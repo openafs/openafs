@@ -9,9 +9,13 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <unistd.h>
+#include <errno.h>
+#include <syslog.h>
 #include <security/pam_appl.h>
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <sys/wait.h>
 
 RCSID("$Header$");
 
@@ -53,12 +57,12 @@ these facilities, we can safely define these to be null functions */
 
 #if !defined(AFS_HPUX110_ENV)
 /* For HP 11.0, this function is in util/hputil.c */
-sigvec()
+sigvec(int sig, const struct sigvec* vec, struct sigvec* ovec)
 {
 	assert(0);
 }
 #endif  /* AFS_HPUX110_ENV */
-sigsetmask()
+sigsetmask(int mask)
 {
 	assert(0);
 }
@@ -85,3 +89,115 @@ char *cv2string(ttp, aval)
     return tp;
 }
 
+int do_klog(const char* user, const char* password, const char* lifetime)
+{
+pid_t	pid;
+int	pipedes[2];
+int	status;
+char*   argv[32];
+int     argc = 0;
+char*   klog_prog;
+int	ret = 1;
+
+#if defined(AFS_KERBEROS_ENV) 
+   klog_prog = KLOGKRB;
+#else
+   klog_prog = KLOG;
+#endif
+   if (access(klog_prog, X_OK) != 0) {
+      syslog(LOG_ERR, "can not access klog program '%s'", KLOG);
+      goto out;
+   }
+#if defined(AFS_KERBEROS_ENV) 
+   argv[argc++] = "klog.krb";
+
+#else
+   argv[argc++] = "klog";
+#endif
+   argv[argc++] = (char*)user;
+   argv[argc++] = "-silent";
+   argv[argc++] = "-pipe";
+   if (lifetime != NULL) {
+      argv[argc++] = "-lifetime";
+      argv[argc++] = (char*)lifetime;
+   }
+   argv[argc] = NULL;
+
+   if (pipe(pipedes) != 0) {
+      syslog(LOG_ERR, "can not open pipe: %s", strerror(errno));
+      goto out;
+   }
+   pid = fork();
+   switch(pid) {
+      case (-1): /* Error: fork failed */
+         syslog(LOG_ERR, "fork failed: %s", strerror(errno));
+	 goto out;
+      case (0) : /* child */
+	 close(0);
+	 dup(pipedes[0]);
+	 close(pipedes[0]);
+	 close(1);
+	 dup(pipedes[1]);
+	 close(pipedes[1]);
+	 execv(klog_prog, argv);
+	 /* notreached */
+	 syslog(LOG_ERR, "execv failed: %s", strerror(errno));
+	 close(0);
+	 close(1);
+	 goto out;
+      default :
+	 write(pipedes[1], password, strlen(password));
+	 write(pipedes[1], "\n", 1);
+	 close(pipedes[0]);
+	 close(pipedes[1]);
+	 if (pid != wait(&status)) return(0);
+	 if (WIFEXITED(status)) {
+            ret = WEXITSTATUS(status);
+	    goto out;
+         }
+	 syslog(LOG_NOTICE, "%s for %s failed", klog_prog, user) ;
+   }
+out:
+   /*   syslog(LOG_DEBUG, "do_klog returns %d", ret); */
+   return(ret);
+}
+
+/* get the current AFS pag for the calling process */
+static afs_int32 curpag()
+{
+   gid_t groups[30];
+   afs_uint32 g0, g1;
+   afs_uint32 h, l, ret;
+      
+   if (getgroups(sizeof groups/sizeof groups[0], groups) < 2) return 0;
+	 
+   g0 = groups[0]  & 0xffff;
+   g1 = groups[1]  & 0xffff;
+   g0 -= 0x3f00;
+   g1 -= 0x3f00;
+   if (g0 < 0xc000 && g1 < 0xc000) {
+      l = ((g0 & 0x3fff) << 14) | (g1 & 0x3fff);
+      h = (g0 >> 14);
+      h = (g1 >> 14) + h + h + h;
+      ret = ((h << 28) | l);
+      /* Additional testing */
+      if (((ret >> 24) & 0xff) == 'A')
+         return ret;
+      else
+         return -1;
+     }
+   return -1;
+}
+
+/* Returns the AFS pag number, if any, otherwise return -1 */
+afs_int32 getPAG()
+{
+   afs_int32 pag;
+   
+   pag = curpag();
+   if (pag == 0 || pag == -1)
+      return -1;
+       
+   /* high order byte is always 'A'; actual pag value is low 24 bits */
+   return (pag & 0xFFFFFF);
+}

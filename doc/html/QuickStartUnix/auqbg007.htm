@@ -971,6 +971,7 @@ instructions specify the recommended and tested configuration.
 <P>The recommended AFS-related entries in the PAM configuration file make use
 of one or more of the following three attributes.
 <DL>
+<h4><br>Authentication Management</h4>
 <P><DT><B><TT>try_first_pass</TT>
 </B><DD>This is a standard PAM attribute that can be included on entries after the
 first one for a service; it directs the module to use the password that
@@ -979,83 +980,232 @@ authentication succeeds if the password provided to the module listed first is
 the user's correct AFS password. For further discussion of this
 attribute and its alternatives, see the operating system's PAM
 documentation.
+<P>
 <P><DT><B><TT>ignore_root</TT>
 </B><DD>This attribute, specific to the AFS PAM module, directs it to ignore not
 only the local superuser <B> root</B>, but also any user with UID 0
 (zero).
+<P><DT><B><TT>ignore_uid <i>uid</i></TT>
+</B><DD>This option is an extension of the &quot;ignore_root&quot; switch. The additional
+parameter is a limit. Users with a uid up to the given parameter are ignored
+by <i>pam_afs.so</i>. Thus, a system administrator still has the opportunity to
+add local user accounts to his system by choosing between &quot;low&quot; and
+&quot;high&quot; user ids.<br>
+An example /etc/passwd file for &quot;ignore_uid 100&quot; may have entries like these:
+<PRE>
+        .
+        .
+afsuserone:x:99:100::/afs/afscell/u/afsuserone:/bin/bash
+afsusertwo:x:100:100::/afs/afscell/u/afsusertwo:/bin/bash
+localuserone:x:101:100::/home/localuserone:/bin/bash
+localusertwo:x:102:100::/home/localusertwo:/bin/bash
+        .
+        .
+</PRE><br>
+AFS accounts should be locked in the file /etc/shadow like this:
+<PRE>
+        .
+        .
+afsuserone:!!:11500:0:99999:7:::
+afsusertwo:!!:11500:0:99999:7:::
+localuserone:&lt;thelocaluserone'skey&gt;:11500:0:99999:7:::
+localusertwo:&lt;thelocalusertwo'skey&gt;:11500:0:99999:7:::
+        .
+        .
+</PRE><br>
+There is no need to store a local key in this file since the AFS
+password is sent and verfied at the AFS cell server!
+
 <P><DT><B><TT>setenv_password_expires</TT>
 </B><DD>This attribute, specific to the AFS PAM module, sets the environment
 variable PASSWORD_EXPIRES to the expiration date of the user's AFS
 password, which is recorded in the Authentication Database.
+<P><DT><B><TT>set_token</TT>
+</B><DD>Some applications don't call <i>pam_setcred()</i> in order to retrieve the appropriate
+credentials (here the AFS token) for their session. This switch sets the credentials
+already in <i>pam_sm_authenticate()</i> obsoleting a call to <i>pam_setcred()</i>.<br>
+<b>Caution: Don't use this switch for applications which do call <i>pam_setcred()</i>!</b>
+One example for an application not calling <i>pam_setcred()</i> are older versions of
+the samba server.<br>
+Nevertheless, using applications with working pam session management is recommended as this
+setup conforms better with the PAM definitions.
+<P><DT><B><TT>refresh_token</TT>
+</B><DD>This options is identical to &quot;set_token&quot; except that no new PAG is generated.
+This is necessary to handle processes like xlock or xscreensaver. It is not enough to give
+the screen and the keyboard free for the user who reactivated his screen typing in the
+correct AFS password, but one may also need fresh tokens with full
+livetime in order to work on, and the new token must be refreshed in the already existing PAG
+for the processes that have been started. This is achieved using this option.
+<P><DT><B><TT>use_klog</TT>
+</B><DD>Activating this switch the authentication is done by calling the external program &quot;klog&quot;.
+One program requiring this is for example <i>kdm</i> of KDE 2.x.<br></DD>
+<P><DT><B><TT>dont_fork</TT>
+</B><DD>Usually, the password verification and the establishment of the token is performed
+in a sub process. Using this option pam_afs does not fork and performs all actions in a single
+process. <b>Only use this options in case you notice serious problems caused by the sub process.</b>
+This option has been developed in respect to the &quot;mod_auth_pam&quot;-project (see also
+<A HREF="http://pam.sourceforge.net/mod_auth_pam/">mod_auth_pam</A>). The mod_auth_pam
+module enables PAM authentication for the apache http server package.
+
+<h4><br>Session Management</h4>
+
+<P><DT><B><TT>no_unlog</TT>
+</B><DD>Normally the tokens are deleted (in memory) after the session ends. Using this options the tokens are left
+untouched. <b>This behaviour has been the default in pam_afs until openafs-1.1.1!</b>
+<P><DT><B><TT>remainlifetime <i>sec</i></TT>
+</B><DD>The tokens are kept active for <i>sec</i> seconds before they are deleted. X display managers
+i.e. are used to inform the applications started in the X session before the logout and then
+end themselves. If the token was deleted immediately the applications would have no chance to
+write back their settings to i.e. the user's AFS home space. This option may help to avoid the
+problem.<br>
+
 </DL>
 <P>Perform the following steps to enable AFS login.
 <OL TYPE=1>
 <P><LI>Mount the AFS CD-ROM for Linux on the <B>/cdrom</B> directory, if it
 is not already. Then change to the directory for PAM modules, which
-depends on which Linux distribution you are using. 
+depends on which Linux distribution you are using.
 <P>If you are using a Linux distribution from Red Hat Software:
-<PRE>   
-   # <B>cd /lib/security</B>   
-</PRE> 
+<PRE>
+   # <B>cd /lib/security</B>
+</PRE>
 <P>If you are using another Linux distribution:
-<PRE>   
+<PRE>
    # <B>cd /usr/lib/security</B>
-   
+
 </PRE>
 <P><LI>Copy the appropriate AFS authentication library file to the directory to
 which you changed in the previous step. Create a symbolic link whose
 name does not mention the version. Omitting the version eliminates the
 need to edit the PAM configuration file if you later update the library
-file. 
+file.
 <P>If you use the AFS Authentication Server (<B>kaserver</B>
 process):
-<PRE>   
+<PRE>
    # <B>cp /cdrom/i386_linux22/lib/pam_afs.so.1  .</B>
-   
-   # <B>ln -s pam_afs.so.1 pam_afs.so</B>   
-</PRE> 
+
+   # <B>ln -s pam_afs.so.1 pam_afs.so</B>
+</PRE>
 <P>If you use a Kerberos implementation of AFS authentication:
-<PRE>   
+<PRE>
    # <B>cp /cdrom/i386_linux22/lib/pam_afs.krb.so.1   .</B>
-   
+
    # <B>ln -s pam_afs.krb.so.1 pam_afs.so</B>
-   
+
 </PRE>
 <P><LI>For each service with which you want to use AFS authentication, insert an
 entry for the AFS PAM module into the <TT>auth</TT> section of the
 service's PAM configuration file. (Linux uses a separate
 configuration file for each service, unlike some other operating systems which
 list all services in a single file.) Mark the entry as
-<TT>sufficient</TT> in the second field. 
+<TT>sufficient</TT> in the second field.
 <P>Place the AFS entry below any entries that impose conditions under which
 you want the service to fail for a user who does not meet the entry's
 requirements. Mark these entries <TT>required</TT>. Place the
 AFS entry above any entries that need to execute only if AFS authentication
-fails. 
+fails.
 <P>Insert the following AFS entry if using the Red Hat distribution:
-<PRE>   
-   auth  sufficient  /lib/security/pam_afs.so   try_first_pass  ignore_root   
-</PRE> 
+<PRE>
+   auth  sufficient  /lib/security/pam_afs.so   try_first_pass  ignore_root
+</PRE>
 <P>Insert the following AFS entry if using another distribution:
-<PRE>   
-   auth  sufficient  /usr/lib/security/pam_afs.so  try_first_pass  ignore_root   
-</PRE> 
-<P>The following example illustrates the recommended configuration of the
-configuration file for the <B>login</B> service
-(<B>/etc/pam.d/login</B>) on a machine using the Red Hat
-distribution.
-<PRE>   
+<PRE>
+   auth  sufficient  /usr/lib/security/pam_afs.so  try_first_pass  ignore_root
+</PRE>
+<P>Check the PAM config files also for &quot;session&quot; entries. If there are
+lines beginning with &quot;session&quot; then please insert this line too:
+<PRE>
+   session  optional  /lib/security/pam_afs.so
+</PRE>
+<P>or
+<PRE>
+   session  optional  /usr/lib/security/pam_afs.so
+</PRE>
+<P>This guaranties that the user's tokens are deleted from memory after his
+session ends so that no other user coincidently gets those tokens without authorization!
+The following examples illustrate the recommended configuration of the
+configuration file for several services:<br>
+
+<h4><br>Authentication Management</h4>
+
+(<B>/etc/pam.d/login</B>)
+<PRE>
    #%PAM-1.0
    auth      required   /lib/security/pam_securetty.so
    auth      required   /lib/security/pam_nologin.so
    auth      sufficient /lib/security/pam_afs.so try_first_pass ignore_root
+   #                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   #This enables AFS authentication for every user but root
    auth      required   /lib/security/pam_pwdb.so shadow nullok
    account   required   /lib/security/pam_pwdb.so
    password  required   /lib/security/pam_cracklib.so
    password  required   /lib/security/pam_pwdb.so shadow nullok use_authtok
+   session   optional   /lib/security/pam_afs.so
+   #Make sure tokens are deleted after the user logs out
    session   required   /lib/security/pam_pwdb.so
-   
+
+</PRE><br>
+(<b>/etc/pam.d/samba</b>)
+<PRE>
+   auth       required     /lib/security/pam_afs.so ignore_uid 100 set_token
+   #                                                ^^^^^^^^^^^^^^^^^^^^^^^^
+   #Here, users with uid&gt;100 are considered to belong to the AFS and users
+   #with uid&lt;=100 are ignored by pam_afs. The token is retrieved already in
+   #pam_sm_authenticate() (this is an example pam config for a samba version
+   #that does not call pam_setcred(), it also does no sense to include session
+   #entries here since they would be ignored by this version of samba ).
+   account    required     /lib/security/pam_pwdb.so
 </PRE>
+(<b>/etc/pam.d/xscreensaver</b>)
+<PRE>
+   auth       sufficient   /lib/security/pam_afs.so ignore_uid 100 refresh_token
+   #                                                               ^^^^^^^^^^^^^
+   #Avoid generating a new PAG for the new tokens, use the already existing PAG and
+   #establish a fresh token in it.
+   auth       required     /lib/security/pam_pwdb.so try_first_pass
+</PRE>
+(<b>/etc/pam.d/httpd</b>)
+<PRE>
+   auth       required   /lib/security/pam_afs.so ignore_uid 100 dont_fork
+   #                                                             ^^^^^^^^^
+   #Don't fork for the verification of the password.
+</PRE>
+
+<h4><br>Session Management</h4>
+
+(<b>/etc/pam.d/su</b>)
+<PRE>
+   auth       sufficient   /lib/security/pam_afs.so ignore_uid 100
+   auth       required     /lib/security/pam_pwdb.so try_first_pass
+   account    required     /lib/security/pam_pwdb.so
+   password   required     /lib/security/pam_cracklib.so
+   password   required     /lib/security/pam_pwdb.so use_authtok
+   session    required     /lib/security/pam_pwdb.so
+   session    optional     /lib/security/pam_afs.so no_unlog
+   #                                                ^^^^^^^^
+   #Don't delete the token in this case, since the user may still
+   #need it (for example if somebody logs in and changes to root
+   #afterwards he may still want to access his home space in AFS).
+   session    required     /lib/security/pam_login_access.so
+   session    optional     /lib/security/pam_xauth.so
+</PRE>
+(<b>/etc/pam.d/xdm</b>)
+<PRE>
+   auth       required     /lib/security/pam_nologin.so
+   auth       required     /lib/security/pam_login_access.so
+   auth       sufficient   /lib/security/pam_afs.so ignore_uid 100 use_klog
+   auth       required     /lib/security/pam_pwdb.so try_first_pass
+   account    required     /lib/security/pam_pwdb.so
+   password   required     /lib/security/pam_cracklib.so
+   password   required     /lib/security/pam_pwdb.so shadow nullok use_authtok
+   session    optional     /lib/security/pam_afs.so remainlifetime 10
+   #                                                ^^^^^^^^^^^^^^^^^
+   #Wait 10 seconds before deleting the AFS tokens in order to give
+   #the programs of the X session some time to save their settings
+   #to AFS.
+   session    required     /lib/security/pam_pwdb.so
+</PRE>
+
 <P><LI>Proceed to <A HREF="#HDRWQ145">Loading and Creating Client Files</A>.
 </OL>
 <A NAME="IDX2986"></A>

@@ -45,13 +45,19 @@
 #define PAMAFS_PASSEXPFAIL	32 /* "Failed to set PASSWORD_EXPIRES"  */
 #define PAMAFS_CHOWNKRB		33 /* "Failed to chown krb ticketfile"  */
 #define PAMAFS_KRBFAIL		34 /* "Failed to set KRBTKTFILE"        */
-#define PAMAFS_TRUSTROOT	35 /* "Ignoring superuser %s"		*/
-#define PAMAFS_NEW_PWD_PROMPT   36 /* "New AFS Password:"               */
-#define PAMAFS_VERIFY_PWD_PROMPT  37 /* "New AFS Password (again):"     */
-#define PAMAFS_KAPASS_FAIL      38 /* "Failed to change AFS password"   */
-#define PAMAFS_FLAGS            39 /* "Missing PAM flag:"               */
-#define PAMAFS_KAERROR          40 /* "ka error, code=%d"               */
-#define PAMAFS_NE_PASSWORD      41 /* "Passwords are not equal"         */  
+#define PAMAFS_REMAINLIFETIME   35 /* "Unknown remaining lifetime"      */
+#define PAMAFS_SESSIONCLOSED1   36 /* "Session closed"                  */
+#define PAMAFS_SESSIONCLOSED2   37 /* "Session closed, Tokens destroyed"*/
+#define PAMAFS_CONFLICTOPT      38 /* "Option conflict"                 */
+#define PAMAFS_IGNOREUID        39 /* "Unknown uid"                     */
+#define PAMAFS_NEW_PWD_PROMPT   40 /* "New AFS Password:"               */
+#define PAMAFS_VERIFY_PWD_PROMPT  41 /* "New AFS Password (again):"     */
+#define PAMAFS_KAPASS_FAIL      42 /* "Failed to change AFS password"   */
+#define PAMAFS_FLAGS            43 /* "Missing PAM flag:"               */
+#define PAMAFS_KAERROR          44 /* "ka error, code=%d"               */
+#define PAMAFS_NE_PASSWORD      45 /* "Passwords are not equal"         */
+#define PAMAFS_IGNORE_UNREG     46 /* "AFS ignoring unregistered user"  */
+
 
 char *pam_afs_message(int msgnum, int *freeit);
 void pam_afs_syslog(int priority, int msgid, ...);

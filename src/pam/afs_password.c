@@ -93,8 +93,11 @@ pam_sm_chauthtok(
 
     if (use_first_pass) try_first_pass = 0;
 
-    pam_afs_syslog(LOG_DEBUG, PAMAFS_OPTIONS, nowarn, use_first_pass, try_first_pass);
-    pam_afs_syslog(LOG_DEBUG, PAMAFS_PAMERROR, flags);
+    if (logmask && LOG_MASK(LOG_DEBUG))
+      {
+	pam_afs_syslog(LOG_DEBUG, PAMAFS_OPTIONS, nowarn, use_first_pass, try_first_pass);
+	pam_afs_syslog(LOG_DEBUG, PAMAFS_PAMERROR, flags);
+      }
 
     /* Try to get the user-interaction info, if available. */
     errcode = pam_get_item(pamh, PAM_CONV, (const void **) &pam_convp);
@@ -109,7 +112,8 @@ pam_sm_chauthtok(
 	RET(PAM_USER_UNKNOWN);
     }
 
-    pam_afs_syslog(LOG_DEBUG, PAMAFS_USERNAMEDEBUG, user);
+    if (logmask && LOG_MASK(LOG_DEBUG))
+      pam_afs_syslog(LOG_DEBUG, PAMAFS_USERNAMEDEBUG, user);
 
     /*
      * If the user has a "local" (or via nss, possibly nss_dce) pwent,
@@ -147,13 +151,15 @@ pam_sm_chauthtok(
 	    RET(PAM_AUTH_ERR);
 	}
 	password = NULL;	/* In case it isn't already NULL */
-	pam_afs_syslog(LOG_DEBUG, PAMAFS_NOFIRSTPASS, user);
+	if (logmask && LOG_MASK(LOG_DEBUG))
+	  pam_afs_syslog(LOG_DEBUG, PAMAFS_NOFIRSTPASS, user);
     } else if (password[0] == '\0') {
 	/* Actually we *did* get one but it was empty. */
 	torch_password = 0;
 	pam_afs_syslog(LOG_INFO, PAMAFS_NILPASSWORD, user);
 	RET(PAM_NEW_AUTHTOK_REQD);
     } else {
+      if (logmask && LOG_MASK(LOG_DEBUG))
 	pam_afs_syslog(LOG_DEBUG, PAMAFS_GOTPASS, user);
 	torch_password = 0;
 	got_authtok = 1;
