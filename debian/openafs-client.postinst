@@ -40,6 +40,11 @@ case "$1" in
 		      'print "$F[2] # $F[0]" if $F[1] eq "A"' \
 		      >>/etc/openafs/CellServDB.new
 		    done
+			if [ `wc -l </etc/openafs/CellServDB.new` -eq 1 ] ; then
+			    echo None of the hostnames resolved to an address 2>&1
+			    db_reset openafs-client/cell-info ||true
+			    exit 1
+			 fi
 		    cat /etc/openafs/CellServDB.new \
 		      /etc/openafs/CellServDB  >/etc/openafs/CellServDB.tmp
 		    mv /etc/openafs/CellServDB.tmp \
