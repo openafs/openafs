@@ -171,7 +171,7 @@ BOOL InitApp (LPSTR pszCmdLineA)
    if (fInstall)
       {
       HKEY hk;
-      if (RegCreateKey (HKEY_LOCAL_MACHINE, TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"), &hk) == 0)
+      if (RegCreateKey (HKEY_CURRENT_USER, REGSTR_PATH_OPENAFS_CLIENT, &hk) == 0)
          {
          DWORD dwSize = sizeof(g.fStartup);
          DWORD dwType = REG_DWORD;
@@ -211,7 +211,14 @@ BOOL InitApp (LPSTR pszCmdLineA)
    g.fStartup = TRUE;
 
    HKEY hk;
-   if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"), &hk) == 0)
+    if (RegOpenKey (HKEY_CURRENT_USER, REGSTR_PATH_OPENAFS_CLIENT, &hk) == 0)
+    {
+        DWORD dwSize = sizeof(g.fStartup);
+        DWORD dwType = REG_DWORD;
+        RegQueryValueEx (hk, TEXT("ShowTrayIcon"), NULL, &dwType, (PBYTE)&g.fStartup, &dwSize);
+        RegCloseKey (hk);
+    }
+    else if (RegOpenKey (HKEY_LOCAL_MACHINE, REGSTR_PATH_OPENAFS_CLIENT, &hk) == 0)
       {
       DWORD dwSize = sizeof(g.fStartup);
       DWORD dwType = REG_DWORD;

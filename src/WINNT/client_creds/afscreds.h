@@ -52,9 +52,10 @@ extern "C" {
  *
  */
 
-#define REGSTR_BASE          HKEY_LOCAL_MACHINE
 #define REGSTR_PATH_AFS      TEXT("Software\\TransarcCorporation\\AFS Client\\CurrentVersion")
 #define REGSTR_PATH_AFSCREDS TEXT("Software\\TransarcCorporation\\AFS Client\\AfsCreds")
+#define REGSTR_PATH_OPENAFS_CLIENT  TEXT("SOFTWARE\\OpenAFS\\Client")
+#define REGSTR_PATH_OPENAFS_CLIENT_REMIND  TEXT("SOFTWARE\\OpenAFS\\Client\\Reminders")
 
 #define REGVAL_AFS_TITLE     TEXT("Title")
 #define REGVAL_AFS_VERSION   TEXT("VersionString")

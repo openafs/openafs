@@ -41,8 +41,6 @@ void Shortcut_Exit (void)
    CoUninitialize();
 }
 
-static char OpenAFSConfigKeyName[] = "SOFTWARE\\OpenAFS\\Client";
-
 BOOL Shortcut_Create (LPTSTR pszTarget, LPCTSTR pszSource, LPTSTR pszDesc, LPTSTR pszArgs)
 {
    IShellLink *psl;
@@ -115,10 +113,10 @@ void Shortcut_FixStartup (LPCTSTR pszLinkName, BOOL fAutoStart)
        DWORD code, len, type; 
        TCHAR szParams[ 64 ] = TEXT(AFSCREDS_SHORTCUT_OPTIONS);
 
-       code = RegOpenKeyEx(HKEY_CURRENT_USER, OpenAFSConfigKeyName,
+       code = RegOpenKeyEx(HKEY_CURRENT_USER, REGSTR_PATH_OPENAFS_CLIENT,
                             0, KEY_QUERY_VALUE, &hk);
        if (code != ERROR_SUCCESS)
-           code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
+           code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, REGSTR_PATH_OPENAFS_CLIENT,
                                 0, KEY_QUERY_VALUE, &hk);
        if (code == ERROR_SUCCESS) {
            len = sizeof(szParams);

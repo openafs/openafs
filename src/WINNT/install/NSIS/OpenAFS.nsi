@@ -642,7 +642,7 @@ skipremove:
   ReadINIStr $R0 $1 "Field 2" "State"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "Cell" $R0
   ReadINIStr $R0 $1 "Field 3" "State"
-  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "ShowTrayIcon" 1
+  WriteRegDWORD HKLM "SOFTWARE\OpenAFS\Client" "ShowTrayIcon" 1
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "SecurityLevel" $R0
   ReadINIStr $R0 $1 "Field 5" "State"  
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "FreelanceClient" $R0
@@ -657,7 +657,7 @@ skipremove:
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "NoFindLanaByName" 1
 !ENDIF
 
-  strcpy $REG_SUB_KEY "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon" 
+  strcpy $REG_SUB_KEY "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" 
   strcpy $REG_VALUE   "DependOnGroup" 
   strcpy $REG_DATA_1  "PNP_TDI"
   strcpy $REG_DATA_2  ""

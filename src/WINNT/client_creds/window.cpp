@@ -397,19 +397,27 @@ void Main_OnSelectTab (void)
 
 void Main_OnCheckTerminate (void)
 {
-   HKEY hk;
-   if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"), &hk) == 0)
-      {
+    HKEY hk;
+
+    if (RegOpenKey (HKEY_CURRENT_USER, REGSTR_PATH_OPENAFS_CLIENT, &hk) == 0)
+    {
+        DWORD dwSize = sizeof(g.fStartup);
+        DWORD dwType = REG_DWORD;
+        RegQueryValueEx (hk, TEXT("ShowTrayIcon"), NULL, &dwType, (PBYTE)&g.fStartup, &dwSize);
+        RegCloseKey (hk);
+    }
+    else if (RegOpenKey (HKEY_LOCAL_MACHINE, REGSTR_PATH_OPENAFS_CLIENT, &hk) == 0)
+    {
       DWORD dwSize = sizeof(g.fStartup);
       DWORD dwType = REG_DWORD;
       RegQueryValueEx (hk, TEXT("ShowTrayIcon"), NULL, &dwType, (PBYTE)&g.fStartup, &dwSize);
       RegCloseKey (hk);
-      }
+    }
 
-   Shortcut_FixStartup (cszSHORTCUT_NAME, g.fStartup);
+    Shortcut_FixStartup (cszSHORTCUT_NAME, g.fStartup);
 
-   if (!g.fStartup)
-      Quit();
+    if (!g.fStartup)
+        Quit();
 }
 
 
@@ -716,14 +724,14 @@ void Terminate_OnOK (HWND hDlg)
 
    g.fStartup = IsDlgButtonChecked (hDlg, IDC_STARTUP);
 
-   HKEY hk;
-   if (RegCreateKey (HKEY_LOCAL_MACHINE, TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"), &hk) == 0)
-      {
-      DWORD dwSize = sizeof(g.fStartup);
-      DWORD dwType = REG_DWORD;
-      RegSetValueEx (hk, TEXT("ShowTrayIcon"), NULL, dwType, (PBYTE)&g.fStartup, dwSize);
-      RegCloseKey (hk);
-      }
+    HKEY hk;
+    if (RegCreateKey (HKEY_CURRENT_USER, REGSTR_PATH_OPENAFS_CLIENT, &hk) == 0)
+    {
+        DWORD dwSize = sizeof(g.fStartup);
+        DWORD dwType = REG_DWORD;
+        RegSetValueEx (hk, TEXT("ShowTrayIcon"), NULL, dwType, (PBYTE)&g.fStartup, dwSize);
+        RegCloseKey (hk);
+    }
 
    Shortcut_FixStartup (cszSHORTCUT_NAME, g.fStartup);
 
