@@ -1352,6 +1352,7 @@ int afs_linux_readpage(struct file *fp, struct page *pp)
     struct iovec iovec;
     struct inode *ip = FILE_INODE(fp);
     int cnt = atomic_read(&pp->count);
+    struct vcache *avc = ITOAFS(ip);
 
     AFS_GLOCK();
     afs_Trace4(afs_iclSetp, CM_TRACE_READPAGE,
@@ -1372,7 +1373,7 @@ int afs_linux_readpage(struct file *fp, struct page *pp)
 
     setup_uio(&tuio, &iovec, (char*)address, offset, PAGESIZE,
 	      UIO_READ, AFS_UIOSYS);
-    code = afs_rdwr(ITOAFS(ip), &tuio, UIO_READ, 0, credp);
+    code = afs_rdwr(avc, &tuio, UIO_READ, 0, credp);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     unlock_kernel();
 #endif
@@ -1397,6 +1398,22 @@ int afs_linux_readpage(struct file *fp, struct page *pp)
     wake_up(&pp->wait);
     free_page(address);
 #endif
+
+    if (!code && AFS_CHUNKOFFSET(offset) == 0) {
+	struct dcache *tdc;
+	struct vrequest treq;
+
+	code = afs_InitReq(&treq, credp);
+	if (!code && !NBObtainWriteLock(&avc->lock, 534)) {
+	    tdc = afs_FindDCache(avc, offset);
+	    if (tdc) {
+		if (!(tdc->mflags & DFNextStarted))
+		    afs_PrefetchChunk(avc, tdc, credp, &treq);
+		afs_PutDCache(tdc);
+	    }
+	    ReleaseWriteLock(&avc->lock);
+	}
+    }
 
     crfree(credp);
     afs_Trace4(afs_iclSetp, CM_TRACE_READPAGE,
