@@ -71,7 +71,6 @@ char **argv;
     register long code;
     long cc, upos=0, gpos;
     struct ubik_hdr *uh;
-    struct timeval time;
     char *dfile = 0;
     char *pfile = "/usr/afs/db/kaserver.DB0";
     
@@ -147,20 +146,42 @@ char **argv;
 	exit (1);
     }
 
-    init_kaprocs(pfile,9);
     initialize_KA_error_table();
 
     if (wflag) {
+	struct kaheader header;
+	afs_int32 ltime=time(0);
+	memset(&header, 0, sizeof(header));
+	header.version             = htonl(KADBVERSION);
+	header.headerSize          = htonl(sizeof(header));
+	header.freePtr             = 0;
+	header.eofPtr              = htonl(sizeof(header));
+	header.kvnoPtr             = 0;
+	header.stats.allocs        = 0;
+	header.stats.frees         = 0;
+	header.stats.cpws          = 0;
+	header.admin_accounts      = 0;
+	header.specialKeysVersion  = htonl(ltime);
+	header.hashsize            = htonl(HASHSIZE);
+	header.checkVersion        = htonl(KADBVERSION);
+
+	write(dbase_fd, &header, sizeof(header));
 	while(fgets(buffer, sizeof(buffer), dfp)) {
 	  struct kaentry tentry;
 	  int flags, exp, modtime, modid, cpwtime, maxlife, kvno;
-	  char kaname[64+64+2], key[33], name[64], instance[64];
+	  char kaname[64+64+2], key[33], name[64], instance[64], rlm[64];
 	  afs_int32 maxLifetime;
 
 	  sscanf(buffer, "%s %d %d %d %d %d %d %d %s",
 		 kaname, &flags, &exp, &modtime, &modid, &cpwtime, 
 		 &maxlife, &kvno, key);
 	  
+	  printf("%s %d %d %d %d %d %d %d %s", kaname, flags, exp, modtime, 
+		 modid, cpwtime, maxlife, kvno, key);
+	  memset(name,0,sizeof(name));
+	  memset(instance,0,sizeof(instance));
+	  ka_ParseLoginName(&kaname, &name, &instance, &rlm);
+	  printf("%s %s %s\n", kaname, name, instance);
 	  strncpy(tentry.userID.name, name, sizeof(tentry.userID.name));
 	  strncpy(tentry.userID.instance, instance, sizeof(tentry.userID.instance));
 	  tentry.flags = htonl(flags);
@@ -183,8 +204,9 @@ char **argv;
 	  else
 	    tentry.max_ticket_lifetime = htonl(maxLifetime);
 
-	  write(dbase_fd, &tentry, sizeof(&tentry));
+	  write(dbase_fd, &tentry, sizeof(tentry));
 	}
+	/*CheckInit(0,0);*/
     } else {
 	while (1) {
 	    gpos = display_entry(upos*sizeof(struct kaentry));
