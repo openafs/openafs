@@ -475,8 +475,10 @@ kawrap_ubik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8)
 	do {			/* Cycle through the servers */
 	    lcode = code;
 	    code =
-		ubik_CallIter(aproc, aclient, aflags, &count, p1, p2, p3, p4,
-			      p5, p6, p7, p8, 0, 0, 0, 0, 0, 0, 0, 0);
+		ubik_CallIter(aproc, aclient, aflags, &count, (long) p1,
+			      (long) p2, (long) p3, (long) p4,
+			      (long) p5, (long) p6, (long) p7,
+			      (long) p8, 0, 0, 0, 0, 0, 0, 0, 0);
 	} while ((code == UNOQUORUM) || (code == UNOTSYNC)
 		 || (code == KALOCKED) || (code == -1));
 

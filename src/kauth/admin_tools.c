@@ -512,10 +512,9 @@ ka_islocked(char *name, char *instance, afs_uint32 * when)
     do {
 	tempwhen = 0;
 	code =
-	    ubik_CallIter(KAM_LockStatus, conn, UPUBIKONLY, &count, name,
-			  instance, &tempwhen, /*spares */ 0, 0, 0,
-			  0, 0, 0, 0, 0, 0, 0, 0,
-			  0);
+	    ubik_CallIter(KAM_LockStatus, conn, UPUBIKONLY, &count, (long) name,
+			  (long) instance, (long) &tempwhen, 0, 0, 0,
+			  0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	if (code) {
 	    if (seriouserror(code))
 		com_err(whoami, code, "");
@@ -550,8 +549,8 @@ Unlock(struct cmd_syndesc *as, char *arock)
 
     count = 0;
     do {
-	code = ubik_CallIter(KAM_Unlock, conn, 0, &count, name, instance,
-			     /*spares */ 0, 0, 0, 0);
+	code = ubik_CallIter(KAM_Unlock, conn, 0, &count, (long) name, (long) instance,
+			     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 	if (code && (code != UNOSERVERS)) {
 	    server = 0;
 	    if (conn && conn->conns[count - 1]
