@@ -1014,12 +1014,15 @@ sigint_handler(int x)
 }
 
 /* Move volume <afromvol> on <afromserver> <afrompart> to <atoserver>
- * <atopart>. The operation is almost idempotent 
+ * <atopart>.  The operation is almost idempotent.  The following
+ * flags are recognized:
+ * 
+ *     RV_NOCLONE - don't use a copy clone
  */
 
 int
-UV_MoveVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
-	      afs_int32 atoserver, afs_int32 atopart)
+UV_MoveVolume2(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
+	       afs_int32 atoserver, afs_int32 atopart, int flags)
 {
     struct rx_connection *toconn, *fromconn;
     afs_int32 fromtid, totid, clonetid;
@@ -1243,26 +1246,32 @@ UV_MoveVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	   afromvol);
     VDONE;
 
-    /* Get a clone id */
-    VPRINT1("Allocating new volume id for clone of volume %u ...", afromvol);
-    newVol = 0;
-    vcode = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 1, &newVol);
-    EGOTO1(mfail, vcode,
-	   "Could not get an ID for the clone of volume %u from the VLDB\n",
-	   afromvol);
-    VDONE;
+    if (!(flags & RV_NOCLONE)) {
+	/* Get a clone id */
+	VPRINT1("Allocating new volume id for clone of volume %u ...",
+		afromvol);
+	newVol = 0;
+	vcode = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 1, &newVol);
+	EGOTO1(mfail, vcode,
+	       "Could not get an ID for the clone of volume %u from the VLDB\n",
+	       afromvol);
+	VDONE;
 
-    /* Do the clone. Default flags on clone are set to delete on salvage and out of service */
-    VPRINT1("Cloning source volume %u ...", afromvol);
-    strcpy(vname, "move-clone-temp");
-    code = AFSVolClone(fromconn, fromtid, 0, readonlyVolume, vname, &newVol);
-    EGOTO1(mfail, code, "Failed to clone the source volume %u\n", afromvol);
-    VDONE;
+	/* Do the clone. Default flags on clone are set to delete on salvage and out of service */
+	VPRINT1("Cloning source volume %u ...", afromvol);
+	strcpy(vname, "move-clone-temp");
+	code =
+	    AFSVolClone(fromconn, fromtid, 0, readonlyVolume, vname, &newVol);
+	EGOTO1(mfail, code, "Failed to clone the source volume %u\n",
+	       afromvol);
+	VDONE;
+    }
 
     /* lookup the name of the volume we just cloned */
     volid = afromvol;
     code = AFSVolGetName(fromconn, fromtid, &volName);
-    EGOTO1(mfail, code, "Failed to get the name of the volume %u\n", newVol);
+    EGOTO1(mfail, code, "Failed to get the name of the volume %u\n",
+	   afromvol);
 
     VPRINT1("Ending the transaction on the source volume %u ...", afromvol);
     rcode = 0;
@@ -1279,27 +1288,39 @@ UV_MoveVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
      * Create the destination volume
      * ***/
 
-    VPRINT1("Starting transaction on the cloned volume %u ...", newVol);
-    code =
-	AFSVolTransCreate(fromconn, newVol, afrompart, ITOffline, &clonetid);
-    EGOTO1(mfail, code,
-	   "Failed to start a transaction on the cloned volume%u\n", newVol);
-    VDONE;
+    if (!(flags & RV_NOCLONE)) {
+	/* All of this is to get the fromDate */
+	VPRINT1("Starting transaction on the cloned volume %u ...", newVol);
+	code =
+	    AFSVolTransCreate(fromconn, newVol, afrompart, ITOffline,
+			      &clonetid);
+	EGOTO1(mfail, code,
+	       "Failed to start a transaction on the cloned volume%u\n",
+	       newVol);
+	VDONE;
 
-    VPRINT1("Setting flags on cloned volume %u ...", newVol);
-    code = AFSVolSetFlags(fromconn, clonetid, VTDeleteOnSalvage | VTOutOfService);	/*redundant */
-    EGOTO1(mfail, code, "Could not set falgs on the cloned volume %u\n",
-	   newVol);
-    VDONE;
+	VPRINT1("Setting flags on cloned volume %u ...", newVol);
+	code =
+	    AFSVolSetFlags(fromconn, clonetid,
+			   VTDeleteOnSalvage | VTOutOfService);	/*redundant */
+	EGOTO1(mfail, code, "Could not set flags on the cloned volume %u\n",
+	       newVol);
+	VDONE;
 
-    /* remember time from which we've dumped the volume */
-    VPRINT1("Getting status of cloned volume %u ...", newVol);
-    code = AFSVolGetStatus(fromconn, clonetid, &tstatus);
-    EGOTO1(mfail, code, "Failed to get the status of the cloned volume %u\n",
-	   newVol);
-    VDONE;
+	/* remember time from which we've dumped the volume */
+	VPRINT1("Getting status of cloned volume %u ...", newVol);
+	code = AFSVolGetStatus(fromconn, clonetid, &tstatus);
+	EGOTO1(mfail, code,
+	       "Failed to get the status of the cloned volume %u\n",
+	       newVol);
+	VDONE;
 
-    fromDate = tstatus.creationDate - CLOCKSKEW;
+	fromDate = tstatus.creationDate - CLOCKSKEW;
+    } else {
+	/* With RV_NOCLONE, just do a full copy from the source */
+	fromDate = 0;
+    }
+
 
 #ifdef	ENABLE_BUGFIX_1165
     /*
@@ -1374,25 +1395,31 @@ UV_MoveVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     destination.destPort = AFSCONF_VOLUMEPORT;
     destination.destSSID = 1;
 
-    /* Copy the clone to the new volume */
-    VPRINT2("Dumping from clone %u on source to volume %u on destination ...",
-	    newVol, afromvol);
     strncpy(cookie.name, tmpName, VOLSER_OLDMAXVOLNAME);
     cookie.type = RWVOL;
     cookie.parent = entry.volumeId[RWVOL];
     cookie.clone = 0;
-    code = AFSVolForward(fromconn, clonetid, 0, &destination, totid, &cookie);
-    EGOTO1(mfail, code, "Failed to move data for the volume %u\n", volid);
-    VDONE;
 
-    VPRINT1("Ending transaction on cloned volume %u ...", newVol);
-    code = AFSVolEndTrans(fromconn, clonetid, &rcode);
-    if (!code)
-	code = rcode;
-    clonetid = 0;
-    EGOTO1(mfail, code,
-	   "Failed to end the transaction on the cloned volume %u\n", newVol);
-    VDONE;
+    if (!(flags & RV_NOCLONE)) {
+	/* Copy the clone to the new volume */
+	VPRINT2("Dumping from clone %u on source to volume %u on destination ...",
+		newVol, afromvol);
+	code =
+	    AFSVolForward(fromconn, clonetid, 0, &destination, totid,
+			  &cookie);
+	EGOTO1(mfail, code, "Failed to move data for the volume %u\n", volid);
+	VDONE;
+
+	VPRINT1("Ending transaction on cloned volume %u ...", newVol);
+	code = AFSVolEndTrans(fromconn, clonetid, &rcode);
+	if (!code)
+	    code = rcode;
+	clonetid = 0;
+	EGOTO1(mfail, code,
+	       "Failed to end the transaction on the cloned volume %u\n",
+	       newVol);
+	VDONE;
+    }
 
     /* ***
      * reattach to the main-line volume, and incrementally dump it.
@@ -1406,14 +1433,16 @@ UV_MoveVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
     VDONE;
 
     /* now do the incremental */
-    VPRINT1
-	("Doing the incremental dump from source to destination for volume %u ... ",
+    VPRINT2
+	("Doing the%s dump from source to destination for volume %u ... ",
+	 (flags & RV_NOCLONE) ? "" : " incremental",
 	 afromvol);
     code =
 	AFSVolForward(fromconn, fromtid, fromDate, &destination, totid,
 		      &cookie);
-    EGOTO(mfail, code,
-	  "Failed to do the incremental dump from rw volume on old site to rw volume on newsite\n");
+    EGOTO1(mfail, code,
+	   "Failed to do the%s dump from rw volume on old site to rw volume on newsite\n",
+	  (flags & RV_NOCLONE) ? "" : " incremental");
     VDONE;
 
     /* now adjust the flags so that the new volume becomes official */
@@ -1582,27 +1611,33 @@ UV_MoveVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	code = 0;		/* no backup volume? that's okay */
 
     fromtid = 0;
-    VPRINT1("Starting transaction on the cloned volume %u ...", newVol);
-    code =
-	AFSVolTransCreate(fromconn, newVol, afrompart, ITOffline, &clonetid);
-    EGOTO1(mfail, code,
-	   "Failed to start a transaction on the cloned volume%u\n", newVol);
-    VDONE;
+    if (!(flags & RV_NOCLONE)) {
+	VPRINT1("Starting transaction on the cloned volume %u ...", newVol);
+	code =
+	    AFSVolTransCreate(fromconn, newVol, afrompart, ITOffline,
+			      &clonetid);
+	EGOTO1(mfail, code,
+	       "Failed to start a transaction on the cloned volume%u\n",
+	       newVol);
+	VDONE;
 
-    /* now delete the clone */
-    VPRINT1("Deleting the cloned volume %u ...", newVol);
-    code = AFSVolDeleteVolume(fromconn, clonetid);
-    EGOTO1(mfail, code, "Failed to delete the cloned volume %u\n", newVol);
-    VDONE;
+	/* now delete the clone */
+	VPRINT1("Deleting the cloned volume %u ...", newVol);
+	code = AFSVolDeleteVolume(fromconn, clonetid);
+	EGOTO1(mfail, code, "Failed to delete the cloned volume %u\n",
+	       newVol);
+	VDONE;
 
-    VPRINT1("Ending transaction on cloned volume %u ...", newVol);
-    code = AFSVolEndTrans(fromconn, clonetid, &rcode);
-    if (!code)
-	code = rcode;
-    clonetid = 0;
-    EGOTO1(mfail, code,
-	   "Failed to end the transaction on the cloned volume %u\n", newVol);
-    VDONE;
+	VPRINT1("Ending transaction on cloned volume %u ...", newVol);
+	code = AFSVolEndTrans(fromconn, clonetid, &rcode);
+	if (!code)
+	    code = rcode;
+	clonetid = 0;
+	EGOTO1(mfail, code,
+	       "Failed to end the transaction on the cloned volume %u\n",
+	       newVol);
+	VDONE;
+    }
 
     /* fall through */
     /* END OF MOVE */
@@ -1652,8 +1687,8 @@ UV_MoveVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	if (code || rcode) {
 	    VPRINT("\n");
 	    fprintf(STDERR,
-		    "Could not end transaction on the source's clone volume %lu\n",
-		    (unsigned long)newVol);
+		    "Could not end transaction on the source volume %lu\n",
+		    (unsigned long)afromvol);
 	    if (!error)
 		error = (code ? code : rcode);
 	}
@@ -1948,23 +1983,39 @@ UV_MoveVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 }
 
 
-/* Move volume <afromvol> on <afromserver> <afrompart> to <atoserver>
- * <atopart>. The operation is almost idempotent 
- */
-
 int
-UV_CopyVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
-	      char *atovolname, afs_int32 atoserver, afs_int32 atopart)
+UV_MoveVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
+	      afs_int32 atoserver, afs_int32 atopart)
+{
+    return UV_MoveVolume2(afromvol, afromserver, afrompart,
+			  atoserver, atopart, 0);
+}
+
+
+/* Copy volume <afromvol> from <afromserver> <afrompart> to <atoserver>
+ * <atopart>.  The new volume is named by <atovolname>.  The new volume
+ * has ID <atovolid> if that is nonzero; otherwise a new ID is allocated
+ * from the VLDB.  the following flags are supported:
+ * 
+ *     RV_RDONLY  - target volume is RO
+ *     RV_OFFLINE - leave target volume offline
+ *     RV_CPINCR  - do incremental dump if target exists
+ *     RV_NOVLDB  - don't create/update VLDB entry
+ *     RV_NOCLONE - don't use a copy clone
+ */
+int
+UV_CopyVolume2(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
+	       char *atovolname, afs_int32 atoserver, afs_int32 atopart,
+	       afs_int32 atovolid, int flags)
 {
     struct rx_connection *toconn, *fromconn;
     afs_int32 fromtid, totid, clonetid;
     char vname[64];
-    char tmpName[VOLSER_MAXVOLNAME + 1];
     afs_int32 rcode;
-    afs_int32 fromDate;
+    afs_int32 fromDate, cloneFromDate;
     struct restoreCookie cookie;
     register afs_int32 vcode, code;
-    afs_int32 cloneVol, newVol;
+    afs_int32 cloneVol, newVol, volflag;
     struct volser_status tstatus;
     struct destServer destination;
 
@@ -2009,80 +2060,121 @@ UV_CopyVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
      * clone the read/write volume locally.
      * ***/
 
-    VPRINT1("Starting transaction on source volume %u ...", afromvol);
-    code = AFSVolTransCreate(fromconn, afromvol, afrompart, ITBusy, &fromtid);
-    EGOTO1(mfail, code, "Failed to create transaction on the volume %u\n",
-	   afromvol);
-    VDONE;
+    cloneVol = 0;
+    if (!(flags & RV_NOCLONE)) {
+	VPRINT1("Starting transaction on source volume %u ...", afromvol);
+	code = AFSVolTransCreate(fromconn, afromvol, afrompart, ITBusy,
+				 &fromtid);
+	EGOTO1(mfail, code, "Failed to create transaction on the volume %u\n",
+	       afromvol);
+	VDONE;
 
-    /* Get a clone id */
-    VPRINT1("Allocating new volume id for clone of volume %u ...", afromvol);
-    newVol = 0;
-    vcode = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 1, &cloneVol);
-    EGOTO1(mfail, vcode,
+	/* Get a clone id */
+	VPRINT1("Allocating new volume id for clone of volume %u ...",
+		afromvol);
+	cloneVol = 0;
+	vcode = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 1, &cloneVol);
+	EGOTO1(mfail, vcode,
 	   "Could not get an ID for the clone of volume %u from the VLDB\n",
 	   afromvol);
-    VDONE;
+	VDONE;
+    }
 
-    /* Get a new volume id */
-    VPRINT1("Allocating new volume id for copy of volume %u ...", afromvol);
-    newVol = 0;
-    vcode = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 1, &newVol);
-    EGOTO1(mfail, vcode,
-	   "Could not get an ID for the copy of volume %u from the VLDB\n",
-	   afromvol);
-    VDONE;
+    if (atovolid) {
+	newVol = atovolid;
+    } else {
+	/* Get a new volume id */
+	VPRINT1("Allocating new volume id for copy of volume %u ...", afromvol);
+	newVol = 0;
+	vcode = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 1, &newVol);
+	EGOTO1(mfail, vcode,
+	       "Could not get an ID for the copy of volume %u from the VLDB\n",
+	       afromvol);
+	VDONE;
+    }
 
-    /* Do the clone. Default flags on clone are set to delete on salvage and out of service */
-    VPRINT1("Cloning source volume %u ...", afromvol);
-    strcpy(vname, "copy-clone-temp");
-    code =
-	AFSVolClone(fromconn, fromtid, 0, readonlyVolume, vname, &cloneVol);
-    EGOTO1(mfail, code, "Failed to clone the source volume %u\n", afromvol);
-    VDONE;
+    if (!(flags & RV_NOCLONE)) {
+	/* Do the clone. Default flags on clone are set to delete on salvage and out of service */
+	VPRINT1("Cloning source volume %u ...", afromvol);
+	strcpy(vname, "copy-clone-temp");
+	code =
+	    AFSVolClone(fromconn, fromtid, 0, readonlyVolume, vname,
+			&cloneVol);
+	EGOTO1(mfail, code, "Failed to clone the source volume %u\n",
+	       afromvol);
+	VDONE;
 
-    VPRINT1("Ending the transaction on the source volume %u ...", afromvol);
-    rcode = 0;
-    code = AFSVolEndTrans(fromconn, fromtid, &rcode);
-    fromtid = 0;
-    if (!code)
-	code = rcode;
-    EGOTO1(mfail, code,
-	   "Failed to end the transaction on the source volume %u\n",
-	   afromvol);
-    VDONE;
+	VPRINT1("Ending the transaction on the source volume %u ...", afromvol);
+	rcode = 0;
+	code = AFSVolEndTrans(fromconn, fromtid, &rcode);
+	fromtid = 0;
+	if (!code)
+	    code = rcode;
+	EGOTO1(mfail, code,
+	       "Failed to end the transaction on the source volume %u\n",
+	       afromvol);
+	VDONE;
+    }
 
     /* ***
      * Create the destination volume
      * ***/
 
-    VPRINT1("Starting transaction on the cloned volume %u ...", cloneVol);
-    code =
-	AFSVolTransCreate(fromconn, cloneVol, afrompart, ITOffline,
+    if (!(flags & RV_NOCLONE)) {
+	VPRINT1("Starting transaction on the cloned volume %u ...", cloneVol);
+	code =
+	    AFSVolTransCreate(fromconn, cloneVol, afrompart, ITOffline,
 			  &clonetid);
-    EGOTO1(mfail, code,
-	   "Failed to start a transaction on the cloned volume%u\n",
-	   cloneVol);
-    VDONE;
+	EGOTO1(mfail, code,
+	       "Failed to start a transaction on the cloned volume%u\n",
+	       cloneVol);
+	VDONE;
 
-    VPRINT1("Setting flags on cloned volume %u ...", cloneVol);
-    code = AFSVolSetFlags(fromconn, clonetid, VTDeleteOnSalvage | VTOutOfService);	/*redundant */
-    EGOTO1(mfail, code, "Could not set falgs on the cloned volume %u\n",
-	   cloneVol);
-    VDONE;
+	VPRINT1("Setting flags on cloned volume %u ...", cloneVol);
+	code =
+	    AFSVolSetFlags(fromconn, clonetid,
+			   VTDeleteOnSalvage | VTOutOfService);	/*redundant */
+	EGOTO1(mfail, code, "Could not set flags on the cloned volume %u\n",
+	       cloneVol);
+	VDONE;
 
-    /* remember time from which we've dumped the volume */
-    VPRINT1("Getting status of cloned volume %u ...", cloneVol);
-    code = AFSVolGetStatus(fromconn, clonetid, &tstatus);
-    EGOTO1(mfail, code, "Failed to get the status of the cloned volume %u\n",
-	   cloneVol);
-    VDONE;
+	/* remember time from which we've dumped the volume */
+	VPRINT1("Getting status of cloned volume %u ...", cloneVol);
+	code = AFSVolGetStatus(fromconn, clonetid, &tstatus);
+	EGOTO1(mfail, code,
+	       "Failed to get the status of the cloned volume %u\n",
+	       cloneVol);
+	VDONE;
 
-    fromDate = tstatus.creationDate - CLOCKSKEW;
+	fromDate = tstatus.creationDate - CLOCKSKEW;
+    } else {
+	fromDate = 0;
+    }
 
     /* create a volume on the target machine */
+    cloneFromDate = 0;
     code = AFSVolTransCreate(toconn, newVol, atopart, ITOffline, &totid);
     if (!code) {
+	if ((flags & RV_CPINCR)) {
+	    VPRINT1("Getting status of pre-existing volume %u ...", newVol);
+	    code = AFSVolGetStatus(toconn, totid, &tstatus);
+	    EGOTO1(mfail, code,
+		   "Failed to get the status of the pre-existing volume %u\n",
+		   newVol);
+	    VDONE;
+
+	    /* Using the update date should be OK here, but add some fudge */
+	    cloneFromDate = tstatus.updateDate - CLOCKSKEW;
+	    if ((flags & RV_NOCLONE))
+		fromDate = cloneFromDate;
+
+	    /* XXX We should check that the source volume's creationDate is
+	     * XXX not newer than the existing target volume, and if not,
+	     * XXX throw away the existing target and do a full dump. */
+
+	    goto cpincr;
+	}
+
 	/* Delete the existing volume.
 	 * While we are deleting the volume in these steps, the transaction
 	 * we started against the cloned volume (clonetid above) will be
@@ -2110,13 +2202,12 @@ UV_CopyVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 
     VPRINT1("Creating the destination volume %u ...", newVol);
     code =
-	AFSVolCreateVolume(toconn, atopart, atovolname, volser_RW, newVol,
-			   &newVol, &totid);
+	AFSVolCreateVolume(toconn, atopart, atovolname,
+			   (flags & RV_RDONLY) ? volser_RO : volser_RW,
+			   newVol, &newVol, &totid);
     EGOTO1(mfail, code, "Failed to create the destination volume %u\n",
 	   newVol);
     VDONE;
-
-    strncpy(tmpName, atovolname, VOLSER_OLDMAXVOLNAME);
 
     VPRINT1("Setting volume flags on destination volume %u ...", newVol);
     code =
@@ -2125,38 +2216,46 @@ UV_CopyVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 	   "Failed to set the flags on the destination volume %u\n", newVol);
     VDONE;
 
-    /***
-     * Now dump the clone to the new volume
-     ***/
+cpincr:
 
     destination.destHost = ntohl(atoserver);
     destination.destPort = AFSCONF_VOLUMEPORT;
     destination.destSSID = 1;
 
-
-/* probably should have some code here that checks to see if we are copying to same server
-and partition - if so, just use a clone to save disk space */
-
-    /* Copy the clone to the new volume */
-    VPRINT2("Dumping from clone %u on source to volume %u on destination ...",
-	    cloneVol, newVol);
-    strncpy(cookie.name, tmpName, VOLSER_OLDMAXVOLNAME);
-    cookie.type = RWVOL;
+    strncpy(cookie.name, atovolname, VOLSER_OLDMAXVOLNAME);
+    cookie.type = (flags & RV_RDONLY) ? ROVOL : RWVOL;
     cookie.parent = 0;
     cookie.clone = 0;
-    code = AFSVolForward(fromconn, clonetid, 0, &destination, totid, &cookie);
-    EGOTO1(mfail, code, "Failed to move data for the volume %u\n", newVol);
-    VDONE;
 
-    VPRINT1("Ending transaction on cloned volume %u ...", cloneVol);
-    code = AFSVolEndTrans(fromconn, clonetid, &rcode);
-    if (!code)
-	code = rcode;
-    clonetid = 0;
-    EGOTO1(mfail, code,
-	   "Failed to end the transaction on the cloned volume %u\n",
-	   cloneVol);
-    VDONE;
+    /***
+     * Now dump the clone to the new volume
+     ***/
+
+    if (!(flags & RV_NOCLONE)) {
+	/* XXX probably should have some code here that checks to see if
+	 * XXX we are copying to same server and partition - if so, just
+	 * XXX use a clone to save disk space */
+
+	/* Copy the clone to the new volume */
+	VPRINT2("Dumping from clone %u on source to volume %u on destination ...",
+	    cloneVol, newVol);
+	code =
+	    AFSVolForward(fromconn, clonetid, cloneFromDate, &destination,
+			  totid, &cookie);
+	EGOTO1(mfail, code, "Failed to move data for the volume %u\n",
+	       newVol);
+	VDONE;
+
+	VPRINT1("Ending transaction on cloned volume %u ...", cloneVol);
+	code = AFSVolEndTrans(fromconn, clonetid, &rcode);
+	if (!code)
+	    code = rcode;
+	clonetid = 0;
+	EGOTO1(mfail, code,
+	       "Failed to end the transaction on the cloned volume %u\n",
+	       cloneVol);
+	VDONE;
+    }
 
     /* ***
      * reattach to the main-line volume, and incrementally dump it.
@@ -2170,18 +2269,21 @@ and partition - if so, just use a clone to save disk space */
     VDONE;
 
     /* now do the incremental */
-    VPRINT1
-	("Doing the incremental dump from source to destination for volume %u ... ",
+    VPRINT2
+	("Doing the%s dump from source to destination for volume %u ... ",
+	 (flags & RV_NOCLONE) ? "" : " incremental",
 	 afromvol);
     code =
 	AFSVolForward(fromconn, fromtid, fromDate, &destination, totid,
 		      &cookie);
-    EGOTO(mfail, code,
-	  "Failed to do the incremental dump from rw volume on old site to rw volume on newsite\n");
+    EGOTO1(mfail, code,
+	   "Failed to do the%s dump from old site to new site\n",
+	   afromvol);
     VDONE;
 
     VPRINT1("Setting volume flags on destination volume %u ...", newVol);
-    code = AFSVolSetFlags(toconn, totid, 0);
+    volflag = ((flags & RV_OFFLINE) ? VTOutOfService : 0);	/* off or on-line */
+    code = AFSVolSetFlags(toconn, totid, volflag);
     EGOTO(mfail, code,
 	  "Failed to set the flags to make destination volume online\n");
     VDONE;
@@ -2208,59 +2310,65 @@ and partition - if so, just use a clone to save disk space */
     VDONE;
 
     fromtid = 0;
-    VPRINT1("Starting transaction on the cloned volume %u ...", cloneVol);
-    code =
-	AFSVolTransCreate(fromconn, cloneVol, afrompart, ITOffline,
-			  &clonetid);
-    EGOTO1(mfail, code,
-	   "Failed to start a transaction on the cloned volume%u\n",
-	   cloneVol);
-    VDONE;
 
-    /* now delete the clone */
-    VPRINT1("Deleting the cloned volume %u ...", cloneVol);
-    code = AFSVolDeleteVolume(fromconn, clonetid);
-    EGOTO1(mfail, code, "Failed to delete the cloned volume %u\n", cloneVol);
-    VDONE;
+    if (!(flags & RV_NOCLONE)) {
+	VPRINT1("Starting transaction on the cloned volume %u ...", cloneVol);
+	code =
+	    AFSVolTransCreate(fromconn, cloneVol, afrompart, ITOffline,
+			      &clonetid);
+	EGOTO1(mfail, code,
+	       "Failed to start a transaction on the cloned volume%u\n",
+	       cloneVol);
+	VDONE;
 
-    VPRINT1("Ending transaction on cloned volume %u ...", cloneVol);
-    code = AFSVolEndTrans(fromconn, clonetid, &rcode);
-    if (!code)
-	code = rcode;
-    clonetid = 0;
-    EGOTO1(mfail, code,
-	   "Failed to end the transaction on the cloned volume %u\n",
-	   cloneVol);
-    VDONE;
+	/* now delete the clone */
+	VPRINT1("Deleting the cloned volume %u ...", cloneVol);
+	code = AFSVolDeleteVolume(fromconn, clonetid);
+	EGOTO1(mfail, code, "Failed to delete the cloned volume %u\n",
+	       cloneVol);
+	VDONE;
 
-    /* create the vldb entry for the copied volume */
-    strncpy(newentry.name, atovolname, VOLSER_OLDMAXVOLNAME);
-    newentry.nServers = 1;
-    newentry.serverNumber[0] = atoserver;
-    newentry.serverPartition[0] = atopart;
-    newentry.flags = RW_EXISTS;	/* this records that rw volume exists */
-    newentry.serverFlags[0] = ITSRWVOL;	/*this rep site has rw vol */
-    newentry.volumeId[RWVOL] = newVol;
-    newentry.volumeId[ROVOL] = 0;
-    newentry.volumeId[BACKVOL] = 0;
-    newentry.cloneId = 0;
-    /*map into right byte order, before passing to xdr, the stuff has to be in host
-     * byte order. Xdr converts it into network order */
-    MapNetworkToHost(&newentry, &storeEntry);
-    /* create the vldb entry */
-    vcode = VLDB_CreateEntry(&storeEntry);
-    if (vcode) {
-	fprintf(STDERR,
-		"Could not create a VLDB entry for the volume %s %lu\n",
-		atovolname, (unsigned long)newVol);
-	/*destroy the created volume */
-	VPRINT1("Deleting the newly created volume %u\n", newVol);
-	AFSVolDeleteVolume(toconn, totid);
-	error = vcode;
-	goto mfail;
+	VPRINT1("Ending transaction on cloned volume %u ...", cloneVol);
+	code = AFSVolEndTrans(fromconn, clonetid, &rcode);
+	if (!code)
+	    code = rcode;
+	clonetid = 0;
+	EGOTO1(mfail, code,
+	       "Failed to end the transaction on the cloned volume %u\n",
+	       cloneVol);
+	VDONE;
     }
-    VPRINT2("Created the VLDB entry for the volume %s %u\n", atovolname,
-	    newVol);
+
+    if (!(flags & RV_NOVLDB)) {
+	/* create the vldb entry for the copied volume */
+	strncpy(newentry.name, atovolname, VOLSER_OLDMAXVOLNAME);
+	newentry.nServers = 1;
+	newentry.serverNumber[0] = atoserver;
+	newentry.serverPartition[0] = atopart;
+	newentry.flags = (flags & RV_RDONLY) ? RO_EXISTS : RW_EXISTS;
+	newentry.serverFlags[0] = (flags & RV_RDONLY) ? ITSROVOL : ITSRWVOL;
+	newentry.volumeId[RWVOL] = newVol;
+	newentry.volumeId[ROVOL] = (flags & RV_RDONLY) ? newVol : 0;
+	newentry.volumeId[BACKVOL] = 0;
+	newentry.cloneId = 0;
+	/*map into right byte order, before passing to xdr, the stuff has to be in host
+	 * byte order. Xdr converts it into network order */
+	MapNetworkToHost(&newentry, &storeEntry);
+	/* create the vldb entry */
+	vcode = VLDB_CreateEntry(&storeEntry);
+	if (vcode) {
+	    fprintf(STDERR,
+		    "Could not create a VLDB entry for the volume %s %lu\n",
+		    atovolname, (unsigned long)newVol);
+	    /*destroy the created volume */
+	    VPRINT1("Deleting the newly created volume %u\n", newVol);
+	    AFSVolDeleteVolume(toconn, totid);
+	    error = vcode;
+	    goto mfail;
+	}
+	VPRINT2("Created the VLDB entry for the volume %s %u\n", atovolname,
+		newVol);
+    }
 
     /* normal cleanup code */
 
@@ -2389,6 +2497,13 @@ and partition - if so, just use a clone to save disk space */
 }
 
 
+int
+UV_CopyVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
+	      char *atovolname, afs_int32 atoserver, afs_int32 atopart)
+{
+    return UV_CopyVolume2(afromvol, afromserver, afrompart,
+                          atovolname, atoserver, atopart, 0, 0);
+}
 
 
 
@@ -2637,6 +2752,196 @@ UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
 		if (!error)
 		    error = code;
 	    }
+	}
+    }
+
+    if (aconn)
+	rx_DestroyConnection(aconn);
+
+    PrintError("", error);
+    return error;
+}
+
+/* Make a new clone of volume <avolid> on <aserver> and <apart> 
+ * using volume ID <acloneid>, or a new ID allocated from the VLDB.
+ * The new volume is named by <aname>, or by appending ".clone" to
+ * the existing name if <aname> is NULL.  The following flags are
+ * supported:
+ * 
+ *     RV_RDONLY  - target volume is RO
+ *     RV_OFFLINE - leave target volume offline
+ */
+
+int
+UV_CloneVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid,
+	       afs_int32 acloneid, char *aname, int flags)
+{
+    struct rx_connection *aconn = (struct rx_connection *)0;
+    afs_int32 ttid = 0, btid = 0;
+    afs_int32 code = 0, rcode = 0;
+    char vname[VOLSER_MAXVOLNAME + 1];
+    afs_int32 error = 0;
+    int backexists = 1;
+    volEntries volumeInfo;
+
+    aconn = UV_Bind(aserver, AFSCONF_VOLUMEPORT);
+
+    if (!aname) {
+	volumeInfo.volEntries_val = (volintInfo *) 0;
+	volumeInfo.volEntries_len = 0;
+	code = AFSVolListOneVolume(aconn, apart, avolid, &volumeInfo);
+	if (code) {
+	    fprintf(stderr, "Could not get info for volume %lu\n",
+		    (unsigned long)avolid);
+	    error = code;
+	    goto bfail;
+	}
+	strncpy(vname, volumeInfo.volEntries_val[0].name,
+		VOLSER_OLDMAXVOLNAME - 7);
+	vname[VOLSER_OLDMAXVOLNAME - 7] = 0;
+	strcat(vname, ".clone");
+	aname = vname;
+	if (volumeInfo.volEntries_val)
+	    free(volumeInfo.volEntries_val);
+    }
+
+    if (!acloneid) {
+	/* Get a clone id */
+	VPRINT1("Allocating new volume id for clone of volume %u ...",
+		avolid);
+	code = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 1, &acloneid);
+	EGOTO1(bfail, code,
+	   "Could not get an ID for the clone of volume %u from the VLDB\n",
+	   avolid);
+	VDONE;
+    }
+
+    /* Test to see if the clone volume exists by trying to create
+     * a transaction on the clone volume. We've assumed the clone exists.
+     */
+    /* XXX I wonder what happens if the clone has some other parent... */
+    code = AFSVolTransCreate(aconn, acloneid, apart, ITOffline, &btid);
+    if (code) {
+	if (code != VNOVOL) {
+	    fprintf(STDERR, "Could not reach the clone volume %lu\n",
+		    (unsigned long)acloneid);
+	    error = code;
+	    goto bfail;
+	}
+	backexists = 0;		/* backup volume does not exist */
+    }
+    if (btid) {
+	code = AFSVolEndTrans(aconn, btid, &rcode);
+	btid = 0;
+	if (code || rcode) {
+	    fprintf(STDERR,
+		    "Could not end transaction on the previous clone volume %lu\n",
+		    (unsigned long)acloneid);
+	    error = (code ? code : rcode);
+	    goto bfail;
+	}
+    }
+
+    /* Now go ahead and try to clone the RW volume.
+     * First start a transaction on the RW volume 
+     */
+    code = AFSVolTransCreate(aconn, avolid, apart, ITBusy, &ttid);
+    if (code) {
+	fprintf(STDERR, "Could not start a transaction on the volume %lu\n",
+		(unsigned long)avolid);
+	error = code;
+	goto bfail;
+    }
+
+    /* Clone or reclone the volume, depending on whether the backup 
+     * volume exists or not
+     */
+    if (backexists) {
+	VPRINT1("Re-cloning clone volume %u ...", acloneid);
+
+	code = AFSVolReClone(aconn, ttid, acloneid);
+	if (code) {
+	    fprintf(STDERR, "Could not re-clone backup volume %lu\n",
+		    (unsigned long)acloneid);
+	    error = code;
+	    goto bfail;
+	}
+    } else {
+	VPRINT1("Creating a new clone %u ...", acloneid);
+
+	code = AFSVolClone(aconn, ttid, 0,
+			   (flags & RV_RDONLY) ? readonlyVolume : backupVolume,
+			   aname, &acloneid);
+	if (code) {
+	    fprintf(STDERR, "Failed to clone the volume %lu\n",
+		    (unsigned long)avolid);
+	    error = code;
+	    goto bfail;
+	}
+    }
+
+    /* End the transaction on the RW volume */
+    code = AFSVolEndTrans(aconn, ttid, &rcode);
+    ttid = 0;
+    if (code || rcode) {
+	fprintf(STDERR,
+		"Failed to end the transaction on the rw volume %lu\n",
+		(unsigned long)avolid);
+	error = (code ? code : rcode);
+	goto bfail;
+    }
+
+    /* Now go back to the backup volume and bring it on line */
+    if (!(flags & RV_OFFLINE)) {
+	code = AFSVolTransCreate(aconn, acloneid, apart, ITOffline, &btid);
+	if (code) {
+	    fprintf(STDERR,
+		    "Failed to start a transaction on the clone volume %lu\n",
+		    (unsigned long)acloneid);
+	    error = code;
+	    goto bfail;
+	}
+
+	code = AFSVolSetFlags(aconn, btid, 0);
+	if (code) {
+	    fprintf(STDERR, "Could not mark the clone volume %lu on line \n",
+		    (unsigned long)acloneid);
+	    error = code;
+	    goto bfail;
+	}
+
+	code = AFSVolEndTrans(aconn, btid, &rcode);
+	btid = 0;
+	if (code || rcode) {
+	    fprintf(STDERR,
+		    "Failed to end the transaction on the clone volume %lu\n",
+		    (unsigned long)acloneid);
+	    error = (code ? code : rcode);
+	    goto bfail;
+	}
+    }
+
+    VDONE;
+
+  bfail:
+    if (ttid) {
+	code = AFSVolEndTrans(aconn, ttid, &rcode);
+	if (code || rcode) {
+	    fprintf(STDERR, "Could not end transaction on the volume %lu\n",
+		    (unsigned long)avolid);
+	    if (!error)
+		error = (code ? code : rcode);
+	}
+    }
+
+    if (btid) {
+	code = AFSVolEndTrans(aconn, btid, &rcode);
+	if (code || rcode) {
+	    fprintf(STDERR,
+		    "Could not end transaction on the clone volume %lu\n",
+		    (unsigned long)acloneid);
+	    if (!error)
+		error = (code ? code : rcode);
 	}
     }
 

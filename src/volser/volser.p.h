@@ -156,9 +156,13 @@ struct partList {		/*used by the backup system */
 #define	VOK 0x02
 
 /* Values for the UV_RestoreVolume flags parameter */
+/* Also used for UV_CopyVolume and UV_CloneVolume */
 #define RV_FULLRST 0x1
 #define RV_OFFLINE 0x2
 #define RV_RDONLY  0x10000
+#define RV_CPINCR  0x20000
+#define RV_NOVLDB  0x40000
+#define RV_NOCLONE 0x80000
 
 extern afs_uint32 vsu_GetVolumeID(char *astring, struct ubik_client *acstruct, afs_int32 *errp);
 extern int vsu_ExtractName(char rname[], char name[]);

@@ -1789,7 +1789,8 @@ MoveVolume(as)
      register struct cmd_syndesc *as;
 {
 
-    afs_int32 volid, fromserver, toserver, frompart, topart, code, err;
+    afs_int32 volid, fromserver, toserver, frompart, topart;
+    afs_int32 flags, code, err;
     char fromPartName[10], toPartName[10];
 
     struct diskPartition partition;	/* for space check */
@@ -1847,6 +1848,9 @@ MoveVolume(as)
 	return ENOENT;
     }
 
+    flags = 0;
+    if (as->parms[5].items) flags |= RV_NOCLONE;
+
     /*
      * check source partition for space to clone volume
      */
@@ -1894,7 +1898,8 @@ MoveVolume(as)
 
     /* successful move still not guaranteed but shoot for it */
 
-    code = UV_MoveVolume(volid, fromserver, frompart, toserver, topart);
+    code =
+	UV_MoveVolume2(volid, fromserver, frompart, toserver, topart, flags);
     if (code) {
 	PrintDiagnostics("move", code);
 	return code;
@@ -1912,7 +1917,7 @@ static
 CopyVolume(as)
      register struct cmd_syndesc *as;
 {
-    afs_int32 volid, fromserver, toserver, frompart, topart, code, err;
+    afs_int32 volid, fromserver, toserver, frompart, topart, code, err, flags;
     char fromPartName[10], toPartName[10], *tovolume;
     struct nvldbentry entry;
     struct diskPartition partition;	/* for space check */
@@ -1937,7 +1942,7 @@ CopyVolume(as)
     toserver = GetServer(as->parms[4].items->data);
     if (toserver == 0) {
 	fprintf(STDERR, "vos: server '%s' not found in host table\n",
-		as->parms[3].items->data);
+		as->parms[4].items->data);
 	return ENOENT;
     }
 
@@ -1985,7 +1990,7 @@ CopyVolume(as)
     topart = volutil_GetPartitionID(as->parms[5].items->data);
     if (topart < 0) {
 	fprintf(STDERR, "vos: could not interpret partition name '%s'\n",
-		as->parms[4].items->data);
+		as->parms[5].items->data);
 	return EINVAL;
     }
     if (!IsPartValid(topart, toserver, &code)) {	/*check for validity of the partition */
@@ -1994,13 +1999,14 @@ CopyVolume(as)
 	else
 	    fprintf(STDERR,
 		    "vos : partition %s does not exist on the server\n",
-		    as->parms[4].items->data);
+		    as->parms[5].items->data);
 	return ENOENT;
     }
 
-    /*
-     * check source partition for space to clone volume
-     */
+    flags = 0;
+    if (as->parms[6].items) flags |= RV_OFFLINE;
+    if (as->parms[7].items) flags |= RV_RDONLY;
+    if (as->parms[8].items) flags |= RV_NOCLONE;
 
     MapPartIdIntoName(topart, toPartName);
     MapPartIdIntoName(frompart, fromPartName);
@@ -2039,8 +2045,8 @@ CopyVolume(as)
     /* successful copy still not guaranteed but shoot for it */
 
     code =
-	UV_CopyVolume(volid, fromserver, frompart, tovolume, toserver,
-		      topart);
+	UV_CopyVolume2(volid, fromserver, frompart, tovolume, toserver,
+		       topart, 0, flags);
     if (code) {
 	PrintDiagnostics("copy", code);
 	return code;
@@ -2050,6 +2056,311 @@ CopyVolume(as)
     fprintf(STDOUT, "Volume %lu copied from %s %s to %s on %s %s \n",
 	    (unsigned long)volid, as->parms[1].items->data, fromPartName,
 	    tovolume, as->parms[4].items->data, toPartName);
+
+    return 0;
+}
+
+
+static
+ShadowVolume(as)
+     register struct cmd_syndesc *as;
+{
+    afs_int32 volid, fromserver, toserver, frompart, topart, tovolid;
+    afs_int32 code, err, flags;
+    char fromPartName[10], toPartName[10], toVolName[32], *tovolume;
+    struct nvldbentry entry;
+    struct diskPartition partition;	/* for space check */
+    volintInfo *p, *q;
+
+    p = (volintInfo *) 0;
+    q = (volintInfo *) 0;
+
+    volid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
+    if (volid == 0) {
+	if (err)
+	    PrintError("", err);
+	else
+	    fprintf(STDERR, "vos: can't find volume ID or name '%s'\n",
+		    as->parms[0].items->data);
+	return ENOENT;
+    }
+    fromserver = GetServer(as->parms[1].items->data);
+    if (fromserver == 0) {
+	fprintf(STDERR, "vos: server '%s' not found in host table\n",
+		as->parms[1].items->data);
+	return ENOENT;
+    }
+
+    toserver = GetServer(as->parms[3].items->data);
+    if (toserver == 0) {
+	fprintf(STDERR, "vos: server '%s' not found in host table\n",
+		as->parms[3].items->data);
+	return ENOENT;
+    }
+
+    frompart = volutil_GetPartitionID(as->parms[2].items->data);
+    if (frompart < 0) {
+	fprintf(STDERR, "vos: could not interpret partition name '%s'\n",
+		as->parms[2].items->data);
+	return EINVAL;
+    }
+    if (!IsPartValid(frompart, fromserver, &code)) {	/*check for validity of the partition */
+	if (code)
+	    PrintError("", code);
+	else
+	    fprintf(STDERR,
+		    "vos : partition %s does not exist on the server\n",
+		    as->parms[2].items->data);
+	return ENOENT;
+    }
+
+    topart = volutil_GetPartitionID(as->parms[4].items->data);
+    if (topart < 0) {
+	fprintf(STDERR, "vos: could not interpret partition name '%s'\n",
+		as->parms[4].items->data);
+	return EINVAL;
+    }
+    if (!IsPartValid(topart, toserver, &code)) {	/*check for validity of the partition */
+	if (code)
+	    PrintError("", code);
+	else
+	    fprintf(STDERR,
+		    "vos : partition %s does not exist on the server\n",
+		    as->parms[4].items->data);
+	return ENOENT;
+    }
+
+    if (as->parms[5].items) {
+	tovolume = as->parms[5].items->data;
+	if (!ISNAMEVALID(tovolume)) {
+	    fprintf(STDERR,
+		"vos: the name of the root volume %s exceeds the size limit of %d\n",
+		tovolume, VOLSER_OLDMAXVOLNAME - 10);
+	    return E2BIG;
+	}
+	if (!VolNameOK(tovolume)) {
+	    fprintf(STDERR,
+		"Illegal volume name %s, should not end in .readonly or .backup\n",
+		tovolume);
+	    return EINVAL;
+	}
+	if (IsNumeric(tovolume)) {
+	    fprintf(STDERR,
+		"Illegal volume name %s, should not be a number\n",
+		tovolume);
+	    return EINVAL;
+	}
+    } else {
+	/* use actual name of source volume */
+	code = UV_ListOneVolume(fromserver, frompart, volid, &p);
+	if (code) {
+	    fprintf(STDERR, "vos:cannot access volume %lu\n",
+		(unsigned long)volid);
+	    exit(1);
+	}
+	strcpy(toVolName, p->name);
+	tovolume = toVolName;
+	/* save p for size checks later */
+    }
+
+    if (as->parms[6].items) {
+	tovolid = vsu_GetVolumeID(as->parms[6].items->data, cstruct, &err);
+	if (tovolid == 0) {
+	    if (err)
+		PrintError("", err);
+	    else
+		fprintf(STDERR, "vos: can't find volume ID or name '%s'\n",
+			as->parms[6].items->data);
+	    if (p)
+		free(p);
+	    return ENOENT;
+	}
+    } else {
+	tovolid = vsu_GetVolumeID(tovolume, cstruct, &err);
+	if (tovolid == 0) {
+	    if (err)
+		PrintError("", err);
+	    else
+		fprintf(STDERR, "vos: can't find volume ID or name '%s'\n",
+			tovolume);
+	    if (p)
+		free(p);
+	    return ENOENT;
+	}
+    }
+
+    flags = RV_NOVLDB;
+    if (as->parms[7].items) flags |= RV_OFFLINE;
+    if (as->parms[8].items) flags |= RV_RDONLY;
+    if (as->parms[9].items) flags |= RV_NOCLONE;
+    if (as->parms[10].items) flags |= RV_CPINCR;
+
+    MapPartIdIntoName(topart, toPartName);
+    MapPartIdIntoName(frompart, fromPartName);
+
+    /*
+     * check target partition for space to move volume
+     */
+
+    code = UV_PartitionInfo(toserver, toPartName, &partition);
+    if (code) {
+	fprintf(STDERR, "vos: cannot access partition %s\n", toPartName);
+	exit(1);
+    }
+    if (TESTM)
+	fprintf(STDOUT, "target partition %s free space %d\n", toPartName,
+		partition.free);
+
+    /* Don't do this again if we did it above */
+    if (!p) {
+	code = UV_ListOneVolume(fromserver, frompart, volid, &p);
+	if (code) {
+	    fprintf(STDERR, "vos:cannot access volume %lu\n",
+		(unsigned long)volid);
+	    exit(1);
+	}
+    }
+
+    /* OK if this fails */
+    code = UV_ListOneVolume(toserver, topart, tovolid, &q);
+
+    /* Treat existing volume size as "free" */
+    if (q)
+	p->size = (q->size < p->size) ? p->size - q->size : 0;
+
+    if (partition.free <= p->size) {
+	fprintf(STDERR,
+		"vos: no space on target partition %s to copy volume %lu\n",
+		toPartName, (unsigned long)volid);
+	free(p);
+	if (q) free(q);
+	exit(1);
+    }
+    free(p);
+    if (q) free(q);
+
+    /* successful copy still not guaranteed but shoot for it */
+
+    code =
+	UV_CopyVolume2(volid, fromserver, frompart, tovolume, toserver,
+		       topart, tovolid, flags);
+    if (code) {
+	PrintDiagnostics("shadow", code);
+	return code;
+    }
+    MapPartIdIntoName(topart, toPartName);
+    MapPartIdIntoName(frompart, fromPartName);
+    fprintf(STDOUT, "Volume %lu shadowed from %s %s to %s %s \n",
+	    (unsigned long)volid, as->parms[1].items->data, fromPartName,
+	    as->parms[4].items->data, toPartName);
+
+    return 0;
+}
+
+
+static
+CloneVolume(as)
+     register struct cmd_syndesc *as;
+{
+    afs_int32 server, part, volid, cloneid, voltype;
+    char partName[10], *volname;
+    afs_int32 code, err, flags;
+    struct nvldbentry entry;
+
+    volid = vsu_GetVolumeID(as->parms[0].items->data, cstruct, &err);
+    if (volid == 0) {
+	if (err)
+	    PrintError("", err);
+	else
+	    fprintf(STDERR, "vos: can't find volume ID or name '%s'\n",
+		    as->parms[0].items->data);
+	return ENOENT;
+    }
+
+    if (as->parms[1].items || as->parms[2].items) {
+	if (!as->parms[1].items || !as->parms[2].items) {
+	    fprintf(STDERR,
+		    "Must specify both -server and -partition options\n");
+	    return -1;
+	}
+	server = GetServer(as->parms[1].items->data);
+	if (server == 0) {
+	    fprintf(STDERR, "vos: server '%s' not found in host table\n",
+		    as->parms[1].items->data);
+	    return ENOENT;
+	}
+	part = volutil_GetPartitionID(as->parms[2].items->data);
+	if (part < 0) {
+	    fprintf(STDERR, "vos: could not interpret partition name '%s'\n",
+		    as->parms[2].items->data);
+	    return EINVAL;
+	}
+	if (!IsPartValid(part, server, &code)) {	/*check for validity of the partition */
+	    if (code)
+		PrintError("", code);
+	    else
+		fprintf(STDERR,
+		    "vos : partition %s does not exist on the server\n",
+		    as->parms[2].items->data);
+	    return ENOENT;
+        }
+    } else {
+	code = GetVolumeInfo(volid, &server, &part, &voltype, &entry);
+	if (code)
+	    return code;
+    }
+
+    volname = 0;
+    if (as->parms[3].items) {
+	volname = as->parms[3].items->data;
+	if (strlen(volname) > VOLSER_OLDMAXVOLNAME - 1) {
+	    fprintf(STDERR,
+		"vos: the name of the root volume %s exceeds the size limit of %d\n",
+		volname, VOLSER_OLDMAXVOLNAME - 1);
+	    return E2BIG;
+	}
+	if (!VolNameOK(volname)) {
+	    fprintf(STDERR,
+		"Illegal volume name %s, should not end in .readonly or .backup\n",
+		volname);
+	    return EINVAL;
+	}
+	if (IsNumeric(volname)) {
+	    fprintf(STDERR,
+		"Illegal volume name %s, should not be a number\n",
+		volname);
+	    return EINVAL;
+	}
+    }
+
+    cloneid = 0;
+    if (as->parms[4].items) {
+	cloneid = vsu_GetVolumeID(as->parms[4].items->data, cstruct, &err);
+	if (cloneid == 0) {
+	    if (err)
+		PrintError("", err);
+	    else
+		fprintf(STDERR, "vos: can't find volume ID or name '%s'\n",
+			as->parms[4].items->data);
+	    return ENOENT;
+	}
+    }
+
+    flags = 0;
+    if (as->parms[5].items) flags |= RV_OFFLINE;
+    if (as->parms[6].items) flags |= RV_RDONLY;
+
+
+    code = 
+	UV_CloneVolume(server, part, volid, cloneid, volname, flags);
+
+    if (code) {
+	PrintDiagnostics("clone", code);
+	return code;
+    }
+    MapPartIdIntoName(part, partName);
+    fprintf(STDOUT, "Created clone for volume %lu\n",
+	    as->parms[0].items->data);
 
     return 0;
 }
@@ -4962,6 +5273,8 @@ main(argc, argv)
 		"machine name on destination");
     cmd_AddParm(ts, "-topartition", CMD_SINGLE, 0,
 		"partition name on destination");
+    cmd_AddParm(ts, "-live", CMD_FLAG, CMD_OPTIONAL,
+		"copy live volume without cloning");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("copy", CopyVolume, 0, "copy a volume");
@@ -4974,11 +5287,56 @@ main(argc, argv)
 		"machine name on destination");
     cmd_AddParm(ts, "-topartition", CMD_SINGLE, 0,
 		"partition name on destination");
+    cmd_AddParm(ts, "-offline", CMD_FLAG, CMD_OPTIONAL,
+		"leave new volume offline");
+    cmd_AddParm(ts, "-readonly", CMD_FLAG, CMD_OPTIONAL,
+		"make new volume read-only");
+    cmd_AddParm(ts, "-live", CMD_FLAG, CMD_OPTIONAL,
+		"copy live volume without cloning");
+    COMMONPARMS;
+
+    ts = cmd_CreateSyntax("shadow", ShadowVolume, 0,
+			  "make or update a shadow volume");
+    cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID on source");
+    cmd_AddParm(ts, "-fromserver", CMD_SINGLE, 0, "machine name on source");
+    cmd_AddParm(ts, "-frompartition", CMD_SINGLE, 0,
+		"partition name on source");
+    cmd_AddParm(ts, "-toserver", CMD_SINGLE, 0,
+		"machine name on destination");
+    cmd_AddParm(ts, "-topartition", CMD_SINGLE, 0,
+		"partition name on destination");
+    cmd_AddParm(ts, "-toname", CMD_SINGLE, CMD_OPTIONAL,
+		"volume name on destination");
+    cmd_AddParm(ts, "-toid", CMD_SINGLE, CMD_OPTIONAL,
+		"volume ID on destination");
+    cmd_AddParm(ts, "-offline", CMD_FLAG, CMD_OPTIONAL,
+		"leave shadow volume offline");
+    cmd_AddParm(ts, "-readonly", CMD_FLAG, CMD_OPTIONAL,
+		"make shadow volume read-only");
+    cmd_AddParm(ts, "-live", CMD_FLAG, CMD_OPTIONAL,
+		"copy live volume without cloning");
+    cmd_AddParm(ts, "-incremental", CMD_FLAG, CMD_OPTIONAL,
+		"do incremental update if target exists");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("backup", BackupVolume, 0,
 			  "make backup of a volume");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
+    COMMONPARMS;
+
+    ts = cmd_CreateSyntax("clone", CloneVolume, 0,
+			  "make clone of a volume");
+    cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "server");
+    cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition");
+    cmd_AddParm(ts, "-toname", CMD_SINGLE, CMD_OPTIONAL,
+		"volume name on destination");
+    cmd_AddParm(ts, "-toid", CMD_SINGLE, CMD_OPTIONAL,
+		"volume ID on destination");
+    cmd_AddParm(ts, "-offline", CMD_FLAG, CMD_OPTIONAL,
+		"leave clone volume offline");
+    cmd_AddParm(ts, "-readonly", CMD_FLAG, CMD_OPTIONAL,
+		"make clone volume read-only, not readwrite");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("release", ReleaseVolume, 0, "release a volume");
