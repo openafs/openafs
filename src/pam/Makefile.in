@@ -20,9 +20,9 @@ AFSLIBS = ${DESTDIR}lib/librxkad.a 	    \
 
 LDFLAGS = ${SHARE_LDFLAGS}
    LIBS = ${LIBDIR}afs/libkauth.a ${LIBSA} ${LIBDIR}afs/libauth.a \
-	  ${AFSLIBS} ${PAMLIBS}
+	  ${AFSLIBS} ${PAMLIBS} @LIB_AFSDB@
   KLIBS = ${LIBDIR}afs/libkauth.krb.a ${LIBSA} ${LIBDIR}afs/libauth.krb.a \
-	  ${AFSLIBS} ${PAMLIBS}
+	  ${AFSLIBS} ${PAMLIBS} @LIB_AFSDB@
  SHOBJS = afs_auth.o afs_account.o afs_session.o afs_password.o \
 	  afs_pam_msg.o afs_message.o afs_util.o AFS_component_version_number.o
    OBJS = $(SHOBJS) test_pam.o
