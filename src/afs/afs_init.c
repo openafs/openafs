@@ -452,11 +452,11 @@ afs_InitCacheInfo(afile)
     cacheInode = filevp->i_ino;
     afs_cacheSBp = filevp->i_sb;
 #else
-    cacheInode = afs_vnodeToInumber(filevp);
-    cacheDev.dev = afs_vnodeToDev(filevp);
 #if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
     afs_InitDualFSCacheOps(filevp);
 #endif
+    cacheInode = afs_vnodeToInumber(filevp);
+    cacheDev.dev = afs_vnodeToDev(filevp);
     afs_cacheVfsp = filevp->v_vfsp;
 #endif /* AFS_LINUX20_ENV */
     AFS_RELE((struct vnode *)filevp);
