@@ -14,6 +14,9 @@
  */
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/sys/rmtsyss.c,v 1.1.1.4 2001/07/11 03:11:26 hartmans Exp $");
+
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <afs/vice.h>

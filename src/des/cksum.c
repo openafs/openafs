@@ -18,6 +18,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/cksum.c,v 1.1.1.4 2001/07/11 03:08:38 hartmans Exp $");
+
 #include <mit-cpyright.h>
 #include <stdio.h>
 #if defined(HAVE_STRINGS_H)

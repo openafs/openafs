@@ -12,6 +12,11 @@
  * subscripts starting at 0.
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/make_keyperm.c,v 1.1.1.3 2001/07/11 03:08:42 hartmans Exp $");
+
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include <errno.h>

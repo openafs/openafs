@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/test/dirpath_test.c,v 1.1.1.3 2001/07/11 03:11:51 hartmans Exp $");
+
 #include <stdio.h>
 #include <afs/afsutil.h>
 

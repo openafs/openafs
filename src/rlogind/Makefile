@@ -35,7 +35,7 @@ AFSLIBS =  ${LIBDIR}afs/libkauth.a ${LIBDIR}afs/libprot.a ${LIBDIR}libubik.a\
 RES = 
 LIBS = ../login/libutil.a ${RES} ${AFSLIBS}
 ALIBS= ${AFSLIBS} 
-CFLAGS= ${OPTMZ} -I${DESTDIR}include ${XCFLAGS}
+CFLAGS= ${OPTMZ} -I${TOP_SRCDIR}/config -I${DESTDIR}include ${XCFLAGS}
 
 include ../config/Makefile.version
 

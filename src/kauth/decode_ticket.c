@@ -7,6 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/decode_ticket.c,v 1.1.1.3 2001/07/11 03:09:21 hartmans Exp $");
+
 #include <des.h>
 #include <afs/com_err.h>
 #include <afs/auth.h>

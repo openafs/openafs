@@ -15,7 +15,7 @@ COMPONENT=tbutc
 include ../config/Makefile.${SYS_NAME}
 
 CC      =${MT_CC}
-CFLAGS  = ${DBG} -w ${MT_CFLAGS}
+CFLAGS  = ${DBG} -w -I${TOP_SRCDIR}/config ${MT_CFLAGS}
 
 LDFLAGS = ${DBG} ${XLDFLAGS}
 

@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/pthread_glock.c,v 1.1.1.3 2001/07/11 03:11:48 hartmans Exp $");
+
 #if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
 #define AFS_GRMUTEX_DECLSPEC __declspec(dllexport)
 #endif

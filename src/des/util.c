@@ -7,6 +7,11 @@
  * Miscellaneous debug printing utilities
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/util.c,v 1.1.1.3 2001/07/11 03:08:47 hartmans Exp $");
+
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include <sys/types.h>

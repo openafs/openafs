@@ -2,7 +2,7 @@ SHELL=/bin/sh
 COMPONENT=inetd
 include ../config/Makefile.${SYS_NAME}
 
-INCLUDES = -I${DESTDIR}include
+INCLUDES = -I${TOP_SRCDIR}/config -I${DESTDIR}include
 DEFINES = ${INCLUDES}
 LIBDIR = ${DESTDIR}lib/
 AFSLIBS =  ${LIBDIR}afs/libkauth.a ${LIBDIR}libubik.a\

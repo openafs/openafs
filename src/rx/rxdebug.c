@@ -7,9 +7,12 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <sys/types.h>
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rxdebug.c,v 1.1.1.5 2001/07/11 03:10:56 hartmans Exp $");
+
+#include <sys/types.h>
 #include <errno.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>

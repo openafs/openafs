@@ -24,10 +24,6 @@
 
 %{
 
-#ifndef lint
-static char sccsid[] = "@(#)ftpcmd.y	5.20.1.1 (Berkeley) 3/2/89";
-#endif /* not lint */
-
 #include <afs/param.h>
 #include <sys/param.h>
 #include <sys/socket.h>

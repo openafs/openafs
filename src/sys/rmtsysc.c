@@ -14,6 +14,9 @@
  */
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/sys/rmtsysc.c,v 1.1.1.5 2001/07/11 03:11:25 hartmans Exp $");
+
 #include <errno.h>
 #include <limits.h>
 #include <sys/types.h>

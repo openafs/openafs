@@ -13,6 +13,10 @@
    update the database, change the server passwords, etc. */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/admin_tools.c,v 1.1.1.6 2001/07/11 03:09:20 hartmans Exp $");
+
 #include <afs/stds.h>
 #include <afs/debug.h>
 #include <ctype.h>

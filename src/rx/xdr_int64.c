@@ -3,8 +3,12 @@
  *  XDR routine for int64 (long long or struct)
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_int64.c,v 1.1.1.2 2001/07/11 03:10:59 hartmans Exp $");
+
 #if defined(KERNEL) && !defined(UKERNEL)
-#include "afs/param.h"
 #ifdef AFS_LINUX20_ENV
 #include "../h/string.h"
 #define bzero(A,C) memset((A), 0, (C))
@@ -20,10 +24,6 @@
 #ifdef        AFS_DEC_ENV
 #include <afs/longc_procs.h>
 #endif
-#endif
-
-#ifndef lint
-static char sccsid[] = "@(#)xdr_array.c 1.1 86/02/03 Copyr 1984 Sun Micro";
 #endif
 
 #ifdef AFS_64BIT_ENV

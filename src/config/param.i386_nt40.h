@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef _PARAM_NT35_H_
-#define _PARAM_NT35_H_
+#ifndef AFS_PARAM_H
+#define AFS_PARAM_H
 
 
 #define AFS_NT40_ENV        1
@@ -58,4 +58,4 @@ typedef char * caddr_t;
 #define pipe(fdp)               _pipe(fdp, 4096, _O_BINARY)
 
 #define snprintf                _snprintf
-#endif /* _PARAM_NT35_H_ */
+#endif /* AFS_PARAM_H */

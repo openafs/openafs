@@ -17,6 +17,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kalog.c,v 1.1.1.3 2001/07/11 03:09:23 hartmans Exp $");
+
 #include <stdio.h>
 #include <afs/afsutil.h>
 #ifndef AFS_NT40_ENV

@@ -30,7 +30,7 @@ all: test-reauth ${DESTDIR}/lib/afs/libafssiad.so ${DESTDIR}/lib/afs/libafssiad.
 clean:
 	rm -f test-reauth libafssiad.so libafssiad.krb.so *.s *.o *.b core *~ *.com *.ld AFS_component_version_number.c
 
-CFLAGS = $(DEBUG) -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = $(DEBUG) -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 
 ${DESTDIR}/lib/afs/libafssiad.so: libafssiad.so
 	${INSTALL} $? $@

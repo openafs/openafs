@@ -34,12 +34,13 @@
  */
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_clntout.c,v 1.1.1.3 2001/07/11 03:11:10 hartmans Exp $");
+
 #include <stdio.h>
 #include <string.h>
 #include "rpc_parse.h"
 #include "rpc_util.h"
-
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_clntout.c,v 1.1.1.2 2001/07/05 01:04:05 hartmans Exp $");
 
 #define DEFAULT_TIMEOUT 25	/* in seconds */
 

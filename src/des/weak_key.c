@@ -12,6 +12,11 @@
  * Originally written 8/85 by Steve Miller, MIT Project Athena.
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/weak_key.c,v 1.1.1.4 2001/07/11 03:08:48 hartmans Exp $");
+
 #include <des.h>
 #include "des_internal.h"
 #if defined(HAVE_STRINGS_H)

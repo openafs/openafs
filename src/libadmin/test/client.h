@@ -11,7 +11,6 @@
  * This file implements the client related funtions for afscp
  */
 
-#include <afs/param.h>
 #include <afs/stds.h>
 
 #include <stddef.h>

@@ -34,6 +34,10 @@
  */
 
 #include "../afs/param.h"
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/AIX/osi_config.c,v 1.1.1.3 2001/07/11 03:06:26 hartmans Exp $");
+
 #include "sys/limits.h"
 #include "sys/types.h"
 #include "sys/user.h"
@@ -53,7 +57,6 @@
 #include <sys/timer.h>	/* For the timer related defines		*/
 #include <sys/intr.h>	/* for the serialization defines		*/
 #include <sys/malloc.h>	/* for the parameters to xmalloc()		*/
-#include "afs/param.h"
 #include "afs/afs_osi.h"    /* pick up osi_timeval_t for afs_stats.h */
 #include "afs/afs_stats.h"
 #include "export.h"

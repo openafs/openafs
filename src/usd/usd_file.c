@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/usd/usd_file.c,v 1.1.1.5 2001/07/11 03:11:34 hartmans Exp $");
+
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/types.h>

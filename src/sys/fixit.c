@@ -30,6 +30,10 @@ to the free list when the files are removed from lost+found
 */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/sys/fixit.c,v 1.1.1.3 2001/07/11 03:11:22 hartmans Exp $");
+
 #include <sys/types.h>
 #include <sys/file.h>
 #include <dirent.h>

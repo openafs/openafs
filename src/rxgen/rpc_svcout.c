@@ -34,6 +34,9 @@
  */
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_svcout.c,v 1.1.1.3 2001/07/11 03:11:12 hartmans Exp $");
+
 #include <stdio.h>
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
@@ -44,8 +47,6 @@
 #endif
 #include "rpc_parse.h"
 #include "rpc_util.h"
-
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_svcout.c,v 1.1.1.2 2001/07/05 01:04:07 hartmans Exp $");
 
 static char RQSTP[] = "rqstp";
 static char TRANSP[] = "transp";

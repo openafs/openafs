@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef _PARAM_I386_DJGPP_H_
-#define _PARAM_I386_DJGPP_H_
+#ifndef AFS_PARAM_H
+#define AFS_PARAM_H
 
 #define AFS_NONFSTRANS
 #define AFS_DJGPP_ENV         /* win95 env. */
@@ -30,4 +30,4 @@
 #define AFS_HAVE_STATVFS	0	/* System doesn't support statvfs */
 #define AFS_VM_RDWR_ENV	1	/* read/write implemented via VM */
 
-#endif /* _PARAM_I386_DJGPP_H_ */
+#endif /* AFS_PARAM_H */

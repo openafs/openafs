@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/dumpstuff.c,v 1.1.1.4 2001/07/11 03:12:32 hartmans Exp $");
+
 #include <sys/types.h>
 #include <ctype.h>
 #include <stdio.h>

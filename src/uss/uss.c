@@ -16,6 +16,10 @@
  */
 #include <stdlib.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss.c,v 1.1.1.3 2001/07/11 03:11:36 hartmans Exp $");
+
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif

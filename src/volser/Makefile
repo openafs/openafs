@@ -10,7 +10,8 @@ COMPONENT=volser
 include ../config/Makefile.${SYS_NAME}
 
 COMPILE_ET=${SRCDIR}bin/compile_et
-CFLAGS=${DBG} ${OPTMZ} -I${SRCDIR}include ${XCFLAGS} ${DBG_DEFS}
+CFLAGS=${DBG} ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}include \
+	${XCFLAGS} ${DBG_DEFS}
 LDFLAGS=${DBG} ${OPTMZ} ${XLDFLAGS}
 
 INCDIRS= -I${TOP_SRCDIR}/config -I${SRCDIR}include/afs -I${SRCDIR}include

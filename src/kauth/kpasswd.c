@@ -9,6 +9,10 @@
 
 /* These two needed for rxgen output to work */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kpasswd.c,v 1.1.1.4 2001/07/11 03:09:27 hartmans Exp $");
+
 #include <afs/stds.h>
 #include <sys/types.h>
 #ifdef	AFS_AIX32_ENV

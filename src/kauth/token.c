@@ -7,25 +7,20 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- * Revision 2.3  1990/12/13  11:41:57
- * Call ubik_ClientDestroy even on error exit.
- *
- * Revision 2.2  90/10/02  15:50:09
- * Destroy ubik connections when done.
- * Cleanups.
- * 
- * Revision 2.1  90/08/07  19:12:59
- * Start with clean version to sync test and dev trees.
- * */
-
 /* These routines provide an interface to the token cache maintained by the
    kernel.  Principally it handles cache misses by requesting the desired token
    from the AuthServer. */
 
-    /* These two needed for rxgen output to work */
 #if defined(UKERNEL)
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/token.c,v 1.1.1.3 2001/07/11 03:09:30 hartmans Exp $");
+
+#if defined(UKERNEL)
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../afs/stds.h"
@@ -38,7 +33,6 @@
 #include "../afs/auth.h"
 #include "../afs/pthread_glock.h"
 #else /* defined(UKERNEL) */
-#include <afs/param.h>
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <rx/xdr.h>

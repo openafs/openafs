@@ -8,6 +8,10 @@
  */
 
 /* Get CM initialization parameters. */
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/venus/test/getinitparams.c,v 1.1.1.3 2001/07/11 03:12:01 hartmans Exp $");
+
 #include <afs/param.h>
 #include <stdio.h>
 #include <netinet/in.h>

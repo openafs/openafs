@@ -37,7 +37,8 @@ LIBS =	${SRCDIR}lib/afs/libvolser.a \
 	${SRCDIR}lib/afs/util.a \
 	${XLIBS}
 
-CFLAGS = ${DBUG} -I/usr/include -I${SRCDIR}include -I. ${XCFLAGS}
+CFLAGS = ${DBUG} -I/usr/include -I${TOP_SRCDIR}/config \
+	-I${SRCDIR}include -I. ${XCFLAGS}
 OBJS =  uss_procs.o \
 	uss_common.o \
 	uss_vol.o \

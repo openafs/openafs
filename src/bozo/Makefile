@@ -10,7 +10,7 @@ COMPONENT=bozo
 include ../config/Makefile.${SYS_NAME}
 
 COMPILE_ET=$(SRCDIR)bin/compile_et
-CFLAGS=-g -I${SRCDIR}include ${XCFLAGS}
+CFLAGS=-g -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 RPCINCLS=${SRCDIR}include/lwp.h ${SRCDIR}include/rx/rx.h bosint.h
 INCLS=bnode.h ${RPCINCLS} ${SRCDIR}include/afs/auth.h \
      ${SRCDIR}include/afs/keys.h  ${SRCDIR}include/afs/cellconfig.h \

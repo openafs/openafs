@@ -14,6 +14,10 @@
  *
  */
 #include "../afs/param.h"	/* Should be always first */
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/FBSD/osi_inode.c,v 1.1.1.2 2001/07/11 03:06:58 hartmans Exp $");
+
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
 #include "../afs/osi_inode.h"

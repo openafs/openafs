@@ -7,92 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
-/*
- * This module implemenets the logical Local Clock, as described in section
- * 5. of the NTP specification.
- *
- * Revision 2.2  90/09/19  16:23:58
- * Changed most AIX conditionals to AIX22 since, 3.1 has adjtime call.
- * On HP only call settimeofday if accumulated offset is at least 2 msec.
- * 
- * Revision 2.1  90/08/07  19:22:51
- * Start with clean version to sync test and dev trees.
- * 
- * Revision 1.9  90/05/24  16:20:57
- * For AIX add code to set the bias according to current offset begin
- *   positive or negative.
- * Fix bug where cum.tv_sec wasn't being added in.
- * Reorganize HPUX conditionals a bit.
- * 
- * Revision 1.8  90/05/21  13:49:48
- * Modify local adjtime procedure to try really hard to set the time by shaving
- *   the usec field of the clock using stime.
- * 
- * Revision 1.7  89/12/22  20:30:19
- * hp/ux specific (initial port to it); Added <afs/param.h> and special include files for HPUX and misc other changes such as handle sysV stuff (i.e. adjtime()) alike AIX
- * 
- * Revision 1.6  89/12/11  14:25:26
- * Added code to support AIX 2.2.1.
- * 
- * Revision 1.5  89/05/24  12:25:22
- * Latest May 18, Version 4.3 release from UMD.
- * 
- * Revision 3.4.1.4  89/05/18  18:23:36
- * A couple of changes to debug NeXT support in ntp_adjust.c
- * 
- * Revision 3.4.1.3  89/04/07  18:05:17
- * Removed unused variable from ntp_adjust.c module.
- * 
- * Revision 3.4.1.2  89/03/22  18:30:52
- * patch3: Use new RCS headers.
- * 
- * Revision 3.4.1.1  89/03/20  00:09:06
- * patch1: Don't zero the drift compensation or compliance values when a step
- * patch1: adjustment of the clock occurs.  Use symbolic definition of
- * patch1: CLOCK_FACTOR rather than constant.
- * 
- * Revision 3.4  89/03/17  18:37:03
- * Latest test release.
- * 
- * Revision 3.3.1.2  89/03/17  18:25:03
- * Applied suggested code from Dennis Ferguson for logical clock model based on
- * the equations in section 5.  Many thanks.
- * 
- * Revision 3.3.1.1  89/03/16  19:19:29
- * Attempt to implement using the equations in section 5 of the NTP spec, 
- * rather then modeling the Fuzzball implementation.
- * 
- * Revision 3.3  89/03/15  14:19:45
- * New baseline for next release.
- * 
- * Revision 3.2.1.1  89/03/15  13:47:24
- * Use "%f" in format strings rather than "%lf".
- * 
- * Revision 3.2  89/03/07  18:22:54
- * New version of UNIX NTP daemon and software based on the 6 March 1989
- * draft of the new NTP protocol specification.  This module attempts to
- * conform to the new logical clock described in section 5 of the spec.  Note
- * that the units of the drift_compensation register have changed.
- * 
- * This version also accumulates the residual adjtime() truncation and
- * adds it in on subsequent adjustments.
- * 
- * Revision 3.1.1.1  89/02/15  08:55:48
- * *** empty log message ***
- * 
- * 
- * Revision 3.1  89/01/30  14:43:08
- * Second UNIX NTP test release.
- * 
- * Revision 3.0  88/12/12  16:00:38
- * Test release of new UNIX NTP software.  This version should conform to the
- * revised NTP protocol specification.
- * 
- */
-
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/ntp/ntp_adjust.c,v 1.1.1.3 2001/07/11 03:10:18 hartmans Exp $");
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/param.h>

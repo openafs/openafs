@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/vsutils.c,v 1.1.1.5 2001/07/11 03:12:41 hartmans Exp $");
+
 #include <afs/stds.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>

@@ -21,6 +21,10 @@
 #include <stdio.h>
 #include <des.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/cbc_encrypt.c,v 1.1.1.3 2001/07/11 03:08:38 hartmans Exp $");
+
 
 #define XPRT_CBC_ENCRYPT
 

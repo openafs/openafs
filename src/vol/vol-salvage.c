@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
 /*
  *      System:		VICE-TWO
  *      Module:		vol-salvage.c
@@ -91,6 +89,10 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #define MAIN 1
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vol-salvage.c,v 1.1.1.5 2001/07/11 03:12:23 hartmans Exp $");
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

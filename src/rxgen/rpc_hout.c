@@ -34,12 +34,13 @@
  */
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_hout.c,v 1.1.1.3 2001/07/11 03:11:11 hartmans Exp $");
+
 #include <stdio.h>
 #include <ctype.h>
 #include "rpc_util.h"
 #include "rpc_parse.h"
-
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_hout.c,v 1.1.1.2 2001/07/05 01:04:06 hartmans Exp $");
 
 static pconstdef();
 static pstructdef();

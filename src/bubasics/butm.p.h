@@ -8,7 +8,6 @@
  */
 
 #include <afs/auth.h>
-#include <afs/param.h>
 #include <afs/bubasics.h>
 
 struct blockMark {

@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/venus/fs.c,v 1.1.1.6 2001/07/11 03:11:55 hartmans Exp $");
+
 #include <afs/afs_args.h>
 #include <rx/xdr.h>
 #include <sys/ioctl.h>

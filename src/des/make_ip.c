@@ -8,6 +8,11 @@
  * permutation of the DES.
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/make_ip.c,v 1.1.1.3 2001/07/11 03:08:43 hartmans Exp $");
+
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include "des_internal.h"

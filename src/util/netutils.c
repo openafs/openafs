@@ -12,10 +12,18 @@
  * Parsing NetRestrict file and filtering IP addresses
  */
 
+#ifdef KERNEL
+#include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/netutils.c,v 1.1.1.4 2001/07/11 03:11:47 hartmans Exp $");
+
 #include <stdlib.h>
 #include <stdio.h>
 #ifdef KERNEL
-#include "../afs/param.h"
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #else

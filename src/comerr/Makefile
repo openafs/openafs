@@ -18,7 +18,7 @@ LIBOBJS= error_msg.o et_name.o com_err.o
 
 UKERNELDIR=../libuafs/
 
-CFLAGS= ${OPTMZ} -I${DESTDIR}include ${XCFLAGS}
+CFLAGS= ${OPTMZ} -I${DESTDIR}include -I${TOP_SRCDIR}/config ${XCFLAGS}
 FILES=	Makefile et_name.c error_msg.c compile_et.c \
 		error_table.y et_lex.lex.l \
 		com_err.c com_err.h \

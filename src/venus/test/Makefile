@@ -11,7 +11,7 @@ include ../../config/Makefile.${SYS_NAME}
 # DESTDIR=DEST/
 OPTIMIZE=-O
 
-INCDIRS= -I${DESTDIR}include -I..
+INCDIRS= -I${TOP_SRCDIR}/config -I${DESTDIR}include -I..
 LDIRS= -L${DESTDIR}lib -L${DESTDIR}lib/afs -L..
 utilib=${DESTDIR}lib/afs/util.a
 LIBS= -lsys -lubik -lvldb -lauth -lrxkad -ldes -lcom_err -lcmd -lrx -llwp ${utilib}

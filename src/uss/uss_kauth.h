@@ -15,7 +15,6 @@
 
 #ifndef _USS_KAUTH_H_
 #define _USS_KAUTH_H_ 1
-#include <afs/param.h>
 /*
  * --------------------- Required definitions ---------------------
  */

@@ -8,6 +8,10 @@
  */
 
 #include "../afs/param.h"	/* Should be always first */
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_memcache.c,v 1.1.1.3 2001/07/11 03:06:18 hartmans Exp $");
+
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #ifndef AFS_LINUX22_ENV
 #include "../rpc/types.h"

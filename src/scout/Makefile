@@ -11,6 +11,7 @@ COMPONENT=scout
 include ../config/Makefile.${SYS_NAME}
 
 CFLAGS= ${DBUG} -I. \
+	-I${TOP_SRCDIR}/config \
 	-I${SRCDIR}include \
 	-I${SRCDIR}include/afs \
 	-I${SRCDIR} ${XCFLAGS}

@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/rebuild.c,v 1.1.1.5 2001/07/11 03:09:30 hartmans Exp $");
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #ifdef AFS_NT40_ENV

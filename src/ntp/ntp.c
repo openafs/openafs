@@ -7,83 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef	lint
-#endif /* lint */
-/*
- * Revision 2.1  90/08/07  19:22:00
- * Start with clean version to sync test and dev trees.
- * 
- * Revision 1.9  90/06/20  20:10:20
- * dropped an `#endif' when I merged.
- * 
- * Revision 1.8  90/06/13  20:04:39
- * rs_aix31.
- * 
- * Revision 1.7  89/12/22  20:29:41
- * hp/ux specific (initial port to it); Added <afs/param.h> and special include files for HPUX and misc other changes
- * 
- * Revision 1.6  89/12/11  14:25:09
- * Added code to support AIX 2.2.1.
- * 
- * Revision 1.5  89/05/24  12:24:59
- * Latest May 18, Version 4.3 release from UMD.
- * 
- * Revision 3.4.1.6  89/05/18  18:21:29
- * A few cosmetic changes in ntp.c for the case when udp/ntp is not in the
- * /etc/services file.
- * 
- * Revision 3.4.1.5  89/05/03  15:09:53
- * Fix minor problem in ntp.c to get sin_family set in the proper place.
- * 
- * Revision 3.4.1.4  89/04/07  18:04:49
- * Removed unused variables from ntp.c program.
- * 
- * Revision 3.4.1.3  89/03/22  18:29:22
- * patch3: Use new RCS headers.
- * 
- * Revision 3.4.1.2  89/03/22  17:51:13
- * Use a connect UDP socket so we can pick up ICMP error messages.
- * 
- * Revision 3.4.1.1  89/03/20  00:02:32
- * patch1: Shorten timeout interval and clean up timeout message.
- * 
- * Revision 3.4  89/03/17  18:36:54
- * Latest test release.
- * 
- * Revision 3.3.1.1  89/03/17  18:23:14
- * Fix code that sets time.
- * 
- * Revision 3.3  89/03/15  14:19:30
- * New baseline for next release.
- * 
- * Revision 3.2.1.2  89/03/15  13:45:13
- * Fix use of NTP_PORT when getservbyname() fails.  Use "%f" in printf format
- * strings rather than "%lf".
- * 
- * 
- * Revision 3.2.1.1  89/03/10  11:26:23
- * Add (primitive) facility to set the time from an NTP timer server,
- * much the same way as various UDP/TIME based programs do.  The
- * default output format is a one line listing of delay, offset and time.  The
- * previous, longer format can be had by using the -v option.
- * 
- * Revision 3.2  89/03/07  18:20:55
- * Cleaned up displays of NTP header fields, also dumping in useful formats
- * (floating point and ctime strings) as well as hex fields.
- * 
- * Revision 3.1.1.1  89/02/15  08:53:30
- * Bug fixes to last released version.
- * 
- * 
- * Revision 3.1  89/01/30  14:43:05
- * Second UNIX NTP test release.
- * 
- * Revision 3.0  88/12/12  15:56:10
- * Test release of new UNIX NTP software.  This version should conform to the
- * revised NTP protocol specification.
- * 
- */
-
 /*
  * This program expects a list of host names.  It will send off a
  * network time protocol packet and print out the replies on the
@@ -107,6 +30,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/ntp/ntp.c,v 1.1.1.3 2001/07/11 03:10:18 hartmans Exp $");
+
 #include <stdio.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>

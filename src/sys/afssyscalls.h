@@ -12,9 +12,6 @@
 
 #ifndef AFS_NT40_ENV
 
-#ifndef lint
-#endif
-
 /* Declare Inode type. */
 #ifdef AFS_64BIT_IOPS_ENV
 #ifdef AFS_SGI62_ENV

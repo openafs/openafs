@@ -12,8 +12,15 @@
  * make any use of DES. */
 
 #ifdef KERNEL
-
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_client.c,v 1.1.1.4 2001/07/11 03:11:13 hartmans Exp $");
+
+#ifdef KERNEL
 #include "../afs/stds.h"
 #ifndef UKERNEL
 #include "../h/types.h"
@@ -30,9 +37,7 @@
 #include "../rpc/xdr.h"
 #endif
 #include "../rx/rx.h"
-#else /* KERNEL */
-
-#include <afs/param.h>
+#else /* ! KERNEL */
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <time.h>
@@ -46,7 +51,6 @@
 #ifdef AFS_PTHREAD_ENV
 #include "../rxkad/rxkad.h"
 #endif /* AFS_PTHREAD_ENV */
-
 #endif /* KERNEL */
 
 #include "private_data.h"

@@ -18,6 +18,10 @@
 #include <stdio.h>
 #include <time.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/afsmonitor/afsmon-output.c,v 1.1.1.4 2001/07/11 03:07:15 hartmans Exp $");
+
 #include <afs/xstat_fs.h>  
 #include <afs/xstat_cm.h>
 

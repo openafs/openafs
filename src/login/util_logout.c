@@ -15,11 +15,11 @@
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)logout.c	5.2 (Berkeley) 2/17/89";
-#endif /* LIBC_SCCS and not lint */
-
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/login/util_logout.c,v 1.1.1.2 2001/07/11 03:10:08 hartmans Exp $");
+
 #include <sys/types.h>
 #include <sys/file.h>
 #ifdef	AFS_SUN5_ENV

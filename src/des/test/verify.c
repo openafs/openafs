@@ -16,6 +16,10 @@
 #include <errno.h>
 #include <des.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/test/verify.c,v 1.1.1.4 2001/07/11 03:08:49 hartmans Exp $");
+
 
 extern char *errmsg();
 extern int des_string_to_key();

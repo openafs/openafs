@@ -21,6 +21,10 @@
 */
 
 #include "../afs/param.h"
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/FBSD/rx_knet.c,v 1.1.1.2 2001/07/11 03:11:08 hartmans Exp $");
+
 #ifdef AFS_FBSD40_ENV
 #include "../rx/rx_kcommon.h"
 

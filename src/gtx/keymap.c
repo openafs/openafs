@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/keymap.c,v 1.1.1.3 2001/07/11 03:09:16 hartmans Exp $");
+
 #include "gtxkeymap.h"
 
 struct keymap_map *keymap_Create() {

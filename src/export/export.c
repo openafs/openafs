@@ -11,6 +11,12 @@
  * export -	EXPORT kernel extension
  */
 
+/* Unsafe: conflicts with _KERNEL inclusion of headers below */
+/* #include <afs/param.h> */
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/export/export.c,v 1.1.1.3 2001/07/11 03:08:53 hartmans Exp $");
+
 #define _KERNEL
 #include "sys/types.h"
 #include "sys/user.h"

@@ -1,5 +1,5 @@
-#ifndef	_PARAM_FBSD_42_H_
-#define	_PARAM_FBSD_42_H_
+#ifndef	AFS_PARAM_H
+#define	AFS_PARAM_H
 
 #include <sys/param.h>
 
@@ -112,4 +112,4 @@ enum vcexcl {NONEXCL, EXCL};
 #endif	/* ! ASSEMBLER & ! __LANGUAGE_ASSEMBLY__ */
 #endif /* _KERNEL */
 
-#endif	/* _PARAM_FBSD_42_H_ */
+#endif	/* AFS_PARAM_H */

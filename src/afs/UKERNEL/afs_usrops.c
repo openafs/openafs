@@ -12,6 +12,10 @@
  */
 
 #include "../afs/param.h"	/* Should be always first */
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/UKERNEL/afs_usrops.c,v 1.1.1.5 2001/07/11 03:06:47 hartmans Exp $");
+
 
 #ifdef	UKERNEL
 

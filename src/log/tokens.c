@@ -7,9 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/log/tokens.c,v 1.1.1.3 2001/07/11 03:10:05 hartmans Exp $");
+
 #include <stdio.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>

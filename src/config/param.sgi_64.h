@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef	_PARAM_SGI_64_H
-#define	_PARAM_SGI_64_H
+#ifndef	AFS_PARAM_HH
+#define	AFS_PARAM_HH
 
 
 #define AFS_VFS_ENV		1
@@ -107,4 +107,4 @@
 #ifndef CMSERVERPREF
 #define CMSERVERPREF
 #endif
-#endif	/* _PARAM_SGI_64_H_ */
+#endif	/* AFS_PARAM_H */

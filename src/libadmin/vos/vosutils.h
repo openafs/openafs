@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
-#include <afsconfig.h>
 #include <afs/stds.h>
 #include <afs/afs_Admin.h>
 #include <afs/vlserver.h>

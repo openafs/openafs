@@ -45,6 +45,10 @@
    but null terminated as you might figure, except for the ticket which is
    preceded by a 4 byte length.  All fields in host order. 890306 */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/krb_tf.c,v 1.1.1.3 2001/07/11 03:09:28 hartmans Exp $");
+
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
 #include <io.h>

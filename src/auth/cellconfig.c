@@ -9,6 +9,9 @@
 
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/auth/cellconfig.c,v 1.1.1.6 2001/07/11 03:07:36 hartmans Exp $");
+
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
 #ifdef UKERNEL

@@ -12,6 +12,10 @@
  *
  */
 #include "../afs/param.h"
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_alloc.c,v 1.1.1.6 2001/07/11 03:06:41 hartmans Exp $");
+
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../h/mm.h"

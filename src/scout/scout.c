@@ -12,6 +12,10 @@
  *------------------------------------------------------------------------*/
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/scout/scout.c,v 1.1.1.3 2001/07/11 03:11:19 hartmans Exp $");
+
 #undef	IN
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>

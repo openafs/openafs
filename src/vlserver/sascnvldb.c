@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/sascnvldb.c,v 1.1.1.3 2001/07/11 03:12:13 hartmans Exp $");
+
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <errno.h>

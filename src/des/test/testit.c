@@ -13,6 +13,10 @@
 #include <errno.h>
 #include <des.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/test/testit.c,v 1.1.1.4 2001/07/11 03:08:49 hartmans Exp $");
+
 
 #define MIN_ARGC	0	/* min # args, not incl flags */
 #define MAX_ARGC	2	/* max # args, not incl flags */

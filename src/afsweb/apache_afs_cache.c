@@ -10,6 +10,10 @@
 /* This code borrows from nsafs.c - slightly modified - names,etc. */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/afsweb/apache_afs_cache.c,v 1.1.1.3 2001/07/11 03:07:28 hartmans Exp $");
+
 #include "apache_afs_cache.h"
 
 /*

@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/host.c,v 1.1.1.4 2001/07/11 03:12:11 hartmans Exp $");
+
 #include <stdio.h>
 #include <errno.h>
 #ifdef AFS_NT40_ENV

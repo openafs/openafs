@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bosserver.c,v 1.1.1.6 2001/07/11 03:07:43 hartmans Exp $");
+
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <sys/stat.h>

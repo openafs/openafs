@@ -14,7 +14,6 @@
 
 #ifndef _USS_VOL_H_
 #define _USS_VOL_H_ 1
-#include <afs/param.h>
 
 /*
  * ------------------------ Exported functions  -----------------------

@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kdb.c,v 1.1.1.3 2001/07/11 03:09:26 hartmans Exp $");
+
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>

@@ -17,7 +17,7 @@ INCLS=cmd.h ${XINCLS}
 LIBOBJS=cmd_errors.o cmd.o 
 LIB64OBJS=cmd_errors64.o cmd64.o 
 
-CFLAGS= ${OPTMZ} -I${SRCDIR}include ${XCFLAGS}
+CFLAGS= ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 
 include ../config/Makefile.version
 
@@ -39,10 +39,10 @@ AFS_component_version_number64.o: AFS_component_version_number.c
 	${CC} ${OPTMZ} -I${SRCDIR}include ${XCFLAGS64} -c -o AFS_component_version_number64.o AFS_component_version_number.c
 
 cmd_errors64.o: cmd_errors.c
-	${CC} ${OPTMZ} -I${SRCDIR}include ${XCFLAGS64} -c -o cmd_errors64.o cmd_errors.c
+	${CC} ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS64} -c -o cmd_errors64.o cmd_errors.c
 
 cmd64.o: cmd.c ${INCLS}
-	${CC} ${OPTMZ} -I${SRCDIR}include ${XCFLAGS64} -c -o cmd64.o cmd.c
+	${CC} ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS64} -c -o cmd64.o cmd.c
 
 
 libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o

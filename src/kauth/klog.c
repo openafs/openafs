@@ -7,32 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- * Revision 2.6  1991/04/15  10:44:53
- * Initialize "explicit" local variable in false case.
- *
- * Revision 2.5  90/10/02  15:48:55
- * Change -x parm to CMD_FLAG.
- * 
- * Revision 2.4  90/10/01  11:28:01
- * Cleaups for HC compiler.
- * Add the -x option back as a noop for existing programs/scripts.
- * 
- * Revision 2.3  90/09/26  14:19:23
- * Remove support for -x option.  This controlled checking the /etc/passwd file.
- *   We no longer do this under an circumstances.
- * 
- * Revision 2.2  90/08/09  08:41:24
- * Check for lifetimes longer than 30 days and reject them.  Otherwise such
- *   bogus lifetimes make the kaserver think the password is wrong.
- * 
- * Revision 2.1  90/08/07  19:11:58
- * Start with clean version to sync test and dev trees.
- * */
-/* See RCS log for older history. */
-
-    /* These two needed for rxgen output to work */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/klog.c,v 1.1.1.3 2001/07/11 03:09:26 hartmans Exp $");
+
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <rx/xdr.h>

@@ -7,6 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/cmd/cmd.c,v 1.1.1.5 2001/07/11 03:08:08 hartmans Exp $");
+
 #include <sys/types.h>
 #include <ctype.h>
 #include "cmd.h"

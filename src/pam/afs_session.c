@@ -7,6 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/pam/afs_session.c,v 1.1.1.3 2001/07/11 03:10:31 hartmans Exp $");
+
 #include <security/pam_appl.h>
 #include <security/pam_modules.h>
 

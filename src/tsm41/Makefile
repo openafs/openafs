@@ -7,7 +7,7 @@
 
 include ../config/Makefile.${SYS_NAME}
 OPTIMIZE=-g
-CFLAGS = ${OPTIMIZE} -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = ${OPTIMIZE} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 LIBDIR = ${DESTDIR}lib/
 AFSLIBS = ${LIBDIR}afs/libkauth.a ${LIBDIR}afs/libprot.a ${LIBDIR}libubik.a \
 	  ${LIBDIR}afs/libauth.a ${DESTDIR}lib/librxkad.a ${LIBDIR}afs/libsys.a \

@@ -13,6 +13,11 @@
  *
  *------------------------------------------------------------------------*/
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/xstat/xstat_cm_test.c,v 1.1.1.3 2001/07/11 03:12:46 hartmans Exp $");
+
 #include "xstat_cm.h"		/*Interface for xstat_cm module*/
 #include <cmd.h>		/*Command line interpreter*/
 #include <time.h>

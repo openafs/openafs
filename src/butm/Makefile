@@ -11,7 +11,7 @@ SHELL = /bin/sh
 SRCDIR=DEST/
 DESTDIR=DEST/
 
-CFLAGS = -g -w -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = -g -w -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 LDFLAGS = -g ${XLDFLAGS}
 INCLS= ${SRCDIR}include/afs/com_err.h ${SRCDIR}include/afs/butm.h
 

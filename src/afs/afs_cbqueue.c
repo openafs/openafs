@@ -72,6 +72,10 @@
  * granted with a shorter expiration time.
  */
 #include "../afs/param.h"       /*Should be always first*/
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cbqueue.c,v 1.1.1.3 2001/07/11 03:06:02 hartmans Exp $");
+
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
 #include "../afs/afs_cbqueue.h"

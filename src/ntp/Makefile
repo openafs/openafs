@@ -9,7 +9,7 @@ SHELL = /bin/sh
 COMPONENT=ntp
 include ../config/Makefile.${SYS_NAME}
 
-INCPATH= -I${DESTDIR}include
+INCPATH= -I${TOP_SRCDIR}/config -I${DESTDIR}include
 BINDIR=/usr/local/etc
 LINKDIR=/etc
 LIBS= ${DESTDIR}lib/afs/util.a  

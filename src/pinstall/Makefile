@@ -30,7 +30,7 @@ COMPONENT=pinstall
 include ../config/Makefile.${SYS_NAME}
 
 LIBS= ${XLIBS}
-CFLAGS= ${OPTMZ} ${XCFLAGS}
+CFLAGS= ${OPTMZ} -I${TOP_SRCDIR}/config ${XCFLAGS}
 
 include ../config/Makefile.version
 

@@ -8,6 +8,10 @@
  */
 
 #include "../afs/param.h"
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/DARWIN/rx_knet.c,v 1.1.1.2 2001/07/11 03:11:08 hartmans Exp $");
+
 #include "../rx/rx_kcommon.h"
 
 int osi_NetReceive(asocket, addr, dvec, nvecs, alength)

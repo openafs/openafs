@@ -9,6 +9,14 @@
 
 #ifdef	KERNEL
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_event.c,v 1.1.1.4 2001/07/11 03:10:48 hartmans Exp $");
+
+#ifdef KERNEL
 #ifndef UKERNEL
 #include "../afs/afs_osi.h"
 #else /* !UKERNEL */
@@ -34,7 +42,6 @@
 extern void *osi_Alloc();
 #endif
 #else /* KERNEL */
-#include "afs/param.h"
 #include <stdio.h>
 #include "rx_clock.h"
 #include "rx_queue.h"

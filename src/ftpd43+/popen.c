@@ -17,12 +17,7 @@
  * IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  *
- * static char sccsid[] = "@(#)popen.c	5.7 (Berkeley) 9/1/88";
  */
-
-#ifndef lint
-static char sccsid[] = "@(#)popen.c	5.2 (Berkeley) 9/22/88";
-#endif /* not lint */
 
 #include <afs/param.h>
 #include <sys/types.h>

@@ -7,9 +7,16 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifdef	KERNEL
+#ifdef KERNEL
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
 #include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_rdwr.c,v 1.1.1.6 2001/07/11 03:10:53 hartmans Exp $");
+
+#ifdef KERNEL
 #ifndef UKERNEL
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #include "../afs/sysincludes.h"
@@ -56,8 +63,6 @@
 #undef register
 #endif  /* AFS_ALPHA_ENV */
 #else /* KERNEL */
-# include <afs/param.h>
-# include <afsconfig.h>
 # include <sys/types.h>
 #ifndef AFS_NT40_ENV
 # include <sys/socket.h>

@@ -51,6 +51,10 @@
 #include <time.h>
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/test/selclient.c,v 1.1.1.3 2001/07/11 03:10:15 hartmans Exp $");
+
 
 #include "../lwp.h"
 #include "seltest.h"

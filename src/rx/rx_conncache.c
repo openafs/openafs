@@ -13,11 +13,18 @@
 
 #ifdef UKERNEL
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_conncache.c,v 1.1.1.4 2001/07/11 03:10:49 hartmans Exp $");
+
+#ifdef UKERNEL
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../rx/rx.h"
-#else /* UKERNEL */
-#include <afs/param.h>
+#else /* ! UKERNEL */
 #include <sys/types.h>
 #include <errno.h>
 #include <assert.h>

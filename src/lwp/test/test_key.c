@@ -18,6 +18,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/test/test_key.c,v 1.1.1.3 2001/07/11 03:10:16 hartmans Exp $");
+
 #include <stdio.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV

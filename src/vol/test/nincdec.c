@@ -12,6 +12,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/test/nincdec.c,v 1.1.1.3 2001/07/11 03:12:30 hartmans Exp $");
+
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>
 #include <stdlib.h>

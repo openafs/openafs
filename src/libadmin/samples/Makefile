@@ -8,7 +8,7 @@
 include ../../config/Makefile.${SYS_NAME}
 
 CC = ${MT_CC}
-CFLAGS = ${OPTMZ} ${DBG} -I${SRCDIR}include ${MT_CFLAGS}
+CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${MT_CFLAGS}
 
 
 ########################################################################

@@ -24,9 +24,6 @@ end		return END;
 /* Copyright (C)  1998  Transarc Corporation.  All rights reserved.
  *
  */
-#ifndef lint
-#endif
-
 int yywrap(void) {
   return 1;
 }

@@ -7,6 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/sys/pioctl_nt.c,v 1.1.1.4 2001/07/11 03:11:22 hartmans Exp $");
+
 #include <afs/stds.h>
 #include <windows.h>
 #include <stdlib.h>

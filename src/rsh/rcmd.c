@@ -15,11 +15,11 @@
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)rcmd.c	5.20 (Berkeley) 1/24/89";
-#endif /* LIBC_SCCS and not lint */
-
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rsh/rcmd.c,v 1.1.1.4 2001/07/11 03:10:45 hartmans Exp $");
+
 #ifdef aiws		/*AIX*/
 #include <sys/types.h>
 #define MAXHOSTNAMELEN	64	/* use BSD's, not sys/param's */

@@ -9,6 +9,11 @@
 
 /* Sample program using multi_Rx, to execute calls in parallel to multiple hosts */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/multi.example/sample_client.c,v 1.1.1.3 2001/07/11 03:11:05 hartmans Exp $");
+
 #include <sys/types.h>
 #include <netdb.h>
 #include <netinet/in.h>

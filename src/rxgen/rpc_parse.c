@@ -34,6 +34,9 @@
  */
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_parse.c,v 1.1.1.4 2001/07/11 03:11:11 hartmans Exp $");
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -47,8 +50,6 @@
 #include "rpc_util.h"
 #include "rpc_scan.h"
 #include "rpc_parse.h"
-
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_parse.c,v 1.1.1.3 2001/07/05 01:04:06 hartmans Exp $");
 
 list *proc_defined[MAX_PACKAGES], *special_defined, *typedef_defined, *uniondef_defined;
 char *SplitStart = NULL;

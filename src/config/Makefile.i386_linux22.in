@@ -19,7 +19,7 @@ LINUX_VERS = 2.2.5-15 2.2.10 2.2.12 2.2.12-20 2.2.13 2.2.14
 
 #
 # compilation and link editor flags
-DBG=-g
+DBG=-g -Wall
 OPTMZ=-O2
 PAM_CFLAGS = -O2 -Dlinux -DLINUX_PAM -fPIC
 # Put -O2 here to _ensure_ all Makefiles pick it up.
@@ -40,7 +40,7 @@ AR=ar
 AS=as
 CP=cp
 LD=ld   
-MT_CC=cc
+MT_CC=kgcc
 MV=mv
 RANLIB=ranlib
 RM=rm

@@ -26,9 +26,6 @@
  * Mountain View, California  94043
  */
 #ifndef	NeXT
-#ifndef lint
-static char sccsid[] = "@(#)xdr_rec.c 1.1 86/02/03 Copyr 1984 Sun Micro";
-#endif
 
 /*  * xdr_rec.c, Implements TCP/IP based XDR streams with a "record marking"
  * layer above tcp (for rpc's use).
@@ -47,6 +44,10 @@ static char sccsid[] = "@(#)xdr_rec.c 1.1 86/02/03 Copyr 1984 Sun Micro";
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_rec.c,v 1.1.1.2 2001/07/11 03:10:58 hartmans Exp $");
+
 #include <stdio.h>
 #include "xdr.h"
 #ifndef AFS_NT40_ENV

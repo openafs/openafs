@@ -12,6 +12,10 @@
  * setpag (aliased to use_setpag in sysincludes.h)
  */
 #include "../afs/param.h"
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/UKERNEL/osi_groups.c,v 1.1.1.3 2001/07/11 03:06:48 hartmans Exp $");
+
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../afs/afs_stats.h"  /* statistics */

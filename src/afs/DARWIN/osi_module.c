@@ -1,4 +1,8 @@
 #include "../afs/param.h"
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_module.c,v 1.1.1.2 2001/07/11 03:06:55 hartmans Exp $");
+
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../sys/syscall.h"

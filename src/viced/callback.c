@@ -80,6 +80,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/callback.c,v 1.1.1.4 2001/07/11 03:12:10 hartmans Exp $");
+
 #include <stdio.h> 
 #include <stdlib.h>      /* for malloc() */
 #include <time.h>        /* ANSI standard location for time stuff */

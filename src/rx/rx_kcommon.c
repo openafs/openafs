@@ -12,6 +12,10 @@
  */
 
 #include "../afs/param.h"
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_kcommon.c,v 1.1.1.5 2001/07/11 03:10:51 hartmans Exp $");
+
 #include "../rx/rx_kcommon.h"
 
 #ifdef AFS_HPUX110_ENV

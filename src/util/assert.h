@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#if !defined(lint) && !defined(LOCORE) && defined(RCS_HDRS)
-#endif
 /*	@(#)assert.h 1.1 83/08/01 SMI; from UCB 4.1 83/05/03	*/
 /* Modified to dump core, rather than exit.  May/85 RNS */
 

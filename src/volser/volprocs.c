@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/volprocs.c,v 1.1.1.4 2001/07/11 03:12:38 hartmans Exp $");
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <errno.h>

@@ -16,6 +16,10 @@
 /* Clone a volume.  Assumes the new volume is already created */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/clone.c,v 1.1.1.3 2001/07/11 03:12:17 hartmans Exp $");
+
 #include <sys/types.h>
 #include <stdio.h>
 #ifdef AFS_PTHREAD_ENV

@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/hputil.c,v 1.1.1.3 2001/07/11 03:11:46 hartmans Exp $");
+
 #ifdef AFS_HPUX_ENV
 #include <stdio.h>
 #include <sys/types.h>

@@ -51,10 +51,13 @@
   *	-shutdown  Shutdown afs daemons
   *---------------------------------------------------------------------------*/
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/afsd/afsd.c,v 1.1.1.7 2001/07/11 03:07:01 hartmans Exp $");
+
 #define VFS 1
 
-#include <afs/param.h>
-#include "afsconfig.h"
 #include <afs/cmd.h>
 
 #include <assert.h>

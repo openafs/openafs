@@ -15,11 +15,11 @@
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)logwtmp.c	5.2 (Berkeley) 9/20/88";
-#endif /* LIBC_SCCS and not lint */
-
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/login/util_logwtmp.c,v 1.1.1.2 2001/07/11 03:10:08 hartmans Exp $");
+
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/stat.h>

@@ -15,14 +15,13 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifndef lint
-static char sccsid[] = "@(#)setup.c	5.25 (Berkeley) 2/1/90";
-#endif /* not lint */
+#include <afs/param.h>
+#include <afsconfig.h>
 
+RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/setup.c,v 1.1.1.2 2001/07/11 03:12:07 hartmans Exp $");
 
 #include <stdio.h>
 #define VICE
-#include <afs/param.h>
 
 #if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV)
 #define AFS_NEWCG_ENV

@@ -15,10 +15,14 @@
  * rx_pthread.c is used for the thread safe RX package.
  */
 
-# include <afs/param.h>
-# include <sys/types.h>
-# include <errno.h>
-# include <signal.h>
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_pthread.c,v 1.1.1.5 2001/07/11 03:10:53 hartmans Exp $");
+
+#include <sys/types.h>
+#include <errno.h>
+#include <signal.h>
 #ifndef AFS_NT40_ENV
 # include <sys/socket.h>
 # include <sys/file.h>
@@ -28,11 +32,11 @@
 # include <sys/ioctl.h>
 # include <sys/time.h>
 #endif
-# include <sys/stat.h>
-# include <rx.h>
-# include <rx_globals.h>
-# include <assert.h>
-# include <rx/rx_pthread.h>
+#include <sys/stat.h>
+#include <rx.h>
+#include <rx_globals.h>
+#include <assert.h>
+#include <rx/rx_pthread.h>
 
 /*
  * Number of times the event handling thread was signalled because a new

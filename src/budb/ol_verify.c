@@ -10,6 +10,10 @@
 /* ol_verify - online database verification */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/budb/ol_verify.c,v 1.1.1.3 2001/07/11 03:07:59 hartmans Exp $");
+
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>

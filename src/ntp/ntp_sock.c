@@ -7,59 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef	lint
-#endif
-/*
- * Revision 2.1  90/08/07  19:23:04
- * Start with clean version to sync test and dev trees.
- * 
- * Revision 1.6  89/12/11  14:25:44
- * Added code to support AIX 2.2.1.
- * 
- * Revision 1.5  89/05/24  12:26:08
- * Latest May 18, Version 4.3 release
- * 
- * Revision 3.4.1.3  89/05/18  18:28:20
- * In ntp_sock.c, change the order that the bind() call is done for each socket.
- * It turns out that if you have the Multicast code installed, incoming packets
- * will be delived to the *first* socket that matches.  It also turns out that
- * when binding sockets, the first one bound is the last on checked, so we want
- * to bind the wildcard socket first.
- * 
- * Revision 3.4.1.2  89/04/07  19:07:46
- * Deleted unused variables in ntp_sock.c
- * 
- * Revision 3.4.1.1  89/03/22  18:31:20
- * patch3: Use new RCS headers.
- * 
- * Revision 3.4  89/03/17  18:37:09
- * Latest test release.
- * 
- * Revision 3.3  89/03/15  14:19:53
- * New baseline for next release.
- * 
- * Revision 3.2.1.1  89/03/10  11:30:41
- * 1
- * 
- * Revision 3.2  89/03/07  18:26:26
- * New version of UNIX NTP daemon based on the 6 March 1989 draft of the new
- * NTP protocol specification.  This version has a bunch of bugs fixes and
- * new algorithms which were discussed on the NTP mailing list over the past
- * few weeks.
- * 
- * Revision 3.1.1.1  89/02/15  08:56:28
- * *** empty log message ***
- * 
- * 
- * Revision 3.1  89/01/30  14:43:12
- * Second UNIX NTP test release.
- * 
- * Revision 3.0  88/12/12  16:00:15
- * Test release of new UNIX NTP software.  This version should conform to the
- * revised NTP protocol specification.
- * 
- */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/ntp/ntp_sock.c,v 1.1.1.3 2001/07/11 03:10:20 hartmans Exp $");
+
 #include <sys/types.h>
 #include <sys/param.h>
 #ifdef	AFS_SUN5_ENV

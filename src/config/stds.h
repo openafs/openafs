@@ -35,12 +35,6 @@ typedef void *opaque;
 pragma Off(Prototype_override_warnings);
 #endif /* defined(__HIGHC__) */
 #endif
-/*
- * This makes including the RCS id in object files less painful.  Put this near
- * the beginning of .c files (not .h files).  Do NOT follow it with a
- * semi-colon.  The argument should be a double quoted string containing the
- * standard RCS Header keyword.
- */
 
 /* Now some types to enhance portability.  Always use these on the wire or when
  * laying out shared structures on disk. */

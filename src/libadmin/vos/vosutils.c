@@ -7,6 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/vos/vosutils.c,v 1.1.1.4 2001/07/11 03:09:59 hartmans Exp $");
+
 #include "vosutils.h"
 #include "vsprocs.h"
 #include "lockprocs.h"

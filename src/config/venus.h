@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#if !defined(lint) && !defined(LOCORE) && defined(RCS_HDRS)
-#endif
 /* /usr/andrew/include/vice/ioctl.h
 
 Definitions of Venus-specific ioctls for Venus 2.
@@ -178,4 +176,5 @@ struct cm_initparams {
 #define VIOC_SETRXKCRYPT        _VICEIOCTL(56)  /* Set rxkad enc flag */
 #define VIOC_PREFETCHTAPE       _VICEIOCTL(66)  /* MR-AFS prefetch from tape */
 #define VIOC_RESIDENCY_CMD      _VICEIOCTL(67)  /* generic MR-AFS cmds */
+#define VIOC_STATISTICS         _VICEIOCTL(68)  /* arla: fetch statistics */
 #endif /* AFS_VENUS_H */

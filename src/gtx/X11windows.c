@@ -15,6 +15,11 @@
  *
  *------------------------------------------------------------------------*/
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/X11windows.c,v 1.1.1.3 2001/07/11 03:09:11 hartmans Exp $");
+
 #include "gtxX11win.h"			/*Interface definition*/
 #include <stdio.h>			/*Standard I/O package*/
 

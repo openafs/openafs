@@ -14,6 +14,10 @@
  *------------------------------------------------------------------------*/
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/lightobject.c,v 1.1.1.3 2001/07/11 03:09:15 hartmans Exp $");
+
 #include "gtxlightobj.h"		/*Interface for this module*/
 #include <stdio.h>                      /*Standard I/O stuff*/
 #include <errno.h>

@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
 /*
 	System:		VICE-TWO
 	Module:		purge.c
@@ -16,6 +14,10 @@
 
  */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/purge.c,v 1.1.1.3 2001/07/11 03:12:23 hartmans Exp $");
+
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>

@@ -11,7 +11,8 @@ include ../config/Makefile.${SYS_NAME}
 
 COMPILE_ET = ${SRCDIR}bin/compile_et
 
-CFLAGS= ${DBUG} -w -I${SRCDIR}include -I${SRCDIR}include/afs ${XCFLAGS}
+CFLAGS= ${DBUG} -w -I${TOP_SRCDIR}/config \
+	-I${SRCDIR}include -I${SRCDIR}include/afs ${XCFLAGS}
 
 #LIBS=${SRCDIR}lib/afs/libcmd.a ${SRCDIR}lib/afs/libbubasics.a \
 #${SRCDIR}lib/afs/libcom_err.a ${SRCDIR}lib/afs/util.a \

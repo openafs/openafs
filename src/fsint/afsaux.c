@@ -7,10 +7,16 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
 #ifdef KERNEL
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/fsint/afsaux.c,v 1.1.1.4 2001/07/11 03:09:06 hartmans Exp $");
+
+#ifdef KERNEL
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -38,7 +44,6 @@
 #endif /* defined(UKERNEL) */
 #include "../afsint/afsint.h"
 #else /* KERNEL */
-# include <afs/param.h>
 # include <rx/xdr.h>
 # include "afsint.h"
 #endif /* KERNEL */

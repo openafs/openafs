@@ -1,5 +1,30 @@
 %{
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/comerr/error_table.y,v 1.1.1.3 2001/07/11 03:08:13 hartmans Exp $");
+
+/*
+ *
+ * Copyright 1986, 1987 by the MIT Student Information Processing Board
+ *
+ * For copyright info, see mit-sipb-cr.h.
+ */
+#ifndef AFS_NT40_ENV
+#include <unistd.h>
+#endif
+#include <string.h>
+#include <assert.h>
+#include <ctype.h>
+#ifdef AFS_NT40_ENV
+#include <sys/types.h>
+#include <afs/afsutil.h>
+#else
+#include <sys/time.h>
+#endif
+#include <sys/timeb.h>
+#include "error_table.h"
+#include "mit-sipb-cr.h"
 
 /*
  * If __STDC__ is defined, function prototypes in the SunOS 5.5.1 lex
@@ -103,29 +128,6 @@ description	:	QUOTED_STRING
 		;
 
 %%
-/*
- *
- * Copyright 1986, 1987 by the MIT Student Information Processing Board
- *
- * For copyright info, see mit-sipb-cr.h.
- */
-#ifndef AFS_NT40_ENV
-#include <unistd.h>
-#endif
-#include <afs/param.h>
-#include <string.h>
-#include <assert.h>
-#include <ctype.h>
-#ifdef AFS_NT40_ENV
-#include <sys/types.h>
-#include <afs/afsutil.h>
-#else
-#include <sys/time.h>
-#endif
-#include <sys/timeb.h>
-#include "error_table.h"
-#include "mit-sipb-cr.h"
-#include <stdio.h>
 
 /* Copyright (C)  1998  Transarc Corporation.  All rights reserved.
  *

@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaprocs.c,v 1.1.1.5 2001/07/11 03:09:23 hartmans Exp $");
+
 #include <afs/stds.h>
 #include <errno.h>
 #include "kauth.h"

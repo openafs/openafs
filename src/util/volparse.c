@@ -7,12 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- * ALL RIGHTS RESERVED
- */
-
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/volparse.c,v 1.1.1.5 2001/07/11 03:11:51 hartmans Exp $");
+
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
 #else

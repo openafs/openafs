@@ -16,6 +16,10 @@
  * --------------------- Required definitions ---------------------
  */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_fs.c,v 1.1.1.3 2001/07/11 03:11:37 hartmans Exp $");
+
 #include "uss_fs.h"		/*Interface to this module*/
 #include <sys/types.h>
 #include <sys/errno.h>

@@ -9,6 +9,14 @@
 
 #if defined(UKERNEL)
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/ubikclient.c,v 1.1.1.4 2001/07/11 03:11:31 hartmans Exp $");
+
+#if defined(UKERNEL)
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../afs/stds.h"
@@ -19,7 +27,6 @@
 #include "../afs/ubik.h"
 #include "../afs/pthread_glock.h"
 #else /* defined(UKERNEL) */
-#include <afs/param.h>
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
 #include <stdio.h>

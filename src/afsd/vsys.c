@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/afsd/vsys.c,v 1.1.1.3 2001/07/11 03:07:02 hartmans Exp $");
+
 #include <afs/afs_args.h>
 
 #include "AFS_component_version_number.c"

@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef	_PARAM_USR_HPUX102_H_
-#define	_PARAM_USR_HPUX102_H_
+#ifndef	AFS_PARAM_H
+#define	AFS_PARAM_H
 
 #define AFS_VFS_ENV	1
 /* Used only in vfsck code; is it needed any more???? */
@@ -61,4 +61,4 @@
 #define CMSERVERPREF
 #endif
 
-#endif	/* _PARAM_USR_HPUX102_H_ */
+#endif	/* AFS_PARAM_H */

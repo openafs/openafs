@@ -7,6 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/vos/lockprocs.c,v 1.1.1.4 2001/07/11 03:09:58 hartmans Exp $");
+
 #include "lockprocs.h"
 #ifdef HAVE_STRINGS_H
 #include <strings.h>

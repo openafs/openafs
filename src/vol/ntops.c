@@ -10,6 +10,10 @@
 /* I/O operations for the Windows NT platforms. */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/ntops.c,v 1.1.1.3 2001/07/11 03:12:22 hartmans Exp $");
+
 #ifdef AFS_NT40_ENV
 #include <stdio.h>
 #include <stdlib.h>

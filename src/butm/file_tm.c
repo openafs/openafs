@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/butm/file_tm.c,v 1.1.1.3 2001/07/11 03:08:07 hartmans Exp $");
+
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else

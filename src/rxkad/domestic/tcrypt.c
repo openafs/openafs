@@ -7,16 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- * Revision 2.2  90/08/20  10:19:23
- * Cleanup.
- * Remove dependence on auth.h
- * 
- * Revision 2.1  90/08/07  19:33:42
- * Start with clean version to sync test and dev trees.
- * */
-
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/domestic/tcrypt.c,v 1.1.1.3 2001/07/11 03:11:16 hartmans Exp $");
+
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <netinet/in.h>

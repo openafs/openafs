@@ -7,15 +7,16 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/venus/up.c,v 1.1.1.5 2001/07/11 03:12:00 hartmans Exp $");
+
 /* missing type from C language */
 #define Boolean short
 #define true 1
 #define false 0
 
-/* ************************************************************* */
-
-#include <afs/param.h>
-#include <afsconfig.h>
 #include <errno.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>

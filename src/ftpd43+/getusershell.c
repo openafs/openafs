@@ -15,10 +15,6 @@
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)getusershell.c	5.5 (Berkeley) 7/21/88";
-#endif /* LIBC_SCCS and not lint */
-
 #include <afs/param.h>
 #include <sys/param.h>
 #include <sys/file.h>

@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
 /*
 	System:		VICE-TWO
 	Module:		common.c
@@ -19,6 +17,10 @@
 #include <sys/types.h>
 #include <stdio.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/common.c,v 1.1.1.3 2001/07/11 03:12:18 hartmans Exp $");
+
 #include <afs/afsutil.h>
 
 int Statistics = 0;

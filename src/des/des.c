@@ -31,11 +31,14 @@
  *
  * originally written by Steve Miller, MIT Project Athena
  */
-
 #include <mit-cpyright.h>
 
-#include <stdio.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/des.c,v 1.1.1.3 2001/07/11 03:08:41 hartmans Exp $");
+
+#include <stdio.h>
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
 #endif /* AFS_PTHREAD_ENV */

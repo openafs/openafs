@@ -10,6 +10,10 @@
 #include <afs/vldbint.h>
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/venus/cacheout.c,v 1.1.1.3 2001/07/11 03:11:54 hartmans Exp $");
+
 #include <stdio.h>
 #include <string.h>
 

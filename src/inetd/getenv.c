@@ -15,11 +15,11 @@
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)getenv.c	5.5 (Berkeley) 6/27/88";
-#endif /* LIBC_SCCS and not lint */
-
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/inetd/getenv.c,v 1.1.1.2 2001/07/11 03:09:18 hartmans Exp $");
+
 #include <stdio.h>
 
 /*

@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/gtxtest.c,v 1.1.1.3 2001/07/11 03:09:15 hartmans Exp $");
+
 #include "gtxwindows.h"
 #include "gtxobjects.h"
 #include "gtxtextobj.h"

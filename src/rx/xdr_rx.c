@@ -13,6 +13,14 @@
 
 #ifdef	KERNEL
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_rx.c,v 1.1.1.4 2001/07/11 03:10:58 hartmans Exp $");
+
+#ifdef KERNEL
 #ifndef UKERNEL
 #include "../h/types.h"
 #include "../h/uio.h"
@@ -49,7 +57,6 @@
 #include "../afs/longc_procs.h"
 
 #else /* KERNEL */
-#include "afs/param.h"
 #include <sys/types.h>
 #include <stdio.h>
 #ifndef AFS_NT40_ENV

@@ -9,7 +9,8 @@ SHELL = /bin/sh
 COMPONENT=libacl
 include ../config/Makefile.${SYS_NAME}
 
-INCDIRS= -I${DESTDIR}include -I.. -I${BACKDIR}include -I${DESTDIR}include/afs 
+INCDIRS= -I${TOP_SRCDIR}/config -I${DESTDIR}include -I.. \
+	-I${BACKDIR}include -I${DESTDIR}include/afs 
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
 

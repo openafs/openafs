@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bnode.c,v 1.1.1.4 2001/07/11 03:07:42 hartmans Exp $");
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -713,9 +717,9 @@ bnode_Int(int asignal)
     extern void bozo_ShutdownAndExit();
 
     if (asignal == SIGQUIT) {
-	IOMGR_SoftSig(bozo_ShutdownAndExit, asignal);
+	IOMGR_SoftSig(bozo_ShutdownAndExit, (char *)asignal);
     } else {
-	IOMGR_SoftSig(bnode_SoftInt, asignal);
+	IOMGR_SoftSig(bnode_SoftInt, (char *)asignal);
     }
 }
 

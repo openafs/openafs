@@ -17,6 +17,10 @@
 /* ********************************************************************** */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/serverLog.c,v 1.1.1.6 2001/07/11 03:11:50 hartmans Exp $");
+
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
 #include <io.h>

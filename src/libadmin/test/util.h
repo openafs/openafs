@@ -11,7 +11,6 @@
  * This file implements the bos related funtions for afscp
  */
 
-#include <afs/param.h>
 #include <afs/stds.h>
 
 #include <stddef.h>

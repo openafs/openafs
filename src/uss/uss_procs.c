@@ -16,6 +16,10 @@
  * --------------------- Required definitions ---------------------
  */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_procs.c,v 1.1.1.3 2001/07/11 03:11:40 hartmans Exp $");
+
 #include "uss_procs.h"		/*Module interface*/
 #include "uss_common.h"		/*Common defs & operations*/
 #include "uss_acl.h"		/*ACL-related operations*/

@@ -10,6 +10,10 @@
 /* procedures invoked by the rpc stub */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/butc/tcprocs.c,v 1.1.1.3 2001/07/11 03:08:06 hartmans Exp $");
+
 #include <sys/types.h>
 #include <errno.h>
 #ifdef AFS_NT40_ENV

@@ -9,6 +9,14 @@
 
 #if defined(UKERNEL)
 #include "../afs/param.h"
+#else
+#include <afs/param.h>
+#endif
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptuser.c,v 1.1.1.4 2001/07/11 03:10:40 hartmans Exp $");
+
+#if defined(UKERNEL)
 #include "../afs/sysincludes.h"
 #include "../afs/afs_usrops.h"
 #include "../afs/afsincludes.h"
@@ -19,12 +27,9 @@
 #include "../afs/auth.h"
 #include "../afs/cellconfig.h"
 #include "../afs/afsutil.h"
-
 #include "../afs/ptclient.h"
 #include "../afs/pterror.h"
-
 #else /* defined(UKERNEL) */
-#include <afs/param.h>
 #include <afs/stds.h>
 #include <ctype.h>
 #include <sys/types.h>

@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
 /*******************************************************************\
 * 								    *
 * 	Information Technology Center				    *
@@ -24,6 +22,10 @@
 */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/iomgr.c,v 1.1.1.4 2001/07/11 03:10:10 hartmans Exp $");
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

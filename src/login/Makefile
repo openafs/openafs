@@ -29,7 +29,7 @@ KAFSLIBS = ${LIBDIR}afs/libkauth.krb.a ${LIBDIR}afs/libprot.a ${LIBDIR}libubik.a
 	  ${LIBDIR}afs/libauth.krb.a ${DESTDIR}lib/librxkad.a ${LIBDIR}afs/libsys.a \
 	  ${DESTDIR}lib/libdes.a ${LIBDIR}librx.a ${LIBDIR}liblwp.a \
           ${LIBDIR}afs/libcmd.a ${LIBDIR}afs/libcom_err.a ${LIBDIR}afs/util.a
-INCLUDES = -I${DESTDIR}include -I/usr/include -I/usr/include/sys
+INCLUDES = -I${TOP_SRCDIR}/config -I${DESTDIR}include -I/usr/include -I/usr/include/sys
 CFLAGS=	-g ${XCFLAGS} ${INCLUDES}
 LIBC=	/lib/libc.a
 SRCS=	login.c 

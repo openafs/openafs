@@ -15,6 +15,16 @@
  *
  *--------------------------------------------------------------------------------*/
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/windows.c,v 1.1.1.3 2001/07/11 03:09:18 hartmans Exp $");
+
+/* On DUX "IN" is a variable in curses.h, so this can be a bit of a problem */
+#ifdef IN
+#undef IN
+#endif
+
 #include "gtxwindows.h"		/*Interface for this module*/
 #include "gtxcurseswin.h"	/*Interface for the curses module*/
 #include "gtxdumbwin.h"		/*Interface for the dumb terminal module*/

@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
 /*
 	(Multiple) readers & writers test of LWP stuff.
 
@@ -17,6 +15,10 @@ Created: 11/1/83, J. Rosenberg
 */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/rw.c,v 1.1.1.3 2001/07/11 03:10:13 hartmans Exp $");
+
 #ifdef AFS_NT40_ENV
 #include <malloc.h>
 #include <stdlib.h>

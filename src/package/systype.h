@@ -14,6 +14,4 @@
  *	Transarc Corporation & Carnegie Mellon University
  *------------------------------------------------------------------------*/
 
-#include <afs/param.h>
-
 char *systype = SYS_NAME;

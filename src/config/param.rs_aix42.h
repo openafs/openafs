@@ -7,8 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef	_PARAM_RS_AIX42_H_
-#define	_PARAM_RS_AIX42_H_
+#ifndef	AFS_PARAM_H
+#define	AFS_PARAM_H
 
 #define	AFS_AIX_ENV		1
 #define	AFS_AIX32_ENV		1
@@ -63,4 +63,4 @@
 #define va_nodeid	va_serialno
 #endif /* !_KERNEL	*/
 #define	AFS_DIRENT
-#endif /* _PARAM_RS_AIX42_H_ */
+#endif /* AFS_PARAM_H */

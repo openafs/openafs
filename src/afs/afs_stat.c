@@ -10,6 +10,10 @@
 /* statistics-gathering package */
 
 #include "../afs/param.h"       /*Should be always first*/
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_stat.c,v 1.1.1.3 2001/07/11 03:06:19 hartmans Exp $");
+
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
 #include "afs_stats.h"

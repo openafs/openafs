@@ -7,19 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- * Revision 2.3  91/08/09  18:10:56
- * added a new param to afsconf_SuperUser
- * 
- * Revision 2.2  90/08/29  15:10:43
- * Cleanups.
- * Reject security index #1: rxvab/bcrypt.
- * 
- * Revision 2.1  90/08/07  18:52:21
- * Start with clean version to sync test and dev trees.
- * */
-
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/auth/userok.c,v 1.1.1.4 2001/07/11 03:07:38 hartmans Exp $");
+
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
 #include <sys/types.h>

@@ -11,6 +11,11 @@
  * screen_test: A test of the gator screen operations.
  *--------------------------------------------------------------------------------*/
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/screen_test.c,v 1.1.1.3 2001/07/11 03:09:17 hartmans Exp $");
+
 #include "gtxwindows.h"	    /*Generalized window interface*/
 #include "gtxcurseswin.h"    /*Curses window interface*/
 #include "gtxdumbwin.h"	    /*Dumb terminal window interface*/

@@ -7,6 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/test/test_ktime.c,v 1.1.1.3 2001/07/11 03:11:52 hartmans Exp $");
+
 #include "ktime.h"
 
 static struct testTime {

@@ -10,6 +10,11 @@
 /*
  * cfgexport -	load/configure the EXPORT kernel extension
  */
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/export/cfgexport.c,v 1.1.1.3 2001/07/11 03:08:52 hartmans Exp $");
+
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/types.h>

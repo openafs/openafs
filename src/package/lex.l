@@ -10,6 +10,11 @@
  *	workstation configuration facility.
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/package/lex.l,v 1.1.1.2 2001/07/11 03:10:23 hartmans Exp $");
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>

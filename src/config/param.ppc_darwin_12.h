@@ -1,5 +1,5 @@
-#ifndef _PARAM_PPC_DARWIN_H_
-#define _PARAM_PPC_DARWIN_H_
+#ifndef AFS_PARAM_H
+#define AFS_PARAM_H
 
 #define AFS_ENV                 1
 #define AFS_64BIT_ENV           1       /* Defines afs_int32 as int, not long. */
@@ -55,4 +55,4 @@
 #define VN_HOLD(vp)     VREF(((struct vnode *)(vp)))
 
 #endif
-#endif /* _PARAM_PPC_DARWIN_H_ */
+#endif /* AFS_PARAM_H */

@@ -15,17 +15,12 @@
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifndef lint
-char copyright[] =
-"@(#) Copyright (c) 1983, 1988 The Regents of the University of California.\n\
- All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-static char sccsid[] = "@(#)rlogind.c	5.22.1.6 (Berkeley) 2/7/89";
-#endif /* not lint */
-
 /*
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rlogind/rlogind.c,v 1.1.1.2 2001/07/11 03:10:43 hartmans Exp $");
+
 #ifdef MSG
 #include "rlogind_msg.h"
 #define MF_LIBC "libc.cat"

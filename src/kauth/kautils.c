@@ -7,23 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- * Revision 2.4  1990/10/01  10:01:37
- * Include <netinet/in.h> so ntohl is defined properly.
- *
- * Revision 2.3  90/09/28  16:18:23
- * Cleanups.
- * Move KeyIsZero here.
- * Add KeyCheckSum function.
- * 
- * Revision 2.2  90/09/19  08:31:04
- * Include afs/param.h.
- * 
- * Revision 2.1  90/08/29  08:37:41
- * Start with clean version to sync test and dev trees.
- * */
-
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kautils.c,v 1.1.1.4 2001/07/11 03:09:25 hartmans Exp $");
+
 #include <afs/stds.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV

@@ -16,6 +16,10 @@
 #include <arpa/inet.h>
 #include <afs/prs_fs.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/test/test_interim_ktc.c,v 1.1.1.3 2001/07/11 03:09:32 hartmans Exp $");
+
 #include <afs/stds.h>
 #include <afs/com_err.h>
 #include <afs/cellconfig.h>

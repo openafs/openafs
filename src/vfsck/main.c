@@ -15,17 +15,11 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifndef lint
-char copyright[] =
-"@(#) Copyright (c) 1980, 1986 The Regents of the University of California.\n\
- All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-static char sccsid[] = "@(#)main.c	5.17 (Berkeley) 2/1/90";
-#endif /* not lint */
-
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/main.c,v 1.1.1.3 2001/07/11 03:12:05 hartmans Exp $");
+
 #define VICE	/* allow us to put our changes in at will */
 #include <stdio.h>
 

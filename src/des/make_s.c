@@ -5,6 +5,11 @@
  * see the file <mit-cpyright.h>.
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/make_s.c,v 1.1.1.2 2001/07/11 03:08:45 hartmans Exp $");
+
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include "des_internal.h"

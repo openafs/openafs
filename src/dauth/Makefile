@@ -12,7 +12,7 @@ include ../config/Makefile.${SYS_NAME}
 COMPILE_ET = 	${SRCDIR}bin/compile_et
 OPTMZ=	-g
 
-CFLAGS = 	${OPTMZ} -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = 	${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 LDFLAGS =	${OPTMZ} ${XLDFLAGS}
 
 INCLS=		${SRCDIR}include/ubik.h \

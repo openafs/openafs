@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/base64.c,v 1.1.1.3 2001/07/11 03:11:43 hartmans Exp $");
+
 
 #ifdef AFS_SGI_XFS_IOPS_ENV
 

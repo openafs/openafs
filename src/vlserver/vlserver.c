@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/vlserver.c,v 1.1.1.7 2001/07/11 03:12:16 hartmans Exp $");
+
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <signal.h>
@@ -45,9 +49,7 @@ int lwps = 9;
 struct vldstats dynamic_statistics;
 struct ubik_dbase *VL_dbase;
 afs_uint32	HostAddress[MAXSERVERID+1];
-extern afs_int32 afsconf_GetKey();
 extern int afsconf_CheckAuth();
-extern int afsconf_ClientAuth();
 extern int afsconf_ServerAuth();
 
 extern afs_int32 ubik_lastYesTime;

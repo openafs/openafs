@@ -13,22 +13,16 @@
  * specifies the terms and conditions for redistribution.
  */
 
-#ifndef lint
-char copyright[] =
-"@(#) Copyright (c) 1980 Regents of the University of California.\n\
- All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-static char sccsid[] = "@(#)login.c	5.15 (Berkeley) 4/12/86";
-#endif /* not lint */
-
 /*
  * login [ name ]
  * login -r hostname (for rlogind)
  * login -h hostname (for telnetd, etc.)
  */
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/klogin.c,v 1.1.1.4 2001/07/11 03:09:27 hartmans Exp $");
+
 #if !defined(AFS_SUN_ENV) && !defined(AFS_AIX_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) &&!defined(AFS_FBSD_ENV)
 #include <sys/param.h>
 

@@ -10,7 +10,8 @@ COMPONENT=bu_utils
 include ../config/Makefile.${SYS_NAME}
 
 COMPILE_ET = ${DESTDIR}/bin/compile_et
-CFLAGS= -g -w -I${SRCDIR}include -I${SRCDIR}include/afs ${XCFLAGS}
+CFLAGS= -g -w -I${TOP_SRCDIR}/config \
+	-I${SRCDIR}include -I${SRCDIR}include/afs ${XCFLAGS}
 LDFLAGS = ${XLDFLAGS}
 
 include ../config/Makefile.version

@@ -7,60 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef	lint
-#endif /* lint */
-/*
- * Revision 2.1  90/08/07  19:23:23
- * Start with clean version to sync test and dev trees.
- * 
- * Revision 1.7  89/12/22  20:33:21
- * hp/ux specific (initial port to it); Added <afs/param.h> and special include files for HPUX and misc other changes
- * 
- * Revision 1.6  89/12/11  14:26:16
- * Added code to support AIX 2.2.1.
- * 
- * Revision 1.5  89/05/24  12:27:44
- * Latest May 18, Version 4.3 release from UMD.
- * 
- * Revision 3.4.1.3  89/05/18  18:33:50
- * Added support few a new type of unsigned long to double compiler brokenness,
- * called GENERIC_UNS_BUG.  If this is defined, then the unsigned long is
- * shifted right one bit, the high-order bit of the result is cleared, then
- * converted to a double.  The double is multiplied by 2.0, and the a 1.0 is
- * optionall added to it if the low order bit of the original unsigned long
- * was set.  Whew!
- * 
- * Revision 3.4.1.2  89/03/29  12:46:02
- * Check for success sending query before trying to listen for answers.  Will 
- * catch case of no server running and an ICMP port unreachable being returned.
- * 
- * Revision 3.4.1.1  89/03/22  18:32:19
- * patch3: Use new RCS headers.
- * 
- * Revision 3.4  89/03/17  18:37:18
- * Latest test release.
- * 
- * Revision 3.3  89/03/15  14:20:03
- * New baseline for next release.
- * 
- * Revision 3.2  89/03/07  18:29:22
- * New version of UNIX NTP daemon based on the 6 March 1989 draft of the new
- * NTP protocol spec.  This module has mostly cosmetic changes.
- * 
- * Revision 3.1.1.1  89/02/15  08:59:27
- * *** empty log message ***
- * 
- * 
- * Revision 3.1  89/01/30  14:43:18
- * Second UNIX NTP test release.
- * 
- * Revision 3.0  88/12/12  15:58:59
- * Test release of new UNIX NTP software.  This version should conform to the
- * revised NTP protocol specification.
- * 
- */
-
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/ntp/ntpsubs.c,v 1.1.1.4 2001/07/11 03:10:21 hartmans Exp $");
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/param.h>

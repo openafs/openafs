@@ -7,9 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/utils.c,v 1.1.1.4 2001/07/11 03:10:41 hartmans Exp $");
+
 #include <sys/types.h>
 #include <lock.h>
 #include <ubik.h>

@@ -26,10 +26,12 @@
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_float.c,v 1.1.1.2 2001/07/11 03:10:57 hartmans Exp $");
+
 #ifndef	NeXT
-#ifndef lint
-static char sccsid[] = "@(#)xdr_float.c 1.1 86/02/03 Copyr 1984 Sun Micro";
-#endif
 
 /*
  * xdr_float.c, Generic XDR routines impelmentation.

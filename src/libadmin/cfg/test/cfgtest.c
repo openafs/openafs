@@ -10,6 +10,10 @@
 /* Test driver for configuration functions. */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/cfg/test/cfgtest.c,v 1.1.1.3 2001/07/11 03:09:42 hartmans Exp $");
+
 #include <afs/stds.h>
 
 #include <stddef.h>

@@ -11,6 +11,11 @@
  * This file implements the bos related funtions for afscp
  */
 
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/test/bos.c,v 1.1.1.3 2001/07/11 03:09:53 hartmans Exp $");
+
 #include "bos.h"
 
 /*

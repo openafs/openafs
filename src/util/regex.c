@@ -8,47 +8,15 @@
  */
 
 /*
- * All Rights Reserved
- */
-/*
- * HISTORY
- * Revision 1.1.7.2  1994/08/25  17:34:40
- * 	Added s12y calls
- * 	[1994/08/25  17:23:12]
- *
- * Revision 1.1.7.1  1994/06/09  13:50:35
- * 	fixed copyright in src/file
- * 	[1994/06/08  21:23:56]
- * 
- * Revision 1.1.5.3  1993/01/18  19:51:30
- * 	Embedded copyright notice
- * 	[1993/01/18  19:26:02
- * 
- * Revision 1.1.5.2  1992/11/24  15:37:53
- * 	Change include file install directory from .../afs to .../dcedfs.
- * 	[1992/11/22  16:05:26]
- * 
- * Revision 1.1.3.3  1992/01/24  01:48:02
- * 	Merging dfs6.3
- * 	[1992/01/24  00:02:28]
- * 
- * Revision 1.1.3.2  1992/01/23  19:03:28
- * 	Moving files onto the branch for dfs6.3 merge
- * 	[1992/01/23  18:19:02]
- * 	Revision 1.1.1.2  1992/01/22  19:29:25
- * 	Bring in dfs6.3 sources
- * 
- * Revision 1.1  1992/01/19  02:56:43
- * 	Initial revision
- * 
- * $EndLog$
- */
-/*
  * regex.c -- regular expression patter matching functions
  * 
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/regex.c,v 1.1.1.3 2001/07/11 03:11:48 hartmans Exp $");
+
 /*
  * routines to do regular expression matching
  *

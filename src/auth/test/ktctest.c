@@ -15,6 +15,10 @@
 #include <errno.h>
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/auth/test/ktctest.c,v 1.1.1.3 2001/07/11 03:07:41 hartmans Exp $");
+
 #include <afs/stds.h>
 #include <afs/afsutil.h>
 #include <afs/auth.h>

@@ -9,6 +9,9 @@
 
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/vos/afs_vosAdmin.c,v 1.1.1.4 2001/07/11 03:09:57 hartmans Exp $");
+
 #include <afs/stds.h>
 #include <stdio.h>
 #ifdef HAVE_STRINGS_H

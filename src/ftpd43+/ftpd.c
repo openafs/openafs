@@ -15,16 +15,6 @@
  * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#ifndef lint
-char copyright[] =
-"@(#) Copyright (c) 1985, 1988 Regents of the University of California.\n\
- All rights reserved.\n";
-#endif /* not lint */
-
-#ifndef lint
-static char sccsid[] = "@(#)ftpd.c	5.27.1.1	(Berkeley) 3/2/89";
-#endif /* not lint */
-
 /*
  * FTP server.
  */

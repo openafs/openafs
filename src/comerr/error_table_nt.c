@@ -13,6 +13,10 @@
 #line 1 "error_table.y"
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/comerr/error_table_nt.c,v 1.1.1.2 2001/07/11 03:08:13 hartmans Exp $");
+
 
 /*
  * If __STDC__ is defined, function prototypes in the SunOS 5.5.1 lex

@@ -34,6 +34,9 @@
  */
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_util.c,v 1.1.1.3 2001/07/11 03:11:12 hartmans Exp $");
+
 #include <stdio.h>
 #ifdef HAVE_STRINGS_H
 #include <strings.h>
@@ -45,8 +48,6 @@
 #include "rpc_scan.h"
 #include "rpc_parse.h"
 #include "rpc_util.h"
-
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_util.c,v 1.1.1.2 2001/07/05 01:04:08 hartmans Exp $");
 
 char curline[MAXLINESIZE];	/* current read line */
 char *where = curline;	/* current point in line */

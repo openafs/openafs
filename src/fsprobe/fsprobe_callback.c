@@ -22,6 +22,10 @@
  *------------------------------------------------------------------------*/
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/fsprobe/fsprobe_callback.c,v 1.1.1.3 2001/07/11 03:09:07 hartmans Exp $");
+
 #include <errno.h>
 #include <stdio.h>			/*Standard I/O stuff*/
 #include <afs/afscbint.h>		/*Callback interface defs*/

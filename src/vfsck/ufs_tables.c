@@ -18,6 +18,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/ufs_tables.c,v 1.1.1.2 2001/07/11 03:12:02 hartmans Exp $");
+
 #ifdef KERNEL
 #include "param.h"
 #else

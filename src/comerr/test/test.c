@@ -1,4 +1,8 @@
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/comerr/test/test.c,v 1.1.1.2 2001/07/11 03:08:16 hartmans Exp $");
+
 #include <stdio.h>
 #include <errno.h>
 #include <afs/com_err.h>

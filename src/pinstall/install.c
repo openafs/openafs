@@ -28,9 +28,6 @@ SOFTWARE.
 ******************************************************************/
 /* $ACIS: $ */
 
-#ifndef lint
-#endif
-
 /* ALSO utimes and strip the file
 
 Generic install command.  Options are:
@@ -50,6 +47,10 @@ Generic install command.  Options are:
 #define MAXFILES 200
 #define BUFSIZE 32768
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/pinstall/install.c,v 1.1.1.4 2001/07/11 03:10:32 hartmans Exp $");
+
 #include <stdio.h>
 #include <pwd.h>
 #include <grp.h>

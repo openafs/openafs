@@ -15,6 +15,11 @@
 /*
  * --------------------- Required definitions ---------------------
  */
+#include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_common.c,v 1.1.1.3 2001/07/11 03:11:36 hartmans Exp $");
+
 #include "uss_common.h"		/*Interface definitions*/
 #include <afs/kautils.h>	/*MAXKTCREALMLEN & MAXKTCNAMELEN*/
 

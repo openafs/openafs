@@ -7,8 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef lint
-#endif
 /*******************************************************************\
 * 								    *
 * 								    *
@@ -21,6 +19,10 @@
 
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/timer.c,v 1.1.1.5 2001/07/11 03:10:13 hartmans Exp $");
+
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else

@@ -8,6 +8,10 @@
  */
 
 #include "../afs/param.h"	/* Should be always first */
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/UKERNEL/osi_vfsops.c,v 1.1.1.4 2001/07/11 03:06:48 hartmans Exp $");
+
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
 #include "../afs/afs_stats.h"   /* statistics stuff */

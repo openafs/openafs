@@ -9,6 +9,9 @@
 
 #include <afs/param.h>
 #include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/update/client.c,v 1.1.1.4 2001/07/11 03:11:32 hartmans Exp $");
+
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
@@ -51,12 +54,8 @@
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
-
-RCSID("$Header: /tmp/cvstemp/openafs/src/update/client.c,v 1.1.1.3 2001/07/05 01:04:23 hartmans Exp $");
-
 #include "update.h"
 #include "global.h"
-
 
 char *whoami;
 static int verbose;

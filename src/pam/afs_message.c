@@ -15,6 +15,10 @@
 #include <pwd.h>
 #include <unistd.h>
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/pam/afs_message.c,v 1.1.1.4 2001/07/11 03:10:30 hartmans Exp $");
+
 #include <sys/param.h>
 #include <afs/kautils.h>
 #include <stdarg.h>

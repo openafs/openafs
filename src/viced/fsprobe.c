@@ -8,6 +8,10 @@
  */
 
 #include <afs/param.h>
+#include <afsconfig.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/fsprobe.c,v 1.1.1.3 2001/07/11 03:12:11 hartmans Exp $");
+
 #include <afs/stds.h>
 #include <afs/afsint.h>
 #include <rx/rx_globals.h>
