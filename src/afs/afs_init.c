@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_init.c,v 1.28 2004/05/08 04:23:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_init.c,v 1.28.2.1 2004/12/07 06:12:11 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -351,7 +351,9 @@ afs_InitCacheInfo(register char *afile)
     struct osi_stat tstat;
     register struct osi_file *tfile;
     struct afs_fheader theader;
+#ifndef AFS_LINUX22_ENV
     struct vnode *filevp;
+#endif
     int goodFile;
 
     AFS_STATCNT(afs_InitCacheInfo);

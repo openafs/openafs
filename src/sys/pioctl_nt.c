@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.18.2.3 2004/11/05 19:21:58 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/sys/pioctl_nt.c,v 1.18.2.5 2004/12/07 06:15:58 shadow Exp $");
 
 #include <afs/stds.h>
 #include <windows.h>
@@ -22,6 +22,8 @@ RCSID
 #include <string.h>
 #include <winioctl.h>
 #include <winsock2.h>
+#define SECURITY_WIN32
+#include <security.h>
 #include <nb30.h>
 
 #include <osi.h>
@@ -129,6 +131,15 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
     char netbiosName[MAX_NB_NAME_LENGTH];
     char tbuffer[256]="";
     HANDLE fh;
+    HKEY hk;
+    char szUser[128] = "";
+    char szClient[MAX_PATH] = "";
+    char szPath[MAX_PATH] = "";
+    NETRESOURCE nr;
+    DWORD res;
+    DWORD ioctlDebug = IoctlDebug();
+    DWORD gle;
+    DWORD dwSize = sizeof(szUser);
 
     if (fileNamep) {
         drivep = strchr(fileNamep, ':');
@@ -188,15 +199,6 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 		    FILE_FLAG_WRITE_THROUGH, NULL);
     fflush(stdout);
     if (fh == INVALID_HANDLE_VALUE) {
-        HKEY hk;
-        char szUser[64] = "";
-        char szClient[MAX_PATH] = "";
-        char szPath[MAX_PATH] = "";
-        NETRESOURCE nr;
-        DWORD res;
-        DWORD ioctlDebug = IoctlDebug();
-        DWORD gle;
-
         gle = GetLastError();
         if (gle && ioctlDebug ) {
             char buf[4096];
@@ -210,62 +212,131 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                                (va_list *) NULL
                                ) )
             {
-                fprintf(stderr,"pioctl CreateFile(%s) failed: [%s]\r\n",tbuffer,buf);
+                fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%8X\r\n\t[%s]\r\n",
+                        tbuffer,gle,buf);
             }
         }
+#ifdef COMMENT
         if (gle != ERROR_DOWNGRADE_DETECTED)
             return -1;                                   
+#endif
 
         lana_GetNetbiosName(szClient, LANA_NETBIOS_NAME_FULL);
-        sprintf(szPath, "\\\\%s", szClient);
 
-        /* We should probably be using GetUserNameEx() for this */
         if (RegOpenKey (HKEY_CURRENT_USER, 
-                        TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"), &hk) == 0)
+                         TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"), &hk) == 0)
         {
-            DWORD dwSize = sizeof(szUser);
             DWORD dwType = REG_SZ;
             RegQueryValueEx (hk, TEXT("Logon User Name"), NULL, &dwType, (PBYTE)szUser, &dwSize);
             RegCloseKey (hk);
         }
-        if ( ioctlDebug )
-            fprintf(stderr, "pioctl logon user: [%s]\r\n",szUser);
 
-        memset (&nr, 0x00, sizeof(NETRESOURCE));
-        nr.dwType=RESOURCETYPE_DISK;
-        nr.lpLocalName=0;
-        nr.lpRemoteName=szPath;
-        res = WNetAddConnection2(&nr,NULL,szUser,0);
-        if (res) {
-            if ( ioctlDebug ) {
-                fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
-                         szPath,szUser,res);
-            }
-            return -1;
-        }
+        if ( szUser[0] ) {
+            if ( ioctlDebug )
+                fprintf(stderr, "pioctl logon user: [%s]\r\n",szUser);
 
-        fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
-                         FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-                         FILE_FLAG_WRITE_THROUGH, NULL);
-        fflush(stdout);
-        if (fh == INVALID_HANDLE_VALUE) {
-            gle = GetLastError();
-            if (gle && ioctlDebug ) {
-                char buf[4096];
+            sprintf(szPath, "\\\\%s", szClient);
+            memset (&nr, 0x00, sizeof(NETRESOURCE));
+            nr.dwType=RESOURCETYPE_DISK;
+            nr.lpLocalName=0;
+            nr.lpRemoteName=szPath;
+            res = WNetAddConnection2(&nr,NULL,szUser,0);
+            if (res) {
+                if ( ioctlDebug ) {
+                    fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
+                             szPath,szUser,res);
+                }
 
-                if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
-                                    NULL,
-                                    gle,
-                                    MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
-                                    buf,
-                                    4096,
-                                    (va_list *) NULL
-                                    ) )
-                {
-                    fprintf(stderr,"pioctl CreateFile(%s) failed: [%s]\r\n",tbuffer,buf);
+                sprintf(szPath, "\\\\%s\\all", szClient);
+                res = WNetAddConnection2(&nr,NULL,szUser,0);
+                if (res) {
+                    if ( ioctlDebug ) {
+                        fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
+                                 szPath,szUser,res);
+                    }
+                    goto next_attempt;
                 }
             }
-            return -1;
+
+            fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+                             FILE_FLAG_WRITE_THROUGH, NULL);
+            fflush(stdout);
+            if (fh == INVALID_HANDLE_VALUE) {
+                gle = GetLastError();
+                if (gle && ioctlDebug ) {
+                    char buf[4096];
+
+                    if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+                                        NULL,
+                                        gle,
+                                        MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
+                                        buf,
+                                        4096,
+                                        (va_list *) NULL
+                                        ) )
+                    {
+                        fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%8X\r\n\t[%s]\r\n",
+                                 tbuffer,gle,buf);
+                    }
+                }
+            }
+        }
+    }
+
+  next_attempt:
+    if ( fh == INVALID_HANDLE_VALUE ) {
+        if (GetUserNameEx(NameSamCompatible, szUser, &dwSize)) {
+            if ( ioctlDebug )
+                fprintf(stderr, "pioctl logon user: [%s]\r\n",szUser);
+
+            sprintf(szPath, "\\\\%s", szClient);
+            memset (&nr, 0x00, sizeof(NETRESOURCE));
+            nr.dwType=RESOURCETYPE_DISK;
+            nr.lpLocalName=0;
+            nr.lpRemoteName=szPath;
+            res = WNetAddConnection2(&nr,NULL,szUser,0);
+            if (res) {
+                if ( ioctlDebug ) {
+                    fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
+                             szPath,szUser,res);
+                }
+
+                sprintf(szPath, "\\\\%s\\all", szClient);
+                res = WNetAddConnection2(&nr,NULL,szUser,0);
+                if (res) {
+                    if ( ioctlDebug ) {
+                        fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
+                                 szPath,szUser,res);
+                    }
+                    return -1;
+                }
+            }
+
+            fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+                             FILE_FLAG_WRITE_THROUGH, NULL);
+            fflush(stdout);
+            if (fh == INVALID_HANDLE_VALUE) {
+                gle = GetLastError();
+                if (gle && ioctlDebug ) {
+                    char buf[4096];
+
+                    if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+                                        NULL,
+                                        gle,
+                                        MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
+                                        buf,
+                                        4096,
+                                        (va_list *) NULL
+                                        ) )
+                    {
+                        fprintf(stderr,"pioctl CreateFile(%s) failed: 0x%8X\r\n\t[%s]\r\n",
+                                 tbuffer,gle,buf);
+                    }
+                }
+                return -1;
+            }
         }
     }
 

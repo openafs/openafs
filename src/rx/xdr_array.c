@@ -30,7 +30,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_array.c,v 1.9 2003/11/29 22:08:16 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr_array.c,v 1.9.2.1 2004/12/07 06:10:06 shadow Exp $");
 
 #ifndef	NeXT
 
@@ -119,6 +119,9 @@ xdr_array(register XDR * xdrs, caddr_t * addrp, u_int * sizep, u_int maxsize,
 
 	case XDR_FREE:
 	    return (TRUE);
+
+	case XDR_ENCODE:
+	    break;
 	}
 
     /*

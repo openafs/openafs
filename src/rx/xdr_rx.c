@@ -19,7 +19,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_rx.c,v 1.10 2004/05/15 04:53:30 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr_rx.c,v 1.10.2.1 2004/12/07 06:10:07 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -73,11 +73,21 @@ RCSID
 #if defined(KERNEL)
 /*
  * kernel version needs to agree with <rpc/xdr.h>
+ * except on Linux which does XDR differently from everyone else
  */
+# if defined(AFS_LINUX20_ENV) && !defined(UKERNEL)
+#  define AFS_XDRS_T void *
+# else
+#  define AFS_XDRS_T XDR *
+# endif
 # if defined(AFS_SUN57_ENV)
 #  define AFS_RPC_INLINE_T rpc_inline_t
 # elif defined(AFS_DUX40_ENV)
 #  define AFS_RPC_INLINE_T int
+# elif defined(AFS_LINUX20_ENV) && !defined(UKERNEL)
+#  define AFS_RPC_INLINE_T afs_int32
+# elif defined(AFS_LINUX20_ENV)
+#  define AFS_RPC_INLINE_T int32_t *
 # else
 #  define AFS_RPC_INLINE_T long
 # endif
@@ -85,23 +95,23 @@ RCSID
 /*
  * user version needs to agree with "xdr.h", i.e. <rx/xdr.h>
  */
+#  define AFS_XDRS_T void *
 #  define AFS_RPC_INLINE_T afs_int32
 #endif /* KERNEL */
 
 /* Static prototypes */
 #if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)
-static bool_t xdrrx_getint64(XDR * xdrs, long *lp);
-static bool_t xdrrx_putint64(XDR * xdrs, long *lp);
+static bool_t xdrrx_getint64(AFS_XDRS_T axdrs, long *lp);
+static bool_t xdrrx_putint64(AFS_XDRS_T axdrs, long *lp);
 #endif /* (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV) */
 
-static bool_t xdrrx_getint32(XDR * xdrs, afs_int32 * lp);
-static bool_t xdrrx_putint32(register XDR * xdrs, register afs_int32 * lp);
-static bool_t xdrrx_getbytes(register XDR * xdrs, register caddr_t addr,
+static bool_t xdrrx_getint32(AFS_XDRS_T axdrs, afs_int32 * lp);
+static bool_t xdrrx_putint32(AFS_XDRS_T axdrs, register afs_int32 * lp);
+static bool_t xdrrx_getbytes(AFS_XDRS_T axdrs, register caddr_t addr,
 			     register u_int len);
-static bool_t xdrrx_putbytes(register XDR * xdrs, register caddr_t addr,
+static bool_t xdrrx_putbytes(AFS_XDRS_T axdrs, register caddr_t addr,
 			     register u_int len);
-static AFS_RPC_INLINE_T *xdrrx_inline(register XDR * xdrs,
-				      register u_int len);
+static AFS_RPC_INLINE_T *xdrrx_inline(AFS_XDRS_T axdrs, register u_int len);
 
 
 /*
@@ -149,8 +159,9 @@ int rx_pin_failed = 0;
 
 #if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)
 static bool_t
-xdrrx_getint64(XDR * xdrs, long *lp)
+xdrrx_getint64(AFS_XDRS_T axdrs, long *lp)
 {
+    XDR * xdrs = (XDR *)axdrs;
     register struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
     afs_int32 i;
 
@@ -162,8 +173,9 @@ xdrrx_getint64(XDR * xdrs, long *lp)
 }
 
 static bool_t
-xdrrx_putint64(XDR * xdrs, long *lp)
+xdrrx_putint64(AFS_XDRS_T axdrs, long *lp)
 {
+    XDR * xdrs = (XDR *)axdrs;
     afs_int32 code, i = htonl(*lp);
     register struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
 
@@ -173,9 +185,10 @@ xdrrx_putint64(XDR * xdrs, long *lp)
 #endif /* (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV) */
 
 static bool_t
-xdrrx_getint32(XDR * xdrs, afs_int32 * lp)
+xdrrx_getint32(AFS_XDRS_T axdrs, afs_int32 * lp)
 {
     afs_int32 l;
+    XDR * xdrs = (XDR *)axdrs;
     register struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
 #if	defined(KERNEL) && defined(AFS_AIX32_ENV)
     char *saddr = (char *)&l;
@@ -211,9 +224,10 @@ xdrrx_getint32(XDR * xdrs, afs_int32 * lp)
 }
 
 static bool_t
-xdrrx_putint32(register XDR * xdrs, register afs_int32 * lp)
+xdrrx_putint32(register AFS_XDRS_T axdrs, register afs_int32 * lp)
 {
     afs_int32 code, l = htonl(*lp);
+    XDR * xdrs = (XDR *)axdrs;
     register struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
 #if	defined(KERNEL) && defined(AFS_AIX32_ENV)
     char *saddr = (char *)&code;
@@ -241,9 +255,10 @@ xdrrx_putint32(register XDR * xdrs, register afs_int32 * lp)
 }
 
 static bool_t
-xdrrx_getbytes(register XDR * xdrs, register caddr_t addr, register u_int len)
+xdrrx_getbytes(register AFS_XDRS_T axdrs, register caddr_t addr, register u_int len)
 {
     afs_int32 code;
+    XDR * xdrs = (XDR *)axdrs;
     register struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
 #if	defined(KERNEL) && defined(AFS_AIX32_ENV)
     char *saddr = (char *)&code;
@@ -272,9 +287,10 @@ xdrrx_getbytes(register XDR * xdrs, register caddr_t addr, register u_int len)
 }
 
 static bool_t
-xdrrx_putbytes(register XDR * xdrs, register caddr_t addr, register u_int len)
+xdrrx_putbytes(register AFS_XDRS_T axdrs, register caddr_t addr, register u_int len)
 {
     afs_int32 code;
+    XDR * xdrs = (XDR *)axdrs;
     register struct rx_call *call = ((struct rx_call *)(xdrs)->x_private);
 #if	defined(KERNEL) && defined(AFS_AIX32_ENV)
     char *saddr = (char *)&code;
@@ -319,7 +335,7 @@ xdrrx_setpos(register XDR * xdrs, u_int pos)
 #endif
 
 static AFS_RPC_INLINE_T *
-xdrrx_inline(register XDR * xdrs, register u_int len)
+xdrrx_inline(AFS_XDRS_T axdrs, register u_int len)
 {
     /* I don't know what this routine is supposed to do, but the stdio module returns null, so we will, too */
     return (0);

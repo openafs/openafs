@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_sleep.c,v 1.22 2004/06/21 19:30:21 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_sleep.c,v 1.22.2.1 2004/12/07 06:12:13 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -50,7 +50,6 @@ int
 afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 {
     afs_int32 endTime;
-    struct timer_list *timer = NULL;
     int code;
 
     AFS_STATCNT(osi_Wait);

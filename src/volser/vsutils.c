@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/vsutils.c,v 1.16.2.1 2004/10/18 07:12:29 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/vsutils.c,v 1.16.2.2 2004/12/07 16:37:09 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef AFS_NT40_ENV
@@ -490,67 +490,34 @@ vsu_GetVolumeID(astring, acstruct, errp)
      afs_int32 *errp;
      char *astring;
 {
-    afs_uint32 tc, value;
-
-    char *str, *ptr, volname[VOLSER_OLDMAXVOLNAME + 1];
-    int tryname, curval;
+    afs_uint32 value;
+    char volname[VOLSER_OLDMAXVOLNAME + 1];
     struct nvldbentry entry;
     afs_int32 vcode = 0;
     int total;
 
     *errp = 0;
+
+    if (isdigit(astring[0])) {
+	char *end;
+	afs_uint32 result;
+	result = strtoul(astring, &end, 10);
+	if (result != ULONG_MAX && *end == '\0')
+	    return result;
+    }
+
+    /* It was not a volume number but something else */
     total = strlen(astring);
-    str = astring;
-    ptr = astring;
-    tryname = 0;
-    while ((curval = *str++)) {
-	if (curval < '0' || curval > '9')
-	    tryname = 1;
+    vsu_ExtractName(volname, astring);
+    vcode = VLDB_GetEntryByName(volname, &entry);
+    if (!vcode) {
+      if (!strcmp(&astring[total - 9], ".readonly"))
+	return entry.volumeId[ROVOL];
+      else if ((!strcmp(&astring[total - 7], ".backup")))
+	return entry.volumeId[BACKVOL];
+      else
+	return (entry.volumeId[RWVOL]);
     }
-
-    if (tryname) {
-	vsu_ExtractName(volname, astring);
-	vcode = VLDB_GetEntryByName(volname, &entry);
-	if (!vcode) {
-	    if (!strcmp(&astring[total - 9], ".readonly"))
-		return entry.volumeId[ROVOL];
-	    else if ((!strcmp(&astring[total - 7], ".backup")))
-		return entry.volumeId[BACKVOL];
-	    else
-		return (entry.volumeId[RWVOL]);
-	} else {
-	    *errp = vcode;
-	    return 0;		/* can't find volume */
-	}
-    }
-
-    value = 0;
-    while ((tc = *astring++)) {
-	if (tc & 0x80) {
-	    if (!tryname)
-		fprintf(STDERR, "goofed in volid \n");
-	    else {
-		fprintf(STDERR, "Could not get entry from vldb for %s\n",
-			ptr);
-		PrintError("", vcode);
-	    }
-	    *errp = EINVAL;
-	    return 0;
-	}
-	if (tc < '0' || tc > '9') {
-	    if (!tryname)
-		fprintf(STDERR,
-			"internal error: out of range char in vol ID\n");
-	    else {
-		fprintf(STDERR, "Could not get entry from vldb for %s\n",
-			ptr);
-		PrintError("", vcode);
-	    }
-	    *errp = ERANGE;
-	    return 0;
-	}
-	value *= 10;
-	value += (tc - '0');
-    }
-    return value;
+    *errp = vcode;
+    return 0;		/* can't find volume */
 }

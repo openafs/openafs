@@ -1,5 +1,5 @@
 /*
- * $Id: dumptool.c,v 1.3 2004/02/03 05:31:52 shadow Exp $
+ * $Id: dumptool.c,v 1.3.2.1 2004/12/17 14:39:31 shadow Exp $
  *
  * dumptool - A tool to manage MR-AFS dump files
  *
@@ -238,7 +238,7 @@ extern resid ServerRequestorId;
 struct vnodeData {
     struct VnodeDiskObject *vnode;	/* A pointer to the disk vnode */
     int vnodeNumber;		/* The vnode number */
-    long dumpdata;		/* File offset of dump data (if
+    off64_t dumpdata;		/* File offset of dump data (if
 				 * available */
     unsigned char *filedata;	/* A pointer to the actual file
 				 * data itself (if available) */
@@ -308,7 +308,7 @@ main(int argc, char *argv[])
     unsigned int magic;
     struct DumpHeader dheader;
     VolumeDiskData vol;
-    long offset;
+    off64_t offset;
     int Res, Arg1, Arg2, Arg3, i;
     char *p;
     struct winsize win;
@@ -500,14 +500,14 @@ main(int argc, char *argv[])
      * vnodes, the other to actually build the index.
      */
 
-    offset = ftell(f);
+    offset = ftello64(f);
 
     if (ScanVnodes(f, &vol, 1)) {
 	fprintf(stderr, "First vnode scan failed, aborting\n");
 	exit(1);
     }
 
-    fseek(f, offset, SEEK_SET);
+    fseeko64(f, offset, SEEK_SET);
 
     if (ScanVnodes(f, &vol, 0)) {
 	fprintf(stderr, "Second vnode scan failed, aborting\n");
@@ -883,7 +883,7 @@ ScanVnodes(FILE * f, VolumeDiskData * vol, int sizescan)
     int numDirVnodes = 0;
     unsigned char buf[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *)buf;
-    long offset, oldoffset;
+    off64_t offset, oldoffset;
     struct vnodeData *vdata;
     unsigned int length;
 
@@ -1022,8 +1022,8 @@ ScanVnodes(FILE * f, VolumeDiskData * vol, int sizescan)
 		    return -1;
 		}
 		vnode->length = length;
-		offset = ftell(f);
-		fseek(f, length, SEEK_CUR);
+		offset = ftello64(f);
+		fseeko64(f, length, SEEK_CUR);
 		break;
 	    default:
 		if (verbose)
@@ -1097,8 +1097,8 @@ ScanVnodes(FILE * f, VolumeDiskData * vol, int sizescan)
 		    return -1;
 		}
 
-		oldoffset = ftell(f);
-		fseek(f, offset, SEEK_SET);
+		oldoffset = ftello64(f);
+		fseeko64(f, offset, SEEK_SET);
 
 		if (fread(vdata->filedata, length, 1, f) != 1) {
 		    if (verbose)
@@ -1106,7 +1106,7 @@ ScanVnodes(FILE * f, VolumeDiskData * vol, int sizescan)
 		    return -1;
 		}
 
-		fseek(f, oldoffset, SEEK_SET);
+		fseeko64(f, oldoffset, SEEK_SET);
 	    } else if (vnode->type == vDirectory)
 		/*
 		 * Warn the user we may not have all directory
@@ -1150,12 +1150,12 @@ ScanVnodes(FILE * f, VolumeDiskData * vol, int sizescan)
  * Parsing the directory information is a pain, but other than that
  * we just use the other tools we already have in here.
  */
-
+#define CMDBUFSIZE 	(AFSPATHMAX * 2)
 static void
 InteractiveRestore(FILE * f, VolumeDiskData * vol)
 {
     struct vnodeData *vdatacwd;	/* Vnode data for our current dir */
-    char cmdbuf[256];
+    char cmdbuf[CMDBUFSIZE];
     int argc;
     char **argv;
 
@@ -1190,7 +1190,7 @@ InteractiveRestore(FILE * f, VolumeDiskData * vol)
 		numNoDirData);
 
     printf("> ");
-    while (fgets(cmdbuf, 256, stdin)) {
+    while (fgets(cmdbuf, CMDBUFSIZE, stdin)) {
 
 	cmdbuf[strlen(cmdbuf) - 1] = '\0';
 
@@ -1550,7 +1550,7 @@ CopyFile(int argc, char **argv, struct vnodeData *vdatacwd, FILE * f)
 {
     struct vnodeData *vdata;
     FILE *out;
-    long cur = 0;
+    off64_t cur = 0;
     int bytes, ret;
     char buffer[COPYBUFSIZE];
 
@@ -1572,7 +1572,7 @@ CopyFile(int argc, char **argv, struct vnodeData *vdatacwd, FILE * f)
 	return;
     }
 
-    if (fseek(f, vdata->dumpdata, SEEK_SET)) {
+    if (fseeko64(f, vdata->dumpdata, SEEK_SET)) {
 	fprintf(stderr, "Seek failed: %s\n", strerror(errno));
 	fclose(out);
 	return;
@@ -1621,7 +1621,7 @@ CopyVnode(int argc, char *argv[], FILE * f)
 {
     struct vnodeData *vdata;
     FILE *out;
-    long cur = 0;
+    off64_t cur = 0;
     int bytes, ret;
     char buffer[COPYBUFSIZE];
     unsigned int vnode, uniquifier = 0;
@@ -1661,7 +1661,7 @@ CopyVnode(int argc, char *argv[], FILE * f)
 	return;
     }
 
-    if (fseek(f, vdata->dumpdata, SEEK_SET)) {
+    if (fseeko64(f, vdata->dumpdata, SEEK_SET)) {
 	fprintf(stderr, "Seek failed: %s\n", strerror(errno));
 	fclose(out);
 	return;
@@ -1960,7 +1960,7 @@ MakeArgv(char *string, int *argc, char ***argv)
     static char *largv[64];
     char **la = largv;
     char *s = string;
-    static char argbuf[256];
+    static char argbuf[CMDBUFSIZE];
     char *ap = argbuf;
 
     *argc = 0;

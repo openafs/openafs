@@ -16,7 +16,17 @@
 		/* no ticket good for longer than 30 days */
 #define MAXKTCTICKETLIFETIME (30*24*3600)
 #define MINKTCTICKETLEN	      32
+
+#if defined(AFS_AIX52_ENV)
+#ifdef __XCOFF64__
 #define	MAXKTCTICKETLEN	      12000	/* was 344 */
+#else
+#define MAXKTCTICKETLEN		344
+#endif
+#else
+#define	MAXKTCTICKETLEN	      12000	/* was 344 */
+#endif
+
 #define	MAXKTCNAMELEN	      64	/* name & inst should be 256 */
 #define MAXKTCREALMLEN	      64	/* should be 256 */
 #define KTC_TIME_UNCERTAINTY (15*60)	/* max skew bet. machines' clocks */

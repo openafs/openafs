@@ -42,14 +42,14 @@ The Microsoft development tools require anywhere from 660 MB to 1.8GB
 of storage depending on which compilers are selected.  The following 
 versions are supported:
 
-    Microsoft Visual .NET 
+    Microsoft Visual Studio .NET 
       available via a MSDN subscription
 
-    Microsoft Visual .NET 2003 (recommended)
+    Microsoft Visual Studio .NET 2003 (recommended)
       available via a MSDN subscription
 
-    Microsoft Visual C++ Toolkit 2003 (same as .NET 2003)
-      http://msdn.microsoft.com/visualc/vctoolkit2003/
+    Microsoft Visual Studio .NET 2005 (do not use for production)
+      available via a MSDN subscription
 
 The following Microsoft SDK is required:
 
@@ -129,8 +129,8 @@ The AFS base directory should look something like the following:
 
 STEP B. Install compiler and development tools.
 
-Install a copy of Microsoft Visual .NET, Visual .NET 2003, Visual C++
-Toolkit 2003.  The "Typical" install setting is sufficient.
+Install a copy of Microsoft Visual Studio .NET, Visual Studio .NET 2003, 
+or Visual Studio .NET 2005.  The "Typical" install setting is sufficient.
 
 (1) You can reduce the installation size by selecting "Custom" install
 and remove all but the following Options:
@@ -176,9 +176,9 @@ customized for use on your development system.  The following variables
 must be defined to match your configuration:
 
   AFSVER_CL: Set to 1200 if using MS Visual C++ 6.0
-             Set to 1300 if using MS Visual .NET
-             Set to 1310 if using MS Visual .NET 2003
-             Set to 1400 if using MS Visual .NET 2005
+             Set to 1300 if using MS Visual Studio .NET
+             Set to 1310 if using MS Visual Studio .NET 2003
+             Set to 1400 if using MS Visual Studio .NET 2005
 
   MSVCDIR: Set to the short name version of the directory into which
            the visual C++ compiler was installed regardless of version

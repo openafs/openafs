@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_util.c,v 1.17 2003/07/15 23:14:13 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_util.c,v 1.17.2.1 2004/12/07 06:12:12 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -301,7 +301,7 @@ afs_CheckLocks(void)
 	for (i = 0; i < NSERVERS; i++) {
 	    for (ts = afs_servers[i]; ts; ts = ts->next) {
 		if (ts->flags & SRVR_ISDOWN)
-		    printf("Server entry %x is marked down\n", ts);
+		    printf("Server entry %lx is marked down\n", (unsigned long)ts);
 		for (sa = ts->addr; sa; sa = sa->next_sa) {
 		    for (tc = sa->conns; tc; tc = tc->next) {
 			if (tc->refCount)
@@ -329,7 +329,7 @@ afs_CheckLocks(void)
 	for (i = 0; i < NUSERS; i++) {
 	    for (tu = afs_users[i]; tu; tu = tu->next) {
 		if (tu->refCount)
-		    printf("user at %x is held\n", tu);
+		    printf("user at %lx is held\n", (unsigned long)tu);
 	    }
 	}
     }

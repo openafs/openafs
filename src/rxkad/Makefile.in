@@ -87,14 +87,14 @@ md4.o: md4.c ${INCLS}
  
 md5.o: md5.c ${INCLS}
 
-fcrypt.o: domestic/fcrypt.c fcrypt.h sboxes.h rxkad.h rxkad_prototypes.h
-	${CCOBJ} ${CFLAGS} -c domestic/fcrypt.c
+fcrypt.o: ${srcdir}/domestic/fcrypt.c fcrypt.h sboxes.h rxkad.h rxkad_prototypes.h
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/domestic/fcrypt.c
 
-crypt_conn.o: domestic/crypt_conn.c fcrypt.h private_data.h ${INCLS}
-	${CCOBJ} ${CFLAGS} -c domestic/crypt_conn.c
+crypt_conn.o: ${srcdir}/domestic/crypt_conn.c fcrypt.h private_data.h ${INCLS}
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/domestic/crypt_conn.c
 
-tcrypt.o: domestic/tcrypt.c AFS_component_version_number.o
-	${CCOBJ} ${CFLAGS} -c domestic/fcrypt.c
+tcrypt.o: ${srcdir}/domestic/tcrypt.c AFS_component_version_number.o
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/domestic/fcrypt.c
 
 tcrypt: tcrypt.o librxkad.a 
 	${CC} -o tcrypt tcrypt.o librxkad.a

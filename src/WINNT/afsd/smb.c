@@ -51,6 +51,8 @@ int smbShutdownFlag = 0;
 int smb_LogoffTokenTransfer;
 time_t smb_LogoffTransferTimeout;
 
+int smb_StoreAnsiFilenames = 0;
+
 DWORD last_msg_time = 0;
 
 long ongoingOps = 0;
@@ -95,6 +97,7 @@ LSA_STRING smb_lsaLogonOrigin;
 #define NCBmax MAXIMUM_WAIT_OBJECTS
 EVENT_HANDLE NCBavails[NCBmax], NCBevents[NCBmax];
 EVENT_HANDLE **NCBreturns;
+EVENT_HANDLE *smb_ServerShutdown;
 DWORD NCBsessions[NCBmax];
 NCB *NCBs[NCBmax];
 struct smb_packet *bufs[NCBmax];
@@ -157,7 +160,7 @@ extern HANDLE WaitToTerminate;
  * Time in Unix format of midnight, 1/1/1970 local time.
  * When added to dosUTime, gives Unix (AFS) time.
  */
-long smb_localZero = 0;
+time_t smb_localZero = 0;
 
 /* Time difference for converting to kludge-GMT */
 int smb_NowTZ;
@@ -362,6 +365,10 @@ char * myCrt_2Dispatch(int i)
         return "S(0d)_ReceiveTran2CreateDirectory";
     case 14:
         return "S(0e)_ReceiveTran2SessionSetup";
+    case 16:
+        return "S(10)_ReceiveTran2GetDfsReferral";
+    case 17:
+        return "S(11)_ReceiveTran2ReportDfsInconsistency";
     }
 }       
 
@@ -392,14 +399,7 @@ unsigned int smb_Attributes(cm_scache_t *scp)
     {
         attrs = SMB_ATTR_DIRECTORY;
 #ifdef SPECIAL_FOLDERS
-#ifdef AFS_FREELANCE_CLIENT
-        if ( cm_freelanceEnabled &&
-             scp->fid.cell==AFS_FAKE_ROOT_CELL_ID && 
-             scp->fid.volume==AFS_FAKE_ROOT_VOL_ID &&
-             scp->fid.vnode==0x1 && scp->fid.unique==0x1) {
-            attrs |= SMB_ATTR_SYSTEM;		/* FILE_ATTRIBUTE_SYSTEM */
-        }
-#endif /* AFS_FREELANCE_CLIENT */
+        attrs |= SMB_ATTR_SYSTEM;		/* FILE_ATTRIBUTE_SYSTEM */
 #endif /* SPECIAL_FOLDERS */
     } else
         attrs = 0;
@@ -713,7 +713,7 @@ void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep)
 }       
 #endif /* !DJGPP */
 
-void smb_SearchTimeFromUnixTime(long *dosTimep, time_t unixTime)
+void smb_SearchTimeFromUnixTime(time_t *dosTimep, time_t unixTime)
 {
     struct tm *ltp;
     int dosDate;
@@ -745,8 +745,8 @@ void smb_UnixTimeFromSearchTime(time_t *unixTimep, time_t searchTime)
     unsigned short dosTime;
     struct tm localTm;
         
-    dosDate = searchTime & 0xffff;
-    dosTime = (searchTime >> 16) & 0xffff;
+    dosDate = (unsigned short) (searchTime & 0xffff);
+    dosTime = (unsigned short) ((searchTime >> 16) & 0xffff);
 
     localTm.tm_year = 80 + ((dosDate>>9) & 0x3f);
     localTm.tm_mon = ((dosDate >> 5) & 0xf) - 1;	/* January is 0 in localTm */
@@ -1655,7 +1655,7 @@ void smb_GCDirSearches(int isV3)
     int i;
         
     victimCount = 0;	/* how many have we got so far */
-    for(tp = smb_lastDirSearchp; tp; tp=prevp) {
+    for (tp = smb_lastDirSearchp; tp; tp=prevp) {
         /* we'll move tp from queue, so
          * do this early.
          */
@@ -2118,7 +2118,7 @@ void smb_FormatResponsePacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *op
         op->inCom = inSmbp->com;
     }
     outp->reb = 0x80;	/* SERVER_RESP */
-    outp->flg2 = 0x1;	/* KNOWS_LONG_NAMES */
+    outp->flg2 = SMB_FLAGS2_KNOWS_LONG_NAMES;
 
     /* copy fields in generic packet area */
     op->wctp = &outp->wct;
@@ -2764,8 +2764,12 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
          * 32-bit error codes *
          * and NT Find *
          * and NT SMB's *
-         * and raw mode */
+         * and raw mode 
+         * and DFS */
         caps = NTNEGOTIATE_CAPABILITY_NTSTATUS |
+#ifdef DFS_SUPPORT
+               NTNEGOTIATE_CAPABILITY_DFS |
+#endif
                NTNEGOTIATE_CAPABILITY_NTFIND |
                NTNEGOTIATE_CAPABILITY_RAWMODE |
                NTNEGOTIATE_CAPABILITY_NTSMB;
@@ -2869,12 +2873,16 @@ void smb_Daemon(void *parmp)
 {
     afs_uint32 count = 0;
 
-    while(1) {
+    while(smbShutdownFlag == 0) {
         count++;
         thrd_Sleep(10000);
+
+        if (smbShutdownFlag == 1)
+            break;
+        
         if ((count % 72) == 0)	{	/* every five minutes */
             struct tm myTime;
-            long old_localZero = smb_localZero;
+            time_t old_localZero = smb_localZero;
 		 
             /* Initialize smb_localZero */
             myTime.tm_isdst = -1;		/* compute whether on DST or not */
@@ -2996,6 +3004,8 @@ long smb_ReceiveCoreTreeConnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     /* parse input parameters */
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
     passwordp = smb_ParseASCIIBlock(tp, &tp);
     tp = strrchr(pathp, '\\');
     if (!tp)
@@ -3172,6 +3182,8 @@ long smb_ReceiveCoreSearchVolume(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t 
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(tp, (char **) &tp);
     osi_assert(pathp != NULL);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
     statBlockp = smb_ParseVblBlock(tp, (char **) &tp, &statLen);
     osi_assert(statBlockp != NULL);
     if (statLen == 0) {
@@ -3269,12 +3281,12 @@ long smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
         smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
                 
         /* copy out time */
-        shortTemp = dosTime & 0xffff;
+        shortTemp = (unsigned short) (dosTime & 0xffff);
         *((u_short *)dptr) = shortTemp;
         dptr += 2;
 
         /* and copy out date */
-        shortTemp = (dosTime>>16) & 0xffff;
+        shortTemp = (unsigned short) ((dosTime>>16) & 0xffff);
         *((u_short *)dptr) = shortTemp;
         dptr += 2;
                 
@@ -3353,6 +3365,8 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
     inCookiep = smb_ParseVblBlock(tp, &tp, &dataLength);
 
     /* bail out if request looks bad */
@@ -3362,7 +3376,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 
     /* We can handle long names */
     if (vcp->flags & SMB_VCFLAG_USENT)
-        ((smb_t *)outp)->flg2 |= 0x40;	/* IS_LONG_NAME */
+        ((smb_t *)outp)->flg2 |= SMB_FLAGS2_IS_LONG_NAME;
 
     /* make sure we got a whole search status */
     if (dataLength < 21) {
@@ -3655,7 +3669,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
              * attributes */
 
             /* no hidden files */
-            if(smb_hideDotFiles && !(dsp->attribute & SMB_ATTR_HIDDEN) && smb_IsDotFile(actualName))
+            if (smb_hideDotFiles && !(dsp->attribute & SMB_ATTR_HIDDEN) && smb_IsDotFile(actualName))
                 goto nextEntry;
 
             if (!(dsp->attribute & SMB_ATTR_DIRECTORY))  /* no directories */
@@ -3724,9 +3738,11 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
              * never hurts to be sure.
              */
             strncpy(op, actualName, 13);
+            if (smb_StoreAnsiFilenames)
+                CharToOem(op, op);
 
             /* Uppercase if requested by client */
-            if ((((smb_t *)inp)->flg2 & 1) == 0)
+            if ((((smb_t *)inp)->flg2 & SMB_FLAGS2_KNOWS_LONG_NAMES) == 0)
                 _strupr(op);
 
             op += 13;
@@ -3807,12 +3823,12 @@ long smb_ReceiveCoreCheckPath(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 
     pathp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(pathp, NULL);
+    if (!pathp)
+        return CM_ERROR_BADFD;
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
     osi_Log1(smb_logp, "SMB receive check path %s",
              osi_LogSaveString(smb_logp, pathp));
-
-    if (!pathp) {
-        return CM_ERROR_BADFD;
-    }
         
     rootScp = cm_rootSCachep;
         
@@ -3879,11 +3895,11 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 
     pathp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(pathp, NULL);
-
-    if (!pathp) {
+    if (!pathp)
         return CM_ERROR_BADSMB;
-    }
-        
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
+               
     osi_Log2(smb_logp, "SMB receive setfile attributes time %d, attr 0x%x",
              dosTime, attribute);
 
@@ -3977,13 +3993,14 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 
     pathp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(pathp, NULL);
-
-    if (!pathp) {
+    if (!pathp)
         return CM_ERROR_BADSMB;
-    }
         
     if (*pathp == 0)		/* null path */
         pathp = "\\";
+    else
+        if (smb_StoreAnsiFilenames)
+            OemToChar(pathp,pathp);
 
     osi_Log1(smb_logp, "SMB receive getfile attributes path %s",
              osi_LogSaveString(smb_logp, pathp));
@@ -4020,6 +4037,7 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
      */
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastComp, pathp);
+#ifndef SPECIAL_FOLDERS
     if (lastComp && stricmp(lastComp, "\\desktop.ini") == 0) {
         code = cm_NameI(rootScp, spacep->data,
                         caseFold | CM_FLAG_DIRSEARCH | CM_FLAG_FOLLOW,
@@ -4042,6 +4060,7 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
             }
         }
     }
+#endif /* SPECIAL_FOLDERS */
 
     code = cm_NameI(rootScp, pathp, caseFold | CM_FLAG_FOLLOW, userp,
                     tidPathp, &req, &newScp);
@@ -4079,8 +4098,8 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
     smb_SetSMBParm(outp, 0, attrs);
         
     smb_DosUTimeFromUnixTime(&dosTime, newScp->clientModTime);
-    smb_SetSMBParm(outp, 1, dosTime & 0xffff);
-    smb_SetSMBParm(outp, 2, (dosTime>>16) & 0xffff);
+    smb_SetSMBParm(outp, 1, (unsigned int)(dosTime & 0xffff));
+    smb_SetSMBParm(outp, 2, (unsigned int)((dosTime>>16) & 0xffff));
     smb_SetSMBParm(outp, 3, newScp->length.LowPart & 0xffff);
     smb_SetSMBParm(outp, 4, (newScp->length.LowPart >> 16) & 0xffff);
     smb_SetSMBParm(outp, 5, 0);
@@ -4135,6 +4154,8 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     pathp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(pathp, NULL);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
 	
     osi_Log1(smb_logp, "SMB receive open file [%s]", osi_LogSaveString(smb_logp, pathp));
 
@@ -4223,8 +4244,8 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     smb_SetSMBParm(outp, 0, fidp->fid);
     smb_SetSMBParm(outp, 1, smb_Attributes(scp));
     smb_DosUTimeFromUnixTime(&dosTime, scp->clientModTime);
-    smb_SetSMBParm(outp, 2, dosTime & 0xffff);
-    smb_SetSMBParm(outp, 3, (dosTime >> 16) & 0xffff);
+    smb_SetSMBParm(outp, 2, (unsigned int)(dosTime & 0xffff));
+    smb_SetSMBParm(outp, 3, (unsigned int)((dosTime >> 16) & 0xffff));
     smb_SetSMBParm(outp, 4, scp->length.LowPart & 0xffff);
     smb_SetSMBParm(outp, 5, (scp->length.LowPart >> 16) & 0xffff);
     /* pass the open mode back; XXXX add access checks */
@@ -4320,6 +4341,8 @@ long smb_ReceiveCoreUnlink(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
 
     osi_Log1(smb_logp, "SMB receive unlink %s",
              osi_LogSaveString(smb_logp, pathp));
@@ -4741,7 +4764,11 @@ smb_ReceiveCoreRename(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     tp = smb_GetSMBData(inp, NULL);
     oldPathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(oldPathp,oldPathp);
     newPathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(newPathp,newPathp);
 
     osi_Log2(smb_logp, "smb rename [%s] to [%s]",
               osi_LogSaveString(smb_logp, oldPathp),
@@ -4818,6 +4845,8 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
 
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
@@ -5449,7 +5478,7 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
                             writeBackOffset.HighPart, cm_chunkSize, 0, userp);
     }
 
-    osi_Log2(smb_logp, "smb_WriteData fid %d returns %d written %d",
+    osi_Log3(smb_logp, "smb_WriteData fid %d returns %d written %d",
               fidp->fid, code, *writtenp);
     return code;
 }
@@ -5839,6 +5868,8 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
         
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
 
     if (strcmp(pathp, "\\") == 0)
         return CM_ERROR_EXISTS;
@@ -5953,6 +5984,8 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         
     tp = smb_GetSMBData(inp, NULL);
     pathp = smb_ParseASCIIBlock(tp, &tp);
+    if (smb_StoreAnsiFilenames)
+        OemToChar(pathp,pathp);
 
     spacep = inp->spacep;
     smb_StripLastComponent(spacep->data, &lastNamep, pathp);
@@ -5977,8 +6010,10 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* otherwise, scp points to the parent directory.  Do a lookup, and
      * truncate the file if we find it, otherwise we create the file.
      */
-    if (!lastNamep) lastNamep = pathp;
-    else lastNamep++;
+    if (!lastNamep) 
+        lastNamep = pathp;
+    else 
+        lastNamep++;
 
     if (!smb_IsLegalFilename(lastNamep))
         return CM_ERROR_BADNTFILENAME;
@@ -6351,7 +6386,7 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
                 smbp->reh = (unsigned char) ((NTStatus >> 8) & 0xff);
                 smbp->errLow = (unsigned char) ((NTStatus >> 16) & 0xff);
                 smbp->errHigh = (unsigned char) ((NTStatus >> 24) & 0xff);
-                smbp->flg2 |= 0x4000;
+                smbp->flg2 |= SMB_FLAGS2_ERR_STATUS;
                 break;
             }
             else {
@@ -6464,8 +6499,12 @@ void smb_ClientWaiter(void *parmp)
     while (1) {
         code = thrd_WaitForMultipleObjects_Event(numNCBs, NCBevents,
                                                  FALSE, INFINITE);
-        if (code == WAIT_OBJECT_0)
-            continue;
+        if (code == WAIT_OBJECT_0) {
+            if (smbShutdownFlag == 1)
+                break;
+            else
+                continue;
+        }
 
         /* error checking */
         if (code >= WAIT_ABANDONED_0 && code < (WAIT_ABANDONED_0 + numNCBs))
@@ -6523,8 +6562,12 @@ void smb_ServerWaiter(void *parmp)
         /* Get a session */
         code = thrd_WaitForMultipleObjects_Event(numSessions, SessionEvents,
                                                  FALSE, INFINITE);
-        if (code == WAIT_OBJECT_0)
-            continue;
+        if (code == WAIT_OBJECT_0) {
+            if ( smbShutdownFlag == 1 )
+                break;
+            else
+                continue;
+        }
 
         if (code >= WAIT_ABANDONED_0 && code < (WAIT_ABANDONED_0 + numSessions))
         {
@@ -6562,8 +6605,12 @@ void smb_ServerWaiter(void *parmp)
       NCBretry:
         code = thrd_WaitForMultipleObjects_Event(numNCBs, NCBavails,
                                                  FALSE, INFINITE);
-        if (code == WAIT_OBJECT_0)
-            goto NCBretry;
+        if (code == WAIT_OBJECT_0) {
+            if ( smbShutdownFlag == 1 ) 
+                break;
+            else
+                goto NCBretry;
+        }
 
         /* error checking */
         if (code >= WAIT_ABANDONED_0 && code < (WAIT_ABANDONED_0 + numNCBs))
@@ -6603,9 +6650,6 @@ void smb_ServerWaiter(void *parmp)
 
         /* Fire it up */
         ncbp = NCBs[idx_NCB];
-#ifdef DJGPP
-        dos_ncb = ((smb_ncb_t *)ncbp)->dos_ncb;
-#endif /* DJGPP */
         ncbp->ncb_lsn = (unsigned char) LSNs[idx_session];
         ncbp->ncb_command = NCBRECV | ASYNCH;
         ncbp->ncb_lana_num = lanas[idx_session];
@@ -6619,6 +6663,7 @@ void smb_ServerWaiter(void *parmp)
         ((smb_ncb_t*)ncbp)->orig_pkt = bufs[idx_NCB];
         ncbp->ncb_event = NCBreturns[0][idx_NCB];
         ncbp->ncb_length = SMB_PACKETSIZE;
+        dos_ncb = ((smb_ncb_t *)ncbp)->dos_ncb;
         Netbios(ncbp, dos_ncb);
 #endif /* !DJGPP */
     }
@@ -6657,8 +6702,14 @@ void smb_Server(VOID *parmp)
     while (1) {
         code = thrd_WaitForMultipleObjects_Event(numNCBs, NCBreturns[myIdx],
                                                  FALSE, INFINITE);
+
+        /* terminate silently if shutdown flag is set */
         if (code == WAIT_OBJECT_0) {
-            continue;
+            if (smbShutdownFlag == 1) {
+                thrd_SetEvent(smb_ServerShutdown[myIdx]);
+                break;
+            } else
+                continue;
         }
 
         /* error checking */
@@ -6824,7 +6875,7 @@ void smb_Server(VOID *parmp)
          * Either way, we can't do anything with this packet.
          * Log, sleep and resume.
          */
-        if(!vcp) {
+        if (!vcp) {
             HANDLE h;
             char buf[1000];
             char *ptbuf[1];
@@ -6843,7 +6894,7 @@ void smb_Server(VOID *parmp)
             ptbuf[0] = buf;
 
             h = RegisterEventSource(NULL,AFS_DAEMON_EVENT_NAME);
-            if(h) {
+            if (h) {
                 ReportEvent(h, EVENTLOG_ERROR_TYPE, 0, 1001, NULL,1,sizeof(*ncbp),ptbuf,(void*)ncbp);
                 DeregisterEventSource(h);
             }
@@ -7525,6 +7576,15 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
         NCBreturns[i] = malloc(NCBmax * sizeof(EVENT_HANDLE));
         NCBreturns[i][0] = retHandle;
     }
+
+    smb_ServerShutdown = malloc(smb_NumServerThreads * sizeof(EVENT_HANDLE));
+    for (i = 0; i < smb_NumServerThreads; i++) {
+        sprintf(eventName, "smb_ServerShutdown[%d]", i);
+        smb_ServerShutdown[i] = thrd_CreateEvent(NULL, FALSE, FALSE, eventName);
+        if ( GetLastError() == ERROR_ALREADY_EXISTS )
+            afsi_log("Event Object Already Exists: %s", eventName);
+    }
+
     for (i = 1; i <= nThreads; i++)
         InitNCBslot(i);
     numNCBs = nThreads + 1;
@@ -7625,8 +7685,8 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     smb_tran2DispatchTable[12].procp = smb_ReceiveTran2FindNotifyNext;
     smb_tran2DispatchTable[13].procp = smb_ReceiveTran2CreateDirectory;
     smb_tran2DispatchTable[14].procp = smb_ReceiveTran2SessionSetup;
-    smb_tran2DispatchTable[14].procp = smb_ReceiveTran2GetDFSReferral;
-    smb_tran2DispatchTable[14].procp = smb_ReceiveTran2ReportDFSInconsistency;
+    smb_tran2DispatchTable[16].procp = smb_ReceiveTran2GetDFSReferral;
+    smb_tran2DispatchTable[17].procp = smb_ReceiveTran2ReportDFSInconsistency;
 
     /* setup the rap dispatch table */
     memset(smb_rapDispatchTable, 0, sizeof(smb_rapDispatchTable));
@@ -7789,7 +7849,7 @@ void smb_Shutdown(void)
 #ifndef DJGPP
         code = Netbios(ncbp);
 #else
-		code = Netbios(ncbp, dos_ncb);
+        code = Netbios(ncbp, dos_ncb);
 #endif
         /*fprintf(stderr, "returned from NCBHANGUP session %d LSN %d\n", i, LSNs[i]);*/
         if (code == 0) code = ncbp->ncb_retcode;
@@ -7818,6 +7878,23 @@ void smb_Shutdown(void)
                      ncbp->ncb_lana_num, code);
         }       
         fflush(stderr);
+    }
+
+    /* Trigger the shutdown of all SMB threads */
+    for (i = 0; i < smb_NumServerThreads; i++)
+        thrd_SetEvent(NCBreturns[i][0]);
+
+    thrd_SetEvent(NCBevents[0]);
+    thrd_SetEvent(SessionEvents[0]);
+    thrd_SetEvent(NCBavails[0]);
+
+    for (i = 0;i < smb_NumServerThreads; i++) {
+        DWORD code = thrd_WaitForSingleObject_Event(smb_ServerShutdown[i], INFINITE);
+        if (code == WAIT_OBJECT_0) {
+            continue;
+        } else {
+            afsi_log("smb_Shutdown[%d] wait error",i);
+        }
     }
 }
 

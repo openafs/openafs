@@ -90,6 +90,14 @@ $(VOLINFO): $(OUT)\vol-info.obj $(OUT)\physio.obj $(OUT)\volinfo.res $(EXEC_LIBS
 	$(EXEPREP)
 
 ############################################################################
+# build volinfo
+VOLBLESS = $(DESTDIR)\root.server\usr\afs\bin\vol-bless.exe
+
+$(VOLBLESS): $(OUT)\vol-bless.obj $(OUT)\physio.obj $(OUT)\vol-bless.res $(EXEC_LIBS)
+	$(EXECONLINK)
+	$(EXEPREP)
+
+############################################################################
 # generate versioninfo resources
 $(OUT)\salvager.res: salvager.rc AFS_component_version_number.h
 

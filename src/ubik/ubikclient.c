@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/ubikclient.c,v 1.8.2.1 2004/08/25 07:09:43 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/ubikclient.c,v 1.8.2.2 2004/12/13 19:38:53 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -46,7 +46,6 @@ RCSID
 #endif /* defined(UKERNEL) */
 
 
-afs_int32 ubik_CallIter();
 short ubik_initializationState;	/* initial state is zero */
 
 
@@ -750,28 +749,11 @@ ubik_Call_New(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
  * This is part of an iterator.  It doesn't handle finding sync sites
  */
 afs_int32
-ubik_CallIter(aproc, aclient, aflags, apos, p1, p2, p3, p4, p5, p6, p7, p8,
-	      p9, p10, p11, p12, p13, p14, p15, p16)
-     int (*aproc) ();
-     register struct ubik_client *aclient;
-     afs_int32 aflags;
-     int *apos;
-     long p1;
-     long p2;
-     long p3;
-     long p4;
-     long p5;
-     long p6;
-     long p7;
-     long p8;
-     long p9;
-     long p10;
-     long p11;
-     long p12;
-     long p13;
-     long p14;
-     long p15;
-     long p16;
+ubik_CallIter(int (*aproc) (), struct ubik_client *aclient,
+			       afs_int32 aflags, int *apos, long p1, long p2,
+			       long p3, long p4, long p5, long p6, long p7,
+			       long p8, long p9, long p10, long p11, long p12,
+			       long p13, long p14, long p15, long p16)
 {
     return CallIter(aproc, aclient, aflags, apos, p1, p2, p3, p4, p5, p6, p7,
 		    p8, p9, p10, p11, p12, p13, p14, p15, p16, NEED_LOCK);

@@ -62,6 +62,7 @@ BOOL APIENTRY About(HWND, unsigned int, unsigned int, long);
 #include "cm_buf.h"
 #include "cm_freelance.h"
 #include "smb_ioctl.h"
+#include "afsd_init.h"
 #ifdef DJGPP
 #include "afs/afsmsg95.h"
 #endif

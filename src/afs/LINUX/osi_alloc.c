@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_alloc.c,v 1.22 2004/07/14 04:14:31 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_alloc.c,v 1.22.2.1 2004/12/07 06:12:12 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -96,11 +96,11 @@ linux_alloc(unsigned int asize, int drop_glock)
 #endif
 		);
 	    if (new)		/* piggy back alloc type */
-		(unsigned long)new |= KM_TYPE;
+		new = (void *)(KM_TYPE | (unsigned long)new);
 	} else {
 	    new = (void *)vmalloc(asize);
 	    if (new)		/* piggy back alloc type */
-		(unsigned long)new |= VM_TYPE;
+		new = (void *)(VM_TYPE | (unsigned long)new);
 	}
 
 	if (!new) {
@@ -143,8 +143,8 @@ linux_free(void *p)
 	vfree(MEMADDR(p));
 	break;
     default:
-	printf("afs_osi_Free: Asked to free unknown type %d at 0x%x\n",
-	       MEMTYPE(p), MEMADDR(p));
+	printf("afs_osi_Free: Asked to free unknown type %d at 0x%lx\n",
+	       (int)MEMTYPE(p), (unsigned long)MEMADDR(p));
 	break;
     }
 
@@ -196,8 +196,8 @@ hash_verify(size_t index, unsigned key, void *data)
     memtype = MEMTYPE(lmp->chunk);
     if (memtype != KM_TYPE && memtype != VM_TYPE) {
 	printf
-	    ("osi_linux_verify_alloced_memory: unknown type %d at 0x%x, index=%d\n",
-	     memtype, lmp->chunk, index);
+	    ("osi_linux_verify_alloced_memory: unknown type %d at 0x%lx, index=%lu\n",
+	     (int)memtype, (unsigned long)lmp->chunk, (unsigned long)index);
     }
     afs_linux_hash_verify_count++;
 }

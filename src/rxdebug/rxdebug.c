@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxdebug/rxdebug.c,v 1.5 2003/07/15 23:16:38 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxdebug/rxdebug.c,v 1.5.2.1 2004/12/07 06:17:15 shadow Exp $");
 
 #include <sys/types.h>
 #include <errno.h>
@@ -21,6 +21,7 @@ RCSID
 #include <sys/socket.h>
 #include <sys/file.h>
 #include <netdb.h>
+#include <arpa/inet.h>
 #endif
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>

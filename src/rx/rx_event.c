@@ -19,7 +19,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_event.c,v 1.14.2.1 2004/08/25 07:09:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_event.c,v 1.14.2.2 2004/12/07 06:10:06 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -188,8 +188,9 @@ rxevent_Post(struct clock *when,
 			   struct rx_connection * conn,
 			   struct rx_call * acall), void *arg, void *arg1)
 #else
-struct rxevent *
-rxevent_Post(struct clock *when, void (*func) (), void *arg, void *arg1)
+static struct rxevent *
+_rxevent_Post(struct clock *when, void (*func) (), void *arg, void *arg1,
+	      int arg2, int newargs)
 #endif
 {
     register struct rxevent *ev, *evqe, *evqpr;
@@ -202,9 +203,10 @@ rxevent_Post(struct clock *when, void (*func) (), void *arg, void *arg1)
     if (rx_Log_event) {
 	struct clock now;
 	clock_GetTime(&now);
-	fprintf(rx_Log_event, "%d.%d: rxevent_Post(%d.%d, %x, %x)\n",
+	fprintf(rx_Log_event, "%d.%d: rxevent_Post(%d.%d, %lx, %lx, %lx, %d)\n",
 		(int)now.sec, (int)now.usec, (int)when->sec, (int)when->usec,
-		(unsigned int)func, (unsigned int)arg);
+		(unsigned long)func, (unsigned long)arg,
+		(unsigned long)arg1, arg2);
     }
 #endif
 
@@ -262,6 +264,8 @@ rxevent_Post(struct clock *when, void (*func) (), void *arg, void *arg1)
     ev->func = func;
     ev->arg = arg;
     ev->arg1 = arg1;
+    ev->arg2 = arg2;
+    ev->newargs = newargs;
     rxevent_nPosted += 1;	/* Rather than ++, to shut high-C up
 				 *  regarding never-set variables
 				 */
@@ -291,6 +295,19 @@ rxevent_Post(struct clock *when, void (*func) (), void *arg, void *arg1)
     return ev;
 }
 
+struct rxevent *
+rxevent_Post(struct clock *when, void (*func) (), void *arg, void *arg1)
+{
+    return _rxevent_Post(when, func, arg, arg1, 0, 0);
+}
+
+struct rxevent *
+rxevent_Post2(struct clock *when, void (*func) (), void *arg, void *arg1,
+	      int arg2)
+{
+    return _rxevent_Post(when, func, arg, arg1, arg2, 1);
+}
+
 /* Cancel an event by moving it from the event queue to the free list.
  * Warning, the event must be on the event queue!  If not, this should core
  * dump (reference through 0).  This routine should be called using the macro
@@ -311,10 +328,10 @@ rxevent_Cancel_1(register struct rxevent *ev, register struct rx_call *call,
     if (rx_Log_event) {
 	struct clock now;
 	clock_GetTime(&now);
-	fprintf(rx_Log_event, "%d.%d: rxevent_Cancel_1(%d.%d, %x, %x)\n",
+	fprintf(rx_Log_event, "%d.%d: rxevent_Cancel_1(%d.%d, %lx, %lx)\n",
 		(int)now.sec, (int)now.usec, (int)ev->eventTime.sec,
-		(int)ev->eventTime.usec, (unsigned int)ev->func,
-		(unsigned int)ev->arg);
+		(int)ev->eventTime.usec, (unsigned long)ev->func,
+		(unsigned long)ev->arg);
     }
 #endif
     /* Append it to the free list (rather than prepending) to keep the free
@@ -395,7 +412,11 @@ rxevent_RaiseEvents(struct clock *next)
 	    queue_Remove(ev);
 	    rxevent_nPosted--;
 	    MUTEX_EXIT(&rxevent_lock);
-	    ev->func(ev, ev->arg, ev->arg1);
+	    if (ev->newargs) {
+		ev->func(ev, ev->arg, ev->arg1, ev->arg2);
+	    } else {
+		ev->func(ev, ev->arg, ev->arg1);
+	    }
 	    MUTEX_ENTER(&rxevent_lock);
 	    queue_Append(&rxevent_free, ev);
 	    rxevent_nFree++;

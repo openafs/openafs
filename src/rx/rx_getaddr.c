@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_getaddr.c,v 1.15.2.2 2004/11/09 17:16:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_getaddr.c,v 1.15.2.3 2004/12/07 05:48:55 shadow Exp $");
 
 #ifndef AFS_DJGPP_ENV
 #ifndef KERNEL
@@ -455,6 +455,9 @@ rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
 		perror("SIOCGIFFLAGS");
 		continue;	/* ignore this address */
 	    }
+
+            if (a->sin_addr.s_addr == htonl(0x7f000001) )
+                continue;   /* skip loopback address as well. */
 
 	    if (count >= maxSize) {	/* no more space */
 		printf("Too many interfaces..ignoring 0x%x\n",

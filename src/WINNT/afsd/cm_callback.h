@@ -66,4 +66,6 @@ extern void cm_CheckCBExpiration(void);
 
 extern osi_rwlock_t cm_callbackLock;
 
+extern void cm_CallbackNotifyChange(cm_scache_t *scp);
+
 #endif /*  _CM_CALLBACK_H_ENV__ */

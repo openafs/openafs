@@ -58,7 +58,7 @@ typedef struct cm_scache {
         				 * write-locked to prevent buffers from
                                          * being created during a truncate op, etc.
                                          */
-        unsigned long refCount;			/* reference count; cm_scacheLock */
+        long refCount;			/* reference count; cm_scacheLock */
         osi_queueData_t *bufReadsp;	/* queue of buffers being read */
         osi_queueData_t *bufWritesp;	/* queue of buffers being written */
 
@@ -240,7 +240,11 @@ extern void cm_MergeStatus(cm_scache_t *, struct AFSFetchStatus *, struct AFSVol
 
 extern void cm_AFSFidFromFid(struct AFSFid *, cm_fid_t *);
 
+extern void cm_HoldSCacheNoLock(cm_scache_t *);
+
 extern void cm_HoldSCache(cm_scache_t *);
+
+extern void cm_ReleaseSCacheNoLock(cm_scache_t *);
 
 extern void cm_ReleaseSCache(cm_scache_t *);
 
@@ -255,5 +259,7 @@ extern osi_queue_t *cm_allFileLocks;
 extern cm_scache_t **cm_hashTablep;
 
 extern void cm_DiscardSCache(cm_scache_t *scp);
+
+extern int cm_FindFileType(cm_fid_t *fidp);
 
 #endif /*  __CM_SCACHE_H_ENV__ */

@@ -20,6 +20,9 @@ LIBINCLUDES = \
 
 PTHR_DLLFILE = $(DESTDIR)\lib\afspthread.dll
 
+$(OUT)\pthread.res: pthread.rc AFS_component_version_number.h
+	$(RC) /fo$*.res $(*F).rc 
+
 PTHR_DLLOBJS = \
 	$(OUT)\pthread.obj \
 	$(OUT)\pthread.res
