@@ -608,14 +608,14 @@ loopback:
    $(NTMAKE)
    $(CD) ..\..\..\..
 
-NSIS:
+NSIS: loopback
    echo ***** Making NSIS Installer
    $(DOCD) $(SRC)\WINNT\install\$@
    $(CD) $(SRC)\WINNT\install\$@
    $(NTMAKE)
    $(CD) ..\..\..\..
 
-wix:
+wix: loopback
    echo ***** Making Wix MSI Installer
    $(DOCD) $(SRC)\WINNT\install\$@
    $(CD) $(SRC)\WINNT\install\$@
@@ -634,11 +634,11 @@ InstallShield5:
 	$(NTMAKE)
 	$(CD) ..\..\..\..
 
-media: install loopback InstallShield5 NSIS wix
+media: install InstallShield5 NSIS wix
 
-install-nsis: install loopback NSIS
+install-nsis: install NSIS
 
-install-wix: install loopback wix
+install-wix: install wix
 
 install-is5: install InstallShield5
 

@@ -57,8 +57,10 @@ SOFTWARE.
 #include <stdio.h>
 //#endif
 
+#include "loopbackutils.h"
+
 #define CLEANUP_ON_FAILURE(hr) \
-    do { if (!SUCCEEDED(hr)) goto cleanup; } while (0)
+	do { if (!SUCCEEDED(hr)) {goto cleanup;} } while (0)
 
 #define CLEANUP_ON_AND_SET(check, var, value) \
     do { if (check) { (var) = (value); goto cleanup; } } while (0)
@@ -113,7 +115,7 @@ FindNetworkAdapterConfigurationInstanceByGUID(
                          &pEnum);
     if (!SUCCEEDED(hr))
     {
-        printf("ExecQuery() error (0x%08X)\n", hr);
+        ReportMessage(0,"ExecQuery() error",NULL,NULL, hr);
         goto cleanup;
     }
 
@@ -143,7 +145,7 @@ FindNetworkAdapterConfigurationInstanceByGUID(
         
         if (bFound)
         {
-            printf("Found adapter: %S\n", V_BSTR(&Value));
+            ReportMessage(1,"Found adapter", NULL,V_BSTR(&Value),0);
             VariantClear(&Value);
             hr = pObj->Get(L"__RELPATH", // property name
                            0L,
@@ -262,11 +264,14 @@ WMIEnableStatic(
     hr = CoInitializeEx(0, COINIT_MULTITHREADED);
     CLEANUP_ON_FAILURE(hr);
 
+    /* When called from an MSI this will generally fail.  This should only be called once
+	   per process and not surprisingly MSI beats us to it.  So ignore return value and
+	   hope for the best. */
     hr = CoInitializeSecurity(NULL, -1, NULL, NULL,
                               RPC_C_AUTHN_LEVEL_CONNECT,
                               RPC_C_IMP_LEVEL_IMPERSONATE,
                               NULL, EOAC_NONE, 0);
-    CLEANUP_ON_FAILURE(hr);
+    /* CLEANUP_ON_FAILURE(hr); */
 
     hr = CoCreateInstance(CLSID_WbemLocator, 0, CLSCTX_INPROC_SERVER,
                           IID_IWbemLocator, (LPVOID *) &pLocator);
@@ -276,7 +281,7 @@ WMIEnableStatic(
                                  NULL, NULL, &pNamespace);
     CLEANUP_ON_FAILURE(hr);
 
-    printf("Connected to WMI\n");
+    ReportMessage(0,"Connected to WMI",NULL,NULL,0);
 
     // Set the proxy so that impersonation of the client occurs.
     hr = CoSetProxyBlanket(pNamespace,
@@ -297,7 +302,7 @@ WMIEnableStatic(
     hr = pFindInstance(pContext, pNamespace, &InstancePath);
     CLEANUP_ON_FAILURE(hr);
 
-    printf("Found Adapter Instance: %S\n", InstancePath);
+    ReportMessage(0,"Found Adapter Instance",NULL, InstancePath,0);
 
 #if 0
     // Use the adapter instance index to set MAXLANA in the registry.
@@ -306,9 +311,9 @@ WMIEnableStatic(
         if (swscanf(InstancePath, L"Win32_NetworkAdapterConfiguration.Index=%u", &dwIndex)==1)
         {
             DWORD ret = 0; 
-            printf("Setting MAXLANA to at least %u\n",dwIndex+1);
+            ReportMessage(1,"Setting MAXLANA",NULL,NULL,dwIndex+1);
             ret = AdjustMaxLana(dwIndex+1);
-            if (ret) printf("AdjustMaxLana returned the error code %u.\n",ret);
+            if (ret) ReportMessage(0,"AdjustMaxLana returned the error code ",NULL,NULL,ret);
         }
     }
 #endif
@@ -334,11 +339,11 @@ WMIEnableStatic(
     CLEANUP_ON_FAILURE(hr);
 
     // Sleep for a twenty seconds
-    printf("Calling ExecMethod in 20 seconds...\r");
+    ReportMessage(0,"Calling ExecMethod in 20 seconds...",NULL,NULL,0);
     Sleep(10000);
-    printf("Calling ExecMethod in 10 seconds...\r");
+    ReportMessage(0,"Calling ExecMethod in 10 seconds...",NULL,NULL,0);
     Sleep(5000);  
-    printf("Calling ExecMethod in  5 seconds...\r");
+    ReportMessage(0,"Calling ExecMethod in  5 seconds...",NULL,NULL,0);
     Sleep(2000);
 
 //    printf("Skipping ExecMethod\n");
@@ -348,11 +353,11 @@ WMIEnableStatic(
     // Try up to five times, sleeping 3 seconds between tries
     for (count=0; count<5; count++)
     {
-        if (count>0) printf("Trying again in 3 seconds...\n");
+        if (count>0) ReportMessage(0,"Trying again in 3 seconds...",NULL,NULL,0);
 
 	Sleep(3000);
   
-        printf("Calling ExecMethod NOW...          \n");     
+        ReportMessage(0,"Calling ExecMethod NOW...          ",NULL,NULL,0);     
 
         // Call the method
 
@@ -361,7 +366,7 @@ WMIEnableStatic(
 
         if (!SUCCEEDED(hr))
         {
-           printf("ExecMethod failed (0x%08X)\n", hr);
+           ReportMessage(0,"ExecMethod failed",NULL,NULL, hr);
            continue;
         }
 
@@ -370,7 +375,7 @@ WMIEnableStatic(
 
         if (!SUCCEEDED(hr))
         {
-          printf("WARNING: Could not determine return value for EnableStatic (0x%08X)\n", hr);
+          ReportMessage(0,"WARNING: Could not determine return value for EnableStatic ",NULL,NULL, hr);
           continue;
         }
 
@@ -378,10 +383,10 @@ WMIEnableStatic(
 
 
         if(hr != 0)
-            printf("EnableStatic failed (0x%08X)\n", hr);
+            ReportMessage(0,"EnableStatic failed ", NULL,NULL,hr);
         else
         {
-            printf("EnableStatic succeeded\n");
+            ReportMessage(0,"EnableStatic succeeded",NULL,NULL,0);
             break;
         }
 
@@ -431,7 +436,7 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
     wchar_t         device_guid[100];
     DWORD			lenDeviceId;    
     
-    printf("\nRunning LoopbackBindings()...\n");
+    ReportMessage(0,"Running LoopbackBindings()...",NULL,NULL,0);
     
     hr = CoInitializeEx( NULL, COINIT_DISABLE_OLE1DDE | COINIT_APARTMENTTHREADED ); 
     CLEANUP_ON_FAILURE(hr);
@@ -467,7 +472,7 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
             IEnumNetCfgBindingPath *pEnumPaths;
             INetCfgComponent *upper;
             
-            wprintf(L"LoopbackBindings found: %s\n", device_guid );
+            ReportMessage(0,"LoopbackBindings found", NULL, device_guid,0 );
             
             hr = pAdapter->QueryInterface( IID_INetCfgComponentBindings, (void**) &pBindings);
             if(hr==S_OK)
@@ -484,20 +489,20 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
                         upper->GetDisplayName( &swName );
                         upper->GetId( &swId );
                         
-                        wprintf(L"Looking at %s (%s)... \n",swName, swId);
+                        ReportMessage(1,"Looking at ",NULL, swName, 0);
                                                                         
                         {
-                            wprintf(L"  Moving to the end of binding order...");
+                            ReportMessage(1,"  Moving to the end of binding order...",NULL,NULL,0);
                             INetCfgComponentBindings *pBindings2;
                             hr = upper->QueryInterface( IID_INetCfgComponentBindings, (void**) &pBindings2);
                             if (hr==S_OK)
                             {
-                                printf("...");
+                                ReportMessage(1,"...",0,0,0);
                                 hr = pBindings2->MoveAfter(pPath, NULL);                                
                                 pBindings2->Release();                               
                                 bConfigChanged=TRUE;
                             }
-                            if (hr==S_OK) printf("success\n"); else printf("failed: 0x%0lx\n",hr);                                                        
+                            if (hr==S_OK) ReportMessage(1,"success",0,0,0); else ReportMessage(0,"Binding change failed",0,0,hr);                                                        
                                                                                                             
                         }                        
                         
@@ -507,9 +512,9 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
                         {
                             if (pPath->IsEnabled()!=S_OK)
                             {
-                                wprintf(L"  Enabling %s: ",swName);
+                                ReportMessage(1,"  Enabling ",0,swName,0);
                                 hr = pPath->Enable(TRUE);
-                                if (hr==S_OK) printf("success\n"); else printf("failed: %ld\n",hr);
+                                if (hr==S_OK) ReportMessage(1,"success",0,0,0); else ReportMessage(0,"Proto failed",0,0,hr);
                                 bConfigChanged=TRUE;
                             }
                             
@@ -519,9 +524,9 @@ extern "C" HRESULT LoopbackBindings (LPCWSTR loopback_guid)
                         {
                             if (pPath->IsEnabled()==S_OK)
                             {
-                                wprintf(L"  Disabling %s: ",swName);
+                                ReportMessage(1,"  Disabling ",0,swName,0);
                                 hr = pPath->Enable(FALSE);
-                                if (hr==S_OK) printf("success\n"); else printf("failed: %ld\n",hr);
+                                if (hr==S_OK) ReportMessage(1,"success",0,0,0); else ReportMessage(0,"Proto failed",0,0,hr);
                                 bConfigChanged=TRUE;
                             }
                         }
@@ -558,7 +563,7 @@ cleanup:
     if(pLock) pLock->Release();
     if(pCfg) pCfg->Release();
     
-    if (hr) printf ("LoopbackBindings() is returning %u\n",hr);
+    if (hr) ReportMessage(0,"LoopbackBindings() is returning ",0,0,hr);
     return hr;
 }
 
@@ -571,7 +576,7 @@ SetIpAddress(
     LPCWSTR mask
     )
 {
-    printf("\nRunning SetIpAddress()...\n");
+    ReportMessage(0,"Running SetIpAddress()...",0,0,0);
     HRESULT hr = 0;
 
     hr = WMIEnableStatic(FindNetworkAdapterConfigurationInstanceByGUID,
@@ -587,7 +592,7 @@ DWORD AdjustMaxLana(DWORD dwMaxLana)
     HKEY hNetBiosParamKey = NULL;
     DWORD dwType, dwExistingMaxLana, dwSize;
 
-    printf ("Making sure MaxLana is at least %u...\n", dwMaxLana);
+    ReportMessage(0,"Making sure MaxLana is large enough",0,0, dwMaxLana);
 
     ret = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SYSTEM\\CurrentControlSet\\Services\\NetBIOS\\Parameters"), 
         0, KEY_ALL_ACCESS , &hNetBiosParamKey);
@@ -605,11 +610,11 @@ DWORD AdjustMaxLana(DWORD dwMaxLana)
 
     if ((dwType != REG_DWORD) || (ret)) dwExistingMaxLana = 0;
 
-    printf ("  MaxLana is currently %u\n", dwExistingMaxLana);
+    ReportMessage (1,"MaxLana is currently",0,0, dwExistingMaxLana);
 
     if (dwExistingMaxLana < dwMaxLana) 
     {
-        printf ("  Changing to %u\n", dwMaxLana);
+        ReportMessage (1,"Changing MaxLana", 0,0,dwMaxLana);
         ret = RegSetValueEx(hNetBiosParamKey, _T("MaxLana"), 0, REG_DWORD, (const BYTE*)&dwMaxLana, 4);
         if (ret) 
         {
@@ -640,7 +645,7 @@ BOOL UpdateHostsFile( LPCWSTR swName, LPCWSTR swIp, LPCSTR szFilename, BOOL bPre
     _snprintf(szIp, 2047, "%S", swIp);
     _snprintf(szName, 2047, "%S", swName);
     strupr(szName);
-    printf("Starting UpdateHostsFile() on %s file\n",szFilename);
+    ReportMessage(0,"Starting UpdateHostsFile() on file",szFilename,0,0);
 
 	rv = SHGetFolderPathA( NULL, CSIDL_SYSTEM, NULL, SHGFP_TYPE_CURRENT , etcPath );
 	if(rv != S_OK) return FALSE;
@@ -653,7 +658,7 @@ BOOL UpdateHostsFile( LPCWSTR swName, LPCWSTR swIp, LPCSTR szFilename, BOOL bPre
 	{
 		// the directory doesn't exist
 		// it should be there. non-existence implies more things are wrong
-		printf( "Path does not exist : %s\n", etcPath );
+		ReportMessage(0, "Path does not exist ", etcPath,0,0 );
 		return FALSE;
 	}
 
@@ -665,12 +670,12 @@ BOOL UpdateHostsFile( LPCWSTR swName, LPCWSTR swIp, LPCSTR szFilename, BOOL bPre
 
 	if(fa == INVALID_FILE_ATTRIBUTES)
 	{
-		printf( "No %s file found. Creating...", szFilename);
+		ReportMessage(0, "File not found. Creating...", szFilename,0,0);
 
 		hFile = fopen( etcPath, "w" );
 		if(!hFile)
 		{
-			printf("FAILED : can't create %s file\nErrno is %d\n",etcPath,errno);
+			ReportMessage(0,"FAILED : can't create file",etcPath,0,errno);
 			return FALSE;
 		}
 
@@ -678,17 +683,17 @@ BOOL UpdateHostsFile( LPCWSTR swName, LPCWSTR swIp, LPCSTR szFilename, BOOL bPre
 
 		fclose( hFile );
 
-		printf("done\n");
+		ReportMessage(1,"done",0,0,0);
 	}
 	else // the file exists. parse and update
 	{
 
-		printf( "Updating %s file ...",szFilename );
+		ReportMessage(1, "Updating file ...",szFilename,0,0 );
 
 		hFile = fopen( etcPath, "r");
 		if(!hFile)
 		{
-			printf("FAILED : can't open %s file\nErrno is %d\n",etcPath,errno);
+			ReportMessage(0,"FAILED : can't open file",etcPath,0,errno);
 			return FALSE;
 		}
 
@@ -697,7 +702,7 @@ BOOL UpdateHostsFile( LPCWSTR swName, LPCWSTR swIp, LPCSTR szFilename, BOOL bPre
 		hTemp = fopen( tempPath, "w");
 		if(!hTemp)
 		{
-			printf("FAILED : can't create temp file %s\nErrno is %d\n",tempPath,errno);
+			ReportMessage(0,"FAILED : can't create temp file",tempPath,0,errno);
 			fclose(hFile);
 			return FALSE;
 		}
@@ -738,26 +743,25 @@ BOOL UpdateHostsFile( LPCWSTR swName, LPCWSTR swIp, LPCSTR szFilename, BOOL bPre
 		
         if ((unlink( buffer ) != 0) && (errno == EACCES))
         {
-            printf("FAILED : Can't delete %s file\nErrno is %d",buffer,errno);            
+            ReportMessage(0,"FAILED : Can't delete file",buffer,0,errno);            
             return FALSE;
             
         }
         
-        if ((errno) && (errno != ENOENT)) printf("WEIRD : errno after unlink is %d...",errno);
+        if ((errno) && (errno != ENOENT)) ReportMessage(0,"WEIRD : errno after unlink ",0,0,errno);
 
 		if(rename( etcPath, buffer) != 0)
 		{
-			printf("FAILED : Can't rename old %s file\nErrno is %d\n",etcPath,errno);
+			ReportMessage(0,"FAILED : Can't rename old file",etcPath,0,errno);
 			return FALSE;
 		}
 
 		if(rename( tempPath, etcPath ) != 0)
 		{
-			printf("FAILED : Can't rename new %s file\nErrno is %d\n",tempPath,errno);
+			ReportMessage(0,"FAILED : Can't rename new file",tempPath,0,errno);
 			return FALSE;
 		}
 
-		printf("done\n");
 	}
 
 	return TRUE;

@@ -30,6 +30,8 @@ SOFTWARE.
 #include <shlobj.h>
 #include <wtypes.h>
 
+#include "loopbackutils.h"
+
 #define NETSHELL_LIBRARY _T("netshell.dll")
 
 // Use the IShellFolder API to rename the connection.

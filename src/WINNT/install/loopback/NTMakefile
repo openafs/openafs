@@ -29,30 +29,30 @@ LINK=link
 DLLSOURCEFILES = loopbackutils.cpp renameconnection.cpp wmi.cpp
 DLLOBJFILES =  $(OUT)\loopbackutils.obj $(OUT)\renameconnection.obj $(OUT)\wmi.obj
 
+STATICC2OBJ=$(CC) $(cflags) $(afscflags) $(afscdefs) -ML
+
 $(OUT)\loopbackutils.obj: loopbackutils.cpp
-	$(CPP2OBJ) -c -DUNICODE -D_UNICODE /Fo$@ $**
+	$(STATICC2OBJ) -c -DUNICODE -D_UNICODE /Fo$@ $**
 
 $(OUT)\renameconnection.obj: renameconnection.cpp
-	$(CPP2OBJ) -c -DUNICODE -D_UNICODE /Fo$@ $**
+	$(STATICC2OBJ) -c -DUNICODE -D_UNICODE /Fo$@ $**
 
 $(OUT)\wmi.obj: wmi.cpp
-	$(CPP2OBJ)  -I$(NTDDKDIR) -c -DUNICODE -D_UNICODE /Fo$@ $**
+	$(STATICC2OBJ)  -I$(NTDDKDIR) -c -DUNICODE -D_UNICODE /Fo$@ $**
 
 $(DLLFILE): $(DLLOBJFILES)
 	$(LINK) -DLL $(DLLEXPORTS) -OUT:$@ $(DLLOBJFILES) $(DLLLIBFILES)
 
 # instloop.exe
 
-EXESOURCEFILES = instloop.c
-EXEOBJFILES = $(OUT)\instloop.obj
-EXELIBFILES = $(MEDIABINDIR)\afsloopback.lib
+EXEOBJFILES = $(OUT)\instloop.obj $(DLLOBJFILES)
+#EXELIBFILES = $(MEDIABINDIR)\afsloopback.lib
 
 $(OUT)\instloop.obj: instloop.c
-	$(C2OBJ) -c -DUNICODE -D_UNICODE /Fo$@ $**
+      $(STATICC2OBJ) -c -DUNICODE -D_UNICODE /Fo$@ $**
 
-$(EXEFILE): $(EXEOBJFILES) $(EXELIBFILES)
-	$(LINK) /OUT:$@ $(EXEOBJFILES) $(EXELIBFILES)
-
+$(EXEFILE): $(EXEOBJFILES)
+      $(LINK) /OUT:$@ $(EXEOBJFILES) $(DLLLIBFILES)
 
 install:  $(DLLFILE) $(EXEFILE)
 

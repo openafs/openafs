@@ -33,6 +33,8 @@ int RenameConnection(PCWSTR GuidString, PCWSTR pszNewName);
 DWORD SetIpAddress(LPCWSTR guid, LPCWSTR ip, LPCWSTR mask);
 HRESULT LoopbackBindings (LPCWSTR loopback_guid);
 BOOL UpdateHostsFile( LPCWSTR swName, LPCWSTR swIp, LPCSTR szFilename, BOOL bPre );
+void ReportMessage(int level, LPCSTR msg, LPCSTR str, LPCWSTR wstr, DWORD dw);
+void SetMsiReporter(LPCSTR strAction, LPCSTR strDesc, DWORD h);
 #ifdef  __cplusplus
 }
 #endif
@@ -63,3 +65,10 @@ BOOL UpdateHostsFile( LPCWSTR swName, LPCWSTR swIp, LPCSTR szFilename, BOOL bPre
 #define SLEEP
 #endif
 
+/* Reporting mechanisms */
+#define REPORT_PRINTF 1
+#define REPORT_MSI 2
+#define REPORT_IGNORE 3
+
+extern DWORD dwReporterType;
+extern DWORD hMsiHandle;

@@ -116,7 +116,7 @@ extern "C" DWORD UnInstallLoopBack(void)
     if (found == FALSE)
     {
         ret = GetLastError();
-        printf("The %s does not seem to be installed\n", DRIVER_DESC);
+        ReportMessage(0,"Driver does not seem to be installed", DRIVER_DESC, NULL, ret);
         goto cleanup;
     }
 
@@ -315,7 +315,7 @@ extern "C" DWORD InstallLoopBack(LPCTSTR pConnectionName, LPCTSTR ip, LPCTSTR ma
     if (!found)
     {
         ret = GetLastError();
-        printf("Could not find the %s driver to install\n", DRIVER_DESC);
+        ReportMessage(0,"Could not find the driver to install", DRIVER_DESC, NULL, 0);
         goto cleanup;
     }
 
@@ -439,8 +439,7 @@ extern "C" DWORD InstallLoopBack(LPCTSTR pConnectionName, LPCTSTR ip, LPCTSTR ma
     ret = RenameConnection(pCfgGuidString, pConnectionName);
     if (ret)
     {
-        printf("Could not set the connection name to \"%S\"\n",
-               pConnectionName);
+        ReportMessage(0,"Could not set the connection name", NULL, pConnectionName, 0);
         goto cleanup;
     }
 
@@ -448,25 +447,25 @@ extern "C" DWORD InstallLoopBack(LPCTSTR pConnectionName, LPCTSTR ip, LPCTSTR ma
     ret = SetIpAddress(pCfgGuidString, ip, mask);
     if (ret)
     {
-        printf("Could not set the ip address and network mask\n");
+        ReportMessage(0,"Could not set the ip address and network mask",NULL,NULL,0);
         goto cleanup;
     }
     ret = LoopbackBindings(pCfgGuidString);
     if (ret)
     {
-        printf("Could not properly set the bindings\n");
+        ReportMessage(0,"Could not properly set the bindings",NULL,NULL,0);
         goto cleanup;
     }
     ret = !UpdateHostsFile( pConnectionName, ip, "hosts", FALSE );
     if (ret)
     {
-        printf("Could not update hosts file\n");
+        ReportMessage(0,"Could not update hosts file",NULL,NULL,0);
         goto cleanup;
     }
     ret = !UpdateHostsFile( pConnectionName, ip, "lmhosts", TRUE );
     if (ret)
     {
-        printf("Could not update lmhosts file\n");
+        ReportMessage(0,"Could not update lmhosts file",NULL,NULL,0);
         goto cleanup;
     }
 
@@ -507,12 +506,13 @@ static void display_usage()
                  L"loopback_install", MB_ICONINFORMATION | MB_OK );
 }
 
-static int process_args (LPWSTR lpCmdLine, Args & args) {
+static int process_args (LPWSTR lpCmdLine, int skip, Args & args) {
 	int i, iNumArgs;
 	LPWSTR * argvW;
 
 	argvW = CommandLineToArgvW (lpCmdLine, &iNumArgs);
-	for (i = 0; i < iNumArgs; i++)
+	// Skip over the command name
+	for (i = skip; i < iNumArgs; i++)
 	{
 		if (wcsstr (argvW[i], L"help")
 			|| !_wcsicmp (argvW[i], L"?")
@@ -556,6 +556,7 @@ static int process_args (LPWSTR lpCmdLine, Args & args) {
 		wcsMallocAndCpy (&args.lpSubnetMask, DEFAULT_MASK);
 
 	GlobalFree (argvW);
+
 	return 1;
 }
 
@@ -563,7 +564,7 @@ void CALLBACK doLoopBackEntryW (HWND hwnd, HINSTANCE hinst, LPWSTR lpCmdLine, in
 {
 	Args args;
 
-	if (!process_args(lpCmdLine, args)) 
+	if (!process_args(lpCmdLine, 0, args)) 
         return;
 
 	InstallLoopBack(args.lpConnectionName, args.lpIPAddr, args.lpSubnetMask);
@@ -601,6 +602,14 @@ UINT __stdcall installLoopbackMSI (MSIHANDLE hInstall)
 	Args args;
 	UINT rc;
 
+	SetMsiReporter("InstallLoopback", "Installing loopback adapter", hInstall);
+
+    /* check if there is already one installed.  If there is, we shouldn't try to 
+     * install another.
+     */
+	if(IsLoopbackInstalled())
+        return ERROR_SUCCESS;
+
 	szValueBuf = (LPWSTR) malloc (cbValueBuf * sizeof (WCHAR));
 	while (rc = MsiGetPropertyW(hInstall, L"CustomActionData", szValueBuf, &cbValueBuf)) {
 		free (szValueBuf);
@@ -612,12 +621,12 @@ UINT __stdcall installLoopbackMSI (MSIHANDLE hInstall)
             return ERROR_INSTALL_FAILURE;
 	}
 
-	if (!process_args(szValueBuf, args)) 
+	if (!process_args(szValueBuf, 1, args)) 
         return ERROR_INSTALL_FAILURE;
 		
 	rc = InstallLoopBack (args.lpConnectionName, args.lpIPAddr, args.lpSubnetMask);
 
-	if (rc == 1) 
+	if (rc != 2 && rc != 0) 
         return ERROR_INSTALL_FAILURE;
 
 	if (rc == 2) {
@@ -634,6 +643,8 @@ UINT __stdcall uninstallLoopbackMSI (MSIHANDLE hInstall)
 	Args args;
 	UINT rc;
 
+	SetMsiReporter("RemoveLoopback", "Removing loopback adapter",  hInstall);
+
 	szValueBuf = (LPWSTR) malloc (cbValueBuf * sizeof (WCHAR));
 	while (rc = MsiGetPropertyW(hInstall, L"CustomActionData", szValueBuf, &cbValueBuf)) {
 		free (szValueBuf);
@@ -645,7 +656,7 @@ UINT __stdcall uninstallLoopbackMSI (MSIHANDLE hInstall)
             return ERROR_INSTALL_FAILURE;
 	}
 
-	if (!process_args(szValueBuf, args)) 
+	if (!process_args(szValueBuf, 1, args)) 
         return ERROR_INSTALL_FAILURE;
 		
 	rc = UnInstallLoopBack ();
@@ -660,3 +671,39 @@ UINT __stdcall uninstallLoopbackMSI (MSIHANDLE hInstall)
 	return ERROR_SUCCESS;
 }
 
+DWORD hMsiHandle = 0;
+DWORD dwReporterType = REPORT_PRINTF;
+
+extern "C" void ReportMessage(int level, LPCSTR msg, LPCSTR str, LPCWSTR wstr, DWORD dw) {
+    if(dwReporterType == REPORT_PRINTF)
+		printf("%s:[%s][%S][%d]\n", (msg?msg:""), (str?str:""), (wstr?wstr:L""), dw);
+	else if(dwReporterType == REPORT_MSI && hMsiHandle && level == 0) {
+		MSIHANDLE hRec = MsiCreateRecord(5);
+        
+		MsiRecordClearData(hRec);
+		MsiRecordSetStringA(hRec,1,(msg)?msg:"");
+		MsiRecordSetStringA(hRec,2,(str)?str:"");
+		MsiRecordSetStringW(hRec,3,(wstr)?wstr:L"");
+		MsiRecordSetInteger(hRec,4,dw);
+
+		MsiProcessMessage(hMsiHandle,INSTALLMESSAGE_ACTIONDATA,hRec);
+
+		MsiCloseHandle(hRec);
+	}
+}
+
+extern "C" void SetMsiReporter(LPCSTR strAction, LPCSTR strDesc,DWORD h) {
+	dwReporterType = REPORT_MSI;
+	hMsiHandle = h;
+
+	MSIHANDLE hRec = MsiCreateRecord(4);
+	
+	MsiRecordClearData(hRec);
+	MsiRecordSetStringA(hRec,1,strAction);
+	MsiRecordSetStringA(hRec,2,strDesc);
+	MsiRecordSetStringA(hRec,3,"[1]:([2])([3])([4])");
+
+	MsiProcessMessage(h,INSTALLMESSAGE_ACTIONSTART, hRec);
+
+	MsiCloseHandle(hRec);
+}
