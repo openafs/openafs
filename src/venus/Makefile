@@ -87,6 +87,10 @@ ${DESTDIR}etc/kdump: kdump
 	sun4x_57 ) \
 		${INSTALLex} -f kdump.sh.solaris7 $@; \
 		${INSTALL} -s -f $? ${DESTDIR}etc/kdump32;; \
+	*linux* ) \
+		for lv in ${LINUX_VERS}; do \
+			${INSTALL} -s $?-$$lv $@-$$lv ; \
+		done ;; \
 	hp_ux11* ) \
 		${INSTALLex} -f kdump.sh.hp_ux11 $@; \
 		${INSTALL} -s -f $? ${DESTDIR}etc/kdump32;; \
@@ -160,7 +164,9 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 	set -x; \
 	case ${SYS_NAME} in \
 		*linux* ) \
-			${CC} -g -I${LINUX_SRCDIR}${LINUX_VERS}/include -I${DESTDIR}include -I${SRCDIR}include ${XCFLAGS} -c kdump.c ;; \
+			for lv in ${LINUX_VERS}; do \
+				${CC} -g -I${LINUX_SRCDIR}$$lv/include -I${DESTDIR}include -I${SRCDIR}include ${XCFLAGS} -o kdump-$$lv.o -c kdump.c ; \
+			done ;; \
 		alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c| alpha_dux?? ) \
 			${CC} -g ${CFLAGS} -I/usr/sys/include -I/usr/sys/BINARY -I/usr/sys/AFS -DDEBUGGER -c kdump.c ;;\
 		sgi_6? ) \
@@ -222,8 +228,12 @@ kdump:  kdump.o
 				;; \
 			esac || exit $$? ; \
 		done ;; \
+	*linux* ) \
+		for lv in ${LINUX_VERS}; do \
+			${CC} -g -o kdump-$$lv kdump-$$lv.o ${DESTDIR}lib/afs/libcmd.a  ${DESTDIR}lib/afs/util.a ${XLIBS} ; \
+		done ;; \
 	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux??) \
-	    ${CC} -g -o kdump kdump.o ${DESTDIR}lib/afs/libcmd.a  ${DESTDIR}lib/afs/util.a ${XLIBS} -ll -lmld;; \
+		${CC} -g -o kdump kdump.o ${DESTDIR}lib/afs/libcmd.a  ${DESTDIR}lib/afs/util.a ${XLIBS} -ll -lmld;; \
 	ncrx86_* ) ${CC} -g -o kdump kdump.o ${DESTDIR}lib/afs/libcmd.a  ${DESTDIR}lib/afs/util.a -lelf ${XLIBS} ;; \
 	* )     ${CC} -g -o kdump kdump.o ${DESTDIR}lib/afs/libcmd.a  ${DESTDIR}lib/afs/util.a ${XLIBS} ;; \
 	esac
