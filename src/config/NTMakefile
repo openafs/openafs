@@ -23,12 +23,16 @@ INCFILES =\
 	$(INCFILEDIR)\afs_args.h \
 	$(INCFILEDIR)\debug.h \
 	$(INCFILEDIR)\param.h \
+	$(INCFILEDIR)\afsconfig.h \
 	$(INCFILEDIR)\afs_sysnames.h \
 	$(INCFILEDIR)\stds.h \
 	$(INCFILEDIR)\icl.h 
 
 
 $(INCFILEDIR)\param.h: param.$(SYS_NAME).h
+	$(COPY) $? $@
+
+$(INCFILEDIR)\afsconfig.h: afsconfig-windows.h
 	$(COPY) $? $@
 
 idirs: doclink

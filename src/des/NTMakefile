@@ -56,7 +56,7 @@ LIBOBJS = \
 	weak_key.obj \
 	read_pssword.obj \
 	strng_to_key.obj \
-	misco.obj \
+	misc.obj \
 	util.obj \
 	crypt.obj
 
@@ -64,10 +64,6 @@ LIBFILE = $(DESTDIR)\lib\afsdes.lib
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
-
-# Special case, since misc.c includes a "main" for the table generators.
-misco.obj: misc.c
-	$(C2OBJ) misc.c /Fomisco.obj -DDONT_INCL_MAIN
 
 #####################
 # Generator Files ###
@@ -113,28 +109,28 @@ ip.c: make_ip.exe
 # Make generators.
 misc.obj: AFS_component_version_number.c
 
-make_keyperm.exe: make_keyperm.obj misc.obj
+make_keyperm.exe: make_keyperm.obj misc.obj main.obj
 	$(EXECONLINK)
 
-make_p_table.exe: make_p_table.obj misc.obj
+make_p_table.exe: make_p_table.obj misc.obj main.obj
 	$(EXECONLINK)
 
-make_s_table.exe: make_s_table.obj misc.obj
+make_s_table.exe: make_s_table.obj misc.obj main.obj
 	$(EXECONLINK)
 
-make_odd.exe: make_odd.obj misc.obj
+make_odd.exe: make_odd.obj misc.obj main.obj
 	$(EXECONLINK)
 
-make_p.exe: make_p.obj misc.obj
+make_p.exe: make_p.obj misc.obj main.obj
 	$(EXECONLINK)
 
-make_s.exe: make_s.obj misc.obj
+make_s.exe: make_s.obj misc.obj main.obj
 	$(EXECONLINK)
 
-make_fp.exe: make_fp.obj misc.obj
+make_fp.exe: make_fp.obj misc.obj main.obj
 	$(EXECONLINK)
 
-make_ip.exe: make_ip.obj misc.obj
+make_ip.exe: make_ip.obj misc.obj main.obj
 	$(EXECONLINK)
 
 install: $(GENERATED_FILES) $(LIBFILE) $(INCFILES)

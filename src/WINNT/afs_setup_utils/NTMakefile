@@ -88,6 +88,8 @@ $(AFSRM_EXEFILE): $(AFSRM_EXEOBJS) $(AFSRM_EXELIBS)
 
 install : $(INSTALL_UTILS_DLLFILE) $(SERVER_UNINST_DLLFILE) $(CLIENT_UNINST_DLLFILE) \
           $(CC_UNINST_DLLFILE) $(LIGHT_CLIENT_UNINST_DLLFILE) $(DOCS_UNINST_DLLFILE) \
+
+media : install
           $(AFSRM_EXEFILE) lang
 		  cd _isuser
 		  nmake -fntmakefile install
