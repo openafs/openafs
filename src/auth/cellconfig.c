@@ -524,6 +524,7 @@ static int afsconf_OpenInternal(register struct afsconf_dir *adir,
 	adir->alias_entries = curAlias;
     }
 
+    if (tf != NULL) fclose(tf);
     /* now read the fs keys, if possible */
     adir->keystr = (struct afsconf_keys *) 0;
     afsconf_IntGetKeys(adir);
