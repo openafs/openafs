@@ -181,7 +181,7 @@ viced: project vlserver audit
 
 tviced: project viced vlserver libafsrpc libafsauthent
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux*) \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
 		${COMPILE_PART1} tviced  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT viced for ${SYS_NAME} ;; \
@@ -253,7 +253,7 @@ bozo: project ntp audit
 vfsck:	minproject vol
 	set -x; \
 	case ${SYS_NAME} in \
-	sgi_* | *linux* | rs_aix42 | ppc_darwin* ) \
+	sgi_* | *linux* | rs_aix42 | ppc_darwin* | hp_ux102 ) \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
@@ -346,7 +346,13 @@ libafs: minproject libafs_setup ${KERNELDIR}
 	${COMPILE_PART1} libafs ${COMPILE_PART2}
 
 libuafs: minproject libuafs_setup ${UKERNELDIR}
-	${COMPILE_PART1} libuafs ${COMPILE_PART2}
+	set -x; \
+	case ${SYS_NAME} in \
+	hp_ux102* ) \
+		echo Skipping libuafs for ${SYS_NAME} ;; \
+	* ) \
+		${COMPILE_PART1} libuafs ${COMPILE_PART2} ;; \
+	esac
 
 afsweb: minproject kauth dauth 
 	${COMPILE_PART1} afsweb ${COMPILE_PART2}
@@ -374,7 +380,7 @@ butc: project bubasics butm budb bucoord cmd
 
 tbutc: project bubasics butm budb bucoord cmd butc
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix4*|*linux*|hp_ux*) \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix4*|*linux*|hp_ux110) \
 		${COMPILE_PART1} tbutc ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT butc for ${SYS_NAME} ;; \
@@ -413,7 +419,7 @@ tests: rxtests ubiktests
 # pthread based user space RX library
 libafsrpc: rx rxkad des
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux*) \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
 	${COMPILE_PART1} libafsrpc  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
@@ -421,7 +427,7 @@ libafsrpc: rx rxkad des
 
 libafsauthent: ubik auth kauth libafsrpc
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux*) \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
 	${COMPILE_PART1} libafsauthent  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
@@ -441,7 +447,7 @@ libadmin_real:
 
 libadmin: libafsauthent bozo
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux*) \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
 			$(MAKE) libadmin_real SYS_NAME=$(SYS_NAME) \
 			WASHTOOL="$(WASHTOOL)" \
 			COMPILE_PART1="$(COMPILE_PART1)" \
