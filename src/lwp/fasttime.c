@@ -38,9 +38,6 @@ RCSID
 #include <sys/time.h>
 #include <sys/file.h>
 #endif
-#if !defined(AFS_AIX_ENV) && !defined(AFS_NT40_ENV)
-#include <sys/mman.h>
-#endif
 #include <afs/afsutil.h>
 
 extern char *valloc();
