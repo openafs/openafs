@@ -27,13 +27,17 @@ all: \
 	${KERNELDIR}/afs \
 	${KERNELDIR}/afs/xfsattrs.h \
 	${UKERNELDIR}/afs \
-	${UKERNELDIR}/afs/afs.exp
+	${UKERNELDIR}/afs/afsl.exp
 
 libsys.a: ${OBJECTS} ${RMTOBJS} AFS_component_version_number.o
 	-$(RM) -f $@
 	$(AR) crv $@ ${OBJECTS} ${RMTOBJS} \
 		AFS_component_version_number.o ${LIBSYS_AIX_EXP}
 	$(RANLIB) $@
+	case "${SYS_NAME}" in                   	\
+		rs_aix*) 			        \
+			$(AR) crv $@ afsl.exp;;         \
+	esac
 
 tests:	pagsh pagsh.krb fixit iinc idec icreate iopen istat rmtsysd
 
@@ -145,7 +149,7 @@ ${TOP_LIBDIR}/libsys.a: libsys.a
 ${UKERNELDIR}/afs:
 	mkdir -p $@
 
-${UKERNELDIR}/afs/afs.exp: afs.exp
+${UKERNELDIR}/afs/afsl.exp: afsl.exp
 	${INSTALL} $? $@
 
 ${KERNELDIR}/afs:
