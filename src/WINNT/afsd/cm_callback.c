@@ -964,11 +964,11 @@ SRXAFSCB_WhoAreYou(struct rx_call *callp, struct interfaceAddr* addr)
     for ( i=0; i < cm_noIPAddr; i++ ) {
         addr->addr_in[i] = cm_IPAddr[i];
         addr->subnetmask[i] = cm_SubnetMask[i];
-        addr->mtu[i] = cm_NetMtu[i];
+        addr->mtu[i] = (rx_mtu == -1 || (rx_mtu != -1 && cm_NetMtu[i] < rx_mtu)) ? 
+            cm_NetMtu[i] : rx_mtu;
     }
-    
-    MUTEX_EXIT(&callp->lock);
 
+    MUTEX_EXIT(&callp->lock);
     return 0;
 }
 
@@ -1123,7 +1123,8 @@ SRXAFSCB_TellMeAboutYourself( struct rx_call *callp,
     for ( i=0; i < cm_noIPAddr; i++ ) {
         addr->addr_in[i] = cm_IPAddr[i];
         addr->subnetmask[i] = cm_SubnetMask[i];
-        addr->mtu[i] = cm_NetMtu[i];
+        addr->mtu[i] = (rx_mtu == -1 || (rx_mtu != -1 && cm_NetMtu[i] < rx_mtu)) ? 
+            cm_NetMtu[i] : rx_mtu;
     }
 
     dataBytes = 1 * sizeof(afs_int32);
@@ -1133,7 +1134,6 @@ SRXAFSCB_TellMeAboutYourself( struct rx_call *callp,
     capabilities->Capabilities_val = dataBuffP;
 
     MUTEX_EXIT(&callp->lock);
-
     return 0;
 }
 

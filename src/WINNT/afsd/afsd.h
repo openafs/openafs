@@ -121,6 +121,8 @@ extern int cm_fakeDirVersion;				// the version number of the root.afs directory
 extern int cm_dnsEnabled;
 extern int cm_freelanceEnabled;
 
+extern long rx_mtu;
+
 #define CAPABILITY_ERRORTRANS (1<<0)
 #define CAPABILITY_BITS 1
 
