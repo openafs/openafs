@@ -729,22 +729,21 @@ DWORD APIENTRY NPLogonNotify(
 
 	if (code) {
         char msg[128];
+        HANDLE h;
+        char *ptbuf[1];
 
 		StringCbPrintf(msg, sizeof(msg), "Integrated login failed: %s", reason);
 
-		if (interactive && !opt.failSilently)
+		if (ISLOGONINTEGRATED(opt.LogonOption) && interactive && !opt.failSilently)
 			MessageBox(hwndOwner, msg, "AFS Logon", MB_OK);
-		else {
-            HANDLE h;
-            char *ptbuf[1];
 
-            h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
-            ptbuf[0] = msg;
-            ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1008, NULL,
-                         1, 0, ptbuf, NULL);
-            DeregisterEventSource(h);
-        }
-	    code = MapAuthError(code);
+        h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
+        ptbuf[0] = msg;
+        ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1008, NULL,
+                     1, 0, ptbuf, NULL);
+        DeregisterEventSource(h);
+	    
+        code = MapAuthError(code);
 		SetLastError(code);
 
 		if (ISLOGONINTEGRATED(opt.LogonOption) && (code!=0))
