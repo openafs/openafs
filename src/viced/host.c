@@ -1055,14 +1055,24 @@ retry:
 	  && ( ( !identP->valid && host->interface )
 	    || ( identP->valid && !host->interface )
 	    || ( identP->valid
-	      && !afs_uuid_equal(&identP->uuid, &host->interface->uuid) ) ) ) {
-		/* The host in the cache is not the host for this connection */
-		host->hostFlags |= HOSTDELETED;
-		h_Unlock_r(host);
-		if (!held) h_Release_r(host);
-		ViceLog(0, ("CB: new identity for host %s:%d, deleting\n",
-			   afs_inet_ntoa_r(host->host, hoststr), host->port));
-		goto retry;
+	      && !afs_uuid_equal(&identP->uuid, &host->interface->uuid) ) ) ) 
+	{
+	    char uuid1[128], uuid2[128];
+	    /* The host in the cache is not the host for this connection */
+	    host->hostFlags |= HOSTDELETED;
+	    h_Unlock_r(host);
+	    if (!held) h_Release_r(host);
+
+	    if (identP->valid)
+		afsUUID_to_string(identP->uuid, uuid1, 127);
+	    if (host->interface)
+		afsUUID_to_string(host->interface->uuid, uuid2, 127);
+	    ViceLog(0, 
+		    ("CB: new identity for host %s:%d, deleting(%x %x %s %s)\n", 
+		     afs_inet_ntoa_r(host->host, hoststr), host->port, 
+		     identP->valid, host->interface, identP->valid ? uuid1 : 
+		     "", host->interface ? uuid2 : ""));
+	    goto retry;
 	}
     } else {
         host = h_Alloc_r(tcon);
