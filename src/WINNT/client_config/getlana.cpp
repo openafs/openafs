@@ -394,21 +394,16 @@ void GetUncServerName(int lanaNumber, BOOL isGateway, TCHAR* name, int type)
     if (lanaNumber >= 0 && lana_IsLoopback(lanaNumber, msg))
     {
         HKEY parmKey;
-        char mountRoot[MAX_PATH+1];
-        char *pmount=mountRoot;
-        DWORD len=sizeof(mountRoot)-1;
-        printf("int mountroot \n");
+        char explicitNetbiosName[MAX_PATH+1];
+        DWORD len=sizeof(explicitNetbiosName)-1;
         if ((RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSCONFIGKEYNAME,0, KEY_QUERY_VALUE, &parmKey)!= ERROR_SUCCESS) 
-             || (RegQueryValueEx(parmKey, "Mountroot", NULL, NULL,(LPBYTE)(mountRoot), &len)!= ERROR_SUCCESS)
-             || (len > sizeof(mountRoot)-1)
+             || (RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,(LPBYTE)(explicitNetbiosName), &len)!= ERROR_SUCCESS)
+             || (len > sizeof(explicitNetbiosName)-1)
              ) 
-            strcpy(mountRoot, "afs"); 
+            strcpy(explicitNetbiosName, "AFS"); 
         RegCloseKey(parmKey);
-        mountRoot[len]=0;       /*safety see ms-help://MS.MSDNQTR.2002OCT.1033/sysinfo/base/regqueryvalueex.htm*/
-        if ((*pmount=='/') || (*pmount=='\\'))
-            pmount++;
-
-        _tcscpy(name, pmount);
+        explicitNetbiosName[len]=0;       /*safety see ms-help://MS.MSDNQTR.2002OCT.1033/sysinfo/base/regqueryvalueex.htm*/
+        _tcscpy(name, explicitNetbiosName);
     } else {
         gethostname(cm_HostName, sizeof(cm_HostName));
 		_tcscpy(tmpName, cm_HostName);
