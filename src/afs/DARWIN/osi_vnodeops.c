@@ -1,7 +1,7 @@
-#include <afs/param.h>  /* Should be always first */
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.1.1.2 2001/07/11 03:06:56 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_vnodeops.c,v 1.1.1.3 2001/07/14 22:20:01 hartmans Exp $");
 
 #include <afs/sysincludes.h>            /* Standard vendor system headers */
 #include <afs/afsincludes.h>            /* Afs-based standard headers */

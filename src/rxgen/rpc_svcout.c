@@ -32,10 +32,10 @@
  * rpc_svcout.c, Server-skeleton outputter for the RPC protocol compiler
  * Copyright (C) 1987, Sun Microsytsems, Inc. 
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_svcout.c,v 1.1.1.3 2001/07/11 03:11:12 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_svcout.c,v 1.1.1.4 2001/07/14 22:23:51 hartmans Exp $");
 
 #include <stdio.h>
 #ifdef HAVE_STRINGS_H

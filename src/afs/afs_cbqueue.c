@@ -71,10 +71,10 @@
  * might have missed a CallBack RPC, and a subsequent callback might be
  * granted with a shorter expiration time.
  */
-#include "../afs/param.h"       /*Should be always first*/
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cbqueue.c,v 1.1.1.3 2001/07/11 03:06:02 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cbqueue.c,v 1.1.1.4 2001/07/14 22:19:18 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/

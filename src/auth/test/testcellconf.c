@@ -22,10 +22,10 @@ Creation date:
     17 August 1987
 
 --------------------------------------------------------------------------------------------------------------*/
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/auth/test/testcellconf.c,v 1.1.1.3 2001/07/11 03:07:40 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/auth/test/testcellconf.c,v 1.1.1.4 2001/07/14 22:20:41 hartmans Exp $");
 
 #include <sys/types.h>
 #include <stddef.h>

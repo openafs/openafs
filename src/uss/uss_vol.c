@@ -15,10 +15,10 @@
 /*
  * --------------------- Required definitions ---------------------
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_vol.c,v 1.1.1.3 2001/07/11 03:11:38 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/uss/uss_vol.c,v 1.1.1.4 2001/07/14 22:24:16 hartmans Exp $");
 
 #include "uss_vol.h"		/*Interface to this module*/
 #include "uss_common.h"		/*Common definitions*/

@@ -51,20 +51,18 @@
   *	-shutdown  Shutdown afs daemons
   *---------------------------------------------------------------------------*/
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afsd/afsd.c,v 1.1.1.7 2001/07/11 03:07:01 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afsd/afsd.c,v 1.1.1.8 2001/07/14 22:20:06 hartmans Exp $");
 
 #define VFS 1
 
 #include <afs/cmd.h>
 
 #include <assert.h>
-#include <itc.h>
+#include <potpourri.h>
 #include <afs/afsutil.h>
-#undef in
-#undef out
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>

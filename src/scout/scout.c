@@ -11,10 +11,10 @@
  * Scout: A quick and (semi-)dirty attempt at the old CMU vopcon.
  *------------------------------------------------------------------------*/
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/scout/scout.c,v 1.1.1.3 2001/07/11 03:11:19 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/scout/scout.c,v 1.1.1.4 2001/07/14 22:23:57 hartmans Exp $");
 
 #undef	IN
 #ifdef	AFS_AIX32_ENV

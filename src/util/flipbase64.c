@@ -7,10 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/flipbase64.c,v 1.1.1.5 2001/07/11 03:11:45 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/flipbase64.c,v 1.1.1.6 2001/07/14 22:24:21 hartmans Exp $");
 
 
 #if defined(AFS_NAMEI_ENV)

@@ -15,10 +15,10 @@
  */
 
 /* First we have the kernel hacks' include files. */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/dir/test/physio.c,v 1.1.1.3 2001/07/11 03:08:52 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/dir/test/physio.c,v 1.1.1.4 2001/07/14 22:21:52 hartmans Exp $");
 
 #include <sys/param.h>
 #ifdef AFS_VFSINCL_ENV

@@ -28,10 +28,11 @@ AFS_OS_NFSOBJS = \
 AFS_OS_NONFSOBJS = \
 	osi_vfsops.o
 
+HEADER_RT = @HEADER_RT@
 
 # System specific build commands and flags
 KDEFS=-DLANGUAGE_C -G 4 -I/usr/sys/include -I../include \
-	 -I/usr/sys/${HEADER_RT} -I/usr/sys/BINARY -I/usr/sys/AFS \
+	 -I/usr/sys/${HEADER_RT} -I/usr/sys/BINARY \
 	-DDEC3000_500 -DSWAPTYPE=1 -DUERF -DOSF -DCOMPAT_43 -DMACH -DUFS \
 	-DRT -DKERNEL -D_KERNEL  -signed  -no_excpt -Wb,-static -Wco,-nofloat \
 	-Olimit 1000 -D__alpha -Umips -UMIPS 

@@ -13,10 +13,10 @@
  * setpag
  *
  */
-#include "../afs/param.h"
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_groups.c,v 1.1.1.6 2001/07/11 03:06:40 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_groups.c,v 1.1.1.7 2001/07/14 22:19:45 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"

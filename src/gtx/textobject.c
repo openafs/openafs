@@ -12,10 +12,10 @@
  *	Implementation of the gator text object.
  *------------------------------------------------------------------------*/
 #define	IGNORE_STDS_H
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/textobject.c,v 1.1.1.3 2001/07/11 03:09:17 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/textobject.c,v 1.1.1.4 2001/07/14 22:22:05 hartmans Exp $");
 
 #include "gtxtextobj.h"		/*Interface for this module*/
 #include "gtxwindows.h"		/*Gator window interface*/

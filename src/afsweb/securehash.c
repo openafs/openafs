@@ -25,10 +25,10 @@
  * the Secure Hash Standard (SHS, FIPS PUB 180.1).
  */
 
-#include "../afs/param.h"	/* Should be always first */
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afsweb/securehash.c,v 1.1.1.3 2001/07/11 03:07:27 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afsweb/securehash.c,v 1.1.1.4 2001/07/14 22:20:31 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include <net/if.h>

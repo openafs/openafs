@@ -9,10 +9,10 @@
 
 /* This is a placeholder for routines unique to the port of AFS to hp-ux*/
 
-#include "../afs/param.h"
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/HPUX/osi_vnodeops.c,v 1.1.1.3 2001/07/11 03:06:35 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/HPUX/osi_vnodeops.c,v 1.1.1.4 2001/07/14 22:19:40 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */

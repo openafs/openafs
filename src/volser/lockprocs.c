@@ -14,10 +14,10 @@
  *  Date:	    December, 88
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/volser/lockprocs.c,v 1.1.1.3 2001/07/11 03:12:37 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/lockprocs.c,v 1.1.1.4 2001/07/14 22:25:07 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV

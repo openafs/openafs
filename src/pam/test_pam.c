@@ -7,10 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/pam/test_pam.c,v 1.1.1.4 2001/07/11 03:10:32 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/pam/test_pam.c,v 1.1.1.5 2001/07/14 22:23:13 hartmans Exp $");
 
 #include <stdio.h>
 #include <security/pam_appl.h>

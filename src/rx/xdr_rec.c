@@ -43,10 +43,10 @@
  * The other 31 bits encode the byte length of the fragment.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_rec.c,v 1.1.1.2 2001/07/11 03:10:58 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_rec.c,v 1.1.1.3 2001/07/14 22:23:38 hartmans Exp $");
 
 #include <stdio.h>
 #include "xdr.h"

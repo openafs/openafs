@@ -29,10 +29,10 @@ ups the ref count on the #<inode-no> files, so they're not returned
 to the free list when the files are removed from lost+found
 */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/sys/fixit.c,v 1.1.1.3 2001/07/11 03:11:22 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/sys/fixit.c,v 1.1.1.4 2001/07/14 22:24:01 hartmans Exp $");
 
 #include <sys/types.h>
 #include <sys/file.h>

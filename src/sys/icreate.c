@@ -11,10 +11,10 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <stdio.h>
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/sys/icreate.c,v 1.1.1.3 2001/07/11 03:11:22 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/sys/icreate.c,v 1.1.1.4 2001/07/14 22:24:02 hartmans Exp $");
 
 
 #include "AFS_component_version_number.c"

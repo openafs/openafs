@@ -7,10 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ntp/read_local.c,v 1.1.1.3 2001/07/11 03:10:21 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ntp/read_local.c,v 1.1.1.4 2001/07/14 22:23:07 hartmans Exp $");
 
 #ifdef	REFCLOCK
 /*

@@ -29,10 +29,10 @@
  *
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ntp/ntp.c,v 1.1.1.3 2001/07/11 03:10:18 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ntp/ntp.c,v 1.1.1.4 2001/07/14 22:23:05 hartmans Exp $");
 
 #include <stdio.h>
 #ifdef	AFS_AIX32_ENV

@@ -11,10 +11,10 @@
  * a partition.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/test/nilist.c,v 1.1.1.3 2001/07/11 03:12:30 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/test/nilist.c,v 1.1.1.4 2001/07/14 22:25:05 hartmans Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV

@@ -10,10 +10,10 @@
 /* I don't really need all thes, but I can't tell which ones I need 
  * and which I don't.
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/vprintf.c,v 1.1.1.3 2001/07/11 03:12:07 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/vprintf.c,v 1.1.1.4 2001/07/14 22:24:44 hartmans Exp $");
 
 #define VICE	/* allow us to put our changes in at will */
 #include <stdio.h>

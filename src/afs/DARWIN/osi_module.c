@@ -1,14 +1,12 @@
-#include "../afs/param.h"
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_module.c,v 1.1.1.2 2001/07/11 03:06:55 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DARWIN/osi_module.c,v 1.1.1.3 2001/07/14 22:20:01 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../sys/syscall.h"
 #include <mach/kmod.h>
-#define VERSION "1.0.3"
-
 
 struct vfsconf afs_vfsconf;
 extern struct vfsops afs_vfsops;

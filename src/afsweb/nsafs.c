@@ -11,10 +11,10 @@
  * User space client specific interface glue
  */
 
-#include "../afs/param.h"	/* Should be always first */
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afsweb/nsafs.c,v 1.1.1.3 2001/07/11 03:07:28 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afsweb/nsafs.c,v 1.1.1.4 2001/07/14 22:20:32 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include <net/if.h>

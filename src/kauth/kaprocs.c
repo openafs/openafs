@@ -7,10 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaprocs.c,v 1.1.1.5 2001/07/11 03:09:23 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaprocs.c,v 1.1.1.6 2001/07/14 22:22:11 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <errno.h>
@@ -772,9 +772,7 @@ set_password (tt, name, instance, password, kvno, caller)
     
 
     if (special_name (name, instance)) { /* set key over rides key_version */
-#if SPECIAL
 	tentry.flags = htonl (ntohl(tentry.flags) | KAFSPECIAL);
-#endif
 	if (code = ka_NewKey (tt, to, &tentry, password)) return(code);
     }
     else {

@@ -26,10 +26,10 @@
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_refernce.c,v 1.1.1.2 2001/07/11 03:10:56 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_refernce.c,v 1.1.1.3 2001/07/14 22:23:37 hartmans Exp $");
 
 #ifndef	NeXT
 

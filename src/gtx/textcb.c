@@ -13,10 +13,10 @@
  *
  *------------------------------------------------------------------------*/
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/textcb.c,v 1.1.1.3 2001/07/11 03:09:18 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/textcb.c,v 1.1.1.4 2001/07/14 22:22:05 hartmans Exp $");
 
 #include "gtxtextcb.h"		/*Module interface*/
 #include <stdio.h>			/*Standard I/O stuff*/

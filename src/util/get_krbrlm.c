@@ -3,10 +3,10 @@
  * For copying and distribution information, please see the file <mit-copyright.h>.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/get_krbrlm.c,v 1.1.1.2 2001/07/11 03:11:46 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/get_krbrlm.c,v 1.1.1.3 2001/07/14 22:24:22 hartmans Exp $");
 
 #include <stdio.h>
 #include "afsutil.h"

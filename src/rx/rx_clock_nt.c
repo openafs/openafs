@@ -10,10 +10,10 @@
 /* Elapsed time package */
 /* See rx_clock.h for calling conventions */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_clock_nt.c,v 1.1.1.4 2001/07/11 03:10:46 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_clock_nt.c,v 1.1.1.5 2001/07/14 22:23:27 hartmans Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <stdio.h>

@@ -20,10 +20,10 @@
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include <des.h>
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/cbc_encrypt.c,v 1.1.1.3 2001/07/11 03:08:38 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/cbc_encrypt.c,v 1.1.1.4 2001/07/14 22:21:28 hartmans Exp $");
 
 
 #define XPRT_CBC_ENCRYPT

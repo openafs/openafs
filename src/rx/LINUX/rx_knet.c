@@ -12,10 +12,10 @@
  *
  * Linux implementation.
  */
-#include "../afs/param.h"
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/LINUX/rx_knet.c,v 1.1.1.5 2001/07/11 03:11:01 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/LINUX/rx_knet.c,v 1.1.1.6 2001/07/14 22:23:41 hartmans Exp $");
 
 #ifdef AFS_LINUX22_ENV
 #include "../rx/rx_kcommon.h"

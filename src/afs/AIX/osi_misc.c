@@ -16,10 +16,10 @@
  * aix_vattr_null
  */
 
-#include "../afs/param.h"
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/AIX/osi_misc.c,v 1.1.1.3 2001/07/11 03:06:27 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/AIX/osi_misc.c,v 1.1.1.4 2001/07/14 22:19:33 hartmans Exp $");
 
 #include "../h/systm.h"
 #include "../h/types.h"

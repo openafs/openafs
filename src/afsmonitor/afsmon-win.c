@@ -12,10 +12,10 @@
  *
  *-------------------------------------------------------------------------*/
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afsmonitor/afsmon-win.c,v 1.1.1.4 2001/07/11 03:07:15 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afsmonitor/afsmon-win.c,v 1.1.1.5 2001/07/14 22:20:19 hartmans Exp $");
 
 #include <stdio.h>
 #include <signal.h>

@@ -11,10 +11,10 @@
  * This file implements the vos related funtions for afscp
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/test/vos.c,v 1.1.1.3 2001/07/11 03:09:56 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/test/vos.c,v 1.1.1.4 2001/07/14 22:22:42 hartmans Exp $");
 
 #include "vos.h"
 

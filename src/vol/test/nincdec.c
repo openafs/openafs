@@ -11,10 +11,10 @@
  * Test "inode" creation in the user space file system.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/test/nincdec.c,v 1.1.1.3 2001/07/11 03:12:30 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/test/nincdec.c,v 1.1.1.4 2001/07/14 22:25:06 hartmans Exp $");
 
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>

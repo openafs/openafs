@@ -36,10 +36,10 @@
 #define UT_NAMESIZE 8
 #endif
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/login/login.c,v 1.1.1.3 2001/07/11 03:10:07 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/login/login.c,v 1.1.1.4 2001/07/14 22:22:52 hartmans Exp $");
 
 #include <unistd.h>
 #include <stdlib.h>

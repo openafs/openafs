@@ -11,14 +11,14 @@
  * Kerberos-style ticket.  These are the client-only routines.  They do not
  * make any use of DES. */
 
+#include <afsconfig.h>
 #ifdef KERNEL
 #include "../afs/param.h"
 #else
 #include <afs/param.h>
 #endif
-#include <afsconfig.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_client.c,v 1.1.1.4 2001/07/11 03:11:13 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_client.c,v 1.1.1.5 2001/07/14 22:23:52 hartmans Exp $");
 
 #ifdef KERNEL
 #include "../afs/stds.h"

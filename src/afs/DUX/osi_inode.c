@@ -13,10 +13,10 @@
  * Implements:
  *
  */
-#include "../afs/param.h"	/* Should be always first */
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DUX/osi_inode.c,v 1.1.1.5 2001/07/11 03:06:31 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DUX/osi_inode.c,v 1.1.1.6 2001/07/14 22:19:37 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */

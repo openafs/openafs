@@ -12,10 +12,10 @@
    make small changes as well as subroutines to permit specialized programs to
    update the database, change the server passwords, etc. */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/admin_tools.c,v 1.1.1.6 2001/07/11 03:09:20 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/admin_tools.c,v 1.1.1.7 2001/07/14 22:22:07 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <afs/debug.h>

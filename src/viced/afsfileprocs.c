@@ -25,10 +25,10 @@
  * privilege"? 
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/afsfileprocs.c,v 1.1.1.5 2001/07/11 03:12:08 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/afsfileprocs.c,v 1.1.1.6 2001/07/14 22:24:45 hartmans Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>

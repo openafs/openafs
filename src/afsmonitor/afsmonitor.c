@@ -13,10 +13,10 @@
  *-------------------------------------------------------------------------*/
 
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afsmonitor/afsmonitor.c,v 1.1.1.5 2001/07/11 03:07:26 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afsmonitor/afsmonitor.c,v 1.1.1.6 2001/07/14 22:20:30 hartmans Exp $");
 
 #include <stdio.h>
 #include <math.h>

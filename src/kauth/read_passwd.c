@@ -10,10 +10,10 @@
  * echoing.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/read_passwd.c,v 1.1.1.2 2001/07/11 03:09:26 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/read_passwd.c,v 1.1.1.3 2001/07/14 22:22:13 hartmans Exp $");
 
 #include <mit-cpyright.h>
 #include <des.h>

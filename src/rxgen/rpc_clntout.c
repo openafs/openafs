@@ -32,10 +32,10 @@
  * rpc_clntout.c, Client-stub outputter for the RPC protocol compiler
  * Copyright (C) 1987, Sun Microsytsems, Inc.
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_clntout.c,v 1.1.1.3 2001/07/11 03:11:10 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_clntout.c,v 1.1.1.4 2001/07/14 22:23:48 hartmans Exp $");
 
 #include <stdio.h>
 #include <string.h>

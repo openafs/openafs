@@ -7,22 +7,33 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/vlclient.c,v 1.1.1.3 2001/07/11 03:12:15 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/vlclient.c,v 1.1.1.4 2001/07/14 22:24:51 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
-#ifdef AFS_NT40_ENV
+#ifdef HAVE_TIME_H
 #include <time.h>
+#endif
+#ifdef HAVE_FCNTL_H
 #include <fcntl.h>
+#endif
+#ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <WINNT/afsevent.h>
-#else
+#endif
+#ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
+#endif
+#ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
+#endif
+#ifdef HAVE_NETDB_H
 #include <netdb.h>
+#endif
+#ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
 #include <stdio.h>

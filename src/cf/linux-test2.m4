@@ -13,3 +13,18 @@ ac_cv_linux_fs_struct_inode_has_i_bytes=no)])
 AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_bytes)
 CPPFLAGS="$save_CPPFLAGS"])
 
+AC_DEFUN(LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK, [
+AC_MSG_CHECKING(for page_lock in struct address_space)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_address_space_has_page_lock, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct address_space _a_s;
+printf("%x\n", _a_s.page_lock);], 
+ac_cv_linux_fs_struct_address_space_has_page_lock=yes,
+ac_cv_linux_fs_struct_address_space_has_page_lock=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_address_space_has_page_lock)
+CPPFLAGS="$save_CPPFLAGS"])
+

@@ -7,10 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/test/nsubr.c,v 1.1.1.3 2001/07/11 03:12:31 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/test/nsubr.c,v 1.1.1.4 2001/07/14 22:25:06 hartmans Exp $");
 
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>

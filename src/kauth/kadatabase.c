@@ -7,10 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kadatabase.c,v 1.1.1.3 2001/07/11 03:09:22 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kadatabase.c,v 1.1.1.4 2001/07/14 22:22:10 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -388,9 +388,6 @@ afs_int32 ka_NewKey (tt, tentryaddr, tentry, key)
   afs_int32 newtotalkeyentries = 0, oldtotalkeyentries = 0, keyentries;
   int   foundcurrentkey = 0, addednewkey = 0, modified;
 
-#if !SPECIAL
-    if ((ntohl(tentry->flags) & KAFSPECIAL) == 0) return KANOTSPECIAL;
-#endif
     es_Report ("Newkey for %s.%s\n", tentry->userID.name, tentry->userID.instance);
 
     newkeyver = ntohl(tentry->key_version) + 1;
@@ -549,10 +546,6 @@ afs_int32 ka_DelKey (tt, tentryaddr, tentry)
     afs_int32 okeysaddr, nextaddr;		/* offset of old keys block */
     afs_int32 prevptr = 0;
     Date  now = time(0);
-
-#if !SPECIAL
-    if ((ntohl(tentry->flags) & KAFSPECIAL) == 0) return KANOTSPECIAL;
-#endif
 
     es_Report ("DelKey for %s.%s\n", tentry->userID.name, tentry->userID.instance);
 
@@ -721,9 +714,6 @@ afs_int32 ka_LookupKvno (tt, name, inst, kvno, key)
     code = FindBlock (tt, name, inst, &to, &tentry);
     if (code) return code;
     if (to == 0) return KANOENT;
-#if !SPECIAL
-    if ((ntohl(tentry.flags) & KAFSPECIAL) == 0) return KANOTSPECIAL; 
-#endif
 
     /* first check the current key */
     if (tentry.key_version == htonl(kvno)) {
@@ -787,9 +777,6 @@ afs_int32 ka_LookupKey (tt, name, inst, kvno, key)
     code = FindBlock (tt, name, inst, &to, &tentry);
     if (code) return code;
     if (to == 0) return KANOENT;
-#if !SPECIAL
-    if ((ntohl(tentry.flags) & KAFSPECIAL) == 0) return KANOTSPECIAL;
-#endif
     bcopy (&tentry.key, key, sizeof(*key));
     *kvno = ntohl(tentry.key_version);
     ka_Encache (name, inst, *kvno, key, NEVERDATE);

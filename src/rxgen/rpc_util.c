@@ -32,10 +32,10 @@
  * rpc_util.c, Utility routines for the RPC protocol compiler 
  * Copyright (C) 1987, Sun Microsystems, Inc. 
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_util.c,v 1.1.1.3 2001/07/11 03:11:12 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_util.c,v 1.1.1.4 2001/07/14 22:23:52 hartmans Exp $");
 
 #include <stdio.h>
 #ifdef HAVE_STRINGS_H

@@ -17,10 +17,10 @@
  *	@(#)ufs_tables.c	7.3 (Berkeley) 4/24/89
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/ufs_tables.c,v 1.1.1.2 2001/07/11 03:12:02 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/ufs_tables.c,v 1.1.1.3 2001/07/14 22:24:40 hartmans Exp $");
 
 #ifdef KERNEL
 #include "param.h"

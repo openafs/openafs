@@ -16,10 +16,10 @@
 /*                                                                        */
 /* ********************************************************************** */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/serverLog.c,v 1.1.1.6 2001/07/11 03:11:50 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/serverLog.c,v 1.1.1.7 2001/07/14 22:24:26 hartmans Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -36,10 +36,12 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/util/serverLog.c,v 1.1.1.6 2001/07/11 0
 #include <afs/procmgmt.h>  /* signal(), kill(), wait(), etc. */
 #include <fcntl.h>
 #include <afs/stds.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
-#include <string.h>
-#else
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
+#else
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
 #endif
 #include "afsutil.h"
 #include "fileutil.h"
@@ -100,7 +102,6 @@ void FSLog (const char *format, ...)
     char tbuffer[1024];
     char *info;
     int len;
-    int i;
     char *name;
 
     currenttime = time(0);
@@ -137,13 +138,14 @@ void FSLog (const char *format, ...)
 #endif
 }
 
-static void DebugOn(int loglevel)
+static int DebugOn(int loglevel)
 {
     if (loglevel == 0) {
         ViceLog(0, ("Reset Debug levels to 0\n"));
     } else {
         ViceLog(0, ("Set Debug On level = %d\n",loglevel));
     }
+    return 0;
 } /*DebugOn*/
 
 
@@ -177,7 +179,7 @@ void ResetDebug_Signal(int signo)
 #if defined(AFS_PTHREAD_ENV)
     DebugOn(LogLevel);
 #else /* AFS_PTHREAD_ENV */
-    IOMGR_SoftSig(DebugOn, LogLevel);
+    IOMGR_SoftSig(DebugOn, (void *)LogLevel);
 #endif /* AFS_PTHREAD_ENV */
 
     signal(signo, ResetDebug_Signal);   /* on some platforms, this signal */
@@ -209,7 +211,7 @@ int OpenLog(const char *fileName)
 #ifndef AFS_NT40_ENV
     if ( serverLogSyslog ) {
 	openlog(NULL, LOG_PID, serverLogSyslogFacility);
-	return;
+	return(0);
     }
 #endif
 

@@ -38,7 +38,7 @@ install0: ${DESTDIR}include/afs/dirpath.h \
 		netutils.h packages.h afsutil.h pthread_glock.h \
 		afs_atomlist.h afs_lhash.h \
 		${DESTDIR}include/afs
-	${INSTALL} itc.h potpourri.h ${DESTDIR}include
+	${INSTALL} potpourri.h ${DESTDIR}include
 
 install: install0 kinstall ukinstall
 

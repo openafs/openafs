@@ -9,10 +9,10 @@
 
 /* rx_user.c contains routines specific to the user space UNIX implementation of rx */
 
-# include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_lwp.c,v 1.1.1.7 2001/07/11 03:10:50 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_lwp.c,v 1.1.1.8 2001/07/14 22:23:31 hartmans Exp $");
 
 # include <sys/types.h>		/* fd_set on older platforms */
 # include <errno.h>

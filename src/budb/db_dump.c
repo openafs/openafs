@@ -12,10 +12,10 @@
  * for transportability between hosts
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/budb/db_dump.c,v 1.1.1.3 2001/07/11 03:07:57 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/budb/db_dump.c,v 1.1.1.4 2001/07/14 22:20:57 hartmans Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>

@@ -18,10 +18,10 @@
  * eliminate the practice of reporting errors to STDOUT.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/vos/vsprocs.c,v 1.1.1.4 2001/07/11 03:10:00 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/vos/vsprocs.c,v 1.1.1.5 2001/07/14 22:22:45 hartmans Exp $");
 
 #include "vsprocs.h"
 #include "vosutils.h"

@@ -11,10 +11,10 @@
  * This file contains sample code for the rxstats interface 
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/samples/rxdebug_basic_stats.c,v 1.1.1.3 2001/07/11 03:09:48 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/samples/rxdebug_basic_stats.c,v 1.1.1.4 2001/07/14 22:22:35 hartmans Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>

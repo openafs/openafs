@@ -32,10 +32,10 @@
  * rpc_hout.c, Header file outputter for the RPC protocol compiler 
  * Copyright (C) 1987, Sun Microsystems, Inc. 
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_hout.c,v 1.1.1.3 2001/07/11 03:11:11 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_hout.c,v 1.1.1.4 2001/07/14 22:23:50 hartmans Exp $");
 
 #include <stdio.h>
 #include <ctype.h>

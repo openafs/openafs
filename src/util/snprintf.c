@@ -1,9 +1,9 @@
 /* snprintf.c - Formatted, length-limited print to a string */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/snprintf.c,v 1.1.1.4 2001/07/11 03:11:51 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/snprintf.c,v 1.1.1.5 2001/07/14 22:24:27 hartmans Exp $");
 
 #if defined(AFS_OSF20_ENV) && !defined(AFS_DUX50_ENV) || defined(AFS_AIX32_ENV) || (defined(AFS_SUN55_ENV) && !defined(AFS_SUN56_ENV))
 #include <sys/types.h>

@@ -9,14 +9,14 @@
 
 /* The rxkad security object.  Routines used by both client and servers. */
 
+#include <afsconfig.h>
 #ifdef KERNEL
 #include "../afs/param.h"
 #else
 #include <afs/param.h>
 #endif
-#include <afsconfig.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_common.c,v 1.1.1.4 2001/07/11 03:11:15 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_common.c,v 1.1.1.5 2001/07/14 22:23:53 hartmans Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL

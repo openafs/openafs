@@ -13,10 +13,10 @@
 	Institution:	The Information Technology Center, Carnegie-Mellon University
 
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/purge.c,v 1.1.1.3 2001/07/11 03:12:23 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/purge.c,v 1.1.1.4 2001/07/14 22:24:58 hartmans Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV

@@ -8,10 +8,10 @@
  *			-1 ==> error
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/test/key_test.c,v 1.1.1.3 2001/07/11 03:08:48 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/test/key_test.c,v 1.1.1.4 2001/07/14 22:21:38 hartmans Exp $");
 
 #include <mit-cpyright.h>
 #include <stdio.h>

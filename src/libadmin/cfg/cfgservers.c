@@ -15,10 +15,10 @@
  *   cfg_UpdateClient*() - configure update clients.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/cfg/cfgservers.c,v 1.1.1.3 2001/07/11 03:09:41 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/cfg/cfgservers.c,v 1.1.1.4 2001/07/14 22:22:28 hartmans Exp $");
 
 #include <afs/stds.h>
 

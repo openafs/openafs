@@ -88,10 +88,10 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 /* Main program file. Define globals. */
 #define MAIN 1
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vol-salvage.c,v 1.1.1.5 2001/07/11 03:12:23 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vol-salvage.c,v 1.1.1.6 2001/07/14 22:25:01 hartmans Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>

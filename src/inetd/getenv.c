@@ -15,10 +15,10 @@
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/inetd/getenv.c,v 1.1.1.2 2001/07/11 03:09:18 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/inetd/getenv.c,v 1.1.1.3 2001/07/14 22:22:06 hartmans Exp $");
 
 #include <stdio.h>
 

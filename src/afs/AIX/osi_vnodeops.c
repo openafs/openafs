@@ -7,10 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include "../afs/param.h"
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/AIX/osi_vnodeops.c,v 1.1.1.3 2001/07/11 03:06:28 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/AIX/osi_vnodeops.c,v 1.1.1.4 2001/07/14 22:19:35 hartmans Exp $");
 
 #include "../h/systm.h"
 #include "../h/types.h"

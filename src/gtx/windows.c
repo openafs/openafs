@@ -15,10 +15,10 @@
  *
  *--------------------------------------------------------------------------------*/
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/windows.c,v 1.1.1.3 2001/07/11 03:09:18 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/windows.c,v 1.1.1.4 2001/07/14 22:22:05 hartmans Exp $");
 
 /* On DUX "IN" is a variable in curses.h, so this can be a bit of a problem */
 #ifdef IN

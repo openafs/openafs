@@ -11,10 +11,10 @@
  * cb_test: A test of the gator text circular buffer package.
  *------------------------------------------------------------------------*/
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/cb_test.c,v 1.1.1.3 2001/07/11 03:09:12 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/cb_test.c,v 1.1.1.4 2001/07/14 22:21:58 hartmans Exp $");
 
 #include "gtxtextcb.h"	/*Module interface*/
 

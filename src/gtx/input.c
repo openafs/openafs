@@ -8,10 +8,10 @@
  */
 
 #define	IGNORE_STDS_H
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/input.c,v 1.1.1.3 2001/07/11 03:09:15 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/input.c,v 1.1.1.4 2001/07/14 22:22:03 hartmans Exp $");
 
 #ifdef AFS_HPUX_ENV
 #include <sys/types.h>

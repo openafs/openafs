@@ -7,10 +7,10 @@
  * Declaration of debugging flag.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/debug_decl.c,v 1.1.1.2 2001/07/11 03:08:40 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/debug_decl.c,v 1.1.1.3 2001/07/14 22:21:31 hartmans Exp $");
 
 #include <mit-cpyright.h>
 int	des_debug	= 0;

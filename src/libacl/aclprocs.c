@@ -13,10 +13,10 @@
 */
 
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libacl/aclprocs.c,v 1.1.1.4 2001/07/11 03:09:34 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/libacl/aclprocs.c,v 1.1.1.5 2001/07/14 22:22:21 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV

@@ -8,10 +8,10 @@
  * originally written 8/85 by Steve Miller.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/make_e.c,v 1.1.1.2 2001/07/11 03:08:42 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/make_e.c,v 1.1.1.3 2001/07/14 22:21:33 hartmans Exp $");
 
 #include <mit-cpyright.h>
 #include <stdio.h>

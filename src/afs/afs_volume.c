@@ -15,10 +15,10 @@
  * afs_CheckVolumeNames
  * afs_FindVolume
  */
-#include "../afs/param.h"	/* Should be always first */
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_volume.c,v 1.1.1.4 2001/07/11 03:06:23 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_volume.c,v 1.1.1.5 2001/07/14 22:19:29 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */

@@ -17,10 +17,10 @@
  *	@(#)ufs_subr.c	7.11 (Berkeley) 12/30/89
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/ufs_subr.c,v 1.1.1.2 2001/07/11 03:12:07 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/ufs_subr.c,v 1.1.1.3 2001/07/14 22:24:44 hartmans Exp $");
 
 #define VICE
 

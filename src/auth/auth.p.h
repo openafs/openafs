@@ -29,7 +29,7 @@ extern int ktc_SetToken(
         struct ktc_principal *server,
         struct ktc_token *token,
         struct ktc_principal *client,
-        int flags
+        afs_int32 flags
 );
 
 extern int ktc_GetToken(

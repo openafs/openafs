@@ -18,10 +18,10 @@
  * login -r hostname (for rlogind)
  * login -h hostname (for telnetd, etc.)
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/klogin.c,v 1.1.1.4 2001/07/11 03:09:27 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/klogin.c,v 1.1.1.5 2001/07/14 22:22:14 hartmans Exp $");
 
 #if !defined(AFS_SUN_ENV) && !defined(AFS_AIX_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) &&!defined(AFS_FBSD_ENV)
 #include <sys/param.h>

@@ -12,10 +12,10 @@
  *
  * Implements:
  */
-#include "../afs/param.h"	/* Should be always first */
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/AIX/osi_timeout.c,v 1.1.1.3 2001/07/11 03:06:28 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/AIX/osi_timeout.c,v 1.1.1.4 2001/07/14 22:19:35 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /* Standard vendor system headers */
 #include "../afs/afsincludes.h" /* Afs-based standard headers */

@@ -16,10 +16,10 @@
  *
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kalog.c,v 1.1.1.3 2001/07/11 03:09:23 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kalog.c,v 1.1.1.4 2001/07/14 22:22:10 hartmans Exp $");
 
 #include <stdio.h>
 #include <afs/afsutil.h>

@@ -9,14 +9,14 @@
 
 /* These routines provide a convenient interface to the AuthServer. */
 
+#include <afsconfig.h>
 #if defined(UKERNEL)
 #include "../afs/param.h"
 #else
 #include <afs/param.h>
 #endif
-#include <afsconfig.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/authclient.c,v 1.1.1.5 2001/07/11 03:09:22 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/authclient.c,v 1.1.1.6 2001/07/14 22:22:09 hartmans Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"

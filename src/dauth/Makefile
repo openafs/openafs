@@ -22,7 +22,7 @@ INCLS=		${SRCDIR}include/ubik.h \
 	       	${SRCDIR}include/rx/xdr.h \
 		${SRCDIR}include/afs/com_err.h
 
-VERSION =	AFS_component_version_number.o
+VERS =	AFS_component_version_number.o
 OBJS =		adkint.cs.o adkint.xdr.o
 
 LIBS = 		${SRCDIR}lib/afs/libkauth.a \
@@ -57,14 +57,14 @@ adkint.xdr.o:	adkint.xdr.c adkint.h
 adkint.cs.c	adkint.xdr.c adkint.h: adkint.xg
 		${SRCDIR}bin/rxgen adkint.xg
 
-dlog:		dlog.o $(VERSION) $(OBJS) $(LIBS)
-		$(CC) ${LDFLAGS} -o dlog dlog.o $(VERSION) $(OBJS) ${LIBS} \
+dlog:		dlog.o $(VERS) $(OBJS) $(LIBS)
+		$(CC) ${LDFLAGS} -o dlog dlog.o $(VERS) $(OBJS) ${LIBS} \
 				${XLIBS}
 
 dlog.o: 	dlog.c adkint.h
 
-dpass:		dpass.o $(VERSION) $(LIBS)
-		$(CC) ${LDFLAGS} -o dpass dpass.o $(VERSION) $(LIBS) ${XLIBS}
+dpass:		dpass.o $(VERS) $(LIBS)
+		$(CC) ${LDFLAGS} -o dpass dpass.o $(VERS) $(LIBS) ${XLIBS}
 
 # Test version of dlog just checks ASN.1 date conversion.
 dlog_test:	dlog.c $(OBJS) $(LIBS)

@@ -7,10 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/rebuild.c,v 1.1.1.5 2001/07/11 03:09:30 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/rebuild.c,v 1.1.1.6 2001/07/14 22:22:17 hartmans Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>

@@ -6,10 +6,10 @@
  * Copyright (C) 1986, Sun Microsystems, Inc.
  *
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_update.c,v 1.1.1.2 2001/07/11 03:10:58 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_update.c,v 1.1.1.3 2001/07/14 22:23:38 hartmans Exp $");
 
 #ifndef	NeXT
 #include "xdr.h"

@@ -35,10 +35,10 @@
  * shutdown_vcache
  *
  */
-#include "../afs/param.h"       /*Should be always first*/
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_vcache.c,v 1.1.1.6 2001/07/11 03:06:22 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_vcache.c,v 1.1.1.7 2001/07/14 22:19:27 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -951,6 +951,9 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 	sema_init(&ip->i_zombie, 1);
 	init_waitqueue_head(&ip->i_wait);
 	spin_lock_init(&ip->i_data.i_shared_lock);
+#ifdef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
+	spin_lock_init(&ip->i_data.page_lock);
+#endif
 	INIT_LIST_HEAD(&ip->i_data.clean_pages);
 	INIT_LIST_HEAD(&ip->i_data.dirty_pages);
 	INIT_LIST_HEAD(&ip->i_data.locked_pages);

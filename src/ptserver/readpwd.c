@@ -7,10 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/readpwd.c,v 1.1.1.3 2001/07/11 03:10:41 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/readpwd.c,v 1.1.1.4 2001/07/14 22:23:21 hartmans Exp $");
 
 #include <stdio.h>
 #ifndef AFS_NT40_ENV

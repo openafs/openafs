@@ -16,10 +16,10 @@
 /* 									 */
 /* ********************************************************************** */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/viced.c,v 1.1.1.5 2001/07/11 03:12:12 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/viced.c,v 1.1.1.6 2001/07/14 22:24:48 hartmans Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>

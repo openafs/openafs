@@ -11,10 +11,10 @@
  * ALL RIGHTS RESERVED
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaauxdb.c,v 1.1.1.3 2001/07/11 03:09:22 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaauxdb.c,v 1.1.1.4 2001/07/14 22:22:10 hartmans Exp $");
 
 #include <fcntl.h>
 #ifdef AFS_NT40_ENV
@@ -118,7 +118,7 @@ int kaux_write(
 
 /* adjust this user's records to reflect a failure.
  * locktime is the value stored in the main database that specifies
- * how afs_int32 a user's ID should be locked once the attempts limit has
+ * how long a user's ID should be locked once the attempts limit has
  * been exceeded.  It also functions as the interval during which the
  * permitted N-1 authentication failures plus the forbidden Nth
  * failure must occur, in order for the ID to actually be locked.  Ie,

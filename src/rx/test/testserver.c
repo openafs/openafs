@@ -9,10 +9,10 @@
 
 /* Server test program */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/test/testserver.c,v 1.1.1.3 2001/07/11 03:11:08 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/test/testserver.c,v 1.1.1.4 2001/07/14 22:23:47 hartmans Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>

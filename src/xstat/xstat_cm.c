@@ -14,10 +14,10 @@
  *
  *------------------------------------------------------------------------*/
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/xstat/xstat_cm.c,v 1.1.1.3 2001/07/11 03:12:47 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/xstat/xstat_cm.c,v 1.1.1.4 2001/07/14 22:25:16 hartmans Exp $");
 
 #include "xstat_cm.h"			/*Interface for this module*/
 #include <lwp.h>			/*Lightweight process package*/

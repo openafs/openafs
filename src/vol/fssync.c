@@ -35,10 +35,10 @@ static int newVLDB = 1;
    fsync.c
    File server synchronization with external volume utilities.
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/fssync.c,v 1.1.1.3 2001/07/11 03:12:19 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/fssync.c,v 1.1.1.4 2001/07/14 22:24:55 hartmans Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>

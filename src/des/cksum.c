@@ -17,10 +17,10 @@
  *	spm	8/85	MIT project athena
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/cksum.c,v 1.1.1.4 2001/07/11 03:08:38 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/cksum.c,v 1.1.1.5 2001/07/14 22:21:27 hartmans Exp $");
 
 #include <mit-cpyright.h>
 #include <stdio.h>

@@ -9,10 +9,10 @@
 
 /* I/O operations for the Unix open by name (namei) interface. */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/namei_ops.c,v 1.1.1.5 2001/07/11 03:12:21 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/namei_ops.c,v 1.1.1.6 2001/07/14 22:24:57 hartmans Exp $");
 
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>

@@ -33,10 +33,10 @@
  * Copyright (C) 1987, Sun Microsystems, Inc. 
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_main.c,v 1.1.1.5 2001/07/11 03:11:11 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_main.c,v 1.1.1.6 2001/07/14 22:23:51 hartmans Exp $");
 
 #include <limits.h>
 #include <stdio.h>

@@ -9,10 +9,10 @@
 
 /* procedures invoked by the rpc stub */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/butc/tcprocs.c,v 1.1.1.3 2001/07/11 03:08:06 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/butc/tcprocs.c,v 1.1.1.4 2001/07/14 22:21:08 hartmans Exp $");
 
 #include <sys/types.h>
 #include <errno.h>

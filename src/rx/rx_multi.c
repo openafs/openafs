@@ -7,10 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_multi.c,v 1.1.1.3 2001/07/11 03:10:52 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_multi.c,v 1.1.1.4 2001/07/14 22:23:33 hartmans Exp $");
 
 #ifdef	KERNEL
 #include "../rx/rx_kernel.h"

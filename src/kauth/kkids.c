@@ -12,10 +12,10 @@
  */
 
 /* These two needed for rxgen output to work */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kkids.c,v 1.1.1.3 2001/07/11 03:09:26 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kkids.c,v 1.1.1.4 2001/07/14 22:22:13 hartmans Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>

@@ -7,10 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/kas/afs_kasAdmin.c,v 1.1.1.4 2001/07/11 03:09:43 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/kas/afs_kasAdmin.c,v 1.1.1.5 2001/07/14 22:22:32 hartmans Exp $");
 
 #include <stdio.h>
 #include <afs/stds.h>
@@ -665,6 +665,7 @@ static int GetPrincipalLockStatus(
     afs_status_t tst = 0;
     unsigned int locked;
     int count=0;
+    int once = 0;
  
     /*
      * Validate input arguments and make rpc.
@@ -714,8 +715,9 @@ static int GetPrincipalLockStatus(
 			    &locked, 0, 0, 0, 0);
 	if (tst == 0) {
 	    if (locked) {
-		if (locked < *lockedUntil) {
+		if ((locked < *lockedUntil) || !once) {
 		    *lockedUntil = locked;
+		    once++;
 		}
 	    }
 	}
@@ -728,7 +730,7 @@ static int GetPrincipalLockStatus(
     if ((tst == 0) && (locked == 0)) {
 	*lockedUntil = 0;
     }
-    if (tst == 0) {
+    if ((tst == 0) || (tst == UNOSERVERS)) {
 	rc = 1;
     }
 
@@ -1145,6 +1147,9 @@ int ADMINAPI kas_PrincipalKeySet(
     if (tst) {
 	goto fail_kas_PrincipalKeySet;
     }
+
+    /* If we failed to fail we must have succeeded */
+    rc = 1;
  
 fail_kas_PrincipalKeySet:
 
@@ -1286,7 +1291,7 @@ int ADMINAPI kas_PrincipalUnlock(
 	}
     } while (tst != UNOSERVERS);
 
-    if (tst == 0) {
+    if ((tst == 0) || (tst == UNOSERVERS)){
 	rc = 1;
     }
 

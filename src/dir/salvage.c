@@ -9,10 +9,10 @@
 
 /* This is the directory salvager.  It consists of two routines.  The first, DirOK, checks to see if the directory looks good.  If the directory does NOT look good, the approved procedure is to then call Salvage, which copies all the good entries from the damaged dir into a new directory. */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/dir/salvage.c,v 1.1.1.3 2001/07/11 03:08:51 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/dir/salvage.c,v 1.1.1.4 2001/07/14 22:21:50 hartmans Exp $");
 
 #include <sys/types.h>
 #include <errno.h>

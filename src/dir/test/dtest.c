@@ -8,10 +8,10 @@
  */
 
 #define PAGESIZE 2048
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/dir/test/dtest.c,v 1.1.1.3 2001/07/11 03:08:51 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/dir/test/dtest.c,v 1.1.1.4 2001/07/14 22:21:51 hartmans Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>

@@ -7,10 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/auth/writeconfig.c,v 1.1.1.4 2001/07/11 03:07:38 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/auth/writeconfig.c,v 1.1.1.5 2001/07/14 22:20:40 hartmans Exp $");
 
 #include <afs/pthread_glock.h>
 #include <afs/afsutil.h>

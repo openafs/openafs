@@ -9,14 +9,14 @@
 
 /* RX:  Globals for internal use, basically */
 
+#include <afsconfig.h>
 #ifdef KERNEL
 #include "../afs/param.h"
 #else
 #include <afs/param.h>
 #endif
-#include <afsconfig.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_globals.c,v 1.1.1.3 2001/07/11 03:10:50 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_globals.c,v 1.1.1.4 2001/07/14 22:23:31 hartmans Exp $");
 
 /* Enable data initialization when the header file is included */
 #define INIT(stuff) = stuff

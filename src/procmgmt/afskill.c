@@ -12,10 +12,10 @@
  * linked with the process management library (except SIGKILL).
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/procmgmt/afskill.c,v 1.1.1.3 2001/07/11 03:10:33 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/procmgmt/afskill.c,v 1.1.1.4 2001/07/14 22:23:14 hartmans Exp $");
 
 #include <afs/stds.h>
 

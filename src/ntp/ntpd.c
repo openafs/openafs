@@ -7,10 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ntp/ntpd.c,v 1.1.1.3 2001/07/11 03:10:20 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ntp/ntpd.c,v 1.1.1.4 2001/07/14 22:23:06 hartmans Exp $");
 
 #if defined(AFS_SGI_ENV)
 #define NOSWAP 1
@@ -284,12 +284,12 @@ main(argc, argv)
 #endif	/* DEBUG */
 		setlogmask(LOG_UPTO(LOG_INFO));
 
-	syslog(LOG_NOTICE, "%s version $Revision: 1.1.1.3 $", prog_name);
+	syslog(LOG_NOTICE, "%s version $Revision: 1.1.1.4 $", prog_name);
 	syslog(LOG_NOTICE, "patchlevel %d", PATCHLEVEL);
 
 #ifdef	DEBUG
 	if (debug)
-		printf("%s version $Revision: 1.1.1.3 $ patchlevel %d\n",
+		printf("%s version $Revision: 1.1.1.4 $ patchlevel %d\n",
 		       prog_name, PATCHLEVEL);
 #endif
 #if defined(AFS_AIX_ENV)

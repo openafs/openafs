@@ -11,10 +11,10 @@
  * ALL RIGHTS RESERVED
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/hostparse.c,v 1.1.1.5 2001/07/11 03:11:46 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/hostparse.c,v 1.1.1.6 2001/07/14 22:24:22 hartmans Exp $");
 
 #ifdef UKERNEL
 #include "../afs/sysincludes.h"

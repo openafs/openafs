@@ -7,10 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/venus/fs.c,v 1.1.1.6 2001/07/11 03:11:55 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/venus/fs.c,v 1.1.1.7 2001/07/14 22:24:35 hartmans Exp $");
 
 #include <afs/afs_args.h>
 #include <rx/xdr.h>

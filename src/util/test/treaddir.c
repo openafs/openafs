@@ -16,10 +16,10 @@
  * 2) Read empty <drive:>
  * 3) Try to read a file.
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/test/treaddir.c,v 1.1.1.3 2001/07/11 03:11:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/test/treaddir.c,v 1.1.1.4 2001/07/14 22:24:33 hartmans Exp $");
 
 #include <stdio.h>
 #include <errno.h>

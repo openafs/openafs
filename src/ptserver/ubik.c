@@ -1,9 +1,9 @@
-/* $Id: ubik.c,v 1.1.1.3 2001/07/11 03:10:42 hartmans Exp $ */
+/* $Id: ubik.c,v 1.1.1.4 2001/07/14 22:23:22 hartmans Exp $ */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ubik.c,v 1.1.1.3 2001/07/11 03:10:42 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ubik.c,v 1.1.1.4 2001/07/14 22:23:22 hartmans Exp $");
 
 #include <sys/types.h>
 #include <netinet/in.h>

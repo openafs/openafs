@@ -13,10 +13,10 @@
  *
  *------------------------------------------------------------------------*/
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/objects.c,v 1.1.1.3 2001/07/11 03:09:17 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/objects.c,v 1.1.1.4 2001/07/14 22:22:05 hartmans Exp $");
 
 #include "gtxobjects.h"		/*Interface for this module*/
 #include "gtxtextobj.h"		/*Text object interface*/

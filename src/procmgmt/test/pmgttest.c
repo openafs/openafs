@@ -10,10 +10,10 @@
 /* Test of the process management library */
 
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/procmgmt/test/pmgttest.c,v 1.1.1.3 2001/07/11 03:10:35 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/procmgmt/test/pmgttest.c,v 1.1.1.4 2001/07/14 22:23:16 hartmans Exp $");
 
 #include <afs/stds.h>
 

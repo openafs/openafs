@@ -23,10 +23,10 @@
  *		  This saves a (precious) file descriptor.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/fasttime.c,v 1.1.1.3 2001/07/11 03:10:09 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/fasttime.c,v 1.1.1.4 2001/07/14 22:22:53 hartmans Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>

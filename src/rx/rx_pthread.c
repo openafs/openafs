@@ -15,10 +15,10 @@
  * rx_pthread.c is used for the thread safe RX package.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_pthread.c,v 1.1.1.5 2001/07/11 03:10:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_pthread.c,v 1.1.1.6 2001/07/14 22:23:34 hartmans Exp $");
 
 #include <sys/types.h>
 #include <errno.h>

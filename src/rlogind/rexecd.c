@@ -4,10 +4,10 @@
  * specifies the terms and conditions for redistribution.
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rlogind/rexecd.c,v 1.1.1.2 2001/07/11 03:10:43 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rlogind/rexecd.c,v 1.1.1.3 2001/07/14 22:23:23 hartmans Exp $");
 
 #include <afs/kautils.h>	/* for UserAuthGeneral */
 #include <sys/types.h>

@@ -13,10 +13,10 @@
 
 #include <sys/types.h>
 #include <stdio.h>
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/dump_sched.c,v 1.1.1.3 2001/07/11 03:07:50 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/dump_sched.c,v 1.1.1.4 2001/07/14 22:20:48 hartmans Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>

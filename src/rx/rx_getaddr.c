@@ -7,10 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_getaddr.c,v 1.1.1.5 2001/07/11 03:10:48 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_getaddr.c,v 1.1.1.6 2001/07/14 22:23:28 hartmans Exp $");
 
 #ifndef AFS_DJGPP_ENV
 #ifndef KERNEL

@@ -11,10 +11,10 @@
  * This file implements the client related funtions for afscp
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/test/client.c,v 1.1.1.3 2001/07/11 03:09:54 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/test/client.c,v 1.1.1.4 2001/07/14 22:22:40 hartmans Exp $");
 
 #include "client.h"
 #include <afs/cellconfig.h>

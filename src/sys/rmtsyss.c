@@ -12,10 +12,10 @@
  * currently fires up this module, when the "-rmtsys" flag is given.
  * This module resides in the lib/afs/librmtsys.a library.
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/sys/rmtsyss.c,v 1.1.1.4 2001/07/11 03:11:26 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/sys/rmtsyss.c,v 1.1.1.5 2001/07/14 22:24:05 hartmans Exp $");
 
 #include <sys/types.h>
 #include <sys/ioctl.h>

@@ -9,10 +9,10 @@
 
 /* ticket caching code */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/auth/ktc_nt.c,v 1.1.1.4 2001/07/11 03:07:38 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/auth/ktc_nt.c,v 1.1.1.5 2001/07/14 22:20:41 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <stdio.h>

@@ -8,10 +8,10 @@
  */
 
 #include <sys/types.h>
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/server.c,v 1.1.1.3 2001/07/11 03:07:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/server.c,v 1.1.1.4 2001/07/14 22:20:53 hartmans Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>

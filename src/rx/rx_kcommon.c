@@ -11,10 +11,10 @@
  * rx_kcommon.c - Common kernel RX code for all system types.
  */
 
-#include "../afs/param.h"
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_kcommon.c,v 1.1.1.5 2001/07/11 03:10:51 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_kcommon.c,v 1.1.1.6 2001/07/14 22:23:32 hartmans Exp $");
 
 #include "../rx/rx_kcommon.h"
 

@@ -16,10 +16,10 @@
  * required lib is kernel32.lib, header is winbase.h
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/lwp_nt.c,v 1.1.1.5 2001/07/11 03:10:11 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/lwp_nt.c,v 1.1.1.6 2001/07/14 22:22:55 hartmans Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <stdio.h>
