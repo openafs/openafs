@@ -973,6 +973,7 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
 	smb_fid_t *fidp;
 	int newFid;
         
+	lock_ObtainWrite(&smb_rctLock);
 	/* figure out if we need to allocate a new file ID */
 	if (fid == 0) {
 		newFid = 1;
@@ -980,7 +981,6 @@ smb_fid_t *smb_FindFID(smb_vc_t *vcp, unsigned short fid, int flags)
 	}
 	else newFid = 0;
 
-	lock_ObtainWrite(&smb_rctLock);
 retry:
 	for(fidp = vcp->fidsp; fidp; fidp = (smb_fid_t *) osi_QNext(&fidp->q)) {
 		if (fid == fidp->fid) {
@@ -1010,7 +1010,8 @@ retry:
             afsi_log("Event Object Already Exists: %s", eventName);
         if (newFid) {
 			vcp->fidCounter = fid+1;
-            if (vcp->fidCounter == 0) vcp->fidCounter = 1;
+            if (vcp->fidCounter == 0) 
+                vcp->fidCounter = 1;
         }
     }
     lock_ReleaseWrite(&smb_rctLock);
