@@ -171,6 +171,9 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
 #include <afs/procmgmt.h>  /* signal(), kill(), wait(), etc. */
+#ifndef AFS_NT40_ENV
+#include <syslog.h>
+#endif
 
 #include "nfs.h"
 #include "lwp.h"
@@ -212,6 +215,12 @@ int     ShowSuid = 0;          	/* -showsuid flag */
 int     ShowMounts = 0;        	/* -showmounts flag */
 int     orphans = ORPH_IGNORE;  /* -orphans option */
 int	Showmode = 0;
+
+#ifndef AFS_NT40_ENV
+int useSyslog = 0;	/* -syslog flag */
+int useSyslogFacility = LOG_DAEMON; /* -syslogfacility option */
+#endif
+
 #define	MAXPARALLEL	32
 
 int	OKToZap;		/* -o flag */
@@ -552,8 +561,19 @@ static handleit(as)
 	  orphans = ORPH_ATTACH;
     }
 
+#ifndef AFS_NT40_ENV /* ignore options on NT */
+	if ( ti = as->parms[16].items) { /* -syslog */
+		useSyslog = 1;
+		ShowLog = 0;
+	}
+	if ( ti = as->parms[17].items) { /* -syslogfacility */
+		useSyslogFacility = atoi(ti->data);
+	}
+#endif
+
+
 #ifdef FAST_RESTART
-    if (ti = as->parms[16].items) {  /* -DontSalvage */
+    if (ti = as->parms[18].items) {  /* -DontSalvage */
       printf("Exiting immediately without salvage. Look into the FileLog");
       printf(" to find volumes which really need to be salvaged!\n");
       Exit(0);
@@ -726,6 +746,12 @@ char **argv;
     cmd_AddParm(ts, "-showsuid", CMD_FLAG,CMD_OPTIONAL, "Report on suid/sgid files");
     cmd_AddParm(ts, "-showmounts", CMD_FLAG,CMD_OPTIONAL, "Report on mountpoints");
     cmd_AddParm(ts, "-orphans", CMD_SINGLE, CMD_OPTIONAL, "ignore | remove | attach");
+
+	/* note - syslog isn't avail on NT, but if we make it conditional, have
+		to deal with screwy offsets for cmd params */
+    cmd_AddParm(ts, "-syslog", CMD_FLAG, CMD_OPTIONAL, "Write salvage log to syslogs");
+    cmd_AddParm(ts, "-syslogfacility", CMD_SINGLE, CMD_OPTIONAL, "Syslog facility number to use");
+
 #ifdef FAST_RESTART
     cmd_AddParm(ts, "-DontSalvage", CMD_FLAG, CMD_OPTIONAL, "Don't salvage. This my be set in BosConfig to let the fileserver restart immediately after a crash. Bad volumes will be taken offline");
 #endif /* FAST_RESTART */
@@ -1010,8 +1036,15 @@ void SalvageFileSysParallel(struct DiskPartition *partP)
 	     ShowLog = 0;
 	     for (fd =0; fd < 16; fd++) close(fd);
 	     open("/", 0); dup2(0, 1); dup2(0, 2);
-	     sprintf(logFileName, "%s.%d", AFSDIR_SERVER_SLVGLOG_FILEPATH, jobs[startjob]->jobnumb);
-	     logFile = fopen(logFileName, "w");
+#ifndef AFS_NT40_ENV
+		 if ( useSyslog ) {
+		 	openlog(NULL, LOG_PID, useSyslogFacility);
+		 } else
+#endif
+		 {
+	       sprintf(logFileName, "%s.%d", AFSDIR_SERVER_SLVGLOG_FILEPATH, jobs[startjob]->jobnumb);
+	       logFile = fopen(logFileName, "w");
+		 }
 	     if (!logFile) logFile = stdout;
 
 	     SalvageFileSys1(jobs[startjob]->partP, 0);
@@ -1022,6 +1055,9 @@ void SalvageFileSysParallel(struct DiskPartition *partP)
     } /* while ( thisjob || (!partP && numjobs > 0) ) */
 
     /* If waited for all jobs to complete, now collect log files and return */
+#ifndef AFS_NT40_ENV
+	if ( ! useSyslog ) /* if syslogging - no need to collect */
+#endif
     if (!partP) {
        for (i=0; i<jobcount; i++) {
 	  sprintf(logFileName, "%s.%d", AFSDIR_SERVER_SLVGLOG_FILEPATH, i);
@@ -1034,8 +1070,8 @@ void SalvageFileSysParallel(struct DiskPartition *partP)
 	  (void)unlink(logFileName);
        }
        fflush(logFile);
-       return;
     }
+	return;
 }
 
 
@@ -3522,6 +3558,13 @@ void CheckLogFile(void)
 {
   char oldSlvgLog[AFSDIR_PATH_MAX];
 
+#ifndef AFS_NT40_ENV
+  if ( useSyslog ) {
+		ShowLog = 0;
+		return;
+  }
+#endif
+
   strcpy(oldSlvgLog, AFSDIR_SERVER_SLVGLOG_FILEPATH);
   strcat(oldSlvgLog, ".old");
     if (!logFile) {
@@ -3543,6 +3586,14 @@ void showlog(void)
 {
     char line[256];
 
+#ifndef AFS_NT40_ENV
+	if ( useSyslog ) {
+		printf("Can't show log since using syslog.\n");
+		fflush(stdout);
+		return;
+	}
+#endif
+
     rewind(logFile);
     fclose(logFile);
 
@@ -3562,18 +3613,35 @@ void Log(a,b,c,d,e,f,g,h,i,j,k)
 char *a, *b, *c, *d, *e, *f, *g, *h, *i, *j, *k;
 {
     struct timeval now;
-    gettimeofday(&now, 0);
-    fprintf(logFile, "%s ", TimeStamp(now.tv_sec, 1));
-    fprintf(logFile, a,b,c,d,e,f,g,h,i,j,k);
-    fflush(logFile);
+
+#ifndef AFS_NT40_ENV
+	if ( useSyslog )
+	{
+		syslog(LOG_INFO, a,b,c,d,e,f,g,h,i,j,k);
+	} else 
+#endif
+	{
+	    gettimeofday(&now, 0);
+	    fprintf(logFile, "%s ", TimeStamp(now.tv_sec, 1));
+	    fprintf(logFile, a,b,c,d,e,f,g,h,i,j,k);
+	    fflush(logFile);
+	}
 }
 
 void Abort(a,b,c,d,e,f,g,h,i,j,k)
 char *a, *b, *c, *d, *e, *f, *g, *h, *i, *j, *k;
 {
-    fprintf(logFile, a,b,c,d,e,f,g,h,i,j,k);
-    fflush(logFile);
-    if (ShowLog) showlog();
+#ifndef AFS_NT40_ENV
+	if ( useSyslog )
+	{
+		syslog(LOG_INFO, a,b,c,d,e,f,g,h,i,j,k);
+	} else 
+#endif
+	{
+	    fprintf(logFile, a,b,c,d,e,f,g,h,i,j,k);
+	    fflush(logFile);
+	    if (ShowLog) showlog();
+	}
     if (debug)
 	abort();
     Exit(1);
