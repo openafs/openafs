@@ -402,7 +402,9 @@ SRCDIR_PARENT=`pwd`
 TOP_SRCDIR="${SRCDIR_PARENT}/src"
 TOP_INCDIR="${SRCDIR_PARENT}/include"
 TOP_LIBDIR="${SRCDIR_PARENT}/lib"
-DEST="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest"
+if test "${DEST}x" = "x"; then
+	DEST="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest"
+fi
 
 dnl checks for header files.
 AC_HEADER_STDC
