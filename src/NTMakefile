@@ -22,7 +22,9 @@ SRC=$(AFSROOT)\src
 !IFNDEF AFS_OBJDIR
 AFS_OBJDIR=$(AFSROOT)\obj
 !ENDIF
+!IFNDEF DESTDIR
 DESTDIR=$(AFSROOT)\dest
+!ENDIF
 
 CD = cd
 NTMAKE = nmake /nologo /f ntmakefile install
@@ -132,7 +134,14 @@ rx: des
 	$(NTMAKE)
 	$(CD) ..\..
 
-rxstat: rx
+rx\test: rx
+    echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+rxstat: rx\test
      echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -195,7 +204,14 @@ cm_headers: libacl_headers
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..\..
 
-afsdobjs: cm_headers
+auth: cm_headers
+     echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+afsdobjs: auth
      echo ***** $@
 	$(DOCD) $(SRC)\WINNT\afsd
 	$(CD) $(SRC)\WINNT\afsd
@@ -209,14 +225,7 @@ sys: afsdobjs
 	$(NTMAKE)
 	$(CD) ..\..
 
-auth: sys
-     echo ***** $@
-	$(DOCD) $(SRC)\$@
-	$(CD) $(SRC)\$@
-	$(NTMAKE)
-	$(CD) ..\..
-
-ubik: auth
+ubik: sys
      echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@
@@ -580,12 +589,8 @@ lang:
     nmake /nologo /f ntmakefile "NTMAKE = nmake /nologo /f ntmakefile lang" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile lang" install
 
 mkdir:
-    -mkdir $(AFS_OBJDIR)
-    -mkdir $(DESTDIR)
-    -mkdir $(AFS_OBJDIR)\checked
-    -mkdir $(AFS_OBJDIR)\free
-	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\checked\ 
-	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\free\ 
+	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\checked\
+	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\free\
     -mkdir $(DESTDIR)\checked
 	-mkdir $(DESTDIR)\free
     -mkdir $(DESTDIR)\checked\bin
