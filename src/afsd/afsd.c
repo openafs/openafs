@@ -1932,7 +1932,9 @@ mainproc(as, arock)
     if (afsd_debug)
 	printf("%s: Calling AFSOP_VOLUMEINFO: volume info file is '%s'\n", rn,
 	       fullpn_VolInfoFile);
-    call_syscall(AFSOP_VOLUMEINFO, fullpn_VolInfoFile);
+    /* once again, meaningless for a memory-based cache. */
+    if (!(cacheFlags & AFSCALL_INIT_MEMCACHE)) 
+	call_syscall(AFSOP_VOLUMEINFO, fullpn_VolInfoFile);
 
     /*
      * Pass the kernel the name of the afs logging file holding the volume
