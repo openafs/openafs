@@ -236,7 +236,7 @@ SVOTE_Beacon(rxcall, astate, astart, avers, atid)
        he's lowest, these loops don't occur.  because if someone knows he's
        lowest, he will send out beacons telling others to vote for him. */
     if (!amIClone &&
-        (ntohl((afs_uint32) ubik_host) <= ntohl((afs_uint32) lowestHost)
+        (ntohl((afs_uint32) ubik_host[0]) <= ntohl((afs_uint32) lowestHost)
         || lowestTime + BIGTIME < now)) {
 	lowestTime = now;
 	lowestHost = ubik_host[0];
@@ -294,9 +294,8 @@ SVOTE_Beacon(rxcall, astate, astart, avers, atid)
 	    (otherHost != lastYesHost) ||
 	    (lastYesState != astate)) {
 	   /* A new vote or a change in the vote or changed quorum */
-	   ubik_dprint("Ubik: vote 'yes' for %d.%d.%d.%d %s\n",
-		       ((otherHost>>24)&0xff), ((otherHost>>16)&0xff),
-		       ((otherHost>> 8)&0xff), (otherHost      &0xff),
+	   ubik_dprint("Ubik: vote 'yes' for %s %s\n",
+				afs_inet_ntoa(otherHost),
 		       (astate?"(in quorum)":"(NOT in quorum)"));
 	}
 
