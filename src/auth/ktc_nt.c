@@ -248,7 +248,7 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
 	     struct ktc_principal *client, int flags)
 {
     struct ViceIoctl iob;
-    char tbuffer[1024];
+    char tbuffer[MAXKTCTICKETLEN];
     char *tp;
     struct ClearToken ct;
     int temp;
@@ -416,7 +416,7 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
 	     int tokenLen, struct ktc_principal *client)
 {
     struct ViceIoctl iob;
-    char tbuffer[1024];
+    char tbuffer[MAXKTCTICKETLEN];
     char *tp, *cp;
     char *ticketP;
     int ticketLen, temp;
