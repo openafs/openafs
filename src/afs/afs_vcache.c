@@ -511,8 +511,8 @@ static void afs_TryFlushDcacheChildren(struct vcache *tvc)
     VN_HOLD(tvc);
     AFS_GUNLOCK();
     d_prune_aliases(ip);
-    AFS_GLOCK();
     VN_RELE(tvc);
+    AFS_GLOCK();
 #else
 restart:
     DLOCK();
