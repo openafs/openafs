@@ -42,7 +42,7 @@ XDROBJS = xdr.o xdr_array.o xdr_arrayn.o xdr_rx.o xdr_afsuuid.o
 
 RXOBJS = rx_clock.o rx_event.o rx_user.o rx_lwp.o rx.o rx_null.o rx_globals.o \
 	rx_getaddr.o rx_misc.o rx_packet.o rx_rdwr.o  rx_trace.o rx_conncache.o \
-	xdr_int64.o 
+	xdr_int64.o xdr_update.o xdr_refernce.o
 
 MULTIOBJS = rx_multi.o
 
@@ -56,7 +56,7 @@ XDROBJS_djgpp = xdr.o xdr_rec.o xdr_stdio.o \
 
 RXOBJS_djgpp = rx_clock.o rx_event.o rx_user.o rx_lwp.o rx.o rx_null.o rx_globals.o \
 		rx_getaddr.o rx_misc.o rx_packet.o rx_rdwr.o  rx_trace.o rx_conncache.o \
-		xdr_int64.o rx_xmit_nt.o
+		xdr_int64.o xdr_update.o xdr_refernce.o rx_xmit_nt.o
 
 BASICINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 	     rx_clock.h rx_queue.h rx_event.h
