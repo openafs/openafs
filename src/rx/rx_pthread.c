@@ -133,6 +133,9 @@ void rxi_StartServerProc(proc, stacksize)
 	printf("Unable to Create Rx server thread\n");
 	exit(1);
     }
+    MUTEX_ENTER(&rx_stats_mutex);
+    ++rxi_pthread_hinum;
+    MUTEX_EXIT(&rx_stats_mutex);
     AFS_SIGSET_RESTORE();
 }
 
@@ -330,6 +333,9 @@ void rxi_StartListener() {
 	printf("Unable to create Rx event handling thread\n");
 	exit(1);
     }
+    MUTEX_ENTER(&rx_stats_mutex);
+    ++rxi_pthread_hinum;
+    MUTEX_EXIT(&rx_stats_mutex);
     AFS_SIGSET_RESTORE();
 
     assert(pthread_mutex_lock(&listener_mutex)==0);
@@ -371,6 +377,7 @@ rxi_Listen(sock)
 	printf("Unable to create socket listener thread\n");
 	exit(1);
     }
+    ++rxi_pthread_hinum;
     AFS_SIGSET_RESTORE();
     return 0;
 }
