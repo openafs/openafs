@@ -21,6 +21,7 @@ int newVLDB;			/* Compatibility flag */
 #endif
 static int newVLDB = 1;
 
+
 #ifndef AFS_PTHREAD_ENV
 #define USUAL_PRIORITY (LWP_MAX_PRIORITY - 2)
 
@@ -35,6 +36,14 @@ static int newVLDB = 1;
    fsync.c
    File server synchronization with external volume utilities.
  */
+
+/* This controls the size of an fd_set; it must be defined early before
+ * the system headers define that type and the macros that operate on it.
+ * Its value should be as large as the maximum file descriptor limit we
+ * are likely to run into on any platform.  Right now, that is 65536
+ * which is the default hard fd limit on Solaris 9 */
+#define FD_SETSIZE 65536
+
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -276,6 +285,8 @@ getport(struct sockaddr_in *addr)
     return sd;
 }
 
+static fd_set FSYNC_readfds;
+
 static void
 FSYNC_sync()
 {
@@ -331,18 +342,17 @@ FSYNC_sync()
     InitHandler();
     AcceptOn();
     for (;;) {
-	fd_set readfds;
 	int maxfd;
-	GetHandler(&readfds, &maxfd);
+	GetHandler(&FSYNC_readfds, &maxfd);
 	/* Note: check for >= 1 below is essential since IOMGR_select
 	 * doesn't have exactly same semantics as select.
 	 */
 #ifdef AFS_PTHREAD_ENV
-	if (select(maxfd + 1, &readfds, NULL, NULL, NULL) >= 1)
+	if (select(maxfd + 1, &FSYNC_readfds, NULL, NULL, NULL) >= 1)
 #else /* AFS_PTHREAD_ENV */
-	if (IOMGR_Select(maxfd + 1, &readfds, NULL, NULL, NULL) >= 1)
+	if (IOMGR_Select(maxfd + 1, &FSYNC_readfds, NULL, NULL, NULL) >= 1)
 #endif /* AFS_PTHREAD_ENV */
-	    CallHandler(&readfds);
+	    CallHandler(&FSYNC_readfds);
     }
 }
 
