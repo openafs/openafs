@@ -21,15 +21,15 @@
  * at the appropriate times to change the pointers to these servers.
  */
 typedef struct cm_server {
-	struct cm_server *allNextp;		/* locked by cm_serverLock */
+    struct cm_server *allNextp;		/* locked by cm_serverLock */
     struct sockaddr_in addr;		/* by mx */
     int type;				/* by mx */
-	struct cm_conn *connsp;			/* locked by cm_connLock */
+    struct cm_conn *connsp;		/* locked by cm_connLock */
     long flags;				/* by mx */
-    struct cm_cell *cellp;			/* cell containing this server */
-	unsigned long refCount;				/* locked by cm_serverLock */
-    osi_mutex_t mx;
-	unsigned short ipRank;			/* server priority */
+    struct cm_cell *cellp;		/* cell containing this server */
+    unsigned long refCount;		/* locked by cm_serverLock */
+    osi_mutex_t mx;                     
+    unsigned short ipRank;		/* server priority */
 } cm_server_t;
 
 enum repstate {not_busy, busy, offline};
