@@ -2,7 +2,7 @@ Source: openafs
 Section: net
 Priority: optional
 Maintainer: Sam Hartman <hartmans@debian.org>
-Build-Depends: debhelper (>= 2.2.20), libncurses5-dev, libpam0g-dev, bison, docbook-to-man, flex, autoconf, automake, perl
+Build-Depends: debhelper (>= 4.1.16), libncurses5-dev, libpam0g-dev, bison, docbook-to-man, flex, autoconf, automake, perl
 Standards-Version: 3.5.0
 
 Package: openafs-client
@@ -61,7 +61,7 @@ Description: The AFS distributed filesystem- database server
  protection servers.
 
 Package: libopenafs-dev
-Section: devel
+Section: libdevel
 Architecture: i386 powerpc sparc alpha s390 ia64
 Priority: extra
 Description: The AFS distributed filesystem- development libraries

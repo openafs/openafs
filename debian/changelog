@@ -1,3 +1,15 @@
+openafs (1.2.9-1) unstable; urgency=low
+
+  * Literal newline fixes, Closes: #175627
+  * New upstream version
+  * Fix section of libopenafs-dev to libdevel
+  * openafs-client stop should shut down afsd if it is running even if afs
+    not mounted, Closes: #188000
+  * Report i386_linux24 not linux22 on i386, Closes: #187789
+  * Convert to po-debconf, patch from Andre Luis Lopes, CLoses: #187901
+
+ --
+
 openafs (1.2.8-4) unstable; urgency=low
 
   * Fix from Eduard Bloch to compile on kernels with variable numbers of

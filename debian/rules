@@ -107,7 +107,6 @@ install: build
 binary-indep: DH_OPTIONS=-i
 binary-indep: build install binary-source
 	# Need this version of debhelper for DH_OPTIONS to work.
-	dh_testversion 1.1.17
 	dh_testdir
 	dh_testroot
 #	dh_installdebconf
@@ -137,8 +136,6 @@ binary-indep: build install binary-source
 # Pass -a to all debhelper commands in this target to reduce clutter.
 binary-arch: DH_OPTIONS=-a
 binary-arch: build install
-	# Need this version of debhelper for DH_OPTIONS to work.
-	dh_testversion 1.1.17
 	dh_testdir
 	dh_testroot
 	dh_installdebconf

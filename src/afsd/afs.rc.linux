@@ -189,7 +189,7 @@ force-start)
 		umount /afs
 		echo -n " afsd"
 	fi
-
+	pidof afsd >/dev/null &&afsd -shutdown
 
 	LIBAFS=`/sbin/lsmod | fgrep openafs`
 	if [ -n "$LIBAFS" ] ; then
