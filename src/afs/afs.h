@@ -633,8 +633,8 @@ struct vcache {
 	afs_uint32 Date;
 	afs_uint32 Owner;
 	afs_uint32 Group;
-	ushort Mode;		/* XXXX Should be afs_int32 XXXX */
-	ushort LinkCount;
+	afs_uint16 Mode;	/* XXXX Should be afs_int32 XXXX */
+	afs_uint16 LinkCount;
 	/* vnode type is in v.v_type */
     } m;
     afs_rwlock_t lock;		/* The lock on the vcache contents. */

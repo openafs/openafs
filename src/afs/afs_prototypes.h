@@ -685,7 +685,7 @@ extern struct srvAddr *afs_srvAddrs[NSERVERS];
 extern struct server *afs_servers[NSERVERS];
 extern int afs_totalServers;
 extern struct server *afs_setTimeHost;
-extern struct server *afs_FindServer(afs_int32 aserver, ushort aport,
+extern struct server *afs_FindServer(afs_int32 aserver, afs_uint16 aport,
 				     afsUUID * uuidp, afs_int32 locktype);
 extern struct server *afs_GetServer(afs_uint32 * aserver, afs_int32 nservers,
 				    afs_int32 acell, u_short aport,

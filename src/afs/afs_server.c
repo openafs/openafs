@@ -714,7 +714,7 @@ afs_CheckServers(int adown, struct cell *acellp)
 
 /* find a server structure given the host address */
 struct server *
-afs_FindServer(afs_int32 aserver, ushort aport, afsUUID * uuidp,
+afs_FindServer(afs_int32 aserver, afs_uint16 aport, afsUUID * uuidp,
 	       afs_int32 locktype)
 {
     struct server *ts;
