@@ -17,7 +17,12 @@ int afs_putapage(struct vnode *vp, struct page *pages,
 #else
 		 u_int *offp,
 #endif
-		 u_int *lenp, int flags, struct AFS_UCRED *credp);
+#if     defined(AFS_SUN58_ENV)
+                 size_t *lenp,
+#else
+                 u_int *lenp,
+#endif
+                 int flags, struct AFS_UCRED *credp);
 
 
 
