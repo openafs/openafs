@@ -140,10 +140,14 @@ ${UKERNELDIR}/afs/rxkad_common.c: rxkad_common.c
 
 install:   \
 	${DESTDIR}${libdir}/librxkad.a \
+	${DESTDIR}${includedir}/rx/fcrypt.h \
 	${DESTDIR}${includedir}/rx/rxkad.h \
 	${DESTDIR}${includedir}/rx/rxkad_prototypes.h
 
 ${DEST}/lib/librxkad.a: librxkad.a
+	${INSTALL} $? $@
+
+${DEST}/include/rx/fcrypt.h: fcrypt.h
 	${INSTALL} $? $@
 
 ${DEST}/include/rx/rxkad.h: rxkad.h
@@ -228,10 +232,16 @@ ${DESTDIR}${libdir}/librxkad.a: librxkad.a
 ${TOP_LIBDIR}/librxkad.a: librxkad.a
 	${INSTALL} $? $@
 
+${DESTDIR}${includedir}/rx/fcrypt.h: fcrypt.h
+	${INSTALL} $? $@
+
 ${DESTDIR}${includedir}/rx/rxkad.h: rxkad.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/rx/rxkad_prototypes.h: rxkad_prototypes.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/fcrypt.h: fcrypt.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/rx/rxkad.h: rxkad.h
@@ -242,6 +252,7 @@ ${TOP_INCDIR}/rx/rxkad_prototypes.h: rxkad_prototypes.h
 
 dest:   \
 	${DEST}/lib/librxkad.a \
+	${DEST}/include/rx/fcrypt.h \
 	${DEST}/include/rx/rxkad.h \
 	${DEST}/include/rx/rxkad_prototypes.h
 
