@@ -202,7 +202,7 @@ savecontext:
               .long   PRE_Block
       .L0:
               l       %r5,0(%r5)              /* Get A(PRE_Block) */
-              mvi     0(%r5),1                /* Set it */
+              mvi     3(%r5),1                /* Set it */
               lr      %r6,%r3                 /* Get base of savearea */
               st      %r15,0(%r3)             /* Save stack pointer */
               ltr     %r4,%r4                 /* If new sp is 0 */
@@ -236,8 +236,9 @@ returnto:
                  .long          PRE_Block
       .L3:
               l       %r5,0(%r5)              /* Get A(PRE_Block) */
-              xc      0(4,%r5),0(%r5)         /* Clear it */
-              l       %r15,0(%r15)
+              /*xc      0(4,%r5),0(%r5)         /* Clear it */
+	      mvi     3(%r5),0                /* Clear it */ 
+	      l       %r15,0(%r15)
               lm      %r6,%r15,24(%r15)       /* Restore registers */
               br      %r14                    /* Return */
 

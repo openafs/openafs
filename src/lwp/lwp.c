@@ -39,7 +39,7 @@ extern char* getenv();
 extern void *malloc(int size);
 extern void *realloc(void *ptr, int size);
 #endif
-#if defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_S390_LINUX20_ENV)
 extern int PRE_Block;	/* from preempt.c */
 #else
 extern char PRE_Block;	/* from preempt.c */
