@@ -45,7 +45,7 @@ void cm_InitFreelance() {
 	// yj: first we make a call to cm_initLocalMountPoints
 	// to read all the local mount points from an ini file
 	cm_InitLocalMountPoints();
-	
+
 	// then we make a call to InitFakeRootDir to create
 	// a fake root directory based on the local mount points
 	cm_InitFakeRootDir();
@@ -346,7 +346,7 @@ int cm_reInitLocalMountPoints() {
 long cm_InitLocalMountPoints() {
 	
 	FILE *fp;
-	char line[200];
+	char line[512];
 	int i;
 	char* t;
 	cm_localMountPoint_t* aLocalMountPoint;
@@ -359,10 +359,21 @@ long cm_InitLocalMountPoints() {
 
 	// if we fail to open the file, create an empty one
 	if (!fp) {
-	  fp = fopen(hdir, "w");
-	  fputs("0\n", fp);
-	  fclose(fp);
-	  return 0;  /* success */
+        long code;
+        char rootCellName[256];
+        fp = fopen(hdir, "w");
+      	code = cm_GetRootCellName(rootCellName);
+        if (code == 0) {
+            fputs("1\n", fp);
+            fprintf(fp,"%s#%s:root.cell.\n",rootCellName,rootCellName);
+            fprintf(fp,".%s%%%s:root.cell.\n",rootCellName,rootCellName);
+            fclose(fp);
+            fopen(hdir, "r");
+        } else {
+            fputs("0\n", fp);
+            fclose(fp);
+            return 0;  /* success */
+        }
 	}
 
 	// we successfully opened the file
@@ -370,7 +381,7 @@ long cm_InitLocalMountPoints() {
 	
 	// now we read the first line to see how many entries
 	// there are
-	fgets(line, 200, fp);
+	fgets(line, sizeof(line), fp);
 
 	// if the line is empty at any point when we're reading
 	// we're screwed. report error and return.
@@ -396,7 +407,7 @@ long cm_InitLocalMountPoints() {
 	// entry name, yyy is the cell name and zzz is the volume name.
 	// #yyy:zzz together make up the mount point.
 	for (i=0; i<cm_noLocalMountPoints; i++) {
-		fgets(line, 200, fp);
+		fgets(line, sizeof(line), fp);
 		// check that the line is not empty
 		if (line[0]==0) {
 			afsi_log("error occurred while parsing entry in %s: empty line in line %d", AFS_FREELANCE_INI, i);
@@ -405,29 +416,31 @@ long cm_InitLocalMountPoints() {
 		}
 		// line is not empty, so let's parse it
 		t = strchr(line, '#');
-		// make sure that there is a '#' separator in the line
+        if (!t)
+            t = strchr(line, '%');
+		// make sure that there is a '#' or '%' separator in the line
 		if (!t) {
-			afsi_log("error occurred while parsing entry in %s: no # separator in line %d", AFS_FREELANCE_INI, i);
-			fprintf(stderr, "error occurred while parsing entry in afs_freelance.ini: no # separator in line %d", i);
+			afsi_log("error occurred while parsing entry in %s: no # or %% separator in line %d", AFS_FREELANCE_INI, i);
+			fprintf(stderr, "error occurred while parsing entry in afs_freelance.ini: no # or %% separator in line %d", i);
 			return -1;
 		}
 		aLocalMountPoint->namep=malloc(t-line+1);
 		memcpy(aLocalMountPoint->namep, line, t-line);
 		*(aLocalMountPoint->namep + (t-line)) = 0;
-		aLocalMountPoint->mountPointStringp=malloc(strlen(line) - (t-line) + 1);
+		
+        aLocalMountPoint->mountPointStringp=malloc(strlen(line) - (t-line) + 1);
 		memcpy(aLocalMountPoint->mountPointStringp, t, strlen(line)-(t-line)-2);
 		*(aLocalMountPoint->mountPointStringp + (strlen(line)-(t-line)-2)) = 0;
     
         osi_Log2(afsd_logp,"found mount point: name %s, string %s",
-			aLocalMountPoint->namep,
-			aLocalMountPoint->mountPointStringp);
+                  aLocalMountPoint->namep,
+                  aLocalMountPoint->mountPointStringp);
 
         aLocalMountPoint++;
 	}
 	fclose(fp);
 	return 0;
 }
-
 
 int cm_getNoLocalMountPoints() {
 	return cm_noLocalMountPoints;
@@ -437,11 +450,11 @@ cm_localMountPoint_t* cm_getLocalMountPoint(int vnode) {
 	return 0;
 }
 
-long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, cm_fid_t *fidp)
+long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, cm_fid_t *fidp)
 {
     FILE *fp;
     char hfile[120];
-    char line[200];
+    char line[512];
     char fullname[200];
     int n;
     int alias = 0;
@@ -450,8 +463,8 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, cm_fid_t
        don't add the mount point.
        allow partial matches as a means of poor man's alias. */
     /* major performance issue? */
-    osi_Log3(afsd_logp,"Freelance Add Mount request: filename=%s cellname=%s volume=%s",
-              filename, cellname, volume);
+    osi_Log3(afsd_logp,"Freelance Add Mount request: filename=%s cellname=%s volume=%s %s",
+              filename, cellname, volume, rw ? "rw" : "ro");
     if (cellname[0] == '.') {
         if (!cm_GetCell_Gen(&cellname[1], &fullname[1], CM_FLAG_CREATE))
             return -1;
@@ -465,36 +478,38 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, cm_fid_t
 
     lock_ObtainMutex(&cm_Freelance_Lock);
 
-     cm_GetConfigDir(hfile);
-     strcat(hfile, AFS_FREELANCE_INI);
-     fp = fopen(hfile, "r+");
-     if (!fp)
-       return CM_ERROR_INVAL;
-     fgets(line, 200, fp);
-     n = atoi(line);
-     n++;
-     fseek(fp, 0, SEEK_SET);
-     fprintf(fp, "%d", n);
-     fseek(fp, 0, SEEK_END);
-     fprintf(fp, "%s#%s:%s\n", filename, fullname, volume);
-     fclose(fp);
-     lock_ReleaseMutex(&cm_Freelance_Lock);
+    cm_GetConfigDir(hfile);
+    strcat(hfile, AFS_FREELANCE_INI);
+    fp = fopen(hfile, "r+");
+    if (!fp)
+        return CM_ERROR_INVAL;
+    fgets(line, sizeof(line), fp);
+    n = atoi(line);
+    n++;
+    fseek(fp, 0, SEEK_SET);
+    fprintf(fp, "%d", n);
+    fseek(fp, 0, SEEK_END);
+    if (rw)
+        fprintf(fp, "%s%%%s:%s\n", filename, fullname, volume);
+    else
+        fprintf(fp, "%s#%s:%s\n", filename, fullname, volume);
+    fclose(fp);
+    lock_ReleaseMutex(&cm_Freelance_Lock);
 
-     /* cm_reInitLocalMountPoints(); */
-     if (fidp) {
-       fidp->unique = 1;
-       fidp->vnode = cm_noLocalMountPoints + 1;   /* vnode value of last mt pt */
-     }
-     cm_noteLocalMountPointChange();
-    
-     return 0;
+    /* cm_reInitLocalMountPoints(); */
+    if (fidp) {
+        fidp->unique = 1;
+        fidp->vnode = cm_noLocalMountPoints + 1;   /* vnode value of last mt pt */
+    }
+    cm_noteLocalMountPointChange();
+    return 0;
 }
 
 long cm_FreelanceRemoveMount(char *toremove)
 {
      int i, n;
      char* cp;
-     char line[200];
+     char line[512];
      char shortname[200];
      char hfile[120], hfile2[120];
      FILE *fp1, *fp2;
@@ -515,36 +530,38 @@ long cm_FreelanceRemoveMount(char *toremove)
        return CM_ERROR_INVAL;
      }
 
-     fgets(line, 200, fp1);
+     fgets(line, sizeof(line), fp1);
      n=atoi(line);
      fprintf(fp2, "%d\n", n-1);
 
      for (i=0; i<n; i++) {
-          fgets(line, 200, fp1);
-          cp=strchr(line, '#');
-          memcpy(shortname, line, cp-line);
-          shortname[cp-line]=0;
+         fgets(line, sizeof(line), fp1);
+         cp=strchr(line, '#');
+         if (!cp)
+             cp=strchr(line, '%');
+         memcpy(shortname, line, cp-line);
+         shortname[cp-line]=0;
 
-          if (strcmp(shortname, toremove)==0) {
+         if (strcmp(shortname, toremove)==0) {
 
-          } else {
-	    found = 1;
-	    fputs(line, fp2);
-          }
+         } else {
+             found = 1;
+             fputs(line, fp2);
+         }
      }
 
      fclose(fp1);
      fclose(fp2);
      if (!found)
-       return CM_ERROR_NOSUCHFILE;
+         return CM_ERROR_NOSUCHFILE;
 
-     unlink(hfile);
-     rename(hfile2, hfile);
+    unlink(hfile);
+    rename(hfile2, hfile);
 
-     lock_ReleaseMutex(&cm_Freelance_Lock);
+    lock_ReleaseMutex(&cm_Freelance_Lock);
 
-     cm_noteLocalMountPointChange();
-     return 0;
+    cm_noteLocalMountPointChange();
+    return 0;
 }
 
 #endif /* AFS_FREELANCE_CLIENT */

@@ -1435,7 +1435,8 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
 	  /* we are adding the mount point to the root dir., so call
 	     the freelance code to do the add. */
 	  osi_Log0(afsd_logp,"IoctlCreateMountPoint within Freelance root dir");
-	  code = cm_FreelanceAddMount(leaf, fullCell, volume, NULL);
+	  code = cm_FreelanceAddMount(leaf, fullCell, volume, 
+                                  *ioctlp->inDatap == '%', NULL);
 	  return code;
 	}
 #endif
