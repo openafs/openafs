@@ -22,9 +22,9 @@
 #include <pthread.h>
 extern pthread_mutex_t host_glock_mutex;
 #define H_LOCK \
-    assert(pthread_mutex_lock(&host_glock_mutex) == 0);
+    assert(pthread_mutex_lock(&host_glock_mutex) == 0)
 #define H_UNLOCK \
-    assert(pthread_mutex_unlock(&host_glock_mutex) == 0);
+    assert(pthread_mutex_unlock(&host_glock_mutex) == 0)
 #else /* AFS_PTHREAD_ENV */
 #define H_LOCK
 #define H_UNLOCK

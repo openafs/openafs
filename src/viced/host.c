@@ -261,8 +261,10 @@ static short consolePort = 0;
 int
 h_Release(register struct host *host)
 {
-    H_LOCK h_Release_r(host);
-    H_UNLOCK return 0;
+    H_LOCK;
+    h_Release_r(host);
+    H_UNLOCK;
+    return 0;
 }
 
 /**
@@ -309,8 +311,10 @@ h_OtherHolds_r(register struct host *host)
 int
 h_Lock_r(register struct host *host)
 {
-    H_UNLOCK h_Lock(host);
-    H_LOCK return 0;
+    H_UNLOCK;
+    h_Lock(host);
+    H_LOCK;
+    return 0;
 }
 
 /**
@@ -325,15 +329,17 @@ h_NBLock_r(register struct host *host)
     struct Lock *hostLock = &host->lock;
     int locked = 0;
 
-    H_UNLOCK LOCK_LOCK(hostLock)
+    H_UNLOCK;
+    LOCK_LOCK(hostLock);
     if (!(hostLock->excl_locked) && !(hostLock->readers_reading))
-	  hostLock->excl_locked = WRITE_LOCK;
+	hostLock->excl_locked = WRITE_LOCK;
     else
 	locked = 1;
 
-    LOCK_UNLOCK(hostLock)
-    H_LOCK if (locked)
-	  return 1;
+    LOCK_UNLOCK(hostLock);
+    H_LOCK;
+    if (locked)
+	return 1;
     else
 	return 0;
 }
@@ -445,8 +451,10 @@ h_gethostcps_r(register struct host *host, register afs_int32 now)
     host->hcps.prlist_len = 0;
     slept ? (host->cpsCall = FT_ApproxTime()) : (host->cpsCall = now);
 
-    H_UNLOCK code = pr_GetHostCPS(htonl(host->host), &host->hcps);
-    H_LOCK if (code) {
+    H_UNLOCK;
+    code = pr_GetHostCPS(htonl(host->host), &host->hcps);
+    H_LOCK;
+    if (code) {
 	/*
 	 * Although ubik_Call (called by pr_GetHostCPS) traverses thru all protection servers
 	 * and reevaluates things if no sync server or quorum is found we could still end up
@@ -503,13 +511,15 @@ h_flushhostcps(register afs_uint32 hostaddr, register afs_uint32 hport)
     register struct host *host;
     int held = 0;
 
-    H_LOCK host = h_Lookup_r(hostaddr, hport, &held);
+    H_LOCK;
+    host = h_Lookup_r(hostaddr, hport, &held);
     if (host) {
 	host->hcpsfailed = 1;
 	if (!held)
 	    h_Release_r(host);
     }
-    H_UNLOCK return;
+    H_UNLOCK;
+    return;
 }
 
 
@@ -816,9 +826,11 @@ h_FreeConnection(struct rx_connection *tcon)
 
     client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (client) {
-	H_LOCK if (client->tcon == tcon)
+	H_LOCK;
+	if (client->tcon == tcon)
 	    client->tcon = (struct rx_connection *)0;
-    H_UNLOCK}
+	H_UNLOCK;
+    }
 }				/*h_FreeConnection */
 
 
@@ -836,8 +848,10 @@ h_Enumerate(int (*proc) (), char *param)
     register int *held;
     register int i, count;
 
-    H_LOCK if (hostCount == 0) {
-	H_UNLOCK return;
+    H_LOCK;
+    if (hostCount == 0) {
+	H_UNLOCK;
+	return;
     }
     list = (struct host **)malloc(hostCount * sizeof(struct host *));
     if (!list) {
@@ -855,7 +869,8 @@ h_Enumerate(int (*proc) (), char *param)
 	    h_Hold_r(host);
     }
     assert(count == hostCount);
-    H_UNLOCK for (i = 0; i < count; i++) {
+    H_UNLOCK;
+    for (i = 0; i < count; i++) {
 	held[i] = (*proc) (list[i], held[i], param);
 	if (!held[i])
 	    h_Release(list[i]);	/* this might free up the host */
@@ -962,11 +977,13 @@ h_GetHost_r(struct rx_connection *tcon)
 	    goto retry;
 	}
 	host->hostFlags &= ~ALTADDR;
-	H_UNLOCK code =
+	H_UNLOCK;
+	code =
 	    RXAFSCB_TellMeAboutYourself(host->callback_rxcon, &interf, &caps);
 	if (code == RXGEN_OPCODE)
 	    code = RXAFSCB_WhoAreYou(host->callback_rxcon, &interf);
-	H_LOCK if (code == RXGEN_OPCODE) {
+	H_LOCK;
+	if (code == RXGEN_OPCODE) {
 	    identP = (struct Identity *)malloc(sizeof(struct Identity));
 	    if (!identP) {
 		ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
@@ -1079,12 +1096,14 @@ h_GetHost_r(struct rx_connection *tcon)
 	h_gethostcps_r(host, FT_ApproxTime());
 	if (!(host->Console & 1)) {
 	    int pident = 0;
-	    H_UNLOCK code =
+	    H_UNLOCK;
+	    code =
 		RXAFSCB_TellMeAboutYourself(host->callback_rxcon, &interf,
 					    &caps);
 	    if (code == RXGEN_OPCODE)
 		code = RXAFSCB_WhoAreYou(host->callback_rxcon, &interf);
-	    H_LOCK if (code == RXGEN_OPCODE) {
+	    H_LOCK;
+	    if (code == RXGEN_OPCODE) {
 		if (!identP)
 		    identP =
 			(struct Identity *)malloc(sizeof(struct Identity));
@@ -1125,9 +1144,10 @@ h_GetHost_r(struct rx_connection *tcon)
 			 ntohs(host->port)));
 	    }
 	    if (code == 0 && !identP->valid) {
-		H_UNLOCK code =
-		    RXAFSCB_InitCallBackState(host->callback_rxcon);
-	    H_LOCK} else if (code == 0) {
+		H_UNLOCK;
+		code = RXAFSCB_InitCallBackState(host->callback_rxcon);
+		H_LOCK;
+	    } else if (code == 0) {
 		oldHost = h_LookupUuid_r(&identP->uuid);
 		if (oldHost) {
 		    /* This is a new address for an existing host. Update
@@ -1150,10 +1170,12 @@ h_GetHost_r(struct rx_connection *tcon)
 		} else {
 		    /* This really is a new host */
 		    hashInsertUuid_r(&identP->uuid, host);
-		    H_UNLOCK code =
+		    H_UNLOCK;
+		    code =
 			RXAFSCB_InitCallBackState3(host->callback_rxcon,
 						   &FS_HostUUID);
-		    H_LOCK if (code == 0) {
+		    H_LOCK;
+		    if (code == 0) {
 			ViceLog(25,
 				("InitCallBackState3 success on %s:%d\n",
 				 afs_inet_ntoa_r(host->host, hoststr),
@@ -1259,8 +1281,10 @@ MapName_r(char *aname, char *acell, afs_int32 * aval)
 	}
     }
 
-    H_UNLOCK code = pr_NameToId(&lnames, &lids);
-    H_LOCK if (code == 0) {
+    H_UNLOCK;
+    code = pr_NameToId(&lnames, &lids);
+    H_LOCK;
+    if (code == 0) {
 	if (lids.idlist_val) {
 	    *aval = lids.idlist_val[0];
 	    if (*aval == AnonymousID) {
@@ -1293,20 +1317,25 @@ h_ID2Client(afs_int32 vid)
     register struct client *client;
     register struct host *host;
 
-    H_LOCK for (host = hostList; host; host = host->next) {
+    H_LOCK;
+    for (host = hostList; host; host = host->next) {
 	if (host->hostFlags & HOSTDELETED)
 	    continue;
 	for (client = host->FirstClient; client; client = client->next) {
 	    if (!client->deleted && client->ViceId == vid) {
 		client->refCount++;
-		H_UNLOCK ObtainSharedLock(&client->lock);
-		H_LOCK client->refCount--;
-		H_UNLOCK return client;
+		H_UNLOCK;
+		ObtainSharedLock(&client->lock);
+		H_LOCK;
+		client->refCount--;
+		H_UNLOCK;
+		return client;
 	    }
 	}
     }
 
-    H_UNLOCK return 0;
+    H_UNLOCK;
+    return 0;
 }
 
 /*
@@ -1347,8 +1376,10 @@ h_FindClient_r(struct rx_connection *tcon)
 	     */
 	    return client;
 	}
-	H_UNLOCK ObtainWriteLock(&client->lock);	/* released at end */
-    H_LOCK} else if (client) {
+	H_UNLOCK;
+	ObtainWriteLock(&client->lock);	/* released at end */
+	H_LOCK;
+    } else if (client) {
 	client->refCount++;
     }
 
@@ -1427,8 +1458,10 @@ h_FindClient_r(struct rx_connection *tcon)
 		    client->tcon = (struct rx_connection *)0;
 		}
 		client->refCount++;
-		H_UNLOCK ObtainWriteLock(&client->lock);
-		H_LOCK break;
+		H_UNLOCK;
+		ObtainWriteLock(&client->lock);
+		H_LOCK;
+		break;
 	    }
 	}
 
@@ -1468,8 +1501,10 @@ h_FindClient_r(struct rx_connection *tcon)
 	    client->CPS.prlist_len = AnonCPS.prlist_len;
 	    client->CPS.prlist_val = AnonCPS.prlist_val;
 	} else {
-	    H_UNLOCK code = pr_GetCPS(viceid, &client->CPS);
-	    H_LOCK if (code) {
+	    H_UNLOCK;
+	    code = pr_GetCPS(viceid, &client->CPS);
+	    H_LOCK;
+	    if (code) {
 		char hoststr[16];
 		ViceLog(0,
 			("pr_GetCPS failed(%d) for user %d, host %s:%d\n",
@@ -1540,19 +1575,21 @@ GetClient(struct rx_connection *tcon, struct client **cp)
 {
     register struct client *client;
 
-    H_LOCK *cp = client =
-	(struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+    H_LOCK;
+    *cp = client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
     if (client == NULL || client->tcon == NULL) {
 	ViceLog(0,
 		("GetClient: no client in conn %x (host %x), VBUSYING\n",
 		 tcon, rx_HostOf(rx_PeerOf(tcon))));
-	H_UNLOCK return VBUSY;
+	H_UNLOCK;
+	return VBUSY;
     }
     if (rxr_CidOf(client->tcon) != client->sid) {
 	ViceLog(0,
 		("GetClient: tcon %x tcon sid %d client sid %d\n",
 		 client->tcon, rxr_CidOf(client->tcon), client->sid));
-	H_UNLOCK return VBUSY;
+	H_UNLOCK;
+	return VBUSY;
     }
     if (!(client && client->tcon && rxr_CidOf(client->tcon) == client->sid)) {
 	if (!client)
@@ -1570,10 +1607,12 @@ GetClient(struct rx_connection *tcon, struct client **cp)
 		("Token for %s at %s:%d expired %d\n", h_UserName(client),
 		 afs_inet_ntoa_r(client->host->host, hoststr),
 		 ntohs(client->host->port), client->expTime));
-	H_UNLOCK return VICETOKENDEAD;
+	H_UNLOCK;
+	return VICETOKENDEAD;
     }
 
-    H_UNLOCK return 0;
+    H_UNLOCK;
+    return 0;
 
 }				/*GetClient */
 
@@ -1627,8 +1666,10 @@ h_PrintClient(register struct host *host, int held, StreamHandle_t * file)
     char tbuffer[32];
     char hoststr[16];
 
-    H_LOCK if (host->hostFlags & HOSTDELETED) {
-	H_UNLOCK return held;
+    H_LOCK;
+    if (host->hostFlags & HOSTDELETED) {
+	H_UNLOCK;
+	return held;
     }
     (void)afs_snprintf(tmpStr, sizeof tmpStr,
 		       "Host %s:%d down = %d, LastCall %s",
@@ -1672,7 +1713,8 @@ h_PrintClient(register struct host *host, int held, StreamHandle_t * file)
 	    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	}
     }
-    H_UNLOCK return held;
+    H_UNLOCK;
+    return held;
 
 }				/*h_PrintClient */
 
@@ -1715,15 +1757,16 @@ h_DumpHost(register struct host *host, int held, StreamHandle_t * file)
     int i;
     char tmpStr[256];
 
-    H_LOCK(void) afs_snprintf(tmpStr, sizeof tmpStr,
-			      "ip:%x port:%d hidx:%d cbid:%d lock:%x last:%u active:%u down:%d del:%d cons:%d cldel:%d\n\t hpfailed:%d hcpsCall:%u hcps [",
-			      host->host, ntohs(host->port), host->index,
-			      host->cblist, CheckLock(&host->lock),
-			      host->LastCall, host->ActiveCall,
-			      (host->hostFlags & VENUSDOWN),
-			      host->hostFlags & HOSTDELETED, host->Console,
-			      host->hostFlags & CLIENTDELETED,
-			      host->hcpsfailed, host->cpsCall);
+    H_LOCK;
+    (void)afs_snprintf(tmpStr, sizeof tmpStr,
+		       "ip:%x port:%d hidx:%d cbid:%d lock:%x last:%u active:%u down:%d del:%d cons:%d cldel:%d\n\t hpfailed:%d hcpsCall:%u hcps [",
+		       host->host, ntohs(host->port), host->index,
+		       host->cblist, CheckLock(&host->lock),
+		       host->LastCall, host->ActiveCall,
+		       (host->hostFlags & VENUSDOWN),
+		       host->hostFlags & HOSTDELETED, host->Console,
+		       host->hostFlags & CLIENTDELETED,
+		       host->hcpsfailed, host->cpsCall);
     STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
     if (host->hcps.prlist_val)
 	for (i = 0; i < host->hcps.prlist_len; i++) {
@@ -1748,7 +1791,8 @@ h_DumpHost(register struct host *host, int held, StreamHandle_t * file)
     sprintf(tmpStr, " slot/bit: %d/%d\n", h_holdSlot(), h_holdbit());
     STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 
-    H_UNLOCK return held;
+    H_UNLOCK;
+    return held;
 
 }				/*h_DumpHost */
 
@@ -1791,7 +1835,8 @@ h_GetWorkStats(int *nump, int *activep, int *delp, afs_int32 cutofftime)
     register struct host *host;
     register int num = 0, active = 0, del = 0;
 
-    H_LOCK for (host = hostList; host; host = host->next) {
+    H_LOCK;
+    for (host = hostList; host; host = host->next) {
 	if (!(host->hostFlags & HOSTDELETED)) {
 	    num++;
 	    if (host->ActiveCall > cutofftime)
@@ -1800,8 +1845,9 @@ h_GetWorkStats(int *nump, int *activep, int *delp, afs_int32 cutofftime)
 		del++;
 	}
     }
-    H_UNLOCK if (nump)
-	 *nump = num;
+    H_UNLOCK;
+    if (nump)
+	*nump = num;
     if (activep)
 	*activep = active;
     if (delp)
@@ -1965,7 +2011,8 @@ h_GetHostNetStats(afs_int32 * a_numHostsP, afs_int32 * a_sameNetOrSubnetP,
     *a_diffSubnetP = (afs_int32) 0;
     *a_diffNetworkP = (afs_int32) 0;
 
-    H_LOCK for (hostP = hostList; hostP; hostP = hostP->next) {
+    H_LOCK;
+    for (hostP = hostList; hostP; hostP = hostP->next) {
 	if (!(hostP->hostFlags & HOSTDELETED)) {
 	    /*
 	     * Bump the number of undeleted host entries found.
@@ -1979,7 +2026,8 @@ h_GetHostNetStats(afs_int32 * a_numHostsP, afs_int32 * a_sameNetOrSubnetP,
 			      a_diffNetworkP);
 	}			/*Only look at non-deleted hosts */
     }				/*For each host record hashed to this index */
-H_UNLOCK}			/*h_GetHostNetStats */
+    H_UNLOCK;
+}				/*h_GetHostNetStats */
 
 static afs_uint32 checktime;
 static afs_uint32 clientdeletetime;
@@ -1998,7 +2046,8 @@ CheckHost(register struct host *host, int held)
     int code;
 
     /* Host is held by h_Enumerate */
-    H_LOCK for (client = host->FirstClient; client; client = client->next) {
+    H_LOCK;
+    for (client = host->FirstClient; client; client = client->next) {
 	if (client->refCount == 0 && client->LastCall < clientdeletetime) {
 	    client->deleted = 1;
 	    host->hostFlags |= CLIENTDELETED;
@@ -2012,13 +2061,17 @@ CheckHost(register struct host *host, int held)
 		if (!(host->hostFlags & VENUSDOWN)) {
 		    host->hostFlags &= ~ALTADDR;	/* alternate address invalid */
 		    if (host->interface) {
-			H_UNLOCK code =
+			H_UNLOCK;
+			code =
 			    RXAFSCB_InitCallBackState3(host->callback_rxcon,
 						       &FS_HostUUID);
-		    H_LOCK} else {
-			H_UNLOCK code =
+			H_LOCK;
+		    } else {
+			H_UNLOCK;
+			code =
 			    RXAFSCB_InitCallBackState(host->callback_rxcon);
-		    H_LOCK}
+			H_LOCK;
+		    }
 		    host->hostFlags |= ALTADDR;	/* alternate addresses valid */
 		    if (code) {
 			char hoststr[16];
@@ -2039,9 +2092,10 @@ CheckHost(register struct host *host, int held)
 		if (!(host->hostFlags & VENUSDOWN) && host->cblist) {
 		    if (host->interface) {
 			afsUUID uuid = host->interface->uuid;
-			H_UNLOCK code =
-			    RXAFSCB_ProbeUuid(host->callback_rxcon, &uuid);
-			H_LOCK if (code) {
+			H_UNLOCK;
+			code = RXAFSCB_ProbeUuid(host->callback_rxcon, &uuid);
+			H_LOCK;
+			if (code) {
 			    if (MultiProbeAlternateAddress_r(host)) {
 				char hoststr[16];
 				(void)afs_inet_ntoa_r(host->host, hoststr);
@@ -2052,8 +2106,10 @@ CheckHost(register struct host *host, int held)
 			    }
 			}
 		    } else {
-			H_UNLOCK code = RXAFSCB_Probe(host->callback_rxcon);
-			H_LOCK if (code) {
+			H_UNLOCK;
+			code = RXAFSCB_Probe(host->callback_rxcon);
+			H_LOCK;
+			if (code) {
 			    char hoststr[16];
 			    (void)afs_inet_ntoa_r(host->host, hoststr);
 			    ViceLog(0,
@@ -2067,7 +2123,8 @@ CheckHost(register struct host *host, int held)
 	}
 	h_Unlock_r(host);
     }
-    H_UNLOCK return held;
+    H_UNLOCK;
+    return held;
 
 }				/*CheckHost */
 

@@ -537,7 +537,8 @@ FDel(register struct FileEntry *fe)
 int
 InitCallBack(int nblks)
 {
-    H_LOCK tfirst = CBtime(FT_ApproxTime());
+    H_LOCK;
+    tfirst = CBtime(FT_ApproxTime());
     /* N.B. The "-1", below, is because
      * FE[0] and CB[0] are not used--and not allocated */
     FE = ((struct FileEntry *)(calloc(nblks, sizeof(struct FileEntry)))) - 1;
@@ -558,7 +559,8 @@ InitCallBack(int nblks)
 	FreeCB(&CB[cbstuff.nCBs]);	/* This is correct */
     cbstuff.nblks = nblks;
     cbstuff.nbreakers = 0;
-    H_UNLOCK return 0;
+    H_UNLOCK;
+    return 0;
 }
 
 afs_int32
@@ -592,8 +594,10 @@ XCallBackBulk_r(struct host * ahost, struct AFSFid * fids, afs_int32 nfids)
 	tc.AFSCBs_len = i;
 	tc.AFSCBs_val = tcbs;
 
-	H_UNLOCK code |= RXAFSCB_CallBack(ahost->callback_rxcon, &tf, &tc);
-    H_LOCK}
+	H_UNLOCK;
+	code |= RXAFSCB_CallBack(ahost->callback_rxcon, &tf, &tc);
+	H_LOCK;
+    }
 
     return code;
 }
@@ -612,7 +616,8 @@ AddCallBack1(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
 	     int locked)
 {
     int retVal;
-    H_LOCK if (!locked) {
+    H_LOCK;
+    if (!locked) {
 	h_Lock_r(host);
     }
     retVal = AddCallBack1_r(host, fid, thead, type, 1);
@@ -620,7 +625,8 @@ AddCallBack1(struct host *host, AFSFid * fid, afs_uint32 * thead, int type,
     if (!locked) {
 	h_Unlock_r(host);
     }
-    H_UNLOCK return retVal;
+    H_UNLOCK;
+    return retVal;
 }
 
 static int
@@ -781,7 +787,8 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 
     if (j) {			/* who knows what multi would do with 0 conns? */
 	cbstuff.nbreakers++;
-	H_UNLOCK multi_Rx(conns, j) {
+	H_UNLOCK;
+	multi_Rx(conns, j) {
 	    multi_RXAFSCB_CallBack(afidp, &tc);
 	    if (multi_error) {
 		afs_uint32 idx;
@@ -825,7 +832,8 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 				     ntohs(hp->port)));
 			}
 
-			H_LOCK h_Lock_r(hp);
+			H_LOCK;
+			h_Lock_r(hp);
 			hp->hostFlags |= VENUSDOWN;
 		/**
 		  * We always go into AddCallBack1_r with the host locked
@@ -833,12 +841,14 @@ MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 			AddCallBack1_r(hp, afidp->AFSCBFids_val, itot(idx),
 				       CB_DELAYED, 1);
 			h_Unlock_r(hp);
-		    H_UNLOCK}
+			H_UNLOCK;
+		    }
 		}
 	    }
 	}
 	multi_End;
-	H_LOCK cbstuff.nbreakers--;
+	H_LOCK;
+	cbstuff.nbreakers--;
     }
 
     for (i = 0; i < ncbas; i++) {
@@ -878,7 +888,8 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
 	     afs_inet_ntoa_r(xhost->host, hoststr), ntohs(xhost->port),
 	     fid->Volume, fid->Vnode, fid->Unique));
 
-    H_LOCK cbstuff.BreakCallBacks++;
+    H_LOCK;
+    cbstuff.BreakCallBacks++;
     fe = FindFE(fid);
     if (!fe) {
 	goto done;
@@ -937,7 +948,8 @@ BreakCallBack(struct host *xhost, AFSFid * fid, int flag)
     }
 
   done:
-    H_UNLOCK return 0;
+    H_UNLOCK;
+    return 0;
 }
 
 /* Delete (do not break) single call back for fid */
@@ -950,13 +962,15 @@ DeleteCallBack(struct host *host, AFSFid * fid)
 
     cbstuff.DeleteCallBacks++;
 
-    H_LOCK h_Lock_r(host);
+    H_LOCK;
+    h_Lock_r(host);
     fe = FindFE(fid);
     if (!fe) {
 	h_Unlock_r(host);
-	H_UNLOCK ViceLog(8,
-			 ("DCB: No call backs for fid (%u, %u, %u)\n",
-			  fid->Volume, fid->Vnode, fid->Unique));
+	H_UNLOCK;
+	ViceLog(8,
+		("DCB: No call backs for fid (%u, %u, %u)\n",
+		 fid->Volume, fid->Vnode, fid->Unique));
 	return 0;
     }
     pcb = FindCBPtr(fe, host);
@@ -966,13 +980,15 @@ DeleteCallBack(struct host *host, AFSFid * fid)
 		 afs_inet_ntoa_r(host->host, hoststr), ntohs(host->port),
 		 fid->Volume, fid->Vnode, fid->Unique));
 	h_Unlock_r(host);
-	H_UNLOCK return 0;
+	H_UNLOCK;
+	return 0;
     }
     HDel(itocb(*pcb));
     TDel(itocb(*pcb));
     CDelPtr(fe, pcb, 1);
     h_Unlock_r(host);
-    H_UNLOCK return 0;
+    H_UNLOCK;
+    return 0;
 }
 
 /*
@@ -989,12 +1005,14 @@ DeleteFileCallBacks(AFSFid * fid)
     register afs_uint32 cbi;
     register int n;
 
-    H_LOCK cbstuff.DeleteFiles++;
+    H_LOCK;
+    cbstuff.DeleteFiles++;
     fe = FindFE(fid);
     if (!fe) {
-	H_UNLOCK ViceLog(8,
-			 ("DF: No fid (%u,%u,%u) to delete\n", fid->Volume,
-			  fid->Vnode, fid->Unique));
+	H_UNLOCK;
+	ViceLog(8,
+		("DF: No fid (%u,%u,%u) to delete\n", fid->Volume,
+		 fid->Vnode, fid->Unique));
 	return 0;
     }
     for (n = 0, cbi = fe->firstcb; cbi; n++) {
@@ -1005,7 +1023,8 @@ DeleteFileCallBacks(AFSFid * fid)
 	FreeCB(cb);
     }
     FDel(fe);
-    H_UNLOCK return 0;
+    H_UNLOCK;
+    return 0;
 }
 
 /* Delete (do not break) all call backs for host.  The host should be
@@ -1041,8 +1060,10 @@ int
 BreakDelayedCallBacks(struct host *host)
 {
     int retVal;
-    H_LOCK retVal = BreakDelayedCallBacks_r(host);
-    H_UNLOCK return retVal;
+    H_LOCK;
+    retVal = BreakDelayedCallBacks_r(host);
+    H_UNLOCK;
+    return retVal;
 }
 
 int
@@ -1060,12 +1081,16 @@ BreakDelayedCallBacks_r(struct host *host)
     if (!(host->hostFlags & RESETDONE) && !(host->hostFlags & HOSTDELETED)) {
 	host->hostFlags &= ~ALTADDR;	/* alterrnate addresses are invalid */
 	if (host->interface) {
-	    H_UNLOCK code =
+	    H_UNLOCK;
+	    code =
 		RXAFSCB_InitCallBackState3(host->callback_rxcon,
 					   &FS_HostUUID);
-	H_LOCK} else {
-	    H_UNLOCK code = RXAFSCB_InitCallBackState(host->callback_rxcon);
-	H_LOCK}
+	    H_LOCK;
+	} else {
+	    H_UNLOCK;
+	    code = RXAFSCB_InitCallBackState(host->callback_rxcon);
+	    H_LOCK;
+	}
 	host->hostFlags |= ALTADDR;	/* alternate addresses are valid */
 	if (code) {
 	    if (ShowProblems) {
@@ -1219,8 +1244,10 @@ MultiBreakVolumeCallBack(struct host *host, int isheld,
 			 struct VCBParams *parms)
 {
     int retval;
-    H_LOCK retval = MultiBreakVolumeCallBack_r(host, isheld, parms, 1);
-    H_UNLOCK return retval;
+    H_LOCK;
+    retval = MultiBreakVolumeCallBack_r(host, isheld, parms, 1);
+    H_UNLOCK;
+    return retval;
 }
 
 /*
@@ -1232,8 +1259,10 @@ MultiBreakVolumeLaterCallBack(struct host *host, int isheld,
 			      struct VCBParams *parms)
 {
     int retval;
-    H_LOCK retval = MultiBreakVolumeCallBack_r(host, isheld, parms, 0);
-    H_UNLOCK return retval;
+    H_LOCK;
+    retval = MultiBreakVolumeCallBack_r(host, isheld, parms, 0);
+    H_UNLOCK;
+    return retval;
 }
 
 /*
@@ -1262,7 +1291,8 @@ BreakVolumeCallBacks(afs_uint32 volume)
     struct VCBParams henumParms;
     afs_uint32 tthead = 0;	/* zero is illegal value */
 
-    H_LOCK fid.Volume = volume, fid.Vnode = fid.Unique = 0;
+    H_LOCK;
+    fid.Volume = volume, fid.Vnode = fid.Unique = 0;
     for (hash = 0; hash < VHASH; hash++) {
 	for (feip = &HashTable[hash]; (fe = itofe(*feip));) {
 	    if (fe->volid == volume) {
@@ -1289,13 +1319,16 @@ BreakVolumeCallBacks(afs_uint32 volume)
 
     if (!tthead) {
 	/* didn't find any callbacks, so return right away. */
-	H_UNLOCK return 0;
+	H_UNLOCK;
+	return 0;
     }
     henumParms.ncbas = 0;
     henumParms.fid = &fid;
     henumParms.thead = tthead;
-    H_UNLOCK h_Enumerate(MultiBreakVolumeCallBack, (char *)&henumParms);
-    H_LOCK if (henumParms.ncbas) {	/* do left-overs */
+    H_UNLOCK;
+    h_Enumerate(MultiBreakVolumeCallBack, (char *)&henumParms);
+    H_LOCK;
+    if (henumParms.ncbas) {	/* do left-overs */
 	struct AFSCBFids tf;
 	tf.AFSCBFids_len = 1;
 	tf.AFSCBFids_val = &fid;
@@ -1304,7 +1337,8 @@ BreakVolumeCallBacks(afs_uint32 volume)
 
 	henumParms.ncbas = 0;
     }
-    H_UNLOCK return 0;
+    H_UNLOCK;
+    return 0;
 }
 
 #ifdef AFS_PTHREAD_ENV
@@ -1324,7 +1358,8 @@ BreakVolumeCallBacksLater(afs_uint32 volume)
     int found = 0;
 
     ViceLog(25, ("Setting later on volume %u\n", volume));
-    H_LOCK for (hash = 0; hash < VHASH; hash++) {
+    H_LOCK;
+    for (hash = 0; hash < VHASH; hash++) {
 	for (feip = &HashTable[hash]; fe = itofe(*feip);) {
 	    if (fe->volid == volume) {
 		register struct CallBack *cbnext;
@@ -1334,13 +1369,16 @@ BreakVolumeCallBacksLater(afs_uint32 volume)
 		    cb->status = CB_DELAYED;
 		    cbnext = itocb(cb->cnext);
 		}
-		FSYNC_LOCK fe->status |= FE_LATER;
-		FSYNC_UNLOCK found++;
+		FSYNC_LOCK;
+		fe->status |= FE_LATER;
+		FSYNC_UNLOCK;
+		found++;
 	    }
 	    feip = &fe->fnext;
 	}
     }
-    H_UNLOCK if (!found) {
+    H_UNLOCK;
+    if (!found) {
 	/* didn't find any callbacks, so return right away. */
 	return 0;
     }
@@ -1369,9 +1407,9 @@ BreakLaterCallBacks(void)
 
     /* Unchain first */
     ViceLog(25, ("Looking for FileEntries to unchain\n"));
-    H_LOCK
-	/* Pick the first volume we see to clean up */
-	fid.Volume = fid.Vnode = fid.Unique = 0;
+    H_LOCK;
+    /* Pick the first volume we see to clean up */
+    fid.Volume = fid.Vnode = fid.Unique = 0;
 
     for (hash = 0; hash < VHASH; hash++) {
 	for (feip = &HashTable[hash]; fe = itofe(*feip);) {
@@ -1391,11 +1429,13 @@ BreakLaterCallBacks(void)
     }
 
     if (!myfe) {
-	H_UNLOCK return 0;
+	H_UNLOCK;
+	return 0;
     }
 
     /* loop over FEs from myfe and free/break */
-    FSYNC_UNLOCK tthead = 0;
+    FSYNC_UNLOCK;
+    tthead = 0;
     for (fe = myfe; fe;) {
 	register struct CallBack *cbnext;
 	for (cb = itocb(fe->firstcb); cb; cb = cbnext) {
@@ -1420,9 +1460,10 @@ BreakLaterCallBacks(void)
 	henumParms.ncbas = 0;
 	henumParms.fid = &fid;
 	henumParms.thead = tthead;
-	H_UNLOCK h_Enumerate(MultiBreakVolumeLaterCallBack,
-			     (char *)&henumParms);
-	H_LOCK if (henumParms.ncbas) {	/* do left-overs */
+	H_UNLOCK;
+	h_Enumerate(MultiBreakVolumeLaterCallBack, (char *)&henumParms);
+	H_LOCK;
+	if (henumParms.ncbas) {	/* do left-overs */
 	    struct AFSCBFids tf;
 	    tf.AFSCBFids_len = 1;
 	    tf.AFSCBFids_val = &fid;
@@ -1431,9 +1472,11 @@ BreakLaterCallBacks(void)
 	    henumParms.ncbas = 0;
 	}
     }
-    FSYNC_LOCK H_UNLOCK
-	/* Arrange to be called again */
-      return 1;
+    FSYNC_LOCK;
+    H_UNLOCK;;
+
+    /* Arrange to be called again */
+    return 1;
 }
 
 /*
@@ -1443,8 +1486,10 @@ BreakLaterCallBacks(void)
 int
 CleanupTimedOutCallBacks(void)
 {
-    H_LOCK CleanupTimedOutCallBacks_r();
-H_UNLOCK}
+    H_LOCK;
+    CleanupTimedOutCallBacks_r();
+    H_UNLOCK;
+}
 
 int
 CleanupTimedOutCallBacks_r(void)
@@ -1603,11 +1648,15 @@ ClearHostCallbacks_r(struct host *hp, int locked)
 	/* host is up, try a call */
 	hp->hostFlags &= ~ALTADDR;	/* alternate addresses are invalid */
 	if (hp->interface) {
-	    H_UNLOCK code =
+	    H_UNLOCK;
+	    code =
 		RXAFSCB_InitCallBackState3(hp->callback_rxcon, &FS_HostUUID);
-	H_LOCK} else {
-	    H_UNLOCK code = RXAFSCB_InitCallBackState(hp->callback_rxcon);
-	H_LOCK}
+	    H_LOCK;
+	} else {
+	    H_UNLOCK;
+	    code = RXAFSCB_InitCallBackState(hp->callback_rxcon);
+	    H_LOCK;
+	}
 	hp->hostFlags |= ALTADDR;	/* alternate addresses are valid */
 	if (code) {
 	    /* failed, mark host down and need reset */
@@ -1871,8 +1920,10 @@ int
 MultiBreakCallBackAlternateAddress(struct host *host, struct AFSCBFids *afidp)
 {
     int retVal;
-    H_LOCK retVal = MultiBreakCallBackAlternateAddress_r(host, afidp);
-    H_UNLOCK return retVal;
+    H_LOCK;
+    retVal = MultiBreakCallBackAlternateAddress_r(host, afidp);
+    H_UNLOCK;
+    return retVal;
 }
 
 int
@@ -1928,12 +1979,14 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
     ViceLog(125,
 	    ("Starting multibreakcall back on all addr for host %s\n",
 	     afs_inet_ntoa_r(host->host, hoststr)));
-    H_UNLOCK multi_Rx(conns, j) {
+    H_UNLOCK;
+    multi_Rx(conns, j) {
 	multi_RXAFSCB_CallBack(afidp, &tc);
 	if (!multi_error) {
 	    /* first success */
-	    H_LOCK if (host->callback_rxcon)
-		  rx_DestroyConnection(host->callback_rxcon);
+	    H_LOCK;
+	    if (host->callback_rxcon)
+		rx_DestroyConnection(host->callback_rxcon);
 	    host->callback_rxcon = conns[multi_i];
 	    host->host = addr[multi_i];
 	    connSuccess = conns[multi_i];
@@ -1942,13 +1995,14 @@ MultiBreakCallBackAlternateAddress_r(struct host *host,
 	    ViceLog(125,
 		    ("multibreakcall success with addr %s\n",
 		     afs_inet_ntoa_r(addr[multi_i], hoststr)));
-	    H_UNLOCK multi_Abort;
+	    H_UNLOCK;
+	    multi_Abort;
 	}
     }
     multi_End_Ignore;
-    H_LOCK
-	/* Destroy all connections except the one on which we succeeded */
-	for (i = 0; i < j; i++)
+    H_LOCK;
+    /* Destroy all connections except the one on which we succeeded */
+    for (i = 0; i < j; i++)
 	if (conns[i] != connSuccess)
 	    rx_DestroyConnection(conns[i]);
 
@@ -2016,12 +2070,14 @@ MultiProbeAlternateAddress_r(struct host *host)
     ViceLog(125,
 	    ("Starting multiprobe on all addr for host %s\n",
 	     afs_inet_ntoa_r(host->host, hoststr)));
-    H_UNLOCK multi_Rx(conns, j) {
+    H_UNLOCK;
+    multi_Rx(conns, j) {
 	multi_RXAFSCB_ProbeUuid(&host->interface->uuid);
 	if (!multi_error) {
 	    /* first success */
-	    H_LOCK if (host->callback_rxcon)
-		  rx_DestroyConnection(host->callback_rxcon);
+	    H_LOCK;
+	    if (host->callback_rxcon)
+		rx_DestroyConnection(host->callback_rxcon);
 	    host->callback_rxcon = conns[multi_i];
 	    host->host = addr[multi_i];
 	    connSuccess = conns[multi_i];
@@ -2030,13 +2086,14 @@ MultiProbeAlternateAddress_r(struct host *host)
 	    ViceLog(125,
 		    ("multiprobe success with addr %s\n",
 		     afs_inet_ntoa_r(addr[multi_i], hoststr)));
-	    H_UNLOCK multi_Abort;
+	    H_UNLOCK;
+	    multi_Abort;
 	}
     }
     multi_End_Ignore;
-    H_LOCK
-	/* Destroy all connections except the one on which we succeeded */
-	for (i = 0; i < j; i++)
+    H_LOCK;
+    /* Destroy all connections except the one on which we succeeded */
+    for (i = 0; i < j; i++)
 	if (conns[i] != connSuccess)
 	    rx_DestroyConnection(conns[i]);
 

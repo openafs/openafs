@@ -470,7 +470,8 @@ FsyncCheckLWP()
     assert(pthread_mutex_init(&fsync_glock_mutex, NULL) == 0);
 #endif
 
-    FSYNC_LOCK while (1) {
+    FSYNC_LOCK;
+    while (1) {
 #ifdef AFS_PTHREAD_ENV
 	/* rounding is fine */
 	fsync_next.tv_nsec = 0;
