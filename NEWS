@@ -1,4 +1,12 @@
-OpenAFS News -- history of user-visible changes. October 19, 2001
+OpenAFS News -- history of user-visible changes.  August 2, 2002.
+
+* Changes incorporated in OpenAFS 1.2.6
+
+** Mountpoint directory information can be faked by the cache manager,
+   making operations such as stat'ing all cells under /afs much faster.
+   This is enabled by passing -fakestat to afsd.
+
+** Solaris 9 FCS and Solaris 7 and 8 x86 are now supported.
 
 * Changes incorporated in OpenAFS 1.2.5
 
