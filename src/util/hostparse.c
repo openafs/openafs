@@ -18,15 +18,23 @@
 #else /* UKERNEL */
 #include <stdio.h>
 #include <sys/types.h>
+#include <stdlib.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
-#include <stdlib.h>
 #include <direct.h>
 #else
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <ctype.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#else
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
 #endif
 #include <errno.h>
 #include "afsutil.h"
@@ -47,7 +55,7 @@ register char *ahost; {
     tc = *ahost;    /* look at the first char */
     if (tc >= '0' && tc <= '9') {
 	numeric = 1;
-	while (tc = *ptr++) {
+	while ((tc = *ptr++)) {
 	    if (tc == '.') {
 		if (dots >= 3) {
 		    numeric = 0;
@@ -66,7 +74,7 @@ register char *ahost; {
 	tval = 0;
 	dots = 0;
 	bzero(addr, sizeof(addr));
-	while (tc = *ahost++) {
+	while ((tc = *ahost++)) {
 	    if (tc == '.') {
 		if (dots >= 3) return (struct hostent *) 0; /* too many dots */
 		addr[dots++] = tval;
@@ -118,8 +126,8 @@ char *hostutil_GetNameByINet(addr)
   } else {
      addr = ntohl(addr);
      sprintf(tbuffer, "%d.%d.%d.%d", 
-	     ((addr>>24) & 0xff), ((addr>>16) & 0xff),
-	     ((addr>>8)  & 0xff), ( addr      & 0xff));
+	     (int)((addr>>24) & 0xff), (int)((addr>>16) & 0xff),
+	     (int)((addr>>8)  & 0xff), (int)( addr      & 0xff));
   }
   
     return tbuffer;

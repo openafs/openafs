@@ -8,6 +8,7 @@
  */
 
 #include <afs/param.h>
+#include <stdio.h>
 
 #include "AFS_component_version_number.c"
 

@@ -100,10 +100,12 @@ unsigned int initAFSDirPath(void)
  */
 static void initDirPathArray(void)
 { 
-    char *buf, *pathp;
-    int status;
+    char *pathp;
 
 #ifdef AFS_NT40_ENV
+    char *buf;
+    int status;
+
     /* get the afs server software installation dir from the registry */
     if (afssw_GetServerInstallDir(&buf)) {
 	/* failed; server not installed; use temp directory */
