@@ -72,7 +72,6 @@
 #include "rx_globals.h"
 #include <lwp.h>
 #include "rx_internal.h"
-#endif /* KERNEL */
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
@@ -82,7 +81,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-
+#endif /* KERNEL */
 
 #ifdef RX_LOCKS_DB
 /* rxdb_fileID is used to identify the lock location, along with line#. */

@@ -26,7 +26,6 @@
 #include "rx.h"
 #endif /* AFS_PTHREAD_ENV */
 #include <stdlib.h>
-#endif
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
@@ -36,7 +35,7 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-
+#endif
 
 /*
  * We currently only include below the errors that

@@ -83,6 +83,12 @@ extern afs_int32 afs_termState;
 # include <netinet/in.h>
 # include <sys/time.h>
 #endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 # include "rx.h"
 # include "rx_user.h"
 # include "rx_clock.h"
@@ -92,12 +98,6 @@ extern afs_int32 afs_termState;
 # include "rx_internal.h"
 # include <afs/rxgen_consts.h>
 #endif /* KERNEL */
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
-#endif
 
 int (*registerProgram)() = 0;
 int (*swapNameProgram)() = 0;
