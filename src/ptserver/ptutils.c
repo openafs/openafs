@@ -62,6 +62,7 @@ extern int IDCmp();
 extern afs_int32 AddToEntry();
 static char *whoami = "ptserver";
 
+
 #if defined(SUPERGROUPS)
 
 #include "map.h"
@@ -74,6 +75,8 @@ afs_int32 allocNextId(struct ubik_trans *, struct prentry *);
 
 struct map *sg_flagged;
 struct map *sg_found;
+int prp_user_default = PRP_USER_DEFAULT;
+int prp_group_default = PRP_GROUP_DEFAULT;
 
 #define NIL_MAP ((struct map *) 0)
 
@@ -332,9 +335,9 @@ AccessOK(ut, cid, tentry, mem, any)
     }
     if (!(flags & PRACCESS)) {	/* provide default access */
 	if (flags & PRGRP)
-	    flags |= PRP_GROUP_DEFAULT;
+	    flags |= prp_group_default;
 	else
-	    flags |= PRP_USER_DEFAULT;
+	    flags |= prp_user_default;
     }
 
     if (flags & any)
