@@ -71,12 +71,16 @@ RCSID("$Header$");
 #include <mit-cpyright.h>
 
 /* System include files */
+#ifndef KERNEL
 #include <stdio.h>
+#endif
 #include <errno.h>
 
 /* Application include files */
 #include <des.h>
 #include "des_internal.h"
+#include "des_prototypes.h"
+
 /* Definitions for byte swapping */
 
 #ifdef LSBFIRST
@@ -89,19 +93,18 @@ static unsigned short two_bytes_vax_to_nets();
 #define vaxtohs(x) two_bytes_vax_to_nets((char *)(x))
 #endif
 
-/* Externals */
-extern char *errmsg();
-extern int des_debug;
-
 /*** Routines ***************************************************** */
 
-afs_uint32
-des_quad_cksum(in,out,length,out_count,c_seed)
-    des_cblock *c_seed;		/* secret seed, 8 bytes */
-    unsigned char *in;		/* input block */
-    afs_uint32 *out;		/* optional longer output */
-    int out_count;		/* number of iterations */
-    afs_int32 length;		/* original length in bytes */
+/*
+    des_cblock *c_seed;		* secret seed, 8 bytes *
+    unsigned char *in;		* input block *
+    afs_uint32 *out;		* optional longer output *
+    int out_count;		* number of iterations *
+    afs_int32 length;		* original length in bytes *
+*/
+
+afs_uint32 des_quad_cksum(unsigned char *in, afs_uint32 *out, 
+	afs_int32 length, int out_count, des_cblock *c_seed)
 {
 
     /*
@@ -157,8 +160,7 @@ des_quad_cksum(in,out,length,out_count,c_seed)
 }
 #ifdef MSBFIRST
 
-static unsigned short two_bytes_vax_to_nets(p)
-    char *p;
+static unsigned short two_bytes_vax_to_nets(char *p)
 {
     union {
 	char pieces[2];
@@ -170,8 +172,7 @@ static unsigned short two_bytes_vax_to_nets(p)
     return(short_conv.result);
 }
 
-static afs_uint32 four_bytes_vax_to_nets(p)
-    char *p;
+static afs_uint32 four_bytes_vax_to_nets(char *p)
 {
     union {
 	char pieces[4];

@@ -125,4 +125,9 @@ int64_t flipbase64_to_int64(char *s);
 #endif
 #endif
 
+#ifndef UKERNEL
+#include "afs/ktime.h"
+#endif
+#include "afsutil_prototypes.h"
+
 #endif /* _AFSUTIL_H_ */

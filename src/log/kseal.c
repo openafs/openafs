@@ -17,6 +17,15 @@ RCSID("$Header$");
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/auth.h>
@@ -91,7 +100,7 @@ char **argv; {
     token.endTime = 0x7fffffff;
     memcpy(&token.sessionKey, session, 8);
     token.kvno = 0;
-    code = ktc_SetToken (&sname, &token, (char *) 0, 0);
+    code = ktc_SetToken (&sname, &token, NULL, 0);
     if (code) {
 	printf("kseal: could not install newly-sealed ticket, code %d\n", code);
 	exit(1);

@@ -62,9 +62,7 @@ int afs_fakestat_enable = 0;
  * what "@sys" is in binary... */
 #define AFS_EQ_ATSYS(name) (((name)[0]=='@')&&((name)[1]=='s')&&((name)[2]=='y')&&((name)[3]=='s')&&(!(name)[4]))
 
-char *
-afs_strcat(s1, s2)
-	register char *s1, *s2;
+char *afs_strcat(register char *s1, register char *s2)
 {
 	register char *os1;
 
@@ -73,21 +71,21 @@ afs_strcat(s1, s2)
 	while (*s1++)
 		;
 	--s1;
-	while (*s1++ = *s2++)
+	while ((*s1++ = *s2++))
 		;
 	return (os1);
 }
 
 
-char *afs_index(a, c)
-    register char *a, c; {
+char *afs_index(register char *a, register char c)
+{
     register char tc;
     AFS_STATCNT(afs_index);
-    while (tc = *a) {
+    while ((tc = *a)) {
 	if (tc == c) return a;
 	else a++;
     }
-    return (char *) 0;
+    return NULL;
 }
 
 /* call under write lock, evaluate mvid field from a mt pt.
@@ -99,11 +97,8 @@ char *afs_index(a, c)
  *
  * NOTE: this function returns a held volume structure in *volpp if it returns 0!
  */
-EvalMountPoint(avc, advc, avolpp, areq)
-    register struct vcache *avc;
-    struct volume **avolpp;
-    struct vcache *advc;	    /* the containing dir */
-    register struct vrequest *areq;
+int EvalMountPoint(register struct vcache *avc, struct vcache *advc, 
+	struct volume **avolpp, register struct vrequest *areq)
 {
     afs_int32  code;
     struct volume *tvp = 0;
@@ -119,7 +114,7 @@ EvalMountPoint(avc, advc, avolpp, areq)
 #ifdef notdef
     if (avc->mvid && (avc->states & CMValid)) return 0;	/* done while racing */
 #endif
-    *avolpp = (struct volume *)0;
+    *avolpp = NULL;
     code = afs_HandleLink(avc, areq);
     if (code) return code;
 
@@ -247,10 +242,7 @@ EvalMountPoint(avc, advc, avolpp, areq)
  * without calling afs_EvalFakeStat is legal, as long as this
  * function is called.
  */
-
-void
-afs_InitFakeStat(state)
-    struct afs_fakestat_state *state;
+void afs_InitFakeStat(struct afs_fakestat_state *state)
 {
     state->valid = 1;
     state->did_eval = 0;
@@ -265,12 +257,8 @@ afs_InitFakeStat(state)
  *
  * Only issues RPCs if canblock is non-zero.
  */
-static int
-afs_EvalFakeStat_int(avcp, state, areq, canblock)
-    struct vcache **avcp;
-    struct afs_fakestat_state *state;
-    struct vrequest *areq;
-    int canblock;
+int afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
+	struct vrequest *areq, int canblock)
 {
     struct vcache *tvc, *root_vp;
     struct volume *tvolp = NULL;
@@ -308,15 +296,15 @@ afs_EvalFakeStat_int(avcp, state, areq, canblock)
 	    do {
 		retry = 0;
 		ObtainWriteLock(&afs_xvcache, 597);
-		root_vp = afs_FindVCache(tvc->mvid, 0, 0, &retry, 0);
+		root_vp = afs_FindVCache(tvc->mvid, &retry, 0);
 		if (root_vp && retry) {
 		    ReleaseWriteLock(&afs_xvcache);
-		    afs_PutVCache(root_vp, 0);
+		    afs_PutVCache(root_vp);
 		}
 	    } while (root_vp && retry);
 	    ReleaseWriteLock(&afs_xvcache);
 	} else {
-	    root_vp = afs_GetVCache(tvc->mvid, areq, NULL, NULL, WRITE_LOCK);
+	    root_vp = afs_GetVCache(tvc->mvid, areq, NULL, NULL);
 	}
 	if (!root_vp) {
 	    code = canblock ? ENOENT : 0;
@@ -360,10 +348,8 @@ done:
  * something goes wrong and the error code should be returned to the user.
  */
 int
-afs_EvalFakeStat(avcp, state, areq)
-    struct vcache **avcp;
-    struct afs_fakestat_state *state;
-    struct vrequest *areq;
+afs_EvalFakeStat(struct vcache **avcp, struct afs_fakestat_state *state,
+	struct vrequest *areq)
 {
     return afs_EvalFakeStat_int(avcp, state, areq, 1);
 }
@@ -378,11 +364,8 @@ afs_EvalFakeStat(avcp, state, areq)
  * Returns 0 if everything succeeds and *avcp points to a valid
  * vcache entry (possibly evaluated).
  */
-int
-afs_TryEvalFakeStat(avcp, state, areq)
-    struct vcache **avcp;
-    struct afs_fakestat_state *state;
-    struct vrequest *areq;
+int afs_TryEvalFakeStat(struct vcache **avcp, struct afs_fakestat_state *state, 
+	struct vrequest *areq)
 {
     return afs_EvalFakeStat_int(avcp, state, areq, 0);
 }
@@ -393,18 +376,16 @@ afs_TryEvalFakeStat(avcp, state, areq)
  * Perform any necessary cleanup at the end of a vnode op, given that
  * afs_InitFakeStat was previously called with this state.
  */
-void
-afs_PutFakeStat(state)
-    struct afs_fakestat_state *state;
+void afs_PutFakeStat(struct afs_fakestat_state *state)
 {
     osi_Assert(state->valid == 1);
     if (state->need_release)
-	afs_PutVCache(state->root_vp, 0);
+	afs_PutVCache(state->root_vp);
     state->valid = 0;
 }
     
-afs_ENameOK(aname)
-    register char *aname; {
+int afs_ENameOK(register char *aname)
+{
     register char tc;
     register int tlen;
 
@@ -414,10 +395,8 @@ afs_ENameOK(aname)
     return 1;
 }
 
-afs_getsysname(areq, adp, bufp)
-    register struct vrequest *areq;
-    register struct vcache *adp;
-    register char *bufp;
+int afs_getsysname(register struct vrequest *areq, register struct vcache *adp, 
+	register char *bufp)
 {
     static char sysname[MAXSYSNAME];
     register struct unixuser *au;
@@ -431,7 +410,7 @@ afs_getsysname(areq, adp, bufp)
     au = afs_GetUser(areq->uid, adp->fid.Cell, 0);
     afs_PutUser(au, 0);	
     if (au->exporter) {
-      error = EXP_SYSNAME(au->exporter, (char *)0, bufp);
+      error = EXP_SYSNAME(au->exporter, NULL, bufp);
       if (error) 
 	strcpy(bufp, "@sys");
       return -1;
@@ -441,11 +420,8 @@ afs_getsysname(areq, adp, bufp)
     }
 }
 
-Check_AtSys(avc, aname, state, areq)
-    register struct vcache *avc;
-    char *aname;
-    struct sysname_info *state;
-    struct vrequest *areq;
+int Check_AtSys(register struct vcache *avc, const char *aname, 
+	struct sysname_info *state, struct vrequest *areq)
 {
     if (AFS_EQ_ATSYS(aname)) {
       state->offset = 0;
@@ -460,10 +436,8 @@ Check_AtSys(avc, aname, state, areq)
     }
 }
 
-Next_AtSys(avc, areq, state)
-     register struct vcache *avc;
-     struct vrequest *areq;
-     struct sysname_info *state;
+int Next_AtSys(register struct vcache *avc, struct vrequest *areq, 
+	struct sysname_info *state)
 {
   if (state->index == -1)
     return 0;	/* No list */
@@ -518,11 +492,9 @@ extern int BlobScan(afs_int32 *afile, afs_int32 ablob);
  * ensure that vcaches created for failed RPC's to older servers have the
  * CForeign bit set.
  */
-struct vcache * BStvc = (struct vcache *) 0;
-int afs_DoBulkStat(adp, dirCookie, areqp)
-  struct vcache *adp;
-  long dirCookie;
-  struct vrequest *areqp;
+static struct vcache *BStvc = NULL;
+
+int afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 {
     int nentries;		/* # of entries to prefetch */
     int nskip;			/* # of slots in the LRU queue to skip */
@@ -688,14 +660,14 @@ tagain:
 	    do {
 	      retry = 0;
 	      ObtainWriteLock(&afs_xvcache, 130);
-	      tvcp = afs_FindVCache(&tfid, 0, 0, &retry, 0 /* no stats | LRU */);
+	      tvcp = afs_FindVCache(&tfid, &retry, 0 /* no stats | LRU */);
 	      if (tvcp && retry) {
 		ReleaseWriteLock(&afs_xvcache);
-		afs_PutVCache(tvcp, 0);
+		afs_PutVCache(tvcp);
 	      }
 	    } while (tvcp && retry);
 	    if (!tvcp) {          /* otherwise, create manually */
-	      tvcp = afs_NewVCache(&tfid, hostp, 0, 0);
+	      tvcp = afs_NewVCache(&tfid, hostp);
 	      ObtainWriteLock(&tvcp->lock, 505);
 	      ReleaseWriteLock(&afs_xvcache);
 	      afs_RemoveVCB(&tfid);
@@ -742,7 +714,7 @@ tagain:
 		tvcp->m.Length = statSeqNo;
 		fidIndex++;
 	    }
-	    afs_PutVCache(tvcp, 0);
+	    afs_PutVCache(tvcp);
 	}	/* if dir vnode has non-zero entry */
 
 	/* move to the next dir entry by adding in the # of entries
@@ -780,9 +752,7 @@ tagain:
 	if (tcp) {
 	    hostp = tcp->srvr->server;
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_BULKSTATUS);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GUNLOCK();
 
 	    if (!(tcp->srvr->server->flags & SNO_INLINEBULK)) {
 		code = RXAFS_InlineBulkStatus(tcp->id, &fidParm, &statParm,
@@ -799,14 +769,12 @@ tagain:
 		code = RXAFS_BulkStatus(tcp->id, &fidParm, &statParm, &cbParm,
 					&volSync);
 	    }
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	}
 	else code = -1;
     } while (afs_Analyze(tcp, code, &adp->fid, areqp, 
-			 AFS_STATS_FS_RPCIDX_BULKSTATUS, SHARED_LOCK, (struct cell *)0));
+			 AFS_STATS_FS_RPCIDX_BULKSTATUS, SHARED_LOCK, NULL));
 
     /* now, if we didnt get the info, bail out. */
     if (code) goto done;
@@ -879,7 +847,7 @@ tagain:
 	do {
 	   retry = 0;
 	   ObtainReadLock(&afs_xvcache);
-	   tvcp = afs_FindVCache(&afid, 1, 0, &retry, 0/* !stats&!lru*/);
+	   tvcp = afs_FindVCache(&afid, &retry, 0/* !stats&!lru*/);
 	   ReleaseReadLock(&afs_xvcache);
 	} while (tvcp && retry);
 
@@ -900,7 +868,7 @@ tagain:
 	if (!(tvcp->states & CBulkFetching) || (tvcp->m.Length != statSeqNo)) {
 	    flagIndex++;
 	    ReleaseWriteLock(&tvcp->lock);
-	    afs_PutVCache(tvcp, 0);
+	    afs_PutVCache(tvcp);
 	    continue;
 	}
 
@@ -917,10 +885,10 @@ tagain:
 	}
 	if ((QNext(QPrev(&tvcp->vlruq)) != &tvcp->vlruq) 
 	    || (QPrev(QNext(&tvcp->vlruq)) != &tvcp->vlruq))
-	   refpanic ("Bulkstat VLRU inconsistent4");
+	{   refpanic ("Bulkstat VLRU inconsistent4"); }
 	if ((QNext(QPrev(&lruvcp->vlruq)) != &lruvcp->vlruq) 
 	    || (QPrev(QNext(&lruvcp->vlruq)) != &lruvcp->vlruq)) 
-	   refpanic ("Bulkstat VLRU inconsistent5");
+	{   refpanic ("Bulkstat VLRU inconsistent5"); }
 
 	if (tvcp != lruvcp) {  /* if they are == don't move it, don't corrupt vlru */
 	   QRemove(&tvcp->vlruq);
@@ -932,10 +900,10 @@ tagain:
 	}
 	if ((QNext(QPrev(&tvcp->vlruq)) != &tvcp->vlruq) 
 	    || (QPrev(QNext(&tvcp->vlruq)) != &tvcp->vlruq))
-	   refpanic ("Bulkstat VLRU inconsistent5");
+	{   refpanic ("Bulkstat VLRU inconsistent5"); }
 	if ((QNext(QPrev(&lruvcp->vlruq)) != &lruvcp->vlruq) 
 	    || (QPrev(QNext(&lruvcp->vlruq)) != &lruvcp->vlruq))
-	   refpanic ("Bulkstat VLRU inconsistent6");
+	{   refpanic ("Bulkstat VLRU inconsistent6"); }
 	ReleaseWriteLock(&afs_xvcache);
 
 	ObtainWriteLock(&afs_xcbhash, 494);
@@ -947,7 +915,7 @@ tagain:
 	    flagIndex++;
 	    ReleaseWriteLock(&tvcp->lock);
 	    ReleaseWriteLock(&afs_xcbhash);
-	    afs_PutVCache(tvcp, 0);
+	    afs_PutVCache(tvcp);
 	    continue;
 	}
 
@@ -1007,11 +975,11 @@ tagain:
 
 	ReleaseWriteLock(&tvcp->lock);
 	/* finally, we're done with the entry */
-	afs_PutVCache(tvcp, 0);
+	afs_PutVCache(tvcp);
     }	/* for all files we got back */
 
     /* finally return the pointer into the LRU queue */
-    afs_PutVCache(lruvcp, 0);
+    afs_PutVCache(lruvcp);
 
   done:
     /* Be sure to turn off the CBulkFetching flags */
@@ -1023,7 +991,7 @@ tagain:
 	do {
 	   retry = 0;
 	   ObtainReadLock(&afs_xvcache);
-	   tvcp = afs_FindVCache(&afid, 1, 0, &retry, 0/* !stats&!lru*/);
+	   tvcp = afs_FindVCache(&afid, &retry, 0/* !stats&!lru*/);
 	   ReleaseReadLock(&afs_xvcache);
 	} while (tvcp && retry);
 	if (tvcp != NULL
@@ -1032,7 +1000,7 @@ tagain:
 	  tvcp->states &= ~CBulkFetching;
 	}
 	if (tvcp != NULL) {
-	  afs_PutVCache(tvcp, 0);
+	  afs_PutVCache(tvcp);
 	}
     }
     if ( volp )
@@ -1043,7 +1011,7 @@ tagain:
 	if ((&statsp[0])->errorCode) {
 	    afs_Analyze(tcp, (&statsp[0])->errorCode, &adp->fid, areqp, 
 			AFS_STATS_FS_RPCIDX_BULKSTATUS, SHARED_LOCK, 
-			(struct cell *)0);
+			NULL);
 	    code = (&statsp[0])->errorCode;
 	}
     } else {
@@ -1055,7 +1023,7 @@ tagain:
 }
 
 /* was: (AFS_DEC_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_NCR_ENV) */
-int AFSDOBULK = 1;
+static int AFSDOBULK = 1;
 
 #ifdef	AFS_OSF_ENV
 afs_lookup(adp, ndp)
@@ -1086,7 +1054,7 @@ afs_lookup(adp, aname, avcp, acred)
     struct AFS_UCRED *acred; {
 #endif
     struct vrequest treq;
-    char *tname = (char *)0;
+    char *tname = NULL;
     register struct vcache *tvc=0;
     register afs_int32 code;
     register afs_int32 bulkcode = 0;
@@ -1104,7 +1072,7 @@ afs_lookup(adp, aname, avcp, acred)
     AFS_STATCNT(afs_lookup);
     afs_InitFakeStat(&fakestate);
 
-    if (code = afs_InitReq(&treq, acred))
+    if ((code = afs_InitReq(&treq, acred)))
 	goto done;
 
 #ifdef	AFS_OSF_ENV
@@ -1134,17 +1102,17 @@ afs_lookup(adp, aname, avcp, acred)
     if (code)
 	goto done;
 
-    *avcp = (struct vcache *) 0;   /* Since some callers don't initialize it */
+    *avcp = NULL;   /* Since some callers don't initialize it */
 
     /* come back to here if we encounter a non-existent object in a read-only
        volume's directory */
 
   redo:
-    *avcp = (struct vcache *) 0;   /* Since some callers don't initialize it */
+    *avcp = NULL;   /* Since some callers don't initialize it */
     bulkcode = 0;
 
     if (!(adp->states & CStatd)) {
-	if (code = afs_VerifyVCache2(adp, &treq)) {
+	if ((code = afs_VerifyVCache2(adp, &treq))) {
 	    goto done;
 	}
     }
@@ -1171,8 +1139,7 @@ afs_lookup(adp, aname, avcp, acred)
 	    goto done;
 	}
 	/* otherwise we have the fid here, so we use it */
-	tvc = afs_GetVCache(adp->mvid, &treq, (afs_int32 *)0,
-			    (struct vcache*)0, 0);
+	tvc = afs_GetVCache(adp->mvid, &treq, NULL, NULL);
 	afs_Trace3(afs_iclSetp, CM_TRACE_GETVCDOTDOT,
 		   ICL_TYPE_FID, adp->mvid, ICL_TYPE_POINTER, tvc, 
 		   ICL_TYPE_INT32,  code);
@@ -1191,7 +1158,7 @@ afs_lookup(adp, aname, avcp, acred)
     /* now check the access */
     if (treq.uid != adp->last_looker) {  
        if (!afs_AccessOK(adp, PRSFS_LOOKUP, &treq, CHECK_MODE_BITS)) {
-	 *avcp = (struct vcache *)0;
+	 *avcp = NULL;
 	 code = EACCES;
 	 goto done;
        }
@@ -1236,8 +1203,8 @@ afs_lookup(adp, aname, avcp, acred)
     if (tvc) {
 	if (no_read_access && vType(tvc) != VDIR && vType(tvc) != VLNK) {
 	    /* need read access on dir to stat non-directory / non-link */
-	    afs_PutVCache(tvc, WRITE_LOCK);
-	    *avcp = (struct vcache *)0;
+	    afs_PutVCache(tvc);
+	    *avcp = NULL;
 	    code = EACCES;
 	    goto done;
 	}
@@ -1267,7 +1234,7 @@ afs_lookup(adp, aname, avcp, acred)
     /* now we have to lookup the next fid */
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &dirOffset, &dirLen, 1);
     if (!tdc) {
-      *avcp = (struct vcache *)0;  /* redundant, but harmless */
+      *avcp = NULL;  /* redundant, but harmless */
       code = EIO;
       goto done;
     }
@@ -1372,7 +1339,7 @@ afs_lookup(adp, aname, avcp, acred)
         do {
 	   retry = 0;
 	   ObtainReadLock(&afs_xvcache);	
-	   tvc = afs_FindVCache(&tfid, 1, 0, &retry, 0/* !stats,!lru */);
+	   tvc = afs_FindVCache(&tfid, &retry, 0/* !stats,!lru */);
 	   ReleaseReadLock(&afs_xvcache);	
         } while (tvc && retry);
 
@@ -1383,11 +1350,11 @@ afs_lookup(adp, aname, avcp, acred)
 
 	/* if the vcache isn't usable, release it */
 	if (tvc && !(tvc->states & CStatd)) {
-	    afs_PutVCache(tvc, 0);
-	    tvc = (struct vcache *) 0;
+	    afs_PutVCache(tvc);
+	    tvc = NULL;
 	}
     } else {
-	tvc = (struct vcache *) 0;
+	tvc = NULL;
 	bulkcode = 0;
     }
 
@@ -1401,12 +1368,10 @@ afs_lookup(adp, aname, avcp, acred)
     if (!tvc) {
        afs_int32 cached = 0;
        if (!tfid.Fid.Unique && (adp->states & CForeign)) {
-	    tvc = afs_LookupVCache(&tfid, &treq, &cached, WRITE_LOCK, 
-				   adp, tname);
+	    tvc = afs_LookupVCache(&tfid, &treq, &cached, adp, tname);
        } 
        if (!tvc && !bulkcode) {  /* lookup failed or wasn't called */
-	   tvc = afs_GetVCache(&tfid, &treq, &cached, (struct vcache*)0,
-			       WRITE_LOCK);
+	   tvc = afs_GetVCache(&tfid, &treq, &cached, NULL);
        } 
     } /* if !tvc */
     } /* sub-block just to reduce stack usage */
@@ -1431,7 +1396,7 @@ afs_lookup(adp, aname, avcp, acred)
 	    ReleaseWriteLock(&tvc->lock);
 
 	    if (code) {
-		afs_PutVCache(tvc, WRITE_LOCK);
+		afs_PutVCache(tvc);
 		if (tvolp) afs_PutVolume(tvolp, WRITE_LOCK);
 		goto done;
 	    }
@@ -1446,12 +1411,11 @@ afs_lookup(adp, aname, avcp, acred)
 
 		if (tvolp && (tvolp->states & VForeign)) {
 		    /* XXXX tvolp has ref cnt on but not locked! XXX */
-		    tvc = afs_GetRootVCache(tvc->mvid, &treq, (afs_int32 *)0, tvolp, WRITE_LOCK);
+		    tvc = afs_GetRootVCache(tvc->mvid, &treq, NULL, tvolp);
 		} else {
-		    tvc = afs_GetVCache(tvc->mvid, &treq, (afs_int32 *)0,
-					(struct vcache*)0, WRITE_LOCK);
+		    tvc = afs_GetVCache(tvc->mvid, &treq, NULL, NULL);
 		}
-		afs_PutVCache(uvc, WRITE_LOCK); /* we're done with it */
+		afs_PutVCache(uvc); /* we're done with it */
 
 		if (!tvc) {
 		    code = ENOENT;
@@ -1466,7 +1430,7 @@ afs_lookup(adp, aname, avcp, acred)
 		 * ptr to point back to the appropriate place */
 		if (tvolp) {
 		    ObtainWriteLock(&tvc->lock,134);
-		    if (tvc->mvid == (struct VenusFid *) 0) {
+		    if (tvc->mvid == NULL) {
 			tvc->mvid = (struct VenusFid *) osi_AllocSmallSpace(sizeof(struct VenusFid));
 		    }
 		    /* setup backpointer */
@@ -1476,7 +1440,7 @@ afs_lookup(adp, aname, avcp, acred)
 		}
 	    }
 	    else {
-		afs_PutVCache(tvc, WRITE_LOCK);
+		afs_PutVCache(tvc);
 		code = ENOENT;
 		if (tvolp) afs_PutVolume(tvolp, WRITE_LOCK);
 		goto done;
@@ -1522,7 +1486,7 @@ done:
 	/* Handle RENAME; only need to check rename "."  */
 	if (opflag == RENAME && wantparent && *ndp->ni_next == 0) {
 	    if (!FidCmp(&(tvc->fid), &(adp->fid))) { 
-		afs_PutVCache(*avcp, WRITE_LOCK);
+		afs_PutVCache(*avcp);
 		*avcp = NULL;
 		afs_PutFakeStat(&fakestate);
 		return afs_CheckCode(EISDIR, &treq, 18);
@@ -1559,7 +1523,7 @@ done:
        /* If there is an error, make sure *avcp is null.
 	* Alphas panic otherwise - defect 10719.
 	*/
-       *avcp = (struct vcache *)0;
+       *avcp = NULL;
     }
 
     afs_PutFakeStat(&fakestate);

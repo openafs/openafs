@@ -32,9 +32,16 @@ int      strcmp();
 #include <signal.h>
 #endif
 #if defined(AFS_SGI_ENV)
-#include <strings.h>
 #include <signal.h>
 #endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 
 #if	defined	(AFS_AIX_ENV) || defined(AFS_SGI_ENV)
 /* Just temp till we figure out the aix stuff */

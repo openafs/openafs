@@ -111,9 +111,7 @@ static afs_int32 Cuid[2];			/* set once and shared by all */
 int rxkad_EpochWasSet = 0;		/* TRUE => we called rx_SetEpoch */
 
 /* allocate a new connetion ID in place */
-rxkad_AllocCID(aobj, aconn)
-  struct rx_securityClass *aobj;
-  struct rx_connection *aconn;
+int rxkad_AllocCID(struct rx_securityClass *aobj, struct rx_connection *aconn)
 {
     struct rxkad_cprivate *tcp;
     struct rxkad_cidgen tgen;
@@ -167,13 +165,9 @@ rxkad_AllocCID(aobj, aconn)
  * the session key and the ticket for the other side obtained from the
  * AuthServer.  Refers to export control to determine level. */
 
-struct rx_securityClass *
-rxkad_NewClientSecurityObject(level, sessionkey, kvno, ticketLen, ticket)
-  rxkad_level      level;
-  struct ktc_encryptionKey *sessionkey;
-  afs_int32		   kvno;
-  int		   ticketLen;
-  char		  *ticket;
+struct rx_securityClass *rxkad_NewClientSecurityObject(
+	rxkad_level level, struct ktc_encryptionKey *sessionkey,
+	afs_int32 kvno, int ticketLen, char *ticket)
 {   struct rx_securityClass *tsc;
     struct rxkad_cprivate   *tcp;
     int			     code;
@@ -206,10 +200,8 @@ rxkad_NewClientSecurityObject(level, sessionkey, kvno, ticketLen, ticket)
 
 /* client: respond to a challenge packet */
 
-rxs_return_t rxkad_GetResponse (aobj, aconn, apacket)
-  IN struct rx_securityClass *aobj;
-  IN struct rx_packet *apacket;
-  IN struct rx_connection *aconn;
+int rxkad_GetResponse(struct rx_securityClass *aobj, 
+	struct rx_connection *aconn, struct rx_packet *apacket)
 {   struct rxkad_cprivate *tcp;
     char *tp;
     int   v2;				/* whether server is old style or v2 */
@@ -287,7 +279,7 @@ rxs_return_t rxkad_GetResponse (aobj, aconn, apacket)
     rx_computelen(apacket, missing);
     missing = responseSize + tcp->ticketLen - missing;
     if (missing > 0) 
-       if (rxi_AllocDataBuf(apacket, missing) > 0)
+       if (rxi_AllocDataBuf(apacket, missing, RX_PACKET_CLASS_SEND) > 0) 
 	  return RXKADPACKETSHORT;	/* not enough space */
 
     /* copy response and ticket into packet */
@@ -298,8 +290,7 @@ rxs_return_t rxkad_GetResponse (aobj, aconn, apacket)
     return 0;
 }
 
-
-rxkad_ResetState()
+void rxkad_ResetState(void)
 {
     LOCK_CUID
     Cuid[0] = 0;

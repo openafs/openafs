@@ -215,7 +215,7 @@ static int yy_n_chars;		/* number of characters read into yy_ch_buf */
 int yyleng;
 
 /* Points to current character in buffer. */
-static char *yy_c_buf_p = (char *) 0;
+static char *yy_c_buf_p = NULL;
 static int yy_init = 1;		/* whether we need to initialize */
 static int yy_start = 0;	/* start state number */
 
@@ -388,13 +388,6 @@ static yyconst short int yy_chk[65] =
 static yy_state_type yy_state_buf[YY_BUF_SIZE + 2], *yy_state_ptr;
 static char *yy_full_match;
 static int yy_lp;
-#define REJECT \
-{ \
-*yy_cp = yy_hold_char; /* undo effects of setting up yytext */ \
-yy_cp = yy_full_match; /* restore poss. backed-over text */ \
-++yy_lp; \
-goto find_rule; \
-}
 static int yy_more_flag = 0;
 static int yy_more_len = 0;
 #define yymore() (yy_more_flag = 1)
@@ -621,7 +614,6 @@ yy_match:
 yy_find_action:
 		yy_current_state = *--yy_state_ptr;
 		yy_lp = yy_accept[yy_current_state];
-find_rule: /* we branch to this label when backing up */
 		for ( ; ; ) /* until we find what rule we matched */
 			{
 			if ( yy_lp && yy_lp < yy_accept[yy_current_state + 1] )

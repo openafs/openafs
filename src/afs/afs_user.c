@@ -43,14 +43,6 @@ RCSID("$Header$");
 #endif
 
 
-/* Imported variables */
-extern afs_rwlock_t afs_xserver;
-extern afs_rwlock_t afs_xsrvAddr;
-extern afs_rwlock_t afs_xconn;
-extern afs_rwlock_t afs_xvcache; 
-extern struct srvAddr *afs_srvAddrs[NSERVERS];  /* Hashed by server's ip */
-extern struct server *afs_servers[NSERVERS];
-
 /* Exported variables */
 afs_rwlock_t afs_xuser;
 struct unixuser *afs_users[NUSERS];
@@ -63,8 +55,7 @@ void afs_ResetAccessCache(afs_int32 uid, int alock);
  * Called with afs_xuser, afs_xserver and afs_xconn locks held, to delete
  * appropriate conn structures for au
  */
-static void RemoveUserConns(au)
-    register struct unixuser *au;
+static void RemoveUserConns(register struct unixuser *au)
 {
     register int i;
     register struct server *ts;
@@ -100,7 +91,8 @@ static void RemoveUserConns(au)
  * other epochs as soon as possible (old file servers act bizarrely when they
  * see epoch changes).
  */
-void afs_GCUserData(aforce) {
+void afs_GCUserData(int aforce)
+{
     register struct unixuser *tu, **lu, *nu;
     register int i;
     afs_int32 now, delFlag;
@@ -156,8 +148,7 @@ void afs_GCUserData(aforce) {
  * cache for these guys.  Can't do this when token expiration detected,
  * since too many locks are set then.
  */
-void afs_CheckTokenCache()
-
+void afs_CheckTokenCache(void)
 {
     register int i;
     register struct unixuser *tu;
@@ -232,9 +223,7 @@ void afs_ResetAccessCache(afs_int32 uid, int alock)
  * Ensure all connections make use of new tokens.  Discard incorrectly-cached
  * access info.
  */
-void afs_ResetUserConns (auser)
-    register struct unixuser *auser;
-
+void afs_ResetUserConns (register struct unixuser *auser)
 {
     int i;
     struct server *ts;
@@ -278,7 +267,7 @@ struct unixuser *afs_FindUser(afs_int32 auid, afs_int32 acell, afs_int32 locktyp
 	}
     }
     ReleaseWriteLock(&afs_xuser);
-    return (struct unixuser *) 0;
+    return NULL;
 
 } /*afs_FindUser*/
 
@@ -305,10 +294,8 @@ struct unixuser *afs_FindUser(afs_int32 auid, afs_int32 acell, afs_int32 locktyp
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-void afs_ComputePAGStats()
-
-{ /*afs_ComputePAGStats*/
-
+void afs_ComputePAGStats(void)
+{
     register struct unixuser *currPAGP;		  /*Ptr to curr PAG*/
     register struct unixuser *cmpPAGP;		  /*Ptr to PAG being compared*/
     register struct afs_stats_AuthentInfo *authP; /*Ptr to stats area*/
@@ -441,10 +428,8 @@ void afs_ComputePAGStats()
 } /*afs_ComputePAGStats*/
 
 
-struct unixuser *afs_GetUser(auid, acell, locktype)
-    afs_int32 acell;
-    register afs_int32 auid;
-    afs_int32 locktype;
+struct unixuser *afs_GetUser(register afs_int32 auid, 
+	afs_int32 acell, afs_int32 locktype)
 {
     register struct unixuser *tu, *pu=0;
     register afs_int32 i;
@@ -456,7 +441,7 @@ struct unixuser *afs_GetUser(auid, acell, locktype)
     for (tu = afs_users[i]; tu; tu = tu->next) {
 	if (tu->uid == auid) {
 	    RmtUser = 0;
-	    pu = (struct unixuser *)0;
+	    pu = NULL;
 	    if (tu->exporter) {
 		RmtUser = 1;
 		pu = tu;
@@ -504,9 +489,7 @@ struct unixuser *afs_GetUser(auid, acell, locktype)
 } /*afs_GetUser*/
 
 
-void afs_PutUser(au, locktype)
-    register struct unixuser *au;
-    afs_int32 locktype;
+void afs_PutUser(register struct unixuser *au, afs_int32 locktype)
 {
     AFS_STATCNT(afs_PutUser);
     --au->refCount;
@@ -517,10 +500,7 @@ void afs_PutUser(au, locktype)
  * Set the primary flag on a unixuser structure, ensuring that exactly one
  * dude has the flag set at any time for a particular unix uid.
  */
-void afs_SetPrimary(au, aflag)
-    register struct unixuser *au;
-    register int aflag;
-
+void afs_SetPrimary(register struct unixuser *au, register int aflag)
 {
     register struct unixuser *tu;
     register int i;
@@ -528,7 +508,7 @@ void afs_SetPrimary(au, aflag)
 
     AFS_STATCNT(afs_SetPrimary);
     i = UHash(au->uid);
-    pu = (struct unixuser *) 0;
+    pu = NULL;
     ObtainWriteLock(&afs_xuser,105);
     /*
      * See if anyone is this uid's primary cell yet; recording in pu the
@@ -546,7 +526,7 @@ void afs_SetPrimary(au, aflag)
 	 * people see a primary identity until now.
 	 */
 	pu->states &= ~UPrimary;
-	pu = (struct unixuser *) 0;
+	pu = NULL;
     }
     if (aflag == 1) {
 	/* setting au to be primary */

@@ -92,7 +92,7 @@ struct afsconf_cell *acellInfo;
 {
     afs_int32 code;
 
-    code = afsconf_SetExtendedCellInfo(adir, apath, acellInfo, (char *)0);
+    code = afsconf_SetExtendedCellInfo(adir, apath, acellInfo, NULL);
     return code;
 }
    

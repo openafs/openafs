@@ -319,7 +319,7 @@ int main(
 					syslog(LOG_CRIT,
 					    "REPEATED LOGIN FAILURES ON %s, %.*s",
 						tty, NMAX, utmp.ut_name);
-				ioctl(0, TIOCHPCL, (struct sgttyb *) 0);
+				ioctl(0, TIOCHPCL, NULL);
 				close(0), close(1), close(2);
 				sleep(10);
 				exit(1);
@@ -640,7 +640,7 @@ static gid_t tty_gid(int default_gid)
 	gid_t gid = default_gid;
 
 	gr = getgrnam(TTYGRPNAME);
-	if (gr != (struct group *) 0)
+	if (gr != NULL)
 		gid = gr->gr_gid;
 
 	endgrent();

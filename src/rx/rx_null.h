@@ -7,18 +7,4 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#ifndef RX_NULL_HEADER
-#define RX_NULL_HEADER
-
-#ifdef	KERNEL
-#include "../rx/rx.h"
-#else /* KERNEL */
-#include "rx.h"
-#endif /* KERNEL */
-
-/* The null security object.  No authentication, no nothing. */
-
-extern struct rx_securityClass *rxnull_NewServerSecurityObject();
-extern struct rx_securityClass *rxnull_NewClientSecurityObject();
-
-#endif /* RX_NULL_HEADER */
+/* Remove this file */

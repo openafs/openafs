@@ -45,6 +45,12 @@ RCSID("$Header$");
 #include <strings.h>
 #endif
 #endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 #include "rpc_scan.h"
 #include "rpc_parse.h"
 #include "rpc_util.h"
@@ -64,12 +70,20 @@ FILE *fin;	/* file pointer of current input */
 
 list *defined;	/* list of defined things */
 
-static printwhere();
+/* static prototypes */
+static int findit(definition *def, char *type);
+static char *fixit(char *type, char *orig);
+static int typedefed(definition *def, char *type);
+static char *locase(char *str);
+static char *toktostr(tok_kind kind);
+static void printbuf(void);
+static void printwhere(void);
+
 
 /*
  * Reinitialize the world 
  */
-reinitialize()
+void reinitialize(void)
 {
     int i;
 	memset(curline, 0, MAXLINESIZE);
@@ -89,9 +103,7 @@ reinitialize()
 /*
  * string equality 
  */
-streq(a, b)
-	char *a;
-	char *b;
+int streq(char *a, char *b)
 {
 	return (strcmp(a, b) == 0);
 }
@@ -99,15 +111,10 @@ streq(a, b)
 /*
  * find a value in a list 
  */
-char *
-findval(lst, val, cmp)
-	list *lst;
-	char *val;
-	int (*cmp) ();
-
+char *findval(list *lst, char *val, int (*cmp)(definition *def, char *type))
 {
 	for (; lst != NULL; lst = lst->next) {
-		if ((*cmp) (lst->val, val)) {
+		if ((*cmp) ((definition *) lst->val, val)) {
 			return (lst->val);
 		}
 	}
@@ -117,10 +124,7 @@ findval(lst, val, cmp)
 /*
  * store a value in a list 
  */
-void
-storeval(lstp, val)
-	list **lstp;
-	char *val;
+void storeval(list **lstp, char *val)
 {
 	list **l;
 	list *lst;
@@ -133,19 +137,13 @@ storeval(lstp, val)
 }
 
 
-static
-findit(def, type)
-	definition *def;
-	char *type;
+static int findit(definition *def, char *type)
 {
 	return (streq(def->def_name, type));
 }
 
 
-static char *
-fixit(type, orig)
-	char *type;
-	char *orig;
+static char *fixit(char *type, char *orig)
 {
 	definition *def;
 
@@ -163,16 +161,12 @@ fixit(type, orig)
 	}
 }
 
-char *
-fixtype(type)
-	char *type;
+char *fixtype(char *type)
 {
 	return (fixit(type, type));
 }
 
-char *
-stringfix(type)
-	char *type;
+char *stringfix(char *type)
 {
 	if (streq(type, "string")) {
 		return ("wrapstring");
@@ -181,11 +175,7 @@ stringfix(type)
 	}
 }
 
-void
-ptype(prefix, type, follow)
-	char *prefix;
-	char *type;
-	int follow;
+void ptype(char *prefix, char *type, int follow)
 {
 	if (prefix != NULL) {
 		if (streq(prefix, "enum")) {
@@ -204,10 +194,7 @@ ptype(prefix, type, follow)
 }
 
 
-static
-typedefed(def, type)
-	definition *def;
-	char *type;
+static int typedefed(definition *def, char *type)
 {
 	if (def->def_kind != DEF_TYPEDEF || def->def.ty.old_prefix != NULL) {
 		return (0);
@@ -216,9 +203,7 @@ typedefed(def, type)
 	}
 }
 
-isvectordef(type, rel)
-	char *type;
-	relation rel;
+int isvectordef(char *type, relation rel)
 {
 	definition *def;
 
@@ -242,15 +227,13 @@ isvectordef(type, rel)
 }
 
 
-static char *
-locase(str)
-	char *str;
+static char *locase(char *str)
 {
 	char c;
 	static char buf[100];
 	char *p = buf;
 
-	while (c = *str++) {
+	while ((c = *str++)) {
 		*p++ = (c >= 'A' && c <= 'Z') ? (c - 'A' + 'a') : c;
 	}
 	*p = 0;
@@ -258,10 +241,7 @@ locase(str)
 }
 
 
-void
-pvname(pname, vnum)
-	char *pname;
-	char *vnum;
+void pvname(char *pname, char *vnum)
 {
 	f_print(fout, "%s_%s", locase(pname), vnum);
 }
@@ -270,9 +250,7 @@ pvname(pname, vnum)
 /*
  * print a useful (?) error message, and then die 
  */
-void
-error(msg)
-	char *msg;
+void error(char *msg)
 {
 	printwhere();
 	f_print(stderr, "%s, line %d: ", infilename, linenum);
@@ -284,7 +262,7 @@ error(msg)
  * Something went wrong, unlink any files that we may have created and then
  * die. 
  */
-crash()
+void crash(void)
 {
 	int i;
 
@@ -295,9 +273,7 @@ crash()
 }
 
 
-void
-record_open(file)
-	char *file;
+void record_open(char *file)
 {
 	if (nfiles < NFILES) {
 		outfiles[nfiles++] = file;
@@ -307,15 +283,13 @@ record_open(file)
 	}
 }
 
+/* buffer shared for all of the expected* routines */
 static char expectbuf[100];
-static char *toktostr();
 
 /*
  * error, token encountered was not the expected one 
  */
-void
-expected1(exp1)
-	tok_kind exp1;
+void expected1(tok_kind exp1)
 {
 	s_print(expectbuf, "expected '%s'",
 		toktostr(exp1));
@@ -325,9 +299,7 @@ expected1(exp1)
 /*
  * error, token encountered was not one of two expected ones 
  */
-void
-expected2(exp1, exp2)
-	tok_kind exp1, exp2;
+void expected2(tok_kind exp1, tok_kind exp2)
 {
 	s_print(expectbuf, "expected '%s' or '%s'",
 		toktostr(exp1),
@@ -338,9 +310,7 @@ expected2(exp1, exp2)
 /*
  * error, token encountered was not one of 3 expected ones 
  */
-void
-expected3(exp1, exp2, exp3)
-	tok_kind exp1, exp2, exp3;
+void expected3(tok_kind exp1, tok_kind exp2, tok_kind exp3)
 {
 	s_print(expectbuf, "expected '%s', '%s' or '%s'",
 		toktostr(exp1),
@@ -353,9 +323,7 @@ expected3(exp1, exp2, exp3)
 /*
  * error, token encountered was not one of 4 expected ones
  */
-void
-expected4(exp1,exp2,exp3,exp4)
-	tok_kind exp1,exp2,exp3,exp4;
+void expected4(tok_kind exp1, tok_kind exp2, tok_kind exp3, tok_kind exp4)
 {
 	sprintf(expectbuf,"expected '%s', '%s', '%s', or '%s'",
 		toktostr(exp1),
@@ -365,10 +333,7 @@ expected4(exp1,exp2,exp3,exp4)
 	error(expectbuf);
 }
 
-void
-tabify(f, tab)
-	FILE *f;
-	int tab;
+void tabify(FILE *f, int tab)
 {
 	if (scan_print)
 	while (tab--) {
@@ -376,62 +341,58 @@ tabify(f, tab)
 	}
 }
 
-
-
 static token tokstrings[] = {
-			     {TOK_IDENT, "identifier"},
-			     {TOK_CONST, "const"},
-			     {TOK_RPAREN, ")"},
-			     {TOK_LPAREN, "("},
-			     {TOK_RBRACE, "}"},
-			     {TOK_LBRACE, "{"},
-			     {TOK_LBRACKET, "["},
-			     {TOK_RBRACKET, "]"},
-			     {TOK_STAR, "*"},
-			     {TOK_COMMA, ","},
-			     {TOK_EQUAL, "="},
-			     {TOK_COLON, ":"},
-			     {TOK_SEMICOLON, ";"},
-			     {TOK_UNION, "union"},
-			     {TOK_STRUCT, "struct"},
-			     {TOK_SWITCH, "switch"},
-			     {TOK_CASE, "case"},
-			     {TOK_DEFAULT, "default"},
-			     {TOK_ENUM, "enum"},
-			     {TOK_TYPEDEF, "typedef"},
-			     {TOK_INT, "int"},
-			     {TOK_SHORT, "short"},
-			     {TOK_INT32, "afs_int32"},	/* XXX */
-			     {TOK_UNSIGNED, "unsigned"},
-			     {TOK_DOUBLE, "double"},
-			     {TOK_FLOAT, "float"},
-			     {TOK_CHAR, "char"},
-			     {TOK_STRING, "string"},
-			     {TOK_OPAQUE, "opaque"},
-			     {TOK_BOOL, "bool"},
-			     {TOK_VOID, "void"},
-			     {TOK_PROGRAM, "program"},
-			     {TOK_VERSION, "version"},
-			     { TOK_PACKAGE, "package" },
-			     { TOK_PREFIX, "prefix" },
-			     { TOK_STATINDEX, "statindex" },
-			     { TOK_SPECIAL, "special" },
-			     { TOK_STARTINGOPCODE, "startingopcode" },
-			     { TOK_CUSTOMIZED, "customized" },
-			     { TOK_PROC, "proc" },
-			     { TOK_SPLITPREFIX, "splitprefix" },
-			     { TOK_SPLIT, "split" },
-			     { TOK_MULTI, "multi" },
-			     { TOK_IN,   "IN" },
-			     { TOK_OUT,  "OUT" },
-			     { TOK_INOUT, "INOUT" },
-			     { TOK_AFSUUID, "afsUUID" },
-			     {TOK_EOF, "??????"}
+	{ TOK_IDENT, "identifier"},
+	{ TOK_CONST, "const"},
+	{ TOK_RPAREN, ")"},
+	{ TOK_LPAREN, "("},
+	{ TOK_RBRACE, "}"},
+	{ TOK_LBRACE, "{"},
+	{ TOK_LBRACKET, "["},
+	{ TOK_RBRACKET, "]"},
+	{ TOK_STAR, "*"},
+	{ TOK_COMMA, ","},
+	{ TOK_EQUAL, "="},
+	{ TOK_COLON, ":"},
+	{ TOK_SEMICOLON, ";"},
+	{ TOK_UNION, "union"},
+	{ TOK_STRUCT, "struct"},
+	{ TOK_SWITCH, "switch"},
+	{ TOK_CASE, "case"},
+	{ TOK_DEFAULT, "default"},
+	{ TOK_ENUM, "enum"},
+	{ TOK_TYPEDEF, "typedef"},
+	{ TOK_INT, "int"},
+	{ TOK_SHORT, "short"},
+	{ TOK_INT32, "afs_int32"},	/* XXX */
+	{ TOK_UNSIGNED, "unsigned"},
+	{ TOK_DOUBLE, "double"},
+	{ TOK_FLOAT, "float"},
+	{ TOK_CHAR, "char"},
+	{ TOK_STRING, "string"},
+	{ TOK_OPAQUE, "opaque"},
+	{ TOK_BOOL, "bool"},
+	{ TOK_VOID, "void"},
+	{ TOK_PROGRAM, "program"},
+	{ TOK_VERSION, "version"},
+	{ TOK_PACKAGE, "package" },
+	{ TOK_PREFIX, "prefix" },
+	{ TOK_STATINDEX, "statindex" },
+	{ TOK_SPECIAL, "special" },
+	{ TOK_STARTINGOPCODE, "startingopcode" },
+	{ TOK_CUSTOMIZED, "customized" },
+	{ TOK_PROC, "proc" },
+	{ TOK_SPLITPREFIX, "splitprefix" },
+	{ TOK_SPLIT, "split" },
+	{ TOK_MULTI, "multi" },
+	{ TOK_IN,   "IN" },
+	{ TOK_OUT,  "OUT" },
+	{ TOK_INOUT, "INOUT" },
+	{ TOK_AFSUUID, "afsUUID" },
+	{ TOK_EOF, "??????"}
 };
 
-static char *
-toktostr(kind)
-	tok_kind kind;
+static char *toktostr(tok_kind kind)
 {
 	token *sp;
 
@@ -441,8 +402,7 @@ toktostr(kind)
 
 
 
-static
-printbuf()
+static void printbuf(void)
 {
 	char c;
 	int i;
@@ -450,7 +410,7 @@ printbuf()
 
 #	define TABSIZE 4
 
-	for (i = 0; c = curline[i]; i++) {
+	for (i = 0; (c = curline[i]); i++) {
 		if (c == '\t') {
 			cnt = 8 - (i % TABSIZE);
 			c = ' ';
@@ -458,14 +418,13 @@ printbuf()
 			cnt = 1;
 		}
 		while (cnt--) {
-			(void) fputc(c, stderr);
+			fputc(c, stderr);
 		}
 	}
 }
 
 
-static
-printwhere()
+static void printwhere(void)
 {
 	int i;
 	char c;
@@ -480,8 +439,8 @@ printwhere()
 			cnt = 1;
 		}
 		while (cnt--) {
-			(void) fputc('^', stderr);
+			fputc('^', stderr);
 		}
 	}
-	(void) fputc('\n', stderr);
+	fputc('\n', stderr);
 }

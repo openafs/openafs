@@ -70,7 +70,7 @@ afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
     afs_Trace2(afs_iclSetp, CM_TRACE_MKDIR, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname);
 
-    if (code = afs_InitReq(&treq, acred)) 
+    if ((code = afs_InitReq(&treq, acred))) 
 	goto done2;
     afs_InitFakeStat(&fakestate);
 
@@ -107,15 +107,11 @@ afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
 	if (tc) {
           XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_MAKEDIR);
 	  now = osi_Time();
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	  RX_AFS_GUNLOCK();
 	  code = RXAFS_MakeDir(tc->id, (struct AFSFid *) &adp->fid.Fid, aname,
 			      &InStatus, (struct AFSFid *) &newFid.Fid,
 			      &OutFidStatus, &OutDirStatus, &CallBack, &tsync);
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	  RX_AFS_GLOCK();
           XSTATS_END_TIME;
 	    CallBack.ExpirationTime += now;
 	    /* DON'T forget to Set the callback value... */
@@ -123,7 +119,7 @@ afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
 	else code = -1;
     } while
       (afs_Analyze(tc, code, &adp->fid, &treq,
-		   AFS_STATS_FS_RPCIDX_MAKEDIR, SHARED_LOCK, (struct cell *)0));
+		   AFS_STATS_FS_RPCIDX_MAKEDIR, SHARED_LOCK, NULL));
 
     if (code) {
 	if (code < 0) {
@@ -156,7 +152,7 @@ afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
     newFid.Fid.Volume = adp->fid.Fid.Volume;
     ReleaseWriteLock(&adp->lock);
     /* now we're done with parent dir, create the real dir's cache entry */
-    tvc = afs_GetVCache(&newFid, &treq, (afs_int32 *)0, (struct vcache*)0, 0);
+    tvc = afs_GetVCache(&newFid, &treq, NULL, NULL);
     if (tvc) {
 	code = 0;
 	*avcp = tvc;
@@ -193,7 +189,7 @@ afs_rmdir(adp, aname, acred)
 #endif
     struct vrequest treq;
     register struct dcache *tdc;
-    register struct vcache *tvc = (struct vcache *)0;
+    register struct vcache *tvc = NULL;
     register afs_int32 code;
     register struct conn *tc;
     afs_size_t offset, len;
@@ -208,7 +204,7 @@ afs_rmdir(adp, aname, acred)
     afs_Trace2(afs_iclSetp, CM_TRACE_RMDIR, ICL_TYPE_POINTER, adp, 
 	       ICL_TYPE_STRING, aname);
 
-    if (code = afs_InitReq(&treq, acred))
+    if ((code = afs_InitReq(&treq, acred)))
 	goto done2;
     afs_InitFakeStat(&fakestate);
 
@@ -246,12 +242,10 @@ afs_rmdir(adp, aname, acred)
 	    unlinkFid.Cell = adp->fid.Cell;
 	    unlinkFid.Fid.Volume = adp->fid.Fid.Volume;
 	    if (unlinkFid.Fid.Unique == 0) {
-		tvc = afs_LookupVCache(&unlinkFid, &treq, &cached, 
-				       WRITE_LOCK, adp, aname);
+		tvc = afs_LookupVCache(&unlinkFid, &treq, &cached, adp, aname);
 	    } else {
 		ObtainReadLock(&afs_xvcache);
-		tvc = afs_FindVCache(&unlinkFid, 1, WRITE_LOCK, 
-				     0, 1/* do xstats */);
+		tvc = afs_FindVCache(&unlinkFid, 0, 1/* do xstats */);
 		ReleaseReadLock(&afs_xvcache);
 	    }
 	}
@@ -261,20 +255,16 @@ afs_rmdir(adp, aname, acred)
 	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
 	if (tc) {
           XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEDIR);
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	  RX_AFS_GUNLOCK();
 	    code = RXAFS_RemoveDir(tc->id, (struct AFSFid *) &adp->fid.Fid,
 				   aname, &OutDirStatus, &tsync);
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	  RX_AFS_GLOCK();
           XSTATS_END_TIME;
 	}
 	else code = -1;
     } while
       (afs_Analyze(tc, code, &adp->fid, &treq,
-		   AFS_STATS_FS_RPCIDX_REMOVEDIR, SHARED_LOCK, (struct cell *)0));
+		   AFS_STATS_FS_RPCIDX_REMOVEDIR, SHARED_LOCK, NULL));
 
     if (code) {
 	if (tdc) {
@@ -318,7 +308,7 @@ afs_rmdir(adp, aname, acred)
 	ObtainWriteLock(&tvc->lock,155);
 	tvc->states &= ~CUnique;		/* For the dfs xlator */
 	ReleaseWriteLock(&tvc->lock);
-	afs_PutVCache(tvc, WRITE_LOCK);
+	afs_PutVCache(tvc);
     }
     ReleaseWriteLock(&adp->lock);
     /* don't worry about link count since dirs can not be hardlinked */
@@ -329,8 +319,8 @@ done:
     code = afs_CheckCode(code, &treq, 27); 
 done2:
 #ifdef	AFS_OSF_ENV
-    afs_PutVCache(adp, 0);
-    afs_PutVCache(ndp->ni_vp, 0);
+    afs_PutVCache(adp);
+    afs_PutVCache(ndp->ni_vp);
 #endif	/* AFS_OSF_ENV */
     return code;
 }

@@ -100,22 +100,15 @@ struct coda_inode_info {};
 #include "../afs/longc_procs.h"
 #include "../afs/afs_stats.h"
 #include "../h/errno.h"
+#ifdef KERNEL
+#include "../afs/afsincludes.h"
+#endif
 
-extern afs_int32 afs_termState;
-extern int (*rxk_GetPacketProc)(); /* set to packet allocation procedure */
-extern int (*rxk_PacketArrivalProc)();
-
-#define	MAXRXPORTS  20
+#define        MAXRXPORTS  20
 typedef unsigned short rxk_ports_t[MAXRXPORTS];
 typedef char *rxk_portRocks_t[MAXRXPORTS];
 extern rxk_ports_t rxk_ports;
 extern rxk_portRocks_t rxk_portRocks;
-
-extern struct osi_socket *rxk_NewSocket(short aport);
-extern struct ifnet *rxi_FindIfnet();
-extern int rxi_FindIfMTU();
-
-extern int rxk_initDone;
 
 #if defined(AFS_XBSD_ENV)
 extern struct domain inetdomain;

@@ -114,8 +114,8 @@ afs_int32 WhoIsThis (acall, at, aid)
     }
     else if (code == 2) {		/* kad class */
 	if ((code = rxkad_GetServerInfo
-	    (acall->conn, (afs_int32 *) 0, 0/*was &exp*/,
-	     name, inst, tcell, (afs_int32 *) 0)))
+	    (acall->conn, NULL, 0/*was &exp*/,
+	     name, inst, tcell, NULL)))
 	    goto done;
 #if 0
 	/* This test is unnecessary, since rxkad_GetServerInfo already check.
@@ -464,7 +464,7 @@ afs_int32 nameToID (call, aname, aid)
 
     /* Initialize return struct */
     aid->idlist_len = 0;
-    aid->idlist_val = (afs_int32 *)0;
+    aid->idlist_val = NULL;
     
     size = aname->namelist_len;
     if (size == 0) return 0;
@@ -844,7 +844,7 @@ afs_int32 getCPS (call, aid, alist, over)
 
     *over = 0;
     alist->prlist_len = 0;
-    alist->prlist_val = (afs_int32 *) 0;
+    alist->prlist_val = NULL;
     code = Initdb();
     if (code != PRSUCCESS) return code;
     code = ubik_BeginTransReadAny(dbase,UBIK_READTRANS,&tt);
@@ -925,7 +925,7 @@ afs_int32 getCPS2 (call, aid, ahost, alist, over)
     *over = 0;
     iaddr.s_addr = ntohl(ahost);
     alist->prlist_len = 0;
-    alist->prlist_val = (afs_int32 *) 0;
+    alist->prlist_val = NULL;
     code = Initdb();
     if (code != PRSUCCESS) return code;
     code = ubik_BeginTransReadAny(dbase,UBIK_READTRANS,&tt);
@@ -1004,7 +1004,7 @@ afs_int32 getHostCPS (call, ahost, alist, over)
     *over = 0;
     iaddr.s_addr = ntohl(ahost);
     alist->prlist_len = 0;
-    alist->prlist_val = (afs_int32 *) 0;
+    alist->prlist_val = NULL;
     code = Initdb();
     if (code != PRSUCCESS) return code;
     code = ubik_BeginTransReadAny(dbase,UBIK_READTRANS,&tt);
@@ -1472,7 +1472,7 @@ afs_int32 listElements (call, aid, alist, over)
 
     *over = 0;
     alist->prlist_len = 0;
-    alist->prlist_val = (afs_int32 *) 0;
+    alist->prlist_val = NULL;
 
     code = Initdb();
     if (code != PRSUCCESS) return code;
@@ -1534,7 +1534,7 @@ afs_int32 listOwned (call, aid, alist, lastP)
     afs_int32 start;
 
     alist->prlist_len = 0;
-    alist->prlist_val = (afs_int32 *) 0;
+    alist->prlist_val = NULL;
 
     if (!lastP) return PRBADARG;
     start = *lastP;
@@ -1679,7 +1679,7 @@ afs_int32 addWildCards(tt,alist,host)
 	} else
 	    continue;
 	wlist.prlist_len = 0;
-	wlist.prlist_val = (afs_int32 *) 0;
+	wlist.prlist_val = NULL;
 	
 	code = GetList (tt, &tentry, &wlist, 0);
 	if (code) return code;
@@ -1729,8 +1729,8 @@ afs_int32 WhoIsThisWithName(acall, at, aid, aname)
 	extern char *pr_realmName;
 
 	if ((code = rxkad_GetServerInfo
-	    (acall->conn, (afs_int32 *) 0, 0/*was &exp*/,
-	     name, inst, tcell, (afs_int32 *) 0)))
+	    (acall->conn, NULL, 0/*was &exp*/,
+	     name, inst, tcell, NULL)))
 	    goto done;
 	strncpy (vname, name, sizeof(vname));
 	if ((ilen = strlen(inst))) {

@@ -22,6 +22,15 @@ RCSID("$Header$");
 #include <sys/time.h>
 #include <netdb.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <time.h>
@@ -73,7 +82,7 @@ int debugging = 0;
 int BU_rxstat_userok(call)
     struct rx_call *call;
 {
-    return afsconf_SuperUser(BU_conf, call, (char *)0);
+    return afsconf_SuperUser(BU_conf, call, NULL);
 }
 
 int
@@ -127,9 +136,9 @@ initializeArgHandler()
 
     int argHandler();
 
-    cmd_SetBeforeProc(MyBeforeProc, (char *)0);
+    cmd_SetBeforeProc(MyBeforeProc, NULL);
 
-    cptr = cmd_CreateSyntax((char *) 0, argHandler, (char *) 0,
+    cptr = cmd_CreateSyntax(NULL, argHandler, NULL,
                             "Backup database server");
 
     cmd_AddParm(cptr, "-database", CMD_SINGLE, CMD_OPTIONAL,
@@ -310,7 +319,6 @@ main(argc, argv)
     extern int afsconf_CheckAuth();
 
     extern int rx_stackSize;
-    extern struct rx_securityClass *rxnull_NewServerSecurityObject();
     extern int BUDB_ExecuteRequest();
     
 #ifdef AFS_NT40_ENV
@@ -470,7 +478,7 @@ main(argc, argv)
     sca[RX_SCINDEX_KAD] = rxkad_NewServerSecurityObject(rxkad_clear,
 							  BU_conf,
 							  afsconf_GetKey,
-							  (char *) 0);
+							  NULL);
 
     /* Disable jumbograms */
     rx_SetNoJumbo();

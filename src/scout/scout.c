@@ -20,6 +20,13 @@ RCSID("$Header$");
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #undef IN
 #include <gtxwindows.h>		/*Generic window package*/
 #include <gtxobjects.h>		/*Object definitions*/
@@ -273,7 +280,7 @@ static struct onode *mini_initLightObject(a_name, a_x, a_y, a_width, a_win)
 	      rn, a_name, a_x, a_y, a_width);
       fflush(scout_debugfd);
     }
-    newlightp = (struct onode *)0;
+    newlightp = NULL;
 
     /*
       * Set up the creation parameters according to the information we've
@@ -301,10 +308,10 @@ static struct onode *mini_initLightObject(a_name, a_x, a_y, a_width, a_win)
     light_crparams.onode_params.cr_width      = a_width;
     light_crparams.onode_params.cr_height     = 1;
     light_crparams.onode_params.cr_window     = a_win;
-    light_crparams.onode_params.cr_home_obj   = (struct onode *)0;
-    light_crparams.onode_params.cr_prev_obj   = (struct onode *)0;
-    light_crparams.onode_params.cr_parent_obj = (struct onode *)0;
-    light_crparams.onode_params.cr_helpstring = (char *)0;
+    light_crparams.onode_params.cr_home_obj   = NULL;
+    light_crparams.onode_params.cr_prev_obj   = NULL;
+    light_crparams.onode_params.cr_parent_obj = NULL;
+    light_crparams.onode_params.cr_helpstring = NULL;
 
     light_crparams.appearance = 0;
     light_crparams.flashfreq  = 0;
@@ -383,7 +390,7 @@ static int scout_initDiskLightObjects(a_line, a_win)
 			      0,			/*Y value*/
 			      LIGHTOBJ_DISK_WIDTH,	/*Width*/
 			      a_win))			/*Window*/
-	  == (struct onode *)0) {
+	  == NULL) {
 	fprintf(stderr, "[%s:%s] Can't create disk %d light object\n",
 		pn, rn, i);
 	return(-1);
@@ -1559,7 +1566,7 @@ static int init_mini_line(a_skt, a_lineNum, a_line, a_srvname)
 			      curr_y,
 			      LIGHTOBJ_CONN_WIDTH,
 			      scout_gwin))
-	== (struct onode *)0) {
+	== NULL) {
       fprintf(stderr, "[%s:%s] Can't create currConns light object\n",
 	      pn, rn);
       return(-1);
@@ -1572,7 +1579,7 @@ static int init_mini_line(a_skt, a_lineNum, a_line, a_srvname)
 			      curr_y,
 			      LIGHTOBJ_FETCH_WIDTH,
 			      scout_frame->window))
-	== (struct onode *)0) {
+	== NULL) {
       fprintf(stderr, "[%s:%s] Can't create fetches light object\n",
 	      pn, rn);
       return(-1);
@@ -1585,7 +1592,7 @@ static int init_mini_line(a_skt, a_lineNum, a_line, a_srvname)
 			      curr_y,
 			      LIGHTOBJ_STORE_WIDTH,
 			      scout_frame->window))
-	== (struct onode *)0) {
+	== NULL) {
       fprintf(stderr, "[%s:%s] Can't create stores light object\n",
 	      pn, rn);
       return(-1);
@@ -1598,7 +1605,7 @@ static int init_mini_line(a_skt, a_lineNum, a_line, a_srvname)
 			      curr_y,
 			      LIGHTOBJ_WK_WIDTH,
 			      scout_frame->window))
-	== (struct onode *)0) {
+	== NULL) {
       fprintf(stderr, "[%s:%s] Can't create workstations light object\n",
 	      pn, rn);
       return(-1);
@@ -1611,7 +1618,7 @@ static int init_mini_line(a_skt, a_lineNum, a_line, a_srvname)
 			      curr_y,
 			      LIGHTOBJ_SRVNAME_WIDTH,
 			      scout_frame->window))
-	== (struct onode *)0) {
+	== NULL) {
       fprintf(stderr, "[%s:%s] Can't create server name light object\n",
 	      pn, rn);
       return(-1);
@@ -1718,7 +1725,7 @@ static int execute_scout(a_numservers, a_srvname, a_pkg)
 #endif /* 0 */
     scout_gwin = gtx_Init(0,	/*Don't start up InputServer yet*/
 			  -1);	/*Type of window package*/
-    if (scout_gwin == (struct gwin *)0) {
+    if (scout_gwin == NULL) {
       fprintf(stderr, "[%s:%s] Call to gtx_Init() failed!\n", pn, rn);
       return(-1);
     }
@@ -1767,7 +1774,7 @@ static int execute_scout(a_numservers, a_srvname, a_pkg)
       else
 	sprintf(fullsrvname, "%s.%s", curr_item->data, scout_basename);
       he = hostutil_GetHostByName(fullsrvname);
-      if (he == (struct hostent *)0) {
+      if (he == NULL) {
 	fprintf(stderr, "[%s] Can't get host info for '%s'\n",
 		rn, fullsrvname);
 	return(-1);
@@ -1831,7 +1838,7 @@ static int execute_scout(a_numservers, a_srvname, a_pkg)
 			   0,			 /*Y*/
 			   scout_frameDims.maxx, /*Width*/
 			   scout_gwin);		 /*Window*/
-    if (scout_banner0_lp != (struct onode *)0) {
+    if (scout_banner0_lp != NULL) {
       lightdata = (struct gator_lightobj *)(scout_banner0_lp->o_data);
       code = mini_justify(scout_Banner,
 			  lightdata->label,
@@ -1854,7 +1861,7 @@ static int execute_scout(a_numservers, a_srvname, a_pkg)
 			   2,			 /*Y*/
 			   scout_frameDims.maxx, /*Width*/
 			   scout_gwin);		 /*Window*/
-    if (scout_banner1_lp != (struct onode *)0) {
+    if (scout_banner1_lp != NULL) {
       if (scout_attn_disk_mode == SCOUT_DISKM_PCUSED) {
 	sprintf(scout_Banner, "%s > %s%% used",
 		scout_LightLabels,
@@ -1881,7 +1888,7 @@ static int execute_scout(a_numservers, a_srvname, a_pkg)
 			   3,			 /*Y*/
 			   scout_frameDims.maxx, /*Width*/
 			   scout_gwin);		 /*Window*/
-    if (scout_banner2_lp != (struct onode *)0) {
+    if (scout_banner2_lp != NULL) {
       lightdata = (struct gator_lightobj *)(scout_banner2_lp->o_data);
       code = mini_justify(scout_LightLabelUnd,
 			  lightdata->label,
@@ -1962,8 +1969,8 @@ static int execute_scout(a_numservers, a_srvname, a_pkg)
       keymap_BindToString(scout_frame->keymap,		/*Ptr to keymap*/
 			  "e",				/*Key to bind*/
 			  ExitCmd,			/*Cmd to execute*/
-			  (char *)0,			/*Name*/
-			  (char *)0);			/*Ptr to rock*/
+			  NULL,			/*Name*/
+			  NULL);			/*Ptr to rock*/
     if (code) {
       fprintf(stderr, "[%s] Can't bind key `e', code is %d\n", rn, code);
       return(code);

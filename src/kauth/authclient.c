@@ -69,6 +69,9 @@ static struct afsconf_cell debug_cell_server_list;
 static int explicit = 0;
 static int debug = 0;
 
+#ifdef ENCRYPTIONBLOCKSIZE
+#undef ENCRYPTIONBLOCKSIZE
+#endif
 #define ENCRYPTIONBLOCKSIZE (sizeof(des_cblock))
 
 /* Copy the specified list of servers into a specially know cell named
@@ -158,7 +161,7 @@ afs_int32 ka_GetSecurity (
       case KA_AUTHENTICATION_SERVICE:
       case KA_TICKET_GRANTING_SERVICE:
 no_security:
-	*scP = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+	*scP = rxnull_NewClientSecurityObject();
 	*siP = RX_SCINDEX_NULL;
 	break;
       case KA_MAINTENANCE_SERVICE:
@@ -518,7 +521,7 @@ afs_int32 ka_Authenticate (
     int	  version;
 
     LOCK_GLOBAL_MUTEX
-    if (code = des_key_sched (key, schedule)) {
+    if ((code = des_key_sched (key, schedule))) {
 	UNLOCK_GLOBAL_MUTEX
 	return KABADKEY;
     }

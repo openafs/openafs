@@ -29,6 +29,15 @@ RCSID("$Header$");
 
 #include <errno.h>
 #include <stdio.h>			/*Standard I/O stuff*/
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/afscbint.h>		/*Callback interface defs*/
 
 int afs_cb_inited = 0;

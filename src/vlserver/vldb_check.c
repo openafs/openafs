@@ -39,6 +39,15 @@ RCSID("$Header$");
 #include <netdb.h>
 #include <netinet/in.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include "vlserver.h"
 #include "vldbint.h"
 #include <ubik.h>
@@ -703,7 +712,7 @@ CheckIpAddrs(header)
 
 	   if (memcmp(&e->ex_hostuuid, &nulluuid, sizeof(afsUUID)) == 0) {
 	      if (ipindex != -1) {
-		 printf("Server Addrs index %d references null MH block %d, index %d\n", i, j);
+		 printf("Server Addrs index %d references null MH block %d, index %d\n", ipindex, i, j);
 		 serveraddrs[ipindex] = 0;     /* avoids printing 2nd error below */
 	      }
 	      continue;
@@ -924,7 +933,7 @@ main(argc, argv)
 
   setlinebuf(stdout);
 
-  ts=cmd_CreateSyntax((char *)0, WorkerBee, (char *) 0, "vldb check");
+  ts=cmd_CreateSyntax(NULL, WorkerBee, NULL, "vldb check");
   cmd_AddParm(ts, "-database", CMD_SINGLE, CMD_REQUIRED, "vldb_file");
   cmd_AddParm(ts, "-uheader",  CMD_FLAG,   CMD_OPTIONAL, "Display UBIK header");
   cmd_AddParm(ts, "-vheader",  CMD_FLAG,   CMD_OPTIONAL, "Display VLDB header");

@@ -39,7 +39,8 @@ extern RMTSYS_ExecuteRequest();
 
 #include "AFS_component_version_number.c"
 
-main() {
+int main(int argc, char *argv[])
+{
     struct rx_securityClass *(securityObjects[N_SECURITY_OBJECTS]);
     struct rx_service *service;
 

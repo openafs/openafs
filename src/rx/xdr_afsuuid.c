@@ -36,10 +36,7 @@ RCSID("$Header$");
 #endif
 #endif
 
-int
-xdr_afsUUID(xdrs, objp)
-	XDR *xdrs;
-	afsUUID *objp;
+int xdr_afsUUID(XDR *xdrs, afsUUID *objp)
 {
 	if (!xdr_afs_uint32(xdrs, &objp->time_low)) {
 		return (FALSE);

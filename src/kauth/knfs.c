@@ -87,14 +87,14 @@ char *sysname;
     blob.in_size = sizeof(pheader);
     blob.in = space;
     blob.out_size = 0;
-    blob.out = (char *) 0;
+    blob.out = NULL;
     memcpy(tp, &setp, sizeof(afs_int32));
     tp += sizeof(afs_int32);
     strcpy(tp, sysname);
     blob.in_size += sizeof(afs_int32) + strlen(sysname) + 1;
     tp += strlen(sysname);
     *(tp++) = '\0';
-    code = pioctl((char *) 0, _VICEIOCTL(99), &blob, 0);
+    code = pioctl(NULL, _VICEIOCTL(99), &blob, 0);
     if (code) {
 	code = errno;
     }
@@ -156,7 +156,7 @@ static GetTokens(ahost, auid)
 	iob.in_size = sizeof(afs_int32) + sizeof(pheader);
 	iob.out = tbuffer;
 	iob.out_size = sizeof(tbuffer);
-	code = pioctl((char *)0, _VICEIOCTL(99), &iob, 0);
+	code = pioctl(NULL, _VICEIOCTL(99), &iob, 0);
 	if (code < 0 && errno == EDOM) return KTC_NOENT;
 	else if (code == 0) {
 	    /* check to see if this is the right cell/realm */
@@ -255,8 +255,8 @@ afs_int32 auid; {
     blob.in_size = sizeof(pheader);
     blob.in = space;
     blob.out_size = 0;
-    blob.out = (char *) 0;
-    code = pioctl((char *) 0, _VICEIOCTL(99), &blob, 0);
+    blob.out = NULL;
+    code = pioctl(NULL, _VICEIOCTL(99), &blob, 0);
     if (code) {
 	code = errno;
     }
@@ -333,8 +333,8 @@ afs_int32 auid; {
 	blob.in_size = tp-space;
 	blob.in = space;
 	blob.out_size = 0;
-	blob.out = (char *) 0;
-	code = pioctl((char *) 0, _VICEIOCTL(99), &blob, 0);
+	blob.out = NULL;
+	code = pioctl(NULL, _VICEIOCTL(99), &blob, 0);
 	if (code) {
 	    code = errno;
 	    break;
@@ -447,7 +447,7 @@ char **argv; {
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
 
-    ts = cmd_CreateSyntax((char *) 0, cmdproc, 0, "copy tickets for NFS");
+    ts = cmd_CreateSyntax(NULL, cmdproc, 0, "copy tickets for NFS");
     cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_REQUIRED, "host name");
     cmd_AddParm(ts, "-id", CMD_SINGLE, CMD_OPTIONAL, "user ID (decimal)");
     cmd_AddParm(ts, "-sysname", CMD_SINGLE, CMD_OPTIONAL, "host's '@sys' value");

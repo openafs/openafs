@@ -85,8 +85,8 @@ int PRE_InitPreempt(slice)
     action.sa_sigaction = AlarmHandler;
     action.sa_flags = SA_SIGINFO;
 
-    if ((sigaction(SIGALRM, &action, (struct sigaction *)0) == -1) ||
-	(setitimer(ITIMER_REAL, &itv, (struct itimerval *) 0) == -1))
+    if ((sigaction(SIGALRM, &action, NULL) == -1) ||
+	(setitimer(ITIMER_REAL, &itv, NULL) == -1))
 	return(LWP_ESYSTEM);
 
     return(LWP_SUCCESS);
@@ -104,8 +104,8 @@ int PRE_EndPreempt()
     memset((char *)&action, 0, sizeof(action));
     action.sa_handler = SIG_DFL;
 
-    if ((setitimer(ITIMER_REAL, &itv, (struct itimerval *) 0) == -1) ||
-	(sigaction(SIGALRM, &action, (struct sigaction *)0) == -1))
+    if ((setitimer(ITIMER_REAL, &itv, NULL) == -1) ||
+	(sigaction(SIGALRM, &action, NULL) == -1))
 	return(LWP_ESYSTEM);
 
     return(LWP_SUCCESS);

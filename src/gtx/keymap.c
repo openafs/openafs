@@ -12,6 +12,16 @@
 
 RCSID("$Header$");
 
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+#include <stdlib.h>
+
 #include "gtxkeymap.h"
 
 struct keymap_map *keymap_Create() {
@@ -28,9 +38,9 @@ char *gtx_CopyString(aval)
 register char *aval; {
     register char *tp;
 
-    if (!aval) return (char *) 0;	/* propagate null strings around */
+    if (!aval) return NULL;	/* propagate null strings around */
     tp = (char *) malloc(strlen(aval)+1);
-    if (tp != (char *)0)
+    if (tp != NULL)
       strcpy(tp, aval);
     return(tp);
 }
@@ -51,8 +61,8 @@ char *aname; {
     if (tp=tentry->name)
 	free(tp);
     if (atype == KEYMAP_EMPTY) {
-	tentry->u.generic = (char *) 0;
-	tentry->name = (char *) 0;
+	tentry->u.generic = NULL;
+	tentry->name = NULL;
     }
     else {
 	tentry->name = gtx_CopyString(aname);
@@ -81,8 +91,8 @@ char *aname; {
 	if (*cptr == 0) {	/* we're peeking: already skipped command char */
 	    /* last character, do final function */
 	    if (!aproc)	/* delete the entry */
-		code = BindIt(amap, tc, KEYMAP_EMPTY, (char *) 0,
-			      (char *) 0, (char *) 0);
+		code = BindIt(amap, tc, KEYMAP_EMPTY, NULL,
+			      NULL, NULL);
 	    else
 		code = BindIt(amap, tc, KEYMAP_PROC, (char *) aproc, aname, arock);
 	    if (code) return code;
@@ -92,7 +102,7 @@ char *aname; {
 	    if (amap->entries[tc].type != KEYMAP_SUBMAP) {
 		tmap = keymap_Create();
 		code = BindIt(amap, tc, KEYMAP_SUBMAP, (char *) tmap,
-			      (char *) 0, (char *) 0);
+			      NULL, NULL);
 	    }
 	    else {
 		tmap = amap->entries[tc].u.submap;

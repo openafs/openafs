@@ -51,10 +51,8 @@ static char fileModeMap[8] = {
 };
 
 /* avc must be held.  Returns bit map of mode bits.  Ignores file mode bits */
-afs_int32 afs_GetAccessBits (avc, arights, areq)
-    register struct vcache *avc;
-    register afs_int32 arights;
-    register struct vrequest *areq; 
+afs_int32 afs_GetAccessBits(register struct vcache *avc, register afs_int32 arights, 
+	register struct vrequest *areq)
 {
     AFS_STATCNT(afs_GetAccessBits);
     /* see if anyuser has the required access bits */
@@ -105,10 +103,9 @@ afs_int32 afs_GetAccessBits (avc, arights, areq)
 /* the new access ok function.  AVC must be held but not locked. if avc is a
  * file, its parent need not be held, and should not be locked. */
 
-afs_AccessOK(avc, arights, areq, check_mode_bits)
-struct vcache *avc;
-afs_int32 arights, check_mode_bits;
-struct vrequest *areq; {
+int afs_AccessOK(struct vcache *avc, afs_int32 arights, struct vrequest *areq, 
+	afs_int32 check_mode_bits)
+{
     register struct vcache *tvc;
     struct VenusFid dirFid;
     register afs_int32 mask;
@@ -136,11 +133,10 @@ struct vrequest *areq; {
 	    dirFid.Fid.Vnode = avc->parentVnode;
 	    dirFid.Fid.Unique = avc->parentUnique;
 	    /* Avoid this GetVCache call */
-	    tvc = afs_GetVCache(&dirFid, areq, (afs_int32 *)0,
-				(struct vcache*)0, WRITE_LOCK);
+	    tvc = afs_GetVCache(&dirFid, areq, NULL, NULL);
 	    if (tvc) {
 		dirBits = afs_GetAccessBits(tvc, arights, areq);
-		afs_PutVCache(tvc, WRITE_LOCK);
+		afs_PutVCache(tvc);
 	    }
 	}
 	else
@@ -177,15 +173,12 @@ struct vrequest *areq; {
 }
 
 
-#if	defined(AFS_SUN5_ENV) || (defined(AFS_SGI_ENV) && !defined(AFS_SGI65_ENV))
-afs_access(OSI_VC_ARG(avc), amode, flags, acred)
-    int flags;		
+#if defined(AFS_SUN5_ENV) || (defined(AFS_SGI_ENV) && !defined(AFS_SGI65_ENV))
+int afs_access(OSI_VC_DECL(avc), register afs_int32 amode, int flags, struct AFS_UCRED *acred)
 #else
-afs_access(OSI_VC_ARG(avc), amode, acred)
+int afs_access(OSI_VC_DECL(avc), register afs_int32 amode, struct AFS_UCRED *acred)
 #endif
-    OSI_VC_DECL(avc);
-    register afs_int32 amode;
-    struct AFS_UCRED *acred; {
+{
     register afs_int32 code;
     struct vrequest treq;
     struct afs_fakestat_state fakestate;
@@ -196,7 +189,7 @@ afs_access(OSI_VC_ARG(avc), amode, acred)
 		ICL_TYPE_INT32, amode,
 		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
     afs_InitFakeStat(&fakestate);
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
 
     code = afs_EvalFakeStat(&avc, &fakestate, &treq);
     if (code) {
@@ -294,10 +287,7 @@ afs_access(OSI_VC_ARG(avc), amode, acred)
  * afs_getRights
  * This function is just an interface to afs_GetAccessBits
  */
-int afs_getRights(OSI_VC_ARG(avc), arights, acred)
-    OSI_VC_DECL(avc);
-    register afs_int32 arights;
-    struct AFS_UCRED *acred;
+int afs_getRights(OSI_VC_DECL(avc), register afs_int32 arights, struct AFS_UCRED *acred)
 {
     register afs_int32 code;
     struct vrequest treq;

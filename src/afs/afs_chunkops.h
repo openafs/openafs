@@ -26,13 +26,6 @@
 
 #else /* AFS_NOCHUNKING */
 
-extern afs_int32 afs_OtherCSize, afs_LogChunk, afs_FirstCSize;
-#ifdef AFS_64BIT_CLIENT
-#ifdef AFS_VM_RDWR_ENV
-extern afs_size_t afs_vmMappingEnd;
-#endif /* AFS_VM_RDWR_ENV */
-#endif /* AFS_64BIT_CLIENT */
-
 #define AFS_OTHERCSIZE  (afs_OtherCSize)
 #define AFS_LOGCHUNK    (afs_LogChunk)
 #define AFS_FIRSTCSIZE  (afs_FirstCSize)
@@ -44,19 +37,6 @@ extern afs_size_t afs_vmMappingEnd;
 
 #define AFS_MINCHUNK 13  /* 8k is minimum */
 #define AFS_MAXCHUNK 18  /* 256K is maximum */
-
-#ifdef notdef
-extern int afs_ChunkOffset(), afs_Chunk(), afs_ChunkBase(), afs_ChunkSize(), 
-    afs_ChunkToBase(), afs_ChunkToSize();
-
-/* macros */
-#define	AFS_CHUNKOFFSET(x) afs_ChunkOffset(x)
-#define	AFS_CHUNK(x) afs_Chunk(x)
-#define	AFS_CHUNKBASE(x) afs_ChunkBase(x)
-#define	AFS_CHUNKSIZE(x) afs_ChunkSize(x)
-#define	AFS_CHUNKTOBASE(x) afs_ChunkToBase(x)
-#define	AFS_CHUNKTOSIZE(x) afs_ChunkToSize(x)
-#endif
 
 #define AFS_CHUNKOFFSET(offset) ((offset < afs_FirstCSize) ? offset : \
 			 ((offset - afs_FirstCSize) & (afs_OtherCSize - 1)))
@@ -79,28 +59,30 @@ extern int afs_ChunkOffset(), afs_Chunk(), afs_ChunkBase(), afs_ChunkSize(),
 #define AFS_SETCHUNKSIZE(chunk) { afs_LogChunk = chunk; \
 		      afs_FirstCSize = afs_OtherCSize = (1 << chunk);  }
 
-
-extern void afs_CacheTruncateDaemon();
-
 /*
  * Functions exported by a cache type 
  */
 
-extern struct afs_cacheOps *afs_cacheType;
-
 struct afs_cacheOps {
-    void *(*open)();
-    int (*truncate)();
-    int (*fread)();
-    int (*fwrite)();
-    int (*close)();
-    int (*vread)();
-    int (*vwrite)();
-    int (*FetchProc)();
-    int (*StoreProc)();
-    struct dcache *(*GetDSlot)();
-    struct volume *(*GetVolSlot)();
-    int (*HandleLink)();
+    void *(*open)(afs_int32 ainode);
+    int (*truncate)(struct osi_file *fp, int len);
+    int (*fread)(struct osi_file *fp, int offset, char *buf, int len);
+    int (*fwrite)(struct osi_file *fp, int offset, char *buf, int len);
+    int (*close)(struct osi_file *fp);
+    int (*vread)(register struct vcache *avc, struct uio *auio, 
+        struct AFS_UCRED *acred, daddr_t albn, struct buf **abpp, int noLock);
+    int (*vwrite)(register struct vcache *avc, struct uio *auio,
+        int aio, struct AFS_UCRED *acred, int noLock);
+    int (*FetchProc)(register struct rx_call *acall, 
+        struct osi_file *afile, afs_size_t abase, struct dcache *adc, 
+        struct vcache *avc, afs_size_t *abytesToXferP, 
+        afs_size_t *abytesXferredP, afs_int32 lengthFound);
+    int (*StoreProc)(register struct rx_call *acall, 
+        struct osi_file *afile, register afs_int32 alen, struct vcache *avc, 
+        int *shouldWake, afs_size_t *abytesToXferP, afs_size_t *abytesXferredP);
+    struct dcache *(*GetDSlot)(register afs_int32 aslot, register struct dcache *tmpdc);
+    struct volume *(*GetVolSlot)(void);
+    int (*HandleLink)(register struct vcache *avc, struct vrequest *areq);
 };
 
 /* Ideally we should have used consistent naming - like COP_OPEN, COP_TRUNCATE, etc. */

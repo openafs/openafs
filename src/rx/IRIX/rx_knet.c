@@ -43,9 +43,10 @@ RCSID("$Header$");
 int rxk_lastSocketError = 0;
 int rxk_nSocketErrors = 0;
 int rxk_nSignalsCleared = 0;
-int osi_NetReceive(osi_socket so, struct sockaddr_in *from, 
-		   struct iovec *iov, int iovcnt, int *lengthp)
-{
+
+int osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
+        int nvecs, int *alength)
+{  
     struct uio tuio;
     int code;
     struct mbuf *maddr = NULL;
@@ -57,18 +58,18 @@ int osi_NetReceive(osi_socket so, struct sockaddr_in *from,
 #endif
 
     tuio.uio_iov = tmpvec;
-    tuio.uio_iovcnt = iovcnt;
+    tuio.uio_iovcnt = nvecs;
     tuio.uio_offset = 0;
     tuio.uio_segflg = AFS_UIOSYS;
     tuio.uio_fmode = 0;
-    tuio.uio_resid = *lengthp;
+    tuio.uio_resid = *alength;
     tuio.uio_pio = 0;
     tuio.uio_pbuf = 0;
 
-    if (iovcnt > RX_MAXWVECS+2) {
-	osi_Panic("Too many (%d) iovecs passed to osi_NetReceive\n", iovcnt);
+    if (nvecs > RX_MAXWVECS+2) {
+	osi_Panic("Too many (%d) iovecs passed to osi_NetReceive\n", nvecs);
     }
-    memcpy(tmpvec, (char*)iov, (RX_MAXWVECS+1) * sizeof(struct iovec));
+    memcpy(tmpvec, (char*)dvec, (RX_MAXWVECS+1) * sizeof(struct iovec));
 #ifdef AFS_SGI65_ENV
     code = soreceive(&bhv, &maddr, &tuio, NULL, NULL);
 #else
@@ -101,7 +102,7 @@ int osi_NetReceive(osi_socket so, struct sockaddr_in *from,
 	    m_freem(maddr);
     }
     else {
-	*lengthp = *lengthp - tuio.uio_resid;
+	*alength = *alength - tuio.uio_resid;
 	if (maddr) {
 	    memcpy((char*)from, (char*)mtod(maddr, struct sockaddr_in *),
 		  sizeof(struct sockaddr_in));
@@ -544,7 +545,7 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
     }
     tm = top;
 
-    tm->m_act = (struct mbuf *) 0;
+    tm->m_act = NULL;
 
     /* setup mbuf corresponding to destination address */
     um = m_get(M_DONTWAIT, MT_SONAME);

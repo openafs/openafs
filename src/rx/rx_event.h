@@ -49,47 +49,52 @@ struct rxepoch {
 #endif
 
 /* This routine must be called to initialize the event package.  nEvents is the number of events to allocate in a batch whenever more are needed.  If this is 0, a default number (10) will be allocated. */
+#if 0
 extern void rxevent_Init(/* nEvents, scheduler */);
+#endif
 
 /* Get the expiration time for the next event */
+#if 0
 extern void exevent_NextEvent(/* when */);
+#endif
 
 /* Arrange for the indicated event at the appointed time.  When is a "struct clock", in the clock.c time base */
+#if 0
 extern struct rxevent *rxevent_Post(/* when, func, arg, arg1 */);
+#endif
 
 /* Remove the indicated event from the event queue.  The event must be pending.  Also see the warning, above.  The event pointer supplied is zeroed. */
 #ifdef RX_ENABLE_LOCKS
 #ifdef RX_REFCOUNT_CHECK
-extern void rxevent_Cancel_1(/* event_ptr, call , type*/);
 #define	rxevent_Cancel(event_ptr, call, type)			    \
 	BEGIN					    \
 	    if (event_ptr) {			    \
 		rxevent_Cancel_1(event_ptr, call, type);	    \
-		event_ptr = (struct rxevent *) 0;	    \
+		event_ptr = NULL;	    \
 	    }					    \
 	END
 #else /* RX_REFCOUNT_CHECK */
-extern void rxevent_Cancel_1(/* event_ptr, call*/);
 #define	rxevent_Cancel(event_ptr, call, type)			    \
 	BEGIN					    \
 	    if (event_ptr) {			    \
-		rxevent_Cancel_1(event_ptr, call);	    \
-		event_ptr = (struct rxevent *) 0;	    \
+		rxevent_Cancel_1(event_ptr, call, 0);	    \
+		event_ptr = NULL;	    \
 	    }					    \
 	END
 #endif /* RX_REFCOUNT_CHECK */
 #else /* RX_ENABLE_LOCKS */
-extern void rxevent_Cancel_1(/* event_ptr */);
 #define	rxevent_Cancel(event_ptr, call, type)			    \
 	BEGIN					    \
 	    if (event_ptr) {			    \
-		rxevent_Cancel_1(event_ptr);	    \
-		event_ptr = (struct rxevent *) 0;	    \
+		rxevent_Cancel_1(event_ptr, NULL, 0);	    \
+		event_ptr = NULL;	    \
 	    }					    \
 	END
 #endif /* RX_ENABLE_LOCKS */
 
 /* The actions specified for each event that has reached the current clock time will be taken.  The current time returned by GetTime is used (warning:  this may be an old time if the user has not called clock_NewTime) */
+#if 0
 extern int rxevent_RaiseEvents();
+#endif
 
 #endif /* _EVENT_ */

@@ -28,6 +28,14 @@ RCSID("$Header$");
 #include <netinet/in.h>
 #include <netdb.h>
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/stds.h>
 #include <afs/afsutil.h>
 #include <rx/rxkad.h>
@@ -61,7 +69,7 @@ main(int argc, char **argv)
 	struct ktc_encryptionKey tkey;
 	int kvno;
 	char buf[BUFSIZ], ver[BUFSIZ];
-	char *tcell = (char *) 0;
+	char *tcell = NULL;
 
 	if (argc != 3) {
 	    printf("bos_util add: usage is 'bos_util add <kvno>\n");
@@ -86,7 +94,7 @@ main(int argc, char **argv)
 	    exit(1);
 	}
 	ka_StringToKey(buf,tcell,&tkey);
-	code = afsconf_AddKey(tdir, kvno, &tkey);
+	code = afsconf_AddKey(tdir, kvno, &tkey, 0);
 	if (code) {
 	    printf("bos_util: failed to set key, code %d.\n", code);
 	    exit(1);
@@ -97,7 +105,7 @@ main(int argc, char **argv)
 	int kvno;
 	register afs_int32 code;
 	char buf[BUFSIZ], ver[BUFSIZ];
-	char *tcell = (char *) 0;
+	char *tcell = NULL;
 
 	if (argc != 3) {
 	    printf("bos_util adddes: usage is 'bos_util adddes <kvno>\n");
@@ -122,7 +130,7 @@ main(int argc, char **argv)
 	    exit(1);
 	}
 	des_string_to_key(buf,&tkey);
-	code = afsconf_AddKey(tdir, kvno, &tkey);
+	code = afsconf_AddKey(tdir, kvno, &tkey, 0);
 	if (code) {
 	    printf("bos_util: failed to set key, code %d.\n", code);
 	    exit(1);
@@ -148,7 +156,7 @@ main(int argc, char **argv)
 		printf("Can't find key in %s\n", argv[3]);
 		exit(1);
 	}
-	code = afsconf_AddKey(tdir, kvno, tkey);
+	code = afsconf_AddKey(tdir, kvno, tkey, 0);
 	if (code) {
 	    printf("bos_util: failed to set key, code %d.\n", code);
 	    exit(1);
@@ -194,7 +202,7 @@ main(int argc, char **argv)
 	printf("All done.\n");
     }
     else {
-	printf("bos_util: unknown operation '%s', type 'bos_util' for assistance\n");
+	printf("bos_util: unknown operation '%s', type 'bos_util' for assistance\n", argv[1]);
 	exit(1);
     }
     exit(0);

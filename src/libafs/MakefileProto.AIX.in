@@ -134,8 +134,6 @@ install_libafs: $(INST_LIBAFS) $(INST_LIBAFSIAUTH)
 dest_libafs: $(DEST_LIBAFS) $(DEST_LIBAFSIAUTH)
 
 
-# Object build rules:
-# Common objects
 osi_assem.o:	${AFS}/osi_assem.s
 	${AS} -o osi_assem.o ${AFS}/osi_assem.s
 osi_config.o: $(AFS)/osi_config.c

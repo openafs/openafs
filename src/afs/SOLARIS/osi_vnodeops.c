@@ -572,7 +572,7 @@ retry:
     } /* while (1) ... */
 
     AFS_GLOCK();
-    pl[slot] = (struct page *) 0;
+    pl[slot] = NULL;
     ReleaseReadLock(&tdc->lock);
 
     /* Prefetch next chunk if we're at a chunk boundary */

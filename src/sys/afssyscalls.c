@@ -64,30 +64,26 @@ static void check_iops(int index, char *fun, char *file, int line);
 #endif
 
 int
-icreate(dev, near_inode, param1, param2, param3, param4)
-int dev, near_inode, param1, param2, param3, param4;
+icreate(int dev, int near_inode, int param1, int param2, int param3, int param4)
 {
 	return(syscall(AFS_ICREATE, dev, near_inode, param1, param2, param3,
 		       param4));
 }
 
 int
-iopen(dev, inode, usrmod)
-int dev, inode, usrmod;
+iopen(int dev, int inode, int usrmod)
 {
 	return(syscall(AFS_IOPEN, dev, inode, usrmod));
 }
 
 int
-iinc(dev, inode, inode_p1)
-int dev, inode, inode_p1;
+iinc(int dev, int inode, int inode_p1)
 {
 	return(syscall(AFS_IINC, dev, inode, inode_p1));
 }
 
 int
-idec(dev, inode, inode_p1)
-int dev, inode, inode_p1;
+idec(int dev, int inode, int inode_p1)
 {
 	return(syscall(AFS_IDEC, dev, inode, inode_p1));
 }
@@ -187,36 +183,26 @@ int afs_init_kernel_config(int flag)
 #ifdef notdef
 /* iread and iwrite are deprecated interfaces. Use inode_read and inode_write instead. */
 int
-iread(dev, inode, inode_p1, offset, cbuf, count)
-int dev, inode, inode_p1;
-unsigned int offset;
-char *cbuf;
-unsigned int count;
+iread(int dev, int inode, int inode_p1, unsigned int offset, char *cbuf, unsigned int count)
 {
 	return(syscall(AFS_IREAD, dev, inode, inode_p1, offset, cbuf, count));
 }
 
 int
-iwrite(dev, inode, inode_p1, offset, cbuf, count)
-int dev, inode, inode_p1;
-unsigned int offset;
-char *cbuf;
-unsigned int count;
+iwrite(int dev, int inode, int inode_p1, unsigned int offset, char *cbuf, unsigned int count)
 {
 	return(syscall(AFS_IWRITE, dev, inode, inode_p1, offset, cbuf, count));
 }
 #endif /* notdef */
 
 int
-lsetpag()
+lsetpag(void)
 {
 	return(syscall(AFS_SETPAG));
 }
 
 int
-lpioctl(path, cmd, cmarg, follow)
-char *path, *cmarg;
-int cmd, follow;
+lpioctl(char *path, int cmd, char *cmarg, int follow)
 {
 	return(syscall(AFS_PIOCTL, path, cmd, cmarg, follow));
 }
@@ -235,8 +221,7 @@ struct iparam {
 /* Also since we're limited to 6 parameters/call, in some calls (icreate,
    iread, iwrite) we combine some in a structure */
 
-icreate(dev, near_inode, param1, param2, param3, param4)
-int dev, near_inode, param1, param2, param3, param4;
+int icreate(int dev, int near_inode, int param1, int param2, int param3, int param4)
 {
     extern int errno;
     int errcode;
@@ -252,8 +237,7 @@ int dev, near_inode, param1, param2, param3, param4;
 }
 
 
-iopen(dev, inode, usrmod)
-int dev, inode, usrmod;
+int iopen(int dev, int inode, int usrmod)
 {
     extern int errno;
     int errcode;
@@ -263,8 +247,7 @@ int dev, inode, usrmod;
 }
 
 
-iinc(dev, inode, inode_p1)
-int dev, inode, inode_p1;
+int iinc(int dev, int inode, int inode_p1)
 {
     extern int errno;
     int errcode;
@@ -274,8 +257,7 @@ int dev, inode, inode_p1;
 }
 
 
-idec(dev, inode, inode_p1)
-int dev, inode, inode_p1;
+int idec(int dev, int inode, int inode_p1)
 {
     extern int errno;
     int errcode;
@@ -286,11 +268,7 @@ int dev, inode, inode_p1;
 
 
 #ifdef notdef
-iread(dev, inode, inode_p1, offset, cbuf, count)
-int dev, inode, inode_p1;
-unsigned int offset;
-char *cbuf;
-unsigned int count;
+int iread(int dev, int inode, int inode_p1, unsigned int offset, char *cbuf, unsigned int count)
 {
     extern int errno;
     int errcode;
@@ -305,11 +283,7 @@ unsigned int count;
 }
 
 
-iwrite(dev, inode, inode_p1, offset, cbuf, count)
-int dev, inode, inode_p1;
-unsigned int offset;
-char *cbuf;
-unsigned int count;
+iwrite(int dev, int inode, int inode_p1, unsigned int offset, char *cbuf, unsigned int count)
 {
     extern int errno;
     int errcode;
@@ -327,7 +301,7 @@ unsigned int count;
 
 #endif /* AFS_NAMEI_ENV */
 
-lsetpag()
+int lsetpag(void)
 {
     extern int errno;
     int errcode;
@@ -336,9 +310,7 @@ lsetpag()
     return (errcode);
 }
 
-lpioctl(path, cmd, cmarg, follow)
-char *path, *cmarg;
-int cmd, follow;
+int lpioctl(char *path, int cmd, char *cmarg, int follow)
 {
     extern int errno;
     int errcode;
@@ -353,13 +325,7 @@ int cmd, follow;
 #ifndef AFS_NAMEI_ENV
 
 int
-inode_read(dev, inode, inode_p1, offset, cbuf, count)
-afs_int32 dev;
-Inode inode;
-afs_int32 inode_p1;
-unsigned int offset;
-char *cbuf;
-unsigned int count;
+inode_read(afs_int32 dev, Inode inode, afs_int32 inode_p1, unsigned int offset, char *cbuf, unsigned int count)
 {
     int fd;
     int code = 0;
@@ -382,13 +348,7 @@ unsigned int count;
 
 
 int
-inode_write(dev, inode, inode_p1, offset, cbuf, count)
-afs_int32 dev;
-Inode inode;
-afs_int32 inode_p1;
-unsigned int offset;
-char *cbuf;
-unsigned int count;
+inode_write(afs_int32 dev, Inode inode, afs_int32 inode_p1, unsigned int offset, char *cbuf, unsigned int count)
 {
     int fd;
     int code = 0;
@@ -416,9 +376,7 @@ unsigned int count;
 #ifdef AFS_64BIT_IOPS_ENV
 char * PrintInode(char *s, Inode ino)
 #else
-char * PrintInode(s, ino)
-afs_ino_str_t s;
-Inode ino;
+char * PrintInode(afs_ino_str_t s, Inode ino)
 #endif
 {
     static afs_ino_str_t result; 

@@ -25,6 +25,15 @@ RCSID("$Header$");
 #include <sys/file.h>
 #include <netinet/in.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <lock.h>
 #include <afs/voldefs.h>
 #include <rx/xdr.h>
@@ -56,10 +65,6 @@ afs_int32 VolumeExists(), CheckVldbRWBK(), CheckVldb();
 
 struct ubik_client *cstruct;
 int verbose = 0;
-extern struct  rx_securityClass *rxnull_NewClientSecurityObject();
-extern struct rx_connection *rx_NewConnection();
-extern void AFSVolExecuteRequest();
-extern struct rx_securityClass *rxnull_NewServerSecurityObject();
 extern int VL_GetNewVolumeId();
 extern int VL_SetLock();
 extern int VL_ReleaseLock();
@@ -1125,7 +1130,7 @@ UV_MoveVolume(afromvol, afromserver, afrompart, atoserver, atopart)
 
     strncpy(tmpName, volName, VOLSER_OLDMAXVOLNAME);
     free(volName);
-    volName = (char *) 0;
+    volName = NULL;
 
     code = AFSVolSetFlags (toconn, totid, (VTDeleteOnSalvage | VTOutOfService));
     ONERR(code, "Failed to set the flags on the destination volume %u\n", volid);
@@ -3149,7 +3154,7 @@ UV_ListPartitions(aserver, ptrPartList, cntp)
     aconn = UV_Bind(aserver,AFSCONF_VOLUMEPORT);
 
     partEnts.partEntries_len = 0;
-    partEnts.partEntries_val = (afs_int32 *)0;
+    partEnts.partEntries_val = NULL;
     code = AFSVolXListPartitions(aconn, &partEnts); /* this is available only on new servers */
     if (code == RXGEN_OPCODE) 
     {

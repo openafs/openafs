@@ -505,7 +505,7 @@ bc_GetConn (aconfig, aport, tconn)
 
     /* use non-secure connections to butc */
     if (!rxsc)
-	rxsc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+	rxsc = rxnull_NewClientSecurityObject();
     if (!rxsc || !aconfig) return(-1);
 
     for (te = aconfig->tapeHosts; te; te = te->next)

@@ -22,6 +22,15 @@ RCSID("$Header$");
 #include <netdb.h>
 #include <netinet/in.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/stds.h>
 #include <rx/xdr.h>
 #include <afs/assert.h>
@@ -472,7 +481,7 @@ h_gethostcps_r(host,now)
     host->hostFlags |= HPCS_INPROGRESS;	/* mark as CPSCall in progress */
     if (host->hcps.prlist_val)
 	free(host->hcps.prlist_val);    /* this is for hostaclRefresh */
-    host->hcps.prlist_val = (afs_int32 *)0;
+    host->hcps.prlist_val = NULL;
     host->hcps.prlist_len = 0;
     slept? (host->cpsCall = FT_ApproxTime()): (host->cpsCall = now );
 
@@ -507,7 +516,7 @@ h_gethostcps_r(host,now)
 	}
 	if (host->hcps.prlist_val)
 	    free(host->hcps.prlist_val);
-	host->hcps.prlist_val = (afs_int32 *)0;
+	host->hcps.prlist_val = NULL;
 	host->hcps.prlist_len = 0;	/* Make sure it's zero */
     } else
 	host->hcpsfailed = 0;
@@ -607,7 +616,7 @@ struct host *h_Alloc_r(r_con)
        makes a request that causes a break call back.  It shouldn't. */
     {
 	if (!sc)
-	    sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+	    sc = rxnull_NewClientSecurityObject();
 	host->callback_rxcon = rx_NewConnection (host->host, host->port,
 						 1, sc, 0);
 	rx_SetConnDeadTime(host->callback_rxcon, 50);
@@ -615,12 +624,14 @@ struct host *h_Alloc_r(r_con)
     }
     now = host->LastCall = host->cpsCall = host->ActiveCall = FT_ApproxTime();
     host->hostFlags = 0;
-    host->hcps.prlist_val = (afs_int32 *)0;
+    host->hcps.prlist_val = NULL;
     host->hcps.prlist_len = 0;
-    host->hcps.prlist_val = (afs_int32 *)0;
+    host->hcps.prlist_val = NULL;
     host->interface = 0;
-    /*host->hcpsfailed = 0; 	/* save cycles */
-    /* h_gethostcps(host);      do this under host lock */
+#ifdef undef
+    host->hcpsfailed = 0; 	/* save cycles */
+    h_gethostcps(host);      /* do this under host lock */
+#endif
     host->FirstClient = 0;      
     h_InsertList_r(host);	/* update global host List */
 #if FS_STATS_DETAILED
@@ -638,9 +649,8 @@ struct host *h_Alloc_r(r_con)
 
 
 /* Lookup a host given an IP address and UDP port number. */
-struct host *h_Lookup(hostaddr, hport, heldp)
-    afs_uint32 hostaddr, hport;     /* network byte order */
-    int *heldp;
+/* hostaddr and hport are in network order */
+struct host *h_Lookup(afs_uint32 hostaddr, afs_uint32 hport, int *heldp)
 {
     struct host *retVal;
     H_LOCK
@@ -650,9 +660,8 @@ struct host *h_Lookup(hostaddr, hport, heldp)
 }
 
 /* Note: host should be released by caller if 0 == *heldp and non-null */
-struct host *h_Lookup_r(hostaddr, hport, heldp)
-    afs_uint32 hostaddr, hport;     /* network byte order */
-    int *heldp;
+/* hostaddr and hport are in network order */
+struct host *h_Lookup_r(afs_uint32 hostaddr, afs_uint32 hport, int *heldp)
 {
     register afs_int32 now;
     register struct host *host=0;
@@ -696,8 +705,7 @@ restart:
 } /*h_Lookup*/
 
 /* Lookup a host given its UUID. */
-struct host *h_LookupUuid_r(uuidp)
-    afsUUID *uuidp;
+struct host *h_LookupUuid_r(afsUUID *uuidp)
 {
     register struct host *host=0;
     register struct h_hashChain* chain;
@@ -725,8 +733,7 @@ struct host *h_LookupUuid_r(uuidp)
  * NOTE: h_Hold_r is a macro defined in host.h.
  */
 
-int h_Hold(host)
-    register struct host *host;
+int h_Hold(register struct host *host)
 {
     H_LOCK
     h_Hold_r(host);
@@ -740,9 +747,7 @@ int h_Hold(host)
  * To be called, there must be no holds, and either host->deleted
  * or host->clientDeleted must be set.
  */
-h_TossStuff_r(host)
-    register struct host *host;
-
+int h_TossStuff_r(register struct host *host)
 {
     register struct client **cp, *client;
     int		i;
@@ -753,11 +758,11 @@ h_TossStuff_r(host)
 	return;
 
     /* ASSUMPTION: r_FreeConnection() does not yield */
-    for (cp = &host->FirstClient; client = *cp; ) {
+    for (cp = &host->FirstClient; (client = *cp); ) {
 	if ((host->hostFlags & HOSTDELETED) || client->deleted) {
 	    if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val) {
 		free(client->CPS.prlist_val);
-                client->CPS.prlist_val = (afs_int32 *)0;
+                client->CPS.prlist_val = NULL;
 	    }
 	    if (client->tcon) {
 		rx_SetSpecific(client->tcon, rxcon_client_key, (void *)0);
@@ -779,7 +784,7 @@ h_TossStuff_r(host)
 	int i;
 
 	if (host->Console & 1) Console--;
-	if (rxconn = host->callback_rxcon) {
+	if ((rxconn = host->callback_rxcon)) {
 	    host->callback_rxcon = (struct rx_connection *)0;
 	    /*
 	     * If rx_DestroyConnection calls h_FreeConnection we will
@@ -795,7 +800,7 @@ h_TossStuff_r(host)
 	}
 	if (host->hcps.prlist_val)
 	    free(host->hcps.prlist_val);
-	host->hcps.prlist_val = (afs_int32 *)0;
+	host->hcps.prlist_val = NULL;
 	host->hcps.prlist_len = 0;
 	DeleteAllCallBacks_r(host);
 	host->hostFlags &= ~RESETDONE;	/* just to be safe */
@@ -804,7 +809,7 @@ h_TossStuff_r(host)
 	if ( !(host->interface) )
 	{
 		for (hp = &hostHashTable[h_HashIndex(host->host)];
-			th = *hp; hp = &th->next) 
+			(th = *hp); hp = &th->next) 
 		{
 	    		assert(th->hostPtr);
 			if (th->hostPtr == host) 
@@ -821,7 +826,7 @@ h_TossStuff_r(host)
 	    /* delete all hash entries for the UUID */
 	    uuidp = &host->interface->uuid;
 	    for (hp = &hostUuidHashTable[h_UuidHashIndex(uuidp)];
-		 th = *hp; hp = &th->next) {
+		 (th = *hp); hp = &th->next) {
 		assert(th->hostPtr);
 		if (th->hostPtr == host)
 		{
@@ -836,7 +841,7 @@ h_TossStuff_r(host)
 	    {
 		hostAddr = host->interface->addr[i];
 		for (hp = &hostHashTable[h_HashIndex(hostAddr)];
-	     		th = *hp; hp = &th->next) 
+	     		(th = *hp); hp = &th->next) 
 		{
 	    		assert(th->hostPtr);
 	    		if (th->hostPtr == host) 
@@ -857,9 +862,7 @@ h_TossStuff_r(host)
 
 
 /* Called by rx when a server connection disappears */
-h_FreeConnection(tcon)
-    struct rx_connection *tcon;
-
+int h_FreeConnection(struct rx_connection *tcon)
 {
     register struct client *client;
 
@@ -1183,7 +1186,7 @@ static MapName_r(aname, acell, aval)
     lnames.namelist_len = 1;
     lnames.namelist_val = (prname *) aname;  /* don't malloc in the common case */
     lids.idlist_len = 0;
-    lids.idlist_val = (afs_int32 *) 0;
+    lids.idlist_val = NULL;
 
     cnamelen=strlen(acell);
     if (cnamelen) {
@@ -1396,7 +1399,7 @@ ticket name length != 64
 	if (client->CPS.prlist_val && (client->ViceId != ANONYMOUSID)) {
 	   free(client->CPS.prlist_val);
 	}
-	client->CPS.prlist_val = (afs_int32 *)0;
+	client->CPS.prlist_val = NULL;
         client->ViceId = viceid;
 	client->expTime	= expTime;
 
@@ -1443,7 +1446,7 @@ ticket name length != 64
      * required).  So, before setting the RPC's rock, we should disconnect
      * the RPC from the other client structure's rock.
      */
-    if (oldClient = (struct client *) rx_GetSpecific(tcon, rxcon_client_key)) {
+    if ((oldClient = (struct client *) rx_GetSpecific(tcon, rxcon_client_key))) {
 	oldClient->tcon = (struct rx_connection *) 0;
 	/* rx_SetSpecific will be done immediately below */
     }
@@ -2038,7 +2041,7 @@ h_CheckHosts() {
      */
     checktime = now - 15*60;
     clientdeletetime = now - 120*60;	/* 2 hours ago */
-    h_Enumerate(CheckHost, (char *) 0);
+    h_Enumerate(CheckHost, NULL);
 
 } /*h_CheckHosts*/
 
@@ -2236,7 +2239,7 @@ struct host* host;
 	int index;
 	register struct h_hashChain **hp, *th;
 
-        for (hp = &hostHashTable[h_HashIndex(addr)]; th = *hp; )
+        for (hp = &hostHashTable[h_HashIndex(addr)]; (th = *hp); )
         {
         	assert(th->hostPtr);
         	if (th->hostPtr == host && th->addr == addr)

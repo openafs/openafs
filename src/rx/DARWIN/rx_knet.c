@@ -14,13 +14,10 @@ RCSID("$Header$");
 
 #include "../rx/rx_kcommon.h"
 
-int osi_NetReceive(asocket, addr, dvec, nvecs, alength)
-    struct socket *asocket;
-    struct sockaddr_in *addr;
-    struct iovec *dvec;
-    int nvecs;
-    int *alength;
+int osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec, 	
+	int nvecs, int *alength)
 {
+    struct socket *asocket = (struct socket *)so;
     struct uio u;
     int i;
     struct iovec iov[RX_MAXIOVECS];

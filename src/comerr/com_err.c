@@ -13,18 +13,7 @@ RCSID("$Header$");
 #include <stdio.h>
 #include <stdarg.h>
 #include "error_table.h"
-
-
-/*
- * Protect us from header version (externally visible) of com_err, so
- * we can survive in a <varargs.h> environment.  I think.
- */
-#define com_err com_err_external
-/* #include "com_err.h" */
-char *error_message();
-#undef com_err
-
-extern char *error_message ();
+#include "com_err.h"
 
 static void
     default_com_err_proc (const char *whoami, afs_int32 code, const char *fmt, va_list args)
@@ -50,18 +39,12 @@ typedef void (*errf) (const char *, afs_int32, const char *, va_list);
 
 static errf com_err_hook = default_com_err_proc;
 
-void com_err_va (whoami, code, fmt, args)
-    const char *whoami;
-    afs_int32 code;
-    const char *fmt;
-    va_list args;
+void com_err_va (const char *whoami, afs_int32 code, const char *fmt, va_list args)
 {
     (*com_err_hook) (whoami, code, fmt, args);
 }
 
-void com_err (const char *whoami,
-	      afs_int32 code,
-	      const char *fmt, ...)
+void com_err (const char *whoami, afs_int32 code, const char *fmt, ...)
 {
     va_list pvar;
 
@@ -72,8 +55,7 @@ void com_err (const char *whoami,
     va_end(pvar);
 }
 
-errf set_com_err_hook (new_proc)
-    errf new_proc;
+errf set_com_err_hook (errf new_proc)
 {
     errf x = com_err_hook;
     if (new_proc) com_err_hook = new_proc;
@@ -81,7 +63,8 @@ errf set_com_err_hook (new_proc)
     return x;
 }
 
-errf reset_com_err_hook () {
+errf reset_com_err_hook (void)
+{
     errf x = com_err_hook;
     com_err_hook = default_com_err_proc;
     return x;

@@ -10,6 +10,7 @@
 #undef MEMORYLEAK
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/afsutil.h>
 
 RCSID("$Header$");
 
@@ -27,6 +28,7 @@ RCSID("$Header$");
 #include <signal.h>
 #endif
 #include "mit-sipb-cr.h"
+#include "internal.h"
 #include "compiler.h"
 
 #ifndef lint
@@ -34,7 +36,6 @@ static const char copyright[] =
     "Copyright 1987,1988 by MIT Student Information Processing Board";
 #endif
 
-extern char *gensym();
 extern char *current_token;
 extern int table_number, current;
 char buffer[BUFSIZ];
@@ -48,7 +49,8 @@ extern FILE *yyin;
 extern FILE *yyout;
 extern int yylineno;
 
-char * xmalloc (size) unsigned int size; {
+char * xmalloc (unsigned int size)
+{
     char * p = malloc (size);
     if (!p) {
 	perror (whoami);
@@ -57,7 +59,8 @@ char * xmalloc (size) unsigned int size; {
     return p;
 }
 
-static int check_arg (str_list, arg) char const *const *str_list, *arg; {
+static int check_arg (char const *const *str_list, char const *arg)
+{
     while (*str_list)
 	if (!strcmp(arg, *str_list++))
 	    return 1;
@@ -115,13 +118,17 @@ char h_file[MAXPATHLEN];	/* output */
 char msf_file[MAXPATHLEN];
 char et_file[MAXPATHLEN];       /* full path to input file */
 
-static void usage () {
+static void usage (void)
+{
     fprintf (stderr, "%s: usage: %s ERROR_TABLE [-debug] [-language LANG] [-h INCLUDE] [-p prefix] [-v version]\n",
 	     whoami, whoami);
     exit (1);
 }
 
-static void dup_err (type, one, two) char const *type, *one, *two; {
+static void dup_err (char const *type, 
+	char const *one, 
+	char const *two)
+{
     fprintf (stderr, "%s: multiple %s specified: `%s' and `%s'\n",
 	     whoami, type, one, two);
     usage ();
@@ -129,7 +136,8 @@ static void dup_err (type, one, two) char const *type, *one, *two; {
 
 #include "AFS_component_version_number.c"
 
-int main (argc, argv) int argc; char **argv; {
+int main (int argc, char **argv)
+{
     char *p, *ename;
     char const * const *cpp;
     int got_language = 0;
@@ -354,17 +362,16 @@ int main (argc, argv) int argc; char **argv; {
 		"static const struct error_table et = { text, %ldL, %d };\n\n",
 		(long int) table_number, current);
 	fputs("static struct et_list etlink = { 0, &et};\n\n", cfile);
-	fprintf(cfile, "void initialize_%s_error_table (%s) {\n",
-		table_name, (language == lang_C) ? "void" : "NOARGS");
+	fprintf(cfile, "void initialize_%s_error_table(void) {\n", table_name);
 	fputs("    add_to_error_table(&etlink);\n", cfile);
 	fputs("}\n", cfile);
 	fclose(cfile);
 
 
-	fprintf (hfile, "extern void initialize_%s_error_table ();\n",
+	fprintf (hfile, "extern void initialize_%s_error_table(void);\n",
 		 table_name);
     } else {
-	fprintf (hfile, "#define initialize_%s_error_table()\n",
+	fprintf (hfile, "#define initialize_%s_error_table(void)\n",
 		 table_name);
     }
 
@@ -392,7 +399,8 @@ int main (argc, argv) int argc; char **argv; {
     return 0;
 }
 
-void yyerror(const char *s) {
+void yyerror(const char *s)
+{
     fputs(s, stderr);
     fprintf(stderr, "\nLine number %d; last token was '%s'\n",
 	    yylineno, current_token);

@@ -96,7 +96,7 @@ int ta_rauth(s, svc_name, raddr)
     strcpy(tserver.cell, localName);
     strcpy(tserver.name, "afs");
 
-    code = ktc_GetToken(&tserver, &token, sizeof(token), (char *)0);
+    code = ktc_GetToken(&tserver, &token, sizeof(token), NULL);
     if(code) {
 	syslog(LOG_WARNING, "ta_rauth: no tokens available");
 	return 0; /* try port without authentication */

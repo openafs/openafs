@@ -34,10 +34,7 @@ RCSID("$Header$");
  *
  * OSF/1 Locking:  VN_LOCK has been called.
  */
-int
-osi_VM_FlushVCache(avc, slept)
-    struct vcache *avc;
-    int *slept;
+int osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
     if (avc->vrefCount > 1)
 	return EBUSY;
@@ -82,10 +79,8 @@ osi_VM_FlushVCache(avc, slept)
  *
  * Called with the global lock NOT held.
  */
-void
-osi_ubc_flush_dirty_and_wait(vp, flags)
-struct vnode *vp;
-int flags; {
+static void osi_ubc_flush_dirty_and_wait(struct vnode *vp, int flags)
+{
     int retry;
     vm_page_t pp;
     int first;
@@ -126,9 +121,7 @@ int flags; {
  * Locking:  the vcache entry's lock is held.  It will usually be dropped and
  * re-obtained.
  */
-void
-osi_VM_StoreAllSegments(avc)
-    struct vcache *avc;
+void osi_VM_StoreAllSegments(struct vcache *avc)
 {
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
@@ -146,11 +139,7 @@ osi_VM_StoreAllSegments(avc)
  * Since we drop and re-obtain the lock, we can't guarantee that there won't
  * be some pages around when we return, newly created by concurrent activity.
  */
-void
-osi_VM_TryToSmush(avc, acred, sync)
-    struct vcache *avc;
-    struct AFS_UCRED *acred;
-    int sync;
+void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 {
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
@@ -164,10 +153,7 @@ osi_VM_TryToSmush(avc, acred, sync)
  *
  * Locking:  No lock is held, not even the global lock.
  */
-void
-osi_VM_FlushPages(avc, credp)
-    struct vcache *avc;
-    struct AFS_UCRED *credp;
+void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
     ubc_flush_dirty(AFSTOV(avc)->v_object, 0);
     ubc_invalidate(AFSTOV(avc)->v_object, 0, 0, B_INVAL);
@@ -179,11 +165,7 @@ osi_VM_FlushPages(avc, credp)
  * activeV is raised.  This is supposed to block pageins, but at present
  * it only works on Solaris.
  */
-void
-osi_VM_Truncate(avc, alen, acred)
-    struct vcache *avc;
-    int alen;
-    struct AFS_UCRED *acred;
+void osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
     ubc_invalidate(AFSTOV(avc)->v_object, alen,
                         MAXINT - alen, B_INVAL);

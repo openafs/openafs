@@ -174,7 +174,7 @@ EXT afs_uint32 rx_MyMaxSendSize INIT(8588);
 EXT afs_uint32 rx_maxJumboRecvSize INIT(RX_MAX_PACKET_SIZE);
 
 /* need this to permit progs to run on AIX systems */
-EXT int (*rxi_syscallp) () INIT(0); 
+EXT int (*rxi_syscallp) (afs_uint32 a3, afs_uint32 a4, void *a5) INIT(0); 
 
 /* List of free queue entries */
 EXT struct rx_serverQueueEntry *rx_FreeSQEList INIT(0);
@@ -259,66 +259,9 @@ EXT afs_kmutex_t rx_connHashTable_lock;
 
 #define PEER_HASH(host, port)  ((host ^ port) & rx_hashTableMask)
 
-
-#ifdef	notdef /* Use a func for now to measure allocated structs */
-#define	rxi_Free(addr, size)	osi_Free(addr, size)
-#endif /* notdef */
-
-void rxi_Free();
-
 /* Forward definitions of internal procedures */
-struct rx_packet *rxi_AllocPacket();
-struct rx_packet *rxi_AllocSendPacket();
-char *rxi_Alloc();
-struct rx_peer *rxi_FindPeer();
-struct rx_call *rxi_NewCall();
-void rxi_FreeCall();
-struct rx_call *rxi_FindCall();
-int rxi_ReadPacket();
-struct rx_packet *rxi_ReceivePacket();
-struct rx_packet *rxi_ReceiveDataPacket();
-struct rx_packet *rxi_ReceiveAckPacket();
-struct rx_packet *rxi_ReceiveResponsePacket();
-struct rx_packet *rxi_ReceiveChallengePacket();
-void rx_ServerProc();
-void rxi_ServerProc();
-void rxi_AttachServerProc();
-void rxi_ChallengeOn();
 #define	rxi_ChallengeOff(conn)	rxevent_Cancel((conn)->challengeEvent, (struct rx_call*)0, 0);
-void rxi_ChallengeEvent();
-void rxi_SendDelayedConnAbort();
-void rxi_SendDelayedCallAbort();
-struct rx_packet *rxi_SendAck();
-void rxi_ClearTransmitQueue();
-void rxi_ClearReceiveQueue();
-void rxi_InitCall();
-void rxi_ResetCall();
-void rxi_CallError();
-void rxi_ConnectionError();
-void rxi_QueuePackets();
-void rxi_Start();
-void rxi_CallIsIdle();
-void rxi_CallTimedOut();
-void rxi_ComputeRoundTripTime();
-void rxi_ScheduleKeepAliveEvent();
-void rxi_KeepAliveEvent();
-void rxi_KeepAliveOn();
 #define rxi_KeepAliveOff(call) rxevent_Cancel((call)->keepAliveEvent, call, RX_CALL_REFCOUNT_ALIVE)
-void rxi_AckAll();
-void rxi_SendDelayedAck();
-struct rx_packet *rxi_SendSpecial();
-struct rx_packet *rxi_SendCallAbort();
-struct rx_packet *rxi_SendConnectionAbort();
-void rxi_ScheduleDecongestionEvent();
-void rxi_CongestionWait();
-void rxi_ReapConnections();
-void rxi_EncodePacketHeader();
-void rxi_DecodePacketHeader();
-void rxi_DebugPrint();
-void rxi_SendDelayedAck();
-void rxi_PrepareSendPacket();
-void rxi_Send();
-
 
 #define rxi_AllocSecurityObject() (struct rx_securityClass *) rxi_Alloc(sizeof(struct rx_securityClass))
 #define	rxi_FreeSecurityObject(obj) rxi_Free(obj, sizeof(struct rx_securityClass))

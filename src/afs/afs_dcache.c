@@ -27,13 +27,6 @@ static void afs_FreeDiscardedDCache(void);
 static void afs_DiscardDCache(struct dcache *);
 static void afs_FreeDCache(struct dcache *);
 
-/* Imported variables */
-extern afs_rwlock_t afs_xvcache;
-extern afs_rwlock_t afs_xcbhash;
-extern afs_int32 afs_mariner;
-extern afs_int32 cacheInfoModTime;			/*Last time cache info modified*/
-
-
 /*
  * --------------------- Exported definitions ---------------------
  */
@@ -95,8 +88,8 @@ extern struct dcache *afs_UFSGetDSlot();
 extern struct volume *afs_UFSGetVolSlot();
 extern int osi_UFSTruncate(), afs_osi_Read(), afs_osi_Write(), osi_UFSClose();
 extern int afs_UFSRead(), afs_UFSWrite();
-static int afs_UFSCacheFetchProc(), afs_UFSCacheStoreProc();
 extern int afs_UFSHandleLink();
+static int afs_UFSCacheFetchProc(), afs_UFSCacheStoreProc();
 struct afs_cacheOps afs_UfsCacheOps = {
     osi_UFSOpen,
     osi_UFSTruncate,
@@ -112,12 +105,6 @@ struct afs_cacheOps afs_UfsCacheOps = {
     afs_UFSHandleLink,
 };
 
-extern void *afs_MemCacheOpen();
-extern struct dcache *afs_MemGetDSlot();
-extern struct volume *afs_MemGetVolSlot();
-extern int afs_MemCacheTruncate(), afs_MemReadBlk(), afs_MemWriteBlk(), afs_MemCacheClose();
-extern int afs_MemRead(), afs_MemWrite(), afs_MemCacheFetchProc(), afs_MemCacheStoreProc();
-extern int afs_MemHandleLink();
 struct afs_cacheOps afs_MemCacheOps = {
     afs_MemCacheOpen,
     afs_MemCacheTruncate,
@@ -156,14 +143,8 @@ struct afs_cacheOps *afs_cacheType;
  *	Call this from close call when vnodeops is RCS unlocked.
  */
 
-void
-afs_StoreWarn(acode, avolume, aflags)
-    register afs_int32 acode;
-    afs_int32 avolume;
-    register afs_int32 aflags;
-
-{ /*afs_StoreWarn*/
-
+void afs_StoreWarn(register afs_int32 acode, afs_int32 avolume, register afs_int32 aflags)
+{
     static char problem_fmt[] =
 	"afs: failed to store file in volume %d (%s)\n";
     static char problem_fmt_w_error[] =
@@ -171,7 +152,6 @@ afs_StoreWarn(acode, avolume, aflags)
     static char netproblems[] = "network problems";
     static char partfull[]    = "partition full";
     static char overquota[]   = "over quota";
-    static char unknownerr[]  = "unknown error";
 
     AFS_STATCNT(afs_StoreWarn);
     if (acode < 0) {
@@ -219,21 +199,22 @@ afs_StoreWarn(acode, avolume, aflags)
 	    }
 } /*afs_StoreWarn*/
 
-void afs_MaybeWakeupTruncateDaemon() {
+void afs_MaybeWakeupTruncateDaemon(void)
+{
     if (!afs_CacheTooFull && afs_CacheIsTooFull()) {
 	afs_CacheTooFull = 1;
 	if (!afs_TruncateDaemonRunning)
-	    afs_osi_Wakeup((char *)afs_CacheTruncateDaemon);
+	    afs_osi_Wakeup((int *)afs_CacheTruncateDaemon);
     } else if (!afs_TruncateDaemonRunning &&
 		afs_blocksDiscarded > CM_MAXDISCARDEDCHUNKS) {
-	afs_osi_Wakeup((char *)afs_CacheTruncateDaemon);
+	afs_osi_Wakeup((int *)afs_CacheTruncateDaemon);
     }
 }
 
 /* Keep statistics on run time for afs_CacheTruncateDaemon. This is a
  * struct so we need only export one symbol for AIX.
  */
-struct CTD_stats {
+static struct CTD_stats {
     osi_timeval_t CTD_beforeSleep;
     osi_timeval_t CTD_afterSleep;
     osi_timeval_t CTD_sleepTime;
@@ -242,7 +223,8 @@ struct CTD_stats {
 } CTD_stats;
 
 u_int afs_min_cache = 0;
-void afs_CacheTruncateDaemon() {
+void afs_CacheTruncateDaemon(void)
+{
     osi_timeval_t CTD_tmpTime;
     u_int counter;
     u_int cb_lowat;
@@ -308,7 +290,7 @@ void afs_CacheTruncateDaemon() {
 	    afs_stats_AddTo(CTD_stats.CTD_runTime, CTD_tmpTime);
 
 	    afs_TruncateDaemonRunning = 0;
-	    afs_osi_Sleep((char *)afs_CacheTruncateDaemon);  
+	    afs_osi_Sleep((int *)afs_CacheTruncateDaemon);  
 	    afs_TruncateDaemonRunning = 1;
 
 	    osi_GetuTime(&CTD_stats.CTD_afterSleep);
@@ -345,13 +327,8 @@ void afs_CacheTruncateDaemon() {
  *	anewsize : New size desired.
  */
 
-void
-afs_AdjustSize(adc, newSize)
-    register struct dcache *adc;
-    register afs_int32 newSize;
-
-{ /*afs_AdjustSize*/
-
+void afs_AdjustSize(register struct dcache *adc, register afs_int32 newSize)
+{
     register afs_int32 oldSize;
 
     AFS_STATCNT(afs_AdjustSize);
@@ -366,11 +343,7 @@ afs_AdjustSize(adc, newSize)
     }
     afs_blocksUsed += (newSize - oldSize);
     afs_stats_cmperf.cacheBlocksInUse = afs_blocksUsed;	/* XXX */
-
-} /*afs_AdjustSize*/
-
-
-
+}
 
 
 /*
@@ -521,7 +494,7 @@ static void afs_GetDownD(int anumber, int *aneedSpace)
 		/* xdcache is lower than the xvcache lock */
 		MReleaseWriteLock(&afs_xdcache);
 		MObtainReadLock(&afs_xvcache);
-		tvc = afs_FindVCache(afid, 0,0, 0, 0 /* no stats, no vlru */ );
+		tvc = afs_FindVCache(afid, 0, 0 /* no stats, no vlru */ );
 		MReleaseReadLock(&afs_xvcache);
 		MObtainWriteLock(&afs_xdcache, 527);
 		skip = 0;
@@ -691,11 +664,8 @@ endmultipage:
  *
  * Locks: Must have the afs_xdcache lock write-locked to call this function.
  */
-afs_HashOutDCache(adc)
-    struct dcache *adc;
-
-{ /*afs_HashOutDCache*/
-
+int afs_HashOutDCache(struct dcache *adc)
+{
     int i, us;
 
 #ifndef	AFS_DEC_ENV
@@ -774,11 +744,8 @@ afs_HashOutDCache(adc)
  *	(in write mode)
  */
 
-void
-afs_FlushDCache(adc)
-register struct dcache *adc;
-{ /*afs_FlushDCache*/
-
+void afs_FlushDCache(register struct dcache *adc)
+{
     AFS_STATCNT(afs_FlushDCache);
     /*
      * Bump the number of cache files flushed.
@@ -819,8 +786,7 @@ register struct dcache *adc;
  *
  * Environment: called with afs_xdcache lock write-locked.
  */
-static void afs_FreeDCache(adc)
-    register struct dcache *adc;
+static void afs_FreeDCache(register struct dcache *adc)
 {
     /* Thread on free list, update free list count and mark entry as
      * freed in its indexFlags element.  Also, ensure DCache entry gets
@@ -862,12 +828,8 @@ static void afs_FreeDCache(adc)
  *	Must be called with afs_xdcache write-locked.
  */
 
-static void
-afs_DiscardDCache(adc)
-    register struct dcache *adc;
-
-{ /*afs_DiscardDCache*/
-
+static void afs_DiscardDCache(register struct dcache *adc)
+{
     register afs_int32 size;
 
     AFS_STATCNT(afs_DiscardDCache);
@@ -902,8 +864,7 @@ afs_DiscardDCache(adc)
  * Description:
  *     Free the next element on the list of discarded cache elements.
  */
-static void
-afs_FreeDiscardedDCache()
+static void afs_FreeDiscardedDCache(void)
 {
     register struct dcache *tdc;
     register struct osi_file *tfile; 
@@ -963,7 +924,7 @@ afs_FreeDiscardedDCache()
  * Parameters:
  *      None
  */
-afs_MaybeFreeDiscardedDCache()
+int afs_MaybeFreeDiscardedDCache(void)
 {
 
     AFS_STATCNT(afs_MaybeFreeDiscardedDCache);
@@ -987,19 +948,8 @@ afs_MaybeFreeDiscardedDCache()
  * Environment:
  *	Must be called with afs_xdcache write-locked.
  */
-#if defined(AFS_SGI_ENV) && defined(AFS_SGI_SHORTSTACK)
-extern SV_TYPE afs_sgibksync;
-extern SV_TYPE afs_sgibkwait;
-extern lock_t afs_sgibklock;
-extern struct dcache *afs_sgibklist;
-#endif
-
-static void
-afs_GetDownDSlot(anumber)
-    int anumber;
-
-{ /*afs_GetDownDSlot*/
-
+static void afs_GetDownDSlot(int anumber)
+{
     struct afs_q *tq, *nq;
     struct dcache *tdc;
     int ix;
@@ -1065,7 +1015,7 @@ afs_GetDownDSlot(anumber)
 
 
 	    /* finally put the entry in the free list */
-	    afs_indexTable[ix] = (struct dcache *) 0;
+	    afs_indexTable[ix] = NULL;
 	    afs_indexFlags[ix] &= ~IFEverUsed;
 	    tdc->index = NULLIDX;
 	    tdc->lruq.next = (struct afs_q *) afs_freeDSList;
@@ -1091,8 +1041,7 @@ afs_GetDownDSlot(anumber)
  * Environment:
  *	Nothing interesting.
  */
-afs_RefDCache(adc)
-    struct dcache *adc;
+int afs_RefDCache(struct dcache *adc)
 {
     ObtainWriteLock(&adc->tlock, 627);
     if (adc->refCount < 0)
@@ -1115,10 +1064,8 @@ afs_RefDCache(adc)
  * Environment:
  *	Nothing interesting.
  */
-afs_PutDCache(adc)
-    register struct dcache *adc;
-
-{ /*afs_PutDCache*/
+int afs_PutDCache(register struct dcache *adc)
+{
     AFS_STATCNT(afs_PutDCache);
     ObtainWriteLock(&adc->tlock, 276);
     if (adc->refCount <= 0)
@@ -1126,8 +1073,7 @@ afs_PutDCache(adc)
     --adc->refCount;
     ReleaseWriteLock(&adc->tlock);
     return 0;
-
-} /*afs_PutDCache*/
+}
 
 
 /*
@@ -1143,13 +1089,9 @@ afs_PutDCache(adc)
  * Environment:
  *	Both pvnLock and lock are write held.
  */
-void
-afs_TryToSmush(avc, acred, sync)
-    register struct vcache *avc;
-    struct AFS_UCRED *acred;
-    int sync;
-{ /*afs_TryToSmush*/
-
+void afs_TryToSmush(register struct vcache *avc, struct AFS_UCRED *acred, 
+	int sync)
+{
     register struct dcache *tdc;
     register int index;
     register int i;
@@ -1176,7 +1118,7 @@ afs_TryToSmush(avc, acred, sync)
       i = afs_dvnextTbl[index];	/* next pointer this hash table */
       if (afs_indexUnique[index] == avc->fid.Fid.Unique) {
 	int releaseTlock = 1;
-	tdc = afs_GetDSlot(index, (struct dcache *)0);
+	tdc = afs_GetDSlot(index, NULL);
 	if (!FidCmp(&tdc->f.fid, &avc->fid)) {
 	    if (sync) {
 		if ((afs_indexFlags[index] & IFDataMod) == 0 &&
@@ -1206,7 +1148,7 @@ afs_TryToSmush(avc, acred, sync)
      * trytoSmush occured during the lookup call
      */
     afs_allCBs++;
-} /*afs_TryToSmush*/
+}
 
 /*
  * afs_FindDCache
@@ -1228,12 +1170,8 @@ afs_TryToSmush(avc, acred, sync)
  *	The vcache entry is held upon entry.
  */
 
-struct dcache *afs_FindDCache(avc, abyte)
-    register struct vcache *avc;
-    afs_size_t abyte;
-
-{ /*afs_FindDCache*/
-
+struct dcache *afs_FindDCache(register struct vcache *avc, afs_size_t abyte)
+{
     afs_int32 chunk;
     register afs_int32 i, index;
     register struct dcache *tdc;
@@ -1249,7 +1187,7 @@ struct dcache *afs_FindDCache(avc, abyte)
     MObtainWriteLock(&afs_xdcache,278);
     for(index = afs_dchashTbl[i]; index != NULLIDX;) {
       if (afs_indexUnique[index] == avc->fid.Fid.Unique) {
-	tdc = afs_GetDSlot(index, (struct dcache *)0);
+	tdc = afs_GetDSlot(index, NULL);
 	ReleaseReadLock(&tdc->tlock);
 	if (!FidCmp(&tdc->f.fid, &avc->fid) && chunk == tdc->f.chunk) {
 	    break;  /* leaving refCount high for caller */
@@ -1265,7 +1203,7 @@ struct dcache *afs_FindDCache(avc, abyte)
 	return tdc;
     }
     else
-	return(struct dcache *) 0;
+	return NULL;
 
 } /*afs_FindDCache*/
 
@@ -1292,17 +1230,10 @@ struct dcache *afs_FindDCache(avc, abyte)
  * Environment:
  *	Nothing interesting.
  */
-static int afs_UFSCacheStoreProc(acall, afile, alen, avc, shouldWake,
-			      abytesToXferP, abytesXferredP)
-     register struct rx_call *acall;
-     struct osi_file *afile;
-     register afs_int32 alen;
-     afs_size_t *abytesToXferP;
-     afs_size_t *abytesXferredP;
-     struct vcache *avc;
-     int *shouldWake;
-{ /* afs_UFSCacheStoreProc*/
-
+static int afs_UFSCacheStoreProc(register struct rx_call *acall, 
+	struct osi_file *afile, register afs_int32 alen, struct vcache *avc, 
+	int *shouldWake, afs_size_t *abytesToXferP, afs_size_t *abytesXferredP)
+{
     afs_int32 code, got;
     register char *tbuffer;
     register int tlen;
@@ -1391,17 +1322,11 @@ static int afs_UFSCacheStoreProc(acall, afile, alen, avc, shouldWake,
  *	Nothing interesting.
  */
 
-static int afs_UFSCacheFetchProc(acall, afile, abase, adc, avc,
-			      abytesToXferP, abytesXferredP, lengthFound)
-    register struct rx_call *acall;
-    afs_size_t abase;
-    afs_size_t *abytesToXferP;
-    afs_size_t *abytesXferredP;
-    struct dcache *adc;
-    struct vcache *avc;
-    struct osi_file *afile;
-    afs_int32 lengthFound;
-{ /*UFS_CacheFetchProc*/
+static int afs_UFSCacheFetchProc(register struct rx_call *acall, 
+	struct osi_file *afile, afs_size_t abase, struct dcache *adc, 
+	struct vcache *avc, afs_size_t *abytesToXferP, 
+	afs_size_t *abytesXferredP, afs_int32 lengthFound)
+{
     afs_int32 length;
     register afs_int32 code;
     register char *tbuffer;
@@ -1524,7 +1449,8 @@ struct tlocal1 {
  * Update the vnode-to-dcache hint if we can get the vnode lock
  * right away.  Assumes dcache entry is at least read-locked.
  */
-void updateV2DC(int lockVc, struct vcache *v, struct dcache *d, int src) {
+void updateV2DC(int lockVc, struct vcache *v, struct dcache *d, int src)
+{
     if (!lockVc || 0 == NBObtainWriteLock(&v->lock,src)) {
 	if (hsame(v->m.DataVersion, d->f.versionNo) && v->callback) {
 	    v->quick.dc = d;
@@ -1538,15 +1464,11 @@ void updateV2DC(int lockVc, struct vcache *v, struct dcache *d, int src) {
     }
 }
 
-struct dcache *afs_GetDCache(avc, abyte, areq, aoffset, alen, aflags)
-    register struct vcache *avc;    /* Write-locked unless aflags & 1 */
-    afs_size_t abyte;
-    afs_size_t *aoffset, *alen;
-    int	aflags;
-    register struct vrequest *areq;
-
-{ /*afs_GetDCache*/
-
+/* avc - Write-locked unless aflags & 1 */
+struct dcache *afs_GetDCache(register struct vcache *avc, afs_size_t abyte, 
+	register struct vrequest *areq, afs_size_t *aoffset, afs_size_t *alen, 
+	int aflags)
+{
     register afs_int32 i, code, code1, shortcut , adjustsize=0;
     int setLocks;
     afs_int32 index;
@@ -1625,7 +1547,7 @@ RetryGetDCache:
     shortcut = 0;
 
     /* check hints first! (might could use bcmp or some such...) */
-    if (tdc = avc->h1.dchint) {
+    if ((tdc = avc->h1.dchint)) {
 	int dcLocked;
 
 	/*
@@ -1706,7 +1628,7 @@ RetryLookup:
 	us = NULLIDX;
 	for (index = afs_dchashTbl[i]; index != NULLIDX; ) {
 	    if (afs_indexUnique[index] == avc->fid.Fid.Unique) {
-		tdc = afs_GetDSlot(index, (struct dcache *)0);
+		tdc = afs_GetDSlot(index, NULL);
 		ReleaseReadLock(&tdc->tlock);
 		/*
 		 * Locks held:
@@ -2349,7 +2271,7 @@ RetryLookup:
 		    ObtainWriteLock(&afs_xcbhash, 453);
 		    afs_DequeueCallback(avc);
 		    avc->states &= ~(CStatd | CUnique);   
-		    avc->callback = (struct server *)0;
+		    avc->callback = NULL;
 		    ReleaseWriteLock(&afs_xcbhash);
 		    if (avc->fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
 			osi_dnlc_purgedp(avc);
@@ -2374,7 +2296,7 @@ RetryLookup:
 	} while
 	    (afs_Analyze(tc, code, &avc->fid, areq,
 			 AFS_STATS_FS_RPCIDX_FETCHDATA,
-			 SHARED_LOCK, (struct cell *)0));
+			 SHARED_LOCK, NULL));
 
 	/*
 	 * Locks held:
@@ -2430,7 +2352,7 @@ RetryLookup:
 	     * avc->lock(W); assert(!setLocks || slowPass)
 	     */
 	    osi_Assert(!setLocks || slowPass);
-	    tdc = (struct dcache *) 0;
+	    tdc = NULL;
             goto done;
 	}
 
@@ -2572,11 +2494,8 @@ done:
  * Environment:
  *	The afs_xdcache is write-locked through this whole affair.
  */
-void
-afs_WriteThroughDSlots()
-
-{ /*afs_WriteThroughDSlots*/
-
+void afs_WriteThroughDSlots(void)
+{
     register struct dcache *tdc;
     register afs_int32 i, touchedit=0;
     struct dcache **ents;
@@ -2651,8 +2570,7 @@ afs_WriteThroughDSlots()
 	afs_osi_Write(afs_cacheInodep, 0, &theader, sizeof(theader));
     }
     MReleaseWriteLock(&afs_xdcache);
-
-} /*afs_WriteThroughDSlots*/
+}
 
 /*
  * afs_MemGetDSlot
@@ -2669,12 +2587,8 @@ afs_WriteThroughDSlots()
  *	Must be called with afs_xdcache write-locked.
  */
 
-struct dcache *afs_MemGetDSlot(aslot, tmpdc)
-     register afs_int32 aslot;
-     register struct dcache *tmpdc;
-
-{ /*afs_MemGetDSlot*/
-
+struct dcache *afs_MemGetDSlot(register afs_int32 aslot, register struct dcache *tmpdc)
+{
     register afs_int32 code;
     register struct dcache *tdc;
     register char *tfile;
@@ -2693,7 +2607,7 @@ struct dcache *afs_MemGetDSlot(aslot, tmpdc)
 	ConvertWToRLock(&tdc->tlock);
 	return tdc;
     }
-    if (tmpdc == (struct dcache *)0) {
+    if (tmpdc == NULL) {
 	if (!afs_freeDSList) afs_GetDownDSlot(4); 
 	if (!afs_freeDSList) {
 	    /* none free, making one is better than a panic */
@@ -2739,7 +2653,7 @@ struct dcache *afs_MemGetDSlot(aslot, tmpdc)
     RWLOCK_INIT(&tdc->mflock, "dcache flock");
     ObtainReadLock(&tdc->tlock);
     
-    if (tmpdc == (struct dcache *)0)
+    if (tmpdc == NULL)
 	afs_indexTable[aslot] = tdc;
     return tdc;
 
@@ -2761,12 +2675,8 @@ unsigned int last_error = 0, lasterrtime = 0;
  * Environment:
  *	afs_xdcache lock write-locked.
  */
-struct dcache *afs_UFSGetDSlot(aslot, tmpdc)
-    register afs_int32 aslot;
-    register struct dcache *tmpdc;
-
-{ /*afs_UFSGetDSlot*/
-
+struct dcache *afs_UFSGetDSlot(register afs_int32 aslot, register struct dcache *tmpdc)
+{
     register afs_int32 code;
     register struct dcache *tdc;
     int existing = 0;
@@ -2789,7 +2699,7 @@ struct dcache *afs_UFSGetDSlot(aslot, tmpdc)
      * If we weren't passed an in-memory region to place the file info,
      * we have to allocate one.
      */
-    if (tmpdc == (struct dcache *)0) {
+    if (tmpdc == NULL) {
 	if (!afs_freeDSList) afs_GetDownDSlot(4);
 	if (!afs_freeDSList) {
 	    /* none free, making one is better than a panic */
@@ -2849,7 +2759,7 @@ struct dcache *afs_UFSGetDSlot(aslot, tmpdc)
      * If we didn't read into a temporary dcache region, update the
      * slot pointer table.
      */
-    if (tmpdc == (struct dcache *)0)
+    if (tmpdc == NULL)
 	afs_indexTable[aslot] = tdc;
     return tdc;
 
@@ -2874,12 +2784,8 @@ struct dcache *afs_UFSGetDSlot(aslot, tmpdc)
  *	The reference count is not changed.
  */
 
-afs_WriteDCache(adc, atime)
-    int atime;
-    register struct dcache *adc;
-
-{ /*afs_WriteDCache*/
-
+int afs_WriteDCache(register struct dcache *adc, int atime)
+{
     register struct osi_file *tfile;
     register afs_int32 code;
 
@@ -2894,8 +2800,7 @@ afs_WriteDCache(adc, atime)
 		     (char *)(&adc->f), sizeof(struct fcache));
     if (code != sizeof(struct fcache)) return EIO;
     return 0;
-
-} /*afs_WriteDCache*/
+}
 
 
 
@@ -2913,11 +2818,8 @@ afs_WriteDCache(adc, atime)
  *	Nothing interesting.
  */
 
-afs_wakeup(avc)
-    register struct vcache *avc;
-
-{ /*afs_wakeup*/
-
+int afs_wakeup(register struct vcache *avc)
+{
     register int i;
     register struct brequest *tb;
     tb = afs_brs;
@@ -2947,8 +2849,7 @@ afs_wakeup(avc)
 	}
     }
     return 0;
-
-} /*afs_wakeup*/
+}
 
 
 /*
@@ -2967,12 +2868,8 @@ afs_wakeup(avc)
  *	This function is called only during initialization.
  */
 
-int afs_InitCacheFile(afile, ainode)
-    ino_t ainode;
-    char *afile;
-
-{ /*afs_InitCacheFile*/
-
+int afs_InitCacheFile(char *afile, ino_t ainode)
+{
     register afs_int32 code;
 #if defined(AFS_LINUX22_ENV)
     struct dentry *filevp;
@@ -2990,7 +2887,7 @@ int afs_InitCacheFile(afile, ainode)
     if (index >= afs_cacheFiles) return EINVAL;
 
     MObtainWriteLock(&afs_xdcache,282);
-    tdc = afs_GetDSlot(index, (struct dcache *)0);
+    tdc = afs_GetDSlot(index, NULL);
     ReleaseReadLock(&tdc->tlock);
     MReleaseWriteLock(&afs_xdcache);
 
@@ -3000,7 +2897,7 @@ int afs_InitCacheFile(afile, ainode)
 	code = gop_lookupname(afile,
 			      AFS_UIOSYS,
 			      0,
-			      (struct vnode **) 0,
+			      NULL,
 			      &filevp);
 	if (code) {
 	    ReleaseWriteLock(&afs_xdcache);
@@ -3101,8 +2998,7 @@ int afs_InitCacheFile(afile, ainode)
     afs_PutDCache(tdc);
     afs_stats_cmperf.cacheNumEntries++;
     return 0;
-
-} /*afs_InitCacheFile*/
+}
 
 
 /*Max # of struct dcache's resident at any time*/
@@ -3128,7 +3024,7 @@ void afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk,
     afs_freeDCList = NULLIDX;
     afs_discardDCList = NULLIDX;
     afs_freeDCCount = 0;
-    afs_freeDSList = (struct dcache *)0;
+    afs_freeDSList = NULL;
     hzero(afs_indexCounter);
 
     LOCK_INIT(&afs_xdcache, "afs_xdcache");

@@ -308,7 +308,7 @@ afs_int32 freeTapeList()
 	listEntryPtr = next;
     }
 
-    listEntryHead = (struct tapeEntryList *)0;
+    listEntryHead = NULL;
     return(0);
 }
 	    
@@ -422,7 +422,7 @@ saveDbToTape(saveDbIfPtr)
     }
 
 
-    listEntryHead = (struct tapeEntryList *)0;
+    listEntryHead = NULL;
 
     /* Get the tape and write a new label to it */
     code = GetDBTape(taskId, expires, &tapeInfo, dumpEntry.id, 1, autoQuery, &wroteLabel);
@@ -688,7 +688,7 @@ restoreDbFromTape(taskId)
 	ERROR_EXIT(code);
     }
 
-    listEntryHead = (struct tapeEntryList *)0;
+    listEntryHead = NULL;
 
     rstTapeInfo.taskId   = taskId;
     rstTapeInfo.tapeSeq  = 1;
@@ -910,7 +910,7 @@ writeDbDump(tapeInfoPtr, taskId, expires, dumpid)
 		code = pthread_create(&alivePid, &tattr, KeepAlive, 0);
 		AFS_SIGSET_RESTORE();
 #else
-	        code = LWP_CreateProcess(KeepAlive, 16384, 1, (char *)0, 
+	        code = LWP_CreateProcess(KeepAlive, 16384, 1, NULL, 
 					 "Keep-alive process", &alivePid);
 #endif
 		/* XXX should we check code here ??? XXX */

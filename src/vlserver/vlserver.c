@@ -33,6 +33,15 @@ RCSID("$Header$");
 #include <netinet/in.h>
 #endif
 #include <stdio.h>
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
@@ -100,7 +109,7 @@ void initialize_dstats ()
 int vldb_rxstat_userok(call)
     struct rx_call *call;
 {
-    return afsconf_SuperUser(vldb_confdir, call, (char *)0);
+    return afsconf_SuperUser(vldb_confdir, call, NULL);
 }
 
 /* Main server module */
@@ -115,7 +124,6 @@ char	**argv;
     afs_int32		    myHost;
     struct rx_service	    *tservice;
     struct rx_securityClass *sc[3];
-    extern struct rx_securityClass *rxnull_NewServerSecurityObject();
     extern int		    VL_ExecuteRequest();
     extern int		    RXSTATS_ExecuteRequest();
     struct afsconf_dir *tdir;
@@ -235,7 +243,7 @@ char	**argv;
     signal(SIGXCPU, CheckSignal_Signal);
 #endif
     /* get list of servers */
-    code = afsconf_GetExtendedCellInfo(tdir,(char *)0, AFSCONF_VLDBSERVICE,
+    code = afsconf_GetExtendedCellInfo(tdir,NULL, AFSCONF_VLDBSERVICE,
                                        &info, &clones);
     if (code) {
 	printf("vlserver: Couldn't get cell server list for 'afsvldb'.\n");
@@ -271,7 +279,7 @@ char	**argv;
 
     sc[0] = rxnull_NewServerSecurityObject();
     sc[1] = (struct rx_securityClass *) 0;
-    sc[2] = (struct rx_securityClass *) rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, (char *) 0);
+    sc[2] = rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, NULL);
     tservice = rx_NewService(0, USER_SERVICE_ID, "Vldb server", sc, 3, VL_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
 	printf("vlserver: Could not create VLDB_SERVICE rx service\n");

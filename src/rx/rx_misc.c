@@ -51,9 +51,7 @@ RCSID("$Header$");
  * Convert from the local (host) to the standard 
  * (network) system error code.
  */
-int
-hton_syserr_conv(code)
-    register afs_int32 code;
+int hton_syserr_conv(register afs_int32 code)
 {
     register afs_int32 err;
 
@@ -74,8 +72,7 @@ hton_syserr_conv(code)
  * Convert from the standard (Network) format to the
  * local (host) system error code.
  */
-int
-ntoh_syserr_conv(int code)
+int ntoh_syserr_conv(int code)
 {
     register afs_int32 err;
 
@@ -117,8 +114,7 @@ pthread_mutex_t osi_malloc_mutex;
 #endif /* AFS_PTHREAD_ENV */
 long osi_alloccnt=0, osi_allocsize=0;
 static const char memZero;
-char * osi_alloc(x)
-    afs_int32 x; 
+char *osi_alloc(afs_int32 x)
 {
     /* 
      * 0-length allocs may return NULL ptr from osi_kalloc, so we special-case
@@ -131,10 +127,7 @@ char * osi_alloc(x)
     return (char *)(mem_alloc(x));
 }
 
-int
-osi_free(x, size)
-    char *x;
-    afs_int32 size; 
+int osi_free(char *x, afs_int32 size)
 {
     if ((x == &memZero) || !x) return 0;
     LOCK_MALLOC_STATS

@@ -124,9 +124,9 @@ static int test_objects(pkg)
     light_crparams.onode_params.cr_width      = 10;
     light_crparams.onode_params.cr_height     = 1;
     light_crparams.onode_params.cr_window     = &gator_basegwin;
-    light_crparams.onode_params.cr_home_obj   = (struct onode *)0;
-    light_crparams.onode_params.cr_prev_obj   = (struct onode *)0;
-    light_crparams.onode_params.cr_parent_obj = (struct onode *)0;
+    light_crparams.onode_params.cr_home_obj   = NULL;
+    light_crparams.onode_params.cr_prev_obj   = NULL;
+    light_crparams.onode_params.cr_parent_obj = NULL;
     light_crparams.onode_params.cr_helpstring = helpstring1;
 
     light_crparams.appearance = 0;
@@ -136,7 +136,7 @@ static int test_objects(pkg)
     light_crparams.label_y = 0;
 
     light_onp1 = gator_objects_create((struct onode_createparams *)(&light_crparams));
-    if (light_onp1 == (struct onode *)0) {
+    if (light_onp1 == NULL) {
       fprintf(stderr, "[%s:%s] Can't create light object\n", pn, rn);
       exit(-1);
     }
@@ -148,7 +148,7 @@ static int test_objects(pkg)
     sprintf(light_crparams.onode_params.cr_name, "%s", "Light2");
     sprintf(light_crparams.label, "%s", "Light 2   ");
     light_onp2 = gator_objects_create((struct onode_createparams *)(&light_crparams));
-    if (light_onp2 == (struct onode *)0) {
+    if (light_onp2 == NULL) {
       fprintf(stderr, "[%s:%s] Can't create light object\n", pn, rn);
       exit(-1);
     }
@@ -160,7 +160,7 @@ static int test_objects(pkg)
     sprintf(light_crparams.onode_params.cr_name, "%s", "Light3");
     sprintf(light_crparams.label, "%s", "Light 3   ");
     light_onp3 = gator_objects_create((struct onode_createparams *)(&light_crparams));
-    if (light_onp3 == (struct onode *)0) {
+    if (light_onp3 == NULL) {
       fprintf(stderr, "[%s:%s] Can't create light object\n", pn, rn);
       exit(-1);
     }
@@ -172,7 +172,7 @@ static int test_objects(pkg)
     sprintf(light_crparams.onode_params.cr_name, "%s", "Light4");
     sprintf(light_crparams.label, "%s", "Light 4   ");
     light_onp4 = gator_objects_create((struct onode_createparams *)(&light_crparams));
-    if (light_onp4 == (struct onode *)0) {
+    if (light_onp4 == NULL) {
       fprintf(stderr, "[%s:%s] Can't create light object\n", pn, rn);
       exit(-1);
     }
@@ -188,15 +188,15 @@ static int test_objects(pkg)
     text_crparams.onode_params.cr_width	     = 35;
     text_crparams.onode_params.cr_height     =  7;
     text_crparams.onode_params.cr_window     = &gator_basegwin;
-    text_crparams.onode_params.cr_home_obj   = (struct onode *)0;
-    text_crparams.onode_params.cr_prev_obj   = (struct onode *)0;
-    text_crparams.onode_params.cr_parent_obj = (struct onode *)0;
+    text_crparams.onode_params.cr_home_obj   = NULL;
+    text_crparams.onode_params.cr_prev_obj   = NULL;
+    text_crparams.onode_params.cr_parent_obj = NULL;
     text_crparams.onode_params.cr_helpstring = helpstringt1;
     text_crparams.maxEntries 	   =  7;
     text_crparams.maxCharsPerEntry = 35;
 
     text_onp1 = gator_objects_create((struct onode_createparams *)(&text_crparams));
-    if (text_onp1 == (struct onode *)0) {
+    if (text_onp1 == NULL) {
       fprintf(stderr, "[%s:%s] Can't create text object\n", pn, rn);
       exit(-1);
     }

@@ -42,10 +42,7 @@ RCSID("$Header$");
  *
  * Locking:  only the global lock is held on entry.
  */
-int
-osi_VM_GetDownD(avc, adc)
-    struct vcache *avc;
-    struct dcache *adc;
+int osi_VM_GetDownD(struct vcache *avc, struct dcache *adc)
 {
     int code;
 
@@ -73,10 +70,7 @@ osi_VM_GetDownD(avc, adc)
  * is not dropped and re-acquired for any platform.  It may be that *slept is
  * therefore obsolescent.
  */
-int
-osi_VM_FlushVCache(avc, slept)
-    struct vcache *avc;
-    int *slept;
+int osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
     if (avc->vrefCount != 0)
 	return EBUSY;
@@ -113,9 +107,7 @@ osi_VM_FlushVCache(avc, slept)
  * Locking:  the vcache entry's lock is held.  It will usually be dropped and
  * re-obtained.
  */
-void
-osi_VM_StoreAllSegments(avc)
-    struct vcache *avc;
+void osi_VM_StoreAllSegments(struct vcache *avc)
 {
     AFS_GUNLOCK();
 #if	defined(AFS_SUN56_ENV)
@@ -133,11 +125,7 @@ osi_VM_StoreAllSegments(avc)
  * Locking:  the vcache entry's lock is held.  It may be dropped and
  * re-obtained.
  */
-void
-osi_VM_TryToSmush(avc, acred, sync)
-    struct vcache *avc;
-    struct AFS_UCRED *acred;
-    int sync;
+void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 {
     AFS_GUNLOCK();
 #if	defined(AFS_SUN56_ENV)
@@ -154,10 +142,7 @@ osi_VM_TryToSmush(avc, acred, sync)
  *
  * Locking:  No lock is held, not even the global lock.
  */
-void
-osi_VM_FlushPages(avc, credp)
-    struct vcache *avc;
-    struct AFS_UCRED *credp;
+void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
     extern int afs_pvn_vptrunc;
 
@@ -174,11 +159,7 @@ osi_VM_FlushPages(avc, credp)
  * The caller will raise activeV (to prevent pageins), but this function must
  * be called first, since it causes a pagein.
  */
-void
-osi_VM_PreTruncate(avc, alen, acred)
-    struct vcache *avc;
-    int alen;
-    struct AFS_UCRED *acred;
+void osi_VM_PreTruncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
     page_t *pp;
     int pageOffset = (alen & PAGEOFFSET);
@@ -203,11 +184,7 @@ osi_VM_PreTruncate(avc, alen, acred)
  * Locking:  no lock is held, not even the global lock.
  * Pageins are blocked (activeV is raised).
  */
-void
-osi_VM_Truncate(avc, alen, acred)
-    struct vcache *avc;
-    int alen;
-    struct AFS_UCRED *acred;
+void osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
     /*
      * It's OK to specify afs_putapage here, even though we aren't holding

@@ -9,7 +9,8 @@
 
 #ifndef __INCL_KTIME_
 #define __INCL_KTIME_ 1
-#undef min 	/* XXX */
+
+#undef min 	/* redefined at end of file */
 struct ktime_date {
     afs_int32 mask;		/* mask of valid fields */
     short year;
@@ -56,5 +57,5 @@ struct ktime {
 
 afs_int32 ktime_InterpretDate(struct ktime_date *akdate);
 
-
+#define min(a,b) (((a) < (b)) ? (a) : (b))
 #endif /* __INCL_KTIME_ */

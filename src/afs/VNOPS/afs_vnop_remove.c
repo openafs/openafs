@@ -94,13 +94,10 @@ afs_IsWired(avc)
 }
 #endif	/* AFS_OSF_ENV */
 
-afsremove(adp, tdc, tvc, aname, acred, treqp)
-    register struct vcache *adp;
-    register struct dcache *tdc;
-    register struct vcache *tvc;
-    char *aname;
-    struct vrequest *treqp;
-    struct AFS_UCRED *acred; {
+int afsremove(register struct vcache *adp, register struct dcache *tdc, 
+	register struct vcache *tvc, char *aname, struct AFS_UCRED *acred, 
+	struct vrequest *treqp)
+{
     register afs_int32 code;
     register struct conn *tc;
     struct AFSFetchStatus OutDirStatus;
@@ -111,20 +108,16 @@ afsremove(adp, tdc, tvc, aname, acred, treqp)
 	tc = afs_Conn(&adp->fid, treqp, SHARED_LOCK);
 	if (tc) {
           XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEFILE);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GUNLOCK();
 	    code = RXAFS_RemoveFile(tc->id, (struct AFSFid *) &adp->fid.Fid,
 				    aname, &OutDirStatus, &tsync);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GLOCK();
           XSTATS_END_TIME;
       }
 	else code = -1;
     } while
       (afs_Analyze(tc, code, &adp->fid, treqp,
-		   AFS_STATS_FS_RPCIDX_REMOVEFILE, SHARED_LOCK, (struct cell *)0));
+		   AFS_STATS_FS_RPCIDX_REMOVEFILE, SHARED_LOCK, NULL));
 
     osi_dnlc_remove (adp, aname, tvc);
     if (tvc) afs_symhint_inval(tvc);   /* XXX: don't really need to be so extreme */
@@ -134,7 +127,7 @@ afsremove(adp, tdc, tvc, aname, acred, treqp)
 	    ReleaseSharedLock(&tdc->lock);
 	    afs_PutDCache(tdc);
 	}
-	if (tvc) afs_PutVCache(tvc, WRITE_LOCK);
+	if (tvc) afs_PutVCache(tvc);
 
 	if (code < 0) {
 	  ObtainWriteLock(&afs_xcbhash, 497);
@@ -183,12 +176,13 @@ afsremove(adp, tdc, tvc, aname, acred, treqp)
 #if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
 	afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
-	afs_PutVCache(tvc, WRITE_LOCK);
+	afs_PutVCache(tvc);
     }
     return (0);
 }
 
-static char *newname() {
+static char *newname(void)
+{
     char *name, *sp, *p = ".__afs";
     afs_int32 rd = afs_random() & 0xffff;
 
@@ -242,10 +236,10 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     tvc = (struct vcache *)ndp->ni_vp;  /* should never be null */
 #endif
 
-    if (code = afs_InitReq(&treq, acred)) {
+    if ((code = afs_InitReq(&treq, acred))) {
 #ifdef  AFS_OSF_ENV
-	afs_PutVCache(adp, 0);
-	afs_PutVCache(tvc, 0);
+	afs_PutVCache(adp);
+	afs_PutVCache(tvc);
 #endif
 	return code;
     }
@@ -255,8 +249,8 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     if (code) {
 	afs_PutFakeStat(&fakestate);
 #ifdef  AFS_OSF_ENV
-	afs_PutVCache(adp, 0);
-	afs_PutVCache(tvc, 0);
+	afs_PutVCache(adp);
+	afs_PutVCache(tvc);
 #endif
 	return code;
     }
@@ -266,16 +260,16 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	code = afs_DynrootVOPRemove(adp, acred, aname);
 	afs_PutFakeStat(&fakestate);
 #ifdef  AFS_OSF_ENV
-	afs_PutVCache(adp, 0);
-	afs_PutVCache(tvc, 0);
+	afs_PutVCache(adp);
+	afs_PutVCache(tvc);
 #endif
 	return code;
     }
     if (strlen(aname) > AFSNAMEMAX) {
 	afs_PutFakeStat(&fakestate);
 #ifdef  AFS_OSF_ENV
-	afs_PutVCache(adp, 0);
-	afs_PutVCache(tvc, 0);
+	afs_PutVCache(adp);
+	afs_PutVCache(tvc);
 #endif
 	return ENAMETOOLONG;
     }
@@ -284,13 +278,13 @@ tagain:
 #ifdef	AFS_OSF_ENV
     tvc = VTOAFS(ndp->ni_vp);  /* should never be null */
     if (code) {
-	afs_PutVCache(adp, 0);
-	afs_PutVCache(tvc, 0);
+	afs_PutVCache(adp);
+	afs_PutVCache(tvc);
 	afs_PutFakeStat(&fakestate);
 	return afs_CheckCode(code, &treq, 22);
     }
 #else	/* AFS_OSF_ENV */
-    tvc = (struct vcache *) 0;
+    tvc = NULL;
     if (code) {
 	code = afs_CheckCode(code, &treq, 23);
 	afs_PutFakeStat(&fakestate);
@@ -303,8 +297,8 @@ tagain:
       */
     if ( adp->states & CRO ) {
 #ifdef  AFS_OSF_ENV
-        afs_PutVCache(adp, 0);
-        afs_PutVCache(tvc, 0);
+        afs_PutVCache(adp);
+        afs_PutVCache(tvc);
 #endif
         code = EROFS;
 	afs_PutFakeStat(&fakestate);
@@ -344,12 +338,10 @@ tagain:
 	    unlinkFid.Cell = adp->fid.Cell;
 	    unlinkFid.Fid.Volume = adp->fid.Fid.Volume;
 	    if (unlinkFid.Fid.Unique == 0) {
-		tvc = afs_LookupVCache(&unlinkFid, &treq, &cached, 
-				       WRITE_LOCK, adp, aname);
+		tvc = afs_LookupVCache(&unlinkFid, &treq, &cached, adp, aname);
 	    } else {
 		ObtainReadLock(&afs_xvcache);
-		tvc = afs_FindVCache(&unlinkFid, 1, WRITE_LOCK, 
-				     0 , DO_STATS );
+		tvc = afs_FindVCache(&unlinkFid, 0, DO_STATS);
 		ReleaseReadLock(&afs_xvcache);
 	    }
 	}
@@ -397,12 +389,12 @@ tagain:
 	}
         if ( tdc )
 		afs_PutDCache(tdc);
-	afs_PutVCache(tvc, WRITE_LOCK);	
+	afs_PutVCache(tvc);	
     } else {
 	code = afsremove(adp, tdc, tvc, aname, acred, &treq);
     }
 #ifdef	AFS_OSF_ENV
-    afs_PutVCache(adp, WRITE_LOCK);
+    afs_PutVCache(adp);
 #endif	/* AFS_OSF_ENV */
     afs_PutFakeStat(&fakestate);
     return code;
@@ -414,9 +406,7 @@ tagain:
  *
  * CAUTION -- may be called with avc unheld. */
 
-afs_remunlink(avc, doit)
-    register struct vcache *avc;
-    register int doit;
+int afs_remunlink(register struct vcache *avc, register int doit)
 {
     struct AFS_UCRED *cred;
     char *unlname;
@@ -430,7 +420,7 @@ afs_remunlink(avc, doit)
 	return 0;
 
     if (avc->mvid && (doit || (avc->states & CUnlinkedDel))) {
-        if (code = afs_InitReq(&treq, avc->uncred)) {
+        if ((code = afs_InitReq(&treq, avc->uncred))) {
 	    ReleaseWriteLock(&avc->lock);
         }
 	else {
@@ -466,8 +456,7 @@ afs_remunlink(avc, doit)
 	    dirFid.Fid.Volume = avc->fid.Fid.Volume;
 	    dirFid.Fid.Vnode = avc->parentVnode;
 	    dirFid.Fid.Unique = avc->parentUnique;
-	    adp = afs_GetVCache(&dirFid, &treq, (afs_int32 *)0, 
-				(struct vcache *)0, WRITE_LOCK);
+	    adp = afs_GetVCache(&dirFid, &treq, NULL, NULL);
 	    
 	    if (adp) {
 		tdc = afs_FindDCache(adp, 0);
@@ -476,10 +465,10 @@ afs_remunlink(avc, doit)
 
 		/* afsremove releases the adp & tdc locks, and does vn_rele(avc) */
 		code = afsremove(adp, tdc, avc, unlname, cred, &treq);
-		afs_PutVCache(adp, WRITE_LOCK);
+		afs_PutVCache(adp);
 	    } else {
 		/* we failed - and won't be back to try again. */
-		afs_PutVCache(avc, WRITE_LOCK);
+		afs_PutVCache(avc);
 	    }
 	    osi_FreeSmallSpace(unlname);
 	    crfree(cred);

@@ -28,6 +28,15 @@ RCSID("$Header$");
 #include <sys/types.h>
 #include <netdb.h>
 #include <errno.h>
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #undef VIRTUE
 #undef VICE
 #include <afs/afsint.h>
@@ -701,7 +710,7 @@ afs_int32 uss_acl_SetDiskQuota(a_path, a_q)
 
     status = (uss_VolumeStatus_t *)tmp_str;
     status->MinQuota = status->MaxQuota = -1;
-    name = motd = offmsg = (char *) 0;
+    name = motd = offmsg = NULL;
     status->MaxQuota = a_q;
 
     input = (char *)status + sizeof(*status);

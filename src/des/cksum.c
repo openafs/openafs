@@ -23,7 +23,9 @@
 RCSID("$Header$");
 
 #include <mit-cpyright.h>
+#ifndef KERNEL
 #include <stdio.h>
+#endif
 #ifdef HAVE_STRING_H
 #include <string.h>
 #else
@@ -34,12 +36,9 @@ RCSID("$Header$");
 
 #include <des.h>
 #include "des_internal.h"
+#include "des_prototypes.h"
 
 #define XPRT_CKSUM
-
-extern int des_debug;
-extern int des_debug_print();
-extern int des_ecb_encrypt();
 
 /*
  * This routine performs DES cipher-block-chaining checksum operation,
@@ -55,14 +54,16 @@ extern int des_ecb_encrypt();
  * The input is null padded, at the end (highest addr), to an integral
  * multiple of eight bytes.
  */
+/*
+    des_cblock *in;		* >= length bytes of inputtext *
+    des_cblock *out;		* >= length bytes of outputtext *
+    register afs_int32 length;	* in bytes *
+    des_key_schedule key;       * precomputed key schedule *
+    des_cblock *iv;		* 8 bytes of ivec *
+*/
 
-afs_uint32
-des_cbc_cksum(in,out,length,key,iv)
-    des_cblock *in;		/* >= length bytes of inputtext */
-    des_cblock *out;		/* >= length bytes of outputtext */
-    register afs_int32 length;	/* in bytes */
-    des_key_schedule key;		/* precomputed key schedule */
-    des_cblock *iv;		/* 8 bytes of ivec */
+afs_uint32 des_cbc_cksum(des_cblock *in, des_cblock *out,
+	register afs_int32 length, des_key_schedule key, des_cblock *iv)
 {
     register afs_uint32 *input = (afs_uint32 *) in;
     register afs_uint32 *output = (afs_uint32 *) out;

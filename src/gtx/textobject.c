@@ -25,6 +25,15 @@ RCSID("$Header$");
 #include <stdio.h>                      /*Standard I/O stuff*/
 #include <errno.h>
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+#include <stdlib.h>
+
 /*Externally-advertised array of text onode operations*/
 struct onodeops gator_text_ops = {
     gator_text_destroy,

@@ -7,17 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-extern int osi_dnlc_enter () ;
-extern struct vcache * osi_dnlc_lookup () ;
-extern int osi_dnlc_remove () ;
-extern int osi_dnlc_purgedp () ;
-extern int osi_dnlc_purgevp () ;
-extern int osi_dnlc_purge ();
-extern int osi_dnlc_purgevol();
-extern int osi_dnlc_init();
-extern int osi_dnlc_shutdown ();
-
-
 #define AFSNCNAMESIZE 36 /* multiple of 4 */
 struct nc {
   unsigned int key;

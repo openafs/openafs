@@ -31,6 +31,7 @@ RCSID("$Header$");
 #else /* !UKERNEL */
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
+#include "../rx/rx.h"
 #include "../rx/rx_clock.h"
 #endif /* !UKERNEL */
 #else /* KERNEL */
@@ -38,6 +39,7 @@ RCSID("$Header$");
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
+#include "rx.h"
 #include "rx_clock.h"
 #endif
 
@@ -61,7 +63,8 @@ int clock_nUpdates;		/* The actual number of clock updates */
 static int clockInitialized = 0;
 
 /* Initialize the clock */
-void clock_Init(void) {
+void clock_Init(void)
+{
     struct itimerval itimer, otimer;
 
     if (!clockInitialized) {
@@ -82,18 +85,15 @@ void clock_Init(void) {
     clock_UpdateTime();
 }
 
-#ifndef KERNEL
 /* Make clock uninitialized. */
-int
-clock_UnInit()
+int clock_UnInit(void)
 {
     clockInitialized = 0;
     return 0;
 } 
-#endif 
 
 /* Compute the current time.  The timer gets the current total elapsed time since startup, expressed in seconds and microseconds.  This call is almost 200 usec on an APC RT */
-void clock_UpdateTime()
+void clock_UpdateTime(void)
 {
     struct itimerval itimer;
     getitimer(ITIMER_REAL, &itimer);

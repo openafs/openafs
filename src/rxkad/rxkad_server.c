@@ -82,7 +82,7 @@ pthread_mutex_t rxkad_random_mutex;
 #define UNLOCK_RM
 #endif /* AFS_PTHREAD_ENV */
 
-static void init_random_int32 ()
+static void init_random_int32 (void)
 {   struct timeval key;
 
     gettimeofday (&key, NULL);
@@ -91,7 +91,7 @@ static void init_random_int32 ()
     UNLOCK_RM
 }
 
-static afs_int32 get_random_int32 ()
+static afs_int32 get_random_int32 (void)
 {   static struct timeval seed;
     afs_int32 rc;
 
@@ -113,12 +113,17 @@ static afs_int32 get_random_int32 ()
    the rx connection pointer passed to the RPC routine to obtain information
    about the client. */
 
-struct rx_securityClass *
-rxkad_NewServerSecurityObject (level, get_key_rock, get_key, user_ok)
-  rxkad_level      level;		/* minimum level */
-  char		  *get_key_rock;	/* rock for get_key implementor */
-  int		 (*get_key)();		/* passed kvno & addr(key) to fill */
-  int		 (*user_ok)();		/* passed name, inst, cell => bool */
+/*
+  rxkad_level      level;		* minimum level *
+  char		  *get_key_rock;	* rock for get_key implementor *
+  int		 (*get_key)();		* passed kvno & addr(key) to fill *
+  int		 (*user_ok)();		* passed name, inst, cell => bool *
+*/
+
+struct rx_securityClass *rxkad_NewServerSecurityObject (
+	rxkad_level level, char *get_key_rock, 
+	int (*get_key)(char *get_key_rock, int kvno, struct ktc_encryptionKey *serverKey),
+	int (*user_ok)(char *name, char *instance, char *cell, afs_int32 kvno))
 {   struct rx_securityClass *tsc;
     struct rxkad_sprivate   *tsp;
     int size;
@@ -150,9 +155,8 @@ rxkad_NewServerSecurityObject (level, get_key_rock, get_key, user_ok)
 
 /* server: called to tell if a connection authenticated properly */
 
-rxs_return_t rxkad_CheckAuthentication (aobj, aconn)
-  struct rx_securityClass *aobj;
-  struct rx_connection *aconn;
+int rxkad_CheckAuthentication (struct rx_securityClass *aobj, 
+	struct rx_connection *aconn)
 {   struct rxkad_sconn *sconn;
 
     /* first make sure the object exists */
@@ -165,9 +169,8 @@ rxs_return_t rxkad_CheckAuthentication (aobj, aconn)
 /* server: put the current challenge in the connection structure for later use
    by packet sender */
 
-rxs_return_t rxkad_CreateChallenge(aobj, aconn)
-  struct rx_securityClass *aobj;
-  struct rx_connection *aconn;
+int rxkad_CreateChallenge(struct rx_securityClass *aobj, 
+	struct rx_connection *aconn)
 {   struct rxkad_sconn *sconn;
     struct rxkad_sprivate *tsp;
 
@@ -182,10 +185,8 @@ rxs_return_t rxkad_CreateChallenge(aobj, aconn)
 
 /* server: fill in a challenge in the packet */
 
-rxs_return_t rxkad_GetChallenge (aobj, aconn, apacket)
-  IN struct rx_securityClass *aobj;
-  IN struct rx_packet *apacket;
-  IN struct rx_connection *aconn;
+int rxkad_GetChallenge (struct rx_securityClass *aobj, 
+	struct rx_connection *aconn, struct rx_packet *apacket)
 {   struct rxkad_sconn *sconn;
     char *challenge;
     int challengeSize;
@@ -226,10 +227,8 @@ rxs_return_t rxkad_GetChallenge (aobj, aconn, apacket)
 /* XXX this does some copying of data in and out of the packet, but I'll bet it
  * could just do it in place, especially if I used rx_Pullup...
  */
-rxs_return_t rxkad_CheckResponse (aobj, aconn, apacket)
-  struct rx_securityClass *aobj;
-  struct rx_packet *apacket;
-  struct rx_connection *aconn;
+int rxkad_CheckResponse (struct rx_securityClass *aobj, 
+	struct rx_connection *aconn, struct rx_packet *apacket)
 {   struct rxkad_sconn *sconn;
     struct rxkad_sprivate *tsp;
     struct ktc_encryptionKey serverKey;
@@ -386,15 +385,9 @@ rxs_return_t rxkad_CheckResponse (aobj, aconn, apacket)
 
 /* return useful authentication info about a server-side connection */
 
-afs_int32 rxkad_GetServerInfo (aconn, level, expiration,
-				 name, instance, cell, kvno)
-  struct rx_connection *aconn;
-  rxkad_level	 *level;
-  afs_uint32  *expiration;
-  char		 *name;
-  char		 *instance;
-  char		 *cell;
-  afs_int32		 *kvno;
+afs_int32 rxkad_GetServerInfo (struct rx_connection *aconn, 
+	rxkad_level *level, afs_uint32 *expiration, char *name, char *instance, 
+	char *cell, afs_int32 *kvno)
 {
     struct rxkad_sconn *sconn;
 

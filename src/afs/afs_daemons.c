@@ -34,29 +34,22 @@ static int rxepoch_checked=0;
 #define afs_CheckRXEpoch() {if (rxepoch_checked == 0 && rxkad_EpochWasSet) { \
 	rxepoch_checked = 1; afs_GCUserData(/* force flag */ 1);  } }
 
-extern char afs_rootVolumeName[];
-extern struct vcache *afs_globalVp;
-extern struct VenusFid afs_rootFid;
-extern struct osi_dev cacheDev;
-extern char *afs_indexFlags;
-extern afs_rwlock_t afs_xvcache;
-extern struct afs_exporter *afs_nfsexporter;
-extern int cacheDiskType;
-extern int afs_BumpBase();
-extern void afs_CheckCallbacks();
-
 /* PAG garbage collection */
 /* We induce a compile error if param.h does not define AFS_GCPAGS */
 afs_int32 afs_gcpags=AFS_GCPAGS;
 afs_int32 afs_gcpags_procsize;
 
 afs_int32 afs_CheckServerDaemonStarted = 0;
+#ifdef DEFAULT_PROBE_INTERVAL
+afs_int32 PROBE_INTERVAL=DEFAULT_PROBE_INTERVAL;  /* overridding during compile */
+#else
 afs_int32 PROBE_INTERVAL=180;	/* default to 3 min */
+#endif
 
 #define PROBE_WAIT() (1000 * (PROBE_INTERVAL - ((afs_random() & 0x7fffffff) \
 		      % (PROBE_INTERVAL/2))))
 
-afs_CheckServerDaemon()
+int afs_CheckServerDaemon(void)
 {
     afs_int32 now, delay, lastCheck, last10MinCheck;
 
@@ -75,13 +68,13 @@ afs_CheckServerDaemon()
 
 	now = osi_Time();
 	if (PROBE_INTERVAL + lastCheck <= now) {
-	    afs_CheckServers(1, (struct cell *) 0); /* check down servers */
+	    afs_CheckServers(1, NULL); /* check down servers */
 	    lastCheck = now = osi_Time();
 	}
 
 	if (600 + last10MinCheck <= now) {
 	    afs_Trace1(afs_iclSetp, CM_TRACE_PROBEUP, ICL_TYPE_INT32, 600);
-	    afs_CheckServers(0, (struct cell *) 0);
+	    afs_CheckServers(0, NULL);
 	    last10MinCheck = now = osi_Time();
 	}
 	/* shutdown check. */
@@ -103,9 +96,9 @@ afs_CheckServerDaemon()
     afs_CheckServerDaemonStarted = 0;
 }
 
-void afs_Daemon() {
+void afs_Daemon(void)
+{
     afs_int32 code;
-    extern struct afs_exporter *root_exported;
     struct afs_exporter *exporter;
     afs_int32 now;
     afs_int32 last3MinCheck, last10MinCheck, last60MinCheck, lastNMinCheck;
@@ -186,7 +179,7 @@ void afs_Daemon() {
 	    }
 	    if (lastNMinCheck + PROBE_INTERVAL < now) {
 		/* only check down servers */
-		afs_CheckServers(1, (struct cell *) 0);
+		afs_CheckServers(1, NULL);
 		lastNMinCheck = now;
 	    }
 	}
@@ -206,7 +199,7 @@ void afs_Daemon() {
 	    }
 #endif /* else AFS_USERSPACE_IP_ADDR */
 	    if (!afs_CheckServerDaemonStarted)
-		afs_CheckServers(0, (struct cell *) 0);
+		afs_CheckServers(0, NULL);
 	    afs_GCUserData(0);	    /* gc old conns */
 	    /* This is probably the wrong way of doing GC for the various exporters but it will suffice for a while */
 	    for (exporter = root_exported; exporter; exporter = exporter->exp_next) {
@@ -266,7 +259,8 @@ void afs_Daemon() {
     }
 }
 
-afs_CheckRootVolume () {
+int afs_CheckRootVolume (void)
+{
     char rootVolName[32];
     register struct volume *tvp;
     int usingDynroot = afs_GetDynrootEnable();
@@ -280,9 +274,9 @@ afs_CheckRootVolume () {
     }
     if (usingDynroot) {
 	afs_GetDynrootFid(&afs_rootFid);
-	tvp = afs_GetVolume(&afs_rootFid, (struct vrequest *) 0, READ_LOCK);
+	tvp = afs_GetVolume(&afs_rootFid, NULL, READ_LOCK);
     } else {
-	tvp = afs_GetVolumeByName(rootVolName, LOCALCELL, 1, (struct vrequest *) 0, READ_LOCK);
+	tvp = afs_GetVolumeByName(rootVolName, LOCALCELL, 1, NULL, READ_LOCK);
     }
     if (!tvp) {
 	char buf[128];
@@ -291,7 +285,7 @@ afs_CheckRootVolume () {
 	if ((len < 9) || strcmp(&rootVolName[len - 9], ".readonly")) {
 	    strcpy(buf, rootVolName);
 	    afs_strcat(buf, ".readonly");
-	    tvp = afs_GetVolumeByName(buf, LOCALCELL, 1, (struct vrequest *) 0, READ_LOCK);
+	    tvp = afs_GetVolumeByName(buf, LOCALCELL, 1, NULL, READ_LOCK);
 	}
     }
     if (tvp) {
@@ -322,8 +316,6 @@ afs_CheckRootVolume () {
 /* This is to make sure that we update the root gnode */
 /* every time root volume gets released */
     {
-	extern struct vfs *afs_globalVFS;
-	extern int afs_root();
 	struct gnode *rootgp;
 	struct mount *mp;
 	int code;
@@ -348,11 +340,11 @@ afs_CheckRootVolume () {
 }
 
 /* ptr_parm 0 is the pathname, size_parm 0 to the fetch is the chunk number */
-void BPath(ab)
-    register struct brequest *ab; {
-    register struct dcache *tdc;
-    struct vcache *tvc;
-    struct vnode *tvn;
+static void BPath(register struct brequest *ab)
+{
+    register struct dcache *tdc = NULL;
+    struct vcache *tvc = NULL;
+    struct vnode *tvn = NULL;
 #ifdef AFS_LINUX22_ENV
     struct dentry *dp = NULL;
 #endif
@@ -361,14 +353,14 @@ void BPath(ab)
     afs_int32 code;
 
     AFS_STATCNT(BPath);
-    if (code = afs_InitReq(&treq, ab->cred)) return;
+    if ((code = afs_InitReq(&treq, ab->cred))) return;
     AFS_GUNLOCK();
 #ifdef AFS_LINUX22_ENV
-    code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1,  (struct vnode **) 0, &dp);
+    code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1,  NULL, &dp);
     if (dp)
 	tvn = (struct vnode*)dp->d_inode;
 #else
-    code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1,  (struct vnode **) 0, (struct vnode **)&tvn);
+    code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1,  NULL, (struct vnode **)&tvn);
 #endif
     AFS_GLOCK();
     osi_FreeLargeSpace((char *)ab->ptr_parm[0]); /* free path name buffer here */
@@ -414,15 +406,15 @@ void BPath(ab)
  * ptr_parm 0 is the dcache entry to wakeup,
  * size_parm 1 is true iff we should release the dcache entry here.
  */
-void BPrefetch(ab)
-    register struct brequest *ab; {
+static void BPrefetch(register struct brequest *ab)
+{
     register struct dcache *tdc;
     register struct vcache *tvc;
     afs_size_t offset, len;
     struct vrequest treq;
 
     AFS_STATCNT(BPrefetch);
-    if (len = afs_InitReq(&treq, ab->cred)) return;
+    if ((len = afs_InitReq(&treq, ab->cred))) return;
     tvc = ab->vnode;
     tdc = afs_GetDCache(tvc, ab->size_parm[0], &treq, &offset, &len, 1);
     if (tdc) {
@@ -448,8 +440,8 @@ void BPrefetch(ab)
 }
 
 
-void BStore(ab)
-    register struct brequest *ab; {
+static void BStore(register struct brequest *ab)
+{
     register struct vcache *tvc;
     register afs_int32 code;
     struct vrequest treq;
@@ -458,7 +450,7 @@ void BStore(ab)
 #endif
 
     AFS_STATCNT(BStore);
-    if (code = afs_InitReq(&treq, ab->cred)) return;
+    if ((code = afs_InitReq(&treq, ab->cred))) return;
     code = 0;
     tvc = ab->vnode;
 #if defined(AFS_SGI_ENV)
@@ -496,8 +488,8 @@ void BStore(ab)
 }
 
 /* release a held request buffer */
-void afs_BRelease(ab)
-    register struct brequest *ab; {
+void afs_BRelease(register struct brequest *ab)
+{
 
     AFS_STATCNT(afs_BRelease);
     MObtainWriteLock(&afs_xbrs,294);
@@ -509,19 +501,16 @@ void afs_BRelease(ab)
 }
 
 /* return true if bkg fetch daemons are all busy */
-int afs_BBusy() {
+int afs_BBusy(void)
+{
     AFS_STATCNT(afs_BBusy);
     if (afs_brsDaemons > 0) return 0;
     return 1;
 }
 
-struct brequest *afs_BQueue(aopcode, avc, dontwait, ause, acred, asparm0, asparm1, apparm0)
-    register short aopcode;
-    afs_int32 ause, dontwait;
-    register struct vcache *avc;
-    struct AFS_UCRED *acred;
-    afs_size_t asparm0, asparm1;
-    void *apparm0;
+struct brequest *afs_BQueue(register short aopcode, register struct vcache *avc, 
+	afs_int32 dontwait, afs_int32 ause, struct AFS_UCRED *acred, 
+	afs_size_t asparm0, afs_size_t asparm1, void *apparm0)
 {
     register int i;
     register struct brequest *tb;
@@ -562,7 +551,7 @@ struct brequest *afs_BQueue(aopcode, avc, dontwait, ause, acred, asparm0, asparm
 	}
         if (dontwait) {
 	    MReleaseWriteLock(&afs_xbrs);
-	    return (struct brequest *)0;
+	    return NULL;
 	}
 	/* no free buffers, sleep a while */
 	afs_brsWaiters++;
@@ -611,7 +600,7 @@ afs_int32 afs_biodcnt = 0;
 Simple_lock afs_asyncbuf_lock;
 /*static*/ struct buf *afs_get_bioreq()
 {
-    struct buf *bp = (struct buf *) 0;
+    struct buf *bp = NULL;
     struct buf *bestbp;
     struct buf **bestlbpP, **lbpP;
     int bestage, stop;
@@ -719,8 +708,7 @@ Simple_lock afs_asyncbuf_lock;
  */
 static int afs_initbiod = 0;		/* this is self-initializing code */
 int DOvmlock = 0;
-afs_BioDaemon (nbiods)
-    afs_int32 nbiods;
+int afs_BioDaemon (afs_int32 nbiods)
 {
     afs_int32 code, s, pflg = 0;
     label_t jmpbuf;
@@ -898,7 +886,7 @@ afs_int32 afs_biodcnt = 0;
     struct afs_bioqueue *self;      /* address on which to sleep */
 
 {
-    struct buf *bp = (struct buf *) 0;
+    struct buf *bp = NULL;
     struct buf *bestbp;
     struct buf **bestlbpP, **lbpP;
     int bestage, stop;
@@ -1192,10 +1180,10 @@ if (DOvmlock)
 
 
 int afs_nbrs = 0;
-void afs_BackgroundDaemon() {
+void afs_BackgroundDaemon(void)
+{
     struct brequest *tb;
     int i, foundAny;
-    afs_int32 pid;
 
     AFS_STATCNT(afs_BackgroundDaemon);
     /* initialize subsystem */
@@ -1242,7 +1230,7 @@ void afs_BackgroundDaemon() {
 		}
 	    }
 	}
-	if (tb = min_tb) {
+	if ((tb = min_tb)) {
 	    /* claim and process this request */
 	    tb->flags |= BSTARTED;
 	    MReleaseWriteLock(&afs_xbrs);
@@ -1262,7 +1250,7 @@ void afs_BackgroundDaemon() {
 #else
 		AFS_RELE((struct vnode *)(tb->vnode));	/* MUST call vnode layer or could lose vnodes */
 #endif
-		tb->vnode = (struct vcache *) 0;
+		tb->vnode = NULL;
 	    }
 	    if (tb->cred) {
 		crfree(tb->cred);
@@ -1283,12 +1271,8 @@ void afs_BackgroundDaemon() {
 }
 
 
-void shutdown_daemons()
+void shutdown_daemons(void)
 {
-  extern int afs_cold_shutdown;
-  register int i;
-  register struct brequest *tb;
-
   AFS_STATCNT(shutdown_daemons);
   if (afs_cold_shutdown) {
       afs_brsDaemons = brsInit = 0;
@@ -1325,8 +1309,7 @@ SV_TYPE afs_sgibkwait;
 lock_t afs_sgibklock;
 struct dcache *afs_sgibklist;
 
-int
-afs_sgidaemon(void)
+int afs_sgidaemon(void)
 {
 	int s;
 	struct dcache *tdc;

@@ -17,17 +17,15 @@ RCSID("$Header$");
 #include "../afs/afs_stats.h" /* statistics */
 #include "afs/stds.h"
 static struct axscache *afs_axsfreelist = NULL;
-static struct xfreelist { struct xfreelist *next; } *xfreemallocs = 0, *xsp = 0;
-int afs_xaxscnt = 0;
+static struct xfreelist { struct xfreelist *next; } *xfreemallocs = 0;
+static int afs_xaxscnt = 0;
 afs_rwlock_t afs_xaxs;
 
 /* takes an address of an access cache & uid, returns ptr */
 /* PRECONDITION: first field has been checked and doesn't match! 
  * INVARIANT:  isparent(i,j) ^ isparent(j,i)  (ie, they switch around)
  */
-struct axscache *afs_SlowFindAxs(cachep,id)
-    struct axscache **cachep;
-    afs_int32 id;
+struct axscache *afs_SlowFindAxs(struct axscache **cachep, afs_int32 id)
 {
     register struct axscache *i,*j;
 
@@ -39,7 +37,7 @@ struct axscache *afs_SlowFindAxs(cachep,id)
 	    return(i);
 	}
 
-	if (j=i->next) {   /* ASSIGNMENT HERE! */
+	if ((j=i->next)) {   /* ASSIGNMENT HERE! */
 	    if (j->uid == id) {
 		axs_Front(cachep,i,j);
 		return(j);
@@ -53,14 +51,14 @@ struct axscache *afs_SlowFindAxs(cachep,id)
 
 
 #define NAXSs (1000 / sizeof(struct axscache))
-struct axscache *axs_Alloc() 
+struct axscache *axs_Alloc(void) 
 {
     register struct axscache *i, *j, *xsp;
     struct axscache *h;
     int k;
 
     ObtainWriteLock(&afs_xaxs,174);
-    if (h = afs_axsfreelist) {
+    if ((h = afs_axsfreelist)) {
 	afs_axsfreelist = h->next;
     } else {
 	h=i=j= (struct axscache *) afs_osi_Alloc(NAXSs * sizeof(struct axscache));
@@ -93,8 +91,7 @@ struct axscache *axs_Alloc()
 
 /* I optimize for speed on lookup, and don't give a RIP about delete.
  */
-void afs_RemoveAxs(headp, axsp)
-    struct axscache **headp, *axsp;
+void afs_RemoveAxs(struct axscache **headp, struct axscache *axsp)
 {
     struct axscache *i, *j;
 
@@ -114,7 +111,7 @@ void afs_RemoveAxs(headp, axsp)
 		axs_Free(axsp);
 		return;
 	    }
-	    if (i = j->next) {   /* ASSIGNMENT HERE! */
+	    if ((i = j->next)) {   /* ASSIGNMENT HERE! */
 		j->next = i->next;
 		axs_Free(axsp);
 		return;
@@ -130,8 +127,7 @@ void afs_RemoveAxs(headp, axsp)
  * Takes an entire list of access cache structs and prepends them, lock, stock,
  * and barrel, to the front of the freelist.
  */
-void afs_FreeAllAxs(headp)
-    struct axscache **headp;
+void afs_FreeAllAxs(struct axscache **headp)
 {
     struct axscache *i,*j;
 
@@ -162,7 +158,9 @@ void afs_FreeAllAxs(headp)
 }
    
 
-void shutdown_xscache() 
+/* doesn't appear to be used at all */
+#if 0
+static void shutdown_xscache(void) 
 {
     struct xfreelist *xp, *nxp;
 
@@ -176,3 +174,4 @@ void shutdown_xscache()
     afs_axsfreelist = NULL;
     xfreemallocs = NULL;
 }
+#endif

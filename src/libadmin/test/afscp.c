@@ -185,8 +185,8 @@ int main(int argc, char *argv[])
 
     /* initialize command syntax and globals */
 
-    cmd_SetBeforeProc(MyBeforeProc, (char *) 0);
-    cmd_SetAfterProc(MyAfterProc, (char *) 0);
+    cmd_SetBeforeProc(MyBeforeProc, NULL);
+    cmd_SetAfterProc(MyAfterProc, NULL);
     SetupBosAdminCmd();
     SetupClientAdminCmd();
     SetupKasAdminCmd();

@@ -78,4 +78,37 @@ struct DirPage1
  */
 extern int DVOffset(void *ap);
 
+
+
+/* Prototypes */
+extern int NameBlobs (char *name);
+extern int Create (char *dir, char *entry, afs_int32 *vfid);
+extern int Length (char *dir);
+extern int Delete (char *dir, char *entry);
+extern int FindBlobs (char *dir, int nblobs);
+extern void AddPage (char *dir, int pageno);
+extern void FreeBlobs(char *dir, register int firstblob, int nblobs);
+extern int MakeDir (char *dir, afs_int32 *me, afs_int32 *parent);
+extern int Lookup (char *dir, char *entry, register afs_int32 *fid);
+extern int LookupOffset (char *dir, char *entry, register afs_int32 *fid, long *offsetp);
+extern int EnumerateDir (char *dir, int (*hookproc)(void *dir, char *name, afs_int32 vnode, afs_int32 unique), void *hook);
+extern int IsEmpty (char *dir);
+extern struct DirEntry *GetBlob (char *dir, afs_int32 blobno);
+extern int DirHash (register char *string);
+
+#ifdef KERNEL
+extern int afs_dir_NameBlobs (char *name);
+extern int afs_dir_Create (char *dir, char *entry, afs_int32 *vfid);
+extern int afs_dir_Length (char *dir);
+extern int afs_dir_Delete (char *dir, char *entry);
+extern int afs_dir_MakeDir (char *dir, afs_int32 *me, afs_int32 *parent);
+extern int afs_dir_Lookup (char *dir, char *entry, register afs_int32 *fid);
+extern int afs_dir_LookupOffset (char *dir, char *entry, register afs_int32 *fid, long *offsetp);
+extern int afs_dir_EnumerateDir (char *dir, int (*hookproc)(void *dir, char *name, afs_int32 vnode, afs_int32 unique), void *hook);
+extern int afs_dir_IsEmpty (char *dir);
+extern struct DirEntry *afs_dir_GetBlob (char *dir, afs_int32 blobno);
+#endif
+
+
+
 #endif /*	!defined(__AFS_DIR_H) */

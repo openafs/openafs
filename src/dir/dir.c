@@ -105,6 +105,9 @@ RCSID("$Header$");
 #define	IsEmpty		afs_dir_IsEmpty
 #else /* KERNEL */
 
+# ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+# endif
 # include <sys/types.h>	
 # include <errno.h>
 # include "dir.h"
@@ -113,29 +116,35 @@ RCSID("$Header$");
 #else
 #include <netinet/in.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #endif /* KERNEL */
 
 afs_int32 DErrno;
 char *DRelease();
-static struct DirEntry *FindItem();
-struct DirEntry *GetBlob();
 struct DirEntry *DRead();
 struct DirEntry *DNew();
 
-void AddPage();
-void FreeBlobs();
+/* Local static prototypes */
+static struct DirEntry *FindItem (char *dir, char *ename,
+        unsigned short **previtem);
 
-int NameBlobs (name)
-char * name; {/* Find out how many entries are required to store a name. */
+
+int NameBlobs (char *name)
+{/* Find out how many entries are required to store a name. */
     register int i;
     i = strlen(name)+1;
     return 1+((i+15)>>5);
 }
 
-int Create (dir, entry, vfid)
-char *dir;
-char *entry;
-afs_int32 *vfid; {
+int Create (char *dir, char *entry, afs_int32 *vfid)
+{
     /* Create an entry in a file.  Dir is a file representation, while entry is a string name. */
     int blobs, firstelt;
     register int i;
@@ -176,8 +185,8 @@ afs_int32 *vfid; {
     return 0;
 }
 
-int Length (dir)
-char *dir; {
+int Length (char *dir)
+{
     int i,ctr;
     struct DirHeader *dhp;
     dhp = (struct DirHeader *) DRead(dir,0);
@@ -193,9 +202,8 @@ char *dir; {
     return ctr*AFS_PAGESIZE;
 }
 
-Delete (dir, entry)
-char *dir;
-char *entry; {
+int Delete (char *dir, char *entry)
+{
     /* Delete an entry from a directory, including update of all free entry descriptors. */
     int nitems, index;
     register struct DirEntry *firstitem;
@@ -211,12 +219,11 @@ char *entry; {
     return 0;
 }
 
-FindBlobs (dir,nblobs)
-char *dir;
-int nblobs; {
+int FindBlobs (char *dir, int nblobs)
+{
     /* Find a bunch of contiguous entries; at least nblobs in a row. */
     register int i, j, k;
-    int failed;
+    int failed = 0;
     register struct DirHeader *dhp;
     struct PageHeader *pp;
     int pgcount;
@@ -279,9 +286,8 @@ int nblobs; {
     return -1;
 }
 
-void AddPage (dir,pageno)
-char *dir;
-int pageno; {/* Add a page to a directory. */
+void AddPage (char *dir, int pageno)
+{/* Add a page to a directory. */
     register int i;
     register struct PageHeader *pp;
 
@@ -295,10 +301,8 @@ int pageno; {/* Add a page to a directory. */
     DRelease(pp,1);
 }
 
-void FreeBlobs(dir,firstblob,nblobs)
-char *dir;
-register int firstblob;
-int nblobs; {
+void FreeBlobs(char *dir, register int firstblob, int nblobs)
+{
     /* Free a whole bunch of directory entries. */
     register int i;
     int page;
@@ -316,10 +320,8 @@ int nblobs; {
     DRelease(pp,1);
     }
 
-MakeDir (dir,me,parent)
-char *dir;
-afs_int32 *me;
-afs_int32 *parent; {
+int MakeDir (char *dir, afs_int32 *me, afs_int32 *parent)
+{
     /* Format an empty directory properly.  Note that the first 13 entries in a directory header
       page are allocated, 1 to the page header, 4 to the allocation map and 8 to the hash table. */
     register int i;
@@ -340,10 +342,8 @@ afs_int32 *parent; {
     return 0;
     }
 
-Lookup (dir, entry, fid)
-    char *dir;
-    char *entry;
-    register afs_int32 *fid; {
+int Lookup (char *dir, char *entry, register afs_int32 *fid)
+{
     /* Look up a file name in directory. */
     register struct DirEntry *firstitem;
     unsigned short *previtem;
@@ -357,11 +357,8 @@ Lookup (dir, entry, fid)
     return 0;
 }
 
-LookupOffset (dir, entry, fid, offsetp)
-  char *dir;
-  char *entry;
-  long *offsetp;
-  register afs_int32 *fid; {
+int LookupOffset (char *dir, char *entry, register afs_int32 *fid, long *offsetp)
+{
       /* Look up a file name in directory. */
       register struct DirEntry *firstitem;
       unsigned short *previtem;
@@ -377,10 +374,8 @@ LookupOffset (dir, entry, fid, offsetp)
       return 0;
 }
 
-EnumerateDir (dir,hookproc,hook)
-    char *dir;
-    void *hook;
-    int (*hookproc)(); {
+int EnumerateDir (char *dir, int (*hookproc)(), void *hook)
+{
     /* Enumerate the contents of a directory. */
     register int i;
     int num;
@@ -413,8 +408,8 @@ EnumerateDir (dir,hookproc,hook)
     return 0;
 }
 
-IsEmpty (dir)
-char *dir; {
+int IsEmpty (char *dir)
+{
     /* Enumerate the contents of a directory. */
     register int i;
     int num;
@@ -442,9 +437,8 @@ char *dir; {
     return 0;
 }
 
-struct DirEntry *GetBlob (dir, blobno)
-    char *dir;
-    afs_int32 blobno; {
+struct DirEntry *GetBlob (char *dir, afs_int32 blobno)
+{
     /* Return a pointer to an entry, given its number. */
     struct DirEntry *ep;
     ep=DRead(dir,blobno>>LEPP);
@@ -452,14 +446,14 @@ struct DirEntry *GetBlob (dir, blobno)
     return (struct DirEntry *) (((long)ep)+32*(blobno&(EPP-1)));
 }
 
-DirHash (string)
-    register char *string; {
+int DirHash (register char *string)
+{
     /* Hash a string to a number between 0 and NHASHENT. */
     register unsigned char tc;
     register int hval;
     register int tval;
     hval = 0;
-    while(tc=(*string++)) {
+    while((tc=(*string++))) {
         hval *= 173;
         hval  += tc;
     }
@@ -469,10 +463,9 @@ DirHash (string)
     return tval;
 }
 
-static struct DirEntry *FindItem (dir,ename,previtem)
-char *dir;
-char *ename;
-unsigned short **previtem; {
+static struct DirEntry *FindItem (char *dir, char *ename,
+	unsigned short **previtem)
+{
     /* Find a directory entry, given its name.  This entry returns a pointer to a locked buffer, and a pointer to a locked buffer (in previtem) referencing the found item (to aid the delete code).  If no entry is found, however, no items are left locked, and a null pointer is returned instead. */
     register int i;
     register struct DirHeader *dhp;

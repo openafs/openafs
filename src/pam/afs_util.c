@@ -17,6 +17,14 @@
 #include <afs/param.h>
 #include <sys/wait.h>
 #include <limits.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+#include <stdlib.h>
 
 RCSID("$Header$");
 
@@ -58,12 +66,12 @@ these facilities, we can safely define these to be null functions */
 
 #if !defined(AFS_HPUX110_ENV)
 /* For HP 11.0, this function is in util/hputil.c */
-sigvec(int sig, const struct sigvec* vec, struct sigvec* ovec)
+int sigvec(int sig, const struct sigvec* vec, struct sigvec* ovec)
 {
 	assert(0);
 }
 
-sigsetmask(int mask)
+int sigsetmask(int mask)
 {
 	assert(0);
 }
@@ -71,9 +79,7 @@ sigsetmask(int mask)
 
 /* converts string to integer */
 
-char *cv2string(ttp, aval)
-    register char *ttp;
-    register unsigned long aval;
+char *cv2string(register char *ttp, register unsigned long aval)
 {
     register char *tp = ttp;
     register int  i;
@@ -169,7 +175,7 @@ out:
 }
 
 /* get the current AFS pag for the calling process */
-static afs_int32 curpag()
+static afs_int32 curpag(void)
 {
    gid_t groups[NGROUPS_MAX];
    afs_uint32 g0, g1;
@@ -196,7 +202,7 @@ static afs_int32 curpag()
 }
 
 /* Returns the AFS pag number, if any, otherwise return -1 */
-afs_int32 getPAG()
+afs_int32 getPAG(void)
 {
    afs_int32 pag;
    

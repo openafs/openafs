@@ -25,6 +25,15 @@ RCSID("$Header$");
 #include <errno.h>
 #undef abs
 #include <stdlib.h>
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/stds.h>
 #include <afs/cmd.h>
 #include <afs/afs_args.h>
@@ -619,7 +628,7 @@ printf("Magic was %x instead of %x -> %x\n", magic, CAT_MAGIC, CATD_ERR);
 		return( CATD_ERR );
 */
 	}
-/*	if ((catd->_mem = shmat((int)fileno(catd->_fd), (char *)0, SHM_MAP | SHM_RDONLY))
+/*	if ((catd->_mem = shmat((int)fileno(catd->_fd), NULL, SHM_MAP | SHM_RDONLY))
            == (char * )ERR ) {   */
 
 	if (1) {      /* disable the shmat, share memory segemnt */
@@ -2507,7 +2516,7 @@ icl_LogFreeUse(logp)
 	osi_Free(logp->datap, sizeof(afs_int32) * logp->logSize);
 	logp->firstUsed = logp->firstFree = 0;
 	logp->logElements = 0;
-	logp->datap = (afs_int32 *)0;
+	logp->datap = NULL;
     }
     return 0;
 }
@@ -2678,7 +2687,7 @@ static DoDump(as, arock)
 	    return 1;
 	}
 	waitTime = strtol(as->parms[3].items->data, 
-			  (char **)0, 0);
+			  NULL, 0);
     }
 
     if (as->parms[2].items)

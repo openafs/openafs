@@ -16,13 +16,9 @@ RCSID("$Header$");
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
 #include "../afs/afs_stats.h"   /* afs statistics */
 
-
 static int osi_TimedSleep(char *event, afs_int32 ams, int aintok);
-void afs_osi_Wakeup(char *event);
-void afs_osi_Sleep(char *event);
 
 static char waitV, dummyV;
-
 
 void afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle)
 {
@@ -48,9 +44,9 @@ void afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle)
  */
 int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 {
-    int code;
-    afs_int32 endTime, tid;
+    afs_int32 endTime;
     struct timer_list *timer = NULL;
+    int code;
 
     AFS_STATCNT(osi_Wait);
     endTime = osi_Time() + (ams/1000);
@@ -58,11 +54,9 @@ int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 	ahandle->proc = (caddr_t) current;
 
     do {
-        AFS_ASSERT_GLOCK();
-	code = 0;
-        code = osi_TimedSleep(&waitV, ams, aintok);
-
-        if (code) break;
+	AFS_ASSERT_GLOCK();
+        code = osi_TimedSleep(&waitV, ams, 1);
+	if (code) break;
 	if (ahandle && (ahandle->proc == (caddr_t) 0)) {
 	    /* we've been signalled */
 	    break;
@@ -165,7 +159,7 @@ static void afs_addevent(char *event)
  * Waits for an event to be notified, returning early if a signal
  * is received.  Returns EINTR if signaled, and 0 otherwise.
  */
-int afs_osi_SleepSig(char *event)
+int afs_osi_SleepSig(void *event)
 {
     struct afs_event *evp;
     int seq, retval;
@@ -210,7 +204,7 @@ int afs_osi_SleepSig(char *event)
  *   caller that the wait has been interrupted and the stack should be cleaned
  *   up preparatory to signal delivery
  */
-void afs_osi_Sleep(char *event)
+void afs_osi_Sleep(void *event)
 {
     sigset_t saved_set;
 
@@ -277,7 +271,7 @@ static int osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 }
 
 
-void afs_osi_Wakeup(char *event)
+void afs_osi_Wakeup(void *event)
 {
     struct afs_event *evp;
 

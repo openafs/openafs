@@ -37,6 +37,14 @@ RCSID("$Header$");
 #include <afs/ktime.h>
 #include <afs/audit.h>
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include "bnode.h"
 #include "bosint.h"
 
@@ -372,7 +380,7 @@ char *aname; {
     }
     if (DoLogging) bozo_Log("%s is executing SetCellName '%s'\n", caller, aname);
 
-    code = afsconf_GetExtendedCellInfo(bozo_confdir, (char *) 0, (char *) 0, &tcell, &clones);
+    code = afsconf_GetExtendedCellInfo(bozo_confdir, NULL, NULL, &tcell, &clones);
     if (code) 
       goto fail;
 
@@ -421,7 +429,7 @@ char **aname; {
     register char *tp;
     char clones[MAXHOSTSPERCELL];
 
-    code = afsconf_GetExtendedCellInfo(bozo_confdir, (char *) 0, (char *) 0, &tcell, &clones);
+    code = afsconf_GetExtendedCellInfo(bozo_confdir, NULL, NULL, &tcell, &clones);
     if (code) goto fail;
 
     if (awhich >= tcell.numServers) {
@@ -464,7 +472,7 @@ char *aname; {
     if (DoLogging) 
       bozo_Log("%s is executing DeleteCellHost '%s'\n", caller, aname);
 
-    code = afsconf_GetExtendedCellInfo(bozo_confdir, (char *) 0, (char *) 0, &tcell, &clones);
+    code = afsconf_GetExtendedCellInfo(bozo_confdir, NULL, NULL, &tcell, &clones);
     if (code) 
       goto fail;
 
@@ -509,7 +517,7 @@ char *aname; {
     if (DoLogging) 
       bozo_Log("%s is executing AddCellHost '%s'\n", caller, aname);
 
-    code = afsconf_GetExtendedCellInfo(bozo_confdir, (char *) 0, (char *) 0, &tcell, &clones);
+    code = afsconf_GetExtendedCellInfo(bozo_confdir, NULL, NULL, &tcell, &clones);
     if (code) 
       goto fail;
 
@@ -868,7 +876,7 @@ struct rx_call *acall; {
     }
     if (DoLogging) bozo_Log("%s is executing ShutdownAll\n", caller);
 
-    code = bnode_ApplyInstance(sdproc, (char *) 0);
+    code = bnode_ApplyInstance(sdproc, NULL);
 
   fail:
     osi_auditU (acall, BOS_ShutdownAllEvent, code, AUD_END);
@@ -888,15 +896,15 @@ struct rx_call *acall; {
     if (DoLogging) bozo_Log("%s is executing RestartAll\n", caller);
 
     /* start shutdown of all processes */
-    code = bnode_ApplyInstance(sdproc, (char *) 0);
+    code = bnode_ApplyInstance(sdproc, NULL);
     if (code) goto fail;
 
     /* wait for all done */
-    code = bnode_ApplyInstance(swproc, (char *) 0);
+    code = bnode_ApplyInstance(swproc, NULL);
     if (code) goto fail;
 
     /* start them up again */
-    code = bnode_ApplyInstance(stproc, (char *) 0);
+    code = bnode_ApplyInstance(stproc, NULL);
 
   fail:
     osi_auditU (acall, BOS_RestartAllEvent, code, AUD_END);
@@ -916,11 +924,11 @@ register struct rx_call *acall; {
     if (DoLogging) bozo_Log("%s is executing ReBozo\n", caller);
 
     /* start shutdown of all processes */
-    code = bnode_ApplyInstance(sdproc, (char *) 0);
+    code = bnode_ApplyInstance(sdproc, NULL);
     if (code) goto fail;
 
     /* wait for all done */
-    code = bnode_ApplyInstance(swproc, (char *) 0);
+    code = bnode_ApplyInstance(swproc, NULL);
     if (code) goto fail;
 
     if (acall) osi_auditU (acall, BOS_RebozoEvent, code, AUD_END);
@@ -948,7 +956,7 @@ struct rx_call *acall; {
       goto fail; 
     }
     if (DoLogging) bozo_Log("%s is executing StartupAll\n", caller);
-    code = bnode_ApplyInstance(stproc, (char *) 0);
+    code = bnode_ApplyInstance(stproc, NULL);
 
 fail:
     osi_auditU (acall, BOS_StartupAllEvent, code, AUD_END);
@@ -1497,9 +1505,9 @@ void bozo_ShutdownAndExit(int asignal)
 	     asignal);
 
     /* start shutdown of all processes */
-    if ((code = bnode_ApplyInstance(sdproc, (char *) 0)) == 0) {
+    if ((code = bnode_ApplyInstance(sdproc, NULL)) == 0) {
 	/* wait for shutdown to complete */
-	code = bnode_ApplyInstance(swproc, (char *) 0);
+	code = bnode_ApplyInstance(swproc, NULL);
     }
 
     if (code) {

@@ -30,13 +30,10 @@ RCSID("$Header$");
 
 
 #ifdef RXK_LISTENER_ENV
-int osi_NetReceive(asocket, addr, dvec, nvecs, alength)
-    struct socket *asocket;
-    struct sockaddr_in *addr;
-    struct iovec *dvec;
-    int nvecs;
-    int *alength;
-{
+int osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,         
+        int nvecs, int *alength)
+{   
+    struct socket *asocket = (struct socket *)so;
     struct uio u;
     int i;
     struct iovec iov[RX_MAXIOVECS];
@@ -212,7 +209,7 @@ static void rxk_input (struct mbuf *am, int iphlen)
 
     /* make sure we have base ip and udp headers in first mbuf */
     if (iphlen > sizeof (struct ip)) {
-        ip_stripoptions(am, (struct mbuf *)0);
+        ip_stripoptions(am, NULL);
         iphlen = sizeof (struct ip);
     }
 
@@ -402,7 +399,7 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
             }
             mlen = MHLEN;
             m->m_pkthdr.len = 0;
-            m->m_pkthdr.rcvif = (struct ifnet *)0;
+            m->m_pkthdr.rcvif = NULL;
         } else
 	MGET(m, M_DONTWAIT, MT_DATA);
 	if (!m) {
@@ -467,7 +464,7 @@ nopages:
     }
     tm = top;
 
-    tm->m_act = (struct mbuf *) 0;
+    tm->m_act = NULL;
 
     /* setup mbuf corresponding to destination address */
     um = m_get(M_DONTWAIT, MT_SONAME);

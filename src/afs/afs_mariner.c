@@ -36,9 +36,8 @@ static int marinerPtr = 0;	/* pointer to next mariner slot to use */
 afs_int32 afs_mariner = 0;
 afs_int32 afs_marinerHost = 0;
 
-afs_AddMarinerName(aname, avc)
-    register char *aname;
-    register struct vcache *avc; {
+int afs_AddMarinerName(register char *aname, register struct vcache *avc)
+{
     register int i;
     register char *tp;
 
@@ -55,8 +54,8 @@ afs_AddMarinerName(aname, avc)
     return 0;
 }
 
-char *afs_GetMariner(avc)
-    register struct vcache *avc; {
+char *afs_GetMariner(register struct vcache *avc)
+{
     register int i;
     AFS_STATCNT(afs_GetMariner);
     for(i=0; i<NMAR; i++) {
@@ -67,9 +66,8 @@ char *afs_GetMariner(avc)
     return "a file";
 }
 
-void afs_MarinerLogFetch(avc, off, bytes, idx)
-    register struct vcache *avc;
-    register afs_int32 off, bytes, idx;
+void afs_MarinerLogFetch(register struct vcache *avc, register afs_int32 off, 
+	register afs_int32 bytes, register afs_int32 idx)
 {
     struct sockaddr_in taddr;
     register char *tp, *tp1, *tp2;
@@ -102,9 +100,7 @@ void afs_MarinerLogFetch(avc, off, bytes, idx)
     osi_FreeSmallSpace(tp1);
 } /*afs_MarinerLogFetch*/
 
-void afs_MarinerLog(astring, avc)
-    register struct vcache *avc;
-    register char *astring;
+void afs_MarinerLog(register char *astring, register struct vcache *avc)
 {
     struct sockaddr_in taddr;
     register char *tp, *tp1, *buf;

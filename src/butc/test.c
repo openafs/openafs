@@ -35,7 +35,6 @@
 #endif
 
 #define SERVERNAME "server1"
-extern  struct rx_securityClass *rxnull_NewClientSecurityObject();
 
 afs_int32 code = 0;
 struct tc_tapeSet ttapeSet;
@@ -52,7 +51,7 @@ afs_int32 aserver, port;
 	register struct rx_connection *tc;
 	struct rx_securityClass *uvclass;
 
-	uvclass = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+	uvclass = rxnull_NewClientSecurityObject();
 	tc = rx_NewConnection(aserver, htons(port), TCSERVICE_ID, uvclass, 0);
 	return tc;
 }
@@ -273,7 +272,7 @@ char **argv; {
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
-    cmd_SetBeforeProc(MyBeforeProc,  (char *) 0);
+    cmd_SetBeforeProc(MyBeforeProc,  NULL);
 
     ts = cmd_CreateSyntax("dump",PerformDump,0,"perform a dump");
  

@@ -334,7 +334,7 @@ tagain:
 	if (!dirpos)
 	    break;
 
-	de = (struct DirEntry*)afs_dir_GetBlob(&tdc->f.inode, dirpos);
+	de = afs_dir_GetBlob(&tdc->f.inode, dirpos);
 	if (!de)
 	    break;
 
@@ -356,7 +356,7 @@ tagain:
              if ((avc->states & CForeign) == 0 &&
                  (ntohl(de->fid.vnode) & 1)) {
 		 type=DT_DIR;
-             } else if ((tvc=afs_FindVCache(&afid,0,0,0,0))) {
+             } else if ((tvc=afs_FindVCache(&afid,0,0))) {
                   if (tvc->mvstat) {
                        type=DT_DIR;
                   } else if (((tvc->states) & (CStatd|CTruth))) {
@@ -373,7 +373,7 @@ tagain:
                        /* what other types does AFS support? */
                   }
                   /* clean up from afs_FindVCache */
-                  afs_PutVCache(tvc, WRITE_LOCK);
+                  afs_PutVCache(tvc);
              }
              code = (*filldir)(dirbuf, de->name, len, offset, ino, type);
         }
@@ -778,7 +778,7 @@ static int afs_linux_revalidate(struct dentry *dp)
     if (afs_fakestat_enable && vcp->mvstat == 1 && vcp->mvid &&
 	(vcp->states & CMValid) && (vcp->states & CStatd)) {
 	ObtainSharedLock(&afs_xvcache, 680);
-	rootvp = afs_FindVCache(vcp->mvid, 0, 0, 0, 0);
+	rootvp = afs_FindVCache(vcp->mvid, 0, 0);
 	ReleaseSharedLock(&afs_xvcache);
     }
 
@@ -797,7 +797,7 @@ static int afs_linux_revalidate(struct dentry *dp)
 #ifdef AFS_LINUX24_ENV
 	unlock_kernel();
 #endif
-	if (rootvp) afs_PutVCache(rootvp, 0);
+	if (rootvp) afs_PutVCache(rootvp);
 	AFS_GUNLOCK();
 	return 0;
     }
@@ -855,14 +855,14 @@ static int afs_linux_dentry_revalidate(struct dentry *dp)
 	goto done;
     }
 
-    if (code = afs_InitReq(&treq, credp))
+    if ((code = afs_InitReq(&treq, credp)))
         goto done;
 
     Check_AtSys(parentvcp, dp->d_name.name, &sysState, &treq);
     name = sysState.name;
 
     /* First try looking up the DNLC */
-    if (lookupvcp = osi_dnlc_lookup(parentvcp, name, WRITE_LOCK)) {
+    if ((lookupvcp = osi_dnlc_lookup(parentvcp, name, WRITE_LOCK))) {
         /* Verify that the dentry does not point to an old inode */
         if (vcp != lookupvcp)
             goto done;
@@ -886,7 +886,7 @@ static int afs_linux_dentry_revalidate(struct dentry *dp)
 done:
     /* Clean up */
     if (lookupvcp)
-        afs_PutVCache(lookupvcp, WRITE_LOCK);
+        afs_PutVCache(lookupvcp);
     if (sysState.allocked)
         osi_FreeLargeSpace(name);
 

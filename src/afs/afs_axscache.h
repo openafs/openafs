@@ -31,23 +31,19 @@ struct axscache {
   struct axscache * next;
 };
 
-extern struct axscache *axs_Alloc(), *afs_SlowFindAxs();
-extern void afs_RemoveAxs(), afs_FreeAllAxs();
-extern afs_rwlock_t afs_xaxs;
-
 /* DON'T use this with a NULL pointer! 
  * the quick check should cover 99.9% of the cases 
  */
-#define afs_FindAxs(cachep,id) (((cachep)->uid == id) ? cachep : afs_SlowFindAxs(&(cachep),id))
+#define afs_FindAxs(cachep,id) (((cachep)->uid == id) ? (cachep) : afs_SlowFindAxs(&(cachep),(id)))
 
 #define axs_Front(head,pp,p) {(pp)->next = (p)->next; (p)->next= *(head);*(head)=(p);}
 
 #define afs_AddAxs(cachep,id,bits) {   \
  struct axscache *ac;                  \
- if (ac = axs_Alloc()) {               \
- ac->uid = id;                         \
- ac->axess = (afs_int32)bits;               \
- ac->next = cachep;                    \
+ if ((ac = axs_Alloc())) {               \
+ ac->uid = (id);                         \
+ ac->axess = (afs_int32)(bits);               \
+ ac->next = (cachep);                    \
  cachep = ac; }}
 
 #endif

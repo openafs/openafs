@@ -96,7 +96,8 @@ typedef struct cache_entry {
  * Compare two connections for equality
  */
  
-static int rxi_CachedConnectionsEqual(rx_connParts_p a, rx_connParts_p b) {
+static int rxi_CachedConnectionsEqual(rx_connParts_p a, rx_connParts_p b)
+{
     return ((a->hostAddr == b->hostAddr) &&
             (a->port == b->port) &&
             (a->service == b->service) &&
@@ -108,8 +109,8 @@ static int rxi_CachedConnectionsEqual(rx_connParts_p a, rx_connParts_p b) {
  * Check the cache for a connection
  */
  
-static int rxi_FindCachedConnection(rx_connParts_p parts,
-                                struct rx_connection **conn) {
+static int rxi_FindCachedConnection(rx_connParts_p parts, struct rx_connection **conn)
+{
     int error = 0;
     cache_entry_p cacheConn, nCacheConn;
  
@@ -135,8 +136,8 @@ static int rxi_FindCachedConnection(rx_connParts_p parts,
  * arguments that were used to create it
  */
  
-static void rxi_AddCachedConnection(rx_connParts_p parts,
-                                struct rx_connection **conn) {
+static void rxi_AddCachedConnection(rx_connParts_p parts, struct rx_connection **conn)
+{
     cache_entry_p new_entry;
  
     if((new_entry = (cache_entry_p) malloc(sizeof(cache_entry_t)))) {
@@ -160,8 +161,8 @@ static void rxi_AddCachedConnection(rx_connParts_p parts,
  * Create a new connection if none are currently available.
  */
  
-static int rxi_GetCachedConnection(rx_connParts_p parts,
-                                struct rx_connection **conn) {
+static int rxi_GetCachedConnection(rx_connParts_p parts, struct rx_connection **conn)
+{
     int error = 0;
  
     /*
@@ -200,7 +201,8 @@ static int rxi_GetCachedConnection(rx_connParts_p parts,
  * Note - only call this routine from rx_Finalize.
  */
 
-void rxi_DeleteCachedConnections() {
+void rxi_DeleteCachedConnections(void)
+{
     cache_entry_p cacheConn, nCacheConn;
  
     LOCK_CONN_CACHE
@@ -224,10 +226,9 @@ void rxi_DeleteCachedConnections() {
  */
  
 struct rx_connection *rx_GetCachedConnection(unsigned int remoteAddr,
-                      unsigned short port,
-                      unsigned short service,
-                      struct rx_securityClass *securityObject,
-                      int securityIndex) {
+	unsigned short port, unsigned short service, struct rx_securityClass *securityObject,
+	int securityIndex)
+{
     struct rx_connection *conn = NULL;
     rx_connParts_t parts;
  
@@ -250,7 +251,8 @@ struct rx_connection *rx_GetCachedConnection(unsigned int remoteAddr,
  * Release a connection we previously handed out
  */
  
-void rx_ReleaseCachedConnection(struct rx_connection *conn) {
+void rx_ReleaseCachedConnection(struct rx_connection *conn)
+{
     cache_entry_p cacheConn, nCacheConn;
  
     LOCK_CONN_CACHE
@@ -275,5 +277,4 @@ void rx_ReleaseCachedConnection(struct rx_connection *conn) {
 	}
     }
     UNLOCK_CONN_CACHE
- 
 }

@@ -20,22 +20,16 @@ RCSID("$Header$");
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include <errno.h>
+#include <des.h>
 #include "des_internal.h"
+#include "des_prototypes.h"
 
 char *progname;
-extern char *errmsg();
-extern afs_int32 swap_bit_pos_1();
-extern afs_int32 swap_bit_pos_0();
-int sflag;
-int vflag;
-int dflag;
-int pid;
-int child_status;
 
-int key_position[64+1];
-int C[28+1];
-int D[28+1];
-int C_temp, D_temp;
+static int key_position[64+1];
+static int C[28+1];
+static int D[28+1];
+static int C_temp, D_temp;
 
 /*
  *  CONVENTIONS for numbering the bits
@@ -49,11 +43,11 @@ int C_temp, D_temp;
 /*
  * Sequence of shifts used for the key schedule.
  */
-int const shift[16+1] = { 0,
+static int const shift[16+1] = { 0,
     1,1,2,2,2,2,2,2,1,2,2,2,2,2,2,1,
 };
 
-int const pc_1[64+1] = { 0,
+static int const pc_1[64+1] = { 0,
 
     57,49,41,33,25,17, 9,
      1,58,50,42,34,26,18,
@@ -71,7 +65,7 @@ int const pc_1[64+1] = { 0,
  * Permuted-choice 2, to pick out the bits from
  * the CD array that generate the key schedule.
  */
-int const pc_2[48+1] = { 0,
+static int const pc_2[48+1] = { 0,
 
     14,17,11,24, 1, 5,
      3,28,15, 6,21,10,
@@ -84,12 +78,11 @@ int const pc_2[48+1] = { 0,
     46,42,50,36,29,32,
 };
 
-int ks_perm[16+1][48+1];
+static int ks_perm[16+1][48+1];
 
-int des_debug;
+static int des_debug;
 
-void gen(stream)
-    FILE *stream;
+void gen(FILE *stream)
 {
     /*  Local Declarations */
     register int i, j, iter;

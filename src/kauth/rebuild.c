@@ -392,7 +392,7 @@ WorkerBee (as, arock)
     listentries = (as->parms[3].items ? 1 : 0);     /* -entries  */
     verbose     = (as->parms[4].items ? 1 : 0);     /* -verbose  */
     outFile     = (as->parms[5].items ? as->parms[5].items->data : 
-		                        (char *)0); /* -rebuild  */
+		                        NULL); /* -rebuild  */
 
     if (outFile) {
 	out = fopen (outFile, "w");
@@ -600,7 +600,7 @@ main (argc, argv)
 
   setlinebuf(stdout);
 
-  ts=cmd_CreateSyntax((char *)0, WorkerBee, (char *) 0, "KADB check");
+  ts=cmd_CreateSyntax(NULL, WorkerBee, NULL, "KADB check");
   cmd_AddParm(ts, "-database", CMD_SINGLE, CMD_REQUIRED, "kadb_file");
   cmd_AddParm(ts, "-uheader",  CMD_FLAG,   CMD_OPTIONAL, "Display UBIK header");
   cmd_AddParm(ts, "-kheader",  CMD_FLAG,   CMD_OPTIONAL, "Display KADB header");

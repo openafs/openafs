@@ -75,7 +75,7 @@ ListUsedIds (as, arock)
     if (as->parms[1].items) number = atoi (as->parms[1].items->data);
     if (as->parms[2].items) unused = 1;
 
-    code = pr_Initialize(1, conf_dir,(char *)0);
+    code = pr_Initialize(1, conf_dir,NULL);
     if (code) {
 	com_err (whoami, code, "initializing pruser");
 	exit (1);
@@ -402,7 +402,7 @@ TestManyMembers (as, arock)
 
     afs_int32 code;
 
-    code = pr_Initialize(1, conf_dir,(char *)0);
+    code = pr_Initialize(1, conf_dir,NULL);
     if (code) {
 	com_err (whoami, code, "initializing pruser");
 	exit (1);
@@ -723,7 +723,7 @@ TestPrServ (as, arock)
     int i,j;
     int maxLen = PR_MAXNAMELEN-1 - strlen(lcell) - 1;
 
-    code = pr_Initialize(1, conf_dir,(char *)0);
+    code = pr_Initialize(1, conf_dir,NULL);
     if (code) {
 	com_err (whoami, code, "initializing pruser");
 	exit (1);
@@ -1024,8 +1024,8 @@ main (argc, argv)
     }
 #endif
 
-    cmd_SetBeforeProc(MyBeforeProc, (char *)0);
-    cmd_SetAfterProc(MyAfterProc, (char *)0);
+    cmd_SetBeforeProc(MyBeforeProc, NULL);
+    cmd_SetAfterProc(MyAfterProc, NULL);
 
     ts = cmd_CreateSyntax("usedIds", ListUsedIds, 0, "Find used (or unused) user (or group) ids");
     cmd_AddParm (ts, "-startId", CMD_SINGLE, CMD_OPTIONAL, "id to start checking");

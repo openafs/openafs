@@ -41,6 +41,7 @@ COMERROBJS =\
 XDROBJS =\
 	xdr_arrayn.o \
 	xdr_rx.o \
+	xdr_int32.o \
 	xdr_int64.o \
 	xdr_afsuuid.o \
 	AFS_component_version_number.o
@@ -187,6 +188,9 @@ AFS_component_version_number.o: ${RX}/AFS_component_version_number.c
 	${CCRULE}
 
 xdr.o: ${RX}/xdr.c
+	${CCRULE}
+
+xdr_int32.o: ${RX}/xdr_int32.c
 	${CCRULE}
 
 xdr_int64.o: ${RX}/xdr_int64.c

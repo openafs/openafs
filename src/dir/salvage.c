@@ -22,6 +22,14 @@ RCSID("$Header$");
 #include <netinet/in.h>
 #endif
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include "dir.h"
 #define printf	Log	/* To make it work with volume salvager */
 

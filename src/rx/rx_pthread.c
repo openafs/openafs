@@ -73,8 +73,7 @@ struct clock rxi_clockNow;
 /*
  * Delay the current thread the specified number of seconds.
  */
-void rxi_Delay(sec)
-    int sec;
+void rxi_Delay(int sec)
 {
     sleep(sec);
 }
@@ -82,8 +81,8 @@ void rxi_Delay(sec)
 /*
  * Called from rx_Init()
  */
-void rxi_InitializeThreadSupport() {
-
+void rxi_InitializeThreadSupport(void)
+{
     listeners_started = 0;
     gettimeofday((struct timeval *)&rxi_clockNow, NULL);
 }
@@ -100,9 +99,7 @@ static void *server_entry(void * argp)
 /*
  * Start an Rx server process.
  */
-void rxi_StartServerProc(proc, stacksize)
-    void (*proc)();
-    int stacksize;
+void rxi_StartServerProc(void (*proc)(void), int stacksize)
 {
     pthread_t thread;
     pthread_attr_t tattr;
@@ -189,7 +186,8 @@ static void *event_handler(void *argp)
 /*
  * This routine will get called by the event package whenever a new,
  * earlier than others, event is posted. */
-void rxi_ReScheduleEvents() {
+void rxi_ReScheduleEvents(void)
+{
     assert(pthread_mutex_lock(&event_handler_mutex)==0);
     pthread_cond_signal(&rx_event_handler_cond);
     rx_pthread_event_rescheduled = 1;
@@ -199,10 +197,7 @@ void rxi_ReScheduleEvents() {
 
 /* Loop to listen on a socket. Return setting *newcallp if this
  * thread should become a server thread.  */
-static void rxi_ListenerProc(sock, tnop, newcallp)
-int sock;
-int *tnop;
-struct rx_call **newcallp;
+static void rxi_ListenerProc(int sock, int *tnop, struct rx_call **newcallp)
 {
     unsigned int host;
     u_short port;
@@ -268,7 +263,7 @@ static void *rx_ListenerProc(void *argp)
 /* This is the server process request loop. The server process loop
  * becomes a listener thread when rxi_ServerProc returns, and stays
  * listener thread until rxi_ListenerProc returns. */
-void rx_ServerProc()
+void rx_ServerProc(void)
 {
     int sock;
     int threadID;
@@ -304,7 +299,8 @@ void rx_ServerProc()
  * listening until rxi_StartListener is called because most of R may not
  * be initialized when rxi_Listen is called.
  */
-void rxi_StartListener() {
+void rxi_StartListener(void)
+{
     pthread_attr_t tattr;
     AFS_SIGSET_DECL;
 
@@ -342,8 +338,7 @@ void rxi_StartListener() {
 /*
  * Listen on the specified socket.
  */
-rxi_Listen(sock)
-    osi_socket sock;
+int rxi_Listen(osi_socket sock)
 {
     pthread_t thread;
     pthread_attr_t tattr;
@@ -380,10 +375,7 @@ rxi_Listen(sock)
  * Recvmsg.
  *
  */
-int rxi_Recvmsg
-    (int socket,
-     struct msghdr *msg_p,
-     int flags)
+int rxi_Recvmsg(int socket, struct msghdr *msg_p, int flags)
 {
     int ret;
     ret = recvmsg(socket, msg_p, flags);
@@ -393,10 +385,7 @@ int rxi_Recvmsg
 /*
  * Sendmsg.
  */
-rxi_Sendmsg(socket, msg_p, flags)
-    osi_socket socket;
-    struct msghdr *msg_p;
-    int flags;
+int rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 {
     int ret;
     ret = sendmsg(socket, msg_p, flags);

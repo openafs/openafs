@@ -160,9 +160,9 @@ int main(argc,argv)
 	exit(2);
     }
     retrytime = 60;
-    dirname = (struct filestr *) 0;
-    ModFiles =  (struct filestr *) 0;
-    okhostfiles = (struct filestr *) 0;
+    dirname = NULL;
+    ModFiles =  NULL;
+    okhostfiles = NULL;
 
     verbose = 0;
     interval = TIMEOUT;

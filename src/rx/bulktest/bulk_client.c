@@ -176,7 +176,7 @@ char **argv;
     int store = 0;
     int count = 1;
     int verbose = 0;
-    char *hostname = (char *) 0;
+    char *hostname = NULL;
     u_long host;
     struct rx_securityClass *null_securityObject;
     struct rx_connection *conn = (struct rx_connection *) 0;

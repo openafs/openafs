@@ -94,6 +94,13 @@ RCSID("$Header$");
 #include <sys/time.h>
 #include <sys/file.h>
 #endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <afs/assert.h>
 
 #include <afs/stds.h>
@@ -301,7 +308,7 @@ static struct CallBack *iGetCB(register int *nused)
 {
     register struct CallBack *ret;
 
-    if (ret = CBfree) {
+    if ((ret = CBfree)) {
 	CBfree = (struct CallBack *)(((struct object *)ret)->next);
 	(*nused)++;
     }
@@ -325,7 +332,7 @@ static struct FileEntry *iGetFE(register int *nused)
 {
     register struct FileEntry *ret;
 
-    if (ret = FEfree) {
+    if ((ret = FEfree)) {
 	FEfree = (struct FileEntry *)(((struct object *)ret)->next);
 	(*nused)++;
     }
@@ -620,7 +627,7 @@ AddCallBack1(host, fid, thead, type, locked)
     return retVal;
 }
 
-int
+static int
 AddCallBack1_r(host, fid, thead, type, locked)
     struct host *host;
     AFSFid *fid;
@@ -680,7 +687,7 @@ AddCallBack1_r(host, fid, thead, type, locked)
 	register afs_uint32 hash;
 
 	fe = newfe;
-	newfe = (struct FileEntry *) 0;
+	newfe = NULL;
 	fe->firstcb = 0;
         fe->volid = fid->Volume;
 	fe->vnode = fid->Vnode;
@@ -711,7 +718,7 @@ AddCallBack1_r(host, fid, thead, type, locked)
 	}
     } else {
 	cb = newcb;
-	newcb = (struct CallBack *) 0;
+	newcb = NULL;
 	*(lastcb?&lastcb->cnext:&fe->firstcb) = cbtoi(cb);
 	fe->ncbs++;
 	cb->cnext = 0;
@@ -1283,7 +1290,7 @@ BreakVolumeCallBacks(volume)
     H_LOCK
     fid.Volume = volume, fid.Vnode = fid.Unique = 0;
     for (hash=0; hash<VHASH; hash++) {
-	for (feip = &HashTable[hash]; fe = itofe(*feip); ) {
+	for (feip = &HashTable[hash]; (fe = itofe(*feip)); ) {
 	    if (fe->volid == volume) {
 		register struct CallBack *cbnext;
 		for (cb = itocb(fe->firstcb); cb; cb = cbnext) {
@@ -1410,7 +1417,7 @@ static int GetSomeSpace_r(hostp, locked)
     struct host *hostp;
     int locked;
 {
-    register struct host *hp, *hp1 = (struct host *)0;
+    register struct host *hp, *hp1 = NULL;
     int i=0;
 
     cbstuff.GotSomeSpaces++;
@@ -1819,7 +1826,7 @@ struct AFSCBFids*	afidp;
 
 	/* initialise a security object only once */
 	if ( !sc )
-	    sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+	    sc = rxnull_NewClientSecurityObject();
 
 	/* initialize alternate rx connections */
 	for ( i=0,j=0; i < host->interface->numberOfInterfaces; i++)
@@ -1898,7 +1905,7 @@ struct host*		host;
 
 	/* initialise a security object only once */
 	if ( !sc )
-	    sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+	    sc = rxnull_NewClientSecurityObject();
 
 	/* initialize alternate rx connections */
 	for ( i=0,j=0; i < host->interface->numberOfInterfaces; i++)

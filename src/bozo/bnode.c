@@ -27,6 +27,15 @@ RCSID("$Header$");
 #include <time.h>
 #endif
 #include <sys/stat.h>
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/procmgmt.h>  /* signal(), kill(), wait(), etc. */
 #include <lwp.h>
 #include <afs/audit.h>
@@ -66,7 +75,7 @@ register struct bnode_proc *ap; {
     tbnodep = ap->bnode;
     if (tbnodep->lastErrorName) {
 	free(tbnodep->lastErrorName);
-	tbnodep->lastErrorName = (char *) 0;
+	tbnodep->lastErrorName = NULL;
     }
     if (ap->coreName) {
 	tbnodep->lastErrorName = (char *) malloc(strlen(ap->coreName)+1);
@@ -262,7 +271,7 @@ register char *aname; {
     for(tb=allBnodes;tb;tb=tb->next) {
 	if (!strcmp(tb->name, aname)) return tb;
     }
-    return (struct bnode *) 0;
+    return NULL;
 }
 
 static struct bnode_type *FindType(aname)
@@ -864,7 +873,7 @@ char *aexecString; {
     for (tt = tlist, i = 0; i < (MAXVARGS - 1) && tt; tt = tt->next, i++) {
 	argv[i] = tt->key;
     }
-    argv[i] = (char *) 0;   /* null-terminated */
+    argv[i] = NULL;   /* null-terminated */
 
     cpid = spawnprocve(argv[0], argv, environ, -1);
     osi_audit(BOSSpawnProcEvent, 0, AUD_STR, aexecString, AUD_END );
@@ -891,7 +900,7 @@ int asignal; {
     if (!(aproc->flags & BPROC_STARTED) || (aproc->flags & BPROC_EXITED))
 	return BZNOTACTIVE;
 
-    osi_audit( BOSStopProcEvent, 0, AUD_STR, (aproc ? aproc->comLine : (char *)0), AUD_END );
+    osi_audit( BOSStopProcEvent, 0, AUD_STR, (aproc ? aproc->comLine : NULL), AUD_END );
 
     code = kill(aproc->pid, asignal);
     bnode_Check(aproc->bnode);

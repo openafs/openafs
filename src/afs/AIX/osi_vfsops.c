@@ -117,8 +117,7 @@ static int afs_root_nolock (struct vfs *afsp, struct vnode **avpp)
 	credp = crref();
 	if (!(code = afs_InitReq(&treq, credp)) &&
 	    !(code = afs_CheckInit())) {
-	    tvp = afs_GetVCache(&afs_rootFid, &treq, (afs_int32 *)0,
-				(struct vcache*)0, WRITE_LOCK);
+	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	    /* we really want this to stay around */
 	    if (tvp) {
 		afs_globalVp = tvp;

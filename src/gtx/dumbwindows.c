@@ -133,7 +133,7 @@ struct gwin *gator_dumbgwin_create(params)
     /*
       * Return failure here, fill this routine in at some point.
       */
-    return((struct gwin *)0);
+    return(NULL);
 
 } /*gator_dumbgwin_create*/
 

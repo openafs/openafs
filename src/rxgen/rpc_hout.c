@@ -40,29 +40,37 @@ RCSID("$Header$");
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "rpc_util.h"
+
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#include "rpc_scan.h"
 #include "rpc_parse.h"
+#include "rpc_util.h"
 
-static pconstdef();
-static pstructdef();
-static puniondef();
-static pprogramdef();
-static psprocdef();
-static penumdef();
-static ptypedef();
-static pdeclaration();
-static undefined2();
-
+/* Static declarations */
+static void pconstdef(definition *def);
+static void pstructdef(definition *def);
+static void puniondef(definition *def);
+static void puldefine(char *name, char *num);
+static int define_printed(proc_list *stop, version_list *start);
+static void pprogramdef(definition *def);
+static void psproc1(definition *defp, int callTconnF, char *type, char *prefix, int iomask);
+static void psprocdef(definition *defp);
+static void penumdef(definition *def);
+static void ptypedef(definition *def);
+static void pdeclaration(char *name, declaration *dec, int tab);
+static int undefined2(char *type, char *stop);
 
 /*
  * Print the C-version of an xdr definition 
  */
-void
-print_datadef(def)
-	definition *def;
+void print_datadef(definition *def)
 {
-        extern int IsRxgenDefinition();
-	
 	if (Sflag) scan_print = 0;
         if ((def->def_kind != DEF_CONST) && (!IsRxgenDefinition(def))) {
 		f_print(fout, "\n");
@@ -92,7 +100,7 @@ print_datadef(def)
 		break;
 	}
 	if (def->def_kind != DEF_PROGRAM && def->def_kind != DEF_CONST && (!IsRxgenDefinition(def))) {
-		f_print(fout, "bool_t xdr_%s();\n", def->def_name);
+		f_print(fout, "bool_t xdr_%s(XDR *xdrs, %s *objp);\n", def->def_name, def->def_name);
 	}
 	if (def->def_kind != DEF_CONST && (!IsRxgenDefinition(def))) {
 		f_print(fout, "\n");
@@ -100,16 +108,12 @@ print_datadef(def)
 	if (Sflag) scan_print = 1;
 }
 
-static
-pconstdef(def)
-	definition *def;
+static void pconstdef(definition *def)
 {
 	pdefine(def->def_name, def->def.co);
 }
 
-static
-pstructdef(def)
-	definition *def;
+static void pstructdef(definition *def)
 {
 	decl_list *l;
 	char *name = def->def_name;
@@ -122,9 +126,7 @@ pstructdef(def)
 	f_print(fout, "typedef struct %s %s;\n", name, name);
 }
 
-static
-puniondef(def)
-	definition *def;
+static void puniondef(definition *def)
 {
 	case_list *l;
 	char *name = def->def_name;
@@ -152,25 +154,17 @@ puniondef(def)
 }
 
 
-pdefine(name, num)
-	char *name;
-	char *num;
+void pdefine(char *name, char *num)
 {
 	f_print(fout, "#define %s %s\n", name, num);
 }
 
-static
-puldefine(name, num)
-	char *name;
-	char *num;
+static void puldefine(char *name, char *num)
 {
 	f_print(fout, "#define %s ((afs_uint32)%s)\n", name, num);
 }
 
-static
-define_printed(stop, start)
-	proc_list *stop;
-	version_list *start;
+static int define_printed(proc_list *stop, version_list *start)
 {
 	version_list *vers;
 	proc_list *proc;
@@ -189,9 +183,7 @@ define_printed(stop, start)
 }
 
 
-static
-pprogramdef(def)
-	definition *def;
+static void pprogramdef(definition *def)
 {
 	version_list *vers;
 	proc_list *proc;
@@ -208,14 +200,9 @@ pprogramdef(def)
 	}
 }
 
-static
-psproc1(defp,callTconnF,type,prefix,iomask)
-definition *defp;
-int callTconnF;
-char *type, *prefix;
-int iomask;
+static void psproc1(definition *defp, int callTconnF, char *type, char *prefix, int iomask)
 {
-	proc1_list *plist, *plist1;
+	proc1_list *plist;
 
 	f_print(fout,"\nextern %s %s%s%s(\n",type,prefix,defp->pc.proc_prefix,defp->pc.proc_name);
 
@@ -242,9 +229,7 @@ int iomask;
 	f_print(fout, ");\n");
 }
 
-static
-psprocdef(defp)
-definition *defp;
+static void psprocdef(definition *defp)
 {
 	int split_flag = defp->pc.split_flag;
 
@@ -259,9 +244,7 @@ definition *defp;
 }
 
 
-pprocdef(proc, vp)
-	proc_list *proc;
-	version_list *vp;
+void pprocdef(proc_list *proc, version_list *vp)
 {
 	f_print(fout, "extern ");
 	if (proc->res_prefix) {
@@ -282,9 +265,7 @@ pprocdef(proc, vp)
 	f_print(fout, "();\n");
 }
 
-static
-penumdef(def)
-	definition *def;
+static void penumdef(definition *def)
 {
 	char *name = def->def_name;
 	enumval_list *l;
@@ -311,9 +292,7 @@ penumdef(def)
 	f_print(fout, "typedef enum %s %s;\n", name, name);
 }
 
-static
-ptypedef(def)
-	definition *def;
+static void ptypedef(definition *def)
 {
 	char *name = def->def_name;
 	char *old = def->def.ty.old_type;
@@ -361,11 +340,7 @@ ptypedef(def)
 }
 
 
-static
-pdeclaration(name, dec, tab)
-	char *name;
-	declaration *dec;
-	int tab;
+static void pdeclaration(char *name, declaration *dec, int tab)
 {
 	char buf[8];	/* enough to hold "struct ", include NUL */
 	char *prefix;
@@ -420,10 +395,7 @@ pdeclaration(name, dec, tab)
 
 
 
-static
-undefined2(type, stop)
-	char *type;
-	char *stop;
+static int undefined2(char *type, char *stop)
 {
 	list *l;
 	definition *def;

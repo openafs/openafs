@@ -28,6 +28,15 @@ RCSID("$Header$");
 #include <sys/statfs.h>
 #endif
 #include <errno.h>
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <lock.h>
 #include <afs/stds.h>
 #include <rx/xdr.h>
@@ -80,7 +89,6 @@ afs_int32 tserver;
 extern struct ubik_client *cstruct;
 const char *confdir;
 extern struct rx_connection *UV_Bind();
-extern  struct rx_securityClass *rxnull_NewClientSecurityObject();
 extern int UV_SetSecurity();
 extern int UV_SetVolumeInfo();
 extern int vsu_SetCrypt();
@@ -372,7 +380,7 @@ int ReceiveFile(ufd, call, blksize)
     struct rx_call *call;
     long blksize;
 {
-    char *buffer = (char *) 0;
+    char *buffer = NULL;
     afs_int32  bytesread;
     afs_uint32  bytesleft, w;
     afs_int32 error = 0;
@@ -3933,7 +3941,7 @@ register struct cmd_syndesc *as;
       struct hostent       *he; 
       afs_int32 saddr;
       he = hostutil_GetHostByName((char*)as->parms[1].items->data);
-      if (he == (struct hostent *)0) {
+      if (he == NULL) {
 	  fprintf(stderr,
 		  "Can't get host info for '%s'\n",
 		  as->parms[1].items->data);
@@ -4046,7 +4054,7 @@ char *arock; {
     cstruct = (struct ubik_client *)0;
 
     sauth = 0;
-    tcell = (char *) 0;
+    tcell = NULL;
     if (as->parms[12].items)	/* if -cell specified */
 	tcell = as->parms[12].items->data;
     if(as->parms[14].items)	/* -serverauth specified */
@@ -4099,7 +4107,7 @@ char **argv; {
 
     confdir = AFSDIR_CLIENT_ETC_DIRPATH;
 
-    cmd_SetBeforeProc(MyBeforeProc,  (char *) 0);
+    cmd_SetBeforeProc(MyBeforeProc,  NULL);
 
     ts = cmd_CreateSyntax("create", CreateVolume, 0, "create a new volume");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");

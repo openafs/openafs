@@ -44,7 +44,13 @@ OBJS = \
 	crypt.o \
 	util.o
 
-all: ukinstall ${TOP_LIBDIR}/libdes.a ${TOP_INCDIR}/des.h ${TOP_INCDIR}/des_conf.h ${TOP_INCDIR}/mit-cpyright.h ${TOP_INCDIR}/des_odd.h
+all: ukinstall \
+	${TOP_LIBDIR}/libdes.a \
+	${TOP_INCDIR}/des.h \
+	${TOP_INCDIR}/des_prototypes.h \
+	${TOP_INCDIR}/des_conf.h \
+	${TOP_INCDIR}/mit-cpyright.h \
+	${TOP_INCDIR}/des_odd.h
 
 #
 # Build rules
@@ -114,7 +120,7 @@ fp.c: make_fp
 #
 # Dependency rules
 #
-INCLS=des.h mit-cpyright.h des_conf.h des_internal.h conf.h
+INCLS=des.h des_prototypes.h mit-cpyright.h des_conf.h des_internal.h conf.h
 
 make_keyperm.o: make_keyperm.c ${INCLS}
 make_ip.o: make_ip.c tables.h ${INCLS}
@@ -147,12 +153,21 @@ make_e.o: make_e.c ${INCLS}
 #
 # Install targets
 #
-install:  ${DESTDIR}${libdir}/libdes.a ${DESTDIR}${includedir}/des.h ${DESTDIR}${includedir}/des_conf.h ${DESTDIR}${includedir}/mit-cpyright.h ${DESTDIR}${includedir}/des_odd.h
+install:  \
+	${DESTDIR}${libdir}/libdes.a \
+	${DESTDIR}${includedir}/des.h \
+	${DESTDIR}${includedir}/des_prototypes.h \
+	${DESTDIR}${includedir}/des_conf.h \
+	${DESTDIR}${includedir}/mit-cpyright.h \
+	${DESTDIR}${includedir}/des_odd.h
 
 ${DEST}/lib/libdes.a: libdes.a
 	${INSTALL} $? $@
 
 ${DEST}/include/des.h: des.h
+	${INSTALL} $? $@
+
+${DEST}/include/des_prototypes.h: des_prototypes.h
 	${INSTALL} $? $@
 
 ${DEST}/include/des_conf.h: des_conf.h
@@ -167,6 +182,7 @@ ${DEST}/include/des_odd.h: odd.h
 ukinstall: \
 	${UKERNELDIR}/des/libdes.a \
 	${UKERNELDIR}/des/des.h \
+	${UKERNELDIR}/des/des_prototypes.h \
 	${UKERNELDIR}/des/mit-cpyright.h 
 
 ${UKERNELDIR}/des:
@@ -176,6 +192,9 @@ ${UKERNELDIR}/des/libdes.a: libdes.a
 	${INSTALL} $? $@
 
 ${UKERNELDIR}/des/des.h: des.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/des/des_prototypes.h: des_prototypes.h
 	${INSTALL} $? $@
 
 ${UKERNELDIR}/des/mit-cpyright.h: mit-cpyright.h
@@ -208,6 +227,12 @@ ${DESTDIR}${includedir}/des.h: des.h
 ${TOP_INCDIR}/des.h: des.h
 	${INSTALL} $? $@
 
+${DESTDIR}${includedir}/des_prototypes.h: des_prototypes.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/des_prototypes.h: des_prototypes.h
+	${INSTALL} $? $@
+
 ${DESTDIR}${includedir}/des_conf.h: des_conf.h
 	${INSTALL} $? $@
 
@@ -226,5 +251,11 @@ ${DESTDIR}${includedir}/des_odd.h: odd.h
 ${TOP_INCDIR}/des_odd.h: odd.h
 	${INSTALL} $? $@
 
-dest:  ${DEST}/lib/libdes.a ${DEST}/include/des.h ${DEST}/include/des_conf.h ${DEST}/include/mit-cpyright.h ${DEST}/include/des_odd.h
+dest:  \
+	${DEST}/lib/libdes.a \
+	${DEST}/include/des.h \
+	${DEST}/include/des_prototypes.h \
+	${DEST}/include/des_conf.h \
+	${DEST}/include/mit-cpyright.h \
+	${DEST}/include/des_odd.h
 

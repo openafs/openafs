@@ -46,10 +46,6 @@ RCSID("$Header$");
 #include <stdio.h>
 #define LASTUNSIGNED	((u_int)0-1)
 
-#ifndef osi_alloc
-char *osi_alloc();
-#endif
-
 /*
  * XDR an indirect pointer
  * xdr_reference is for recursively translating a structure that is

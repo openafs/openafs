@@ -121,9 +121,6 @@ INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
 DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS}
 DEST_LIBAFSNONFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFSNONFS}
 
-# Without this line, gmake tries to build libafs.o
-.PHONY: libafs
-
 libafs:	$(LIBAFSNONFS)
 install_libafs:	$(INST_LIBAFSNONFS)
 dest_libafs:	$(DEST_LIBAFSNONFS)

@@ -15,7 +15,6 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 # the libuafs README for details.
 
 # System specific build commands and flags
-CC = gcc
 DEFINES= -D_REENTRANT -DKERNEL -DUKERNEL
 KOPTS=
 CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBUG}

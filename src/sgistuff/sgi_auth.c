@@ -52,8 +52,8 @@ afs_verify(
 	if (ka_UserAuthenticateGeneral(
 			KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG,
 			uname, /* kerberos name */
-			(char *)0, /* instance */
-			(char *)0, /* realm */
+			NULL, /* instance */
+			NULL, /* realm */
 			pword, /* password */
 			0, /* default lifetime */
 			exp, /* spare 1/expiration */

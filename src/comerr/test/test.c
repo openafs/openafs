@@ -50,7 +50,7 @@ main()
 	printf("\n\nCOM_ERR tests:\n");
 	com_err("whoami", FOO_ERR, (char *)NULL);
 	com_err("whoami", FOO_ERR, " -- message goes %s", "here");
-	com_err("whoami", 0, (char *)0);
+	com_err("whoami", 0, NULL);
 	com_err("whoami", 0, "error number %d\n", 0);
 
 	return 0;

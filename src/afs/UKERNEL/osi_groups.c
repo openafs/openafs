@@ -98,7 +98,7 @@ int usr_setpag(
     }
     *newpag = (pagvalue == -1 ? genpag(): pagvalue);
     afs_get_groups_from_pag(*newpag, &gidset[0], &gidset[1]);
-    if (code = afs_setgroups(cred, ngroups, gidset, change_parent)) {
+    if ((code = afs_setgroups(cred, ngroups, gidset, change_parent))) {
 	osi_FreeSmallSpace((char *)gidset);
 	return (code);
     }

@@ -53,7 +53,7 @@ struct osi_file {
 #else
     afs_int32 offset;
 #endif
-    int	(*proc)();	/* proc, which, if not null, is called on writes */
+    int	(*proc)(struct osi_file *afile, afs_int32 code);	/* proc, which, if not null, is called on writes */
     char *rock;		/* rock passed to proc */
     ino_t inum;         /* guarantee validity of hint */
 #if defined(UKERNEL)
@@ -88,22 +88,11 @@ struct afs_osi_WaitHandle {
 
 
 #define	osi_NPACKETS	20		/* number of cluster pkts to alloc */
-extern struct osi_socket *osi_NewSocket();
-
 
 /*
  * Alloc declarations.
  */
-extern void *afs_osi_Alloc(size_t size);
-extern void  afs_osi_Free(void *x, size_t size);
 #define afs_osi_Alloc_NoSleep afs_osi_Alloc
-
-extern void *osi_AllocSmallSpace(size_t size);
-extern void  osi_FreeSmallSpace(void *x);
-extern void *osi_AllocMediumSpace(size_t size);
-extern void  osi_FreeMediumSpace(void *x);
-extern void *osi_AllocLargeSpace(size_t size);
-extern void  osi_FreeLargeSpace(void *x);
 
 /*
  * Vnode related macros
@@ -189,9 +178,9 @@ typedef struct timeval osi_timeval_t;
 
 #ifdef AFS_GLOBAL_SUNLOCK
 #define AFS_ASSERT_GLOCK() \
-    (ISAFS_GLOCK() || (osi_Panic("afs global lock not held"), 0))
+    (ISAFS_GLOCK() || (osi_Panic("afs global lock not held at %s:%d\n", __FILE__, __LINE__), 0))
 #define AFS_ASSERT_RXGLOCK() \
-    (ISAFS_RXGLOCK() || (osi_Panic("rx global lock not held"), 0))
+    (ISAFS_RXGLOCK() || (osi_Panic("rx global lock not held at %s:%d\n", __FILE__, __LINE__), 0))
 #endif /* AFS_GLOBAL_SUNLOCK */
 
 #ifdef RX_ENABLE_LOCKS
@@ -371,24 +360,6 @@ typedef struct timeval osi_timeval_t;
 */
 #define AfsLargeFileUio(uio)       0
 #define AfsLargeFileSize(pos, off) 0
-
-
-/* VM function prototypes.
- */
-#if defined(AFS_SUN5_ENV)
-extern int osi_VM_GetDownD();
-extern void osi_VM_PreTruncate();
-#endif
-#if defined(AFS_SGI_ENV)
-extern void osi_VM_FSyncInval();
-#endif
-extern int osi_VM_FlushVCache();
-extern void osi_VM_StoreAllSegments();
-extern void osi_VM_TryToSmush();
-extern void osi_VM_FlushPages();
-extern void osi_VM_Truncate();
-
-extern void osi_ReleaseVM();
 
 /* Now include system specific OSI header file. It will redefine macros
  * defined here as required by the OS.

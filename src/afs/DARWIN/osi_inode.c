@@ -233,7 +233,7 @@ afs_syscall_iopen(dev, inode, usrmod, retval)
 {
     struct file *fp;
     struct inode *ip;
-    struct vnode *vp = (struct vnode *)0;
+    struct vnode *vp = NULL;
     int dummy;
     int fd;
     extern struct fileops vnops;

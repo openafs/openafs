@@ -26,6 +26,15 @@ RCSID("$Header$");
 #ifdef AFS_AIX_ENV
 #include <sys/statfs.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <errno.h>
 #include <lock.h>
 #include <rx/xdr.h>
@@ -461,7 +470,7 @@ afs_int32 vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc
             strcpy(sname.cell, info.name);
             sname.instance[0] = 0;
             strcpy(sname.name, "afs");
-            code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), (char *)0);
+            code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
             if (code) {   /* did not get ticket */
                 fprintf(STDERR, "vsu_ClientInit: Could not get afs tokens, running unauthenticated.\n");
                 scIndex = 0;
@@ -477,10 +486,10 @@ afs_int32 vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc
 
         switch (scIndex) {
           case 0 :
-            sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+            sc = rxnull_NewClientSecurityObject();
             break;
           case 2:
-            sc = (struct rx_securityClass *)rxkad_NewClientSecurityObject(
+            sc = rxkad_NewClientSecurityObject(
                  vsu_rxkad_level, &ttoken.sessionKey, ttoken.kvno,
                  ttoken.ticketLen, ttoken.ticket);
             break;

@@ -27,14 +27,6 @@ RCSID("$Header$");
 #include "../afs/afs_stats.h" /* statistics */
 
 /* memory cache routines */
-
-struct memCacheEntry {
-    int size;      /* # of valid bytes in this entry */
-    int dataSize;  /* size of allocated data area */
-    afs_lock_t afs_memLock;
-    char *data;    /* bytes */
-};
-
 static struct memCacheEntry *memCache;
 static int memCacheBlkSize = 8192;
 static int memMaxBlkNumber = 0;
@@ -42,10 +34,7 @@ static int memAllocMaySleep = 0;
 
 extern int cacheDiskType;
 
-afs_InitMemCache(size, blkSize, flags)
-     int size;
-     int blkSize;
-     int flags;
+int afs_InitMemCache(int size, int blkSize, int flags)
   {
       int index;
 
@@ -92,8 +81,7 @@ nomem:
 
  }
 
-afs_MemCacheClose(file)
-    char *file;
+int afs_MemCacheClose(char *file)
 {
     return 0;
 }
@@ -117,11 +105,7 @@ void *afs_MemCacheOpen(ino_t blkno)
 /*
  * this routine simulates a read in the Memory Cache 
  */
-afs_MemReadBlk(mceP, offset, dest, size)
-     int offset;
-     register struct memCacheEntry *mceP;
-     char *dest;
-     int size;
+int afs_MemReadBlk(register struct memCacheEntry *mceP, int offset, char *dest, int size)
   {
       int bytesRead;
       
@@ -150,12 +134,7 @@ afs_MemReadBlk(mceP, offset, dest, size)
 /*
  * this routine simulates a readv in the Memory Cache 
  */
-afs_MemReadvBlk(mceP, offset, iov, nio, size)
-     int offset;
-     register struct memCacheEntry *mceP;
-     struct iovec *iov;
-     int nio;
-     int size;
+int afs_MemReadvBlk(register struct memCacheEntry *mceP, int offset, struct iovec *iov, int nio, int size)
   {
       int i;
       int bytesRead;
@@ -188,9 +167,7 @@ afs_MemReadvBlk(mceP, offset, iov, nio, size)
       return bytesRead;
   }
 
-afs_MemReadUIO(blkno, uioP)
-     ino_t blkno;
-     struct uio *uioP;
+int afs_MemReadUIO(ino_t blkno, struct uio *uioP)
   {
       register struct memCacheEntry *mceP = (struct memCacheEntry *)afs_MemCacheOpen(blkno);
       int length = mceP->size - uioP->uio_offset;
@@ -205,11 +182,7 @@ afs_MemReadUIO(blkno, uioP)
   }
 
 /*XXX: this extends a block arbitrarily to support big directories */
-afs_MemWriteBlk(mceP, offset, src, size)
-     register struct memCacheEntry *mceP;
-     int offset;
-     char *src;
-     int size;
+int afs_MemWriteBlk(register struct memCacheEntry *mceP, int offset, char *src, int size)
   {
       AFS_STATCNT(afs_MemWriteBlk);
       MObtainWriteLock(&mceP->afs_memLock,560);
@@ -250,12 +223,7 @@ afs_MemWriteBlk(mceP, offset, src, size)
   }
 
 /*XXX: this extends a block arbitrarily to support big directories */
-afs_MemWritevBlk(mceP, offset, iov, nio, size)
-     register struct memCacheEntry *mceP;
-     int offset;
-     struct iovec *iov;
-     int nio;
-     int size;
+int afs_MemWritevBlk(register struct memCacheEntry *mceP, int offset, struct iovec *iov, int nio, int size)
   {
       int i;
       int bytesWritten;
@@ -291,9 +259,7 @@ afs_MemWritevBlk(mceP, offset, iov, nio, size)
       return bytesWritten;
   }
 
-afs_MemWriteUIO(blkno, uioP)
-     ino_t blkno;
-     struct uio *uioP;
+int afs_MemWriteUIO(ino_t blkno, struct uio *uioP)
   {
       register struct memCacheEntry *mceP = (struct memCacheEntry *)afs_MemCacheOpen(blkno);
       afs_int32 code;
@@ -322,9 +288,7 @@ afs_MemWriteUIO(blkno, uioP)
       return code;
   }
 
-afs_MemCacheTruncate(mceP, size)
-     register struct memCacheEntry *mceP;
-     int size;
+int afs_MemCacheTruncate(register struct memCacheEntry *mceP, int size)
   {
       AFS_STATCNT(afs_MemCacheTruncate);
 
@@ -343,16 +307,9 @@ afs_MemCacheTruncate(mceP, size)
       return 0;
   }
 
-afs_MemCacheStoreProc(acall, mceP, alen, avc, shouldWake, abytesToXferP, abytesXferredP, length)
-     register struct memCacheEntry *mceP;
-     register struct rx_call *acall;
-     register afs_int32 alen;
-     struct vcache *avc;
-     int *shouldWake;
-     afs_size_t *abytesToXferP;
-     afs_size_t *abytesXferredP;
-     afs_int32 length;
-
+int afs_MemCacheStoreProc(register struct rx_call *acall, register struct memCacheEntry *mceP, 
+	register afs_int32 alen, struct vcache *avc, int *shouldWake, afs_size_t *abytesToXferP, 
+	afs_size_t *abytesXferredP, afs_int32 length)
   {
 
       register afs_int32 code;
@@ -429,15 +386,9 @@ afs_MemCacheStoreProc(acall, mceP, alen, avc, shouldWake, abytesToXferP, abytesX
       return 0;
   }
 
-afs_MemCacheFetchProc(acall, mceP, abase, adc, avc, abytesToXferP, abytesXferredP, lengthFound)
-     register struct rx_call *acall;
-     afs_size_t abase;
-     afs_size_t *abytesToXferP;
-     afs_size_t *abytesXferredP;
-     struct dcache *adc;
-     struct vcache *avc;
-     register struct memCacheEntry *mceP;
-     afs_int32 lengthFound;
+int afs_MemCacheFetchProc(register struct rx_call *acall, register struct memCacheEntry *mceP, 
+	afs_size_t abase, struct dcache *adc, struct vcache *avc, afs_size_t *abytesToXferP, 
+	afs_size_t *abytesXferredP, afs_int32 lengthFound)
 {
       register afs_int32 code;
       afs_int32 length;
@@ -525,7 +476,7 @@ afs_MemCacheFetchProc(acall, mceP, abase, adc, avc, abytesToXferP, abytesXferred
   }
 
 
-void shutdown_memcache()
+void shutdown_memcache(void)
 {
     register int index;
 

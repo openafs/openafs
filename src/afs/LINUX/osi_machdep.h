@@ -165,7 +165,7 @@ do { \
 #define AFS_GUNLOCK() \
 do { \
     if (!ISAFS_GLOCK()) \
-	osi_Panic("afs global lock not held"); \
+	osi_Panic("afs global lock not held at %s:%d", __FILE__, __LINE__); \
     afs_global_owner = 0; \
     up(&afs_global_lock); \
 } while (0)

@@ -60,14 +60,12 @@ pam_sm_authenticate(
     int use_klog = 0;
     int set_expires = 0;  /* This option is only used in pam_set_cred() */
     int got_authtok = 0;	/* got PAM_AUTHTOK upon entry */
-    int nouser = 0;
     char *user = NULL, *password = NULL;
     long password_expires = -1;
     int torch_password = 1;
     int i;
     struct pam_conv *pam_convp = NULL;
     int auth_ok;
-    uid_t uid;
     struct passwd unix_pwd, *upwd = NULL;
     char upwd_buf[2048];	/* size is a guess. */
     char*	reason = NULL;
@@ -307,7 +305,7 @@ try_auth:
               if (refresh_token || set_token)
                  code = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION,
 				    user, /* kerberos name */
-				    (char *)0, /* instance */
+				    NULL, /* instance */
 				    cell_ptr, /* realm */
 				    password, /* password */
 				    0, /* default lifetime */
@@ -317,7 +315,7 @@ try_auth:
               else
                  code = ka_VerifyUserPassword(KA_USERAUTH_VERSION,
 				    user, /* kerberos name */
-				    (char *)0, /* instance */
+				    NULL, /* instance */
 				    cell_ptr, /* realm */
 				    password, /* password */
 				    0, /* spare 2 */
@@ -348,7 +346,7 @@ try_auth:
            }
     }
     /* Restore old signal handler */
-    code = sigaction(SIGCHLD, &origAction, (struct sigaction *)0);
+    code = sigaction(SIGCHLD, &origAction, NULL);
     if (code) {
        pam_afs_syslog(LOG_ERR, PAMAFS_PAMERROR, errno);
     }
@@ -358,7 +356,7 @@ try_auth:
         if (refresh_token || set_token)
             code = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION,
 				    user, /* kerberos name */
-				    (char *)0, /* instance */
+				    NULL, /* instance */
 				    cell_ptr, /* realm */
 				    password, /* password */
 				    0, /* default lifetime */
@@ -368,7 +366,7 @@ try_auth:
         else
             code = ka_VerifyUserPassword(KA_USERAUTH_VERSION,
 				    user, /* kerberos name */
-				    (char *)0, /* instance */
+				    NULL, /* instance */
 				    cell_ptr, /* realm */
 				    password, /* password */
 				    0, /* spare 2 */

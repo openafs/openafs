@@ -25,9 +25,7 @@ RCSID("$Header$");
 #define	KSUCCESS	0
 #define	KFAILURE	-1
 
-afs_krb_get_lrealm(r,n)
-    char *r;
-    int n;
+int afs_krb_get_lrealm(char *r, int n)
 {
     FILE *cnffile, *fopen();
 

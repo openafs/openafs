@@ -12,19 +12,17 @@ RCSID("$Header$");
 
 #include <mit-cpyright.h>
 #include <stdio.h>
+#include <des.h>
 #include "des_internal.h"
+#include "des_prototypes.h"
 
 #define WANT_S_TABLE
 #include "tables.h"
 
-extern afs_uint32 swap_bit_pos_0();
-extern afs_uint32 swap_six_bits_to_ansi();
-extern afs_uint32 swap_four_bits_to_ansi();
 char temp[8][64];
 int des_debug;
 
-void gen(stream)
-    FILE *stream;
+void gen(FILE *stream)
 {
     register afs_uint32 i,j,k,l,m,n;
 
@@ -52,7 +50,7 @@ void gen(stream)
             if (des_debug)
                 fprintf(stderr,
                 "i = %ld, j = %ld, k = %ld, l = %ld, m = %ld, n = %ld\n",
-                        i,j,k,l,m,n);
+                        (long) i,(long) j,(long) k,(long) l,(long) m,(long) n);
             temp[i][j] = n;
         }
     }

@@ -218,7 +218,6 @@ int ubik_ServerInitCommon(myHost, myPort, info, clones, serverList, pathName, db
     struct rx_securityClass *secClass;
 
     struct rx_service *tservice;
-    extern struct rx_securityClass *rxnull_NewServerSecurityObject();
     extern int VOTE_ExecuteRequest(), DISK_ExecuteRequest();
     extern void rx_ServerProc();
     extern int rx_stackSize;

@@ -21,6 +21,13 @@ RCSID("$Header$");
 #include <netinet/in.h>
 #include <netdb.h>
 #endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <afs/stds.h>
 #include <sys/types.h>
 #include <lock.h>
@@ -139,10 +146,10 @@ int blockEntries[NBLOCKTYPES] =
 int blockEntrySize[NBLOCKTYPES] = 
 {
     0					 /* free */,
-    sizeof(((struct vfBlock *)0)->a[0]),
-    sizeof(((struct viBlock *)0)->a[0]),
-    sizeof(((struct tBlock *)0)->a[0]),
-    sizeof(((struct dBlock *)0)->a[0]),
+    sizeof(((struct vfBlock *)NULL)->a[0]),
+    sizeof(((struct viBlock *)NULL)->a[0]),
+    sizeof(((struct tBlock *)NULL)->a[0]),
+    sizeof(((struct dBlock *)NULL)->a[0]),
     0};
 
 char *typeName[NBLOCKTYPES] = 

@@ -160,7 +160,7 @@ afs_int32 pr_Initialize (secLevel, confDir, cell)
         strcpy(sname.cell,info.name);
 	sname.instance[0] = 0;
 	strcpy(sname.name, "afs");
-	code = ktc_GetToken(&sname,&ttoken, sizeof(ttoken), (char *)0);
+	code = ktc_GetToken(&sname,&ttoken, sizeof(ttoken), NULL);
 	if (code) scIndex = 0;
 	else {
 	    if (ttoken.kvno >= 0 && ttoken.kvno <= 255)
@@ -172,14 +172,14 @@ afs_int32 pr_Initialize (secLevel, confDir, cell)
 			 ttoken.kvno);
 		scIndex = 2;
 	    }
-	    sc[2] = (struct rx_securityClass *) rxkad_NewClientSecurityObject
+	    sc[2] = rxkad_NewClientSecurityObject
 		(rxkad_clear, &ttoken.sessionKey, ttoken.kvno,
 		 ttoken.ticketLen, ttoken.ticket);
 	}
     }
     if (scIndex == 1) return PRBADARG;
     if ((scIndex == 0) && (sc[0] == 0))
-	sc[0] = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+	sc[0] = rxnull_NewClientSecurityObject();
     if ((scIndex == 0) && (secLevel != 0))
 	com_err (whoami, code,
 		 "Could not get afs tokens, running unauthenticated.");
@@ -552,7 +552,7 @@ afs_int32 pr_ListEntries(flag, startindex, nentries, entries, nextstartindex)
   prentries bulkentries;
 
   *nentries = 0;
-  *entries  = (struct prlistentries *)0;
+  *entries  = NULL;
   *nextstartindex = -1;
   bulkentries.prentries_val = 0;
   bulkentries.prentries_len = 0;

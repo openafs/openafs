@@ -39,6 +39,17 @@ extern int afs_shuttingdown;
 #endif
 #endif
 
+/* Moved from VNOPS/afs_vnop_flocks so can be used in prototypes */
+#if     defined(AFS_HPUX102_ENV)
+#define AFS_FLOCK       k_flock
+#else
+#if     defined(AFS_SUN56_ENV) || defined(AFS_LINUX24_ENV)
+#define AFS_FLOCK       flock64
+#else
+#define AFS_FLOCK       flock
+#endif /* AFS_SUN65_ENV */
+#endif /* AFS_HPUX102_ENV */
+
 /* The following are various levels of afs debugging */
 #define	AFSDEB_GENERAL		1	/* Standard debugging */
 #define	AFSDEB_NETWORK		2	/* low level afs networking */
@@ -1014,57 +1025,6 @@ extern struct brequest afs_brs[NBRS];		/* request structures */
 #define	SHash(aserv)	((ntohl(aserv)) & (NSERVERS-1))
 #define	FVHash(acell,avol)  (((avol)+(acell)) & (NFENTRIES-1))
 
-extern struct cell	    *afs_GetCell();
-extern struct cell	    *afs_GetCellNoLock();
-extern struct cell	    *afs_GetCellByName();
-extern struct cell	    *afs_FindCellByName();
-extern struct cell	    *afs_GetCellByIndex();
-extern struct unixuser	    *afs_GetUser();
-extern struct volume	    *afs_GetVolume();
-extern struct volume	    *afs_GetVolumeByName();
-extern struct conn	    *afs_Conn();
-extern struct conn	    *afs_ConnByHost();
-extern struct conn	    *afs_ConnByMHosts();
-extern afs_int32	    afs_NewCell();
-extern struct dcache	    *afs_GetDCache();
-extern struct dcache	    *afs_FindDCache();
-extern struct dcache	    *afs_NewDCache();
-extern struct dcache	    *afs_GetDSlot();
-extern struct vcache	    *afs_GetVCache();
-extern struct brequest	    *afs_BQueue();
-
-/* afs_cache.c */
-extern int afs_CacheInit();
-extern void afs_StoreWarn();
-extern void afs_AdjustSize();
-extern void afs_ComputeCacheParms();
-extern void afs_FlushDCache();
-extern void afs_FlushActiveVcaches();
-extern void afs_StuffVcache();
-extern void afs_PutVCache();
-extern void afs_TryToSmush();
-extern void afs_ProcessFS();
-extern void afs_WriteThroughDSlots();
-extern void shutdown_cache();
-/* afs_call.c */
-extern void afs_shutdown();
-/* afs_osifile.c */
-extern void shutdown_osifile();
-
-/* afs_dynroot.c */
-extern int afs_IsDynrootFid();
-extern void afs_GetDynrootFid();
-extern int afs_IsDynroot();
-extern void afs_RefreshDynroot();
-extern void afs_GetDynroot();
-extern void afs_PutDynroot();
-extern int afs_DynrootNewVnode();
-extern int afs_SetDynrootEnable();
-extern int afs_GetDynrootEnable();
-extern int afs_DynrootVOPSymlink();
-extern int afs_DynrootVOPRemove();
-
-
 /* Performance hack - we could replace VerifyVCache2 with the appropriate
  * GetVCache incantation, and could eliminate even this code from afs_UFSRead 
  * by making intentionally invalidating quick.stamp in the various callbacks
@@ -1108,11 +1068,6 @@ extern int afs_DynrootVOPRemove();
 #define	afs_nlrdwr(avc, uio, rw, io, cred) \
     (((rw) == UIO_WRITE) ? afs_write(avc, uio, io, cred, 1) : afs_read(avc, uio, cred, 0, 0, 1))
 
-extern afs_int32 afs_blocksUsed, afs_blocksDiscarded;
-extern afs_int32 afs_discardDCCount, afs_freeDCCount;
-extern afs_int32 afs_bulkStatsDone, afs_bulkStatsLost;
-extern int afs_TruncateDaemonRunning;
-extern int afs_CacheTooFull;
 /* Cache size truncation uses the following low and high water marks:
  * If the cache is more than 95% full (CM_DCACHECOUNTFREEPCT), the cache
  * truncation daemon is awakened and will free up space until the cache is 85%
@@ -1122,9 +1077,6 @@ extern int afs_CacheTooFull;
  * afs_GetDownD wakes those processes once the cache is 95% full
  * (CM_CACHESIZEDRAINEDPCT).
  */
-extern void afs_MaybeWakeupTruncateDaemon();
-extern void afs_CacheTruncateDaemon();
-extern int afs_WaitForCacheDrain;
 #define CM_MAXDISCARDEDCHUNKS	16      /* # of chunks */
 #define CM_DCACHECOUNTFREEPCT	95      /* max pct of chunks in use */
 #define CM_DCACHESPACEFREEPCT	90      /* max pct of space in use */
@@ -1141,11 +1093,8 @@ extern int afs_WaitForCacheDrain;
 /* Handy max length of a numeric string. */
 #define	CVBS	12  /* max afs_int32 is 2^32 ~ 4*10^9, +1 for NULL, +luck */
 
-extern int afs_norefpanic;
 #define refpanic(foo) if (afs_norefpanic) \
         { printf( foo ); afs_norefpanic++;} else osi_Panic( foo )
-
-
 
 /* 
 ** these are defined in the AIX source code sys/fs_locks.h but are not
@@ -1182,6 +1131,24 @@ extern int afs_norefpanic;
 #endif /* AFS_SGI62_ENV */
 #endif
 
+
+/* Note: this should agree with the definition in kdump.c */
+#if     defined(AFS_OSF_ENV)
+#if     !defined(UKERNEL)
+#define AFS_USEBUFFERS  1
+#endif
+#endif
+
+#if !defined(UKERNEL) && !defined(HAVE_STRUCT_BUF)
+/* declare something so that prototypes don't flip out */
+/* this is really a sick hack, but appears struct buf stuff is only actually passed
+around as a pointer, except with libuafs, in which case it is actually defined */
+
+struct buf {
+	int bogus; 
+};
+#endif
+
 /* fakestat support: opaque storage for afs_EvalFakeStat to remember
  * what vcache should be released.
  */
@@ -1193,6 +1160,29 @@ struct afs_fakestat_state {
 };
 
 extern int afs_fakestat_enable;
+
+struct buffer {
+    ino_t fid[1];       /* Unique cache key + i/o addressing */
+    afs_int32 page;
+    afs_int32 accesstime;
+    struct buffer *hashNext;
+    char *data;
+    char lockers;
+    char dirty;
+    char hashIndex;
+#if AFS_USEBUFFERS
+    struct buf *bufp;
+#endif
+    afs_rwlock_t lock;          /* the lock for this structure */
+};
+
+/* afs_memcache.c */
+struct memCacheEntry {
+    int size;      /* # of valid bytes in this entry */
+    int dataSize;  /* size of allocated data area */
+    afs_lock_t afs_memLock;
+    char *data;    /* bytes */
+};
 
 #endif	/* _AFS_H_ */
 

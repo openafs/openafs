@@ -224,7 +224,7 @@ Command is executed in user's cell.
 static MyBeforeProc(as, arock)
 struct cmd_syndesc *as;
 char *arock; {
-    register char *tcell = (char *)0;
+    register char *tcell = NULL;
     char confdir[200];
     struct afsconf_dir *tdir;
     struct afsconf_cell info;
@@ -238,7 +238,7 @@ char *arock; {
     if (code)
 	printf("Warning: could not initialize network communication.\n");
 
-    junk=(struct rx_securityClass *)rxnull_NewClientSecurityObject();
+    junk=rxnull_NewClientSecurityObject();
     tdir=afsconf_Open(confdir);
     if(!tdir)
 	printf("Warning: could not get cell configuration.\n");
@@ -282,7 +282,7 @@ char **argv;
 	/*
 	Look in /usr/vice/etc (client side database).
 	*/
-	cmd_SetBeforeProc(MyBeforeProc,  (char *) 0);
+	cmd_SetBeforeProc(MyBeforeProc,  NULL);
 
 	ts = cmd_CreateSyntax("initcmd"/*"invalidatecache"*/,InvalidateCache,0,
 		"invalidate server ACL cache");

@@ -108,7 +108,7 @@ static struct mbuf *rxk_input (register struct mbuf *am, struct ifnet *aif)
     if (am->m_off > MMAXOFF || am->m_len < 28) {
 	am = m_pullup(am, 28);
 	USERPRI;
-	if (!am) return (struct mbuf *)0;
+	if (!am) return NULL;
     }
     hdr = (mtod(am, struct ip *))->ip_hl;
     if (hdr > 5) {
@@ -116,7 +116,7 @@ static struct mbuf *rxk_input (register struct mbuf *am, struct ifnet *aif)
 	if (am->m_len < (8 + (hdr<<2))) {
 	    am = m_pullup(am, 8+(hdr<<2));
 	    USERPRI;
-	    if (!am) return (struct mbuf *)0;
+	    if (!am) return NULL;
 	}
 	ti = mtod(am, struct ip *); /* recompute, since m_pullup allocates new mbuf */
 	tu = (struct udphdr *)(((char *)ti) + (hdr<<2)); /* skip ip hdr */
@@ -132,7 +132,7 @@ static struct mbuf *rxk_input (register struct mbuf *am, struct ifnet *aif)
 	for(tsp=ports, i=0; i<MAXRXPORTS;i++) {
 	    if (*tsp++ == port) {
 		/* checksum the packet */
-		ip_stripoptions(ti,     (struct mbuf *) 0); /* get rid of anything we don't need */
+		ip_stripoptions(ti,     NULL); /* get rid of anything we don't need */
 		/* deliver packet to rx */
 		taddr.sin_family = AF_INET;         /* compute source address */
 		taddr.sin_port = tu->uh_sport;
@@ -169,7 +169,7 @@ static struct mbuf *rxk_input (register struct mbuf *am, struct ifnet *aif)
 			   this packet is bad */
 			m_freem(am);
 			USERPRI;
-			return((struct mbuf *)0);
+			return(NULL);
 		    }
 		}
 		/*
@@ -192,7 +192,7 @@ static struct mbuf *rxk_input (register struct mbuf *am, struct ifnet *aif)
 		}
 		else m_freem(am);
 		USERPRI;
-		return((struct mbuf *)0);
+		return(NULL);
 	    }
 	}
     }
@@ -204,19 +204,13 @@ static struct mbuf *rxk_input (register struct mbuf *am, struct ifnet *aif)
       return code;
     }
     USERPRI;
-    return((struct mbuf *)0);
+    return(NULL);
 }
 #endif /* ! RXK_LISTENER_ENV */
 
 /* steal decl from sgi_65 */
-int
-osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
-     register struct socket *asocket;
-     struct iovec *dvec;
-     int nvec;
-     register afs_int32 asize;
-     struct sockaddr_in *addr;
-     int istack;
+int osi_NetSend(register struct socket *asocket, struct sockaddr_in *addr, 
+	struct iovec *dvec, int nvec, register afs_int32 asize, int istack)
 {
     struct uio uio;
     MBLKP bp;
@@ -246,31 +240,31 @@ osi_NetSend(asocket, addr, dvec, nvec, asize, istack)
 
 /* pattern from IRIX */
 #if defined(RXK_LISTENER_ENV)
-int osi_NetReceive(struct socket *so, struct sockaddr_in *from, 
-                   struct iovec *iov, int iovcnt, int *lengthp)
-{
+int osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,         
+        int nvecs, int *alength)
+{   
     int          code;
     struct uio   tuio;
     struct iovec tmpvec[RX_MAXWVECS+2];
     int          flags = 0;
     MBLKP bp, sp;
 
-    if (iovcnt > RX_MAXWVECS+2) {
-        osi_Panic("Too many (%d) iovecs passed to osi_NetReceive\n", iovcnt);
+    if (nvecs > RX_MAXWVECS+2) {
+        osi_Panic("Too many (%d) iovecs passed to osi_NetReceive\n", nvecs);
     }
-    memcpy(tmpvec, (char*)iov, iovcnt/*(RX_MAXWVECS+1)*/ * sizeof(struct iovec));
+    memcpy(tmpvec, (char*)dvec, nvecs/*(RX_MAXWVECS+1)*/ * sizeof(struct iovec));
     tuio.uio_iov     = tmpvec;
-    tuio.uio_iovcnt  = iovcnt;
+    tuio.uio_iovcnt  = nvecs;
     tuio.uio_fpflags = 0;
     tuio.uio_offset  = 0;
     tuio.uio_seg     = UIOSEG_KERNEL;
-    tuio.uio_resid   = *lengthp;
+    tuio.uio_resid   = *alength;
 
     code = soreceive(so, &bp, &tuio, &flags, &sp, (MBLKPP)NULL);
     if (!code) {
-        *lengthp = *lengthp - tuio.uio_resid;
+        *alength = *alength - tuio.uio_resid;
         if (bp) {
-            memcpy((char*)from, (char*)bp->b_rptr, sizeof(struct sockaddr_in));
+            memcpy((char*)addr, (char*)bp->b_rptr, sizeof(struct sockaddr_in));
         } else {
             code = -1;
         }

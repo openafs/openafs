@@ -20,7 +20,6 @@ RCSID("$Header$");
 #endif
 
 static char memZero;			/* address of 0 bytes for kmem_alloc */
-extern int afs_osicred_initialized;
 
 struct osimem {
     struct osimem *next;
@@ -40,7 +39,7 @@ lock_t afs_event_lock;
 flid_t osi_flid;
 #endif
 
-void osi_Init()
+void osi_Init(void)
 {
     static int once = 0;
     if (once++ > 0)			/* just in case */
@@ -81,8 +80,8 @@ void osi_Init()
 #endif
 }
 
-osi_Active(avc)
-register struct vcache *avc; {
+int osi_Active(register struct vcache *avc)
+{
     AFS_STATCNT(osi_Active);
 #if defined(AFS_SUN_ENV) || defined(AFS_AIX_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || (AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     if ((avc->opens > 0) || (avc->states & CMAPPED))	return 1;   /* XXX: Warning, verify this XXX  */
@@ -110,9 +109,7 @@ register struct vcache *avc; {
    avc->pvnLock is already held, avc->lock is guaranteed not to be held (by
    us, of course).
 */
-void osi_FlushPages(avc, credp)
-    register struct vcache *avc; 
-    struct AFS_UCRED *credp;    
+void osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
 {
     afs_hyper_t origDV;
     ObtainReadLock(&avc->lock);
@@ -166,8 +163,8 @@ afs_lock_t afs_ftf;		/* flush text lock */
  * shouldn't do anything that would discard newly written data before
  * it is written to the file system. */
 
-void osi_FlushText_really(vp)
-    register struct vcache *vp; {
+void osi_FlushText_really(register struct vcache *vp)
+{
     afs_hyper_t fdv;	/* version before which we'll flush */
 
     AFS_STATCNT(osi_FlushText);
@@ -234,9 +231,8 @@ void osi_FlushText_really(vp)
  * cacheinval().  But they would panic.  So it might be worth looking
  * into some middle ground...
  */
-static void
-afs_gfs_FlushText(vp)
-    register struct vcache *vp; {
+static void afs_gfs_FlushText(register struct vcache *vp)
+{
     afs_hyper_t fdv;	/* version before which we'll flush */
     register struct text *xp;
     struct gnode * gp;
@@ -260,7 +256,7 @@ afs_gfs_FlushText(vp)
 	    return;
 	  }
 	}
-	else xp = (struct text *) 0;
+	else xp = NULL;
 
 	if (gp->g_flag & GTEXT)	{/* still has a text object? */
 	  xinval(gp);
@@ -281,28 +277,32 @@ afs_gfs_FlushText(vp)
 #endif /* AFS_TEXT_ENV */
 
 /* mask signals in afsds */
-void afs_osi_MaskSignals(){
+void afs_osi_MaskSignals(void)
+{
 #ifdef AFS_LINUX22_ENV
     osi_linux_mask();
 #endif
 }
     
 /* unmask signals in rxk listener */
-void afs_osi_UnmaskRxkSignals(){
+void afs_osi_UnmaskRxkSignals(void)
+{
 #ifdef AFS_LINUX22_ENV
     osi_linux_unmask();
 #endif
 }
     
 /* register rxk listener proc info */
-void afs_osi_RxkRegister(){
+void afs_osi_RxkRegister(void)
+{
 #ifdef AFS_LINUX22_ENV
     osi_linux_rxkreg();
 #endif
 }
 
 /* procedure for making our processes as invisible as we can */
-void afs_osi_Invisible() {
+void afs_osi_Invisible(void)
+{
 #ifdef AFS_LINUX22_ENV
     afs_osi_MaskSignals();
 #endif 
@@ -332,9 +332,8 @@ void afs_osi_Invisible() {
 
 #ifndef AFS_LINUX20_ENV /* Linux version in osi_misc.c */
 /* set the real time */
-afs_osi_SetTime(atv)
-    register osi_timeval_t *atv; {
-
+int afs_osi_SetTime(register osi_timeval_t *atv)
+{
 #ifdef	AFS_AIX32_ENV
     struct timestruc_t t;
 
@@ -354,7 +353,6 @@ afs_osi_SetTime(atv)
     struct stimea {
 	time_t time;
     } sta;
-    extern int stime(struct stimea *time, rval_t *rvp);
 
     sta.time = atv->tv_sec;
 
@@ -364,7 +362,6 @@ afs_osi_SetTime(atv)
     struct stimea {
 	sysarg_t time;
     } sta;
-    extern int stime(struct stimea *time);
 
     AFS_GUNLOCK();
     sta.time = atv->tv_sec;
@@ -375,7 +372,6 @@ afs_osi_SetTime(atv)
     /* does not impliment security features of kern_time.c:settime() */
     struct timespec ts;
     struct timeval tv,delta;
-    extern void (*lease_updatetime)();
     int s;
     AFS_GUNLOCK();
     s=splclock();
@@ -508,9 +504,7 @@ void afs_osi_Free(void *x, size_t asize)
  *      correctly (or at least, not to introduce worse bugs than already exist)
  */
 #ifdef	notdef
-int
-osi_VMDirty_p(avc)
-     struct vcache *avc;
+int osi_VMDirty_p(struct vcache *avc)
 {
     int dirtyPages;
 
@@ -533,7 +527,6 @@ osi_VMDirty_p(avc)
 
     if (avc->vmh) {
 	unsigned int pagef, pri, index, next;
-	extern struct vmkerdata vmker;
 
 	index = VMHASH(avc->vmh);
 	if (scb_valid(index)) {  /* could almost be an ASSERT */
@@ -582,10 +575,7 @@ return 0;
  *
  * Locking:  the vcache entry lock is held.  It is dropped and re-obtained.
  */
-void
-osi_ReleaseVM(avc, acred)
-    struct vcache *avc;
-    struct AFS_UCRED *acred;
+void osi_ReleaseVM(struct vcache *avc, struct AFS_UCRED *acred)
 {
 #ifdef	AFS_SUN5_ENV
     AFS_GUNLOCK();
@@ -601,18 +591,15 @@ osi_ReleaseVM(avc, acred)
 }
 
 
-void shutdown_osi()
+void shutdown_osi(void)
 {
-    extern int afs_cold_shutdown;
-
     AFS_STATCNT(shutdown_osi);
     if (afs_cold_shutdown) {
 	LOCK_INIT(&afs_ftf, "afs_ftf");	
       }
 }
 
-afs_osi_suser(credp) 
-  void * credp;
+int afs_osi_suser(void *credp) 
 {
 #ifdef AFS_SUN5_ENV
   return afs_suser(credp);
@@ -628,7 +615,7 @@ afs_osi_suser(credp)
  */
 
 #if defined(AFS_SUN5_ENV)
-void afs_osi_TraverseProcTable()
+void afs_osi_TraverseProcTable(void)
 {
     struct proc *prp;
     for (prp = practive; prp != NULL; prp = prp->p_next) {
@@ -650,7 +637,7 @@ void afs_osi_TraverseProcTable()
  * changes.  To be safe, we use both.
  */
 
-void afs_osi_TraverseProcTable()
+void afs_osi_TraverseProcTable(void)
 {
     register proc_t *p;
     int endchain = 0;
@@ -711,14 +698,14 @@ static int SGI_ProcScanFunc(proc_t *p, void *arg, int mode)
 }
 #endif	/* AFS_SGI65_ENV */
 
-void afs_osi_TraverseProcTable()
+void afs_osi_TraverseProcTable(void)
 {
     procscan(SGI_ProcScanFunc, afs_GCPAGs_perproc_func);
 }
 #endif	/* AFS_SGI_ENV */
 
 #if defined(AFS_AIX_ENV)
-void afs_osi_TraverseProcTable()
+void afs_osi_TraverseProcTable(void)
 {
     struct proc *p;
     int i;
@@ -764,12 +751,10 @@ void afs_osi_TraverseProcTable()
 #endif
 
 #if defined(AFS_OSF_ENV)
-void afs_osi_TraverseProcTable()
+void afs_osi_TraverseProcTable(void)
 {
     struct pid_entry *pe;
 #ifdef AFS_DUX50_ENV
-extern struct pid_entry *pidtab;
-extern int npid; 
 #define pidNPID (pidtab + npid)
 #define PID_LOCK()
 #define PID_UNLOCK()
@@ -784,7 +769,7 @@ extern int npid;
 #endif
 
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-void afs_osi_TraverseProcTable()
+void afs_osi_TraverseProcTable(void)
 {   
     struct proc *p;
     LIST_FOREACH(p, &allproc, p_list) {
@@ -820,12 +805,12 @@ void afs_osi_TraverseProcTable()
  */
 
 #if defined(AFS_SGI65_ENV)
-const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
+const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *p)
 {
     return NULL;
 }
 #elif defined(AFS_HPUX_ENV)
-const struct AFS_UCRED *afs_osi_proc2cred(proc_t *p)
+const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *p)
 {
     if (!p)
 	return;
@@ -841,9 +826,6 @@ const struct AFS_UCRED *afs_osi_proc2cred(proc_t *p)
 #elif defined(AFS_AIX_ENV)
 
 /* GLOBAL DECLARATIONS */
-
-extern int      xmattach();        /* fills out cross memory descriptor */
-extern int      xmdetach();        /* decrements reference count to segment */
 
 /*
  * LOCKS: the caller must do

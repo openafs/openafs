@@ -12,14 +12,15 @@
 
 RCSID("$Header$");
 
-#include <mit-cpyright.h>
+#include "mit-cpyright.h"
+#ifndef KERNEL
 #include <stdio.h>
+#endif
 #include <sys/types.h>
 #include <des.h>
+#include "des_prototypes.h"
 
-int des_cblock_print_file(x, fp)
-    des_cblock *x;
-    FILE *fp;
+int des_cblock_print_file(des_cblock *x, FILE *fp)
 {
     unsigned char *y = (unsigned char *) x;
     register int i = 0;
@@ -36,11 +37,7 @@ int des_cblock_print_file(x, fp)
 }
 
 #ifdef DEBUG
-int des_debug_print(area, x, arg1, arg2)
-    char *area;
-    int x;
-    char *arg1;
-    char *arg2;
+int des_debug_print(char *area, int x, char *arg1, char *arg2)
 {
     ;
 }

@@ -168,6 +168,7 @@ UAFSOBJ = \
 	$(UOBJ)/Krxstat.ss.o \
 	$(UOBJ)/Krxstat.xdr.o \
 	$(UOBJ)/rxstat.o \
+	$(UOBJ)/xdr_int32.o \
 	$(UOBJ)/xdr_int64.o
 
 AFSWEBOBJ = \
@@ -656,6 +657,8 @@ $(UOBJ)/rx_packet.o: $(RX)/rx_packet.c
 $(UOBJ)/rx_conncache.o: $(RX)/rx_conncache.c
 	$(CRULE1)
 $(UOBJ)/xdr_rx.o: $(RX)/xdr_rx.c
+	$(CRULE1)
+$(UOBJ)/xdr_int32.o: $(RX)/xdr_int32.c
 	$(CRULE1)
 $(UOBJ)/xdr_int64.o: $(RX)/xdr_int64.c
 	$(CRULE1)

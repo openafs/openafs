@@ -27,19 +27,17 @@ RCSID("$Header$");
 #endif
 #endif
 
+#include <des.h>
 #include "des_internal.h"
+#include "des_prototypes.h"
 
-extern void gen PROTOTYPE((FILE * stream));
-extern int des_debug;
 char const *whoami;
 
 #ifndef DONT_INCL_MAIN
 
 #include "AFS_component_version_number.c"
 
-int main(argc, argv)
-    int argc;
-    char *argv[];
+int main(int argc, char *argv[])
 {
     char *filename;
     char *arg;

@@ -35,7 +35,7 @@ int afs_authenticate (char *userName, char *response, int  *reenter, char **mess
     int code, unixauthneeded, password_expires = -1;
 
     *reenter = 0;
-    *message = (char *)0;
+    *message = NULL;
     if (response) {
 	pword = response;
     } else {
@@ -54,7 +54,7 @@ int afs_authenticate (char *userName, char *response, int  *reenter, char **mess
 	return AUTH_FAILURE;
     }
     if (code = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG, userName, 
-					  (char *)0, (char *)0, pword, 0, &password_expires, 0, &reason)) {
+					  NULL, NULL, pword, 0, &password_expires, 0, &reason)) {
 	if (code == KANOENT) 
 	    return AUTH_NOTFOUND;	
 	*message = (char *)malloc(1024);

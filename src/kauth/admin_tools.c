@@ -104,7 +104,7 @@ int ListUsers (
 	    printf ("next_index (%d) is negative: ", next_index);
 	if (strlen(name.name) == 0) printf ("name is zero length: ");
 	if (all)
-	    DumpUser(name.name, (char *)0, showa, showkey, name.instance);
+	    DumpUser(name.name, NULL, showa, showkey, name.instance);
 	else
 	    ka_PrintUserID ("", name.name, name.instance, "\n");
     }
@@ -117,7 +117,7 @@ int ExamineUser (
   char *arock)
 {
     int showkey = (as->parms[1].items != NULL);
-    return DumpUser(as->parms[0].items->data, arock, 0, showkey, (char *)0);
+    return DumpUser(as->parms[0].items->data, arock, 0, showkey, NULL);
 }
 
 
@@ -985,7 +985,7 @@ static GetPassword (
 
 	code = rx_Init(0);
 	if (code) goto abort;
-	sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+	sc = rxnull_NewClientSecurityObject();
 	si = RX_SCINDEX_NULL;
 	conns[0] = rx_NewConnection (htonl(INADDR_LOOPBACK), htons(AFSCONF_KAUTHPORT),
 				     KA_MAINTENANCE_SERVICE, sc, si);
@@ -1566,8 +1566,8 @@ afs_int32 ka_AdminInteractive (
 
     strncpy(myName, *cmd_argv, 509);
 
-    cmd_SetBeforeProc(MyBeforeProc,  (char *) 0);
-    cmd_SetAfterProc(MyAfterProc, (char *) 0);
+    cmd_SetBeforeProc(MyBeforeProc,  NULL);
+    cmd_SetAfterProc(MyAfterProc, NULL);
 
     ts = cmd_CreateSyntax ("interactive", Interactive, 0, "enter interactive mode");
     add_std_args (ts);

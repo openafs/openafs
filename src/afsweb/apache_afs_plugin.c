@@ -169,7 +169,7 @@ void afs_plugin_init(int tokenExpiration, char *weblogPath,char *error_fname, ch
     sleep(5);
     execlp(weblogPath,"weblog_starter", weblogPath, error_fname, 
 	   weblogarg1,weblogarg2,weblogarg3,weblogarg4,
-	   (char *)0);
+	   NULL);
     fprintf(stderr, "%s: Error executing %s - %s\n", 
 	    module_name, weblogPath, strerror(errno));
     perror("execlp");

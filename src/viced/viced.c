@@ -38,6 +38,15 @@ RCSID("$Header$");
 #include <netdb.h>
 #include <sys/resource.h>
 #include <unistd.h>	/* sysconf() */
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #ifndef ITIMER_REAL
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
@@ -93,7 +102,6 @@ static void     ResetCheckDescriptors(void), ResetCheckSignal(void);
 static int	CheckSignal();
 static int	FiveMinuteCheckLWP(), HostCheckLWP();
 extern	int     GetKeysFromToken();
-extern struct rx_securityClass *rxnull_NewServerSecurityObject();
 extern int RXAFS_ExecuteRequest();
 extern int RXSTATS_ExecuteRequest();
 
@@ -214,7 +222,7 @@ void CheckDescriptors_Signal(x)  {IOMGR_SoftSig(CheckDescriptors, 0);}
 int fs_rxstat_userok(call)
     struct rx_call *call;
 {
-    return afsconf_SuperUser(confDir, call, (char *)0);
+    return afsconf_SuperUser(confDir, call, NULL);
 }
 
 static void ResetCheckSignal(void)
@@ -473,10 +481,10 @@ main(argc, argv)
     rx_SetRxDeadTime(30);
     sc[0] = rxnull_NewServerSecurityObject();
     sc[1] = 0; /* rxvab_NewServerSecurityObject(key1, 0) */
-    sc[2] = rxkad_NewServerSecurityObject (rxkad_clear, (char *) 0,
-					   get_key, (char *) 0);
-    sc[3] = rxkad_NewServerSecurityObject (rxkad_crypt, (char *) 0,
-					   get_key, (char *) 0);
+    sc[2] = rxkad_NewServerSecurityObject (rxkad_clear, NULL,
+					   get_key, NULL);
+    sc[3] = rxkad_NewServerSecurityObject (rxkad_crypt, NULL,
+					   get_key, NULL);
     tservice = rx_NewService
 	(/* port */ 0, /* service id */ 1, /*service name */ "AFS",
 	 /* security classes */ sc, /* numb sec classes */ 4,
@@ -485,7 +493,7 @@ main(argc, argv)
 	ViceLog(0, ("Failed to initialize RX, probably two servers running.\n"));
 	exit(-1);
     }
-    rx_SetDestroyConnProc(tservice, (char (*)()) h_FreeConnection);
+    rx_SetDestroyConnProc(tservice, h_FreeConnection);
     rx_SetMinProcs(tservice, 3);
     rx_SetMaxProcs(tservice, lwps);
     rx_SetCheckReach(tservice, 1);
@@ -1258,7 +1266,7 @@ static void NewParms(initializing)
 
     if (!(stat("/vice/file/parms",&sbuf))) {
 	parms = (char *)malloc(sbuf.st_size);
-	if(parms <= (char *)0) return;
+	if(!parms) return;
 	fd = open("parms", O_RDONLY, 0666);
 	if(fd <= 0) {
 	    ViceLog(0, ("Open for parms failed with errno = %d\n", errno));
@@ -1268,12 +1276,13 @@ static void NewParms(initializing)
 	i = read(fd, parms, sbuf.st_size);
 	close(fd);
 	if(i != sbuf.st_size) {
-	    if (i < 0 )
+	    if (i < 0 ) {
 		ViceLog(0, ("Read on parms failed with errno = %d\n", errno));
-	    else
+	    } else {
 		ViceLog(0,
 			("Read on parms failed; expected %d bytes but read %d\n",
 			sbuf.st_size, i));
+	    }
 	    free(parms);
 	    return;
 	}
@@ -1293,10 +1302,11 @@ static void NewParms(initializing)
 		    i++;
 	    }
 	}
-	if(ParseArgs(argc, argv) == 0)
+	if(ParseArgs(argc, argv) == 0) {
 	    ViceLog(0, ("Change parameters to:"));
-	else
+	} else {
 	    ViceLog(0, ("Invalid parameter in:"));
+	}
 	for(i = 0; i < argc; i++) {
 	    ViceLog(0, (" %s", argv[i]));
 	}
@@ -1338,9 +1348,9 @@ InitPR()
     SystemId = SYSADMINID;
     SystemAnyUser = ANYUSERID;
     SystemAnyUserCPS.prlist_len = 0;
-    SystemAnyUserCPS.prlist_val = (afs_int32 *)0;
+    SystemAnyUserCPS.prlist_val = NULL;
     AnonCPS.prlist_len = 0;
-    AnonCPS.prlist_val = (afs_int32 *)0;
+    AnonCPS.prlist_val = NULL;
     while (1) {
 	code = pr_GetCPS(SystemAnyUser, &SystemAnyUserCPS);
 	if (code != 0) {
@@ -1384,7 +1394,7 @@ char *confDir;
 	ViceLog(0, ("Could not get security object for localAuth\n"));
 	exit(1);
     }
-    code = afsconf_GetCellInfo(tdir,(char *)0, AFSCONF_VLDBSERVICE, &info);
+    code = afsconf_GetCellInfo(tdir,NULL, AFSCONF_VLDBSERVICE, &info);
     if (info.numServers > MAXSERVERS) {
 	ViceLog(0, ("vl_Initialize: info.numServers=%d (> MAXSERVERS=%d)\n",info.numServers, MAXSERVERS));
 	exit(1);
@@ -1537,7 +1547,8 @@ Do_VLRegisterRPC() {
     return 0;
 }
 
-AddrsEqual(cnt, addr1, addr2) 
+#if 0
+static int AddrsEqual(cnt, addr1, addr2) 
     int cnt;
     afs_int32 *addr1, *addr2; 
 {
@@ -1551,6 +1562,7 @@ AddrsEqual(cnt, addr1, addr2)
     }
     return 1;
 }
+#endif
 
 InitVL() {
     int (*old)();
@@ -1576,7 +1588,7 @@ InitVL() {
     if (code) {
        /* Need to create the file */
        ViceLog(0, ("Creating new SysID file\n")); 
-       if (code = afs_uuid_create(&FS_HostUUID)) {
+       if ((code = afs_uuid_create(&FS_HostUUID))) {
 	  ViceLog(0, ("Failed to create new uuid: %d\n", code)); 
 	  exit(1);
        }

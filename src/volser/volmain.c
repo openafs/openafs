@@ -23,6 +23,13 @@ RCSID("$Header$");
 #include <sys/file.h>
 #include <netinet/in.h>
 #endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include <stdio.h>
@@ -59,7 +66,7 @@ RCSID("$Header$");
 extern int (*vol_PollProc)();
 extern struct volser_trans *TransList();
 extern int IOMGR_Poll();
-char *GlobalNameHack = (char *)0;
+char *GlobalNameHack = NULL;
 int hackIsIn = 0;
 afs_int32 GlobalVolCloneId, GlobalVolParentId;
 int GlobalVolType;
@@ -72,8 +79,6 @@ extern int (*VolWriteProc)();
 extern int (*VolFlushProc)();
 extern void AFSVolExecuteRequest();
 extern void RXSTATS_ExecuteRequest();
-extern struct rx_securityClass *rxnull_NewServerSecurityObject();
-extern struct rx_service *rx_NewService();
 extern Log();
 struct afsconf_dir *tdir;
 static afs_int32 runningCalls=0;
@@ -90,12 +95,14 @@ int Testing = 0; /* for ListViceInodes */
 		       }
 
 
-static MyBeforeProc () {
+static MyBeforeProc (struct rx_call *acall)
+{
     runningCalls++;
     return 0;
 }
 
-static MyAfterProc () {
+static MyAfterProc (struct rx_call *acall, afs_int32 code)
+{
     runningCalls--;
     return 0;
 }
@@ -181,7 +188,7 @@ void * a5;
 int vol_rxstat_userok(call)
     struct rx_call *call;
 {
-    return afsconf_SuperUser(tdir, call, (char *)0);
+    return afsconf_SuperUser(tdir, call, NULL);
 }
 
 #include "AFS_component_version_number.c"
@@ -359,14 +366,14 @@ usage:
 	VS_EXIT(1);
     }
     afsconf_GetKey(tdir, 999, &tkey);
-    securityObjects[0] = (struct rx_securityClass *) rxnull_NewServerSecurityObject();
+    securityObjects[0] = rxnull_NewServerSecurityObject();
     securityObjects[1] = (struct rx_securityClass *) 0;	/* don't bother with rxvab */
-    securityObjects[2] = (struct rx_securityClass *) rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, (char *) 0);
+    securityObjects[2] = rxkad_NewServerSecurityObject(0, tdir, afsconf_GetKey, NULL);
     if (securityObjects[0] == (struct rx_securityClass *) 0) Abort("rxnull_NewServerSecurityObject");
     service = rx_NewService(0, VOLSERVICE_ID, "VOLSER", securityObjects, 3, AFSVolExecuteRequest);
     if (service == (struct rx_service *) 0) Abort("rx_NewService");
-    rx_SetBeforeProc(service, (char (*)()) MyBeforeProc);
-    rx_SetAfterProc(service, (char (*)()) MyAfterProc);
+    rx_SetBeforeProc(service, MyBeforeProc);
+    rx_SetAfterProc(service, MyAfterProc);
     rx_SetIdleDeadTime(service, 0);	/* never timeout */
     if (lwps < 4)
 	lwps = 4;

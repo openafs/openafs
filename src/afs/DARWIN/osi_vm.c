@@ -33,10 +33,7 @@ RCSID("$Header$");
  *
  * OSF/1 Locking:  VN_LOCK has been called.
  */
-int
-osi_VM_FlushVCache(avc, slept)
-    struct vcache *avc;
-    int *slept;
+int osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
     struct vnode *vp=AFSTOV(avc);
 #ifdef AFS_DARWIN14_ENV
@@ -76,9 +73,7 @@ osi_VM_FlushVCache(avc, slept)
  * Locking:  the vcache entry's lock is held.  It will usually be dropped and
  * re-obtained.
  */
-void
-osi_VM_StoreAllSegments(avc)
-    struct vcache *avc;
+void osi_VM_StoreAllSegments(struct vcache *avc)
 {
     struct vnode *vp=AFSTOV(avc);
     ReleaseWriteLock(&avc->lock);
@@ -99,11 +94,8 @@ osi_VM_StoreAllSegments(avc)
  * Since we drop and re-obtain the lock, we can't guarantee that there won't
  * be some pages around when we return, newly created by concurrent activity.
  */
-void
-osi_VM_TryToSmush(avc, acred, sync)
-    struct vcache *avc;
-    struct AFS_UCRED *acred;
-    int sync;
+void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, 
+	int sync)
 {
     struct vnode *vp=AFSTOV(avc);
     void *object;
@@ -129,10 +121,7 @@ osi_VM_TryToSmush(avc, acred, sync)
 /* XXX this seems to not be referenced anywhere. *somebody* ought to be calling
    this, and also making sure that ubc's idea of the filesize is right more
    often */
-void
-osi_VM_FlushPages(avc, credp)
-    struct vcache *avc;
-    struct AFS_UCRED *credp;
+void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
     struct vnode *vp=AFSTOV(avc);
     void *object;
@@ -155,11 +144,7 @@ osi_VM_FlushPages(avc, credp)
  * activeV is raised.  This is supposed to block pageins, but at present
  * it only works on Solaris.
  */
-void
-osi_VM_Truncate(avc, alen, acred)
-    struct vcache *avc;
-    int alen;
-    struct AFS_UCRED *acred;
+void osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
     struct vnode *vp=AFSTOV(avc);
     if (UBCINFOEXISTS(vp))  {
@@ -167,14 +152,10 @@ osi_VM_Truncate(avc, alen, acred)
     }
 }
 
-extern struct  AFS_UCRED afs_osi_cred;
-extern afs_rwlock_t afs_xvcache;
 /* vnreclaim and vinactive are probably not aggressive enough to keep
    enough afs vcaches free, so we try to do some of it ourselves */
 /* XXX there's probably not nearly enough locking here */
-void osi_VM_TryReclaim(avc, slept)
-     struct vcache *avc;
-     int *slept;
+void osi_VM_TryReclaim(struct vcache *avc, int *slept)
 {
     struct proc *p=current_proc();
     struct vnode *vp=AFSTOV(avc);
@@ -273,8 +254,8 @@ void osi_VM_TryReclaim(avc, slept)
       ObtainReadLock(&afs_xvcache);
 }
 
-void osi_VM_NukePages(struct vnode *vp, off_t offset, off_t size) {
-
+void osi_VM_NukePages(struct vnode *vp, off_t offset, off_t size)
+{
     void *object;
     struct vcache *avc = VTOAFS(vp);
 
@@ -318,9 +299,10 @@ void osi_VM_NukePages(struct vnode *vp, off_t offset, off_t size) {
     ubc_setsize(vp, size);
 #endif
 #endif
-
 }
-int osi_VM_Setup(struct vcache *avc) {
+
+int osi_VM_Setup(struct vcache *avc)
+{
    int error;
    struct vnode *vp=AFSTOV(avc);
 

@@ -99,17 +99,3 @@ struct token {
 	char *str;
 };
 typedef struct token token;
-
-
-/*
- * routine interface 
- */
-void scanprint();
-void scan();
-void scan2();
-void scan3();
-void scan4();
-void scan_num();
-void peek();
-int peekscan();
-void get_token();

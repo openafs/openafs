@@ -37,9 +37,7 @@ extern unsigned char *afs_indexFlags;
  * afs_FlushActiveVCaches routine (when CCORE is on).
  * avc->lock must be write-locked.
  */
-afs_StoreOnLastReference(avc, treq)
-register struct vcache *avc;
-register struct vrequest *treq;
+int afs_StoreOnLastReference(register struct vcache *avc, register struct vrequest *treq)
 {
     int code = 0;
  
@@ -61,7 +59,7 @@ register struct vrequest *treq;
 	avc->execsOrWriters--;
 	AFS_RELE(AFSTOV(avc)); /* VN_HOLD at set CCore(afs_FakeClose)*/
 	crfree((struct AFS_UCRED *)avc->linkData);	/* "crheld" in afs_FakeClose */
-	avc->linkData =	(char *)0;
+	avc->linkData =	NULL;
     }
     /* Now, send the file back.  Used to require 0 writers left, but now do
      * it on every close for write, since two closes in a row are harmless
@@ -88,11 +86,8 @@ register struct vrequest *treq;
 
 
 
-afs_MemWrite(avc, auio, aio, acred, noLock)
-    register struct vcache *avc;
-    struct uio *auio;
-    int aio, noLock;
-    struct AFS_UCRED *acred; 
+int afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio, 
+	struct AFS_UCRED *acred, int noLock)
 {
     afs_size_t totalLength;
     afs_size_t transferLength;
@@ -117,7 +112,7 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
  	return avc->vc_error;
 
     startDate = osi_Time();
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
     /* otherwise we read */
     totalLength = auio->afsio_resid;
     filePos = auio->afsio_offset;
@@ -332,11 +327,8 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 
 
 /* called on writes */
-afs_UFSWrite(avc, auio, aio, acred, noLock)
-    register struct vcache *avc;
-    struct uio *auio;
-    int aio, noLock;
-    struct AFS_UCRED *acred; 
+int afs_UFSWrite(register struct vcache *avc, struct uio *auio, 
+	int aio, struct AFS_UCRED *acred, int noLock)
 {
     afs_size_t totalLength;
     afs_size_t transferLength;
@@ -363,7 +355,7 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
  	return avc->vc_error;
 
     startDate = osi_Time();
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
     /* otherwise we read */
     totalLength = auio->afsio_resid;
     filePos = auio->afsio_offset;
@@ -673,9 +665,8 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
 }
 
 /* do partial write if we're low on unmodified chunks */
-afs_DoPartialWrite(avc, areq)
-register struct vcache *avc;
-struct vrequest *areq; {
+int afs_DoPartialWrite(register struct vcache *avc, struct vrequest *areq)
+{
     register afs_int32 code;
 
     if (afs_stats_cmperf.cacheCurrDirtyChunks <= afs_stats_cmperf.cacheMaxDirtyChunks) 
@@ -714,8 +705,8 @@ struct vrequest *areq; {
  * N.B: Intercepting close syscall doesn't trap aborts or exit system
  * calls.
 */
-afs_closex(afd)
-    register struct file *afd; {
+int afs_closex(register struct file *afd)
+{
     struct vrequest treq;
     struct vcache *tvc;
     afs_int32 flags;
@@ -725,7 +716,7 @@ afs_closex(afd)
 
     AFS_STATCNT(afs_closex);
     /* setup the credentials */
-    if (code = afs_InitReq(&treq, u.u_cred)) return code;
+    if ((code = afs_InitReq(&treq, u.u_cred))) return code;
     afs_InitFakeStat(&fakestat);
 
     closeDone = 0;
@@ -1010,7 +1001,7 @@ off_t start, stop;
 
     AFS_STATCNT(afs_fsync);
     afs_Trace1(afs_iclSetp, CM_TRACE_FSYNC, ICL_TYPE_POINTER, avc);
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
 
 #if defined(AFS_SGI_ENV)
     AFS_RWLOCK((vnode_t *)avc, VRWLOCK_WRITE);

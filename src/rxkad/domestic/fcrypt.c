@@ -64,9 +64,8 @@ int ROUNDS = 16;
 
 #define XPRT_FCRYPT
 
-int fc_keysched (key, schedule)
-  IN struct ktc_encryptionKey *key;
-  OUT fc_KeySchedule    schedule;
+int fc_keysched (struct ktc_encryptionKey *key, 
+	fc_KeySchedule schedule)
 {   unsigned char *keychar = (unsigned char *)key;
     afs_uint32  kword[2];
 
@@ -106,11 +105,9 @@ int fc_keysched (key, schedule)
     return 0;
 }
 
-afs_int32 fc_ecb_encrypt(clear, cipher, schedule, encrypt)
-  IN afs_uint32  *clear;
-  OUT afs_uint32 *cipher;
-  IN fc_KeySchedule  schedule;
-  IN int	     encrypt;	/* 0 ==> decrypt, else encrypt */
+/* IN int encrypt; * 0 ==> decrypt, else encrypt */
+afs_int32 fc_ecb_encrypt(afs_uint32 *clear, afs_uint32 *cipher, 
+	fc_KeySchedule schedule, int encrypt)
 {   afs_uint32  L,R;
     afs_uint32  S,P;
     unsigned char *Pchar = (unsigned char *)&P;
@@ -195,13 +192,14 @@ afs_int32 fc_ecb_encrypt(clear, cipher, schedule, encrypt)
  * NOTE: fc_cbc_encrypt now modifies its 5th argument, to permit chaining over
  * scatter/gather vectors.
  */
-afs_int32 fc_cbc_encrypt (input, output, length, key, xor, encrypt)
-  char		*input;
-  char		*output;
-  afs_int32		 length;		/* in bytes */
-  int		 encrypt;		/* 0 ==> decrypt, else encrypt */
-  fc_KeySchedule key;			/* precomputed key schedule */
-  afs_uint32 *xor;			/* 8 bytes of initialization vector */
+/*
+  afs_int32 length; * in bytes *
+  int encrypt; * 0 ==> decrypt, else encrypt *
+  fc_KeySchedule key; * precomputed key schedule *
+  afs_uint32 *xor; * 8 bytes of initialization vector *
+*/
+afs_int32 fc_cbc_encrypt (char *input, char *output, afs_int32 length, 
+	fc_KeySchedule key, afs_uint32 *xor, int encrypt)
 {   afs_uint32 i,j;
     afs_uint32 t_input[2];
     afs_uint32 t_output[2];

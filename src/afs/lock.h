@@ -15,17 +15,6 @@
  * LICENSED MATERIALS - PROPERTY OF IBM
  */
 
-/* The following macros allow multi statement macros to be defined safely, i.e.
-   - the multi statement macro can be the object of an if statement;
-   - the call to the multi statement macro may be legally followed by a semi-colon.
-   BEGINMAC and ENDMAC have been tested with both the portable C compiler and
-   Hi-C.  Both compilers were from the Palo Alto 4.2BSD software releases, and
-   both optimized out the constant loop code.  For an example of the use
-   of BEGINMAC and ENDMAC, see the definition for ReleaseWriteLock, below.
-   An alternative to this, using "if(1)" for BEGINMAC is not used because it
-   may generate worse code with pcc, and may generate warning messages with hi-C.
-*/
-
 #if	(defined(AFS_SUN5_ENV)) || defined(AFS_OSF_ENV)
 #define	AFS_NOBOZO_LOCK
 #endif
@@ -82,6 +71,17 @@ typedef struct afs_bozoLock afs_bozoLock_t;
 #define	RWLOCK_INIT(lock, nm)	Lock_Init(lock)
 #undef	LOCK_INIT
 #define	LOCK_INIT(lock, nm)	Lock_Init(lock)
+
+/* The following macros allow multi statement macros to be defined safely, i.e.
+   - the multi statement macro can be the object of an if statement;
+   - the call to the multi statement macro may be legally followed by a semi-colon.
+   BEGINMAC and ENDMAC have been tested with both the portable C compiler and
+   Hi-C.  Both compilers were from the Palo Alto 4.2BSD software releases, and
+   both optimized out the constant loop code.  For an example of the use
+   of BEGINMAC and ENDMAC, see the definition for ReleaseWriteLock, below.
+   An alternative to this, using "if(1)" for BEGINMAC is not used because it
+   may generate worse code with pcc, and may generate warning messages with hi-C.
+*/
 
 #define BEGINMAC do {
 #define ENDMAC   } while (0)

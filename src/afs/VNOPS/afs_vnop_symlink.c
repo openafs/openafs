@@ -80,7 +80,7 @@ afs_symlink
     afs_Trace2(afs_iclSetp, CM_TRACE_SYMLINK, ICL_TYPE_POINTER, adp,
                 ICL_TYPE_STRING, aname);
 
-    if (code = afs_InitReq(&treq, acred))
+    if ((code = afs_InitReq(&treq, acred)))
 	goto done2;
 
     afs_InitFakeStat(&fakestate);
@@ -135,32 +135,24 @@ afs_symlink
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SYMLINK);
 	    if (adp->states & CForeign) {
 		now = osi_Time();
-#ifdef RX_ENABLE_LOCKS
-		AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GUNLOCK();
 		code = RXAFS_DFSSymlink(tc->id, (struct AFSFid *) &adp->fid.Fid, aname,
 				     atargetName, &InStatus, (struct AFSFid *) &newFid.Fid,
 				     &OutFidStatus, &OutDirStatus, &CallBack, &tsync);
-#ifdef RX_ENABLE_LOCKS
-		AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GLOCK();
 	    } else {
-#ifdef RX_ENABLE_LOCKS
-		AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GUNLOCK();
 		code = RXAFS_Symlink(tc->id, (struct AFSFid *) &adp->fid.Fid, aname,
 				     atargetName, &InStatus, (struct AFSFid *) &newFid.Fid,
 				     &OutFidStatus, &OutDirStatus, &tsync);
-#ifdef RX_ENABLE_LOCKS
-		AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GLOCK();
 	    }
           XSTATS_END_TIME;
 	}
 	else code = -1;
     } while 
        (afs_Analyze(tc, code, &adp->fid, &treq,
-                   AFS_STATS_FS_RPCIDX_SYMLINK, SHARED_LOCK, (struct cell *)0));
+                   AFS_STATS_FS_RPCIDX_SYMLINK, SHARED_LOCK, NULL));
 
     UpgradeSToWLock(&afs_xvcache,40);
     if (code) {
@@ -199,7 +191,7 @@ afs_symlink
     /* now we're done with parent dir, create the link's entry.  Note that
      * no one can get a pointer to the new cache entry until we release 
      * the xvcache lock. */
-    tvc = afs_NewVCache(&newFid, hostp, 1, WRITE_LOCK);
+    tvc = afs_NewVCache(&newFid, hostp);
     ObtainWriteLock(&tvc->lock,157);
     ObtainWriteLock(&afs_xcbhash, 500);
     tvc->states |= CStatd;		/* have valid info */
@@ -226,7 +218,7 @@ afs_symlink
     }
     ReleaseWriteLock(&tvc->lock);
     ReleaseWriteLock(&afs_xvcache);
-    afs_PutVCache(tvc, WRITE_LOCK);
+    afs_PutVCache(tvc);
     code = 0;
 done:
     afs_PutFakeStat(&fakestate);
@@ -240,10 +232,8 @@ done2:
     return code;
 }
 
-afs_MemHandleLink(avc, areq)
-     register struct vcache *avc;
-     struct vrequest *areq;
-  {
+int afs_MemHandleLink(register struct vcache *avc, struct vrequest *areq)
+{
       register struct dcache *tdc;
       register char *tp, *rbuf;
       afs_size_t offset, len;
@@ -289,9 +279,7 @@ afs_MemHandleLink(avc, areq)
       return 0;
   }
 
-afs_UFSHandleLink(avc, areq)
-    register struct vcache *avc;
-    struct vrequest *areq; 
+int afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq)
 {
     register struct dcache *tdc;
     register char *tp, *rbuf;
@@ -354,7 +342,7 @@ afs_readlink(OSI_VC_ARG(avc), auio, acred)
 
     AFS_STATCNT(afs_readlink);
     afs_Trace1(afs_iclSetp, CM_TRACE_READLINK, ICL_TYPE_POINTER, avc);
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
     afs_InitFakeStat(&fakestat);
     code = afs_EvalFakeStat(&avc, &fakestat, &treq);
     if (code) goto done;

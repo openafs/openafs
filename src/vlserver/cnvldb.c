@@ -17,6 +17,15 @@ RCSID("$Header$");
 #include <errno.h>
 #include <stdio.h>
 #include <sys/file.h>
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include "cnvldb.h"  /* CHANGEME! */
 #include <netinet/in.h>
 #include <afs/venus.h>

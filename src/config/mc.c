@@ -15,6 +15,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <afsconfig.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
+
 #define TOK_DONTUSE 1 /* Don't copy if match and this flag is set. */
 struct token {
     struct token *next;
@@ -23,8 +28,8 @@ struct token {
 };
 
 /* free token list returned by parseLine */
-static int FreeTokens(alist)
-    register struct token *alist; {
+static int FreeTokens(register struct token *alist)
+{
     register struct token *nlist;
     for(; alist; alist = nlist) {
 	nlist = alist->next;
@@ -35,9 +40,8 @@ static int FreeTokens(alist)
 }
 
 #define	space(x)    ((x) == ' ' || (x) == '\t' || (x) == '<' || (x) == '>')
-static int ParseLine(aline, alist)
-    char *aline;
-    struct token **alist; {
+static int ParseLine(char *aline, struct token **alist)
+{
     char tbuffer[MAXTOKLEN+1];
     register char *tptr = NULL;
     int inToken;
@@ -47,8 +51,8 @@ static int ParseLine(aline, alist)
     int dontUse = 0;
     
     inToken = 0;	/* not copying token chars at start */
-    first = (struct token *) 0;
-    last = (struct token *) 0;
+    first = NULL;
+    last = NULL;
     while (1) {
 	tc = *aline++;
 	if (tc == 0 || space(tc)) {    /* terminating null gets us in here, too */
@@ -59,7 +63,7 @@ static int ParseLine(aline, alist)
 		else
 		    *tptr++ = 0;
 		ttok = (struct token *) malloc(sizeof(struct token));
-		ttok->next = (struct token *) 0;
+		ttok->next = NULL;
 		if (dontUse) {
 		    ttok->key = (char *) malloc(strlen(tbuffer));
 		    strcpy(ttok->key, tbuffer+1);
@@ -93,7 +97,7 @@ static int ParseLine(aline, alist)
 	}
 	if (tc == 0) {
 	    /* last token flushed 'cause space(0) --> true */
-	    if (last) last->next = (struct token *) 0;
+	    if (last) last->next = NULL;
 	    *alist = first;
 	    return 0;
 	}
@@ -101,10 +105,8 @@ static int ParseLine(aline, alist)
 }
 /* read a line into a buffer, putting in null termination and stopping on appropriate
     end of line char.  Returns 0 at eof, > 0 at normal line end, and < 0 on error */
-static int GetLine(afile, abuffer, amax)
-    FILE *afile;
-    int amax;
-    register char *abuffer; {
+static int GetLine(FILE *afile, register char *abuffer, int amax)
+{
     register int tc;
     int first;
 
@@ -125,10 +127,8 @@ static int GetLine(afile, abuffer, amax)
     }
 }
 
-int mc_copy(ain, aout, alist)
-    register FILE *ain;
-    register FILE *aout;
-    char *alist[]; {
+int mc_copy(register FILE *ain, register FILE *aout, char *alist[])
+{
     char tbuffer[MAXLINELEN];
     struct token *tokens;
     register char **tp;
@@ -150,7 +150,7 @@ int mc_copy(ain, aout, alist)
 	    if (code != 0) return -1;
 	    copying = 0;
 	    done = 0;
-	    for(tp = alist; (!done) && (*tp != (char *)0) ; tp++) {
+	    for(tp = alist; (!done) && (*tp != NULL) ; tp++) {
 		for(tt = tokens; tt; tt=tt->next) {
 		    if (!strcmp(*tp, tt->key)) {
 			/* Need to search all tokens in case a dont use

@@ -6,6 +6,7 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#include <afs/afsutil.h>
 
 RCSID("$Header$");
 
@@ -23,14 +24,11 @@ static const char char_set[] =
 
 static char buf[6];
 
-const char * error_table_name(num)
-    int num;
+const char *error_table_name(afs_int32 num)
 {
     int ch;
     int i;
     char *p;
-
-    extern char *lcstring();
 
     /* num = aa aaa abb bbb bcc ccc cdd ddd d?? ??? ??? */
     p = buf;

@@ -374,6 +374,23 @@ case $AFS_SYSNAME in
 		DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
 		;;
 esac
+
+AC_MSG_CHECKING(for definition of struct buf)
+AC_CACHE_VAL(ac_cv_have_struct_buf, [
+	ac_cv_have_struct_buf=no
+	AC_TRY_COMPILE(
+		[#include <sys/buf.h>],
+		[struct buf x;
+		printf("%d\n", sizeof(x));],
+		ac_cv_have_struct_buf=yes,)
+	]
+)
+AC_MSG_RESULT($ac_cv_have_struct_buf)
+if test "$ac_cv_have_struct_buf" = yes; then
+	AC_DEFINE(HAVE_STRUCT_BUF)
+fi
+
+
 AC_CACHE_VAL(ac_cv_sockaddr_len,
 [
 AC_MSG_CHECKING([if struct sockaddr has sa_len field])

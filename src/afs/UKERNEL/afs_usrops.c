@@ -176,9 +176,7 @@ struct {
 /*
  * Never call afs_brelse
  */
-int ufs_brelse(vp, bp)
-struct usr_vnode *vp;
-struct usr_buf *bp;
+int ufs_brelse(struct usr_vnode *vp, struct usr_buf *bp)
 {
     usr_assert(0);
 }
@@ -186,14 +184,12 @@ struct usr_buf *bp;
 /*
  * I am not sure what to do with these, they assert for now
  */
-int iodone(bp)
-struct usr_buf *bp;
+int iodone(struct usr_buf *bp)
 {
     usr_assert(0);
 }
 
-struct usr_file *getf(fd)
-int fd;
+struct usr_file *getf(int fd)
 {
     usr_assert(0);
 }
@@ -201,14 +197,12 @@ int fd;
 /*
  * Every user is a super user
  */
-int afs_osi_suser(credp)
-struct usr_ucred *credp;
+int afs_osi_suser(void *credp)
 {
     return 1;
 }
 
-int afs_suser(credp)
-struct usr_ucred *credp;
+int afs_suser(void *credp)
 {
     return 1;
 }
@@ -217,8 +211,7 @@ struct usr_ucred *credp;
  * These are no-ops in user space
  */
 
-int afs_osi_SetTime(atv)
-osi_timeval_t *atv;
+int afs_osi_SetTime(osi_timeval_t *atv)
 {
     return 0;
 }
@@ -227,7 +220,7 @@ osi_timeval_t *atv;
  * xflock should never fall through, the only files we know
  * about are AFS files
  */
-int usr_flock()
+int usr_flock(void)
 {
     usr_assert(0);
 }
@@ -236,7 +229,7 @@ int usr_flock()
  * ioctl should never fall through, the only files we know
  * about are AFS files
  */
-int usr_ioctl()
+int usr_ioctl(void)
 {
     usr_assert(0);
 }
@@ -244,22 +237,22 @@ int usr_ioctl()
 /*
  * We do not support the inode related system calls
  */
-int afs_syscall_icreate()
+int afs_syscall_icreate(void)
 {
     usr_assert(0);
 }
 
-int afs_syscall_iincdec()
+int afs_syscall_iincdec(void)
 {
     usr_assert(0);
 }
 
-int afs_syscall_iopen()
+int afs_syscall_iopen(void)
 {
     usr_assert(0);
 }
 
-int afs_syscall_ireadwrite()
+int afs_syscall_ireadwrite(void)
 {
     usr_assert(0);
 }
@@ -268,22 +261,22 @@ int afs_syscall_ireadwrite()
  * these routines are referenced in the vfsops structure, but
  * should never get called
  */
-int vno_close()
+int vno_close(void)
 {
     usr_assert(0);
 }
 
-int vno_ioctl()
+int vno_ioctl(void)
 {
     usr_assert(0);
 }
 
-int vno_rw()
+int vno_rw(void)
 {
     usr_assert(0);
 }
 
-int vno_select()
+int vno_select(void)
 {
     usr_assert(0);
 }
@@ -291,11 +284,7 @@ int vno_select()
 /*
  * uiomove copies data between kernel buffers and uio buffers
  */
-int usr_uiomove(kbuf, n, rw, uio)
-char *kbuf;
-int n;
-int rw;
-struct usr_uio *uio;
+int usr_uiomove(char *kbuf, int n, int rw, struct usr_uio *uio)
 {
     int nio;
     int len;
@@ -337,8 +326,7 @@ struct usr_uio *uio;
 /*
  * routines to manage user credentials
  */
-struct usr_ucred *usr_crcopy(credp)
-struct usr_ucred *credp;
+struct usr_ucred *usr_crcopy(struct usr_ucred *credp)
 {
     struct usr_ucred *newcredp;
 
@@ -348,7 +336,7 @@ struct usr_ucred *credp;
     return newcredp;
 }
 
-struct usr_ucred *usr_crget()
+struct usr_ucred *usr_crget(void)
 {
     struct usr_ucred *newcredp;
 
@@ -357,8 +345,7 @@ struct usr_ucred *usr_crget()
     return newcredp;
 }
 
-int usr_crfree(credp)
-struct usr_ucred *credp;
+int usr_crfree(struct usr_ucred *credp)
 {
     credp->cr_ref--;
     if (credp->cr_ref == 0) {
@@ -366,14 +353,12 @@ struct usr_ucred *credp;
     }
 }
 
-int usr_crhold(credp)
-struct usr_ucred *credp;
+int usr_crhold(struct usr_ucred *credp)
 {
     credp->cr_ref++;
 }
 
-void usr_vattr_null(vap)
-struct usr_vattr *vap;
+void usr_vattr_null(struct usr_vattr *vap)
 {
     int n;
     char *cp;
@@ -390,7 +375,7 @@ struct usr_vattr *vap;
  * kernel environment for each thread. The user structure
  * is stored in the thread specific data.
  */
-void uafs_InitThread()
+void uafs_InitThread(void)
 {
     int st;
     struct usr_user *uptr;
@@ -417,7 +402,7 @@ void uafs_InitThread()
  * this routine is used to implement the global 'u' structure. Initializes
  * the thread if needed.
  */
-struct usr_user *get_user_struct()
+struct usr_user *get_user_struct(void)
 {
     struct usr_user *uptr;
     int st;
@@ -441,8 +426,7 @@ struct usr_user *get_user_struct()
 /*
  * Sleep on an event
  */
-int afs_osi_Sleep(x)
-caddr_t x;
+void afs_osi_Sleep(void *x)
 {
     int index;
     osi_wait_t *waitp;
@@ -487,15 +471,13 @@ caddr_t x;
     }
 }
 
-int afs_osi_SleepSig(x)
-    caddr_t x;
+int afs_osi_SleepSig(void *x)
 {
     afs_osi_Sleep(x);
     return 0;
 }
 
-int afs_osi_Wakeup(x)
-caddr_t x;
+void afs_osi_Wakeup(void *x)
 {
     int index;
     osi_wait_t *waitp;
@@ -513,10 +495,7 @@ caddr_t x;
     usr_mutex_unlock(&osi_waitq_lock);
 }
 
-int afs_osi_Wait(msec, handle, intok)
-afs_int32 msec;
-struct afs_osi_WaitHandle *handle;
-int intok;
+int afs_osi_Wait(afs_int32 msec, struct afs_osi_WaitHandle *handle, int intok)
 {
     int index;
     osi_wait_t *waitp;
@@ -589,17 +568,16 @@ int intok;
     return ret;
 }
 
-void afs_osi_CancelWait(handle)
-struct afs_osi_WaitHandle *handle;
+void afs_osi_CancelWait(struct afs_osi_WaitHandle *handle)
 {
-    afs_osi_Wakeup((caddr_t)handle);
+    afs_osi_Wakeup(handle);
 }
 
 /*
  * Netscape NSAPI doesn't have a cond_timed_wait, so we need
  * to explicitly signal cond_timed_waits when their timers expire
  */
-int afs_osi_CheckTimedWaits()
+int afs_osi_CheckTimedWaits(void)
 {
     time_t curTime;
     osi_wait_t *waitp;
@@ -636,12 +614,8 @@ int max_osi_files = 0;
  * Allocate a slot in the file table if there is not one there already,
  * copy in the file name and kludge up the vnode and inode structures
  */
-int lookupname(fnamep, segflg, followlink, dirvpp, compvpp)
-char *fnamep;
-int segflg;
-int followlink;
-struct usr_vnode **dirvpp;
-struct usr_vnode **compvpp;
+int lookupname(char *fnamep, int segflg, int followlink, 
+	struct usr_vnode **dirvpp, struct usr_vnode **compvpp)
 {
     int i;
     int code;
@@ -695,8 +669,7 @@ struct usr_vnode **compvpp;
 /*
  * open a file given its i-node number
  */
-void *osi_UFSOpen(ino)
-int ino;
+void *osi_UFSOpen(afs_int32 ino)
 {
     int rc;
     struct osi_file *fp;
@@ -735,8 +708,7 @@ int ino;
     return fp;
 }
 
-int osi_UFSClose(fp)
-struct osi_file *fp;
+int osi_UFSClose(struct osi_file *fp)
 {
     int rc;
 
@@ -755,9 +727,7 @@ struct osi_file *fp;
     return 0;
 }
 
-int osi_UFSTruncate(fp, len)
-struct osi_file *fp;
-int len;
+int osi_UFSTruncate(struct osi_file *fp, afs_int32 len)
 {
     int rc;
 
@@ -775,11 +745,7 @@ int len;
     return 0;
 }
 
-int afs_osi_Read(fp, offset, buf, len)
-struct osi_file *fp;
-int offset;
-char *buf;
-int len;
+int afs_osi_Read(struct osi_file *fp, int offset, char *buf, afs_int32 len)
 {
     int rc, ret;
     int code;
@@ -817,11 +783,7 @@ int len;
     return ret;
 }
 
-int afs_osi_Write(fp, offset, buf, len)
-struct osi_file *fp;
-int offset;
-char *buf;
-int len;
+int afs_osi_Write(struct osi_file *fp, afs_int32 offset, char *buf, afs_int32 len)
 {
     int rc, ret;
     int code;
@@ -859,9 +821,7 @@ int len;
     return ret;
 }
 
-int afs_osi_Stat(fp, stp)
-struct osi_file *fp;
-struct osi_stat *stp;
+int afs_osi_Stat(struct osi_file *fp, struct osi_stat *stp)
 {
     int rc;
     struct stat st;
@@ -963,72 +923,65 @@ void osi_FreeSmallSpace(void *ptr)
     afs_osi_Free(ptr, 0);
 }
 
-void shutdown_osi()
+void shutdown_osi(void)
 {
     AFS_STATCNT(shutdown_osi);
     return;
 }
 
-void shutdown_osinet()
+void shutdown_osinet(void)
 {
     AFS_STATCNT(shutdown_osinet);
     return;
 }
 
-void shutdown_osifile()
+void shutdown_osifile(void)
 {
     AFS_STATCNT(shutdown_osifile);
     return;
 }
 
-int afs_nfsclient_init()
+int afs_nfsclient_init(void)
 {
     return 0;
 }
 
-void shutdown_nfsclnt()
+void shutdown_nfsclnt(void)
 {
     return;
 }
 
-int afs_osi_Invisible()
+void afs_osi_Invisible(void)
 {
-    return 0;
+    return;
 }
 
-int osi_GetTime(tv)
-struct timeval *tv;
+int osi_GetTime(struct timeval *tv)
 {
     gettimeofday(tv, NULL);
     return 0;
 }
 
-int osi_SetTime(tv)
-struct timeval *tv;
+int osi_SetTime(struct timeval *tv)
 {
     return 0;
 }
 
-int osi_Active(avc)
-struct vcache *avc;
+int osi_Active(struct vcache *avc)
 {
     AFS_STATCNT(osi_Active);
     if (avc->opens > 0) return(1);
     return 0;
 }
 
-int afs_osi_MapStrategy(aproc, bp)
-int (*aproc)();
-struct usr_buf *bp;
+int afs_osi_MapStrategy(int (*aproc)(), struct usr_buf *bp)
 {
     afs_int32 returnCode;
     returnCode = (*aproc)(bp);
     return returnCode;
 }
 
-osi_FlushPages(avc, credp)
-    register struct vcache *avc; 
-    struct AFS_UCRED *credp;    
+void osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp)
 {
     ObtainSharedLock(&avc->lock,555);
     if ((hcmp((avc->m.DataVersion), (avc->mapDV)) <= 0) || 
@@ -1042,8 +995,7 @@ osi_FlushPages(avc, credp)
     return;
 }
 
-osi_FlushText_really(vp)
-    register struct vcache *vp;
+void osi_FlushText_really(register struct vcache *vp)
 {
     if (hcmp(vp->m.DataVersion, vp->flushDV) > 0) {
 	hset(vp->flushDV, vp->m.DataVersion);
@@ -1051,21 +1003,17 @@ osi_FlushText_really(vp)
     return;
 }
 
-int osi_SyncVM(avc)
-struct vcache *avc;
+int osi_SyncVM(struct vcache *avc)
 {
     return 0;
 }
 
-void osi_ReleaseVM(avc, len, credp)
-struct vcache *avc;
-int len;
-struct usr_ucred *credp;
+void osi_ReleaseVM(struct vcache *avc, int len, struct usr_ucred *credp)
 {
     return;
 }
 
-void osi_Init()
+void osi_Init(void)
 {
     int i;
     int rc;
@@ -1144,8 +1092,7 @@ void osi_Init()
   *	None.
   *------------------------------------------------------------------------*/
 
-int GetVFileNumber(fname)
-    char *fname;
+int GetVFileNumber(char *fname)
 {
     int	computedVNumber;    /*The computed file number we return*/
     int	filenameLen;	    /*Number of chars in filename*/
@@ -1203,8 +1150,7 @@ int GetVFileNumber(fname)
   *	As described.
   *------------------------------------------------------------------------*/
 
-int CreateCacheFile(fname)
-    char *fname;
+int CreateCacheFile(char *fname)
 {
     static char	rn[] = "CreateCacheFile";   /*Routine name*/
     int	cfd;				    /*File descriptor to AFS cache file*/
@@ -1257,8 +1203,7 @@ int CreateCacheFile(fname)
   *     delete files as explained above.
   *------------------------------------------------------------------------*/
 
-int SweepAFSCache(vFilesFound)
-    int *vFilesFound;
+int SweepAFSCache(int *vFilesFound)
 {
     static char	rn[] = "SweepAFSCache";	/*Routine name*/
     char fullpn_FileToDelete[1024];	/*File to be deleted from cache*/
@@ -1270,7 +1215,7 @@ int SweepAFSCache(vFilesFound)
 
     if (cacheFlags & AFSCALL_INIT_MEMCACHE) {
 	if (afsd_debug)
-	    printf("%s: Memory Cache, no cache sweep done\n");
+	    printf("%s: Memory Cache, no cache sweep done\n", rn);
 	*vFilesFound = 0;
 	return 0;
     }
@@ -1405,10 +1350,8 @@ int SweepAFSCache(vFilesFound)
     return(0);
 }
 
-static ConfigCell(aci, arock, adir)
-register struct afsconf_cell *aci;
-char *arock;
-struct afsconf_dir *adir; {
+static ConfigCell(register struct afsconf_cell *aci, char *arock, struct afsconf_dir *adir)
+{
     register int isHomeCell;
     register int i;
     afs_int32 cellFlags;
@@ -1443,8 +1386,7 @@ struct afsconf_dir *adir; {
 /*
  * Set the UDP port number RX uses for UDP datagrams
  */
-void uafs_SetRxPort(
-    int port)
+void uafs_SetRxPort(int port)
 {
     usr_assert(usr_rx_port == 0);
     usr_rx_port = port;
@@ -1659,7 +1601,7 @@ void uafs_Init(
     memset(pathname_for_V, 0, (cacheFiles * sizeof(char *)));
     if (afsd_debug)
 	printf("%s: %d pathname_for_V entries at 0x%x, %d bytes\n",
-	       rn, cacheFiles, (cacheFiles * sizeof(AFSD_INO_T)));
+	       rn, cacheFiles, pathname_for_V, (cacheFiles * sizeof(AFSD_INO_T)));
 
     /*
      * Set up all the pathnames we'll need for later.
@@ -1729,7 +1671,7 @@ void uafs_Init(
      */
     lookingForHomeCell = 1;
 
-    afsconf_CellApply(afs_cdir, ConfigCell, (char *) 0);
+    afsconf_CellApply(afs_cdir, ConfigCell, NULL);
 
     /*
      * If we're still looking for the home cell after the whole cell
@@ -1913,7 +1855,7 @@ void uafs_Init(
     return;
 }
 
-void uafs_Shutdown()
+void uafs_Shutdown(void)
 {
     int rc;
 
@@ -1931,7 +1873,7 @@ void uafs_Shutdown()
 /*
  * Donate the current thread to the RX server pool.
  */
-void uafs_RxServerProc()
+void uafs_RxServerProc(void)
 {
     osi_socket sock;
     int threadID;
@@ -1964,11 +1906,10 @@ struct syscallThreadArgs {
 };
 
 #ifdef NETSCAPE_NSAPI
-void syscallThread(argp)
+void syscallThread(void *argp)
 #else /* NETSCAPE_NSAPI */
-void *syscallThread(argp)
+void *syscallThread(void *argp)
 #endif /* NETSCAPE_NSAPI */
-void *argp;
 {
     int i;
     struct usr_ucred *crp;
@@ -2060,7 +2001,7 @@ int uafs_SetTokens(char *tbuffer, int tlen)
     return 0;
 }
 
-int uafs_RPCStatsEnableProc()
+int uafs_RPCStatsEnableProc(void)
 {
     int rc;
     struct afs_ioctl iob;
@@ -2079,7 +2020,7 @@ int uafs_RPCStatsEnableProc()
     return rc;
 }
 
-int uafs_RPCStatsDisableProc()
+int uafs_RPCStatsDisableProc(void)
 {
     int rc;
     struct afs_ioctl iob;
@@ -2098,7 +2039,7 @@ int uafs_RPCStatsDisableProc()
     return rc;
 }
 
-int uafs_RPCStatsClearProc()
+int uafs_RPCStatsClearProc(void)
 {
     int rc;
     struct afs_ioctl iob;
@@ -2117,7 +2058,7 @@ int uafs_RPCStatsClearProc()
     return rc;
 }
 
-int uafs_RPCStatsEnablePeer()
+int uafs_RPCStatsEnablePeer(void)
 {
     int rc;
     struct afs_ioctl iob;
@@ -2136,7 +2077,7 @@ int uafs_RPCStatsEnablePeer()
     return rc;
 }
 
-int uafs_RPCStatsDisablePeer()
+int uafs_RPCStatsDisablePeer(void)
 {
     int rc;
     struct afs_ioctl iob;
@@ -2155,7 +2096,7 @@ int uafs_RPCStatsDisablePeer()
     return rc;
 }
 
-int uafs_RPCStatsClearPeer()
+int uafs_RPCStatsClearPeer(void)
 {
     int rc;
     struct afs_ioctl iob;
@@ -2474,8 +2415,7 @@ char *uafs_LastPath(char *path)
 /*
  * Set the working directory.
  */
-int uafs_chdir(
-    char *path)
+int uafs_chdir(char *path)
 {
     int retval;
     AFS_GLOCK();
@@ -2484,8 +2424,7 @@ int uafs_chdir(
     return retval;
 }
 
-int uafs_chdir_r(
-    char *path)
+int uafs_chdir_r(char *path)
 {
     int code;
     struct vnode *dirP;
@@ -2508,9 +2447,7 @@ int uafs_chdir_r(
 /*
  * Create a directory.
  */
-int uafs_mkdir(
-    char *path,
-    int mode)
+int uafs_mkdir(char *path, int mode)
 {
     int retval;
     AFS_GLOCK();
@@ -2519,9 +2456,7 @@ int uafs_mkdir(
     return retval;
 }
 
-int uafs_mkdir_r(
-    char *path,
-    int mode)
+int uafs_mkdir_r(char *path, int mode)
 {
     int code;
     char *nameP;
@@ -2602,10 +2537,7 @@ int uafs_IsRoot(char *path)
  * Open a file
  * Note: file name may not end in a slash.
  */
-int uafs_open(
-    char *path,
-    int flags,
-    int mode)
+int uafs_open(char *path, int flags, int mode)
 {
     int retval;
     AFS_GLOCK();
@@ -2614,10 +2546,7 @@ int uafs_open(
     return retval;
 }
 
-int uafs_open_r(
-    char *path,
-    int flags,
-    int mode)
+int uafs_open_r(char *path, int flags, int mode)
 {
     int fd;
     int code;
@@ -2791,18 +2720,14 @@ int uafs_open_r(
 /*
  * Create a file
  */
-int uafs_creat(
-    char *path,
-    int mode)
+int uafs_creat(char *path, int mode)
 {
     int rc;
     rc = uafs_open(path, O_CREAT|O_WRONLY|O_TRUNC, mode);
     return rc;
 }
 
-int uafs_creat_r(
-    char *path,
-    int mode)
+int uafs_creat_r(char *path, int mode)
 {
     int rc;
     rc = uafs_open_r(path, O_CREAT|O_WRONLY|O_TRUNC, mode);
@@ -2812,10 +2737,7 @@ int uafs_creat_r(
 /*
  * Write to a file
  */
-int uafs_write(
-    int fd,
-    char *buf,
-    int len)
+int uafs_write(int fd, char *buf, int len)
 {
     int retval;
     AFS_GLOCK();
@@ -2824,10 +2746,7 @@ int uafs_write(
     return retval;
 }
 
-int uafs_write_r(
-    int fd,
-    char *buf,
-    int len)
+int uafs_write_r(int fd, char *buf, int len)
 {
     int code;
     struct usr_uio uio;
@@ -2872,10 +2791,7 @@ int uafs_write_r(
 /*
  * Read from a file
  */
-int uafs_read(
-    int fd,
-    char *buf,
-    int len)
+int uafs_read(int fd, char *buf, int len)
 {
     int retval;
     AFS_GLOCK();
@@ -2884,10 +2800,7 @@ int uafs_read(
     return retval;
 }
 
-int uafs_read_r(
-    int fd,
-    char *buf,
-    int len)
+int uafs_read_r(int fd, char *buf, int len)
 {
     int code;
     struct usr_uio uio;
@@ -2934,9 +2847,7 @@ int uafs_read_r(
  *
  * NOTE: Caller must hold the global AFS lock.
  */
-int uafs_GetAttr(
-    struct usr_vnode *vp,
-    struct stat *stats)
+int uafs_GetAttr(struct usr_vnode *vp, struct stat *stats)
 {
     int code;
     struct usr_vattr attrs;
@@ -4082,7 +3993,7 @@ int uafs_klog_r(
 /*
  * Destroy AFS credentials from the kernel cache
  */
-int uafs_unlog()
+int uafs_unlog(void)
 {
     int code;
 
@@ -4092,7 +4003,7 @@ int uafs_unlog()
     return code;
 }
 
-int uafs_unlog_r()
+int uafs_unlog_r(void)
 {
     int retval;
     AFS_GUNLOCK();

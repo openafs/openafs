@@ -62,9 +62,13 @@
 #endif
 
 #ifdef	KERNEL
-void *afs_osi_Alloc();
 #define	osi_alloc		afs_osi_Alloc
 #define	osi_free		afs_osi_Free
+
+/* keep here for now, 64 bit issues */
+extern void *afs_osi_Alloc(size_t x);
+extern void *afs_osi_Alloc_NoSleep(size_t x);
+extern void afs_osi_Free(void *x, size_t asize);
 
 #ifndef UKERNEL
 #define xdr_void afs_xdr_void
@@ -160,7 +164,12 @@ enum xdr_op {
  * allocate dynamic storage of the appropriate size and return it.
  * bool_t	(*xdrproc_t)(XDR *, caddr_t *);
  */
+#if 0
 typedef	bool_t (*xdrproc_t)();
+#else
+typedef bool_t (*xdrproc_t) (void *, ...);
+#endif
+
 
 /*
  * The XDR handle.
@@ -176,23 +185,23 @@ typedef struct {
  * 64 bits. I've only done this for the kernel, since other changes may
  * be necessary if we make a 64 bit user version of AFS.
  */
-		bool_t	(*x_getint64)(); /* get 32 bits into a long */
-		bool_t	(*x_putint64)(); /* send 32 bits of a long */
+		bool_t	(*x_getint64)(void *xdrs, afs_int64 *lp); /* get 32 bits into a long */
+		bool_t	(*x_putint64)(void *xdrs, afs_int64 *lp); /* send 32 bits of a long */
 #endif /* AFS_SGI61_ENV */
 #if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
-		bool_t	(*x_getint32)();	/* get an afs_int32 from underlying stream */
-		bool_t	(*x_putint32)();	/* put an afs_int32 to " */
+		bool_t	(*x_getint32)(void *xdrs, afs_int32 *lp);	/* get an afs_int32 from underlying stream */
+		bool_t	(*x_putint32)(void *xdrs, afs_int32 *lp);	/* put an afs_int32 to " */
 #endif
-		bool_t	(*x_getbytes)();/* get some bytes from " */
-		bool_t	(*x_putbytes)();/* put some bytes to " */
-		u_int	(*x_getpostn)();/* returns bytes off from beginning */
-		bool_t  (*x_setpostn)();/* lets you reposition the stream */
-		afs_int32 *	(*x_inline)();	/* buf quick ptr to buffered data */
-		void	(*x_destroy)();	/* free privates of this xdr_stream */
+		bool_t	(*x_getbytes)(void *xdrs, caddr_t addr, u_int len);/* get some bytes from " */
+		bool_t	(*x_putbytes)(void *xdrs, caddr_t addr, u_int len);/* put some bytes to " */
+		u_int	(*x_getpostn)(void *xdrs);/* returns bytes off from beginning */
+		bool_t  (*x_setpostn)(void *xdrs, u_int pos);/* lets you reposition the stream */
+		afs_int32 *	(*x_inline)(void *xdrs, u_int len);	/* buf quick ptr to buffered data */
+		void	(*x_destroy)(void *xdrs);	/* free privates of this xdr_stream */
 #if defined(KERNEL) && defined(AFS_SUN57_ENV)
-		bool_t  (*x_control)();
-		bool_t  (*x_getint32)();
-		bool_t  (*x_putint32)();
+		bool_t  (*x_control)(void *xdrs);
+		bool_t  (*x_getint32)(void *xdrs, afs_int32 *lp);
+		bool_t  (*x_putint32)(void *xdrs, afs_int32 *lp);
 #endif
 	} *x_ops;
 	caddr_t 	x_public;	/* users' data */
@@ -310,61 +319,6 @@ struct xdr_discrim {
 #define IXDR_PUT_SHORT(buf, v)		IXDR_PUT_INT32((buf), ((afs_int32)(v)))
 #define IXDR_PUT_U_SHORT(buf, v)	IXDR_PUT_INT32((buf), ((afs_int32)(v)))
 
-/*
- * These are the "generic" xdr routines.
- */
-extern bool_t	xdr_void();
-extern bool_t	xdr_int();
-extern bool_t	xdr_u_int();
-extern bool_t	xdr_short();
-extern bool_t	xdr_u_short();
-extern bool_t	xdr_long();
-extern bool_t	xdr_char();
-extern bool_t	xdr_u_char();
-extern bool_t	xdr_bool();
-extern bool_t	xdr_enum();
-extern bool_t	xdr_array();
-extern bool_t	xdr_bytes();
-extern bool_t	xdr_opaque();
-extern bool_t	xdr_string();
-extern bool_t	xdr_union();
-extern bool_t	xdr_float();
-extern bool_t	xdr_double();
-extern bool_t	xdr_reference();
-extern bool_t	xdr_wrapstring();
-extern bool_t	xdr_vector();
-extern bool_t   xdr_int64();
-extern bool_t   xdr_uint64();
-
-/*
- * These are the public routines for the various implementations of
- * xdr streams.
- */
-extern void   xdrmem_create();		/* XDR using memory buffers */
-extern void   xdrrx_create();		/* XDR using rx */
-extern void   xdrstdio_create();	/* XDR using stdio library */
-extern void   xdrrec_create();		/* XDR pseudo records for tcp */
-extern bool_t xdrrec_endofrecord();	/* make end of xdr record */
-extern bool_t xdrrec_skiprecord();	/* move to begining of next record */
-extern bool_t xdrrec_eof();		/* true iff no more input */
-
-/*
- * If you change the definitions of xdr_afs_int32 and xdr_afs_uint32, be sure
- * to change them in BOTH rx/xdr.h and rxgen/rpc_main.c.  Also, config/stds.h
- * has the defines for afs_int32 which should match below.
- */
-
-#ifndef xdr_afs_int32
-#define xdr_afs_int32 xdr_int
-#endif
-#ifndef xdr_afs_uint32
-#define xdr_afs_uint32 xdr_u_int
-#endif
-#ifndef xdr_afs_int64
-#define xdr_afs_int64 xdr_int64
-#endif
-#ifndef xdr_afs_uint64
-#define xdr_afs_uint64 xdr_uint64
-#endif
+#include "xdr_prototypes.h"
 
 #endif /* __XDR_INCLUDE__ */

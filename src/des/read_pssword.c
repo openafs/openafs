@@ -61,6 +61,10 @@ static int intrupt;
 #include <windows.h>
 #endif
 
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+
 static int intrupt;
 #if defined(AFS_SGI_ENV) || defined (AFS_AIX_ENV) || defined(AFS_XBSD_ENV) /*|| defined (AFS_HPUX_ENV) || defined(AFS_SUN5_ENV)*/
 #undef	BSDUNIX
@@ -85,11 +89,7 @@ int des_read_pw_string(char *, int, char *, int);
 int des_string_to_key(char *, des_cblock *);
 
 /*** Routines ****************************************************** */
-int
-des_read_password(k,prompt,verify)
-    des_cblock *k;
-    char *prompt;
-    int	verify;
+int des_read_password(des_cblock *k, char *prompt, int verify)
 {
     int ok;
     char key_string[BUFSIZ];
@@ -157,8 +157,6 @@ des_read_pw_string(s,maxa,prompt,verify)
     FILE *fi;
     char savel, flags;
     void (*sig)();
-    extern void setbuf();
-    extern int kill(), fclose();
 #endif
 #endif
 #ifdef AFS_NT40_ENV
@@ -316,7 +314,7 @@ lose:
      * Restore the old signal handler for SIGINT.
      */
     tcsetattr(fno, TCSANOW, &save_ttyb);
-    sigaction(SIGINT, &oldsig, (struct sigaction *)0);
+    sigaction(SIGINT, &oldsig, NULL);
     if (fi != stdin)
         fclose(fi);
  

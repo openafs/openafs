@@ -205,8 +205,8 @@ pam_sm_chauthtok(
 
     if ( (code = ka_VerifyUserPassword(KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG,
 				    user, /* kerberos name */
-				    (char *)0, /* instance */
-				    (char *)0, /* realm */
+				    NULL, /* instance */
+				    NULL, /* realm */
 				    password, /* password */
 				    0, /* spare 2 */
 				    &reason /* error string */ )) !=0 ) {

@@ -53,9 +53,9 @@ afs_uint32 afs_nextCellNum = 0x100;
 struct cell *afs_rootcell = 0;
 
 /* Handler waiting for request from client */
-static char afs_AfsdbHandlerWait;
+static int afs_AfsdbHandlerWait;
 /* Client waiting for handler to become available or finish request */
-static char afs_AfsdbLookupWait;
+static int afs_AfsdbLookupWait;
 
 /* Set to 1 when we've seen the userspace AFSDB process at least once */
 char afs_AfsdbHandlerPresent = 0;
@@ -77,9 +77,7 @@ char afs_AfsdbHandler_ReqPending = 0;
 /* Handler sets Completed to 1 when it completes the client request */
 char afs_AfsdbHandler_Completed = 0;
 
-
-int afs_strcasecmp(s1, s2)
-    register char *s1, *s2;
+int afs_strcasecmp(register char *s1, register char *s2)
 {
     while (*s1 && *s2) {
 	register char c1, c2;
@@ -97,7 +95,7 @@ int afs_strcasecmp(s1, s2)
 
 
 #ifdef AFS_AFSDB_ENV
-void afs_StopAfsdb()
+void afs_StopAfsdb(void)
 {
     if (afs_AfsdbHandlerPresent) {
 	afs_osi_Wakeup(&afs_AfsdbHandlerWait);
@@ -107,10 +105,7 @@ void afs_StopAfsdb()
     }
 }
 
-int afs_AfsdbHandler(acellName, acellNameLen, kernelMsg)
-    char *acellName;
-    int acellNameLen;
-    afs_int32 *kernelMsg;
+int afs_AfsdbHandler(char *acellName, int acellNameLen, afs_int32 *kernelMsg)
 {
     /* afs_syscall_call() has already grabbed the global lock */
 
@@ -165,11 +160,8 @@ int afs_AfsdbHandler(acellName, acellNameLen, kernelMsg)
 #endif
 
 
-int afs_GetCellHostsFromDns(acellName, acellHosts, timeout, realName)
-    char *acellName;
-    afs_int32 *acellHosts;
-    int *timeout;
-    char **realName;
+int afs_GetCellHostsFromDns(char *acellName, afs_int32 *acellHosts, 
+	int *timeout, char **realName)
 {
 #ifdef AFS_AFSDB_ENV
     char grab_glock = 0;
@@ -218,8 +210,7 @@ int afs_GetCellHostsFromDns(acellName, acellHosts, timeout, realName)
 }
 
 
-void afs_RefreshCell(ac)
-    register struct cell *ac;
+void afs_RefreshCell(register struct cell *ac)
 {
     afs_int32 cellHosts[MAXCELLHOSTS];
     char *realName = NULL;
@@ -236,7 +227,7 @@ void afs_RefreshCell(ac)
 	goto done;
 
     /* Refresh the DB servers for the real cell; other values stay the same. */
-    afs_NewCell(realName, cellHosts, 0, (char *) 0, 0, 0, timeout, (char *) 0);
+    afs_NewCell(realName, cellHosts, 0, NULL, 0, 0, timeout, NULL);
 
     /* If this is an alias, update the alias entry too */
     if (afs_strcasecmp(ac->cellName, realName)) {
@@ -247,7 +238,7 @@ void afs_RefreshCell(ac)
 	tc = afs_FindCellByName(realName, READ_LOCK);
 
 	if (tc) {
-	    afs_NewCell(ac->cellName, 0, CAlias, (char *) 0, 0, 0,
+	    afs_NewCell(ac->cellName, 0, CAlias, NULL, 0, 0,
 			timeout, tc->cellName);
 	    afs_PutCell(tc, READ_LOCK);
 	}
@@ -259,9 +250,7 @@ done:
 }
 
 
-struct cell *afs_GetCellByName_Dns(acellName, locktype)
-    register char *acellName;
-    afs_int32 locktype;
+struct cell *afs_GetCellByName_Dns(register char *acellName, afs_int32 locktype)
 {
     afs_int32 cellHosts[MAXCELLHOSTS];
     char *realName = NULL;
@@ -270,8 +259,8 @@ struct cell *afs_GetCellByName_Dns(acellName, locktype)
 
     if (afs_GetCellHostsFromDns(acellName, cellHosts, &timeout, &realName))
 	goto bad;
-    if (afs_NewCell(realName, cellHosts, CNoSUID, (char *) 0, 0, 0,
-		    timeout, (char *) 0))
+    if (afs_NewCell(realName, cellHosts, CNoSUID, NULL, 0, 0,
+		    timeout, NULL))
 	goto bad;
 
     /* If this is an alias, create an entry for it too */
@@ -284,7 +273,7 @@ struct cell *afs_GetCellByName_Dns(acellName, locktype)
 	if (!tc)
 	    goto bad;
 
-	if (afs_NewCell(acellName, 0, CAlias, (char *) 0, 0, 0,
+	if (afs_NewCell(acellName, 0, CAlias, NULL, 0, 0,
 			timeout, tc->cellName)) {
 	    afs_PutCell(tc, READ_LOCK);
 	    goto bad;
@@ -300,13 +289,11 @@ struct cell *afs_GetCellByName_Dns(acellName, locktype)
 bad:
     if (realName)
 	afs_osi_Free(realName, strlen(realName) + 1);
-    return (struct cell *) 0;
+    return NULL;
 }
 
 
-struct cell *afs_FindCellByName(acellName, locktype)
-    register char *acellName;
-    afs_int32 locktype;
+struct cell *afs_FindCellByName(register char *acellName, afs_int32 locktype)
 {
     register struct cell *tc;
     register struct afs_q *cq, *tq;
@@ -324,7 +311,7 @@ retry:
 	    afs_RefreshCell(tc);
 	    if ((tc->states & CAlias) && (didAlias == 0)) {
 		acellName = tc->realName;
-		if (!acellName) return (struct cell *) 0;
+		if (!acellName) return NULL;
 		didAlias = 1;
 		goto retry;
 	    }
@@ -333,27 +320,22 @@ retry:
     }
 
     ReleaseWriteLock(&afs_xcell);
-    return (struct cell *) 0;
-} /*afs_FindCellByName*/
+    return NULL;
+}
 
-
-struct cell *afs_GetCellByName(acellName, locktype)
-    register char *acellName;
-    afs_int32 locktype;
+struct cell *afs_GetCellByName(register char *acellName, afs_int32 locktype)
 {
     struct cell *tc;
 
     tc = afs_FindCellByName(acellName, locktype);
     if (!tc)
 	tc = afs_GetCellByName_Dns(acellName, locktype);
-
+  
     return tc;
-} /*afs_GetCellByName*/
+}
 
-static struct cell *afs_GetCellInternal(acell, locktype, holdxcell)
-    register afs_int32 acell;
-    afs_int32 locktype;
-    int holdxcell;
+static struct cell *afs_GetCellInternal(register afs_int32 acell, 
+	afs_int32 locktype, int holdxcell)
 {
     register struct cell *tc;
     register struct afs_q *cq, *tq;
@@ -375,29 +357,23 @@ static struct cell *afs_GetCellInternal(acell, locktype, holdxcell)
     }
     if (holdxcell)
 	ReleaseWriteLock(&afs_xcell);
-    return (struct cell *) 0;
+    return NULL;
 
-} /*afs_GetCell*/
+}
 
-struct cell *afs_GetCell(acell, locktype)
-    register afs_int32 acell;
-    afs_int32 locktype;
+struct cell *afs_GetCell(register afs_int32 acell, afs_int32 locktype)
 {
     return afs_GetCellInternal(acell, locktype, 1);
 }
 
 /* This is only to be called if the caller is already holding afs_xcell */
-struct cell *afs_GetCellNoLock(acell, locktype)
-    register afs_int32 acell;
-    afs_int32 locktype;
+struct cell *afs_GetCellNoLock(register afs_int32 acell, afs_int32 locktype)
 {
     return afs_GetCellInternal(acell, locktype, 0);
 }
 
-struct cell *afs_GetCellByIndex(cellindex, locktype, refresh)
-    register afs_int32 cellindex;
-    afs_int32 locktype;
-    afs_int32 refresh;
+struct cell *afs_GetCellByIndex(register afs_int32 cellindex, 
+	afs_int32 locktype, afs_int32 refresh)
 {
     register struct cell *tc;
     register struct afs_q *cq, *tq;
@@ -415,15 +391,12 @@ struct cell *afs_GetCellByIndex(cellindex, locktype, refresh)
 	}
     }
     ReleaseWriteLock(&afs_xcell);
-    return (struct cell *) 0;
+    return NULL;
 
-} /*afs_GetCellByIndex*/
+}
 
 
-struct cell *afs_GetRealCellByIndex(cellindex, locktype, refresh)
-    register afs_int32 cellindex;
-    afs_int32 locktype;
-    afs_int32 refresh;
+struct cell *afs_GetRealCellByIndex(register afs_int32 cellindex, afs_int32 locktype, afs_int32 refresh)
 {
     register struct cell *tc;
     register struct afs_q *cq, *tq;
@@ -441,18 +414,12 @@ struct cell *afs_GetRealCellByIndex(cellindex, locktype, refresh)
 	}
     }
     ReleaseWriteLock(&afs_xcell);
-    return (struct cell *) 0;
+    return NULL;
 } /*afs_GetRealCellByIndex*/
 
 
-afs_int32 afs_NewCell(acellName, acellHosts, aflags, linkedcname, fsport, vlport, timeout, aliasFor)
-    int aflags;
-    char *acellName;
-    register afs_int32 *acellHosts;
-    char *linkedcname;
-    u_short fsport, vlport;
-    int timeout;
-    char *aliasFor;
+afs_int32 afs_NewCell(char *acellName, register afs_int32 *acellHosts, int aflags, 
+	char *linkedcname, u_short fsport, u_short vlport, int timeout, char *aliasFor)
 {
     register struct cell *tc, *tcl=0;
     register afs_int32 i, newc=0, code=0;
@@ -507,7 +474,7 @@ afs_int32 afs_NewCell(acellName, acellHosts, aflags, linkedcname, fsport, vlport
 	    tc->cell = afs_nextCellNum++;
 	}
 	tc->states = 0;
-	tc->lcellp = (struct cell *)0;
+	tc->lcellp = NULL;
 	tc->fsport = (fsport ? fsport : AFS_FSPORT);
 	tc->vlport = (vlport ? vlport : AFS_VLPORT);
 	afs_stats_cmperf.numCellsVisible++;
@@ -536,7 +503,7 @@ afs_int32 afs_NewCell(acellName, acellHosts, aflags, linkedcname, fsport, vlport
 	    goto bad;
 	}
 	if (tcl->lcellp) {	/* XXX Overwriting if one existed before! XXX */
-	    tcl->lcellp->lcellp = (struct cell *)0;
+	    tcl->lcellp->lcellp = NULL;
 	    tcl->lcellp->states &= ~CLinkedCell;
 	}
 	tc->lcellp = tcl;
@@ -585,10 +552,9 @@ bad:
     }
     ReleaseWriteLock(&afs_xcell);
     return code;
+}
 
-} /*afs_NewCell*/
-
-afs_RemoveCellEntry(struct server *srvp)
+void afs_RemoveCellEntry(struct server *srvp)
 {
   struct cell *tc;
   afs_int32 j, k;

@@ -11,9 +11,6 @@ RCSID("$Header$");
 #if defined(KERNEL) && !defined(UKERNEL)
 #ifdef AFS_LINUX20_ENV
 #include "../h/string.h"
-#if 0
-#define bzero(A,C) memset((A), 0, (C))
-#endif
 #else
 #include <sys/param.h>
 #include <sys/systm.h>
@@ -32,10 +29,12 @@ RCSID("$Header$");
 /*
  * XDR afs_int64 integers
  */
-bool_t
-xdr_int64(xdrs, ulp)
-        register XDR *xdrs;
-        afs_int64 *ulp;
+bool_t xdr_int64(register XDR *xdrs, afs_int64 *ulp)
+{
+	return xdr_afs_int64(xdrs, ulp);
+}
+
+bool_t xdr_afs_int64(register XDR *xdrs, afs_int64 *ulp)
 {
         static afs_int32 high;
         static afs_uint32 low;
@@ -62,10 +61,11 @@ xdr_int64(xdrs, ulp)
 /*
  * XDR afs_int64 integers
  */
-bool_t
-xdr_uint64(xdrs, ulp)
-        register XDR *xdrs;
-        afs_uint64 *ulp;
+bool_t xdr_uint64(register XDR *xdrs, afs_uint64 *ulp)
+{
+	return xdr_afs_uint64(xdrs, ulp);
+}
+bool_t xdr_afs_uint64(register XDR *xdrs, afs_uint64 *ulp)
 {
         static afs_uint32 high;
         static afs_uint32 low;
@@ -88,14 +88,16 @@ xdr_uint64(xdrs, ulp)
                 return (TRUE);
         return (FALSE);
 }
+
 #else /* AFS_64BIT_ENV */
 /*
  * XDR afs_int64 integers
  */
-bool_t
-xdr_int64(xdrs, ulp)
-        register XDR *xdrs;
-        afs_int64 *ulp;
+bool_t xdr_int64(register XDR *xdrs, afs_int64 *ulp)
+{
+	return xdr_afs_int64(xdrs, ulp);
+}
+bool_t xdr_afs_int64(register XDR *xdrs, afs_int64 *ulp)
 {
         if (xdrs->x_op == XDR_DECODE) {
                 if (!XDR_GETINT32(xdrs, (afs_int32 *) &ulp->high)) return (FALSE);
@@ -113,10 +115,11 @@ xdr_int64(xdrs, ulp)
 /*
  * XDR afs_uint64 integers
  */
-bool_t
-xdr_uint64(xdrs, ulp)
-        register XDR *xdrs;
-        afs_uint64 *ulp;
+bool_t xdr_uint64(register XDR *xdrs, afs_uint64 *ulp)
+{
+	return xdr_afs_uint64(xdrs, ulp);
+}
+bool_t xdr_afs_uint64(register XDR *xdrs, afs_uint64 *ulp)
 {
         if (xdrs->x_op == XDR_DECODE) {
                 if (!XDR_GETINT32(xdrs, (afs_uint32 *) &ulp->high)) return (FALSE);

@@ -351,7 +351,7 @@ scanVolData(taskId, curTapePtr, tapeVersion, volumeHeader, volumeTrailer, bytesR
      afs_uint32              *bytesRead;
 {
     afs_int32 headBytes, tailBytes;
-    char  *block = (char *) 0;
+    char  *block = NULL;
     char  *buffer[2];
     int   hasdata[2], curr, prev;
     afs_uint32 chunkSize = 0;

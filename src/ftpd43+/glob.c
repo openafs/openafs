@@ -254,7 +254,7 @@ expand(as)
 		cs++, gpathp++;
 	*gpathp = 0;
 	if (*oldcs == '{') {
-		(void) execbrc(cs, ((char *)0));
+		(void) execbrc(cs, (NULL));
 		return;
 	}
 	matchdir(cs);
@@ -1050,7 +1050,7 @@ strspl(cp, dp)
 {
 	register char *ep = malloc((unsigned)(strlen(cp) + strlen(dp) + 1));
 
-	if (ep == (char *)0)
+	if (ep == NULL)
 		fatal("Out of memory");
 	(void) strcpy(ep, cp);
 	(void) strcat(ep, dp);
@@ -1063,7 +1063,7 @@ copyblk(v)
 {
 	register char **nv = (char **)malloc((unsigned)((blklen(v) + 1) *
 						sizeof(char **)));
-	if (nv == (char **)0)
+	if (nv == NULL)
 		fatal("Out of memory");
 
 	return (blkcpy(nv, v));

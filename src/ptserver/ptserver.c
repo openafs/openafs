@@ -66,7 +66,7 @@ char *pr_realmName;
 int pr_rxstat_userok(call)
     struct rx_call *call;
 {
-    return afsconf_SuperUser(prdir, call, (char *)0);
+    return afsconf_SuperUser(prdir, call, NULL);
 }
 
 void main (argc, argv)
@@ -79,8 +79,6 @@ void main (argc, argv)
     char hostname[64];
     struct rx_service *tservice;
     struct rx_securityClass *sc[3];
-    extern struct rx_securityClass *rxnull_NewServerSecurityObject();
-    extern struct rx_securityClass *rxkad_NewServerSecurityObject();
     extern int RXSTATS_ExecuteRequest();
     extern int PR_ExecuteRequest();
 #if 0
@@ -213,7 +211,7 @@ void main (argc, argv)
     memcpy(&myHost, th->h_addr, sizeof(afs_int32));
         
     /* get list of servers */
-    code = afsconf_GetExtendedCellInfo(prdir,(char *)0,"afsprot",
+    code = afsconf_GetExtendedCellInfo(prdir,NULL,"afsprot",
                        &info, &clones);
     if (code) {
 	com_err (whoami, code, "Couldn't get server list");
@@ -264,7 +262,7 @@ void main (argc, argv)
     sc[1] = 0;
     if (kerberosKeys) {
 	sc[2] = rxkad_NewServerSecurityObject
-	    (0, prdir, afsconf_GetKey, (char *)0);
+	    (0, prdir, afsconf_GetKey, NULL);
     }
     else sc[2] = sc[0];
 

@@ -226,6 +226,3 @@ struct definition {
 	int can_fail;
 };
 typedef struct definition definition;
-
-/* @(#)rpc_parse.h	1.2 87/11/19 3.9 RPCSRC */
-definition *get_definition();

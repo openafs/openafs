@@ -100,9 +100,7 @@ int FT_GetTimeOfDay(struct timeval *tv, struct timezone *tz)
 
 
 /* For compatibility.  Should go away. */
-TM_GetTimeOfDay (tv, tz)
-    struct timeval *tv;
-    struct timezone *tz;
+int TM_GetTimeOfDay (struct timeval *tv, struct timezone *tz)
 {
     return FT_GetTimeOfDay(tv, tz);
 }

@@ -195,15 +195,15 @@ afs_int32 ka_GetServerToken (
 	    return code;
 	}
 	/* get a connection to the local cell */
-	if (code = ka_AuthServerConn (localCell, KA_TICKET_GRANTING_SERVICE, 0, &conn)) {
+	if ((code = ka_AuthServerConn (localCell, KA_TICKET_GRANTING_SERVICE, 0, &conn))) {
 	    UNLOCK_GLOBAL_MUTEX
 	    return code;
 	}
 	/* get foreign auth ticket */
-	if (code = ka_GetToken (KA_TGS_NAME, realm, localCell, client.name,
+	if ((code = ka_GetToken (KA_TGS_NAME, realm, localCell, client.name,
 				client.instance, conn, now, now+lifetime,
 				&cell_token, "" /* local auth domain */,
-				&auth_token)) {
+				&auth_token))) {
 	    UNLOCK_GLOBAL_MUTEX
 	    return code;
 	}
@@ -218,19 +218,19 @@ afs_int32 ka_GetServerToken (
 	strcpy (auth_server.instance, realm);
 	lcstring (auth_server.cell, localCell, sizeof(auth_server.cell));
 	ucstring (authDomain, localCell, sizeof(authDomain));
-	if (code = ktc_SetToken (&auth_server, &auth_token, &client, 0)) {
+	if ((code = ktc_SetToken (&auth_server, &auth_token, &client, 0))) {
 	    UNLOCK_GLOBAL_MUTEX
 	    return code;
 	}
     }
 
-    if (code = ka_AuthServerConn (cell, KA_TICKET_GRANTING_SERVICE, 0, &conn)) {
+    if ((code = ka_AuthServerConn (cell, KA_TICKET_GRANTING_SERVICE, 0, &conn))) {
 	UNLOCK_GLOBAL_MUTEX
 	return code;
     }
-    if (code = ka_GetToken (name, instance, cell, client.name,
+    if ((code = ka_GetToken (name, instance, cell, client.name,
 			    client.instance, conn, now, now+lifetime,
-			    &auth_token, authDomain, token)) {
+			    &auth_token, authDomain, token))) {
 	UNLOCK_GLOBAL_MUTEX
 	return code;
     }
@@ -240,8 +240,8 @@ afs_int32 ka_GetServerToken (
 	return code;
     }
 
-    if (code = ktc_SetToken (&server, token, &client,
-			     dosetpag ? AFS_SETTOK_SETPAG : 0)) {
+    if ((code = ktc_SetToken (&server, token, &client,
+			     dosetpag ? AFS_SETTOK_SETPAG : 0))) {
 	UNLOCK_GLOBAL_MUTEX
 	return code;
     }

@@ -18,6 +18,7 @@ AFS_OS_OBJS = \
 	osi_vnodeops.o \
 	osi_module.o
 
+
 #AFS_OS_NFSOBJS = osi_vfsops_nfs.o
 
 AFS_OS_NONFSOBJS = osi_vfsops.o

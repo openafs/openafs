@@ -466,7 +466,7 @@ int callOutRoutine(taskId, tapePath, flag, name, dbDumpId, tapecount)
   
   if (flag == CLOSEOPCODE)
     {
-      CO_argv[3] = (char *)0;
+      CO_argv[3] = NULL;
     }
   else
     {
@@ -493,10 +493,10 @@ int callOutRoutine(taskId, tapePath, flag, name, dbDumpId, tapecount)
 	sprintf(Sdumpid, "%u", dbDumpId);
       CO_argv[5] = Sdumpid;
       
-      CO_argv[6] = (char *)0;
+      CO_argv[6] = NULL;
     }
 
-      CO_envp[0] = (char *)0;
+      CO_envp[0] = NULL;
 
       pid = spawnprocve(callOut, CO_argv, CO_envp, 2);
       if (pid < 0) {
@@ -1295,7 +1295,7 @@ afs_int32 restoreVolumeData (call, rparamsPtr)
 	 * Seach for the volume trailer in these two blocks.
 	 */
 	if (lastbuf == startWbuf)
-	    found = FindVolTrailer2((char *)0                , 0     , &headBytes,
+	    found = FindVolTrailer2(NULL, 0     , &headBytes,
 				    bufferBlock[lastbuf].data, nbytes, &tailBytes,
 				    &tapeVolTrailer);
 	else
@@ -1708,7 +1708,7 @@ Restorer (newNode)
        if (tapeblocks < 2) tapeblocks = 2;
        allocbufferSize = tapeblocks * BUTM_BLOCKSIZE;     /* This many full tapeblocks */
     }
-    bufferBlock = (struct TapeBlock *)0;
+    bufferBlock = NULL;
     bufferBlock = (struct TapeBlock *) malloc(allocbufferSize);
     if (!bufferBlock) ERROR_EXIT(TC_NOMEMORY);
     memset(bufferBlock, 0, allocbufferSize);

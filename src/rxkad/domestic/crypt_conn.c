@@ -44,18 +44,17 @@ RCSID("$Header$");
 #include "private_data.h"
 #define XPRT_RXKAD_CRYPT
 
-afs_int32 rxkad_DecryptPacket (conn, schedule, ivec, len, packet)
-  IN struct rx_connection *conn;
-  IN fc_KeySchedule *schedule;
-  IN fc_InitializationVector *ivec;
-  IN int len;
-  INOUT struct rx_packet *packet;
+afs_int32 rxkad_DecryptPacket (const struct rx_connection *conn, 
+	const fc_KeySchedule *schedule, const fc_InitializationVector *ivec, 
+	const int inlen, struct rx_packet *packet)
 {
     afs_uint32 xor[2];
     struct rx_securityClass *obj;
     struct rxkad_cprivate *tp;		/* s & c have type at same offset */
     char * data;
-    int i,tlen;
+    int i,tlen,len;
+
+    len = inlen;
 
     obj = rx_SecurityObjectOf(conn);
     tp = (struct rxkad_cprivate *)obj->privateData;
@@ -80,18 +79,17 @@ afs_int32 rxkad_DecryptPacket (conn, schedule, ivec, len, packet)
     return 0;
 }
 
-afs_int32 rxkad_EncryptPacket (conn, schedule, ivec, len, packet)
-  IN struct rx_connection *conn;
-  IN fc_KeySchedule *schedule;
-  IN fc_InitializationVector *ivec;
-  IN int len;
-  INOUT struct rx_packet *packet;
+afs_int32 rxkad_EncryptPacket (const struct rx_connection *conn, 
+	const fc_KeySchedule *schedule, const fc_InitializationVector *ivec, 
+	const int inlen, struct rx_packet *packet)
 {
     afs_uint32 xor[2];
     struct rx_securityClass *obj;
     struct rxkad_cprivate *tp;		/* s & c have type at same offset */
     char *data;
-    int i,tlen;
+    int i,tlen,len;
+
+    len = inlen;
 
     obj = rx_SecurityObjectOf(conn);
     tp = (struct rxkad_cprivate *)obj->privateData;

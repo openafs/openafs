@@ -32,12 +32,12 @@ RCSID("$Header$");
 static struct rx_securityOps null_ops;
 static struct rx_securityClass null_object = {&null_ops, 0, 0};
 
-struct rx_securityClass *rxnull_NewServerSecurityObject()
+struct rx_securityClass *rxnull_NewServerSecurityObject(void)
 {
     return &null_object;
 }
 
-struct rx_securityClass *rxnull_NewClientSecurityObject()
+struct rx_securityClass *rxnull_NewClientSecurityObject(void)
 {
     return &null_object;
 }

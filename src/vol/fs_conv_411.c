@@ -927,7 +927,7 @@ char *vol_DevName(adev)
 	    }
     }
     closedir(dirp);
-    return (char *) 0;	/* failed */
+    return NULL;	/* failed */
 }
   
 char *unrawname(name)

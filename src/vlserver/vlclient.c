@@ -37,6 +37,15 @@ RCSID("$Header$");
 #include <netinet/in.h>
 #endif
 #include <stdio.h>
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/afsutil.h>
 #include <rx/xdr.h>
 #include <rx/rx.h>
@@ -128,7 +137,7 @@ struct Vlent *GetVolume(vol, entry)
     register int i;
     register struct Vlent *vl;
 
-    if (!vol) return (struct Vlent *)0;
+    if (!vol) return NULL;
     i = VHash(vol);
     for (vl=VLa[i]; vl; vl = vl->next) {
 	if ((vl->rwid == vol && vol != entry->volumeId[0]) ||
@@ -148,7 +157,7 @@ struct Vlent *GetVolume(vol, entry)
 	exit(1);
     }
     VL++;
-    return (struct Vlent *)0;
+    return NULL;
 }
 
 /* Almost identical's to pr_Initialize in vlserver/pruser.c */
@@ -189,7 +198,7 @@ char *confDir, *cellp;
 	    strncpy(sname.cell, cellp, sizeof(sname.cell));
 	sname.instance[0] = 0;
 	strcpy(sname.name, "afs");
-	code = ktc_GetToken(&sname,&ttoken, sizeof(ttoken), (char *)0);
+	code = ktc_GetToken(&sname,&ttoken, sizeof(ttoken), NULL);
 	if (code) {
 	    fprintf(stderr,"vl_Initialize: Could not get afs tokens, running unauthenticated.\n");
 	    scIndex = 0;
@@ -205,16 +214,16 @@ char *confDir, *cellp;
     }
     switch (scIndex) {
       case 0 :
-	  sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+	  sc = rxnull_NewClientSecurityObject();
 	  break;
 	case 1 :
 	    return -1;
 	case 2:
-	  sc = (struct rx_securityClass *) rxkad_NewClientSecurityObject (rxkad_clear,
+	  sc = rxkad_NewClientSecurityObject (rxkad_clear,
 	       &ttoken.sessionKey, ttoken.kvno, ttoken.ticketLen, ttoken.ticket);
       }
     if (!server) {
-	code = afsconf_GetCellInfo(tdir,(char *)0, AFSCONF_VLDBSERVICE, &info);
+	code = afsconf_GetCellInfo(tdir,NULL, AFSCONF_VLDBSERVICE, &info);
 	if (info.numServers > MAXSERVERS) {
 	    fprintf(stderr,
 		    "vl_Initialize: info.numServers=%d (> MAXSERVERS=%d)\n",
@@ -908,7 +917,7 @@ static handleit(as)
 	       printf("changing %s", *argp);
 	       h1 = hostutil_GetHostByName(&(*argp)[0]);
 	       if (!h1) {
-		 printf("cmdebug: can't resolve address for host %s");
+		 printf("cmdebug: can't resolve address for host %s", *argp);
 		 continue;
 	       }
 	       memcpy(&a1, (afs_int32 *)h1->h_addr, sizeof(afs_uint32));

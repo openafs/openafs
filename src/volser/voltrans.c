@@ -24,6 +24,15 @@ RCSID("$Header$");
 #else
 #include <sys/time.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <rx/rx.h>
 #include "volser.h"
 
@@ -93,7 +102,7 @@ register struct volser_trans *atrans; {
 	if (tt == atrans) {
 	    if (tt->volume)
 		VDetachVolume(&error, tt->volume);
-	    tt->volume = (struct Volume *) 0;
+	    tt->volume = NULL;
 	    *lt = tt->next;
 	    free(tt);
 	    return 0;

@@ -1165,7 +1165,7 @@ Dumper(nodePtr)
        dataSize = (tapeblocks * BUTM_BLKSIZE);
        allocbufferSize = BUTM_HDRSIZE + dataSize + sizeof(struct volumeHeader);
     }
-    bufferBlock = (char *)0;
+    bufferBlock = NULL;
     bufferBlock = malloc(allocbufferSize);
     if (!bufferBlock) {
 	ErrorLog(0, taskId, TC_NOMEMORY, 0, "Can't allocate BUFFERSIZE for dumps\n");
@@ -2157,7 +2157,7 @@ DeleteDump(ptr)
     }
 
     /* Switch back to the original server */
-    rc = InitToServer(taskId, &butxInfo, (char *)0);
+    rc = InitToServer(taskId, &butxInfo, NULL);
 
     if (vl.budb_volumeList_val) free(vl.budb_volumeList_val);
 

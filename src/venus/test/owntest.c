@@ -9,6 +9,9 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 
 RCSID("$Header$");
 
@@ -44,8 +47,8 @@ char **argv; {
 	perror("chmod back to RW");
 	exit(errno);
     }
-    gettimeofday(&tv[0], (char *) 0);
-    gettimeofday(&tv[1], (char *) 0);
+    gettimeofday(&tv[0], NULL);
+    gettimeofday(&tv[1], NULL);
     tv[0].tv_sec -= 10000;
     tv[0].tv_usec = 0;
     tv[1].tv_sec -= 20000;

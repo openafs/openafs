@@ -22,6 +22,14 @@ RCSID("$Header$");
 #include "xstat_fs.h"			/*Interface for this module*/
 #include <lwp.h>			/*Lightweight process package*/
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #define LWP_STACK_SIZE	(16 * 1024)
 
 /*
@@ -495,7 +503,7 @@ int xstat_fs_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler
 		rn, a_numServers);
 	arg_errfound = 1;
     }
-    if (a_collIDP == (afs_int32 *)0) {
+    if (a_collIDP == NULL) {
 	fprintf(stderr, "[%s] Null collection ID array argument\n", rn);
 	arg_errfound = 1;
     }
@@ -590,7 +598,7 @@ int xstat_fs_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler
      * Create a null Rx client security object, to be used by the
      * probe LWP.
      */
-    secobj = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+    secobj = rxnull_NewClientSecurityObject();
     if (secobj == (struct rx_securityClass *)0) {
 	fprintf(stderr,
 		"[%s] Can't create probe LWP client security object.\n",
@@ -619,7 +627,7 @@ int xstat_fs_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler
 	
 	hostNameFound =
 	    hostutil_GetNameByINet(curr_conn->skt.sin_addr.s_addr);
-	if (hostNameFound == (char *)0) {
+	if (hostNameFound == NULL) {
 	    fprintf(stderr,
 		    "[%s] Can't map Internet address %lu to a string name\n",
 		    rn, curr_conn->skt.sin_addr.s_addr);

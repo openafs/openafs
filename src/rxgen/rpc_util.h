@@ -46,84 +46,132 @@ struct list {
 };
 typedef struct list list;
 
-/*
- * Global variables 
- */
 #define MAXLINESIZE 1024
-extern char curline[MAXLINESIZE];
+
+
+/* PROTOTYPES */
+
+/* rpc_main.c */
+extern char *prefix;
+extern int nincludes;
+extern char *OutFileFlag;
+extern char OutFile[];
+extern char Sflag, Cflag, hflag, cflag, kflag;
+extern char zflag;
+extern char xflag;
+extern char yflag;
+extern int debug;
+
+
+/* rpc_util.c */
+extern char curline[];
 extern char *where;
 extern int linenum;
-
-extern char Sflag, Cflag, hflag, cflag, xflag;
-extern char *prefix;
-extern list *special_defined, *typedef_defined, *uniondef_defined;
-extern int PackageIndex, combinepackages, scan_print, master_opcodenumber, master_highest_opcode;
-extern char *PackagePrefix[MAX_PACKAGES];
-extern char *PackageStatIndex[MAX_PACKAGES];
-extern int no_of_stat_funcs;
-extern int no_of_stat_funcs_header[MAX_PACKAGES];
 extern char *infilename;
+extern char *outfiles[];
+extern int nfiles;
 extern FILE *fout;
 extern FILE *fin;
-
 extern list *defined;
 
-/*
- * Character arrays to keep list of function names as we process the file
- */
-
-extern char function_list[MAX_PACKAGES]
-                         [MAX_FUNCTIONS_PER_PACKAGE]
-                         [MAX_FUNCTION_NAME_LEN];
-extern int function_list_index;
-
-/*
- * rpc_util routines 
- */
-void storeval();
+extern void reinitialize(void);
+extern int streq(char *a, char *b);
+extern char *findval(list *lst, char *val, int (*cmp)(definition *def, char *type));
+extern void storeval(list **lstp, char *val);
+extern char *fixtype(char *type);
+extern char *stringfix(char *type);
+extern void ptype(char *prefix, char *type, int follow);
+extern int isvectordef(char *type, relation rel);
+extern void pvname(char *pname, char *vnum);
+extern void error(char *msg);
+extern void crash(void);
+extern void record_open(char *file);
+extern void expected1(tok_kind exp1);
+extern void expected2(tok_kind exp1, tok_kind exp2);
+extern void expected3(tok_kind exp1, tok_kind exp2, tok_kind exp3);
+extern void expected4(tok_kind exp1, tok_kind exp2, tok_kind exp3, tok_kind exp4);
+extern void tabify(FILE *f, int tab);
 
 #define STOREVAL(list,item)	\
 	storeval(list,(char *)item)
 
-char *findval();
-
 #define FINDVAL(list,item,finder) \
 	findval(list, (char *) item, finder)
 
-char *fixtype();
-char *stringfix();
-void pvname();
-void ptype();
-int isvectordef();
-int streq();
-void error();
-void expected1();
-void expected2();
-void expected3();
-void expected4();
-void tabify();
-void record_open();
+/* rpc_clntout.c */
+extern void write_stubs(void);
 
-/*
- * rpc_cout routines 
- */
-void cprint();
-void emit();
+/* rpc_cout.c */
+extern void emit(definition *def);
+extern void print_param(declaration *dec);
 
-/*
- * rpc_hout routines 
- */
-void print_datadef();
+/* rpc_hout.c */
+extern void print_datadef(definition *def);
+extern void pdefine(char *name, char *num);
+extern void pprocdef(proc_list *proc, version_list *vp);
 
-/*
- * rpc_svcout routines 
- */
-void write_most();
-void write_register();
-void write_rest();
-void write_programs();
+/* rpc_parse.c */
+extern list *proc_defined[MAX_PACKAGES], *special_defined, *typedef_defined, *uniondef_defined;
+extern char *SplitStart;
+extern char *SplitEnd;
+extern char *MasterPrefix;
+extern char *ServerPrefix;
+extern char *PackagePrefix[];
+extern char *PackageStatIndex[];
+extern int no_of_stat_funcs;
+extern int no_of_stat_funcs_header[];
+extern int no_of_opcodes[], master_no_of_opcodes;
+extern int lowest_opcode[], master_lowest_opcode;
+extern int highest_opcode[], master_highest_opcode;
+extern int master_opcodenumber;
+extern int opcodesnotallowed[];
+extern int combinepackages;
+extern int PackageIndex;
+extern int PerProcCounter;
+extern int Multi_Init;
+extern char function_list[MAX_PACKAGES]
+                  [MAX_FUNCTIONS_PER_PACKAGE]
+                  [MAX_FUNCTION_NAME_LEN];
+extern int function_list_index;
 
-/*
- * rpc_clntout routines
- */
-void write_stubs();
+extern definition *get_definition(void);
+
+extern void er_Proc_CodeGeneration(void);
+extern void h_opcode_stats(void);
+extern void generate_multi_macros(definition *defp);
+extern int IsRxgenToken(token *tokp);
+extern int IsRxgenDefinition(definition *def);
+
+
+
+
+extern proc1_list *Proc_list, **Proc_listp;
+
+
+/* rpc_svcout.c */
+extern int nullproc(proc_list *proc);
+extern void write_programs(char *storage);
+extern void write_rest(void);
+extern void write_most(void);
+extern void write_register(char *transp);
+
+/* rpc_scan.c */
+extern int pushed;
+extern token lasttok;
+extern int scan_print;
+
+extern void scan(tok_kind expect, token *tokp);
+extern void scan2(tok_kind expect1, tok_kind expect2,
+        token *tokp);
+extern void scan3(tok_kind expect1, tok_kind expect2,
+        tok_kind expect3, token *tokp);
+extern void scan4(tok_kind expect1, tok_kind expect2,
+        tok_kind expect3, tok_kind expect4, token *tokp);
+extern void scan_num(token *tokp);
+extern void peek(token *tokp);
+extern int peekscan(tok_kind expect, token *tokp);
+extern void get_token(token *tokp);
+extern void unget_token(token *tokp);
+extern void findkind(char **mark, token *tokp);
+extern void printdirective(char *line);
+

@@ -65,12 +65,6 @@ RCSID("$Header$");
 #include <inet/ip.h>
 #endif
 
-/* Imported variables */
-extern afs_int32 afs_setTime;
-extern afs_int32 afs_waitForever;
-extern short afs_waitForeverCount;
-
-
 /* Exported variables */
 afs_rwlock_t afs_xserver;               /* allocation lock for servers */
 struct server *afs_setTimeHost=0;       /* last host we used for time */
@@ -250,9 +244,7 @@ void afs_ServerDown(struct srvAddr *sa)
 
 
 /* return true if we have any callback promises from this server */
-static HaveCallBacksFrom(aserver)
-    struct server *aserver;
-
+static int HaveCallBacksFrom(struct server *aserver)
 {
     register afs_int32 now;
     register int i;
@@ -276,9 +268,7 @@ static HaveCallBacksFrom(aserver)
 } /*HaveCallBacksFrom*/
 
 
-static void CheckVLServer(sa, areq)
-    struct vrequest *areq;
-    register struct srvAddr *sa;
+static void CheckVLServer(register struct srvAddr *sa, struct vrequest *areq)
 {
     register struct server *aserver = sa->server;
     register struct conn *tc;
@@ -348,10 +338,8 @@ static void CheckVLServer(sa, areq)
  *	entries.
  *------------------------------------------------------------------------*/
 
-void afs_CountServers()
-
-{ /*afs_CountServers*/
-
+void afs_CountServers(void)
+{
     int currIdx;				/*Curr idx into srv table*/
     struct server *currSrvP;			/*Ptr to curr server record*/
     afs_int32 currChainLen;				/*Length of curr hash chain*/
@@ -491,10 +479,7 @@ void afs_CountServers()
 
 
 /* check down servers (if adown), or running servers (if !adown) */
-void afs_CheckServers(adown, acellp)
-    struct cell *acellp;
-    int	adown;
-
+void afs_CheckServers(int adown, struct cell *acellp)
 {
     struct vrequest treq;
     struct server *ts;
@@ -512,7 +497,7 @@ void afs_CheckServers(adown, acellp)
     XSTATS_DECLS;
 
     AFS_STATCNT(afs_CheckServers);
-    if (code = afs_InitReq(&treq, &afs_osi_cred)) return;
+    if ((code = afs_InitReq(&treq, &afs_osi_cred))) return;
     ObtainReadLock(&afs_xserver);  /* Necessary? */
     ObtainReadLock(&afs_xsrvAddr);	
 
@@ -579,7 +564,7 @@ void afs_CheckServers(adown, acellp)
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_GETTIME);
 	    start = osi_Time();		/* time the gettimeofday call */
 	    RX_AFS_GUNLOCK();
-	    code = RXAFS_GetTime(tc->id, &tv.tv_sec, &tv.tv_usec);
+	    code = RXAFS_GetTime(tc->id, (afs_int32 *)&tv.tv_sec, (afs_int32 *)&tv.tv_usec);
 	    RX_AFS_GLOCK();
 	    end = osi_Time();
 	    XSTATS_END_TIME;
@@ -687,7 +672,7 @@ struct server *afs_FindServer (afs_int32 aserver, ushort aport,
 	    }
 	}
     }
-    return (struct server *)0;
+    return NULL;
 
 } /*afs_FindServer*/
 
@@ -721,10 +706,8 @@ NB:  Has to be unsigned, since shifts on signed quantities may preserve
 */
 
 #define	ranstage(x)	(x)= (afs_uint32) (3141592621U*((afs_uint32)x)+1)
-extern afs_int32 rxi_getaddr();
 
-unsigned int afs_random()
-
+unsigned int afs_random(void)
 {
     static afs_int32 state = 0;
     register int i;
@@ -755,7 +738,7 @@ unsigned int afs_random()
    need to multiply by something with lots of ones in it, so multiply by 
    8 or 16 is right out.
  */
-int afs_randomMod15()
+int afs_randomMod15(void)
 {
 afs_uint32 temp;
 
@@ -765,7 +748,7 @@ temp = (temp *15) >> 28;
 return temp;
 }
 
-int afs_randomMod127()
+int afs_randomMod127(void)
 {
 afs_uint32 temp;
 
@@ -784,7 +767,7 @@ void afs_SortOneServer(struct server *asp)
    int lowrank, rank;
       
    for (rootsa=&(asp->addr); *rootsa; rootsa=&(lowsa->next_sa)) {
-      lowprev = (struct srvAddr *)0;
+      lowprev = NULL;
       lowsa   = *rootsa;             /* lowest sa is the first one */
       lowrank = lowsa->sa_iprank;
 
@@ -997,11 +980,13 @@ typedef struct ill_s {			/**/
  * passed into the kernel at startup time through the AFSOP_ADVISEADDR
  * system call. These are stored in the data structure 
  * called 'afs_cb_interface'. 
+ *
+ * struct srvAddr *sa;         remote server
+ * afs_int32 addr;                one of my local addr in net order
+ * afs_uint32 subnetmask;         subnet mask of local addr in net order
+ *
  */
-afsi_SetServerIPRank(sa, addr, subnetmask)
-   struct srvAddr *sa;         /* remote server */
-   afs_int32 addr;                 /* one of my local addr in net order  */
-   afs_uint32 subnetmask;         /* subnet mask of local addr in net order */
+int afsi_SetServerIPRank(struct srvAddr *sa, afs_int32 addr, afs_uint32 subnetmask)
 {
    afs_uint32 myAddr, myNet, mySubnet, netMask;
    afs_uint32 serverAddr ; 
@@ -1032,10 +1017,7 @@ afsi_SetServerIPRank(sa, addr, subnetmask)
 }
 #else /* AFS_USERSPACE_IP_ADDR */
 #if (! defined(AFS_SUN5_ENV)) && defined(USEIFADDR)
-void
-afsi_SetServerIPRank(sa, ifa)
-    struct srvAddr *sa;
-    struct in_ifaddr *ifa;
+void afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa)
 {
     struct sockaddr_in *sin;
     int t;
@@ -1082,11 +1064,9 @@ afsi_enum_set_rank(struct hashbucket *h, caddr_t mkey, caddr_t arg1,
 }
 #endif /* AFS_SGI62_ENV */
 
-static afs_SetServerPrefs(sa)
-    struct srvAddr *sa;
+static int afs_SetServerPrefs(struct srvAddr *sa)
 {
 #if     defined(AFS_USERSPACE_IP_ADDR)
-    extern interfaceAddr afs_cb_interface;
     int i;
 
     sa->sa_iprank = LO;
@@ -1101,7 +1081,6 @@ static afs_SetServerPrefs(sa)
     ipif_t * ipif;
     int subnet, subnetmask, net, netmask;
     long *addr = (long *) ill_g_headp;
-    extern struct ifnet *rxi_FindIfnet();
 
     if (sa) sa->sa_iprank= 0;
     for (ill = (struct ill_s *)*addr /*ill_g_headp*/; ill; ill = ill->ill_next ) {
@@ -1164,7 +1143,7 @@ static afs_SetServerPrefs(sa)
     }
 #else
 #ifndef USEIFADDR
-    struct ifnet *ifn = (struct ifnet *)0;
+    struct ifnet *ifn = NULL;
     struct in_ifaddr *ifad = (struct in_ifaddr *) 0;
     struct sockaddr_in *sin;
 
@@ -1236,7 +1215,6 @@ static afs_SetServerPrefs(sa)
     }
 #else
     {
-	extern struct in_ifaddr *in_ifaddr;
 	struct in_ifaddr *ifa;
 	for ( ifa = in_ifaddr; ifa; ifa = ifa->ia_next ) {
 	    afsi_SetServerIPRank(sa, ifa);
@@ -1264,8 +1242,7 @@ return 0;
  * clean up all other structures that may reference it.
  * The afs_xserver and afs_xsrvAddr locks are assumed taken.
  */
-void afs_FlushServer(srvp)
-  struct server *srvp;
+void afs_FlushServer(struct server *srvp)
 {
   afs_int32 i;
   struct server  *ts, **pts;
@@ -1279,7 +1256,6 @@ void afs_FlushServer(srvp)
   /* Remove all the callbacks structs */
   if (srvp->cbrs) {
      struct afs_cbr *cb, *cbnext;
-     extern afs_lock_t afs_xvcb;
 
      MObtainWriteLock(&afs_xvcb, 300);
      for (cb=srvp->cbrs; cb; cb=cbnext) {
@@ -1320,8 +1296,7 @@ void afs_FlushServer(srvp)
  * The afs_xserver and afs_xsrvAddr locks are assumed taken.
  *    It is not removed from the afs_srvAddrs hash chain.
  */
-void afs_RemoveSrvAddr(sap)
-  struct srvAddr *sap;
+void afs_RemoveSrvAddr(struct srvAddr *sap)
 {
   struct srvAddr **psa, *sa;
   struct server  *srv;
@@ -1545,8 +1520,7 @@ struct server *afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers,
     return(newts);
 } /* afs_GetServer */
 
-void afs_ActivateServer(sap) 
-     struct srvAddr *sap;
+void afs_ActivateServer(struct srvAddr *sap) 
 {
    osi_timeval_t currTime;		/*Filled with current time*/
    osi_timeval_t *currTimeP;		/*Ptr to above*/

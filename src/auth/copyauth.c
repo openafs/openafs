@@ -12,6 +12,14 @@
 
 RCSID("$Header$");
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <sys/types.h>
 #include "auth.h"
 #ifdef AFS_NT40_ENV
@@ -65,7 +73,7 @@ char **argv; {
     strcpy(tserver.cell, localName);
     strcpy(tserver.name, "afs");
     tserver.instance[0] = 0;
-    code = ktc_GetToken(&tserver, &token, sizeof(token), (char *) 0);
+    code = ktc_GetToken(&tserver, &token, sizeof(token), NULL);
     if (code) {
 	printf("%s: failed to get '%s' service ticket in cell '%s' (code %d)\n", whoami, tserver.name, tserver.cell, code);
 	exit(1);
@@ -73,7 +81,7 @@ char **argv; {
     
     /* and now set the ticket in the new cell */
     strcpy(tserver.cell, argv[1]);
-    code = ktc_SetToken(&tserver, &token, (char *) 0, 0);
+    code = ktc_SetToken(&tserver, &token, NULL, 0);
     if (code) {
 	printf("%s: failed to set ticket (code %d), are you sure you're authenticated?\n", whoami, code);
 	exit(1);

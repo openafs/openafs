@@ -100,6 +100,15 @@ RCSID("$Header$");
 #include <mntent.h>
 #endif
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
+
 #include <rx/xdr.h>
 #include <afs/afsint.h>
 #include "nfs.h"
@@ -353,7 +362,7 @@ void VAttachPartitions2() {
     char pname[32];
 
     dirp = opendir("/");
-    while (de = readdir(dirp)) {
+    while ((de = readdir(dirp))) {
 	strcpy(pname, "/");
 	strncat(pname, de->d_name, 20);
 	pname[sizeof(pname)-1] = '\0';
@@ -727,7 +736,7 @@ int VAttachPartitions(void)
 	    exit(-1);
 	}
     }
-    while (mntent = getmntent(mfd)) {
+    while ((mntent = getmntent(mfd))) {
 	/* If we're going to always attach this partition, do it later. */
 	if (VIsAlwaysAttach(mntent->mnt_dir))
 	    continue;

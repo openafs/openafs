@@ -98,7 +98,6 @@ afs_indexFlags
 afs_indexTimes
 rxi_Alloccnt
 rxi_Allocsize
-afs_xaxscnt
 afs_dcentries
 rxevent_nFree
 rxevent_nPosted
@@ -106,7 +105,6 @@ afs_brsWaiters
 afs_brsDaemons
 afs_brs
 afs_callo
-cbHashT
 VLRU
 afs_DLRU
 afs_xcbhash
@@ -123,9 +121,7 @@ rx_connHashTable_lock
 rxevent_lock
 * rxdb_idHash
 * rxdb_lockList
-afs_nfspags
 afs_duplicate_nfs_fids
-CTD_stats
 rx_tq_debug
 afs_totalServers
 afs_totalSrvAddrs

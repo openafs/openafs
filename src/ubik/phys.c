@@ -101,7 +101,7 @@ static int uphys_open(adbase, afid)
     
     /* enter it in the cache */
     tfd = fdcache;
-    bestfd = (struct fdcache *) 0;
+    bestfd = NULL;
     for(i=0;i<MAXFDCACHE;i++,tfd++) {	/* look for empty slot */
 	if (tfd->fd == -1) {
 	    bestfd = tfd;

@@ -62,10 +62,6 @@ RCSID("$Header$");
 #endif
 #endif
 
-#ifndef osi_alloc
-char *osi_alloc();
-#endif
-
 #define LASTUNSIGNED	((u_int)0-1)
 
 
@@ -76,14 +72,16 @@ char *osi_alloc();
  * elsize is the size (in bytes) of each element, and elproc is the
  * xdr procedure to call to handle each element of the array.
  */
+/*
+	caddr_t *addrp;		* array pointer *
+	u_int *sizep;		* number of elements *
+	u_int maxsize;		* max numberof elements *
+	u_int elsize;		* size in bytes of each element *
+	xdrproc_t elproc;	* xdr routine to handle each element *
+*/
 #ifdef	KERNEL
-bool_t xdr_arrayN(xdrs, addrp, sizep, maxsize, elsize, elproc)
-	register XDR *xdrs;
-	caddr_t *addrp;		/* array pointer */
-	u_int *sizep;		/* number of elements */
-	u_int maxsize;		/* max numberof elements */
-	u_int elsize;		/* size in bytes of each element */
-	xdrproc_t elproc;	/* xdr routine to handle each element */
+bool_t xdr_arrayN(register XDR *xdrs, caddr_t *addrp, u_int *sizep, 
+	u_int maxsize, u_int elsize, xdrproc_t elproc)
 {
 	register u_int i;
 	register caddr_t target = *addrp;
@@ -113,7 +111,7 @@ bool_t xdr_arrayN(xdrs, addrp, sizep, maxsize, elsize, elproc)
 		case XDR_DECODE:
 			if (c == 0)
 				return (TRUE);
-			*addrp = target = osi_alloc(nodesize);
+			*addrp = target = (caddr_t) osi_alloc(nodesize);
 			if (target == NULL) {
 				return (FALSE);
 			}

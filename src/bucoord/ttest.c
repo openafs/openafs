@@ -52,7 +52,7 @@ char **argv; {
 	printf("ttest: could not initialize rx, code %d.\n", code);
 	exit(1);
     }
-    rxsc[0] = (struct rx_securityClass *) rxnull_NewServerSecurityObject();
+    rxsc[0] = rxnull_NewServerSecurityObject();
     tservice = rx_NewService(0, 1, "tape-controller", rxsc, 1, TC_ExecuteRequest);
     rx_SetMinProcs(tservice, 3);
     rx_SetMaxProcs(tservice, 5);

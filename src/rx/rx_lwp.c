@@ -44,6 +44,7 @@ extern int (*registerProgram)();
 extern int (*swapNameProgram)();
 
 int debugSelectFailure;	/* # of times select failed */
+
 /*
  * Sleep on the unique wait channel provided.
  */
@@ -75,8 +76,7 @@ void rxi_Delay(int sec)
 static int quitListening = 0;
 
 /* This routine will kill the listener thread, if it exists. */
-void
-rxi_StopListener()
+void rxi_StopListener(void)
 {
     quitListening = 1;
     rxi_ReScheduleEvents();
@@ -87,7 +87,8 @@ rxi_StopListener()
    is blocked in selects, this will unblock it.  It also can be called
    to force a new trip through the rxi_Listener select loop when the set
    of file descriptors it should be listening to changes... */
-void rxi_ReScheduleEvents() {
+void rxi_ReScheduleEvents(void)
+{
     if (rx_listenerPid) IOMGR_Cancel(rx_listenerPid);
 }
 
@@ -100,8 +101,7 @@ void rxi_InitializeThreadSupport(void)
     FD_ZERO(&rx_selectMask);
 }
 
-void rxi_StartServerProc(proc, stacksize)
-    long (*proc)();
+void rxi_StartServerProc(void (*proc)(void), int stacksize)
 {
     PROCESS scratchPid;
     static int number = 0;
@@ -114,7 +114,8 @@ void rxi_StartServerProc(proc, stacksize)
 	(*registerProgram)(scratchPid, name);
 }
 
-void rxi_StartListener() {
+void rxi_StartListener(void)
+{
     /* Priority of listener should be high, so it can keep conns alive */
 #define	RX_LIST_STACK	24000
     LWP_CreateProcess(rx_ListenerProc, RX_LIST_STACK, LWP_MAX_PRIORITY, 0,
@@ -140,10 +141,7 @@ void rxi_StartListener() {
    don't do a polling select again until several seconds later (via nextPollTime mechanism).
    */
 
-void rxi_ListenerProc(rfds, tnop, newcallp)
-    fd_set *rfds;
-    int *tnop;
-    struct rx_call **newcallp;
+static void rxi_ListenerProc(fd_set *rfds, int *tnop, struct rx_call **newcallp)
 {
     afs_uint32 host;
     u_short port;
@@ -186,7 +184,7 @@ void rxi_ListenerProc(rfds, tnop, newcallp)
 	   then atomically computes the time to the next event, guaranteeing
 	   that this is positive.  If there is no next event, it returns 0 */
 	clock_NewTime();
-	if (!rxevent_RaiseEvents(&cv)) tvp = (struct timeval *) 0;
+	if (!rxevent_RaiseEvents(&cv)) tvp = NULL;
 	else {
 	    /* It's important to copy cv to tv, because the 4.3 documentation
 	       for select threatens that *tv may be updated after a select, in
@@ -329,7 +327,7 @@ static void rx_ListenerProc(void *dummy)
 /* This is the server process request loop. The server process loop
  * becomes a listener thread when rxi_ServerProc returns, and stays
  * listener thread until rxi_ListenerProc returns. */
-void rx_ServerProc()
+void rx_ServerProc(void)
 {
     int sock;
     int threadID;
@@ -363,8 +361,7 @@ void rx_ServerProc()
  * Called from a single thread at startup.
  * Returns 0 on success; -1 on failure.
  */
-int rxi_Listen(sock)
-    osi_socket sock;
+int rxi_Listen(osi_socket sock)
 {
 #ifndef AFS_NT40_ENV
     /*
@@ -401,7 +398,7 @@ int rxi_Listen(sock)
 /*
  * Recvmsg
  */
-int rxi_Recvmsg(osi_socket socket, struct msghdr *msg_p, int flags)
+int rxi_Recvmsg(int socket, struct msghdr *msg_p, int flags)
 {
     return recvmsg((int) socket, msg_p, flags);
 }

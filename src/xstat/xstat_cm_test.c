@@ -21,6 +21,13 @@ RCSID("$Header$");
 #include "xstat_cm.h"		/*Interface for xstat_cm module*/
 #include <cmd.h>		/*Command line interpreter*/
 #include <time.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 
 /*
  * External routines that don't have explicit include file definitions.
@@ -1277,7 +1284,7 @@ int RunTheTest(a_s)
 	CMSktArray[currCM].sin_family = htons(AF_INET); /*Internet family*/
 	CMSktArray[currCM].sin_port   = htons(7001);	   /*Cache Manager port*/
 	he = hostutil_GetHostByName(curr_item->data);
-	if (he == (struct hostent *)0) {
+	if (he == NULL) {
 	    fprintf(stderr,
 		    "[%s] Can't get host info for '%s'\n",
 		    rn, curr_item->data);

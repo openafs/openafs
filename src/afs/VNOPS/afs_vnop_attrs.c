@@ -35,9 +35,7 @@ struct afs_exporter *afs_nfsexporter;
 extern struct vcache *afs_globalVp;
 
 /* copy out attributes from cache entry */
-afs_CopyOutAttrs(avc, attrs)
-    register struct vattr *attrs;
-    register struct vcache *avc;
+int afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
 {
     register struct volume *tvp;
     register struct cell *tcell;
@@ -187,14 +185,10 @@ afs_CopyOutAttrs(avc, attrs)
 
 
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-afs_getattr(OSI_VC_ARG(avc), attrs, flags, acred)
-    int flags;
+int afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, int flags, struct AFS_UCRED *acred)
 #else
-afs_getattr(OSI_VC_ARG(avc), attrs, acred)
+int afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 #endif
-    OSI_VC_DECL(avc);
-    struct vattr *attrs;
-    struct AFS_UCRED *acred; 
 {
     afs_int32 code;
     struct vrequest treq;
@@ -257,7 +251,7 @@ afs_getattr(OSI_VC_ARG(avc), attrs, acred)
 
 	if (afs_nfsexporter) {
 	  if (!inited) {
-	    if (code = afs_InitReq(&treq, acred))
+	    if ((code = afs_InitReq(&treq, acred)))
 	      return code;
 	     inited = 1;
 	  }
@@ -275,7 +269,7 @@ afs_getattr(OSI_VC_ARG(avc), attrs, acred)
 #endif
 	      }
 	  }
-	  if (au = afs_FindUser(treq.uid, -1, READ_LOCK)) {
+	  if ((au = afs_FindUser(treq.uid, -1, READ_LOCK))) {
 	    register struct afs_exporter *exporter = au->exporter;
 
 	    if (exporter && !(afs_nfsexporter->exp_states & EXP_UNIXMODE)) {
@@ -329,10 +323,9 @@ afs_getattr(OSI_VC_ARG(avc), attrs, acred)
 }
 
 /* convert a Unix request into a status store request */
-afs_VAttrToAS(avc, av, as)
-register struct vcache *avc;
-register struct vattr *av;
-register struct AFSStoreStatus *as; {
+int afs_VAttrToAS(register struct vcache *avc, register struct vattr *av, 
+	register struct AFSStoreStatus *as)
+{
     register int mask;
     mask = 0;
     AFS_STATCNT(afs_VAttrToAS);
@@ -412,15 +405,12 @@ register struct AFSStoreStatus *as; {
 /* We don't set CDirty bit in avc->states because setattr calls WriteVCache
  * synchronously, therefore, it's not needed.
  */
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-afs_setattr(OSI_VC_ARG(avc), attrs, flags, acred)
-    int flags;
+#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+int afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs, int flags, struct AFS_UCRED *acred)
 #else
-afs_setattr(avc, attrs, acred)
+int afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs, struct AFS_UCRED *acred)
 #endif
-    OSI_VC_DECL(avc);
-    register struct vattr *attrs;
-    struct AFS_UCRED *acred; {
+{
     struct vrequest treq;
     struct AFSStoreStatus astat;
     register afs_int32 code;
@@ -430,7 +420,7 @@ afs_setattr(avc, attrs, acred)
     AFS_STATCNT(afs_setattr);
     afs_Trace2(afs_iclSetp, CM_TRACE_SETATTR, ICL_TYPE_POINTER, avc, 
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
  
     afs_InitFakeStat(&fakestate);
     code = afs_EvalFakeStat(&avc, &fakestate, &treq);

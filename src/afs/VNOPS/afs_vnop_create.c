@@ -25,38 +25,31 @@ RCSID("$Header$");
 #include "../afs/nfsclient.h"
 #include "../afs/afs_osidnlc.h"
 
-extern afs_rwlock_t afs_xvcache;
-extern afs_rwlock_t afs_xcbhash;
-
 /* question: does afs_create need to set CDirty in the adp or the avc?
  * I think we can get away without it, but I'm not sure.  Note that
  * afs_setattr is called in here for truncation.
  */
 #ifdef	AFS_OSF_ENV
-afs_create(ndp, attrs)
-    struct nameidata *ndp;
-    struct vattr *attrs; {
+int afs_create(struct nameidata *ndp, struct vattr *attrs)
+#else	/* AFS_OSF_ENV */
+#ifdef AFS_SGI64_ENV
+int afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, int flags, 
+	int amode, struct vcache **avcp, struct AFS_UCRED *acred)
+#else /* AFS_SGI64_ENV */
+int afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, enum vcexcl aexcl, 
+	int amode, struct vcache **avcp, struct AFS_UCRED *acred)
+#endif /* AFS_SGI64_ENV */
+#endif /* AFS_OSF_ENV */
+    {
+#ifdef AFS_OSF_ENV
     register struct vcache *adp = VTOAFS(ndp->ni_dvp);
     char *aname = ndp->ni_dent.d_name;
     enum vcexcl aexcl = NONEXCL; /* XXX - create called properly */
     int amode = 0; /* XXX - checked in higher level */
     struct vcache **avcp = (struct vcache **)&(ndp->ni_vp);
     struct ucred *acred = ndp->ni_cred;
-#else	/* AFS_OSF_ENV */
-#ifdef AFS_SGI64_ENV
-afs_create(OSI_VC_ARG(adp), aname, attrs, flags, amode, avcp, acred)
-    int flags;
-#else /* AFS_SGI64_ENV */
-afs_create(OSI_VC_ARG(adp), aname, attrs, aexcl, amode, avcp, acred)
-    enum vcexcl aexcl;
-#endif /* AFS_SGI64_ENV */
-    OSI_VC_DECL(adp);
-    char *aname;
-    struct vattr *attrs;
-    int amode;
-    struct vcache **avcp;
-    struct AFS_UCRED *acred; {
-#endif /* AFS_OSF_ENV */
+#endif
+
     afs_int32 origCBs, origZaps, finalZaps;
     struct vrequest treq;
     register afs_int32 code;
@@ -78,7 +71,7 @@ afs_create(OSI_VC_ARG(adp), aname, attrs, aexcl, amode, avcp, acred)
 
 
     AFS_STATCNT(afs_create);
-    if (code = afs_InitReq(&treq, acred)) 
+    if ((code = afs_InitReq(&treq, acred))) 
 	goto done2;
 
     afs_Trace3(afs_iclSetp, CM_TRACE_CREATE, ICL_TYPE_POINTER, adp,
@@ -165,14 +158,12 @@ tagain:
 	    /* found the file, so use it */
 	    newFid.Cell = adp->fid.Cell;
 	    newFid.Fid.Volume = adp->fid.Fid.Volume;
-	    tvc = (struct vcache *)0;
+	    tvc = NULL;
 	    if (newFid.Fid.Unique == 0) {
-		tvc = afs_LookupVCache(&newFid, &treq, (afs_int32 *)0, 
-				       WRITE_LOCK, adp, aname);	
+		tvc = afs_LookupVCache(&newFid, &treq, NULL, adp, aname);	
 	    }
 	    if (!tvc)  /* lookup failed or wasn't called */
-	       tvc = afs_GetVCache(&newFid, &treq, (afs_int32 *)0,
-				   (struct vcache*)0, WRITE_LOCK);
+	       tvc = afs_GetVCache(&newFid, &treq, NULL, NULL);
 
 	    if (tvc) {
 		/* if the thing exists, we need the right access to open it.
@@ -186,7 +177,7 @@ tagain:
                  */
 		if ((amode & VREAD) && 
 		      !afs_AccessOK(tvc, PRSFS_READ, &treq, CHECK_MODE_BITS)) {	
-		   afs_PutVCache(tvc, READ_LOCK);
+		   afs_PutVCache(tvc);
 		   code = EACCES;
 		   goto done;
 		}
@@ -202,7 +193,7 @@ tagain:
 		    tvc->parentUnique = adp->fid.Fid.Unique;
 		    /* need write mode for these guys */
 		    if (!afs_AccessOK(tvc, PRSFS_WRITE, &treq, CHECK_MODE_BITS)) {
-			afs_PutVCache(tvc, READ_LOCK);
+			afs_PutVCache(tvc);
 			code = EACCES;
 			goto done;
 		    }
@@ -214,7 +205,7 @@ tagain:
 #endif
 		  {
 		    if (vType(tvc) != VREG) {
-			afs_PutVCache(tvc, READ_LOCK);
+			afs_PutVCache(tvc);
 			code = EISDIR;
 			goto done;
 		    }
@@ -242,7 +233,7 @@ tagain:
 		    tvc->states &= ~CCreating;
 		    ReleaseWriteLock(&tvc->lock);
 		    if (code) {
-			afs_PutVCache(tvc, 0);
+			afs_PutVCache(tvc);
 			goto done;
 		    }
 		}
@@ -292,23 +283,19 @@ tagain:
  	    hostp = tc->srvr->server;	    /* remember for callback processing */
 	    now = osi_Time();
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_CREATEFILE);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GUNLOCK();
 	    code = RXAFS_CreateFile(tc->id, (struct AFSFid *) &adp->fid.Fid,
 				    aname, &InStatus, (struct AFSFid *)
 				    &newFid.Fid, &OutFidStatus,
 				    &OutDirStatus, &CallBack, &tsync);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	    CallBack.ExpirationTime += now;
 	}
 	else code = -1;
     } while
       (afs_Analyze(tc, code, &adp->fid, &treq,
-		   AFS_STATS_FS_RPCIDX_CREATEFILE, SHARED_LOCK, (struct cell *)0));
+		   AFS_STATS_FS_RPCIDX_CREATEFILE, SHARED_LOCK, NULL));
 
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
     if (code == EEXIST && aexcl == NONEXCL) {
@@ -336,11 +323,11 @@ tagain:
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 #if defined(AFS_SGI64_ENV)
 	code = afs_lookup(VNODE_TO_FIRST_BHV((vnode_t*)adp), aname, avcp,
-			  (struct pathname *)0, 0,
-			  (struct vnode *)0, acred);
+			  NULL, 0,
+			  NULL, acred);
 #else
-	code = afs_lookup(adp, aname, avcp, (struct pathname *)0, 0,
-			  (struct vnode *)0, acred);
+	code = afs_lookup(adp, aname, avcp, NULL, 0,
+			  NULL, acred);
 #endif /* AFS_SGI64_ENV */
 #else /* SUN5 || SGI */
 	code = afs_lookup(adp, aname, avcp, acred);
@@ -410,9 +397,8 @@ tagain:
        freeing of the vnode will change evenZaps.  Don't need to update the VLRU
        queue, since the find will only succeed in the event of a create race, and 
        then the vcache will be at the front of the VLRU queue anyway...  */
-    if (!(tvc = afs_FindVCache(&newFid, 0, WRITE_LOCK, 
-			       0, DO_STATS))) {
-	tvc = afs_NewVCache(&newFid, hostp, 0, WRITE_LOCK);
+    if (!(tvc = afs_FindVCache(&newFid, 0, DO_STATS))) {
+	tvc = afs_NewVCache(&newFid, hostp);
 	if (tvc) {
 	    int finalCBs;
 	    ObtainWriteLock(&tvc->lock,139);
@@ -479,7 +465,7 @@ done:
 
 done2:
 #ifdef	AFS_OSF_ENV
-    afs_PutVCache(adp, 0);
+    afs_PutVCache(adp);
 #endif	/* AFS_OSF_ENV */
 
     return code;
@@ -496,11 +482,9 @@ done2:
  * This routine must be called with the stat cache entry write-locked,
  * and dcache entry write-locked.
  */
-afs_LocalHero(avc, adc, astat, aincr)
-    register struct vcache *avc;
-    register AFSFetchStatus *astat;
-    register struct dcache *adc;
-    register int aincr; {
+int afs_LocalHero(register struct vcache *avc, register struct dcache *adc, 
+	register AFSFetchStatus *astat, register int aincr)
+{
     register afs_int32 ok;
     afs_hyper_t avers;
 

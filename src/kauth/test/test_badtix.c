@@ -374,7 +374,7 @@ int main (argc, argv)
 	struct rx_securityClass *sc;
 	int			 si;	/* security class index */
 
-	sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+	sc = rxnull_NewClientSecurityObject();
 	si = RX_SCINDEX_NULL;
 	conns[0] = rx_NewConnection (htonl(INADDR_LOOPBACK), htons(AFSCONF_KAUTHPORT),
 				     KA_MAINTENANCE_SERVICE, sc, si);

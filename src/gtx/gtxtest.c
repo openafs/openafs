@@ -12,6 +12,15 @@
 
 RCSID("$Header$");
 
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include "gtxwindows.h"
 #include "gtxobjects.h"
 #include "gtxtextobj.h"
@@ -128,9 +137,9 @@ main() {
     textcrparams.onode_params.cr_width	     = 35;
     textcrparams.onode_params.cr_height     =  7;
     textcrparams.onode_params.cr_window     = win;	/* ???? */
-    textcrparams.onode_params.cr_home_obj   = (struct onode *)0;
-    textcrparams.onode_params.cr_prev_obj   = (struct onode *)0;
-    textcrparams.onode_params.cr_parent_obj = (struct onode *)0;
+    textcrparams.onode_params.cr_home_obj   = NULL;
+    textcrparams.onode_params.cr_prev_obj   = NULL;
+    textcrparams.onode_params.cr_parent_obj = NULL;
     textcrparams.onode_params.cr_helpstring = "Help string for text";
     textcrparams.maxEntries 	   =  7;
     textcrparams.maxCharsPerEntry = 35;
@@ -147,9 +156,9 @@ main() {
     textcrparams.onode_params.cr_width	     = 35;
     textcrparams.onode_params.cr_height     =  7;
     textcrparams.onode_params.cr_window     = win;	/* ???? */
-    textcrparams.onode_params.cr_home_obj   = (struct onode *)0;
-    textcrparams.onode_params.cr_prev_obj   = (struct onode *)0;
-    textcrparams.onode_params.cr_parent_obj = (struct onode *)0;
+    textcrparams.onode_params.cr_home_obj   = NULL;
+    textcrparams.onode_params.cr_prev_obj   = NULL;
+    textcrparams.onode_params.cr_parent_obj = NULL;
     textcrparams.onode_params.cr_helpstring = "Help string for text";
     textcrparams.maxEntries 	   =  7;
     textcrparams.maxCharsPerEntry = 35;
@@ -163,9 +172,9 @@ main() {
     lightcrparams.onode_params.cr_width	     = 10;
     lightcrparams.onode_params.cr_height     = 10;
     lightcrparams.onode_params.cr_window     = win;	/* ???? */
-    lightcrparams.onode_params.cr_home_obj   = (struct onode *)0;
-    lightcrparams.onode_params.cr_prev_obj   = (struct onode *)0;
-    lightcrparams.onode_params.cr_parent_obj = (struct onode *)0;
+    lightcrparams.onode_params.cr_home_obj   = NULL;
+    lightcrparams.onode_params.cr_prev_obj   = NULL;
+    lightcrparams.onode_params.cr_parent_obj = NULL;
     lightcrparams.onode_params.cr_helpstring = "Help string for text";
     strcpy(lightcrparams.label, "Light-1");
     lightcrparams.label_x = 0;
@@ -182,9 +191,9 @@ main() {
     gtxframe_ClearList(frameA);
     gtxframe_AddToList(frameA, objectA);
     gtxframe_AddToList(frameA, lightA);
-    keymap_BindToString(frameA->keymap, "b", SwitchToBCmd, (char *) 0, (char *) 0);
-    keymap_BindToString(frameA->keymap, "a", StupidCmd, (char *) 0, (char *) 0);
-    keymap_BindToString(frameA->keymap, "c", ChangeCmd, (char *) 0, (char *) 0);
+    keymap_BindToString(frameA->keymap, "b", SwitchToBCmd, NULL, NULL);
+    keymap_BindToString(frameA->keymap, "a", StupidCmd, NULL, NULL);
+    keymap_BindToString(frameA->keymap, "c", ChangeCmd, NULL, NULL);
     keymap_BindToString(frameA->keymap, "\033a", ChangeMenuCmd, "ChangeMenu", (char *) 1);
     keymap_BindToString(frameA->keymap, "\033b", ChangeMenuCmd, "ChangeMenu", (char *) 2);
     keymap_BindToString(frameA->keymap, "\033c", ChangeMenuCmd, "ChangeMenu", (char *) 3);
@@ -197,11 +206,11 @@ main() {
     /* setup B's frame */
     gtxframe_ClearList(frameB);
     gtxframe_AddToList(frameB, objectB);
-    keymap_BindToString(frameB->keymap, "a", SwitchToACmd, (char *) 0, (char *) 0);
-    keymap_BindToString(frameB->keymap, "b", StupidCmd, (char *) 0, (char *) 0);
-    keymap_BindToString(frameB->keymap, "d", NoCallCmd, (char *) 0, (char *) 0);
-    keymap_BindToString(frameB->keymap, "d", (int (*)()) 0, (char *) 0, (char *) 0);
-    keymap_BindToString(frameB->keymap, "\033d", NoCallCmd, (char *) 0, (char *) 0);
+    keymap_BindToString(frameB->keymap, "a", SwitchToACmd, NULL, NULL);
+    keymap_BindToString(frameB->keymap, "b", StupidCmd, NULL, NULL);
+    keymap_BindToString(frameB->keymap, "d", NoCallCmd, NULL, NULL);
+    keymap_BindToString(frameB->keymap, "d", (int (*)()) 0, NULL, NULL);
+    keymap_BindToString(frameB->keymap, "\033d", NoCallCmd, NULL, NULL);
     gtxframe_AddMenu(frameB, "FrameA", "a");
 
     /* finally setup the first window */
@@ -211,7 +220,7 @@ main() {
     /* play with maps for a while */
     tmap = (struct keymap_map *) keymap_Create();
     keymap_BindToString(tmap, "d", NoCallCmd, "test", (char *) 1);
-    keymap_BindToString(tmap, "cd", NoCallCmd, "bozo", (char *) 0);
+    keymap_BindToString(tmap, "cd", NoCallCmd, "bozo", NULL);
     keymap_Delete(tmap);
 
     gtx_InputServer(win);

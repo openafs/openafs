@@ -70,7 +70,7 @@ main(argc, argv)
 	exit(1);
     }
     rx_Init(0);
-    sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+    sc = rxnull_NewClientSecurityObject();
     for (i=0; i<MAXSERVERS; i++) {
 	if (serverList[i]){
 	    serverconns[i] = rx_NewConnection(serverList[i], htons(3000),

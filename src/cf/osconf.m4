@@ -157,6 +157,8 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_linux22)
+		CC="gcc -pipe"
+		MT_CC="gcc -pipe"
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
@@ -168,13 +170,15 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_linux24)
+		CC="gcc -pipe"
+		MT_CC="gcc -pipe"
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
+		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libncurses.so"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
 		;;
 	
 	i386_obsd29)

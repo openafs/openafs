@@ -722,7 +722,7 @@ static void SigHandler (signo)
 
 /* Alright, this is the signal signalling routine.  It delivers LWP signals
    to LWPs waiting on Unix signals. NOW ALSO CAN YIELD!! */
-static int SignalSignals ()
+static int SignalSignals (void)
 {
     bool gotone = FALSE;
     register int i;
@@ -1023,9 +1023,7 @@ int IOMGR_Cancel(PROCESS pid)
 #ifndef AFS_NT40_ENV
 /* Cause delivery of signal signo to result in a LWP_SignalProcess of
    event. */
-IOMGR_Signal (signo, event)
-    int signo;
-    char *event;
+int IOMGR_Signal (int signo, char *event)
 {
     struct sigaction sa;
 
@@ -1045,12 +1043,11 @@ IOMGR_Signal (signo, event)
 }
 
 /* Stop handling occurrences of signo. */
-IOMGR_CancelSignal (signo)
-    int signo;
+int IOMGR_CancelSignal (int signo)
 {
     if (badsig(signo) || (sigsHandled & mysigmask(signo)) == 0)
 	return LWP_EBADSIG;
-    sigaction (signo, &oldActions[signo], (struct sigaction *)0);
+    sigaction (signo, &oldActions[signo], NULL);
     sigsHandled &= ~mysigmask(signo);
     return LWP_SUCCESS;
 }
@@ -1086,10 +1083,7 @@ void IOMGR_Sleep (int seconds)
 
 /* Netbios code for djgpp port */
 
-int IOMGR_NCBSelect(ncbp, dos_ncb, timeout)
-  NCB *ncbp;
-  dos_ptr dos_ncb;
-  struct timeval *timeout;
+int IOMGR_NCBSelect(NCB *ncbp, dos_ptr dos_ncb, struct timeval *timeout)
 {
   struct IoRequest *request;
   int result;
@@ -1170,7 +1164,7 @@ int IOMGR_NCBSelect(ncbp, dos_ncb, timeout)
   }
 }
       
-int IOMGR_CheckNCB()
+int IOMGR_CheckNCB(void)
 {
   int woke_someone = FALSE;
   EVENT_HANDLE ev;
@@ -1213,7 +1207,7 @@ int ncb_handler(__dpmi_regs *r)
   return;
 }
 
-int install_ncb_handler()
+int install_ncb_handler(void)
 {
   callback_info.pm_offset = (long) ncb_handler;
   if (_go32_dpmi_allocate_real_mode_callback_retf(&callback_info,

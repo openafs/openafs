@@ -311,11 +311,6 @@ struct rx_packet {
   (((struct rx_packet*)(p))->wirevec[(o+1)].iov_base))
 
 
-struct rx_packet *rx_AllocPacket();
-struct rx_packet *rxi_ReceiveDebugPacket();
-struct rx_packet *rxi_ReceiveVersionPacket();
-struct rx_packet *rxi_SplitJumboPacket();
-
 /* copy data into an RX packet */
 #define rx_packetwrite(p, off, len, in)               \
   ( (off) + (len) > (p)->wirevec[1].iov_len ?         \
@@ -354,12 +349,5 @@ struct rx_packet *rxi_SplitJumboPacket();
  * security header */
 /* DEPRECATED */
 #define	rx_UserDataOf(conn, packet)	(((char *) (packet)->wirevec[1].iov_base) + (conn)->securityHeaderSize)
-
-/* Adjust an MTU for efficient use of RX buffers */
-extern int rxi_AdjustIfMTU(int mtu);
-/* Adjust a maximum MTU for efficient use of RX buffers */
-extern int rxi_AdjustMaxMTU(int mtu, int peerMaxMTU);
-/* Figure out how many datagram packets will fit in this mtu */
-extern int rxi_AdjustDgramPackets(int frags, int mtu);
 
 #endif /* _RX_PACKET_ */

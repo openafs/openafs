@@ -28,6 +28,15 @@ RCSID("$Header$");
 #include <pwd.h>
 #include <netdb.h>
 #include <sys/errno.h>
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/vlserver.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
@@ -40,7 +49,6 @@ RCSID("$Header$");
 
 extern int errno;
 extern struct rx_connection *UV_Bind();
-extern  struct rx_securityClass *rxnull_NewClientSecurityObject();
 extern int line;
 extern int VL_GetEntryByID();
 extern char *hostutil_GetNameByINet();
@@ -168,7 +176,7 @@ static afs_int32 InitThisModule(a_noAuthFlag, a_confDir, a_cellName)
 	strcpy(sname.cell, info.name);
 	sname.instance[0] = 0;
 	strcpy(sname.name, "afs");
-	code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), (char *)0);
+	code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
 	if (code) {
 	    fprintf(stderr,
 		    "%s: Couldn't get AFS tokens, running unauthenticated.\n",
@@ -560,7 +568,7 @@ static int CheckDoubleMount(a_mp, a_oldmp)
     struct stat stbuf;
     
     pws = getpwuid(atoi(uss_Uid));
-    if (pws != (struct passwd *)0) {
+    if (pws != NULL) {
 	/*
 	 * User exists in the password file, so they've been fully
 	 * created and integrated.  Return the ``ancient'' mountpoint.

@@ -73,7 +73,7 @@ static short PortName(aname)
 register char *aname;
 {
     register struct servent *ts;
-    ts = getservbyname(aname, (char *) 0);
+    ts = getservbyname(aname, NULL);
     if (!ts) return -1;
     return ts->s_port;	/* returns it in network byte order */
 }
@@ -134,12 +134,12 @@ struct cmd_syndesc *as;
     if (as->parms[0].items)
 	hostName = as->parms[0].items->data;
     else
-	hostName = (char *) 0;
+	hostName = NULL;
 
     if (as->parms[1].items)
 	portName = as->parms[1].items->data;
     else
-	portName = (char *) 0;
+	portName = NULL;
 
     if (as->parms[7].items) {
 	char *name = as->parms[7].items->data;
@@ -525,7 +525,7 @@ char **argv;
     }
 #endif
 
-    ts = cmd_CreateSyntax((char *) 0, MainCommand, 0, "probe RX server");
+    ts = cmd_CreateSyntax(NULL, MainCommand, 0, "probe RX server");
     cmd_AddParm(ts, "-servers", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-nodally", CMD_FLAG, CMD_OPTIONAL,

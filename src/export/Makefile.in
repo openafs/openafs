@@ -24,12 +24,12 @@ noversion system: install
 install: ${DESTDIR}${libdir}/afs/export.exp ${DESTDIR}${libdir}/afs/extras.exp  
 
 kinstall:
-	${INSTALL} export.h ${KERNELDIR}
-	${INSTALL} export.exp ${KERNELDIR}
+	${INSTALL} ${srcdir}/export.h ${KERNELDIR}
+	${INSTALL} ${srcdir}/export.exp ${KERNELDIR}
 
 ukinstall webinstall:
-	${INSTALL} export.h ${UKERNELDIR}
-	${INSTALL} export.exp ${UKERNELDIR}
+	${INSTALL} ${srcdir}/export.h ${UKERNELDIR}
+	${INSTALL} ${srcdir}/export.exp ${UKERNELDIR}
 
 export.ext: ${KOBJ}
 	${LD} -o export.ext -eexport ${IMPORTS} ${KOBJ} ${EXPORTS} -lcsys

@@ -87,7 +87,6 @@ RCSID("$Header$");
 # include "rx_queue.h"
 # include "rx.h"
 # include "rx_globals.h"
-# include "rx_internal.h"
 #endif /* KERNEL */
 
 #ifdef RX_LOCKS_DB
@@ -98,10 +97,8 @@ static int rxdb_fileID = RXDB_FILE_RX_RDWR;
  *
  * LOCKS USED -- called at netpri with rx global lock and call->lock held.
  */
-int rxi_ReadProc(call, buf, nbytes)
-    register struct rx_call *call;
-    register char *buf;
-    register int nbytes;
+int rxi_ReadProc(register struct rx_call *call, register char *buf, 
+	register int nbytes)
 {
     register struct rx_packet *cp = call->currentPacket;
     register struct rx_packet *rp;
@@ -287,10 +284,7 @@ MTUXXX  doesn't there need to be an "else" here ???
     return requestCount;
 }
 
-int rx_ReadProc(call, buf, nbytes)
-  struct rx_call *call;
-  char *buf;
-  int nbytes;
+int rx_ReadProc(struct rx_call *call, char *buf, int nbytes)
 {
     int bytes;
     int tcurlen;
@@ -343,9 +337,7 @@ int rx_ReadProc(call, buf, nbytes)
 }
 
 /* Optimization for unmarshalling 32 bit integers */
-int rx_ReadProc32(call, value)
-  struct rx_call *call;
-  afs_int32 *value;
+int rx_ReadProc32(struct rx_call *call, afs_int32 *value)
 {
     int bytes;
     int tcurlen;
@@ -407,9 +399,8 @@ int rx_ReadProc32(call, value)
  * current iovec as possible. Does not block if it runs out
  * of packets to complete the iovec. Return true if an ack packet
  * was sent, otherwise return false */
-int rxi_FillReadVec(call, seq, serial, flags)
-  struct rx_call *call;
-  afs_uint32 seq, serial, flags;
+int rxi_FillReadVec(struct rx_call *call, afs_uint32 seq, 
+	afs_uint32 serial, afs_uint32 flags)
 {
     int didConsume = 0;
     int didHardAck = 0;
@@ -564,12 +555,8 @@ int rxi_FillReadVec(call, seq, serial, flags)
  *
  * LOCKS USED -- called at netpri with rx global lock and call->lock held.
  */
-int rxi_ReadvProc(call, iov, nio, maxio, nbytes)
-    struct rx_call *call;
-    struct iovec *iov;
-    int *nio;
-    int maxio;
-    int nbytes;
+int rxi_ReadvProc(struct rx_call *call, struct iovec *iov, int *nio, 
+	int maxio, int nbytes)
 {
     struct rx_packet *rp; 
     struct rx_packet *nxp; /* Next packet pointer, for queue_Scan */
@@ -635,12 +622,8 @@ int rxi_ReadvProc(call, iov, nio, maxio, nbytes)
     return nbytes - call->iovNBytes;
 }
 
-int rx_ReadvProc(call, iov, nio, maxio, nbytes)
-    struct rx_call *call;
-    struct iovec *iov;
-    int *nio;
-    int maxio;
-    int nbytes;
+int rx_ReadvProc(struct rx_call *call, struct iovec *iov, 
+	int *nio, int maxio, int nbytes)
 {
     int bytes;
     SPLVAR;
@@ -659,10 +642,8 @@ int rx_ReadvProc(call, iov, nio, maxio, nbytes)
  *
  * LOCKS USED -- called at netpri with rx global lock and call->lock held. */
 
-int rxi_WriteProc(call, buf, nbytes)
-    register struct rx_call *call;
-    register char *buf;
-    register int nbytes;
+int rxi_WriteProc(register struct rx_call *call, register char *buf, 	
+	register int nbytes)
 {
     struct rx_connection *conn = call->conn;
     register struct rx_packet *cp = call->currentPacket;
@@ -824,10 +805,7 @@ int rxi_WriteProc(call, buf, nbytes)
     return requestCount - nbytes;
 }
 
-int rx_WriteProc(call, buf, nbytes)
-  struct rx_call *call;
-  char *buf;
-  int nbytes;
+int rx_WriteProc(struct rx_call *call, char *buf, int nbytes)
 {
     int bytes;
     int tcurlen;
@@ -880,9 +858,7 @@ int rx_WriteProc(call, buf, nbytes)
 }
 
 /* Optimization for marshalling 32 bit arguments */
-int rx_WriteProc32(call, value)
-  register struct rx_call *call;
-  register afs_int32 *value;
+int rx_WriteProc32(register struct rx_call *call, register afs_int32 *value)
 {
     int bytes;
     int tcurlen;
@@ -945,12 +921,8 @@ int rx_WriteProc32(call, value)
  *
  * LOCKS USED -- called at netpri with rx global lock and call->lock held. */
 
-int rxi_WritevAlloc(call, iov, nio, maxio, nbytes)
-    struct rx_call *call;
-    struct iovec *iov;
-    int *nio;
-    int maxio;
-    int nbytes;
+int rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, 
+	int *nio, int maxio, int nbytes)
 {
     struct rx_connection *conn = call->conn;
     struct rx_packet *cp = call->currentPacket;
@@ -1058,12 +1030,8 @@ int rxi_WritevAlloc(call, iov, nio, maxio, nbytes)
     return requestCount - nbytes;
 }
 
-int rx_WritevAlloc(call, iov, nio, maxio, nbytes)
-    struct rx_call *call;
-    struct iovec *iov;
-    int *nio;
-    int maxio;
-    int nbytes;
+int rx_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, 
+	int maxio, int nbytes)
 {
     int bytes;
     SPLVAR;
@@ -1078,8 +1046,7 @@ int rx_WritevAlloc(call, iov, nio, maxio, nbytes)
     return bytes;
 }
 
-int rx_WritevInit(call)
-    struct rx_call *call;
+int rx_WritevInit(struct rx_call *call)
 {
     int bytes;
     SPLVAR;
@@ -1116,11 +1083,8 @@ int rx_WritevInit(call)
  *
  * LOCKS USED -- called at netpri with rx global lock and call->lock held. */
 
-int rxi_WritevProc(call, iov, nio, nbytes)
-    struct rx_call *call;
-    struct iovec *iov;
-    int nio;
-    int nbytes;
+int rxi_WritevProc(struct rx_call *call, struct iovec *iov, 
+	int nio, int nbytes)
 {
     struct rx_packet *cp = call->currentPacket;
     register struct rx_packet *tp; /* Temporary packet pointer */
@@ -1268,11 +1232,7 @@ int rxi_WritevProc(call, iov, nio, nbytes)
     return requestCount - nbytes;
 }
 
-int rx_WritevProc(call, iov, nio, nbytes)
-    struct rx_call *call;
-    struct iovec *iov;
-    int nio;
-    int nbytes;
+int rx_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 {
     int bytes;
     SPLVAR;
@@ -1289,8 +1249,7 @@ int rx_WritevProc(call, iov, nio, nbytes)
 
 /* Flush any buffered data to the stream, switch to read mode
  * (clients) or to EOF mode (servers) */
-void rxi_FlushWrite(call)
-    register struct rx_call *call;
+void rxi_FlushWrite(register struct rx_call *call)
 {
     register struct rx_packet *cp = call->currentPacket;
     register struct rx_packet *tp; /* Temporary packet pointer */
@@ -1353,8 +1312,7 @@ void rxi_FlushWrite(call)
 
 /* Flush any buffered data to the stream, switch to read mode
  * (clients) or to EOF mode (servers) */
-void rx_FlushWrite(call)
-  struct rx_call *call;
+void rx_FlushWrite(struct rx_call *call)
 {
     SPLVAR;
     NETPRI;

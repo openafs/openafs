@@ -13,6 +13,15 @@
 
 RCSID("$Header$");
 
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include "y.tab.h"
 #include "uss_common.h"
 int line=1;
@@ -185,7 +194,7 @@ Replace(in, out)
     
     if (isQuotedString) {
 	nullP = strchr(out, '"');
-	if (nullP == (char *)0)
+	if (nullP == NULL)
 	    nullP = out_cp;
     }
     else

@@ -64,6 +64,15 @@ RCSID("$Header$");
 #include <fcntl.h>
 #include <dirent.h>
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
+
 char rootdir[MAXPATHLEN];
 char mntroot[MAXPATHLEN];
 #define ADIR  "AFSDir-"
@@ -534,7 +543,7 @@ afs_int32 ReadVNode(count)
 		  } *page0;
 		  
 
-		  buffer = (char *)0;
+		  buffer = NULL;
 		  buffer = (char *)malloc(vn.dataSize);
 
 		  readdata(buffer, vn.dataSize);
@@ -915,7 +924,7 @@ main(argc, argv)
 
   setlinebuf(stdout);
 
-  ts=cmd_CreateSyntax((char *)0, WorkerBee, (char *) 0, "vldb check");
+  ts=cmd_CreateSyntax(NULL, WorkerBee, NULL, "vldb check");
   cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_OPTIONAL, "dump file");
   cmd_AddParm(ts, "-dir",  CMD_SINGLE, CMD_OPTIONAL, "restore dir");
   cmd_AddParm(ts, "-extension",  CMD_SINGLE, CMD_OPTIONAL, "name extension");

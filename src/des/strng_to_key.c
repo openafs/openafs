@@ -21,14 +21,19 @@
  */
 
 #include <mit-cpyright.h>
-#include <stdio.h>
 #include <afsconfig.h>
 #include <afs/param.h>
 
 RCSID("$Header$");
 
+#ifndef KERNEL
+#include <stdio.h>
+#endif
+
 #include <des.h>
 #include "des_internal.h"
+#include "des_prototypes.h"
+
 #ifdef HAVE_STRING_H
 #include <string.h>
 #else
@@ -37,21 +42,10 @@ RCSID("$Header$");
 #endif
 #endif
 
-extern int des_debug;
-extern int des_debug_print();
-extern void des_fixup_key_parity();
-extern afs_uint32 des_cbc_cksum();
-
-/* prototypes */
-int des_key_sched(register des_cblock *k, des_key_schedule schedule);
-
 /*
  * convert an arbitrary length string to a DES key
  */
-void
-des_string_to_key(str,key)
-    char *str;
-    register des_cblock *key;
+void des_string_to_key(char *str, register des_cblock *key)
 {
     register char *in_str;
     register unsigned temp,i,j;

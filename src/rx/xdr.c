@@ -58,10 +58,6 @@ RCSID("$Header$");
 #endif
 #include "xdr.h"
 
-#ifndef osi_alloc
-extern char *osi_alloc();
-#endif
-
 /*
  * constants specific to the xdr "protocol"
  */
@@ -77,23 +73,17 @@ extern char *osi_alloc();
 /*
  * XDR nothing
  */
-bool_t
-xdr_void(/* xdrs, addr */)
-	/* XDR *xdrs; */
-	/* caddr_t addr; */
+bool_t xdr_void(void)
 {
-
 	return (TRUE);
 }
 
 #if !defined(AFS_OSF20_ENV) && !defined(AFS_SGI61_ENV)
 /*
- * XDR integers
+ * XDR afs_int32 integers
+ * same as xdr_u_long - open coded to save a proc call!
  */
-bool_t
-xdr_int(xdrs, ip)
-	XDR *xdrs;
-	int *ip;
+bool_t xdr_int(register XDR *xdrs, int *ip)
 {
 
 	if (xdrs->x_op == XDR_ENCODE)
@@ -109,12 +99,10 @@ xdr_int(xdrs, ip)
 }
 
 /*
- * XDR unsigned integers
+ * XDR unsigned afs_int32 integers
+ * same as xdr_long - open coded to save a proc call!
  */
-bool_t
-xdr_u_int(xdrs, up)
-	XDR *xdrs;
-	u_int *up;
+bool_t xdr_u_int(register XDR *xdrs, u_int *up)
 {
 
 	if (xdrs->x_op == XDR_DECODE)
@@ -134,10 +122,7 @@ xdr_u_int(xdrs, up)
  * XDR afs_int32 integers
  * same as xdr_u_long - open coded to save a proc call!
  */
-bool_t
-xdr_int(xdrs, lp)
-	register XDR *xdrs;
-	int *lp;
+bool_t xdr_int(register XDR *xdrs, int *lp)
 {
 
 	if (xdrs->x_op == XDR_ENCODE)
@@ -156,31 +141,27 @@ xdr_int(xdrs, lp)
  * XDR unsigned afs_int32 integers
  * same as xdr_long - open coded to save a proc call!
  */
-bool_t
-xdr_u_int(xdrs, ulp)
-	register XDR *xdrs;
-	int *ulp;
+bool_t xdr_u_int(register XDR *xdrs, u_int *ulp)
 {
 
 	if (xdrs->x_op == XDR_DECODE)
 		return (XDR_GETINT32(xdrs, (long *)ulp));
+
 	if (xdrs->x_op == XDR_ENCODE)
 		return (XDR_PUTINT32(xdrs, (long *)ulp));
+
 	if (xdrs->x_op == XDR_FREE)
 		return (TRUE);
+
 	return (FALSE);
 }
 #endif
-
 
 /*
  * XDR afs_int32 integers
  * same as xdr_u_long - open coded to save a proc call!
  */
-bool_t
-xdr_long(xdrs, lp)
-	register XDR *xdrs;
-	long *lp;
+bool_t xdr_long(register XDR *xdrs, long *lp)
 {
 
 	if (xdrs->x_op == XDR_ENCODE)
@@ -199,31 +180,22 @@ xdr_long(xdrs, lp)
  * XDR unsigned afs_int32 integers
  * same as xdr_long - open coded to save a proc call!
  */
-bool_t
-xdr_u_long(xdrs, ulp)
-	register XDR *xdrs;
-	u_long *ulp;
+bool_t xdr_u_long(register XDR *xdrs, u_long *ulp)
 {
 
 	if (xdrs->x_op == XDR_DECODE)
-		return (XDR_GETINT32(xdrs, (long *)ulp));
-
+		return (XDR_GETINT32(xdrs, ulp));
 	if (xdrs->x_op == XDR_ENCODE)
-		return (XDR_PUTINT32(xdrs, (long *)ulp));
-
+		return (XDR_PUTINT32(xdrs, ulp));
 	if (xdrs->x_op == XDR_FREE)
 		return (TRUE);
-
 	return (FALSE);
 }
 
 /*
  * XDR chars
  */
-bool_t
-xdr_char(xdrs, sp)
-	register XDR *xdrs;
-	char *sp;
+bool_t xdr_char(register XDR *xdrs, char *sp)
 {
 	afs_int32 l;
 
@@ -249,10 +221,7 @@ xdr_char(xdrs, sp)
 /*
  * XDR unsigned chars
  */
-bool_t
-xdr_u_char(xdrs, usp)
-	register XDR *xdrs;
-	u_char *usp;
+bool_t xdr_u_char(register XDR *xdrs, u_char *usp)
 {
 	afs_uint32 l;
 
@@ -279,10 +248,7 @@ xdr_u_char(xdrs, usp)
 /*
  * XDR short integers
  */
-bool_t
-xdr_short(xdrs, sp)
-	register XDR *xdrs;
-	short *sp;
+bool_t xdr_short(register XDR *xdrs, short *sp)
 {
 	afs_int32 l;
 
@@ -308,10 +274,7 @@ xdr_short(xdrs, sp)
 /*
  * XDR unsigned short integers
  */
-bool_t
-xdr_u_short(xdrs, usp)
-	register XDR *xdrs;
-	u_short *usp;
+bool_t xdr_u_short(register XDR *xdrs, u_short *usp)
 {
 	afs_uint32 l;
 
@@ -338,10 +301,7 @@ xdr_u_short(xdrs, usp)
 /*
  * XDR booleans
  */
-bool_t
-xdr_bool(xdrs, bp)
-	register XDR *xdrs;
-	bool_t *bp;
+bool_t xdr_bool(register XDR *xdrs, bool_t *bp)
 {
 	afs_int32 lb;
 
@@ -367,10 +327,7 @@ xdr_bool(xdrs, bp)
 /*
  * XDR enumerations
  */
-bool_t
-xdr_enum(xdrs, ep)
-	XDR *xdrs;
-	enum_t *ep;
+bool_t xdr_enum(register XDR *xdrs, enum_t *ep)
 {
 	enum sizecheck { SIZEVAL };	/* used to find the size of an enum */
 
@@ -387,11 +344,7 @@ xdr_enum(xdrs, ep)
  * Allows the specification of a fixed size sequence of opaque bytes.
  * cp points to the opaque object and cnt gives the byte length.
  */
-bool_t
-xdr_opaque(xdrs, cp, cnt)
-	register XDR *xdrs;
-	caddr_t cp;
-	register u_int cnt;
+bool_t xdr_opaque(register XDR *xdrs, caddr_t cp, register u_int cnt)
 {
 	register u_int rndup;
 	int crud[BYTES_PER_XDR_UNIT];
@@ -440,12 +393,7 @@ xdr_opaque(xdrs, cp, cnt)
  * *cpp is a pointer to the bytes, *sizep is the count.
  * If *cpp is NULL maxsize bytes are allocated
  */
-bool_t
-xdr_bytes(xdrs, cpp, sizep, maxsize)
-	register XDR *xdrs;
-	char **cpp;
-	register u_int *sizep;
-	u_int maxsize;
+bool_t xdr_bytes(register XDR *xdrs, char **cpp, register u_int *sizep, u_int maxsize)
 {
 	register char *sp = *cpp;  /* sp is the actual string pointer */
 	register u_int nodesize;
@@ -499,13 +447,14 @@ xdr_bytes(xdrs, cpp, sizep, maxsize)
  * routine may be called.
  * If there is no specific or default routine an error is returned.
  */
-bool_t
-xdr_union(xdrs, dscmp, unp, choices, dfault)
-	register XDR *xdrs;
-	enum_t *dscmp;		/* enum to decide which arm to work on */
-	caddr_t unp;		/* the union itself */
-	struct xdr_discrim *choices;	/* [value, xdr proc] for each arm */
-	xdrproc_t dfault;	/* default xdr routine */
+/*
+	enum_t *dscmp;		* enum to decide which arm to work on *
+	caddr_t unp;		* the union itself *
+	struct xdr_discrim *choices;	* [value, xdr proc] for each arm *
+	xdrproc_t dfault;	* default xdr routine *
+*/
+bool_t xdr_union(register XDR *xdrs, enum_t *dscmp, caddr_t unp, 
+	struct xdr_discrim *choices, xdrproc_t dfault)
 {
 	register enum_t dscm;
 
@@ -548,11 +497,7 @@ xdr_union(xdrs, dscmp, unp, choices, dfault)
  * storage is allocated.  The last parameter is the max allowed length
  * of the string as specified by a protocol.
  */
-bool_t
-xdr_string(xdrs, cpp, maxsize)
-	register XDR *xdrs;
-	char **cpp;
-	u_int maxsize;
+bool_t xdr_string(register XDR *xdrs, char **cpp, u_int maxsize)
 {
 	register char *sp = *cpp;  /* sp is the actual string pointer */
 	u_int size;
@@ -614,10 +559,7 @@ xdr_string(xdrs, cpp, maxsize)
  * routines like clnt_call
  */
 #ifndef	KERNEL
-bool_t
-xdr_wrapstring(xdrs, cpp)
-	XDR *xdrs;
-	char **cpp;
+bool_t xdr_wrapstring(register XDR *xdrs, char **cpp)
 {
 	if (xdr_string(xdrs, cpp, BUFSIZ)) {
 		return(TRUE);

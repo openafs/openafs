@@ -132,7 +132,7 @@ struct gwin *gator_X11gwin_create(params)
     if (X11_debug)
 	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
-    return((struct gwin *)0);
+    return(NULL);
 
 } /*gator_X11gwin_create*/
 

@@ -14,32 +14,6 @@
 #ifndef TRANSARC_NETUTILS_H
 #define TRANSARC_NETUTILS_H
 
-/* Network and IP address utility and file parsing functions */
-
-extern int parseNetRestrictFile(
-				afs_uint32 outAddrs[], 
-				afs_uint32 mask[], 
-				afs_uint32 mtu[],
-				afs_uint32 maxAddrs,
-				afs_uint32 *nAddrs, 
-				char reason[], 
-				const char *fileName
-				);
-
-extern int filterAddrs(
-		       afs_uint32 addr1[],afs_uint32 addr2[],
-		       afs_uint32  mask1[], afs_uint32 mask2[],
-		       afs_uint32  mtu1[], afs_uint32 mtu2[]
-		       );
-
-extern int parseNetFiles(
-			 afs_uint32  addrbuf[],
-			 afs_uint32  maskbuf[],
-			 afs_uint32  mtubuf[],
-			 afs_uint32 max,
-			 char reason[],
-			 const char *niFilename,
-			 const char *nrFilename
-			 );
+#include "afsutil_prototypes.h"
 
 #endif /* TRANSARC_NETUTILS_H */ 

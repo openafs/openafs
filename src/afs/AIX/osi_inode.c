@@ -141,7 +141,7 @@ devtovfs(dev_t dev)
     AFS_STATCNT(devtovfs);
 
     a.dev = dev;
-    a.ans = (struct vfs *)0;
+    a.ans = NULL;
     vfs_search(devtovfs_func, &a);
     return a.ans;
 }
@@ -249,7 +249,7 @@ out:
 SYSENT(icreate, (dev, near_inode, param1, param2, param3, param4), ) {
 	struct inode *ip, *newip, *pip;
 	register int err, rval1, rc=0;
-	struct vnode *vp = (struct vnode *)0;
+	struct vnode *vp = NULL;
 	extern struct vfs *rootvfs;
 	register struct vfs *vfsp;
 	struct vfs *nvfsp = NULL;
@@ -312,7 +312,7 @@ SYSENT(icreate, (dev, near_inode, param1, param2, param3, param4), ) {
 SYSENT(iopen, (dev, inode, usrmod), ) {
 	struct file *fp;
 	register struct inode *ip;
-	struct vnode *vp = (struct vnode *)0;
+	struct vnode *vp = NULL;
 	extern struct fileops vnodefops;
 	register struct vfs *vfsp;
 	int fd;
@@ -375,7 +375,7 @@ idec(dev, inode, inode_p1) {
 SYSENT(iincdec, (dev, inode, inode_p1, amount), ) {
 	register struct inode *ip;
 	char error;
-	struct vnode *vp = (struct vnode *)0;
+	struct vnode *vp = NULL;
 	int dummy;
 
 	AFS_STATCNT(afs_syscall_iincdec);

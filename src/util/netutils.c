@@ -44,6 +44,7 @@ RCSID("$Header$");
 #endif
 
 #include "assert.h"
+#include "afsutil.h"
 #include "dirpath.h"
 
 #define AFS_IPINVALID        0xffffffff /* invalid IP address */
@@ -57,10 +58,7 @@ RCSID("$Header$");
 ** w.x.y.z 	# machineName
  * returns the network interface IP Address in NBO
  */
-afs_uint32
-extract_Addr(line, maxSize)
-char* line;
-int maxSize;
+afs_uint32 extract_Addr(char *line, int maxSize)
 {
   char bytes[4][32];
   int i=0,n=0;
@@ -114,13 +112,17 @@ int maxSize;
  * All addresses should be in NBO (as returned by rx_getAllAddr() and
  * parsed by extract_Addr().
  */
-int parseNetRestrictFile(outAddrs, mask, mtu, maxAddrs, nAddrs, reason, fileName)
-  afs_uint32  outAddrs[];           /* output address array */
-  afs_uint32  *mask, *mtu;          /* optional mask and mtu */
-  afs_uint32 maxAddrs;	   	   /* max number of addresses */
-  afs_uint32 *nAddrs;              /* number of Addresses in output array */
-  char       reason[];             /* reason for failure */
-  const char *fileName;            /* filename to parse */
+/*
+  afs_uint32  outAddrs[];          * output address array *
+  afs_uint32  *mask, *mtu;         * optional mask and mtu *
+  afs_uint32 maxAddrs;	   	   * max number of addresses *
+  afs_uint32 *nAddrs;              * number of Addresses in output array *
+  char       reason[];             * reason for failure *
+  const char *fileName;            * filename to parse *
+*/
+
+int parseNetRestrictFile(afs_uint32 outAddrs[], afs_uint32 *mask, afs_uint32 *mtu, 
+	afs_uint32 maxAddrs, afs_uint32 *nAddrs, char reason[], const char *fileName)
 {
   FILE*  fp;
   char   line[MAX_NETFILE_LINE];
@@ -213,12 +215,8 @@ int parseNetRestrictFile(outAddrs, mask, mtu, maxAddrs, nAddrs, reason, fileName
  * be valid. This function returns the number of valid
  * interface addresses. Pulled out from afsd.c
  */
-int
-ParseNetInfoFile(final, mask, mtu, max, reason, fileName)
-afs_uint32   *final, *mask, *mtu;
-int 	max;			/* max number of interfaces */
-char reason[];
-const char *fileName;
+int ParseNetInfoFile(afs_uint32 *final, afs_uint32 *mask, afs_uint32 *mtu, 
+	int max, char reason[], const char *fileName)
 {
 
   afs_uint32  existingAddr[MAXIPADDRS], existingMask[MAXIPADDRS], existingMtu[MAXIPADDRS];
@@ -330,10 +328,10 @@ const char *fileName;
  * and return them in the first buffer. Return number of common
  * entries.
  */
-int filterAddrs(addr1,addr2,mask1,mask2,mtu1,mtu2,n1,n2)
-afs_uint32 addr1[],addr2[];
-afs_uint32  mask1[], mask2[];
-afs_uint32  mtu1[], mtu2[];
+int filterAddrs(afs_uint32 addr1[], afs_uint32 addr2[], 
+	afs_uint32 mask1[], afs_uint32 mask2[], 
+	afs_uint32 mtu1[], afs_uint32 mtu2[], 
+	int n1, int n2)
 {
   afs_uint32 taddr[MAXIPADDRS];
   afs_uint32  tmask[MAXIPADDRS];
@@ -385,14 +383,9 @@ afs_uint32  mtu1[], mtu2[];
  * parse both netinfo and netrerstrict files and return the final
  * set of IP addresses to use
  */
-int parseNetFiles(addrbuf, maskbuf,mtubuf,max,reason, niFileName, nrFileName)
-afs_uint32  addrbuf[];
-afs_uint32  maskbuf[];
-afs_uint32  mtubuf[];
-afs_uint32 max;        /* Entries in addrbuf, maskbuf and mtubuf */
-char reason[];
-const char *niFileName;
-const char *nrFileName;
+/* max - Entries in addrbuf, maskbuf and mtubuf */
+int parseNetFiles(afs_uint32 addrbuf[], afs_uint32 maskbuf[], afs_uint32 mtubuf[], 
+	afs_uint32 max, char reason[], const char *niFileName, const char *nrFileName)
 {
   afs_uint32	addrbuf1[MAXIPADDRS],maskbuf1[MAXIPADDRS], mtubuf1[MAXIPADDRS];
   afs_uint32     addrbuf2[MAXIPADDRS],maskbuf2[MAXIPADDRS], mtubuf2[MAXIPADDRS];

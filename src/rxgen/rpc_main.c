@@ -55,9 +55,12 @@ RCSID("$Header$");
 #ifdef HAVE_SYS_FILE_H
 #include <sys/file.h>
 #endif
-#include "rpc_util.h"
-#include "rpc_parse.h"
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include "rpc_scan.h"
+#include "rpc_parse.h"
+#include "rpc_util.h"
 
 #define EXTEND	1		/* alias for TRUE */
 
@@ -105,9 +108,6 @@ static char CPP[] = "cc -E";
 static char CPP[] = "/lib/cpp";
 #endif
 static char CPPFLAGS[] = "-C";
-static char *allv[] = {
-	"rpcgen", "-s", "udp", "-s", "tcp",
-};
 
 #ifdef	AFS_ALPHA_ENV
 /*
@@ -127,28 +127,34 @@ static char *XTRA_CPPFLAGS[] = {
 };
 #endif
 
-static int c_output();
-static int h_output();
-static int s_output();
-static int l_output();
-static int do_registers();
-static int parseargs();
-
-static int allc = sizeof(allv)/sizeof(allv[0]);
-
 #include "AFS_component_version_number.c"
 
-int
-main(argc, argv)
-	int argc;
-	char *argv[];
+/* static prototypes */
+static char *extendfile(char *file, char *ext);
+static void open_output(char *infile, char *outfile);
+static void open_input(char *infile, char *define);
+static void c_output(char *infile, char *define, int extend,
+	char *outfile, int append);
+static void h_output(char *infile, char *define, int extend,
+	char *outfile, int append);
+static void s_output(int argc, char *argv[], char *infile,
+	char *define, int extend, char *outfile, int nomain);
+static void l_output(char *infile, char *define, int extend, char *outfile);
+static void do_registers(int argc, char *argv[]);
+static int parseargs(int argc, char *argv[], struct commandline *cmd);
+static void C_output(char *infile, char *define, int extend,
+        char *outfile, int append);
+static void S_output(char *infile, char *define, int extend,
+        char *outfile, int append);
+static char *uppercase(char *str);
 
+int main(int argc, char *argv[])
 {
 	struct commandline cmd;
+#ifdef AFS_NT40_ENV
 	char *ep;
 
 	/* initialize CPP with the correct pre-processor on NT */
-#ifdef AFS_NT40_ENV
 	ep = getenv("RXGEN_CPPCMD");
 	if (ep)
 	  strcpy(CPP, ep);
@@ -188,7 +194,7 @@ main(argc, argv)
 	    OutFileFlag = NULL;
 	    c_output(cmd.infile, "-DRPC_XDR", !EXTEND, cmd.outfile, 0);
 	} else if (cmd.hflag) {
-		h_output(cmd.infile, "-DRPC_HDR", !EXTEND, cmd.outfile);
+		h_output(cmd.infile, "-DRPC_HDR", !EXTEND, cmd.outfile, 0);
 	} else if (cmd.lflag) {
 		l_output(cmd.infile, "-DRPC_CLNT", !EXTEND, cmd.outfile);
 	} else if (cmd.sflag || cmd.mflag) {
@@ -223,60 +229,10 @@ main(argc, argv)
 	exit(0);
 }
 
-static void
-write_int32_macros(fout)
-	FILE *fout;
-{
-	/*
-	 * Note that rxgen writes code that uses xdr_afs_int32() and
-	 * xdr_afs_uint32().  Systems do not provide these natively, so we
-	 * #define them to locally provided equivalents.
-	 *
-	 * Some systems do come with native xdr_int32() and xdr_uint32()
-	 * functions, but the prototypes are not always in the same
-	 * place and are not always consistent so it is less trouble to
-	 * use the original int and u_int functions.  We do check that
-	 * an int is 32 bits...
-	 *
-	 * A cleaner solution than these #defines would be to make rxgen
-	 * emit calls to xdr_int() and xdr_u_int() to process the types
-	 * afs_int32 and afs_uint32 (if, of course, an int is 32 bits).
-	 *
-	 * Note that to avoid compiler warnings we need to keep
-	 * the types of the native xdr_* routines in sync with the
-	 * definitions of afs_int32 and afs_uint32 in config/stds.h.
-	 */
-
-	/*
-	 * If you change the definitions of xdr_afs_int32 and xdr_afs_uint32,
-	 * be sure to change them in BOTH rx/xdr.h and rxgen/rpc_main.c.
-	 */
-
-#if (INT_MAX == 0x7FFFFFFF) && (UINT_MAX == 0xFFFFFFFFu)
-	f_print(fout, "#ifndef xdr_afs_int32\n");
-	f_print(fout, "#define xdr_afs_int32 xdr_int\n");
-	f_print(fout, "#endif\n");
-	f_print(fout, "#ifndef xdr_afs_uint32\n");
-	f_print(fout, "#define xdr_afs_uint32 xdr_u_int\n");
-	f_print(fout, "#endif\n");
-        f_print(fout, "#ifndef xdr_afs_int64\n");
-        f_print(fout, "#define xdr_afs_int64 xdr_int64\n");
-        f_print(fout, "#endif\n");
-        f_print(fout, "#ifndef xdr_afs_uint64\n");
-        f_print(fout, "#define xdr_afs_uint64 xdr_uint64\n");
-        f_print(fout, "#endif\n");
-#else
-#error Need to do some work here...
-#endif
-}
-
 /*
  * add extension to filename 
  */
-static char *
-extendfile(file, ext)
-	char *file;
-	char *ext;
+static char *extendfile(char *file, char *ext)
 {
 	char *res;
 	char *p;
@@ -303,10 +259,7 @@ extendfile(file, ext)
 /*
  * Open output file with given extension 
  */
-static
-open_output(infile, outfile)
-	char *infile;
-	char *outfile;
+static void open_output(char *infile, char *outfile)
 {
 	if (outfile == NULL) {
 		fout = stdout;
@@ -329,12 +282,8 @@ open_output(infile, outfile)
 /*
  * Open input file with given define for C-preprocessor 
  */
-static
-open_input(infile, define)
-	char *infile;
-	char *define;
+static void open_input(char *infile, char *define)
 {
-	int nargs = 0;
 	char cpp_cmdline[MAXCMDLINE];
 
 	int i;
@@ -384,13 +333,8 @@ open_input(infile, define)
 /*
  * Compile into an XDR routine output file
  */
-static
-c_output(infile, define, extend, outfile, append)
-	char *infile;
-	char *define;
-	int extend;
-	char *outfile;
-	int append;
+static void c_output(char *infile, char *define, int extend, 
+	char *outfile, int append)
 {
     definition *def;
     char *include;
@@ -443,12 +387,8 @@ c_output(infile, define, extend, outfile, append)
 	}
     }
 
-    write_int32_macros(fout);
-
     tell = ftell(fout);
-    while (def = get_definition()) {
-	extern int IsRxgenDefinition();
-
+    while ((def = get_definition())) {
 	if (!yflag) {
 	    if ((!IsRxgenDefinition(def)) && def->def_kind != DEF_CUSTOMIZED)
 		emit(def);
@@ -469,10 +409,10 @@ c_output(infile, define, extend, outfile, append)
 	    for(i=0;i<no_of_stat_funcs_header[j];i++) {
 		if (i == 0) {
 		    f_print(fout, "\t\"%s\"",
-			    &function_list[j][i]);
+			    function_list[j][i]);
 		} else {
 		    f_print(fout, ",\n\t\"%s\"",
-			    &function_list[j][i]);
+			    function_list[j][i]);
 		}
 	    }
 
@@ -489,21 +429,13 @@ c_output(infile, define, extend, outfile, append)
 /*
  * Compile into an XDR header file
  */
-static
-h_output(infile, define, extend, outfile, append)
-	char *infile;
-	char *define;
-	int extend;
-	char *outfile;
-	int append;
+static void h_output(char *infile, char *define, int extend, 
+	char *outfile, int append)
 {
 	definition *def;
 	char *outfilename;
 	long tell;
-	extern char *uppercase();
 	char fullname[1024], *p;
-	extern int h_opcode_stats();
-
 
 	open_input(infile, define);
 	hflag = 1;
@@ -516,7 +448,7 @@ h_output(infile, define, extend, outfile, append)
 	outfilename = extend ? extendfile(fullname, outfile) : outfile;
 	open_output(infile, outfilename);
 	strcpy(fullname, outfilename);
-	if (p = strchr(fullname, '.')) *p = '\0';
+	if ((p = strchr(fullname, '.'))) *p = '\0';
 	f_print(fout, "/* Machine generated file -- Do NOT edit */\n\n");
 	f_print(fout, "#ifndef	_RXGEN_%s_\n", uppercase(fullname));
 	f_print(fout, "#define	_RXGEN_%s_\n\n", uppercase(fullname));
@@ -591,7 +523,7 @@ h_output(infile, define, extend, outfile, append)
 	f_print(fout, "#define AFS_RXGEN_EXPORT\n");
 	f_print(fout, "#endif /* AFS_NT40_ENV */\n\n");
 	tell = ftell(fout);
-	while (def = get_definition()) {
+	while ((def = get_definition())) {
 		print_datadef(def);
 	}
 	h_opcode_stats();
@@ -605,15 +537,8 @@ h_output(infile, define, extend, outfile, append)
 /*
  * Compile into an RPC service
  */
-static
-s_output(argc, argv, infile, define, extend, outfile, nomain)
-	int argc;
-	char *argv[];
-	char *infile;
-	char *define;
-	int extend;
-	char *outfile;
-	int nomain;
+static void s_output(int argc, char *argv[], char *infile, 
+	char *define, int extend, char *outfile, int nomain)
 {
 	char *include;
 	definition *def;
@@ -630,7 +555,7 @@ s_output(argc, argv, infile, define, extend, outfile, nomain)
 		free(include);
 	}
 	foundprogram = 0;
-	while (def = get_definition()) {
+	while ((def = get_definition())) {
 		foundprogram |= (def->def_kind == DEF_PROGRAM);
 	}
 	if (extend && !foundprogram) {
@@ -647,12 +572,7 @@ s_output(argc, argv, infile, define, extend, outfile, nomain)
 	}
 }
 
-static
-l_output(infile, define, extend, outfile)
-	char *infile;
-	char *define;
-	int extend;
-	char *outfile;
+static void l_output(char *infile, char *define, int extend, char *outfile)
 {
 	char *include;
 	definition *def;
@@ -669,7 +589,7 @@ l_output(infile, define, extend, outfile)
 		free(include);
 	}
 	foundprogram = 0;
-	while (def = get_definition()) {
+	while ((def = get_definition())) {
 		foundprogram |= (def->def_kind == DEF_PROGRAM);
 	}
 	if (extend && !foundprogram) {
@@ -682,11 +602,7 @@ l_output(infile, define, extend, outfile)
 /*
  * Perform registrations for service output 
  */
-static
-do_registers(argc, argv)
-	int argc;
-	char *argv[];
-
+static void do_registers(int argc, char *argv[])
 {
 	int i;
 
@@ -699,12 +615,8 @@ do_registers(argc, argv)
 }
 
 
-C_output(infile, define, extend, outfile, append)
-char *infile;
-char *define;
-int extend;
-char *outfile;
-int append;
+static void C_output(char *infile, char *define, int extend, 
+	char *outfile, int append)
 {
     char *include;
     char *outfilename;
@@ -757,8 +669,6 @@ int append;
 	}
     }
 
-    write_int32_macros(fout);
-
     tell = ftell(fout);
     while (get_definition()) continue;
     if (extend && tell == ftell(fout)) {
@@ -768,19 +678,14 @@ int append;
     Cflag = 0;
 }
 
-S_output(infile, define, extend, outfile, append)
-char *infile;
-char *define;
-int extend;
-char *outfile;
-int append;
+static void S_output(char *infile, char *define, int extend, 
+	char *outfile, int append)
 {
     char *include;
     char *outfilename;
     char fullname[1024];
     definition *def;
     long tell;
-    extern int er_Proc_CodeGeneration();
     char *currfile = (OutFileFlag ? OutFile : infile);
    
     Sflag = 1;
@@ -828,11 +733,9 @@ int append;
 	}
     }
 
-    write_int32_macros(fout);
-
     tell = ftell(fout);
     fflush(fout);
-    while (def = get_definition()) {
+    while ((def = get_definition())) {
 	fflush(fout);
 	print_datadef(def);
     }
@@ -845,8 +748,7 @@ int append;
     Sflag = 0;
 }
 
-char *uppercase(str)
-char *str;
+static char *uppercase(char *str)
 {
     static char max_size[100];
     char *pnt;
@@ -862,12 +764,7 @@ char *str;
 /*
  * Parse command line arguments 
  */
-static
-parseargs(argc, argv, cmd)
-	int argc;
-	char *argv[];
-	struct commandline *cmd;
-
+static int parseargs(int argc, char *argv[], struct commandline *cmd)
 {
 	int i;
 	int j;
@@ -906,10 +803,10 @@ parseargs(argc, argv, cmd)
 				case 'x':
 				case 'y':
 				case 'z':
-					if (flag[c]) {
+					if (flag[(int)c]) {
 						return (0);
 					}
-					flag[c] = 1;
+					flag[(int)c] = 1;
 					break;
 				case 'o':
 				case 's':
@@ -917,7 +814,7 @@ parseargs(argc, argv, cmd)
 					    argv[i][j + 1] != 0) {
 						return (0);
 					}
-					flag[c] = 1;
+					flag[(int)c] = 1;
 					if (++i == argc) {
 						return (0);
 					}

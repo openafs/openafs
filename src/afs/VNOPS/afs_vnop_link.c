@@ -64,7 +64,7 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     afs_Trace3(afs_iclSetp, CM_TRACE_LINK, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_POINTER, avc, ICL_TYPE_STRING, aname);
     /* create a hard link; new entry is aname in dir adp */
-    if (code = afs_InitReq(&treq, acred)) 
+    if ((code = afs_InitReq(&treq, acred))) 
 	goto done2;
 
     afs_InitFakeStat(&vfakestate);
@@ -99,22 +99,18 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
 	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
 	if (tc) {
           XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_LINK);
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	  RX_AFS_GUNLOCK();
 	    code = RXAFS_Link(tc->id, (struct AFSFid *) &adp->fid.Fid, aname,
 			      (struct AFSFid *) &avc->fid.Fid, &OutFidStatus,
 			      &OutDirStatus, &tsync);
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	  RX_AFS_GLOCK();
           XSTATS_END_TIME;
 
 	}
 	else code = -1;
     } while
       (afs_Analyze(tc, code, &adp->fid, &treq,
-		   AFS_STATS_FS_RPCIDX_LINK, SHARED_LOCK, (struct cell *)0));
+		   AFS_STATS_FS_RPCIDX_LINK, SHARED_LOCK, NULL));
 
     if (code) {
 	if (tdc) afs_PutDCache(tdc);
@@ -165,7 +161,7 @@ done:
     afs_PutFakeStat(&dfakestate);
 done2:
 #ifdef	AFS_OSF_ENV
-    afs_PutVCache(adp, WRITE_LOCK);
+    afs_PutVCache(adp);
 #endif	/* AFS_OSF_ENV */
     return code;
 }

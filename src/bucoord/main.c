@@ -89,8 +89,6 @@ extern PrintError();
  */
 struct bc_config *bc_globalConfig;		/*Ptr to global BC configuration info*/
 
-extern struct rx_securityClass *rxnull_NewServerSecurityObject();
-
 struct ubik_client *cstruct;		/* Ptr to Ubik client structure*/
 struct ktc_token   ttoken;              /* The token */
 
@@ -386,7 +384,7 @@ afs_int32 doDispatch(targc, targv, dispatchCount)
 
   lock_Dispatch();
 
-  loadFile = (char *) 0;
+  loadFile = NULL;
   code = cmd_Dispatch(targc, targv);
   internalLoadFile = loadFile;
 
@@ -502,7 +500,7 @@ main(argc, argv)
     /* Get early warning if the command is interacive mode or not */
     interact = ( ((argc < 2) || (argv[1][0] == '-')) ? 1 : 0 );
 
-    cmd_SetBeforeProc(MyBeforeProc, (char *)0);
+    cmd_SetBeforeProc(MyBeforeProc, NULL);
 
     ts = cmd_CreateSyntax("dump", bc_DumpCmd, 0, "start dump");
     cmd_AddParm(ts, "-volumeset", CMD_SINGLE, CMD_OPTIONAL, "volume set name");

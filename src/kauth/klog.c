@@ -107,7 +107,7 @@ int main (
     zero_argc = argc;
     zero_argv = argv;
 
-    ts = cmd_CreateSyntax((char *) 0, CommandProc, 0, "obtain Kerberos authentication");
+    ts = cmd_CreateSyntax(NULL, CommandProc, 0, "obtain Kerberos authentication");
 
 #define aXFLAG 0
 #define aPRINCIPAL 1

@@ -24,13 +24,16 @@ RCSID("$Header$");
 #endif
 #include "../afsint/afsint.h"
 
-afs_int32 rxi_Findcbi();
-extern  struct interfaceAddr afs_cb_interface;
+struct ifnet *rxi_FindIfnet(afs_uint32 addr, struct in_ifaddr **pifad);
 
 #ifndef RXK_LISTENER_ENV
-int (*rxk_GetPacketProc)(); /* set to packet allocation procedure */
-int (*rxk_PacketArrivalProc)();
+int (*rxk_PacketArrivalProc)(register struct rx_packet *ahandle,
+        register struct sockaddr_in *afrom, char *arock,
+        afs_int32 asize); /* set to packet allocation procedure */
+int (*rxk_GetPacketProc)(char **ahandle, int asize);
 #endif
+
+extern  struct interfaceAddr afs_cb_interface;
 
 rxk_ports_t rxk_ports;
 rxk_portRocks_t rxk_portRocks;
@@ -60,8 +63,8 @@ static int rxk_AddPort(u_short aport, char * arock)
 }
 
 /* remove as port from the monitored list, port # is in network order */
-rxk_DelPort(aport)
-u_short aport; {
+int rxk_DelPort(u_short aport)
+{
     register int i;
     register unsigned short *tsp;
 
@@ -85,13 +88,12 @@ void rxk_shutdownPorts(void)
 #if ! defined(AFS_SUN5_ENV) && ! defined(UKERNEL) && ! defined(RXK_LISTENER_ENV)
 	    soclose((struct socket *)rxk_portRocks[i]);
 #endif
-	    rxk_portRocks[i] = (char *)0;
+	    rxk_portRocks[i] = NULL;
 	}
     }
 }
 
-osi_socket rxi_GetUDPSocket(port)
-    u_short port;
+osi_socket rxi_GetUDPSocket(u_short port)
 {
     struct osi_socket *sockp;
     sockp = (struct osi_socket *) rxk_NewSocket(port);
@@ -122,8 +124,7 @@ char *msg;
  * defined only on success.
  */
 
-int
-osi_utoa(char *buf, size_t len, unsigned long val)
+int osi_utoa(char *buf, size_t len, unsigned long val)
 {
 	long k;	/* index of first byte of string value */
 
@@ -196,8 +197,7 @@ osi_utoa(char *buf, size_t len, unsigned long val)
  * argument to the native panic(), we construct a single string and hand
  * that to osi_Panic().
  */
-void
-osi_AssertFailK(const char *expr, const char *file, int line)
+void osi_AssertFailK(const char *expr, const char *file, int line)
 {
 	static const char msg0[] = "assertion failed: ";
 	static const char msg1[] = ", file: ";
@@ -241,7 +241,7 @@ osi_AssertFailK(const char *expr, const char *file, int line)
 #ifndef UKERNEL
 /* This is the server process request loop. Kernel server
  * processes never become listener threads */
-void rx_ServerProc()
+void rx_ServerProc(void)
 {
     int threadID;
 
@@ -262,9 +262,8 @@ void rx_ServerProc()
 #endif /* !UKERNEL */
 
 #ifndef RXK_LISTENER_ENV
-static int MyPacketProc(ahandle, asize)
-int asize;   /* this includes the Rx header */
-char **ahandle;
+/* asize includes the Rx header */
+static int MyPacketProc(char **ahandle, int asize)
 {
     register struct rx_packet *tp;
 
@@ -305,11 +304,10 @@ char **ahandle;
     return 0;
 }
 
-static int MyArrivalProc(ahandle, afrom, arock, asize)
-register struct rx_packet *ahandle;
-register struct sockaddr_in *afrom;
-char *arock;
-afs_int32 asize; {
+static int MyArrivalProc(register struct rx_packet *ahandle, 
+	register struct sockaddr_in *afrom, char *arock, 
+	afs_int32 asize)
+{
     /* handle basic rx packet */
     ahandle->length = asize - RX_HEADER_SIZE;
     rxi_DecodePacketHeader(ahandle);
@@ -323,8 +321,8 @@ afs_int32 asize; {
 }
 #endif /* !RXK_LISTENER_ENV */
 
-void
-rxi_StartListener() {
+void rxi_StartListener(void)
+{
     /* if kernel, give name of appropriate procedures */
 #ifndef RXK_LISTENER_ENV
     rxk_GetPacketProc = MyPacketProc;
@@ -335,8 +333,7 @@ rxi_StartListener() {
 
 /* Called from rxi_FindPeer, when initializing a clear rx_peer structure,
   to get interesting information. */
-void rxi_InitPeerParams(pp)
-register struct rx_peer *pp;
+void rxi_InitPeerParams(register struct rx_peer *pp)
 {
 #ifdef	ADAPT_MTU
     u_short rxmtu;
@@ -480,11 +477,10 @@ void shutdown_rxkernel(void)
 #define ADDRSPERSITE 16
 static afs_uint32 myNetAddrs[ADDRSPERSITE];
 static int myNetMTUs[ADDRSPERSITE];
-static int myNetFlags[ADDRSPERSITE];
 static int numMyNetAddrs = 0;
 
 #ifdef AFS_USERSPACE_IP_ADDR	
-int rxi_GetcbiInfo()
+int rxi_GetcbiInfo(void)
 {
    int     i, j, different = 0;
    int     rxmtu, maxmtu;
@@ -529,8 +525,7 @@ int rxi_GetcbiInfo()
 /* Returns the afs_cb_interface inxex which best matches address.
  * If none is found, we return -1.
  */
-afs_int32 rxi_Findcbi(addr)
-     afs_uint32 addr;
+afs_int32 rxi_Findcbi(afs_uint32 addr)
 {
    int j;
    afs_uint32 myAddr, thisAddr, netMask, subnetMask;
@@ -570,7 +565,6 @@ afs_int32 rxi_Findcbi(addr)
       }
    }
 
- done:
    return(rvalue);
 }
 
@@ -582,7 +576,7 @@ afs_int32 rxi_Findcbi(addr)
 #define IFADDR2SA(f) ((f)->ifa_addr)
 #endif
 
-int rxi_GetIFInfo()
+int rxi_GetIFInfo(void)
 {
     int i = 0;
     int different = 0;
@@ -646,10 +640,7 @@ int rxi_GetIFInfo()
 }
 
 /* Returns ifnet which best matches address */
-struct ifnet *
-rxi_FindIfnet(addr, pifad) 
-     afs_uint32 addr;
-     struct in_ifaddr **pifad;
+struct ifnet *rxi_FindIfnet(afs_uint32 addr, struct in_ifaddr **pifad) 
 {
   afs_uint32 ppaddr;
   int match_value = 0;
@@ -854,8 +845,7 @@ bad:
 
 
 /* free socket allocated by rxk_NewSocket */
-int rxk_FreeSocket(asocket)
-    register struct socket *asocket;
+int rxk_FreeSocket(register struct socket *asocket)
 {
     AFS_STATCNT(osi_FreeSocket);
 #if defined(AFS_DARWIN_ENV) && defined(KERNEL_FUNNEL)
@@ -873,9 +863,8 @@ int rxk_FreeSocket(asocket)
 /*
  * Run RX event daemon every second (5 times faster than rest of systems)
  */
-afs_rxevent_daemon() 
+void afs_rxevent_daemon(void) 
 {
-    int s, code;
     struct clock temp;
     SPLVAR;
 
@@ -891,7 +880,7 @@ afs_rxevent_daemon()
 #ifdef RX_ENABLE_LOCKS
 	AFS_GLOCK();
 #endif /* RX_ENABLE_LOCKS */
-	afs_osi_Wait(500, (char *)0, 0);
+	afs_osi_Wait(500, NULL, 0);
 	if (afs_termState == AFSOP_STOP_RXEVENT )
 	{
 #ifdef RXK_LISTENER_ENV
@@ -1048,7 +1037,7 @@ void rxk_Listener(void)
 	}
 	if (!(code = rxk_ReadPacket(rx_socket, rxp, &host, &port))) {
 	    AFS_RXGLOCK();
-	    rxp = rxi_ReceivePacket(rxp, rx_socket, host, port);
+	    rxp = rxi_ReceivePacket(rxp, rx_socket, host, port, 0, 0);
 	    AFS_RXGUNLOCK();
 	}
     }

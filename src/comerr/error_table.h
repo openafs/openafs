@@ -25,7 +25,7 @@ struct et_list {
 #define	ERRCODE_RANGE	8	/* # of bits to shift table number */
 #define	BITS_PER_CHAR	6	/* # bits to shift per character in name */
 
-extern const char *error_table_name();
+extern char const *error_table_name(afs_int32 num);
 extern void add_to_error_table(struct et_list *new_table);
 #define _ET_H
 #endif

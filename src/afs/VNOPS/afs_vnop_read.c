@@ -47,13 +47,8 @@ extern afs_hyper_t afs_indexCounter;         /* Fake time for marking index */
 void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 			      struct AFS_UCRED *acred, struct vrequest *areq);
 
-afs_MemRead(avc, auio, acred, albn, abpp, noLock)
-    register struct vcache *avc;
-    struct uio *auio;
-    struct AFS_UCRED *acred;
-    daddr_t albn;
-    int noLock;
-    struct buf **abpp; 
+int afs_MemRead(register struct vcache *avc, struct uio *auio, struct AFS_UCRED *acred, 
+	daddr_t albn, struct buf **abpp, int noLock)
 {
     afs_size_t totalLength;
     afs_size_t transferLength;
@@ -73,7 +68,7 @@ afs_MemRead(avc, auio, acred, albn, abpp, noLock)
 	return EIO;
 
     /* check that we have the latest status info in the vnode cache */
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
     if (!noLock) {
 	code = afs_VerifyVCache(avc, &treq);
 	if (code) {
@@ -250,7 +245,7 @@ tagain:
 		    /* don't have current data, so get it below */
 		    ReleaseReadLock(&tdc->lock);
 		    afs_PutDCache(tdc);
-		    tdc = (struct dcache *) 0;
+		    tdc = NULL;
 		}
 	    }
 
@@ -439,13 +434,8 @@ void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
      * Also need to worry about DFFetching, and IFFree, I think. */
 static struct dcache *savedc = 0;
 
-afs_UFSReadFast(avc, auio, acred, albn, abpp, noLock)
-    register struct vcache *avc;
-    struct uio *auio;
-    struct AFS_UCRED *acred;
-    int noLock;
-    daddr_t albn;
-    struct buf **abpp; 
+int afs_UFSReadFast(register struct vcache *avc, struct uio *auio, 
+	struct AFS_UCRED *acred, daddr_t albn, struct buf **abpp, int noLock)
 {
     struct vrequest treq;
     int offDiff;
@@ -585,13 +575,8 @@ afs_UFSReadFast(avc, auio, acred, albn, abpp, noLock)
     return afs_UFSRead(avc, auio, acred, albn, abpp, noLock);
 }
 
-afs_UFSRead(avc, auio, acred, albn, abpp, noLock)
-    struct vcache *avc;
-    struct uio *auio;
-    struct AFS_UCRED *acred;
-    daddr_t albn;
-    int noLock;
-    struct buf **abpp; 
+int afs_UFSRead(register struct vcache *avc, struct uio *auio,
+	struct AFS_UCRED *acred, daddr_t albn, struct buf **abpp, int noLock)
 {
     afs_size_t totalLength;
     afs_size_t transferLength;
@@ -613,7 +598,7 @@ afs_UFSRead(avc, auio, acred, albn, abpp, noLock)
 	return EIO;
 
     /* check that we have the latest status info in the vnode cache */
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred))) return code;
     if (!noLock) {
       if (!avc) 
 	osi_Panic ("null avc in afs_UFSRead");
@@ -793,7 +778,7 @@ tagain:
 		    /* don't have current data, so get it below */
 		    ReleaseReadLock(&tdc->lock);
 		    afs_PutDCache(tdc);
-		    tdc = (struct dcache *) 0;
+		    tdc = NULL;
 		}
 	    }
 

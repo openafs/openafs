@@ -150,7 +150,7 @@ void Lp_QInit(
   struct qHead *ahead)
 {
    ahead->count = 0;
-   ahead->next  = (struct aqueue *)0;
+   ahead->next  = NULL;
 }
 
 /*add <elem> in front of queue <ahead> */
@@ -163,7 +163,7 @@ void Lp_QAdd(
     if(ahead->count == 0) {
 	ahead->count += 1;
 	ahead->next = elem;
-	elem->next = (struct aqueue *)0;
+	elem->next = NULL;
     }
     else {
 	temp = ahead->next;
@@ -183,7 +183,7 @@ int Lp_QScan(
     struct aqueue *cptr;
 
     cptr = ahead->next;
-    while(cptr != (struct aqueue *)0) {
+    while(cptr != NULL) {
 	if(cptr->ids[RWVOL] == id) {
 	    *success = 1;
 	    *elem = cptr;
@@ -216,7 +216,7 @@ void Lp_QEnumerate(
 	    elem->copyDate[i] = temp->copyDate[i];
 	    elem->isValid[i] = temp->isValid[i];
 	}
-	elem->next = (struct aqueue *)0;
+	elem->next = NULL;
 	*success = 1;
 	free(temp);
     }

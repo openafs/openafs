@@ -25,9 +25,9 @@ RCSID("$Header$");
  */
 
 /* routine to make copy of uio structure in ainuio, using aoutvec for space */
-afsio_copy(ainuio, aoutuio, aoutvec)
-struct uio *ainuio, *aoutuio;
-register struct iovec *aoutvec; {
+int afsio_copy(struct uio *ainuio, struct uio *aoutuio, 
+	register struct iovec *aoutvec)
+{
     register int i;
     register struct iovec *tvec;
 
@@ -45,9 +45,8 @@ register struct iovec *aoutvec; {
 }
 
 /* trim the uio structure to the specified size */
-afsio_trim(auio, asize)
-register struct uio *auio;
-register afs_int32 asize; {
+int afsio_trim(register struct uio *auio, register afs_int32 asize)
+{
     register int i;
     register struct iovec *tv;
 
@@ -75,9 +74,8 @@ register afs_int32 asize; {
 }
 
 /* skip asize bytes in the current uio structure */
-afsio_skip(auio, asize)
-register struct uio *auio;
-register afs_int32 asize; {
+int afsio_skip(register struct uio *auio, register afs_int32 asize)
+{
     register struct iovec *tv;	/* pointer to current iovec */
     register int cnt;
 

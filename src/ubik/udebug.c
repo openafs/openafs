@@ -66,7 +66,7 @@ static short PortName(aname)
     struct servent *ts;
     int len;
 
-    ts = getservbyname(aname, (char *) 0);
+    ts = getservbyname(aname, NULL);
 
     if (ts)
        return ntohs(ts->s_port);  /* returns it in host byte order */
@@ -107,12 +107,12 @@ struct cmd_syndesc *as; {
     if (as->parms[0].items)
 	hostName = as->parms[0].items->data;
     else
-	hostName = (char *) 0;
+	hostName = NULL;
 
     if (as->parms[1].items)
 	portName = as->parms[1].items->data;
     else
-	portName = (char *) 0;
+	portName = NULL;
 
     /* lookup host */
     if (hostName) {
@@ -139,7 +139,7 @@ struct cmd_syndesc *as; {
     }
 
     rx_Init(0);
-    sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+    sc = rxnull_NewClientSecurityObject();
     tconn = rx_NewConnection(hostAddr, port, VOTE_SERVICE_ID, sc, 0);
     
     /* now do the main call */
@@ -333,7 +333,7 @@ main(argc, argv)
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
-    ts = cmd_CreateSyntax((char *) 0, CommandProc, 0, "probe ubik server");
+    ts = cmd_CreateSyntax(NULL, CommandProc, 0, "probe ubik server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "print all info");

@@ -1086,9 +1086,9 @@ lookupname(namep, seg, follow, dvpp, cvpp)
     ndp->ni_segflg = seg;
     ndp->ni_dirp = namep;
     error = namei(ndp);
-    if (dvpp != (struct vnode **)0)
+    if (dvpp != NULL)
 	*dvpp = ndp->ni_dvp;
-    if (cvpp != (struct vnode **)0)
+    if (cvpp != NULL)
 	*cvpp = ndp->ni_vp;
     return(error);
 }

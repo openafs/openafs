@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
     }
     alist[0] = argv[3];
     alist[1] = "all";
-    alist[2] = (char *) 0;
+    alist[2] = NULL;
     code = mc_copy(infile, outfile, alist);
     if (code) {
 	printf("config: failed to correctly write makefile '%s', code %d\n",

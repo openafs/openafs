@@ -58,8 +58,7 @@ struct osi_socket *rxk_NewSocket(short aport)
 
 
 /* free socket allocated by osi_NetSocket */
-int rxk_FreeSocket(asocket)
-    register struct socket *asocket;
+int rxk_FreeSocket(register struct socket *asocket)
 {
     AFS_STATCNT(osi_FreeSocket);
     return 0;

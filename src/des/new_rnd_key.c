@@ -20,8 +20,13 @@
 
 RCSID("$Header$");
 
+#ifndef KERNEL
+#include <stdio.h>
+#endif
 #include <des.h>
 #include "des_internal.h"
+#include "des_prototypes.h"
+
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
 #endif
@@ -34,12 +39,6 @@ RCSID("$Header$");
 #endif
 #include "stats.h"
 
-extern void des_fixup_key_parity();
-extern int des_is_weak_key();
-extern int des_ecb_encrypt();
-extern int des_key_sched();
-
-void des_set_random_generator_seed();
 static afs_int32 des_set_sequence_number(des_cblock new_sequence_number);
 static afs_int32 des_generate_random_block(des_cblock block);
 
@@ -72,9 +71,7 @@ pthread_mutex_t des_init_mutex;
  *        to be a weak des key.  Des_generate_random_block is used to
  *        provide the random bits.
  */
-int
-des_random_key(key)
-     des_cblock key;
+int des_random_key(des_cblock key)
 {
     LOCK_INIT
     if (!is_inited) {
@@ -119,8 +116,7 @@ des_random_key(key)
 #include <unistd.h>
 #endif
 
-void des_init_random_number_generator(key)
-     des_cblock key;
+void des_init_random_number_generator(des_cblock key)
 {
     struct { /* This must be 64 bits exactly */
 	afs_int32 process_id;
@@ -156,7 +152,7 @@ void des_init_random_number_generator(key)
      * use a time stamp to ensure that a server started later does not reuse
      * an old stream:
      */
-    gettimeofday(&time, (struct timezone *)0);
+    gettimeofday(&time, NULL);
     des_set_sequence_number((unsigned char *)&time);
 
     /*
@@ -215,9 +211,7 @@ pthread_mutex_t des_random_mutex;
  * Requires: key is a valid des key.  I.e., has correct parity and is not a
  *           weak des key.
  */
-void
-des_set_random_generator_seed(key)
-     des_cblock key;
+void des_set_random_generator_seed(des_cblock key)
 {
     register int i;
 
@@ -239,8 +233,7 @@ des_set_random_generator_seed(key)
  *
  * Note that des_set_random_generator_seed resets the sequence number to 0.
  */
-static afs_int32
-des_set_sequence_number(des_cblock new_sequence_number)
+static afs_int32 des_set_sequence_number(des_cblock new_sequence_number)
 {
     LOCK_RANDOM
     memcpy((char *)sequence_number, (char *)new_sequence_number, sizeof(sequence_number));
@@ -256,8 +249,7 @@ des_set_sequence_number(des_cblock new_sequence_number)
  * Requires: des_set_random_generator_seed must have been called at least once
  *           before this routine is called.
  */
-static afs_int32
-des_generate_random_block(des_cblock block)
+static afs_int32 des_generate_random_block(des_cblock block)
 {
     int i;
 

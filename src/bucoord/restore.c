@@ -190,7 +190,7 @@ bc_Restorer(aindex)
     struct rx_connection *aconn = (struct rx_connection *)0;
     statusP statusPtr, newStatusPtr;
 
-    struct dumpinfo *dumpinfolist = (struct dumpinfo *)0;
+    struct dumpinfo *dumpinfolist = NULL;
     struct dumpinfo *pdi, *ndi, *di, dlevels[BC_MAXLEVELS];
     struct volinfo  *pvi, *nvi, *vi;
     afs_int32           lvl, lv;

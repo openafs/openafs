@@ -350,7 +350,7 @@ initLightObject(a_name, a_x, a_y, a_width, a_win)
     }
 #endif
 
-    newlightp = (struct onode *)0;
+    newlightp = NULL;
 
     /*
       * Set up the creation parameters according to the information we've
@@ -376,10 +376,10 @@ initLightObject(a_name, a_x, a_y, a_width, a_win)
     light_crparams.onode_params.cr_width      = a_width;
     light_crparams.onode_params.cr_height     = 1;
     light_crparams.onode_params.cr_window     = a_win;
-    light_crparams.onode_params.cr_home_obj   = (struct onode *)0;
-    light_crparams.onode_params.cr_prev_obj   = (struct onode *)0;
-    light_crparams.onode_params.cr_parent_obj = (struct onode *)0;
-    light_crparams.onode_params.cr_helpstring = (char *)0;
+    light_crparams.onode_params.cr_home_obj   = NULL;
+    light_crparams.onode_params.cr_prev_obj   = NULL;
+    light_crparams.onode_params.cr_parent_obj = NULL;
+    light_crparams.onode_params.cr_helpstring = NULL;
 
     light_crparams.appearance = 0;
     light_crparams.flashfreq  = 0;
@@ -1069,7 +1069,7 @@ create_ovwFrame_objects()
       long */
    initMsg_o = initLightObject(initMsg,
 		maxX/2 - 18,maxY/3,sizeof(initMsg),afsmon_win);
-   if (initMsg_o == (struct onode *)0) {
+   if (initMsg_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create initMsg_o onode\n",rn);
 	afsmon_Exit(250);
    }
@@ -1083,7 +1083,7 @@ create_ovwFrame_objects()
 
    ovw_cmd_o = initLightObject("",
 		0,maxY-1,OVW_CMD_O_WIDTH,afsmon_win);
-   if (ovw_cmd_o == (struct onode *)0) {
+   if (ovw_cmd_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create command onode\n",rn);
 	afsmon_Exit(265);
    }
@@ -1094,7 +1094,7 @@ create_ovwFrame_objects()
 
    ovw_progName_o = initLightObject("",0,0,
 				PROGNAME_O_WIDTH,afsmon_win);
-   if (ovw_progName_o == (struct onode *)0) {
+   if (ovw_progName_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create programName onode\n",rn);
 	afsmon_Exit(255);
    }
@@ -1105,7 +1105,7 @@ create_ovwFrame_objects()
 
    ovw_pageNum_o = initLightObject("",
 		maxX-OVW_PAGENUM_O_WIDTH,0,OVW_PAGENUM_O_WIDTH,afsmon_win);
-   if (ovw_pageNum_o == (struct onode *)0) {
+   if (ovw_pageNum_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create pageNumber onode\n",rn);
 	afsmon_Exit(260);
    }
@@ -1115,7 +1115,7 @@ create_ovwFrame_objects()
    /* create the probe number object */
    ovw_probeNum_o = initLightObject("",
 	maxX-OVW_PROBENUM_O_WIDTH,maxY-1,OVW_PROBENUM_O_WIDTH,afsmon_win);
-   if (ovw_probeNum_o == (struct onode *)0) {
+   if (ovw_probeNum_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create probe number onode\n",rn);
 	afsmon_Exit(270);
    }
@@ -1125,7 +1125,7 @@ create_ovwFrame_objects()
    /* create the numFS monitored object */
    ovw_numFS_o = initLightObject("",
 		0,2,FC_NUMHOSTS_O_WIDTH,afsmon_win);
-   if (ovw_numFS_o == (struct onode *)0) {
+   if (ovw_numFS_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create numFS onode\n",rn);
 	afsmon_Exit(275);
    }
@@ -1134,7 +1134,7 @@ create_ovwFrame_objects()
    /* create the numCM monitored object */
    ovw_numCM_o = initLightObject("",
 		maxX/2,2,OVW_NUMCM_O_WIDTH,afsmon_win);
-   if (ovw_numCM_o == (struct onode *)0) {
+   if (ovw_numCM_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create numCM_o onode\n",rn);
 	afsmon_Exit(280);
    }
@@ -1143,7 +1143,7 @@ create_ovwFrame_objects()
    /* create the number-of-FS-alerts object */
    ovw_FSalerts_o = initLightObject("",
 		0,3,OVW_FSALERTS_O_WIDTH,afsmon_win);
-   if (ovw_FSalerts_o == (struct onode *)0) {
+   if (ovw_FSalerts_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create FSalerts_o onode\n",rn);
 	afsmon_Exit(285);
    }
@@ -1152,7 +1152,7 @@ create_ovwFrame_objects()
    /* create the number-of-CM-alerts object */
    ovw_CMalerts_o = initLightObject("",
 		maxX/2,3,OVW_CMALERTS_O_WIDTH,afsmon_win);
-   if (ovw_CMalerts_o == (struct onode *)0) {
+   if (ovw_CMalerts_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create CMalerts_o onode\n",rn);
 	afsmon_Exit(290);
    }
@@ -1164,7 +1164,7 @@ create_ovwFrame_objects()
    /* allocate memory for a list of onode pointers for file server names */
    ovw_fsNames_o = (struct onode **) malloc(
 			sizeof(struct onode *) * ovw_numHosts_perPage); 
-   if (ovw_fsNames_o == (struct onode **)0) {
+   if (ovw_fsNames_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to allocate memory for FS onodes\n",rn);
 	afsmon_Exit(295);
    }
@@ -1174,7 +1174,7 @@ create_ovwFrame_objects()
    for (i=0; i< ovw_numHosts_perPage; i++) {
    	*ovw_fsNames_o_Ptr = initLightObject("",
 		0,OVW_FIRST_HOST_ROW+i,OVW_HOSTNAME_O_WIDTH,afsmon_win);
-   	if (*ovw_fsNames_o_Ptr == (struct onode *)0) {
+   	if (*ovw_fsNames_o_Ptr == NULL) {
 		sprintf(errMsg,"[ %s ] Failed to create an FS name onode\n",rn);
 		afsmon_Exit(300);
    	}
@@ -1194,7 +1194,7 @@ create_ovwFrame_objects()
    /* allocate memory for a list of onode pointers for cache manager names */
    ovw_cmNames_o = (struct onode **) malloc(
 			sizeof(struct onode *) * ovw_numHosts_perPage); 
-   if (ovw_cmNames_o == (struct onode **)0) {
+   if (ovw_cmNames_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to allocate memory for CM onodes\n",rn);
 	afsmon_Exit(305);
    }
@@ -1204,7 +1204,7 @@ create_ovwFrame_objects()
    for (i=0; i< ovw_numHosts_perPage; i++) {
    	*ovw_cmNames_o_Ptr = initLightObject("",
 		maxX/2,OVW_FIRST_HOST_ROW+i,OVW_HOSTNAME_O_WIDTH,afsmon_win);
-   	if (*ovw_cmNames_o_Ptr == (struct onode *)0) {
+   	if (*ovw_cmNames_o_Ptr == NULL) {
 		sprintf(errMsg,"[ %s ] Failed to create a CM name onode\n",rn);
 		afsmon_Exit(310);
    	}
@@ -1239,21 +1239,21 @@ create_ovwFrame_objects()
   /* bind the overview frame to a keyboard input handler */
 
    /* bind Q and  to exit */
-   keymap_BindToString(ovwFrame->keymap,"Q",afsmonExit_gtx,(char *)0,(char *)0);
-   keymap_BindToString(ovwFrame->keymap,"",afsmonExit_gtx,(char *)0,(char *)0);
+   keymap_BindToString(ovwFrame->keymap,"Q",afsmonExit_gtx,NULL,NULL);
+   keymap_BindToString(ovwFrame->keymap,"",afsmonExit_gtx,NULL,NULL);
 
   /* f -> switch of fs frame */
-  keymap_BindToString(ovwFrame->keymap,"f",Switch_ovw_2_fs,(char *)0,(char *)0);
+  keymap_BindToString(ovwFrame->keymap,"f",Switch_ovw_2_fs,NULL,NULL);
   /* c -> switch of cm frame */
-  keymap_BindToString(ovwFrame->keymap,"c",Switch_ovw_2_cm,(char *)0,(char *)0);
+  keymap_BindToString(ovwFrame->keymap,"c",Switch_ovw_2_cm,NULL,NULL);
   /* n -> switch to next overview page */
-  keymap_BindToString(ovwFrame->keymap,"n",Switch_ovw_next,(char *)0,(char *)0);
+  keymap_BindToString(ovwFrame->keymap,"n",Switch_ovw_next,NULL,NULL);
   /* N -> switch to last overview page */
-  keymap_BindToString(ovwFrame->keymap,"N",Switch_ovw_last,(char *)0,(char *)0);
+  keymap_BindToString(ovwFrame->keymap,"N",Switch_ovw_last,NULL,NULL);
   /* p -> switch to previous overview page */
-  keymap_BindToString(ovwFrame->keymap,"p",Switch_ovw_prev,(char *)0,(char *)0);
+  keymap_BindToString(ovwFrame->keymap,"p",Switch_ovw_prev,NULL,NULL);
   /* P -> switch to first overview page */
-  keymap_BindToString(ovwFrame->keymap,"P",Switch_ovw_first,(char *)0,(char *)0);
+  keymap_BindToString(ovwFrame->keymap,"P",Switch_ovw_first,NULL,NULL);
 
    
    return(0);
@@ -1740,7 +1740,7 @@ int a_LcolNum;		/* starting (leftmost) column number */
    }
    
    if (fsIdx >= numFS) {	/* whoops! screwed up */
-	sprintf(errMsg,"[ %s ] Programming error 1\n");
+	sprintf(errMsg,"[ %s ] Programming error 1\n", rn);
 	afsmon_Exit(325);
    }
 
@@ -2108,7 +2108,7 @@ create_FSframe_objects()
    /* create the command line object */
    fs_cmd_o = initLightObject("Command [oview, cm, prev, next, left, right] ? ",
 		0,maxY-1,FC_CMD_O_WIDTH,afsmon_win);
-   if (fs_cmd_o == (struct onode *)0) {
+   if (fs_cmd_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create fs command onode\n",rn);
 	afsmon_Exit(340);
    }
@@ -2124,7 +2124,7 @@ create_FSframe_objects()
    /* create the page number object */
    fs_pageNum_o = initLightObject("[File Servers, p. X of X, c. Y of Y]",
 		maxX-FC_PAGENUM_O_WIDTH,0,FC_PAGENUM_O_WIDTH,afsmon_win);
-   if (fs_pageNum_o == (struct onode *)0) {
+   if (fs_pageNum_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create pageNumber onode\n",rn);
 	afsmon_Exit(335);
    }
@@ -2134,7 +2134,7 @@ create_FSframe_objects()
    /* create the probe number object */
    fs_probeNum_o = initLightObject("[FS probes 1, freq=30 sec]",
 	maxX-FC_PROBENUM_O_WIDTH ,maxY-1, FC_PROBENUM_O_WIDTH, afsmon_win);
-   if (fs_probeNum_o == (struct onode *)0) {
+   if (fs_probeNum_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create fs probeNum onode\n",rn);
 	afsmon_Exit(345);
    }
@@ -2146,7 +2146,7 @@ create_FSframe_objects()
    fs_numFS_o = initLightObject(
 		"  	0 File Servers monitored, 0 alerts on 0 machines",
 		4,2,FC_NUMHOSTS_O_WIDTH,afsmon_win);
-   if (fs_numFS_o == (struct onode *)0) {
+   if (fs_numFS_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create numFS onode for the fs frame\n",
 		rn);
 	afsmon_Exit(350);
@@ -2155,7 +2155,7 @@ create_FSframe_objects()
 
    /* create the "more columns to left" indicator */
    fs_leftArrows_o = initLightObject("<<<", 0,2,FC_ARROWS_O_WIDTH, afsmon_win);
-   if (fs_leftArrows_o == (struct onode *)0) {
+   if (fs_leftArrows_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create leftArrows onode for the fs frame\n", rn);
 	afsmon_Exit(355);
    }
@@ -2164,7 +2164,7 @@ create_FSframe_objects()
    /* create the "more columns to right" indicator */
    fs_rightArrows_o = initLightObject(">>>", maxX-FC_ARROWS_O_WIDTH, 2,
 				FC_ARROWS_O_WIDTH, afsmon_win);
-   if (fs_rightArrows_o == (struct onode *)0) {
+   if (fs_rightArrows_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create rightArrows onode for the fs frame\n", rn);
 	afsmon_Exit(360);
    }
@@ -2207,7 +2207,7 @@ create_FSframe_objects()
    for(arrIdx=0; arrIdx<2; arrIdx++) {
 	numBytes = fs_cols_perPage * sizeof(struct onode *);
 	fs_lines_Ptr->data_o[arrIdx] = (struct onode **) malloc(numBytes);
-	if (fs_lines_Ptr->data_o[arrIdx] == (struct onode **)0) {
+	if (fs_lines_Ptr->data_o[arrIdx] == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to allocate %d bytes for FS data onodes\n",
 		rn, numBytes);
 	afsmon_Exit(370);
@@ -2224,7 +2224,7 @@ create_FSframe_objects()
 	/* initialize host name onode */
 	fs_lines_Ptr->host_o = initLightObject("FSHostName",
 		0,FC_FIRST_HOST_ROW + 2*i, FC_HOSTNAME_O_WIDTH, afsmon_win);
-   	if (fs_lines_Ptr->host_o == (struct onode *)0) {
+   	if (fs_lines_Ptr->host_o == NULL) {
 		sprintf(errMsg,"[ %s ] Failed to create an FS name onode\n",rn);
 		afsmon_Exit(375);
    	}
@@ -2253,7 +2253,7 @@ create_FSframe_objects()
 		sprintf(tmpBuf,"-FSData %d-",arrIdx);
 		*fs_data_o_Ptr = initLightObject(tmpBuf,
 			x_pos, y_pos, FC_COLUMN_WIDTH, afsmon_win);
-   		if (*fs_data_o_Ptr == (struct onode *)0) {
+   		if (*fs_data_o_Ptr == NULL) {
 		sprintf(errMsg,"[ %s ] Failed to create an FS data onode\n",rn);
 		afsmon_Exit(380);
 		}
@@ -2276,7 +2276,7 @@ create_FSframe_objects()
 
    fsLabels_o[arrIdx] = (struct onode **) malloc(
 			sizeof(struct onode *) * fs_cols_perPage); 
-   if (fsLabels_o[arrIdx] == (struct onode **)0) {
+   if (fsLabels_o[arrIdx] == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to allocate memory for FS label onodes\n",
 		rn);
 	afsmon_Exit(385);
@@ -2290,7 +2290,7 @@ create_FSframe_objects()
 		FC_FIRST_LABEL_ROW + arrIdx, 
 		FC_COLUMN_WIDTH,afsmon_win);
 
-   	if (*fsLabels_o_Ptr == (struct onode *)0) {
+   	if (*fsLabels_o_Ptr == NULL) {
 		sprintf(errMsg,"[ %s ] Failed to create a FS label onode\n",rn);
 		afsmon_Exit(390);
    	}
@@ -2313,22 +2313,22 @@ create_FSframe_objects()
 
    /* create keyboard bindings */
    /* bind Q and  to exit */
-   keymap_BindToString(fsFrame->keymap,"Q",afsmonExit_gtx,(char *)0,(char *)0);
-   keymap_BindToString(fsFrame->keymap,"",afsmonExit_gtx,(char *)0,(char *)0);
+   keymap_BindToString(fsFrame->keymap,"Q",afsmonExit_gtx,NULL,NULL);
+   keymap_BindToString(fsFrame->keymap,"",afsmonExit_gtx,NULL,NULL);
 
    /* o = overview, c = cm, n = next, p = prev, l = left, r = right 
       N = last page, P = first page, L = leftmost col, R = rightmost col */
 
-   keymap_BindToString(fsFrame->keymap,"o",Switch_fs_2_ovw,(char *)0,(char *)0);
-   keymap_BindToString(fsFrame->keymap,"c",Switch_fs_2_cm,(char *)0,(char *)0);
-   keymap_BindToString(fsFrame->keymap,"n",Switch_fs_next,(char *)0,(char *)0);
-   keymap_BindToString(fsFrame->keymap,"N",Switch_fs_last,(char *)0,(char *)0);
-   keymap_BindToString(fsFrame->keymap,"p",Switch_fs_prev,(char *)0,(char *)0);
-   keymap_BindToString(fsFrame->keymap,"P",Switch_fs_first,(char *)0,(char *)0);
-   keymap_BindToString(fsFrame->keymap,"l",Switch_fs_left,(char *)0,(char *)0);
-   keymap_BindToString(fsFrame->keymap,"L",Switch_fs_leftmost,(char *)0,(char *)0);
-   keymap_BindToString(fsFrame->keymap,"r",Switch_fs_right,(char *)0,(char *)0);
-   keymap_BindToString(fsFrame->keymap,"R",Switch_fs_rightmost,(char *)0,(char *)0);
+   keymap_BindToString(fsFrame->keymap,"o",Switch_fs_2_ovw,NULL,NULL);
+   keymap_BindToString(fsFrame->keymap,"c",Switch_fs_2_cm,NULL,NULL);
+   keymap_BindToString(fsFrame->keymap,"n",Switch_fs_next,NULL,NULL);
+   keymap_BindToString(fsFrame->keymap,"N",Switch_fs_last,NULL,NULL);
+   keymap_BindToString(fsFrame->keymap,"p",Switch_fs_prev,NULL,NULL);
+   keymap_BindToString(fsFrame->keymap,"P",Switch_fs_first,NULL,NULL);
+   keymap_BindToString(fsFrame->keymap,"l",Switch_fs_left,NULL,NULL);
+   keymap_BindToString(fsFrame->keymap,"L",Switch_fs_leftmost,NULL,NULL);
+   keymap_BindToString(fsFrame->keymap,"r",Switch_fs_right,NULL,NULL);
+   keymap_BindToString(fsFrame->keymap,"R",Switch_fs_rightmost,NULL,NULL);
 
    return(0);
 }	/* create_FSframe_objects */
@@ -2887,7 +2887,7 @@ create_CMframe_objects()
    /* create the command line object */
    cm_cmd_o = initLightObject("Command [oview, fs, prev, next, left, right] ? ",
 		0,maxY-1,FC_CMD_O_WIDTH,afsmon_win);
-   if (cm_cmd_o == (struct onode *)0) {
+   if (cm_cmd_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create cm command onode\n",rn);
 	afsmon_Exit(420);
    }
@@ -2904,7 +2904,7 @@ create_CMframe_objects()
    /* create the page number object */
    cm_pageNum_o = initLightObject("[Cache Managers, p. X of X, c. Y of Y]",
 		maxX-FC_PAGENUM_O_WIDTH,0,FC_PAGENUM_O_WIDTH,afsmon_win);
-   if (cm_pageNum_o == (struct onode *)0) {
+   if (cm_pageNum_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create pageNumber onode\n",rn);
 	afsmon_Exit(415);
    }
@@ -2914,7 +2914,7 @@ create_CMframe_objects()
    /* create the probe number object */
    cm_probeNum_o = initLightObject("[CM probes 1, freq=30 sec]",
 	maxX-FC_PROBENUM_O_WIDTH ,maxY-1, FC_PROBENUM_O_WIDTH, afsmon_win);
-   if (cm_probeNum_o == (struct onode *)0) {
+   if (cm_probeNum_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create cm probeNum onode\n",rn);
 	afsmon_Exit(425);
    }
@@ -2926,7 +2926,7 @@ create_CMframe_objects()
    cm_numCM_o = initLightObject(
 		"  	0 Cache Mangers monitored, 0 alerts on 0 machines",
 		4,2,FC_NUMHOSTS_O_WIDTH,afsmon_win);
-   if (cm_numCM_o == (struct onode *)0) {
+   if (cm_numCM_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create numCM onode for the cm frame\n",
 		rn);
 	afsmon_Exit(430);
@@ -2935,7 +2935,7 @@ create_CMframe_objects()
 
    /* create the "more columns to left" indicator */
    cm_leftArrows_o = initLightObject("<<<", 0,2,FC_ARROWS_O_WIDTH, afsmon_win);
-   if (cm_leftArrows_o == (struct onode *)0) {
+   if (cm_leftArrows_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create leftArrows onode for the cm frame\n", rn);
 	afsmon_Exit(435);
    }
@@ -2944,7 +2944,7 @@ create_CMframe_objects()
    /* create the "more columns to right" indicator */
    cm_rightArrows_o = initLightObject(">>>", maxX-FC_ARROWS_O_WIDTH, 2,
 				FC_ARROWS_O_WIDTH, afsmon_win);
-   if (cm_rightArrows_o == (struct onode *)0) {
+   if (cm_rightArrows_o == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to create rightArrows onode for the cm frame\n", rn);
 	afsmon_Exit(440);
    }
@@ -2987,7 +2987,7 @@ create_CMframe_objects()
    for(arrIdx=0; arrIdx<2; arrIdx++) {
 	numBytes = cm_cols_perPage * sizeof(struct onode *);
 	cm_lines_Ptr->data_o[arrIdx] = (struct onode **) malloc(numBytes);
-	if (cm_lines_Ptr->data_o[arrIdx] == (struct onode **)0) {
+	if (cm_lines_Ptr->data_o[arrIdx] == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to allocate %d bytes for CM data onodes\n",
 		rn, numBytes);
 	afsmon_Exit(450);
@@ -3004,7 +3004,7 @@ create_CMframe_objects()
 	/* initialize host name onode */
 	cm_lines_Ptr->host_o = initLightObject("CMHostName",
 		0,FC_FIRST_HOST_ROW + 2*i, FC_HOSTNAME_O_WIDTH, afsmon_win);
-   	if (cm_lines_Ptr->host_o == (struct onode *)0) {
+   	if (cm_lines_Ptr->host_o == NULL) {
 		sprintf(errMsg,"[ %s ] Failed to create an CM name onode\n",rn);
 		afsmon_Exit(455);
    	}
@@ -3033,7 +3033,7 @@ create_CMframe_objects()
 		sprintf(tmpBuf,"-CMData %d-",arrIdx);
 		*cm_data_o_Ptr = initLightObject(tmpBuf,
 			x_pos, y_pos, FC_COLUMN_WIDTH, afsmon_win);
-   		if (*cm_data_o_Ptr == (struct onode *)0) {
+   		if (*cm_data_o_Ptr == NULL) {
 		sprintf(errMsg,"[ %s ] Failed to create an CM data onode\n",rn);
 		afsmon_Exit(460);
 		}
@@ -3056,7 +3056,7 @@ create_CMframe_objects()
 
    cmLabels_o[arrIdx] = (struct onode **) malloc(
 			sizeof(struct onode *) * cm_cols_perPage); 
-   if (cmLabels_o[arrIdx] == (struct onode **)0) {
+   if (cmLabels_o[arrIdx] == NULL) {
 	sprintf(errMsg,"[ %s ] Failed to allocate memory for CM label onodes\n",
 		rn);
 	afsmon_Exit(465);
@@ -3070,7 +3070,7 @@ create_CMframe_objects()
 		FC_FIRST_LABEL_ROW + arrIdx, 
 		FC_COLUMN_WIDTH,afsmon_win);
 
-   	if (*cmLabels_o_Ptr == (struct onode *)0) {
+   	if (*cmLabels_o_Ptr == NULL) {
 		sprintf(errMsg,"[ %s ] Failed to create a CM label onode\n",rn);
 		afsmon_Exit(470);
    	}
@@ -3097,22 +3097,22 @@ create_CMframe_objects()
 
    /* create keyboard bindings */
    /* bind Q and  to exit */
-   keymap_BindToString(cmFrame->keymap,"Q",afsmonExit_gtx,(char *)0,(char *)0);
-   keymap_BindToString(cmFrame->keymap,"",afsmonExit_gtx,(char *)0,(char *)0);
+   keymap_BindToString(cmFrame->keymap,"Q",afsmonExit_gtx,NULL,NULL);
+   keymap_BindToString(cmFrame->keymap,"",afsmonExit_gtx,NULL,NULL);
 
    /* o = overview, c = cm, n = next, p = prev, l = left, r = right 
       N = last page, P = first page, L = leftmost col, R = rightmost col */
 
-   keymap_BindToString(cmFrame->keymap,"o",Switch_cm_2_ovw,(char *)0,(char *)0);
-   keymap_BindToString(cmFrame->keymap,"f",Switch_cm_2_fs,(char *)0,(char *)0);
-   keymap_BindToString(cmFrame->keymap,"n",Switch_cm_next,(char *)0,(char *)0);
-   keymap_BindToString(cmFrame->keymap,"N",Switch_cm_last,(char *)0,(char *)0);
-   keymap_BindToString(cmFrame->keymap,"p",Switch_cm_prev,(char *)0,(char *)0);
-   keymap_BindToString(cmFrame->keymap,"P",Switch_cm_first,(char *)0,(char *)0);
-   keymap_BindToString(cmFrame->keymap,"l",Switch_cm_left,(char *)0,(char *)0);
-   keymap_BindToString(cmFrame->keymap,"L",Switch_cm_leftmost,(char *)0,(char *)0);
-   keymap_BindToString(cmFrame->keymap,"r",Switch_cm_right,(char *)0,(char *)0);
-   keymap_BindToString(cmFrame->keymap,"R",Switch_cm_rightmost,(char *)0,(char *)0);
+   keymap_BindToString(cmFrame->keymap,"o",Switch_cm_2_ovw,NULL,NULL);
+   keymap_BindToString(cmFrame->keymap,"f",Switch_cm_2_fs,NULL,NULL);
+   keymap_BindToString(cmFrame->keymap,"n",Switch_cm_next,NULL,NULL);
+   keymap_BindToString(cmFrame->keymap,"N",Switch_cm_last,NULL,NULL);
+   keymap_BindToString(cmFrame->keymap,"p",Switch_cm_prev,NULL,NULL);
+   keymap_BindToString(cmFrame->keymap,"P",Switch_cm_first,NULL,NULL);
+   keymap_BindToString(cmFrame->keymap,"l",Switch_cm_left,NULL,NULL);
+   keymap_BindToString(cmFrame->keymap,"L",Switch_cm_leftmost,NULL,NULL);
+   keymap_BindToString(cmFrame->keymap,"r",Switch_cm_right,NULL,NULL);
+   keymap_BindToString(cmFrame->keymap,"R",Switch_cm_rightmost,NULL,NULL);
 
    return(0);
 }	/* create_CMframe_objects */
@@ -3139,7 +3139,7 @@ gtx_initialize()
 
    afsmon_win = gtx_Init(0,-1);	/* 0 => dont start input server,
 				   1 => use curses */
-   if(afsmon_win == (struct gwin *)0) {
+   if(afsmon_win == NULL) {
 	sprintf(errMsg,"[ %s ] gtx initialization failed\n",rn);
 	afsmon_Exit(475);
    }

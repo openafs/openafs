@@ -13,18 +13,17 @@ RCSID("$Header$");
 
 #include <mit-cpyright.h>
 #include <stdio.h>
+#include <des.h>
 #include "des_internal.h"
+#include "des_prototypes.h"
 
 #define WANT_P_TABLE
 #include "tables.h"
 
-extern afs_uint32 swap_byte_bits();
-extern afs_uint32 rev_swap_bit_pos_0();
 static unsigned char P_temp[32];
 static afs_uint32 P_prime[4][256];
 
-void gen(stream)
-    FILE *stream;
+void gen(FILE *stream)
 {
     register int i,j,k,m;
     /* P permutes 32 bit input R1 into 32 bit output R2 */

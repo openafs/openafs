@@ -86,14 +86,10 @@ static struct afs_dynSymlink *afs_dynSymlinkBase = NULL;
 static int afs_dynSymlinkIndex = 0;
 /* End of variables protected by afs_dynSymlinkLock */
 
-extern afs_int32 afs_cellindex;
-extern afs_rwlock_t afs_xvcache;
-
 /*
  * Returns non-zero iff fid corresponds to the top of the dynroot volume.
  */
-int
-afs_IsDynrootFid(struct VenusFid *fid)
+int afs_IsDynrootFid(struct VenusFid *fid)
 {
     return
 	(afs_dynrootEnable &&
@@ -106,8 +102,7 @@ afs_IsDynrootFid(struct VenusFid *fid)
 /*
  * Obtain the magic dynroot volume Fid.
  */
-void
-afs_GetDynrootFid(struct VenusFid *fid) 
+void afs_GetDynrootFid(struct VenusFid *fid) 
 {
     fid->Cell       = AFS_DYNROOT_CELL;
     fid->Fid.Volume = AFS_DYNROOT_VOLUME;
@@ -118,9 +113,7 @@ afs_GetDynrootFid(struct VenusFid *fid)
 /*
  * Returns non-zero iff avc is a pointer to the dynroot /afs vnode.
  */
-int
-afs_IsDynroot(avc)
-    struct vcache *avc;
+int afs_IsDynroot(struct vcache *avc)
 {
     return afs_IsDynrootFid(&avc->fid);
 }
@@ -130,13 +123,8 @@ afs_IsDynroot(avc)
  * caller has allocated the directory to be large enough to hold
  * the necessary entry.
  */
-static void
-afs_dynroot_addDirEnt(dirHeader, curPageP, curChunkP, name, vnode)
-    struct DirHeader *dirHeader;
-    int *curPageP;
-    int *curChunkP;
-    char *name;
-    int vnode;
+static void afs_dynroot_addDirEnt(struct DirHeader *dirHeader, 
+	int *curPageP, int *curChunkP, char *name, int vnode)
 {
     char *dirBase = (char *) dirHeader;
     struct PageHeader *pageHeader;
@@ -201,8 +189,7 @@ afs_dynroot_addDirEnt(dirHeader, curPageP, curChunkP, name, vnode)
  * cells.  Useful when the list of cells has changed due to
  * an AFSDB lookup, for instance.
  */
-void
-afs_RefreshDynroot()
+void afs_RefreshDynroot(void)
 {
     int cellidx, maxcellidx, i;
     struct cell *c;
@@ -210,8 +197,6 @@ afs_RefreshDynroot()
     int dirSize, sizeOfCurEntry;
     char *newDir, *dotCell;
     struct DirHeader *dirHeader;
-    struct PageHeader *pageHeader;
-    struct DirEntry *dirEntry;
     int doFlush = 0;
     int linkCount = 0;
     struct afs_dynSymlink *ts;
@@ -349,7 +334,7 @@ afs_RefreshDynroot()
 	do {
 	    retry = 0;
 	    ObtainReadLock(&afs_xvcache);
-	    tvc = afs_FindVCache(&tfid, 0, 0, &retry, 0);
+	    tvc = afs_FindVCache(&tfid, &retry, 0);
 	    ReleaseReadLock(&afs_xvcache);
 	} while (retry);
 	if (tvc) {
@@ -364,11 +349,7 @@ afs_RefreshDynroot()
  * Returns a pointer to the base of the dynroot directory in memory,
  * length thereof, and a FetchStatus.
  */
-void
-afs_GetDynroot(dynrootDir, dynrootLen, status)
-    char **dynrootDir;
-    int *dynrootLen;
-    struct AFSFetchStatus *status;
+void afs_GetDynroot(char **dynrootDir, int *dynrootLen, struct AFSFetchStatus *status)
 {
     ObtainReadLock(&afs_dynrootDirLock);
     if (!afs_dynrootDir) {
@@ -398,8 +379,7 @@ afs_GetDynroot(dynrootDir, dynrootLen, status)
 /*
  * Puts back the dynroot read lock.
  */
-void
-afs_PutDynroot()
+void afs_PutDynroot(void)
 {
     ReleaseReadLock(&afs_dynrootDirLock);
 }
@@ -409,10 +389,7 @@ afs_PutDynroot()
  * is non-zero if this vnode is handled by dynroot, in which case
  * FetchStatus will be filled in.
  */
-int
-afs_DynrootNewVnode(avc, status)
-    struct vcache *avc;
-    struct AFSFetchStatus *status;
+int afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 {
     if (!afs_dynrootEnable) return 0;
 
@@ -528,9 +505,7 @@ afs_DynrootNewVnode(avc, status)
 /*
  * Enable or disable dynroot.  Returns 0 if successful.
  */
-int
-afs_SetDynrootEnable(enable)
-    int enable;
+int afs_SetDynrootEnable(int enable)
 {
     afs_dynrootEnable = enable;
     return 0;
@@ -539,8 +514,7 @@ afs_SetDynrootEnable(enable)
 /*
  * Check if dynroot support is enabled.
  */
-int
-afs_GetDynrootEnable()
+int afs_GetDynrootEnable(void)
 {
     return afs_dynrootEnable;
 }
@@ -548,11 +522,7 @@ afs_GetDynrootEnable()
 /*
  * Remove a temporary symlink entry from /afs.
  */
-int
-afs_DynrootVOPRemove(avc, acred, aname)
-    struct vcache *avc;
-    struct AFS_UCRED *acred;
-    char *aname;
+int afs_DynrootVOPRemove(struct vcache *avc, struct AFS_UCRED *acred, char *aname)
 {
     struct afs_dynSymlink **tpps;
     struct afs_dynSymlink *tps;
@@ -596,12 +566,8 @@ afs_DynrootVOPRemove(avc, acred, aname)
 /*
  * Create a temporary symlink entry in /afs.
  */
-int
-afs_DynrootVOPSymlink(avc, acred, aname, atargetName)
-    struct vcache *avc;
-    struct AFS_UCRED *acred;
-    char *aname;
-    char *atargetName;
+int afs_DynrootVOPSymlink(struct vcache *avc, struct AFS_UCRED *acred, 
+	char *aname, char *atargetName)
 {
     struct afs_dynSymlink *tps;
     struct cell *c;

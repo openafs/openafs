@@ -21,6 +21,13 @@ RCSID("$Header$");
 #include <sys/file.h>
 #include <sys/param.h>
 #endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <sys/types.h>
 #include <ubik.h>
 #include <afs/auth.h>
@@ -133,7 +140,7 @@ afs_int32 GetText (call, lockHandle, textType, maxLength, offset,
     /* allocate the transfer storage */
     if (transferSize <= 0) {
       charListPtr->charListT_len = 0L;
-      charListPtr->charListT_val = (char *)0;
+      charListPtr->charListT_val = NULL;
     }
     else {
       charListPtr->charListT_len = transferSize;

@@ -56,9 +56,9 @@ char **argv; {
     
     initialize_CMD_error_table();
 
-    ts = cmd_CreateSyntax("apple", cproc1, (char *) 0, "describe apple");
+    ts = cmd_CreateSyntax("apple", cproc1, NULL, "describe apple");
 
-    ts = cmd_CreateSyntax("pear", cproc2, (char *) 0, "describe pear");
+    ts = cmd_CreateSyntax("pear", cproc2, NULL, "describe pear");
     cmd_AddParm(ts, "-num", CMD_LIST, 0, "number of pears");
     cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL, "don't authenticate");
     cmd_AddParm(ts, "-spotpos", CMD_LIST, CMD_OPTIONAL | CMD_EXPANDS, 0);
@@ -71,7 +71,7 @@ char **argv; {
     while (1) {
 	printf("> ");
 	tp = gets(tline);
-	if (tp == (char *) 0) break;
+	if (tp == NULL) break;
 	code = cmd_ParseLine(tline, tv, &tc, 100);
 	if (code) {
 	    printf("itest: parsing failure: %s\n", error_message(code));

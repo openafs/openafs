@@ -269,7 +269,7 @@ main(argc, argv)
 			s = open("/dev/tty", 2);
 			if (s >= 0) {
 #ifndef	AFS_HPUX_ENV
-				(void) ioctl(s, (afs_uint32) TIOCNOTTY, (char *) 0);
+				(void) ioctl(s, (afs_uint32) TIOCNOTTY, NULL);
 #endif
 				(void) close(s);
 			}
@@ -338,7 +338,7 @@ main(argc, argv)
 	if ((i = open(driftcomp_file, O_WRONLY|O_CREAT, 0644)) >= 0) {
 		drift_fd = i;
 	}
-	(void) gettimeofday(&tv, (struct timezone *) 0);
+	(void) gettimeofday(&tv, NULL);
 	srand(tv.tv_sec);
 
 	FD_ZERO(&tmpmask);
@@ -385,7 +385,7 @@ main(argc, argv)
 #endif
 	selfds++;
 
-	(void) setitimer(ITIMER_REAL, itp, (struct itimerval *) 0);
+	(void) setitimer(ITIMER_REAL, itp, NULL);
 
 	for (;;) {		/* go into a finite but hopefully very long
 				 * loop */
@@ -393,8 +393,8 @@ main(argc, argv)
 
 		readfds = tmpmask;
 		nfds = select(selfds, &readfds, (fd_set *) 0, (fd_set *) 0,
-						(struct timeval *) 0);
-		(void) gettimeofday(&tv, (struct timezone *) 0);
+						NULL);
+		(void) gettimeofday(&tv, NULL);
 
 		for(i = 0; i < nintf && nfds; i++) {
 			if (!FD_ISSET(addrs[i].fd, &readfds))

@@ -189,8 +189,7 @@ error:
     return OSI_NULLSOCKET;
 }
 
-void osi_Panic(msg, a1, a2, a3)
-    char *msg;
+void osi_Panic(char *msg, int a1, int a2, int a3)
 {
     (osi_Msg "Fatal Rx error: ");
     (osi_Msg msg, a1, a2, a3);
@@ -205,14 +204,13 @@ void osi_Panic(msg, a1, a2, a3)
 
 void osi_AssertFailU(const char *expr, const char *file, int line)
 {
-    osi_Panic("assertion failed: %s, file: %s, line: %d\n", expr, file, line);
+    osi_Panic("assertion failed: %s, file: %s, line: %d\n", (int) expr, (int) file, line);
 }
 
 #ifdef	AFS_AIX32_ENV
 #ifndef osi_Alloc
 static const char memZero;
-char * osi_Alloc(x)
-    afs_int32 x; 
+char *osi_Alloc(afs_int32 x)
 {
     /* 
      * 0-length allocs may return NULL ptr from osi_kalloc, so we special-case
@@ -222,9 +220,7 @@ char * osi_Alloc(x)
     return ((char *) malloc(x));
 }
 
-osi_Free(x, size)
-    char *x;
-    afs_int32 size; 
+void osi_Free(char *x, afs_int32 size)
 {
     if (x == &memZero) return;
     free((char *)x);
@@ -313,8 +309,7 @@ void rx_GetIFInfo(void)
     
 #endif
 
-static afs_uint32 fudge_netmask(addr) 
-afs_uint32 addr;
+static afs_uint32 fudge_netmask(afs_uint32 addr) 
 {
 afs_uint32 msk;
 
@@ -351,7 +346,7 @@ return rcode;
 #endif /* AFS_AIX_ENV */
 
 #ifndef AFS_NT40_ENV
-void rx_GetIFInfo()
+void rx_GetIFInfo(void)
 {
     int     s;
     int     i, j, len, res;

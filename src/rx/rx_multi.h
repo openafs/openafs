@@ -29,10 +29,6 @@ struct multi_handle {
 #endif /* RX_ENABLE_LOCKS */
 };
 
-extern struct multi_handle *multi_Init();
-extern int multi_Select();
-extern void multi_Finalize();
-
 #define multi_Rx(conns, nConns) \
     do {\
 	register struct multi_handle *multi_h;\
