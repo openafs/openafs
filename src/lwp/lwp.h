@@ -286,7 +286,7 @@ extern
  * cases, and also between machines apparently running the same OS
  * version.
  */
-#define AFS_LWP_MINSTACKSIZE	(48 * 1024)
+#define AFS_LWP_MINSTACKSIZE	(96 * 1024)
 
 /* Action to take on stack overflow. */
 #define LWP_SOQUIET	1		/* do nothing */
