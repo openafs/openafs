@@ -420,6 +420,7 @@ void shutdown_rxevent(void)
 	osi_Free((char *)xp, sizeof(struct xfreelist));
 	xp = nxp;
     }
+    xfreemallocs = (struct xfreelist *) 0;
 #endif
 
 }
