@@ -270,7 +270,7 @@ afsd_thread(void *rock)
 	complete_and_exit(0, 0);
 	break;
     default:
-	printf("Unknown op %d in StartDaemon()\n");
+	printf("Unknown op %d in StartDaemon()\n", parm);
 	break;
     }
     return 0;
