@@ -133,7 +133,7 @@ EvalMountPoint(avc, advc, avolpp, areq)
        volnamep = &avc->linkData[1];
        tcell = afs_GetCell(avc->fid.Cell, READ_LOCK);
     }
-    if (!tcell) return ENOENT;
+    if (!tcell) return ENODEV;
 
     mtptCell = tcell->cell;               /* The cell for the mountpoint */
     if (tcell->lcellp) {
