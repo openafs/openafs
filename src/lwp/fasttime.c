@@ -118,6 +118,12 @@ FT_AGetTimeOfDay(struct timeval *tv, struct timezone *tz)
     return FT_GetTimeOfDay(tv, tz);
 }
 
+#ifdef AFS_PTHREAD_ENV
+unsigned int FT_ApproxTime(void)
+{
+    return time(0);
+}
+#else
 unsigned int
 FT_ApproxTime(void)
 {
@@ -126,3 +132,4 @@ FT_ApproxTime(void)
     }
     return FT_LastTime.tv_sec;
 }
+#endif
