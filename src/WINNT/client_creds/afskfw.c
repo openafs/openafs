@@ -466,10 +466,10 @@ KFW_is_available(void)
 	DWORD code, len;
     DWORD enableKFW = 1;
 
-    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
+    code = RegOpenKeyEx(HKEY_CURRENT_USER, OpenAFSConfigKeyName,
                          0, KEY_QUERY_VALUE, &parmKey);
     if (code != ERROR_SUCCESS)
-        code = RegOpenKeyEx(HKEY_CURRENT_USER, OpenAFSConfigKeyName,
+        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
                              0, KEY_QUERY_VALUE, &parmKey);
 	if (code == ERROR_SUCCESS) {
         len = sizeof(enableKFW);
