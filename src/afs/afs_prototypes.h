@@ -352,7 +352,7 @@ extern void shutdown_mariner(void);
 
 
 /* afs_memcache.c */
-extern int afs_InitMemCache(afs_int64 size, int blkSize, int flags);
+extern int afs_InitMemCache(int blkCount, int blkSize, int flags);
 extern int afs_MemCacheClose(char *file);
 extern void *afs_MemCacheOpen(ino_t blkno);
 extern int afs_MemReadBlk(register struct memCacheEntry *mceP, int offset, char *dest, int size);

@@ -34,7 +34,7 @@ static int memAllocMaySleep = 0;
 
 extern int cacheDiskType;
 
-int afs_InitMemCache(afs_int64 size, int blkSize, int flags)
+int afs_InitMemCache(int blkCount, int blkSize, int flags)
   {
       int index;
 
@@ -42,7 +42,7 @@ int afs_InitMemCache(afs_int64 size, int blkSize, int flags)
       if(blkSize)
 	  memCacheBlkSize = blkSize;
       
-      memMaxBlkNumber = size / memCacheBlkSize;
+      memMaxBlkNumber = blkCount;
       memCache = (struct memCacheEntry *)
 	  afs_osi_Alloc(memMaxBlkNumber * sizeof(struct memCacheEntry));
       if (flags & AFSCALL_INIT_MEMCACHE_SLEEP) {
