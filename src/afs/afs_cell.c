@@ -52,19 +52,30 @@ afs_uint32 afs_nextCellNum = 0x100;
 /* Local variables. */
 struct cell *afs_rootcell = 0;
 
+/* Handler waiting for request from client */
 static char afs_AfsdbHandlerWait;
+/* Client waiting for handler to become available or finish request */
 static char afs_AfsdbLookupWait;
 
+/* Set to 1 when we've seen the userspace AFSDB process at least once */
 char afs_AfsdbHandlerPresent = 0;
+/* Set to 1 when there is a client interacting with the AFSDB handler.
+ * Protects the in and out variables below.  Protected by GLOCK. */
 char afs_AfsdbHandlerInuse = 0;
+/* Set to 1 when AFSDB has been shut down */
 char afs_AfsdbHandlerShutdown = 0;
 
+/* Input to handler from the client: cell name to look up */
 char *afs_AfsdbHandler_CellName;
+/* Outputs from handler to client: cell hosts, TTL, and real cell name */
 afs_int32 *afs_AfsdbHandler_CellHosts;
 int *afs_AfsdbHandler_Timeout;
+char **afs_AfsdbHandler_RealName;
 
-char afs_AfsdbHandler_ReqPending;
-char afs_AfsdbHandler_Completed;
+/* Client sets ReqPending to 1 whenever it queues a request for it */
+char afs_AfsdbHandler_ReqPending = 0;
+/* Handler sets Completed to 1 when it completes the client request */
+char afs_AfsdbHandler_Completed = 0;
 
 
 struct cell *afs_GetCellByName_int();
@@ -115,6 +126,9 @@ int afs_AfsdbHandler(acellName, acellNameLen, kernelMsg)
 	*afs_AfsdbHandler_Timeout = kernelMsg[1];
 	if (*afs_AfsdbHandler_Timeout) *afs_AfsdbHandler_Timeout += osi_Time();
 
+	*afs_AfsdbHandler_RealName = afs_osi_Alloc(strlen(acellName) + 1);
+	strcpy(*afs_AfsdbHandler_RealName, acellName);
+
 	for (i=0; i<MAXCELLHOSTS; i++) {
 	    if (i >= hostCount)
 		afs_AfsdbHandler_CellHosts[i] = 0;
@@ -153,10 +167,11 @@ int afs_AfsdbHandler(acellName, acellNameLen, kernelMsg)
 #endif
 
 
-int afs_GetCellHostsFromDns(acellName, acellHosts, timeout)
+int afs_GetCellHostsFromDns(acellName, acellHosts, timeout, realName)
     char *acellName;
     afs_int32 *acellHosts;
     int *timeout;
+    char **realName;
 {
 #ifdef AFS_AFSDB_ENV
     char grab_glock = 0;
@@ -180,6 +195,7 @@ int afs_GetCellHostsFromDns(acellName, acellHosts, timeout)
     afs_AfsdbHandler_CellName = acellName;
     afs_AfsdbHandler_CellHosts = acellHosts;
     afs_AfsdbHandler_Timeout = timeout;
+    afs_AfsdbHandler_RealName = realName;
 
     /* Wake up the AFSDB handler */
     afs_AfsdbHandler_Completed = 0;
@@ -207,20 +223,24 @@ int afs_GetCellHostsFromDns(acellName, acellHosts, timeout)
 void afs_RefreshCell(tc)
     register struct cell *tc;
 {
-    afs_int32 acellHosts[MAXCELLHOSTS];
+    afs_int32 cellHosts[MAXCELLHOSTS];
+    char *realName;
     int timeout;
 
     /* Don't need to do anything if no timeout or it's not expired */
     if (!tc->timeout || tc->timeout > osi_Time()) return;
 
-    if (!afs_GetCellHostsFromDns(tc->cellName, acellHosts, &timeout)) {
-	afs_NewCell(tc->cellName, acellHosts, tc->states,
-		    tc->lcellp ? tc->lcellp->cellName : (char *) 0,
-		    tc->fsport, tc->vlport, timeout);
-    }
+    if (afs_GetCellHostsFromDns(tc->cellName, cellHosts, &timeout, &realName))
+	/* In case of lookup failure, keep old data */
+	return;
 
-    /* In case of a DNS failure, keep old cell data.. */
-    return;
+    /* Refresh the DB servers for the real cell; other values stay the same. */
+    afs_NewCell(realName, cellHosts, 0, (char *) 0, 0, 0, timeout, (char *) 0);
+
+    /* If this is an alias, update the alias entry too */
+    if (afs_strcasecmp(tc->cellName, realName))
+	afs_NewCell(tc->cellName, 0, CAlias, (char *) 0, 0, 0,
+		    timeout, realName);
 }
 
 
@@ -228,19 +248,28 @@ struct cell *afs_GetCellByName_Dns(acellName, locktype)
     register char *acellName;
     afs_int32 locktype;
 {
-    afs_int32 acellHosts[MAXCELLHOSTS];
+    afs_int32 cellHosts[MAXCELLHOSTS];
+    char *realName;
     int timeout;
 
-    if (afs_GetCellHostsFromDns(acellName, acellHosts, &timeout))
+    if (afs_GetCellHostsFromDns(acellName, cellHosts, &timeout, &realName))
 	return (struct cell *) 0;
-    if (afs_NewCell(acellName, acellHosts, CNoSUID, (char *) 0, 0, 0, timeout))
+    if (afs_NewCell(realName, cellHosts, CNoSUID, (char *) 0, 0, 0,
+		    timeout, (char *) 0))
 	return (struct cell *) 0;
+
+    /* If this is an alias, create an entry for it too */
+    if (afs_strcasecmp(acellName, realName)) {
+	if (afs_NewCell(acellName, 0, CAlias, (char *) 0, 0, 0,
+			timeout, realName))
+	    return (struct cell *) 0;
+    }
 
     return afs_GetCellByName_int(acellName, locktype, 0);
 }
 
 
-struct cell *afs_GetCellByName_int(acellName, locktype, trydns)
+static struct cell *afs_GetCellByName_int(acellName, locktype, trydns)
     register char *acellName;
     afs_int32 locktype;
     char trydns;
@@ -257,6 +286,10 @@ struct cell *afs_GetCellByName_int(acellName, locktype, trydns)
 	    QAdd(&CellLRU, &tc->lruq);
 	    ReleaseWriteLock(&afs_xcell);
 	    afs_RefreshCell(tc);
+	    if (tc->states & CAlias) {
+		tc = tc->alias;
+		afs_RefreshCell(tc);
+	    }
 	    return tc;
 	}
     }
@@ -327,20 +360,21 @@ struct cell *afs_GetCellByIndex(cellindex, locktype)
 } /*afs_GetCellByIndex*/
 
 
-afs_int32 afs_NewCell(acellName, acellHosts, aflags, linkedcname, fsport, vlport, timeout)
+afs_int32 afs_NewCell(acellName, acellHosts, aflags, linkedcname, fsport, vlport, timeout, aliasFor)
     int aflags;
     char *acellName;
     register afs_int32 *acellHosts;
     char *linkedcname;
     u_short fsport, vlport;
     int timeout;
+    char *aliasFor;
 {
     register struct cell *tc, *tcl=0;
     register afs_int32 i, newc=0, code=0;
     register struct afs_q *cq, *tq;
 
     AFS_STATCNT(afs_NewCell);
-    if (*acellHosts == 0)
+    if (!(aflags & CAlias) && *acellHosts == 0)
 	/* need >= one host to gen cell # */
 	return EINVAL;
 
@@ -350,6 +384,13 @@ afs_int32 afs_NewCell(acellName, acellHosts, aflags, linkedcname, fsport, vlport
     for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
 	tc = QTOC(cq); tq = QNext(cq);
 	if (afs_strcasecmp(tc->cellName, acellName) == 0) {
+	    /* if the cell we've found has the correct name but no timeout,
+	     * and we're called with a non-zero timeout, bail out:  never
+	     * override static configuration entries with AFSDB ones. */
+	    if (timeout && !tc->timeout) {
+		ReleaseWriteLock(&afs_xcell);
+		return 0;
+	    }
 	    /* we don't want to keep pinging old vlservers which were down,
 	     * since they don't matter any more.  It's easier to do this than
 	     * to remove the server from its various hash tables. */
@@ -414,6 +455,26 @@ afs_int32 afs_NewCell(acellName, acellHosts, aflags, linkedcname, fsport, vlport
     tc->timeout = timeout;
  
     memset((char *)tc->cellHosts, 0, sizeof(tc->cellHosts));
+    if (aflags & CAlias) {
+	struct cell *tca = NULL;
+
+	if (!aliasFor) {
+	    code = EINVAL;
+	    goto bad;
+	}
+	for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
+	    tca = QTOC(cq); tq = QNext(cq);
+	    if (!afs_strcasecmp(tca->cellName, aliasFor))
+		break;
+	}
+	if (!tca) {
+	    code = ENOENT;
+	    goto bad;
+	}
+	tc->alias = tca;
+	goto done;
+    }
+
     for (i=0; i<MAXCELLHOSTS; i++) {
         struct server *ts;
 	afs_uint32 temp = acellHosts[i];
@@ -425,6 +486,7 @@ afs_int32 afs_NewCell(acellName, acellHosts, aflags, linkedcname, fsport, vlport
 	afs_PutServer(ts, WRITE_LOCK);
     }
     afs_SortServers(tc->cellHosts, MAXCELLHOSTS);	/* randomize servers */
+done:
     ReleaseWriteLock(&afs_xcell);
     return 0;
 bad:

@@ -189,6 +189,7 @@ struct afs_cbr {
 #define	CNoSUID		    2	    /* 1 if no suid progs can run from this cell */
 #define CHasVolRef	   16	    /* Volumes were referenced in this cell*/
 #define CLinkedCell	   32
+#define CAlias		   64	    /* This cell entry is an alias */
 
 struct cell {
     struct afs_q lruq;			     /* lru q next and prev */
@@ -201,6 +202,7 @@ struct cell {
     short states;			    /* state flags */
     short cellIndex;			    /* relative index number per cell */
     time_t timeout;			    /* data expire time, if non-zero */
+    struct cell *alias;			    /* what this cell is an alias for */
 };
 
 #define	afs_PutCell(cellp, locktype)

@@ -2295,7 +2295,7 @@ static PNewCell(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     }
 
     linkedstate |= CNoSUID; /* setuid is disabled by default for fs newcell */
-    code = afs_NewCell(newcell, cellHosts, linkedstate, linkedcell, fsport, vlport, (int)0);
+    code = afs_NewCell(newcell, cellHosts, linkedstate, linkedcell, fsport, vlport, (int)0, (char *) 0);
     return code;
 }
 
