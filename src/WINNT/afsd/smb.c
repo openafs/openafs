@@ -9,6 +9,8 @@
 
 //#define NOSERVICE 1
 
+#define NOMOREFILESFIX 1
+
 #include <afs/param.h>
 #include <afs/stds.h>
 
@@ -2276,6 +2278,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 namep += entryLength;
                 tcounter++;		/* which proto entry we're looking at */
         }
+#ifndef NOMOREFILESFIX
 	/* 
 	 * NOTE: We can determine what OS (NT4.0, W2K, W9X, etc)
 	 * the client is running by reading the protocol signature.
@@ -2310,6 +2313,8 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 		       */
 	       }
 	}
+	// NOMOREFILESFIX
+#endif
 
         if (NTProtoIndex != -1) {
 		protoIndex = NTProtoIndex;
