@@ -1439,7 +1439,7 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
       ain += sizeof(afs_int32);			/* skip id field */
       /* rest is cell name, look it up */
       /* some versions of gcc appear to need != 0 in order to get this right */
-      if (flag & 0x8000 != 0) {			/* XXX Use Constant XXX */
+      if ((flag & 0x8000) != 0) {		/* XXX Use Constant XXX */
 	  flag &= ~0x8000;
 	  set_parent_pag = 1;
       }
