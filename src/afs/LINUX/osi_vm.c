@@ -66,17 +66,7 @@ int osi_VM_FlushVCache(struct vcache *avc, int *slept)
  */
 void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 {
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-    struct inode *ip = (struct inode*)avc;
-
-    truncate_inode_pages(&ip->i_data, 0);
-#elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,15)
-    struct inode *ip = (struct inode*)avc;
-
-    truncate_inode_pages(ip, 0);
-#else
     invalidate_inode_pages((struct inode *)avc);
-#endif
 }
 
 /* Flush and invalidate pages, for fsync() with INVAL flag
