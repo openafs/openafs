@@ -191,7 +191,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libncurses.so"
-		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE -G0"
 		;;
 
 	i386_linux22)

@@ -275,7 +275,7 @@ login: project kauth rxkad
 		${COMPILE_PART1} sia ${COMPILE_PART2} ;; \
 	sun4x_55 ) \
 		${COMPILE_PART1} login ${COMPILE_PART2} ;; \
-	parisc_linux24|ia64_linux24) \
+	parisc_linux24) \
 		echo Skipping pam/login for parisc_linux24 ;; \
 	sun4x_* | sunx86_* | hp_ux11* | *linux* | *fbsd* ) \
 		${COMPILE_PART1} pam ${COMPILE_PART2} ;; \
