@@ -399,7 +399,7 @@ afs_int32 vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc
         }
         code = afsconf_ClientAuth(tdir, &sc, &scIndex); /* sets sc,scIndex */
         if (code) {
-            fprintf(STDERR, "vsu_ClientInit: Could not get security object for -localAuth %\n");
+            fprintf(STDERR, "vsu_ClientInit: Could not get security object for -localAuth\n");
             return -1;
         }
         code = afsconf_GetCellInfo(tdir, tdir->cellName, AFSCONF_VLDBSERVICE,
