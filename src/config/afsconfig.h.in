@@ -9,6 +9,9 @@
 /* define if you want to want namei fileserver */
 #undef AFS_NAMEI_ENV
 
+/* define if your aops.writepage takes a struct writeback_control argument */
+#undef AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL
+
 /* define if you want to salvager to check bitmasks later */
 #undef BITMAP_LATER
 
@@ -27,6 +30,9 @@
 
 /* define if prev_task defined */
 #undef DEFINED_PREV_TASK
+
+/* define if your dops.d_revalidate takes a nameidata argument */
+#undef DOP_REVALIDATE_TAKES_NAMEIDATA
 
 /* define if you have redhat buildsystem */
 #undef ENABLE_REDHAT_BUILDSYS
@@ -88,6 +94,9 @@
 
 /* define if your linux kernel has linux/syscall.h */
 #undef HAVE_KERNEL_LINUX_SYSCALL_H
+
+/* define if your linux kernel provides page_follow_link */
+#undef HAVE_KERNEL_PAGE_FOLLOW_LINK
 
 /* Define to 1 if you have the <malloc.h> header file. */
 #undef HAVE_MALLOC_H
@@ -271,6 +280,15 @@
 /* define if your setattr return return non-void */
 #undef INODE_SETATTR_NOT_VOID
 
+/* define if your iops.create takes a nameidata argument */
+#undef IOP_CREATE_TAKES_NAMEIDATA
+
+/* define if your iops.lookup takes a nameidata argument */
+#undef IOP_LOOKUP_TAKES_NAMEIDATA
+
+/* define if your iops.permission takes a nameidata argument */
+#undef IOP_PERMISSION_TAKES_NAMEIDATA
+
 /* define if irix has memcpy and friends */
 #undef IRIX_HAS_MEM_FUNCS
 
@@ -360,6 +378,9 @@
 
 /* define if target is big endian */
 #undef WORDS_BIGENDIAN
+
+/* define if your sops.write_inode returns non-void */
+#undef WRITE_INODE_NOT_VOID
 
 /* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
    `char[]'. */

@@ -309,7 +309,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE am__leading_dot CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE build build_cpu build_vendor build_os host host_cpu host_vendor host_os CPP EGREP LN_S RANLIB ac_ct_RANLIB YACC LEX LEXLIB LEX_OUTPUT_ROOT P5PLUS_KOPTS LINUX_GCC_KOPTS RHCONFIG_SP RHCONFIG_MP MPS HEADER_RT PTHREAD_LIBS XBSA_CFLAGS HAVE_PAM BUILD_LOGIN afsconfdir viceetcdir afskerneldir afssrvbindir afssrvsbindir afssrvlibexecdir afsdbdir afslogsdir afslocaldir afsbackupdir afsbosconfigdir AFS_SYSNAME AFS_PARAM_COMMON ENABLE_KERNEL_MODULE LIB_AFSDB LINUX_KERNEL_PATH BSD_KERNEL_PATH BSD_KERNEL_BUILD LINUX_VERSION MKAFS_OSTYPE TOP_OBJDIR TOP_SRCDIR TOP_INCDIR TOP_LIBDIR DEST WITH_OBSOLETE WITH_INSECURE DARWIN_INFOFILE IRIX_BUILD_IP35 AS AR MV RM LD CP LORDER XFS_SIZE_CHECK install_XFS_SIZE_CHECK dest_XFS_SIZE_CHECK FS_CONV_SOL26 install_FS_CONV_SOL26 dest_FS_CONV_SOL26 FS_CONV_OSF40D install_FS_CONV_OSF40D dest_FS_CONV_OSF40D CCXPG2 CCOBJ AFSD_LIBS AFSD_LDFLAGS AIX64 DBG FSINCLUDES KERN_DBG KERN_OPTMZ LWP_DBG LWP_OPTMZ MT_CC MT_CFLAGS MT_LIBS OPTMZ PAM_CFLAGS PAM_LIBS PINSTALL_LIBS REGEX_OBJ SHLIB_CFLAGS SHLIB_LDFLAGS SHLIB_LINKER SHLIB_SUFFIX TXLIBS VFSCK_CFLAGS XCFLAGS XCFLAGS64 XLDFLAGS XLDFLAGS64 XLIBELFA XLIBKVM XLIBS HELPER_SPLINT HELPER_SPLINTCFG LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS INSTALL_PROGRAM INSTALL_SCRIPT INSTALL_DATA CYGPATH_W PACKAGE VERSION ACLOCAL AUTOCONF AUTOMAKE AUTOHEADER MAKEINFO AMTAR install_sh STRIP ac_ct_STRIP INSTALL_STRIP_PROGRAM AWK SET_MAKE am__leading_dot CC CFLAGS LDFLAGS CPPFLAGS ac_ct_CC EXEEXT OBJEXT DEPDIR am__include am__quote AMDEP_TRUE AMDEP_FALSE AMDEPBACKSLASH CCDEPMODE am__fastdepCC_TRUE am__fastdepCC_FALSE build build_cpu build_vendor build_os host host_cpu host_vendor host_os CPP EGREP LN_S RANLIB ac_ct_RANLIB YACC LEX LEXLIB LEX_OUTPUT_ROOT HEADER_RT P5PLUS_KOPTS LINUX_GCC_KOPTS RHCONFIG_SP RHCONFIG_MP MPS PTHREAD_LIBS XBSA_CFLAGS HAVE_PAM BUILD_LOGIN afsconfdir viceetcdir afskerneldir afssrvbindir afssrvsbindir afssrvlibexecdir afsdbdir afslogsdir afslocaldir afsbackupdir afsbosconfigdir AFS_SYSNAME AFS_PARAM_COMMON ENABLE_KERNEL_MODULE LIB_AFSDB LINUX_KERNEL_PATH BSD_KERNEL_PATH BSD_KERNEL_BUILD LINUX_VERSION MKAFS_OSTYPE TOP_OBJDIR TOP_SRCDIR TOP_INCDIR TOP_LIBDIR DEST WITH_OBSOLETE WITH_INSECURE DARWIN_INFOFILE IRIX_BUILD_IP35 AS AR MV RM LD CP LORDER XFS_SIZE_CHECK install_XFS_SIZE_CHECK dest_XFS_SIZE_CHECK FS_CONV_SOL26 install_FS_CONV_SOL26 dest_FS_CONV_SOL26 FS_CONV_OSF40D install_FS_CONV_OSF40D dest_FS_CONV_OSF40D CCXPG2 CCOBJ AFSD_LIBS AFSD_LDFLAGS AIX64 DBG FSINCLUDES KERN_DBG KERN_OPTMZ LWP_DBG LWP_OPTMZ MT_CC MT_CFLAGS MT_LIBS OPTMZ PAM_CFLAGS PAM_LIBS PINSTALL_LIBS REGEX_OBJ SHLIB_CFLAGS SHLIB_LDFLAGS SHLIB_LINKER SHLIB_SUFFIX TXLIBS VFSCK_CFLAGS XCFLAGS XCFLAGS64 XLDFLAGS XLDFLAGS64 XLIBELFA XLIBKVM XLIBS HELPER_SPLINT HELPER_SPLINTCFG LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1612,7 +1612,7 @@ fi
 
 # Define the identity of the package.
  PACKAGE=openafs-libafs
- VERSION=1.3.74
+ VERSION=1.3.77
 
 
 cat >>confdefs.h <<_ACEOF
@@ -4778,6 +4778,7 @@ echo $ECHO_N "checking your OS... $ECHO_C" >&6
 system=$host
 case $system in
         *-linux*)
+
 		MKAFS_OSTYPE=LINUX
 		if test "x$enable_redhat_buildsys" = "xyes"; then
 
@@ -4839,6 +4840,634 @@ echo "$as_me: WARNING: No usable linux headers found at $LINUX_KERNEL_PATH so di
 		fi
 		echo "$as_me:$LINENO: result: linux" >&5
 echo "${ECHO_T}linux" >&6
+                if test "x$enable_kernel_module" = "xyes"; then
+                 AFS_SYSKVERS=`echo $LINUX_VERSION | awk -F\. '{print $1 $2}'`
+                 if test "x${AFS_SYSKVERS}" = "x"; then
+                  { { echo "$as_me:$LINENO: error: Couldn't guess your Linux version 2" >&5
+echo "$as_me: error: Couldn't guess your Linux version 2" >&2;}
+   { (exit 1); exit 1; }; }
+                 fi
+                fi
+                ;;
+        *-solaris*)
+		MKAFS_OSTYPE=SOLARIS
+                echo "$as_me:$LINENO: result: sun4" >&5
+echo "${ECHO_T}sun4" >&6
+
+echo "$as_me:$LINENO: checking for vfs_dqrwlock in struct ufsvfs" >&5
+echo $ECHO_N "checking for vfs_dqrwlock in struct ufsvfs... $ECHO_C" >&6
+if test "${ac_cv_solaris_ufsvfs_has_dqrwlock+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#define _KERNEL
+#include <sys/fs/ufs_inode.h>
+int
+main ()
+{
+struct ufsvfs _ufsvfs;
+(void) _ufsvfs.vfs_dqrwlock;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_solaris_ufsvfs_has_dqrwlock=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_solaris_ufsvfs_has_dqrwlock=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+
+echo "$as_me:$LINENO: result: $ac_cv_solaris_ufsvfs_has_dqrwlock" >&5
+echo "${ECHO_T}$ac_cv_solaris_ufsvfs_has_dqrwlock" >&6
+if test "$ac_cv_solaris_ufsvfs_has_dqrwlock" = "yes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_VFS_DQRWLOCK 1
+_ACEOF
+
+fi
+
+
+echo "$as_me:$LINENO: checking for p_corefile in struct proc" >&5
+echo $ECHO_N "checking for p_corefile in struct proc... $ECHO_C" >&6
+if test "${ac_cv_solaris_proc_has_p_corefile+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#define _KERNEL
+#include <sys/proc.h>
+int
+main ()
+{
+struct proc _proc;
+(void) _proc.p_corefile;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_solaris_proc_has_p_corefile=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_solaris_proc_has_p_corefile=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+
+echo "$as_me:$LINENO: result: $ac_cv_solaris_proc_has_p_corefile" >&5
+echo "${ECHO_T}$ac_cv_solaris_proc_has_p_corefile" >&6
+if test "$ac_cv_solaris_proc_has_p_corefile" = "yes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_P_COREFILE 1
+_ACEOF
+
+fi
+
+
+echo "$as_me:$LINENO: checking for fs_rolled in struct proc" >&5
+echo $ECHO_N "checking for fs_rolled in struct proc... $ECHO_C" >&6
+if test "${ac_cv_solaris_fs_has_fs_rolled+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <sys/fs/ufs_fs.h>
+int
+main ()
+{
+struct fs _fs;
+(void) _fs.fs_rolled;
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_solaris_fs_has_fs_rolled=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_solaris_fs_has_fs_rolled=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+
+echo "$as_me:$LINENO: result: $ac_cv_solaris_fs_has_fs_rolled" >&5
+echo "${ECHO_T}$ac_cv_solaris_fs_has_fs_rolled" >&6
+if test "$ac_cv_solaris_fs_has_fs_rolled" = "yes"; then
+
+cat >>confdefs.h <<\_ACEOF
+#define STRUCT_FS_HAS_FS_ROLLED 1
+_ACEOF
+
+fi
+
+                ;;
+        *-sunos*)
+		MKAFS_OSTYPE=SUNOS
+		enable_kernel_module=no
+                echo "$as_me:$LINENO: result: sun4" >&5
+echo "${ECHO_T}sun4" >&6
+                ;;
+        *-hpux*)
+		MKAFS_OSTYPE=HPUX
+                echo "$as_me:$LINENO: result: hp_ux" >&5
+echo "${ECHO_T}hp_ux" >&6
+                ;;
+        *-irix*)
+		if test -d /usr/include/sys/SN/SN1; then
+		 IRIX_BUILD_IP35="IP35"
+		fi
+		MKAFS_OSTYPE=IRIX
+                echo "$as_me:$LINENO: result: sgi" >&5
+echo "${ECHO_T}sgi" >&6
+                ;;
+        *-aix*)
+		MKAFS_OSTYPE=AIX
+                echo "$as_me:$LINENO: result: rs_aix" >&5
+echo "${ECHO_T}rs_aix" >&6
+                ;;
+        *-osf*)
+		MKAFS_OSTYPE=DUX
+                echo "$as_me:$LINENO: result: alpha_dux" >&5
+echo "${ECHO_T}alpha_dux" >&6
+		if test "x$enable_kernel_module" = "xyes"; then
+		 if test "x$with_dux_kernel_headers" != "x"; then
+		   HEADER_RT=`ls ${with_dux_kernel_headers}/rt_preempt.h | head -1 | sed 's,/rt_preempt.h,,;s,/usr/sys/,,'`
+		 else
+ 		   HEADER_RT=`ls /usr/sys/*/rt_preempt.h | head -1 | sed 's,/rt_preempt.h,,;s,/usr/sys/,,'`
+		 fi
+		fi
+		if test "$HEADER_RT" = "*" ; then
+			{ { echo "$as_me:$LINENO: error: Need a configured kernel directory" >&5
+echo "$as_me: error: Need a configured kernel directory" >&2;}
+   { (exit 1); exit 1; }; }
+		fi
+
+                ;;
+        *-darwin*)
+		MKAFS_OSTYPE=DARWIN
+                echo "$as_me:$LINENO: result: ppc_darwin" >&5
+echo "${ECHO_T}ppc_darwin" >&6
+                ;;
+	*-freebsd*)
+		MKAFS_OSTYPE=FBSD
+		echo "$as_me:$LINENO: result: i386_fbsd" >&5
+echo "${ECHO_T}i386_fbsd" >&6
+		;;
+	*-netbsd*)
+		MKAFS_OSTYPE=NBSD
+		echo "$as_me:$LINENO: result: nbsd" >&5
+echo "${ECHO_T}nbsd" >&6
+		;;
+	*-openbsd*)
+		MKAFS_OSTYPE=OBSD
+		echo "$as_me:$LINENO: result: i386_obsd" >&5
+echo "${ECHO_T}i386_obsd" >&6
+		;;
+        *)
+                echo "$as_me:$LINENO: result: $system" >&5
+echo "${ECHO_T}$system" >&6
+                ;;
+esac
+
+if test "x$with_afs_sysname" != "x"; then
+        AFS_SYSNAME="$with_afs_sysname"
+else
+	echo "$as_me:$LINENO: checking your AFS sysname" >&5
+echo $ECHO_N "checking your AFS sysname... $ECHO_C" >&6
+	case $host in
+		i?86-*-openbsd3.1)
+			AFS_SYSNAME="i386_obsd31"
+			;;
+		i?86-*-openbsd3.2)
+			AFS_SYSNAME="i386_obsd32"
+			;;
+		i?86-*-openbsd3.3)
+			AFS_SYSNAME="i386_obsd33"
+			;;
+		i?86-*-openbsd3.4)
+			AFS_SYSNAME="i386_obsd34"
+			;;
+		i?86-*-openbsd3.5)
+			AFS_SYSNAME="i386_obsd35"
+			;;
+		i?86-*-openbsd3.6)
+			AFS_SYSNAME="i386_obsd36"
+			;;
+		i?86-*-freebsd4.2*)
+			AFS_SYSNAME="i386_fbsd_42"
+			;;
+		i?86-*-freebsd4.3*)
+			AFS_SYSNAME="i386_fbsd_43"
+			;;
+		i?86-*-freebsd4.4*)
+			AFS_SYSNAME="i386_fbsd_44"
+			;;
+		i?86-*-freebsd4.5*)
+			AFS_SYSNAME="i386_fbsd_45"
+			;;
+		i?86-*-freebsd4.6*)
+			AFS_SYSNAME="i386_fbsd_46"
+			;;
+		i?86-*-freebsd4.7*)
+			AFS_SYSNAME="i386_fbsd_47"
+			;;
+		i?86-*-freebsd5.0*)
+			AFS_SYSNAME="i386_fbsd_50"
+			;;
+		i?86-*-freebsd5.1*)
+			AFS_SYSNAME="i386_fbsd_51"
+			;;
+		i?86-*-freebsd5.2*)
+			AFS_SYSNAME="i386_fbsd_52"
+			;;
+		i?86-*-freebsd5.3*)
+			AFS_SYSNAME="i386_fbsd_53"
+			;;
+		i?86-*-netbsd*1.5*)
+			AFS_PARAM_COMMON=param.nbsd15.h
+			AFS_SYSNAME="i386_nbsd15"
+			;;
+		alpha-*-netbsd*1.5*)
+			AFS_PARAM_COMMON=param.nbsd15.h
+			AFS_SYSNAME="alpha_nbsd15"
+			;;
+		i?86-*-netbsd*1.6[M-Z]*)
+			AFS_PARAM_COMMON=param.nbsd20.h
+			AFS_SYSNAME="i386_nbsd20"
+			;;
+		powerpc-*-netbsd*1.6[M-Z]*)
+			AFS_PARAM_COMMON=param.nbsd20.h
+			AFS_SYSNAME="ppc_nbsd20"
+			;;
+		i?86-*-netbsd*2.0*)
+			AFS_PARAM_COMMON=param.nbsd20.h
+			AFS_SYSNAME="i386_nbsd20"
+			;;
+		powerpc-*-netbsd*2.0*)
+			AFS_PARAM_COMMON=param.nbsd20.h
+			AFS_SYSNAME="ppc_nbsd20"
+			;;
+		i?86-*-netbsd*1.6*)
+			AFS_PARAM_COMMON=param.nbsd16.h
+			AFS_SYSNAME="i386_nbsd16"
+			;;
+		alpha-*-netbsd*1.6*)
+			AFS_PARAM_COMMON=param.nbsd16.h
+			AFS_SYSNAME="alpha_nbsd16"
+			;;
+		powerpc-*-netbsd*1.6*)
+			AFS_PARAM_COMMON=param.nbsd16.h
+			AFS_SYSNAME="ppc_nbsd16"
+			;;
+		i?86-*-netbsd*2.99*)
+			AFS_PARAM_COMMON=param.nbsd21.h
+			AFS_SYSNAME="i386_nbsd21"
+			;;
+		hppa*-hp-hpux11.0*)
+			AFS_SYSNAME="hp_ux110"
+			;;
+		hppa*-hp-hpux11.11)
+			AFS_SYSNAME="hp_ux11i"
+			;;
+		ia64-hp-hpux11.22)
+			AFS_SYSNAME="ia64_hpux1122"
+			;;
+		ia64-hp-hpux*)
+			AFS_SYSNAME="ia64_hpux1123"
+			;;
+		hppa*-hp-hpux10*)
+			AFS_SYSNAME="hp_ux102"
+			;;
+		powerpc-apple-darwin1.2*)
+			AFS_SYSNAME="ppc_darwin_12"
+			;;
+		powerpc-apple-darwin1.3*)
+			AFS_SYSNAME="ppc_darwin_13"
+			;;
+		powerpc-apple-darwin1.4*)
+			AFS_SYSNAME="ppc_darwin_14"
+			;;
+		powerpc-apple-darwin5.1*)
+			AFS_SYSNAME="ppc_darwin_14"
+			;;
+		powerpc-apple-darwin5.2*)
+			AFS_SYSNAME="ppc_darwin_14"
+			;;
+		powerpc-apple-darwin5.3*)
+			AFS_SYSNAME="ppc_darwin_14"
+			;;
+		powerpc-apple-darwin5.4*)
+			AFS_SYSNAME="ppc_darwin_14"
+			;;
+		powerpc-apple-darwin5.5*)
+			AFS_SYSNAME="ppc_darwin_14"
+			;;
+		powerpc-apple-darwin6.0*)
+			AFS_SYSNAME="ppc_darwin_60"
+			;;
+		powerpc-apple-darwin6.1*)
+			AFS_SYSNAME="ppc_darwin_60"
+			;;
+		powerpc-apple-darwin6.2*)
+			AFS_SYSNAME="ppc_darwin_60"
+			;;
+		powerpc-apple-darwin6.3*)
+			AFS_SYSNAME="ppc_darwin_60"
+			;;
+		powerpc-apple-darwin6.4*)
+			AFS_SYSNAME="ppc_darwin_60"
+			;;
+		powerpc-apple-darwin6.5*)
+			AFS_SYSNAME="ppc_darwin_60"
+			;;
+		powerpc-apple-darwin7.0*)
+			AFS_SYSNAME="ppc_darwin_70"
+			;;
+		powerpc-apple-darwin7.1*)
+			AFS_SYSNAME="ppc_darwin_70"
+			;;
+		powerpc-apple-darwin7.2*)
+			AFS_SYSNAME="ppc_darwin_70"
+			;;
+		powerpc-apple-darwin7.3*)
+			AFS_SYSNAME="ppc_darwin_70"
+			;;
+		powerpc-apple-darwin7.4*)
+			AFS_SYSNAME="ppc_darwin_70"
+			;;
+		powerpc-apple-darwin7.5*)
+			AFS_SYSNAME="ppc_darwin_70"
+			;;
+		sparc-sun-solaris2.5*)
+			AFS_SYSNAME="sun4x_55"
+			enable_login="yes"
+			;;
+		sparc-sun-solaris2.6)
+			AFS_SYSNAME="sun4x_56"
+			;;
+		sparc-sun-solaris2.7)
+			AFS_SYSNAME="sun4x_57"
+			;;
+		sparc-sun-solaris2.8)
+			AFS_SYSNAME="sun4x_58"
+			;;
+		sparc-sun-solaris2.9)
+			AFS_SYSNAME="sun4x_59"
+			;;
+		sparc-sun-solaris2.10)
+			AFS_SYSNAME="sun4x_510"
+			;;
+		sparc-sun-sunos4*)
+			AFS_SYSNAME="sun4_413"
+			enable_login="yes"
+			;;
+		i386-pc-solaris2.7)
+			AFS_SYSNAME="sunx86_57"
+			;;
+		i386-pc-solaris2.8)
+			AFS_SYSNAME="sunx86_58"
+			;;
+		i386-pc-solaris2.9)
+			AFS_SYSNAME="sunx86_59"
+			;;
+		i386-pc-solaris2.10)
+			AFS_SYSNAME="sunx86_510"
+			;;
+		alpha*-dec-osf4.0*)
+			AFS_SYSNAME="alpha_dux40"
+			;;
+		alpha*-dec-osf5.0*)
+			AFS_SYSNAME="alpha_dux50"
+			;;
+		alpha*-dec-osf5.1*)
+			AFS_SYSNAME="alpha_dux51"
+			;;
+		mips-sgi-irix6.5)
+			AFS_SYSNAME="sgi_65"
+			;;
+		ia64-*-linux*)
+			AFS_SYSNAME="ia64_linuxXX"
+			;;
+		powerpc-*-linux*)
+			AFS_SYSNAME="ppc_linuxXX"
+			;;
+		powerpc64-*-linux*)
+			AFS_SYSNAME="ppc64_linuxXX"
+			;;
+		alpha*-linux*)
+			AFS_SYSNAME="alpha_linux_XX"
+			;;
+		s390-*-linux*)
+			AFS_SYSNAME="s390_linuxXX"
+			;;
+		s390x-*-linux*)
+			AFS_SYSNAME="s390x_linuxXX"
+			;;
+		sparc-*-linux*)
+			AFS_SYSNAME="sparc_linuxXX"
+			;;
+		sparc64-*-linux*)
+			AFS_SYSNAME="sparc64_linuxXX"
+			;;
+		i?86-*-linux*)
+			AFS_SYSNAME="i386_linuxXX"
+			;;
+		parisc-*-linux-gnu|hppa-*-linux-gnu)
+			AFS_SYSNAME="parisc_linuxXX"
+			enable_pam="no"
+			;;
+		power*-ibm-aix4.2*)
+			AFS_SYSNAME="rs_aix42"
+			enable_pam="no"
+			;;
+		power*-ibm-aix4.3*)
+			AFS_SYSNAME="rs_aix42"
+			enable_pam="no"
+			;;
+		power*-ibm-aix5.1*)
+			AFS_SYSNAME="rs_aix51"
+			enable_pam="no"
+			;;
+		power*-ibm-aix5.2*)
+			AFS_SYSNAME="rs_aix52"
+			enable_pam="no"
+			;;
+		x86_64-*-linux-gnu)
+			AFS_SYSNAME="amd64_linuxXX"
+			enable_pam="no"
+			;;
+		*)
+			{ { echo "$as_me:$LINENO: error: An AFS sysname is required" >&5
+echo "$as_me: error: An AFS sysname is required" >&2;}
+   { (exit 1); exit 1; }; }
+			exit 1
+			;;
+	esac
+	case $AFS_SYSNAME in
+		*_linux* | *_umlinux*)
+			if test "x${AFS_SYSKVERS}" = "x"; then
+			 { { echo "$as_me:$LINENO: error: Couldn't guess your Linux version. Please use the --with-afs-sysname option to configure an AFS sysname." >&5
+echo "$as_me: error: Couldn't guess your Linux version. Please use the --with-afs-sysname option to configure an AFS sysname." >&2;}
+   { (exit 1); exit 1; }; }
+			fi
+			_AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
+			AFS_SYSNAME="$_AFS_SYSNAME"
+			save_CPPFLAGS="$CPPFLAGS"
+			CPPFLAGS="-I${LINUX_KERNEL_PATH}/include $CPPFLAGS"
+			cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <linux/autoconf.h>
+int
+main ()
+{
+#ifndef CONFIG_USERMODE
+			  #error not UML
+			  #endif
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_is_uml=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+			if test "${ac_cv_linux_is_uml}" = yes; then
+			 _AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/linux/umlinux/`
+			fi
+			CPPFLAGS="$save_CPPFLAGS"
+			AFS_SYSNAME="$_AFS_SYSNAME"
+			;;
+	esac
+        echo "$as_me:$LINENO: result: $AFS_SYSNAME" >&5
+echo "${ECHO_T}$AFS_SYSNAME" >&6
+fi
+
+case $AFS_SYSNAME in *_linux* | *_umlinux*)
+
+		# Add (sub-) architecture-specific paths needed by conftests
+		case $AFS_SYSNAME  in
+			*_umlinux26)
+				UMLINUX26_FLAGS="-I$LINUX_KERNEL_PATH/arch/um/include"
+				UMLINUX26_FLAGS="$UMLINUX26_FLAGS -I$LINUX_KERNEL_PATH/arch/um/kernel/tt/include"
+ 				UMLINUX26_FLAGS="$UMLINUX26_FLAGS -I$LINUX_KERNEL_PATH/arch/um/kernel/skas/include"
+				CPPFLAGS="$CPPFLAGS $UMLINUX26_FLAGS"
+		esac
+
 		if test "x$enable_kernel_module" = "xyes"; then
 		 if test "x$enable_debug_kernel" = "xno"; then
 			LINUX_GCC_KOPTS="$LINUX_GCC_KOPTS -fomit-frame-pointer"
@@ -5884,6 +6513,400 @@ echo "$as_me:$LINENO: result: $ac_cv_linux_func_inode_setattr_returns_int" >&5
 echo "${ECHO_T}$ac_cv_linux_func_inode_setattr_returns_int" >&6
 CPPFLAGS="$save_CPPFLAGS"
 
+echo "$as_me:$LINENO: checking for write_inode return type" >&5
+echo $ECHO_N "checking for write_inode return type... $ECHO_C" >&6
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+if test "${ac_cv_linux_func_write_inode_returns_int+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <linux/fs.h>
+int
+main ()
+{
+struct inode _inode;
+struct super_operations _sops;
+int i;
+i = _sops.write_inode(&_inode, 0);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_func_write_inode_returns_int=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_linux_func_write_inode_returns_int=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+
+echo "$as_me:$LINENO: result: $ac_cv_linux_func_write_inode_returns_int" >&5
+echo "${ECHO_T}$ac_cv_linux_func_write_inode_returns_int" >&6
+CPPFLAGS="$save_CPPFLAGS"
+
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+echo "$as_me:$LINENO: checking whether inode_operations.create takes a nameidata" >&5
+echo $ECHO_N "checking whether inode_operations.create takes a nameidata... $ECHO_C" >&6
+if test "${ac_cv_linux_func_i_create_takes_nameidata+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <linux/fs.h>
+#include <linux/namei.h>
+int
+main ()
+{
+struct inode _inode;
+struct dentry _dentry;
+struct nameidata _nameidata;
+(void)_inode.i_op->create(&_inode, &_dentry, 0, &_nameidata);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_func_i_create_takes_nameidata=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_linux_func_i_create_takes_nameidata=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+
+echo "$as_me:$LINENO: result: $ac_cv_linux_func_i_create_takes_nameidata" >&5
+echo "${ECHO_T}$ac_cv_linux_func_i_create_takes_nameidata" >&6
+if test "x$ac_cv_linux_func_i_create_takes_nameidata" = "xyes" ; then
+
+cat >>confdefs.h <<\_ACEOF
+#define IOP_CREATE_TAKES_NAMEIDATA 1
+_ACEOF
+
+fi
+echo "$as_me:$LINENO: checking whether inode_operations.lookup takes a nameidata" >&5
+echo $ECHO_N "checking whether inode_operations.lookup takes a nameidata... $ECHO_C" >&6
+if test "${ac_cv_linux_func_i_lookup_takes_nameidata+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <linux/fs.h>
+#include <linux/namei.h>
+int
+main ()
+{
+struct inode _inode;
+struct dentry _dentry;
+struct nameidata _nameidata;
+(void)_inode.i_op->lookup(&_inode, &_dentry, &_nameidata);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_func_i_lookup_takes_nameidata=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_linux_func_i_lookup_takes_nameidata=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+
+echo "$as_me:$LINENO: result: $ac_cv_linux_func_i_lookup_takes_nameidata" >&5
+echo "${ECHO_T}$ac_cv_linux_func_i_lookup_takes_nameidata" >&6
+if test "x$ac_cv_linux_func_i_lookup_takes_nameidata" = "xyes" ; then
+
+cat >>confdefs.h <<\_ACEOF
+#define IOP_LOOKUP_TAKES_NAMEIDATA 1
+_ACEOF
+
+fi
+echo "$as_me:$LINENO: checking whether inode_operations.permission takes a nameidata" >&5
+echo $ECHO_N "checking whether inode_operations.permission takes a nameidata... $ECHO_C" >&6
+if test "${ac_cv_linux_func_i_permission_takes_nameidata+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <linux/fs.h>
+#include <linux/namei.h>
+int
+main ()
+{
+struct inode _inode;
+struct nameidata _nameidata;
+(void)_inode.i_op->permission(&_inode, 0, &_nameidata);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_func_i_permission_takes_nameidata=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_linux_func_i_permission_takes_nameidata=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+
+echo "$as_me:$LINENO: result: $ac_cv_linux_func_i_permission_takes_nameidata" >&5
+echo "${ECHO_T}$ac_cv_linux_func_i_permission_takes_nameidata" >&6
+if test "x$ac_cv_linux_func_i_permission_takes_nameidata" = "xyes" ; then
+
+cat >>confdefs.h <<\_ACEOF
+#define IOP_PERMISSION_TAKES_NAMEIDATA 1
+_ACEOF
+
+fi
+echo "$as_me:$LINENO: checking whether dentry_operations.d_revalidate takes a nameidata" >&5
+echo $ECHO_N "checking whether dentry_operations.d_revalidate takes a nameidata... $ECHO_C" >&6
+CPPFLAGS="$CPPFLAGS -Werror"
+if test "${ac_cv_linux_func_d_revalidate_takes_nameidata+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <linux/fs.h>
+#include <linux/namei.h>
+int
+main ()
+{
+struct dentry _dentry;
+struct nameidata _nameidata;
+(void)_dentry.d_op->d_revalidate(&_dentry, &_nameidata);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_func_d_revalidate_takes_nameidata=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_linux_func_d_revalidate_takes_nameidata=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+
+echo "$as_me:$LINENO: result: $ac_cv_linux_func_d_revalidate_takes_nameidata" >&5
+echo "${ECHO_T}$ac_cv_linux_func_d_revalidate_takes_nameidata" >&6
+if test "x$ac_cv_linux_func_d_revalidate_takes_nameidata" = "xyes" ; then
+
+cat >>confdefs.h <<\_ACEOF
+#define DOP_REVALIDATE_TAKES_NAMEIDATA 1
+_ACEOF
+
+fi
+CPPFLAGS="$save_CPPFLAGS"
+
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+echo "$as_me:$LINENO: checking whether address_space_operations.writepage takes a writeback_control" >&5
+echo $ECHO_N "checking whether address_space_operations.writepage takes a writeback_control... $ECHO_C" >&6
+if test "${ac_cv_linux_func_a_writepage_takes_writeback_control+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <linux/fs.h>
+#include <linux/mm.h>
+#include <linux/writeback.h>
+int
+main ()
+{
+struct address_space_operations _aops;
+struct page _page;
+struct writeback_control _writeback_control;
+(void)_aops.writepage(&_page, &_writeback_control);
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_func_a_writepage_takes_writeback_control=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_linux_func_a_writepage_takes_writeback_control=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+
+echo "$as_me:$LINENO: result: $ac_cv_linux_func_a_writepage_takes_writeback_control" >&5
+echo "${ECHO_T}$ac_cv_linux_func_a_writepage_takes_writeback_control" >&6
+if test "x$ac_cv_linux_func_a_writepage_takes_writeback_control" = "xyes" ; then
+
+cat >>confdefs.h <<\_ACEOF
+#define AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL 1
+_ACEOF
+
+fi
+CPPFLAGS="$save_CPPFLAGS"
+
   echo "$as_me:$LINENO: checking for linux/syscall.h in kernel" >&5
 echo $ECHO_N "checking for linux/syscall.h in kernel... $ECHO_C" >&6
   if test -f "${LINUX_KERNEL_PATH}/include/linux/syscall.h"; then
@@ -6015,6 +7038,66 @@ fi
 
 echo "$as_me:$LINENO: result: $ac_cv_linux_kernel_sock_create_v" >&5
 echo "${ECHO_T}$ac_cv_linux_kernel_sock_create_v" >&6
+CPPFLAGS="$save_CPPFLAGS"
+
+echo "$as_me:$LINENO: checking for page_follow_link_light vs page_follow_link" >&5
+echo $ECHO_N "checking for page_follow_link_light vs page_follow_link... $ECHO_C" >&6
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+if test "${ac_cv_linux_kernel_page_follow_link+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+#include <linux/fs.h>
+int
+main ()
+{
+
+  page_follow_link(0,0)
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext
+if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
+  (eval $ac_compile) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest.$ac_objext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_linux_kernel_page_follow_link=yes
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+ac_cv_linux_kernel_page_follow_link=no
+fi
+rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
+fi
+
+echo "$as_me:$LINENO: result: $ac_cv_linux_kernel_page_follow_page" >&5
+echo "${ECHO_T}$ac_cv_linux_kernel_page_follow_page" >&6
 CPPFLAGS="$save_CPPFLAGS"
 
 RHCONFIG_SP=""
@@ -6421,7 +7504,7 @@ cat >>conftest.$ac_ext <<_ACEOF
 int
 main ()
 {
-#if !defined(CONFIG_MODVERSIONS) || (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
+#if !defined(CONFIG_MODVERSIONS)
 lose;
 #endif
 
@@ -6465,6 +7548,8 @@ echo "${ECHO_T}$ac_cv_linux_config_modversions" >&6
   echo "$as_me:$LINENO: checking which kernel modules to build" >&5
 echo $ECHO_N "checking which kernel modules to build... $ECHO_C" >&6
   if false; then
+      MPS="MP SP"
+  elif test "x$ac_cv_linux_config_modversions" = "xno" -a "$AFS_SYSKVERS" -lt 26; then
       MPS="MP SP"
   else
   if test "${ac_cv_linux_config_smp+set}" = set; then
@@ -6533,7 +7618,7 @@ echo "${ECHO_T}$MPS" >&6
 fi
 
 
-                 if test "x$ac_cv_linux_config_modversions" = "xno"; then
+                 if test "x$ac_cv_linux_config_modversions" = "xno" -o $AFS_SYSKVERS -ge 26; then
                    { echo "$as_me:$LINENO: WARNING: Cannot determine sys_call_table status. assuming it isn't exported" >&5
 echo "$as_me: WARNING: Cannot determine sys_call_table status. assuming it isn't exported" >&2;}
                    ac_cv_linux_exports_sys_call_table=no
@@ -7140,6 +8225,13 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 		 fi
+		 if test "x$ac_cv_linux_func_write_inode_returns_int" = "xyes" ; then
+
+cat >>confdefs.h <<\_ACEOF
+#define WRITE_INODE_NOT_VOID 1
+_ACEOF
+
+		 fi
 		 if test "x$ac_cv_linux_fs_struct_address_space_has_page_lock" = "xyes"; then
 
 cat >>confdefs.h <<\_ACEOF
@@ -7210,6 +8302,13 @@ cat >>confdefs.h <<\_ACEOF
 _ACEOF
 
 		 fi
+		 if test "x$ac_cv_linux_kernel_page_follow_link" = "xyes" ; then
+
+cat >>confdefs.h <<\_ACEOF
+#define HAVE_KERNEL_PAGE_FOLLOW_LINK 1
+_ACEOF
+
+		 fi
 		 if test "x$ac_linux_syscall" = "xyes" ; then
 
 cat >>confdefs.h <<\_ACEOF
@@ -7254,607 +8353,7 @@ _ACEOF
 		 fi
                 :
 		fi
-                ;;
-        *-solaris*)
-		MKAFS_OSTYPE=SOLARIS
-                echo "$as_me:$LINENO: result: sun4" >&5
-echo "${ECHO_T}sun4" >&6
-
-echo "$as_me:$LINENO: checking for vfs_dqrwlock in struct ufsvfs" >&5
-echo $ECHO_N "checking for vfs_dqrwlock in struct ufsvfs... $ECHO_C" >&6
-if test "${ac_cv_solaris_ufsvfs_has_dqrwlock+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-
-cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-#define _KERNEL
-#include <sys/fs/ufs_inode.h>
-int
-main ()
-{
-struct ufsvfs _ufsvfs;
-(void) _ufsvfs.vfs_dqrwlock;
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext
-if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest.$ac_objext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_solaris_ufsvfs_has_dqrwlock=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_cv_solaris_ufsvfs_has_dqrwlock=no
-fi
-rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
-
-echo "$as_me:$LINENO: result: $ac_cv_solaris_ufsvfs_has_dqrwlock" >&5
-echo "${ECHO_T}$ac_cv_solaris_ufsvfs_has_dqrwlock" >&6
-if test "$ac_cv_solaris_ufsvfs_has_dqrwlock" = "yes"; then
-
-cat >>confdefs.h <<\_ACEOF
-#define HAVE_VFS_DQRWLOCK 1
-_ACEOF
-
-fi
-
-
-echo "$as_me:$LINENO: checking for p_corefile in struct proc" >&5
-echo $ECHO_N "checking for p_corefile in struct proc... $ECHO_C" >&6
-if test "${ac_cv_solaris_proc_has_p_corefile+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-
-cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-#define _KERNEL
-#include <sys/proc.h>
-int
-main ()
-{
-struct proc _proc;
-(void) _proc.p_corefile;
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext
-if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest.$ac_objext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_solaris_proc_has_p_corefile=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_cv_solaris_proc_has_p_corefile=no
-fi
-rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
-
-echo "$as_me:$LINENO: result: $ac_cv_solaris_proc_has_p_corefile" >&5
-echo "${ECHO_T}$ac_cv_solaris_proc_has_p_corefile" >&6
-if test "$ac_cv_solaris_proc_has_p_corefile" = "yes"; then
-
-cat >>confdefs.h <<\_ACEOF
-#define HAVE_P_COREFILE 1
-_ACEOF
-
-fi
-
-
-echo "$as_me:$LINENO: checking for fs_rolled in struct proc" >&5
-echo $ECHO_N "checking for fs_rolled in struct proc... $ECHO_C" >&6
-if test "${ac_cv_solaris_fs_has_fs_rolled+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-
-cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-#include <sys/fs/ufs_fs.h>
-int
-main ()
-{
-struct fs _fs;
-(void) _fs.fs_rolled;
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext
-if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest.$ac_objext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_solaris_fs_has_fs_rolled=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-ac_cv_solaris_fs_has_fs_rolled=no
-fi
-rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
-fi
-
-echo "$as_me:$LINENO: result: $ac_cv_solaris_fs_has_fs_rolled" >&5
-echo "${ECHO_T}$ac_cv_solaris_fs_has_fs_rolled" >&6
-if test "$ac_cv_solaris_fs_has_fs_rolled" = "yes"; then
-
-cat >>confdefs.h <<\_ACEOF
-#define STRUCT_FS_HAS_FS_ROLLED 1
-_ACEOF
-
-fi
-
-                ;;
-        *-sunos*)
-		MKAFS_OSTYPE=SUNOS
-		enable_kernel_module=no
-                echo "$as_me:$LINENO: result: sun4" >&5
-echo "${ECHO_T}sun4" >&6
-                ;;
-        *-hpux*)
-		MKAFS_OSTYPE=HPUX
-                echo "$as_me:$LINENO: result: hp_ux" >&5
-echo "${ECHO_T}hp_ux" >&6
-                ;;
-        *-irix*)
-		if test -d /usr/include/sys/SN/SN1; then
-		 IRIX_BUILD_IP35="IP35"
-		fi
-		MKAFS_OSTYPE=IRIX
-                echo "$as_me:$LINENO: result: sgi" >&5
-echo "${ECHO_T}sgi" >&6
-                ;;
-        *-aix*)
-		MKAFS_OSTYPE=AIX
-                echo "$as_me:$LINENO: result: rs_aix" >&5
-echo "${ECHO_T}rs_aix" >&6
-                ;;
-        *-osf*)
-		MKAFS_OSTYPE=DUX
-                echo "$as_me:$LINENO: result: alpha_dux" >&5
-echo "${ECHO_T}alpha_dux" >&6
-		if test "x$enable_kernel_module" = "xyes"; then
-		 if test "x$with_dux_kernel_headers" != "x"; then
-		   HEADER_RT=`ls ${with_dux_kernel_headers}/rt_preempt.h | head -1 | sed 's,/rt_preempt.h,,;s,/usr/sys/,,'`
-		 else
- 		   HEADER_RT=`ls /usr/sys/*/rt_preempt.h | head -1 | sed 's,/rt_preempt.h,,;s,/usr/sys/,,'`
-		 fi
-		fi
-		if test "$HEADER_RT" = "*" ; then
-			{ { echo "$as_me:$LINENO: error: Need a configured kernel directory" >&5
-echo "$as_me: error: Need a configured kernel directory" >&2;}
-   { (exit 1); exit 1; }; }
-		fi
-
-                ;;
-        *-darwin*)
-		MKAFS_OSTYPE=DARWIN
-                echo "$as_me:$LINENO: result: ppc_darwin" >&5
-echo "${ECHO_T}ppc_darwin" >&6
-                ;;
-	*-freebsd*)
-		MKAFS_OSTYPE=FBSD
-		echo "$as_me:$LINENO: result: i386_fbsd" >&5
-echo "${ECHO_T}i386_fbsd" >&6
-		;;
-	*-netbsd*)
-		MKAFS_OSTYPE=NBSD
-		echo "$as_me:$LINENO: result: nbsd" >&5
-echo "${ECHO_T}nbsd" >&6
-		;;
-	*-openbsd*)
-		MKAFS_OSTYPE=OBSD
-		echo "$as_me:$LINENO: result: i386_obsd" >&5
-echo "${ECHO_T}i386_obsd" >&6
-		;;
-        *)
-                echo "$as_me:$LINENO: result: $system" >&5
-echo "${ECHO_T}$system" >&6
-                ;;
 esac
-
-if test "x$with_afs_sysname" != "x"; then
-        AFS_SYSNAME="$with_afs_sysname"
-else
-	echo "$as_me:$LINENO: checking your AFS sysname" >&5
-echo $ECHO_N "checking your AFS sysname... $ECHO_C" >&6
-	case $host in
-		i?86-*-openbsd3.1)
-			AFS_SYSNAME="i386_obsd31"
-			;;
-		i?86-*-openbsd3.2)
-			AFS_SYSNAME="i386_obsd32"
-			;;
-		i?86-*-openbsd3.3)
-			AFS_SYSNAME="i386_obsd33"
-			;;
-		i?86-*-openbsd3.4)
-			AFS_SYSNAME="i386_obsd34"
-			;;
-		i?86-*-openbsd3.5)
-			AFS_SYSNAME="i386_obsd35"
-			;;
-		i?86-*-openbsd3.6)
-			AFS_SYSNAME="i386_obsd36"
-			;;
-		i?86-*-freebsd4.2*)
-			AFS_SYSNAME="i386_fbsd_42"
-			;;
-		i?86-*-freebsd4.3*)
-			AFS_SYSNAME="i386_fbsd_43"
-			;;
-		i?86-*-freebsd4.4*)
-			AFS_SYSNAME="i386_fbsd_44"
-			;;
-		i?86-*-freebsd4.5*)
-			AFS_SYSNAME="i386_fbsd_45"
-			;;
-		i?86-*-freebsd4.6*)
-			AFS_SYSNAME="i386_fbsd_46"
-			;;
-		i?86-*-freebsd4.7*)
-			AFS_SYSNAME="i386_fbsd_47"
-			;;
-		i?86-*-freebsd5.0*)
-			AFS_SYSNAME="i386_fbsd_50"
-			;;
-		i?86-*-freebsd5.1*)
-			AFS_SYSNAME="i386_fbsd_51"
-			;;
-		i?86-*-freebsd5.2*)
-			AFS_SYSNAME="i386_fbsd_52"
-			;;
-		i?86-*-freebsd5.3*)
-			AFS_SYSNAME="i386_fbsd_53"
-			;;
-		i?86-*-netbsd*1.5*)
-			AFS_PARAM_COMMON=param.nbsd15.h
-			AFS_SYSNAME="i386_nbsd15"
-			;;
-		alpha-*-netbsd*1.5*)
-			AFS_PARAM_COMMON=param.nbsd15.h
-			AFS_SYSNAME="alpha_nbsd15"
-			;;
-		i?86-*-netbsd*1.6[M-Z]*)
-			AFS_PARAM_COMMON=param.nbsd20.h
-			AFS_SYSNAME="i386_nbsd20"
-			;;
-		powerpc-*-netbsd*1.6[M-Z]*)
-			AFS_PARAM_COMMON=param.nbsd20.h
-			AFS_SYSNAME="ppc_nbsd20"
-			;;
-		i?86-*-netbsd*2.0*)
-			AFS_PARAM_COMMON=param.nbsd20.h
-			AFS_SYSNAME="i386_nbsd20"
-			;;
-		powerpc-*-netbsd*2.0*)
-			AFS_PARAM_COMMON=param.nbsd20.h
-			AFS_SYSNAME="ppc_nbsd20"
-			;;
-		i?86-*-netbsd*1.6*)
-			AFS_PARAM_COMMON=param.nbsd16.h
-			AFS_SYSNAME="i386_nbsd16"
-			;;
-		alpha-*-netbsd*1.6*)
-			AFS_PARAM_COMMON=param.nbsd16.h
-			AFS_SYSNAME="alpha_nbsd16"
-			;;
-		powerpc-*-netbsd*1.6*)
-			AFS_PARAM_COMMON=param.nbsd16.h
-			AFS_SYSNAME="ppc_nbsd16"
-			;;
-		hppa*-hp-hpux11.0*)
-			AFS_SYSNAME="hp_ux110"
-			;;
-		hppa*-hp-hpux11.11)
-			AFS_SYSNAME="hp_ux11i"
-			;;
-		ia64-hp-hpux11.22)
-			AFS_SYSNAME="ia64_hpux1122"
-			;;
-		ia64-hp-hpux*)
-			AFS_SYSNAME="ia64_hpux1123"
-			;;
-		hppa*-hp-hpux10*)
-			AFS_SYSNAME="hp_ux102"
-			;;
-		powerpc-apple-darwin1.2*)
-			AFS_SYSNAME="ppc_darwin_12"
-			;;
-		powerpc-apple-darwin1.3*)
-			AFS_SYSNAME="ppc_darwin_13"
-			;;
-		powerpc-apple-darwin1.4*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin5.1*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin5.2*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin5.3*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin5.4*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin5.5*)
-			AFS_SYSNAME="ppc_darwin_14"
-			;;
-		powerpc-apple-darwin6.0*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin6.1*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin6.2*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin6.3*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin6.4*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin6.5*)
-			AFS_SYSNAME="ppc_darwin_60"
-			;;
-		powerpc-apple-darwin7.0*)
-			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		powerpc-apple-darwin7.1*)
-			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		powerpc-apple-darwin7.2*)
-			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		powerpc-apple-darwin7.3*)
-			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		powerpc-apple-darwin7.4*)
-			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		powerpc-apple-darwin7.5*)
-			AFS_SYSNAME="ppc_darwin_70"
-			;;
-		sparc-sun-solaris2.5*)
-			AFS_SYSNAME="sun4x_55"
-			enable_login="yes"
-			;;
-		sparc-sun-solaris2.6)
-			AFS_SYSNAME="sun4x_56"
-			;;
-		sparc-sun-solaris2.7)
-			AFS_SYSNAME="sun4x_57"
-			;;
-		sparc-sun-solaris2.8)
-			AFS_SYSNAME="sun4x_58"
-			;;
-		sparc-sun-solaris2.9)
-			AFS_SYSNAME="sun4x_59"
-			;;
-		sparc-sun-solaris2.10)
-			AFS_SYSNAME="sun4x_510"
-			;;
-		sparc-sun-sunos4*)
-			AFS_SYSNAME="sun4_413"
-			enable_login="yes"
-			;;
-		i386-pc-solaris2.7)
-			AFS_SYSNAME="sunx86_57"
-			;;
-		i386-pc-solaris2.8)
-			AFS_SYSNAME="sunx86_58"
-			;;
-		i386-pc-solaris2.9)
-			AFS_SYSNAME="sunx86_59"
-			;;
-		i386-pc-solaris2.10)
-			AFS_SYSNAME="sunx86_510"
-			;;
-		alpha*-dec-osf4.0*)
-			AFS_SYSNAME="alpha_dux40"
-			;;
-		alpha*-dec-osf5.0*)
-			AFS_SYSNAME="alpha_dux50"
-			;;
-		alpha*-dec-osf5.1*)
-			AFS_SYSNAME="alpha_dux51"
-			;;
-		mips-sgi-irix6.5)
-			AFS_SYSNAME="sgi_65"
-			;;
-		ia64-*-linux*)
-			AFS_SYSNAME="ia64_linuxXX"
-			;;
-		powerpc-*-linux*)
-			AFS_SYSNAME="ppc_linuxXX"
-			;;
-		powerpc64-*-linux*)
-			AFS_SYSNAME="ppc64_linuxXX"
-			;;
-		alpha*-linux*)
-			AFS_SYSNAME="alpha_linux_XX"
-			;;
-		s390-*-linux*)
-			AFS_SYSNAME="s390_linuxXX"
-			;;
-		s390x-*-linux*)
-			AFS_SYSNAME="s390x_linuxXX"
-			;;
-		sparc-*-linux*)
-			AFS_SYSNAME="sparc_linuxXX"
-			;;
-		sparc64-*-linux*)
-			AFS_SYSNAME="sparc64_linuxXX"
-			;;
-		i?86-*-linux*)
-			AFS_SYSNAME="i386_linuxXX"
-			;;
-		parisc-*-linux-gnu|hppa-*-linux-gnu)
-			AFS_SYSNAME="parisc_linuxXX"
-			enable_pam="no"
-			;;
-		power*-ibm-aix4.2*)
-			AFS_SYSNAME="rs_aix42"
-			;;
-		power*-ibm-aix4.3*)
-			AFS_SYSNAME="rs_aix42"
-			;;
-		power*-ibm-aix5.1*)
-			AFS_SYSNAME="rs_aix51"
-			;;
-		power*-ibm-aix5.2*)
-			AFS_SYSNAME="rs_aix52"
-			;;
-		x86_64-*-linux-gnu)
-			AFS_SYSNAME="amd64_linuxXX"
-			enable_pam="no"
-			;;
-		*)
-			{ { echo "$as_me:$LINENO: error: An AFS sysname is required" >&5
-echo "$as_me: error: An AFS sysname is required" >&2;}
-   { (exit 1); exit 1; }; }
-			exit 1
-			;;
-	esac
-	case $AFS_SYSNAME in
-		*_linux*)
-			AFS_SYSKVERS=`echo $LINUX_VERSION | awk -F\. '{print $1 $2}'`
-			if test "x${AFS_SYSKVERS}" = "x"; then
-			 { { echo "$as_me:$LINENO: error: Couldn't guess your Linux version. Please use the --with-afs-sysname option to configure an AFS sysname." >&5
-echo "$as_me: error: Couldn't guess your Linux version. Please use the --with-afs-sysname option to configure an AFS sysname." >&2;}
-   { (exit 1); exit 1; }; }
-			fi
-			_AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
-			AFS_SYSNAME="$_AFS_SYSNAME"
-			save_CPPFLAGS="$CPPFLAGS"
-			CPPFLAGS="-I${LINUX_KERNEL_PATH}/include $CPPFLAGS"
-			cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-#include <linux/autoconf.h>
-int
-main ()
-{
-#ifndef CONFIG_USERMODE
-			  #error not UML
-			  #endif
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext
-if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
-  (eval $ac_compile) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest.$ac_objext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_linux_is_uml=yes
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-fi
-rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
-			if test "${ac_cv_linux_is_uml}" = yes; then
-			 _AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/linux/umlinux/`
-			fi
-			CPPFLAGS="$save_CPPFLAGS"
-			AFS_SYSNAME="$_AFS_SYSNAME"
-			;;
-	esac
-        echo "$as_me:$LINENO: result: $AFS_SYSNAME" >&5
-echo "${ECHO_T}$AFS_SYSNAME" >&6
-fi
 
 case $AFS_SYSNAME in
 	*_darwin*)
@@ -12259,7 +12758,7 @@ case $AFS_SYSNAME in
 		YACC="byacc"
 		;;
 
-	*nbsd20)
+	*nbsd2*)
 		LEX="flex -l"
 		MT_CFLAGS='${XCFLAGS} -DAFS_PTHREAD_ENV -D_REENTRANT '
 		MT_LIBS="-lpthread" # XXX -pthread soon
@@ -12281,7 +12780,7 @@ case $AFS_SYSNAME in
 		YACC="bison -y"
 		;;
 
-	ia64_linux24)
+	ia64_linux24|ia64_linux26)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
@@ -12369,6 +12868,26 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_umlinux24)
+		CC="gcc -pipe"
+		CCOBJ="gcc -pipe"
+		MT_CC="gcc -pipe"
+		KERN_OPTMZ=-O2
+		LEX="flex -l"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_LIBS="-lpthread"
+		DBG=-g
+		KERN_DBG=-g
+		LWP_DBG=-g
+		LWP_OPTMZ=-O2
+		OPTMZ=-O2
+		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		TXLIBS="-lncurses"
+		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		SHLIB_LINKER="${MT_CC} -shared"
+		;;
+
+	i386_umlinux26)
 		CC="gcc -pipe"
 		CCOBJ="gcc -pipe"
 		MT_CC="gcc -pipe"
@@ -13792,12 +14311,12 @@ s,@YACC@,$YACC,;t t
 s,@LEX@,$LEX,;t t
 s,@LEXLIB@,$LEXLIB,;t t
 s,@LEX_OUTPUT_ROOT@,$LEX_OUTPUT_ROOT,;t t
+s,@HEADER_RT@,$HEADER_RT,;t t
 s,@P5PLUS_KOPTS@,$P5PLUS_KOPTS,;t t
 s,@LINUX_GCC_KOPTS@,$LINUX_GCC_KOPTS,;t t
 s,@RHCONFIG_SP@,$RHCONFIG_SP,;t t
 s,@RHCONFIG_MP@,$RHCONFIG_MP,;t t
 s,@MPS@,$MPS,;t t
-s,@HEADER_RT@,$HEADER_RT,;t t
 s,@PTHREAD_LIBS@,$PTHREAD_LIBS,;t t
 s,@XBSA_CFLAGS@,$XBSA_CFLAGS,;t t
 s,@HAVE_PAM@,$HAVE_PAM,;t t

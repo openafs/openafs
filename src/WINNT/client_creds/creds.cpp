@@ -446,7 +446,7 @@ int GetDefaultCell (LPTSTR pszCell)
     }
     else if (IsServiceRunning())
     {
-        char szCellA[ 256 ] = "";
+        char szCellA[ cchRESOURCE ] = "";
         int rc;
         HKEY hk;
 
@@ -463,8 +463,8 @@ int GetDefaultCell (LPTSTR pszCell)
         } else {
             rc = 0;
         }
-		if (rc == 0)
-			CopyAnsiToString(pszCell, szCellA);
+        if (rc == 0)
+            CopyAnsiToString(pszCell, szCellA);
     }
     return rc;
 }

@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_rdwr.c,v 1.21.2.1 2004/10/18 07:12:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_rdwr.c,v 1.21.2.2 2004/12/07 06:10:06 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -724,7 +724,7 @@ rxi_WriteProc(register struct rx_call *call, register char *buf,
 		    (call->
 		     flags & (RX_CALL_FAST_RECOVER |
 			      RX_CALL_FAST_RECOVER_WAIT))) {
-		    rxi_Start(0, call, 0);
+		    rxi_Start(0, call, 0, 0);
 		}
 	    }
 	    /* Wait for transmit window to open up */
@@ -1196,7 +1196,7 @@ rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
     }
 
     if (!(call->flags & (RX_CALL_FAST_RECOVER | RX_CALL_FAST_RECOVER_WAIT))) {
-	rxi_Start(0, call, 0);
+	rxi_Start(0, call, 0, 0);
     }
 
     /* Wait for the length of the transmit queue to fall below call->twind */
@@ -1312,7 +1312,7 @@ rxi_FlushWrite(register struct rx_call *call)
 	if (!
 	    (call->
 	     flags & (RX_CALL_FAST_RECOVER | RX_CALL_FAST_RECOVER_WAIT))) {
-	    rxi_Start(0, call, 0);
+	    rxi_Start(0, call, 0, 0);
 	}
     }
 }

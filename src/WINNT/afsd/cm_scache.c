@@ -235,7 +235,7 @@ cm_scache_t *cm_FindSCache(cm_fid_t *fidp)
     lock_ObtainWrite(&cm_scacheLock);
     for(scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
         if (cm_FidCmp(fidp, &scp->fid) == 0) {
-            scp->refCount++;
+            cm_HoldSCacheNoLock(scp);
             cm_AdjustLRU(scp);
             lock_ReleaseWrite(&cm_scacheLock);
             return scp;
@@ -272,9 +272,9 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     // yj: check if we have the scp, if so, we don't need
     // to do anything else
     lock_ObtainWrite(&cm_scacheLock);
-    for(scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
+    for (scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
         if (cm_FidCmp(fidp, &scp->fid) == 0) {
-            scp->refCount++;
+            cm_HoldSCacheNoLock(scp);
             *outScpp = scp;
             cm_AdjustLRU(scp);
             lock_ReleaseWrite(&cm_scacheLock);
@@ -369,9 +369,10 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
     /* otherwise, we have the volume, now reverify that the scp doesn't
      * exist, and proceed.
      */
-    for(scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
+    for (scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
         if (cm_FidCmp(fidp, &scp->fid) == 0) {
-            scp->refCount++;
+			osi_assert(scp->volp == volp);
+            cm_HoldSCacheNoLock(scp);
             cm_AdjustLRU(scp);
             lock_ReleaseWrite(&cm_scacheLock);
             if (volp)
@@ -978,12 +979,25 @@ void cm_AFSFidFromFid(AFSFid *afsFidp, cm_fid_t *fidp)
     afsFidp->Unique = fidp->unique;
 }       
 
+void cm_HoldSCacheNoLock(cm_scache_t *scp)
+{
+#ifdef NOLOCK_ASSERT
+    osi_assert(scp->refCount > 0);
+#endif
+    scp->refCount++;
+}
+
 void cm_HoldSCache(cm_scache_t *scp)
 {
     lock_ObtainWrite(&cm_scacheLock);
     osi_assert(scp->refCount > 0);
     scp->refCount++;
     lock_ReleaseWrite(&cm_scacheLock);
+}
+
+void cm_ReleaseSCacheNoLock(cm_scache_t *scp)
+{
+    osi_assert(scp->refCount-- > 0);
 }
 
 void cm_ReleaseSCache(cm_scache_t *scp)
@@ -1033,9 +1047,9 @@ int cm_DumpSCache(FILE *outputFile, char *cookie)
   
     for (scp = cm_scacheLRULastp; scp; scp = (cm_scache_t *) osi_QPrev(&scp->q)) 
     {
-        if (scp->refCount != 0)
+        if (scp->refCount > 0)
         {
-            sprintf(output, "%s fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%d\n", 
+            sprintf(output, "%s fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u\n", 
                     cookie, scp->fid.cell, scp->fid.volume, scp->fid.vnode, scp->fid.unique, 
                     scp->refCount);
             WriteFile(outputFile, output, strlen(output), &zilch, NULL);
@@ -1051,9 +1065,9 @@ int cm_DumpSCache(FILE *outputFile, char *cookie)
         {
             if (scp)
             {
-                if (scp->refCount)
+                if (scp->refCount > 0)
                 {
-                    sprintf(output, "%s scp=0x%08X, hash=%d, fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%d\n", 
+                    sprintf(output, "%s scp=0x%08X, hash=%d, fid (cell=%d, volume=%d, vnode=%d, unique=%d) refCount=%u\n", 
                             cookie, (void *)scp, i, scp->fid.cell, scp->fid.volume, scp->fid.vnode, 
                             scp->fid.unique, scp->refCount);
                     WriteFile(outputFile, output, strlen(output), &zilch, NULL);

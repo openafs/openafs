@@ -574,6 +574,10 @@ Section "AFS Client" secClient
   WriteRegStr HKCR "FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" "" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
   WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" "AFS Client Shell Extension"
   WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" "afs_cpa" "$INSTDIR\Client\Program\afs_cpa.cpl"
+
+  ; Support for apps that wrote submount data directly to afsdsbmt.ini
+  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion\IniFileMapping\afsdsbmt.ini" "AFS Mappings" "USR:Software\OpenAFS\Client\mappings"
+  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion\IniFileMapping\afsdsbmt.ini" "AFS Submounts" "SYS:OpenAFS\Client\Submounts"
   
   ; AFS Reg entries
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion"
@@ -1963,7 +1967,10 @@ StartRemove:
   DeleteRegKey /ifempty HKLM "${AFS_REGKEY_ROOT}"
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS"
   DeleteRegValue HKLM "SYSTEM\CurrentControlSet\Services\NetBT\Parameters" "SmbDeviceEnabled"
- 
+
+  ; Support for apps that wrote submount data directly to afsdsbmt.ini
+  DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion\IniFileMapping\afsdsbmt.ini"
+
   RMDir  "$INSTDIR"
 
 SectionEnd
@@ -2232,18 +2239,49 @@ Function AFSPageGetCellName
   StrCmp $R0 "0" good
   
 startOver:
+   ; We want to read in the existing parameters and make them the defaults
+   
+   ;AFS Crypt security
+   ReadRegDWORD $R1 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "SecurityLevel"
+   StrCmp $R1 "" +3
+   WriteINIStr $1 "Field 3" "State" $R1
+   goto +2
+   WriteINIStr $1 "Field 3" "State" "1"
+   
+   ;Use DNS
+   ReadRegDWORD $R1 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "UseDNS"
+   StrCmp $R1 "" +3
+   WriteINIStr $1 "Field 9" "State" $R1
+   goto +2
+   WriteINIStr $1 "Field 9" "State" "1"
+   
+   ; Use integrated logon
+   ReadRegDWORD $R1 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "LogonOptions"
+   StrCmp $R1 "" +3
+   WriteINIStr $1 "Field 7" "State" $R1
+   goto +2
+   WriteINIStr $1 "Field 7" "State" "0"
+   
    ; If this is a server install, we do NOT want to recommend the Freelance client
    ; And we do not need to ask for the cell name.
    SectionGetFlags ${secServer} $R1
    IntOp $R1 $R1 & ${SF_SELECTED}
    StrCmp $R1 "1" +1 NotServer
    WriteINIStr $1 "Field 6" "Text" "Enable AFS Freelance client (Not Recommended for servers)"
+   ReadRegDWORD $R1 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "FreelanceClient"
+   StrCmp $R1 "" +3
+   WriteINIStr $1 "Field 5" "State" $R1
+   goto +2
    WriteINIStr $1 "Field 5" "State" "0"
    WriteINIStr $1 "Field 1" "Flags" "DISABLED"
    WriteINIStr $1 "Field 2" "Flags" "DISABLED"
    goto SkipServerTest
 NotServer:
    WriteINIStr $1 "Field 6" "Text" "Enable AFS Freelance client (Recommended)"
+   ReadRegDWORD $R1 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "FreelanceClient"
+   StrCmp $R1 "" +3
+   WriteINIStr $1 "Field 5" "State" $R1
+   goto +2
    WriteINIStr $1 "Field 5" "State" "1"
    WriteINIStr $1 "Field 1" "Flags" ""
    WriteINIStr $1 "Field 2" "Flags" ""

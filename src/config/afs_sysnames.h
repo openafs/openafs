@@ -173,6 +173,7 @@
 #define SYS_NAME_ID_ia64_linux2		2200
 #define SYS_NAME_ID_ia64_linux22	2201
 #define SYS_NAME_ID_ia64_linux24	2202
+#define SYS_NAME_ID_ia64_linux26	2203
 
 #define SYS_NAME_ID_m68k_linux22        2301
 #define SYS_NAME_ID_m68k_linux24        2302
@@ -196,6 +197,7 @@
 #define SYS_NAME_ID_sparc_nbsd20	2522
 #define SYS_NAME_ID_sparc64_nbsd20	2523
 #define SYS_NAME_ID_macppc_nbsd20	2524
+#define SYS_NAME_ID_i386_nbsd21		2525
 
 #define SYS_NAME_ID_i386_obsd31		2600
 #define SYS_NAME_ID_i386_obsd32		2601
@@ -212,6 +214,7 @@
 #define SYS_NAME_ID_i386_umlinux2	2800
 #define SYS_NAME_ID_i386_umlinux22	2801
 #define SYS_NAME_ID_i386_umlinux24	2802
+#define SYS_NAME_ID_i386_umlinux26	2803
 
 #define SYS_NAME_ID_ppc64_linux2	2900
 #define SYS_NAME_ID_ppc64_linux22	2901

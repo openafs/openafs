@@ -33,7 +33,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_server.c,v 1.33.2.1 2004/08/25 07:07:53 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_server.c,v 1.33.2.3 2004/12/07 06:12:40 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -498,9 +498,9 @@ afs_CheckServers(int adown, struct cell *acellp)
     struct conn *tc;
     afs_int32 i, j;
     afs_int32 code;
-    afs_int32 start, end, delta;
+    afs_int32 start, end = 0, delta;
+    afs_int32 m_error;
     osi_timeval_t tv;
-    int setTimer;
     struct unixuser *tu;
     char tbuffer[CVBS];
     int srvAddrCount;
@@ -508,9 +508,7 @@ afs_CheckServers(int adown, struct cell *acellp)
     struct conn **conns;
     int nconns;
     struct rx_connection **rxconns;      
-    int nrxconns;
     afs_int32 *conntimer, *deltas;
-    XSTATS_DECLS;
 
     AFS_STATCNT(afs_CheckServers);
 
@@ -600,40 +598,47 @@ afs_CheckServers(int adown, struct cell *acellp)
     start = osi_Time();         /* time the gettimeofday call */
     AFS_GUNLOCK(); 
     multi_Rx(rxconns,nconns)
-	{
-	    tv.tv_sec = tv.tv_usec = 0;
-	    multi_RXAFS_GetTime(&tv.tv_sec, &tv.tv_usec);
-	    tc = conns[multi_i];
-	    sa = tc->srvr;
-	    if (conntimer[multi_i] == 0)
-		rx_SetConnDeadTime(tc->id, AFS_RXDEADTIME);
-	    end = osi_Time();
-	    if ((start == end) && !multi_error)
-		deltas[multi_i] = end - tv.tv_sec;
-	    if (( multi_error >= 0 ) && (sa->sa_flags & SRVADDR_ISDOWN) && (tc->srvr == sa)) {
-		/* server back up */
-		print_internet_address("afs: file server ", sa, " is back up", 2);
-		
-                ObtainWriteLock(&afs_xserver, 244);
-                ObtainWriteLock(&afs_xsrvAddr, 245);        
-                afs_MarkServerUpOrDown(sa, 0);
-                ReleaseWriteLock(&afs_xsrvAddr);
-                ReleaseWriteLock(&afs_xserver);
-		
-		if (afs_waitForeverCount) {
-		    afs_osi_Wakeup(&afs_waitForever);
-		}
-	    } else {
-		if (multi_error < 0) {
-		                /* server crashed */
-		    afs_ServerDown(sa);
-		    ForceNewConnections(sa);  /* multi homed clients */
-		}
-	    }
-	    
-	} multi_End;
+      {
+	tv.tv_sec = tv.tv_usec = 0;
+	multi_RXAFS_GetTime(&tv.tv_sec, &tv.tv_usec);
+	tc = conns[multi_i];
+	sa = tc->srvr;
+	if (conntimer[multi_i] == 0)
+	  rx_SetConnDeadTime(tc->id, AFS_RXDEADTIME);
+	end = osi_Time();
+	m_error=multi_error;
+	if ((start == end) && !multi_error)
+	  deltas[multi_i] = end - tv.tv_sec;
+	
+      } multi_End;
     AFS_GLOCK(); 
- 
+    
+    for(i=0;i<nconns;i++){
+      tc = conns[i];
+      sa = tc->srvr;
+      
+      if (( m_error >= 0 ) && (sa->sa_flags & SRVADDR_ISDOWN) && (tc->srvr == sa)) {
+	/* server back up */
+	print_internet_address("afs: file server ", sa, " is back up", 2);
+	
+	ObtainWriteLock(&afs_xserver, 244);
+	ObtainWriteLock(&afs_xsrvAddr, 245);        
+	afs_MarkServerUpOrDown(sa, 0);
+	ReleaseWriteLock(&afs_xsrvAddr);
+	ReleaseWriteLock(&afs_xserver);
+	
+	if (afs_waitForeverCount) {
+	  afs_osi_Wakeup(&afs_waitForever);
+	}
+      } else {
+	if (m_error < 0) {
+	  /* server crashed */
+	  afs_ServerDown(sa);
+	  ForceNewConnections(sa);  /* multi homed clients */
+	}
+      }
+    }
+
     /*
      * If we're supposed to set the time, and the call worked
      * quickly (same second response) and this is the host we
@@ -1053,7 +1058,7 @@ typedef struct ill_s {
  * afs_uint32 subnetmask;         subnet mask of local addr in net order
  *
  */
-int
+void
 afsi_SetServerIPRank(struct srvAddr *sa, afs_int32 addr,
 		     afs_uint32 subnetmask)
 {

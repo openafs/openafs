@@ -35,7 +35,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_int32.c,v 1.5 2003/07/15 23:16:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr_int32.c,v 1.5.2.1 2004/12/07 06:10:07 shadow Exp $");
 
 #ifndef	NeXT
 
@@ -55,10 +55,10 @@ xdr_afs_int32(register XDR * xdrs, afs_int32 * lp)
 {
 
     if (xdrs->x_op == XDR_ENCODE)
-	return (XDR_PUTINT32(xdrs, (long *)lp));
+	return (XDR_PUTINT32(xdrs, lp));
 
     if (xdrs->x_op == XDR_DECODE)
-	return (XDR_GETINT32(xdrs, (long *)lp));
+	return (XDR_GETINT32(xdrs, lp));
 
     if (xdrs->x_op == XDR_FREE)
 	return (TRUE);
@@ -75,9 +75,9 @@ xdr_afs_uint32(register XDR * xdrs, afs_uint32 * ulp)
 {
 
     if (xdrs->x_op == XDR_DECODE)
-	return (XDR_GETINT32(xdrs, (long *)ulp));
+	return (XDR_GETINT32(xdrs, (afs_int32 *)ulp));
     if (xdrs->x_op == XDR_ENCODE)
-	return (XDR_PUTINT32(xdrs, (long *)ulp));
+	return (XDR_PUTINT32(xdrs, (afs_int32 *)ulp));
     if (xdrs->x_op == XDR_FREE)
 	return (TRUE);
     return (FALSE);

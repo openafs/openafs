@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.2 2004/08/25 07:16:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.3 2004/12/07 06:12:11 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -271,7 +271,7 @@ afsd_thread(void *rock)
 	complete_and_exit(0, 0);
 	break;
     default:
-	printf("Unknown op %d in StartDaemon()\n", parm);
+	printf("Unknown op %ld in StartDaemon()\n", (long)parm);
 	break;
     }
     return 0;
@@ -1096,6 +1096,7 @@ struct iparam32 {
 };
 
 
+#if defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV) && !defined(AFS_AMD64_LINUX20_ENV))
 static void
 iparam32_to_iparam(const struct iparam32 *src, struct iparam *dst)
 {
@@ -1104,6 +1105,7 @@ iparam32_to_iparam(const struct iparam32 *src, struct iparam *dst)
     dst->param3 = src->param3;
     dst->param4 = src->param4;
 }
+#endif
 
 /*
  * If you need to change copyin_iparam(), you may also need to change
@@ -3018,7 +3020,7 @@ afs_icl_EnumerateSets(int (*aproc)
     for (tp = afs_icl_allSets; tp; tp = np) {
 	tp->refCount++;		/* hold this guy */
 	ReleaseWriteLock(&afs_icl_lock);
-	code = (*aproc) (tp->name, arock, tp);
+	code = (*aproc) (tp->name, arock, (struct afs_icl_log *)tp);
 	ObtainWriteLock(&afs_icl_lock, 206);
 	np = tp->nextp;		/* tp may disappear next, but not np */
 	if (--tp->refCount == 0 && (tp->states & ICL_SETF_DELETED))

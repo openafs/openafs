@@ -19,7 +19,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_volume.c,v 1.26 2003/08/27 21:43:16 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_volume.c,v 1.26.2.1 2004/12/07 06:12:12 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -411,7 +411,7 @@ afs_GetVolume(struct VenusFid *afid, struct vrequest *areq,
 
 
 static struct volume *
-afs_SetupVolume(afs_int32 volid, char *aname, char *ve, struct cell *tcell,
+afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
 		afs_int32 agood, afs_int32 type, struct vrequest *areq)
 {
     struct volume *tv;

@@ -16,8 +16,10 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29 2004/07/29 03:08:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29.2.1 2004/12/07 06:12:13 shadow Exp $");
 
+#define __NO_VERSION__		/* don't define kernel_version in module.h */
+#include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"
@@ -27,9 +29,6 @@ RCSID
 #if defined(AFS_LINUX24_ENV)
 #include "h/smp_lock.h"
 #endif
-
-#define __NO_VERSION__		/* don't define kernel_version in module.h */
-#include <linux/module.h>
 
 
 struct vcache *afs_globalVp = 0;
@@ -52,7 +51,6 @@ static int afs_root(struct super_block *afsp);
 struct super_block *afs_read_super(struct super_block *sb, void *data, int silent);
 int afs_fill_super(struct super_block *sb, void *data, int silent);
 static struct super_block *afs_get_sb(struct file_system_type *fs_type, int flags, const char *dev_name, void *data);
-void put_inode_on_dummy_list(struct inode *ip);
 
 /* afs_file_system
  * VFS entry for Linux - installed in init_module
@@ -267,7 +265,11 @@ static LIST_HEAD(dummy_inode_list);
  * has synced some pages of a file to disk.
  */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+#ifdef WRITE_INODE_NOT_VOID
+static int
+#else
 static void
+#endif
 afs_write_inode(struct inode *ip, int unused)
 #else
 static void
@@ -280,6 +282,9 @@ afs_write_inode(struct inode *ip)
 
     /* for now we don't actually update the metadata during msync. This
      * is just to keep linux happy.  */
+#ifdef WRITE_INODE_NOT_VOID
+    return 0;
+#endif
 }
 
 
@@ -300,8 +305,6 @@ afs_destroy_inode(struct inode *ip)
 static void
 afs_delete_inode(struct inode *ip)
 {
-    struct vcache *vp = ITOAFS(ip);
-
 #ifdef AFS_LINUX26_ENV
     put_inode_on_dummy_list(ip);
 #endif
@@ -317,9 +320,7 @@ afs_delete_inode(struct inode *ip)
 static void
 afs_put_super(struct super_block *sbp)
 {
-    extern int afs_afs_cold_shutdown;
     int code = 0;
-    int fv_slept;
 
     AFS_GLOCK();
     AFS_STATCNT(afs_unmount);
@@ -339,7 +340,6 @@ afs_put_super(struct super_block *sbp)
 #endif
 
     osi_linux_verify_alloced_memory();
-  done:
     AFS_GUNLOCK();
 
     if (!code) {

@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.24.2.1 2004/08/25 07:09:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.24.2.2 2004/12/07 06:12:13 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -469,15 +469,15 @@ DoLockWarning(void)
 
 
 #ifdef	AFS_OSF_ENV
-afs_lockctl(struct vcache * avc, struct eflock * af, int flag,
-	    struct AFS_UCRED * acred, pid_t clid, off_t offset)
+int afs_lockctl(struct vcache * avc, struct eflock * af, int flag,
+		struct AFS_UCRED * acred, pid_t clid, off_t offset)
 #elif defined(AFS_SGI_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
-	    struct AFS_UCRED * acred, pid_t clid)
+int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
+		struct AFS_UCRED * acred, pid_t clid)
 #else
 u_int clid = 0;
-afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
-	    struct AFS_UCRED * acred)
+int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
+		struct AFS_UCRED * acred)
 #endif
 {
     struct vrequest treq;

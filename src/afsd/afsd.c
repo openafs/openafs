@@ -56,7 +56,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43 2004/07/28 22:47:58 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.1 2004/12/07 18:25:08 shadow Exp $");
 
 #define VFS 1
 
@@ -1384,7 +1384,7 @@ mainproc(as, arock)
 	/* -chunksize */
 	chunkSize = atoi(as->parms[12].items->data);
 	if (chunkSize < 0 || chunkSize > 30) {
-	    printf("afsd:invalid chunk size spec'd, using default\n");
+	    printf("afsd:invalid chunk size (not in range 0-30), using default\n");
 	    chunkSize = 0;
 	}
     }

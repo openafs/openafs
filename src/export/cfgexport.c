@@ -14,7 +14,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/export/cfgexport.c,v 1.11 2003/09/03 16:47:16 rees Exp $");
+    ("$Header: /cvs/openafs/src/export/cfgexport.c,v 1.11.2.1 2004/12/07 16:48:42 shadow Exp $");
 
 #include <errno.h>
 #include <stdio.h>
@@ -202,7 +202,9 @@ get_syms(conf, syms)
     FILE *fp;
     int xsym_compar();
 
-    fp = fopen(syms, "r");
+    if (syms == NULL)
+      sys_error("syms is NULL");
+    fp = fopen(syms, "r"); 
     if (fp == NULL)
 	sys_error(syms);
 
@@ -375,6 +377,7 @@ get_syms(conf, syms)
  *	strp	-	^ to ^ to EXPORT string table
  *	szp	-	^ to EXPORT string table size
  */
+#define SYMBUFSIZE 262144
 xlate_xtok(xp, kp, strp, szp)
      register struct syment *xp;
      register sym_t *kp;
@@ -386,13 +389,13 @@ xlate_xtok(xp, kp, strp, szp)
     static left, offset, sz;
 
     if (!export_strings) {
-	export_strings = malloc(sz = 1024);
+	export_strings = malloc(sz = SYMBUFSIZE);
 	if (!export_strings)
 	    error("no memory for EXPORT string table");
 
 	*strp = export_strings;
 	*szp = offset = sizeof(uint);
-	left = 1024 - offset;
+	left = SYMBUFSIZE - offset;
 
 	export_strings += offset;
 
@@ -417,11 +420,11 @@ xlate_xtok(xp, kp, strp, szp)
 	 */
 	len = strlen(xstrings + xp->n_offset) + 1;
 	while (len >= left) {
-	    export_strings = (char *)realloc(*strp, sz += 1024);
+	    export_strings = (char *)realloc(*strp, sz += SYMBUFSIZE);
 	    if (!export_strings)
 		error("no memory for EXPORT string table");
 	    *strp = export_strings;
-	    left += 1024;
+	    left += SYMBUFSIZE;
 	    prev = "";		/* lazy */
 	}
 
@@ -452,11 +455,11 @@ xlate_xtok(xp, kp, strp, szp)
 	 */
 	len = strlen(xp->n_nptr) + 1;
 	while (len >= left) {
-	    export_strings = (char *)realloc(*strp, sz += 1024);
+	    export_strings = (char *)realloc(*strp, sz += SYMBUFSIZE);
 	    if (!export_strings)
 		error("no memory for EXPORT string table");
 	    *strp = export_strings;
-	    left += 1024;
+	    left += SYMBUFSIZE;
 	    prev = "";		/* lazy */
 	}
 

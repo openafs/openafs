@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_daemons.c,v 1.28.2.1 2004/08/25 07:16:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_daemons.c,v 1.28.2.2 2004/12/07 06:12:11 shadow Exp $");
 
 #ifdef AFS_AIX51_ENV
 #define __FULL_PROTO
@@ -292,33 +292,28 @@ afs_CheckRootVolume(void)
 	strcpy(rootVolName, afs_rootVolumeName);
     }
 
-    if (!usingDynroot) {
+    if (usingDynroot) {
+	afs_GetDynrootFid(&afs_rootFid);
+	tvp = afs_GetVolume(&afs_rootFid, NULL, READ_LOCK);
+    } else {
 	struct cell *lc = afs_GetPrimaryCell(READ_LOCK);
 
 	if (!lc)
 	    return ENOENT;
 	localcell = lc->cellNum;
 	afs_PutCell(lc, READ_LOCK);
-    }
-
-    if (usingDynroot) {
-	afs_GetDynrootFid(&afs_rootFid);
-	tvp = afs_GetVolume(&afs_rootFid, NULL, READ_LOCK);
-    } else {
 	tvp = afs_GetVolumeByName(rootVolName, localcell, 1, NULL, READ_LOCK);
-    }
-    if (!tvp && !usingDynroot) {
-	char buf[128];
-	int len = strlen(rootVolName);
+	if (!tvp) {
+	    char buf[128];
+	    int len = strlen(rootVolName);
 
-	if ((len < 9) || strcmp(&rootVolName[len - 9], ".readonly")) {
-	    strcpy(buf, rootVolName);
-	    afs_strcat(buf, ".readonly");
-	    tvp = afs_GetVolumeByName(buf, localcell, 1, NULL, READ_LOCK);
+	    if ((len < 9) || strcmp(&rootVolName[len - 9], ".readonly")) {
+		strcpy(buf, rootVolName);
+		afs_strcat(buf, ".readonly");
+		tvp = afs_GetVolumeByName(buf, localcell, 1, NULL, READ_LOCK);
+	    }
 	}
-    }
-    if (tvp) {
-	if (!usingDynroot) {
+	if (tvp) {
 	    int volid = (tvp->roVol ? tvp->roVol : tvp->volume);
 	    afs_rootFid.Cell = localcell;
 	    if (afs_rootFid.Fid.Volume && afs_rootFid.Fid.Volume != volid
@@ -337,6 +332,8 @@ afs_CheckRootVolume(void)
 	    afs_rootFid.Fid.Vnode = 1;
 	    afs_rootFid.Fid.Unique = 1;
 	}
+    }
+    if (tvp) {
 	afs_initState = 300;	/* won */
 	afs_osi_Wakeup(&afs_initState);
 	afs_PutVolume(tvp, READ_LOCK);

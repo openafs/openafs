@@ -35,7 +35,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr.c,v 1.9 2003/11/29 22:08:16 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr.c,v 1.9.2.1 2004/12/07 06:10:06 shadow Exp $");
 
 /*
  * xdr.c, Generic XDR routines implementation.
@@ -80,125 +80,115 @@ xdr_void(void)
     return (TRUE);
 }
 
-#if !defined(AFS_OSF20_ENV) && !defined(AFS_SGI61_ENV)
 /*
- * XDR afs_int32 integers
- * same as xdr_u_long - open coded to save a proc call!
+ * XDR integers
  */
 bool_t
 xdr_int(register XDR * xdrs, int *ip)
 {
+    afs_int32 l;
 
-    if (xdrs->x_op == XDR_ENCODE)
-	return (XDR_PUTINT32(xdrs, (long *)ip));
+    switch (xdrs->x_op) {
 
-    if (xdrs->x_op == XDR_DECODE)
-	return (XDR_GETINT32(xdrs, (long *)ip));
+    case XDR_ENCODE:
+	l = (afs_int32) * ip;
+	return (XDR_PUTINT32(xdrs, &l));
 
-    if (xdrs->x_op == XDR_FREE)
+    case XDR_DECODE:
+	if (!XDR_GETINT32(xdrs, &l)) {
+	    return (FALSE);
+	}
+	*ip = (int)l;
 	return (TRUE);
 
+    case XDR_FREE:
+	return (TRUE);
+    }
     return (FALSE);
 }
 
 /*
- * XDR unsigned afs_int32 integers
- * same as xdr_long - open coded to save a proc call!
+ * XDR unsigned integers
  */
 bool_t
-xdr_u_int(register XDR * xdrs, u_int * up)
+xdr_u_int(register XDR * xdrs, u_int * uip)
 {
+    afs_uint32 l;
 
-    if (xdrs->x_op == XDR_DECODE)
-	return (XDR_GETINT32(xdrs, (long *)up));
+    switch (xdrs->x_op) {
 
-    if (xdrs->x_op == XDR_ENCODE)
-	return (XDR_PUTINT32(xdrs, (long *)up));
+    case XDR_ENCODE:
+	l = (afs_uint32) * uip;
+	return (XDR_PUTINT32(xdrs, &l));
 
-    if (xdrs->x_op == XDR_FREE)
+    case XDR_DECODE:
+	if (!XDR_GETINT32(xdrs, &l)) {
+	    return (FALSE);
+	}
+	*uip = (u_int) l;
 	return (TRUE);
 
+    case XDR_FREE:
+	return (TRUE);
+    }
     return (FALSE);
 }
 
-#else
-/*
- * XDR afs_int32 integers
- * same as xdr_u_long - open coded to save a proc call!
- */
-bool_t
-xdr_int(register XDR * xdrs, int *lp)
-{
-
-    if (xdrs->x_op == XDR_ENCODE)
-	return (XDR_PUTINT32(xdrs, (long *)lp));
-
-    if (xdrs->x_op == XDR_DECODE)
-	return (XDR_GETINT32(xdrs, (long *)lp));
-
-    if (xdrs->x_op == XDR_FREE)
-	return (TRUE);
-
-    return (FALSE);
-}
 
 /*
- * XDR unsigned afs_int32 integers
- * same as xdr_long - open coded to save a proc call!
- */
-bool_t
-xdr_u_int(register XDR * xdrs, u_int * ulp)
-{
-
-    if (xdrs->x_op == XDR_DECODE)
-	return (XDR_GETINT32(xdrs, (long *)ulp));
-
-    if (xdrs->x_op == XDR_ENCODE)
-	return (XDR_PUTINT32(xdrs, (long *)ulp));
-
-    if (xdrs->x_op == XDR_FREE)
-	return (TRUE);
-
-    return (FALSE);
-}
-#endif
-
-/*
- * XDR afs_int32 integers
- * same as xdr_u_long - open coded to save a proc call!
+ * XDR long integers
  */
 bool_t
 xdr_long(register XDR * xdrs, long *lp)
 {
+    afs_int32 l;
 
-    if (xdrs->x_op == XDR_ENCODE)
-	return (XDR_PUTINT32(xdrs, lp));
+    switch (xdrs->x_op) {
 
-    if (xdrs->x_op == XDR_DECODE)
-	return (XDR_GETINT32(xdrs, lp));
+    case XDR_ENCODE:
+	l = (afs_int32) * lp;
+	return (XDR_PUTINT32(xdrs, &l));
 
-    if (xdrs->x_op == XDR_FREE)
+    case XDR_DECODE:
+	if (!XDR_GETINT32(xdrs, &l)) {
+	    return (FALSE);
+	}
+	*lp = (long)l;
 	return (TRUE);
 
+    case XDR_FREE:
+	return (TRUE);
+    }
     return (FALSE);
 }
 
 /*
- * XDR unsigned afs_int32 integers
- * same as xdr_long - open coded to save a proc call!
+ * XDR unsigned long integers
  */
 bool_t
 xdr_u_long(register XDR * xdrs, u_long * ulp)
 {
+    afs_uint32 l;
 
-    if (xdrs->x_op == XDR_DECODE)
-	return (XDR_GETINT32(xdrs, ulp));
-    if (xdrs->x_op == XDR_ENCODE)
-	return (XDR_PUTINT32(xdrs, ulp));
-    if (xdrs->x_op == XDR_FREE)
+    switch (xdrs->x_op) {
+
+    case XDR_ENCODE:
+	l = (afs_uint32) * ulp;
+	return (XDR_PUTINT32(xdrs, &l));
+
+    case XDR_DECODE:
+	if (!XDR_GETINT32(xdrs, &l)) {
+	    return (FALSE);
+	}
+	*ulp = (u_long) l;
 	return (TRUE);
+
+    case XDR_FREE:
+	return (TRUE);
+    }
     return (FALSE);
 }
+
 
 /*
  * XDR chars
@@ -384,7 +374,7 @@ xdr_opaque(register XDR * xdrs, caddr_t cp, register u_int cnt)
 	}
 	if (rndup == 0)
 	    return (TRUE);
-	return (XDR_GETBYTES(xdrs, crud, rndup));
+	return (XDR_GETBYTES(xdrs, (caddr_t)crud, rndup));
     }
 
     if (xdrs->x_op == XDR_ENCODE) {
@@ -537,6 +527,8 @@ xdr_string(register XDR * xdrs, char **cpp, u_int maxsize)
 	/* Fall through */
     case XDR_ENCODE:
 	size = strlen(sp);
+	break;
+    case XDR_DECODE:
 	break;
     }
 

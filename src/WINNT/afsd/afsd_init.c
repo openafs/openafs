@@ -16,6 +16,8 @@
 #include <nb30.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <locale.h>
+#include <mbctype.h>
 #include <winsock2.h>
 
 #include <osi.h>
@@ -37,6 +39,8 @@ extern afs_int32 cryptall;
 
 char AFSConfigKeyName[] =
 	"SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters";
+char OpenAFSConfigKeyName[] =
+	"SOFTWARE\\OpenAFS\\Client";
 
 osi_log_t *afsd_logp;
 
@@ -99,85 +103,22 @@ HANDLE afsi_file;
 int cm_dnsEnabled = 1;
 #endif
 
-extern initUpperCaseTable();
-void afsd_initUpperCaseTable() 
-{
-	initUpperCaseTable();
-}
-
-void
-afsi_start()
-{
-	char wd[100];
-	char t[100], u[100], *p, *path;
-	int zilch;
-	int code;
-    DWORD dwLow, dwHigh;
-	HKEY parmKey;
-	DWORD dummyLen;
-    DWORD maxLogSize = 100 * 1024;
-
-	afsi_file = INVALID_HANDLE_VALUE;
-    if (getenv("TEMP"))
-    {
-        StringCbCopyA(wd, sizeof(wd), getenv("TEMP"));
-    }
-    else
-    {
-        code = GetWindowsDirectory(wd, sizeof(wd));
-        if (code == 0) return;
-    }
-	StringCbCatA(wd, sizeof(wd), "\\afsd_init.log");
-	GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
-	afsi_file = CreateFile(wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
-                           OPEN_ALWAYS, FILE_FLAG_WRITE_THROUGH, NULL);
-
-    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
-                         0, KEY_QUERY_VALUE, &parmKey);
-	if (code == ERROR_SUCCESS) {
-        dummyLen = sizeof(maxLogSize);
-        code = RegQueryValueEx(parmKey, "MaxLogSize", NULL, NULL,
-                                (BYTE *) &maxLogSize, &dummyLen);
-        RegCloseKey (parmKey);
-	}
-
-    if (maxLogSize) {
-        dwLow = GetFileSize( afsi_file, &dwHigh );
-        if ( dwHigh > 0 || dwLow >= maxLogSize ) {
-            CloseHandle(afsi_file);
-            afsi_file = CreateFile( wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
-                                    CREATE_ALWAYS, FILE_FLAG_WRITE_THROUGH, NULL);
-        }
-    }
-
-    SetFilePointer(afsi_file, 0, NULL, FILE_END);
-	GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, u, sizeof(u));
-	StringCbCatA(t, sizeof(t), ": Create log file\n");
-	StringCbCatA(u, sizeof(u), ": Created log file\n");
-	WriteFile(afsi_file, t, strlen(t), &zilch, NULL);
-	WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
-    p = "PATH=";
-    path = getenv("PATH");
-	WriteFile(afsi_file, p, strlen(p), &zilch, NULL);
-	WriteFile(afsi_file, path, strlen(path), &zilch, NULL);
-	WriteFile(afsi_file, "\n", 1, &zilch, NULL);
-}
 
 static int afsi_log_useTimestamp = 1;
 
 void
 afsi_log(char *pattern, ...)
 {
-	char s[256], t[100], d[100], u[512];
-	int zilch;
-	va_list ap;
-	va_start(ap, pattern);
+    char s[256], t[100], d[100], u[512];
+    DWORD zilch;
+    va_list ap;
+    va_start(ap, pattern);
 
-	StringCbVPrintfA(s, sizeof(s), pattern, ap);
+    StringCbVPrintfA(s, sizeof(s), pattern, ap);
     if ( afsi_log_useTimestamp ) {
         GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
-		GetDateFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, d, sizeof(d));
-		StringCbPrintfA(u, sizeof(u), "%s %s: %s\n", d, t, s);
+        GetDateFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, d, sizeof(d));
+        StringCbPrintfA(u, sizeof(u), "%s %s: %s\n", d, t, s);
         if (afsi_file != INVALID_HANDLE_VALUE)
             WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
 #ifdef NOTSERVICE
@@ -189,31 +130,110 @@ afsi_log(char *pattern, ...)
     }
 }
 
+extern initUpperCaseTable();
+void afsd_initUpperCaseTable() 
+{
+    initUpperCaseTable();
+}
+
+void
+afsi_start()
+{
+    char wd[100];
+    char t[100], u[100], *p, *path;
+    int zilch;
+    int code;
+    DWORD dwLow, dwHigh;
+    HKEY parmKey;
+    DWORD dummyLen;
+    DWORD maxLogSize = 100 * 1024;
+
+    afsi_file = INVALID_HANDLE_VALUE;
+    if (getenv("TEMP"))
+    {
+        StringCbCopyA(wd, sizeof(wd), getenv("TEMP"));
+    }
+    else
+    {
+        code = GetWindowsDirectory(wd, sizeof(wd));
+        if (code == 0) 
+            return;
+    }
+    StringCbCatA(wd, sizeof(wd), "\\afsd_init.log");
+    GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
+    afsi_file = CreateFile(wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                           OPEN_ALWAYS, FILE_FLAG_WRITE_THROUGH, NULL);
+
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
+                         0, KEY_QUERY_VALUE, &parmKey);
+    if (code == ERROR_SUCCESS) {
+        dummyLen = sizeof(maxLogSize);
+        code = RegQueryValueEx(parmKey, "MaxLogSize", NULL, NULL,
+                                (BYTE *) &maxLogSize, &dummyLen);
+        RegCloseKey (parmKey);
+    }
+
+    if (maxLogSize) {
+        dwLow = GetFileSize( afsi_file, &dwHigh );
+        if ( dwHigh > 0 || dwLow >= maxLogSize ) {
+            CloseHandle(afsi_file);
+            afsi_file = CreateFile( wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                                    CREATE_ALWAYS, FILE_FLAG_WRITE_THROUGH, NULL);
+        }
+    }
+
+    SetFilePointer(afsi_file, 0, NULL, FILE_END);
+    GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, u, sizeof(u));
+    StringCbCatA(t, sizeof(t), ": Create log file\n");
+    StringCbCatA(u, sizeof(u), ": Created log file\n");
+    WriteFile(afsi_file, t, strlen(t), &zilch, NULL);
+    WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
+    p = "PATH=";
+    path = getenv("PATH");
+    WriteFile(afsi_file, p, strlen(p), &zilch, NULL);
+    WriteFile(afsi_file, path, strlen(path), &zilch, NULL);
+    WriteFile(afsi_file, "\n", 1, &zilch, NULL);
+
+    /* Initialize C RTL Code Page conversion functions */
+    /* All of the path info obtained from the SMB client is in the OEM code page */
+    afsi_log("OEM Code Page = %d", GetOEMCP());
+    afsi_log("locale =  %s", setlocale(LC_ALL,NULL));
+#ifdef COMMENT
+    /* Two things to look into.  First, should mbstowcs() be performing 
+     * character set translations from OEM to Unicode in smb3.c; 
+     * Second, do we need to set this translation in each function 
+     * due to multi-threading. 
+     */
+    afsi_log("locale -> %s", setlocale(LC_ALL, ".OCP"));
+    afsi_log("_setmbcp = %d -> %d", _setmbcp(_MB_CP_OEM), _getmbcp());
+#endif /* COMMENT */
+}
+
 /*
  * Standard AFSD trace
  */
 
 void afsd_ForceTrace(BOOL flush)
 {
-	HANDLE handle;
-	int len;
-	char buf[256];
+    HANDLE handle;
+    int len;
+    char buf[256];
 
-	if (!logReady) 
+    if (!logReady) 
         return;
 
-	len = GetTempPath(sizeof(buf)-10, buf);
-	StringCbCopyA(&buf[len], sizeof(buf)-len, "/afsd.log");
-	handle = CreateFile(buf, GENERIC_WRITE, FILE_SHARE_READ,
-			    NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (handle == INVALID_HANDLE_VALUE) {
-		logReady = 0;
-		osi_panic("Cannot create log file", __FILE__, __LINE__);
-	}
-	osi_LogPrint(afsd_logp, handle);
-	if (flush)
-		FlushFileBuffers(handle);
-	CloseHandle(handle);
+    len = GetTempPath(sizeof(buf)-10, buf);
+    StringCbCopyA(&buf[len], sizeof(buf)-len, "/afsd.log");
+    handle = CreateFile(buf, GENERIC_WRITE, FILE_SHARE_READ,
+                         NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (handle == INVALID_HANDLE_VALUE) {
+        logReady = 0;
+        osi_panic("Cannot create log file", __FILE__, __LINE__);
+    }
+    osi_LogPrint(afsd_logp, handle);
+    if (flush)
+        FlushFileBuffers(handle);
+    CloseHandle(handle);
 }
 
 static void
@@ -250,7 +270,7 @@ configureBackConnectionHostNames(void)
     DWORD dwType;
     DWORD dwSize;
     DWORD dwValue;
-    PBYTE pHostNames = NULL, pName;
+    PBYTE pHostNames = NULL, pName = NULL;
     BOOL  bNameFound = FALSE;   
 
     if ( RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
@@ -273,12 +293,14 @@ configureBackConnectionHostNames(void)
         }
              
         if ( !bNameFound ) {
+            int size = strlen(cm_NetbiosName) + 2;
             if ( !pHostNames ) {
-                pName = pHostNames = malloc(strlen(cm_NetbiosName) + 2);
+                pHostNames = malloc(size);
                 dwSize = 1;
             }
-            strcpy(pName, cm_NetbiosName);
-            pName += strlen(cm_NetbiosName) + 1;
+            pName = pHostNames;
+            StringCbCopyA(pName, size, cm_NetbiosName);
+            pName += size - 1;
             *pName = '\0';  /* add a second nul terminator */
 
             dwType = REG_MULTI_SZ;
@@ -971,12 +993,12 @@ int afsd_InitCM(char **reasonP)
 
 int afsd_InitDaemons(char **reasonP)
 {
-	long code;
-	cm_req_t req;
+    long code;
+    cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
-	/* this should really be in an init daemon from here on down */
+    /* this should really be in an init daemon from here on down */
 
     if (!cm_freelanceEnabled) {
 		osi_Log0(afsd_logp, "Loading Root Volume from cell");
@@ -990,39 +1012,55 @@ int afsd_InitDaemons(char **reasonP)
         }
     }
 
-	/* compute the root fid */
-	if (!cm_freelanceEnabled) {
+    /* compute the root fid */
+    if (!cm_freelanceEnabled) {
         cm_rootFid.cell = cm_rootCellp->cellID;
         cm_rootFid.volume = cm_GetROVolumeID(cm_rootVolumep);
         cm_rootFid.vnode = 1;
         cm_rootFid.unique = 1;
-	}
-	else
+    }
+    else
         cm_FakeRootFid(&cm_rootFid);
         
     code = cm_GetSCache(&cm_rootFid, &cm_rootSCachep, cm_rootUserp, &req);
-	afsi_log("cm_GetSCache code %x scache %x", code,
+    afsi_log("cm_GetSCache code %x scache %x", code,
              (code ? (cm_scache_t *)-1 : cm_rootSCachep));
-	if (code != 0) {
-		*reasonP = "unknown error";
-		return -1;
-	}
+    if (code != 0) {
+        *reasonP = "unknown error";
+        return -1;
+    }
 
-	cm_InitDaemon(numBkgD);
-	afsi_log("cm_InitDaemon");
+    cm_InitDaemon(numBkgD);
+    afsi_log("cm_InitDaemon");
 
-	return 0;
+    return 0;
 }
 
 int afsd_InitSMB(char **reasonP, void *aMBfunc)
 {
-	/* Do this last so that we don't handle requests before init is done.
+    HKEY parmKey;
+    DWORD dummyLen;
+    DWORD dwValue;
+    DWORD code;
+
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
+                         0, KEY_QUERY_VALUE, &parmKey);
+    if (code == ERROR_SUCCESS) {
+        dummyLen = sizeof(DWORD);
+        code = RegQueryValueEx(parmKey, "StoreAnsiFilenames", NULL, NULL,
+                                (BYTE *) &dwValue, &dummyLen);
+        if (code == ERROR_SUCCESS)
+            smb_StoreAnsiFilenames = dwValue ? 1 : 0;
+        RegCloseKey (parmKey);
+    }
+
+    /* Do this last so that we don't handle requests before init is done.
      * Here we initialize the SMB listener.
      */
     smb_Init(afsd_logp, cm_NetbiosName, smb_UseV3, LANadapter, numSvThreads, aMBfunc);
-    afsi_log("smb_Init");
+    afsi_log("smb_Init complete");
 
-	return 0;
+    return 0;
 }
 
 #ifdef ReadOnly

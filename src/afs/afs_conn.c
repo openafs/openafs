@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_conn.c,v 1.13 2003/07/15 23:14:11 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_conn.c,v 1.13.2.1 2004/12/07 06:12:11 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -220,7 +220,8 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	    }
 	    isec = 2;
 	    /* kerberos tickets on channel 2 */
-	    csec = rxkad_NewClientSecurityObject(level, tu->ct.HandShakeKey,
+	    csec = rxkad_NewClientSecurityObject(level,
+                                                 (struct ktc_encryptionKey *)tu->ct.HandShakeKey,
 						 /* kvno */
 						 tu->ct.AuthHandle, tu->stLen,
 						 tu->stp);

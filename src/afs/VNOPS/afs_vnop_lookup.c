@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50.2.4 2004/11/09 17:15:04 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50.2.5 2004/12/07 06:12:13 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -67,7 +67,7 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
     char *cpos, *volnamep;
     char type, *buf;
     afs_int32 prefetch;		/* 1=>None  2=>RO  3=>BK */
-    afs_int32 mtptCell, assocCell, hac = 0;
+    afs_int32 mtptCell, assocCell = 0, hac = 0;
     afs_int32 samecell, roname, len;
 
     AFS_STATCNT(EvalMountPoint);
@@ -432,7 +432,7 @@ afs_getsysname(register struct vrequest *areq, register struct vcache *adp,
 }
 
 void
-Check_AtSys(register struct vcache *avc, char *aname,
+Check_AtSys(register struct vcache *avc, const char *aname,
 	    struct sysname_info *state, struct vrequest *areq)
 {
     int num = 0;
@@ -448,7 +448,7 @@ Check_AtSys(register struct vcache *avc, char *aname,
 	state->offset = -1;
 	state->allocked = 0;
 	state->index = 0;
-	state->name = aname;
+	state->name = (char *)aname;
     }
 }
 
@@ -500,10 +500,10 @@ Next_AtSys(register struct vcache *avc, struct vrequest *areq,
 	    }
 	    afs_PutUser(au, 0);
 	}
-	if (++(state->index) >= num || !(*sysnamelist)[state->index])
+	if (++(state->index) >= num || !(*sysnamelist)[(unsigned int)state->index])
 	    return 0;		/* end of list */
     }
-    strcpy(state->name + state->offset, (*sysnamelist)[state->index]);
+    strcpy(state->name + state->offset, (*sysnamelist)[(unsigned int)state->index]);
     return 1;
 }
 
@@ -546,14 +546,14 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     struct afs_q *tq;		/* temp queue variable */
     AFSCBFids fidParm;		/* file ID parm for bulk stat */
     AFSBulkStats statParm;	/* stat info parm for bulk stat */
-    int fidIndex;		/* which file were stating */
-    struct conn *tcp;		/* conn for call */
+    int fidIndex = 0;		/* which file were stating */
+    struct conn *tcp = 0;	/* conn for call */
     AFSCBs cbParm;		/* callback parm for bulk stat */
     struct server *hostp = 0;	/* host we got callback from */
     long startTime;		/* time we started the call,
 				 * for callback expiration base
 				 */
-    afs_size_t statSeqNo;	/* Valued of file size to detect races */
+    afs_size_t statSeqNo = 0;	/* Valued of file size to detect races */
     int code;			/* error code */
     long newIndex;		/* new index in the dir */
     struct DirEntry *dirEntryp;	/* dir entry we are examining */
@@ -564,7 +564,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     long volStates;		/* flags from vol structure */
     struct volume *volp = 0;	/* volume ptr */
     struct VenusFid dotdot;
-    int flagIndex;		/* First file with bulk fetch flag set */
+    int flagIndex = 0;		/* First file with bulk fetch flag set */
     int inlinebulk = 0;		/* Did we use InlineBulk RPC or not? */
     XSTATS_DECLS;
     /* first compute some basic parameters.  We dont want to prefetch more
@@ -606,12 +606,12 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
   tagain:
     code = afs_VerifyVCache(adp, areqp);
     if (code)
-	goto done;
+	goto done2;
 
     dcp = afs_GetDCache(adp, (afs_size_t) 0, areqp, &temp, &temp, 1);
     if (!dcp) {
 	code = ENOENT;
-	goto done;
+	goto done2;
     }
 
     /* lock the directory cache entry */
@@ -1067,6 +1067,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     } else {
 	code = 0;
     }
+  done2:
     osi_FreeLargeSpace(statMemp);
     osi_FreeLargeSpace(cbfMemp);
     return code;

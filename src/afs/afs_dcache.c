@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42.2.3 2004/11/09 17:14:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42.2.4 2004/12/07 06:12:11 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -1199,7 +1199,7 @@ afs_FindDCache(register struct vcache *avc, afs_size_t abyte)
 {
     afs_int32 chunk;
     register afs_int32 i, index;
-    register struct dcache *tdc;
+    register struct dcache *tdc = NULL;
 
     AFS_STATCNT(afs_FindDCache);
     chunk = AFS_CHUNK(abyte);
@@ -1526,7 +1526,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
     register struct osi_file *file;
     register struct conn *tc;
     int downDCount = 0;
-    struct server *newCallback;
+    struct server *newCallback = NULL;
     char setNewCallback;
     char setVcacheStatus;
     char doVcacheUpdate;

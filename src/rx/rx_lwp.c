@@ -22,7 +22,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_lwp.c,v 1.17 2004/07/19 14:39:42 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_lwp.c,v 1.17.2.1 2004/12/07 06:10:06 shadow Exp $");
 
 # include <sys/types.h>		/* fd_set on older platforms */
 # include <errno.h>
@@ -75,7 +75,7 @@ rxi_Wakeup(void *addr)
 }
 
 PROCESS rx_listenerPid = 0;	/* LWP process id of socket listener process */
-static void rx_ListenerProc(void *dummy);
+static int rx_ListenerProc(void *dummy);
 
 /*
  * Delay the current thread the specified number of seconds.
@@ -126,7 +126,7 @@ rxi_StartServerProc(void (*proc) (void), int stacksize)
     char name[32];
 
     sprintf(name, "srv_%d", ++number);
-    LWP_CreateProcess(proc, stacksize, RX_PROCESS_PRIORITY, (void *)0,
+    LWP_CreateProcess((int (*)(void *))proc, stacksize, RX_PROCESS_PRIORITY, (void *)0,
 		      "rx_ServerProc", &scratchPid);
     if (registerProgram)
 	(*registerProgram) (scratchPid, name);
@@ -320,7 +320,7 @@ rxi_ListenerProc(fd_set * rfds, int *tnop, struct rx_call **newcallp)
 /* This is the listener process request loop. The listener process loop
  * becomes a server thread when rxi_ListenerProc returns, and stays
  * server thread until rxi_ServerProc returns. */
-static void
+static int
 rx_ListenerProc(void *dummy)
 {
     int threadID;

@@ -160,7 +160,7 @@ void cm_RevokeCallback(struct rx_call *callp, AFSFid *fidp)
         if (scp->fid.volume == tfid.volume &&
              scp->fid.vnode == tfid.vnode &&
              scp->fid.unique == tfid.unique) {
-            scp->refCount++;
+            cm_HoldSCacheNoLock(scp);
             lock_ReleaseWrite(&cm_scacheLock);
             osi_Log1(afsd_logp, "Discarding SCache scp %x", scp);
             lock_ObtainMutex(&scp->mx);
@@ -168,7 +168,7 @@ void cm_RevokeCallback(struct rx_call *callp, AFSFid *fidp)
             lock_ReleaseMutex(&scp->mx);
             cm_CallbackNotifyChange(scp);
             lock_ObtainWrite(&cm_scacheLock);
-            scp->refCount--;
+            cm_ReleaseSCacheNoLock(scp);
         }
     }
     lock_ReleaseWrite(&cm_scacheLock);
@@ -201,7 +201,7 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, AFSFid *fidp)
     for (hash = 0; hash < cm_hashTableSize; hash++) {
         for(scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
             if (scp->fid.volume == fidp->Volume) {
-                scp->refCount++;
+                cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
                 lock_ObtainMutex(&scp->mx);
                 osi_Log1(afsd_logp, "Discarding SCache scp %x", scp);
@@ -209,7 +209,7 @@ void cm_RevokeVolumeCallback(struct rx_call *callp, AFSFid *fidp)
                 lock_ReleaseMutex(&scp->mx);
                 cm_CallbackNotifyChange(scp);
                 lock_ObtainWrite(&cm_scacheLock);
-                scp->refCount--;
+                cm_ReleaseSCacheNoLock(scp);
             }
         }	/* search one hash bucket */
     }	/* search all hash buckets */
@@ -290,7 +290,7 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
 	lock_ObtainWrite(&cm_scacheLock);
 	for (hash = 0; hash < cm_hashTableSize; hash++) {
             for (scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
-                scp->refCount++;
+                cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
                 lock_ObtainMutex(&scp->mx);
                 discarded = 0;
@@ -306,7 +306,7 @@ SRXAFSCB_InitCallBackState(struct rx_call *callp)
                 if (discarded)
                     cm_CallbackNotifyChange(scp);
                 lock_ObtainWrite(&cm_scacheLock);
-                scp->refCount--;
+                cm_ReleaseSCacheNoLock(scp);
             }	/* search one hash bucket */
 	}      	/* search all hash buckets */
 	
@@ -909,17 +909,17 @@ void cm_CheckCBExpiration(void)
     lock_ObtainWrite(&cm_scacheLock);
     for (i=0; i<cm_hashTableSize; i++) {
         for (scp = cm_hashTablep[i]; scp; scp=scp->nextp) {
-            scp->refCount++;
+            cm_HoldSCacheNoLock(scp);
             lock_ReleaseWrite(&cm_scacheLock);
             if (scp->cbExpires > 0 && (scp->cbServerp == NULL || now > scp->cbExpires)) {
                 osi_Log1(afsd_logp, "Callback Expiration Discarding SCache scp %x", scp);
-                cm_CallbackNotifyChange(scp);
                 lock_ObtainMutex(&scp->mx);
                 cm_DiscardSCache(scp);
                 lock_ReleaseMutex(&scp->mx);
+                cm_CallbackNotifyChange(scp);
             }
             lock_ObtainWrite(&cm_scacheLock);
-            osi_assert(scp->refCount-- > 0);
+            cm_ReleaseSCacheNoLock(scp);
         }
     }
     lock_ReleaseWrite(&cm_scacheLock);

@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/volume.c,v 1.35.2.1 2004/08/25 07:14:19 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/volume.c,v 1.35.2.2 2004/12/13 19:41:10 shadow Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -635,7 +635,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
     }
 
     DiskToVolumeHeader(&iheader, &diskHeader);
-    if (programType == volumeUtility && mode != V_SECRETLY) {
+    if (programType == volumeUtility && mode != V_SECRETLY && mode != V_PEEK) {
 	if (FSYNC_askfs(iheader.id, partition, FSYNC_NEEDVOLUME, mode)
 	    == FSYNC_DENIED) {
 	    Log("VAttachVolume: attach of volume %u apparently denied by file server\n", iheader.id);
@@ -650,7 +650,7 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
 	 * takes the volume offline or not.  If the volume isn't
 	 * offline, we must not return it when we detach the volume,
 	 * or the server will abort */
-	if (mode == V_READONLY
+	if (mode == V_READONLY || mode == V_PEEK
 	    || (!VolumeWriteable(vp) && (mode == V_CLONE || mode == V_DUMP)))
 	    vp->needsPutBack = 0;
 	else
@@ -667,7 +667,8 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
      * for all of that to happen, but if it does, probably the right
      * fix is for the server to allow the return of readonly volumes
      * that it doesn't think are really checked out. */
-    if (programType == volumeUtility && vp == NULL && mode != V_SECRETLY) {
+    if (programType == volumeUtility && vp == NULL &&
+	mode != V_SECRETLY && mode != V_PEEK) {
 	FSYNC_askfs(iheader.id, partition, FSYNC_ON, 0);
     } else if (programType == fileServer && vp) {
 	V_needsCallback(vp) = 0;

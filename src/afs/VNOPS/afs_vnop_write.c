@@ -21,7 +21,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.36.2.1 2004/08/25 07:09:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.36.2.2 2004/12/07 06:12:14 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -181,7 +181,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
      * high-level write op.
      */
     if (avc->execsOrWriters <= 0) {
-	printf("WARNING: afs_ufswr vp=%x, exOrW=%d\n", avc,
+	printf("WARNING: afs_ufswr vp=%lx, exOrW=%d\n", (unsigned long)avc,
 	       avc->execsOrWriters);
     }
 #else
@@ -432,7 +432,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
      * high-level write op.
      */
     if (avc->execsOrWriters <= 0) {
-	printf("WARNING: afs_ufswr vcp=%x, exOrW=%d\n", avc,
+	printf("WARNING: afs_ufswr vcp=%lx, exOrW=%d\n", (unsigned long)avc,
 	       avc->execsOrWriters);
     }
 #else

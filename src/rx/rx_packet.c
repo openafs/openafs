@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.35.2.2 2004/10/18 17:43:58 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.35.2.3 2004/12/07 06:10:06 shadow Exp $");
 
 #ifdef KERNEL
 #if defined(UKERNEL)
@@ -480,7 +480,7 @@ rx_CheckPackets(void)
 void
 rxi_FreePacketNoLock(struct rx_packet *p)
 {
-    dpf(("Free %x\n", (int)p));
+    dpf(("Free %lx\n", (unsigned long)p));
 
     if (p->flags & RX_PKTFLAG_FREE)
 	osi_Panic("rxi_FreePacketNoLock: packet already free\n");
@@ -652,7 +652,7 @@ rxi_AllocPacketNoLock(int class)
     if (!(p->flags & RX_PKTFLAG_FREE))
 	osi_Panic("rxi_AllocPacket: packet not free\n");
 
-    dpf(("Alloc %x, class %d\n", (int)p, class));
+    dpf(("Alloc %lx, class %d\n", (unsigned long)p, class));
 
     queue_Remove(p);
     p->flags = 0;		/* clear RX_PKTFLAG_FREE, initialize the rest */
@@ -1653,7 +1653,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	AFS_RXGLOCK();
 #ifdef RXDEBUG
     }
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %x resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], peer->host, peer->port, p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (int)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], peer->host, peer->port, p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (unsigned long)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 #endif
     MUTEX_ENTER(&rx_stats_mutex);
     rx_stats.packetsSent[p->header.type - 1]++;
@@ -1832,7 +1832,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 
     assert(p != NULL);
 
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %x resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], peer->host, peer->port, p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (int)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], peer->host, peer->port, p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (unsigned long)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 
 #endif
     MUTEX_ENTER(&rx_stats_mutex);

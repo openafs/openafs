@@ -63,8 +63,7 @@ UTILOBJS = \
 	pthread_glock.o \
 	get_krbrlm.o \
 	dirpath.o \
-	fileutil.o \
-	casestrcpy.o
+	fileutil.o
 
 RXKADOBJS = \
 	rxkad_errs.o
@@ -195,9 +194,6 @@ dirpath.o: ${UTIL}/dirpath.c
 	${CCRULE}
 
 fileutil.o: ${UTIL}/fileutil.c
-	${CCRULE}
-
-casestrcpy.o: ${UTIL}/casestrcpy.c
 	${CCRULE}
 
 pthread_glock.o: ${UTIL}/pthread_glock.c

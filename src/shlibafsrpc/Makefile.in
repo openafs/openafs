@@ -37,6 +37,7 @@ SYSOBJS =\
 	syscall.o
 
 UTILOBJS =\
+	assert.o \
 	casestrcpy.o \
 	base64.o
 
@@ -273,7 +274,7 @@ xdr_afsuuid.o: ${RX}/xdr_afsuuid.c
 #
 #   $ what /opt/langtools/bin/pxdb32
 #   /opt/langtools/bin/pxdb32:
-#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.15.2.1 $
+#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.15.2.3 $
 #
 # The problem occurs when -g and -O are both used when compiling des.c.
 # The simplest way to work around the problem is to leave out either -g or -O.
@@ -341,6 +342,9 @@ com_err.o: ${COMERR}/com_err.c
 	${CCRULE}
 
 casestrcpy.o: ${UTIL}/casestrcpy.c
+	${CCRULE}
+
+assert.o: ${UTIL}/assert.c
 	${CCRULE}
 
 base64.o: ${UTIL}/base64.c

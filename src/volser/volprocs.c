@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/volprocs.c,v 1.34.2.2 2004/11/09 17:13:45 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/volprocs.c,v 1.34.2.3 2004/12/13 19:41:13 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -1790,7 +1790,7 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid, afs_int32
 		pntr->volid = volid;
 		goto drop;
 	    }
-	    tv = VAttachVolumeByName(&error, pname, volname, V_READONLY);
+	    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
 	    if (error) {
 		pntr->status = 0;	/*things are messed up */
 		strcpy(pntr->name, volname);
@@ -2004,7 +2004,7 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	    /*
 	     * Attach the volume, give up on the volume if we can't.
 	     */
-	    tv = VAttachVolumeByName(&error, pname, volname, V_READONLY);
+	    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
 	    if (error) {
 		xInfoP->status = 0;	/*things are messed up */
 		strcpy(xInfoP->name, volname);
@@ -2171,7 +2171,7 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 		pntr->volid = volid;
 		goto drop;
 	    }
-	    tv = VAttachVolumeByName(&error, pname, volname, V_READONLY);
+	    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
 	    if (error) {
 		pntr->status = 0;	/*things are messed up */
 		strcpy(pntr->name, volname);
@@ -2413,7 +2413,7 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	    /*
 	     * Attach the volume, give up on this volume if we can't.
 	     */
-	    tv = VAttachVolumeByName(&error, pname, volname, V_READONLY);
+	    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
 	    if (error) {
 		xInfoP->status = 0;	/*things are messed up */
 		strcpy(xInfoP->name, volname);

@@ -35,6 +35,7 @@
 				<ComponentRef Id="rcm_Client" />
                 <ComponentRef Id="rcm_ClientCacheSize" />
                 <ComponentRef Id="rcm_ClientCachePath" />
+                <ComponentRef Id="rcm_StoreAnsiFilenames" />
 
 				<ComponentRef Id="cmp_CommonDir" />
 
