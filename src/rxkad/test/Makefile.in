@@ -9,28 +9,26 @@ srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
 
-INCDIRS= -I${DESTDIR}/include -I..
+CFLAGS=-g -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 
 HEADERS = ../rxkad.h stress.h stress_internal.h stress_errs.h
 
-LDIR= ${DESTDIR}/lib/
-ULIBS = ${LDIR}/afs/libcmd.a ${LDIR}/afs/libcom_err.a ${DESTDIR}/lib/afs/util.a
-
-LIBS = ../librxkad.a  ${LDIR}/librx.a ${LDIR}/libdes.a \
-	${LDIR}/liblwp.a  ${ULIBS} ${XLIBS}
+LIBS=${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/util.a
 
 LIBRPC = ../../librpc/libafsrpc.so
 THLIBS= ${LDIR}/afs/libcmd.a  ${LDIR}/afs/libcom_err.a \
 	${ULIBS} ${XLIBS} ${LIBRPC} -lpthread
 
-CFLAGS = ${OPTIMIZE} ${INCDIRS} ${XCFLAGS}
-
-
 THFLAGS = -mt -DAFS_PTHREAD_ENV
 
 THRULE = ${CC} ${CFLAGS} ${THFLAGS} -c $?
-
-COMPILE_ET = ${SRCDIR}/bin/compile_et
 
 noversion all test system: stress
 
@@ -52,7 +50,7 @@ th_stress.xdr.o: stress.xdr.c stress.h
 	${THRULE} -o th_stress.xdr.o
 
 stress.ss.c stress.cs.c stress.xdr.c stress.h: stress.rg
-	${SRCDIR}/bin/rxgen stress.rg
+	${RXGEN} stress.rg
 
 stress_errs.o: stress_errs.c
 
