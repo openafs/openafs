@@ -1596,6 +1596,11 @@ tryagain:
     {
 	if (!failed) {
 	    failed = 1;
+#if defined(AFS_OSF_ENV) && !defined(AFS_OSF20_ENV)
+	    catclose1 (catd);
+#else
+	    catclose (catd);
+#endif
 	    goto tryagain;
 	}
         sprintf ((char *) error_text, "status %08x (%s / %s)", 
