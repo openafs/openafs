@@ -19,13 +19,18 @@
 
 #define AFS_64BIT_ENV		1       /* Defines afs_int32 as int, not long. */
 
+#ifdef AFS_NAMEI_ENV
+#define AFS_64BIT_IOPS_ENV     1       /* needed for NAMEI... */
+#else /* AFS_NAMEI_ENV */
+#define AFS_3DISPARES           1       /* Utilize the 3 available disk inode 'spares' */
+#endif /* AFS_NAMEI_ENV */
+
 #include <afs/afs_sysnames.h>
 
 #define AFS_GLOBAL_SUNLOCK	1	/* For global locking */
 #define RXK_LISTENER_ENV   1
 #define AFS_GCPAGS		1       /* if nonzero, garbage collect PAGs */
 
-#define	AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */
 #define	AFS_SYSCALL		65
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
