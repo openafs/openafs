@@ -434,6 +434,17 @@ Default : <not defined>
   directory is used.
 
 
+Value   : IoctlDebug
+Type	: REG_DEBUG
+Default : 0x0
+
+  This value can be used to debug the cause of pioctl() failures.
+  Set a non-zero value and the pioctl() library will output status
+  information to stdout.  Executing command line tools such as
+  tokens.exe, fs.exe, etc can then be used to determine why the
+  pioctl() call is failing. 
+
+
 
 2.1 Domain specific configuration keys for the Network Provider
 ---------------------------------------------------------------

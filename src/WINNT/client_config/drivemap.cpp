@@ -141,7 +141,7 @@ DeleteRegistryString(HKEY key, TCHAR * subkey, LPTSTR lhs)
                     0,
                     NULL,
                     REG_OPTION_NON_VOLATILE,
-                    KEY_READ,
+                    KEY_WRITE,
                     NULL,
                     &hkSub,
                     NULL);

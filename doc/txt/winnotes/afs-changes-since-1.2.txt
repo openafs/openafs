@@ -1,4 +1,36 @@
 Since 1.3.74:
+  * The afs_config.exe submounts dialog had two errors.  
+    First, attempts to remove entries failed because the registry
+    key was being opened without KEY_WRITE privileges.  
+    Second, when editing a submount entry, changing the name
+    would add a new key and leave the original one in place. 
+    Now the original submount will be removed if its name is 
+    changed.
+
+  * In recent months there have been several incidents in which
+    users have experienced problems starting or accessing 
+    afsd_service.exe and after significant effort has been spent
+    it has turned out that they have two versions of AFS on the
+    machine or an inconsistent set of DLLs.  
+
+    Code has now been added to afsd_service.exe which will walk
+    the list of modules loaded by afsd_service.exe and validate
+    that the version of the AFS DLLs matches the version of the
+    afsd_service.exe executable.  If they do not match the service
+    will not start.  
+
+  * When Freelance mode is enabled and there is no registry
+    key HKLM\SOFTWARE\OpenAFS\Client\Freelance, afsd_service.exe
+    will attempt to import the afs_freelance.ini file contents.
+    If the file does not exist, it was creating a dummy file
+    with a r/o and r/w entry for the default cell and then
+    importing those values.
+
+    This process has been changed.  The temporary file is no
+    longer created.   Also, both the OpenAFS Client install
+    directory as well as %WINDIR% are checked for previous
+    afs_freelance.ini files.
+
   * Added support for VL_GetEntryByNameN().  Still need to add
     support for VL_GetEntryByNameU() for multi-homed support.
 

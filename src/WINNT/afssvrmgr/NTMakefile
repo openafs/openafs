@@ -118,7 +118,7 @@ $(OUT)\svrmgr_stub.res : AFS_component_version_number.h
 
 clean::
 	$(CD) lang
-	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile clean
+	for /f %l in ('dir /B ??_??') if exist @$(NTLANG) do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile clean
 	$(CD) ..
 
 mkdir:
