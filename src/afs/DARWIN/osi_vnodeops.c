@@ -239,7 +239,7 @@ afs_vop_create(ap)
 	*ap->a_vpp = AFSTOV(vcp);
 	vn_lock(*ap->a_vpp, LK_EXCLUSIVE| LK_RETRY, p);
         if (UBCINFOMISSING(*ap->a_vpp) ||
-            UBCINFORECLAIMED(*ap->a_vpp)
+            UBCINFORECLAIMED(*ap->a_vpp))
                 ubc_info_init(*ap->a_vpp);
     }
     else *ap->a_vpp = 0;
