@@ -151,7 +151,6 @@
 				     * the receiver should be greater than
                                      * this one, rather than a resend of an
 				     * earlier sequence number */
-#define	RX_FREE_PACKET		16	/* Unallocated to a call */
 #define RX_SLOW_START_OK	32  /* Set this flag in an ack packet to
 				     * inform the sender that slow start is
 				     * supported by the receiver. */
@@ -162,6 +161,14 @@
 /* The following flags are preset per packet, i.e. they don't change
  * on retransmission of the packet */
 #define	RX_PRESET_FLAGS		(RX_CLIENT_INITIATED | RX_LAST_PACKET)
+
+
+/*
+ * Flags for the packet structure itself, housekeeping for the
+ * most part.  These live in rx_packet->flags.
+ */
+#define	RX_PKTFLAG_ACKED	0x01
+#define	RX_PKTFLAG_FREE		0x02
 
 
 /* The rx part of the header of a packet, in host form */
@@ -245,7 +252,7 @@ struct rx_packet {
     unsigned int niovecs;
     struct iovec wirevec[RX_MAXWVECS+1];       /* the new form of the packet */
     
-    u_char acked;	/* This packet has been *tentatively* acknowledged */
+    u_char flags;		    /* Flags for local state of this packet */
     u_char backoff;                 /* for multiple re-sends */
     u_short length;		    /* Data length */
     /* NT port relies on the fact that the next two are physically adjacent.

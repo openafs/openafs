@@ -270,8 +270,9 @@ static struct rx_packet * allocCBuf(int class)
   rx_nFreePackets--;
   c = queue_First(&rx_freePacketQueue, rx_packet);
   queue_Remove(c);
-  if (c->header.flags != RX_FREE_PACKET)
+  if (!(c->flags & RX_PKTFLAG_FREE))
     osi_Panic("rxi_AllocPacket: packet not free\n");
+  c->flags &= ~RX_PKTFLAG_FREE;
   c->header.flags = 0;
   
 #ifdef KERNEL
@@ -375,7 +376,7 @@ void rxi_MorePackets(int apackets)
     p->wirevec[0].iov_len  = RX_HEADER_SIZE;
     p->wirevec[1].iov_base = (char *) (p->localdata);
     p->wirevec[1].iov_len  = RX_FIRSTBUFFERSIZE;
-    p->header.flags = RX_FREE_PACKET;
+    p->flags |= RX_PKTFLAG_FREE;
     p->niovecs = 2;
     
     queue_Append(&rx_freePacketQueue, p);
@@ -410,7 +411,7 @@ void rxi_MorePacketsNoLock(int apackets)
     p->wirevec[0].iov_len  = RX_HEADER_SIZE;
     p->wirevec[1].iov_base = (char *) (p->localdata);
     p->wirevec[1].iov_len  = RX_FIRSTBUFFERSIZE;
-    p->header.flags = RX_FREE_PACKET;
+    p->flags |= RX_PKTFLAG_FREE;
     p->niovecs = 2;
     
     queue_Append(&rx_freePacketQueue, p);
@@ -457,10 +458,10 @@ void rxi_FreePacketNoLock(struct rx_packet *p)
 {
   dpf(("Free %x\n", p));
 
-  if (p->header.flags & RX_FREE_PACKET)
+  if (p->flags & RX_PKTFLAG_FREE)
     osi_Panic("rxi_FreePacketNoLock: packet already free\n");
   rx_nFreePackets++;
-  p->header.flags = RX_FREE_PACKET;
+  p->flags |= RX_PKTFLAG_FREE;
   queue_Append(&rx_freePacketQueue, p);
 }
 
@@ -624,12 +625,13 @@ struct rx_packet *rxi_AllocPacketNoLock(class)
   
   rx_nFreePackets--;
   p = queue_First(&rx_freePacketQueue, rx_packet);
-  if (p->header.flags != RX_FREE_PACKET)
+  if (!(p->flags & RX_PKTFLAG_FREE))
     osi_Panic("rxi_AllocPacket: packet not free\n");
   
   dpf(("Alloc %x, class %d\n", p, class));
   
   queue_Remove(p);
+  p->flags &= ~RX_PKTFLAG_FREE;
   p->header.flags = 0;
   
   /* have to do this here because rx_FlushWrite fiddles with the iovs in
@@ -1878,7 +1880,7 @@ void rxi_PrepareSendPacket(call, p, last)
     int i, j;
     ssize_t len;	/* len must be a signed type; it can go negative */
 
-    p->acked = 0;
+    p->flags &= ~RX_PKTFLAG_ACKED;
     p->header.cid = (conn->cid | call->channel);
     p->header.serviceId = conn->serviceId;
     p->header.securityIndex = conn->securityIndex;

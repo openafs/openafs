@@ -3326,12 +3326,12 @@ struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
      * set the ack bits in the packets and have rxi_Start remove the packets
      * when it's done transmitting.
      */
-	if (!tp->acked) {
+	if (!(tp->flags & RX_PKTFLAG_ACKED)) {
 	    newAckCount++;
 	}
 	if (call->flags & RX_CALL_TQ_BUSY) {
 #ifdef RX_ENABLE_LOCKS
-	    tp->acked = 1;
+	    tp->flags |= RX_PKTFLAG_ACKED;
 	    call->flags |= RX_CALL_TQ_SOME_ACKED;
 #else /* RX_ENABLE_LOCKS */
 	    break;
@@ -3400,17 +3400,17 @@ struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
 	 * out of sequence. */
 	if (tp->header.seq < first) {
 	    /* Implicit ack information */
-	    if (!tp->acked) {
+	    if (!(tp->flags & RX_PKTFLAG_ACKED)) {
 		newAckCount++;
 	    }
-	    tp->acked = 1;
+	    tp->flags |= RX_PKTFLAG_ACKED;
 	}
 	else if (tp->header.seq < first + nAcks) {
 	    /* Explicit ack information:  set it in the packet appropriately */
 	    if (ap->acks[tp->header.seq - first] == RX_ACK_TYPE_ACK) {
-		if (!tp->acked) {
+		if (!(tp->flags & RX_PKTFLAG_ACKED)) {
 		    newAckCount++;
-		    tp->acked = 1;
+		    tp->flags |= RX_PKTFLAG_ACKED;
 		}
 		if (missing) {
 		    nNacked++;
@@ -3418,12 +3418,12 @@ struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
 		    call->nSoftAcked++;
 		}
 	    } else {
-		tp->acked = 0;
+		tp->flags &= ~RX_PKTFLAG_ACKED;
 		missing = 1;
 	    }
 	}
 	else {
-	    tp->acked = 0;
+	    tp->flags &= ~RX_PKTFLAG_ACKED;
 	    missing = 1;
 	}
 
@@ -3432,7 +3432,7 @@ struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
 	 * ie, this should readjust the retransmit timer for all outstanding 
 	 * packets...  So we don't just retransmit when we should know better*/
 
-	if (!tp->acked && !clock_IsZero(&tp->retryTime)) {
+	if (!(tp->flags & RX_PKTFLAG_ACKED) && !clock_IsZero(&tp->retryTime)) {
 	  tp->retryTime = tp->timeSent;
 	  clock_Add(&tp->retryTime, &peer->timeout);
 	  /* shift by eight because one quarter-sec ~ 256 milliseconds */
@@ -3625,10 +3625,10 @@ struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
 	 * so we will retransmit as soon as the window permits*/
 	for(acked = 0, queue_ScanBackwards(&call->tq, tp, nxp, rx_packet)) {
 	    if (acked) {
-		if (!tp->acked) {
+		if (!(tp->flags & RX_PKTFLAG_ACKED)) {
 		    clock_Zero(&tp->retryTime);
 		}
-	    } else if (tp->acked) {
+	    } else if (tp->flags & RX_PKTFLAG_ACKED) {
 		acked = 1;
 	    }
 	}
@@ -3938,7 +3938,7 @@ static void rxi_SetAcksInTransmitQueue(call)
      for (queue_Scan(&call->tq, p, tp, rx_packet)) {
 	 if (!p) 
 	     break;
-	 p->acked = 1;
+	 p->flags |= RX_PKTFLAG_ACKED;
 	 someAcked = 1;
      }
      if (someAcked) {
@@ -3975,7 +3975,7 @@ void rxi_ClearTransmitQueue(call, force)
 	for (queue_Scan(&call->tq, p, tp, rx_packet)) {
 	  if (!p) 
 	     break;
-	  p->acked = 1;
+	  p->flags |= RX_PKTFLAG_ACKED;
 	  someAcked = 1;
 	}
 	if (someAcked) {
@@ -4628,7 +4628,7 @@ static void rxi_SendXmitList(call, list, len, istack, now, retryTime, resending)
 	/* Does the current packet force us to flush the current list? */
 	if (cnt > 0
 	    && (list[i]->header.serial
-		|| list[i]->acked
+		|| (list[i]->flags & RX_PKTFLAG_ACKED)
 		|| list[i]->length > RX_JUMBOBUFFERSIZE)) {
 	    if (lastCnt > 0) {
 		rxi_SendList(call, lastP, lastCnt, istack, 1, now, retryTime, resending);
@@ -4644,7 +4644,7 @@ static void rxi_SendXmitList(call, list, len, istack, now, retryTime, resending)
 	}
 	/* Add the current packet to the list if it hasn't been acked.
 	 * Otherwise adjust the list pointer to skip the current packet.  */
-	if (!list[i]->acked) {
+	if (!(list[i]->flags & RX_PKTFLAG_ACKED)) {
 	    cnt++;
 	    /* Do we need to flush the list? */
 	    if (cnt >= (int)peer->maxDgramPackets
@@ -4684,7 +4684,7 @@ static void rxi_SendXmitList(call, list, len, istack, now, retryTime, resending)
 	 * an acked packet. Since we always send retransmissions
 	 * in a separate packet, we only need to check the first
 	 * packet in the list */
-	if (cnt > 0 && !listP[0]->acked) {
+	if (cnt > 0 && !(listP[0]->flags & RX_PKTFLAG_ACKED)) {
 	    morePackets = 1;
 	}
 	if (lastCnt > 0) {
@@ -4789,7 +4789,7 @@ void rxi_Start(event, call, istack)
 	 * than recovery rates.
 	 */
 	for(queue_Scan(&call->tq, p, nxp, rx_packet)) {
-	    if (!p->acked) {
+	    if (!(p->flags & RX_PKTFLAG_ACKED)) {
 		clock_Zero(&p->retryTime);
 	    }
 	}
@@ -4852,14 +4852,14 @@ void rxi_Start(event, call, istack)
 	     /* Only send one packet during fast recovery */
 	     break;
 	  }
-	  if ((p->header.flags == RX_FREE_PACKET) ||
+	  if ((p->flags & RX_PKTFLAG_FREE) ||
 	      (!queue_IsEnd(&call->tq, nxp)
-	       && (nxp->header.flags == RX_FREE_PACKET)) ||
+	       && (nxp->flags & RX_PKTFLAG_FREE)) ||
 	      (p == (struct rx_packet *)&rx_freePacketQueue) ||
 	      (nxp == (struct rx_packet *)&rx_freePacketQueue)) {
 	      osi_Panic("rxi_Start: xmit queue clobbered");
 	  }
-	  if (p->acked) {
+	  if (p->flags & RX_PKTFLAG_ACKED) {
 	    MUTEX_ENTER(&rx_stats_mutex);
 	    rx_stats.ignoreAckedPacket++;
 	    MUTEX_EXIT(&rx_stats_mutex);
@@ -4942,7 +4942,7 @@ void rxi_Start(event, call, istack)
 	     * the transmit queue.
 	     */
 	    for (missing = 0, queue_Scan(&call->tq, p, nxp, rx_packet)) {
-		if (p->header.seq < call->tfirst && p->acked) {
+		if (p->header.seq < call->tfirst && (p->flags & RX_PKTFLAG_ACKED)) {
 		    queue_Remove(p);
 		    rxi_FreePacket(p);
 		}
@@ -4978,7 +4978,7 @@ void rxi_Start(event, call, istack)
 		break;
 	    }
 
-	    if (!p->acked && !clock_IsZero(&p->retryTime)) {
+	    if (!(p->flags & RX_PKTFLAG_ACKED) && !clock_IsZero(&p->retryTime)) {
 		haveEvent = 1;
 		retryTime = p->retryTime;
 		break;
