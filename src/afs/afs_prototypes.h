@@ -467,12 +467,6 @@ extern int setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag, int chan
 #endif
 
 
-/* OBSD/osi_misc.c */
-#ifdef AFS_OBSD_ENV
-extern int setpag(struct proc *proc, struct ucred **cred, afs_uint32 pagvalue,
-		  afs_uint32 *newpag, int change_parent);
-#endif
-
 /* ARCH/osi_sleep.c */
 extern void afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle);
 extern void afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle);
@@ -509,6 +503,13 @@ extern int afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
 extern int afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr, afs_int32 asize);
 extern int afs_osi_MapStrategy(int (*aproc)(struct buf *bp), register struct buf *bp);
 extern void shutdown_osifile(void);
+
+
+/* ARCH/osi_groups.c */
+#ifdef AFS_XBSD_ENV
+extern int setpag(struct proc *proc, struct ucred **cred, afs_uint32 pagvalue,
+		  afs_uint32 *newpag, int change_parent);
+#endif
 
 
 /* ARCH/osi_vm.c */
