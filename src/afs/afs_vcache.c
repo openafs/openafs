@@ -365,6 +365,7 @@ afs_FlushVCBs(afs_int32 lockit)
 		    fidArray.AFSCBFids_val = (struct AFSFid *)tfids;
 		    cbArray.AFSCBs_len = 1;
 		    cbArray.AFSCBs_val = callBacks;
+		    memset(&callBacks[0], 0, sizeof(callBacks[0]));
 		    callBacks[0].CallBackType = CB_EXCLUSIVE;
 		    for (safety3 = 0; safety3 < MAXHOSTS * 2; safety3++) {
 			tc = afs_ConnByHost(tsp, tsp->cell->fsport,
