@@ -136,6 +136,11 @@ int mp_afs_root (struct mount *afsp, struct vnode **avpp)
     if (afs_globalVp && (afs_globalVp->states & CStatd)) {
 	tvp = afs_globalVp;
     } else {
+	if (afs_globalVp) {
+	    afs_PutVCache(afs_globalVp);
+	    afs_globalVp = NULL;
+	}
+
 	if (!(code = afs_InitReq(&treq, cred)) &&
 	    !(code = afs_CheckInit())) {
 	    tvp = afs_GetVCache(&afs_rootFid, &treq, (afs_int32 *)0,

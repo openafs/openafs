@@ -110,6 +110,12 @@ int afs_root (struct vfs *afsp, struct vnode **avpp)
 	    locked = 1;
 	    mutex_exit(&vp->v_lock);
 	}
+
+	if (afs_globalVp) {
+	    afs_PutVCache(afs_globalVp);
+	    afs_globalVp = NULL;
+	}
+
 	if (!(code = afs_InitReq(&treq, proc->p_cred)) &&
 	    !(code = afs_CheckInit())) {
 	    tvp = afs_GetVCache(&afs_rootFid, &treq, (afs_int32 *)0,
