@@ -399,7 +399,7 @@ void cm_FreeServer(cm_server_t* server)
          * for this server have a 0 refCount; otherwise, they will
          * not be garbage collected 
          */
-        cm_GCConnections(&server);  /* connsp */
+        cm_GCConnections(server);  /* connsp */
 
         lock_FinalizeMutex(&server->mx);
         if ( cm_allServersp == server )
