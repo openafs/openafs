@@ -112,9 +112,9 @@ int base32_to_int(char *s);
  * early in name.
  */
 typedef char lb64_string_t[12];
-char *int64_to_flipbase64(b64_string_t s, u_int64_t a);
+char *int64_to_flipbase64(b64_string_t s, uint64_t a);
 int64_t flipbase64_to_int64(char *s);
-#define int32_to_flipbase64(S, A) int64_to_flipbase64(S, (u_int64_t)(A))
+#define int32_to_flipbase64(S, A) int64_to_flipbase64(S, (uint64_t)(A))
 #endif
 
 /* This message preserves our ability to license AFS to the U.S. Government
