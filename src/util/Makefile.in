@@ -124,6 +124,12 @@ afs_atomlist.o: ${srcdir}/afs_atomlist.c ${includes}
 afs_lhash.o: ${srcdir}/afs_lhash.c ${includes}
 	${CC} ${CFLAGS} -c ${srcdir}/afs_lhash.c
 
+strlcat.o: ${srcdir}/strlcat.c ${includes}
+	${CC} ${CFLAGS} -c ${srcdir}/strlcat.c
+
+strlcpy.o: ${srcdir}/strlcpy.c ${includes}
+	${CC} ${CFLAGS} -c ${srcdir}/strlcpy.c
+
 #
 # Install targets
 #

@@ -130,7 +130,7 @@ libafsrpc.a: ${LIBOBJS}
 	$(RANLIB) $@
 	case "${SYS_NAME}" in \
 	    rs_aix*) \
-		$(AR) crv $@ ${srcdir}/../sys/afsl.exp;; \
+		$(AR) crv $@ ../sys/afsl.exp;; \
         esac
 
 rx_event.o: ${RX}/rx_event.c

@@ -382,7 +382,7 @@ xlate_xtok(xp, kp, strp, szp)
      uint *szp;
 {
     register len;
-    static char *export_strings, *prev = "";
+    static char *export_strings = NULL, *prev = "";
     static left, offset, sz;
 
     if (!export_strings) {

@@ -1408,7 +1408,7 @@ afs_SimpleVStat(register struct vcache *avc,
 #else
     if ((avc->execsOrWriters <= 0) && !afs_DirtyPages(avc)) {
 #endif
-#ifdef AFS_64BIT_ClIENT
+#ifdef AFS_64BIT_CLIENT
 	FillInt64(length, astat->Length_hi, astat->Length);
 #else /* AFS_64BIT_CLIENT */
 	length = astat->Length;

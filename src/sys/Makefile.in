@@ -36,7 +36,7 @@ libsys.a: ${OBJECTS} ${RMTOBJS} afsl.exp AFS_component_version_number.o
 	$(RANLIB) $@
 	case "${SYS_NAME}" in                   	\
 		rs_aix*) 			        \
-			$(AR) crv $@ ${srcdir}/afsl.exp;;         \
+			$(AR) crv $@ afsl.exp;;         \
 	esac
 
 tests:	pagsh pagsh.krb fixit iinc idec icreate iopen istat rmtsysd
@@ -67,7 +67,7 @@ afssyscalls.o: afssyscalls.c afssyscalls.h
 	${CC} ${CFLAGS} -c ${srcdir}/afssyscalls.c
 
 rmtsysnet.o rmtsysc.o rmtsyss.o rmtsysd.o: rmtsys.h
-rmtsysd: AFS_component_version_number.o
+rmtsysd: AFS_component_version_number.o afs.exp afsl.exp
 
 rmtsys.cs.c: rmtsys.xg
 	${RXGEN} -C -o $@ ${srcdir}/rmtsys.xg
@@ -127,7 +127,7 @@ xfsinode: xfsinode.c  AFS_component_version_number.c
 		$(CC) -o xfsinode ${CFLAGS} ${srcdir}/xfsinode.c ${LIBS}
 	esac
 
-afs.exp: afs4.exp afs5.exp
+afs.exp: ${srcdir}/afs4.exp ${srcdir}/afs5.exp
 	case ${SYS_NAME} in \
 		rs_aix5* ) \
 			cp -p ${srcdir}/afs5.exp afs.exp ;; \
@@ -135,7 +135,7 @@ afs.exp: afs4.exp afs5.exp
 			cp -p ${srcdir}/afs4.exp afs.exp ;; \
 	esac
 
-afsl.exp: afsl4.exp afsl5.exp
+afsl.exp: ${srcdir}/afsl4.exp ${srcdir}/afsl5.exp
 	case ${SYS_NAME} in \
 		rs_aix5* ) \
 			cp -p ${srcdir}/afsl5.exp afsl.exp ;; \
