@@ -1052,13 +1052,13 @@ create_ovwFrame_objects()
 	fflush(debugFD);
     }
 
-   /* get frame dimensions, it must be atleast 80x12 for any sensible output*/
+   /* get frame dimensions, it must be atleast MINXxMINY for any sensible output*/
    WOP_GETDIMENSIONS(ovwFrame->window,&frameDims);
    maxX = frameDims.maxx;
    maxY = frameDims.maxy;
    if (maxX + 1 < MINX || maxY + 1 < MINY) {
-	sprintf(errMsg1,"[ %s ] Window size %dx%d; must be at least 80x12\n",
-		rn, maxX + 1, maxY + 1);
+	sprintf(errMsg1,"[ %s ] Window size %dx%d; must be at least %dx%d\n",
+		rn, maxX + 1, maxY + 1, MINX, MINY);
 	return(-1);
    }
    if (afsmon_debug)
