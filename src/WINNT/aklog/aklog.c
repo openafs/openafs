@@ -355,7 +355,7 @@ static char *afs_realm_of_cell(struct afsconf_cell *cellconfig)
 
 static char *afs_realm_of_cell5(krb5_context context, struct afsconf_cell *cellconfig)
 {
-	char ** krbrlms;
+	char ** krbrlms = 0;
 	static char krbrlm[REALM_SZ+1];
 	krb5_error_code status;
 
@@ -364,14 +364,14 @@ static char *afs_realm_of_cell5(krb5_context context, struct afsconf_cell *cellc
 
 	status = krb5_get_host_realm( context, cellconfig->hostName[0], &krbrlms );
 
-	if(krbrlms && krbrlms[0])
+	if (status == 0 && krbrlms && krbrlms[0]) {
 		strcpy(krbrlm, krbrlms[0]);
-	else {
+    } else {
 		strcpy(krbrlm, cellconfig->name);
 		strupr(krbrlm);
 	}
 
-	if(krbrlms)
+	if (krbrlms)
 		krb5_free_host_realm( context, krbrlms );
 
 	return krbrlm;
