@@ -276,6 +276,8 @@ int init_module(void)
 # endif
 #endif /* AFS_IA64_LINUX20_ENV */
 
+    osi_sysctl_init();
+
     return 0;
 }
 
@@ -286,6 +288,8 @@ void cleanup_module(void)
 #endif
 {
     struct task_struct *t;
+
+    osi_sysctl_clean();
 
 #if defined(AFS_IA64_LINUX20_ENV)
     sys_call_table[__NR_setgroups - 1024] = POINTER2SYSCALL ((struct fptr *) sys_setgroupsp)->ip;
