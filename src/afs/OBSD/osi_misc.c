@@ -67,7 +67,11 @@ RCSID
 int
 afs_osi_suser(void *credp)
 {
+#ifdef AFS_OBSD35_ENV
+    return (suser_ucred((struct ucred *)credp) ? 0 : 1);
+#else
     return (suser((struct ucred *)credp, &curproc->p_acflag) ? 0 : 1);
+#endif
 }
 
 void *
