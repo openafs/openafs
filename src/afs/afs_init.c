@@ -828,5 +828,6 @@ shutdown_AFS(void)
 	LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
 
 	shutdown_cell();
+	shutdown_server();
     }
 }

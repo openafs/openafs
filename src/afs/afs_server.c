@@ -1706,3 +1706,31 @@ void afs_ActivateServer(struct srvAddr *sap) {
 	}
     }
 }
+
+
+void shutdown_server()
+{
+    int i;
+
+    for (i = 0; i < NSERVERS; i++) {
+	struct server *ts, *next;
+
+        ts = afs_servers[i];
+        while(ts) {
+	    next = ts->next;
+	    afs_osi_Free(ts, sizeof(struct server));
+	    ts = next;
+        }
+    }
+
+    for (i = 0; i < NSERVERS; i++) {
+	struct srvAddr *sa, *next;
+
+        sa = afs_srvAddrs[i];
+        while(sa) {
+	    next = sa->next_bkt;
+	    afs_osi_Free(sa, sizeof(struct srvAddr));
+	    sa = next;
+        }
+    }
+}
