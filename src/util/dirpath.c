@@ -10,10 +10,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/dirpath.c,v 1.8 2001/07/11 04:03:29 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/dirpath.c,v 1.9 2001/07/15 07:22:31 hartmans Exp $");
 
 #include <stddef.h>
 #include <stdlib.h>

@@ -7,10 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptserver.c,v 1.3 2001/07/11 04:03:28 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptserver.c,v 1.4 2001/07/15 07:22:31 hartmans Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV

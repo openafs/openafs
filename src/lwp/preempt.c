@@ -13,10 +13,10 @@
 * 	Carnegie-Mellon University				    *
 * 								    *
 \*******************************************************************/
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/preempt.c,v 1.6 2001/07/11 04:03:28 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/preempt.c,v 1.7 2001/07/15 07:22:29 hartmans Exp $");
 
 
 #if defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) || defined(AFS_DJGPP_ENV)

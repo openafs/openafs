@@ -20,10 +20,10 @@
  * stat calls.
  */
 
-#include "../afs/param.h"
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.7 2001/07/11 04:03:24 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.8 2001/07/15 07:22:26 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"

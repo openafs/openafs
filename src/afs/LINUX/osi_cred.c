@@ -11,10 +11,10 @@
  * osi_cred.c - Linux cred handling routines.
  *
  */
-#include "../afs/param.h"
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_cred.c,v 1.3 2001/07/11 04:03:24 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_cred.c,v 1.4 2001/07/15 07:22:26 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"

@@ -14,10 +14,10 @@
 * 								    *
 \*******************************************************************/
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/lwp.c,v 1.7 2001/07/11 04:03:27 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/lwp.c,v 1.8 2001/07/15 07:22:29 hartmans Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>

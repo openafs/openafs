@@ -7,10 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include "../afs/param.h"	/* Should be always first */
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_call.c,v 1.5 2001/07/11 04:03:23 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_call.c,v 1.6 2001/07/15 07:22:24 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */

@@ -44,6 +44,14 @@ all:
 	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
 	$(MAKE) install "COMPILE_PART1=cd src; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME}
 
+all_nolibafs:
+	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
+	$(MAKE) install TARGET=finale_nolibafs "COMPILE_PART1=cd src; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME}
+
+only_libafs:
+	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
+	$(MAKE) install TARGET=libafs "COMPILE_PART1=cd src; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME}
+
 project: cmd comerr 
 
 config: 
@@ -96,7 +104,7 @@ rxtests: rxobj
 
 fsint: project kfsint
 
-kfsint: lwp rxgen rxincls 
+kfsint: lwp rxgen rxincls
 	${COMPILE_PART1} fsint ${COMPILE_PART2}
 
 export2: project fsint
@@ -383,6 +391,12 @@ finale: project cmd comerr afsd allrcmds butc tbutc @ENABLE_KERNEL_MODULE@ libua
 	libafsauthent libadmin
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
+finale_nolibafs: project cmd comerr afsd allrcmds butc tbutc libuafs audit kauth log package \
+	ptserver scout bu_utils ubik uss bozo vfsck volser \
+	venus update xstat afsmonitor dauth tests libafsrpc \
+	libafsauthent libadmin
+	${COMPILE_PART1} finale ${COMPILE_PART2}
+
 # Use washtool to ensure MakefileProto is current and obj/libafs exists.
 
 libafs_setup: config export
@@ -503,7 +517,10 @@ distclean: clean
 	/bin/rm -f config.log config.cache config.status Makefile
 	/bin/rm -f src/config/afsconfig.h src/config/Makefile.${SYS_NAME} 
 	/bin/rm -f src/libafs/Makefile src/libafs/MakefileProto.${MKAFS_OSTYPE}
-	/bin/rm -f src/libuafs/Makefile src/kauth/Kkauth.cs.c
+	/bin/rm -f src/libuafs/Makefile afs.ppc_darwin.plist src/pam/Makefile
+
+pristine: distclean
+	/bin/rm -f src/config/afsconfig.h.in configure aclocal.m4
 
 links:
 	echo "Remove the obj directory"

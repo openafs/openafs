@@ -19,10 +19,10 @@
  * afs_index
  */
 
-#include "../afs/param.h"	/* Should be always first */
 #include <afsconfig.h>
+#include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.5 2001/07/11 04:03:25 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.6 2001/07/15 07:22:27 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */

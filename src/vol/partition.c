@@ -15,10 +15,10 @@
 
  */
 
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.6 2001/07/11 04:03:31 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.7 2001/07/15 07:22:32 hartmans Exp $");
 
 #include <ctype.h>
 #ifdef AFS_NT40_ENV

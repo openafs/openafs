@@ -10,10 +10,10 @@
 /*
  * All Rights Reserved
  */
-#include <afs/param.h>
 #include <afsconfig.h>
+#include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/venus/fstrace.c,v 1.4 2001/07/11 04:03:30 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/venus/fstrace.c,v 1.5 2001/07/15 07:22:32 hartmans Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
