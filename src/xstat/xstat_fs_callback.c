@@ -196,7 +196,7 @@ afs_int32 SRXAFSCB_InitCallBackState(rxcall)
  *------------------------------------------------------------------------*/
 
 afs_int32 SRXAFSCB_Probe(rxcall)
-	struct rx_call *rxcall;
+    struct rx_call *rxcall;
 
 { /*SRXAFSCB_Probe*/
 
@@ -461,8 +461,8 @@ afs_int32 SRXAFSCB_GetXStats(rxcall, clientVersionNumber, collectionNumber,
  *------------------------------------------------------------------------*/
 
 afs_int32 SRXAFSCB_InitCallBackState2(rxcall, addr)
-struct rx_call *rxcall;
-struct interfaceAddr * addr;
+    struct rx_call *rxcall;
+    struct interfaceAddr * addr;
 {
 
 #if XSTAT_FS_CALLBACK_VERBOSE
@@ -471,11 +471,11 @@ struct interfaceAddr * addr;
     char *hostNameResult;				/*Ptr to static*/
 
     if (rxcall != (struct rx_call *)0) {
-      hostNameResult =
-	  hostutil_GetNameByINet((afs_int32)(rxcall->conn->peer->host));
-      strcpy(hostName, hostNameResult);
-      fprintf(stderr, "[%s:%s] Called from host %s, port %d\n",
-	      mn, rn, hostName, rxcall->conn->peer->port);
+	hostNameResult =
+	    hostutil_GetNameByINet((afs_int32)(rxcall->conn->peer->host));
+	strcpy(hostName, hostNameResult);
+	fprintf(stderr, "[%s:%s] Called from host %s, port %d\n",
+		mn, rn, hostName, rxcall->conn->peer->port);
     } /*Valid rxcall param*/
 #endif /* XSTAT_FS_CALLBACK_VERBOSE */
     return RXGEN_OPCODE;
@@ -506,8 +506,8 @@ struct interfaceAddr * addr;
  *------------------------------------------------------------------------*/
 
 afs_int32 SRXAFSCB_WhoAreYou(rxcall, addr)
-struct rx_call *rxcall;
-struct interfaceAddr *addr;
+    struct rx_call *rxcall;
+    struct interfaceAddr *addr;
 {
     int i;
     int code = 0;
@@ -519,11 +519,11 @@ struct interfaceAddr *addr;
     char *hostNameResult;				/*Ptr to static*/
 
     if (rxcall != (struct rx_call *)0) {
-      hostNameResult =
-	  hostutil_GetNameByINet((afs_int32)(rxcall->conn->peer->host));
-      strcpy(hostName, hostNameResult);
-      fprintf(stderr, "[%s:%s] Called from host %s, port %d\n",
-	      mn, rn, hostName, rxcall->conn->peer->port);
+	hostNameResult =
+	    hostutil_GetNameByINet((afs_int32)(rxcall->conn->peer->host));
+	strcpy(hostName, hostNameResult);
+	fprintf(stderr, "[%s:%s] Called from host %s, port %d\n",
+		mn, rn, hostName, rxcall->conn->peer->port);
     } /*Valid rxcall param*/
 #endif /* XSTAT_FS_CALLBACK_VERBOSE */
 
@@ -561,8 +561,8 @@ struct interfaceAddr *addr;
  *------------------------------------------------------------------------*/
 
 afs_int32 SRXAFSCB_InitCallBackState3(rxcall, uuidp)
-struct rx_call *rxcall;
-afsUUID *uuidp;
+    struct rx_call *rxcall;
+    afsUUID *uuidp;
 {
 #if XSTAT_FS_CALLBACK_VERBOSE
     static char rn[] = "SRXAFSCB_InitCallBackState3";	/*Routine name*/
@@ -570,11 +570,11 @@ afsUUID *uuidp;
     char *hostNameResult;				/*Ptr to static*/
 
     if (rxcall != (struct rx_call *)0) {
-      hostNameResult =
-	  hostutil_GetNameByINet((afs_int32)(rxcall->conn->peer->host));
-      strcpy(hostName, hostNameResult);
-      fprintf(stderr, "[%s:%s] Called from host %s, port %d\n",
-	      mn, rn, hostName, rxcall->conn->peer->port);
+	hostNameResult =
+	    hostutil_GetNameByINet((afs_int32)(rxcall->conn->peer->host));
+	strcpy(hostName, hostNameResult);
+	fprintf(stderr, "[%s:%s] Called from host %s, port %d\n",
+		mn, rn, hostName, rxcall->conn->peer->port);
     } /*Valid rxcall param*/
 #endif /* XSTAT_FS_CALLBACK_VERBOSE */
 
@@ -609,8 +609,8 @@ afsUUID *uuidp;
  *------------------------------------------------------------------------*/
 
 afs_int32 SRXAFSCB_ProbeUuid(rxcall, uuidp)
-struct rx_call *rxcall;
-afsUUID *uuidp;
+    struct rx_call *rxcall;
+    afsUUID *uuidp;
 {
     int code = 0;
 
@@ -620,11 +620,11 @@ afsUUID *uuidp;
     char *hostNameResult;				/*Ptr to static*/
 
     if (rxcall != (struct rx_call *)0) {
-      hostNameResult =
-	  hostutil_GetNameByINet((afs_int32)(rxcall->conn->peer->host));
-      strcpy(hostName, hostNameResult);
-      fprintf(stderr, "[%s:%s] Called from host %s, port %d\n",
-	      mn, rn, hostName, rxcall->conn->peer->port);
+	hostNameResult =
+	    hostutil_GetNameByINet((afs_int32)(rxcall->conn->peer->host));
+	strcpy(hostName, hostNameResult);
+	fprintf(stderr, "[%s:%s] Called from host %s, port %d\n",
+		mn, rn, hostName, rxcall->conn->peer->port);
     } /*Valid rxcall param*/
 #endif /* XSTAT_FS_CALLBACK_VERBOSE */
 
@@ -775,4 +775,38 @@ afs_int32 SRXAFSCB_GetCacheConfig(
     cacheConfig *config)
 {
     return RXGEN_OPCODE;
+}
+
+afs_int32 SRXAFSCB_TellMeAboutYourself(struct rx_call *rxcall, 
+                                       struct interfaceAddr *addr,
+                                       Capabilities *capabilites)
+{
+    int i;
+    int code = 0;
+    int         count;
+
+#if XSTAT_FS_CALLBACK_VERBOSE
+    static char rn[] = "SRXAFSCB_TellMeAboutYourself";  /*Routine name*/
+    char hostName[256];                                 /*Host name buffer*/
+    char *hostNameResult;                               /*Ptr to static*/
+
+    if (rxcall != (struct rx_call *)0) {
+	hostNameResult =
+	    hostutil_GetNameByINet((afs_int32)(rxcall->conn->peer->host));
+	strcpy(hostName, hostNameResult);
+	fprintf(stderr, "[%s:%s] Called from host %s, port %d\n",
+		mn, rn, hostName, rxcall->conn->peer->port);
+    } /*Valid rxcall param*/
+#endif /* XSTAT_FS_CALLBACK_VERBOSE */
+
+    if ( rxcall && addr )
+    {
+	if (!afs_cb_inited) init_afs_cb();
+	*addr = afs_cb_interface;
+    }
+
+    /*
+     * Return successfully.
+     */
+    return(0);
 }

@@ -752,3 +752,38 @@ afs_int32 SRXAFSCB_GetCacheConfig(
 {
     return RXGEN_OPCODE;
 }
+
+afs_int32 SRXAFSCB_TellMeAboutYourself(struct rx_call *rxcall,
+                                       struct interfaceAddr *addr,
+                                       Capabilities *capabilities)
+{
+    int i;
+    int code = 0;
+    int         count;
+
+#if FSPROBE_CALLBACK_VERBOSE
+    static char rn[] = "SRXAFSCB_TellMeAboutYourself";  /*Routine name*/
+    char hostName[256];                                 /*Host name buffer*/
+    char *hostNameResult;                               /*Ptr to static*/
+
+    if (rxcall != (struct rx_call *)0) {
+      hostNameResult =
+          hostutil_GetNameByINet((afs_int32)(rxcall->conn->peer->host));
+      strcpy(hostName, hostNameResult);
+      fprintf(stderr, "[%s:%s] Called from host %s, port %d\n",
+              mn, rn, hostName, rxcall->conn->peer->port);
+    } /*Valid rxcall param*/
+#endif /* FSPROBE_CALLBACK_VERBOSE */
+
+    if ( rxcall && addr )
+    {
+        if (!afs_cb_inited) init_afs_cb();
+        *addr = afs_cb_interface;
+    }
+
+    /*
+     * Return successfully.
+     */
+    return(0);
+}
+

@@ -694,3 +694,7 @@ StoreData64(
 
 GiveUpAllCallBacks(
 ) = 65539;
+
+GetCapabilities(
+  Capabilities *capabilities
+) = 65540;

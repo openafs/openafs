@@ -156,4 +156,7 @@ typedef afs_int32 serverList<AFSMAXCELLHOSTS>;
 
 typedef afs_uint32 cacheConfig<>;
 
+const AFSCAPABILITIESMAX = 196;
+typedef afs_int32 Capabilities<AFSCAPABILITIESMAX>;
+
 %#endif /* FSINT_COMMON_XG */

@@ -107,3 +107,7 @@ proc GetCellByNum(
   OUT serverList *cellHosts
 ) = 65537;
 
+proc TellMeAboutYourself(
+  OUT struct interfaceAddr *addr,
+  OUT Capabilities *capabilities
+) = 65538;
