@@ -163,7 +163,7 @@ void * a5;
 #ifndef AFS_LINUX20_ENV
   old = signal(SIGSYS, SIG_IGN);	
 #endif
-  rcode = syscall (31 /* AFS_SYSCALL */, 28 /* AFSCALL_CALL */, a3, a4, a5);
+  rcode = syscall (AFS_SYSCALL /* AFS_SYSCALL */, 28 /* AFSCALL_CALL */, a3, a4, a5);
 #ifndef AFS_LINUX20_ENV
   signal(SIGSYS, old);	
 #endif

@@ -48,7 +48,7 @@ cred_t *crget(void)
 	    osi_Panic("crget: No more memory for creds!\n");
 	
 	for (i=0; i < CRED_ALLOC_STEP-1; i++)
-	    cred_pool[i].cr_ref = (int)&cred_pool[i+1];
+	    cred_pool[i].cr_ref = (long)&cred_pool[i+1];
 	cred_pool[i].cr_ref = 0;
     }
     tmp = cred_pool;
@@ -69,7 +69,7 @@ void crfree(cred_t *cr)
     }
 
     CRED_LOCK();
-    cr->cr_ref = (int)cred_pool;
+    cr->cr_ref = (long)cred_pool;
     cred_pool = cr;
     CRED_UNLOCK();
     ncreds_inuse --;

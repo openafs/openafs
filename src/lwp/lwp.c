@@ -342,8 +342,14 @@ int LWP_CreateProcess(ep, stacksize, priority, parm, name, pid)
 	savecontext(Create_Process_Part2, &temp2->context,
 		    stackptr+stacksize-16); /* 16 = 2 * jmp_buf_type*/
 #else
+#if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV)
+	savecontext(Create_Process_Part2, &temp2->context,
+		    stackptr+stacksize-0x40); /* lomgjmp does something
+						 with %fp + 0x38 */
+#else
 	savecontext(Create_Process_Part2, &temp2->context,
 		    stackptr+stacksize-sizeof(void *));
+#endif
 #endif
 #endif
 	/* End of gross hack */
@@ -463,8 +469,13 @@ int LWP_DestroyProcess(pid)		/* destroy a lightweight process */
 	    savecontext(Dispatcher, &(temp -> context),
 			&(LWPANCHOR.dsptchstack[(sizeof LWPANCHOR.dsptchstack)-8]));
 #else
+#if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV)
+	    savecontext(Dispatcher, &(temp -> context),
+			&(LWPANCHOR.dsptchstack[(sizeof LWPANCHOR.dsptchstack)-0x40]));
+#else
 	    savecontext(Dispatcher, &(temp -> context),
 			&(LWPANCHOR.dsptchstack[(sizeof LWPANCHOR.dsptchstack)-sizeof(void *)]));
+#endif
 #endif
 #endif
 	}

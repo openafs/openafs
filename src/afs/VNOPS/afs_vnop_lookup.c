@@ -325,7 +325,11 @@ void afs_HandleAtName(aname, aresult, areq, adp)
 #if (defined(AFS_SGI62_ENV) || defined(AFS_SUN57_64BIT_ENV))
 extern int BlobScan(ino64_t *afile, afs_int32 ablob);
 #else
+#if defined AFS_LINUX_64BIT_KERNEL
+extern int BlobScan(long *afile, afs_int32 ablob);
+#else
 extern int BlobScan(afs_int32 *afile, afs_int32 ablob);
+#endif
 #endif
 
 

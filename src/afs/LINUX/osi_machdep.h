@@ -30,7 +30,11 @@
 #define afs_hz HZ
 #include "../h/sched.h"
 #define osi_Time() (xtime.tv_sec)
+#if  (CPU == sparc64)
+#define osi_GetTime(V) do { (*##V##).tv_sec = xtime.tv_sec; (*##V##).tv_usec = xtime.tv_usec; } while (0)
+#else
 #define osi_GetTime(V) (*(V)=xtime)
+#endif
 
 #undef gop_lookupname
 #define gop_lookupname osi_lookupname
@@ -89,7 +93,11 @@ extern struct vnodeops afs_dir_iops, afs_symlink_iops;
 
 /* cred struct */
 typedef struct cred {		/* maps to task field: */
+#if (CPU == sparc64)
+    long cr_ref;
+#else
     int cr_ref;
+#endif
     unsigned short cr_uid;	/* euid */
     unsigned short cr_ruid;	/* uid */
     unsigned short cr_gid;	/* egid */

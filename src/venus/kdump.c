@@ -211,6 +211,8 @@ typedef	struct adaptive_mutex2	adaptive_mutex2_t;
 #define _LINUX_TIME_H
 #define _LINUX_FCNTL_H
 #define _I386_STATFS_H
+#define _SPARC_STATFS_H
+#define _SPARC64_STATFS_H
 struct timezone {
     int a,b;
 };
@@ -219,6 +221,7 @@ typedef struct timeval {
     int tv_usec;
 } timeval_t; /* Needed here since KERNEL defined. */
 #define _LINUX_BYTEORDER_LITTLE_ENDIAN_H
+#define _LINUX_BYTEORDER_BIG_ENDIAN_H
 #include <linux/version.h>
 #include <linux/fs.h>
 #include <afs/osi_vfs.h>
@@ -1892,7 +1895,7 @@ int pnt;
 #endif
 }
 
-#if	defined(sparc)
+#if	defined(sparc) && !defined(__linux__)
 int readmem(kmem, buf, vad, len)
     int kmem, len;
 #ifdef AFS_SUN57_ENV
@@ -1990,7 +1993,7 @@ void kread(int kmem,off_t loc,void *buf,KDUMP_SIZE_T len)
 	}
     }
 #else
-#if	defined(sparc)
+#if	defined(sparc) && !defined(__linux__)
 #ifndef AFS_SUN5_ENV
     if (mem) {
 #endif
@@ -2103,7 +2106,7 @@ int opencore(core)
 #else /* AFS_KDUMP_LIB */
     int fd;
 
-#if	defined(sparc)
+#if	defined(sparc) && !defined(__linux__)
 #ifndef	AFS_SUN5_ENV
     if (mem) {
 #endif

@@ -816,6 +816,21 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
 	}
 #endif /* AFS_SUN57_64BIT_ENV */
 
+#if defined(AFS_LINUX_64BIT_KERNEL)
+	struct iparam32 dst32;
+
+#ifdef AFS_SPARC64_LINUX20_ENV
+	if (current->tss.flags & SPARC_FLAG_32BIT) {
+#else
+#error Not done for this linux version
+#endif
+		AFS_COPYIN(cmarg, (caddr_t) &dst32, sizeof dst32, code);
+		if (!code)
+			iparam32_to_iparam(&dst32, dst);
+		return code;
+	}
+#endif /* AFS_LINUX_64BIT_KERNEL */
+
 	AFS_COPYIN(cmarg, (caddr_t) dst, sizeof *dst, code);
 	return code;
 }
@@ -888,9 +903,9 @@ asmlinkage int afs_syscall(long syscall, long parm1, long parm2, long parm3,
 			   long parm4)
 {
     struct afssysargs args, *uap = &args;
-    int linux_ret=0;
-    int *retval = &linux_ret;
-    int eparm[4]; /* matches AFSCALL_ICL in fstrace.c */
+    long linux_ret=0;
+    long *retval = &linux_ret;
+    long eparm[4]; /* matches AFSCALL_ICL in fstrace.c */
 #else
 #if defined(UKERNEL)
 Afs_syscall ()

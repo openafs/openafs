@@ -41,6 +41,17 @@ CCFLAGS =   -O2 -fomit-frame-pointer \
 	-fno-strength-reduce -pipe -m486 -malign-loops=2 -malign-jumps=2 \
 	-malign-functions=2
 DEFINES = -D__KERNEL__  -DCPU=586 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+<sparc_linux22 sparc_linux24>
+LD = ld -m elf32_sparc
+CCFLAGS =   -O2 -fomit-frame-pointer \
+	-fno-strength-reduce -pipe -mcpu=v8 -mno-fpu -fcall-used-g5 -fcall-used-g7
+DEFINES = -D__KERNEL__  -DCPU=sparc -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+<sparc64_linux22 sparc64_linux24>
+CC = sparc64-linux-gcc
+LD = ld -m elf64_sparc
+CCFLAGS =   -O2 -fomit-frame-pointer \
+	-fno-strength-reduce -pipe -mcpu=ultrasparc -m64 -mno-fpu -mcmodel=medlow -ffixed-g4 -fcall-used-g5 -fcall-used-g7 -Wno-sign-compare
+DEFINES = -D__KERNEL__  -DCPU=sparc64 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 <ppc_linux22 ppc_linux24>
 CCFLAGS =   -O2 -fomit-frame-pointer -fno-strength-reduce \
 	-fno-strict-aliasing -fsigned-char -msoft-float -pipe \
@@ -95,6 +106,10 @@ ${COMPDIRS}:
 		ln -s ${LINUX_SRCDIR}$$v/include/asm-i386 asm ; \
 <ppc_linux22 ppc_linux24>
 		ln -s ${LINUX_SRCDIR}$$v/include/asm-ppc asm ; \
+<sparc_linux22 sparc_linux24>
+		ln -s ${LINUX_SRCDIR}$$v/include/asm-sparc asm ; \
+<sparc64_linux22 sparc64_linux24>
+		ln -s ${LINUX_SRCDIR}$$v/include/asm-sparc64 asm ; \
 <all>
 		for m in ${MPS} ; do \
 			KDIR=${KOBJ}-$$v-$$m ; \
