@@ -1287,7 +1287,7 @@ extern char fsync_wait[];
 int BreakVolumeCallBacksLater(afs_uint32 volume)
 {
     int hash;
-    u_short *feip;
+    afs_int32 *feip;
     struct FileEntry *fe;
     struct CallBack *cb;
     struct host *host;
@@ -1333,11 +1333,11 @@ int BreakLaterCallBacks(void)
 {
     struct AFSFid fid;
     int hash;
-    u_short *feip;
+    afs_int32 *feip;
     struct CallBack *cb;
     struct FileEntry *fe = NULL;
     struct FileEntry *myfe = NULL;
-    struct FileEntry *tmpfe;
+    struct FileEntry **fepp;
     struct host *host;
     struct VCBParams henumParms;
     unsigned short tthead = 0;  /* zero is illegal value */
@@ -1373,7 +1373,7 @@ restart:
 	/* Clear for next pass */
 	fid.Volume = 0, fid.Vnode = fid.Unique = 0;
 	tthead = 0;
-	for (fe = myfe; fe; ) {
+	for (fepp = &myfe; fe = *fepp; ) {
 	    /* Pick up first volid we see and break callbacks for it */
 	    if (fid.Volume == 0 || fid.Volume == fe->volid) {
 		register struct CallBack *cbnext;
@@ -1391,14 +1391,11 @@ restart:
 		    FreeCB(cb);
 		    /* leave hold for MultiBreakVolumeCallBack to clear */
 		}
-		/* if we delete the head element, relink chain */
-		if (myfe == fe) 
-		    (struct object *)myfe = ((struct object *)fe)->next;
-		tmpfe = fe;
-		(struct object *)fe = ((struct object *)fe)->next;
-		FreeFE(tmpfe);
+		/* relink chain */
+		(struct object *) *fepp = ((struct object *)fe)->next;
+		FreeFE(fe);
 	    } else {
-		(struct object *)fe = ((struct object *)fe)->next;
+		(struct object **) fepp = &(((struct object *)fe)->next);
 	    }
 	}
 
