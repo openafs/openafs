@@ -698,14 +698,14 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
 	DWORD i;
     struct sockaddr_in vlSockAddr;
 
+    *numServers = 0; 
+    *ttl = 0;
+
     /* query the AFSDB records of cell */
 	if (DnsQuery_A(cellName, DNS_TYPE_AFSDB, DNS_QUERY_STANDARD, NULL, &pDnsCell, NULL) == ERROR_SUCCESS) {
 
 		memset((void*) &vlSockAddr, 0, sizeof(vlSockAddr));
 		
-		*numServers = 0; 
-        *ttl = 0;
-
 		/* go through the returned records */
 		for (pDnsIter = pDnsCell;pDnsIter; pDnsIter = pDnsIter->pNext) {
 			/* if we find an AFSDB record with Preference set to 1, we found a volserver */
