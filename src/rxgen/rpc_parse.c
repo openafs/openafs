@@ -35,7 +35,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_parse.c,v 1.1.1.6 2001/09/11 14:34:40 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_parse.c,v 1.1.1.7 2001/09/20 06:16:17 hartmans Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -1451,11 +1451,6 @@ ss_ProcProto_setup(defp, somefrees)
 definition *defp;
 int *somefrees;
 {
-    proc1_list *plist, *plist1;
-    list *listp;
-    definition *defp1;
-    int preserve_flag = 0;
-
 	f_print(fout, "#ifndef KERNEL\n");
 	f_print(fout, "\tafs_int32 %s%s%s%s();\n", prefix, ServerPrefix, 
 		PackagePrefix[PackageIndex], defp->pc.proc_name);

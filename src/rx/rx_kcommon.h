@@ -35,19 +35,19 @@ typedef unsigned short                  etap_event_t;
 #ifndef AFS_LINUX22_ENV
 #include "../h/socketvar.h"
 #include "../h/protosw.h"
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_XBSD_ENV)
 #include "../h/domain.h"
 #include "../h/dir.h"
 #include "../h/buf.h"
 #include "../h/mbuf.h"
 #else
-#if defined(AFS_FBSD_ENV)
+#if defined(AFS_XBSD_ENV)
 #include "../h/dirent.h"
 #include "../h/socket.h"
 #include "../h/domain.h"
 #include "../h/buf.h"
 #include "../h/mbuf.h"
-#endif /* AFS_FBSD_ENV */
+#endif /* AFS_XBSD_ENV */
 #endif
 #endif /* AFS_LINUX22_ENV */
 #ifdef AFS_SGI62_ENV
@@ -114,8 +114,8 @@ extern struct ifnet *rxi_FindIfnet();
 
 extern int rxk_initDone;
 
-#if defined(AFS_FBSD_ENV)
+#if defined(AFS_XBSD_ENV)
 extern struct domain inetdomain;
-#endif /* AFS_FBSD_ENV */
+#endif /* AFS_XBSD_ENV */
 
 #endif /* _RX_KCOMMON_H_ */

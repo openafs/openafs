@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-error_table am
+error_table AM
         ec ADMMISCDIRECTORYNULL, "the directory parameter cannot be NULL."
         ec ADMMISCUSERNULL, "the user parameter cannot be NULL."
         ec ADMMISCACLNULL, "the acl parameter cannot be NULL."

@@ -123,9 +123,19 @@ afsapplib_primary :
 	nmake /nologo /f ntmakefile primary
 	$(CD) ..\afsadmsvr
 
+afsapplib_clean :
+	$(CD) ..\afsapplib
+	nmake /nologo /f ntmakefile clean
+	$(CD) ..\afsadmsvr
+
 afsclass_primary :
 	$(CD) ..\afsclass
 	nmake /nologo /f ntmakefile primary
+	$(CD) ..\afsadmsvr
+
+afsclass_clean :
+	$(CD) ..\afsclass
+	nmake /nologo /f ntmakefile clean
 	$(CD) ..\afsadmsvr
 
 $(EXEFILE) : $(EXEOBJS) $(EXELIBS)
@@ -141,7 +151,7 @@ install : \
 	afsclass_primary \
 	$(EXEFILE)
 
-clean::
+clean:: afsclass_clean afsapplib_clean
 	if exist ITaAfsAdmSvr*.cpp del ITaAfsAdmSvr*.cpp
 	if exist ITaAfsAdmSvr*.c del ITaAfsAdmSvr*.c
 	if exist ITaAfsAdmSvr*.h del ITaAfsAdmSvr*.h

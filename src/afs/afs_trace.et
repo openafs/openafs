@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-error_table 2 zcm
+error_table 2 ZCM
 	ec	CM_TRACE_NULL, "dummy"
 	ec	CM_TRACE_PAGEIN, "getapage vp 0x%lx off 0x%x len 0x%x rw=0x%x"
 	ec	CM_TRACE_PAGEINDONE, "getapage done code 0x%x pg 0x%lx (0x%x)"

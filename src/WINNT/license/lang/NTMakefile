@@ -24,3 +24,5 @@ install :
     @$(DESTDIR)\bin\sgml2rtf -1252 es_ES.ide
     @$(DESTDIR)\bin\sgml2rtf -1252 de_DE.ide
 
+clean :: 
+	$(DEL) *.rtf

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/volser/vsprocs.c,v 1.1.1.6 2001/09/11 14:35:57 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/vsprocs.c,v 1.1.1.7 2001/09/20 06:17:11 hartmans Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -65,12 +65,16 @@ extern int VL_SetLock();
 extern int VL_ReleaseLock();
 extern int VL_DeleteEntry();
 
+void MapNetworkToHost();
+void MapHostToNetwork();
+
 struct release {
   afs_int32 time;
   afs_int32 vldbEntryIndex;
 };
 
 /*map the partition <partId> into partition name <partName>*/
+void
 MapPartIdIntoName(partId, partName)
 afs_int32 partId;
 char *partName;
@@ -79,14 +83,14 @@ char *partName;
 	strcpy(partName,"/vicep");
 	partName[6] = partId + 'a';
 	partName[7] = '\0';
-	return 0;
+	return;
     } else if (partId < VOLMAXPARTS) {
         strcpy(partName,"/vicep");
 	partId -= 26;
 	partName[6] = 'a' + (partId/26);
 	partName[7] = 'a' + (partId%26);
 	partName[8] = '\0';
-	return 0;
+	return;
     }
 }
 
@@ -228,12 +232,12 @@ PrintError(msg, errcode)
 
 		afs_int32 offset;
 
-		initialize_ka_error_table();
-		initialize_rxk_error_table();
-		initialize_ktc_error_table();
-		initialize_acfg_error_table();
-		initialize_cmd_error_table();
-		initialize_vl_error_table();
+		initialize_KA_error_table();
+		initialize_RXK_error_table();
+		initialize_KTC_error_table();
+		initialize_ACFG_error_table();
+		initialize_CMD_error_table();
+		initialize_VL_error_table();
 		
 		offset = errcode & ((1<<ERRCODE_RANGE)-1);
 		fprintf(STDERR,"%s: %s\n",error_table_name (errcode), error_message (errcode));
@@ -364,9 +368,6 @@ struct nvldbentry *entry;
 void EnumerateEntry(entry)
 struct nvldbentry *entry;
 {
-    int i;
-    char pname[10];
-    int isMixed = 0;
 
     fprintf(STDOUT,"\n");
     fprintf(STDOUT,"%s \n",entry->name);
@@ -535,9 +536,8 @@ UV_AddVLDBEntry(aserver, apart, aname, aid)
   afs_int32 aid; 
 {
     register struct rx_connection *aconn;
-    register afs_int32 code;
     afs_int32 error;
-    afs_int32 rcode,vcode;
+    afs_int32 vcode;
     struct nvldbentry entry,storeEntry;/*the new vldb entry */
 
     aconn = (struct rx_connection *)0;
@@ -1760,7 +1760,7 @@ static int DelVol (conn, vid, part, flags)
 struct rx_connection *conn;
 afs_int32 vid, part, flags;
 {
-  afs_int32 acode, bcode, ccode, rcode, tid;
+  afs_int32 acode, ccode, rcode, tid;
   ccode = rcode = tid = 0;
 
   acode = AFSVolTransCreate(conn, vid, part, flags, &tid);
@@ -1931,7 +1931,7 @@ UV_ReleaseVolume(afromvol, afromserver, afrompart, forceflag)
   afs_int32 cloneVolId, roVolId;
   struct replica *replicas=0;
   struct nvldbentry entry,storeEntry;
-  int i, volcount, k, m, n, fullrelease, vldbindex;
+  int i, volcount, m, fullrelease, vldbindex;
   int failure;
   struct restoreCookie cookie;
   struct rx_connection **toconns=0;
@@ -1943,7 +1943,7 @@ UV_ReleaseVolume(afromvol, afromserver, afrompart, forceflag)
   afs_int32 clonetid=0, onlinetid;
   afs_int32 fromtid=0;
   afs_uint32 fromdate, thisdate;
-  int ix, si, s;
+  int s;
   manyDests tr;
   manyResults results;
   int rwindex, roindex, roclone, roexists;
@@ -3491,7 +3491,6 @@ static afs_int32 CheckVolume(volumeinfo, aserver, apart, modentry, maxvolid)
    int   idx, j;
    afs_int32 code, error = 0;
    struct nvldbentry entry, storeEntry;
-   int sameserver;
    char pname[10];
    int pass=0, islocked=0, createentry, addvolume, modified, mod;
    afs_int32 rwvolid;
@@ -4402,10 +4401,9 @@ afs_int32 CheckVldb(entry, modified)
    afs_int32             *modified;
 {
    afs_int32 code, error=0;
-   int idx;
    struct nvldbentry storeEntry;
    int islocked=0, mod, modentry, delentry=0;
-   int foundro, pass=0;
+   int pass=0;
 
    if (modified) *modified = 0;
    if (verbose) {
@@ -4926,6 +4924,7 @@ UV_SetVolume(server, partition, volid, transflag, setflag, sleeptime)
 
 /*maps the host addresses in <old > (present in network byte order) to
  that in< new> (present in host byte order )*/
+void
 MapNetworkToHost(old, new)
 struct nvldbentry *old, *new;
 {
@@ -4947,10 +4946,10 @@ struct nvldbentry *old, *new;
     new->volumeId[BACKVOL] = old->volumeId[BACKVOL];
     new->cloneId = old->cloneId;
     new->flags = old->flags;
-
 }
 
 /*maps the host entries in <entry> which are present in host byte order to network byte order */
+void
 MapHostToNetwork(entry)
 struct nvldbentry *entry;
 {

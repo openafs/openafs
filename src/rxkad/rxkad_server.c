@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_server.c,v 1.1.1.7 2001/09/11 14:34:43 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_server.c,v 1.1.1.8 2001/09/20 06:16:20 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -180,7 +180,6 @@ rxs_return_t rxkad_GetChallenge (aobj, aconn, apacket)
   IN struct rx_packet *apacket;
   IN struct rx_connection *aconn;
 {   struct rxkad_sconn *sconn;
-    afs_int32 temp;
     char *challenge;
     int challengeSize;
     struct rxkad_v2Challenge  c_v2;   /* version 2 */

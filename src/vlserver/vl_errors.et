@@ -10,7 +10,7 @@
 # NOTE: VL_PERM value is hardcoded in audit/audit.h, so if you make
 # changes here, make sure that audit/audit.h is kept up to date.
 
-error_table vl
+error_table VL
   ec VL_IDEXIST, "Volume Id entry exists in vl database"
   ec VL_IO, "I/O related error"
   ec VL_NAMEEXIST, "Volume name entry exists in vl database"

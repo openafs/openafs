@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/volser/volprocs.c,v 1.1.1.6 2001/09/11 14:35:55 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/volprocs.c,v 1.1.1.7 2001/09/20 06:17:08 hartmans Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -1584,13 +1584,15 @@ afs_int32 VolListPartitions (acid, partIds)
 struct rx_call *acid;
 struct pIDs *partIds;
 {   
-    struct stat rbuf, pbuf;
     char namehead[9];
+    struct stat rbuf, pbuf;
     int code;
     char i;
+
+    strcpy(namehead, "/vicep");	/*7 including null terminator*/
+
 #ifdef AFS_NT40_ENV
     /* Just return attached partitions. */
-    strcpy(namehead, "/vicep");
     namehead[7] = '\0';
     for (i=0; i<26; i++) {
 	namehead[6] = i + 'a';
@@ -1598,9 +1600,8 @@ struct pIDs *partIds;
 	    partIds->partIds[i] = VGetPartition(namehead, 0) ? i : -1;
     }
 #else
-    strcpy(namehead, "/vicep");	/*7 including null terminator*/
-    code = stat("/",&rbuf);	/*interested in buf->st_dev*/
     
+    (void) stat("/",&rbuf);	/*interested in buf->st_dev*/
    
     for(i = 0 ; i < 26 ; i++){
 	
@@ -1613,8 +1614,6 @@ struct pIDs *partIds;
 	    else  partIds->partIds[i ] = -1;
 	}
 	else partIds->partIds[i ] = -1;
-	
-	
     }
 #endif   
     return 0;

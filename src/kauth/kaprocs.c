@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaprocs.c,v 1.1.1.7 2001/09/11 14:32:56 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaprocs.c,v 1.1.1.8 2001/09/20 06:14:57 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <errno.h>
@@ -707,7 +707,6 @@ impose_reuse_limits ( password, tentry )
   int code;
   Date now;
   int i;
-  int reuse_p;
   extern int MinHours;
   afs_uint32 newsum;
 
@@ -1277,8 +1276,7 @@ afs_int32 kamSetFields (call, aname, ainstance, aflags,
     afs_int32  caller;
     afs_int32  tentry_offset;		/* offset of entry */
     struct kaentry tentry;
-    unsigned char newvals[4], oldvals[4];
-    int i;
+    unsigned char newvals[4];
 
     COUNT_REQ (SetFields);
 
@@ -1953,13 +1951,16 @@ afs_int32 kamGetPassword (call, name, password)
   struct rx_call *call;
   char		 *name;
   EncryptionKey  *password;
-{   int  code = KANOAUTH;
+{   
+  int  code = KANOAUTH;
+  COUNT_REQ (GetPassword);
+  
+#ifdef GETPASSWORD
+  {
     afs_int32 to;
     struct ubik_trans *tt;
     struct kaentry tentry;
 
-    COUNT_REQ (GetPassword);
-#ifdef GETPASSWORD
     if (!name_instance_legal (name, "")) return KABADNAME;
     /* only requests from this host work */
     if (rx_HostOf(rx_PeerOf(rx_ConnectionOf(call))) != htonl(INADDR_LOOPBACK))
@@ -1968,9 +1969,12 @@ afs_int32 kamGetPassword (call, name, password)
 
     /* this isn't likely to be used because of string to key problems, so since
        this is a temporary thing anyway, we'll use it here. */
-    {   extern char udpAuthPrincipal[256];
+    {   
+      extern char udpAuthPrincipal[256];
+
 	save_principal (udpAuthPrincipal, name, 0, 0);
     }
+
     get_time (0,0,0);			/* update random value */
     code = FindBlock(tt, name, "", &to, &tentry);
     if (code) goto abort;
@@ -1984,6 +1988,7 @@ afs_int32 kamGetPassword (call, name, password)
 
     memcpy(password, &tentry.key, sizeof (*password));
     code = ubik_EndTrans (tt);
+  }
 #endif
     return code;
 }

@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_analyze.c,v 1.1.1.6 2001/07/14 22:19:06 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_analyze.c,v 1.1.1.7 2001/09/20 06:07:11 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -48,13 +48,13 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_analyze.c,v 1.1.1.6 2001/07/14 
 
 
 /* shouldn't do it this way, but for now will do */
-#ifndef ERROR_TABLE_BASE_u
-#define ERROR_TABLE_BASE_u	(5376L)
+#ifndef ERROR_TABLE_BASE_U
+#define ERROR_TABLE_BASE_U	(5376L)
 #endif /* ubik error base define */
 
 /* same hack for vlserver error base as for ubik error base */
-#ifndef ERROR_TABLE_BASE_vl
-#define ERROR_TABLE_BASE_vl	(363520L)
+#ifndef ERROR_TABLE_BASE_VL
+#define ERROR_TABLE_BASE_VL	(363520L)
 #define VL_NOENT		(363524L)
 #endif /* vlserver error base define */
 
@@ -481,7 +481,7 @@ int afs_Analyze(aconn, acode, afid, areq, op, locktype, cellp)
 	shouldRetry = 1;
 	acode = 0;
     }
-    else if (acode == VICETOKENDEAD || (acode & ~0xff) == ERROR_TABLE_BASE_rxk) {
+    else if (acode == VICETOKENDEAD || (acode & ~0xff) == ERROR_TABLE_BASE_RXK) {
 	/* any rxkad error is treated as token expiration */
 	struct unixuser *tu;
 
@@ -525,7 +525,7 @@ int afs_Analyze(aconn, acode, afid, areq, op, locktype, cellp)
 	shouldRetry = 0;
     }
     /* check for ubik errors; treat them like crashed servers */
-    else if (acode >= ERROR_TABLE_BASE_u && acode < ERROR_TABLE_BASE_u+255) {
+    else if (acode >= ERROR_TABLE_BASE_U && acode < ERROR_TABLE_BASE_U+255) {
 	afs_ServerDown(sa);
 	if (aerrP)
 	    (aerrP->err_Server)++;
@@ -561,8 +561,8 @@ int afs_Analyze(aconn, acode, afid, areq, op, locktype, cellp)
 	   }
 	}
      }
-    else if (acode >= ERROR_TABLE_BASE_vl
-	     && acode <= ERROR_TABLE_BASE_vl + 255) /* vlserver errors */ {
+    else if (acode >= ERROR_TABLE_BASE_VL
+	     && acode <= ERROR_TABLE_BASE_VL + 255) /* vlserver errors */ {
        shouldRetry = 0;
        areq->volumeError = VOLMISSING;
     }

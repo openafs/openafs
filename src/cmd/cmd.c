@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/cmd/cmd.c,v 1.1.1.6 2001/07/14 22:21:11 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/cmd/cmd.c,v 1.1.1.7 2001/09/20 06:13:01 hartmans Exp $");
 
 #include <sys/types.h>
 #include <ctype.h>
@@ -68,7 +68,7 @@ static int FindType(as, aname)
 register struct cmd_syndesc *as;
 register char *aname; {
     register int i;
-    int cmdlen;
+    size_t cmdlen;
     int ambig;
     int best;
 
@@ -95,7 +95,7 @@ int *aambig;
 char *aname; {
     register struct cmd_syndesc *ts;
     struct cmd_syndesc *best;
-    int cmdLen;
+    size_t cmdLen;
     int ambig;
 
     cmdLen = strlen(aname);
@@ -199,7 +199,7 @@ void PrintFlagHelp(as)
 register struct cmd_syndesc *as; {
     register int i;
     register struct cmd_parmdesc *tp;
-    int flag_width;
+    size_t flag_width;
     char *flag_prefix;
 
     /* find flag name length */

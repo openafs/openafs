@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/test/stress.c,v 1.1.1.5 2001/09/11 14:34:43 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/test/stress.c,v 1.1.1.6 2001/09/20 06:16:20 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -265,9 +265,9 @@ void main (argc, argv)
 
     whoami = argv[0];
 
-    initialize_rxk_error_table();
-    initialize_rks_error_table();
-    initialize_cmd_error_table();
+    initialize_RXK_error_table();
+    initialize_RKS_error_table();
+    initialize_CMD_error_table();
 
     code = rx_Init (0);
     rx_SetRxDeadTime(120);

@@ -17,7 +17,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/user.c,v 1.1.1.7 2001/09/11 14:33:02 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/user.c,v 1.1.1.8 2001/09/20 06:15:02 hartmans Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
@@ -186,7 +186,7 @@ afs_int32 ka_UserAuthenticateGeneral (
     }
 #endif
 
-#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_USR_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_USR_LINUX20_ENV) && !defined(AFS_XBSD_ENV)
     /* handle smoothly the case where no AFS system calls exists (yet) */
     old = (int (*)())signal(SIGSYS, SIG_IGN);
 #endif

@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/test/test_interim_ktc.c,v 1.1.1.5 2001/09/11 14:33:05 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/test/test_interim_ktc.c,v 1.1.1.6 2001/09/20 06:15:03 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <afs/com_err.h>
@@ -733,11 +733,11 @@ main (argc, argv)
     srandom (1);
 
     /* Initialize com_err error code hacking */
-    initialize_u_error_table();
-    initialize_ka_error_table();
-    initialize_rxk_error_table();
-    initialize_ktc_error_table();
-    initialize_acfg_error_table();
+    initialize_U_error_table();
+    initialize_KA_error_table();
+    initialize_RXK_error_table();
+    initialize_KTC_error_table();
+    initialize_ACFG_error_table();
 
     /* set defaults */
     strcpy (cell, "");

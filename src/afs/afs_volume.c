@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_volume.c,v 1.1.1.6 2001/09/11 14:24:48 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_volume.c,v 1.1.1.7 2001/09/20 06:07:16 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -56,11 +56,10 @@ extern struct srvAddr *afs_srvAddrs[NSERVERS];  /* Hashed by server's ip */
 extern int afs_totalSrvAddrs;
 
 /* In case we don't have the vl error table yet. */
-#ifndef ERROR_TABLE_BASE_vl
-#define ERROR_TABLE_BASE_vl	(363520L)
-#define VL_NOENT		(363524L)
+#ifndef ERROR_TABLE_BASE_VL
+#define ERROR_TABLE_BASE_VL     (363520L)
+#define VL_NOENT                (363524L)
 #endif /* vlserver error base define */
-
 
 /* Exported variables */
 ino_t volumeInode;			/*Inode for VolumeItems file*/

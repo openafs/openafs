@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/ubik.c,v 1.1.1.7 2001/09/11 14:34:57 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/ubik.c,v 1.1.1.8 2001/09/20 06:16:30 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -216,7 +216,7 @@ int ubik_ServerInitCommon(myHost, myPort, info, clones, serverList, pathName, db
     extern void rx_ServerProc();
     extern int rx_stackSize;
 
-    initialize_u_error_table();
+    initialize_U_error_table();
 
     tdb = (struct ubik_dbase *) malloc(sizeof(struct ubik_dbase));
     tdb->pathName = (char *) malloc(strlen(pathName)+1);

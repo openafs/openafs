@@ -39,6 +39,9 @@
 #ifdef AFS_NT40_ENV
 #include "conf-winnt.h"
 #else
+#ifdef AFS_XBSD_ENV
+#include "conf-i386-obsd.h"
+#else
 #if defined(AFS_LINUX20_ENV) || defined(AFS_DJGPP_ENV)
 #ifdef AFS_PPC_LINUX20_ENV
 #include "conf-ppc-linux.h"
@@ -74,6 +77,7 @@ Figure out what the machine looks like and fix this file to include it.
 #endif
 #endif /* AFS_LINUX20_ENV */
 #endif /* AFS_NT40_ENV */
+#endif /* AFS_XBSD_ENV */
 #endif /* NCR || X86 */
 #endif /* __alpha */
 #endif /* SGI */

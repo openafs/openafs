@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bosserver.c,v 1.1.1.8 2001/09/11 14:31:27 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bosserver.c,v 1.1.1.9 2001/09/20 06:12:44 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -52,6 +52,9 @@ extern int BOZO_ExecuteRequest();
 extern int RXSTATS_ExecuteRequest();
 extern int afsconf_GetKey();
 extern struct bnode_ops fsbnode_ops, ezbnode_ops, cronbnode_ops;
+
+void bozo_Log();
+
 struct afsconf_dir *bozo_confdir = 0;	/* bozo configuration dir */
 static char *bozo_pid;
 struct rx_securityClass *bozo_rxsc[3];
@@ -666,7 +669,6 @@ char **envp;
     int noAuth = 0;
     struct ktc_encryptionKey tkey;
     int i;
-    pid_t	newSessionID;
     char namebuf[AFSDIR_PATH_MAX];
 
 #ifdef	AFS_AIX32_ENV
@@ -919,6 +921,7 @@ char **envp;
     rx_StartServer(1);	    /* donate this process */
 }
 
+void
 bozo_Log(a,b,c,d,e,f)
 char *a, *b, *c, *d, *e, *f; {
     char tdate[26];

@@ -219,6 +219,6 @@ $(DESTDIR)\etc\kas.exe:  $(DESTDIR)\root.server\usr\afs\bin\kas.exe
 
 clean::
 	$(DEL) $(KPASSWD_EXEFILE)
-
-
+	$(DEL) kauth.cs.c kauth.h kauth.ss.c kauth.xdr.c kautils.h
+	$(DEL) kaerrors.c
 

@@ -428,10 +428,10 @@ struct ka_getTicketAnswer {
     char ticket[MAXKTCTICKETLEN];
 };
 
-#ifndef ERROR_TABLE_BASE_ka
+#ifndef ERROR_TABLE_BASE_KA
 #define ka_ErrorString error_message
 #undef  KAMINERROR
-#define KAMINERROR ERROR_TABLE_BASE_ka
+#define KAMINERROR ERROR_TABLE_BASE_KA
 #define KAMAXERROR (KAMINERROR+255)
 #endif
 

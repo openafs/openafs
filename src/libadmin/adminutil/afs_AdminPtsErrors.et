@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-error_table ap
+error_table AP
         ec ADMPTSSERVERNULL, "the protection server parameter cannot be NULL"
         ec ADMPTSUSERNAMENULL, "the user name parameter cannot be NULL"
         ec ADMPTSUSERNAMETOOLONG, "the user name parameter is too long"

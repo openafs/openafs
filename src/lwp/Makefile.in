@@ -82,6 +82,11 @@ process.o	: process.s process.c
 	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux?? ) \
 		${AS} -v  -P -DOSF -I${TOP_INCDIR} -DASSEMBLER process.s; \
 		${AS} -v process.i -o process.o;; \
+	*_obsd* ) \
+		cp process.s process.S ; \
+		${CC} -E -I${TOP_INCDIR} process.S >process.ss ; \
+		${AS} process.ss -o process.o ;  \
+		$(RM) -f process.S ;;\
 	hp_ux110 ) \
 		${CC} ${CFLAGS} -c process.c;; \
 	*) \

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bos.c,v 1.1.1.7 2001/09/11 14:31:25 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bos.c,v 1.1.1.8 2001/09/20 06:12:42 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <stdlib.h>
@@ -387,6 +387,7 @@ register struct cmd_syndesc *as; {
 	    printf("\n");
 	}
     }
+    return 0;
 }
 
 static UnInstall(as)
@@ -1791,8 +1792,8 @@ main(argc, argv)
     afsconf_SawCell = 0;	/* Reset it */
     /* don't check error code, since fails sometimes when we're setting up a
      * system */
-    initialize_cmd_error_table();
-    initialize_bz_error_table();
+    initialize_CMD_error_table();
+    initialize_BZ_error_table();
 
     ts = cmd_CreateSyntax("start", StartServer, 0, "start running a server");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");

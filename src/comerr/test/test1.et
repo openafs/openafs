@@ -1,4 +1,4 @@
-	error_table	krb
+	error_table	KRB
 
 	error_code	KRB_MK_AP_TKFIL,
 			"Can't read ticket file"

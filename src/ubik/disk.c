@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/disk.c,v 1.1.1.5 2001/09/11 14:34:55 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/disk.c,v 1.1.1.6 2001/09/20 06:16:28 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -236,11 +236,11 @@ static int DInit (abuffers)
 }
 
 /* Take a buffer and mark it as the least recently used buffer */
-static int Dlru(abuf)
+static void Dlru(abuf)
   struct buffer *abuf;
 {
   if (LruBuffer == abuf)
-     return 0;
+     return;
 
   /* Unthread from where it is in the list */
   abuf->lru_next->lru_prev = abuf->lru_prev;
@@ -256,12 +256,12 @@ static int Dlru(abuf)
 }
 
 /* Take a buffer and mark it as the most recently used buffer */
-static int Dmru(abuf)
+static void Dmru(abuf)
      struct buffer *abuf;
 {
   if (LruBuffer == abuf) {
      LruBuffer = LruBuffer->lru_next;
-     return 0;
+     return;
   }
 
   /* Unthread from where it is in the list */
@@ -273,7 +273,6 @@ static int Dmru(abuf)
   abuf->lru_prev = LruBuffer->lru_prev;
   LruBuffer->lru_prev->lru_next = abuf;
   LruBuffer->lru_prev = abuf;
-
 }
 
 /* get a pointer to a particular buffer */
@@ -283,7 +282,7 @@ static char *DRead(dbase, fid, page)
     int page; {
     /* Read a page from the disk. */
     struct buffer *tb, *lastbuffer;
-    afs_int32 trys, code;
+    afs_int32 code;
 
     calls++;
     lastbuffer = LruBuffer->lru_prev;
@@ -469,7 +468,7 @@ static struct buffer *newslot (adbase, afid, apage)
 }
 
 /* Release a buffer, specifying whether or not the buffer has been modified by the locker. */
-static DRelease (ap,flag)
+static void DRelease (ap,flag)
     char *ap;
     int flag; {
     int index;
@@ -480,7 +479,7 @@ static DRelease (ap,flag)
     bp = &(Buffers[index]);
     bp->lockers--;
     if (flag) bp->dirty=1;
-    return 0;
+    return;
 }
 
 /* flush all modified buffers, leaves dirty bits set (they're cleared

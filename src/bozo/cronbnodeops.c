@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/cronbnodeops.c,v 1.1.1.5 2001/09/11 14:31:27 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/cronbnodeops.c,v 1.1.1.6 2001/09/20 06:12:45 hartmans Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -120,6 +120,7 @@ register struct cronbnode *abnode; {
 	if (temp < 1) temp = 1;	/* temp is when to start dude */
 	bnode_SetTimeout(abnode, temp);
     }
+    return 0;
 }
 
 static int cron_restartp (abnode)

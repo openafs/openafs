@@ -12,7 +12,7 @@ extern int errno;
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/db_verify.c,v 1.1.1.6 2001/09/11 14:34:06 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/db_verify.c,v 1.1.1.7 2001/09/20 06:15:55 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -222,7 +222,6 @@ int PrintEntryError (misc, ea, e, indent)
   struct prentry *e;
   int indent;
 {
-    int i;
 
     pr_PrintEntry (stderr, /*net order*/0, ea, e, indent);
     return 0;
@@ -1045,11 +1044,8 @@ WorkerBee (as, arock)
     char *recreateFile;
     struct misc_data misc;		/* info & statistics */
 
-    int   a;
-    char  arg[100];
-
-    initialize_pt_error_table();
-    initialize_u_error_table();
+    initialize_PT_error_table();
+    initialize_U_error_table();
     
     pr_dbaseName = AFSDIR_SERVER_PRDB_FILEPATH;
     memset(&misc, 0, sizeof(misc));
@@ -1099,7 +1095,6 @@ main (argc, argv)
   char *argv[];
 {
   struct cmd_syndesc *ts;
-  struct cmd_item    *ti;
 
   setlinebuf(stdout);
 

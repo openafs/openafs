@@ -14,7 +14,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/client.c,v 1.1.1.6 2001/09/11 14:32:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/client.c,v 1.1.1.7 2001/09/20 06:14:55 hartmans Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
@@ -294,11 +294,11 @@ afs_int32 ka_Init(int flags)			/* reserved for future use. */
 	return 0;
     }
     inited++;
-    initialize_u_error_table();
-    initialize_ka_error_table();
-    initialize_rxk_error_table();
-    initialize_ktc_error_table();
-    initialize_acfg_error_table();
+    initialize_U_error_table();
+    initialize_KA_error_table();
+    initialize_RXK_error_table();
+    initialize_KTC_error_table();
+    initialize_ACFG_error_table();
     code = ka_CellConfig (AFSDIR_CLIENT_ETC_DIRPATH);
     UNLOCK_GLOBAL_MUTEX
 

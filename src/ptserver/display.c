@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/display.c,v 1.1.1.4 2001/07/14 22:23:17 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/display.c,v 1.1.1.5 2001/09/20 06:15:55 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -32,7 +32,6 @@ static char *pr_TimeToString (time_t clock)
 {   struct tm *tm;
     static char buffer[32];
     static int this_year = 0;
-    char year[6];
 
     if (clock == 0) return "time-not-set  ";
     if (!this_year) {

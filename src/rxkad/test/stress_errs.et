@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-error_table rks
+error_table RKS
   ec RXKST_PROCESSCREATED, "process created, not yet started"
   ec RXKST_PROCESSRUNNING, "process running, no error"
   ec RXKST_BADARGS, "arguments illegal or inconsistent"

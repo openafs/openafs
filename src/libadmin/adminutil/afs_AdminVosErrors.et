@@ -5,7 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-error_table av
+error_table AV
         ec ADMVOSSERVERNULL, "the volume server parameter cannot be NULL"
         ec ADMVOSCELLHANDLENULL, "the cell handle parameter cannot be NULL"
         ec ADMVOSCELLHANDLEBADMAGIC, "the cell handle parameter failed to pass the magic number test.  Most likely the cell handle is invalid, or has been overwritten by mistake."

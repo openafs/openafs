@@ -7,7 +7,7 @@
 
 # Backup Coordinator Module error table
 
-error_table bucd
+error_table BUCD
 	ec BC_BADARG, "Unacceptable user supplied argument"
 	ec BC_VERSIONMISMATCH, "Object has been updated"
 	ec BC_NOTUNIQUE, "Search matched more than one item"

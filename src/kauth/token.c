@@ -18,7 +18,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/token.c,v 1.1.1.4 2001/07/14 22:22:17 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/token.c,v 1.1.1.5 2001/09/20 06:15:01 hartmans Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
@@ -320,8 +320,6 @@ afs_int32 ka_VerifyUserToken(
     afs_int32	        now = time(0);
     struct ktc_token	token;
     char		cellname[MAXKTCREALMLEN];
-    char		realm[MAXKTCREALMLEN];
-    struct ktc_principal client, server;
     afs_int32 pwexpires;
 
     LOCK_GLOBAL_MUTEX

@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/clone.c,v 1.1.1.5 2001/09/11 14:35:41 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/clone.c,v 1.1.1.6 2001/09/20 06:16:58 hartmans Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -75,6 +75,9 @@ struct clone_head {
     struct clone_items *first;
     struct clone_items *last;
 };
+
+void CloneVolume();
+void CloneVolume_r();
 
 static ci_AddItem(ah, aino)
 Inode aino;
@@ -349,6 +352,7 @@ afs_int32 DoCloneIndex(rwvp, clvp, class, reclone)
    return error;
 }
 
+void
 CloneVolume(error, original, new, old)
     Error *error;
     Volume *original, *new, *old;
@@ -358,6 +362,7 @@ CloneVolume(error, original, new, old)
     VOL_UNLOCK
 }
 
+void
 CloneVolume_r(rerror, original, new, old)
     Error *rerror;
     Volume *original, *new, *old;

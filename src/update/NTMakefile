@@ -77,3 +77,4 @@ install: update.h $(UPCLIENT) $(UPSERVER)
 # Local clean target; augments predefined clean target
 
 clean::
+	$(DEL) update.cs.c update.ss.c update.xdr.c update.h

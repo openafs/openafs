@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/rebuild.c,v 1.1.1.7 2001/09/11 14:33:02 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/rebuild.c,v 1.1.1.8 2001/09/20 06:15:01 hartmans Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -40,6 +40,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/rebuild.c,v 1.1.1.7 2001/09/11 14
 char *whoami = "kadb_check";
 int fd;
 FILE *out;
+
+void badEntry();
 
 int listuheader, listkheader, listentries, verbose;
 
@@ -82,6 +84,7 @@ int readUbikHeader()
   return(0);
 }
 
+void
 PrintHeader(header)
   struct kaheader *header;
 {
@@ -100,6 +103,7 @@ PrintHeader(header)
   printf("stats.cpw commands     = %d\n", header->stats.cpws);
 }
 
+void
 PrintEntry(index, entry)
   afs_int32 index;
   struct kaentry *entry;
@@ -221,6 +225,7 @@ char *EntryName(entryp)
   return(principal);
 }
 
+void
 RebuildEntry(entryp)
   struct kaentry *entryp;
 {
@@ -365,7 +370,6 @@ WorkerBee (as, arock)
   char *arock;
 {
     afs_int32 code;
-    int a;
     char *dbFile;
     char *outFile;
     afs_int32 index;
@@ -556,6 +560,7 @@ WorkerBee (as, arock)
     exit (code != 0);
 }
 
+void
 badEntry(e, i)
   afs_int32 e, i;
 {
@@ -585,7 +590,6 @@ main (argc, argv)
   char *argv[];
 {
   struct cmd_syndesc *ts;
-  struct cmd_item    *ti;
 
   setlinebuf(stdout);
 

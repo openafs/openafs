@@ -108,6 +108,7 @@ install9x: install
 clean::
 	$(DEL) acfg_errors.c ktc_errors.c
 	$(DEL) $(INCFILEDIR)\auth.h  $(INCFILEDIR)\cellconfig.h
-
+	$(DEL) auth.h  cellconfig.h
 
 setkey: $(SETKEY_EXEFILE)
+

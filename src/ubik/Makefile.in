@@ -44,7 +44,7 @@ LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a \
 RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
 
-all: test ukinstall ${TOP_LIBDIR}/libubik.a ${TOP_INCDIR}/ubik.h ${TOP_INCDIR}/ubik_int.h udebug utst_server utst_client
+all: ukinstall ${TOP_LIBDIR}/libubik.a ${TOP_INCDIR}/ubik.h ${TOP_INCDIR}/ubik_int.h udebug utst_server utst_client
 
 utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o libubik.a 
 	${CC} ${CFLAGS} -o utst_server utst_server.o utst_int.ss.o utst_int.xdr.o libubik.a $(LIBS)

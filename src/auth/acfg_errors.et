@@ -9,7 +9,7 @@
 
 # AFS Configuration Package error table
 
-error_table acfg
+error_table ACFG
   ec AFSCONF_FAILURE, "mysterious failure"
   ec AFSCONF_NOTFOUND, "could not find entry"
   ec AFSCONF_UNKNOWN, "do not know that information"

@@ -14,7 +14,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptuser.c,v 1.1.1.6 2001/09/11 14:34:08 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptuser.c,v 1.1.1.7 2001/09/20 06:15:57 hartmans Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
@@ -71,14 +71,10 @@ afs_int32 pr_Initialize (secLevel, confDir, cell)
     afs_int32 i;
     char cellstr[64];
 
-    initialize_pt_error_table();
-    initialize_rxk_error_table();
-    initialize_acfg_error_table();
-    initialize_ktc_error_table();
-/*
-    initialize_lwp_error_table();
-    initialize_rx_error_table();
-*/
+    initialize_PT_error_table();
+    initialize_RXK_error_table();
+    initialize_ACFG_error_table();
+    initialize_KTC_error_table();
 
     if (strcmp(confDir, tconfDir)) {
 	/*

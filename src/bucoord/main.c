@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/main.c,v 1.1.1.6 2001/09/11 14:31:36 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/main.c,v 1.1.1.7 2001/09/20 06:12:50 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -108,18 +108,18 @@ osi_audit() {return 0;}
  */
 void InitErrTabs()
 {
-    initialize_acfg_error_table();
-    initialize_ka_error_table();
-    initialize_rxk_error_table();
-    initialize_cmd_error_table();
-    initialize_vl_error_table();
-    initialize_butm_error_table();
-    initialize_vols_error_table();
-    initialize_butc_error_table();
-    initialize_butx_error_table();
-    initialize_budb_error_table();
-    initialize_bucd_error_table();
-    initialize_ktc_error_table();
+    initialize_ACFG_error_table();
+    initialize_KA_error_table();
+    initialize_RXK_error_table();
+    initialize_CMD_error_table();
+    initialize_VL_error_table();
+    initialize_BUTM_error_table();
+    initialize_VOLS_error_table();
+    initialize_BUTC_error_table();
+    initialize_BUTX_error_table();
+    initialize_BUDB_error_table();
+    initialize_BUCD_error_table();
+    initialize_KTC_error_table();
 }
 
 /* 
@@ -232,7 +232,7 @@ static int backupInit()
     extern statusWatcher();
 
     /* Initialization */
-    initialize_cmd_error_table();
+    initialize_CMD_error_table();
 
     /* don't run more than once */
     if (initd) 

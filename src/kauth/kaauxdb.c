@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaauxdb.c,v 1.1.1.4 2001/07/14 22:22:10 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaauxdb.c,v 1.1.1.5 2001/09/20 06:14:56 hartmans Exp $");
 
 #include <fcntl.h>
 #ifdef AFS_NT40_ENV
@@ -165,7 +165,6 @@ int kaux_islocked(
     unsigned int nfailures, myshare;
     afs_uint32 lasttime;
     struct ubik_debug beaconinfo;
-    afs_uint32 now;
 
     /* if attempts is 0, that means there's no limit, so the id
     * can't ever be locked...

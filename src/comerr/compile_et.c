@@ -11,7 +11,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/comerr/compile_et.c,v 1.1.1.4 2001/07/14 22:21:12 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/comerr/compile_et.c,v 1.1.1.5 2001/09/20 06:13:03 hartmans Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -133,6 +133,7 @@ int main (argc, argv) int argc; char **argv; {
     char const * const *cpp;
     int got_language = 0;
     char *got_include = 0;
+    char lcname[6];
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -364,6 +365,14 @@ int main (argc, argv) int argc; char **argv; {
 	     table_name, table_name);
     fprintf (hfile, "#define %s_err_base ERROR_TABLE_BASE_%s\n", table_name,
 	     table_name);
+    fprintf (hfile, "\n/* for compatibility with other users... */\n");
+    lcstring (lcname, table_name, sizeof(lcname));
+    fprintf (hfile, "#define ERROR_TABLE_BASE_%s (%ldL)\n",
+	     lcname, (long int) table_number);
+    fprintf (hfile, "#define init_%s_err_tbl initialize_%s_error_table\n",
+	     lcname, lcname);
+    fprintf (hfile, "#define %s_err_base ERROR_TABLE_BASE_%s\n", lcname,
+	     lcname);
     fclose(hfile);		/* bye bye include file */
     if (use_msf)
 	fclose(msfile);

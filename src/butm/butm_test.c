@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/butm/butm_test.c,v 1.1.1.5 2001/09/11 14:31:56 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/butm/butm_test.c,v 1.1.1.6 2001/09/20 06:12:58 hartmans Exp $");
 
 #include <sys/types.h>
 #include <sys/file.h>
@@ -71,7 +71,7 @@ main (argc, argv)
     /* -------------
      * General Setup 
      * ------------- */
-    initialize_butm_error_table();
+    initialize_BUTM_error_table();
 
     tapeInfo.structVersion = BUTM_MAJORVERSION;
 

@@ -105,6 +105,7 @@ install: $(INCFILES) $(LIBFILE)  $(CL_UDBG_EXEFILE)
 clean::
 	$(DEL) ubik_int.ss.c ubik_int.cs.c ubik_int.xdr.c 
 	$(DEL) $(INCFILEDIR)\ubik_int.h	uerrors.c $(INCFILEDIR)\ubik.h
+	$(DEL) ubik_int.h ubik.h
 
 ############################################################################
 # test ubik

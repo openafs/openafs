@@ -22,7 +22,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/waitkey.c,v 1.1.1.8 2001/09/11 14:33:41 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/waitkey.c,v 1.1.1.9 2001/09/20 06:15:32 hartmans Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -164,7 +164,7 @@ int LWP_WaitForKeystroke(int seconds)
     if (stdin->_IO_read_ptr < stdin->_IO_read_end)
 	return 1;
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if (stdin->_bf._size > 0)
         return 1;
 #else

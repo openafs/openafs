@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/admin_tools.c,v 1.1.1.8 2001/09/11 14:32:52 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/admin_tools.c,v 1.1.1.9 2001/09/20 06:14:54 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <afs/debug.h>
@@ -1449,9 +1449,10 @@ static ForgetTicket (
   char *arock)
 {
     afs_int32 code;
-    struct ktc_principal server;
 
 #ifdef notdef
+    struct ktc_principal server;
+
     if (as->parms[0].items) {
 	char *name = as->parms[0].items->data;
 	code = ka_ParseLoginName

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/volser/dumpstuff.c,v 1.1.1.6 2001/09/11 14:35:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/dumpstuff.c,v 1.1.1.7 2001/09/20 06:17:07 hartmans Exp $");
 
 #include <sys/types.h>
 #include <ctype.h>
@@ -417,7 +417,7 @@ static int DumpFile(struct iod *iodp, char tag, int vnode, FdHandle_t *handleP)
 {
     int   code = 0, lcode = 0, error = 0;
     afs_int32 pad = 0, offset;
-    int   n, nbytes, howMany;
+    int   n, nbytes, howMany, howBig;
     byte  *p;
     struct stat status;
     int size;
@@ -427,9 +427,13 @@ static int DumpFile(struct iod *iodp, char tag, int vnode, FdHandle_t *handleP)
 #endif
 
 #ifdef AFS_NT40_ENV
-    howMany = 4096; /* Page size */
+    howBig = _filelength(handleP->fd_fd);
+    howMany = 4096;
+
 #else
     fstat(handleP->fd_fd, &status);
+    howBig = status.st_size;
+
 #ifdef	AFS_AIX_ENV
     /* Unfortunately in AIX valuable fields such as st_blksize are 
      * gone from the stat structure.
@@ -438,8 +442,9 @@ static int DumpFile(struct iod *iodp, char tag, int vnode, FdHandle_t *handleP)
     howMany = tstatfs.f_bsize;
 #else
     howMany = status.st_blksize;
-#endif
+#endif /* AFS_AIX_ENV */
 #endif /* AFS_NT40_ENV */
+
 
     size = FDH_SIZE(handleP);
     code = DumpInt32(iodp, tag, size);
@@ -490,7 +495,7 @@ static int DumpFile(struct iod *iodp, char tag, int vnode, FdHandle_t *handleP)
 	    */
 	   memset(p+n, 0, howMany-n);
 	   if (!pad)
-	      offset = (status.st_size - nbytes) + n;
+	      offset = (howBig - nbytes) + n;
 	   pad += (howMany-n);
 	   
 	   /* Now seek over the data we could not get. An error here means we
@@ -631,7 +636,6 @@ static int DumpVnodeIndex(register struct iod *iodp, Volume *vp,
     char buf[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *) buf;
     StreamHandle_t *file;
-    IHandle_t *handle;
     FdHandle_t *fdP;
     int size;
     int flag;

@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libacl/aclprocs.c,v 1.1.1.6 2001/09/11 14:33:06 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/libacl/aclprocs.c,v 1.1.1.7 2001/09/20 06:15:05 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -222,7 +222,6 @@ struct acl_accessList **acl;
     register char *nextc;
     register afs_int32 code;
     int p,n;
-    char tbuf[PR_MAXNAMELEN+1];
     namelist lnames;
     idlist lids;
 
@@ -377,6 +376,7 @@ char *version;
 #ifdef AFS_PTHREAD_ENV
     assert(pthread_mutex_init(&acl_list_mutex, NULL) == 0);
 #endif /* AFS_PTHREAD_ENV */
+    return 0;
 }
 
 int acl_IsAMember(aid,cps)

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/auth/userok.c,v 1.1.1.5 2001/07/14 22:20:41 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/auth/userok.c,v 1.1.1.6 2001/09/20 06:12:39 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
@@ -231,7 +231,6 @@ register char *auser; {
     char tbuffer[256];
     register bufio_p bp;
     char tname[64];
-    register char *tp;
     register int flag;
     register afs_int32 code;
     int rc;

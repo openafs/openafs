@@ -11,7 +11,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kas.c,v 1.1.1.4 2001/07/14 22:22:12 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kas.c,v 1.1.1.5 2001/09/20 06:14:57 hartmans Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -59,11 +59,11 @@ int main (
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
-    initialize_cmd_error_table();
-    initialize_ktc_error_table();
-    initialize_ka_error_table();
-    initialize_acfg_error_table();
-    initialize_u_error_table();
+    initialize_CMD_error_table();
+    initialize_KTC_error_table();
+    initialize_KA_error_table();
+    initialize_ACFG_error_table();
+    initialize_U_error_table();
 
 #ifdef AFS_NT40_ENV
     /* initialize winsock */

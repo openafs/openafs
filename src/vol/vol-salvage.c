@@ -91,7 +91,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vol-salvage.c,v 1.1.1.7 2001/09/11 14:35:48 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vol-salvage.c,v 1.1.1.8 2001/09/20 06:17:02 hartmans Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -122,7 +122,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vol-salvage.c,v 1.1.1.7 2001/09/11 
 #ifdef	AFS_SUN5_ENV
 #include <sys/fs/ufs_inode.h>
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #include <ufs/ufs/dinode.h>
 #include <ufs/ffs/fs.h>
 #else
@@ -133,7 +133,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vol-salvage.c,v 1.1.1.7 2001/09/11 
 #ifdef	AFS_OSF_ENV
 #include <ufs/inode.h>
 #else	/* AFS_OSF_ENV */
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_XBSD_ENV)
 #include <sys/inode.h>
 #endif
 #endif
@@ -1424,7 +1424,7 @@ int OnlyOneVolume(inodeinfo, singleVolumeNumber)
 int GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 {
     struct stat status;
-    int summaryFd, forceSal, err;
+    int forceSal, err;
     struct ViceInodeInfo *ip;
     struct InodeSummary summary;
     char summaryFileName[50];
@@ -2920,7 +2920,6 @@ void DistilVnodeEssence(VolumeId rwVId, VnodeClass class, Inode ino,
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     char buf[SIZEOF_LARGEDISKVNODE];
     struct VnodeDiskObject *vnode = (struct VnodeDiskObject *) buf;
-    int code;
     int size;
     StreamHandle_t *file;
     int vnodeIndex;
@@ -3444,7 +3443,7 @@ int CopyInode(Device device, Inode inode1, Inode inode2, int rwvolume)
     char buf[4096];
     IHandle_t *srcH, *destH;
     FdHandle_t *srcFdP, *destFdP;
-    register int n;
+    register int n = 0;
 
     IH_INIT(srcH, device, rwvolume, inode1);
     srcFdP = IH_OPEN(srcH);

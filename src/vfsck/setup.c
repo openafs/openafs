@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/setup.c,v 1.1.1.4 2001/09/11 14:35:31 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/setup.c,v 1.1.1.5 2001/09/20 06:16:47 hartmans Exp $");
 
 #include <stdio.h>
 #define VICE
@@ -199,7 +199,6 @@ restat:
 	    dev = sname;
 	}
 #endif
-#ifdef	AFS_HPUX_ENV
 	hotroot = is_hotroot(dev);
 
 	/*
@@ -226,9 +225,15 @@ restat:
 	     mounted = swap = 0;
 	     if (!hotroot) {
 		 mounted = is_mounted(dev,&st_mounted);
+#ifdef	AFS_HPUX_ENV
 		 swap = is_swap(st_mounted.st_rdev);
+#endif
 	     }
-	     if (!fflag && !mflag) {
+	     if (!fflag 
+#ifdef  AFS_HPUX_ENV
+&& !mflag
+#endif
+) {
 		 if (hotroot) {
 		     msgprintf("fsck: %s: root file system",dev);
 		     if (preen) 
@@ -787,9 +792,10 @@ clean_byte_valid(lastfsck)
 }
 #endif
 
-#ifdef	AFS_HPUX_ENV
 #include <sys/ustat.h>
+#ifdef	AFS_HPUX_ENV
 #include <sys/pstat.h>
+#endif
 #include <sys/errno.h>
 
 extern int errno;
@@ -826,6 +832,8 @@ is_mounted(device,dev_st)
     return (0);
 }
 
+#ifdef	AFS_HPUX_ENV
+
 #define PS_BURST 1
 #ifdef AFS_HPUX102_ENV
 #define PSTAT(P, N, I) pstat_getswap(P, sizeof(*P), (size_t)N, I)
@@ -849,6 +857,9 @@ is_swap(devno)
     return (match);
 }
 
+#endif AFS_HPUX_ENV
+
+
 is_pre_init(rdevnum)
     dev_t rdevnum;
 {
@@ -859,8 +870,17 @@ is_pre_init(rdevnum)
 
 is_roroot()
 {
+#ifndef UID_NO_CHANGE
+    struct stat stslash;
+
+    if (stat("/",&stslash) < 0)
+	return (0);
+    if ( chown("/", stslash.st_uid, stslash.st_gid) == 0 )
+	return(0);
+#else
     if ( chown("/",UID_NO_CHANGE,GID_NO_CHANGE) == 0 )
 	return(0);
+#endif
     else if (errno != EROFS ) {
 	printf ("fsck: chown failed: %d\n",errno);
 	return (0);
@@ -954,7 +974,6 @@ freply(s)
     return (0);
 }
 
-#endif
 
 #if   defined(AFS_HPUX110_ENV)
 /*

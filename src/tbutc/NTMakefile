@@ -56,12 +56,10 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 	     $(DESTDIR)\lib\afs\afskauth.lib \
 	     $(DESTDIR)\lib\afsubik.lib \
 	     $(DESTDIR)\lib\afs\afsauth.lib \
-\
 	     $(DESTDIR)\lib\afsrpc.lib \
              $(DESTDIR)\lib\afsrxkad.lib \
 	     $(DESTDIR)\lib\afsrx.lib \
              $(DESTDIR)\lib\afslwp.lib \
-\
              $(DESTDIR)\lib\afs\afsutil.lib \
              $(DESTDIR)\lib\afs\afsusd.lib \
 	     $(DESTDIR)\lib\afs\afspioctl.lib \
@@ -76,6 +74,7 @@ BUTCLIBS=$(DESTDIR)\lib\afs\afsbudb.lib  \
 	$(DESTDIR)\lib\pthread.lib \
 !ENDIF
 	     $(DESTDIR)\lib\afsdes.lib
+
 
 #	$(DESTDIR)\lib\afsauthent.lib \
 #	$(DESTDIR)\lib\afsrpc.lib \

@@ -180,16 +180,6 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pszCmdLineA, int nCm
 		return 0;
 	}
 
-    // Check the version of the client.  It must be at least 35.
-    if (g_CfgData.nClientVersion < 35) {
-        int nMajor, nMinor;
-        nMajor = g_CfgData.nClientVersion / 10;
-        nMinor = g_CfgData.nClientVersion - (nMajor * 10);
-        g_LogFile.Write("The version of the AFS Client on this machine (%d.%d) is too old to run the server.  The Client must be at least version 3.5.\r\n", nMajor, nMinor);
-		ErrorDialog(0, IDS_ERROR_CLIENT_VERSION);
-        return 0;
-    }
-
 	// Run the appropriate interface
 	if ((strstr(_strlwr(pszCmdLineA), "wizard") != 0))
 		RunWizard();

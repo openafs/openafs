@@ -24,7 +24,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/vldb_check.c,v 1.1.1.5 2001/09/11 14:35:38 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/vldb_check.c,v 1.1.1.6 2001/09/20 06:16:56 hartmans Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -135,7 +135,6 @@ afs_int32 NameHash(volname)
    char *volname;
 {
    unsigned int hash;
-   int i;
    char *vchar;
 
    hash = 0;
@@ -155,7 +154,7 @@ int InvalidVolname(volname)
   char *volname;
 {
   char *map;
-  int slen;
+  size_t slen;
 
   map = LEGALCHARS;
   slen = strlen(volname);
@@ -310,6 +309,7 @@ readentry(addr, vlentryp, type)
   }
 }
 
+void
 readSIT(base, addr)
   int base;
   int addr;
@@ -366,6 +366,7 @@ readSIT(base, addr)
  * Record what type of entry it is and its address in the record array.
  * Remember what the maximum volume id we found is and check against the header.
  */
+void
 ReadAllEntries(header)
   struct vlheader *header;
 {
@@ -572,10 +573,10 @@ FollowIdHash(header)
 FollowFreeChain(header)
   struct vlheader *header;
 {
-  int count=0;
+  afs_int32 count=0;
   struct nvlentry vlentry;
   afs_uint32 addr;
-  afs_int32 i, type, rindex;
+  afs_int32 type, rindex;
 
   /* Now follow the Free Chain */
   if (verbose)
@@ -584,7 +585,7 @@ FollowFreeChain(header)
      readentry(addr, &vlentry, &type);
      if (type != FR) {
         printf("Free Chain %d: Bad entry at %u: Not a valid free vlentry (0x%x)\n",
-	       i, addr, type);
+	       count, addr, type);
 	continue;
      }
 
@@ -625,8 +626,6 @@ CheckIpAddrs(header)
   struct vlheader *header;
 {
   int mhblocks=0;
-  struct nvlentry vlentry;
-  afs_uint32 addr;
   afs_int32 i, j, m, rindex;
   afs_int32 mhentries, regentries;
   afs_int32 caddrs[VL_MAX_ADDREXTBLKS];
@@ -676,7 +675,7 @@ CheckIpAddrs(header)
 		  record[rindex].addr, caddrs[i], rindex);
 	}
 	if (record[rindex].type & FRC) {
-	   printf("MH Blocks Chain %d: Bad entry at %u: Already a MH block\n", i, addr);
+	   printf("MH Blocks Chain %d: Bad entry at %u: Already a MH block\n", i, record[rindex].addr);
 	   break;
 	}
 	record[rindex].type |= MHC;
@@ -794,6 +793,7 @@ CheckIpAddrs(header)
 
 }
 
+int
 WorkerBee(as, arock)
   struct cmd_syndesc *as;
   char *arock;
@@ -921,7 +921,6 @@ main(argc, argv)
   char **argv;
 {
   struct cmd_syndesc *ts;
-  struct cmd_item    *ti;
 
   setlinebuf(stdout);
 

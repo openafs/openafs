@@ -35,3 +35,7 @@ rxstat.cs.c rxstat.ss.c rxstat.xdr.c rxstat.h: rxstat.xg
 install: $(LIBFILE) $(INCFILES)
 
 install9x: install
+
+clean::
+	$(DEL) rxstat.cs.c rxstat.h rxstat.ss.c rxstat.xdr.c
+

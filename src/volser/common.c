@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/volser/common.c,v 1.1.1.4 2001/07/14 22:25:07 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/common.c,v 1.1.1.5 2001/09/20 06:17:06 hartmans Exp $");
 
 #include <stdio.h>
 #include <afs/afsutil.h>
@@ -36,14 +36,15 @@ char *s;
     abort();
 }
 
+void
 InitErrTabs()
 {
-    initialize_ka_error_table();
-    initialize_rxk_error_table();
-    initialize_ktc_error_table();
-    initialize_acfg_error_table();
-    initialize_cmd_error_table();
-    initialize_vl_error_table();
-    initialize_vols_error_table();
+    initialize_KA_error_table();
+    initialize_RXK_error_table();
+    initialize_KTC_error_table();
+    initialize_ACFG_error_table();
+    initialize_CMD_error_table();
+    initialize_VL_error_table();
+    initialize_VOLS_error_table();
     return;
 }

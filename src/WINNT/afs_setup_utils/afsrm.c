@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     int code;
 
     /* initialize command syntax */
-    initialize_cmd_error_table();
+    initialize_CMD_error_table();
     SetupCmd();
 
     /* execute command */

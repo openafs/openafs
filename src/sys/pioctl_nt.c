@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/sys/pioctl_nt.c,v 1.1.1.5 2001/07/14 22:24:01 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/sys/pioctl_nt.c,v 1.1.1.6 2001/09/20 06:16:25 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <windows.h>
@@ -87,7 +87,6 @@ static long GetIoctlHandle(char *fileNamep, HANDLE *handlep)
 	HKEY parmKey;
 	DWORD dummyLen;
 	long code;
-        int hostsize;
 
         if (fileNamep) {
 	      drivep = strchr(fileNamep, ':');
@@ -116,11 +115,14 @@ nogateway:
 #ifndef AFS_WIN95_ENV
 		gethostname(hostName, sizeof(hostName));
 #else
+		{
+		  int hostsize;
                 /* DJGPP version of gethostname gets the NetBIOS
                    name of the machine, so that is what we are using for
                    the AFS server name instead of the DNS name. */
                 hostsize = sizeof(hostName);
                 GetComputerName(hostName, &hostsize);
+		}
 #endif /* AFS_WIN95_ENV */
 
 havehost:

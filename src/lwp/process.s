@@ -349,8 +349,16 @@ _returnto:
 #include	<sys/asm_linkage.h>
 #include  <sys/trap.h>
 #else
+#ifdef AFS_XBSD_ENV
+#include <machine/trap.h>
+#define ST_FLUSH_WINDOWS ST_FLUSHWIN
+#define MINFRAME 92
+#define SA(x) (((x)+7)&~7)
+#define STACK_ALIGN 8
+#else /* SunOS 4: */
 #include	<sun4/asm_linkage.h>
 #include  <sun4/trap.h>
+#endif
 #endif
 	.data	
 #ifdef	AFS_SUN5_ENV
@@ -1153,7 +1161,7 @@ LEAF(returnto,1)
 	END(returnto)
 #endif
 
-#if defined(AFS_NCR_ENV) || defined(AFS_X86_ENV) || defined(AFS_DJGPP_ENV)
+#if defined(AFS_NCR_ENV) || defined(AFS_X86_ENV) || defined(AFS_DJGPP_ENV) || defined(AFS_XBSD_ENV)
 /* Sun 386i... I hope this does the right thing!!!
  * 
  * Written by Derek Atkins <warlord@MIT.EDU>
@@ -1187,7 +1195,7 @@ LEAF(returnto,1)
 	.set	newsp,16
 
 
-#ifdef AFS_DJGPP_ENV
+#if defined(AFS_DJGPP_ENV) || defined(AFS_XBSD_ENV)
 .globl	_PRE_Block
 .globl	_savecontext
 _savecontext:
@@ -1199,7 +1207,7 @@ savecontext:
 	pushl	%ebp			/* New Frame! */
 	movl	%esp,%ebp
 	pusha				/* Push all registers */
-#ifdef AFS_DJGPP_ENV
+#if defined(AFS_DJGPP_ENV) || defined(AFS_XBSD_ENV)
 	movl	$1,_PRE_Block		/* Pre-emption code */
 #else
 	movl	$1,PRE_Block		/* Pre-emption code */
@@ -1215,7 +1223,7 @@ L1:
 
 /* Shouldnt be here....*/
 
-#ifdef AFS_DJGPP_ENV
+#if defined(AFS_DJGPP_ENV) || defined(AFS_XBSD_ENV)
 	call	_abort
 #else
 	call	abort
@@ -1229,7 +1237,7 @@ L1:
 /* stack offset */
 	.set	area2,8
 
-#ifdef AFS_DJGPP_ENV
+#if defined(AFS_DJGPP_ENV) || defined(AFS_XBSD_ENV)
 .globl	_returnto
 _returnto:
 #else
@@ -1241,7 +1249,7 @@ returnto:
 	movl	area2(%ebp),%eax	/* eax = area2 */
 	movl	(%eax),%esp		/* restore esp */
 	popa 
-#ifdef AFS_DJGPP_ENV
+#if defined(AFS_DJGPP_ENV) || defined(AFS_XBSD_ENV)
 	movl	$0,_PRE_Block		/* clear it up... */
 #else
 	movl	$0,PRE_Block		/* clear it up... */
@@ -1251,7 +1259,7 @@ returnto:
 
 /* I see, said the blind man, as he picked up his hammer and saw! */
 	pushl	$1234
-#ifdef AFS_DJGPP_ENV
+#if defined(AFS_DJGPP_ENV) || defined(AFS_XBSD_ENV)
 	call	_abort
 #else
 	call	abort

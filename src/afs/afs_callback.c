@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_callback.c,v 1.3 2001/09/20 06:04:37 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_callback.c,v 1.1.1.6 2001/09/20 06:07:11 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -1160,7 +1160,7 @@ int SRXAFSCB_GetCellServDB(
 
     t_name[i] = '\0';
     if (p_name)
-	bcopy(p_name, t_name, i);
+	memcpy(t_name, p_name, i);
 
     ReleaseReadLock(&afs_xcell);
 
@@ -1237,7 +1237,7 @@ int SRXAFSCB_GetLocalCell(
 
     t_name[plen] = '\0';
     if (p_name)
-	bcopy(p_name, t_name, plen);
+	memcpy(t_name, p_name, plen);
 
     ReleaseReadLock(&afs_xcell);
 

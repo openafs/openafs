@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/vlutils.c,v 1.1.1.5 2001/09/11 14:35:40 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/vlutils.c,v 1.1.1.6 2001/09/20 06:16:58 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -89,7 +89,7 @@ struct ubik_trans   *trans;
 afs_int32		    offset;
 char		    *buffer;
 afs_int32		    length; {
-    struct vlentry oentry, *oep;
+    struct vlentry oentry;
     struct nvlentry nentry, *nep;
     char *bufp;
     register afs_int32 i;
@@ -138,7 +138,7 @@ struct ubik_trans   *trans;
 afs_int32		    offset;
 char		    *buffer;
 afs_int32		    length; {
-    struct vlentry *oep, *obufp, tentry;
+    struct vlentry *oep, tentry;
     struct nvlentry *nep, *nbufp;
     char *bufp = (char *)&tentry;
     register afs_int32 i;
@@ -475,7 +475,6 @@ afs_int32 FindExtentBlock(trans, uuidp, createit, hostslot, expp, basep)
 		    *expp = exp;
 		    *basep = base;
 		    if (vldbversion != VLDBVERSION_4) {
-			vldbversion != VLDBVERSION_4;
 			cheader.vital_header.vldbversion = htonl(VLDBVERSION_4);
 			code = write_vital_vlheader(trans);
 			if (code) ERROR_EXIT(VL_IO);
@@ -628,6 +627,7 @@ int		    hashindex;
 	VLog(0, ("[%d]#%d: %10d %d %d (%s)\n", hashindex, i, tentry.volumeId[0],
 	      tentry.nextIdHash[0], tentry.nextNameHash, tentry.name));
     }
+    return 0;
 }
 
 
@@ -645,6 +645,7 @@ int		    hashindex;
 	VLog(0, ("[%d]#%d: %10d %d %d (%s)\n", hashindex, i, tentry.volumeId[0],
 	      tentry.nextIdHash[0],  tentry.nextNameHash, tentry.name));
     }
+    return 0;
 }
 
 

@@ -19,7 +19,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/volume.c,v 1.1.1.9 2001/09/11 14:35:50 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/volume.c,v 1.1.1.10 2001/09/20 06:17:03 hartmans Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -35,7 +35,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/volume.c,v 1.1.1.9 2001/09/11 14:35
 #ifdef	AFS_SUN5_ENV
 #include <sys/fs/ufs_fs.h>
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #include <ufs/ufs/dinode.h>
 #include <ufs/ffs/fs.h>
 #else
@@ -43,7 +43,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/volume.c,v 1.1.1.9 2001/09/11 14:35
 #endif
 #endif
 #else /* AFS_VFSINCL_ENV */
-#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_XBSD_ENV)
 #include <sys/fs.h>
 #endif
 #endif /* AFS_VFSINCL_ENV */

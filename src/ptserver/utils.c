@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/utils.c,v 1.1.1.6 2001/09/11 14:34:10 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/utils.c,v 1.1.1.7 2001/09/20 06:15:59 hartmans Exp $");
 
 #include <sys/types.h>
 #include <lock.h>
@@ -402,7 +402,6 @@ register struct ubik_trans *at;
 char aname[PR_MAXNAMELEN];
 afs_int32 *aid;
 {
-    register afs_int32 code;
     afs_int32 temp;
     struct prentry tentry;
 
