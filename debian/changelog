@@ -1,3 +1,9 @@
+openafs (1.2.4-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Sam Hartman <hartmans@debian.org>  Sun, 12 May 2002 02:01:15 -0400
+
 openafs (1.2.3final2-5) unstable; urgency=medium
 
   * Fix subarch handling, closes: #139662
