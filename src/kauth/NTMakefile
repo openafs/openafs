@@ -125,7 +125,7 @@ KASERVER_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib
 
 $(KASERVER): $(KASERVER_OBJS) $(AFSLIBS) $(KASERVER_EXELIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
 	$(EXEPREP) 
 
 #build $(OUT)\kadatabase.obj
@@ -149,7 +149,7 @@ KAS_OBJS =\
 	$(OUT)\kas.res
 	
 $(KAS): $(KAS_OBJS) $(AFSLIBS) $(KAUTH_LIBFILE) $(TOKENLIB)
-	$(EXECONLINK) dnsapi.lib mpr.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
 	$(EXEPREP) 
 
 ########### Misc Exes #######################################################
@@ -162,20 +162,20 @@ KPASSWD_OBJS =\
 	$(OUT)\kpasswd.res
 
 $(KPASSWD_EXEFILE): $(KPASSWD_OBJS) $(AFSLIBS) $(KAUTH_LIBFILE) $(TOKENLIB)
-	$(EXECONLINK) dnsapi.lib mpr.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
 	$(EXEPREP)
 
 #kpwvalid.exe
 $(OUT)\kpwvalid.exe: $(OUT)\kpwvalid.obj $(AFSLIBS) $(KAUTH_LIBFILE)
-	$(EXECONLINK) dnsapi.lib mpr.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
 
 #kdb.exe - Not implemented for NT - because dbm not available on NT
 #kdb.exe: $(OUT)\kdb.obj $(AFSLIBS) $(KAUTH_LIBFILE) 
-#	$(EXECONLINK) dnsapi.lib mpr.lib
+#	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
 
 #rebuild.exe 
 $(OUT)\rebuild.exe: $(OUT)\rebuild.obj $(OUT)\kautils.obj $(AFSLIBS) 
-	$(EXECONLINK) dnsapi.lib mpr.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
 
 ############################################################################
 # Definitions for generating versioninfo resources

@@ -22,16 +22,13 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "cm_config.h"
+#include "afsd.h"
 #include <WINNT\afssw.h>
+#include <WINNT\afsreg.h>
 #ifdef AFS_AFSDB_ENV
 #include "cm_dns.h"
 #include <afs/afsint.h>
 #endif
-
-char AFSConfigKeyName[] =
-	"SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters";
-char AFSLocalMachineKeyName[] = "SOFTWARE\\OpenAFS\\Client";
 
 /* TODO: these should be pulled in from dirpath.h */
 #if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
@@ -99,7 +96,7 @@ BOOL WINAPI DllMain (HANDLE hModule, DWORD fdwReason, LPVOID lpReserved)
         DWORD LSPtype, LSPsize;
         HKEY NPKey;
 
-        (void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_CLIENT_PARMS_KEY,
+        (void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
                              0, KEY_QUERY_VALUE, &NPKey);
         LSPsize=sizeof(TraceOption);
         RegQueryValueEx(NPKey, REG_CLIENT_TRACE_OPTION_PARM, NULL,
@@ -189,9 +186,9 @@ static long cm_ParsePair(char *lineBufferp, char *leftp, char *rightp)
  * newCellNamep but return an error code.
  */
 long cm_SearchCellFile(char *cellNamep, char *newCellNamep,
-	cm_configProc_t *procp, void *rockp)
+                       cm_configProc_t *procp, void *rockp)
 {
-	char wdir[257];
+    char wdir[257];
     FILE *tfilep = NULL, *bestp, *tempp;
     char *tp;
     char lineBuffer[257];
@@ -434,7 +431,7 @@ long cm_GetCellServDB(char *cellNamep)
 	HKEY parmKey;
     int tlen;
 
-	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSLocalMachineKeyName,
+	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
 				0, KEY_QUERY_VALUE, &parmKey);
 	if (code != ERROR_SUCCESS)
         goto dirpath;
@@ -467,7 +464,7 @@ long cm_GetRootCellName(char *cellNamep)
 	DWORD code, dummyLen;
 	HKEY parmKey;
 
-	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
+	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
 				0, KEY_QUERY_VALUE, &parmKey);
 	if (code != ERROR_SUCCESS)
 		return -1;
@@ -557,7 +554,7 @@ long cm_WriteConfigString(char *labelp, char *valuep)
 	DWORD code, dummyDisp;
 	HKEY parmKey;
 
-	code = RegCreateKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
+	code = RegCreateKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
 				0, "container", 0, KEY_SET_VALUE, NULL,
 				&parmKey, &dummyDisp);
 	if (code != ERROR_SUCCESS)
@@ -579,7 +576,7 @@ long cm_WriteConfigInt(char *labelp, long value)
 	DWORD code, dummyDisp;
 	HKEY parmKey;
 
-	code = RegCreateKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
+	code = RegCreateKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
 				0, "container", 0, KEY_SET_VALUE, NULL,
 				&parmKey, &dummyDisp);
 	if (code != ERROR_SUCCESS)
@@ -738,7 +735,7 @@ long cm_CloseCellFile(cm_configFile_t *filep)
 
 void cm_GetConfigDir(char *dir)
 {
-    char wdir[256];
+	char wdir[256];
     int tlen;
 #ifdef AFS_WIN95_ENV
     char *afsconf_path;

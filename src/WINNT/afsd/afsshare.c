@@ -13,6 +13,8 @@
 #include <windows.h>
 #include <stdio.h>
 
+#include <WINNT\afsreg.h>
+
 int
 main(int argc, char **argv) {
     BOOL res;
@@ -27,7 +29,7 @@ main(int argc, char **argv) {
     }
 
     if (RegCreateKeyEx( HKEY_LOCAL_MACHINE,
-                        "SOFTWARE\\OpenAFS\\Client\\Submounts",
+                        AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
                         0,
                         NULL,
                         REG_OPTION_NON_VOLATILE,
@@ -45,7 +47,7 @@ main(int argc, char **argv) {
             }
         } else {
             if (RegCreateKeyEx( HKEY_LOCAL_MACHINE,
-                                "SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters",
+                                AFSREG_CLT_SVC_PARAM_SUBKEY,
                                 0,
                                 NULL,
                                 REG_OPTION_NON_VOLATILE,

@@ -31,7 +31,7 @@ cm_diskcache_t *diskCBBuf;
 
 extern int afs_diskCacheChunks;
 /*extern int cm_diskCacheChunkSize;*/
-extern long buf_bufferSize;
+extern long buf_blockSize;
 long cm_diskCacheChunkSize;
 extern char cm_cachePath[];
 extern int cm_cachePathLen;
@@ -85,11 +85,11 @@ int diskcache_Init()
   if (!cm_diskCacheEnabled)
     return 0;
   
-  cm_diskCacheChunkSize = buf_bufferSize;
-  if (cm_diskCacheChunkSize % buf_bufferSize != 0)
+  cm_diskCacheChunkSize = buf_blockSize;
+  if (cm_diskCacheChunkSize % buf_blockSize != 0)
   {
     complain("Error: disk cache chunk size %d not a multiple of buffer size %d\n",
-             cm_diskCacheChunkSize, buf_bufferSize);
+             cm_diskCacheChunkSize, buf_blockSize);
     return CM_ERROR_INVAL;
   }
   
@@ -660,7 +660,7 @@ int diskcache_Write(cm_diskcache_t *dcp, /*int bufferNum,*/ char *buf, int size)
      opened = 1;
    }
 
-   /*lseek(dcp->openfd, bufferNum * buf_bufferSize, SEEK_SET);*/
+   /*lseek(dcp->openfd, bufferNum * buf_blockSize, SEEK_SET);*/
    /* only write size bytes */
    rc = write(dcp->openfd, buf, size);
    if (rc < 0)

@@ -12,19 +12,19 @@
 
 /* bulk I/O descriptor */
 typedef struct cm_bulkIO {
-	struct cm_scache *scp;		/* typically unheld vnode ptr */
-        osi_hyper_t offset;		/* offset of buffers */
-        long length;			/* # of bytes to be transferred */
-	int reserved;			/* did we reserve multiple buffers? */
+    struct cm_scache *scp;		/* typically unheld vnode ptr */
+    osi_hyper_t offset;		        /* offset of buffers */
+    long length;			/* # of bytes to be transferred */
+    int reserved;			/* did we reserve multiple buffers? */
         
-        /* all of these buffers are held */
-        osi_queueData_t *bufListp;	/* list of buffers involved in I/O */
-        osi_queueData_t *bufListEndp;	/* list of buffers involved in I/O */
+    /* all of these buffers are held */
+    osi_queueData_t *bufListp;	/* list of buffers involved in I/O */
+    osi_queueData_t *bufListEndp;	/* list of buffers involved in I/O */
 } cm_bulkIO_t;
 
 extern long cm_StoreMini(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp);
 
-extern int cm_InitDCache(long chunkSize, long nbuffers);
+extern int cm_InitDCache(int newFile, long chunkSize, long nbuffers);
 
 extern int cm_HaveBuffer(struct cm_scache *, struct cm_buf *, int haveBufLocked);
 
@@ -50,5 +50,9 @@ extern void cm_BkgStore(cm_scache_t *scp, long p1, long p2, long p3, long p4,
 
 extern void cm_ConsiderPrefetch(cm_scache_t *scp, osi_hyper_t *offsetp,
 	cm_user_t *userp, cm_req_t *reqp);
+
+extern long cm_ValidateDCache(void);
+
+extern long cm_ShutdownDCache(void);
 
 #endif /*  __CM_DCACHE_ENV__ */

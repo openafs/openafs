@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.35.2.7 2005/01/31 04:34:46 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.35.2.8 2005/03/11 07:03:32 shadow Exp $");
 
 #ifdef KERNEL
 #if defined(UKERNEL)
@@ -185,6 +185,7 @@ rx_SlowReadPacket(struct rx_packet * packet, unsigned int offset, int resid,
     /* i is the iovec which contains the first little bit of data in which we
      * are interested.  l is the total length of everything prior to this iovec.
      * j is the number of bytes we can safely copy out of this iovec.
+     * offset only applies to the first iovec.
      */
     r = resid;
     while ((resid > 0) && (i < packet->niovecs)) {
@@ -222,6 +223,7 @@ rx_SlowWritePacket(struct rx_packet * packet, int offset, int resid, char *in)
     /* i is the iovec which contains the first little bit of data in which we
      * are interested.  l is the total length of everything prior to this iovec.
      * j is the number of bytes we can safely copy out of this iovec.
+     * offset only applies to the first iovec.
      */
     r = resid;
     while ((resid > 0) && (i < RX_MAXWVECS)) {

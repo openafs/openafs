@@ -3,6 +3,7 @@
         <Feature Id="feaOpenAFS" AllowAdvertise="no" Absent="disallow" ConfigurableDirectory="AFSDIR"
             Description="$(loc.StrAFSProdDesc)" Display="expand" InstallDefault="local" Level="30"
             Title="OpenAFS">
+           <ComponentRef Id="efl_desktop_INI" />
             <Feature Id="feaClient" AllowAdvertise="no" Description="$(loc.StrAFSClientLongDesc)" Display="expand"
                 InstallDefault="followParent" Level="30" Title="$(loc.StrAFSClientDesc)">
                 
@@ -65,6 +66,7 @@
                 <ComponentRef Id="cmf_tokens_EXE" />
                 <ComponentRef Id="cmf_unlog_EXE" />
                 <ComponentRef Id="cmf_fs_EXE" />
+                <ComponentRef Id="cmf_afsdacl_EXE" />
                 <ComponentRef Id="cmf_afscreds_EXE" />
                 <ComponentRef Id="cmf_afs_shl_ext_DLL" />
                 <ComponentRef Id="cmf_afsd_service_EXE" />
@@ -80,6 +82,7 @@
                 <ComponentRef Id="cmf_rxdebug_EXE" />
                 <ComponentRef Id="cmf_backup_EXE" />
                 <ComponentRef Id="cmf_aklog_EXE" />
+                <ComponentRef Id="cmf_cmdebug_EXE" />
                 
                 <!-- Runtime -->
                 <?include runtime.wxi?>

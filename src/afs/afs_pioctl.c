@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.8 2005/02/21 01:15:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.9 2005/03/11 06:50:31 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #ifdef AFS_OBSD_ENV
@@ -956,11 +956,11 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 		       foreigncreds ? foreigncreds : credp);
 #else
 #ifdef AFS_LINUX22_ENV
-	code = gop_lookupname(path, AFS_UIOUSER, follow, NULL, &dp);
+	code = gop_lookupname(path, AFS_UIOUSER, follow, &dp);
 	if (!code)
 	    vp = (struct vnode *)dp->d_inode;
 #else
-	code = gop_lookupname(path, AFS_UIOUSER, follow, NULL, &vp);
+	code = gop_lookupname(path, AFS_UIOUSER, follow, &vp);
 #endif /* AFS_LINUX22_ENV */
 #endif /* AFS_AIX41_ENV */
 	AFS_GLOCK();

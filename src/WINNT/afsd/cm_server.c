@@ -29,12 +29,6 @@ osi_rwlock_t cm_serverLock;
 
 cm_server_t *cm_allServersp;
 
-int cm_noIPAddr;         /* number of client network interfaces */
-int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address in host order */
-int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host order*/
-int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
-int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
-
 void cm_CheckServers(long flags, cm_cell_t *cellp)
 {
     /* ping all file servers, up or down, with unauthenticated connection,
@@ -47,7 +41,7 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
     long usecs;
     int doPing;
     int serverType;
-    long now;
+    unsigned long now;
     int wasDown;
     cm_conn_t *connp;
     struct rx_connection * callp;
@@ -172,6 +166,19 @@ void cm_SetServerPrefs(cm_server_t * serverp)
     /* implement server prefs for fileservers only */
     if ( serverp->type == CM_SERVER_FILE )
     {
+        int cm_noIPAddr;         /* number of client network interfaces */
+        int cm_IPAddr[CM_MAXINTERFACE_ADDR];    /* client's IP address in host order */
+        int cm_SubnetMask[CM_MAXINTERFACE_ADDR];/* client's subnet mask in host order*/
+        int cm_NetMtu[CM_MAXINTERFACE_ADDR];    /* client's MTU sizes */
+        int cm_NetFlags[CM_MAXINTERFACE_ADDR];  /* network flags */
+        long code;
+
+        /* get network related info */
+        cm_noIPAddr = CM_MAXINTERFACE_ADDR;
+        code = syscfg_GetIFInfo(&cm_noIPAddr,
+                                 cm_IPAddr, cm_SubnetMask,
+                                 cm_NetMtu, cm_NetFlags);
+
         serverAddr = ntohl(serverp->addr.sin_addr.s_addr);
         serverp->ipRank  = CM_IPRANK_LOW;	/* default setings */
 
@@ -247,7 +254,8 @@ cm_server_t *cm_FindServer(struct sockaddr_in *addrp, int type)
     lock_ObtainWrite(&cm_serverLock);
     for (tsp = cm_allServersp; tsp; tsp=tsp->allNextp) {
         if (tsp->type == type &&
-             tsp->addr.sin_addr.s_addr == addrp->sin_addr.s_addr) break;
+            tsp->addr.sin_addr.s_addr == addrp->sin_addr.s_addr) 
+            break;
     }       
 
     /* bump ref count if we found the server */

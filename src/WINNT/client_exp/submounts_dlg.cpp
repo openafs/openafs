@@ -18,7 +18,7 @@ extern "C" {
 #include "msgs.h"
 #include "submount_info.h"
 #include "hourglass.h"
-
+#include <WINNT\afsreg.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -46,7 +46,7 @@ static CSubmountInfo *ReadSubmtInfo(const CString& strShareName)
 
     HKEY hkSubmounts;
     RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
-                    "SOFTWARE\\OpenAFS\\Client\\Submounts",
+                    AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
                     0, 
                     "AFS", 
                     REG_OPTION_NON_VOLATILE,
@@ -167,7 +167,7 @@ BOOL CSubmountsDlg::FillSubmtList()
     DWORD dwSubmounts;
 
     RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
-                    "SOFTWARE\\OpenAFS\\Client\\Submounts",
+                    AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
                     0, 
                     "AFS", 
                     REG_OPTION_NON_VOLATILE,
@@ -249,7 +249,7 @@ static BOOL AddSubmt(CSubmountInfo *pInfo)
 
     HKEY hkSubmounts;
     RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
-                    "SOFTWARE\\OpenAFS\\Client\\Submounts",
+                    AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
                     0, 
                     "AFS", 
                     REG_OPTION_NON_VOLATILE,
@@ -271,7 +271,7 @@ static BOOL DeleteSubmt(CSubmountInfo *pInfo)
 
     HKEY hkSubmounts;
     RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
-                    "SOFTWARE\\OpenAFS\\Client\\Submounts",
+                    AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
                     0, 
                     "AFS", 
                     REG_OPTION_NON_VOLATILE,

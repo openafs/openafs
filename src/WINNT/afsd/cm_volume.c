@@ -25,16 +25,81 @@
 #include "afsd.h"
 
 osi_rwlock_t cm_volumeLock;
-cm_volume_t *cm_allVolumesp;
 
-void cm_InitVolume(void)
+long 
+cm_ValidateVolume(void)
 {
-	static osi_once_t once;
-	if (osi_Once(&once)) {
-		lock_InitializeRWLock(&cm_volumeLock, "cm global volume lock");
-                cm_allVolumesp = NULL;
-		osi_EndOnce(&once);
+    cm_volume_t * volp;
+    afs_uint32 count;
+
+    for (volp = cm_data.allVolumesp, count = 0; volp; volp=volp->nextp, count++) {
+        if ( volp->magic != CM_VOLUME_MAGIC ) {
+            afsi_log("cm_ValidateVolume failure: volp->magic != CM_VOLUME_MAGIC");
+            fprintf(stderr, "cm_ValidateVolume failure: volp->magic != CM_VOLUME_MAGIC\n");
+            return -1;
         }
+        if ( volp->cellp && volp->cellp->magic != CM_CELL_MAGIC ) {
+            afsi_log("cm_ValidateVolume failure: volp->cellp->magic != CM_CELL_MAGIC");
+            fprintf(stderr, "cm_ValidateVolume failure: volp->cellp->magic != CM_CELL_MAGIC\n");
+            return -2;
+        }
+        if ( volp->nextp && volp->nextp->magic != CM_VOLUME_MAGIC ) {
+            afsi_log("cm_ValidateVolume failure: volp->nextp->magic != CM_VOLUME_MAGIC");
+            fprintf(stderr, "cm_ValidateVolume failure: volp->nextp->magic != CM_VOLUME_MAGIC\n");
+            return -3;
+        }
+        if ( count != 0 && volp == cm_data.allVolumesp || 
+             count > cm_data.maxVolumes ) {
+            afsi_log("cm_ValidateVolume failure: cm_data.allVolumep loop detected");
+            fprintf(stderr, "cm_ValidateVolume failure: cm_data.allVolumep loop detected\n");
+            return -4;
+        }
+    }
+
+    if ( count != cm_data.currentVolumes ) {
+        afsi_log("cm_ValidateVolume failure: count != cm_data.currentVolumes");
+        fprintf(stderr, "cm_ValidateVolume failure: count != cm_data.currentVolumes\n");
+        return -5;
+    }
+    
+    return 0;
+}
+
+long
+cm_ShutdownVolume(void)
+{
+    cm_volume_t * volp;
+
+    for (volp = cm_data.allVolumesp; volp; volp=volp->nextp)
+        lock_FinalizeMutex(&volp->mx);
+
+    return 0;
+}
+
+void cm_InitVolume(int newFile, long maxVols)
+{
+    static osi_once_t once;
+
+    if (osi_Once(&once)) {
+        lock_InitializeRWLock(&cm_volumeLock, "cm global volume lock");
+
+        if ( newFile ) {
+            cm_data.allVolumesp = NULL;
+            cm_data.currentVolumes = 0;
+            cm_data.maxVolumes = maxVols;
+        } else {
+            cm_volume_t * volp;
+
+            for (volp = cm_data.allVolumesp; volp; volp=volp->nextp) {
+                lock_InitializeMutex(&volp->mx, "cm_volume_t mutex");
+                volp->flags |= CM_VOLUMEFLAG_RESET;
+                volp->rwServersp = NULL;
+                volp->roServersp = NULL;
+                volp->bkServersp = NULL;
+            }
+        }
+        osi_EndOnce(&once);
+    }
 }
 
 /*
@@ -84,32 +149,46 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
     long code;
 
     /* clear out old bindings */
-    cm_FreeServerList(&volp->rwServersp);
-    cm_FreeServerList(&volp->roServersp);
-    cm_FreeServerList(&volp->bkServersp);
+    if (volp->rwServersp)
+        cm_FreeServerList(&volp->rwServersp);
+    if (volp->roServersp)
+        cm_FreeServerList(&volp->roServersp);
+    if (volp->bkServersp)
+        cm_FreeServerList(&volp->bkServersp);
 
-    /* now we have volume structure locked and held; make RPC to fill it */
-    do {
-        code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
-        if (code) 
-            continue;
-        osi_Log1(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s", volp->namep);
-#ifdef MULTIHOMED
-        code = VL_GetEntryByNameU(connp->callp, volp->namep, &uvldbEntry);
-		type = 2;
-        if ( code == RXGEN_OPCODE ) 
+#ifdef AFS_FREELANCE_CLIENT
+    if ( cellp->cellID == AFS_FAKE_ROOT_CELL_ID && atoi(volp->namep)==AFS_FAKE_ROOT_VOL_ID ) 
+    {
+        memset(&vldbEntry, 0, sizeof(vldbEntry));
+        vldbEntry.flags |= VLF_RWEXISTS;
+        vldbEntry.volumeId[0] = AFS_FAKE_ROOT_VOL_ID;
+        code = 0;
+        type = 0;
+    } else
 #endif
-        {
-            code = VL_GetEntryByNameN(connp->callp, volp->namep, &nvldbEntry);
-            type = 1;
-        }
-        if ( code == RXGEN_OPCODE ) {
-            code = VL_GetEntryByNameO(connp->callp, volp->namep, &vldbEntry);
-            type = 0;
-        }
-    } while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
-    code = cm_MapVLRPCError(code, reqp);
-
+    {
+        /* now we have volume structure locked and held; make RPC to fill it */
+        do {
+            code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
+            if (code) 
+                continue;
+            osi_Log1(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s", volp->namep);
+#ifdef MULTIHOMED
+            code = VL_GetEntryByNameU(connp->callp, volp->namep, &uvldbEntry);
+            type = 2;
+            if ( code == RXGEN_OPCODE ) 
+#endif
+            {
+                code = VL_GetEntryByNameN(connp->callp, volp->namep, &nvldbEntry);
+                type = 1;
+            }
+            if ( code == RXGEN_OPCODE ) {
+                code = VL_GetEntryByNameO(connp->callp, volp->namep, &vldbEntry);
+                type = 0;
+            }
+        } while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
+        code = cm_MapVLRPCError(code, reqp);
+    }
     if (code == 0) {
         afs_int32 flags;
         afs_int32 nServers;
@@ -153,7 +232,7 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
                 if ( !(uvldbEntry.serverFlags[i] & VLSERVER_FLAG_UUID) ) {
                     serverFlags[j] = uvldbEntry.serverFlags[i];
                     serverNumber[j] = uvldbEntry.serverNumber[i].time_low;
-					j++;
+                    j++;
                 } else {
                     afs_uint32 * addrp, nentries, code, unique;
                     bulkaddrs  addrs;
@@ -189,7 +268,7 @@ long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
                     free(addrs.bulkaddrs_val);  /* This is wrong */
                 }
             }
-			nServers = j;					/* update the server count */
+            nServers = j;					/* update the server count */
             break;
 #endif
         }
@@ -287,7 +366,7 @@ long cm_GetVolumeByID(cm_cell_t *cellp, long volumeID, cm_user_t *userp,
         long code;
 
         lock_ObtainWrite(&cm_volumeLock);
-	for(volp = cm_allVolumesp; volp; volp=volp->nextp) {
+	for(volp = cm_data.allVolumesp; volp; volp=volp->nextp) {
 		if (cellp == volp->cellp &&
                 	((unsigned) volumeID == volp->rwID ||
                 	 (unsigned) volumeID == volp->roID ||
@@ -336,27 +415,31 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
 	code = 0;
 
 	lock_ObtainWrite(&cm_volumeLock);
-        for(volp = cm_allVolumesp; volp; volp=volp->nextp) {
-		if (cellp == volp->cellp && strcmp(volumeNamep, volp->namep) == 0) {
-			break;
-                }
+        for (volp = cm_data.allVolumesp; volp; volp=volp->nextp) {
+            if (cellp == volp->cellp && strcmp(volumeNamep, volp->namep) == 0) {
+                break;
+            }
         }
         
         /* otherwise, get from VLDB */
 	if (!volp) {
-		volp = malloc(sizeof(*volp));
-	        memset(volp, 0, sizeof(*volp));
-	        volp->cellp = cellp;
-	        volp->nextp = cm_allVolumesp;
-	        cm_allVolumesp = volp;
-	        volp->namep = malloc(strlen(volumeNamep)+1);
-	        strcpy(volp->namep, volumeNamep);
-	        lock_InitializeMutex(&volp->mx, "cm_volume_t mutex");
-	        volp->refCount = 1;	/* starts off held */
-                volp->flags |= CM_VOLUMEFLAG_RESET;
+            if ( cm_data.currentVolumes >= cm_data.maxVolumes )
+                osi_panic("Exceeded Max Volumes", __FILE__, __LINE__);
+
+            volp = &cm_data.volumeBaseAddress[cm_data.currentVolumes++];
+            memset(volp, 0, sizeof(cm_volume_t));
+            volp->magic = CM_VOLUME_MAGIC;
+            volp->cellp = cellp;
+            volp->nextp = cm_data.allVolumesp;
+            cm_data.allVolumesp = volp;
+            strncpy(volp->namep, volumeNamep, VL_MAXNAMELEN);
+            volp->namep[VL_MAXNAMELEN-1] = '\0';
+            lock_InitializeMutex(&volp->mx, "cm_volume_t mutex");
+            volp->refCount = 1;	/* starts off held */
+            volp->flags |= CM_VOLUMEFLAG_RESET;
 	}
         else {
-        	volp->refCount++;
+            volp->refCount++;
 	}
         
 	/* next should work since no one could have gotten ptr to this structure yet */
@@ -364,13 +447,13 @@ long cm_GetVolumeByName(struct cm_cell *cellp, char *volumeNamep,
 	lock_ObtainMutex(&volp->mx);
         
 	if (volp->flags & CM_VOLUMEFLAG_RESET) {
-		code = cm_UpdateVolume(cellp, userp, reqp, volp);
-		if (code == 0)
-			volp->flags &= ~CM_VOLUMEFLAG_RESET;
+            code = cm_UpdateVolume(cellp, userp, reqp, volp);
+            if (code == 0)
+                volp->flags &= ~CM_VOLUMEFLAG_RESET;
 	}
 
 	if (code == 0)
-	       	*outVolpp = volp;
+            *outVolpp = volp;
         lock_ReleaseMutex(&volp->mx);
         return code;
 }
@@ -379,7 +462,6 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 {
 	cm_cell_t *cellp;
 	cm_volume_t *volp;
-	long code;
 
 	if (!fidp) return;
 
@@ -388,7 +470,7 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
 
 	/* search for the volume */
         lock_ObtainWrite(&cm_volumeLock);
-	for(volp = cm_allVolumesp; volp; volp=volp->nextp) {
+	for(volp = cm_data.allVolumesp; volp; volp=volp->nextp) {
 		if (cellp == volp->cellp &&
                 	(fidp->volume == volp->rwID ||
                 	 fidp->volume == volp->roID ||
@@ -401,7 +483,7 @@ void cm_ForceUpdateVolume(cm_fid_t *fidp, cm_user_t *userp, cm_req_t *reqp)
         lock_ReleaseWrite(&cm_volumeLock);
 
 	/* update it */
-	cm_mountRootGen++;
+	cm_data.mountRootGen = time(NULL);
 	lock_ObtainMutex(&volp->mx);
 	volp->flags |= CM_VOLUMEFLAG_RESET;
 #ifdef COMMENT
@@ -477,9 +559,9 @@ void cm_CheckVolumes(void)
 {
 	cm_volume_t *volp;
 
-	cm_mountRootGen++;
+	cm_data.mountRootGen = time(NULL);
         lock_ObtainWrite(&cm_volumeLock);
-	for(volp = cm_allVolumesp; volp; volp=volp->nextp) {
+	for (volp = cm_data.allVolumesp; volp; volp=volp->nextp) {
 		volp->refCount++;
                 lock_ReleaseWrite(&cm_volumeLock);
                 lock_ObtainMutex(&volp->mx);
@@ -506,7 +588,7 @@ void cm_ChangeRankVolume(cm_server_t       *tsp)
 
 	/* find volumes which might have RO copy on server*/
 	lock_ObtainWrite(&cm_volumeLock);
-	for(volp = cm_allVolumesp; volp; volp=volp->nextp)
+	for(volp = cm_data.allVolumesp; volp; volp=volp->nextp)
 	{
 		code = 1 ;	/* assume that list is unchanged */
 		volp->refCount++;

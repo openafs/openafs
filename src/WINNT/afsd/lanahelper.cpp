@@ -35,6 +35,7 @@ SOFTWARE.
 #include <malloc.h>
 #include <stdio.h>
 #include <lanahelper.h>
+#include <WINNT\afsreg.h>
 
 #define NOLOGGING
 #ifndef NOLOGGING
@@ -55,11 +56,11 @@ extern "C" {
 }
 #endif
 
-static const char *szAFSConfigKeyName = "SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters";
 static const char *szNetbiosNameValue = "NetbiosName";
 static const char *szIsGatewayValue = "IsGateway";
 static const char *szLanAdapterValue = "LanAdapter";
 static const char *szNoFindLanaByName = "NoFindLanaByName";
+static const char *szForceLanaLoopback = "ForceLanaLoopback";
 
 // Use the IShellFolder API to get the connection name for the given Guid.
 static HRESULT lana_ShellGetNameFromGuidW(WCHAR *wGuid, WCHAR *wName, int NameSize)
@@ -312,9 +313,9 @@ extern "C" LANAINFO * lana_FindLanaByName(const char *LanaName)
         if ((lanamap[i].flags & 1) == 0)
             continue;
 
-		// check for an IPv4 binding
-		if(!strstr(pBind,"_Tcpip_"))
-			continue;
+        // check for an IPv4 binding
+        if(!strstr(pBind,"_Tcpip_"))
+            continue;
 
         // Find the beginning of the GUID.
         guid = strchr(pBind, '{');
@@ -435,6 +436,19 @@ extern "C" BOOL lana_IsLoopback(lana_number_t lana)
     } astat;
     unsigned char kWLA_MAC[6] = { 0x02, 0x00, 0x4c, 0x4f, 0x4f, 0x50 };
     int status;
+    HKEY hkConfig;
+    LONG rv;
+    int regLana = -1;
+    DWORD dummyLen;
+
+    rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE,AFSREG_CLT_SVC_PARAM_SUBKEY,0,KEY_READ,&hkConfig);
+    if (rv == ERROR_SUCCESS) {
+        rv = RegQueryValueEx(hkConfig, szForceLanaLoopback, NULL, NULL, (LPBYTE) &regLana, &dummyLen);
+        RegCloseKey(hkConfig);
+
+        if (regLana == lana)
+            return TRUE;
+    }
 
     // Reset the adapter: in Win32, this is required for every process, and
     // acts as an init call, not as a real hardware reset.
@@ -496,9 +510,9 @@ extern "C" BOOL lana_IsLoopback(lana_number_t lana)
 // buffer is assumed to hold at least MAX_NB_NAME_LENGTH bytes.
 //
 // flags :
-//        LANA_NETBIOS_NAME_IN : Use the values of *pLana and *pIsGateway as [in] parameters.
-//        LANA_NETBIOS_NAME_SUFFIX : Only return the suffix of netbios name
-//		  LANA_NETBIOS_NAME_FULL : Return full netbios name
+//      LANA_NETBIOS_NAME_IN : Use the values of *pLana and *pIsGateway as [in] parameters.
+//      LANA_NETBIOS_NAME_SUFFIX : Only return the suffix of netbios name
+//      LANA_NETBIOS_NAME_FULL : Return full netbios name
 extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int * pIsGateway, int flags) {
     HKEY hkConfig;
 	DWORD dummyLen;
@@ -509,7 +523,7 @@ extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int
 	TCHAR nbName[MAX_NB_NAME_LENGTH];
 	TCHAR hostname[MAX_COMPUTERNAME_LENGTH+1];
 
-	rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE,szAFSConfigKeyName,0,KEY_READ,&hkConfig);
+	rv = RegOpenKeyEx(HKEY_LOCAL_MACHINE,AFSREG_CLT_SVC_PARAM_SUBKEY,0,KEY_READ,&hkConfig);
 	if(rv == ERROR_SUCCESS) {
 		if(!(flags & LANA_NETBIOS_NAME_IN) || !pLana) {
 			dummyLen = sizeof(regLana);
@@ -655,7 +669,7 @@ extern "C" void lana_GetNetbiosName(LPTSTR pszName, int type)
             return;
         }
 
-		if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,szAFSConfigKeyName,0,KEY_READ,&hkCfg) == ERROR_SUCCESS) {
+		if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,AFSREG_CLT_SVC_PARAM_SUBKEY,0,KEY_READ,&hkCfg) == ERROR_SUCCESS) {
 			dummyLen = sizeof(name);
 			if(RegQueryValueEx(hkCfg,TEXT("Gateway"),NULL,NULL,(LPBYTE) name,&dummyLen) == ERROR_SUCCESS)
 				name[0] = _T('\0');

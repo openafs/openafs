@@ -29,7 +29,8 @@
   *	-cachedir    The base directory for the workstation cache.
   *	-mountdir   The directory on which the AFS is to be mounted.
   *	-confdir    The configuration directory .
-  *	-nosettime  Don't keep checking the time to avoid drift.
+  *	-nosettime  Don't keep checking the time to avoid drift (default).
+  *     -settime    Keep checking the time to avoid drift.
   *	-verbose     Be chatty.
   *	-debug	   Print out additional debugging info.
   *	-kerndev    [OBSOLETE] The kernel device for AFS.
@@ -56,7 +57,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.2 2005/01/31 04:09:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.4 2005/03/20 14:54:12 shadow Exp $");
 
 #define VFS 1
 
@@ -77,6 +78,7 @@ RCSID
 #include <errno.h>
 #include <sys/time.h>
 #include <dirent.h>
+
 
 #ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
@@ -176,8 +178,10 @@ kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 #endif
 #endif
 
+
 #undef	VIRTUE
 #undef	VICE
+
 
 #define CACHEINFOFILE   "cacheinfo"
 #define	AFSLOGFILE	"AFSLog"
@@ -190,6 +194,7 @@ kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 char LclCellName[64];
 
 #define MAX_CACHE_LOOPS 4
+
 
 /*
  * Internet address (old style... should be updated).  This was pulled out of the old 4.2
@@ -242,7 +247,7 @@ int sawDCacheSize = 0;
 int sawBiod = 0;
 char cacheMountDir[1024];	/*Mount directory for AFS */
 char rootVolume[64] = "root.afs";	/*AFS root volume name */
-afs_int32 cacheSetTime = 1;	/*Keep checking time to avoid drift? */
+afs_int32 cacheSetTime = FALSE;	/*Keep checking time to avoid drift? */
 afs_int32 isHomeCell;		/*Is current cell info for the home cell? */
 #ifdef AFS_XBSD_ENV
 int createAndTrunc = O_RDWR | O_CREAT | O_TRUNC;	/*Create & truncate on open */
@@ -1292,7 +1297,7 @@ AfsdbLookupHandler()
 #endif
 
 mainproc(as, arock)
-     register struct cmd_syndesc *as;
+     struct cmd_syndesc *as;
      char *arock;
 {
     static char rn[] = "afsd";	/*Name of this routine */
@@ -1501,7 +1506,22 @@ mainproc(as, arock)
 	/* -rxbind */
 	enable_rxbind = 1;
     }
+    if (as->parms[32].items) {
+       /* -settime */
+       cacheSetTime = TRUE;
+    }
 
+    /* set rx_extraPackets */
+    if (as->parms[33].items) {
+	/* -rxpck */
+	int rxpck = atoi(as->parms[33].items->data);
+	printf("afsd: set rxpck = %d\n",rxpck);
+	code = call_syscall(AFSOP_SET_RXPCK, rxpck);
+	if (code) {
+	printf("afsd: failed to set rxpck\n");
+	exit(1);
+	}
+    }
     
     /*
      * Pull out all the configuration info for the workstation's AFS cache and
@@ -2110,7 +2130,7 @@ main(argc, argv)
      int argc;
      char **argv;
 {
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
 
     ts = cmd_CreateSyntax(NULL, mainproc, NULL, "start AFS");
     cmd_AddParm(ts, "-blocks", CMD_SINGLE, CMD_OPTIONAL,
@@ -2179,6 +2199,9 @@ main(argc, argv)
     cmd_AddParm(ts, "-backuptree", CMD_FLAG, CMD_OPTIONAL,
 		"Prefer backup volumes for mointpoints in backup volumes");
     cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL, "Bind the Rx socket (one interface only)");
+    cmd_AddParm(ts, "-settime", CMD_FLAG, CMD_OPTIONAL,
+               "don't set the time");
+    cmd_AddParm(ts, "-rxpck", CMD_SINGLE, CMD_OPTIONAL, "set rx_extraPackets to this value");
     return (cmd_Dispatch(argc, argv));
 }
 

@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29.2.2 2005/02/21 01:13:08 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29.2.3 2005/03/11 04:37:18 shadow Exp $");
 
 #define __NO_VERSION__		/* don't define kernel_version in module.h */
 #include <linux/module.h> /* early to avoid printf->printk mapping */
@@ -369,7 +369,7 @@ afs_statfs(struct super_block *sbp, struct statfs *__statp, int size)
 #endif
 {
 #if !defined(AFS_LINUX24_ENV)
-    struct statfs stat;
+    struct statfs stat, *statp;
 
     if (size < sizeof(struct statfs))
 	return;

@@ -636,6 +636,7 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
   SOCKADDR_IN sockAddr;
   PDNS_HDR  pDNShdr;
   char buffer[BUFSIZE];
+  char query[1024];
   int rc;
 
 #ifdef DEBUG
@@ -671,6 +672,13 @@ int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOS
   __djgpp_set_socket_blocking_mode(commSock, 0);
   bind(commSock,0,sizeof( SOCKADDR_IN ) );
 #endif /* DJGPP */
+
+  strncpy(query, cellName, 1024);
+  query[1023] = 0;
+  if (query[strlen(query)-1] != '.') {
+    strncat(query,".",1024);
+    query[1023] = 0;
+  }
 
   rc = send_DNS_AFSDB_Query(cellName,commSock,sockAddr, buffer);
   if (rc < 0) {

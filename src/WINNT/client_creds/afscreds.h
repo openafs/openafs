@@ -24,6 +24,7 @@
 #include <time.h>
 #include <shellapi.h>
 #include <WINNT/al_wizard.h>
+#include <WINNT\afsreg.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -52,11 +53,6 @@ extern "C" {
  * REG PATHS __________________________________________________________________
  *
  */
-
-#define REGSTR_PATH_AFS      TEXT("Software\\TransarcCorporation\\AFS Client\\CurrentVersion")
-#define REGSTR_PATH_AFSCREDS TEXT("Software\\TransarcCorporation\\AFS Client\\AfsCreds")
-#define REGSTR_PATH_OPENAFS_CLIENT  TEXT("SOFTWARE\\OpenAFS\\Client")
-#define REGSTR_PATH_OPENAFS_CLIENT_REMIND  TEXT("SOFTWARE\\OpenAFS\\Client\\Reminders")
 
 #define REGVAL_AFS_TITLE     TEXT("Title")
 #define REGVAL_AFS_VERSION   TEXT("VersionString")

@@ -113,7 +113,7 @@ void Shortcut_FixStartup (LPCTSTR pszLinkName, BOOL fAutoStart)
        DWORD code, len, type; 
        TCHAR szParams[ 64 ] = TEXT(AFSCREDS_SHORTCUT_OPTIONS);
 
-       code = RegOpenKeyEx(HKEY_CURRENT_USER, REGSTR_PATH_OPENAFS_CLIENT,
+       code = RegOpenKeyEx(HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY,
                             0, KEY_QUERY_VALUE, &hk);
        if (code == ERROR_SUCCESS) {
            len = sizeof(szParams);
@@ -123,7 +123,7 @@ void Shortcut_FixStartup (LPCTSTR pszLinkName, BOOL fAutoStart)
            RegCloseKey (hk);
        }
        if (code != ERROR_SUCCESS) {
-           code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, REGSTR_PATH_OPENAFS_CLIENT,
+           code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
                                 0, KEY_QUERY_VALUE, &hk);
            if (code == ERROR_SUCCESS) {
                len = sizeof(szParams);

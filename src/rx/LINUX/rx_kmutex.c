@@ -17,13 +17,13 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/LINUX/rx_kmutex.c,v 1.7 2003/07/15 23:16:22 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/LINUX/rx_kmutex.c,v 1.7.2.1 2005/03/20 20:13:45 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 #include "rx_kmutex.h"
 #include "rx/rx_kernel.h"
 
-#ifdef CONFIG_SMP
+#if defined(CONFIG_SMP) || defined(CONFIG_PREEMPT)
 
 void
 afs_mutex_init(afs_kmutex_t * l)

@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42.2.7 2005/02/21 01:15:21 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42.2.9 2005/03/20 20:09:13 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -3008,7 +3008,7 @@ afs_InitCacheFile(char *afile, ino_t ainode)
     ObtainWriteLock(&tdc->lock, 621);
     MObtainWriteLock(&afs_xdcache, 622);
     if (afile) {
-	code = gop_lookupname(afile, AFS_UIOSYS, 0, NULL, &filevp);
+	code = gop_lookupname(afile, AFS_UIOSYS, 0, &filevp);
 	if (code) {
 	    ReleaseWriteLock(&afs_xdcache);
 	    ReleaseWriteLock(&tdc->lock);
@@ -3227,8 +3227,14 @@ afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
     afs_freeDSList = &tdp[0];
     for (i = 0; i < aDentries - 1; i++) {
 	tdp[i].lruq.next = (struct afs_q *)(&tdp[i + 1]);
+        RWLOCK_INIT(&tdp[i].lock, "dcache lock");
+        RWLOCK_INIT(&tdp[i].tlock, "dcache tlock");
+        RWLOCK_INIT(&tdp[i].mflock, "dcache flock");
     }
     tdp[aDentries - 1].lruq.next = (struct afs_q *)0;
+    RWLOCK_INIT(&tdp[aDentries - 1].lock, "dcache lock");
+    RWLOCK_INIT(&tdp[aDentries - 1].tlock, "dcache tlock");
+    RWLOCK_INIT(&tdp[aDentries - 1].mflock, "dcache flock");
 
     afs_stats_cmperf.cacheBlocksOrig = afs_stats_cmperf.cacheBlocksTotal =
 	afs_cacheBlocks = ablocks;

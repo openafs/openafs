@@ -23,6 +23,7 @@
 #endif /* !DJGPP */
 #include <stdio.h>
 #include <assert.h>
+#include <WINNT\afsreg.h>
 
 #define AFS_DAEMON_EVENT_NAME "TransarcAFSDaemon"
 
@@ -93,9 +94,9 @@ osi_log_t *osi_LogCreate(char *namep, long size)
         logp->datap = malloc(size * sizeof(osi_logEntry_t));
 
 	/* init strings array */
-	logp->maxstringindex = size/10;
+	logp->maxstringindex = size/5;
 	logp->stringindex = 0;
-	logp->stringsp = malloc((size/10) * OSI_LOG_STRINGSIZE);
+	logp->stringsp = malloc((size/5) * OSI_LOG_STRINGSIZE);
  
         /* and sync */
         thrd_InitCrit(&logp->cs);
@@ -341,7 +342,6 @@ void osi_LogDisable(osi_log_t *logp)
 		logp->enabled = 0;
 }
 
-#define REG_CLIENT_PARMS_KEY  "SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"
 #define TRACE_OPTION_EVENT 2
 #define ISCLIENTTRACE(v) ( ((v) & TRACE_OPTION_EVENT)==TRACE_OPTION_EVENT)
 
@@ -351,7 +351,7 @@ void osi_InitTraceOption()
 {
 	DWORD LSPtype, LSPsize;
 	HKEY NPKey;
-	(void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_CLIENT_PARMS_KEY,
+	(void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
 		    0, KEY_QUERY_VALUE, &NPKey);
 	LSPsize=sizeof(osi_TraceOption);
 	RegQueryValueEx(NPKey, "TraceOption", NULL,

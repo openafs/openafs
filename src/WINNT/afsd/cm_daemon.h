@@ -15,6 +15,8 @@ extern long cm_daemonCheckInterval;
 
 extern osi_rwlock_t cm_daemonLock;
 
+void cm_DaemonShutdown(void);
+
 void cm_InitDaemon(int nDaemons);
 
 typedef void (cm_bkgProc_t)(cm_scache_t *scp, long p1, long p2, long p3,

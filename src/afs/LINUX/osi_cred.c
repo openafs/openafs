@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_cred.c,v 1.10 2004/04/21 02:20:23 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_cred.c,v 1.10.2.1 2005/03/20 20:19:20 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -54,11 +54,11 @@ crget(void)
 	    osi_Panic("crget: No more memory for creds!\n");
 
 	for (i = 0; i < CRED_ALLOC_STEP - 1; i++)
-	    cred_pool[i].cr_ref = (long)&cred_pool[i + 1];
-	cred_pool[i].cr_ref = 0;
+	    cred_pool[i].cr_next = (cred_t *) &cred_pool[i + 1];
+	cred_pool[i].cr_next = NULL;
     }
     tmp = cred_pool;
-    cred_pool = (cred_t *) tmp->cr_ref;
+    cred_pool = (cred_t *) tmp->cr_next;
     ncreds_inuse++;
     CRED_UNLOCK();
 
@@ -74,15 +74,15 @@ void
 crfree(cred_t * cr)
 {
     if (cr->cr_ref > 1) {
-#if defined(AFS_LINUX26_ENV)
-	put_group_info(cr->cr_group_info);
-#endif
 	cr->cr_ref--;
 	return;
     }
 
+#if defined(AFS_LINUX26_ENV)
+    put_group_info(cr->cr_group_info);
+#endif
     CRED_LOCK();
-    cr->cr_ref = (long)cred_pool;
+    cr->cr_next = (cred_t *) cred_pool;
     cred_pool = cr;
     CRED_UNLOCK();
     ncreds_inuse--;

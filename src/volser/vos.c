@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/vos.c,v 1.40.2.2 2004/11/09 17:13:45 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/vos.c,v 1.40.2.7 2005/03/21 02:56:40 jaltman Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -795,6 +795,210 @@ XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 }				/*XDisplayFormat */
 
 #ifdef FULL_LISTVOL_SWITCH
+/*------------------------------------------------------------------------
+ * PRIVATE XDisplayFormat2
+ *
+ * Description:
+ *	Display the formated contents of one extended volume info structure.
+ *
+ * Arguments:
+ *	a_xInfoP	: Ptr to extended volume info struct to print.
+ *	a_servID	: Server ID to print.
+ *	a_partID        : Partition ID to print.
+ *	a_totalOKP	: Ptr to total-OK counter.
+ *	a_totalNotOKP	: Ptr to total-screwed counter.
+ *	a_totalBusyP	: Ptr to total-busy counter.
+ *	a_fast		: Fast listing?
+ *	a_int32		: Int32 listing?
+ *	a_showProblems	: Show volume problems?
+ *
+ * Returns:
+ *	Nothing.
+ *
+ * Environment:
+ *	Nothing interesting.
+ *
+ * Side Effects:
+ *	As advertised.
+ *------------------------------------------------------------------------*/
+
+static void
+XDisplayFormat2(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
+	       a_totalBusyP, a_fast, a_int32, a_showProblems)
+     volintXInfo *a_xInfoP;
+     afs_int32 a_servID;
+     afs_int32 a_partID;
+     int *a_totalOKP;
+     int *a_totalNotOKP;
+     int *a_totalBusyP;
+     int a_fast;
+     int a_int32;
+     int a_showProblems;
+
+{				/*XDisplayFormat */
+
+    char pname[10];
+
+    if (a_fast) {
+	/*
+	 * Short & sweet.
+	 */
+	fprintf(STDOUT, "vold_id\t%-10lu\n", (unsigned long)a_xInfoP->volid);
+    } else if (a_int32) {
+	/*
+	 * Fully-detailed listing.
+	 */
+	if (a_xInfoP->status == VOK) {
+	    /*
+	     * Volume's status is OK - all the fields are valid.
+	     */
+
+                static long server_cache = -1, partition_cache = -1;
+                static char hostname[256], address[32], pname[16];
+                int i,ai[] = {VOLINT_STATS_TIME_IDX_0,VOLINT_STATS_TIME_IDX_1,VOLINT_STATS_TIME_IDX_2,
+                              VOLINT_STATS_TIME_IDX_3,VOLINT_STATS_TIME_IDX_4,VOLINT_STATS_TIME_IDX_5};
+
+		if (a_servID != server_cache) {
+			struct in_addr s;
+
+			s.s_addr = a_servID;
+			strcpy(hostname, hostutil_GetNameByINet(a_servID));
+			strcpy(address, inet_ntoa(s));
+			server_cache = a_servID;
+		}
+		if (a_partID != partition_cache) {
+			MapPartIdIntoName(a_partID, pname);
+			partition_cache = a_partID;
+		} else {
+			pname[0] = '\0';
+		}
+		fprintf(STDOUT, "name\t\t%s\n", a_xInfoP->name);
+		fprintf(STDOUT, "id\t\t%lu\n", a_xInfoP->volid);
+		fprintf(STDOUT, "serv\t\t%s\t%s\n", address, hostname);
+		fprintf(STDOUT, "part\t\t%s\n", pname);
+		switch (a_xInfoP->status) {
+		case VOK:
+			fprintf(STDOUT, "status\t\tOK\n");
+			break;
+		case VBUSY:
+			fprintf(STDOUT, "status\t\tBUSY\n");
+			return;
+		default:
+			fprintf(STDOUT, "status\t\tUNATTACHABLE\n");
+			return;
+		}
+		fprintf(STDOUT, "backupID\t%lu\n", a_xInfoP->backupID);
+		fprintf(STDOUT, "parentID\t%lu\n", a_xInfoP->parentID);
+		fprintf(STDOUT, "cloneID\t\t%lu\n", a_xInfoP->cloneID);
+		fprintf(STDOUT, "inUse\t\t%s\n", a_xInfoP->inUse ? "Y" : "N");
+		switch (a_xInfoP->type) {
+		case 0:
+			fprintf(STDOUT, "type\t\tRW\n");
+			break;
+		case 1:
+			fprintf(STDOUT, "type\t\tRO\n");
+			break;
+		case 2:
+			fprintf(STDOUT, "type\t\tBK\n");
+			break;
+		default:
+			fprintf(STDOUT, "type\t\t?\n");
+			break;
+		}
+		fprintf(STDOUT, "creationDate\t%-9lu\t%s", a_xInfoP->creationDate,
+			ctime(&a_xInfoP->creationDate));
+		fprintf(STDOUT, "accessDate\t%-9lu\t%s", a_xInfoP->accessDate,
+			ctime(&a_xInfoP->accessDate));
+		fprintf(STDOUT, "updateDate\t%-9lu\t%s", a_xInfoP->updateDate,
+			ctime(&a_xInfoP->updateDate));
+		fprintf(STDOUT, "backupDate\t%-9lu\t%s", a_xInfoP->backupDate,
+			ctime(&a_xInfoP->backupDate));
+		fprintf(STDOUT, "copyDate\t%-9lu\t%s", a_xInfoP->copyDate,
+			ctime(&a_xInfoP->copyDate));
+		
+		fprintf(STDOUT, "diskused\t%u\n", a_xInfoP->size);
+		fprintf(STDOUT, "maxquota\t%u\n", a_xInfoP->maxquota);
+
+		fprintf(STDOUT, "filecount\t%u\n", a_xInfoP->filecount);
+		fprintf(STDOUT, "dayUse\t\t%u\n", a_xInfoP->dayUse);
+
+
+
+		fprintf(STDOUT,"reads_same_net\t%8d\n",a_xInfoP->stat_reads[VOLINT_STATS_SAME_NET]);
+		fprintf(STDOUT,"reads_same_net_auth\t%8d\n",a_xInfoP->stat_reads[VOLINT_STATS_SAME_NET_AUTH]);
+		fprintf(STDOUT,"reads_diff_net\t%8d\n",a_xInfoP->stat_reads[VOLINT_STATS_DIFF_NET]);
+		fprintf(STDOUT,"reads_diff_net_auth\t%8d\n",a_xInfoP->stat_reads[VOLINT_STATS_DIFF_NET_AUTH]);
+
+		fprintf(STDOUT,"writes_same_net\t%8d\n",a_xInfoP->stat_writes[VOLINT_STATS_SAME_NET]);
+		fprintf(STDOUT,"writes_same_net_auth\t%8d\n",a_xInfoP->stat_writes[VOLINT_STATS_SAME_NET_AUTH]);
+		fprintf(STDOUT,"writes_diff_net\t%8d\n",a_xInfoP->stat_writes[VOLINT_STATS_DIFF_NET]);
+		fprintf(STDOUT,"writes_diff_net_auth\t%8d\n",a_xInfoP->stat_writes[VOLINT_STATS_DIFF_NET_AUTH]);
+
+		for(i=0;i<5;i++)
+		{
+			fprintf(STDOUT,"file_same_author_idx_%d\t%8d\n",i+1,a_xInfoP->stat_fileSameAuthor[ai[i]]);
+			fprintf(STDOUT,"file_diff_author_idx_%d\t%8d\n",i+1,a_xInfoP->stat_fileDiffAuthor[ai[i]]);
+			fprintf(STDOUT,"dir_same_author_idx_%d\t%8d\n",i+1,a_xInfoP->stat_dirSameAuthor[ai[i]]);
+			fprintf(STDOUT,"dir_dif_author_idx_%d\t%8d\n",i+1,a_xInfoP->stat_dirDiffAuthor[ai[i]]);
+		}
+
+	} /*Volume status OK */
+	else if (a_xInfoP->status == VBUSY) {
+	    (*a_totalBusyP)++;
+	    qPut(&busyHead, a_xInfoP->volid);
+	    if (a_showProblems)
+		fprintf(STDOUT, "BUSY_VOL\t%lu\n",
+			(unsigned long)a_xInfoP->volid);
+	} /*Busy volume */
+	else {
+	    (*a_totalNotOKP)++;
+	    qPut(&notokHead, a_xInfoP->volid);
+	    if (a_showProblems)
+		fprintf(STDOUT, "COULD_NOT_ATTACH\t%lu\n",
+			(unsigned long)a_xInfoP->volid);
+	}			/*Screwed volume */
+    } /*Long listing */
+    else {
+	/*
+	 * Default listing.
+	 */
+	if (a_xInfoP->status == VOK) {
+	    fprintf(STDOUT, "name\t%-32s\n", a_xInfoP->name);
+	    fprintf(STDOUT, "volID\t%10lu\n", (unsigned long)a_xInfoP->volid);
+	    if (a_xInfoP->type == 0)
+		fprintf(STDOUT, "type\tRW\n");
+	    if (a_xInfoP->type == 1)
+		fprintf(STDOUT, "type\tRO\n");
+	    if (a_xInfoP->type == 2)
+		fprintf(STDOUT, "type\tBK\n");
+	    fprintf(STDOUT, "size\t%10dK\n", a_xInfoP->size);
+
+	    fprintf(STDOUT, "inUse\t%d\n",a_xInfoP->inUse);
+	    if (a_xInfoP->inUse == 1)
+	    	(*a_totalOKP)++;
+	    else
+		(*a_totalNotOKP)++;
+
+	} /*Volume OK */
+	else if (a_xInfoP->status == VBUSY) {
+	    (*a_totalBusyP)++;
+	    qPut(&busyHead, a_xInfoP->volid);
+	    if (a_showProblems)
+		fprintf(STDOUT, "VOLUME_BUSY\t%lu\n",
+			(unsigned long)a_xInfoP->volid);
+	} /*Busy volume */
+	else {
+	    (*a_totalNotOKP)++;
+	    qPut(&notokHead, a_xInfoP->volid);
+	    if (a_showProblems)
+		fprintf(STDOUT, "COULD_NOT_ATTACH_VOLUME\t%lu\n",
+			(unsigned long)a_xInfoP->volid);
+	}			/*Screwed volume */
+    }				/*Default listing */
+}				/*XDisplayFormat */
+#endif /*FULL_LISTVOL_SWITCH*/
+
+#ifdef FULL_LISTVOL_SWITCH
 static void
 DisplayFormat2(server, partition, pntr)
      long server, partition;
@@ -935,7 +1139,6 @@ DisplayVolumes(server, part, pntr, count, longlist, fast, quiet)
 	}
     }
 }
-
 /*------------------------------------------------------------------------
  * PRIVATE XDisplayVolumes
  *
@@ -1026,6 +1229,101 @@ XDisplayVolumes(a_servID, a_partID, a_xInfoP, a_count, a_int32, a_fast,
     }
 
 }				/*XDisplayVolumes */
+#ifdef FULL_LISTVOL_SWITCH
+/*------------------------------------------------------------------------
+ * PRIVATE XDisplayVolumes2
+ *
+ * Description:
+ *	Display extended formated volume information.
+ *
+ * Arguments:
+ *	a_servID : Pointer to the Rx call we're performing.
+ *	a_partID : Partition for which we want the extended list.
+ *	a_xInfoP : Ptr to extended volume info.
+ *	a_count  : Number of volume records contained above.
+ *	a_int32   : Int32 listing generated?
+ *	a_fast   : Fast listing generated?
+ *	a_quiet  : Quiet listing generated?
+ *
+ * Returns:
+ *	Nothing.
+ *
+ * Environment:
+ *	Nothing interesting.
+ *
+ * Side Effects:
+ *	As advertised.
+ *------------------------------------------------------------------------*/
+
+static void
+XDisplayVolumes2(a_servID, a_partID, a_xInfoP, a_count, a_int32, a_fast,
+		a_quiet)
+     afs_int32 a_servID;
+     afs_int32 a_partID;
+     volintXInfo *a_xInfoP;
+     afs_int32 a_count;
+     afs_int32 a_int32;
+     afs_int32 a_fast;
+     int a_quiet;
+
+{				/*XDisplayVolumes */
+
+    int totalOK;		/*Total OK volumes */
+    int totalNotOK;		/*Total screwed volumes */
+    int totalBusy;		/*Total busy volumes */
+    int i;			/*Loop variable */
+    afs_int32 volid;		/*Current volume ID */
+
+    /*
+     * Initialize counters and (global!!) queues.
+     */
+    totalOK = 0;
+    totalNotOK = 0;
+    totalBusy = 0;
+    qInit(&busyHead);
+    qInit(&notokHead);
+
+    /*
+     * Display each volume in the list.
+     */
+    for (i = 0; i < a_count; i++) {
+	fprintf(STDOUT, "BEGIN_OF_ENTRY\n");
+	XDisplayFormat2(a_xInfoP, a_servID, a_partID, &totalOK, &totalNotOK,
+		       &totalBusy, a_fast, a_int32, 0);
+	fprintf(STDOUT, "END_OF_ENTRY\n");
+	a_xInfoP++;
+    }
+
+    /*
+     * If any volumes were found to be busy or screwed, display them.
+     */
+    if (totalBusy) {
+	while (busyHead.count) {
+	    qGet(&busyHead, &volid);
+	    fprintf(STDOUT, "BUSY_VOL\t%lu\n",
+		    (unsigned long)volid);
+	}
+    }
+    if (totalNotOK) {
+	while (notokHead.count) {
+	    qGet(&notokHead, &volid);
+	    fprintf(STDOUT, "COULD_NOT_ATTACH\t%lu\n",
+		    (unsigned long)volid);
+	}
+    }
+
+    if (!a_quiet) {
+	fprintf(STDOUT, "\n");
+	if (!a_fast) {
+	    fprintf(STDOUT,
+		    "VOLUMES_ONLINE\t%d\nVOLUMES_OFFLINE\t%d\nVOLUMES_BUSY\t%d\n",
+		    totalOK, totalNotOK, totalBusy);
+	}
+    }
+
+}				/*XDisplayVolumes2 */
+#endif /* FULL_LISTVOL_SWITCH */
+
 
 /* set <server> and <part> to the correct values depending on 
  * <voltype> and <entry> */
@@ -3330,6 +3628,12 @@ ListVolumes(as)
 			as->parms[0].items->data, pname,
 			(unsigned long)count);
 	    if (wantExtendedInfo) {
+#ifdef FULL_LISTVOL_SWITCH
+		if (as->parms[6].items)
+		    XDisplayVolumes2(aserver, dummyPartList.partId[i], origxInfoP,
+				count, int32list, fast, quiet);
+		else
+#endif /* FULL_LISTVOL_SWITCH */
 		XDisplayVolumes(aserver, dummyPartList.partId[i], origxInfoP,
 				count, int32list, fast, quiet);
 		if (xInfoP)
@@ -4651,6 +4955,8 @@ PartitionInfo(as)
     struct diskPartition partition;
     struct partList dummyPartList;
     int i, cnt;
+    int printSummary=0, sumPartitions=0;
+    long long sumFree=0, sumStorage=0;
 
     apart = -1;
     aserver = GetServer(as->parms[0].items->data);
@@ -4669,6 +4975,9 @@ PartitionInfo(as)
 	dummyPartList.partId[0] = apart;
 	dummyPartList.partFlags[0] = PARTVALID;
 	cnt = 1;
+    }
+    if (as->parms[2].items) {
+        printSummary = 1;
     }
     if (apart != -1) {
 	if (!IsPartValid(apart, aserver, &code)) {	/*check for validity of the partition */
@@ -4700,7 +5009,15 @@ PartitionInfo(as)
 	    fprintf(STDOUT,
 		    "Free space on partition %s: %d K blocks out of total %d\n",
 		    pname, partition.free, partition.minFree);
+	    sumPartitions++;
+	    sumFree += partition.free;
+	    sumStorage += partition.minFree;
 	}
+    }
+    if (printSummary) {
+        fprintf(STDOUT,
+		"Summary: %lld K blocks free out of %lld K blocks on %d partitions\n",
+		sumFree, sumStorage, sumPartitions);
     }
     return 0;
 }
@@ -4875,7 +5192,11 @@ ListAddrs(as)
     memset(&askuuid, 0, sizeof(afsUUID));
     if (as->parms[0].items) {
 	/* -uuid */
-	afsUUID_from_string(as->parms[0].items->data, &askuuid);
+        if (afsUUID_from_string(as->parms[0].items->data, &askuuid) < 0) {
+	    fprintf(STDERR, "vos: invalid UUID '%s'\n", 
+		    as->parms[0].items->data);
+	    exit(-1);
+	}
 	m_attrs.Mask = VLADDR_UUID;
 	m_attrs.uuid = askuuid;
     }
@@ -4885,7 +5206,7 @@ ListAddrs(as)
 	afs_int32 saddr;
 	he = hostutil_GetHostByName((char *)as->parms[1].items->data);
 	if (he == NULL) {
-	    fprintf(stderr, "Can't get host info for '%s'\n",
+	    fprintf(STDERR, "vos: Can't get host info for '%s'\n",
 		    as->parms[1].items->data);
 	    exit(-1);
 	}
@@ -4922,10 +5243,21 @@ ListAddrs(as)
 	vcode =
 	    ubik_Call_New(VL_GetAddrsU, cstruct, 0, &m_attrs, &m_uuid,
 			  &vlcb, &m_nentries, &m_addrs);
+
 	if (vcode == VL_NOENT) {
-	    i++;
-	    nentries++;
-	    continue;
+  	    if (m_attrs.Mask == VLADDR_UUID) {
+	        fprintf(STDERR, "vos: no entry for UUID '%s' found in VLDB\n",
+			as->parms[0].items->data);
+		exit(-1);
+	    } else if (m_attrs.Mask == VLADDR_IPADDR) {
+	        fprintf(STDERR, "vos: no entry for host '%s' [0x%08x] found in VLDB\n",
+			as->parms[1].items->data, m_attrs.ipaddr);
+		exit(-1);
+	    } else {
+	        i++;
+		nentries++;
+		continue;
+	    }
 	}
 
 	if (vcode == VL_INDEXERANGE) {
@@ -5598,6 +5930,8 @@ main(argc, argv)
 			  "list partition information");
     cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
     cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL, "partition name");
+    cmd_AddParm(ts, "-summary", CMD_FLAG, CMD_OPTIONAL,
+		"print storage summary");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("unlockvldb", UnlockVLDB, 0,

@@ -222,3 +222,6 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
 #include "redhat-fix.h"
 #endif
+
+/* include all of the vos listvol options */
+#define FULL_LISTVOL_SWITCH 1

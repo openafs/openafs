@@ -13,18 +13,20 @@
 #define         NCSIZE 			512
 #define         NHSIZE 			256 /* must be power of 2 == CM_DIR_NHASHENT */
 
+#define         CM_DNLC_MAGIC           ('D' | 'N' <<8 | 'L'<<16 | 'C'<<24)
 
-struct nc {
-  unsigned int key;
-  struct nc *next, *prev;
-  cm_scache_t *dirp, *vp;
-  unsigned char name[CM_AFSNCNAMESIZE];   
-};
+typedef struct nc {
+    afs_uint32 magic;
+    unsigned int key;
+    struct nc *next, *prev;
+    cm_scache_t *dirp, *vp;
+    unsigned char name[CM_AFSNCNAMESIZE];   
+} cm_nc_t;
 
 typedef struct {
-  unsigned int enters, lookups, misses, removes;
-  unsigned int purgeds, purgevs, purgevols, purges;
-  unsigned int cycles, lookuprace;
+    unsigned int enters, lookups, misses, removes;
+    unsigned int purgeds, purgevs, purgevols, purges;
+    unsigned int cycles, lookuprace;
 } cm_dnlcstats_t;
 
 #define dnlcHash(ts, hval) for (hval=0; *ts; ts++) {    \
@@ -37,6 +39,7 @@ extern void cm_dnlcPurgedp(cm_scache_t *adp);
 extern void cm_dnlcPurgevp(cm_scache_t *avc);
 extern void cm_dnlcPurge(void);
 extern void cm_dnlcPurgeVol(struct AFSFid *fidp);
-extern void cm_dnlcInit(void);
-extern void cm_dnlcShutdown(void);
+extern void cm_dnlcInit(int);
+extern long cm_dnlcShutdown(void);
 extern cm_scache_t* cm_dnlcLookup(cm_scache_t *adp, cm_lookupSearch_t* sp);
+extern long cm_dnlcValidate(void);

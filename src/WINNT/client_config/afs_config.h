@@ -31,6 +31,7 @@
 #include "resource.h"
 #include "config.h"
 #include "help.hid"
+#include <WINNT\afsreg.h>
 
 
 /*
@@ -82,9 +83,6 @@ typedef struct
    } GLOBALS;
 
 extern GLOBALS g;
-
-extern const TCHAR AFSDConfigKeyName[];
-extern const TCHAR AFSClientKeyName[];
 
 /*
  * MACROS _____________________________________________________________________

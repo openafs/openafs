@@ -545,7 +545,7 @@ extern void afs_osi_SetTime(osi_timeval_t * atv);
 #ifdef AFS_LINUX20_ENV
 #ifdef AFS_LINUX24_ENV
 extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
-			  vnode_t ** dirvpp, struct dentry **dpp);
+			  struct dentry **dpp);
 extern int osi_InitCacheInfo(char *aname);
 extern int osi_rdwr(int rw, struct osi_file *file, caddr_t addrp,
 		    size_t asize, size_t * resid);

@@ -32,15 +32,14 @@ SOFTWARE.
 #include <strsafe.h>
 
 
-#define REG_CLIENT_PARMS_KEY            "SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"
-#define REG_CLIENT_PROVIDER_KEY			"SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\NetworkProvider"
-#define REG_CLIENT_DOMAINS_SUBKEY		"Domain"
+#define REG_CLIENT_DOMAINS_SUBKEY	"Domain"
 #define REG_CLIENT_RETRY_INTERVAL_PARM  "LoginRetryInterval"
 #define REG_CLIENT_SLEEP_INTERVAL_PARM	"LoginSleepInterval"
 #define REG_CLIENT_FAIL_SILENTLY_PARM   "FailLoginsSilently"
 #define REG_CLIENT_TRACE_OPTION_PARM	"TraceOption"
 #define REG_CLIENT_LOGON_OPTION_PARM	"LogonOptions"
 #define REG_CLIENT_LOGON_SCRIPT_PARMW	L"LogonScript"
+#define REG_CLIENT_THESE_CELLS_PARM     "TheseCells"
 #define DEFAULT_RETRY_INTERVAL          60                        /* seconds*/
 #define DEFAULT_FAIL_SILENTLY           FALSE
 #define DEFAULT_SLEEP_INTERVAL          5                         /* seconds*/
@@ -64,11 +63,12 @@ extern DWORD TraceOption;
 typedef struct LogonOptions_type {
 	DWORD	LogonOption;
 	BOOLEAN	failSilently;
-	int		retryInterval;
-	int		sleepInterval;
+	int	retryInterval;
+	int	sleepInterval;
 	char *	smbName;
 	LPWSTR	logonScript;
 	DWORD	flags; /* LOGON_FLAG_* */
+        char *  theseCells;
 } LogonOptions_t;
 
 /* */

@@ -128,7 +128,8 @@
 #define SYS_NAME_ID_ncrx86_30		1301
 
 #define SYS_NAME_ID_i386_nt35		1400
-#define SYS_NAME_ID_i386_win95	1401
+#define SYS_NAME_ID_i386_win95	        1401
+#define SYS_NAME_ID_i386_w2k            1402
 
 #define SYS_NAME_ID_i386_linux2		1500
 #define SYS_NAME_ID_i386_linux22	1501
@@ -224,6 +225,10 @@
 #define SYS_NAME_ID_ppc64_linux26	2903
 
 #define SYS_NAME_ID_amd64_fbsd_53        3008
+
+#define SYS_NAME_ID_amd64_w2k           3100
+
+#define SYS_NAME_ID_i64_w2k             3200
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 

@@ -26,6 +26,7 @@
 
 #include "afsd.h"
 #include "afsd_init.h"
+#include <WINNT\afsreg.h>
 
 #include "smb.h"
 #include "cm_server.h"
@@ -71,11 +72,12 @@ long cm_FlushFile(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp)
     lock_ObtainMutex(&scp->mx);
     scp->cbServerp = NULL;
     scp->cbExpires = 0;
+    cm_dnlcPurgedp(scp);
+    cm_dnlcPurgevp(scp);
+    cm_FreeAllACLEnts(scp);
     lock_ReleaseMutex(&scp->mx);
 
     lock_ReleaseWrite(&scp->bufCreateLock);
-    cm_dnlcPurgedp(scp);
-
     return code;
 }
 
@@ -89,8 +91,8 @@ void cm_ResetACLCache(cm_user_t *userp)
     int hash;
 
     lock_ObtainWrite(&cm_scacheLock);
-    for (hash=0; hash < cm_hashTableSize; hash++) {
-        for (scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
+    for (hash=0; hash < cm_data.hashTableSize; hash++) {
+        for (scp=cm_data.hashTablep[hash]; scp; scp=scp->nextp) {
             cm_HoldSCacheNoLock(scp);
             lock_ReleaseWrite(&cm_scacheLock);
             lock_ObtainMutex(&scp->mx);
@@ -179,7 +181,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
         shareFound = smb_FindShare(ioctlp->fidp->vcp, ioctlp->uidp, shareName, &sharePath);
         if ( shareFound ) {
             /* we found a sharename, therefore use the resulting path */
-            code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+            code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->data,
                              CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                              userp, sharePath, reqp, &substRootp);
             free(sharePath);
@@ -208,7 +210,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             shareName[i] = 0;       /* terminate string */
 
 
-            code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+            code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->data,
                              CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                              userp, shareName, reqp, &substRootp);
             if (code) 
@@ -220,7 +222,7 @@ long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
                 return code;
         }
     } else {
-        code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+        code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->data,
                          CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                          userp, ioctlp->tidPathp, reqp, &substRootp);
         if (code) 
@@ -347,7 +349,7 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
         shareFound = smb_FindShare(ioctlp->fidp->vcp, ioctlp->uidp, shareName, &sharePath);
         if ( shareFound ) {
             /* we found a sharename, therefore use the resulting path */
-            code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+            code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->data,
                              CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                              userp, sharePath, reqp, &substRootp);
             free(sharePath);
@@ -373,7 +375,7 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             shareName[i++] = '/';	/* add trailing slash */
             shareName[i] = 0;       /* terminate string */
 
-            code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+            code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->data,
                              CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                              userp, shareName, reqp, &substRootp);
             if (code) return code;
@@ -383,7 +385,7 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
             if (code) return code;
         }
     } else {
-        code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+        code = cm_NameI(cm_data.rootSCachep, ioctlp->prefix->data,
                         CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
                         userp, ioctlp->tidPathp, reqp, &substRootp);
         if (code) return code;
@@ -472,7 +474,7 @@ long cm_IoctlGetFileCellName(struct smb_ioctl *ioctlp, struct cm_user *userp)
     {
         cellp = cm_FindCellByID(scp->fid.cell);
         if (cellp) {
-            StringCbCopyA(ioctlp->outDatap, 999999, cellp->namep);
+            StringCbCopyA(ioctlp->outDatap, 999999, cellp->name);
             ioctlp->outDatap += strlen(ioctlp->outDatap) + 1;
             code = 0;
         }
@@ -545,8 +547,8 @@ long cm_IoctlFlushVolume(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_ReleaseSCache(scp);
 
     lock_ObtainWrite(&cm_scacheLock);
-    for (i=0; i<cm_hashTableSize; i++) {
-        for (scp = cm_hashTablep[i]; scp; scp = scp->nextp) {
+    for (i=0; i<cm_data.hashTableSize; i++) {
+        for (scp = cm_data.hashTablep[i]; scp; scp = scp->nextp) {
             if (scp->fid.volume == volume) {
                 cm_HoldSCacheNoLock(scp);
                 lock_ReleaseWrite(&cm_scacheLock);
@@ -974,10 +976,10 @@ long cm_IoctlSetCacheSize(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
     memcpy(&temp, ioctlp->inDatap, sizeof(temp));
     if (temp == 0) 
-        temp = buf_nOrigBuffers;
+        temp = cm_data.buf_nOrigBuffers;
     else {
         /* temp is in 1K units, convert to # of buffers */
-        temp = temp / (buf_bufferSize / 1024);
+        temp = temp / (cm_data.buf_blockSize / 1024);
     }       
 
     /* now adjust the cache size */
@@ -1031,12 +1033,12 @@ long cm_IoctlGetCacheParms(struct smb_ioctl *ioctlp, struct cm_user *userp)
     memset(&parms, 0, sizeof(parms));
 
     /* first we get, in 1K units, the cache size */
-    parms.parms[0] = buf_nbuffers * (buf_bufferSize / 1024);
+    parms.parms[0] = cm_data.buf_nbuffers * (cm_data.buf_blockSize / 1024);
 
     /* and then the actual # of buffers in use (not in the free list, I guess,
      * will be what we do).
      */
-    parms.parms[1] = (buf_nbuffers - buf_CountFreeList()) * (buf_bufferSize / 1024);
+    parms.parms[1] = (cm_data.buf_nbuffers - buf_CountFreeList()) * (cm_data.buf_blockSize / 1024);
 
     memcpy(ioctlp->outDatap, &parms, sizeof(parms));
     ioctlp->outDatap += sizeof(parms);
@@ -1069,7 +1071,7 @@ long cm_IoctlGetCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
     }
 
     lock_ObtainRead(&cm_cellLock);
-    for (tcellp = cm_allCellsp; tcellp; tcellp = tcellp->nextp) {
+    for (tcellp = cm_data.allCellsp; tcellp; tcellp = tcellp->nextp) {
         if (whichCell == 0) break;
         whichCell--;
     }
@@ -1097,8 +1099,8 @@ long cm_IoctlGetCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
         }
         lock_ReleaseRead(&cm_serverLock);
         cp = basep + max * sizeof(afs_int32);
-        StringCbCopyA(cp, 999999, tcellp->namep);
-        cp += strlen(tcellp->namep)+1;
+        StringCbCopyA(cp, 999999, tcellp->name);
+        cp += strlen(tcellp->name)+1;
         ioctlp->outDatap = cp;
     }
 
@@ -1126,18 +1128,18 @@ long cm_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_SkipIoctlPath(ioctlp);
     lock_ObtainWrite(&cm_cellLock);
   
-    for (cp = cm_allCellsp; cp; cp=cp->nextp) 
+    for (cp = cm_data.allCellsp; cp; cp=cp->nextp) 
     {
         long code;
         /* delete all previous server lists - cm_FreeServerList will ask for write on cm_ServerLock*/
         cm_FreeServerList(&cp->vlServersp);
         cp->vlServersp = NULL;
-        code = cm_SearchCellFile(cp->namep, cp->namep, cm_AddCellProc, cp);
+        code = cm_SearchCellFile(cp->name, cp->name, cm_AddCellProc, cp);
 #ifdef AFS_AFSDB_ENV
         if (code) {
             if (cm_dnsEnabled) {
                 int ttl;
-                code = cm_SearchCellByDNS(cp->namep, cp->namep, &ttl, cm_AddCellProc, cp);
+                code = cm_SearchCellByDNS(cp->name, cp->name, &ttl, cm_AddCellProc, cp);
                 if ( code == 0 ) { /* got cell from DNS */
                     cp->flags |= CM_CELLFLAG_DNS;
                     cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
@@ -1169,9 +1171,9 @@ long cm_IoctlGetWsCell(smb_ioctl_t *ioctlp, cm_user_t *userp)
 	if (cm_freelanceEnabled) {
 	    StringCbCopyA(ioctlp->outDatap, 999999, "Freelance.Local.Root");
 		ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
-	} else if (cm_rootCellp) {
+	} else if (cm_data.rootCellp) {
 	    /* return the default cellname to the caller */
-	    StringCbCopyA(ioctlp->outDatap, 999999, cm_rootCellp->namep);
+	    StringCbCopyA(ioctlp->outDatap, 999999, cm_data.rootCellp->name);
 	    ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
 	} else {
 	    /* if we don't know our default cell, return failure */
@@ -1352,12 +1354,13 @@ long cm_IoctlSetSPrefs(struct smb_ioctl *ioctlp, struct cm_user *userp)
         {
             tsp->ipRank = rank; /* no need to protect by mutex*/
 
-            if ( type == CM_SERVER_FILE) /* fileserver */
-            {
+            if (type == CM_SERVER_FILE)
+            {   /* fileserver */
                 /* find volumes which might have RO copy 
                 /* on server and change the ordering of 
-                ** their RO list */
-                    cm_ChangeRankVolume(tsp);
+                 * their RO list 
+                 */
+                cm_ChangeRankVolume(tsp);
             }
             else 	
             {
@@ -1481,7 +1484,7 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
     }
 
 #ifdef AFS_FREELANCE_CLIENT
-    if (cm_freelanceEnabled && dscp == cm_rootSCachep) {
+    if (cm_freelanceEnabled && dscp == cm_data.rootSCachep) {
         /* we are adding the mount point to the root dir., so call
          * the freelance code to do the add. */
         osi_Log0(afsd_logp,"IoctlCreateMountPoint within Freelance root dir");
@@ -1530,7 +1533,7 @@ long cm_IoctlSymlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cp = ioctlp->inDatap;		/* contents of link */
 
 #ifdef AFS_FREELANCE_CLIENT
-    if (cm_freelanceEnabled && dscp == cm_rootSCachep) {
+    if (cm_freelanceEnabled && dscp == cm_data.rootSCachep) {
         /* we are adding the symlink to the root dir., so call
          * the freelance code to do the add. */
         if (cp[0] == cp[1] && cp[1] == '\\' && 
@@ -1588,7 +1591,9 @@ long cm_IoctlListlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (code) return code;
 
     /* Check that it's a real symlink */
-    if (scp->fileType != CM_SCACHETYPE_SYMLINK){
+    if (scp->fileType != CM_SCACHETYPE_SYMLINK &&
+        scp->fileType != CM_SCACHETYPE_DFSLINK &&
+        scp->fileType != CM_SCACHETYPE_INVALID) {
         cm_ReleaseSCache(scp);
         return CM_ERROR_INVAL;
     }
@@ -1609,7 +1614,19 @@ long cm_IoctlListlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
         if (newRootScp != NULL)
             cm_ReleaseSCache(newRootScp);
         code = 0;
-    }       
+    } else if (code == CM_ERROR_PATH_NOT_COVERED && 
+                scp->fileType == CM_SCACHETYPE_DFSLINK ||
+               code == CM_ERROR_NOSUCHPATH &&
+                scp->fileType == CM_SCACHETYPE_INVALID) {
+        cp = ioctlp->outDatap;
+        StringCbCopyA(cp, 999999, spacep->data);
+        cp += strlen(cp) + 1;
+        ioctlp->outDatap = cp;
+        cm_FreeSpace(spacep);
+        if (newRootScp != NULL)
+            cm_ReleaseSCache(newRootScp);
+        code = 0;
+    }
 
     return code;
 }
@@ -1635,7 +1652,9 @@ long cm_IoctlIslink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (code) return code;
 
     /* Check that it's a real symlink */
-    if (scp->fileType != CM_SCACHETYPE_SYMLINK)
+    if (scp->fileType != CM_SCACHETYPE_SYMLINK &&
+        scp->fileType != CM_SCACHETYPE_DFSLINK &&
+        scp->fileType != CM_SCACHETYPE_INVALID)
         code = CM_ERROR_INVAL;
     cm_ReleaseSCache(scp);
     return code;
@@ -1657,7 +1676,7 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cp = ioctlp->inDatap;
 
 #ifdef AFS_FREELANCE_CLIENT
-    if (cm_freelanceEnabled && dscp == cm_rootSCachep) {
+    if (cm_freelanceEnabled && dscp == cm_data.rootSCachep) {
         /* we are adding the mount point to the root dir., so call
          * the freelance code to do the add. */
         osi_Log0(afsd_logp,"IoctlDeletelink from Freelance root dir");
@@ -1683,7 +1702,9 @@ long cm_IoctlDeletelink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     }
 	
     /* now check that this is a real symlink */
-    if (scp->fileType != CM_SCACHETYPE_SYMLINK) {
+    if (scp->fileType != CM_SCACHETYPE_SYMLINK &&
+        scp->fileType != CM_SCACHETYPE_DFSLINK &&
+        scp->fileType != CM_SCACHETYPE_INVALID) {
         lock_ReleaseMutex(&scp->mx);
         cm_ReleaseSCache(scp);
         code = CM_ERROR_INVAL;
@@ -1785,7 +1806,7 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
             return CM_ERROR_INVAL;
 #endif /* !DJGPP */
     } else {
-        cellp = cm_rootCellp;
+        cellp = cm_data.rootCellp;
         osi_Log0(smb_logp,"cm_IoctlSetToken - no name specified");
     }
 
@@ -1904,7 +1925,7 @@ long cm_IoctlGetTokenIter(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cp += sizeof(temp);
 
     /* cell name */
-    StringCbCopyA(cp, 999999, ucellp->cellp->namep);
+    StringCbCopyA(cp, 999999, ucellp->cellp->name);
     cp += strlen(cp) + 1;
 
     /* user name */
@@ -1993,7 +2014,7 @@ long cm_IoctlGetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cp += sizeof(temp);
 
     /* cell name */
-    StringCbCopyA(cp, 999999, ucellp->cellp->namep);
+    StringCbCopyA(cp, 999999, ucellp->cellp->name);
     cp += strlen(cp) + 1;
 
     /* user name */
@@ -2098,7 +2119,7 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
      */
 
     RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
-                    "SOFTWARE\\OpenAFS\\Client\\Submounts",
+                    AFSREG_CLT_OPENAFS_SUBKEY "\\Submounts",
                     0, 
                     "AFS", 
                     REG_OPTION_NON_VOLATILE,
@@ -2286,9 +2307,9 @@ long cm_IoctlGetSMBName(smb_ioctl_t *ioctlp, cm_user_t *userp)
  * functions to dump contents of various structures. 
  * In debug build (linked with crt debug library) will dump allocated but not freed memory
  */
-extern int cm_DumpSCache(FILE *outputFile, char *cookie);
-extern int cm_DumpBufHashTable(FILE *outputFile, char *cookie);
-extern int smb_DumpVCP(FILE *outputFile, char *cookie);
+extern int cm_DumpSCache(FILE *outputFile, char *cookie, int lock);
+extern int cm_DumpBufHashTable(FILE *outputFile, char *cookie, int lock);
+extern int smb_DumpVCP(FILE *outputFile, char *cookie, int lock);
 
 long cm_IoctlMemoryDump(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
@@ -2346,9 +2367,9 @@ long cm_IoctlMemoryDump(struct smb_ioctl *ioctlp, struct cm_user *userp)
 #endif
   
     /* dump all interesting data */
-    cm_DumpSCache(hLogFile, cookie);
-    cm_DumpBufHashTable(hLogFile, cookie);
-    smb_DumpVCP(hLogFile, cookie);
+    cm_DumpSCache(hLogFile, cookie, 1);
+    cm_DumpBufHashTable(hLogFile, cookie, 1);
+    smb_DumpVCP(hLogFile, cookie, 1);
 
     CloseHandle(hLogFile);                          
   

@@ -46,6 +46,7 @@
 #define	AFSOP_SET_THISCELL	 35	/* set the primary cell */
 #define AFSOP_BASIC_INIT	 36	/* used to be part of START_AFS */
 #define AFSOP_SET_BACKUPTREE	 37	/* enable backup tree support */
+#define AFSOP_SET_RXPCK		 38	/*set rx_extraPackets*/
 
 /* The range 20-30 is reserved for AFS system offsets in the afs_syscall */
 #define	AFSCALL_PIOCTL		20
@@ -183,6 +184,7 @@ typedef struct cm_initparams_v1 {
 #define PROC_CELLSERVDB_NAME "CellServDB"
 #define VIOC_SYSCALL_TYPE 'C' 
 #define VIOC_SYSCALL _IOW(VIOC_SYSCALL_TYPE,1,void *)
+#define VIOC_SYSCALL32 _IOW(VIOC_SYSCALL_TYPE,1,int)
  
 struct afsprocdata {
   long param4;

@@ -3,7 +3,7 @@
  * Original NetBSD version for Transarc afs by John Kohl <jtk@MIT.EDU>
  * OpenBSD version by Jim Rees <rees@umich.edu>
  *
- * $Id: osi_vfsops.c,v 1.18.2.1 2004/12/07 06:19:16 shadow Exp $
+ * $Id: osi_vfsops.c,v 1.18.2.2 2005/03/11 06:50:43 shadow Exp $
  */
 
 /*
@@ -94,7 +94,7 @@ NONINFRINGEMENT.
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/OBSD/osi_vfsops.c,v 1.18.2.1 2004/12/07 06:19:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/OBSD/osi_vfsops.c,v 1.18.2.2 2005/03/11 06:50:43 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
@@ -151,27 +151,22 @@ struct vfsops afs_vfsops = {
 
 int
 afs_nbsd_lookupname(char *fnamep, enum uio_seg segflg, int followlink,
-		    struct vnode **dirvpp, struct vnode **compvpp)
+		    struct vnode **compvpp)
 {
     struct nameidata nd;
     int niflag;
     int error;
 
     /*
-     * Lookup pathname "fnamep", returning parent directory in
-     * *dirvpp (if non-null) and leaf in *compvpp.  segflg says whether the
-     * pathname is user or system space.
+     * Lookup pathname "fnamep", returning leaf in *compvpp.  segflg says
+     * whether the pathname is user or system space.
      */
     /* XXX LOCKLEAF ? */
     niflag = followlink ? FOLLOW : NOFOLLOW;
-    if (dirvpp)
-	niflag |= WANTPARENT;	/* XXX LOCKPARENT? */
     NDINIT(&nd, LOOKUP, niflag, segflg, fnamep, osi_curproc());
     if ((error = namei(&nd)))
 	return error;
     *compvpp = nd.ni_vp;
-    if (dirvpp)
-	*dirvpp = nd.ni_dvp;
     return error;
 }
 
@@ -462,7 +457,7 @@ afs_vfs_load(struct lkm_table *lkmtp, int cmd)
     if (memname[M_AFSBUFFER] == NULL)
 	memname[M_AFSBUFFER] = afsbfrmem;
     lkmid = lkmtp->id;
-    printf("OpenAFS ($Revision: 1.18.2.1 $) lkm loaded\n");
+    printf("OpenAFS ($Revision: 1.18.2.2 $) lkm loaded\n");
     return 0;
 }
 

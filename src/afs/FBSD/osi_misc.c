@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/FBSD/osi_misc.c,v 1.9 2004/03/10 23:01:51 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/FBSD/osi_misc.c,v 1.9.2.1 2005/03/11 06:50:37 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -32,7 +32,7 @@ RCSID
 
 int
 osi_lookupname(char *aname, enum uio_seg seg, int followlink,
-	       struct vnode **dirvpp, struct vnode **vpp)
+	       struct vnode **vpp)
 {
     struct nameidata n;
     int flags, error, wasowned;
@@ -49,7 +49,6 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 	flags |= FOLLOW;
     else
 	flags |= NOFOLLOW;
-    /*   if (dirvpp) flags|=WANTPARENT; *//* XXX LOCKPARENT? */
     NDINIT(&n, LOOKUP, flags, seg, aname, curproc);
     if ((error = namei(&n)) != 0) {
 #ifdef AFS_FBSD50_ENV
@@ -59,10 +58,6 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 	return error;
     }
     *vpp = n.ni_vp;
-/*
-   if (dirvpp)
-      *dirvpp = n.ni_dvp;
-*/
     /* should we do this? */
     VOP_UNLOCK(n.ni_vp, 0, curproc);
     NDFREE(&n, NDF_ONLY_PNBUF);

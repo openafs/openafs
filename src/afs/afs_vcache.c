@@ -39,7 +39,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_vcache.c,v 1.65.2.10 2005/02/21 01:12:53 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_vcache.c,v 1.65.2.12 2005/03/20 20:38:55 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -886,7 +886,9 @@ restart:
 #if defined(AFS_LINUX22_ENV)
     {
 	struct inode *ip = AFSTOI(tvc);
+#if defined(AFS_LINUX24_ENV)
 	struct address_space *mapping = &ip->i_data;
+#endif
 
 #if defined(AFS_LINUX26_ENV)
 	inode_init_once(ip);
@@ -955,6 +957,10 @@ restart:
 #ifdef STRUCT_INODE_HAS_I_SB_LIST
 	list_add(&ip->i_sb_list, &ip->i_sb->s_inodes);
 #endif
+#ifdef STRUCT_INODE_HAS_INOTIFY_LOCK
+	INIT_LIST_HEAD(&inode->inotify_watches); 
+	spin_lock_init(&inode->inotify_lock); 
+#endif 
     }
 #endif
 

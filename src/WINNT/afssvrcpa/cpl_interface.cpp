@@ -25,9 +25,9 @@
  * DEFINITIONS _______________________________________________________________
  *
  */
-#define APP_INSTALL_DIR_REG_KEY		AFSREG_SVR_SW_VERSION_KEY
+#define APP_INSTALL_DIR_REG_SUBKEY	AFSREG_SVR_SW_VERSION_SUBKEY
 #define APP_INSTALL_DIR_REG_VALUE	AFSREG_SVR_SW_VERSION_DIR_VALUE
-#define	APP_EXE_PATH				"\\usr\\afs\\bin\\afssvrcfg.exe"
+#define	APP_EXE_PATH			"\\usr\\afs\\bin\\afssvrcfg.exe"
 
 
 
@@ -61,7 +61,7 @@ static char *GetInstallDir()
 
 	dwSize = sizeof(szInstallDir);
 
-	nResult = RegOpenKeyAlt(AFSREG_NULL_KEY, APP_INSTALL_DIR_REG_KEY, KEY_READ, FALSE, &hKey, 0);
+	nResult = RegOpenKeyAlt(HKEY_LOCAL_MACHINE, APP_INSTALL_DIR_REG_SUBKEY, KEY_READ, FALSE, &hKey, 0);
 	if (nResult == ERROR_SUCCESS) {
 		nResult = RegQueryValueEx(hKey, APP_INSTALL_DIR_REG_VALUE, 0, &dwType, (PBYTE)szInstallDir, &dwSize);
 		RegCloseKey(hKey);

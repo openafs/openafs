@@ -14,6 +14,7 @@
 
 #include <rx/rx.h>
 
+#include <WINNT/afsreg.h>
 #include "afsd.h"
 #ifdef AFS_FREELANCE_CLIENT
 #include "cm_freelance.h"
@@ -25,22 +26,26 @@ int cm_noLocalMountPoints;
 int cm_fakeDirSize;
 int cm_fakeDirCallback=0;
 int cm_fakeGettingCallback=0;
-int cm_fakeDirVersion = 0x8;
 cm_localMountPoint_t* cm_localMountPoints;
 osi_mutex_t cm_Freelance_Lock;
 int cm_localMountPointChangeFlag = 0;
 int cm_freelanceEnabled = 0;
 time_t FakeFreelanceModTime = 0x3b49f6e2;
 
+static int freelance_ShutdownFlag = 0;
+#if !defined(DJGPP)
+static HANDLE hFreelanceChangeEvent = 0;
+static HANDLE hFreelanceSymlinkChangeEvent = 0;
+#endif
+
 void cm_InitFakeRootDir();
 
 #if !defined(DJGPP)
 void cm_FreelanceChangeNotifier(void * parmp) {
-    HANDLE hFreelanceChangeEvent = 0;
     HKEY   hkFreelance = 0;
 
     if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
-                      "SOFTWARE\\OpenAFS\\Client\\Freelance",
+                      AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance",
                       0,
                       KEY_NOTIFY,
                       &hkFreelance) == ERROR_SUCCESS) {
@@ -64,22 +69,28 @@ void cm_FreelanceChangeNotifier(void * parmp) {
                                      ) != ERROR_SUCCESS) {
             RegCloseKey(hkFreelance);
             CloseHandle(hFreelanceChangeEvent);
+            hFreelanceChangeEvent = 0;
             return;
         }
 
         if (WaitForSingleObject(hFreelanceChangeEvent, INFINITE) == WAIT_OBJECT_0)
         {
+            if (freelance_ShutdownFlag == 1) {     
+                RegCloseKey(hkFreelance);          
+                CloseHandle(hFreelanceChangeEvent);
+                hFreelanceChangeEvent = 0;         
+                return;                            
+            }                                      
             cm_noteLocalMountPointChange();
         }
     }
 }
 
 void cm_FreelanceSymlinkChangeNotifier(void * parmp) {
-    HANDLE hFreelanceSymlinkChangeEvent = 0;
     HKEY   hkFreelance = 0;
 
     if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
-                      "SOFTWARE\\OpenAFS\\Client\\Freelance\\Symlinks",
+                      AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance\\Symlinks",
                       0,
                       KEY_NOTIFY,
                       &hkFreelance) == ERROR_SUCCESS) {
@@ -103,16 +114,35 @@ void cm_FreelanceSymlinkChangeNotifier(void * parmp) {
                                      ) != ERROR_SUCCESS) {
             RegCloseKey(hkFreelance);
             CloseHandle(hFreelanceSymlinkChangeEvent);
+            hFreelanceSymlinkChangeEvent = 0;
             return;
         }
 
         if (WaitForSingleObject(hFreelanceSymlinkChangeEvent, INFINITE) == WAIT_OBJECT_0)
         {
+            if (freelance_ShutdownFlag == 1) {     
+                RegCloseKey(hkFreelance);          
+                CloseHandle(hFreelanceSymlinkChangeEvent);
+                hFreelanceSymlinkChangeEvent = 0;         
+                return;                            
+            }                                      
             cm_noteLocalMountPointChange();
         }
     }
 }
 #endif
+
+void                                          
+cm_FreelanceShutdown(void)                    
+{                                             
+    freelance_ShutdownFlag = 1;               
+#if !defined(DJGPP)                           
+    if (hFreelanceChangeEvent != 0)           
+        thrd_SetEvent(hFreelanceChangeEvent); 
+    if (hFreelanceSymlinkChangeEvent != 0)           
+        thrd_SetEvent(hFreelanceSymlinkChangeEvent); 
+#endif                                        
+}                                             
 
 void cm_InitFreelance() {
 #if !defined(DJGPP)
@@ -122,6 +152,10 @@ void cm_InitFreelance() {
 
     lock_InitializeMutex(&cm_Freelance_Lock, "Freelance Lock");
 
+    // make sure we sync the data version to the cached root scache_t                  
+    if (cm_data.rootSCachep && cm_data.rootSCachep->fid.cell == AFS_FAKE_ROOT_CELL_ID) 
+        cm_data.fakeDirVersion = cm_data.rootSCachep->dataVersion;                          
+                                                                                      
     // yj: first we make a call to cm_initLocalMountPoints
     // to read all the local mount points from an ini file
     cm_InitLocalMountPoints();
@@ -334,7 +368,7 @@ int cm_FakeRootFid(cm_fid_t *fidp)
 /* called while not holding freelance lock */
 int cm_noteLocalMountPointChange(void) {
     lock_ObtainMutex(&cm_Freelance_Lock);
-    cm_fakeDirVersion++;
+    cm_data.fakeDirVersion++;
     cm_localMountPointChangeFlag = 1;
     lock_ReleaseMutex(&cm_Freelance_Lock);
     return 1;
@@ -370,7 +404,7 @@ int cm_reInitLocalMountPoints() {
     lock_ObtainMutex(&cm_Freelance_Lock);  /* always scache then freelance lock */
     for (i=0; i<cm_noLocalMountPoints; i++) {
         hash = CM_SCACHE_HASH(&aFid);
-        for (scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
+        for (scp=cm_data.hashTablep[hash]; scp; scp=scp->nextp) {
             if (scp->fid.volume == aFid.volume &&
                  scp->fid.vnode == aFid.vnode &&
                  scp->fid.unique == aFid.unique 
@@ -387,12 +421,15 @@ int cm_reInitLocalMountPoints() {
                 cm_ReleaseSCacheNoLock(scp);
 
                 // take the scp out of the hash
-                lscpp = &cm_hashTablep[hash];
-                for (tscp=*lscpp; tscp; lscpp = &tscp->nextp, tscp = *lscpp) {
-                    if (tscp == scp) break;
+                for (lscpp = &cm_data.hashTablep[hash], tscp = cm_data.hashTablep[hash]; 
+                     tscp; 
+                     lscpp = &tscp->nextp, tscp = tscp->nextp) {
+                    if (tscp == scp) {
+                        *lscpp = scp->nextp;
+                        scp->flags &= ~CM_SCACHEFLAG_INHASH;
+                        break;
+                    }
                 }
-                *lscpp = scp->nextp;
-                scp->flags &= ~CM_SCACHEFLAG_INHASH;
             }
         }
         aFid.vnode = aFid.vnode + 1;
@@ -452,7 +489,7 @@ long cm_InitLocalMountPoints() {
 
 #if !defined(DJGPP)
     if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
-                      "SOFTWARE\\OpenAFS\\Client\\Freelance",
+                      AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance",
                       0,
                       KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
                       &hkFreelance) == ERROR_SUCCESS) {
@@ -484,7 +521,7 @@ long cm_InitLocalMountPoints() {
         }
 
         if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
-                          "SOFTWARE\\OpenAFS\\Client\\Freelance\\Symlinks",
+                          AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance\\Symlinks",
                           0,
                           NULL,
                           REG_OPTION_NON_VOLATILE,
@@ -542,14 +579,23 @@ long cm_InitLocalMountPoints() {
             if (t2)
                 *(t2+1) = '\0';
 
+            for ( t=line;*t;t++ ) {
+                if ( !isprint(*t) ) {
+                    afsi_log("error occurred while parsing mountpoint entry [%d]: non-printable character", dwIndex);
+                    fprintf(stderr, "error occurred while parsing mountpoint entry [%d]: non-printable character", dwIndex);
+                    cm_noLocalMountPoints--;
+                    continue;
+                }
+            }
+
             // line is not empty, so let's parse it
             t = strchr(line, '#');
             if (!t)
                 t = strchr(line, '%');
             // make sure that there is a '#' or '%' separator in the line
             if (!t) {
-                afsi_log("error occurred while parsing entry in %s: no # or %% separator in line %d", AFS_FREELANCE_INI, dwIndex);
-                fprintf(stderr, "error occurred while parsing entry in afs_freelance.ini: no # or %% separator in line %d", dwIndex);
+                afsi_log("error occurred while parsing mountpoint entry [%d]: no # or %% separator", dwIndex);
+                fprintf(stderr, "error occurred while parsing mountpoint entry [%d]: no # or %% separator", dwIndex);
                 cm_noLocalMountPoints--;
                 continue;
             }
@@ -590,13 +636,22 @@ long cm_InitLocalMountPoints() {
             if (t2)
                 *(t2+1) = '\0';
 
+            for ( t=line;*t;t++ ) {
+                if ( !isprint(*t) ) {
+                    afsi_log("error occurred while parsing symlink entry [%d]: non-printable character", dwIndex);
+                    fprintf(stderr, "error occurred while parsing symlink entry [%d]: non-printable character", dwIndex);
+                    cm_noLocalMountPoints--;
+                    continue;
+                }
+            }
+
             // line is not empty, so let's parse it
             t = strchr(line, ':');
 
             // make sure that there is a ':' separator in the line
             if (!t) {
-                afsi_log("error occurred while parsing symlink entry: no ':' separator in line %d", dwIndex);
-                fprintf(stderr, "error occurred while parsing symlink entry: no ':' separator in line %d", dwIndex);
+                afsi_log("error occurred while parsing symlink entry [%d]: no ':' separator", dwIndex);
+                fprintf(stderr, "error occurred while parsing symlink entry [%d]: no ':' separator", dwIndex);
                 cm_noLocalMountPoints--;
                 continue;
             }
@@ -642,7 +697,7 @@ long cm_InitLocalMountPoints() {
 
 #if !defined(DJGPP)
     RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
-                    "SOFTWARE\\OpenAFS\\Client\\Freelance",
+                    AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance",
                     0,
                     NULL,
                     REG_OPTION_NON_VOLATILE,
@@ -776,7 +831,7 @@ long cm_FreelanceMountPointExists(char * filename)
     lock_ObtainMutex(&cm_Freelance_Lock);
 
     if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
-                      "SOFTWARE\\OpenAFS\\Client\\Freelance",
+                      AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance",
                       0,
                       KEY_READ|KEY_QUERY_VALUE,
                       &hkFreelance) == ERROR_SUCCESS) 
@@ -853,7 +908,7 @@ long cm_FreelanceSymlinkExists(char * filename)
     lock_ObtainMutex(&cm_Freelance_Lock);
 
     if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
-                      "SOFTWARE\\OpenAFS\\Client\\Freelance\\Symlinks",
+                      AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance\\Symlinks",
                       0,
                       KEY_READ|KEY_QUERY_VALUE,
                       &hkFreelance) == ERROR_SUCCESS) 
@@ -962,7 +1017,7 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
 
 #if !defined(DJGPP)
     if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
-                      "SOFTWARE\\OpenAFS\\Client\\Freelance",
+                      AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance",
                       0,
                       KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
                       &hkFreelance) == ERROR_SUCCESS) {
@@ -1065,7 +1120,7 @@ long cm_FreelanceRemoveMount(char *toremove)
 
 #if !defined(DJGPP)
     if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
-                      "SOFTWARE\\OpenAFS\\Client\\Freelance",
+                      AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance",
                       0,
                       KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
                       &hkFreelance) == ERROR_SUCCESS) {
@@ -1196,7 +1251,7 @@ long cm_FreelanceAddSymlink(char *filename, char *destination, cm_fid_t *fidp)
 
 #if !defined(DJGPP)
     if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
-                        "SOFTWARE\\OpenAFS\\Client\\Freelance\\Symlinks",
+                        AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance\\Symlinks",
                         0,
                         NULL,
                         REG_OPTION_NON_VOLATILE,
@@ -1278,7 +1333,7 @@ long cm_FreelanceRemoveSymlink(char *toremove)
 
 #if !defined(DJGPP)
     if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
-                      "SOFTWARE\\OpenAFS\\Client\\Freelance\\Symlinks",
+                      AFSREG_CLT_OPENAFS_SUBKEY "\\Freelance\\Symlinks",
                       0,
                       KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
                       &hkFreelanceSymlinks) == ERROR_SUCCESS) {

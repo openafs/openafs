@@ -31,7 +31,7 @@ SOFTWARE.
 *         are noted in the comments section of each of the
 *         functions.
 *
-* rcsid: $Id: afscustom.cpp,v 1.2.2.1 2004/08/23 15:55:09 jaltman Exp $
+* rcsid: $Id: afscustom.cpp,v 1.2.2.2 2005/03/11 07:02:52 shadow Exp $
 **************************************************************/
 
 // Only works for Win2k and above
@@ -420,14 +420,54 @@ UINT createAfsAdminGroup(void) {
     return status;
 }
 
+/* LookupAliasFromRid is from Microsoft KB 157234 
+ * 
+ * Author: Scott Field (sfield)    02-Oct-96
+ */
+
+BOOL
+LookupAliasFromRid( LPWSTR TargetComputer, DWORD Rid, LPWSTR Name,
+                    PDWORD cchName )
+{
+    SID_IDENTIFIER_AUTHORITY sia = SECURITY_NT_AUTHORITY;
+    SID_NAME_USE snu;
+    PSID pSid;
+    WCHAR DomainName[DNLEN+1];
+    DWORD cchDomainName = DNLEN;
+    BOOL bSuccess = FALSE;
+
+    //
+    // Sid is the same regardless of machine, since the well-known
+    // BUILTIN domain is referenced.
+    //
+
+    if(AllocateAndInitializeSid( &sia, 2, SECURITY_BUILTIN_DOMAIN_RID,
+                                 Rid, 0, 0, 0, 0, 0, 0, &pSid )) {
+        bSuccess = LookupAccountSidW( TargetComputer, pSid, Name, cchName,
+                                      DomainName, &cchDomainName, &snu );
+        FreeSid(pSid);
+    }
+
+    return bSuccess;
+}
+
 UINT initializeAfsAdminGroup(void) {
     PSID psidAdmin = NULL;
     SID_IDENTIFIER_AUTHORITY auth = SECURITY_NT_AUTHORITY;
     NET_API_STATUS status;
     LOCALGROUP_MEMBERS_INFO_0 *gmAdmins = NULL;
     DWORD dwNEntries, dwTEntries;
+    WCHAR AdminGroupName[UNLEN+1];
+    DWORD cchName = UNLEN;
 
-    status = NetLocalGroupGetMembers(NULL, L"Administrators", 0, (LPBYTE *) &gmAdmins, MAX_PREFERRED_LENGTH, &dwNEntries, &dwTEntries, NULL);
+    if (!LookupAliasFromRid( NULL, DOMAIN_ALIAS_RID_ADMINS, AdminGroupName, &cchName )) 
+    {
+        /* if we fail, we will try the English string "Administrators" */
+        wcsncpy(AdminGroupName, L"Administrators", UNLEN+1);
+        AdminGroupName[UNLEN] = 0;
+    }
+
+    status = NetLocalGroupGetMembers(NULL, AdminGroupName, 0, (LPBYTE *) &gmAdmins, MAX_PREFERRED_LENGTH, &dwNEntries, &dwTEntries, NULL);
     if(status)
         return status;
 

@@ -22,7 +22,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_clock.c,v 1.13 2004/05/15 04:53:30 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_clock.c,v 1.13.2.1 2005/03/20 19:40:32 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -54,6 +54,7 @@ RCSID
 #else
 #define	STARTVALUE 100000000	/* Max number of seconds setitimer allows, for some reason */
 #endif
+static int startvalue = STARTVALUE;
 
 struct clock clock_now;		/* The last elapsed time ready by clock_GetTimer */
 
@@ -81,6 +82,10 @@ clock_Init(void)
 	    fflush(stderr);
 	    exit(1);
 	}
+        getitimer(ITIMER_REAL, &itimer);
+        startvalue = itimer.it_value.tv_sec;
+        if (itimer.it_value.tv_usec > 0)
+          startvalue++;
 	clockInitialized = 1;
     }
 
@@ -101,7 +106,7 @@ clock_UpdateTime(void)
 {
     struct itimerval itimer;
     getitimer(ITIMER_REAL, &itimer);
-    clock_now.sec = STARTVALUE - 1 - itimer.it_value.tv_sec;	/* The "-1" makes up for adding 1000000 usec, on the next line */
+    clock_now.sec = startvalue - 1 - itimer.it_value.tv_sec;	/* The "-1" makes up for adding 1000000 usec, on the next line */
     clock_now.usec = 1000000 - itimer.it_value.tv_usec;
     if (clock_now.usec == 1000000)
 	clock_now.usec = 0, clock_now.sec++;
