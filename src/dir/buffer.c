@@ -16,6 +16,27 @@ RCSID
 #include <stdlib.h>
 #include <lock.h>
 
+#ifdef AFS_64BIT_IOPS_ENV
+#define BUFFER_FID_SIZE (9 + 2*sizeof(char*)/sizeof(int))
+#else
+#define BUFFER_FID_SIZE (6 + 2*sizeof(char*)/sizeof(int))
+#endif
+
+struct buffer {
+    /* fid is used for Unique cache key + i/o addressing.
+     * fid size is based on 4 + size of inode and size of pointer
+     */
+    afs_int32 fid[BUFFER_FID_SIZE];
+    afs_int32 page;
+    afs_int32 accesstime;
+    struct buffer *hashNext;
+    void *data;
+    char lockers;
+    char dirty;
+    char hashIndex;
+    struct Lock lock;
+};
+
 #include "dir.h"
 
 struct Lock afs_bufferLock;
@@ -40,26 +61,7 @@ struct Lock afs_bufferLock;
 #define NULL 0
 #endif
 
-#ifdef AFS_64BIT_IOPS_ENV
-#define BUFFER_FID_SIZE (9 + 2*sizeof(char*)/sizeof(int))
-#else
-#define BUFFER_FID_SIZE (6 + 2*sizeof(char*)/sizeof(int))
-#endif
-
-static struct buffer {
-    /* fid is used for Unique cache key + i/o addressing.
-     * fid size is based on 4 + size of inode and size of pointer
-     */
-    afs_int32 fid[BUFFER_FID_SIZE];
-    afs_int32 page;
-    afs_int32 accesstime;
-    struct buffer *hashNext;
-    void *data;
-    char lockers;
-    char dirty;
-    char hashIndex;
-    struct Lock lock;
-} **Buffers;
+static struct buffer **Buffers;
 
 char *BufferData;
 
@@ -72,8 +74,7 @@ static int calls = 0, ios = 0;
 struct buffer *newslot();
 
 int
-DStat(abuffers, acalls, aios)
-     int *abuffers, *acalls, *aios;
+DStat(int *abuffers, int *acalls, int *aios)
 {
     *abuffers = nbuffers;
     *acalls = calls;
@@ -82,8 +83,7 @@ DStat(abuffers, acalls, aios)
 }
 
 int
-DInit(abuffers)
-     int abuffers;
+DInit(int abuffers)
 {
     /* Initialize the venus buffer system. */
     register int i, tsize;
@@ -117,9 +117,7 @@ DInit(abuffers)
 }
 
 void *
-DRead(fid, page)
-     register afs_int32 *fid;
-     register int page;
+DRead(register afs_int32 *fid, register int page)
 {
     /* Read a page from the disk. */
     register struct buffer *tb, *tb2, **bufhead;
@@ -198,8 +196,7 @@ DRead(fid, page)
 }
 
 static int
-FixupBucket(ap)
-     register struct buffer *ap;
+FixupBucket(register struct buffer *ap)
 {
     register struct buffer **lp, *tp;
     register int i;
@@ -223,9 +220,7 @@ FixupBucket(ap)
 }
 
 struct buffer *
-newslot(afid, apage, lp)
-     afs_int32 *afid, apage;
-     register struct buffer *lp;	/* pointer to a fairly-old buffer */
+newslot(afs_int32 *afid, afs_int32 apage, register struct buffer *lp)
 {
     /* Find a usable buffer slot */
     register afs_int32 i;
@@ -278,9 +273,7 @@ newslot(afid, apage, lp)
 }
 
 void
-DRelease(bp, flag)
-     register struct buffer *bp;
-     int flag;
+DRelease(register struct buffer *bp, int flag)
 {
     /* Release a buffer, specifying whether or not the buffer has been modified by the locker. */
     register int index;
@@ -297,8 +290,7 @@ DRelease(bp, flag)
 }
 
 int
-DVOffset(ap)
-     register void *ap;
+DVOffset(register void *ap)
 {
     /* Return the byte within a file represented by a buffer pointer. */
     register struct buffer *bp = ap;
@@ -312,8 +304,7 @@ DVOffset(ap)
 }
 
 void
-DZap(fid)
-     register afs_int32 *fid;
+DZap(register afs_int32 *fid)
 {
     /* Destroy all buffers pertaining to a particular fid. */
     register struct buffer *tb;
@@ -329,8 +320,7 @@ DZap(fid)
 }
 
 int
-DFlushVolume(vid)
-     register afs_int32 vid;
+DFlushVolume(register afs_int32 vid)
 {
     /* Flush all data and release all inode handles for a particular volume */
     register struct buffer *tb;
@@ -353,8 +343,7 @@ DFlushVolume(vid)
 }
 
 int
-DFlushEntry(fid)
-     register afs_int32 *fid;
+DFlushEntry(register afs_int32 *fid)
 {
     /* Flush pages modified by one entry. */
     register struct buffer *tb;
@@ -413,9 +402,7 @@ DFlush()
 }
 
 void *
-DNew(fid, page)
-     register int page;
-     register afs_int32 *fid;
+DNew(register afs_int32 *fid, register int page)
 {
     /* Same as read, only do *not* even try to read the page,
      * since it probably doesn't exist.
