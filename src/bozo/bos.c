@@ -1518,6 +1518,33 @@ static DoStat (aname, aconn, aint32p, firstTime)
     return 0;
 }
 
+#ifdef BOS_RESTRICTED_MODE
+static GetRestrict(as)
+struct cmd_syndesc *as; {
+    register struct rx_connection *tconn;
+    afs_int32 code, val;
+    
+    tconn = GetConn(as, 0);
+    code = BOZO_GetRestrictedMode(tconn, &val);
+    if (code) printf("bos: failed to get restricted mode (%s)\n", em(code));
+    else printf("Restricted mode is %s\n", val ? "on" : "off");
+    
+    return 0;
+}
+
+static SetRestrict(as)
+struct cmd_syndesc *as; {
+    register struct rx_connection *tconn;
+    afs_int32 code, val;
+    
+    tconn = GetConn(as, 0);
+    util_GetInt32(as->parms[1].items->data, &val);
+    code = BOZO_SetRestrictedMode(tconn, val);
+    if (code) printf("bos: failed to set restricted mode (%s)\n", em(code));
+    return 0;
+}
+#endif
+
 static void add_std_args (ts)
   register struct cmd_syndesc *ts;
 {
@@ -1765,6 +1792,16 @@ main(argc, argv)
 		"ignore | remove | attach");
     add_std_args (ts);
 
+#ifdef BOS_RESTRICTED_MODE
+    ts = cmd_CreateSyntax("getrestricted", GetRestrict, 0, "get restrict mode");
+    cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
+    add_std_args (ts);
+
+    ts = cmd_CreateSyntax("setrestricted", SetRestrict, 0, "set restrict mode");
+    cmd_AddParm(ts, "-server", CMD_SINGLE, 0, "machine name");
+    cmd_AddParm(ts, "-mode", CMD_SINGLE, 0, "mode to set");
+    add_std_args (ts);
+#endif
 #endif
 
     code = cmd_Dispatch(argc, argv);
