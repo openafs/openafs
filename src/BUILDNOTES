@@ -19,3 +19,9 @@ HPUX 11.0 (hp_ux110):
 	For future kernel development, the KernDevKit package from the CoreOS
 	media is required.
 
+HPUX 10.2 (hp_ux102):
+	Does not currently build libafs, which means no afs client support,
+	however, the client tools, and all of the server code does get built.
+	
+	Requires that the DCE-CoreTools and possible the KernDevKit package
+	from CoreOS media be installed.
