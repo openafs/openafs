@@ -37,14 +37,6 @@ RCSID
 #include <linux/syscall.h>
 #endif
 
-#if defined(AFS_LINUX26_ENV)
-#include <linux/vermagic.h>
-#include <linux/compiler.h>
-
-MODULE_INFO(vermagic, VERMAGIC_STRING);
-
-#endif
-
 #ifdef AFS_SPARC64_LINUX24_ENV
 #define __NR_setgroups32      82	/* This number is not exported for some bizarre reason. */
 #endif
