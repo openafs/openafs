@@ -114,8 +114,10 @@ static void GetCEBlock()
     register int i;
 
     block = (struct CEBlock *)malloc(sizeof(struct CEBlock));
-    if (!block)
+    if (!block) {
+	ViceLog(0, ("Failed malloc in GetCEBlock\n"));
 	ShutDownAndCore(PANIC);
+    }
 
     for(i = 0; i < (CESPERBLOCK -1); i++) {
 	Lock_Init(&block->entry[i].lock);
@@ -137,8 +139,10 @@ static struct client *GetCE()
 
     if (CEFree == 0)
 	GetCEBlock();
-    if (CEFree == 0)
+    if (CEFree == 0) {
+	ViceLog(0, ("CEFree NULL in GetCE\n"));
 	ShutDownAndCore(PANIC);
+    }
 
     entry = CEFree;
     CEFree = entry->next;
@@ -193,8 +197,10 @@ static void GetHTBlock()
     static int index = 0;
 
     block = (struct HTBlock *)malloc(sizeof(struct HTBlock));
-    if (!block)
+    if (!block) {
+	ViceLog(0, ("Failed malloc in GetHTBlock\n"));
 	ShutDownAndCore(PANIC);
+    }
 
 #ifdef AFS_PTHREAD_ENV
     for(i=0; i < (h_HTSPERBLOCK); i++)
