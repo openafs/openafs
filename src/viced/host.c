@@ -504,10 +504,10 @@ void h_flushhostcps(register afs_uint32 hostaddr, register afs_uint32 hport)
     H_LOCK
     host = h_Lookup_r(hostaddr, hport, &held);
     if (host) {
-      host->hcpsfailed = 1;
+	host->hcpsfailed = 1;
+	if (!held)
+	    h_Release_r(host);
     }
-    if (!held)
-      h_Release_r(host);
     H_UNLOCK
 
     return;
