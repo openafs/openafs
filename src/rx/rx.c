@@ -993,6 +993,20 @@ void rx_DestroyConnection(conn)
     USERPRI;
 }
 
+void
+rx_GetConnection(register struct rx_connection *conn)
+{
+    SPLVAR;
+    
+    NETPRI;
+    AFS_RXGLOCK();
+    MUTEX_ENTER(&conn->conn_data_lock);
+    conn->refCount++;
+    MUTEX_EXIT(&conn->conn_data_lock);
+    AFS_RXGUNLOCK();
+    USERPRI;
+}
+
 /* Start a new rx remote procedure call, on the specified connection.
  * If wait is set to 1, wait for a free call channel; otherwise return
  * 0.  Maxtime gives the maximum number of seconds this call may take,

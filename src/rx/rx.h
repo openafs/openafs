@@ -253,6 +253,8 @@ returned with an error code of RX_CALL_DEAD ( transient error ) */
 #define rx_EnableHotThread()		(rx_enable_hot_thread = 1)
 #define rx_DisableHotThread()		(rx_enable_hot_thread = 0)
 
+#define rx_PutConnection(conn) rx_DestroyConnection(conn)
+
 struct rx_securityObjectStats {
     char type;				/* 0:unk 1:null,2:vab 3:kad */
     char level;
