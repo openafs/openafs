@@ -87,7 +87,13 @@ static void *linux_alloc(unsigned int asize)
 
     /*  if we can use kmalloc use it to allocate the required memory. */
     if (asize <  MAX_KMALLOC_SIZE) {
-        new = (void *)(unsigned long)kmalloc(asize, GFP_KERNEL);
+        new = (void *)(unsigned long)kmalloc(asize, 
+#ifdef GFP_NOFS
+					     GFP_NOFS
+#else
+					     GFP_KERNEL
+#endif
+					     );
         if (new) /* piggy back alloc type */
             (unsigned long)new |= KM_TYPE;
     }
@@ -97,7 +103,8 @@ static void *linux_alloc(unsigned int asize)
             if (--max_wait <=0) {
 		break;
             }
-	    schedule();
+	    set_current_state(TASK_INTERRUPTIBLE);
+	    schedule_timeout(HZ);
         }
 	if (new) /* piggy back alloc type */
 	    (unsigned long)new |= VM_TYPE;
