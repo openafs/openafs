@@ -124,7 +124,12 @@
 		 DllEntry="UninstallNsisInstallation"
 		 Execute="immediate" />
 		<CustomAction
-		 Id="AbortInstallation"
+		 Id="AbortInstallationA"
+		 BinaryKey="BIN_afsCustom"
+		 DllEntry="AbortMsiImmediate"
+		 Execute="immediate" />
+		<CustomAction
+		 Id="AbortInstallationB"
 		 BinaryKey="BIN_afsCustom"
 		 DllEntry="AbortMsiImmediate"
 		 Execute="immediate" />
@@ -134,8 +139,12 @@
         <AdminExecuteSequence />
         <InstallExecuteSequence>
 			<RemoveExistingProducts After="InstallValidate">IBMAFS_UPGRADE OR OPENAFS_UPGRADE</RemoveExistingProducts>
-			<Custom Action="RemoveNsisInstallation" Before="AbortInstallation">NSISUNINSTALL &lt;&gt; "" AND UILevel &gt;= 4</Custom>
-			<Custom Action="AbortInstallation" Before="CostInitialize">NSISUNINSTALL &lt;&gt; "" AND UILevel &lt; 4</Custom>
+			<Custom Action="RemoveNsisInstallation" Before="AbortInstallationA">NSISUNINSTALL &lt;&gt; "" AND UILevel &gt;= 4</Custom>
+			<Custom Action="AbortInstallationA" Before="CostInitialize">NSISUNINSTALL &lt;&gt; "" AND UILevel &lt; 4</Custom>
+			<!-- Assert that if the server is going to be installed locally after this session, control center and client are also local -->
+			<Custom Action="AbortInstallationB" After="MigrateFeatureStates">
+				<![CDATA[((&feaServer=3 OR (!feaServer=3 AND &feaServer<1)) AND (&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3) OR &feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3) ))]]>
+			</Custom>
 		<?ifdef RemoveLoopback?>
 			<Custom Action="RemoveLoopback" After="SelfRegModules">&amp;feaLoopback=2 OR &amp;feaLoopback=3</Custom>
             <Custom Action="RollbackLoopback" After="RemoveLoopback">&amp;feaLoopback=3</Custom>

@@ -11,6 +11,15 @@
 	<Property Id="RXMAXMTU">$(var.RxMaxMTU)</Property>
 	<Property Id="HIDEDOTFILES">$(var.HideDotFiles)</Property>
 
+	<Property Id="CREDSSTARTUP">1</Property>
+	<Property Id="CREDSAUTOINIT">-a</Property>
+	<Property Id="CREDSRENEWDRMAP">-m</Property>
+	<Property Id="CREDSIPCHDET">-n</Property>
+	<Property Id="CREDSQUIET">-q</Property>
+	<!-- empty property 
+	<Property Id="CREDSSHOW"></Property>
+	-->
+
     <!-- Add/remove programs -->
     <Property Id="ARPCOMMENTS">$(var.ProductComments)</Property>
     <Property Id="ARPCONTACT">openafs-info@openafs.org</Property>

@@ -227,8 +227,15 @@
           <Publish Event="NewDialog" Value="SetupTypeDlg">InstallMode = "Custom"</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="[ButtonText_Next]">
-		  <Publish Event="NewDialog" Value="ConfigClientDlg">&amp;feaClient = 3</Publish>
-          <Publish Event="NewDialog" Value="VerifyReadyDlg">&amp;feaClient &lt;&gt; 3</Publish>
+		  <Publish Event="NewDialog" Value="ConfigClientDlg">
+			<![CDATA[ &feaClient = 3 AND NOT ((&feaServer=3 OR (!feaServer=3 AND &feaServer<1)) AND (&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3) OR &feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3) ))]]>
+		  </Publish>
+          <Publish Event="NewDialog" Value="VerifyReadyDlg">
+            <![CDATA[ &feaClient <> 3 AND NOT ((&feaServer=3 OR (!feaServer=3 AND &feaServer<1)) AND (&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3) OR &feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3) ))]]>
+          </Publish>
+          <Publish Event="NewDialog" Value="AddServerDepsDlg">
+            <![CDATA[ ((&feaServer=3 OR (!feaServer=3 AND &feaServer<1)) AND (&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3) OR &feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3) )) ]]>
+          </Publish>
           <Subscribe Event="SelectionNoItems" Attribute="Enabled" />
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="[ButtonText_Cancel]">
@@ -247,11 +254,11 @@
           <Text>[DlgTitleFont]Custom Setup</Text>
         </Control>
         <Control Id="Box" Type="GroupBox" X="210" Y="81" Width="140" Height="98" />
-        <Control Id="ItemDescription" Type="Text" X="215" Y="90" Width="131" Height="30">
+        <Control Id="ItemDescription" Type="Text" X="215" Y="90" Width="131" Height="40">
           <Text>Multiline description of the currently selected item.</Text>
           <Subscribe Event="SelectionDescription" Attribute="Text" />
         </Control>
-        <Control Id="ItemSize" Type="Text" X="215" Y="130" Width="131" Height="45">
+        <Control Id="ItemSize" Type="Text" X="215" Y="135" Width="131" Height="40">
           <Text>The size of the currently selected item.</Text>
           <Subscribe Event="SelectionSize" Attribute="Text" />
         </Control>
@@ -266,6 +273,53 @@
           <Condition Action="hide">Installed</Condition>
         </Control>
       </Dialog>
+
+      <Dialog Id="AddServerDepsDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes" TrackDiskSpace="yes">
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="[ButtonText_Cancel]">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="[ButtonText_Next]">
+		  <Publish Event="AddLocal" Value="feaClient"><![CDATA[&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3)]]></Publish>
+		  <Publish Event="AddLocal" Value="feaControlCenter"><![CDATA[&feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3)]]></Publish>
+		  <Publish Event="NewDialog" Value="ConfigClientDlg">
+			<![CDATA[ &feaClient = 3 ]]>
+		  </Publish>
+          <Publish Event="NewDialog" Value="VerifyReadyDlg">
+            <![CDATA[ &feaClient <> 3 ]]>
+          </Publish>
+          <Subscribe Event="SelectionNoItems" Attribute="Enabled" />
+        </Control>
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="374" Height="44" FixedSize="yes" TabSkip="no" Text="[BannerBitmap]" />
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="[ButtonText_Back]">
+          <Publish Event="NewDialog" Value="CustomizeDlg">1</Publish>
+        </Control>
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>Dependencies of the OpenAFS Server</Text>
+        </Control>
+        <Control Id="Text" Type="Text" X="25" Y="70" Width="320" Height="30">
+          <Text>The OpenAFS Server component requires the following component(s) which are currently not set to be installed.  Click Next to add these components or click Back to review your selections.</Text>
+        </Control>
+        <Control Id="ClientIcon" Type="Icon" X="25" Y="110" Width="32" Height="32" IconSize="32" Text="[CustomSetupIcon]" Hidden="yes">
+          <Condition Action="show"><![CDATA[&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3)]]></Condition>
+        </Control>
+        <Control Id="ClientText" Type="Text" X="60" Y="117" Width="200" Height="15" Hidden="yes" Transparent="yes" NoPrefix="yes">
+          <Text>OpenAFS Client</Text>
+          <Condition Action="show"><![CDATA[&feaClient=2 OR (&feaClient<>3 AND !feaClient<>3)]]></Condition>
+        </Control>
+        <Control Id="CCIcon" Type="Icon" X="25" Y="150" Width="32" Height="32" IconSize="32" Text="[CustomSetupIcon]" Hidden="yes">
+          <Condition Action="show"><![CDATA[&feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3)]]></Condition>
+        </Control>
+        <Control Id="CCText" Type="Text" X="60" Y="157" Width="200" Height="15" Hidden="yes" Transparent="yes" NoPrefix="yes">
+          <Text>OpenAFS Control Center</Text>
+          <Condition Action="show"><![CDATA[&feaControlCenter=2 OR (&feaControlCenter<>3 AND !feaControlCenter<>3)]]></Condition>
+        </Control>
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="374" Height="0" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="374" Height="0" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>[DlgTitleFont]Server Dependencies</Text>
+        </Control>
+      </Dialog>
+
       <Dialog Id="DiskCostDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
         <Control Id="OK" Type="PushButton" X="304" Y="243" Width="56" Height="17" Default="yes" Cancel="yes" Text="[ButtonText_OK]">
           <Publish Event="EndDialog" Value="Return">1</Publish>
@@ -677,7 +731,7 @@
           <Publish Event="NewDialog" Value="CustomizeDlg">1</Publish>
         </Control>
         <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Text="[ButtonText_Next]">
-          <Publish Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+          <Publish Event="NewDialog" Value="ConfigCredsDlg">1</Publish>
         </Control>
         <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="[ButtonText_Cancel]">
           <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
@@ -694,11 +748,11 @@
         <Control Id="CellLabel" Type="Text" X="45" Y="73" Width="100" Height="15" TabSkip="no" Text="Default &amp;Cell" />
         <Control Id="CellEdit" Type="Edit" X="150" Y="73" Width="115" Height="18" Property="AFSCELLNAME" Text="{120}" />
         <Control Id="LogonOptionsLabel" Type="Text" X="45" Y="93" Width="100" Height="15" Text="Integrated logon options" />
-        <Control Id="LogonOptionSel" Type="RadioButtonGroup" X="45" Y="108" Width="220" Height="80" Property="LOGONOPTIONS" />
-        <Control Id="FreelanceLabel" Type="Text" X="45" Y="188" Width="100" Height="15" Text="Freelance mode" />
-        <Control Id="FreelanceSel" Type="RadioButtonGroup" X="150" Y="188" Width="120" Height="20" Property="FREELANCEMODE" />
-        <Control Id="DNSLabel" Type="Text" X="45" Y="208" Width="100" Height="15" Text="Lookup cells in DNS" />
-        <Control Id="DNSSel" Type="RadioButtonGroup" X="150" Y="208" Width="120" Height="20" Property="USEDNS" />
+        <Control Id="LogonOptionSel" Type="RadioButtonGroup" X="45" Y="108" Width="220" Height="60" Property="LOGONOPTIONS" />
+        <Control Id="FreelanceLabel" Type="Text" X="45" Y="168" Width="100" Height="15" Text="Freelance mode" />
+        <Control Id="FreelanceSel" Type="RadioButtonGroup" X="150" Y="168" Width="120" Height="20" Property="FREELANCEMODE" />
+        <Control Id="DNSLabel" Type="Text" X="45" Y="188" Width="100" Height="15" Text="Lookup cells in DNS" />
+        <Control Id="DNSSel" Type="RadioButtonGroup" X="150" Y="188" Width="120" Height="20" Property="USEDNS" />
       </Dialog>
       <RadioGroup Property="FREELANCEMODE">
 		<RadioButton X="5" Y="0" Width="55" Height="15" Text="Disable">0</RadioButton>
@@ -711,9 +765,39 @@
       <RadioGroup Property="LOGONOPTIONS">
 		<RadioButton X="5" Y="0" Width="215" Height="15" Text="Disable integrated logon">0</RadioButton>
 		<RadioButton X="5" Y="20" Width="215" Height="15" Text="Enable integrated logon">1</RadioButton>
-		<RadioButton X="5" Y="40" Width="215" Height="15" Text="Enable high security mode">2</RadioButton>
-		<RadioButton X="5" Y="60" Width="215" Height="15" Text="Enable integrated logon and high security">3</RadioButton>		
+		<RadioButton X="5" Y="40" Width="215" Height="15" Text="Enable integrated logon and high security">3</RadioButton>		
       </RadioGroup>
+
+      <Dialog Id="ConfigCredsDlg" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="[ButtonText_Back]">
+          <Publish Event="NewDialog" Value="ConfigClientDlg">1</Publish>
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Text="[ButtonText_Next]">
+			<Publish Event="AddLocal" Value="feaCredsStartup">CREDSSTARTUP = "1"</Publish>
+			<Publish Event="Remove" Value="feaCredsStartup">CREDSSTARTUP &lt;&gt; "1"</Publish>
+			<Publish Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="[ButtonText_Cancel]">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+        <Control Id="BannerBitmap" Type="Bitmap" X="0" Y="0" Width="374" Height="44" FixedSize="yes" TabSkip="no" Text="[BannerBitmap]" />
+        <Control Id="Description" Type="Text" X="25" Y="23" Width="280" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>Choose the configuration options for AFS credentials.</Text>
+        </Control>
+        <Control Id="BannerLine" Type="Line" X="0" Y="44" Width="374" Height="0" />
+        <Control Id="BottomLine" Type="Line" X="0" Y="234" Width="374" Height="0" />
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes">
+          <Text>[DlgTitleFont]Options for AFS Credentials</Text>
+        </Control>
+        <Control Id="CredStartLabel" Type="Text" X="45" Y="53" Width="295" Height="15" TabSkip="yes" Text="Startup options for AFS Credentials" />
+        <Control Id="CredStartup" Type="CheckBox" X="50" Y="73" Width="300" Height="15" Property="CREDSSTARTUP" CheckBoxValue="1" Text="Start AFS Credentials at startup" />
+        <Control Id="CredCommandLabel" Type="Text" X="45" Y="93" Width="295" Height="15" TabSkip="yes" Text="Command line options for AFS Credentials" />
+        <Control Id="CredAutoInit" Type="CheckBox" X="50" Y="113" Width="300" Height="15" Property="CREDSAUTOINIT" CheckBoxValue="-a" Text="Auto initialize AFS Credentials." />
+        <Control Id="CredRenew" Type="CheckBox" X="50" Y="133" Width="300" Height="15" Property="CREDSRENEWDRMAP" CheckBoxValue="-m" Text="Renew drive maps" />
+        <Control Id="CredIPCg" Type="CheckBox" X="50" Y="153" Width="300" Height="15" Property="CREDSIPCHDET" CheckBoxValue="-n" Text="Detect IP address changes" />
+        <Control Id="CredQuiet" Type="CheckBox" X="50" Y="173" Width="300" Height="15" Property="CREDSQUIET" CheckBoxValue="-q" Text="Quiet mode" />
+        <Control Id="CredShow" Type="CheckBox" X="50" Y="193" Width="300" Height="15" Property="CREDSSHOW" CheckBoxValue="-s" Text="Show credentials window on startup" />
+      </Dialog>
 
       <Dialog Id="UserExit" Width="370" Height="270" Title="[ProductName] [Setup]" NoMinimize="yes">
         <Control Id="Finish" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Cancel="yes" Text="[ButtonText_Finish]">
@@ -778,7 +862,7 @@
         <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="[ButtonText_Back]">
           <Publish Event="NewDialog" Value="AdminInstallPointDlg">InstallMode = "Server Image"</Publish>
           <Publish Event="NewDialog" Value="CustomizeDlg">(InstallMode = "Custom" OR InstallMode = "Change") AND &amp;feaClient &lt;&gt; 3</Publish>
-          <Publish Event="NewDialog" Value="ConfigClientDlg">(InstallMode = "Custom" OR InstallMode = "Change") AND &amp;feaClient = 3</Publish>
+          <Publish Event="NewDialog" Value="ConfigCredsDlg">(InstallMode = "Custom" OR InstallMode = "Change") AND &amp;feaClient = 3</Publish>
           <Publish Event="NewDialog" Value="MaintenanceTypeDlg">InstallMode = "Repair"</Publish>
           <Publish Event="NewDialog" Value="SetupTypeDlg">InstallMode = "Typical" OR InstallMode = "Complete"</Publish>
         </Control>

@@ -16,6 +16,8 @@
        CellName       : Default cell name
        CellDbFile     : Path to default CellServDB file
        
+       RemoveLoopback : Defined if we want to remove the loopback adapter
+       
       
       Directory specs: (all dir. specs end in a '\')
        MediaBinDir    : Installer binaries (instloop.exe etc.)

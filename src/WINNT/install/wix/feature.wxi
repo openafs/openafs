@@ -16,6 +16,10 @@
 					<Condition Level="30">VersionNT = 500 And ServicePackLevel &lt; 3</Condition>
 				</Feature>
 				
+				<Feature Id="feaCredsStartup" AllowAdvertise="no" FollowParent="yes" Display="hidden" InstallDefault="local" Level="30">
+					<ComponentRef Id="cmp_credsStartup" />
+				</Feature>
+				
 			<?ifdef Debug?>
 				<Feature Id="feaClientDebug" AllowAdvertise="no" Description="$(loc.StrAFSClientDebugLongDesc)" Display="expand"
 					FollowParent="yes" InstallDefault="local" Level="30" Title="$(loc.StrAFSClientDebugDesc)">
