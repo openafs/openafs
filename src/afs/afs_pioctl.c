@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_pioctl.c,v 1.14 2002/08/02 04:57:37 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_pioctl.c,v 1.15 2002/09/26 19:18:06 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -430,17 +430,28 @@ afs_xioctl ()
 #endif	/* AFS_SUN5_ENV */
 #endif
 #ifndef AFS_LINUX22_ENV
-#if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
       struct file *fd;
 #else
       register struct file *fd;
 #endif
 #endif
+#if defined(AFS_FBSD_ENV)
+      register struct filedesc *fdp;
+#endif
       register struct vcache *tvc;
       register int ioctlDone = 0, code = 0;
       
       AFS_STATCNT(afs_xioctl);
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_FBSD_ENV)
+        fdp=p->p_fd;
+        if ((u_int)uap->fd >= fdp->fd_nfiles ||
+            (fd = fdp->fd_ofiles[uap->fd]) == NULL)
+                return EBADF;
+        if ((fd->f_flag & (FREAD | FWRITE)) == 0)
+                return EBADF;
+#else
+#if defined(AFS_DARWIN_ENV)
         if ((code=fdgetf(p, uap->fd, &fd)))
            return code;
 #else
@@ -476,6 +487,7 @@ afs_xioctl ()
 #else
       fd = getf(uap->fd);
       if (!fd) return;
+#endif
 #endif
 #endif
 #endif
@@ -589,7 +601,10 @@ afs_xioctl ()
 #endif
           code = ioctl(uap, rvp);
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_FBSD_ENV)
+        return ioctl(p, uap);
+#else
+#if defined(AFS_DARWIN_ENV) 
         return ioctl(p, uap, retval);
 #else
 #ifdef  AFS_OSF_ENV
@@ -603,6 +618,7 @@ afs_xioctl ()
 #else   /* AFS_OSF_ENV */
 #ifndef AFS_LINUX22_ENV
           ioctl();
+#endif
 #endif
 #endif
 #endif
@@ -1072,6 +1088,7 @@ afs_HandlePioctl(avc, acom, ablob, afollow, acred)
     inData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     if (inSize > 0) {
       AFS_COPYIN(ablob->in, inData, inSize, code);
+      inData[inSize]='\0';
     }
     else code = 0;
     if (code) {
@@ -1089,8 +1106,10 @@ afs_HandlePioctl(avc, acom, ablob, afollow, acred)
     if (code == 0 && ablob->out_size > 0) {
       if (outSize > ablob->out_size) outSize = ablob->out_size;
       if (outSize >= PIGGYSIZE) code = E2BIG;
-      else if	(outSize) 
+      else if	(outSize) {
+	outData[outSize]='\0';
 	AFS_COPYOUT(outData, ablob->out, outSize, code);
+      }
     }
     osi_FreeLargeSpace(outData);
     afs_PutFakeStat(&fakestate);
@@ -1185,11 +1204,12 @@ static PStoreBehind(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     else code = EPERM;
   }
 
-  if (avc && (sbr->sb_thisfile != -1))
+  if (avc && (sbr->sb_thisfile != -1)) {
     if (afs_AccessOK(avc, PRSFS_WRITE | PRSFS_ADMINISTER, 
 		      areq, DONT_CHECK_MODE_BITS))
       avc->asynchrony = sbr->sb_thisfile;
     else code = EACCES;
+  }
 
   *aoutSize = sizeof(struct sbstruct);
   sbr = (struct sbstruct *)aout;
@@ -1412,6 +1432,7 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     ain += sizeof(afs_int32);
     stp	= ain;	/* remember where the ticket is */
     if (i < 0 || i > 2000) return EINVAL;	/* malloc may fail */
+    if (i > MAXKTCTICKETLEN) return EINVAL;
     stLen = i;
     ain	+= i;	/* skip over ticket */
     memcpy((char *)&i, ain, sizeof(afs_int32));
@@ -1451,7 +1472,11 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     if (set_parent_pag) {
 	int pag;
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV)
         struct proc *p=current_proc(); /* XXX */
+#else
+        struct proc *p=curproc; /* XXX */
+#endif
         uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
                 p->p_pid, p->p_comm);
         if (!setpag(p, acred, -1, &pag, 1)) {

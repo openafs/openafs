@@ -14,7 +14,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_packet.c,v 1.6 2001/10/14 18:43:30 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_packet.c,v 1.7 2002/09/26 19:18:09 hartmans Exp $");
 
 #ifdef KERNEL
 #if defined(UKERNEL)
@@ -33,6 +33,12 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_packet.c,v 1.6 2001/10/14 18:43:3
 #include "../afs/sysincludes.h"
 #endif
 #include "../h/socket.h"
+#if !defined(AFS_SUN5_ENV) &&  !defined(AFS_LINUX20_ENV)
+#if	!defined(AFS_OSF_ENV) && !defined(AFS_AIX41_ENV)
+#include "../sys/mount.h"   /* it gets pulled in by something later anyway */
+#endif
+#include "../h/mbuf.h"
+#endif
 #include "../netinet/in.h"
 #include "../afs/afs_osi.h"
 #include "../rx/rx_kmutex.h"
@@ -42,12 +48,6 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_packet.c,v 1.6 2001/10/14 18:43:3
 #include <sys/sysmacros.h>
 #endif
 #include "../rx/rx_packet.h"
-#if !defined(AFS_SUN5_ENV) &&  !defined(AFS_LINUX20_ENV)
-#if	!defined(AFS_OSF_ENV) && !defined(AFS_AIX41_ENV)
-#include "../sys/mount.h"   /* it gets pulled in by something later anyway */
-#endif
-#include "../h/mbuf.h"
-#endif
 #endif /* defined(UKERNEL) */
 #include "../rx/rx_globals.h"
 #else /* KERNEL */
@@ -1437,7 +1437,9 @@ static void rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
     taddr.sin_family = AF_INET;
     taddr.sin_port = aport;
     taddr.sin_addr.s_addr = ahost;
-
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    taddr.sin_len = sizeof(struct sockaddr_in);
+#endif
 
     /* We need to trim the niovecs. */
     nbytes = apacket->length;

@@ -240,7 +240,7 @@ viced: project vlserver audit
 
 tviced: project viced vlserver libafsrpc libafsauthent
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux110) \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux110) \
 		${COMPILE_PART1} tviced  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT viced for ${SYS_NAME} ;; \
@@ -292,7 +292,7 @@ bozo: project ntp audit
 vfsck:	vol
 	set -x; \
 	case ${SYS_NAME} in \
-	sgi_* | *linux* | rs_aix42 | ppc_darwin* | hp_ux* | *fbsd* | *_obsd* ) \
+	sgi_* | *linux* | rs_aix42 | ppc_darwin* | hp_ux* | *fbsd* | *_obsd* | sun*_4* ) \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
@@ -379,7 +379,7 @@ libafs_tree: libafs_setup ${KERNELDIR}
 libuafs: libuafs_setup ${UKERNELDIR}
 	set -x; \
 	case ${SYS_NAME} in \
-	hp_ux102* | *_obsd* ) \
+	hp_ux102* | *_obsd* | sun*_4* ) \
 		echo Skipping libuafs for ${SYS_NAME} ;; \
 	* ) \
 		${COMPILE_PART1} libuafs ${COMPILE_PART2} ;; \
@@ -434,7 +434,7 @@ tests: rxtests ubiktests
 # pthread based user space RX library
 libafsrpc: rx rxkad des
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110|*fbsd*) \
 	${COMPILE_PART1} libafsrpc  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
@@ -442,10 +442,26 @@ libafsrpc: rx rxkad des
 
 libafsauthent: ubik auth kauth libafsrpc
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110|*fbsd*) \
 	${COMPILE_PART1} libafsauthent  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
+	esac
+
+shlibafsrpc: rx rxkad des
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux110) \
+	${COMPILE_PART1} shlibafsrpc ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
+	esac
+
+shlibafsauthent: ubik auth kauth shlibafsrpc
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux110) \
+	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
 	esac
 
 libadmin_real: 
@@ -471,13 +487,13 @@ libadmin: libafsauthent bozo
 finale: project cmd comerr afsd allrcmds butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
-	libafsauthent libadmin
+	libafsauthent shlibafsrpc shlibafsauthent libadmin
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs: project cmd comerr afsd allrcmds butc tbutc libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
-	libafsauthent libadmin
+	libafsauthent shlibafsrpc shlibafsauthent libadmin
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 # Use washtool to ensure MakefileProto is current and obj/libafs exists.
@@ -570,6 +586,8 @@ clean2:
 	-${COMPILE_PART1} rxdebug ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafsrpc ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafsauthent ${COMPILE_CLEAN}
+	-${COMPILE_PART1} shlibafsrpc ${COMPILE_CLEAN}
+	-${COMPILE_PART1} shlibafsauthent ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin/adminutil ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin/client ${COMPILE_CLEAN}
@@ -690,6 +708,8 @@ distclean: clean
 	src/rxstat/Makefile \
 	src/scout/Makefile \
 	src/sgistuff/Makefile \
+	src/shlibafsauthent/Makefile \
+	src/shlibafsrpc/Makefile \
 	src/sia/Makefile \
 	src/sys/Makefile \
 	src/tbutc/Makefile \

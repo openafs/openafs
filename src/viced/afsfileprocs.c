@@ -28,7 +28,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/afsfileprocs.c,v 1.9 2002/06/10 12:02:03 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/afsfileprocs.c,v 1.10 2002/09/26 19:18:09 hartmans Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -5530,8 +5530,14 @@ Check_PermissionRights(targetptr, client, rights, CallingRoutine, InStatus)
 	    }
 	    else {	/* store data or status */
 	      /* watch for chowns and chgrps */
-	      if (CHOWN(InStatus, targetptr) || CHGRP(InStatus, targetptr))
-		return(EPERM);      /* Was EACCES */
+	      if (CHOWN(InStatus, targetptr) || CHGRP(InStatus, targetptr)) {
+		if (VanillaUser (client)) 
+		  return(EPERM);	/* Was EACCES */
+		else
+		  osi_audit(PrivilegeEvent, 0,
+			    AUD_INT, (client ? client->ViceId : 0), 
+			    AUD_INT, CallingRoutine, AUD_END);
+	      }
 	      /* must be sysadmin to set suid/sgid bits */
 	      if ((InStatus->Mask & AFS_SETMODE) &&
 #ifdef AFS_NT40_ENV

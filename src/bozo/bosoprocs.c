@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bosoprocs.c,v 1.5 2002/05/12 05:50:43 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/bosoprocs.c,v 1.6 2002/09/26 19:18:07 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -1260,6 +1260,13 @@ int DirAccessOK ()
     for (i=0; i<bozo_nbosEntryStats; i++) {
 	struct bozo_bosEntryStats *e = &bozo_bosEntryStats[i];
 	if (!StatEachEntry (e)) {
+	    bozo_Log("unhappy with %s which is a %s that should "
+		     "have at least rights %o, at most rights %o %s\n",
+		     e->path, 
+		     e->dir ? "dir" : "file", 
+		     e->reqPerm, 
+		     e->proPerm, 
+		     e->rootOwner ? ", owned by root" : "");
 	    result = 0;
 	    break;
 	}

@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.11 2002/08/02 04:57:39 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.12 2002/09/26 19:18:09 hartmans Exp $");
 
 #include <ctype.h>
 #ifdef AFS_NT40_ENV
@@ -75,6 +75,9 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.11 2002/08/02 04:57
 #else
 #if	defined(AFS_SUN_ENV)
 #include <sys/vfs.h>
+#ifndef AFS_SUN5_ENV
+#include <mntent.h>
+#endif
 #endif
 #ifdef AFS_SUN5_ENV
 #include <unistd.h>
@@ -503,6 +506,7 @@ int VAttachPartitions(void)
 	    continue; /* Ignore any "special" partitions */
 
 #ifdef AFS_AIX42_ENV
+#ifndef AFS_NAMEI_ENV
 	{
 	    struct superblock fs;
 	    /* The Log statements are non-sequiters in the SalvageLog and don't
@@ -519,6 +523,7 @@ int VAttachPartitions(void)
 		continue;
 	    }
 	}
+#endif
 #endif
 
 	/* If we're going to always attach this partition, do it later. */

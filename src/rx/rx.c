@@ -16,7 +16,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx.c,v 1.11 2002/01/30 16:54:11 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx.c,v 1.12 2002/09/26 19:18:08 hartmans Exp $");
 
 #ifdef KERNEL
 #include "../afs/sysincludes.h"
@@ -263,23 +263,31 @@ void rxi_StartUnlocked();
 struct rx_connection *rxLastConn = 0; 
 
 #ifdef RX_ENABLE_LOCKS
-/* The locking hierarchy for rx fine grain locking is composed of five
+/* The locking hierarchy for rx fine grain locking is composed of these
  * tiers:
+ *
+ * rx_connHashTable_lock - synchronizes conn creation, rx_connHashTable access
  * conn_call_lock - used to synchonize rx_EndCall and rx_NewCall
  * call->lock - locks call data fields.
- * Most any other lock - these are all independent of each other.....
- *	rx_freePktQ_lock
+ * These are independent of each other:
  *	rx_freeCallQueue_lock
- *	freeSQEList_lock
- *	rx_connHashTable_lock
- *	rx_serverPool_lock
  *	rxi_keyCreate_lock
+ * rx_serverPool_lock
+ * freeSQEList_lock
+ *
+ * serverQueueEntry->lock
+ * rx_rpc_stats
  * rx_peerHashTable_lock - locked under rx_connHashTable_lock
-
+ * peer->lock - locks peer data fields.
+ * conn_data_lock - that more than one thread is not updating a conn data
+ *		    field at the same time.
+ * rx_freePktQ_lock
+ *
  * lowest level:
- *	peer_lock - locks peer data fields.
- *	conn_data_lock - that more than one thread is not updating a conn data
- *		field at the same time.
+ *	multi_handle->lock
+ *	rxevent_lock
+ *	rx_stats_mutex
+ *
  * Do we need a lock to protect the peer field in the conn structure?
  *      conn->peer was previously a constant for all intents and so has no
  *      lock protecting this field. The multihomed client delta introduced
@@ -404,9 +412,9 @@ int rx_Init(u_int port)
 #ifdef RX_LOCKS_DB
     rxdb_init();
 #endif /* RX_LOCKS_DB */
-    MUTEX_INIT(&rx_stats_mutex, "rx_stats_mutex",MUTEX_DEFAULT,0);    
-    MUTEX_INIT(&rx_rpc_stats, "rx_rpc_stats",MUTEX_DEFAULT,0);    
-    MUTEX_INIT(&rx_freePktQ_lock, "rx_freePktQ_lock",MUTEX_DEFAULT,0);    
+    MUTEX_INIT(&rx_stats_mutex, "rx_stats_mutex",MUTEX_DEFAULT,0);
+    MUTEX_INIT(&rx_rpc_stats, "rx_rpc_stats",MUTEX_DEFAULT,0);
+    MUTEX_INIT(&rx_freePktQ_lock, "rx_freePktQ_lock",MUTEX_DEFAULT,0);
     MUTEX_INIT(&freeSQEList_lock, "freeSQEList lock",MUTEX_DEFAULT,0);
     MUTEX_INIT(&rx_freeCallQueue_lock, "rx_freeCallQueue_lock",
 	       MUTEX_DEFAULT,0);
@@ -957,9 +965,10 @@ static void rxi_DestroyConnectionNoLock(conn)
 
     /* Make sure the connection is completely reset before deleting it. */
     /* get rid of pending events that could zap us later */
-    if (conn->challengeEvent) {
+    if (conn->challengeEvent)
 	rxevent_Cancel(conn->challengeEvent, (struct rx_call*)0, 0);
-    }
+    if (conn->checkReachEvent)
+	rxevent_Cancel(conn->checkReachEvent, (struct rx_call*)0, 0);
  
     /* Add the connection to the list of destroyed connections that
      * need to be cleaned up. This is necessary to avoid deadlocks
@@ -1247,6 +1256,7 @@ rx_NewService(port, serviceId, serviceName, securityObjects,
 	    service->idleDeadTime = 60;
 	    service->connDeadTime = rx_connDeadTime;
 	    service->executeRequestProc = serviceProc;
+	    service->checkReach = 0;
 	    rx_services[i] = service;	/* not visible until now */
 	    AFS_RXGUNLOCK();
 	    USERPRI;
@@ -1423,7 +1433,7 @@ osi_socket *socketp;
     } else {    /* otherwise allocate a new one and return that */
 	MUTEX_EXIT(&freeSQEList_lock);
 	sq = (struct rx_serverQueueEntry *) rxi_Alloc(sizeof(struct rx_serverQueueEntry));
-	MUTEX_INIT(&sq->lock, "server Queue lock",MUTEX_DEFAULT,0);	
+	MUTEX_INIT(&sq->lock, "server Queue lock",MUTEX_DEFAULT,0);
 	CV_INIT(&sq->cv, "server Queue lock", CV_DEFAULT, 0);
     }
 
@@ -1581,7 +1591,7 @@ rx_GetCall(tno, cur_service, socketp)
     } else {    /* otherwise allocate a new one and return that */
 	MUTEX_EXIT(&freeSQEList_lock);
 	sq = (struct rx_serverQueueEntry *) rxi_Alloc(sizeof(struct rx_serverQueueEntry));
-	MUTEX_INIT(&sq->lock, "server Queue lock",MUTEX_DEFAULT,0);	
+	MUTEX_INIT(&sq->lock, "server Queue lock",MUTEX_DEFAULT,0);
 	CV_INIT(&sq->cv, "server Queue lock", CV_DEFAULT, 0);
     }
     MUTEX_ENTER(&sq->lock);
@@ -2408,9 +2418,9 @@ struct rx_packet *rxi_ReceivePacket(np, socket, host, port, tnop, newcallp)
 	addr.sin_family = AF_INET;
 	addr.sin_port = port;
 	addr.sin_addr.s_addr = host;
-#if  defined(AFS_OSF_ENV) && defined(_KERNEL)
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN 
         addr.sin_len = sizeof(addr);
-#endif  /* AFS_OSF_ENV */
+#endif  /* STRUCT_SOCKADDR_HAS_SA_LEN */
 	drop = (*rx_justReceived) (np, &addr);
 	/* drop packet if return value is non-zero */
 	if (drop) return np;
@@ -2438,7 +2448,7 @@ struct rx_packet *rxi_ReceivePacket(np, socket, host, port, tnop, newcallp)
 
     MUTEX_ENTER(&conn->conn_data_lock);
     if (conn->maxSerial < np->header.serial)
-      conn->maxSerial = np->header.serial;
+	conn->maxSerial = np->header.serial;
     MUTEX_EXIT(&conn->conn_data_lock);
 
     /* If the connection is in an error state, send an abort packet and ignore
@@ -2555,7 +2565,9 @@ struct rx_packet *rxi_ReceivePacket(np, socket, host, port, tnop, newcallp)
 	    return np;
 	}
 	if (!call) {
+	    MUTEX_ENTER(&conn->conn_call_lock);
 	    call = rxi_NewCall(conn, channel);
+	    MUTEX_EXIT(&conn->conn_call_lock);
 	    *call->callNumber = np->header.callNumber;
 	    call->state = RX_STATE_PRECALL;
 	    clock_GetTime(&call->queueTime);
@@ -2865,20 +2877,110 @@ static TooLow(ap, acall)
 }
 #endif /* KERNEL */
 
+static void rxi_CheckReachEvent(event, conn, acall)
+    struct rxevent *event;
+    struct rx_connection *conn;
+    struct rx_call *acall;
+{
+    struct rx_call *call = acall;
+    struct clock when;
+    int i, waiting;
+
+    MUTEX_ENTER(&conn->conn_data_lock);
+    conn->checkReachEvent = (struct rxevent *) 0;
+    waiting = conn->flags & RX_CONN_ATTACHWAIT;
+    if (event) conn->refCount--;
+    MUTEX_EXIT(&conn->conn_data_lock);
+
+    if (waiting) {
+	if (!call) {
+	    MUTEX_ENTER(&conn->conn_call_lock);
+	    MUTEX_ENTER(&conn->conn_data_lock);
+	    for (i=0; i<RX_MAXCALLS; i++) {
+		struct rx_call *tc = conn->call[i];
+		if (tc && tc->state == RX_STATE_PRECALL) {
+		    call = tc;
+		    break;
+		}
+	    }
+	    if (!call)
+		/* Indicate that rxi_CheckReachEvent is no longer running by
+		 * clearing the flag.  Must be atomic under conn_data_lock to
+		 * avoid a new call slipping by: rxi_CheckConnReach holds
+		 * conn_data_lock while checking RX_CONN_ATTACHWAIT.
+		 */
+		conn->flags &= ~RX_CONN_ATTACHWAIT;
+	    MUTEX_EXIT(&conn->conn_data_lock);
+	    MUTEX_EXIT(&conn->conn_call_lock);
+	}
+
+	if (call) {
+	    if (call != acall) MUTEX_ENTER(&call->lock);
+	    rxi_SendAck(call, NULL, 0, 0, 0, RX_ACK_PING, 0);
+	    if (call != acall) MUTEX_EXIT(&call->lock);
+
+	    clock_GetTime(&when);
+	    when.sec += RX_CHECKREACH_TIMEOUT;
+	    MUTEX_ENTER(&conn->conn_data_lock);
+	    if (!conn->checkReachEvent) {
+		conn->refCount++;
+		conn->checkReachEvent =
+		    rxevent_Post(&when, rxi_CheckReachEvent, conn, NULL);
+	    }
+	    MUTEX_EXIT(&conn->conn_data_lock);
+	}
+    }
+}
+
+static int rxi_CheckConnReach(conn, call)
+    struct rx_connection *conn;
+    struct rx_call *call;
+{
+    struct rx_service *service = conn->service;
+    struct rx_peer *peer = conn->peer;
+    afs_uint32 now, lastReach;
+
+    if (service->checkReach == 0)
+	return 0;
+
+    now = clock_Sec();
+    MUTEX_ENTER(&peer->peer_lock);
+    lastReach = peer->lastReachTime;
+    MUTEX_EXIT(&peer->peer_lock);
+    if (now - lastReach < RX_CHECKREACH_TTL)
+	return 0;
+
+    MUTEX_ENTER(&conn->conn_data_lock);
+    if (conn->flags & RX_CONN_ATTACHWAIT) {
+	MUTEX_EXIT(&conn->conn_data_lock);
+	return 1;
+    }
+    conn->flags |= RX_CONN_ATTACHWAIT;
+    MUTEX_EXIT(&conn->conn_data_lock);
+    if (!conn->checkReachEvent)
+	rxi_CheckReachEvent((struct rxevent *)0, conn, call);
+
+    return 1;
+}
+
 /* try to attach call, if authentication is complete */
-static void TryAttach(acall, socket, tnop, newcallp)
-register struct rx_call *acall;
-register osi_socket socket;
-register int *tnop;
-register struct rx_call **newcallp; {
-    register struct rx_connection *conn;
-    conn = acall->conn;
-    if ((conn->type==RX_SERVER_CONNECTION) && (acall->state == RX_STATE_PRECALL)) {
+static void TryAttach(acall, socket, tnop, newcallp, reachOverride)
+    register struct rx_call *acall;
+    register osi_socket socket;
+    register int *tnop;
+    register struct rx_call **newcallp;
+    int reachOverride;
+{
+    struct rx_connection *conn = acall->conn;
+
+    if (conn->type==RX_SERVER_CONNECTION && acall->state==RX_STATE_PRECALL) {
 	/* Don't attach until we have any req'd. authentication. */
 	if (RXS_CheckAuthentication(conn->securityObject, conn) == 0) {
-	    rxi_AttachServerProc(acall, socket, tnop, newcallp);
-	    /* Note:  this does not necessarily succeed; there
-	       may not any proc available */
+	    if (reachOverride || rxi_CheckConnReach(conn, acall) == 0)
+		rxi_AttachServerProc(acall, socket, tnop, newcallp);
+		/* Note:  this does not necessarily succeed; there
+		 * may not any proc available
+		 */
 	}
 	else {
 	    rxi_ChallengeOn(acall->conn);
@@ -3053,7 +3155,7 @@ struct rx_packet *rxi_ReceiveDataPacket(call, np, istack, socket, host,
 	     * server thread is available, this thread becomes a server
 	     * thread and the server thread becomes a listener thread. */
 	    if (isFirst) {
-		TryAttach(call, socket, tnop, newcallp);
+		TryAttach(call, socket, tnop, newcallp, 0);
 	    }
 	}	
 	/* This is not the expected next packet. */
@@ -3241,6 +3343,35 @@ nextloop:;
 static void rxi_ComputeRate();
 #endif
 
+static void rxi_UpdatePeerReach(conn, acall)
+    struct rx_connection *conn;
+    struct rx_call *acall;
+{
+    struct rx_peer *peer = conn->peer;
+
+    MUTEX_ENTER(&peer->peer_lock);
+    peer->lastReachTime = clock_Sec();
+    MUTEX_EXIT(&peer->peer_lock);
+
+    MUTEX_ENTER(&conn->conn_data_lock);
+    if (conn->flags & RX_CONN_ATTACHWAIT) {
+	int i;
+
+	conn->flags &= ~RX_CONN_ATTACHWAIT;
+	MUTEX_EXIT(&conn->conn_data_lock);
+
+	for (i=0; i<RX_MAXCALLS; i++) {
+	    struct rx_call *call = conn->call[i];
+	    if (call) {
+		if (call != acall) MUTEX_ENTER(&call->lock);
+		TryAttach(call, -1, NULL, NULL, 1);
+		if (call != acall) MUTEX_EXIT(&call->lock);
+	    }
+	}
+    } else
+	MUTEX_EXIT(&conn->conn_data_lock);
+}
+
 /* The real smarts of the whole thing.  */
 struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
     register struct rx_call *call;
@@ -3288,6 +3419,9 @@ struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
     if (np->header.flags & RX_SLOW_START_OK) {
 	call->flags |= RX_CALL_SLOW_START_OK;
     }
+
+    if (ap->reason == RX_ACK_PING_RESPONSE)
+	rxi_UpdatePeerReach(conn, call);
     
 #ifdef RXDEBUG
     if (rx_Log) {
@@ -3743,8 +3877,9 @@ struct rx_packet *rxi_ReceiveResponsePacket(conn, np, istack)
     }
     else {
 	/* If the response is valid, any calls waiting to attach
-         * servers can now do so */
+	 * servers can now do so */
 	int i;
+
 	for (i=0; i<RX_MAXCALLS; i++) {
 	    struct rx_call *call = conn->call[i];
 	    if (call) {
@@ -3754,6 +3889,12 @@ struct rx_packet *rxi_ReceiveResponsePacket(conn, np, istack)
 		MUTEX_EXIT(&call->lock);
 	    }
 	}
+
+	/* Update the peer reachability information, just in case
+	 * some calls went into attach-wait while we were waiting
+	 * for authentication..
+	 */
+	rxi_UpdatePeerReach(conn, NULL);
     }
     return np;
 }
@@ -3804,10 +3945,10 @@ rxi_ReceiveChallengePacket(conn, np, istack)
  * call so it eventually gets one */
 void 
 rxi_AttachServerProc(call, socket, tnop, newcallp)
-register struct rx_call *call;
-register osi_socket socket;
-register int *tnop;
-register struct rx_call **newcallp;
+    register struct rx_call *call;
+    register osi_socket socket;
+    register int *tnop;
+    register struct rx_call **newcallp;
 {
     register struct rx_serverQueueEntry *sq;
     register struct rx_service *service = call->conn->service;
@@ -4159,8 +4300,16 @@ void rxi_ConnectionError(conn, error)
 {
     if (error) {
 	register int i;
+	MUTEX_ENTER(&conn->conn_data_lock);
 	if (conn->challengeEvent)
 	    rxevent_Cancel(conn->challengeEvent, (struct rx_call*)0, 0);
+	if (conn->checkReachEvent) {
+	    rxevent_Cancel(conn->checkReachEvent, (struct rx_call*)0, 0);
+	    conn->checkReachEvent = 0;
+	    conn->flags &= ~RX_CONN_ATTACHWAIT;
+	    conn->refCount--;
+	}
+	MUTEX_EXIT(&conn->conn_data_lock);
 	for (i=0; i<RX_MAXCALLS; i++) {
 	    struct rx_call *call = conn->call[i];
 	    if (call) {
@@ -6032,6 +6181,9 @@ static int MakeDebugCall(
     taddr.sin_family = AF_INET;
     taddr.sin_port = remotePort;
     taddr.sin_addr.s_addr = remoteAddr;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    taddr.sin_len = sizeof(struct sockaddr_in);
+#endif
     while(1) {
 	memset(&theader, 0, sizeof(theader));
 	theader.epoch = htonl(999);

@@ -22,7 +22,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.11 2002/08/02 04:57:38 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.12 2002/09/26 19:18:06 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -110,7 +110,7 @@ EvalMountPoint(avc, advc, avolpp, areq)
     struct VenusFid tfid;
     struct cell *tcell;
     char   *cpos, *volnamep;
-    char   type, buf[128];
+    char   type, *buf;
     afs_int32  prefetchRO;          /* 1=>No  2=>Yes */
     afs_int32  mtptCell, assocCell, hac=0;
     afs_int32  samecell, roname, len;
@@ -179,15 +179,18 @@ EvalMountPoint(avc, advc, avolpp, areq)
      * Don't know why we do this. Would have still found it in above call - jpm.
      */
     if (!tvp && (prefetchRO == 2)) {
-       strcpy(buf, volnamep);
-       afs_strcat(buf, ".readonly");
+	buf = (char *)osi_AllocSmallSpace(strlen(volnamep)+10);
 
-       tvp = afs_GetVolumeByName(buf, mtptCell, 1, areq, WRITE_LOCK);
+	strcpy(buf, volnamep);
+	afs_strcat(buf, ".readonly");
 
-       /* Try the associated linked cell if failed */
-       if (!tvp && hac && areq->volumeError) {
-	  tvp = afs_GetVolumeByName(buf, assocCell, 1, areq, WRITE_LOCK);
-       }
+	tvp = afs_GetVolumeByName(buf, mtptCell, 1, areq, WRITE_LOCK);
+       
+	/* Try the associated linked cell if failed */
+	if (!tvp && hac && areq->volumeError) {
+	    tvp = afs_GetVolumeByName(buf, assocCell, 1, areq, WRITE_LOCK);
+	}
+	osi_FreeSmallSpace(buf);
     }
   
     if (!tvp) return ENODEV;       /* Couldn't find the volume */
@@ -195,7 +198,7 @@ EvalMountPoint(avc, advc, avolpp, areq)
     /* Don't cross mountpoint from a BK to a BK volume */
     if ((avc->states & CBackup) && (tvp->states & VBackup)) {
 	afs_PutVolume(tvp, WRITE_LOCK);
-	return ELOOP;
+	return ENODEV;
     }
 
     /* If we want (prefetched) the RO and it exists, then drop the
@@ -1088,6 +1091,7 @@ afs_lookup(adp, aname, avcp, acred)
     struct sysname_info sysState;   /* used only for @sys checking */
     int dynrootRetry = 1;
     struct afs_fakestat_state fakestate;
+    int tryEvalOnly = 0;
 
     AFS_STATCNT(afs_lookup);
     afs_InitFakeStat(&fakestate);
@@ -1095,14 +1099,32 @@ afs_lookup(adp, aname, avcp, acred)
     if (code = afs_InitReq(&treq, acred))
 	goto done;
 
-    code = afs_EvalFakeStat(&adp, &fakestate, &treq);
-    if (code)
-	goto done;
 #ifdef	AFS_OSF_ENV
     ndp->ni_dvp = AFSTOV(adp);
     memcpy(aname, ndp->ni_ptr, ndp->ni_namelen);
     aname[ndp->ni_namelen] = '\0';
 #endif	/* AFS_OSF_ENV */
+
+#if defined(AFS_DARWIN_ENV)
+    /* Workaround for MacOSX Finder, which tries to look for
+     * .DS_Store and Contents under every directory.
+     */
+    if (afs_fakestat_enable && adp->mvstat == 1) {
+	if (strcmp(aname, ".DS_Store") == 0)
+	    tryEvalOnly = 1;
+	if (strcmp(aname, "Contents") == 0)
+	    tryEvalOnly = 1;
+    }
+#endif
+
+    if (tryEvalOnly)
+	code = afs_TryEvalFakeStat(&adp, &fakestate, &treq);
+    else
+	code = afs_EvalFakeStat(&adp, &fakestate, &treq);
+    if (tryEvalOnly && adp->mvstat == 1)
+	code = ENOENT;
+    if (code)
+	goto done;
 
     *avcp = (struct vcache *) 0;   /* Since some callers don't initialize it */
 
