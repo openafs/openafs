@@ -708,14 +708,12 @@ tagain:
 	    trimlen = len;
 	    afsio_trim(&tuio, trimlen);
 	    tuio.afsio_offset = offset;
-#ifdef	AFS_AIX_ENV
-#ifdef	AFS_AIX41_ENV
+#if defined(AFS_AIX41_ENV)
 	  AFS_GUNLOCK();
 	  code = VNOP_RDWR(tfile->vnode, UIO_READ, FREAD, &tuio, NULL, NULL,
 			   NULL, &afs_osi_cred);
 	  AFS_GLOCK();
-#else
-#ifdef AFS_AIX32_ENV
+#elif defined(AFS_AIX32_ENV)
 	    code = VNOP_RDWR(tfile->vnode, UIO_READ, FREAD, &tuio, NULL, NULL);
 	  /* Flush all JFS pages now for big performance gain in big file cases
 	   * If we do something like this, must check to be sure that AFS file 
@@ -741,53 +739,49 @@ tagain:
 			(len + PAGESIZE-1)/PAGESIZE);
 	  }	
 */
-#else
-	    code = VNOP_RDWR(tfile->vnode, UIO_READ, FREAD, (off_t)&offset, &tuio, NULL, NULL, -1);
-#endif
-#endif
-#else
-#ifdef	AFS_SUN5_ENV
+#elif defined(AFS_AIX_ENV)
+	  code = VNOP_RDWR(tfile->vnode, UIO_READ, FREAD, (off_t)&offset, &tuio, NULL, NULL, -1);
+#elif defined(AFS_SUN5_ENV)
 	  AFS_GUNLOCK();
 	    VOP_RWLOCK(tfile->vnode, 0);
 	    code = VOP_READ(tfile->vnode, &tuio, 0, &afs_osi_cred);
 	    VOP_RWUNLOCK(tfile->vnode, 0);
 	  AFS_GLOCK();
-#else
-#if defined(AFS_SGI_ENV)
+#elif defined(AFS_SGI_ENV)
 	    AFS_GUNLOCK();
 	    AFS_VOP_RWLOCK(tfile->vnode, VRWLOCK_READ);
 	    AFS_VOP_READ(tfile->vnode, &tuio, IO_ISLOCKED, &afs_osi_cred,
 			 code);
 	    AFS_VOP_RWUNLOCK(tfile->vnode, VRWLOCK_READ);
 	    AFS_GLOCK();
-#else
-#ifdef	AFS_OSF_ENV
+#elif defined(AFS_OSF_ENV)
 	    tuio.uio_rw = UIO_READ;
 	    AFS_GUNLOCK();
 	    VOP_READ(tfile->vnode, &tuio, 0, &afs_osi_cred, code);
 	    AFS_GLOCK();
-#else	/* AFS_OSF_ENV */
-#ifdef AFS_SUN_ENV
+#elif defined(AFS_SUN_ENV)
 	    code = VOP_RDWR(tfile->vnode, &tuio, UIO_READ, 0, &afs_osi_cred);
-#else
-#if 	defined(AFS_HPUX100_ENV)
+#elif defined(AFS_HPUX100_ENV)
 	    AFS_GUNLOCK();
 	    code = VOP_RDWR(tfile->vnode, &tuio, UIO_READ, 0, &afs_osi_cred);
 	    AFS_GLOCK();
-#else
-#if defined(AFS_LINUX20_ENV)
+#elif defined(AFS_LINUX20_ENV)
 	    AFS_GUNLOCK();
 	    code = osi_file_uio_rdwr(tfile, &tuio, UIO_READ);
 	    AFS_GLOCK();
-#else
-#if defined(AFS_DARWIN_ENV)
+#elif defined(AFS_DARWIN_ENV)
             AFS_GUNLOCK();
             VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, current_proc());
             code = VOP_READ(tfile->vnode, &tuio, 0, &afs_osi_cred);
             VOP_UNLOCK(tfile->vnode, 0, current_proc());
             AFS_GLOCK();
-#else
-#if defined(AFS_XBSD_ENV)
+#elif defined(AFS_FBSD50_ENV)
+            AFS_GUNLOCK();
+            VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curthread);
+            code = VOP_READ(tfile->vnode, &tuio, 0, &afs_osi_cred);
+            VOP_UNLOCK(tfile->vnode, 0, curthread);
+            AFS_GLOCK();
+#elif defined(AFS_XBSD_ENV)
             AFS_GUNLOCK();
             VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curproc);
             code = VOP_READ(tfile->vnode, &tuio, 0, &afs_osi_cred);
@@ -795,14 +789,6 @@ tagain:
             AFS_GLOCK();
 #else
 	    code = VOP_RDWR(tfile->vnode, &tuio, UIO_READ, 0, &afs_osi_cred);
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
 #endif
 
 #ifdef IHINT
