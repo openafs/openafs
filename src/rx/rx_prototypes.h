@@ -561,9 +561,15 @@ extern void rx_SetNoJumbo(void);
 
 /* EXTERNAL PROTOTYPES - include here cause it causes too many issues to
    include the afs_prototypes.h file - just make sure they match */
+#ifndef afs_osi_Alloc
 extern void *afs_osi_Alloc(size_t x);
+#endif
+#ifndef afs_osi_Alloc_NoSleep
 extern void *afs_osi_Alloc_NoSleep(size_t x);
+#endif
+#ifndef afs_osi_Free
 extern void afs_osi_Free(void *x, size_t asize);
+#endif
 #ifndef afs_osi_Wakeup
 extern int afs_osi_Wakeup(void *event);
 #endif

@@ -113,9 +113,6 @@
 
 #define p_rcred         p_ucred
 
-#define	VN_RELE(vp)	vrele(((struct vnode *)(vp)))
-#define	VN_HOLD(vp)	VREF(((struct vnode *)(vp)))
-
 #if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__)
 enum vcexcl { NONEXCL, EXCL };
 

@@ -28,11 +28,10 @@ extern struct mount *afs_cacheVfsp;
 void *
 osi_UFSOpen(afs_int32 ainode)
 {
-    struct inode *ip;
-    register struct osi_file *afile = NULL;
+    struct osi_file *afile;
+    struct vnode *vp;
     extern int cacheDiskType;
-    afs_int32 code = 0;
-    int dummy;
+    afs_int32 code;
 
     AFS_STATCNT(osi_UFSOpen);
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS)
@@ -40,24 +39,24 @@ osi_UFSOpen(afs_int32 ainode)
     afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
 #if defined(AFS_FBSD50_ENV)
-    code = VFS_VGET(afs_cacheVfsp, (ino_t) ainode, LK_EXCLUSIVE, &afile->vnode);
+    code = VFS_VGET(afs_cacheVfsp, (ino_t) ainode, LK_EXCLUSIVE, &vp);
 #else
-    code =
-	igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, (ino_t) ainode, &ip,
-		  &dummy);
+    code = VFS_VGET(afs_cacheVfsp, (ino_t) ainode, &vp);
 #endif
     AFS_GLOCK();
+    if (code == 0 && vp->v_type == VNON)
+	code = ENOENT;
     if (code) {
 	osi_FreeSmallSpace(afile);
 	osi_Panic("UFSOpen: igetinode failed");
     }
 #if defined(AFS_FBSD50_ENV)
-    VOP_UNLOCK(afile->vnode, 0, curthread);
+    VOP_UNLOCK(vp, 0, curthread);
 #else
-    afile->vnode = ITOV(ip);
-    VOP_UNLOCK(afile->vnode, 0, curproc);
+    VOP_UNLOCK(vp, 0, curproc);
 #endif
-    afile->size = VTOI(afile->vnode)->i_size;
+    afile->vnode = vp;
+    afile->size = VTOI(vp)->i_size;
     afile->offset = 0;
     afile->proc = NULL;
     afile->inum = ainode;	/* for hint validity checking */
@@ -73,7 +72,9 @@ afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
     MObtainWriteLock(&afs_xosi, 320);
     AFS_GUNLOCK();
 #if defined(AFS_FBSD50_ENV)
+    vn_lock(afile->vnode, LK_EXCLUSIVE | LK_RETRY, curthread);
     code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curthread);
+    VOP_UNLOCK(afile->vnode, LK_EXCLUSIVE, curthread);
 #else
     code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curproc);
 #endif
@@ -104,25 +105,41 @@ int
 osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 {
     struct vattr tvattr;
+    struct vnode *vp;
     register afs_int32 code;
-    struct osi_stat tstat;
     AFS_STATCNT(osi_Truncate);
 
-    /* This routine only shrinks files, and most systems
+    MObtainWriteLock(&afs_xosi, 321);
+    vp = afile->vnode;
+    /*
+     * This routine only shrinks files, and most systems
      * have very slow truncates, even when the file is already
      * small enough.  Check now and save some time.
      */
-    code = afs_osi_Stat(afile, &tstat);
-    if (code || tstat.size <= asize)
-	return code;
-    MObtainWriteLock(&afs_xosi, 321);
-    VATTR_NULL(&tvattr);
-    tvattr.va_size = asize;
     AFS_GUNLOCK();
 #if defined(AFS_FBSD50_ENV)
-    code = VOP_SETATTR(afile->vnode, &tvattr, afs_osi_credp, curthread);
+    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curthread);
+    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curthread);
 #else
-    code = VOP_SETATTR(afile->vnode, &tvattr, afs_osi_credp, curproc);
+    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curproc);
+    code = VOP_GETATTR(afile->vnode, &tvattr, afs_osi_credp, curproc);
+#endif
+    if (code != 0 || tvattr.va_size <= asize)
+	goto out;
+
+    VATTR_NULL(&tvattr);
+    tvattr.va_size = asize;
+#if defined(AFS_FBSD50_ENV)
+    code = VOP_SETATTR(vp, &tvattr, afs_osi_credp, curthread);
+#else
+    code = VOP_SETATTR(vp, &tvattr, afs_osi_credp, curproc);
+#endif
+
+out:
+#if defined(AFS_FBSD50_ENV)
+    VOP_UNLOCK(vp, LK_EXCLUSIVE, curthread);
+#else
+    VOP_UNLOCK(vp, LK_EXCLUSIVE, curproc);
 #endif
     AFS_GLOCK();
     MReleaseWriteLock(&afs_xosi);

@@ -79,8 +79,10 @@
 #define	AFS_UIOUSER	UIO_USERSPACE
 #define	AFS_CLBYTES	CLBYTES
 #define	osi_GetTime(x)	microtime(x)
-#define	AFS_KALLOC(x)	malloc(x, M_AFS, M_WAITOK)
-#define	AFS_KFREE(x,y)	free(x,M_AFS)
+#define	AFS_KALLOC(x)	osi_fbsd_alloc((x), 1)
+#undef	AFS_KALLOC_NOSLEEP
+#define	AFS_KALLOC_NOSLEEP(x)	osi_fbsd_alloc((x), 0)
+#define	AFS_KFREE(x,y)	osi_fbsd_free((x))
 #define	v_count		v_usecount
 #define v_vfsp		v_mount
 #define vfs_bsize	mnt_stat.f_bsize
@@ -99,9 +101,6 @@
 #endif /* SSYS */
 
 #define p_rcred         p_ucred
-
-#define	VN_RELE(vp)	vrele(((struct vnode *)(vp)))
-#define	VN_HOLD(vp)	VREF(((struct vnode *)(vp)))
 
 #if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__)
 enum vcexcl { NONEXCL, EXCL };

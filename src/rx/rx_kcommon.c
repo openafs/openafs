@@ -780,6 +780,8 @@ rxk_NewSocket(short aport)
 #if (defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)) && defined(KERNEL_FUNNEL)
     thread_funnel_switch(KERNEL_FUNNEL, NETWORK_FUNNEL);
 #endif
+    AFS_ASSERT_GLOCK();
+    AFS_GUNLOCK();
 #if	defined(AFS_HPUX102_ENV)
 #if     defined(AFS_HPUX110_ENV)
     /* we need a file associated with the socket so sosend in NetSend 
@@ -811,6 +813,7 @@ rxk_NewSocket(short aport)
     if (code)
 	goto bad;
 
+    memset(&myaddr, 0, sizeof myaddr);
     myaddr.sin_family = AF_INET;
     myaddr.sin_port = aport;
     myaddr.sin_addr.s_addr = 0;
@@ -856,6 +859,7 @@ rxk_NewSocket(short aport)
     if (code) {
 	printf("sobind fails (%d)\n", (int)code);
 	soclose(newSocket);
+	AFS_GLOCK();
 	goto bad;
     }
 #else /* defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) */
@@ -890,12 +894,14 @@ rxk_NewSocket(short aport)
 #endif /* else AFS_DARWIN_ENV */
 #endif /* else AFS_HPUX110_ENV */
 
+    AFS_GLOCK();
 #if defined(AFS_DARWIN_ENV) && defined(KERNEL_FUNNEL)
     thread_funnel_switch(NETWORK_FUNNEL, KERNEL_FUNNEL);
 #endif
     return (struct osi_socket *)newSocket;
 
   bad:
+    AFS_GLOCK();
 #if defined(AFS_DARWIN_ENV) && defined(KERNEL_FUNNEL)
     thread_funnel_switch(NETWORK_FUNNEL, KERNEL_FUNNEL);
 #endif

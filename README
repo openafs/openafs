@@ -33,13 +33,13 @@ A. Creating the proper directory structure.
       alpha_dux40
       alpha_dux50 (only tested on 5.0A, does not work with 5.1)
       i386_fbsd_42, i386_fbsd_43, i386_fbsd_44, i386_fbsd_45,
-	      i386_fbsd_46, i386_fbsd_47, i386_fbsd_50
-              (gnu make is required for building on FreeBSD)
+	      i386_fbsd_46, i386_fbsd_47, i386_fbsd_50, i386_fbsd_51,
+	      i386_fbsd_52
       i386_linux22
       i386_linux24
       i386_umlinux22
       i386_umlinux24
-      i386_obsd31, i386_obsd32, i386_obsd33
+      i386_obsd31, i386_obsd32, i386_obsd33, i386_obsd34
       rs_aix42
       sgi_65 (file server not tested)
       sun4_413 (No client support, no fileserver support, db servers only)
@@ -155,7 +155,9 @@ E  HP-UX 11.0 Notes
 
 F  OpenBSD Notes
 
-   For now, you need kernel source installed to build OpenAFS.
+   You need kernel source installed to build OpenAFS.  Use the
+   --with-bsd-kernel-headers= configure option if your kernel source is not
+   in /usr/src/sys.
 
    There is a package builder in src/packaging/OpenBSD.  "sh buildpkg.sh"
    should make a package for the client.  Use pkg_add to install.  The
@@ -170,3 +172,22 @@ F  OpenBSD Notes
    sys/kern/vfs_syscalls.c to a printf and build a new kernel.
 
    You can't run arla and OpenAFS at the same time.
+
+G  FreeBSD Notes
+
+   The FreeBSD client is very new and untested.  Do not trust it for
+   production work.
+
+   You need kernel source installed to build OpenAFS.  Use the
+   --with-bsd-kernel-headers= configure option if your kernel source is not
+   in /usr/src/sys.
+
+   You also need access to your kernel build directory for the opt_global.h
+   include file.  Use the --with-bsd-kernel-build= configure option if your
+   kernel build is not GENERIC in the standard place.
+
+   There is no client package, but you may be able to modify the OpenBSD
+   package builder (see "OpenBSD Notes" above) or install by hand.
+
+   There is no server package, but I am told that "make install" will put
+   server binaries in /usr/afs.

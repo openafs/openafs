@@ -41,7 +41,7 @@ char *afs_sysnamelist[MAXNUMSYSNAMES];	/* For support of a list of sysname */
 int afs_sysnamecount = 0;
 struct volume *Initialafs_freeVolList;
 int afs_memvolumes = 0;
-#ifdef AFS_OBSD_ENV
+#if defined(AFS_XBSD_ENV)
 static struct vnode *volumeVnode;
 #endif
 
@@ -295,9 +295,9 @@ afs_InitVolumeInfo(char *afile)
     struct osi_file *tfile;
 
     AFS_STATCNT(afs_InitVolumeInfo);
-#if defined(AFS_OBSD_ENV)
+#if defined(AFS_XBSD_ENV)
     /*
-     * On Open/NetBSD, we can get into big trouble if we don't hold the volume file
+     * On Open/Free/NetBSD, we can get into big trouble if we don't hold the volume file
      * vnode.  SetupVolume holds afs_xvolume lock exclusive.
      * SetupVolume->GetVolSlot->UFSGetVolSlot->{GetVolCache or WriteVolCache}
      * ->osi_UFSOpen->VFS_VGET()->ffs_vget->getnewvnode->vgone on some vnode.
@@ -368,20 +368,14 @@ afs_InitCacheInfo(register char *afile)
     {
 #if	defined(AFS_SUN56_ENV)
 	struct statvfs64 st;
-#else
-#if	defined(AFS_HPUX102_ENV)
+#elif	defined(AFS_HPUX102_ENV)
 	struct k_statvfs st;
-#else
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) ||defined(AFS_HPUX100_ENV)
+#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) ||defined(AFS_HPUX100_ENV)
 	struct statvfs st;
-#else
-#if defined(AFS_DUX40_ENV)
+#elif defined(AFS_DUX40_ENV)
 	struct nstatfs st;
 #else
 	struct statfs st;
-#endif /* DUX40 */
-#endif /* SUN5 SGI */
-#endif /* HP 10.20 */
 #endif /* SUN56 */
 
 #if	defined(AFS_SGI_ENV)
@@ -424,15 +418,17 @@ afs_InitCacheInfo(register char *afile)
 	    afs_fsfragsize = st.f_bsize - 1;
 #endif
     }
-#ifdef AFS_LINUX20_ENV
+#if defined(AFS_LINUX20_ENV)
     cacheInode = filevp->i_ino;
     afs_cacheSBp = filevp->i_sb;
-#else
-#ifdef AFS_OBSD_ENV
+#elif defined(AFS_XBSD_ENV)
     cacheInode = VTOI(filevp)->i_number;
     cacheDev.mp = filevp->v_mount;
     cacheDev.held_vnode = filevp;
-    AFS_HOLD(filevp);		/* Make sure mount point stays busy. XXX */
+    vref(filevp);		/* Make sure mount point stays busy. XXX */
+#if !defined(AFS_OBSD_ENV)
+    afs_cacheVfsp = filevp->v_vfsp;
+#endif
 #else
 #if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
     afs_InitDualFSCacheOps(filevp);
@@ -440,7 +436,6 @@ afs_InitCacheInfo(register char *afile)
     cacheInode = afs_vnodeToInumber(filevp);
     cacheDev.dev = afs_vnodeToDev(filevp);
     afs_cacheVfsp = filevp->v_vfsp;
-#endif /* AFS_OBSD_ENV */
 #endif /* AFS_LINUX20_ENV */
     AFS_RELE(filevp);
 #endif /* AFS_LINUX22_ENV */
@@ -494,10 +489,12 @@ afs_ResourceInit(int preallocs)
     RWLOCK_INIT(&afs_icl_lock, "afs_icl_lock");
     RWLOCK_INIT(&afs_xinterface, "afs_xinterface");
     LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
+#ifndef AFS_FBSD_ENV
 #ifndef	AFS_AIX32_ENV
     LOCK_INIT(&osi_fsplock, "osi_fsplock");
 #endif
     LOCK_INIT(&osi_flplock, "osi_flplock");
+#endif
     RWLOCK_INIT(&afs_xconn, "afs_xconn");
 
     afs_CellInit();
@@ -669,11 +666,11 @@ shutdown_cache(void)
 	afs_cacheFiles = afs_cacheBlocks = 0;
 	pag_epoch = maxIHint = nihints = usedihint = 0;
 	pagCounter = 0;
-#ifdef AFS_OBSD_ENV
-	AFS_RELE(volumeVnode);	/* let it go, finally. */
+#if defined(AFS_XBSD_ENV)
+	vrele(volumeVnode);	/* let it go, finally. */
 	volumeVnode = NULL;
 	if (cacheDev.held_vnode) {
-	    AFS_RELE(cacheDev.held_vnode);
+	    vrele(cacheDev.held_vnode);
 	    cacheDev.held_vnode = NULL;
 	}
 #endif

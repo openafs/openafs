@@ -18,32 +18,52 @@ RCSID
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 
-
-
+#ifndef AFS_FBSD50_ENV
 static int osi_TimedSleep(char *event, afs_int32 ams, int aintok);
-
 static char waitV;
+#endif
 
 
 void
 afs_osi_InitWaitHandle(struct afs_osi_WaitHandle *achandle)
 {
     AFS_STATCNT(osi_InitWaitHandle);
-    achandle->proc = (caddr_t) 0;
+#ifdef AFS_FBSD50_ENV
+    cv_init(&achandle->wh_condvar, "afscondvar");
+    achandle->wh_inited = 1;
+#else
+    achandle->proc = NULL;
+#endif
 }
 
 /* cancel osi_Wait */
+/* XXX
+ * I can't tell -- is this supposed to be cv_signal() or cv_waitq_remove()?
+ * Or perhaps cv_broadcast()?
+ * Assuming cv_signal() is the desired meaning.  -GAW
+ */
 void
 afs_osi_CancelWait(struct afs_osi_WaitHandle *achandle)
 {
+#ifndef AFS_FBSD50_ENV
     caddr_t proc;
+#endif
 
     AFS_STATCNT(osi_CancelWait);
+
+#ifdef AFS_FBSD50_ENV
+    /* XXX should not be necessary */
+    if (!achandle->wh_inited)
+	return;
+    AFS_ASSERT_GLOCK();
+    cv_signal(&achandle->wh_condvar);
+#else
     proc = achandle->proc;
     if (proc == 0)
 	return;
-    achandle->proc = (caddr_t) 0;	/* so dude can figure out he was signalled */
+    achandle->proc = NULL;	/* so dude can figure out he was signalled */
     afs_osi_Wakeup(&waitV);
+#endif
 }
 
 /* afs_osi_Wait
@@ -54,31 +74,56 @@ int
 afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 {
     int code;
+#ifdef AFS_FBSD50_ENV
+    struct timeval tv;
+    int ticks;
+#else
     afs_int32 endTime;
+#endif
 
     AFS_STATCNT(osi_Wait);
+#ifdef AFS_FBSD50_ENV
+    tv.tv_sec = ams / 1000;
+    tv.tv_usec = (ams % 1000) * 1000;
+    ticks = tvtohz(&tv);
+
+    AFS_ASSERT_GLOCK();
+    if (ahandle == NULL) {
+	/* This is nasty and evil and rude. */
+	code = msleep(&tv, &afs_global_mtx, (aintok ? PPAUSE|PCATCH : PVFS),
+	    "afswait", ticks);
+    } else {
+	if (!ahandle->wh_inited)
+	    afs_osi_InitWaitHandle(ahandle);	/* XXX should not be needed */
+
+	if (aintok)
+	    code = cv_timedwait_sig(&ahandle->wh_condvar, &afs_global_mtx,
+		ticks);
+	else
+	    code = cv_timedwait(&ahandle->wh_condvar, &afs_global_mtx, ticks);
+    }
+#else
     endTime = osi_Time() + (ams / 1000);
     if (ahandle)
 	ahandle->proc = (caddr_t) curproc;
     do {
 	AFS_ASSERT_GLOCK();
-	code = 0;
 	code = osi_TimedSleep(&waitV, ams, aintok);
-
 	if (code)
 	    break;		/* if something happened, quit now */
 	/* if we we're cancelled, quit now */
-	if (ahandle && (ahandle->proc == (caddr_t) 0)) {
+	if (ahandle && (ahandle->proc == NULL)) {
 	    /* we've been signalled */
 	    break;
 	}
     } while (osi_Time() < endTime);
+#endif
     return code;
 }
 
-
-
-
+/*
+ * All this gluck should probably also be replaced with CVs.
+ */
 typedef struct afs_event {
     struct afs_event *next;	/* next in hash chain */
     char *event;		/* lwp event: an address */
@@ -140,9 +185,13 @@ afs_osi_Sleep(void *event)
     seq = evp->seq;
     while (seq == evp->seq) {
 	AFS_ASSERT_GLOCK();
+#ifdef AFS_FBSD50_ENV
+	msleep(event, &afs_global_mtx, PVFS, "afsslp", 0);
+#else
 	AFS_GUNLOCK();
 	tsleep(event, PVFS, "afs_osi_Sleep", 0);
 	AFS_GLOCK();
+#endif
     }
     relevent(evp);
 }
@@ -154,6 +203,7 @@ afs_osi_SleepSig(void *event)
     return 0;
 }
 
+#ifndef AFS_FBSD50_ENV
 /* osi_TimedSleep
  * 
  * Arguments:
@@ -188,7 +238,7 @@ osi_TimedSleep(char *event, afs_int32 ams, int aintok)
     relevent(evp);
     return code;
 }
-
+#endif /* not AFS_FBSD50_ENV */
 
 int
 afs_osi_Wakeup(void *event)

@@ -53,14 +53,14 @@ getinode(fs, dev, inode, ipp, perror)
 #else
 	simple_lock(&mountlist_slock);
 #endif
-	if (mp = TAILQ_FIRST(&mountlist))
+	if ((mp = TAILQ_FIRST(&mountlist)) != NULL)
 	    do {
 		/*
 		 * XXX Also do the test for MFS
 		 */
 #undef m_data
 #undef m_next
-		if (mp->mnt_stat.f_type == MOUNT_UFS) {
+		if (!strcmp(mp->mnt_stat.f_fstypename, MOUNT_UFS)) {
 		    ump = VFSTOUFS(mp);
 		    if (ump->um_fs == NULL)
 			break;

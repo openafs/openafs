@@ -16,48 +16,22 @@ struct vcache *afs_globalVp = 0;
 struct mount *afs_globalVFS = 0;
 int afs_pbuf_freecnt = -1;
 
-int
-afs_quotactl()
-{
-    return EOPNOTSUPP;
-}
+#ifdef AFS_FBSD50_ENV
+#define	THREAD_OR_PROC struct thread *p
+#else
+#define	THREAD_OR_PROC struct proc *p
+#endif
 
 int
-afs_fhtovp(mp, fhp, vpp)
-     struct mount *mp;
-     struct fid *fhp;
-     struct vnode **vpp;
-{
-
-    return (EINVAL);
-}
-
-int
-afs_vptofh(vp, fhp)
-     struct vnode *vp;
-     struct fid *fhp;
-{
-
-    return (EINVAL);
-}
-
-int
-afs_start(mp, flags, p)
-     struct mount *mp;
-     int flags;
-     struct proc *p;
+afs_start(struct mount *mp, int flags, THREAD_OR_PROC)
 {
     afs_pbuf_freecnt = nswbuf / 2 + 1;
     return (0);			/* nothing to do. ? */
 }
 
 int
-afs_mount(mp, path, data, ndp, p)
-     register struct mount *mp;
-     char *path;
-     caddr_t data;
-     struct nameidata *ndp;
-     struct proc *p;
+afs_mount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
+	THREAD_OR_PROC)
 {
     /* ndp contains the mounted-from device.  Just ignore it.
      * we also don't care about our proc struct. */
@@ -91,12 +65,16 @@ afs_mount(mp, path, data, ndp, p)
 }
 
 int
-afs_unmount(mp, flags, p)
-     struct mount *mp;
-     int flags;
-     struct proc *p;
+afs_unmount(struct mount *mp, int flags, THREAD_OR_PROC)
 {
 
+    /*
+     * Release any remaining vnodes on this mount point.
+     * The `1' means that we hold one extra reference on
+     * the root vnode (this is just a guess right now).
+     * This has to be done outside the global lock.
+     */
+    vflush(mp, 1, (flags & MNT_FORCE) ? FORCECLOSE : 0);
     AFS_GLOCK();
     AFS_STATCNT(afs_unmount);
     afs_globalVFS = 0;
@@ -114,24 +92,27 @@ afs_root(struct mount *mp, struct vnode **vpp)
     register struct vcache *tvp = 0;
 #ifdef AFS_FBSD50_ENV
     struct thread *td = curthread;
-    struct ucred cr = *td->td_ucred;
+    struct ucred *cr = td->td_ucred;
 #else
     struct proc *p = curproc;
-    struct ucred cr = *p->p_cred->pc_ucred;
+    struct ucred *cr = p->p_cred->pc_ucred;
 #endif
 
     AFS_GLOCK();
     AFS_STATCNT(afs_root);
+    crhold(cr);
     if (afs_globalVp && (afs_globalVp->states & CStatd)) {
 	tvp = afs_globalVp;
 	error = 0;
     } else {
+tryagain:
 	if (afs_globalVp) {
 	    afs_PutVCache(afs_globalVp);
+	    /* vrele() needed here or not? */
 	    afs_globalVp = NULL;
 	}
 
-	if (!(error = afs_InitReq(&treq, &cr)) && !(error = afs_CheckInit())) {
+	if (!(error = afs_InitReq(&treq, cr)) && !(error = afs_CheckInit())) {
 	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	    /* we really want this to stay around */
 	    if (tvp)
@@ -141,57 +122,45 @@ afs_root(struct mount *mp, struct vnode **vpp)
 	}
     }
     if (tvp) {
-	osi_vnhold(tvp, 0);
-	AFS_GUNLOCK();
+	struct vnode *vp = AFSTOV(tvp);
+
 #ifdef AFS_FBSD50_ENV
-	vn_lock(AFSTOV(tvp), LK_EXCLUSIVE | LK_RETRY, td);
+	ASSERT_VI_UNLOCKED(vp, "afs_root");
+#endif
+	AFS_GUNLOCK();
+	/*
+	 * I'm uncomfortable about this.  Shouldn't this happen at a
+	 * higher level, and shouldn't we busy the top-level directory
+	 * to prevent recycling?
+	 */
+#ifdef AFS_FBSD50_ENV
+	error = vget(vp, LK_EXCLUSIVE | LK_RETRY, td);
+	vp->v_vflag |= VV_ROOT;
 #else
-	vn_lock(AFSTOV(tvp), LK_EXCLUSIVE | LK_RETRY, p);
+	error = vget(vp, LK_EXCLUSIVE | LK_RETRY, p);
+	vp->v_flag |= VROOT;
 #endif
 	AFS_GLOCK();
+	if (error != 0)
+		goto tryagain;
+
 	afs_globalVFS = mp;
-	*vpp = AFSTOV(tvp);
-	tvp->v.v_flag |= VROOT;
+	*vpp = vp;
     }
 
     afs_Trace2(afs_iclSetp, CM_TRACE_VFSROOT, ICL_TYPE_POINTER, *vpp,
 	       ICL_TYPE_INT32, error);
     AFS_GUNLOCK();
+    crfree(cr);
     return error;
 }
 
 int
-afs_vget(mp, lfl, vp)
-     struct mount *mp;
-     struct vnode *vp;
-     int lfl;
-{
-#ifdef AFS_FBSD50_ENV
-    return EOPNOTSUPP;
-#else
-    int error;
-
-    printf("vget called. help!\n");
-    if (vp->v_usecount < 0) {
-	vprint("bad usecount", vp);
-	panic("afs_vget");
-    }
-    error = vget(vp, lfl, curproc);
-    if (!error)
-	insmntque(vp, afs_globalVFS);	/* take off free list */
-    return error;
-#endif
-}
-
-int
-afs_statfs(struct mount *mp, struct statfs *abp, struct proc *p)
+afs_statfs(struct mount *mp, struct statfs *abp, THREAD_OR_PROC)
 {
     AFS_GLOCK();
     AFS_STATCNT(afs_statfs);
 
-#if 0
-    abp->f_type = MOUNT_AFS;
-#endif
     abp->f_bsize = mp->vfs_bsize;
     abp->f_iosize = mp->vfs_bsize;
 
@@ -217,21 +186,10 @@ afs_statfs(struct mount *mp, struct statfs *abp, struct proc *p)
 }
 
 int
-afs_sync(mp, waitfor, cred, p)
-     struct mount *mp;
-     int waitfor;
-     struct ucred *cred;
-     struct prioc *p;
+afs_sync(struct mount *mp, int waitfor, struct ucred *cred, THREAD_OR_PROC)
 {
     return 0;
 }
-
-int
-afs_sysctl()
-{
-    return EOPNOTSUPP;
-}
-
 
 int
 afs_init(struct vfsconf *vfc)
@@ -244,18 +202,17 @@ struct vfsops afs_vfsops = {
     afs_start,
     afs_unmount,
     afs_root,
-    afs_quotactl,
+    vfs_stdquotactl,
     afs_statfs,
     afs_sync,
-    afs_vget,
-    afs_fhtovp,
-#ifdef AFS_FBSD50_ENV
+    vfs_stdvget,
+    vfs_stdfhtovp,
     vfs_stdcheckexp,
-#endif
-    afs_vptofh,
+    vfs_stdvptofh,
     afs_init,
-#ifdef AFS_FBSD50_ENV
     vfs_stduninit,
+    vfs_stdextattrctl,
+#ifdef AFS_FBSD50_ENV
+    NULL,
 #endif
-    afs_sysctl
 };

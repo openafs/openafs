@@ -153,7 +153,7 @@ afs_FlushVCache(struct vcache *avc, int *slept)
 	afs_osi_Free(avc->linkData, strlen(avc->linkData) + 1);
 	avc->linkData = NULL;
     }
-#if defined(AFS_OBSD_ENV)
+#if defined(AFS_XBSD_ENV)
     /* OK, there are no internal vrefCounts, so there shouldn't
      * be any more refs here. */
     if (avc->v) {
@@ -801,36 +801,6 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 		    continue;	/* start over - may have raced. */
 		}
 	    }
-#elif defined(AFS_FBSD50_ENV)
-	    if (VREFCOUNT(tvc) == 1 && tvc->opens == 0
-		&& (tvc->states & CUnlinkedDel) == 0) {
-		if (!(VOP_LOCK(&tvc->v, LK_EXCLUSIVE, curthread))) {
-		    if (VREFCOUNT(tvc) == 1 && tvc->opens == 0
-			&& (tvc->states & CUnlinkedDel) == 0) {
-			VREFCOUNT_DEC(tvc);
-			AFS_GUNLOCK();	/* perhaps inline inactive for locking */
-			VOP_INACTIVE(&tvc->v, curthread);
-			AFS_GLOCK();
-		    } else {
-			VOP_UNLOCK(&tvc->v, 0, curthread);
-		    }
-		}
-	    }
-#elif defined(AFS_FBSD_ENV) && !defined(AFS_FBSD50_ENV)
-	    if (VREFCOUNT(tvc) == 1 && tvc->opens == 0
-		&& (tvc->states & CUnlinkedDel) == 0) {
-		if (!(VOP_LOCK(&tvc->v, LK_EXCLUSIVE, curproc))) {
-		    if (VREFCOUNT(tvc) == 1 && tvc->opens == 0
-			&& (tvc->states & CUnlinkedDel) == 0) {
-			VREFCOUNT_DEC(tvc);
-			AFS_GUNLOCK();	/* perhaps inline inactive for locking */
-			VOP_INACTIVE(&tvc->v, curproc);
-			AFS_GLOCK();
-		    } else {
-			VOP_UNLOCK(&tvc->v, 0, curproc);
-		    }
-		}
-	    }
 #elif defined(AFS_LINUX22_ENV)
 	    if (tvc != afs_globalVp && VREFCOUNT(tvc) && tvc->opens == 0)
 		afs_TryFlushDcacheChildren(tvc);
@@ -838,12 +808,13 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 
 	    if (VREFCOUNT(tvc) == 0 && tvc->opens == 0
 		&& (tvc->states & CUnlinkedDel) == 0) {
-#ifdef AFS_OBSD_ENV
+#if defined(AFS_XBSD_ENV)
 		/*
 		 * vgone() reclaims the vnode, which calls afs_FlushVCache(),
 		 * then it puts the vnode on the free list.
 		 * If we don't do this we end up with a cleaned vnode that's
 		 * not on the free list.
+		 * XXX assume FreeBSD is the same for now.
 		 */
 		vgone(AFSTOV(tvc));
 		code = fv_slept = 0;
@@ -907,7 +878,7 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     vm_info_ptr = tvc->v.v_vm_info;
 #endif /* AFS_MACH_ENV */
 
-#if defined(AFS_OBSD_ENV)
+#if defined(AFS_XBSD_ENV)
     if (tvc->v)
 	panic("afs_NewVCache(): free vcache with vnode attached");
 #endif
@@ -933,6 +904,36 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     AFS_GLOCK();
     lockinit(&tvc->rwlock, PINOD, "vcache", 0, 0);
 #endif
+#ifdef AFS_FBSD_ENV
+    {
+	struct vnode *vp;
+
+	AFS_GUNLOCK();
+#ifdef AFS_FBSD50_ENV
+	if (getnewvnode(MOUNT_AFS, afs_globalVFS, afs_vnodeop_p, &vp))
+#else
+	if (getnewvnode(VT_AFS, afs_globalVFS, afs_vnodeop_p, &vp))
+#endif
+	    panic("afs getnewvnode");	/* can't happen */
+	AFS_GLOCK();
+	if (tvc->v != NULL) {
+	    /* I'd like to know if this ever happens...
+	       We don't drop global for the rest of this function,
+	       so if we do lose the race, the other thread should
+	       have found the same vnode and finished initializing
+	       the vcache entry.  Is it conceivable that this vcache
+	       entry could be recycled during this interval?  If so,
+	       then there probably needs to be some sort of additional
+	       mutual exclusion (an Embryonic flag would suffice).
+		-GAW */
+	    printf("afs_NewVCache: lost the race\n");
+	    return (tvc);
+	}
+	tvc->v = vp;
+	tvc->v->v_data = tvc;
+	lockinit(&tvc->rwlock, PINOD, "vcache", 0, 0);
+    }
+#endif
     tvc->parentVnode = 0;
     tvc->mvid = NULL;
     tvc->linkData = NULL;
@@ -957,9 +958,9 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     /* Hold it for the LRU (should make count 2) */
     VN_HOLD(AFSTOV(tvc));
 #else /* AFS_OSF_ENV */
-#ifndef AFS_OBSD_ENV
+#if !defined(AFS_XBSD_ENV)
     VREFCOUNT_SET(tvc, 1);	/* us */
-#endif /* AFS_OBSD_ENV */
+#endif /* AFS_XBSD_ENV */
 #endif /* AFS_OSF_ENV */
 #ifdef	AFS_AIX32_ENV
     LOCK_INIT(&tvc->pvmlock, "vcache pvmlock");
@@ -1039,14 +1040,6 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     tvc->v.v_freelist.tqe_next = 0;
     tvc->v.v_freelist.tqe_prev = (struct vnode **)0xdeadb;
     /*tvc->vrefCount++; */
-#endif
-#ifdef AFS_FBSD_ENV
-    lockinit(&tvc->rwlock, PINOD, "vcache rwlock", 0, 0);
-    cache_purge(AFSTOV(tvc));
-    tvc->v.v_data = tvc;
-    tvc->v.v_tag = VT_AFS;
-    tvc->v.v_usecount++;	/* steal an extra ref for now so vfree never happens */
-    /* This extra ref is dealt with above... */
 #endif
     /*
      * The proper value for mvstat (for root fids) is setup by the caller.
@@ -1800,6 +1793,40 @@ afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq,
     VOP_LOCK(AFSTOV(tvc), LK_EXCLUSIVE | LK_RETRY, curproc);
     uvm_vnp_uncache(AFSTOV(tvc));
     VOP_UNLOCK(AFSTOV(tvc), 0, curproc);
+#endif
+#ifdef AFS_FBSD_ENV
+    /*
+     * XXX - I really don't like this.  Should try to understand better.
+     * It seems that sometimes, when we get called, we already hold the
+     * lock on the vnode (e.g., from afs_getattr via afs_VerifyVCache).
+     * We can't drop the vnode lock, because that could result in a race.
+     * Sometimes, though, we get here and don't hold the vnode lock.
+     * I hate code paths that sometimes hold locks and sometimes don't.
+     * In any event, the dodge we use here is to check whether the vnode
+     * is locked, and if it isn't, then we gain and drop it around the call
+     * to vinvalbuf; otherwise, we leave it alone.
+     */
+    {
+	struct vnode *vp;
+	int iheldthelock;
+
+	vp = AFSTOV(tvc);
+#ifdef AFS_FBSD50_ENV
+	iheldthelock = VOP_ISLOCKED(vp, curthread);
+	if (!iheldthelock)
+	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curthread);
+	vinvalbuf(vp, V_SAVE, osi_curcred(), curthread, PINOD, 0);
+	if (!iheldthelock)
+	    VOP_UNLOCK(vp, LK_EXCLUSIVE, curthread);
+#else
+	iheldthelock = VOP_ISLOCKED(vp, curproc);
+	if (!iheldthelock)
+	    vn_lock(vp, LK_EXCLUSIVE | LK_RETRY, curproc);
+	vinvalbuf(vp, V_SAVE, osi_curcred(), curproc, PINOD, 0);
+	if (!iheldthelock)
+	    VOP_UNLOCK(vp, LK_EXCLUSIVE, curproc);
+#endif
+    }
 #endif
 
     ObtainWriteLock(&afs_xcbhash, 464);

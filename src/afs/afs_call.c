@@ -64,13 +64,12 @@ simple_lock_data_t afs_global_lock;
 struct lock__bsd__ afs_global_lock;
 #endif
 
-#if defined(AFS_XBSD_ENV)
+#if defined(AFS_XBSD_ENV) && !defined(AFS_FBSD50_ENV)
 struct lock afs_global_lock;
-#ifdef AFS_FBSD50_ENV
-struct thread *afs_global_owner;
-#else
 struct proc *afs_global_owner;
 #endif
+#ifdef AFS_FBSD50_ENV
+struct mtx afs_global_mtx;
 #endif
 
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)

@@ -13,6 +13,10 @@
 #include "h/types.h"
 #include "h/param.h"
 
+#ifdef AFS_FBSD50_ENV
+#include <sys/condvar.h>
+#endif
+
 #ifdef AFS_LINUX20_ENV
 #ifndef _LINUX_CODA_FS_I
 #define _LINUX_CODA_FS_I
@@ -68,11 +72,9 @@ struct osi_file {
 };
 
 struct osi_dev {
-#ifdef AFS_OBSD_ENV
+#if defined(AFS_XBSD_ENV)
     struct mount *mp;
     struct vnode *held_vnode;
-#elif defined(AFS_FBSD50_ENV)
-    struct cdev *dev;
 #elif defined(AFS_AIX42_ENV)
     dev_t dev;
 #else
@@ -81,7 +83,12 @@ struct osi_dev {
 };
 
 struct afs_osi_WaitHandle {
+#ifdef AFS_FBSD50_ENV
+    struct cv wh_condvar;
+    int wh_inited;		/* XXX */
+#else
     caddr_t proc;		/* process waiting */
+#endif
 };
 
 #define	osi_SetFileProc(x,p)	((x)->proc=(p))

@@ -57,6 +57,8 @@ osi_Init(void)
 #elif defined(AFS_OSF_ENV)
     usimple_lock_init(&afs_global_lock);
     afs_global_owner = (thread_t) 0;
+#elif defined(AFS_FBSD50_ENV)
+    mtx_init(&afs_global_mtx, "AFS global lock", NULL, MTX_DEF);
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     lockinit(&afs_global_lock, PLOCK, "afs global lock", 0, 0);
     afs_global_owner = 0;
@@ -433,6 +435,8 @@ afs_osi_Alloc(size_t x)
     AFS_STATS(afs_stats_cmperf.OutStandingMemUsage += x);
 #ifdef AFS_LINUX20_ENV
     return osi_linux_alloc(x, 1);
+#elif defined(AFS_FBSD_ENV)
+    return osi_fbsd_alloc(x, 1);
 #else
     size = x;
     tm = (struct osimem *)AFS_KALLOC(size);
@@ -479,6 +483,8 @@ afs_osi_Free(void *x, size_t asize)
     AFS_STATS(afs_stats_cmperf.OutStandingMemUsage -= asize);
 #if defined(AFS_LINUX20_ENV)
     osi_linux_free(x);
+#elif defined(AFS_FBSD_ENV)
+    osi_fbsd_free(x);
 #else
     AFS_KFREE((struct osimem *)x, asize);
 #endif

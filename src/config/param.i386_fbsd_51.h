@@ -79,7 +79,7 @@
 #ifdef _KERNEL
 #define AFS_GLOBAL_SUNLOCK        1
 #define	AFS_VFS34	1	/* What is VFS34??? */
-#define	AFS_SHORTGID	1	/* are group id's short? */
+#define	AFS_SHORTGID	0	/* are group id's short? */
 #define	afsio_iov	uio_iov
 #define	afsio_iovcnt	uio_iovcnt
 #define	afsio_offset	uio_offset
@@ -89,8 +89,10 @@
 #define	AFS_UIOUSER	UIO_USERSPACE
 #define	AFS_CLBYTES	CLBYTES
 #define	osi_GetTime(x)	microtime(x)
-#define AFS_KALLOC(x)   malloc(x, M_AFS, M_WAITOK)
-#define AFS_KFREE(x,y)  free(x,M_AFS)
+#define AFS_KALLOC(x)   osi_fbsd_alloc((x), 1)
+#undef	AFS_KALLOC_NOSLEEP
+#define	AFS_KALLOC_NOSLEEP(x) osi_fbsd_alloc((x), 0)
+#define AFS_KFREE(x,y)  osi_fbsd_free((x))
 #define	v_count		v_usecount
 #define v_vfsp		v_mount
 #define vfs_bsize	mnt_stat.f_bsize
@@ -109,9 +111,6 @@
 #endif /* SSYS */
 
 #define p_rcred         p_ucred
-
-#define	VN_RELE(vp)	vrele(((struct vnode *)(vp)))
-#define	VN_HOLD(vp)	VREF(((struct vnode *)(vp)))
 
 #if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__)
 enum vcexcl { NONEXCL, EXCL };
@@ -169,7 +168,7 @@ enum vcexcl { NONEXCL, EXCL };
 #define SYS_NAME_ID	SYS_NAME_ID_i386_fbsd_51
 #define AFSLITTLE_ENDIAN    1
 #define AFS_HAVE_FFS        1	/* Use system's ffs. */
-#define AFS_HAVE_STATVFS    0	/* System doesn't support statvfs */
+#define AFS_HAVE_STATVFS    1	/* System doesn't support statvfs */
 #define AFS_VM_RDWR_ENV	    1	/* read/write implemented via VM */
 
 #define	afsio_iov	uio_iov

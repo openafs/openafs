@@ -1,3 +1,49 @@
+/*
+ * A large chunk of this file appears to be copied directly from
+ * sys/nfsclient/nfs_bio.c, which has the following license:
+ */
+/*
+ * Copyright (c) 1989, 1993
+ *	The Regents of the University of California.  All rights reserved.
+ *
+ * This code is derived from software contributed to Berkeley by
+ * Rick Macklem at The University of Guelph.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. All advertising materials mentioning features or use of this software
+ *    must display the following acknowledgement:
+ *	This product includes software developed by the University of
+ *	California, Berkeley and its contributors.
+ * 4. Neither the name of the University nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ *
+ *	@(#)nfs_bio.c	8.9 (Berkeley) 3/30/95
+ */
+/*
+ * Pursuant to a statement of U.C. Berkeley dated 1999-07-22, this license
+ * is amended to drop clause (3) above.
+ */
+
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -9,6 +55,7 @@ RCSID
 #include <afs/afs_stats.h>	/* statistics */
 #include <sys/malloc.h>
 #include <sys/namei.h>
+#include <sys/unistd.h>
 #ifndef AFS_FBSD50_ENV
 #include <vm/vm_zone.h>
 #endif
@@ -31,6 +78,7 @@ int afs_vop_write(struct vop_write_args *);
 int afs_vop_getpages(struct vop_getpages_args *);
 int afs_vop_putpages(struct vop_putpages_args *);
 int afs_vop_ioctl(struct vop_ioctl_args *);
+static int afs_vop_pathconf(struct vop_pathconf_args *);
 int afs_vop_poll(struct vop_poll_args *);
 #ifndef AFS_FBSD50_ENV
 int afs_vop_mmap(struct vop_mmap_args *);
@@ -59,7 +107,7 @@ int afs_vop_advlock(struct vop_advlock_args *);
 /* Global vfs data structures for AFS. */
 vop_t **afs_vnodeop_p;
 struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
-    {&vop_default_desc, (vop_t *) vop_eopnotsupp},
+    {&vop_default_desc, (vop_t *) vop_defaultop},
     {&vop_access_desc, (vop_t *) afs_vop_access},	/* access */
     {&vop_advlock_desc, (vop_t *) afs_vop_advlock},	/* advlock */
     {&vop_bmap_desc, (vop_t *) afs_vop_bmap},	/* bmap */
@@ -76,10 +124,8 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
     {&vop_getvobject_desc, (vop_t *) vop_stdgetvobject},
     {&vop_putpages_desc, (vop_t *) afs_vop_putpages},	/* write */
     {&vop_inactive_desc, (vop_t *) afs_vop_inactive},	/* inactive */
-    {&vop_islocked_desc, (vop_t *) afs_vop_islocked},	/* islocked */
     {&vop_lease_desc, (vop_t *) vop_null},
     {&vop_link_desc, (vop_t *) afs_vop_link},	/* link */
-    {&vop_lock_desc, (vop_t *) afs_vop_lock},	/* lock */
     {&vop_lookup_desc, (vop_t *) afs_vop_lookup},	/* lookup */
     {&vop_mkdir_desc, (vop_t *) afs_vop_mkdir},	/* mkdir */
     {&vop_mknod_desc, (vop_t *) afs_vop_mknod},	/* mknod */
@@ -87,6 +133,7 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
     {&vop_mmap_desc, (vop_t *) afs_vop_mmap},	/* mmap */
 #endif
     {&vop_open_desc, (vop_t *) afs_vop_open},	/* open */
+    {&vop_pathconf_desc, (vop_t *) afs_vop_pathconf},	/* pathconf */
     {&vop_poll_desc, (vop_t *) afs_vop_poll},	/* select */
     {&vop_print_desc, (vop_t *) afs_vop_print},	/* print */
     {&vop_read_desc, (vop_t *) afs_vop_read},	/* read */
@@ -99,7 +146,6 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
     {&vop_setattr_desc, (vop_t *) afs_vop_setattr},	/* setattr */
     {&vop_strategy_desc, (vop_t *) afs_vop_strategy},	/* strategy */
     {&vop_symlink_desc, (vop_t *) afs_vop_symlink},	/* symlink */
-    {&vop_unlock_desc, (vop_t *) afs_vop_unlock},	/* unlock */
     {&vop_write_desc, (vop_t *) afs_vop_write},	/* write */
     {&vop_ioctl_desc, (vop_t *) afs_vop_ioctl},	/* XXX ioctl */
     /*{ &vop_seek_desc, afs_vop_seek }, *//* seek */
@@ -122,7 +168,98 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
 #define a_p a_td
 #endif
 
+/*
+ * Mosty copied from sys/ufs/ufs/ufs_vnops.c:ufs_pathconf().
+ * We should know the correct answers to these questions with
+ * respect to the AFS protocol (which may differ from the UFS
+ * values) but for the moment this will do.
+ */
+static int
+afs_vop_pathconf(struct vop_pathconf_args *ap)
+{
+	int error;
 
+	error = 0;
+	switch (ap->a_name) {
+	case _PC_LINK_MAX:
+		*ap->a_retval = LINK_MAX;
+		break;
+	case _PC_NAME_MAX:
+		*ap->a_retval = NAME_MAX;
+		break;
+	case _PC_PATH_MAX:
+		*ap->a_retval = PATH_MAX;
+		break;
+	case _PC_PIPE_BUF:
+		*ap->a_retval = PIPE_BUF;
+		break;
+	case _PC_CHOWN_RESTRICTED:
+		*ap->a_retval = 1;
+		break;
+	case _PC_NO_TRUNC:
+		*ap->a_retval = 1;
+		break;
+#ifdef _PC_ACL_EXTENDED
+	case _PC_ACL_EXTENDED:
+		*ap->a_retval = 0;
+		break;
+	case _PC_ACL_PATH_MAX:
+		*ap->a_retval = 3;
+		break;
+#endif
+#ifdef _PC_MAC_PRESENT
+	case _PC_MAC_PRESENT:
+		*ap->a_retval = 0;
+		break;
+#endif
+#ifdef _PC_ASYNC_IO
+	case _PC_ASYNC_IO:
+		/* _PC_ASYNC_IO should have been handled by upper layers. */
+		KASSERT(0, ("_PC_ASYNC_IO should not get here"));
+		error = EINVAL;
+		break;
+	case _PC_PRIO_IO:
+		*ap->a_retval = 0;
+		break;
+	case _PC_SYNC_IO:
+		*ap->a_retval = 0;
+		break;
+#endif
+#ifdef _PC_ALLOC_SIZE_MIN
+	case _PC_ALLOC_SIZE_MIN:
+		*ap->a_retval = ap->a_vp->v_mount->mnt_stat.f_bsize;
+		break;
+#endif
+#ifdef _PC_FILESIZEBITS
+	case _PC_FILESIZEBITS:
+		*ap->a_retval = 32; /* XXX */
+		break;
+#endif
+#ifdef _PC_REC_INCR_XFER_SIZE
+	case _PC_REC_INCR_XFER_SIZE:
+		*ap->a_retval = ap->a_vp->v_mount->mnt_stat.f_iosize;
+		break;
+	case _PC_REC_MAX_XFER_SIZE:
+		*ap->a_retval = -1; /* means ``unlimited'' */
+		break;
+	case _PC_REC_MIN_XFER_SIZE:
+		*ap->a_retval = ap->a_vp->v_mount->mnt_stat.f_iosize;
+		break;
+	case _PC_REC_XFER_ALIGN:
+		*ap->a_retval = PAGE_SIZE;
+		break;
+#endif
+#ifdef _PC_SYMLINK_MAX
+	case _PC_SYMLINK_MAX:
+		*ap->a_retval = MAXPATHLEN;
+		break;
+#endif
+	default:
+		error = EINVAL;
+		break;
+	}
+	return (error);
+}
 
 int
 afs_vop_lookup(ap)
@@ -397,15 +534,16 @@ afs_vop_read(ap)
     return code;
 }
 
+/* struct vop_getpages_args {
+ *	struct vnode *a_vp;
+ *	vm_page_t *a_m;
+ *	int a_count;
+ *	int a_reqpage;
+ *	vm_oofset_t a_offset;
+ * };
+ */
 int
-afs_vop_getpages(ap)
-     struct vop_getpages_args	/* {
-				 * struct vnode *a_vp;
-				 * vm_page_t *a_m;
-				 * int a_count;
-				 * int a_reqpage;
-				 * vm_oofset_t a_offset;
-				 * } */ *ap;
+afs_vop_getpages(struct vop_getpages_args *ap)
 {
     int code;
     int i, nextoff, size, toff, npages;
@@ -413,9 +551,16 @@ afs_vop_getpages(ap)
     struct iovec iov;
     struct buf *bp;
     vm_offset_t kva;
-    struct vcache *avc = VTOAFS(ap->a_vp);
+    vm_object_t object;
+    struct vnode *vp;
+    struct vcache *avc;
 
-    if (avc->v.v_object == NULL) {
+#ifdef AFS_FBSD50_ENV
+    GIANT_REQUIRED;
+#endif
+    vp = ap->a_vp;
+    avc = VTOAFS(vp);
+    if ((object = vp->v_object) == NULL) {
 	printf("afs_getpages: called with non-merged cache vnode??\n");
 	return VM_PAGER_ERROR;
     }
@@ -429,6 +574,10 @@ afs_vop_getpages(ap)
     {
 	vm_page_t m = ap->a_m[ap->a_reqpage];
 
+#ifdef AFS_FBSD50_ENV
+	VM_OBJECT_LOCK(object);
+	vm_page_lock_queues();
+#endif
 	if (m->valid != 0) {
 	    /* handled by vm_fault now        */
 	    /* vm_page_zero_invalid(m, TRUE); */
@@ -436,12 +585,26 @@ afs_vop_getpages(ap)
 		if (i != ap->a_reqpage)
 		    vm_page_free(ap->a_m[i]);
 	    }
+#ifdef AFS_FBSD50_ENV
+	    vm_page_unlock_queues();
+	    VM_OBJECT_UNLOCK(object);
+#endif
 	    return (0);
 	}
+#ifdef AFS_FBSD50_ENV
+	vm_page_unlock_queues();
+	VM_OBJECT_UNLOCK(object);
+#endif
     }
     bp = getpbuf(&afs_pbuf_freecnt);
+
     kva = (vm_offset_t) bp->b_data;
     pmap_qenter(kva, ap->a_m, npages);
+#ifdef AFS_FBSD50_ENV
+    cnt.v_vnodein++;
+    cnt.v_vnodepgsin += npages;
+#endif
+
     iov.iov_base = (caddr_t) kva;
     iov.iov_len = ap->a_count;
     uio.uio_iov = &iov;
@@ -455,6 +618,7 @@ afs_vop_getpages(ap)
 #else
     uio.uio_procp = curproc;
 #endif
+
     AFS_GLOCK();
     afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc, osi_curcred());	/* hold bozon lock, but not basic vnode lock */
@@ -464,14 +628,28 @@ afs_vop_getpages(ap)
     pmap_qremove(kva, npages);
 
     relpbuf(bp, &afs_pbuf_freecnt);
+
     if (code && (uio.uio_resid == ap->a_count)) {
+#ifdef AFS_FBSD50_ENV
+	VM_OBJECT_LOCK(object);
+	vm_page_lock_queues();
+#endif
 	for (i = 0; i < npages; ++i) {
 	    if (i != ap->a_reqpage)
 		vm_page_free(ap->a_m[i]);
 	}
+#ifdef AFS_FBSD50_ENV
+	vm_page_unlock_queues();
+	VM_OBJECT_UNLOCK(object);
+#endif
 	return VM_PAGER_ERROR;
     }
+
     size = ap->a_count - uio.uio_resid;
+#ifdef AFS_FBSD50_ENV
+    VM_OBJECT_LOCK(object);
+    vm_page_lock_queues();
+#endif
     for (i = 0, toff = 0; i < npages; i++, toff = nextoff) {
 	vm_page_t m;
 	nextoff = toff + PAGE_SIZE;
@@ -519,6 +697,10 @@ afs_vop_getpages(ap)
 	    }
 	}
     }
+#ifdef AFS_FBSD50_ENV
+    vm_page_unlock_queues();
+    VM_OBJECT_UNLOCK(object);
+#endif
     return 0;
 }
 
@@ -543,16 +725,22 @@ afs_vop_write(ap)
     return code;
 }
 
+/*-
+ * struct vop_putpages_args {
+ *	struct vnode *a_vp;
+ *	vm_page_t *a_m;
+ *	int a_count;
+ *	int a_sync;
+ *	int *a_rtvals;
+ *	vm_oofset_t a_offset;
+ * };
+ */
+/*
+ * All of the pages passed to us in ap->a_m[] are already marked as busy,
+ * so there is no additional locking required to set their flags.  -GAW
+ */
 int
-afs_vop_putpages(ap)
-     struct vop_putpages_args	/* {
-				 * struct vnode *a_vp;
-				 * vm_page_t *a_m;
-				 * int a_count;
-				 * int a_sync;
-				 * int *a_rtvals;
-				 * vm_oofset_t a_offset;
-				 * } */ *ap;
+afs_vop_putpages(struct vop_putpages_args *ap)
 {
     int code;
     int i, size, npages, sync;
@@ -560,22 +748,36 @@ afs_vop_putpages(ap)
     struct iovec iov;
     struct buf *bp;
     vm_offset_t kva;
-    struct vcache *avc = VTOAFS(ap->a_vp);
+    struct vnode *vp;
+    struct vcache *avc;
 
-    if (avc->v.v_object == NULL) {
+#ifdef AFS_FBSD50_ENV
+    GIANT_REQUIRED;
+#endif
+
+    vp = ap->a_vp;
+    avc = VTOAFS(vp);
+    /* Perhaps these two checks should just be KASSERTs instead... */
+    if (vp->v_object == NULL) {
 	printf("afs_putpages: called with non-merged cache vnode??\n");
-	return VM_PAGER_ERROR;
+	return VM_PAGER_ERROR;	/* XXX I think this is insufficient */
     }
     if (vType(avc) != VREG) {
 	printf("afs_putpages: not VREG");
-	return VM_PAGER_ERROR;
+	return VM_PAGER_ERROR;	/* XXX I think this is insufficient */
     }
     npages = btoc(ap->a_count);
     for (i = 0; i < npages; i++)
 	ap->a_rtvals[i] = VM_PAGER_AGAIN;
     bp = getpbuf(&afs_pbuf_freecnt);
+
     kva = (vm_offset_t) bp->b_data;
     pmap_qenter(kva, ap->a_m, npages);
+#ifdef AFS_FBSD50_ENV
+    cnt.v_vnodeout++;
+    cnt.v_vnodepgsout += ap->a_count;
+#endif
+
     iov.iov_base = (caddr_t) kva;
     iov.iov_len = ap->a_count;
     uio.uio_iov = &iov;
@@ -600,16 +802,16 @@ afs_vop_putpages(ap)
     code = afs_write(avc, &uio, sync, osi_curcred(), 0);
     afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
-    pmap_qremove(kva, npages);
 
+    pmap_qremove(kva, npages);
     relpbuf(bp, &afs_pbuf_freecnt);
+
     if (!code) {
 	size = ap->a_count - uio.uio_resid;
 	for (i = 0; i < round_page(size) / PAGE_SIZE; i++) {
 	    ap->a_rtvals[i] = VM_PAGER_OK;
-	    ap->a_m[i]->dirty = 0;
+	    vm_page_undirty(ap->a_m[i]);
 	}
-	return VM_PAGER_ERROR;
     }
     return ap->a_rtvals[0];
 }
@@ -933,26 +1135,44 @@ afs_vop_rmdir(ap)
     return error;
 }
 
+/* struct vop_symlink_args {
+ *	struct vnode *a_dvp;
+ *	struct vnode **a_vpp;
+ *	struct componentname *a_cnp;
+ *	struct vattr *a_vap;
+ *	char *a_target;
+ * };
+ */
 int
-afs_vop_symlink(ap)
-     struct vop_symlink_args	/* {
-				 * struct vnode *a_dvp;
-				 * struct vnode **a_vpp;
-				 * struct componentname *a_cnp;
-				 * struct vattr *a_vap;
-				 * char *a_target;
-				 * } */ *ap;
+afs_vop_symlink(struct vop_symlink_args *ap)
 {
-    register struct vnode *dvp = ap->a_dvp;
-    int error = 0;
-    /* NFS ignores a_vpp; so do we. */
+    struct vnode *dvp;
+    struct vnode *newvp;
+    struct vcache *vcp;
+    int error;
 
     GETNAME();
     AFS_GLOCK();
+
+    dvp = ap->a_dvp;
+    newvp = NULL;
+
     error =
 	afs_symlink(VTOAFS(dvp), name, ap->a_vap, ap->a_target, cnp->cn_cred);
+    if (error == 0) {
+	error = afs_lookup(VTOAFS(dvp), name, &vcp, cnp->cn_cred);
+	if (error == 0) {
+	    newvp = AFSTOV(vcp);
+#ifdef AFS_FBSD50_ENV
+	    vn_lock(newvp, LK_EXCLUSIVE | LK_RETRY, cnp->cn_thread);
+#else
+	    vn_lock(newvp, LK_EXCLUSIVE | LK_RETRY, cnp->cn_proc);
+#endif
+	}
+    }
     AFS_GUNLOCK();
     DROPNAME();
+    *(ap->a_vpp) = newvp;
     return error;
 }
 
@@ -1043,69 +1263,43 @@ afs_vop_inactive(ap)
     return 0;
 }
 
+/*
+ * struct vop_reclaim_args {
+ *	struct vnode *a_vp;
+ * };
+ */
 int
-afs_vop_reclaim(ap)
-     struct vop_reclaim_args	/* {
-				 * struct vnode *a_vp;
-				 * } */ *ap;
+afs_vop_reclaim(struct vop_reclaim_args *ap)
 {
-#ifdef AFS_DO_FLUSH_IN_RECLAIM
-    int error, sl;
-#endif
-    register struct vnode *vp = ap->a_vp;
-
-    cache_purge(vp);		/* just in case... */
-
-#ifdef AFS_DO_FLUSH_IN_RECLAIM
-    AFS_GLOCK();
-    error = afs_FlushVCache(VTOAFS(vp), &sl);	/* tosses our stuff from vnode */
-    AFS_GUNLOCK();
-    ubc_unlink(vp);
-    if (!error && vp->v_data)
-	panic("afs_reclaim: vnode not cleaned");
-    return error;
-#else
-    if (vp->v_usecount == 2) {
-	vprint("reclaim count==2", vp);
-    } else if (vp->v_usecount == 1) {
-	vprint("reclaim count==1", vp);
-    } else
-	vprint("reclaim bad count", vp);
-
-    return 0;
-#endif
-}
-
-int
-afs_vop_lock(ap)
-     struct vop_lock_args	/* {
-				 * struct vnode *a_vp;
-				 * } */ *ap;
-{
-    register struct vnode *vp = ap->a_vp;
-    register struct vcache *avc = VTOAFS(vp);
-
-#ifdef AFS_FBSD50_ENV
-    if (!strcmp(vp->v_tag, "none"))
-#else
-    if (vp->v_tag == VT_NON)
-#endif
-	return (ENOENT);
-    return (lockmgr(&avc->rwlock, ap->a_flags, &vp->v_interlock, ap->a_p));
-}
-
-int
-afs_vop_unlock(ap)
-     struct vop_unlock_args	/* {
-				 * struct vnode *a_vp;
-				 * } */ *ap;
-{
+    /* copied from ../OBSD/osi_vnodeops.c:afs_nbsd_reclaim() */
+    int code, slept;
     struct vnode *vp = ap->a_vp;
     struct vcache *avc = VTOAFS(vp);
-    return (lockmgr
-	    (&avc->rwlock, ap->a_flags | LK_RELEASE, &vp->v_interlock,
-	     ap->a_p));
+    int haveGlock = ISAFS_GLOCK();
+    int haveVlock = CheckLock(&afs_xvcache);
 
+    if (!haveGlock)
+	AFS_GLOCK();
+    if (!haveVlock)
+	ObtainWriteLock(&afs_xvcache, 901);
+#ifndef AFS_DISCON_ENV
+    code = afs_FlushVCache(avc, &slept);	/* tosses our stuff from vnode */
+#else
+    /* reclaim the vnode and the in-memory vcache, but keep the on-disk vcache */
+    code = afs_FlushVS(avc);
+#endif
+    if (!haveVlock)
+	ReleaseWriteLock(&afs_xvcache);
+    if (!haveGlock)
+	AFS_GUNLOCK();
+
+    /*
+     * XXX Pretend it worked, to prevent panic on shutdown
+     * Garrett, please fix - Jim Rees
+     */
+    if (code)
+	printf("afs_vop_reclaim: afs_FlushVCache failed code %d\n", code);
+    return 0;
 }
 
 int
@@ -1173,16 +1367,6 @@ afs_vop_print(ap)
 	   (s & CVFlushed) ? " flush in progress" : "");
     printf("\n");
     return 0;
-}
-
-int
-afs_vop_islocked(ap)
-     struct vop_islocked_args	/* {
-				 * struct vnode *a_vp;
-				 * } */ *ap;
-{
-    struct vcache *vc = VTOAFS(ap->a_vp);
-    return lockstatus(&vc->rwlock, ap->a_p);
 }
 
 /*

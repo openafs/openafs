@@ -30,30 +30,19 @@ RCSID
 #define curproc curthread
 #endif
 
-#ifndef AFS_FBSD50_ENV
-/*
- * afs_suser() returns true if the caller is superuser, false otherwise.
- *
- * Note that it must NOT set errno.
- */
-
-afs_suser()
-{
-    int error;
-
-    if (suser(curproc) == 0) {
-	return (1);
-    }
-    return (0);
-}
-#endif
-
 int
 osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 	       struct vnode **dirvpp, struct vnode **vpp)
 {
     struct nameidata n;
-    int flags, error;
+    int flags, error, wasowned;
+
+#ifdef AFS_FBSD50_ENV
+    wasowned = mtx_owned(&afs_global_mtx);
+    if (wasowned)
+	mtx_unlock(&afs_global_mtx);
+#endif
+
     flags = 0;
     flags = LOCKLEAF;
     if (followlink)
@@ -62,8 +51,13 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
 	flags |= NOFOLLOW;
     /*   if (dirvpp) flags|=WANTPARENT; *//* XXX LOCKPARENT? */
     NDINIT(&n, LOOKUP, flags, seg, aname, curproc);
-    if (error = namei(&n))
+    if ((error = namei(&n)) != 0) {
+#ifdef AFS_FBSD50_ENV
+	if (wasowned)
+	    mtx_lock(&afs_global_mtx);
+#endif
 	return error;
+    }
     *vpp = n.ni_vp;
 /*
    if (dirvpp)
@@ -72,6 +66,10 @@ osi_lookupname(char *aname, enum uio_seg seg, int followlink,
     /* should we do this? */
     VOP_UNLOCK(n.ni_vp, 0, curproc);
     NDFREE(&n, NDF_ONLY_PNBUF);
+#ifdef AFS_FBSD50_ENV
+    if (wasowned)
+	mtx_lock(&afs_global_mtx);
+#endif
     return 0;
 }
 
@@ -102,4 +100,75 @@ afs_osi_SetTime(osi_timeval_t * atv)
     resettodr();
     AFS_GLOCK();
 #endif
+}
+
+/*
+ * Replace all of the bogus special-purpose memory allocators...
+ */
+void *
+osi_fbsd_alloc(size_t size, int dropglobal)
+{
+	void *rv;
+#ifdef AFS_FBSD50_ENV
+	int wasowned;
+
+	if (dropglobal) {
+		wasowned = mtx_owned(&afs_global_mtx);
+		if (wasowned)
+			mtx_unlock(&afs_global_mtx);
+		rv = malloc(size, M_AFS, M_WAITOK);
+		if (wasowned)
+			mtx_lock(&afs_global_mtx);
+	} else
+#endif
+		rv = malloc(size, M_AFS, M_NOWAIT);
+
+	return (rv);
+}
+
+void
+osi_fbsd_free(void *p)
+{
+
+	free(p, M_AFS);
+}
+
+void
+osi_AllocMoreSSpace(afs_int32 preallocs)
+{
+	;
+}
+
+void
+osi_FreeLargeSpace(void *p)
+{
+	osi_fbsd_free(p);
+}
+
+void
+osi_FreeSmallSpace(void *p)
+{
+	osi_fbsd_free(p);
+}
+
+void *
+osi_AllocLargeSpace(size_t size)
+{
+	AFS_ASSERT_GLOCK();
+	AFS_STATCNT(osi_AllocLargeSpace);
+	return (osi_fbsd_alloc(size, 1));
+}
+
+void *
+osi_AllocSmallSpace(size_t size)
+{
+	AFS_ASSERT_GLOCK();
+	AFS_STATCNT(osi_AllocSmallSpace);
+	return (osi_fbsd_alloc(size, 1));
+}
+
+void
+shutdown_osinet(void)
+{
+	;
 }

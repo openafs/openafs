@@ -96,7 +96,9 @@
 
 /* keep here for now, 64 bit issues */
 extern void *afs_osi_Alloc(size_t x);
+#ifndef afs_osi_Alloc_NoSleep
 extern void *afs_osi_Alloc_NoSleep(size_t x);
+#endif
 extern void afs_osi_Free(void *x, size_t asize);
 
 #endif

@@ -465,8 +465,12 @@ extern void afs_osi_RxkRegister(void);
 extern void afs_osi_MaskSignals(void);
 extern void afs_osi_UnmaskRxkSignals(void);
 extern void *afs_osi_Alloc(size_t x);
+#ifndef afs_osi_Alloc_NoSleep
 extern void *afs_osi_Alloc_NoSleep(size_t x);
+#endif
+#ifndef afs_osi_Free
 extern void afs_osi_Free(void *x, size_t asize);
+#endif
 extern void afs_osi_FreeStr(char *x);
 extern void osi_Init(void);
 extern int osi_Active(register struct vcache *avc);
@@ -503,9 +507,11 @@ extern void afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p);
 extern afs_int32 PagInCred(const struct AFS_UCRED *cred);
 
 /* afs_osi_alloc.c */
+#ifndef AFS_FBSD_ENV
 extern afs_int32 afs_preallocs;
 extern afs_lock_t osi_fsplock;
 extern afs_lock_t osi_flplock;
+#endif
 extern void osi_FreeLargeSpace(void *adata);
 extern void osi_FreeMediumSpace(void *adata);
 extern void osi_FreeSmallSpace(void *adata);

@@ -83,10 +83,20 @@ osi_StopListener(void)
 {
     struct proc *p;
 
+    /*
+     * Have to drop global lock to safely do this.
+     * soclose() is currently protected by Giant,
+     * but pfind and psignal are MPSAFE.
+     */
+    AFS_GUNLOCK();
     soclose(rx_socket);
     p = pfind(rxk_ListenerPid);
     if (p)
 	psignal(p, SIGUSR1);
+#ifdef AFS_FBSD50_ENV
+    PROC_UNLOCK(p);
+#endif
+    AFS_GLOCK();
 }
 
 int

@@ -44,6 +44,9 @@ AC_ARG_WITH(linux-kernel-headers,
 AC_ARG_WITH(bsd-kernel-headers,
 [  --with-bsd-kernel-headers=path    	use the kernel headers found at path(optional, defaults to /usr/src/sys)]
 )
+AC_ARG_WITH(bsd-kernel-build,
+[  --with-bsd-kernel-build=path    	use the kernel build found at path(optional, defaults to KSRC/i386/compile/GENERIC)]
+)
 AC_ARG_ENABLE(kernel-module,
 [  --disable-kernel-module             	disable compilation of the kernel module (defaults to enabled)],, enable_kernel_module="yes"
 )
@@ -774,6 +777,19 @@ else
 	BSD_KERNEL_PATH="/usr/src/sys"
 fi
 
+if test "x$with_bsd_kernel_build" != "x"; then
+	BSD_KERNEL_BUILD="$with_bsd_kernel_build"
+else
+	case $AFS_SYSNAME in
+		i386_fbsd_4?)
+			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/compile/GENERIC"
+			;;
+		i386_fbsd_5?)
+			BSD_KERNEL_BUILD="${BSD_KERNEL_PATH}/i386/compile/GENERIC"
+			;;
+	esac
+fi
+
 # Fast restart
 if test "$enable_supergroups" = "yes"; then
 	AC_DEFINE(SUPERGROUPS, 1, [define if you want to have support for nested pts groups])
@@ -919,6 +935,7 @@ AC_SUBST(ENABLE_KERNEL_MODULE)
 AC_SUBST(LIB_AFSDB)
 AC_SUBST(LINUX_KERNEL_PATH)
 AC_SUBST(BSD_KERNEL_PATH)
+AC_SUBST(BSD_KERNEL_BUILD)
 AC_SUBST(LINUX_VERSION)
 AC_SUBST(MKAFS_OSTYPE)
 AC_SUBST(TOP_OBJDIR)

@@ -29,14 +29,19 @@ AFS_OS_NONFSOBJS = \
 
 # System specific build commands and flags
 KSRC = @BSD_KERNEL_PATH@
+KBLD = @BSD_KERNEL_BUILD@
 KDEFS=-Wall -ansi -nostdinc -I/usr/include -D_KERNEL -DKLD_MODULE \
 	-elf -mpreferred-stack-boundary=2 \
 <i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
-	-fformat-extensions
+	-fformat-extensions \
+	-include ${KBLD}/opt_global.h
 <all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
-	-mno-align-long-strings -fformat-extensions -fno-common -ffreestanding
+	-mno-align-long-strings -fformat-extensions -fno-common -ffreestanding \
+	-I${KBLD} -include opt_global.h -fno-strict-aliasing
 <all>
+
 DBUG = -O2
+#DBUG = -O -g
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
 OPTF=${OPT} 
 OPTF2=${OPT2} 
@@ -140,5 +145,12 @@ setdef0.o: setdef0.c
 	$(CRULE_NOOPT)
 setdef1.o: setdef1.c
 	$(CRULE_NOOPT)
+
+# vnode_if.h build rules:
+<i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
+vnode_if.h:	${KSRC}/kern/vnode_if.src
+	perl5 ${KSRC}/kern/vnode_if.pl -h ${KSRC}/kern/vnode_if.src
+<all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
 vnode_if.h:	${KSRC}/kern/vnode_if.src
 	awk -f ${KSRC}/tools/vnode_if.awk ${KSRC}/kern/vnode_if.src -h
+<all>

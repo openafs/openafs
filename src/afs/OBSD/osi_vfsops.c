@@ -404,11 +404,13 @@ afs_nbsd_ref(struct vnode *vp)
 void
 afs_nbsd_rele(struct vnode *vp)
 {
+    AFS_GUNLOCK();
     if (vp->v_usecount <= 0) {
 	vprint("rele'ing unheld node", vp);
 	panic("afs_rele");
     }
     vrele(vp);
+    AFS_GLOCK();
 }
 
 int
