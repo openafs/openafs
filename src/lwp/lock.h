@@ -23,6 +23,11 @@
 #ifndef LOCK_H
 #define LOCK_H
 
+#ifdef KERNEL
+#error Do not include lwp/lock.h for kernel code. Use afs/lock.h instead.
+#endif
+
+
 /* The following macros allow multi statement macros to be defined safely, i.e.
    - the multi statement macro can be the object of an if statement;
    - the call to the multi statement macro may be legally followed by a semi-colon.

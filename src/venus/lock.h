@@ -7,8 +7,15 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#error I thought venus/lock.h was never included, what's going on?
+
+#if 0
+/* I believe this file is never actually used */
+
 #ifndef __AFSLOCK_INCLUDE__
 #define	__AFSLOCK_INCLUDE__	    1
+
+#warning UMR-INCLUDE venus/lock.h
 
 /*******************************************************************\
 * 								    *
@@ -185,3 +192,6 @@ can use the locks above to solve this problem, and we do.
 
 */
 #endif /* __AFSLOCK_INCLUDE__ */
+
+
+#endif

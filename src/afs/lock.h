@@ -10,6 +10,10 @@
 #ifndef __AFSLOCK_INCLUDE__
 #define	__AFSLOCK_INCLUDE__	    1
 
+#if !defined(KERNEL) && !defined(KDUMP_KERNEL)
+#error Do not include afs/lock.h except for kernel code.
+#endif
+
 /*
  * (C) COPYRIGHT IBM CORPORATION 1987
  * LICENSED MATERIALS - PROPERTY OF IBM
