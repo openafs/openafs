@@ -194,6 +194,7 @@ randSPEntries(serverlist, avols)
 	}
 	free(ss);
     }
+    return 0;
 }
 
 int

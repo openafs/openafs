@@ -1443,6 +1443,7 @@ SkipTape(Restore, size, index, tapename, tapeid, taskid)
 	    SkipVolume(Restore, size, i, Restore[i].origVid, taskid);
 	}
     }
+    return 0;
 }
 
 /* SkipVolume
@@ -1468,6 +1469,7 @@ SkipVolume(Restore, size, index, volid, taskid)
 	    }
 	}
     }
+    return 0;
 }
 
 xbsaRestoreVolume(taskId, restoreInfo, rparamsPtr)

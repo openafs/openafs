@@ -779,6 +779,7 @@ pr_SetFieldsEntry(id, mask, flags, ngroups, nusers)
 }
 
 
+int
 stolower(s)
      char *s;
 {
@@ -787,4 +788,5 @@ stolower(s)
 	    *s = tolower(*s);
 	s++;
     }
+    return 0;
 }

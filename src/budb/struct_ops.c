@@ -122,6 +122,7 @@ printHashTable(fid, htptr)
 /* printMemoryHashTable
  *	print the hash table structure, i.e. the header structure.
  */
+int
 printMemoryHashTable(fid, mhtptr)
      FILE *fid;
      struct memoryHashTable *mhtptr;
@@ -131,24 +132,30 @@ printMemoryHashTable(fid, mhtptr)
     fprintf(fid, "progress = %d\n", mhtptr->progress);
     fprintf(fid, "size = %d\n", mhtptr->size);
     fprintf(fid, "oldsize = %d\n", mhtptr->oldSize);
+    return 0;
 }
 
+int
 printPrincipal(ptr)
      struct ktc_principal *ptr;
 {
     printf("name = %s\n", ptr->name);
     printf("instance = %s\n", ptr->instance);
     printf("cell = %s\n", ptr->cell);
+    return 0;
 }
 
+int
 printStructDumpHeader(ptr)
      struct structDumpHeader *ptr;
 {
     printf("type = %d\n", ptr->type);
     printf("structure version = %d\n", ptr->structversion);
     printf("size = %d bytes\n", ptr->size);
+    return 0;
 }
 
+int
 printTape(fid, tptr)
      FILE *fid;
      struct tape *tptr;
@@ -167,8 +174,10 @@ printTape(fid, tptr)
     fprintf(fid, "firstVol = %d\n", tptr->firstVol);
     fprintf(fid, "labelPos = %d\n", tptr->labelpos);
     fprintf(fid, "useCount = %d\n", tptr->useCount);
+    return 0;
 }
 
+int
 printTapeEntry(teptr)
      struct budb_tapeEntry *teptr;
 {
@@ -198,8 +207,10 @@ printTapeEntry(teptr)
     printf("labelPos = %d\n", teptr->labelpos);
     printf("useCount = %d\n", teptr->useCount);
     printf("dump = %d\n", teptr->dump);
+    return 0;
 }
 
+int
 printTapeSet(tsptr, nss)
      struct budb_tapeSet *tsptr;
      afs_int32 nss;		/* is the tapeserver name an accurate name */
@@ -212,8 +223,10 @@ printTapeSet(tsptr, nss)
 /*  printf("a  = %d\n",tsptr->a ); */
 /*  printf("b = %d\n",tsptr->b);   */
     printf("Start Tape Seq = %d\n", tsptr->b);
+    return 0;
 }
 
+int
 printVolumeEntry(veptr)
      struct budb_volumeEntry *veptr;
 {
@@ -245,8 +258,10 @@ printVolumeEntry(veptr)
 
     printf("dump = %d\n", veptr->dump);
     printf("tape = %s\n", veptr->tape);
+    return 0;
 }
 
+int
 printVolFragment(fid, vfptr)
      FILE *fid;
      struct volFragment *vfptr;
@@ -262,8 +277,10 @@ printVolFragment(fid, vfptr)
     fprintf(fid, "nBytes = %d\n", vfptr->nBytes);
     fprintf(fid, "flags = %d\n", vfptr->flags);
     fprintf(fid, "sequence = %d\n", vfptr->sequence);
+    return 0;
 }
 
+int
 printVolInfo(fid, viptr)
      FILE *fid;
      struct volInfo *viptr;
@@ -278,6 +295,7 @@ printVolInfo(fid, viptr)
     fprintf(fid, "sameNameChain = %d\n", viptr->sameNameChain);
     fprintf(fid, "firstFragment = %d\n", viptr->firstFragment);
     fprintf(fid, "nFrags = %d\n", viptr->nFrags);
+    return 0;
 }
 
 
@@ -401,6 +419,7 @@ principal_hton(hostptr, netptr)
     strcpy(netptr->name, hostptr->name);
     strcpy(netptr->instance, hostptr->instance);
     strcpy(netptr->cell, hostptr->cell);
+    return 0;
 }
 
 principal_ntoh(netptr, hostptr)
@@ -409,6 +428,7 @@ principal_ntoh(netptr, hostptr)
     strcpy(hostptr->name, netptr->name);
     strcpy(hostptr->instance, netptr->instance);
     strcpy(hostptr->cell, netptr->cell);
+    return 0;
 }
 
 structDumpHeader_hton(hostPtr, netPtr)
@@ -445,6 +465,7 @@ tapeEntry_ntoh(netptr, hostptr)
     hostptr->dump = ntohl(netptr->dump);
 }
 
+int
 tapeSet_hton(hostptr, netptr)
      struct budb_tapeSet *hostptr, *netptr;
 {
@@ -454,8 +475,10 @@ tapeSet_hton(hostptr, netptr)
     netptr->maxTapes = htonl(hostptr->maxTapes);
     netptr->a = htonl(hostptr->a);
     netptr->b = htonl(hostptr->b);
+    return 0;
 }
 
+int
 tapeSet_ntoh(netptr, hostptr)
      struct budb_tapeSet *netptr, *hostptr;
 {
@@ -465,6 +488,7 @@ tapeSet_ntoh(netptr, hostptr)
     hostptr->maxTapes = ntohl(netptr->maxTapes);
     hostptr->a = ntohl(netptr->a);
     hostptr->b = ntohl(netptr->b);
+    return 0;
 }
 
 textBlock_hton(hostptr, netptr)

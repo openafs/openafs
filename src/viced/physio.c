@@ -202,4 +202,5 @@ FidCpy(DirHandle * tofile, DirHandle * fromfile)
 {
     *tofile = *fromfile;
     IH_COPY(tofile->dirh_handle, fromfile->dirh_handle);
+    return 0;
 }

@@ -229,10 +229,11 @@ void cm_InitFakeRootDir() {
 
 int cm_FakeRootFid(cm_fid_t *fidp)
 {
-  fidp->cell = 0x1;            /* root cell */
-	fidp->volume = 0x20000001;   /* root.afs ? */
-	fidp->vnode = 0x1;
-	fidp->unique = 0x1;
+      fidp->cell = 0x1;            /* root cell */
+      fidp->volume = 0x20000001;   /* root.afs ? */
+      fidp->vnode = 0x1;
+      fidp->unique = 0x1;
+      return 0;
 }
   
 int cm_getLocalMountPointChange() {
@@ -332,6 +333,7 @@ int cm_reInitLocalMountPoints() {
 	lock_ReleaseMutex(&cm_Freelance_Lock);
 
 	printf("----- reinit complete -----\n\n");
+	return 0;
 }
 
 

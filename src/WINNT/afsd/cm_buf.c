@@ -1441,5 +1441,6 @@ int cm_DumpBufHashTable(FILE *outputFile, char *cookie)
     WriteFile(outputFile, output, strlen(output), &zilch, NULL);
 
     lock_ReleaseRead(&buf_globalLock);
+    return 0;
 }
 

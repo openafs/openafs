@@ -832,6 +832,7 @@ h_FreeConnection(struct rx_connection *tcon)
 	    client->tcon = (struct rx_connection *)0;
 	H_UNLOCK;
     }
+    return 0;
 }				/*h_FreeConnection */
 
 

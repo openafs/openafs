@@ -565,7 +565,8 @@ long cm_CloseCellFile(cm_configFile_t *filep)
 
 #if !defined(DJGPP) && !defined(AFS_WIN95_ENV)
 	code = GetWindowsDirectory(wdir, sizeof(wdir));
-        if (code == 0 || code > sizeof(wdir)) return NULL;
+        if (code == 0 || code > sizeof(wdir)) 
+	    return closeCode;
         
 	/* add trailing backslash, if required */
         tlen = strlen(wdir);
@@ -599,7 +600,8 @@ long cm_CloseCellFile(cm_configFile_t *filep)
         
         code = rename(sdir, wdir);	/* do the rename */
         
-        if (code) code = errno;
+        if (code) 
+	  code = errno;
         
         return code;
 }

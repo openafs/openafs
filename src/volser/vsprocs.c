@@ -415,6 +415,7 @@ UV_SetSecurity(register struct rx_securityClass *as, afs_int32 aindex)
 {
     uvindex = aindex;
     uvclass = as;
+    return 0;
 }
 
 /* bind to volser on <port> <aserver> */

@@ -528,6 +528,7 @@ makeDbDumpEntry(tapeEntPtr, dumpEntryPtr)
     strcat(dumpEntryPtr->tapes.format, ".%d");
     dumpEntryPtr->tapes.b = tapeEntPtr->seq;
     dumpEntryPtr->tapes.maxTapes = 0;
+    return 0;
 }
 
 /* readDbTape
@@ -780,6 +781,7 @@ KeepAlive()
 	if (code || done)
 	    break;
     }
+    return 0;
 }
 
 #define BIGCHUNK 102400

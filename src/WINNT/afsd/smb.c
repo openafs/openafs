@@ -6639,6 +6639,7 @@ int smb_DumpVCP(FILE *outputFile, char *cookie)
     }       
   
     lock_ReleaseRead(&smb_rctLock);
+    return 0;
 }
 
 

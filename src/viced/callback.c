@@ -1489,6 +1489,7 @@ CleanupTimedOutCallBacks(void)
     H_LOCK;
     CleanupTimedOutCallBacks_r();
     H_UNLOCK;
+    return 0;
 }
 
 int

@@ -219,6 +219,7 @@ FixupBucket(ap)
     ap->hashIndex = i;		/* remember where we are for deletion */
     ap->hashNext = phTable[i];	/* add us to the list */
     phTable[i] = ap;		/* at the front, since it's LRU */
+    return 0;
 }
 
 struct buffer *

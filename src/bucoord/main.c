@@ -468,6 +468,7 @@ bc_interactCmd(as, arock)
      char *arock;
 {
     interact = 1;
+    return 0;
 }
 
 static void

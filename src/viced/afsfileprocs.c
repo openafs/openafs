@@ -1898,7 +1898,7 @@ RXGetVolumeStatus(AFSFetchVolumeStatus * status, char **name, char **offMsg,
     }
     strcpy(*motd, V_motd(volptr));
 #endif /* FS_STATS_DETAILED */
-
+    return 0;
 }				/*RXGetVolumeStatus */
 
 
