@@ -856,3 +856,11 @@ void cm_CheckCBExpiration(void)
         }
         lock_ReleaseWrite(&cm_scacheLock);
 }
+
+/* debug interface: not implemented */
+int SRXAFSCB_GetCellByNum(struct rx_call *a_call, afs_int32 a_cellnum,
+			  char **a_name, serverList *a_hosts)
+{
+    /* XXXX */
+    return RXGEN_OPCODE;
+}
