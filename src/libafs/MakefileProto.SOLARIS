@@ -40,7 +40,7 @@ KDEFS_32 =
 KDEFS_64 = -xarch=v9
 
 <all>
-CFLAGS=-I. -I.. ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 
 # Name of directory to hold object files and libraries.
 <all -sun4x_57 -sun4x_58>

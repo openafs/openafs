@@ -190,7 +190,7 @@ LDFLAGS_32 = -n32
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
 OPTF=${OPT} 
 OPTF2=${OPT2} 
-CFLAGS=-I. -I.. ${FSINCLUDES} $(DEFINES) -G 0 $(KDEFS) $(KOPTS) ${DBUG}
+CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) -G 0 $(KDEFS) $(KOPTS) ${DBUG}
 
 # This tells Makefile.common to use it's single directory build target.
 #COMPDIRS = single_compdir
@@ -214,13 +214,12 @@ KOBJ = STATIC MODLOAD
 
 
 setup:
-	-rm -f  h net netinet rpc ufs nfs  machine sys sgiefs
+	-rm -f  h net netinet rpc ufs nfs  machine sys 
 	-ln -s /usr/include/sys h
 	-ln -s /usr/include/net /usr/include/netinet .
 	-ln -s /usr/include/rpc /usr/include/sys .
 	-ln -s /usr/include/sys/fs .
 	-mkdir ${DESTDIR}root.client/bin
-	-mkdir ${DESTDIR}root.client/usr/vice/etc/sgiload
 <all -sgi_65>
 	BUILDPROCS="${PROCESSORS}" ; \
 	BUILDMPS="${MPS}" ; \

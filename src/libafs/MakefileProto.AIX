@@ -59,7 +59,7 @@ LDSTUFF= -b"binder:/usr/lib/bind glink:/usr/lib/glink.o" -bnoentry -b h:4 \
 LDFLAGS = -m -eafs_config -bexport:${DESTDIR}/lib/afs/afs.exp ${IMPORTS} \
 	 -lsys -lcsys 
 
-CFLAGS=-I. -I.. ${FSINCLUDES} $(KDEFS) $(KOPTS) ${DBUG}
+CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(KDEFS) $(KOPTS) ${DBUG}
 
 # Name of directory to hold object files and libraries.
 KOBJ = MODLOAD

@@ -14,7 +14,7 @@ MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 # System specific build commands and flags
 DEFINES= -DAFSDEBUG -DKERNEL -DUKERNEL -DAFS -DVICE
-CFLAGS=-I. -I.. ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBUG}
+CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBUG}
 AR = /usr/bin/ar
 ARFLAGS = -r
 RANLIB = /bin/ranlib

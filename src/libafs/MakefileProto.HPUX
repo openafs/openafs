@@ -60,7 +60,7 @@ KDEFS_64 = +DA2.0W +DS2.0 +M2 +W 478,530
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT -DHPONCPLUS
 OPTF=${OPT} 
 OPTF2=${OPT2} 
-CFLAGS=-I. -I.. -I../h -I../nfs ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+CFLAGS=-I. -I.. -I../h -I../nfs -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 
 # Name of directory to hold object files and libraries.
 KOBJ=STATIC

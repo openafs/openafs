@@ -10,7 +10,7 @@
 SHELL=/bin/sh
 DESTDIR = DEST/
 SRCDIR = DEST/
-INCLUDE= -I.  -I/usr/include
+INCLUDE= -I.  -I/usr/include -I${TOP_SRCDIR}/config
 Aobj=COMMON
 Dobj=DYNEL
 Cobj=CLIENT

@@ -65,7 +65,7 @@ CCFLAGS =   -O2 -fomit-frame-pointer -fno-strength-reduce \
 	-fno-builtin -ffixed-r2
 DEFINES = -D__KERNEL__  -D__powerpc__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 <all>
-INCLUDES = -I. -I../
+INCLUDES = -I. -I../ -I${TOP_SRCDIR}/config
 
 CFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES)
 

@@ -36,7 +36,7 @@ OPTF2=${OPT2}
 KOPTS=-traditional-cpp -static -fno-common -finline -fno-keep-inline-functions -force_cpusubtype_ALL -msoft-float -mlong-branch 
 #CFLAGS=-Werror-implicit-function-declaration -I. -I.. ${KINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 #CFLAGS=-framework Kernel -I. -I.. ${KINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
-CFLAGS=-I. -I.. ${KINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${KINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 
 
 # Name of directory to hold object files and libraries.

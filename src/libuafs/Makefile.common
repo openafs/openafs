@@ -9,7 +9,7 @@
 #
 
 SHELL=/bin/sh
-INCLUDE=  -I. -I/usr/include
+INCLUDE=  -I. -I/usr/include -I${TOP_SRCDIR}/config
 UOBJ	=../UAFS
 WEBOBJ	=../AFSWEB
 AFS	=../afs
