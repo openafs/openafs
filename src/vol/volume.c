@@ -271,9 +271,10 @@ int VInitVolumePackage(ProgramType pt, int nLargeVnodes, int nSmallVnodes,
 	/* Attach all the volumes in this partition */
 	for (diskP = DiskPartitionList; diskP; diskP = diskP->next) {
 	    int nAttached = 0, nUnattached = 0;
+	    Log("Partition %s: attaching volumes\n", diskP->name);
 	    dirp = opendir(VPartitionPath(diskP));
 	    assert(dirp);
-	    while (dp = readdir(dirp)) {
+	    while ((dp = readdir(dirp))) {
 		char *p;
 		p = strrchr(dp->d_name, '.');
 		if (p != NULL && strcmp(p, VHDREXT) == 0) {
@@ -284,6 +285,9 @@ int VInitVolumePackage(ProgramType pt, int nLargeVnodes, int nSmallVnodes,
 		    (*(vp?&nAttached:&nUnattached))++;
 		    if (error == VOFFLINE)
 			Log("Volume %u stays offline (/vice/offline/%s exists)\n", 
+			    VolumeNumber(dp->d_name), dp->d_name);
+		    else 
+			Log("Partition %s: attached volume %u (%s)\n", diskP->name, 
 			    VolumeNumber(dp->d_name), dp->d_name);
 		    if (vp) {
 			VPutVolume(vp);
