@@ -619,6 +619,7 @@ AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h)
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf re_comp re_exec)
 AC_CHECK_FUNCS(setprogname getprogname sigaction)
 AC_CHECK_TYPE(ssize_t, int)
+AC_SIZEOF_TYPE(long)
 
 AC_CHECK_FUNCS(timegm)
 
