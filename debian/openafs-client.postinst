@@ -28,7 +28,7 @@ case "$1" in
 	    else cp /usr/share/openafs/CellServDB \
 	      /etc/openafs
 	    fi
-	if grep  -q -F "^>$RET" /etc/openafs/CellServDB ; then :
+	if grep  -q -F "$RET" /etc/openafs/CellServDB&& [ "x$RET" != "x" ]  ; then :
 		else db_input critical  openafs-client/cell-info || true
 	    db_input high openafs-client/run-client ||true
 	    db_go
