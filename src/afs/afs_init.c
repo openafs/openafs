@@ -108,6 +108,8 @@ struct vfs *afs_cacheVfsp=0;
 afs_rwlock_t afs_puttofileLock; /* not used */
 char *afs_sysname = 0;			/* So that superuser may change the
 					 * local value of @sys */
+char *afs_sysnamelist[MAXNUMSYSNAMES];	/* For support of a list of sysname */
+int afs_sysnamecount = 0;
 struct volume *Initialafs_freeVolList;
 int afs_memvolumes = 0;
 
@@ -525,8 +527,11 @@ afs_ResourceInit(preallocs)
 	afs_resourceinit_flag = 1;
 	for (i=0;i<NFENTRIES;i++)
 	    fvTable[i] = 0;
-	afs_sysname = afs_osi_Alloc(MAXSYSNAME);
+	for(i=0;i<MAXNUMSYSNAMES;i++)
+	  afs_sysnamelist[i] = afs_osi_Alloc(MAXSYSNAME);
+	afs_sysname = afs_sysnamelist[0];
 	strcpy(afs_sysname, SYS_NAME);
+	afs_sysnamecount = 1;
 	QInit(&CellLRU);	
 #if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
     {  extern afs_int32 afs_preallocs;
@@ -837,8 +842,10 @@ void shutdown_AFS()
       for (i=0; i<NFENTRIES; i++)
 	fvTable[i] = 0;
       /* Reinitialize local globals to defaults */
-      afs_osi_Free(afs_sysname, MAXSYSNAME);
+      for(i=0; i<MAXNUMSYSNAMES; i++)
+	afs_osi_Free(afs_sysnamelist[i], MAXSYSNAME);
       afs_sysname = 0;
+      afs_sysnamecount = 0;
       afs_marinerHost = 0;
       QInit(&CellLRU);      
       afs_setTimeHost = (struct server *)0;

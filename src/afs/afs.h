@@ -63,6 +63,7 @@ extern int afs_shuttingdown;
 #define	PIGGYSIZE	1350	    /* max piggyback size */
 #define	MAXVOLS		128	    /* max vols we can store */
 #define	MAXSYSNAME	128	    /* max sysname (i.e. @sys) size */
+#define MAXNUMSYSNAMES	16	    /* max that current constants allow */
 #define	NOTOKTIMEOUT	(2*3600)    /* time after which to timeout conns sans tokens */
 #define	NOPAG		0xffffffff
 #define AFS_NCBRS	300	    /* max # of call back return entries */
@@ -74,6 +75,11 @@ extern int afs_shuttingdown;
 #define	AFS_RXDEADTIME	50
 #define AFS_HARDDEADTIME        120
 
+struct sysname_info {
+  char *name;
+  short offset;
+  char index, allocked;
+};
 
 /* flags to use with AFSOP_CACHEINIT */
 #define AFSCALL_INIT_MEMCACHE        0x1         /* use a memory-based cache */

@@ -1664,8 +1664,9 @@ static PNewStatMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
     register struct vcache *tvc;
     register struct dcache *tdc;
     struct VenusFid tfid;
-    char *bufp = 0;
-    afs_int32 offset, len, hasatsys=0;
+    char *bufp;
+    struct sysname_info sysState;
+    afs_int32 offset, len;
 
     AFS_STATCNT(PNewStatMount);
     if (!avc) return EINVAL;
@@ -1676,8 +1677,11 @@ static PNewStatMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
     }
     tdc = afs_GetDCache(avc, 0, areq, &offset, &len, 1);
     if (!tdc) return ENOENT;
-    hasatsys = Check_AtSys(avc, ain, &bufp, areq);
-    code = afs_dir_Lookup(&tdc->f.inode, bufp, &tfid.Fid);
+    Check_AtSys(avc, ain, &sysState, areq);
+    do {
+      code = afs_dir_Lookup(&tdc->f.inode, sysState.name, &tfid.Fid);
+    } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
+    bufp = sysState.name;
     if (code) {
 	afs_PutDCache(tdc);
 	goto out;
@@ -1717,7 +1721,7 @@ static PNewStatMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
     ReleaseWriteLock(&tvc->lock);
     afs_PutVCache(tvc, WRITE_LOCK);
 out:
-    if (hasatsys) osi_FreeLargeSpace(bufp);
+    if (sysState.allocked) osi_FreeLargeSpace(bufp);
     return code;
 }
 
@@ -2341,8 +2345,9 @@ static PRemoveMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
     afs_int32 ainSize;
     afs_int32 *aoutSize;	/* set this */ {
     register afs_int32 code;
-    char *bufp = 0;
-    afs_int32 offset, len, hasatsys = 0;
+    char *bufp;
+    struct sysname_info sysState;
+    afs_int32 offset, len;
     register struct conn *tc;
     register struct dcache *tdc;
     register struct vcache *tvc;
@@ -2362,8 +2367,11 @@ static PRemoveMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
 
     tdc	= afs_GetDCache(avc, 0,	areq, &offset,	&len, 1);	/* test for error below */
     if (!tdc) return ENOENT;
-    hasatsys = Check_AtSys(avc, ain, &bufp, areq);
-    code = afs_dir_Lookup(&tdc->f.inode, bufp, &tfid.Fid);
+    Check_AtSys(avc, ain, &sysState, areq);
+    do {
+      code = afs_dir_Lookup(&tdc->f.inode, sysState.name, &tfid.Fid);
+    } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
+    bufp = sysState.name;
     if (code) {
 	afs_PutDCache(tdc);
 	goto out;
@@ -2446,7 +2454,7 @@ static PRemoveMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
     ReleaseWriteLock(&avc->lock);
     code = 0;
 out:
-    if (hasatsys) osi_FreeLargeSpace(bufp);
+    if (sysState.allocked) osi_FreeLargeSpace(bufp);
     return code;    
 }
 
@@ -2676,7 +2684,6 @@ static PGetVnodeXStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
 /* (since we don't really believe remote uids anyway) */
  /* outname[] shouldn't really be needed- this is left as an excercise */
  /* for the reader.  */
-
 static PSetSysName(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
 struct vcache *avc;
 int afun;
@@ -2691,9 +2698,11 @@ register struct AFS_UCRED *acred;
     register struct afs_exporter *exporter;
     extern struct unixuser *afs_FindUser();
     extern char *afs_sysname;
+    extern char *afs_sysnamelist[];
+    extern int afs_sysnamecount;
     register struct unixuser *au;
     register afs_int32 pag, error;
-    int t;
+    int t, count;
 
 
     AFS_STATCNT(PSetSysName);
@@ -2709,9 +2718,24 @@ register struct AFS_UCRED *acred;
     bcopy(ain, (char *)&setsysname, sizeof(afs_int32));
     ain += sizeof(afs_int32);
     if (setsysname) {
-      t = strlen(ain);
-      if (t > MAXSYSNAME)
+
+      /* Check my args */
+      if (setsysname < 0 || setsysname > MAXNUMSYSNAMES)
 	return EINVAL;
+      for(cp = ain,count = 0;count < setsysname;count++) {
+	/* won't go past end of ain since maxsysname*num < ain length */
+	t = strlen(cp);
+	if (t >= MAXSYSNAME || t <= 0)
+	  return EINVAL;
+	/* check for names that can shoot us in the foot */
+	if (*cp == '.' && (cp[1] == 0 || (cp[1] == '.' && cp[2] == 0)))
+	  return EINVAL;
+	cp += t+1;
+      }
+      /* args ok */
+
+      /* inname gets first entry in case we're being a translater */
+      t = strlen(ain);
       bcopy(ain, inname, t+1);  /* include terminating null */
       ain += t + 1;
     }
@@ -2738,23 +2762,50 @@ register struct AFS_UCRED *acred;
 	else foundname = 1;
 	afs_PutUser(au, READ_LOCK);
     } else {
+
+      /* Not xlating, so local case */
 	if (!afs_sysname) osi_Panic("PSetSysName: !afs_sysname\n");
-	if (!setsysname) {
+	if (!setsysname) {	/* user just wants the info */
 	    strcpy(outname, afs_sysname);
-	    foundname = 1;
-	} else {
-	    if (!afs_osi_suser(acred))     /* Local guy; only root can change sysname */
+	    foundname = afs_sysnamecount;
+	} else {     /* Local guy; only root can change sysname */
+	    if (!afs_osi_suser(acred))
 		return EACCES;
+	   
+	    /* clear @sys entries from the dnlc, once afs_lookup can
+	     do lookups of @sys entries and thinks it can trust them */
+	    /* privs ok, store the entry, ... */
 	    strcpy(afs_sysname, inname);
+	    if (setsysname > 1) { /* ... or list */
+	      cp = ain;
+	      for(count=1; count < setsysname;++count) {
+		if (!afs_sysnamelist[count])
+		  osi_Panic("PSetSysName: no afs_sysnamelist entry to write\n");
+		t = strlen(cp);
+		bcopy(cp, afs_sysnamelist[count], t+1); /* include null */
+		cp += t+1;
+	      }
+	    }
+	    afs_sysnamecount = setsysname;
 	}
     }
     if (!setsysname) {
-	cp = aout;
+	cp = aout;  /* not changing so report back the count and ... */
 	bcopy((char *)&foundname, cp, sizeof(afs_int32));
 	cp += sizeof(afs_int32);
 	if (foundname) {
-	    strcpy(cp, outname);
+	    strcpy(cp, outname);		/* ... the entry, ... */
 	    cp += strlen(outname)+1;
+	    for(count=1; count < foundname; ++count) { /* ... or list. */
+	      /* Note: we don't support @sys lists for exporters */
+	      if (!afs_sysnamelist[count])
+		osi_Panic("PSetSysName: no afs_sysnamelist entry to read\n");
+	      t = strlen(afs_sysnamelist[count]);
+	      if (t >= MAXSYSNAME)
+		osi_Panic("PSetSysName: sysname entry garbled\n");
+	      strcpy(cp, afs_sysnamelist[count]);
+	      cp += t + 1;
+	    }
 	}
 	*aoutSize = cp - aout;
     }
@@ -3498,8 +3549,9 @@ static PFlushMount(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     register struct vcache *tvc;
     register struct dcache *tdc;
     struct VenusFid tfid;
-    char *bufp = 0;
-    afs_int32 offset, len, hasatsys=0;
+    char *bufp;
+    struct sysname_info sysState;
+    afs_int32 offset, len;
 
     AFS_STATCNT(PFlushMount);
     if (!avc) return EINVAL;
@@ -3510,8 +3562,11 @@ static PFlushMount(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     }
     tdc = afs_GetDCache(avc, 0, areq, &offset, &len, 1);
     if (!tdc) return ENOENT;
-    hasatsys = Check_AtSys(avc, ain, &bufp, areq);
-    code = afs_dir_Lookup(&tdc->f.inode, bufp, &tfid.Fid);
+    Check_AtSys(avc, ain, &sysState, areq);
+    do {
+      code = afs_dir_Lookup(&tdc->f.inode, sysState.name, &tfid.Fid);
+    } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
+    bufp = sysState.name;
     if (code) {
 	afs_PutDCache(tdc);
 	goto out;
@@ -3556,7 +3611,7 @@ static PFlushMount(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
 #endif
     afs_PutVCache(tvc, WRITE_LOCK);
 out:
-    if (hasatsys) osi_FreeLargeSpace(bufp);
+    if (sysState.allocked) osi_FreeLargeSpace(bufp);
     return code;
 }
 

@@ -40,6 +40,8 @@ extern afs_rwlock_t afs_xvcache;
 extern afs_rwlock_t afs_xcbhash;
 extern struct afs_exporter *afs_nfsexporter;
 extern char *afs_sysname;
+extern char *afs_sysnamelist[];
+extern int afs_sysnamecount;
 extern struct afs_q VLRU;			/*vcache LRU*/
 #ifdef AFS_LINUX22_ENV
 extern struct inode_operations afs_symlink_iops, afs_dir_iops;
@@ -242,85 +244,82 @@ afs_ENameOK(aname)
     return 1;
 }
 
-Check_AtSys(avc, aname, outb, areq)
-    register struct vcache *avc;
-    char *aname, **outb;
-    struct vrequest *areq;
-{
-    register char *tname;
-    register int error = 0, offset = -1;
-
-    for (tname=aname; *tname; tname++) /*Move to the end of the string*/;
-
-    /*
-     * If the current string is 4 chars long or more, check to see if the
-     * tail end is "@sys".
-     */
-    if ((tname >= aname + 4) && (AFS_EQ_ATSYS(tname-4)))
-	offset = (tname - 4) - aname;
-    if (offset < 0) {
-	tname = aname;
-    }  else {
-	tname = (char *) osi_AllocLargeSpace(AFS_LRALLOCSIZ);
-	if (offset)
-	    strncpy(tname, aname, offset);
-	if (!afs_nfsexporter) 
-	    strcpy(tname+offset, (afs_sysname ? afs_sysname : SYS_NAME ));
-	else {
-	    register struct unixuser *au;
-	    register afs_int32 error;
-	    au = afs_GetUser(areq->uid, avc->fid.Cell, 0); afs_PutUser(au, 0);	
-	    if (au->exporter) {
-		error = EXP_SYSNAME(au->exporter, (char *)0, tname+offset);
-		if (error) 
-		    strcpy(tname+offset, "@sys");
-	    } else {
-		strcpy(tname+offset, (afs_sysname ? afs_sysname : SYS_NAME ));
-	    }
-	}
-	error = 1;
-    }
-    *outb = tname;
-    return error;
-}
-
-
-char *afs_getsysname(areq, adp)
+afs_getsysname(areq, adp, bufp)
     register struct vrequest *areq;
-    register struct vcache *adp; {
+    register struct vcache *adp;
+    register char *bufp;
+{
     static char sysname[MAXSYSNAME];
     register struct unixuser *au;
     register afs_int32 error;
 
+    if (!afs_nfsexporter) {
+      strcpy(bufp, afs_sysname);
+      return 0;
+    }
     AFS_STATCNT(getsysname);
-    /* this whole interface is wrong, it should take a buffer ptr and copy
-     * the data out.
-     */
     au = afs_GetUser(areq->uid, adp->fid.Cell, 0);
     afs_PutUser(au, 0);	
     if (au->exporter) {
-      error = EXP_SYSNAME(au->exporter, (char *)0, sysname);
-      if (error) return "@sys";
-      else return sysname;
+      error = EXP_SYSNAME(au->exporter, (char *)0, bufp);
+      if (error) 
+	strcpy(bufp, "@sys");
+      return -1;
     } else {
-      return (afs_sysname == 0? SYS_NAME : afs_sysname);
+      strcpy(bufp, afs_sysname);
+      return 0;
     }
 }
 
-void afs_HandleAtName(aname, aresult, areq, adp)
-    register char *aname;
-    register char *aresult;
-    register struct vrequest *areq;
-    register struct vcache *adp; {
-    register int tlen;
-    AFS_STATCNT(HandleAtName);
-    tlen = strlen(aname);
-    if (tlen >= 4 && strcmp(aname+tlen-4, "@sys")==0) {
-	strncpy(aresult, aname, tlen-4);
-	strcpy(aresult+tlen-4, afs_getsysname(areq, adp));
+Check_AtSys(avc, aname, state, areq)
+    register struct vcache *avc;
+    char *aname;
+    struct sysname_info *state;
+    struct vrequest *areq;
+{
+    if (AFS_EQ_ATSYS(aname)) {
+      state->offset = 0;
+      state->name = (char *) osi_AllocLargeSpace(AFS_SMALLOCSIZ);
+      state->allocked = 1;
+      state->index = afs_getsysname(areq, avc, state->name);
+    } else {
+      state->offset = -1;
+      state->allocked = 0;
+      state->index = 0;
+      state->name = aname;
     }
-    else strcpy(aresult, aname);
-    }
+}
+
+Next_AtSys(avc, areq, state)
+     register struct vcache *avc;
+     struct vrequest *areq;
+     struct sysname_info *state;
+{
+  if (state->index == -1)
+    return 0;	/* No list */
+
+  /* Check for the initial state of aname != "@sys" in Check_AtSys*/
+  if (state->offset == -1 && state->allocked == 0) {
+    register char *tname;
+    /* Check for .*@sys */
+      for (tname=state->name; *tname; tname++)
+	/*Move to the end of the string*/;
+      if ((tname > state->name + 4) && (AFS_EQ_ATSYS(tname-4))) {
+	state->offset = (tname - 4) - state->name;
+	tname = (char *) osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+	strncpy(tname, state->name, state->offset);
+	state->name = tname;
+	state->allocked = 1;
+	state->index = afs_getsysname(areq, avc, state->name+state->offset);
+	return 1;
+      } else
+	return 0; /* .*@sys doesn't match either */
+  } else if (++(state->index) >= afs_sysnamecount
+	     || !afs_sysnamelist[state->index])
+    return 0;	/* end of list */
+  strcpy(state->name+state->offset, afs_sysnamelist[state->index]);
+  return 1;
+}
 
 #if (defined(AFS_SGI62_ENV) || defined(AFS_SUN57_64BIT_ENV))
 extern int BlobScan(ino64_t *afile, afs_int32 ablob);
@@ -884,6 +883,7 @@ afs_lookup(adp, aname, avcp, acred)
     OSI_VC_CONVERT(adp)
     afs_hyper_t versionNo;
     int no_read_access = 0;
+    struct sysname_info sysState;   /* used only for @sys checking */
 
     AFS_STATCNT(afs_lookup);
 #ifdef	AFS_OSF_ENV
@@ -898,39 +898,6 @@ afs_lookup(adp, aname, avcp, acred)
       goto done;
     }
 
-    /* lookup the name aname in the appropriate dir, and return a cache entry
-      on the resulting fid */
-
-    /*
-     * check for, and handle "@sys" if it's there.  We should be able
-     * to avoid the alloc and the strcpy with a little work, but it's
-     * not pressing.  If there aren't any remote users (ie, via the 
-     * NFS translator), we have a slightly easier job.
-     * the faster way to do this is to check for *aname == '@' and if 
-     * it's there, check for @sys, otherwise, assume there's no @sys 
-     * then, if the lookup fails, check for .*@sys...
-     */
-    if (!AFS_EQ_ATSYS(aname)) {
-      tname = aname;
-    }
-    else {
-	tname = (char *) osi_AllocLargeSpace(AFS_SMALLOCSIZ);
-	if (!afs_nfsexporter) 
-	  strcpy(tname, (afs_sysname ? afs_sysname : SYS_NAME ));
-	else {
-	  register struct unixuser *au;
-	  register afs_int32 error;
-	  au = afs_GetUser(treq.uid, adp->fid.Cell, 0); afs_PutUser(au, 0);	
-	  if (au->exporter) {
-	    error = EXP_SYSNAME(au->exporter, (char *)0, tname);
-	    if (error) 
-	      strcpy(tname, "@sys");
-	  } else {
-	      strcpy(tname, (afs_sysname ? afs_sysname : SYS_NAME ));
-	  }
-	}
-      }
-
     /* come back to here if we encounter a non-existent object in a read-only
        volume's directory */
 
@@ -944,7 +911,7 @@ afs_lookup(adp, aname, avcp, acred)
     else code = 0;
 
     /* watch for ".." in a volume root */
-    if (adp->mvstat == 2 && tname[0] == '.' && tname[1] == '.' && !tname[2]) {
+    if (adp->mvstat == 2 && aname[0] == '.' && aname[1] == '.' && !aname[2]) {
 	/* looking up ".." in root via special hacks */
 	if (adp->mvid == (struct VenusFid *) 0 || adp->mvid->Fid.Volume == 0) {
 #ifdef	AFS_OSF_ENV
@@ -1001,7 +968,7 @@ afs_lookup(adp, aname, avcp, acred)
      * I'm not fiddling with the LRUQ here, either, perhaps I should, or else 
      * invent a lightweight version of GetVCache.
      */
-    if (tname[0] == '.' && !tname[1]) { /* special case */
+    if (aname[0] == '.' && !aname[1]) { /* special case */
 	ObtainReadLock(&afs_xvcache);	
 	osi_vnhold(adp, 0);
 	ReleaseReadLock(&afs_xvcache);	
@@ -1014,6 +981,16 @@ afs_lookup(adp, aname, avcp, acred)
       goto done;
     }
 
+    Check_AtSys(adp, aname, &sysState, &treq);
+    tname = sysState.name;
+
+    /* 1st Check_AtSys and lookup by tname is required here, for now,
+       because the dnlc is *not* told to remove entries for the parent
+       dir of file/dir op that afs_LocalHero likes, but dnlc is informed
+       if the cached entry for the parent dir is invalidated for a
+       non-local change.
+       Otherwise, we'd be able to do a dnlc lookup on an entry ending
+       w/@sys and know the dnlc was consistent with reality. */
     tvc = osi_dnlc_lookup (adp, tname, WRITE_LOCK);
     *avcp = tvc;  /* maybe wasn't initialized, but it is now */
     if (tvc) {
@@ -1057,7 +1034,6 @@ afs_lookup(adp, aname, avcp, acred)
 
     /* now we will just call dir package with appropriate inode.
       Dirs are always fetched in their entirety for now */
-    /* If the first lookup doesn't succeed, maybe it's got @sys in the name */
     ObtainReadLock(&adp->lock);
 
     /*
@@ -1084,17 +1060,28 @@ afs_lookup(adp, aname, avcp, acred)
     /* Save the version number for when we call osi_dnlc_enter */
     hset(versionNo, tdc->f.versionNo);
 
+    /*
+     * check for, and handle "@sys" if it's there.  We should be able
+     * to avoid the alloc and the strcpy with a little work, but it's
+     * not pressing.  If there aren't any remote users (ie, via the 
+     * NFS translator), we have a slightly easier job.
+     * the faster way to do this is to check for *aname == '@' and if 
+     * it's there, check for @sys, otherwise, assume there's no @sys 
+     * then, if the lookup fails, check for .*@sys...
+     */
+    /* above now implemented by Check_AtSys and Next_AtSys */
+
+    /* lookup the name in the appropriate dir, and return a cache entry
+       on the resulting fid */
     theDir = tdc->f.inode;
-    code = afs_dir_LookupOffset(&theDir, tname, &tfid.Fid, &dirCookie);
-    if (code == ENOENT && tname == aname) {
-      int len;
-      len = strlen(aname);
-      if (len >= 4 && AFS_EQ_ATSYS(aname+len-4)) {
-	tname = (char *) osi_AllocLargeSpace(AFS_LRALLOCSIZ);
-	afs_HandleAtName(aname, tname, &treq, adp);
-	code = afs_dir_LookupOffset(&theDir, tname, &tfid.Fid, &dirCookie);
-      }
+    code = afs_dir_LookupOffset(&theDir, sysState.name, &tfid.Fid, &dirCookie);
+
+    /* If the first lookup doesn't succeed, maybe it's got @sys in the name */
+    while (code == ENOENT && Next_AtSys(adp, &treq, &sysState)) {
+      code = afs_dir_LookupOffset(&theDir, sysState.name, &tfid.Fid, &dirCookie);
     }
+    tname = sysState.name;
+
     ReleaseReadLock(&adp->lock);
     afs_PutDCache(tdc);
 
