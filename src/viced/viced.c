@@ -109,6 +109,7 @@ static void CheckSignal(void);
 extern int GetKeysFromToken();
 extern int RXAFS_ExecuteRequest();
 extern int RXSTATS_ExecuteRequest();
+afs_int32 Do_VLRegisterRPC();
 
 int eventlog = 0, rxlog = 0;
 FILE *debugFile;
