@@ -281,7 +281,7 @@ int osi_FreeSocket(asocket)
     vnode_t *vp = SOTOV(so);
 
     AFS_STATCNT(osi_FreeSocket);
-    if (rxk_ListenerPid) {
+    while (rxk_ListenerPid) {
 	kill(rxk_ListenerPid, SIGUSR1);
 	afs_osi_Sleep(&rxk_ListenerPid);
     }
