@@ -111,26 +111,6 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
     RWLOCK_INIT(&afs_xaxs, "afs_xaxs");
     osi_dnlc_init();
 
-
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-    {
-	afs_int32 preallocs;
-
-	/*
-	 * We want to also reserve space for the gnode struct which is associated
-	 * with each vnode (vcache) one; we want to use the pinned pool for them   
-	 * since they're referenced at interrupt level.
-	 */
-	if (afs_stats_cmperf.SmallBlocksAlloced + astatSize < 3600)
-	    preallocs = astatSize;
-	else {
-	    preallocs = 3600 - afs_stats_cmperf.SmallBlocksAlloced;
-	    if (preallocs <= 0)
-		preallocs = 10;
-	}
-	osi_AllocMoreSSpace(preallocs);
-    }
-#endif
     /* 
      * create volume list structure 
      */
@@ -488,9 +468,7 @@ afs_ResourceInit(int preallocs)
     RWLOCK_INIT(&afs_xinterface, "afs_xinterface");
     LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
 #ifndef AFS_FBSD_ENV
-#ifndef	AFS_AIX32_ENV
     LOCK_INIT(&osi_fsplock, "osi_fsplock");
-#endif
     LOCK_INIT(&osi_flplock, "osi_flplock");
 #endif
     RWLOCK_INIT(&afs_xconn, "afs_xconn");
@@ -507,15 +485,6 @@ afs_ResourceInit(int preallocs)
 	afs_sysname = afs_sysnamelist[0];
 	strcpy(afs_sysname, SYS_NAME);
 	afs_sysnamecount = 1;
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-	{
-
-	    if ((preallocs > 256) && (preallocs < 3600))
-		afs_preallocs = preallocs;
-	    osi_AllocMoreSSpace(afs_preallocs);
-	    osi_AllocMoreMSpace(100);
-	}
-#endif
     }
 
     secobj = rxnull_NewServerSecurityObject();

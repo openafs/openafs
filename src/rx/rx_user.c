@@ -233,30 +233,30 @@ osi_AssertFailU(const char *expr, const char *file, int line)
 	      (int)file, line);
 }
 
-#ifdef	AFS_AIX32_ENV
+#if defined(AFS_AIX32_ENV) && !defined(KERNEL)
 #ifndef osi_Alloc
 static const char memZero;
-char *
+void *
 osi_Alloc(afs_int32 x)
 {
     /* 
-     * 0-length allocs may return NULL ptr from osi_kalloc, so we special-case
+     * 0-length allocs may return NULL ptr from malloc, so we special-case
      * things so that NULL returned iff an error occurred 
      */
     if (x == 0)
-	return &memZero;
-    return ((char *)malloc(x));
+	return (void *)&memZero;
+    return(malloc(x));
 }
 
 void
-osi_Free(char *x, afs_int32 size)
+osi_Free(void *x, afs_int32 size)
 {
     if (x == &memZero)
 	return;
-    free((char *)x);
+    free(x);
 }
 #endif
-#endif /* AFS_AIX32_ENV */
+#endif /* defined(AFS_AIX32_ENV) && !defined(KERNEL) */
 
 #define	ADDRSPERSITE	16
 
