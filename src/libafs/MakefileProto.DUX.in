@@ -75,21 +75,26 @@ setup:
 # Below this line are targets when in the COMMON directory:
 LIBAFS = libafs.o
 LIBAFSNONFS = libafs.nonfs.o
+AFSMOD = afs.mod
 
 DEST_LIBAFS = ${DESTDIR}/root.client/bin/${LIBAFS}
 DEST_LIBAFSNONFS = ${DESTDIR}/root.client/bin/${LIBAFSNONFS}
+DEST_AFSMOD = ${DESTDIR}/root.client/bin/${AFSMOD}
 
 
-# libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
+# libafs:	${DEST_LIBAFS} ${DEST_LIBAFSNONFS} ${DEST_AFSMOD}
 
 .PHONY: libafs
-libafs:	$(DEST_LIBAFSNONFS)
+libafs:	${DEST_LIBAFSNONFS} ${DEST_AFSMOD}
 
 
-$(DEST_LIBAFS): $(LIBAFS)
+${DEST_LIBAFS}: ${LIBAFS}
 	$(INSTALL) -f $? $@
 
-$(DEST_LIBAFSNONFS): $(LIBAFSNONFS)
+${DEST_LIBAFSNONFS}: ${LIBAFSNONFS}
+	$(INSTALL) -f $? $@
+
+${DEST_AFSMOD}: ${AFSMOD}
 	$(INSTALL) -f $? $@
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
@@ -98,6 +103,8 @@ ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(LD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS}
 
+${AFSMOD}: ${LIBAFSNONFS}
+	$(LD) -dc -r -o ${AFSMOD} ${LIBAFSNONFS}
 
 # Object build rules:
 osi_groups.o: $(AFS)/osi_groups.c
