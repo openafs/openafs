@@ -272,10 +272,12 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 	// because we have to fill in the status stuff 'coz we
 	// don't want trybulkstat to fill it in for us
 #ifdef AFS_FREELANCE_CLIENT
-	special = (fidp->cell==0x1 && fidp->volume==AFS_FAKE_ROOT_VOL_ID && 
+	special = (fidp->cell==AFS_FAKE_ROOT_CELL_ID && 
+               fidp->volume==AFS_FAKE_ROOT_VOL_ID &&
 			   !(fidp->vnode==0x1 && fidp->unique==0x1));
-	isRoot = (fidp->cell==0x1 && fidp->volume==AFS_FAKE_ROOT_VOL_ID && 
-			   fidp->vnode==0x1 && fidp->unique==0x1);
+	isRoot = (fidp->cell==AFS_FAKE_ROOT_CELL_ID && 
+              fidp->volume==AFS_FAKE_ROOT_VOL_ID &&
+			  fidp->vnode==0x1 && fidp->unique==0x1);
 	if (cm_freelanceEnabled && isRoot) {
 		osi_Log0(afsd_logp,"cm_getSCache Freelance and isRoot");
           /* freelance: if we are trying to get the root scp for the first
@@ -295,7 +297,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 		scp->volp = cm_rootSCachep->volp;
 		if (scp->dotdotFidp == (cm_fid_t *) NULL)
 			scp->dotdotFidp = (cm_fid_t *) malloc (sizeof(cm_fid_t));
-		scp->dotdotFidp->cell=0x1;
+		scp->dotdotFidp->cell=AFS_FAKE_ROOT_CELL_ID;
 		scp->dotdotFidp->volume=AFS_FAKE_ROOT_VOL_ID;
 		scp->dotdotFidp->unique=1;
 		scp->dotdotFidp->vnode=1;
@@ -592,7 +594,7 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
 #ifdef AFS_FREELANCE_CLIENT
 			&& (!cm_freelanceEnabled || !(!(scp->fid.vnode==0x1 &&
 				                         scp->fid.unique==0x1) &&
-				                         scp->fid.cell==0x1 &&
+				                         scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
 				                         scp->fid.volume==AFS_FAKE_ROOT_VOL_ID))
 #endif /* AFS_FREELANCE_CLIENT */
 		    ) {

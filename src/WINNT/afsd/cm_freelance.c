@@ -225,7 +225,7 @@ void cm_InitFakeRootDir() {
 
 int cm_FakeRootFid(cm_fid_t *fidp)
 {
-      fidp->cell = 0x1;            /* root cell */
+      fidp->cell = AFS_FAKE_ROOT_CELL_ID;            /* root cell */
       fidp->volume = AFS_FAKE_ROOT_VOL_ID;   /* root.afs ? */
       fidp->vnode = 0x1;
       fidp->unique = 0x1;
@@ -264,7 +264,7 @@ int cm_reInitLocalMountPoints() {
 
 	osi_Log0(afsd_logp,"Invalidating local mount point scp...  ");
 
-	aFid.cell = 0x1;
+	aFid.cell = AFS_FAKE_ROOT_CELL_ID;
 	aFid.volume=AFS_FAKE_ROOT_VOL_ID;
 	aFid.unique=0x1;
 	aFid.vnode=0x2;

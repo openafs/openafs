@@ -1275,6 +1275,9 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
         	tp = pathp;
 		phase = 2;
 	}
+	if (tp == NULL) {
+		tp = "";
+	}
 	haveComponent = 0;
         psp = NULL;
         tscp = rootSCachep;
@@ -1548,9 +1551,10 @@ long cm_TryBulkProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 	// yj: if this is a mountpoint under root.afs then we don't want it
 	// to be bulkstat-ed, instead, we call getSCache directly and under
 	// getSCache, it is handled specially.
-	if 	(cm_freelanceEnabled &&
-           tfid.cell==0x1 && tfid.volume==AFS_FAKE_ROOT_VOL_ID &&
-			   !(tfid.vnode==0x1 && tfid.unique==0x1) )
+	if 	( cm_freelanceEnabled &&
+          tfid.cell==AFS_FAKE_ROOT_CELL_ID && 
+          tfid.volume==AFS_FAKE_ROOT_VOL_ID &&
+          !(tfid.vnode==0x1 && tfid.unique==0x1) )
 	{
         osi_Log0(afsd_logp, "cm_TryBulkProc Freelance calls cm_SCache on root.afs mountpoint");
 		return cm_GetSCache(&tfid, &tscp, NULL, NULL);

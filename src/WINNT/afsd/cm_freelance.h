@@ -18,5 +18,6 @@ extern long cm_FreelanceRemoveMount(char *toremove);
 extern long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, cm_fid_t *fidp);
 
 #define AFS_FREELANCE_INI "afs_freelance.ini"
-#define AFS_FAKE_ROOT_VOL_ID  0x00000001
+#define AFS_FAKE_ROOT_CELL_ID 0xFFFFFFFF
+#define AFS_FAKE_ROOT_VOL_ID  0xFFFFFFFF
 #endif // _CM_FREELANCE_H

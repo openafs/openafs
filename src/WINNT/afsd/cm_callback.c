@@ -600,7 +600,9 @@ int cm_HaveCallback(cm_scache_t *scp)
     // good shape and we simply return true, provided no change is detected.
   int fdc, fgc;
 
-    if (cm_freelanceEnabled && scp->fid.cell==0x1 && scp->fid.volume==AFS_FAKE_ROOT_VOL_ID) {	// if it's something on /afs
+    if (cm_freelanceEnabled && 
+        scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
+        scp->fid.volume==AFS_FAKE_ROOT_VOL_ID) {	// if it's something on /afs
 	if (!(scp->fid.vnode==0x1 && scp->fid.unique==0x1))  	// if it's not root.afs
 	    return 1;
 	else {
@@ -757,7 +759,7 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 	// specially. We need to fetch the status by calling
 	// cm_MergeStatus and mark that cm_fakeDirCallback is 2
 	if (cm_freelanceEnabled &&
-        scp->fid.cell==0x1 &&
+        scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
 		scp->fid.volume==AFS_FAKE_ROOT_VOL_ID &&
 		scp->fid.unique==0x1 &&
 		scp->fid.vnode==0x1) {
