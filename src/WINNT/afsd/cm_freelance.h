@@ -17,7 +17,7 @@ extern void cm_InitFreelance();
 extern long cm_FreelanceRemoveMount(char *toremove);
 extern long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, cm_fid_t *fidp);
 extern int cm_clearLocalMountPointChange();
-
+extern int cm_FakeRootFid(cm_fid_t *fidp);
 
 #define AFS_FREELANCE_INI "afs_freelance.ini"
 #define AFS_FAKE_ROOT_CELL_ID 0xFFFFFFFF

@@ -55,6 +55,8 @@ jmp_buf notifier_jmp;
 extern int traceOnPanic;
 extern HANDLE afsi_file;
 
+int powerEventsRegsitered = 0;
+
 /*
  * Notifier function for use by osi_panic
  */
@@ -271,6 +273,7 @@ afsd_ServiceControlHandlerEx(
             **	Return any error code to deny request,                                        
             **	i.e. as if returning BROADCAST_QUERY_DENY                                     
             */                                                                                
+            if(powerEventsRegsitered) {
             switch((int) dwEventType)                                                         
             {                                                                               
             case PBT_APMQUERYSUSPEND:                                                         
@@ -492,8 +495,30 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
     }
 
 #ifdef REGISTER_POWER_NOTIFICATIONS
+    {
+        HKEY hkParm;
+        DWORD code;
+        DWORD dummyLen;
+        int bpower = TRUE;
+
+        /* see if we should handle power notifications */
+        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName, 0, KEY_QUERY_VALUE, &hkParm);
+        if(code == ERROR_SUCCESS) {
+            dummyLen = sizeof(bpower);
+            code = RegQueryValueEx(hkParm, "FlushOnHibernate", NULL, NULL,
+                (BYTE *) &bpower, &dummyLen);      
+
+            if(code != ERROR_SUCCESS)
+                bpower = TRUE;
+
+	    RegCloseKey(hkParm);
+        }
     /* create thread used to flush cache */
+        if(bpower) {
     PowerNotificationThreadCreate();
+            powerEventsRegsitered = 1;
+        }
+    }
 #endif
 
     /* allow an exit to be called prior to any initialization */
@@ -609,6 +634,7 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
 
 #ifdef	REGISTER_POWER_NOTIFICATIONS
     /* terminate thread used to flush cache */
+    if(powerEventsRegsitered)
     PowerNotificationThreadExit();
 #endif
 
