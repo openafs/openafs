@@ -1978,7 +1978,15 @@ long cm_IoctlMemoryDump(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cm_SkipIoctlPath(ioctlp);
     memcpy(&inValue, ioctlp->inDatap, sizeof(long));
   
-    GetWindowsDirectory(logfileName, sizeof(logfileName));
+    if (getenv("TEMP"))
+    {
+        strncpy(logfileName, getenv("TEMP"), MAX_PATH);
+        logfileName[MAX_PATH] = '\0';
+    }
+    else
+    {
+        GetWindowsDirectory(logfileName, sizeof(logfileName));
+    }
     strncat(logfileName, "\\afsd_alloc.log", sizeof(logfileName));
 
     hLogFile = CreateFile(logfileName, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
