@@ -17,6 +17,10 @@ if grep -q 'set resDir = ""' /usr/bin/package ; then
    exit 1
 fi
 
+if [ -x /usr/bin/curl ]; then
+    /usr/bin/curl -f -O http://www.central.org/dl/cellservdb/CellServDB
+fi
+
 if [ ! -f CellServDB ]; then
    echo "A CellServDB file must be placed in the working directory"
    die=1
