@@ -1332,6 +1332,12 @@ int afs_linux_writepage(struct page *pp)
     unsigned offset = PAGE_CACHE_SIZE;
     long status;
  
+#ifdef PageLaunder
+    if (PageLaunder(pp)) {
+        return(fail_writepage(pp));
+    }
+#endif
+
     inode = (struct inode *) mapping->host;
     end_index = inode->i_size >> PAGE_CACHE_SHIFT;
 
