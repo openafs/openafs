@@ -1432,14 +1432,18 @@ struct tlocal1 {
 
 /* these fields are protected by the lock on the vcache and luck 
  * on the dcache */
-#define updateV2DC(l,v,d,src) { if (l) ObtainWriteLock(&((v)->lock),src);\
-    if (hsame((v)->m.DataVersion, (d)->f.versionNo) && (v)->callback) { \
-	(v)->quick.dc = (d);                                          \
-	(v)->quick.stamp = (d)->stamp = MakeStamp();                  \
-	(v)->quick.minLoc = AFS_CHUNKTOBASE((d)->f.chunk);            \
-  /* Don't think I need these next two lines forever */       \
-	(v)->quick.len = (d)->f.chunkBytes;                           \
-	(v)->h1.dchint = (d); }  if(l) ReleaseWriteLock(&((v)->lock)); }
+#define updateV2DC(l,v,d,src) { \
+    if (!l || 0 == NBObtainWriteLock(&((v)->lock),src)) { \
+	if (hsame((v)->m.DataVersion, (d)->f.versionNo) && (v)->callback) { \
+	    (v)->quick.dc = (d);                                          \
+	    (v)->quick.stamp = (d)->stamp = MakeStamp();                  \
+	    (v)->quick.minLoc = AFS_CHUNKTOBASE((d)->f.chunk);            \
+	    /* Don't think I need these next two lines forever */         \
+	    (v)->quick.len = (d)->f.chunkBytes;                           \
+	    (v)->h1.dchint = (d);                                         \
+	}                                                                 \
+	if(l) ReleaseWriteLock(&((v)->lock));                             \
+    } }
 
 struct dcache *afs_GetDCache(avc, abyte, areq, aoffset, alen, aflags)
     register struct vcache *avc;    /*Held*/
