@@ -10,12 +10,6 @@
 #ifndef	_RX_MULTI_
 #define _RX_MULTI_
 
-#ifdef	KERNEL
-#include "rx/rx.h"
-#else /* KERNEL */
-# include "rx.h"
-#endif /* KERNEL */
-
 struct multi_handle {
     int nConns;
     struct rx_call **calls;

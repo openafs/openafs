@@ -14,14 +14,16 @@ RCSID
     ("$Header$");
 
 #ifdef	KERNEL
-#include "rx/rx_kernel.h"
-#include "rx/rx_multi.h"
+#include "afs/sysincludes.h"
+#include "rx/rx.h"
 #else /* KERNEL */
-# include "rx_user.h"
-# include "rx_multi.h"
+# include "rx.h"
 #endif /* KERNEL */
 
-/* multi.c and multi.h, together with some rxgen hooks, provide a way of making multiple, but similar, rx calls to multiple hosts simultaneously */
+/*
+ * multi.c and multi.h, together with some rxgen hooks, provide a way of
+ * making multiple, but similar, rx calls to multiple hosts simultaneously
+ */
 
 struct multi_handle *
 multi_Init(struct rx_connection **conns, register int nConns)
@@ -30,7 +32,13 @@ multi_Init(struct rx_connection **conns, register int nConns)
     register short *ready;
     register struct multi_handle *mh;
     register int i;
-    /* Note:  all structures that are possibly referenced by other processes must be allocated.  In some kernels variables allocated on a process stack will not be accessible to other processes */
+
+    /*
+     * Note: all structures that are possibly referenced by other
+     * processes must be allocated.  In some kernels variables allocated on
+     * a process stack will not be accessible to other processes
+     */
+
     calls = (struct rx_call **)osi_Alloc(sizeof(struct rx_call *) * nConns);
     ready = (short *)osi_Alloc(sizeof(short *) * nConns);
     mh = (struct multi_handle *)osi_Alloc(sizeof(struct multi_handle));
