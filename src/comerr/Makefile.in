@@ -4,8 +4,22 @@
 # Copyright 1987, 1989 MIT Student Information Processing Board
 # For copyright info, see mit-sipb-cr.h.
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -15,9 +29,9 @@ include ../config/Makefile.${SYS_NAME}
 
 UKERNELDIR=../libuafs/
 
-CFLAGS= ${OPTMZ} -I${DESTDIR}/include -I${TOP_SRCDIR}/config ${XCFLAGS}
+CFLAGS=${OPTMZ} -I${TOP_INCDIR} -I${TOP_SRCDIR}/config ${XCFLAGS}
 
-all: install
+all: ukinstall compile_et ${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/error_table.h ${TOP_INCDIR}/afs/mit-sipb-cr.h ${TOP_LIBDIR}/libcom_err.a
 
 et_lex.lex.c: et_lex.lex.l
 	$(RM) -f et_lex.lex.c
@@ -26,9 +40,9 @@ et_lex.lex.c: et_lex.lex.l
 compile_et:	compile_et.o error_table.o
 	case $(SYS_NAME) in \
 	*_linux* ) \
-	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o -L${DESTDIR}/lib/afs -lafsutil;; \
+	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil;; \
 	* ) \
-	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o -L${DESTDIR}/lib/afs -lafsutil -ll;; \
+	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o -L${TOP_LIBDIR} -lafsutil -ll;; \
 	esac
 
 libcom_err.a: error_msg.o et_name.o com_err.o AFS_component_version_number.o
@@ -48,12 +62,7 @@ ukinstall: \
 	${UKERNELDIR}/afs/internal.h \
 	${UKERNELDIR}/afs/et_name.c
 
-install: ukinstall \
-	${DESTDIR}/bin/compile_et \
-	${DESTDIR}/include/afs/com_err.h \
-	${DESTDIR}/include/afs/error_table.h \
-	${DESTDIR}/include/afs/mit-sipb-cr.h \
-	${DESTDIR}/lib/afs/libcom_err.a
+install:  ${DESTDIR}${bindir}/compile_et ${DESTDIR}${includedir}/afs/com_err.h ${DESTDIR}${includedir}/afs/error_table.h ${DESTDIR}${includedir}/afs/mit-sipb-cr.h ${DESTDIR}${libdir}/afs/libcom_err.a
 
 ${UKERNELDIR}/afs:
 	mkdir -p $@
@@ -79,19 +88,19 @@ ${UKERNELDIR}/afs/internal.h: internal.h
 ${UKERNELDIR}/afs/et_name.c: et_name.c
 	${INSTALL} $? $@
 
-${DESTDIR}/bin/compile_et: compile_et
+${DEST}/bin/compile_et: compile_et
 	${INSTALL} $? $@
 
-${DESTDIR}/include/afs/com_err.h: com_err.h
+${DEST}/include/afs/com_err.h: com_err.h
 	${INSTALL} $? $@
 
-${DESTDIR}/include/afs/error_table.h: error_table.h 
+${DEST}/include/afs/error_table.h: error_table.h 
 	${INSTALL} $? $@
 
-${DESTDIR}/include/afs/mit-sipb-cr.h: mit-sipb-cr.h
+${DEST}/include/afs/mit-sipb-cr.h: mit-sipb-cr.h
 	${INSTALL} $? $@
 
-${DESTDIR}/lib/afs/libcom_err.a: libcom_err.a
+${DEST}/lib/afs/libcom_err.a: libcom_err.a
 	${INSTALL} $? $@
 
 clean:
@@ -108,3 +117,32 @@ compile_et.o:  AFS_component_version_number.c
 error_table.o: et_lex.lex.c
 
 include ../config/Makefile.version
+${DESTDIR}${bindir}/compile_et: compile_et
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/com_err.h: com_err.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/com_err.h: com_err.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/error_table.h: error_table.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/error_table.h: error_table.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/mit-sipb-cr.h: mit-sipb-cr.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/mit-sipb-cr.h: mit-sipb-cr.h
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/afs/libcom_err.a: libcom_err.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libcom_err.a: libcom_err.a
+	${INSTALL} $? $@
+
+dest:  ${DEST}/bin/compile_et ${DEST}/include/afs/com_err.h ${DEST}/include/afs/error_table.h ${DEST}/include/afs/mit-sipb-cr.h ${DEST}/lib/afs/libcom_err.a
+

@@ -6,8 +6,22 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 # Makefile for the null library.
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -16,11 +30,11 @@ SHELL=/bin/sh
 include ../config/Makefile.${SYS_NAME}
 CFLAGS = ${XCFLAGS}
 
-all: install
+all: ${TOP_LIBDIR}/libnull.a
 
-install: ${DESTDIR}/lib/afs/libnull.a
+install: ${DESTDIR}${libdir}/afs/libnull.a
 
-${DESTDIR}/lib/afs/libnull.a: libnull.a
+${DEST}/lib/afs/libnull.a: libnull.a
 	${INSTALL} $? $@
 
 null.o: null.c AFS_component_version_number.o
@@ -34,3 +48,11 @@ clean:
 	$(RM) -f *.o *.a AFS_component_version_number.c
 
 include ../config/Makefile.version
+${DESTDIR}${libdir}/afs/libnull.a: libnull.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libnull.a: libnull.a
+	${INSTALL} $? $@
+
+dest: ${DEST}/lib/afs/libnull.a
+

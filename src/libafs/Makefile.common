@@ -38,16 +38,18 @@ system:	all
 
 kinstall:	install
 install:	all $(INSTDIRS)
+dest:		all $(DESTDIRS)
 
 all:	setup $(COMPDIRS)
 
-single_compdir single_instdir:
+single_compdir single_instdir single_destdir:
 	cd $(KOBJ) ; \
 	echo $(MAKE) DESTDIR=${DESTDIR} $@_libafs; \
 	$(MAKE) DESTDIR=${DESTDIR}  $@_libafs;
 
 single_compdir_libafs: libafs
 single_instdir_libafs: install_libafs
+single_destdir_libafs: dest_libafs
 
 AFSAOBJS = \
 	afs_atomlist.o \

@@ -5,8 +5,22 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -14,41 +28,41 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS =  -DNINTERFACE -I${TOP_SRCDIR}/config -I. -I${SRCDIR}/include -I${SRCDIR}/include/afs \
+CFLAGS=-DNINTERFACE -I${TOP_SRCDIR}/config -I. -I${TOP_INCDIR} -I${TOP_INCDIR}/afs \
 	 ${XCFLAGS} -DRXDEBUG
 
 LDFLAGS = ${DBUG} ${XLDFLAGS}
 
-LIBS=	${SRCDIR}/lib/afs/libacl.a	\
-	${SRCDIR}/lib/afs/libvldb.a	\
-	${SRCDIR}/lib/afs/libprot.a	\
-	${SRCDIR}/lib/afs/libauth.a	\
-	${SRCDIR}/lib/librxkad.a		\
-	${SRCDIR}/lib/libubik.a 		\
-	${SRCDIR}/lib/afs/vlib.a		\
-	${SRCDIR}/lib/afs/libdir.a	\
-	${SRCDIR}/lib/afs/util.a		\
-	${SRCDIR}/lib/afs/libsys.a	\
-	${SRCDIR}/lib/afs/libafsint.a	\
-	${SRCDIR}/lib/librxstat.a	\
-	${SRCDIR}/lib/librx.a		\
-	${SRCDIR}/lib/afs/libsys.a	\
-	${SRCDIR}/lib/libdes.a		\
-	${SRCDIR}/lib/afs/libcom_err.a	\
-	${SRCDIR}/lib/afs/util.a		\
-	${SRCDIR}/lib/liblwp.a 
+LIBS=${TOP_LIBDIR}/libacl.a	\
+	${TOP_LIBDIR}/libvldb.a	\
+	${TOP_LIBDIR}/libprot.a	\
+	${TOP_LIBDIR}/libauth.a	\
+	${TOP_LIBDIR}/librxkad.a		\
+	${TOP_LIBDIR}/libubik.a 		\
+	${TOP_LIBDIR}/vlib.a		\
+	${TOP_LIBDIR}/libdir.a	\
+	${TOP_LIBDIR}/util.a		\
+	${TOP_LIBDIR}/libsys.a	\
+	${TOP_LIBDIR}/libafsint.a	\
+	${TOP_LIBDIR}/librxstat.a	\
+	${TOP_LIBDIR}/librx.a		\
+	${TOP_LIBDIR}/libsys.a	\
+	${TOP_LIBDIR}/libdes.a		\
+	${TOP_LIBDIR}/libcom_err.a	\
+	${TOP_LIBDIR}/util.a		\
+	${TOP_LIBDIR}/liblwp.a
 
-headers=${SRCDIR}/include/lwp.h		\
-	${SRCDIR}/include/afs/acl.h	\
-	${SRCDIR}/include/afs/errors.h	\
-	${SRCDIR}/include/afs/ptclient.h \
-	${SRCDIR}/include/lock.h		\
-	${SRCDIR}/include/afs/volume.h	\
-	${SRCDIR}/include/afs/vnode.h	\
-	${SRCDIR}/include/rx/rx.h	\
-	${SRCDIR}/include/rx/xdr.h	\
-	${SRCDIR}/include/afs/auth.h	\
-	${SRCDIR}/include/afs/afsint.h	\
+headers=${TOP_INCDIR}/lwp.h		\
+	${TOP_INCDIR}/afs/acl.h	\
+	${TOP_INCDIR}/afs/errors.h	\
+	${TOP_INCDIR}/afs/ptclient.h \
+	${TOP_INCDIR}/lock.h		\
+	${TOP_INCDIR}/afs/volume.h	\
+	${TOP_INCDIR}/afs/vnode.h	\
+	${TOP_INCDIR}/rx/rx.h	\
+	${TOP_INCDIR}/rx/xdr.h	\
+	${TOP_INCDIR}/afs/auth.h	\
+	${TOP_INCDIR}/afs/afsint.h	\
 	viced.h				\
 	host.h				\
 	fs_stats.h
@@ -59,7 +73,7 @@ objects=viced.o		\
 	physio.o	\
 	callback.o	
 
-all: install
+all: cbd fsprobe check_sysid fileserver ${TOP_INCDIR}/afs/fs_stats.h
 
 ${objects}: ${headers}
 
@@ -73,10 +87,10 @@ fileserver: ${objects} ${headers} ${LIBS}
 	case ${SYS_NAME} in \
 	rs_aix*) \
 	    ${CC} -K ${LDFLAGS} -o fileserver ${objects} \
-	    ${SRCDIR}/lib/afs/libaudit.a ${LIBS} ${XLIBS} ;; \
+	    ${TOP_LIBDIR}/libaudit.a ${LIBS} ${XLIBS} ;; \
 	*) \
 	    ${CC} ${LDFLAGS} -o fileserver ${objects} \
-	    ${SRCDIR}/lib/afs/libaudit.a ${LIBS} ${XLIBS} ;; \
+	    ${TOP_LIBDIR}/libaudit.a ${LIBS} ${XLIBS} ;; \
 	esac
 
 fsprobe.o: fsprobe.c AFS_component_version_number.c
@@ -91,22 +105,38 @@ cbd.o: callback.c AFS_component_version_number.c
 cbd: cbd.o
 	${CC} ${CFLAGS} -DINTERPRET_DUMP -o cbd cbd.o ${LIBS} ${XLIBS} 
 
-${DESTDIR}/root.server/usr/afs/bin/fileserver: fileserver
+${DEST}/root.server/usr/afs/bin/fileserver: fileserver
 	@case ${SYS_NAME} in \
 	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*) \
 	echo "Don't install fileserver for ${SYS_NAME}" ;; \
 	*) \
-	echo ${INSTALL} -ns fileserver ${DESTDIR}/root.server/usr/afs/bin/fileserver ; \
-	${INSTALL} -ns fileserver ${DESTDIR}/root.server/usr/afs/bin/fileserver ;; \
+	echo ${INSTALL} -ns $? $@ ; \
+	${INSTALL} -ns $? $@ ;; \
 	esac
 
-${DESTDIR}/include/afs/fs_stats.h: fs_stats.h
+${DEST}/include/afs/fs_stats.h: fs_stats.h
 	${INSTALL} $? $@
 
-install: cbd fsprobe check_sysid ${DESTDIR}/root.server/usr/afs/bin/fileserver \
-	${DESTDIR}/include/afs/fs_stats.h
+install:    ${DESTDIR}${afssrvlibexecdir}/fileserver ${DESTDIR}${includedir}/afs/fs_stats.h
 
 clean:
 	$(RM) -f *.o fileserver core AFS_component_version_number.c cbd check_sysid fsprobe
 
 include ../config/Makefile.version
+${DESTDIR}${afssrvlibexecdir}/fileserver: fileserver
+	@case ${SYS_NAME} in \
+	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*) \
+	echo "Don't install fileserver for ${SYS_NAME}" ;; \
+	*) \
+	echo ${INSTALL} -ns $? $@ ; \
+	${INSTALL} -ns $? $@ ;; \
+	esac
+
+${DESTDIR}${includedir}/afs/fs_stats.h: fs_stats.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/fs_stats.h: fs_stats.h
+	${INSTALL} $? $@
+
+dest:    ${DEST}/root.server/usr/afs/bin/fileserver ${DEST}/include/afs/fs_stats.h
+

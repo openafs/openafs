@@ -21,28 +21,30 @@ NS_INCL =SRC/../afsweb/netscape_includes
 
 # Build rules - CC and CFLAGS are defined in system specific MakefileProtos.
 
-install: ukinstall
+all: ${TOP_LIBDIR}/$(LIBUAFS) linktest
 
-webinstall: AFSWEB/$(LIBAFSWEB) AFSWEB/$(LIBAFSWEBKRB)
-	${INSTALL} AFSWEB/$(LIBAFSWEB) ${DESTDIR}/root.afsweb/usr/lib
-	${INSTALL} AFSWEB/$(LIBAFSWEBKRB) ${DESTDIR}/root.afsweb/usr/lib
-
-ukinsthdrs:
-	${INSTALL} afs/param.h ${DESTDIR}/root.perf/include/afs
-	${INSTALL} afs/stds.h ${DESTDIR}/root.perf/include/afs
-	${INSTALL} afs/afs_sysnames.h ${DESTDIR}/root.perf/include/afs
-	${INSTALL} afs/afs_stats.h ${DESTDIR}/root.perf/include/afs
-	${INSTALL} afs/sysincludes.h ${DESTDIR}/root.perf/include/afs
-	${INSTALL} afs/afs_usrops.h ${DESTDIR}/root.perf/include/afs
-
-ukinstlibs:
-	${INSTALL} des/libdes.a ${DESTDIR}/root.perf/lib
-	${INSTALL} UAFS/$(LIBUAFS) ${DESTDIR}/root.perf/lib	
-
-ukinstall: ukinsthdrs UAFS/$(LIBUAFS) linktest ukinstlibs
+webinstall: all \
+	${TOP_LIBDIR}/$(LIBAFSWEB) \
+	${TOP_LIBDIR}/$(LIBAFSWEBKRB) 
 
 linktest: UAFS/$(LIBUAFS) des/libdes.a
-	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest linktest.c -I${TOP_SRCDIR}/config -I${DESTDIR}/include -I${DESTDIR}/include/rx -I${DESTDIR}/root.perf/include UAFS/$(LIBUAFS) des/libdes.a $(TEST_LIBS) $(XLIBS)
+	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest linktest.c -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I${TOP_INCDIR}/rx -I. UAFS/$(LIBUAFS) des/libdes.a $(TEST_LIBS) $(XLIBS)
+
+ukinstall: install
+
+install: \
+	${DESTDIR}${libdir}/$(LIBUAFS)
+
+dest: \
+	${DEST}/root.perf/include/afs/param.h \
+	${DEST}/root.perf/include/afs/stds.h \
+	${DEST}/root.perf/include/afs/afs_sysnames.h \
+	${DEST}/root.perf/include/afs/afs_stats.h \
+	${DEST}/root.perf/include/afs/sysincludes.h \
+	${DEST}/root.perf/include/afs/afs_usrops.h \
+	${DEST}/root.perf/lib/libdes.a \
+	${DEST}/root.perf/lib/$(LIBUAFS)
+
 
 CRULE1=	$(CC) $(OPTF) -DKERNEL $(CFLAGS) -c $?
 CRULE2=	$(CC) $(OPTF) $(WEBOPTS) -DKERNEL $(CFLAGS) -c $?
@@ -892,3 +894,53 @@ clean:
 	-$(RM) -rf UAFS* AFSWEB* nsapi des afs afsint config rx
 	-$(RM) -f  h net netinet rpc ufs machine inet nfs sys des linktest
 
+
+${TOP_LIBDIR}/$(LIBAFSWEB): AFSWEB/$(LIBAFSWEB)
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/$(LIBAFSWEBKRB): AFSWEB/$(LIBAFSWEBKRB)
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/$(LIBUAFS): UAFS/$(LIBUAFS)
+	${INSTALL} $? $@
+
+
+${DESTDIR}${libdir}/$(LIBAFSWEB): AFSWEB/$(LIBAFSWEB)
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/$(LIBAFSWEBKRB): AFSWEB/$(LIBAFSWEBKRB)
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/$(LIBUAFS): UAFS/$(LIBUAFS)
+	${INSTALL} $? $@
+
+
+${DEST}/root.afsweb/usr/lib/$(LIBAFSWEB): AFSWEB/$(LIBAFSWEB)
+	${INSTALL} $? $@
+
+${DEST}/root.afsweb/usr/lib/$(LIBAFSWEBKRB): AFSWEB/$(LIBAFSWEBKRB)
+	${INSTALL} $? $@
+
+${DEST}/root.perf/include/afs/param.h: afs/param.h
+	${INSTALL} $? $@
+
+${DEST}/root.perf/include/afs/stds.h: afs/stds.h
+	${INSTALL} $? $@
+
+${DEST}/root.perf/include/afs/afs_sysnames.h: afs/afs_sysnames.h
+	${INSTALL} $? $@
+
+${DEST}/root.perf/include/afs/afs_stats.h: afs/afs_stats.h
+	${INSTALL} $? $@
+
+${DEST}/root.perf/include/afs/sysincludes.h: afs/sysincludes.h
+	${INSTALL} $? $@
+
+${DEST}/root.perf/include/afs/afs_usrops.h: afs/afs_usrops.h
+	${INSTALL} $? $@
+
+${DEST}/root.perf/lib/libdes.a: des/libdes.a
+	${INSTALL} $? $@
+
+${DEST}/root.perf/lib/$(LIBUAFS): UAFS/$(LIBUAFS)
+	${INSTALL} $? $@

@@ -5,8 +5,22 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -14,7 +28,7 @@ SHELL = /bin/sh
 include ../../config/Makefile.${SYS_NAME}
 
 CC = ${MT_CC}
-CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${MT_CFLAGS} 
+CFLAGS=${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${MT_CFLAGS}
 CCRULE = ${CC} ${CFLAGS} -c $?
 
 BOZO = ../../bozo/
@@ -25,13 +39,31 @@ BOZOOBJS = bosint.xdr.o bosint.cs.o
 
 LIBOBJS = ${ADMINOBJS} ${BOZOOBJS}
 
-LIBBOSADMIN = ${DESTDIR}/lib/afs/libbosadmin.a
+all: ${TOP_INCDIR}/afs/afs_bosAdmin.h ${TOP_LIBDIR}/libbosadmin.a
 
-system install: ${LIBBOSADMIN}
+install: ${DESTDIR}${includedir}/afs/afs_bosAdmin.h ${DESTDIR}${libdir}/afs/libbosadmin.a
 
-${LIBBOSADMIN}: libbosadmin.a
-	${INSTALL} afs_bosAdmin.h ${DESTDIR}/include/afs
-	${INSTALL} libbosadmin.a ${LIBBOSADMIN}
+dest: ${DEST}/include/afs/afs_bosAdmin.h ${DEST}/lib/afs/libbosadmin.a
+
+${TOP_INCDIR}/afs/afs_bosAdmin.h: afs_bosAdmin.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/afs_bosAdmin.h: afs_bosAdmin.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/afs_bosAdmin.h: afs_bosAdmin.h
+	${INSTALL} $? $@
+
+
+${TOP_LIBDIR}/libbosadmin.a: libbosadmin.a
+	${INSTALL} $? $@
+
+${DEST}/lib/afs/libbosadmin.a: libbosadmin.a
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/afs/libbosadmin.a: libbosadmin.a
+	${INSTALL} $? $@
+
 
 libbosadmin.a: ${LIBOBJS}
 	-$(RM) -f $@

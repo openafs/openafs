@@ -5,8 +5,22 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 SHELL=/bin/sh
@@ -14,26 +28,26 @@ KERNELDIR = ../libafs/
 
 include ../config/Makefile.${SYS_NAME}
 
-LIBDIR = ${DESTDIR}/lib/
-  LIBSA = ${LIBDIR}/afs/libprot.a ${LIBDIR}/libubik.a
-AFSLIBS = ${DESTDIR}/lib/librxkad.a 	    \
-	  ${LIBDIR}/afs/libsys.a ${DESTDIR}/lib/libdes.a 	    \
-	  ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a ${LIBDIR}/afs/libaudit.a \
-          ${LIBDIR}/afs/libcmd.a ${LIBDIR}/afs/libcom_err.a ${LIBDIR}/afs/util.a
+  LIBSA = ${TOP_LIBDIR}/libprot.a ${TOP_LIBDIR}/libubik.a
+AFSLIBS = ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
+	  ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/librx.a \
+	  ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libaudit.a \
+          ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcom_err.a \
+	  ${TOP_LIBDIR}/util.a
 
 LDFLAGS = ${SHARE_LDFLAGS}
-   LIBS = ${LIBDIR}/afs/libkauth.a ${LIBSA} ${LIBDIR}/afs/libauth.a \
+   LIBS = ${TOP_LIBDIR}/libkauth.a ${LIBSA} ${TOP_LIBDIR}/libauth.a \
 	  ${AFSLIBS} ${PAMLIBS} @LIB_AFSDB@
-  KLIBS = ${LIBDIR}/afs/libkauth.krb.a ${LIBSA} ${LIBDIR}/afs/libauth.krb.a \
+  KLIBS = ${TOP_LIBDIR}/libkauth.krb.a ${LIBSA} ${TOP_LIBDIR}/libauth.krb.a \
 	  ${AFSLIBS} ${PAMLIBS} @LIB_AFSDB@
  SHOBJS = afs_auth.o afs_account.o afs_session.o afs_password.o \
 	  afs_pam_msg.o afs_message.o afs_util.o AFS_component_version_number.o
    OBJS = $(SHOBJS) test_pam.o
-INCLUDES = -I${TOP_SRCDIR}/config -I${DESTDIR}/include \
+INCLUDES=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} \
 	-I/usr/include -I/usr/include/sys
 CFLAGS =  ${DEBUG} ${INCLUDES} ${PAM_CFLAGS}
 
-all: install
+all: test_pam ${TOP_LIBDIR}/pam_afs.so.1 ${TOP_LIBDIR}/pam_afs.krb.so.1
 
 afs_setcred.o: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
 	${CC} ${CFLAGS} -c afs_setcred.c -o afs_setcred.o
@@ -90,12 +104,12 @@ test_pam: test_pam.o
 		echo No link line for system $(SYS_NAME). ;; \
 	esac
 
-install: test_pam ${DESTDIR}/lib/pam_afs.so.1 ${DESTDIR}/lib/pam_afs.krb.so.1
+install:  ${DESTDIR}${libdir}/pam_afs.so.1 ${DESTDIR}${libdir}/pam_afs.krb.so.1
 
-${DESTDIR}/lib/pam_afs.so.1: pam_afs.so.1
+${DEST}/lib/pam_afs.so.1: pam_afs.so.1
 	${INSTALL} $? $@
 
-${DESTDIR}/lib/pam_afs.krb.so.1: pam_afs.krb.so.1
+${DEST}/lib/pam_afs.krb.so.1: pam_afs.krb.so.1
 	${INSTALL} $? $@
 
 afs_auth.o: afs_auth.c afs_pam_msg.h afs_message.h afs_util.h
@@ -110,4 +124,18 @@ clean:
 	$(RM) -f *.a *.o *.so.1 test_pam core *~ AFS_component_version_number.c
 
 include ../config/Makefile.version
+
+${DESTDIR}${libdir}/pam_afs.so.1: pam_afs.so.1
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/pam_afs.so.1: pam_afs.so.1
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/pam_afs.krb.so.1: pam_afs.krb.so.1
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/pam_afs.krb.so.1: pam_afs.krb.so.1
+	${INSTALL} $? $@
+
+dest:  ${DEST}/lib/pam_afs.so.1 ${DEST}/lib/pam_afs.krb.so.1
 

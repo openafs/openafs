@@ -22,7 +22,7 @@ LIBS= -lauth -lsys -lrx -llwp -lafsutil ${XLIBS}
 
 CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${XCFLAGS}
 
-tests system all: testcellconf ktctest
+tests all: testcellconf ktctest
 
 testcellconf: testcellconf.o 
 	$(CC) $(CFLAGS) -o testcellconf testcellconf.o  ${LIBS}
@@ -32,3 +32,7 @@ ktctest: ktctest.o
 
 clean:
 	$(RM) -f *.o *.a copyauth testcellconf ktctest setkey auth.h cellconfig.h acfg_errors.c ktc_errors.c core
+
+install:
+
+dest:

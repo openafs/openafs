@@ -5,8 +5,22 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -16,11 +30,18 @@ SHELL=/bin/sh
 
 include Makefile.${SYS_NAME}
 
-CFLAGS=-g -I${DESTDIR}/include ${XCFLAGS}
+CFLAGS=-g -I${TOP_INCDIR} ${XCFLAGS}
 
 INST=$(RM) -f $@; $(CP) $? $@
 
-all: install
+all: config mkvers ukinstall kinstall \
+	${TOP_INCDIR}/afs/param.h \
+	${TOP_INCDIR}/afs/stds.h \
+	${TOP_INCDIR}/afs/afs_sysnames.h \
+	${TOP_INCDIR}/afs/afs_args.h \
+	${TOP_INCDIR}/afs/icl.h \
+	${TOP_INCDIR}/afs/venus.h \
+	${TOP_INCDIR}/afs/debug.h
 
 Makefile.version: Makefile.version-CML Makefile.version-NOCML
 	$(RM) -f Makefile.version
@@ -53,12 +74,6 @@ mkvers: mkvers.c
 mc.o: mc.c
 config.o: config.c AFS_component_version_number.c
 
-${DESTDIR}/bin:
-	mkdir -p $@
-
-${DESTDIR}/bin/mkvers: mkvers
-	$(INST)
-
 #
 # Include installation targets
 #
@@ -78,33 +93,28 @@ UKDIRS = ${UKERNELDIR}/afs \
 $(UKDIRS): 
 	mkdir -p $@
 
-HDIRS = ${DESTDIR}/include/afs 
-
-$(HDIRS): 
-	mkdir -p $@
-
-${KERNELDIR}/afs/param.h ${DESTDIR}/include/afs/param.h: param.${SYS_NAME}.h
+${KERNELDIR}/afs/param.h ${DEST}/include/afs/param.h ${DESTDIR}${includedir}/afs/param.h ${TOP_INCDIR}/afs/param.h: param.${SYS_NAME}.h
 	-$(INST)
 
-${UKERNELDIR}/afs/afs_sysnames.h ${KERNELDIR}/afs/afs_sysnames.h ${DESTDIR}/include/afs/afs_sysnames.h: afs_sysnames.h
+${UKERNELDIR}/afs/afs_sysnames.h ${KERNELDIR}/afs/afs_sysnames.h ${DEST}/include/afs/afs_sysnames.h ${DESTDIR}${includedir}/afs/afs_sysnames.h ${TOP_INCDIR}/afs/afs_sysnames.h: afs_sysnames.h
 	$(INST)
 
-${UKERNELDIR}/afs/stds.h ${KERNELDIR}/afs/stds.h ${DESTDIR}/include/afs/stds.h: stds.h
+${UKERNELDIR}/afs/stds.h ${KERNELDIR}/afs/stds.h ${DEST}/include/afs/stds.h ${DESTDIR}${includedir}/afs/stds.h ${TOP_INCDIR}/afs/stds.h: stds.h
 	$(INST)
 
 ${UKERNELDIR}/config/Makefile.${SYS_NAME} ${KERNELDIR}/config/Makefile.${SYS_NAME}: Makefile.${SYS_NAME}
 	$(INST)
 
-${UKERNELDIR}/afs/icl.h ${KERNELDIR}/afs/icl.h ${DESTDIR}/include/afs/icl.h: icl.h 
+${UKERNELDIR}/afs/icl.h ${KERNELDIR}/afs/icl.h ${DEST}/include/afs/icl.h ${DESTDIR}${includedir}/afs/icl.h ${TOP_INCDIR}/afs/icl.h: icl.h 
 	$(INST)
 
-${UKERNELDIR}/afs/afs_args.h ${KERNELDIR}/afs/afs_args.h ${DESTDIR}/include/afs/afs_args.h: afs_args.h 
+${UKERNELDIR}/afs/afs_args.h ${KERNELDIR}/afs/afs_args.h ${DEST}/include/afs/afs_args.h ${DESTDIR}${includedir}/afs/afs_args.h ${TOP_INCDIR}/afs/afs_args.h: afs_args.h 
 	$(INST)
 
-${UKERNELDIR}/afs/venus.h ${DESTDIR}/include/afs/venus.h: venus.h 
+${UKERNELDIR}/afs/venus.h ${DEST}/include/afs/venus.h ${DESTDIR}${includedir}/afs/venus.h ${TOP_INCDIR}/afs/venus.h: venus.h 
 	$(INST)
 
-${DESTDIR}/include/afs/debug.h: debug.h 
+${DEST}/include/afs/debug.h ${DESTDIR}${includedir}/afs/debug.h ${TOP_INCDIR}/afs/debug.h: debug.h 
 	$(INST)
 
 ${UKERNELDIR}/afs/param.h: param.${SYS_NAME}_usr.h
@@ -115,22 +125,13 @@ ${UKERNELDIR}/afs/param.h: param.${SYS_NAME}_usr.h
 # kernel include environment.  param.h is, well, param.h.  The afs_sysnames.h
 # file is needed by param.h to create unique identifiers for each SYS_TYPE.
 
-install: config \
-	$(DESTDIR)/bin \
-	$(DESTDIR)/bin/mkvers \
-	hinstall \
-	ukinstall \
-	kinstall 
-
-hinstall: \
-	$(HDIRS) \
-	${DESTDIR}/include/afs/param.h \
-	${DESTDIR}/include/afs/stds.h \
-	${DESTDIR}/include/afs/afs_sysnames.h \
-	${DESTDIR}/include/afs/afs_args.h \
-	${DESTDIR}/include/afs/icl.h \
-	${DESTDIR}/include/afs/venus.h \
-	${DESTDIR}/include/afs/debug.h 
+install: ${DESTDIR}${includedir}/afs/param.h \
+	${DESTDIR}${includedir}/afs/stds.h \
+	${DESTDIR}${includedir}/afs/afs_sysnames.h \
+	${DESTDIR}${includedir}/afs/afs_args.h \
+	${DESTDIR}${includedir}/afs/icl.h \
+	${DESTDIR}${includedir}/afs/venus.h \
+	${DESTDIR}${includedir}/afs/debug.h
 
 kinstall: \
 	$(KDIRS) \
@@ -154,4 +155,13 @@ ukinstall: \
 	${UKERNELDIR}/afs/AFS_component_version_number.c
 
 clean:
-	$(RM) -f *.o config core xprt AFS_component_version_number.c
+	$(RM) -f *.o config mkvers core xprt AFS_component_version_number.c
+
+dest: ${DEST}/include/afs/param.h \
+	${DEST}/include/afs/stds.h \
+	${DEST}/include/afs/afs_sysnames.h \
+	${DEST}/include/afs/afs_args.h \
+	${DEST}/include/afs/icl.h \
+	${DEST}/include/afs/venus.h \
+	${DEST}/include/afs/debug.h
+

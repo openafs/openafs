@@ -1,8 +1,20 @@
 #
 #	(C) Copyright 10/17/86 by Carnegie Mellon University
 #
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -19,15 +31,20 @@ MANUAL=mpp.1
 include ../config/Makefile.${SYS_NAME}
 include ../config/Makefile.version
 
-system: install
-
 all: ${PROGRAM}
 
-install: ${PROGRAM} 
-	${INSTALL} -c -s -m 755 ${PROGRAM} ${DESTDIR}etc
+install: ${DESTDIR}${sbindir}/${PROGRAM}
+
+dest: ${DEST}/etc/${PROGRAM} 
+
+${DESTDIR}${sbindir}/${PROGRAM}: ${PROGRAM}
+	${INSTALL} $? $@
+
+${DEST}/etc/${PROGRAM}: ${PROGRAM}
+	${INSTALL} $? $@
 
 installdoc: ${MANUAL}
-	${INSTALL} -c ${MANUAL} ${DESTDIR}man/man1
+	${INSTALL} -c ${MANUAL} ${DEST}/man/man1
 
 clean:
 	-$(RM) -f core a.out *.o *.out ${PROGRAM} AFS_component_version_number.c

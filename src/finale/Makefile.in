@@ -5,49 +5,63 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
 SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS = -g -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
+CFLAGS=-g -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
 LDFLAGS = -g ${XLDFLAGS}
-INCLS=${SRCDIR}/include/ubik.h \
-	${SRCDIR}/include/lwp.h \
-	${SRCDIR}/include/lock.h  \
-	${SRCDIR}/include/rx/rx.h \
-	${SRCDIR}/include/rx/xdr.h \
-	${SRCDIR}/include/rx/rxkad.h \
-	${SRCDIR}/include/afs/com_err.h \
-	${SRCDIR}/include/afs/auth.h \
-	${SRCDIR}/include/afs/cellconfig.h \
-	${SRCDIR}/include/afs/cmd.h \
-	${SRCDIR}/include/afs/pterror.h \
-	${SRCDIR}/include/afs/kautils.h \
-	${SRCDIR}/include/afs/bnode.h \
-	${SRCDIR}/include/afs/vlserver.h
+INCLS=${TOP_INCDIR}/ubik.h \
+	${TOP_INCDIR}/lwp.h \
+	${TOP_INCDIR}/lock.h  \
+	${TOP_INCDIR}/rx/rx.h \
+	${TOP_INCDIR}/rx/xdr.h \
+	${TOP_INCDIR}/rx/rxkad.h \
+	${TOP_INCDIR}/afs/com_err.h \
+	${TOP_INCDIR}/afs/auth.h \
+	${TOP_INCDIR}/afs/cellconfig.h \
+	${TOP_INCDIR}/afs/cmd.h \
+	${TOP_INCDIR}/afs/pterror.h \
+	${TOP_INCDIR}/afs/kautils.h \
+	${TOP_INCDIR}/afs/bnode.h \
+	${TOP_INCDIR}/afs/vlserver.h
 
-LIBS=${SRCDIR}/lib/libubik.a \
-	${SRCDIR}/lib/librx.a \
-	${SRCDIR}/lib/liblwp.a \
-	${SRCDIR}/lib/afs/libauth.a \
-	${SRCDIR}/lib/afs/libsys.a \
-	${SRCDIR}/lib/librxkad.a \
-	${SRCDIR}/lib/afs/libcmd.a \
-	${SRCDIR}/lib/afs/libvldb.a \
-	${SRCDIR}/lib/afs/libbos.a \
-	${SRCDIR}/lib/afs/libcom_err.a \
-	${SRCDIR}/lib/afs/libvolser.a \
-	${SRCDIR}/lib/afs/util.a \
-	${SRCDIR}/lib/afs/libkauth.a \
-	${SRCDIR}/lib/afs/libprot.a \
-	${SRCDIR}/lib/libdes.a \
+LIBS=${TOP_LIBDIR}/libubik.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libvldb.a \
+	${TOP_LIBDIR}/libbos.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/libvolser.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libkauth.a \
+	${TOP_LIBDIR}/libprot.a \
+	${TOP_LIBDIR}/libdes.a \
 	${XLIBS}
 
-all: install
+all: translate_et
 
 translate_et: translate_et.o ${INCLS}
 	${CC} ${LDFLAGS} -o translate_et translate_et.o ${LIBS}
@@ -71,9 +85,9 @@ test: translate_et
 #
 # Install targets
 #
-install: ${DESTDIR}/bin/translate_et
+install: ${DESTDIR}${bindir}/translate_et
 
-${DESTDIR}/bin/translate_et: translate_et
+${DEST}/bin/translate_et: translate_et
 	${INSTALL} $? $@
 
 #
@@ -84,4 +98,9 @@ clean:
 	$(RM) -f *.o translate_et core AFS_component_version_number.c
 
 include ../config/Makefile.version
+
+${DESTDIR}${bindir}/translate_et: translate_et
+	${INSTALL} $? $@
+
+dest: ${DEST}/bin/translate_et
 

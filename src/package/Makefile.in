@@ -4,8 +4,22 @@
 #
 # Makefile for package, the AFS workstation configuration tool.
 #
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -13,7 +27,7 @@ SHELL    = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-INCLUDES = -I/usr/include -I${TOP_SRCDIR}/config -I${SRCDIR}/include
+INCLUDES=-I/usr/include -I${TOP_SRCDIR}/config -I${TOP_INCDIR}
 DBGFLAG  = -UDEBUG
 CFLAGS   = ${DBUG} -DKFLAG -DANDREW -DVICE $(DBGFLAG) $(INCLUDES) $(XCFLAGS)
 YFLAGS   = -vd
@@ -60,13 +74,13 @@ TEST_OBJS = test.o \
 	misc.o \
 	globfuncs.o
 
-LIBS =  ${DESTDIR}/lib/afs/libsys.a \
-        ${DESTDIR}/lib/afs/libcmd.a \
-	${DESTDIR}/lib/afs/libcom_err.a \
-        ${DESTDIR}/lib/librx.a \
-	${DESTDIR}/lib/afs/libsys.a \
-	${DESTDIR}/lib/afs/util.a \
-	${DESTDIR}/lib/liblwp.a \
+LIBS=${TOP_LIBDIR}/libsys.a \
+        ${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libcom_err.a \
+        ${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/liblwp.a \
 	${XLIBS}
 
 include ../config/Makefile.version
@@ -86,13 +100,31 @@ lex.c:
 	-$(RM) -f lex.c
 	$(LEX)  -t lex.l > lex.c
 
-system	: install
-
 clean	:
 	$(RM) -f *.o gram.c test_gram.c core package package_test *.BAK y.output yacc.tmp yacc.acts\
 	AFS_component_version_number.c lex.c y.tab.h
 
-install: package package_test
-	$(INSTALL) -s  -c -m 755 package      ${DESTDIR}/etc
-	$(INSTALL) -s  -c -m 755 package_test ${DESTDIR}/etc
-	${INSTALL} -ns -c -m 755 makepkgfiles ${DESTDIR}/etc
+install:   ${DESTDIR}${sbindir}/package ${DESTDIR}${sbindir}/package_test ${DESTDIR}${sbindir}/makepkgfiles
+
+
+${DEST}/etc/package: package
+	${INSTALL} $? $@
+
+${DESTDIR}${sbindir}/package: package
+	${INSTALL} $? $@
+
+${DEST}/etc/package_test: package_test
+	${INSTALL} $? $@
+
+${DESTDIR}${sbindir}/package_test: package_test
+	${INSTALL} $? $@
+
+${DEST}/etc/makepkgfiles: makepkgfiles
+	${INSTALL} $? $@
+
+${DESTDIR}${sbindir}/makepkgfiles: makepkgfiles
+	${INSTALL} $? $@
+
+
+dest:   ${DEST}/etc/package ${DEST}/etc/package_test ${DEST}/etc/makepkgfiles
+

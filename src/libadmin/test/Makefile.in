@@ -5,30 +5,42 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
 include ../../config/Makefile.${SYS_NAME}
 
 CC = ${MT_CC}
-CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${MT_CFLAGS}
+CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${MT_CFLAGS}
 
 
 ########################################################################
 # build tests
 
 AFSCPLIBS =\
-	$(DESTDIR)/lib/afs/libafsadminutil.a \
-	$(DESTDIR)/lib/afs/libclientadmin.a \
-	$(DESTDIR)/lib/afs/libbosadmin.a \
-	$(DESTDIR)/lib/afs/libvosadmin.a \
-	$(DESTDIR)/lib/afs/libkasadmin.a \
-	$(DESTDIR)/lib/afs/libptsadmin.a \
-	$(DESTDIR)/lib/libafsauthent.a \
-	$(DESTDIR)/lib/libafsrpc.a \
-	$(DESTDIR)/lib/afs/libcmd.a  # static library
+	$(TOP_LIBDIR)/libafsadminutil.a \
+	$(TOP_LIBDIR)/libclientadmin.a \
+	$(TOP_LIBDIR)/libbosadmin.a \
+	$(TOP_LIBDIR)/libvosadmin.a \
+	$(TOP_LIBDIR)/libkasadmin.a \
+	$(TOP_LIBDIR)/libptsadmin.a \
+	$(TOP_LIBDIR)/libafsauthent.a \
+	$(TOP_LIBDIR)/libafsrpc.a \
+	$(TOP_LIBDIR)/libcmd.a  # static library
 
 AFSCPOBJS =\
 	bos.o \
@@ -40,10 +52,14 @@ AFSCPOBJS =\
 
 afscp: afscp.o $(AFSCPOBJS) $(AFSCPLIBS)
 	$(CC) $(CFLAGS) -o afscp afscp.o $(AFSCPOBJS) \
-	-LDEST/lib/afs $(AFSCPLIBS) ${MTLIBS} $(XLIBS)
+	-L${TOP_LIBDIR} $(AFSCPLIBS) ${MTLIBS} $(XLIBS)
 
 #######################################################################
-install test tests: afscp
+all test tests: afscp
+
+install:
+
+dest:
 
 clean:
 	$(RM) -f *.o afscp core

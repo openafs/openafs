@@ -5,8 +5,22 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -14,10 +28,10 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-INCPATH= -I${TOP_SRCDIR}/config -I${DESTDIR}/include
+INCPATH=-I${TOP_SRCDIR}/config -I${TOP_INCDIR}
 BINDIR=/usr/local/etc
 LINKDIR=/etc
-LIBS= ${DESTDIR}/lib/afs/util.a  
+LIBS=${TOP_LIBDIR}/util.a
 
 VERS=3.4
 
@@ -101,8 +115,8 @@ ntpd.o: AFS_component_version_number.c
 ntpdc.o: AFS_component_version_number.c
 read_psti.o: AFS_component_version_number.c
 
-all:	${PROGS} runntp
-	-@./ntest
+#all:	${PROGS} runntp
+#	-@./ntest
 
 ntp:	ntp.o ntpsubs.o
 	${CC} ${LDFLAGS} -o ntp ntp.o ntpsubs.o ${LIBS} ${XLIBS} ${XLIBELFA}
@@ -131,22 +145,17 @@ ntpd.o:	patchlevel.h
 
 # for afs
 
-system: install
+all: AFS_component_version_number.c ntest ntpd ntp ntpdc runntp
 
-AFSLIBS= ${DESTDIR}/lib/afs/libauth.a ${DESTDIR}/lib/afs/libcom_err.a ${DESTDIR}/lib/afs/util.a 
+AFSLIBS=${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
 
-runntp.o: runntp.c ${DESTDIR}/include/afs/cellconfig.h AFS_component_version_number.c
-	${CC} ${CFLAGS} -I${DESTDIR}/include -c runntp.c ${AFSLIBS} ${XLIBS}
+runntp.o: runntp.c ${TOP_INCDIR}/afs/cellconfig.h AFS_component_version_number.c
+	${CC} ${CFLAGS} -I${TOP_INCDIR} -c runntp.c ${AFSLIBS} ${XLIBS}
 
 runntp: runntp.o ${AFSLIBS}
 	${CC} ${LDFLAGS} -o runntp runntp.o ${AFSLIBS} ${XLIBS}
 
-install: AFS_component_version_number.c ntest ntpd ntp ntpdc runntp
-	${INSTALL} ntpd ${DESTDIR}/root.server/usr/afs/bin/ntpd
-	${INSTALL} ntpdc ${DESTDIR}/root.server/usr/afs/bin/ntpdc
-	${INSTALL} ntp ${DESTDIR}/etc/ntp
-	${INSTALL} ntpdc ${DESTDIR}/etc/ntpdc
-	${INSTALL} runntp ${DESTDIR}/root.server/usr/afs/bin/runntp
+install:       ${DESTDIR}${afssrvlibexecdir}/ntpd ${DESTDIR}${afssrvsbindir}/ntpdc ${DESTDIR}${sbindir}/ntp ${DESTDIR}${sbindir}/ntpdc ${DESTDIR}${afssrvlibexecdir}/runntp
 
 #
 # If you don't want a symlink to the daemon, comment out the next line
@@ -179,6 +188,43 @@ ntp.tar.Z:	${DIST}
 
 depend:
 	mkdep $(CFLAGS) $(SRCS)
+
+${DEST}/root.server/usr/afs/bin/ntpd: ntpd
+	${INSTALL} $? $@
+
+${DESTDIR}${afssrvlibexecdir}/ntpd: ntpd
+	${INSTALL} $? $@
+
+
+${DEST}/root.server/usr/afs/bin/ntpdc: ntpdc
+	${INSTALL} $? $@
+
+${DESTDIR}${afssrvsbindir}/ntpdc: ntpdc
+	${INSTALL} $? $@
+
+
+${DEST}/etc/ntp: ntp
+	${INSTALL} $? $@
+
+${DESTDIR}${sbindir}/ntp: ntp
+	${INSTALL} $? $@
+
+
+${DEST}/etc/ntpdc: ntpdc
+	${INSTALL} $? $@
+
+${DESTDIR}${sbindir}/ntpdc: ntpdc
+	${INSTALL} $? $@
+
+
+${DEST}/root.server/usr/afs/bin/runntp: runntp
+	${INSTALL} $? $@
+
+${DESTDIR}${afssrvlibexecdir}/runntp: runntp
+	${INSTALL} $? $@
+
+
+dest:       ${DEST}/root.server/usr/afs/bin/ntpd ${DEST}/root.server/usr/afs/bin/ntpdc ${DEST}/etc/ntp ${DEST}/etc/ntpdc ${DEST}/root.server/usr/afs/bin/runntp
 
 # DO NOT DELETE THIS LINE -- mkdep uses it.
 # DO NOT PUT ANYTHING AFTER THIS LINE, IT WILL GO AWAY.

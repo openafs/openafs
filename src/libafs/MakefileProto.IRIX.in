@@ -7,9 +7,22 @@
 
 # MakefileProto for IRIX systems
 #
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+afskerneldir=@afskerneldir@
 SYS_NAME=@AFS_SYSNAME@
 
 include config/Makefile.${SYS_NAME}
@@ -200,6 +213,7 @@ CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) -G 0 $(KDEFS) $(
 # This is the irix multiple directory target.
 COMPDIRS = irix_compdirs
 INSTDIRS = irix_instdirs
+DESTDIRS = irix_destdirs
 
 include Makefile.common
 
@@ -223,7 +237,6 @@ setup:
 	-ln -s /usr/include/net /usr/include/netinet .
 	-ln -s /usr/include/rpc /usr/include/sys .
 	-ln -s /usr/include/sys/fs .
-	-mkdir ${DESTDIR}/root.client/bin
 <all -sgi_65>
 	BUILDPROCS="${PROCESSORS}" ; \
 	BUILDMPS="${MPS}" ; \
@@ -266,7 +279,7 @@ setup:
 
 # Compile static and modload versions of the clients.
 <all -sgi_65>
-${COMPDIRS} ${INSTDIRS}:
+${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	BUILDPROCS="${PROCESSORS}" ; \
 	if [ "${CPUARCH}" != "" ] ; then \
 		BUILDPROCS=${CPUARCH}; \
@@ -316,7 +329,7 @@ ${COMPDIRS} ${INSTDIRS}:
 	  done; \
 	done
 <sgi_65>
-${COMPDIRS} ${INSTDIRS}:
+${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	BUILDPROCS="${PROCESSORS}" ; \
 	if [ "${IPNO}" != "" ] ; then \
 		BUILDPROCS="${IPNO}"; \
@@ -357,69 +370,109 @@ irix_compdirs_STATIC.libafs: STATIC.libafs
 irix_compdirs_MODLOAD.libafs: MODLOAD.libafs
 irix_instdirs_STATIC.libafs: install_STATIC.libafs
 irix_instdirs_MODLOAD.libafs: install_MODLOAD.libafs
+irix_destdirs_STATIC.libafs: dest_STATIC.libafs
+irix_destdirs_MODLOAD.libafs: dest_MODLOAD.libafs
+
+
+
+${INSTDIRS}: install_COPYFILES install_LINKFILES
+${DESTDIRS}: dest_COPYFILES dest_LINKFILES
+
 
 
 LIBAFSNONFSA = libafs.nonfs.a
-COPYFILES = copyfiles
-LINKFILES = linkfiles
 
-${INSTDIRS}: ${COPYFILES} ${LINKFILES}
-
-STATICCLIENTDIR = ${DESTDIR}/root.client/bin
-MODLOADCLIENTDIR = ${DESTDIR}/root.client/usr/vice/etc/sgiload
-
-# Make the NFS and no-NFS clients for this directory.
-# STATIC.libafs: ${LIBAFSNONFSA} ${COPYFILES} ${LINKFILES}
 STATIC.libafs: ${LIBAFSNONFSA}
+
 install_STATIC.libafs: ${LIBAFSNONFSA}
 <all -sgi_65>
 	${CP} ${LIBAFSNONFSA} \
-		${STATICCLIENTDIR}/libafs.${MPSP}.${CPUARCH}.nonfs.a
+		${DESTDIR}${afskerneldir}/libafs.${MPSP}.${CPUARCH}.nonfs.a
 <sgi_65>
 	${CP} ${LIBAFSNONFSA} \
-		${STATICCLIENTDIR}/libafs.${IPNO}.nonfs.a
+		${DESTDIR}${afskerneldir}/libafs.${IPNO}.nonfs.a
+<all>
+
+dest_STATIC.libafs: ${LIBAFSNONFSA}
+<all -sgi_65>
+	${CP} ${LIBAFSNONFSA} \
+		${DEST}/root.client/bin/libafs.${MPSP}.${CPUARCH}.nonfs.a
+<sgi_65>
+	${CP} ${LIBAFSNONFSA} \
+		${DEST}/root.client/bin/libafs.${IPNO}.nonfs.a
 <all>
 
 ${LIBAFSNONFSA}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(AR) cru  $@ $?
 
+
 LIBAFSNONFSO = libafs.nonfs.o
 
 # MODLOAD.libafs: ${LIBAFSNONFSO} ${COPYFILES} ${LINKFILES}
 MODLOAD.libafs: ${LIBAFSNONFSO}
+
 install_MODLOAD.libafs: ${LIBAFSNONFSO}
 <all -sgi_65>
 	${CP} ${LIBAFSNONFSO} \
-		${MODLOADCLIENTDIR}/libafs.${MPSP}.${CPUARCH}.nonfs.o
+		${DESTDIR}${afskerneldir}/libafs.${MPSP}.${CPUARCH}.nonfs.o
 <sgi_65>
 	${CP} ${LIBAFSNONFSO} \
-		${MODLOADCLIENTDIR}/libafs.${IPNO}.nonfs.o
+		${DESTDIR}${afskerneldir}/libafs.${IPNO}.nonfs.o
+<all>
+
+dest_MODLOAD.libafs: ${LIBAFSNONFSO}
+<all -sgi_65>
+	${CP} ${LIBAFSNONFSO} \
+		${DESTDIR}/root.client/usr/vice/etc/sgiload/libafs.${MPSP}.${CPUARCH}.nonfs.o
+<sgi_65>
+	${CP} ${LIBAFSNONFSO} \
+		${DESTDIR}/root.client/usr/vice/etc/sgiload/libafs.${IPNO}.nonfs.o
 <all>
 
 ${LIBAFSNONFSO}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(LD) ${LDFLAGS} -elf -r -d -G 0 -o ${LIBAFSNONFSO} \
 		$(AFSAOBJS) $(AFSNONFSOBJS)
 
-${COPYFILES}:
-	${CP} sgi_system ${STATICCLIENTDIR}/afs.sm
-	chmod 644 ${STATICCLIENTDIR}/afs.sm
-	${CP} sgi_master ${STATICCLIENTDIR}/afs
-	chmod 644 ${STATICCLIENTDIR}/afs
+
+install_COPYFILES:
+	${CP} sgi_system ${DESTDIR}${afskerneldir}/afs.sm
+	chmod 644 ${DESTDIR}${afskerneldir}/afs.sm
+	${CP} sgi_master ${DESTDIR}${afskerneldir}/afs
+	chmod 644 ${DESTDIR}${afskerneldir}/afs
+
+dest_COPYFILES:
+	${CP} sgi_system ${DEST}/root.client/bin/afs.sm
+	chmod 644 ${DEST}/root.client/bin/afs.sm
+	${CP} sgi_master ${DEST}/root.client/bin/afs
+	chmod 644 ${DEST}/root.client/bin/afs
 
 # Create symlinks to clients we don't need to build.
 # If this changes, also change the kdump symlinks.
-${LINKFILES}:
+install_LINKFILES:
 <sgi_65>
-	ln -fs  libafs.IP20.a       ${DESTDIR}/root.client/bin/libafs.IP22.a
-	ln -fs  libafs.IP20.a       ${DESTDIR}/root.client/bin/libafs.IP32.a
-	ln -fs  libafs.IP20.nonfs.a ${DESTDIR}/root.client/bin/libafs.IP22.nonfs.a
-	ln -fs  libafs.IP20.nonfs.a ${DESTDIR}/root.client/bin/libafs.IP32.nonfs.a
-	ln -fs  libafs.IP20.o       ${DESTDIR}/root.client/usr/vice/etc/sgiload/libafs.IP22.o
-	ln -fs  libafs.IP20.o       ${DESTDIR}/root.client/usr/vice/etc/sgiload/libafs.IP32.o
-	ln -fs  libafs.IP20.nonfs.o ${DESTDIR}/root.client/usr/vice/etc/sgiload/libafs.IP22.nonfs.o
-	ln -fs  libafs.IP20.nonfs.o ${DESTDIR}/root.client/usr/vice/etc/sgiload/libafs.IP32.nonfs.o
+	ln -fs libafs.IP20.a       ${DESTDIR}${afskerneldir}/libafs.IP22.a
+	ln -fs libafs.IP20.a       ${DESTDIR}${afskerneldir}/libafs.IP32.a
+	ln -fs libafs.IP20.nonfs.a ${DESTDIR}${afskerneldir}/libafs.IP22.nonfs.a
+	ln -fs libafs.IP20.nonfs.a ${DESTDIR}${afskerneldir}/libafs.IP32.nonfs.a
+	ln -fs libafs.IP20.o       ${DESTDIR}${afskerneldir}/libafs.IP22.o
+	ln -fs libafs.IP20.o       ${DESTDIR}${afskerneldir}/libafs.IP32.o
+	ln -fs libafs.IP20.nonfs.o ${DESTDIR}${afskerneldir}/libafs.IP22.nonfs.o
+	ln -fs libafs.IP20.nonfs.o ${DESTDIR}${afskerneldir}/libafs.IP32.nonfs.o
+<all>
 
-	
+# Create symlinks to clients we don't need to build.
+# If this changes, also change the kdump symlinks.
+dest_LINKFILES:
+<sgi_65>
+	ln -fs  libafs.IP20.a       ${DEST}/root.client/bin/libafs.IP22.a
+	ln -fs  libafs.IP20.a       ${DEST}/root.client/bin/libafs.IP32.a
+	ln -fs  libafs.IP20.nonfs.a ${DEST}/root.client/bin/libafs.IP22.nonfs.a
+	ln -fs  libafs.IP20.nonfs.a ${DEST}/root.client/bin/libafs.IP32.nonfs.a
+	ln -fs  libafs.IP20.o       ${DEST}/root.client/usr/vice/etc/sgiload/libafs.IP22.o
+	ln -fs  libafs.IP20.o       ${DEST}/root.client/usr/vice/etc/sgiload/libafs.IP32.o
+	ln -fs  libafs.IP20.nonfs.o ${DEST}/root.client/usr/vice/etc/sgiload/libafs.IP22.nonfs.o
+	ln -fs  libafs.IP20.nonfs.o ${DEST}/root.client/usr/vice/etc/sgiload/libafs.IP32.nonfs.o
+<all>
 
 
 # Object build rules:

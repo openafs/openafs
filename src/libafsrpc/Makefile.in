@@ -7,8 +7,22 @@
 
 # This is a pthread safe library containing rx, rxkad and des.
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -17,9 +31,9 @@ SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 CC=${MT_CC}
-INCLUDES = -I${SRCDIR}/include -I.. -I../rx
+INCLUDES=-I${TOP_INCDIR} -I.. -I../rx
 CFLAGS = ${OPTMZ} ${DBG} ${INCLUDES} -DRXDEBUG ${MT_CFLAGS} -I${TOP_SRCDIR}/config
-SFLAGS=-P -I${SRCDIR}/include
+SFLAGS=-P -I${TOP_INCDIR}
 RX = ../rx
 CCRULE = ${CC} ${CFLAGS} -c $?
 RXKAD = ../rxkad
@@ -114,10 +128,12 @@ LIBOBJS = \
 	${RXSTATOBJS} \
 	${FSINTOBJS}
 
-system install: ${DESTDIR}/lib/libafsrpc.a
+all: ${TOP_LIBDIR}/libafsrpc.a
 
-${DESTDIR}/lib/libafsrpc.a: libafsrpc.a
-	${INSTALL} libafsrpc.a ${DESTDIR}/lib/libafsrpc.a
+install: ${DESTDIR}${libdir}/libafsrpc.a
+
+${DEST}/lib/libafsrpc.a: libafsrpc.a
+	${INSTALL} $? $@
 
 libafsrpc.a: ${LIBOBJS}
 	$(RM) -f $@
@@ -362,3 +378,11 @@ afsaux.o: ${FSINT}/afsaux.c
 
 clean:
 	$(RM) -f *.o libafsrpc*
+${DESTDIR}${libdir}/libafsrpc.a: libafsrpc.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libafsrpc.a: libafsrpc.a
+	${INSTALL} $? $@
+
+dest: ${DEST}/lib/libafsrpc.a
+

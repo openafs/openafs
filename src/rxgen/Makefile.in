@@ -4,8 +4,22 @@
 # Makefile for rpc protocol compiler
 # Copyright (C) 1987, Sun Microsystems, Inc.
 #
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -22,9 +36,9 @@ OBJS= rpc_main.o rpc_hout.o rpc_cout.o rpc_parse.o rpc_scan.o rpc_util.o \
 	rpc_svcout.o rpc_clntout.o
 
 GOAL=rxgen
-CFLAGS = -I. -I${DESTDIR}/include -I${TOP_SRCDIR}/config ${XCFLAGS}
+CFLAGS=-I. -I${TOP_INCDIR} -I${TOP_SRCDIR}/config ${XCFLAGS}
 
-all: install
+all: ukinstall rxgen ${TOP_INCDIR}/afs/rxgen_consts.h
 
 rxgen: $(OBJS) AFS_component_version_number.c
 	$(CC) $(CFLAGS) $(OBJS) $(XLIBS) -o $@
@@ -32,9 +46,7 @@ rxgen: $(OBJS) AFS_component_version_number.c
 #
 # Install targets
 #
-install: ukinstall \
-	${DESTDIR}/bin/rxgen \
-	${DESTDIR}/include/afs/rxgen_consts.h
+install:  ${DESTDIR}${bindir}/rxgen ${DESTDIR}${includedir}/afs/rxgen_consts.h
 
 ukinstall: \
 	${UKERNELDIR}/afs \
@@ -46,10 +58,10 @@ ${UKERNELDIR}/afs:
 ${UKERNELDIR}/afs/rxgen_consts.h: rxgen_consts.h
 	${INSTALL} $? $@
 
-${DESTDIR}/bin/rxgen: rxgen
+${DEST}/bin/rxgen: rxgen
 	${INSTALL} $? $@
 
-${DESTDIR}/include/afs/rxgen_consts.h: rxgen_consts.h
+${DEST}/include/afs/rxgen_consts.h: rxgen_consts.h
 	${INSTALL} $? $@
 
 #
@@ -59,3 +71,14 @@ clean:
 	$(RM) -f *.o rxgen core AFS_component_version_number.c
 
 include ../config/Makefile.version
+${DESTDIR}${bindir}/rxgen: rxgen
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/rxgen_consts.h: rxgen_consts.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/rxgen_consts.h: rxgen_consts.h
+	${INSTALL} $? $@
+
+dest:  ${DEST}/bin/rxgen ${DEST}/include/afs/rxgen_consts.h
+

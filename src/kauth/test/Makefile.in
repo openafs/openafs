@@ -21,11 +21,13 @@ LIBS= -llwp -ldes -lrxkad -lauth -lcmd -lubik -lprot -lsys -lrx -lcom_err -lkaut
 
 CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS}
 
-system: all
 
 # the only tests _known_ to work are multiklog and the tcl scripts.
 
 all test tests: multiklog 
+
+install:
+dest:
 
 clean:
 	$(RM) -f *.o core

@@ -7,9 +7,22 @@
 
 # MakefileProto for HP systems
 #
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+afskerneldir=@afskerneldir@
 SYS_NAME=@AFS_SYSNAME@
 
 include config/Makefile.${SYS_NAME}
@@ -74,6 +87,7 @@ KOBJ=STATIC
 # This is the hpux multiple directory target.
 COMPDIRS = hpux_compdirs
 INSTDIRS = hpux_instdirs
+DESTDIRS = hpux_destdirs
 
 include Makefile.common
 
@@ -105,7 +119,7 @@ setup:
 	echo Setup complete.
 
 # Compile the clients.
-${COMPDIRS} ${INSTDIRS}:
+${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	if false; then \
 	for b in $(BITS); do \
 	    for t in $(KOBJ); do \
@@ -124,20 +138,29 @@ ${COMPDIRS} ${INSTDIRS}:
 
 hpux_compdirs_libafs: libafs
 hpux_instdirs_libafs: install_libafs
+hpux_destdirs_libafs: dest_libafs
 
 
 # Below this line are targets when in the static directory:
 LIBAFS = libafs$(BITSUFFIX).a
 LIBAFSNONFS = libafs$(BITSUFFIX).nonfs.a
 
+INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
+INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
 
-DEST_LIBAFS = ${DESTDIR}/root.client/bin/${LIBAFS}
-DEST_LIBAFSNONFS = ${DESTDIR}/root.client/bin/${LIBAFSNONFS}
+DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
+DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
 
 
-# libafs: ${DEST_LIBAFS} ${DEST_LIBAFSNONFS}
 libafs: ${LIBAFSNONFS}
-install_libafs: ${DEST_LIBAFSNONFS}
+install_libafs: ${INST_LIBAFSNONFS}
+dest_libafs: ${DEST_LIBAFSNONFS}
+
+$(INST_LIBAFS): $(LIBAFS)
+	${INSTALL} -f $? $@
+
+$(INST_LIBAFSNONFS): $(LIBAFSNONFS)
+	${INSTALL} -f $? $@
 
 $(DEST_LIBAFS): $(LIBAFS)
 	${INSTALL} -f $? $@

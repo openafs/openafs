@@ -104,7 +104,7 @@ ConstructLocalLogPath(const char *cpath,
 /* afs installation dir names */
 #define AFSDIR_SERVER_ETC_DIR   "@afsconfdir"
 #define AFSDIR_CLIENT_ETC_DIR "@viceetcdir"
-#define AFSDIR_SERVER_BIN_DIR   "@afssrvdir"
+#define AFSDIR_SERVER_BIN_DIR   "@afssrvlibexecdir"
 #define AFSDIR_CORES_DIR "cores"
 #define AFSDIR_DB_DIR    "@afsdbdir"
 #define AFSDIR_LOGS_DIR  "@afslogsdir"
@@ -113,7 +113,7 @@ ConstructLocalLogPath(const char *cpath,
 #define AFSDIR_MIGR_DIR  "@afslocaldir/migrate"
 #define AFSDIR_BIN_FILE_DIR  "@afslocaldir/migrate/bin_files"
 #define AFSDIR_BOSCONFIG_DIR "@afsbosconfigdir"
-#define AFSDIR_BOSSERVER_DIR "@afsbosserverdir"
+#define AFSDIR_BOSSERVER_DIR "@afssrvsbindir"
 
 /* file names */ 
 #define AFSDIR_THISCELL_FILE    "ThisCell"

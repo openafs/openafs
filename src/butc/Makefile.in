@@ -5,8 +5,22 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -16,51 +30,49 @@ include ../config/Makefile.${SYS_NAME}
 
 CFLAGS=-g -w ${INCDIRS} ${XCFLAGS}
 
-INCDIRS= -I${TOP_SRCDIR}/config -I${SRCDIR}/include/afs \
-	-I${SRCDIR}/include/rx -I${SRCDIR}/include
+INCDIRS=-I${TOP_SRCDIR}/config -I${TOP_INCDIR}/afs \
+	-I${TOP_INCDIR}/rx -I${TOP_INCDIR}
 
-INCLS=${SRCDIR}/include/afs/partition.h ${SRCDIR}/include/afs/volume.h \
-	${SRCDIR}/include/afs/vlserver.h ${SRCDIR}/include/rx/rx.h \
-	${SRCDIR}/include/rx/xdr.h ${SRCDIR}/include/afs/keys.h \
-	${SRCDIR}/include/afs/cellconfig.h ${SRCDIR}/include/ubik.h \
-	${SRCDIR}/include/afs/cmd.h ${SRCDIR}/include/afs/butc.h \
-	${SRCDIR}/include/afs/tcdata.h ${SRCDIR}/include/afs/bubasics.h \
-	${SRCDIR}/include/afs/butm.h
+INCLS=${TOP_INCDIR}/afs/partition.h ${TOP_INCDIR}/afs/volume.h \
+	${TOP_INCDIR}/afs/vlserver.h ${TOP_INCDIR}/rx/rx.h \
+	${TOP_INCDIR}/rx/xdr.h ${TOP_INCDIR}/afs/keys.h \
+	${TOP_INCDIR}/afs/cellconfig.h ${TOP_INCDIR}/ubik.h \
+	${TOP_INCDIR}/afs/cmd.h ${TOP_INCDIR}/afs/butc.h \
+	${TOP_INCDIR}/afs/tcdata.h ${TOP_INCDIR}/afs/bubasics.h \
+	${TOP_INCDIR}/afs/butm.h
 
-HACKS=${SRCDIR}/lib/afs/libdir.a
+HACKS=${TOP_LIBDIR}/libdir.a
 
-INCLIBS=-L${SRCDIR}/lib/afs -L${SRCDIR}/lib
-
-LIBS=${SRCDIR}/lib/afs/libbudb.a \
-	$(SRCDIR)/lib/afs/libbxdb.a \
-	${SRCDIR}/lib/afs/libbubasics.a \
-        ${SRCDIR}/lib/afs/libbutm.a \
-	${SRCDIR}/lib/afs/libvolser.a \
-	${SRCDIR}/lib/afs/libvldb.a \
-        ${SRCDIR}/lib/afs/vlib.a \
-	${SRCDIR}/lib/afs/libacl.a \
-        ${SRCDIR}/lib/afs/libprot.a      \
-        ${SRCDIR}/lib/afs/libkauth.a \
-        ${SRCDIR}/lib/libubik.a \
-        ${SRCDIR}/lib/afs/libauth.a \
-	${SRCDIR}/lib/librxkad.a \
-        ${SRCDIR}/lib/afs/libsys.a  \
-        ${SRCDIR}/lib/libdes.a \
-	${SRCDIR}/lib/librx.a \
-        ${SRCDIR}/lib/afs/libsys.a  \
-	${SRCDIR}/lib/liblwp.a \
-        ${SRCDIR}/lib/afs/libcmd.a \
-	${SRCDIR}/lib/afs/libcom_err.a \
-	${SRCDIR}/lib/afs/util.a \
-	${SRCDIR}/lib/afs/libusd.a \
-	${SRCDIR}/lib/afs/libprocmgmt.a
+LIBS=${TOP_LIBDIR}/libbudb.a \
+	$(TOP_LIBDIR)/libbxdb.a \
+	${TOP_LIBDIR}/libbubasics.a \
+        ${TOP_LIBDIR}/libbutm.a \
+	${TOP_LIBDIR}/libvolser.a \
+	${TOP_LIBDIR}/libvldb.a \
+        ${TOP_LIBDIR}/vlib.a \
+	${TOP_LIBDIR}/libacl.a \
+        ${TOP_LIBDIR}/libprot.a      \
+        ${TOP_LIBDIR}/libkauth.a \
+        ${TOP_LIBDIR}/libubik.a \
+        ${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/librxkad.a \
+        ${TOP_LIBDIR}/libsys.a  \
+        ${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/librx.a \
+        ${TOP_LIBDIR}/libsys.a  \
+	${TOP_LIBDIR}/liblwp.a \
+        ${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libusd.a \
+	${TOP_LIBDIR}/libprocmgmt.a
 
 TESTOBJS=test.o
 
 SOBJS=dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o tcudbprocs.o \
 	dump.o tcstatus.o
 
-all: install
+all: butc read_tape
 
 butc_test: ${TESTOBJS} ${LIBS} ${INCLS} ${HACKS}
 	${CC} ${CFLAGS} ${TESTOBJS} ${LIBS} ${XLIBS} -o butc_test
@@ -87,20 +99,30 @@ tcstatus.o: tcstatus.c ${INCLS}
 
 read_tape: read_tape.c
 	${CC} ${CFLAGS} -o read_tape read_tape.c \
-		${SRCDIR}/lib/afs/libcmd.a ${SRCDIR}/lib/afs/util.a \
-		${SRCDIR}/lib/afs/libusd.a
-	${INSTALL} read_tape ${SRCDIR}/etc
+		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a \
+		${TOP_LIBDIR}/libusd.a
 
 clean:
 	$(RM) -f butc *.o butc_test core tdump read_tape AFS_component_version_number.c
 
-install: butc read_tape
+install:  
 	@case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|rs_aix4*|*linux*|hp_ux*) \
 		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
 	*) \
-		echo ${INSTALL} butc ${DESTDIR}/etc/butc ; \
-		${INSTALL} butc ${DESTDIR}/etc/butc ;; \
+		echo ${INSTALL} butc ${DESTDIR}${sbindir}/butc ; \
+		${INSTALL} butc ${DESTDIR}${sbindir}/butc ;; \
 	esac
+	${INSTALL} read_tape ${DESTDIR}${sbindir}/read_tape
 
 include ../config/Makefile.version
+dest:  
+	@case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix4*|*linux*|hp_ux*) \
+		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
+	*) \
+		echo ${INSTALL} butc ${DEST}/etc/butc ; \
+		${INSTALL} butc ${DEST}/etc/butc ;; \
+	esac
+	${INSTALL} read_tape ${DEST}/etc/read_tape
+

@@ -22,8 +22,22 @@
 # target machine for run-time code (may cross-compile),
 # override as needed 
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -51,13 +65,13 @@ OBJS = \
 	crypt.o \
 	util.o
 
-all: install
+all: ukinstall ${TOP_LIBDIR}/libdes.a ${TOP_INCDIR}/des.h ${TOP_INCDIR}/des_conf.h ${TOP_INCDIR}/mit-cpyright.h ${TOP_INCDIR}/des_odd.h
 
 #
 # Build rules
 #
 .c.o:
-	${CC} -c -I. -I${SRCDIR}/include -I${TOP_SRCDIR}/config ${XCFLAGS} $<
+	${CC} -c -I. -I${TOP_INCDIR} -I${TOP_SRCDIR}/config ${XCFLAGS} $<
 
 libdes.a: ${OBJS} AFS_component_version_number.o
 	$(RM) -f libdes.a
@@ -154,26 +168,21 @@ make_e.o: make_e.c ${INCLS}
 #
 # Install targets
 #
-install: ukinstall\
-	${DESTDIR}/lib/libdes.a \
-	${DESTDIR}/include/des.h \
-	${DESTDIR}/include/des_conf.h \
-	${DESTDIR}/include/mit-cpyright.h \
-	${DESTDIR}/include/des_odd.h
+install:  ${DESTDIR}${libdir}/libdes.a ${DESTDIR}${includedir}/des.h ${DESTDIR}${includedir}/des_conf.h ${DESTDIR}${includedir}/mit-cpyright.h ${DESTDIR}${includedir}/des_odd.h
 
-${DESTDIR}/lib/libdes.a: libdes.a
+${DEST}/lib/libdes.a: libdes.a
 	${INSTALL} $? $@
 
-${DESTDIR}/include/des.h: des.h
+${DEST}/include/des.h: des.h
 	${INSTALL} $? $@
 
-${DESTDIR}/include/des_conf.h: des_conf.h
+${DEST}/include/des_conf.h: des_conf.h
 	${INSTALL} $? $@
 
-${DESTDIR}/include/mit-cpyright.h: mit-cpyright.h
+${DEST}/include/mit-cpyright.h: mit-cpyright.h
 	${INSTALL} $? $@
 
-${DESTDIR}/include/des_odd.h: odd.h
+${DEST}/include/des_odd.h: odd.h
 	${INSTALL} $? $@
 
 ukinstall: \
@@ -207,4 +216,36 @@ clean:
 	cd test; $(MAKE) clean
 
 include ../config/Makefile.version
+
+${DESTDIR}${libdir}/libdes.a: libdes.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libdes.a: libdes.a
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/des.h: des.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/des.h: des.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/des_conf.h: des_conf.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/des_conf.h: des_conf.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/mit-cpyright.h: mit-cpyright.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/mit-cpyright.h: mit-cpyright.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/des_odd.h: odd.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/des_odd.h: odd.h
+	${INSTALL} $? $@
+
+dest:  ${DEST}/lib/libdes.a ${DEST}/include/des.h ${DEST}/include/des_conf.h ${DEST}/include/mit-cpyright.h ${DEST}/include/des_odd.h
 

@@ -16,15 +16,29 @@
 #
 #	@(#)Makefile	5.12 (Berkeley) 6/26/89
 #
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
 
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS=	${DBUG} -w -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
+CFLAGS=${DBUG} -w -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
 LIBC=	/lib/libc.a
 SRCS=	dir.c inode.c main.c pass1.c pass1b.c pass2.c pass3.c pass4.c \
 	pass5.c setup.c utilities.c ufs_subr.c ufs_tables.c dirutils.c\
@@ -45,7 +59,7 @@ vfsck: main.o ${OBJS}
 ${OBJS}:	${SRCS}
 	case ${SYS_NAME} in 					\
 	  hp_ux11? )                                            \
-	    ${CC} -o vfsck -I/usr/old/usr/include ${DBUG} -w -I${SRCDIR}/include ${SRCS} ${NON_SHARED} +DA1.0 -Wl,-a,archive -D_FILE64 \
+	    ${CC} -o vfsck -I/usr/old/usr/include ${DBUG} -w -I${TOP_INCDIR} ${SRCS} ${NON_SHARED} +DA1.0 -Wl,-a,archive -D_FILE64 \
 			;;					\
 	  hp?00_ux101 | hp_ux10? )				\
 	    ${CC} -o vfsck ${CFLAGS} ${SRCS} ${NON_SHARED} ${XLIBS} -D_FILE64\
@@ -71,21 +85,31 @@ depend: ${SRCS}
 
 system: install
 
-install: all ${MAN}
-	${INSTALL} -s -c vfsck ${DESTDIR}/root.server/etc
-	${INSTALL} -s -c vfsck ${DESTDIR}/root.server/usr/afs/bin
+install: ${DESTDIR}${afssrvlibexecdir}/vfsck
+
+${DEST}/root.server/etc/vfsck: vfsck
+	${INSTALL} $? $@
+
+${DEST}/root.server/usr/afs/bin/vfsck: vfsck
+	${INSTALL} $? $@
+
+${DESTDIR}${afssrvlibexecdir}/vfsck: vfsck
+	${INSTALL} $? $@
+
+
+dest: ${DEST}/root.server/etc/vfsck ${DEST}/root.server/usr/afs/bin/vfsck
 	case ${SYS_NAME} in 				\
 		hp_ux10? )				\
-			${CP} bcheckrc ${DESTDIR}/root.server/etc; \
+			${CP} bcheckrc ${DEST}/root.server/etc; \
 			;;				\
 		hp_ux11? )				\
-			${CP} bcheckrc-hp_ux110 ${DESTDIR}/root.server/etc/bcheckrc; \
+			${CP} bcheckrc-hp_ux110 ${DEST}/root.server/etc/bcheckrc; \
 			;;				\
 	esac
 	case ${SYS_NAME} in 				\
 		hp_ux10? | hp_ux11? )			\
-			 ${CP} mount ${DESTDIR}/root.server/etc ;\
-			 ${CP} umount ${DESTDIR}/root.server/etc; \
-			 chmod 755 ${DESTDIR}/root.server/etc/bcheckrc ${DESTDIR}/root.server/etc/mount ${DESTDIR}/root.server/etc/umount ;\
+			 ${CP} mount ${DEST}/root.server/etc ;\
+			 ${CP} umount ${DEST}/root.server/etc; \
+			 chmod 755 ${DEST}/root.server/etc/bcheckrc ${DEST}/root.server/etc/mount ${DEST}/root.server/etc/umount ;\
 				;;					\
 	esac

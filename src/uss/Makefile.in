@@ -7,8 +7,22 @@
 
 # uss Makefile
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -16,29 +30,29 @@ SHELL=/bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-all: install
+all: uss
 
-CFLAGS = ${DBUG} -I/usr/include -I${TOP_SRCDIR}/config \
-	-I${SRCDIR}/include -I. ${XCFLAGS}
+CFLAGS=${DBUG} -I/usr/include -I${TOP_SRCDIR}/config \
+	-I${TOP_INCDIR} -I. ${XCFLAGS}
 
 #
 # Build targets
 #
-LIBS =	${SRCDIR}/lib/afs/libvolser.a \
-	${SRCDIR}/lib/afs/libvldb.a  \
-	${SRCDIR}/lib/afs/libkauth.a \
-	${SRCDIR}/lib/afs/libprot.a \
-	${SRCDIR}/lib/libubik.a \
-	${SRCDIR}/lib/afs/libauth.a \
-	${SRCDIR}/lib/librxkad.a \
-	${SRCDIR}/lib/afs/libsys.a \
-	${SRCDIR}/lib/libdes.a \
-	${SRCDIR}/lib/librx.a \
-	${SRCDIR}/lib/afs/libsys.a \
-	${SRCDIR}/lib/liblwp.a \
-	${SRCDIR}/lib/afs/libcmd.a \
-	${SRCDIR}/lib/afs/libcom_err.a\
-	${SRCDIR}/lib/afs/util.a \
+LIBS=${TOP_LIBDIR}/libvolser.a \
+	${TOP_LIBDIR}/libvldb.a  \
+	${TOP_LIBDIR}/libkauth.a \
+	${TOP_LIBDIR}/libprot.a \
+	${TOP_LIBDIR}/libubik.a \
+	${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libcom_err.a\
+	${TOP_LIBDIR}/util.a \
 	${XLIBS}
 
 OBJS =  uss_procs.o \
@@ -109,9 +123,9 @@ y.tab.c : grammar.y
 #
 # Installation targets
 #
-install: ${DESTDIR}/etc/uss
+install: ${DESTDIR}${sbindir}/uss
 
-${DESTDIR}/etc/uss: uss
+${DEST}/etc/uss: uss
 	${INSTALL} $? $@
 
 #
@@ -123,3 +137,8 @@ clean:
 include ../config/Makefile.version
 
 #
+${DESTDIR}${sbindir}/uss: uss
+	${INSTALL} $? $@
+
+dest: ${DEST}/etc/uss
+

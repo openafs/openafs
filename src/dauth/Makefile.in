@@ -5,8 +5,21 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -14,33 +27,33 @@ SHELL = 	/bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-COMPILE_ET = 	${SRCDIR}/bin/compile_et
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
 OPTMZ=	-g
 
-CFLAGS = 	${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
+CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
 LDFLAGS =	${OPTMZ} ${XLDFLAGS}
 
-INCLS=		${SRCDIR}/include/ubik.h \
-	       	${SRCDIR}/include/lwp.h \
-	       	${SRCDIR}/include/lock.h  \
-	       	${SRCDIR}/include/rx/rx.h \
-	       	${SRCDIR}/include/rx/xdr.h \
-		${SRCDIR}/include/afs/com_err.h
+INCLS=${TOP_INCDIR}/ubik.h \
+	       	${TOP_INCDIR}/lwp.h \
+	       	${TOP_INCDIR}/lock.h  \
+	       	${TOP_INCDIR}/rx/rx.h \
+	       	${TOP_INCDIR}/rx/xdr.h \
+		${TOP_INCDIR}/afs/com_err.h
 
 VERS =	AFS_component_version_number.o
 OBJS =		adkint.cs.o adkint.xdr.o
 
-LIBS = 		${SRCDIR}/lib/afs/libkauth.a \
-		${SRCDIR}/lib/afs/libauth.a \
-		${SRCDIR}/lib/afs/libcmd.a \
-	        ${SRCDIR}/lib/afs/libcom_err.a \
-		${SRCDIR}/lib/libubik.a \
-		${SRCDIR}/lib/librxkad.a \
-		${SRCDIR}/lib/libdes.a \
-		${SRCDIR}/lib/librx.a \
-	        ${SRCDIR}/lib/liblwp.a \
-	       	${SRCDIR}/lib/afs/libsys.a \
-		${SRCDIR}/lib/afs/util.a 
+LIBS=${TOP_LIBDIR}/libkauth.a \
+		${TOP_LIBDIR}/libauth.a \
+		${TOP_LIBDIR}/libcmd.a \
+	        ${TOP_LIBDIR}/libcom_err.a \
+		${TOP_LIBDIR}/libubik.a \
+		${TOP_LIBDIR}/librxkad.a \
+		${TOP_LIBDIR}/libdes.a \
+		${TOP_LIBDIR}/librx.a \
+	        ${TOP_LIBDIR}/liblwp.a \
+	       	${TOP_LIBDIR}/libsys.a \
+		${TOP_LIBDIR}/util.a
 
 CELL=		`pwd|awk -F/ '{print $$3}'`
 USNS=		cellname
@@ -52,7 +65,7 @@ ukinstall webinstall:
 
 noversion:	install
 
-all: 		dlog dpass
+all: dlog dpass
 
 clean:
 		$(RM) -f adkint.h adkint.cs.c adkint.ss.c adkint.xdr.c *.o dlog dpass AFS_component_version_number.c
@@ -60,7 +73,7 @@ clean:
 adkint.cs.o:	adkint.cs.c
 adkint.xdr.o:	adkint.xdr.c adkint.h
 adkint.cs.c	adkint.xdr.c adkint.h: adkint.xg
-		${SRCDIR}/bin/rxgen adkint.xg
+		${RXGEN} adkint.xg
 
 dlog:		dlog.o $(VERS) $(OBJS) $(LIBS)
 		$(CC) ${LDFLAGS} -o dlog dlog.o $(VERS) $(OBJS) ${LIBS} \
@@ -76,13 +89,19 @@ dlog_test:	dlog.c $(OBJS) $(LIBS)
 		$(CC) $(LDFLAGS) -DDLOG_TEST -o dlog_test dlog.c $(OBJS) \
 			$(LIBS) ${XLIBS}
 
-system: 	install
-
-${DESTDIR}/bin/dlog: dlog
+${DEST}/bin/dlog: dlog
 	${INSTALL} $? $@
 
-${DESTDIR}/bin/dpass: dpass
+${DEST}/bin/dpass: dpass
 	${INSTALL} $? $@
 
 
-install: 	all ${DESTDIR}/bin/dlog ${DESTDIR}/bin/dpass
+install:  ${DESTDIR}${bindir}/dlog ${DESTDIR}${bindir}/dpass
+${DESTDIR}${bindir}/dlog: dlog
+	${INSTALL} $? $@
+
+${DESTDIR}${bindir}/dpass: dpass
+	${INSTALL} $? $@
+
+dest:  ${DEST}/bin/dlog ${DEST}/bin/dpass
+

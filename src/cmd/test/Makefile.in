@@ -43,3 +43,5 @@ kinstall:
 clean:
 	$(RM) -f  *.a *.o ctest dtest itest core
 
+install:
+dest:

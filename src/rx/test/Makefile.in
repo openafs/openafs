@@ -33,7 +33,7 @@ TH_TESTS = th_testserver th_testclient
 
 .IGNORE: 
 
-system all: test
+all: test
 
 test tests: ${TESTS}
 

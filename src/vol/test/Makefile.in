@@ -5,8 +5,22 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -14,16 +28,16 @@ SHELL=/bin/sh
 
 include ../../config/Makefile.${SYS_NAME}
 
-INCDIRS= -I. -I.. -I${DESTDIR}/include ${FSINCLUDES}
+INCDIRS=-I. -I.. -I${TOP_INCDIR} ${FSINCLUDES}
 INSTALL = ${SRCDIR}/bin/install
 LDFLAGS = ${OPTMZ} ${PROF} ${LDIRS} ${XLDFLAGS}
 
-LIBS= ${DESTDIR}/lib/afs/libcmd.a ${DESTDIR}/lib/afs/vlib.a \
-	${SRCDIR}/lib/afs/util.a \
-	${DESTDIR}/lib/afs/libsys.a ${DESTDIR}/lib/afs/libdir.a \
-	${DESTDIR}/lib/liblwp.a  ${DESTDIR}/lib/afs/libacl.a ${XLIBS}
+LIBS=${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/vlib.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libdir.a \
+	${TOP_LIBDIR}/liblwp.a  ${TOP_LIBDIR}/libacl.a ${XLIBS}
 
-NAMEI_LIBS = ../vlib.a ${SRCDIR}/lib/afs/util.a ${DESTDIR}/lib/liblwp.a
+NAMEI_LIBS=../vlib.a ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/liblwp.a
 
 CFLAGS = -D${SYS_NAME} ${OPTMZ} ${INCDIRS} ${XCFLAGS} -g
 
@@ -34,17 +48,14 @@ PUBLICHEADERS=../nfs.h ../vnode.h ../viceinode.h ../volume.h ../vldb.h \
 
 OBJECTS=listVicepx.o utilities.o  updateDirInode.o
 
-all system: install
+all: listVicepx updateDirInode testpart
 
 kinstall:
 	@echo No kernel source here.
 
-install:  listVicepx updateDirInode testpart
+install:   
 
-${OBJECTS}:	${PUBLICHEADERS} ${SRCDIR}/include/lwp.h \
-		${SRCDIR}/include/lock.h  ${SRCDIR}/include/afs/afsint.h \
-		../filesignal.h ../vutils.h ../vldb.h ../salvage.h \
-		../volinodes.h ../qiin.h 
+${OBJECTS}: ${PUBLICHEADERS} ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/afs/afsint.h ../filesignal.h ../vutils.h ../vldb.h ../salvage.h ../volinodes.h ../qiin.h
 
 listVicepx.o:	listVicepx.c  utilities.c
 		${CC} ${CFLAGS} -c listVicepx.c
@@ -52,8 +63,8 @@ listVicepx.o:	listVicepx.c  utilities.c
 
 testpart:	testpart.c ../vlib.a
 		${CC} ${CFLAGS} ${LDFLAGS} -o $@ testpart.c \
-		${DESTDIR}/lib/afs/vlib.a ${DESTDIR}/lib/liblwp.a \
-		${DESTDIR}/lib/afs/util.a ${XLIBS}
+		${TOP_LIBDIR}/vlib.a ${TOP_LIBDIR}/liblwp.a \
+		${TOP_LIBDIR}/util.a ${XLIBS}
 		
 
 listVicepx:	listVicepx.o utilities.o 
@@ -79,8 +90,10 @@ nilist: nilist.o nsubr.o
 	${CC} ${CFLAGS} -o nilist nilist.o nsubr.o ${NAMEI_LIBS}
 
 nino: nino.o
-	${CC} ${CFLAGS} -o nino nino.o ${DESTDIR}/lib/afs/util.a
+	${CC} ${CFLAGS} -o nino nino.o ${TOP_LIBDIR}/util.a
 
 clean:
 	$(RM) -f *.o *.a 
 	$(RM) -f ${SCMPROGS} ${STAGEPROGS} core listVicepx updateDirInode
+dest:   
+

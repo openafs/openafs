@@ -7,9 +7,22 @@
 
 # MakefileProto for Solaris systems
 #
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+afskerneldir=@afskerneldir@
 SYS_NAME=@AFS_SYSNAME@
 
 include config/Makefile.${SYS_NAME}
@@ -57,10 +70,12 @@ KOBJ = MODLOAD32 MODLOAD64
 <all -sun4x_57 -sun4x_58>
 COMPDIRS = single_compdir
 INSTDIRS = single_instdir
+DESTDIRS = single_destdir
 
 <sun4x_57 sun4x_58>
 COMPDIRS = solaris_compdirs
 INSTDIRS = solaris_instdirs
+DESTDIRS = solaris_destdirs
 
 <all>
 include Makefile.common
@@ -90,7 +105,7 @@ setup:
 ## the 64 bit libafs in MODLOAD32 and MODLOAD64 directories respectively
 
 <sun4x_57 sun4x_58>
-${COMPDIRS} ${INSTDIRS}:
+${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	for t in ${KOBJ} ; do \
 		echo Building directory: $$t ; \
 		case $$t in \
@@ -110,6 +125,7 @@ ${COMPDIRS} ${INSTDIRS}:
 
 solaris_compdirs_libafs: libafs
 solaris_instdirs_libafs: install_libafs
+solaris_destdirs_libafs: dest_libafs
 
 <all>
 
@@ -118,16 +134,25 @@ LIBAFS = libafs.o
 LIBAFSNONFS = libafs.nonfs.o
 
 <all -sun4x_57 -sun4x_58>
-DEST_LIBAFS = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFS}
-DEST_LIBAFSNONFS = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFSNONFS}
+INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
+INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
+
+DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS}
+DEST_LIBAFSNONFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFSNONFS}
 
 # Without this line, gmake tries to build libafs.o
 .PHONY: libafs
 
-# libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
 libafs:	$(LIBAFSNONFS)
-install_libafs:	$(DEST_LIBAFSNONFS)
+install_libafs:	$(INST_LIBAFSNONFS)
+dest_libafs:	$(DEST_LIBAFSNONFS)
 
+
+$(INST_LIBAFS): $(LIBAFS)
+	${INSTALL} -f $? $@
+
+$(INST_LIBAFSNONFS): $(LIBAFSNONFS)
+	${INSTALL} -f $? $@
 
 $(DEST_LIBAFS): $(LIBAFS)
 	${INSTALL} -f $? $@
@@ -145,11 +170,14 @@ ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(LD) -r -o $@  $(AFSAOBJS) ${AFSNONFSOBJS}
 
 <sun4x_57 sun4x_58>
-MODLOADDIR = ${DESTDIR}/root.client/usr/vice/etc/modload
 
 libafs: ${LIBAFSNONFS}
+
 install_libafs: ${LIBAFSNONFS}
-	${INSTALL} -f ${LIBAFSNONFS} ${MODLOADDIR}/libafs${BITS}.nonfs.o
+	${INSTALL} -f ${LIBAFSNONFS} ${DESTDIR}${afskerneldir}/libafs${BITS}.nonfs.o
+
+dest_libafs: ${LIBAFSNONFS}
+	${INSTALL} -f ${LIBAFSNONFS} ${DEST}/root.client/usr/vice/etc/libafs${BITS}.nonfs.o
 
 <all>
 

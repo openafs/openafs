@@ -5,8 +5,22 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -18,12 +32,12 @@ include ../config/Makefile.${SYS_NAME}
 # subtle bugs that may have been introduced in process.s, be warned!
 OPTIMIZE=${LWP_OPTMZ}
 
-CFLAGS=${OPTIMIZE} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
+CFLAGS=${OPTIMIZE} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
 
 LIBOBJS=lwp.o process.o lock.o iomgr.o timer.o fasttime.o preempt.o \
 	waitkey.o threadname.o AFS_component_version_number.o
 
-all: install
+all: ${TOP_LIBDIR}/liblwp.a ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/preempt.h ${TOP_INCDIR}/timer.h
 
 #
 # Build rules
@@ -34,27 +48,27 @@ liblwp.a: ${LIBOBJS}
 	$(RANLIB) $@
 
 process.s:
-	# This is required so sgi_64+ does not try to build this file.
 	echo Nothing to be done for process.s
+	# This is required so sgi_64+ does not try to build this file.
 
 process.o	: process.s process.c
 	@case "$(SYS_NAME)" in \
 	pmax_he1) \
-		$(CC) -c -I${SRCDIR}/include process.s;; \
+		$(CC) -c -I${TOP_INCDIR} process.s;; \
 	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5? | sunx86_54) \
-		/usr/ccs/lib/cpp -P -I${SRCDIR}/include process.s process.ss; \
+		/usr/ccs/lib/cpp -P -I${TOP_INCDIR} process.s process.ss; \
 		${AS} process.ss -o process.o; \
 			$(RM) process.ss ;; \
 	sgi_5* ) \
-		$(CC) -c -I${SRCDIR}/include -KPIC -G0  process.s;; \
+		$(CC) -c -I${TOP_INCDIR} -KPIC -G0  process.s;; \
 	sgi_61 | sgi_62 | sgi_63 ) \
-		$(CC) -c ${XCFLAGS} -I${SRCDIR}/include -KPIC -G0  process.s;; \
+		$(CC) -c ${XCFLAGS} -I${TOP_INCDIR} -KPIC -G0  process.s;; \
 	s390*) \
-		/lib/cpp -P -I${SRCDIR}/include process.s >process.ss; \
+		/lib/cpp -P -I${TOP_INCDIR} process.s >process.ss; \
 		${AS} -ahlns process.ss -o process.o >process.lst; \
 		$(RM) process.ss ;; \
 	ppc_darwin* ) \
-		$(CC) -c ${XCFLAGS} -I${SRCDIR}/include process.s;; \
+		$(CC) -c ${XCFLAGS} -I${TOP_INCDIR} process.s;; \
 	i386_fbsd* ) \
 		/usr/bin/cpp -P process.fbsd.s > process.ss; \
 		${AS} -o process.o process.ss; \
@@ -62,16 +76,16 @@ process.o	: process.s process.c
 	hp* | *_linux* | sgi_64 | sgi_65 ) \
 		${CC} ${CFLAGS} -c process.c;; \
 	ncrx86_*) \
-		/usr/ccs/lib/cpp -P -I${SRCDIR}/include process.s process.ss; \
+		/usr/ccs/lib/cpp -P -I${TOP_INCDIR} process.s process.ss; \
 		${AS} -o process.o process.ss; \
 		$(RM) process.ss ;; \
 	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux?? ) \
-		${AS} -v  -P -DOSF -I${SRCDIR}/include -DASSEMBLER process.s; \
+		${AS} -v  -P -DOSF -I${TOP_INCDIR} -DASSEMBLER process.s; \
 		${AS} -v process.i -o process.o;; \
 	hp_ux110 ) \
 		${CC} ${CFLAGS} -c process.c;; \
 	*) \
-		/lib/cpp -P -I${SRCDIR}/include process.s process.ss; \
+		/lib/cpp -P -I${TOP_INCDIR} process.s process.ss; \
 		${AS} process.ss -o process.o; \
 		$(RM) process.ss ;; \
 	esac
@@ -83,7 +97,7 @@ preempt.o	: preempt.c lwp.h preempt.h
 lwp.o		: lwp.c lwp.h
 	case "$(SYS_NAME)" in \
 		rs_aix*) \
-			$(CC) -I${TOP_SRCDIR}/config -I${SRCDIR}/include -c lwp.c;; \
+			$(CC) -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -c lwp.c;; \
 		*)  \
 			$(CC) ${CFLAGS} -c lwp.c;; \
 		esac
@@ -97,8 +111,8 @@ exc_handling.o	: exc_handling.c
 #
 # tests
 #
-rw: rw.o liblwp.a $(DESTDIR)/lib/afs/util.a
-	${CC} ${CFLAGS} -o rw rw.o liblwp.a $(DESTDIR)/lib/afs/util.a
+rw: rw.o liblwp.a $(TOP_LIBDIR)/util.a
+	${CC} ${CFLAGS} -o rw rw.o liblwp.a $(TOP_LIBDIR)/util.a
 
 rw.o: rw.c
 	${CC} ${CFLAGS} -c rw.c
@@ -107,25 +121,21 @@ rw.o: rw.c
 #
 # Install targets
 #
-install: ${DESTDIR}/lib/liblwp.a \
-	${DESTDIR}/include/lock.h \
-	${DESTDIR}/include/lwp.h \
-	${DESTDIR}/include/preempt.h \
-	${DESTDIR}/include/timer.h
+install: ${DESTDIR}${libdir}/liblwp.a ${DESTDIR}${includedir}/lock.h ${DESTDIR}${includedir}/lwp.h ${DESTDIR}${includedir}/preempt.h ${DESTDIR}${includedir}/timer.h
 
-${DESTDIR}/lib/liblwp.a: liblwp.a
+${DEST}/lib/liblwp.a: liblwp.a
 	${INSTALL} $? $@
 
-${DESTDIR}/include/lock.h: lock.h
+${DEST}/include/lock.h: lock.h
 	${INSTALL} $? $@
 
-${DESTDIR}/include/lwp.h: lwp.h
+${DEST}/include/lwp.h: lwp.h
 	${INSTALL} $? $@
 
-${DESTDIR}/include/preempt.h: preempt.h
+${DEST}/include/preempt.h: preempt.h
 	${INSTALL} $? $@
 
-${DESTDIR}/include/timer.h: timer.h
+${DEST}/include/timer.h: timer.h
 	${INSTALL} $? $@
 
 #
@@ -135,3 +145,35 @@ clean:
 	$(RM) -f *.o *.a core AFS_component_version_number.c
 
 include ../config/Makefile.version
+${DESTDIR}${libdir}/liblwp.a: liblwp.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/liblwp.a: liblwp.a
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/lock.h: lock.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/lock.h: lock.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/lwp.h: lwp.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/lwp.h: lwp.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/preempt.h: preempt.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/preempt.h: preempt.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/timer.h: timer.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/timer.h: timer.h
+	${INSTALL} $? $@
+
+dest: ${DEST}/lib/liblwp.a ${DEST}/include/lock.h ${DEST}/include/lwp.h ${DEST}/include/preempt.h ${DEST}/include/timer.h
+

@@ -6,10 +6,22 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 SHELL=/bin/sh
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
 TOP_SRCDIR=@TOP_SRCDIR@
-INSTALL=${SRCDIR}/bin/install
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afskerneldir=@afskerneldir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
 
 # Systype-generic items
 SYS_NAME=@AFS_SYSNAME@
@@ -29,6 +41,8 @@ WITH_INSECURE=@WITH_INSECURE@
 
 ENABLE_KERNEL_MODULE=@ENABLE_KERNEL_MODULE@
 
+include src/config/Makefile.${SYS_NAME}
+
 # To compile AFS from scratch in the src tree run "make".
 #   This recursively calls "make install ..." and does not depend on the
 #   existence of any non-standard programs.
@@ -36,25 +50,66 @@ ENABLE_KERNEL_MODULE=@ENABLE_KERNEL_MODULE@
 #   rxgen, compile_et and others already exist and runs it with
 #   "-argument kinstall".
 
-COMPILE_PART1=cd src; cd
-COMPILE_PART2=; $(MAKE) install
-COMPILE_PART3=; $(MAKE) test
-COMPILE_CLEAN=; $(MAKE) clean
+COMPILE_PART1  = cd src; cd
+COMPILE_PART2A = ; $(MAKE)
+COMPILE_PART2B = all
+COMPILE_PART2  = ${COMPILE_PART2A} ${COMPILE_PART2B}
+COMPILE_CLEAN  = ${COMPILE_PART2A} clean
 
-all: force ${SYS_NAME}/dest
-	$(MAKE) install
+all: force ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}
+	$(MAKE) build
 
-all_nolibafs: ${SYS_NAME}/dest
-	$(MAKE) install TARGET=finale_nolibafs
+all_nolibafs: force ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}
+	$(MAKE) build TARGET=finale_nolibafs
 
-only_libafs: ${SYS_NAME}/dest
-	$(MAKE) install TARGET=libafs
+only_libafs: force ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}
+	$(MAKE) build TARGET=libafs
 
-only_libafs_tree: ${SYS_NAME}/dest
-	$(MAKE) install TARGET=libafs_tree
+only_libafs_tree: force ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}
+	$(MAKE) build TARGET=libafs_tree
 
-${SYS_NAME}/dest:
-	mkdir -p ${SYS_NAME}/dest
+install: all install_dirs
+	$(MAKE) build COMPILE_PART2B=install
+
+install_nolibafs: all install_dirs
+	$(MAKE) build TARGET=finale_nolibafs COMPILE_PART2B=install
+
+install_only_libafs: all install_dirs
+	$(MAKE) build TARGET=libafs COMPILE_PART2B=install
+
+dest: all dest_dirs
+	$(MAKE) build COMPILE_PART2B=dest
+
+dest_nolibafs: all dest_dirs
+	$(MAKE) build TARGET=finale_nolibafs COMPILE_PART2B=dest
+
+dest_only_libafs: all dest_dirs
+	$(MAKE) build TARGET=libafs COMPILE_PART2B=dest
+
+${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}:
+	mkdir -p $@
+
+install_dirs: force
+	mkdir -p ${DESTDIR}${bindir}
+	mkdir -p ${DESTDIR}${sbindir}
+	mkdir -p ${DESTDIR}${libexecdir}/openafs
+	mkdir -p ${DESTDIR}${libdir}/afs
+	mkdir -p ${DESTDIR}${includedir}/afs
+	mkdir -p ${DESTDIR}${includedir}/rx
+	mkdir -p ${DESTDIR}${afskerneldir}
+	mkdir -p ${DESTDIR}${afssrvbindir}
+	mkdir -p ${DESTDIR}${afssrvsbindir}
+	mkdir -p ${DESTDIR}${afssrvlibexecdir}
+
+dest_dirs: force
+	mkdir -p ${DEST}/bin
+	mkdir -p ${DEST}/etc
+	mkdir -p ${DEST}/lib/afs
+	mkdir -p ${DEST}/include/afs
+	mkdir -p ${DEST}/include/rx
+	mkdir -p ${DEST}/root.client/usr/vice/etc/C
+	mkdir -p ${DEST}/root.server/etc
+	mkdir -p ${DEST}/root.server/usr/afs/bin
 
 project: cmd comerr 
 
@@ -77,10 +132,11 @@ comerr: util
 	${COMPILE_PART1} comerr ${COMPILE_PART2}
 
 cmd: comerr
-	${COMPILE_PART1} cmd ${COMPILE_PART2}
 	@case ${SYS_NAME} in \
 	sgi_6* | sun4x_57 | sun4x_58 | hp_ux11* | sparc64_linux* | alpha_linux* ) \
-		${COMPILE_PART1} cmd ${COMPILE_PART2} install64 ;; \
+		${COMPILE_PART1} cmd ${COMPILE_PART2}64 ;; \
+	*) \
+		${COMPILE_PART1} cmd ${COMPILE_PART2} ;; \
 	esac
 
 lwp: project util
@@ -103,8 +159,9 @@ rxstat: rx
 rxincls: rxobj
 	${COMPILE_PART1} rx ${COMPILE_PART2}
 
-rxtests: rxobj
-	${COMPILE_PART1} rx ${COMPILE_PART3}
+rxtests: rxdebug
+rxdebug: rx
+	${COMPILE_PART1} rxdebug ${COMPILE_PART2}
 
 fsint: project kfsint
 
@@ -141,8 +198,7 @@ auth: project comerr des lwp rx sys rxkad audit
 ubik: project auth 
 	${COMPILE_PART1} ubik ${COMPILE_PART2}
 
-ubiktests: ubik sys
-	${COMPILE_PART1} ubik ${COMPILE_PART3}
+ubiktests: ubik
 
 ptserver: project ubik cmd comerr auth audit
 	${COMPILE_PART1} ptserver ${COMPILE_PART2}
@@ -205,12 +261,12 @@ null: project
 gtx: project null auth # kauth rxkad ?
 	case ${SYS_NAME} in \
 	  rs_aix* | sun4x_5? | sgi_6? | *linux* | ppc_darwin* | *fbsd*) \
-		$(RM) -f ${DESTDIR}/lib/afs/libtermlib.a; \
-		ln -s libnull.a ${DESTDIR}/lib/afs/libtermlib.a; \
+		$(RM) -f ${TOP_LIBDIR}/libtermlib.a; \
+		ln -s libnull.a ${TOP_LIBDIR}/libtermlib.a; \
 		${COMPILE_PART1} gtx ${COMPILE_PART2};; \
 	  *) \
-		$(RM) -f ${DESTDIR}/lib/afs/libtermlib.a; \
-		ln -s /usr/lib/libtermlib.a ${DESTDIR}/lib/afs/libtermlib.a; \
+		$(RM) -f ${TOP_LIBDIR}/libtermlib.a; \
+		ln -s /usr/lib/libtermlib.a ${TOP_LIBDIR}/libtermlib.a; \
 		${COMPILE_PART1} gtx ${COMPILE_PART2};; \
 	esac
 
@@ -406,13 +462,13 @@ libadmin: libafsauthent bozo
 
 finale: project cmd comerr afsd allrcmds butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
-	venus update xstat afsmonitor dauth tests libafsrpc \
+	venus update xstat afsmonitor dauth rxdebug libafsrpc \
 	libafsauthent libadmin
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs: project cmd comerr afsd allrcmds butc tbutc libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
-	venus update xstat afsmonitor dauth tests libafsrpc \
+	venus update xstat afsmonitor dauth rxdebug libafsrpc \
 	libafsauthent libadmin
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
@@ -427,8 +483,8 @@ libuafs_setup: config export
 force:
 
 TARGET=finale
-install: force
-	$(MAKE) $(TARGET)
+build: force
+	$(MAKE) $(TARGET) DEST=$(DEST) COMPILE_PART2B=$(COMPILE_PART2B) DESTDIR=$(DESTDIR)
 
 kupdate: updatekdir libafs_setup libuafs_setup
 
@@ -503,6 +559,7 @@ clean2:
 	-${COMPILE_PART1} bucoord ${COMPILE_CLEAN}
 	-${COMPILE_PART1} xstat ${COMPILE_CLEAN}
 	-${COMPILE_PART1} afsmonitor ${COMPILE_CLEAN}
+	-${COMPILE_PART1} rxdebug ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafsrpc ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafsauthent ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin ${COMPILE_CLEAN}
@@ -528,6 +585,7 @@ clean2:
 	-${COMPILE_PART1} libuafs ${COMPILE_CLEAN}
 	-(cd src/libafs; /bin/rm -rf afs afsint config rx)
 	-(cd src/libuafs; /bin/rm -rf afs afsint config rx des)
+	-/bin/rm -rf ${TOP_INCDIR} ${TOP_LIBDIR}
 	-/bin/rm -rf libafs_tree ${SYS_NAME}
 
  
@@ -617,6 +675,7 @@ distclean: clean
 	src/rx/multi.example/Makefile \
 	src/rx/simple.example/Makefile \
 	src/rx/test/Makefile \
+	src/rxdebug/Makefile \
 	src/rxgen/Makefile \
 	src/rxkad/Makefile \
 	src/rxkad/test/Makefile \

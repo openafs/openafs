@@ -5,8 +5,21 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -14,20 +27,20 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-LIBS = 	${SRCDIR}/lib/afs/libauth.a \
-	${SRCDIR}/lib/librxkad.a \
-	${SRCDIR}/lib/libdes.a \
-	${SRCDIR}/lib/librx.a \
-	${SRCDIR}/lib/liblwp.a \
-	${SRCDIR}/lib/afs/libcom_err.a \
-	${SRCDIR}/lib/afs/util.a \
-	${SRCDIR}/lib/afs/libsys.a 
+LIBS=${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libsys.a
 
-CFLAGS= -I${SRCDIR}/include -I${TOP_SRCDIR}/config ${XCFLAGS}
+CFLAGS=-I${TOP_INCDIR} -I${TOP_SRCDIR}/config ${XCFLAGS}
 
-RXGEN=${SRCDIR}/bin/rxgen
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 
-all: install
+all: upserver upclient
 
 #
 # Build targets
@@ -48,13 +61,12 @@ update.cs.c update.ss.c update.er.c update.h: update.xg
 #
 # Installation targets
 #
-install : ${DESTDIR}/root.server/usr/afs/bin/upserver \
-	${DESTDIR}/root.server/usr/afs/bin/upclient
+install : ${DESTDIR}${afssrvlibexecdir}/upserver ${DESTDIR}${afssrvlibexecdir}/upclient
 
-${DESTDIR}/root.server/usr/afs/bin/upserver: upserver
+${DEST}/root.server/usr/afs/bin/upserver: upserver
 	${INSTALL} $? $@
 
-${DESTDIR}/root.server/usr/afs/bin/upclient: upclient
+${DEST}/root.server/usr/afs/bin/upclient: upclient
 	${INSTALL} $? $@
 
 #
@@ -65,4 +77,12 @@ clean:
 	AFS_component_version_number.c
 
 include ../config/Makefile.version
+
+${DESTDIR}${afssrvlibexecdir}/upserver: upserver
+	${INSTALL} $? $@
+
+${DESTDIR}${afssrvlibexecdir}/upclient: upclient
+	${INSTALL} $? $@
+
+dest: ${DEST}/root.server/usr/afs/bin/upserver ${DEST}/root.server/usr/afs/bin/upclient
 

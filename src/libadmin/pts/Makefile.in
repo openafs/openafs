@@ -5,8 +5,22 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -14,7 +28,7 @@ SHELL = /bin/sh
 include ../../config/Makefile.${SYS_NAME}
 
 CC = ${MT_CC}
-CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${MT_CFLAGS}
+CFLAGS=${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${MT_CFLAGS}
 CCRULE = ${CC} ${CFLAGS} -c $?
 
 PTSERVER = ../../ptserver/
@@ -28,13 +42,29 @@ PTSERVEROBJS = \
 
 LIBOBJS = ${ADMINOBJS} ${PTSERVEROBJS}
 
-LIBPTSADMIN = ${DESTDIR}/lib/afs/libptsadmin.a
+all: ${TOP_INCDIR}/afs/afs_ptsAdmin.h ${TOP_LIBDIR}/libptsadmin.a
 
-system install: ${LIBPTSADMIN}
+install: ${DESTDIR}${includedir}/afs/afs_ptsAdmin.h ${DESTDIR}${libdir}/afs/libptsadmin.a
 
-${LIBPTSADMIN}: libptsadmin.a
-	${INSTALL} afs_ptsAdmin.h ${DESTDIR}/include/afs
-	${INSTALL} libptsadmin.a ${LIBPTSADMIN}
+dest: ${DEST}/include/afs/afs_ptsAdmin.h ${DEST}/lib/afs/libptsadmin.a
+
+${TOP_INCDIR}/afs/afs_ptsAdmin.h: afs_ptsAdmin.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/afs_ptsAdmin.h: afs_ptsAdmin.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/afs_ptsAdmin.h: afs_ptsAdmin.h
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libptsadmin.a: libptsadmin.a
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/afs/libptsadmin.a: libptsadmin.a
+	${INSTALL} $? $@
+
+${DEST}/lib/afs/libptsadmin.a: libptsadmin.a
+	${INSTALL} $? $@
 
 libptsadmin.a: ${LIBOBJS}
 	-$(RM) -f $@

@@ -7,8 +7,22 @@
 
 # */
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -19,27 +33,27 @@ DEBUG =
 UNRESOLVED =
 include ../config/Makefile.${SYS_NAME}
 
-LIBS1 = ${DESTDIR}/lib/libubik.a        ${DESTDIR}/lib/afs/libprot.a 
-LIBS2 = ${DESTDIR}/lib/librxkad.a       ${DESTDIR}/lib/afs/libaudit.a \
-	${DESTDIR}/lib/librx.a          ${DESTDIR}/lib/liblwp.a \
-	${DESTDIR}/lib/libdes.a         ${DESTDIR}/lib/afs/libcmd.a \
-	${DESTDIR}/lib/afs/libcom_err.a ${DESTDIR}/lib/afs/util.a \
-	${DESTDIR}/lib/afs/libsys.a
+LIBS1=${TOP_LIBDIR}/libubik.a        ${TOP_LIBDIR}/libprot.a
+LIBS2=${TOP_LIBDIR}/librxkad.a       ${TOP_LIBDIR}/libaudit.a \
+	${TOP_LIBDIR}/librx.a          ${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libdes.a         ${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libsys.a
 
-LIBS  = ${DESTDIR}/lib/afs/libkauth.a ${LIBS1} ${DESTDIR}/lib/afs/libauth.a ${LIBS2}
-KLIBS = ${DESTDIR}/lib/afs/libkauth.krb.a ${LIBS1} ${DESTDIR}/lib/afs/libauth.krb.a ${LIBS2}
+LIBS=${TOP_LIBDIR}/libkauth.a ${LIBS1} ${TOP_LIBDIR}/libauth.a ${LIBS2}
+KLIBS=${TOP_LIBDIR}/libkauth.krb.a ${LIBS1} ${TOP_LIBDIR}/libauth.krb.a ${LIBS2}
 
-all: test-reauth ${DESTDIR}/lib/afs/libafssiad.so ${DESTDIR}/lib/afs/libafssiad.krb.so
+all: ${TOP_LIBDIR}/libafssiad.so ${TOP_LIBDIR}/libafssiad.krb.so
 
 clean:
 	$(RM) -f test-reauth libafssiad.so libafssiad.krb.so *.s *.o *.b core *~ *.com *.ld AFS_component_version_number.c
 
-CFLAGS = $(DEBUG) -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
+CFLAGS=$(DEBUG) -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
 
-${DESTDIR}/lib/afs/libafssiad.so: libafssiad.so
+${DEST}/lib/afs/libafssiad.so: libafssiad.so
 	${INSTALL} $? $@
 
-${DESTDIR}/lib/afs/libafssiad.krb.so: libafssiad.krb.so
+${DEST}/lib/afs/libafssiad.krb.so: libafssiad.krb.so
 	${INSTALL} $? $@
 
 siad.o: siad.c
@@ -59,7 +73,19 @@ libafssiad.krb.so: siad_krb.o
 test-reauth: test-reauth.o
 	$(CC) $(CFLAGS) -g -o test-reauth test-reauth.o -lc
 
-install: all
+install: ${DESTDIR}${libdir}/afs/libafssiad.so ${DESTDIR}${libdir}/afs/libafssiad.krb.so
 
+${DESTDIR}${libdir}/afs/libafssiad.so: libafssiad.so
+	${INSTALL} $? $@
 
+${TOP_LIBDIR}/libafssiad.so: libafssiad.so
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/afs/libafssiad.krb.so: libafssiad.krb.so
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libafssiad.krb.so: libafssiad.krb.so
+	${INSTALL} $? $@
+
+dest: ${DEST}/lib/afs/libafssiad.so ${DEST}/lib/afs/libafssiad.krb.so
 

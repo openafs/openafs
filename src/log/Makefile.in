@@ -5,42 +5,56 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
 include ../config/Makefile.${SYS_NAME}
 
-INCDIRS= -I${TOP_SRCDIR}/config -I${DESTDIR}/include -I${DESTDIR}/include/afs 
+INCDIRS=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I${TOP_INCDIR}/afs
 
 CFLAGS = ${OPTMZ} ${INCDIRS} ${XCFLAGS} ${DBUG}
 
 PROGRAMS=	unlog tokens tokens.krb kseal
 
-INCLS=${SRCDIR}/include/afs/auth.h ${SRCDIR}/include/rx/rx.h \
-${SRCDIR}/include/rx/xdr.h ${SRCDIR}/include/des.h ${SRCDIR}/include/rx/rxkad.h \
-${SRCDIR}/include/afs/cellconfig.h
+INCLS=${TOP_INCDIR}/afs/auth.h ${TOP_INCDIR}/rx/rx.h \
+${TOP_INCDIR}/rx/xdr.h ${TOP_INCDIR}/des.h ${TOP_INCDIR}/rx/rxkad.h \
+${TOP_INCDIR}/afs/cellconfig.h
 
-LIBRARIES=	${SRCDIR}/lib/afs/libauth.a \
-		${SRCDIR}/lib/librxkad.a \
-		${SRCDIR}/lib/libdes.a \
-		${SRCDIR}/lib/afs/libsys.a ${SRCDIR}/lib/librx.a \
-		${SRCDIR}/lib/afs/libsys.a \
-	        ${SRCDIR}/lib/liblwp.a ${SRCDIR}/lib/afs/libcmd.a \
-	        ${SRCDIR}/lib/afs/util.a
-KLIBRARIES=	${SRCDIR}/lib/afs/libauth.krb.a \
-		${SRCDIR}/lib/librxkad.a \
-		${SRCDIR}/lib/libdes.a \
-		${SRCDIR}/lib/afs/libsys.a ${SRCDIR}/lib/librx.a \
-		${SRCDIR}/lib/afs/libsys.a \
-	        ${SRCDIR}/lib/liblwp.a ${SRCDIR}/lib/afs/libcmd.a \
-	        ${SRCDIR}/lib/afs/util.a
+LIBRARIES=${TOP_LIBDIR}/libauth.a \
+		${TOP_LIBDIR}/librxkad.a \
+		${TOP_LIBDIR}/libdes.a \
+		${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a \
+		${TOP_LIBDIR}/libsys.a \
+	        ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
+	        ${TOP_LIBDIR}/util.a
+KLIBRARIES=${TOP_LIBDIR}/libauth.krb.a \
+		${TOP_LIBDIR}/librxkad.a \
+		${TOP_LIBDIR}/libdes.a \
+		${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librx.a \
+		${TOP_LIBDIR}/libsys.a \
+	        ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
+	        ${TOP_LIBDIR}/util.a
 
 #
 # Main targets
 #
-all: install
+all: unlog tokens tokens.krb kseal
 
 #
 # Build targets
@@ -65,34 +79,35 @@ tokens.krb: tokens.o ${KLIBRARIES}
 
 kseal.o: kseal.c ${INCLS} AFS_component_version_number.c
 unlog.o: unlog.c AFS_component_version_number.c
-tokens.o: tokens.c ${SRCDIR}/include/rx/xdr.h AFS_component_version_number.c
+tokens.o: tokens.c ${TOP_INCDIR}/rx/xdr.h AFS_component_version_number.c
 
 #
 # Install targets
 #
-install: ${DESTDIR}/bin/unlog \
-	${DESTDIR}/bin/tokens \
-	${DESTDIR}/bin/tokens.krb \
-	${DESTDIR}/root.server/usr/afs/bin/tokens \
-	${DESTDIR}/root.server/usr/afs/bin/tokens.krb \
-	${DESTDIR}/etc/kseal
+install: \
+	${DESTDIR}${bindir}/unlog \
+	${DESTDIR}${bindir}/tokens \
+	${DESTDIR}${bindir}/tokens.krb \
+	${DESTDIR}${afssrvbindir}/tokens \
+	${DESTDIR}${afssrvbindir}/tokens.krb \
+	${DESTDIR}${sbindir}/kseal
 
-${DESTDIR}/bin/unlog: unlog
+${DEST}/bin/unlog: unlog
 	${INSTALL} $? $@
 
-${DESTDIR}/bin/tokens: tokens
+${DEST}/bin/tokens: tokens
 	${INSTALL} $? $@
 
-${DESTDIR}/bin/tokens.krb: tokens.krb
+${DEST}/bin/tokens.krb: tokens.krb
 	${INSTALL} $? $@
 
-${DESTDIR}/root.server/usr/afs/bin/tokens: tokens
+${DEST}/root.server/usr/afs/bin/tokens: tokens
 	${INSTALL} $? $@
 
-${DESTDIR}/root.server/usr/afs/bin/tokens.krb: tokens.krb
+${DEST}/root.server/usr/afs/bin/tokens.krb: tokens.krb
 	${INSTALL} $? $@
 
-${DESTDIR}/etc/kseal: kseal
+${DEST}/etc/kseal: kseal
 	${INSTALL} $? $@
 
 #
@@ -105,4 +120,30 @@ test:
 	cd test; $(MAKE)
 
 include ../config/Makefile.version
+
+${DESTDIR}${bindir}/unlog: unlog
+	${INSTALL} $? $@
+
+${DESTDIR}${bindir}/tokens: tokens
+	${INSTALL} $? $@
+
+${DESTDIR}${bindir}/tokens.krb: tokens.krb
+	${INSTALL} $? $@
+
+${DESTDIR}${afssrvbindir}/tokens: tokens
+	${INSTALL} $? $@
+
+${DESTDIR}${afssrvbindir}/tokens.krb: tokens.krb
+	${INSTALL} $? $@
+
+${DESTDIR}${sbindir}/kseal: kseal
+	${INSTALL} $? $@
+
+dest: \
+	${DEST}/bin/unlog \
+	${DEST}/bin/tokens \
+	${DEST}/bin/tokens.krb \
+	${DEST}/root.server/usr/afs/bin/tokens \
+	${DEST}/root.server/usr/afs/bin/tokens.krb \
+	${DEST}/etc/kseal
 

@@ -7,8 +7,21 @@
 
 # Makefile for gtx, a display-independent, object-oriented window toolkit.
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -16,9 +29,9 @@ SHELL=/bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-COMPILE_ET=${SRCDIR}/bin/compile_et
-CFLAGS= ${DBUG} -I. -I${TOP_SRCDIR}/config \
-	-I${SRCDIR}/include -I${SRCDIR}/include/afs ${XCFLAGS}
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+CFLAGS=${DBUG} -I. -I${TOP_SRCDIR}/config \
+	-I${TOP_INCDIR} -I${TOP_INCDIR}/afs ${XCFLAGS}
 LDFLAGS = ${XLDFLAGS}
 #RPCINCLS=${SRCDIR}/include/lwp.h ${SRCDIR}/include/rx/rx.h bosint.h
 RPCINCLS=
@@ -35,23 +48,23 @@ INCLS=gtxobjects.h \
 	gtxframe.h \
 	gtxobjdict.h \
 	${RPCINCLS} \
-	${SRCDIR}/include/afs/keys.h \
-	${SRCDIR}/include/afs/cellconfig.h \
-	${SRCDIR}/include/afs/cmd.h
+	${TOP_INCDIR}/afs/keys.h \
+	${TOP_INCDIR}/afs/cellconfig.h \
+	${TOP_INCDIR}/afs/cmd.h
 
-LIBS= \
-	${SRCDIR}/lib/librx.a \
-	${SRCDIR}/lib/liblwp.a \
-	${SRCDIR}/lib/afs/libsys.a \
-	${SRCDIR}/lib/afs/libcmd.a \
-	${SRCDIR}/lib/afs/libkauth.a \
-	${SRCDIR}/lib/afs/libauth.a \
-	${SRCDIR}/lib/librxkad.a \
-	${SRCDIR}/lib/libdes.a \
-	${SRCDIR}/lib/afs/libcom_err.a \
-	${SRCDIR}/lib/afs/util.a
+LIBS=\
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libkauth.a \
+	${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/util.a
 
-EXTRA_LIBS= ${TXLIBS} ${SRCDIR}/lib/afs/libtermlib.a  ${XLIBS} 
+EXTRA_LIBS=${TXLIBS} ${TOP_LIBDIR}/libtermlib.a  ${XLIBS}
 
 KEYMAP_SRCS=keymap.c input.c frame.c
 
@@ -90,6 +103,8 @@ include ../config/Makefile.version
 noversion: install
 
 all: libgtx.a gtxtest
+	${INSTALL} gtx*.h ${TOP_INCDIR}/afs
+	${INSTALL} libgtx.a ${TOP_LIBDIR}
 
 tests: object_test screen_test curses_test cb_test gtxtest
 
@@ -156,16 +171,19 @@ object_test: object_test.o ${WINDOW_OBJS} ${DICT_OBJS} ${OBJECT_OBJS} ${CB_OBJS}
 #
 # Misc others
 #
-system: install
-
 libgtx.a: ${LIBOBJS} AFS_component_version_number.o
 	-$(RM) -f $@
 	ar rv $@ ${LIBOBJS} AFS_component_version_number.o
 	${RANLIB} $@
 
-install: all
-	${INSTALL} gtx*.h ${DESTDIR}/include/afs
-	${INSTALL} libgtx.a ${DESTDIR}/lib/afs
+install: libgtx.a
+	${INSTALL} gtx*.h ${DESTDIR}${includedir}/afs
+	${INSTALL} libgtx.a ${DESTDIR}${libdir}/afs
 
 clean:
 	$(RM) -f  *.o *.a *.ln object_test screen_test curses_test err.c core cb_test gtxtest AFS_component_version_number.c
+
+dest: libgtx.a
+	${INSTALL} gtx*.h ${DEST}/include/afs
+	${INSTALL} libgtx.a ${DEST}/lib/afs
+

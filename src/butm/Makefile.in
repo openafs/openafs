@@ -5,33 +5,47 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
 SHELL = /bin/sh
 
-CFLAGS = -g -w -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
+CFLAGS=-g -w -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
 LDFLAGS = -g ${XLDFLAGS}
-INCLS= ${SRCDIR}/include/afs/com_err.h ${SRCDIR}/include/afs/butm.h
+INCLS=${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/butm.h
 
-LIBS=${SRCDIR}/lib/afs/libbubasics.a \
-	${SRCDIR}/lib/liblwp.a \
-	${SRCDIR}/lib/afs/libusd.a \
-	${SRCDIR}/lib/afs/libcom_err.a \
-	${SRCDIR}/lib/afs/libbutm.a \
-	${SRCDIR}/lib/afs/libcom_err.a \
-	${SRCDIR}/lib/afs/util.a \
+LIBS=${TOP_LIBDIR}/libbubasics.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libusd.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/libbutm.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/util.a \
 	${XLIBS}
 
 include ../config/Makefile.${SYS_NAME}
 
-all: install
+all: ${TOP_LIBDIR}/libbutm.a
 
-install: ${DESTDIR}/lib/afs/libbutm.a
+install: ${DESTDIR}${libdir}/afs/libbutm.a
 
-${DESTDIR}/lib/afs/libbutm.a: libbutm.a
+${DEST}/lib/afs/libbutm.a: libbutm.a
 	${INSTALL} $? $@
 
 libbutm.a: file_tm.o AFS_component_version_number.o
@@ -53,3 +67,11 @@ clean:
 	$(RM) -f *.o *.a core test_ftm AFS_component_version_number.c
 
 include ../config/Makefile.version
+${DESTDIR}${libdir}/afs/libbutm.a: libbutm.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libbutm.a: libbutm.a
+	${INSTALL} $? $@
+
+dest: ${DEST}/lib/afs/libbutm.a
+

@@ -40,7 +40,7 @@ MT_CC=gcc
 MV=mv
 RANLIB=ranlib
 RM=rm
-INSTALL=${DESTDIR}/bin/install
+INSTALL=${TOP_SRCDIR}/pinstall/pinstall
 #
 # Other OS specific requirements
 #

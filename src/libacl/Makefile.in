@@ -5,8 +5,22 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -14,8 +28,8 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-INCDIRS= -I${TOP_SRCDIR}/config -I${DESTDIR}/include -I.. \
-	-I${BACKDIR}/include -I${DESTDIR}/include/afs 
+INCDIRS=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I.. \
+	-I${BACKDIR}/include -I${TOP_INCDIR}/afs
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
 
@@ -25,7 +39,7 @@ LIBOBJS=aclprocs.o netprocs.o
 
 include ../config/Makefile.version
 
-all: libacl.a
+all: kinstall ukinstall ${TOP_LIBDIR}/libacl.a ${TOP_INCDIR}/afs/acl.h ${TOP_INCDIR}/afs/prs_fs.h
 
 libacl.a: $(LIBOBJS)  AFS_component_version_number.o
 	$(RM) -f libacl.a
@@ -47,10 +61,43 @@ kinstall:
 ukinstall webinstall:
 	${INSTALL} prs_fs.h ${UKERNELDIR}/afs/prs_fs.h
 
-install: libacl.a kinstall ukinstall
-	${INSTALL} libacl.a ${DESTDIR}/lib/afs/libacl.a
-	${INSTALL} acl.h ${DESTDIR}/include/afs/acl.h
-	${INSTALL} prs_fs.h ${DESTDIR}/include/afs/prs_fs.h
+install:    ${DESTDIR}${libdir}/afs/libacl.a ${DESTDIR}${includedir}/afs/acl.h ${DESTDIR}${includedir}/afs/prs_fs.h
 
 test:
 	cd test; $(MAKE)
+
+${DEST}/lib/afs/libacl.a: libacl.a
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/afs/libacl.a: libacl.a
+	${INSTALL} $? $@
+
+
+${TOP_LIBDIR}/libacl.a: libacl.a
+	${INSTALL} $? $@
+
+
+${DEST}/include/afs/acl.h: acl.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/acl.h: acl.h
+	${INSTALL} $? $@
+
+
+${TOP_INCDIR}/afs/acl.h: acl.h
+	${INSTALL} $? $@
+
+
+${DEST}/include/afs/prs_fs.h: prs_fs.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/prs_fs.h: prs_fs.h
+	${INSTALL} $? $@
+
+
+${TOP_INCDIR}/afs/prs_fs.h: prs_fs.h
+	${INSTALL} $? $@
+
+
+dest:    ${DEST}/lib/afs/libacl.a ${DEST}/include/afs/acl.h ${DEST}/include/afs/prs_fs.h
+

@@ -1,18 +1,32 @@
-TOP_SRCDIR=@DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
-TOP_SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
 OPTIMIZE=-O
 
-INCDIRS= -I${DESTDIR}/include -I..
-LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L..
+INCDIRS=-I${TOP_INCDIR} -I..
+LDIRS=-L${TOP_LIBDIR} -L${DESTDIR}/lib/afs -L..
 
 CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} -lcom_err ${XCFLAGS}
 
-all: install
+all: test
 
-install: test
+install: 
 
 #
 # Build targets
@@ -39,4 +53,6 @@ clean:
 		et_lex.lex.c \
 		test1.h test1.c test2.h test2.c test \
 		eddep makedep core
+
+dest: 
 

@@ -16,8 +16,22 @@
 #
 # @(#)Makefile	5.3 (Berkeley) 9/20/88
 #
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -29,17 +43,18 @@ LIBC=	/lib/libc.a
 SRCS=	rlogind.c ../rsh/rcmd.c ../rsh/herror.c ../inetd/ta-rauth.c
 OBJS=	rlogind.o ../rsh/rcmd.o ../rsh/herror.o ../inetd/ta-rauth.o
 MAN=
-LIBDIR = ${DESTDIR}/lib/
-AFSLIBS =  ${LIBDIR}/afs/libkauth.a ${LIBDIR}/afs/libprot.a ${LIBDIR}/libubik.a\
-		   ${LIBDIR}/afs/libauth.a ${DESTDIR}/lib/librxkad.a ${LIBDIR}/afs/libsys.a \
-		   ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a \
-	 	   ${LIBDIR}/afs/libsys.a \
-		   ${DESTDIR}/lib/librxkad.a ${DESTDIR}/lib/libdes.a \
-	           ${LIBDIR}/afs/libcmd.a ${LIBDIR}/afs/libcom_err.a ${LIBDIR}/afs/util.a ${LIBDIR}/afs/libaudit.a
+AFSLIBS = ${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libprot.a \
+	  ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/libauth.a \
+	  ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
+	  ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a \
+	  ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/librxkad.a \
+	  ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libcmd.a \
+	  ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a \
+	  ${TOP_LIBDIR}/libaudit.a
 RES = 
 LIBS = ../login/libutil.a ${RES} ${AFSLIBS}
 ALIBS= ${AFSLIBS} 
-CFLAGS= ${OPTMZ} -I${TOP_SRCDIR}/config -I${DESTDIR}/include ${XCFLAGS}
+CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
 
 include ../config/Makefile.version
 
@@ -86,6 +101,20 @@ cleandir: clean
 depend: ${SRCS}
 	mkdep -p ${CFLAGS} ${SRCS}
 
-install: ${MAN} all
-	${INSTALL} -s -m 755 rlogind ${DESTDIR}/etc/rlogind
-	${INSTALL} -s -m 755 rexecd ${DESTDIR}/etc/rexecd
+install: ${DESTDIR}${sbindir}/rlogind ${DESTDIR}${sbindir}/rexecd
+
+${DEST}/etc/rlogind: rlogind
+	${INSTALL} $? $@
+
+${DESTDIR}${sbindir}/rlogind: rlogind
+	${INSTALL} $? $@
+
+${DEST}/etc/rexecd: rexecd
+	${INSTALL} $? $@
+
+${DESTDIR}${sbindir}/rexecd: rexecd
+	${INSTALL} $? $@
+
+
+dest:   ${DEST}/etc/rlogind ${DEST}/etc/rexecd
+

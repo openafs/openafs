@@ -17,24 +17,43 @@
 # @(#)Makefile	5.1 (Berkeley) 10/18/88
 #
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
 
 include ../config/Makefile.${SYS_NAME}
 
-LIBDIR = ${DESTDIR}/lib/
-AFSLIBS = ${LIBDIR}/afs/libkauth.a ${LIBDIR}/afs/libprot.a ${LIBDIR}/libubik.a \
-	  ${LIBDIR}/afs/libauth.a ${DESTDIR}/lib/librxkad.a ${LIBDIR}/afs/libsys.a \
-	  ${DESTDIR}/lib/libdes.a ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a \
-          ${LIBDIR}/afs/libcmd.a ${LIBDIR}/afs/libcom_err.a ${LIBDIR}/afs/util.a
-KAFSLIBS = ${LIBDIR}/afs/libkauth.krb.a ${LIBDIR}/afs/libprot.a ${LIBDIR}/libubik.a \
-	  ${LIBDIR}/afs/libauth.krb.a ${DESTDIR}/lib/librxkad.a ${LIBDIR}/afs/libsys.a \
-	  ${DESTDIR}/lib/libdes.a ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a \
-          ${LIBDIR}/afs/libcmd.a ${LIBDIR}/afs/libcom_err.a ${LIBDIR}/afs/util.a
-INCLUDES = -I${TOP_SRCDIR}/config -I${DESTDIR}/include -I/usr/include -I/usr/include/sys
+AFSLIBS =  ${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libprot.a \
+	   ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/libauth.a \
+	   ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
+	   ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/librx.a \
+	   ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
+	   ${TOP_LIBDIR}/afs/libcom_err.a ${TOP_LIBDIR}/afs/util.a
+
+KAFSLIBS = ${TOP_LIBDIR}/libkauth.krb.a ${TOP_LIBDIR}/libprot.a \
+	   ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/libauth.krb.a \
+	   ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
+	   ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/librx.a \
+	   ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
+	   ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
+
+INCLUDES=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I/usr/include -I/usr/include/sys
 CFLAGS=	-g ${XCFLAGS} ${INCLUDES}
 LIBC=	/lib/libc.a
 SRCS=	login.c 
@@ -44,7 +63,6 @@ LIBS=   ${AFSLIBS}
 KLIBS=   ${KAFSLIBS}
 SLIBS=   ${AFSLIBS} ${LIBC}
 SKLIBS=   ${KAFSLIBS} ${LIBC}
-MAN=
 UTILOBJS = util_login.o util_logout.o util_logwtmp.o
 
 include ../config/Makefile.version
@@ -84,8 +102,21 @@ cleandir: clean
 depend: ${SRCS}
 	mkdep -p ${CFLAGS} ${SRCS}
 
-install: ${MAN} all
-	${INSTALL} -s login ${DESTDIR}/bin/login
-	${INSTALL} -s login.krb ${DESTDIR}/bin/login.krb
+install:  ${DESTDIR}${bindir}/login  ${DESTDIR}${bindir}/login.krb
 
-system: install
+${DEST}/bin/login: login
+	${INSTALL} $? $@
+
+${DESTDIR}${bindir}/login: login
+	${INSTALL} $? $@
+
+
+${DEST}/bin/login.krb: login.krb
+	${INSTALL} $? $@
+
+${DESTDIR}${bindir}/login.krb: login.krb
+	${INSTALL} $? $@
+
+
+dest:   ${DEST}/bin/login ${DEST}/bin/login.krb
+

@@ -5,21 +5,35 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
 OPTIMIZE=-O
 
-INCDIRS= -I${DESTDIR}/include -I.. 
-LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L..
+INCDIRS=-I${TOP_INCDIR} -I..
+LDIRS=-L${TOP_LIBDIR} -L${DESTDIR}/lib/afs -L..
 
 CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS}
 
-all: install
+all: testproc smail-notifier
 
-install: testproc smail-notifier
+install:  
 
 #
 # Build targets
@@ -35,4 +49,6 @@ smail-notifier: smail-notifier.c
 #
 clean:
 	$(RM) -f  *.a *.o testproc smail-notifier core
+
+dest:  
 

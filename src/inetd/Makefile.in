@@ -1,6 +1,18 @@
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -8,16 +20,15 @@ SHELL=/bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-INCLUDES = -I${TOP_SRCDIR}/config -I${DESTDIR}/include
+INCLUDES = -I${TOP_SRCDIR}/config -I${TOP_INCDIR}
 DEFINES = ${INCLUDES}
-LIBDIR = ${DESTDIR}/lib/
-AFSLIBS =  ${LIBDIR}/afs/libkauth.a ${LIBDIR}/libubik.a\
-		   ${LIBDIR}/afs/libauth.a ${LIBDIR}/afs/libsys.a \
-		   ${LIBDIR}/librx.a \
-		   ${LIBDIR}/afs/libsys.a \
-		   ${LIBDIR}/liblwp.a ${DESTDIR}/lib/librxkad.a\
-		   ${DESTDIR}/lib/libdes.a ${LIBDIR}/afs/libcmd.a \
-		   ${LIBDIR}/afs/libcom_err.a ${LIBDIR}/afs/util.a 
+AFSLIBS =  ${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libubik.a\
+		   ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libsys.a \
+		   ${TOP_LIBDIR}/librx.a \
+		   ${TOP_LIBDIR}/libsys.a \
+		   ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/librxkad.a\
+		   ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/libcmd.a \
+		   ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a 
 LIBRES = 
 LIBS = ${AFSLIBS} ${LIBRES} ${XLIBS}
 OBJS = inetd.o setenv.o getenv.o
@@ -29,8 +40,6 @@ noversion: install
 
 # ta-rauth.o is used by rlogin, rsh, rcp, rlogind
 all : inetd ta-rauth.o
-
-system: install
 
 inetd: ${OBJS}
 	set -x; \
@@ -49,16 +58,23 @@ ta-rauth.o: ta-rauth.c
 clean:
 	$(RM) -f inetd *.o *.BAK *~ core AFS_component_version_number.c
 
-install: all
-	${INSTALL} -s -m 755 inetd ${DESTDIR}/etc/inetd
+install: ${DESTDIR}${sbindir}/inetd
+
+dest: ${DEST}/etc/inetd
 	set -x; \
 	case "${SYS_NAME}" in \
 	sun4* ) \
-		${INSTALL} -m 644 -f inetd.conf.solaris ${DESTDIR}/etc/inetd.conf ;; \
+		${INSTALL} -m 644 -f inetd.conf.solaris ${DEST}/etc/inetd.conf ;; \
 	sgi_* ) \
-		${INSTALL} -m 644 -f inetd.conf.sgi ${DESTDIR}/etc/inetd.conf ;; \
+		${INSTALL} -m 644 -f inetd.conf.sgi ${DEST}/etc/inetd.conf ;; \
 	alpha_dux?? ) \
-		${INSTALL} -m 644 -f inetd.conf.dux40 ${DESTDIR}/etc/inetd.conf ;; \
+		${INSTALL} -m 644 -f inetd.conf.dux40 ${DEST}/etc/inetd.conf ;; \
 	* ) \
-		${INSTALL} -m 644 inetd.conf ${DESTDIR}/etc/inetd.conf ;; \
+		${INSTALL} -m 644 inetd.conf ${DEST}/etc/inetd.conf ;; \
 	esac
+
+${DESTDIR}${sbindir}/inetd: inetd
+	${INSTALL} $? $@
+
+${DEST}/etc/inetd: inetd
+	${INSTALL} $? $@

@@ -7,9 +7,22 @@
 
 # MakefileProto for AIX systems
 #
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+afskerneldir=@afskerneldir@
 SYS_NAME=@AFS_SYSNAME@
 
 include config/Makefile.${SYS_NAME}
@@ -52,7 +65,7 @@ OPT2   = -O
 
 IMPORTS = -bI:/lib/kernex.exp -bI:/lib/syscalls.exp -bI:/lib/sockets.exp \
 	-bI:/lib/netinet.exp \
-	-bI:${DESTDIR}/lib/afs/extras.exp -bI:${DESTDIR}/lib/afs/export.exp
+	-bI:${TOP_LIBDIR}/extras.exp -bI:${TOP_LIBDIR}/export.exp
 KDEFS = -U_IBMR2 -D_POWER -D_AIX -DNLS -D_NLS -DMSG -D__STR31__ -Daiws \
 	-D_POWER_RS -D_POWER_PC -D_POWER_RS1 -D_POWER_RS2 -D_POWER_RSC \
 	 -D_POWER_601 -D_POWER_603 -D_POWER_604 -D_THREADS -M  -D_KERNEL \
@@ -60,7 +73,7 @@ KDEFS = -U_IBMR2 -D_POWER -D_AIX -DNLS -D_NLS -DMSG -D__STR31__ -Daiws \
 	 -DGETMOUNT -H8 -DAFS -DAFS_COMMON -D_VOPS -D_SUN -DKERNEL
 LDSTUFF= -b"binder:/usr/lib/bind glink:/usr/lib/glink.o" -bnoentry -b h:4 \
 	-D0 -T512
-LDFLAGS = -m -eafs_config -bexport:${DESTDIR}/lib/afs/afs.exp ${IMPORTS} \
+LDFLAGS = -m -eafs_config -bexport:${TOP_LIBDIR}/afs.exp ${IMPORTS} \
 	 -lsys -lcsys 
 
 CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(KDEFS) $(KOPTS) ${DBUG}
@@ -71,6 +84,7 @@ KOBJ = MODLOAD
 # This tells Makefile.common to use it's single directory build target.
 COMPDIRS = single_compdir
 INSTDIRS = single_instdir
+DESTDIRS = single_destdir
 
 include Makefile.common
 
@@ -90,21 +104,20 @@ setup:
 	ln -s /usr/include/jfs ufs
 
 
-
-
-
 # Standard AFS->NFS translator support is removed in AFS 3.5 in favor of
 # the iauth authentication mechanism. The model was changed by IBM in the
 # middle of an OS release. So iauth is only supported on AIX 4.1.5 and 
 # later 4.1.x (if they are ever made) and AIX 4.2.1 (and later AIX 4.2.x if
 # they are ever made. AIX 4.3 also uses the iauth translator.
 
-CLIENTDIR = $(DESTDIR)root.client/usr/vice/etc/dkload
 LIBAFSIAUTH = afs.ext.iauth
 LIBAFS = afs.ext
 
-DEST_LIBAFSIAUTH = $(CLIENTDIR)/$(LIBAFSIAUTH)
-DEST_LIBAFS = $(CLIENTDIR)/$(LIBAFS)
+DEST_LIBAFSIAUTH = $(DEST)root.client/usr/vice/etc/dkload/$(LIBAFSIAUTH)
+DEST_LIBAFS = $(DEST)root.client/usr/vice/etc/dkload/$(LIBAFS)
+
+INST_LIBAFSIAUTH = ${DESTDIR}${afskerneldir}/$(LIBAFSIAUTH)
+INST_LIBAFS = ${DESTDIR}${afskerneldir}/$(LIBAFS)
 
 $(DEST_LIBAFS): $(LIBAFS)
 	$(INSTALL) -f $? $@
@@ -116,6 +129,15 @@ $(DEST_LIBAFSIAUTH): $(LIBAFSIAUTH)
 	-${STRIP} $@
 	$(INSTALL) -f $?.map $@.map
 	
+$(INST_LIBAFS): $(LIBAFS)
+	$(INSTALL) -f $? $@
+	-${STRIP} $@
+	$(INSTALL) -f $?.map $@.map
+	
+$(INST_LIBAFSIAUTH): $(LIBAFSIAUTH)
+	$(INSTALL) -f $? $@
+	-${STRIP} $@
+	$(INSTALL) -f $?.map $@.map
 	
 
 $(LIBAFSIAUTH): $(AFSAOBJS) $(AFSIAUTHOBJS)
@@ -129,7 +151,8 @@ $(LIBAFS): $(AFSAOBJS) $(AFSNOIAUTHOBJS)
 	${AFSAOBJS} $(AFSNOIAUTHOBJS) ${LIBS} ${LDFLAGS}
 
 libafs: $(LIBAFS) $(LIBAFSIAUTH)
-install_libafs: $(DEST_LIBAFS) $(DEST_LIBAFSIAUTH)
+install_libafs: $(INST_LIBAFS) $(INST_LIBAFSIAUTH)
+dest_libafs: $(DEST_LIBAFS) $(DEST_LIBAFSIAUTH)
 
 
 # Object build rules:

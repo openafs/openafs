@@ -12,8 +12,22 @@
 # # supported (if not supported, don't show it).
 # ######################################################################
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -23,19 +37,12 @@ include ../config/Makefile.${SYS_NAME}
 
 UKERNELDIR = ../libuafs/
 
-CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
+CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
 
-all: install
+all: ukinstall ${TOP_LIBDIR}/libaudit.a ${TOP_INCDIR}/afs/audit.h
 
-install: ukinstall ${DESTDIR}/lib/afs/libaudit.a ${DESTDIR}/include/afs/audit.h
-	case ${SYS_NAME} in \
-	rs_aix*) \
-	   ${INSTALL} Audit              ${DESTDIR}/root.server/usr/afs/local ;  \
-	   ${INSTALL} objects.aix.sample ${DESTDIR}/root.server/usr/afs/local/audit/objects.sample ;  \
-	   ${INSTALL} events.aix.sample  ${DESTDIR}/root.server/usr/afs/local/audit/events.sample  ;  \
-	   ${INSTALL} config.aix.sample  ${DESTDIR}/root.server/usr/afs/local/audit/config.sample  ;; \
-        *) ;; \
-        esac ;
+# XXX-INST: where to install the AIX audit files?
+install:  ${DESTDIR}${libdir}/afs/libaudit.a ${DESTDIR}${includedir}/afs/audit.h
 
 ukinstall: ${UKERNELDIR}/afs ${UKERNELDIR}/afs/audit.h
 
@@ -45,10 +52,10 @@ ${UKERNELDIR}/afs:
 ${UKERNELDIR}/afs/audit.h: audit.h
 	${INSTALL} $? $@
 
-${DESTDIR}/include/afs/audit.h: audit.h
+${DEST}/include/afs/audit.h: audit.h
 	${INSTALL} $? $@
 
-${DESTDIR}/lib/afs/libaudit.a: libaudit.a
+${DEST}/lib/afs/libaudit.a: libaudit.a
 	${INSTALL} $? $@
 
 libaudit.a: audit.o AFS_component_version_number.o
@@ -63,3 +70,25 @@ clean:
 	$(RM) -f *.a *.o core AFS_component_version_number.c
 
 include ../config/Makefile.version
+${DESTDIR}${libdir}/afs/libaudit.a: libaudit.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libaudit.a: libaudit.a
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/audit.h: audit.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/audit.h: audit.h
+	${INSTALL} $? $@
+
+dest:  ${DEST}/lib/afs/libaudit.a ${DEST}/include/afs/audit.h
+	case ${SYS_NAME} in \
+	rs_aix*) \
+	   ${INSTALL} Audit              ${DEST}/root.server/usr/afs/local ;  \
+	   ${INSTALL} objects.aix.sample ${DEST}/root.server/usr/afs/local/audit/objects.sample ;  \
+	   ${INSTALL} events.aix.sample  ${DEST}/root.server/usr/afs/local/audit/events.sample  ;  \
+	   ${INSTALL} config.aix.sample  ${DEST}/root.server/usr/afs/local/audit/config.sample  ;; \
+        *) ;; \
+        esac ;
+

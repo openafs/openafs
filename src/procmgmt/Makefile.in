@@ -5,16 +5,30 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS = $(DBUG) -I${SRCDIR}/include -I${TOP_SRCDIR}/config ${XCFLAGS}
+CFLAGS=$(DBUG) -I${TOP_INCDIR} -I${TOP_SRCDIR}/config ${XCFLAGS}
 
-all: install
+all: ${TOP_LIBDIR}/libprocmgmt.a ${TOP_INCDIR}/afs/procmgmt.h
 
 #
 # Build targets
@@ -29,13 +43,12 @@ procmgmt_unix.o: procmgmt_unix.c procmgmt.h
 #
 # Install targets
 #
-install: ${DESTDIR}/lib/afs/libprocmgmt.a \
-	${DESTDIR}/include/afs/procmgmt.h
+install: ${DESTDIR}${libdir}/afs/libprocmgmt.a ${DESTDIR}${includedir}/afs/procmgmt.h
 
-${DESTDIR}/lib/afs/libprocmgmt.a: libprocmgmt.a
+${DEST}/lib/afs/libprocmgmt.a: libprocmgmt.a
 	${INSTALL} $? $@
 
-${DESTDIR}/include/afs/procmgmt.h: procmgmt.h
+${DEST}/include/afs/procmgmt.h: procmgmt.h
 	${INSTALL} $? $@
 
 #
@@ -45,3 +58,17 @@ clean:
 	$(RM) -f *.a *.o core AFS_component_version_number.c
 
 include ../config/Makefile.version
+${DESTDIR}${libdir}/afs/libprocmgmt.a: libprocmgmt.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libprocmgmt.a: libprocmgmt.a
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/procmgmt.h: procmgmt.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/procmgmt.h: procmgmt.h
+	${INSTALL} $? $@
+
+dest: ${DEST}/lib/afs/libprocmgmt.a ${DEST}/include/afs/procmgmt.h
+

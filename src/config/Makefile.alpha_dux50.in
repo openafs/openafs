@@ -22,7 +22,9 @@ DBG=-g3
 CP=cp
 CSTATIC=-non_shared
 RANLIB=/bin/true
-INSTALL=${DESTDIR}/bin/install
+INSTALL=${TOP_SRCDIR}/pinstall/pinstall
 
 #this is for the vol package
-FS_CONV_OSF40D= $(DESTDIR)root.server/usr/afs/bin/fs_conv_dux40D
+FS_CONV_OSF40D         = fs_conv_dux40D
+install_FS_CONV_OSF40D = $(DESTDIR)${afssrvsbindir}/fs_conv_dux40D
+dest_FS_CONV_OSF40D    = $(DEST)/root.server/usr/afs/bin/fs_conv_dux40D

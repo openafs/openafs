@@ -5,8 +5,21 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -14,14 +27,16 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-COMPILE_ET = ${SRCDIR}/bin/compile_et
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
 
 LIBOBJS=cmd_errors.o cmd.o 
 LIB64OBJS=cmd_errors64.o cmd64.o 
 
-CFLAGS= ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
+CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
 
-all: install
+all: ${TOP_LIBDIR}/libcmd.a ${TOP_INCDIR}/afs/cmd.h
+
+all64: all ${TOP_LIBDIR}/libcmd64.a
 
 cmd.h cmd_errors.c: cmd_errors.et cmd.p.h
 	$(RM) -f cmd.h cmd_errors.c
@@ -32,10 +47,10 @@ cmd_errors.o: cmd_errors.c
 cmd.o: cmd.c cmd.h
 
 cmd_errors64.o: cmd_errors.c
-	${CC} ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS64} -c -o cmd_errors64.o cmd_errors.c
+	${CC} ${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS64} -c -o cmd_errors64.o cmd_errors.c
 
 cmd64.o: cmd.c cmd.h
-	${CC} ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS64} -c -o cmd64.o cmd.c
+	${CC} ${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS64} -c -o cmd64.o cmd.c
 
 
 libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o
@@ -49,22 +64,22 @@ libcmd.a: ${LIBOBJS} AFS_component_version_number.o
 	$(RANLIB) $@
 
 AFS_component_version_number64.o: AFS_component_version_number.c
-	${CC} ${OPTMZ} -I${SRCDIR}/include ${XCFLAGS64} -c -o AFS_component_version_number64.o AFS_component_version_number.c
+	${CC} ${OPTMZ} -I${TOP_INCDIR} ${XCFLAGS64} -c -o AFS_component_version_number64.o AFS_component_version_number.c
 
 #
 # Install targets
 #
-install: ${DESTDIR}/lib/afs/libcmd.a ${DESTDIR}/include/afs/cmd.h
+install: ${DESTDIR}${libdir}/afs/libcmd.a ${DESTDIR}${includedir}/afs/cmd.h
 
-install64: install ${DESTDIR}/lib/afs/libcmd64.a
+install64: install ${DESTDIR}${libdir}/afs/libcmd64.a
 
-${DESTDIR}/include/afs/cmd.h: cmd.h
+${DEST}/include/afs/cmd.h: cmd.h
 	${INSTALL} $? $@
 
-${DESTDIR}/lib/afs/libcmd.a: libcmd.a
+${DEST}/lib/afs/libcmd.a: libcmd.a
 	${INSTALL} $? $@
 
-${DESTDIR}/lib/afs/libcmd64.a: libcmd64.a
+${DEST}/lib/afs/libcmd64.a: libcmd64.a
 	${INSTALL} $? $@
 
 #
@@ -77,3 +92,24 @@ clean:
 	$(RM) -f  *.a *.o ctest dtest cmd.h cmd_errors.c core AFS_component_version_number.c
 
 include ../config/Makefile.version
+${DESTDIR}${libdir}/afs/libcmd.a: libcmd.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libcmd.a: libcmd.a
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/afs/libcmd64.a: libcmd64.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libcmd64.a: libcmd64.a
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/cmd.h: cmd.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/cmd.h: cmd.h
+	${INSTALL} $? $@
+
+dest: ${DEST}/lib/afs/libcmd.a ${DEST}/include/afs/cmd.h
+
+dest64: dest ${DEST}/lib/afs/libcmd64.a

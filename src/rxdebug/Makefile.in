@@ -23,53 +23,51 @@ COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
 RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
+MKAFS_OSTYPE=@MKAFS_OSTYPE@
+
 SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+KERNELDIR = ../libafs/
+UKERNELDIR = ../libuafs/
 
-all: ${TOP_LIBDIR}/libusd.a ${TOP_INCDIR}/afs/usd.h
+CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I${TOP_INCDIR}/rx -DRXDEBUG ${XCFLAGS}
+
+LIBS=${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
+	       ${TOP_LIBDIR}/util.a ${TOP_LIBDIR}/libsys.a
+
+all: rxdebug rxdumptrace
+
+rxdebug.o: rxdebug.c
+
+rxdumptrace.o: ../rx/rx_trace.c
+	$(CC) $(CFLAGS) -DDUMPTRACE -c -o rxdumptrace.o ../rx/rx_trace.c
+
+rxdumptrace: rxdumptrace.o ${LIBS}
+	$(RM) -f rxdumptrace
+	$(CC) $(CFLAGS) -o rxdumptrace rxdumptrace.o  ${LIBS} ${XLIBS}
+
+rxdebug: rxdebug.o ${LIBS}
+	${CC} ${CFLAGS} -o $@ $@.o ${LIBS} ${XLIBS}
 
 #
-# Build targets
+# Install targets
 #
-libusd.a: usd_file.o AFS_component_version_number.o
-	$(RM) -f $@
-	$(AR) crv $@ usd_file.o AFS_component_version_number.o
-	$(RANLIB) $@
-
-usd_file.o: usd_file.c usd.h
-
-#
-# Installation targets
-#
-install: ${DESTDIR}${libdir}/afs/libusd.a ${DESTDIR}${includedir}/afs/usd.h
-
-${DEST}/lib/afs/libusd.a: libusd.a
-	${INSTALL} $? $@
-
-${DEST}/include/afs/usd.h: usd.h
-	${INSTALL} $? $@
+install:  ${DESTDIR}${sbindir}/rxdebug
 
 #
 # Misc. targets
 #
 clean:
-	$(RM) -f *.o libusd.a core AFS_component_version_number.c
+	$(RM) -f *.o *.a core *_component_version_number.c rxdumptrace rxdebug
 
 include ../config/Makefile.version
-${DESTDIR}${libdir}/afs/libusd.a: libusd.a
+
+dest: ${DEST}/etc/rxdebug
+
+${DESTDIR}${sbindir}/rxdebug: rxdebug
 	${INSTALL} $? $@
 
-${TOP_LIBDIR}/libusd.a: libusd.a
+${DEST}/etc/rxdebug: rxdebug
 	${INSTALL} $? $@
-
-${DESTDIR}${includedir}/afs/usd.h: usd.h
-	${INSTALL} $? $@
-
-${TOP_INCDIR}/afs/usd.h: usd.h
-	${INSTALL} $? $@
-
-dest: ${DEST}/lib/afs/libusd.a ${DEST}/include/afs/usd.h
-

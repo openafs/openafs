@@ -6,8 +6,22 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 # Make modified install
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -16,9 +30,9 @@ SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 LIBS= ${XLIBS}
-CFLAGS= ${OPTMZ} -g -I. -I${DESTDIR}/include -I${TOP_SRCDIR}/config ${XCFLAGS}
+CFLAGS=${OPTMZ} -g -I. -I${TOP_INCDIR} -I${TOP_SRCDIR}/config ${XCFLAGS}
 
-all: install
+all: pinstall
 
 pinstall: install.c AFS_component_version_number.c 
 	case ${SYS_NAME} in \
@@ -33,18 +47,13 @@ pinstall: install.c AFS_component_version_number.c
 test: pinstall
 	csh ./test/test_install
 
-${DESTDIR}/bin/install: pinstall
-	case ${SYS_NAME} in \
-		ppc_darwin*) \
-			./pinstall -f pinstall ${DESTDIR}/bin/pinstall ;;\
-		*) \
-			./pinstall -f pinstall ${DESTDIR}/bin/install ;;\
-	esac
+${DEST}/bin/install: pinstall
+	${INSTALL} -f $? $@
 
 # Note: Some rule needs to appear here so that OSF's make does not try to
 # compile install from install.c. A ";" will not work since other platforms
 # complain. That's why we use 'echo'.
-install: ${DESTDIR}/bin/install
+install:
 	@echo -n
 
 clean:
@@ -52,4 +61,6 @@ clean:
 
 include ../config/Makefile.version
 
+
+dest: ${DEST}/bin/install
 

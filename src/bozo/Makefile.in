@@ -5,8 +5,21 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -14,40 +27,40 @@ SHELL=/bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-COMPILE_ET=${SRCDIR}/bin/compile_et
-CFLAGS=-g -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
-RPCINCLS=${SRCDIR}/include/lwp.h ${SRCDIR}/include/rx/rx.h bosint.h
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+CFLAGS=-g -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h bosint.h
 
-INCLS=	bnode.h \
+INCLS=bnode.h \
 	${RPCINCLS} \
-	${SRCDIR}/include/afs/auth.h \
-	${SRCDIR}/include/afs/keys.h \
-	${SRCDIR}/include/afs/cellconfig.h \
-	${SRCDIR}/include/afs/cmd.h \
-	${SRCDIR}/include/afs/ktime.h
+	${TOP_INCDIR}/afs/auth.h \
+	${TOP_INCDIR}/afs/keys.h \
+	${TOP_INCDIR}/afs/cellconfig.h \
+	${TOP_INCDIR}/afs/cmd.h \
+	${TOP_INCDIR}/afs/ktime.h
 
 # EH 12/18/90 - have to search librx.a twice on Ultrix 4.0
-LIBS=	${SRCDIR}/lib/librx.a \
-	${SRCDIR}/lib/liblwp.a \
-	${SRCDIR}/lib/afs/libcmd.a \
-	${SRCDIR}/lib/afs/libkauth.a \
-	${SRCDIR}/lib/afs/libvolser.a \
-	${SRCDIR}/lib/afs/libvldb.a \
-	${SRCDIR}/lib/afs/libauth.a \
-	${SRCDIR}/lib/librxstat.a \
-	${SRCDIR}/lib/librxkad.a \
-	${SRCDIR}/lib/libdes.a \
-	${SRCDIR}/lib/librx.a \
-	${SRCDIR}/lib/libubik.a \
-	${SRCDIR}/lib/afs/libcom_err.a \
-	${SRCDIR}/lib/afs/util.a \
-	${SRCDIR}/lib/afs/libsys.a \
-	${SRCDIR}/lib/afs/libprocmgmt.a
+LIBS=${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libkauth.a \
+	${TOP_LIBDIR}/libvolser.a \
+	${TOP_LIBDIR}/libvldb.a \
+	${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/librxstat.a \
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libubik.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libprocmgmt.a
 
 OBJS=bosserver.o bnode.o ezbnodeops.o fsbnodeops.o bosint.ss.o bosint.xdr.o \
 bosoprocs.o cronbnodeops.o
 
-all: install
+all: bosserver ${TOP_INCDIR}/afs/bosint.h bos ${TOP_LIBDIR}/libbos.a ${TOP_INCDIR}/afs/bnode.h
 
 $(OBJS) bosint.xdr.o bosint.cs.o boserr.o: $(INCLS)
 
@@ -56,7 +69,7 @@ bosint.xdr.o: bosint.xdr.c ${RPCINCLS}
 bosint.cs.o: bosint.cs.c ${RPCINCLS}
 
 bosint.xdr.c bosint.ss.c bosint.cs.c bosint.h: bosint.xg
-	${SRCDIR}/bin/rxgen -x bosint.xg
+	${RXGEN} -x bosint.xg
 
 bnode.h boserr.c: bnode.p.h boserr.et
 	$(RM) -f boserr.c bnode.h; $(COMPILE_ET) boserr -h bnode
@@ -84,34 +97,35 @@ libbos.a: bosint.xdr.o bosint.cs.o boserr.o AFS_component_version_number.o
 	$(RANLIB) $@
 
 bosserver: $(OBJS) $(LIBS)
-	${CC} $(CFLAGS) -o bosserver $(OBJS) ${SRCDIR}/lib/afs/libaudit.a $(LIBS)  ${XLIBS} 
+	${CC} $(CFLAGS) -o bosserver $(OBJS) ${TOP_LIBDIR}/libaudit.a $(LIBS)  ${XLIBS} 
 
 #
 # Install targets
 #
-install: ${DESTDIR}/root.server/usr/afs/bin/bosserver \
-	${DESTDIR}/include/afs/bosint.h \
-	${DESTDIR}/bin/bos \
-	${DESTDIR}/root.server/usr/afs/bin/bos \
-	${DESTDIR}/lib/afs/libbos.a \
-	${DESTDIR}/include/afs/bnode.h
+install: \
+	${DESTDIR}${afssrvsbindir}/bosserver \
+	${DESTDIR}${includedir}/afs/bosint.h \
+	${DESTDIR}${bindir}/bos \
+	${DESTDIR}${afssrvbindir}/bos \
+	${DESTDIR}${libdir}/afs/libbos.a \
+	${DESTDIR}${includedir}/afs/bnode.h
 
-${DESTDIR}/root.server/usr/afs/bin/bosserver: bosserver
+${DEST}/root.server/usr/afs/bin/bosserver: bosserver
 	${INSTALL} $? $@
 
-${DESTDIR}/include/afs/bosint.h: bosint.h
+${DEST}/include/afs/bosint.h: bosint.h
 	${INSTALL} $? $@
 
-${DESTDIR}/bin/bos: bos
+${DEST}/bin/bos: bos
 	${INSTALL} $? $@
 
-${DESTDIR}/root.server/usr/afs/bin/bos: bos
+${DEST}/root.server/usr/afs/bin/bos: bos
 	${INSTALL} $? $@
 
-${DESTDIR}/lib/afs/libbos.a: libbos.a
+${DEST}/lib/afs/libbos.a: libbos.a
 	${INSTALL} $? $@
 
-${DESTDIR}/include/afs/bnode.h: bnode.h
+${DEST}/include/afs/bnode.h: bnode.h
 	${INSTALL} $? $@
 
 #
@@ -125,3 +139,38 @@ test:
 	cd test; $(MAKE) 
 
 include ../config/Makefile.version
+${DESTDIR}${afssrvsbindir}/bosserver: bosserver
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/bosint.h: bosint.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/bosint.h: bosint.h
+	${INSTALL} $? $@
+
+${DESTDIR}${bindir}/bos: bos
+	${INSTALL} $? $@
+
+${DESTDIR}${afssrvbindir}/bos: bos
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/afs/libbos.a: libbos.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libbos.a: libbos.a
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/bnode.h: bnode.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/bnode.h: bnode.h
+	${INSTALL} $? $@
+
+dest: \
+	${DEST}/root.server/usr/afs/bin/bosserver \
+	${DEST}/include/afs/bosint.h \
+	${DEST}/bin/bos \
+	${DEST}/root.server/usr/afs/bin/bos \
+	${DEST}/lib/afs/libbos.a \
+	${DEST}/include/afs/bnode.h
+

@@ -7,8 +7,22 @@
 
 # */
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -53,38 +67,38 @@ LWPOBJS    =lock.o
 
 BUTMOBJS   =file_tm.o
 BUTMLIBS   =libbutm.a
-BUTMINCLS  =${SRCDIR}/include/afs/com_err.h ${SRCDIR}/include/afs/butm.h
-BUTMINCLUDE=-I${SRCDIR}/include
+BUTMINCLS=${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/butm.h
+BUTMINCLUDE=-I${TOP_INCDIR}
 
 BUTCOBJS   =dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o \
 	    tcudbprocs.o dump.o tcstatus.o butc_xbsa.o \
             ${LWPOBJS} ${BUCOORDOBJS}
-BUTCINCLS  =${SRCDIR}/include/afs/partition.h \
-	    ${SRCDIR}/include/afs/volume.h \
-	    ${SRCDIR}/include/afs/vlserver.h \
-	    ${SRCDIR}/include/rx/rx.h \
-	    ${SRCDIR}/include/rx/xdr.h \
-	    ${SRCDIR}/include/afs/keys.h \
-	    ${SRCDIR}/include/afs/cellconfig.h \
-	    ${SRCDIR}/include/ubik.h \
-	    ${SRCDIR}/include/afs/cmd.h \
-	    ${SRCDIR}/include/afs/butc.h \
-	    ${SRCDIR}/include/afs/tcdata.h \
-	    ${SRCDIR}/include/afs/bubasics.h \
-	    ${SRCDIR}/include/afs/butm.h
-BUTCINCLUDE=-I. -I${SRCDIR}/include
-BUTCLIBS   =${SRCDIR}/lib/afs/libbudb.a \
-	    ${SRCDIR}/lib/afs/libbubasics.a \
+BUTCINCLS=${TOP_INCDIR}/afs/partition.h \
+	    ${TOP_INCDIR}/afs/volume.h \
+	    ${TOP_INCDIR}/afs/vlserver.h \
+	    ${TOP_INCDIR}/rx/rx.h \
+	    ${TOP_INCDIR}/rx/xdr.h \
+	    ${TOP_INCDIR}/afs/keys.h \
+	    ${TOP_INCDIR}/afs/cellconfig.h \
+	    ${TOP_INCDIR}/ubik.h \
+	    ${TOP_INCDIR}/afs/cmd.h \
+	    ${TOP_INCDIR}/afs/butc.h \
+	    ${TOP_INCDIR}/afs/tcdata.h \
+	    ${TOP_INCDIR}/afs/bubasics.h \
+	    ${TOP_INCDIR}/afs/butm.h
+BUTCINCLUDE=-I. -I${TOP_INCDIR}
+BUTCLIBS=${TOP_LIBDIR}/libbudb.a \
+	    ${TOP_LIBDIR}/libbubasics.a \
 	    ${VOLSERLIBS} \
             ${BUTMLIBS} \
-	    ${SRCDIR}/lib/afs/libvldb.a \
-	    ${SRCDIR}/lib/libafsauthent.a \
-	    ${SRCDIR}/lib/libafsrpc.a \
-            ${SRCDIR}/lib/afs/libcmd.a \
-	    ${SRCDIR}/lib/afs/util.a \
-	    ${SRCDIR}/lib/afs/libusd.a \
-	    ${SRCDIR}/lib/afs/libprocmgmt.a \
-	    ${SRCDIR}/lib/librx.a
+	    ${TOP_LIBDIR}/libvldb.a \
+	    ${TOP_LIBDIR}/libafsauthent.a \
+	    ${TOP_LIBDIR}/libafsrpc.a \
+            ${TOP_LIBDIR}/libcmd.a \
+	    ${TOP_LIBDIR}/util.a \
+	    ${TOP_LIBDIR}/libusd.a \
+	    ${TOP_LIBDIR}/libprocmgmt.a \
+	    ${TOP_LIBDIR}/librx.a
 
 include ../config/Makefile.version
 
@@ -288,9 +302,18 @@ pre:
 		fi; \
 	fi;
 
-all: butc ${BUTMLIBS}
-install install.noversion: all
-	${INSTALL} butc ${DESTDIR}/etc/butc
+all: butc
+
+install install.noversion:  ${DESTDIR}${sbindir}/butc
 
 noversion: install
 system: install
+${DEST}/etc/butc: butc
+	${INSTALL} $? $@
+
+${DESTDIR}${sbindir}/butc: butc
+	${INSTALL} $? $@
+
+
+dest:  ${DEST}/etc/butc
+

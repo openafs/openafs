@@ -18,7 +18,7 @@ INCDIRS= -I${TOP_SRCDIR}/config -I${DESTDIR}/include -I..
 LIBS=-L.. -ldes
 CFLAGS = ${INCDIRS} ${XCFLAGS}
 
-all system test: $(PROGS)
+all test: $(PROGS)
 
 clean:
 	$(RM) -f *.o *.a testit verify key_test core

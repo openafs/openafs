@@ -5,8 +5,22 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -15,47 +29,47 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS= ${DBUG} -I. \
+CFLAGS=${DBUG} -I. \
 	-I${TOP_SRCDIR}/config \
-	-I${SRCDIR}/include \
-	-I${SRCDIR}/include/afs \
-	-I${SRCDIR} ${XCFLAGS}
+	-I${TOP_INCDIR} \
+	-I${TOP_INCDIR}/afs \
+	${XCFLAGS}
 LDFLAGS = ${XLDFLAGS}
 
-INCLS=${SRCDIR}/include/afs/gtxobjects.h \
-	${SRCDIR}/include/afs/gtxwindows.h \
-	${SRCDIR}/include/afs/gtxcurseswin.h \
-	${SRCDIR}/include/afs/gtxdumbwin.h \
-	${SRCDIR}/include/afs/gtxX11win.h \
-	${SRCDIR}/include/afs/gtxobjects.h \
-	${SRCDIR}/include/afs/gtxlightobj.h \
-	${SRCDIR}/include/afs/gtxtextobj.h \
-	${SRCDIR}/include/afs/gtxobjdict.h \
-	${SRCDIR}/include/afs/keys.h \
-	${SRCDIR}/include/afs/cellconfig.h \
-	${SRCDIR}/include/afs/cmd.h
+INCLS=${TOP_INCDIR}/afs/gtxobjects.h \
+	${TOP_INCDIR}/afs/gtxwindows.h \
+	${TOP_INCDIR}/afs/gtxcurseswin.h \
+	${TOP_INCDIR}/afs/gtxdumbwin.h \
+	${TOP_INCDIR}/afs/gtxX11win.h \
+	${TOP_INCDIR}/afs/gtxobjects.h \
+	${TOP_INCDIR}/afs/gtxlightobj.h \
+	${TOP_INCDIR}/afs/gtxtextobj.h \
+	${TOP_INCDIR}/afs/gtxobjdict.h \
+	${TOP_INCDIR}/afs/keys.h \
+	${TOP_INCDIR}/afs/cellconfig.h \
+	${TOP_INCDIR}/afs/cmd.h
  
-LIBS= 	${SRCDIR}/lib/afs/libgtx.a \
-	${SRCDIR}/lib/afs/libfsprobe.a \
-	${SRCDIR}/lib/afs/libvolser.a \
-	${SRCDIR}/lib/afs/libkauth.a \
-	${SRCDIR}/lib/afs/libauth.a \
-	${SRCDIR}/lib/librxkad.a \
-	${SRCDIR}/lib/libdes.a \
-	${SRCDIR}/lib/afs/libcmd.a \
-	${SRCDIR}/lib/afs/vlib.a ${SRCDIR}/lib/afs/libacl.a \
-        ${SRCDIR}/lib/afs/libvldb.a \
-        ${SRCDIR}/lib/libubik.a \
-	${SRCDIR}/lib/afs/libafsint.a \
-	${SRCDIR}/lib/afs/libsys.a \
-	${SRCDIR}/lib/librx.a \
-	${SRCDIR}/lib/afs/libsys.a \
-	${SRCDIR}/lib/afs/libaudit.a \
-	${SRCDIR}/lib/afs/libcom_err.a \
-	${SRCDIR}/lib/liblwp.a \
-	${SRCDIR}/lib/afs/util.a
+LIBS=${TOP_LIBDIR}/libgtx.a \
+	${TOP_LIBDIR}/libfsprobe.a \
+	${TOP_LIBDIR}/libvolser.a \
+	${TOP_LIBDIR}/libkauth.a \
+	${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/vlib.a ${TOP_LIBDIR}/libacl.a \
+        ${TOP_LIBDIR}/libvldb.a \
+        ${TOP_LIBDIR}/libubik.a \
+	${TOP_LIBDIR}/libafsint.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libaudit.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/util.a
 
-all: install
+all: scout
 
 #
 # Build targets
@@ -63,14 +77,14 @@ all: install
 scout.o: scout.c ${INCLS} AFS_component_version_number.c
 
 scout: scout.o $(LIBS)
-	${CC} ${LDFLAGS} -o scout scout.o $(LIBS) ${TXLIBS} ${SRCDIR}/lib/afs/libtermlib.a ${XLIBS}
+	${CC} ${LDFLAGS} -o scout scout.o $(LIBS) ${TXLIBS} ${TOP_LIBDIR}/libtermlib.a ${XLIBS}
 
 #
 # Installation targets
 #
-install: ${DESTDIR}/bin/scout
+install: ${DESTDIR}${bindir}/scout
 
-${DESTDIR}/bin/scout: scout
+${DEST}/bin/scout: scout
 	${INSTALL} $? $@
 
 #
@@ -80,4 +94,9 @@ clean:
 	$(RM) -f *.o scout core AFS_component_version_number.c
 
 include ../config/Makefile.version
+
+${DESTDIR}${bindir}/scout: scout
+	${INSTALL} $? $@
+
+dest: ${DEST}/bin/scout
 

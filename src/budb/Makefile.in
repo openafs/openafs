@@ -6,8 +6,20 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 # */
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -15,48 +27,48 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-COMPILE_ET = ${SRCDIR}/bin/compile_et
-RXGEN=${SRCDIR}/bin/rxgen
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 
-CFLAGS = -g -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
+CFLAGS=-g -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
 LDFLAGS = -g ${XLDFLAGS}
-INCLS= \
-	${SRCDIR}/include/lock.h \
-	${SRCDIR}/include/ubik.h \
-	${SRCDIR}/include/lwp.h \
-	${SRCDIR}/include/des.h \
-	${SRCDIR}/include/rx/rx.h \
-	${SRCDIR}/include/rx/xdr.h \
-	${SRCDIR}/include/rx/rxkad.h \
-	${SRCDIR}/include/afs/auth.h \
-	${SRCDIR}/include/afs/cellconfig.h \
-	${SRCDIR}/include/afs/com_err.h \
-	${SRCDIR}/include/afs/bubasics.h \
+INCLS=\
+	${TOP_INCDIR}/lock.h \
+	${TOP_INCDIR}/ubik.h \
+	${TOP_INCDIR}/lwp.h \
+	${TOP_INCDIR}/des.h \
+	${TOP_INCDIR}/rx/rx.h \
+	${TOP_INCDIR}/rx/xdr.h \
+	${TOP_INCDIR}/rx/rxkad.h \
+	${TOP_INCDIR}/afs/auth.h \
+	${TOP_INCDIR}/afs/cellconfig.h \
+	${TOP_INCDIR}/afs/com_err.h \
+	${TOP_INCDIR}/afs/bubasics.h \
 	budb.h budb_client.h database.h
 
 # library ordering defined by top level makefile
-LIBS= ${SRCDIR}/lib/afs/libbubasics.a \
-	${SRCDIR}/lib/afs/libaudit.a \
-	${SRCDIR}/lib/afs/libprot.a \
-	${SRCDIR}/lib/afs/libkauth.a \
-	${SRCDIR}/lib/libubik.a \
-	${SRCDIR}/lib/afs/libauth.a \
-	${SRCDIR}/lib/librxkad.a \
-	${SRCDIR}/lib/afs/libsys.a \
-	${SRCDIR}/lib/libdes.a \
-	${SRCDIR}/lib/librx.a \
-	${SRCDIR}/lib/afs/libsys.a \
-	${SRCDIR}/lib/liblwp.a \
-	${SRCDIR}/lib/afs/libcmd.a \
-	${SRCDIR}/lib/afs/libcom_err.a \
-	${SRCDIR}/lib/afs/util.a
+LIBS=${TOP_LIBDIR}/libbubasics.a \
+	${TOP_LIBDIR}/libaudit.a \
+	${TOP_LIBDIR}/libprot.a \
+	${TOP_LIBDIR}/libkauth.a \
+	${TOP_LIBDIR}/libubik.a \
+	${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/util.a
 
 COMMON_OBJS = database.o db_alloc.o db_dump.o db_hash.o struct_ops.o ol_verify.o
 
 SERVER_OBJS = ${COMMON_OBJS} budb.ss.o budb.xdr.o dbs_dump.o db_lock.o db_text.o \
 	procs.o server.o budb_errs.o
 
-all: install
+all: ${TOP_LIBDIR}/libbudb.a ${TOP_INCDIR}/afs/budb.h ${TOP_INCDIR}/afs/budb_errs.h ${TOP_INCDIR}/afs/budb_client.h budb_server
 
 budb_errs.o: budb_errs.c
 
@@ -91,25 +103,26 @@ libbudb.a: budb_errs.o budb.cs.o budb.xdr.o struct_ops.o AFS_component_version_n
 #
 # Install targets
 #
-install: ${DESTDIR}/lib/afs/libbudb.a \
-	${DESTDIR}/include/afs/budb.h \
-	${DESTDIR}/include/afs/budb_errs.h \
-	${DESTDIR}/include/afs/budb_client.h \
-	${DESTDIR}/root.server/usr/afs/bin/buserver
+install: \
+	${DESTDIR}${libdir}/afs/libbudb.a \
+	${DESTDIR}${includedir}/afs/budb.h \
+	${DESTDIR}${includedir}/afs/budb_errs.h \
+	${DESTDIR}${includedir}/afs/budb_client.h \
+	${DESTDIR}${afssrvlibexecdir}/buserver
 
-${DESTDIR}/lib/afs/libbudb.a: libbudb.a
+${DEST}/lib/afs/libbudb.a: libbudb.a
 	${INSTALL} $? $@
 
-${DESTDIR}/include/afs/budb.h: budb.h
+${DEST}/include/afs/budb.h: budb.h
 	${INSTALL} $? $@
 
-${DESTDIR}/include/afs/budb_errs.h: budb_errs.h
+${DEST}/include/afs/budb_errs.h: budb_errs.h
 	${INSTALL} $? $@
 
-${DESTDIR}/include/afs/budb_client.h: budb_client.h
+${DEST}/include/afs/budb_client.h: budb_client.h
 	${INSTALL} $? $@
 
-${DESTDIR}/root.server/usr/afs/bin/buserver: budb_server
+${DEST}/root.server/usr/afs/bin/buserver: budb_server
 	${INSTALL} -f $? $@
 
 #
@@ -120,3 +133,37 @@ clean:
 		*.ss.c *.cs.c core budb_server AFS_component_version_number.c
 
 include ../config/Makefile.version
+${DESTDIR}${libdir}/afs/libbudb.a: libbudb.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libbudb.a: libbudb.a
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/budb.h: budb.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/budb.h: budb.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/budb_errs.h: budb_errs.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/budb_errs.h: budb_errs.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/budb_client.h: budb_client.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/budb_client.h: budb_client.h
+	${INSTALL} $? $@
+
+${DESTDIR}${afssrvlibexecdir}/buserver: budb_server
+	${INSTALL} -f $? $@
+
+dest: \
+	${DEST}/lib/afs/libbudb.a \
+	${DEST}/include/afs/budb.h \
+	${DEST}/include/afs/budb_errs.h \
+	${DEST}/include/afs/budb_client.h \
+	${DEST}/root.server/usr/afs/bin/buserver
+

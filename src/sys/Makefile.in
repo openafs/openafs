@@ -7,8 +7,22 @@
 
 # System calls.
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -17,9 +31,9 @@ SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 UKERNELDIR=../libuafs/
-CFLAGS= ${DBUG} -I${TOP_SRCDIR}/config -I${SRCDIR}/include  ${XCFLAGS}
-SFLAGS=-P -I${SRCDIR}/include  
-LIBS= libsys.a ${SRCDIR}/lib/librx.a libsys.a ${SRCDIR}/lib/liblwp.a ${SRCDIR}/lib/afs/util.a ${XLIBS}
+CFLAGS=${DBUG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR}  ${XCFLAGS}
+SFLAGS=-P -I${TOP_INCDIR}
+LIBS=libsys.a ${TOP_LIBDIR}/librx.a libsys.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
 UKSRCS=afsl.exp
 
 OBJECTS= afssyscalls.o syscall.o
@@ -27,20 +41,33 @@ RMTOBJS=rmtsysnet.o rmtsysc.o rmtsys.cs.o rmtsys.xdr.o rmtsys.ss.o rmtsyss.o
 
 include ../config/Makefile.version
 
-all: libsys.a ${DESTDIR}/etc/rmtsysd  ${DESTDIR}/include/afs/afssyscalls.h \
-	${DESTDIR}/bin/pagsh  ${DESTDIR}/bin/pagsh.krb
+all: ${TOP_LIBDIR}/libsys.a rmtsysd ${TOP_INCDIR}/afs/afssyscalls.h pagsh pagsh.krb kinstall ukinstall
+	case "${SYS_NAME}" in \
+	rs_aix*)			\
+		${INSTALL} afs.exp ${TOP_LIBDIR};;	\
+	sgi_6? ) \
+		${INSTALL} xfsattrs.h ${TOP_INCDIR}/afs;; \
+	esac
 
-${DESTDIR}/etc/rmtsysd: rmtsysd
-	${INSTALL} -s rmtsysd ${DESTDIR}/etc/rmtsysd
+install: ${DESTDIR}${libdir}/afs/libsys.a ${DESTDIR}${sbindir}/rmtsysd ${DESTDIR}${includedir}/afs/afssyscalls.h ${DESTDIR}${bindir}/pagsh ${DESTDIR}${bindir}/pagsh.krb  
+	case "${SYS_NAME}" in \
+	rs_aix*)			\
+		${INSTALL} afs.exp ${DESTDIR}${includedir}/afs;;	\
+	sgi_6? ) \
+		${INSTALL} xfsattrs.h ${DESTDIR}${includedir}/afs;; \
+	esac
 
-${DESTDIR}/bin/pagsh: pagsh
-	${INSTALL} -s pagsh ${DESTDIR}/bin/pagsh
+${DEST}/etc/rmtsysd: rmtsysd
+	${INSTALL} -s $? $@
 
-${DESTDIR}/bin/pagsh.krb: pagsh.krb
-	${INSTALL} -s pagsh.krb ${DESTDIR}/bin/pagsh.krb
+${DEST}/bin/pagsh: pagsh
+	${INSTALL} -s $? $@
 
-${DESTDIR}/include/afs/afssyscalls.h: afssyscalls.h
-	${INSTALL} afssyscalls.h ${DESTDIR}/include/afs/afssyscalls.h
+${DEST}/bin/pagsh.krb: pagsh.krb
+	${INSTALL} -s $? $@
+
+${DEST}/include/afs/afssyscalls.h: afssyscalls.h
+	${INSTALL} $? $@
 
 libsys.a: ${OBJECTS} ${RMTOBJS} AFS_component_version_number.o
 	-$(RM) -f $@
@@ -51,23 +78,14 @@ libsys.a: ${OBJECTS} ${RMTOBJS} AFS_component_version_number.o
 		$(AR) crv $@ afsl.exp;;		\
 	esac
 
-system: install
-
 kinstall:
 	case "${SYS_NAME}" in				\
 	    rs_aix*)			\
-		${INSTALL} afs.exp ${DESTDIR}/lib/afs;;	\
+		${INSTALL} afs.exp ${TOP_LIBDIR}/afs;;	\
 	    sgi_6? ) \
 		${INSTALL} xfsattrs.h ../libafs/afs;; \
 	    *)						\
 		echo No $@ source here;;		\
-	esac
-
-install: all kinstall ukinstall
-	${INSTALL} libsys.a ${DESTDIR}/lib/afs
-	case "${SYS_NAME}" in \
-	sgi_6? ) \
-		${INSTALL} xfsattrs.h ${DESTDIR}/include/afs;; \
 	esac
 
 ukinstall webinstall: ${UKERNELDIR}/afs ${UKSRCS}
@@ -108,7 +126,7 @@ rmtsysnet.o rmtsysc.o rmtsyss.o rmtsysd.o: rmtsys.h
 rmtsysd: AFS_component_version_number.o
 
 rmtsys.cs.c rmtsys.ss.c rmtsys.xdr.c rmtsys.h: rmtsys.xg
-	${SRCDIR}/bin/rxgen rmtsys.xg
+	${RXGEN} rmtsys.xg
 
 rmtsysd: rmtsysd.o libsys.a
 	${CC} ${CFLAGS} -o rmtsysd rmtsysd.o ${LIBS}
@@ -129,49 +147,49 @@ iinc:	iinc.c
 	    sgi_6*) \
 		$(CC) -o iinc ${CFLAGS} iinc.c libsys.a;; \
 	    *)						\
-		$(CC) -o iinc -I${SRCDIR}/include iinc.c ${LIBS} ${XLIBS};; \
+		$(CC) -o iinc -I${TOP_INCDIR} iinc.c ${LIBS} ${XLIBS};; \
 	esac
 idec:	idec.c  AFS_component_version_number.c
 	case "${SYS_NAME}" in				\
 	    sgi_6* ) \
 		$(CC) -o idec ${CFLAGS} idec.c libsys.a;; \
 	    *)						\
-		$(CC) -o idec -I${SRCDIR}/include idec.c ${LIBS} ${XLIBS};; \
+		$(CC) -o idec -I${TOP_INCDIR} idec.c ${LIBS} ${XLIBS};; \
 	esac
 icreate:icreate.c  AFS_component_version_number.c
 	case "${SYS_NAME}" in				\
 	    sgi_6* ) \
 		$(CC) -o icreate ${CFLAGS} icreate.c libsys.a;; \
 	    *)						\
-		$(CC) -o icreate -I${SRCDIR}/include icreate.c ${XLIBS};; \
+		$(CC) -o icreate -I${TOP_INCDIR} icreate.c ${XLIBS};; \
 	esac
 iopen:	iopen.c  AFS_component_version_number.c
 	case "${SYS_NAME}" in				\
 	    sgi_6* ) \
 		$(CC) -o iopen ${CFLAGS} iopen.c libsys.a;; \
 	    *)						\
-		$(CC) -o iopen -I${SRCDIR}/include iopen.c ${XLIBS};; \
+		$(CC) -o iopen -I${TOP_INCDIR} iopen.c ${XLIBS};; \
 	esac
 iread:	iread.c  AFS_component_version_number.c
 	case "${SYS_NAME}" in				\
 	    sgi_6* ) \
 		${CC} -o iread ${CFLAGS} iread.c libsys.a;; \
 	    *)						\
-		${CC} -o iread -I${SRCDIR}/include iread.c ${XLIBS};; \
+		${CC} -o iread -I${TOP_INCDIR} iread.c ${XLIBS};; \
 	esac
 iwrite:	iwrite.c  AFS_component_version_number.c
 	case "${SYS_NAME}" in				\
 	    sgi_6* ) \
 		${CC} -o iwrite ${CFLAGS} iwrite.c libsys.a;; \
 	    *)						\
-		${CC} -o iwrite -I${SRCDIR}/include iwrite.c ${XLIBS};; \
+		${CC} -o iwrite -I${TOP_INCDIR} iwrite.c ${XLIBS};; \
 	esac
 istat:	istat.c  AFS_component_version_number.c
 	case "${SYS_NAME}" in				\
 		sgi_6* ) \
 		$(CC) -o istat ${CFLAGS} istat.c libsys.a;; \
 	    *)						\
-		$(CC) -o istat -I${SRCDIR}/include istat.c ${XLIBS};; \
+		$(CC) -o istat -I${TOP_INCDIR} istat.c ${XLIBS};; \
 	esac
 fixit:	fixit.c AFS_component_version_number.c
 	$(CC) -o fixit -IDEST/include fixit.c libsys.a 
@@ -189,3 +207,37 @@ clean:
 	$(RM) -f *.o libsys.a xfsinode iinc idec icreate iopen istat core \
 	rmtsysc rmtsyss *.o rmtsys.ss.c rmtsys.cs.c rmtsys.xdr.c rmtsys.h \
 	rmtsysd AFS_component_version_number.c pagsh pagsh.krb
+${DEST}/lib/afs/libsys.a: libsys.a
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/afs/libsys.a: libsys.a
+	${INSTALL} $? $@
+
+
+${TOP_LIBDIR}/libsys.a: libsys.a
+	${INSTALL} $? $@
+
+
+${DESTDIR}${sbindir}/rmtsysd: rmtsysd
+	${INSTALL} -s $? $@
+
+${DESTDIR}${includedir}/afs/afssyscalls.h: afssyscalls.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/afssyscalls.h: afssyscalls.h
+	${INSTALL} $? $@
+
+${DESTDIR}${bindir}/pagsh: pagsh
+	${INSTALL} -s $? $@
+
+${DESTDIR}${bindir}/pagsh.krb: pagsh.krb
+	${INSTALL} -s $? $@
+
+dest: ${DEST}/lib/afs/libsys.a ${DEST}/etc/rmtsysd ${DEST}/include/afs/afssyscalls.h ${DEST}/bin/pagsh ${DEST}/bin/pagsh.krb  
+	case "${SYS_NAME}" in \
+	rs_aix*)			\
+		${INSTALL} afs.exp ${DEST}/include/afs;;	\
+	sgi_6? ) \
+		${INSTALL} xfsattrs.h ${DEST}/include/afs;; \
+	esac
+

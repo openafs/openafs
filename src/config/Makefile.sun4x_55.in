@@ -39,7 +39,9 @@ MV=mv
 RANLIB=/bin/true
 RM=rm
 STRIP= /usr/ccs/bin/strip
-INSTALL=${DESTDIR}/bin/install
+INSTALL=${TOP_SRCDIR}/pinstall/pinstall
 #
 # this is for the vol package
-FS_CONV_SOL26= $(DESTDIR)root.server/usr/afs/bin/fs_conv_sol26
+FS_CONV_SOL26         = fs_conv_sol26
+install_FS_CONV_SOL26 = $(DESTDIR)${afssrvsbindir}/fs_conv_sol26
+dest_FS_CONV_SOL26    = $(DEST)/root.server/usr/afs/bin/fs_conv_sol26

@@ -8,8 +8,22 @@
 # Makefile for the module providing the client side of the File Server
 # and Cache Manager extended statistics gathering.
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -17,23 +31,28 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS= ${DBUG} -I. \
+CFLAGS=${DBUG} -I. \
 	-I${TOP_SRCDIR}/config \
-	-I${SRCDIR}/include \
-	-I${SRCDIR}/include/afs \
-	-I${SRCDIR} \
+	-I${TOP_INCDIR} \
+	-I${TOP_INCDIR}/afs \
 	-I/usr/include ${XCFLAGS}
 
-RPCINCLS=${SRCDIR}/include/lwp.h ${SRCDIR}/include/rx/rx.h
+RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h
 
-LIBS=	${SRCDIR}/lib/afs/libafsint.a \
-	${SRCDIR}/lib/afs/libcmd.a \
-	${SRCDIR}/lib/librx.a \
-	${SRCDIR}/lib/liblwp.a \
-	${SRCDIR}/lib/afs/libsys.a \
-	${SRCDIR}/lib/afs/util.a
+LIBS=${TOP_LIBDIR}/libafsint.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/util.a
 
-all: install
+all: \
+	${TOP_INCDIR}/afs/xstat_fs.h \
+	${TOP_INCDIR}/afs/xstat_cm.h \
+	${TOP_LIBDIR}/libxstat_fs.a \
+	${TOP_LIBDIR}/libxstat_cm.a \
+	xstat_fs_test \
+	xstat_cm_test
 
 #
 # File Server data collection
@@ -75,29 +94,29 @@ xstat_cm_test: xstat_cm_test.o libxstat_cm.a ${LIBS}
 # Installation targets
 #
 install: \
-	${DESTDIR}/include/afs/xstat_fs.h \
-	${DESTDIR}/include/afs/xstat_cm.h \
-	${DESTDIR}/lib/afs/libxstat_fs.a \
-	${DESTDIR}/lib/afs/libxstat_cm.a \
-	${DESTDIR}/bin/xstat_fs_test \
-	${DESTDIR}/bin/xstat_cm_test 
+	${DESTDIR}${includedir}/afs/xstat_fs.h \
+	${DESTDIR}${includedir}/afs/xstat_cm.h \
+	${DESTDIR}${libdir}/afs/libxstat_fs.a \
+	${DESTDIR}${libdir}/afs/libxstat_cm.a \
+	${DESTDIR}${bindir}/xstat_fs_test \
+	${DESTDIR}${bindir}/xstat_cm_test
 
-${DESTDIR}/include/afs/xstat_fs.h: xstat_fs.h
+${DEST}/include/afs/xstat_fs.h: xstat_fs.h
 	${INSTALL} $? $@
 
-${DESTDIR}/include/afs/xstat_cm.h: xstat_cm.h
+${DEST}/include/afs/xstat_cm.h: xstat_cm.h
 	${INSTALL} $? $@
 
-${DESTDIR}/lib/afs/libxstat_fs.a: libxstat_fs.a
+${DEST}/lib/afs/libxstat_fs.a: libxstat_fs.a
 	${INSTALL} $? $@
 
-${DESTDIR}/lib/afs/libxstat_cm.a: libxstat_cm.a
+${DEST}/lib/afs/libxstat_cm.a: libxstat_cm.a
 	${INSTALL} $? $@
 
-${DESTDIR}/bin/xstat_fs_test: xstat_fs_test
+${DEST}/bin/xstat_fs_test: xstat_fs_test
 	${INSTALL} $? $@
 
-${DESTDIR}/bin/xstat_cm_test: xstat_cm_test
+${DEST}/bin/xstat_cm_test: xstat_cm_test
 	${INSTALL} $? $@
 
 #
@@ -107,4 +126,42 @@ clean:
 	$(RM) -f *.o *.a xstat_fs_test xstat_cm_test core AFS_component_version_number.c
 
 include ../config/Makefile.version
+
+${DESTDIR}${includedir}/afs/xstat_fs.h: xstat_fs.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/xstat_fs.h: xstat_fs.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/xstat_cm.h: xstat_cm.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/xstat_cm.h: xstat_cm.h
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/afs/libxstat_fs.a: libxstat_fs.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libxstat_fs.a: libxstat_fs.a
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/afs/libxstat_cm.a: libxstat_cm.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libxstat_cm.a: libxstat_cm.a
+	${INSTALL} $? $@
+
+${DESTDIR}${bindir}/xstat_fs_test: xstat_fs_test
+	${INSTALL} $? $@
+
+${DESTDIR}${bindir}/xstat_cm_test: xstat_cm_test
+	${INSTALL} $? $@
+
+dest: \
+	${DEST}/include/afs/xstat_fs.h \
+	${DEST}/include/afs/xstat_cm.h \
+	${DEST}/lib/afs/libxstat_fs.a \
+	${DEST}/lib/afs/libxstat_cm.a \
+	${DEST}/bin/xstat_fs_test \
+	${DEST}/bin/xstat_cm_test
 

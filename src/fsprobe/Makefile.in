@@ -8,8 +8,22 @@
 # Makefile for fsprobe and its test program, all part of the AFS
 # navigation and monitoring tool (gator).
 #
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -19,29 +33,29 @@ include ../config/Makefile.${SYS_NAME}
 
 CFLAGS=-g -I. \
 	-I${TOP_SRCDIR}/config \
-	-I${SRCDIR}/include \
-	-I${SRCDIR}/include/afs \
+	-I${TOP_INCDIR} \
+	-I${TOP_INCDIR}/afs \
 	-I${SRCDIR} \
 	-I/usr/include ${XCFLAGS}
 
-RPCINCLS=${SRCDIR}/include/lwp.h ${SRCDIR}/include/rx/rx.h
+RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h
 
 INCLS=fsprobe.h ${RPCINCLS}
 
-LIBS= 	${SRCDIR}/lib/afs/libvolser.a ${SRCDIR}/lib/afs/vlib.a ${SRCDIR}/lib/afs/libacl.a \
-        ${SRCDIR}/lib/afs/libsys.a ${SRCDIR}/lib/afs/libvldb.a \
-        ${SRCDIR}/lib/libubik.a \
-        ${SRCDIR}/lib/afs/libauth.a ${SRCDIR}/lib/afs/libsys.a \
-        ${SRCDIR}/lib/afs/libcmd.a ${SRCDIR}/lib/librxkad.a ${SRCDIR}/lib/libdes.a \
-        ${SRCDIR}/lib/afs/libcom_err.a ${SRCDIR}/lib/afs/libkauth.a \
-	${SRCDIR}/lib/afs/libaudit.a \
-	${SRCDIR}/lib/afs/libafsint.a \
-	${SRCDIR}/lib/librx.a \
-	${SRCDIR}/lib/liblwp.a \
-	${SRCDIR}/lib/afs/libsys.a \
-	${SRCDIR}/lib/afs/util.a 
+LIBS=${TOP_LIBDIR}/libvolser.a ${TOP_LIBDIR}/vlib.a ${TOP_LIBDIR}/libacl.a \
+        ${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libvldb.a \
+        ${TOP_LIBDIR}/libubik.a \
+        ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/libsys.a \
+        ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a \
+        ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/libkauth.a \
+	${TOP_LIBDIR}/libaudit.a \
+	${TOP_LIBDIR}/libafsint.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/util.a
 
-all: install
+all: ${TOP_INCDIR}/afs/fsprobe.h ${TOP_LIBDIR}/libfsprobe.a fsprobe_test
 
 #
 # Build targets
@@ -62,14 +76,12 @@ fsprobe_test: fsprobe_test.o libfsprobe.a ${LIBS}
 #
 # Install targets
 #
-install: ${DESTDIR}/include/afs/fsprobe.h \
-	${DESTDIR}/lib/afs/libfsprobe.a \
-	fsprobe_test
+install: ${DESTDIR}${includedir}/afs/fsprobe.h ${DESTDIR}${libdir}/afs/libfsprobe.a 
 
-${DESTDIR}/include/afs/fsprobe.h: fsprobe.h
+${DEST}/include/afs/fsprobe.h: fsprobe.h
 	${INSTALL} $? $@
 
-${DESTDIR}/lib/afs/libfsprobe.a: libfsprobe.a
+${DEST}/lib/afs/libfsprobe.a: libfsprobe.a
 	${INSTALL} $? $@
 
 #
@@ -79,4 +91,18 @@ clean:
 	$(RM) -f *.o fsprobe_test libfsprobe.a core AFS_component_version_number.c
 
 include ../config/Makefile.version
+
+${DESTDIR}${includedir}/afs/fsprobe.h: fsprobe.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/fsprobe.h: fsprobe.h
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/afs/libfsprobe.a: libfsprobe.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libfsprobe.a: libfsprobe.a
+	${INSTALL} $? $@
+
+dest: ${DEST}/include/afs/fsprobe.h ${DEST}/lib/afs/libfsprobe.a 
 

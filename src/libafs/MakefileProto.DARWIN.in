@@ -3,9 +3,22 @@
 # 
 # MakefileProto for Digital Unix systems
 #
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+afskerneldir=@afskerneldir@
 SYS_NAME=@AFS_SYSNAME@
 
 include config/Makefile.${SYS_NAME}
@@ -49,6 +62,7 @@ KOBJ = MODLOAD
 # This tells Makefile.common to use it's single directory build target.
 COMPDIRS = single_compdir
 INSTDIRS = single_instdir
+DESTDIRS = single_destdir
 
 include Makefile.common
 
@@ -73,13 +87,22 @@ setup:
 LIBAFS = libafs.o
 LIBAFSNONFS = libafs.nonfs.o
 
-DEST_LIBAFS = ${DESTDIR}/root.client/usr/vice/etc/afs.kext/Contents/MacOS/afs-nfs
-DEST_LIBAFSNONFS = ${DESTDIR}/root.client/usr/vice/etc/afs.kext/Contents/MacOS/afs
+INST_LIBAFS = ${DESTDIR}${afskerneldir}/afs-nfs
+INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/afs
+DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/afs.kext/Contents/MacOS/afs-nfs
+DEST_LIBAFSNONFS = ${DEST}/root.client/usr/vice/etc/afs.kext/Contents/MacOS/afs
 
 
 libafs: $(LIBAFSNONFS) ;
-install_libafs: $(DEST_LIBAFSNONFS) ;
+install_libafs: $(INST_LIBAFSNONFS) ;
+dest_libafs: $(DEST_LIBAFSNONFS) ;
 
+
+$(INST_LIBAFS): $(LIBAFS)
+	$(INSTALL) -f $? $@
+
+$(INST_LIBAFSNONFS): $(LIBAFSNONFS)
+	$(INSTALL) -f $? $@
 
 $(DEST_LIBAFS): $(LIBAFS)
 	$(INSTALL) -f $? $@

@@ -7,8 +7,22 @@
 
 # This is a pthread safe library containing ubikclient, auth, kauth.
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
@@ -17,7 +31,7 @@ SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 CC=${MT_CC}
-CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${MT_CFLAGS} 
+CFLAGS=${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${MT_CFLAGS}
 CCRULE = ${CC} ${CFLAGS} -c $?
 
 AUDIT= ../audit
@@ -94,10 +108,12 @@ LIBOBJS = \
 	${PTSERVEROBJS} \
 	${SYSOBJS}
 
-system install: ${DESTDIR}/lib/libafsauthent.a
+all: ${TOP_LIBDIR}/libafsauthent.a
 
-${DESTDIR}/lib/libafsauthent.a: libafsauthent.a
-	${INSTALL} libafsauthent.a ${DESTDIR}/lib/libafsauthent.a
+install: ${DESTDIR}${libdir}/libafsauthent.a
+
+${DEST}/lib/libafsauthent.a: libafsauthent.a
+	${INSTALL} $? $@
 
 libafsauthent.a: ${LIBOBJS}
 	$(RM) -f $@
@@ -242,3 +258,12 @@ rmtsysnet.o: ${SYS}/rmtsysnet.c
 
 clean:
 	$(RM) -f *.o *.a libafsauthent*
+
+${DESTDIR}${libdir}/libafsauthent.a: libafsauthent.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libafsauthent.a: libafsauthent.a
+	${INSTALL} $? $@
+
+dest: ${DEST}/lib/libafsauthent.a
+

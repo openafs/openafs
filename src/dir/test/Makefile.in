@@ -23,6 +23,8 @@ CFLAGS = ${OPTMZ} ${INCDIRS} ${XCFLAGS}
 
 OBJS=test-salvage.o physio.o dtest.o
 
+all:
+
 install:	dtest 
 
 clean:
