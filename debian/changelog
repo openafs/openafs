@@ -1,3 +1,12 @@
+openafs (1.0.3-2) unstable; urgency=low
+
+  * Fix  direntry type to be DT_UNKNOWN not DT_DIR on Linux (contributed upstream)
+  * Return ENOTEMPTY not ENOTDIR for rmdir of non-empty directory, closes: #82589
+  * Include build instructions in modules, closes: #92032
+  * Don't grep a file for a potentially null string, closes: #89967
+
+ --
+
 openafs (1.0.3-1) unstable; urgency=low
 
   * New upstream version
