@@ -22,7 +22,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/waitkey.c,v 1.1.1.6 2001/07/14 22:22:57 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/waitkey.c,v 1.1.1.7 2001/07/20 10:07:28 hartmans Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -98,6 +98,7 @@ int LWP_WaitForKeystroke(int seconds)
  * Return Value:
  *   n - a whole line has been read.(has n chars)
  *   0 - buf not big enough.
+ *   -1 - line with only EOF
  */
 
 int LWP_GetLine(char *linebuf, int len)
@@ -111,6 +112,10 @@ int LWP_GetLine(char *linebuf, int len)
     { 
       LWP_WaitForKeystroke(-1);
       ch = getch(); 
+      
+      if ((ch == EOF) && (cnt == 0))
+	return -1;
+
       if (ch == '\b') {/* print and throw away a backspace */
 	if (!cnt) /* if we are at the start of the line don't bspace */
 	  continue;
@@ -195,15 +200,19 @@ int LWP_WaitForKeystroke(int seconds)
  * Return Value:
  *   n - a whole line has been read.(has n chars)
  *   0 - buf not big enough.
+ *   -1 - line with only EOF
  */
 
 int LWP_GetLine(char *linebuf, int len)
 {
   int linelen;
+  char *s;
 
   LWP_WaitForKeystroke(-1);
 
-  fgets(linebuf, len, stdin);
+  s = fgets(linebuf, len, stdin);
+  if (s == NULL) return -1;
+
   linelen = strlen(linebuf);
   if (linebuf[linelen-1] != '\n') /* buffer too small */
     return 0;

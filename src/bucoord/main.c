@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/main.c,v 1.1.1.4 2001/07/14 22:20:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/main.c,v 1.1.1.5 2001/07/20 10:06:30 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -688,13 +688,17 @@ main(argc, argv)
     /* Iterate on command lines, interpreting user commands (interactive mode) */
     while(1) 
     {
+	int ret;
+
 	printf("backup> ");
 	fflush(stdout);
 
 	
-	while (LWP_GetLine(lineBuffer, sizeof(lineBuffer)) == 0)
+	while ((ret = LWP_GetLine(lineBuffer, sizeof(lineBuffer))) == 0)
 	  printf("%s: Command line too long\n", whoami); /* line too long */
-	
+
+	if (ret == -1) return 0; /* Got EOF */
+
 	if ( !LineIsBlank(lineBuffer) ) 
 	{
 	    code = cmd_ParseLine(lineBuffer, targv, &targc, MAXV);
