@@ -32,7 +32,7 @@ MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 all:
 	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
-	$(MAKE) install "COMPILE_PART1=cd obj; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME} "WASHTOOL=echo No washtool: "
+	$(MAKE) install "COMPILE_PART1=cd obj; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME} "WASHTOOL=echo No washtool: "
 
 basics:
 	-if test -f "${WASHTOOL}"; \
@@ -95,7 +95,7 @@ rxincls: rxobj
 	${COMPILE_PART1} rx ${COMPILE_PART2}
 
 rxtests: rxobj
-	${COMPILE_PART1} rx ${COMPILE_PART2}
+	${COMPILE_PART1} rx ${COMPILE_PART3}
 
 fsint: project kfsint
 
@@ -138,8 +138,9 @@ auth: project comerr des lwp rx sys rxkad audit
 ubik: project auth 
 	${COMPILE_PART1} ubik ${COMPILE_PART2}
 
+#	cd obj/ubik; $(MAKE) test SYS_NAME=${SYS_NAME} 
 ubiktests: ubik sys
-	cd obj/ubik; $(MAKE) test SYS_NAME=${SYS_NAME} 
+	${COMPILE_PART1} ubik ${COMPILE_PART3}
 
 ptserver: project ubik cmd comerr auth audit
 	${COMPILE_PART1} ptserver ${COMPILE_PART2}
