@@ -219,6 +219,8 @@ unwind( "$openafsdirpath->{'afssrvsbindir'}/vos remove $server $part root.afs.re
 
 run("$openafsinitcmd->{'client-restart'}");
 
+`cp ./t.uniq-bad /usr/tmp`;
+
 system ("pagsh -c './test-front.sh $lcell'");
 
 @unwinds = ();
