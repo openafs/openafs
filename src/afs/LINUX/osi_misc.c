@@ -203,6 +203,7 @@ osi_file_uio_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
 	     * This is bad -- we can't read any more data from the
 	     * file, but we have no good way of signaling a partial
 	     * read either.
+	     */
 	    code = EIO;
 	    break;
 	}
