@@ -176,7 +176,9 @@ Type	: REG_SZ
 Default : "i386_nt40"
 Variable: cm_sysName
 
-  Self explanatory.
+  Provides an initial value for "fs sysname".  The string can contain
+  one or more replacement values for @sys in order of preference separated 
+  by whitespace.
 
 Value	: SecurityLevel
 Type	: DWORD {1,0}
@@ -334,6 +336,12 @@ Default : 100K
   the file will be reset to 0 bytes.  If this value is 0, it means the file
   should be allowed to grow indefinitely.
 
+Value   : FlushOnHibernate
+Type    : DWORD {0,1}
+Default : 1
+
+  If set, flushes all volumes before the machine goes on hibernate or
+  stand-by.
 
 Regkey:
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters\GlobalAutoMapper]
@@ -739,7 +747,7 @@ Regkey:
 [HKLM\SOFTWARE\OpenAFS\Client\Submounts]
 
 Value   : "submount name"
-Type    : REG_SZ
+Type    : REG_EXPAND_SZ
 Default : <none>
 
     This key is used to store mappings of unix style AFS paths

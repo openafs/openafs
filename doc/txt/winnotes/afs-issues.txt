@@ -1,4 +1,4 @@
-This file is a rough list of known issues with the 1.3.70 release of OpenAFS
+This file is a rough list of known issues with the 1.3.72 release of OpenAFS
 on Windows.  This list is not complete.  There are probably other issues 
 which can be found in the RT database or on the mailing list.
 
@@ -108,28 +108,27 @@ directories.
      and per-machine settings.  All of the new registry items need to 
      be added to the UI
 
-(27) There appears to be a thread safety issue in the Rx library when
-     running on Intel processors which support hyper-threading
-
-(28) Thread initialization versus Global Drive Mapping.  There is no
+(27) Thread initialization versus Global Drive Mapping.  There is no
      mechanism in the afsd_init.c to ensure that all of the threads 
      complete initializing in the correct sequence.  In the case of 
      Global Drive Maps this is a problem because the Global Drive Maps
      can be executed prior to the completion of the SMB registration
      and service thread initialization.
 
-(29) Should we allow the AFSCACHE file to be stored in the Virtual Paging
+(28) Should we allow the AFSCACHE file to be stored in the Virtual Paging
      file as long as we do not support persistent caches?
 
-(30) CIFS Remote Administration Protocol implementation is incomplete.
+(29) CIFS Remote Administration Protocol implementation is incomplete.
      Notifications are not made to requestors when the view of a file
      or folder changes due to token acquisition; token expiration; or
      token destruction
 
-(31) Microsoft Office appears to have trouble editing files of ~20MB
+(30) Microsoft Office appears to have trouble editing files of ~20MB
      or larger from within AFS.  Performance is particularly slow and
      applications such as Word often crash upon saving the files.
-      
+
+(31) The Cache Manager Flush routines do not return or check error 
+     codes.        
 
 -------------------------------------------------------------------------
 List of unfunded projects:
@@ -144,22 +143,21 @@ List of unfunded projects:
       the AFS Client Server is not using Freelance mode
    5. Prevent panic situation when the IP address to which the SMB server is bound is removed 
       from the local machine's network configuration
-   6. Identify and fix the problems with running the RX library on Hyperthreaded systems
-   7. Add support for Named Pipes within the afs filesystem
+   6. Add support for Named Pipes within the afs filesystem
       (This is not currently a supported feature of AFS; it will require 
       changes to the servers as well as the clients.)
-   8. Re-write afscreds.exe to support:
+   7. Re-write afscreds.exe to support:
          1. choosing between Kerberos 5 and Kerberos 4 on a per principal basis
          2. providing users with the ability to map multiple cells to a single principal
          3. providing change password functionality on a per principal basis
          4. no longer include drive mapping
          5. configuration of afscreds startup options in shortcut
-   9. Re-write afs_config.exe to be only "per user" functionality which does not require admin 
+   8. Re-write afs_config.exe to be only "per user" functionality which does not require admin 
       privileges
          1. default cell and principal for the user
          2. drive mappings
          3. visibility of afs creds and setting of afs creds startup options
-  10. Create new afs_admin.exe tool to be installed in the administrator folder (or use MMS) 
+   9. Create new afs_admin.exe tool to be installed in the administrator folder (or use MMS) 
       which contains
          1. afs client service cell name
          2. integrated logon configuration
@@ -174,29 +172,29 @@ List of unfunded projects:
         11. network configuration
         12. miscellaneous
         13. need to add support for all of the new registry values since 1.2.8
-  11. Identify why 16-bit DOS applications executed out of AFS fail
-  12. Add support for configurable Icon file representing AFS folders within the Explorer Shell
-  13. Documentation Documentation Documentation
-  14. Large File support (> 2GB)
-  15. Integrate KFW installation into the NSIS installer
-  16. Add support for record locking to AFS (requires changes to the servers)
-  17. Unicode enable the SMB/CIFS server.  OEM Code Pages: 
+  10. Identify why 16-bit DOS applications executed out of AFS fail
+  11. Add support for configurable Icon file representing AFS folders within the Explorer Shell
+  12. Documentation Documentation Documentation
+  13. Large File support (> 2GB)
+  14. Integrate KFW installation into the NSIS installer
+  15. Add support for record locking to AFS (requires changes to the servers)
+  16. Unicode enable the SMB/CIFS server.  OEM Code Pages: 
       1. prevent the use of interoperable file names
       2. force the use of paths no longer than 256 characters
       3. force share names to be no longer than 13 characters
       4. restrict authentication to ASCII only names and passwords
-  18. Complete implementation of CIFS Remote Administration Protocol
-  19. Correct the problems with overlapped writes which adversely affect 
+  17. Complete implementation of CIFS Remote Administration Protocol
+  18. Correct the problems with overlapped writes which adversely affect 
       Microsoft Office applications storing documents and temporary files
       within AFS volumes
-  20. Add support for SMB/CIFS Digital Signatures
-  21. Development of afsmap.exe tool to provide AFS aware NET USE functionality
+  19. Add support for SMB/CIFS Digital Signatures
+  20. Development of afsmap.exe tool to provide AFS aware NET USE functionality
       afsmap.exe <drive> <afs-path> [/PERSISTENT]
       afsmap.exe <drive> <unc-path> [/PERSISTENT]
       afsmap.exe <drive> /DELETE
-  22. Write-through caching appears to be unsupported.   Files copied to AFS
+  21. Write-through caching appears to be unsupported.   Files copied to AFS
       do not end up in the local cache.
-  23. Missing SMB/CIFS functions: 
+  22. Missing SMB/CIFS functions: 
         Find
         FindUnique
         FindClose
@@ -204,8 +202,11 @@ List of unfunded projects:
         WriteBulk       
         WriteBulkData
         Tran2::SessionSetup
-  24. StoreBehind mode is not implemented.  Or more correctly, all data is
+  23. StoreBehind mode is not implemented.  Or more correctly, all data is
       written directly to the server and is not cached.  Writes invalidate
       the local cache entries which are then read back from the server.
+  24. The Power Management Flush Cache code does not work on Terminal 
+      Server nor does it always successfully flush all of the dirty buffers
+      to the AFS servers before suspend/hibernate operations occur.
 
 
