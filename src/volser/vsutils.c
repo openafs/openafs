@@ -539,18 +539,19 @@ afs_int32 vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc
  */
 vsu_ExtractName(rname,name)
 char rname[],name[];
-{   char sname[32];
+{   char sname[VOLSER_OLDMAXVOLNAME+1];
     int total;
 
-    strcpy(sname,name);
+    strncpy(sname, name, sizeof(sname));
+    sname[sizeof(sname)-1] = '\0';
     total = strlen(sname);
     if(!strcmp(&sname[total - 9],".readonly")) {
 	/*discard the last 8 chars */
 	sname[total - 9] = '\0';
-	strcpy(rname,sname);
+	strcpy(rname, sname);
 	return 0;
     }
-    else if(!strcmp(&sname[total - 7 ],".backup")) {
+    else if(!strcmp(&sname[total - 7],".backup")) {
 	/*discard last 6 chars */
 	sname[total - 7] = '\0';
 	strcpy(rname,sname);
@@ -558,6 +559,7 @@ char rname[],name[];
     }
     else {
 	strncpy(rname,name,VOLSER_OLDMAXVOLNAME);
+	rname[VOLSER_OLDMAXVOLNAME] = '\0';
 	return -1;
     }
 }
