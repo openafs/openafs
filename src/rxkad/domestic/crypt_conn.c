@@ -46,7 +46,6 @@
 #endif
 
 
-AFS_HIDE
 afs_int32 rxkad_DecryptPacket (conn, schedule, ivec, len, packet)
   IN struct rx_connection *conn;
   IN fc_KeySchedule *schedule;
@@ -84,7 +83,6 @@ afs_int32 rxkad_DecryptPacket (conn, schedule, ivec, len, packet)
     return 0;
 }
 
-AFS_HIDE
 afs_int32 rxkad_EncryptPacket (conn, schedule, ivec, len, packet)
   IN struct rx_connection *conn;
   IN fc_KeySchedule *schedule;

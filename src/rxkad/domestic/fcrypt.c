@@ -104,7 +104,6 @@ int fc_keysched (key, schedule)
     return 0;
 }
 
-AFS_HIDE
 afs_int32 fc_ecb_encrypt(clear, cipher, schedule, encrypt)
   IN afs_uint32  *clear;
   OUT afs_uint32 *cipher;
@@ -194,7 +193,6 @@ afs_int32 fc_ecb_encrypt(clear, cipher, schedule, encrypt)
  * NOTE: fc_cbc_encrypt now modifies its 5th argument, to permit chaining over
  * scatter/gather vectors.
  */
-AFS_HIDE
 afs_int32 fc_cbc_encrypt (input, output, length, key, xor, encrypt)
   char		*input;
   char		*output;

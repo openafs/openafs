@@ -62,7 +62,7 @@ extern int des_debug_print();
  *
  */
 
-AFS_HIDE afs_int32
+afs_int32
 des_pcbc_encrypt(in,out,length,key,iv,encrypt)
     des_cblock *in;		/* >= length bytes of inputtext */
     des_cblock *out;		/* >= length bytes of outputtext */
