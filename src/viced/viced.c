@@ -96,11 +96,10 @@ extern int      BreakVolumeCallBacks(), InitCallBack();
 extern	int     LogLevel, etext;
 extern afs_int32	BlocksSpare, PctSpare;
 
-void            ShutDown();
+void            ShutDown(void);
 static void	ClearXStatValues(), NewParms(), PrintCounters();
 static void     ResetCheckDescriptors(void), ResetCheckSignal(void);
-static int	CheckSignal();
-static int	FiveMinuteCheckLWP(), HostCheckLWP();
+static void     CheckSignal(void);
 extern	int     GetKeysFromToken();
 extern int RXAFS_ExecuteRequest();
 extern int RXSTATS_ExecuteRequest();
@@ -182,15 +181,14 @@ afs_uint32 FS_HostAddrs[ADDRSPERSITE], FS_HostAddr_cnt = 0, FS_registered=0;
 /* All addresses in FS_HostAddrs are in NBO */
 afsUUID FS_HostUUID;
 
-static ParseArgs();
-static FlagMsg();
+static void FlagMsg();
 
 /*
  * Home for the performance statistics.
  */
 
 /* DEBUG HACK */
-static CheckDescriptors()
+static void CheckDescriptors()
 {
 #ifndef AFS_NT40_ENV
     struct stat status;
@@ -210,9 +208,9 @@ static CheckDescriptors()
 
 
 #ifdef AFS_PTHREAD_ENV
-void CheckSignal_Signal(x)       {CheckSignal(0);}
-void ShutDown_Signal(x)          {ShutDown(0);}
-void CheckDescriptors_Signal(x)  {CheckDescriptors(0);}
+void CheckSignal_Signal(x)       {CheckSignal();}
+void ShutDown_Signal(x)          {ShutDown();}
+void CheckDescriptors_Signal(x)  {CheckDescriptors();}
 #else /* AFS_PTHREAD_ENV */
 void CheckSignal_Signal(x)       {IOMGR_SoftSig(CheckSignal, 0);}
 void ShutDown_Signal(x)          {IOMGR_SoftSig(ShutDown, 0);}
@@ -220,8 +218,7 @@ void CheckDescriptors_Signal(x)  {IOMGR_SoftSig(CheckDescriptors, 0);}
 #endif /* AFS_PTHREAD_ENV */
 
 /* check whether caller is authorized to manage RX statistics */
-int fs_rxstat_userok(call)
-    struct rx_call *call;
+int fs_rxstat_userok(struct rx_call *call)
 {
     return afsconf_SuperUser(confDir, call, NULL);
 }
@@ -248,11 +245,7 @@ static void ResetCheckDescriptors(void)
 
 
 /* proc called by rxkad module to get a key */
-static int get_key(arock, akvno, akey)
-    char *akey;
-    char *arock;
-    register afs_int32 akvno;
-
+static int get_key(char *arock, register afs_int32 akvno, char *akey)
 {
     /* find the key */
     static struct afsconf_key tkey;
@@ -271,9 +264,7 @@ static int get_key(arock, akvno, akey)
 } /*get_key*/
 
 #ifndef AFS_NT40_ENV
-int viced_syscall(a3, a4, a5)
-afs_uint32 a3, a4;
-void * a5;
+int viced_syscall(afs_uint32 a3, afs_uint32 a4, void * a5)
 {
   afs_uint32 rcode;
   void (*old)();
@@ -294,10 +285,982 @@ void * a5;
 #include "AFS_component_version_number.c"
 #endif /* !AFS_NT40_ENV */
 
-main(argc, argv)
-    int argc;
-    char * argv[];
+#define MAXADMINNAME 64
+char adminName[MAXADMINNAME];
 
+static void
+CheckAdminName()
+{
+    int             fd = 0;
+    struct stat     status;
+    
+    if ((stat("/AdminName", &status)) ||	/* if file does not exist */
+	(status.st_size <= 0) ||		/* or it is too short */
+	(status.st_size >= (MAXADMINNAME)) ||	/* or it is too long */
+	!(fd = open("/AdminName", O_RDONLY, 0))) {	/* or the open fails */
+	strcpy(adminName, "System:Administrators");	/* use the default name */
+    }
+    else {
+	read(fd, adminName, status.st_size);	/* use name from the file */
+    }
+    if (fd)
+	close(fd);	/* close fd if it was opened */
+
+} /*CheckAdminName*/
+
+
+/* This LWP does things roughly every 5 minutes */
+static void FiveMinuteCheckLWP()
+{
+    static int msg  = 0;
+    char tbuffer[32];
+
+    ViceLog(1, ("Starting five minute check process\n"));
+    while (1) {
+#ifdef AFS_PTHREAD_ENV
+	sleep(fiveminutes);
+#else /* AFS_PTHREAD_ENV */
+	IOMGR_Sleep(fiveminutes);
+#endif /* AFS_PTHREAD_ENV */
+
+	/* close the log so it can be removed */
+	ReOpenLog(AFSDIR_SERVER_FILELOG_FILEPATH); /* don't trunc, just append */
+	ViceLog(2, ("Cleaning up timed out callbacks\n"));
+	if(CleanupTimedOutCallBacks())
+	    ViceLog(5,("Timed out callbacks deleted\n"));
+	ViceLog(2, ("Set disk usage statistics\n"));
+	VSetDiskUsage();
+	if (FS_registered == 1) Do_VLRegisterRPC();
+	if(printBanner && (++msg&1)) { /* Every 10 minutes */
+	    time_t now = FT_ApproxTime();
+	    if (console != NULL) {
+#ifndef AFS_QUIETFS_ENV
+		fprintf(console,"File server is running at %s\r",
+			afs_ctime(&now, tbuffer, sizeof(tbuffer)));
+#endif /* AFS_QUIETFS_ENV */
+		ViceLog(2, ("File server is running at %s\n",
+			afs_ctime(&now, tbuffer, sizeof(tbuffer))));
+	    }
+	}
+    }
+} /*FiveMinuteCheckLWP*/
+
+
+/* This LWP does host checks every 5 minutes:  it should not be used for
+ * other 5 minute activities because it may be delayed by timeouts when
+ * it probes the workstations
+ */
+static void HostCheckLWP()
+{
+    ViceLog(1, ("Starting Host check process\n"));
+    while(1) {
+#ifdef AFS_PTHREAD_ENV
+	sleep(fiveminutes);
+#else /* AFS_PTHREAD_ENV */
+	IOMGR_Sleep(fiveminutes);
+#endif /* AFS_PTHREAD_ENV */
+	ViceLog(2, ("Checking for dead venii & clients\n"));
+	h_CheckHosts();
+    }
+} /*HostCheckLWP*/
+
+
+/*------------------------------------------------------------------------
+ * PRIVATE ClearXStatValues
+ *
+ * Description:
+ *	Initialize all of the values collected via the xstat
+ *	interface.
+ *
+ * Arguments:
+ *	None.
+ *
+ * Returns:
+ *	Nothing.
+ *
+ * Environment:
+ *	Must be called during File Server initialization.
+ *
+ * Side Effects:
+ *	As advertised.
+ *------------------------------------------------------------------------*/
+
+static void ClearXStatValues()
+{ /*ClearXStatValues*/
+
+    struct fs_stats_opTimingData *opTimeP;	/*Ptr to timing struct*/
+    struct fs_stats_xferData *opXferP;		/*Ptr to xfer struct*/
+    int i;					/*Loop counter*/
+
+    /*
+     * Zero all xstat-related structures.
+     */
+    memset((char *)(&afs_perfstats), 0, sizeof(struct afs_PerfStats));
+#if FS_STATS_DETAILED
+    memset((char *)(&afs_FullPerfStats), 0, sizeof(struct fs_stats_FullPerfStats));
+
+    /*
+     * That's not enough.  We have to set reasonable minima for
+     * time and xfer values in the detailed stats.
+     */
+    opTimeP = &(afs_FullPerfStats.det.rpcOpTimes[0]);
+    for (i = 0; i < FS_STATS_NUM_RPC_OPS; i++, opTimeP++)
+	opTimeP->minTime.tv_sec = 999999;
+
+    opXferP = &(afs_FullPerfStats.det.xferOpTimes[0]);
+    for (i = 0; i < FS_STATS_NUM_XFER_OPS; i++, opXferP++) {
+	opXferP->minTime.tv_sec = 999999;
+	opXferP->minBytes = 999999999;
+    }
+
+    /*
+     * There's more.  We have to set our unique system identifier, as
+     * declared in param.h.  If such a thing is not defined, we bitch
+     * and declare ourselves to be an unknown system type.
+     */
+#ifdef SYS_NAME_ID
+    afs_perfstats.sysname_ID = SYS_NAME_ID;
+#else
+#ifndef AFS_NT40_ENV
+    ViceLog(0, ("Sys name ID constant not defined in param.h!!\n"));
+    ViceLog(0, ("[Choosing ``undefined'' sys name ID.\n"));
+#endif
+    afs_perfstats.sysname_ID = SYS_NAME_ID_UNDEFINED;
+#endif /* SYS_NAME_ID */
+#endif
+
+} /*ClearXStatValues*/
+
+
+static void PrintCounters()
+{
+    int	dirbuff, dircall, dirio;
+    struct timeval  tpl;
+    int workstations, activeworkstations, delworkstations;
+    int processSize = 0;
+    char tbuffer[32];
+
+    TM_GetTimeOfDay(&tpl, 0);
+    Statistics = 1;
+    ViceLog(0, ("Vice was last started at %s\n",
+		afs_ctime(&StartTime, tbuffer, sizeof(tbuffer))));
+
+    VPrintCacheStats();
+    VPrintDiskStats();
+    DStat(&dirbuff, &dircall, &dirio);
+    ViceLog(0,("With %d directory buffers; %d reads resulted in %d read I/Os\n",
+	    dirbuff, dircall, dirio));
+    rx_PrintStats(stderr);
+    h_PrintStats();
+    PrintCallBackStats();
+#ifdef AFS_NT40_ENV
+    processSize = -1; /* TODO: */
+#else
+    processSize = (int)((long) sbrk(0) >> 10);
+#endif
+    ViceLog(0,("There are %d connections, process size %d\n",  CurrentConnections, processSize));
+    h_GetWorkStats(&workstations, &activeworkstations, &delworkstations,
+	 tpl.tv_sec-15*60);
+    ViceLog(0,
+	    ("There are %d workstations, %d are active (req in < 15 mins), %d marked \"down\"\n",
+	    workstations, activeworkstations, delworkstations));
+    Statistics = 0;
+
+} /*PrintCounters*/
+
+
+
+static void CheckSignal()
+{
+    if (FS_registered > 0)  {
+	/*
+	 * We have proper ip addresses; tell the vlserver what we got; the following
+	 * routine will do the proper reporting for us
+	 */
+	Do_VLRegisterRPC();
+    }
+    h_DumpHosts();
+    h_PrintClients();
+    DumpCallBackState();
+    PrintCounters();
+    ResetCheckSignal();
+
+} /*CheckSignal*/
+
+void ShutDownAndCore(int dopanic)
+{
+    time_t now = time(0);
+    char *tstr;
+    char tbuffer[32];
+
+    ViceLog(0, ("Shutting down file server at %s",
+		afs_ctime(&now, tbuffer, sizeof(tbuffer))));
+    if (dopanic) 
+	ViceLog(0, ("ABNORMAL SHUTDOWN, see core file.\n"));
+#ifndef AFS_QUIETFS_ENV
+    if (console != NULL) {
+	fprintf(console,"File server restart/shutdown received at %s\r",
+		afs_ctime(&now, tbuffer, sizeof(tbuffer)));
+    }
+#endif
+    DFlush();
+    PrintCounters();
+
+    /* do not allows new reqests to be served from now on, all new requests
+       are returned with an error code of RX_RESTARTING ( transient failure ) */
+    rx_SetRxTranquil();			/* dhruba */
+    VShutdown();
+
+    if (debugFile) {
+	rx_PrintStats(debugFile);
+	fflush(debugFile);
+    }
+    if (console != NULL) {
+	now = time(0);
+	if (dopanic) {
+#ifndef AFS_QUIETFS_ENV
+	    fprintf(console, "File server has terminated abnormally at %s\r",
+		    afs_ctime(&now, tbuffer, sizeof(tbuffer)));
+#endif
+	    ViceLog(0, ("File server has terminated abnormally at %s\n",
+		afs_ctime(&now, tbuffer, sizeof(tbuffer))));
+	} else {
+#ifndef AFS_QUIETFS_ENV
+	    fprintf(console, "File server has terminated normally at %s\r",
+		    afs_ctime(&now, tbuffer, sizeof(tbuffer)));
+#endif
+	    ViceLog(0, ("File server has terminated normally at %s\n",
+		afs_ctime(&now, tbuffer, sizeof(tbuffer))));
+	}
+    }
+
+    exit(0);
+
+} /*ShutDown*/
+
+void ShutDown(void) /* backward compatibility */
+{
+  ShutDownAndCore(DONTPANIC);
+}
+
+
+static void FlagMsg()
+{
+    char buffer[1024];
+
+	/* default supports help flag */
+
+    strcpy(buffer, "Usage: fileserver ");
+    strcat(buffer, "[-d <debug level>] ");
+    strcat(buffer, "[-p <number of processes>] ");
+    strcat(buffer, "[-spare <number of spare blocks>] ");
+    strcat(buffer, "[-pctspare <percentage spare>] ");
+    strcat(buffer, "[-b <buffers>] ");
+    strcat(buffer, "[-l <large vnodes>] ");
+    strcat(buffer, "[-s <small vnodes>] ");
+    strcat(buffer, "[-vc <volume cachesize>] ");
+    strcat(buffer, "[-w <call back wait interval>] ");
+    strcat(buffer, "[-cb <number of call backs>] ");
+    strcat(buffer, "[-banner (print banner every 10 minutes)] ");
+    strcat(buffer, "[-novbc (whole volume cbs disabled)] ");
+    strcat(buffer, "[-implicit <admin mode bits: rlidwka>] ");
+    strcat(buffer, "[-readonly (read-only file server)] ");
+    strcat(buffer, "[-hr <number of hours between refreshing the host cps>] ");
+    strcat(buffer, "[-busyat <redirect clients when queue > n>] ");
+    strcat(buffer, "[-rxpck <number of rx extra packets>] ");
+    strcat(buffer, "[-rxdbg (enable rx debugging)] ");
+    strcat(buffer, "[-rxdbge (enable rxevent debugging)] ");
+#ifdef	AFS_AIX32_ENV
+    strcat(buffer, "[-m <min percentage spare in partition>] ");
+#endif
+#if defined(AFS_SGI_ENV)
+    strcat(buffer, "[-lock (keep fileserver from swapping)] ");
+#endif
+    strcat(buffer, "[-L (large server conf)] ");
+    strcat(buffer, "[-S (small server conf)] ");
+    strcat(buffer, "[-k <stack size>] ");
+    strcat(buffer, "[-realm <Kerberos realm name>] ");
+    strcat(buffer, "[-udpsize <size of socket buffer in bytes>] ");
+/*   strcat(buffer, "[-enable_peer_stats] "); */
+/*   strcat(buffer, "[-enable_process_stats] "); */
+    strcat(buffer, "[-help]\n");
+/*
+    ViceLog(0, ("%s", buffer));
+*/
+
+	printf("%s",buffer);
+	fflush(stdout);
+
+} /*FlagMsg*/
+
+
+static afs_int32 ParseRights(char *arights)
+{
+    afs_int32 mode = 0;
+    int i, len;
+    char tc;
+
+    if (!arights || !strcmp(arights, "")) {
+	printf("Missing list of mode bits on -implicit option\n");
+	return -1;
+    }
+    if (!strcmp(arights, "none"))
+      mode = 0;
+    else if (!strcmp(arights, "read")) 
+      mode = PRSFS_READ | PRSFS_LOOKUP;
+    else if (!strcmp(arights, "write"))
+      mode = PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | 
+	     PRSFS_DELETE | PRSFS_WRITE | PRSFS_LOCK;
+    else if (!strcmp(arights, "all"))
+      mode = PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | 
+	     PRSFS_DELETE | PRSFS_WRITE | PRSFS_LOCK | PRSFS_ADMINISTER;
+    else {
+	len = strlen(arights);
+	for(i=0;i<len;i++) {
+	    tc = *arights++;
+	    if (tc == 'r') mode |= PRSFS_READ;
+	    else if (tc == 'l') mode |= PRSFS_LOOKUP;
+	    else if (tc == 'i') mode |= PRSFS_INSERT;
+	    else if (tc == 'd') mode |= PRSFS_DELETE;
+	    else if (tc == 'w') mode |= PRSFS_WRITE;
+	    else if (tc == 'k') mode |= PRSFS_LOCK;
+	    else if (tc == 'a') mode |= PRSFS_ADMINISTER;
+	    else if (tc == 'A') mode |= PRSFS_USR0;
+	    else if (tc == 'B') mode |= PRSFS_USR1;
+	    else if (tc == 'C') mode |= PRSFS_USR2;
+	    else if (tc == 'D') mode |= PRSFS_USR3;
+	    else if (tc == 'E') mode |= PRSFS_USR4;
+	    else if (tc == 'F') mode |= PRSFS_USR5;
+	    else if (tc == 'G') mode |= PRSFS_USR6;
+	    else if (tc == 'H') mode |= PRSFS_USR7;
+	    else {
+		printf("Illegal -implicit rights character '%c'.\n", tc);
+		return -1;
+	    }
+	}
+    }
+    return mode;
+}
+
+/*
+ * Limit MAX_FILESERVER_THREAD by the system limit on the number of
+ * pthreads (sysconf(_SC_THREAD_THREADS_MAX)), if applicable and
+ * available.
+ *
+ * AIX:         sysconf() limit is real
+ * HP-UX:       sysconf() limit is real
+ * IRIX:        sysconf() limit is apparently NOT real -- too small
+ * DUX:         sysconf() limit is apparently NOT real -- too big
+ * Linux:       sysconf() limit is apparently NOT real -- too big
+ * Solaris:     no sysconf() limit
+ */
+static int
+max_fileserver_thread(void)
+{
+#if defined(AFS_PTHREAD_ENV)
+#if defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV)
+	long ans;
+
+	ans = sysconf(_SC_THREAD_THREADS_MAX);
+	if (0 < ans && ans < MAX_FILESERVER_THREAD)
+		return (int) ans;
+#endif
+#endif /* defined(AFS_PTHREAD_ENV) */
+	return MAX_FILESERVER_THREAD;
+}
+
+static int ParseArgs(int argc, char *argv[])
+{
+    int SawL=0, SawS=0, SawVC=0;
+    int Sawrxpck = 0, Sawsmall=0, Sawlarge=0, Sawcbs=0, Sawlwps=0, Sawbufs=0;
+    int Sawbusy=0;
+    int i;
+    int bufSize = 0;      /* temp variable to read in udp socket buf size*/
+
+    for (i = 1; i < argc; i++) {
+	if (!strcmp(argv[i], "-d")) {
+	    debuglevel = atoi(argv[++i]);
+	    LogLevel = debuglevel;
+	}
+	else
+	    if (!strcmp(argv[i], "-banner")) {
+		printBanner = 1;
+	} else
+	    if (!strcmp(argv[i], "-implicit")) {
+		implicitAdminRights = ParseRights(argv[++i]);
+		if (implicitAdminRights < 0) return implicitAdminRights;
+	} else
+	    if (!strcmp(argv[i], "-readonly")) {
+		readonlyServer = 1;
+	} else
+	    if (!strcmp(argv[i], "-L")) {
+		SawL = 1;
+	} else
+	    if (!strcmp(argv[i], "-S")) {
+		SawS = 1;
+	}
+	else
+	    if (!strcmp(argv[i], "-p")) {
+		int lwps_max = max_fileserver_thread() - FILESERVER_HELPER_THREADS;
+		Sawlwps = 1;
+		lwps = atoi(argv[++i]);
+		if (lwps > lwps_max)
+		    lwps = lwps_max;
+		else if (lwps < 6)
+		    lwps = 6;
+	    }
+	else
+	    if (!strcmp(argv[i], "-b")) {
+		Sawbufs = 1;
+		buffs = atoi(argv[++i]);
+	    }
+	else
+	    if (!strcmp(argv[i], "-l")) {
+		Sawlarge = 1;
+		large = atoi(argv[++i]);
+	    }
+	else
+	    if (!strcmp(argv[i], "-vc")) {
+		SawVC = 1;
+		volcache = atoi(argv[++i]);
+	    }
+	else
+	    if (!strcmp(argv[i], "-novbc")) {
+		novbc = 1;
+	    }
+	else
+	    if (!strcmp(argv[i], "-rxpck")) {
+		Sawrxpck = 1;
+		rxpackets = atoi(argv[++i]);
+	    }
+	else
+	    if (!strcmp(argv[i], "-s")) {
+		Sawsmall = 1;
+		nSmallVns = atoi(argv[++i]);
+	    }
+	else	
+	    if (!strcmp(argv[i], "-k"))
+		stack = atoi(argv[++i]);
+#if defined(AFS_SGI_ENV)
+	else
+	    if (!strcmp(argv[i], "-lock")) {
+		SawLock = 1;
+	    }
+#endif
+	else
+	    if (!strcmp(argv[i], "-spare")) {
+		BlocksSpare = atoi(argv[++i]);
+		SawSpare = 1;
+	    }
+	else
+	    if (!strcmp(argv[i], "-pctspare")) {
+		PctSpare = atoi(argv[++i]);
+		BlocksSpare = 0;		/* has non-zero default */
+		SawPctSpare = 1;
+	    }
+	else
+	    if (!strcmp(argv[i], "-w"))
+		fiveminutes = atoi(argv[++i]);
+	else
+	    if (!strcmp(argv[i], "-hr")) {
+		int hr = atoi(argv[++i]);
+		if ((hr < 1) || (hr > 36)) {
+		    printf("host acl refresh interval of %d hours is invalid; hours must be between 1 and 36\n\n",
+			   hr);
+		    return -1;
+		}		    
+		hostaclRefresh = hr*60*60;
+	} else
+	    if (!strcmp(argv[i], "-rxdbg"))
+		rxlog = 1;
+	else 
+	    if (!strcmp(argv[i], "-rxdbge"))
+		eventlog = 1;
+	else
+	    if (!strcmp(argv[i], "-cb")) {
+		Sawcbs = 1;
+		numberofcbs = atoi(argv[++i]);
+		if ((numberofcbs < 10000) || (numberofcbs > 2147483647)) {
+		    printf("number of cbs %d invalid; must be between 10000 and 2147483647\n",
+			   numberofcbs);
+		    return -1;
+		}
+	    }
+	    else
+	      if (!strcmp(argv[i], "-busyat")) {
+		Sawbusy = 1;
+		busy_threshold = atoi(argv[++i]);
+		if (busy_threshold < 10) {
+		    printf("Busy threshold %d is too low, will compute default.\n",
+			   busy_threshold);
+		    Sawbusy = 0;
+		}
+	    }
+#ifdef	AFS_AIX32_ENV
+	else
+	    if (!strcmp(argv[i], "-m")) {
+		extern int aixlow_water;
+		 aixlow_water = atoi(argv[++i]);
+		if ((aixlow_water < 0) || (aixlow_water > 30)) {
+		    printf("space reserved %d% invalid; must be between 0-30%\n", aixlow_water);
+		    return -1;
+		}
+	    }
+#endif
+	else
+	    if (!strcmp(argv[i], "-nojumbo")) {
+		rxJumbograms = 0;
+	    }
+	else
+	    if (!strcmp(argv[i], "-realm")) {
+		extern char local_realm[AFS_REALM_SZ];
+		if (strlen(argv[++i]) >= AFS_REALM_SZ) {
+		    printf("-realm argument must contain fewer than %d characters.\n",AFS_REALM_SZ);
+		    return -1;
+		}
+		strncpy (local_realm, argv[i], AFS_REALM_SZ);
+	    }
+	else
+	    if ( !strcmp(argv[i], "-udpsize")) {
+		if ( (i+1) >= argc ) {
+		    printf("You have to specify -udpsize <integer value>\n");
+		    return -1;
+		}
+		bufSize = atoi(argv[++i]);
+		if ( bufSize < rx_GetMinUdpBufSize() )
+		    printf("Warning:udpsize %d is less than minimum %d; ignoring\n",
+				bufSize, rx_GetMinUdpBufSize() );
+		else
+		    udpBufSize = bufSize;
+	    }
+	else
+	    if (!strcmp(argv[i], "-enable_peer_stats")) {
+		rx_enablePeerRPCStats();
+	    }
+	else
+	    if (!strcmp(argv[i], "-enable_process_stats")) {
+		rx_enableProcessRPCStats();
+	    }
+#ifndef AFS_NT40_ENV
+        else 
+	    if (strcmp(argv[i], "-syslog")==0) {
+		/* set syslog logging flag */
+		serverLogSyslog = 1;
+	    } 
+	else 
+	    if (strncmp(argv[i], "-syslog=", 8)==0) {
+		serverLogSyslog = 1;
+		serverLogSyslogFacility = atoi(argv[i]+8);
+	    }
+#endif
+	else {
+	    return(-1);
+	}
+    }
+    if (SawS && SawL) {
+	printf("Only one of -L, or -S must be specified\n");
+	return -1;
+    }
+    if (SawS) {
+	if (!Sawrxpck) rxpackets = 100;
+	if (!Sawsmall) nSmallVns = 200;
+	if (!Sawlarge) large = 200;
+	if (!Sawcbs) numberofcbs = 20000;
+	if (!Sawlwps) lwps = 6;
+	if (!Sawbufs) buffs = 70;
+	if (!SawVC) volcache = 200;
+    }
+    if (SawL) {
+	if (!Sawrxpck) rxpackets = 200;
+	if (!Sawsmall) nSmallVns = 600;
+	if (!Sawlarge) large = 600;
+	if (!Sawcbs) numberofcbs = 64000;
+	if (!Sawlwps) lwps = 12;
+	if (!Sawbufs) buffs = 120;
+	if (!SawVC) volcache = 600;
+    }
+    if (!Sawbusy) 
+        busy_threshold = 3*rxpackets/2;
+
+    return(0);
+
+} /*ParseArgs*/
+
+
+#define MAXPARMS 15
+
+static void NewParms(int initializing)
+{
+    static struct stat sbuf;
+    register int i, fd;
+    char *parms;
+    char *argv[MAXPARMS];
+    register int argc;
+
+    if (!(stat("/vice/file/parms",&sbuf))) {
+	parms = (char *)malloc(sbuf.st_size);
+	if(!parms) return;
+	fd = open("parms", O_RDONLY, 0666);
+	if(fd <= 0) {
+	    ViceLog(0, ("Open for parms failed with errno = %d\n", errno));
+	    return;
+	}
+
+	i = read(fd, parms, sbuf.st_size);
+	close(fd);
+	if(i != sbuf.st_size) {
+	    if (i < 0 ) {
+		ViceLog(0, ("Read on parms failed with errno = %d\n", errno));
+	    } else {
+		ViceLog(0,
+			("Read on parms failed; expected %d bytes but read %d\n",
+			sbuf.st_size, i));
+	    }
+	    free(parms);
+	    return;
+	}
+
+	for (i = 0;i < MAXPARMS; argv[i++] = 0 );
+	
+	for (argc = i = 0; i < sbuf.st_size; i++) {
+	    if ((*(parms + i) != ' ') && (*(parms + i) != '\n')){
+		if(argv[argc] == 0) argv[argc] = (parms+i);
+	    }
+	    else {
+		*(parms + i) = '\0';
+		if(argv[argc] != 0) {
+		    if(++argc == MAXPARMS) break;
+		}
+		while ((*(parms + i + 1) == ' ') || (*(parms + i + 1) == '\n'))
+		    i++;
+	    }
+	}
+	if(ParseArgs(argc, argv) == 0) {
+	    ViceLog(0, ("Change parameters to:"));
+	} else {
+	    ViceLog(0, ("Invalid parameter in:"));
+	}
+	for(i = 0; i < argc; i++) {
+	    ViceLog(0, (" %s", argv[i]));
+	}
+	ViceLog(0,("\n"));
+	free(parms);
+    }
+    else
+	if(!initializing)
+	    ViceLog(0, ("Received request to change parms but no parms file exists\n"));
+
+} /*NewParms*/
+
+
+/* Miscellaneous routines */
+void Die (char *msg)
+{
+    ViceLog (0,("%s\n", msg));
+    assert(0);
+
+} /*Die*/
+
+
+afs_int32 InitPR()
+{
+    register code;
+
+    /*
+     * If this fails, it's because something major is wrong, and is not
+     * likely to be time dependent.
+     */
+    code = pr_Initialize(2, AFSDIR_SERVER_ETC_DIRPATH, 0);
+    if (code != 0) {
+	ViceLog(0, ("Couldn't initialize protection library; code=%d.\n", code));
+	return code; 
+    }
+    SystemId = SYSADMINID;
+    SystemAnyUser = ANYUSERID;
+    SystemAnyUserCPS.prlist_len = 0;
+    SystemAnyUserCPS.prlist_val = NULL;
+    AnonCPS.prlist_len = 0;
+    AnonCPS.prlist_val = NULL;
+    while (1) {
+	code = pr_GetCPS(SystemAnyUser, &SystemAnyUserCPS);
+	if (code != 0) {
+	    ViceLog(0,
+		    ("Couldn't get CPS for AnyUser, will try again in 30 seconds; code=%d.\n",
+		    code));
+	    goto sleep;
+	}
+	code = pr_GetCPS(ANONYMOUSID,&AnonCPS);
+	if (code != 0) {
+	    ViceLog(0,("Couldn't get Anonymous CPS, exiting; code=%d.\n", code));
+	    return -1;
+	}
+	AnonymousID = ANONYMOUSID;
+	return 0;
+sleep:
+#ifdef AFS_PTHREAD_ENV
+	sleep(30);
+#else /* AFS_PTHREAD_ENV */
+	IOMGR_Sleep(30);
+#endif /* AFS_PTHREAD_ENV */
+    }
+} /*InitPR*/
+
+struct rx_connection *serverconns[MAXSERVERS];
+struct ubik_client *cstruct;
+
+afs_int32 vl_Initialize(char *confDir)
+{   afs_int32 code, scIndex = 0, i;
+    struct afsconf_dir *tdir;
+    struct rx_securityClass *sc;
+    struct afsconf_cell info;
+
+    tdir = afsconf_Open(confDir);
+    if (!tdir) {
+	ViceLog(0, ("Could not open configuration directory (%s).\n", confDir));
+	exit(1);
+    }
+    code = afsconf_ClientAuth(tdir, &sc, &scIndex);
+    if (code) {
+	ViceLog(0, ("Could not get security object for localAuth\n"));
+	exit(1);
+    }
+    code = afsconf_GetCellInfo(tdir,NULL, AFSCONF_VLDBSERVICE, &info);
+    if (info.numServers > MAXSERVERS) {
+	ViceLog(0, ("vl_Initialize: info.numServers=%d (> MAXSERVERS=%d)\n",info.numServers, MAXSERVERS));
+	exit(1);
+    }
+    for (i = 0;i<info.numServers;i++) 
+	serverconns[i] = rx_NewConnection(info.hostAddr[i].sin_addr.s_addr, info.hostAddr[i].sin_port,
+					  USER_SERVICE_ID, sc, scIndex);
+    code = ubik_ClientInit(serverconns, &cstruct);
+    if (code) {
+	ViceLog(0, ("vl_Initialize: ubik client init failed.\n"));
+	return code;
+    }
+    return 0;
+}
+
+#define SYSIDMAGIC	0x88aabbcc
+#define SYSIDVERSION	1
+
+afs_int32
+ReadSysIdFile() {
+    afs_int32 fd, nentries, i;
+    struct versionStamp vsn;
+    struct stat     status;
+    afsUUID uuid;
+
+    if ((stat(AFSDIR_SERVER_SYSID_FILEPATH, &status)) || (status.st_size <= 0)) {
+	ViceLog(0, ("%s: doesn't exist\n", AFSDIR_SERVER_SYSID_FILEPATH));
+	return ENOENT;
+    }
+    if (!(fd = open(AFSDIR_SERVER_SYSID_FILEPATH, O_RDONLY, 0))) {
+	ViceLog(0, ("%s: can't open (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
+	return EIO;
+    }
+    if ((i = read(fd, (char *)&vsn, sizeof(vsn))) != sizeof(vsn)) {
+	ViceLog(0, ("%s: Read failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
+	return EIO;
+    }
+    if (vsn.magic != SYSIDMAGIC) {
+	ViceLog(0, ("%s: wrong magic %x (we support %x)\n", AFSDIR_SERVER_SYSID_FILEPATH, vsn.magic, SYSIDMAGIC));
+	return EIO;
+    }
+    if (vsn.version != SYSIDVERSION) {
+	ViceLog(0, ("%s: wrong version %d (we support %d)\n", AFSDIR_SERVER_SYSID_FILEPATH, vsn.version, SYSIDVERSION));
+	return EIO;
+    }
+    if ((i = read(fd, (char *)&uuid, sizeof(struct afsUUID))) != sizeof(struct afsUUID)) {
+	ViceLog(0, ("%s: read of uuid failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
+	return EIO;
+    }
+    afs_ntohuuid(&uuid);
+    FS_HostUUID = uuid;
+    if ((i = read(fd, (char *)&nentries, sizeof(afs_int32))) != sizeof(afs_int32)) {
+	ViceLog(0, ("%s: Read of entries failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
+	return EIO;
+    }
+    if (nentries <= 0 || nentries > ADDRSPERSITE) {
+	ViceLog(0, ("%s: invalid num of interfaces: %d\n", AFSDIR_SERVER_SYSID_FILEPATH, nentries));
+	return EIO;
+    }
+    FS_HostAddr_cnt = nentries;
+    for (i = 0; i < nentries; i++) {
+	if (read(fd, (char *)&FS_HostAddrs[i], sizeof(afs_int32)) != sizeof(afs_int32)) {	
+	    ViceLog(0, ("%s: Read of addresses failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
+	    FS_HostAddr_cnt = 0;	/* reset it */
+	    return EIO;
+	}
+    }
+    close(fd);
+    return 0;
+}
+
+afs_int32
+WriteSysIdFile() {
+    afs_int32 fd, nentries, i;
+    struct versionStamp vsn;
+    struct stat     status;
+    afsUUID uuid;
+    
+    if (!stat(AFSDIR_SERVER_SYSID_FILEPATH, &status)) {
+	/*
+	 * File exists; keep the old one around
+	 */
+	renamefile(AFSDIR_SERVER_SYSID_FILEPATH, AFSDIR_SERVER_OLDSYSID_FILEPATH);	
+    }
+    fd = open(AFSDIR_SERVER_SYSID_FILEPATH, O_WRONLY|O_TRUNC|O_CREAT, 0666);
+    if (fd < 1) {
+	ViceLog(0, ("%s: can't create (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
+	return EIO;
+    }
+    vsn.magic = SYSIDMAGIC;
+    vsn.version = 1;
+    if ((i = write(fd, (char *)&vsn, sizeof(vsn))) != sizeof(vsn)) {
+	ViceLog(0, ("%s: write failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
+	return EIO;
+    }
+    uuid = FS_HostUUID;
+    afs_htonuuid(&uuid);
+    if ((i = write(fd, (char *)&uuid, sizeof(struct afsUUID))) != sizeof(struct afsUUID)) {
+	ViceLog(0, ("%s: write of uuid failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
+	return EIO;
+    }
+    if ((i = write(fd, (char *)&FS_HostAddr_cnt, sizeof(afs_int32))) != sizeof(afs_int32)) {
+	ViceLog(0, ("%s: write of # of entries failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
+	return EIO;
+    }
+    for (i = 0; i < FS_HostAddr_cnt; i++) {
+	if (write(fd, (char *)&FS_HostAddrs[i], sizeof(afs_int32)) != sizeof(afs_int32)) {	
+	    ViceLog(0, ("%s: write of addresses failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
+	    return EIO;
+	}
+    }
+    close(fd);
+    return 0;
+}
+
+/*
+ * defect 10966 
+ * This routine sets up the buffers for the VL_RegisterAddrs RPC. All addresses
+ * in FS_HostAddrs[] are in NBO, while the RPC treats them as a "blob" of data
+ * and so we need to convert each of them into HBO which is what the extra 
+ * array called FS_HostAddrs_HBO is used here.
+ */ 
+afs_int32
+Do_VLRegisterRPC() {
+    register int code;
+    bulkaddrs addrs;
+    extern int VL_RegisterAddrs();
+    afs_uint32 FS_HostAddrs_HBO[ADDRSPERSITE];
+    int i=0;
+ 
+    for (i=0; i < FS_HostAddr_cnt ; i++) 
+     FS_HostAddrs_HBO[i]=ntohl(FS_HostAddrs[i]);
+    addrs.bulkaddrs_len = FS_HostAddr_cnt;
+    addrs.bulkaddrs_val = (afs_uint32 *)FS_HostAddrs_HBO;
+    code = ubik_Call(VL_RegisterAddrs, cstruct, 0, &FS_HostUUID, 0, &addrs);
+    if (code) {
+       if (code == VL_MULTIPADDR) {
+	  ViceLog(0, ("VL_RegisterAddrs rpc failed; The ethernet address exist on a different server; repair it\n"));
+	  ViceLog(0, ("VL_RegisterAddrs rpc failed; See VLLog for details\n"));
+	  return code;
+       } else if (code == RXGEN_OPCODE) {
+	  ViceLog(0, ("vlserver doesn't support VL_RegisterAddrs rpc; ignored\n"));
+	  FS_registered = 2; 	/* So we don't have to retry in the gc daemon */
+       } else {
+	  ViceLog(0, ("VL_RegisterAddrs rpc failed; will retry periodically (code=%d, err=%d)\n",
+		      code, errno));
+       }
+    } else {
+       FS_registered = 2; 	/* So we don't have to retry in the gc daemon */
+       WriteSysIdFile();
+    }
+
+    return 0;
+}
+
+#if 0
+static int AddrsEqual(cnt, addr1, addr2) 
+    int cnt;
+    afs_int32 *addr1, *addr2; 
+{
+    register int i, j;
+
+    for (i = 0; i < cnt; i++) {
+	for (j = 0; j < cnt; j++) {
+	    if (addr1[i] == addr2[j]) break;
+	}
+	if (j == cnt) return 0;
+    }
+    return 1;
+}
+#endif
+
+afs_int32 
+InitVL() {
+    int (*old)();
+    afs_int32 code;
+    afs_int32 cnt, i;
+    extern int rxi_numNetAddrs;
+    extern afs_uint32 rxi_NetAddrs[];
+
+    /*
+     * If this fails, it's because something major is wrong, and is not
+     * likely to be time dependent.
+     */
+    code = vl_Initialize(AFSDIR_SERVER_ETC_DIRPATH);
+    if (code != 0) {
+	ViceLog(0, ("Couldn't initialize protection library; code=%d.\n", code));
+	return code;
+    }
+
+    /* Read or create the sysid file and register the fileserver's
+     * IP addresses with the vlserver.
+     */
+    code = ReadSysIdFile();
+    if (code) {
+       /* Need to create the file */
+       ViceLog(0, ("Creating new SysID file\n")); 
+       if ((code = afs_uuid_create(&FS_HostUUID))) {
+	  ViceLog(0, ("Failed to create new uuid: %d\n", code)); 
+	  exit(1);
+       }
+    }
+    /* A good sysid file exists; inform the vlserver. If any conflicts,
+     * we always use the latest interface available as the real truth.
+     */
+#ifndef AFS_NT40_ENV
+    if(AFSDIR_SERVER_NETRESTRICT_FILEPATH || AFSDIR_SERVER_NETINFO_FILEPATH) {
+      /*
+       * Find addresses we are supposed to register as per the netrestrict 
+       * and netinfo files (/usr/afs/local/NetInfo and 
+       * /usr/afs/local/NetRestict)
+       */
+      char reason[1024];
+      afs_int32 code = parseNetFiles(FS_HostAddrs,NULL, NULL,
+				 ADDRSPERSITE, reason,
+				 AFSDIR_SERVER_NETINFO_FILEPATH,
+				 AFSDIR_SERVER_NETRESTRICT_FILEPATH);
+      if (code < 0) {
+	ViceLog(0,("Can't register any valid addresses: %s\n",reason));
+	exit(1);
+      }
+      FS_HostAddr_cnt = (afs_uint32) code;
+    }
+    else 
+#endif
+    {
+      FS_HostAddr_cnt = rx_getAllAddr(FS_HostAddrs, ADDRSPERSITE);
+    }
+
+    FS_registered = 1;
+    code = Do_VLRegisterRPC();
+    return code;
+} 
+
+int
+main(int argc, char * argv[])
 {
     int     i;
     afs_int32    code;
@@ -494,7 +1457,7 @@ main(argc, argv)
 	ViceLog(0, ("Failed to initialize RX, probably two servers running.\n"));
 	exit(-1);
     }
-    rx_SetDestroyConnProc(tservice, h_FreeConnection);
+    rx_SetDestroyConnProc(tservice, (void (*)())h_FreeConnection);
     rx_SetMinProcs(tservice, 3);
     rx_SetMaxProcs(tservice, lwps);
     rx_SetCheckReach(tservice, 1);
@@ -643,989 +1606,3 @@ main(argc, argv)
 #endif /* AFS_PTHREAD_ENV */
 }
 
-
-/* This LWP does things roughly every 5 minutes */
-static FiveMinuteCheckLWP()
-
-{
-    static int msg  = 0;
-    char tbuffer[32];
-
-    ViceLog(1, ("Starting five minute check process\n"));
-    while (1) {
-#ifdef AFS_PTHREAD_ENV
-	sleep(fiveminutes);
-#else /* AFS_PTHREAD_ENV */
-	IOMGR_Sleep(fiveminutes);
-#endif /* AFS_PTHREAD_ENV */
-
-	/* close the log so it can be removed */
-	ReOpenLog(AFSDIR_SERVER_FILELOG_FILEPATH); /* don't trunc, just append */
-	ViceLog(2, ("Cleaning up timed out callbacks\n"));
-	if(CleanupTimedOutCallBacks())
-	    ViceLog(5,("Timed out callbacks deleted\n"));
-	ViceLog(2, ("Set disk usage statistics\n"));
-	VSetDiskUsage();
-	if (FS_registered == 1) Do_VLRegisterRPC();
-	if(printBanner && (++msg&1)) { /* Every 10 minutes */
-	    time_t now = FT_ApproxTime();
-	    if (console != NULL) {
-#ifndef AFS_QUIETFS_ENV
-		fprintf(console,"File server is running at %s\r",
-			afs_ctime(&now, tbuffer, sizeof(tbuffer)));
-#endif /* AFS_QUIETFS_ENV */
-		ViceLog(2, ("File server is running at %s\n",
-			afs_ctime(&now, tbuffer, sizeof(tbuffer))));
-	    }
-	}
-    }
-} /*FiveMinuteCheckLWP*/
-
-
-/* This LWP does host checks every 5 minutes:  it should not be used for
- * other 5 minute activities because it may be delayed by timeouts when
- * it probes the workstations
- */
-static HostCheckLWP()
-
-{
-    ViceLog(1, ("Starting Host check process\n"));
-    while(1) {
-#ifdef AFS_PTHREAD_ENV
-	sleep(fiveminutes);
-#else /* AFS_PTHREAD_ENV */
-	IOMGR_Sleep(fiveminutes);
-#endif /* AFS_PTHREAD_ENV */
-	ViceLog(2, ("Checking for dead venii & clients\n"));
-	h_CheckHosts();
-    }
-} /*HostCheckLWP*/
-
-
-#define MAXADMINNAME 64
-char adminName[MAXADMINNAME];
-
-CheckAdminName()
-
-{
-    int             fd = 0;
-    struct stat     status;
-    
-    if ((stat("/AdminName", &status)) ||	/* if file does not exist */
-	(status.st_size <= 0) ||		/* or it is too short */
-	(status.st_size >= (MAXADMINNAME)) ||	/* or it is too long */
-	!(fd = open("/AdminName", O_RDONLY, 0))) {	/* or the open fails */
-	strcpy(adminName, "System:Administrators");	/* use the default name */
-    }
-    else {
-	read(fd, adminName, status.st_size);	/* use name from the file */
-    }
-    if (fd)
-	close(fd);	/* close fd if it was opened */
-
-} /*CheckAdminName*/
-
-
-/*------------------------------------------------------------------------
- * PRIVATE ClearXStatValues
- *
- * Description:
- *	Initialize all of the values collected via the xstat
- *	interface.
- *
- * Arguments:
- *	None.
- *
- * Returns:
- *	Nothing.
- *
- * Environment:
- *	Must be called during File Server initialization.
- *
- * Side Effects:
- *	As advertised.
- *------------------------------------------------------------------------*/
-
-static void ClearXStatValues()
-
-{ /*ClearXStatValues*/
-
-    struct fs_stats_opTimingData *opTimeP;	/*Ptr to timing struct*/
-    struct fs_stats_xferData *opXferP;		/*Ptr to xfer struct*/
-    int i;					/*Loop counter*/
-
-    /*
-     * Zero all xstat-related structures.
-     */
-    memset((char *)(&afs_perfstats), 0, sizeof(struct afs_PerfStats));
-#if FS_STATS_DETAILED
-    memset((char *)(&afs_FullPerfStats), 0, sizeof(struct fs_stats_FullPerfStats));
-
-    /*
-     * That's not enough.  We have to set reasonable minima for
-     * time and xfer values in the detailed stats.
-     */
-    opTimeP = &(afs_FullPerfStats.det.rpcOpTimes[0]);
-    for (i = 0; i < FS_STATS_NUM_RPC_OPS; i++, opTimeP++)
-	opTimeP->minTime.tv_sec = 999999;
-
-    opXferP = &(afs_FullPerfStats.det.xferOpTimes[0]);
-    for (i = 0; i < FS_STATS_NUM_XFER_OPS; i++, opXferP++) {
-	opXferP->minTime.tv_sec = 999999;
-	opXferP->minBytes = 999999999;
-    }
-
-    /*
-     * There's more.  We have to set our unique system identifier, as
-     * declared in param.h.  If such a thing is not defined, we bitch
-     * and declare ourselves to be an unknown system type.
-     */
-#ifdef SYS_NAME_ID
-    afs_perfstats.sysname_ID = SYS_NAME_ID;
-#else
-#ifndef AFS_NT40_ENV
-    ViceLog(0, ("Sys name ID constant not defined in param.h!!\n"));
-    ViceLog(0, ("[Choosing ``undefined'' sys name ID.\n"));
-#endif
-    afs_perfstats.sysname_ID = SYS_NAME_ID_UNDEFINED;
-#endif /* SYS_NAME_ID */
-#endif
-
-} /*ClearXStatValues*/
-
-
-static void PrintCounters()
-
-{
-    int	dirbuff, dircall, dirio;
-    struct timeval  tpl;
-    int workstations, activeworkstations, delworkstations;
-    int processSize = 0;
-    char tbuffer[32];
-
-    TM_GetTimeOfDay(&tpl, 0);
-    Statistics = 1;
-    ViceLog(0, ("Vice was last started at %s\n",
-		afs_ctime(&StartTime, tbuffer, sizeof(tbuffer))));
-
-    VPrintCacheStats();
-    VPrintDiskStats();
-    DStat(&dirbuff, &dircall, &dirio);
-    ViceLog(0,("With %d directory buffers; %d reads resulted in %d read I/Os\n",
-	    dirbuff, dircall, dirio));
-    rx_PrintStats(stderr);
-    h_PrintStats();
-    PrintCallBackStats();
-#ifdef AFS_NT40_ENV
-    processSize = -1; /* TODO: */
-#else
-    processSize = (int)((long) sbrk(0) >> 10);
-#endif
-    ViceLog(0,("There are %d connections, process size %d\n",  CurrentConnections, processSize));
-    h_GetWorkStats(&workstations, &activeworkstations, &delworkstations,
-	 tpl.tv_sec-15*60);
-    ViceLog(0,
-	    ("There are %d workstations, %d are active (req in < 15 mins), %d marked \"down\"\n",
-	    workstations, activeworkstations, delworkstations));
-    Statistics = 0;
-
-} /*PrintCounters*/
-
-
-
-static CheckSignal()
-
-{
-    if (FS_registered > 0)  {
-	/*
-	 * We have proper ip addresses; tell the vlserver what we got; the following
-	 * routine will do the proper reporting for us
-	 */
-	Do_VLRegisterRPC();
-    }
-    h_DumpHosts();
-    h_PrintClients();
-    DumpCallBackState();
-    PrintCounters();
-    ResetCheckSignal();
-
-} /*CheckSignal*/
-
-void ShutDownAndCore(dopanic)
-int dopanic;
-{
-    time_t now = time(0);
-    char *tstr;
-    char tbuffer[32];
-
-    ViceLog(0, ("Shutting down file server at %s",
-		afs_ctime(&now, tbuffer, sizeof(tbuffer))));
-    if (dopanic) 
-	ViceLog(0, ("ABNORMAL SHUTDOWN, see core file.\n"));
-#ifndef AFS_QUIETFS_ENV
-    if (console != NULL) {
-	fprintf(console,"File server restart/shutdown received at %s\r",
-		afs_ctime(&now, tbuffer, sizeof(tbuffer)));
-    }
-#endif
-    DFlush();
-    PrintCounters();
-
-    /* do not allows new reqests to be served from now on, all new requests
-       are returned with an error code of RX_RESTARTING ( transient failure ) */
-    rx_SetRxTranquil();			/* dhruba */
-    VShutdown();
-
-    if (debugFile) {
-	rx_PrintStats(debugFile);
-	fflush(debugFile);
-    }
-    if (console != NULL) {
-	now = time(0);
-	if (dopanic) {
-#ifndef AFS_QUIETFS_ENV
-	    fprintf(console, "File server has terminated abnormally at %s\r",
-		    afs_ctime(&now, tbuffer, sizeof(tbuffer)));
-#endif
-	    ViceLog(0, ("File server has terminated abnormally at %s\n",
-		afs_ctime(&now, tbuffer, sizeof(tbuffer))));
-	} else {
-#ifndef AFS_QUIETFS_ENV
-	    fprintf(console, "File server has terminated normally at %s\r",
-		    afs_ctime(&now, tbuffer, sizeof(tbuffer)));
-#endif
-	    ViceLog(0, ("File server has terminated normally at %s\n",
-		afs_ctime(&now, tbuffer, sizeof(tbuffer))));
-	}
-    }
-
-    exit(0);
-
-} /*ShutDown*/
-
-void ShutDown() /* backward compatibility */
-{
-  ShutDownAndCore(DONTPANIC);
-}
-
-
-static FlagMsg()
-
-{
-    char buffer[1024];
-
-	/* default supports help flag */
-
-    strcpy(buffer, "Usage: fileserver ");
-    strcat(buffer, "[-d <debug level>] ");
-    strcat(buffer, "[-p <number of processes>] ");
-    strcat(buffer, "[-spare <number of spare blocks>] ");
-    strcat(buffer, "[-pctspare <percentage spare>] ");
-    strcat(buffer, "[-b <buffers>] ");
-    strcat(buffer, "[-l <large vnodes>] ");
-    strcat(buffer, "[-s <small vnodes>] ");
-    strcat(buffer, "[-vc <volume cachesize>] ");
-    strcat(buffer, "[-w <call back wait interval>] ");
-    strcat(buffer, "[-cb <number of call backs>] ");
-    strcat(buffer, "[-banner (print banner every 10 minutes)] ");
-    strcat(buffer, "[-novbc (whole volume cbs disabled)] ");
-    strcat(buffer, "[-implicit <admin mode bits: rlidwka>] ");
-    strcat(buffer, "[-readonly (read-only file server)] ");
-    strcat(buffer, "[-hr <number of hours between refreshing the host cps>] ");
-    strcat(buffer, "[-busyat <redirect clients when queue > n>] ");
-    strcat(buffer, "[-rxpck <number of rx extra packets>] ");
-    strcat(buffer, "[-rxdbg (enable rx debugging)] ");
-    strcat(buffer, "[-rxdbge (enable rxevent debugging)] ");
-#ifdef	AFS_AIX32_ENV
-    strcat(buffer, "[-m <min percentage spare in partition>] ");
-#endif
-#if defined(AFS_SGI_ENV)
-    strcat(buffer, "[-lock (keep fileserver from swapping)] ");
-#endif
-    strcat(buffer, "[-L (large server conf)] ");
-    strcat(buffer, "[-S (small server conf)] ");
-    strcat(buffer, "[-k <stack size>] ");
-    strcat(buffer, "[-realm <Kerberos realm name>] ");
-    strcat(buffer, "[-udpsize <size of socket buffer in bytes>] ");
-/*   strcat(buffer, "[-enable_peer_stats] "); */
-/*   strcat(buffer, "[-enable_process_stats] "); */
-    strcat(buffer, "[-help]\n");
-/*
-    ViceLog(0, ("%s", buffer));
-*/
-
-	printf("%s",buffer);
-	fflush(stdout);
-
-} /*FlagMsg*/
-
-
-static afs_int32 ParseRights(arights)
-    char *arights;
-{
-    afs_int32 mode = 0;
-    int i, len;
-    char tc;
-
-    if (!arights || !strcmp(arights, "")) {
-	printf("Missing list of mode bits on -implicit option\n");
-	return -1;
-    }
-    if (!strcmp(arights, "none"))
-      mode = 0;
-    else if (!strcmp(arights, "read")) 
-      mode = PRSFS_READ | PRSFS_LOOKUP;
-    else if (!strcmp(arights, "write"))
-      mode = PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | 
-	     PRSFS_DELETE | PRSFS_WRITE | PRSFS_LOCK;
-    else if (!strcmp(arights, "all"))
-      mode = PRSFS_READ | PRSFS_LOOKUP | PRSFS_INSERT | 
-	     PRSFS_DELETE | PRSFS_WRITE | PRSFS_LOCK | PRSFS_ADMINISTER;
-    else {
-	len = strlen(arights);
-	for(i=0;i<len;i++) {
-	    tc = *arights++;
-	    if (tc == 'r') mode |= PRSFS_READ;
-	    else if (tc == 'l') mode |= PRSFS_LOOKUP;
-	    else if (tc == 'i') mode |= PRSFS_INSERT;
-	    else if (tc == 'd') mode |= PRSFS_DELETE;
-	    else if (tc == 'w') mode |= PRSFS_WRITE;
-	    else if (tc == 'k') mode |= PRSFS_LOCK;
-	    else if (tc == 'a') mode |= PRSFS_ADMINISTER;
-	    else if (tc == 'A') mode |= PRSFS_USR0;
-	    else if (tc == 'B') mode |= PRSFS_USR1;
-	    else if (tc == 'C') mode |= PRSFS_USR2;
-	    else if (tc == 'D') mode |= PRSFS_USR3;
-	    else if (tc == 'E') mode |= PRSFS_USR4;
-	    else if (tc == 'F') mode |= PRSFS_USR5;
-	    else if (tc == 'G') mode |= PRSFS_USR6;
-	    else if (tc == 'H') mode |= PRSFS_USR7;
-	    else {
-		printf("Illegal -implicit rights character '%c'.\n", tc);
-		return -1;
-	    }
-	}
-    }
-    return mode;
-}
-
-/*
- * Limit MAX_FILESERVER_THREAD by the system limit on the number of
- * pthreads (sysconf(_SC_THREAD_THREADS_MAX)), if applicable and
- * available.
- *
- * AIX:         sysconf() limit is real
- * HP-UX:       sysconf() limit is real
- * IRIX:        sysconf() limit is apparently NOT real -- too small
- * DUX:         sysconf() limit is apparently NOT real -- too big
- * Linux:       sysconf() limit is apparently NOT real -- too big
- * Solaris:     no sysconf() limit
- */
-static int
-max_fileserver_thread(void)
-{
-#if defined(AFS_PTHREAD_ENV)
-#if defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV)
-	long ans;
-
-	ans = sysconf(_SC_THREAD_THREADS_MAX);
-	if (0 < ans && ans < MAX_FILESERVER_THREAD)
-		return (int) ans;
-#endif
-#endif /* defined(AFS_PTHREAD_ENV) */
-	return MAX_FILESERVER_THREAD;
-}
-
-static ParseArgs(argc, argv)
-    int argc;
-    char *argv[];
-
-{
-    int SawL=0, SawS=0, SawVC=0;
-    int Sawrxpck = 0, Sawsmall=0, Sawlarge=0, Sawcbs=0, Sawlwps=0, Sawbufs=0;
-    int Sawbusy=0;
-    int i;
-    int bufSize = 0;      /* temp variable to read in udp socket buf size*/
-
-    for (i = 1; i < argc; i++) {
-	if (!strcmp(argv[i], "-d")) {
-	    debuglevel = atoi(argv[++i]);
-	    LogLevel = debuglevel;
-	}
-	else
-	    if (!strcmp(argv[i], "-banner")) {
-		printBanner = 1;
-	} else
-	    if (!strcmp(argv[i], "-implicit")) {
-		implicitAdminRights = ParseRights(argv[++i]);
-		if (implicitAdminRights < 0) return implicitAdminRights;
-	} else
-	    if (!strcmp(argv[i], "-readonly")) {
-		readonlyServer = 1;
-	} else
-	    if (!strcmp(argv[i], "-L")) {
-		SawL = 1;
-	} else
-	    if (!strcmp(argv[i], "-S")) {
-		SawS = 1;
-	}
-	else
-	    if (!strcmp(argv[i], "-p")) {
-		int lwps_max = max_fileserver_thread() - FILESERVER_HELPER_THREADS;
-		Sawlwps = 1;
-		lwps = atoi(argv[++i]);
-		if (lwps > lwps_max)
-		    lwps = lwps_max;
-		else if (lwps < 6)
-		    lwps = 6;
-	    }
-	else
-	    if (!strcmp(argv[i], "-b")) {
-		Sawbufs = 1;
-		buffs = atoi(argv[++i]);
-	    }
-	else
-	    if (!strcmp(argv[i], "-l")) {
-		Sawlarge = 1;
-		large = atoi(argv[++i]);
-	    }
-	else
-	    if (!strcmp(argv[i], "-vc")) {
-		SawVC = 1;
-		volcache = atoi(argv[++i]);
-	    }
-	else
-	    if (!strcmp(argv[i], "-novbc")) {
-		novbc = 1;
-	    }
-	else
-	    if (!strcmp(argv[i], "-rxpck")) {
-		Sawrxpck = 1;
-		rxpackets = atoi(argv[++i]);
-	    }
-	else
-	    if (!strcmp(argv[i], "-s")) {
-		Sawsmall = 1;
-		nSmallVns = atoi(argv[++i]);
-	    }
-	else	
-	    if (!strcmp(argv[i], "-k"))
-		stack = atoi(argv[++i]);
-#if defined(AFS_SGI_ENV)
-	else
-	    if (!strcmp(argv[i], "-lock")) {
-		SawLock = 1;
-	    }
-#endif
-	else
-	    if (!strcmp(argv[i], "-spare")) {
-		BlocksSpare = atoi(argv[++i]);
-		SawSpare = 1;
-	    }
-	else
-	    if (!strcmp(argv[i], "-pctspare")) {
-		PctSpare = atoi(argv[++i]);
-		BlocksSpare = 0;		/* has non-zero default */
-		SawPctSpare = 1;
-	    }
-	else
-	    if (!strcmp(argv[i], "-w"))
-		fiveminutes = atoi(argv[++i]);
-	else
-	    if (!strcmp(argv[i], "-hr")) {
-		int hr = atoi(argv[++i]);
-		if ((hr < 1) || (hr > 36)) {
-		    printf("host acl refresh interval of %d hours is invalid; hours must be between 1 and 36\n\n",
-			   hr);
-		    return -1;
-		}		    
-		hostaclRefresh = hr*60*60;
-	} else
-	    if (!strcmp(argv[i], "-rxdbg"))
-		rxlog = 1;
-	else 
-	    if (!strcmp(argv[i], "-rxdbge"))
-		eventlog = 1;
-	else
-	    if (!strcmp(argv[i], "-cb")) {
-		Sawcbs = 1;
-		numberofcbs = atoi(argv[++i]);
-		if ((numberofcbs < 10000) || (numberofcbs > 4294967295)) {
-		    printf("number of cbs %d invalid; must be between 10000 and 4294967295\n",
-			   numberofcbs);
-		    return -1;
-		}
-	    }
-	    else
-	      if (!strcmp(argv[i], "-busyat")) {
-		Sawbusy = 1;
-		busy_threshold = atoi(argv[++i]);
-		if (busy_threshold < 10) {
-		    printf("Busy threshold %d is too low, will compute default.\n",
-			   busy_threshold);
-		    Sawbusy = 0;
-		}
-	    }
-#ifdef	AFS_AIX32_ENV
-	else
-	    if (!strcmp(argv[i], "-m")) {
-		extern int aixlow_water;
-		 aixlow_water = atoi(argv[++i]);
-		if ((aixlow_water < 0) || (aixlow_water > 30)) {
-		    printf("space reserved %d% invalid; must be between 0-30%\n", aixlow_water);
-		    return -1;
-		}
-	    }
-#endif
-	else
-	    if (!strcmp(argv[i], "-nojumbo")) {
-		rxJumbograms = 0;
-	    }
-	else
-	    if (!strcmp(argv[i], "-realm")) {
-		extern char local_realm[AFS_REALM_SZ];
-		if (strlen(argv[++i]) >= AFS_REALM_SZ) {
-		    printf("-realm argument must contain fewer than %d characters.\n",AFS_REALM_SZ);
-		    return -1;
-		}
-		strncpy (local_realm, argv[i], AFS_REALM_SZ);
-	    }
-	else
-	    if ( !strcmp(argv[i], "-udpsize")) {
-		if ( (i+1) >= argc ) {
-		    printf("You have to specify -udpsize <integer value>\n");
-		    return -1;
-		}
-		bufSize = atoi(argv[++i]);
-		if ( bufSize < rx_GetMinUdpBufSize() )
-		    printf("Warning:udpsize %d is less than minimum %d; ignoring\n",
-				bufSize, rx_GetMinUdpBufSize() );
-		else
-		    udpBufSize = bufSize;
-	    }
-	else
-	    if (!strcmp(argv[i], "-enable_peer_stats")) {
-		rx_enablePeerRPCStats();
-	    }
-	else
-	    if (!strcmp(argv[i], "-enable_process_stats")) {
-		rx_enableProcessRPCStats();
-	    }
-#ifndef AFS_NT40_ENV
-        else 
-	    if (strcmp(argv[i], "-syslog")==0) {
-		/* set syslog logging flag */
-		serverLogSyslog = 1;
-	    } 
-	else 
-	    if (strncmp(argv[i], "-syslog=", 8)==0) {
-		serverLogSyslog = 1;
-		serverLogSyslogFacility = atoi(argv[i]+8);
-	    }
-#endif
-	else {
-	    return(-1);
-	}
-    }
-    if (SawS && SawL) {
-	printf("Only one of -L, or -S must be specified\n");
-	return -1;
-    }
-    if (SawS) {
-	if (!Sawrxpck) rxpackets = 100;
-	if (!Sawsmall) nSmallVns = 200;
-	if (!Sawlarge) large = 200;
-	if (!Sawcbs) numberofcbs = 20000;
-	if (!Sawlwps) lwps = 6;
-	if (!Sawbufs) buffs = 70;
-	if (!SawVC) volcache = 200;
-    }
-    if (SawL) {
-	if (!Sawrxpck) rxpackets = 200;
-	if (!Sawsmall) nSmallVns = 600;
-	if (!Sawlarge) large = 600;
-	if (!Sawcbs) numberofcbs = 64000;
-	if (!Sawlwps) lwps = 12;
-	if (!Sawbufs) buffs = 120;
-	if (!SawVC) volcache = 600;
-    }
-    if (!Sawbusy) 
-        busy_threshold = 3*rxpackets/2;
-
-    return(0);
-
-} /*ParseArgs*/
-
-
-#define MAXPARMS 15
-
-static void NewParms(initializing)
-    int initializing;
-
-{
-    static struct stat sbuf;
-    register int i, fd;
-    char *parms;
-    char *argv[MAXPARMS];
-    register int argc;
-
-    if (!(stat("/vice/file/parms",&sbuf))) {
-	parms = (char *)malloc(sbuf.st_size);
-	if(!parms) return;
-	fd = open("parms", O_RDONLY, 0666);
-	if(fd <= 0) {
-	    ViceLog(0, ("Open for parms failed with errno = %d\n", errno));
-	    return;
-	}
-
-	i = read(fd, parms, sbuf.st_size);
-	close(fd);
-	if(i != sbuf.st_size) {
-	    if (i < 0 ) {
-		ViceLog(0, ("Read on parms failed with errno = %d\n", errno));
-	    } else {
-		ViceLog(0,
-			("Read on parms failed; expected %d bytes but read %d\n",
-			sbuf.st_size, i));
-	    }
-	    free(parms);
-	    return;
-	}
-
-	for (i = 0;i < MAXPARMS; argv[i++] = 0 );
-	
-	for (argc = i = 0; i < sbuf.st_size; i++) {
-	    if ((*(parms + i) != ' ') && (*(parms + i) != '\n')){
-		if(argv[argc] == 0) argv[argc] = (parms+i);
-	    }
-	    else {
-		*(parms + i) = '\0';
-		if(argv[argc] != 0) {
-		    if(++argc == MAXPARMS) break;
-		}
-		while ((*(parms + i + 1) == ' ') || (*(parms + i + 1) == '\n'))
-		    i++;
-	    }
-	}
-	if(ParseArgs(argc, argv) == 0) {
-	    ViceLog(0, ("Change parameters to:"));
-	} else {
-	    ViceLog(0, ("Invalid parameter in:"));
-	}
-	for(i = 0; i < argc; i++) {
-	    ViceLog(0, (" %s", argv[i]));
-	}
-	ViceLog(0,("\n"));
-	free(parms);
-    }
-    else
-	if(!initializing)
-	    ViceLog(0, ("Received request to change parms but no parms file exists\n"));
-
-} /*NewParms*/
-
-
-/* Miscellaneous routines */
-Die (msg)
-    char *msg;
-
-{
-    ViceLog (0,("%s\n", msg));
-    assert(0);
-
-} /*Die*/
-
-
-InitPR()
-
-{
-    register code;
-
-    /*
-     * If this fails, it's because something major is wrong, and is not
-     * likely to be time dependent.
-     */
-    code = pr_Initialize(2, AFSDIR_SERVER_ETC_DIRPATH, 0);
-    if (code != 0) {
-	ViceLog(0, ("Couldn't initialize protection library; code=%d.\n", code));
-	return code; 
-    }
-    SystemId = SYSADMINID;
-    SystemAnyUser = ANYUSERID;
-    SystemAnyUserCPS.prlist_len = 0;
-    SystemAnyUserCPS.prlist_val = NULL;
-    AnonCPS.prlist_len = 0;
-    AnonCPS.prlist_val = NULL;
-    while (1) {
-	code = pr_GetCPS(SystemAnyUser, &SystemAnyUserCPS);
-	if (code != 0) {
-	    ViceLog(0,
-		    ("Couldn't get CPS for AnyUser, will try again in 30 seconds; code=%d.\n",
-		    code));
-	    goto sleep;
-	}
-	code = pr_GetCPS(ANONYMOUSID,&AnonCPS);
-	if (code != 0) {
-	    ViceLog(0,("Couldn't get Anonymous CPS, exiting; code=%d.\n", code));
-	    return -1;
-	}
-	AnonymousID = ANONYMOUSID;
-	return 0;
-sleep:
-#ifdef AFS_PTHREAD_ENV
-	sleep(30);
-#else /* AFS_PTHREAD_ENV */
-	IOMGR_Sleep(30);
-#endif /* AFS_PTHREAD_ENV */
-    }
-} /*InitPR*/
-
-struct rx_connection *serverconns[MAXSERVERS];
-struct ubik_client *cstruct;
-afs_int32 vl_Initialize(confDir)
-char *confDir;
-{   afs_int32 code, scIndex = 0, i;
-    struct afsconf_dir *tdir;
-    struct rx_securityClass *sc;
-    struct afsconf_cell info;
-
-    tdir = afsconf_Open(confDir);
-    if (!tdir) {
-	ViceLog(0, ("Could not open configuration directory (%s).\n", confDir));
-	exit(1);
-    }
-    code = afsconf_ClientAuth(tdir, &sc, &scIndex);
-    if (code) {
-	ViceLog(0, ("Could not get security object for localAuth\n"));
-	exit(1);
-    }
-    code = afsconf_GetCellInfo(tdir,NULL, AFSCONF_VLDBSERVICE, &info);
-    if (info.numServers > MAXSERVERS) {
-	ViceLog(0, ("vl_Initialize: info.numServers=%d (> MAXSERVERS=%d)\n",info.numServers, MAXSERVERS));
-	exit(1);
-    }
-    for (i = 0;i<info.numServers;i++) 
-	serverconns[i] = rx_NewConnection(info.hostAddr[i].sin_addr.s_addr, info.hostAddr[i].sin_port,
-					  USER_SERVICE_ID, sc, scIndex);
-    code = ubik_ClientInit(serverconns, &cstruct);
-    if (code) {
-	ViceLog(0, ("vl_Initialize: ubik client init failed.\n"));
-	return code;
-    }
-    return 0;
-}
-
-#define SYSIDMAGIC	0x88aabbcc
-#define SYSIDVERSION	1
-
-ReadSysIdFile() {
-    afs_int32 fd, nentries, i;
-    struct versionStamp vsn;
-    struct stat     status;
-    afsUUID uuid;
-
-    if ((stat(AFSDIR_SERVER_SYSID_FILEPATH, &status)) || (status.st_size <= 0)) {
-	ViceLog(0, ("%s: doesn't exist\n", AFSDIR_SERVER_SYSID_FILEPATH));
-	return ENOENT;
-    }
-    if (!(fd = open(AFSDIR_SERVER_SYSID_FILEPATH, O_RDONLY, 0))) {
-	ViceLog(0, ("%s: can't open (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
-	return EIO;
-    }
-    if ((i = read(fd, (char *)&vsn, sizeof(vsn))) != sizeof(vsn)) {
-	ViceLog(0, ("%s: Read failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
-	return EIO;
-    }
-    if (vsn.magic != SYSIDMAGIC) {
-	ViceLog(0, ("%s: wrong magic %x (we support %x)\n", AFSDIR_SERVER_SYSID_FILEPATH, vsn.magic, SYSIDMAGIC));
-	return EIO;
-    }
-    if (vsn.version != SYSIDVERSION) {
-	ViceLog(0, ("%s: wrong version %d (we support %d)\n", AFSDIR_SERVER_SYSID_FILEPATH, vsn.version, SYSIDVERSION));
-	return EIO;
-    }
-    if ((i = read(fd, (char *)&uuid, sizeof(struct afsUUID))) != sizeof(struct afsUUID)) {
-	ViceLog(0, ("%s: read of uuid failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
-	return EIO;
-    }
-    afs_ntohuuid(&uuid);
-    FS_HostUUID = uuid;
-    if ((i = read(fd, (char *)&nentries, sizeof(afs_int32))) != sizeof(afs_int32)) {
-	ViceLog(0, ("%s: Read of entries failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
-	return EIO;
-    }
-    if (nentries <= 0 || nentries > ADDRSPERSITE) {
-	ViceLog(0, ("%s: invalid num of interfaces: %d\n", AFSDIR_SERVER_SYSID_FILEPATH, nentries));
-	return EIO;
-    }
-    FS_HostAddr_cnt = nentries;
-    for (i = 0; i < nentries; i++) {
-	if (read(fd, (char *)&FS_HostAddrs[i], sizeof(afs_int32)) != sizeof(afs_int32)) {	
-	    ViceLog(0, ("%s: Read of addresses failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
-	    FS_HostAddr_cnt = 0;	/* reset it */
-	    return EIO;
-	}
-    }
-    close(fd);
-    return 0;
-}
-
-WriteSysIdFile() {
-    afs_int32 fd, nentries, i;
-    struct versionStamp vsn;
-    struct stat     status;
-    afsUUID uuid;
-    
-    if (!stat(AFSDIR_SERVER_SYSID_FILEPATH, &status)) {
-	/*
-	 * File exists; keep the old one around
-	 */
-	renamefile(AFSDIR_SERVER_SYSID_FILEPATH, AFSDIR_SERVER_OLDSYSID_FILEPATH);	
-    }
-    fd = open(AFSDIR_SERVER_SYSID_FILEPATH, O_WRONLY|O_TRUNC|O_CREAT, 0666);
-    if (fd < 1) {
-	ViceLog(0, ("%s: can't create (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
-	return EIO;
-    }
-    vsn.magic = SYSIDMAGIC;
-    vsn.version = 1;
-    if ((i = write(fd, (char *)&vsn, sizeof(vsn))) != sizeof(vsn)) {
-	ViceLog(0, ("%s: write failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
-	return EIO;
-    }
-    uuid = FS_HostUUID;
-    afs_htonuuid(&uuid);
-    if ((i = write(fd, (char *)&uuid, sizeof(struct afsUUID))) != sizeof(struct afsUUID)) {
-	ViceLog(0, ("%s: write of uuid failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
-	return EIO;
-    }
-    if ((i = write(fd, (char *)&FS_HostAddr_cnt, sizeof(afs_int32))) != sizeof(afs_int32)) {
-	ViceLog(0, ("%s: write of # of entries failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
-	return EIO;
-    }
-    for (i = 0; i < FS_HostAddr_cnt; i++) {
-	if (write(fd, (char *)&FS_HostAddrs[i], sizeof(afs_int32)) != sizeof(afs_int32)) {	
-	    ViceLog(0, ("%s: write of addresses failed (%d)\n", AFSDIR_SERVER_SYSID_FILEPATH, errno));
-	    return EIO;
-	}
-    }
-    close(fd);
-    return 0;
-}
-
-/*
- * defect 10966 
- * This routine sets up the buffers for the VL_RegisterAddrs RPC. All addresses
- * in FS_HostAddrs[] are in NBO, while the RPC treats them as a "blob" of data
- * and so we need to convert each of them into HBO which is what the extra 
- * array called FS_HostAddrs_HBO is used here.
- */ 
-Do_VLRegisterRPC() {
-    register int code;
-    bulkaddrs addrs;
-    extern int VL_RegisterAddrs();
-    afs_uint32 FS_HostAddrs_HBO[ADDRSPERSITE];
-    int i=0;
- 
-    for (i=0; i < FS_HostAddr_cnt ; i++) 
-     FS_HostAddrs_HBO[i]=ntohl(FS_HostAddrs[i]);
-    addrs.bulkaddrs_len = FS_HostAddr_cnt;
-    addrs.bulkaddrs_val = (afs_uint32 *)FS_HostAddrs_HBO;
-    code = ubik_Call(VL_RegisterAddrs, cstruct, 0, &FS_HostUUID, 0, &addrs);
-    if (code) {
-       if (code == VL_MULTIPADDR) {
-	  ViceLog(0, ("VL_RegisterAddrs rpc failed; The ethernet address exist on a different server; repair it\n"));
-	  ViceLog(0, ("VL_RegisterAddrs rpc failed; See VLLog for details\n"));
-	  return code;
-       } else if (code == RXGEN_OPCODE) {
-	  ViceLog(0, ("vlserver doesn't support VL_RegisterAddrs rpc; ignored\n"));
-	  FS_registered = 2; 	/* So we don't have to retry in the gc daemon */
-       } else {
-	  ViceLog(0, ("VL_RegisterAddrs rpc failed; will retry periodically (code=%d, err=%d)\n",
-		      code, errno));
-       }
-    } else {
-       FS_registered = 2; 	/* So we don't have to retry in the gc daemon */
-       WriteSysIdFile();
-    }
-
-    return 0;
-}
-
-#if 0
-static int AddrsEqual(cnt, addr1, addr2) 
-    int cnt;
-    afs_int32 *addr1, *addr2; 
-{
-    register int i, j;
-
-    for (i = 0; i < cnt; i++) {
-	for (j = 0; j < cnt; j++) {
-	    if (addr1[i] == addr2[j]) break;
-	}
-	if (j == cnt) return 0;
-    }
-    return 1;
-}
-#endif
-
-InitVL() {
-    int (*old)();
-    afs_int32 code;
-    afs_int32 cnt, i;
-    extern int rxi_numNetAddrs;
-    extern afs_uint32 rxi_NetAddrs[];
-
-    /*
-     * If this fails, it's because something major is wrong, and is not
-     * likely to be time dependent.
-     */
-    code = vl_Initialize(AFSDIR_SERVER_ETC_DIRPATH);
-    if (code != 0) {
-	ViceLog(0, ("Couldn't initialize protection library; code=%d.\n", code));
-	return code;
-    }
-
-    /* Read or create the sysid file and register the fileserver's
-     * IP addresses with the vlserver.
-     */
-    code = ReadSysIdFile();
-    if (code) {
-       /* Need to create the file */
-       ViceLog(0, ("Creating new SysID file\n")); 
-       if ((code = afs_uuid_create(&FS_HostUUID))) {
-	  ViceLog(0, ("Failed to create new uuid: %d\n", code)); 
-	  exit(1);
-       }
-    }
-    /* A good sysid file exists; inform the vlserver. If any conflicts,
-     * we always use the latest interface available as the real truth.
-     */
-#ifndef AFS_NT40_ENV
-    if(AFSDIR_SERVER_NETRESTRICT_FILEPATH || AFSDIR_SERVER_NETINFO_FILEPATH) {
-      /*
-       * Find addresses we are supposed to register as per the netrestrict 
-       * and netinfo files (/usr/afs/local/NetInfo and 
-       * /usr/afs/local/NetRestict)
-       */
-      char reason[1024];
-      afs_int32 code = parseNetFiles(FS_HostAddrs,NULL, NULL,
-				 ADDRSPERSITE, reason,
-				 AFSDIR_SERVER_NETINFO_FILEPATH,
-				 AFSDIR_SERVER_NETRESTRICT_FILEPATH);
-      if (code < 0) {
-	ViceLog(0,("Can't register any valid addresses: %s\n",reason));
-	exit(1);
-      }
-      FS_HostAddr_cnt = (afs_uint32) code;
-    }
-    else 
-#endif
-    {
-      FS_HostAddr_cnt = rx_getAllAddr(FS_HostAddrs, ADDRSPERSITE);
-    }
-
-    FS_registered = 1;
-    code = Do_VLRegisterRPC();
-    return code;
-} 

@@ -357,6 +357,1522 @@ static void CallPostamble(register struct rx_connection *aconn)
 
 } /*CallPostamble*/
 
+/*
+ * Returns the volume and vnode pointers associated with file Fid; the lock
+ * type on the vnode is set to lock. Note that both volume/vnode's ref counts
+ * are incremented and they must be eventualy released.
+ */
+static afs_int32
+CheckVnode(AFSFid *fid, Volume **volptr, Vnode **vptr, int lock)
+{
+    int fileCode = 0;
+    int errorCode = -1;
+    static struct timeval restartedat = {0,0};
+
+    if (fid->Volume == 0 || fid->Vnode == 0) /* not: || fid->Unique == 0) */
+	return(EINVAL);
+    if ((*volptr) == 0) {
+      extern int VInit;
+
+      while(1) {
+	errorCode = 0;
+	*volptr = VGetVolume(&errorCode, (afs_int32)fid->Volume);
+	if (!errorCode) {
+	  assert (*volptr);
+	  break;
+	}
+	if ((errorCode == VOFFLINE) && (VInit < 2)) {
+	    /* The volume we want may not be attached yet because
+	     * the volume initialization is not yet complete.
+             * We can do several things: 
+	     *     1.  return -1, which will cause users to see
+	     *         "connection timed out".  This is more or
+	     *         less the same as always, except that the servers
+	     *         may appear to bounce up and down while they
+	     *         are actually restarting.
+	     *     2.  return VBUSY which will cause clients to 
+	     *         sleep and retry for 6.5 - 15 minutes, depending
+	     *         on what version of the CM they are running.  If
+	     *         the file server takes longer than that interval 
+	     *         to attach the desired volume, then the application
+	     *         will see an ENODEV or EIO.  This approach has 
+	     *         the advantage that volumes which have been attached
+	     *         are immediately available, it keeps the server's
+	     *         immediate backlog low, and the call is interruptible
+	     *         by the user.  Users see "waiting for busy volume."
+	     *     3.  sleep here and retry.  Some people like this approach
+	     *         because there is no danger of seeing errors.  However, 
+	     *         this approach only works with a bounded number of 
+	     *         clients, since the pending queues will grow without
+	     *         stopping.  It might be better to find a way to take
+	     *         this call and stick it back on a queue in order to
+	     *         recycle this thread for a different request.    
+	     *     4.  Return a new error code, which new cache managers will
+	     *         know enough to interpret as "sleep and retry", without
+	     *         the upper bound of 6-15 minutes that is imposed by the
+	     *         VBUSY handling.  Users will see "waiting for
+	     *         busy volume," so they know that something is
+	     *         happening.  Old cache managers must be able to do  
+	     *         something reasonable with this, for instance, mark the
+	     *         server down.  Fortunately, any error code < 0
+	     *         will elicit that behavior. See #1.
+	     *     5.  Some combination of the above.  I like doing #2 for 10
+	     *         minutes, followed by #4.  3.1b and 3.2 cache managers
+	     *         will be fine as long as the restart period is
+	     *         not longer than 6.5 minutes, otherwise they may
+	     *         return ENODEV to users.  3.3 cache managers will be
+	     *         fine for 10 minutes, then will return
+	     *         ETIMEDOUT.  3.4 cache managers will just wait
+	     *         until the call works or fails definitively.
+	     *  NB. The problem with 2,3,4,5 is that old clients won't
+	     *  fail over to an alternate read-only replica while this
+	     *  server is restarting.  3.4 clients will fail over right away.
+	     */
+	  if (restartedat.tv_sec == 0) {
+	    /* I'm not really worried about when we restarted, I'm   */
+	    /* just worried about when the first VBUSY was returned. */
+	    TM_GetTimeOfDay(&restartedat, 0);
+	    return(VBUSY);
+	  }
+	  else {
+	    struct timeval now;
+	    TM_GetTimeOfDay(&now, 0);
+	    if ((now.tv_sec - restartedat.tv_sec) < (11*60)) {
+	      return(VBUSY);
+	    }
+	    else {
+	      return (VRESTARTING);
+	    }
+	  }
+	}
+	  /* allow read operations on busy volume */
+	else if(errorCode==VBUSY && lock==READ_LOCK) {
+	  errorCode=0;
+	  break;
+	}
+	else if (errorCode)
+	  return(errorCode);
+      }
+    }
+    assert (*volptr);
+
+    /* get the vnode  */
+    *vptr = VGetVnode(&errorCode, *volptr, fid->Vnode, lock);
+    if (errorCode)
+	return(errorCode);
+    if ((*vptr)->disk.uniquifier != fid->Unique) {
+	VPutVnode(&fileCode, *vptr);
+	assert(fileCode == 0);
+	*vptr = 0;
+	return(VNOVNODE);   /* return the right error code, at least */
+    }
+    return(0);
+} /*CheckVnode*/
+
+/*
+ * This routine returns the ACL associated with the targetptr. If the
+ * targetptr isn't a directory, we access its parent dir and get the ACL
+ * thru the parent; in such case the parent's vnode is returned in
+ * READ_LOCK mode.
+ */
+static afs_int32
+SetAccessList(Vnode **targetptr,
+	      Volume **volume,
+	      struct acl_accessList **ACL,
+	      int * ACLSize,
+	      Vnode **parent,
+	      AFSFid *Fid,
+	      int Lock)
+{
+    if ((*targetptr)->disk.type == vDirectory) {
+	*parent = 0;
+	*ACL = VVnodeACL(*targetptr);
+	*ACLSize = VAclSize(*targetptr);
+	return(0);
+    }
+    else {
+	assert(Fid != 0);
+	while(1) {
+	    VnodeId parentvnode;
+	    int errorCode = 0;
+	    
+	    parentvnode = (*targetptr)->disk.parent;
+	    VPutVnode(&errorCode,*targetptr);
+	    *targetptr = 0;
+	    if (errorCode) return(errorCode);
+	    *parent = VGetVnode(&errorCode, *volume, parentvnode, READ_LOCK);
+	    if (errorCode) return(errorCode);
+	    *ACL = VVnodeACL(*parent);
+	    *ACLSize = VAclSize(*parent);
+	    if ((errorCode = CheckVnode(Fid, volume, targetptr, Lock)) != 0)
+		return(errorCode);
+	    if ((*targetptr)->disk.parent != parentvnode) {
+		VPutVnode(&errorCode, *parent);
+		*parent = 0;
+		if (errorCode) return(errorCode);
+	    } else
+		return(0);
+	}
+    }
+
+} /*SetAccessList*/
+
+/*
+ * Compare the directory's ACL with the user's access rights in the client
+ * connection and return the user's and everybody else's access permissions
+ * in rights and anyrights, respectively
+ */
+static afs_int32
+GetRights (struct client *client,
+	   struct acl_accessList *ACL,
+	   afs_int32 *rights,
+	   afs_int32 *anyrights)
+{
+    extern prlist SystemAnyUserCPS;
+    afs_int32 hrights = 0;
+    int code;
+
+    if (acl_CheckRights(ACL, &SystemAnyUserCPS, anyrights) != 0) {
+
+	ViceLog(0,("CheckRights failed\n"));
+	*anyrights = 0;
+    }
+    *rights = 0;
+    acl_CheckRights(ACL, &client->CPS, rights);
+
+        /* wait if somebody else is already doing the getCPS call */
+    H_LOCK
+    while ( client->host->hostFlags & HCPS_INPROGRESS )
+    {
+	client->host->hostFlags |= HCPS_WAITING;  /* I am waiting */
+#ifdef AFS_PTHREAD_ENV
+	pthread_cond_wait(&client->host->cond, &host_glock_mutex);
+#else /* AFS_PTHREAD_ENV */
+        if ((code=LWP_WaitProcess( &(client->host->hostFlags))) !=LWP_SUCCESS)
+                ViceLog(0, ("LWP_WaitProcess returned %d\n", code));
+#endif /* AFS_PTHREAD_ENV */
+    }
+
+    if (client->host->hcps.prlist_len && !client->host->hcps.prlist_val) {
+	ViceLog(0,("CheckRights: len=%d, for host=0x%x\n", client->host->hcps.prlist_len, client->host->host));
+    } else
+	acl_CheckRights(ACL, &client->host->hcps, &hrights);
+    H_UNLOCK
+    /* Allow system:admin the rights given with the -implicit option */
+    if (acl_IsAMember(SystemId, &client->CPS))
+        *rights |= implicitAdminRights;
+    *rights |= hrights;
+    *anyrights |= hrights;
+
+    return(0);
+
+} /*GetRights*/
+
+/*
+ * VanillaUser returns 1 (true) if the user is a vanilla user (i.e., not
+ * a System:Administrator)
+ */
+static afs_int32
+VanillaUser(struct client *client)
+{
+    if (acl_IsAMember(SystemId, &client->CPS))
+	return(0);  /* not a system administrator, then you're "vanilla" */
+    return(1);
+
+} /*VanillaUser*/
+
+
+/*
+ * This unusual afs_int32-parameter routine encapsulates all volume package related
+ * operations together in a single function; it's called by almost all AFS
+ * interface calls.
+ */
+static afs_int32
+GetVolumePackage(struct rx_connection *tcon,
+		 AFSFid *Fid,
+		 Volume **volptr,
+		 Vnode **targetptr,
+		 int chkforDir,
+		 Vnode **parent,
+		 struct client **client,
+		 int locktype,
+		 afs_int32 *rights, 
+		 afs_int32 *anyrights)
+{
+    struct acl_accessList * aCL;    /* Internal access List */
+    int	aCLSize;	    /* size of the access list */
+    int	errorCode = 0;	    /* return code to caller */
+
+    if ((errorCode = CheckVnode(Fid, volptr, targetptr, locktype)))
+	return(errorCode);
+    if (chkforDir) {
+	if (chkforDir == MustNOTBeDIR && ((*targetptr)->disk.type == vDirectory))
+	    return(EISDIR);
+	else if (chkforDir == MustBeDIR && ((*targetptr)->disk.type != vDirectory))
+	    return(ENOTDIR);
+    }
+    if ((errorCode = SetAccessList(targetptr, volptr, &aCL, &aCLSize, parent, (chkforDir == MustBeDIR ? (AFSFid *)0 : Fid), (chkforDir == MustBeDIR ? 0 : locktype))) != 0)
+	return(errorCode);
+    if (chkforDir == MustBeDIR) assert((*parent) == 0);
+    if ((errorCode = GetClient(tcon, client)) != 0)
+	return(errorCode);
+    if (!(*client))
+	return(EINVAL);
+    assert(GetRights(*client, aCL, rights, anyrights) == 0);
+    /* ok, if this is not a dir, set the PRSFS_ADMINISTER bit iff we're the owner */
+    if ((*targetptr)->disk.type != vDirectory) {
+	/* anyuser can't be owner, so only have to worry about rights, not anyrights */
+	if ((*targetptr)->disk.owner == (*client)->ViceId)
+	    (*rights) |= PRSFS_ADMINISTER;
+	else
+	    (*rights) &= ~PRSFS_ADMINISTER;
+    }
+#ifdef ADMIN_IMPLICIT_LOOKUP
+    /* admins get automatic lookup on everything */
+    if (!VanillaUser(*client)) (*rights) |= PRSFS_LOOKUP;
+#endif /* ADMIN_IMPLICIT_LOOKUP */
+    return errorCode;
+
+} /*GetVolumePackage*/
+
+
+/*
+ * This is the opposite of GetVolumePackage(), and is always used at the end of
+ * AFS calls to put back all used vnodes and the volume in the proper order!
+ */
+static afs_int32
+PutVolumePackage(Vnode *parentwhentargetnotdir, 
+		 Vnode *targetptr,
+		 Vnode *parentptr,
+		 Volume *volptr)
+{
+    int	fileCode = 0;	/* Error code returned by the volume package */
+
+    if (parentwhentargetnotdir) {
+	VPutVnode(&fileCode, parentwhentargetnotdir);
+	assert(!fileCode || (fileCode == VSALVAGE));
+    }
+    if (targetptr) {
+	VPutVnode(&fileCode, targetptr);
+	assert(!fileCode || (fileCode == VSALVAGE));
+    }
+    if (parentptr) {
+	VPutVnode(&fileCode, parentptr);
+	assert(!fileCode || (fileCode == VSALVAGE));
+    }
+    if (volptr) {
+	VPutVolume(volptr);
+    }
+} /*PutVolumePackage*/
+
+static int VolumeOwner (register struct client *client, 
+			register Vnode *targetptr)
+{
+    afs_int32 owner = V_owner(targetptr->volumePtr);	/* get volume owner */
+
+    if (owner >= 0)
+	return (client->ViceId == owner);
+    else {
+	/* 
+	 * We don't have to check for host's cps since only regular
+	 * viceid are volume owners.
+	 */
+	return (acl_IsAMember(owner, &client->CPS));
+    }
+
+} /*VolumeOwner*/
+
+static int VolumeRootVnode (Vnode *targetptr)
+{
+    return ((targetptr->vnodeNumber == ROOTVNODE) &&
+	    (targetptr->disk.uniquifier == 1));
+
+} /*VolumeRootVnode*/
+
+/*
+ * Check if target file has the proper access permissions for the Fetch
+ * (FetchData, FetchACL, FetchStatus) and Store (StoreData, StoreACL,
+ * StoreStatus) related calls
+ */
+/* this code should probably just set a "priv" flag where all the audit events
+ * are now, and only generate the audit event once at the end of the routine, 
+ * thus only generating the event if all the checks succeed, but only because
+ * of the privilege       XXX
+ */
+static afs_int32
+Check_PermissionRights(Vnode *targetptr,
+		       struct client *client,
+		       afs_int32 rights,
+		       int CallingRoutine,
+		       AFSStoreStatus *InStatus)
+{
+    int errorCode = 0;
+#define OWNSp(client, target) ((client)->ViceId == (target)->disk.owner)
+#define CHOWN(i,t) (((i)->Mask & AFS_SETOWNER) &&((i)->Owner != (t)->disk.owner))
+#define CHGRP(i,t) (((i)->Mask & AFS_SETGROUP) &&((i)->Group != (t)->disk.group))
+
+    if (CallingRoutine & CHK_FETCH) {
+#ifdef	CMUCS
+	if (VanillaUser(client)) 
+#else
+	if (CallingRoutine == CHK_FETCHDATA || VanillaUser(client)) 
+#endif
+	  {
+	    if (targetptr->disk.type == vDirectory || targetptr->disk.type == vSymlink) {
+		if (   !(rights & PRSFS_LOOKUP)
+#ifdef ADMIN_IMPLICIT_LOOKUP  
+		    /* grant admins fetch on all directories */
+		    && VanillaUser(client)
+#endif /* ADMIN_IMPLICIT_LOOKUP */
+		    && !VolumeOwner(client, targetptr))
+		    return(EACCES);
+	    } else {    /* file */
+		/* must have read access, or be owner and have insert access */
+		if (!(rights & PRSFS_READ) &&
+		    !(OWNSp(client, targetptr) && (rights & PRSFS_INSERT)))
+		    return(EACCES);
+	    }
+	    if (CallingRoutine == CHK_FETCHDATA && targetptr->disk.type == vFile)
+#ifdef USE_GROUP_PERMS
+		if (!OWNSp(client, targetptr) &&
+		    !acl_IsAMember(targetptr->disk.owner, &client->CPS)) {
+		    errorCode = (((GROUPREAD|GROUPEXEC) & targetptr->disk.modeBits)
+				 ? 0: EACCES);
+		} else {
+		    errorCode =(((OWNERREAD|OWNEREXEC) & targetptr->disk.modeBits)
+				? 0: EACCES);
+		}
+#else
+		/*
+		 * The check with the ownership below is a kludge to allow
+		 * reading of files created with no read permission. The owner
+		 * of the file is always allowed to read it.
+		 */
+		if ((client->ViceId != targetptr->disk.owner) && VanillaUser(client))
+		    errorCode =(((OWNERREAD|OWNEREXEC) & targetptr->disk.modeBits) ? 0: EACCES);
+#endif
+	}
+	else /*  !VanillaUser(client) && !FetchData */ {
+	  osi_audit( PrivilegeEvent, 0, AUD_INT, (client ? client->ViceId : 0), 
+                                        AUD_INT, CallingRoutine, AUD_END);
+	}
+    }
+    else { /* a store operation */
+      if ( (rights & PRSFS_INSERT) && OWNSp(client, targetptr)
+	  && (CallingRoutine != CHK_STOREACL)
+	  && (targetptr->disk.type == vFile))
+	{
+	  /* bypass protection checks on first store after a create
+	   * for the creator; also prevent chowns during this time
+	   * unless you are a system administrator */
+	  /******  InStatus->Owner && UnixModeBits better be SET!! */
+	  if ( CHOWN(InStatus, targetptr) || CHGRP(InStatus, targetptr)) {
+	    if (readonlyServer) 
+	      return(VREADONLY);
+	    else if (VanillaUser (client)) 
+	      return(EPERM);      /* Was EACCES */
+	    else
+	      osi_audit( PrivilegeEvent, 0, AUD_INT, (client ? client->ViceId : 0), 
+                                            AUD_INT, CallingRoutine, AUD_END);
+	  }
+	} else {
+	  if (CallingRoutine != CHK_STOREDATA && !VanillaUser(client)) {
+	    osi_audit( PrivilegeEvent, 0, AUD_INT, (client ? client->ViceId : 0),
+		                          AUD_INT, CallingRoutine, AUD_END);
+	  }
+	  else {
+	    if (readonlyServer) {
+		return(VREADONLY);
+	    }
+	    if (CallingRoutine == CHK_STOREACL) {
+	      if (!(rights & PRSFS_ADMINISTER) &&
+		  !VolumeOwner(client, targetptr)) return(EACCES);
+	    }
+	    else {	/* store data or status */
+	      /* watch for chowns and chgrps */
+	      if (CHOWN(InStatus, targetptr) || CHGRP(InStatus, targetptr)) {
+		if (readonlyServer) 
+		  return(VREADONLY);
+		else if (VanillaUser (client)) 
+		  return(EPERM);	/* Was EACCES */
+		else
+		  osi_audit(PrivilegeEvent, 0,
+			    AUD_INT, (client ? client->ViceId : 0), 
+			    AUD_INT, CallingRoutine, AUD_END);
+	      }
+	      /* must be sysadmin to set suid/sgid bits */
+	      if ((InStatus->Mask & AFS_SETMODE) &&
+#ifdef AFS_NT40_ENV
+		  (InStatus->UnixModeBits & 0xc00) != 0) {
+#else
+		  (InStatus->UnixModeBits & (S_ISUID|S_ISGID)) != 0) {
+#endif
+		if (readonlyServer)
+		  return(VREADONLY);
+		if (VanillaUser(client))
+		  return(EACCES);
+		else osi_audit( PrivSetID, 0, AUD_INT, (client ? client->ViceId : 0),
+			                      AUD_INT, CallingRoutine, AUD_END);
+	      }
+	      if (CallingRoutine == CHK_STOREDATA) {
+		if (readonlyServer)
+		  return(VREADONLY);
+		if (!(rights & PRSFS_WRITE))
+		  return(EACCES);
+		/* Next thing is tricky.  We want to prevent people
+                 * from writing files sans 0200 bit, but we want
+                 * creating new files with 0444 mode to work.  We
+                 * don't check the 0200 bit in the "you are the owner"
+                 * path above, but here we check the bit.  However, if
+                 * you're a system administrator, we ignore the 0200
+                 * bit anyway, since you may have fchowned the file,
+                 * too */
+#ifdef USE_GROUP_PERMS
+			if ((targetptr->disk.type == vFile)
+			    && VanillaUser(client)) {
+			    if (!OWNSp(client, targetptr) &&
+				!acl_IsAMember(targetptr->disk.owner,
+					       &client->CPS)) {
+				errorCode = ((GROUPWRITE & targetptr->disk.modeBits)
+					     ? 0: EACCES);
+			    } else {
+				errorCode = ((OWNERWRITE & targetptr->disk.modeBits)
+					     ? 0 : EACCES);
+			    }
+			} else
+#endif
+		if ((targetptr->disk.type != vDirectory)
+		    && (!(targetptr->disk.modeBits & OWNERWRITE)))
+		  if (readonlyServer)
+		    return(VREADONLY);
+		  if (VanillaUser(client))
+		    return(EACCES);
+		  else osi_audit( PrivilegeEvent, 0, AUD_INT, (client ? client->ViceId : 0),
+				                     AUD_INT, CallingRoutine, AUD_END);
+	      }
+	      else {  /* a status store */
+		if (readonlyServer)
+		  return(VREADONLY);
+		if (targetptr->disk.type == vDirectory) {
+		  if (!(rights & PRSFS_DELETE) && !(rights & PRSFS_INSERT))
+		    return(EACCES);
+		}
+		else {	/* a file  or symlink */
+		  if (!(rights & PRSFS_WRITE)) return(EACCES);
+		}
+	      }
+	    }
+	  }
+	}
+    }
+    return(errorCode);
+
+} /*Check_PermissionRights*/
+
+
+/*
+ * The Access List information is converted from its internal form in the
+ * target's vnode buffer (or its parent vnode buffer if not a dir), to an
+ * external form and returned back to the caller, via the AccessList
+ * structure
+ */
+static afs_int32
+RXFetch_AccessList(Vnode *targetptr,
+		   Vnode *parentwhentargetnotdir,
+		   struct AFSOpaque *AccessList)
+{
+    char * eACL;	/* External access list placeholder */
+
+    if (acl_Externalize((targetptr->disk.type == vDirectory ?
+			 VVnodeACL(targetptr) :
+			 VVnodeACL(parentwhentargetnotdir)), &eACL) != 0) {
+	return EIO;
+    }
+    if ((strlen(eACL)+1) > AFSOPAQUEMAX) {
+	acl_FreeExternalACL(&eACL);
+	return(E2BIG);
+    } else {
+	strcpy((char *)(AccessList->AFSOpaque_val), (char *)eACL);
+	AccessList->AFSOpaque_len = strlen(eACL) +1;
+    }
+    acl_FreeExternalACL(&eACL);
+    return(0);
+
+} /*RXFetch_AccessList*/
+
+
+/*
+ * The Access List information is converted from its external form in the
+ * input AccessList structure to the internal representation and copied into
+ * the target dir's vnode storage.
+ */
+static afs_int32
+RXStore_AccessList(Vnode *targetptr, struct AFSOpaque *AccessList)
+{
+    struct acl_accessList * newACL;	/* PlaceHolder for new access list */
+
+    if (acl_Internalize(AccessList->AFSOpaque_val, &newACL) != 0)
+	return(EINVAL);
+    if ((newACL->size + 4) > VAclSize(targetptr))
+	return(E2BIG);
+    memcpy((char *) VVnodeACL(targetptr), (char *) newACL, (int)(newACL->size));
+    acl_FreeACL(&newACL);
+    return(0);
+
+} /*RXStore_AccessList*/
+
+
+static afs_int32
+Fetch_AccessList(Vnode *targetptr, Vnode *parentwhentargetnotdir,
+		 struct AFSAccessList *AccessList)
+{
+    char * eACL;	/* External access list placeholder */
+
+    assert(acl_Externalize((targetptr->disk.type == vDirectory ?
+			    VVnodeACL(targetptr) :
+			    VVnodeACL(parentwhentargetnotdir)), &eACL) == 0);
+    if ((strlen(eACL)+1) > AccessList->MaxSeqLen) {
+	acl_FreeExternalACL(&eACL);
+	return(E2BIG);
+    } else {
+	strcpy((char *)(AccessList->SeqBody), (char *)eACL);
+	AccessList->SeqLen = strlen(eACL) +1;
+    }
+    acl_FreeExternalACL(&eACL);
+    return(0);
+
+} /*Fetch_AccessList*/
+
+/*
+ * The Access List information is converted from its external form in the
+ * input AccessList structure to the internal representation and copied into
+ * the target dir's vnode storage.
+ */
+static afs_int32
+Store_AccessList(Vnode *targetptr, struct AFSAccessList *AccessList)
+{
+    struct acl_accessList * newACL;	/* PlaceHolder for new access list */
+
+    if (acl_Internalize(AccessList->SeqBody, &newACL) != 0)
+	return(EINVAL);
+    if ((newACL->size + 4) > VAclSize(targetptr))
+	return(E2BIG);
+    memcpy((char *) VVnodeACL(targetptr), (char *) newACL, (int)(newACL->size));
+    acl_FreeACL(&newACL);
+    return(0);
+
+} /*Store_AccessList*/
+
+
+/* In our current implementation, each successive data store (new file
+ * data version) creates a new inode. This function creates the new
+ * inode, copies the old inode's contents to the new one, remove the old
+ * inode (i.e. decrement inode count -- if it's currently used the delete
+ * will be delayed), and modify some fields (i.e. vnode's
+ * disk.inodeNumber and cloned)
+ */
+#define	COPYBUFFSIZE	8192
+static int CopyOnWrite(Vnode *targetptr, Volume *volptr)
+{
+    Inode	ino, nearInode;
+    int		rdlen;
+    int		wrlen;
+    register int size, length;
+    int ifd, ofd;
+    char	*buff;
+    int 	rc;		/* return code */
+    IHandle_t	*newH;	/* Use until finished copying, then cp to vnode.*/
+    FdHandle_t  *targFdP;  /* Source Inode file handle */
+    FdHandle_t  *newFdP; /* Dest Inode file handle */
+
+    if (targetptr->disk.type ==	vDirectory) DFlush();	/* just in case? */
+
+    size = targetptr->disk.length;
+    buff = (char *)malloc(COPYBUFFSIZE);
+    if (buff == NULL) {
+	return EIO;
+    }
+
+    ino = VN_GET_INO(targetptr);
+    assert(VALID_INO(ino));
+    targFdP = IH_OPEN(targetptr->handle);
+    if (targFdP == NULL) {
+	rc = errno;
+	ViceLog(0, ("CopyOnWrite failed: Failed to open target vnode %u in volume %u (errno = %d)\n", targetptr->vnodeNumber, V_id(volptr), rc));
+	free(buff);
+	VTakeOffline (volptr);
+	return rc;
+    }
+
+    nearInode = VN_GET_INO(targetptr);
+    ino	= IH_CREATE(V_linkHandle(volptr), V_device(volptr),
+		    VPartitionPath(V_partition(volptr)),nearInode, V_id(volptr),
+		    targetptr->vnodeNumber, targetptr->disk.uniquifier,
+		    (int)targetptr->disk.dataVersion);
+    if (!VALID_INO(ino))
+    {
+	ViceLog(0,("CopyOnWrite failed: Partition %s that contains volume %u may be out of free inodes(errno = %d)\n", volptr->partition->name, V_id(volptr), errno));
+	FDH_CLOSE(targFdP);
+	free(buff);
+	return ENOSPC;
+    }
+    IH_INIT(newH, V_device(volptr), V_id(volptr), ino);
+    newFdP = IH_OPEN(newH);
+    assert(newFdP != NULL);
+
+    while(size > 0) {
+	if (size > COPYBUFFSIZE) { /* more than a buffer */
+	    length = COPYBUFFSIZE;
+	    size -= COPYBUFFSIZE;
+	} else {
+	    length = size;
+	    size = 0;
+	}
+	rdlen = FDH_READ(targFdP, buff, length); 
+	if (rdlen == length)
+	    wrlen = FDH_WRITE(newFdP, buff, length);
+	else
+	    wrlen = 0;
+	/*  Callers of this function are not prepared to recover
+	 *  from error that put the filesystem in an inconsistent
+	 *  state. Make sure that we force the volume off-line if
+	 *  we some error other than ENOSPC - 4.29.99)
+	 *
+	 *  In case we are unable to write the required bytes, and the
+	 *  error code indicates that the disk is full, we roll-back to
+	 *  the initial state.
+	 */
+	if((rdlen != length) || (wrlen != length))
+		if ( (wrlen < 0) && (errno == ENOSPC) )	/* disk full */
+		{
+	    		ViceLog(0,("CopyOnWrite failed: Partition %s containing volume %u is full\n",
+		    			volptr->partition->name, V_id(volptr)));
+			/* remove destination inode which was partially copied till now*/
+			FDH_REALLYCLOSE(newFdP);
+			IH_RELEASE(newH);
+			FDH_REALLYCLOSE(targFdP);
+			rc = IH_DEC(V_linkHandle(volptr), ino,
+				  V_parentId(volptr));
+    			if (!rc ) {
+			    ViceLog(0,("CopyOnWrite failed: error %u after i_dec on disk full, volume %u in partition %s needs salvage\n",
+				       rc, V_id(volptr), 
+				       volptr->partition->name));
+			    VTakeOffline (volptr);
+			}
+			free(buff);
+			return ENOSPC;
+		}
+		else {
+		    ViceLog(0,("CopyOnWrite failed: volume %u in partition %s  (tried reading %u, read %u, wrote %u, errno %u) volume needs salvage\n",
+			       V_id(volptr), volptr->partition->name, length,
+			       rdlen, wrlen, errno));
+#ifdef FAST_RESTART /* if running in no-salvage, don't core the server */
+		    ViceLog(0,("CopyOnWrite failed: taking volume offline\n"));
+#else /* Avoid further corruption and try to get a core. */
+		    assert(0); 
+#endif
+                    /* Decrement this inode so salvager doesn't find it. */
+		    FDH_REALLYCLOSE(newFdP);
+		    IH_RELEASE(newH);
+		    FDH_REALLYCLOSE(targFdP);
+		    rc = IH_DEC(V_linkHandle(volptr), ino,
+				V_parentId(volptr));
+		    free(buff);
+		    VTakeOffline (volptr);
+		    return EIO;
+		}
+#ifndef AFS_PTHREAD_ENV
+	IOMGR_Poll();
+#endif /* !AFS_PTHREAD_ENV */
+    }
+    FDH_REALLYCLOSE(targFdP);
+    rc = IH_DEC(V_linkHandle(volptr), VN_GET_INO(targetptr),
+	      V_parentId(volptr)) ;
+    assert(!rc);
+    IH_RELEASE(targetptr->handle);
+
+    rc = FDH_SYNC(newFdP);
+    assert(rc == 0);
+    FDH_CLOSE(newFdP);
+    targetptr->handle = newH;
+    VN_SET_INO(targetptr, ino);
+    targetptr->disk.cloned = 0;
+    /* Internal change to vnode, no user level change to volume - def 5445 */
+    targetptr->changed_oldTime = 1;
+    free(buff);
+    return 0;				/* success */
+} /*CopyOnWrite*/
+
+
+/*
+ * Common code to handle with removing the Name (file when it's called from
+ * SAFS_RemoveFile() or an empty dir when called from SAFS_rmdir()) from a
+ * given directory, parentptr.
+ */
+int DT1=0, DT0=0;
+static afs_int32
+DeleteTarget(Vnode *parentptr,
+	     Volume *volptr,
+	     Vnode **targetptr,
+	     DirHandle *dir,
+	     AFSFid *fileFid,
+	     char *Name,
+	     int ChkForDir)
+{
+    DirHandle childdir;	    /* Handle for dir package I/O */
+    int errorCode = 0;
+    int code;
+
+    /* watch for invalid names */
+    if (!strcmp(Name, ".") || !strcmp(Name, ".."))
+	return (EINVAL);
+    if (parentptr->disk.cloned)	
+    {
+	ViceLog(25, ("DeleteTarget : CopyOnWrite called\n"));
+	if ((errorCode = CopyOnWrite(parentptr, volptr)))
+	{
+		ViceLog(20, ("DeleteTarget %s: CopyOnWrite failed %d\n",Name,errorCode));
+		return errorCode;
+	}
+    }
+
+    /* check that the file is in the directory */
+    SetDirHandle(dir, parentptr);
+    if (Lookup(dir, Name, fileFid))
+	return(ENOENT);
+    fileFid->Volume = V_id(volptr);
+
+    /* just-in-case check for something causing deadlock */
+    if (fileFid->Vnode == parentptr->vnodeNumber)
+	return(EINVAL);
+
+    *targetptr = VGetVnode(&errorCode, volptr, fileFid->Vnode, WRITE_LOCK);
+    if (errorCode) {
+	return (errorCode);
+    }
+    if (ChkForDir == MustBeDIR) {
+	if ((*targetptr)->disk.type != vDirectory)
+	    return(ENOTDIR);
+    } else if ((*targetptr)->disk.type == vDirectory)
+	return(EISDIR);
+    
+    /*assert((*targetptr)->disk.uniquifier == fileFid->Unique);*/
+    /**
+      * If the uniquifiers dont match then instead of asserting
+      * take the volume offline and return VSALVAGE
+      */
+    if ( (*targetptr)->disk.uniquifier != fileFid->Unique ) {
+	VTakeOffline(volptr);
+	errorCode = VSALVAGE;
+	return errorCode;
+    }
+	
+    if (ChkForDir == MustBeDIR) {
+	SetDirHandle(&childdir, *targetptr);
+	if (IsEmpty(&childdir) != 0)
+	    return(EEXIST);
+	DZap(&childdir);
+	(*targetptr)->delete = 1;
+    } else if ((--(*targetptr)->disk.linkCount) == 0) 
+	(*targetptr)->delete = 1;
+    if ((*targetptr)->delete) {
+	if (VN_GET_INO(*targetptr)) {
+	    DT0++;
+	    IH_REALLYCLOSE((*targetptr)->handle);
+	    errorCode = IH_DEC(V_linkHandle(volptr),
+			     VN_GET_INO(*targetptr),
+			     V_parentId(volptr));
+	    IH_RELEASE((*targetptr)->handle);
+	    if (errorCode == -1) {
+		ViceLog(0, ("DT: inode=%s, name=%s, errno=%d\n",
+			    PrintInode(NULL, VN_GET_INO(*targetptr)),
+			    Name, errno));
+#ifdef	AFS_DEC_ENV
+		if ((errno != ENOENT) && (errno != EIO) && (errno != ENXIO))
+#else
+		if (errno != ENOENT) 
+#endif
+		    {
+		    ViceLog(0, ("Volume %u now offline, must be salvaged.\n", 
+                                volptr->hashid));
+                    VTakeOffline(volptr);
+		    return (EIO);
+		    }
+		DT1++;
+		errorCode = 0;
+	    }
+	}
+	VN_SET_INO(*targetptr, (Inode)0);
+	VAdjustDiskUsage(&errorCode, volptr,
+			-(int)nBlocks((*targetptr)->disk.length), 0);
+    }
+    
+    (*targetptr)->changed_newTime = 1; /* Status change of deleted file/dir */
+
+    code = Delete(dir,(char *) Name);
+    if (code) {
+       ViceLog(0, ("Error %d deleting %s\n", code,
+		   (((*targetptr)->disk.type== Directory)?"directory":"file")));
+       ViceLog(0, ("Volume %u now offline, must be salvaged.\n", 
+                  volptr->hashid));
+       VTakeOffline(volptr);
+       if (!errorCode) errorCode = code;
+    }
+
+    DFlush();
+    return(errorCode);
+
+} /*DeleteTarget*/
+
+
+/*
+ * This routine updates the parent directory's status block after the
+ * specified operation (i.e. RemoveFile(), CreateFile(), Rename(),
+ * SymLink(), Link(), MakeDir(), RemoveDir()) on one of its children has
+ * been performed.
+ */
+static void
+Update_ParentVnodeStatus(Vnode *parentptr,
+			 Volume *volptr,
+			 DirHandle *dir,
+			 int author,
+			 int linkcount,
+#if FS_STATS_DETAILED
+			 char a_inSameNetwork
+#endif /* FS_STATS_DETAILED */
+			 )
+{
+    afs_uint32 newlength;	/* Holds new directory length */
+    int errorCode;
+#if FS_STATS_DETAILED
+    Date currDate;		/*Current date*/
+    int writeIdx;		/*Write index to bump*/
+    int timeIdx;		/*Authorship time index to bump*/
+#endif /* FS_STATS_DETAILED */
+
+    parentptr->disk.dataVersion++;
+    newlength = Length(dir);
+    /* 
+     * This is a called on both dir removals (i.e. remove, removedir, rename) but also in dir additions
+     * (create, symlink, link, makedir) so we need to check if we have enough space
+     * XXX But we still don't check the error since we're dealing with dirs here and really the increase
+     * of a new entry would be too tiny to worry about failures (since we have all the existing cushion)
+     */
+    if (nBlocks(newlength) != nBlocks(parentptr->disk.length))
+	VAdjustDiskUsage(&errorCode, volptr, 
+			 (int)(nBlocks(newlength) - nBlocks(parentptr->disk.length)),
+			 (int)(nBlocks(newlength) - nBlocks(parentptr->disk.length)));
+    parentptr->disk.length = newlength;
+
+#if FS_STATS_DETAILED
+    /*
+     * Update directory write stats for this volume.  Note that the auth
+     * counter is located immediately after its associated ``distance''
+     * counter.
+     */
+    if (a_inSameNetwork)
+	writeIdx = VOL_STATS_SAME_NET;
+    else
+	writeIdx = VOL_STATS_DIFF_NET;
+    V_stat_writes(volptr, writeIdx)++;
+    if (author != AnonymousID) {
+	V_stat_writes(volptr, writeIdx+1)++;
+    }
+
+    /*
+     * Update the volume's authorship information in response to this
+     * directory operation.  Get the current time, decide to which time
+     * slot this operation belongs, and bump the appropriate slot.
+     */
+    currDate = (FT_ApproxTime() - parentptr->disk.unixModifyTime);
+    timeIdx = (currDate < VOL_STATS_TIME_CAP_0 ? VOL_STATS_TIME_IDX_0 :
+	       currDate < VOL_STATS_TIME_CAP_1 ? VOL_STATS_TIME_IDX_1 :
+	       currDate < VOL_STATS_TIME_CAP_2 ? VOL_STATS_TIME_IDX_2 :
+	       currDate < VOL_STATS_TIME_CAP_3 ? VOL_STATS_TIME_IDX_3 :
+	       currDate < VOL_STATS_TIME_CAP_4 ? VOL_STATS_TIME_IDX_4 :
+	       VOL_STATS_TIME_IDX_5);
+    if (parentptr->disk.author == author) {
+	V_stat_dirSameAuthor(volptr, timeIdx)++;
+    }
+    else {
+	V_stat_dirDiffAuthor(volptr, timeIdx)++;
+    }
+#endif /* FS_STATS_DETAILED */
+
+    parentptr->disk.author = author;
+    parentptr->disk.linkCount = linkcount;
+    parentptr->disk.unixModifyTime = FT_ApproxTime();	/* This should be set from CLIENT!! */
+    parentptr->disk.serverModifyTime = FT_ApproxTime();
+    parentptr->changed_newTime = 1; /* vnode changed, write it back. */
+}
+
+
+/*
+ * Update the target file's (or dir's) status block after the specified
+ * operation is complete. Note that some other fields maybe updated by
+ * the individual module.
+ */
+
+/* XXX INCOMPLETE - More attention is needed here! */
+static void
+Update_TargetVnodeStatus(Vnode *targetptr,
+			 afs_uint32 Caller,
+			 struct client *client,
+			 AFSStoreStatus *InStatus,
+			 Vnode *parentptr,
+			 Volume *volptr,
+			 afs_int32 length)
+{
+#if FS_STATS_DETAILED
+    Date currDate;		/*Current date*/
+    int writeIdx;		/*Write index to bump*/
+    int timeIdx;		/*Authorship time index to bump*/
+#endif /* FS_STATS_DETAILED */
+
+    if (Caller & (TVS_CFILE|TVS_SLINK|TVS_MKDIR))	{   /* initialize new file */
+	targetptr->disk.parent = parentptr->vnodeNumber;
+	targetptr->disk.length = length;
+	/* targetptr->disk.group =	0;  save some cycles */
+	targetptr->disk.modeBits = 0777;
+	targetptr->disk.owner = client->ViceId;
+	targetptr->disk.dataVersion =  0 ; /* consistent with the client */
+	targetptr->disk.linkCount = (Caller & TVS_MKDIR ? 2 : 1);
+	/* the inode was created in Alloc_NewVnode() */
+    }
+
+#if FS_STATS_DETAILED
+    /*
+     * Update file write stats for this volume.  Note that the auth
+     * counter is located immediately after its associated ``distance''
+     * counter.
+     */
+    if (client->InSameNetwork)
+	writeIdx = VOL_STATS_SAME_NET;
+    else
+	writeIdx = VOL_STATS_DIFF_NET;
+    V_stat_writes(volptr, writeIdx)++;
+    if (client->ViceId != AnonymousID) {
+	V_stat_writes(volptr, writeIdx+1)++;
+    }
+
+    /*
+     * We only count operations that DON'T involve creating new objects
+     * (files, symlinks, directories) or simply setting status as
+     * authorship-change operations.
+     */
+    if (!(Caller & (TVS_CFILE | TVS_SLINK | TVS_MKDIR | TVS_SSTATUS))) {
+	/*
+	 * Update the volume's authorship information in response to this
+	 * file operation.  Get the current time, decide to which time
+	 * slot this operation belongs, and bump the appropriate slot.
+	 */
+	currDate = (FT_ApproxTime() - targetptr->disk.unixModifyTime);
+	timeIdx = (currDate < VOL_STATS_TIME_CAP_0 ? VOL_STATS_TIME_IDX_0 :
+		   currDate < VOL_STATS_TIME_CAP_1 ? VOL_STATS_TIME_IDX_1 :
+		   currDate < VOL_STATS_TIME_CAP_2 ? VOL_STATS_TIME_IDX_2 :
+		   currDate < VOL_STATS_TIME_CAP_3 ? VOL_STATS_TIME_IDX_3 :
+		   currDate < VOL_STATS_TIME_CAP_4 ? VOL_STATS_TIME_IDX_4 :
+		   VOL_STATS_TIME_IDX_5);
+	if (targetptr->disk.author == client->ViceId) {
+	    V_stat_fileSameAuthor(volptr, timeIdx)++;
+	} else {
+	    V_stat_fileDiffAuthor(volptr, timeIdx)++;
+	}
+      }
+#endif /* FS_STATS_DETAILED */
+
+    if (!(Caller & TVS_SSTATUS))
+      targetptr->disk.author = client->ViceId;
+    if (Caller & TVS_SDATA) {
+      targetptr->disk.dataVersion++;
+      if (VanillaUser(client))
+	{
+	  targetptr->disk.modeBits &= ~04000; /* turn off suid for file. */
+#ifdef CREATE_SGUID_ADMIN_ONLY
+	  targetptr->disk.modeBits &= ~02000; /* turn off sgid for file. */
+#endif
+	}
+    }
+    if (Caller & TVS_SSTATUS) {	/* update time on non-status change */
+	/* store status, must explicitly request to change the date */
+	if (InStatus->Mask & AFS_SETMODTIME)
+	    targetptr->disk.unixModifyTime = InStatus->ClientModTime;
+    }
+    else {/* other: date always changes, but perhaps to what is specified by caller */
+	targetptr->disk.unixModifyTime = (InStatus->Mask & AFS_SETMODTIME ? InStatus->ClientModTime : FT_ApproxTime());
+    }
+    if (InStatus->Mask & AFS_SETOWNER) {
+	/* admin is allowed to do chmod, chown as well as chown, chmod. */
+	if (VanillaUser(client))
+	  {
+	    targetptr->disk.modeBits &= ~04000; /* turn off suid for file. */
+#ifdef CREATE_SGUID_ADMIN_ONLY
+	    targetptr->disk.modeBits &= ~02000; /* turn off sgid for file. */
+#endif
+	  }
+	targetptr->disk.owner = InStatus->Owner;
+	if (VolumeRootVnode (targetptr)) {
+	    Error errorCode = 0;	/* what should be done with this? */
+
+	    V_owner(targetptr->volumePtr) = InStatus->Owner;
+	    VUpdateVolume(&errorCode, targetptr->volumePtr);
+	}
+    }
+    if (InStatus->Mask & AFS_SETMODE) {
+	int modebits = InStatus->UnixModeBits;
+#define	CREATE_SGUID_ADMIN_ONLY 1
+#ifdef CREATE_SGUID_ADMIN_ONLY
+	if (VanillaUser(client)) 
+	    modebits = modebits & 0777;
+#endif
+	if (VanillaUser(client)) {
+	  targetptr->disk.modeBits = modebits;
+	}
+	else {
+	  targetptr->disk.modeBits = modebits;
+	  switch ( Caller ) {
+	  case TVS_SDATA: osi_audit( PrivSetID, 0, AUD_INT, client->ViceId,
+				    AUD_INT, CHK_STOREDATA, AUD_END); break;
+	  case TVS_CFILE:
+	  case TVS_SSTATUS: osi_audit( PrivSetID, 0, AUD_INT, client->ViceId,
+				    AUD_INT, CHK_STORESTATUS, AUD_END); break;
+	  default: break;
+	  }
+	}
+      }
+    targetptr->disk.serverModifyTime = FT_ApproxTime();
+    if (InStatus->Mask & AFS_SETGROUP)
+	targetptr->disk.group = InStatus->Group;
+    /* vnode changed : to be written back by VPutVnode */
+    targetptr->changed_newTime = 1;
+
+} /*Update_TargetVnodeStatus*/
+
+
+/*
+ * Fills the CallBack structure with the expiration time and type of callback
+ * structure. Warning: this function is currently incomplete.
+ */
+static void
+SetCallBackStruct(afs_uint32 CallBackTime, struct AFSCallBack *CallBack)
+{
+    /* CallBackTime could not be 0 */
+    if (CallBackTime == 0) {
+	ViceLog(0, ("WARNING: CallBackTime == 0!\n"));
+	CallBack->ExpirationTime = 0;
+    } else
+	CallBack->ExpirationTime = CallBackTime - FT_ApproxTime();	
+    CallBack->CallBackVersion =	CALLBACK_VERSION;
+    CallBack->CallBackType = CB_SHARED;		    /* The default for now */
+
+} /*SetCallBackStruct*/
+
+
+/*
+ * Adjusts (Subtract) "length" number of blocks from the volume's disk
+ * allocation; if some error occured (exceeded volume quota or partition
+ * was full, or whatever), it frees the space back and returns the code.
+ * We usually pre-adjust the volume space to make sure that there's
+ * enough space before consuming some.
+ */
+static afs_int32
+AdjustDiskUsage(Volume *volptr, afs_int32 length, afs_int32 checkLength)
+{
+    int rc;
+    int nc;
+
+    VAdjustDiskUsage(&rc, volptr, length, checkLength);
+    if (rc) {
+	VAdjustDiskUsage(&nc, volptr, -length, 0);
+	if (rc == VOVERQUOTA) {
+	    ViceLog(2,("Volume %u (%s) is full\n",
+		    V_id(volptr), V_name(volptr)));
+	    return(rc);
+	}
+	if (rc == VDISKFULL) {
+	    ViceLog(0,("Partition %s that contains volume %u is full\n",
+		    volptr->partition->name, V_id(volptr)));
+	    return(rc);
+	}
+	ViceLog(0,("Got error return %d from VAdjustDiskUsage\n",rc));
+	return(rc);
+    }
+    return(0);
+
+} /*AdjustDiskUsage*/
+
+/*
+ * Common code that handles the creation of a new file (SAFS_CreateFile and
+ * SAFS_Symlink) or a new dir (SAFS_MakeDir)
+ */
+static afs_int32
+Alloc_NewVnode(Vnode *parentptr,
+	       DirHandle *dir,
+	       Volume *volptr,
+	       Vnode **targetptr,
+	       char *Name,
+	       struct AFSFid *OutFid,
+	       int FileType,
+	       int BlocksPreallocatedForVnode)
+{
+    int	errorCode = 0;		/* Error code returned back */
+    int temp;
+    Inode inode=0;
+    Inode nearInode;		/* hint for inode allocation in solaris */
+
+    if ((errorCode = AdjustDiskUsage(volptr, BlocksPreallocatedForVnode,
+				    BlocksPreallocatedForVnode))) {
+	ViceLog(25, ("Insufficient space to allocate %d blocks\n", 
+		     BlocksPreallocatedForVnode));
+	return(errorCode);
+    }
+
+    *targetptr = VAllocVnode(&errorCode, volptr, FileType);
+    if (errorCode != 0) {
+	VAdjustDiskUsage(&temp, volptr, - BlocksPreallocatedForVnode, 0);
+	return(errorCode);
+    }
+    OutFid->Volume = V_id(volptr);
+    OutFid->Vnode = (*targetptr)->vnodeNumber;
+    OutFid->Unique = (*targetptr)->disk.uniquifier;
+
+    nearInode = VN_GET_INO(parentptr);   /* parent is also in same vol */
+
+    /* create the inode now itself */
+    inode = IH_CREATE(V_linkHandle(volptr), V_device(volptr),
+		      VPartitionPath(V_partition(volptr)), nearInode,
+		      V_id(volptr), (*targetptr)->vnodeNumber,
+		      (*targetptr)->disk.uniquifier, 1);
+
+    /* error in creating inode */
+    if (!VALID_INO(inode)) 
+    {
+               ViceLog(0, ("Volume : %d vnode = %d Failed to create inode: errno = %d\n", 
+                         (*targetptr)->volumePtr->header->diskstuff.id,
+                         (*targetptr)->vnodeNumber, 
+                         errno));
+		VAdjustDiskUsage(&temp, volptr, -BlocksPreallocatedForVnode,0);
+		(*targetptr)->delete = 1; /* delete vnode */
+		return ENOSPC;
+    }
+    VN_SET_INO(*targetptr, inode);
+    IH_INIT(((*targetptr)->handle), V_device(volptr), V_id(volptr), inode);
+
+    /* copy group from parent dir */
+    (*targetptr)->disk.group = parentptr->disk.group;
+
+    if (parentptr->disk.cloned)	
+    {
+	ViceLog(25, ("Alloc_NewVnode : CopyOnWrite called\n"));
+	if ((errorCode = CopyOnWrite(parentptr, volptr)))  /* disk full */
+	{
+		ViceLog(25, ("Alloc_NewVnode : CopyOnWrite failed\n"));
+		/* delete the vnode previously allocated */
+		(*targetptr)->delete = 1;
+		VAdjustDiskUsage(&temp, volptr,
+				 -BlocksPreallocatedForVnode, 0);
+		IH_REALLYCLOSE((*targetptr)->handle);
+		if ( IH_DEC(V_linkHandle(volptr), inode, V_parentId(volptr)) )
+		    ViceLog(0,("Alloc_NewVnode: partition %s idec %s failed\n",
+				volptr->partition->name,
+			       PrintInode(NULL, inode)));
+		IH_RELEASE((*targetptr)->handle);
+			
+		return errorCode;
+	}
+    }
+    
+    /* add the name to the directory */
+    SetDirHandle(dir, parentptr);
+    if ((errorCode = Create(dir,(char *)Name, OutFid))) {
+	(*targetptr)->delete = 1;
+	VAdjustDiskUsage(&temp, volptr, - BlocksPreallocatedForVnode, 0);
+	IH_REALLYCLOSE((*targetptr)->handle);
+	if ( IH_DEC(V_linkHandle(volptr), inode, V_parentId(volptr)))
+	    ViceLog(0,("Alloc_NewVnode: partition %s idec %s failed\n",
+		       volptr->partition->name,
+		       PrintInode(NULL, inode)));
+	IH_RELEASE((*targetptr)->handle);
+	return(errorCode);
+    }
+    DFlush();
+    return(0);
+
+} /*Alloc_NewVnode*/
+
+
+/*
+ * Handle all the lock-related code (SAFS_SetLock, SAFS_ExtendLock and
+ * SAFS_ReleaseLock)
+ */
+static afs_int32
+HandleLocking(Vnode *targetptr, afs_int32 rights, ViceLockType LockingType)
+{
+    int	Time;		/* Used for time */
+    int writeVnode = targetptr->changed_oldTime; /* save original status */
+
+    /* Does the caller has Lock priviledges; root extends locks, however */
+    if (LockingType != LockExtend && !(rights & PRSFS_LOCK))
+	return(EACCES);
+    targetptr->changed_oldTime = 1; /* locking doesn't affect any time stamp */
+    Time = FT_ApproxTime();
+    switch (LockingType) {
+	case LockRead:
+	case LockWrite:
+	    if (Time > targetptr->disk.lock.lockTime)
+		targetptr->disk.lock.lockTime = targetptr->disk.lock.lockCount = 0;
+	    Time += AFS_LOCKWAIT;
+	    if (LockingType == LockRead) {
+		if (targetptr->disk.lock.lockCount >= 0) {
+		    ++(targetptr->disk.lock.lockCount);
+		    targetptr->disk.lock.lockTime = Time;
+		} else return(EAGAIN);
+	    } else {
+		if (targetptr->disk.lock.lockCount == 0) {
+		    targetptr->disk.lock.lockCount = -1;
+		    targetptr->disk.lock.lockTime = Time;
+		} else return(EAGAIN);
+	    }
+	    break;
+	case LockExtend:
+	    Time += AFS_LOCKWAIT;
+	    if (targetptr->disk.lock.lockCount != 0)
+		targetptr->disk.lock.lockTime = Time;
+	    else return(EINVAL);	    
+	    break;
+	case LockRelease:
+	    if ((--targetptr->disk.lock.lockCount) <= 0)
+		targetptr->disk.lock.lockCount = targetptr->disk.lock.lockTime = 0;
+	    break;
+	default:
+	    targetptr->changed_oldTime = writeVnode; /* restore old status */
+	    ViceLog(0, ("Illegal Locking type %d\n", LockingType));
+    }
+    return(0);
+} /*HandleLocking*/
+
+/* Checks if caller has the proper AFS and Unix (WRITE) access permission to the target directory; Prfs_Mode refers to the AFS Mode operation while rights contains the caller's access permissions to the directory. */
+
+static afs_int32
+CheckWriteMode(Vnode *targetptr, afs_int32 rights, int Prfs_Mode)
+{
+    if (readonlyServer)
+	return(VREADONLY);
+    if (!(rights & Prfs_Mode))
+	return(EACCES);
+    if ((targetptr->disk.type != vDirectory) && (!(targetptr->disk.modeBits & OWNERWRITE)))
+	return(EACCES);
+    return(0);
+}
+
+/*
+ * If some flags (i.e. min or max quota) are set, the volume's in disk
+ * label is updated; Name, OfflineMsg, and Motd are also reflected in the
+ * update, if applicable.
+ */
+static afs_int32
+RXUpdate_VolumeStatus(Volume *volptr, AFSStoreVolumeStatus* StoreVolStatus,
+		      char *Name, char *OfflineMsg, char *Motd)
+{
+    Error errorCode = 0;
+
+    if (StoreVolStatus->Mask & AFS_SETMINQUOTA)
+	V_minquota(volptr) = StoreVolStatus->MinQuota;
+    if (StoreVolStatus->Mask & AFS_SETMAXQUOTA)
+	V_maxquota(volptr) = StoreVolStatus->MaxQuota;
+    if (strlen(OfflineMsg) > 0) {
+	strcpy(V_offlineMessage(volptr), OfflineMsg);
+    }
+    if (strlen(Name) > 0) {
+	strcpy(V_name(volptr), Name);
+    }
+#if TRANSARC_VOL_STATS
+    /*
+     * We don't overwrite the motd field, since it's now being used
+     * for stats
+     */
+#else
+    if (strlen(Motd) > 0) {
+	strcpy(V_motd(volptr), Motd);
+    }
+#endif /* FS_STATS_DETAILED */
+    VUpdateVolume(&errorCode, volptr);
+    return(errorCode);
+
+} /*RXUpdate_VolumeStatus*/
+
+
+/* old interface */
+static afs_int32
+Update_VolumeStatus(Volume *volptr, VolumeStatus *StoreVolStatus,
+		    struct BBS *Name, struct BBS *OfflineMsg,
+		    struct BBS *Motd)
+{
+    Error errorCode = 0;
+
+    if (StoreVolStatus->MinQuota > -1)
+	V_minquota(volptr) = StoreVolStatus->MinQuota;
+    if (StoreVolStatus->MaxQuota > -1)
+	V_maxquota(volptr) = StoreVolStatus->MaxQuota;
+    if (OfflineMsg->SeqLen > 1)
+	strcpy(V_offlineMessage(volptr), OfflineMsg->SeqBody);
+    if (Name->SeqLen > 1)
+	strcpy(V_name(volptr), Name->SeqBody);
+#if TRANSARC_VOL_STATS
+    /*
+     * We don't overwrite the motd field, since it's now being used
+     * for stats
+     */
+#else
+    if (Motd->SeqLen > 1)
+	strcpy(V_motd(volptr), Motd->SeqBody);
+#endif /* FS_STATS_DETAILED */
+    VUpdateVolume(&errorCode, volptr);
+    return(errorCode);
+
+} /*Update_VolumeStatus*/
+
+
+/*
+ * Get internal volume-related statistics from the Volume disk label
+ * structure and put it into the VolumeStatus structure, status; it's
+ * used by both SAFS_GetVolumeStatus and SAFS_SetVolumeStatus to return
+ * the volume status to the caller.
+ */
+static afs_int32
+GetVolumeStatus(VolumeStatus *status, struct BBS *name, struct BBS *offMsg,
+		struct BBS *motd, Volume *volptr)
+{
+    status->Vid = V_id(volptr);
+    status->ParentId = V_parentId(volptr);
+    status->Online = V_inUse(volptr);
+    status->InService = V_inService(volptr);
+    status->Blessed = V_blessed(volptr);
+    status->NeedsSalvage = V_needsSalvaged(volptr);
+    if (VolumeWriteable(volptr))
+	status->Type = ReadWrite;
+    else
+	status->Type = ReadOnly;
+    status->MinQuota = V_minquota(volptr);
+    status->MaxQuota = V_maxquota(volptr);
+    status->BlocksInUse = V_diskused(volptr);
+    status->PartBlocksAvail = volptr->partition->free;
+    status->PartMaxBlocks = volptr->partition->totalUsable;
+    strncpy(name->SeqBody, V_name(volptr), (int)name->MaxSeqLen);
+    name->SeqLen = strlen(V_name(volptr)) + 1;
+    if (name->SeqLen > name->MaxSeqLen) name->SeqLen = name -> MaxSeqLen;
+    strncpy(offMsg->SeqBody, V_offlineMessage(volptr), (int)name->MaxSeqLen);
+    offMsg->SeqLen = strlen(V_offlineMessage(volptr)) + 1;
+    if (offMsg->SeqLen > offMsg->MaxSeqLen)
+	offMsg->SeqLen = offMsg -> MaxSeqLen;
+#ifdef notdef
+    /*Don't do anything with the motd field*/
+    strncpy(motd->SeqBody, nullString, (int)offMsg->MaxSeqLen);
+    motd->SeqLen = strlen(nullString) + 1;
+#endif
+    if (motd->SeqLen > motd->MaxSeqLen)
+	motd->SeqLen = motd -> MaxSeqLen;
+
+} /*GetVolumeStatus*/
+
+static afs_int32
+RXGetVolumeStatus(AFSFetchVolumeStatus *status, char **name, char **offMsg,
+		  char **motd, Volume *volptr)
+{
+    int temp;
+
+    status->Vid = V_id(volptr);
+    status->ParentId = V_parentId(volptr);
+    status->Online = V_inUse(volptr);
+    status->InService = V_inService(volptr);
+    status->Blessed = V_blessed(volptr);
+    status->NeedsSalvage = V_needsSalvaged(volptr);
+    if (VolumeWriteable(volptr))
+	status->Type = ReadWrite;
+    else
+	status->Type = ReadOnly;
+    status->MinQuota = V_minquota(volptr);
+    status->MaxQuota = V_maxquota(volptr);
+    status->BlocksInUse = V_diskused(volptr);
+    status->PartBlocksAvail = volptr->partition->free;
+    status->PartMaxBlocks = volptr->partition->totalUsable;
+
+    /* now allocate and copy these things; they're freed by the RXGEN stub */
+    temp = strlen(V_name(volptr)) + 1;
+    *name = malloc(temp);
+    strcpy(*name, V_name(volptr));
+    temp = strlen(V_offlineMessage(volptr)) + 1;
+    *offMsg = malloc(temp);
+    strcpy(*offMsg, V_offlineMessage(volptr));
+#if TRANSARC_VOL_STATS
+    *motd = malloc(1);
+    strcpy(*motd, nullString);
+#else
+    temp = strlen(V_motd(volptr)) + 1;
+    *motd = malloc(temp);
+    strcpy(*motd, V_motd(volptr));
+#endif /* FS_STATS_DETAILED */
+
+} /*RXGetVolumeStatus*/
+
+
+static afs_int32
+FileNameOK(register char *aname)
+{
+    register afs_int32 i, tc;
+    i = strlen(aname);
+    if (i >= 4) {
+	/* watch for @sys on the right */
+	if (strcmp(aname+i-4, "@sys") == 0) return 0;
+    }
+    while ((tc = *aname++)) {
+	if (tc == '/') return 0;    /* very bad character to encounter */
+    }
+    return 1;	/* file name is ok */
+
+} /*FileNameOK*/
+
+
+/* Debugging tool to print Volume Statu's contents */
+static void
+PrintVolumeStatus(VolumeStatus *status)
+{
+    ViceLog(5,("Volume header contains:\n"));
+    ViceLog(5,("Vid = %u, Parent = %u, Online = %d, InService = %d, Blessed = %d, NeedsSalvage = %d\n",
+	    status->Vid, status->ParentId, status->Online, status->InService,
+	    status->Blessed, status->NeedsSalvage));
+    ViceLog(5,("MinQuota = %d, MaxQuota = %d\n", status->MinQuota, status->MaxQuota));
+    ViceLog(5,("Type = %d, BlocksInUse = %d, PartBlocksAvail = %d, PartMaxBlocks = %d\n",
+	    status->Type, status->BlocksInUse, status->PartBlocksAvail, status->PartMaxBlocks));
+
+} /*PrintVolumeStatus*/
+
+
+/*
+ * This variant of symlink is expressly to support the AFS/DFS translator
+ * and is not supported by the AFS fileserver. We just return EINVAL.
+ * The cache manager should not generate this call to an AFS cache manager.
+ */
+afs_int32 SRXAFS_DFSSymlink (struct rx_call *acall,
+			     struct AFSFid *DirFid,
+			     char *Name,
+			     char *LinkContents,
+			     struct AFSStoreStatus *InStatus,
+			     struct AFSFid *OutFid,
+			     struct AFSFetchStatus *OutFidStatus,
+			     struct AFSFetchStatus *OutDirStatus,
+			     struct AFSCallBack *CallBack,
+			     struct AFSVolSync *Sync)
+{
+    return EINVAL;
+}
+
+afs_int32 SRXAFS_ResidencyCmd (struct rx_call *acall, struct AFSFid *Fid,
+			       struct ResidencyCmdInputs *Inputs,
+			       struct ResidencyCmdOutputs *Outputs)
+{
+    return EINVAL;
+}
 
 #define	AFSV_BUFFERSIZE	16384 
 
@@ -393,30 +1909,6 @@ static char *AllocSendBuffer()
     return (char *) tp;
 
 } /*AllocSendBuffer*/
-
-static int VolumeOwner (register struct client *client, 
-			register Vnode *targetptr)
-{
-    afs_int32 owner = V_owner(targetptr->volumePtr);	/* get volume owner */
-
-    if (owner >= 0)
-	return (client->ViceId == owner);
-    else {
-	/* 
-	 * We don't have to check for host's cps since only regular
-	 * viceid are volume owners.
-	 */
-	return (acl_IsAMember(owner, &client->CPS));
-    }
-
-} /*VolumeOwner*/
-
-static int VolumeRootVnode (Vnode *targetptr)
-{
-    return ((targetptr->vnodeNumber == ROOTVNODE) &&
-	    (targetptr->disk.uniquifier == 1));
-
-} /*VolumeRootVnode*/
 
 /*
  * This routine returns the status info associated with the targetptr vnode
@@ -461,50 +1953,6 @@ void GetStatus(Vnode *targetptr,
     status->errorCode = 0;
 
 } /*GetStatus*/
-
-afs_int32 SRXAFS_FetchData (struct rx_call *acall,   
-			    struct AFSFid *Fid,      
-			    afs_int32 Pos,           
-			    afs_int32 Len,           
-			    struct AFSFetchStatus *OutStatus,
-			    struct AFSCallBack *CallBack, 
-			    struct AFSVolSync *Sync) 
-
-{
-    int code;
-
-    code = common_FetchData (acall, Fid, Pos, Len, OutStatus,
-			     CallBack, Sync, 0);
-    return code;
-}
-
-afs_int32 SRXAFS_FetchData64 (struct rx_call *acall, 
-			      struct AFSFid *Fid,    
-			      afs_int64 Pos,         
-			      afs_int64 Len,         
-			      struct AFSFetchStatus *OutStatus,
-			      struct AFSCallBack *CallBack,
-			      struct AFSVolSync *Sync)
-{
-    int code;
-    afs_int32 tPos, tLen;
-
-#ifdef AFS_64BIT_ENV
-    if (Pos + Len > 0x7fffffff)
-        return E2BIG;
-    tPos = Pos;
-    tLen = Len;
-#else /* AFS_64BIT_ENV */
-    if (Pos.high || Len.high)
-        return E2BIG;
-    tPos = Pos.low;
-    tLen = Len.low;
-#endif /* AFS_64BIT_ENV */
-
-    code = common_FetchData (acall, Fid, tPos, tLen, OutStatus,
-			     CallBack, Sync, 1);
-    return code;
-}
 
 static
 afs_int32 common_FetchData64 (struct rx_call *acall, 
@@ -743,6 +2191,49 @@ Bad_FetchData:
 
 } /*SRXAFS_FetchData*/
 
+afs_int32 SRXAFS_FetchData (struct rx_call *acall,   
+			    struct AFSFid *Fid,      
+			    afs_int32 Pos,           
+			    afs_int32 Len,           
+			    struct AFSFetchStatus *OutStatus,
+			    struct AFSCallBack *CallBack, 
+			    struct AFSVolSync *Sync) 
+
+{
+    int code;
+
+    code = common_FetchData64 (acall, Fid, Pos, Len, OutStatus,
+			     CallBack, Sync, 0);
+    return code;
+}
+
+afs_int32 SRXAFS_FetchData64 (struct rx_call *acall, 
+			      struct AFSFid *Fid,    
+			      afs_int64 Pos,         
+			      afs_int64 Len,         
+			      struct AFSFetchStatus *OutStatus,
+			      struct AFSCallBack *CallBack,
+			      struct AFSVolSync *Sync)
+{
+    int code;
+    afs_int32 tPos, tLen;
+
+#ifdef AFS_64BIT_ENV
+    if (Pos + Len > 0x7fffffff)
+        return E2BIG;
+    tPos = Pos;
+    tLen = Len;
+#else /* AFS_64BIT_ENV */
+    if (Pos.high || Len.high)
+        return E2BIG;
+    tPos = Pos.low;
+    tLen = Len.low;
+#endif /* AFS_64BIT_ENV */
+
+    code = common_FetchData64 (acall, Fid, tPos, tLen, OutStatus,
+			     CallBack, Sync, 1);
+    return code;
+}
 
 afs_int32 SRXAFS_FetchACL (struct rx_call *acall,    
 			   struct AFSFid *Fid,       
@@ -3806,9 +5297,9 @@ afs_int32 SRXAFS_GetStatistics (struct rx_call *acall,
     AFSCallStats.GetStatistics++, AFSCallStats.TotalCalls++;
     FS_UNLOCK
     memset(Statistics, 0, sizeof(*Statistics));
-    SetAFSStats(Statistics);
-    SetVolumeStats(Statistics);
-    SetSystemStats(Statistics);
+    SetAFSStats((struct AFSStatistics *)Statistics);
+    SetVolumeStats((struct AFSStatistics *)Statistics);
+    SetSystemStats((struct AFSStatistics *)Statistics);
     
 Bad_GetStatistics:
     CallPostamble(tcon);
@@ -4504,24 +5995,6 @@ static afs_int32 TryLocalVLServer(char *avolid, struct VolumeInfo *avolinfo)
     return code;
 }
 
-static afs_int32
-GetVolumeInfo (struct rx_call *acall,
-	       char *avolid,
-	       struct VolumeInfo *avolinfo)
-{
-    int errorCode = 0;			/* error code */
-
-    FS_LOCK
-    AFSCallStats.GetVolumeInfo++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-
-    errorCode = TryLocalVLServer(avolid, avolinfo);
-    ViceLog(1, ("SAFS_GetVolumeInfo returns %d, Volume %u, type %x, servers %x %x %x %x...\n",
-	    errorCode, avolinfo->Vid, avolinfo->Type,
-	    avolinfo->Server0, avolinfo->Server1, avolinfo->Server2,
-	    avolinfo->Server3));
-    return(errorCode);
-}
 
 
 
@@ -4552,7 +6025,15 @@ afs_int32 SRXAFS_GetVolumeInfo (struct rx_call *acall,
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_GetVolumeInfo;
 
-    code = GetVolumeInfo (tcon, avolid, avolinfo);
+    FS_LOCK
+    AFSCallStats.GetVolumeInfo++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK
+
+    code = TryLocalVLServer(avolid, avolinfo);
+    ViceLog(1, ("SAFS_GetVolumeInfo returns %d, Volume %u, type %x, servers %x %x %x %x...\n",
+		code, avolinfo->Vid, avolinfo->Type,
+		avolinfo->Server0, avolinfo->Server1, avolinfo->Server2,
+		avolinfo->Server3));
     avolinfo->Type4	= 0xabcd9999;	/* tell us to try new vldb */
 
 Bad_GetVolumeInfo:
@@ -4967,90 +6448,6 @@ Bad_GetTime:
 
 
 /*
- * This unusual afs_int32-parameter routine encapsulates all volume package related
- * operations together in a single function; it's called by almost all AFS
- * interface calls.
- */
-static afs_int32
-GetVolumePackage(struct rx_connection *tcon,
-		 AFSFid *Fid,
-		 Volume **volptr,
-		 Vnode **targetptr,
-		 int chkforDir,
-		 Vnode **parent,
-		 struct client **client,
-		 int locktype,
-		 afs_int32 *rights, 
-		 afs_int32 *anyrights)
-{
-    struct acl_accessList * aCL;    /* Internal access List */
-    int	aCLSize;	    /* size of the access list */
-    int	errorCode = 0;	    /* return code to caller */
-
-    if ((errorCode = CheckVnode(Fid, volptr, targetptr, locktype)))
-	return(errorCode);
-    if (chkforDir) {
-	if (chkforDir == MustNOTBeDIR && ((*targetptr)->disk.type == vDirectory))
-	    return(EISDIR);
-	else if (chkforDir == MustBeDIR && ((*targetptr)->disk.type != vDirectory))
-	    return(ENOTDIR);
-    }
-    if ((errorCode = SetAccessList(targetptr, volptr, &aCL, &aCLSize, parent, (chkforDir == MustBeDIR ? (AFSFid *)0 : Fid), (chkforDir == MustBeDIR ? 0 : locktype))) != 0)
-	return(errorCode);
-    if (chkforDir == MustBeDIR) assert((*parent) == 0);
-    if ((errorCode = GetClient(tcon, client)) != 0)
-	return(errorCode);
-    if (!(*client))
-	return(EINVAL);
-    assert(GetRights(*client, aCL, rights, anyrights) == 0);
-    /* ok, if this is not a dir, set the PRSFS_ADMINISTER bit iff we're the owner */
-    if ((*targetptr)->disk.type != vDirectory) {
-	/* anyuser can't be owner, so only have to worry about rights, not anyrights */
-	if ((*targetptr)->disk.owner == (*client)->ViceId)
-	    (*rights) |= PRSFS_ADMINISTER;
-	else
-	    (*rights) &= ~PRSFS_ADMINISTER;
-    }
-#ifdef ADMIN_IMPLICIT_LOOKUP
-    /* admins get automatic lookup on everything */
-    if (!VanillaUser(*client)) (*rights) |= PRSFS_LOOKUP;
-#endif /* ADMIN_IMPLICIT_LOOKUP */
-    return errorCode;
-
-} /*GetVolumePackage*/
-
-
-/*
- * This is the opposite of GetVolumePackage(), and is always used at the end of
- * AFS calls to put back all used vnodes and the volume in the proper order!
- */
-static afs_int32
-PutVolumePackage(Vnode *parentwhentargetnotdir, 
-		 Vnode *targetptr,
-		 Vnode *parentptr,
-		 Volume *volptr)
-{
-    int	fileCode = 0;	/* Error code returned by the volume package */
-
-    if (parentwhentargetnotdir) {
-	VPutVnode(&fileCode, parentwhentargetnotdir);
-	assert(!fileCode || (fileCode == VSALVAGE));
-    }
-    if (targetptr) {
-	VPutVnode(&fileCode, targetptr);
-	assert(!fileCode || (fileCode == VSALVAGE));
-    }
-    if (parentptr) {
-	VPutVnode(&fileCode, parentptr);
-	assert(!fileCode || (fileCode == VSALVAGE));
-    }
-    if (volptr) {
-	VPutVolume(volptr);
-    }
-} /*PutVolumePackage*/
-
-
-/*
  * FetchData_RXStyle
  *
  * Purpose:
@@ -5116,8 +6513,8 @@ FetchData_RXStyle(Volume *volptr,
 	 */
 	tlen = htonl(0);
         if (Int64Mode)
-            rx_Write(Call, &tlen, sizeof(afs_int32));   /* send 0-length  */
-	rx_Write(Call, &tlen, sizeof(afs_int32));	/* send 0-length  */
+            rx_Write(Call, (char *)&tlen, sizeof(afs_int32));   /* send 0-length  */
+	rx_Write(Call, (char *)&tlen, sizeof(afs_int32));	/* send 0-length  */
 	return (0);
     }
     TM_GetTimeOfDay(&StartTime, 0);
@@ -5136,9 +6533,9 @@ FetchData_RXStyle(Volume *volptr,
     tlen = htonl(Len);
     if (Int64Mode) {
         afs_int32 zero = 0;
-        rx_Write(Call, &zero, sizeof(afs_int32)); /* High order bits */
+        rx_Write(Call, (char *)&zero, sizeof(afs_int32)); /* High order bits */
     }
-    rx_Write(Call, &tlen, sizeof(afs_int32));	/* send length on fetch */
+    rx_Write(Call, (char *)&tlen, sizeof(afs_int32));	/* send length on fetch */
 #if FS_STATS_DETAILED
     (*a_bytesToFetchP) = Len;
 #endif /* FS_STATS_DETAILED */
@@ -5509,1415 +6906,3 @@ StoreData_RXStyle(Volume *volptr,
 } /*StoreData_RXStyle*/
 
 
-/*
- * Check if target file has the proper access permissions for the Fetch
- * (FetchData, FetchACL, FetchStatus) and Store (StoreData, StoreACL,
- * StoreStatus) related calls
- */
-/* this code should probably just set a "priv" flag where all the audit events
- * are now, and only generate the audit event once at the end of the routine, 
- * thus only generating the event if all the checks succeed, but only because
- * of the privilege       XXX
- */
-static afs_int32
-Check_PermissionRights(Vnode *targetptr,
-		       struct client *client,
-		       afs_int32 rights,
-		       int CallingRoutine,
-		       AFSStoreStatus *InStatus)
-{
-    int errorCode = 0;
-#define OWNSp(client, target) ((client)->ViceId == (target)->disk.owner)
-#define CHOWN(i,t) (((i)->Mask & AFS_SETOWNER) &&((i)->Owner != (t)->disk.owner))
-#define CHGRP(i,t) (((i)->Mask & AFS_SETGROUP) &&((i)->Group != (t)->disk.group))
-
-    if (CallingRoutine & CHK_FETCH) {
-#ifdef	CMUCS
-	if (VanillaUser(client)) 
-#else
-	if (CallingRoutine == CHK_FETCHDATA || VanillaUser(client)) 
-#endif
-	  {
-	    if (targetptr->disk.type == vDirectory || targetptr->disk.type == vSymlink) {
-		if (   !(rights & PRSFS_LOOKUP)
-#ifdef ADMIN_IMPLICIT_LOOKUP  
-		    /* grant admins fetch on all directories */
-		    && VanillaUser(client)
-#endif /* ADMIN_IMPLICIT_LOOKUP */
-		    && !VolumeOwner(client, targetptr))
-		    return(EACCES);
-	    } else {    /* file */
-		/* must have read access, or be owner and have insert access */
-		if (!(rights & PRSFS_READ) &&
-		    !(OWNSp(client, targetptr) && (rights & PRSFS_INSERT)))
-		    return(EACCES);
-	    }
-	    if (CallingRoutine == CHK_FETCHDATA && targetptr->disk.type == vFile)
-#ifdef USE_GROUP_PERMS
-		if (!OWNSp(client, targetptr) &&
-		    !acl_IsAMember(targetptr->disk.owner, &client->CPS)) {
-		    errorCode = (((GROUPREAD|GROUPEXEC) & targetptr->disk.modeBits)
-				 ? 0: EACCES);
-		} else {
-		    errorCode =(((OWNERREAD|OWNEREXEC) & targetptr->disk.modeBits)
-				? 0: EACCES);
-		}
-#else
-		/*
-		 * The check with the ownership below is a kludge to allow
-		 * reading of files created with no read permission. The owner
-		 * of the file is always allowed to read it.
-		 */
-		if ((client->ViceId != targetptr->disk.owner) && VanillaUser(client))
-		    errorCode =(((OWNERREAD|OWNEREXEC) & targetptr->disk.modeBits) ? 0: EACCES);
-#endif
-	}
-	else /*  !VanillaUser(client) && !FetchData */ {
-	  osi_audit( PrivilegeEvent, 0, AUD_INT, (client ? client->ViceId : 0), 
-                                        AUD_INT, CallingRoutine, AUD_END);
-	}
-    }
-    else { /* a store operation */
-      if ( (rights & PRSFS_INSERT) && OWNSp(client, targetptr)
-	  && (CallingRoutine != CHK_STOREACL)
-	  && (targetptr->disk.type == vFile))
-	{
-	  /* bypass protection checks on first store after a create
-	   * for the creator; also prevent chowns during this time
-	   * unless you are a system administrator */
-	  /******  InStatus->Owner && UnixModeBits better be SET!! */
-	  if ( CHOWN(InStatus, targetptr) || CHGRP(InStatus, targetptr)) {
-	    if (readonlyServer) 
-	      return(VREADONLY);
-	    else if (VanillaUser (client)) 
-	      return(EPERM);      /* Was EACCES */
-	    else
-	      osi_audit( PrivilegeEvent, 0, AUD_INT, (client ? client->ViceId : 0), 
-                                            AUD_INT, CallingRoutine, AUD_END);
-	  }
-	} else {
-	  if (CallingRoutine != CHK_STOREDATA && !VanillaUser(client)) {
-	    osi_audit( PrivilegeEvent, 0, AUD_INT, (client ? client->ViceId : 0),
-		                          AUD_INT, CallingRoutine, AUD_END);
-	  }
-	  else {
-	    if (readonlyServer) {
-		return(VREADONLY);
-	    }
-	    if (CallingRoutine == CHK_STOREACL) {
-	      if (!(rights & PRSFS_ADMINISTER) &&
-		  !VolumeOwner(client, targetptr)) return(EACCES);
-	    }
-	    else {	/* store data or status */
-	      /* watch for chowns and chgrps */
-	      if (CHOWN(InStatus, targetptr) || CHGRP(InStatus, targetptr)) {
-		if (readonlyServer) 
-		  return(VREADONLY);
-		else if (VanillaUser (client)) 
-		  return(EPERM);	/* Was EACCES */
-		else
-		  osi_audit(PrivilegeEvent, 0,
-			    AUD_INT, (client ? client->ViceId : 0), 
-			    AUD_INT, CallingRoutine, AUD_END);
-	      }
-	      /* must be sysadmin to set suid/sgid bits */
-	      if ((InStatus->Mask & AFS_SETMODE) &&
-#ifdef AFS_NT40_ENV
-		  (InStatus->UnixModeBits & 0xc00) != 0) {
-#else
-		  (InStatus->UnixModeBits & (S_ISUID|S_ISGID)) != 0) {
-#endif
-		if (readonlyServer)
-		  return(VREADONLY);
-		if (VanillaUser(client))
-		  return(EACCES);
-		else osi_audit( PrivSetID, 0, AUD_INT, (client ? client->ViceId : 0),
-			                      AUD_INT, CallingRoutine, AUD_END);
-	      }
-	      if (CallingRoutine == CHK_STOREDATA) {
-		if (readonlyServer)
-		  return(VREADONLY);
-		if (!(rights & PRSFS_WRITE))
-		  return(EACCES);
-		/* Next thing is tricky.  We want to prevent people
-                 * from writing files sans 0200 bit, but we want
-                 * creating new files with 0444 mode to work.  We
-                 * don't check the 0200 bit in the "you are the owner"
-                 * path above, but here we check the bit.  However, if
-                 * you're a system administrator, we ignore the 0200
-                 * bit anyway, since you may have fchowned the file,
-                 * too */
-#ifdef USE_GROUP_PERMS
-			if ((targetptr->disk.type == vFile)
-			    && VanillaUser(client)) {
-			    if (!OWNSp(client, targetptr) &&
-				!acl_IsAMember(targetptr->disk.owner,
-					       &client->CPS)) {
-				errorCode = ((GROUPWRITE & targetptr->disk.modeBits)
-					     ? 0: EACCES);
-			    } else {
-				errorCode = ((OWNERWRITE & targetptr->disk.modeBits)
-					     ? 0 : EACCES);
-			    }
-			} else
-#endif
-		if ((targetptr->disk.type != vDirectory)
-		    && (!(targetptr->disk.modeBits & OWNERWRITE)))
-		  if (readonlyServer)
-		    return(VREADONLY);
-		  if (VanillaUser(client))
-		    return(EACCES);
-		  else osi_audit( PrivilegeEvent, 0, AUD_INT, (client ? client->ViceId : 0),
-				                     AUD_INT, CallingRoutine, AUD_END);
-	      }
-	      else {  /* a status store */
-		if (readonlyServer)
-		  return(VREADONLY);
-		if (targetptr->disk.type == vDirectory) {
-		  if (!(rights & PRSFS_DELETE) && !(rights & PRSFS_INSERT))
-		    return(EACCES);
-		}
-		else {	/* a file  or symlink */
-		  if (!(rights & PRSFS_WRITE)) return(EACCES);
-		}
-	      }
-	    }
-	  }
-	}
-    }
-    return(errorCode);
-
-} /*Check_PermissionRights*/
-
-
-/*
- * The Access List information is converted from its internal form in the
- * target's vnode buffer (or its parent vnode buffer if not a dir), to an
- * external form and returned back to the caller, via the AccessList
- * structure
- */
-static afs_int32
-RXFetch_AccessList(Vnode *targetptr,
-		   Vnode *parentwhentargetnotdir,
-		   struct AFSOpaque *AccessList)
-{
-    char * eACL;	/* External access list placeholder */
-
-    if (acl_Externalize((targetptr->disk.type == vDirectory ?
-			 VVnodeACL(targetptr) :
-			 VVnodeACL(parentwhentargetnotdir)), &eACL) != 0) {
-	return EIO;
-    }
-    if ((strlen(eACL)+1) > AFSOPAQUEMAX) {
-	acl_FreeExternalACL(&eACL);
-	return(E2BIG);
-    } else {
-	strcpy((char *)(AccessList->AFSOpaque_val), (char *)eACL);
-	AccessList->AFSOpaque_len = strlen(eACL) +1;
-    }
-    acl_FreeExternalACL(&eACL);
-    return(0);
-
-} /*RXFetch_AccessList*/
-
-
-/*
- * The Access List information is converted from its external form in the
- * input AccessList structure to the internal representation and copied into
- * the target dir's vnode storage.
- */
-static afs_int32
-RXStore_AccessList(Vnode *targetptr, struct AFSOpaque *AccessList)
-{
-    struct acl_accessList * newACL;	/* PlaceHolder for new access list */
-
-    if (acl_Internalize(AccessList->AFSOpaque_val, &newACL) != 0)
-	return(EINVAL);
-    if ((newACL->size + 4) > VAclSize(targetptr))
-	return(E2BIG);
-    memcpy((char *) VVnodeACL(targetptr), (char *) newACL, (int)(newACL->size));
-    acl_FreeACL(&newACL);
-    return(0);
-
-} /*RXStore_AccessList*/
-
-
-static afs_int32
-Fetch_AccessList(Vnode *targetptr, Vnode *parentwhentargetnotdir,
-		 struct AFSAccessList *AccessList)
-{
-    char * eACL;	/* External access list placeholder */
-
-    assert(acl_Externalize((targetptr->disk.type == vDirectory ?
-			    VVnodeACL(targetptr) :
-			    VVnodeACL(parentwhentargetnotdir)), &eACL) == 0);
-    if ((strlen(eACL)+1) > AccessList->MaxSeqLen) {
-	acl_FreeExternalACL(&eACL);
-	return(E2BIG);
-    } else {
-	strcpy((char *)(AccessList->SeqBody), (char *)eACL);
-	AccessList->SeqLen = strlen(eACL) +1;
-    }
-    acl_FreeExternalACL(&eACL);
-    return(0);
-
-} /*Fetch_AccessList*/
-
-/*
- * The Access List information is converted from its external form in the
- * input AccessList structure to the internal representation and copied into
- * the target dir's vnode storage.
- */
-static afs_int32
-Store_AccessList(Vnode *targetptr, struct AFSAccessList *AccessList)
-{
-    struct acl_accessList * newACL;	/* PlaceHolder for new access list */
-
-    if (acl_Internalize(AccessList->SeqBody, &newACL) != 0)
-	return(EINVAL);
-    if ((newACL->size + 4) > VAclSize(targetptr))
-	return(E2BIG);
-    memcpy((char *) VVnodeACL(targetptr), (char *) newACL, (int)(newACL->size));
-    acl_FreeACL(&newACL);
-    return(0);
-
-} /*Store_AccessList*/
-
-
-/*
- * Common code to handle with removing the Name (file when it's called from
- * SAFS_RemoveFile() or an empty dir when called from SAFS_rmdir()) from a
- * given directory, parentptr.
- */
-int DT1=0, DT0=0;
-static afs_int32
-DeleteTarget(Vnode *parentptr,
-	     Volume *volptr,
-	     Vnode **targetptr,
-	     DirHandle *dir,
-	     AFSFid *fileFid,
-	     char *Name,
-	     int ChkForDir)
-{
-    DirHandle childdir;	    /* Handle for dir package I/O */
-    int errorCode = 0;
-    int code;
-
-    /* watch for invalid names */
-    if (!strcmp(Name, ".") || !strcmp(Name, ".."))
-	return (EINVAL);
-    if (parentptr->disk.cloned)	
-    {
-	ViceLog(25, ("DeleteTarget : CopyOnWrite called\n"));
-	if ((errorCode = CopyOnWrite(parentptr, volptr)))
-	{
-		ViceLog(20, ("DeleteTarget %s: CopyOnWrite failed %d\n",Name,errorCode));
-		return errorCode;
-	}
-    }
-
-    /* check that the file is in the directory */
-    SetDirHandle(dir, parentptr);
-    if (Lookup(dir, Name, fileFid))
-	return(ENOENT);
-    fileFid->Volume = V_id(volptr);
-
-    /* just-in-case check for something causing deadlock */
-    if (fileFid->Vnode == parentptr->vnodeNumber)
-	return(EINVAL);
-
-    *targetptr = VGetVnode(&errorCode, volptr, fileFid->Vnode, WRITE_LOCK);
-    if (errorCode) {
-	return (errorCode);
-    }
-    if (ChkForDir == MustBeDIR) {
-	if ((*targetptr)->disk.type != vDirectory)
-	    return(ENOTDIR);
-    } else if ((*targetptr)->disk.type == vDirectory)
-	return(EISDIR);
-    
-    /*assert((*targetptr)->disk.uniquifier == fileFid->Unique);*/
-    /**
-      * If the uniquifiers dont match then instead of asserting
-      * take the volume offline and return VSALVAGE
-      */
-    if ( (*targetptr)->disk.uniquifier != fileFid->Unique ) {
-	VTakeOffline(volptr);
-	errorCode = VSALVAGE;
-	return errorCode;
-    }
-	
-    if (ChkForDir == MustBeDIR) {
-	SetDirHandle(&childdir, *targetptr);
-	if (IsEmpty(&childdir) != 0)
-	    return(EEXIST);
-	DZap(&childdir);
-	(*targetptr)->delete = 1;
-    } else if ((--(*targetptr)->disk.linkCount) == 0) 
-	(*targetptr)->delete = 1;
-    if ((*targetptr)->delete) {
-	if (VN_GET_INO(*targetptr)) {
-	    DT0++;
-	    IH_REALLYCLOSE((*targetptr)->handle);
-	    errorCode = IH_DEC(V_linkHandle(volptr),
-			     VN_GET_INO(*targetptr),
-			     V_parentId(volptr));
-	    IH_RELEASE((*targetptr)->handle);
-	    if (errorCode == -1) {
-		ViceLog(0, ("DT: inode=%s, name=%s, errno=%d\n",
-			    PrintInode(NULL, VN_GET_INO(*targetptr)),
-			    Name, errno));
-#ifdef	AFS_DEC_ENV
-		if ((errno != ENOENT) && (errno != EIO) && (errno != ENXIO))
-#else
-		if (errno != ENOENT) 
-#endif
-		    {
-		    ViceLog(0, ("Volume %u now offline, must be salvaged.\n", 
-                                volptr->hashid));
-                    VTakeOffline(volptr);
-		    return (EIO);
-		    }
-		DT1++;
-		errorCode = 0;
-	    }
-	}
-	VN_SET_INO(*targetptr, (Inode)0);
-	VAdjustDiskUsage(&errorCode, volptr,
-			-(int)nBlocks((*targetptr)->disk.length), 0);
-    }
-    
-    (*targetptr)->changed_newTime = 1; /* Status change of deleted file/dir */
-
-    code = Delete(dir,(char *) Name);
-    if (code) {
-       ViceLog(0, ("Error %d deleting %s\n", code,
-		   (((*targetptr)->disk.type== Directory)?"directory":"file")));
-       ViceLog(0, ("Volume %u now offline, must be salvaged.\n", 
-                  volptr->hashid));
-       VTakeOffline(volptr);
-       if (!errorCode) errorCode = code;
-    }
-
-    DFlush();
-    return(errorCode);
-
-} /*DeleteTarget*/
-
-
-/*
- * This routine updates the parent directory's status block after the
- * specified operation (i.e. RemoveFile(), CreateFile(), Rename(),
- * SymLink(), Link(), MakeDir(), RemoveDir()) on one of its children has
- * been performed.
- */
-static void
-Update_ParentVnodeStatus(Vnode *parentptr,
-			 Volume *volptr,
-			 DirHandle *dir,
-			 int author,
-			 int linkcount,
-#if FS_STATS_DETAILED
-			 char a_inSameNetwork;
-#endif /* FS_STATS_DETAILED */
-			 )
-{
-    afs_uint32 newlength;	/* Holds new directory length */
-    int errorCode;
-#if FS_STATS_DETAILED
-    Date currDate;		/*Current date*/
-    int writeIdx;		/*Write index to bump*/
-    int timeIdx;		/*Authorship time index to bump*/
-#endif /* FS_STATS_DETAILED */
-
-    parentptr->disk.dataVersion++;
-    newlength = Length(dir);
-    /* 
-     * This is a called on both dir removals (i.e. remove, removedir, rename) but also in dir additions
-     * (create, symlink, link, makedir) so we need to check if we have enough space
-     * XXX But we still don't check the error since we're dealing with dirs here and really the increase
-     * of a new entry would be too tiny to worry about failures (since we have all the existing cushion)
-     */
-    if (nBlocks(newlength) != nBlocks(parentptr->disk.length))
-	VAdjustDiskUsage(&errorCode, volptr, 
-			 (int)(nBlocks(newlength) - nBlocks(parentptr->disk.length)),
-			 (int)(nBlocks(newlength) - nBlocks(parentptr->disk.length)));
-    parentptr->disk.length = newlength;
-
-#if FS_STATS_DETAILED
-    /*
-     * Update directory write stats for this volume.  Note that the auth
-     * counter is located immediately after its associated ``distance''
-     * counter.
-     */
-    if (a_inSameNetwork)
-	writeIdx = VOL_STATS_SAME_NET;
-    else
-	writeIdx = VOL_STATS_DIFF_NET;
-    V_stat_writes(volptr, writeIdx)++;
-    if (author != AnonymousID) {
-	V_stat_writes(volptr, writeIdx+1)++;
-    }
-
-    /*
-     * Update the volume's authorship information in response to this
-     * directory operation.  Get the current time, decide to which time
-     * slot this operation belongs, and bump the appropriate slot.
-     */
-    currDate = (FT_ApproxTime() - parentptr->disk.unixModifyTime);
-    timeIdx = (currDate < VOL_STATS_TIME_CAP_0 ? VOL_STATS_TIME_IDX_0 :
-	       currDate < VOL_STATS_TIME_CAP_1 ? VOL_STATS_TIME_IDX_1 :
-	       currDate < VOL_STATS_TIME_CAP_2 ? VOL_STATS_TIME_IDX_2 :
-	       currDate < VOL_STATS_TIME_CAP_3 ? VOL_STATS_TIME_IDX_3 :
-	       currDate < VOL_STATS_TIME_CAP_4 ? VOL_STATS_TIME_IDX_4 :
-	       VOL_STATS_TIME_IDX_5);
-    if (parentptr->disk.author == author) {
-	V_stat_dirSameAuthor(volptr, timeIdx)++;
-    }
-    else {
-	V_stat_dirDiffAuthor(volptr, timeIdx)++;
-    }
-#endif /* FS_STATS_DETAILED */
-
-    parentptr->disk.author = author;
-    parentptr->disk.linkCount = linkcount;
-    parentptr->disk.unixModifyTime = FT_ApproxTime();	/* This should be set from CLIENT!! */
-    parentptr->disk.serverModifyTime = FT_ApproxTime();
-    parentptr->changed_newTime = 1; /* vnode changed, write it back. */
-}
-
-
-/*
- * Update the target file's (or dir's) status block after the specified
- * operation is complete. Note that some other fields maybe updated by
- * the individual module.
- */
-
-/* XXX INCOMPLETE - More attention is needed here! */
-static void
-Update_TargetVnodeStatus(Vnode *targetptr,
-			 afs_uint32 Caller,
-			 struct client *client,
-			 AFSStoreStatus *InStatus,
-			 Vnode *parentptr,
-			 Volume *volptr,
-			 afs_int32 length)
-{
-#if FS_STATS_DETAILED
-    Date currDate;		/*Current date*/
-    int writeIdx;		/*Write index to bump*/
-    int timeIdx;		/*Authorship time index to bump*/
-#endif /* FS_STATS_DETAILED */
-
-    if (Caller & (TVS_CFILE|TVS_SLINK|TVS_MKDIR))	{   /* initialize new file */
-	targetptr->disk.parent = parentptr->vnodeNumber;
-	targetptr->disk.length = length;
-	/* targetptr->disk.group =	0;  save some cycles */
-	targetptr->disk.modeBits = 0777;
-	targetptr->disk.owner = client->ViceId;
-	targetptr->disk.dataVersion =  0 ; /* consistent with the client */
-	targetptr->disk.linkCount = (Caller & TVS_MKDIR ? 2 : 1);
-	/* the inode was created in Alloc_NewVnode() */
-    }
-
-#if FS_STATS_DETAILED
-    /*
-     * Update file write stats for this volume.  Note that the auth
-     * counter is located immediately after its associated ``distance''
-     * counter.
-     */
-    if (client->InSameNetwork)
-	writeIdx = VOL_STATS_SAME_NET;
-    else
-	writeIdx = VOL_STATS_DIFF_NET;
-    V_stat_writes(volptr, writeIdx)++;
-    if (client->ViceId != AnonymousID) {
-	V_stat_writes(volptr, writeIdx+1)++;
-    }
-
-    /*
-     * We only count operations that DON'T involve creating new objects
-     * (files, symlinks, directories) or simply setting status as
-     * authorship-change operations.
-     */
-    if (!(Caller & (TVS_CFILE | TVS_SLINK | TVS_MKDIR | TVS_SSTATUS))) {
-	/*
-	 * Update the volume's authorship information in response to this
-	 * file operation.  Get the current time, decide to which time
-	 * slot this operation belongs, and bump the appropriate slot.
-	 */
-	currDate = (FT_ApproxTime() - targetptr->disk.unixModifyTime);
-	timeIdx = (currDate < VOL_STATS_TIME_CAP_0 ? VOL_STATS_TIME_IDX_0 :
-		   currDate < VOL_STATS_TIME_CAP_1 ? VOL_STATS_TIME_IDX_1 :
-		   currDate < VOL_STATS_TIME_CAP_2 ? VOL_STATS_TIME_IDX_2 :
-		   currDate < VOL_STATS_TIME_CAP_3 ? VOL_STATS_TIME_IDX_3 :
-		   currDate < VOL_STATS_TIME_CAP_4 ? VOL_STATS_TIME_IDX_4 :
-		   VOL_STATS_TIME_IDX_5);
-	if (targetptr->disk.author == client->ViceId) {
-	    V_stat_fileSameAuthor(volptr, timeIdx)++;
-	} else {
-	    V_stat_fileDiffAuthor(volptr, timeIdx)++;
-	}
-      }
-#endif /* FS_STATS_DETAILED */
-
-    if (!(Caller & TVS_SSTATUS))
-      targetptr->disk.author = client->ViceId;
-    if (Caller & TVS_SDATA) {
-      targetptr->disk.dataVersion++;
-      if (VanillaUser(client))
-	{
-	  targetptr->disk.modeBits &= ~04000; /* turn off suid for file. */
-#ifdef CREATE_SGUID_ADMIN_ONLY
-	  targetptr->disk.modeBits &= ~02000; /* turn off sgid for file. */
-#endif
-	}
-    }
-    if (Caller & TVS_SSTATUS) {	/* update time on non-status change */
-	/* store status, must explicitly request to change the date */
-	if (InStatus->Mask & AFS_SETMODTIME)
-	    targetptr->disk.unixModifyTime = InStatus->ClientModTime;
-    }
-    else {/* other: date always changes, but perhaps to what is specified by caller */
-	targetptr->disk.unixModifyTime = (InStatus->Mask & AFS_SETMODTIME ? InStatus->ClientModTime : FT_ApproxTime());
-    }
-    if (InStatus->Mask & AFS_SETOWNER) {
-	/* admin is allowed to do chmod, chown as well as chown, chmod. */
-	if (VanillaUser(client))
-	  {
-	    targetptr->disk.modeBits &= ~04000; /* turn off suid for file. */
-#ifdef CREATE_SGUID_ADMIN_ONLY
-	    targetptr->disk.modeBits &= ~02000; /* turn off sgid for file. */
-#endif
-	  }
-	targetptr->disk.owner = InStatus->Owner;
-	if (VolumeRootVnode (targetptr)) {
-	    Error errorCode = 0;	/* what should be done with this? */
-
-	    V_owner(targetptr->volumePtr) = InStatus->Owner;
-	    VUpdateVolume(&errorCode, targetptr->volumePtr);
-	}
-    }
-    if (InStatus->Mask & AFS_SETMODE) {
-	int modebits = InStatus->UnixModeBits;
-#define	CREATE_SGUID_ADMIN_ONLY 1
-#ifdef CREATE_SGUID_ADMIN_ONLY
-	if (VanillaUser(client)) 
-	    modebits = modebits & 0777;
-#endif
-	if (VanillaUser(client)) {
-	  targetptr->disk.modeBits = modebits;
-	}
-	else {
-	  targetptr->disk.modeBits = modebits;
-	  switch ( Caller ) {
-	  case TVS_SDATA: osi_audit( PrivSetID, 0, AUD_INT, client->ViceId,
-				    AUD_INT, CHK_STOREDATA, AUD_END); break;
-	  case TVS_CFILE:
-	  case TVS_SSTATUS: osi_audit( PrivSetID, 0, AUD_INT, client->ViceId,
-				    AUD_INT, CHK_STORESTATUS, AUD_END); break;
-	  default: break;
-	  }
-	}
-      }
-    targetptr->disk.serverModifyTime = FT_ApproxTime();
-    if (InStatus->Mask & AFS_SETGROUP)
-	targetptr->disk.group = InStatus->Group;
-    /* vnode changed : to be written back by VPutVnode */
-    targetptr->changed_newTime = 1;
-
-} /*Update_TargetVnodeStatus*/
-
-
-/*
- * Fills the CallBack structure with the expiration time and type of callback
- * structure. Warning: this function is currently incomplete.
- */
-static void
-SetCallBackStruct(afs_uint32 CallBackTime, struct AFSCallBack *CallBack)
-{
-    /* CallBackTime could not be 0 */
-    if (CallBackTime == 0) {
-	ViceLog(0, ("WARNING: CallBackTime == 0!\n"));
-	CallBack->ExpirationTime = 0;
-    } else
-	CallBack->ExpirationTime = CallBackTime - FT_ApproxTime();	
-    CallBack->CallBackVersion =	CALLBACK_VERSION;
-    CallBack->CallBackType = CB_SHARED;		    /* The default for now */
-
-} /*SetCallBackStruct*/
-
-
-/*
- * Returns the volume and vnode pointers associated with file Fid; the lock
- * type on the vnode is set to lock. Note that both volume/vnode's ref counts
- * are incremented and they must be eventualy released.
- */
-static afs_int32
-CheckVnode(AFSFid *fid, Volume **volptr, Vnode **vptr, int lock)
-{
-    int fileCode = 0;
-    int errorCode = -1;
-    static struct timeval restartedat = {0,0};
-
-    if (fid->Volume == 0 || fid->Vnode == 0) /* not: || fid->Unique == 0) */
-	return(EINVAL);
-    if ((*volptr) == 0) {
-      extern int VInit;
-
-      while(1) {
-	errorCode = 0;
-	*volptr = VGetVolume(&errorCode, (afs_int32)fid->Volume);
-	if (!errorCode) {
-	  assert (*volptr);
-	  break;
-	}
-	if ((errorCode == VOFFLINE) && (VInit < 2)) {
-	    /* The volume we want may not be attached yet because
-	     * the volume initialization is not yet complete.
-             * We can do several things: 
-	     *     1.  return -1, which will cause users to see
-	     *         "connection timed out".  This is more or
-	     *         less the same as always, except that the servers
-	     *         may appear to bounce up and down while they
-	     *         are actually restarting.
-	     *     2.  return VBUSY which will cause clients to 
-	     *         sleep and retry for 6.5 - 15 minutes, depending
-	     *         on what version of the CM they are running.  If
-	     *         the file server takes longer than that interval 
-	     *         to attach the desired volume, then the application
-	     *         will see an ENODEV or EIO.  This approach has 
-	     *         the advantage that volumes which have been attached
-	     *         are immediately available, it keeps the server's
-	     *         immediate backlog low, and the call is interruptible
-	     *         by the user.  Users see "waiting for busy volume."
-	     *     3.  sleep here and retry.  Some people like this approach
-	     *         because there is no danger of seeing errors.  However, 
-	     *         this approach only works with a bounded number of 
-	     *         clients, since the pending queues will grow without
-	     *         stopping.  It might be better to find a way to take
-	     *         this call and stick it back on a queue in order to
-	     *         recycle this thread for a different request.    
-	     *     4.  Return a new error code, which new cache managers will
-	     *         know enough to interpret as "sleep and retry", without
-	     *         the upper bound of 6-15 minutes that is imposed by the
-	     *         VBUSY handling.  Users will see "waiting for
-	     *         busy volume," so they know that something is
-	     *         happening.  Old cache managers must be able to do  
-	     *         something reasonable with this, for instance, mark the
-	     *         server down.  Fortunately, any error code < 0
-	     *         will elicit that behavior. See #1.
-	     *     5.  Some combination of the above.  I like doing #2 for 10
-	     *         minutes, followed by #4.  3.1b and 3.2 cache managers
-	     *         will be fine as long as the restart period is
-	     *         not longer than 6.5 minutes, otherwise they may
-	     *         return ENODEV to users.  3.3 cache managers will be
-	     *         fine for 10 minutes, then will return
-	     *         ETIMEDOUT.  3.4 cache managers will just wait
-	     *         until the call works or fails definitively.
-	     *  NB. The problem with 2,3,4,5 is that old clients won't
-	     *  fail over to an alternate read-only replica while this
-	     *  server is restarting.  3.4 clients will fail over right away.
-	     */
-	  if (restartedat.tv_sec == 0) {
-	    /* I'm not really worried about when we restarted, I'm   */
-	    /* just worried about when the first VBUSY was returned. */
-	    TM_GetTimeOfDay(&restartedat, 0);
-	    return(VBUSY);
-	  }
-	  else {
-	    struct timeval now;
-	    TM_GetTimeOfDay(&now, 0);
-	    if ((now.tv_sec - restartedat.tv_sec) < (11*60)) {
-	      return(VBUSY);
-	    }
-	    else {
-	      return (VRESTARTING);
-	    }
-	  }
-	}
-	  /* allow read operations on busy volume */
-	else if(errorCode==VBUSY && lock==READ_LOCK) {
-	  errorCode=0;
-	  break;
-	}
-	else if (errorCode)
-	  return(errorCode);
-      }
-    }
-    assert (*volptr);
-
-    /* get the vnode  */
-    *vptr = VGetVnode(&errorCode, *volptr, fid->Vnode, lock);
-    if (errorCode)
-	return(errorCode);
-    if ((*vptr)->disk.uniquifier != fid->Unique) {
-	VPutVnode(&fileCode, *vptr);
-	assert(fileCode == 0);
-	*vptr = 0;
-	return(VNOVNODE);   /* return the right error code, at least */
-    }
-    return(0);
-} /*CheckVnode*/
-
-
-/*
- * This routine returns the ACL associated with the targetptr. If the
- * targetptr isn't a directory, we access its parent dir and get the ACL
- * thru the parent; in such case the parent's vnode is returned in
- * READ_LOCK mode.
- */
-static afs_int32
-SetAccessList(Vnode **targetptr,
-	      Volume **volume,
-	      struct acl_accessList **ACL,
-	      int * ACLSize,
-	      Vnode **parent,
-	      AFSFid *Fid,
-	      int Lock)
-{
-    if ((*targetptr)->disk.type == vDirectory) {
-	*parent = 0;
-	*ACL = VVnodeACL(*targetptr);
-	*ACLSize = VAclSize(*targetptr);
-	return(0);
-    }
-    else {
-	assert(Fid != 0);
-	while(1) {
-	    VnodeId parentvnode;
-	    int errorCode = 0;
-	    
-	    parentvnode = (*targetptr)->disk.parent;
-	    VPutVnode(&errorCode,*targetptr);
-	    *targetptr = 0;
-	    if (errorCode) return(errorCode);
-	    *parent = VGetVnode(&errorCode, *volume, parentvnode, READ_LOCK);
-	    if (errorCode) return(errorCode);
-	    *ACL = VVnodeACL(*parent);
-	    *ACLSize = VAclSize(*parent);
-	    if ((errorCode = CheckVnode(Fid, volume, targetptr, Lock)) != 0)
-		return(errorCode);
-	    if ((*targetptr)->disk.parent != parentvnode) {
-		VPutVnode(&errorCode, *parent);
-		*parent = 0;
-		if (errorCode) return(errorCode);
-	    } else
-		return(0);
-	}
-    }
-
-} /*SetAccessList*/
-
-
-/*
- * Common code that handles the creation of a new file (SAFS_CreateFile and
- * SAFS_Symlink) or a new dir (SAFS_MakeDir)
- */
-static afs_int32
-Alloc_NewVnode(Vnode *parentptr,
-	       DirHandle *dir,
-	       Volume *volptr,
-	       Vnode **targetptr,
-	       char *Name,
-	       struct AFSFid *OutFid,
-	       int FileType,
-	       int BlocksPreallocatedForVnode)
-{
-    int	errorCode = 0;		/* Error code returned back */
-    int temp;
-    Inode inode=0;
-    Inode nearInode;		/* hint for inode allocation in solaris */
-
-    if ((errorCode = AdjustDiskUsage(volptr, BlocksPreallocatedForVnode,
-				    BlocksPreallocatedForVnode))) {
-	ViceLog(25, ("Insufficient space to allocate %d blocks\n", 
-		     BlocksPreallocatedForVnode));
-	return(errorCode);
-    }
-
-    *targetptr = VAllocVnode(&errorCode, volptr, FileType);
-    if (errorCode != 0) {
-	VAdjustDiskUsage(&temp, volptr, - BlocksPreallocatedForVnode, 0);
-	return(errorCode);
-    }
-    OutFid->Volume = V_id(volptr);
-    OutFid->Vnode = (*targetptr)->vnodeNumber;
-    OutFid->Unique = (*targetptr)->disk.uniquifier;
-
-    nearInode = VN_GET_INO(parentptr);   /* parent is also in same vol */
-
-    /* create the inode now itself */
-    inode = IH_CREATE(V_linkHandle(volptr), V_device(volptr),
-		      VPartitionPath(V_partition(volptr)), nearInode,
-		      V_id(volptr), (*targetptr)->vnodeNumber,
-		      (*targetptr)->disk.uniquifier, 1);
-
-    /* error in creating inode */
-    if (!VALID_INO(inode)) 
-    {
-               ViceLog(0, ("Volume : %d vnode = %d Failed to create inode: errno = %d\n", 
-                         (*targetptr)->volumePtr->header->diskstuff.id,
-                         (*targetptr)->vnodeNumber, 
-                         errno));
-		VAdjustDiskUsage(&temp, volptr, -BlocksPreallocatedForVnode,0);
-		(*targetptr)->delete = 1; /* delete vnode */
-		return ENOSPC;
-    }
-    VN_SET_INO(*targetptr, inode);
-    IH_INIT(((*targetptr)->handle), V_device(volptr), V_id(volptr), inode);
-
-    /* copy group from parent dir */
-    (*targetptr)->disk.group = parentptr->disk.group;
-
-    if (parentptr->disk.cloned)	
-    {
-	ViceLog(25, ("Alloc_NewVnode : CopyOnWrite called\n"));
-	if ((errorCode = CopyOnWrite(parentptr, volptr)))  /* disk full */
-	{
-		ViceLog(25, ("Alloc_NewVnode : CopyOnWrite failed\n"));
-		/* delete the vnode previously allocated */
-		(*targetptr)->delete = 1;
-		VAdjustDiskUsage(&temp, volptr,
-				 -BlocksPreallocatedForVnode, 0);
-		IH_REALLYCLOSE((*targetptr)->handle);
-		if ( IH_DEC(V_linkHandle(volptr), inode, V_parentId(volptr)) )
-		    ViceLog(0,("Alloc_NewVnode: partition %s idec %s failed\n",
-				volptr->partition->name,
-			       PrintInode(NULL, inode)));
-		IH_RELEASE((*targetptr)->handle);
-			
-		return errorCode;
-	}
-    }
-    
-    /* add the name to the directory */
-    SetDirHandle(dir, parentptr);
-    if ((errorCode = Create(dir,(char *)Name, OutFid))) {
-	(*targetptr)->delete = 1;
-	VAdjustDiskUsage(&temp, volptr, - BlocksPreallocatedForVnode, 0);
-	IH_REALLYCLOSE((*targetptr)->handle);
-	if ( IH_DEC(V_linkHandle(volptr), inode, V_parentId(volptr)))
-	    ViceLog(0,("Alloc_NewVnode: partition %s idec %s failed\n",
-		       volptr->partition->name,
-		       PrintInode(NULL, inode)));
-	IH_RELEASE((*targetptr)->handle);
-	return(errorCode);
-    }
-    DFlush();
-    return(0);
-
-} /*Alloc_NewVnode*/
-
-
-/*
- * Handle all the lock-related code (SAFS_SetLock, SAFS_ExtendLock and
- * SAFS_ReleaseLock)
- */
-static afs_int32
-HandleLocking(Vnode *targetptr, afs_int32 rights, ViceLockType LockingType)
-{
-    int	Time;		/* Used for time */
-    int writeVnode = targetptr->changed_oldTime; /* save original status */
-
-    /* Does the caller has Lock priviledges; root extends locks, however */
-    if (LockingType != LockExtend && !(rights & PRSFS_LOCK))
-	return(EACCES);
-    targetptr->changed_oldTime = 1; /* locking doesn't affect any time stamp */
-    Time = FT_ApproxTime();
-    switch (LockingType) {
-	case LockRead:
-	case LockWrite:
-	    if (Time > targetptr->disk.lock.lockTime)
-		targetptr->disk.lock.lockTime = targetptr->disk.lock.lockCount = 0;
-	    Time += AFS_LOCKWAIT;
-	    if (LockingType == LockRead) {
-		if (targetptr->disk.lock.lockCount >= 0) {
-		    ++(targetptr->disk.lock.lockCount);
-		    targetptr->disk.lock.lockTime = Time;
-		} else return(EAGAIN);
-	    } else {
-		if (targetptr->disk.lock.lockCount == 0) {
-		    targetptr->disk.lock.lockCount = -1;
-		    targetptr->disk.lock.lockTime = Time;
-		} else return(EAGAIN);
-	    }
-	    break;
-	case LockExtend:
-	    Time += AFS_LOCKWAIT;
-	    if (targetptr->disk.lock.lockCount != 0)
-		targetptr->disk.lock.lockTime = Time;
-	    else return(EINVAL);	    
-	    break;
-	case LockRelease:
-	    if ((--targetptr->disk.lock.lockCount) <= 0)
-		targetptr->disk.lock.lockCount = targetptr->disk.lock.lockTime = 0;
-	    break;
-	default:
-	    targetptr->changed_oldTime = writeVnode; /* restore old status */
-	    ViceLog(0, ("Illegal Locking type %d\n", LockingType));
-    }
-    return(0);
-} /*HandleLocking*/
-
-/*
- * Compare the directory's ACL with the user's access rights in the client
- * connection and return the user's and everybody else's access permissions
- * in rights and anyrights, respectively
- */
-static afs_int32
-GetRights (struct client *client,
-	   struct acl_accessList *ACL,
-	   afs_int32 *rights,
-	   afs_int32 *anyrights)
-{
-    extern prlist SystemAnyUserCPS;
-    afs_int32 hrights = 0;
-    int code;
-
-    if (acl_CheckRights(ACL, &SystemAnyUserCPS, anyrights) != 0) {
-
-	ViceLog(0,("CheckRights failed\n"));
-	*anyrights = 0;
-    }
-    *rights = 0;
-    acl_CheckRights(ACL, &client->CPS, rights);
-
-        /* wait if somebody else is already doing the getCPS call */
-    H_LOCK
-    while ( client->host->hostFlags & HCPS_INPROGRESS )
-    {
-	client->host->hostFlags |= HCPS_WAITING;  /* I am waiting */
-#ifdef AFS_PTHREAD_ENV
-	pthread_cond_wait(&client->host->cond, &host_glock_mutex);
-#else /* AFS_PTHREAD_ENV */
-        if ((code=LWP_WaitProcess( &(client->host->hostFlags))) !=LWP_SUCCESS)
-                ViceLog(0, ("LWP_WaitProcess returned %d\n", code));
-#endif /* AFS_PTHREAD_ENV */
-    }
-
-    if (client->host->hcps.prlist_len && !client->host->hcps.prlist_val) {
-	ViceLog(0,("CheckRights: len=%d, for host=0x%x\n", client->host->hcps.prlist_len, client->host->host));
-    } else
-	acl_CheckRights(ACL, &client->host->hcps, &hrights);
-    H_UNLOCK
-    /* Allow system:admin the rights given with the -implicit option */
-    if (acl_IsAMember(SystemId, &client->CPS))
-        *rights |= implicitAdminRights;
-    *rights |= hrights;
-    *anyrights |= hrights;
-
-    return(0);
-
-} /*GetRights*/
-
-
-/* Checks if caller has the proper AFS and Unix (WRITE) access permission to the target directory; Prfs_Mode refers to the AFS Mode operation while rights contains the caller's access permissions to the directory. */
-
-static afs_int32
-CheckWriteMode(Vnode *targetptr, afs_int32 rights, int Prfs_Mode)
-{
-    if (readonlyServer)
-	return(VREADONLY);
-    if (!(rights & Prfs_Mode))
-	return(EACCES);
-    if ((targetptr->disk.type != vDirectory) && (!(targetptr->disk.modeBits & OWNERWRITE)))
-	return(EACCES);
-    return(0);
-}
-
-/* In our current implementation, each successive data store (new file
- * data version) creates a new inode. This function creates the new
- * inode, copies the old inode's contents to the new one, remove the old
- * inode (i.e. decrement inode count -- if it's currently used the delete
- * will be delayed), and modify some fields (i.e. vnode's
- * disk.inodeNumber and cloned)
- */
-#define	COPYBUFFSIZE	8192
-static int CopyOnWrite(Vnode *targetptr, Volume *volptr)
-{
-    Inode	ino, nearInode;
-    int		rdlen;
-    int		wrlen;
-    register int size, length;
-    int ifd, ofd;
-    char	*buff;
-    int 	rc;		/* return code */
-    IHandle_t	*newH;	/* Use until finished copying, then cp to vnode.*/
-    FdHandle_t  *targFdP;  /* Source Inode file handle */
-    FdHandle_t  *newFdP; /* Dest Inode file handle */
-
-    if (targetptr->disk.type ==	vDirectory) DFlush();	/* just in case? */
-
-    size = targetptr->disk.length;
-    buff = (char *)malloc(COPYBUFFSIZE);
-    if (buff == NULL) {
-	return EIO;
-    }
-
-    ino = VN_GET_INO(targetptr);
-    assert(VALID_INO(ino));
-    targFdP = IH_OPEN(targetptr->handle);
-    if (targFdP == NULL) {
-	rc = errno;
-	ViceLog(0, ("CopyOnWrite failed: Failed to open target vnode %u in volume %u (errno = %d)\n", targetptr->vnodeNumber, V_id(volptr), rc));
-	free(buff);
-	VTakeOffline (volptr);
-	return rc;
-    }
-
-    nearInode = VN_GET_INO(targetptr);
-    ino	= IH_CREATE(V_linkHandle(volptr), V_device(volptr),
-		    VPartitionPath(V_partition(volptr)),nearInode, V_id(volptr),
-		    targetptr->vnodeNumber, targetptr->disk.uniquifier,
-		    (int)targetptr->disk.dataVersion);
-    if (!VALID_INO(ino))
-    {
-	ViceLog(0,("CopyOnWrite failed: Partition %s that contains volume %u may be out of free inodes(errno = %d)\n", volptr->partition->name, V_id(volptr), errno));
-	FDH_CLOSE(targFdP);
-	free(buff);
-	return ENOSPC;
-    }
-    IH_INIT(newH, V_device(volptr), V_id(volptr), ino);
-    newFdP = IH_OPEN(newH);
-    assert(newFdP != NULL);
-
-    while(size > 0) {
-	if (size > COPYBUFFSIZE) { /* more than a buffer */
-	    length = COPYBUFFSIZE;
-	    size -= COPYBUFFSIZE;
-	} else {
-	    length = size;
-	    size = 0;
-	}
-	rdlen = FDH_READ(targFdP, buff, length); 
-	if (rdlen == length)
-	    wrlen = FDH_WRITE(newFdP, buff, length);
-	else
-	    wrlen = 0;
-	/*  Callers of this function are not prepared to recover
-	 *  from error that put the filesystem in an inconsistent
-	 *  state. Make sure that we force the volume off-line if
-	 *  we some error other than ENOSPC - 4.29.99)
-	 *
-	 *  In case we are unable to write the required bytes, and the
-	 *  error code indicates that the disk is full, we roll-back to
-	 *  the initial state.
-	 */
-	if((rdlen != length) || (wrlen != length))
-		if ( (wrlen < 0) && (errno == ENOSPC) )	/* disk full */
-		{
-	    		ViceLog(0,("CopyOnWrite failed: Partition %s containing volume %u is full\n",
-		    			volptr->partition->name, V_id(volptr)));
-			/* remove destination inode which was partially copied till now*/
-			FDH_REALLYCLOSE(newFdP);
-			IH_RELEASE(newH);
-			FDH_REALLYCLOSE(targFdP);
-			rc = IH_DEC(V_linkHandle(volptr), ino,
-				  V_parentId(volptr));
-    			if (!rc ) {
-			    ViceLog(0,("CopyOnWrite failed: error %u after i_dec on disk full, volume %u in partition %s needs salvage\n",
-				       rc, V_id(volptr), 
-				       volptr->partition->name));
-			    VTakeOffline (volptr);
-			}
-			free(buff);
-			return ENOSPC;
-		}
-		else {
-		    ViceLog(0,("CopyOnWrite failed: volume %u in partition %s  (tried reading %u, read %u, wrote %u, errno %u) volume needs salvage\n",
-			       V_id(volptr), volptr->partition->name, length,
-			       rdlen, wrlen, errno));
-#ifdef FAST_RESTART /* if running in no-salvage, don't core the server */
-		    ViceLog(0,("CopyOnWrite failed: taking volume offline\n"));
-#else /* Avoid further corruption and try to get a core. */
-		    assert(0); 
-#endif
-                    /* Decrement this inode so salvager doesn't find it. */
-		    FDH_REALLYCLOSE(newFdP);
-		    IH_RELEASE(newH);
-		    FDH_REALLYCLOSE(targFdP);
-		    rc = IH_DEC(V_linkHandle(volptr), ino,
-				V_parentId(volptr));
-		    free(buff);
-		    VTakeOffline (volptr);
-		    return EIO;
-		}
-#ifndef AFS_PTHREAD_ENV
-	IOMGR_Poll();
-#endif /* !AFS_PTHREAD_ENV */
-    }
-    FDH_REALLYCLOSE(targFdP);
-    rc = IH_DEC(V_linkHandle(volptr), VN_GET_INO(targetptr),
-	      V_parentId(volptr)) ;
-    assert(!rc);
-    IH_RELEASE(targetptr->handle);
-
-    rc = FDH_SYNC(newFdP);
-    assert(rc == 0);
-    FDH_CLOSE(newFdP);
-    targetptr->handle = newH;
-    VN_SET_INO(targetptr, ino);
-    targetptr->disk.cloned = 0;
-    /* Internal change to vnode, no user level change to volume - def 5445 */
-    targetptr->changed_oldTime = 1;
-    free(buff);
-    return 0;				/* success */
-} /*CopyOnWrite*/
-
-
-/*
- * VanillaUser returns 1 (true) if the user is a vanilla user (i.e., not
- * a System:Administrator)
- */
-static afs_int32
-VanillaUser(struct client *client)
-{
-    if (acl_IsAMember(SystemId, &client->CPS))
-	return(0);  /* not a system administrator, then you're "vanilla" */
-    return(1);
-
-} /*VanillaUser*/
-
-
-/*
- * Adjusts (Subtract) "length" number of blocks from the volume's disk
- * allocation; if some error occured (exceeded volume quota or partition
- * was full, or whatever), it frees the space back and returns the code.
- * We usually pre-adjust the volume space to make sure that there's
- * enough space before consuming some.
- */
-static afs_int32
-AdjustDiskUsage(Volume *volptr, afs_int32 length, afs_int32 checkLength)
-{
-    int rc;
-    int nc;
-
-    VAdjustDiskUsage(&rc, volptr, length, checkLength);
-    if (rc) {
-	VAdjustDiskUsage(&nc, volptr, -length, 0);
-	if (rc == VOVERQUOTA) {
-	    ViceLog(2,("Volume %u (%s) is full\n",
-		    V_id(volptr), V_name(volptr)));
-	    return(rc);
-	}
-	if (rc == VDISKFULL) {
-	    ViceLog(0,("Partition %s that contains volume %u is full\n",
-		    volptr->partition->name, V_id(volptr)));
-	    return(rc);
-	}
-	ViceLog(0,("Got error return %d from VAdjustDiskUsage\n",rc));
-	return(rc);
-    }
-    return(0);
-
-} /*AdjustDiskUsage*/
-
-/*
- * If some flags (i.e. min or max quota) are set, the volume's in disk
- * label is updated; Name, OfflineMsg, and Motd are also reflected in the
- * update, if applicable.
- */
-static afs_int32
-RXUpdate_VolumeStatus(Volume *volptr, AFSStoreVolumeStatus* StoreVolStatus,
-		      char *Name, char *OfflineMsg, char *Motd)
-{
-    Error errorCode = 0;
-
-    if (StoreVolStatus->Mask & AFS_SETMINQUOTA)
-	V_minquota(volptr) = StoreVolStatus->MinQuota;
-    if (StoreVolStatus->Mask & AFS_SETMAXQUOTA)
-	V_maxquota(volptr) = StoreVolStatus->MaxQuota;
-    if (strlen(OfflineMsg) > 0) {
-	strcpy(V_offlineMessage(volptr), OfflineMsg);
-    }
-    if (strlen(Name) > 0) {
-	strcpy(V_name(volptr), Name);
-    }
-#if TRANSARC_VOL_STATS
-    /*
-     * We don't overwrite the motd field, since it's now being used
-     * for stats
-     */
-#else
-    if (strlen(Motd) > 0) {
-	strcpy(V_motd(volptr), Motd);
-    }
-#endif /* FS_STATS_DETAILED */
-    VUpdateVolume(&errorCode, volptr);
-    return(errorCode);
-
-} /*RXUpdate_VolumeStatus*/
-
-
-/* old interface */
-static afs_int32
-Update_VolumeStatus(Volume *volptr, VolumeStatus *StoreVolStatus,
-		    struct BBS *Name, struct BBS *OfflineMsg,
-		    struct BBS *Motd)
-{
-    Error errorCode = 0;
-
-    if (StoreVolStatus->MinQuota > -1)
-	V_minquota(volptr) = StoreVolStatus->MinQuota;
-    if (StoreVolStatus->MaxQuota > -1)
-	V_maxquota(volptr) = StoreVolStatus->MaxQuota;
-    if (OfflineMsg->SeqLen > 1)
-	strcpy(V_offlineMessage(volptr), OfflineMsg->SeqBody);
-    if (Name->SeqLen > 1)
-	strcpy(V_name(volptr), Name->SeqBody);
-#if TRANSARC_VOL_STATS
-    /*
-     * We don't overwrite the motd field, since it's now being used
-     * for stats
-     */
-#else
-    if (Motd->SeqLen > 1)
-	strcpy(V_motd(volptr), Motd->SeqBody);
-#endif /* FS_STATS_DETAILED */
-    VUpdateVolume(&errorCode, volptr);
-    return(errorCode);
-
-} /*Update_VolumeStatus*/
-
-
-/*
- * Get internal volume-related statistics from the Volume disk label
- * structure and put it into the VolumeStatus structure, status; it's
- * used by both SAFS_GetVolumeStatus and SAFS_SetVolumeStatus to return
- * the volume status to the caller.
- */
-static afs_int32
-GetVolumeStatus(VolumeStatus *status, struct BBS *name, struct BBS *offMsg,
-		struct BBS *motd, Volume *volptr)
-{
-    status->Vid = V_id(volptr);
-    status->ParentId = V_parentId(volptr);
-    status->Online = V_inUse(volptr);
-    status->InService = V_inService(volptr);
-    status->Blessed = V_blessed(volptr);
-    status->NeedsSalvage = V_needsSalvaged(volptr);
-    if (VolumeWriteable(volptr))
-	status->Type = ReadWrite;
-    else
-	status->Type = ReadOnly;
-    status->MinQuota = V_minquota(volptr);
-    status->MaxQuota = V_maxquota(volptr);
-    status->BlocksInUse = V_diskused(volptr);
-    status->PartBlocksAvail = volptr->partition->free;
-    status->PartMaxBlocks = volptr->partition->totalUsable;
-    strncpy(name->SeqBody, V_name(volptr), (int)name->MaxSeqLen);
-    name->SeqLen = strlen(V_name(volptr)) + 1;
-    if (name->SeqLen > name->MaxSeqLen) name->SeqLen = name -> MaxSeqLen;
-    strncpy(offMsg->SeqBody, V_offlineMessage(volptr), (int)name->MaxSeqLen);
-    offMsg->SeqLen = strlen(V_offlineMessage(volptr)) + 1;
-    if (offMsg->SeqLen > offMsg->MaxSeqLen)
-	offMsg->SeqLen = offMsg -> MaxSeqLen;
-#ifdef notdef
-    /*Don't do anything with the motd field*/
-    strncpy(motd->SeqBody, nullString, (int)offMsg->MaxSeqLen);
-    motd->SeqLen = strlen(nullString) + 1;
-#endif
-    if (motd->SeqLen > motd->MaxSeqLen)
-	motd->SeqLen = motd -> MaxSeqLen;
-
-} /*GetVolumeStatus*/
-
-static afs_int32
-RXGetVolumeStatus(AFSFetchVolumeStatus *status, char **name, char **offMsg,
-		  char **motd, Volume *volptr)
-{
-    int temp;
-
-    status->Vid = V_id(volptr);
-    status->ParentId = V_parentId(volptr);
-    status->Online = V_inUse(volptr);
-    status->InService = V_inService(volptr);
-    status->Blessed = V_blessed(volptr);
-    status->NeedsSalvage = V_needsSalvaged(volptr);
-    if (VolumeWriteable(volptr))
-	status->Type = ReadWrite;
-    else
-	status->Type = ReadOnly;
-    status->MinQuota = V_minquota(volptr);
-    status->MaxQuota = V_maxquota(volptr);
-    status->BlocksInUse = V_diskused(volptr);
-    status->PartBlocksAvail = volptr->partition->free;
-    status->PartMaxBlocks = volptr->partition->totalUsable;
-
-    /* now allocate and copy these things; they're freed by the RXGEN stub */
-    temp = strlen(V_name(volptr)) + 1;
-    *name = malloc(temp);
-    strcpy(*name, V_name(volptr));
-    temp = strlen(V_offlineMessage(volptr)) + 1;
-    *offMsg = malloc(temp);
-    strcpy(*offMsg, V_offlineMessage(volptr));
-#if TRANSARC_VOL_STATS
-    *motd = malloc(1);
-    strcpy(*motd, nullString);
-#else
-    temp = strlen(V_motd(volptr)) + 1;
-    *motd = malloc(temp);
-    strcpy(*motd, V_motd(volptr));
-#endif /* FS_STATS_DETAILED */
-
-} /*RXGetVolumeStatus*/
-
-
-static afs_int32
-FileNameOK(register char *aname)
-{
-    register afs_int32 i, tc;
-    i = strlen(aname);
-    if (i >= 4) {
-	/* watch for @sys on the right */
-	if (strcmp(aname+i-4, "@sys") == 0) return 0;
-    }
-    while ((tc = *aname++)) {
-	if (tc == '/') return 0;    /* very bad character to encounter */
-    }
-    return 1;	/* file name is ok */
-
-} /*FileNameOK*/
-
-
-/* Debugging tool to print Volume Statu's contents */
-static void
-PrintVolumeStatus(VolumeStatus *status)
-{
-    ViceLog(5,("Volume header contains:\n"));
-    ViceLog(5,("Vid = %u, Parent = %u, Online = %d, InService = %d, Blessed = %d, NeedsSalvage = %d\n",
-	    status->Vid, status->ParentId, status->Online, status->InService,
-	    status->Blessed, status->NeedsSalvage));
-    ViceLog(5,("MinQuota = %d, MaxQuota = %d\n", status->MinQuota, status->MaxQuota));
-    ViceLog(5,("Type = %d, BlocksInUse = %d, PartBlocksAvail = %d, PartMaxBlocks = %d\n",
-	    status->Type, status->BlocksInUse, status->PartBlocksAvail, status->PartMaxBlocks));
-
-} /*PrintVolumeStatus*/
-
-
-/*
- * This variant of symlink is expressly to support the AFS/DFS translator
- * and is not supported by the AFS fileserver. We just return EINVAL.
- * The cache manager should not generate this call to an AFS cache manager.
- */
-afs_int32 SRXAFS_DFSSymlink (struct rx_call *acall,
-			     struct AFSFid *DirFid,
-			     char *Name,
-			     char *LinkContents,
-			     struct AFSStoreStatus *InStatus,
-			     struct AFSFid *OutFid,
-			     struct AFSFetchStatus *OutFidStatus,
-			     struct AFSFetchStatus *OutDirStatus,
-			     struct AFSCallBack *CallBack,
-			     struct AFSVolSync *Sync)
-{
-    return EINVAL;
-}
-
-afs_int32 SRXAFS_ResidencyCmd (struct rx_call *acall, struct AFSFid *Fid,
-			       struct ResidencyCmdInputs *Inputs,
-			       struct ResidencyCmdOutputs *Outputs)
-{
-    return EINVAL;
-}

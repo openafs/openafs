@@ -363,10 +363,7 @@ int h_NBLock_r(register struct host *host)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static char h_AddrInSameNetwork(a_targetAddr, a_candAddr)
-    afs_uint32 a_targetAddr;
-    afs_uint32 a_candAddr;
-
+static char h_AddrInSameNetwork(afs_uint32 a_targetAddr, afs_uint32 a_candAddr)
 { /*h_AddrInSameNetwork*/
 
     afs_uint32 targetNet;
@@ -420,9 +417,8 @@ static char h_AddrInSameNetwork(a_targetAddr, a_candAddr)
 
 
 
-h_gethostcps_r(host,now)
-    register struct host *host;
-    register afs_int32	  now;
+void
+h_gethostcps_r(register struct host *host, register afs_int32 now)
 {
     register int code;
     int  slept=0, held;
@@ -532,8 +528,7 @@ return;
  */
 #define	DEF_ROPCONS 2115
 
-struct host *h_Alloc(r_con)
-    register struct rx_connection *r_con;
+struct host *h_Alloc(register struct rx_connection *r_con)
 {
     struct host *retVal;
     H_LOCK
@@ -542,9 +537,7 @@ struct host *h_Alloc(r_con)
     return retVal;
 }
 
-struct host *h_Alloc_r(r_con)
-    register struct rx_connection *r_con;
-
+struct host *h_Alloc_r(register struct rx_connection *r_con)
 {
     register int code;
     struct servent *serverentry;
@@ -889,6 +882,23 @@ void h_Enumerate_r(int (*proc)(), struct host* enumstart, char *param)
 	    h_Release_r(host);/* this might free up the host */
     }
 } /*h_Enumerate_r*/
+
+/* inserts a new HashChain structure corresponding to this UUID */
+void hashInsertUuid_r(struct afsUUID *uuid, struct host* host)
+{
+	int index;
+	struct h_hashChain*	chain;
+
+	/* hash into proper bucket */
+	index = h_UuidHashIndex(uuid);
+
+        /* insert into beginning of list for this bucket */
+	chain = (struct h_hashChain *)malloc(sizeof(struct h_hashChain));
+	assert(chain);
+	chain->hostPtr = host;
+	chain->next = hostUuidHashTable[index];
+	hostUuidHashTable[index] = chain;
+}
 
 /* Host is returned held */
 struct host *h_GetHost_r(struct rx_connection *tcon)
@@ -2035,6 +2045,25 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 	return 0;
 }
 
+/* inserts a new HashChain structure corresponding to this address */
+void hashInsert_r(afs_int32 addr, struct host* host)
+{
+	int index;
+	struct h_hashChain*	chain;
+
+	/* hash into proper bucket */
+	index = h_HashIndex(addr);
+
+        /* insert into beginning of list for this bucket */
+	chain = (struct h_hashChain *)malloc(sizeof(struct h_hashChain));
+	assert(chain);
+	chain->hostPtr = host;
+	chain->next = hostHashTable[index];
+	chain->addr = addr;
+	hostHashTable[index] = chain;
+
+}
+
 /*
  * This is called with host locked and held. At this point, the
  * hostHashTable should not be having entries for the alternate
@@ -2086,42 +2115,6 @@ addInterfaceAddr_r(struct host *host, afs_int32 addr)
 	hashInsert_r(addr, host);
 
 	return 0;
-}
-
-/* inserts a new HashChain structure corresponding to this address */
-void hashInsert_r(afs_int32 addr, struct host* host)
-{
-	int index;
-	struct h_hashChain*	chain;
-
-	/* hash into proper bucket */
-	index = h_HashIndex(addr);
-
-        /* insert into beginning of list for this bucket */
-	chain = (struct h_hashChain *)malloc(sizeof(struct h_hashChain));
-	assert(chain);
-	chain->hostPtr = host;
-	chain->next = hostHashTable[index];
-	chain->addr = addr;
-	hostHashTable[index] = chain;
-
-}
-
-/* inserts a new HashChain structure corresponding to this UUID */
-void hashInsertUuid_r(struct afsUUID *uuid, struct host* host)
-{
-	int index;
-	struct h_hashChain*	chain;
-
-	/* hash into proper bucket */
-	index = h_UuidHashIndex(uuid);
-
-        /* insert into beginning of list for this bucket */
-	chain = (struct h_hashChain *)malloc(sizeof(struct h_hashChain));
-	assert(chain);
-	chain->hostPtr = host;
-	chain->next = hostUuidHashTable[index];
-	hostUuidHashTable[index] = chain;
 }
 
 /* deleted a HashChain structure for this address and host */

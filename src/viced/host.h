@@ -147,7 +147,7 @@ extern int rxcon_client_key;
    an active connection for this to work.  If a lwp is working on a request
    for the client, then the client must have a connection */
 /* N.B. h_UserName returns pointer to static data; also relatively expensive */
-extern char *h_UserName();
+extern char *h_UserName(struct client *client);
 
 /* all threads whose thread-id is greater than the size of the hold array,
 ** then use the most significant bit in the 'hold' field in the host structure 
@@ -167,16 +167,13 @@ extern char *h_UserName();
 #define h_holdbit()  ( 1<<h_holdIndex() )
 
 #define h_Hold_r(host)   ((host)->holds[h_holdSlot()] |= h_holdbit())
-extern int h_Hold();
-extern int h_Release();
-extern int h_Release_r();
+extern int h_Release(register struct host *host);
+extern int h_Release_r(register struct host *host);
 
 #define h_Held_r(host)   ((h_holdbit() & (host)->holds[h_holdSlot()]) != 0)
-extern int h_Held();
-extern int h_OtherHolds();
-extern int h_OtherHolds_r();
+extern int h_OtherHolds_r(register struct host *host);
 #define h_Lock(host)    ObtainWriteLock(&(host)->lock)
-extern int h_Lock_r();
+extern int h_Lock_r(register struct host *host);
 #define h_Unlock(host)  ReleaseWriteLock(&(host)->lock)
 #define h_Unlock_r(host)  ReleaseWriteLock(&(host)->lock)
 
@@ -196,26 +193,21 @@ extern int h_Lock_r();
 				(h)->prev ? ((h)->prev->next = (h)->next):0;\
 				( h == hostList )? (hostList = h->next):0;
 
-extern struct host *h_Alloc();
-extern struct host *h_Alloc_r();
-extern struct host *h_Lookup();
-extern struct host *h_Lookup_r();
-extern struct host *h_LookupUuid_r();
-extern int h_FreeConnection();
-extern int h_Enumerate();
-extern struct host *h_GetHost();
-extern struct host *h_GetHost_r();
-extern struct client *h_FindClient_r();
-extern int h_ReleaseClient_r();
-extern struct client *h_ID2Client();
-extern int GetClient();
-extern h_PrintStats();
-extern h_PrintStats_r();
-extern h_PrintClients();
-extern h_PrintClients_r();
-extern h_GetWorkStats();
-extern h_GetWorkStats_r();
-extern void h_flushhostcps();
+extern struct host *h_Alloc(register struct rx_connection *r_con);
+extern struct host *h_Alloc_r(register struct rx_connection *r_con);
+extern struct host *h_Lookup_r(afs_uint32 hostaddr, afs_uint32 hport, int *heldp);
+extern struct host *h_LookupUuid_r(afsUUID *uuidp);
+extern int h_FreeConnection(struct rx_connection *tcon);
+extern void h_Enumerate(int (*proc)(), char *param);
+extern struct host *h_GetHost_r(struct rx_connection *tcon);
+extern struct client *h_FindClient_r(struct rx_connection *tcon);
+extern int h_ReleaseClient_r(struct client *client);
+extern struct client *h_ID2Client(afs_int32 vid);
+extern int GetClient(struct rx_connection * tcon, struct client **cp);
+extern void h_PrintStats();
+extern void h_PrintClients();
+extern void h_GetWorkStats();
+extern void h_flushhostcps(register afs_uint32 hostaddr, register afs_uint32 hport);
 struct Interface *MultiVerifyInterface_r();
 
 struct host *(hosttableptrs[h_MAXHOSTTABLES]);  /* Used by h_itoh */
