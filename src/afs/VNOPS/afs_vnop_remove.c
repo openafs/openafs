@@ -376,7 +376,7 @@ tagain:
 
 	ReleaseWriteLock(&adp->lock);
 	if (tdc) ReleaseSharedLock(&tdc->lock);
-	code = afsrename(adp, aname, adp, unlname, acred);
+	code = afsrename(adp, aname, adp, unlname, acred, &treq);
 	Tnam1 = unlname;
 	if (!code) {
 	    tvc->mvid = (struct VenusFid *)unlname;
