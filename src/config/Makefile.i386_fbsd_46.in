@@ -1,0 +1,41 @@
+# Copyright 1998 Transarc Corporation 
+#
+# Keep macros within each section in sorted order for clean diff displays.
+#
+# AFS_OSTYPE used to indicate suffixes and os specific subdirectories.
+AFS_OSTYPE = FBSD
+
+#
+# compilation and link editor flags
+DBG=-g
+OPTMZ=-O2
+PAM_CFLAGS = -O2 -pipe -fPIC
+# Put -O2 here to _ensure_ all Makefiles pick it up.
+XCFLAGS= -O2 -pipe
+MT_CFLAGS=-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}
+XLDFLAGS=
+SHLIB_LDFLAGS = -shared -Xlinker -x
+SHLIB_SUFFIX=so
+SHLIB_CFLAGS=
+#
+# libraries
+MTLIBS=-pthread
+TXLIBS= /usr/lib/libncurses.so
+XLIBS=@LIB_AFSDB@ -lcompat
+
+#
+# programs
+AR=ar
+AS=as
+CP=cp
+INSTALL=${TOP_SRCDIR}/pinstall/pinstall
+LD=ld   
+MT_CC=cc
+MV=mv
+RANLIB=ranlib
+RM=rm
+#
+# Other OS specific requirements
+#
+YACC = bison -y
+LEX = flex -l
