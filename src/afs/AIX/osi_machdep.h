@@ -38,7 +38,7 @@ extern long time;
 #define AFS_FAST_RELE(vp) (vp)->vrefCount--
 
 #undef gop_lookupname
-#define	gop_lookupname(fnamep,segflg,followlink,dirvpp,compvpp) \
+#define	gop_lookupname(fnamep,segflg,followlink,compvpp) \
 	lookupvp((fnamep), (followlink), (compvpp), &afs_osi_cred)
 
 #undef afs_suser

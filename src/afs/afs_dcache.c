@@ -3008,7 +3008,7 @@ afs_InitCacheFile(char *afile, ino_t ainode)
     ObtainWriteLock(&tdc->lock, 621);
     MObtainWriteLock(&afs_xdcache, 622);
     if (afile) {
-	code = gop_lookupname(afile, AFS_UIOSYS, 0, NULL, &filevp);
+	code = gop_lookupname(afile, AFS_UIOSYS, 0, &filevp);
 	if (code) {
 	    ReleaseWriteLock(&afs_xdcache);
 	    ReleaseWriteLock(&tdc->lock);

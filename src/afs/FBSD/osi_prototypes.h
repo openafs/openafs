@@ -19,7 +19,7 @@ extern afs_rwlock_t afs_xosi;
 
 /* osi_misc.c */
 extern int osi_lookupname(char *aname, enum uio_seg seg, int followlink,
-			  struct vnode **dirvpp, struct vnode **vpp);
+			  struct vnode **vpp);
 extern void *osi_fbsd_alloc(size_t size, int dropglobal);
 extern void osi_fbsd_free(void *p);
 

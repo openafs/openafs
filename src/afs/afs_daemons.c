@@ -386,11 +386,11 @@ BPath(register struct brequest *ab)
 	return;
     AFS_GUNLOCK();
 #ifdef AFS_LINUX22_ENV
-    code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1, NULL, &dp);
+    code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1, &dp);
     if (dp)
 	tvn = (struct vnode *)dp->d_inode;
 #else
-    code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1, NULL, &tvn);
+    code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1, &tvn);
 #endif
     AFS_GLOCK();
     osi_FreeLargeSpace((char *)ab->ptr_parm[0]);	/* free path name buffer here */

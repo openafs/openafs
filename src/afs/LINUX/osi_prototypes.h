@@ -32,7 +32,7 @@ extern afs_rwlock_t afs_xosi;
 
 /* osi_misc.c */
 extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
-			  vnode_t ** dirvpp, struct dentry **dpp);
+			  struct dentry **dpp);
 extern int osi_InitCacheInfo(char *aname);
 extern int osi_rdwr(int rw, struct osi_file *file, caddr_t addrp,
 		    size_t asize, size_t * resid);
