@@ -48,8 +48,12 @@ unsigned long afs_linux_page_offset = 0; /* contains the PAGE_OFFSET value */
 /* Since sys_ni_syscall is not exported, I need to cache it in order to restore
  * it.
  */
+#ifdef AFS_SPARC64_LINUX20_ENV
 static unsigned int afs_ni_syscall = 0;
-
+#else
+static void* afs_ni_syscall = 0;
+#endif
+ 
 #ifdef AFS_SPARC64_LINUX20_ENV
 static unsigned int afs_ni_syscall32 = 0;
 asmlinkage int (*sys_setgroupsp32)(int gidsetsize, __kernel_gid_t32 *grouplist);
@@ -69,6 +73,10 @@ __asm__ __volatile__ ("
 }
 #endif
 
+#if defined(AFS_LINUX24_ENV)
+asmlinkage int (*sys_setgroupsp32)(int gidsetsize, __kernel_gid32_t *grouplist);
+#endif 
+
 #ifdef AFS_SPARC64_LINUX20_ENV
 #define POINTER2SYSCALL (unsigned int)(unsigned long)
 #define SYSCALL2POINTER (void *)(long)
@@ -81,7 +89,7 @@ int init_module(void)
 {
     extern int afs_syscall();
     extern int afs_xsetgroups();
-#ifdef AFS_SPARC64_LINUX20_ENV
+#if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_LINUX24_ENV)
     extern int afs_xsetgroups32();
 #endif
 
@@ -127,6 +135,10 @@ int init_module(void)
     sys_setgroupsp32 = SYSCALL2POINTER sys_call_table32[__NR_setgroups];
     sys_call_table32[__NR_setgroups] = POINTER2SYSCALL afs_xsetgroups32;
 #endif
+#if defined(AFS_LINUX24_ENV)
+    sys_setgroupsp32 = SYSCALL2POINTER sys_call_table[__NR_setgroups32];
+    sys_call_table[__NR_setgroups32] = POINTER2SYSCALL afs_xsetgroups32;
+#endif
 
     return 0;
 }
@@ -141,7 +153,9 @@ void cleanup_module(void)
     sys_call_table32[__NR_setgroups] = POINTER2SYSCALL sys_setgroupsp32;
     sys_call_table32[__NR_afs_syscall] = afs_ni_syscall32;
 #endif
-
+#if defined(AFS_LINUX24_ENV)
+    sys_call_table[__NR_setgroups32] = POINTER2SYSCALL sys_setgroupsp32;
+#endif
     unregister_filesystem(&afs_file_system);
 
     osi_linux_free_inode_pages(); /* Invalidate all pages using AFS inodes. */

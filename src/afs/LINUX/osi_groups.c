@@ -126,8 +126,12 @@ asmlinkage int afs_xsetgroups(int gidsetsize, gid_t *grouplist)
     return code;
 }
 
-#ifdef AFS_SPARC64_LINUX20_ENV
+#if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_LINUX24_ENV)
+#if defined(AFS_SPARC64_LINUX20_ENV)
 asmlinkage int afs_xsetgroups32(int gidsetsize, __kernel_gid_t32 *grouplist)
+#else
+asmlinkage int afs_xsetgroups32(int gidsetsize, __kernel_gid32_t *grouplist)
+#endif
 {
     gid_t gl[NGROUPS];
     int ret, i;
