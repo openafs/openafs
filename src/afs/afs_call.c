@@ -637,6 +637,9 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	afs_int32 *kmsg = afs_osi_Alloc(kmsgLen);
 	char *cellname = afs_osi_Alloc(cellLen);
 
+#ifndef UKERNEL
+	afs_osi_MaskSignals();
+#endif
 	AFS_COPYIN((afs_int32 *)parm2, cellname, cellLen, code);
 	AFS_COPYIN((afs_int32 *)parm3, kmsg, kmsgLen, code);
 	if (!code) {
