@@ -1592,6 +1592,17 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 	    unlink(summaryFileName);
 	    if (!singleVolumeNumber)	/* Remove the FORCESALVAGE file */
 		RemoveTheForce(fileSysPath);
+	    else {
+		struct VolumeSummary *vsp;
+		int i, j;
+
+		GetVolumeSummary(singleVolumeNumber);
+
+		for (i = 0,vsp = volumeSummaryp; i < nVolumes; i++) {
+		    if (vsp->fileName)
+			DeleteExtraVolumeHeaderFile(vsp);
+		}
+	    }
 	    Log("%s vice inodes on %s; not salvaged\n",
 		singleVolumeNumber ? "No applicable" : "No", dev);
 	    return -1;
