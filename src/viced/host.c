@@ -1466,8 +1466,7 @@ ticket name length != 64
      */
     if (oldClient = (struct client *) rx_GetSpecific(tcon, rxcon_client_key)) {
 	oldClient->tcon = (struct rx_connection *) 0;
-        ViceLog(0, ("FindClient: client %x(%x) already had conn %x (host %x), s
-tolen by client %x(%x)\n", 
+        ViceLog(0, ("FindClient: client %x(%x) already had conn %x (host %x), stolen by client %x(%x)\n", 
                     oldClient, oldClient->sid, tcon, 
                     rx_HostOf(rx_PeerOf(tcon)), client, client->sid));
 	/* rx_SetSpecific will be done immediately below */
