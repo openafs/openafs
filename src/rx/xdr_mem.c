@@ -87,7 +87,7 @@ static void xdrmem_destroy(void)
 
 static bool_t xdrmem_getint32(register XDR *xdrs, afs_int32 *lp)
 {
-	if (xdrs->x_handy -= sizeof(afs_int32))
+	if (xdrs->x_handy < sizeof(afs_int32))
 		return (FALSE);
 	else
 		xdrs->x_handy -= sizeof(afs_int32);
@@ -98,7 +98,7 @@ static bool_t xdrmem_getint32(register XDR *xdrs, afs_int32 *lp)
 
 static bool_t xdrmem_putint32(register XDR *xdrs, afs_int32 *lp)
 {
-	if (xdrs->x_handy -= sizeof(afs_int32))
+	if (xdrs->x_handy < sizeof(afs_int32))
 		return (FALSE);
 	else
 		xdrs->x_handy -= sizeof(afs_int32);
