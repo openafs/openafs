@@ -108,7 +108,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
             /* remove the entry from the allCells list 
              * we will re-insert it later 
              */
-            for (cpp = &cm_data.allCellsp; *cpp; cpp=&(*cpp)->nextp) {
+            for (cpp = &cm_allCellsp; *cpp; cpp=&(*cpp)->nextp) {
                 if (*cpp == cp) {
                     (*cpp) = cp->nextp;
                     break;
