@@ -30,7 +30,7 @@ typedef struct socket *osi_socket;
 
 extern osi_socket rxi_GetUDPSocket();
 
-#if (!defined(AFS_GLOBAL_SUNLOCK) && !defined(RX_ENABLE_LOCKS)) || (defined(AFS_HPUX_ENV) && !defined(RX_ENABLE_LOCKS))
+#if (!defined(AFS_GLOBAL_SUNLOCK) && !defined(RX_ENABLE_LOCKS)
 #define	osi_rxSleep(a)	afs_osi_Sleep(a)
 #define	osi_rxWakeup(a)	afs_osi_Wakeup(a)
 #endif
