@@ -201,17 +201,33 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	    osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLOFFLINE.");
 	    thrd_Sleep(5000);
 	    /* cm_ForceUpdateVolume marks all servers as non_busy */
-	    cm_ForceUpdateVolume(fidp, userp, reqp);
+		/* No it doesn't.  It won't do anything if all of the 
+		 * the servers are marked as DOWN.  So clear the DOWN
+		 * flag and reset the busy state as well.
+		 */
+		cm_GetServerList(fidp, userp, reqp, &serversp);
+		lock_ObtainWrite(&cm_serverLock);
+		for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
+	        tsrp->server->flags &= ~CM_SERVERFLAG_DOWN;
+			if (tsrp->status == busy)
+				tsrp->status = not_busy;
+		}
+        lock_ReleaseWrite(&cm_serverLock);
+
+        if (fidp != NULL)
+            cm_ForceUpdateVolume(fidp, userp, reqp);
 	    retry = 1;
 	}
 
 	/* if all servers are busy, mark them non-busy and start over */
 	if (errorCode == CM_ERROR_ALLBUSY) {
 		cm_GetServerList(fidp, userp, reqp, &serversp);
+		lock_ObtainWrite(&cm_serverLock);
 		for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
 			if (tsrp->status == busy)
 				tsrp->status = not_busy;
 		}
+        lock_ReleaseWrite(&cm_serverLock);
 		thrd_Sleep(5000);
 		retry = 1;
 	}
@@ -219,6 +235,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	/* special codes:  VBUSY and VRESTARTING */
 	if (errorCode == VBUSY || errorCode == VRESTARTING) {
 		cm_GetServerList(fidp, userp, reqp, &serversp);
+		lock_ObtainWrite(&cm_serverLock);
 		for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
 			if (tsrp->server == serverp
 			    && tsrp->status == not_busy) {
@@ -226,6 +243,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 				break;
 			}
 		}
+        lock_ReleaseWrite(&cm_serverLock);
 		retry = 1;
 	}
 
@@ -328,7 +346,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 	cm_serverRef_t *tsrp;
         cm_server_t *tsp;
         long firstError = 0;
-	int someBusy = 0, someOffline = 0, allDown = 1;
+	int someBusy = 0, someOffline = 0, allBusy = 1, allDown = 1;
 	long timeUsed, timeLeft, hardTimeLeft;
 #ifdef DJGPP
         struct timeval now;
@@ -360,6 +378,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
             else if (tsrp->status == offline)
                 someOffline = 1;
             else {
+				allBusy = 0;
                 code = cm_ConnByServer(tsp, usersp, connpp);
                 if (code == 0) {
                     cm_PutServer(tsp);
@@ -389,16 +408,17 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 
 	lock_ReleaseWrite(&cm_serverLock);
 	if (firstError == 0) {
-		if (someBusy) 
+		if (allBusy) 
 			firstError = CM_ERROR_ALLBUSY;
-		else if (someOffline) 
+		else if (allDown) 
 			firstError = CM_ERROR_ALLOFFLINE;
-		else if (!allDown && serversp) 
-			firstError = CM_ERROR_TIMEDOUT;
-		/* Only return CM_ERROR_NOSUCHVOLUME if there are no
-		   servers for this volume */
-		else 
+		else if (serversp == NULL) 
+			/* Only return CM_ERROR_NOSUCHVOLUME if there are no
+			 * servers for this volume 
+			 */
 			firstError = CM_ERROR_NOSUCHVOLUME;
+		else
+			firstError = CM_ERROR_TIMEDOUT;
 	}
 	osi_Log1(afsd_logp, "cm_ConnByMServers returning %x", firstError);
     return firstError;
