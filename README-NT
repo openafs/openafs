@@ -128,18 +128,24 @@ by using Internet Explorer 5.x or higher.  (Active X controls are required)
 
 The header files that are required are found from a Microsoft SDK are:
 
-   netspi.h
-   npapi.h
+   netspi.h   (Windows 9x builds)
+   npapi.h    (Windows 2000,XP,2003 builds)
+   netcfgx.h  (NSIS Loopback Adapter installer - Windows 2000,XP,2003 builds)
+   netcfgn.h  (NSIS Loopback Adapter installer - Windows 2000,XP,2003 builds)
 
-These files come from Microsoft DDKs/SDKs as follows:
+These files come from the following Microsoft DDKs/SDKs:
 
-   January 1997 Windows NT Workstation DDK - /ddk/frc/network/inc/npapi.h
-   November 2001 Microsoft Platform SDK - install "samples" from "Core SDK"
-                              samples/winbase/security/winnt/logonnp/npapi.h
-   July 1998 Windows 95 DDK - net/inc/netmpr.h and net/inc/netspi.h
-   July 1999 Windows 98 DDK - src/net/inc/netmpr.h and src/net/inc/netspi.h
-                            - you need to install "Legacy and Related
-                              driver samples"
+   npapi.h:
+        Windows XP/2003 Platform SDK - include/
+
+   netcfgn.h, netcfgx.h:
+        Windows XP/2003 DDK - inc/wxp/
+
+   netmpr.h, netspi.h:
+       July 1998 Windows 95 DDK - net/inc/netmpr.h and net/inc/netspi.h
+       July 1999 Windows 98 DDK - src/net/inc/netmpr.h and src/net/inc/netspi.h
+                                - you need to install "Legacy and Related
+                                  driver samples"
 
 STEP D. Configure NTBUILD.BAT.
 
