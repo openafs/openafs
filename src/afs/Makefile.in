@@ -60,7 +60,7 @@ install:   ${DESTDIR}${includedir}/afs/afs.h  ${DESTDIR}${includedir}/afs/osi_in
 	esac
 	case ${SYS_NAME} in \
 		*linux* ) \
-			${INSTALL} ${MKAFS_OSTYPE}/osi_vfs.h ${DESTDIR}${includedir}/afs ;;\
+			${INSTALL} ${MKAFS_OSTYPE}/osi_vfs.h ${DESTDIR}${includedir}/afs || true ;;\
 		* ) \
 			echo No vfs headers to install for ${SYS_NAME};; \
 	esac
@@ -136,7 +136,7 @@ dest:   ${DEST}/include/afs/afs.h ${DEST}/include/afs/osi_inode.h ${DEST}/includ
 	esac
 	case ${SYS_NAME} in \
 		*linux* ) \
-			${INSTALL} ${MKAFS_OSTYPE}/osi_vfs.h ${DEST}/include/afs ;;\
+			${INSTALL} ${MKAFS_OSTYPE}/osi_vfs.h ${DEST}/include/afs || true;;\
 		* ) \
 			echo No vfs headers to install for ${SYS_NAME};; \
 	esac
