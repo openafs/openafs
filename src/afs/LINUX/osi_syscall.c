@@ -257,7 +257,7 @@ int osi_syscall_init(void)
 	    SYSCALL2POINTER afs_sys_call_table[_S(__NR_setgroups)];
 	((struct fptr *)sys_setgroupsp)->gp = kernel_gp;
 
-	afs_sys_call_table[_S(_NR_setgroups)] =
+	afs_sys_call_table[_S(__NR_setgroups)] =
 	    POINTER2SYSCALL((struct fptr *)afs_xsetgroups_stub)->ip;
     }
 
