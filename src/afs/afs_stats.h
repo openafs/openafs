@@ -189,7 +189,6 @@ struct afs_CMCallStats {
     afs_int32 C_shutdown_BKG;	/* afs_call.c*/
     afs_int32 C_shutdown_afstest;	/* afs_call.c*/
     afs_int32 C_SRXAFSCB_GetCE;	/* afs_callback.c*/
-    afs_int32 C_SRXAFSCB_GetCE64;	/* afs_callback.c*/
     afs_int32 C_ClearCallBack;	/* afs_callback.c*/
     afs_int32 C_SRXAFSCB_GetLock;	/* afs_callback.c*/
     afs_int32 C_SRXAFSCB_CallBack;	/* afs_callback.c*/
@@ -637,6 +636,7 @@ struct afs_CMCallStats {
     afs_int32 C_SRXAFSCB_GetLocalCell;	/* afs_callback.c*/
     afs_int32 C_afs_MarshallCacheConfig;	/* afs_callback.c*/
     afs_int32 C_SRXAFSCB_GetCacheConfig;	/* afs_callback.c*/
+    afs_int32 C_SRXAFSCB_GetCE64;	/* afs_callback.c*/
 };
 
 struct afs_CMMeanStats {
