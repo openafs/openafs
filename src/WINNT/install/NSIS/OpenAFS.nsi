@@ -708,18 +708,12 @@ skipremove:
   strcpy $REG_DATA_3  "RpcSs"
   Call RegWriteMultiStr
 
-!ifdef WINLOGON
   ; WinLogon Event Notification
-  ; Disabled because of last minute problems with the XP SP2 release final build
-  ; we are disabling the use of this functionality
   WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Asynchronous" 0
   WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Impersonate"  1
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "DLLName" "afslogon.dll"
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Logoff" "AFS_Logoff_Event"
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Startup" "AFS_Startup_Event"
-!else
-  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\AfsLogon"
-!endif
 
   SetRebootFlag true
   
