@@ -25,6 +25,8 @@
 
 #include <afs/param.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <malloc.h>
@@ -160,6 +162,7 @@ static struct timeval iomgr_badtv;
 static PROCESS iomgr_badpid;
 static void SignalIO(int fds, fd_set *rfds, fd_set *wfds, fd_set *efs,
 		    int code);
+static void SignalTimeout(int code, struct timeval *timeout);
 
 #ifdef AFS_DJGPP_ENV
 /* handle Netbios NCB completion */
@@ -217,7 +220,7 @@ static struct IoRequest *NewRequest()
 {
     struct IoRequest *request;
 
-    if (request=iorFreeList)
+    if ((request=iorFreeList))
 	iorFreeList = (struct IoRequest *) (request->result);
     else request = (struct IoRequest *) malloc(sizeof(struct IoRequest));
 
@@ -401,9 +404,6 @@ static int IOMGR(void *dummy)
 	struct TM_Elem *earliest;
 	struct timeval timeout, junk;
 	bool woke_someone;
-#ifndef AFS_NT40_ENV
-	int fds;
-#endif
 
 	FD_ZERO(&IOMGR_readfds);
 	FD_ZERO(&IOMGR_writefds);
