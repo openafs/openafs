@@ -7226,6 +7226,82 @@ init_sys_error_to_et(void)
 }
 
 afs_int32
+SRXAFS_CallBackRxConnAddr (struct rx_call * acall, afs_int32 *addr)
+{
+    Error errorCode = 0;
+    struct host *thost;
+    struct client *tclient;
+    static struct rx_securityClass *sc = 0;
+    int i,j;
+    struct rx_connection *tcon;
+    struct rx_connection *conn;
+    
+    if (errorCode = CallPreamble(acall, ACTIVECALL, &tcon))
+	    goto Bad_CallBackRxConnAddr1;
+    
+#ifndef __EXPERIMENTAL_CALLBACK_CONN_MOVING
+    errorCode = 1;
+#else
+
+    H_LOCK
+    tclient = h_FindClient_r(tcon);
+    thost = tclient->host;
+    
+    /* nothing more can be done */
+    if ( !thost->interface ) 
+	goto Bad_CallBackRxConnAddr;
+    
+    assert(thost->interface->numberOfInterfaces > 0 );
+    
+    /* the only address is the primary interface */
+    /* can't change when there's only 1 address, anyway */
+    if ( thost->interface->numberOfInterfaces == 1 ) 
+	goto Bad_CallBackRxConnAddr;
+    
+    /* initialise a security object only once */
+    if ( !sc )
+	sc = (struct rx_securityClass *) rxnull_NewClientSecurityObject();
+    
+    for ( i=0; i < thost->interface->numberOfInterfaces; i++)
+    {
+	    if ( *addr == thost->interface->addr[i] ) {
+		    break;
+	    }
+    }
+    
+    if ( *addr != thost->interface->addr[i] ) 
+	goto Bad_CallBackRxConnAddr;
+
+    conn = rx_NewConnection (thost->interface->addr[i],
+			     thost->port, 1, sc, 0);
+    rx_SetConnDeadTime(conn, 2); 
+    rx_SetConnHardDeadTime(conn, AFS_HARDDEADTIME); 
+    H_UNLOCK
+    errorCode = RXAFSCB_Probe(conn);
+    H_LOCK
+    if (!errorCode) {
+	if ( thost->callback_rxcon )
+	    rx_DestroyConnection(thost->callback_rxcon);
+	thost->callback_rxcon = conn;
+	thost->host           = addr;
+	rx_SetConnDeadTime(thost->callback_rxcon, 50);
+	rx_SetConnHardDeadTime(thost->callback_rxcon, AFS_HARDDEADTIME);
+	H_UNLOCK;
+	errorCode = CallPostamble(tcon, errorCode);
+	return errorCode;
+    } else {
+	rx_DestroyConnection(conn);
+    }	    
+#endif
+
+ Bad_CallBackRxConnAddr:
+    H_UNLOCK;
+    errorCode = CallPostamble(tcon, errorCode);
+ Bad_CallBackRxConnAddr1:
+    return errorCode;          /* failure */
+}
+
+afs_int32
 sys_error_to_et(afs_int32 in)
 {
     if (in == 0)

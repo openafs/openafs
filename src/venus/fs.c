@@ -2076,6 +2076,45 @@ ListAliasesCmd(struct cmd_syndesc *as)
 }
 
 static int
+CallBackRxConnCmd(struct cmd_syndesc *as)
+{
+    afs_int32 code;
+    struct ViceIoctl blob;
+    struct cmd_item *ti;
+    afs_int32 hostAddr;
+    struct hostent *thp;
+    char *tp;
+    int setp;
+    
+    ti = as->parms[0].items;
+    setp = 1;
+    if (ti) {
+        thp = hostutil_GetHostByName(ti->data);
+	if (!thp) {
+	    fprintf(stderr, "host %s not found in host table.\n", ti->data);
+	    return 1;
+	}
+	else memcpy(&hostAddr, thp->h_addr, sizeof(afs_int32));
+    } else {
+        hostAddr = 0;   /* means don't set host */
+	setp = 0;       /* aren't setting host */
+    }
+    
+    /* now do operation */
+    blob.in_size = sizeof(afs_int32);
+    blob.out_size = sizeof(afs_int32);
+    blob.in = (char *) &hostAddr;
+    blob.out = (char *) &hostAddr;
+    
+    code = pioctl(0, VIOC_CBADDR, &blob, 1);
+    if (code < 0) {
+	Die(errno, 0);
+	return 1;
+    }
+    return 0;
+}
+
+static int
 NewCellCmd(struct cmd_syndesc *as)
 {
     afs_int32 code, linkedstate = 0, size = 0, *lp;
@@ -3417,6 +3456,9 @@ defect 3069
     cmd_AddParm(ts, "-disable", CMD_FLAG, CMD_OPTIONAL, "Disable RX stats");
     cmd_AddParm(ts, "-clear", CMD_FLAG, CMD_OPTIONAL, "Clear RX stats");
 
+    ts = cmd_CreateSyntax("setcbaddr", CallBackRxConnCmd, 0, "configure callback connection address");
+    cmd_AddParm(ts, "-addr", CMD_SINGLE, CMD_OPTIONAL, "host name or address");
+
     code = cmd_Dispatch(argc, argv);
     if (rxInitDone)
 	rx_Finalize();
@@ -3773,3 +3815,4 @@ RxStatPeerCmd(struct cmd_syndesc *as)
 
     return 0;
 }
+
