@@ -1,4 +1,27 @@
 Since 1.3.77:
+  * OpenAFS for Windows has failed to work at sites which are 
+    utilizing a cross-realm trust between an MIT/Heimdal realm
+    and a multi-domain Windows forest when the workstation being
+    accessed is not located in the root domain.  This is caused 
+    by a bug in the workstation which was triggered after the 
+    introduction of Windows 2003 Server.  When the bug is triggered,
+    the workstation attempts to authenticate users to afsd_service.exe
+    by contacting the Domain Controller instead of using the 
+    LSA loopback authentication mechanism.
+
+    One of the reasons this bug occurs is because the workstation    
+    does not have a reliable way of knowing that the service whose
+    netbios name is "AFS" is located on the workstation.  This will
+    be fixed starting in Longhorn Beta 1 by Microsoft.  The 
+    "BackConnectionHostNames" registry value will be used to 
+    indicate that the authentications to that service name should
+    be performed using the loopback authentication mechanism.
+
+    In the meantime, when Logon Caching is enabled, we can force
+    afsd_service.exe to authenticate using the logon cache before
+    contacting the Domain Controller.  This will work with both
+    password and smart card based logons.  
+
   * The allDown logic in cm_ConnByMServers() was wrong.  The allDown
     flag should not be cleared if a volume's server reference is 
     marked as "offline".  In the case where all of the volume's 

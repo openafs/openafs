@@ -543,7 +543,10 @@ Where: -long   print all info
        -addrs  print only host interfaces
        -cache  print only cache configuration
 
-
+37.  If you are a site which utilizes MIT/Heimdal Kerberos principals
+to logon to Windows via a cross-realm relationship with a multi-domain
+Windows forest, you must enable Windows logon caching unless the 
+workstation is Longhorn Beta 1 or later.
 
 ------------------------------------------------------------------------
 
