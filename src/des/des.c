@@ -72,7 +72,7 @@ pthread_mutex_t rxkad_stats_mutex;
 /* encrypt == 0  ==> decrypt, else encrypt */
 
 afs_int32
-des_ecb_encrypt(afs_uint32 * clear, afs_uint32 * cipher,
+des_ecb_encrypt(void * clear, void * cipher,
 		register des_key_schedule schedule, int encrypt)
 {
     /* better pass 8 bytes, length not checked here */
@@ -137,11 +137,11 @@ des_ecb_encrypt(afs_uint32 * clear, afs_uint32 * cipher,
 #endif
     {
 	if (clear)
-	    L1 = *clear++;
+	    L1 = *((afs_int32 *)clear)++;
 	else
 	    L1 = 0;
 	if (clear)
-	    R1 = *clear;
+	    R1 = *((afs_int32 *)clear);
 	else
 	    R1 = 0;
     }
@@ -446,8 +446,8 @@ des_ecb_encrypt(afs_uint32 * clear, afs_uint32 * cipher,
     } else
 #endif
     {
-	*cipher++ = L2;
-	*cipher = R2;
+	*((afs_int32 *)cipher)++ = L2;
+	*((afs_int32 *)cipher) = R2;
     }
 
 #ifdef DEBUG

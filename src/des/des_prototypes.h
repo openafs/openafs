@@ -18,19 +18,19 @@ extern void test_set(FILE * stream, const char *src, int testbit,
 extern int des_debug;
 
 /* cbc_encrypt.c */
-extern afs_int32 des_cbc_encrypt(des_cblock * in, des_cblock * out,
+extern afs_int32 des_cbc_encrypt(void * in, void * out,
 				 register afs_int32 length,
 				 des_key_schedule key, des_cblock * iv,
 				 int encrypt);
 
 /* pcbc_encrypt.c */
-extern afs_int32 des_pcbc_encrypt(des_cblock * in, des_cblock * out,
+extern afs_int32 des_pcbc_encrypt(void * in, void * out,
 				  register afs_int32 length,
 				  des_key_schedule key, des_cblock * iv,
 				  int encrypt);
 
 /* des.c */
-extern afs_int32 des_ecb_encrypt(afs_uint32 * clear, afs_uint32 * cipher,
+extern afs_int32 des_ecb_encrypt(void * clear, void * cipher,
 				 register des_key_schedule schedule,
 				 int encrypt);
 
