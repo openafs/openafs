@@ -383,7 +383,7 @@ install_STATIC.libafs: ${LIBAFSNONFSA}
 ${LIBAFSNONFSA}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(AR) cru  $@ $?
 
-LIBAFSNONFSO = libaf.nonfs.o
+LIBAFSNONFSO = libafs.nonfs.o
 
 # MODLOAD.libafs: ${LIBAFSNONFSO} ${COPYFILES} ${LINKFILES}
 MODLOAD.libafs: ${LIBAFSNONFSO}
