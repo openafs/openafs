@@ -1065,7 +1065,7 @@ int rx_WritevAlloc(call, iov, nio, maxio, nbytes)
     int maxio;
     int nbytes;
 {
-    int bytes;
+    char bytes;
     SPLVAR;
 
     NETPRI;
