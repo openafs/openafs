@@ -47,6 +47,7 @@ afs_int32 *afs_dchashTbl;	/*Data cache hash table */
 afs_int32 *afs_dvnextTbl;	/*Dcache hash table links */
 afs_int32 *afs_dcnextTbl;	/*Dcache hash table links */
 struct dcache **afs_indexTable;	/*Pointers to dcache entries */
+afs_hyper_t *afs_indexTimes;	/*Dcache entry Access times */
 afs_int32 *afs_indexUnique;	/*dcache entry Fid.Unique */
 unsigned char *afs_indexFlags;	/*(only one) Is there data there? */
 afs_hyper_t afs_indexCounter;	/*Fake time for marking index
@@ -427,11 +428,12 @@ afs_GetDownD(int anumber, int *aneedSpace)
 		/* skip if dirty or already free */
 		continue;
 	    }
-	    if (tdc) {
-		if (tdc->refCount != 0)         /* Referenced; can't use it! */
-		    continue;
-                hset(tdc->atime, vtime);
+	    tdc = afs_indexTable[i];
+	    if (tdc && (tdc->refCount != 0)) {
+		/* Referenced; can't use it! */
+		continue;
 	    }
+	    hset(vtime, afs_indexTimes[i]);
 
 	    /* if we've already looked at this one, skip it */
 	    if (afs_indexFlags[i] & IFFlag)
@@ -1221,7 +1223,7 @@ afs_FindDCache(register struct vcache *avc, afs_size_t abyte)
     }
     MReleaseWriteLock(&afs_xdcache);
     if (index != NULLIDX) {
-	hset(tdc->atime, afs_indexCounter);
+	hset(afs_indexTimes[tdc->index], afs_indexCounter);
 	hadd32(afs_indexCounter, 1);
 	return tdc;
     } else
@@ -1885,7 +1887,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
     if (aflags & 2) {
 	/* don't need data, just a unique dcache entry */
 	ObtainWriteLock(&afs_xdcache, 608);
-	hset(tdc->atime, afs_indexCounter);
+	hset(afs_indexTimes[tdc->index], afs_indexCounter);
 	hadd32(afs_indexCounter, 1);
 	ReleaseWriteLock(&afs_xdcache);
 
@@ -2478,7 +2480,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 
     if (tdc) {
 	MObtainWriteLock(&afs_xdcache, 602);
-	hset(tdc->atime, afs_indexCounter);
+	hset(afs_indexTimes[tdc->index], afs_indexCounter);
 	hadd32(afs_indexCounter, 1);
 	MReleaseWriteLock(&afs_xdcache);
 
@@ -3091,7 +3093,7 @@ afs_InitCacheFile(char *afile, ino_t ainode)
 	 * Initialize index times to file's mod times; init indexCounter
 	 * to max thereof
 	 */
-	hset32(tdc->atime, tstat.atime);
+	hset32(afs_indexTimes[index], tstat.atime);
 	if (hgetlo(afs_indexCounter) < tstat.atime) {
 	    hset32(afs_indexCounter, tstat.atime);
 	}
@@ -3196,6 +3198,9 @@ afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
     afs_indexTable = (struct dcache **)
 	afs_osi_Alloc(sizeof(struct dcache *) * afiles);
     memset((char *)afs_indexTable, 0, sizeof(struct dcache *) * afiles);
+    afs_indexTimes =
+	(afs_hyper_t *) afs_osi_Alloc(afiles * sizeof(afs_hyper_t));
+    memset((char *)afs_indexTimes, 0, afiles * sizeof(afs_hyper_t));
     afs_indexUnique =
 	(afs_int32 *) afs_osi_Alloc(afiles * sizeof(afs_uint32));
     memset((char *)afs_indexUnique, 0, afiles * sizeof(afs_uint32));
@@ -3208,6 +3213,7 @@ afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
     memset((char *)tdp, 0, aDentries * sizeof(struct dcache));
 #ifdef	KERNEL_HAVE_PIN
     pin((char *)afs_indexTable, sizeof(struct dcache *) * afiles);	/* XXX */
+    pin((char *)afs_indexTimes, sizeof(afs_hyper_t) * afiles);	/* XXX */
     pin((char *)afs_indexFlags, sizeof(char) * afiles);	/* XXX */
     pin((char *)afs_indexUnique, sizeof(afs_int32) * afiles);	/* XXX */
     pin((char *)tdp, aDentries * sizeof(struct dcache));	/* XXX */
@@ -3244,6 +3250,7 @@ shutdown_dcache(void)
     afs_osi_Free(afs_dvnextTbl, afs_cacheFiles * sizeof(afs_int32));
     afs_osi_Free(afs_dcnextTbl, afs_cacheFiles * sizeof(afs_int32));
     afs_osi_Free(afs_indexTable, afs_cacheFiles * sizeof(struct dcache *));
+    afs_osi_Free(afs_indexTimes, afs_cacheFiles * sizeof(afs_hyper_t));
     afs_osi_Free(afs_indexUnique, afs_cacheFiles * sizeof(afs_uint32));
     afs_osi_Free(afs_indexFlags, afs_cacheFiles * sizeof(u_char));
     afs_osi_Free(afs_Initial_freeDSList,
@@ -3252,6 +3259,7 @@ shutdown_dcache(void)
     unpin((char *)afs_dcnextTbl, afs_cacheFiles * sizeof(afs_int32));
     unpin((char *)afs_dvnextTbl, afs_cacheFiles * sizeof(afs_int32));
     unpin((char *)afs_indexTable, afs_cacheFiles * sizeof(struct dcache *));
+    unpin((char *)afs_indexTimes, afs_cacheFiles * sizeof(afs_hyper_t));
     unpin((char *)afs_indexUnique, afs_cacheFiles * sizeof(afs_uint32));
     unpin((u_char *) afs_indexFlags, afs_cacheFiles * sizeof(u_char));
     unpin(afs_Initial_freeDSList, afs_dcentries * sizeof(struct dcache));
