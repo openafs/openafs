@@ -142,9 +142,9 @@ static int afs_root(struct super_block *afsp)
 		/* setup super_block and mount point inode. */
 		afs_globalVp = tvp;
 #if defined(AFS_LINUX24_ENV)
-		afsp->s_root = d_alloc_root(AFSTOV(tvp));
+		afsp->s_root = d_alloc_root(AFSTOI(tvp));
 #else
-		afsp->s_root = d_alloc_root(AFSTOV(tvp), NULL);
+		afsp->s_root = d_alloc_root(AFSTOI(tvp), NULL);
 #endif
 		afsp->s_root->d_op = &afs_dentry_operations;
 	    } else
@@ -188,8 +188,8 @@ int afs_notify_change(struct dentry *dp, struct iattr* iattrp)
     VATTR_NULL(&vattr);
     iattr2vattr(&vattr, iattrp); /* Convert for AFS vnodeops call. */
     update_inode_cache(ip, &vattr);
-    code = afs_setattr(VTOAFS(ip), &vattr, credp);
-    afs_CopyOutAttrs(VTOAFS(ip), &vattr);
+    code = afs_setattr(ITOAFS(ip), &vattr, credp);
+    afs_CopyOutAttrs(ITOAFS(ip), &vattr);
     /* Note that the inode may still not have all the correct info. But at
      * least we've got the newest version of what was supposed to be set.
      */
@@ -242,7 +242,7 @@ void afs_write_inode(struct inode *ip)
 
 void afs_delete_inode(struct inode *ip)
 {
-    struct vcache *vc = VTOAFS(ip);
+    struct vcache *vc = ITOAFS(ip);
 
     AFS_GLOCK();
     osi_clear_inode(ip);

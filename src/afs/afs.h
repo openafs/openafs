@@ -574,6 +574,10 @@ extern afs_uint32 afs_stampValue;		/* stamp for pair's usage */
 
 #define VTOAFS(V) ((struct vcache*)(V))
 #define AFSTOV(V) (&(V)->v)
+#ifdef AFS_LINUX22_ENV
+#define ITOAFS(V) ((struct vcache*)(V))
+#define AFSTOI(V) (struct inode *)(&(V)->v)
+#endif
 
 /* INVARIANTs: (vlruq.next != NULL) == (vlruq.prev != NULL)
  *             nextfree => !vlruq.next && ! vlruq.prev
