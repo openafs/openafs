@@ -154,6 +154,9 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 		if [ "$$m" = "MP" ] ; then \
 			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
 			TARG="libafs.mp" ; \
+		elif [ "$$m" = "EP" ] ; then \
+			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
+			TARG="libafs.ep" ; \
 		else  \
 			SMP_DEF="@RHCONFIG_SP@ ${LOCAL_SMP_DEF}" ; \
 			TARG=libafs ; \
@@ -165,22 +168,28 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 
 linux_compdirs_libafs: libafs
 linux_compdirs_libafs.mp: libafs.mp
+linux_compdirs_libafs.ep: libafs.ep
 linux_instdirs_libafs: install_libafs
 linux_instdirs_libafs.mp: install_libafs.mp
+linux_instdirs_libafs.ep: install_libafs.ep
 linux_destdirs_libafs: dest_libafs
 linux_destdirs_libafs.mp: dest_libafs.mp
+linux_destdirs_libafs.ep: dest_libafs.ep
 
 
 # Below this line are targets when in the COMMON directory:
 # For Linux there is no kernel NFS server.
 LIBAFS = libafs-${CLIENT}.o
 LIBAFS_MP = libafs-${CLIENT}.mp.o
+LIBAFS_EP = libafs-${CLIENT}.ep.o
 
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
 INST_LIBAFS_MP = ${DESTDIR}${afskerneldir}/${LIBAFS_MP}
+INST_LIBAFS_EP = ${DESTDIR}${afskerneldir}/${LIBAFS_EP}
 
 DEST_LIBAFS = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS}
 DEST_LIBAFS_MP = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_MP}
+DEST_LIBAFS_EP = ${DEST}/root.client/usr/vice/etc/modload/${LIBAFS_EP}
 
 
 libafs:	$(LIBAFS) 
@@ -188,6 +197,9 @@ libafs:	$(LIBAFS)
 
 libafs.mp: $(LIBAFS_MP)
 	echo MP Build Complete
+
+libafs.ep: $(LIBAFS_EP)
+	echo EP Build Complete
 
 ${LIBAFS}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(RM) -f $@
@@ -197,11 +209,18 @@ ${LIBAFS_MP}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(RM) -f $@
 	$(LD) -r -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)
 
+${LIBAFS_EP}: $(AFSAOBJS) $(AFSNONFSOBJS)
+	$(RM) -f $@
+	$(LD) -r -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)
+
 install_libafs:	$(INST_LIBAFS) 
 	echo SP Install Complete
 
 install_libafs.mp: $(INST_LIBAFS_MP)
 	echo MP Install Complete
+
+install_libafs.ep: $(INST_LIBAFS_EP)
+	echo EP Install Complete
 
 dest_libafs:	$(DEST_LIBAFS) 
 	echo SP Install Complete
@@ -209,16 +228,25 @@ dest_libafs:	$(DEST_LIBAFS)
 dest_libafs.mp: $(DEST_LIBAFS_MP)
 	echo MP Install Complete
 
+dest_libafs.ep: $(DEST_LIBAFS_EP)
+	echo EP Install Complete
+
 $(INST_LIBAFS): $(LIBAFS)
 	${INSTALL} -f $? $@
 
 $(INST_LIBAFS_MP): $(LIBAFS_MP)
 	${INSTALL} -f $? $@
 
+$(INST_LIBAFS_EP): $(LIBAFS_EP)
+	${INSTALL} -f $? $@
+
 $(DEST_LIBAFS): $(LIBAFS)
 	${INSTALL} -f $? $@
 
 $(DEST_LIBAFS_MP): $(LIBAFS_MP)
+	${INSTALL} -f $? $@
+
+$(DEST_LIBAFS_EP): $(LIBAFS_EP)
 	${INSTALL} -f $? $@
 
 
