@@ -1,25 +1,47 @@
-#ifndef UKERNEL
-/* This section for kernel libafs compiles only */
-
+/* NetBSD shared section */
 
 #ifndef	AFS_PARAM_COMMON_H
-#define	AFS_PARAM_COMMON_H
+#define	AFS_PARAM_COMMON_H 1
 
-#ifndef ASSEMBLER
-#include <sys/param.h>
+#define AFS_64BIT_ENV  1
+#define AFS_NAMEI_ENV  1	/* User space interface to file system */
+#define AFS_64BIT_IOPS_ENV 1	/* Needed for NAMEI */
+#define AFS_64BIT_CLIENT 1
+
+#define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
+#define AFS_SYSCALL 210
+
+#ifndef	MOUNT_AFS
+#define	MOUNT_AFS AFS_MOUNT_AFS
 #endif
 
 #define AFS_XBSD_ENV 1		/* {Free,Open,Net}BSD */
 
-#define AFS_64BIT_ENV  1
-#define AFS_NAMEI_ENV     1	/* User space interface to file system */
-#define AFS_64BIT_IOPS_ENV 1	/* Needed for NAMEI */
 #define AFS_NBSD_ENV 1
 #define AFS_NBSD15_ENV 1
 #define AFS_NBSD16_ENV 1
 #define AFS_NBSD20_ENV 1
 #define AFS_NONFSTRANS 1
 #define AFS_KERBEROS_ENV 1
+
+#define AFS_VFSINCL_ENV 1
+
+#define AFS_HAVE_FFS            1	/* Use system's ffs. */
+
+#if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__) && !defined(IGNORE_STDS_H)
+#if __NetBSD_Version__ >= 200040000
+#define AFS_HAVE_STATVFS    1	/* System supports statvfs */
+#else
+#define AFS_HAVE_STATVFS    0	/* System doesn't supports statvfs */
+#endif
+#endif
+
+#ifndef UKERNEL
+
+#if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__) && !defined(IGNORE_STDS_H)
+#include <sys/param.h>
+#endif
+
 #define FTRUNC O_TRUNC
 
 #define IUPD 0x0010
@@ -36,24 +58,7 @@
 
 #define AFS_VM_RDWR_ENV	1
 #define AFS_VFS_ENV	1
-#define AFS_VFSINCL_ENV 1
 #define AFS_GREEDY43_ENV	1
-#define AFS_ENV  	1
-
-#define AFS_MOUNT_AFS	"afs"
-#define AFS_SYSCALL 210
-
-
-#ifndef MOUNT_UFS
-#define MOUNT_UFS "ufs"
-#endif
-
-#ifndef	MOUNT_AFS
-#define	MOUNT_AFS AFS_MOUNT_AFS
-#endif
-
-#define AFS_HAVE_FFS            1	/* Use system's ffs. */
-#define AFS_HAVE_STATVFS	0	/* System supports statvfs */
 
 #define AFS_GCPAGS	        0	/* if nonzero, garbage collect PAGs */
 #define AFS_USE_GETTIMEOFDAY    1	/* use gettimeofday to implement rx clock */
@@ -96,7 +101,7 @@
 #define	VN_RELE(vp)	vrele(((struct vnode *)(vp)))
 #define	VN_HOLD(vp)	VREF(((struct vnode *)(vp)))
 
-#if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__)
+#if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__) && !defined(IGNORE_STDS_H)
 enum vcexcl { NONEXCL, EXCL };
 
 #ifdef KERNEL
@@ -108,14 +113,50 @@ enum vcexcl { NONEXCL, EXCL };
 #endif
 #endif /* KERNEL */
 
-#endif /* ! ASSEMBLER & ! __LANGUAGE_ASSEMBLY__ */
+#endif /* ! ASSEMBLER & ! __LANGUAGE_ASSEMBLY__ && !defined(IGNORE_STDS_H) */ 
 #endif /* _KERNEL */
-
-#endif /* AFS_PARAM_COMMON_H */
 
 #else /* !defined(UKERNEL) */
 
+
 /* This section for user space compiles only */
 
+#define UKERNEL			1	/* user space kernel */
+
+#include <afs/afs_sysnames.h>
+
+#define AFS_USERSPACE_IP_ADDR 1
+#define RXK_LISTENER_ENV      1
+#define AFS_GCPAGS	      0	/* if nonzero, garbage collect PAGs */
+
+#define	afsio_iov	uio_iov
+#define	afsio_iovcnt	uio_iovcnt
+#define	afsio_offset	uio_offset
+#define	afsio_seg	uio_segflg
+#define	afsio_fmode	uio_fmode
+#define	afsio_resid	uio_resid
+#define	AFS_UIOSYS	UIO_SYSSPACE
+#define	AFS_UIOUSER	UIO_USERSPACE
+#define	AFS_CLBYTES	MCLBYTES
+#define	AFS_MINCHANGE	2
+#define	VATTR_NULL	usr_vattr_null
+
+#define AFS_DIRENT
+#ifndef CMSERVERPREF
+#define CMSERVERPREF
+#endif
+
+#if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__) && !defined(IGNORE_STDS_H)
+#include <limits.h>
+#include <sys/param.h>
+#include <sys/types.h>
+#include <sys/mount.h>
+#include <sys/fcntl.h>
+#include <netinet/in.h>
+#include <sys/uio.h>
+#include <sys/socket.h>
+#endif
 
 #endif /* !defined(UKERNEL) */
+
+#endif /* AFS_PARAM_COMMON_H */

@@ -52,7 +52,7 @@ process.o	: process.s process.i386.s process.c
 		$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} -I${TOP_INCDIR} ${srcdir}/process.s;; \
 	i386_*bsd*) \
 		cp ${srcdir}/process.i386.s process.S ; \
-		${CCOBJ} -E -I${srcdir} -I${TOP_INCDIR} process.S >process.ss ; \
+		${CCOBJ} -DIGNORE_STDS_H -E -I${srcdir} -I${TOP_INCDIR} process.S > process.ss ; \
 		${AS} process.ss -o process.o ;  \
 		$(RM) -f process.S ;;\
 	ncrx86_* | sunx86_*) \
