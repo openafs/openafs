@@ -7,12 +7,25 @@
 ;MultiLanguage Example Script
 ;Written by Joost Verburg
 
-!include nsi-includes.nsi
-!ifndef v2.0b4
+; Read in the environment information
+!include ${INCLUDEDIR}\nsi-includes.nsi
+; Define DEBUG if building a DEBUG installer
+
+; This version compiles with NSIS v2.0b3 or NSIS v2.0b4
+
+!ifndef v2.0b4       ; v2.0b3
+!ifndef DEBUG        ; !DEBUG
 !define MUI_PRODUCT "OpenAFS" ;Define your own software name here
+!else                ; DEBUG on v2.0b3
+!define MUI_PRODUCT "OpenAFS Checked/Debug"
+!endif               ; End DEBUG
 !define MUI_VERSION ${AFS_VERSION}
-!else
-Name "OpenAFS ${AFS_VERSION}"
+!else                ; v2.0b4
+!ifndef DEBUG        ; !DEBUG on v2.0b4
+Name "OpenAFS ${AFS_VERSION} ${__DATE__} ${__TIME__}"
+!else                ; DEBUG on v2.0b4
+Name "OpenAFS ${AFS_VERSION} ${__DATE__} ${__TIME__} Checked/Debug"
+!endif               ; End DEBUG/!DEBUG
 VIProductVersion "${AFS_VERSION}.00"
 VIAddVersionKey "ProductName" "OpenAFS"
 VIAddVersionKey "CompanyName" "OpenAFS.org"
@@ -21,12 +34,10 @@ VIAddVersionKey "FileVersion" ${AFS_VERSION}
 VIAddVersionKey "FileDescription" "OpenAFS for Windows Installer"
 VIAddVersionKey "LegalCopyright" "(C)2003"
 !ifdef DEBUG
-VIAddVersionKey "PrivateBuild" "Debug"
-!endif
-!endif
+VIAddVersionKey "PrivateBuild" "Checked/Debug"
+!endif               ; End DEBUG
+!endif               ; End v2.0b4
 
-; Define DEBUG if building a DEBUG installer
-;!define DEBUG 1
 
 !include "MUI.nsh"
 !include Sections.nsh
@@ -36,9 +47,9 @@ VIAddVersionKey "PrivateBuild" "Debug"
 
   ;General
 !ifndef DEBUG
-  OutFile "OpenAFSforWindows.exe"
+  OutFile "${AFS_DESTDIR}\WinInstall\OpenAFSforWindows.exe"
 !else
-  OutFile "OpenAFSforWindows-DEBUG.exe"
+  OutFile "${AFS_DESTDIR}\WinInstall\OpenAFSforWindows-DEBUG.exe"
 !endif
   SilentInstall normal
   SetCompressor bzip2
@@ -54,7 +65,7 @@ VIAddVersionKey "PrivateBuild" "Debug"
   CRCCheck force
 
   ;Folder selection page
-  InstallDir "$PROGRAMFILES\OpenAFS\AFS"
+  InstallDir "$PROGRAMFILES\OpenAFS"      ; Install to shorter path
   
   ;Remember install folder
   InstallDirRegKey HKCU "Software\TransarcCorporation" ""
@@ -89,7 +100,7 @@ VIAddVersionKey "PrivateBuild" "Debug"
   !define MUI_UNCONFIRMPAGE
 
   
-!IFNDEF v2.0b4
+!IFNDEF v2.0b4       ; v2.0b3
   !insertmacro MUI_PAGECOMMAND_WELCOME
  ;!insertmacro MUI_PAGECOMMAND_LICENSE
   !insertmacro MUI_PAGECOMMAND_COMPONENTS
@@ -98,7 +109,7 @@ VIAddVersionKey "PrivateBuild" "Debug"
   Page custom AFSPageGetCellName
   !insertmacro MUI_PAGECOMMAND_INSTFILES
   !insertmacro MUI_PAGECOMMAND_FINISH
-!ELSE
+!ELSE                ; v2.0b4
   !insertmacro MUI_PAGE_WELCOME
   !insertmacro MUI_PAGE_COMPONENTS
   !insertmacro MUI_PAGE_DIRECTORY
@@ -194,16 +205,16 @@ VIAddVersionKey "PrivateBuild" "Debug"
 !endif
   LangString DESC_SecServer ${LANG_PORTUGUESEBR} "OpenAFS Server: Allows you to run an AFS file server."
   
-  LangString DESC_SecControl ${LANG_ENGLISH} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
-  LangString DESC_SecControl ${LANG_GERMAN} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
-  LangString DESC_SecControl ${LANG_SPANISH} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
-  LangString DESC_SecControl ${LANG_SIMPCHINESE} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
-  LangString DESC_SecControl ${LANG_TRADCHINESE} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
-  LangString DESC_SecControl ${LANG_JAPANESE} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
+  LangString DESC_SecControl ${LANG_ENGLISH} "OpenAFS Control Center: GUI utilities for managing and configuring AFS servers."
+  LangString DESC_SecControl ${LANG_GERMAN} "OpenAFS Control Center: GUI utilities for managing and configuring AFS servers."
+  LangString DESC_SecControl ${LANG_SPANISH} "OpenAFS Control Center: GUI utilities for managing and configuring AFS servers."
+  LangString DESC_SecControl ${LANG_SIMPCHINESE} "OpenAFS Control Center: GUI utilities for managing and configuring AFS servers."
+  LangString DESC_SecControl ${LANG_TRADCHINESE} "OpenAFS Control Center: GUI utilities for managing and configuring AFS servers."
+  LangString DESC_SecControl ${LANG_JAPANESE} "OpenAFS Control Center: GUI utilities for managing and configuring AFS servers."
 !ifdef v2.0b4  
-  LangString DESC_SecControl ${LANG_KOREAN} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
+  LangString DESC_SecControl ${LANG_KOREAN} "OpenAFS Control Center: GUI utilities for managing and configuring AFS servers."
 !endif
-  LangString DESC_SecControl ${LANG_PORTUGUESEBR} "OpenAFS Control Center: GUI utilities for managing and configuring AFS."
+  LangString DESC_SecControl ${LANG_PORTUGUESEBR} "OpenAFS Control Center: GUI utilities for managing and configuring AFS servers."
   
   LangString DESC_SecDocs ${LANG_ENGLISH} "Supplemental Documentation: Additional documentation for using OpenAFS."
   LangString DESC_SecDocs ${LANG_GERMAN} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
@@ -228,6 +239,28 @@ VIAddVersionKey "PrivateBuild" "Debug"
 !endif
   LangString CellError ${LANG_PORTUGUESEBR} "You must specify a valid CellServDB file to copy during the install"
   
+  LangString CellNameError ${LANG_ENGLISH} "You must specify a cell name for your client to use."
+  LangString CellNameError ${LANG_GERMAN} "You must specify a cell name for your client to use."
+  LangString CellNameError ${LANG_SPANISH} "You must specify a cell name for your client to use."
+  LangString CellNameError ${LANG_SIMPCHINESE} "You must specify a cell name for your client to use."
+  LangString CellNameError ${LANG_TRADCHINESE} "You must specify a cell name for your client to use."
+  LangString CellNameError ${LANG_JAPANESE} "You must specify a cell name for your client to use."
+!ifdef v2.0b4
+  LangString CellNameError ${LANG_KOREAN} "You must specify a cell name for your client to use."
+!endif
+  LangString CellNameError ${LANG_PORTUGUESEBR} "You must specify a cell name for your client to use."
+  
+  LangString URLError ${LANG_ENGLISH} "You must specify a URL if you choose the option to download the CellServDB."
+  LangString URLError ${LANG_GERMAN} "You must specify a URL if you choose the option to download the CellServDB."
+  LangString URLError ${LANG_SPANISH} "You must specify a URL if you choose the option to download the CellServDB."
+  LangString URLError ${LANG_SIMPCHINESE} "You must specify a URL if you choose the option to download the CellServDB."
+  LangString URLError ${LANG_TRADCHINESE} "You must specify a URL if you choose the option to download the CellServDB."
+  LangString URLError ${LANG_JAPANESE} "You must specify a URL if you choose the option to download the CellServDB."
+!ifdef v2.0b4
+  LangString URLError ${LANG_KOREAN} "You must specify a URL if you choose the option to download the CellServDB."
+!endif
+  LangString URLError ${LANG_PORTUGUESEBR} "You must specify a URL if you choose the option to download the CellServDB."
+
   
 ; Upgrade/re-install strings
    LangString UPGRADE_CLIENT ${LANG_ENGLISH} "Upgrade AFS Client"
@@ -686,7 +719,14 @@ DontUseFile:
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\${AFS_VERSION}" "MajorVersion" ${AFS_MAJORVERSION}
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\${AFS_VERSION}" "MinorVersion" ${AFS_MINORVERSION}
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\${AFS_VERSION}" "PatchLevel" ${AFS_PATCHLEVEL}
-
+!ifdef DEBUG
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "Debug" 1
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Client\${AFS_VERSION}" "Debug" 1
+!else
+   ; Delete the DEBUG string
+   DeleteRegValue HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "Debug"
+   DeleteRegValue HKLM "${AFS_REGKEY_ROOT}\AFS Client\${AFS_VERSION}" "Debug"
+!endif
    ; Set network settings
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\NetBT\Parameters" "SmbDeviceEnabled" 0
   
@@ -725,7 +765,12 @@ skipremove:
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon" "(Default)" ""
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "AuthentProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "Class" 2
-  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "LogonOptions" 0
+  ReadINIStr $R0 $1 "Field 7" "State"
+  ReadINIStr $R1 $1 "Field 9" "State"
+  ; Complicated way to do $R1 = ($R1 *2) + $R0
+  IntOp $R2 $R1 * 2
+  IntOp $R1 $R2 + $R0
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "LogonOptions" $R1
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "LogonScript" "$INSTDIR\Client\Program\afscreds.exe -:%s -x"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "Name" "OpenAFSDaemon"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "ProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
@@ -733,10 +778,12 @@ skipremove:
   ;Write cell name
   ReadINIStr $R0 $1 "Field 2" "State"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "Cell" $R0
+  ReadINIStr $R0 $1 "Field 3" "State"
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "ShowTrayIcon" 1
-  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "SecurityLevel" 1  
-  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "FreelanceClient" 1  
-  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "UseDNS" 0  
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "SecurityLevel" $R0
+  ReadINIStr $R0 $1 "Field 5" "State"  
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "FreelanceClient" $R0
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "UseDNS" 0
   SetRebootFlag true
   
   WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -844,7 +891,14 @@ Section "AFS Server" SecServer
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\${AFS_VERSION}" "MajorVersion" ${AFS_MAJORVERSION}
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\${AFS_VERSION}" "MinorVersion" ${AFS_MINORVERSION}
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\${AFS_VERSION}" "PatchLevel" ${AFS_PATCHLEVEL}
-
+!ifdef DEBUG
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "Debug" 1
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Server\${AFS_VERSION}" "Debug" 1
+!else
+   ; Delete the DEBUG string
+   DeleteRegValue HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "Debug"
+   DeleteRegValue HKLM "${AFS_REGKEY_ROOT}\AFS Server\${AFS_VERSION}" "Debug"
+!endif
   ; Install the service
   SetOutPath "$INSTDIR\Common"
   File "${AFS_WININSTALL_DIR}\Service.exe"
@@ -922,7 +976,14 @@ Section "AFS Control Center" SecControl
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\${AFS_VERSION}" "MajorVersion" ${AFS_MAJORVERSION}
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\${AFS_VERSION}" "MinorVersion" ${AFS_MINORVERSION}
   WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\${AFS_VERSION}" "PatchLevel" ${AFS_PATCHLEVEL}
-  
+!ifdef DEBUG
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "Debug" 1
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\${AFS_VERSION}" "Debug" 1
+!else
+   ; Delete the DEBUG string
+   DeleteRegValue HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "Debug"
+   DeleteRegValue HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\${AFS_VERSION}" "Debug"
+!endif
 
   ;Write start menu entries
   CreateDirectory "$SMPROGRAMS\OpenAFS\Control Center"
@@ -1249,7 +1310,34 @@ DefaultOptions:
 end:
 	Pop $0
   
+   Push $R0
   
+  ; See if we can set a default installation path...
+  ReadRegStr $R0 HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion" "PathName"
+  StrCmp $R0 "" TryServer
+  Push $R0
+  Call GetParent
+  Call GetParent
+  Pop $R0
+  StrCpy $INSTDIR $R0
+  goto Nope
+  
+TryServer:
+  ReadRegStr $R0 HKLM "${AFS_REGKEY_ROOT}\AFS Server\CurrentVersion" "PathName"
+  StrCmp $R0 "" TryControl
+  Push $R0
+  Call GetParent
+  Pop $R0
+  StrCpy $INSTDIR $R0
+  goto Nope
+   
+TryControl:
+  ReadRegStr $R0 HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "PathName"
+  StrCmp $R0 "" Nope
+  StrCpy $INSTDIR $R0
+  
+Nope:
+  Pop $R0
   
   GetTempFilename $0
   File /oname=$0 CellServPage.ini
@@ -1619,12 +1707,14 @@ Function AFSPageGetCellServDB
 startOver:
   WriteINIStr $0 "Field 2" "Flags" "DISABLED"
   WriteINIStr $0 "Field 3" "State" "1"
+  WriteINISTR $0 "Field 4" "State" "0"
+  WriteINIStr $0 "Field 6" "State" "0"
   
   ; If there is an existing afsdcell.ini file, allow the user to choose it and make it default
   IfFileExists "$WINDIR\afsdcell.ini" +1 notpresent
   WriteINIStr $0 "Field 2" "Flags" "ENABLED"
   WriteINIStr $0 "Field 2" "State" "1"
-  WriteINIStr $0 "Field 3" "State" "3"
+  WriteINIStr $0 "Field 3" "State" "0"
   
   notpresent:
   
@@ -1637,10 +1727,22 @@ startOver:
 exit: Quit
 done:
 
-   ; Check that if a file is set, a filename is entered...
+   ; Check that if a file is set, a valid filename is entered...
    ReadINIStr $R0 $0 "Field 6" "State"
-   StrCmp $R0 "1" CheckFileName Skip
-CheckFileName:
+   StrCmp $R0 "1" CheckFileName
+   
+   ;Check if a URL is specified, one *IS* specified
+   ReadINIStr $R0 $0 "Field 4" "State"
+   StrCmp $R0 "1" CheckURL Skip
+   
+   CheckURL:
+   ReadINIStr $R0 $0 "Field 5" "State"
+   StrCmp $R0 "" +1 Skip
+   MessageBox MB_OK|MB_ICONSTOP $(URLError)
+   WriteINIStr $0 "Field 4" "State" "0"
+   goto startOver
+   
+   CheckFileName:
    ReadINIStr $R0 $0 "Field 7" "State"
    IfFileExists $R0 Skip
 
@@ -1657,7 +1759,8 @@ Function AFSPageGetCellName
    Call IsSilent
    Pop $R1
    StrCmp $R1 "/S" exit
-  !insertmacro MUI_HEADER_TEXT "Cell Name Configuration" "Please enter the name for your default cell:" 
+startOver:
+   !insertmacro MUI_HEADER_TEXT "Cell Name Configuration" "Please enter the name for your default cell:" 
   InstallOptions::dialog $1
   Pop $R1
   StrCmp $R1 "cancel" exit
@@ -1665,6 +1768,12 @@ Function AFSPageGetCellName
   StrCmp $R1 "success" done
 exit: Quit
 done:
+   ReadINIStr $R0 $1 "Field 2" "State"
+   StrCmp $R0 "" +1 good
+   
+   MessageBox MB_OK|MB_ICONSTOP $(CellNameError)
+   goto startOver
+good:
 FunctionEnd
 
 ;-------------
@@ -1673,7 +1782,11 @@ Function AFSCommon.Install
 
 WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "DisplayName" "OpenAFS for Windows"
 WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "UninstallString" "$INSTDIR\uninstall.exe"
+!ifndef DEBUG
 WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "DisplayVersion" "${AFS_VERSION}"
+!else
+WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "DisplayVersion" "${AFS_VERSION} Checked/Debug"
+!endif
 WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "URLInfoAbout" "http://www.openafs.org/"
 
 FunctionEnd
@@ -2809,4 +2922,42 @@ Done:
 Pop $R2
 Pop $R1
 Exch $R0
+FunctionEnd
+
+; GetParent
+ ; input, top of stack  (e.g. C:\Program Files\Poop)
+ ; output, top of stack (replaces, with e.g. C:\Program Files)
+ ; modifies no other variables.
+ ;
+ ; Usage:
+ ;   Push "C:\Program Files\Directory\Whatever"
+ ;   Call GetParent
+ ;   Pop $R0
+ ;   ; at this point $R0 will equal "C:\Program Files\Directory"
+
+Function GetParent
+
+  Exch $R0
+  Push $R1
+  Push $R2
+  Push $R3
+  
+  StrCpy $R1 0
+  StrLen $R2 $R0
+  
+  loop:
+    IntOp $R1 $R1 + 1
+    IntCmp $R1 $R2 get 0 get
+    StrCpy $R3 $R0 1 -$R1
+    StrCmp $R3 "\" get
+  Goto loop
+  
+  get:
+    StrCpy $R0 $R0 -$R1
+    
+    Pop $R3
+    Pop $R2
+    Pop $R1
+    Exch $R0
+    
 FunctionEnd
