@@ -22,12 +22,6 @@ $(OUT)\Killer.obj: Killer.cpp
 $(EXEDIR)\Killer.exe: $(OUT)\Killer.obj
       $(EXECONLINK) $(OUT)\Killer.obj
 
-$(OUT)\loopback_install.obj: loopback_install.cpp
-      $(C2OBJ) -I$(NTDDKDIR) loopback_install.cpp
-
-$(EXEDIR)\loopback_install.dll: $(OUT)\loopback_install.obj
-      $(DLLCONLINK) /DEF:loopback_install.def  $(OUT)\loopback_install.obj $(LOOPBACK_LIBS)
-
 prebuild:
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
 !IF ("$(AFSVER_CL)"=="1310")
@@ -87,7 +81,7 @@ prebuild:
 build: prebuild
    "C:\Program Files\NSIS\makensis.exe" /DINCLUDEDIR=$(OUT) OpenAFS.nsi
 
-install: $(OUT)\Service.obj $(EXEDIR)\Service.exe $(OUT)\Killer.obj $(EXEDIR)\Killer.exe $(EXEDIR)\loopback_install.dll build
+install: $(OUT)\Service.obj $(EXEDIR)\Service.exe $(OUT)\Killer.obj $(EXEDIR)\Killer.exe build
 
 #clean:
 #   $(DEL) $(OUT)\Service.obj

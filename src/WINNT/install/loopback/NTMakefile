@@ -1,0 +1,58 @@
+# rcsid : $Id$
+
+RELDIR=WINNT\install\loopback
+!INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\config\NTMakefile.version
+
+MEDIABINDIR = $(DESTDIR)\WinInstall\Config
+
+EXEFILE = $(MEDIABINDIR)\instloop.exe
+
+DLLFILE = $(MEDIABINDIR)\afsloopback.dll
+
+DLLEXPORTS=\
+	-EXPORT:UnInstallLoopBack \
+	-EXPORT:IsLoopbackInstalled \
+	-EXPORT:InstallLoopBack \
+	-EXPORT:doLoopBackEntryW \
+	-EXPORT:uninstallLoopBackEntryW \
+	-EXPORT:installLoopbackMSI
+
+DLLLIBFILES=\
+	setupapi.lib msi.lib uuid.lib Shell32.lib ole32.lib advapi32.lib wbemuuid.lib
+
+LINK=link
+
+# afsloopback.dll
+
+DLLSOURCEFILES = loopbackutils.cpp renameconnection.cpp wmi.cpp
+DLLOBJFILES =  $(OUT)\loopbackutils.obj $(OUT)\renameconnection.obj $(OUT)\wmi.obj
+
+$(OUT)\loopbackutils.obj: loopbackutils.cpp
+	$(CPP2OBJ) -c -DUNICODE -D_UNICODE /Fo$@ $**
+
+$(OUT)\renameconnection.obj: renameconnection.cpp
+	$(CPP2OBJ) -c -DUNICODE -D_UNICODE /Fo$@ $**
+
+$(OUT)\wmi.obj: wmi.cpp
+	$(CPP2OBJ)  -I$(NTDDKDIR) -c -DUNICODE -D_UNICODE /Fo$@ $**
+
+$(DLLFILE): $(DLLOBJFILES)
+	$(LINK) -DLL $(DLLEXPORTS) -OUT:$@ $(DLLOBJFILES) $(DLLLIBFILES)
+
+# instloop.exe
+
+EXESOURCEFILES = instloop.c
+EXEOBJFILES = $(OUT)\instloop.obj
+EXELIBFILES = $(MEDIABINDIR)\afsloopback.lib
+
+$(OUT)\instloop.obj: instloop.c
+	$(C2OBJ) -c -DUNICODE -D_UNICODE /Fo$@ $**
+
+$(EXEFILE): $(EXEOBJFILES) $(EXELIBFILES)
+	$(LINK) /OUT:$@ $(EXEOBJFILES) $(EXELIBFILES)
+
+
+install:  $(DLLFILE) $(EXEFILE)
+
+clean	::

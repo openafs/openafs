@@ -601,6 +601,13 @@ mkdir:
 	-mkdir $(DESTDIR)\free\bin
 	-@copy $(SRC)\config\NTLANG.BAT .
 
+loopback:
+   echo ***** Making Loopback Adapter Utility DLL
+   $(DOCD) $(SRC)\WINNT\install\$@
+   $(CD) $(SRC)\WINNT\install\$@
+   $(NTMAKE)
+   $(CD) ..\..\..\..
+
 NSIS:
    echo ***** Making NSIS Installer
    $(DOCD) $(SRC)\WINNT\install\$@
@@ -627,11 +634,11 @@ InstallShield5:
 	$(NTMAKE)
 	$(CD) ..\..\..\..
 
-media: install InstallShield5 NSIS
+media: install loopback InstallShield5 NSIS wix
 
-install-nsis: install NSIS
+install-nsis: install loopback NSIS
 
-install-wix: install wix
+install-wix: install loopback wix
 
 install-is5: install InstallShield5
 

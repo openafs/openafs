@@ -347,6 +347,9 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\WINNT\install\InstallShield5))
 		$(MKDIR) $(OJT)\WINNT\install\InstallShield5
 !	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\install\loopback))
+		$(MKDIR) $(OJT)\WINNT\install\loopback
+!	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\install\NSIS))
 		$(MKDIR) $(OJT)\WINNT\install\NSIS
 !	ENDIF

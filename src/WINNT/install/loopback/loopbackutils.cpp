@@ -1,185 +1,56 @@
 /*
-
-Copyright 2004 by the Massachusetts Institute of Technology
-
-All rights reserved.
-
-Permission to use, copy, modify, and distribute this software and its
-documentation for any purpose and without fee is hereby granted,
-provided that the above copyright notice appear in all copies and that
-both that copyright notice and this permission notice appear in
-supporting documentation, and that the name of the Massachusetts
-Institute of Technology (M.I.T.) not be used in advertising or publicity
-pertaining to distribution of the software without specific, written
-prior permission.
-
-M.I.T. DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING
-ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL
-M.I.T. BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR
-ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
-WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
-ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
-SOFTWARE.
-
+   Copyright 2004 by the Massachusetts Institute of Technology              
+                                                                            
+   All rights reserved.                                                     
+                                                                            
+   Permission to use, copy, modify, and distribute this software and its    
+   documentation for any purpose and without fee is hereby granted,         
+   provided that the above copyright notice appear in all copies and that   
+   both that copyright notice and this permission notice appear in          
+   supporting documentation, and that the name of the Massachusetts         
+   Institute of Technology (M.I.T.) not be used in advertising or publicity 
+   pertaining to distribution of the software without specific, written     
+   prior permission.                                                        
+                                                                            
+   M.I.T. DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING  
+   ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL 
+   M.I.T. BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR   
+   ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,      
+   WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,   
+   ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS      
+   SOFTWARE.                                                                
 */
 
+#define _WIN32_DCOM
 #include <windows.h>
 #include <stdio.h>
+#include <stdlib.h>
+
+struct Args {
+	bool bQuiet;
+	LPWSTR lpIPAddr;
+	LPWSTR lpSubnetMask;
+    LPWSTR lpConnectionName;
+	Args () : bQuiet (0), lpIPAddr (0), lpSubnetMask (0), lpConnectionName (0) { }
+	~Args () {
+		if (lpIPAddr) free (lpIPAddr);
+		if (lpSubnetMask) free (lpSubnetMask);
+        if (lpConnectionName) free (lpConnectionName);
+	}
+};
+
+#include <shellapi.h>
 #define INITGUID
 #include <guiddef.h>
 #include <devguid.h>
+#include <objbase.h>
 #include <setupapi.h>
 #include <tchar.h>
+#include <Msi.h>
+#include <Msiquery.h>
+#include "loopbackutils.h"
 
-#undef REDIRECT_STDOUT
-
-#ifdef USE_PAUSE
-#define PAUSE                                          \
-    do {                                               \
-        char c;                                        \
-        printf("PAUSED - PRESS ENTER TO CONTINUE\n");  \
-        scanf("%c", &c);                               \
-    } while(0)
-#else
-#define PAUSE
-#endif
-
-/*#define USE_SLEEP*/
-
-#ifdef USE_SLEEP
-#define SLEEP Sleep(10*1000)
-#else
-#define SLEEP
-#endif
-
-
-static void ShowUsage(void);
-DWORD InstallLoopBack(LPCTSTR pConnectionName, LPCTSTR ip, LPCTSTR mask);
-DWORD UnInstallLoopBack(void);
-int RenameConnection(PCWSTR GuidString, PCWSTR pszNewName);
-DWORD SetIpAddress(LPCWSTR guid, LPCWSTR ip, LPCWSTR mask);
-HRESULT LoopbackBindings (LPCWSTR loopback_guid);
-BOOL UpdateHostsFile( LPCWSTR swName, LPCWSTR swIp, LPCSTR szFilename, BOOL bPre );
-
-#define DRIVER_DESC "Microsoft Loopback Adapter"
-#define DRIVER _T("loopback")
-#define MANUFACTURE _T("microsoft")
-#define DEFAULT_NAME _T("AFS")
-#define DEFAULT_IP _T("10.254.254.253")
-#define DEFAULT_MASK _T("255.255.255.252")
-
-static void
-ShowUsage(void)
-{
-    printf("instloop [-i [name [ip mask]] | -u]\n\n");
-    printf("    -i  install the %s\n", DRIVER_DESC);
-    _tprintf(_T("        (if unspecified, uses name %s,\n"), DEFAULT_NAME);
-    _tprintf(_T("         ip %s, and mask %s)\n"), DEFAULT_IP, DEFAULT_MASK);    
-    printf("    -u  uninstall the %s\n", DRIVER_DESC);
-}
-
-static void
-DisplayStartup(BOOL bInstall)
-{
-    printf("%snstalling the %s\n"
-           " (Note: This may take up to a minute or two...)\n",
-           bInstall ? "I" : "Un",
-           DRIVER_DESC);
-    
-}
-
-static void
-DisplayResult(BOOL bInstall, DWORD rc)
-{
-    if (rc)
-    {
-        printf("Could not %sinstall the %s\n", bInstall ? "" : "un",
-               DRIVER_DESC);
-        SLEEP;
-        PAUSE;
-    }
-}
-
-
-int _tmain(int argc, TCHAR *argv[])
-{
-    DWORD rc = 0;
-#ifdef REDIRECT_STDOUT
-    FILE *fh = NULL;
-#endif
-
-    PAUSE;
-
-#ifdef REDIRECT_STDOUT
-    fh = freopen("instlog.txt","a+", stdout);
-#endif
-
-    if (argc > 1)
-    {
-        if (_tcsicmp(argv[1], _T("-i")) == 0)
-        {
-            TCHAR* name = DEFAULT_NAME;
-            TCHAR* ip = DEFAULT_IP;
-            TCHAR* mask = DEFAULT_MASK;
-
-            if (argc > 2)
-            {
-                name = argv[2];
-                if (argc > 3)
-                {
-                    if (argc < 5)
-                    {
-                        ShowUsage();
-#ifdef REDIRECT_STDOUT
-                        fflush(fh); fclose(fh);
-#endif
-                        return 1;
-                    }
-                    else
-                    {
-                        ip = argv[3];
-                        mask = argv[4];
-                    }
-                }
-            }
-            DisplayStartup(TRUE);
-			if(IsLoopbackInstalled()) {
-				printf("Loopback already installed\n");
-				rc = 0; /* don't signal an error. */
-			} else {
-	            rc = InstallLoopBack(name, ip, mask);
-			}
-            DisplayResult(TRUE, rc);
-#ifdef REDIRECT_STDOUT
-            fflush(fh); fclose(fh);
-#endif
-            return rc;
-        }
-        else if (_tcsicmp(argv[1], _T("-u")) == 0)
-        {
-            DisplayStartup(FALSE);
-            rc = UnInstallLoopBack();
-            DisplayResult(FALSE, rc);
-#ifdef REDIRECT_STDOUT
-            fflush(fh); fclose(fh);
-#endif
-            return rc;
-        }
-        ShowUsage();
-#ifdef REDIRECT_STDOUT
-        fflush(fh); fclose(fh);
-#endif
-        return 1;
-    }
-    ShowUsage();
-#ifdef REDIRECT_STDOUT
-    fflush(fh); fclose(fh);
-#endif
-    return 0;
-}
-
-
-DWORD UnInstallLoopBack(void)
+extern "C" DWORD UnInstallLoopBack(void)
 {
     BOOL ok;
     DWORD ret = 0;
@@ -203,7 +74,7 @@ DWORD UnInstallLoopBack(void)
     if (hDeviceInfo == INVALID_HANDLE_VALUE)
         return GetLastError();
 
-    deviceDesc = malloc(MAX_PATH*sizeof(TCHAR));
+    deviceDesc = (TCHAR *)malloc(MAX_PATH*sizeof(TCHAR));
     // enumerate the driver info list
     while (SetupDiEnumDeviceInfo(hDeviceInfo, index, &DeviceInfoData))
     {
@@ -219,7 +90,7 @@ DWORD UnInstallLoopBack(void)
                 break;
             // if the buffer is too small, reallocate
             free(deviceDesc);
-            deviceDesc = malloc(size);
+            deviceDesc = (TCHAR *)malloc(size);
             ok = SetupDiGetDeviceRegistryProperty(hDeviceInfo,
                                                   &DeviceInfoData,
                                                   SPDRP_DEVICEDESC,
@@ -270,7 +141,7 @@ cleanup:
     return ret;
 }
 
-BOOL IsLoopbackInstalled()
+BOOL IsLoopbackInstalled(void)
 {
     TCHAR * hwid = _T("*MSLOOP");
     HDEVINFO DeviceInfoSet;
@@ -351,7 +222,7 @@ cleanup_DeviceInfo:
 }
 
 
-DWORD InstallLoopBack(LPCTSTR pConnectionName, LPCTSTR ip, LPCTSTR mask)
+extern "C" DWORD InstallLoopBack(LPCTSTR pConnectionName, LPCTSTR ip, LPCTSTR mask)
 {
     BOOL ok;
     DWORD ret = 0;
@@ -616,4 +487,143 @@ cleanup:
         SetupDiDestroyDeviceInfoList(hDeviceInfo);
 
     return ret;
+};
+
+/* The following functions provide the RunDll32 interface 
+ *    RunDll32 loopback_install.dll doLoopBackEntry [Interface Name] [IP address] [Subnet Mask]
+ */
+
+static void wcsMallocAndCpy (LPWSTR * dst, const LPWSTR src) {
+	*dst = (LPWSTR) malloc ((wcslen (src) + 1) * sizeof (WCHAR));
+	wcscpy (*dst, src);
 }
+
+static void display_usage()
+{
+    MessageBoxW( NULL, 
+                 L"Installation utility for the MS Loopback Adapter\r\n\r\n"
+                 L"Usage:\r\n"
+                 L"RunDll32 loopback_install.dll doLoopBackEntry [q|quiet] [Connection Name] [IP address] [Submask]\r\n",
+                 L"loopback_install", MB_ICONINFORMATION | MB_OK );
+}
+
+static int process_args (LPWSTR lpCmdLine, Args & args) {
+	int i, iNumArgs;
+	LPWSTR * argvW;
+
+	argvW = CommandLineToArgvW (lpCmdLine, &iNumArgs);
+	for (i = 0; i < iNumArgs; i++)
+	{
+		if (wcsstr (argvW[i], L"help")
+			|| !_wcsicmp (argvW[i], L"?")
+			|| (wcslen(argvW[i]) == 2 && argvW[i][1] == L'?'))
+		{
+			display_usage();
+			GlobalFree (argvW);
+			return 0;
+		}
+
+		if (!_wcsicmp (argvW[i], L"q") || !_wcsicmp (argvW[i], L"quiet")) {
+			args.bQuiet = true;
+			continue;
+		}
+
+		if (!args.lpConnectionName) {
+			wcsMallocAndCpy (&args.lpConnectionName, argvW[i]);
+			continue;
+		}
+
+		if (!args.lpIPAddr) {
+			wcsMallocAndCpy (&args.lpIPAddr, argvW[i]);
+			continue;
+		}
+
+		if (!args.lpSubnetMask) {
+			wcsMallocAndCpy (&args.lpSubnetMask, argvW[i]);
+			continue;
+		}
+
+		display_usage();
+		GlobalFree (argvW);
+		return 0;
+	}
+
+	if (!args.lpConnectionName)
+		wcsMallocAndCpy (&args.lpConnectionName, DEFAULT_NAME);
+	if (!args.lpIPAddr)
+		wcsMallocAndCpy (&args.lpIPAddr, DEFAULT_IP);
+	if (!args.lpSubnetMask)
+		wcsMallocAndCpy (&args.lpSubnetMask, DEFAULT_MASK);
+
+	GlobalFree (argvW);
+	return 1;
+}
+
+void CALLBACK doLoopBackEntryW (HWND hwnd, HINSTANCE hinst, LPWSTR lpCmdLine, int nCmdShow)
+{
+	Args args;
+
+	if (!process_args(lpCmdLine, args)) 
+        return;
+
+	InstallLoopBack(args.lpConnectionName, args.lpIPAddr, args.lpSubnetMask);
+}
+
+void CALLBACK uninstallLoopBackEntryW (HWND hwnd, HINSTANCE hinst, LPWSTR lpCmdLine, int nCmdSHow)
+{
+    Args args;
+
+    // initialize COM
+	// This and CoInitializeSecurity fail when running under the MSI
+	// engine, but there seems to be no ill effect (the security is now
+	// set on the specific object via CoSetProxyBlanket in loopback_configure)
+    if(CoInitializeEx(NULL, COINIT_DISABLE_OLE1DDE | COINIT_APARTMENTTHREADED ))
+    {
+		//Don't fail (MSI install will have already initialized COM)
+        //EasyErrorBox(0, L"Failed to initialize COM.");
+        //return 1;
+    }
+
+	// Initialize COM security (otherwise we'll get permission denied when we try to use WMI or NetCfg)
+    CoInitializeSecurity( NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_DEFAULT, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE, NULL);
+
+    UnInstallLoopBack();
+
+	CoUninitialize();
+}
+
+/* And an MSI installer interface */
+
+UINT __stdcall installLoopbackMSI (MSIHANDLE hInstall)
+{
+	LPWSTR szValueBuf;
+	DWORD cbValueBuf = 256;
+	Args args;
+	UINT rc;
+
+	szValueBuf = (LPWSTR) malloc (cbValueBuf * sizeof (WCHAR));
+	while (rc = MsiGetPropertyW(hInstall, L"CustomActionData", szValueBuf, &cbValueBuf)) {
+		free (szValueBuf);
+		if (rc == ERROR_MORE_DATA) {
+			cbValueBuf++;
+			szValueBuf = (LPWSTR) malloc (cbValueBuf * sizeof (WCHAR));
+		} 
+        else 
+            return ERROR_INSTALL_FAILURE;
+	}
+
+	if (!process_args(szValueBuf, args)) 
+        return ERROR_INSTALL_FAILURE;
+		
+	rc = InstallLoopBack (args.lpConnectionName, args.lpIPAddr, args.lpSubnetMask);
+
+	if (rc == 1) 
+        return ERROR_INSTALL_FAILURE;
+
+	if (rc == 2) {
+		MsiDoActionW (hInstall, L"ScheduleReboot");
+	}
+
+	return ERROR_SUCCESS;
+}
+

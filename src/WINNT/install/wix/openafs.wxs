@@ -63,7 +63,7 @@
          src="$(var.MediaBinDir)instloop.exe"/>
         <Binary
 		 Id="BIN_afsCustom"
-		 src="$(var.MediaBinDir)afscustom.dll"/>
+		 src="$(var.MediaDllDir)afscustom.dll"/>
         <CustomAction
          Id="InstallLoopback"
          BinaryKey="BIN_Instloop"

@@ -20,7 +20,8 @@
        
       
       Directory specs: (all dir. specs end in a '\')
-       MediaBinDir    : Installer binaries (instloop.exe etc.)
+       MediaDllDir    : Installer Dlls
+       MediaBinDir    : Installer Exes
        SrcDir         : openafs\src\
        DestDir        : $(DEST)\
        BinDir         : $(DEST)\bin\
@@ -107,8 +108,11 @@
     <?ifndef SrcDir?>
         <?define SrcDir="$(env.AFSROOT)\src\"?>
     <?endif?>
+    <?ifndef MediaDllDir?>
+        <?define MediaDllDir="$(var.DestDir)WinInstall\Dll\"?>
+    <?endif?>
     <?ifndef MediaBinDir?>
-        <?define MediaBinDir="$(var.DestDir)WinInstall\Dll\"?>
+        <?define MediaBinDir="$(var.DestDir)WinInstall\Config\"?>
     <?endif?>
     <?ifndef BinDir?>
         <?define BinDir="$(var.DestDir)bin\"?>
