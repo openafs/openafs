@@ -457,9 +457,33 @@ KFW_cleanup(void)
         FreeLibrary(hCCAPI);
 }
 
+char OpenAFSConfigKeyName[] = "SOFTWARE\\OpenAFS\\Client";
+
 int 
 KFW_is_available(void)
 {
+    HKEY parmKey;
+	DWORD code, len;
+    DWORD enableKFW = 1;
+
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
+                         0, KEY_QUERY_VALUE, &parmKey);
+    if (code != ERROR_SUCCESS)
+        code = RegOpenKeyEx(HKEY_CURRENT_USER, OpenAFSConfigKeyName,
+                             0, KEY_QUERY_VALUE, &parmKey);
+	if (code == ERROR_SUCCESS) {
+        len = sizeof(enableKFW);
+        code = RegQueryValueEx(parmKey, "EnableKFW", NULL, NULL,
+                                (BYTE *) &enableKFW, &len);
+        if (code != ERROR_SUCCESS) {
+            enableKFW = 1;
+        }
+        RegCloseKey (parmKey);
+	}
+
+    if ( !enableKFW )
+        return FALSE;
+
     KFW_initialize();
     if ( hKrb5 && hComErr && hService && 
 #ifdef USE_MS2MIT
