@@ -354,7 +354,7 @@ ${DESTDIR}${sbindir}/${KDUMP}: ${KDUMP}
 		${INSTALL} -s -f $? $@;; \
 	*linux* ) \
 		${INSTALLex} -f kdump.sh.linux ${DESTDIR}${sbindir}/kdump; \
-		${INSTALL} -s @? $@ ;; \
+		${INSTALL} -s $? $@ ;; \
 	hp_ux11* ) \
 		${INSTALLex} -f kdump.sh.hp_ux11 ${DESTDIR}${sbindir}/kdump; \
 		${INSTALL} -s -f $? $@;; \
