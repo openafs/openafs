@@ -1188,7 +1188,6 @@ struct afs_fakestat_state {
     char valid;
     char did_eval;
     char need_release;
-    char nonblock;
     struct vcache *root_vp;
 };
 

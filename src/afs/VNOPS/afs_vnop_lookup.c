@@ -255,7 +255,95 @@ afs_InitFakeStat(state)
     state->valid = 1;
     state->did_eval = 0;
     state->need_release = 0;
-    state->nonblock = 0;
+}
+
+/*
+ * afs_EvalFakeStat_int
+ *
+ * The actual implementation of afs_EvalFakeStat and afs_TryEvalFakeStat,
+ * which is called by those wrapper functions.
+ *
+ * Only issues RPCs if canblock is non-zero.
+ */
+static int
+afs_EvalFakeStat_int(avcp, state, areq, canblock)
+    struct vcache **avcp;
+    struct afs_fakestat_state *state;
+    struct vrequest *areq;
+    int canblock;
+{
+    struct vcache *tvc, *root_vp;
+    struct volume *tvolp = NULL;
+    int code = 0;
+
+    osi_Assert(state->valid == 1);
+    osi_Assert(state->did_eval == 0);
+    state->did_eval = 1;
+    if (!afs_fakestat_enable)
+	return 0;
+    tvc = *avcp;
+    if (tvc->mvstat != 1)
+	return 0;
+
+    /* Is the call to VerifyVCache really necessary? */
+    code = afs_VerifyVCache(tvc, areq);
+    if (code)
+	goto done;
+    if (canblock) {
+	ObtainWriteLock(&tvc->lock, 599);
+	code = EvalMountPoint(tvc, NULL, &tvolp, areq);
+	ReleaseWriteLock(&tvc->lock);
+	if (code)
+	    goto done;
+	if (tvolp) {
+	    tvolp->dotdot = tvc->fid;
+	    tvolp->dotdot.Fid.Vnode = tvc->parentVnode;
+	    tvolp->dotdot.Fid.Unique = tvc->parentUnique;
+	}
+    }
+    if (tvc->mvid && (tvc->states & CMValid)) {
+	if (!canblock) {
+	    afs_int32 retry;
+
+	    do {
+		retry = 0;
+		ObtainWriteLock(&afs_xvcache, 597);
+		root_vp = afs_FindVCache(tvc->mvid, 0, 0, &retry, 0);
+		if (root_vp && retry) {
+		    ReleaseWriteLock(&afs_xvcache);
+		    afs_PutVCache(root_vp, 0);
+		}
+	    } while (root_vp && retry);
+	    ReleaseWriteLock(&afs_xvcache);
+	} else {
+	    root_vp = afs_GetVCache(tvc->mvid, areq, NULL, NULL, WRITE_LOCK);
+	}
+	if (!root_vp) {
+	    code = canblock ? ENOENT : 0;
+	    goto done;
+	}
+	if (tvolp) {
+	    /* Is this always kosher?  Perhaps we should instead use
+	     * NBObtainWriteLock to avoid potential deadlock.
+	     */
+	    ObtainWriteLock(&root_vp->lock, 598);
+	    if (!root_vp->mvid)
+		root_vp->mvid = osi_AllocSmallSpace(sizeof(struct VenusFid));
+	    *root_vp->mvid = tvolp->dotdot;
+	    ReleaseWriteLock(&root_vp->lock);
+	}
+	state->need_release = 1;
+	state->root_vp = root_vp;
+	*avcp = root_vp;
+	code = 0;
+    } else {
+	code = canblock ? ENOENT : 0;
+    }
+
+done:
+    if (tvolp)
+	afs_PutVolume(tvolp, WRITE_LOCK);
+    return code;
 }
 
 /*
@@ -277,78 +365,7 @@ afs_EvalFakeStat(avcp, state, areq)
     struct afs_fakestat_state *state;
     struct vrequest *areq;
 {
-    struct vcache *tvc, *root_vp;
-    struct volume *tvolp = NULL;
-    int code = 0;
-
-    osi_Assert(state->valid == 1);
-    osi_Assert(state->did_eval == 0);
-    state->did_eval = 1;
-    if (!afs_fakestat_enable)
-	return 0;
-    tvc = *avcp;
-    if (tvc->mvstat != 1)
-	return 0;
-
-    /* Is the call to VerifyVCache really necessary? */
-    code = afs_VerifyVCache(tvc, areq);
-    if (code)
-	goto done;
-    if (!state->nonblock) {
-	ObtainWriteLock(&tvc->lock, 599);
-	code = EvalMountPoint(tvc, NULL, &tvolp, areq);
-	ReleaseWriteLock(&tvc->lock);
-	if (code)
-	    goto done;
-	if (tvolp) {
-	    tvolp->dotdot = tvc->fid;
-	    tvolp->dotdot.Fid.Vnode = tvc->parentVnode;
-	    tvolp->dotdot.Fid.Unique = tvc->parentUnique;
-	}
-    }
-    if (tvc->mvid && (tvc->states & CMValid)) {
-	if (state->nonblock) {
-	    afs_int32 retry;
-
-	    do {
-		retry = 0;
-		ObtainWriteLock(&afs_xvcache, 597);
-		root_vp = afs_FindVCache(tvc->mvid, 0, 0, &retry, 0);
-		if (root_vp && retry) {
-		    ReleaseWriteLock(&afs_xvcache);
-		    afs_PutVCache(root_vp, 0);
-		}
-	    } while (root_vp && retry);
-	    ReleaseWriteLock(&afs_xvcache);
-	} else {
-	    root_vp = afs_GetVCache(tvc->mvid, areq, NULL, NULL, WRITE_LOCK);
-	}
-	if (!root_vp) {
-	    code = state->nonblock ? 0 : ENOENT;
-	    goto done;
-	}
-	if (tvolp) {
-	    /* Is this always kosher?  Perhaps we should instead use
-	     * NBObtainWriteLock to avoid potential deadlock.
-	     */
-	    ObtainWriteLock(&root_vp->lock, 598);
-	    if (!root_vp->mvid)
-		root_vp->mvid = osi_AllocSmallSpace(sizeof(struct VenusFid));
-	    *root_vp->mvid = tvolp->dotdot;
-	    ReleaseWriteLock(&root_vp->lock);
-	}
-	state->need_release = 1;
-	state->root_vp = root_vp;
-	*avcp = root_vp;
-	code = 0;
-    } else {
-	code = state->nonblock ? 0 : ENOENT;
-    }
-
-done:
-    if (tvolp)
-	afs_PutVolume(tvolp, WRITE_LOCK);
-    return code;
+    return afs_EvalFakeStat_int(avcp, state, areq, 1);
 }
 
 /*
@@ -367,8 +384,7 @@ afs_TryEvalFakeStat(avcp, state, areq)
     struct afs_fakestat_state *state;
     struct vrequest *areq;
 {
-    state->nonblock = 1;
-    return afs_EvalFakeStat(avcp, state, areq);
+    return afs_EvalFakeStat_int(avcp, state, areq, 0);
 }
 
 /*
