@@ -1196,6 +1196,8 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
     afsFid.Volume = dscp->fid.volume;
     afsFid.Vnode = dscp->fid.vnode;
     afsFid.Unique = dscp->fid.unique;
+
+    osi_Log1(afsd_logp, "CALL RemoveFile scp 0x%x", (long) dscp);
     do {
         code = cm_Conn(&dscp->fid, userp, reqp, &connp);
         if (code) 
@@ -1208,6 +1210,11 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
 
     } while (cm_Analyze(connp, userp, reqp, &dscp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
+
+    if (code)
+        osi_Log1(afsd_logp, "CALL RemoveFile FAILURE, code 0x%x", code);
+    else
+        osi_Log0(afsd_logp, "CALL RemoveFile SUCCESS");
 
     lock_ObtainMutex(&dscp->mx);
     cm_dnlcRemove(dscp, namep);
@@ -1610,7 +1617,7 @@ long cm_EvaluateSymLink(cm_scache_t *dscp, cm_scache_t *linkScp,
     cm_space_t *spacep;
     cm_scache_t *newRootScp;
 
-    osi_Log1(afsd_logp, "Evaluating symlink vp %x", linkScp);
+    osi_Log1(afsd_logp, "Evaluating symlink scp 0x%x", linkScp);
 
     code = cm_AssembleLink(linkScp, "", &newRootScp, &spacep, userp, reqp);
     if (code) 
@@ -1775,7 +1782,8 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
     lock_ObtainMutex(&dscp->mx);
 
     /* if we failed, bail out early */
-    if (code && code != CM_ERROR_STOPNOW) return;
+    if (code && code != CM_ERROR_STOPNOW) 
+        return;
 
     /* otherwise, we may have one or more bulk stat's worth of stuff in bb;
      * make the calls to create the entries.  Handle AFSCBMAX files at a
@@ -1784,7 +1792,8 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
     filex = 0;
     while (filex < bb.counter) {
         filesThisCall = bb.counter - filex;
-        if (filesThisCall > AFSCBMAX) filesThisCall = AFSCBMAX;
+        if (filesThisCall > AFSCBMAX) 
+            filesThisCall = AFSCBMAX;
 
         fidStruct.AFSCBFids_len = filesThisCall;
         fidStruct.AFSCBFids_val = &bb.fids[filex];
@@ -1808,16 +1817,21 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
                              &volSync, NULL, &cbReq, code));
         code = cm_MapRPCError(code, reqp);
 
-        osi_Log0(afsd_logp, "CALL BulkStatus DONE");
+        if (code)
+            osi_Log1(afsd_logp, "CALL BulkStatus FAILURE code 0x%x", code);
+        else
+            osi_Log0(afsd_logp, "CALL BulkStatus SUCCESS");
 
         /* may as well quit on an error, since we're not going to do
          * much better on the next immediate call, either.
          */
-        if (code) 
+        if (code) {
+            cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, 0);
             break;
+        }
 
         /* otherwise, we should do the merges */
-        for(i = 0; i<filesThisCall; i++) {
+        for (i = 0; i<filesThisCall; i++) {
             j = filex + i;
             tfid.cell = dscp->fid.cell;
             tfid.volume = bb.fids[j].Volume;
@@ -2019,7 +2033,7 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
         return code;
 
     /* now make the RPC */
-    osi_Log1(afsd_logp, "CALL StoreStatus vp %x", (long) scp);
+    osi_Log1(afsd_logp, "CALL StoreStatus scp 0x%x", (long) scp);
     tfid.Volume = scp->fid.volume;
     tfid.Vnode = scp->fid.vnode;
     tfid.Unique = scp->fid.unique;
@@ -2037,7 +2051,10 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
                          &scp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
 
-    osi_Log1(afsd_logp, "CALL StoreStatus DONE, code %d", code);
+    if (code)
+        osi_Log1(afsd_logp, "CALL StoreStatus FAILURE, code 0x%x", code);
+    else
+        osi_Log0(afsd_logp, "CALL StoreStatus SUCCESS");
 
     lock_ObtainMutex(&scp->mx);
     cm_SyncOpDone(scp, NULL, CM_SCACHESYNC_STORESTATUS);
@@ -2096,6 +2113,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     cm_StatusFromAttr(&inStatus, NULL, attrp);
 
     /* try the RPC now */
+    osi_Log1(afsd_logp, "CALL CreateFile scp 0x%x", (long) dscp);
     do {
         code = cm_Conn(&dscp->fid, userp, reqp, &connp);
         if (code) 
@@ -2116,6 +2134,11 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
                          &dscp->fid, &volSync, NULL, &cbReq, code));
     code = cm_MapRPCError(code, reqp);
         
+    if (code)
+        osi_Log1(afsd_logp, "CALL CreateFile FAILURE, code 0x%x", code);
+    else
+        osi_Log0(afsd_logp, "CALL CreateFile SUCCESS");
+
     lock_ObtainMutex(&dscp->mx);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
@@ -2218,6 +2241,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
     cm_StatusFromAttr(&inStatus, NULL, attrp);
 
     /* try the RPC now */
+    osi_Log1(afsd_logp, "CALL MakeDir scp 0x%x", (long) dscp);
     do {
         code = cm_Conn(&dscp->fid, userp, reqp, &connp);
         if (code) 
@@ -2238,6 +2262,11 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
                          &dscp->fid, &volSync, NULL, &cbReq, code));
     code = cm_MapRPCError(code, reqp);
         
+    if (code)
+        osi_Log1(afsd_logp, "CALL MakeDir FAILURE, code 0x%x", code);
+    else
+        osi_Log0(afsd_logp, "CALL MakeDir SUCCESS");
+
     lock_ObtainMutex(&dscp->mx);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
@@ -2302,6 +2331,8 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
     if (code)
         return code;
 
+    /* try the RPC now */
+    osi_Log1(afsd_logp, "CALL Link scp 0x%x", (long) dscp);
     do {
         code = cm_Conn(&dscp->fid, userp, reqp, &connp);
         if (code) continue;
@@ -2318,12 +2349,17 @@ long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp, long flags,
         code = RXAFS_Link(callp, &dirAFSFid, namep, &existingAFSFid,
             &newLinkStatus, &updatedDirStatus, &volSync);
         rx_PutConnection(callp);
-        osi_Log1(smb_logp,"  RXAFS_Link returns %d", code);
+        osi_Log1(smb_logp,"  RXAFS_Link returns 0x%x", code);
 
     } while (cm_Analyze(connp, userp, reqp,
         &dscp->fid, &volSync, NULL, NULL, code));
 
     code = cm_MapRPCError(code, reqp);
+
+    if (code)
+        osi_Log1(afsd_logp, "CALL Link FAILURE, code 0x%x", code);
+    else
+        osi_Log0(afsd_logp, "CALL Link SUCCESS");
 
     lock_ObtainMutex(&dscp->mx);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
@@ -2364,6 +2400,7 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
     cm_StatusFromAttr(&inStatus, NULL, attrp);
 
     /* try the RPC now */
+    osi_Log1(afsd_logp, "CALL Symlink scp 0x%x", (long) dscp);
     do {
         code = cm_Conn(&dscp->fid, userp, reqp, &connp);
         if (code) 
@@ -2383,6 +2420,11 @@ long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp, long flags,
                          &dscp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
         
+    if (code)
+        osi_Log1(afsd_logp, "CALL Symlink FAILURE, code 0x%x", code);
+    else
+        osi_Log0(afsd_logp, "CALL Symlink SUCCESS");
+
     lock_ObtainMutex(&dscp->mx);
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
@@ -2440,6 +2482,7 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, cm_user_t *userp,
     didEnd = 0;
 
     /* try the RPC now */
+    osi_Log1(afsd_logp, "CALL RemoveDir scp 0x%x", (long) dscp);
     do {
         code = cm_Conn(&dscp->fid, userp, reqp, &connp);
         if (code) 
@@ -2457,11 +2500,16 @@ long cm_RemoveDir(cm_scache_t *dscp, char *namep, cm_user_t *userp,
     } while (cm_Analyze(connp, userp, reqp,
                          &dscp->fid, &volSync, NULL, NULL, code));
     code = cm_MapRPCErrorRmdir(code, reqp);
-        
+
+    if (code)
+        osi_Log1(afsd_logp, "CALL RemoveDir FAILURE, code 0x%x", code);
+    else
+        osi_Log0(afsd_logp, "CALL RemoveDir SUCCESS");
+
     lock_ObtainMutex(&dscp->mx);
-    cm_dnlcRemove(dscp, namep); 
     cm_SyncOpDone(dscp, NULL, CM_SCACHESYNC_STOREDATA);
     if (code == 0) {
+        cm_dnlcRemove(dscp, namep); 
         cm_MergeStatus(dscp, &updatedDirStatus, &volSync, userp, 0);
     }
     lock_ReleaseMutex(&dscp->mx);
@@ -2581,6 +2629,8 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
     didEnd = 0;
 
     /* try the RPC now */
+    osi_Log2(afsd_logp, "CALL Rename old scp 0x%x new scp 0x%x", 
+              (long) oldDscp, (long) newDscp);
     do {
         code = cm_Conn(&oldDscp->fid, userp, reqp, &connp);
         if (code) 
@@ -2604,6 +2654,11 @@ long cm_Rename(cm_scache_t *oldDscp, char *oldNamep, cm_scache_t *newDscp,
                          &volSync, NULL, NULL, code));
     code = cm_MapRPCError(code, reqp);
         
+    if (code)
+        osi_Log1(afsd_logp, "CALL Rename FAILURE, code 0x%x", code);
+    else
+        osi_Log0(afsd_logp, "CALL Rename SUCCESS");
+
     /* update the individual stat cache entries for the directories */
     lock_ObtainMutex(&oldDscp->mx);
     cm_SyncOpDone(oldDscp, NULL, CM_SCACHESYNC_STOREDATA);
@@ -2766,6 +2821,7 @@ long cm_Unlock(cm_scache_t *scp, unsigned char LockType,
         tfid.Vnode = scp->fid.vnode;
         tfid.Unique = scp->fid.unique;
         lock_ReleaseMutex(&scp->mx);
+        osi_Log1(afsd_logp, "CALL ReleaseLock scp 0x%x", (long) scp);
         do {
             code = cm_Conn(&scp->fid, userp, reqp, &connp);
             if (code) 
@@ -2778,6 +2834,12 @@ long cm_Unlock(cm_scache_t *scp, unsigned char LockType,
         } while (cm_Analyze(connp, userp, reqp, &scp->fid, &volSync,
                              NULL, NULL, code));
         code = cm_MapRPCError(code, reqp);
+
+        if (code)
+            osi_Log1(afsd_logp, "CALL ReleaseLock FAILURE, code 0x%x", code);
+        else
+            osi_Log0(afsd_logp, "CALL ReleaseLock SUCCESS");
+
         lock_ObtainMutex(&scp->mx);
     }
 
@@ -2811,6 +2873,7 @@ void cm_CheckLocks()
             tfid.Vnode = fileLock->fid.vnode;
             tfid.Unique = fileLock->fid.unique;
             lock_ReleaseWrite(&cm_scacheLock);
+            osi_Log1(afsd_logp, "CALL ExtendLock lock 0x%x", (long) fileLock);
             do {
                 code = cm_Conn(&fileLock->fid, fileLock->userp,
                                 &req, &connp);
@@ -2826,6 +2889,11 @@ void cm_CheckLocks()
                                  &fileLock->fid, &volSync, NULL, NULL,
                                  code));
             code = cm_MapRPCError(code, &req);
+            if (code)
+                osi_Log1(afsd_logp, "CALL ExtendLock FAILURE, code 0x%x", code);
+            else
+                osi_Log0(afsd_logp, "CALL ExtendLock SUCCESS");
+
             lock_ObtainWrite(&cm_scacheLock);
         }
         q = nq;
@@ -2884,6 +2952,7 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int vcp_is_dead)
         tfid.Volume = oldFileLock->fid.volume;
         tfid.Vnode = oldFileLock->fid.vnode;
         tfid.Unique = oldFileLock->fid.unique;
+        osi_Log1(afsd_logp, "CALL SetLock lock 0x%x", (long) oldFileLock);
         do {
             code = cm_Conn(&oldFileLock->fid, oldFileLock->userp,
                             &req, &connp);
@@ -2899,6 +2968,11 @@ long cm_RetryLock(cm_file_lock_t *oldFileLock, int vcp_is_dead)
                              &oldFileLock->fid, &volSync,
                              NULL, NULL, code));
         code = cm_MapRPCError(code, &req);
+
+        if (code)
+            osi_Log1(afsd_logp, "CALL SetLock FAILURE, code 0x%x", code);
+        else
+            osi_Log0(afsd_logp, "CALL SetLock SUCCESS");
     }
 
   handleCode:

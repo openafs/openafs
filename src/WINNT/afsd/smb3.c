@@ -5115,6 +5115,23 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 #define  FILE_OVERWRITE	4	// (open & truncate, but do not create)
 #define  FILE_OVERWRITE_IF 5	// (open & truncate, or create)
 
+/* Flags field */
+#define REQUEST_OPLOCK 2
+#define REQUEST_BATCH_OPLOCK 4
+#define OPEN_DIRECTORY 8
+#define EXTENDED_RESPONSE_REQUIRED 0x10
+
+/* CreateOptions field. */
+#define FILE_DIRECTORY_FILE       0x0001
+#define FILE_WRITE_THROUGH        0x0002
+#define FILE_SEQUENTIAL_ONLY      0x0004
+#define FILE_NON_DIRECTORY_FILE   0x0040
+#define FILE_NO_EA_KNOWLEDGE      0x0200
+#define FILE_EIGHT_DOT_THREE_ONLY 0x0400
+#define FILE_RANDOM_ACCESS        0x0800
+#define FILE_DELETE_ON_CLOSE      0x1000
+#define FILE_OPEN_BY_FILE_ID      0x2000
+
 long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     char *pathp, *realPathp;
@@ -5132,6 +5149,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     unsigned int requestOpLock;
     unsigned int requestBatchOpLock;
     unsigned int mustBeDir;
+    unsigned int extendedRespRequired;
     unsigned int treeCreate;
     int realDirFlag;
     unsigned int desiredAccess;
@@ -5166,9 +5184,10 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     nameLength = smb_GetSMBOffsetParm(inp, 2, 1);
     flags = smb_GetSMBOffsetParm(inp, 3, 1)
         | (smb_GetSMBOffsetParm(inp, 4, 1) << 16);
-    requestOpLock = flags & 0x02;
-    requestBatchOpLock = flags & 0x04;
-    mustBeDir = flags & 0x08;
+    requestOpLock = flags & REQUEST_OPLOCK;
+    requestBatchOpLock = flags & REQUEST_BATCH_OPLOCK;
+    mustBeDir = flags & OPEN_DIRECTORY;
+    extendedRespRequired = flags & EXTENDED_RESPONSE_REQUIRED;
 
     /*
      * Why all of a sudden 32-bit FID?
@@ -5189,9 +5208,9 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     /* mustBeDir is never set; createOptions directory bit seems to be
      * more important
      */
-    if (createOptions & 1)
+    if (createOptions & FILE_DIRECTORY_FILE)
         realDirFlag = 1;
-    else if (createOptions & 0x40)
+    else if (createOptions & FILE_NON_DIRECTORY_FILE)
         realDirFlag = 0;
     else
         realDirFlag = -1;
@@ -5418,7 +5437,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 }
             } while (dscp == NULL && code == 0);
         } else
-			code = 0;
+            code = 0;
 
         /* we might have scp and we might have dscp */
 
@@ -5847,10 +5866,10 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     lparmp = (ULONG *) parmp;
 
     flags = lparmp[0];
-    requestOpLock = flags & 0x02;
-    requestBatchOpLock = flags & 0x04;
-    mustBeDir = flags & 0x08;
-    extendedRespRequired = flags & 0x10;
+    requestOpLock = flags & REQUEST_OPLOCK;
+    requestBatchOpLock = flags & REQUEST_BATCH_OPLOCK;
+    mustBeDir = flags & OPEN_DIRECTORY;
+    extendedRespRequired = flags & EXTENDED_RESPONSE_REQUIRED;
 
     /*
      * Why all of a sudden 32-bit FID?
@@ -5883,9 +5902,9 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
     /* mustBeDir is never set; createOptions directory bit seems to be
      * more important
      */
-    if (createOptions & 1)
+    if (createOptions & FILE_DIRECTORY_FILE)
         realDirFlag = 1;
-    else if (createOptions & 0x40)
+    else if (createOptions & FILE_NON_DIRECTORY_FILE)
         realDirFlag = 0;
     else
         realDirFlag = -1;

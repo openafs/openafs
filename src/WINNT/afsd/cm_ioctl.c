@@ -1114,7 +1114,7 @@ extern long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep);
 
 long cm_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-    /* NT cache manager will read cell information from afsdcell.ini each time
+    /* NT cache manager will read cell information from CellServDB each time
      * cell is accessed. So, this call is necessary only if list of server for a cell 
      * changes (or IP addresses of cell servers changes).
      * All that needs to be done is to refresh server information for all cells that 
