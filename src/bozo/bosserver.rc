@@ -10,6 +10,8 @@
 /* Define VERSIONINFO resource */
 
 #define  AFS_VERINFO_FILE_DESCRIPTION "AFS Basic OverSeer Server"
+#define  AFS_VERINFO_NAME "bosserver"
+#define  AFS_VERINFO_FILENAME "bosserver.exe"
 
 #include "AFS_component_version_number.h"
 #include "..\config\NTVersioninfo.rc"

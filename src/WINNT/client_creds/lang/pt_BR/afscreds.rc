@@ -26,6 +26,19 @@
 #ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #endif //_WIN32
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Client"
+
+#define AFS_VERINFO_NAME "afscreds"
+#define AFS_VERINFO_FILENAME "afscreds.exe"
+#define AFS_VERINFO_LANG_CODE 0x416
+#define AFS_VERINFO_CHARSET 1252
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
 
 /////////////////////////////////////////////////////////////////////////////
 //

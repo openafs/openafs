@@ -10,6 +10,8 @@
 #include "resource.h"
 
 #define  AFS_VERINFO_FILE_DESCRIPTION "AFS Server Configuration"
+#define AFS_VERINFO_NAME "afscfg"
+#define AFS_VERINFO_FILENAME "afscfg.exe"
 #include "AFS_component_version_number.h"
 #include "..\..\config\NTVersioninfo.rc"
 
