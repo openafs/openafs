@@ -35,6 +35,9 @@ AC_ARG_ENABLE(kernel-module,
 AC_ARG_ENABLE(redhat-buildsys,
 [  --enable-redhat-buildsys		enable compilation of the redhat build system kernel (defaults to disabled)],, enable_redhat_buildsys="no"
 )
+AC_ARG_ENABLE(transarc-paths,
+[  --enable-transarc-paths              	Use Transarc style paths like /usr/afs and /usr/vice],, enable_transarc_paths="no"
+)
 
 AC_PROG_CC
 
@@ -391,6 +394,39 @@ AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h)
 AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h)
 
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf re_comp re_exec)
+
+dnl Directory PATH handling
+if test "x$enable_transarc_paths" = "xyes"  ; then 
+    afsconfdir=${afsconfdir=/usr/afs/etc}
+    viceetcdir=${viceetcdir=/usr/vice/etc}
+    afssrvdir=${afssrvdir=/usr/afs/bin}
+    afsdbdir=${afsdbdir=/usr/afs/db}
+    afslogsdir=${afslogsdir=/usr/afs/logs}
+    afslocaldir=${afslocaldir=/usr/afs/local}
+    afsbackupdir=${afsbackupdir=/usr/afs/backup}
+    afsbosconfigdir=${afsbosconfigdir=/usr/afs/local}
+    afsbosserverdir=${afsbosserverdir=/usr/afs/bin}
+    else 
+    afsconfdir=${afsconfdir=$sysconfdir/openafs/server}
+    viceetcdir=${viceetcdir=$sysconfdir/openafs}
+    afssrvdir=${afssrvdir=$libexecdir/openafs}
+    afsdbdir=${afsdbdir=$localstatedir/openafs/db}
+    afslogsdir=${afslogsdir=$localstatedir/openafs/logs}
+    afslocaldir=${afslocaldir=$localstatedir/openafs}
+    afsbackupdir=${afsbackupdir=$localstatedir/openafs/backup}
+    afsbosconfigdir=${afsbosconfigdir=$sysconfdir/openafs}
+	afsbosserverdir=${afsbosserverdir=$sbindir}
+
+fi
+AC_SUBST(afsconfdir)
+AC_SUBST(viceetcdir)
+AC_SUBST(afssrvdir)
+AC_SUBST(afsdbdir)
+AC_SUBST(afslogsdir)
+AC_SUBST(afslocaldir)
+AC_SUBST(afsbackupdir)
+AC_SUBST(afsbosconfigdir)
+AC_SUBST(afsbosserverdir)
 
 if test "x$enable_kernel_module" = "xyes"; then
 ENABLE_KERNEL_MODULE=libafs

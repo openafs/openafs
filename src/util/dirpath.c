@@ -61,16 +61,16 @@ static void initDirPathArray(void);
 /* Additional macros for ease of use */
 /* buf is expected to be atleast AFS_PATH_MAX bytes long */
 #define AFSDIR_SERVER_DIRPATH(buf, dir)  \
-            strcompose(buf, AFSDIR_PATH_MAX, dirPathArray[AFSDIR_SERVER_AFS_DIRPATH_ID], "/", dir, NULL)
+            strcompose(buf, AFSDIR_PATH_MAX, serverPrefix, dir, NULL)
 
 #define AFSDIR_SERVER_FILEPATH(buf, dir, file)  \
-            strcompose(buf, AFSDIR_PATH_MAX, dirPathArray[AFSDIR_SERVER_AFS_DIRPATH_ID], "/", dir, "/", file,  NULL)
+            strcompose(buf, AFSDIR_PATH_MAX, serverPrefix, dir, "/", file,  NULL)
 
 #define AFSDIR_CLIENT_DIRPATH(buf, dir)  \
-            strcompose(buf, AFSDIR_PATH_MAX, dirPathArray[AFSDIR_CLIENT_VICE_DIRPATH_ID], "/", dir, NULL)
+            strcompose(buf, AFSDIR_PATH_MAX, clientPrefix, dir, NULL)
 
 #define AFSDIR_CLIENT_FILEPATH(buf, dir, file)  \
-            strcompose(buf, AFSDIR_PATH_MAX, dirPathArray[AFSDIR_CLIENT_VICE_DIRPATH_ID], "/", dir, "/", file,  NULL)
+            strcompose(buf, AFSDIR_PATH_MAX,  clientPrefix, dir, "/", file,  NULL)
 
 
 /* initAFSDirPath() -- External users call this function to initialize
@@ -105,7 +105,9 @@ unsigned int initAFSDirPath(void)
 static void initDirPathArray(void)
 { 
     char *pathp;
-
+    const char * clientPrefix = "";
+    const char * serverPrefix = "";
+    
 #ifdef AFS_NT40_ENV
     char *buf;
     int status;
@@ -145,6 +147,7 @@ static void initDirPathArray(void)
 	strcpy(ntClientConfigDirShort, ntClientConfigDirLong);
     }
     FilepathNormalize(ntClientConfigDirShort);
+    clientPrefix = ntClientConfigDirShort;
 
     /* setup the root server directory path (/usr/afs equivalent) */
     strcpy(afsSrvDirPath, ntServerInstallDirShort);
@@ -155,6 +158,7 @@ static void initDirPathArray(void)
 
     /* setup top level dirpath (/usr equivalent); valid for server ONLY */
     strcpy(dirPathArray[AFSDIR_USR_DIRPATH_ID], ntServerInstallDirShort);
+    serverPrefix = ntInstallDirShort;
     strcat(dirPathArray[AFSDIR_USR_DIRPATH_ID], AFSDIR_CANONICAL_USR_DIRPATH);
 
 #else /* AFS_NT40_ENV */
@@ -182,10 +186,10 @@ static void initDirPathArray(void)
   strcpy(dirPathArray[AFSDIR_SERVER_AFS_DIRPATH_ID], afsSrvDirPath);
 
   pathp = dirPathArray[AFSDIR_SERVER_ETC_DIRPATH_ID];
-  AFSDIR_SERVER_DIRPATH(pathp, AFSDIR_ETC_DIR);
+  AFSDIR_SERVER_DIRPATH(pathp, AFSDIR_SERVER_ETC_DIR);
 
   pathp = dirPathArray[AFSDIR_SERVER_BIN_DIRPATH_ID];
-  AFSDIR_SERVER_DIRPATH(pathp, AFSDIR_BIN_DIR);
+  AFSDIR_SERVER_DIRPATH(pathp, AFSDIR_SERVER_BIN_DIR);
 
   pathp = dirPathArray[AFSDIR_SERVER_CORES_DIRPATH_ID];
   AFSDIR_SERVER_DIRPATH(pathp, AFSDIR_CORES_DIR);
@@ -218,16 +222,16 @@ static void initDirPathArray(void)
   strcpy(dirPathArray[AFSDIR_CLIENT_VICE_DIRPATH_ID], afsClntDirPath);
 
   pathp = dirPathArray[AFSDIR_CLIENT_ETC_DIRPATH_ID];
-  AFSDIR_CLIENT_DIRPATH(pathp, AFSDIR_ETC_DIR);
+  AFSDIR_CLIENT_DIRPATH(pathp, AFSDIR_CLIENT_ETC_DIR);
 #endif /* AFS_NT40_ENV */
 
   /* server file paths */
 
   pathp = dirPathArray[AFSDIR_SERVER_THISCELL_FILEPATH_ID];
-  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_ETC_DIR, AFSDIR_THISCELL_FILE);
+  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_SERVER_ETC_DIR, AFSDIR_THISCELL_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_CELLSERVDB_FILEPATH_ID];
-  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_ETC_DIR, AFSDIR_CELLSERVDB_FILE);
+  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_SERVER_ETC_DIR, AFSDIR_CELLSERVDB_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_NOAUTH_FILEPATH_ID];
   AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_LOCAL_DIR, AFSDIR_NOAUTH_FILE);
@@ -248,7 +252,7 @@ static void initDirPathArray(void)
   AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_DB_DIR, AFSDIR_KADB_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_NTPD_FILEPATH_ID];
-  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_BIN_DIR, AFSDIR_NTPD_FILE);
+  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_SERVER_BIN_DIR, AFSDIR_NTPD_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_PRDB_FILEPATH_ID];
   AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_DB_DIR, AFSDIR_PRDB_FILE);
@@ -257,7 +261,7 @@ static void initDirPathArray(void)
   AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_LOGS_DIR, AFSDIR_PTLOG_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_KCONF_FILEPATH_ID];
-  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_ETC_DIR, AFSDIR_KCONF_FILE);
+  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_SERVER_ETC_DIR, AFSDIR_KCONF_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_VLDB_FILEPATH_ID];
   AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_DB_DIR, AFSDIR_VLDB_FILE);
@@ -272,37 +276,37 @@ static void initDirPathArray(void)
   AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_LOGS_DIR, AFSDIR_SLVGLOG_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_SALVAGER_FILEPATH_ID];
-  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_BIN_DIR, AFSDIR_SALVAGER_FILE);
+  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_SERVER_BIN_DIR, AFSDIR_SALVAGER_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_SLVGLOCK_FILEPATH_ID];
   AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_LOCAL_DIR, AFSDIR_SLVGLOCK_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_KEY_FILEPATH_ID];
-  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_ETC_DIR, AFSDIR_KEY_FILE);
+  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_SERVER_ETC_DIR, AFSDIR_KEY_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_ULIST_FILEPATH_ID];
-  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_ETC_DIR, AFSDIR_ULIST_FILE);
+  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_SERVER_ETC_DIR, AFSDIR_ULIST_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_BOZCONF_FILEPATH_ID];
-  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_LOCAL_DIR, AFSDIR_BOZCONF_FILE);
+  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_BOSCONFIG_DIR, AFSDIR_BOZCONF_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_BOZCONFNEW_FILEPATH_ID];
-  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_LOCAL_DIR, AFSDIR_BOZCONFNEW_FILE);
+  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_BOSCONFIG_DIR, AFSDIR_BOZCONFNEW_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_BOZLOG_FILEPATH_ID];
   AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_LOGS_DIR, AFSDIR_BOZLOG_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_BOZINIT_FILEPATH_ID];
-  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_LOCAL_DIR, AFSDIR_BOZINIT_FILE);
+  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_BOSCONFIG_DIR, AFSDIR_BOZINIT_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_BOSVR_FILEPATH_ID];
-  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_BIN_DIR, AFSDIR_BOSVR_FILE);
+  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_BOSSERVER_DIR, AFSDIR_BOSVR_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_VOLSERLOG_FILEPATH_ID];
   AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_LOGS_DIR, AFSDIR_VOLSERLOG_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_ROOTVOL_FILEPATH_ID];
-  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_ETC_DIR, AFSDIR_ROOTVOL_FILE);
+  AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_SERVER_ETC_DIR, AFSDIR_ROOTVOL_FILE);
 
   pathp = dirPathArray[AFSDIR_SERVER_HOSTDUMP_FILEPATH_ID];
   AFSDIR_SERVER_FILEPATH(pathp, AFSDIR_LOCAL_DIR, AFSDIR_HOSTDUMP_FILE);
@@ -350,17 +354,17 @@ static void initDirPathArray(void)
 	  ntClientConfigDirShort, AFSDIR_CELLSERVDB_FILE_NTCLIENT);
 #else
   pathp = dirPathArray[AFSDIR_CLIENT_THISCELL_FILEPATH_ID];
-  AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_ETC_DIR, AFSDIR_THISCELL_FILE);
+  AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_CLIENT_ETC_DIR, AFSDIR_THISCELL_FILE);
 
   pathp = dirPathArray[AFSDIR_CLIENT_CELLSERVDB_FILEPATH_ID]; 
-  AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_ETC_DIR, AFSDIR_CELLSERVDB_FILE);
+  AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_CLIENT_ETC_DIR, AFSDIR_CELLSERVDB_FILE);
 #endif /* AFS_NT40_ENV */
 
   pathp = dirPathArray[AFSDIR_CLIENT_NETINFO_FILEPATH_ID];
-  AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_ETC_DIR, AFSDIR_NETINFO_FILE);
+  AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_CLIENT_ETC_DIR, AFSDIR_NETINFO_FILE);
 
   pathp = dirPathArray[AFSDIR_CLIENT_NETRESTRICT_FILEPATH_ID];
-  AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_ETC_DIR, AFSDIR_NETRESTRICT_FILE);
+  AFSDIR_CLIENT_FILEPATH(pathp, AFSDIR_CLIENT_ETC_DIR, AFSDIR_NETRESTRICT_FILE);
 
   initFlag = 1;  /* finished dirpath initialization */
   return;
@@ -382,6 +386,48 @@ const char *getDirPath(afsdir_id_t string_id)
     }
     return (const char *)dirPathArray[string_id];
 }
+/*
+ * LocalizePathHead() -- Make path relative to local part
+ *
+ * ConstructLocalPath takes a path  and a directory that path should
+ * be considered relative to.   This  function checks the given path
+ * for   a prefix  that represents a canonical path.  If such a prefix
+ * is found,  the path is adjusted to remove the prefix and the path
+ * is considered  relative to the local version of that path.
+ */
+
+/* The following array  maps cannonical parts to local parts.  It
+ * might  seem reasonable to  simply construct an array in parallel to
+ * dirpatharray  but it turns out you don't want translations for all
+ local paths.
+*/
+
+struct canonmapping {
+  const char * canonical;
+  const char * local;
+};
+static struct   canonmapping CanonicalTranslations[] = {
+  {AFSDIR_CANONICAL_SERVER_ETC_DIRPATH, AFSDIR_SERVER_ETC_DIR},
+  { AFSDIR_CANONICAL_SERVER_LOGS_DIRPATH, AFSDIR_LOGS_DIR},
+  { AFSDIR_CANONICAL_SERVER_LOCAL_DIRPATH, AFSDIR_LOCAL_DIR},
+  {AFSDIR_CANONICAL_SERVER_BIN_DIRPATH,  AFSDIR_SERVER_BIN_DIR },
+  { NULL, NULL }
+};
+
+static void LocalizePathHead ( const char **path, const char **relativeTo)
+{
+  struct canonmapping *current;
+  for (current = CanonicalTranslations;  current->local != NULL ; current++) {
+    int canonlength = strlen (current->canonical);
+    if (strncmp (*path, current->canonical, canonlength) == 0 ) {
+      (*path) += canonlength;
+      if (**path == '/')
+	(*path)++;
+      *relativeTo  = current->local;
+      return;
+      }
+  }
+}
 
 
 #ifdef AFS_NT40_ENV
@@ -399,7 +445,7 @@ const char *getDirPath(afsdir_id_t string_id)
  *         2) If cpath begins with a drive letter but is not fully qualified,
  *            i.e., it is drive relative, then the function fails with EINVAL.
  *         3) If cpath begins with '/' (or '\') then the path returned is the
- *            concatenation  AFS-server-install-dir + cpath.
+ *            concatenation  AFS-server-install-dir + cpath after translating for localization.
  *	   4) Otherwise the path returned is the concatenation
  *            AFS-server-install-dir + relativeTo + cpath.
  *
@@ -430,6 +476,7 @@ ConstructLocalPath(const char *cpath,
 	cpath++;
     }
 
+    LocalizePathHead (&cpath,&relativeTo);
     if ((((*cpath >= 'a') && (*cpath <= 'z')) ||
 	 ((*cpath >= 'A') && (*cpath <= 'Z'))) &&
 	(*(cpath+1) == ':')) {
@@ -528,6 +575,7 @@ ConstructLocalPath(const char *cpath,
 	cpath++;
     }
 
+    LocalizePathHead (&cpath, &relativeTo);
     if (*cpath == '/') {
 	newPath = (char *)malloc(strlen(cpath) + 1);
 	if (!newPath) {

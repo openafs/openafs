@@ -1,5 +1,13 @@
 Openafs News -- history of user Visible changes. 11 July 2001
 
+* Changes since OpenAFS 1.1.1
+
+** AFS now supports --prefix and the other directory options of
+   configure.  By default AFS builds assuming it will be installed in
+   /usr/local.  In order to get traditional AFS directory paths (/usr/afs
+   and /usr/vice/etc) use the --enable-transarc-paths option to
+configure.  More details on the new directory layout are found in README.
+   
 * Changes since Openafs 1.0
 
 ** AFS now builds with configure. The README for building has been

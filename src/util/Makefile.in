@@ -9,6 +9,17 @@ DESTDIR=@DESTDIR@
 SRCDIR=@SRCDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+afsconfdir=@afsconfdir@
+viceetcdir=@viceetcdir@
+afssrvdir=@afssrvdir@
+afsdbdir=@afsdbdir@
+afslogsdir=@afslogsdir@
+afslocaldir=@afslocaldir@
+afsbackupdir=@afsbackupdir@
+afsbosconfigdir=@afsbosconfigdir@
+afsbosserverdir=@afsbosserverdir@
 
 SHELL = /bin/sh
 
@@ -24,6 +35,19 @@ objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
 
 all: install
 
+dirpath.h: dirpath.hin Makefile
+	( sed \
+		-e "s+@afsconfdir+${afsconfdir}+" \
+		-e "s+@viceetcdir+${viceetcdir}+" \
+		-e "s+@afssrvdir+${afssrvdir}+" \
+		-e "s+@afsdbdir+${afsdbdir}+" \
+		-e "s+@afslogsdir+${afslogsdir}+" \
+		-e "s+@afslocaldir+${afslocaldir}+" \
+		-e "s+@afsbackupdir+${afsbackupdir}+" \
+		-e "s+@afsbosconfigdir+${afsbosconfigdir}+" \
+		-e "s+@afsbosserverdir+${afsbosserverdir}+" \
+		dirpath.hin >dirpath.h.tmp && \
+		mv dirpath.h.tmp dirpath.h )
 util.a: ${objects} AFS_component_version_number.o
 	$(RM) -f util.a
 	$(AR) crv util.a ${objects} AFS_component_version_number.o
@@ -266,7 +290,7 @@ ${UKDIR}/afs_lhash.h: afs_lhash.h
 #
 
 clean:
-	$(RM) -f ${objects} sys
+	$(RM) -f ${objects} sys dirpath.h
 	$(RM) -f util.a *.o core AFS_component_version_number.c
 
 test:
