@@ -1,3 +1,15 @@
+Since 1.3.77:
+  * The variable used to determine whether a file or virtual memory
+    mapped cache is used was not properly initialized to a default
+    value. If the registry setting "NonPersistentCaching" was not
+    set, the choice would be random.   Properly initialized to be
+    "file".
+
+ * The memory mapped view was never unmapped before closing the file
+   at service shutdown.  This is now properly cleaned up.
+
+ * Default location of Cache file is now %TEMP%\AFSCache
+
 Since 1.3.76:
 
   * A bug affecting new installations of 1.3.75/76 would result in

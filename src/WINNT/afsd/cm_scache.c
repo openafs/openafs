@@ -982,7 +982,7 @@ void cm_AFSFidFromFid(AFSFid *afsFidp, cm_fid_t *fidp)
 void cm_HoldSCacheNoLock(cm_scache_t *scp)
 {
 #ifdef NOLOCK_ASSERT
-    osi_assert(scp->refCount > 0);
+    osi_assert(scp->refCount >= 0);
 #endif
     scp->refCount++;
 }
@@ -990,7 +990,7 @@ void cm_HoldSCacheNoLock(cm_scache_t *scp)
 void cm_HoldSCache(cm_scache_t *scp)
 {
     lock_ObtainWrite(&cm_scacheLock);
-    osi_assert(scp->refCount > 0);
+    osi_assert(scp->refCount >= 0);
     scp->refCount++;
     lock_ReleaseWrite(&cm_scacheLock);
 }

@@ -1181,6 +1181,7 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
     DismountGlobalDrives();
     smb_Shutdown();
     rx_Finalize();
+    buf_Shutdown();
 
 #ifdef	REGISTER_POWER_NOTIFICATIONS
     /* terminate thread used to flush cache */

@@ -142,6 +142,8 @@ extern cm_buf_t **buf_fileHashTablepp;
 
 extern long buf_Init(cm_buf_ops_t *);
 
+extern void buf_Shutdown(void);
+
 extern long buf_CountFreeList(void);
 
 extern void buf_Release(cm_buf_t *);
