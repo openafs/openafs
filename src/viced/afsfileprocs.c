@@ -314,7 +314,18 @@ retry:
     else if (thost->hostFlags & VENUSDOWN) {
       if (BreakDelayedCallBacks_r(thost)) {
 	ViceLog(0,("BreakDelayedCallbacks FAILED for host %08x which IS UP.  Possible network or routing failure.\n",thost->host));
-	code = -1;
+	if ( MultiProbeAlternateAddress_r (thost) ) {
+	    ViceLog(0, ("MultiProbe failed to find new address for host %x.%d\n",
+			thost->host, thost->port));
+	    code = -1;
+	} else {
+	    ViceLog(0, ("MultiProbe found new address for host %x.%d\n",
+			thost->host, thost->port));
+	    if (BreakDelayedCallBacks_r(thost)) {
+		ViceLog(0,("BreakDelayedCallbacks FAILED AGAIN for host %08x which IS UP.  Possible network or routing failure.\n",thost->host));
+		code = -1;
+	    }
+	}
       }
     } else {
        code =  0;
