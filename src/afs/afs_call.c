@@ -293,8 +293,8 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	    else {
 		AFS_COPYIN((char *)parm3, tcell.cellName, parm4, code);
 		if (!code) 
-		    afs_NewCell(tcell.cellName, tcell.hosts, parm5,
-				(char *)0, (u_short)0, (u_short)0, (int)0);
+		    afs_NewCell(tcell.cellName, tcell.hosts, parm5, (char *)0,
+				(u_short)0, (u_short)0, (int)0, (char *)0);
 	    }
 	}
     } else if (parm == AFSOP_ADDCELL2) {
@@ -323,8 +323,8 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 		    }
 		}
 		if (!code)
-		    afs_NewCell(tbuffer1, tcell.hosts, cflags, 
-				lcnamep, (u_short)0, (u_short)0, (int)0);
+		    afs_NewCell(tbuffer1, tcell.hosts, cflags, lcnamep,
+				(u_short)0, (u_short)0, (int)0, (char *)0);
 	    }
 	}
 	osi_FreeSmallSpace(tbuffer);

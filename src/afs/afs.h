@@ -1016,7 +1016,7 @@ extern struct brequest afs_brs[NBRS];		/* request structures */
 extern struct cell	    *afs_GetCell();
 extern struct cell	    *afs_GetCellNoLock();
 extern struct cell	    *afs_GetCellByName();
-extern struct cell	    *afs_GetCellByName2();
+extern struct cell	    *afs_FindCellByName();
 extern struct cell	    *afs_GetCellByIndex();
 extern struct unixuser	    *afs_GetUser();
 extern struct volume	    *afs_GetVolume();

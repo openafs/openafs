@@ -584,7 +584,7 @@ afs_DynrootVOPRemove(avc, acred, aname)
     }
 
     /* Check if this is an actual cell? */
-    c = afs_GetCellByName2(aname, READ_LOCK, 0 /* no AFSDB */);
+    c = afs_FindCellByName(aname, READ_LOCK);
     if (c) {
 	afs_PutCell(c, READ_LOCK);
 	return EROFS;
@@ -610,7 +610,7 @@ afs_DynrootVOPSymlink(avc, acred, aname, atargetName)
 	return EPERM;
 
     /* Check if it's already a cell */
-    c = afs_GetCellByName2(aname, READ_LOCK, 0 /* no AFSDB */);
+    c = afs_FindCellByName(aname, READ_LOCK);
     if (c) {
 	afs_PutCell(c, READ_LOCK);
 	return EEXIST;

@@ -856,7 +856,7 @@ struct afsconf_cell *acellInfo; {
 	    bestce = tce;
 	}
     }
-    if (!ambig && bestce) {
+    if (!ambig && bestce && bestce->cellInfo.numServers) {
 	*acellInfo = bestce->cellInfo;	/* structure assignment */
 	if (aservice) {
 	    tservice = afsconf_FindService(aservice);
