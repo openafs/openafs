@@ -1,0 +1,32 @@
+#!/bin/sh
+
+echo "NOTE:    Executing configure script."
+#######
+#
+#  (c) Copyright 
+#
+########
+
+    set -a
+    UTILS="/usr/lbin/sw/control_utils"
+    if [[ ! -f ${UTILS} ]]
+    then
+        echo "ERROR:   Cannot find ${UTILS}"
+        exit 1
+    fi
+    . ${UTILS}
+
+############################################################################
+# Set the global PATH to include OPENAFS software
+ROOT=/usr/afs/
+
+mod_pathfile -a MP ${ROOT}man
+
+if [[ $? = 2 ]]
+then
+    echo "         /etc/MANPATH already contains the OPENAFS component."
+else
+    echo "NOTE:    Processes may need to be restarted to inherit"
+    echo "         ${ROOT}/man in their PATH."
+fi
+

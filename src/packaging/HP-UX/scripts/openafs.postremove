@@ -1,0 +1,46 @@
+#!/bin/sh
+
+echo "NOTE:    Executing configure script."
+#######
+#
+#  (c) Copyright Hewlett-Packard Company 1994
+#
+########
+
+    set -a
+    UTILS="/usr/lbin/sw/control_utils"
+    if [[ ! -f ${UTILS} ]]
+    then
+        echo "ERROR:   Cannot find ${UTILS}"
+        exit 1
+    fi
+    . ${UTILS}
+
+############################################################################
+# Removing the OPENOAFS product means cleanup everything!
+
+# Kill ruthlessly..
+
+PROCS="bosserver fileserver volserver buserver ptserver kaserver vlserver \
+	upserver upclient"
+
+for proc in $PROCS
+do
+  kill_named_procs $proc SIGKILL
+done
+
+
+rm -fr /usr/vice
+if [[ $? != 0 ]]
+  print "         Could not remove the /usr/vice directory, adding it to the"
+  print "         cleanup file"
+  print "/usr/vice" >> /var/adm/cleanupfile
+fi
+rm -fr /usr/afs
+if [[ $? != 0 ]]
+  print "         Could not remove the /usr/afs directory, adding it to the"
+  print "         cleanup file"
+  print "/usr/afs" >> /var/adm/cleanupfile
+fi
+       
+

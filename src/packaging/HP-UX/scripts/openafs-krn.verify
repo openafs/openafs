@@ -1,0 +1,53 @@
+#!/bin/sh
+##############
+# Subproduct: OPENAFS.Kernel
+# Fileset: OPENAFS-KRN32 | OPENAFS-KRN64
+# verify
+# @(#) $Revision: 1.2
+##############
+#
+#  (c) Copyright Hewlett-Packard Company, 2003
+#
+########
+
+# The global variables SUCCESS, FAILURE, WARNING, EXCLUDE, PATH, ROOT,
+# SW_CTL_SCRIPT_NAME, _pf, PRODUCT, and FILESET are all set by control_utils.
+
+UTILS=/usr/lbin/sw/control_utils
+if [[ ! -f $UTILS ]]
+then
+  print "ERROR:   Cannot find the sh functions library $UTILS."
+  exit 1
+fi
+. $UTILS
+
+TEMP=/tmp/kern-verify.$$
+
+trap "/usr/bin/rm -f $TEMP" HUP INT QUIT TERM ABRT EXIT
+
+kernel="$(get_kernel_path)"
+
+/usr/lbin/sysadm/get_sysfile ${kernel} >| $TEMP
+if [[ ! -s "$TEMP" ]]
+then
+  print "ERROR:   The get_sysfile tool failed on ${kernel}."
+  exit $FAILURE
+fi
+
+for driver in afs
+do
+  /usr/bin/grep "^${driver}\$" $TEMP >/dev/null 2>&1
+  if [[ $? -ne 0 ]]
+  then
+    print "WARNING: The \"${driver}\" functionality is not configured in the"
+    print "         kernel (${kernel})."
+    print "          The $FILESET fileset is not properly installed."
+    exit $WARNING
+  fi
+done
+
+#
+# Finished
+#
+
+exit $exitval

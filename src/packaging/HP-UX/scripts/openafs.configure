@@ -1,0 +1,49 @@
+#!/bin/sh
+
+echo "NOTE:    Executing configure script."
+#######
+#
+#  (c) Copyright Hewlett-Packard Company 1994
+#
+########
+
+    set -a
+    UTILS="/usr/lbin/sw/control_utils"
+    if [[ ! -f ${UTILS} ]]
+    then
+        echo "ERROR:   Cannot find ${UTILS}"
+        exit 1
+    fi
+    . ${UTILS}
+
+############################################################################
+# Set the global PATH to include OPENAFS software
+ROOT=/usr/afs/
+mod_pathfile -a P ${ROOT}bin
+
+if [[ $? = 2 ]]
+then
+    echo "         /etc/PATH already contains the OPENAFS component."
+else
+    echo "NOTE:    Processes may need to be restarted to inherit"
+    echo "         ${ROOT}/bin in their PATH."
+fi
+
+if [[ -f /usr/newconfig/sbin/init.d/afs ]]; then
+
+  # Copy from the original to /sbin/init.d
+
+  cp /usr/newconfig/sbin/init.d/afs /sbin/init.d
+  chmog 555 bin bin  /sbin/init.d/afs
+
+  # Insert the sym links for startup and shutdown
+  # Assume possible upgrade! if the link is there, don't relink
+  #
+  if [[ ! -h /sbin/rc2.d/K800afs ]]; then
+    ln -s /sbin/init.d/afs /sbin/rc2.d/K800afs
+  fi
+  if [[ ! -h /sbin/rc2.d/S460afs ]]; then
+    ln -s /sbin/init.d/afs /sbin/rc2.d/S460afs
+  fi
+
+fi
