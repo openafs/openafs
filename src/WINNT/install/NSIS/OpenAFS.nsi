@@ -649,7 +649,8 @@ skipremove:
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "SecurityLevel" $R0
   ReadINIStr $R0 $1 "Field 5" "State"  
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "FreelanceClient" $R0
-  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "UseDNS" 1
+  ReadINIStr $R0 $1 "Field 11" "State"  
+  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "UseDNS" $R0
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "NetbiosName" "AFS"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "MountRoot" "/afs"
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "RxMaxMTU" 1260
@@ -2008,8 +2009,11 @@ StrCmp $R0 "1" done
 ReadINIStr $R0 $0 "Field 3" "State"
 StrCmp $R0 "1" UsePackaged
 
+ReadINIStr $R0 $0 "Field 6" "State"
+StrCmp $R0 "1" CheckOther
+
 ; If none of these, grab file from other location
-goto CheckOther
+goto UsePackaged
 
 DoDownload:
    ReadINIStr $R0 $0 "Field 5" "State"
@@ -2026,7 +2030,7 @@ UsePackaged:
    
 CheckOther:
    ReadINIStr $R0 $0 "Field 7" "State"
-   StrCmp $R0 "1" +1 done
+   StrCmp $R0 "" done
    CopyFiles $R0 "$WINDIR\afsdcell.ini"
    
 done:
