@@ -171,6 +171,8 @@
 #define SYS_NAME_ID_sparc_nbsd16	2512
 #define SYS_NAME_ID_sparc64_nbsd16	2513
 
+#define SYS_NAME_ID_i386_obsd31		2600
+
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 
  * files (i.e in afs/param.h)

@@ -24,11 +24,11 @@
 
 #define FTRUNC O_TRUNC
 
-#define AFS_SYSCALL	208
-#define AFS_MOUNT_AFS	"afs"
+#define AFS_SYSCALL		208
+#define AFS_MOUNT_AFS		"afs"
 
-#define SYS_NAME	"i386_obsd31"
-#define SYS_NAME_ID	2002
+#define SYS_NAME		"i386_obsd31"
+#define SYS_NAME_ID		SYS_NAME_ID_i386_obsd31
 
 #define RXK_LISTENER_ENV	1
 #define AFS_GCPAGS	        0       /* if nonzero, garbage collect PAGs */
