@@ -155,7 +155,6 @@ void afs_LookupAFSDB(char *acellName)
 #ifdef AFS_AFSDB_ENV
     afs_int32 cellHosts[MAXCELLHOSTS];
     char *realName = NULL;
-    struct cell *tc;
     int code, timeout;
     
     code = afs_GetCellHostsAFSDB(acellName, cellHosts, &timeout, &realName);
@@ -321,7 +320,7 @@ int afs_cellname_write()
 {
     struct osi_file *tfile;
     struct cell_name *cn;
-    int code, off;
+    int off;
 
     if (!afs_cellname_dirty || !afs_cellname_inode_set)
 	return 0;

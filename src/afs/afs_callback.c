@@ -932,7 +932,6 @@ int SRXAFSCB_WhoAreYou(struct rx_call *a_call, struct interfaceAddr *addr)
 {
     int i;
     int code = 0;
-    XSTATS_DECLS;
 
     RX_AFS_GLOCK();
 

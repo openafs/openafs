@@ -221,7 +221,7 @@ extern void afs_Daemon(void);
 extern struct brequest *afs_BQueue(register short aopcode, register struct vcache *avc, 
         afs_int32 dontwait, afs_int32 ause, struct AFS_UCRED *acred, 
         afs_size_t asparm0, afs_size_t asparm1, void *apparm0);
-extern int afs_CheckServerDaemon(void);
+extern void afs_CheckServerDaemon(void);
 extern int afs_CheckRootVolume (void);
 extern void afs_BRelease(register struct brequest *ab);
 extern int afs_BBusy(void);

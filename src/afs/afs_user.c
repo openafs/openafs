@@ -153,7 +153,6 @@ void afs_CheckTokenCache(void)
     register int i;
     register struct unixuser *tu;
     afs_int32 now;
-    register struct cell *tcell;
 
     AFS_STATCNT(afs_CheckCacheResets);
     ObtainReadLock(&afs_xvcache);
@@ -174,10 +173,9 @@ void afs_CheckTokenCache(void)
 		     * cache.
 		     */
 #ifdef notdef
-		    tcell = afs_GetCell(tu->cell);
 		    /* I really hate this message - MLK */
 		    afs_warn("afs: Tokens for user of AFS id %d for cell %s expired now\n",
-			   tu->vid, tcell->cellName);
+			   tu->vid, afs_GetCell(tu->cell)->cellName);
 #endif
 		    tu->states |= (UTokensBad | UNeedsReset);
 		}
@@ -197,7 +195,7 @@ void afs_CheckTokenCache(void)
 
 void afs_ResetAccessCache(afs_int32 uid, int alock)
 {
-    register int i, j;
+    register int i;
     register struct vcache *tvc;
     struct axscache *ac;
 
@@ -226,7 +224,6 @@ void afs_ResetAccessCache(afs_int32 uid, int alock)
 void afs_ResetUserConns (register struct unixuser *auser)
 {
     int i;
-    struct server *ts;
     struct srvAddr *sa;
     struct conn *tc;
     

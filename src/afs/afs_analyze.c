@@ -293,13 +293,12 @@ int afs_Analyze(register struct conn *aconn, afs_int32 acode,
 	struct VenusFid *afid, register struct vrequest *areq, int op,
 	afs_int32 locktype, struct cell *cellp)
 {
-   afs_int32 i, code;
-   struct srvAddr *sa;
-   struct server *tsp;
-   struct volume *tvp;
-   afs_int32 shouldRetry = 0;
-   struct afs_stats_RPCErrors *aerrP;
-   XSTATS_DECLS;
+    afs_int32 i;
+    struct srvAddr *sa;
+    struct server *tsp;
+    struct volume *tvp;
+    afs_int32 shouldRetry = 0;
+    struct afs_stats_RPCErrors *aerrP;
 
     AFS_STATCNT(afs_Analyze);
     afs_Trace4(afs_iclSetp, CM_TRACE_ANALYZE, ICL_TYPE_INT32, op,

@@ -49,7 +49,7 @@ afs_int32 PROBE_INTERVAL=180;	/* default to 3 min */
 #define PROBE_WAIT() (1000 * (PROBE_INTERVAL - ((afs_random() & 0x7fffffff) \
 		      % (PROBE_INTERVAL/2))))
 
-int afs_CheckServerDaemon(void)
+void afs_CheckServerDaemon(void)
 {
     afs_int32 now, delay, lastCheck, last10MinCheck;
 
