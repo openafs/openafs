@@ -130,6 +130,12 @@ case $system in
 			OMIT_FRAME_POINTER=-fomit-frame-pointer
 		 fi
 		 AC_SUBST(OMIT_FRAME_POINTER)
+		 OPENAFS_GCC_SUPPORTS_MARCH
+		 AC_SUBST(P5PLUS_KOPTS)
+		 OPENAFS_GCC_NEEDS_NO_STRENGTH_REDUCE
+		 OPENAFS_GCC_NEEDS_NO_STRICT_ALIASING
+		 OPENAFS_GCC_SUPPORTS_NO_COMMON
+		 AC_SUBST(LINUX_GCC_KOPTS)
 	         ifdef([OPENAFS_CONFIGURE_LIBAFS],
 	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,afs)],
 	           [LINUX_BUILD_VNODE_FROM_INODE(${srcdir}/src/config,src/afs/LINUX,${srcdir}/src/afs/LINUX)]
@@ -144,9 +150,42 @@ case $system in
 		 LINUX_EXPORTS_TASKLIST_LOCK
 		 LINUX_NEED_RHCONFIG
 		 LINUX_WHICH_MODULES
+                 if test "$ac_cv_linux_config_modversions" = "xno"; then
+                   AC_MSG_WARN([Cannot determine sys_call_table status. assuming it's exported])
+                   ac_cv_linux_exports_sys_call_table=yes
+                 else
+                   LINUX_EXPORTS_SYS_CALL_TABLE
+                   LINUX_EXPORTS_KALLSYMS_SYMBOL
+                   LINUX_EXPORTS_KALLSYMS_ADDRESS
+                   LINUX_EXPORTS_INIT_MM
+                   if test "x$ac_cv_linux_exports_sys_call_table" = "xno"; then
+                         linux_syscall_method=none
+                         if test "x$ac_cv_linux_exports_init_mm" = "xyes"; then
+                            linux_syscall_method=scan
+                            if test "x$ac_cv_linux_exports_kallsyms_address" = "xyes"; then
+                               linux_syscall_method=scan_with_kallsyms_address
+                            fi
+                         fi
+                         if test "x$ac_cv_linux_exports_kallsyms_symbol" = "xyes"; then
+                            linux_syscall_method=kallsyms_symbol
+                         fi
+                         if test "x$linux_syscall_method" = "xnone"; then
+                        AC_MSG_ERROR([no available sys_call_table access method])
+                         fi
+                   fi
+                 fi
 		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_TASKLIST_LOCK, 1, [define if your linux kernel exports tasklist_lock])
 		 fi
+                 if test "x$ac_cv_linux_exports_sys_call_table" = "xyes"; then
+                  AC_DEFINE(EXPORTED_SYS_CALL_TABLE)
+                 fi
+                 if test "x$ac_cv_linux_exports_kallsyms_symbol" = "xyes"; then
+                  AC_DEFINE(EXPORTED_KALLSYMS_SYMBOL)
+                 fi
+                 if test "x$ac_cv_linux_exports_kallsyms_address" = "xyes"; then
+                  AC_DEFINE(EXPORTED_KALLSYMS_ADDRESS)
+                 fi
 		 if test "x$ac_cv_linux_completion_h_exists" = "xyes" ; then
 		  AC_DEFINE(COMPLETION_H_EXISTS, 1, [define if your h_exists exists])
 		 fi

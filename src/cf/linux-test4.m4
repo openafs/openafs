@@ -14,6 +14,70 @@ ac_cv_linux_exports_tasklist_lock=no)])
 AC_MSG_RESULT($ac_cv_linux_exports_tasklist_lock)
 CPPFLAGS="$save_CPPFLAGS"])
 
+AC_DEFUN(LINUX_EXPORTS_SYS_CALL_TABLE, [
+AC_MSG_CHECKING(for exported sys_call_table)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_exports_sys_call_table,
+[
+AC_TRY_COMPILE(
+[#include <linux/modversions.h>],
+[#ifndef __ver_sys_call_table
+#error sys_call_table not exported
+#endif],
+ac_cv_linux_exports_sys_call_table=yes,
+ac_cv_linux_exports_sys_call_table=no)])
+AC_MSG_RESULT($ac_cv_linux_exports_sys_call_table)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN(LINUX_EXPORTS_INIT_MM, [
+AC_MSG_CHECKING(for exported init_mm)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_exports_init_mm,
+[
+AC_TRY_COMPILE(
+[#include <linux/modversions.h>],
+[#ifndef __ver_init_mm
+#error init_mm not exported
+#endif],
+ac_cv_linux_exports_init_mm=yes,
+ac_cv_linux_exports_init_mm=no)])
+AC_MSG_RESULT($ac_cv_linux_exports_init_mm)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN(LINUX_EXPORTS_KALLSYMS_SYMBOL, [
+AC_MSG_CHECKING(for exported kallsyms_symbol_to_address)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_exports_kallsyms_symbol,
+[
+AC_TRY_COMPILE(
+[#include <linux/modversions.h>],
+[#ifndef __ver_kallsyms_symbol_to_address
+#error kallsyms_symbol_to_address not exported
+#endif],
+ac_cv_linux_exports_kallsyms_symbol=yes,
+ac_cv_linux_exports_kallsyms_symbol=no)])
+AC_MSG_RESULT($ac_cv_linux_exports_kallsyms_symbol)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN(LINUX_EXPORTS_KALLSYMS_ADDRESS, [
+AC_MSG_CHECKING(for exported kallsyms_address_to_symbol)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_exports_kallsyms_address,
+[
+AC_TRY_COMPILE(
+[#include <linux/modversions.h>],
+[#ifndef __ver_kallsyms_address_to_symbol
+#error kallsyms_address_to_symbol not exported
+#endif],
+ac_cv_linux_exports_kallsyms_address=yes,
+ac_cv_linux_exports_kallsyms_address=no)])
+AC_MSG_RESULT($ac_cv_linux_exports_kallsyms_address)
+CPPFLAGS="$save_CPPFLAGS"])
+
 AC_DEFUN(LINUX_COMPLETION_H_EXISTS, [
 AC_MSG_CHECKING(for linux/completion.h existance)
 save_CPPFLAGS="$CPPFLAGS"

@@ -26,6 +26,10 @@ RCSID("$Header$");
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 #include <linux/init.h>
 #endif
+#ifndef EXPORTED_SYS_CALL_TABLE
+#include <linux/sched.h>
+#include <linux/syscall.h>
+#endif
 
 
 
@@ -37,10 +41,18 @@ asmlinkage int (*sys_settimeofdayp)(struct timeval *tv, struct timezone *tz);
 asmlinkage int (*sys_killp)(int pid, int signal);
 asmlinkage long (*sys_setgroupsp)(int gidsetsize, gid_t *grouplist);
 
+#ifdef EXPORTED_SYS_CALL_TABLE
 #ifdef AFS_SPARC64_LINUX20_ENV
 extern unsigned int sys_call_table[];  /* changed to uint because SPARC64 has syscaltable of 32bit items */
 #else
 extern void * sys_call_table[]; /* safer for other linuces */
+#endif
+#else /* EXPORTED_SYS_CALL_TABLE */
+#ifdef AFS_SPARC64_LINUX20_ENV
+static unsigned int *sys_call_table;  /* changed to uint because SPARC64 has syscaltable of 32bit items */
+#else
+static void ** sys_call_table; /* safer for other linuces */
+#endif
 #endif
 extern struct file_system_type afs_file_system;
 
@@ -69,7 +81,11 @@ asmlinkage int (*sys32_setgroupsp)(int gidsetsize, __kernel_gid_t32 *grouplist);
 #if defined(__NR_setgroups32)
 asmlinkage int (*sys32_setgroups32p)(int gidsetsize, __kernel_gid_t32 *grouplist);
 #endif
+#ifdef EXPORTED_SYS_CALL_TABLE
 extern unsigned int sys_call_table32[];
+#else
+static unsigned int *sys_call_table32;
+#endif
 
 asmlinkage int afs_syscall32(long syscall, long parm1, long parm2, long parm3,
 			     long parm4, long parm5)
@@ -197,6 +213,23 @@ int init_module(void)
 #endif
 #endif
 
+#ifndef EXPORTED_SYS_CALL_TABLE
+    unsigned long *ptr;
+    unsigned long offset;
+    unsigned long datalen;
+    int ret;
+    unsigned long token;
+    char      *mod_name;
+    unsigned long    mod_start;
+    unsigned long    mod_end;
+    char      *sec_name;
+    unsigned long    sec_start;
+    unsigned long    sec_end;
+    char      *sym_name;
+    unsigned long    sym_start;
+    unsigned long    sym_end;
+#endif
+
     RWLOCK_INIT(&afs_xosi, "afs_xosi");
 
     /* obtain PAGE_OFFSET value */
@@ -209,7 +242,58 @@ int init_module(void)
         return -EIO;
     }
 #endif
+#ifndef EXPORTED_SYS_CALL_TABLE
+    sys_call_table=0;
 
+#ifdef EXPORTED_KALLSYMS_SYMBOL
+    ret=1;
+    token=0;
+    while (ret) {
+      sym_start=0;
+      ret=kallsyms_symbol_to_address("sys_call_table", &token, &mod_name,
+				     &mod_start, &mod_end, &sec_name, &sec_start, &sec_end,
+				     &sym_name, &sym_start, &sym_end);
+      if (ret && !strcmp(mod_name, "kernel"))
+	break;
+    }
+    if (ret && sym_start) {
+      sys_call_table=sym_start;
+    }
+#else
+#ifdef EXPORTED_KALLSYMS_ADDRESS
+    ret=kallsyms_address_to_symbol((unsigned long)&init_mm, &mod_name,
+				   &mod_start, &mod_end, &sec_name, &sec_start, &sec_end,
+				   &sym_name, &sym_start, &sym_end);
+    ptr=(unsigned long *)sec_start;
+    datalen=(sec_end-sec_start)/sizeof(unsigned long);
+#else
+    ptr=(unsigned long *)&init_mm;
+    datalen=16384;
+#endif
+    for (offset=0;offset <datalen;ptr++,offset++) {
+      if (ptr[0] == (unsigned long)&sys_exit &&
+	  ptr[__NR_open - __NR_exit] == (unsigned long)&sys_open) {
+	sys_call_table=ptr - __NR_exit;
+	break;
+      }
+    }
+#ifdef EXPORTED_KALLSYMS_ADDRESS
+    ret=kallsyms_address_to_symbol((unsigned long)sys_call_table, &mod_name,
+				   &mod_start, &mod_end, &sec_name, &sec_start, &sec_end,
+				   &sym_name, &sym_start, &sym_end);
+    if (ret && strcmp(sym_name, "sys_call_table"))
+      sys_call_table=0;
+#endif
+#endif
+    if (!sys_call_table) {
+      printf("Failed to find address of sys_call_table\n");
+      return -EIO;
+    }
+# ifdef AFS_SPARC64_LINUX20_ENV
+    error cant support this yet.
+#endif
+#endif /* SYS_CALL_TABLE */
+      
     /* Initialize pointers to kernel syscalls. */
 #if defined(AFS_IA64_LINUX20_ENV)
     kernel_gp = ((struct fptr *)printk)->gp;
@@ -240,7 +324,6 @@ int init_module(void)
 	printf("AFS syscall entry point already in use!\n");
 	return -EBUSY;
     }
-
 
 #if defined(AFS_IA64_LINUX20_ENV)
     afs_ni_syscall = sys_call_table[__NR_afs_syscall - 1024];
