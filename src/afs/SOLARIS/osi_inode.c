@@ -19,7 +19,14 @@
 #include "../afs/osi_inode.h"
 #include "../afs/afs_stats.h" /* statistics stuff */
 
-extern int (*ufs_iputp)(), (*ufs_iallocp)(), (*ufs_iupdatp)(),  (*ufs_igetp)();
+extern int (*ufs_iallocp)(), (*ufs_iupdatp)(), (*ufs_igetp)(),
+           (*ufs_itimes_nolockp)();
+
+#define AFS_ITIMES(ip) { \
+        mutex_enter(&(ip)->i_tlock); \
+        (*ufs_itimes_nolockp)(ip); \
+        mutex_exit(&(ip)->i_tlock); \
+}
 
 getinode(vfsp, dev, inode, ipp, credp,perror)
      struct vfs *vfsp;
@@ -34,6 +41,7 @@ getinode(vfsp, dev, inode, ipp, credp,perror)
     struct vnode *vp;
     struct fs *fs;
     struct inode *pip;
+    struct ufsvfs *ufsvfsp;
     
     AFS_STATCNT(getinode);
     
@@ -48,7 +56,13 @@ getinode(vfsp, dev, inode, ipp, credp,perror)
 	) {
 	return (ENODEV);
     }
-    if (code = (*ufs_igetp)(vfsp, inode, &ip, credp)) {
+    ufsvfsp = (struct ufsvfs *)vfsp->vfs_data;
+
+    rw_enter(&ufsvfsp->vfs_dqrwlock, RW_READER);
+    code = (*ufs_igetp)(vfsp, inode, &ip, credp);
+    rw_exit(&ufsvfsp->vfs_dqrwlock);
+
+    if (code) {
 	*perror = BAD_IGET;
 	return code;
     }
@@ -81,14 +95,16 @@ igetinode(vfsp, dev, inode, ipp, credp,perror)
     
     if (ip->i_mode == 0) {
 	/* Not an allocated inode */
+	AFS_ITIMES(ip);
 	rw_exit(&ip->i_contents);
-	(*ufs_iputp)(ip);
+	VN_RELE(ITOV(ip));
 	return (ENOENT);
     }
     
     if (ip->i_nlink == 0 || (ip->i_mode&IFMT) != IFREG) {
+	AFS_ITIMES(ip);
 	rw_exit(&ip->i_contents);
-	(*ufs_iputp)(ip);
+	VN_RELE(ITOV(ip));
 	return (ENOENT);
     }
     
@@ -122,6 +138,7 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp, credp)
     struct inode *ip, *newip;
     register int code;
     dev_t newdev;
+    struct ufsvfs *ufsvfsp;
 
     AFS_STATCNT(afs_syscall_icreate);
     
@@ -142,11 +159,22 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp, credp)
     if (code) {
 	return (code);
     }
-    if (code = (*ufs_iallocp)(ip, near_inode, 0, &newip, credp)) {	
-	(*ufs_iputp)(ip);
+
+    ufsvfsp = ip->i_ufsvfs;
+    rw_enter(&ip->i_rwlock, RW_WRITER);
+    rw_enter(&ufsvfsp->vfs_dqrwlock, RW_READER);
+    rw_enter(&ip->i_contents, RW_WRITER);
+    code = (*ufs_iallocp)(ip, near_inode, 0, &newip, credp);
+    rw_exit(&ufsvfsp->vfs_dqrwlock);
+    rw_exit(&ip->i_rwlock);
+
+    AFS_ITIMES(ip);
+    rw_exit(&ip->i_contents);
+    VN_RELE(ITOV(ip));
+
+    if (code) {
 	return (code);
     }
-    (*ufs_iputp)(ip);
     rw_enter(&newip->i_contents, RW_WRITER);
     mutex_enter(&newip->i_tlock);
     newip->i_flag |= IACC|IUPD|ICHG;
@@ -184,8 +212,9 @@ afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp, credp)
      */
     if (CrSync)
 	(*ufs_iupdatp)(newip, 1);
+    AFS_ITIMES(newip);
     rw_exit(&newip->i_contents);
-    (*ufs_iputp)(newip);
+    VN_RELE(ITOV(newip));
     return (code);
 }
 
@@ -224,7 +253,10 @@ afs_syscall_iopen(dev, inode, usrmod, rvp, credp)
     }
     code = falloc((struct vnode *)NULL, FWRITE|FREAD, &fp, &fd);
     if (code) {
-	(*ufs_iputp)(ip);
+	rw_enter(&ip->i_contents, RW_READER);
+	AFS_ITIMES(ip);
+	rw_exit(&ip->i_contents);
+	VN_RELE(ITOV(ip));
 	return (code);
     }
     
@@ -284,9 +316,13 @@ afs_syscall_iincdec(dev, inode, inode_p1, amount, rvp, credp)
     if (code) {
 	return (code);
     }
-    if (!IS_VICEMAGIC(ip))
+    if (!IS_VICEMAGIC(ip)) {
 	code = EPERM;
-    else {
+	rw_enter(&ip->i_contents, RW_READER);
+	AFS_ITIMES(ip);
+	rw_exit(&ip->i_contents);
+	VN_RELE(ITOV(ip));
+    } else {
 	rw_enter(&ip->i_contents, RW_WRITER);
 	ip->i_nlink += amount;
 	if (ip->i_nlink == 0) {
@@ -300,9 +336,10 @@ afs_syscall_iincdec(dev, inode, inode_p1, amount, rvp, credp)
 	/* We may want to force the inode to the disk in case of crashes, other references, etc. */
 	if (IncSync)
 	    (*ufs_iupdatp)(ip, 1);
+	AFS_ITIMES(ip);
 	rw_exit(&ip->i_contents);
+	VN_RELE(ITOV(ip));
     }
-    (*ufs_iputp)(ip);
     return (code);
 }
 
