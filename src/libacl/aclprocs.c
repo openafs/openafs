@@ -29,7 +29,7 @@ RCSID("$Header$");
 #endif
 #include <rx/xdr.h>
 #include <rx/rx.h>
-#include <ptclient.h>
+#include <afs/ptclient.h>
 #include "acl.h"
 
 #ifdef AFS_PTHREAD_ENV

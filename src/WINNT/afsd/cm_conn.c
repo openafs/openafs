@@ -18,7 +18,7 @@
 #include <osi.h>
 #include <rx/rx.h>
 #ifndef DJGPP
-#include <rxkad.h>
+#include <rx/rxkad.h>
 #else
 #include <rx/rxkad.h>
 #endif

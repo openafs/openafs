@@ -79,7 +79,7 @@ extern afs_int32 afs_termState;
 #ifdef AFS_NT40_ENV
 # include <stdlib.h>
 # include <fcntl.h>
-# include <afsutil.h>
+# include <afs/afsutil.h>
 #else
 # include <sys/socket.h>
 # include <sys/file.h>
