@@ -125,24 +125,4 @@ int64_t flipbase64_to_int64(char *s);
 #endif
 #endif
 
-/* This message preserves our ability to license AFS to the U.S. Government
- * more than once.
- */
-
-#define AFS_GOVERNMENT_MESSAGE \
-"===================== U.S. Government Restricted Rights ======================\n\
-If you are licensing the Software on behalf of the U.S. Government\n\
-(\"Government\"), the following provisions apply to you.  If the Software is\n\
-supplied to the Department of Defense (\"DoD\"), it is classified as \"Commercial\n\
-Computer Software\" under paragraph 252.227-7014 of the DoD Supplement to the\n\
-Federal Acquisition Regulations (\"DFARS\") (or any successor regulations)\n\
-and the Government is acquiring only the license rights granted herein (the\n\
-license rights customarily provided to non-Government users).  If the Software\n\
-is supplied to any unit or agency of the Government other than DoD, it is\n\
-classified as \"Restricted Computer Software\" and the Government's rights in\n\
-the Software are defined in paragraph 52.227-19 of the Federal Acquisition\n\
-Regulations (\"FAR\") (or any successor regulations) or, in the case of NASA,\n\
-in paragraph 18.52.227-86 of the NASA Supplement in the FAR (or any successor\n\
-regulations).\n"
-
 #endif /* _AFSUTIL_H_ */
