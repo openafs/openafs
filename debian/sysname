@@ -13,13 +13,13 @@ i[3456]86)
 	echo parisc_linux24
 	;;
     ppc)
-	echo ppc_linux22
+	echo ppc_linux24
 	;;
     sparc|sparc64)
-	echo sparc_linux22
+	echo sparc_linux24
 	;;
     s390)
-    echo s390_linux22
+    echo s390_linux24
     ;;
 	*)
 	echo ERROr:  sysname not yet known

@@ -124,7 +124,6 @@ binary-indep: build install binary-source
 	dh_compress
 	dh_fixperms
 	# You may want to make some executables suid here.
-	dh_suidregister
 	dh_installdeb
 #	dh_perl
 	dh_gencontrol
@@ -158,7 +157,6 @@ binary-arch: build install
 	chmod 700 debian/openafs-fileserver/etc/openafs/server
 	chmod 700 debian/openafs-dbserver/var/lib/openafs/db
 	chmod 700 debian/openafs-fileserver/var/lib/openafs/cores
-	dh_suidregister
 	dh_installdeb
 #	dh_makeshlibs
 #	dh_perlc
