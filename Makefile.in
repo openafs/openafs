@@ -243,7 +243,7 @@ viced: project vlserver audit
 
 tviced: project viced vlserver libafsrpc libafsauthent
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux110) \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux110) \
 		${COMPILE_PART1} tviced  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT viced for ${SYS_NAME} ;; \
@@ -295,7 +295,7 @@ bozo: project ntp audit
 vfsck:	vol
 	set -x; \
 	case ${SYS_NAME} in \
-	sgi_* | *linux* | rs_aix42 | ppc_darwin* | hp_ux* | *fbsd* | *_obsd* ) \
+	sgi_* | *linux* | rs_aix42 | ppc_darwin* | hp_ux* | *fbsd* | *_obsd* | sun*_4* ) \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
@@ -382,7 +382,7 @@ libafs_tree: libafs_setup ${KERNELDIR}
 libuafs: libuafs_setup ${UKERNELDIR}
 	set -x; \
 	case ${SYS_NAME} in \
-	hp_ux102* | *_obsd* ) \
+	hp_ux102* | *_obsd* | sun*_4* ) \
 		echo Skipping libuafs for ${SYS_NAME} ;; \
 	* ) \
 		${COMPILE_PART1} libuafs ${COMPILE_PART2} ;; \

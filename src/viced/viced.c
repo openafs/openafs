@@ -36,11 +36,11 @@ RCSID("$Header$");
 #include <sys/file.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <sys/resource.h>
 #include <unistd.h>	/* sysconf() */
 #ifndef ITIMER_REAL
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
+#include <sys/resource.h>
 #endif /* AFS_NT40_ENV */
 #include <afs/stds.h>
 #undef SHARED

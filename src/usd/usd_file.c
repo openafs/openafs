@@ -24,11 +24,11 @@ RCSID("$Header$");
 #ifdef AFS_DARWIN_ENV
 #include <sys/ioccom.h>
 #endif
-#include <sys/mtio.h>
-#endif /* AFS_AIX_ENV */
-#if defined(AFS_DUX40_ENV) || defined(AFS_OBSD_ENV)
+#if defined(AFS_DUX40_ENV) || defined(AFS_OBSD_ENV) || defined(AFS_SUN4_ENV)
 #include <sys/ioctl.h>
 #endif
+#include <sys/mtio.h>
+#endif /* AFS_AIX_ENV */
 #include <afs/debug.h>
 #include "usd.h"
 

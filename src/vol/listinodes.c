@@ -23,7 +23,7 @@
 RCSID("$Header$");
 
 #ifndef AFS_NAMEI_ENV
-#ifdef AFS_LINUX20_ENV
+#if defined(AFS_LINUX20_ENV) || defined(AFS_SUN4_ENV)
 /* ListViceInodes
  *
  * Return codes:
@@ -36,7 +36,7 @@ char *devname, *mountedOn, *resultFile, *wpath;
 int (*judgeInode)(); 
 int *forcep, forceR;
 {
-    Log("ListViceInodes not implemented for Linux\n");
+    Log("ListViceInodes not implemented for this platform!\n");
     return -1;
 }
 #else

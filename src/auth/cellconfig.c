@@ -61,6 +61,10 @@ RCSID("$Header$");
 #include "cellconfig.h"
 #include "keys.h"
 
+#ifndef T_AFSDB
+#define T_AFSDB 18  /* per RFC1183 section 1 */
+#endif
+
 static ParseHostLine();
 static ParseCellLine();
 static afsconf_OpenInternal();

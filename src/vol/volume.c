@@ -130,9 +130,6 @@ RCSID("$Header$");
 #endif /* AFS_PTHREAD_ENV */
 #include "vutils.h"
 #include "fssync.h"
-#if !defined(AFS_NT40_ENV) && !defined(AFS_NAMEI_ENV)
-#include <afs/osi_inode.h>
-#endif
 #ifndef AFS_NT40_ENV
 #include <unistd.h>
 #endif

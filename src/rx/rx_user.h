@@ -73,12 +73,6 @@ extern void osi_Panic();
 extern void osi_AssertFailU(const char *expr, const char *file, int line);
 #define osi_Assert(e) (void)((e) || (osi_AssertFailU(#e, __FILE__, __LINE__), 0))
 
-#if  !defined(_ANSI_C_SOURCE) || defined(AFS_SUN_ENV)
-#if defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
-extern int fprintf();
-#endif
-#endif	/* ANSI_C_SOURCE */
-
 #define	osi_Msg			    fprintf)(stderr,
 
 #endif /* RX_USER_INCLUDE */
