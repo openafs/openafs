@@ -32,6 +32,7 @@ case $AFS_SYSNAME in
 		;;
 
 	alpha_dux50)
+		LEX="flex -l"
 		CSTATIC="-non_shared"
 		LWP_OPTMZ="-O2"
 		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV ${XCFLAGS}'
@@ -556,9 +557,9 @@ case $AFS_SYSNAME in
 	;;
 
 	alpha_dux*)
-		FS_CONV_OSF40D="fs_conv_dux40d"
-		install_FS_CONV_OSF40D='$(DESTDIR)${afssrvsbindir}/fs_conv_dux40d'
-		dest_FS_CONV_OSF40D='$(DEST)/root.server/usr/afs/bin/fs_conv_sdux40d'
+		FS_CONV_OSF40D="fs_conv_dux40D"
+		install_FS_CONV_OSF40D='$(DESTDIR)${afssrvsbindir}/fs_conv_dux40D'
+		dest_FS_CONV_OSF40D='$(DEST)/root.server/usr/afs/bin/fs_conv_dux40D'
 
 		AC_SUBST(FS_CONV_OSF40D)
 		AC_SUBST(install_FS_CONV_OSF40D)
