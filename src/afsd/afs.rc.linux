@@ -172,7 +172,7 @@ load_client() {
 		choose_client
 	fi
     
-	if [ ! -f $MODLOADDIR/$LIBAFS ] ; then
+	if [ ! -f "$MODLOADDIR/$LIBAFS" ] ; then
 		echo AFS module $MODLOADDIR/$LIBAFS does not exist. Not starting AFS.
 		exit 1
 	fi
