@@ -2,6 +2,7 @@
  *	(C) Copyright 10/17/86 by Carnegie Mellon University
  */
 #include <stdio.h>
+#include <unistd.h>
 
 extern char *malloc();
 
