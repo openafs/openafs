@@ -1434,7 +1434,7 @@ struct cmd_syndesc *as; {
         if (as->parms[MRAFS_OFFSET + 14].items)
             mrafsParm.OptDontAskFS = 1;
         if (as->parms[MRAFS_OFFSET + 15].items)
-            mrafsParm.OptLogLevel = atoi(as->parms[MRAFS_OFFSET + 15].items->dta);
+            mrafsParm.OptLogLevel = atoi(as->parms[MRAFS_OFFSET + 15].items->data);
         if (as->parms[MRAFS_OFFSET + 16].items)
             mrafsParm.OptRxDebug = 1;
         if (as->parms[MRAFS_OFFSET + 17].items) {                             
