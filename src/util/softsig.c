@@ -8,14 +8,14 @@
  */
 
 #define _POSIX_PTHREAD_SEMANTICS
-#include <afs\param.h>
+#include <afs/param.h>
 #include <assert.h>
 #include <stdio.h>
 #ifndef  AFS_NT40_ENV
 #include <signal.h>
 #include <unistd.h>
 #else
-#include <afs\procmgmt.h>
+#include <afs/procmgmt.h>
 #endif
 #include <pthread.h>
 
