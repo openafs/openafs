@@ -7,10 +7,7 @@
 
 {
     global:
-	des_cbc_init;
 	des_check_key_parity;
-	des_cksum_init;
-	des_des_init;
 	des_fixup_key_parity;
 	des_init_random_number_generator;
 	des_is_weak_key;
@@ -45,8 +42,6 @@
 	rxkad_GetServerInfo;
 	rxkad_NewClientSecurityObject;
 	rxkad_NewServerSecurityObject;
-	rxkad_client_init;
-	rxkad_crypt_init;
 	rxnull_NewClientSecurityObject;
 	rxnull_NewServerSecurityObject;
 	rxs_Release;
@@ -60,7 +55,6 @@
 	com_err;
 	error_message;
 	rx_socket;
-	des_pcbc_init;
 	rxevent_debugFile;
 	rx_debugFile;
 	rx_connDeadTime;
