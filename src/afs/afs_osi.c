@@ -788,15 +788,14 @@ void afs_osi_TraverseProcTable(void)
 void afs_osi_TraverseProcTable()
 {   
     struct task_struct *p;
+
+    read_lock(&tasklist_lock);
     for_each_task(p) if (p->pid) {
         if (p->state & TASK_ZOMBIE)
             continue;
-#if 0
-        if (p->flags & )
-            continue;
-#endif
 	afs_GCPAGs_perproc_func(p);
     }
+    read_unlock(&tasklist_lock);
 }   
 #endif
 
@@ -992,13 +991,11 @@ const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
 	(pr->state == TASK_INTERRUPTIBLE) ||
 	(pr->state == TASK_UNINTERRUPTIBLE) ||
 	(pr->state == TASK_STOPPED)) {
-	read_lock(&tasklist_lock);
-       cr.cr_ref=1;
-       cr.cr_uid=pr->uid;
-       cr.cr_ngroups=pr->ngroups;
-       memcpy(cr.cr_groups, pr->groups, NGROUPS * sizeof(gid_t));
-       read_unlock(&tasklist_lock);  
-       rv = &cr;
+	cr.cr_ref=1;
+	cr.cr_uid=pr->uid;
+	cr.cr_ngroups=pr->ngroups;
+	memcpy(cr.cr_groups, pr->groups, NGROUPS * sizeof(gid_t));
+	rv = &cr;
     }
     
     return rv;
