@@ -98,6 +98,14 @@ my $lcell = "${cellname}";
 run("$openafsinitcmd->{'filesrv-start'}");
 unwind("$openafsinitcmd->{'filesrv-stop'}");
 $shutdown_needed = 1;
+
+open(THISCELL, ">$openafsdirpath->{'afsconfdir'}/ThisCell");
+print THISCELL $cellname;
+close THISCELL;
+open(THISCELL, ">$openafsdirpath->{'afsconfdir'}/CellServDB");
+print THISCELL ">$cellname #test cell";
+close THISCELL;
+
 run ("$openafsdirpath->{'afssrvbindir'}/bos setcellname $server $lcell -localauth ||true");
 run ("$openafsdirpath->{'afssrvbindir'}/bos addhost $server $server -localauth ||true");
 run("$openafsdirpath->{'afssrvbindir'}/bos adduser $server $admin -localauth");
