@@ -158,6 +158,13 @@
 
 #define SYS_NAME_ID_i386_nbsd15         2501
 #define SYS_NAME_ID_alpha_nbsd15        2502
+#define SYS_NAME_ID_sparc_nbsd15        2503
+#define SYS_NAME_ID_sparc64_nbsd15      2504
+
+#define SYS_NAME_ID_i386_nbsd16		2510
+#define SYS_NAME_ID_alpha_nbsd16	2511
+#define SYS_NAME_ID_sparc_nbsd16	2512
+#define SYS_NAME_ID_sparc64_nbsd16	2513
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 
