@@ -1320,7 +1320,7 @@ void
 rxi_ServerProc(int threadID, struct rx_call *newcall, osi_socket * socketp)
 {
     register struct rx_call *call;
-	register afs_int32 code;
+    register afs_int32 code;
     register struct rx_service *tservice = NULL;
 
     for (;;) {
@@ -1335,13 +1335,11 @@ rxi_ServerProc(int threadID, struct rx_call *newcall, osi_socket * socketp)
 	    }
 	}
 
-	rx_GetConnection(call->conn);
-
 	/* if server is restarting( typically smooth shutdown) then do not
 	 * allow any new calls.
 	 */
 
-	if (rx_tranquil) {
+	if (rx_tranquil && (call != NULL)) {
 	    SPLVAR;
 
 	    NETPRI;
@@ -1365,8 +1363,7 @@ rxi_ServerProc(int threadID, struct rx_call *newcall, osi_socket * socketp)
 #ifdef RX_ENABLE_LOCKS
 	    AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS */
-		rx_PutConnection(call->conn);
-		return;
+	    return;
 	}
 #endif
 
@@ -1375,18 +1372,16 @@ rxi_ServerProc(int threadID, struct rx_call *newcall, osi_socket * socketp)
 	if (tservice->beforeProc)
 	    (*tservice->beforeProc) (call);
 
-	code = tservice->executeRequestProc(call);
+	code = call->conn->service->executeRequestProc(call);
 
 	if (tservice->afterProc)
 	    (*tservice->afterProc) (call, code);
 
-	rx_PutConnection(call->conn);
 	rx_EndCall(call, code);
 	MUTEX_ENTER(&rx_stats_mutex);
 	rxi_nCalls++;
 	MUTEX_EXIT(&rx_stats_mutex);
     }
-
 }
 
 
