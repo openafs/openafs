@@ -431,6 +431,7 @@ void afs_linux_vma_close(struct vm_area_struct *vmap)
 {
     struct vcache *vcp;
     cred_t *credp;
+    int need_unlock = 0;
 
     if (!vmap->vm_file)
 	return;
@@ -445,24 +446,38 @@ void afs_linux_vma_close(struct vm_area_struct *vmap)
 	       ICL_TYPE_INT32, vcp->mapcnt,
 	       ICL_TYPE_INT32, vcp->opens,
 	       ICL_TYPE_INT32, vcp->execsOrWriters);
-    ObtainWriteLock(&vcp->lock, 532);
+    if ((&vcp->lock)->excl_locked == 0 || (&vcp->lock)->pid_writer == MyPidxx) {
+	ObtainWriteLock(&vcp->lock, 532);
+	need_unlock = 1;
+    } else
+	printk("AFS_VMA_CLOSE(%d): Skipping Already locked vcp=%p vmap=%p\n", MyPidxx, &vcp, &vmap);
     if (vcp->mapcnt) {
 	vcp->mapcnt--;
-	ReleaseWriteLock(&vcp->lock);
+	if (need_unlock)
+	    ReleaseWriteLock(&vcp->lock);
 	if (!vcp->mapcnt) {
-	    credp = crref();
-	    (void) afs_close(vcp, vmap->vm_file->f_flags, credp);
-	    /* only decrement the execsOrWriters flag if this is not a writable
-	     * file. */
-	    if (! (vmap->vm_file->f_flags & (FWRITE | FTRUNC)))
+	    if(need_unlock && vcp->execsOrWriters < 2) {
+		credp = crref();
+		(void) afs_close(vcp, vmap->vm_file->f_flags, credp);
+		/* only decrement the execsOrWriters flag if this is not a
+		   writable file. */
+		if (! (vmap->vm_file->f_flags & (FWRITE | FTRUNC)))
+		    vcp->execsOrWriters--;
+		vcp->states &= ~CMAPPED;
+		crfree(credp);
+	    } else if ((vmap->vm_file->f_flags & (FWRITE | FTRUNC)))
 		vcp->execsOrWriters--;
-
-	    vcp->states &= ~CMAPPED;
-	    crfree(credp);
+	    /* If we did not have the lock */
+	    if (!need_unlock) {
+		vcp->mapcnt++;
+		if (!vcp->execsOrWriters)
+		    vcp->execsOrWriters = 1;
+	    }
 	}
     }
     else {
-	ReleaseWriteLock(&vcp->lock);
+	if (need_unlock)
+	    ReleaseWriteLock(&vcp->lock);
     }
 
  unlock_exit:
