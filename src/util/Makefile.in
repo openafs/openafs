@@ -45,15 +45,6 @@ objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
 	 dirpath.o fileutil.o netutils.o flipbase64.o \
 	 afs_atomlist.o afs_lhash.o snprintf.o ${REGEX_OBJ}
 
-
-PICTARGET =../pic/util
-PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(OBJS)) 
-$(PICTARGET)/%.o: %.c $(PICTARGET)
-	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
-
-$(PICTARGET):
-	mkdir -p $(PICTARGET)
-
 all: ukinstall kinstall \
 	${TOP_INCDIR}/afs/dirpath.h \
 	${TOP_INCDIR}/afs/pthread_nosigs.h \
@@ -89,7 +80,7 @@ dirpath.h: dirpath.hin Makefile
 		dirpath.hin >dirpath.h.tmp && \
 		mv dirpath.h.tmp dirpath.h )
 
-util.a: ${objects} AFS_component_version_number.o $(PICOBJS)
+util.a: ${objects} AFS_component_version_number.o
 	$(RM) -f util.a
 	$(AR) crv util.a ${objects} AFS_component_version_number.o
 	$(RANLIB) util.a
@@ -443,7 +434,7 @@ ${UKDIR}/afs_lhash.h: afs_lhash.h
 
 clean:
 	$(RM) -f ${objects} sys dirpath.h
-	$(RM) -f util.a *.o core AFS_component_version_number.c $(PICTARGET)/*.o
+	$(RM) -f util.a *.o core AFS_component_version_number.c
 
 test:
 	cd test; $(MAKE)

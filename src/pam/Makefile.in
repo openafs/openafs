@@ -43,29 +43,29 @@ LDFLAGS = ${SHLIB_LDFLAGS}
  SHOBJS = afs_account.o afs_session.o afs_password.o \
 	  afs_pam_msg.o afs_message.o AFS_component_version_number.o
    OBJS = $(SHOBJS) test_pam.o
-INCLUDES=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} 
-
+INCLUDES=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} \
+	-I/usr/include -I/usr/include/sys
 CFLAGS =  ${DEBUG} ${INCLUDES} ${PAM_CFLAGS}
 
 all: test_pam ${TOP_LIBDIR}/pam_afs.so.1 ${TOP_LIBDIR}/pam_afs.krb.so.1
 
 afs_setcred.o: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} $(PAM_CFLAGS) -c afs_setcred.c -o afs_setcred.o
+	${CC} ${CFLAGS} -c afs_setcred.c -o afs_setcred.o
 
 afs_setcred_krb.o: afs_setcred.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} $(PAM_CFLAGS)  -DAFS_KERBEROS_ENV -c afs_setcred.c -o afs_setcred_krb.o
+	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c afs_setcred.c -o afs_setcred_krb.o
 
 afs_auth.o: afs_auth.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS}  $(PAM_CFLAGS)  -c afs_auth.c -o afs_auth.o
+	${CC} ${CFLAGS}  -c afs_auth.c -o afs_auth.o
 
 afs_auth_krb.o: afs_auth.c afs_pam_msg.h afs_message.h afs_util.h
-	${CC} ${CFLAGS} $(PAM_CFLAGS)  -DAFS_KERBEROS_ENV  -c afs_auth.c -o afs_auth_krb.o
+	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV  -c afs_auth.c -o afs_auth_krb.o
 
 afs_util.o: afs_util.c afs_util.h
-	${CC} ${CFLAGS} $(PAM_CFLAGS)  -c afs_util.c -o afs_util.o
+	${CC} ${CFLAGS} -c afs_util.c -o afs_util.o
 
 afs_util_krb.o: afs_util.c afs_util.h
-	${CC} ${CFLAGS} $(PAM_CFLAGS)  -DAFS_KERBEROS_ENV -c afs_util.c -o afs_util_krb.o
+	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c afs_util.c -o afs_util_krb.o
 
 pam_afs.so.1: $(SHOBJS) afs_setcred.o afs_auth.o afs_util.o
 	set -x; \
@@ -77,7 +77,7 @@ pam_afs.so.1: $(SHOBJS) afs_setcred.o afs_auth.o afs_util.o
 		$(LD) $(LDFLAGS) -M mapfile -o $@ afs_setcred.o afs_auth.o afs_util.o\
 			$(SHOBJS) $(LIBS) ;; \
 	*linux*) \
-		$(CC) $(LDFLAGS) $(PAM_CFLAGS) -o $@ afs_setcred.o afs_auth.o afs_util.o $(SHOBJS)  `find ../pic/ -name "*.o" | grep -v AFS_compo`  -lpam;;\
+		$(CC) $(LDFLAGS) -o $@ afs_setcred.o afs_auth.o afs_util.o $(SHOBJS) $(LIBS) ;;\
 	*fbsd*) \
 		$(CC) $(LDFLAGS) -o $@ afs_setcred.o afs_auth.o afs_util.o $(SHOBJS) $(LIBS) ;;\
 	* ) \
