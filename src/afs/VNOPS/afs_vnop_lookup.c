@@ -525,7 +525,7 @@ tagain:
 	      tvcp = afs_FindVCache(&tfid, 0, 0, &retry, 0 /* no stats | LRU */);
 	      if (tvcp && retry) {
 		ReleaseWriteLock(&afs_xvcache);
-		afs_PutVCache(tvcp);
+		afs_PutVCache(tvcp, 0);
 	      }
 	    } while (tvcp && retry);
 	    if (!tvcp) {          /* otherwise, create manually */
@@ -576,7 +576,7 @@ tagain:
 		tvcp->m.Length = statSeqNo;
 		fidIndex++;
 	    }
-	    afs_PutVCache(tvcp);
+	    afs_PutVCache(tvcp, 0);
 	}	/* if dir vnode has non-zero entry */
 
 	/* move to the next dir entry by adding in the # of entries
@@ -734,7 +734,7 @@ tagain:
 	if (!(tvcp->states & CBulkFetching) || (tvcp->m.Length != statSeqNo)) {
 	    flagIndex++;
 	    ReleaseWriteLock(&tvcp->lock);
-	    afs_PutVCache(tvcp);
+	    afs_PutVCache(tvcp, 0);
 	    continue;
 	}
 
@@ -781,7 +781,7 @@ tagain:
 	    flagIndex++;
 	    ReleaseWriteLock(&tvcp->lock);
 	    ReleaseWriteLock(&afs_xcbhash);
-	    afs_PutVCache(tvcp);
+	    afs_PutVCache(tvcp, 0);
 	    continue;
 	}
 
@@ -841,11 +841,11 @@ tagain:
 
 	ReleaseWriteLock(&tvcp->lock);
 	/* finally, we're done with the entry */
-	afs_PutVCache(tvcp);
+	afs_PutVCache(tvcp, 0);
     }	/* for all files we got back */
 
     /* finally return the pointer into the LRU queue */
-    afs_PutVCache(lruvcp);
+    afs_PutVCache(lruvcp, 0);
 
   done:
     /* Be sure to turn off the CBulkFetching flags */
@@ -866,7 +866,7 @@ tagain:
 	  tvcp->states &= ~CBulkFetching;
 	}
 	if (tvcp != NULL) {
-	  afs_PutVCache(tvcp);
+	  afs_PutVCache(tvcp, 0);
 	}
     }
     if ( volp )
@@ -1193,7 +1193,7 @@ afs_lookup(adp, aname, avcp, acred)
 
 	/* if the vcache isn't usable, release it */
 	if (tvc && !(tvc->states & CStatd)) {
-	    afs_PutVCache(tvc);
+	    afs_PutVCache(tvc, 0);
 	    tvc = (struct vcache *) 0;
 	}
     } else {
