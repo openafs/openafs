@@ -7,4 +7,4 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/* Id: $ */
+/* $Id$ */

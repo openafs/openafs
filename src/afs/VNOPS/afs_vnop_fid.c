@@ -19,7 +19,7 @@
 
 RCSID("$Header$");
 
-#if !defined(AFS_DUX40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_DUX40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_OBSD_ENV)
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h" /* statistics */
@@ -117,9 +117,7 @@ struct fid **fidpp;
 	SizeOfSmallFid = sizeof(addr);
 #endif /* defined(AFS_SGI61_ENV) && (_MIPS_SZPTR == 64) */
 	addr[0] = (long)avc;
-#if defined(AFS_OBSD_ENV)
-	osi_vnhold(avc, 0);
-#elif !defined(AFS_AIX41_ENV)
+#ifndef AFS_AIX41_ENV
 	/* No post processing, so don't hold ref count. */
 	VN_HOLD(AFSTOV(avc));
 #endif

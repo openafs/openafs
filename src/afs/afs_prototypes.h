@@ -352,7 +352,6 @@ extern void shutdown_mariner(void);
 
 
 /* afs_memcache.c */
-extern void *afs_MemCacheOpen(ino_t blkno);
 extern int afs_InitMemCache(int size, int blkSize, int flags);
 extern int afs_MemCacheClose(char *file);
 extern void *afs_MemCacheOpen(ino_t blkno);
@@ -819,6 +818,8 @@ extern afs_int32 nihints;
 extern afs_int32 usedihint;
 extern int afs_MemRead(register struct vcache *avc, struct uio *auio, struct AFS_UCRED *acred, 
         daddr_t albn, struct buf **abpp, int noLock);
+extern int afs_UFSRead(register struct vcache *avc, struct uio *auio,
+	struct AFS_UCRED *acred, daddr_t albn, struct buf **abpp, int noLock);
 
 
 /* VNOPS/afs_vnop_readdir.c */
@@ -837,6 +838,7 @@ extern int afsrename();
 
 /* VNOPS/afs_vnop_symlink.c */
 extern int afs_MemHandleLink(register struct vcache *avc, struct vrequest *areq);
+extern int afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq);
 
 /* VNOPS/afs_vnop_flock.c */
 extern afs_int32 lastWarnTime;
@@ -873,7 +875,6 @@ extern struct volume *afs_GetVolume(struct VenusFid *afid, struct vrequest *areq
         afs_int32 locktype);
 extern struct volume *afs_GetVolumeByName(register char *aname, afs_int32 acell, 
         int agood, struct vrequest *areq, afs_int32 locktype);
-
 extern struct volume *afs_UFSGetVolSlot(void);
 extern void afs_CheckVolumeNames(int flags);
 

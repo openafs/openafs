@@ -168,7 +168,7 @@ struct vnodeopv_entry_desc afs_vnodeop_entries[] = {
 	{ &vop_setattr_desc, afs_nbsd_setattr },	/* setattr */
 	{ &vop_read_desc, afs_nbsd_read },		/* read */
 	{ &vop_write_desc, afs_nbsd_write },		/* write */
-	{ &vop_ioctl_desc, afs_nbsd_ioctl }, /* XXX ioctl */
+	{ &vop_ioctl_desc, afs_nbsd_ioctl },		/* XXX ioctl */
 	{ &vop_select_desc, afs_nbsd_select },		/* select */
 	{ &vop_fsync_desc, afs_nbsd_fsync },		/* fsync */
 	{ &vop_remove_desc, afs_nbsd_remove },		/* remove */

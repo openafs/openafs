@@ -106,8 +106,12 @@ RCSID("$Header$");
 #include <sys/syscall.h>
 #include <sys/syscallargs.h>
 
+/* from /usr/src/sys/kern/vfs_subr.c */
+extern void insmntque(struct vnode *, struct mount *);
+
 #define NBSD_DONTFOLLOW_LINK 0
 #define NBSD_FOLLOW_LINK 1
+
 static int lkmid = -1;
 static int afs_badcall(struct proc *p, void *xx, register_t *yy);
 

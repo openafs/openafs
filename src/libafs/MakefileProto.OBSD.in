@@ -8,7 +8,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 # System specific build commands and flags
 KSRC = /usr/src/sys
 KDEFS=-Wall -nostdinc -I/usr/include \
-	-DLKM -DDIAGNOSTIC -DFIFO -DNFSCLIENT -DMFS -DFFS -D_KERNEL -DI386_CPU -DI486_CPU -DI586_CPU \
+	-DLKM -DDIAGNOSTIC -DFIFO -DNFSCLIENT -DMFS -DFFS -D_KERNEL -DI586_CPU -DI686_CPU \
 	-I${KSRC}/sys
 DBUG = -O2
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
@@ -68,9 +68,8 @@ setup:
 
 
 # Below this line are targets when in the COMMON directory:
-LIBAFS = libafs.o
+LIBAFS = libafs.nfs.o
 LIBAFSNONFS = libafs.o
-#LIBAFSNONFS = libafs.nonfs.o
 
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
 INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
@@ -79,12 +78,9 @@ DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
 DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
 
 
-# libafs:	$(LIBAFS) $(LIBAFSNONFS)
 libafs:	$(LIBAFSNONFS)
-	touch libafs
-# install_libafs:	$(INST_LIBAFS) $(INST_LIBAFSNONFS)
+	ls -l libafs.o
 install_libafs:	$(INST_LIBAFSNONFS)
-# dest_libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
 dest_libafs:	$(DEST_LIBAFSNONFS)
 
 $(INST_LIBAFS): $(LIBAFS)
