@@ -22,10 +22,11 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 
 #undef AFS_AFSDB_ENV
 #undef AFS_NAMEI_ENV
-#undef BOS_RESTRICTED_MODE
 
-#undef FAST_RESTART
 #undef BITMAP_LATER
+#undef BOS_RESTRICTED_MODE
+#undef FAST_RESTART
+#undef FULL_LISTVOL_SWITCH
 
 #undef INODE_SETATTR_NOT_VOID
 #undef STRUCT_INODE_HAS_I_BYTES
