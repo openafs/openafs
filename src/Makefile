@@ -253,7 +253,7 @@ bozo: project ntp audit
 vfsck:	minproject vol
 	set -x; \
 	case ${SYS_NAME} in \
-	sgi_* | *linux* | rs_aix42 | ppc_darwin* | hp_ux102 ) \
+	sgi_* | *linux* | rs_aix42 | ppc_darwin* | hp_ux* ) \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
