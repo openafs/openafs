@@ -2420,7 +2420,7 @@ WhichCellCmd(struct cmd_syndesc *as, char *arock)
     afs_int32 code;
     struct cmd_item *ti;
     int error = 0;
-    char cell[MAXCELLCHARS];
+    char cell[MAXCELLCHARS]="";
     
     SetDotDefault(&as->parms[0].items);
     for(ti=as->parms[0].items; ti; ti=ti->next) {
