@@ -1778,18 +1778,16 @@ StartRemove:
 !ENDIF
   
    IfSilent SkipDel
-;  IfFileExists "$WINDIR\afsdcell.ini" CellExists SkipDelAsk
+;  IfFileExists "$INSTDIR\Client\CellServDB" CellExists SkipDelAsk
 ;  CellExists:
   MessageBox MB_YESNO "Would you like to keep your configuration files?" IDYES SkipDel
-  Delete "$WINDIR\afsdcell.ini"
+  Delete "$INSTDIR\Client\CellServDB"
 
-  Delete "$WINDIR\afsdsbmt.ini"
 ; Only remove krb5.ini if KfW was installed
 !IFDEF INSTALL_KFW
   Delete "$WINDIR\krb5.ini"
 !ENDIF
-  Delete "$WINDIR\afsdns.ini"
-  Delete "$WINDIR\afs_freelance.ini"
+  Delete "$INSTDIR\Client\afsdns.ini"
   
   SkipDel:
   Delete "$WINDIR\afsd_init.log"
@@ -2055,21 +2053,21 @@ goto UsePackaged
 
 DoDownload:
    ReadINIStr $R0 $0 "Field 5" "State"
-   NSISdl::download $R0 "$WINDIR\afsdcell.ini"
+   NSISdl::download $R0 "$INSTDIR\Client\CellServDB"
    Pop $R0 ;Get the return value
    StrCmp $R0 "success" +2
       MessageBox MB_OK|MB_ICONSTOP "Download failed: $R0"
    goto done
 
 UsePackaged:
-   SetOutPath "$WINDIR"
-   File "afsdcell.ini"
+   SetOutPath "$INSTDIR\Client"
+   File "CellServDB"
    goto done
    
 CheckOther:
    ReadINIStr $R0 $0 "Field 7" "State"
    StrCmp $R0 "" done
-   CopyFiles $R0 "$WINDIR\afsdcell.ini"
+   CopyFiles $R0 "$INSTDIR\Client\CellServDB"
    
 done:
 
@@ -2220,8 +2218,12 @@ startOver:
   WriteINISTR $0 "Field 4" "State" "0"
   WriteINIStr $0 "Field 6" "State" "0"
   
-  ; If there is an existing afsdcell.ini file, allow the user to choose it and make it default
-  IfFileExists "$WINDIR\afsdcell.ini" +1 notpresent
+  ; If there is an existing afsdcell.ini file, migrate it to CellServDB
+  IfFileExists "$WINDIR\afsdcell.ini" +1 +3
+  CopyFiles /SILENT "$WINDIR\afsdcell.ini" "$INSTDIR\Client\CellServDB"
+  Delete "$WINDIR\afsdcell.ini"
+  ; If there is an existing CellServDB file, allow the user to choose it and make it default
+  IfFileExists "$INSTDIR\Client\CellServDB" +1 notpresent
   WriteINIStr $0 "Field 2" "Flags" "ENABLED"
   WriteINIStr $0 "Field 2" "State" "1"
   WriteINIStr $0 "Field 3" "State" "0"

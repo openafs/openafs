@@ -44,12 +44,25 @@ static CSubmountInfo *ReadSubmtInfo(const CString& strShareName)
 
 	char pathName[1024];
 
-	len = GetPrivateProfileString("AFS Submounts",
-				      PCCHAR(strShareName),
-				      "", pathName, sizeof(pathName),
-				      "afsdsbmt.ini");
+    HKEY hkSubmounts;
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                    "SOFTWARE\\OpenAFS\\Client\\Submounts",
+                    0, 
+                    "AFS", 
+                    REG_OPTION_NON_VOLATILE,
+                    KEY_READ,
+                    NULL, 
+                    &hkSubmounts,
+                    NULL );
 
-	if (len == 0 || len == sizeof(pathName) - 1)
+    DWORD dwType;
+    DWORD status;
+    len = sizeof(pathName);
+    status = RegQueryValueEx( hkSubmounts, (LPCSTR)PCCHAR(strShareName), 0,
+                              &dwType, (LPBYTE)pathName, &len);
+    RegCloseKey( hkSubmounts );
+
+	if (status || len == 0)
 		return pInfo;
 
 	pInfo = new CSubmountInfo();
@@ -148,32 +161,48 @@ BOOL CSubmountsDlg::FillSubmtList()
 {
 	HOURGLASS hourglass;
 
-	DWORD lsize, size = 500;
-	char *buf = NULL, *next;
+    HKEY hkSubmounts;
+    DWORD dwType, dwSize;
+    DWORD status;
+    DWORD dwIndex;
+    DWORD dwSubmounts;
 
-	/*
-	 * We don't know how large a buffer we need.  Keep doubling it until
-	 * we're sure we have enough.
-	 */
-	do {
-		size *= 2;
-		if (buf != NULL) free(buf);
-		buf = (char *)malloc(size);
-		lsize = GetPrivateProfileSection("AFS Submounts", buf, size,
-						 "afsdsbmt.ini");
-	}
-	while (lsize >= size - 2);
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                    "SOFTWARE\\OpenAFS\\Client\\Submounts",
+                    0, 
+                    "AFS", 
+                    REG_OPTION_NON_VOLATILE,
+                    KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                    NULL, 
+                    &hkSubmounts,
+                    NULL );
 
-	if (lsize != 0) {
-		next = buf;
-		do {
-			m_SubmtList.AddString(next);
-			next += (strlen(next) + 1);
-		}
-		while (*next);
-	}
+    RegQueryInfoKey( hkSubmounts,
+                 NULL,  /* lpClass */
+                 NULL,  /* lpcClass */
+                 NULL,  /* lpReserved */
+                 NULL,  /* lpcSubKeys */
+                 NULL,  /* lpcMaxSubKeyLen */
+                 NULL,  /* lpcMaxClassLen */
+                 &dwSubmounts, /* lpcValues */
+                 NULL,  /* lpcMaxValueNameLen */
+                 NULL,  /* lpcMaxValueLen */
+                 NULL,  /* lpcbSecurityDescriptor */
+                 NULL   /* lpftLastWriteTime */
+                 );
 
-	free(buf);
+
+    for ( dwIndex = 0; dwIndex < dwSubmounts; dwIndex ++ ) {
+        char submountName[256];
+        DWORD submountNameLen = sizeof(submountName);
+
+        RegEnumValue( hkSubmounts, dwIndex, submountName, &submountNameLen, NULL,
+              &dwType, NULL, NULL);
+
+        m_SubmtList.AddString(submountName);
+    }
+
+    RegCloseKey( hkSubmounts );
 
 	return TRUE;
 }
@@ -219,25 +248,43 @@ static BOOL AddSubmt(CSubmountInfo *pInfo)
 {
 	HOURGLASS hourglass;
 
-	BOOL written =
-		WritePrivateProfileString("AFS Submounts",
-					  PCCHAR(pInfo->GetShareName()),
-					  PCCHAR(pInfo->GetPathName()),
-					  "afsdsbmt.ini");
+    HKEY hkSubmounts;
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                    "SOFTWARE\\OpenAFS\\Client\\Submounts",
+                    0, 
+                    "AFS", 
+                    REG_OPTION_NON_VOLATILE,
+                    KEY_WRITE,
+                    NULL, 
+                    &hkSubmounts,
+                    NULL );
 
-	return written;
+    DWORD status = RegSetValueEx( hkSubmounts, PCCHAR(pInfo->GetShareName()), 0, REG_SZ,
+                   (const BYTE *)PCCHAR(pInfo->GetPathName()), strlen(PCCHAR(pInfo->GetPathName())) + 1);
+
+    RegCloseKey(hkSubmounts);
+	return (status == ERROR_SUCCESS);
 }
 
 static BOOL DeleteSubmt(CSubmountInfo *pInfo)
 {
 	HOURGLASS hourglass;
 
-	BOOL written =
-		WritePrivateProfileString("AFS Submounts",
-					  PCCHAR(pInfo->GetShareName()),
-					  NULL,
-					  "afsdsbmt.ini");
-	return written;
+    HKEY hkSubmounts;
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                    "SOFTWARE\\OpenAFS\\Client\\Submounts",
+                    0, 
+                    "AFS", 
+                    REG_OPTION_NON_VOLATILE,
+                    KEY_WRITE,
+                    NULL, 
+                    &hkSubmounts,
+                    NULL );
+
+    DWORD status = RegDeleteValue( hkSubmounts, PCCHAR(pInfo->GetShareName()));
+
+    RegCloseKey(hkSubmounts);
+	return (status == ERROR_SUCCESS);
 }
 
 void CSubmountsDlg::OnAdd() 

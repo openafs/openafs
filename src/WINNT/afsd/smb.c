@@ -1388,36 +1388,40 @@ int smb_FindShareCSCPolicy(char *shareName)
 {
 	DWORD len;
 	char policy[1024];
-	char sbmtpath[256];
+    DWORD dwType;
+    HKEY hkCSCPolicy;
+    int  retval = CSC_POLICY_MANUAL;
 
-#ifndef DJGPP
-        strcpy(sbmtpath, "afsdsbmt.ini");
-#else /* DJGPP */
-        strcpy(sbmtpath, cm_confDir);
-        strcat(sbmtpath, "/afsdsbmt.ini");
-#endif /* !DJGPP */
-	len = GetPrivateProfileString("CSC Policy", shareName, "",
-				      policy, sizeof(policy), sbmtpath);
-	if (len == 0 || len == sizeof(policy) - 1) {
-		return CSC_POLICY_MANUAL;
-	}
-	
-	if (stricmp(policy, "documents") == 0)
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                    "SOFTWARE\\OpenAFS\\Client\\CSCPolicy",
+                    0, 
+                    "AFS", 
+                    REG_OPTION_NON_VOLATILE,
+                    KEY_READ,
+                    NULL, 
+                    &hkCSCPolicy,
+                    NULL );
+
+    len = sizeof(policy);
+    if ( RegQueryValueEx( hkCSCPolicy, shareName, 0, &dwType, policy, &len ) ||
+         len == 0) {
+		retval = CSC_POLICY_MANUAL;
+    }
+	else if (stricmp(policy, "documents") == 0)
 	{
-		return CSC_POLICY_DOCUMENTS;
+		retval = CSC_POLICY_DOCUMENTS;
 	}
-	
-	if (stricmp(policy, "programs") == 0)
+	else if (stricmp(policy, "programs") == 0)
 	{
-		return CSC_POLICY_PROGRAMS;
+		retval = CSC_POLICY_PROGRAMS;
 	}
-	
-	if (stricmp(policy, "disable") == 0)
+	else if (stricmp(policy, "disable") == 0)
 	{
-		return CSC_POLICY_DISABLE;
+		retval = CSC_POLICY_DISABLE;
 	}
 	
-	return CSC_POLICY_MANUAL;
+    RegCloseKey(hkCSCPolicy);
+	return retval;
 }
 
 /* find a dir search structure by cookie value, and return it held.

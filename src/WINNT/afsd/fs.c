@@ -3241,9 +3241,8 @@ static CSCPolicyCmd(struct cmd_syndesc *asp)
 {
 	struct cmd_item *ti;
 	char *share = NULL;
-	char sbmtpath[256];
-	char *policy;
-	
+    HKEY hkCSCPolicy;
+
 	for(ti=asp->parms[0].items; ti;ti=ti->next) {
 		share = ti->data;
 		if (share)
@@ -3251,20 +3250,27 @@ static CSCPolicyCmd(struct cmd_syndesc *asp)
 			break;
 		}
 	}
-	
+
 	if (share)
 	{
-#ifdef WIN32
-        if ( !IsAdmin() ) {
+        char *policy;
+
+        RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                        "SOFTWARE\\OpenAFS\\Client\\CSCPolicy",
+                        0, 
+                        "AFS", 
+                        REG_OPTION_NON_VOLATILE,
+                        KEY_WRITE,
+                        NULL, 
+                        &hkCSCPolicy,
+                        NULL );
+
+        if ( !IsAdmin() || hkCSCPolicy == NULL ) {
             fprintf (stderr,"Permission denied: requires Administrator access.\n");
+            if ( hkCSCPolicy )
+                RegCloseKey(hkCSCPolicy);
             return EACCES;
         }
-#else /* WIN32 */
-        if (geteuid()) {
-            fprintf (stderr,"Permission denied: requires root access.\n");
-            return EACCES;
-        }
-#endif /* WIN32 */
 
         policy = "manual";
 		
@@ -3277,30 +3283,58 @@ static CSCPolicyCmd(struct cmd_syndesc *asp)
 		if (asp->parms[4].items)
 			policy = "disable";
 		
-		strcpy(sbmtpath, "afsdsbmt.ini");
-		WritePrivateProfileString("CSC Policy", share, policy, sbmtpath);
+        RegSetValueEx( hkCSCPolicy, share, 0, REG_SZ, policy, strlen(policy)+1);
 		
 		printf("CSC policy on share \"%s\" changed to \"%s\".\n\n", share, policy);
 		printf("Close all applications that accessed files on this share or restart AFS Client for the change to take effect.\n"); 
 	}
 	else
 	{
-		char policies[1024];
-		DWORD len = sizeof(policies);
+        DWORD dwIndex, dwPolicies;
+		char policyName[256];
+		DWORD policyNameLen;
+        char policy[256];
+        DWORD policyLen;
+        DWORD dwType;
 
 		/* list current csc policies */
-		strcpy(sbmtpath, "afsdsbmt.ini");
-				
-		GetPrivateProfileSection("CSC Policy", policies, len, sbmtpath);
+		
+        RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                        "SOFTWARE\\OpenAFS\\Client\\CSCPolicy",
+                        0, 
+                        "AFS", 
+                        REG_OPTION_NON_VOLATILE,
+                        KEY_READ|KEY_QUERY_VALUE,
+                        NULL, 
+                        &hkCSCPolicy,
+                        NULL );
+
+        RegQueryInfoKey( hkCSCPolicy,
+                         NULL,  /* lpClass */
+                         NULL,  /* lpcClass */
+                         NULL,  /* lpReserved */
+                         NULL,  /* lpcSubKeys */
+                         NULL,  /* lpcMaxSubKeyLen */
+                         NULL,  /* lpcMaxClassLen */
+                         &dwPolicies, /* lpcValues */
+                         NULL,  /* lpcMaxValueNameLen */
+                         NULL,  /* lpcMaxValueLen */
+                         NULL,  /* lpcbSecurityDescriptor */
+                         NULL   /* lpftLastWriteTime */
+                         );
 		
 		printf("Current CSC policies:\n");
-		policy = policies;
-		while (policy[0])
-		{
-			printf("  %s\n", policy);
-			policy += strlen(policy) + 1;
+        for ( dwIndex = 0; dwIndex < dwPolicies; dwIndex ++ ) {
+
+            policyNameLen = sizeof(policyName);
+            policyLen = sizeof(policy);
+            RegEnumValue( hkCSCPolicy, dwIndex, policyName, &policyNameLen, NULL,
+                          &dwType, policy, &policyLen);
+
+			printf("  %s = %s\n", policyName, policy);
 		}
 	}
 
+    RegCloseKey(hkCSCPolicy);
 	return (0);
 }

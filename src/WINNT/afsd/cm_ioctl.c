@@ -1982,10 +1982,12 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 	char afspath[MAX_PATH];
 	char *submountreqp;
 	int iteration;
-	int submountDataSize;
-	char *submountData;
-	char *submountName;
 	int nextAutoSubmount;
+    HKEY hkSubmounts;
+    DWORD dwType, dwSize;
+    DWORD status;
+    DWORD dwIndex;
+    DWORD dwSubmounts;
 
 	cm_SkipIoctlPath(ioctlp);
 
@@ -2004,33 +2006,45 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 	 * that submount name is in use... if so, the submount's path
 	 * has to match our path.
 	 */
-	if (submountreqp && *submountreqp) {
+
+    RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                    "SOFTWARE\\OpenAFS\\Client\\Submounts",
+                    0, 
+                    "AFS", 
+                    REG_OPTION_NON_VOLATILE,
+                    KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                    NULL, 
+                    &hkSubmounts,
+                    NULL );
+
+    if (submountreqp && *submountreqp) {
 		char submountPathNormalized[MAX_PATH];
 		char submountPath[MAX_PATH];
 		int submountPathLen;
 
-		submountPathLen = GetPrivateProfileString("AFS Submounts",
-					submountreqp, "", submountPath,
-					sizeof(submountPath), "afsdsbmt.ini");
+        dwSize = sizeof(submountPath);
+        status = RegQueryValueEx( hkSubmounts, submountreqp, 0,
+                         &dwType, submountPath, &dwSize);
 
-		if ((submountPathLen == 0) ||
-		    (submountPathLen == sizeof(submountPath) - 1)) {
+		if (status != ERROR_SUCCESS) {
 
 			/* The suggested submount name isn't in use now--
 			 * so we can safely map the requested submount name
 			 * to the supplied path. Remember not to write the
 			 * leading "/afs" when writing out the submount.
 			 */
-			WritePrivateProfileString("AFS Submounts",
-					submountreqp, 
-					(strlen(&afspath[strlen(cm_mountRoot)])) ?
-						  &afspath[strlen(cm_mountRoot)]:"/",
-					"afsdsbmt.ini");
+            RegSetValueEx( hkSubmounts, submountreqp, 0,
+                           REG_SZ, 
+                           (strlen(&afspath[strlen(cm_mountRoot)])) ?
+                           &afspath[strlen(cm_mountRoot)]:"/",
+                           (strlen(&afspath[strlen(cm_mountRoot)])) ?
+                           strlen(&afspath[strlen(cm_mountRoot)])+1:2);
 
+            RegCloseKey( hkSubmounts );
 			strcpy(ioctlp->outDatap, submountreqp);
 			ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
 			lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
-        		return 0;
+            return 0;
 		}
 
 		/* The suggested submount name is already in use--if the
@@ -2041,35 +2055,26 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 		if (!strcmp (submountPathNormalized, afspath)) {
 			strcpy(ioctlp->outDatap, submountreqp);
 			ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
+            RegCloseKey( hkSubmounts );
 			lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
-        		return 0;
+            return 0;
 		}
 	}
 
-	/* At this point, the user either didn't request a particular
-	 * submount name, or that submount name couldn't be used.
-	 * Look through afsdsbmt.ini to see if there are any submounts
-	 * already associated with the specified path. The first
-	 * step in doing that search is to load the AFS Submounts
-	 * section of afsdsbmt.ini into memory.
-	 */
+    RegQueryInfoKey( hkSubmounts,
+                 NULL,  /* lpClass */
+                 NULL,  /* lpcClass */
+                 NULL,  /* lpReserved */
+                 NULL,  /* lpcSubKeys */
+                 NULL,  /* lpcMaxSubKeyLen */
+                 NULL,  /* lpcMaxClassLen */
+                 &dwSubmounts, /* lpcValues */
+                 NULL,  /* lpcMaxValueNameLen */
+                 NULL,  /* lpcMaxValueLen */
+                 NULL,  /* lpcbSecurityDescriptor */
+                 NULL   /* lpftLastWriteTime */
+                 );
 
-	submountDataSize = 1024;
-	submountData = malloc (submountDataSize);
-
-	for (iteration = 0; iteration < 5; ++iteration) {
-
-		int sectionSize;
-		sectionSize = GetPrivateProfileString("AFS Submounts",
-					NULL, "", submountData,
-					submountDataSize, "afsdsbmt.ini");
-		if (sectionSize < submountDataSize-2)
-			break;
-
-		free (submountData);
-		submountDataSize *= 2;
-		submountData = malloc (submountDataSize);
-	}
 
 	/* Having obtained a list of all available submounts, start
 	 * searching that list for a path which matches the requested
@@ -2079,13 +2084,15 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 
 	nextAutoSubmount = 1;
 
-	for (submountName = submountData;
-        	submountName && *submountName;
-        	submountName += 1+strlen(submountName)) {
-
+    for ( dwIndex = 0; dwIndex < dwSubmounts; dwIndex ++ ) {
 		char submountPathNormalized[MAX_PATH];
 		char submountPath[MAX_PATH] = "";
-		int submountPathLen;
+		DWORD submountPathLen = sizeof(submountPath);
+        char submountName[256];
+        DWORD submountNameLen = sizeof(submountName);
+
+        RegEnumValue( hkSubmounts, dwIndex, submountName, &submountNameLen, NULL,
+              &dwType, submountPath, &submountPathLen);
 
 		/* If this is an Auto### submount, remember its ### value */
 
@@ -2096,14 +2103,6 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 			nextAutoSubmount = max (nextAutoSubmount,
 						thisAutoSubmount+1);
 		}
-
-		/* We have the name of a submount in the AFS Submounts
-		 * section; read that entry to find out what path it
-		 * maps to.
-		 */
-		submountPathLen = GetPrivateProfileString("AFS Submounts",
-					submountName, "", submountPath,
-					sizeof(submountPath), "afsdsbmt.ini");
 
 		if ((submountPathLen == 0) ||
 		    (submountPathLen == sizeof(submountPath) - 1)) {
@@ -2116,17 +2115,14 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 		 */
 		cm_NormalizeAfsPath (submountPathNormalized, submountPath);
 		if (!strcmp (submountPathNormalized, afspath)) {
-
 			strcpy(ioctlp->outDatap, submountName);
 			ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
-			free (submountData);
+            RegCloseKey(hkSubmounts);
 			lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
-        		return 0;
+            return 0;
 
 		}
 	}
-
-	free (submountData);
 
 	/* We've been through the entire list of existing submounts, and
 	 * didn't find any which matched the specified path. So, we'll
@@ -2136,12 +2132,17 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 
 	sprintf(ioctlp->outDatap, "auto%ld", nextAutoSubmount);
 
-	WritePrivateProfileString("AFS Submounts", ioctlp->outDatap,
-				  (strlen(&afspath[lstrlen(cm_mountRoot)])) ? 
-				  &afspath[lstrlen(cm_mountRoot)]:"/",
-				  "afsdsbmt.ini");
+    RegSetValueEx( hkSubmounts, 
+                   ioctlp->outDatap,
+                   0,
+                   REG_SZ, 
+                   (strlen(&afspath[strlen(cm_mountRoot)])) ?
+                   &afspath[strlen(cm_mountRoot)]:"/",
+                   (strlen(&afspath[strlen(cm_mountRoot)])) ?
+                   strlen(&afspath[strlen(cm_mountRoot)])+1:2);
 
 	ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
+    RegCloseKey(hkSubmounts);
 	lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
 	return 0;
 }

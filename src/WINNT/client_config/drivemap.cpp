@@ -43,14 +43,81 @@ const TCHAR sAFSConfigKeyName[] = TEXT("SYSTEM\\CurrentControlSet\\Services\\Tra
 
 #define cREALLOC_SUBMOUNTS   4
 
-static TCHAR cszINIFILE[] = TEXT("afsdsbmt.ini");
-static TCHAR cszSECTION_SUBMOUNTS[] = TEXT("AFS Submounts");
-static TCHAR cszSECTION_MAPPINGS[] = TEXT("AFS Mappings");
-static TCHAR cszSECTION_ACTIVE[] = TEXT("AFS Active");
+static TCHAR cszSECTION_SUBMOUNTS[] = TEXT("SOFTWARE\\OpenAFS\\Client\\Submounts");
+static TCHAR cszSECTION_MAPPINGS[] = TEXT("SOFTWARE\\OpenAFS\\Client\\Mappings");
+static TCHAR cszSECTION_ACTIVE[] = TEXT("SOFTWARE\\OpenAFS\\Client\\Active Maps");
 
 static TCHAR cszAUTOSUBMOUNT[] = TEXT("Auto");
 static TCHAR cszLANMANDEVICE[] = TEXT("\\Device\\LanmanRedirector\\");
 
+
+static BOOL 
+WriteRegistryString(HKEY key, TCHAR * subkey, LPTSTR lhs, LPTSTR rhs)
+{
+    HKEY hkSub = NULL;
+    RegCreateKeyEx( key,
+                    subkey,
+                    0,
+                    NULL,
+                    REG_OPTION_NON_VOLATILE,
+                    KEY_WRITE,
+                    NULL,
+                    &hkSub,
+                    NULL);
+
+    DWORD status = RegSetValueEx( hkSub, lhs, 0, REG_SZ, (const BYTE *)rhs, strlen(rhs)+1 );
+
+    if ( hkSub )
+        RegCloseKey( hkSub );
+
+    return (status == ERROR_SUCCESS);
+}
+
+static BOOL 
+ReadRegistryString(HKEY key, TCHAR * subkey, LPTSTR lhs, LPTSTR rhs, DWORD * size)
+{
+    HKEY hkSub = NULL;
+    RegCreateKeyEx( key,
+                    subkey,
+                    0,
+                    NULL,
+                    REG_OPTION_NON_VOLATILE,
+                    KEY_READ,
+                    NULL,
+                    &hkSub,
+                    NULL);
+
+    DWORD dwType;
+    DWORD status = RegQueryValueEx( hkSub, lhs, 0, &dwType, (LPBYTE)rhs, size );
+
+    if ( hkSub )
+        RegCloseKey( hkSub );
+
+    return (status == ERROR_SUCCESS);
+}
+
+static BOOL 
+DeleteRegistryString(HKEY key, TCHAR * subkey, LPTSTR lhs)
+{
+    HKEY hkSub = NULL;
+    RegCreateKeyEx( key,
+                    subkey,
+                    0,
+                    NULL,
+                    REG_OPTION_NON_VOLATILE,
+                    KEY_READ,
+                    NULL,
+                    &hkSub,
+                    NULL);
+
+    DWORD dwType;
+    DWORD status = RegDeleteValue( hkSub, lhs );
+
+    if ( hkSub )
+        RegCloseKey( hkSub );
+
+    return (status == ERROR_SUCCESS);
+}
 
 /*
  * STRINGS ____________________________________________________________________
@@ -307,92 +374,128 @@ BOOL fCanIssuePIOCTL (void)
 
 void QueryDriveMapList_ReadSubmounts (PDRIVEMAPLIST pList)
 {
-   if (IsWindowsNT())
-      {
-      size_t cchLHS = 1024;
-      LPTSTR mszLHS = AllocateStringMemory (cchLHS);
+    if (IsWindowsNT())
+    {
+        HKEY hkSubmounts;
 
-      for (int iRetry = 0; iRetry < 5; ++iRetry)
-         {
-         DWORD rc = GetPrivateProfileString (cszSECTION_SUBMOUNTS, NULL, TEXT(""), mszLHS, cchLHS, cszINIFILE);
-         if ((rc != cchLHS-1) && (rc != cchLHS-2))
-            break;
+        RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
+                        "SOFTWARE\\OpenAFS\\Client\\Submounts",
+                        0, 
+                        "AFS", 
+                        REG_OPTION_NON_VOLATILE,
+                        KEY_READ|KEY_QUERY_VALUE,
+                        NULL, 
+                        &hkSubmounts,
+                        NULL );
 
-         FreeStringMemory (mszLHS);
-         cchLHS *= 2;
-         mszLHS = AllocateStringMemory (cchLHS);
-         }
+        DWORD dwSubmounts;
+        RegQueryInfoKey( hkSubmounts,
+                         NULL,  /* lpClass */
+                         NULL,  /* lpcClass */
+                         NULL,  /* lpReserved */
+                         NULL,  /* lpcSubKeys */
+                         NULL,  /* lpcMaxSubKeyLen */
+                         NULL,  /* lpcMaxClassLen */
+                         &dwSubmounts, /* lpcValues */
+                         NULL,  /* lpcMaxValueNameLen */
+                         NULL,  /* lpcMaxValueLen */
+                         NULL,  /* lpcbSecurityDescriptor */
+                         NULL   /* lpftLastWriteTime */
+                         );
 
-      for (LPTSTR psz = mszLHS; psz && *psz; psz += 1+lstrlen(psz))
-         {
-         SUBMOUNT Submount;
-         memset (&Submount, 0x00, sizeof(SUBMOUNT));
-         lstrcpy (Submount.szSubmount, psz);
+        for ( DWORD dwIndex = 0; dwIndex < dwSubmounts; dwIndex ++ ) {
+            TCHAR submountPath[MAX_PATH] = "";
+            DWORD submountPathLen = MAX_PATH;
+            TCHAR submountName[MAX_PATH];
+            DWORD submountNameLen = MAX_PATH;
+            DWORD dwType;
 
-         TCHAR szMapping[ MAX_PATH ] = TEXT("");
-         GetPrivateProfileString (cszSECTION_SUBMOUNTS, Submount.szSubmount, TEXT(""), szMapping, MAX_PATH, cszINIFILE);
-         if (szMapping[0] != TEXT('\0'))
-            {
-            AdjustAfsPath (Submount.szMapping, szMapping, FALSE, TRUE);
+            RegEnumValue( hkSubmounts, dwIndex, submountName, &submountNameLen, NULL,
+                          &dwType, (LPBYTE)submountPath, &submountPathLen);
 
-            for (size_t ii = 0; ii < pList->cSubmounts; ++ii)
-               {
-               if (!pList->aSubmounts[ii].szSubmount[0])
-                  break;
-               }
-            if (REALLOC (pList->aSubmounts, pList->cSubmounts, 1+ii, cREALLOC_SUBMOUNTS))
-               {
-               memcpy (&pList->aSubmounts[ii], &Submount, sizeof(SUBMOUNT));
-               }
+            SUBMOUNT Submount;
+            memset (&Submount, 0x00, sizeof(SUBMOUNT));
+            lstrcpy (Submount.szSubmount, submountName);
+
+            if ( submountPath[0] != TEXT('\0') ) {
+                AdjustAfsPath (Submount.szMapping, submountPath, FALSE, TRUE);
+
+                for (size_t ii = 0; ii < pList->cSubmounts; ++ii)
+                {
+                    if (!pList->aSubmounts[ii].szSubmount[0])
+                        break;
+                }
+                if (REALLOC (pList->aSubmounts, pList->cSubmounts, 1+ii, cREALLOC_SUBMOUNTS))
+                {
+                    memcpy (&pList->aSubmounts[ii], &Submount, sizeof(SUBMOUNT));
+                }
             }
-         }
 
-      FreeStringMemory (mszLHS);
-      }
+        }
+        RegCloseKey(hkSubmounts);
+    }
 }
 
 
 void QueryDriveMapList_ReadMappings (PDRIVEMAPLIST pList)
 {
-   size_t cchLHS = 1024;
-   LPTSTR mszLHS = AllocateStringMemory (cchLHS);
+    HKEY hkMappings;
+    RegCreateKeyEx( HKEY_CURRENT_USER,
+                    "SOFTWARE\\OpenAFS\\Client\\Mappings",
+                    0, 
+                    "AFS", 
+                    REG_OPTION_NON_VOLATILE,
+                    KEY_READ|KEY_QUERY_VALUE,
+                    NULL, 
+                    &hkMappings,
+                    NULL );
 
-   for (int iRetry = 0; iRetry < 5; ++iRetry)
-      {
-      DWORD rc = GetPrivateProfileString (cszSECTION_MAPPINGS, NULL, TEXT(""), mszLHS, cchLHS, cszINIFILE);
-      if ((rc != cchLHS-1) && (rc != cchLHS-2))
-         break;
+    DWORD dwMappings;
+    RegQueryInfoKey( hkMappings,
+                     NULL,  /* lpClass */
+                     NULL,  /* lpcClass */
+                     NULL,  /* lpReserved */
+                     NULL,  /* lpcSubKeys */
+                     NULL,  /* lpcMaxSubKeyLen */
+                     NULL,  /* lpcMaxClassLen */
+                     &dwMappings, /* lpcValues */
+                     NULL,  /* lpcMaxValueNameLen */
+                     NULL,  /* lpcMaxValueLen */
+                     NULL,  /* lpcbSecurityDescriptor */
+                     NULL   /* lpftLastWriteTime */
+                     );
 
-      FreeStringMemory (mszLHS);
-      cchLHS *= 2;
-      mszLHS = AllocateStringMemory (cchLHS);
-      }
+    for ( DWORD dwIndex = 0; dwIndex < dwMappings; dwIndex ++ ) {
+        TCHAR mapping[MAX_PATH] = "";
+        DWORD mappingLen = MAX_PATH;
+        TCHAR drive[MAX_PATH];
+        DWORD driveLen = MAX_PATH;
+        DWORD dwType;
 
-   for (LPTSTR psz = mszLHS; psz && *psz; psz += 1+lstrlen(psz))
-      {
-      DRIVEMAP DriveMap;
-      memset (&DriveMap, 0x00, sizeof(DRIVEMAP));
-      DriveMap.chDrive = toupper(*psz);
-      DriveMap.fPersistent = TRUE;
-      if ((DriveMap.chDrive < chDRIVE_A) || (DriveMap.chDrive > chDRIVE_Z))
-         continue;
+        RegEnumValue( hkMappings, dwIndex, drive, &driveLen, NULL,
+                      &dwType, (LPBYTE)mapping, &mappingLen);
 
-      TCHAR szMapping[ MAX_PATH ] = TEXT("");
-      GetPrivateProfileString (cszSECTION_MAPPINGS, psz, TEXT(""), szMapping, MAX_PATH, cszINIFILE);
-      if (szMapping[0] != TEXT('\0'))
-         {
-         AdjustAfsPath (DriveMap.szMapping, szMapping, TRUE, TRUE);
-         if (DriveMap.szMapping[ lstrlen(DriveMap.szMapping)-1 ] == TEXT('*'))
-            {
-            DriveMap.fPersistent = FALSE;
-            DriveMap.szMapping[ lstrlen(DriveMap.szMapping)-1 ] = TEXT('\0');
-            }
-         size_t iDrive = DriveMap.chDrive - chDRIVE_A;
-         memcpy (&pList->aDriveMap[ iDrive ], &DriveMap, sizeof(DRIVEMAP));
-         }
-      }
+       DRIVEMAP DriveMap;
+       memset (&DriveMap, 0x00, sizeof(DRIVEMAP));
+       DriveMap.chDrive = toupper(*drive);
+       DriveMap.fPersistent = TRUE;
+       if ((DriveMap.chDrive < chDRIVE_A) || (DriveMap.chDrive > chDRIVE_Z))
+           continue;
 
-   FreeStringMemory (mszLHS);
+       if (mapping[0] != TEXT('\0'))
+       {
+           AdjustAfsPath (DriveMap.szMapping, mapping, TRUE, TRUE);
+           if (DriveMap.szMapping[ lstrlen(DriveMap.szMapping)-1 ] == TEXT('*'))
+           {
+               DriveMap.fPersistent = FALSE;
+               DriveMap.szMapping[ lstrlen(DriveMap.szMapping)-1 ] = TEXT('\0');
+           }
+           size_t iDrive = DriveMap.chDrive - chDRIVE_A;
+           memcpy (&pList->aDriveMap[ iDrive ], &DriveMap, sizeof(DRIVEMAP));
+       }
+    }
+
+    RegCloseKey(hkMappings);
 }
 
 BOOL ForceMapActive (TCHAR chDrive)
@@ -403,7 +506,8 @@ BOOL ForceMapActive (TCHAR chDrive)
     szDrive[0] = chDrive;
     szDrive[1] = 0;
 
-    GetPrivateProfileString (cszSECTION_ACTIVE, szDrive, TEXT("0"), szActive, sizeof(szActive), cszINIFILE);
+    DWORD len = sizeof(szActive);
+    ReadRegistryString( HKEY_CURRENT_USER, cszSECTION_ACTIVE, szDrive, szActive, &len);
 
     if ( !lstrcmp(szActive,"1") || !lstrcmpi(szActive,"true") || !lstrcmpi(szActive,"on") || !lstrcmpi(szActive,"yes") )
         return TRUE;
@@ -418,34 +522,69 @@ void WriteActiveMap (TCHAR chDrive, BOOL on)
     szDrive[0] = chDrive;
     szDrive[1] = 0;
 
-    WritePrivateProfileString (cszSECTION_ACTIVE, szDrive, on ? "1" : "0", cszINIFILE);
+    WriteRegistryString(HKEY_CURRENT_USER, cszSECTION_ACTIVE, szDrive, on ? "1" : "0");
 }
 
 void QueryDriveMapList_WriteMappings (PDRIVEMAPLIST pList)
 {
-   WriteDriveMappings (pList);
+    WriteDriveMappings (pList);
 }
 
 
 void WriteDriveMappings (PDRIVEMAPLIST pList)
 {
-   WritePrivateProfileString (cszSECTION_MAPPINGS, NULL, NULL, cszINIFILE);
+    HKEY hkMappings;
+    RegCreateKeyEx( HKEY_CURRENT_USER, 
+                    "SOFTWARE\\OpenAFS\\Client\\Mappings",
+                    0, 
+                    "AFS", 
+                    REG_OPTION_NON_VOLATILE,
+                    KEY_READ|KEY_QUERY_VALUE|KEY_WRITE,
+                    NULL, 
+                    &hkMappings,
+                    NULL );
+
+    DWORD dwMappings;
+    RegQueryInfoKey( hkMappings,
+                     NULL,  /* lpClass */
+                     NULL,  /* lpcClass */
+                     NULL,  /* lpReserved */
+                     NULL,  /* lpcSubKeys */
+                     NULL,  /* lpcMaxSubKeyLen */
+                     NULL,  /* lpcMaxClassLen */
+                     &dwMappings, /* lpcValues */
+                     NULL,  /* lpcMaxValueNameLen */
+                     NULL,  /* lpcMaxValueLen */
+                     NULL,  /* lpcbSecurityDescriptor */
+                     NULL   /* lpftLastWriteTime */
+                     );
+
+    if ( dwMappings > 0 ) {
+        for ( long dwIndex = dwMappings - 1; dwIndex >= 0; dwIndex-- ) {
+            TCHAR drive[MAX_PATH];
+            DWORD driveLen = MAX_PATH;
+
+            RegEnumValue( hkMappings, dwIndex, drive, &driveLen, NULL, NULL, NULL, NULL);
+            RegDeleteValue( hkMappings, drive );
+        }
+    }
 
    for (size_t iDrive = 0; iDrive < 26; ++iDrive)
-      {
-      if (pList->aDriveMap[iDrive].szMapping[0] != TEXT('\0'))
-         {
-         TCHAR szLHS[] = TEXT("*");
-         szLHS[0] = pList->aDriveMap[iDrive].chDrive;
+   {
+       if (pList->aDriveMap[iDrive].szMapping[0] != TEXT('\0'))
+       {
+           TCHAR szLHS[] = TEXT("*");
+           szLHS[0] = pList->aDriveMap[iDrive].chDrive;
 
-         TCHAR szRHS[MAX_PATH];
-         AdjustAfsPath (szRHS, pList->aDriveMap[iDrive].szMapping, TRUE, TRUE);
-         if (!pList->aDriveMap[iDrive].fPersistent)
-            lstrcat (szRHS, TEXT("*"));
+           TCHAR szRHS[MAX_PATH];
+           AdjustAfsPath (szRHS, pList->aDriveMap[iDrive].szMapping, TRUE, TRUE);
+           if (!pList->aDriveMap[iDrive].fPersistent)
+               lstrcat (szRHS, TEXT("*"));
 
-         WritePrivateProfileString (cszSECTION_MAPPINGS, szLHS, szRHS, cszINIFILE);
-         }
-      }
+           RegSetValueEx( hkMappings, szLHS, 0, REG_SZ, (const BYTE *)szRHS, lstrlen(szRHS) + 1);
+       }
+   }
+   RegCloseKey( hkMappings );
 }
 
 BOOL DriveIsGlobalAfsDrive(TCHAR chDrive)
@@ -636,29 +775,30 @@ BOOL ActivateDriveMap (TCHAR chDrive, LPTSTR pszMapping, LPTSTR pszSubmountReq, 
 
 BOOL InactivateDriveMap (TCHAR chDrive, DWORD *pdwStatus)
 {
-   DWORD rc = DisMountDOSDrive(chDrive, FALSE);
-   if (rc == NO_ERROR)
-      return TRUE;
+    DWORD rc = DisMountDOSDrive(chDrive, FALSE);
+    if (rc == NO_ERROR)
+        return TRUE;
 
-   if (pdwStatus)
-      *pdwStatus = rc;
-   return FALSE;
+    if (pdwStatus)
+        *pdwStatus = rc;
+    return FALSE;
 }
 
 
 void AddSubMount (LPTSTR pszSubmount, LPTSTR pszMapping)
 {
-   TCHAR szRHS[ MAX_PATH ];
-   AdjustAfsPath (szRHS, pszMapping, FALSE, TRUE);
-   if (!szRHS[0])
-      lstrcpy (szRHS, TEXT("/"));
-   WritePrivateProfileString (cszSECTION_SUBMOUNTS, pszSubmount, szRHS, cszINIFILE);
+    TCHAR szRHS[ MAX_PATH ];
+    AdjustAfsPath (szRHS, pszMapping, FALSE, TRUE);
+    if (!szRHS[0])
+        lstrcpy (szRHS, TEXT("/"));
+
+    WriteRegistryString(HKEY_LOCAL_MACHINE, cszSECTION_SUBMOUNTS, pszSubmount, szRHS);
 }
 
 
 void RemoveSubMount (LPTSTR pszSubmount)
 {
-   WritePrivateProfileString (cszSECTION_SUBMOUNTS, pszSubmount, NULL, cszINIFILE);
+    DeleteRegistryString(HKEY_LOCAL_MACHINE, cszSECTION_SUBMOUNTS, pszSubmount);
 }
 
 
@@ -826,7 +966,7 @@ DWORD RWLogonOption(BOOL read,DWORD value)
    if (read)
    {
 	   rval=0;
-		if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSLogonOptionName,0, KEY_QUERY_VALUE, &hk)==ERROR_SUCCESS)
+		if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSLogonOptionName, 0, KEY_QUERY_VALUE, &hk)==ERROR_SUCCESS)
 		{
 			LSPsize=sizeof(rval);
 			RegQueryValueEx(hk, "LogonOptions", NULL,
