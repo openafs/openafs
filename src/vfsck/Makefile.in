@@ -41,54 +41,28 @@ SYS_NAME=@AFS_SYSNAME@
 
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS=-I. -I${srcdir} ${DBUG} -w -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
-LIBC=	/lib/libc.a
-SRCS=	${srcdir}/dir.c ${srcdir}/inode.c ${srcdir}/main.c ${srcdir}/pass1.c ${srcdir}/pass1b.c \
-	${srcdir}/pass2.c ${srcdir}/pass3.c ${srcdir}/pass4.c ${srcdir}/pass5.c ${srcdir}/setup.c \
-	${srcdir}/utilities.c ${srcdir}/ufs_subr.c ${srcdir}/ufs_tables.c ${srcdir}/dirutils.c \
-	${srcdir}/vprintf.c ${srcdir}/proplist.c
-LOCOBJS=dir.o inode.o main.o pass1.o pass1b.o pass2.o pass3.o pass4.o \
-	pass5.o setup.o utilities.o dirutils.o vprintf.o proplist.o
-SYSOBJS=ufs_subr.o ufs_tables.o
-OBJS=	${LOCOBJS} ${SYSOBJS}
-MAN =
-#MAN=	fsck.0
+CFLAGS=-I. -I${srcdir} ${DBUG} -w -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} \
+	${XCFLAGS} ${VFSCK_CFLAGS}
 
-include ../config/Makefile.version
+SRCS= dir.c inode.c main.c pass1.c pass1b.c pass2.c pass3.c \
+	pass4.c pass5.c setup.c utilities.c ufs_subr.c \
+	ufs_tables.c dirutils.c vprintf.c proplist.c
+
+OBJS= dir.o inode.o main.o pass1.o pass1b.o pass2.o pass3.o pass4.o \
+	pass5.o setup.o utilities.o dirutils.o vprintf.o proplist.o \
+	ufs_subr.o ufs_tables.o
 
 all: vfsck
 
-vfsck: main.o ${OBJS} 
-
-${OBJS}:	${SRCS}
-	case ${SYS_NAME} in 					\
-	  hp_ux11? )                                            \
-	    ${CC} -o vfsck -I/usr/old/usr/include ${DBUG} -w -I${TOP_INCDIR} ${SRCS} ${NON_SHARED} +DA1.0 -Wl,-a,archive -D_FILE64 \
-			;;					\
-	  hp?00_ux101 | hp_ux10? )				\
-	    ${CC} -o vfsck ${CFLAGS} ${SRCS} ${NON_SHARED} ${XLIBS} -D_FILE64\
-			;;					\
-	    * )							\
-	    ${CC} -o vfsck ${CFLAGS} ${SRCS} ${NON_SHARED} ${XLIBS}\
-			;;					\
-	esac
+vfsck: ${OBJS} 
+	${CC} -o vfsck ${CFLAGS} ${OBJS} ${NON_SHARED} ${XLIBS}
 
 main.o: main.c AFS_component_version_number.c
 
-#${LOCOBJS}:
-#	${CC} ${CFLAGS} -c $*.c
 
-clean:
-	$(RM) -f ${OBJS} vfsck core AFS_component_version_number.c
-
-cleandir: clean
-	$(RM) -f ${MAN} tags .depend
-
-depend: ${SRCS}
-	mkdep ${CFLAGS} ${SRCS}
-
-system: install
-
+#
+# Installation targets
+#
 install: ${DESTDIR}${afssrvlibexecdir}/vfsck
 
 ${DEST}/root.server/etc/vfsck: vfsck
@@ -100,20 +74,25 @@ ${DEST}/root.server/usr/afs/bin/vfsck: vfsck
 ${DESTDIR}${afssrvlibexecdir}/vfsck: vfsck
 	${INSTALL} $? $@
 
-
 dest: ${DEST}/root.server/etc/vfsck ${DEST}/root.server/usr/afs/bin/vfsck
-	case ${SYS_NAME} in 				\
-		hp_ux10? )				\
-			${CP} ${srcdir}/bcheckrc ${DEST}/root.server/etc; \
-			;;				\
-		hp_ux11? )				\
-			${CP} ${srcdir}/bcheckrc-hp_ux110 ${DEST}/root.server/etc/bcheckrc; \
-			;;				\
+	case ${SYS_NAME} in \
+		hp_ux10?) \
+			${CP} ${srcdir}/bcheckrc ${DEST}/root.server/etc ;; \
+		hp_ux11?) \
+			${CP} ${srcdir}/bcheckrc-hp_ux110 ${DEST}/root.server/etc/bcheckrc ;; \
 	esac
-	case ${SYS_NAME} in 				\
-		hp_ux10? | hp_ux11? )			\
-			 ${CP} ${srcdir}/mount ${DEST}/root.server/etc ;\
-			 ${CP} ${srcdir}/umount ${DEST}/root.server/etc; \
-			 chmod 755 ${DEST}/root.server/etc/bcheckrc ${DEST}/root.server/etc/mount ${DEST}/root.server/etc/umount ;\
-				;;					\
+	case ${SYS_NAME} in \
+		hp_ux10? | hp_ux11? ) \
+			${CP} ${srcdir}/mount ${DEST}/root.server/etc; \
+			${CP} ${srcdir}/umount ${DEST}/root.server/etc; \
+			chmod 755 ${DEST}/root.server/etc/bcheckrc ${DEST}/root.server/etc/mount ${DEST}/root.server/etc/umount ;\
+				;; \
 	esac
+
+#
+# Misc targets
+#
+clean:
+	$(RM) -f ${OBJS} vfsck core AFS_component_version_number.c
+
+include ../config/Makefile.version

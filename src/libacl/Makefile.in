@@ -31,76 +31,95 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-INCDIRS=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I.. \
-	-I${BACKDIR}/include -I${TOP_INCDIR}/afs
-KERNELDIR = ../libafs/
-UKERNELDIR = ../libuafs/
+CFLAGS = ${OPTMZ} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} \
+	-I${TOP_INCDIR}/afs ${LIBS} ${XCFLAGS}
 
-CFLAGS = ${OPTMZ} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS}
+KERNELDIR = ../libafs
+UKERNELDIR = ../libuafs
 
-LIBOBJS=aclprocs.o netprocs.o
+#
+# Main targets
+#
+all: \
+	${TOP_LIBDIR}/libacl.a \
+	${TOP_INCDIR}/afs/acl.h \
+	${TOP_INCDIR}/afs/prs_fs.h \
+	${KERNELDIR}/afs \
+	${KERNELDIR}/afs/prs_fs.h \
+	${UKERNELDIR}/afs \
+	${UKERNELDIR}/afs/prs_fs.h
 
-include ../config/Makefile.version
-
-all: kinstall ukinstall ${TOP_LIBDIR}/libacl.a ${TOP_INCDIR}/afs/acl.h ${TOP_INCDIR}/afs/prs_fs.h
-
-libacl.a: $(LIBOBJS) AFS_component_version_number.o
+libacl.a: aclprocs.o netprocs.o AFS_component_version_number.o
 	$(RM) -f $@
-	$(AR) crv $@ $(LIBOBJS) AFS_component_version_number.o
+	$(AR) crv $@ aclprocs.o netprocs.o AFS_component_version_number.o
 	$(RANLIB) $@
 
 aclprocs.o: aclprocs.c acl.h
 
 netprocs.o: netprocs.c acl.h
 
-clean: 
-	$(RM) -f acltest *.o libacl.a core AFS_component_version_number.c
-
-system: install
-
-kinstall:
-	${INSTALL} ${srcdir}/prs_fs.h ${KERNELDIR}/afs/prs_fs.h
-
-ukinstall webinstall:
-	${INSTALL} ${srcdir}/prs_fs.h ${UKERNELDIR}/afs/prs_fs.h
-
-install:    ${DESTDIR}${libdir}/afs/libacl.a ${DESTDIR}${includedir}/afs/acl.h ${DESTDIR}${includedir}/afs/prs_fs.h
-
-test:
-	cd test; $(MAKE)
-
-${DEST}/lib/afs/libacl.a: libacl.a
-	${INSTALL} $? $@
-
-${DESTDIR}${libdir}/afs/libacl.a: libacl.a
-	${INSTALL} $? $@
-
+#
+# Installation targets
+#
 
 ${TOP_LIBDIR}/libacl.a: libacl.a
 	${INSTALL} $? $@
 
+${TOP_INCDIR}/afs/acl.h: acl.h
+	${INSTALL} $? $@
 
-${DEST}/include/afs/acl.h: acl.h
+${TOP_INCDIR}/afs/prs_fs.h: prs_fs.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/afs:
+	mkdir -p $? $@
+
+${KERNELDIR}/afs/prs_fs.h: prs_fs.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs:
+	mkdir -p $? $@
+
+${UKERNELDIR}/afs/prs_fs.h: prs_fs.h
+	${INSTALL} $? $@
+
+install: \
+	${DESTDIR}${libdir}/afs/libacl.a \
+	${DESTDIR}${includedir}/afs/acl.h \
+	${DESTDIR}${includedir}/afs/prs_fs.h
+
+${DESTDIR}${libdir}/afs/libacl.a: libacl.a
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/afs/acl.h: acl.h
 	${INSTALL} $? $@
 
-
-${TOP_INCDIR}/afs/acl.h: acl.h
+${DESTDIR}${includedir}/afs/prs_fs.h: prs_fs.h
 	${INSTALL} $? $@
 
+dest: ${DEST}/lib/afs/libacl.a \
+	${DEST}/include/afs/acl.h \
+	${DEST}/include/afs/prs_fs.h
+
+${DEST}/lib/afs/libacl.a: libacl.a
+	${INSTALL} $? $@
+
+${DEST}/include/afs/acl.h: acl.h
+	${INSTALL} $? $@
 
 ${DEST}/include/afs/prs_fs.h: prs_fs.h
 	${INSTALL} $? $@
 
-${DESTDIR}${includedir}/afs/prs_fs.h: prs_fs.h
-	${INSTALL} $? $@
 
+#
+# Misc. targets
+#
+test:
+	cd test; $(MAKE)
 
-${TOP_INCDIR}/afs/prs_fs.h: prs_fs.h
-	${INSTALL} $? $@
+clean: 
+	$(RM) -f acltest *.o *.a core AFS_component_version_number.c
 
+include ../config/Makefile.version
 
-dest:    ${DEST}/lib/afs/libacl.a ${DEST}/include/afs/acl.h ${DEST}/include/afs/prs_fs.h
 

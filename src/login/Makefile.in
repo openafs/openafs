@@ -56,32 +56,25 @@ KAFSLIBS = ${TOP_LIBDIR}/libkauth.krb.a ${TOP_LIBDIR}/libprot.a \
 	   ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
 	   ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
 
-INCLUDES=-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -I/usr/include -I/usr/include/sys
-CFLAGS=	-g ${XCFLAGS} ${INCLUDES}
-LIBC=	/lib/libc.a
+CFLAGS=	-I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} 
+
 SRCS=	login.c 
 OBJS=   login.o setenv.o getenv.o libutil.a
 KOBJS=  login.krb.o setenv.o getenv.o libutil.a
-LIBS=   ${AFSLIBS} 
-KLIBS=   ${KAFSLIBS}
-SLIBS=   ${AFSLIBS} ${LIBC}
-SKLIBS=   ${KAFSLIBS} ${LIBC}
 UTILOBJS = util_login.o util_logout.o util_logwtmp.o
-
-include ../config/Makefile.version
 
 all: login login.krb
 
-login:	${OBJS} ${LIBS}
+login:	${OBJS} ${AFSLIBS}
 	case ${SYS_NAME} in \
-	sun4x_5?|sunx86_5? ) ${CC} -g -o $@ ${CFLAGS} ${OBJS} -lc ${LIBS} ${XLIBS} -lcmd;;\
-	*) ${CC} -g -o $@ ${CFLAGS} ${OBJS} ${LIBS} ${XLIBS} ;;\
+	sun4x_5?|sunx86_5? ) ${CC} -g -o $@ ${CFLAGS} ${OBJS} -lc ${AFSLIBS} ${XLIBS} -lcmd;;\
+	*) ${CC} -g -o $@ ${CFLAGS} ${OBJS} ${AFSLIBS} ${XLIBS} ;;\
 	esac 
 
-login.krb: ${KOBJS} ${KLIBS}
+login.krb: ${KOBJS} ${KAFSLIBS}
 	case ${SYS_NAME} in \
-	sun4x_5?|sunx86_5? ) ${CC} -g -o $@ ${CFLAGS} ${KOBJS} -lc ${KLIBS} ${XLIBS} -lcmd;;\
-	*) ${CC} -g -o $@ ${CFLAGS} ${KOBJS} ${KLIBS} ${XLIBS} ;;\
+	sun4x_5?|sunx86_5? ) ${CC} -g -o $@ ${CFLAGS} ${KOBJS} -lc ${KAFSLIBS} ${XLIBS} -lcmd;;\
+	*) ${CC} -g -o $@ ${CFLAGS} ${KOBJS} ${KAFSLIBS} ${XLIBS} ;;\
 	esac 
 
 libutil.a : ${UTILOBJS}
@@ -90,36 +83,41 @@ libutil.a : ${UTILOBJS}
 	$(RANLIB) $@
 
 login.o: login.c AFS_component_version_number.c
-	${CC} ${CFLAGS} -c login.c
+	${CC} ${CFLAGS} -c ${srcdir}/login.c
 
 login.krb.o: login.c
-	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c login.c
+	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/login.c
 	mv login.o login.krb.o
 
-clean:
-	$(RM) -f *.o ${OBJS} core login AFS_component_version_number.c
-
-cleandir: clean
-	$(RM) -f ${MAN} tags .depend
-
-depend: ${SRCS}
-	mkdep -p ${CFLAGS} ${SRCS}
-
-install:  ${DESTDIR}${bindir}/login  ${DESTDIR}${bindir}/login.krb
-
-${DEST}/bin/login: login
-	${INSTALL} $? $@
+#
+# Installation targets
+#
+install: \
+	${DESTDIR}${bindir}/login \
+	${DESTDIR}${bindir}/login.krb
 
 ${DESTDIR}${bindir}/login: login
-	${INSTALL} $? $@
-
-
-${DEST}/bin/login.krb: login.krb
 	${INSTALL} $? $@
 
 ${DESTDIR}${bindir}/login.krb: login.krb
 	${INSTALL} $? $@
 
 
-dest:   ${DEST}/bin/login ${DEST}/bin/login.krb
+dest: \
+	${DEST}/bin/login \
+	${DEST}/bin/login.krb
+
+${DEST}/bin/login: login
+	${INSTALL} $? $@
+
+${DEST}/bin/login.krb: login.krb
+	${INSTALL} $? $@
+
+#
+# Misc. targets
+#
+clean:
+	$(RM) -f *.o ${OBJS} core login AFS_component_version_number.c
+
+include ../config/Makefile.version
 
