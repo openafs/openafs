@@ -20,20 +20,17 @@ AFS_OS_OBJS = \
 	osi_vnodeops.o \
 	osi_module.o 
 
-AFS_OS_NFSOBJS = \
-	osi_vfsops_nfs.o
+#AFS_OS_NFSOBJS = \
+#	osi_vfsops_nfs.o
 
 AFS_OS_NONFSOBJS = \
 	osi_vfsops.o
 
 
 # System specific build commands and flags
-# KDEFS=-DLANGUAGE_C  -I/usr/sys/include -I../include \
-# 	 -I/usr/src/sys/${HEADER_RT} -I/usr/src/sys/sys \
-# 	-DSWAPTYPE=1 -DUERF -DOSF -DCOMPAT_43 -DUFS \
-#	-DRT -DKERNEL -D_KERNEL
+KSRC = /usr/src/sys
 KDEFS=-Wall -fformat-extensions -ansi -nostdinc -I/usr/include -D_KERNEL \
-	-DKLD_MODULE -elf -mpreferred-stack-boundary=2 -I.. -I../afs
+	-DKLD_MODULE -elf -mpreferred-stack-boundary=2
 DBUG = -O2
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
 OPTF=${OPT} 
@@ -42,7 +39,7 @@ CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(K
 
 
 # Name of directory to hold object files and libraries.
-KOBJ = STATIC
+KOBJ = MODLOAD
 
 # This tells Makefile.common to use it's single directory build target.
 COMPDIRS = single_compdir
@@ -53,20 +50,19 @@ include Makefile.common
 
 setup:
 	-mkdir $(KOBJ)
-	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
+	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common
 	ln -fs ../Makefile $(KOBJ)/Makefile
 	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
-	ln -fs ../config $(KOBJ)/config
 	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm
-	-ln -fs /usr/src/sys/net net
-	-ln -fs /usr/src/sys/i386/include machine
-	-ln -fs /usr/src/sys/netinet netinet
-	-ln -fs /usr/src/sys/nfs nfs
+	-ln -fs ${KSRC}/net net
+	-ln -fs ${KSRC}/i386/include machine
+	-ln -fs ${KSRC}/netinet netinet
+	-ln -fs ${KSRC}/nfs nfs
 	-ln -fs /usr/include/rpc rpc
-	-ln -fs /usr/src/sys/sys sys
-	-ln -fs /usr/src/sys/ufs/ufs ufs
-	-ln -fs /usr/src/sys/sys h
-	-ln -fs /usr/src/sys/vm vm
+	-ln -fs ${KSRC}/sys sys
+	-ln -fs ${KSRC}/ufs/ufs ufs
+	-ln -fs ${KSRC}/sys h
+	-ln -fs ${KSRC}/vm vm
 	-touch $(KOBJ)/sec_net.h
 
 
@@ -119,10 +115,17 @@ ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 	$(LD) -Bshareable -o ${LIBAFS} setdef0.o ${LIBAFS}.kld setdef1.o
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
+<i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
 	$(LD) -r -o ${LIBAFSNONFS}.kld ${AFSAOBJS} ${AFSNONFSOBJS}
 	gensetdefs ${LIBAFSNONFS}.kld
 	$(MAKE) setdef0.o setdef1.o
 	$(LD) -Bshareable -o ${LIBAFSNONFS} setdef0.o ${LIBAFSNONFS}.kld setdef1.o
+<all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
+	$(LD) -r -d -warn-common -o ${LIBAFSNONFS}.kld ${AFSAOBJS} ${AFSNONFSOBJS}
+	touch export_syms
+	awk -f ${KSRC}/conf/kmod_syms.awk ${LIBAFSNONFS}.kld export_syms | xargs -J% objcopy % ${LIBAFSNONFS}.kld
+	$(LD) -Bshareable -d -warn-common -o ${LIBAFSNONFS}.ko ${LIBAFSNONFS}.kld
+<all>
 
 
 # Object build rules:
