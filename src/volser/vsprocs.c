@@ -2855,7 +2855,7 @@ UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
     manyDests tr;
     manyResults results;
     int rwindex, roindex, roclone, roexists;
-    afs_int32 rwcrdate;
+    afs_int32 rwcrdate, clcrdate;
     struct rtime {
 	int validtime;
 	afs_uint32 time;
@@ -2931,22 +2931,74 @@ UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver,
 	  || (entry.cloneId == 0)) ? entry.volumeId[ROVOL] : entry.cloneId);
     code = VolumeExists(afromserver, afrompart, cloneVolId);
     roexists = ((code == ENODEV) ? 0 : 1);
-    if (!roexists && !fullrelease)
-	fullrelease = 1;	/* Do a full release if RO clone does not exist */
-
-    if (verbose) {
-	if (fullrelease) {
-	    fprintf(STDOUT, "This is a complete release of the volume %lu\n",
-		    (unsigned long)afromvol);
-	} else {
-	    fprintf(STDOUT, "This is a completion of the previous release\n");
-	}
-    }
 
     fromconn = UV_Bind(afromserver, AFSCONF_VOLUMEPORT);
     if (!fromconn)
 	ONERROR(-1, afromserver,
 		"Cannot establish connection with server 0x%x\n");
+
+    if (!fullrelease) {
+	if (!roexists)
+	    fullrelease = 1;	/* Do a full release if RO clone does not exist */
+	else {
+	    /* Begin transaction on RW and mark it busy while we query it */
+	    code = AFSVolTransCreate(
+			fromconn, afromvol, afrompart, ITBusy, &fromtid
+		   );
+	    ONERROR(code, afromvol,
+		    "Failed to start transaction on RW volume %u\n");
+
+	    /* Query the creation date for the RW */
+	    code = AFSVolGetStatus(fromconn, fromtid, &volstatus);
+	    ONERROR(code, afromvol,
+		    "Failed to get the status of RW volume %u\n");
+	    rwcrdate = volstatus.creationDate;
+
+	    /* End transaction on RW */
+	    code = AFSVolEndTrans(fromconn, fromtid, &rcode);
+	    fromtid = 0;
+	    ONERROR((code ? code : rcode), afromvol,
+		    "Failed to end transaction on RW volume %u\n");
+
+	    /* Begin transaction on clone and mark it busy while we query it */
+	    code = AFSVolTransCreate(
+			fromconn, cloneVolId, afrompart, ITBusy, &clonetid
+		   );
+	    ONERROR(code, cloneVolId,
+		    "Failed to start transaction on RW clone %u\n");
+
+	    /* Query the creation date for the clone */
+	    code = AFSVolGetStatus(fromconn, clonetid, &volstatus);
+	    ONERROR(code, cloneVolId,
+		    "Failed to get the status of RW clone %u\n");
+	    clcrdate = volstatus.creationDate;
+
+	    /* End transaction on RW */
+	    code = AFSVolEndTrans(fromconn, clonetid, &rcode);
+	    clonetid = 0;
+	    ONERROR((code ? code : rcode), cloneVolId,
+		    "Failed to end transaction on RW volume %u\n");
+
+	    if (rwcrdate > clcrdate)
+		fullrelease = 2;/* Do a full release if RO clone older than RW */
+	}
+    }
+
+    if (verbose) {
+	switch (fullrelease) {
+	    case 2:
+		fprintf(STDOUT, "RW %lu changed, doing a complete release\n",
+			(unsigned long)afromvol);
+		break;
+	    case 1:
+		fprintf(STDOUT, "This is a complete release of volume %lu\n",
+			(unsigned long)afromvol);
+		break;
+	    case 0:
+		fprintf(STDOUT, "This is a completion of a previous release\n");
+		break;
+	}
+    }
 
     if (fullrelease) {
 	/* If the RO clone exists, then if the clone is a temporary
@@ -3800,11 +3852,18 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 		AFSVolCreateVolume(toconn, topart, tovolname, volsertype, 0,
 				   &pvolid, &totid);
 	    EGOTO1(refail, code, "Could not create new volume %u\n", pvolid);
+
+	    newDate = 0;
 	} else {
 	    code =
 		AFSVolTransCreate(toconn, pvolid, topart, ITOffline, &totid);
 	    EGOTO1(refail, code, "Failed to start transaction on %u\n",
 		   pvolid);
+
+	    code = AFSVolGetStatus(toconn, totid, &tstatus);
+	    EGOTO1(refail, code, "Could not get timestamp from volume %u\n",
+		   pvolid);
+	    newDate = tstatus.creationDate;
 	}
     }
     cookie.parent = pvolid;
@@ -3847,7 +3906,8 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	error = code;
 	goto refail;
     }
-    newDate = time(0);
+    if (!newDate)
+	newDate = time(0);
     code = AFSVolSetDate(toconn, totid, newDate);
     if (code) {
 	fprintf(STDERR, "Could not set the date on %lu\n",
