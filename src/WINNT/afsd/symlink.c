@@ -22,8 +22,6 @@
 #include <osi.h>
 #include <afsint.h>
 
-typedef long afs_int32;
-
 #include "fs_utils.h"
 #include "cmd.h"
 
@@ -232,11 +230,6 @@ static MakeLinkCmd(as)
 register struct cmd_syndesc *as; {
     register afs_int32 code;
     struct ViceIoctl blob;
-#ifdef WIN32
-    char cm_NetbiosName[MAX_NB_NAME_LENGTH] = "";
-    BOOL isGateway = FALSE;
-    lana_number_t lanaNum;
-#endif
 
     if (!InAFS(Parent(as->parms[0].items->data))) {
 	fprintf(stderr,"%s: symlinks must be created within the AFS file system\n", pn);
