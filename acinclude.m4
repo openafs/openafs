@@ -558,11 +558,13 @@ else
 			fi
 			_AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
 			AFS_SYSNAME="$_AFS_SYSNAME"
-			AFS_ISUML=`cat /proc/cpuinfo | awk '/^model name/ {print $[]4}'`
-			if test "x${AFS_ISUML}" = "xUML"; then
-			 _AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/linux/umlinux/`
+			if test -f "$LINUX_KERNEL_PATH/include/linux/autoconf.h"; then
+			 AFS_ISUML=`awk '$[]2 == "CONFIG_USERMODE"{print $[]3}' $LINUX_KERNEL_PATH/include/linux/autoconf.h`
+			 if test "x${AFS_ISUML}" = "x1"; then
+			  _AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/linux/umlinux/`
+			 fi
+			 AFS_SYSNAME="$_AFS_SYSNAME"
 			fi
-			AFS_SYSNAME="$_AFS_SYSNAME"
 			;;
 	esac
         AC_MSG_RESULT($AFS_SYSNAME)
