@@ -349,7 +349,7 @@ static int usd_FileOpen(
 	oflags |= O_CREAT;
 
 #ifdef O_LARGEFILE
-    fd = open64(path, oflags, mode);
+    fd = open64(path, oflags | O_LARGEFILE, mode);
 #else /* O_LARGEFILE */
     fd = open(path, oflags, mode);
 #endif /* O_LARGEFILE */

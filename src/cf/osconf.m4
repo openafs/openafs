@@ -47,7 +47,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libncurses.so"
-		XCFLAGS="-O2"
+		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		;;
 
@@ -58,7 +58,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libncurses.so"
-		XCFLAGS="-O2"
+		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		;;
 
@@ -147,7 +147,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libncurses.so"
-		XCFLAGS="-O2"
+		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		;;
 
@@ -158,6 +158,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libncurses.so"
+		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		;;
 	
 	i386_obsd29)
@@ -180,7 +181,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libncurses.so"
-		XCFLAGS="-O2"
+		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		;;
 
@@ -214,7 +215,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libncurses.so"
-		XCFLAGS="-O2"
+		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		;;
 
@@ -225,7 +226,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libncurses.so"
-		XCFLAGS="-O2"
+		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		;;
 
@@ -255,7 +256,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-O -Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libncurses.so"
-		XCFLAGS="-O -g"
+		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		;;
 
@@ -270,7 +271,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-O -Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libncurses.so"
-		XCFLAGS="-O -g"
+		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		;;
 
@@ -339,7 +340,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libncurses.so"
-		XCFLAGS="-O2"
+		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		;;
 
@@ -350,7 +351,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libncurses.so"
-		XCFLAGS="-O2"
+		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		;;
 
@@ -361,7 +362,7 @@ case $AFS_SYSNAME in
 		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="/usr/lib/libncurses.so"
-		XCFLAGS="-O2"
+		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
 		YACC="bison -y"
 		;;
 
