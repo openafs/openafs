@@ -44,7 +44,13 @@
 #define AFS_HAVE_STATVFS	1	/* System supports statvfs */
 
 #define AFS_GCPAGS		1       /* if nonzero, garbage collect PAGs */
+
+#ifdef AFS_NAMEI_ENV
+#define AFS_64BIT_IOPS_ENV     1       /* needed for NAMEI... */
+#else
 #define AFS_3DISPARES   1       /* Utilize the 3 available disk inode spares */
+#endif
+
 #define AFS_USE_GETTIMEOFDAY 1  /* use gettimeofday to implement rx clock */
 
 #if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__)

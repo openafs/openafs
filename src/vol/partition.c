@@ -299,7 +299,7 @@ int VCheckPartition(part, devname)
 	return -1;
 #endif
 
-#ifdef AFS_DUX40_ENV
+#if defined(AFS_DUX40_ENV) && !defined(AFS_NAMEI_ENV)
     if (status.st_ino != ROOTINO) {
 	Log("%s is not a mounted file system; ignored.\n", part);
 	return 0;
