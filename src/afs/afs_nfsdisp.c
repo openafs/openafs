@@ -19,7 +19,9 @@ RCSID("$Header$");
 #include "../rpc/auth.h"
 #include "../rpc/auth_unix.h"
 #include "../rpc/auth_des.h"
+#if !defined(AFS_SUN58_ENV)
 #include "../rpc/auth_kerb.h"
+#endif
 #include "../sys/tiuser.h"
 #include "../rpc/xdr.h"
 #include "../rpc/svc.h"
@@ -48,7 +50,7 @@ struct afs_nfs_disp_tbl {
 };
 
 struct afs_nfs2_resp {
-    nfsstat status;
+    enum nfsstat status;
 };
 
 #ifndef ACL2_NPROC
@@ -326,7 +328,7 @@ afs_nfs2_smallfidder(struct nfsdiropres *dr)
 void
 afs_nfs2_noaccess(struct afs_nfs2_resp *resp)
 {
-    r->status = NFSERR_ACCES;
+    resp->status = NFSERR_ACCES;
 }
 
 void afs_nfs2_null(char *args, char *xp, char *exp, char *rp, char *crp)
@@ -359,18 +361,18 @@ void FUNCNAME(char *args, char *xp, char *exp, char *rp, char *crp) { \
 NFS_V2_REQ(afs_nfs2_getattr, RFS_GETATTR, 0) 
 NFS_V2_REQ(afs_nfs2_setattr, RFS_SETATTR, 0)
 NFS_V2_REQ(afs_nfs2_lookup, RFS_LOOKUP, 1)
-NFS_V2_REQ(afs_nfs2_readlink, RFS_READLINK, 0);
-NFS_V2_REQ(afs_nfs2_read, RFS_READ, 0);
-NFS_V2_REQ(afs_nfs2_write, RFS_WRITE, 0);
-NFS_V2_REQ(afs_nfs2_create, RFS_CREATE, 1);
-NFS_V2_REQ(afs_nfs2_remove, RFS_REMOVE, 0);
-NFS_V2_REQ(afs_nfs2_rename, RFS_RENAME, 0);
-NFS_V2_REQ(afs_nfs2_link, RFS_LINK, 0);
-NFS_V2_REQ(afs_nfs2_symlink, RFS_SYMLINK, 0);
-NFS_V2_REQ(afs_nfs2_mkdir, RFS_MKDIR, 1);
-NFS_V2_REQ(afs_nfs2_rmdir, RFS_RMDIR, 0);
-NFS_V2_REQ(afs_nfs2_readdir, RFS_READDIR, 0);
-NFS_V2_REQ(afs_nfs2_statfs, RFS_STATFS, 0);
+NFS_V2_REQ(afs_nfs2_readlink, RFS_READLINK, 0)
+NFS_V2_REQ(afs_nfs2_read, RFS_READ, 0)
+NFS_V2_REQ(afs_nfs2_write, RFS_WRITE, 0)
+NFS_V2_REQ(afs_nfs2_create, RFS_CREATE, 1)
+NFS_V2_REQ(afs_nfs2_remove, RFS_REMOVE, 0)
+NFS_V2_REQ(afs_nfs2_rename, RFS_RENAME, 0)
+NFS_V2_REQ(afs_nfs2_link, RFS_LINK, 0)
+NFS_V2_REQ(afs_nfs2_symlink, RFS_SYMLINK, 0)
+NFS_V2_REQ(afs_nfs2_mkdir, RFS_MKDIR, 1)
+NFS_V2_REQ(afs_nfs2_rmdir, RFS_RMDIR, 0)
+NFS_V2_REQ(afs_nfs2_readdir, RFS_READDIR, 0)
+NFS_V2_REQ(afs_nfs2_statfs, RFS_STATFS, 0)
 
 struct afs_nfs_disp_tbl afs_rfs_disp_tbl[RFS_NPROC] = {
     { afs_nfs2_null },
@@ -453,6 +455,7 @@ struct afs_nfs3_resp {
     nfsstat3 status;
     bool_t flags; 
 };
+typedef struct afs_nfs3_resp afs_nfs3_resp;
 
 static int 
 is_afs_fh3(nfs_fh3 *fhp) {
@@ -627,7 +630,7 @@ nfs3_to_afs_call(int which, caddr_t *args, nfs_fh3 **fhpp, nfs_fh3 **fh2pp)
 }
 
 afs_int32 
-acl2_to_afs_call(int which, caddr_t *args, nfs_fh3 **fhpp)
+acl3_to_afs_call(int which, caddr_t *args, nfs_fh3 **fhpp)
 {
     nfs_fh3 *fhp;
 
@@ -693,7 +696,7 @@ afs_nfs3_dispatcher(int type, afs_int32 which, char *argp,
 	static int once = 0;
 	struct SmallFid Sfid;
 
-	memcpy((char *)&Sfid, fh->fh_data, SIZEOF_SMALLFID);
+	memcpy((char *)&Sfid, fh->fh3_data, SIZEOF_SMALLFID);
 
 	/* We ran */
 	call = 1;
@@ -717,7 +720,7 @@ afs_nfs3_dispatcher(int type, afs_int32 which, char *argp,
 }
 
 void 
-afs_nfs3_smallfidder(struct nfs_fh3 *fhp int status)
+afs_nfs3_smallfidder(struct nfs_fh3 *fhp, int status)
 {
     afs_int32 addr[2];
     struct vcache *vcp;
@@ -761,6 +764,7 @@ afs_nfs3_smallfidder(struct nfs_fh3 *fhp int status)
 #define NFS_V3_REQ(FUNCNAME, NFSOP, POST, RESP, RESPP) \
 void FUNCNAME(char *args, char *xp, char *exp, char *rp, char *crp) { \
     u_int call; \
+    afs_nfs3_resp dummy; \
     struct cred *svcred = curthread->t_cred; \
     curthread->t_cred = (struct cred*)crp; \
     call=afs_nfs3_dispatcher(0, NFSOP, (char *)args, &exp, rp, crp); \
@@ -768,34 +772,34 @@ void FUNCNAME(char *args, char *xp, char *exp, char *rp, char *crp) { \
     else { (*afs_rfs3_disp_tbl[NFSOP].orig_proc)(args, xp, exp, rp, crp); \
     if (POST && afs_NFSRootOnly && call) { \
     RESP *resp = ( RESP *)xp; \
-    afs_nfs3_smallfidder( RESPP , resp->status); } \
+    afs_nfs3_smallfidder( RESPP , resp->status); } } \
     curthread->t_cred = svcred; \
     return; \
 }
 
-NFS_V3_REQ(afs_nfs3_getattr, NFSPROC3_GETATTR, 0, x, x) 
-NFS_V3_REQ(afs_nfs3_setattr, NFSPROC3_SETATTR, 0, x, x)
+NFS_V3_REQ(afs_nfs3_getattr, NFSPROC3_GETATTR, 0, afs_nfs3_resp, &dummy) 
+NFS_V3_REQ(afs_nfs3_setattr, NFSPROC3_SETATTR, 0, afs_nfs3_resp, &dummy)
 NFS_V3_REQ(afs_nfs3_lookup, NFSPROC3_LOOKUP, 1, LOOKUP3res, &resp->resok.object)
-NFS_V3_REQ(afs_nfs3_access, NFSPROC3_ACCESS, 0, x, x);
-NFS_V3_REQ(afs_nfs3_readlink, NFSPROC3_READLINK, 0, x, x);
-NFS_V3_REQ(afs_nfs3_read, NFSPROC3_READ, 0, x, x);
-NFS_V3_REQ(afs_nfs3_write, NFSPROC3_WRITE, 0, x, x);
-NFS_V3_REQ(afs_nfs3_create, NFSPROC3_CREATE, 1, CREATE3res, &resp->resok.obj.handle);
-NFS_V3_REQ(afs_nfs3_mkdir, NFSPROC3_MKDIR, 1, MKDIR3res, &resp->resok.obj.handle);
-NFS_V3_REQ(afs_nfs3_symlink, NFSPROC3_SYMLINK, 0, x, x);
-NFS_V3_REQ(afs_nfs3_mknod, NFSPROC3_MKNOD, 0, x, x);
-NFS_V3_REQ(afs_nfs3_remove, NFSPROC3_REMOVE, 0, x, x);
-NFS_V3_REQ(afs_nfs3_rmdir, NFSPROC3_RMDIR, 0, x, x);
-NFS_V3_REQ(afs_nfs3_rename, NFSPROC3_RENAME, 0, x, x);
-NFS_V3_REQ(afs_nfs3_link, NFSPROC3_LINK, 0, x, x);
-NFS_V3_REQ(afs_nfs3_readdir, NFSPROC3_READDIR, 0, x, x);
-NFS_V3_REQ(afs_nfs3_readdirplus, NFSPROC3_READDIRPLUS, 0, x, x);
-NFS_V3_REQ(afs_nfs3_fsstat, NFSPROC3_FSSTAT, 0, x, x);
-NFS_V3_REQ(afs_nfs3_fsinfo, NFSPROC3_FSINFO, 0, x, x);
-NFS_V3_REQ(afs_nfs3_pathconf, NFSPROC3_PATHCONF, 0, x, x);
-NFS_V3_REQ(afs_nfs3_commit, NFSPROC3_COMMIT, 0, x, x);
+NFS_V3_REQ(afs_nfs3_access, NFSPROC3_ACCESS, 0, afs_nfs3_resp, &dummy)
+NFS_V3_REQ(afs_nfs3_readlink, NFSPROC3_READLINK, 0, afs_nfs3_resp, &dummy)
+NFS_V3_REQ(afs_nfs3_read, NFSPROC3_READ, 0, afs_nfs3_resp, &dummy)
+NFS_V3_REQ(afs_nfs3_write, NFSPROC3_WRITE, 0, afs_nfs3_resp, &dummy)
+NFS_V3_REQ(afs_nfs3_create, NFSPROC3_CREATE, 1, CREATE3res, &resp->resok.obj.handle)
+NFS_V3_REQ(afs_nfs3_mkdir, NFSPROC3_MKDIR, 1, MKDIR3res, &resp->resok.obj.handle)
+NFS_V3_REQ(afs_nfs3_symlink, NFSPROC3_SYMLINK, 0, afs_nfs3_resp, &dummy)
+NFS_V3_REQ(afs_nfs3_mknod, NFSPROC3_MKNOD, 0, afs_nfs3_resp, &dummy)
+NFS_V3_REQ(afs_nfs3_remove, NFSPROC3_REMOVE, 0, afs_nfs3_resp, &dummy)
+NFS_V3_REQ(afs_nfs3_rmdir, NFSPROC3_RMDIR, 0, afs_nfs3_resp, &dummy)
+NFS_V3_REQ(afs_nfs3_rename, NFSPROC3_RENAME, 0, afs_nfs3_resp, &dummy)
+NFS_V3_REQ(afs_nfs3_link, NFSPROC3_LINK, 0, afs_nfs3_resp, &dummy)
+NFS_V3_REQ(afs_nfs3_readdir, NFSPROC3_READDIR, 0, afs_nfs3_resp, &dummy)
+NFS_V3_REQ(afs_nfs3_readdirplus, NFSPROC3_READDIRPLUS, 0, afs_nfs3_resp, &dummy)
+NFS_V3_REQ(afs_nfs3_fsstat, NFSPROC3_FSSTAT, 0, afs_nfs3_resp, &dummy)
+NFS_V3_REQ(afs_nfs3_fsinfo, NFSPROC3_FSINFO, 0, afs_nfs3_resp, &dummy)
+NFS_V3_REQ(afs_nfs3_pathconf, NFSPROC3_PATHCONF, 0, afs_nfs3_resp, &dummy)
+NFS_V3_REQ(afs_nfs3_commit, NFSPROC3_COMMIT, 0, afs_nfs3_resp, &dummy)
 
-struct afs_nfs_disp_tbl afs_rfs3_disp_tbl[RFS_NPROC] = {
+struct afs_nfs_disp_tbl afs_rfs3_disp_tbl[RFS3_NPROC] = {
     { afs_nfs2_null },
     { afs_nfs3_getattr },
     { afs_nfs3_setattr },
@@ -860,4 +864,4 @@ afs_xlatorinit_v3(struct rfs_disp_tbl *_rfs_tbl,
         _acl_tbl[i].dis_proc = afs_acl3_disp_tbl[i].afs_proc;
     }
 }
-#endif /* !defined(AFS_NONFSTRANS)
+#endif /* !defined(AFS_NONFSTRANS) */
