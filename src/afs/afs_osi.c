@@ -490,6 +490,10 @@ void afs_osi_Free(void *x, size_t asize)
 #endif
 }
 
+void afs_osi_FreeStr(char *x)
+{
+    afs_osi_Free(x, strlen(x) + 1);
+}
 
 /* ? is it moderately likely that there are dirty VM pages associated with 
  * this vnode?

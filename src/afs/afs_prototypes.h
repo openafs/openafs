@@ -156,7 +156,6 @@ extern struct afs_q CellLRU;
 extern afs_rwlock_t afs_xcell;
 extern afs_int32 afs_cellindex;
 extern afs_uint32 afs_nextCellNum;
-extern int afs_strcasecmp(register char *s1, register char *s2);
 extern afs_int32 afs_NewCell(char *acellName, register afs_int32 *acellHosts, int aflags, 
         char *linkedcname, u_short fsport, u_short vlport, int timeout, char *aliasFor);
 extern struct cell *afs_GetCell(register afs_int32 acell, afs_int32 locktype);
@@ -366,12 +365,15 @@ extern struct afs_exporter *afs_nfsexported;
 extern struct afs_exporter *afs_nfsexporter;
 
 /* afs_osi.c */
+extern afs_lock_t afs_ftf;
 extern void afs_osi_Invisible(void);
 extern void afs_osi_RxkRegister(void);
 extern void afs_osi_MaskSignals(void);
 extern void afs_osi_UnmaskRxkSignals(void);
 extern void *afs_osi_Alloc(size_t x);
 extern void *afs_osi_Alloc_NoSleep(size_t x);
+extern void afs_osi_Free(void *x, size_t asize);
+extern void afs_osi_FreeStr(char *x);
 extern void osi_Init(void);
 extern int osi_Active(register struct vcache *avc);
 extern void osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp);
@@ -398,10 +400,6 @@ extern int afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred);
 extern afs_uint32 afs_get_pag_from_groups(gid_t g0a, gid_t g1a);
 extern void afs_get_groups_from_pag(afs_uint32 pag, gid_t *g0p, gid_t *g1p);
 extern afs_int32 PagInCred(const struct AFS_UCRED *cred);
-
-/* afs_osi.c */
-extern afs_lock_t afs_ftf;
-extern void afs_osi_Free(void *x, size_t asize);
 
 /* afs_osi_alloc.c */
 extern afs_int32 afs_preallocs;
@@ -623,6 +621,8 @@ extern void afs_SetPrimary(register struct unixuser *au, register int aflag);
 
 /* afs_util.c */
 extern char *afs_cv2string(char *ttp, afs_uint32 aval);
+extern int afs_strcasecmp(register char *s1, register char *s2);
+extern char *afs_strdup(char *s);
 extern void print_internet_address(char *preamble, struct srvAddr *sa,
 			    char *postamble, int flag);
 extern afs_int32 afs_data_pointer_to_int32(const void *p);
