@@ -94,6 +94,11 @@ afs_create(OSI_VC_ARG(adp), aname, attrs, aexcl, amode, avcp, acred)
     }
 #endif
 
+    if (strlen(aname) > AFSNAMEMAX) {
+	code = ENAMETOOLONG;
+	goto done;
+    }
+
     if (!afs_ENameOK(aname)) {
 	code = EINVAL;
 	goto done;
