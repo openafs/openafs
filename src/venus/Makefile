@@ -13,7 +13,7 @@ include ../config/Makefile.${SYS_NAME}
 INSTALLex = ${INSTALL} -m 755
 CCXPG2= /usr/xpg2bin/cc
 
-CFLAGS = ${OPTMZ} -I${DESTDIR}include -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = ${OPTMZ} -I${DESTDIR}include -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 
 INCLS = ${DESTDIR}include/afs/afsint.h \
 	${DESTDIR}include/afs/cmd.h \

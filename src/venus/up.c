@@ -15,6 +15,7 @@
 /* ************************************************************* */
 
 #include <afs/param.h>
+#include <afsconfig.h>
 #include <errno.h>
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
@@ -38,6 +39,9 @@
 #undef VICE
 #include <sys/ioctl.h>
 #include <netdb.h>      
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
 #include <afs/venus.h>
 
 /* ************************************************************* */
