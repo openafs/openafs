@@ -195,7 +195,7 @@ bc_Restorer(aindex)
     afs_int32 partitionAll;	/* Likewise for partition */
     struct hostent *hostPtr;
     long haddr;
-    u_long did;
+    time_t did;
     int foundtape, c;
 
     extern statusP createStatusNode();

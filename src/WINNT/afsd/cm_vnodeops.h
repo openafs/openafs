@@ -15,7 +15,7 @@ extern unsigned int cm_mountRootGen;
 /* parms for attribute setting call */
 typedef struct cm_attr {
 	int mask;
-	unsigned long clientModTime;
+	time_t clientModTime;
         osi_hyper_t length;
 	int unixModeBits;
         long owner;

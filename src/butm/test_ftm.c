@@ -324,8 +324,8 @@ PerformDumpTest(TestInfo * tip)
     }
     past = time(0) - label.creationTime;
     if ((past < 0) || (past > 5 * 60)) {
-	printf("label creation time is long ago: %s\n",
-	       ctime(&label.creationTime));
+        time_t t = label.creationTime;
+	printf("label creation time is long ago: %s\n", ctime(&t));
 	ERROR_EXIT(5);
     }
     if (strcmp(label.AFSName, tip->tapeName) != 0) {

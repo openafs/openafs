@@ -23,5 +23,5 @@ extern int cm_clearLocalMountPointChange();
 #define AFS_FAKE_ROOT_CELL_ID 0xFFFFFFFF
 #define AFS_FAKE_ROOT_VOL_ID  0xFFFFFFFF
 
-extern afs_uint32 FakeFreelanceModTime;
+extern time_t FakeFreelanceModTime;
 #endif // _CM_FREELANCE_H

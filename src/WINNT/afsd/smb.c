@@ -5800,8 +5800,8 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 		code = cm_SetAttr(scp, &setAttr, userp, &req);
     }
     else {
-		setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
-		smb_UnixTimeFromDosUTime(&setAttr.clientModTime, dosTime);
+        setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
+        smb_UnixTimeFromDosUTime(&setAttr.clientModTime, dosTime);
         code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
                          &req);
 		if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))

@@ -2006,7 +2006,7 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
     smb_fid_t *fidp;
     int attributes;
     char *lastNamep;
-    long dosTime;
+    time_t dosTime;
     int openFun;
     int trunc;
     int openMode;
@@ -2476,7 +2476,7 @@ long cm_GetShortName(char *pathp, cm_user_t *userp, cm_req_t *reqp,
 long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
 {
 	smb_tran2Packet_t *outp;
-    unsigned long dosTime;
+    time_t dosTime;
 	FILETIME ft;
     unsigned short infoLevel;
     int nbytesRequired;
@@ -2980,7 +2980,7 @@ long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
     cm_scache_t *scp;
     cm_scache_t *targetScp;			/* target if scp is a symlink */
     char *dptr;
-    long dosTime;
+    time_t dosTime;
 	FILETIME ft;
     int shortTemp;
     unsigned short attr;
@@ -4067,7 +4067,7 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     smb_fid_t *fidp;
     int attributes;
     char *lastNamep;
-    long dosTime;
+    time_t dosTime;
     int openFun;
     int trunc;
     int openMode;
@@ -4458,7 +4458,7 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     smb_fid_t *fidp;
     cm_scache_t *scp;
     long code = 0;
-    long searchTime;
+    time_t searchTime;
     cm_user_t *userp;
 	cm_req_t req;
 
@@ -4520,8 +4520,8 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     smb_fid_t *fidp;
     cm_scache_t *scp;
     long code = 0;
-	long searchTime;
-    long unixTime;
+    time_t searchTime;
+    time_t unixTime;
     cm_user_t *userp;
     cm_attr_t attrs;
 	cm_req_t req;

@@ -581,7 +581,8 @@ ListDumpSchedule(adump, alevel)
     case BC_ABS_EXPDATE:
 	/* absolute expiration date. Never expires if date is 0 */
 	if (adump->expDate) {
-	    printf("expires at %.24s", cTIME(&adump->expDate));
+            time_t t = adump->expDate;
+	    printf("expires at %.24s", cTIME(&t));
 	}
 	break;
 

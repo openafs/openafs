@@ -30,7 +30,7 @@ cm_localMountPoint_t* cm_localMountPoints;
 osi_mutex_t cm_Freelance_Lock;
 int cm_localMountPointChangeFlag = 0;
 int cm_freelanceEnabled = 0;
-afs_uint32    FakeFreelanceModTime = 0x3b49f6e2;
+time_t FakeFreelanceModTime = 0x3b49f6e2;
 
 void cm_InitFakeRootDir();
 
