@@ -17,6 +17,7 @@ TEST_LDFLAGS=
 TEST_LIBS=
 
 LIBUAFS = libuafs.a
+LIBJUAFS = libjuafs.a
 LIBAFSWEB = nsafs.so
 LIBAFSWEBKRB = nsafs.krb.so
 
@@ -39,7 +40,15 @@ setup_uafs: UAFS setup_common
 	ln -s ../Makefile UAFS/Makefile
 	ln -s ../Makefile.common UAFS/Makefile.common
 
+setup_juafs: JUAFS setup_common
+	-$(RM) -f JUAFS/Makefile JUAFS/Makefile.common
+	ln -s ../Makefile JUAFS/Makefile
+	ln -s ../Makefile.common JUAFS/Makefile.common
+
 UAFS:
+	mkdir -p $@
+
+JUAFS:
 	mkdir -p $@
 
 setup_nsafs: AFSWEB setup_common
@@ -50,9 +59,13 @@ setup_nsafs: AFSWEB setup_common
 AFSWEB: 
 	mkdir -p $@
 
+JUAFS/$(LIBJUAFS): setup_juafs
+	cd JUAFS; \
+	$(MAKE) $(LIBJUAFS) DESTDIR=${DESTDIR} LIBJUAFS_FLAGS=-DAFS_WEB_ENHANCEMENTS
+
 UAFS/$(LIBUAFS): setup_uafs
 	cd UAFS; \
-	$(MAKE) $(LIBUAFS) DESTDIR=${DESTDIR}
+	$(MAKE) $(LIBUAFS) DESTDIR=${DESTDIR} LIBJUAFS_FLAGS=
 
 AFSWEB/$(LIBAFSWEB): setup_nsafs
 	cd AFSWEB; \
@@ -67,6 +80,10 @@ AFSWEB/$(LIBAFSWEBKRB): setup_nsafs
 $(LIBUAFS): $(UAFSOBJ)
 	-$(RM) -f $(LIBUAFS)
 	$(AR) $(ARFLAGS) $(LIBUAFS) $(UAFSOBJ)
+
+$(LIBJUAFS): $(JUAFSOBJ)
+	-$(RM) -f $(LIBJUAFS)
+	$(AR) $(ARFLAGS) $(LIBJUAFS) $(JUAFSOBJ)
 
 $(LIBAFSWEB): $(AFSWEBOBJ) ${DES}/libdes.a
 	-$(RM) -f $(LIBAFSWEB)
