@@ -88,11 +88,13 @@ int init_module(void)
     /* obtain PAGE_OFFSET value */
     afs_linux_page_offset = get_page_offset();
 
+#ifndef AFS_S390_LINUX22_ENV
     if (afs_linux_page_offset == 0) {
         /* couldn't obtain page offset so can't continue */
         printf("afs: Unable to obtain PAGE_OFFSET. Exiting..");
         return -EIO;
     }
+#endif
 
     /* Initialize pointers to kernel syscalls. */
     sys_settimeofdayp = SYSCALL2POINTER sys_call_table[__NR_settimeofday];
@@ -150,7 +152,7 @@ void cleanup_module(void)
 
 static long get_page_offset(void)
 {
-#if defined(AFS_PPC_LINUX22_ENV) || defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV) || defined(AFS_ALPHA_LINUX20_ENV)
+#if defined(AFS_PPC_LINUX22_ENV) || defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV) || defined(AFS_ALPHA_LINUX20_ENV) || defined(AFS_S390_LINUX22_ENV)
     return PAGE_OFFSET;
 #else
     struct task_struct *p;
