@@ -404,7 +404,7 @@ osi_VM_Setup(struct vcache *avc, int force)
 	    if ((error = ubc_info_init(&avc->v))) {
 		AFS_GLOCK();
 		avc->states &= ~CUBCinit;
-		AFS_RELE(avc);
+		AFS_RELE(AFSTOV(avc));
 		return error;
 	    }
 #ifndef AFS_DARWIN14_ENV
@@ -421,7 +421,7 @@ osi_VM_Setup(struct vcache *avc, int force)
 #endif
 	    AFS_GLOCK();
 	    avc->states &= ~CUBCinit;
-	    AFS_RELE(avc);
+	    AFS_RELE(AFSTOV(avc));
 	}
 	if (UBCINFOEXISTS(&avc->v))
 	    ubc_setsize(&avc->v, avc->m.Length);

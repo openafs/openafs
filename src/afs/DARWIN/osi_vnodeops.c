@@ -352,7 +352,8 @@ afs_vop_close(ap)
 				 * } */ *ap;
 {
     int code;
-    struct vcache *avc = ap->a_vp;
+    struct vnode *vp = ap->a_vp;
+    struct vcache *avc = VTOAFS(vp);
     AFS_GLOCK();
     if (ap->a_cred)
 	code = afs_close(avc, ap->a_fflag, ap->a_cred, ap->a_p);
