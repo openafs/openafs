@@ -59,9 +59,9 @@ ENTRY(savecontext)
 L1:
 	jmp	*f(%ebp)			/* ebx = &f */
 
-/* Shouldnt be here....*/
+/* Shouldn't be here....*/
 
-	call	abort
+	call	_C_LABEL(abort)
 
 /*
  * returnto(area2)
@@ -85,4 +85,4 @@ ENTRY(returnto)
 
 /* I see, said the blind man, as he picked up his hammer and saw! */
 	pushl	$1234
-	call	abort
+	call	_C_LABEL(abort)

@@ -29,7 +29,7 @@ process.s:
 	echo Nothing to be done for process.s
 	# This is required so sgi_64+ does not try to build this file.
 
-process.o	: process.s process.c
+process.o	: process.s process.i386.s process.c
 	@case "$(SYS_NAME)" in \
 	pmax_he1) \
 		$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c -I${TOP_INCDIR} process.s;; \
