@@ -13,10 +13,7 @@ AFS_OS_OBJS = \
 	osi_sleep.o \
 	osi_vm.o \
 	osi_vnodeops.o \
-	osi_module.o \
-	xdr.o \
-	xdr_array.o \
-	xdr_int64.o
+	osi_module.o
 
 AFS_OS_NFSOBJS = \
 	osi_vfsops_nfs.o
@@ -141,12 +138,6 @@ osi_vnodeops.o: $(AFS)/osi_vnodeops.c
 	$(CRULE1)
 osi_module.o: $(AFS)/osi_module.c
 	$(CRULE1)   
-xdr.o: $(RX)/xdr.c
-	$(CRULE1)
-xdr_array.o: $(RX)/xdr_array.c
-	$(CRULE1)
-xdr_int64.o: $(RX)/xdr_int64.c
-	$(CRULE1)
 setdef0.o: setdef0.c
 	$(CRULE1)
 setdef1.o: setdef1.c

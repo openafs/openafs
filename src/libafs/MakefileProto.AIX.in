@@ -19,10 +19,7 @@ AFS_OS_OBJS = \
 	osi_misc.o \
 	osi_sleep.o \
 	osi_timeout.o \
-	osi_vm.o \
-	xdr.o \
-	xdr_array.o \
-	xdr_int64.o
+	osi_vm.o
 
 AFSNOIAUTHOBJS = \
 	afs_call.o \
@@ -139,14 +136,6 @@ dest_libafs: $(DEST_LIBAFS) $(DEST_LIBAFSIAUTH)
 
 # Object build rules:
 # Common objects
-xdr.o: $(RX)/xdr.c
-	$(CRULE1)
-xdr_int64.o: $(RX)/xdr_int64.c
-	$(CRULE1)
-
-xdr_array.o: $(RX)/xdr_array.c
-	$(CRULE1)
-
 osi_assem.o:	${AFS}/osi_assem.s
 	${AS} -o osi_assem.o ${AFS}/osi_assem.s
 osi_config.o: $(AFS)/osi_config.c
