@@ -450,14 +450,6 @@ void osi_linux_mask() {
     SIG_UNLOCK(current);
 }
 
-void osi_linux_unmask() {
-    SIG_LOCK(rxk_ListenerTask);
-    sigemptyset(&rxk_ListenerTask->blocked);
-    flush_signals(rxk_ListenerTask);
-    RECALC_SIGPENDING(rxk_ListenerTask);
-    SIG_UNLOCK(rxk_ListenerTask);
-}
-
 void osi_linux_rxkreg() {
     rxk_ListenerTask = current;
 }

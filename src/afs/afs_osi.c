@@ -289,9 +289,6 @@ void afs_osi_MaskSignals(){
     
 /* unmask signals in rxk listener */
 void afs_osi_UnmaskRxkSignals(){
-#ifdef AFS_LINUX22_ENV
-    osi_linux_unmask();
-#endif
 }
     
 /* register rxk listener proc info */
