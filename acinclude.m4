@@ -184,6 +184,7 @@ case $system in
                    LINUX_EXPORTS_SYS_CALL_TABLE
                    LINUX_EXPORTS_SYS_CHDIR
                    LINUX_EXPORTS_SYS_CLOSE
+                   LINUX_EXPORTS_SYS_WAIT4
                    if test "x$ac_cv_linux_exports_sys_call_table" = "xno"; then
                          linux_syscall_method=none
                          if test "x$ac_cv_linux_exports_init_mm" = "xyes"; then
@@ -203,6 +204,9 @@ case $system in
 			 fi
 			 if test "x$ac_cv_linux_exports_sys_close" = "xyes" ; then
 			  AC_DEFINE(EXPORTED_SYS_CLOSE, 1, [define if your linux kernel exports sys_close])
+			 fi
+			 if test "x$ac_cv_linux_exports_sys_wait4" = "xyes" ; then
+			  AC_DEFINE(EXPORTED_SYS_WAIT4, 1, [define if your linux kernel exports sys_wait4])
 			 fi
                    fi
                  fi

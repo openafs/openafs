@@ -154,6 +154,23 @@ AC_MSG_RESULT($ac_cv_linux_exports_sys_close)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
+AC_DEFUN(LINUX_EXPORTS_SYS_WAIT4, [
+AC_MSG_CHECKING(for exported sys_wait4)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_exports_sys_wait4,
+[
+AC_TRY_COMPILE(
+[#include <linux/modversions.h>],
+[#ifndef __ver_sys_wait4
+#error sys_wait4 not exported
+#endif],
+ac_cv_linux_exports_sys_wait4=yes,
+ac_cv_linux_exports_sys_wait4=no)])
+AC_MSG_RESULT($ac_cv_linux_exports_sys_wait4)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
 AC_DEFUN(LINUX_EXPORTS_TASKLIST_LOCK, [
 AC_MSG_CHECKING(for exported tasklist_lock)
 save_CPPFLAGS="$CPPFLAGS"
