@@ -332,6 +332,18 @@ CheckAdminName()
 } /*CheckAdminName*/
 
 
+static void setThreadId(char *s)
+{
+#ifdef AFS_PTHREAD_ENV
+    /* set our 'thread-id' so that the host hold table works */
+    MUTEX_ENTER(&rx_stats_mutex);   /* protects rxi_pthread_hinum */ 
+    ++rxi_pthread_hinum;
+    pthread_setspecific(rx_thread_id_key, (void *)rxi_pthread_hinum);
+    MUTEX_EXIT(&rx_stats_mutex);
+    ViceLog(0,("Set thread id %d for '%s'\n", pthread_getspecific(rx_thread_id_key), s));
+#endif
+}
+
 /* This LWP does things roughly every 5 minutes */
 static void FiveMinuteCheckLWP()
 {
@@ -339,6 +351,7 @@ static void FiveMinuteCheckLWP()
     char tbuffer[32];
 
     ViceLog(1, ("Starting five minute check process\n"));
+    setThreadId("FiveMinuteCheckLWP");
     while (1) {
 #ifdef AFS_PTHREAD_ENV
 	sleep(fiveminutes);
@@ -380,6 +393,7 @@ static void FiveMinuteCheckLWP()
 static void HostCheckLWP()
 {
     ViceLog(1, ("Starting Host check process\n"));
+    setThreadId("HostCheckLWP");
     while(1) {
 #ifdef AFS_PTHREAD_ENV
 	sleep(fiveminutes);
