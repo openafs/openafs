@@ -65,35 +65,10 @@ ${DESTDIR}/bin/mkvers: mkvers
 KDIRS = ${KERNELDIR}/afs \
 	${KERNELDIR}/rx \
 	${KERNELDIR}/afsint \
-	${DESTDIR}/include/afs \
 	${KERNELDIR}/config
 
 $(KDIRS): 
 	mkdir -p $@
-
-${KERNELDIR}/afs/param.h ${DESTDIR}/include/afs/param.h: param.${SYS_NAME}.h
-	-$(INST)
-
-${KERNELDIR}/afs/afs_sysnames.h ${DESTDIR}/include/afs/afs_sysnames.h: afs_sysnames.h
-	$(INST)
-
-${KERNELDIR}/afs/stds.h ${DESTDIR}/include/afs/stds.h: stds.h
-	$(INST)
-
-${KERNELDIR}/config/Makefile.${SYS_NAME}: Makefile.${SYS_NAME}
-	$(INST)
-
-${KERNELDIR}/afs/icl.h ${DESTDIR}/include/afs/icl.h: icl.h 
-	$(INST)
-
-${KERNELDIR}/afs/afs_args.h ${DESTDIR}/include/afs/afs_args.h: afs_args.h 
-	$(INST)
-
-${DESTDIR}/include/afs/venus.h: venus.h 
-	$(INST)
-
-${DESTDIR}/include/afs/debug.h: debug.h 
-	$(INST)
 
 UKDIRS = ${UKERNELDIR}/afs \
 	${UKERNELDIR}/rx \
@@ -103,25 +78,36 @@ UKDIRS = ${UKERNELDIR}/afs \
 $(UKDIRS): 
 	mkdir -p $@
 
+HDIRS = ${DESTDIR}/include/afs 
+
+$(HDIRS): 
+	mkdir -p $@
+
+${KERNELDIR}/afs/param.h ${DESTDIR}/include/afs/param.h: param.${SYS_NAME}.h
+	-$(INST)
+
+${UKERNELDIR}/afs/afs_sysnames.h ${KERNELDIR}/afs/afs_sysnames.h ${DESTDIR}/include/afs/afs_sysnames.h: afs_sysnames.h
+	$(INST)
+
+${UKERNELDIR}/afs/stds.h ${KERNELDIR}/afs/stds.h ${DESTDIR}/include/afs/stds.h: stds.h
+	$(INST)
+
+${UKERNELDIR}/config/Makefile.${SYS_NAME} ${KERNELDIR}/config/Makefile.${SYS_NAME}: Makefile.${SYS_NAME}
+	$(INST)
+
+${UKERNELDIR}/afs/icl.h ${KERNELDIR}/afs/icl.h ${DESTDIR}/include/afs/icl.h: icl.h 
+	$(INST)
+
+${UKERNELDIR}/afs/afs_args.h ${KERNELDIR}/afs/afs_args.h ${DESTDIR}/include/afs/afs_args.h: afs_args.h 
+	$(INST)
+
+${UKERNELDIR}/afs/venus.h ${DESTDIR}/include/afs/venus.h: venus.h 
+	$(INST)
+
+${DESTDIR}/include/afs/debug.h: debug.h 
+	$(INST)
+
 ${UKERNELDIR}/afs/param.h: param.${SYS_NAME}_usr.h
-	$(INST)
-
-${UKERNELDIR}/afs/afs_sysnames.h: afs_sysnames.h
-	$(INST)
-
-${UKERNELDIR}/afs/stds.h: stds.h
-	$(INST)
-
-${UKERNELDIR}/config/Makefile.${SYS_NAME}: Makefile.${SYS_NAME}
-	$(INST)
-
-${UKERNELDIR}/afs/icl.h: icl.h 
-	$(INST)
-
-${UKERNELDIR}/afs/venus.h: venus.h 
-	$(INST)
-
-${UKERNELDIR}/afs/afs_args.h: afs_args.h 
 	$(INST)
 
 # these are needed to compile the kernel.  Config is necessary to
@@ -132,15 +118,19 @@ ${UKERNELDIR}/afs/afs_args.h: afs_args.h
 install: config \
 	$(DESTDIR)/bin \
 	$(DESTDIR)/bin/mkvers \
+	hinstall \
+	ukinstall \
+	kinstall 
+
+hinstall: \
+	$(HDIRS) \
 	${DESTDIR}/include/afs/param.h \
 	${DESTDIR}/include/afs/stds.h \
 	${DESTDIR}/include/afs/afs_sysnames.h \
 	${DESTDIR}/include/afs/afs_args.h \
 	${DESTDIR}/include/afs/icl.h \
 	${DESTDIR}/include/afs/venus.h \
-	${DESTDIR}/include/afs/debug.h \
-	ukinstall \
-	kinstall 
+	${DESTDIR}/include/afs/debug.h 
 
 kinstall: \
 	$(KDIRS) \
