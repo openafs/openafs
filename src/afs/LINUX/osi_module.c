@@ -147,7 +147,7 @@ afsproc_init()
     struct proc_dir_entry *entry1;
 
     openafs_procfs = proc_mkdir(PROC_FSDIRNAME, proc_root_fs);
-    entry1 = create_proc_entry(PROC_SYSCALL_NAME, 0, openafs_procfs);
+    entry1 = create_proc_entry(PROC_SYSCALL_NAME, 0666, openafs_procfs);
 
     entry1->proc_fops = &afs_syscall_fops;
 

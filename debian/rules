@@ -39,6 +39,7 @@ configure-stamp:
 	 afslogsdir=/var/log/openafs sh configure --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
 	--prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib \
 	--localstatedir=/var/lib 
+	chmod a+x src/libafs/make_kbuild_makefile.pl         
 	install -d $(SYS_NAME)/dest/root.client/usr/vice/etc
 	install -d dest/root.server/usr/afs/bin
 
