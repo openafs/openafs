@@ -22,10 +22,10 @@ Each step is explained in detail below:
 
 A. Install a compiler
 
-   You must install a copy of Microsoft Visual C++ 5.0 (6 might also
-   work). The "Typical" install setting is sufficient. It may be
-   possible to use other compilers, but the source code as provided
-   will work with MS VC++ 5.0.
+   You must install a copy of Microsoft Visual C++ 5.0 or 6.0. The
+   "Typical" install setting is sufficient. It may be possible to use
+   other compilers, but the source code as provided will work with MS
+   VC++ 5.0/6.0.
 
 B. Add missing header files
 
@@ -99,38 +99,29 @@ E. Configure the OpenAFS build environment
    settings for you. Within this file there are the following lines
    that must be set to match your system settings:
 
-   set MSVCDIR=<path to vc directory of MS Visual C++>
+   * set SYS_NAME=<sys type>
+
+   * set MSVCDIR=<path to vc directory of MS Visual C++>
    Ex: set MSVCDIR=c:\progra~1\DevStudio\vc
 
       This is the path to the compiler directory of the Microsoft Visual
       C++ installation.
 
-   set AFSDEV_INCLUDE=<default include directories>
+   * set AFSDEV_INCLUDE=<default include directories>
    Ex: set AFSDEV_INCLUDE=%MSVCDIR%\include;%MSVCDIR%\mfc\include
 
       This contains a semicolon separated list of directories that
-      contain compiler provided include files. You do not need to add paths
-      here of AFS include files.
+      contain compiler provided include files. You should not need to 
+      edit this other than to point to the DDK includes not provided 
+      with the distribution
 
-   set AFSDEV_LIB=<default library directories>
-   Ex: set AFSDEV_LIB=%MSVCDIR%\lib;%MSVCDIR%\mfc\lib
-
-      This contains a semicolon separated list of directories that
-      contain compiler provided library files. You do not need to add
-      paths here of AFS library files.
-
-   set AFSDEV_BIN=<compiler binaries directory>
-   Ex: set AFSDEV_BIN=%MSVCDIR%\bin
-
-      This is the path to the compiler binary files.
-
-   set AFSROOT=<Root directory of OpenAFS - parent of the src directory>
+   * set AFSROOT=<Root directory of OpenAFS - parent of the src directory>
    Ex: set AFSROOT=d:\OpenAFS
 
       This is the root directory of OpenAFS, which is the parent
       directory of the src directory.
 
-   set IS5ROOT=<root directory of the Installshield5 program files>
+   * set IS5ROOT=<root directory of the Installshield5 program files>
    Ex: set IS5ROOT=d:\progra~1\instal~1\instal~1.1pr
 
       This is the path to the Installshield5 program directory. You
@@ -138,22 +129,11 @@ E. Configure the OpenAFS build environment
       your computer and want to create the install script as part of
       the build.
 
-   set BISON_SIMPLE=<path to bison.simple>
-   set BISON_HAIRY=<path to bison.hairy>
-   Ex: set BISON_SIMPLE=c:\bin\bison.simple
-   Ex: set BISON_HAIRY=c:\bin\bison.hairy
-
-      bison has two files (in addition to the bison executable) that
-      must be on the system. In order for bison to find these files,
-      you must set the environment variables listed above to the paths
-      to these files. There are other ways to do this, but this is
-      what the build system expects.
-
-   NOTE: There are other settings in ntbuild.bat, but the ones listed
+   NOTES: There are other settings in ntbuild.bat, but the ones listed
          above must be set correctly for the build to succeed.
 
-   As can be seen in the examples above, all paths in ntbuild.bat must
-   be in the old MSDOS 8.3 format.
+          As can be seen in the examples above, all paths in
+          ntbuild.bat must be in the old MSDOS 8.3 format.
 
 F. Set version and installation options
 
@@ -207,7 +187,10 @@ G. Begin the build
  3. Copy the file src/NTMakefile to the parent of the src directory.
     You only need to do this once.
 
- 4. Begin the build. You can choose to build just the product bits,
+ 4. If you have not created a separate object build directory, edit NTMakefile and  
+    OBJ=obj to OBJ=src.
+
+ 5. Begin the build. You can choose to build just the product bits,
     or, if Installshield is installed, the product bits and the
     install package.
 
