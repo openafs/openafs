@@ -78,7 +78,7 @@ char afs_AfsdbHandler_ReqPending = 0;
 char afs_AfsdbHandler_Completed = 0;
 
 
-struct cell *afs_GetCellByName_int();
+static struct cell *afs_GetCellByName_int();
 
 int afs_strcasecmp(s1, s2)
     register char *s1, *s2;
@@ -224,7 +224,7 @@ void afs_RefreshCell(tc)
     register struct cell *tc;
 {
     afs_int32 cellHosts[MAXCELLHOSTS];
-    char *realName;
+    char *realName = NULL;
     int timeout;
 
     /* Don't need to do anything if no timeout or it's not expired */
@@ -232,7 +232,7 @@ void afs_RefreshCell(tc)
 
     if (afs_GetCellHostsFromDns(tc->cellName, cellHosts, &timeout, &realName))
 	/* In case of lookup failure, keep old data */
-	return;
+	goto done;
 
     /* Refresh the DB servers for the real cell; other values stay the same. */
     afs_NewCell(realName, cellHosts, 0, (char *) 0, 0, 0, timeout, (char *) 0);
@@ -241,6 +241,10 @@ void afs_RefreshCell(tc)
     if (afs_strcasecmp(tc->cellName, realName))
 	afs_NewCell(tc->cellName, 0, CAlias, (char *) 0, 0, 0,
 		    timeout, realName);
+
+done:
+    if (realName)
+	afs_osi_Free(realName, strlen(realName) + 1);
 }
 
 
@@ -249,23 +253,30 @@ struct cell *afs_GetCellByName_Dns(acellName, locktype)
     afs_int32 locktype;
 {
     afs_int32 cellHosts[MAXCELLHOSTS];
-    char *realName;
+    char *realName = NULL;
     int timeout;
 
     if (afs_GetCellHostsFromDns(acellName, cellHosts, &timeout, &realName))
-	return (struct cell *) 0;
+	goto bad;
     if (afs_NewCell(realName, cellHosts, CNoSUID, (char *) 0, 0, 0,
 		    timeout, (char *) 0))
-	return (struct cell *) 0;
+	goto bad;
 
     /* If this is an alias, create an entry for it too */
     if (afs_strcasecmp(acellName, realName)) {
 	if (afs_NewCell(acellName, 0, CAlias, (char *) 0, 0, 0,
 			timeout, realName))
-	    return (struct cell *) 0;
+	    goto bad;
     }
 
+    if (realName)
+	afs_osi_Free(realName, strlen(realName) + 1);
     return afs_GetCellByName_int(acellName, locktype, 0);
+
+bad:
+    if (realName)
+	afs_osi_Free(realName, strlen(realName) + 1);
+    return (struct cell *) 0;
 }
 
 
