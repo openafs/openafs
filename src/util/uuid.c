@@ -87,8 +87,8 @@ static u_short uuid_time_adjust, clock_seq;
 static afs_uint32 rand_m, rand_ia, rand_ib, rand_irand, uuid_init_done = 0;
 
 #define	uuid_create_nil(uuid) memset(uuid, 0, sizeof(afsUUID))
-afs_uuid_equal(u1, u2) afsUUID *u1, *u2;  { return(uuid_memcmp((void *)u1, (void *)u2, sizeof (afsUUID)) == 0); }
-afs_uuid_is_nil(u1) afsUUID *u1; { 
+afs_int32 afs_uuid_equal(u1, u2) afsUUID *u1, *u2;  { return(uuid_memcmp((void *)u1, (void *)u2, sizeof (afsUUID)) == 0); }
+afs_int32 afs_uuid_is_nil(u1) afsUUID *u1; { 
     if (!u1) return 1;
     return(uuid_memcmp((void *)u1, (void *)&afs_uuid_g_nil_uuid, sizeof (afsUUID)) == 0); 
 }
@@ -130,7 +130,7 @@ uuid_time_p_t           time2; {
     return (0);
 }
 
-afs_uuid_create (uuid)
+afs_int32 afs_uuid_create (uuid)
 afsUUID *uuid; {
     uuid_address_t eaddr;
     afs_int32 got_no_time = 0, code;
@@ -169,7 +169,7 @@ afsUUID *uuid; {
 #endif	
 	uuid_init_done = 1;
     }
-    if (code = uuid_get_address (&eaddr)) return code;     /* get our hardware network address */
+    if ((code = uuid_get_address (&eaddr))) return code;     /* get our hardware network address */
     do {
         /* get the current time */
         uuid__get_os_time (&time_now);
