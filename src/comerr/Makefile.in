@@ -13,7 +13,7 @@ all: ukinstall compile_et ${TOP_INCDIR}/afs/com_err.h ${TOP_INCDIR}/afs/error_ta
 
 et_lex.lex.c: et_lex.lex.l
 	$(RM) -f et_lex.lex.c
-	$(LEX) -t $? > et_lex.lex.c
+	$(LEX) -t et_lex.lex.l > et_lex.lex.c
 
 compile_et:	compile_et.o error_table.o
 	case $(SYS_NAME) in \
