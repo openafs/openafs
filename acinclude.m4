@@ -404,6 +404,9 @@ else
 		i?86-*-openbsd3.5)
 			AFS_SYSNAME="i386_obsd35"
 			;;
+		i?86-*-openbsd3.6)
+			AFS_SYSNAME="i386_obsd36"
+			;;
 		i?86-*-freebsd4.2*)
 			AFS_SYSNAME="i386_fbsd_42"
 			;;
