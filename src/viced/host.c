@@ -534,7 +534,7 @@ void h_flushhostcps(hostaddr, hport)
     register afs_uint32  hostaddr, hport;  /* net byte order */
 {
     register struct host *host;
-    int held;
+    int held = 0;
     
     H_LOCK
     host = h_Lookup_r(hostaddr, hport, &held);
