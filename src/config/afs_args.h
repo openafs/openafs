@@ -46,6 +46,7 @@
 #define	AFSOP_SET_THISCELL	 35	/* set the primary cell */
 #define AFSOP_BASIC_INIT	 36	/* used to be part of START_AFS */
 #define AFSOP_SET_BACKUPTREE	 37	/* enable backup tree support */
+#define AFSOP_SET_RXPCK		 38	/*set rx_extraPackets*/
 
 /* The range 20-30 is reserved for AFS system offsets in the afs_syscall */
 #define	AFSCALL_PIOCTL		20

@@ -79,6 +79,7 @@ RCSID
 #include <sys/time.h>
 #include <dirent.h>
 
+
 #ifdef HAVE_SYS_PARAM_H
 #include <sys/param.h>
 #endif
@@ -177,8 +178,10 @@ kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 #endif
 #endif
 
+
 #undef	VIRTUE
 #undef	VICE
+
 
 #define CACHEINFOFILE   "cacheinfo"
 #define	AFSLOGFILE	"AFSLog"
@@ -191,6 +194,7 @@ kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 char LclCellName[64];
 
 #define MAX_CACHE_LOOPS 4
+
 
 /*
  * Internet address (old style... should be updated).  This was pulled out of the old 4.2
@@ -1507,6 +1511,17 @@ mainproc(as, arock)
        cacheSetTime = TRUE;
     }
 
+    /* set rx_extraPackets */
+    if (as->parms[33].items) {
+	/* -rxpck */
+	int rxpck = atoi(as->parms[33].items->data);
+	printf("afsd: set rxpck = %d\n",rxpck);
+	code = call_syscall(AFSOP_SET_RXPCK, rxpck);
+	if (code) {
+	printf("afsd: failed to set rxpck\n");
+	exit(1);
+	}
+    }
     
     /*
      * Pull out all the configuration info for the workstation's AFS cache and
@@ -2186,6 +2201,7 @@ main(argc, argv)
     cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL, "Bind the Rx socket (one interface only)");
     cmd_AddParm(ts, "-settime", CMD_FLAG, CMD_OPTIONAL,
                "don't set the time");
+    cmd_AddParm(ts, "-rxpck", CMD_SINGLE, CMD_OPTIONAL, "set rx_extraPackets to this value");
     return (cmd_Dispatch(argc, argv));
 }
 
