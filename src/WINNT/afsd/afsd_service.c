@@ -819,6 +819,7 @@ BOOL AFSModulesVerify(void)
     DWORD (WINAPI *pGetModuleFileNameExA)(HANDLE hProcess, HMODULE hModule, LPTSTR lpFilename, DWORD nSize);
     BOOL (WINAPI *pEnumProcessModules)(HANDLE hProcess, HMODULE* lphModule, DWORD cb, LPDWORD lpcbNeeded);
     DWORD dummyLen, code;
+    DWORD cacheSize = CM_CONFIGDEFAULT_CACHESIZE;
     DWORD verifyServiceSig = TRUE;
     HKEY parmKey;
 
@@ -844,6 +845,17 @@ BOOL AFSModulesVerify(void)
         return FALSE;
     }
 
+
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
+                        "SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters",
+                        0, KEY_QUERY_VALUE, &parmKey);
+    if (code == ERROR_SUCCESS) {
+        dummyLen = sizeof(cacheSize);
+        code = RegQueryValueEx(parmKey, "CacheSize", NULL, NULL,
+                               (BYTE *) &cacheSize, &dummyLen);
+        RegCloseKey (parmKey);
+    }
+
     code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE\\OpenAFS\\Client",
                          0, KEY_QUERY_VALUE, &parmKey);
     if (code == ERROR_SUCCESS) {
@@ -853,8 +865,11 @@ BOOL AFSModulesVerify(void)
         RegCloseKey (parmKey);
     }
 
-    if (verifyServiceSig)
+    if (verifyServiceSig && cacheSize < 716800) {
         trustVerified = VerifyTrust(filename);
+    } else {
+        afsi_log("Signature Verification disabled");
+    }
 
     if (trustVerified) {
         LoadCrypt32();
