@@ -196,14 +196,15 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 	}
 #endif /* defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64) */
 
-#if defined(AFS_LINUX_64BIT_KERNEL)
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV)
 	struct afs_ioctl32 dst32;
 
 #ifdef AFS_SPARC64_LINUX20_ENV
-	if (current->tss.flags & SPARC_FLAG_32BIT) {
+	if (current->tss.flags & SPARC_FLAG_32BIT) 
 #else
 #error Not done for this linux type
-#endif
+#endif /* AFS_SPARC64_LINUX20_ENV */
+	  {
 		AFS_COPYIN(cmarg, (caddr_t) &dst32, sizeof dst32, code);
 		if (!code)
 			afs_ioctl32_to_afs_ioctl(&dst32, dst);
@@ -662,7 +663,7 @@ afs_syscall_pioctl(path, com, cmarg, follow, rvp, credp)
 afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
     char *path;
-    int	com;
+    unsigned int	com;
     caddr_t cmarg;
     int	follow;
 {

@@ -1395,7 +1395,11 @@ int bc_openTextFile(udbClientTextP ctPtr, char *tmpFileName)
     fclose(ctPtr->textStream);
   
   sprintf(tmpFileName, "%s/bu_XXXXXX", gettmpdir());
+#ifdef AFS_LINUX20_ENV
+  mkstemp(tmpFileName);
+#else
   mktemp(tmpFileName);
+#endif
   ctPtr->textStream = fopen(tmpFileName, "w+");
   if ( ctPtr->textStream == NULL )
     ERROR(BUDB_INTERNALERROR);

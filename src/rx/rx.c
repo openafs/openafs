@@ -252,7 +252,7 @@ void rxi_StartUnlocked();
 ** pretty good that the next packet coming in is from the same connection 
 ** as the last packet, since we're send multiple packets in a transmit window.
 */
-struct rx_connection *rxLastConn; 
+struct rx_connection *rxLastConn = 0; 
 
 #ifdef RX_ENABLE_LOCKS
 /* The locking hierarchy for rx fine grain locking is composed of five
@@ -5265,10 +5265,21 @@ void rxi_ComputeRoundTripTime(p, sentp, peer)
 {
 	struct clock thisRtt, *rttp = &thisRtt;
 
+#if defined(AFS_ALPHA_LINUX22_ENV) && defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
+	/* making year 2038 bugs to get this running now - stroucki */
+	struct timeval temptime;
+#endif
       register int rtt_timeout;
       static char id[]="@(#)adaptive RTO";
 
-    clock_GetTime(rttp);
+#if defined(AFS_ALPHA_LINUX20_ENV) && defined(AFS_PTHREAD_ENV) && !defined(KERNEL)
+      /* yet again. This was the worst Heisenbug of the port - stroucki */
+      clock_GetTime(&temptime);
+      rttp->sec=(afs_int32)temptime.tv_sec;
+      rttp->usec=(afs_int32)temptime.tv_usec;
+#else
+      clock_GetTime(rttp);
+#endif
     if (clock_Lt(rttp, sentp)) {
       clock_Zero(rttp);
       return;     /* somebody set the clock back, don't count this time. */

@@ -22,11 +22,17 @@
 
 
 asmlinkage int (*sys_settimeofdayp)(struct timeval *tv, struct timezone *tz);
+#if !defined(AFS_ALPHA_LINUX20_ENV)
 asmlinkage int (*sys_socketcallp)(int call, long *args);
+#endif /* no socketcall on alpha */
 asmlinkage int (*sys_killp)(int pid, int signal);
 asmlinkage int (*sys_setgroupsp)(int gidsetsize, gid_t *grouplist);
 
+#ifdef AFS_SPARC64_LINUX20_ENV
 extern unsigned int sys_call_table[];  /* changed to uint because SPARC64 has syscaltable of 32bit items */
+#else
+extern void * sys_call_table[]; /* safer for other linuces */
+#endif
 extern struct file_system_type afs_file_system;
 
 static long get_page_offset(void);
@@ -63,8 +69,13 @@ __asm__ __volatile__ ("
 }
 #endif
 
+#ifdef AFS_SPARC64_LINUX20_ENV
 #define POINTER2SYSCALL (unsigned int)(unsigned long)
 #define SYSCALL2POINTER (void *)(long)
+#else
+#define POINTER2SYSCALL (void *)
+#define SYSCALL2POINTER (void *)
+#endif
 
 int init_module(void)
 {
@@ -85,7 +96,9 @@ int init_module(void)
 
     /* Initialize pointers to kernel syscalls. */
     sys_settimeofdayp = SYSCALL2POINTER sys_call_table[__NR_settimeofday];
+#if !defined(AFS_ALPHA_LINUX20_ENV)
     sys_socketcallp = SYSCALL2POINTER sys_call_table[__NR_socketcall];
+#endif /* no socketcall on alpha */
     sys_killp = SYSCALL2POINTER sys_call_table[__NR_kill];
 
     /* setup AFS entry point. */
@@ -137,7 +150,7 @@ void cleanup_module(void)
 
 static long get_page_offset(void)
 {
-#if defined(AFS_PPC_LINUX22_ENV) || defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV)
+#if defined(AFS_PPC_LINUX22_ENV) || defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV) || defined(AFS_ALPHA_LINUX20_ENV)
     return PAGE_OFFSET;
 #else
     struct task_struct *p;

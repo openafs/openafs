@@ -563,8 +563,8 @@ main(argc, argv)
     assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
     /* Block signals in the threads */
     AFS_SIGSET_CLEAR();
-    assert(pthread_create(&serverPid, &tattr, FiveMinuteCheckLWP, &fiveminutes) == 0);
-    assert(pthread_create(&serverPid, &tattr, HostCheckLWP, &fiveminutes) == 0);
+    assert(pthread_create(&serverPid, &tattr, (void *)FiveMinuteCheckLWP, &fiveminutes) == 0);
+    assert(pthread_create(&serverPid, &tattr, (void *)HostCheckLWP, &fiveminutes) == 0);
     AFS_SIGSET_RESTORE();
 #else /* AFS_PTHREAD_ENV */
     assert(LWP_CreateProcess(FiveMinuteCheckLWP, stack*1024, LWP_MAX_PRIORITY - 2,
