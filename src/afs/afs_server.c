@@ -1178,8 +1178,7 @@ afsi_SetServerIPRank(sa, ifa)
 #ifdef  IFF_POINTTOPOINT
     /* check for case #4 -- point-to-point link */
     if ((ifa->ia_ifp->if_flags & IFF_POINTOPOINT)
-	&& (myDstaddr == serverAddr))
-	) {
+	&& (myDstaddr == serverAddr)) {
 	if (ifa->ia_ifp->if_metric >= (MAXDEFRANK - MED) / PPWEIGHT)
 	    t = MAXDEFRANK;
 	else
