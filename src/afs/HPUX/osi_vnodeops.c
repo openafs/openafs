@@ -179,10 +179,6 @@ afs_lockf( vp, flag, len, cred, fp, LB, UB )
 #include "../h/tuneable.h"
 #include "../h/buf.h"
 #include "../netinet/in.h"
-#include "../rpc/types.h"
-#include "../rpc/auth.h"
-#include "../rpc/clnt.h"
-#include "../rpc/xdr.h"
 
 /* a freelist of one */
 struct buf *afs_bread_freebp = 0;

@@ -21,7 +21,6 @@ RCSID("$Header$");
 #ifdef AFS_HPUX110_ENV
 #include "../h/tihdr.h"
 #include <xti.h>
-#include "../afs/hpux_110.h"
 #endif
 #include "../afsint/afsint.h"
 
