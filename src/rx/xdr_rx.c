@@ -45,7 +45,7 @@ RCSID("$Header$");
 #define u_quad_t __u_quad_t
 #endif
 #endif
-#include "../rpc/xdr.h"
+#include "../rx/xdr.h"
 #include "../netinet/in.h"
 #else /* !UKERNEL */
 #include "../afs/sysincludes.h"

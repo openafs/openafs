@@ -271,7 +271,7 @@ MALLOC_DECLARE(M_AFS);
 #endif /* AFS_SUN5_ENV */
 
 #include "../rpc/types.h"
-#include "../rpc/xdr.h"
+#include "../rx/xdr.h"
 
 #ifdef AFS_AIX32_ENV
 #  include "net/spl.h"
@@ -366,7 +366,7 @@ MALLOC_DECLARE(M_AFS);
 #undef register
 #endif	/* AFS_ALPHA_ENV */
 
-#include <rpc/xdr.h>
+#include <rx/xdr.h>
 #include <sys/proc.h>
 #include <sys/ioctl.h>
 

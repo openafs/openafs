@@ -45,7 +45,7 @@ typedef afs_int32 ViceDataType;
 %#define SymbolicLink 3 
 
 %#ifdef       KERNEL
-%#define      xdr_array(a,b,c,d,e,f)  xdr_arrayN(a,b,c,d,e,f)
+%#define      afs_xdr_array(a,b,c,d,e,f)  afs_xdr_arrayN(a,b,c,d,e,f)
 %#endif
 
 struct BD {
