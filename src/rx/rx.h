@@ -735,7 +735,7 @@ struct rx_ackPacket {
 #define	RX_ACK_TYPE_ACK		1   /* I have this packet, although I may discard it later */
 
 /* The packet size transmitted for an acknowledge is adjusted to reflect the actual size of the acks array.  This macro defines the size */
-#define rx_AckDataSize(nAcks) (sizeof(struct rx_ackPacket) - RX_MAXACKS + (nAcks))
+#define rx_AckDataSize(nAcks) (3 + offsetof(struct rx_ackPacket, acks[nAcks]))
 
 #define	RX_CHALLENGE_TIMEOUT	2   /* Number of seconds before another authentication request packet is generated */
 
