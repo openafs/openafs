@@ -2374,7 +2374,7 @@ SAFSS_Rename (tcon, OldDirFid, OldName, NewDirFid, NewName, OutOldDirStatus,
 				 V_parentId(volptr));
 		IH_RELEASE(newfileptr->handle);
 		if (errorCode == -1) {
-		    ViceLog(0, ("Del: inode=%d, name=%s, errno=%d\n",
+		    ViceLog(0, ("Del: inode=%s, name=%s, errno=%d\n",
 				PrintInode(NULL, VN_GET_INO(newfileptr)),
 				NewName, errno));
 		    if ((errno != ENOENT) && (errno != EIO) && (errno != ENXIO))
