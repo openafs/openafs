@@ -147,6 +147,81 @@ case $system in
                 ;;
 esac
 
+if test "x$with_afs_sysname" != "x"; then
+        AFS_SYSNAME="$with_afs_sysname"
+else
+	AC_MSG_CHECKING(your AFS sysname)
+	case $host in
+		i?86-*-freebsd4.2*)
+			AFS_SYSNAME="i386_fbsd_42"
+			;;
+		hppa-hp-hpux11*)
+			AFS_SYSNAME="hp_ux110"
+			;;
+		hppa-hp-hpux10*)
+			AFS_SYSNAME="hp_ux102"
+			;;
+		ppc-apple-darwin*)
+			AFS_SYSNAME="ppc_darwin13"
+			;;
+		sparc-sun-solaris2.5*)
+			AFS_SYSNAME="sun4x_55"
+			;;
+		sparc-sun-solaris2.6)
+			AFS_SYSNAME="sun4x_56"
+			;;
+		sparc-sun-solaris2.7)
+			AFS_SYSNAME="sun4x_57"
+			;;
+		sparc-sun-solaris2.8)
+			AFS_SYSNAME="sun4x_58"
+			;;
+		alpha*-dec-osf4.0*)
+			AFS_SYSNAME="alpha_dux40"
+			;;
+		alpha*-dec-osf5.0*)
+			AFS_SYSNAME="alpha_dux50"
+			;;
+		mips-sgi-irix6.5)
+			AFS_SYSNAME="sgi_65"
+			;;
+		powerpc-*-linux*)
+			AFS_SYSNAME="ppc_linuxXX"
+			;;
+		alpha*-linux*)
+			AFS_SYSNAME="alpha_linux_XX"
+			;;
+		sparc-*-linux*)
+			AFS_SYSNAME="sparc_linuxXX"
+			;;
+		sparc64-*-linux*)
+			AFS_SYSNAME="sparc64_linuxXX"
+			;;
+		i?86-*-linux*)
+			AFS_SYSNAME="i386_linuxXX"
+			;;
+		power*-ibm-aix4.2*)
+			AFS_SYSNAME="rs_aix42"
+			;;
+		power*-ibm-aix4.3*)
+			AFS_SYSNAME="rs_aix42"
+			;;
+		default)
+			AC_MSG_ERROR(An AFS sysname is required)
+			exit 1
+			;;
+	esac
+	case $AFS_SYSNAME in
+		*_linux*)
+			AFS_SYSKVERS=`echo $LINUX_VERSION | awk -F\. '{print $1 $2}'`
+			_AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
+			AFS_SYSNAME="$_AFS_SYSNAME"
+			;;
+	esac
+        AC_MSG_RESULT($AFS_SYSNAME)
+fi
+
+
 if test "x${MKAFS_OSTYPE}" = "xIRIX"; then
         echo Skipping library tests because they confuse Irix.
 else
@@ -228,14 +303,6 @@ fi
 
 if test "$enable_bitmap_later" = "yes"; then
 	AC_DEFINE(BITMAP_LATER)
-fi
-
-# Should autocompute a default
-if test "x$with_afs_sysname" != "x"; then
-	AFS_SYSNAME="$with_afs_sysname"
-else
-	AC_MSG_ERROR(An AFS sysname is required)
-	exit 1
 fi
 
 if test "$enable_bos_restricted_mode" = "yes"; then
