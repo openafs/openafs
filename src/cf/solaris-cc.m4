@@ -2,10 +2,16 @@ dnl
 dnl $Id$
 dnl 
 
+dnl
+dnl The Solaris compiler defines __SUNPRO_C as a hex number
+dnl whose digits correspond to the digits in the compiler
+dnl version. Thus compiler version 4.2.0 is 0x420.
+dnl
+
 AC_DEFUN(AC_SOLARIS_CC_GOOD, [
 SOLARISCC="$CC"
 save_CC="$CC"
-if test -x "$CC" ; then
+if test "$CC" ; then
   AC_CHECK_PROGS(SOLARISCC, "$CC" cc /opt/SUNWspro/bin/cc gcc)
 else
   AC_CHECK_PROGS(SOLARISCC, cc /opt/SUNWspro/bin/cc gcc)
@@ -17,7 +23,6 @@ AC_CACHE_VAL(ac_cv_solaris_cc_good,
 SUNPROVERSION=0x400
 AC_TRY_RUN(
 [
-#include<stdio.h>
 int main(void) { return __SUNPRO_C < $SUNPROVERSION;}
 ], 
 ac_cv_solaris_cc_good=yes,
