@@ -1,4 +1,4 @@
-/* $Id: pt_util.c,v 1.6 2003/01/02 03:55:51 hartmans Exp $ */
+/* $Id: pt_util.c,v 1.7 2003/04/13 19:32:23 hartmans Exp $ */
 
 /*
  *
@@ -16,12 +16,13 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/file.h>
 
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/pt_util.c,v 1.6 2003/01/02 03:55:51 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/pt_util.c,v 1.7 2003/04/13 19:32:23 hartmans Exp $");
 
 #include <errno.h>
 #include <lock.h>

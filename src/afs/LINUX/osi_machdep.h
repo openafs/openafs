@@ -24,11 +24,30 @@
 #undef getuerror
 
 #define getpid() current->pid
+#ifdef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
+#define getppid() current->real_parent->pid
+#else
 #define getppid() current->p_opptr->pid
+#endif
 
+#ifdef RECALC_SIGPENDING_TAKES_VOID
+#define RECALC_SIGPENDING(X) recalc_sigpending()
+#else
+#define RECALC_SIGPENDING(X) recalc_sigpending(X)
+#endif
+
+#if defined (STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK)
+#define SIG_LOCK(X) spin_lock_irq(&X->sigmask_lock)
+#define SIG_UNLOCK(X) spin_unlock_irq(&X->sigmask_lock)
+#elif defined (STRUCT_TASK_STRUCT_HAS_SIGHAND)
+#define SIG_LOCK(X) spin_lock_irq(&X->sighand->siglock)
+#define SIG_UNLOCK(X) spin_unlock_irq(&X->sighand->siglock)
+#else
+#define SIG_LOCK(X) spin_lock_irq(&X->sig->siglock)
+#define SIG_UNLOCK(X) spin_unlock_irq(&X->sig->siglock)
+#endif
 
 #define afs_hz HZ
-#include "../h/sched.h"
 #define osi_Time() (xtime.tv_sec)
 #if  (CPU == sparc64)
 #define osi_GetTime(V) do { (*(V)).tv_sec = xtime.tv_sec; (*(V)).tv_usec = xtime.tv_usec; } while (0)
@@ -146,6 +165,7 @@ extern unsigned long afs_linux_page_offset;
 #define afs_linux_page_address(page) (afs_linux_page_offset + PAGE_SIZE * (page - mem_map))
 
 #if defined(__KERNEL__) && defined(CONFIG_SMP)
+#include "../h/sched.h"
 #include "linux/wait.h"
 
 extern struct semaphore afs_global_lock;

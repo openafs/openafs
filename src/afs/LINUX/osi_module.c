@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_module.c,v 1.10 2002/12/11 03:00:39 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_module.c,v 1.11 2003/04/13 19:32:22 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -25,9 +25,9 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_module.c,v 1.10 2002/12/1
 #include <linux/slab.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 #include <linux/init.h>
+#include <linux/sched.h>
 #endif
 #ifndef EXPORTED_SYS_CALL_TABLE
-#include <linux/sched.h>
 #include <linux/syscall.h>
 #endif
 
@@ -41,7 +41,6 @@ asmlinkage int (*sys_settimeofdayp)(struct timeval *tv, struct timezone *tz);
 #if !defined(AFS_ALPHA_LINUX20_ENV)
 asmlinkage int (*sys_socketcallp)(int call, long *args);
 #endif /* no socketcall on alpha */
-asmlinkage int (*sys_killp)(int pid, int signal);
 asmlinkage long (*sys_setgroupsp)(int gidsetsize, gid_t *grouplist);
 
 #ifdef EXPORTED_SYS_CALL_TABLE
@@ -93,14 +92,12 @@ static unsigned int *sys_call_table32;
 asmlinkage int afs_syscall32(long syscall, long parm1, long parm2, long parm3,
 			     long parm4, long parm5)
 {
-__asm__ __volatile__ ("
-	srl %o4, 0, %o4
-	mov %o7, %i7
-	call afs_syscall
-	srl %o5, 0, %o5
-	ret
-	nop
-");
+__asm__ __volatile__ ("srl %o4, 0, %o4\n\t"
+		      "mov %o7, %i7\n\t"
+		      "call afs_syscall\n\t"
+		      "srl %o5, 0, %o5\n\t"
+		      "ret\n\t"
+		      "nop");
 }
 #endif
 
@@ -109,69 +106,65 @@ __asm__ __volatile__ ("
 asmlinkage long
 afs_syscall_stub(int r0, int r1, long r2, long r3, long r4, long gp)
 {
-__asm__ __volatile__ ("
-        alloc r42 = ar.pfs, 8, 3, 6, 0
-        mov r41 = b0    		/* save rp */
-        mov out0 = in0
-        mov out1 = in1
-        mov out2 = in2
-        mov out3 = in3
-        mov out4 = in4
-        mov out5 = gp			/* save gp */
-        ;;
-.L1:    mov r3 = ip
-        ;;
-        addl r15=.fptr_afs_syscall-.L1,r3
-        ;;
-        ld8 r15=[r15]
-        ;;
-        ld8 r16=[r15],8
-        ;;
-        ld8 gp=[r15]
-        mov b6=r16
-        br.call.sptk.many b0 = b6
-        ;;
-        mov ar.pfs = r42
-        mov b0 = r41
-        mov gp = r48			/* restore gp */
-        br.ret.sptk.many b0
-.fptr_afs_syscall:
-        data8 @fptr(afs_syscall)
-");
+__asm__ __volatile__ ("alloc r42 = ar.pfs, 8, 3, 6, 0\n\t"
+		      "mov r41 = b0\n\t"    		/* save rp */
+		      "mov out0 = in0\n\t"
+		      "mov out1 = in1\n\t"
+		      "mov out2 = in2\n\t"
+		      "mov out3 = in3\n\t"
+		      "mov out4 = in4\n\t"
+		      "mov out5 = gp\n\t"			/* save gp */
+		      ";;\n"
+		      ".L1:    mov r3 = ip\n\t"
+		      ";;\n\t"
+		      "addl r15=.fptr_afs_syscall-.L1,r3\n\t"
+		      ";;\n\t"
+		      "ld8 r15=[r15]\n\t"
+		      ";;\n\t"
+		      "ld8 r16=[r15],8\n\t"
+		      ";;\n\t"
+		      "ld8 gp=[r15]\n\t"
+		      "mov b6=r16\n\t"
+		      "br.call.sptk.many b0 = b6\n\t"
+		      ";;\n\t"
+		      "mov ar.pfs = r42\n\t"
+		      "mov b0 = r41\n\t"
+		      "mov gp = r48\n\t"		/* restore gp */
+		      "br.ret.sptk.many b0\n"
+		      ".fptr_afs_syscall:\n\t"
+		      "data8 @fptr(afs_syscall)");
 }
 
 asmlinkage long
 afs_xsetgroups_stub(int r0, int r1, long r2, long r3, long r4, long gp)
 {
-__asm__ __volatile__ ("
-        alloc r42 = ar.pfs, 8, 3, 6, 0
-        mov r41 = b0    		/* save rp */
-        mov out0 = in0
-        mov out1 = in1
-        mov out2 = in2
-        mov out3 = in3
-        mov out4 = in4
-        mov out5 = gp			/* save gp */
-        ;;
-.L2:    mov r3 = ip
-        ;;
-        addl r15=.fptr_afs_xsetgroups - .L2,r3
-        ;;
-        ld8 r15=[r15]
-        ;;
-        ld8 r16=[r15],8
-        ;;
-        ld8 gp=[r15]
-        mov b6=r16
-        br.call.sptk.many b0 = b6
-        ;;
-        mov ar.pfs = r42
-        mov b0 = r41
-        mov gp = r48			/* restore gp */
-        br.ret.sptk.many b0
-.fptr_afs_xsetgroups:
-        data8 @fptr(afs_xsetgroups)
-");
+__asm__ __volatile__ ("alloc r42 = ar.pfs, 8, 3, 6, 0\n\t"
+		      "mov r41 = b0\n\t"    		/* save rp */
+		      "mov out0 = in0\n\t"
+		      "mov out1 = in1\n\t"
+		      "mov out2 = in2\n\t"
+		      "mov out3 = in3\n\t"
+		      "mov out4 = in4\n\t"
+		      "mov out5 = gp\n\t"			/* save gp */
+		      ";;\n"
+		      ".L2:    mov r3 = ip\n\t"
+		      ";;\n\t"
+		      "addl r15=.fptr_afs_xsetgroups - .L2,r3\n\t"
+		      ";;\n\t"
+		      "ld8 r15=[r15]\n\t"
+		      ";;\n\t"
+		      "ld8 r16=[r15],8\n\t"
+		      ";;\n\t"
+		      "ld8 gp=[r15]\n\t"
+		      "mov b6=r16\n\t"
+		      "br.call.sptk.many b0 = b6\n\t"
+		      ";;\n\t"
+		      "mov ar.pfs = r42\n\t"
+		      "mov b0 = r41\n\t"
+		      "mov gp = r48\n\t"		/* restore gp */
+		      "br.ret.sptk.many b0\n"
+		      ".fptr_afs_xsetgroups:\n\t"
+		      "data8 @fptr(afs_xsetgroups)");
 }
 
 struct fptr
@@ -202,7 +195,7 @@ int init_module(void)
 {
 #if defined(AFS_IA64_LINUX20_ENV)
     unsigned long kernel_gp;
-    static struct fptr sys_kill, sys_settimeofday, sys_setgroups;
+    static struct fptr sys_settimeofday, sys_setgroups;
 #endif
     extern int afs_syscall();
     extern long afs_xsetgroups();
@@ -290,11 +283,19 @@ int init_module(void)
 	    break;
 	}
 #else
+#if defined(EXPORTED_SYS_CHDIR) && defined(EXPORTED_SYS_CLOSE)
+        if (ptr[0] == (unsigned long)&sys_close &&
+	    ptr[__NR_chdir - __NR_close] == (unsigned long)&sys_chdir) {
+	    sys_call_table=ptr - __NR_close;
+	    break;
+	}
+#else
         if (ptr[0] == (unsigned long)&sys_exit &&
 	    ptr[__NR_open - __NR_exit] == (unsigned long)&sys_open) {
 	    sys_call_table=ptr - __NR_exit;
 	    break;
 	}
+#endif
 #endif
     }
 #ifdef EXPORTED_KALLSYMS_ADDRESS
@@ -309,6 +310,7 @@ int init_module(void)
          printf("Failed to find address of sys_call_table\n");
 	 return -EIO;
     }
+    printf("Found sys_call_table at %x\n", sys_call_table);
 # ifdef AFS_SPARC64_LINUX20_ENV
 error cant support this yet.
 #endif
@@ -319,21 +321,16 @@ error cant support this yet.
     kernel_gp = ((struct fptr *)printk)->gp;
 
     sys_settimeofdayp = (void *) &sys_settimeofday;
-    sys_killp = (void *) &sys_kill;
 
     ((struct fptr *)sys_settimeofdayp)->ip =
 		SYSCALL2POINTER sys_call_table[__NR_settimeofday - 1024];
     ((struct fptr *)sys_settimeofdayp)->gp = kernel_gp;
     
-    ((struct fptr *)sys_killp)->ip =
-		SYSCALL2POINTER sys_call_table[__NR_kill - 1024];
-    ((struct fptr *)sys_killp)->gp = kernel_gp;
 #else /* !AFS_IA64_LINUX20_ENV */
     sys_settimeofdayp = SYSCALL2POINTER sys_call_table[__NR_settimeofday];
 #ifdef __NR_socketcall
     sys_socketcallp = SYSCALL2POINTER sys_call_table[__NR_socketcall];
 #endif /* no socketcall on alpha */
-    sys_killp = SYSCALL2POINTER sys_call_table[__NR_kill];
 #endif /* AFS_IA64_LINUX20_ENV */
 
     /* setup AFS entry point. */
@@ -440,13 +437,29 @@ static long get_page_offset(void)
 #if defined(AFS_PPC_LINUX22_ENV) || defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV) || defined(AFS_ALPHA_LINUX20_ENV) || defined(AFS_S390_LINUX22_ENV) || defined(AFS_IA64_LINUX20_ENV) || defined(AFS_PARISC_LINUX24_ENV)
     return PAGE_OFFSET;
 #else
-    struct task_struct *p;
+    struct task_struct *p, *q;
 
     /* search backward thru the circular list */
-    for(p = current; p; p = p->prev_task)
-	if (p->pid == 1)
-	    return p->addr_limit.seg;
-
-    return 0;
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+    read_lock(&tasklist_lock);
+#endif
+    /* search backward thru the circular list */
+#ifdef DEFINED_PREV_TASK
+    for(q = current; p = q; q = prev_task(p)) {
+#else
+    for(p = current; p; p = p->prev_task) {
+#endif
+	    if (p->pid == 1) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+		    read_unlock(&tasklist_lock);
+#endif
+		    return p->addr_limit.seg;
+	    }
+    }
+  
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+    read_unlock(&tasklist_lock);
+#endif
+  return 0;
 #endif
 }

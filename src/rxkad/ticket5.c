@@ -61,7 +61,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/ticket5.c,v 1.1.1.2 2003/04/13 19:07:35 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/ticket5.c,v 1.3 2003/04/13 19:32:24 hartmans Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"

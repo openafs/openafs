@@ -60,6 +60,7 @@ all: ukinstall kinstall \
 	${TOP_INCDIR}/afs/pthread_glock.h \
 	${TOP_INCDIR}/afs/afs_atomlist.h \
 	${TOP_INCDIR}/afs/afs_lhash.h \
+	${TOP_INCDIR}/afs/softsig.h \
 	${TOP_INCDIR}/potpourri.h \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libafsutil.a \
@@ -157,6 +158,7 @@ install: \
 	${DESTDIR}${includedir}/afs/pthread_glock.h \
 	${DESTDIR}${includedir}/afs/afs_atomlist.h \
 	${DESTDIR}${includedir}/afs/afs_lhash.h \
+	${DESTDIR}${includedir}/afs/softsig.h \
 	${DESTDIR}${includedir}/potpourri.h \
 	${DESTDIR}${libdir}/afs/util.a \
 	${DESTDIR}${libdir}/afs/libafsutil.a \
@@ -202,6 +204,9 @@ ${TOP_INCDIR}/afs/afs_atomlist.h: afs_atomlist.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/afs/afs_lhash.h: afs_lhash.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/softsig.h: softsig.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/potpourri.h: potpourri.h
@@ -255,6 +260,9 @@ ${DESTDIR}${includedir}/afs/afs_atomlist.h: afs_atomlist.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/afs/afs_lhash.h: afs_lhash.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/softsig.h: softsig.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/potpourri.h: potpourri.h
@@ -312,6 +320,9 @@ ${DEST}/include/afs/afs_atomlist.h: afs_atomlist.h
 	${INSTALL} $? $@
 
 ${DEST}/include/afs/afs_lhash.h: afs_lhash.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/softsig.h: softsig.h
 	${INSTALL} $? $@
 
 ${DEST}/include/potpourri.h: potpourri.h
@@ -456,6 +467,7 @@ dest: \
 	${DEST}/include/afs/pthread_glock.h \
 	${DEST}/include/afs/afs_atomlist.h \
 	${DEST}/include/afs/afs_lhash.h \
+	${DEST}/include/afs/softsig.h \
 	${DEST}/include/potpourri.h \
 	${DEST}/lib/afs/util.a \
 	${DEST}/lib/afs/libafsutil.a \

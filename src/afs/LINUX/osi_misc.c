@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_misc.c,v 1.12 2002/09/26 19:18:06 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_misc.c,v 1.13 2003/04/13 19:32:22 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -444,18 +444,10 @@ void check_bad_parent(struct dentry *dp)
 struct task_struct *rxk_ListenerTask;
 
 void osi_linux_mask() {
-    spin_lock_irq(&current->sigmask_lock);
+    SIG_LOCK(current);
     sigfillset(&current->blocked);
-    recalc_sigpending(current);
-    spin_unlock_irq(&current->sigmask_lock);
-}
-
-void osi_linux_unmask() {
-    spin_lock_irq(&rxk_ListenerTask->sigmask_lock);
-    sigemptyset(&rxk_ListenerTask->blocked);
-    flush_signals(rxk_ListenerTask);
-    recalc_sigpending(rxk_ListenerTask);
-    spin_unlock_irq(&rxk_ListenerTask->sigmask_lock);
+    RECALC_SIGPENDING(current);
+    SIG_UNLOCK(current);
 }
 
 void osi_linux_rxkreg() {

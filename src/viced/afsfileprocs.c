@@ -28,7 +28,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/afsfileprocs.c,v 1.11 2002/12/11 03:00:40 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/afsfileprocs.c,v 1.12 2003/04/13 19:32:25 hartmans Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -266,13 +266,14 @@ static SetVolumeSync(async, avol)
 static CallPreamble(acall, activecall)
     register struct rx_call **acall;
     int activecall;
-
 {
     struct host *thost;
     struct rx_connection *tconn;
     struct client *tclient;
     int retry_flag=1;
     int code = 0;
+    char hoststr[16];
+
     tconn = rx_ConnectionOf(*acall);
     *acall = (struct rx_call *)tconn;	    /* change it! */
 
@@ -320,11 +321,13 @@ retry:
 	ViceLog(0,("BreakDelayedCallbacks FAILED for host %08x which IS UP.  Possible network or routing failure.\n",thost->host));
 	if ( MultiProbeAlternateAddress_r (thost) ) {
 	    ViceLog(0, ("MultiProbe failed to find new address for host %x.%d\n",
-			thost->host, thost->port));
-	    code = -1;
+			afs_inet_ntoa_r(thost->host, hoststr), 
+			ntohs(thost->port)));
+            code = -1;
 	} else {
-	    ViceLog(0, ("MultiProbe found new address for host %x.%d\n",
-			thost->host, thost->port));
+            ViceLog(0, ("MultiProbe found new address for host %s:%d\n",
+                       afs_inet_ntoa_r(thost->host, hoststr), 
+                       ntohs(thost->port)));
 	    if (BreakDelayedCallBacks_r(thost)) {
 		ViceLog(0,("BreakDelayedCallbacks FAILED AGAIN for host %08x which IS UP.  Possible network or routing failure.\n",thost->host));
 		code = -1;
@@ -6143,13 +6146,13 @@ CheckVnode(fid, volptr, vptr, lock)
 	    /* I'm not really worried about when we restarted, I'm   */
 	    /* just worried about when the first VBUSY was returned. */
 	    TM_GetTimeOfDay(&restartedat, 0);
-	    return(VBUSY);
+	    return(busyonrst?VBUSY:VRESTARTING);
 	  }
 	  else {
 	    struct timeval now;
 	    TM_GetTimeOfDay(&now, 0);
 	    if ((now.tv_sec - restartedat.tv_sec) < (11*60)) {
-	      return(VBUSY);
+	      return(busyonrst?VBUSY:VRESTARTING);
 	    }
 	    else {
 	      return (VRESTARTING);

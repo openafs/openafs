@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_daemons.c,v 1.7 2002/05/12 05:50:42 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_daemons.c,v 1.8 2003/04/13 19:32:22 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -265,57 +265,67 @@ void afs_Daemon() {
     }
 }
 
-afs_CheckRootVolume () {
+int afs_CheckRootVolume (void) {
     char rootVolName[32];
-    register struct volume *tvp;
+    struct volume *tvp;
     int usingDynroot = afs_GetDynrootEnable();
+    int localcell;
 
     AFS_STATCNT(afs_CheckRootVolume);
     if (*afs_rootVolumeName == 0) {
 	strcpy(rootVolName, "root.afs");
-    }
-    else {
+    } else {
 	strcpy(rootVolName, afs_rootVolumeName);
     }
-    if (usingDynroot) {
-	afs_GetDynrootFid(&afs_rootFid);
-	tvp = afs_GetVolume(&afs_rootFid, (struct vrequest *) 0, READ_LOCK);
-    } else {
-	tvp = afs_GetVolumeByName(rootVolName, LOCALCELL, 1, (struct vrequest *) 0, READ_LOCK);
-    }
-    if (!tvp) {
-	char buf[128];
-	int len = strlen(rootVolName);
 
-	if ((len < 9) || strcmp(&rootVolName[len - 9], ".readonly")) {
-	    strcpy(buf, rootVolName);
-	    afs_strcat(buf, ".readonly");
-	    tvp = afs_GetVolumeByName(buf, LOCALCELL, 1, (struct vrequest *) 0, READ_LOCK);
-	}
+    if (!usingDynroot) {
+        struct cell *lc = afs_GetPrimaryCell(READ_LOCK);
+
+        if (!lc)
+            return ENOENT;
+        localcell = lc->cellNum;
+        afs_PutCell(lc, READ_LOCK);
+    }
+
+    if (usingDynroot) {
+        afs_GetDynrootFid(&afs_rootFid);
+        tvp = afs_GetVolume(&afs_rootFid, NULL, READ_LOCK);
+    } else {
+        tvp = afs_GetVolumeByName(rootVolName, localcell, 1, NULL, READ_LOCK);
+    }
+    if (!tvp && !usingDynroot) {
+        char buf[128];
+        int len = strlen(rootVolName);
+
+        if ((len < 9) || strcmp(&rootVolName[len - 9], ".readonly")) {
+            strcpy(buf, rootVolName);
+            afs_strcat(buf, ".readonly");
+            tvp = afs_GetVolumeByName(buf, localcell, 1, NULL, READ_LOCK);
+        }
     }
     if (tvp) {
-	if (!usingDynroot) {
-	    int volid = (tvp->roVol? tvp->roVol : tvp->volume);
-	    afs_rootFid.Cell = LOCALCELL;
-	    if (afs_rootFid.Fid.Volume && afs_rootFid.Fid.Volume != volid
-		&& afs_globalVp) {
-		/* If we had a root fid before and it changed location we reset
-		 * the afs_globalVp so that it will be reevaluated.
-		 * Just decrement the reference count. This only occurs during
-		 * initial cell setup and can panic the machine if we set the
-		 * count to zero and fs checkv is executed when the current
-		 * directory is /afs.
-		 */
-		AFS_FAST_RELE(afs_globalVp);
-		afs_globalVp = 0;
-	    }
-	    afs_rootFid.Fid.Volume = volid;
-	    afs_rootFid.Fid.Vnode = 1;
-	    afs_rootFid.Fid.Unique = 1;
-	}
-	afs_initState = 300;    /* won */
-	afs_osi_Wakeup(&afs_initState);
-	afs_PutVolume(tvp, READ_LOCK);
+        if (!usingDynroot) {
+            int volid = (tvp->roVol? tvp->roVol : tvp->volume);
+            afs_rootFid.Cell = localcell;
+            if (afs_rootFid.Fid.Volume && afs_rootFid.Fid.Volume != volid
+                && afs_globalVp) {
+	      /* If we had a root fid before and it changed location we reset
+	       * the afs_globalVp so that it will be reevaluated.
+	       * Just decrement the reference count. This only occurs during
+	       * initial cell setup and can panic the machine if we set the
+	       * count to zero and fs checkv is executed when the current
+	       * directory is /afs.
+	       */
+                AFS_FAST_RELE(afs_globalVp);
+                afs_globalVp = 0;
+            }
+            afs_rootFid.Fid.Volume = volid;
+            afs_rootFid.Fid.Vnode = 1;
+            afs_rootFid.Fid.Unique = 1;
+        }
+        afs_initState = 300;    /* won */
+        afs_osi_Wakeup(&afs_initState);
+        afs_PutVolume(tvp, READ_LOCK);
     }
 #ifdef AFS_DEC_ENV
 /* This is to make sure that we update the root gnode */
