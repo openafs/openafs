@@ -1,3 +1,9 @@
+openafs (1.2.10-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Sam Hartman <hartmans@debian.org>  Wed, 30 Jul 2003 14:20:20 -0400
+
 openafs (1.2.9-3) unstable; urgency=low
 
   * Add support for kernel headers, thanks to Patrick Sodre, 
