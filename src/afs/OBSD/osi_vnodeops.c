@@ -81,7 +81,7 @@ RCSID("$Header$");
 #include "afs/nfsclient.h"
 #include "afs/afs_osidnlc.h"
 
-#ifdef DISCONN
+#ifdef AFS_DISCON_ENV
 extern int afs_FlushVS(struct vcache *tvc);
 #endif
 
@@ -817,7 +817,7 @@ afs_nbsd_reclaim(ap)
     vnode_pager_uncache(vp);
 #endif
 
-#ifndef DISCONN
+#ifndef AFS_DISCON_ENV
     error = afs_FlushVCache(avc, &slept); /* tosses our stuff from vnode */
 #else
     /* reclaim the vnode and the in-memory vcache, but keep the on-disk vcache */
@@ -878,7 +878,7 @@ afs_nbsd_bmap(ap)
 
     AFS_STATCNT(afs_bmap);
     if (ap->a_bnp)
-	ap->a_bnp = ap->a_bn * (8192 / DEV_BSIZE);
+	ap->a_bnp = (daddr_t *) (ap->a_bn * (8192 / DEV_BSIZE));
     if (ap->a_vpp)
 	*ap->a_vpp = (vcp) ? AFSTOV(vcp) : NULL;
     return 0;
@@ -980,6 +980,9 @@ afs_nbsd_pathconf(ap)
     }
     return 0;
 }
+
+extern int
+afs_lockctl(struct vcache *avc, struct AFS_FLOCK *af, int acmd, struct AFS_UCRED *acred, pid_t clid);
 
 /*
  * Advisory record locking support (fcntl() POSIX style)

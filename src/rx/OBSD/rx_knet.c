@@ -46,8 +46,10 @@ int osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr, struct iovec *d
     if (haveGlock)
         AFS_GLOCK();
 
-    if (code)
+    if (code && afs_termState != AFSOP_STOP_RXK_LISTENER) {
+	afs_osi_Sleep(&afs_termState);
 	return code;
+    }
 
     *alength -= u.uio_resid;
     if (addr && nam) {

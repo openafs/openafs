@@ -233,7 +233,7 @@ struct proc *p;
     AFS_GLOCK();
     AFS_STATCNT(afs_mount);
 
-#ifdef DISCONN
+#ifdef AFS_DISCON_ENV
     /* initialize the vcache entries before we start using them */
 
     /* XXX find a better place for this if possible  */
@@ -263,21 +263,42 @@ struct mount *afsp;
 int flags;
 struct proc *p;
 {
-    int err;
     extern int sys_ioctl(), sys_setgroups();
 
-    err = afs_unmount(afsp, flags);
-    if (err == 0) {
-	/* give up syscall entries for ioctl & setgroups, which we've stolen */
-	sysent[SYS_ioctl].sy_call = sys_ioctl;
-	sysent[SYS_setgroups].sy_call = sys_setgroups;
-	/* give up the stolen syscall entry */
-	sysent[AFS_SYSCALL].sy_narg = 0;
-	sysent[AFS_SYSCALL].sy_argsize = 0;
-	sysent[AFS_SYSCALL].sy_call = afs_badcall;
-	printf("AFS unmounted--use `/sbin/modunload -i %d' to unload before restarting AFS\n", lkmid);
+    AFS_STATCNT(afs_unmount);
+#ifdef AFS_DISCON_ENV
+    give_up_cbs();
+#endif
+    if (!afs_globalVFS) {
+	printf("afs already unmounted\n");
+	return 0;
     }
-    return err;
+    if (afs_globalVp)
+	AFS_RELE(AFSTOV(afs_globalVp));
+    afs_globalVp = NULL;
+
+    vflush(afsp, NULLVP, 0); /* don't support forced */
+    afsp->mnt_data = NULL;
+#ifdef  AFS_GLOBAL_SUNLOCK
+    mutex_enter(&afs_global_lock);
+#endif
+    afs_globalVFS = 0;
+    afs_cold_shutdown = 1;
+    afs_shutdown();			/* XXX */
+#ifdef  AFS_GLOBAL_SUNLOCK
+    mutex_exit(&afs_global_lock);
+#endif
+
+    /* give up syscall entries for ioctl & setgroups, which we've stolen */
+    sysent[SYS_ioctl].sy_call = sys_ioctl;
+    sysent[SYS_setgroups].sy_call = sys_setgroups;
+
+    /* give up the stolen syscall entry */
+    sysent[AFS_SYSCALL].sy_narg = 0;
+    sysent[AFS_SYSCALL].sy_argsize = 0;
+    sysent[AFS_SYSCALL].sy_call = afs_badcall;
+    printf("AFS unmounted--use `/sbin/modunload -i %d' to unload before restarting AFS\n", lkmid);
+    return 0;
 }
 
 static int
@@ -360,7 +381,7 @@ int
 afs_sync(struct osi_vfs *afsp)
 {
     AFS_STATCNT(afs_sync);
-#if defined(DISCONN) && !defined(AFS_OBSD_ENV)
+#if defined(AFS_DISCON_ENV) && !defined(AFS_OBSD_ENV)
     /* Can't do this in OpenBSD 2.7, it faults when called from apm_suspend() */
     store_dirty_vcaches();
 #endif
@@ -431,7 +452,7 @@ afsinit()
 
     sysent[AFS_SYSCALL].sy_call = afs3_syscall;
     sysent[AFS_SYSCALL].sy_narg = 6;
-    sysent[AFS_SYSCALL].sy_argsize = 6*sizeof(long);
+    sysent[AFS_SYSCALL].sy_argsize = 6 * sizeof(long);
     sysent[54].sy_call = afs_xioctl;
     sysent[80].sy_call = Afs_xsetgroups;
 
