@@ -25,8 +25,8 @@ Description: The AFS distributed filesystem- file server
  files among multiple computers.  Facilities are provided for access
  control, authentication, backup and administrative management.
  .
-This package provides the AFS fileserver binaries.  It should be
-installed on any machine that will export files into AFS.
+ This package provides the AFS fileserver binaries.  It should be
+ installed on any machine that will export files into AFS.
 
 Package: openafs-dbserver
 Architecture: i386
@@ -36,9 +36,9 @@ Description: The AFS distributed filesystem- database server
  files among multiple computers.  Facilities are provided for access
  control, authentication, backup and administrative management.
  .
-This package provides AFS database server binaries.  It should be
-installed on the servers that will act as volume location and
-protection servers.
+ This package provides AFS database server binaries.  It should be
+ installed on the servers that will act as volume location and
+ protection servers.
 
 Package: libopenafs-dev
 Architecture: i386
