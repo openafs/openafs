@@ -29,8 +29,10 @@ softsig_thread (void *arg)
   sigaddset (&ss, SIGUSR1);
 
   while (1) {
-    void (*h) (int) = NULL;
+    void (*h) (int);
     int i, sigw;
+
+    h = NULL;
 
     for (i = 0; i < NSIG; i++)
       if (softsig_sigs[i].pending) {

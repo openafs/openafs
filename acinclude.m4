@@ -356,6 +356,14 @@ else
 			AFS_PARAM_COMMON=param.nbsd15.h
 			AFS_SYSNAME="alpha_nbsd15"
 			;;
+		i?86-*-netbsd*1.6[[M-Z]]*)
+			AFS_PARAM_COMMON=param.nbsd20.h
+			AFS_SYSNAME="i386_nbsd20"
+			;;
+		i?86-*-netbsd*2.0*)
+			AFS_PARAM_COMMON=param.nbsd20.h
+			AFS_SYSNAME="i386_nbsd20"
+			;;
 		i?86-*-netbsd*1.6*)
 			AFS_PARAM_COMMON=param.nbsd16.h
 			AFS_SYSNAME="i386_nbsd16"
