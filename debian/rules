@@ -244,6 +244,7 @@ binary-modules: build-modules
 	install -g root -o root -m 755  debian/tmp/lib/openafs/*o \
 		debian/$(modulepkg)/lib/modules/$(KVERS)/fs
 # Fix some stuff up
+	if test -f debian/$(modulepkg)/lib/modules/$(KVERS)/fs/openafs.o -a ! -f debian/$(modulepkg)/lib/modules/$(KVERS)/fs/openafs.mp.o; then ln debian/$(modulepkg)/lib/modules/$(KVERS)/fs/openafs.o debian/$(modulepkg)/lib/modules/$(KVERS)/fs/openafs.mp.o; fi
 	install -d -o root -g root -m 755 debian/$(modulepkg)/usr/share/doc
 	ln -s openafs-client debian/$(modulepkg)/usr/share/doc/$(modulepkg)
 	rm -rf debian/$(modulepkg)/usr/include
