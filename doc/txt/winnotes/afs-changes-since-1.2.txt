@@ -1,4 +1,19 @@
 Since 1.3.66:
+   * file and directory names beginning with "." will now be given the
+     hidden attribute when the volume access is anonymous.  this matches
+     the behavior when the volume access is via an authenticated user.
+
+   * Added a change monitor to the HKLM\SOFTWARE\OpenAFS\Client\Freelance
+     key.  When a change occurs mark the root.afs data as invalid and
+     for it to be reloaded on the next access.  This allows administrators
+     to modify the mount point list without restarting the service.
+     
+     The freelance client used to provide a fake modification time for
+     the root.afs volume data and its mount points of 7/09/2001 14:24 EDT.
+     Added code to extract the last modification time of the Freelance
+     registry key and use that instead.  The time now represents the 
+     most recent mount point change.
+
    * PTS registration of new users to foreign cells has been added to 
      aklog.exe
 
