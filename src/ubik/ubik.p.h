@@ -366,7 +366,7 @@ extern afs_int32 ugen_ClientInit(int noAuthFlag, char *confDir, char *cellName,
 				 struct ubik_client **uclientp,
 				 int (*secproc) (), char *funcName, 
 				 afs_int32 gen_rxkad_level, 
-				 afs_int32 maxservers, afs_int32 serviceid, 
+				 afs_int32 maxservers, char *serviceid, 
 				 afs_int32 deadtime, afs_uint32 server, 
 				 afs_uint32 port, afs_int32 usrvid);
 

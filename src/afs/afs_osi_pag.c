@@ -160,7 +160,7 @@ afs_pag_wait(struct AFS_UCRED **acred)
   if(afs_pag_sleep(acred)) {
     if(!afs_pag_sleepcnt) {
       printf("%s() PAG throttling triggered, pid %d... sleeping.  sleepcnt %d\n",
-	     __func__, getpid(), afs_pag_sleepcnt);
+	     "afs_pag_wait", getpid(), afs_pag_sleepcnt);
     }
     
     afs_pag_sleepcnt++;
