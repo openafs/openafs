@@ -95,7 +95,7 @@ AFSAOBJS = \
 	xdr_arrayn.o	\
 	xdr_int64.o	\
 	Kvice.cs.o	\
-	bg-fcrypt.o		\
+	fcrypt.o		\
 	rx.o		\
 	rx_rdwr.o	\
 	rx_clock.o	\
@@ -114,6 +114,7 @@ AFSAOBJS = \
 	Krxstat.ss.o	\
 	Krxstat.xdr.o	\
 	rxstat.o	\
+	crypt_conn.o	\
 	AFS_component_version_number.o\
 	afs_exporter.o	\
 	rxkad_client.o	\
@@ -246,7 +247,9 @@ afs_memcache.o: $(AFS)/afs_memcache.c
 	$(CRULE1);
 afs_stat.o: $(AFS)/afs_stat.c
 	$(CRULE1);
-bg-fcrypt.o: 	$(AFS)/bg-fcrypt.c
+fcrypt.o: 	$(AFS)/fcrypt.c
+	$(CRULE1);
+crypt_conn.o: $(AFS)/crypt_conn.c
 	$(CRULE1);
 rxkad_client.o: $(AFS)/rxkad_client.c
 	$(CRULE1);
