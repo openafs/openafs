@@ -133,6 +133,8 @@ libafsrpc.a: ${LIBOBJS}
 		$(AR) crv $@ ${srcdir}/../sys/afsl.exp;; \
         esac
 
+${RXOBJS}: rx.h rx_user.h rx_globals.h rx_clock.h rx_queue.h rx_event.h
+
 rx_event.o: ${RX}/rx_event.c
 	${CCRULE}
 
@@ -151,7 +153,7 @@ rx_conncache.o: ${RX}/rx_conncache.c
 rx_null.o: ${RX}/rx_null.c
 	${CCRULE}
 
-rx_globals.o: ${RX}/rx_globals.c
+rx_globals.o: ${RX}/rx_globals.c 
 	${CCRULE}
 
 rx_getaddr.o: ${RX}/rx_getaddr.c
