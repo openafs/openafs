@@ -708,7 +708,6 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 	afs_int32 *mtubuffer =
 	    afs_osi_Alloc(sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	int i;
-	int code;
 
 	if (count > AFS_MAX_INTERFACE_ADDR) {
 	    code = ENOMEM;
