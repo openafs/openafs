@@ -56,7 +56,7 @@ rsh.o: rsh.c AFS_component_version_number.c
 	(cd ../inetd ; $(MAKE) ta-rauth.o DESTDIR=${DESTDIR})
 
 clean:
-	rm -f ${OBJS} core rsh *.BAK AFS_component_version_number.c rlogin
+	rm -f ${OBJS} core rsh *.BAK AFS_component_version_number.c rlogin rlogin.o rsh.o
 
 cleandir: clean
 	rm -f ${MAN} tags .depend
