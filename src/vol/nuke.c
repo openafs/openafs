@@ -204,11 +204,11 @@ afs_int32 avolid; {
 	 * volume's ID in its inode, and has to be removed explicitly.
 	 */
 	/* reuse devName buffer now */
-#ifdef AFS_NAMEI_ENV
+#ifdef AFS_NT40_ENV
 	sprintf(devName, "%c:\\%s", *lastDevComp , VolumeExternalName(avolid));
 #else
 	sprintf(devName, "%s/%s", aname, VolumeExternalName(avolid));
-#endif /* AFS_NAMEI_ENV */
+#endif /* AFS_NT40_ENV */
 	code = unlink(devName);
 	if (code) code = errno;
     }
