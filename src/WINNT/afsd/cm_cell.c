@@ -66,7 +66,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
     long code;
     static cellCounter = 1;		/* locked by cm_cellLock */
 	int ttl;
-	char fullname[200];
+	char fullname[200]="";
 
 	lock_ObtainWrite(&cm_cellLock);
 	for(cp = cm_allCellsp; cp; cp=cp->nextp) {
@@ -86,11 +86,16 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
         memset(cp, 0, sizeof(*cp));
         code = cm_SearchCellFile(namep, fullname, cm_AddCellProc, cp);
 		if (code) {
-            afsi_log("in cm_GetCell_gen code= %d fullname= %s", code, fullname);
+            afsi_log("in cm_GetCell_gen cm_SearchCellFile(%s) returns code= %d fullname= %s", 
+                      namep, code, fullname);
 
 #ifdef AFS_AFSDB_ENV
-            if (cm_dnsEnabled /*&& cm_DomainValid(namep)*/)
+            if (cm_dnsEnabled /*&& cm_DomainValid(namep)*/) {
                 code = cm_SearchCellByDNS(namep, fullname, &ttl, cm_AddCellProc, cp);
+                if ( code )
+                    afsi_log("in cm_GetCell_gen cm_SearchCellByDNS(%s) returns code= %d fullname= %s", 
+                             namep, code, fullname);
+            }
 #endif
             if (code) {
                 free(cp);
