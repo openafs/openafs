@@ -1835,6 +1835,7 @@ struct inode_operations afs_symlink_iops = {
   .follow_link =	page_follow_link,
 #else
   .follow_link =	page_follow_link_light,
+  .put_link =           page_put_link,
 #endif
   .setattr =		afs_notify_change,
 #else
