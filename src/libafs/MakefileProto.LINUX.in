@@ -247,7 +247,7 @@ ${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: libafs.ko
 
 .FORCE:
 libafs.ko: .FORCE
-	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(srcdir)/make_kbuild_makefile.pl ${KDIR} $@ @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
+	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" @TOP_SRCDIR@/libafs/make_kbuild_makefile.pl ${KDIR} $@ @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
 	env EXTRA_CFLAGS="${EXTRA_CFLAGS}" $(MAKE) -C ${LINUX_KERNEL_PATH} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules
         
 <all -linux26 -umlinux26>
