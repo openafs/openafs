@@ -73,6 +73,13 @@
 #endif
 #endif /* KERNEL */
 
+#ifndef KERNEL
+#define __USE_LARGEFILE64 1
+#if !defined off64_t
+#define off64_t __off64_t
+#endif
+#endif
+
 /* Machine / Operating system information */
 #define SYS_NAME       "i386_linux24"
 #define SYS_NAME_ID    SYS_NAME_ID_i386_linux24
