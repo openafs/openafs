@@ -118,7 +118,7 @@ int kaux_write(
 
 /* adjust this user's records to reflect a failure.
  * locktime is the value stored in the main database that specifies
- * how afs_int32 a user's ID should be locked once the attempts limit has
+ * how long a user's ID should be locked once the attempts limit has
  * been exceeded.  It also functions as the interval during which the
  * permitted N-1 authentication failures plus the forbidden Nth
  * failure must occur, in order for the ID to actually be locked.  Ie,
