@@ -30,6 +30,7 @@ typedef bit32 FileOffset;	/* Offset in this file */
 #include <pthread.h>
 extern pthread_mutex_t vol_glock_mutex;
 extern pthread_mutex_t vol_attach_mutex;
+extern pthread_mutex_t vol_fsync_mutex;
 extern pthread_cond_t vol_put_volume_cond;
 extern pthread_cond_t vol_sleep_cond;
 #define VATTACH_LOCK \
@@ -40,11 +41,17 @@ extern pthread_cond_t vol_sleep_cond;
     assert(pthread_mutex_lock(&vol_glock_mutex) == 0);
 #define VOL_UNLOCK \
     assert(pthread_mutex_unlock(&vol_glock_mutex) == 0);
+#define VFSYNC_LOCK \
+    assert(pthread_mutex_lock(&vol_fsync_mutex) == 0);
+#define VFSYNC_UNLOCK \
+    assert(pthread_mutex_unlock(&vol_fsync_mutex) == 0);
 #else /* AFS_PTHREAD_ENV */
 #define VATTACH_LOCK
 #define VATTACH_UNLOCK
 #define VOL_LOCK
 #define VOL_UNLOCK
+#define VFSYNC_LOCK
+#define VFSYNC_UNLOCK
 #endif /* AFS_PTHREAD_ENV */
 
 typedef enum { fileServer, volumeUtility, salvager } ProgramType;

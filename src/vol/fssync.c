@@ -204,26 +204,31 @@ FSYNC_askfs(VolumeId volume, char *partName, int com, int reason)
     else
 	command.partName[0] = 0;
     assert(FS_sd != -1);
+    VFSYNC_LOCK
 #ifdef AFS_NT40_ENV
     if (send(FS_sd, (char *)&command, sizeof(command), 0) != sizeof(command)) {
 	printf("FSYNC_askfs: write to file server failed\n");
-	return FSYNC_DENIED;
+	response = FSYNC_DENIED;
+	goto done;
     }
     while ((n = recv(FS_sd, &response, 1, 0)) != 1) {
 	if (n == 0 || WSAEINTR != WSAGetLastError()) {
 	    printf("FSYNC_askfs: No response from file server\n");
-	    return FSYNC_DENIED;
+	    response = FSYNC_DENIED;
+	    goto done;
 	}
     }
 #else
     if (write(FS_sd, &command, sizeof(command)) != sizeof(command)) {
 	printf("FSYNC_askfs: write to file server failed\n");
-	return FSYNC_DENIED;
+	response = FSYNC_DENIED;
+	goto done;
     }
     while ((n = read(FS_sd, &response, 1)) != 1) {
 	if (n == 0 || errno != EINTR) {
 	    printf("FSYNC_askfs: No response from file server\n");
-	    return FSYNC_DENIED;
+	    response = FSYNC_DENIED;
+	    goto done;
 	}
     }
 #endif
@@ -232,6 +237,8 @@ FSYNC_askfs(VolumeId volume, char *partName, int com, int reason)
 	    ("FSYNC_askfs: negative response from file server; volume %u, command %d\n",
 	     command.volume, (int)command.command);
     }
+ done:
+    VFSYNC_UNLOCK
 
     return response;
 }

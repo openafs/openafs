@@ -35,7 +35,11 @@ RCSID
 #include <afs/afsint.h>
 #include <stdio.h>
 #include <signal.h>
+#ifdef AFS_PTHREAD_ENV
+#include <assert.h>
+#else /* AFS_PTHREAD_ENV */
 #include <afs/assert.h>
+#endif /* AFS_PTHREAD_ENV */
 #include <afs/prs_fs.h>
 #include <afs/nfs.h>
 #include <lwp.h>
@@ -69,7 +73,9 @@ RCSID
 
 extern int (*vol_PollProc) ();
 extern struct volser_trans *TransList();
+#ifndef AFS_PTHREAD_ENV
 extern int IOMGR_Poll();
+#endif
 char *GlobalNameHack = NULL;
 int hackIsIn = 0;
 afs_int32 GlobalVolCloneId, GlobalVolParentId;
@@ -135,7 +141,11 @@ BKGLoop()
     while (1) {
 	tv.tv_sec = GCWAKEUP;
 	tv.tv_usec = 0;
+#ifdef AFS_PTHREAD_ENV
+        select(0, 0, 0, 0, &tv);
+#else
 	(void)IOMGR_Select(0, 0, 0, 0, &tv);
+#endif
 	GCTrans();
 	TryUnlock();
 	loop++;
@@ -155,7 +165,11 @@ BKGSleep()
 
     if (TTsleep) {
 	while (1) {
+#ifdef AFS_PTHREAD_ENV
+	    sleep(TTrun);
+#else /* AFS_PTHREAD_ENV */
 	    IOMGR_Sleep(TTrun);
+#endif
 	    for (tt = TransList(); tt; tt = tt->next) {
 		if ((strcmp(tt->lastProcName, "DeleteVolume") == 0)
 		    || (strcmp(tt->lastProcName, "Clone") == 0)
@@ -209,7 +223,6 @@ main(argc, argv)
      int argc;
      char **argv;
 {
-    char *pid;
     register afs_int32 code;
     struct rx_securityClass *(securityObjects[3]);
     struct rx_service *service;
@@ -340,7 +353,9 @@ main(argc, argv)
 #endif
     VInitVolumePackage(volumeUtility, 0, 0, CONNECT_FS, 0);
     DInit(40);
+#ifndef AFS_PTHREAD_ENV
     vol_PollProc = IOMGR_Poll;	/* tell vol pkg to poll io system periodically */
+#endif
 #ifndef AFS_NT40_ENV
     rxi_syscallp = volser_syscall;
 #endif
@@ -365,11 +380,21 @@ main(argc, argv)
     OpenLog(AFSDIR_SERVER_VOLSERLOG_FILEPATH);
     SetupLogSignals();
 
-    /* create the lwp to garbage-collect old transactions and sleep periodically */
-    LWP_CreateProcess(BKGLoop, 16 * 1024, 3, (void *)0, "vol bkg daemon",
-		      &pid);
-    LWP_CreateProcess(BKGSleep, 16 * 1024, 3, (void *)0, "vol slp daemon",
-		      &pid);
+    {
+#ifdef AFS_PTHREAD_ENV
+	pthread_t tid;
+	pthread_attr_t tattr;
+	assert(pthread_attr_init(&tattr) == 0);
+	assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
+
+	assert(pthread_create(&tid, &tattr, BKGLoop, NULL) == 0);
+	assert(pthread_create(&tid, &tattr, BKGSleep, NULL) == 0);
+#else
+	PROCESS pid;
+	LWP_CreateProcess(BKGLoop, 16*1024, 3, 0, "vol bkg daemon", &pid);
+	LWP_CreateProcess(BKGSleep,16*1024, 3, 0, "vol slp daemon", &pid);
+#endif
+    }
 
     /* Create a single security object, in this case the null security object, for unauthenticated connections, which will be used to control security on connections made to this server */
 

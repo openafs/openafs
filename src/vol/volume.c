@@ -148,6 +148,7 @@ RCSID
 #ifdef AFS_PTHREAD_ENV
 pthread_mutex_t vol_glock_mutex;
 pthread_mutex_t vol_attach_mutex;
+pthread_mutex_t vol_fsync_mutex;
 pthread_cond_t vol_put_volume_cond;
 pthread_cond_t vol_sleep_cond;
 #endif /* AFS_PTHREAD_ENV */

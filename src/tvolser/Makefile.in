@@ -1,0 +1,206 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+HELPER_SPLINT=@HELPER_SPLINT@
+
+CC=${MT_CC}
+CFLAGS=${COMMON_CFLAGS} -I.. -DNINTERFACE ${MT_CFLAGS} -DRXDEBUG
+
+CCRULE=${CC} ${CFLAGS} -c $?
+
+VICED=../viced
+VLSERVER=../vlserver
+LWP=../lwp
+LIBACL=../libacl
+UTIL=../util
+DIR=../dir
+VOL=../vol
+FSINT=../fsint
+VOLSER=../volser
+
+VOLSEROBJS=volmain.o volprocs.o physio.o voltrans.o volerr.o volint.cs.o dumpstuff.o  volint.ss.o volint.xdr.o vscommon.o
+
+VLSERVEROBJS=#vldbint.cs.o vldbint.xdr.o
+
+LWPOBJS=lock.o fasttime.o threadname.o
+
+LIBACLOBJS=aclprocs.o netprocs.o
+
+UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o softsig.o
+
+DIROBJS=buffer.o dir.o salvage.o
+
+VOLOBJS= vnode.o volume.o vutil.o partition.o fssync.o purge.o \
+	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o nuke.o
+
+FSINTOBJS=# afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
+
+objects= ${VOLSEROBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
+	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
+
+LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a
+
+all: volserver
+
+COMPILE=${CC} ${CFLAGS} -c $?
+
+volmain.o: ${VOLSER}/volmain.c
+	${COMPILE}
+volprocs.o: ${VOLSER}/volprocs.c
+	${COMPILE}
+physio.o: ${VOLSER}/physio.c
+	${COMPILE}
+voltrans.o: ${VOLSER}/voltrans.c
+	${COMPILE}
+volerr.o: ${VOLSER}/volerr.c
+	${COMPILE}
+volint.cs.o: ${VOLSER}/volint.cs.c
+	${COMPILE}
+dumpstuff.o: ${VOLSER}/dumpstuff.c
+	${COMPILE}
+volint.ss.o: ${VOLSER}/volint.ss.c
+	${COMPILE}
+volint.xdr.o: ${VOLSER}/volint.xdr.c
+	${COMPILE}
+
+assert.o: ${UTIL}/assert.c
+	${COMPILE}
+
+uuid.o: ${UTIL}/uuid.c
+	${COMPILE}
+
+serverLog.o: ${UTIL}/serverLog.c
+	${COMPILE}
+
+fileutil.o: ${UTIL}/fileutil.c
+	${COMPILE}
+
+volparse.o: ${UTIL}/volparse.c
+	${COMPILE}
+
+flipbase64.o: ${UTIL}/flipbase64.c
+	${COMPILE}
+
+netutils.o: ${UTIL}/netutils.c
+	${COMPILE}
+
+dirpath.o: ${UTIL}/dirpath.c
+	${COMPILE}
+
+softsig.o: ${UTIL}/softsig.c
+	${COMPILE}
+
+lock.o: ${LWP}/lock.c
+	${COMPILE}
+
+fasttime.o: ${LWP}/fasttime.c
+	${COMPILE}
+
+threadname.o: ${LWP}/threadname.c
+	${COMPILE}
+
+aclprocs.o: ${LIBACL}/aclprocs.c
+	${COMPILE}
+
+netprocs.o: ${LIBACL}/netprocs.c
+	${COMPILE}
+
+vldbint.cs.o: ${VLSERVER}/vldbint.cs.c
+	${COMPILE}
+
+vldbint.xdr.o: ${VLSERVER}/vldbint.xdr.c
+	${COMPILE}
+
+buffer.o: ${DIR}/buffer.c
+	${COMPILE}
+
+dir.o: ${DIR}/dir.c
+	${COMPILE}
+
+salvage.o: ${DIR}/salvage.c
+	${COMPILE}
+
+vnode.o: ${VOL}/vnode.c
+	${COMPILE}
+
+volume.o: ${VOL}/volume.c
+	${COMPILE}
+
+vutil.o: ${VOL}/vutil.c
+	${COMPILE}
+
+partition.o: ${VOL}/partition.c
+	${COMPILE}
+
+nuke.o: ${VOL}/nuke.c
+	${COMPILE}
+
+fssync.o: ${VOL}/fssync.c
+	${COMPILE}
+
+purge.o: ${VOL}/purge.c
+	${COMPILE}
+
+clone.o: ${VOL}/clone.c
+	${COMPILE}
+
+devname.o: ${VOL}/devname.c
+	${COMPILE}
+
+common.o: ${VOL}/common.c
+	${COMPILE}
+
+vscommon.o: ${VOLSER}/common.c
+	${COMPILE} -o vscommon.o
+
+listinodes.o: ${VOL}/listinodes.c
+	${COMPILE}
+
+ihandle.o: ${VOL}/ihandle.c
+	${COMPILE}
+
+namei_ops.o: ${VOL}/namei_ops.c
+	${COMPILE}
+
+afsaux.o: ${FSINT}/afsaux.c
+	${COMPILE}
+
+afscbint.cs.o: ${FSINT}/afscbint.cs.c
+	${COMPILE}
+
+afscbint.ss.o: ${FSINT}/afscbint.ss.c
+	${COMPILE}
+
+afsint.cs.o: ${FSINT}/afsint.cs.c
+	${COMPILE}
+
+afsint.ss.o: ${FSINT}/afsint.ss.c
+	${COMPILE}
+
+afsint.xdr.o: ${FSINT}/afsint.xdr.c
+	${COMPILE}
+
+volserver: ${objects} ${LIBS}
+	${CC} ${LDFLAGS} -o volserver ${objects} ${LIBS} ${MTLIBS} ${XLIBS}
+
+${DEST}/root.server/usr/afs/bin/volserver: volserver
+	${INSTALL} -ns $? $@
+
+install: ${DESTDIR}${afssrvlibexecdir}/volserver
+
+clean:
+	$(RM) -f *.o volserver core AFS_component_version_number.c
+
+include ../config/Makefile.version
+
+${DESTDIR}${afssrvlibexecdir}/volserver: volserver
+	${INSTALL} -ns $? $@
+
+dest: ${DEST}/root.server/usr/afs/bin/volserver
+

@@ -34,7 +34,11 @@ RCSID
 #endif
 #endif
 #include <sys/stat.h>
+#ifdef AFS_PTHREAD_ENV
+#include <assert.h>
+#else /* AFS_PTHREAD_ENV */
 #include <afs/assert.h>
+#endif /* AFS_PTHREAD_ENV */
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/afsint.h>
@@ -609,7 +613,9 @@ DumpFile(struct iod *iodp, int vnode, FdHandle_t * handleP)
 	/* Now write the data out */
 	if (iod_Write(iodp, (char *)p, howMany) != howMany)
 	    error = VOLSERDUMPERROR;
+#ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();
+#endif
     }
 
     if (pad) {			/* Any padding we hadn't reported yet */
@@ -798,8 +804,10 @@ DumpVnodeIndex(register struct iod *iodp, Volume * vp, VnodeClass class,
 	    code =
 		DumpVnode(iodp, vnode, V_id(vp),
 			  bitNumberToVnodeNumber(vnodeIndex, class), flag);
+#ifndef AFS_PTHREAD_ENV
 	if (!flag)
 	    IOMGR_Poll();	/* if we dont' xfr data, but scan instead, could lose conn */
+#endif
     }
     STREAM_CLOSE(file);
     FDH_CLOSE(fdP);

@@ -9,6 +9,12 @@
 
 #ifndef _VOLSER_
 #define _VOLSER_ 1
+
+#ifdef AFS_PTHREAD_ENV
+#include <assert.h>
+#include <pthread.h>
+#endif
+
 /* vflags, representing state of the volume */
 #define	VTDeleteOnSalvage	1	/* delete on next salvage */
 #define	VTOutOfService		2	/* never put this volume online */

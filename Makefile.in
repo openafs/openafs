@@ -230,6 +230,18 @@ tviced: cmd comerr viced vlserver libafsrpc libafsauthent
 volser: cmd comerr tviced usd kauth audit
 	${COMPILE_PART1} volser ${COMPILE_PART2}
 
+tvolser: project tviced usd libafsrpc libafsauthent
+	case ${SYS_NAME} in                                             \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*)   \
+		${COMPILE_PART1} tvolser  ${COMPILE_PART2} ;;           \
+	*_darwin_[1-6][0-9])                                            \
+		echo Not building MT volser for ${SYS_NAME} ;;          \
+	*_darwin_*)                                                     \
+		${COMPILE_PART1} tvolser ${COMPILE_PART2} ;;            \
+	*)                                                              \
+		echo Not building MT volser for ${SYS_NAME} ;;          \
+	esac
+
 venus: cmd comerr volser ptserver
 	${COMPILE_PART1} venus ${COMPILE_PART2}
 	${COMPILE_PART1} venus/test ${COMPILE_PART2}

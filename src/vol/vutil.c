@@ -139,7 +139,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     handle = NULL;
 
     /* Verify that the parition is valid before writing to it. */
-    if (!(partition = VGetPartition(partname, 0))) {
+    if (!(partition = VGetPartition_r(partname, 0))) {
 	Log("VCreateVolume: partition %s is not in service.\n", partname);
 	*ec = VNOVOL;
 	return NULL;
@@ -148,7 +148,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     nearInodeHash(volumeId, nearInode);
     nearInode %= partition->f_files;
 #endif
-    VLockPartition(partname);
+    VLockPartition_r(partname);
     memset(&tempHeader, 0, sizeof(tempHeader));
     tempHeader.stamp.magic = VOLUMEHEADERMAGIC;
     tempHeader.stamp.version = VOLUMEHEADERVERSION;
@@ -282,7 +282,7 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
     }
     fsync(fd);
     close(fd);
-    return (VAttachVolumeByName(ec, partname, headerName, V_SECRETLY));
+    return (VAttachVolumeByName_r(ec, partname, headerName, V_SECRETLY));
 }
 
 

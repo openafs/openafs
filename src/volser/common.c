@@ -17,6 +17,7 @@ RCSID
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
 
+#ifndef AFS_PTHREAD_ENV
 /*@printflike@*/ void
 Log(const char *format, ...)
 {
@@ -26,6 +27,7 @@ Log(const char *format, ...)
     vViceLog(0, (format, args));
     va_end(args);
 }
+#endif
 
 void
 LogError(afs_int32 errcode)
@@ -34,6 +36,7 @@ LogError(afs_int32 errcode)
 	    ("%s: %s\n", error_table_name(errcode), error_message(errcode)));
 }
 
+#ifndef AFS_PTHREAD_ENV
 /*@printflike@*/ void
 Abort(const char *format, ...)
 {
@@ -45,10 +48,12 @@ Abort(const char *format, ...)
     va_end(args);
     abort();
 }
+#endif
 
 void
 InitErrTabs(void)
 {
+#ifndef AFS_PTHREAD_ENV
     initialize_KA_error_table();
     initialize_RXK_error_table();
     initialize_KTC_error_table();
@@ -56,5 +61,6 @@ InitErrTabs(void)
     initialize_CMD_error_table();
     initialize_VL_error_table();
     initialize_VOLS_error_table();
+#endif
     return;
 }
