@@ -469,15 +469,19 @@ else
 			;;
 		power*-ibm-aix4.2*)
 			AFS_SYSNAME="rs_aix42"
+			enable_pam="no"
 			;;
 		power*-ibm-aix4.3*)
 			AFS_SYSNAME="rs_aix42"
+			enable_pam="no"
 			;;
 		power*-ibm-aix5.1*)
 			AFS_SYSNAME="rs_aix51"
+			enable_pam="no"
 			;;
 		power*-ibm-aix5.2*)
 			AFS_SYSNAME="rs_aix52"
+			enable_pam="no"
 			;;
 		x86_64-*-linux-gnu)
 			AFS_SYSNAME="amd64_linuxXX"
