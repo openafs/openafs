@@ -159,6 +159,9 @@
 #define SYS_NAME_ID_parisc_linux22      2401
 #define SYS_NAME_ID_parisc_linux24      2402
 
+#define SYS_NAME_ID_amd64_linux2        2700
+#define SYS_NAME_ID_amd64_linux22       2701
+#define SYS_NAME_ID_amd64_linux24       2702
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 
  * files (i.e in afs/param.h)

@@ -1087,7 +1087,7 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
 	}
 #endif /* AFS_SUN57_64BIT_ENV */
 
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV) && !defined(AFS_AMD64_LINUX20_ENV)
 	struct iparam32 dst32;
 
 #ifdef AFS_SPARC64_LINUX24_ENV

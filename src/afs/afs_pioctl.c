@@ -208,7 +208,7 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 	}
 #endif /* defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64) */
 
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV) && !defined(AFS_AMD64_LINUX20_ENV)
 	struct afs_ioctl32 dst32;
 
 #ifdef AFS_SPARC64_LINUX24_ENV

@@ -37,6 +37,8 @@ char*	newsp;
 {
 #if defined(AFS_IA64_LINUX20_ENV)
 	register unsigned long sp __asm__("r12");
+#elif defined(AFS_AMD64_LINUX24_ENV)
+        register unsigned long sp __asm__("sp");
 #else
 #error	"You need to update stack pointer register for this platform"
 #endif

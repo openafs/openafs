@@ -88,7 +88,9 @@ RCSID("$Header$");
  * define "LONG_IS_32_BITS" only if sizeof(long)==4.
  * This avoids use of bit fields (your compiler may be sloppy with them).
  */
-#if !defined(cray) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
+
+/* XXX shouldn't this be !AFS_64BIT_ENV ? */
+#if !defined(cray) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV) && !defined(AFS_AMD64_LINUX20_ENV)
 #define	LONG_IS_32_BITS
 #endif
 

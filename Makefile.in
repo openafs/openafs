@@ -314,6 +314,8 @@ login: project kauth rxkad
 		${COMPILE_PART1} login ${COMPILE_PART2} ;; \
 	parisc_linux24) \
 		echo Skipping pam/login for parisc_linux24 ;; \
+	amd64_linux24) \
+		echo Skipping pam/login for amd64_linux24 ;; \
 	sun*_* | hp_ux11* | *linux* | *fbsd* ) \
 		${COMPILE_PART1} pam ${COMPILE_PART2} ;; \
 	ppc_darwin* | *_obsd* ) \
