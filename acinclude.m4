@@ -91,6 +91,7 @@ dnl Various compiler setup.
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
 AC_TYPE_SIGNAL
+COMPILER_HAS_FUNCTION_MACRO
 
 dnl Checks for programs.
 AC_PROG_INSTALL
