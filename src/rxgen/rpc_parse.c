@@ -37,12 +37,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <string.h>
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#else
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
 #endif
 #include "rpc_util.h"
 #include "rpc_scan.h"

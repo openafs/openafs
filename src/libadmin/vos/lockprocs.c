@@ -8,11 +8,12 @@
  */
 
 #include "lockprocs.h"
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#else
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
 #endif
 
 /* Finds an index in VLDB entry that matches the volume type, server, and partition.

@@ -27,11 +27,12 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#ifdef HAVE_STRINGS_H
+#include <string.h>
+#else
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_STRINGS_H
-#include <string.h>
 #endif
 #include <sys/stat.h>
 #include <afs/stds.h>

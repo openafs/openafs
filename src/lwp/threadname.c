@@ -21,11 +21,12 @@
 
 #include <afs/param.h>
 #include <afsconfig.h>
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#else
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
 #endif
 #if defined(AFS_PTHREAD_ENV)
 #include <pthread.h>

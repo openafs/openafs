@@ -11,11 +11,12 @@
 #include <afsconfig.h>
 #include <afs/stds.h>
 #include <stdio.h>
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#else
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_STRINGS_H
-#include <strings.h>
 #endif
 #include <ctype.h>
 #ifdef AFS_NT40_ENV
