@@ -730,7 +730,8 @@ out_valid:
     return 1;
 
 out_bad:
-    d_drop(dp);
+    /* d_drop(dp); Let cached_lookup do this so shrink_dcache_parent 
+       is called */
 #ifdef AFS_LINUX24_ENV
     unlock_kernel();
 #endif
