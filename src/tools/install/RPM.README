@@ -8,14 +8,14 @@
 ## License.  For details, see the LICENSE file in the top-level source
 ## directory or online at http://www.openafs.org/dl/license10.html
 ##
-## openafs-tools, Version 1.2.2 ##
+## openafs-tools, Version 1.2.5 ##
 
 Follow these steps to create a binary distribution RPM for the 
 openafs-tools-cmd package no Red Hat Linux:
 
 1) Copy the spec file to your SPECS directory.
 
-  cp openafs-tools-cmd-1.2.2-1.spec /usr/src/redhat/SPECS/
+  cp openafs-tools-cmd-1.2.5-1.spec /usr/src/redhat/SPECS/
 
 2) Create the source package by running:
 
@@ -27,7 +27,7 @@ openafs-tools-cmd package no Red Hat Linux:
 3) Now you can create the RPM:
 
   cd /usr/src/redhat/SPECS
-  rpm -ba --clean openafs-tools-cmd-1.2.2-1.i386.rpm
+  rpm -ba --clean openafs-tools-cmd-1.2.5-1.i386.rpm
 
   The RPM is now ready for use in the 
 /usr/src/redhat/RPMS directory.

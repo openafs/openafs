@@ -35,6 +35,8 @@ if [ $1 = "help" ]; then
   echo -e "\t-adminPassword (or -p) password: the administrative\n\t    password of the cell.  Ignored if this is not a server"
   echo -e "\t-existingServer (or -e) name: the name of an\n\t   existing server already in the cell.  Ignored if\n\t   this is not an additional server"
   echo -e "\t-scriptDirectory (or -d) name: the name of the\n\t   directory containing these OpenAFS installation\n\t   scripts"
+  echo -e "\t-krb5 (or -k): Set up Kerberos 5 authentication on this\n\t   machine.  Assumes this machine is a client of a Kerberos\n\t   realm that has the same name as the cell being created,\n\t   but all caps.  Ignored if this is not a first server."
+  echo -e "\t-kadminPassword (or -ka) password: the administrative\n\t   password of the kerberos realm.  Ignored if the -krb5\n\t   flag is not set."
   echo -e "\t-noConf (or -n): Do not ask for confirmation before\n\t    performing the installation."
   echo -e "\thelp: Display this help dialogue"
   echo
@@ -57,7 +59,7 @@ while [ $# -gt 0 ]; do
   if [ $# -ne 0 ]; then 
     shift
   fi
-  if [ $flag != "-noConf" -a $flag != "-n" ]; then
+  if [ $flag != "-noConf" -a $flag != "-n" -a $flag != "-krb5" -a $flag != "-k" ]; then
     val=$1
     if [ $# -ne 0 ]; then 
       shift
@@ -126,10 +128,16 @@ while [ $# -gt 0 ]; do
   else
   if [ $flag = "-noConf"  -o $flag = "-n" ]; then
      noConf=$val
+  else 
+  if [ $flag = "-krb5"  -o $flag = "-k" ]; then
+     krb5=$val
+  else
+  if [ $flag = "-kadminPassword" -o $flag = "-ka" ]; then
+     kadminPassword=$val
   else
     echo Invalid flag $flag.  Use \"install_afs help\" for syntax.
     exit 0;
-  fi fi fi fi fi fi fi fi fi fi
+  fi fi fi fi fi fi fi fi fi fi fi fi
 done
 
 # Collect variables not given:
@@ -263,6 +271,31 @@ if [ $serverType -ne $notServer ]; then
     if [ $adminPassword != $adminPassword2 ]; then
       echo -e "Passwords do not match"
       adminPassword=""
+    fi fi fi
+  done
+fi
+
+if [ $krb5 -ne 0 ]; then 
+  while [ -z $kadminPassword ]; do
+    echo -ne "Provide the administrative password of the Kerberos realm: "
+    stty -echo echonl
+    read kadminPassword
+    stty echo
+    echo -ne "Please confirm the password: "
+    stty -echo echonl
+    read kadminPassword2
+    stty echo
+
+    if [ -z $kadminPassword ]; then
+      echo -e "You must give a password"
+    else 
+    if [ -z $kadminPassword2 ]; then
+      echo -e "You must confirm the password"
+      adminPassword=""
+    else
+    if [ $kadminPassword != $kadminPassword2 ]; then
+      echo -e "Passwords do not match"
+      kadminPassword=""
     fi fi fi
   done
 fi
@@ -430,21 +463,35 @@ if [ $serverType -ne $notServer ]; then
     echo kill ${bosserver_process%% /*}
     kill ${bosserver_process%% /*}
 
-    /usr/afs/bin/kaserver -noauth &
+    if [ -z $krb5 ]; then
+      /usr/afs/bin/kaserver -noauth &
  
-    echo Configuring kaserver
-    kas create afs -initial_password $afsPassword -cell $cellName -noauth
-    kas examine -name afs -cell $cellName -noauth
-    kas create admin -initial_password $adminPassword -cell $cellName -noauth
-    kas setfields admin -flags admin -cell $cellName -noauth
-    kas examine -name admin -cell $cellName -noauth
+      echo Configuring kaserver
+      kas create afs -initial_password $afsPassword -cell $cellName -noauth
+      kas examine -name afs -cell $cellName -noauth
+      kas create admin -initial_password $adminPassword -cell $cellName -noauth
+      kas setfields admin -flags admin -cell $cellName -noauth
+      kas examine -name admin -cell $cellName -noauth
     
-    kaserver_process=$(ps -Ao pid,cmd | grep kaserver)
-    echo kill ${kaserver_process%% /*}
-    kill ${kaserver_process%% /*}
+      kaserver_process=$(ps -Ao pid,cmd | grep kaserver)
+      echo kill ${kaserver_process%% /*}
+      kill ${kaserver_process%% /*}
+   
+    else 
+
+      echo Setting up krb5
+      kadmin -p admin/admin -w $kadminPassword -q "addprinc -pw $adminPassword afs"
+      kadmin -p admin/admin -w $kadminPassword -q "modprinc -kvno 0 afs"
+      kadmin -p admin/admin -w $kadminPassword -q "ktadd -k /etc/krb5.keytab -e des-cbc-crc:afs3 afs"
+      asetkey add 1 /etc/krb5.keytab afs
+      kadmin -p admin/admin -w $kadminPassword -q "ktremove -k /etc/krb5.keytab afs all"
+      kadmin -p admin/admin -w $kadminPassword -q "addprinc -pw $adminPassword admin"
+      kadmin -p admin/admin -w $kadminPassword -q "ktadd -k /etc/krb5.keytab admin" 
+
+    fi
 
     echo Bootstrapping ptserver
-    echo -e "admin 128/20 1 -204 -204\nsystem:administrators 130/20 -204 -204 -204\n   admin   1\n" | pt_util -p /usr/afs/db/prdb.DB0 -w
+    echo -e "admin 128/20 1 -204 -204\nsystem:administrators 130/20 -204 -204 -204\n   admin   1\n" | /usr/afs/bin/pt_util -p /usr/afs/db/prdb.DB0 -w
 
   fi
 
@@ -464,8 +511,10 @@ if [ $serverType -eq $firstServer ]; then
 #
   echo Starting the Database Server Processes
 #
-  echo bos create -server $machineName -instance kaserver -type simple -cmd /usr/afs/bin/kaserver -cell $cellName -localauth
-  bos create -server $machineName -instance kaserver -type simple -cmd /usr/afs/bin/kaserver -cell $cellName -localauth
+  if [ -z $krb5 ]; then
+    echo bos create -server $machineName -instance kaserver -type simple -cmd /usr/afs/bin/kaserver -cell $cellName -localauth
+    bos create -server $machineName -instance kaserver -type simple -cmd /usr/afs/bin/kaserver -cell $cellName -localauth
+  fi
   echo bos create -server $machineName -instance buserver -type simple -cmd /usr/afs/bin/buserver -cell $cellName -localauth
   bos create -server $machineName -instance buserver -type simple -cmd /usr/afs/bin/buserver -cell $cellName -localauth
   echo bos create -server $machineName -instance ptserver -type simple -cmd /usr/afs/bin/ptserver -cell $cellName -localauth
@@ -552,9 +601,16 @@ echo Continuing with Verifying ths AFS Initialization Script
 echo /etc/rc.d/init.d/afs start
 /etc/rc.d/init.d/afs start
 if [ $serverType -ne $notServer ]; then
-  # klog in as admin
-  echo klog admin -password 
-  klog admin -password $adminPassword
+ 
+  if [ -z $krb5 ]; then
+    # klog in as admin
+    echo klog admin -password 
+    klog admin -password $adminPassword
+  else
+    kinit -t /etc/krb5.keytab admin
+    aklog
+  fi
+
   # verify klog worked correctly:
   echo tokens
   tokens
@@ -616,9 +672,16 @@ if [ $serverType -eq $firstServer ]; then
   /etc/rc.d/init.d/afs start
   cd /afs
 
-  # klog in as admin
-  echo klog admin -password 
-  klog admin -password $adminPassword
+  if [ -z $krb5 ]; then
+    # klog in as admin
+    echo klog admin -password 
+    klog admin -password $adminPassword
+  else
+    kinit -t /etc/krb5.keytab admin
+    aklog
+    kadmin -p admin/admin -w $kadminPassword -q "ktremove -k /etc/krb5.keytab admin all"
+    kadmin -p admin/admin -w $kadminPassword -q "cpw -pw $adminPassword admin"
+  fi
 
   # Wait for Ubik to elect a quorum
   echo Waiting for a quorum election . . .
@@ -629,8 +692,6 @@ if [ $serverType -eq $firstServer ]; then
   echo fs examine /afs/$cellName
   fs examine /afs/$cellName
 
-#
-#
 fi
 fs checkvolumes
 #
