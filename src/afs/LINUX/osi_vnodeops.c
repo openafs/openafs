@@ -675,67 +675,14 @@ static int afs_linux_revalidate(struct dentry *dp)
     return -code ;
 }
 
-/* Validate a dentry. Return 0 if unchanged, 1 if VFS layer should re-evaluate.
- * In kernels 2.2.10 and above, we are passed an additional flags var which
- * may have either the LOOKUP_FOLLOW OR LOOKUP_DIRECTORY set in which case
- * we are advised to follow the entry if it is a link or to make sure that 
- * it is a directory. But since the kernel itself checks these possibilities
- * later on, we shouldn't have to do it until later. Perhaps in the future..
- */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,10)
 static int afs_linux_dentry_revalidate(struct dentry *dp, int flags)
 #else
 static int afs_linux_dentry_revalidate(struct dentry *dp)
 #endif
 {
-    int code;
-    cred_t *credp;
-    struct vrequest treq;
-    struct vcache *vcp = (struct vcache*)dp->d_inode;
-    struct vcache *dvcp = (struct vcache*)dp->d_parent->d_inode;
-
-
-    AFS_GLOCK();
-#ifdef AFS_LINUX24_ENV
-    lock_kernel();
-#endif
-
-    /* Make this a fast path (no crref), since it's called so often. */
-    if ((dvcp->states & CStatd)) {
-         if (dp->d_time != hgetlo(dvcp->m.DataVersion))
-              goto out_bad;
-         goto out_valid;
-    }
-    credp = crref();
-    code = afs_InitReq(&treq, credp);
-    if (!code)
-        code = afs_VerifyVCache(dvcp, &treq);
-    crfree(credp);
-    if (code)
-        goto out_bad;
-    if (dp->d_time != hgetlo(dvcp->m.DataVersion))
-        goto out_bad;
-
-out_valid:
-    if (vcp) {
-    if (*dp->d_name.name != '/' && vcp->mvstat == 2) /* root vnode */
-	check_bad_parent(dp); /* check and correct mvid */
-        /*vcache2inode(vcp);*/
-    }
-#ifdef AFS_LINUX24_ENV
-    unlock_kernel();
-#endif
-    AFS_GUNLOCK();
-
-    return 1;
-
-out_bad:
-    /* d_drop(dp); Let cached_lookup do this so shrink_dcache_parent 
-       is called */
-#ifdef AFS_LINUX24_ENV
-    unlock_kernel();
-#endif
-    AFS_GUNLOCK();
+    /* Force revalidation as this may be a different client than the
+       one which caused an entry to get cached */
     return 0;
 }
 
