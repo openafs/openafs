@@ -1,0 +1,299 @@
+Since 1.3.62:
+   * All of the resource files have been restructured to adhere to
+     a set of rules IBM implemented for loading string resources.
+     These rules had either been forgotten or were not discovered
+     by folks working on the OpenAFS sources.  The end result was
+     memory corruption.  This is primary item which was preventing
+     the AFS Server from working.
+
+   * Increased the size of the maximum ticket size stored in a token
+     from 344 bytes to 12,000.  Increased the buffers used to convey
+     messages between the pioctl() caller and the SMB Server from
+     1000 bytes to 12,512.  The code appeared to have been writing
+     above the top of the stack by quite a few number of bytes.
+     (The increased ticket size is necessary for the next item.)
+
+   * When obtaining AFS Tokens via KFW, krb524 is no longer required.
+     Instead the raw Kerberos 5 ticket is used in its entirety.  This
+     is extremely important as it allows us to use pure Kerberos 5 KDCs
+     as the source of the AFS authentication.  The use of up to 12,000 byte
+     tickets will allow tickets produced by all versions of Microsoft
+     Active Directory to be used.
+      - create a user account.       
+      - designate it DES only
+      - disable pre-auth
+      - specify its UPN to be  "afs@realm"
+      - assign a SPN of "afs/cellname" to the UPN with setspn.exe
+
+   * Do not enforce the funky 8dot3 pattern matching rule that the first "."
+     is special when using long file names.  (you must use "*.*" and not "*")
+     Instead only enforce it when performing 8dot3 searches. 
+
+   * Fixed the DST problem with creation times being set one hour ahead
+
+   * Fixed the problem when using \\afs\cell-alias.  For example, 
+     \\afs\uncc instead of \\afs\uncc.edu.  Do not a new cell struct
+     for the alias name; instead simply expand the name.  One of the
+     symptoms of this problem was a loss of acquired tokens.
+
+   * Fixed the AFS Shell Extension.  The Symbolic Link menu was empty 
+     of strings.  (Only English strings provided.)
+
+   * Fixed the installer to properly replace in use files.  
+
+   * Fixed the build system to cleanup generated component version files
+
+   * The release build compiled with MSVC 6.0 compiler to avoid the 
+     afsd_service.exe shutdown crash.  This does not solve the problem
+     but simply avoids it for the time being.
+
+Since 1.3.61:
+
+ * fix afslogon.dll to not corrupt memory when High Security mode
+   is not used.  
+
+ * fix afsd_service.exe to not attempt to restore the stack when
+   an exception occurs.  (not safe in multi-threaded programs)
+
+ * fix uninstaller to properly remove the CRT and MFC DLLs
+ 
+ * remove a Message Box from afscreds.exe when getcellconfig()
+   fails on a kerberos realm which is not a cell
+
+The following is a list of changes to the OpenAFS for Window client
+since 1.3.60.
+
+ * "fs setserverprefs" will leave afsd service deadlocked
+
+ * "vos listaddrs" will core dump
+
+ * installer sets the appropriate keys to support Integrated Logon
+
+ * installer disables the "Find Lana by Name" functionality as it
+   was causing headaches for many users
+
+ * fix the intermittent crash of the power management thread when
+   shutting down the AFS Client Service
+
+ * optimizes the obtain drive mount list functionality which is 
+   executed every time the mount tab in afscreds.exe and afs_config.exe
+   are refreshed.  (this happens a lot)
+
+ * fix the service shutdown logic.  add the STOP_PENDING state
+   and do not accept additional service events after we declare
+   ourselves STOPPED.
+
+The following is a list of changes to the OpenAFS for Window client
+since 1.2.10.
+
+* flexelint was run against the source tree and hundreds (perhaps 
+  thousands) of corrections were applied to ensure prototypes 
+  were in use; types were used consistently; variables were 
+  initialized; unused variables were removed; etc.
+
+* A wide variety of instrumentation was added including the 
+  ability to produce a stack trace from within afsd_service.exe
+  when it crashes.
+
+* Dynamic configuration of the RDRtimeout value based upon the
+  LanMan Workstation Session Timeout
+
+* The mount root no longer needs to be called "/afs".  This 
+  is now set by a registry value "MountRoot" within the key
+  HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters
+
+* The cell list is now only read out of afsdcell.ini when the
+  file changes instead of each time a cell is resolved.
+
+* Thread synchronization was added to cm_server.c and ktc_nt.c
+
+* All calls to GlobalAlloc()/GlobalFree() were replaced with 
+  calloc()/free().  The Global functions were needed on Windows 3.x
+  but have caused a variety of problems on the Win32 platforms.
+  Avoiding them is highly recommended by several Microsoft 
+  Knowledgebase articles
+
+* Support for Symbolic Links added to the AFS Shell Extension
+
+* Added a registry value "OverlayEnabled" to determine if
+  Shell Extension Overlays should be enabled.  
+  HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters
+
+* New Build system to support VC6, VC.NET, VC.NET2003 compilers and
+  separate trees for checked and free builds.  Build system supports
+  a custom directory src\WINNT\extra which can be used as a grafting
+  location of organization specific additions to the build tree.
+
+* New installer built using NSIS 2.0.  
+
+* Named all kernel objects in order to allow them to be monitored
+  with tools such as SysInternals' ProcExp.exe.
+  
+* Introduced new EventLog framework for AFSD
+
+* Introduced Power Management interface to AFSD for Standby and 
+  Hibernate modes to allow cache to be flushed prior to network
+  disconnect
+
+* Utilize Win32 DNSQuery API instead of internal routines.  This 
+  allows DNS SRV queries to be sent to all current domain name 
+  servers.  Not just one specified in an INI file.  DNS is now
+  always activated.
+
+* "NetbiosName" registry value may be used to specify a fixed
+  Netbios Name such as "AFS" to be used instead of "HOSTNAME-AFS"
+  when the loopback adapter is in use.  If you need to use the 
+  old notation with a loopback adapter installed specify a registry
+  entry of 
+
+     "NetbiosName" REG_EXPAND_SZ = "%COMPUTERNAME%-AFS"
+
+* Refactor all modules which depend on LAN Adapter and NetbiosName
+  determination in a new library: lanahelper.lib.  This allows for
+  consistent behavior throughout the product.
+
+* Move the afsd.log and afsd_init.log files to the directory specified
+  by the "TEMP" environment variable.  This is usually %WINDIR%\TEMP
+  for services.  Added the Date to the log entries.
+
+* New registry value "RxMaxMTU" used to limit the size of the RX 
+  packets sent by the AFS Client Service to the Server.  In order
+  to enable OpenAFS to work across the Cisco IPSec VPN the packet
+  size must be restricted to 1264 or smaller.  The latest NSIS
+  installer sets a value of 1260 by default.
+
+* New registry value "RxNoJumbo" to disable the use of Jumbo Rx
+  packets.  This is not needed in order to work across the Cisco
+  VPN but might be needed for other network environments.  This
+  value is not set by the NSIS installer.
+
+* New registry value "HideDotFiles" is used to apply the Hidden
+  attribute to files whose names begin with a '.'.   This value
+  is set by the NSIS installer.
+
+* New registry value "MaxMpxRequests" allows the maximum number
+  of multiplexed sessions to be configured at run time.  This
+  value is not set by the NSIS installer.  The default value is
+  50.
+
+* New registry value "MaxVCPerServer" allows the maxmimum number
+  of VCs per server to be configured at run time.  This value is
+  not set by the NSIS installer.  The default value is 100.
+
+* New registry value "AllSubmount" allows the "all" submount to
+  be disabled by setting its value to 0x00.
+
+* Allow cells names to be valid mount points 
+    \\<netbiosName>\<cellname>
+
+* Store the active state of drive mappings in order for afscreds.exe
+  to restore them upon startup
+
+* Add exception handling to generate a Stack Trace to the afsd_init.log
+  file if one happens to occur.
+
+* Add lots of logging to help detect the cause of invalid SMB packets
+
+* Enable Kerberos for Windows to be used to obtain AFS Tokens via
+  conversion of Kerberos 5 "afs" service tickets.  Supports auto-
+  renewal of expiring tokens as long as afscreds.exe is running.
+
+* New afscreds.exe command line options:
+    -A = autoinit
+    -M = renew drive maps
+    -N = ip address change detection
+    -Z = unmap drives
+
+* New registry value "EnableKFW" in {HKCU,HKLM}SOFTWARE\OpenAFS\Client 
+  determines whether or not MIT Kerberos for Windows should be used
+  to obtain tokens via Kerberos 5 tickets.
+
+* New registry value "AfscredsShortcutParams" in 
+  {HKCU,HKLM}SOFTWARE\OpenAFS\Client 
+  determines the command line parameters to be specified when "fixing"
+  the AFS Shortcut in the user's startup folder.
+
+* The "ShowTrayIcon" registry value has been moved from 
+  HKLM\Software\TransarcCorporation\AFS Client\AfsCreds to
+  {HKCU,HKLM}SOFTWARE\OpenAFS\Client 
+  
+* The <cell name> registry values used to store the token expiration
+  reminders have been moved from 
+  HKLM\Software\TransarcCorporation\AFS Client\AfsCreds to
+  {HKCU,HKLM}SOFTWARE\OpenAFS\Client\Reminders
+ 
+* Obtain the Logon User Name from the Explorer key when available
+
+* new text document doc\txt\winnotes\registry.txt lists all registry
+  values used by OpenAFS (excluding the AFS Server)
+
+* BUG: rx_securityClass objects were not properly reference 
+  counted and were never freed.  
+
+* BUG: reduce the number of conditions under which CM_ERROR_TIMEOUT
+  would be generated.  The existence of a server does not imply
+  that it is not down.  If all of the servers for a cell are down
+  return CM_ERROR_NOSUCHVOLUME instead.  This prevents the Explorer
+  Shell from hanging.
+
+* BUG: the directory name lookup cache failed to free the entries
+  in the cache when the name cache entries cycled.  The entries
+  in the cache would become dereferenced without being freed.
+
+* BUG: fs setserverprefs could be executed without Administrator
+  privileges
+
+* BUG: the number of allocated NCB objects (100) exceeded the number
+  which could actually be waited upon by the kernel (64).  Any objects
+  which were utilized above the limit could never have event completions
+  detected.
+
+* BUG: smb_username_t objects were not being reference counted and 
+  were not properly freed.
+
+* BUG: smb_tid_t objects could under unusual circumstances be freed
+  before they were no longer referenced.
+
+* BUG: smb_fid_t object pointer were frequently used even when 
+  their value could be NULL.   They were not properly released and
+  therefore they were never freed.
+
+* BUG: smb_packet_t data structures were not completely initialized
+  upon creation
+
+* BUG: when Rx produces a CM_ERROR_NOIPC error do not return "Access
+  Denied" because that causes the Explorer Shell to try again until
+  access is obtained.  Instead return "Remote Resources" which allows 
+  the shell to move on and treat the error as transient.
+
+* BUG: when initializing the NCBreturns structure, separate Event objects
+  were created for each NCB although a single Event object was supposed
+  to be shared by all.
+
+* BUG: smb_dirSearch_t objects were not being properly referenced counted
+  or freed.
+
+* BUG: smb_tran2Packet_t objects were not being properly referenced 
+  counted or freed.
+
+* BUG: directory path creation did not handle the case of multiple
+  directories requiring creation in one attempt
+
+* BUG: SMB requests which required an Extended Response were ignored.
+  This prevented some files from being written to AFS volumes.
+
+* BUG: character strings were being freed even after they were 
+  inserted into in use data structures
+
+* BUG: inconsistent usernames were used when High Security mode was
+  enabled.  (there is still much to do in this area)
+
+* BUG: pioctl() calls which require out of band RPC operations were
+  susceptible to race conditions when performed by multiple processes
+
+* BUG: memory allocation and deallocation crossed instances of the
+  C Runtime Library producing memory leakage and corruption in 
+  afscreds and the client configurator.
+
+
+

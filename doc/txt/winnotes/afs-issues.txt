@@ -1,0 +1,132 @@
+This file is a rough list of known issues with the 1.3.63 release of OpenAFS
+on Windows.  This list is not complete.  There are probably other issues 
+which can be found in the RT database or on the mailing list.
+
+
+(1) File/Directory access is not integrated with windows security 
+
+(2) tokens are assigned to the service on a system global basis.  Therefore, 
+all users and processes on the machine are able to access files with the 
+list of available tokens.  This is dangerous if anonymous logins are enabled;
+or if multiple users are on the machine (ie, Terminal Server or XP user 
+switching)
+
+(3) SMB LANA list is static.  
+
+(3a) IP address changes cause the service to terminate due to an assertion 
+in smb_Listener() thread.
+
+(3b) New IP addresses do not get bound
+
+(3c) Loopback adapter hack:
+  (i)   prevents use of AFS Gateway 
+  (ii)  requires installation of loopback adapter
+  (iii) the list of hack adapters is incomplete (VMWare, MS TV/Video, ...)
+  (iv)  incompatible with Windows 2000 and earlier
+
+(4) Performance of the AFS Client Service code simply sucks.  The average 
+read, write, and delete times for AFS are more than ten times slower than 
+the equivalent Windows File Share operations.  The Window File Share operations 
+are not all that fast.  It has been claimed that the Windows AFS functions are
+one hundred times slower than the equivalent operations on Linux.  I would not 
+be at all surprised.  The best we can do without rewriting AFS as a IFS would
+be to match the Windows File Share performance.  I believe the threading model
+is imposing significant delays in the movement of data from between the SMB 
+and RX protocol operations. There was also an issue with large numbers of 
+page faults which have since been fixed.
+
+(5) The AFS SMB code logs numerous 1002 events each day.  This is caused 
+when an invalid SMB message are being processed from within the client.  
+It is unclear if the invalid SMB message has been received or is being sent.
+
+(6) The AFS client service causes MRxSMB to produce 3019 events.  This is probably 
+the result of either malformed messages or invalid LANA values being used.
+
+(7) There appear to be directory locking problems associated with renaming 
+directories.
+
+(8) File termination differences between Win9x and nt/w2k/xp (Jim Peterson)
+
+(9) How to silence "Explorer" when the mapped drive is not available?
+
+(10) Convert to IFS!!!!!!
+
+(11) Kerberos 5 integration:
+(11f) allow arbitrary cell to realm mappings
+(11g) modify UI to allow user to choose whether to authenticate
+      using Kerberos or AFS 
+(11h) modify UI to allow user to select an existing principal to
+      be used to request AFS tokens
+(11i) modify UI to display Kerberos 5 ticket info (principal, 
+      ticket lifetimes, etc) 
+
+(12) Default cell is system global just like everything else.  Different
+     users logging in via Integrated Logon or using afscreds.exe cannot
+     be automatically prompted for different cells
+
+(13) AFS Integrated Logon:
+(13a) Obtain tokens via Kerberos 5
+(13b) If using Kerberos, need to figure out a means of passing credentials
+      into the user space until such time as I finish the new credential
+      cache service.
+(13c) If network is not available must store the username and password 
+      somewhere until such time as the network starts.
+
+(14) Loopback adapter is not always installed with bindings to "File and 
+     Printer Sharing for Microsoft Networks" or "Client for Microsoft 
+     Networks".   If these are not bound then SMB names will successfully
+     be published to a list of zero which causes the AFS not to function.
+     We need a way to test whether the Loopback adapter is properly bound
+     so we know if it is safe to use.  Actually, it is worse.  Even with
+     the bindings on Win2000 the loopback adapter frequently fails to publish
+     SMB names.  Of course, the error messages report nothing.
+
+(15) If a drive mapping is "in use", then afscreds cannot be used to Modify
+     or Delete the Mapping.  If a map to "H:" to \afs\cell\foo" with 
+     description "home" is modified to point to \afs\cell\bar, then the 
+     description must be unique.  "home" cannot be reused.  We need a way 
+     to remove "home" from the submount list.  
+
+(16) WinAFS configuration values are still stored in old style INI files 
+     instead of using the Registry.  This is especially important for
+     per-user values such as drive mappings
+
+(17) Drive mappings are lost on WinXP after return from Standby.  (This could
+     be because the AFS Client Service fails OR because the RX protocol is
+     temporarily unable to access the Cell due to network restore timing
+     issues.)
+
+(18) No support for Unicode filenames.  Translations make file unreadable
+
+(19) No auto-restart on service failure
+
+(20) Better EventLog handling
+
+(21) Named Pipes Support
+
+(22) Memory Mapped File support
+
+(23) Large file support
+
+(24) Execution of debug builds indicates corruption of run time library 
+     allocated memory blocks due to buffer overruns.  This may be the 
+     result of improper object locking or out of bounds access.
+
+(25) AFS Shell Extensions do not work on UNC paths of the form \\AFS\...
+     They only work on mapped drives.
+
+(26) Implement persistent disk based cache which survives restarts
+
+(27) NSIS Installer issues for re-installs 
+     (a) AFS Server Configurator should not start on update
+     (b) AFS Server Volumes and Configuration Data should not be 
+         removed on uninstall
+
+(28) The User Interface needs to be re-designed to separate the per-user
+     and per-machine settings.  All of the new registry items need to 
+     be added to the UI
+
+(29) Windows XP SP2 and Windows 2003 SP1 are going to lockdown the 
+     machine.  We need to add code to programatically open the 
+     Internet Connection Firewall to the ports needed by the various
+     AFS services.
