@@ -50,8 +50,8 @@
  */
 struct DiskPartition {
     struct DiskPartition *next;
-    char	name[32];	/* Mounted partition name */
-    char	devName[32];	/* Device mounted on */
+    char	*name;		/* Mounted partition name */
+    char	*devName;	/* Device mounted on */
     Device	device;		/* device number */
     int		lock_fd;	/* File descriptor of this partition if locked; otherwise -1;
     				   Not used by the file server */
