@@ -2625,7 +2625,7 @@ DoEnglish:
    !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afsserver_1033.dll"            "$INSTDIR\Common\afsserver_1033.dll" "$INSTDIR"
    !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\afssvrcfg_1033.dll"            "$INSTDIR\Common\afssvrcfg_1033.dll" "$INSTDIR"
    !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1033.dll"  "$INSTDIR\Common\TaAfsAccountManager_1033.dll" "$INSTDIR"
-   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1033.dll"          "$INSTDIR\Common\TaAfsApplLib_1033.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1033.dll"          "$INSTDIR\Common\TaAfsAppLib_1033.dll" "$INSTDIR"
    !insertmacro ReplaceDLL "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1033.dll"   "$INSTDIR\Common\TaAfsServerManager_1033.dll" "$INSTDIR"
    File "..\..\doc\help\en_US\afs-cc.CNT"
    File "..\..\doc\help\en_US\afs-cc.hlp"
