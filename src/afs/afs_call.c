@@ -1148,6 +1148,8 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
     if (current->thread.flags & THREAD_IA32)
 #elif defined(AFS_PPC64_LINUX20_ENV)
     if (current->thread.flags & PPC_FLAG_32BIT) 
+#elif defined(AFS_S390X_LINUX20_ENV)
+    if (current->thread.flags & S390_FLAG_31BIT) 
 #else
 #error Not done for this linux version
 #endif

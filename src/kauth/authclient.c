@@ -749,7 +749,7 @@ ka_ChangePassword(char *name, char *instance, struct ubik_client * conn,	/* Ubik
     afs_int32 code;
 
     LOCK_GLOBAL_MUTEX
-#ifdef AFS_S390_LINUX20_ENV
+#if defined(AFS_S390_LINUX20_ENV) && !defined(AFS_S390X_LINUX20_ENV)
 	code =
 	ubik_Call_New(KAM_SetPassword, conn, 0, name, instance, 0, 0,
 		      *newkey);

@@ -145,7 +145,8 @@ DateOf(atime)
 {
     static char tbuffer[30];
     register char *tp;
-    tp = ctime((time_t *) & atime);
+    time_t t = (time_t) atime;
+    tp = ctime(&t);
     if (tp) {
 	strcpy(tbuffer, tp);
 	tbuffer[24] = 0;	/* get rid of new line */

@@ -73,11 +73,16 @@ extern char PRE_Block;		/* from preempt.c */
 #define MINFRAME 128
 #define STACK_ALIGN 8
 #else
+#ifdef __s390x__
+#define MINFRAME    160
+#define STACK_ALIGN 8
+#else
 #ifdef __s390__
 #define MINFRAME    96
 #define STACK_ALIGN 8
 #else
 #define STACK_ALIGN 4
+#endif
 #endif
 #endif
 

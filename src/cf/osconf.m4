@@ -439,7 +439,7 @@ case $AFS_SYSNAME in
 	s390_linux22)
 		CC="gcc"
 		CCOBJ="gcc"
-		LD="gcc"
+		LD="ld"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CC="$CC"
@@ -456,7 +456,7 @@ case $AFS_SYSNAME in
 	s390_linux24)
 		CC="gcc"
 		CCOBJ="gcc"
-		LD="gcc"
+		LD="ld"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CC="$CC"
@@ -466,6 +466,23 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE"
+		YACC="bison -y"
+		SHLIB_LINKER="${MT_CC} -shared"
+		;;
+
+	s390x_linux24)
+		CC="gcc"
+		CCOBJ="gcc"
+		LD="ld"
+		KERN_OPTMZ=-O2
+		LEX="flex -l"
+		MT_CC="$CC"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_LIBS="-lpthread"
+		PAM_CFLAGS="-O -Dlinux -DLINUX_PAM -fPIC"
+		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		TXLIBS="-lncurses"
+		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE -D__s390x__"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;

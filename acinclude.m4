@@ -591,6 +591,9 @@ else
 		s390-*-linux*)
 			AFS_SYSNAME="s390_linuxXX"
 			;;
+		s390x-*-linux*)
+			AFS_SYSNAME="s390x_linuxXX"
+			;;
 		sparc-*-linux*)
 			AFS_SYSNAME="sparc_linuxXX"
 			;;

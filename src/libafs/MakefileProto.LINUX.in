@@ -61,6 +61,10 @@ DEFINES = $(COMMON_DEFINES)
 CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char
 DEFINES = $(COMMON_DEFINES) -D__s390__ 
 
+<s390x_linux22 s390x_linux24>
+CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char
+DEFINES = $(COMMON_DEFINES) -D__s390x__ 
+
 <sparc_linux22 sparc_linux24>
 LD = ld -m elf32_sparc
 CCFLAGS = $(COMMON_KERN_CFLAGS) -mcpu=v8 -mno-fpu -fcall-used-g5 -fcall-used-g7
@@ -152,6 +156,8 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-x86_64 asm
 <s390_linux22 s390_linux24>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-s390 asm
+<s390x_linux22 s390x_linux24>
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-s390x asm
 <ppc_linux22 ppc_linux24>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ppc asm 
 <ppc64_linux24>
