@@ -12,7 +12,9 @@ SYS_NAME=@AFS_SYSNAME@
 
 SHELL = /bin/sh
 
-LINUX_VERS=dummy
+LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
+LINUX_VERSION=@LINUX_VERSION@
+
 include ../config/Makefile.${SYS_NAME}
 
 INSTALLex = ${INSTALL} -m 755
@@ -57,16 +59,17 @@ CMLIBS = ${VLIB}/libsys.a \
 
 LIBS = ${FSLIBS} 
 
-include ../config/Makefile.version
+all: install
 
+#
+# Build targets
+#
 cacheout: cacheout.o
 	$(CC) ${CFLAGS} -o cacheout cacheout.o ${LIBS} ${XLIBS} ${CMLIBS}
 
 cacheout.o: cacheout.c
 
-all: fs up cmdebug fstrace kdump gcpags kdump64
-
-${DESTDIR}/bin/fs ${DESTDIR}root.server/usr/afs/bin/fs: fs
+${DESTDIR}/bin/fs ${DESTDIR}/root.server/usr/afs/bin/fs: fs
 	${INSTALL} -s $? $@
 
 ${DESTDIR}/bin/up: up
@@ -87,15 +90,13 @@ ${DESTDIR}/etc/kdump: kdump
 		ln -fs kdump.IP20 ${DESTDIR}/etc/kdump.IP22; \
 		ln -fs kdump.IP20 ${DESTDIR}/etc/kdump.IP32; \
 		for f in kdump.IP??; \
-		do ${INSTALL} -s $$f ${DESTDIR}/etc/$$f || exit $$? ; \
+			do ${INSTALL} -s $$f ${DESTDIR}/etc/$$f || exit $$? ; \
 		done ;; \
 	sun4x_5[78] ) \
 		${INSTALLex} -f kdump.sh.solaris7 $@; \
 		${INSTALL} -s -f $? ${DESTDIR}/etc/kdump32;; \
 	*linux* ) \
-		for lv in ${LINUX_VERS}; do \
-			${INSTALL} -s kdump-$$lv ${DESTDIR}/etc/kdump-$$lv ; \
-		done ;; \
+		${INSTALL} -s kdump-${LINUX_VERSION} ${DESTDIR}/etc/kdump-${LINUX_VERSION} ;; \
 	hp_ux11* ) \
 		${INSTALLex} -f kdump.sh.hp_ux11 $@; \
 		${INSTALL} -s -f $? ${DESTDIR}/etc/kdump32;; \
@@ -112,12 +113,6 @@ ${DESTDIR}/etc/kdump64: kdump64
 		echo skipping kdump64 for ${SYS_NAME} ;; \
 	esac
 
-
-install: all ${DESTDIR}/bin/fs ${DESTDIR}root.server/usr/afs/bin/fs \
-	${DESTDIR}/bin/up ${DESTDIR}/etc/fstrace ${DESTDIR}/bin/cmdebug \
-	${DESTDIR}/etc/kdump ${DESTDIR}/etc/kdump64
-
-system: install
 
 up.o: up.c AFS_component_version_number.c
 
@@ -169,13 +164,9 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 	-set -x; \
 	case ${SYS_NAME} in \
 		alpha_linux* ) \
-			for lv in ${LINUX_VERS}; do \
-				${CC} -g -I${LINUX_SRCDIR}$$lv/include -I${DESTDIR}/include -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS} -mno-fp-regs -ffixed-8 -o kdump-$$lv.o -c kdump.c ; \
-				done ;; \
+			${CC} -g -I${LINUX_KERNEL_PATH}/include -I${DESTDIR}/include -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS} -mno-fp-regs -ffixed-8 -o kdump-${LINUX_VERSION}.o -c kdump.c ;; \
 		*linux* ) \
-			for lv in ${LINUX_VERS}; do \
-				${CC} -g -I${LINUX_SRCDIR}$$lv/include -I${DESTDIR}/include -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS} -o kdump-$$lv.o -c kdump.c ; \
-			done ;; \
+			${CC} -g -I${LINUX_KERNEL_PATH}/include -I${DESTDIR}/include -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS} -o kdump-${LINUX_VERSION}.o -c kdump.c ;; \
 		alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c| alpha_dux?? ) \
 			${CC} -g ${CFLAGS} -I/usr/sys/include -I/usr/sys/BINARY -I/usr/sys/AFS -DDEBUGGER -c kdump.c ;;\
 		sgi_6? ) \
@@ -240,9 +231,7 @@ kdump:  kdump.o
 			esac || exit $$? ; \
 		done ;; \
 	*linux* ) \
-		for lv in ${LINUX_VERS}; do \
-			${CC} -g -o kdump-$$lv kdump-$$lv.o ${DESTDIR}/lib/afs/libcmd.a  ${DESTDIR}/lib/afs/util.a ${XLIBS} ; \
-		done ;; \
+		${CC} -g -o kdump-${LINUX_VERSION} kdump-${LINUX_VERSION}.o ${DESTDIR}/lib/afs/libcmd.a ${DESTDIR}/lib/afs/util.a ${XLIBS} ;; \
 	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux??) \
 		${CC} -g -o kdump kdump.o ${DESTDIR}/lib/afs/libcmd.a  ${DESTDIR}/lib/afs/util.a ${XLIBS} -ll -lmld;; \
 	ncrx86_* ) ${CC} -g -o kdump kdump.o ${DESTDIR}/lib/afs/libcmd.a  ${DESTDIR}/lib/afs/util.a -lelf ${XLIBS} ;; \
@@ -258,9 +247,26 @@ kdump64 : kdump64.o
 		${CC} -g ${XCFLAGS64} -o kdump64 kdump64.o ${DESTDIR}/lib/afs/libcmd64.a ${XLIBELFA}  ${XLIBKVM} ${XLIBS} ;; \
 	esac
 
+#
+# Install targets
+#
+install: ${DESTDIR}/bin/fs \
+	${DESTDIR}/root.server/usr/afs/bin/fs \
+	${DESTDIR}/bin/up \
+	${DESTDIR}/etc/fstrace \
+	${DESTDIR}/bin/cmdebug \
+	${DESTDIR}/etc/kdump \
+	${DESTDIR}/etc/kdump64
+
+#
+# Misc targets
+#
+
 clean:
-	rm -f *.o *.a up fs core cmdebug AFS_component_version_number.c fstrace gcpags
+	rm -f *.o *.a up fs kdump-* kdump kdump64 core cmdebug AFS_component_version_number.c fstrace gcpags
 
 test:
 	cd test; $(MAKE)
+
+include ../config/Makefile.version
 
