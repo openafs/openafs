@@ -1,0 +1,17 @@
+                  OpenAFS Release Notes - Version 1.2.13
+     _________________________________________________________________
+All systems: Major bugfixes.
+     _________________________________________________________________
+
+* Bugfixes:
+
+All systems:
+
+- A fileserver bug where an Rx connection can be reclaimed while in use.
+
+- A fileserver bug where a reference to a volume could be leaked and later 
+  cause a deadlock as a result of a bulk status call
+
+- Reference counting of fileserver objects in unsigned 32 bit integers 
+  instead of signed 16 bit integers.
+
