@@ -19,6 +19,7 @@ extern long serviceKeyVersion;
 #define RXKST_SERVER_INST ""
 #define RXKST_CLIENT_NAME "rxkad_stress_test_client"
 #define RXKST_CLIENT_INST ""
+#define RXKST_CLIENT_CELL "rxtest.openafs.org"
 
 extern int errno;
 
@@ -26,6 +27,7 @@ struct serverParms {
     char *whoami;
     u_int threads;
     int authentication;			/* minimum level  of auth to permit */
+    char *keyfile;
 };
 
 struct clientParms {
@@ -44,17 +46,14 @@ struct clientParms {
     int hijackTest;			/* check hijack prevention measures */
     int stopServer;			/* send stop server RPC */
     int authentication;			/* type of authentication to use */
+    int useTokens;			/* use user's existing tokens */
+    char *cell;                         /* test cell name */
     u_long repeatInterval;		/* secs between load test activity */
     u_long repeatCount;			/* times load test activity repeated */
 };
 
 long rxkst_StartClient(INOUT struct clientParms *parms);
 long rxkst_StartServer(INOUT struct serverParms *parms);
-
-long RXKST_Fast();
-long RXKST_Slow();
-long RXKST_Copious();
-long RXKST_Kill();
 
 /* For backward compatibility with AFS3.0 release. */
 

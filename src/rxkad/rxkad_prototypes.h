@@ -11,12 +11,8 @@
 #define _RXKAD_PROTOTYPES_H
 
 /* till the typedefs are moved elsewhere */
-#ifdef KERNEL
-#include "../afs/fcrypt.h"
-#else
 #include "rx/fcrypt.h"
-#endif
-#include "../rx/rx.h"
+#include "rx/rx.h"
 
 /* domestic/crypt_conn.c */
 extern afs_int32 rxkad_DecryptPacket (const struct rx_connection *conn,

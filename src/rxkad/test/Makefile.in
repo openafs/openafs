@@ -13,8 +13,10 @@ CFLAGS=-g -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 
 HEADERS = ../rxkad.h stress.h stress_internal.h stress_errs.h
 
-LIBS=${TOP_LIBDIR}/librx.a \
+LIBS=${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/librx.a \
 	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/librxkad.a \
 	${TOP_LIBDIR}/libdes.a \

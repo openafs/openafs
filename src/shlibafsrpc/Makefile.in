@@ -133,7 +133,7 @@ ${DEST}/lib/libafsrpc.${SHLIB_SUFFIX}: ${DEST}/lib/${LIBAFSRPC}
 
 ${LIBAFSRPC}: ${LIBOBJS}
 	case ${SYS_NAME} in \
-	rs_aix4*) \
+	rs_aix4* | rs_aix5*) \
 		${SHLIB_LINKER} -o ${LIBAFSRPC} ${LIBOBJS} -bE:afsrpc.exp ${MT_LIBS};; \
 	sun*_5*) \
 		${SHLIB_LINKER} -h ${LIBAFSRPC} -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
