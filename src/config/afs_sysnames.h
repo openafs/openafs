@@ -202,6 +202,10 @@
 #define SYS_NAME_ID_i386_umlinux22	2801
 #define SYS_NAME_ID_i386_umlinux24	2802
 
+#define SYS_NAME_ID_ppc64_linux2	2900
+#define SYS_NAME_ID_ppc64_linux22	2901
+#define SYS_NAME_ID_ppc64_linux24	2902
+
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 
  * files (i.e in afs/param.h)

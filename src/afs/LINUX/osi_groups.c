@@ -183,6 +183,40 @@ afs_xsetgroups32(int gidsetsize, gid_t * grouplist)
 }
 #endif
 
+#if defined(AFS_PPC64_LINUX20_ENV)
+/* Intercept the uid16 system call as used by 32bit programs. */
+extern long (*sys32_setgroupsp)(int gidsetsize, gid_t *grouplist);
+asmlinkage long afs32_xsetgroups(int gidsetsize, gid_t *grouplist)
+{
+    long code;
+    cred_t *cr = crref();
+    afs_uint32 junk;
+    int old_pag;
+    
+    lock_kernel();
+    old_pag = PagInCred(cr);
+    crfree(cr);
+    unlock_kernel();
+    
+    code = (*sys32_setgroupsp)(gidsetsize, grouplist);
+    if (code) {
+	return code;
+    }
+    
+    lock_kernel();
+    cr = crref();
+    if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
+	/* re-install old pag if there's room. */
+	code = setpag(&cr, old_pag, &junk, 0);
+    }
+    crfree(cr);
+    unlock_kernel();
+    
+    /* Linux syscall ABI returns errno as negative */
+    return (-code);
+}
+#endif
+
 #if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_AMD64_LINUX20_ENV)
 /* Intercept the uid16 system call as used by 32bit programs. */
 extern long (*sys32_setgroupsp) (int gidsetsize, u16 * grouplist);
@@ -193,17 +227,17 @@ afs32_xsetgroups(int gidsetsize, u16 * grouplist)
     cred_t *cr = crref();
     afs_uint32 junk;
     int old_pag;
-
+    
     lock_kernel();
     old_pag = PagInCred(cr);
     crfree(cr);
     unlock_kernel();
-
+    
     code = (*sys32_setgroupsp) (gidsetsize, grouplist);
     if (code) {
 	return code;
     }
-
+    
     lock_kernel();
     cr = crref();
     if (old_pag != NOPAG && PagInCred(cr) == NOPAG) {
@@ -212,7 +246,7 @@ afs32_xsetgroups(int gidsetsize, u16 * grouplist)
     }
     crfree(cr);
     unlock_kernel();
-
+    
     /* Linux syscall ABI returns errno as negative */
     return (-code);
 }

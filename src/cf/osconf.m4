@@ -238,6 +238,18 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
+	ppc64_linux24)
+		KERN_OPTMZ=-O2
+		LEX="flex -l"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_LIBS="-lpthread"
+		PAM_CFLAGS="-g -O2 -Dlinux -DLINUX_PAM -fPIC"
+		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		TXLIBS="/usr/lib64/libncurses.so"
+		XCFLAGS="-g -O2 -D_LARGEFILE64_SOURCE"
+		SHLIB_LINKER="${MT_CC} -shared"
+		;;
+
 	i386_linux22)
 		CC="gcc -pipe"
 		MT_CC="gcc -pipe"

@@ -79,7 +79,11 @@
 #ifdef AFS_AMD64_LINUX20_ENV
 #include "conf-amd64-linux.h"
 #else
+#ifdef AFS_PPC64_LINUX20_ENV
+#include "conf-ppc64-linux.h"
+#else
 #include "conf-i386-linux.h"
+#endif /* AFS_PPC64_LINUX20_ENV */
 #endif /* AFS_AMD64_LINUX20_ENV */
 #endif /* AFS_IA64_LINUX20_ENV */
 #endif /* AFS_ALPHA_LINUX20_ENV */

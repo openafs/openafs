@@ -101,7 +101,7 @@ returnto(savearea)
 #elif	defined(AFS_HPUX_ENV)
 #define	LWP_SP	1
 #elif	defined(AFS_LINUX20_ENV)
-#if defined(AFS_PPC_LINUX20_ENV)
+#if defined(AFS_PPC_LINUX20_ENV) || defined(AFS_PPC64_LINUX20_ENV)
 #define LWP_SP 0
 #elif   defined(AFS_I386_LINUX20_ENV)
 #define LWP_SP 4
@@ -139,7 +139,7 @@ Need offset to SP in jmp_buf for this platform.
 typedef __uint64_t jmp_buf_type;
 #endif
 #else
-#ifdef AFS_ALPHA_LINUX20_ENV
+#if defined(AFS_ALPHA_LINUX20_ENV) || defined(AFS_PPC64_LINUX20_ENV) 
 typedef long jmp_buf_type;
 #else
 typedef int jmp_buf_type;

@@ -92,6 +92,10 @@ asmlinkage long (*sys32_setgroups32p) (int gidsetsize, gid_t * grouplist);
 #endif /* __NR_ia32_setgroups32 */
 #endif /* AFS_AMD64_LINUX20_ENV */
 
+#ifdef AFS_PPC64_LINUX20_ENV
+asmlinkage long (*sys32_setgroupsp)(int gidsetsize, gid_t *grouplist);
+#endif /* AFS_AMD64_LINUX20_ENV */
+
 #ifdef AFS_SPARC64_LINUX20_ENV
 static unsigned int afs_ni_syscall32 = 0;
 asmlinkage int (*sys32_setgroupsp) (int gidsetsize,
@@ -158,6 +162,12 @@ asmlinkage int (*sys_setgroups32p) (int gidsetsize,
 #define SYSCALL2POINTER (void *)
 #endif
 
+#ifdef AFS_PPC64_LINUX20_ENV
+extern void *set_afs_syscall(void*);
+extern void *set_afs_xsetgroups_syscall(void*);
+extern void *set_afs_xsetgroups_syscall32(void*);
+#endif
+
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 int __init
 afs_init(void)
@@ -175,7 +185,7 @@ init_module(void)
 #if defined(__NR_setgroups32)
     extern int afs_xsetgroups32();
 #endif /* __NR_setgroups32 */
-#if defined(AFS_SPARC64_LINUX20_ENV) || defined (AFS_AMD64_LINUX20_ENV)
+#if defined(AFS_SPARC64_LINUX20_ENV) || defined (AFS_AMD64_LINUX20_ENV) || defined(AFS_PPC64_LINUX20_ENV)
     extern int afs32_xsetgroups();
 #if (defined(__NR_setgroups32) && defined(AFS_SPARC64_LINUX20_ENV))
     extern int afs32_xsetgroups32();
@@ -466,6 +476,12 @@ init_module(void)
 #endif /* AFS_AMD64_LINUX20_ENV */
 #endif /* AFS_IA64_LINUX20_ENV */
 
+#ifdef AFS_PPC64_LINUX20_ENV
+    afs_ni_syscall = set_afs_syscall(afs_syscall);
+    sys_setgroupsp = set_afs_xsetgroups_syscall(afs_xsetgroups);
+    sys32_setgroupsp = set_afs_xsetgroups_syscall32(afs32_xsetgroups);
+#endif
+
     osi_sysctl_init();
 
     return 0;
@@ -513,6 +529,11 @@ cleanup_module(void)
 #endif
     }
 #endif
+#ifdef AFS_PPC64_LINUX20_ENV
+    set_afs_syscall(afs_ni_syscall);
+    set_afs_xsetgroups_syscall(sys_setgroupsp);
+    set_afs_xsetgroups_syscall32(sys32_setgroupsp);
+#endif
     unregister_filesystem(&afs_file_system);
 
     osi_linux_free_inode_pages();	/* Invalidate all pages using AFS inodes. */
@@ -530,7 +551,7 @@ module_exit(afs_cleanup);
 static long
 get_page_offset(void)
 {
-#if defined(AFS_PPC_LINUX22_ENV) || defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV) || defined(AFS_ALPHA_LINUX20_ENV) || defined(AFS_S390_LINUX22_ENV) || defined(AFS_IA64_LINUX20_ENV) || defined(AFS_PARISC_LINUX24_ENV) || defined(AFS_AMD64_LINUX20_ENV)
+#if defined(AFS_PPC_LINUX22_ENV) || defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV) || defined(AFS_ALPHA_LINUX20_ENV) || defined(AFS_S390_LINUX22_ENV) || defined(AFS_IA64_LINUX20_ENV) || defined(AFS_PARISC_LINUX24_ENV) || defined(AFS_AMD64_LINUX20_ENV) || defined(AFS_PPC64_LINUX20_ENV)
     return PAGE_OFFSET;
 #else
     struct task_struct *p, *q;

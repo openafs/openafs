@@ -67,7 +67,7 @@ CCFLAGS = $(COMMON_KERN_CFLAGS) \
       -mcpu=ultrasparc -m64 -mno-fpu -mcmodel=medlow -ffixed-g4 -fcall-used-g5 -fcall-used-g7 -Wno-sign-compare
 DEFINES = $(COMMON_DEFINES) -DCPU=sparc64
 
-<ppc_linux22 ppc_linux24>
+<ppc_linux22 ppc_linux24 ppc64_linux24>
 CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char -msoft-float -fno-builtin -ffixed-r2
 DEFINES = $(COMMON_DEFINES) -D__powerpc__
 
@@ -141,6 +141,8 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-s390 asm
 <ppc_linux22 ppc_linux24>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ppc asm 
+<ppc64_linux24>
+	ln -s ${LINUX_KERNEL_PATH}/include/asm-ppc64 asm 
 <sparc_linux22 sparc_linux24>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-sparc asm
 <sparc64_linux22 sparc64_linux24>

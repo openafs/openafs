@@ -265,6 +265,8 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
     if (current->tss.flags & SPARC_FLAG_32BIT)
 #elif defined(AFS_AMD64_LINUX20_ENV)
     if (current->thread.flags & THREAD_IA32)
+#elif defined(AFS_PPC64_LINUX20_ENV)
+    if (current->thread.flags & PPC_FLAG_32BIT)
 #else
 #error Not done for this linux type
 #endif

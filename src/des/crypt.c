@@ -91,7 +91,7 @@ RCSID
  */
 
 /* XXX shouldn't this be !AFS_64BIT_ENV ? */
-#if !defined(cray) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV) && !defined(AFS_AMD64_LINUX20_ENV)
+#if !defined(cray) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV) && !defined(AFS_AMD64_LINUX20_ENV) && !defined(AFS_PPC64_LINUX20_ENV)
 #define	LONG_IS_32_BITS
 #endif
 

@@ -510,6 +510,8 @@ rxi_GetcbiInfo(void)
     memset((void *)mtus, 0, sizeof(mtus));
 
     for (i = 0; i < afs_cb_interface.numberOfInterfaces; i++) {
+        if (!afs_cb_interface.mtu[i]) 
+	    afs_cb_interface.mtu[i] = htonl(1500);
 	rxmtu = (ntohl(afs_cb_interface.mtu[i]) - RX_IPUDP_SIZE);
 	ifinaddr = ntohl(afs_cb_interface.addr_in[i]);
 	if (myNetAddrs[i] != ifinaddr)
