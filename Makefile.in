@@ -443,7 +443,7 @@ butc: cmd comerr bubasics butm budb bucoord cmd rxgen rx
 
 tbutc: cmd comerr bubasics butm budb bucoord cmd butc
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix4*|*linux*|hp_ux11*|ia64_hpux*) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 		${COMPILE_PART1} tbutc ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT butc for ${SYS_NAME} ;; \

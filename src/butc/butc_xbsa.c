@@ -24,6 +24,7 @@ RCSID
 #include <errno.h>
 #include "butc_xbsa.h"
 #include <afs/butx.h>
+#include <afs/bubasics.h>
 
 #include "error_macros.h"
 
