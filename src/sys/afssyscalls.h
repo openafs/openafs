@@ -22,7 +22,15 @@ typedef uint64_t Inode;
 #else
 #ifdef AFS_NAMEI_ENV
 #include <sys/types.h>
+#ifdef AFS_NEC_SX92_ENV
+typedef unsigned long Inode;
+#else /* AFS_NEC_SX92_ENV */
+#ifdef AFS_64BIT_ENV
+typedef afs_uint64 Inode;
+#else
 typedef u_int64_t Inode;
+#endif
+#endif /* AFS_NEC_SX92_ENV */
 #else
 error Need 64 bit Inode defined.
 #endif /* AFS_NAMEI_ENV */

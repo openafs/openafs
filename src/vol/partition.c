@@ -179,7 +179,11 @@ static void VInitPartition_r(char *path, char *devname, Device dev)
     dp->next = 0;
     strcpy(dp->name, path);
 #if defined(AFS_NAMEI_ENV) && !defined(AFS_NT40_ENV)
+#ifdef AFS_SUN5_ENV
+    strcpy(dp->devName, devname);
+#else /* AFS_SUN5_ENV */
     strcpy(dp->devName, path);
+#endif
     dp->device = volutil_GetPartitionID(path);
 #else
     strcpy(dp->devName, devname);
