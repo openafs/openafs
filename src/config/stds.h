@@ -53,9 +53,12 @@ typedef long long afs_int64;
 typedef unsigned long long afs_uint64;
 #define ZeroInt64(a)       (a) = 0
 #define AssignInt64(a, b)   *(a) = (b)
-#define AddInt64(a,b,c) *(c) = (a) + (b)
+#define AddInt64(a,b,c) *(c) = (afs_int64)(a) + (afs_int64)(b)
+#define AddUInt64(a,b,c) *(c) = (afs_uint64)(a) + (afs_uint64)(b)
 #define SubtractInt64(a,b,c) *(c) = (afs_int64)(a) - (afs_int64)(b)
+#define SubtractUInt64(a,b,c) *(c) = (afs_uint64)(a) - (afs_uint64)(b)
 #define CompareInt64(a,b) (afs_int64)(a) - (afs_int64)(b)
+#define CompareUInt64(a,b) (afs_uint64)(a) - (afs_uint64)(b)
 #define NonZeroInt64(a)                (a)
 #define Int64ToInt32(a)    (a) & 0xFFFFFFFFL
 #define FillInt64(t,h,l) (t) = (h); (t) <<= 32; (t) |= (l);
@@ -77,6 +80,12 @@ struct u_Int64 {
 typedef struct u_Int64 afs_uint64;
 #define ZeroInt64(a) (a).high = (a).low = 0
 #define AssignInt64(a, b) (b)->high = (a).high; (b)->low = (a).low
+#define CompareInt64(a,b) (((afs_int32)(a).high - (afs_int32)(b).high) || (((a).high == (b).high) && ((a).low - (b).low))) 
+#define AddInt64(a, b, c) {  afs_int64 _a, _b; _a = a; _b = b; (c)->low = _a.low + _b.low; (c)->high = _a.high + _b.high + ((c)->low < _b.low); } 
+#define SubtractInt64(a, b, c) { afs_int64 _a, _b; _a = a; _b = b; (c)->low = _a.low - _b.low;  (c)->high = _a.high - _b.high - (_a.low < _b.low); } 
+#define CompareUInt64(a,b) (((afs_uint32)(a).high - (afs_uint32)(b).high) || (((a).high == (b).high) && ((a).low - (b).low))) 
+#define AddUInt64(a, b, c) {  afs_uint64 _a, _b; _a = a; _b = b; (c)->low = _a.low + _b.low; (c)->high = _a.high + _b.high + ((c)->low < _b.low); } 
+#define SubtractUInt64(a, b, c) { afs_uint64 _a, _b; _a = a; _b = b; (c)->low = _a.low - _b.low;  (c)->high = _a.high - _b.high - (_a.low < _b.low); } 
 #define NonZeroInt64(a)   (a).low || (a).high
 #define Int64ToInt32(a)    (a).low
 #define FillInt64(t,h,l) (t).high = (h); (t).low = (l);
@@ -210,6 +219,7 @@ typedef struct afs_hyper_t {	/* unsigned 64 bit integers */
 
 /* minumum length of string to pass to int_to_base64 */
 typedef char b64_string_t[8];
+#ifndef AFS_NT40_ENV
 #if defined(AFS_HPUX_ENV) || defined(AFS_USR_HPUX_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV))
 char *int_to_base64();
 int base64_to_int();
@@ -217,7 +227,7 @@ int base64_to_int();
 char *int_to_base64(b64_string_t s, int a);
 int base64_to_int(char *s);
 #endif
-
+#endif /* AFS_NT40_ENV */
 /*
  * The afsUUID data type is built in to RX
  */
