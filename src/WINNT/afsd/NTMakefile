@@ -34,6 +34,7 @@ INCFILES =\
 	$(INCFILEDIR)\smb3.h \
 	$(INCFILEDIR)\smb_iocons.h \
 	$(INCFILEDIR)\smb_ioctl.h \
+	$(INCFILEDIR)\afsmsg95.h \
 	$(INCFILEDIR)\afsrpc.h
 
 IDLFILES =\
@@ -162,11 +163,25 @@ install: install_headers $(CONF_DLLFILE) \
 	$(EXEDIR)\afsshare.exe \
 	$(DESTDIR)\bin\kpasswd.exe
 
+install9X: install_headers $(CONF_DLLFILE) \
+	$(EXEDIR)\klog.exe \
+	$(EXEDIR)\tokens.exe \
+	$(EXEDIR)\unlog.exe $(EXEDIR)\afsd_service.exe \
+	$(EXEDIR)\fs.exe $(EXEDIR)\symlink.exe \
+	$(LOGON_DLLFILE) $(LOG95_DLLFILE) \
+	$(EXEDIR)\afsshare.exe \
+	$(DESTDIR)\bin\kpasswd.exe
+
+install_libutils: install_headers $(CONF_DLLFILE) \
+	$(EXEDIR)\klog.exe \
+	$(EXEDIR)\tokens.exe \
+	$(EXEDIR)\unlog.exe \
+	$(EXEDIR)\fs.exe $(EXEDIR)\symlink.exe \
+	$(EXEDIR)\afsshare.exe \
+	$(DESTDIR)\bin\kpasswd.exe
+
 ############################################################################
 # Local clean target; augments predefined clean target
-
-clean::
-	$(DEL) *.res
 
 ############################################################################
 # assorted exe's
@@ -305,3 +320,9 @@ afslogon.res: afslogon.rc AFS_component_version_number.h
 afslog95.res: afslog95.rc AFS_component_version_number.h
 
 libafsconf.res: libafsconf.rc AFS_component_version_number.h
+
+clean::
+	$(DEL) *.res
+	$(DEL) afsrpc.h
+	$(DEL) afsrpc_?.*
+	$(DEL) $(EXELIBS)

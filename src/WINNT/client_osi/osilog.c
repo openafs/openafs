@@ -11,11 +11,15 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifndef DJGPP
 #include <windows.h>
 #include <rpc.h>
+#endif /* !DJGPP */
 #include <malloc.h>
 #include "osi.h"
+#ifndef DJGPP
 #include "dbrpc.h"
+#endif /* !DJGPP */
 #include <stdio.h>
 #include <assert.h>
 
@@ -31,7 +35,9 @@ unsigned long osi_logTixToMicros;	/* mult. correction factor */
 
 osi_fdOps_t osi_logFDOps = {
 	osi_LogFDCreate,
+#ifndef DJGPP
         osi_LogFDGetInfo,
+#endif
         osi_LogFDClose
 };
 
@@ -45,6 +51,7 @@ osi_log_t *osi_LogCreate(char *namep, long size)
         LARGE_INTEGER bigTemp;
         LARGE_INTEGER bigJunk;
 	
+#ifndef DJGPP
 	if (osi_Once(&osi_logOnce)) {
 		QueryPerformanceFrequency(&bigFreq);
                 if (bigFreq.LowPart == 0 && bigFreq.HighPart == 0)
@@ -66,6 +73,7 @@ osi_log_t *osi_LogCreate(char *namep, long size)
 		/* done with init */
 		osi_EndOnce(&osi_logOnce);
         }
+#endif /* !DJGPP */
 
         logp = malloc(sizeof(osi_log_t));
         memset(logp, 0, sizeof(osi_log_t));
@@ -87,11 +95,12 @@ osi_log_t *osi_LogCreate(char *namep, long size)
 	logp->stringsp = malloc((size/10) * OSI_LOG_STRINGSIZE);
  
         /* and sync */
-        InitializeCriticalSection(&logp->cs);
+        thrd_InitCrit(&logp->cs);
         
 	strcpy(tbuffer, "log:");
         strcat(tbuffer, namep);
 	typep = osi_RegisterFDType(tbuffer, &osi_logFDOps, logp);
+#ifndef DJGPP
 	if (typep) {
 		/* add formatting info */
 		osi_AddFDFormatInfo(typep, OSI_DBRPC_REGIONINT, 0,
@@ -99,6 +108,7 @@ osi_log_t *osi_LogCreate(char *namep, long size)
 		osi_AddFDFormatInfo(typep, OSI_DBRPC_REGIONSTRING, 1,
 			"Time (mics)", 0);
 	}
+#endif
 	
         return logp;
 }
@@ -130,9 +140,9 @@ void osi_LogPanic(char *filep, long lineNumber)
 void osi_LogReset(osi_log_t *logp)
 {
 	if (logp) {
-		EnterCriticalSection(&logp->cs);
+		thrd_EnterCrit(&logp->cs);
 		logp->nused = 0;
-		LeaveCriticalSection(&logp->cs);
+		thrd_LeaveCrit(&logp->cs);
 	}
 }
 
@@ -145,7 +155,7 @@ void osi_LogFree(osi_log_t *logp)
 
 	free(logp->namep);
         free(logp->datap);
-	DeleteCriticalSection(&logp->cs);
+	thrd_DeleteCrit(&logp->cs);
         free(logp);
 }
 
@@ -164,7 +174,7 @@ void osi_LogAdd(osi_log_t *logp, char *formatp, long p0, long p1, long p2, long 
          */
 	if (!logp->enabled) return;
         
-	EnterCriticalSection(&logp->cs);
+	thrd_EnterCrit(&logp->cs);
 	if (logp->nused < logp->alloc) logp->nused++;
 	else {
         	logp->first++;
@@ -174,24 +184,28 @@ void osi_LogAdd(osi_log_t *logp, char *formatp, long p0, long p1, long p2, long 
         if (ix >= logp->alloc) ix -= logp->alloc;
 
         lep = logp->datap + ix;	/* ptr arith */
-        lep->tid = GetCurrentThreadId();
+        lep->tid = thrd_Current();
 
 	/* get the time, using the high res timer if available */
+#ifndef DJGPP
         if (osi_logFreq) {
 		QueryPerformanceCounter(&bigTime);
 		lep->micros = (bigTime.LowPart / osi_logFreq) * osi_logTixToMicros;
         }
         else lep->micros = GetCurrentTime() * 1000;
+#else
+        lep->micros = gettime_us();
+#endif /* !DJGPP */                
 
         lep->formatp = formatp;
         lep->parms[0] = p0;
         lep->parms[1] = p1;
         lep->parms[2] = p2;
         lep->parms[3] = p3;
-	LeaveCriticalSection(&logp->cs);
+	thrd_LeaveCrit(&logp->cs);
 }
 
-void osi_LogPrint(osi_log_t *logp, HANDLE handle)
+void osi_LogPrint(osi_log_t *logp, FILE_HANDLE handle)
 {
 	char wholemsg[1000], msg[1000];
 	int i, ix, ioCount;
@@ -199,7 +213,7 @@ void osi_LogPrint(osi_log_t *logp, HANDLE handle)
 
 	if (!logp->enabled) return;
 
-	EnterCriticalSection(&logp->cs);
+	thrd_EnterCrit(&logp->cs);
 
 	for (ix = logp->first, i = 0;
 	     i < logp->nused;
@@ -212,12 +226,16 @@ void osi_LogPrint(osi_log_t *logp, HANDLE handle)
 			lep->micros / 1000000,
 			lep->micros % 1000000,
 			lep->tid, msg);
+#ifndef DJGPP
 		if (!WriteFile(handle, wholemsg, strlen(wholemsg),
 				&ioCount, NULL))
+#else /* DJGPP */
+                if ((ioCount = fwrite(wholemsg, 1, strlen(wholemsg), handle)) == 0)
+#endif /* !DJGPP */
 			break;
 	}
 
-	LeaveCriticalSection(&logp->cs);
+	thrd_LeaveCrit(&logp->cs);
 }
 
 char *osi_LogSaveString(osi_log_t *logp, char *s)
@@ -245,16 +263,17 @@ long osi_LogFDCreate(osi_fdType_t *typep, osi_fd_t **outpp)
         
         lfdp = malloc(sizeof(*lfdp));
         logp = lfdp->logp = typep->rockp;	/* the log we were created for */
-        EnterCriticalSection(&logp->cs);
+        thrd_EnterCrit(&logp->cs);
 	lfdp->nused = logp->nused;
         lfdp->first = logp->first;
         lfdp->current = 0;
-	LeaveCriticalSection(&logp->cs);
+	thrd_LeaveCrit(&logp->cs);
 
 	*outpp = &lfdp->fd;
         return 0;
 }
 
+#ifndef DJGPP
 long osi_LogFDGetInfo(osi_fd_t *ifd, osi_remGetInfoParms_t *outp)
 {
 	osi_logFD_t *lfdp;
@@ -270,7 +289,7 @@ long osi_LogFDGetInfo(osi_fd_t *ifd, osi_remGetInfoParms_t *outp)
 	if (lfdp->current >= lfdp->nused) return OSI_DBRPC_EOF;
         
 	/* grab lock */
-	EnterCriticalSection(&logp->cs);
+	thrd_EnterCrit(&logp->cs);
 
         /* compute which one we want */
         ix = lfdp->first + lfdp->current;
@@ -289,9 +308,10 @@ long osi_LogFDGetInfo(osi_fd_t *ifd, osi_remGetInfoParms_t *outp)
         outp->scount = 2;
         outp->icount = 1;
 
-	LeaveCriticalSection(&logp->cs);
+	thrd_LeaveCrit(&logp->cs);
         return 0;
 }
+#endif /* !DJGPP */
 
 long osi_LogFDClose(osi_fd_t *ifdp)
 {

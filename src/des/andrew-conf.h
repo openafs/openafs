@@ -40,7 +40,7 @@
 #ifdef AFS_NT40_ENV
 #include "conf-winnt.h"
 #else
-#ifdef AFS_LINUX20_ENV
+#if defined(AFS_LINUX20_ENV) || defined(AFS_DJGPP_ENV)
 #ifdef AFS_PPC_LINUX20_ENV
 #include "conf-ppc-linux.h"
 #else

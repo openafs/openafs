@@ -31,6 +31,8 @@ INCFILES = \
 
 install: $(LIBFILE) $(INCFILES)
 
+install9x: install
+
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
 
@@ -38,3 +40,6 @@ tests: rw.exe
 
 rw.exe: rw.obj $(LIBFILE) $(DESTDIR)\lib\afs\afsutil.lib
 	$(EXECONLINK)
+
+clean::
+	$(DEL) $(LIBFILE)

@@ -8,7 +8,9 @@
  */
 
 #define	IGNORE_STDS_H	1
+#ifndef AFS_DJGPP_ENV
 #include <afs/param.h>
+#endif /* AFS_DJGPP_ENV */
 
 #if defined(RIOS)
 
@@ -1151,7 +1153,7 @@ LEAF(returnto,1)
 	END(returnto)
 #endif
 
-#if defined(AFS_NCR_ENV) || defined(AFS_X86_ENV)
+#if defined(AFS_NCR_ENV) || defined(AFS_X86_ENV) || defined(AFS_DJGPP_ENV)
 /* Sun 386i... I hope this does the right thing!!!
  * 
  * Written by Derek Atkins <warlord@MIT.EDU>

@@ -34,6 +34,9 @@ ${DESTDIR}lib/afs/libprocmgmt.a: libprocmgmt.a
 install: ${DESTDIR}lib/afs/libprocmgmt.a 
 	${INSTALL} procmgmt.h ${DESTDIR}include/afs
 
+includes:
+	${INSTALL} procmgmt.h ${DESTDIR}include/afs
+
 clean:
 	$(RM) -f *.o libprocmgmt.a   \
 	 core  AFS_component_version_number.c

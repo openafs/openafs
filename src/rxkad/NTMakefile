@@ -61,6 +61,7 @@ sboxes.h : domestic\sboxes.h
 
 install: $(DOMESTIC) $(INCFILES) $(LIBFILE)
 
+install9x: install
 
 clean::
 	$(DEL) $(RXKAD_INCFILE) rxkad_errs.c 

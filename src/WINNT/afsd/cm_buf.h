@@ -13,6 +13,9 @@
 #define _BUF_H__ENV_ 1
 
 #include <osi.h>
+#ifdef DISKCACHE95
+#include "cm_diskcache.h"
+#endif /* DISKCACHE95 */
 
 /* default # of buffers if not changed */
 #define CM_BUF_BUFFERS	100
@@ -78,11 +81,16 @@ typedef struct cm_buf {
         char *datap;		/* data in this buffer */
 	unsigned long error;	/* last error code, if CM_BUF_ERROR is set */
         struct cm_user *userp;	/* user who wrote to the buffer last */
+#ifndef DJGPP
         OVERLAPPED over;	/* overlapped structure for I/O */
+#endif
         
         /* fields added for the CM; locked by scp->mx */
         long dataVersion;	/* data version of this page */
         long cmFlags;		/* flags for cm */
+#ifdef DISKCACHE95
+        cm_diskcache_t *dcp;    /* diskcache structure */
+#endif /* DISKCACHE95 */
 } cm_buf_t;
 
 /* values for cmFlags */
@@ -143,7 +151,9 @@ extern cm_buf_t *buf_LockedFind(struct cm_scache *, osi_hyper_t *);
 
 extern cm_buf_t *buf_Find(struct cm_scache *, osi_hyper_t *);
 
+#ifndef DJGPP
 extern HANDLE buf_GetFileHandle(long);
+#endif /* !DJGPP */
 
 extern void buf_LockedCleanAsync(cm_buf_t *, cm_req_t *);
 

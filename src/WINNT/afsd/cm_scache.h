@@ -10,6 +10,10 @@
 #ifndef __CM_SCACHE_H_ENV__
 #define __CM_SCACHE_H_ENV__ 1
 
+#ifdef DJGPP
+#include "largeint95.h"
+#endif /* DJGPP */
+
 typedef struct cm_fid {
 	unsigned long cell;
         unsigned long volume;
@@ -209,6 +213,9 @@ typedef struct cm_scache {
 				    (fidp)->vnode +	\
 				    (fidp)->unique))	\
 					% cm_hashTableSize)
+
+#include "cm_conn.h"
+#include "cm_buf.h"
 
 extern cm_scache_t cm_fakeSCache;
 

@@ -47,8 +47,13 @@
 #include "sys/types.h"
 #include <sys/stat.h>
 #include <errno.h>
+#if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#endif /* AFS_NT40_ENV */
 #include "rx_xmit_nt.h"
 #include <stdlib.h>
 #else

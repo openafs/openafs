@@ -173,3 +173,12 @@ install: all ukinstall ${DESTDIR}root.server/usr/afs/bin/ptserver ${DESTDIR}root
 	${INSTALL} ptclient.h ${DESTDIR}include/afs/prclient.h
 	${INSTALL} -f db_verify ${DESTDIR}etc/prdb_check
 	echo '#define ERROR_TABLE_BASE_pr ERROR_TABLE_BASE_pt' >> ${DESTDIR}include/afs/prerror.h
+
+libinstall: ${DESTDIR}lib/afs/libprot.a
+	${INSTALL} libprot.a ${DESTDIR}lib/afs/libprot.a
+	${INSTALL} ptserver.h ptint.h pterror.h ptclient.h ${DESTDIR}include/afs
+	${INSTALL} ptserver.h ${DESTDIR}include/afs/prserver.h
+	${INSTALL} ptint.h ${DESTDIR}include/afs/print.h
+	${INSTALL} pterror.h ${DESTDIR}include/afs/prerror.h
+	${INSTALL} ptclient.h ${DESTDIR}include/afs/prclient.h
+

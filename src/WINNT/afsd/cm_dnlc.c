@@ -18,8 +18,10 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifndef DJGPP
 #include <windows.h>
 #include <winsock2.h>
+#endif /* !DJGPP */
 #include <string.h>
 #include <stdlib.h>
 #include <osi.h>
@@ -41,6 +43,7 @@ static struct nc nameCache[NCSIZE];
 struct nc*	nameHash[NHSIZE];
 
 
+#ifndef DJGPP
 #define dnlcNotify(x,debug){                    \
                         HANDLE  hh;             \
                         char *ptbuf[1];         \
@@ -52,6 +55,9 @@ struct nc*	nameHash[NHSIZE];
                             DeregisterEventSource(hh);			\
 			}						\
                      }  
+#else
+#define dnlcNotify(x,debug)
+#endif /* !DJGPP */
 
 
 static struct nc * 

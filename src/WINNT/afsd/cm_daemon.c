@@ -10,8 +10,12 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifndef DJGPP
 #include <windows.h>
 #include <winsock2.h>
+#else
+#include <netdb.h>
+#endif /* !DJGPP */
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
@@ -113,7 +117,12 @@ void cm_Daemon(long parm)
 	 */
 	gethostname(thostName, sizeof(thostName));
 	thp = gethostbyname(thostName);
-	memcpy(&code, thp->h_addr_list[0], 4);
+        if (thp == NULL)    /* In djgpp, gethostname returns the netbios
+                               name of the machine.  gethostbyname will fail
+                               looking this up if it differs from DNS name. */
+          code = 0;
+        else
+          memcpy(&code, thp->h_addr_list[0], 4);
 	srand(ntohl(code));
 
 	now = osi_Time();
@@ -125,7 +134,7 @@ void cm_Daemon(long parm)
 	lastTokenCacheCheck = now - cm_daemonTokenCheckInterval/2 + (rand() % cm_daemonTokenCheckInterval);
 	
         while (1) {
-		Sleep(30 * 1000);		/* sleep 30 seconds */
+		thrd_Sleep(30 * 1000);		/* sleep 30 seconds */
                 
 		/* find out what time it is */
 		now = osi_Time();
@@ -168,7 +177,7 @@ void cm_InitDaemon(int nDaemons)
 {
 	static osi_once_t once;
         long pid;
-        HANDLE phandle;
+        thread_t phandle;
         int i;
         
         if (osi_Once(&once)) {
@@ -176,16 +185,17 @@ void cm_InitDaemon(int nDaemons)
 		osi_EndOnce(&once);
                 
                 /* creating pinging daemon */
-		phandle = CreateThread((SECURITY_ATTRIBUTES *) 0, 0,
-	                (LPTHREAD_START_ROUTINE) cm_Daemon, 0, 0, &pid);
+		phandle = thrd_Create((SecurityAttrib) 0, 0,
+	                (ThreadFunc) cm_Daemon, 0, 0, &pid, "cm_Daemon");
 		osi_assert(phandle != NULL);
 
-		CloseHandle(phandle);
+		thrd_CloseHandle(phandle);
 		for(i=0; i < nDaemons; i++) {
-			phandle = CreateThread((SECURITY_ATTRIBUTES *) 0, 0,
-		                (LPTHREAD_START_ROUTINE) cm_BkgDaemon, 0, 0, &pid);
+			phandle = thrd_Create((SecurityAttrib) 0, 0,
+		                (ThreadFunc) cm_BkgDaemon, 0, 0, &pid,
+                                              "cm_BkgDaemon");
 			osi_assert(phandle != NULL);
-			CloseHandle(phandle);
+			thrd_CloseHandle(phandle);
 		}
         }
 }

@@ -123,6 +123,9 @@ extern long cm_IoctlGetRxkcrypt(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern long cm_IoctlSetRxkcrypt(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
+extern long cm_IoctlShutdown(smb_ioctl_t *ioctlp, cm_user_t *userp);
+
+
 #endif /* __CM_IOCTL_INTERFACES_ONLY__ */
 
 #endif /*  __CM_IOCTL_H_ENV__ */

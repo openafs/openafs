@@ -6,10 +6,10 @@ rem This software has been released under the terms of the IBM Public
 rem License.  For details, see the LICENSE file in the top-level source
 rem directory or online at http://www.openafs.org/dl/license10.html
 
+
 REM AFS build environment variables for Windows NT.
 REM Modify for local configuration; common defaults shown.
 REM ########################################################################
-
 
 REM ########################################################################
 REM
@@ -57,38 +57,40 @@ goto args_done
 :args_done
 REM ########################################################################
 REM General required definitions:
-REM     SYS_NAME = <AFS system name>
+REM     SYS_NAME = AFS system name
 
-set SYS_NAME=i386_nt40
-
+SET SYS_NAME=i386_win95
+SET _WIN32_IE=0x400
 
 REM ########################################################################
 REM NTMakefile required definitions:
-REM     AFSDEV_BUILDTYPE = [ CHECKED | FREE ]
-REM     AFSDEV_INCLUDE = <default include directories>
-REM     AFSDEV_LIB = <default library directories>
-REM     AFSDEV_BIN = <default build binary directories>
+REM     AFSDEV_BUILDTYPE = CHECKED / FREE 
+REM     AFSDEV_INCLUDE = default include directories
+REM     AFSDEV_LIB = default library directories
+REM     AFSDEV_BIN = default build binary directories
 
 set AFSDEV_BUILDTYPE=%AFSBLD_TYPE%
 
-set MSVCDIR=c:\dev\tools\DevStudio\vc
+rem Location of VC++ development folder
+set MSVCDIR=c:\progra~1\micros~2\vc98
 
 set AFSDEV_INCLUDE=%MSVCDIR%\include;%MSVCDIR%\mfc\include
 set AFSDEV_LIB=%MSVCDIR%\lib;%MSVCDIR%\mfc\lib
 set AFSDEV_BIN=%MSVCDIR%\bin
 
-set AFSROOT=d:\afs\openafs
+REM ########################################################################
+REM Location of base folder where source lies, build directory
+REM e.g. AFSROOT\SRC is source directory of the build tree
+
+set AFSROOT=D:\Dev\AfsSorce\OpenAF~2.2
 
 REM ########################################################################
 REM NTMakefile optional definitions:
 REM
 REM See NTMakefile.SYS_NAME; will normally use defaults.
 REM
-REM     IS5ROOT = <root directory of the InstallShield5 installation>
-REM     You should only define this if you have InstallShield installed on
-REM     your computer and want to create the setup as part of the build.
 
-set IS5ROOT=d:\progra~1\instal~1\instal~1.1pr
+IF [%HOMEDRIVE%]==[] SET HOMEDRIVE=C:
 
 REM ########################################################################
 REM Options necessary when using bison

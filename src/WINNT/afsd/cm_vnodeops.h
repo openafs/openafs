@@ -38,6 +38,8 @@ typedef struct cm_lookupSearch {
         int hasTilde;
 } cm_lookupSearch_t;
 
+#include "cm_dir.h"
+
 typedef int (*cm_DirFuncp_t)(struct cm_scache *, struct cm_dirEntry *, void *,
 	osi_hyper_t *entryOffsetp);
 

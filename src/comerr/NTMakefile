@@ -33,9 +33,14 @@ $(COMERR_LIBFILE): $(COMERR_LIBOBJS)
 # build and install the compile_et executable
 COMPILE_ET_EXEFILE = $(DESTDIR)\bin\compile_et.exe
 
+prep:
+	$(DESTDIR)\bin\touch et_lex.lex_nt.c
+	$(DESTDIR)\bin\touch error_table_nt.c
+	@echo If you update et_lex.lex.l, to build correctly, you should delete error_table_nt.c 
+
 et_lex.lex_nt.c:   et_lex.lex.l
-    $(LEX) -t et_lex.lex.l > $@
-    
+    $(LEX) -t et_lex.lex.l > $@	
+
 error_table_nt.c:  et_lex.lex_nt.c error_table.y
     $(YACC) -d -o $@ error_table.y
 
@@ -51,10 +56,14 @@ $(COMPILE_ET_EXEFILE): $(COMPILE_ET_EXEOBJS) $(COMPILE_ET_EXELIBS)
 	$(EXEPREP) 
 
 ####################################################################
-install: $(INCFILES) $(COMERR_LIBFILE) $(COMPILE_ET_EXEFILE) 
+install: prep $(INCFILES) $(COMERR_LIBFILE) $(COMPILE_ET_EXEFILE) 
+
+install9x: install
 
 clean::
-	$(DEL) *~ \#* *.bak \
+	$(DEL) $(COMERR_LIBFILE)
+	$(DEL) $(COMPILE_ET_EXEFILE)
+	$(DEL) *~ *.bak \
                  *.otl *.aux *.toc *.PS *.dvi *.x9700 *.ps \
                  *.cp *.fn *.ky *.log *.pg *.tp *.vr \
                  et.ar TAGS

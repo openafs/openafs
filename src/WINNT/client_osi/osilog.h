@@ -11,9 +11,12 @@
 #ifndef _OSI_LOG_H__
 #define _OSI_LOG_H__ 1
 
+#include "osi.h"
+#ifndef DJGPP
 #include "osisleep.h"
 #include "osibasel.h"
 #include "osistatl.h"
+#endif /* !DJGPP */
 #include "osifd.h"
 #include "osiqueue.h"
 
@@ -34,7 +37,7 @@ typedef struct osi_log {
 	long alloc;			/* allocated size */
         long nused;			/* number currently in use */
         long first;			/* index of first entry */
-        CRITICAL_SECTION cs;		/* use this, rather than a higher-level
+        Crit_Sec cs;		/* use this, rather than a higher-level
 					 * lock, so we can log stuff from
 					 * osi lock pkg */
         osi_logEntry_t *datap;		/* data for the log */
@@ -64,7 +67,9 @@ extern void osi_LogReset(osi_log_t *);
 
 extern long osi_LogFDCreate(osi_fdType_t *, osi_fd_t **);
 
+#ifndef DJGPP
 extern long osi_LogFDGetInfo(osi_fd_t *, osi_remGetInfoParms_t *);
+#endif
 
 extern long osi_LogFDClose(osi_fd_t *);
 
@@ -74,7 +79,7 @@ extern void osi_LogDisable(osi_log_t *);
 
 extern void osi_LogPanic(char *filep, long line);
 
-extern void osi_LogPrint(osi_log_t *logp, HANDLE handle);
+extern void osi_LogPrint(osi_log_t *logp, FILE_HANDLE handle);
 
 extern char *osi_LogSaveString(osi_log_t *logp, char *s);
 

@@ -54,3 +54,4 @@ $(DESTDIR)\lib\afsdes.lib: $(DESPAR)\lib\afsdes.lib
 install: $(LIBFILES) $(INCFILES)
 
 clean::
+	 $(DEL) $(DESPAR)\lib\afsdes.lib

@@ -8,7 +8,7 @@
 # Override default definitions in NTMakefile.$(SYS_NAME) before including.
 
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
-!INCLUDE ..\config\NTMakefile.version
+!include ..\config\NTMakefile.version
 
 
 ############################################################################
@@ -140,6 +140,10 @@ vlclient.exe: vlclient.obj  $(LIBFILE) $(VLSERVER_EXECLIBS) $(VLCLIENT_LIBS)
 
 install: $(INCFILES) $(LIBFILE) $(VLSERVER) vldb_check.exe vlclient.exe \
 	 $(MT_LIBFILE)
+
+install9x: install
+
+install_libutils: $(INCFILES) $(LIBFILE)
 
 ############################################################################
 # clean up

@@ -36,6 +36,7 @@ $(EXEFILE): $(EXEOBJS) $(EXELIBS)
 
 install: AFS_component_version_number.c $(EXEFILE) $(INCFILES)
 
+install9x: install
 
 clean::
-	
+	$(DEL) $(EXEFILE)	

@@ -221,7 +221,7 @@ char	**argv;
     }
     bcopy(th->h_addr,&myHost,sizeof(afs_int32));
 
-#if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV)
+#if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
     signal(SIGXCPU, CheckSignal_Signal);
 #endif
     /* get list of servers */

@@ -9,7 +9,7 @@ SHELL = /bin/sh
 COMPONENT=util
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS = ${OPTMZ} -I$(SRCDIR)include ${XCFLAGS}
+CFLAGS = ${OPTMZ} -I. -I$(SRCDIR)include ${XCFLAGS}
 LDFLAGS = ${OPTMZ} ${XLDFLAGS}
 
 objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
@@ -41,6 +41,12 @@ install0: ${DESTDIR}include/afs/dirpath.h \
 	${INSTALL} itc.h potpourri.h ${DESTDIR}include
 
 install: install0 kinstall ukinstall
+
+install_headers:
+	${INSTALL} assert.h errors.h vice.h remote.h ktime.h fileutil.h \
+		netutils.h packages.h afsutil.h pthread_glock.h \
+		afs_atomlist.h afs_lhash.h \
+		${DESTDIR}include/afs
 
 kinstall:
 	${INSTALL} vice.h ../libafs/afs

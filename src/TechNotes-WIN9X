@@ -1,0 +1,154 @@
+Win9x AFS Client: Technical Notes
+---------------------------------
+
+This file gives a technical overview of the Win9x AFS client and describes
+the main differences from the NT client.
+
+
+Overview
+--------
+
+The Windows 9x client is based on the Windows NT/2000 client.  Like the
+NT client, it exports AFS through an SMB interface.  Programs access AFS
+files by mounting AFS submounts as SMB shares and using the built-in
+Windows SMB client to communicate with the AFS client.  The AFS client
+acts as an SMB server.  It runs entirely at user level.
+
+DOS box implementation and VXD's
+--------------------------------
+
+The main program of the Win9x client, afsd.exe, is implemented as a
+32-bit DOS program.  It is compiled using the DJGPP compiler and runs in
+a Windows 9x DOS virtual machine.  This approach was necessary to avoid
+a well-known deadlock problem in Windows 9x when the kernel calls up
+to a user-level Win32 daemon: the original requesting program grabs the
+Win16Mutex before entering the kernel.  The request is then passed up to
+the daemon, who attempts to service it using network or file I/O calls.
+These calls also attempt to obtain the Win16Mutex, which is still being
+held by the original requester, so there is a deadlock.
+
+To avoid this problem, the daemon runs in a DOS box.  I/O calls from
+a DOS program do not attempt to obtain the Win16Mutex, so the deadlock
+is avoided.  This approach was discovered by the Coda team at Carnegie
+Mellon University and used to implement a Win9x version of their client.
+The Win9x AFS client uses the same approach.  It also uses the Coda team's
+SOCK.VXD which was written to provide network functions to a DOS program.
+Sockets functions which call SOCK.VXD were added to the DJGPP library.
+
+For more information about the Coda team's approach to this problem, see
+their paper from Usenix 1999:
+http://www.cs.cmu.edu/afs/cs/project/coda/Web/docdir/freenix99.pdf
+
+Note that the AFS client also requires the Coda team's MMAP.VXD.  We are
+not actually calling this VXD, but afsd crashes if it is built without
+it (i.e., by building with dos-gcc -bw95 instead of -bmmap).  Solutions to
+this problem welcomed..
+
+Netbios functions
+-----------------
+
+The Windows AFS clients communicate with user applications using the
+SMB protocol, as described above.  SMB communication is done using the
+Netbios interface.  In Win32, there is a built-in function Netbios()
+which accomplishes this.  In a DOS program, however, this function is
+unavailable.  However, Netbios functionality is available in the BIOS
+by calling interrupt 0x5c.  The NCB (Netbios Control Block) and data
+buffer must be in conventional DOS memory, i.e., below 1 MB.  This memory
+can only be accessed in DJGPP by using the DOS memory access functions:
+dosmemget(), dosmemput(), _farpeekX() and _farpokeX().  The Win9x client
+uses a separately-allocated DOS memory buffer and copies data to and from
+DOS memory for network communication.
+
+Functions were also added to LWP's iomgr.c to check for the completion
+of Netbios requests.  The IOMGR now checks for NCB completion in addition
+to checking for timer expiration, signal delivery, and performing select()
+on file descriptors.
+
+See the new files: netbios95.c, dosutils95.c, and the various changes
+(marked by "#ifdef DJGPP") to smb.c in WINNT/afsd.  Also see lwp/iomgr.c.
+
+Thread functions
+----------------
+
+Unlike the NT client which uses Win32 thread and locking functions,
+the Win9x client uses the LWP package from the AFS source distribution.
+An interface layer was added to allow NT and Win9x to make the same calls.
+For example, thrd_Create() is now used to create a thread.  In NT, this
+is just a macro to the Win32 function CreateThread().  In Win9x, it is a
+function which calls the LWP function LWP_CreateProcess().  See the new
+files osithrd95.c, osithrd95.h, and osithrdnt.h in WINNT/client_osi.
+
+Configuration parameters
+------------------------
+
+In DJGPP, it is not feasible to access the system registry, which is
+where the NT client stores its configuration info.  For the Win9x client,
+the Unix approach is followed instead: the local cell is in a file called
+"ThisCell", cache configuration is in a file called "cache.info", and
+the cell database is stored in "CellServDB" instead of "afsdcell.ini".
+Many parameters are passed via the command line to afsd.exe and are
+processed just like the Unix clients.
+
+See the new files afsd_init95.c and afsd95.c in WINNT/afsd.
+
+Authentication
+--------------
+
+In the functions SetToken() and GetToken(), the NT client sends and
+receives the session key using a separate RPC which should use encryption,
+rather than including the session key in the pioctl packet.  The Win9x
+version avoids this RPC and puts the session key back into the pioctl.
+This should not be a security issue on Win9x since it is a single-user
+machine.  (The pioctl packet will not be visible externally.)  See files
+WINNT/afsd/cm_ioctl.c and auth/ktc_nt.c.
+
+Persistent (disk) caching
+-------------------------
+
+Disk caching support was added for the 9x client.  This has barely been
+tested and is still very experimental!  In addition, there are numerous
+performance issues.  It relies on the fact that LWP is a non-preemptive
+threads package, so no locking is done to protect shared data structures.
+In addition, it uses synchronous I/O to read and write disk files.  Since
+LWP is a user-level threads package, any calls to normal I/O system calls
+like read() or write() will block the entire process.  One better approach
+would be to add support for local disk file descriptors to the select()
+call used by IOMGR, and then to use IOMGR_Select to enqueue I/O requests
+to the disk.  Currently, the select() function supports only sockets.
+
+It should be fairly easy to adapt this code for the NT client.  See the
+implementation in WINNT/afsd/cm_diskcache95.c.  To enable this code,
+define DISKCACHE95 in WINNT/afsd/Makefile.djgpp.
+
+Utility programs
+----------------
+
+The utility programs, such as klog.exe and fs.exe, are Win32 programs and
+are built using the Microsoft compiler.  Changes to the code for these
+files are marked by "#ifdef AFS_WIN95_ENV".
+
+GUI interface
+-------------
+
+The Win9x client does not use the NT configuration GUI programs in
+client_creds and client_cpa (Control Panel Applet.)  It uses a separate
+GUI program called WinAfsLoad.exe in WINNT/win9xpanel.  This program can
+start afsd.exe and keep track of submounts and token expiration.
+
+The Explorer shell extension, which allows right clicking on a file
+in Windows Explorer to get an AFS submenu, is supported in Win9x.
+See WINNT/client_exp.
+
+Integrated logon
+----------------
+
+Integrated logon is not supported in the 9x client.
+
+Known issues
+------------
+
+1) The Microsoft linker LINK386.exe causes a deadlock when attempting to
+create an executable on an AFS filesystem.  Somehow, the linker appears
+to be preempting the entire machine so afsd.exe cannot run to service
+requests.  Solutions to this problem eagerly sought!  (This problem does
+not seem to occur with the Win9x Coda client.)

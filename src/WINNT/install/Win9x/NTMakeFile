@@ -1,0 +1,65 @@
+# Copyright 2000, International Business Machines Corporation and others.
+#	All Rights Reserved.
+# 
+#	This software has been released under the terms of the IBM Public
+#	License.  For details, see the LICENSE file in the top-level source
+#	directory or online at http://www.openafs.org/dl/license10.html
+
+
+!INCLUDE ..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\config\NTMakefile.version
+OUTDIR = $(DESTDIR)\WinInstall
+
+############################################################################
+
+COMPONENTS = \
+	INSTALL.BAT \
+	UNINSTALL.BAT \
+	afsd.pif \
+	cellservdb \
+	readme.doc \
+	license.txt \
+	AFSD.EXE \
+	templet.reg \
+	runonce.pif \
+	$(DESTDIR)\bin\util_cr.exe \
+	$(DESTDIR)\root.client\usr\vice\etc\unlog.exe \
+	$(DESTDIR)\root.client\usr\vice\etc\afs_shl_ext_1033.dll \
+	$(DESTDIR)\lib\afsauthent.dll \
+	$(DESTDIR)\root.client\usr\vice\etc\afsshare.exe \
+	$(DESTDIR)\root.client\usr\vice\etc\fs.exe \
+	$(DESTDIR)\root.client\usr\vice\etc\klog.exe \
+	$(DESTDIR)\bin\kpasswd.exe \
+	$(DESTDIR)\root.client\usr\vice\etc\libosi.dll \
+	$(DESTDIR)\root.client\usr\vice\etc\libafsconf.dll \
+	$(DESTDIR)\bin\pts.exe \
+	$(DESTDIR)\root.client\usr\vice\etc\tokens.exe \
+	$(DESTDIR)\root.client\usr\vice\etc\afs_shl_ext.dll \
+	$(DESTDIR)\lib\win95\pthread.dll \
+	$(DESTDIR)\lib\afsrpc.dll
+		
+
+$(COMPONENTS)::
+	$(COPY) $@ $(DESTDIR)\WinInstall\.
+
+!IF (EXIST(ISBUILD.H))
+!INCLUDE ISBUILD.MAK
+!ENDIF
+
+build:
+	copy install.bat $(OUTDIR)\.
+
+install: prep $(COMPONENTS) build
+
+install9x: install
+
+clean ::
+    $(DEL) $(OUTDIR)\DiskIm~1\Disk1\*
+    $(DEL) $(OUTDIR)\DiskIm~1\WebInstall\*
+
+.SILENT:
+prep :
+	if not exist $(DESTDIR)\WinInstall\sock.vxd $(DESTDIR)\bin\util_cr.exe ~ "SOCK.VXD is missing from $(DESTDIR)\WinInstall\."
+	if not exist $(DESTDIR)\WinInstall\mmap.vxd $(DESTDIR)\bin\util_cr.exe ~ "MMAP.VXD is missing from $(DESTDIR)\WinInstall\."
+	if not exist $(DESTDIR)\WinInstall\afsd.exe $(DESTDIR)\bin\util_cr.exe ~ "AFSD.EXE is missing from $(DESTDIR)\WinInstall\."
+

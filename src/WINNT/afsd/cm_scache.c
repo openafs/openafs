@@ -10,12 +10,14 @@
 #include <afs/param.h>
 #include <afs/stds.h>
 
+#ifndef DJGPP
 #include <windows.h>
 #include <winsock2.h>
+#include <nb30.h>
+#endif /* !DJGPP */
 #include <malloc.h>
 #include <string.h>
 #include <stdlib.h>
-#include <nb30.h>
 #include <osi.h>
 
 #include "afsd.h"
@@ -827,4 +829,28 @@ void cm_ReleaseSCache(cm_scache_t *scp)
 	lock_ObtainWrite(&cm_scacheLock);
 	osi_assert(scp->refCount-- > 0);
 	lock_ReleaseWrite(&cm_scacheLock);
+}
+
+/* just look for the scp entry to get filetype */
+/* doesn't need to be perfectly accurate, so locking doesn't matter too much */
+int cm_FindFileType(cm_fid_t *fidp)
+{
+        long hash;
+        cm_scache_t *scp;
+        
+        hash = CM_SCACHE_HASH(fidp);
+        
+        osi_assert(fidp->cell != 0);
+
+        lock_ObtainWrite(&cm_scacheLock);
+        for(scp=cm_hashTablep[hash]; scp; scp=scp->nextp) {
+                if (cm_FidCmp(fidp, &scp->fid) == 0) {
+                  /*scp->refCount++;*/
+                  /*cm_AdjustLRU(scp);*/
+                  lock_ReleaseWrite(&cm_scacheLock);
+                  return scp->fileType;
+                }
+        }
+        lock_ReleaseWrite(&cm_scacheLock);
+        return NULL;
 }

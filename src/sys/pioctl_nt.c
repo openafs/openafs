@@ -82,6 +82,7 @@ static long GetIoctlHandle(char *fileNamep, HANDLE *handlep)
 	HKEY parmKey;
 	DWORD dummyLen;
 	long code;
+        int hostsize;
 
         if (fileNamep) {
 	      drivep = strchr(fileNamep, ':');
@@ -107,7 +108,16 @@ static long GetIoctlHandle(char *fileNamep, HANDLE *handlep)
 			goto havehost;
 nogateway:
 		/* No gateway name in registry; use ourself */
+#ifndef AFS_WIN95_ENV
 		gethostname(hostName, sizeof(hostName));
+#else
+                /* DJGPP version of gethostname gets the NetBIOS
+                   name of the machine, so that is what we are using for
+                   the AFS server name instead of the DNS name. */
+                hostsize = sizeof(hostName);
+                GetComputerName(hostName, &hostsize);
+#endif /* AFS_WIN95_ENV */
+
 havehost:
 		ctemp = strchr(hostName, '.');	/* turn ntafs.* into ntafs */
 		if (ctemp) *ctemp = 0;
@@ -118,10 +128,12 @@ havehost:
 			hostName, SMB_IOCTL_FILENAME);
         }
 
+        fflush(stdout);
 	/* now open the file */
         fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
         	FILE_SHARE_READ | FILE_SHARE_WRITE, NULL,
 		OPEN_EXISTING, FILE_FLAG_WRITE_THROUGH, NULL);
+        fflush(stdout);
 	if (fh == INVALID_HANDLE_VALUE)
 		return -1;
         
@@ -165,7 +177,7 @@ static long MarshallLong(fs_ioctlRequest_t *reqp, long val)
 static long UnmarshallLong(fs_ioctlRequest_t *reqp, long *valp)
 {
 	/* not enough data left */
-	if (reqp->nbytes < 4) return -1;
+  if (reqp->nbytes < 4) { return -1; }
 
 	memcpy(valp, reqp->mp, 4);
         reqp->mp += 4;

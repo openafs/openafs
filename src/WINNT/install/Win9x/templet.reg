@@ -1,0 +1,52 @@
+REGEDIT4 
+[HKEY_CLASSES_ROOT\CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}] 
+@="AFS Client Shell Extension" 
+[HKEY_CLASSES_ROOT\CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}\InprocServer32] 
+@="c:\\afscli\\afs_shl_ext.dll" 
+"THREADINGMODEL"="Apartment" 
+[HKEY_CLASSES_ROOT\*\shellex\ContextMenuHandlers] 
+@="afs_shl_ext" 
+[HKEY_CLASSES_ROOT\*\shellex\ContextMenuHandlers\AFS Client Shell Extension] 
+@="{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" 
+[HKEY_CLASSES_ROOT\Folder\shellex\ContextMenuHandlers\AFS Client Shell Extension] 
+@="{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" 
+[HKEY_CURRENT_USER\Software\IBM] 
+[HKEY_CURRENT_USER\Software\IBM\AFS] 
+[HKEY_CURRENT_USER\Software\IBM\AFS\Window] 
+"PowerResumeDelay"=hex:14,00,00,00 
+"LoginTime"=hex:28,00,00,00 
+[HKEY_LOCAL_MACHINE\Software\CLASSES\*\shellex\ContextMenuHandlers] 
+@="afs_shl_ext" 
+[HKEY_LOCAL_MACHINE\Software\CLASSES\*\shellex\ContextMenuHandlers\AFS Client Shell Extension] 
+@="{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" 
+[HKEY_LOCAL_MACHINE\Software\CLASSES\CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}] 
+@="AFS Client Shell Extension" 
+[HKEY_LOCAL_MACHINE\Software\CLASSES\CLSID\{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}\InprocServer32] 
+@="c:\\afscli\\afs_shl_ext.dll" 
+"THREADINGMODEL"="Apartment" 
+[HKEY_LOCAL_MACHINE\Software\CLASSES\Folder\shellex\ContextMenuHandlers] 
+@="afs_shl_ext" 
+[HKEY_LOCAL_MACHINE\Software\CLASSES\Folder\shellex\ContextMenuHandlers\AFS Client Shell Extension] 
+@="{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" 
+[HKEY_LOCAL_MACHINE\Software\IBM\AFS] 
+[HKEY_LOCAL_MACHINE\Software\IBM\AFS\1.00.000] 
+[HKEY_LOCAL_MACHINE\Software\IBM\WinAfsLoad] 
+"InstallDir"="C:\\Program Files\\AfsCli" 
+[HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\App Paths\afsd.exe] 
+"Path"="c:\\afscli" 
+@="c:\\afscli\\afsd.exe" 
+[HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved] 
+"{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"="AFS Client Shell Extension" 
+[HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Uninstall\WinAfsLoad] 
+"DisplayName"="WinAfsLoad" 
+"UninstallString"="c:\\afscli\\unsetup.bat ;;;" 
+[HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\VxD\mmap] 
+"STATICVXD"="c:\\afscli\\mmap.vxd" 
+[HKEY_USERS\.DEFAULT\Software\IBM] 
+[HKEY_USERS\.DEFAULT\Software\IBM\AFS] 
+[HKEY_USERS\.DEFAULT\Software\IBM\AFS\Window] 
+"PowerResumeDelay"=hex:14,00,00,00 
+"LoginTime"=hex:28,00,00,00 
+[HKEY_USERS\.DEFAULT\Software\IBM\AFS\Security] 
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Runonce] 
+"doit"="c:\\afscli\\runonce.bat" 

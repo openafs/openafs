@@ -18,7 +18,7 @@ OBJS= rpc_main.o rpc_hout.o rpc_cout.o rpc_parse.o rpc_scan.o rpc_util.o \
 	rpc_svcout.o rpc_clntout.o
 
 GOAL=rxgen
-CFLAGS = ${DBUG} -I${DESTDIR}include ${XCFLAGS}
+CFLAGS = ${DBUG} -I. -I${DESTDIR}include ${XCFLAGS}
 
 USNS=cellname
 SD=../../../src/CML

@@ -10,6 +10,8 @@
 #ifndef _CM_ACCESS_H_ENV__
 #define _CM_ACCESS_H_ENV__ 1
 
+#include "cm_user.h"
+
 extern int cm_HaveAccessRights(struct cm_scache *scp, struct cm_user *up,
 	long rights, long *outRights);
 

@@ -100,6 +100,11 @@ install.noversion: all kinstall ukinstall ${DESTDIR}etc/copyauth
 	${INSTALL} cellconfig.h ${DESTDIR}include/afs
 	${INSTALL} keys.h ${DESTDIR}include/afs
 
+includes: auth.h cellconfig.h keys.h
+	${INSTALL} auth.h ${DESTDIR}include/afs
+	${INSTALL} cellconfig.h ${DESTDIR}include/afs
+	${INSTALL} keys.h ${DESTDIR}include/afs
+
 clean:
 	rm -f *.o *.a copyauth testcellconf setkey auth.h cellconfig.h acfg_errors.c ktc_errors.c core\
 	AFS_component_version_number.c
