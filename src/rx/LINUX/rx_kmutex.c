@@ -59,11 +59,13 @@ void afs_mutex_exit(afs_kmutex_t *l)
     up(&l->sem);
 }
 
-/*
- * CV_WAIT and CV_TIMEDWAIT rely on the fact that the Linux kernel has
- * a global lock. Thus we can safely drop our locks before calling the
- * kernel sleep services.
- * Or not.
+/* CV_WAIT and CV_TIMEDWAIT sleep until the specified event occurs, or, in the
+ * case of CV_TIMEDWAIT, until the specified timeout occurs.
+ * - NOTE: that on Linux, there are circumstances in which TASK_INTERRUPTIBLE
+ *   can wake up, even if all signals are blocked
+ * - TODO: handle signals correctly by passing an indication back to the
+ *   caller that the wait has been interrupted and the stack should be cleaned
+ *   up preparatory to signal delivery
  */
 int afs_cv_wait(afs_kcondvar_t *cv, afs_kmutex_t *l, int sigok)
 {

@@ -197,7 +197,13 @@ int afs_osi_SleepSig(void *event)
     return retval;
 }
 
-/* afs_osi_Sleep -- waits for an event to be notified, ignoring signals. */
+/* afs_osi_Sleep -- waits for an event to be notified, ignoring signals.
+ * - NOTE: that on Linux, there are circumstances in which TASK_INTERRUPTIBLE
+ *   can wake up, even if all signals are blocked
+ * - TODO: handle signals correctly by passing an indication back to the
+ *   caller that the wait has been interrupted and the stack should be cleaned
+ *   up preparatory to signal delivery
+ */
 void afs_osi_Sleep(void *event)
 {
     sigset_t saved_set;
