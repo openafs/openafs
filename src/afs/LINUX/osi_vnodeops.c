@@ -1099,6 +1099,7 @@ struct dentry * afs_linux_follow_link(struct dentry *dp,
     AFS_GUNLOCK();
     return res;
 }
+#endif
 
 /* afs_linux_readpage
  * all reads come through here. A strategy-like read call.
