@@ -180,7 +180,7 @@ kdump: kdump.o
 kdump64: 
 	-set -x; \
 	case ${SYS_NAME} in \
-	sun4x_5[789] | hp_ux11* |sunx86_5[789] )  \
+	sun4x_5[789] | sun4x_510 | hp_ux11* | sunx86_5[789] | sunx86_510 )  \
 		$(MAKE) kdump64.o ; \
 		${CC} ${XCFLAGS64} -o kdump64 kdump64.o ${TOP_LIBDIR}/libcmd64.a ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
 	esac
@@ -230,7 +230,7 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 kdump64.o : kdump.c ${INCLS} AFS_component_version_number.c
 	-set -x; \
 	case ${SYS_NAME} in \
-	sun4x_5[789] | hp_ux11* |sunx86_5[789] ) \
+	sun4x_5[789] | sun4x_510 | hp_ux11* | sunx86_5[789] | sunx86_510 ) \
 		${CC} ${KERN_DBG} ${KERN_OPTMZ} -I${TOP_SRCDIR} -I${TOP_INCDIR}/afs \
 		-I${TOP_OBJDIR}/src/config -I${TOP_OBJDIR}/src -I${TOP_INCDIR} ${XCFLAGS64} \
 		-o kdump64.o -c ${srcdir}/kdump.c ;; \
@@ -278,9 +278,9 @@ ${DEST}/etc/kdump: kdump-build
 		for f in kdump.IP??; \
 			do ${INSTALL} -s $$f ${DEST}/etc/$$f || exit $$? ; \
 		done ;; \
-	sun*_5[789] ) \
+	sun*_5[789] | sun*_510 ) \
 		${INSTALLex} -f ${srcdir}/kdump.sh.solaris7 ${DEST}/etc/kdump; \
-		${INSTALL} -s -f $? $@;; \
+		${INSTALL} -s -f ${srcdir}/kdump ${DEST}/etc/kdump32;; \
 	*alpha_linux* ) \
 		${INSTALLex} -f ${srcdir}/kdump.sh.linux ${DEST}/etc/kdump; \
 		${INSTALL} -s kdump-alpha_linux-${LINUX_VERSION} $@ ;; \
@@ -356,7 +356,7 @@ ${DESTDIR}${sbindir}/kdump: kdump-build
 		for f in kdump.IP??; \
 			do ${INSTALL} -s $$f ${DESTDIR}${sbindir}/$$f || exit $$? ; \
 		done ;; \
-	sun*_5[789] ) \
+	sun*_5[789] | sun*_510 ) \
 		${INSTALLex} -f kdump.sh.solaris7 ${DESTDIR}${sbindir}/kdump32; \
 		${INSTALL} -s -f $? $@;; \
 	*linux* ) \

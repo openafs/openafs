@@ -186,8 +186,6 @@ typedef struct adaptive_mutex2 adaptive_mutex2_t;
 #endif
 #endif
 
-#include <sys/file.h>
-
 #ifdef AFS_SGI62_ENV
 #include <sys/fcntl.h>
 #ifndef L_SET
@@ -203,6 +201,10 @@ typedef struct adaptive_mutex2 adaptive_mutex2_t;
 
 #ifndef AFS_LINUX20_ENV
 #include <sys/socket.h>
+#endif
+
+#ifndef AFS_LINUX26_ENV
+#include <sys/file.h>
 #endif
 
 /*
@@ -253,7 +255,9 @@ typedef struct adaptive_mutex2 adaptive_mutex2_t;
 #undef LONG_MAX
 #undef ULONG_MAX
 #define _LINUX_TIME_H
+#ifndef AFS_LINUX26_ENV
 #define _LINUX_FCNTL_H
+#endif
 #ifdef AFS_IA64_LINUX24_ENV
 #define flock64  flock
 #endif /* AFS_IA64_LINUX24_ENV */
@@ -1835,7 +1839,7 @@ print_buffers(pnt)
 	if (pnt)
 	    printf
 		("Buffer #%d:\tfid=%lu page=%d, accTime=%d,\n\tHash=%x, data=%x, lockers=%x, dirty=%d, hashI=%d\n",
-		 i, bp->fid[0], bp->page, bp->accesstime, bp->hashNext,
+		 i, bp->fid, bp->page, bp->accesstime, bp->hashNext,
 		 bp->data, bp->lockers, bp->dirty, bp->hashIndex);
 #endif
 	j++;
@@ -2994,7 +2998,7 @@ print_vcache(kmem, vep, ptr, pnt)
 	}
     }
 #ifdef AFS_LINUX22_ENV
-    printf("\tflushcnt=%d, mapcnt=%d\n", vep->flushcnt, vep->mapcnt);
+    printf("\tmapcnt=%d\n", vep->mapcnt);
 #endif
 }
 
