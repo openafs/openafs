@@ -1,4 +1,4 @@
-OpenAFS News -- history of user-visible changes.  September 25, 2002.
+OpenAFS News -- history of user-visible changes.  December 9, 2002.
 
 * Changes incorporated in OpenAFS 1.3
 
@@ -17,6 +17,23 @@ OpenAFS News -- history of user-visible changes.  September 25, 2002.
    making operations such as stat'ing all cells under /afs much faster.
    This is enabled by passing -fakestat to afsd, but might not be stable
    on all platforms.
+
+* Changes incorporated in OpenAFS 1.2.8
+
+** Mountpoint directory information is now only faked for cross-cell
+   mountpoits when using the -fakestat flag (e.g. for the directories
+   under /afs, but not for most other volumes mounted inside the cell).
+   The -fakestat-all switch can be used to fake information for all
+   mountpoints.
+
+** HPUX 11.0 is now supported.
+
+** It is now possible for AFS to use Kerberos 5 directly, via rxkad 2b.
+   See the OpenAFS 1.2.8 Release Notes for more information on using this
+   capability.
+
+** An NFS translator kernel module is now included and compiled by default
+   for Solaris only.
 
 * Changes incorporated in OpenAFS 1.2.7
 
