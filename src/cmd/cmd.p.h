@@ -51,62 +51,26 @@ struct cmd_syndesc {
     char *name;		    /* subcommand name */
     char *a0name;	    /* command name from argv[0] */
     char *help;		    /* help description */
-    int (*proc)();
+    int (*proc)(struct cmd_syndesc *ts, char *arock);
     char *rock;
     int	nParms;		    /* number of parms */
     afs_int32 flags;		    /* random flags */
     struct cmd_parmdesc parms[CMD_MAXPARMS];	/* parms themselves */
 };
 
-extern struct cmd_syndesc *cmd_CreateSyntax(
-  char *namep,
-  int (*aprocp)(),
-  char *rockp,
-  char *helpp
-);
-
-extern int cmd_SetBeforeProc(
-  int (*aproc)(),
-  char *arock
-);
-
-extern int cmd_SetAfterProc(
-  int (*aproc)(),
-  char *arock
-);
-
-extern int cmd_CreateAlias(
-  struct cmd_syndesc *as,
-  char *aname
-);
-
-extern int cmd_Seek(
-  struct cmd_syndesc *as,
-  int apos
-);
-
-extern int cmd_AddParm(
-  struct cmd_syndesc *as,
-  char *aname,
-  int atype,
-  afs_int32 aflags,
-  char *ahelp
-);
-
-extern int cmd_Dispatch(
-  int argc,
-  char **argv
-);
-
-extern int cmd_FreeArgv(
-  char **argv
-);
-
-extern int cmd_ParseLine(
-  char *aline,
-  char **argv,
-  afs_int32 *an,
-  afs_int32 amaxn
-);
+extern struct cmd_syndesc *cmd_CreateSyntax(char *namep, 
+	int (*aprocp)(struct cmd_syndesc *ts, char *arock), char *rockp, char *helpp);
+extern int cmd_SetBeforeProc(int (*aproc)(struct cmd_syndesc *ts, char *beforeRock), char *arock);
+extern int cmd_SetAfterProc(int (*aproc)(struct cmd_syndesc *ts, char *afterRock), char *arock);
+extern int cmd_CreateAlias(struct cmd_syndesc *as, char *aname);
+extern int cmd_Seek(struct cmd_syndesc *as, int apos);
+extern int cmd_AddParm(struct cmd_syndesc *as, char *aname, int atype, 
+	afs_int32 aflags, char *ahelp);
+extern int cmd_Dispatch(int argc, char **argv);
+extern int cmd_FreeArgv(char **argv);
+extern int cmd_ParseLine(char *aline, char **argv, afs_int32 *an, afs_int32 amaxn);
+extern int cmd_IsAdministratorCommand(register struct cmd_syndesc *as);
+extern void PrintSyntax(register struct cmd_syndesc *as);
+extern void PrintFlagHelp(register struct cmd_syndesc *as);
 
 #endif /* __CMD_INCL__ */

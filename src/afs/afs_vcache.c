@@ -248,7 +248,8 @@ void afs_InactiveVCache(struct vcache *avc, struct AFS_UCRED *acred)
  * held, so we don't have to worry about blocking in osi_Alloc.
  */
 static struct afs_cbr *afs_cbrSpace = 0;
-struct afs_cbr *afs_AllocCBR() {
+struct afs_cbr *afs_AllocCBR(void)
+{
     register struct afs_cbr *tsp;
     int i;
 
@@ -1019,12 +1020,8 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
  *	doflocks : Do we handle flocks?
  */
 /* LOCK: afs_FlushActiveVcaches afs_xvcache N */
-void
-afs_FlushActiveVcaches(doflocks)
-    register afs_int32 doflocks;
-
-{ /*afs_FlushActiveVcaches*/
-
+void afs_FlushActiveVcaches(register afs_int32 doflocks)
+{
     register struct vcache *tvc;
     register int i;
     register struct conn *tc;
@@ -1157,8 +1154,7 @@ afs_FlushActiveVcaches(doflocks)
 	}
     }
     ReleaseReadLock(&afs_xvcache);
-
-} /*afs_FlushActiveVcaches*/
+}
 
 
 /*
@@ -1241,13 +1237,9 @@ int afs_VerifyVCache2(struct vcache *avc, struct vrequest *areq)
  *
  * Callers:  as of 1992-04-29, only called by WriteVCache
  */
-static void
-afs_SimpleVStat(avc, astat, areq)
-    register struct vcache *avc;
-    register struct AFSFetchStatus *astat;
-    struct vrequest *areq;
-{ /*afs_SimpleVStat*/
-
+static void afs_SimpleVStat(register struct vcache *avc, 
+	register struct AFSFetchStatus *astat, struct vrequest *areq)
+{
     afs_size_t length;
     AFS_STATCNT(afs_SimpleVStat);
 
@@ -2181,16 +2173,10 @@ return code;
  * Environment:
  *	Nothing interesting.
  */
-void
-afs_StuffVcache(afid, OutStatus, CallBack, tc, areq)
-    register struct VenusFid *afid;
-    struct AFSFetchStatus *OutStatus;
-    struct AFSCallBack *CallBack;
-    register struct conn *tc;
-    struct vrequest *areq;
-
-{ /*afs_StuffVcache*/
-
+void afs_StuffVcache(register struct VenusFid *afid, 
+	struct AFSFetchStatus *OutStatus, struct AFSCallBack *CallBack, 
+	register struct conn *tc, struct vrequest *areq)
+{
     register afs_int32 code, i, newvcache=0;
     register struct vcache *tvc;
     struct AFSVolSync tsync;
@@ -2456,12 +2442,9 @@ struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 lockit,
 
 int afs_duplicate_nfs_fids=0;
 
-afs_int32 afs_NFSFindVCache(avcp, afid, lockit)
-     struct vcache **avcp;
-    struct VenusFid *afid;
-    afs_int32 lockit;
-{ /*afs_FindVCache*/
-
+afs_int32 afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid, 
+	afs_int32 lockit)
+{
     register struct vcache *tvc;
     afs_int32 i;
     afs_int32 retry = 0;

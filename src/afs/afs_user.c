@@ -55,8 +55,7 @@ void afs_ResetAccessCache(afs_int32 uid, int alock);
  * Called with afs_xuser, afs_xserver and afs_xconn locks held, to delete
  * appropriate conn structures for au
  */
-static void
-RemoveUserConns(register struct unixuser *au)
+static void RemoveUserConns(register struct unixuser *au)
 {
     register int i;
     register struct server *ts;
@@ -92,8 +91,7 @@ RemoveUserConns(register struct unixuser *au)
  * other epochs as soon as possible (old file servers act bizarrely when they
  * see epoch changes).
  */
-void
-afs_GCUserData(int aforce)
+void afs_GCUserData(int aforce)
 {
     register struct unixuser *tu, **lu, *nu;
     register int i;
@@ -150,8 +148,7 @@ afs_GCUserData(int aforce)
  * cache for these guys.  Can't do this when token expiration detected,
  * since too many locks are set then.
  */
-void
-afs_CheckTokenCache(void)
+void afs_CheckTokenCache(void)
 {
     register int i;
     register struct unixuser *tu;
@@ -198,8 +195,7 @@ afs_CheckTokenCache(void)
 } /*afs_CheckTokenCache*/
 
 
-void
-afs_ResetAccessCache(afs_int32 uid, int alock)
+void afs_ResetAccessCache(afs_int32 uid, int alock)
 {
     register int i, j;
     register struct vcache *tvc;
@@ -227,8 +223,7 @@ afs_ResetAccessCache(afs_int32 uid, int alock)
  * Ensure all connections make use of new tokens.  Discard incorrectly-cached
  * access info.
  */
-void
-afs_ResetUserConns (register struct unixuser *auser)
+void afs_ResetUserConns (register struct unixuser *auser)
 {
     int i;
     struct server *ts;
@@ -299,8 +294,7 @@ struct unixuser *afs_FindUser(afs_int32 auid, afs_int32 acell, afs_int32 locktyp
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-void
-afs_ComputePAGStats(void)
+void afs_ComputePAGStats(void)
 {
     register struct unixuser *currPAGP;		  /*Ptr to curr PAG*/
     register struct unixuser *cmpPAGP;		  /*Ptr to PAG being compared*/
@@ -506,8 +500,7 @@ void afs_PutUser(register struct unixuser *au, afs_int32 locktype)
  * Set the primary flag on a unixuser structure, ensuring that exactly one
  * dude has the flag set at any time for a particular unix uid.
  */
-void
-afs_SetPrimary(register struct unixuser *au, register int aflag)
+void afs_SetPrimary(register struct unixuser *au, register int aflag)
 {
     register struct unixuser *tu;
     register int i;
@@ -583,8 +576,7 @@ static size_t afs_GCPAGs_cred_count=0;
 /*
  * LOCKS: afs_GCPAGs_perproc_func requires write lock on afs_xuser
  */
-void
-afs_GCPAGs_perproc_func(AFS_PROC *pproc)
+void afs_GCPAGs_perproc_func(AFS_PROC *pproc)
 {
     afs_int32 pag, hash, uid;
     const struct AFS_UCRED *pcred;
@@ -643,8 +635,7 @@ afs_GCPAGs_perproc_func(AFS_PROC *pproc)
  * an entry in the login cache, so this routine is not needed.
  */
 
-afs_int32
-afs_GCPAGs(afs_int32 *ReleasedCount)
+afs_int32 afs_GCPAGs(afs_int32 *ReleasedCount)
 {
     struct unixuser *pu;
     int i;

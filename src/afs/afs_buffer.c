@@ -13,6 +13,7 @@
 RCSID("$Header$");
 
 #include "../afs/sysincludes.h"
+#include "../afs/afsincludes.h"
 #if !defined(UKERNEL)
 #include "../h/param.h"
 #include "../h/types.h"
@@ -47,7 +48,6 @@ RCSID("$Header$");
 #include "../afs/afs_stats.h"
 #include "../afs/longc_procs.h"
 #include "../afs/afs.h"
-#include "../afs/afs_prototypes.h"
 
 #ifndef	BUF_TIME_MAX
 #define	BUF_TIME_MAX	0x7fffffff
@@ -167,7 +167,7 @@ char *DRead(register ino_t *fid, register int page)
      * of larger code size.  This could be simplified by better use of
      * macros. 
      */
-    if ( tb = phTable[pHash(fid,page)] ) {  /* ASSMT HERE */
+    if ((tb = phTable[pHash(fid,page)])) {
 	if (bufmatch(tb)) {
 	    MObtainWriteLock(&tb->lock,257);
 	    ReleaseWriteLock(&afs_bufferLock);
@@ -180,7 +180,7 @@ char *DRead(register ino_t *fid, register int page)
 	else {
 	  register struct buffer **bufhead;
 	  bufhead = &( phTable[pHash(fid,page)] );
-	  while (tb2 = tb->hashNext) {
+	  while ((tb2 = tb->hashNext)) {
 	    if (bufmatch(tb2)) {
 	      buf_Front(bufhead,tb,tb2);
 	      MObtainWriteLock(&tb2->lock,258);
@@ -191,7 +191,7 @@ char *DRead(register ino_t *fid, register int page)
 	      MReleaseWriteLock(&tb2->lock);
 	      return tb2->data;
 	    }
-	    if (tb = tb2->hashNext) { /* ASSIGNMENT HERE! */ 
+	    if ((tb = tb2->hashNext)) {
 	      if (bufmatch(tb)) {
 		buf_Front(bufhead,tb2,tb);
 		MObtainWriteLock(&tb->lock,259);
@@ -446,7 +446,7 @@ void DZap (ino_t *fid)
 void DFlush (void)
 {
     /* Flush all the modified buffers. */
-    register int i, code;
+    register int i;
     register struct buffer *tb;
     void *tfile;
 

@@ -52,6 +52,7 @@
 #include "../afs/dir.h"
 #include "../afs/afs_axscache.h"
 #include "../afs/icl.h"
+#include "../afs/afs_stats.h"
 #include "../afs/afs_prototypes.h"
 #if defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #include "../afs/osi_machdep.h"

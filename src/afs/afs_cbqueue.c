@@ -110,8 +110,6 @@ struct afs_lock afs_xcbhash;
 
 void afs_QueueCallback(struct vcache *avc, unsigned int atime, struct volume *avp)
 {
-struct vcache *list;
-
 if (avp && (avp->expireTime < avc->cbExpires))
   avp->expireTime = avc->cbExpires;
 if (!(avc->callsort.next)) {
@@ -394,8 +392,6 @@ int afs_BumpBase(void)
 {
 afs_uint32 now;
 int didbump;
-struct vcache *tvca, *tvcb;
-afs_int32 ttime;
 u_int oldbase;
 
 ObtainWriteLock(&afs_xcbhash,87);

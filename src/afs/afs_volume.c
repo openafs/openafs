@@ -224,8 +224,7 @@ void afs_ResetVolumes(struct server *srvp)
 
 
 /* reset volume name to volume id mapping  cache */
-void afs_CheckVolumeNames(flags) 
-    int flags;
+void afs_CheckVolumeNames(int flags) 
 {
     afs_int32 i,j;
     struct volume *tv;
@@ -400,12 +399,8 @@ struct volume *afs_GetVolume(struct VenusFid *afid, struct vrequest *areq,
 
 
 
-static struct volume *afs_SetupVolume(volid, aname, ve, tcell, agood, type, areq)
-    char *aname;
-    char *ve;
-    afs_int32 volid, agood, type;
-    struct cell *tcell;
-    struct vrequest *areq;
+static struct volume *afs_SetupVolume(afs_int32 volid, char *aname, 
+	char *ve, struct cell *tcell, afs_int32 agood, afs_int32 type, struct vrequest *areq)
 {
     struct volume *tv;
     struct vldbentry *ove = (struct vldbentry *)ve;
@@ -535,7 +530,8 @@ struct volume *afs_GetVolumeByName(register char *aname, afs_int32 acell,
   return(tv);
 }
 
-static struct volume *afs_NewDynrootVolume(struct VenusFid *fid) {
+static struct volume *afs_NewDynrootVolume(struct VenusFid *fid)
+{
     struct cell *tcell;
     struct volume *tv;
     struct vldbentry tve;
@@ -989,4 +985,4 @@ void afs_ResetVolumeInfo(struct volume *tv)
 	tv->name = (char *) 0;
       }
     ReleaseWriteLock(&tv->lock);
-} /*afs_ResetVolumeInfo*/
+}

@@ -98,28 +98,34 @@ static u_short uuid_time_adjust, clock_seq;
 static afs_uint32 rand_m, rand_ia, rand_ib, rand_irand, uuid_init_done = 0;
 
 #define	uuid_create_nil(uuid) memset(uuid, 0, sizeof(afsUUID))
-afs_int32 afs_uuid_equal(u1, u2) afsUUID *u1, *u2;  { return(uuid_memcmp((void *)u1, (void *)u2, sizeof (afsUUID)) == 0); }
-afs_int32 afs_uuid_is_nil(u1) afsUUID *u1; { 
+
+afs_int32 afs_uuid_equal(afsUUID *u1, afsUUID *u2)
+{
+	return(uuid_memcmp((void *)u1, (void *)u2, sizeof (afsUUID)) == 0);
+}
+
+afs_int32 afs_uuid_is_nil(afsUUID *u1)
+{
     if (!u1) return 1;
     return(uuid_memcmp((void *)u1, (void *)&afs_uuid_g_nil_uuid, sizeof (afsUUID)) == 0); 
 }
 
-
-void afs_htonuuid(uuidp)
-afsUUID *uuidp; {
+void afs_htonuuid(afsUUID *uuidp)
+{
     uuidp->time_low = htonl(uuidp->time_low);
     uuidp->time_mid = htons(uuidp->time_mid);
     uuidp->time_hi_and_version = htons(uuidp->time_hi_and_version);
 }
 
-void afs_ntohuuid(uuidp)
-afsUUID *uuidp; {
+void afs_ntohuuid(afsUUID *uuidp)
+{
     uuidp->time_low = ntohl(uuidp->time_low);
     uuidp->time_mid = ntohs(uuidp->time_mid);
     uuidp->time_hi_and_version = ntohs(uuidp->time_hi_and_version);
 }
  
-static u_short true_random () {
+static u_short true_random (void)
+{
     rand_m += 7;
     rand_ia += 1907;
     rand_ib += 73939;
@@ -131,9 +137,8 @@ static u_short true_random () {
 }
 
 
-static afs_int32 time_cmp (time1, time2)
-uuid_time_p_t           time1;
-uuid_time_p_t           time2; {
+static afs_int32 time_cmp (uuid_time_p_t time1, uuid_time_p_t time2)
+{
     if (time1->hi < time2->hi) return (-1);
     if (time1->hi > time2->hi) return (1);
     if (time1->lo < time2->lo) return (-1);
@@ -141,8 +146,8 @@ uuid_time_p_t           time2; {
     return (0);
 }
 
-afs_int32 afs_uuid_create (uuid)
-afsUUID *uuid; {
+afs_int32 afs_uuid_create (afsUUID *uuid)
+{
     uuid_address_t eaddr;
     afs_int32 got_no_time = 0, code;
 
@@ -227,8 +232,8 @@ afsUUID *uuid; {
     return 0;
 }
 
-u_short afs_uuid_hash (uuid)
-afsUUID *uuid; {
+u_short afs_uuid_hash (afsUUID *uuid)
+{
     short               c0=0, c1=0, x, y;
     char             *next_uuid = (char *) uuid;
 

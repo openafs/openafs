@@ -24,4 +24,5 @@
 #include "../afs/dir.h"
 #include "../afs/afs_axscache.h"
 #include "../afs/icl.h"
+#include "../afs/afs_stats.h"
 #include "../afs/afs_prototypes.h"

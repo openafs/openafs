@@ -143,14 +143,8 @@ struct afs_cacheOps *afs_cacheType;
  *	Call this from close call when vnodeops is RCS unlocked.
  */
 
-void
-afs_StoreWarn(acode, avolume, aflags)
-    register afs_int32 acode;
-    afs_int32 avolume;
-    register afs_int32 aflags;
-
-{ /*afs_StoreWarn*/
-
+void afs_StoreWarn(register afs_int32 acode, afs_int32 avolume, register afs_int32 aflags)
+{
     static char problem_fmt[] =
 	"afs: failed to store file in volume %d (%s)\n";
     static char problem_fmt_w_error[] =
@@ -158,7 +152,6 @@ afs_StoreWarn(acode, avolume, aflags)
     static char netproblems[] = "network problems";
     static char partfull[]    = "partition full";
     static char overquota[]   = "over quota";
-    static char unknownerr[]  = "unknown error";
 
     AFS_STATCNT(afs_StoreWarn);
     if (acode < 0) {
@@ -206,14 +199,15 @@ afs_StoreWarn(acode, avolume, aflags)
 	    }
 } /*afs_StoreWarn*/
 
-void afs_MaybeWakeupTruncateDaemon() {
+void afs_MaybeWakeupTruncateDaemon(void)
+{
     if (!afs_CacheTooFull && afs_CacheIsTooFull()) {
 	afs_CacheTooFull = 1;
 	if (!afs_TruncateDaemonRunning)
-	    afs_osi_Wakeup((char *)afs_CacheTruncateDaemon);
+	    afs_osi_Wakeup((int *)afs_CacheTruncateDaemon);
     } else if (!afs_TruncateDaemonRunning &&
 		afs_blocksDiscarded > CM_MAXDISCARDEDCHUNKS) {
-	afs_osi_Wakeup((char *)afs_CacheTruncateDaemon);
+	afs_osi_Wakeup((int *)afs_CacheTruncateDaemon);
     }
 }
 
@@ -296,7 +290,7 @@ void afs_CacheTruncateDaemon(void)
 	    afs_stats_AddTo(CTD_stats.CTD_runTime, CTD_tmpTime);
 
 	    afs_TruncateDaemonRunning = 0;
-	    afs_osi_Sleep((char *)afs_CacheTruncateDaemon);  
+	    afs_osi_Sleep((int *)afs_CacheTruncateDaemon);  
 	    afs_TruncateDaemonRunning = 1;
 
 	    osi_GetuTime(&CTD_stats.CTD_afterSleep);
@@ -333,13 +327,8 @@ void afs_CacheTruncateDaemon(void)
  *	anewsize : New size desired.
  */
 
-void
-afs_AdjustSize(adc, newSize)
-    register struct dcache *adc;
-    register afs_int32 newSize;
-
-{ /*afs_AdjustSize*/
-
+void afs_AdjustSize(register struct dcache *adc, register afs_int32 newSize)
+{
     register afs_int32 oldSize;
 
     AFS_STATCNT(afs_AdjustSize);
@@ -354,11 +343,7 @@ afs_AdjustSize(adc, newSize)
     }
     afs_blocksUsed += (newSize - oldSize);
     afs_stats_cmperf.cacheBlocksInUse = afs_blocksUsed;	/* XXX */
-
-} /*afs_AdjustSize*/
-
-
-
+}
 
 
 /*
@@ -801,8 +786,7 @@ void afs_FlushDCache(register struct dcache *adc)
  *
  * Environment: called with afs_xdcache lock write-locked.
  */
-static void afs_FreeDCache(adc)
-    register struct dcache *adc;
+static void afs_FreeDCache(register struct dcache *adc)
 {
     /* Thread on free list, update free list count and mark entry as
      * freed in its indexFlags element.  Also, ensure DCache entry gets
@@ -844,12 +828,8 @@ static void afs_FreeDCache(adc)
  *	Must be called with afs_xdcache write-locked.
  */
 
-static void
-afs_DiscardDCache(adc)
-    register struct dcache *adc;
-
-{ /*afs_DiscardDCache*/
-
+static void afs_DiscardDCache(register struct dcache *adc)
+{
     register afs_int32 size;
 
     AFS_STATCNT(afs_DiscardDCache);
@@ -884,8 +864,7 @@ afs_DiscardDCache(adc)
  * Description:
  *     Free the next element on the list of discarded cache elements.
  */
-static void
-afs_FreeDiscardedDCache()
+static void afs_FreeDiscardedDCache(void)
 {
     register struct dcache *tdc;
     register struct osi_file *tfile; 
@@ -969,12 +948,8 @@ int afs_MaybeFreeDiscardedDCache(void)
  * Environment:
  *	Must be called with afs_xdcache write-locked.
  */
-static void
-afs_GetDownDSlot(anumber)
-    int anumber;
-
-{ /*afs_GetDownDSlot*/
-
+static void afs_GetDownDSlot(int anumber)
+{
     struct afs_q *tq, *nq;
     struct dcache *tdc;
     int ix;
@@ -1473,7 +1448,8 @@ struct tlocal1 {
  * Update the vnode-to-dcache hint if we can get the vnode lock
  * right away.  Assumes dcache entry is at least read-locked.
  */
-void updateV2DC(int lockVc, struct vcache *v, struct dcache *d, int src) {
+void updateV2DC(int lockVc, struct vcache *v, struct dcache *d, int src)
+{
     if (!lockVc || 0 == NBObtainWriteLock(&v->lock,src)) {
 	if (hsame(v->m.DataVersion, d->f.versionNo) && v->callback) {
 	    v->quick.dc = d;
@@ -2517,11 +2493,8 @@ done:
  * Environment:
  *	The afs_xdcache is write-locked through this whole affair.
  */
-void
-afs_WriteThroughDSlots()
-
-{ /*afs_WriteThroughDSlots*/
-
+void afs_WriteThroughDSlots(void)
+{
     register struct dcache *tdc;
     register afs_int32 i, touchedit=0;
     struct dcache **ents;
@@ -2596,8 +2569,7 @@ afs_WriteThroughDSlots()
 	afs_osi_Write(afs_cacheInodep, 0, &theader, sizeof(theader));
     }
     MReleaseWriteLock(&afs_xdcache);
-
-} /*afs_WriteThroughDSlots*/
+}
 
 /*
  * afs_MemGetDSlot
@@ -2615,7 +2587,7 @@ afs_WriteThroughDSlots()
  */
 
 struct dcache *afs_MemGetDSlot(register afs_int32 aslot, register struct dcache *tmpdc)
-{ /*afs_MemGetDSlot*/
+{
     register afs_int32 code;
     register struct dcache *tdc;
     register char *tfile;

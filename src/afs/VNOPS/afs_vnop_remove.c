@@ -94,13 +94,10 @@ afs_IsWired(avc)
 }
 #endif	/* AFS_OSF_ENV */
 
-afsremove(adp, tdc, tvc, aname, acred, treqp)
-    register struct vcache *adp;
-    register struct dcache *tdc;
-    register struct vcache *tvc;
-    char *aname;
-    struct vrequest *treqp;
-    struct AFS_UCRED *acred; {
+int afsremove(register struct vcache *adp, register struct dcache *tdc, 
+	register struct vcache *tvc, char *aname, struct AFS_UCRED *acred, 
+	struct vrequest *treqp)
+{
     register afs_int32 code;
     register struct conn *tc;
     struct AFSFetchStatus OutDirStatus;
@@ -184,7 +181,8 @@ afsremove(adp, tdc, tvc, aname, acred, treqp)
     return (0);
 }
 
-static char *newname() {
+static char *newname(void)
+{
     char *name, *sp, *p = ".__afs";
     afs_int32 rd = afs_random() & 0xffff;
 
@@ -410,9 +408,7 @@ tagain:
  *
  * CAUTION -- may be called with avc unheld. */
 
-afs_remunlink(avc, doit)
-    register struct vcache *avc;
-    register int doit;
+int afs_remunlink(register struct vcache *avc, register int doit)
 {
     struct AFS_UCRED *cred;
     char *unlname;

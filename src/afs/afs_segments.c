@@ -162,7 +162,7 @@ int afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
     int hash, stored;
     afs_hyper_t newDV, oldDV;	/* DV when we start, and finish, respectively */
     struct dcache **dcList, **dclist;
-    unsigned int i, j, minj, maxj, moredata, high, off;
+    unsigned int i, j, minj, moredata, high, off;
     afs_size_t tlen;
     afs_size_t maxStoredLength; /* highest offset we've written to server. */
     int safety;
@@ -482,7 +482,7 @@ restart:
 #endif /* AFS_64BIT_CLIENT */
 		    if ((tdc->f.chunkBytes < afs_OtherCSize) && 
 			(i < (nchunks-1))) {
-                       int bsent, tlen, tlen1=0, sbytes = afs_OtherCSize - tdc->f.chunkBytes;
+                       int bsent, tlen, sbytes = afs_OtherCSize - tdc->f.chunkBytes;
                        char *tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
  
                        while (sbytes > 0) {

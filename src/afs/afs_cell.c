@@ -53,9 +53,9 @@ afs_uint32 afs_nextCellNum = 0x100;
 struct cell *afs_rootcell = 0;
 
 /* Handler waiting for request from client */
-static char afs_AfsdbHandlerWait;
+static int afs_AfsdbHandlerWait;
 /* Client waiting for handler to become available or finish request */
-static char afs_AfsdbLookupWait;
+static int afs_AfsdbLookupWait;
 
 /* Set to 1 when we've seen the userspace AFSDB process at least once */
 char afs_AfsdbHandlerPresent = 0;
@@ -77,8 +77,7 @@ char afs_AfsdbHandler_ReqPending = 0;
 /* Handler sets Completed to 1 when it completes the client request */
 char afs_AfsdbHandler_Completed = 0;
 
-int afs_strcasecmp(s1, s2)
-    register char *s1, *s2;
+int afs_strcasecmp(register char *s1, register char *s2)
 {
     while (*s1 && *s2) {
 	register char c1, c2;
@@ -96,7 +95,7 @@ int afs_strcasecmp(s1, s2)
 
 
 #ifdef AFS_AFSDB_ENV
-void afs_StopAfsdb()
+void afs_StopAfsdb(void)
 {
     if (afs_AfsdbHandlerPresent) {
 	afs_osi_Wakeup(&afs_AfsdbHandlerWait);
@@ -106,10 +105,7 @@ void afs_StopAfsdb()
     }
 }
 
-int afs_AfsdbHandler(acellName, acellNameLen, kernelMsg)
-    char *acellName;
-    int acellNameLen;
-    afs_int32 *kernelMsg;
+int afs_AfsdbHandler(char *acellName, int acellNameLen, afs_int32 *kernelMsg)
 {
     /* afs_syscall_call() has already grabbed the global lock */
 
@@ -164,11 +160,8 @@ int afs_AfsdbHandler(acellName, acellNameLen, kernelMsg)
 #endif
 
 
-int afs_GetCellHostsFromDns(acellName, acellHosts, timeout, realName)
-    char *acellName;
-    afs_int32 *acellHosts;
-    int *timeout;
-    char **realName;
+int afs_GetCellHostsFromDns(char *acellName, afs_int32 *acellHosts, 
+	int *timeout, char **realName)
 {
 #ifdef AFS_AFSDB_ENV
     char grab_glock = 0;
@@ -217,8 +210,7 @@ int afs_GetCellHostsFromDns(acellName, acellHosts, timeout, realName)
 }
 
 
-void afs_RefreshCell(ac)
-    register struct cell *ac;
+void afs_RefreshCell(register struct cell *ac)
 {
     afs_int32 cellHosts[MAXCELLHOSTS];
     char *realName = NULL;
@@ -362,7 +354,7 @@ static struct cell *afs_GetCellInternal(register afs_int32 acell,
 	ReleaseWriteLock(&afs_xcell);
     return (struct cell *) 0;
 
-} /*afs_GetCell*/
+}
 
 struct cell *afs_GetCell(register afs_int32 acell, afs_int32 locktype)
 {
@@ -396,7 +388,7 @@ struct cell *afs_GetCellByIndex(register afs_int32 cellindex,
     ReleaseWriteLock(&afs_xcell);
     return (struct cell *) 0;
 
-} /*afs_GetCellByIndex*/
+}
 
 
 afs_int32 afs_NewCell(char *acellName, register afs_int32 *acellHosts, int aflags, 
@@ -525,10 +517,9 @@ bad:
     }
     ReleaseWriteLock(&afs_xcell);
     return code;
+}
 
-} /*afs_NewCell*/
-
-int afs_RemoveCellEntry(struct server *srvp)
+void afs_RemoveCellEntry(struct server *srvp)
 {
   struct cell *tc;
   afs_int32 j, k;

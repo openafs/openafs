@@ -383,10 +383,8 @@ int afs_ENameOK(register char *aname)
     return 1;
 }
 
-afs_getsysname(areq, adp, bufp)
-    register struct vrequest *areq;
-    register struct vcache *adp;
-    register char *bufp;
+int afs_getsysname(register struct vrequest *areq, register struct vcache *adp, 
+	register char *bufp)
 {
     static char sysname[MAXSYSNAME];
     register struct unixuser *au;
@@ -410,11 +408,8 @@ afs_getsysname(areq, adp, bufp)
     }
 }
 
-Check_AtSys(avc, aname, state, areq)
-    register struct vcache *avc;
-    char *aname;
-    struct sysname_info *state;
-    struct vrequest *areq;
+int Check_AtSys(register struct vcache *avc, char *aname, 
+	struct sysname_info *state, struct vrequest *areq)
 {
     if (AFS_EQ_ATSYS(aname)) {
       state->offset = 0;
@@ -429,10 +424,8 @@ Check_AtSys(avc, aname, state, areq)
     }
 }
 
-Next_AtSys(avc, areq, state)
-     register struct vcache *avc;
-     struct vrequest *areq;
-     struct sysname_info *state;
+int Next_AtSys(register struct vcache *avc, struct vrequest *areq, 
+	struct sysname_info *state)
 {
   if (state->index == -1)
     return 0;	/* No list */
@@ -489,10 +482,7 @@ extern int BlobScan(afs_int32 *afile, afs_int32 ablob);
  */
 static struct vcache *BStvc = (struct vcache *) 0;
 
-int afs_DoBulkStat(adp, dirCookie, areqp)
-  struct vcache *adp;
-  long dirCookie;
-  struct vrequest *areqp;
+int afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 {
     int nentries;		/* # of entries to prefetch */
     int nskip;			/* # of slots in the LRU queue to skip */

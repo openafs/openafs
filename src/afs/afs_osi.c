@@ -163,8 +163,8 @@ afs_lock_t afs_ftf;		/* flush text lock */
  * shouldn't do anything that would discard newly written data before
  * it is written to the file system. */
 
-void osi_FlushText_really(vp)
-    register struct vcache *vp; {
+void osi_FlushText_really(register struct vcache *vp)
+{
     afs_hyper_t fdv;	/* version before which we'll flush */
 
     AFS_STATCNT(osi_FlushText);

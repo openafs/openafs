@@ -12,11 +12,12 @@
 
 /* afs_analyze.c */
 extern void afs_FinalizeReq(struct vrequest *areq);
-
 extern int afs_Analyze(register struct conn *aconn, afs_int32 acode,
     struct VenusFid *afid, register struct vrequest *areq, int op,
     afs_int32 locktype, struct cell *cellp);
 extern int afs_CheckCode(afs_int32 acode, struct vrequest *areq, int where);
+extern void afs_CopyError(register struct vrequest *afrom, register struct vrequest *ato);
+
 
 /* afs_axscache.c */
 extern afs_rwlock_t afs_xaxs;
@@ -91,6 +92,12 @@ extern int afs_icl_Event0(register struct afs_icl_set *setp, afs_int32 eventID,
 extern int afs_icl_AppendRecord(register struct afs_icl_log *logp, afs_int32 op, 
 	afs_int32 types, long p1, long p2, long p3, long p4);
 
+extern int afs_CheckInit(void);
+extern void afs_shutdown(void);
+extern void shutdown_afstest(void);
+extern void afs_shutdown_BKG(void);
+
+
 /* afs_callback.c */
 extern afs_int32 afs_allCBs;
 extern afs_int32 afs_oddCBs;
@@ -149,6 +156,7 @@ extern struct afs_q CellLRU;
 extern afs_rwlock_t afs_xcell;
 extern afs_int32 afs_cellindex;
 extern afs_uint32 afs_nextCellNum;
+extern int afs_strcasecmp(register char *s1, register char *s2);
 extern afs_int32 afs_NewCell(char *acellName, register afs_int32 *acellHosts, int aflags, 
         char *linkedcname, u_short fsport, u_short vlport, int timeout, char *aliasFor);
 extern struct cell *afs_GetCell(register afs_int32 acell, afs_int32 locktype);
@@ -159,6 +167,13 @@ extern struct cell *afs_GetCellByName2(register char *acellName, afs_int32 lockt
 extern struct cell *afs_GetCellByName_Dns(register char *acellName, afs_int32 locktype);
 extern struct cell *afs_GetCellByName(register char *acellName, afs_int32 locktype);
 extern struct cell *afs_GetCellNoLock(register afs_int32 acell, afs_int32 locktype);
+extern void afs_StopAfsdb(void);
+extern int afs_AfsdbHandler(char *acellName, int acellNameLen, afs_int32 *kernelMsg);
+extern int afs_GetCellHostsFromDns(char *acellName, afs_int32 *acellHosts, 
+        int *timeout, char **realName);
+extern void afs_RefreshCell(register struct cell *ac);
+extern void afs_RemoveCellEntry(struct server *srvp);
+
 
 /* afs_chunk.c */
 extern afs_int32 afs_FirstCSize;
@@ -178,6 +193,9 @@ extern struct conn *afs_ConnByMHosts(struct server *ahosts[], unsigned short apo
         afs_int32 acell, register struct vrequest *areq, afs_int32 locktype);
 extern struct conn *afs_ConnByHost(struct server *aserver, unsigned short aport, 
         afs_int32 acell, struct vrequest *areq, int aforce, afs_int32 locktype);
+extern void afs_PutConn(register struct conn *ac, afs_int32 locktype);
+extern int ForceNewConnections(struct srvAddr *sap);
+
 
 /* afs_daemons.c */
 extern afs_lock_t afs_xbrs;
@@ -194,6 +212,15 @@ extern void afs_Daemon(void);
 extern struct brequest *afs_BQueue(register short aopcode, register struct vcache *avc, 
         afs_int32 dontwait, afs_int32 ause, struct AFS_UCRED *acred, 
         afs_size_t asparm0, afs_size_t asparm1, void *apparm0);
+extern int afs_CheckServerDaemon(void);
+extern int afs_CheckRootVolume (void);
+extern void afs_BRelease(register struct brequest *ab);
+extern int afs_BBusy(void);
+extern int afs_BioDaemon (afs_int32 nbiods);
+extern void afs_BackgroundDaemon(void);
+extern void shutdown_daemons(void);
+extern int afs_sgidaemon(void);
+
 
 /* afs_dcache.c */
 extern u_int afs_min_cache;
@@ -221,6 +248,36 @@ extern struct dcache *afs_GetDCache(register struct vcache *avc, afs_size_t abyt
         register struct vrequest *areq, afs_size_t *aoffset, afs_size_t *alen, 
         int aflags);
 extern struct dcache *afs_FindDCache(register struct vcache *avc, afs_size_t abyte);
+extern void afs_StoreWarn(register afs_int32 acode, afs_int32 avolume, register afs_int32 aflags);
+extern void afs_MaybeWakeupTruncateDaemon(void);
+extern void afs_CacheTruncateDaemon(void);
+extern void afs_AdjustSize(register struct dcache *adc, register afs_int32 newSize);
+extern int afs_HashOutDCache(struct dcache *adc);
+extern int afs_MaybeFreeDiscardedDCache(void);
+extern int afs_RefDCache(struct dcache *adc);
+extern void afs_TryToSmush(register struct vcache *avc, struct AFS_UCRED *acred,
+        int sync);
+extern void updateV2DC(int lockVc, struct vcache *v, struct dcache *d, int src);
+extern void afs_WriteThroughDSlots(void);
+extern struct dcache *afs_UFSGetDSlot(register afs_int32 aslot, register struct dcache *tmpdc);
+extern int afs_WriteDCache(register struct dcache *adc, int atime);
+extern int afs_wakeup(register struct vcache *avc);
+extern int afs_InitCacheFile(char *afile, ino_t ainode);
+
+
+/* afs_dynroot.c */
+extern int afs_IsDynrootFid(struct VenusFid *fid);
+extern void afs_GetDynrootFid(struct VenusFid *fid);
+extern int afs_IsDynroot(struct vcache *avc);
+extern void afs_RefreshDynroot(void);
+extern void afs_GetDynroot(char **dynrootDir, int *dynrootLen, struct AFSFetchStatus *status);
+extern void afs_PutDynroot(void);
+extern int afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status);
+extern int afs_SetDynrootEnable(int enable);
+extern int afs_GetDynrootEnable(void);
+extern int afs_DynrootVOPRemove(struct vcache *avc, struct AFS_UCRED *acred, char *aname);
+extern int afs_DynrootVOPSymlink(struct vcache *avc, struct AFS_UCRED *acred, 
+        char *aname, char *atargetName);
 
 /* afs_exporter.c */
 extern struct afs_exporter *root_exported;
@@ -234,6 +291,15 @@ extern char *afs_sysname;
 extern char *afs_sysnamelist[MAXNUMSYSNAMES];
 extern int afs_sysnamecount;
 extern afs_int32 cacheInfoModTime;
+extern int afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 
+        ablocks, afs_int32 aDentries, afs_int32 aVolumes, afs_int32 achunk, 
+        afs_int32 aflags, afs_int32 ninodes, afs_int32 nusers);
+extern void afs_ComputeCacheParms(void);
+extern int afs_InitCacheInfo(register char *afile);
+extern int afs_ResourceInit(int preallocs);
+extern void shutdown_cache(void);
+extern void shutdown_vnodeops(void);
+extern void shutdown_AFS(void);
 
 /* afs_lock.c */
 extern void Lock_Init(register struct afs_lock *lock);
@@ -262,6 +328,13 @@ extern int afs_CheckBozonLockBlocking(struct afs_bozoLock *alock);
 extern afs_int32 afs_mariner;
 extern afs_int32 afs_marinerHost;
 extern struct rx_service *afs_server;
+extern int afs_AddMarinerName(register char *aname, register struct vcache *avc);
+extern char *afs_GetMariner(register struct vcache *avc);
+extern void afs_MarinerLogFetch(register struct vcache *avc, register afs_int32 off,
+        register afs_int32 bytes, register afs_int32 idx);
+extern void afs_MarinerLog(register char *astring, register struct vcache *avc);
+extern void shutdown_mariner(void);
+
 
 /* afs_memcache.c */
 extern void *afs_MemCacheOpen(ino_t blkno);
@@ -293,12 +366,24 @@ extern void afs_osi_Invisible(void);
 extern void afs_osi_RxkRegister(void);
 extern void afs_osi_MaskSignals(void);
 extern void afs_osi_UnmaskRxkSignals(void);
-#if AFS_GCPAGS
-extern const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr);
-extern void afs_osi_TraverseProcTable(void);
-#endif /* AFS_GCPAGS */
 extern void *afs_osi_Alloc(size_t x);
 extern void *afs_osi_Alloc_NoSleep(size_t x);
+extern void osi_Init(void);
+extern int osi_Active(register struct vcache *avc);
+extern void osi_FlushPages(register struct vcache *avc, struct AFS_UCRED *credp);
+extern void osi_FlushText_really(register struct vcache *vp);
+extern void afs_osi_MaskSignals(void);
+extern void afs_osi_UnmaskRxkSignals(void);
+extern void afs_osi_RxkRegister(void);
+extern void afs_osi_Invisible(void);
+extern int osi_VMDirty_p(struct vcache *avc);
+#ifndef UKERNEL
+extern void osi_ReleaseVM(struct vcache *avc, struct AFS_UCRED *acred);
+#endif
+extern void shutdown_osi(void);
+extern int afs_osi_suser(void *credp);
+extern void afs_osi_TraverseProcTable(void);
+
 
 /* afs_osi_pag.c */
 extern afs_uint32 genpag(void);
@@ -316,15 +401,26 @@ extern void afs_osi_Free(void *x, size_t asize);
 extern afs_int32 afs_preallocs;
 extern afs_lock_t osi_fsplock;
 extern afs_lock_t osi_flplock;
+#ifndef afs_osi_Alloc
+extern void *afs_osi_Alloc(size_t x);
+#endif
+#ifndef afs_osi_Alloc_NoSleep
+extern void *afs_osi_Alloc_NoSleep(size_t x);
+#endif
+#ifndef afs_osi_Free
+extern void afs_osi_Free(void *x, size_t asize);
+#endif
 extern void *osi_AllocLargeSpace(size_t size);
 extern void *osi_AllocMediumSpace(size_t size);
 extern void *osi_AllocSmallSpace(size_t size);
-#if 0 /* defines are rewriting this */
+#ifndef osi_AllocSmall
 extern char *osi_AllocSmall(register afs_int32 size, register afs_int32 morespace);
 #endif
 extern void osi_FreeLargeSpace(void *adata);
 extern void osi_FreeMediumSpace(void *adata);
 extern void osi_FreeSmallSpace(void *adata);
+
+
 
 /* ARCH/osi_misc.c */
 extern void osi_iput(struct inode *ip);
@@ -369,6 +465,14 @@ extern short afs_waitForeverCount;
 extern afs_int32 afs_showflags;
 extern int afs_defaultAsynchrony;
 
+/* afs_segments.c */
+extern int afs_StoreMini(register struct vcache *avc, struct vrequest *areq);
+extern int afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
+        int sync);
+extern int afs_InvalidateAllSegments(struct vcache *avc);
+extern int afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
+        struct vrequest *areq, struct AFS_UCRED *acred);
+
 /* afs_server.c */
 extern afs_rwlock_t afs_xsrvAddr;
 extern afs_rwlock_t afs_xserver;
@@ -384,6 +488,23 @@ extern struct server *afs_GetServer(afs_uint32 *aserver, afs_int32 nservers,
 				    afs_int32 addr_uniquifier);
 extern void afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown);
 extern void afs_ServerDown(struct srvAddr *sa);
+extern void afs_CountServers(void);
+extern void afs_CheckServers(int adown, struct cell *acellp);
+extern unsigned int afs_random(void);
+extern int afs_randomMod15(void);
+extern int afs_randomMod127(void);
+extern void afs_SortOneServer(struct server *asp);
+extern void afs_SortServers(struct server *aservers[], int count);
+extern void afs_FlushServer(struct server *srvp);
+extern void afs_RemoveSrvAddr(struct srvAddr *sap);
+extern void afs_ActivateServer(struct srvAddr *sap);
+#ifdef AFS_USERSPACE_IP_ADDR
+extern int afsi_SetServerIPRank(struct srvAddr *sa, afs_int32 addr, afs_uint32 subnetmask);
+#else
+void afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa);
+#endif
+
+
 
 /* afs_osidnlc.c */
 extern int osi_dnlc_enter(struct vcache *adp, char *aname, struct vcache *avc, afs_hyper_t *avno);
@@ -397,8 +518,25 @@ extern int osi_dnlc_init(void);
 extern int osi_dnlc_shutdown(void);
 
 
+/* afs_stat.c */
+extern struct afs_CMStats afs_cmstats;
+extern struct afs_stats_CMPerf afs_stats_cmperf;
+extern struct afs_stats_CMFullPerf afs_stats_cmfullperf;
+afs_int32 afs_stats_XferSumBytes[AFS_STATS_NUM_FS_XFER_OPS];
+extern void afs_InitStats(void);
+extern int afs_GetCMStat(char **ptr, unsigned *size);
+#ifndef AFS_NOSTATS
+extern int afs_AddToMean(struct afs_MeanStats *oldMean, afs_int32 newValue);
+#endif
+
+
 /* UKERNEL/afs_usrops.c */
+#ifdef UKERNEL
 extern void uafs_Shutdown(void);
+extern void osi_ReleaseVM(struct vcache *avc, int len, struct usr_ucred *credp);
+#endif
+
+
 
 /* afs_user.c */
 extern afs_rwlock_t afs_xuser;
@@ -412,6 +550,12 @@ extern void afs_GCPAGs_perproc_func(AFS_PROC *pproc);
 #endif /* AFS_GCPAGS */
 extern void afs_ComputePAGStats(void);
 extern void afs_PutUser(register struct unixuser *au, afs_int32 locktype);
+extern void afs_GCUserData(int aforce);
+extern void afs_CheckTokenCache(void);
+extern void afs_ResetAccessCache(afs_int32 uid, int alock);
+extern void afs_ResetUserConns (register struct unixuser *auser);
+extern void afs_SetPrimary(register struct unixuser *au, register int aflag);
+
 
 /* afs_util.c */
 extern char *afs_cv2string(char *ttp, afs_uint32 aval);
@@ -471,6 +615,20 @@ extern struct vcache *afs_GetVCache(register struct VenusFid *afid, struct vrequ
 extern void afs_PutVCache(register struct vcache *avc, afs_int32 locktype);
 extern void afs_ProcessFS(register struct vcache *avc, register struct AFSFetchStatus *astat, 
         struct vrequest *areq);
+extern struct afs_cbr *afs_AllocCBR(void);
+extern int afs_FreeCBR(register struct afs_cbr *asp);
+extern int afs_RemoveVCB(register struct VenusFid *afid);
+extern void afs_FlushActiveVcaches(register afs_int32 doflocks);
+extern int afs_WriteVCache(register struct vcache *avc, 
+        register struct AFSStoreStatus *astatus, struct vrequest *areq);
+extern int afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
+        char *name, struct VenusFid *nfid, struct AFSFetchStatus *OutStatusp,
+        struct AFSCallBack *CallBackp, struct server **serverp, struct AFSVolSync *tsyncp);
+extern afs_int32 afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid, 
+        afs_int32 lockit);
+extern void afs_vcacheInit(int astatSize);
+extern void shutdown_vcache(void);
+
 
 /* VNOPS/afs_vnop_access.c */
 extern afs_int32 afs_GetAccessBits(register struct vcache *avc, register afs_int32 arights, 
@@ -527,6 +685,13 @@ extern int afs_TryEvalFakeStat(struct vcache **avcp, struct afs_fakestat_state *
         struct vrequest *areq);
 extern void afs_PutFakeStat(struct afs_fakestat_state *state);
 extern int afs_ENameOK(register char *aname);
+extern int afs_getsysname(register struct vrequest *areq, register struct vcache *adp, 
+        register char *bufp);
+extern int Check_AtSys(register struct vcache *avc, char *aname, 
+        struct sysname_info *state, struct vrequest *areq);
+extern int Next_AtSys(register struct vcache *avc, struct vrequest *areq, 
+        struct sysname_info *state);
+extern int afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp);
 
 
 
@@ -541,6 +706,13 @@ extern int afs_MemRead(register struct vcache *avc, struct uio *auio, struct AFS
 /* VNOPS/afs_vnop_readdir.c */
 extern int afs_rd_stash_i;
 
+/* VNOPS/afs_vnop_remove.c */
+extern int afsremove(register struct vcache *adp, register struct dcache *tdc, 
+        register struct vcache *tvc, char *aname, struct AFS_UCRED *acred, 
+        struct vrequest *treqp);
+extern int afs_remunlink(register struct vcache *avc, register int doit);
+
+
 /* VNOPS/afs_vnop_symlink.c */
 extern int afs_MemHandleLink(register struct vcache *avc, struct vrequest *areq);
 
@@ -550,6 +722,11 @@ extern afs_int32 lastWarnTime;
 /* VNOPS/afs_vnop_write.c */
 extern int afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio, 
 	struct AFS_UCRED *acred, int noLock);
+extern int afs_StoreOnLastReference(register struct vcache *avc, register struct vrequest *treq);
+extern int afs_UFSWrite(register struct vcache *avc, struct uio *auio,
+        int aio, struct AFS_UCRED *acred, int noLock);
+extern int afs_DoPartialWrite(register struct vcache *avc, struct vrequest *areq);
+extern int afs_closex(register struct file *afd);
 
 
 /* afs_volume.c */
@@ -575,9 +752,8 @@ extern struct volume *afs_GetVolume(struct VenusFid *afid, struct vrequest *areq
 extern struct volume *afs_GetVolumeByName(register char *aname, afs_int32 acell, 
         int agood, struct vrequest *areq, afs_int32 locktype);
 
-
-
-
+extern struct volume *afs_UFSGetVolSlot(void);
+extern void afs_CheckVolumeNames(int flags);
 
 
 /* MISC PROTOTYPES - THESE SHOULD NOT BE HERE */

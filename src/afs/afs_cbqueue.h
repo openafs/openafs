@@ -19,7 +19,7 @@
 /* how many slots in the table */
 #define CBHTSIZE    128
 /* 7 is LOG2(slotlen) */
-#define CBHash(t) (t>>7)
+#define CBHash(t) ((t)>>7)
 
 #define	CBQTOV(e)	    ((struct vcache *)(((char *) (e)) - (((char *)(&(((struct vcache *)(e))->callsort))) - ((char *)(e)))))
 

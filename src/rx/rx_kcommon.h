@@ -101,6 +101,9 @@ struct coda_inode_info {};
 #include "../afs/longc_procs.h"
 #include "../afs/afs_stats.h"
 #include "../h/errno.h"
+#ifdef KERNEL
+#include "../afs/afsincludes.h"
+#endif
 
 extern afs_int32 afs_termState;
 extern int (*rxk_GetPacketProc)(); /* set to packet allocation procedure */

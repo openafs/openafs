@@ -37,9 +37,7 @@ extern unsigned char *afs_indexFlags;
  * afs_FlushActiveVCaches routine (when CCORE is on).
  * avc->lock must be write-locked.
  */
-afs_StoreOnLastReference(avc, treq)
-register struct vcache *avc;
-register struct vrequest *treq;
+int afs_StoreOnLastReference(register struct vcache *avc, register struct vrequest *treq)
 {
     int code = 0;
  
@@ -671,9 +669,8 @@ int afs_UFSWrite(register struct vcache *avc, struct uio *auio,
 }
 
 /* do partial write if we're low on unmodified chunks */
-afs_DoPartialWrite(avc, areq)
-register struct vcache *avc;
-struct vrequest *areq; {
+int afs_DoPartialWrite(register struct vcache *avc, struct vrequest *areq)
+{
     register afs_int32 code;
 
     if (afs_stats_cmperf.cacheCurrDirtyChunks <= afs_stats_cmperf.cacheMaxDirtyChunks) 
@@ -712,8 +709,8 @@ struct vrequest *areq; {
  * N.B: Intercepting close syscall doesn't trap aborts or exit system
  * calls.
 */
-afs_closex(afd)
-    register struct file *afd; {
+int afs_closex(register struct file *afd)
+{
     struct vrequest treq;
     struct vcache *tvc;
     afs_int32 flags;

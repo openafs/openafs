@@ -74,14 +74,10 @@ int afs_memvolumes = 0;
 
 struct cm_initparams cm_initParams;
 static int afs_cacheinit_flag = 0;
-int
-afs_CacheInit(astatSize, afiles, ablocks, aDentries, aVolumes, achunk, aflags,
-	      ninodes, nusers)
-    afs_int32 afiles;
-    afs_int32 astatSize, ablocks; 
-    afs_int32 achunk, aflags, ninodes, nusers;
-    afs_int32 aDentries;
-{ /*afs_CacheInit*/
+int afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 
+	ablocks, afs_int32 aDentries, afs_int32 aVolumes, afs_int32 achunk, 
+	afs_int32 aflags, afs_int32 ninodes, afs_int32 nusers)
+{
     register afs_int32 i, preallocs;
     register struct volume *tv;
     long code;
@@ -184,11 +180,8 @@ afs_CacheInit(astatSize, afiles, ablocks, aDentries, aVolumes, achunk, aflags,
   *	None.
   */
 
-void
-afs_ComputeCacheParms()
-
-{ /*afs_ComputeCacheParms*/
-
+void afs_ComputeCacheParms(void)
+{
     register afs_int32 i;
     afs_int32 afs_maxCacheDirty;
 
@@ -522,8 +515,7 @@ int afs_ResourceInit(int preallocs)
  * support features that require knowing the size of struct proc.
  */
 
-static void
-afs_procsize_init(void)
+static void afs_procsize_init(void)
 {
     struct proc *p0;	/* pointer to process 0 */
     struct proc *pN;	/* pointer to process 0's first child */
@@ -589,10 +581,8 @@ afs_procsize_init(void)
  * Environment:
  *	Nothing interesting.
  */
-void
-shutdown_cache()
-
-{ /*shutdown_cache*/
+void shutdown_cache(void)
+{
     register struct afs_cbr *tsp, *nsp;
     int i;
 
@@ -620,7 +610,7 @@ shutdown_cache()
 } /*shutdown_cache*/
 
 
-void shutdown_vnodeops()
+void shutdown_vnodeops(void)
 {
 #if !defined(AFS_SGI_ENV) && !defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
     struct buf *afs_bread_freebp = 0;
@@ -643,8 +633,7 @@ void shutdown_vnodeops()
 }
 
 
-void shutdown_AFS()
-
+void shutdown_AFS(void)
 {
     int i;
     register struct srvAddr *sa;
@@ -777,5 +766,4 @@ void shutdown_AFS()
       RWLOCK_INIT(&afs_xserver, "afs_xserver");
       LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
     }
-    
-} /*shutdown_AFS*/
+}

@@ -82,23 +82,28 @@ RCSID("$Header$");
 #include <string.h>
 #include <sys/wait.h>
 #include <stdlib.h>
+#ifdef HAVE_PWD_H
+#include <pwd.h>
+#endif
+#include <stdio.h>
 
-struct stat istat, ostat;
+static struct stat istat, ostat;
+static int stripcalled = 0;
 
 extern int errno;
 extern int sys_nerr;
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 extern char *sys_errlist[];
 #endif
-#if	defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-extern struct passwd *getpwnam();
-int stripcalled = 0;
-#endif
+
+/* static prototypes */
+char *ErrorString(int aerrno);
+int stripName(char *aname);
+int atoo(register char *astr);
+
 
 #if defined(AFS_HPUX_ENV) && !defined(AFS_HPUX102_ENV)
-utimes(file,tvp)
-char *file;
-struct timeval tvp[2];
+int utimes(char *file, struct timeval tvp[2])
 {
 	struct utimbuf times;
 	
@@ -108,9 +113,7 @@ struct timeval tvp[2];
 }
 #endif
 
-static char *strrpbrk (s, set)
-  char *s;
-  char *set;
+static char *strrpbrk (char *s, char *set)
 {
     char sets[256];
     int  i;
@@ -122,8 +125,8 @@ static char *strrpbrk (s, set)
     return 0;
 }
 
-char *ErrorString(aerrno)
-    int aerrno; {
+char *ErrorString(int aerrno)
+{
     static char tbuffer[100];
     if (aerrno < 0 || aerrno >= sys_nerr) {
 	sprintf(tbuffer, "undefined error code %d", aerrno);
@@ -133,17 +136,15 @@ char *ErrorString(aerrno)
     return tbuffer;
 }
 
-int
-stripName(aname)
-    char *aname;
-    {if (strrchr(aname, '.') == 0) return 1;
+int stripName(char *aname)
+{
+    if (strrchr(aname, '.') == 0) return 1;
     else return 0;
-    }
+}
 
-int
-atoo(astr)
-    register char *astr;
-    {register afs_int32 value;
+int atoo(register char *astr)
+{
+    register afs_int32 value;
     register char tc;
     value = 0;
     while ((tc = *astr++))
@@ -151,16 +152,15 @@ atoo(astr)
 	value += tc-'0';
 	}
     return value;
-    }
+}
 
 #if	defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV)
 /*
  * Implementation lifted from that for AIX 3.1, since there didn't seem to be any
  * reason why it wouldn't work.
  */
-static int
-quickStrip (iname, oname, ignored, copy_only)
-char *iname, *oname; {
+static int quickStrip (char *iname, char *oname, int ignored, int copy_only)
+{
 	int pid, status;
 	static char *strip[] = {
 		"strip", 0, 0,
@@ -241,25 +241,6 @@ char *iname, *oname; {
 	return status;
 }
 
-/*
- * AIXobject -	lie about file type
- *
- * Input:
- *	ignored
- *
- * Returns:
- *	!0 indicating that the file in question is an XCOFF type file.
- *
- * Note:
- *	Since /bin/strip will make that call for us, we will lie so that
- *	it has a chance.
- */
-int
-AIXobject(ignored) {
-
-	return !0;
-}
-
 #else
 #ifdef AFS_AIX_ENV
 #ifdef AFS_AIX32_ENV
@@ -267,9 +248,8 @@ AIXobject(ignored) {
  * whoa! back up and be a little more rational (every little bit helps in
  * aix_31).
  */
-static
-quickStrip (iname, oname, ignored, copy_only)
-char *iname, *oname; {
+static int quickStrip (char *iname, char *oname, int ignored, int copy_only)
+{
 	int pid, status;
 	static char *strip[] = {
 		"strip", 0, 0,
@@ -341,31 +321,12 @@ char *iname, *oname; {
 	return status;
 }
 
-/*
- * AIXobject -	lie about file type
- *
- * Input:
- *	ignored
- *
- * Returns:
- *	!0 indicating that the file in question is an XCOFF type file.
- *
- * Note:
- *	Since /bin/strip will make that call for us, we will lie so that
- *	it has a chance.
- */
-AIXobject(ignored) {
-
-	return !0;
-}
 #endif	/* AFS_AIX32_ENV	*/
 #else	/* !AFS_AIX_ENV		*/
 
 #ifdef	mips
 #include "sex.h"
-int quickStrip(fd, asize)
-int fd;	/* file descriptor */
-afs_int32 asize; /* ignored */
+int quickStrip(int fd, afs_int32 asize)
 {
     FILHDR fheader;
     int dum, newlen;
@@ -417,10 +378,8 @@ afs_int32 asize; /* ignored */
     return 0;
 }
 #else /* !mips */
-static int quickStrip (afd, asize)
-    int afd;
-    afs_int32 asize; {
-
+static int quickStrip (int afd, afs_int32 asize)
+{
     int n, bytesLeft;
     struct exec buf;
     struct exec *head;
@@ -458,10 +417,7 @@ static int quickStrip (afd, asize)
 
 #include "AFS_component_version_number.c"
 
-int
-main (argc, argv)
-    int argc;
-    char **argv;
+int main (int argc, char *argv[])
 {
     int setOwner, setMode, setGroup, ifd, ofd;
     afs_int32 mode=0, owner, group;
@@ -690,7 +646,7 @@ main (argc, argv)
 #if	defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV)
 	stripcalled = 0;
 	if (strip == 1 ||
-	    ((strip == -1 && ((istat.st_mode & 0111) == 0111) && stripName(newNames[i])) && AIXobject(fnames[i])))
+	    ((strip == -1 && ((istat.st_mode & 0111) == 0111) && stripName(newNames[i]))))
 	    stripcalled = 1;
 	if (!stripcalled) {
 	    /* Simply copy target to dest */
@@ -838,4 +794,4 @@ main (argc, argv)
       }
     /* all done now */
     exit(rcode);
-    }
+}

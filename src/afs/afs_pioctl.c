@@ -17,7 +17,6 @@ RCSID("$Header$");
 #include "../afs/afs_stats.h"   /* afs statistics */
 #include "../afs/vice.h"
 #include "../rx/rx_globals.h"
-#include "../afs/afs_prototypes.h" /* Prototypes */
 
 struct VenusFid afs_rootFid;
 afs_int32 afs_waitForever=0;
@@ -3168,6 +3167,9 @@ DECL_PIOCTL(PSetRxkcrypt)
 #define	PIOCTL_HEADER	6
 static int HandleClientContext(struct afs_ioctl *ablob, int *com, struct AFS_UCRED **acred, struct AFS_UCRED *credp)
 {
+#if	defined(AFS_DEC_ENV) || (defined(AFS_NONFSTRANS) && !defined(AFS_AIX_IAUTH_ENV))
+    return EINVAL;			/* NFS trans not supported for Ultrix */
+#else
     char *ain, *inData;
     afs_uint32 hostaddr;
     afs_int32 uid, g0, g1, i, code, pag, exporter_type;
@@ -3175,9 +3177,6 @@ static int HandleClientContext(struct afs_ioctl *ablob, int *com, struct AFS_UCR
     struct AFS_UCRED *newcred;
     struct unixuser *au;
 
-#if	defined(AFS_DEC_ENV) || (defined(AFS_NONFSTRANS) && !defined(AFS_AIX_IAUTH_ENV))
-    return EINVAL;			/* NFS trans not supported for Ultrix */
-#else
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
 #endif

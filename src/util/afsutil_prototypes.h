@@ -105,6 +105,12 @@ extern int parseNetFiles(afs_uint32 addrbuf[], afs_uint32 maskbuf[], afs_uint32 
 
 
 /* uuid.c */
+extern afs_int32 afs_uuid_equal(afsUUID *u1, afsUUID *u2);
+extern afs_int32 afs_uuid_is_nil(afsUUID *u1);
+extern void afs_htonuuid(afsUUID *uuidp);
+extern void afs_ntohuuid(afsUUID *uuidp);
+extern afs_int32 afs_uuid_create (afsUUID *uuid);
+extern u_short afs_uuid_hash (afsUUID *uuid);
 
 
 /* volparse.c */

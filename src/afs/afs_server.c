@@ -338,10 +338,8 @@ static void CheckVLServer(register struct srvAddr *sa, struct vrequest *areq)
  *	entries.
  *------------------------------------------------------------------------*/
 
-void afs_CountServers()
-
-{ /*afs_CountServers*/
-
+void afs_CountServers(void)
+{
     int currIdx;				/*Curr idx into srv table*/
     struct server *currSrvP;			/*Ptr to curr server record*/
     afs_int32 currChainLen;				/*Length of curr hash chain*/
@@ -481,10 +479,7 @@ void afs_CountServers()
 
 
 /* check down servers (if adown), or running servers (if !adown) */
-void afs_CheckServers(adown, acellp)
-    struct cell *acellp;
-    int	adown;
-
+void afs_CheckServers(int adown, struct cell *acellp)
 {
     struct vrequest treq;
     struct server *ts;
@@ -712,8 +707,7 @@ NB:  Has to be unsigned, since shifts on signed quantities may preserve
 
 #define	ranstage(x)	(x)= (afs_uint32) (3141592621U*((afs_uint32)x)+1)
 
-unsigned int afs_random()
-
+unsigned int afs_random(void)
 {
     static afs_int32 state = 0;
     register int i;
@@ -744,7 +738,7 @@ unsigned int afs_random()
    need to multiply by something with lots of ones in it, so multiply by 
    8 or 16 is right out.
  */
-int afs_randomMod15()
+int afs_randomMod15(void)
 {
 afs_uint32 temp;
 
@@ -754,7 +748,7 @@ temp = (temp *15) >> 28;
 return temp;
 }
 
-int afs_randomMod127()
+int afs_randomMod127(void)
 {
 afs_uint32 temp;
 
@@ -1302,8 +1296,7 @@ void afs_FlushServer(struct server *srvp)
  * The afs_xserver and afs_xsrvAddr locks are assumed taken.
  *    It is not removed from the afs_srvAddrs hash chain.
  */
-void afs_RemoveSrvAddr(sap)
-  struct srvAddr *sap;
+void afs_RemoveSrvAddr(struct srvAddr *sap)
 {
   struct srvAddr **psa, *sa;
   struct server  *srv;
@@ -1527,8 +1520,7 @@ struct server *afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers,
     return(newts);
 } /* afs_GetServer */
 
-void afs_ActivateServer(sap) 
-     struct srvAddr *sap;
+void afs_ActivateServer(struct srvAddr *sap) 
 {
    osi_timeval_t currTime;		/*Filled with current time*/
    osi_timeval_t *currTimeP;		/*Ptr to above*/

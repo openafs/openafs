@@ -35,7 +35,6 @@ RCSID("$Header$");
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
 #include "../afs/afs_stats.h"   /* afs statistics */
 #include "../afs/afs_util.h"
-#include "../afs/afs_prototypes.h"
 
 #if	defined(AFS_SUN56_ENV)
 #include <inet/led.h>

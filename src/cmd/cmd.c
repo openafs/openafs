@@ -29,14 +29,14 @@ struct cmd_token {
 static int dummy;	/* non-null ptr used for flag existence */
 static struct cmd_syndesc *allSyntax=0;
 static int noOpcodes = 0;
-static int (*beforeProc)() = 0, (*afterProc)() = 0;
+static int (*beforeProc)(struct cmd_syndesc *ts, char *beforeRock) = 0, (*afterProc)(struct cmd_syndesc *ts, char *afterRock) = 0;
 static char *beforeRock, *afterRock;
 static char initcmd_opcode[] = "initcmd";    /*Name of initcmd opcode*/
 
 /* take name and string, and return null string if name is empty, otherwise return
    the concatenation of the two strings */
-static char *NName(a1, a2)
-char *a1, *a2; {
+static char *NName(char *a1, char *a2)
+{
     static char tbuffer[80];
     if (strlen(a1) == 0) {
 	return "";
@@ -49,8 +49,8 @@ char *a1, *a2; {
 }
 
 /* return true if asub is a substring of amain */
-static int SubString(amain, asub)
-register char *amain, *asub; {
+static int SubString(register char *amain, register char *asub)
+{
     int mlen, slen;
     register int i,j;
     mlen = strlen(amain);
@@ -64,9 +64,8 @@ register char *amain, *asub; {
     return 0;	/* didn't find it */
 }
 
-static int FindType(as, aname)
-register struct cmd_syndesc *as;
-register char *aname; {
+static int FindType(register struct cmd_syndesc *as, register char *aname)
+{
     register int i;
     size_t cmdlen;
     int ambig;
@@ -90,9 +89,8 @@ register char *aname; {
     return (ambig? -1 : best);
 }
 
-static struct cmd_syndesc *FindSyntax(aname, aambig)
-int *aambig;
-char *aname; {
+static struct cmd_syndesc *FindSyntax(char *aname, int *aambig)
+{
     register struct cmd_syndesc *ts;
     struct cmd_syndesc *best;
     size_t cmdLen;
@@ -128,8 +126,8 @@ char *aname; {
 }
 
 /* print the help for a single parameter */
-static void PrintParmHelp(aparm)
-register struct cmd_parmdesc *aparm; {
+static void PrintParmHelp(register struct cmd_parmdesc *aparm)
+{
     if (aparm->type == CMD_FLAG) {
 #ifdef notdef
 	/* doc people don't like seeing this information */
@@ -147,8 +145,8 @@ register struct cmd_parmdesc *aparm; {
 	printf(" <arg>+");
 }
 
-void PrintSyntax(as)
-register struct cmd_syndesc *as; {
+void PrintSyntax(register struct cmd_syndesc *as)
+{
     register int i;
     register struct cmd_parmdesc *tp;
 
@@ -176,8 +174,8 @@ register struct cmd_syndesc *as; {
 }
 
 /* must print newline in any case, to terminate preceding line */
-static void PrintAliases(as)
-register struct cmd_syndesc *as; {
+static void PrintAliases(register struct cmd_syndesc *as)
+{
     register struct cmd_syndesc *ts;
 
     if (as->flags & CMD_ALIAS) {
@@ -195,8 +193,8 @@ register struct cmd_syndesc *as; {
     }
 }
 
-void PrintFlagHelp(as)
-register struct cmd_syndesc *as; {
+void PrintFlagHelp(register struct cmd_syndesc *as)
+{
     register int i;
     register struct cmd_parmdesc *tp;
     size_t flag_width;
@@ -228,9 +226,8 @@ register struct cmd_syndesc *as; {
     }
 }
 
-static int AproposProc(as, arock)
-char *arock;
-register struct cmd_syndesc *as; {
+static int AproposProc(register struct cmd_syndesc *as, char *arock)
+{
     register struct cmd_syndesc *ts;
     char *tsub;
     int didAny;
@@ -254,9 +251,8 @@ register struct cmd_syndesc *as; {
     return 0;
 }
 
-static int HelpProc(as, arock)
-char *arock;
-register struct cmd_syndesc *as; {
+static int HelpProc(register struct cmd_syndesc *as, char *arock)
+{
     register struct cmd_syndesc *ts;
     register struct cmd_item *ti;
     int ambig;
@@ -299,25 +295,23 @@ register struct cmd_syndesc *as; {
     return(code);
 }
 
-int cmd_SetBeforeProc(aproc, arock)
-int (*aproc)();
-char *arock; {
+int cmd_SetBeforeProc(int (*aproc)(struct cmd_syndesc *ts, char *beforeRock), char *arock)
+{
     beforeProc = aproc;
     beforeRock = arock;
     return 0;
 }
 
-int cmd_SetAfterProc(aproc, arock)
-int (*aproc)();
-char *arock; {
+int cmd_SetAfterProc(int (*aproc)(struct cmd_syndesc *ts, char *afterRock), char *arock)
+{
     afterProc = aproc;
     afterRock = arock;
     return 0;
 }
 
 /* thread on list in alphabetical order */
-static int SortSyntax(as)
-struct cmd_syndesc *as; {
+static int SortSyntax(struct cmd_syndesc *as)
+{
     register struct cmd_syndesc **ld, *ud;
 
     for(ld = &allSyntax, ud = *ld; ud; ld = &ud->next, ud = *ld) {
@@ -331,11 +325,8 @@ struct cmd_syndesc *as; {
     return 0;
 }
 
-struct cmd_syndesc *cmd_CreateSyntax(aname, aproc, arock, ahelp)
-int (*aproc)();
-char *ahelp;
-char *arock;
-char *aname; {
+struct cmd_syndesc *cmd_CreateSyntax(char *aname, int (*aproc)(struct cmd_syndesc *ts, char *arock), char *arock, char *ahelp)
+{
     register struct cmd_syndesc *td;
     
     /* can't have two cmds in no opcode mode */
@@ -378,9 +369,8 @@ char *aname; {
     return td;
 }
 
-int cmd_CreateAlias(as, aname)
-register struct cmd_syndesc *as;
-char *aname; {
+int cmd_CreateAlias(register struct cmd_syndesc *as, char *aname)
+{
     register struct cmd_syndesc *td;
     
     td = (struct cmd_syndesc *) malloc(sizeof(struct cmd_syndesc));
@@ -403,27 +393,22 @@ char *aname; {
     return 0;	/* all done */
 }
 
-int cmd_IsAdministratorCommand(as)
-register struct cmd_syndesc *as;
+int cmd_IsAdministratorCommand(register struct cmd_syndesc *as)
 {
     as->flags |= CMD_ADMIN;
     return 0;
 } 
 
-int cmd_Seek(as, apos)
-register struct cmd_syndesc *as;
-int apos; {
+int cmd_Seek(register struct cmd_syndesc *as, int apos)
+{
     if (apos >= CMD_MAXPARMS) return CMD_EXCESSPARMS;
     as->nParms = apos;
     return 0;
 }
 
-int cmd_AddParm(as, aname, atype, aflags, ahelp)
-register struct cmd_syndesc *as;
-char *aname;
-int atype;
-char *ahelp;
-afs_int32 aflags;{
+int cmd_AddParm(register struct cmd_syndesc *as, char *aname, int atype, 
+	afs_int32 aflags, char *ahelp)
+{
     register struct cmd_parmdesc *tp;
 
     if (as->nParms >= CMD_MAXPARMS) return CMD_EXCESSPARMS;
@@ -445,9 +430,8 @@ afs_int32 aflags;{
 }
 
 /* add a text item to the end of the parameter list */
-static int AddItem(aparm, aval)
-register struct cmd_parmdesc *aparm;
-register char *aval; {
+static int AddItem(register struct cmd_parmdesc *aparm, register char *aval)
+{
     register struct cmd_item *ti, *ni;
     ti = (struct cmd_item *) calloc(1, sizeof(struct cmd_item));
     assert(ti);
@@ -464,9 +448,8 @@ register char *aval; {
 }
 
 /* skip to next non-flag item, if any */
-static int AdvanceType(as, aval)
-register afs_int32 aval;
-register struct cmd_syndesc *as; {
+static int AdvanceType(register struct cmd_syndesc *as, register afs_int32 aval)
+{
     register afs_int32 next;
     register struct cmd_parmdesc *tp;
 
@@ -482,8 +465,8 @@ register struct cmd_syndesc *as; {
 }
 
 /* discard parameters filled in by dispatch */
-static void ResetSyntax(as)
-register struct cmd_syndesc *as; {
+static void ResetSyntax(register struct cmd_syndesc *as)
+{
     int i;
     register struct cmd_parmdesc *tp;
     register struct cmd_item *ti, *ni;
@@ -509,8 +492,8 @@ register struct cmd_syndesc *as; {
 }
 
 /* move the expands flag to the last one in the list */
-static int SetupExpandsFlag(as)
-register struct cmd_syndesc *as; {
+static int SetupExpandsFlag(register struct cmd_syndesc *as)
+{
     register struct cmd_parmdesc *tp;
     register int last, i;
 
@@ -529,11 +512,8 @@ register struct cmd_syndesc *as; {
 }
 
 /*Take the current argv & argc and alter them so that the initialization opcode is made to appear.  This is used in cases where the initialization opcode is implicitly invoked.*/
-static char **InsertInitOpcode(aargc, aargv)
-int *aargc;
-char **aargv;
-{ /*InsertInitOpcode*/
-
+static char **InsertInitOpcode(int *aargc, char **aargv)
+{
     char **newargv;	/*Ptr to new, expanded argv space*/
     char *pinitopcode;	/*Ptr to space for name of init opcode*/
     int	i;		/*Loop counter*/
@@ -568,8 +548,8 @@ char **aargv;
 
 } /*InsertInitOpcode*/
 
-static int NoParmsOK(as)
-register struct cmd_syndesc *as; {
+static int NoParmsOK(register struct cmd_syndesc *as)
+{
     register int i;
     register struct cmd_parmdesc *td;
 
@@ -585,10 +565,8 @@ register struct cmd_syndesc *as; {
 }
 
 /* Call the appropriate function, or return syntax error code.  Note: if no opcode is specified, an initialization routine exists, and it has NOT been called before, we invoke the special initialization opcode*/
-int cmd_Dispatch(argc, argv)
-int argc;
-char **argv;
- {
+int cmd_Dispatch(int argc, char **argv)
+{
     char *pname;
     struct cmd_syndesc *ts;
     struct cmd_parmdesc *tparm;
@@ -836,8 +814,8 @@ char **argv;
 }
 
 /* free token list returned by parseLine */
-static int FreeTokens(alist)
-    register struct cmd_token *alist; {
+static int FreeTokens(register struct cmd_token *alist)
+{
     register struct cmd_token *nlist;
     for(; alist; alist = nlist) {
 	nlist = alist->next;
@@ -848,8 +826,8 @@ static int FreeTokens(alist)
 }
 
 /* free an argv list returned by parseline */
-int cmd_FreeArgv(argv)
-register char **argv; {
+int cmd_FreeArgv(register char **argv)
+{
     register char *tp;
     for(tp = *argv; tp; argv++, tp = *argv)
 	free(tp);
@@ -860,11 +838,9 @@ register char **argv; {
     data is still malloc'd, and will be freed when the caller calls cmd_FreeArgv
     later on */
 #define INITSTR ""
-static int CopyBackArgs(alist, argv, an, amaxn)
-register struct cmd_token *alist;
-register char **argv;
-afs_int32 amaxn;
-afs_int32 *an; {
+static int CopyBackArgs(register struct cmd_token *alist, register char **argv, 
+	afs_int32 *an, afs_int32 amaxn)
+{
     register struct cmd_token *next;
     afs_int32 count;
 
@@ -892,23 +868,20 @@ afs_int32 *an; {
     return 0;
 }
 
-static int quote(x)
-register int x; {
+static int quote(register int x)
+{
     if (x == '"' || x == 39 /* single quote */) return 1;
     else return 0;
 }
 
-static int space(x)
-register int x; {
+static int space(register int x)
+{
     if (x == 0 || x == ' ' || x == '\t' || x== '\n') return 1;
     else return 0;
 }
 
-int cmd_ParseLine(aline, argv, an, amaxn)
-char **argv;
-afs_int32 *an;
-afs_int32 amaxn;
-char *aline; {
+int cmd_ParseLine(char *aline, char **argv, afs_int32 *an, afs_int32 amaxn)
+{
     char tbuffer[256];
     register char *tptr = 0;
     int inToken, inQuote;
