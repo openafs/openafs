@@ -129,9 +129,6 @@ RCSID
 #endif /* KERNEL */
 
 afs_int32 DErrno;
-char *DRelease();
-struct DirEntry *DRead();
-struct DirEntry *DNew();
 
 /* Local static prototypes */
 static struct DirEntry *FindItem(void *dir, char *ename,
