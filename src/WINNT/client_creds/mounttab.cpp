@@ -195,9 +195,9 @@ void Mount_OnCheck (HWND hDlg)
             Message (MB_OK | MB_ICONHAND, IDS_ERROR_UNMAP, IDS_ERROR_UNMAP_DESC, TEXT("%08lX"), dwStatus);
          Mount_OnUpdate (hDlg);
          }
+      WriteActiveMap(List.aDriveMap[ iDriveSel ].chDrive, fChecked && List.aDriveMap[ iDriveSel ].fPersistent );
       }
 
-   WriteActiveMap(List.aDriveMap[ iDriveSel ].chDrive, fChecked && List.aDriveMap[ iDriveSel ].fPersistent );
    FreeDriveMapList (&List);
 }
 
