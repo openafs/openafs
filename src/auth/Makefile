@@ -38,6 +38,7 @@ all: libauth.a libauth.krb.a setkey
 cellconfig.o: cellconfig.c ${INCLS}
 #comktc.o: comktc.c ${INCLS} ${SRCDIR}include/afs/vice.h
 #comvice.o: comvice.c ${INCLS}
+ktc.o: ktc.c ${INCLS} ${SRCDIR}include/afs/vice.h
 writeconfig.o: writeconfig.c ${INCLS}
 authcon.o: authcon.c ${INCLS}
 userok.o: userok.c ${INCLS}
@@ -47,12 +48,7 @@ setkey.o: setkey.c ${INCLS} AFS_component_version_number.o
 #comauth.o: comauth.c ${INCLS} ${SRCDIR}include/afs/vice.h
 
 ktc.krb.o: ktc.c ${INCLS} ${SRCDIR}include/afs/vice.h
-	${CC} ${CFLAGS} -DMAYBE_NO_KTC -DAFS_KERBEROS_ENV -c ktc.c -o ktc.krb.o
-
-ktc.o: ktc.c ${INCLS} ${SRCDIR}include/afs/vice.h
-	${CC} ${CFLAGS} -DMAYBE_NO_KTC -c ktc.c
-# : ${SRCDIR}include/afs/ktc.h
-#	${CC} ${CFLAGS} -c ktc.c
+	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ktc.c -o ktc.krb.o
 
 libauth.a: $(OBJS) AFS_component_version_number.o
 	-rm -f libauth.a
