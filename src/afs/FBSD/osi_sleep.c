@@ -180,14 +180,17 @@ static int osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 }
 
 
-void afs_osi_Wakeup(void *event)
+int afs_osi_Wakeup(void *event)
 {
+    int ret=1;
     struct afs_event *evp;
 
     evp = afs_getevent(event);
     if (evp->refcount > 1) {
 	evp->seq++;    
 	wakeup(event);
+	ret=0;
     }
     relevent(evp);
+    return ret;
 }

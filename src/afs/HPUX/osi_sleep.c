@@ -112,3 +112,9 @@ int afs_osi_SleepSig(void *event)
     afs_osi_Sleep(event);
     return 0;
 }
+
+int afs_osi_Wakeup(void *event)
+{
+    wakeup((caddr_t) event);
+    return 0;
+}

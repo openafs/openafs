@@ -83,7 +83,6 @@ extern void       afsHashRelease(tid_t key);
  */
 
 #define	afs_osi_Sleep(x)	sleep((caddr_t) x,PZERO-2)
-#define	afs_osi_Wakeup(x)	wakeup((caddr_t) x)
 #define	osi_NullHandle(x)	((x)->proc == (caddr_t) 0)
 
 extern caddr_t kmem_alloc();

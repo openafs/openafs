@@ -25,27 +25,13 @@ typedef struct socket *osi_socket;
 #define	OSI_NULLSOCKET	((osi_socket) 0)
 
 #if (!defined(AFS_GLOBAL_SUNLOCK) && !defined(RX_ENABLE_LOCKS))
-#define RX_KERNEL_TRACE 1
-#ifdef RX_KERNEL_TRACE
 #include "../afs/icl.h"
 #include "../afs/afs_trace.h"
-#ifdef AFS_AIX_ENV
+#endif
 #define osi_rxSleep(a)  afs_Trace2(afs_iclSetp, CM_TRACE_RXSLEEP, \
         ICL_TYPE_STRING, __FILE__, ICL_TYPE_INT32, __LINE__); afs_osi_Sleep(a)
 #define osi_rxWakeup(a) if (afs_osi_Wakeup(a) == 0) afs_Trace2(afs_iclSetp, \
         CM_TRACE_RXWAKE, ICL_TYPE_STRING, __FILE__, ICL_TYPE_INT32, __LINE__)
-#else
-#define osi_rxSleep(a)  afs_osi_Sleep(a)
-#define osi_rxWakeup(a) afs_osi_Wakeup(a)
-#endif
-#else /* RX_KERNEL_TRACE */
-#define	osi_rxSleep(a)	afs_osi_Sleep(a)
-#define	osi_rxWakeup(a)	afs_osi_Wakeup(a)
-#endif /* RX_KERNEL_TRACE */
-#else /* AFS_GLOBAL_SUNLOCK || RX_ENABLE_LOCKS */
-#define	osi_rxSleep(a)	afs_osi_Sleep(a)
-#define	osi_rxWakeup(a)	afs_osi_Wakeup(a)
-#endif
 
 extern int osi_utoa(char *buf, size_t len, unsigned long val);
 #define osi_Assert(e) (void)((e) || (osi_AssertFailK(#e, __FILE__, __LINE__), 0))
