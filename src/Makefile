@@ -20,6 +20,10 @@ COMPILE_PART2=${WASHTOOLFLAGS}
 
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
+# Enable build+install of obsolete and insecure packages
+# Set to anything other than YES, or comment out to disable the build
+WITH_DEPRECATED=YES
+
 # To compile AFS from scratch in the src tree run "make SYS_NAME=<type>".
 #   This recursively calls "make install ..." and does not depend on the
 #   existence of any non-standard programs.
@@ -218,28 +222,8 @@ fsprobe: project util fsint
 scout: project gtx fsprobe
 	${COMPILE_PART1} scout ${COMPILE_PART2}
 
-mpp: project
-	${COMPILE_PART1} mpp ${COMPILE_PART2}
-
-package: project mpp
-	${COMPILE_PART1} package ${COMPILE_PART2}
-
-package.files: package
-	${DESTDIR}/bin/makepkgfiles afs.dev
-
 uss: des kauth project rx vlserver vol
 	${COMPILE_PART1} uss ${COMPILE_PART2}
-
-ntp: project volser
-	case ${SYS_NAME} in \
-	  sun4x_58 ) echo skipping ntp for ${SYS_NAME} ;; \
-	  *linux* ) echo skipping ntp for ${SYS_NAME} ;; \
-	  ppc_darwin* | *fbsd* ) echo skipping ntp for ${SYS_NAME} ;; \
-	  * ) ${COMPILE_PART1} ntp ${COMPILE_PART2} ;; \
-	esac
-
-#convert: project ntp
-#	${COMPILE_PART1} convert ${COMPILE_PART2}
 
 bozo: project ntp audit
 	${COMPILE_PART1} bozo ${COMPILE_PART2}
@@ -278,40 +262,6 @@ login: project kauth rxkad
 	* ) \
 		${COMPILE_PART1} login ${COMPILE_PART2} ;; \
 	esac
-
-ftpd43+: project kauth rxkad
-	case ${SYS_NAME} in \
-	rs_aix* | sun4x_55 | *linux*) \
-		${COMPILE_PART1} ftpd43+ ${COMPILE_PART2} ;; \
-	* )	echo skip ftpd43+ for ${SYS_NAME} ;; \
-	esac
-
-inetd: project kauth rxkad
-	${COMPILE_PART1} inetd ${COMPILE_PART2} 
-
-rsh: project inetd
-	${COMPILE_PART1} rsh ${COMPILE_PART2} 
-
-rlogind: project rsh ftpd43+ login
-	case ${SYS_NAME} in \
-	rs_aix*) \
-		${COMPILE_PART1} rlogind ${COMPILE_PART2} ;; \
-	* )	echo skipping rlogind for ${SYS_NAME} ;; \
-	esac
-
-sgistuff: project rlogind
-	case ${SYS_NAME} in \
-	sgi_* )	${COMPILE_PART1} sgistuff ${COMPILE_PART2} ;; \
-	* )	echo skipping sgistuff for ${SYS_NAME} ;; \
-	esac
-
-rcp: project rsh inetd
-	case ${SYS_NAME} in \
-	sgi_* )	echo skip rcp for ${SYS_NAME} ;; \
-	*)	${COMPILE_PART1} rcp ${COMPILE_PART2} ;; \
-	esac
-
-allrcmds: project rcp rlogind
 
 KERNELDIR= \
   afs \
@@ -398,6 +348,9 @@ xstat: project
 afsmonitor: project gtx xstat
 	${COMPILE_PART1} afsmonitor ${COMPILE_PART2}
 
+#
+# Washtool internal targets
+#
 ircs: project
 	case ${SYS_NAME} in \
 	sgi_* ) \
@@ -571,3 +524,88 @@ links:
 	for file in `find [!NW]* -type f -print` ; do \
 		/bin/ln -s `pwd`/$${file} $${here}/obj/$${file} ; \
 	done;
+
+#
+# Below targets are all deprecated, insecure, or obsolte, 
+# see README.OBSOLETE and README.INSECURE for more info
+#
+
+mpp: project
+	@case ${WITH_DEPRECATED} in \
+	YES) 	${COMPILE_PART1} mpp ${COMPILE_PART2} ;; \
+	*)	echo skipping deprecated target: mpp ;; \
+	esac
+
+package: project mpp
+	@case ${WITH_DEPRECATED} in \
+	YES) 	${COMPILE_PART1} package ${COMPILE_PART2} ;; \
+	*)	echo skipping deprecated target: package ;; \
+	esac
+
+package.files: package
+	@case ${WITH_DEPRECATED} in \
+	YES) 	${DESTDIR}/bin/makepkgfiles afs.dev ;; \
+	*)	echo skipping deprecated target: package.files ;; \
+	esac
+
+ntp: project volser
+	@case ${WITH_DEPRECATED} in \
+	YES) 	case ${SYS_NAME} in \
+		sun4x_58 | *linux* | *fbsd* | ppc_darwin* ) echo skipping ntp for ${SYS_NAME} ;; \
+		* ) ${COMPILE_PART1} ntp ${COMPILE_PART2} ;; \
+		esac ;; \
+	*)	echo skipping deprecated target: ntp ;; \
+	esac
+
+sgistuff: project rlogind
+	@case ${WITH_DEPRECATED} in \
+	YES) 	case ${SYS_NAME} in \
+		sgi_* )	${COMPILE_PART1} sgistuff ${COMPILE_PART2} ;; \
+		* ) echo skipping sgistuff for ${SYS_NAME} ;; \
+		esac ;; \
+	*)	echo skipping deprecated target: sgistuff ;; \
+	esac
+
+ftpd43+: project kauth rxkad
+	@case ${WITH_DEPRECATED} in \
+	YES) 	case ${SYS_NAME} in \
+		rs_aix* | sun4x_55 | *linux*) \
+			${COMPILE_PART1} ftpd43+ ${COMPILE_PART2} ;; \
+		*) echo skip ftpd43+ for ${SYS_NAME} ;; \
+		esac ;; \
+	*)	echo skipping deprecated target: ftpd43+ ;; \
+	esac
+
+inetd: project kauth rxkad
+	@case ${WITH_DEPRECATED} in \
+	YES) 	${COMPILE_PART1} inetd ${COMPILE_PART2} ;; \
+	*)	echo skipping deprecated target: inetd ;; \
+	esac
+
+rsh: project inetd
+	@case ${WITH_DEPRECATED} in \
+	YES) 	${COMPILE_PART1} rsh ${COMPILE_PART2} ;; \
+	*)	echo skipping deprecated target: rsh ;; \
+	esac
+
+rlogind: project rsh ftpd43+ login
+	@case ${WITH_DEPRECATED} in \
+	YES) 	case ${SYS_NAME} in \
+		rs_aix*) ${COMPILE_PART1} rlogind ${COMPILE_PART2} ;; \
+		*) echo skipping rlogind for ${SYS_NAME} ;; \
+		esac ;; \
+	*)	echo skipping deprecated target: rlogind ;; \
+	esac
+
+rcp: project rsh inetd
+	@case ${WITH_DEPRECATED} in \
+	YES) 	case ${SYS_NAME} in \
+		sgi_* )	echo skip rcp for ${SYS_NAME} ;; \
+		*)	${COMPILE_PART1} rcp ${COMPILE_PART2} ;; \
+		esac ;; \
+	*)	echo skipping deprecated target: rcp ;; \
+	esac
+
+allrcmds: project rcp rlogind
+
+
