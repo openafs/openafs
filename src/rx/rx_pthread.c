@@ -53,7 +53,7 @@ static long rx_pthread_n_event_wakeups;
  */
 static int rx_pthread_event_rescheduled = 0;
 
-static void rx_ListenerProc(void *);
+static void *rx_ListenerProc(void *);
 
 /*
  * We supply an event handling thread for Rx's event processing.
@@ -199,7 +199,7 @@ void rxi_ReScheduleEvents(void)
  * thread should become a server thread.  */
 static void rxi_ListenerProc(int sock, int *tnop, struct rx_call **newcallp)
 {
-    u_long host;
+    unsigned int host;
     u_short port;
     register struct rx_packet *p = (struct rx_packet *)0;
 
@@ -240,7 +240,7 @@ static void rxi_ListenerProc(int sock, int *tnop, struct rx_call **newcallp)
 /* This is the listener process request loop. The listener process loop
  * becomes a server thread when rxi_ListenerProc returns, and stays
  * server thread until rxi_ServerProc returns. */
-static void rx_ListenerProc(void *argp)
+static void *rx_ListenerProc(void *argp)
 {
     int threadID;
     int sock = (int) argp;

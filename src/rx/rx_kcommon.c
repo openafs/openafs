@@ -990,14 +990,15 @@ int rxk_ListenerPid; /* Used to signal process to wakeup at shutdown */
 
 #ifdef AFS_SUN5_ENV
 /*
- * Run the listener as a kernel process.
+ * Run the listener as a kernel thread.
  */
 void rxk_Listener(void)
 {
     extern id_t syscid;
     void rxk_ListenerProc(void);
-    if (newproc(rxk_ListenerProc, syscid, 59))
-	osi_Panic("rxk_Listener: failed to fork listener process!\n");
+    if (thread_create(NULL, DEFAULTSTKSZ, rxk_ListenerProc,
+	0, 0, &p0, TS_RUN, minclsyspri) == NULL)
+	osi_Panic("rxk_Listener: failed to start listener thread!\n");
 }
 
 void rxk_ListenerProc(void)
@@ -1013,11 +1014,11 @@ void rxk_Listener(void)
     rxk_ListenerPid = current->pid;
 #endif
 #ifdef AFS_SUN5_ENV
-    rxk_ListenerPid = curproc->p_pid;
+    rxk_ListenerPid = 1;	/* No PID, just a flag that we're alive */
 #endif /* AFS_SUN5_ENV */
 #ifdef AFS_FBSD_ENV
     rxk_ListenerPid = curproc->p_pid;
-#endif /* AFS_SUN5_ENV */
+#endif /* AFS_FBSD_ENV */
 #if defined(AFS_DARWIN_ENV)
     rxk_ListenerPid = current_proc()->p_pid;
 #endif
@@ -1054,11 +1055,6 @@ void rxk_Listener(void)
 #endif
 #ifdef AFS_SUN5_ENV
     AFS_GUNLOCK();
-#ifdef HAVE_P_COREFILE
-    if (!curproc->p_corefile)  /* newproc doesn't set it, but exit frees it */
-	curproc->p_corefile = refstr_alloc("core");
-#endif
-    exit(CLD_EXITED, 0);
 #endif /* AFS_SUN5_ENV */
 }
 

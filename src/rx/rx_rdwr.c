@@ -1048,7 +1048,7 @@ int rx_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio,
 
 int rx_WritevInit(struct rx_call *call)
 {
-    int bytes;
+    char bytes;
     SPLVAR;
 
     /*
