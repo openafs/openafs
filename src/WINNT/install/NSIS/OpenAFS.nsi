@@ -574,6 +574,10 @@ Section "AFS Client" secClient
   WriteRegStr HKCR "FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" "" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
   WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" "AFS Client Shell Extension"
   WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" "afs_cpa" "$INSTDIR\Client\Program\afs_cpa.cpl"
+
+  ; Support for apps that wrote submount data directly to afsdsbmt.ini
+  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion\IniFileMapping\afsdsbmt.ini" "AFS Mappings" "USR:Software\OpenAFS\Client\mappings"
+  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion\IniFileMapping\afsdsbmt.ini" "AFS Submounts" "SYS:OpenAFS\Client\Submounts"
   
   ; AFS Reg entries
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion"
@@ -1177,6 +1181,11 @@ DoControl:
 
 DoCommon:
   SetOutPath "$INSTDIR\Common"
+!IFDEF CL_1400
+   File "${SYSTEMDIR}\msvcr80d.pdb"
+   File "${SYSTEMDIR}\msvcp80d.pdb"
+   File "${SYSTEMDIR}\mfc80d.pdb"
+!ELSE
 !IFDEF CL_1310
    File "${SYSTEMDIR}\msvcr71d.pdb"
    File "${SYSTEMDIR}\msvcp71d.pdb"
@@ -1190,6 +1199,7 @@ DoCommon:
    File "${SYSTEMDIR}\mfc42d.pdb"
    File "${SYSTEMDIR}\msvcp60d.pdb"
    File "${SYSTEMDIR}\msvcrtd.pdb"
+!ENDIF
 !ENDIF
 !ENDIF
   
@@ -1631,6 +1641,14 @@ StartRemove:
    Delete /REBOOTOK "$INSTDIR\Common\afskasadmin.pdb"
    Delete /REBOOTOK "$INSTDIR\Common\afsptsadmin.pdb"
 !IFDEF DEBUG
+!IFDEF CL_1400
+   Delete /REBOOTOK "$INSTDIR\bin\msvcr80d.dll"
+   Delete /REBOOTOK "$INSTDIR\bin\msvcr80d.pdb"
+   Delete /REBOOTOK "$INSTDIR\bin\msvcp80d.dll"
+   Delete /REBOOTOK "$INSTDIR\bin\msvcp80d.pdb"
+   Delete /REBOOTOK "$INSTDIR\bin\mfc80d.dll"
+   Delete /REBOOTOK "$INSTDIR\bin\mfc80d.pdb"
+!ELSE
 !IFDEF CL_1310
    Delete /REBOOTOK "$INSTDIR\bin\msvcr71d.dll"
    Delete /REBOOTOK "$INSTDIR\bin\msvcr71d.pdb"
@@ -1655,6 +1673,21 @@ StartRemove:
    Delete /REBOOTOK "$INSTDIR\bin\msvcrtd.pdb"
 !ENDIF
 !ENDIF
+!ENDIF
+!ELSE
+!IFDEF CL_1400
+   Delete /REBOOTOK "$INSTDIR\bin\mfc80.dll"
+   Delete /REBOOTOK "$INSTDIR\bin\msvcr80.dll"
+   Delete /REBOOTOK "$INSTDIR\bin\msvcp80.dll"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80CHS.DLL"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80CHT.DLL"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80DEU.DLL"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80ENU.DLL"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80ESP.DLL"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80FRA.DLL"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80ITA.DLL"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80JPN.DLL"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80KOR.DLL"
 !ELSE
 !IFDEF CL_1310
    Delete /REBOOTOK "$INSTDIR\bin\mfc71.dll"
@@ -1687,6 +1720,7 @@ StartRemove:
    Delete /REBOOTOK "$INSTDIR\bin\mfc42.dll"
    Delete /REBOOTOK "$INSTDIR\bin\msvcp60.dll"
    Delete /REBOOTOK "$INSTDIR\bin\msvcrt.dll"
+!ENDIF
 !ENDIF
 !ENDIF
 !ENDIF
@@ -1790,6 +1824,14 @@ StartRemove:
   RMDir  "$INSTDIR\Client"
 
 !IFDEF DEBUG  
+!IFDEF CL_1400
+   Delete /REBOOTOK "$INSTDIR\bin\msvcr80d.dll"
+   Delete /REBOOTOK "$INSTDIR\bin\msvcr80d.pdb"
+   Delete /REBOOTOK "$INSTDIR\bin\msvcp80d.dll"
+   Delete /REBOOTOK "$INSTDIR\bin\msvcp80d.pdb"
+   Delete /REBOOTOK "$INSTDIR\bin\mfc80d.dll"
+   Delete /REBOOTOK "$INSTDIR\bin\mfc80d.pdb"
+!ELSE
 !IFDEF CL_1310
    Delete /REBOOTOK "$INSTDIR\bin\msvcr71d.dll"
    Delete /REBOOTOK "$INSTDIR\bin\msvcr71d.pdb"
@@ -1814,6 +1856,21 @@ StartRemove:
    Delete /REBOOTOK "$INSTDIR\bin\msvcrtd.pdb"
 !ENDIF
 !ENDIF
+!ENDIF
+!ELSE
+!IFDEF CL_1400
+   Delete /REBOOTOK "$INSTDIR\bin\mfc80.dll"
+   Delete /REBOOTOK "$INSTDIR\bin\msvcr80.dll"
+   Delete /REBOOTOK "$INSTDIR\bin\msvcp80.dll"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80CHS.DLL"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80CHT.DLL"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80DEU.DLL"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80ENU.DLL"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80ESP.DLL"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80FRA.DLL"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80ITA.DLL"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80JPN.DLL"
+   Delete /REBOOTOK "$INSTDIR\bin\MFC80KOR.DLL"
 !ELSE
 !IFDEF CL_1310
    Delete /REBOOTOK "$INSTDIR\bin\mfc71.dll"
@@ -1846,6 +1903,7 @@ StartRemove:
    Delete /REBOOTOK "$INSTDIR\bin\mfc42.dll"
    Delete /REBOOTOK "$INSTDIR\bin\msvcp60.dll"
    Delete /REBOOTOK "$INSTDIR\bin\msvcrt.dll"
+!ENDIF
 !ENDIF
 !ENDIF
 !ENDIF
@@ -1909,7 +1967,10 @@ StartRemove:
   DeleteRegKey /ifempty HKLM "${AFS_REGKEY_ROOT}"
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS"
   DeleteRegValue HKLM "SYSTEM\CurrentControlSet\Services\NetBT\Parameters" "SmbDeviceEnabled"
- 
+
+  ; Support for apps that wrote submount data directly to afsdsbmt.ini
+  DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion\IniFileMapping\afsdsbmt.ini"
+
   RMDir  "$INSTDIR"
 
 SectionEnd
@@ -2178,18 +2239,49 @@ Function AFSPageGetCellName
   StrCmp $R0 "0" good
   
 startOver:
+   ; We want to read in the existing parameters and make them the defaults
+   
+   ;AFS Crypt security
+   ReadRegDWORD $R1 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "SecurityLevel"
+   StrCmp $R1 "" +3
+   WriteINIStr $1 "Field 3" "State" $R1
+   goto +2
+   WriteINIStr $1 "Field 3" "State" "1"
+   
+   ;Use DNS
+   ReadRegDWORD $R1 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "UseDNS"
+   StrCmp $R1 "" +3
+   WriteINIStr $1 "Field 9" "State" $R1
+   goto +2
+   WriteINIStr $1 "Field 9" "State" "1"
+   
+   ; Use integrated logon
+   ReadRegDWORD $R1 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "LogonOptions"
+   StrCmp $R1 "" +3
+   WriteINIStr $1 "Field 7" "State" $R1
+   goto +2
+   WriteINIStr $1 "Field 7" "State" "0"
+   
    ; If this is a server install, we do NOT want to recommend the Freelance client
    ; And we do not need to ask for the cell name.
    SectionGetFlags ${secServer} $R1
    IntOp $R1 $R1 & ${SF_SELECTED}
    StrCmp $R1 "1" +1 NotServer
    WriteINIStr $1 "Field 6" "Text" "Enable AFS Freelance client (Not Recommended for servers)"
+   ReadRegDWORD $R1 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "FreelanceClient"
+   StrCmp $R1 "" +3
+   WriteINIStr $1 "Field 5" "State" $R1
+   goto +2
    WriteINIStr $1 "Field 5" "State" "0"
    WriteINIStr $1 "Field 1" "Flags" "DISABLED"
    WriteINIStr $1 "Field 2" "Flags" "DISABLED"
    goto SkipServerTest
 NotServer:
    WriteINIStr $1 "Field 6" "Text" "Enable AFS Freelance client (Recommended)"
+   ReadRegDWORD $R1 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "FreelanceClient"
+   StrCmp $R1 "" +3
+   WriteINIStr $1 "Field 5" "State" $R1
+   goto +2
    WriteINIStr $1 "Field 5" "State" "1"
    WriteINIStr $1 "Field 1" "Flags" ""
    WriteINIStr $1 "Field 2" "Flags" ""
@@ -2597,6 +2689,20 @@ Function AFSLangFiles
  SetOutPath "$INSTDIR\Common"
 
 !IFDEF DEBUG
+!IFDEF CL_1400
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcr80d.dll" "$INSTDIR\Common\msvcr80d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcp80d.dll" "$INSTDIR\Common\msvcp80d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc80d.dll" "$INSTDIR\Common\mfc80d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80CHS.DLL" "$INSTDIR\Common\MFC80CHS.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80CHT.DLL" "$INSTDIR\Common\MFC80CHT.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80DEU.DLL" "$INSTDIR\Common\MFC80DEU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80ENU.DLL" "$INSTDIR\Common\MFC80ENU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80ESP.DLL" "$INSTDIR\Common\MFC80ESP.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80FRA.DLL" "$INSTDIR\Common\MFC80FRA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80ITA.DLL" "$INSTDIR\Common\MFC80ITA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80JPN.DLL" "$INSTDIR\Common\MFC80JPN.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80KOR.DLL" "$INSTDIR\Common\MFC80KOR.DLL" "$INSTDIR"
+!ELSE
 !IFDEF CL_1310
    !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcr71d.dll" "$INSTDIR\Common\msvcr71d.dll" "$INSTDIR"
    !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcp71d.dll" "$INSTDIR\Common\msvcp71d.dll" "$INSTDIR"
@@ -2630,6 +2736,21 @@ Function AFSLangFiles
    !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcrtd.dll" "$INSTDIR\Common\msvcrtd.dll" "$INSTDIR"
 !ENDIF
 !ENDIF
+!ENDIF
+!ELSE
+!IFDEF CL_1400
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc80.dll" "$INSTDIR\Common\mfc80.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcr80.dll" "$INSTDIR\Common\msvcr80.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcp80.dll" "$INSTDIR\Common\msvcp80.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80CHS.DLL" "$INSTDIR\Common\MFC80CHS.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80CHT.DLL" "$INSTDIR\Common\MFC80CHT.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80DEU.DLL" "$INSTDIR\Common\MFC80DEU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80ENU.DLL" "$INSTDIR\Common\MFC80ENU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80ESP.DLL" "$INSTDIR\Common\MFC80ESP.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80FRA.DLL" "$INSTDIR\Common\MFC80FRA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80ITA.DLL" "$INSTDIR\Common\MFC80ITA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80JPN.DLL" "$INSTDIR\Common\MFC80JPN.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC80KOR.DLL" "$INSTDIR\Common\MFC80KOR.DLL" "$INSTDIR"
 !ELSE
 !IFDEF CL_1310
    !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc71.dll" "$INSTDIR\Common\mfc71.dll" "$INSTDIR"
@@ -2665,6 +2786,7 @@ Function AFSLangFiles
 !ENDIF
 !ENDIF
 !ENDIF   
+!ENDIF
 
    StrCmp $LANGUAGE ${LANG_ENGLISH} DoEnglish
    StrCmp $LANGUAGE ${LANG_GERMAN} DoGerman

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/volprocs.c,v 1.34 2004/07/29 03:44:08 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/volprocs.c,v 1.34.2.3 2004/12/13 19:41:13 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -425,7 +425,7 @@ VolCreateVolume(struct rx_call *acid, afs_int32 apart, char *aname,
     if (error) {
 	Log("1 Volser: CreateVolume: Unable to create the volume; aborted, error code %u\n", error);
 	LogError(error);
-	DeleteTrans(tt);
+	DeleteTrans(tt, 1);
 	return EIO;
     }
     V_uniquifier(vp) = 1;
@@ -442,7 +442,7 @@ VolCreateVolume(struct rx_call *acid, afs_int32 apart, char *aname,
     if (error) {
 	Log("1 Volser: create UpdateVolume failed, code %d\n", error);
 	LogError(error);
-	DeleteTrans(tt);
+	DeleteTrans(tt, 1);
 	VDetachVolume(&junk, vp);	/* rather return the real error code */
 	return error;
     }
@@ -677,7 +677,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_int32 purgeId,
 	error = VOLSERTRELE_ERROR;
 	goto fail;
     }
-    DeleteTrans(ttc);
+    DeleteTrans(ttc, 1);
     return 0;
 
   fail:
@@ -690,7 +690,7 @@ VolClone(struct rx_call *acid, afs_int32 atrans, afs_int32 purgeId,
 	TRELE(tt);
     }
     if (ttc)
-	DeleteTrans(ttc);
+	DeleteTrans(ttc, 1);
     return error;
 }
 
@@ -840,7 +840,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
 	goto fail;
     }
 
-    DeleteTrans(ttc);
+    DeleteTrans(ttc, 1);
 
     {
 	struct DiskPartition *tpartp = originalvp->partition;
@@ -856,7 +856,7 @@ VolReClone(struct rx_call *acid, afs_int32 atrans, afs_int32 cloneId)
 	TRELE(tt);
     }
     if (ttc)
-	DeleteTrans(ttc);
+	DeleteTrans(ttc, 1);
     return error;
 }
 
@@ -913,7 +913,7 @@ VolTransCreate(struct rx_call *acid, afs_int32 volume, afs_int32 partition,
 	/* give up */
 	if (tv)
 	    VDetachVolume(&code, tv);
-	DeleteTrans(tt);
+	DeleteTrans(tt, 1);
 	return error;
     }
     tt->volume = tv;
@@ -1387,7 +1387,7 @@ VolEndTrans(struct rx_call *acid, afs_int32 destTrans, afs_int32 *rcode)
 	return ENOENT;
     }
     *rcode = tt->returnCode;
-    DeleteTrans(tt);		/* this does an implicit TRELE */
+    DeleteTrans(tt, 1);		/* this does an implicit TRELE */
 
     return 0;
 }
@@ -1790,7 +1790,7 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid, afs_int32
 		pntr->volid = volid;
 		goto drop;
 	    }
-	    tv = VAttachVolumeByName(&error, pname, volname, V_READONLY);
+	    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
 	    if (error) {
 		pntr->status = 0;	/*things are messed up */
 		strcpy(pntr->name, volname);
@@ -1868,7 +1868,7 @@ VolListOneVolume(struct rx_call *acid, afs_int32 partid, afs_int32
 	tv = (Volume *) 0;
     }
     if (ttc) {
-	DeleteTrans(ttc);
+	DeleteTrans(ttc, 1);
 	ttc = (struct volser_trans *)0;
     }
 
@@ -2004,7 +2004,7 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	    /*
 	     * Attach the volume, give up on the volume if we can't.
 	     */
-	    tv = VAttachVolumeByName(&error, pname, volname, V_READONLY);
+	    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
 	    if (error) {
 		xInfoP->status = 0;	/*things are messed up */
 		strcpy(xInfoP->name, volname);
@@ -2099,7 +2099,7 @@ VolXListOneVolume(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	tv = (Volume *) 0;
     }
     if (ttc) {
-	DeleteTrans(ttc);
+	DeleteTrans(ttc, 1);
 	ttc = (struct volser_trans *)0;
     }
 
@@ -2171,7 +2171,7 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 		pntr->volid = volid;
 		goto drop;
 	    }
-	    tv = VAttachVolumeByName(&error, pname, volname, V_READONLY);
+	    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
 	    if (error) {
 		pntr->status = 0;	/*things are messed up */
 		strcpy(pntr->name, volname);
@@ -2241,7 +2241,7 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 
       drop:
 	if (ttc) {
-	    DeleteTrans(ttc);
+	    DeleteTrans(ttc, 1);
 	    ttc = (struct volser_trans *)0;
 	}
 	pntr++;
@@ -2258,7 +2258,7 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 		    tv = (Volume *) 0;
 		}
 		if (ttc) {
-		    DeleteTrans(ttc);
+		    DeleteTrans(ttc, 1);
 		    ttc = (struct volser_trans *)0;
 		}
 		closedir(dirp);
@@ -2276,7 +2276,7 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
 	    tv = (Volume *) 0;
 	}
 	if (ttc) {
-	    DeleteTrans(ttc);
+	    DeleteTrans(ttc, 1);
 	    ttc = (struct volser_trans *)0;
 	}
 	GetNextVol(dirp, volname, &volid);
@@ -2284,7 +2284,7 @@ VolListVolumes(struct rx_call *acid, afs_int32 partid, afs_int32 flags,
     }
     closedir(dirp);
     if (ttc)
-	DeleteTrans(ttc);
+	DeleteTrans(ttc, 1);
 
     return 0;
 }
@@ -2413,7 +2413,7 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	    /*
 	     * Attach the volume, give up on this volume if we can't.
 	     */
-	    tv = VAttachVolumeByName(&error, pname, volname, V_READONLY);
+	    tv = VAttachVolumeByName(&error, pname, volname, V_PEEK);
 	    if (error) {
 		xInfoP->status = 0;	/*things are messed up */
 		strcpy(xInfoP->name, volname);
@@ -2495,7 +2495,7 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	 * Drop the transaction we have for this volume.
 	 */
 	if (ttc) {
-	    DeleteTrans(ttc);
+	    DeleteTrans(ttc, 1);
 	    ttc = (struct volser_trans *)0;
 	}
 
@@ -2522,7 +2522,7 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
 		    tv = (Volume *) 0;
 		}
 		if (ttc) {
-		    DeleteTrans(ttc);
+		    DeleteTrans(ttc, 1);
 		    ttc = (struct volser_trans *)0;
 		}
 		closedir(dirp);
@@ -2550,7 +2550,7 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
 	    tv = (Volume *) 0;
 	}
 	if (ttc) {
-	    DeleteTrans(ttc);
+	    DeleteTrans(ttc, 1);
 	    ttc = (struct volser_trans *)0;
 	}
 	GetNextVol(dirp, volname, &volid);
@@ -2562,7 +2562,7 @@ VolXListVolumes(struct rx_call *a_rxCidP, afs_int32 a_partID,
      */
     closedir(dirp);
     if (ttc)
-	DeleteTrans(ttc);
+	DeleteTrans(ttc, 1);
     return (0);
 
 }				/*SAFSVolXListVolumes */

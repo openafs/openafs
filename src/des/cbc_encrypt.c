@@ -29,7 +29,7 @@
 #include "des_prototypes.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/des/cbc_encrypt.c,v 1.9 2003/07/15 23:14:59 shadow Exp $");
+    ("$Header: /cvs/openafs/src/des/cbc_encrypt.c,v 1.9.2.1 2004/10/18 07:11:56 shadow Exp $");
 
 
 #define XPRT_CBC_ENCRYPT
@@ -61,7 +61,7 @@ RCSID
     des_cblock *iv;		* 8 bytes of ivec *
 */
 afs_int32
-des_cbc_encrypt(des_cblock * in, des_cblock * out, register afs_int32 length,
+des_cbc_encrypt(void * in, void * out, register afs_int32 length,
 		des_key_schedule key, des_cblock * iv, int encrypt)
 {
     register afs_uint32 *input = (afs_uint32 *) in;

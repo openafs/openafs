@@ -227,6 +227,30 @@
 /* define if you have redhat buildsystem */
 #undef ENABLE_REDHAT_BUILDSYS
 
+/* define if struct ufsvfs has vfs_dqrwlock */
+#undef HAVE_VFS_DQRWLOCK
+
+/* define if struct proc has p_corefile */
+#undef HAVE_P_COREFILE
+
+/* define if struct fs has fs_rolled */
+#undef STRUCT_FS_HAS_FS_ROLLED
+
+/* define if your iops.create takes a nameidata argument */
+#undef IOP_CREATE_TAKES_NAMEIDATA
+
+/* define if your iops.lookup takes a nameidata argument */
+#undef IOP_LOOKUP_TAKES_NAMEIDATA
+
+/* define if your iops.permission takes a nameidata argument */
+#undef IOP_PERMISSION_TAKES_NAMEIDATA
+
+/* define if your dops.d_revalidate takes a nameidata argument */
+#undef DOP_REVALIDATE_TAKES_NAMEIDATA
+
+/* define if your aops.writepage takes a struct writeback_control argument */
+#undef AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL
+
 /* define if you have in_systm.h header file */
 #undef HAVE_IN_SYSTM_H
 
@@ -260,6 +284,9 @@
 /* define if your setattr return return non-void */
 #undef INODE_SETATTR_NOT_VOID
 
+/* define if your sops.write_inode returns non-void */
+#undef WRITE_INODE_NOT_VOID
+
 /* define if your struct address_space has page_lock */
 #undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 
@@ -287,6 +314,12 @@
 /* define if your linux kernel uses SELinux features */
 #undef LINUX_KERNEL_IS_SELINUX
 
+/* define if your linux kernel uses 5 arguments for sock_create */
+#undef LINUX_KERNEL_SOCK_CREATE_V
+
+/* define if your linux kernel provides page_follow_link */
+#undef HAVE_KERNEL_PAGE_FOLLOW_LINK
+
 /* define if your linux kernel has linux/syscall.h */
 #undef HAVE_KERNEL_LINUX_SYSCALL_H
 
@@ -304,15 +337,6 @@
 
 /* define if your struct task_struct has sig */
 #undef STRUCT_TASK_STRUCT_HAS_SIG
-
-/* define if struct ufsvfs has vfs_dqrwlock */
-#undef HAVE_VFS_DQRWLOCK
-
-/* define if struct proc has p_corefile */
-#undef HAVE_P_COREFILE
-
-/* define if struct fs has fs_rolled */
-#undef STRUCT_FS_HAS_FS_ROLLED
 
 /* define if you have a struct buf */
 #undef HAVE_STRUCT_BUF

@@ -28,9 +28,9 @@ extern afs_int32 rxkad_EncryptPacket(const struct rx_connection *conn,
 /* domestic/fcrypt.c */
 extern int fc_keysched(struct ktc_encryptionKey *key,
 		       fc_KeySchedule schedule);
-extern afs_int32 fc_ecb_encrypt(afs_uint32 * clear, afs_uint32 * cipher,
+extern afs_int32 fc_ecb_encrypt(void * clear, void * cipher,
 				fc_KeySchedule schedule, int encrypt);
-extern afs_int32 fc_cbc_encrypt(char *input, char *output, afs_int32 length,
+extern afs_int32 fc_cbc_encrypt(void *input, void *output, afs_int32 length,
 				fc_KeySchedule key, afs_uint32 * xor,
 				int encrypt);
 
@@ -50,14 +50,13 @@ extern int rxkad_GetResponse(struct rx_securityClass *aobj,
 extern void rxkad_ResetState(void);
 
 /* rxkad_common.c */
-#if 0
-/* can't prototype these due to types */
+struct rxkad_endpoint;
 extern int rxkad_SetupEndpoint(struct rx_connection *aconnp,
 			       struct rxkad_endpoint *aendpointp);
+struct rxkad_v2ChallengeResponse;
 extern afs_uint32 rxkad_CksumChallengeResponse(struct
 					       rxkad_v2ChallengeResponse
 					       *v2r);
-#endif
 extern int rxkad_DeriveXORInfo(struct rx_connection *aconnp,
 			       fc_KeySchedule * aschedule, char *aivec,
 			       char *aresult);

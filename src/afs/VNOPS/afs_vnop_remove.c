@@ -14,16 +14,14 @@
  * afs_IsWired (DUX)
  * afsremove
  * afs_remove
- *
- * Local:
- * newname
+ * afs_newname
  *
  */
 #include <afsconfig.h>
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.31.2.1 2004/08/25 07:09:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.31.2.5 2004/12/13 19:35:05 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -154,10 +152,10 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
 	UpgradeSToWLock(&tdc->lock, 637);
     if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
-	code = afs_dir_Delete(&tdc->f.inode, aname);
+	code = afs_dir_Delete(tdc, aname);
 	if (code) {
 	    ZapDCE(tdc);	/* surprise error -- invalid value */
-	    DZap(&tdc->f.inode);
+	    DZap(tdc);
 	}
     }
     if (tdc) {
@@ -193,8 +191,8 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
     return (0);
 }
 
-static char *
-newname(void)
+char *
+afs_newname(void)
 {
     char *name, *sp, *p = ".__afs";
     afs_int32 rd = afs_random() & 0xffff;
@@ -357,7 +355,7 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
      * done the work */
     if (!tvc)
 	if (tdc) {
-	    code = afs_dir_Lookup(&tdc->f.inode, aname, &unlinkFid.Fid);
+	    code = afs_dir_Lookup(tdc, aname, &unlinkFid.Fid);
 	    if (code == 0) {
 		afs_int32 cached = 0;
 
@@ -412,7 +410,7 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 #endif
 #endif
     {
-	char *unlname = newname();
+	char *unlname = afs_newname();
 
 	ReleaseWriteLock(&adp->lock);
 	if (tdc)
@@ -459,7 +457,9 @@ afs_remunlink(register struct vcache *avc, register int doit)
     struct VenusFid dirFid;
     register struct dcache *tdc;
     afs_int32 code = 0;
+#ifdef AFS_DARWIN14_ENV
     int oldref;
+#endif
 
     if (NBObtainWriteLock(&avc->lock, 423))
 	return 0;

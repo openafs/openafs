@@ -10,7 +10,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 
 LIBOBJS=disk.o  remote.o beacon.o recovery.o ubik.o  vote.o lock.o phys.o \
 	ubik_int.cs.o ubik_int.ss.o ubik_int.xdr.o ubikcmd.o \
-	ubikclient.o uerrors.o
+	ubikclient.o uerrors.o uinit.o
 
 INCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/lock.h \
 	${TOP_INCDIR}/rx/rx.h ${TOP_INCDIR}/rx/xdr.h \
@@ -99,6 +99,7 @@ libubik.a: ${LIBOBJS} AFS_component_version_number.o
 	$(RANLIB) $@
 
 disk.o: disk.c ${INCLS}
+uinit.o: uinit.c ${INCLS}
 remote.o: remote.c ${INCLS}
 beacon.o: beacon.c ${INCLS}
 lock.o: lock.c ${INCLS}

@@ -20,7 +20,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/util/netutils.c,v 1.13 2003/07/15 23:17:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/util/netutils.c,v 1.13.2.1 2004/10/18 07:12:18 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -52,6 +52,10 @@ RCSID
 #define AFS_IPINVALIDIGNORE  0xfffffffe	/* no input given to extractAddr */
 #define MAX_NETFILE_LINE       2048	/* length of a line in the netrestrict file */
 #define MAXIPADDRS             1024	/* from afsd.c */
+
+#ifndef INADDR_LOOPBACK
+#define INADDR_LOOPBACK (afs_uint32)0x7f000001
+#endif
 
 /* 
  * The line parameter is a pointer to a buffer containing a string of 
@@ -382,6 +386,11 @@ filterAddrs(afs_uint32 addr1[], afs_uint32 addr2[], afs_uint32 mask1[],
 		break;
 	    }
 	}
+
+	/* Always mask loopback address */
+	if (found && addr1[i] == INADDR_LOOPBACK) 
+	    found = 0;
+
 	if (found) {
 	    taddr[count] = addr1[i];
 	    tmask[count] = mask1[i];

@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42.2.1 2004/08/25 07:09:32 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42.2.4 2004/12/07 06:12:11 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -686,7 +686,7 @@ afs_HashOutDCache(struct dcache *adc)
     AFS_STATCNT(afs_glink);
 #endif
     /* we know this guy's in the LRUQ.  We'll move dude into DCQ below */
-    DZap(&adc->f.inode);
+    DZap(adc);
     /* if this guy is in the hash table, pull him out */
     if (adc->f.fid.Fid.Volume != 0) {
 	/* remove entry from first hash chains */
@@ -1199,7 +1199,7 @@ afs_FindDCache(register struct vcache *avc, afs_size_t abyte)
 {
     afs_int32 chunk;
     register afs_int32 i, index;
-    register struct dcache *tdc;
+    register struct dcache *tdc = NULL;
 
     AFS_STATCNT(afs_FindDCache);
     chunk = AFS_CHUNK(abyte);
@@ -1526,7 +1526,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
     register struct osi_file *file;
     register struct conn *tc;
     int downDCount = 0;
-    struct server *newCallback;
+    struct server *newCallback = NULL;
     char setNewCallback;
     char setVcacheStatus;
     char doVcacheUpdate;
@@ -2038,7 +2038,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	 * Right now, we only have one tool, and it's a hammer.  So, we
 	 * fetch the whole file.
 	 */
-	DZap(&tdc->f.inode);	/* pages in cache may be old */
+	DZap(tdc);	/* pages in cache may be old */
 #ifdef  IHINT
 	if (file = tdc->ihint) {
 	    if (tdc->f.inode == file->inum)
@@ -2415,7 +2415,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	    afs_CFileClose(file);
 	    ZapDCE(tdc);	/* sets DFEntryMod */
 	    if (vType(avc) == VDIR) {
-		DZap(&tdc->f.inode);
+		DZap(tdc);
 	    }
 	    ReleaseWriteLock(&tdc->lock);
 	    afs_PutDCache(tdc);

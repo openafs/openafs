@@ -609,8 +609,6 @@ BOOL IsAdmin (void)
             return FALSE;
         }
 
-        fTested = TRUE;
-
         dwSize = 0;
         dwSize2 = 0;
 
@@ -645,39 +643,76 @@ BOOL IsAdmin (void)
 
             if (OpenProcessToken (GetCurrentProcess(), TOKEN_QUERY, &hToken))
             {
-                /* We'll have to allocate a chunk of memory to store the list of
-                 * groups to which this user belongs; find out how much memory
-                 * we'll need.
-                 */
-                DWORD dwSize = 0;
-                PTOKEN_GROUPS pGroups;
-                
-                GetTokenInformation (hToken, TokenGroups, NULL, dwSize, &dwSize);
-            
-                pGroups = (PTOKEN_GROUPS)malloc(dwSize);
-                
-                /* Allocate that buffer, and read in the list of groups. */
-                if (GetTokenInformation (hToken, TokenGroups, pGroups, dwSize, &dwSize))
-                {
-                    /* Look through the list of group SIDs and see if any of them
-                     * matches the AFS Client Admin group SID.
+
+                if (!CheckTokenMembership(hToken, psidAdmin, &fAdmin)) {
+                    /* We'll have to allocate a chunk of memory to store the list of
+                     * groups to which this user belongs; find out how much memory
+                     * we'll need.
                      */
-                    size_t iGroup = 0;
-                    for (; (!fAdmin) && (iGroup < pGroups->GroupCount); ++iGroup)
+                    DWORD dwSize = 0;
+                    PTOKEN_GROUPS pGroups;
+
+                    GetTokenInformation (hToken, TokenGroups, NULL, dwSize, &dwSize);
+
+                    pGroups = (PTOKEN_GROUPS)malloc(dwSize);
+
+                    /* Allocate that buffer, and read in the list of groups. */
+                    if (GetTokenInformation (hToken, TokenGroups, pGroups, dwSize, &dwSize))
                     {
-                        if (EqualSid (psidAdmin, pGroups->Groups[ iGroup ].Sid)) {
-                            fAdmin = TRUE;
+                        /* Look through the list of group SIDs and see if any of them
+                         * matches the AFS Client Admin group SID.
+                         */
+                        size_t iGroup = 0;
+                        for (; (!fAdmin) && (iGroup < pGroups->GroupCount); ++iGroup)
+                        {
+                            if (EqualSid (psidAdmin, pGroups->Groups[ iGroup ].Sid)) {
+                                fAdmin = TRUE;
+                            }
                         }
                     }
+
+                    if (pGroups)
+                        free(pGroups);
                 }
 
-                if (pGroups)
-                    free(pGroups);
+                /* if do not have permission because we were not explicitly listed
+                 * in the Admin Client Group let's see if we are the SYSTEM account
+                 */
+                if (!fAdmin) {
+                    PTOKEN_USER pTokenUser;
+                    SID_IDENTIFIER_AUTHORITY SIDAuth = SECURITY_NT_AUTHORITY;
+                    PSID pSidLocalSystem = 0;
+                    DWORD gle;
+
+                    GetTokenInformation(hToken, TokenUser, NULL, 0, &dwSize);
+
+                    pTokenUser = (PTOKEN_USER)malloc(dwSize);
+
+                    if (!GetTokenInformation(hToken, TokenUser, pTokenUser, dwSize, &dwSize))
+                        gle = GetLastError();
+
+                    if (AllocateAndInitializeSid( &SIDAuth, 1,
+                                                  SECURITY_LOCAL_SYSTEM_RID,
+                                                  0, 0, 0, 0, 0, 0, 0,
+                                                  &pSidLocalSystem))
+                    {
+                        if (EqualSid(pTokenUser->User.Sid, pSidLocalSystem)) {
+                            fAdmin = TRUE;
+                        }
+
+                        FreeSid(pSidLocalSystem);
+                    }
+
+                    if ( pTokenUser )
+                        free(pTokenUser);
+                }
             }
         }
 
         free(psidAdmin);
         free(pszRefDomain);
+
+        fTested = TRUE;
     }
 
     return fAdmin;
@@ -2181,19 +2216,19 @@ register struct cmd_syndesc *as; {
         return 0;
     }
 
-	input = space;
-	memcpy(&setp, input, sizeof(afs_int32));
-	input += sizeof(afs_int32);
-	if (!setp) {
-	    fprintf(stderr,"No sysname name value was found\n");
+    input = space;
+    memcpy(&setp, input, sizeof(afs_int32));
+    input += sizeof(afs_int32);
+    if (!setp) {
+        fprintf(stderr,"No sysname name value was found\n");
         return 1;
-	} 
+    } 
     
     printf("Current sysname%s", setp > 1 ? "s are" : " is");
     for (; setp > 0; --setp ) {
         printf(" \'%s\'", input);
         input += strlen(input) + 1;
-	}
+    }
     printf("\n");
     return 0;
 }
@@ -2447,7 +2482,7 @@ struct afsconf_cell *info;
 	}
 	else {
 	    /* got a ticket */
-	    if (ttoken.kvno >= 0 && ttoken.kvno	<= 255)	scIndex	= 2;	/* kerberos */
+	    if (ttoken.kvno >= 0 && ttoken.kvno	<= 256)	scIndex	= 2;	/* kerberos */
 	    else {
 		fprintf (stderr, "fs: funny kvno (%d) in ticket, proceeding\n",
 			 ttoken.kvno);
@@ -2943,7 +2978,7 @@ int argc;
 char **argv; {
     register afs_int32 code;
     register struct cmd_syndesc *ts;
-    
+
 #ifdef	AFS_AIX32_ENV
     /*
      * The following signal action for AIX is necessary so that in case of a 
@@ -3141,7 +3176,7 @@ char **argv; {
     cmd_AddParm(ts, "-path", CMD_LIST, CMD_OPTIONAL, "dir/file path");
 
     ts = cmd_CreateSyntax("sysname", SysNameCmd, 0, "get/set sysname (i.e. @sys) value");
-    cmd_AddParm(ts, "-newsys", CMD_SINGLE, CMD_OPTIONAL, "new sysname");
+    cmd_AddParm(ts, "-newsys", CMD_LIST, CMD_OPTIONAL, "new sysname");
 
     ts = cmd_CreateSyntax("exportafs", ExportAfsCmd, 0, "enable/disable translators to AFS");
     cmd_AddParm(ts, "-type", CMD_SINGLE, 0, "exporter name");

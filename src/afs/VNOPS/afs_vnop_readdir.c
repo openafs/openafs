@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_readdir.c,v 1.24.2.1 2004/08/25 07:09:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_readdir.c,v 1.24.2.4 2004/11/09 17:19:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -66,24 +66,8 @@ extern struct DirEntry *afs_dir_GetBlob();
     BlobScan is used by the Linux port in a separate file, so it should not
     become static.
 */
-#if defined(AFS_SGI62_ENV) || defined(AFS_SUN57_64BIT_ENV)
 int
-BlobScan(ino64_t * afile, afs_int32 ablob)
-#else
-#if defined(AFS_HPUX1123_ENV)
-/*DEE should use afs_inode_t for all */
-int
-BlobScan(ino_t * afile, afs_int32 ablob)
-#else
-#ifdef AFS_LINUX_64BIT_KERNEL
-int
-BlobScan(long *afile, afs_int32 ablob)
-#else
-int
-BlobScan(afs_int32 * afile, afs_int32 ablob)
-#endif
-#endif
-#endif
+BlobScan(struct dcache * afile, afs_int32 ablob)
 {
     register afs_int32 relativeBlob;
     afs_int32 pageBlob;
@@ -308,6 +292,9 @@ afs_readdir_move(de, vc, auio, slen, rlen, off)
      afs_size_t off;
 {
     int code = 0;
+    struct volume *tvp;
+    afs_uint32 Volume = vc->fid.Fid.Volume;
+    afs_uint32 Vnode  = de->fid.vnode;
 #if	defined(AFS_SUN56_ENV)
     struct dirent64 *direntp;
 #else
@@ -320,6 +307,79 @@ afs_readdir_move(de, vc, auio, slen, rlen, off)
 #endif /* AFS_SGI53_ENV */
 
     AFS_STATCNT(afs_readdir_move);
+
+#define READDIR_CORRECT_INUMS
+#ifdef READDIR_CORRECT_INUMS
+    if (de->name[0] == '.' && !de->name[1]) {
+	/* This is the '.' entry; if we are a volume root, we need to
+	 * ignore the directory and use the inum for the mount point.
+	 */
+	if (!FidCmp(&afs_rootFid, &vc->fid)) {
+	    Volume = 0;
+	    Vnode  = 2;
+	} else if (vc->mvstat == 2) {
+	    tvp = afs_GetVolume(&vc->fid, 0, READ_LOCK);
+	    if (tvp) {
+		Volume = tvp->mtpoint.Fid.Volume;
+		Vnode  = tvp->mtpoint.Fid.Vnode;
+		afs_PutVolume(tvp, READ_LOCK);
+	    }
+	}
+    }
+    else if (de->name[0] == '.' && de->name[1] == '.' && !de->name[2]) {
+	/* This is the '..' entry.  Getting this right is very tricky,
+	 * because we might be a volume root (so our parent is in a
+	 * different volume), or our parent might be a volume root
+	 * (so we actually want the mount point) or BOTH! */
+	if (!FidCmp(&afs_rootFid, &vc->fid)) {
+	    /* We are the root of the AFS root, and thus our own parent */
+	    Volume = 0;
+	    Vnode  = 2;
+	} else if (vc->mvstat == 2) {
+	    /* We are a volume root, which means our parent is in another
+	     * volume.  Luckily, we should have his fid cached... */
+	    if (vc->mvid) {
+		if (!FidCmp(&afs_rootFid, vc->mvid)) {
+		    /* Parent directory is the root of the AFS root */
+		    Volume = 0;
+		    Vnode  = 2;
+		} else if (vc->mvid->Fid.Vnode == 1
+			   && vc->mvid->Fid.Unique == 1) {
+		    /* XXX The above test is evil and probably breaks DFS */
+		    /* Parent directory is the target of a mount point */
+		    tvp = afs_GetVolume(vc->mvid, 0, READ_LOCK);
+		    if (tvp) {
+			Volume = tvp->mtpoint.Fid.Volume;
+			Vnode  = tvp->mtpoint.Fid.Vnode;
+			afs_PutVolume(tvp, READ_LOCK);
+		    }
+		} else {
+		    /* Parent directory is not a volume root */
+		    Volume = vc->mvid->Fid.Volume;
+		    Vnode  = vc->mvid->Fid.Vnode;
+		}
+	    }
+	} else if (de->fid.vnode == 1 && de->fid.vunique == 1) {
+	    /* XXX The above test is evil and probably breaks DFS */
+	    /* Parent directory is a volume root; use the right inum */
+	    tvp = afs_GetVolume(&vc->fid, 0, READ_LOCK);
+	    if (tvp) {
+		if (tvp->cell == afs_rootFid.Cell
+		    && tvp->volume == afs_rootFid.Fid.Volume) {
+		    /* Parent directory is the root of the AFS root */
+		    Volume = 0;
+		    Vnode  = 2;
+		} else {
+		    /* Parent directory is the target of a mount point */
+		    Volume = tvp->mtpoint.Fid.Volume;
+		    Vnode  = tvp->mtpoint.Fid.Vnode;
+		}
+		afs_PutVolume(tvp, READ_LOCK);
+	    }
+	}
+    }
+#endif
+
 #ifdef	AFS_SGI53_ENV
     {
 	afs_int32 use64BitDirent;
@@ -344,8 +404,7 @@ afs_readdir_move(de, vc, auio, slen, rlen, off)
 
 	if (use64BitDirent) {
 	    struct min_dirent sdirEntry;
-	    sdirEntry.d_fileno =
-		(vc->fid.Fid.Volume << 16) + ntohl(de->fid.vnode);
+	    sdirEntry.d_fileno = (Volume << 16) + ntohl(Vnode);
 	    FIXUPSTUPIDINODE(sdirEntry.d_fileno);
 	    sdirEntry.d_reclen = rlen;
 	    sdirEntry.d_off = (off_t) off;
@@ -368,8 +427,7 @@ afs_readdir_move(de, vc, auio, slen, rlen, off)
 	    }
 	} else {
 	    struct irix5_min_dirent sdirEntry;
-	    sdirEntry.d_fileno =
-		(vc->fid.Fid.Volume << 16) + ntohl(de->fid.vnode);
+	    sdirEntry.d_fileno = (Volume << 16) + ntohl(Vnode);
 	    FIXUPSTUPIDINODE(sdirEntry.d_fileno);
 	    sdirEntry.d_reclen = rlen;
 	    sdirEntry.d_off = (afs_int32) off;
@@ -400,7 +458,7 @@ afs_readdir_move(de, vc, auio, slen, rlen, off)
 #else
     direntp = (struct dirent *)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
 #endif
-    direntp->d_ino = (vc->fid.Fid.Volume << 16) + ntohl(de->fid.vnode);
+    direntp->d_ino =  (Volume << 16) + ntohl(Vnode);
     FIXUPSTUPIDINODE(direntp->d_ino);
 #if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)
     direntp->d_offset = off;
@@ -414,7 +472,7 @@ afs_readdir_move(de, vc, auio, slen, rlen, off)
     osi_FreeLargeSpace((char *)direntp);
 #else /* AFS_SUN5_ENV */
     /* Note the odd mechanism for building the inode number */
-    sdirEntry.d_fileno = (vc->fid.Fid.Volume << 16) + ntohl(de->fid.vnode);
+    sdirEntry.d_fileno = (Volume << 16) + ntohl(Vnode);
     FIXUPSTUPIDINODE(sdirEntry.d_fileno);
     sdirEntry.d_reclen = rlen;
 #if !defined(AFS_SGI_ENV)
@@ -657,8 +715,8 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 	origOffset = auio->afsio_offset;
 	/* scan for the next interesting entry scan for in-use blob otherwise up point at
 	 * this blob note that ode, if non-zero, also represents a held dir page */
-	if (!(us = BlobScan(&tdc->f.inode, (origOffset >> 5)))
-	    || !(nde = (struct DirEntry *)afs_dir_GetBlob(&tdc->f.inode, us))) {
+	if (!(us = BlobScan(tdc, (origOffset >> 5)))
+	    || !(nde = (struct DirEntry *)afs_dir_GetBlob(tdc, us))) {
 	    /* failed to setup nde, return what we've got, and release ode */
 	    if (len) {
 		/* something to hand over. */
@@ -948,8 +1006,8 @@ afs1_readdir(avc, auio, acred)
 
 	/* scan for the next interesting entry scan for in-use blob otherwise up point at
 	 * this blob note that ode, if non-zero, also represents a held dir page */
-	if (!(us = BlobScan(&tdc->f.inode, (origOffset >> 5)))
-	    || !(nde = (struct DirEntry *)afs_dir_GetBlob(&tdc->f.inode, us))) {
+	if (!(us = BlobScan(tdc, (origOffset >> 5)))
+	    || !(nde = (struct DirEntry *)afs_dir_GetBlob(tdc, us))) {
 	    /* failed to setup nde, return what we've got, and release ode */
 	    if (len) {
 		/* something to hand over. */

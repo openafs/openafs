@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/vos.c,v 1.40.2.1 2004/08/17 04:28:45 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/volser/vos.c,v 1.40.2.2 2004/11/09 17:13:45 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -499,11 +499,15 @@ DisplayFormat(pntr, server, part, totalOK, totalNotOK, totalBusy, fast,
 		fprintf(STDOUT, "    Last Access %s",
 			ctime((time_t *) & pntr->accessDate));
 #endif
-	    fprintf(STDOUT, "    Last Update %s",
-		    ctime((time_t *) & pntr->updateDate));
-	    fprintf(STDOUT,
-		    "    %d accesses in the past day (i.e., vnode references)\n",
-		    pntr->dayUse);
+	    if (!pntr->updateDate)
+		fprintf(STDOUT, "    Last Update Never\n");
+	    else {
+		fprintf(STDOUT, "    Last Update %s",
+			ctime((time_t *) & pntr->updateDate));
+		fprintf(STDOUT,
+			"    %d accesses in the past day (i.e., vnode references)\n",
+			pntr->dayUse);
+	    }
 	} else if (pntr->status == VBUSY) {
 	    *totalBusy += 1;
 	    qPut(&busyHead, pntr->volid);
@@ -652,11 +656,15 @@ XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP, a_totalNotOKP,
 		fprintf(STDOUT, "    Last Access %s",
 			ctime((time_t *) & a_xInfoP->accessDate));
 #endif
-	    fprintf(STDOUT, "    Last Update %s",
-		    ctime((time_t *) & a_xInfoP->updateDate));
-	    fprintf(STDOUT,
-		    "    %d accesses in the past day (i.e., vnode references)\n",
-		    a_xInfoP->dayUse);
+	    if (!a_xInfoP->updateDate)
+		fprintf(STDOUT, "    Last Update Never\n");
+	    else {
+		fprintf(STDOUT, "    Last Update %s",
+			ctime((time_t *) & a_xInfoP->updateDate));
+		fprintf(STDOUT,
+			"    %d accesses in the past day (i.e., vnode references)\n",
+			a_xInfoP->dayUse);
+	    }
 
 	    /*
 	     * Print all the read/write and authorship stats.
@@ -1388,16 +1396,9 @@ SetFields(as)
 	return (ENOENT);
     }
 
-    memset(&info, 0, sizeof(info));
+    init_volintInfo(&info);
     info.volid = volid;
     info.type = RWVOL;
-    info.dayUse = -1;
-    info.maxquota = -1;
-    info.flags = -1;
-    info.spare0 = -1;
-    info.spare1 = -1;
-    info.spare2 = -1;
-    info.spare3 = -1;
 
     if (as->parms[1].items) {
 	/* -max <quota> */

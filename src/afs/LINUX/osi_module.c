@@ -15,8 +15,9 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.1 2004/08/25 07:03:36 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.5 2004/12/17 15:29:30 shadow Exp $");
 
+#include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "h/unistd.h"		/* For syscall numbers. */
@@ -26,7 +27,6 @@ RCSID
 #include "../asm/ia32_unistd.h"
 #endif
 
-#include <linux/module.h>
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
@@ -68,7 +68,9 @@ static void **sys_call_table;	/* safer for other linuces */
 
 extern struct file_system_type afs_fs_type;
 
+#if !defined(AFS_LINUX24_ENV)
 static long get_page_offset(void);
+#endif
 
 #if defined(AFS_LINUX24_ENV)
 DECLARE_MUTEX(afs_global_lock);
@@ -138,12 +140,52 @@ static struct file_operations afs_syscall_fops = {
     .ioctl = afs_ioctl,
 };
 
+int
+csdbproc_read(char *buffer, char **start, off_t offset, int count,
+	      int *eof, void *data)
+{
+    int len, j;
+    struct afs_q *cq, *tq;
+    struct cell *tc;
+    char tbuffer[16];
+    afs_uint32 addr;
+    
+    len = 0;
+    ObtainReadLock(&afs_xcell);
+    for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
+	tc = QTOC(cq); tq = QNext(cq);
+	len += sprintf(buffer + len, ">%s #(%d/%d)\n", tc->cellName, 
+		       tc->cellNum, tc->cellIndex);
+	for (j = 0; j < MAXCELLHOSTS; j++) {
+	    if (!tc->cellHosts[j]) break;
+	    addr = ntohl(tc->cellHosts[j]->addr->sa_ip);
+	    sprintf(tbuffer, "%d.%d.%d.%d", 
+		    (int)((addr>>24) & 0xff), (int)((addr>>16) & 0xff),
+		    (int)((addr>>8)  & 0xff), (int)( addr      & 0xff));
+            len += sprintf(buffer + len, "%s #%s\n", tbuffer, tbuffer);
+	}
+    }
+    ReleaseReadLock(&afs_xcell);
+    
+    if (offset >= len) {
+	*start = buffer;
+	*eof = 1;
+	return 0;
+    }
+    *start = buffer + offset;
+    if ((len -= offset) > count)
+	return count;
+    *eof = 1;
+    return len;
+}
+
 static struct proc_dir_entry *openafs_procfs;
 
 static int
-afsproc_init()
+afsproc_init(void)
 {
     struct proc_dir_entry *entry1;
+    struct proc_dir_entry *entry2;
 
     openafs_procfs = proc_mkdir(PROC_FSDIRNAME, proc_root_fs);
     entry1 = create_proc_entry(PROC_SYSCALL_NAME, 0666, openafs_procfs);
@@ -152,12 +194,15 @@ afsproc_init()
 
     entry1->owner = THIS_MODULE;
 
+    entry2 = create_proc_read_entry(PROC_CELLSERVDB_NAME, (S_IFREG|S_IRUGO), openafs_procfs, csdbproc_read, NULL);
+
     return 0;
 }
 
 static void
-afsproc_exit()
+afsproc_exit(void)
 {
+    remove_proc_entry(PROC_CELLSERVDB_NAME, openafs_procfs);
     remove_proc_entry(PROC_SYSCALL_NAME, openafs_procfs);
     remove_proc_entry(PROC_FSDIRNAME, proc_root_fs);
 }
@@ -188,9 +233,9 @@ afs_syscall_stub(int r0, int r1, long r2, long r3, long r4, long gp)
 {
     __asm__ __volatile__("alloc r42 = ar.pfs, 8, 3, 6, 0\n\t" "mov r41 = b0\n\t"	/* save rp */
 			 "mov out0 = in0\n\t" "mov out1 = in1\n\t" "mov out2 = in2\n\t" "mov out3 = in3\n\t" "mov out4 = in4\n\t" "mov out5 = gp\n\t"	/* save gp */
-			 ";;\n" ".L1:    mov r3 = ip\n\t" ";;\n\t" "addl r15=.fptr_afs_syscall-.L1,r3\n\t" ";;\n\t" "ld8 r15=[r15]\n\t" ";;\n\t" "ld8 r16=[r15],8\n\t" ";;\n\t" "ld8 gp=[r15]\n\t" "mov b6=r16\n\t" "br.call.sptk.many b0 = b6\n\t" ";;\n\t" "mov ar.pfs = r42\n\t" "mov b0 = r41\n\t" "mov gp = r48\n\t"	/* restore gp */
+			 ";;\n" ".L1:\n\t" "mov r3 = ip\n\t" ";;\n\t" "addl r15=.fptr_afs_syscall-.L1,r3\n\t" ";;\n\t" "ld8 r15=[r15]\n\t" ";;\n\t" "ld8 r16=[r15],8\n\t" ";;\n\t" "ld8 gp=[r15]\n\t" "mov b6=r16\n\t" "br.call.sptk.many b0 = b6\n\t" ";;\n\t" "mov ar.pfs = r42\n\t" "mov b0 = r41\n\t" "mov gp = r48\n\t"	/* restore gp */
 			 "br.ret.sptk.many b0\n" ".fptr_afs_syscall:\n\t"
-			 "data8 @fptr(afs_syscall)");
+			 "data8 @fptr(afs_syscall)\n\t" ".skip 8");
 }
 
 asmlinkage long
@@ -198,9 +243,9 @@ afs_xsetgroups_stub(int r0, int r1, long r2, long r3, long r4, long gp)
 {
     __asm__ __volatile__("alloc r42 = ar.pfs, 8, 3, 6, 0\n\t" "mov r41 = b0\n\t"	/* save rp */
 			 "mov out0 = in0\n\t" "mov out1 = in1\n\t" "mov out2 = in2\n\t" "mov out3 = in3\n\t" "mov out4 = in4\n\t" "mov out5 = gp\n\t"	/* save gp */
-			 ";;\n" ".L2:    mov r3 = ip\n\t" ";;\n\t" "addl r15=.fptr_afs_xsetgroups - .L2,r3\n\t" ";;\n\t" "ld8 r15=[r15]\n\t" ";;\n\t" "ld8 r16=[r15],8\n\t" ";;\n\t" "ld8 gp=[r15]\n\t" "mov b6=r16\n\t" "br.call.sptk.many b0 = b6\n\t" ";;\n\t" "mov ar.pfs = r42\n\t" "mov b0 = r41\n\t" "mov gp = r48\n\t"	/* restore gp */
+			 ";;\n" ".L2:\n\t" "mov r3 = ip\n\t" ";;\n\t" "addl r15=.fptr_afs_xsetgroups - .L2,r3\n\t" ";;\n\t" "ld8 r15=[r15]\n\t" ";;\n\t" "ld8 r16=[r15],8\n\t" ";;\n\t" "ld8 gp=[r15]\n\t" "mov b6=r16\n\t" "br.call.sptk.many b0 = b6\n\t" ";;\n\t" "mov ar.pfs = r42\n\t" "mov b0 = r41\n\t" "mov gp = r48\n\t"	/* restore gp */
 			 "br.ret.sptk.many b0\n" ".fptr_afs_xsetgroups:\n\t"
-			 "data8 @fptr(afs_xsetgroups)");
+			 "data8 @fptr(afs_xsetgroups)\n\t" ".skip 8");
 }
 
 struct fptr {
@@ -223,11 +268,6 @@ asmlinkage int (*sys_setgroups32p) (int gidsetsize,
 #define SYSCALL2POINTER (void *)
 #endif
 
-#ifdef AFS_PPC64_LINUX20_ENV
-extern void *set_afs_syscall(void*);
-extern void *set_afs_xsetgroups_syscall(void*);
-extern void *set_afs_xsetgroups_syscall32(void*);
-#endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 int __init
@@ -259,8 +299,11 @@ init_module(void)
     unsigned long *ptr;
     unsigned long offset=0;
     unsigned long datalen=0;
-    int ret;
+#if defined(EXPORTED_KALLSYMS_SYMBOL)
     unsigned long token=0;
+#endif
+#if defined(EXPORTED_KALLSYMS_SYMBOL) || defined(EXPORTED_KALLSYMS_ADDRESS)
+    int ret;
     char *mod_name;
     unsigned long mod_start=0;
     unsigned long mod_end=0;
@@ -270,6 +313,7 @@ init_module(void)
     char *sym_name;
     unsigned long sym_start=0;
     unsigned long sym_end=0;
+#endif
 #endif /* EXPORTED_SYS_CALL_TABLE */
 
     RWLOCK_INIT(&afs_xosi, "afs_xosi");
@@ -371,7 +415,7 @@ init_module(void)
     if (!sys_call_table) {
 	printf("Failed to find address of sys_call_table\n");
     } else {
-	printf("Found sys_call_table at %x\n", sys_call_table);
+	printf("Found sys_call_table at %lx\n", (unsigned long)sys_call_table);
 #if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_S390X_LINUX24_ENV)
 	error cant support this yet.;
 #endif /* AFS_SPARC64_LINUX20_ENV */
@@ -433,10 +477,10 @@ init_module(void)
 	if (!ia32_sys_call_table) {
 	    printf("Warning: Failed to find address of ia32_sys_call_table\n");
 	} else {
-	    printf("Found ia32_sys_call_table at %x\n", ia32_sys_call_table);
+	    printf("Found ia32_sys_call_table at %lx\n", (unsigned long)ia32_sys_call_table);
 	}
 #else
-	printf("Found ia32_sys_call_table at %x\n", ia32_sys_call_table);
+	printf("Found ia32_sys_call_table at %lx\n", (unsigned long)ia32_sys_call_table);
 #endif /* IA32_SYS_CALL_TABLE */
 #endif
 
@@ -525,11 +569,6 @@ init_module(void)
 #endif /* AFS_AMD64_LINUX20_ENV */
 #endif /* AFS_IA64_LINUX20_ENV */
 
-#ifdef AFS_PPC64_LINUX20_ENV
-    afs_ni_syscall = set_afs_syscall(afs_syscall);
-    sys_setgroupsp = set_afs_xsetgroups_syscall(afs_xsetgroups);
-    sys32_setgroupsp = set_afs_xsetgroups_syscall32(afs32_xsetgroups);
-#endif
     }
 
     osi_sysctl_init();
@@ -546,8 +585,6 @@ void
 cleanup_module(void)
 #endif
 {
-    struct task_struct *t;
-
     osi_sysctl_clean();
     if (sys_call_table) {
 #if defined(AFS_IA64_LINUX20_ENV)
@@ -582,11 +619,6 @@ cleanup_module(void)
     }
 #endif
     }
-#ifdef AFS_PPC64_LINUX20_ENV
-    set_afs_syscall(afs_ni_syscall);
-    set_afs_xsetgroups_syscall(sys_setgroupsp);
-    set_afs_xsetgroups_syscall32(sys32_setgroupsp);
-#endif
     unregister_filesystem(&afs_fs_type);
 
     osi_linux_free_inode_pages();	/* Invalidate all pages using AFS inodes. */

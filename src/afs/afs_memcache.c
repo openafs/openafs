@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_memcache.c,v 1.15 2003/07/15 23:14:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_memcache.c,v 1.15.2.1 2004/12/07 06:12:11 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #ifndef AFS_LINUX22_ENV
@@ -84,13 +84,18 @@ afs_InitMemCache(int blkCount, int blkSize, int flags)
 }
 
 int
-afs_MemCacheClose(char *file)
+afs_MemCacheClose(struct osi_file *file)
 {
     return 0;
 }
 
+#if defined(AFS_SUN57_64BIT_ENV) || defined(AFS_SGI62_ENV)
 void *
 afs_MemCacheOpen(ino_t blkno)
+#else
+void *
+afs_MemCacheOpen(afs_int32 blkno)
+#endif
 {
     struct memCacheEntry *mep;
 
@@ -108,9 +113,10 @@ afs_MemCacheOpen(ino_t blkno)
  * this routine simulates a read in the Memory Cache 
  */
 int
-afs_MemReadBlk(register struct memCacheEntry *mceP, int offset, char *dest,
+afs_MemReadBlk(register struct osi_file *fP, int offset, void *dest,
 	       int size)
 {
+    register struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
     int bytesRead;
 
     MObtainReadLock(&mceP->afs_memLock);
@@ -188,9 +194,10 @@ afs_MemReadUIO(ino_t blkno, struct uio *uioP)
 
 /*XXX: this extends a block arbitrarily to support big directories */
 int
-afs_MemWriteBlk(register struct memCacheEntry *mceP, int offset, char *src,
+afs_MemWriteBlk(register struct osi_file *fP, int offset, void *src,
 		int size)
 {
+    register struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
     AFS_STATCNT(afs_MemWriteBlk);
     MObtainWriteLock(&mceP->afs_memLock, 560);
     if (size + offset > mceP->dataSize) {
@@ -300,8 +307,9 @@ afs_MemWriteUIO(ino_t blkno, struct uio *uioP)
 }
 
 int
-afs_MemCacheTruncate(register struct memCacheEntry *mceP, int size)
+afs_MemCacheTruncate(register struct osi_file *fP, int size)
 {
+    register struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
     AFS_STATCNT(afs_MemCacheTruncate);
 
     MObtainWriteLock(&mceP->afs_memLock, 313);
@@ -321,11 +329,12 @@ afs_MemCacheTruncate(register struct memCacheEntry *mceP, int size)
 
 int
 afs_MemCacheStoreProc(register struct rx_call *acall,
-		      register struct memCacheEntry *mceP,
+		      register struct osi_file *fP,
 		      register afs_int32 alen, struct vcache *avc,
 		      int *shouldWake, afs_size_t * abytesToXferP,
-		      afs_size_t * abytesXferredP, afs_int32 length)
+		      afs_size_t * abytesXferredP)
 {
+    register struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
 
     register afs_int32 code;
     register int tlen;
@@ -407,11 +416,12 @@ afs_MemCacheStoreProc(register struct rx_call *acall,
 
 int
 afs_MemCacheFetchProc(register struct rx_call *acall,
-		      register struct memCacheEntry *mceP, afs_size_t abase,
+		      register struct osi_file *fP, afs_size_t abase,
 		      struct dcache *adc, struct vcache *avc,
 		      afs_size_t * abytesToXferP, afs_size_t * abytesXferredP,
 		      afs_int32 lengthFound)
 {
+    register struct memCacheEntry *mceP = (struct memCacheEntry *)fP;
     register afs_int32 code;
     afs_int32 length;
     int moredata = 0;

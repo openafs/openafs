@@ -11,13 +11,13 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_file.c,v 1.19 2004/04/12 16:04:32 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_file.c,v 1.19.2.3 2004/12/08 17:21:46 shadow Exp $");
 
+#include "h/module.h" /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "h/smp_lock.h"
-#include "h/module.h"
 
 
 int afs_osicred_initialized = 0;
@@ -29,11 +29,9 @@ extern struct super_block *afs_cacheSBp;
 void *
 osi_UFSOpen(afs_int32 ainode)
 {
-    struct inode *ip;
     register struct osi_file *afile = NULL;
     extern int cacheDiskType;
     afs_int32 code = 0;
-    int dummy;
     struct inode *tip = NULL;
     struct file *filp = NULL;
     AFS_STATCNT(osi_UFSOpen);
@@ -121,7 +119,6 @@ osi_UFSClose(register struct osi_file *afile)
 int
 osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 {
-    struct AFS_UCRED *oldCred;
     register afs_int32 code;
     struct osi_stat tstat;
     struct iattr newattrs;
@@ -141,7 +138,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     down_write(&inode->i_alloc_sem);
 #endif
     down(&inode->i_sem);
-    inode->i_size = newattrs.ia_size = asize;
+    newattrs.ia_size = asize;
     newattrs.ia_valid = ATTR_SIZE | ATTR_CTIME;
 #if defined(AFS_LINUX24_ENV)
     newattrs.ia_ctime = CURRENT_TIME;
@@ -159,6 +156,7 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     if (!code)
 	truncate_inode_pages(&inode->i_data, asize);
 #else
+    inode->i_size = asize;
     if (inode->i_sb->s_op && inode->i_sb->s_op->notify_change) {
 	code = inode->i_sb->s_op->notify_change(&afile->dentry, &newattrs);
     }
@@ -184,10 +182,8 @@ int
 afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
 	     afs_int32 asize)
 {
-    struct AFS_UCRED *oldCred;
     size_t resid;
     register afs_int32 code;
-    register afs_int32 cnt1 = 0;
     AFS_STATCNT(osi_Read);
 
     /**
@@ -222,7 +218,6 @@ int
 afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr,
 	      afs_int32 asize)
 {
-    struct AFS_UCRED *oldCred;
     size_t resid;
     register afs_int32 code;
     AFS_STATCNT(osi_Write);

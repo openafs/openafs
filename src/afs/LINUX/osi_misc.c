@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_misc.c,v 1.34 2004/05/15 06:43:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_misc.c,v 1.34.2.1 2004/12/07 06:12:12 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -167,7 +167,6 @@ int
 osi_file_uio_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
 {
     struct file *filp = &osifile->file;
-    struct inode *ip = FILE_INODE(&osifile->file);
     KERNEL_SPACE_DECL;
     int code = 0;
     struct iovec *iov;
@@ -227,10 +226,10 @@ osi_file_uio_rdwr(struct osi_file *osifile, uio_t * uiop, int rw)
  * Setup a uio struct.
  */
 void
-setup_uio(uio_t * uiop, struct iovec *iovecp, char *buf, afs_offs_t pos,
+setup_uio(uio_t * uiop, struct iovec *iovecp, const char *buf, afs_offs_t pos,
 	  int count, uio_flag_t flag, uio_seg_t seg)
 {
-    iovecp->iov_base = buf;
+    iovecp->iov_base = (char *)buf;
     iovecp->iov_len = count;
     uiop->uio_iov = iovecp;
     uiop->uio_iovcnt = 1;
@@ -248,7 +247,7 @@ setup_uio(uio_t * uiop, struct iovec *iovecp, char *buf, afs_offs_t pos,
 int
 uiomove(char *dp, int length, uio_flag_t rw, uio_t * uiop)
 {
-    int count, n;
+    int count;
     struct iovec *iov;
     int code;
 
@@ -371,8 +370,8 @@ osi_linux_free_inode_pages(void)
 #else
 		if (ip->i_nrpages) {
 #endif
-		    printf("Failed to invalidate all pages on inode 0x%x\n",
-			   ip);
+		    printf("Failed to invalidate all pages on inode 0x%lx\n",
+			   (unsigned long)ip);
 		}
 	    }
 	}
@@ -387,11 +386,14 @@ osi_clear_inode(struct inode *ip)
 
 #if defined(AFS_LINUX24_ENV)
     if (atomic_read(&ip->i_count) > 1)
+	printf("afs_put_inode: ino %ld (0x%lx) has count %ld\n",
+	       (long)ip->i_ino, (unsigned long)ip,
+	       (long)atomic_read(&ip->i_count));
 #else
     if (ip->i_count > 1)
+	printf("afs_put_inode: ino %ld (0x%lx) has count %ld\n",
+	       (long)ip->i_ino, (unsigned long)ip, (long)ip->i_count);
 #endif
-	printf("afs_put_inode: ino %d (0x%x) has count %d\n", ip->i_ino, ip,
-	       ip->i_count);
 
     afs_InactiveVCache(vcp, credp);
     ObtainWriteLock(&vcp->lock, 504);

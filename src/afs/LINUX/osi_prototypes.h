@@ -36,13 +36,14 @@ extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
 extern int osi_InitCacheInfo(char *aname);
 extern int osi_rdwr(int rw, struct osi_file *file, caddr_t addrp,
 		    size_t asize, size_t * resid);
-extern void inline setup_uio(uio_t * uiop, struct iovec *iovecp, char *buf,
-			     afs_offs_t pos, int count, uio_flag_t flag,
-			     uio_seg_t seg);
 extern int osi_file_uio_rdwr(struct osi_file *osifile, uio_t * uiop, int rw);
 extern void afs_osi_SetTime(osi_timeval_t * tvp);
 extern void osi_linux_free_inode_pages(void);
 extern void check_bad_parent(struct dentry *dp);
+
+/* osi_sysctl.c */
+extern int osi_sysctl_init(void);
+extern void osi_sysctl_clean(void);
 
 /* osi_vm.c */
 extern int osi_VM_FlushVCache(struct vcache *avc, int *slept);
@@ -56,6 +57,11 @@ extern void osi_VM_Truncate(struct vcache *avc, int alen,
 
 /* osi_vfsops.c */
 extern void set_inode_cache(struct inode *ip, struct vattr *vp);
+extern void put_inode_on_dummy_list(struct inode *ip);
+extern void vattr2inode(struct inode *ip, struct vattr *vp);
 
+/* osi_vnodeops.c */
+extern int afs_linux_writepage_sync(struct inode *ip, struct page *pp,
+				    unsigned long offset, unsigned int count);
 
 #endif /* _OSI_PROTO_H_ */

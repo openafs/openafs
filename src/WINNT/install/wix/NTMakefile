@@ -30,7 +30,7 @@ languages:
 #	)
 	$(MAKE) /f NTMakefile /nologo LANG=en_US lang
 
-lang:: $(MSIFILE)
+lang:: lang_clean $(MSIFILE)
 
 customactions:
 	$(CD) custom
@@ -62,9 +62,8 @@ $(WIXOBJ): openafs.wxs $(WIXINCLUDES)
 
 # Cleanup
 clean::
-	for %l in ( $(LANGUAGES) ) do (
+	for %l in ( $(LANGUAGES) ) do \
 		$(MAKE) /f NTMakefile /nologo LANG=%l lang_clean
-	)
 	$(CD) custom
 	$(MAKE) /f NTMakefile /nologo clean
 	$(CD) ..

@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.1 2004/08/25 07:03:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.4 2004/12/07 06:12:11 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #ifdef AFS_OBSD_ENV
@@ -195,6 +195,7 @@ static int (*(CpioctlSw[])) () = {
 #define PSetClientContext 99	/*  Special pioctl to setup caller's creds  */
 int afs_nobody = NFS_NOBODY;
 
+#if (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV) && !defined(AFS_AMD64_LINUX20_ENV))
 static void
 afs_ioctl32_to_afs_ioctl(const struct afs_ioctl32 *src, struct afs_ioctl *dst)
 {
@@ -203,6 +204,7 @@ afs_ioctl32_to_afs_ioctl(const struct afs_ioctl32 *src, struct afs_ioctl *dst)
     dst->in_size = src->in_size;
     dst->out_size = src->out_size;
 }
+#endif
 
 /*
  * If you need to change copyin_afs_ioctl(), you may also need to change
@@ -268,7 +270,11 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 #elif defined(AFS_AMD64_LINUX20_ENV)
     if (current->thread.flags & THREAD_IA32)
 #elif defined(AFS_PPC64_LINUX20_ENV)
-    if (current->thread.flags & PPC_FLAG_32BIT)
+#ifdef AFS_PPC64_LINUX26_ENV
+      if (current->thread_info->flags & _TIF_32BIT)
+#else /*Linux 2.6*/
+    if (current->thread.flags & PPC_FLAG_32BIT) 
+#endif
 #elif defined(AFS_S390X_LINUX20_ENV)
     if (current->thread.flags & S390_FLAG_31BIT)
 #else
@@ -488,7 +494,7 @@ struct afs_ioctl_sys {
     unsigned int com;
     unsigned long arg;
 };
-asmlinkage int
+int
 afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
 	   unsigned long arg)
 {
@@ -842,9 +848,12 @@ afs_syscall_pioctl(path, com, cmarg, follow)
      int follow;
 {
     struct afs_ioctl data;
-    struct AFS_UCRED *tmpcred, *foreigncreds = NULL;
+#ifdef AFS_NEED_CLIENTCONTEXT
+    struct AFS_UCRED *tmpcred;
+#endif
+    struct AFS_UCRED *foreigncreds = NULL;
     register afs_int32 code = 0;
-    struct vnode *vp;
+    struct vnode *vp = NULL;
 #ifdef AFS_DEC_ENV
     struct vnode *gp;
 #endif
@@ -1515,7 +1524,7 @@ DECL_PIOCTL(PGetVolumeStatus)
     char *motd = afs_osi_Alloc(256);
     register struct conn *tc;
     register afs_int32 code = 0;
-    struct VolumeStatus volstat;
+    struct AFSFetchVolumeStatus volstat;
     register char *cp;
     char *Name, *OfflineMsg, *MOTD;
     XSTATS_DECLS;
@@ -1713,7 +1722,7 @@ DECL_PIOCTL(PNewStatMount)
     Check_AtSys(avc, ain, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
-	code = afs_dir_Lookup(&tdc->f.inode, sysState.name, &tfid.Fid);
+	code = afs_dir_Lookup(tdc, sysState.name, &tfid.Fid);
     } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);		/* we're done with the data */
@@ -2393,7 +2402,7 @@ DECL_PIOCTL(PRemoveMount)
     Check_AtSys(avc, ain, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
-	code = afs_dir_Lookup(&tdc->f.inode, sysState.name, &tfid.Fid);
+	code = afs_dir_Lookup(tdc, sysState.name, &tfid.Fid);
     } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
     ReleaseReadLock(&tdc->lock);
     bufp = sysState.name;
@@ -2464,10 +2473,10 @@ DECL_PIOCTL(PRemoveMount)
 	ObtainWriteLock(&tdc->lock, 661);
 	if (afs_LocalHero(avc, tdc, &OutDirStatus, 1)) {
 	    /* we can do it locally */
-	    code = afs_dir_Delete(&tdc->f.inode, bufp);
+	    code = afs_dir_Delete(tdc, bufp);
 	    if (code) {
 		ZapDCE(tdc);	/* surprise error -- invalid value */
-		DZap(&tdc->f.inode);
+		DZap(tdc);
 	    }
 	}
 	ReleaseWriteLock(&tdc->lock);
@@ -2687,7 +2696,7 @@ DECL_PIOCTL(PGetVnodeXStatus)
  /* for the reader.  */
 DECL_PIOCTL(PSetSysName)
 {
-    char *cp, *cp2, inname[MAXSYSNAME], outname[MAXSYSNAME];
+    char *cp, *cp2 = NULL, inname[MAXSYSNAME], outname[MAXSYSNAME];
     int setsysname, foundname = 0;
     register struct afs_exporter *exporter;
     register struct unixuser *au;
@@ -3499,7 +3508,7 @@ DECL_PIOCTL(PFlushMount)
     Check_AtSys(avc, ain, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
-	code = afs_dir_Lookup(&tdc->f.inode, sysState.name, &tfid.Fid);
+	code = afs_dir_Lookup(tdc, sysState.name, &tfid.Fid);
     } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);		/* we're done with the data */

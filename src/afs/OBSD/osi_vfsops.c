@@ -3,7 +3,7 @@
  * Original NetBSD version for Transarc afs by John Kohl <jtk@MIT.EDU>
  * OpenBSD version by Jim Rees <rees@umich.edu>
  *
- * $Id: osi_vfsops.c,v 1.18 2004/03/25 17:04:44 rees Exp $
+ * $Id: osi_vfsops.c,v 1.18.2.1 2004/12/07 06:19:16 shadow Exp $
  */
 
 /*
@@ -94,7 +94,7 @@ NONINFRINGEMENT.
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/OBSD/osi_vfsops.c,v 1.18 2004/03/25 17:04:44 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/OBSD/osi_vfsops.c,v 1.18.2.1 2004/12/07 06:19:16 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
@@ -116,7 +116,6 @@ static int lkmid = -1;
 static int afs_badcall(struct proc *p, void *xx, register_t * yy);
 static struct sysent old_sysent;
 
-char afs_NetBSD_osname[] = "OpenBSD";
 struct osi_vfs *afs_globalVFS;
 struct vcache *afs_globalVp;
 
@@ -463,7 +462,7 @@ afs_vfs_load(struct lkm_table *lkmtp, int cmd)
     if (memname[M_AFSBUFFER] == NULL)
 	memname[M_AFSBUFFER] = afsbfrmem;
     lkmid = lkmtp->id;
-    printf("OpenAFS ($Revision: 1.18 $) lkm loaded\n");
+    printf("OpenAFS ($Revision: 1.18.2.1 $) lkm loaded\n");
     return 0;
 }
 
@@ -495,11 +494,6 @@ int
 libafs_lkmentry(struct lkm_table *lkmtp, int cmd, int ver)
 {
     if (cmd == LKM_E_LOAD) {
-	if (strcmp(ostype, afs_NetBSD_osname)) {
-	    printf("This is %s version %s\n", ostype, osrelease);
-	    printf("This version of AFS is only for %s\n", afs_NetBSD_osname);
-	    return EPROGMISMATCH;
-	}
 	if (sysent[AFS_SYSCALL].sy_call == afs3_syscall
 	    || sysent[AFS_SYSCALL].sy_call == afs_badcall) {
 	    printf("AFS already loaded\n");

@@ -28,6 +28,8 @@ struct rxevent {
     void (*func) ();		/* Function to call when this expires */
     char *arg;			/* Argument to the function */
     char *arg1;			/* Another argument */
+    int arg2;			/* An integer argument */
+    int newargs;		/* Nonzero if new-form arguments should be used */
 };
 
 /* We used to maintain a sorted list of events, but the amount of CPU

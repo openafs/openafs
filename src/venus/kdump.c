@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.33 2004/07/13 05:49:54 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/kdump.c,v 1.33.2.1 2004/12/17 15:31:26 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -244,7 +244,9 @@ typedef struct adaptive_mutex2 adaptive_mutex2_t;
 #else
 #include "sys/vfs.h"
 #ifdef AFS_LINUX20_ENV
+#ifndef UIO_MAXIOV
 #define UIO_MAXIOV 1		/* don't care */
+#endif
 #if __GLIBC_MINOR__ == 0
 #include <iovec.h>
 #endif
@@ -257,6 +259,9 @@ typedef struct adaptive_mutex2 adaptive_mutex2_t;
 #undef ULONG_MAX
 #define _LINUX_TIME_H
 #define _LINUX_FCNTL_H
+#ifdef AFS_IA64_LINUX24_ENV
+#define flock64  flock
+#endif /* AFS_IA64_LINUX24_ENV */
 #ifdef AFS_S390_LINUX20_ENV
 #define _S390_STATFS_H
 #else
@@ -294,6 +299,16 @@ typedef struct timeval {
 #define timer_t ktimer_t
 #define timer_t_redefined
 #endif
+#ifdef AFS_LINUX26_ENV
+/* For some reason, this doesn't get defined in linux/types.h
+   if __KERNEL_STRICT_NAMES is defined. But the definition of
+   struct inode uses it.
+*/
+#ifndef HAVE_SECTOR_T
+/* got it from linux/types.h */
+typedef unsigned long sector_t;
+#endif /* HAVE_SECTOR_T */
+#endif /* AFS_LINUX26_ENV */
 #include <linux/version.h>
 #include <linux/fs.h>
 #include <osi_vfs.h>
@@ -647,7 +662,11 @@ PrintIPAddr(int addr)
 #define MAXNAMELEN 64
 typedef struct symlist {
     char s_name[MAXNAMELEN];
+#ifdef AFS_LINUX_64BIT_KERNEL
+    unsigned long s_value;
+#else
     int s_value;
+#endif /* AFS_LINUX_64BIT_KERNEL */
 } symlist_t;
 
 #define KSYM_ALLOC_STEP 128
@@ -701,7 +720,11 @@ read_ksyms(void)
 		exit(1);
 	    }
 	}
+#ifdef AFS_LINUX_64BIT_KERNEL
+	ksyms[nksyms].s_value = (unsigned long)strtoul(line, &p, 16);
+#else
 	ksyms[nksyms].s_value = (int)strtoul(line, &p, 16);
+#endif /* AFS_LINUX_64BIT_KERNEL */
 	p++;
 #ifdef AFS_LINUX26_ENV
 	/* Linux 2.6 /proc/kallsyms has a one-char symbol type
@@ -728,7 +751,11 @@ read_ksyms(void)
 
 
 /* find_symbol returns 0 if not found, otherwise value for symbol */
+#ifdef AFS_LINUX_64BIT_KERNEL
+unsigned long
+#else
 int
+#endif /* AFS_LINUX_64BIT_KERNEL */
 find_symbol(char *name)
 {
     symlist_t *tmp;
@@ -1906,7 +1933,11 @@ print_alloced_memlist(void)
     findsym("afs_linux_memlist", &symoff);
     kread(kmem, symoff, (char *)&memp, sizeof memp);
     if (memp) {
+#ifdef AFS_LINUX_64BIT_KERNEL
+	kread(kmem, (unsigned long)memp, (char *)&next, sizeof next);
+#else
 	kread(kmem, (int)memp, (char *)&next, sizeof next);
+#endif /* AFS_LINUX_64BIT_KERNEL */
     } else {
 	memset(&next, 0, sizeof next);
     }

@@ -24,7 +24,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.27.2.1 2004/08/25 07:09:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.27.2.3 2004/12/07 06:12:13 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -317,6 +317,14 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 				     CMB_ALLOW_EXEC_AS_READ)) {
 		    return EACCES;
 		}
+#if 0
+/* The effect of the following is to force the NFS client to refetch the
+ * volume root every time, since the mtime changes.  For Solaris 9 NFSv3
+ * clients, this means looping forever, since for some reason (related
+ * to caching?) it wants the mtime to be consistent two reads in a row.
+ * Why are volume roots special???
+ * --jhutz 2-May-2004
+ */
 		if (avc->mvstat == 2) {
 #if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 		    attrs->va_mtime.tv_nsec += ((++avc->xlatordv) * 1000);
@@ -324,6 +332,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 		    attrs->va_mtime.tv_usec += ++avc->xlatordv;
 #endif
 		}
+#endif
 	    }
 	    if ((au = afs_FindUser(treq.uid, -1, READ_LOCK))) {
 		register struct afs_exporter *exporter = au->exporter;
@@ -390,10 +399,14 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
 /* Boy, was this machine dependent bogosity hard to swallow????.... */
     if (av->va_mode != -1) {
 #else
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX22_ENV)
+#if	defined(AFS_LINUX22_ENV)
+    if (av->va_mask & ATTR_MODE) {
+#else
+#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_MODE) {
 #else
     if (av->va_mode != ((unsigned short)-1)) {
+#endif
 #endif
 #endif
 	mask |= AFS_SETMODE;
@@ -404,7 +417,10 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
 	    ReleaseWriteLock(&avc->lock);
 	}
     }
-#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX22_ENV)
+#if defined(AFS_LINUX22_ENV)
+    if (av->va_mask & ATTR_GID) {
+#else
+#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_GID) {
 #else
 #if (defined(AFS_HPUX_ENV) || defined(AFS_SUN_ENV))
@@ -417,10 +433,14 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
     if (av->va_gid != -1) {
 #endif
 #endif /* AFS_SUN5_ENV */
+#endif /* AFS_LINUX22_ENV */
 	mask |= AFS_SETGROUP;
 	as->Group = av->va_gid;
     }
-#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX22_ENV)
+#if defined(AFS_LINUX22_ENV)
+    if (av->va_mask & ATTR_UID) {
+#else
+#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_UID) {
 #else
 #if (defined(AFS_HPUX_ENV) || defined(AFS_SUN_ENV))
@@ -433,13 +453,18 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
     if (av->va_uid != -1) {
 #endif
 #endif /* AFS_SUN5_ENV */
+#endif /* AFS_LINUX22_ENV */
 	mask |= AFS_SETOWNER;
 	as->Owner = av->va_uid;
     }
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX22_ENV)
+#if	defined(AFS_LINUX22_ENV)
+    if (av->va_mask & ATTR_MTIME) {
+#else
+#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_MTIME) {
 #else
     if (av->va_mtime.tv_sec != -1) {
+#endif
 #endif
 	mask |= AFS_SETMODTIME;
 #ifndef	AFS_SGI_ENV
@@ -517,7 +542,10 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
      * path (unlike BSD or SUNOS), so we skip this check for Ultrix.
      *
      */
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX22_ENV)
+#if	defined(AFS_LINUX22_ENV)
+    if (attrs->va_mask & ATTR_SIZE) {
+#else
+#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (attrs->va_mask & AT_SIZE) {
 #else
 #ifdef	AFS_OSF_ENV
@@ -527,6 +555,7 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
     if (attrs->va_size != -1) {
 #else
     if (attrs->va_size != ~0) {
+#endif
 #endif
 #endif
 #endif
@@ -551,13 +580,17 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 #if defined(AFS_SGI_ENV)
     AFS_RWLOCK((vnode_t *) avc, VRWLOCK_WRITE);
 #endif
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX22_ENV)
+#if	defined(AFS_LINUX22_ENV)
+    if (attrs->va_mask & ATTR_SIZE) {
+#else
+#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (attrs->va_mask & AT_SIZE) {
 #else
 #if	defined(AFS_OSF_ENV)
     if (attrs->va_size != VNOVAL) {
 #else /* AFS_OSF_ENV */
     if (attrs->va_size != -1) {
+#endif
 #endif
 #endif
 	afs_size_t tsize = attrs->va_size;

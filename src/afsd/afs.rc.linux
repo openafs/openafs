@@ -59,6 +59,7 @@ runcmd() {
 }
 
 SYSCNF=/etc/sysconfig/afs
+KERNEL_VERSION=`uname -r`
 
 # Gather up options and post startup script name, if present
 if [ -f $SYSCNF ] ; then
@@ -104,9 +105,14 @@ choose_client() {
 	esac
 
 	# For now, just use uname -r to get the module version. 
-	VERSION=`uname -r`
-
-	LIBAFS=libafs-$VERSION$MP.o
+	case $KERNEL_VERSION in
+	  [1-2].[0-5].*)
+		LIBAFS=libafs-$KERNEL_VERSION$MP.o
+		;;
+	  *)
+		LIBAFS=libafs-$KERNEL_VERSION$MP.ko
+		;;
+	esac
 }
 
 #
@@ -117,8 +123,14 @@ choose_client() {
 # unregister_filesystem_Rsmp_b240cad8 is a typcial SMP version string from
 # a kernel built from ftp.kernel.org
 #
-
-KSYMS_FILE=/proc/ksyms
+case $KERNEL_VERSION in
+  [1-2].[0-5].*)
+	KSYMS_FILE=/proc/ksyms
+	;;
+  *)
+	KSYMS_FILE=/proc/kallsyms
+	;;
+esac
 SEARCH_STR="unregister_filesystem"
 DEFAULT_SMP_PREFIX="smp_" # Redhat kernels need "smp" instead
 PREFIX="" # none needed for UP with <= 1Gig memory
@@ -129,8 +141,16 @@ set_prefix()
 	h8="$h$h$h$h$h$h$h$h"
 	prefix_set=0
 
-	set X `fgrep $SEARCH_STR $KSYMS_FILE 2> /dev/null`; shift
-	str=$2
+	set X `egrep "\<$SEARCH_STR" $KSYMS_FILE 2> /dev/null`; shift
+	
+	case $KERNEL_VERSION in
+	  [1-2].[0-5].*)
+		str=$2
+		;;
+	  *)
+		str=$3
+		;;
+	esac
 	case $str in
 	${SEARCH_STR}_R$h8)
 		# No prefix required
@@ -179,8 +199,15 @@ load_client() {
 
 	if [ -f $KSYMS_FILE ]; then
 		# use the prefix command if required
-		set_prefix
-		/sbin/insmod ${PREFIX:+-P $PREFIX} -f -m $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
+		case $KERNEL_VERSION in
+		  [1-2].[0-5].*)
+			set_prefix
+			/sbin/insmod ${PREFIX:+-P $PREFIX} -f -m $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
+			;;
+		  *)
+			/sbin/insmod $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
+			;;
+		esac
 	else
 		/sbin/insmod $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
 	fi

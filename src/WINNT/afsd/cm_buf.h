@@ -72,7 +72,7 @@ typedef struct cm_buf {
 				 */
         struct cm_buf *allp;	/* next in all list */
 	osi_mutex_t mx;		/* mutex protecting structure except refcount */
-    int refCount;		/* reference count (buf_globalLock) */
+    unsigned long refCount;		/* reference count (buf_globalLock) */
         long idCounter;		/* counter for softrefs; bumped at each recycle */
         long dirtyCounter;	/* bumped at each dirty->clean transition */
 #ifdef notdef
@@ -194,6 +194,8 @@ extern long buf_FlushCleanPages(cm_scache_t *scp, cm_user_t *userp,
 	cm_req_t *reqp);
 
 extern long buf_SetNBuffers(long nbuffers);
+
+extern void buf_ForceTrace(BOOL flush);
 
 /* error codes */
 #define CM_BUF_EXISTS	1	/* buffer exists, and shouldn't */

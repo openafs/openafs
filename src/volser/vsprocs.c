@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/vsprocs.c,v 1.33 2004/07/29 03:44:08 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/vsprocs.c,v 1.33.2.1 2004/11/09 17:13:45 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -406,6 +406,19 @@ PrintError(char *msg, afs_int32 errcode)
     return 0;
 }
 
+void init_volintInfo(struct volintInfo *vinfo) {
+    memset(vinfo, 0, sizeof(struct volintInfo));
+
+    vinfo->maxquota = -1;
+    vinfo->dayUse = -1;
+    vinfo->creationDate = -1;
+    vinfo->updateDate = -1;
+    vinfo->flags = -1;
+    vinfo->spare0 = -1;
+    vinfo->spare1 = -1;
+    vinfo->spare2 = -1;
+    vinfo->spare3 = -1;
+}
 
 static struct rx_securityClass *uvclass = 0;
 static int uvindex = -1;
@@ -624,8 +637,8 @@ UV_CreateVolume2(afs_int32 aserver, afs_int32 apart, char *aname,
     tid = 0;
     aconn = (struct rx_connection *)0;
     error = 0;
-    memset(&tstatus, 0, sizeof(struct volintInfo));
-    tstatus.dayUse = -1;
+
+    init_volintInfo(&tstatus);
     tstatus.maxquota = aquota;
 
     aconn = UV_Bind(aserver, AFSCONF_VOLUMEPORT);
@@ -1338,6 +1351,8 @@ UV_MoveVolume2(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart,
 
     infop = (volintInfo *) volumeInfo.volEntries_val;
     infop->maxquota = -1;	/* Else it will replace the default quota */
+    infop->creationDate = -1;	/* Else it will use the source creation date */
+    infop->updateDate = -1;	/* Else it will use the source update date */
 #endif
 
     /* create a volume on the target machine */
@@ -4237,9 +4252,7 @@ UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	goto refail;
     }
 
-    memset(&vinfo, 0, sizeof(struct volintInfo));
-    vinfo.dayUse = -1;
-    vinfo.maxquota = -1;
+    init_volintInfo(&vinfo);
     vinfo.creationDate = newCreateDate;
     vinfo.updateDate = newUpdateDate;
     code = AFSVolSetInfo(toconn, totid, &vinfo);

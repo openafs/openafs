@@ -23,7 +23,7 @@
 #define INCLUDE_RXKAD_PRIVATE_DECLS
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/rxkad_common.c,v 1.20.2.1 2004/08/25 07:09:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/rxkad_common.c,v 1.20.2.2 2004/12/07 06:10:16 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -83,7 +83,7 @@ RCSID
 #endif
 /* variable initialization for the benefit of darwin compiler; if it causes
    problems elsewhere, conditionalize for darwin or fc_test compile breaks */
-struct rxkad_stats rxkad_stats = { 0 };
+struct rxkad_stats rxkad_stats = { { 0 } };
 
 /* static prototypes */
 static afs_int32 ComputeSum(struct rx_packet *apacket,
@@ -421,7 +421,7 @@ rxkad_PreparePacket(struct rx_securityClass *aobj, struct rx_call *acall,
     fc_KeySchedule *schedule;
     fc_InitializationVector *ivec;
     int len;
-    int nlen;
+    int nlen = 0;
     int word;
     afs_int32 code;
     afs_int32 *preSeq;

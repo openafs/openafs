@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48 2004/08/09 00:17:33 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48.2.1 2004/12/07 06:12:11 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -445,8 +445,10 @@ afs_osi_SetTime(osi_timeval_t * atv)
 void *
 afs_osi_Alloc(size_t x)
 {
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
     register struct osimem *tm = NULL;
     register int size;
+#endif
 
     AFS_STATCNT(osi_Alloc);
     /* 0-length allocs may return NULL ptr from AFS_KALLOC, so we special-case

@@ -30,41 +30,52 @@ cm_space_t *cm_spaceListp;
 
 long cm_MapRPCError(long error, cm_req_t *reqp)
 {
-	if (error == 0) return 0;
+    if (error == 0) 
+        return 0;
 
-	/* If we had to stop retrying, report our saved error code. */
-	if (reqp && error == CM_ERROR_TIMEDOUT) {
-		if (reqp->accessError)
-			return reqp->accessError;
-		if (reqp->volumeError)
-			return reqp->volumeError;
-		if (reqp->rpcError)
-			return reqp->rpcError;
-		return error;
-	}
-
-	if (error < 0) error = CM_ERROR_TIMEDOUT;
-	else if (error == 30) error = CM_ERROR_READONLY;
-        else if (error == 13) error = CM_ERROR_NOACCESS;
-        else if (error == 18) error = CM_ERROR_CROSSDEVLINK;
-        else if (error == 17) error = CM_ERROR_EXISTS;
-	else if (error == 20) error = CM_ERROR_NOTDIR;
-        else if (error == 2) error = CM_ERROR_NOSUCHFILE;
-	else if (error == 11		/* EAGAIN, most servers */
-		 || error == 35)	/* EAGAIN, Digital UNIX */
-			error = CM_ERROR_WOULDBLOCK;
-	else if (error == VDISKFULL
-		 || error == 28)        /* ENOSPC */ 
-	                error = CM_ERROR_SPACE;
-	else if (error == VOVERQUOTA
-		 || error == 49         /* EDQUOT on Solaris */
-		 || error == 88		/* EDQUOT on AIX */
-		 || error == 69	        /* EDQUOT on Digital UNIX and HPUX */
-		 || error == 122        /* EDQUOT on Linux */
-		 || error == 1133)      /* EDQUOT on Irix  */
-	                error = CM_ERROR_QUOTA;
-        else if (error == VNOVNODE) error = CM_ERROR_BADFD;
+    /* If we had to stop retrying, report our saved error code. */
+    if (reqp && error == CM_ERROR_TIMEDOUT) {
+        if (reqp->accessError)
+            return reqp->accessError;
+        if (reqp->volumeError)
+            return reqp->volumeError;
+        if (reqp->rpcError)
+            return reqp->rpcError;
         return error;
+    }
+
+    if (error < 0) 
+        error = CM_ERROR_TIMEDOUT;
+    else if (error == 30) 
+        error = CM_ERROR_READONLY;
+    else if (error == 13) 
+        error = CM_ERROR_NOACCESS;
+    else if (error == 18) 
+        error = CM_ERROR_CROSSDEVLINK;
+    else if (error == 17) 
+        error = CM_ERROR_EXISTS;
+    else if (error == 20) 
+        error = CM_ERROR_NOTDIR;
+    else if (error == 2) 
+        error = CM_ERROR_NOSUCHFILE;
+    else if (error == 11		/* EAGAIN, most servers */
+             || error == 35)	/* EAGAIN, Digital UNIX */
+        error = CM_ERROR_WOULDBLOCK;
+    else if (error == VDISKFULL
+              || error == 28)        /* ENOSPC */ 
+        error = CM_ERROR_SPACE;
+    else if (error == VOVERQUOTA
+              || error == 49         /* EDQUOT on Solaris */
+              || error == 88		/* EDQUOT on AIX */
+              || error == 69	        /* EDQUOT on Digital UNIX and HPUX */
+              || error == 122        /* EDQUOT on Linux */
+              || error == 1133)      /* EDQUOT on Irix  */
+        error = CM_ERROR_QUOTA;
+    else if (error == VNOVNODE) 
+        error = CM_ERROR_BADFD;
+    else if (error == 21)
+        return CM_ERROR_ISDIR;
+    return error;
 }
 
 long cm_MapRPCErrorRmdir(long error, cm_req_t *reqp)

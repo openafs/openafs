@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.20 2004/06/24 17:38:24 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_vnodeops.c,v 1.20.2.1 2004/10/18 07:11:47 shadow Exp $");
 
 #if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
 /*
@@ -1069,7 +1069,7 @@ afs_nfsrdwr(avc, auio, arw, ioflag, acred)
 	/* do ulimit processing; shrink resid or fail */
 #if	defined(AFS_SUN56_ENV)
 	if (auio->uio_loffset + auio->afsio_resid > auio->uio_llimit) {
-	    if (auio->uio_llimit >= auio->uio_llimit) {
+	    if (auio->uio_loffset >= auio->uio_llimit) {
 		ReleaseWriteLock(&avc->lock);
 		afs_BozonUnlock(&avc->pvnLock, avc);
 		return EFBIG;

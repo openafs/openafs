@@ -45,7 +45,7 @@ else
 [#include <linux/version.h>
 #include <linux/config.h>
 ],
-[#if !defined(CONFIG_MODVERSIONS) || (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
+[#if !defined(CONFIG_MODVERSIONS)
 lose;
 #endif
 ],
@@ -53,7 +53,9 @@ lose;
   ac_cv_linux_config_modversions=no)])
   AC_MSG_RESULT($ac_cv_linux_config_modversions)
   AC_MSG_CHECKING(which kernel modules to build)
-  if test "x$ac_linux_rhconfig" = "xyes" -o "x$ac_cv_linux_config_modversions" = "xno"; then
+  if test "x$ac_linux_rhconfig" = "xyes"; then
+      MPS="MP SP"
+  elif test "x$ac_cv_linux_config_modversions" = "xno" -a "$AFS_SYSKVERS" -lt 26; then
       MPS="MP SP"
   else
   AC_CACHE_VAL(ac_cv_linux_config_smp, [
@@ -93,4 +95,36 @@ AC_TRY_COMPILE(
   ac_cv_linux_kernel_is_selinux=yes,
   ac_cv_linux_kernel_is_selinux=no)])
 AC_MSG_RESULT($ac_cv_linux_kernel_is_selinux)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN([LINUX_KERNEL_SOCK_CREATE],[
+AC_MSG_CHECKING(for 5th argument in sock_create found in some SELinux kernels)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_kernel_sock_create_v,
+[
+AC_TRY_COMPILE(
+  [#include <linux/net.h>],
+  [
+  sock_create(0,0,0,0,0)
+  ],
+  ac_cv_linux_kernel_sock_create_v=yes,
+  ac_cv_linux_kernel_sock_create_v=no)])
+AC_MSG_RESULT($ac_cv_linux_kernel_sock_create_v)
+CPPFLAGS="$save_CPPFLAGS"])
+
+AC_DEFUN([LINUX_KERNEL_PAGE_FOLLOW_LINK],[
+AC_MSG_CHECKING(for page_follow_link_light vs page_follow_link)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_kernel_page_follow_link,
+[
+AC_TRY_COMPILE(
+  [#include <linux/fs.h>],
+  [
+  page_follow_link(0,0)
+  ],
+  ac_cv_linux_kernel_page_follow_link=yes,
+  ac_cv_linux_kernel_page_follow_link=no)])
+AC_MSG_RESULT($ac_cv_linux_kernel_page_follow_page)
 CPPFLAGS="$save_CPPFLAGS"])

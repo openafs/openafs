@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.2 2004/08/25 07:13:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.4 2004/12/07 06:10:05 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"
@@ -662,7 +662,7 @@ void
 rx_StartServer(int donateMe)
 {
     register struct rx_service *service;
-    register int i, nProcs = 0;
+    register int i;
     SPLVAR;
     clock_NewTime();
 
@@ -701,6 +701,7 @@ rx_StartServer(int donateMe)
 #ifndef AFS_NT40_ENV
 #ifndef KERNEL
 	char name[32];
+	static int nProcs;
 #ifdef AFS_PTHREAD_ENV
 	pid_t pid;
 	pid = (pid_t) pthread_self();
@@ -816,15 +817,16 @@ rxi_CleanupConnection(struct rx_connection *conn)
      * idle (refCount == 0) after rx_idlePeerTime (60 seconds) have passed.
      */
     MUTEX_ENTER(&rx_peerHashTable_lock);
-    if (--conn->peer->refCount <= 0) {
+    if (conn->peer->refCount < 2) {
 	conn->peer->idleWhen = clock_Sec();
-	if (conn->peer->refCount < 0) {
-	    conn->peer->refCount = 0;
+	if (conn->peer->refCount < 1) {
+	    conn->peer->refCount = 1;
 	    MUTEX_ENTER(&rx_stats_mutex);
 	    rxi_lowPeerRefCount++;
 	    MUTEX_EXIT(&rx_stats_mutex);
 	}
     }
+    conn->peer->refCount--;
     MUTEX_EXIT(&rx_peerHashTable_lock);
 
     MUTEX_ENTER(&rx_stats_mutex);
@@ -1010,6 +1012,20 @@ rx_DestroyConnection(register struct rx_connection *conn)
     NETPRI;
     AFS_RXGLOCK();
     rxi_DestroyConnection(conn);
+    AFS_RXGUNLOCK();
+    USERPRI;
+}
+
+void
+rx_GetConnection(register struct rx_connection *conn)
+{
+    SPLVAR;
+
+    NETPRI;
+    AFS_RXGLOCK();
+    MUTEX_ENTER(&conn->conn_data_lock);
+    conn->refCount++;
+    MUTEX_EXIT(&conn->conn_data_lock);
     AFS_RXGUNLOCK();
     USERPRI;
 }
@@ -1772,10 +1788,10 @@ rx_GetCall(int tno, struct rx_service *cur_service, osi_socket * socketp)
  */
 void
 rx_SetArrivalProc(register struct rx_call *call,
-		  register VOID(*proc) (register struct rx_call * call,
-					register struct multi_handle * mh,
+		  register void (*proc) (register struct rx_call * call,
+					register VOID * mh,
 					register int index),
-		  register VOID * handle, register VOID * arg)
+		  register VOID * handle, register int arg)
 {
     call->arrivalProc = proc;
     call->arrivalProcHandle = handle;
@@ -1807,7 +1823,7 @@ rx_EndCall(register struct rx_call *call, afs_int32 rc)
 	call->abortCount = 0;
     }
 
-    call->arrivalProc = (VOID(*)())0;
+    call->arrivalProc = (void (*)())0;
     if (rc && call->error == 0) {
 	rxi_CallError(call, rc);
 	/* Send an abort message to the peer if this error code has
@@ -3172,8 +3188,8 @@ rxi_ReceiveDataPacket(register struct rx_call *call,
 	     * (e.g. multi rx) */
 	    if (call->arrivalProc) {
 		(*call->arrivalProc) (call, call->arrivalProcHandle,
-				      (int)call->arrivalProcArg);
-		call->arrivalProc = (VOID(*)())0;
+				      call->arrivalProcArg);
+		call->arrivalProc = (void (*)())0;
 	    }
 
 	    /* Update last packet received */
@@ -3853,7 +3869,7 @@ rxi_ReceiveAckPacket(register struct rx_call *call, struct rx_packet *np,
 	call->state = RX_STATE_DALLY;
 	rxi_ClearTransmitQueue(call, 0);
     } else if (!queue_IsEmpty(&call->tq)) {
-	rxi_Start(0, call, istack);
+	rxi_Start(0, call, 0, istack);
     }
     return np;
 }
@@ -3984,6 +4000,7 @@ rxi_AttachServerProc(register struct rx_call *call,
 	    call->flags |= RX_CALL_WAIT_PROC;
 	    MUTEX_ENTER(&rx_stats_mutex);
 	    rx_nWaiting++;
+	    rx_nWaited++;
 	    MUTEX_EXIT(&rx_stats_mutex);
 	    rxi_calltrace(RX_CALL_ARRIVAL, call);
 	    SET_CALL_QUEUE_LOCK(call, &rx_serverPool_lock);
@@ -4357,8 +4374,8 @@ rxi_ResetCall(register struct rx_call *call, register int newcall)
     /* Notify anyone who is waiting for asynchronous packet arrival */
     if (call->arrivalProc) {
 	(*call->arrivalProc) (call, call->arrivalProcHandle,
-			      (int)call->arrivalProcArg);
-	call->arrivalProc = (VOID(*)())0;
+			      call->arrivalProcArg);
+	call->arrivalProc = (void (*)())0;
     }
 
     if (call->delayedAbortEvent) {
@@ -4890,10 +4907,10 @@ rxi_SendXmitList(struct rx_call *call, struct rx_packet **list, int len,
 /* Call rxi_Start, below, but with the call lock held. */
 void
 rxi_StartUnlocked(struct rxevent *event, register struct rx_call *call,
-		  int istack)
+		  void *arg1, int istack)
 {
     MUTEX_ENTER(&call->lock);
-    rxi_Start(event, call, istack);
+    rxi_Start(event, call, arg1, istack);
     MUTEX_EXIT(&call->lock);
 }
 #endif /* RX_ENABLE_LOCKS */
@@ -4904,7 +4921,8 @@ rxi_StartUnlocked(struct rxevent *event, register struct rx_call *call,
  * better optimized for new packets, the usual case, now that we've
  * got rid of queues of send packets. XXXXXXXXXXX */
 void
-rxi_Start(struct rxevent *event, register struct rx_call *call, int istack)
+rxi_Start(struct rxevent *event, register struct rx_call *call,
+	  void *arg1, int istack)
 {
     struct rx_packet *p;
     register struct rx_packet *nxp;	/* Next pointer for queue_Scan */
@@ -5179,12 +5197,12 @@ rxi_Start(struct rxevent *event, register struct rx_call *call, int istack)
 #ifdef RX_ENABLE_LOCKS
 			CALL_HOLD(call, RX_CALL_REFCOUNT_RESEND);
 			call->resendEvent =
-			    rxevent_Post(&retryTime, rxi_StartUnlocked,
-					 (void *)call, (void *)istack);
+			    rxevent_Post2(&retryTime, rxi_StartUnlocked,
+					 (void *)call, 0, istack);
 #else /* RX_ENABLE_LOCKS */
 			call->resendEvent =
-			    rxevent_Post(&retryTime, rxi_Start, (void *)call,
-					 (void *)istack);
+			    rxevent_Post2(&retryTime, rxi_Start, (void *)call,
+					 0, istack);
 #endif /* RX_ENABLE_LOCKS */
 		    }
 		}
@@ -5455,9 +5473,8 @@ rxi_SendDelayedCallAbort(struct rxevent *event, register struct rx_call *call,
  * security object associated with the connection */
 void
 rxi_ChallengeEvent(struct rxevent *event, register struct rx_connection *conn,
-		   void *atries)
+		   void *arg1, int tries)
 {
-    int tries = (int)atries;
     conn->challengeEvent = NULL;
     if (RXS_CheckAuthentication(conn->securityObject, conn) != 0) {
 	register struct rx_packet *packet;
@@ -5497,8 +5514,8 @@ rxi_ChallengeEvent(struct rxevent *event, register struct rx_connection *conn,
 	clock_GetTime(&when);
 	when.sec += RX_CHALLENGE_TIMEOUT;
 	conn->challengeEvent =
-	    rxevent_Post(&when, rxi_ChallengeEvent, conn,
-			 (void *)(tries - 1));
+	    rxevent_Post2(&when, rxi_ChallengeEvent, conn, 0,
+			 (tries - 1));
     }
 }
 
@@ -5513,7 +5530,7 @@ rxi_ChallengeOn(register struct rx_connection *conn)
 {
     if (!conn->challengeEvent) {
 	RXS_CreateChallenge(conn->securityObject, conn);
-	rxi_ChallengeEvent(NULL, conn, (void *)RX_CHALLENGE_MAXTRIES);
+	rxi_ChallengeEvent(NULL, conn, 0, RX_CHALLENGE_MAXTRIES);
     };
 }
 
@@ -5747,7 +5764,7 @@ rxi_ReapConnections(void)
 		    MUTEX_ENTER(&rx_stats_mutex);
 		    rx_stats.nPeerStructs--;
 		    MUTEX_EXIT(&rx_stats_mutex);
-		    if (prev == *peer_ptr) {
+		    if (peer == *peer_ptr) {
 			*peer_ptr = next;
 			prev = next;
 		    } else
@@ -6217,6 +6234,9 @@ rx_GetServerDebug(osi_socket socket, afs_uint32 remoteAddr,
 	}
 	if (stat->version >= RX_DEBUGI_VERSION_W_GETPEER) {
 	    *supportedValues |= RX_SERVER_DEBUG_ALL_PEER;
+	}
+	if (stat->version >= RX_DEBUGI_VERSION_W_WAITED) {
+	    *supportedValues |= RX_SERVER_DEBUG_WAITED_CNT;
 	}
 
 	stat->nFreePackets = ntohl(stat->nFreePackets);

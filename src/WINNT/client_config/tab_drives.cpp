@@ -722,37 +722,57 @@ void Submounts_OnRemove (HWND hDlg)
 // Action - On Add or On Edit a submount item
 void Submounts_EditSubmount (HWND hDlg, PSUBMOUNT pSubmount)
 {
-   HWND hList = GetDlgItem (hDlg, IDC_LIST);
+    TCHAR szOrigSubmount[MAX_PATH];
+    _tcscpy(szOrigSubmount, pSubmount->szSubmount);
 
-   if (ModalDialogParam (IDD_SUBMOUNT_EDIT, GetParent(hDlg), (DLGPROC)SubEdit_DlgProc, (LPARAM)pSubmount) == IDOK)
-      {
-      TCHAR szMapping[ MAX_PATH ];
-      AdjustAfsPath (szMapping, pSubmount->szMapping, TRUE, FALSE);
+    HWND hList = GetDlgItem (hDlg, IDC_LIST);
 
-      HLISTITEM hItem;
-      for (hItem = FastList_FindFirst (hList); hItem; hItem = FastList_FindNext (hList, hItem))
-         {
-         LPCTSTR pszSubmount;
-         if ((pszSubmount = FastList_GetItemText (hList, hItem, 0)) == NULL)
-            continue;
+    if (ModalDialogParam (IDD_SUBMOUNT_EDIT, GetParent(hDlg), (DLGPROC)SubEdit_DlgProc, (LPARAM)pSubmount) == IDOK)
+    {
+        TCHAR szMapping[ MAX_PATH ];
+        BOOL bNameChange = (szOrigSubmount[0] && _tcsicmp(szOrigSubmount, pSubmount->szSubmount));
 
-         if (!lstrcmpi (pszSubmount, pSubmount->szSubmount))
-            break;
-         }
+        AdjustAfsPath (szMapping, pSubmount->szMapping, TRUE, FALSE);
 
-      if (!hItem)
-         {
-         FASTLISTADDITEM ai;
-         memset (&ai, 0x00, sizeof(FASTLISTADDITEM));
-         ai.iFirstImage = IMAGE_NOIMAGE;
-         ai.iSecondImage = IMAGE_NOIMAGE;
-         ai.pszText = pSubmount->szSubmount;
-         ai.lParam = 0;
-         hItem = FastList_AddItem (hList, &ai);
-         }
+        HLISTITEM hItem;
 
-      FastList_SetItemText (hList, hItem, 1, szMapping);
-      }
+        if ( bNameChange ) {
+            for (hItem = FastList_FindFirst (hList); hItem; hItem = FastList_FindNext (hList, hItem))
+            {
+                LPCTSTR pszSubmount;
+                if ((pszSubmount = FastList_GetItemText (hList, hItem, 0)) == NULL)
+                    continue;
+
+                if (!_tcsicmp(szOrigSubmount, pszSubmount) ) {
+                    FastList_RemoveItem (hList, hItem);
+                    break;
+                }
+            }
+        }
+
+        for (hItem = FastList_FindFirst (hList); hItem; hItem = FastList_FindNext (hList, hItem))
+        {
+            LPCTSTR pszSubmount;
+            if ((pszSubmount = FastList_GetItemText (hList, hItem, 0)) == NULL)
+                continue;
+
+            if (!_tcsicmp(pszSubmount, pSubmount->szSubmount))
+                break;
+        }
+
+        if (!hItem)
+        {
+            FASTLISTADDITEM ai;
+            memset (&ai, 0x00, sizeof(FASTLISTADDITEM));
+            ai.iFirstImage = IMAGE_NOIMAGE;
+            ai.iSecondImage = IMAGE_NOIMAGE;
+            ai.pszText = pSubmount->szSubmount;
+            ai.lParam = 0;
+            hItem = FastList_AddItem (hList, &ai);
+        }
+
+        FastList_SetItemText (hList, hItem, 1, szMapping);
+    }
 }
 
 

@@ -49,12 +49,12 @@ extern int nt_GetLinkCount(FdHandle_t * h, Inode ino, int lockit);
 int nt_ListAFSFiles(char *dev,
 		    int (*write_fun) (FILE * fp, struct ViceInodeInfo *,
 				      char *dir, char *file), FILE * fp,
-		    int (*judge_fun) (struct ViceInodeInfo *, int vid),
-		    int singleVolumeNumber);
+		    int (*judge_fun) (struct ViceInodeInfo *, int vid, void *rock),
+		    int singleVolumeNumber, void *rock);
 int ListViceInodes(char *devname, char *mountedOn, char *resultFile,
-		   int (*judgeInode) (struct ViceInodeInfo * info, int vid),
+		   int (*judgeInode) (struct ViceInodeInfo * info, int vid, void *rock),
 		   int singleVolumeNumber, int *forcep, int forceR,
-		   char *wpath);
+		   char *wpath, void *rock);
 
 
 int nt_HandleToName(char *name, IHandle_t * h);

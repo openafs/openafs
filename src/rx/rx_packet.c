@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.35.2.1 2004/08/25 07:09:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.35.2.3 2004/12/07 06:10:06 shadow Exp $");
 
 #ifdef KERNEL
 #if defined(UKERNEL)
@@ -480,7 +480,7 @@ rx_CheckPackets(void)
 void
 rxi_FreePacketNoLock(struct rx_packet *p)
 {
-    dpf(("Free %x\n", (int)p));
+    dpf(("Free %lx\n", (unsigned long)p));
 
     if (p->flags & RX_PKTFLAG_FREE)
 	osi_Panic("rxi_FreePacketNoLock: packet already free\n");
@@ -652,7 +652,7 @@ rxi_AllocPacketNoLock(int class)
     if (!(p->flags & RX_PKTFLAG_FREE))
 	osi_Panic("rxi_AllocPacket: packet not free\n");
 
-    dpf(("Alloc %x, class %d\n", (int)p, class));
+    dpf(("Alloc %lx, class %d\n", (unsigned long)p, class));
 
     queue_Remove(p);
     p->flags = 0;		/* clear RX_PKTFLAG_FREE, initialize the rest */
@@ -865,7 +865,11 @@ rxi_ReadPacket(int socket, register struct rx_packet *p, afs_uint32 * host,
 	     * never be cleaned up.
 	     */
 	    peer = rxi_FindPeer(*host, *port, 0, 0);
-	    if (peer) {
+	    /* Since this may not be associated with a connection,
+	     * it may have no refCount, meaning we could race with
+	     * ReapConnections
+	     */
+	    if (peer && (peer->refCount > 0)) {
 		MUTEX_ENTER(&peer->peer_lock);
 		hadd32(peer->bytesReceived, p->length);
 		MUTEX_EXIT(&peer->peer_lock);
@@ -1160,6 +1164,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 	    tstat.packetReclaims = htonl(rx_packetReclaims);
 	    tstat.usedFDs = CountFDs(64);
 	    tstat.nWaiting = htonl(rx_nWaiting);
+	    tstat.nWaited = htonl(rx_nWaited);
 	    queue_Count(&rx_idleServerQueue, np, nqe, rx_serverQueueEntry,
 			tstat.idleThreads);
 	    MUTEX_EXIT(&rx_serverPool_lock);
@@ -1648,7 +1653,7 @@ rxi_SendPacket(struct rx_call *call, struct rx_connection *conn,
 	AFS_RXGLOCK();
 #ifdef RXDEBUG
     }
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %x resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], peer->host, peer->port, p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (int)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], peer->host, peer->port, p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (unsigned long)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 #endif
     MUTEX_ENTER(&rx_stats_mutex);
     rx_stats.packetsSent[p->header.type - 1]++;
@@ -1827,7 +1832,7 @@ rxi_SendPacketList(struct rx_call *call, struct rx_connection *conn,
 
     assert(p != NULL);
 
-    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %x resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], peer->host, peer->port, p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (int)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
+    dpf(("%c %d %s: %x.%u.%u.%u.%u.%u.%u flags %d, packet %lx resend %d.%0.3d len %d", deliveryType, p->header.serial, rx_packetTypes[p->header.type - 1], peer->host, peer->port, p->header.serial, p->header.epoch, p->header.cid, p->header.callNumber, p->header.seq, p->header.flags, (unsigned long)p, p->retryTime.sec, p->retryTime.usec / 1000, p->length));
 
 #endif
     MUTEX_ENTER(&rx_stats_mutex);

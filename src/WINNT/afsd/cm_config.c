@@ -738,7 +738,7 @@ long cm_CloseCellFile(cm_configFile_t *filep)
 
 void cm_GetConfigDir(char *dir)
 {
-	char wdir[256];
+    char wdir[256];
     int tlen;
 #ifdef AFS_WIN95_ENV
     char *afsconf_path;

@@ -16,8 +16,13 @@
 		/* no ticket good for longer than 30 days */
 #define MAXKTCTICKETLIFETIME (30*24*3600)
 #define MINKTCTICKETLEN	      32
-#ifdef AFS_AIX_ENV
-#define MAXKTCTICKETLEN 344 /* XXX why must this be small? */
+
+#if defined(AFS_AIX52_ENV)
+#ifdef __XCOFF64__
+#define	MAXKTCTICKETLEN	      12000	/* was 344 */
+#else
+#define MAXKTCTICKETLEN		344
+#endif
 #else
 #define	MAXKTCTICKETLEN	      12000	/* was 344 */
 #endif

@@ -18,22 +18,57 @@
 
 /* basic core protocol SMB structure */
 typedef struct smb {
-	unsigned char id[4];
-        unsigned char com;
-        unsigned char rcls;
-        unsigned char reh;
-        unsigned char errLow;
-        unsigned char errHigh;
-        unsigned char reb;
-        unsigned short flg2;
-        unsigned short res[6];
-        unsigned short tid;
-        unsigned short pid;
-        unsigned short uid;
-        unsigned short mid;
-        unsigned char wct;
-        unsigned char vdata[1];
+    unsigned char id[4];
+    unsigned char com;
+    unsigned char rcls;
+    unsigned char reh;
+    unsigned char errLow;
+    unsigned char errHigh;
+    unsigned char reb;
+    unsigned short flg2;
+    unsigned short res[6];
+    unsigned short tid;
+    unsigned short pid;
+    unsigned short uid;
+    unsigned short mid;
+    unsigned char wct;
+    unsigned char vdata[1];
 } smb_t;
+
+/* flg2 values */
+
+#define SMB_FLAGS2_KNOWS_LONG_NAMES        0x0001
+#define SMB_FLAGS2_KNOWS_EAS               0x0002
+#define SMB_FLAGS2_SECURITY_SIGNATURE      0x0004
+#define SMB_FLAGS2_RESERVED1               0x0008
+#define SMB_FLAGS2_IS_LONG_NAME            0x0040
+#define SMB_FLAGS2_EXT_SEC                 0x0800
+#define SMB_FLAGS2_DFS                     0x1000
+#define SMB_FLAGS2_PAGING_IO               0x2000
+#define SMB_FLAGS2_ERR_STATUS              0x4000
+#define SMB_FLAGS2_UNICODE                 0x8000
+
+/* Information Levels */
+#define SMB_INFO_STANDARD               1
+#define SMB_INFO_QUERY_EA_SIZE          2
+#define SMB_INFO_QUERY_EAS_FROM_LIST    3
+#define SMB_INFO_QUERY_ALL_EAS          4
+#define SMB_INFO_IS_NAME_VALID          6
+
+#define SMB_QUERY_FILE_BASIC_INFO       0x101
+#define SMB_QUERY_FILE_STANDARD_INFO    0x102
+#define SMB_QUERY_FILE_EA_INFO          0x103
+#define SMB_QUERY_FILE_NAME_INFO        0x104
+#define SMB_QUERY_FILE_ALL_INFO         0x107
+#define SMB_QUERY_FILE_ALT_NAME_INFO    0x108
+#define SMB_QUERY_FILE_STREAM_INFO      0x109
+#define SMB_QUERY_FILE_COMPRESSION_INFO 0x10B
+#define SMB_QUERY_FILE_UNIX_BASIC       0x200
+#define SMB_QUERY_FILE_UNIX_LINK        0x201
+
+#define SMB_SET_FILE_UNIX_BASIC         0x200
+#define SMB_SET_FILE_UNIX_LINK          0x201
+#define SMB_SET_FILE_UNIX_HLINK         0x203
 
 /* more defines */
 #define SMB_NOPCODES		256	/* # of opcodes in the dispatch table */
@@ -59,20 +94,20 @@ typedef struct smb {
 #define NEGOTIATE_SECURITY_SIGNATURES_REQUIRED      0x08
 
 /* Capabilities */
-#define NTNEGOTIATE_CAPABILITY_RAWMODE				0x00000001L
-#define NTNEGOTIATE_CAPABILITY_MPXMODE				0x00000002L
-#define NTNEGOTIATE_CAPABILITY_UNICODE				0x00000004L
-#define NTNEGOTIATE_CAPABILITY_LARGEFILES			0x00000008L
-#define NTNEGOTIATE_CAPABILITY_NTSMB				0x00000010L
-#define NTNEGOTIATE_CAPABILITY_RPCAPI				0x00000020L
-#define NTNEGOTIATE_CAPABILITY_NTSTATUS				0x00000040L
-#define NTNEGOTIATE_CAPABILITY_LEVEL_II_OPLOCKS		0x00000080L
+#define NTNEGOTIATE_CAPABILITY_RAWMODE			0x00000001L
+#define NTNEGOTIATE_CAPABILITY_MPXMODE			0x00000002L
+#define NTNEGOTIATE_CAPABILITY_UNICODE			0x00000004L
+#define NTNEGOTIATE_CAPABILITY_LARGEFILES		0x00000008L
+#define NTNEGOTIATE_CAPABILITY_NTSMB			0x00000010L
+#define NTNEGOTIATE_CAPABILITY_RPCAPI			0x00000020L
+#define NTNEGOTIATE_CAPABILITY_NTSTATUS			0x00000040L
+#define NTNEGOTIATE_CAPABILITY_LEVEL_II_OPLOCKS	        0x00000080L
 #define NTNEGOTIATE_CAPABILITY_LOCK_AND_READ		0x00000100L
-#define NTNEGOTIATE_CAPABILITY_NTFIND				0x00000200L
-#define NTNEGOTIATE_CAPABILITY_DFS					0x00001000L
+#define NTNEGOTIATE_CAPABILITY_NTFIND			0x00000200L
+#define NTNEGOTIATE_CAPABILITY_DFS			0x00001000L
 #define NTNEGOTIATE_CAPABILITY_NT_INFO_PASSTHRU		0x00002000L
 #define NTNEGOTIATE_CAPABILITY_BULK_TRANSFER		0x20000000L
-#define NTNEGOTIATE_CAPABILITY_COMPRESSED			0x40000000L
+#define NTNEGOTIATE_CAPABILITY_COMPRESSED		0x40000000L
 #define NTNEGOTIATE_CAPABILITY_EXTENDED_SECURITY	0x80000000L
 
 /* a packet structure for receiving SMB messages; locked by smb_globalLock.
@@ -94,23 +129,23 @@ typedef struct smb {
  */
 #define SMB_PACKETMAGIC	0x7436353	/* magic # for packets */
 typedef struct smb_packet {
-	char data[SMB_PACKETSIZE];
-	struct smb_packet *nextp;	/* in free list, or whatever */
-        long magic;
-	cm_space_t *spacep;		/* use this for stripping last component */
-	NCB *ncbp;			/* use this for sending */
-	struct smb_vc *vcp;
-	unsigned long resumeCode;
-        unsigned short inCount;
-        unsigned short fid;		/* for calls bundled with openAndX */
-        unsigned char *wctp;
-        unsigned char inCom;
-	unsigned char oddByte;
-	unsigned short ncb_length;
-	unsigned char flags;
+    char data[SMB_PACKETSIZE];
+    struct smb_packet *nextp;	        /* in free list, or whatever */
+    long magic;
+    cm_space_t *spacep;		        /* use this for stripping last component */
+    NCB *ncbp;			        /* use this for sending */
+    struct smb_vc *vcp;
+    unsigned long resumeCode;
+    unsigned short inCount;
+    unsigned short fid;		        /* for calls bundled with openAndX */
+    unsigned char *wctp;
+    unsigned char inCom;
+    unsigned char oddByte;
+    unsigned short ncb_length;
+    unsigned char flags;
 #ifdef DJGPP
-        dos_ptr dos_pkt;
-        unsigned int dos_pkt_sel;
+    dos_ptr dos_pkt;
+    unsigned int dos_pkt_sel;
 #endif /* DJGPP */
 } smb_packet_t;
 
@@ -122,13 +157,13 @@ typedef struct smb_packet {
 /* a structure for making Netbios calls; locked by smb_globalLock */
 #define SMB_NCBMAGIC	0x2334344
 typedef struct myncb {
-	NCB ncb;			/* ncb to use */
-        struct myncb *nextp;		/* when on free list */
-        long magic;
+    NCB ncb;			        /* ncb to use */
+    struct myncb *nextp;		/* when on free list */
+    long magic;
 #ifdef DJGPP
-        dos_ptr dos_ncb;
-        smb_packet_t *orig_pkt;
-        unsigned int dos_ncb_sel;
+    dos_ptr dos_ncb;
+    smb_packet_t *orig_pkt;
+    unsigned int dos_ncb_sel;
 #endif /* DJGPP */
 } smb_ncb_t;
 
@@ -140,28 +175,27 @@ typedef struct myncb {
 
 /* one per virtual circuit */
 typedef struct smb_vc {
-	struct smb_vc *nextp;		/* not used */
-    int refCount;			/* the reference count */
-    long flags;			/* the flags, if any; locked by mx */
+    struct smb_vc *nextp;		/* not used */
+    unsigned long refCount;		/* the reference count */
+    long flags;			        /* the flags, if any; locked by mx */
     osi_mutex_t mx;			/* the mutex */
-	long vcID;			/* VC id */
-    unsigned short lsn;		/* the NCB LSN associated with this */
-	unsigned short uidCounter;	/* session ID counter */
-    unsigned short tidCounter;	/* tree ID counter */
-    unsigned short fidCounter;	/* file handle ID counter */
+    long vcID;			        /* VC id */
+    unsigned short lsn;		        /* the NCB LSN associated with this */
+    unsigned short uidCounter;	        /* session ID counter */
+    unsigned short tidCounter;	        /* tree ID counter */
+    unsigned short fidCounter;	        /* file handle ID counter */
     struct smb_tid *tidsp;		/* the first child in the tid list */
-    struct smb_user *usersp;	/* the first child in the user session list */
+    struct smb_user *usersp;	        /* the first child in the user session list */
     struct smb_fid *fidsp;		/* the first child in the open file list */
-	struct smb_user *justLoggedOut;	/* ready for profile upload? */
-	time_t logoffTime;	/* tick count when logged off */
-	/*struct cm_user *logonDLLUser;	/* integrated logon user */
-	unsigned char errorCount;
+    struct smb_user *justLoggedOut;	/* ready for profile upload? */
+    time_t logoffTime;	                /* tick count when logged off */
+    unsigned char errorCount;
     char rname[17];
-	int lana;
-	char encKey[MSV1_0_CHALLENGE_LENGTH]; /* MSV1_0_CHALLENGE_LENGTH is 8 */
-    void * secCtx;              /* security context when negotiating SMB extended auth
-                                 * valid when SMB_VCFLAG_AUTH_IN_PROGRESS is set
-                                 */
+    int lana;
+    char encKey[MSV1_0_CHALLENGE_LENGTH]; /* MSV1_0_CHALLENGE_LENGTH is 8 */
+    void * secCtx;                      /* security context when negotiating SMB extended auth
+                                         * valid when SMB_VCFLAG_AUTH_IN_PROGRESS is set
+                                         */
 } smb_vc_t;
 
 					/* have we negotiated ... */
@@ -176,23 +210,23 @@ typedef struct smb_vc {
 
 /* one per user session */
 typedef struct smb_user {
-	struct smb_user *nextp;		/* next sibling */
-        long refCount;			/* ref count */
-        long flags;			/* flags; locked by mx */
-        osi_mutex_t mx;
-        long userID;			/* the session identifier */
-        struct smb_vc *vcp;		/* back ptr to virtual circuit */
-  struct smb_username *unp;        /* user name struct */
+    struct smb_user *nextp;		/* next sibling */
+    unsigned long refCount;		/* ref count */
+    long flags;			        /* flags; locked by mx */
+    osi_mutex_t mx;
+    long userID;			/* the session identifier */
+    struct smb_vc *vcp;		        /* back ptr to virtual circuit */
+    struct smb_username *unp;           /* user name struct */
 } smb_user_t;
 
 typedef struct smb_username {
-	struct smb_username *nextp;		/* next sibling */
-        long refCount;			/* ref count */
-        long flags;			/* flags; locked by mx */
-        osi_mutex_t mx;
-	struct cm_user *userp;		/* CM user structure */
-        char *name;			/* user name */
-  char *machine;                  /* machine name */
+    struct smb_username *nextp;		/* next sibling */
+    unsigned long refCount;		/* ref count */
+    long flags;			        /* flags; locked by mx */
+    osi_mutex_t mx;
+    struct cm_user *userp;		/* CM user structure */
+    char *name;			        /* user name */
+    char *machine;                      /* machine name */
 } smb_username_t;
 
 #define SMB_USERFLAG_DELETE	1	/* delete struct when ref count zero */
@@ -201,15 +235,15 @@ typedef struct smb_username {
 
 /* one per tree-connect */
 typedef struct smb_tid {
-	struct smb_tid *nextp;		/* next sibling */
-        long refCount;
-        long flags;
-        osi_mutex_t mx;			/* for non-tree-related stuff */
-        unsigned short tid;		/* the tid */
-        struct smb_vc *vcp;		/* back ptr */
-        struct cm_user *userp;		/* user logged in at the
+    struct smb_tid *nextp;		/* next sibling */
+    unsigned long refCount;
+    long flags;
+    osi_mutex_t mx;			/* for non-tree-related stuff */
+    unsigned short tid;		        /* the tid */
+    struct smb_vc *vcp;		        /* back ptr */
+    struct cm_user *userp;		/* user logged in at the
 					 * tree connect level (base) */
-	char *pathname;			/* pathname derived from sharename */
+    char *pathname;			/* pathname derived from sharename */
 } smb_tid_t;
 
 #define SMB_TIDFLAG_DELETE	1	/* delete struct when ref count zero */
@@ -217,40 +251,39 @@ typedef struct smb_tid {
 
 /* one per process ID */
 typedef struct smb_pid {
-	struct smb_pid *nextp;		/* next sibling */
-        long refCount;
-        long flags;
-        osi_mutex_t mx;			/* for non-tree-related stuff */
-        unsigned short pid;		/* the pid */
-        struct smb_tid *tidp;		/* back ptr */
+    struct smb_pid *nextp;		/* next sibling */
+    unsigned long refCount;
+    long flags;
+    osi_mutex_t mx;			/* for non-tree-related stuff */
+    unsigned short pid;		        /* the pid */
+    struct smb_tid *tidp;		/* back ptr */
 } smb_pid_t;
 
 /* ioctl parameter, while being assembled and/or processed */
 typedef struct smb_ioctl {
-	/* input side */
-	char *inDatap;			/* ioctl func's current position
+    /* input side */
+    char *inDatap;			/* ioctl func's current position
 					 * in input parameter block */
-	char *inAllocp;			/* allocated input parameter block */
-        long inCopied;			/* # of input bytes copied in so far
+    char *inAllocp;			/* allocated input parameter block */
+    long inCopied;			/* # of input bytes copied in so far
 					 * by write calls */
-	cm_space_t *prefix;		/* prefix for subst drives */
-	char *tidPathp;			/* Pathname associated with Tree ID */
+    cm_space_t *prefix;		        /* prefix for subst drives */
+    char *tidPathp;			/* Pathname associated with Tree ID */
 
-	/* output side */
-        char *outDatap;			/* output results assembled so far */
-        char *outAllocp;		/* output results assembled so far */
-        long outCopied;			/* # of output bytes copied back so far
-					 * by read calls */
+    /* output side */
+    char *outDatap;			/* output results assembled so far */
+    char *outAllocp;		        /* output results assembled so far */
+    long outCopied;			/* # of output bytes copied back so far
+                                         * by read calls */
 	
-        /* flags */
-        long flags;
+    /* flags */
+    long flags;
 
-        /* fid pointer */
-        struct smb_fid *fidp;
+    /* fid pointer */
+    struct smb_fid *fidp;
 
-  /* uid pointer */
-  smb_user_t *uidp;
-
+    /* uid pointer */
+    smb_user_t *uidp;
 } smb_ioctl_t;
 
 /* flags for smb_ioctl_t */
@@ -259,27 +292,27 @@ typedef struct smb_ioctl {
 
 /* one per file ID; these are really file descriptors */
 typedef struct smb_fid {
-	osi_queue_t q;
-        long refCount;
-        long flags;
-        osi_mutex_t mx;			/* for non-tree-related stuff */
-        unsigned short fid;		/* the file ID */
-        struct smb_vc *vcp;		/* back ptr */
-        struct cm_scache *scp;		/* scache of open file */
-        long offset;			/* our file pointer */
-        smb_ioctl_t *ioctlp;		/* ptr to ioctl structure */
+    osi_queue_t q;
+    unsigned long refCount;
+    unsigned long flags;
+    osi_mutex_t mx;			/* for non-tree-related stuff */
+    unsigned short fid;		        /* the file ID */
+    struct smb_vc *vcp;		        /* back ptr */
+    struct cm_scache *scp;		/* scache of open file */
+    long offset;			/* our file pointer */
+    smb_ioctl_t *ioctlp;		/* ptr to ioctl structure */
 					/* Under NT, we may need to know the
 					 * parent directory and pathname used
 					 * to open the file, either to delete
 					 * the file on close, or to do a
 					 * change notification */
-	struct cm_scache *NTopen_dscp;	/* parent directory (NT) */
-	char *NTopen_pathp;		/* path used in open (NT) */
-	char *NTopen_wholepathp;	/* entire path, not just last name */
-	int curr_chunk;			/* chunk being read */
-	int prev_chunk;			/* previous chunk read */
-	int raw_writers;		/* pending async raw writes */
-	EVENT_HANDLE raw_write_event;	/* signal this when raw_writers zero */
+    struct cm_scache *NTopen_dscp;	/* parent directory (NT) */
+    char *NTopen_pathp;		        /* path used in open (NT) */
+    char *NTopen_wholepathp;	        /* entire path, not just last name */
+    int curr_chunk;			/* chunk being read */
+    int prev_chunk;			/* previous chunk read */
+    int raw_writers;		        /* pending async raw writes */
+    EVENT_HANDLE raw_write_event;	/* signal this when raw_writers zero */
 } smb_fid_t;
 
 #define SMB_FID_OPENREAD		1	/* open for reading */
@@ -298,30 +331,37 @@ typedef struct smb_fid {
 #define SMB_FID_NTOPEN			0x100	/* have dscp and pathp */
 
 /*
- * SMB file attributes
+ * SMB file attributes (32-bit)
  */
-#define SMB_ATTR_ARCHIVE  0x20
-#define SMB_ATTR_COMPRESSED 0x800 /* file or dir is compressed */
-#define SMB_ATTR_NORMAL 0x80 /* normal file. Only valid if used alone */
-#define SMB_ATTR_HIDDEN 0x2 /* hidden file for the purpose of dir listings */
-#define SMB_ATTR_READONLY 0x1
-#define SMB_ATTR_TEMPORARY 0x100
-#define SMB_ATTR_DIRECTORY 0x10
-#define SMB_ATTR_SYSTEM 0x4
+#define SMB_ATTR_READONLY       0x0001
+#define SMB_ATTR_HIDDEN         0x0002 /* hidden file for the purpose of dir listings */
+#define SMB_ATTR_SYSTEM         0x0004
+#define SMB_ATTR_VOLUMEID       0x0008 /* obsolete */
+#define SMB_ATTR_DIRECTORY      0x0010
+#define SMB_ATTR_ARCHIVE        0x0020
+#define SMB_ATTR_DEVICE         0x0040
+#define SMB_ATTR_NORMAL         0x0080 /* normal file. Only valid if used alone */
+#define SMB_ATTR_TEMPORARY      0x0100
+#define SMB_ATTR_SPARSE_FILE    0x0200
+#define SMB_ATTR_REPARSE_POINT  0x0400
+#define SMB_ATTR_COMPRESSED     0x0800 /* file or dir is compressed */
+#define SMB_ATTR_OFFLINE        0x1000
+#define SMB_ATTR_NOT_CONTENT_INDEXED 0x2000
+#define SMB_ATTR_ENCRYPTED      0x4000
 
 /* for tracking in-progress directory searches */
 typedef struct smb_dirSearch {
-	osi_queue_t q;			/* queue of all outstanding cookies */
-        osi_mutex_t mx;			/* just in case the caller screws up */
-        int refCount;			/* reference count */
-        long cookie;			/* value returned to the caller */
-        struct cm_scache *scp;		/* vnode of the dir we're searching */
-        time_t lastTime;		/* last time we used this */
-        long flags;			/* flags (see below);
+    osi_queue_t q;			/* queue of all outstanding cookies */
+    osi_mutex_t mx;			/* just in case the caller screws up */
+    unsigned long refCount;		/* reference count */
+    long cookie;			/* value returned to the caller */
+    struct cm_scache *scp;		/* vnode of the dir we're searching */
+    time_t lastTime;		        /* last time we used this */
+    long flags;			        /* flags (see below);
 					 * locked by smb_globalLock */
-        unsigned short attribute;	/* search attribute
+    unsigned short attribute;	        /* search attribute
 					 * (used for extended protocol) */
-        char mask[256];			/* search mask for V3 */
+    char mask[256];			/* search mask for V3 */
 } smb_dirSearch_t;
 
 #define SMB_DIRSEARCH_DELETE	1	/* delete struct when ref count zero */
@@ -331,11 +371,11 @@ typedef struct smb_dirSearch {
 
 /* type for patching directory listings */
 typedef struct smb_dirListPatch {
-	osi_queue_t q;
-    char *dptr;		/* ptr to attr, time, data, sizel, sizeh */
-    long flags;     /* flags.  See below */
-	cm_fid_t fid;
-  cm_dirEntry_t *dep;   /* temp */
+    osi_queue_t q;
+    char *dptr;		                /* ptr to attr, time, data, sizel, sizeh */
+    long flags;                         /* flags.  See below */
+    cm_fid_t fid;
+    cm_dirEntry_t *dep;                 /* temp */
 } smb_dirListPatch_t;
 
 /* dirListPatch Flags */
@@ -346,12 +386,12 @@ typedef struct smb_dirListPatch {
 
 /* waiting lock list elements */
 typedef struct smb_waitingLock {
-	osi_queue_t q;
-	smb_vc_t *vcp;
-	smb_packet_t *inp;
-	smb_packet_t *outp;
-	time_t timeRemaining;
-	void *lockp;
+    osi_queue_t q;
+    smb_vc_t *vcp;
+    smb_packet_t *inp;
+    smb_packet_t *outp;
+    time_t timeRemaining;
+    void *lockp;
 } smb_waitingLock_t;
 
 extern smb_waitingLock_t *smb_allWaitingLocks;
@@ -359,8 +399,8 @@ extern smb_waitingLock_t *smb_allWaitingLocks;
 typedef long (smb_proc_t)(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp);
 
 typedef struct smb_dispatch {
-	smb_proc_t *procp;	/* proc to call */
-        int flags;		/* flags describing function */
+    smb_proc_t *procp;	                /* proc to call */
+    int flags;		                /* flags describing function */
 } smb_dispatch_t;
 
 #define SMB_DISPATCHFLAG_CHAINED	1	/* this is an _AND_X function */
@@ -492,6 +532,7 @@ extern time_t smb_LogoffTransferTimeout;
 extern int smb_maxVCPerServer; /* max # of VCs per server */
 extern int smb_maxMpxRequests; /* max # of mpx requests */
 
+extern int smb_StoreAnsiFilenames;
 extern int smb_hideDotFiles;
 extern unsigned int smb_IsDotFile(char *lastComp);
 
@@ -515,12 +556,12 @@ extern LSA_STRING smb_lsaLogonOrigin;
 
 /* used for getting a challenge for SMB auth */
 typedef struct _MSV1_0_LM20_CHALLENGE_REQUEST {  
-	MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
+    MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;
 } MSV1_0_LM20_CHALLENGE_REQUEST, *PMSV1_0_LM20_CHALLENGE_REQUEST;
 
 typedef struct _MSV1_0_LM20_CHALLENGE_RESPONSE {  
-	MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;  
-	UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH];
+    MSV1_0_PROTOCOL_MESSAGE_TYPE MessageType;  
+    UCHAR ChallengeToClient[MSV1_0_CHALLENGE_LENGTH];
 } MSV1_0_LM20_CHALLENGE_RESPONSE, *PMSV1_0_LM20_CHALLENGE_RESPONSE;
 /**/
 
@@ -561,9 +602,15 @@ extern long smb_ReadData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count,
 	char *op, cm_user_t *userp, long *readp, int dosflag);
 #endif /* !DJGPP */
 
+extern long smb_Rename(smb_vc_t *vcp, smb_packet_t *inp, char *oldPathp, char *newPathp, int attrs);
+
+extern long smb_Link(smb_vc_t *vcp, smb_packet_t *inp, char *oldPathp, char *newPathp);
+
 extern BOOL smb_IsLegalFilename(char *filename);
 
 extern char *smb_GetSharename(void);
+
+extern DWORD smb_ServerExceptionFilter(void);
 
 /* include other include files */
 #include "smb3.h"

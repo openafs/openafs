@@ -48,6 +48,7 @@ KAUTHOBJS = \
 	read_passwd.o
 
 UBIKOBJS = \
+	uinit.o \
 	ubikclient.o \
 	uerrors.o \
 	ubik_int.cs.o \
@@ -57,8 +58,7 @@ UTILOBJS = \
 	pthread_glock.o \
 	get_krbrlm.o \
 	dirpath.o \
-	fileutil.o \
-	casestrcpy.o
+	fileutil.o
 
 RXKADOBJS = \
 	rxkad_errs.o
@@ -160,6 +160,9 @@ read_passwd.o: ${KAUTH}/read_passwd.c
 ubikclient.o: ${UBIK}/ubikclient.c
 	${CCRULE}
 
+uinit.o: ${UBIK}/uinit.c
+	${CCRULE}
+
 uerrors.o: ${UBIK}/uerrors.c
 	${CCRULE}
 
@@ -176,9 +179,6 @@ dirpath.o: ${UTIL}/dirpath.c
 	${CCRULE}
 
 fileutil.o: ${UTIL}/fileutil.c
-	${CCRULE}
-
-casestrcpy.o: ${UTIL}/casestrcpy.c
 	${CCRULE}
 
 pthread_glock.o: ${UTIL}/pthread_glock.c

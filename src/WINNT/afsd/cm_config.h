@@ -55,6 +55,8 @@ extern long cm_CloseCellFile(cm_configFile_t *filep);
 
 extern long cm_GetCellServDB(char *cellNamep);
 
+extern void cm_GetConfigDir(char *dir);
+
 #endif /* __CM_CONFIG_INTERFACES_ONLY__ */
 
 #endif /* __CONFIG_H_ENV_ */

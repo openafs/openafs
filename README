@@ -53,6 +53,7 @@ A. Creating the proper directory structure.
       alpha_linux22 
       alpha_linux24 
       ia64_linux24
+      ia64_linux26
       sparc_linux22
       sparc_linux24
       sparc64_linux22

@@ -2,7 +2,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/FBSD/osi_vfsops.c,v 1.16 2004/07/27 16:24:40 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/FBSD/osi_vfsops.c,v 1.16.2.1 2004/11/09 17:11:34 shadow Exp $");
 
 #include <afs/sysincludes.h>	/* Standard vendor system headers */
 #include <afsincludes.h>	/* Afs-based standard headers */
@@ -12,8 +12,8 @@ RCSID
 #include <sys/conf.h>
 #include <sys/syscall.h>
 
-struct vcache *afs_globalVp = 0;
-struct mount *afs_globalVFS = 0;
+struct vcache *afs_globalVp = NULL;
+struct mount *afs_globalVFS = NULL;
 int afs_pbuf_freecnt = -1;
 
 #ifdef AFS_FBSD50_ENV
@@ -29,9 +29,23 @@ afs_start(struct mount *mp, int flags, THREAD_OR_PROC)
     return (0);			/* nothing to do. ? */
 }
 
+#ifdef AFS_FBSD53_ENV
 int
-afs_mount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
+afs_mount(struct mount *mp, struct thread *td)
+{
+    int afs_omount(struct mount *mp, char *path, caddr_t data, struct thread *p);
+
+    return afs_omount(mp, NULL, NULL, td);
+}
+#endif
+
+int
+#ifdef AFS_FBSD53_ENV
+afs_omount(struct mount *mp, char *path, caddr_t data, struct thread *p)
+#else
+afs_omount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
 	THREAD_OR_PROC)
+#endif
 {
     /* ndp contains the mounted-from device.  Just ignore it.
      * we also don't care about our proc struct. */
@@ -45,7 +59,7 @@ afs_mount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
 
     if (afs_globalVFS) {	/* Don't allow remounts. */
 	AFS_GUNLOCK();
-	return (EBUSY);
+	return EBUSY;
     }
 
     afs_globalVFS = mp;
@@ -53,7 +67,8 @@ afs_mount(struct mount *mp, char *path, caddr_t data, struct nameidata *ndp,
     vfs_getnewfsid(mp);
     mp->mnt_stat.f_iosize = 8192;
 
-    (void)copyinstr(path, mp->mnt_stat.f_mntonname, MNAMELEN - 1, &size);
+    if (path)
+	(void) copyinstr(path, mp->mnt_stat.f_mntonname, MNAMELEN - 1, &size);
     memset(mp->mnt_stat.f_mntonname + size, 0, MNAMELEN - size);
     memset(mp->mnt_stat.f_mntfromname, 0, MNAMELEN);
     strcpy(mp->mnt_stat.f_mntfromname, "AFS");
@@ -89,13 +104,19 @@ afs_unmount(struct mount *mp, int flags, THREAD_OR_PROC)
 }
 
 int
+#ifdef AFS_FBSD53_ENV
+afs_root(struct mount *mp, struct vnode **vpp, struct thread *td)
+#else
 afs_root(struct mount *mp, struct vnode **vpp)
+#endif
 {
     int error;
     struct vrequest treq;
     register struct vcache *tvp = 0;
 #ifdef AFS_FBSD50_ENV
+#ifndef AFS_FBSD53_ENV
     struct thread *td = curthread;
+#endif
     struct ucred *cr = td->td_ucred;
 #else
     struct proc *p = curproc;
@@ -202,7 +223,10 @@ afs_init(struct vfsconf *vfc)
 }
 
 struct vfsops afs_vfsops = {
+#ifdef AFS_FBSD53_ENV
     afs_mount,
+#endif
+    afs_omount,
     afs_start,
     afs_unmount,
     afs_root,
@@ -217,6 +241,6 @@ struct vfsops afs_vfsops = {
     vfs_stduninit,
     vfs_stdextattrctl,
 #ifdef AFS_FBSD50_ENV
-    NULL,
+    vfs_stdsysctl,
 #endif
 };

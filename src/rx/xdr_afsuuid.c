@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_afsuuid.c,v 1.8 2004/05/15 04:53:30 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr_afsuuid.c,v 1.8.2.1 2004/12/07 06:10:06 shadow Exp $");
 
 #if defined(KERNEL) && !defined(UKERNEL)
 #ifdef AFS_LINUX20_ENV
@@ -55,7 +55,8 @@ xdr_afsUUID(XDR * xdrs, afsUUID * objp)
     if (!xdr_char(xdrs, &objp->clock_seq_low)) {
 	return (FALSE);
     }
-    if (!xdr_vector(xdrs, (char *)objp->node, 6, sizeof(char), xdr_char)) {
+    /* Cast needed here because xdrproc_t officially takes 3 args :-( */
+    if (!xdr_vector(xdrs, (char *)objp->node, 6, sizeof(char), (xdrproc_t)xdr_char)) {
 	return (FALSE);
     }
     return (TRUE);

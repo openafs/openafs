@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50.2.1 2004/08/25 07:09:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50.2.5 2004/12/07 06:12:13 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -67,7 +67,7 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
     char *cpos, *volnamep;
     char type, *buf;
     afs_int32 prefetch;		/* 1=>None  2=>RO  3=>BK */
-    afs_int32 mtptCell, assocCell, hac = 0;
+    afs_int32 mtptCell, assocCell = 0, hac = 0;
     afs_int32 samecell, roname, len;
 
     AFS_STATCNT(EvalMountPoint);
@@ -432,7 +432,7 @@ afs_getsysname(register struct vrequest *areq, register struct vcache *adp,
 }
 
 void
-Check_AtSys(register struct vcache *avc, char *aname,
+Check_AtSys(register struct vcache *avc, const char *aname,
 	    struct sysname_info *state, struct vrequest *areq)
 {
     int num = 0;
@@ -448,7 +448,7 @@ Check_AtSys(register struct vcache *avc, char *aname,
 	state->offset = -1;
 	state->allocked = 0;
 	state->index = 0;
-	state->name = aname;
+	state->name = (char *)aname;
     }
 }
 
@@ -500,28 +500,14 @@ Next_AtSys(register struct vcache *avc, struct vrequest *areq,
 	    }
 	    afs_PutUser(au, 0);
 	}
-	if (++(state->index) >= num || !(*sysnamelist)[state->index])
+	if (++(state->index) >= num || !(*sysnamelist)[(unsigned int)state->index])
 	    return 0;		/* end of list */
     }
-    strcpy(state->name + state->offset, (*sysnamelist)[state->index]);
+    strcpy(state->name + state->offset, (*sysnamelist)[(unsigned int)state->index]);
     return 1;
 }
 
-#if (defined(AFS_SGI62_ENV) || defined(AFS_SUN57_64BIT_ENV))
-extern int BlobScan(ino64_t * afile, afs_int32 ablob);
-#else
-#if defined(AFS_HPUX1123_ENV)
-/* DEE should use the new afs_inode_t  for all */
-extern int BlobScan(ino_t * afile, afs_int32 ablob);
-#else
-#if defined AFS_LINUX_64BIT_KERNEL
-extern int BlobScan(long *afile, afs_int32 ablob);
-#else
-extern int BlobScan(afs_int32 * afile, afs_int32 ablob);
-#endif
-#endif
-#endif
-
+extern int BlobScan(struct dcache * afile, afs_int32 ablob);
 
 /* called with an unlocked directory and directory cookie.  Areqp
  * describes who is making the call.
@@ -560,14 +546,14 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     struct afs_q *tq;		/* temp queue variable */
     AFSCBFids fidParm;		/* file ID parm for bulk stat */
     AFSBulkStats statParm;	/* stat info parm for bulk stat */
-    int fidIndex;		/* which file were stating */
-    struct conn *tcp;		/* conn for call */
+    int fidIndex = 0;		/* which file were stating */
+    struct conn *tcp = 0;	/* conn for call */
     AFSCBs cbParm;		/* callback parm for bulk stat */
     struct server *hostp = 0;	/* host we got callback from */
     long startTime;		/* time we started the call,
 				 * for callback expiration base
 				 */
-    afs_size_t statSeqNo;	/* Valued of file size to detect races */
+    afs_size_t statSeqNo = 0;	/* Valued of file size to detect races */
     int code;			/* error code */
     long newIndex;		/* new index in the dir */
     struct DirEntry *dirEntryp;	/* dir entry we are examining */
@@ -578,7 +564,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     long volStates;		/* flags from vol structure */
     struct volume *volp = 0;	/* volume ptr */
     struct VenusFid dotdot;
-    int flagIndex;		/* First file with bulk fetch flag set */
+    int flagIndex = 0;		/* First file with bulk fetch flag set */
     int inlinebulk = 0;		/* Did we use InlineBulk RPC or not? */
     XSTATS_DECLS;
     /* first compute some basic parameters.  We dont want to prefetch more
@@ -620,12 +606,12 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
   tagain:
     code = afs_VerifyVCache(adp, areqp);
     if (code)
-	goto done;
+	goto done2;
 
     dcp = afs_GetDCache(adp, (afs_size_t) 0, areqp, &temp, &temp, 1);
     if (!dcp) {
 	code = ENOENT;
-	goto done;
+	goto done2;
     }
 
     /* lock the directory cache entry */
@@ -674,7 +660,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 	/* look for first safe entry to examine in the directory.  BlobScan
 	 * looks for a the 1st allocated dir after the dirCookie slot.
 	 */
-	newIndex = BlobScan(&dcp->f.inode, (dirCookie >> 5));
+	newIndex = BlobScan(dcp, (dirCookie >> 5));
 	if (newIndex == 0)
 	    break;
 
@@ -683,7 +669,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
 
 	/* get a ptr to the dir entry */
 	dirEntryp =
-	    (struct DirEntry *)afs_dir_GetBlob(&dcp->f.inode, newIndex);
+	    (struct DirEntry *)afs_dir_GetBlob(dcp, newIndex);
 	if (!dirEntryp)
 	    break;
 
@@ -1081,6 +1067,7 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     } else {
 	code = 0;
     }
+  done2:
     osi_FreeLargeSpace(statMemp);
     osi_FreeLargeSpace(cbfMemp);
     return code;
@@ -1128,13 +1115,13 @@ afs_lookup(adp, aname, avcp, acred)
     int pass = 0, hit = 0;
     long dirCookie;
     extern afs_int32 afs_mariner;	/*Writing activity to log? */
-    OSI_VC_CONVERT(adp);
     afs_hyper_t versionNo;
     int no_read_access = 0;
     struct sysname_info sysState;	/* used only for @sys checking */
     int dynrootRetry = 1;
     struct afs_fakestat_state fakestate;
     int tryEvalOnly = 0;
+    OSI_VC_CONVERT(adp);
 
     AFS_STATCNT(afs_lookup);
     afs_InitFakeStat(&fakestate);
@@ -1293,7 +1280,6 @@ afs_lookup(adp, aname, avcp, acred)
     {				/* sub-block just to reduce stack usage */
 	register struct dcache *tdc;
 	afs_size_t dirOffset, dirLen;
-	ino_t theDir;
 	struct VenusFid tfid;
 
 	/* now we have to lookup the next fid */
@@ -1351,15 +1337,14 @@ afs_lookup(adp, aname, avcp, acred)
 
 	/* lookup the name in the appropriate dir, and return a cache entry
 	 * on the resulting fid */
-	theDir = tdc->f.inode;
 	code =
-	    afs_dir_LookupOffset(&theDir, sysState.name, &tfid.Fid,
+	    afs_dir_LookupOffset(tdc, sysState.name, &tfid.Fid,
 				 &dirCookie);
 
 	/* If the first lookup doesn't succeed, maybe it's got @sys in the name */
 	while (code == ENOENT && Next_AtSys(adp, &treq, &sysState))
 	    code =
-		afs_dir_LookupOffset(&theDir, sysState.name, &tfid.Fid,
+		afs_dir_LookupOffset(tdc, sysState.name, &tfid.Fid,
 				     &dirCookie);
 	tname = sysState.name;
 

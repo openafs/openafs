@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_segments.c,v 1.16.2.1 2004/08/25 07:09:32 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_segments.c,v 1.16.2.4 2004/12/07 06:12:12 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -236,7 +236,6 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
      */
     origCBs = afs_allCBs;
 
-  retry:
     maxStoredLength = 0;
     tlen = avc->m.Length;
     minj = 0;
@@ -301,7 +300,7 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	    afs_size_t base, bytes;
 	    afs_uint32 nchunks;
 	    int nomore;
-	    unsigned int first;
+	    unsigned int first = 0;
 	    int *shouldwake;
 	    struct conn *tc;
 	    struct osi_file *tfile;
@@ -898,7 +897,7 @@ afs_InvalidateAllSegments(struct vcache *avc)
 	ObtainWriteLock(&tdc->lock, 679);
 	ZapDCE(tdc);
 	if (vType(avc) == VDIR)
-	    DZap(&tdc->f.inode);
+	    DZap(tdc);
 	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
     }
@@ -1041,6 +1040,12 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
 	    afs_CFileTruncate(tfile, newSize);
 	    afs_CFileClose(tfile);
 	    afs_AdjustSize(tdc, newSize);
+	    if (alen < tdc->validPos) {
+                if (alen < AFS_CHUNKTOBASE(tdc->f.chunk))
+                    tdc->validPos = 0;
+                else
+                    tdc->validPos = alen;
+            }
 	    ConvertWToSLock(&tdc->lock);
 	}
 	ReleaseSharedLock(&tdc->lock);

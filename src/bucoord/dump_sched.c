@@ -17,7 +17,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/dump_sched.c,v 1.7 2003/11/23 04:53:30 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/dump_sched.c,v 1.7.2.1 2004/10/18 07:11:50 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -581,7 +581,8 @@ ListDumpSchedule(adump, alevel)
     case BC_ABS_EXPDATE:
 	/* absolute expiration date. Never expires if date is 0 */
 	if (adump->expDate) {
-	    printf("expires at %.24s", cTIME(&adump->expDate));
+            time_t t = adump->expDate;
+	    printf("expires at %.24s", cTIME(&t));
 	}
 	break;
 
