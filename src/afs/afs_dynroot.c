@@ -614,6 +614,8 @@ afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status)
 int
 afs_SetDynrootEnable(int enable)
 {
+    RWLOCK_INIT(&afs_dynrootDirLock, "afs_dynrootDirLock");
+    RWLOCK_INIT(&afs_dynSymlinkLock, "afs_dynSymlinkLock");
     afs_dynrootEnable = enable;
     return afs_dynrootCellInit();
 }

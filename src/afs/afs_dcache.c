@@ -3227,8 +3227,14 @@ afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk, int aflags)
     afs_freeDSList = &tdp[0];
     for (i = 0; i < aDentries - 1; i++) {
 	tdp[i].lruq.next = (struct afs_q *)(&tdp[i + 1]);
+        RWLOCK_INIT(&tdp[i].lock, "dcache lock");
+        RWLOCK_INIT(&tdp[i].tlock, "dcache tlock");
+        RWLOCK_INIT(&tdp[i].mflock, "dcache flock");
     }
     tdp[aDentries - 1].lruq.next = (struct afs_q *)0;
+    RWLOCK_INIT(&tdp[aDentries - 1].lock, "dcache lock");
+    RWLOCK_INIT(&tdp[aDentries - 1].tlock, "dcache tlock");
+    RWLOCK_INIT(&tdp[aDentries - 1].mflock, "dcache flock");
 
     afs_stats_cmperf.cacheBlocksOrig = afs_stats_cmperf.cacheBlocksTotal =
 	afs_cacheBlocks = ablocks;
