@@ -1,3 +1,9 @@
+openafs (1.0.snap20001106-5) unstable; urgency=low
+
+  * Make change so kdump builds on potato
+
+ --  Sam Hartman <hartmans@mit.edu>  Sun, 19 Nov 2000 19:27:01 -0500
+
 openafs (1.0.snap20001106-4) unstable; urgency=low
 
   * Fix so dpkg-buildpackage works.  Oops.

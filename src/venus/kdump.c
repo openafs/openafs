@@ -34,7 +34,10 @@ struct ntfs_inode_info{};
 #define u32 unsigned int
 #define s32 int
 #define u16 unsigned short
+#include <features.h>
+#if __GLIBC_MINOR__ >= 2
 #define _SYS_TYPES_H
+#endif
 #define __KERNEL__
 #endif
 
