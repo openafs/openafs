@@ -13,7 +13,7 @@
 #include <afs/afs_sysnames.h>
 
 #define AFS_VFS_ENV	1
-/* Used only in vfsck/* code; is it needed any more???? */
+/* Used only in vfsck code; is it needed any more???? */
 
 #define AFS_VFSINCL_ENV	1	/* NOBODY uses this.... */
 #define AFS_GREEDY43_ENV	1	/* Used only in rx/rx_user.c */
