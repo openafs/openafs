@@ -387,6 +387,10 @@ osi_debug.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_debug.c
 	$(CRULE_OPT)
 osi_module.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_module.c
 	$(CRULE_NOOPT)
+osi_probe.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_probe.c
+	$(CRULE_NOOPT)
+osi_syscall.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_syscall.c
+	$(CRULE_NOOPT)
 osi_sysctl.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_sysctl.c
 	$(CRULE_NOOPT)
 osi_alloc.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_alloc.c

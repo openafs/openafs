@@ -41,6 +41,13 @@ extern void afs_osi_SetTime(osi_timeval_t * tvp);
 extern void osi_linux_free_inode_pages(void);
 extern void check_bad_parent(struct dentry *dp);
 
+/* osi_probe.c */
+extern void *osi_find_syscall_table(int which);
+
+/* osi_syscall.c */
+extern int osi_syscall_init(void);
+extern void osi_syscall_clean(void);
+
 /* osi_sysctl.c */
 extern int osi_sysctl_init(void);
 extern void osi_sysctl_clean(void);
