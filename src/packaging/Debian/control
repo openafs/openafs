@@ -1,0 +1,84 @@
+Source: openafs
+Section: net
+Priority: optional
+Maintainer: Sam Hartman <hartmans@debian.org>
+Build-Depends: debhelper (>= 2.2.20), libncurses5-dev, libpam0g-dev, bison, docbook-to-man, flex, autoconf, automake, perl
+Standards-Version: 3.5.0
+
+Package: openafs-client
+Architecture: i386 powerpc sparc alpha s390 ia64
+Depends: ${shlibs:Depends}, debconf,  openafs-modules-source|openafs-modules1
+Conflicts: arla, openafs-modules
+Description: The AFS distributed filesystem- client support
+ AFS is a distributed filesystem allowing cross-platform sharing of
+ files among multiple computers.  Facilities are provided for access
+ control, authentication, backup and administrative management.
+ .
+ This package provides basic client support to mount and manipulate
+ AFS.
+
+Package: openafs-kpasswd
+Priority: extra
+Architecture: i386 powerpc sparc alpha  s390 ia64
+Depends: ${shlibs:Depends}, openafs-client (= ${Source-Version})
+Conflicts: krb5-user, heimdal-clients
+Description: The AFS distributed filesystem- old password changing
+ AFS is a distributed filesystem allowing cross-platform sharing of
+ files among multiple computers.  Facilities are provided for access
+ control, authentication, backup and administrative management.
+ .
+ This package provides kpasswd and kas, utilities needed by the 
+ Transarc kaserver to create users and change passwords.  Only install
+ this package if you are already using kaserver; generally you should
+ not install this package for new cells or for cells using Kerberos5.
+
+Package: openafs-fileserver
+Architecture: i386 powerpc sparc alpha s390 ia64
+Depends: ${shlibs:Depends}, debconf, openafs-client (= ${Source-Version})
+Recommends: ntp
+Description: The AFS distributed filesystem- file server
+ AFS is a distributed filesystem allowing cross-platform sharing of
+ files among multiple computers.  Facilities are provided for access
+ control, authentication, backup and administrative management.
+ .
+ This package provides the AFS fileserver binaries.  It should be
+ installed on any machine that will export files into AFS.
+
+Package: openafs-dbserver
+Architecture: i386 powerpc sparc alpha s390 ia64
+Depends: ${shlibs:Depends}, debconf, openafs-fileserver (= ${Source-Version}), openafs-client (= ${Source-Version}), perl5
+Conflicts: openafs-ptutil
+Replaces: openafs-ptutil
+Provides: openafs-ptutil
+Description: The AFS distributed filesystem- database server
+ AFS is a distributed filesystem allowing cross-platform sharing of
+ files among multiple computers.  Facilities are provided for access
+ control, authentication, backup and administrative management.
+ .
+ This package provides AFS database server binaries.  It should be
+ installed on the servers that will act as volume location and
+ protection servers.
+
+Package: libopenafs-dev
+Section: devel
+Architecture: i386 powerpc sparc alpha s390 ia64
+Priority: extra
+Description: The AFS distributed filesystem- development libraries
+ AFS is a distributed filesystem allowing cross-platform sharing of
+ files among multiple computers.  Facilities are provided for access
+ control, authentication, backup and administrative management.
+ .
+ This package provides static development libraries and headers
+ needed to compile AFS applications.
+
+Package: openafs-modules-source
+Priority: extra
+Depends: bison, flex, debhelper, libpam0g-dev, libncurses5-dev, kernel-package
+Architecture: all
+Description: The AFS distributed filesystem- Module Sources
+ AFS is a distributed filesystem allowing cross-platform sharing of
+ files among multiple computers.  Facilities are provided for access
+ control, authentication, backup and administrative management.
+ .
+ This package provides source to the AFS kernel modules.
+

@@ -1,0 +1,28 @@
+#!/bin/sh
+case `arch` in
+    alpha)
+	echo alpha_linux_22
+	;;
+i[3456]86)
+	echo i386_linux22
+;;
+    ia64)
+    echo ia64_linux24
+;;
+    parisc*)
+	echo parisc_linux24
+	;;
+    ppc)
+	echo ppc_linux22
+	;;
+    sparc|sparc64)
+	echo sparc_linux22
+	;;
+    s390)
+    echo s390_linux22
+    ;;
+	*)
+	echo ERROr:  sysname not yet known
+	exit 1
+
+esac

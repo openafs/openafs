@@ -1,0 +1,35 @@
+		       Building Kernel Modules
+----------------------------------------
+
+
+ The easiest way to get AFS modules is to install prebuilt modules.
+Fore example if you are running kernel 2.2.18 you might try
+
+apt-get install openafs-modules-2.2.18
+
+If this doesn't work, then you will need to build your own modules.
+This means having kernel sources available.  You should install a
+kernel sources package and untar it in /usr/src.  Then, install
+openafs-modules-source.
+
+apt-get install openafs-modules-source
+
+Next, unpack openafs-modules-source
+
+cd /usr/src
+tar xzf openafs.tar.gz
+
+Now, change into your kernel source tree.  You should then create a
+.config file; the easiest way to do this is to run make menuconfig or
+to copy in a kernel configuration from the same version of the kernel.
+Debian kernel packages store a copy of their kernel configuration in
+/boot/config.version_number.  Finally build the modules
+
+make-kpkg configure
+make-kpkg modules_image
+
+You may need to use the --append_to_version switch to add version suffixes
+like -686 if your modules install into /lib/modules/version-686.
+Ignore any errors about genchanges.sh failing.  An openafs-modules deb
+should be created.  Use dpkg -i to install this version.
+

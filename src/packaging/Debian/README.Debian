@@ -1,0 +1,25 @@
+openafs for Debian
+----------------------
+
+* No manual pages are included.  I need to find out if versions exist
+  that are OK for copyright reasons.
+
+* Documentation can be found at http://www.openafs.org.  If want to
+set up a new cell, read the docs there and then look at the example
+session in configuration-transcript.txt.gz in this directory.  You
+should also read README.servers.  The procedure outlined in these two
+files is much simpler and more secure than the one in the Openafs
+documentation, but the Openafs documentation provides useful
+background.
+
+*  AFS users may be confused by the directory layout.  The files that
+   normally go in /usr/vice/etc go in /etc/openafs.  The cache should
+   be mounted on /var/cache/openafs.
+
+* The libopenafs-dev package only includes static libraries because
+  AFS does not build shared libs.
+
+
+
+
+ -- Sam Hartman <hartmans@mit.edu>, Fri,  3 Nov 2000 23:41:41 -0500
