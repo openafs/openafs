@@ -521,6 +521,7 @@ restart:
     cur = head;
     while ((cur = cur->next) != head) {
 	dentry = list_entry(cur, struct dentry, d_alias);
+#ifdef notdef
 	if (DCOUNT(dentry)) {
 	    this_parent = dentry;
 	repeat:
@@ -559,6 +560,7 @@ restart:
 		goto resume;
 	    }
 	}
+#endif
 
 	if (!DCOUNT(dentry)) {
 	    AFS_GUNLOCK();
