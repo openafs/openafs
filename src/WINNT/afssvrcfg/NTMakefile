@@ -58,8 +58,8 @@ EXELIBS =\
 	$(DESTDIR)\lib\afs\afsbosadmin.lib \
 	$(DESTDIR)\lib\afs\afsvosadmin.lib \
 	$(DESTDIR)\lib\afs\afsclientadmin.lib \
-	$(DESTDIR)\lib\afs\afsadminutil.lib
-
+	$(DESTDIR)\lib\afs\afsadminutil.lib \
+    $(DESTDIR)\lib\lanahelper.lib
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS) 
 	$(EXEGUILINK)  $(VCLIBS)

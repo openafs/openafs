@@ -27,6 +27,7 @@ extern "C" {
 #include <afs\dirpath.h>
 #include <afs\afs_clientAdmin.h>
 }
+#include <lanahelper.h>
 
 
 /*
@@ -259,19 +260,10 @@ LPTSTR GetSalvageLogFileName()  { return g_CfgData.szSalvageLogFileName; }
 
 LPTSTR GetClientNetbiosName()
 {
-    static TCHAR szValue[MAX_MACHINE_NAME_LEN + 1];
+    static TCHAR szValue[MAX_MACHINE_NAME_LEN + 1] = "";
 
-    lstrcpy(szValue, g_CfgData.szLocalName);
-
-    szValue[11] = TEXT('\0');
-
-    for (LPTSTR pch = szValue; *pch != TEXT('\0'); pch++) {
-	if (*pch == TEXT('.')) {
-	    *pch = TEXT('\0');
-	    break;
-	}
-    }
-    lstrcat(szValue, TEXT("-AFS"));
+	if ( szValue[0] == 0 )
+		CopyAnsiToString(GetClientNetbiosNameA(), szValue);
 
     return szValue;
 }
@@ -389,19 +381,12 @@ char *GetClientCellNameA()
 
 char *GetClientNetbiosNameA()
 {
-    static char szValueA[MAX_MACHINE_NAME_LEN + 1];
-    char *dotp;
+    static char szValueA[MAX_MACHINE_NAME_LEN + 1]="";
+	
+	if ( szValueA[0] == 0 )
+        lana_GetNetbiosName(szValueA, LANA_NETBIOS_NAME_FULL);
 
-    CopyStringToAnsi(szValueA, g_CfgData.szLocalName);
-
-    szValueA[11] = '\0';
-
-    if ((dotp = strchr(szValueA, '.')) != NULL) {
-	*dotp = '\0';
-    }
-    strcat(szValueA, "-AFS");
-
-    return szValueA;
+	return szValueA;
 }
 
 char *GetSalvageLogFileNameA()

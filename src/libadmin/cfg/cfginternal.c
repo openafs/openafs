@@ -241,7 +241,7 @@ cfgutil_HostNameIsAlias(const char *hostName1, const char *hostName2,
     int rc = 1;
     afs_status_t tst2, tst = 0;
     int addrCount1, addrCount2;
-    afs_int32 *addrList1, *addrList2;
+    afs_int32 *addrList1 = NULL, *addrList2 = NULL;
 
     /* get all addrs for first host */
 
@@ -256,7 +256,10 @@ cfgutil_HostNameIsAlias(const char *hostName1, const char *hostName2,
 	if (!cfgutil_HostAddressFetchAll
 	    (hostName2, &addrCount2, &addrList2, &tst2)) {
 	    tst = tst2;
-	    free(addrList1);
+		if (addrList1) {
+			free(addrList1);
+			addrList1 = NULL;
+		}
 	}
     }
 
@@ -275,8 +278,14 @@ cfgutil_HostNameIsAlias(const char *hostName1, const char *hostName2,
 		}
 	    }
 	}
-	free(addrList1);
-	free(addrList2);
+		if (addrList1) {
+			free(addrList1);
+			addrList1 = NULL;
+		}
+		if (addrList2) {
+			free(addrList2);
+			addrList2 = NULL;
+		}
     }
 
     if (tst != 0) {
@@ -419,7 +428,7 @@ cfgutil_HostNameGetAddressString(const char *hostName, const char **hostAddr,
     int rc = 1;
     afs_status_t tst2, tst = 0;
     int addrCount;
-    afs_int32 *addrList;
+    afs_int32 *addrList = NULL;
 
     /* get address list for host */
 
@@ -440,7 +449,10 @@ cfgutil_HostNameGetAddressString(const char *hostName, const char **hostAddr,
 	} else {
 	    *hostAddr = inaString;
 	}
-	free(addrList);
+		if (addrList) {
+			free(addrList);
+			addrList = NULL;
+		}
     }
 
     if (tst != 0) {
@@ -531,7 +543,7 @@ cfgutil_HostAddressIsValid(const char *hostName, int hostAddr, short *isValid,
     int rc = 1;
     afs_status_t tst2, tst = 0;
     int addrCount;
-    afs_int32 *addrList;
+    afs_int32 *addrList = NULL;
 
     *isValid = 0;
 
@@ -552,7 +564,10 @@ cfgutil_HostAddressIsValid(const char *hostName, int hostAddr, short *isValid,
 		break;
 	    }
 	}
-	free(addrList);
+		if (addrList) {
+			free(addrList);
+			addrList = NULL;
+		}
     }
 
     if (tst != 0) {

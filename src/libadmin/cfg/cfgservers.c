@@ -1038,7 +1038,7 @@ cfg_FileServerStop(void *hostHandle,	/* host config handle */
 	} else {
 	    /* file server instance deleted; remove its addresses from VLDB */
 	    int addrCount, i;
-	    afs_int32 *addrList;
+	    afs_int32 *addrList = NULL;
 
 	    /* note: ignore any errors since address removal is optional;
 	     * e.g., a common source of errors will be attempting to remove
@@ -1052,7 +1052,10 @@ cfg_FileServerStop(void *hostHandle,	/* host config handle */
 						      NULL, addrList[i],
 						      &tst2);
 		}
-		free(addrList);
+			if (addrList) {
+				free(addrList);
+				addrList = NULL;
+			}
 	    }
 	}
     }
@@ -1207,7 +1210,7 @@ cfg_UpdateServerStart(void *hostHandle,	/* host config handle */
 	    }
 
 	    if (args != NULL && args != argsBuf) {
-		free(args);
+			free(args);
 	    }
 	}
     }
@@ -1471,7 +1474,7 @@ cfg_UpdateClientStart(void *hostHandle,	/* host config handle */
 	    }
 
 	    if (args != argsBuf) {
-		free(args);
+			free(args);
 	    }
 	}
     }

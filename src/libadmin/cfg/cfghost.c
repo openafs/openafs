@@ -961,7 +961,7 @@ cfg_HostPartitionTableEnumerate(void *hostHandle,	/* host config handle */
 			    free(metaTablep);
 			}
 		    } else {
-			free(metaTablep);
+				free(metaTablep);
 		    }
 		}
 	    }

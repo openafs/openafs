@@ -388,7 +388,7 @@ pts_GroupMemberAdd(const void *cellHandle, const char *userName,
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    idlist ids;
+	idlist ids = {0,0};
 
     /*
      * Validate arguments
