@@ -29,6 +29,9 @@ RCSID
 #include "afs/afs_stats.h"
 #include "afs/afs_osidnlc.h"
 #include "h/mm.h"
+#ifdef HAVE_MM_INLINE_H
+#include "h/mm_inline.h"
+#endif
 #include "h/pagemap.h"
 #if defined(AFS_LINUX24_ENV)
 #include "h/smp_lock.h"
