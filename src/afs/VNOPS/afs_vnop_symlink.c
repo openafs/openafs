@@ -42,16 +42,6 @@ extern afs_rwlock_t afs_xcbhash;
 
 /* don't set CDirty in here because RPC is called synchronously */
 int afs_symlink
-#ifdef	AFS_OSF_ENV
-  (ndp, attrs, atargetName)
-     struct nameidata *ndp;
-     struct vattr *attrs;
-     register char *atargetName;
-{
-    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
-    char *aname = ndp->ni_dent.d_name;
-    struct ucred *acred = ndp->ni_cred;
-#else				/* AFS_OSF_ENV */
   (OSI_VC_ARG(adp), aname, attrs, atargetName, acred)
      OSI_VC_DECL(adp);
      char *atargetName;
@@ -59,7 +49,6 @@ int afs_symlink
      struct vattr *attrs;
      struct AFS_UCRED *acred;
 {
-#endif
     afs_uint32 now = 0;
     struct vrequest treq;
     afs_int32 code;
@@ -236,9 +225,6 @@ int afs_symlink
 	afs_PutVolume(volp, READ_LOCK);
     code = afs_CheckCode(code, &treq, 31);
   done2:
-#ifdef  AFS_OSF_ENV
-    AFS_RELE(ndp->ni_dvp);
-#endif /* AFS_OSF_ENV */
     return code;
 }
 
