@@ -145,6 +145,7 @@ static int afsd_thread(void *rock) {
      daemonize(); /* doesn't do much, since we were forked from keventd, but
                      does call mm_release, which wakes up our parent (since it
                      used CLONE_VFORK) */
+     reparent_to_init();
      afs_osi_MaskSignals();
      switch (parm) {
      case AFSOP_START_RXCALLBACK:
