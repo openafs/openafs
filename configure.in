@@ -50,6 +50,7 @@ src/fsprobe/Makefile \
 src/ftpd43+/Makefile \
 src/gtx/Makefile \
 src/inetd/Makefile \
+src/JAVA/libjafs/Makefile \
 src/kauth/test/Makefile \
 src/kauth/Makefile \
 src/libacl/test/Makefile \
