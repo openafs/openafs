@@ -637,7 +637,7 @@ struct usr_vnode **compvpp;
     struct usr_inode *ip;
     struct usr_vnode *vp;
 
-    usr_assert(followlink == 0);
+    /*usr_assert(followlink == 0);*/
     usr_assert(dirvpp == NULL);
 
     /*
@@ -645,7 +645,7 @@ struct usr_vnode **compvpp;
      */
     if (*fnamep != '/' || uafs_afsPathName(fnamep) != NULL) {
 	AFS_GLOCK();
-	code = uafs_LookupName(fnamep, afs_CurrentDir, compvpp, 0);
+	code = uafs_LookupName(fnamep, afs_CurrentDir, compvpp, 0, 0);
 	AFS_GUNLOCK();
 	return code;
     }
@@ -2174,7 +2174,8 @@ int uafs_LookupName(
     char *path,
     struct usr_vnode *parentVp,
     struct usr_vnode **vpp,
-    int follow)
+    int follow,
+    int no_eval_mtpt)
 {
     int code;
     int linkCount;
@@ -2251,7 +2252,14 @@ int uafs_LookupName(
 	     * subdirectory since we hold the global lock
 	     */
 	    nextVp = NULL;
-	    code = afs_lookup(vp, pathP, &nextVp, u.u_cred);
+#ifdef AFS_WEB_ENHANCEMENTS
+            if ((nextPathP != NULL && *nextPathP != '\0') || !no_eval_mtpt)
+              code = afs_lookup(vp, pathP, &nextVp, u.u_cred, 0);
+            else
+              code = afs_lookup(vp, pathP, &nextVp, u.u_cred, AFS_LOOKUP_NOEVAL);
+#else
+            code = afs_lookup(vp, pathP, &nextVp, u.u_cred, 0);
+#endif /* AFS_WEB_ENHANCEMENTS */
 	    if (code != 0) {
 		VN_RELE(vp);
 		afs_osi_Free(tmpPath, strlen(path)+1);
@@ -2353,7 +2361,7 @@ int uafs_LookupLink(
     /*
      * Find the target of the symbolic link
      */
-    code = uafs_LookupName(pathP, parentVp, &linkVp, 1);
+    code = uafs_LookupName(pathP, parentVp, &linkVp, 1, 0);
     if (code) {
 	afs_osi_Free(pathP, MAX_OSI_PATH+1);
 	return code;
@@ -2417,7 +2425,7 @@ int uafs_LookupParent(
     /*
      * look up the parent
      */
-    code = uafs_LookupName(pathP, afs_CurrentDir, &parentP, 1);
+    code = uafs_LookupName(pathP, afs_CurrentDir, &parentP, 1, 0);
     afs_osi_Free(pathP, len);
     if (code != 0) {
 	return code;
@@ -2471,7 +2479,7 @@ int uafs_chdir_r(
     int code;
     struct vnode *dirP;
 
-    code = uafs_LookupName(path, afs_CurrentDir, &dirP, 1);
+    code = uafs_LookupName(path, afs_CurrentDir, &dirP, 1, 0);
     if (code != 0) {
 	errno = code;
 	return -1;
@@ -2661,7 +2669,7 @@ int uafs_open_r(
 	    }
 	} else {
 	    fileP = NULL;
-	    code = uafs_LookupName(nameP, dirP, &fileP, 1);
+	    code = uafs_LookupName(nameP, dirP, &fileP, 1, 0);
 	    VN_RELE(dirP);
 	    if (code != 0) {
 		errno = code;
@@ -2974,7 +2982,7 @@ int uafs_stat_r(
     int code;
     struct vnode *vp;
 
-    code = uafs_LookupName(path, afs_CurrentDir, &vp, 1);
+    code = uafs_LookupName(path, afs_CurrentDir, &vp, 1, 0);
     if (code != 0) {
 	errno = code;
 	return -1;
@@ -3009,7 +3017,7 @@ int uafs_lstat_r(
     int code;
     struct vnode *vp;
 
-    code = uafs_LookupName(path, afs_CurrentDir, &vp, 0);
+    code = uafs_LookupName(path, afs_CurrentDir, &vp, 0, 0);
     if (code != 0) {
 	errno = code;
 	return -1;
@@ -3080,7 +3088,7 @@ int uafs_chmod_r(
     struct vnode *vp;
     struct usr_vattr attrs;
 
-    code = uafs_LookupName(path, afs_CurrentDir, &vp, 1);
+    code = uafs_LookupName(path, afs_CurrentDir, &vp, 1, 0);
     if (code != 0) {
 	errno = code;
 	return -1;
@@ -3155,7 +3163,7 @@ int uafs_truncate_r(
     struct vnode *vp;
     struct usr_vattr attrs;
 
-    code = uafs_LookupName(path, afs_CurrentDir, &vp, 1);
+    code = uafs_LookupName(path, afs_CurrentDir, &vp, 1, 0);
     if (code != 0) {
 	errno = code;
 	return -1;
@@ -3367,7 +3375,7 @@ int uafs_link_r(
     /*
      * Look up the existing node.
      */
-    code = uafs_LookupName(existing, afs_CurrentDir, &existP, 1);
+    code = uafs_LookupName(existing, afs_CurrentDir, &existP, 1, 0);
     if (code != 0) {
 	errno = code;
 	return -1;
@@ -3508,7 +3516,7 @@ int uafs_readlink_r(
     struct usr_uio uio;
     struct iovec iov[1];
 
-    code = uafs_LookupName(path, afs_CurrentDir, &vp, 0);
+    code = uafs_LookupName(path, afs_CurrentDir, &vp, 0, 0);
     if (code != 0) {
 	errno = code;
 	return -1;
@@ -3808,6 +3816,7 @@ usr_DIR *uafs_opendir_r(
     char *path)
 {
     usr_DIR *dirp;
+    struct usr_vnode *fileP;
     int fd;
 
     /*
@@ -3816,6 +3825,17 @@ usr_DIR *uafs_opendir_r(
     fd = uafs_open_r(path, O_RDONLY, 0);
     if (fd < 0) {
 	return NULL;
+    }
+
+    fileP = afs_FileTable[fd];
+    if (fileP == NULL) {
+     return NULL;
+    }
+
+    if (fileP->v_type != VDIR) {
+      uafs_close_r(fd);
+      errno = ENOTDIR;
+      return NULL;
     }
 
     /*
@@ -4107,5 +4127,187 @@ char *uafs_afsPathName(char *path)
     }
     return NULL;
 }
+
+#ifdef AFS_WEB_ENHANCEMENTS
+/*
+ * uafs_klog_nopag
+ * klog but don't allocate a new pag
+ */
+int uafs_klog_nopag(
+    char *user,
+    char *cell,
+    char *passwd,
+    char **reason)
+{
+    int code;
+    afs_int32 password_expires = -1;
+
+    usr_mutex_lock(&osi_authenticate_lock);
+    code = ka_UserAuthenticateGeneral(
+      KA_USERAUTH_VERSION  /*+KA_USERAUTH_DOSETPAG2*/, user,
+          NULL, cell, passwd, 0, &password_expires,
+          0, reason);
+    usr_mutex_unlock(&osi_authenticate_lock);
+    return code;
+}
+
+/*
+ * uafs_getcellstatus
+ * get the cell status
+ */
+int uafs_getcellstatus(char *cell, afs_int32 *status)
+{
+  int rc;
+  struct afs_ioctl iob;
+
+  iob.in = cell;
+  iob.in_size = strlen(cell)+1;
+  iob.out = 0;
+  iob.out_size = 0;
+
+  rc = call_syscall(AFSCALL_PIOCTL, /*path*/0, _VICEIOCTL(35),
+                      (long)&iob, 0, 0);
+
+  if (rc < 0) {
+    errno = rc;
+    return -1;
+  }
+
+  *status = iob.out;
+  return 0;
+}
+
+/*
+ * uafs_getvolquota
+ * Get quota of volume associated with path
+ */
+int uafs_getvolquota(char *path, afs_int32 *BlocksInUse, afs_int32 *MaxQuota)
+{
+  int rc;
+  struct afs_ioctl iob;
+  VolumeStatus *status;
+  char buf[1024];
+
+  iob.in = 0;
+  iob.in_size = 0;
+  iob.out = buf;
+  iob.out_size = 1024;
+
+  rc = call_syscall(AFSCALL_PIOCTL, path, _VICEIOCTL(4),
+                      (long)&iob, 0, 0);
+
+  if (rc != 0) {
+    errno = rc;
+    return -1;
+  }
+
+  status = (VolumeStatus *) buf;
+  *BlocksInUse = status->BlocksInUse;
+  *MaxQuota = status->MaxQuota;
+  return 0;
+}
+
+/*
+ * uafs_setvolquota
+ * Set quota of volume associated with path
+ */
+int uafs_setvolquota(char *path, afs_int32 MaxQuota)
+{
+  int rc;
+  struct afs_ioctl iob;
+  VolumeStatus *status;
+  char buf[1024];
+
+  iob.in = buf;
+  iob.in_size = 1024;
+  iob.out = 0;
+  iob.out_size = 0;
+
+  memset(buf, 0, sizeof(VolumeStatus));
+  status = (VolumeStatus *) buf;
+  status->MaxQuota = MaxQuota;
+  status->MinQuota = -1;
+
+  rc = call_syscall(AFSCALL_PIOCTL, path, _VICEIOCTL(5),
+                      (long)&iob, 0, 0);
+
+  if (rc != 0) {
+    errno = rc;
+    return -1;
+  }
+
+  return 0;
+}
+
+/*
+ * uafs_statmountpoint
+ * Determine whether a dir. is a mount point or not
+ * return 1 if mount point, 0 if not
+ */
+int uafs_statmountpoint(char *path)
+{
+    int retval;
+    int code;
+    char buf[256];
+
+    AFS_GLOCK();
+    retval = uafs_statmountpoint_r(path);
+    AFS_GUNLOCK();
+    return retval;
+}
+
+int uafs_statmountpoint_r(char *path)
+{
+    int code;
+    struct vnode *vp;
+    struct vcache *avc;
+    struct vrequest treq;
+    int r;
+
+    code = uafs_LookupName(path, afs_CurrentDir, &vp, 0, 1);
+    if (code != 0) {
+     errno = code;
+     return -1;
+    }
+
+    avc = (struct vcache *) vp;
+
+    r = avc->mvstat;
+    VN_RELE(vp);
+    return r;
+}
+
+/*
+ * uafs_getRights
+ * Get a list of rights for the current user on path.
+ */
+int uafs_getRights(char *path)
+{
+    int code, rc;
+    struct vnode *vp;
+    int afs_rights;
+
+    AFS_GLOCK();
+    code = uafs_LookupName(path, afs_CurrentDir, &vp, 1, 0);
+    if (code != 0) {
+     errno = code;
+     AFS_GUNLOCK();
+     return -1;
+    }
+
+    afs_rights = PRSFS_READ |
+      PRSFS_WRITE |
+      PRSFS_INSERT |
+      PRSFS_LOOKUP |
+      PRSFS_DELETE |
+      PRSFS_LOCK |
+      PRSFS_ADMINISTER;
+
+    afs_rights = afs_getRights (vp, afs_rights, u.u_cred);
+
+    AFS_GUNLOCK();
+    return afs_rights;
+}
+#endif /* AFS_WEB_ENHANCEMENTS */
 
 #endif /* UKERNEL */

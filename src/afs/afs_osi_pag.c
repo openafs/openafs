@@ -33,7 +33,11 @@ extern int afs_shuttingdown;
 
 /* Exported variables */
 afs_uint32 pag_epoch;
+#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+afs_uint32 pagCounter = 1;
+#else
 afs_uint32 pagCounter = 0;
+#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
 
 /* Local variables */
 
@@ -61,14 +65,15 @@ afs_uint32 pagCounter = 0;
  * anyway, so the pag is an alternative handle which is somewhat more
  * secure (although of course not absolutely secure).
 */
+#if !defined(UKERNEL) || !defined(AFS_WEB_ENHANCEMENTS)
 afs_uint32 genpag(void) {
     AFS_STATCNT(genpag);
 #ifdef AFS_LINUX20_ENV
     /* Ensure unique PAG's (mod 200 days) when reloading the client. */
     return (('A' << 24) + ((pag_epoch + pagCounter++) & 0xffffff));
-#else
+#else /* AFS_LINUX20_ENV */
     return (('A' << 24) + (pagCounter++ & 0xffffff));
-#endif
+#endif /* AFS_LINUX20_ENV */
 }
 
 afs_uint32 getpag(void) {
@@ -81,6 +86,30 @@ afs_uint32 getpag(void) {
 #endif
 }
 
+#else
+
+/* Web enhancement: we don't need to restrict pags to 41XXXXXX since
+ * we are not sharing the space with anyone.  So we use the full 32 bits. */
+
+afs_uint32 genpag(void) {
+    AFS_STATCNT(genpag);
+#ifdef AFS_LINUX20_ENV
+    return (pag_epoch + pagCounter++);
+#else
+    return (pagCounter++);
+#endif /* AFS_LINUX20_ENV */
+}
+
+afs_uint32 getpag(void) {
+    AFS_STATCNT(getpag);
+#ifdef AFS_LINUX20_ENV
+    /* Ensure unique PAG's (mod 200 days) when reloading the client. */
+    return (pag_epoch + pagCounter);
+#else
+    return (pagCounter);
+#endif
+}
+#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
 
 /* used to require 10 seconds between each setpag to guarantee that
  * PAGs never wrap - which would be a security hole.  If we presume
@@ -182,6 +211,115 @@ afs_setpag (void)
 #endif
 }
 
+#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+/*
+ * afs_setpag_val
+ * This function is like setpag but sets the current thread's pag id to a
+ * caller-provided value instead of calling genpag().  This implements a
+ * form of token caching since the caller can recall a particular pag value
+ * for the thread to restore tokens, rather than reauthenticating.
+ */
+int
+#if	defined(AFS_SUN5_ENV)
+afs_setpag_val (struct AFS_UCRED **credpp, int pagval)
+#elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+afs_setpag_val (struct proc *p, void *args, int *retval, int pagval)
+#else
+afs_setpag_val (int pagval) 
+#endif
+{
+    int code = 0;
+
+#if defined(AFS_SGI53_ENV) && defined(MP)
+    /* This is our first chance to get the global lock. */
+    AFS_GLOCK();
+#endif /* defined(AFS_SGI53_ENV) && defined(MP) */    
+
+    AFS_STATCNT(afs_setpag);
+#ifdef AFS_SUN5_ENV
+    if (!afs_suser(*credpp))
+#else
+    if (!afs_suser())
+#endif
+    {
+	while (osi_Time() - pag_epoch < pagCounter ) {
+	    afs_osi_Wait(1000, (struct afs_osi_WaitHandle *) 0, 0);
+	}	
+    }
+
+#if	defined(AFS_SUN5_ENV)
+    code = AddPag(pagval, credpp);
+#elif	defined(AFS_OSF_ENV) || defined(AFS_FBSD_ENV)
+    code = AddPag(p, pagval, &p->p_rcred);
+#elif	defined(AFS_AIX41_ENV)
+    {
+	struct ucred *credp;
+	struct ucred *credp0;
+	
+	credp = crref();
+	credp0 = credp;
+	code = AddPag(pagval, &credp);
+	/* If AddPag() didn't make a new cred, then free our cred ref */
+	if (credp == credp0) {
+	    crfree(credp);
+	}
+    }
+#elif	defined(AFS_HPUX110_ENV)
+    {
+	struct ucred *credp = p_cred(u.u_procp);
+	code = AddPag(pagval, &credp);
+    }
+#elif	defined(AFS_SGI_ENV)
+    {
+	cred_t *credp;
+	credp = OSI_GET_CURRENT_CRED();
+	code = AddPag(pagval, &credp);
+    }
+#elif	defined(AFS_LINUX20_ENV)
+    {
+	struct AFS_UCRED *credp = crref();
+	code = AddPag(pagval, &credp);
+	crfree(credp);
+    }
+#elif defined(AFS_DARWIN_ENV)  || defined(AFS_FBSD_ENV)
+    {
+       struct ucred *credp=crdup(p->p_cred->pc_ucred);
+       code=AddPag(p, pagval, &credp);
+       crfree(credp);
+    }
+#else
+    code = AddPag(pagval, &u.u_cred);
+#endif
+
+    afs_Trace1(afs_iclSetp, CM_TRACE_SETPAG, ICL_TYPE_INT32, code);
+#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_SGI53_ENV) && defined(MP)
+    AFS_GUNLOCK();
+#endif /* defined(AFS_SGI53_ENV) && defined(MP) */    
+    return (code);
+#else
+    if (!getuerror())
+ 	setuerror(code);
+    return (code);
+#endif
+}
+#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
+
+#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+int afs_getpag_val()
+{
+  int pagvalue;
+  struct AFS_UCRED *credp = u.u_cred;
+  int gidset0, gidset1;
+
+  gidset0 = credp->cr_groups[0];
+  gidset1 = credp->cr_groups[1];
+  pagvalue=afs_get_pag_from_groups(gidset0, gidset1);
+  return pagvalue;
+}
+#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
+
+
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 int AddPag(struct proc *p, afs_int32 aval, struct AFS_UCRED **credpp)
 #else	/* AFS_OSF_ENV || AFS_FBSD_ENV */
@@ -244,11 +382,15 @@ afs_uint32 afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
 	h = (g0 >> 14);
 	h = (g1 >> 14) + h + h + h;
 	ret = ((h << 28) | l);
+#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+	return ret;
+#else
 	/* Additional testing */
 	if (((ret >> 24) & 0xff) == 'A')
 	    return ret;
 	else
 	    return NOPAG;
+#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
     }
     return NOPAG;
 }
@@ -260,7 +402,9 @@ void afs_get_groups_from_pag(afs_uint32 pag, gid_t *g0p, gid_t *g1p)
 
 
     AFS_STATCNT(afs_get_groups_from_pag);
+#if !defined(UKERNEL) || !defined(AFS_WEB_ENHANCEMENTS)
     pag &= 0x7fffffff;
+#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
     g0 = 0x3fff & (pag >> 14);
     g1 = 0x3fff & pag;
     g0 |= ((pag >> 28) / 3) << 14;

@@ -74,7 +74,8 @@ extern void uafs_RxServerProc(void);
 extern int uafs_LookupLink(struct usr_vnode *vp, struct usr_vnode *parentP,
 			   struct usr_vnode **vpp);
 extern int uafs_LookupName(char *path, struct usr_vnode *parentP,
-			   struct usr_vnode **vpp, int follow);
+			   struct usr_vnode **vpp, int follow,
+                           int no_eval_mtpt);
 extern int uafs_LookupParent(char *path, struct usr_vnode **vpp);
 extern int uafs_GetAttr(struct usr_vnode *vp, struct stat *stats);
 

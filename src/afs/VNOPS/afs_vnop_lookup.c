@@ -866,8 +866,13 @@ afs_lookup(OSI_VC_ARG(adp), aname, avcp, pnp, flags, rdir, acred)
     int flags;
     struct vnode *rdir;
 #else
+#if defined(UKERNEL)
+afs_lookup(adp, aname, avcp, acred, flags)
+    int flags;
+#else    
 afs_lookup(adp, aname, avcp, acred)
-#endif
+#endif /* UKERNEL */
+#endif /* SUN5 || SGI */
     OSI_VC_DECL(adp);
     struct vcache **avcp;
     char *aname;
@@ -1152,6 +1157,11 @@ afs_lookup(adp, aname, avcp, acred)
 	tvc->parentVnode = adp->fid.Fid.Vnode;
 	tvc->parentUnique = adp->fid.Fid.Unique;
 	tvc->states &= ~CBulkStat;
+
+#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+        if (!(flags & AFS_LOOKUP_NOEVAL))
+          /* don't eval mount points */
+#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
 	if (tvc->mvstat == 1) {
 	  /* a mt point, possibly unevaluated */
 	  struct volume *tvolp;
@@ -1260,6 +1270,14 @@ done:
 
 	if (afs_mariner)
 	  afs_AddMarinerName(aname, tvc); 
+
+#if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
+        if (!(flags & AFS_LOOKUP_NOEVAL))
+	/* Here we don't enter the name into the DNLC because we want the
+        evaluated mount dir to be there (the vcache for the mounted volume)
+        rather than the vc of the mount point itself.  we can still find the
+        mount point's vc in the vcache by its fid. */
+#endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
 	if (!hit) {
 	  osi_dnlc_enter (adp, aname, tvc, &versionNo);
 	}
