@@ -84,6 +84,26 @@ int afs_totalSrvAddrs = 0;
 
 
 
+static struct afs_stats_SrvUpDownInfo *
+GetUpDownStats(struct server *srv)
+{
+    struct afs_stats_SrvUpDownInfo *upDownP;
+    u_short fsport = AFS_FSPORT;
+
+    if (srv->cell)
+	fsport = srv->cell->fsport;
+
+    if (srv->addr->sa_portal == fsport)
+	upDownP = afs_stats_cmperf.fs_UpDown;
+    else
+	upDownP = afs_stats_cmperf.vl_UpDown;
+
+    if (srv->cell && afs_IsPrimaryCell(srv->cell))
+	return &upDownP[AFS_STATS_UPDOWN_IDX_SAME_CELL];
+    else
+	return &upDownP[AFS_STATS_UPDOWN_IDX_DIFF_CELL];
+}
+
 
 /*------------------------------------------------------------------------
  * afs_MarkServerUpOrDown
@@ -159,16 +179,7 @@ void afs_MarkServerUpOrDown(struct srvAddr *sa, int a_isDown)
     currTimeP = &currTime;
     osi_GetuTime(currTimeP);
 
-    if (sa->sa_portal == AFS_FSPORT) {
-	upDownP = (a_serverP->cell->cell == 1) ?
-	    &(afs_stats_cmperf.fs_UpDown[AFS_STATS_UPDOWN_IDX_SAME_CELL]) :
-	    &(afs_stats_cmperf.fs_UpDown[AFS_STATS_UPDOWN_IDX_DIFF_CELL]);
-    } /*File Server record*/
-    else {
-	upDownP = (a_serverP->cell->cell == 1) ?
-	    &(afs_stats_cmperf.vl_UpDown[AFS_STATS_UPDOWN_IDX_SAME_CELL]) :
-	    &(afs_stats_cmperf.vl_UpDown[AFS_STATS_UPDOWN_IDX_DIFF_CELL]);
-    } /*VL Server record*/
+    upDownP = GetUpDownStats(a_serverP);
 
     if (a_isDown) {
 	/*
@@ -285,7 +296,7 @@ static void CheckVLServer(register struct srvAddr *sa, struct vrequest *areq)
 	return;	/* can't do much */
 
     tc = afs_ConnByHost(aserver, aserver->cell->vlport, 
-			aserver->cell->cell, areq, 1, SHARED_LOCK);
+			aserver->cell->cellNum, areq, 1, SHARED_LOCK);
     if (!tc)
 	return;
     rx_SetConnDeadTime(tc->id, 3);
@@ -413,17 +424,7 @@ void afs_CountServers(void)
 		 * in the appropriate places.
 		 */
 		srvRecordAge = currTime.tv_sec - currSrvP->activationTime;
-		if (currSrvP->addr->sa_portal == AFS_FSPORT) {
-		    upDownP = (currSrvP->cell->cell == 1) ?
-			&(afs_stats_cmperf.fs_UpDown[AFS_STATS_UPDOWN_IDX_SAME_CELL]):
-			&(afs_stats_cmperf.fs_UpDown[AFS_STATS_UPDOWN_IDX_DIFF_CELL]);
-		} /*File Server record*/
-		else {
-		    upDownP = (currSrvP->cell->cell == 1) ?
-			&(afs_stats_cmperf.vl_UpDown[AFS_STATS_UPDOWN_IDX_SAME_CELL]):
-			&(afs_stats_cmperf.vl_UpDown[AFS_STATS_UPDOWN_IDX_DIFF_CELL]);
-		} /*VL Server record*/
-
+		upDownP = GetUpDownStats(currSrvP);
 		upDownP->sumOfRecordAges += srvRecordAge;
 		if ((upDownP->ageOfYoungestRecord == 0) ||
 		    (srvRecordAge < upDownP->ageOfYoungestRecord))
@@ -549,8 +550,8 @@ void afs_CheckServers(int adown, struct cell *acellp)
 	    continue;  /* have just been added by setsprefs */ 
 
 	/* get a connection, even if host is down; bumps conn ref count */
-	tu = afs_GetUser(treq.uid, ts->cell->cell, SHARED_LOCK);
-	tc = afs_ConnBySA(sa, ts->cell->fsport, ts->cell->cell, tu,
+	tu = afs_GetUser(treq.uid, ts->cell->cellNum, SHARED_LOCK);
+	tc = afs_ConnBySA(sa, ts->cell->fsport, ts->cell->cellNum, tu,
 			  1/*force*/, 1/*create*/, SHARED_LOCK);
 	afs_PutUser(tu, SHARED_LOCK);
 	if (!tc) continue;
@@ -579,12 +580,9 @@ void afs_CheckServers(int adown, struct cell *acellp)
 	     */
 	    if (code == 0 && start == end && afs_setTime != 0 &&
 		(tc->srvr->server == afs_setTimeHost ||
-		/*
-		 * Sync only to a server in the local cell: cell(id)==1
-		 * or CPrimary.
-		 */
+		/* Sync only to a server in the local cell */
 		(afs_setTimeHost == (struct server *)0 &&
-		 (ts->cell->cell == 1 || (ts->cell->states&CPrimary))))) {
+		 afs_IsPrimaryCell(ts->cell)))) {
 
 		char msgbuf[90];  /* strlen("afs: setting clock...") + slop */
 		/* set the time */
@@ -1572,16 +1570,8 @@ struct server *afs_GetServer(afs_uint32 *aserverp, afs_int32 nservers,
        /* With the introduction of this new record, we need to adjust the
 	* proper individual & global server up/down info.
 	*/
-       if (aport == fsport) {   /* File Server record */
-	  upDownP = (acell == 1) ?
-	    &(afs_stats_cmperf.fs_UpDown[AFS_STATS_UPDOWN_IDX_SAME_CELL]) :
-	    &(afs_stats_cmperf.fs_UpDown[AFS_STATS_UPDOWN_IDX_DIFF_CELL]);
-       } else {                   /* VL Server record */
-	  upDownP = (acell == 1) ?
-	    &(afs_stats_cmperf.vl_UpDown[AFS_STATS_UPDOWN_IDX_SAME_CELL]) :
-	    &(afs_stats_cmperf.vl_UpDown[AFS_STATS_UPDOWN_IDX_DIFF_CELL]);
-       } 
-       (upDownP->numTtlRecords)    += srvcount;
+       upDownP = GetUpDownStats(newts);
+       upDownP->numTtlRecords      += srvcount;
        afs_stats_cmperf.srvRecords += srvcount;
        if (afs_stats_cmperf.srvRecords > afs_stats_cmperf.srvRecordsHWM)
 	  afs_stats_cmperf.srvRecordsHWM = afs_stats_cmperf.srvRecords;
@@ -1608,21 +1598,12 @@ void afs_ActivateServer(struct srvAddr *sap)
       currTimeP = &currTime;
       osi_GetuTime(currTimeP);
       aserver->activationTime = currTime.tv_sec;
-      if (sap->sa_portal == AFS_FSPORT) {
-	 upDownP = (aserver->cell->cell == 1) ?
-	      &(afs_stats_cmperf.fs_UpDown[AFS_STATS_UPDOWN_IDX_SAME_CELL]) :
-		   &(afs_stats_cmperf.fs_UpDown[AFS_STATS_UPDOWN_IDX_DIFF_CELL]);
-      } /*File Server record*/
-      else {
-	 upDownP = (aserver->cell->cell == 1) ?
-	      &(afs_stats_cmperf.vl_UpDown[AFS_STATS_UPDOWN_IDX_SAME_CELL]) :
-		   &(afs_stats_cmperf.vl_UpDown[AFS_STATS_UPDOWN_IDX_DIFF_CELL]);
-      } /*VL Server record*/
-      if (aserver->flags & SRVR_ISDOWN)
-	   (upDownP->numDownRecords)++;
-      else {
-	 (upDownP->numUpRecords)++;
-	 (upDownP->numRecordsNeverDown)++;
+      upDownP = GetUpDownStats(aserver);
+      if (aserver->flags & SRVR_ISDOWN) {
+	 upDownP->numDownRecords++;
+      } else {
+	 upDownP->numUpRecords++;
+	 upDownP->numRecordsNeverDown++;
       }
    }
 }

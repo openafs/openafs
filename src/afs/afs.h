@@ -192,29 +192,43 @@ struct afs_cbr {
     struct AFSFid fid;
 };
 
-
-#define	LOCALCELL	    1	/* local cell's number is always 1 */
+/* cellinfo file magic number */
+#define AFS_CELLINFO_MAGIC	0xf32817cd
 
 /* cell flags */
-#define	CPrimary	    1	    /* on if this is the primary cell */
-#define	CNoSUID		    2	    /* 1 if no suid progs can run from this cell */
-#define CHasVolRef	   16	    /* Volumes were referenced in this cell*/
-#define CLinkedCell	   32
-#define CAlias		   64	    /* This cell entry is an alias */
+#define	CNoSUID			0x02	/* disable suid bit for this cell */
+#define CLinkedCell4		0x04	/* reserved for ADDCELL2 pioctl */
+#define CNoAFSDB		0x08	/* never bother trying AFSDB */
+#define CHasVolRef		0x10	/* volumes were referenced */
+#define CLinkedCell		0x20	/* has a linked cell in lcellp */
 
 struct cell {
-    struct afs_q lruq;			     /* lru q next and prev */
-    afs_int32 cell;				    /* unique id assigned by venus */
+    struct afs_q lruq;			    /* lru q next and prev */
     char *cellName;			    /* char string name of cell */
-    struct server *cellHosts[MAXCELLHOSTS]; /* volume *location* hosts for this cell */
+    afs_int32 cellIndex;		    /* sequence number */
+    afs_int32 cellNum;			    /* semi-permanent cell number */
+    struct server *cellHosts[MAXCELLHOSTS]; /* volume *location* hosts */
     struct cell *lcellp;		    /* Associated linked cell */
     u_short fsport;			    /* file server port */
     u_short vlport;			    /* volume server port */
     short states;			    /* state flags */
-    short cellIndex;			    /* relative index number per cell */
-    short realcellIndex;		    /* as above but ignoring aliases */
     time_t timeout;			    /* data expire time, if non-zero */
-    char *realName;			    /* who this cell is an alias for */
+    struct cell_name *cnamep;		    /* pointer to our cell_name */
+    afs_rwlock_t lock;			    /* protects cell data */
+};
+
+struct cell_name {
+    struct cell_name *next;
+    afs_int32 cellnum;
+    char *cellname;
+    char used;
+};
+
+struct cell_alias {
+    struct cell_alias *next;
+    afs_int32 index;
+    char *alias;
+    char *cell;
 };
 
 #define	afs_PutCell(cellp, locktype)

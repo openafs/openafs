@@ -152,26 +152,32 @@ extern void afs_InitCBQueue(int doLockInit);
 extern void afs_DequeueCallback(struct vcache *avc);
 
 /* afs_cell.c */
-extern struct afs_q CellLRU;
 extern afs_rwlock_t afs_xcell;
-extern afs_int32 afs_cellindex;
-extern afs_uint32 afs_nextCellNum;
-extern afs_int32 afs_NewCell(char *acellName, register afs_int32 *acellHosts, int aflags, 
-        char *linkedcname, u_short fsport, u_short vlport, int timeout, char *aliasFor);
-extern struct cell *afs_GetCell(register afs_int32 acell, afs_int32 locktype);
-extern struct cell *afs_GetCellByIndex(register afs_int32 cellindex, 
-        afs_int32 locktype, afs_int32 refresh);
-extern struct cell *afs_FindCellByName(register char *acellName, afs_int32 locktype);
-extern struct cell *afs_GetCellByName_Dns(register char *acellName, afs_int32 locktype);
-extern struct cell *afs_GetCellByName(register char *acellName, afs_int32 locktype);
-extern struct cell *afs_GetCellNoLock(register afs_int32 acell, afs_int32 locktype);
-extern void afs_StopAfsdb(void);
-extern int afs_AfsdbHandler(char *acellName, int acellNameLen, afs_int32 *kernelMsg);
-extern int afs_GetCellHostsFromDns(char *acellName, afs_int32 *acellHosts, 
-        int *timeout, char **realName);
-extern void afs_RefreshCell(register struct cell *ac);
+extern void afs_CellInit(void);
+extern void shutdown_cell(void);
+extern int afs_cellname_init(ino_t inode, int lookupcode);
+extern int afs_cellname_write();
+extern afs_int32 afs_NewCell(char *acellName, afs_int32 *acellHosts,
+	int aflags, char *linkedcname, u_short fsport, u_short vlport,
+	int timeout);
+extern afs_int32 afs_SetPrimaryCell(char *acellName);
+extern struct cell *afs_GetCell(afs_int32 acell, afs_int32 locktype);
+extern struct cell *afs_GetCellStale(afs_int32 acell, afs_int32 locktype);
+extern struct cell *afs_GetCellByIndex(afs_int32 cellidx, afs_int32 locktype);
+extern struct cell *afs_GetCellByName(char *acellName, afs_int32 locktype);
+extern struct cell *afs_GetPrimaryCell(afs_int32 locktype);
+extern int afs_IsPrimaryCellNum(afs_int32 cellnum);
+extern int afs_IsPrimaryCell(struct cell *cell);
+extern void *afs_TraverseCells(void *(*cb)(struct cell *, void *), void *arg);
+extern int afs_CellOrAliasExists(char *aname);
+extern int afs_CellNumValid(afs_int32 cellnum);
+extern afs_int32 afs_NewCellAlias(char *alias, char *cell);
+extern struct cell_alias *afs_GetCellAlias(int index);
+extern int afs_AFSDBHandler(char *acellName, int acellNameLen,
+	afs_int32 *kernelMsg);
+extern void afs_LookupAFSDB(char *acellName);
+extern void afs_StopAFSDB(void);
 extern void afs_RemoveCellEntry(struct server *srvp);
-
 
 /* afs_chunk.c */
 extern afs_int32 afs_FirstCSize;
@@ -272,15 +278,18 @@ extern int afs_InitCacheFile(char *afile, ino_t ainode);
 extern int afs_IsDynrootFid(struct VenusFid *fid);
 extern void afs_GetDynrootFid(struct VenusFid *fid);
 extern int afs_IsDynroot(struct vcache *avc);
-extern void afs_RefreshDynroot(void);
-extern void afs_GetDynroot(char **dynrootDir, int *dynrootLen, struct AFSFetchStatus *status);
+extern void afs_DynrootInvalidate(void);
+extern void afs_GetDynroot(char **dynrootDir, int *dynrootLen,
+	struct AFSFetchStatus *status);
 extern void afs_PutDynroot(void);
-extern int afs_DynrootNewVnode(struct vcache *avc, struct AFSFetchStatus *status);
+extern int afs_DynrootNewVnode(struct vcache *avc,
+	struct AFSFetchStatus *status);
 extern int afs_SetDynrootEnable(int enable);
 extern int afs_GetDynrootEnable(void);
-extern int afs_DynrootVOPRemove(struct vcache *avc, struct AFS_UCRED *acred, char *aname);
+extern int afs_DynrootVOPRemove(struct vcache *avc, struct AFS_UCRED *acred,
+	char *aname);
 extern int afs_DynrootVOPSymlink(struct vcache *avc, struct AFS_UCRED *acred, 
-        char *aname, char *atargetName);
+	char *aname, char *atargetName);
 
 /* afs_exporter.c */
 extern struct afs_exporter *root_exported;
@@ -616,7 +625,7 @@ extern void afs_SetPrimary(register struct unixuser *au, register int aflag);
 
 /* afs_util.c */
 extern char *afs_cv2string(char *ttp, afs_uint32 aval);
-extern int afs_strcasecmp(register char *s1, register char *s2);
+extern int afs_strcasecmp(char *s1, char *s2);
 extern char *afs_strdup(char *s);
 extern void print_internet_address(char *preamble, struct srvAddr *sa,
 			    char *postamble, int flag);

@@ -101,3 +101,9 @@ proc GetCE64(
   OUT AFSDBCacheEntry64 *ce
 ) = 65536;
 
+proc GetCellByNum(
+  IN  afs_int32 cellNumber,
+  OUT string cellName<AFSNAMEMAX>,
+  OUT serverList *cellHosts
+) = 65537;
+

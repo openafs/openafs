@@ -638,6 +638,7 @@ struct afs_CMCallStats {
     afs_int32 C_afs_MarshallCacheConfig;	/* afs_callback.c*/
     afs_int32 C_SRXAFSCB_GetCacheConfig;	/* afs_callback.c*/
     afs_int32 C_SRXAFSCB_GetCE64;	/* afs_callback.c*/
+    afs_int32 C_SRXAFSCB_GetCellByNum;	/* afs_callback.c*/
 };
 
 struct afs_CMMeanStats {

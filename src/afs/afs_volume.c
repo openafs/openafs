@@ -101,7 +101,7 @@ afs_int32 afs_FVIndex = -1;
 struct volume *afs_UFSGetVolSlot(void)
 {
     register struct volume *tv, **lv;
-    register char *tfile;
+    struct osi_file *tfile;
     register afs_int32 i, code;
     afs_int32 bestTime;
     struct volume *bestVp, **bestLp;
@@ -440,7 +440,7 @@ static struct volume *afs_SetupVolume(afs_int32 volid, char *aname,
     ObtainWriteLock(&afs_xvolume,108);
     i = VHash(volid);
     for (tv = afs_volumes[i]; tv; tv=tv->next) {
-	if (tv->volume == volid && tv->cell == tcell->cell) {
+	if (tv->volume == volid && tv->cell == tcell->cellNum) {
 	    break;
 	}
     }
@@ -449,14 +449,14 @@ static struct volume *afs_SetupVolume(afs_int32 volid, char *aname,
 
 	tv = afs_GetVolSlot();
 	memset((char *)tv, 0, sizeof(struct volume));
-	tv->cell = tcell->cell;
+	tv->cell = tcell->cellNum;
 	RWLOCK_INIT(&tv->lock, "volume lock");
 	tv->next = afs_volumes[i];	/* thread into list */
 	afs_volumes[i] = tv;
 	tv->volume = volid;
 	for (j=fvTable[FVHash(tv->cell,volid)]; j!=0; j=tf->next) {
 	    if (afs_FVIndex != j) {
-		char *tfile;
+		struct osi_file *tfile;
 		tfile = osi_UFSOpen(volumeInode);
 		err = afs_osi_Read(tfile, sizeof(struct fvolume) * j, &staticFVolume, sizeof(struct fvolume));
 		if (err != sizeof(struct fvolume))
@@ -485,12 +485,12 @@ static struct volume *afs_SetupVolume(afs_int32 volid, char *aname,
     ReleaseWriteLock(&afs_xvolume);
     ObtainWriteLock(&tv->lock,111);
     if (type == 2) {
-	InstallUVolumeEntry(tv, uve, tcell->cell, tcell, areq);
+	InstallUVolumeEntry(tv, uve, tcell->cellNum, tcell, areq);
     }
     else if (type == 1)
-	InstallNVolumeEntry(tv, nve, tcell->cell);
+	InstallNVolumeEntry(tv, nve, tcell->cellNum);
     else
-	InstallVolumeEntry(tv, ove, tcell->cell);
+	InstallVolumeEntry(tv, ove, tcell->cellNum);
     if (agood) {
 	if (!tv->name) {
 	    tv->name = afs_osi_Alloc(strlen(aname) + 1);
@@ -549,7 +549,7 @@ static struct volume *afs_NewDynrootVolume(struct VenusFid *fid)
     tve.volumeId[ROVOL] = fid->Fid.Volume;
     tve.flags = VLF_ROEXISTS;
 
-    tv = afs_SetupVolume(0, bp, &tve, tcell, 0, 0, 0);
+    tv = afs_SetupVolume(0, bp, (char *) &tve, tcell, 0, 0, 0);
     afs_PutCell(tcell, READ_LOCK);
     return tv;
 }
@@ -590,7 +590,7 @@ static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agoo
     afs_InitReq(&treq, &afs_osi_cred);	/* *must* be unauth for vldb */
     do {
 	tconn = afs_ConnByMHosts(tcell->cellHosts, tcell->vlport,
-				 tcell->cell, &treq, SHARED_LOCK);
+				 tcell->cellNum, &treq, SHARED_LOCK);
 	if (tconn) {
 	    if (tconn->srvr->server->flags & SNO_LHOSTS) {
 		type = 0;
@@ -921,7 +921,7 @@ void InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
 		memset((char *)&addrs, 0, sizeof(addrs));
 		do {
 		    tconn = afs_ConnByMHosts(tcell->cellHosts, tcell->vlport,
-					     tcell->cell, areq, SHARED_LOCK);
+					     tcell->cellNum, areq, SHARED_LOCK);
 		    if (tconn) {
 			RX_AFS_GUNLOCK();
 			code = VL_GetAddrsU(tconn->id, &attrs, &uuid, &unique, &nentries, &addrs);

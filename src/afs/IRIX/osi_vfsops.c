@@ -522,7 +522,6 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t **avcp, struct fid *fidp)
 {
     struct VenusFid vfid;
     struct vrequest treq;
-    extern struct cell *afs_GetCellByIndex();
     register struct cell *tcell;
     register afs_int32 code = 0;
     afs_int32 ret;
@@ -541,13 +540,13 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t **avcp, struct fid *fidp)
     afid2 = (afs_fid2_t*)fidp;
     if (afid2->af_len == sizeof(afs_fid2_t) - sizeof(afid2->af_len)) {
 	/* It's a checkpoint restart fid. */
-	tcell = afs_GetCellByIndex(afid2->af_cell, READ_LOCK, 0 /* !refresh */);
+	tcell = afs_GetCellByIndex(afid2->af_cell, READ_LOCK);
 	if (!tcell) {
 	    code = ENOENT;
 	    goto out;
-        }
-	vfid.Cell = tcell->cell;
-	afs_PutCell(tcell, WRITE_LOCK);
+	}
+	vfid.Cell = tcell->cellNum;
+	afs_PutCell(tcell, READ_LOCK);
 	vfid.Fid.Volume = afid2->af_volid;
 	vfid.Fid.Vnode = afid2->af_vno;
 	vfid.Fid.Unique = afid2->af_uniq;

@@ -83,6 +83,7 @@ static int afs_CacheInit_Done = 0;
 static int afs_Go_Done = 0;
 extern struct interfaceAddr afs_cb_interface;
 static int afs_RX_Running = 0;
+static int afs_InitSetup_done = 0;
 
 static int
 Afscall_icl(long opcode, long p1, long p2, long p3, long p4, long *retval);
@@ -98,6 +99,9 @@ static int afs_InitSetup(int preallocs)
 {
     extern void afs_InitStats();
     int code;
+
+    if (afs_InitSetup_done)
+	return;
 
 #ifndef AFS_NOSTATS
     /*
@@ -121,6 +125,9 @@ static int afs_InitSetup(int preallocs)
     /* resource init creates the services */
     afs_ResourceInit(preallocs);
 
+    afs_InitSetup_done = 1;
+    afs_osi_Wakeup(&afs_InitSetup_done);
+
     return code;
 }
 
@@ -130,6 +137,11 @@ afs_syscall_call(parm, parm2, parm3, parm4, parm5, parm6)
 long parm, parm2, parm3, parm4, parm5, parm6;
 {
     afs_int32 code = 0;
+#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+    size_t bufferSize;	
+#else /* AFS_SGI61_ENV */
+    u_int bufferSize;	
+#endif /* AFS_SGI61_ENV */
 
     AFS_STATCNT(afs_syscall_call);
 #ifdef	AFS_SUN5_ENV
@@ -205,23 +217,32 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 #endif
     }
 #endif
-    else if (parm == AFSOP_START_AFS) {
-	/* afs daemon */
+    else if (parm == AFSOP_BASIC_INIT) {
 	afs_int32 temp;
 
+	while (!afs_InitSetup_done)
+	    afs_osi_Sleep(&afs_InitSetup_done);
+
+#if defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+	temp = AFS_MINBUFFERS;  /* Should fix this soon */
+#else
+	/* number of 2k buffers we could get from all of the buffer space */
+	temp = ((afs_bufferpages * NBPG)>>11);
+	temp = temp>>2;	/* don't take more than 25% (our magic parameter) */
+	if (temp < AFS_MINBUFFERS)
+	    temp = AFS_MINBUFFERS; /* though we really should have this many */
+#endif
+	DInit(temp);
+	afs_rootFid.Fid.Volume = 0;
+	code = 0;
+    }
+    else if (parm == AFSOP_START_AFS) {
+	/* afs daemon */
 	if (AFS_Running) goto out;
 	AFS_Running = 1;
 	while (afs_initState < AFSOP_START_AFS) 
 	    afs_osi_Sleep(&afs_initState);
 
-#if defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-	temp = AFS_MINBUFFERS;  /* Should fix this soon */
-#else
-	temp = ((afs_bufferpages * NBPG)>>11);	/* number of 2k buffers we could get from all of the buffer space */
-	temp = temp>>2;	/* don't take more than 25% (our magic parameter) */
-	if (temp < AFS_MINBUFFERS) temp = AFS_MINBUFFERS;   /* although we really should have this many */
-#endif
-	DInit(temp);
 	afs_initState = AFSOP_START_BKG;
 	afs_osi_Wakeup(&afs_initState);
 	afs_osi_Invisible();
@@ -287,7 +308,6 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	 home cell flag (0x1 bit) and the nosuid flag (0x2 bit) */
 	struct afsop_cell tcell;
 
-	while (afs_initState < AFSOP_START_BKG) afs_osi_Sleep(&afs_initState);
 	AFS_COPYIN((char *)parm2, (char *)tcell.hosts, sizeof(tcell.hosts), code);
 	if (!code) {
 	    if (parm4 > sizeof(tcell.cellName)) 
@@ -296,18 +316,13 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 		AFS_COPYIN((char *)parm3, tcell.cellName, parm4, code);
 		if (!code) 
 		    afs_NewCell(tcell.cellName, tcell.hosts, parm5,
-				0, 0, 0, 0, 0);
+				NULL, 0, 0, 0);
 	    }
 	}
     } else if (parm == AFSOP_ADDCELL2) {
 	struct afsop_cell tcell;
 	char *tbuffer = osi_AllocSmallSpace(AFS_SMALLOCSIZ), *lcnamep = 0;
 	char *tbuffer1 = osi_AllocSmallSpace(AFS_SMALLOCSIZ), *cnamep = 0;
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-	size_t bufferSize;	
-#else /* AFS_SGI61_ENV */
-	u_int bufferSize;	
-#endif /* AFS_SGI61_ENV */
 	int cflags = parm4;
 
 	/* wait for basic init */
@@ -325,8 +340,8 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 		    }
 		}
 		if (!code)
-		    afs_NewCell(tbuffer1, tcell.hosts, cflags, 
-				lcnamep, 0, 0, 0, 0);
+		    code = afs_NewCell(tbuffer1, tcell.hosts, cflags,
+				       lcnamep, 0, 0, 0);
 	    }
 	}
 	osi_FreeSmallSpace(tbuffer);
@@ -338,34 +353,32 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	 * parm2 is the alias name
 	 * parm3 is the real cell name
 	 */
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-	size_t bufferSize;
-#else /* AFS_SGI61_ENV */
-	u_int bufferSize;	
-#endif /* AFS_SGI61_ENV */
 	char *aliasName = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 	char *cellName = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 
 	AFS_COPYINSTR((char *)parm2, aliasName, AFS_SMALLOCSIZ, &bufferSize, code);
 	if (!code) AFS_COPYINSTR((char *)parm3, cellName, AFS_SMALLOCSIZ, &bufferSize, code);
-	if (!code) afs_NewCell(aliasName,	/* new entry name */
-			       0,		/* host list */
-			       CAlias,		/* flags */
-			       NULL,	/* linked cell */
-			       0, 0,		/* fs & vl ports */
-			       0,		/* timeout */
-			       cellName);	/* real cell name */
-
+	if (!code) afs_NewCellAlias(aliasName, cellName);
 	osi_FreeSmallSpace(aliasName);
 	osi_FreeSmallSpace(cellName);
+    }
+    else if (parm == AFSOP_SET_THISCELL) {
+	/*
+	 * Call arguments:
+	 * parm2 is the primary cell name
+	 */
+	char *cell = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+
+	AFS_COPYINSTR((char *) parm2, cell, AFS_SMALLOCSIZ, &bufferSize, code);
+	if (!code)
+	    afs_SetPrimaryCell(cell);
+	osi_FreeSmallSpace(cell);
     }
     else if (parm == AFSOP_CACHEINIT) {
 	struct afs_cacheParams cparms;
 
 	if (afs_CacheInit_Done) goto out;
 
-	/* wait for basic init */
-	while (afs_initState < AFSOP_START_BKG) afs_osi_Sleep(&afs_initState);
 	AFS_COPYIN((char *)parm2, (caddr_t) &cparms, sizeof(cparms), code);
 	if (code) {
 #if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined (AFS_SGI64_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
@@ -414,12 +427,6 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	code = afs_InitCacheFile(NULL, ainode);
     }
     else if (parm == AFSOP_ROOTVOLUME) {
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-	size_t bufferSize;
-#else /* AFS_SGI61_ENV */
-	u_int bufferSize;
-#endif /* AFS_SGI61_ENV */
-
 	/* wait for basic init */
 	while (afs_initState < AFSOP_START_BKG) afs_osi_Sleep(&afs_initState);
 
@@ -429,29 +436,31 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	}
 	else code = 0;
     }
-    else if (parm == AFSOP_CACHEFILE || parm == AFSOP_CACHEINFO ||
-	      parm == AFSOP_VOLUMEINFO || parm == AFSOP_AFSLOG) {
+    else if (parm == AFSOP_CACHEFILE ||
+	     parm == AFSOP_CACHEINFO ||
+	     parm == AFSOP_VOLUMEINFO ||
+	     parm == AFSOP_AFSLOG ||
+	     parm == AFSOP_CELLINFO) {
 	char *tbuffer = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-	size_t bufferSize;
-#else /* AFS_SGI61_ENV */
-	u_int bufferSize;
-#endif /* AFS_SGI61_ENV */
 
-	/* wait for basic init */
-	while (afs_initState < AFSOP_START_BKG) afs_osi_Sleep(&afs_initState);
 	code = 0;
-	AFS_COPYINSTR((char *)parm2, tbuffer, AFS_SMALLOCSIZ, &bufferSize, code);
+	AFS_COPYINSTR((char *) parm2, tbuffer, AFS_SMALLOCSIZ,
+		      &bufferSize, code);
 	if (code) {
 	    osi_FreeSmallSpace(tbuffer);
 	    goto out;
 	}
 	if (!code) {
-	    tbuffer[AFS_SMALLOCSIZ-1] = 0;	/* null-terminate the name */
-	    /* we now have the cache dir copied in.  Call the cache init routines */
-	    if (parm == AFSOP_CACHEFILE) code = afs_InitCacheFile(tbuffer, 0);
-	    else if (parm == AFSOP_CACHEINFO) code = afs_InitCacheInfo(tbuffer);
-	    else if (parm == AFSOP_VOLUMEINFO) code = afs_InitVolumeInfo(tbuffer);
+	    tbuffer[AFS_SMALLOCSIZ-1] = '\0';	/* null-terminate the name */
+	    /* We have the cache dir copied in.  Call the cache init routine */
+	    if (parm == AFSOP_CACHEFILE)
+		code = afs_InitCacheFile(tbuffer, 0);
+	    else if (parm == AFSOP_CACHEINFO)
+		code = afs_InitCacheInfo(tbuffer);
+	    else if (parm == AFSOP_VOLUMEINFO)
+		code = afs_InitVolumeInfo(tbuffer);
+	    else if (parm == AFSOP_CELLINFO)
+		code = afs_InitCellInfo(tbuffer);
 	}
 	osi_FreeSmallSpace(tbuffer);
     }
@@ -657,7 +666,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	AFS_COPYIN((afs_int32 *)parm2, cellname, cellLen, code);
 	AFS_COPYIN((afs_int32 *)parm3, kmsg, kmsgLen, code);
 	if (!code) {
-	    code = afs_AfsdbHandler(cellname, cellLen, kmsg);
+	    code = afs_AFSDBHandler(cellname, cellLen, kmsg);
 	    if (*cellname == 1) *cellname = 0;
 	    if (code == -2) {	/* Shutting down? */
 		*cellname = 1;
@@ -1281,7 +1290,7 @@ void afs_shutdown(void)
     }
 #ifdef AFS_AFSDB_ENV
     afs_warn("AFSDB... ");
-    afs_StopAfsdb();
+    afs_StopAFSDB();
     while (afs_termState == AFSOP_STOP_AFSDB)
 	afs_osi_Sleep(&afs_termState);
 #endif

@@ -132,10 +132,10 @@ int EvalMountPoint(register struct vcache *avc, struct vcache *advc,
     }
     if (!tcell) return ENODEV;
 
-    mtptCell = tcell->cell;               /* The cell for the mountpoint */
+    mtptCell = tcell->cellNum;		    /* The cell for the mountpoint */
     if (tcell->lcellp) {
-       hac = 1;                           /* has associated cell */
-       assocCell = tcell->lcellp->cell;   /* The associated cell */
+       hac = 1;                             /* has associated cell */
+       assocCell = tcell->lcellp->cellNum;  /* The associated cell */
     }
     afs_PutCell(tcell, READ_LOCK);	    
 
@@ -244,6 +244,9 @@ int EvalMountPoint(register struct vcache *avc, struct vcache *advc,
  */
 void afs_InitFakeStat(struct afs_fakestat_state *state)
 {
+    if (!afs_fakestat_enable)
+	return;
+
     state->valid = 1;
     state->did_eval = 0;
     state->need_release = 0;
@@ -264,11 +267,13 @@ int afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
     struct volume *tvolp = NULL;
     int code = 0;
 
+    if (!afs_fakestat_enable)
+	return 0;
+
     osi_Assert(state->valid == 1);
     osi_Assert(state->did_eval == 0);
     state->did_eval = 1;
-    if (!afs_fakestat_enable)
-	return 0;
+
     tvc = *avcp;
     if (tvc->mvstat != 1)
 	return 0;
@@ -378,6 +383,9 @@ int afs_TryEvalFakeStat(struct vcache **avcp, struct afs_fakestat_state *state,
  */
 void afs_PutFakeStat(struct afs_fakestat_state *state)
 {
+    if (!afs_fakestat_enable)
+	return;
+
     osi_Assert(state->valid == 1);
     if (state->need_release)
 	afs_PutVCache(state->root_vp);
@@ -1296,20 +1304,14 @@ afs_lookup(adp, aname, avcp, acred)
     afs_PutDCache(tdc);
 
     if (code == ENOENT && afs_IsDynroot(adp) && dynrootRetry) {
-	struct cell *tcell;
-
 	ReleaseReadLock(&adp->lock);
 	dynrootRetry = 0;
-	if (*tname == '.')
-	    tcell = afs_GetCellByName(tname + 1, READ_LOCK);
+	if (tname[0] == '.')
+	    afs_LookupAFSDB(tname + 1);
 	else
-	    tcell = afs_GetCellByName(tname, READ_LOCK);
-	if (tcell) {
-	    afs_PutCell(tcell, READ_LOCK);
-	    afs_RefreshDynroot();
-	    if (tname != aname && tname) osi_FreeLargeSpace(tname);
-	    goto redo;
-	}
+	    afs_LookupAFSDB(tname);
+	if (tname && tname != aname) osi_FreeLargeSpace(tname);
+	goto redo;
     } else {
 	ReleaseReadLock(&adp->lock);
     }

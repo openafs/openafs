@@ -346,7 +346,7 @@ afs_int32 afs_FlushVCBs (afs_int32 lockit)
 		    callBacks[0].CallBackType = CB_EXCLUSIVE;
 		    for (safety3 = 0; safety3 < MAXHOSTS*2; safety3++) {
 			tc = afs_ConnByHost(tsp, tsp->cell->fsport,
-					    tsp->cell->cell, &treq, 0,
+					    tsp->cell->cellNum, &treq, 0,
 					    SHARED_LOCK);
 			if (tc) {
 			  XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_GIVEUPCALLBACKS);
@@ -451,7 +451,7 @@ static afs_int32 afs_QueueVCB(struct vcache *avc)
  *	entries locked.
  */
 
-int afs_RemoveVCB(register struct VenusFid *afid)
+int afs_RemoveVCB(struct VenusFid *afid)
 {
     register int i;
     register struct server *tsp;
@@ -464,7 +464,7 @@ int afs_RemoveVCB(register struct VenusFid *afid)
     for(i=0;i<NSERVERS;i++) {
 	for(tsp=afs_servers[i]; tsp; tsp=tsp->next) {
 	    /* if cell is known, and is wrong, then skip this server */
-	    if (tsp->cell && tsp->cell->cell != afid->Cell) continue;
+	    if (tsp->cell && tsp->cell->cellNum != afid->Cell) continue;
 
 	    /*
 	     * Otherwise, iterate through file IDs we're sending to the
@@ -2459,7 +2459,7 @@ struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 *retry, afs_int32
     if (flag & DO_STATS) {
       if (tvc) 	afs_stats_cmperf.vcacheHits++;
       else	afs_stats_cmperf.vcacheMisses++;
-      if (afid->Cell == LOCALCELL)
+      if (afs_IsPrimaryCellNum(afid->Cell))
         afs_stats_cmperf.vlocalAccesses++;
       else
         afs_stats_cmperf.vremoteAccesses++;
@@ -2599,7 +2599,7 @@ afs_int32 afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid)
 
     if (tvc) 	afs_stats_cmperf.vcacheHits++;
     else	afs_stats_cmperf.vcacheMisses++;
-    if (afid->Cell == LOCALCELL)
+    if (afs_IsPrimaryCellNum(afid->Cell))
         afs_stats_cmperf.vlocalAccesses++;
     else
         afs_stats_cmperf.vremoteAccesses++;

@@ -2392,7 +2392,7 @@ done:
     /*
      * See if this was a reference to a file in the local cell.
      */
-    if (avc->fid.Cell == LOCALCELL)
+    if (afs_IsPrimaryCellNum(avc->fid.Cell))
 	afs_stats_cmperf.dlocalAccesses++;
     else
 	afs_stats_cmperf.dremoteAccesses++;
@@ -2680,6 +2680,7 @@ struct dcache *afs_UFSGetDSlot(register afs_int32 aslot, register struct dcache 
     register afs_int32 code;
     register struct dcache *tdc;
     int existing = 0;
+    int entryok;
 
     AFS_STATCNT(afs_UFSGetDSlot);
     if (CheckLock(&afs_xdcache) != -1) osi_Panic("getdslot nolock");
@@ -2727,9 +2728,16 @@ struct dcache *afs_UFSGetDSlot(register afs_int32 aslot, register struct dcache 
     /*
       * Seek to the aslot'th entry and read it in.
       */
-    code = afs_osi_Read(afs_cacheInodep, sizeof(struct fcache) * aslot + sizeof(struct afs_fheader),
-		    (char *)(&tdc->f), sizeof(struct fcache));
-    if (code != sizeof(struct fcache)) {
+    code = afs_osi_Read(afs_cacheInodep, sizeof(struct fcache) * aslot +
+					 sizeof(struct afs_fheader),
+			(char *)(&tdc->f), sizeof(struct fcache));
+    entryok = 1;
+    if (code != sizeof(struct fcache))
+	entryok = 0;
+    if (!afs_CellNumValid(tdc->f.fid.Cell))
+	entryok = 0;
+
+    if (!entryok) {
 	tdc->f.fid.Cell = 0;
 	tdc->f.fid.Fid.Volume = 0;
 	tdc->f.chunk = -1;
@@ -2796,8 +2804,10 @@ int afs_WriteDCache(register struct dcache *adc, int atime)
     /*
      * Seek to the right dcache slot and write the in-memory image out to disk.
      */
-    code = afs_osi_Write(afs_cacheInodep, sizeof(struct fcache) * adc->index + sizeof(struct afs_fheader), 
-		     (char *)(&adc->f), sizeof(struct fcache));
+    afs_cellname_write();
+    code = afs_osi_Write(afs_cacheInodep, sizeof(struct fcache) * adc->index +
+					  sizeof(struct afs_fheader), 
+			 (char *)(&adc->f), sizeof(struct fcache));
     if (code != sizeof(struct fcache)) return EIO;
     return 0;
 }
