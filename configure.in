@@ -107,7 +107,6 @@ src/sys/Makefile \
 src/tbutc/Makefile \
 src/tests/Makefile \
 src/tests/Dirpath.pm \
-src/tools/Makefile \
 src/tsm41/Makefile \
 src/tviced/Makefile \
 src/ubik/Makefile \

@@ -215,9 +215,6 @@ tviced: project viced vlserver libafsrpc libafsauthent
 volser: project tviced usd kauth audit
 	${COMPILE_PART1} volser ${COMPILE_PART2}
 
-tools: volser
-	${COMPILE_PART1} tools ${COMPILE_PART2}
-
 venus: project volser ptserver
 	${COMPILE_PART1} venus ${COMPILE_PART2}
 	${COMPILE_PART1} venus/test ${COMPILE_PART2}
@@ -439,13 +436,13 @@ libadmin: libafsauthent bozo
 
 finale: project cmd comerr afsd allrcmds butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
-	venus update xstat afsmonitor dauth tools rxdebug libafsrpc \
+	venus update xstat afsmonitor dauth rxdebug libafsrpc \
 	libafsauthent libadmin
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs: project cmd comerr afsd allrcmds butc tbutc libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
-	venus update xstat afsmonitor dauth tools rxdebug libafsrpc \
+	venus update xstat afsmonitor dauth rxdebug libafsrpc \
 	libafsauthent libadmin
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
@@ -536,7 +533,7 @@ clean2:
 	-${COMPILE_PART1} bucoord ${COMPILE_CLEAN}
 	-${COMPILE_PART1} xstat ${COMPILE_CLEAN}
 	-${COMPILE_PART1} afsmonitor ${COMPILE_CLEAN}
-	-${COMPILE_PART1} tools ${COMPILE_CLEAN}
+	-${COMPILE_PART1} tests ${COMPILE_CLEAN}
 	-${COMPILE_PART1} rxdebug ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafsrpc ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafsauthent ${COMPILE_CLEAN}
@@ -665,7 +662,8 @@ distclean: clean
 	src/sia/Makefile \
 	src/sys/Makefile \
 	src/tbutc/Makefile \
-	src/tools/Makefile \
+	src/tests/Makefile \
+	src/tests/Dirpath.pm \
 	src/tsm41/Makefile \
 	src/tviced/Makefile \
 	src/ubik/Makefile \
