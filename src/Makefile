@@ -256,8 +256,6 @@ vfsck:	minproject vol
 		echo skip vfsck for ${SYS_NAME} ;; \
 	rs_aix42)	\
 		echo skip vfsck for ${SYS_NAME} ;; \
-	sun4x_58 )  \
-		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
 	esac
