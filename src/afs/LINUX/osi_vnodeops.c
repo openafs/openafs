@@ -1142,7 +1142,7 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
     if (!code)
 	d_drop(dp);
 #if defined(AFS_LINUX26_ENV)
-    lock_kernel();
+    unlock_kernel();
 #endif
     AFS_GUNLOCK();
     crfree(credp);
