@@ -263,8 +263,13 @@ int init_module(void)
     ptr = (unsigned long *) (&sys_close - 0x180000);
     datalen=0x180000/sizeof(ptr);
 #else
+#if defined(AFS_AMD64_LINUX20_ENV)
+    ptr=(unsigned long *)&init_mm;
+    datalen=0x180000/sizeof(ptr);
+#else
     ptr=(unsigned long *)&init_mm;
     datalen=16384;
+#endif
 #endif
 #endif
     for (offset=0;offset <datalen;ptr++,offset++) {
