@@ -887,6 +887,15 @@ afs_vop_rename(ap)
     register struct vnode *fdvp = ap->a_fdvp;
     struct proc *p=fcnp->cn_proc;
 
+    /* Check for cross-device rename.
+     * For AFS, this means anything not in AFS-space
+     */
+    if ((0 != strcmp(tdvp->v_mount->mnt_stat.f_fstypename, "afs")) ||
+	(tvp && (0 != strcmp(tvp->v_mount->mnt_stat.f_fstypename, "afs")))) {
+	error = EXDEV;
+	goto abortit;
+    }
+ 
     /*
      * if fvp == tvp, we're just removing one name of a pair of
      * directory entries for the same element.  convert call into rename.
