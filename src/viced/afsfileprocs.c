@@ -6031,7 +6031,7 @@ afs_int32 SRXAFS_FlushCPS(struct rx_call *acall,
     addr = addrs->IPAddrs_val;
     for (i=0; i<naddrs; i++, addr++) {
       if (*addr)
-	h_flushhostcps(*addr, 7001);
+	h_flushhostcps(*addr, htons(7001));
     }
 
 Bad_FlushCPS:
