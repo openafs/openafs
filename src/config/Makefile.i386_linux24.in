@@ -35,7 +35,6 @@ MT_CC=cc
 MV=mv
 RANLIB=ranlib
 RM=rm
-WASHTOOL=${DESTDIR}bin/washtool
 INSTALL=${DESTDIR}bin/install
 #
 # Other OS specific requirements

@@ -8,8 +8,6 @@
 # Common elements for Makefiles for all system types.
 #
 SHELL=/bin/sh
-DESTDIR = DEST/
-SRCDIR = DEST/
 INCLUDE= -I.  -I/usr/include -I${TOP_SRCDIR}/config
 Aobj=COMMON
 Dobj=DYNEL

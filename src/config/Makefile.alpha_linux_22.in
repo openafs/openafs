@@ -38,7 +38,6 @@ MT_CC=cc
 MV=mv
 RANLIB=ranlib
 RM=rm
-WASHTOOL=${SRCDIR}bin/washtool
 #
 # Other OS specific requirements
 #

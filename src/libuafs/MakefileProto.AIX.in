@@ -1,0 +1,96 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# MakefileProto for AIX systems
+#
+
+DESTDIR=@DESTDIR@
+SRCDIR=@SRCDIR@
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+include ../config/Makefile.${SYS_NAME}
+
+MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
+
+# System specific build commands and flags
+DEFINES= -DAFSDEBUG -DKERNEL -DUKERNEL -DAFS -DVICE
+CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBUG}
+AR = /usr/bin/ar
+ARFLAGS = -r
+RANLIB = /bin/ranlib
+CC = xlc_r
+DEF_LIBPATH=/usr/lib/threads:/usr/lib:/lib
+EXPFILE=../nsafslib.exp 
+LD_FLAGS=-bM:SRE -bE:$(EXPFILE) -berok -bnoentry -blibpath:$(DEF_LIBPATH)
+
+TEST_CFLAGS=-DAFS_PTHREAD_ENV -Daix -DAFS_AIX_ENV
+TEST_LDFLAGS=
+TEST_LIBS=-lm -lpthreads
+
+LIBUAFS = libuafs.a
+LIBAFSWEB = nsafs.a
+LIBAFSWEBKRB = nsafs.krb.a
+
+OPTF=-O
+WEBOPTS = -I../nsapi -qarch=com -DNETSCAPE_NSAPI -DAIX -DNET_SSL -DXP_UNIX -DMCC_HTTPD
+
+include Makefile.common
+
+setup_common:
+	-rm -f  h net netinet rpc ufs nfs  machine sys inet nsapi
+	-ln -s /usr/include/sys h
+	-ln -s /usr/include/net net
+	-ln -s /usr/include/netinet netinet
+	-ln -s /usr/include/rpc rpc
+	-ln -s /usr/include/sys sys
+	-ln -s /usr/include/nfs nfs
+	-ln -s /usr/include/inet inet
+	-ln -s /usr/include/ufs ufs
+	-ln -s $(NS_INCL) nsapi
+
+setup_uafs: setup_common
+	set UAFS; $(MKDIR_IF_NEEDED)
+	-rm -f UAFS/Makefile UAFS/Makefile.common
+	ln -s ../Makefile UAFS/Makefile
+	ln -s ../Makefile.common UAFS/Makefile.common
+
+setup_nsafs: setup_common
+	set AFSWEB; $(MKDIR_IF_NEEDED)
+	-rm -f AFSWEB/Makefile AFSWEB/Makefile.common
+	ln -s ../Makefile AFSWEB/Makefile
+	ln -s ../Makefile.common AFSWEB/Makefile.common
+
+UAFS/$(LIBUAFS): setup_uafs
+	cd UAFS; \
+	$(MAKE) $(LIBUAFS)
+
+AFSWEB/$(LIBAFSWEB): setup_nsafs
+	cd AFSWEB; \
+	$(MAKE) $(LIBAFSWEB)
+
+AFSWEB/$(LIBAFSWEBKRB): setup_nsafs
+	cd AFSWEB; \
+	$(MAKE) $(LIBAFSWEBKRB)
+
+# Below this line are targets when in the COMMON directory:
+
+$(LIBUAFS): $(UAFSOBJ)
+	-rm -f $(LIBUAFS)
+	$(AR) $(ARFLAGS) $(LIBUAFS) $(UAFSOBJ) $(AFS)/afsl.exp
+	$(RANLIB) libuafs.a
+
+$(LIBAFSWEB): $(AFSWEBOBJ) ${DES}/libdes.a ${DESTDIR}/lib/afs/libsys.a
+	-rm -f $(LIBAFSWEB)
+	ld -o $(LIBAFSWEB) $(LD_FLAGS) $(AFSWEBOBJ) ${DES}/libdes.a ${DESTDIR}/lib/afs/libsys.a -lm -lc
+
+##
+## Use Kerberos authentication instead of kaservers
+##
+$(LIBAFSWEBKRB): $(AFSWEBOBJKRB) ${DES}/libdes.a ${DESTDIR}/lib/afs/libsys.a 
+	-rm -f $(LIBAFSWEBKRB)
+	ld -o $(LIBAFSWEBKRB) $(LD_FLAGS) $(AFSWEBOBJKRB) ${DES}/libdes.a ${DESTDIR}/lib/afs/libsys.a -lm -lc

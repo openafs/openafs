@@ -1,0 +1,85 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# MakefileProto for Solaris systems
+#
+
+DESTDIR=@DESTDIR@
+SRCDIR=@SRCDIR@
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+include ../config/Makefile.${SYS_NAME}
+
+MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
+
+# System specific build commands and flags
+CC = cc
+DEFINES=-D_SGI_MP_SOURCE -DAFSDEBUG -DKERNEL -DUKERNEL -DAFS -DVICE
+CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBUG}
+OPTF=-O
+WEBOPTS = -I../nsapi -DNETSCAPE_NSAPI -DNET_SSL -DXP_UNIX -DMCC_HTTPD
+
+TEST_CFLAGS=-D_SGI_MP_SOURCE -DAFS_PTHREAD_ENV -Dirix -DAFS_SGI_ENV
+TEST_LDFLAGS=-ignore_minor
+TEST_LIBS=-lpthread -lm
+
+LIBUAFS = libuafs.a
+LIBAFSWEB = nsafs.so
+LIBAFSWEBKRB = nsafs.krb.so
+
+include Makefile.common
+
+setup_common:
+	-rm -f  h net netinet rpc ufs nfs  machine sys inet nsapi
+	-ln -s /usr/include/sys h
+	-ln -s /usr/include/net net
+	-ln -s /usr/include/netinet netinet
+	-ln -s /usr/include/rpc rpc
+	-ln -s /usr/include/sys sys
+	-ln -s /usr/include/nfs nfs
+	-ln -s /usr/include/inet inet
+	-ln -s /usr/include/ufs ufs
+	-ln -s $(NS_INCL) nsapi
+
+setup_uafs: setup_common
+	set UAFS; $(MKDIR_IF_NEEDED)
+	-rm -f UAFS/Makefile UAFS/Makefile.common
+	ln -s ../Makefile UAFS/Makefile
+	ln -s ../Makefile.common UAFS/Makefile.common
+
+setup_nsafs: setup_common
+	set AFSWEB; $(MKDIR_IF_NEEDED)
+	-rm -f AFSWEB/Makefile AFSWEB/Makefile.common
+	ln -s ../Makefile AFSWEB/Makefile
+	ln -s ../Makefile.common AFSWEB/Makefile.common
+
+UAFS/$(LIBUAFS): setup_uafs
+	cd UAFS; \
+	$(MAKE) $(LIBUAFS)
+
+AFSWEB/$(LIBAFSWEB): setup_nsafs
+	cd AFSWEB; \
+	$(MAKE) $(LIBAFSWEB)
+
+AFSWEB/$(LIBAFSWEB): setup_nsafs
+	cd AFSWEB; \
+	$(MAKE) $(LIBAFSWEBKRB)
+
+# Below this line are targets when in the COMMON directory:
+
+$(LIBUAFS): $(UAFSOBJ)
+	-rm -f $(LIBUAFS)
+	$(AR) $(ARFLAGS) $(LIBUAFS) $(UAFSOBJ)
+
+$(LIBAFSWEB): $(AFSWEBOBJ) ${DES}/libdes.a
+	-rm -f $(LIBAFSWEB)
+	ld -shared $(LIBAFSWEB) $(AFSWEBOBJ) ${DES}/libdes.a $(WEBLIBS)
+
+$(LIBAFSWEBKRB): $(AFSWEBOBJKRB) ${DES}/libdes.a
+	-rm -f $(LIBAFSWEBKRB)
+	ld -shared $(LIBAFSWEBKRB) $(AFSWEBOBJKRB) ${DES}/libdes.a $(WEBLIBS)

@@ -21,7 +21,6 @@ OPTMZ=-O2
 DBG=-g3
 CSTATIC=-non_shared
 RANLIB=/bin/true
-WASHTOOL=${DESTDIR}bin/washtool
 INSTALL=${DESTDIR}bin/install
 CP=cp
 

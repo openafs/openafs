@@ -1,9 +1,12 @@
 #/* Copyright (C) 1995, 1989 Transarc Corporation - All rights reserved */
 #
-# MakefileProto for Digital Unix systems
+# MakefileProto for FreeBSD systems
 #
+DESTDIR=@DESTDIR@
+SRCDIR=@SRCDIR@
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
 
-DESTDIR=DEST/
 # include ../config/Makefile.${SYS_NAME}
 
 # OS specific object files:

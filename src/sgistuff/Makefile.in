@@ -1,0 +1,64 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DESTDIR=@DESTDIR@
+SRCDIR=@SRCDIR@
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL=/bin/sh
+#
+# This must be built after inetd has built ta-rauth.o and after rsh
+# XXX want these to end up in /usr/afsws ...
+# Note that if afskauthlib.so gets installed on a client
+# machine then that will be used ..
+#
+include ../config/Makefile.${SYS_NAME}
+OPTIMIZE=-g
+CFLAGS = ${OPTIMIZE} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
+LDFLAGS = ${OPTIMIZE} ${XLDFLAGS}
+LIBDIR = ${DESTDIR}lib/
+AFSLIBS = ${LIBDIR}afs/libkauth.a ${LIBDIR}afs/libprot.a ${LIBDIR}libubik.a \
+	  ${LIBDIR}afs/libauth.a ${DESTDIR}lib/librxkad.a ${LIBDIR}afs/libsys.a \
+	  ${DESTDIR}lib/libdes.a ${LIBDIR}librx.a ${LIBDIR}liblwp.a \
+          ${LIBDIR}afs/libcmd.a ${LIBDIR}afs/libcom_err.a ${LIBDIR}afs/util.a
+KAFSLIBS = ${LIBDIR}afs/libkauth.krb.a ${LIBDIR}afs/libprot.a ${LIBDIR}libubik.a \
+	  ${LIBDIR}afs/libauth.krb.a ${DESTDIR}lib/librxkad.a ${LIBDIR}afs/libsys.a \
+	  ${DESTDIR}lib/libdes.a ${LIBDIR}librx.a ${LIBDIR}liblwp.a \
+          ${LIBDIR}afs/libcmd.a ${LIBDIR}afs/libcom_err.a ${LIBDIR}afs/util.a
+AUTHFILES=../inetd/ta-rauth.o ../rsh/rcmd.o ../rsh/herror.o
+AUTHLIBS=afsauthlib.so afskauthlib.so
+TARGETS=$(AUTHLIBS) 
+
+default:$(TARGETS)
+	${INSTALL} afsauthlib.so ${DESTDIR}root.client/usr/vice/etc
+	${INSTALL} afskauthlib.so ${DESTDIR}root.client/usr/vice/etc
+
+all:$(TARGETS)
+
+install install.noversion: all default
+
+clean:
+	rm -f $(AUTHLIBS) $(AUTHFILES) 
+
+afsauthlib.so: sgi_auth.o ${AFSLIBS} ${AUTHFILES}
+	$(LD) ${LDFLAGS} -shared -all -o afsauthlib.so sgi_auth.o $(AFSLIBS) ${AUTHFILES}
+
+afskauthlib.so: sgi_auth.o ${KAFSLIBS} ${AUTHFILES}
+	$(LD) ${LDFLAGS} -shared -all -o afskauthlib.so sgi_auth.o $(KAFSLIBS) ${AUTHFILES}
+
+../inetd/ta-rauth.o: ../inetd/ta-rauth.c
+	(cd ../inetd ; $(MAKE) ta-rauth.o )
+
+../rsh/rcmd.o: ../rsh/rcmd.c
+	(cd ../rsh ; $(MAKE) rcmd.o )
+
+../rsh/herror.o: ../rsh/herror.c
+	(cd ../rsh ; $(MAKE) herror.o )
+
+sgi_auth.o: sgi_auth.c
+	${CC} ${CFLAGS} -c sgi_auth.c

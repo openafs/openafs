@@ -7,8 +7,11 @@
 
 # MakefileProto for HP systems
 #
+DESTDIR=@DESTDIR@
+SRCDIR=@SRCDIR@
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
 
-DESTDIR=DEST/
 include ../config/Makefile.${SYS_NAME}
 
 # OS specific object files:
@@ -110,7 +113,7 @@ ${COMPDIRS}:
 		64)	bopts="$(KDEFS_64)"; bsuff="64";; \
 		esac; \
 		cd $$dir; \
-		$(MAKE) BITSUFFIX=$$bsuff CPU_KDEFS="$$bopts" DESTDIR=${DESTDIR} libafs || exit $$?; \
+		$(MAKE) BITSUFFIX=$$bsuff CPU_KDEFS="$$bopts" libafs || exit $$?; \
 		cd ..; \
 	    done; \
 	done; \

@@ -4,9 +4,6 @@
 #
 # AFS_OSTYPE used to indicate suffixes and os specific subdirectories.
 AFS_OSTYPE = FBSD
-# Pointers to destination and source directories
-DESTDIR=DEST/
-SRCDIR=DEST/
 # Base directory for linux kernel source. Actually a prefix which is complete
 # when LINUX_VERS is appended to it.
 # LINUX_SRCDIR = /usr/src/linux-
@@ -43,7 +40,6 @@ MT_CC=cc
 MV=mv
 RANLIB=ranlib
 RM=rm
-WASHTOOL=${SRCDIR}bin/washtool
 #
 # Other OS specific requirements
 #

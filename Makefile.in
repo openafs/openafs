@@ -6,8 +6,9 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 SHELL=/bin/sh
-DESTDIR=dest/
-SRCDIR=${DESTDIR}
+DESTDIR=@DESTDIR@
+SRCDIR=@SRCDIR@
+TOP_SRCDIR=@TOP_SRCDIR@
 INSTALL=${SRCDIR}bin/install
 
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
@@ -30,27 +31,29 @@ WITH_INSECURE=@WITH_INSECURE@
 
 ENABLE_KERNEL_MODULE=@ENABLE_KERNEL_MODULE@
 
-# To compile AFS from scratch in the src tree run "make SYS_NAME=<type>".
+# To compile AFS from scratch in the src tree run "make".
 #   This recursively calls "make install ..." and does not depend on the
 #   existence of any non-standard programs.
-# To compile a package and all its predecessors using washtool run
-#   "make <package>".  This requires that @sys works, and that washtool,
-#   rcsupdate and our version of ci and co exist.
-# To compile for the kernel type "make blibafs".  This assumes washtool,
-#   install, rxgen, compile_et and others already exist and runs it with
+# To compile for the kernel type "make blibafs".  This assumes install, 
+#   rxgen, compile_et and others already exist and runs it with
 #   "-argument kinstall".
+
+COMPILE_PART1=cd src; cd
+COMPILE_PART2=; $(MAKE) install
+COMPILE_PART3=; $(MAKE) test
+COMPILE_CLEAN=; $(MAKE) clean
 
 all: force
 	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
-	$(MAKE) install "COMPILE_PART1=cd src; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME}
+	$(MAKE) install
 
 all_nolibafs:
 	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
-	$(MAKE) install TARGET=finale_nolibafs "COMPILE_PART1=cd src; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME}
+	$(MAKE) install TARGET=finale_nolibafs
 
 only_libafs:
 	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
-	$(MAKE) install TARGET=libafs "COMPILE_PART1=cd src; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME}
+	$(MAKE) install TARGET=libafs
 
 project: cmd comerr 
 
@@ -375,12 +378,7 @@ libadmin_real:
 libadmin: libafsauthent bozo
 	case ${SYS_NAME} in \
 	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
-			$(MAKE) libadmin_real SYS_NAME=$(SYS_NAME) \
-			COMPILE_PART1="$(COMPILE_PART1)" \
-			COMPILE_PART2="$(COMPILE_PART2)" \
-			TOP_SRCDIR=@TOP_SRCDIR@ \
-			SRCDIR=$(SRCDIR) DESTDIR=$(DESTDIR) \
-			DBG_DEFS=$(DBG_DEFS) ;; \
+			$(MAKE) libadmin_real ;; \
 	*) \
 		echo Not building MT libadmin for ${SYS_NAME} ;; \
 	esac
@@ -409,27 +407,21 @@ force:
 
 TARGET=finale
 install: force
-	$(MAKE) $(TARGET) "SYS_NAME=${SYS_NAME}" \
-		"COMPILE_PART1=${COMPILE_PART1}" \
-		"COMPILE_PART2=${COMPILE_PART2}" \
-		 DESTDIR=`pwd`/${SYS_NAME}/dest/ \
-		 TOP_SRCDIR=@TOP_SRCDIR@ \
-		 SRCDIR=`pwd`/${SYS_NAME}/dest/ \
-		 "DBG_DEFS=${DBG_DEFS}"
+	$(MAKE) $(TARGET)
 
 kupdate: updatekdir libafs_setup libuafs_setup
 
 blibafs:
-	$(MAKE) libafs "WASHTOOL=${WASHTOOL}" "WASHTOOLFLAGS=-argument kinstall" SYS_NAME=${SYS_NAME} "CPUARCH=${CPUARCH}" "MPSP=${MPSP}" "DBG_DEFS=${DBG_DEFS}"
+	$(MAKE) libafs
 
 blibuafs:
-	$(MAKE) libuafs "WASHTOOL=${WASHTOOL}" "WASHTOOLFLAGS=-argument ukinstall" SYS_NAME=${SYS_NAME} "CPUARCH=${CPUARCH}" "MPSP=${MPSP}" "DBG_DEFS=${DBG_DEFS}"
+	$(MAKE) libuafs
 
 bwebafs: sys
-	$(MAKE) libuafs "WASHTOOL=${WASHTOOL}" "WASHTOOLFLAGS=-argument webinstall" SYS_NAME=${SYS_NAME} "CPUARCH=${CPUARCH}" "MPSP=${MPSP}" "DBG_DEFS=${DBG_DEFS}"
+	$(MAKE) libuafs
 
 clean:
-	$(MAKE) clean2 "COMPILE_PART1=cd src; cd" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME} 
+	$(MAKE) clean2
 
 clean2:
 	-${COMPILE_PART1} config ${COMPILE_CLEAN}
@@ -523,24 +515,6 @@ distclean: clean
 
 pristine: distclean
 	/bin/rm -f src/config/afsconfig.h.in configure aclocal.m4
-
-links:
-	echo "Remove the obj directory"
-	- /bin/rm -rf @sys/obj/* ;
-	- /bin/rm -rf @sys/dest/* ;
-	- /bin/mkdir @sys/obj ;
-	echo "Create the obj directories"
-	here=`pwd` ; \
-	cd src; \
-	for file in `find [!NW]* -type d -print` ; do \
-		/bin/mkdir $${here}/obj/$${file} ; \
-	done;
-	echo "Create the obj file links"
-	here=`pwd` ; \
-	cd src; \
-	for file in `find [!NW]* -type f -print` ; do \
-		/bin/ln -s `pwd`/$${file} $${here}/obj/$${file} ; \
-	done;
 
 #
 # Below targets are all deprecated, insecure, or obsolte, 

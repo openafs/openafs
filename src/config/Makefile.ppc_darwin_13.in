@@ -3,9 +3,6 @@
 # AFS_OSTYPE used to indicate suffixes and os specific subdirectories.
 AFS_OSTYPE = DARWIN
 #
-# Pointers to destination and source directories
-DESTDIR=DEST/
-DESTDIR=DEST/
 #
 # compilation and link editor flags
 XCFLAGS=-traditional-cpp

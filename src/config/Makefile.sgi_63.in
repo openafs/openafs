@@ -38,5 +38,4 @@ LEX=lex
 MV=mv
 RANLIB=/bin/true
 RM=rm
-WASHTOOL=${DESTDIR}bin/washtool
 INSTALL=${DESTDIR}bin/install

@@ -1,0 +1,59 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DESTDIR=@DESTDIR@
+SRCDIR=@SRCDIR@
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL = /bin/sh
+include ../../config/Makefile.${SYS_NAME}
+
+CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${MT_CFLAGS}
+CCRULE = ${CC} ${CFLAGS} -c $?
+
+UBIKOBJS=\
+	ubik_int.cs.o \
+	ubik_int.xdr.o
+
+CFGOBJS=\
+	cfgclient.o \
+	cfgdb.o \
+	cfghost.o \
+	cfgservers.o \
+	cfginternal.o
+
+LIBOBJS =\
+	${UBIKOBJS} \
+	${CFGOBJS}
+
+
+LIBCFGADMIN = ${DESTDIR}/lib/afs/libcfgadmin.a
+
+system install: ${LIBCFGADMIN}
+
+${LIBCFGADMIN}: libcfgadmin.a
+	${INSTALL} afs_cfgAdmin.h ${DESTDIR}include/afs
+	${INSTALL} libcfgadmin.a ${LIBCFGADMIN}
+
+libcfgadmin.a: ${LIBOBJS}
+	-rm -f $@
+	ar rv $@ ${LIBOBJS}
+	${RANLIB} $@
+
+UBIKDIR=../../ubik
+
+ubik_int.cs.o: ${UBIKDIR}/ubik_int.cs.c
+	${CCRULE}
+
+ubik_int.xdr.o: ${UBIKDIR}/ubik_int.xdr.c
+	${CCRULE}
+
+${CFGOBJS}: afs_cfgAdmin.h
+
+clean:
+	rm -f *.o libcfgadmin*

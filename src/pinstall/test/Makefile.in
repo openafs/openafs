@@ -1,0 +1,29 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# There's really not much in here to build...
+#
+DESTDIR=@DESTDIR@
+SRCDIR=@SRCDIR@
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+
+
+BACKDIR=../../../../PARENT/dest/
+OPTIMIZE=-O
+
+INCDIRS= -I${DESTDIR}include -I.. -I${BACKDIR}include
+
+CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS}
+
+all test system:	
+	@echo "nothing to do, done"
+
+kinstall:
+	@echo No kernel source here.
+

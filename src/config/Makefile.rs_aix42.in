@@ -34,7 +34,6 @@ LEX=lex
 MV=mv
 RANLIB=ranlib
 RM=rm
-WASHTOOL=${DESTDIR}bin/washtool
 INSTALL=${DESTDIR}bin/install
 #
 # This is the XBSA make flag and pathname to XBSA header files (xbsa.h)

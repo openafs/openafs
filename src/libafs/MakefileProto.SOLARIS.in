@@ -7,6 +7,11 @@
 
 # MakefileProto for Solaris systems
 #
+DESTDIR=@DESTDIR@
+SRCDIR=@SRCDIR@
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
 include ../config/Makefile.${SYS_NAME}
 
 # OS specific object files:
@@ -95,7 +100,7 @@ ${COMPDIRS}:
 		export ARCH_DEFS ; \
 		export BITS ; \
 		cd $$t  ; \
-		$(MAKE) DESTDIR=${DESTDIR}  libafs ; \
+		$(MAKE) libafs ; \
 		cd ../ ;\
 	done
 

@@ -1,0 +1,41 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DESTDIR=@DESTDIR@
+SRCDIR=@SRCDIR@
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+include ../../../config/Makefile.${SYS_NAME}
+
+CC = ${MT_CC}
+CFLAGS = ${OPTMZ} ${DBG} -DAFS_PTHREAD_ENV -I${SRCDIR}include ${MT_CFLAGS}
+
+
+########################################################################
+# build tests
+
+CFGTESTLIBS =\
+	$(DESTDIR)/lib/afs/libafsadminutil.a \
+	$(DESTDIR)/lib/afs/libclientadmin.a \
+	$(DESTDIR)/lib/afs/libcfgadmin.a \
+	$(DESTDIR)/lib/afs/libbosadmin.a \
+	$(DESTDIR)/lib/afs/libvosadmin.a \
+	$(DESTDIR)/lib/afs/libkasadmin.a \
+	$(DESTDIR)/lib/afs/libptsadmin.a \
+	$(DESTDIR)/lib/libafsauthent.a \
+	$(DESTDIR)/lib/libafsrpc.a \
+	$(DESTDIR)/lib/afs/libcmd.a  # static library
+
+cfgtest: cfgtest.o $(CFGTESTLIBS)
+	$(CC) $(CFLAGS) -o cfgtest cfgtest.o -LDEST/lib/afs $(CFGTESTLIBS) $(XLIBS)
+
+#######################################################################
+test tests: cfgtest
+
+clean:
+	$(RM) -f *.o cfgtest core

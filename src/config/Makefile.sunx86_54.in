@@ -20,5 +20,4 @@ AR = /usr/ccs/bin/ar
 LD = /usr/ccs/bin/ld
 LORDER = /usr/ccs/bin/lorder
 STRIP= /usr/ccs/bin/strip
-WASHTOOL=${DESTDIR}bin/washtool
 INSTALL=${DESTDIR}bin/install

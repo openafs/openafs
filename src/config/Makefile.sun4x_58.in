@@ -40,7 +40,6 @@ MV=mv
 RANLIB=/bin/true
 RM=rm
 STRIP= /usr/ccs/bin/strip
-WASHTOOL=${DESTDIR}bin/washtool
 INSTALL=${DESTDIR}bin/install
 #
 # this is for the vol package

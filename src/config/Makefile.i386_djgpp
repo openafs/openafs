@@ -9,8 +9,6 @@
 #
 # AFS_OSTYPE used to indicate suffixes and os specific subdirectories.
 AFS_OSTYPE = DJGPP
-DESTDIR=DEST/
-SRCDIR=DEST/
 
 # compilation and link editor flags
 #DBG=-g
@@ -40,7 +38,6 @@ RANLIB=dos-ranlib
 MT_CC=dos-gcc -bmmap
 MV=mv
 RM=rm
-WASHTOOL=${SRCDIR}bin/washtool
 #
 # Other OS specific requirements
 #

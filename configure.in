@@ -354,6 +354,8 @@ fi
 
 SRCDIR_PARENT=`pwd`
 TOP_SRCDIR="${SRCDIR_PARENT}/src"
+DESTDIR="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest/"
+SRCDIR="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest/"
 
 dnl checks for header files.
 AC_HEADER_STDC
@@ -379,6 +381,8 @@ AC_SUBST(LINUX_KERNEL_PATH)
 AC_SUBST(LINUX_VERSION)
 AC_SUBST(MKAFS_OSTYPE)
 AC_SUBST(TOP_SRCDIR)
+AC_SUBST(DESTDIR)
+AC_SUBST(SRCDIR)
 AC_SUBST(WITH_OBSOLETE)
 AC_SUBST(WITH_INSECURE)
 
@@ -387,6 +391,109 @@ Makefile               \
 src/config/Makefile.version-NOCML \
 src/config/Makefile.${AFS_SYSNAME} \
 src/libafs/MakefileProto.${MKAFS_OSTYPE} \
+src/libuafs/MakefileProto.${MKAFS_OSTYPE} \
 src/pam/Makefile \
 src/afsd/afs.ppc_darwin.plist \
+src/afs/Makefile \
+src/afsd/Makefile \
+src/afsmonitor/Makefile \
+src/afsweb/Makefile \
+src/audit/Makefile \
+src/auth/test/Makefile \
+src/auth/Makefile \
+src/bozo/test/Makefile \
+src/bozo/Makefile \
+src/bu_utils/Makefile \
+src/bubasics/Makefile \
+src/bucoord/Makefile \
+src/budb/Makefile \
+src/butc/Makefile \
+src/butm/Makefile \
+src/cmd/test/Makefile \
+src/cmd/Makefile \
+src/comerr/test/Makefile \
+src/comerr/Makefile \
+src/config/Makefile \
+src/dauth/Makefile \
+src/des/test/Makefile \
+src/des/Makefile \
+src/des_stub/Makefile \
+src/dir/test/Makefile \
+src/dir/Makefile \
+src/export/Makefile \
+src/finale/Makefile \
+src/fsint/Makefile \
+src/fsprobe/Makefile \
+src/ftpd43+/Makefile \
+src/gtx/Makefile \
+src/inetd/Makefile \
+src/kauth/test/Makefile \
+src/kauth/Makefile \
+src/libacl/test/Makefile \
+src/libacl/Makefile \
+src/libadmin/adminutil/Makefile \
+src/libadmin/Makefile \
+src/libadmin/bos/Makefile \
+src/libadmin/cfg/test/Makefile \
+src/libadmin/cfg/Makefile \
+src/libadmin/client/Makefile \
+src/libadmin/kas/Makefile \
+src/libadmin/pts/Makefile \
+src/libadmin/samples/Makefile \
+src/libadmin/test/Makefile \
+src/libadmin/vos/Makefile \
+src/libafsauthent/Makefile \
+src/libafsrpc/Makefile \
+src/log/test/Makefile \
+src/log/Makefile \
+src/login/Makefile \
+src/lwp/test/Makefile \
+src/lwp/Makefile \
+src/mpp/Makefile \
+src/ntp/Makefile \
+src/null/Makefile \
+src/package/Makefile \
+src/pam/Makefile \
+src/pinstall/test/Makefile \
+src/pinstall/Makefile \
+src/procmgmt/Makefile \
+src/procmgmt/test/Makefile \
+src/ptserver/Makefile \
+src/rcp/Makefile \
+src/rlogind/Makefile \
+src/rsh/Makefile \
+src/rx/Makefile \
+src/rx/bulk.example/Makefile \
+src/rx/bulktest/Makefile \
+src/rx/multi.example/Makefile \
+src/rx/simple.example/Makefile \
+src/rx/test/Makefile \
+src/rxgen/Makefile \
+src/rxkad/Makefile \
+src/rxkad/test/Makefile \
+src/rxstat/Makefile \
+src/scout/Makefile \
+src/sgistuff/Makefile \
+src/sia/Makefile \
+src/sys/Makefile \
+src/tbutc/Makefile \
+src/tsm41/Makefile \
+src/tviced/Makefile \
+src/ubik/Makefile \
+src/update/Makefile \
+src/usd/test/Makefile \
+src/usd/Makefile \
+src/uss/Makefile \
+src/util/Makefile \
+src/util/test/Makefile \
+src/venus/test/Makefile \
+src/venus/Makefile \
+src/vfsck/Makefile \
+src/viced/Makefile \
+src/vlserver/Makefile \
+src/vol/Makefile \
+src/vol/test/Makefile \
+src/volser/Makefile \
+src/wsadmin.src/Makefile \
+src/xstat/Makefile \
 )
