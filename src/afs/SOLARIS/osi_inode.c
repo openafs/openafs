@@ -106,7 +106,6 @@ igetinode(vfsp, dev, inode, ipp, credp,perror)
     
     if (ip->i_mode == 0) {
 	/* Not an allocated inode */
-	AFS_ITIMES(ip);
 	rw_exit(&ip->i_contents);
 	VN_RELE(ITOV(ip));
 	return (ENOENT);
