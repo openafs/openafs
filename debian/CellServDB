@@ -1,44 +1,101 @@
 >andrew.cmu.edu         #Carnegie Mellon University - Computing Services
+128.2.10.2                      #vice2.fs.andrew.cmu.edu
+128.2.10.7                      #vice7.fs.andrew.cmu.edu
 128.2.10.11                     #vice11.fs.andrew.cmu.edu
 128.2.10.12                     #vice12.fs.andrew.cmu.edu
-128.2.10.2                      #vice2.fs.andrew.cmu.edu
 128.2.10.28                     #vice28.fs.andrew.cmu.edu
-128.2.10.7                      #vice7.fs.andrew.cmu.edu
+>athena.mit.edu         #MIT/Athena cell
+18.7.1.66                       #paris.mit.edu.
+18.70.0.6                       #prill.mit.edu.
+18.145.0.25                     #agamemnon.mit.edu.
+>biocenter.helsinki.fi  #University of Helsinki, Institute of Biotechnology
+128.214.58.174                  #afsdb1.biocenter.helsinki.fi
+128.214.88.114                  #afsdb2.biocenter.helsinki.fi
+>citi.umich.edu         #University of Michigan - CITI
+141.211.92.144                  #babble.citi.umich.edu
 >cs.cmu.edu             #Carnegie Mellon University - School of Comp. Sci.
 128.2.206.130                   #cucumber.srv.cs.cmu.edu
 128.2.222.199                   #papaya.srv.cs.cmu.edu
 128.2.242.86                    #lemon.srv.cs.cmu.edu
+>cs.uwm.edu             #University of Wisconsin--Milwaukee
+129.89.38.124                   #solomons.cs.uwm.edu
+>cs.wisc.edu            #Univ. of Wisconsin-Madison, Computer Sciences Dept.
+128.105.132.14                  #timon.cs.wisc.edu
+128.105.132.15                  #pumbaa.cs.wisc.edu
+128.105.132.16                  #zazu.cs.wisc.edu
+>dementia.org           #Dementia Unlimited
+128.2.35.149                    #alycia.dementia.org
+128.2.120.216                   #meredith.dementia.org
+>dev.mit.edu            #MIT/IS Development cell
+18.7.1.70                       #wham.mit.edu.
+18.86.0.50                      #hum.mit.edu.
+18.86.0.51                      #rattle.mit.edu.
 >ece.cmu.edu            #Carnegie Mellon University - Elec. Comp. Eng. Dept.
 128.2.129.7                     #porok.ece.cmu.edu
 128.2.129.8                     #vicio.ece.cmu.edu
 128.2.129.9                     #e-xing.ece.cmu.edu
->athena.mit.edu         #MIT/Athena cell
-18.145.0.25                     #agamemnon.mit.edu.
-18.70.0.6                       #prill.mit.edu.
-18.7.1.66                       #paris.mit.edu.
->dev.mit.edu            #MIT/IS Development cell
-18.86.0.28                      #wham.mit.edu.
-18.86.0.50                      #hum.mit.edu.
-18.86.0.51                      #rattle.mit.edu.
->net.mit.edu            #MIT/Network Group cell
-18.72.1.38                      #gracie.mit.edu.
-18.72.0.26                      #cetus.mit.edu.
->sipb.mit.edu           #MIT/SIPB cell
-18.181.0.19                     #reynelda.mit.edu.
-18.181.0.23                     #ronald-ann.mit.edu.
-18.181.0.22                     #rosebud.mit.edu.
+128.2.136.109                   #last.ece.cmu.edu
+>es.net                 #Energy Sciences Net
+198.128.3.21                    #fs1.es.net
+198.128.3.22                    #fs2.es.net
+198.128.3.23                    #fs3.es.net
+>extundo.com            #Simon Josefsson's cell
+195.42.214.241                  #slipsten.extundo.com
+>ipp-garching.mpg.de    #Institut fuer Plasmaphysik
+130.183.9.5                     #afs-db1.rzg.mpg.de
+130.183.100.10                  #afs-db2.aug.ipp-garching.mpg.de
+130.183.100.23                  #afs-db3.aug.ipp-garching.mpg.de
 >ir.stanford.edu        #Stanford University
 171.64.7.222                    #afsdb1.stanford.edu
 171.64.7.234                    #afsdb2.stanford.edu
 171.64.7.246                    #afsdb3.stanford.edu
+>isk.kth.se             #Royal Institute of Technology, ISK
+130.237.202.12                  #afsdb2.isk.kth.se
+130.237.206.13                  #afsdb1.isk.kth.se
+130.237.209.141                 #afsdb3.isk.kth.se
+>mekinok.com            #Mekinok, Inc.
+4.17.166.66                     #loggerhead.mekinok.com
+>meteo.uni-koeln.de     #Univ. of Cologne - Inst. for Geophysics & Meteorology
+134.95.144.200                  #bora.meteo.uni-koeln.de
+134.95.144.208                  #monsun.meteo.uni-koeln.de
+134.95.144.213                  #brise.meteo.uni-koeln.de
+>msu.edu                #Michigan State University Main Cell
+35.9.7.10                       #afsdb0.cl.msu.edu
+>nd.edu                 #University of Notre Dame
+129.74.223.17                   #john.helios.nd.edu
+129.74.223.33                   #lizardo.helios.nd.edu
+129.74.223.65                   #buckaroo.helios.nd.edu
+>net.mit.edu            #MIT/Network Group cell
+18.72.0.26                      #cetus.mit.edu.
+18.72.1.38                      #gracie.mit.edu.
+>openafs.org            #OpenAFS
+128.2.121.218                   #virtue.openafs.org
+>pitt.edu               #University of Pittsburgh
+136.142.8.15                    #afs09.srv.cis.pitt.edu
+136.142.8.20                    #afs10.srv.cis.pitt.edu
+136.142.8.21                    #afs11.srv.cis.pitt.edu
+>rhic                   #Relativistic Heavy Ion Collider
+130.199.6.51                    #rafs03.rcf.bnl.gov
+130.199.6.52                    #rafs02.rcf.bnl.gov
+130.199.6.69                    #rafs01.rcf.bnl.gov
+>sipb.mit.edu           #MIT/SIPB cell
+18.181.0.19                     #reynelda.mit.edu.
+18.181.0.22                     #rosebud.mit.edu.
+18.181.0.23                     #ronald-ann.mit.edu.
+>sunsite.dk             #SunSITE.dk
+130.225.51.30                   #sunsite.dk
+>tu-chemnitz.de         #Technische Universitaet Chemnitz, Germany
+134.109.2.1                     #zuse.hrz.tu-chemnitz.de
+134.109.2.15                    #phoenix.hrz.tu-chemnitz.de
+134.109.200.7                   #aetius.hrz.tu-chemnitz.de
 >umr.edu                #University of Missouri - Rolla
 131.151.1.59                    #afs1.umr.edu
 131.151.1.70                    #afs6.umr.edu
 131.151.1.146                   #afs5.umr.edu
->dementia.org           #Dementia Unlimited
-128.2.120.216                   #meredith.dementia.org
-128.2.35.149                    #alycia.dementia.org
->mekinok.com            #Mekinok, Inc.
-4.17.166.66                     #loggerhead.mekinok.com
->extundo.com            #Simon Josefsson's cell
-195.42.214.241                  #slipsten.extundo.com
+>wu-wien.ac.at          #University of Economics, Vienna, Austria
+137.208.3.33                    #afsdb1.wu-wien.ac.at
+137.208.7.4                     #afsdb2.wu-wien.ac.at
+137.208.7.7                     #afsdb3.wu-wien.ac.at
+>zepa.net               #Kolya/zepa.net cell
+205.245.53.21                   #perseus.zepa.net.
+205.245.53.48                   #neptune.zepa.net.
