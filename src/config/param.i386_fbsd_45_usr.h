@@ -7,6 +7,9 @@
 #define AFS_VFSINCL_ENV         1
 #define AFS_USR_FBSD40_ENV	1
 #define AFS_USR_FBSD42_ENV	1
+#define AFS_USR_FBSD43_ENV	1
+#define AFS_USR_FBSD44_ENV	1
+#define AFS_USR_FBSD45_ENV	1
 #define AFS_USR_FBSD_ENV	1
 #define AFS_NONFSTRANS 1
 
@@ -23,8 +26,8 @@
 #define AFS_GCPAGS	      0       /* if nonzero, garbage collect PAGs */
 
 /* Machine / Operating system information */
-#define SYS_NAME	"i386_fbsd_42"
-#define SYS_NAME_ID	SYS_NAME_ID_i386_fbsd_42
+#define SYS_NAME	"i386_fbsd_45"
+#define SYS_NAME_ID	SYS_NAME_ID_i386_fbsd_45
 #define AFSLITTLE_ENDIAN    1
 #define AFS_HAVE_FFS        1       /* Use system's ffs. */
 #define AFS_HAVE_STATVFS    0	/* System doesn't support statvfs */

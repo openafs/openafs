@@ -70,7 +70,7 @@ extern struct vcache *afs_globalVp;
 #ifdef AFS_OSF_ENV
 extern struct mount *afs_globalVFS;
 extern struct vnodeops Afs_vnodeops;
-#elif defined(AFS_DARWIN_ENV)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 extern struct mount *afs_globalVFS;
 #else
 extern struct vfs *afs_globalVFS;
@@ -882,6 +882,19 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
     tvc->v.v_freelist.tqe_prev=(struct vnode **)0xdeadb;
     /*tvc->vrefCount++;*/
 #endif 
+#ifdef AFS_FBSD_ENV
+    lockinit(&tvc->rwlock, PINOD, "vcache rwlock", 0, 0);
+    cache_purge((struct vnode *)tvc); 
+    tvc->v.v_data=tvc;
+    tvc->v.v_tag=VT_AFS;
+#ifndef VSTANDARD
+    tvc->v.v_usecount++; /* steal an extra ref for now so vfree never happens */
+                         /* this will prevent the vfs layer from reusing
+                          * afs vnodes, but afs will eventually run out of
+                          * vcache's and panic...
+                          */
+#endif
+#endif
     /*
      * The proper value for mvstat (for root fids) is setup by the caller.
      */

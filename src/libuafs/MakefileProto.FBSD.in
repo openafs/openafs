@@ -55,7 +55,7 @@ UAFS/$(LIBUAFS): setup_uafs
 	$(MAKE) $(LIBUAFS) DESTDIR=${DESTDIR}
 
 AFSWEB/$(LIBAFSWEB): setup_nsafs
-cd AFSWEB; \
+	cd AFSWEB; \
 	$(MAKE) $(LIBAFSWEB) DESTDIR=${DESTDIR}
 
 AFSWEB/$(LIBAFSWEBKRB): setup_nsafs

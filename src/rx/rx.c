@@ -2409,7 +2409,7 @@ struct rx_packet *rxi_ReceivePacket(np, socket, host, port, tnop, newcallp)
 	addr.sin_family = AF_INET;
 	addr.sin_port = port;
 	addr.sin_addr.s_addr = host;
-#if  defined(AFS_OSF_ENV) && defined(_KERNEL)
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN 
         addr.sin_len = sizeof(addr);
 #endif  /* AFS_OSF_ENV */
 	drop = (*rx_justReceived) (np, &addr);
@@ -6165,6 +6165,9 @@ static int MakeDebugCall(
     taddr.sin_family = AF_INET;
     taddr.sin_port = remotePort;
     taddr.sin_addr.s_addr = remoteAddr;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+    taddr.sin_len = sizeof(struct sockaddr_in);
+#endif
     while(1) {
 	memset(&theader, 0, sizeof(theader));
 	theader.epoch = htonl(999);

@@ -554,15 +554,23 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
 	code = osi_file_uio_rdwr(tfile, &tuio, UIO_WRITE);
 	AFS_GLOCK();
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV)
         AFS_GUNLOCK();
         VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, current_proc());
         code = VOP_WRITE(tfile->vnode, &tuio, 0, &afs_osi_cred);
         VOP_UNLOCK(tfile->vnode, 0, current_proc());
         AFS_GLOCK();
 #else
+#if defined(AFS_FBSD_ENV)
+        AFS_GUNLOCK();
+        VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curproc);
+        code = VOP_WRITE(tfile->vnode, &tuio, 0, &afs_osi_cred);
+        VOP_UNLOCK(tfile->vnode, 0, curproc);
+        AFS_GLOCK();
+#else
 	code = VOP_RDWR(tfile->vnode, &tuio, UIO_WRITE, 0, &afs_osi_cred);
-#endif /* AFS_DARWIN_ENV || AFS_FBSD_ENV */
+#endif /* AFS_FBSD_ENV */
+#endif /* AFS_DARWIN_ENV */
 #endif /* AFS_LINUX20_ENV */
 #endif /* AFS_HPUX100_ENV */
 #endif /* AFS_OSF_ENV */

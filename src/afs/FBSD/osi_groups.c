@@ -6,7 +6,6 @@
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
  */
-
 /*
  * osi_groups.c
  *
@@ -23,11 +22,6 @@ RCSID("$Header$");
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #include "../afs/afs_stats.h"  /* statistics */
-
-#define NOCRED  ((struct ucred *) -1)
-#define NOUID   ((uid_t) -1)
-#define NOGID   ((gid_t) -1)
-
 
 static int
 afs_getgroups(
@@ -51,27 +45,33 @@ Afs_xsetgroups(p, args, retval)
 {
     int code = 0;
     struct vrequest treq;
+    struct ucred *cr;
+
+    cr=crdup(p->p_cred->pc_ucred);
 
     AFS_STATCNT(afs_xsetgroups);
     AFS_GLOCK();
-
-    /*    code = afs_InitReq(&treq, u.u_cred); */
-    code = afs_InitReq(&treq, curproc->p_cred->pc_ucred);
+    
+    code = afs_InitReq(&treq, cr);
     AFS_GUNLOCK();
-    if (code) return code;
+    crfree(cr);
+    if (code) return setgroups(p, args, retval); /* afs has shut down */
 
     code = setgroups(p, args, retval);
     /* Note that if there is a pag already in the new groups we don't
      * overwrite it with the old pag.
      */
-    if (PagInCred(curproc->p_cred->pc_ucred) == NOPAG) {
+    cr=crdup(p->p_cred->pc_ucred);
+
+    if (PagInCred(cr) == NOPAG) {
 	if (((treq.uid >> 24) & 0xff) == 'A') {
 	    AFS_GLOCK();
 	    /* we've already done a setpag, so now we redo it */
-	    AddPag(p, treq.uid, &p->p_rcred);
+	    AddPag(p, treq.uid, &cr );
 	    AFS_GUNLOCK();
 	}
     }
+    crfree(cr);
     return code;
 }
 
@@ -90,18 +90,18 @@ setpag(proc, cred, pagvalue, newpag, change_parent)
 
     AFS_STATCNT(setpag);
     ngroups = afs_getgroups(*cred, NGROUPS, gidset);
-    if (afs_get_pag_from_groups(gidset[0], gidset[1]) == NOPAG) {
+    if (afs_get_pag_from_groups(gidset[1], gidset[2]) == NOPAG) {
 	/* We will have to shift grouplist to make room for pag */
 	if (ngroups + 2 > NGROUPS) {
 	    return (E2BIG);
 	}
-	for (j = ngroups -1; j >= 0; j--) {
- 	    gidset[j+2] = gidset[j];
- 	}
+	for (j = ngroups -1; j >= 1; j--) {
+	    gidset[j+2] = gidset[j];
+	}
 	ngroups += 2;
     }
     *newpag = (pagvalue == -1 ? genpag(): pagvalue);
-    afs_get_groups_from_pag(*newpag, &gidset[0], &gidset[1]);
+    afs_get_groups_from_pag(*newpag, &gidset[1], &gidset[2]);
     code = afs_setgroups(proc, cred, ngroups, gidset, change_parent);
     return code;
 }
@@ -137,7 +137,7 @@ afs_setgroups(
     int ngrps;
     int i;
     gid_t *gp;
-    struct ucred *newcr, *cr;
+    struct ucred *oldcr, *cr;
 
     AFS_STATCNT(afs_setgroups);
     /*
@@ -147,18 +147,19 @@ afs_setgroups(
     if (ngroups > NGROUPS)
 	return EINVAL;
     cr = *cred;
-    if (!change_parent) {
-	crhold(cr);
-	newcr = crcopy(cr);
-    } else
-	newcr = cr;
-    newcr->cr_ngroups = ngroups;
-    gp = newcr->cr_groups;
+    cr->cr_ngroups = ngroups;
+    gp = cr->cr_groups;
     while (ngroups--)
 	*gp++ = *gidset++;
-    if (!change_parent) {
-	substitute_real_creds(proc, NOUID, NOUID, NOGID, NOGID, newcr);
+    if (change_parent) {
+	crhold(cr);
+	oldcr=proc->p_pptr->p_cred->pc_ucred;
+	proc->p_pptr->p_cred->pc_ucred=cr;
+	crfree(oldcr);
     }
-    *cred = newcr;
+    crhold(cr);
+    oldcr=proc->p_cred->pc_ucred;
+    proc->p_cred->pc_ucred=cr;
+    crfree(oldcr);
     return(0);
 }

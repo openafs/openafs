@@ -914,6 +914,9 @@ dumpPass(dparamsPtr, passNumber)
 	    server.sin_addr.s_addr = vldbEntry.serverNumber[e];
 	    server.sin_port        = 0;
 	    server.sin_family      = AF_INET;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+	    server.sin_len	   = sizeof(struct sockaddr_in);
+#endif
 	    curDump->hostAddr      = HOSTADDR(&server);
 	    curDump->partition     = vldbEntry.serverPartition[e];
 

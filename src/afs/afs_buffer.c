@@ -94,6 +94,9 @@ char *BufferData;
 #ifdef	AFS_AIX_ENV
 extern struct buf *geteblk();
 #endif
+#ifdef AFS_FBSD_ENV
+#define timecounter afs_timecounter
+#endif
 /* The locks for individual buffer entries are now sometimes obtained while holding the
  * afs_bufferLock. Thus we now have a locking hierarchy: afs_bufferLock -> Buffers[].lock.
  */

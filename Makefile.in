@@ -206,7 +206,7 @@ viced: project vlserver audit
 
 tviced: project viced vlserver libafsrpc libafsauthent
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux110) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux110|*fbsd*) \
 		${COMPILE_PART1} tviced ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT viced for ${SYS_NAME} ;; \
@@ -400,7 +400,7 @@ tests: rxtests ubiktests
 # pthread based user space RX library
 libafsrpc: rx rxkad des
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux110) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux110|*fbsd*) \
 	${COMPILE_PART1} libafsrpc ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
@@ -408,7 +408,7 @@ libafsrpc: rx rxkad des
 
 libafsauthent: ubik auth kauth libafsrpc
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux110) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux110|*fbsd*) \
 	${COMPILE_PART1} libafsauthent ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \

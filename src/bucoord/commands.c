@@ -325,6 +325,9 @@ int EvalVolumeSet2(aconfig, avs, avols, uclient)
 	      tvd->server.sin_addr.s_addr = entries[e].serverNumber[ei];
 	      tvd->server.sin_port        = 0; /* default FS port */
 	      tvd->server.sin_family      = AF_INET;
+#ifdef STRUCT_SOCKADDR_HAS_SA_LEN
+	      tvd->server.sin_len         = sizeof(struct sockaddr_in);
+#endif 
 
 	      /* String tvd off of partition struct */
 	      tvd->next  = ps->vdlist;

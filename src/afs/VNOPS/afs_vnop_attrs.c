@@ -101,7 +101,17 @@ afs_CopyOutAttrs(avc, attrs)
      * anyway, so the difference between 512K and 1000000 shouldn't matter
      * much, and "&" is a lot faster than "%".
      */
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+    /* nfs on these systems puts an 0 in nsec and stores the nfs usec (aka 
+       dataversion) in va_gen */
+
+    attrs->va_atime.tv_nsec = attrs->va_mtime.tv_nsec =
+	attrs->va_ctime.tv_nsec =0;
+    attrs->va_blocksize = PAGESIZE;		/* XXX Was 8192 XXX */
+    attrs->va_gen = hgetlo(avc->m.DataVersion);
+    attrs->va_flags = 0;
+#else
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) 
     attrs->va_atime.tv_nsec = attrs->va_mtime.tv_nsec =
 	attrs->va_ctime.tv_nsec =
 	    (hgetlo(avc->m.DataVersion) & 0x7ffff) * 1000;
@@ -115,6 +125,7 @@ afs_CopyOutAttrs(avc, attrs)
 	attrs->va_ctime.tv_usec =
 	    (hgetlo(avc->m.DataVersion) & 0x7ffff);
     attrs->va_blocksize = PAGESIZE;		/* XXX Was 8192 XXX */
+#endif
 #endif
 #ifdef AFS_DEC_ENV
     /* Have to use real device #s in Ultrix, since that's how FS type is
@@ -132,7 +143,7 @@ afs_CopyOutAttrs(avc, attrs)
      * Below return 0 (and not 1) blocks if the file is zero length. This conforms
      * better with the other filesystems that do return 0.	
      */
-#if   defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if   defined(AFS_OSF_ENV)
 #ifdef	va_size_rsv
     attrs->va_size_rsv = 0;
 #endif

@@ -181,12 +181,13 @@ afs_ustrategy(abp)
 #endif
     }
 #if	!defined(AFS_AIX32_ENV) && !defined(AFS_SUN5_ENV)
-#ifdef AFS_DUX40_ENV
+#if defined(AFS_DUX40_ENV) || defined (AFS_FBSD_ENV)
     if (code) {
 	abp->b_error = code;
 	abp->b_flags |= B_ERROR;
     }
     biodone(abp);
+#if defined(AFS_DUX40_ENV)
     if (code && !(abp->b_flags & B_READ)) {
 	/* prevent ubc from retrying writes */
 	AFS_GUNLOCK();
@@ -195,6 +196,7 @@ afs_ustrategy(abp)
 		       PAGE_SIZE, B_INVAL);
 	AFS_GLOCK();
     }
+#endif
 #else  /* AFS_DUX40_ENV */
     iodone(abp);
 #endif /* AFS_DUX40_ENV */

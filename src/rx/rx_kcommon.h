@@ -53,6 +53,9 @@ typedef unsigned short                  etap_event_t;
 #ifdef AFS_SGI62_ENV
 #include "../h/hashing.h"
 #endif
+#ifdef AFS_FBSD_ENV
+#include "../h/sysctl.h"
+#endif
 #include "../netinet/in.h"
 #include "../net/route.h"
 #include "../netinet/in_systm.h"

@@ -21,7 +21,7 @@ RCSID("$Header$");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
-
+#include <sys/namei.h>
 /*
  * afs_suser() returns true if the caller is superuser, false otherwise.
  *
@@ -35,4 +35,30 @@ afs_suser() {
 	return(1);
     }
     return(0);
+}
+
+int osi_lookupname(char *aname, enum uio_seg seg, int followlink,
+                          struct vnode **dirvpp, struct vnode **vpp)
+{
+   struct nameidata n;
+   int flags,error;
+   flags=0;
+   flags=LOCKLEAF;
+   if (followlink)
+     flags|=FOLLOW;
+   else 
+     flags|=NOFOLLOW;
+/*   if (dirvpp) flags|=WANTPARENT;*/ /* XXX LOCKPARENT? */
+   NDINIT(&n, LOOKUP, flags, seg, aname, curproc);
+   if (error=namei(&n))
+      return error;
+   *vpp=n.ni_vp;
+/*
+   if (dirvpp)
+      *dirvpp = n.ni_dvp;
+*/
+   /* should we do this? */
+   VOP_UNLOCK(n.ni_vp, 0, curproc);
+   NDFREE(&n, NDF_ONLY_PNBUF);
+   return 0;
 }

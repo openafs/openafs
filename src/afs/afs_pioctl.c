@@ -430,17 +430,28 @@ afs_xioctl ()
 #endif	/* AFS_SUN5_ENV */
 #endif
 #ifndef AFS_LINUX22_ENV
-#if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
       struct file *fd;
 #else
       register struct file *fd;
 #endif
 #endif
+#if defined(AFS_FBSD_ENV)
+      register struct filedesc *fdp;
+#endif
       register struct vcache *tvc;
       register int ioctlDone = 0, code = 0;
       
       AFS_STATCNT(afs_xioctl);
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_FBSD_ENV)
+        fdp=p->p_fd;
+        if ((u_int)uap->fd >= fdp->fd_nfiles ||
+            (fd = fdp->fd_ofiles[uap->fd]) == NULL)
+                return EBADF;
+        if ((fd->f_flag & (FREAD | FWRITE)) == 0)
+                return EBADF;
+#else
+#if defined(AFS_DARWIN_ENV)
         if ((code=fdgetf(p, uap->fd, &fd)))
            return code;
 #else
@@ -481,7 +492,7 @@ afs_xioctl ()
 #endif
 #endif
 #endif
-      
+#endif
       /* first determine whether this is any sort of vnode */
 #ifdef AFS_LINUX22_ENV
       tvc = (struct vcache *)ip;
@@ -589,7 +600,10 @@ afs_xioctl ()
 #endif
           code = ioctl(uap, rvp);
 #else
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_FBSD_ENV)
+        return ioctl(p, uap);
+#else
+#if defined(AFS_DARWIN_ENV) 
         return ioctl(p, uap, retval);
 #else
 #ifdef  AFS_OSF_ENV
@@ -603,6 +617,7 @@ afs_xioctl ()
 #else   /* AFS_OSF_ENV */
 #ifndef AFS_LINUX22_ENV
           ioctl();
+#endif
 #endif
 #endif
 #endif
@@ -1172,11 +1187,12 @@ static PStoreBehind(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     else code = EPERM;
   }
 
-  if (avc && (sbr->sb_thisfile != -1))
+  if (avc && (sbr->sb_thisfile != -1)) {
     if (afs_AccessOK(avc, PRSFS_WRITE | PRSFS_ADMINISTER, 
 		      areq, DONT_CHECK_MODE_BITS))
       avc->asynchrony = sbr->sb_thisfile;
     else code = EACCES;
+  }
 
   *aoutSize = sizeof(struct sbstruct);
   sbr = (struct sbstruct *)aout;
@@ -1437,7 +1453,11 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     if (set_parent_pag) {
 	int pag;
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV)
         struct proc *p=current_proc(); /* XXX */
+#else
+        struct proc *p=curproc; /* XXX */
+#endif
         uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
                 p->p_pid, p->p_comm);
         if (!setpag(p, acred, -1, &pag, 1)) {

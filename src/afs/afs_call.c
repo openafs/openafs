@@ -61,9 +61,10 @@ simple_lock_data_t afs_global_lock;
 #elif defined(AFS_DARWIN_ENV)
 struct lock__bsd__ afs_global_lock;
 #elif defined(AFS_FBSD_ENV)
-struct simplelock afs_global_lock;
+struct lock afs_global_lock;
+struct proc *afs_global_owner;
 #endif
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
 thread_t afs_global_owner;
 #endif /* AFS_OSF_ENV */
 
