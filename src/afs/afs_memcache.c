@@ -242,18 +242,18 @@ int afs_MemWritevBlk(register struct memCacheEntry *mceP, int offset, struct iov
 	  afs_osi_Free(oldData,mceP->dataSize);
 	  mceP->dataSize = size+offset;
       }
+      AFS_GUNLOCK();
       if (mceP->size < offset)
 	  memset(mceP->data+mceP->size, 0, offset-mceP->size);
       for (bytesWritten = 0, i = 0 ; i < nio && size > 0 ; i++) {
 	  bytesToWrite = (size < iov[i].iov_len) ? size : iov[i].iov_len;
-	  AFS_GUNLOCK();
 	  memcpy(mceP->data + offset, iov[i].iov_base, bytesToWrite);
-	  AFS_GLOCK();
  	  offset += bytesToWrite;
  	  bytesWritten += bytesToWrite;
  	  size -= bytesToWrite;
       }
       mceP->size = (offset < mceP->size) ? mceP->size : offset;
+      AFS_GLOCK();
 
       MReleaseWriteLock(&mceP->afs_memLock);
       return bytesWritten;
