@@ -164,9 +164,20 @@ char	**argv;
 	    rx_enablePeerRPCStats();
 	} else if (strcmp(argv[index], "-enable_process_stats") == 0) {
 	    rx_enableProcessRPCStats();
+#ifndef AFS_NT40_ENV
+	} else if (strcmp(argv[index], "-syslog")==0) {
+	    /* set syslog logging flag */
+	    serverLogSyslog = 1;
+	} else if (strncmp(argv[index], "-syslog=", 8)==0) {
+	    serverLogSyslog = 1;
+	    serverLogSyslogFacility = atoi(argv[index]+8);
+#endif
 	} else {
 	    /* support help flag */
 	    printf("Usage: vlserver [-p <number of processes>] [-nojumbo] "
+#ifndef AFS_NT40_ENV
+		   "[-syslog[=FACILITY]] "
+#endif
 		   /*" [-enable_peer_stats] [-enable_process_stats] " */
 		   "[-help]\n");
 	    fflush(stdout);

@@ -274,11 +274,24 @@ char **argv; {
 	else if (strcmp(argv[code], "-enable_process_stats")==0) {
 	    rx_enableProcessRPCStats();
 	}
+#ifndef AFS_NT40_ENV
+	else if (strcmp(argv[code], "-syslog")==0) {
+	    /* set syslog logging flag */
+	    serverLogSyslog = 1;
+	} 
+	else if (strncmp(argv[code], "-syslog=", 8)==0) {
+	    serverLogSyslog = 1;
+	    serverLogSyslogFacility = atoi(argv[code]+8);
+	}
+#endif
 	else {
 	    printf("volserver: unrecognized flag '%s'\n", argv[code]);
 usage:
 	    printf("Usage: volserver [-log] [-p <number of processes>] "
 		   "[-udpsize <size of socket buffer in bytes>] "
+#ifndef AFS_NT40_ENV
+		   "[-syslog[=FACILITY]] "
+#endif
 		   /* "[-enable_peer_stats] [-enable_process_stats] " */
 		   "[-help]\n");
 	    VS_EXIT(1);

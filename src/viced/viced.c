@@ -1177,6 +1177,18 @@ static ParseArgs(argc, argv)
 	    if (!strcmp(argv[i], "-enable_process_stats")) {
 		rx_enableProcessRPCStats();
 	    }
+#ifndef AFS_NT40_ENV
+        else 
+	    if (strcmp(argv[i], "-syslog")==0) {
+		/* set syslog logging flag */
+		serverLogSyslog = 1;
+	    } 
+	else 
+	    if (strncmp(argv[i], "-syslog=", 8)==0) {
+		serverLogSyslog = 1;
+		serverLogSyslogFacility = atoi(argv[i]+8);
+	    }
+#endif
 	else {
 	    return(-1);
 	}
