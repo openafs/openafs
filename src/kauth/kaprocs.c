@@ -1032,7 +1032,7 @@ PrepareTicketAnswer(oanswer, challenge, ticket, ticketLen, sessionKey, start,
 
     code = KAANSWERTOOLONG;
     if (oanswer->MaxSeqLen <
-	sizeof(struct ka_ticketAnswer) - 5 * MAXKTCNAMELEN)
+	sizeof(struct ka_ticketAnswer) - 5 * MAXKTCNAMELEN - MAXKTCTICKETLEN + ticketLen)
 	return code;
 
     answer = (struct ka_ticketAnswer *)oanswer->SeqBody;
@@ -1958,7 +1958,7 @@ GetTicket(version, call, kvno, authDomain, aticket, sname, sinstance, atimes,
     case 0:
 	code = KAANSWERTOOLONG;
 	if (oanswer->MaxSeqLen <
-	    sizeof(struct ka_getTicketAnswer) - 5 * MAXKTCNAMELEN)
+	    sizeof(struct ka_getTicketAnswer) - 5 * MAXKTCNAMELEN - MAXKTCTICKETLEN + ticketLen)
 	    goto abort;
 
 	answer = (struct ka_getTicketAnswer *)oanswer->SeqBody;
