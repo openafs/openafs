@@ -546,6 +546,7 @@ int afsd_InitCM(char **reasonP)
 		afsi_log("Logoff token transfer on by default");
 	}
     smb_LogoffTokenTransfer = ltt;
+    afsi_log("Logoff token transfer is currently ignored");
 
 	if (ltt) {
 		dummyLen = sizeof(ltto);
@@ -562,6 +563,7 @@ int afsd_InitCM(char **reasonP)
         ltto = 0;
     }
     smb_LogoffTransferTimeout = ltto;
+    afsi_log("Default logoff token is currently ignored");
 
 	dummyLen = sizeof(cm_rootVolumeName);
 	code = RegQueryValueEx(parmKey, "RootVolume", NULL, NULL,

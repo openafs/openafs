@@ -800,7 +800,7 @@
         <Control Id="CredStartLabel" Type="Text" X="45" Y="53" Width="295" Height="15" TabSkip="yes" Text="Startup options for AFS Credentials" />
         <Control Id="CredStartup" Type="CheckBox" X="50" Y="73" Width="300" Height="15" Property="CREDSSTARTUP" CheckBoxValue="1" Text="Start AFS Credentials at startup" />
         <Control Id="CredCommandLabel" Type="Text" X="45" Y="93" Width="295" Height="15" TabSkip="yes" Text="Command line options for AFS Credentials" />
-        <Control Id="CredAutoInit" Type="CheckBox" X="50" Y="113" Width="300" Height="15" Property="CREDSAUTOINIT" CheckBoxValue="-a" Text="Auto initialize AFS Credentials." />
+        <Control Id="CredAutoInit" Type="CheckBox" X="50" Y="113" Width="300" Height="15" Property="CREDSAUTOINIT" CheckBoxValue="-a" Text="Auto initialize AFS Credentials" />
         <Control Id="CredRenew" Type="CheckBox" X="50" Y="133" Width="300" Height="15" Property="CREDSRENEWDRMAP" CheckBoxValue="-m" Text="Renew drive maps" />
         <Control Id="CredIPCg" Type="CheckBox" X="50" Y="153" Width="300" Height="15" Property="CREDSIPCHDET" CheckBoxValue="-n" Text="Detect IP address changes" />
         <Control Id="CredQuiet" Type="CheckBox" X="50" Y="173" Width="300" Height="15" Property="CREDSQUIET" CheckBoxValue="-q" Text="Quiet mode" />

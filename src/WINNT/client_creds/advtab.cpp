@@ -10,6 +10,7 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/afskfw.h>
 }
 
 #include "afscreds.h"
@@ -214,6 +215,12 @@ void Advanced_OnChangeService (HWND hDlg, WORD wCmd)
                 if (StartService (hService, 0, 0))
                 {
                     TestAndDoMapShare(SERVICE_START_PENDING);
+                    if ( KFW_is_available() && KFW_AFS_wait_for_service_start() ) {
+#ifdef USE_MS2MIT
+                        KFW_import_windows_lsa();
+#endif /* USE_MS2MIT */
+                        KFW_AFS_renew_tokens_for_all_cells();
+                    }
                     fSuccess = TRUE;
                 }
                 CloseServiceHandle (hService);

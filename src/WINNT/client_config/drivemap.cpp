@@ -1319,7 +1319,7 @@ DWORD MountDOSDrive(char chDrive,const char *szSubmount,BOOL bPersistent,const c
     nr.dwType=RESOURCETYPE_DISK;
     nr.lpLocalName=szDrive;
     nr.lpRemoteName=szPath;
-    nr.dwDisplayType = RESOURCEDISPLAYTYPE_SHARE;
+    nr.dwDisplayType = RESOURCEDISPLAYTYPE_SHARE; /* ignored parameter */
     DWORD res=WNetAddConnection2(&nr,NULL,pUsername,(bPersistent)?CONNECT_UPDATE_PROFILE:0);
     DEBUG_EVENT5("AFS DriveMap","Mount %s Local[%s] Remote[%s] User[%s]=%x",
                   (bPersistent)?"Persistant" : "NonPresistant",

@@ -1,4 +1,4 @@
-This file is a rough list of known issues with the 1.3.65 release of OpenAFS
+This file is a rough list of known issues with the 1.3.70 release of OpenAFS
 on Windows.  This list is not complete.  There are probably other issues 
 which can be found in the RT database or on the mailing list.
 
@@ -82,44 +82,57 @@ directories.
      temporarily unable to access the Cell due to network restore timing
      issues.)
 
-(18) No support for Unicode filenames.  Translations make file unreadable
+(18) No support for Unicode CIFS/SMB data structures.  OEM Code Pages prevent
+     the use of interoperable file names; force the use of paths no longer 
+     than 256 characters; force share names to be no longer than 13 
+     characters; restrict authentication to ASCII only names and passwords;
+     etc.
 
 (19) No auto-restart on service failure
 
 (20) Better EventLog handling
 
-(21) Named Pipes Support
+(21) Named Pipes Support [requires modifications to AFS servers to support]
 
 (22) Memory Mapped File support
 
-(23) Large file support
+(23) Large file support [both SMB/CIFS and AFS]
 
-(26) Implement persistent disk based cache which survives restarts
+(24) Implement persistent disk based cache which survives restarts
 
-(27) NSIS Installer issues
+(25) NSIS Installer issues
      (a) integration with KFW install script
      (b) Optional removal of AFS Server volumes
 
-(28) The User Interface needs to be re-designed to separate the per-user
+(26) The User Interface needs to be re-designed to separate the per-user
      and per-machine settings.  All of the new registry items need to 
      be added to the UI
 
-(30) There appears to be a thread safety issue in the Rx library when
+(27) There appears to be a thread safety issue in the Rx library when
      running on Intel processors which support hyper-threading
 
-(32) Thread initialization versus Global Drive Mapping.  There is no
+(28) Thread initialization versus Global Drive Mapping.  There is no
      mechanism in the afsd_init.c to ensure that all of the threads 
      complete initializing in the correct sequence.  In the case of 
      Global Drive Maps this is a problem because the Global Drive Maps
      can be executed prior to the completion of the SMB registration
      and service thread initialization.
 
-(35) Should we allow the AFSCACHE file to be stored in the Virtual Paging
+(29) Should we allow the AFSCACHE file to be stored in the Virtual Paging
      file as long as we do not support persistent caches?
 
+(30) CIFS Remote Administration Protocol implementation is incomplete.
+     Notifications are not made to requestors when the view of a file
+     or folder changes due to token acquisition; token expiration; or
+     token destruction
+
+(31) Microsoft Office appears to have trouble editing files of ~20MB
+     or larger from within AFS.  Performance is particularly slow and
+     applications such as Word often crash upon saving the files.
+      
 
 -------------------------------------------------------------------------
-List sent to SLAC:
+List of unfunded projects:
 
    1. No longer use AFS Client Service "cell" as the default cell for individual users
    2. Re-write afsd_service.exe to perform synchronized thread startup and shutdown.  
@@ -168,4 +181,10 @@ List sent to SLAC:
   15. Large File support (> 2GB)
   16. Integrate KFW installation into the NSIS installer
   17. Add support for record locking to AFS (requires changes to the servers)
-
+  18. Unicode enable the SMB/CIFS server.  OEM Code Pages: 
+      1. prevent the use of interoperable file names
+      2. force the use of paths no longer than 256 characters
+      3. force share names to be no longer than 13 characters
+      4. restrict authentication to ASCII only names and passwords
+  19. Complete implementation of CIFS Remote Administration Protocol
+  20. Identify and correct the problems with Microsoft Office applications

@@ -221,32 +221,6 @@ a non-MS KDC for authentication, then your KDC administrator will have to
 add these service principals to the list of principals to be maintained
 for each host.
 
-SMB Authentication will fail in the following situation.  If you have
-configured the Windows machine to authenticate to a non-Windows realm
-(MIT or Heimdal KDC) and you are using account mapping to map the 
-Kerberos principal to local account name.  If the password for the 
-Kerberos principal and the local machine account are not the same,
-SMB Authentication will fail.  To make AFS accessible to the user one
-of three things must be done:
-
-(1) The user must synchronize the local Windows password with the Kerberos
-    password
-
-(2) The user must login with the local Windows account
-
-(3) The user must attach to the AFS server using the local account credentials.
-    The user can do this either by browsing \\AFS in the Windows Explorer and
-    specify "remember my password" to avoid the need to perform this operation
-    in the future; or the following commands may be executed from the command
-    line:
-
-    NET USE \\AFS /USER:<local-account-name> <password>
-    NET USE \\AFS /SAVECRED
-
-(4) SMB Authentication for OpenAFS must be disabled.  (see registry.txt 
-    for information on how to set the SMBAuthType to NONE.
-
-
 19. As of 1.3.70, INI files are no longer used for the storage of AFS 
 configuration data.  No longer are there any AFS related files stored in the
 %WINDIR% directory.  The CellServDB file is no longer called "afsdsbmt.ini"

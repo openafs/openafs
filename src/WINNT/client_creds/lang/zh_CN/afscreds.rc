@@ -468,7 +468,7 @@ BEGIN
     MENUITEM "显示令牌(&S)...",             M_ACTIVATE
     MENUITEM "到期前警告(&W)",              M_REMIND, CHECKED
     MENUITEM SEPARATOR
-    MENUITEM "除去图标(&R)",                M_TERMINATE
+    MENUITEM "除去图标(&R)...",                M_TERMINATE
 END
 
 

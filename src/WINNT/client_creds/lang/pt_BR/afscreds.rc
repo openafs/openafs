@@ -478,7 +478,7 @@ BEGIN
     MENUITEM "&Mostrar Tokens...",          M_ACTIVATE
     MENUITEM "&Avisar Antes do Vencimento",  M_REMIND, CHECKED
     MENUITEM SEPARATOR
-    MENUITEM "&Remover Ícone",              M_TERMINATE
+    MENUITEM "&Remover Ícone...",              M_TERMINATE
 END
 
 

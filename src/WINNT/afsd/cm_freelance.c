@@ -426,8 +426,8 @@ long cm_InitLocalMountPoints() {
             *(aLocalMountPoint->mountPointStringp + (strlen(line)-(t-line)-2)) = 0;
     
             osi_Log2(afsd_logp,"found mount point: name %s, string %s",
-                      aLocalMountPoint->namep,
-                      aLocalMountPoint->mountPointStringp);
+                      osi_LogSaveString(afsd_logp,aLocalMountPoint->namep),
+                      osi_LogSaveString(afsd_logp,aLocalMountPoint->mountPointStringp));
 
             aLocalMountPoint++;
         }
@@ -585,7 +585,9 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
        allow partial matches as a means of poor man's alias. */
     /* major performance issue? */
     osi_Log3(afsd_logp,"Freelance Add Mount request: filename=%s cellname=%s volume=%s %s",
-              filename, cellname, volume, rw ? "rw" : "ro");
+              osi_LogSaveString(afsd_logp,filename), 
+              osi_LogSaveString(afsd_logp,cellname), 
+              osi_LogSaveString(afsd_logp,volume), rw ? "rw" : "ro");
     if (cellname[0] == '.') {
         if (!cm_GetCell_Gen(&cellname[1], &fullname[1], CM_FLAG_CREATE))
             return -1;
@@ -595,7 +597,8 @@ long cm_FreelanceAddMount(char *filename, char *cellname, char *volume, int rw, 
             return -1;
     }
     
-    osi_Log1(afsd_logp,"Freelance Adding Mount for Cell: %s", cellname);
+    osi_Log1(afsd_logp,"Freelance Adding Mount for Cell: %s", 
+              osi_LogSaveString(afsd_logp,cellname));
 
     lock_ObtainMutex(&cm_Freelance_Lock);
 

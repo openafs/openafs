@@ -475,7 +475,7 @@ BEGIN
     MENUITEM "&Show Tokens...",             M_ACTIVATE
     MENUITEM "&Warn Before Expiration",     M_REMIND, CHECKED
     MENUITEM SEPARATOR
-    MENUITEM "&Remove Icon",                M_TERMINATE
+    MENUITEM "&Remove Icon...",                M_TERMINATE
 END
 
 

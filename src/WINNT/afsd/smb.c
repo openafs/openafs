@@ -1280,11 +1280,6 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
 	DWORD code;
     DWORD allSubmount = 1;
 
-	if (strcmp(shareName, "IPC$") == 0) {
-		*pathNamep = NULL;
-		return 0;
-	}
-
     /* if allSubmounts == 0, only return the //mountRoot/all share 
      * if in fact it has been been created in the subMounts table.  
      * This is to allow sites that want to restrict access to the 
@@ -1313,6 +1308,14 @@ int smb_FindShare(smb_vc_t *vcp, smb_user_t *uidp, char *shareName,
 	if (_stricmp(shareName, "ioctl$") == 0) {
 		*pathNamep = strdup("/.__ioctl__");
 		return 1;
+	}
+
+    if (_stricmp(shareName, "IPC$") == 0 ||
+        _stricmp(shareName, SMB_IOCTL_FILENAME_NOSLASH) == 0 ||
+        _stricmp(shareName, "DESKTOP.INI") == 0
+         ) {
+		*pathNamep = NULL;
+		return 0;
 	}
 
 #ifndef DJGPP
@@ -2191,7 +2194,7 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
 	}
 
 	*NTStatusp = NTStatus;
-	osi_Log2(smb_logp, "SMB SEND code %x as NT %x", code, NTStatus);
+	osi_Log2(smb_logp, "SMB SEND code %lX as NT %lX", code, NTStatus);
 }
 
 void smb_MapCoreError(long code, smb_vc_t *vcp, unsigned short *scodep,
@@ -2349,7 +2352,7 @@ void smb_MapCoreError(long code, smb_vc_t *vcp, unsigned short *scodep,
 
 	*scodep = error;
 	*classp = class;
-	osi_Log3(smb_logp, "SMB SEND code %x as SMB %d: %d", code, class, error);
+	osi_Log3(smb_logp, "SMB SEND code %lX as SMB %d: %d", code, class, error);
 }
 
 long smb_SendCoreBadOp(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
@@ -4913,6 +4916,9 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
 	DWORD filter = 0;
 	cm_req_t req;
 
+    osi_Log3(smb_logp, "smb_WriteData fid %d, off 0x%x, size 0x%x",
+              fidp->fid, offsetp->LowPart, count);
+
 	cm_InitReq(&req);
 
 	bufferp = NULL;
@@ -4924,10 +4930,14 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
 	lock_ObtainMutex(&scp->mx);
 
 	/* start by looking up the file's end */
+    osi_Log1(smb_logp, "smb_WriteData fid %d calling cm_SyncOp NEEDCALLBACK|SETSTATUS|GETSTATUS",
+              fidp->fid);
 	code = cm_SyncOp(scp, NULL, userp, &req, 0,
 					 CM_SCACHESYNC_NEEDCALLBACK
 					 | CM_SCACHESYNC_SETSTATUS
 					 | CM_SCACHESYNC_GETSTATUS);
+    osi_Log2(smb_logp, "smb_WriteData fid %d calling cm_SyncOp NEEDCALLBACK|SETSTATUS|GETSTATUS returns %d",
+              fidp->fid,code);
 	if (code) 
 		goto done;
         
@@ -5005,10 +5015,14 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
 
 			/* now get the data in the cache */
 			while (1) {
+                osi_Log1(smb_logp, "smb_WriteData fid %d calling cm_SyncOp NEEDCALLBACK|WRITE|BUFLOCKED",
+                          fidp->fid);
 				code = cm_SyncOp(scp, bufferp, userp, &req, 0,
 								 CM_SCACHESYNC_NEEDCALLBACK
 								 | CM_SCACHESYNC_WRITE
 								 | CM_SCACHESYNC_BUFLOCKED);
+                osi_Log2(smb_logp, "smb_WriteData fid %d calling cm_SyncOp NEEDCALLBACK|WRITE|BUFLOCKED returns %d",
+                          fidp->fid,code);
 				if (code) 
 					goto done;
                                 
@@ -5111,13 +5125,20 @@ long smb_WriteData(smb_fid_t *fidp, osi_hyper_t *offsetp, long count, char *op,
 	}
 
 	if (code == 0 && doWriteBack) {
+        long code2;
 		lock_ObtainMutex(&scp->mx);
-		cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_ASYNCSTORE);
+        osi_Log1(smb_logp, "smb_WriteData fid %d calling cm_SyncOp ASYNCSTORE",
+                  fidp->fid);
+		code2 = cm_SyncOp(scp, NULL, userp, &req, 0, CM_SCACHESYNC_ASYNCSTORE);
+        osi_Log2(smb_logp, "smb_WriteData fid %d calling cm_SyncOp ASYNCSTORE returns %d",
+                  fidp->fid,code2);
 		lock_ReleaseMutex(&scp->mx);
 		cm_QueueBKGRequest(scp, cm_BkgStore, writeBackOffset.LowPart,
 						   writeBackOffset.HighPart, cm_chunkSize, 0, userp);
 	}
 
+    osi_Log2(smb_logp, "smb_WriteData fid %d returns %d",
+              fidp->fid, code);
 	return code;
 }
 
@@ -5141,7 +5162,7 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     op = smb_GetSMBData(inp, NULL);
 	op = smb_ParseDataBlock(op, NULL, &inDataBlockCount);
 
-    osi_Log3(smb_logp, "smb_ReceiveCoreWrite fd %d, off 0x%x, size 0x%x",
+    osi_Log3(smb_logp, "smb_ReceiveCoreWrite fid %d, off 0x%x, size 0x%x",
              fd, offset.LowPart, count);
         
 	fd = smb_ChainFID(fd, inp);

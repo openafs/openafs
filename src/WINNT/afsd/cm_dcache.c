@@ -153,15 +153,23 @@ long cm_BufWrite(void *vfidp, osi_hyper_t *offsetp, long length, long flags,
                 /* write out wbytes of data from bufferp */
                 temp = rx_Write(callp, bufferp, wbytes);
                 if (temp != wbytes) {
+                    osi_Log2(afsd_logp, "rx_Write failed %d != %d",temp,wbytes);
                     code = -1;
 					break;
-				}
+				} else {
+                    osi_Log1(afsd_logp, "rx_Write succeeded %d",temp);
+                }
                 nbytes -= wbytes;
             }	/* while more bytes to write */
 		}		/* if RPC started successfully */
-
-		if (code == 0)
+        else {
+            osi_Log1(afsd_logp, "StartRXAFS_StoreData failed (%lX)",code);
+        }
+		if (code == 0) {
 			code = EndRXAFS_StoreData(callp, &outStatus, &volSync);
+            if (code)
+                osi_Log1(afsd_logp, "EndRXAFS_StoreData failed (%lX)",code);
+        }
         code = rx_EndCall(callp, code);
         osi_Log0(afsd_logp, "CALL StoreData DONE");
                 

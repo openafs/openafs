@@ -1,4 +1,13 @@
 Since 1.3.65:
+   * The algorithm used to re-attempt access to the servers associated with
+     a volume has been altered to properly address the case in which all 
+     servers have been marked down.  The previous algorithm did not reset
+     the server's down flags so the servers were never actually retried.
+     This caused a problem with active volumes if the network connectivity
+     was lost as could be the case with a network cable removal, wireless
+     drop, or laptop hibernation.  With the fix volume access is restored
+     almost instantenously when network connectivity becomes available.
+
    * Support for SMB/CIFS browsing has been added to the AFS Client Service
      SMB server.  It is now possible to use "NET VIEW \\AFS" to obtain a
      listing of AFS submounts and freelance mount points.  Support for

@@ -1010,7 +1010,8 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
                 return CM_ERROR_NOSUCHFILE;
         }
         else {  /* nonexistent dir on freelance root, so add it */
-			osi_Log1(afsd_logp,"cm_Lookup adding mount for non-existent directory: %s", namep);
+			osi_Log1(afsd_logp,"cm_Lookup adding mount for non-existent directory: %s", 
+                     osi_LogSaveString(afsd_logp,namep));
             code = cm_FreelanceAddMount(namep, namep, "root.cell.", 0, &rock.fid);
             if (code < 0) {   /* add mount point failed, so give up */
                 if (flags & CM_FLAG_CHECKPATH)
