@@ -508,7 +508,11 @@ static int afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     int code = 0;
     struct vcache *vcp = (struct vcache*)FILE_INODE(fp);
     cred_t *credp = crref();
+#ifdef AFS_LINUX24_ENV
+    struct flock64 flock;
+#else
     struct flock flock;
+#endif
     
     /* Convert to a lock format afs_lockctl understands. */
     memset((char*)&flock, 0, sizeof(flock));
