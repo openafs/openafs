@@ -277,8 +277,8 @@ static int backupInit()
 
     /* setup status monitoring thread */
     initStatus();
-    code = LWP_CreateProcess(statusWatcher, 20480, LWP_NORMAL_PRIORITY, 2,
-                             "statusWatcher", &watcherPid);
+    code = LWP_CreateProcess(statusWatcher, 20480, LWP_NORMAL_PRIORITY, 
+			     (void *)2, "statusWatcher", &watcherPid);
     if ( code )
     {
 	com_err(whoami, code, "; Can't create status monitor task");

@@ -224,7 +224,8 @@ statusWatcher()
 	        printf("Starting scheduled dump: job %d\n", jobNumber);
 	        printf("schedD> %s\n", cmdLine);
 
-		code = LWP_CreateProcess(cmdDispatch, 16384, LWP_NORMAL_PRIORITY, 2,
+		code = LWP_CreateProcess(cmdDispatch, 16384, 
+					 LWP_NORMAL_PRIORITY, (void *) 2,
 					 "cmdDispatch", &dispatchPid);
 		if ( code )
 		{

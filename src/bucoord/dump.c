@@ -302,7 +302,8 @@ bc_StartDmpRst(aconfig, adname, avname, avolsToDump, adestServer, adestPartition
     else
         memset(&bc_dumpTasks[i].destServer, 0, sizeof(struct sockaddr_in));
  
-    code = LWP_CreateProcess(bc_DmpRstStart, 20480, LWP_NORMAL_PRIORITY, i, "helper", &junk);
+    code = LWP_CreateProcess(bc_DmpRstStart, 20480, LWP_NORMAL_PRIORITY, 
+			     (void *)i, "helper", &junk);
     if (code)
     {
 	bc_HandleMisc(code);

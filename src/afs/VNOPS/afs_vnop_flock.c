@@ -463,7 +463,6 @@ afs_lockctl(struct vcache *avc, struct eflock *af, int flag,
 #else
 #if defined(AFS_SGI_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 afs_lockctl(struct vcache *avc, struct AFS_FLOCK *af, int acmd, struct AFS_UCRED *acred, pid_t clid)
-pid_t clid;
 #else
 u_int clid=0;
 afs_lockctl(struct vcache *avc, struct AFS_FLOCK *af, int acmd, struct AFS_UCRED *acred)

@@ -205,7 +205,7 @@ fc_test.o: ${INCLS}
 #
 
 clean: 
-	$(RM) -f *.o *.a tcrypt core rxkad_errs.c rxkad.h rxkad_prototypes.h \
+	$(RM) -f *.o *.a tcrypt core rxkad_errs.c rxkad.h \
 		AFS_component_version_number.c \
 		crypt_conn.c fcrypt.c fcrypt.h sboxes.h \
 		fc_test

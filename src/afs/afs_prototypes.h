@@ -508,9 +508,15 @@ extern afs_uint32 pag_epoch;
 extern afs_uint32 pagCounter;
 
 /* OS/osi_vfsops.c */
+#if defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
+extern struct mount *afs_globalVFS;
+#else
 extern struct vfs *afs_globalVFS;
+#endif
 extern struct vcache *afs_globalVp;
+#ifdef AFS_LINUX20_ENV
 extern void vcache2inode(struct vcache *avc);
+#endif
 
 /* afs_pioctl.c */
 extern struct VenusFid afs_rootFid;
@@ -578,7 +584,7 @@ extern int osi_dnlc_shutdown(void);
 extern struct afs_CMStats afs_cmstats;
 extern struct afs_stats_CMPerf afs_stats_cmperf;
 extern struct afs_stats_CMFullPerf afs_stats_cmfullperf;
-afs_int32 afs_stats_XferSumBytes[AFS_STATS_NUM_FS_XFER_OPS];
+extern afs_int32 afs_stats_XferSumBytes[AFS_STATS_NUM_FS_XFER_OPS];
 extern void afs_InitStats(void);
 extern int afs_GetCMStat(char **ptr, unsigned *size);
 #ifndef AFS_NOSTATS

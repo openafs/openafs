@@ -34,10 +34,6 @@ RCSID("$Header$");
 #include "../h/buf.h"
 #endif /* !defined(UKERNEL) */
 
-#if !defined(UKERNEL) && defined(AFS_LINUX20_ENV)
-#include "../afs/osi_vfs.h"
-#endif
-
 #include "../afs/stds.h"
 #include "../afs/volerrors.h"
 #include "../afs/exporter.h"
