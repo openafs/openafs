@@ -1735,7 +1735,9 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 			 * leading "/afs" when writing out the submount.
 			 */
 			WritePrivateProfileString("AFS Submounts",
-					submountreqp, &afspath[strlen("/afs")],
+					submountreqp, 
+					(strlen(&afspath[strlen("/afs")])) ?
+						  &afspath[strlen("/afs")]:"/",
 					"afsdsbmt.ini");
 
 			strcpy(ioctlp->outDatap, submountreqp);
