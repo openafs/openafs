@@ -102,7 +102,7 @@ static stolower();
 extern int IDCmp();
 
 /* When abort, reset initd so that the header is read in on next call.
- * Abort the transarction and return the code.
+ * Abort the transaction and return the code.
  */
 #define ABORT_WITH(tt,code) return(initd=0,ubik_AbortTrans(tt),code)
 
