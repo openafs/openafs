@@ -3192,7 +3192,7 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
     struct ktc_principal    aserver;
     struct ktc_principal    aclient;
     struct ktc_token	atoken;
-    krb5_context ctx;
+    krb5_context ctx = 0;
     krb5_timestamp now = 0;
     krb5_error_code code;
     int serverReachable = 0;
@@ -3366,6 +3366,7 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
         GlobalFree(rootcell);
 
 #ifndef USE_FSPROBE
+	if (KFW_is_available()) {
     if ( pname )
         pkrb5_free_unparsed_name(ctx,pname);
     if ( principal )
@@ -3375,6 +3376,7 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
 #endif /* USE_FSPROBE */
     if (ctx)
         pkrb5_free_context(ctx);
+	}
     return;
 }
 
