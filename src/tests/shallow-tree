@@ -1,0 +1,5 @@
+#!/bin/sh
+# $Id$
+
+mkdir foo && ( cd foo && $SHELL $SHELLVERBOSE ${srcdir}/dir-tree 3 "0 1 2 3 4" )
+${objdir}/rm-rf foo

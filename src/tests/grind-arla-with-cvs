@@ -1,0 +1,52 @@
+#!/bin/sh
+
+if [ x`uname` != xLinux ] ; then
+    echo This test does not run on this architecture
+    exit 1
+fi
+
+echo '***********************************************************'
+echo '*                                                         *'
+echo '*               Infinite run until error                  *'
+echo '*                                                         *'
+echo '***********************************************************'
+sleep 5
+
+# First argument is our working dir
+test $1 || exit 1
+mkdir $1
+cd $1 || exit 1
+
+TOPDIR=$PWD
+export TOPDIR
+CVSROOT=/afs/stacken.kth.se/src/SourceRepository
+export CVSROOT
+
+# test if cvs takes -R
+cvs -R help 2>&1 | grep Usage: > /dev/null && exit 1
+
+cvs -R checkout arla
+while true; do
+	echo Starting at $TOPDIR
+
+	cd $TOPDIR || exit 1
+	cd arla || exit 1
+	cvs -R update -A -d
+	sh HACKING
+	cd $TOPDIR || exit 1
+	mkdir arla-obj
+	cd arla-obj || exit 1
+	
+	../arla/configure && mv xfs/linux/Makefile xfs/linux/Makefile.old && sed 's/ -Werror//g' < xfs/linux/Makefile.old > xfs/linux/Makefile &&  make || exit 1
+
+	cd $TOPDIR || exit 1
+	cd arla || exit 1
+	cvs -R update -r arla-0-35-branch -d
+	sh HACKING
+	cd $TOPDIR || exit 1
+	mkdir arla-obj
+	cd arla-obj || exit 1
+	../arla/configure && mv xfs/linux/Makefile xfs/linux/Makefile.old && sed 's/ -Werror//g' < xfs/linux/Makefile.old > xfs/linux/Makefile &&  make || exit 1
+done
+	
+	

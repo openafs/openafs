@@ -1,0 +1,4 @@
+#!/bin/sh
+# $Id$
+
+$objdir/test-setpag 1>&4

@@ -1,0 +1,4 @@
+#!/bin/sh
+# $Id$
+
+$objdir/create-symlinks 1000

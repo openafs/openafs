@@ -1,0 +1,3 @@
+#!/bin/sh
+touch ../../replicated/foo || exit 0
+exit 1

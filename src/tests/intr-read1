@@ -1,0 +1,4 @@
+#!/bin/sh
+# $Id$
+$objdir/intr-read ${AFSROOT}/stacken.kth.se/ftp/pub/gnu/gnu-0.2 || exit 1
+exit 0

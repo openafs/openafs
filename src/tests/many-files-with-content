@@ -1,0 +1,4 @@
+#!/bin/sh
+# $Id$
+
+$objdir/create-files 1000 10

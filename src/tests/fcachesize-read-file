@@ -1,0 +1,14 @@
+#!/bin/sh
+# $Id$
+
+FS=${FS:-${objdir}/../appl/fs/fs}
+SIZE1=`$FS getcache | awk '{ print $8 ; exit }'`
+SIZE2=`expr $SIZE1 + 4`
+if test -w /dev/null; then
+  dd if=../foo of=/dev/null bs=1k count=$SIZE2 >/dev/null 2>/dev/null || exit 1
+  rm ../foo || exit 1
+else
+  echo "not running dd (you have no /dev/null)"
+fi
+
+exit 0

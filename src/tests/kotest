@@ -1,0 +1,4 @@
+#!/bin/sh
+# $Id$
+
+exec ${objdir}/../lib/ko/kotest

@@ -1,0 +1,11 @@
+#!/bin/sh
+echo row1 > testfile
+echo log1 | ci -u testfile
+co -l testfile
+echo row2 >> testfile
+echo log2 | ci -u testfile
+co -l testfile
+echo row3 >> testfile
+echo log3 | ci -u testfile
+wc -l testfile | grep '3 testfile' || exit 1
+

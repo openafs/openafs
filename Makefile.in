@@ -570,6 +570,7 @@ clean2:
 	-${COMPILE_PART1} bucoord ${COMPILE_CLEAN}
 	-${COMPILE_PART1} xstat ${COMPILE_CLEAN}
 	-${COMPILE_PART1} afsmonitor ${COMPILE_CLEAN}
+	-${COMPILE_PART1} tests ${COMPILE_CLEAN}
 	-${COMPILE_PART1} rxdebug ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafsrpc ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafsauthent ${COMPILE_CLEAN}
@@ -696,6 +697,9 @@ distclean: clean
 	src/sia/Makefile \
 	src/sys/Makefile \
 	src/tbutc/Makefile \
+	src/tests/Makefile \
+	src/tests/run-tests \
+	src/tests/OpenAFS/Dirpath.pm \
 	src/tsm41/Makefile \
 	src/tviced/Makefile \
 	src/ubik/Makefile \

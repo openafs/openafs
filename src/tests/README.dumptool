@@ -1,0 +1,152 @@
+$Id$
+
+This is the README for dumptool, a program to interactively restore
+AFS volume dump files.
+
+
+INTRODUCTION
+
+Dumptool arose out of a need here at NRL to perform maintenance of
+MR-AFS (Multi-Resident AFS) volumes.  After it was written, we found
+that it worked great on standard AFS volumes as well, and relatively
+few changes were required to make it compile with a standard AFS
+installation.
+
+Dumptool provides an interface similar to the interactive Unix restore;
+given a dump file, a user can navigate through the filesystem inside
+the dump using familiar commands such as "cd" and "ls".  Also provided
+is a "cp" command to copy individual files out of the dump into a
+normal filesystem space.  This eliminates the need to restore an
+entire volume just to retrieve a single file.
+
+Dumptool was written at the Naval Research Laboratory by Ken Hornstein
+<kenh@cmf.nrl.navy.mil>.  The latest and greatest version of dumptool
+can always be found in the AFS contrib directory at:
+
+/afs/transarc.com/public/afs-contrib/dumptool/
+
+
+INSTALLATION & OPERATION
+
+The standard Makefile target will build a dumptool for a vanilla AFS
+installation.  The "mrafs" target will build a dumptool that can
+operate on MR-AFS dumps.  In either case, you may need to change some
+of the Makefile variables to reflect your site; see the Makefile for
+more information.
+
+Once dumptool is built successfully, you can run it on any AFS dump
+file.  Without any additional arguments, dumptool will scan the dump file,
+build indexes of all listed vnodes, and present a prompt (">") that
+accepts the following commands:
+
+	ls	Lists files in the current directory.  Filename globbing
+		(e.g., wildcards such as * ?) are supported via the system
+		fnmatch() function.  Accepts the following flags:
+
+	    -l	Generates a "long" listing, similar to the -l switch for
+		the Unix ls.  Displays Unix mode mask, owner, group,
+		and file size.
+	    -i  Displays volume, vnode, and uniquifier for each matching
+		file in the format volume.vnode.uniquifier.  Note that
+		the volume displayed is that of the _parent_ volume,
+		which in the case of a backup volume is the _original_
+		volume from which it was generated.
+	    -F  Append / to filenames for directories, @ for symlinks,
+		and * for files which have the execute bits set.
+	    -R  Recurse through all subdirectories.
+	
+	cd	Change the current directory
+
+	cp	Copy a file from the dump.  Note that globbing is NOT
+		supported, and you must give a filename (the Unix
+		idiom of just giving a destination directory for the
+		second argument to cp will NOT work).
+	
+	vcp	Copy a file from the dump, by the vnode.  The first
+		argument is the vnode number, optionally followed by
+		the uniqifier.  E.g:
+
+		vcp 126278 /tmp/file1
+		vcp 126278.43289 /tmp/file2
+	
+	quit	Exits dumptool.
+	exit
+
+
+ADDITIONAL OPTIONS TO DUMPTOOL
+
+Dumptool supports a number of command-line options.  They are detailed
+below:
+
+	-v	Verbose mode.  Output additional information during dump
+		processing.  Each -v will increate output.
+
+	-f	Force dump processing.  Attempt to continue processing
+		a dump even when some errors are detected.  Not completely
+		tested.
+	
+	-i	Inode dump.  Dump a list of all files in the volume,
+		with their volume/vnode/uniqifier information.
+
+
+SUPPORT FOR MR-AFS
+
+Dumptool also supports the extra information in MR-AFS dumps, and
+provides some extra commands/options for dealing with MR-AFS dumps:
+
+Additional command line options:
+
+	-d	Dump all residency filenames in the dump file to standard
+		output.
+	
+	-t 	Residency tag information.  Allows a user to specify the
+		tag of a residency if the rsserver is not available.
+		Format of option is Residency/Tag
+	
+	-r	Residency filesystem information.  Allows a user to specify
+		the residency filesystem information if dumptool is not
+		run on the same host as the residency in the dump.  Format
+		of option is Residency/Type/Size/Algorithm.
+
+Additional commands:
+
+	file	Displays to standard output the residency filename of a
+		given dump filename.  All residencies available are shown.
+
+
+CAVEATS
+
+The user interface needs some work.  "ls" doesn't support nearly as many
+options as the standard Unix one.  "cp" also doesn't have all of the features
+found in common Unix variants.
+
+Right now two passes are done through the dump file to scan all vnodes.
+With some clever work this could be sped up somewhat and changed to only
+do a single scan.
+
+
+MODIFYING DUMPTOOL
+
+I welcome changes to dumptool, but I have some guidelines.
+
+First, I DEMAND that the changes be sent in context diff format.  I prefer
+unidiff (diff -u), but standard context diffs are okay.  It's extremely
+difficult to deal with new code in any other way.
+
+If the changes you want to do require some significant
+rearchitecturing, it might be a good idea to contact me first.  That
+way we can coordinate the modifications in a meaningful way (I might
+have made changes since the last released version).
+
+If you're making MR-AFS specific changes, please follow the example
+I've set and protect them with #ifdef RESIDENCY.
+
+And please ... follow my code style, okay?  I always try to follow
+whatever wacky code style I find in source code that I modify, and I
+think it's only polite for you to do the same.
+
+
+CONTACT INFORMATION
+
+As always, please send comments, suggestions, or new features to me,
+Ken Hornstein <kenh@cmf.nrl.navy.mil>.  Shar and enjoy.

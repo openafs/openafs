@@ -1,0 +1,8 @@
+#!/bin/sh
+# $Id$
+cat <<FOO > foo.c
+int main() { return 0; }
+FOO
+%CC% -o foo foo.c || exit 1
+./foo || exit 1
+rm -f foo foo.c

@@ -1,0 +1,25 @@
+# This is -*- perl -*-
+
+package OpenAFS::Dirpath;
+
+use strict;
+use vars qw( @ISA @EXPORT $openafsdirpath);
+@ISA = qw(Exporter);
+require Exporter;
+@EXPORT = qw($openafsdirpath);
+
+# Dirpath configuration
+$openafsdirpath = {
+        'afsconfdir'       => '@afsconfdir@',
+        'viceetcdir'       => '@viceetcdir@',
+	'afssrvbindir'     => '@afssrvbindir@',
+	'afssrvsbindir'    => '@afssrvsbindir@',
+	'afssrvlibexecdir' => '@afssrvlibexecdir@',
+	'afsdbdir'         => '@afsdbdir@',
+	'afslogsdir'       => '@afslogsdir@',
+	'afslocaldir'      => '@afslocaldir@',
+	'afsbackupdir'     => '@afsbackupdir@',
+	'afsbosconfigdir'  => '@afsbosconfigdir@'
+};
+
+1;
