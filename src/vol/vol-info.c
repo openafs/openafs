@@ -238,9 +238,9 @@ static int handleit(struct cmd_syndesc *as)
 	InodeTimes = 1;
     else    
 	InodeTimes = 0;
-    if (ti = as->parms[5].items)
+    if ((ti = as->parms[5].items))
 	partName = ti->data;
-    if (ti = as->parms[6].items)
+    if ((ti = as->parms[6].items))
 	volumeId = atoi(ti->data);
     if (as->parms[7].items)
 	dheader = 1;
@@ -815,11 +815,14 @@ void PrintVnode(int offset, VnodeDiskObject *vnode, int vnodeNumber, Inode ino)
     char filename[MAX_PATH];
 #endif
 #endif
-    Vvnodesize += vnode->length;
+    afs_fsize_t fileLength;
+
+    VNDISK_GET_LEN(fileLength, vnode);
+    Vvnodesize += fileLength;
     if (dsizeOnly) return;
-    if (orphaned && (vnode->length ==0 || vnode->parent || !offset)) return;
+    if (orphaned && (fileLength ==0 || vnode->parent || !offset)) return;
     printf("%10d Vnode %u.%u.%u cloned: %d, length: %d linkCount: %d parent: %d",
-        offset, vnodeNumber, vnode->uniquifier, vnode->dataVersion, vnode->cloned, vnode->length, vnode->linkCount, vnode->parent);
+        offset, vnodeNumber, vnode->uniquifier, vnode->dataVersion, vnode->cloned, fileLength, vnode->linkCount, vnode->parent);
     if (DumpInodeNumber)
 	printf(" inode: %s", PrintInode(NULL, ino));
     if (DumpDate)

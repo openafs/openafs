@@ -765,9 +765,10 @@ int ProcessIndex(Volume *vp, VnodeClass class, afs_int32 **Bufp, int *sizep,
 		    if (vnode->type != vNull && VNDISK_GET_INO(vnode)) {
 			cnt1++;
 			if (DoLogging) {
+			   afs_fsize_t vnodeLength;
 			   Log("RestoreVolume %d Cleanup: Removing old vnode=%d inode=%d size=%d\n", 
 			       V_id(vp), bitNumberToVnodeNumber(i,class),
-			       VNDISK_GET_INO(vnode), vnode->length);
+			       VNDISK_GET_INO(vnode), vnodeLength);
 			}
 			IH_DEC(V_linkHandle(vp), VNDISK_GET_INO(vnode),
 			     V_parentId(vp));
@@ -980,6 +981,7 @@ static int ReadVnodes(register struct iod *iodp, Volume *vp,
 		case 'f': {
 		    Inode ino;
 		    Error error;
+		    afs_fsize_t vnodeLength;
 
 		    ino = IH_CREATE(V_linkHandle(vp),
 				    V_device(vp),
@@ -1000,8 +1002,9 @@ static int ReadVnodes(register struct iod *iodp, Volume *vp,
 			IH_RELEASE(tmpH);
 			return VOLSERREAD_DUMPERROR;
 		    }
-		    vnode->length = volser_WriteFile(vnodeNumber, iodp, fdP,
-						     &error);
+		    vnodeLength = volser_WriteFile(vnodeNumber, iodp, fdP,
+						   &error);
+		    VNDISK_SET_LEN(vnode, vnodeLength);
 		    FDH_REALLYCLOSE(fdP);
 		    IH_RELEASE(tmpH);
 		    if (error) {

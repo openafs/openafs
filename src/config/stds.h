@@ -93,6 +93,18 @@ typedef afs_int32 afs_size_t;
 typedef afs_uint32 afs_offs_t;
 #endif /* AFS_64BIT_CLIENT */
 
+#ifdef AFS_LARGEFILE_ENV
+typedef afs_int64 afs_foff_t;
+typedef afs_uint64 afs_fsize_t;
+typedef afs_int64 afs_sfsize_t;
+#define SplitOffsetOrSize(t,h,l) SplitInt64(t,h,l)
+#else /* !AFS_LARGEFILE_ENV */
+typedef afs_int32 afs_foff_t;
+typedef afs_uint32 afs_fsize_t;
+typedef afs_int32 afs_sfsize_t;
+#define SplitOffsetOrSize(t,h,l) (h) = 0; (l) = (t);
+#endif /* !AFS_LARGEFILE_ENV */
+
 /* you still have to include <netinet/in.h> to make these work */
 
 #define hton32 htonl

@@ -154,6 +154,18 @@ typedef struct Vnode {
 	(sizeof(struct Vnode) - sizeof(VnodeDiskObject) + SIZEOF_LARGEDISKVNODE)
 #define SIZEOF_SMALLVNODE	(sizeof (struct Vnode))
 
+#ifdef AFS_LARGEFILE_ENV
+#define VN_GET_LEN(N, V) FillInt64(N, (V)->disk.reserved6, (V)->disk.length)
+#define VNDISK_GET_LEN(N, V) FillInt64(N, (V)->reserved6, (V)->length)
+#define VN_SET_LEN(V, N) SplitInt64(N, (V)->disk.reserved6, (V)->disk.length)
+#define VNDISK_SET_LEN(V, N) SplitInt64(N, (V)->reserved6, (V)->length)
+#else /* !AFS_LARGEFILE_ENV */
+#define VN_GET_LEN(N, V) (N) = (V)->disk.length;
+#define VNDISK_GET_LEN(N, V) (N) = (V)->length;
+#define VN_SET_LEN(V, N) (V)->disk.length = (N);
+#define VNDISK_SET_LEN(V, N) (V)->length = (N);
+#endif /* !AFS_LARGEFILE_ENV */
+
 #ifdef AFS_64BIT_IOPS_ENV
 #define VN_GET_INO(V) ((Inode)((V)->disk.vn_ino_lo | \
 			       ((V)->disk.vn_ino_hi ? \

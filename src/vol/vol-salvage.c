@@ -2315,7 +2315,8 @@ int SalvageIndex(Inode ino, VnodeClass class, int RW,
     int err = 0;
     StreamHandle_t *file;
     struct VnodeClassInfo *vcp;
-    int size;
+    afs_sfsize_t size;
+    afs_fsize_t vnodeLength;
     int vnodeIndex, nVnodes;
     afs_ino_str_t stmp1, stmp2;
     IHandle_t *handle;
@@ -2491,16 +2492,17 @@ int SalvageIndex(Inode ino, VnodeClass class, int RW,
 			VNDISK_SET_INO(vnode, ip->inodeNumber);
 			vnodeChanged = 1;
 		    }
-		    if (ip->byteCount != vnode->length) {
+		    VNDISK_GET_LEN(vnodeLength, vnode);
+		    if (ip->byteCount != vnodeLength) {
 			if (check) {
 			    if (!Showmode) Log("Vnode %d: length incorrect; (is %d should be %d)\n",
-					       vnodeNumber, vnode->length, ip->byteCount);
+					       vnodeNumber, vnodeLength, ip->byteCount);
 			    err = -1;
 			    goto zooks;
 			}
 			if (!Showmode) Log("Vnode %d: length incorrect; changed from %d to %d\n",
-					   vnodeNumber, vnode->length, ip->byteCount);
-			vnode->length = ip->byteCount;
+					   vnodeNumber, vnodeLength, ip->byteCount);
+			VNDISK_SET_LEN(vnode, ip->byteCount);
 			vnodeChanged = 1;
 		    }
 		    if (!check)
@@ -2684,7 +2686,7 @@ void CopyAndSalvage(register struct DirSummary *dir)
     }
     vnode.cloned = 0;
     VNDISK_SET_INO(&vnode, newinode);
-    vnode.length = Length(&newdir);
+    VNDISK_SET_LEN(&vnode, Length(&newdir));
     code = IH_IWRITE(vnodeInfo[vLarge].handle,
 		    vnodeIndexOffset(vcp, dir->vnodeNumber),
 		    (char*)&vnode, sizeof (vnode));
@@ -2988,9 +2990,11 @@ void DistilVnodeEssence(VolumeId rwVId, VnodeClass class, Inode ino,
       nVnodes--, vnodeIndex++) {
 	if (vnode->type != vNull) {
 	    register struct VnodeEssence *vep = &vip->vnodes[vnodeIndex];
+	    afs_fsize_t vnodeLength;
 	    vip->nAllocatedVnodes++;
 	    vep->count = vnode->linkCount;
-	    vep->blockCount = nBlocks(vnode->length);
+	    VNDISK_GET_LEN(vnodeLength, vnode);
+	    vep->blockCount = nBlocks(vnodeLength);
 	    vip->volumeBlockCount += vep->blockCount;
 	    vep->parent = vnode->parent;
 	    vep->unique = vnode->uniquifier;

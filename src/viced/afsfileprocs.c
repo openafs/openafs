@@ -1020,7 +1020,7 @@ static int CopyOnWrite(Vnode *targetptr, Volume *volptr)
 
     if (targetptr->disk.type ==	vDirectory) DFlush();	/* just in case? */
 
-    size = targetptr->disk.length;
+    VN_GET_LEN(size, targetptr);
     buff = (char *)malloc(COPYBUFFSIZE);
     if (buff == NULL) {
 	return EIO;
@@ -1236,8 +1236,12 @@ DeleteTarget(Vnode *parentptr,
 	    }
 	}
 	VN_SET_INO(*targetptr, (Inode)0);
-	VAdjustDiskUsage(&errorCode, volptr,
-			-(int)nBlocks((*targetptr)->disk.length), 0);
+	{
+	    afs_fsize_t adjLength;
+	    VN_GET_LEN(adjLength, *targetptr);
+	    VAdjustDiskUsage(&errorCode, volptr,
+			     -(int)nBlocks(adjLength), 0);
+	}
     }
     
     (*targetptr)->changed_newTime = 1; /* Status change of deleted file/dir */
@@ -1275,7 +1279,8 @@ Update_ParentVnodeStatus(Vnode *parentptr,
 #endif /* FS_STATS_DETAILED */
 			 )
 {
-    afs_uint32 newlength;	/* Holds new directory length */
+    afs_fsize_t newlength;	/* Holds new directory length */
+    afs_fsize_t parentLength;
     int errorCode;
 #if FS_STATS_DETAILED
     Date currDate;		/*Current date*/
@@ -1291,11 +1296,13 @@ Update_ParentVnodeStatus(Vnode *parentptr,
      * XXX But we still don't check the error since we're dealing with dirs here and really the increase
      * of a new entry would be too tiny to worry about failures (since we have all the existing cushion)
      */
-    if (nBlocks(newlength) != nBlocks(parentptr->disk.length))
+    VN_GET_LEN(parentLength, parentptr);
+    if (nBlocks(newlength) != nBlocks(parentLength)) {
 	VAdjustDiskUsage(&errorCode, volptr, 
-			 (int)(nBlocks(newlength) - nBlocks(parentptr->disk.length)),
-			 (int)(nBlocks(newlength) - nBlocks(parentptr->disk.length)));
-    parentptr->disk.length = newlength;
+			 (nBlocks(newlength) - nBlocks(parentLength)),
+			 (nBlocks(newlength) - nBlocks(parentLength)));
+    }
+    VN_SET_LEN(parentptr, newlength);
 
 #if FS_STATS_DETAILED
     /*
@@ -1354,7 +1361,7 @@ Update_TargetVnodeStatus(Vnode *targetptr,
 			 AFSStoreStatus *InStatus,
 			 Vnode *parentptr,
 			 Volume *volptr,
-			 afs_int32 length)
+			 afs_fsize_t length)
 {
 #if FS_STATS_DETAILED
     Date currDate;		/*Current date*/
@@ -1364,7 +1371,7 @@ Update_TargetVnodeStatus(Vnode *targetptr,
 
     if (Caller & (TVS_CFILE|TVS_SLINK|TVS_MKDIR))	{   /* initialize new file */
 	targetptr->disk.parent = parentptr->vnodeNumber;
-	targetptr->disk.length = length;
+	VN_SET_LEN(targetptr, length);
 	/* targetptr->disk.group =	0;  save some cycles */
 	targetptr->disk.modeBits = 0777;
 	targetptr->disk.owner = client->ViceId;
@@ -1990,8 +1997,11 @@ void GetStatus(Vnode *targetptr,
     else
 	status->FileType = Invalid;			/*invalid type field */
     status->LinkCount = targetptr->disk.linkCount;
-    status->Length_hi = 0;
-    status->Length = targetptr->disk.length;
+    {
+	afs_fsize_t targetLen;
+	VN_GET_LEN(targetLen, targetptr);
+	SplitOffsetOrSize(targetLen, status->Length_hi, status->Length);
+    }
     status->DataVersion = targetptr->disk.dataVersion;
     status->Author = targetptr->disk.author;
     status->Owner = targetptr->disk.owner;
@@ -2828,15 +2838,15 @@ Bad_FetchStatus:
 
 } /*SRXAFS_FetchStatus*/
 
-
-afs_int32 SRXAFS_StoreData (struct rx_call *acall,		
-			    struct AFSFid *Fid,			
-			    struct AFSStoreStatus *InStatus,	
-			    afs_uint32 Pos,                     
-			    afs_uint32 Length,                  
-			    afs_uint32 FileLength,              
-			    struct AFSFetchStatus *OutStatus,	
-			    struct AFSVolSync *Sync)
+static
+afs_int32 common_StoreData64 (struct rx_call *acall,		
+			      struct AFSFid *Fid,			
+			      struct AFSStoreStatus *InStatus,	
+			      afs_uint32 Pos,                     
+			      afs_uint32 Length,                  
+			      afs_uint32 FileLength,              
+			      struct AFSFetchStatus *OutStatus,	
+			      struct AFSVolSync *Sync)
 {
     Vnode * targetptr =	0;		/* pointer to input fid */
     Vnode * parentwhentargetnotdir = 0;	/* parent of Fid to get ACL */
@@ -3058,6 +3068,23 @@ Bad_StoreData:
     osi_auditU (acall, StoreDataEvent, errorCode, AUD_FID, Fid, AUD_END);
     return(errorCode);
 
+} /*common_StoreData64*/
+
+afs_int32 SRXAFS_StoreData (struct rx_call *acall,		
+			    struct AFSFid *Fid,			
+			    struct AFSStoreStatus *InStatus,	
+			    afs_uint32 Pos,                     
+			    afs_uint32 Length,                  
+			    afs_uint32 FileLength,              
+			    struct AFSFetchStatus *OutStatus,	
+			    struct AFSVolSync *Sync)
+{
+    int code;
+
+    code = common_StoreData64 (acall, Fid, InStatus, Pos, Length, FileLength,
+			       OutStatus, Sync);
+    return code;
+
 } /*SRXAFS_StoreData*/
 
 afs_int32 SRXAFS_StoreData64 (struct rx_call *acall, 		
@@ -3088,8 +3115,8 @@ afs_int32 SRXAFS_StoreData64 (struct rx_call *acall,
     tFileLength = FileLength.low;
 #endif /* AFS_64BIT_ENV */
 
-    code = SRXAFS_StoreData (acall, Fid, InStatus, tPos, tLength, tFileLength,
-                             OutStatus, Sync);
+    code = common_StoreData64 (acall, Fid, InStatus, tPos, tLength, tFileLength,
+			       OutStatus, Sync);
     return code;
 }
 
@@ -3947,8 +3974,9 @@ SAFSS_Rename (struct rx_call *acall,
 	/* Drop the link count */
 	newfileptr->disk.linkCount--;
 	if (newfileptr->disk.linkCount == 0) {      /* Link count 0 - delete */
-	    VAdjustDiskUsage(&errorCode, volptr,
-			     -(int)nBlocks(newfileptr->disk.length), 0);
+	    afs_fsize_t	newSize;
+	    VN_GET_LEN(newSize, newfileptr);
+	    VAdjustDiskUsage(&errorCode, volptr, -nBlocks(newSize), 0);
 	    if (VN_GET_INO(newfileptr)) {
 		IH_REALLYCLOSE(newfileptr->handle);
 		errorCode = IH_DEC(V_linkHandle(volptr),
@@ -4645,7 +4673,7 @@ SAFSS_MakeDir (struct rx_call *acall,
     SetDirHandle(&dir, targetptr);
     assert(!(MakeDir(&dir, OutFid, DirFid)));
     DFlush();
-    targetptr->disk.length = Length(&dir);
+    VN_SET_LEN(targetptr, Length(&dir));
 
     /* set up return status */
     GetStatus(targetptr, OutFidStatus, rights, anyrights, parentptr);
@@ -6709,16 +6737,20 @@ FetchData_RXStyle(Volume *volptr,
 	AFSCallStats.TotalFetchedBytes = AFSCallStats.AccumFetchTime = 0;
     AFSCallStats.AccumFetchTime += ((StopTime.tv_sec - StartTime.tv_sec) * 1000) +
       ((StopTime.tv_usec - StartTime.tv_usec) / 1000);
-    AFSCallStats.TotalFetchedBytes += targetptr->disk.length;
-    AFSCallStats.FetchSize1++;
-    if (targetptr->disk.length < SIZE2)
-	AFSCallStats.FetchSize2++;  
-    else if (targetptr->disk.length < SIZE3)
-	AFSCallStats.FetchSize3++;
-    else if (targetptr->disk.length < SIZE4)
-	AFSCallStats.FetchSize4++;  
-    else
-	AFSCallStats.FetchSize5++;
+    {
+	afs_fsize_t	targLen;
+	VN_GET_LEN(targLen, targetptr);
+	AFSCallStats.TotalFetchedBytes += targLen;
+	AFSCallStats.FetchSize1++;
+	if (targLen < SIZE2)
+	    AFSCallStats.FetchSize2++;  
+	else if (targLen < SIZE3)
+	    AFSCallStats.FetchSize3++;
+	else if (targLen < SIZE4)
+	    AFSCallStats.FetchSize4++;  
+	else
+	    AFSCallStats.FetchSize5++;
+    }
     FS_UNLOCK
     return (0);
 
@@ -6850,7 +6882,7 @@ StoreData_RXStyle(Volume *volptr,
 	}
 	
 	if (linkCount != 1) {
-	    afs_uint32 size;
+	    afs_fsize_t size;
 	    ViceLog(25, ("StoreData_RXStyle : inode %s has more than onelink\n",
 			 PrintInode(NULL, VN_GET_INO(targetptr))));
 	    /* other volumes share this data, better copy it first */
@@ -6862,7 +6894,7 @@ StoreData_RXStyle(Volume *volptr,
 	     * of the disk will be recorded...
 	     */
 	    FDH_CLOSE(fdP);
-	    size = targetptr->disk.length;
+	    VN_GET_LEN(size, targetptr);
 	    volptr->partition->flags &= ~PART_DONTUPDATE;
 	    VSetPartitionDiskUsage(volptr->partition);
 	    volptr->partition->flags |= PART_DONTUPDATE;
@@ -6900,7 +6932,11 @@ StoreData_RXStyle(Volume *volptr,
 	NewLength = Pos+Length;   /* and write */
 
     /* adjust the disk block count by the difference in the files */
-    adjustSize = (int) (nBlocks(NewLength) - nBlocks(targetptr->disk.length));
+    {
+	afs_fsize_t	targSize;
+	VN_GET_LEN(targSize, targetptr);
+	adjustSize = nBlocks(NewLength) - nBlocks(targSize);
+    }
     if((errorCode = AdjustDiskUsage(volptr, adjustSize,
 				   adjustSize - SpareComp(volptr)))) {
 	FDH_CLOSE(fdP);
@@ -6982,8 +7018,9 @@ StoreData_RXStyle(Volume *volptr,
       FDH_SYNC(fdP);
     }
     if (errorCode) {
+	afs_fsize_t	nfSize = FDH_SIZE(fdP);
 	/* something went wrong: adjust size and return */
-	targetptr->disk.length = FDH_SIZE(fdP); /* set new file size. */
+	VN_SET_LEN(targetptr, nfSize); /* set new file size. */
 	/* changed_newTime is tested in StoreData to detemine if we
 	 * need to update the target vnode.
 	 */
@@ -6991,29 +7028,32 @@ StoreData_RXStyle(Volume *volptr,
 	FDH_CLOSE(fdP);
 	/* set disk usage to be correct */
 	VAdjustDiskUsage(&errorCode, volptr,
-			 (int)(nBlocks(targetptr->disk.length)
-			       - nBlocks(NewLength)), 0);
+			 (int)(nBlocks(nfSize) - nBlocks(NewLength)), 0);
 	return errorCode;
     }
     FDH_CLOSE(fdP);
 
     TM_GetTimeOfDay(&StopTime, 0);
 
-    targetptr->disk.length = NewLength;
+    VN_SET_LEN(targetptr, NewLength);
 
     /* Update all StoreData related stats */
     FS_LOCK
     if (AFSCallStats.TotalStoredBytes >	2000000000)	/* reset if over 2 billion */
 	AFSCallStats.TotalStoredBytes = AFSCallStats.AccumStoreTime = 0;
     AFSCallStats.StoreSize1++;			/* Piggybacked data */
-    if (targetptr->disk.length < SIZE2)
-	AFSCallStats.StoreSize2++;
-    else if (targetptr->disk.length < SIZE3)
-	AFSCallStats.StoreSize3++;
-    else if (targetptr->disk.length < SIZE4)
-	AFSCallStats.StoreSize4++;
-    else
-	AFSCallStats.StoreSize5++;
+    {
+	afs_fsize_t	targLen;
+	VN_GET_LEN(targLen, targetptr);
+	if (targLen < SIZE2)
+	    AFSCallStats.StoreSize2++;
+	else if (targLen < SIZE3)
+	    AFSCallStats.StoreSize3++;
+	else if (targLen < SIZE4)
+	    AFSCallStats.StoreSize4++;
+	else
+	    AFSCallStats.StoreSize5++;
+    }
     FS_UNLOCK
     return(errorCode);
 
