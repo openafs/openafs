@@ -51,7 +51,7 @@
 #endif /* defined(UKERNEL) */
 
 
-static afs_int32 GetTickets (
+afs_int32 GetTickets (
   char *name,
   char *instance,
   char *realm,
