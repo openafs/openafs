@@ -20,11 +20,12 @@
 #include <net/if.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #include <sys/sysctl.h>
 #include <net/route.h>
 #include <net/if_dl.h>
 #endif
+
 /*
  * By including this, we get any system dependencies. In particular,
  * the pthreads for solaris requires the socket call to be mapped.
@@ -105,7 +106,7 @@ afs_int32 rxi_getaddr ()
 #undef socket
 #endif /* UKERNEL */
 
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #define ROUNDUP(a) \
         ((a) > 0 ? (1 + (((a) - 1) | (sizeof(long) - 1))) : sizeof(long))
 #define ADVANCE(x, n) (x += ROUNDUP((n)->sa_len))
@@ -132,7 +133,7 @@ rt_xaddrs(cp, cplim, rtinfo)
 /* this function returns the total number of interface addresses 
 ** the buffer has to be passed in by the caller
 */
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 int rx_getAllAddr (buffer,maxSize)
 afs_int32	buffer[];
 int 	maxSize;	/* sizeof of buffer in afs_int32 units */
@@ -337,13 +338,13 @@ int    maxSize;        /* sizeof of buffer in afs_int32 units */
     len = ifc.ifc_len / sizeof(struct ifreq);
     if (len > NIFS)
 	len = NIFS;
-#if    defined(AFS_AIX41_ENV) || defined (AFS_DARWIN_ENV)
+#if    defined(AFS_AIX41_ENV) || defined (AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     if ( ifc.ifc_len > sizeof(ifs) ) 	/* safety check */
 	ifc.ifc_len = sizeof(ifs); 
     for ( cp = (char *)ifc.ifc_buf, 
 		cplim= ifc.ifc_buf+ifc.ifc_len;
 		cp < cplim;
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	        cp += _SIZEOF_ADDR_IFREQ(*ifr))
 #else
                 cp += sizeof(ifr->ifr_name) + MAX(a->sin_len, sizeof(*a)))

@@ -179,7 +179,7 @@ afs_int32 ka_UserAuthenticateGeneral (
     }
 #endif
 
-#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_USR_LINUX20_ENV)
+#if !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_USR_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
     /* handle smoothly the case where no AFS system calls exists (yet) */
     old = (int (*)())signal(SIGSYS, SIG_IGN);
 #endif

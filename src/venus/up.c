@@ -42,7 +42,7 @@
 
 extern char *index ();
 extern char *rindex ();
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 extern sys_nerr;
 extern char *sys_errlist[];
 #endif

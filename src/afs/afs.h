@@ -509,7 +509,11 @@ struct SimpleLocks {
 #define VPageCleaning 0x2	/* Solaris - Cache Trunc Daemon sez keep out */
 
 #define	CPSIZE	    2
+#if !defined(AFS_FBSD_ENV)
 #define	vrefCount   v.v_count
+#else
+#define vrefCount   v.v_usecount
+#endif /* AFS_FBSD_ENV */
 
 #define	AFS_MAXDV   0x7fffffff	    /* largest dataversion number */
 #define	AFS_NOTRUNC 0x7fffffff	    /* largest dataversion number */

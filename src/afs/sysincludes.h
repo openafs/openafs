@@ -41,7 +41,7 @@ struct xfs_inode_info {};
 #include <linux/errno.h>
 
 #else /* AFS_LINUX22_ENV */
-#ifdef AFS_DARWIN_ENV    
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #define _MACH_ETAP_H_   
 typedef unsigned short                  etap_event_t; 
 #endif
@@ -132,7 +132,7 @@ typedef unsigned short                  etap_event_t;
 #include "../h/socketvar.h"
 #include "../h/protosw.h"
 
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_FBSD_ENV)
 #  include "../h/dirent.h"
 #  ifdef	AFS_SUN5_ENV
 #    include "../h/sysmacros.h"
@@ -184,15 +184,24 @@ struct vfspage;			/* for vnode.h compiler warnings */
 #    include "../h/swap.h"	/* for struct swpdbd, for vnode.h compiler warnings */
 #    include "../h/dbd.h"	/* for union idbd, for vnode.h compiler warnings */
 #  endif /* AFS_HPUX_ENV */
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD40_ENV)
 #  include <sys/uio.h>
 #  include <sys/mount.h> 
 #  include <sys/namei.h>
 #  include <sys/vnode.h>  
 #  include <sys/queue.h>    
+#ifndef AFS_FBSD_ENV
 #  include <sys/ubc.h>
 #define timeout_fcn_t mach_timeout_fcn_t
 #  include <kern/sched_prim.h>
+#else
+#  include <ufs/ufs/dinode.h>
+#  include <vm/vm.h>
+#  include <vm/vm_extern.h>
+#  include <vm/pmap.h>
+#  include <vm/vm_map.h>
+#  include <sys/lock.h>
+#endif
 #undef timeout_fcn_t
 #define _DIR_H_
 #define doff_t          int32_t
@@ -213,7 +222,7 @@ struct vfspage;			/* for vnode.h compiler warnings */
 #      endif /* !AFS_HPUX_ENV */
 #    endif /* !AFS_AIX32_ENV */
 #  endif /* AFS_SUN5_ENV */
-#endif /* AFS_DARWIN_ENV */
+#endif /* AFS_DARWIN_ENV || AFS_FBSD_ENV */
 #endif /* AFS_DEC_ENV */
 
 /* These mainly deal with networking and rpc headers */
@@ -234,7 +243,9 @@ struct vfspage;			/* for vnode.h compiler warnings */
 
 /* Miscellaneous headers */
 #include "../h/proc.h"
+#if !defined(AFS_FBSD_ENV)
 #include "../h/ioctl.h"
+#endif /* AFS_FBSD_ENV */
 
 #if	defined(AFS_HPUX101_ENV)
 #include "../h/proc_iface.h"
@@ -246,7 +257,7 @@ struct vfspage;			/* for vnode.h compiler warnings */
 #include "../h/tty.h"
 #endif
 
-#if !defined(AFS_SGI_ENV) && !defined(AFS_SUN_ENV) && !defined(AFS_MACH_ENV) && !defined(AFS_AIX32_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_SGI_ENV) && !defined(AFS_SUN_ENV) && !defined(AFS_MACH_ENV) && !defined(AFS_AIX32_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 
 #  include "../h/text.h"
 #endif 

@@ -28,7 +28,7 @@
 
 char *emalloc();
 
-#if defined(AFS_AIX41_ENV) || defined(AFS_LINUX20_ENV)
+#if defined(AFS_AIX41_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV)
 int test_linecounter;	/*Line number currently being parsed*/
 
 char *ch2str();

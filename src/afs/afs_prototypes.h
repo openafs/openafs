@@ -38,9 +38,9 @@ extern void afs_osi_TraverseProcTable(void);
 /* afs_osi_pag.c */
 extern afs_uint32 genpag(void);
 extern afs_uint32 getpag(void);
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 extern int AddPag(struct proc *p, afs_int32 aval, struct AFS_UCRED **credpp);
-#else	/* AFS_OSF_ENV */
+#else	/* AFS_OSF_ENV || AFS_FBSD_ENV */
 extern int AddPag(afs_int32 aval, struct AFS_UCRED **credpp);
 #endif
 extern afs_uint32 afs_get_pag_from_groups(gid_t g0, gid_t g1);
@@ -119,7 +119,7 @@ extern void InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
 			 int acell, struct cell *tcell, struct vrequest *areq);
 extern void afs_ResetVolumeInfo(struct volume *tv);
 
-#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #include "../afs/osi_prototypes.h"
 #endif
 

@@ -109,7 +109,7 @@ extern void  osi_FreeLargeSpace(void *x);
 /*
  * Vnode related macros
  */
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 extern int (**afs_vnodeop_p)();
 #define IsAfsVnode(vc)      ((vc)->v_op == afs_vnodeop_p)
 #define SetAfsVnode(vc)     (vc)->v_op = afs_vnodeop_p
@@ -236,7 +236,7 @@ typedef struct timeval osi_timeval_t;
  * (Also, of course, the vnode is assumed to be one of ours.  Can't use this
  * macro for V-file vnodes.)
  */
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 /* Bare refcount manipulation would probably work on this platform, but just
    calling VREF does not */
 #define AFS_FAST_HOLD(vp) osi_vnhold((vp),0)
@@ -282,7 +282,7 @@ typedef struct timeval osi_timeval_t;
 		AFS_GLOCK();					\
 	} while(0)
 
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    int haveGlock = ISAFS_GLOCK();			\
@@ -293,7 +293,7 @@ typedef struct timeval osi_timeval_t;
 	    if (haveGlock)					\
 		AFS_GLOCK();					\
 	} while(0)
-#else /* AFS_OSF_ENV */
+#else /* AFS_OSF_ENV || AFS_FBSD_ENV */
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    int haveGlock = ISAFS_GLOCK();			\
@@ -303,7 +303,7 @@ typedef struct timeval osi_timeval_t;
 	    if (haveGlock)					\
 		AFS_GLOCK();					\
 	} while(0)
-#endif /* AFS_OSF_ENV */
+#endif /* AFS_OSF_ENV || AFS_FBSD_ENV */
 
 #else /* AFS_GLOBAL_SUNLOCK */
 
@@ -322,18 +322,18 @@ typedef struct timeval osi_timeval_t;
 	    CODE = copyout((SRC),(DST),(LEN));			\
 	} while(0)
 
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    (UIO)->uio_rw = (RW);				\
 	    CODE = uiomove((SRC),(LEN),(UIO));			\
 	} while(0)
-#else /* AFS_OSF_ENV */
+#else /* AFS_OSF_ENV || AFS_FBSD_ENV */
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    CODE = uiomove((SRC),(LEN),(RW),(UIO));		\
 	} while(0)
-#endif /* AFS_OSF_ENV */
+#endif /* AFS_OSF_ENV || AFS_FBSD_ENV */
 
 #endif /* AFS_GLOBAL_SUNLOCK */
 

@@ -120,7 +120,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #ifdef	AFS_SUN5_ENV
 #include <sys/fs/ufs_inode.h>
 #else
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #include <ufs/ufs/dinode.h>
 #include <ufs/ffs/fs.h>
 #else
@@ -131,7 +131,7 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #ifdef	AFS_OSF_ENV
 #include <ufs/inode.h>
 #else	/* AFS_OSF_ENV */
-#ifndef AFS_LINUX20_ENV
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
 #include <sys/inode.h>
 #endif
 #endif

@@ -131,6 +131,7 @@
 #define SYS_NAME_ID_alpha_linux_22      2001
 #define SYS_NAME_ID_alpha_linux_24      2002
 
+#define SYS_NAME_ID_i386_fbsd_42        2100
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 

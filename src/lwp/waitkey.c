@@ -154,7 +154,7 @@ int LWP_WaitForKeystroke(int seconds)
     if (stdin->_IO_read_ptr < stdin->_IO_read_end)
 	return 1;
 #else
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     if (stdin->_bf._size > 0)
         return 1;
 #else

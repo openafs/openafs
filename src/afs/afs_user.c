@@ -606,7 +606,7 @@ void afs_GCPAGs_perproc_func(AFS_PROC *pproc)
     afs_GCPAGs_cred_count++;
 
     pag = PagInCred(pcred);
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD40_ENV)
     uid = (pag != NOPAG ? pag : pcred->cr_uid);
 #else
     uid = (pag != NOPAG ? pag : pcred->cr_ruid);

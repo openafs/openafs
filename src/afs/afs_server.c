@@ -1202,7 +1202,7 @@ static afs_SetServerPrefs(sa)
 #ifdef AFS_SGI62_ENV
     (void) hash_enum(&hashinfo_inaddr, afsi_enum_set_rank, HTF_INET, NULL,
 		     (caddr_t)sa, NULL);
-#elif defined(AFS_DARWIN_ENV)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     {
         struct in_ifaddr *ifa;
         TAILQ_FOREACH(ifa , &in_ifaddrhead, ia_link) {

@@ -11,7 +11,7 @@
 #define __AFS_SYSINCLUDESH__ 1
 
 #include  <stdio.h>
-#ifndef AFS_USR_DARWIN_ENV /* must be included after KERNEL undef'd */
+#if !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_USR_FBSD_ENV) /* must be included after KERNEL undef'd */
 #include  <errno.h>
 #endif
 #include  <stdlib.h>
@@ -114,7 +114,7 @@
 #define FREAD			0x0001
 #endif /* AFS_USR_LINUX22_ENV */
 
-#ifdef AFS_USR_DARWIN_ENV
+#if defined(AFS_USR_DARWIN_ENV) || defined(AFS_USR_FBSD_ENV)
 #ifdef KERNEL
 #undef KERNEL
 #define AFS_USR_UNDEF_KERNEL_ENV 1
@@ -135,7 +135,7 @@
 #ifndef O_SYNC
 #define O_SYNC O_FSYNC
 #endif
-#endif /* AFS_USR_DARWIN_ENV */
+#endif /* AFS_USR_DARWIN_ENV || AFS_USR_FBSD_ENV */
 
 /* glibc 2.2 has pthread_attr_setstacksize */
 #if defined(AFS_LINUX22_ENV) || defined(AFS_USR_LINUX22_ENV) && (__GLIBC_MINOR__ < 2)
@@ -183,7 +183,7 @@
 #undef socket
 #endif /* AFS_USR_SGI_ENV */
 
-#ifdef AFS_USR_DARWIN_ENV
+#if defined(AFS_USR_DARWIN_ENV) || defined(AFS_USR_FBSD_ENV)
 #undef if_mtu
 #undef if_metric
 #endif
@@ -1326,7 +1326,9 @@ struct min_direct {
 struct usr_ucred {
 	unsigned long		cr_ref;
 	long			cr_uid;
+#if !defined(AFS_USR_FBSD_ENV)
 	long			cr_gid;
+#endif
 	long			cr_ruid;
 	long			cr_rgid;
 	long			cr_suid;

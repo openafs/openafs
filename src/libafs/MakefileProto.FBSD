@@ -1,0 +1,112 @@
+#/* Copyright (C) 1995, 1989 Transarc Corporation - All rights reserved */
+#
+# MakefileProto for Digital Unix systems
+#
+
+DESTDIR=DEST/
+# include $(DESTDIR)/../obj/config/Makefile.${SYS_NAME}
+
+
+# OS specific object files:
+AFS_OS_OBJS = \
+	osi_groups.o \
+	osi_file.o \
+	osi_inode.o \
+	osi_misc.o \
+	osi_sleep.o \
+	osi_vm.o \
+	osi_vnodeops.o 
+
+AFS_OS_NFSOBJS = \
+	osi_vfsops_nfs.o
+
+AFS_OS_NONFSOBJS = \
+	osi_vfsops.o
+
+
+# System specific build commands and flags
+# KDEFS=-DLANGUAGE_C  -I/usr/sys/include -I../include \
+# 	 -I/usr/src/sys/${HEADER_RT} -I/usr/src/sys/sys \
+# 	-DSWAPTYPE=1 -DUERF -DOSF -DCOMPAT_43 -DUFS \
+#	-DRT -DKERNEL -D_KERNEL
+KDEFS=-Wall -fformat-extensions -ansi -nostdinc -I/usr/include -D_KERNEL \
+	-elf -mpreferred-stack-boundary=2 -I/usr/src/sys/sys -I../afs
+DBUG = -O2
+DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
+OPTF=${OPT} 
+OPTF2=${OPT2} 
+CFLAGS=-I. -I.. ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+
+
+# Name of directory to hold object files and libraries.
+KOBJ = STATIC
+
+# This tells Makefile.common to use it's single directory build target.
+COMPDIRS = single_compdir
+
+include Makefile.common
+
+setup:
+	-mkdir $(KOBJ)
+	-rm $(KOBJ)/Makefile $(KOBJ)/Makefile.common
+	ln -s ../Makefile $(KOBJ)/Makefile
+	ln -s ../Makefile.common $(KOBJ)/Makefile.common
+	-rm -f  h net netinet rpc ufs nfs  machine sys vm
+	-ln -s /usr/src/sys/net net
+	-ln -s /usr/src/sys/i386/include machine
+	-ln -s /usr/src/sys/netinet netinet
+	-ln -s /usr/src/sys/nfs nfs
+	-ln -s /usr/include/rpc rpc
+	-ln -s /usr/src/sys/sys sys
+	-ln -s /usr/src/sys/ufs/ufs ufs
+	-ln -s /usr/src/sys/sys h
+	-ln -s /usr/src/sys/vm vm
+	-touch $(KOBJ)/sec_net.h
+
+
+# Below this line are targets when in the COMMON directory:
+LIBAFS = libafs.o
+LIBAFSNONFS = libafs.nonfs.o
+
+DEST_LIBAFS = ${DESTDIR}/root.client/bin/${LIBAFS}
+DEST_LIBAFSNONFS = ${DESTDIR}/root.client/bin/${LIBAFSNONFS}
+
+
+# libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
+# libafs:	$(DEST_LIBAFSNONFS)
+libafs:
+	echo WARNING: No kernel module for ${SYS_NAME}
+
+
+$(DEST_LIBAFS): $(LIBAFS)
+	$(INSTALL) -f $? $@
+
+$(DEST_LIBAFSNONFS): $(LIBAFSNONFS)
+	$(INSTALL) -f $? $@
+
+${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
+	$(LD) -r -o ${LIBAFS} ${AFSAOBJS} ${AFSNFSOBJS}
+
+${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
+	$(LD) -r -o ${LIBAFSNONFS} ${AFSAOBJS} ${AFSNONFSOBJS}
+
+
+# Object build rules:
+osi_groups.o: $(AFS)/osi_groups.c
+	$(CRULE1)
+osi_file.o: $(AFS)/osi_file.c
+	$(CRULE1)
+osi_inode.o: $(AFS)/osi_inode.c
+	$(CRULE1)
+osi_misc.o: $(AFS)/osi_misc.c
+	$(CRULE1)
+osi_sleep.o: $(AFS)/osi_sleep.c
+	$(CRULE1)
+osi_vfsops_nfs.o: $(AFS)/osi_vfsops.c
+	$(CRULE1) -o osi_vfsops_nfs.o
+osi_vfsops.o: $(AFS)/osi_vfsops.c
+	$(CRULE1) -DAFS_NONFSTRANS
+osi_vm.o: $(AFS)/osi_vm.c
+	$(CRULE1)
+osi_vnodeops.o: $(AFS)/osi_vnodeops.c
+	$(CRULE1)

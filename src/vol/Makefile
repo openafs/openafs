@@ -92,7 +92,7 @@ listinodes.o: listinodes.c AFS_component_version_number.c
 
 gi: ${DESTDIR}/lib/afs/libsys.a
 	case ${SYS_NAME} in \
-                *linux* | sgi_* ) \
+                *linux* | sgi_* | *fbsd* ) \
 			echo "Don't build gi on ${SYS_NAME}";; \
                 *) \
 			${CC} ${CFLAGS} -c gi.c ; \

@@ -432,11 +432,11 @@ afs_InitCacheInfo(afile)
 	      TO_KERNEL_SPACE();
 	  }
 #else
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
         if (!VFS_STATFS(filevp->v_mount, &st, current_proc()))
 #else 
 	if (!VFS_STATFS(filevp->v_vfsp, &st))  
-#endif /* AFS_DARWIN_ENV */
+#endif /* AFS_DARWIN_ENV || AFS_FBSD_ENV */
 #endif /* AFS_LINUX20_ENV */
 #endif /* AIX41 */
 #endif /* OSF */

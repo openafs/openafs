@@ -33,7 +33,7 @@ kinstall: AFS_component_version_number.c
 			gencat -m afszcm.cat afs_trace.msf ;; \
 		*_linux* ) \
 			gencat --new afszcm.cat afs_trace.msf ;; \
-		ppc_darwin*) \
+		ppc_darwin* | i386_fbsd*) \
 			echo No gencat for ${SYS_NAME} ;; \
 		* ) \
 			gencat afszcm.cat afs_trace.msf ;; \
@@ -59,7 +59,7 @@ install install.noversion: kinstall ukinstall
 			${INSTALL} longc_procs.h ${DESTDIR}include/afs ;; \
 	esac
 	case ${SYS_NAME} in \
-		next_mach30 | vax_ul43 | ppc_darwin* ) \
+		next_mach30 | vax_ul43 | ppc_darwin* | i386_fbsd* ) \
 			echo skipping afszcm.cat install for ${SYS_NAME} ;; \
 		* ) \
 			${INSTALL} afszcm.cat ${DESTDIR}root.client/usr/vice/etc/C ;; \

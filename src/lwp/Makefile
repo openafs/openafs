@@ -69,7 +69,11 @@ process.o	: process.s process.c
 					rm process.ss ;; \
 				ppc_darwin* ) \
 					$(CC) -c ${XCFLAGS} -I${SRCDIR}include process.s;; \
-				hp* | *_linux* | sgi_64 | sgi_65) \
+				i386_fbsd* ) \
+					/usr/bin/cpp -P process.fbsd.s > process.ss; \
+					${AS} -o process.o process.ss; \
+					rm process.ss ;; \
+				hp* | *_linux* | sgi_64 | sgi_65 ) \
 					${CC} ${CFLAGS} -c process.c;; \
 				ncrx86_*) \
 					/usr/ccs/lib/cpp -P -I${SRCDIR}include process.s process.ss; \

@@ -50,6 +50,8 @@ extern char PRE_Block;             /* used in lwp.c and process.s */
 #else
 #error Unsupported linux LWP system type.
 #endif
+#elif   defined(AFS_X86_FBSD_ENV)
+#define LWP_SP 4
 #elif   defined(AFS_DARWIN_ENV)
 #define LWP_SP 16
 #else

@@ -40,7 +40,7 @@
 #define MAX(a,b)  ((a)>(b)?(a):(b))
 #endif
 #else /* AFS_NT40_ENV */
-#if !defined(AFS_DARWIN_ENV) && !defined(AFS_USR_DARWIN_ENV)
+#if !defined(AFS_DARWIN_ENV) && !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_FBSD_ENV) && !defined(AFS_USR_FBSD_ENV)
 #include <sys/sysmacros.h>      /* MIN, MAX on Solaris */
 #endif
 #include <sys/param.h>          /* MIN, MAX elsewhere */

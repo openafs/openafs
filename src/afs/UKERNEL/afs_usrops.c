@@ -1845,7 +1845,7 @@ void uafs_Init(
 	iob.out = tbuffer;
 	iob.out_size = sizeof(tbuffer);
 
-#if defined(AFS_USR_SUN5_ENV) || defined(AFS_USR_OSF_ENV) || defined(AFS_USR_HPUX_ENV) || defined(AFS_USR_LINUX22_ENV) || defined(AFS_USR_DARWIN_ENV)
+#if defined(AFS_USR_SUN5_ENV) || defined(AFS_USR_OSF_ENV) || defined(AFS_USR_HPUX_ENV) || defined(AFS_USR_LINUX22_ENV) || defined(AFS_USR_DARWIN_ENV) || defined(AFS_USR_FBSD_ENV)
 	rc = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, 0, _VICEIOCTL(8), &iob, 0);
 #elif defined(AFS_USR_SGI_ENV)
 	rc = syscall(AFS_PIOCTL, 0, _VICEIOCTL(8), &iob, 0);

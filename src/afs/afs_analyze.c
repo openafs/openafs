@@ -15,7 +15,7 @@
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 
 #ifndef UKERNEL
-#ifndef AFS_LINUX20_ENV
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
 #include <net/if.h>
 #include <netinet/in.h>
 #endif
@@ -23,7 +23,7 @@
 #ifdef AFS_SGI62_ENV
 #include "../h/hashing.h"
 #endif
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
 #include <netinet/in_var.h>
 #endif
 #endif /* !UKERNEL */

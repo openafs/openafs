@@ -343,7 +343,7 @@ int LWP_CreateProcess(ep, stacksize, priority, parm, name, pid)
 #ifdef __hp9000s800
 	savecontext(Create_Process_Part2, &temp2->context, stackptr+MINFRAME);
 #else
-#if defined(AFS_SGI62_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SGI62_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	/* Need to have the sp on an 8-byte boundary for storing doubles. */
 	savecontext(Create_Process_Part2, &temp2->context,
 		    stackptr+stacksize-16); /* 16 = 2 * jmp_buf_type*/
@@ -485,7 +485,7 @@ int LWP_DestroyProcess(pid)		/* destroy a lightweight process */
 	    savecontext(Dispatcher, &(temp -> context),
 			&(LWPANCHOR.dsptchstack[MINFRAME]));
 #else
-#if defined(AFS_SGI62_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SGI62_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	    savecontext(Dispatcher, &(temp -> context),
 			&(LWPANCHOR.dsptchstack[(sizeof LWPANCHOR.dsptchstack)-8]));
 #else
