@@ -84,6 +84,8 @@ char *cm_sysName = 0;
 int   cm_sysNameCount = 0;
 char *cm_sysNameList[MAXNUMSYSNAMES];
 
+DWORD TraceOption = 0;
+
 /*
  * AFSD Initialization Log
  *
@@ -113,6 +115,10 @@ afsi_start()
 	char t[100], u[100], *p, *path;
 	int zilch;
 	int code;
+    DWORD dwLow, dwHigh;
+	HKEY parmKey;
+	DWORD dummyLen;
+    DWORD maxLogSize = 100 * 1024;
 
 	afsi_file = INVALID_HANDLE_VALUE;
     if (getenv("TEMP"))
@@ -128,6 +134,25 @@ afsi_start()
 	GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
 	afsi_file = CreateFile(wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
                            OPEN_ALWAYS, FILE_FLAG_WRITE_THROUGH, NULL);
+
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
+                         0, KEY_QUERY_VALUE, &parmKey);
+	if (code == ERROR_SUCCESS) {
+        dummyLen = sizeof(maxLogSize);
+        code = RegQueryValueEx(parmKey, "MaxLogSize", NULL, NULL,
+                                (BYTE *) &maxLogSize, &dummyLen);
+        RegCloseKey (parmKey);
+	}
+
+    if (maxLogSize) {
+        dwLow = GetFileSize( afsi_file, &dwHigh );
+        if ( dwHigh > 0 || dwLow >= maxLogSize ) {
+            CloseHandle(afsi_file);
+            afsi_file = CreateFile( wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+                                    CREATE_ALWAYS, FILE_FLAG_WRITE_THROUGH, NULL);
+        }
+    }
+
     SetFilePointer(afsi_file, 0, NULL, FILE_END);
 	GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, u, sizeof(u));
 	StringCbCatA(t, sizeof(t), ": Create log file\n");
@@ -431,6 +456,11 @@ int afsd_InitCM(char **reasonP)
         }
     }
 
+	dummyLen = sizeof(TraceOption);
+	code = RegQueryValueEx(parmKey, "TraceOption", NULL, NULL,
+				(BYTE *) &TraceOption, &dummyLen);
+    afsi_log("Event Log Tracing = %lX", TraceOption);
+
 	dummyLen = sizeof(traceBufSize);
 	code = RegQueryValueEx(parmKey, "TraceBufferSize", NULL, NULL,
 				(BYTE *) &traceBufSize, &dummyLen);
@@ -544,7 +574,7 @@ int afsd_InitCM(char **reasonP)
 	}
 
 	cm_mountRootLen = sizeof(cm_mountRoot);
-	code = RegQueryValueEx(parmKey, "Mountroot", NULL, NULL,
+	code = RegQueryValueEx(parmKey, "MountRoot", NULL, NULL,
 				cm_mountRoot, &cm_mountRootLen);
 	if (code == ERROR_SUCCESS) {
 		afsi_log("Mount root %s", cm_mountRoot);

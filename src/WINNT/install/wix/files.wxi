@@ -11,6 +11,7 @@
             <Registry Id="reg_afslogon04" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Impersonate" Value="1" Type="integer" />
             <Registry Id="reg_afslogon05" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="DLLName" Value="#fileafslogon_DLL" />
             <Registry Id="reg_afslogon06" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Logoff" Value="AFS_Logoff_Event" />
+            <Registry Id="reg_afslogon07" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Startup" Value="AFS_Startup_Event" />
         </Component>
     <?ifdef DebugSyms?>
         <Component Id="cmp_ClientSystemDebug" Guid="DD34DA09-D9DA-4A5A-9521-87B7738A7D53">

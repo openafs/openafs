@@ -52,16 +52,17 @@ extern int errno;
 #define AFS_CELLSERVDB AFS_CELLSERVDB_UNIX
 #endif /* DJGPP || WIN95 */
 
-#ifdef DEBUG
-DWORD TraceOption=1;
+static DWORD TraceOption = 0;
 
-#define TRACE_OPTION_EVENT 1
-#define ISLOGONTRACE(v) ( ((v) & TRACE_OPTION_EVENT)==TRACE_OPTION_EVENT)
+/* This really needs to be initialized at DLL Init */
+#define TRACE_OPTION_EVENT 4
+
+#define ISCONFIGTRACE(v) ( ((v) & TRACE_OPTION_EVENT)==TRACE_OPTION_EVENT)
 
 void DebugEvent0_local(char *a) 
 {
 	HANDLE h; char *ptbuf[1];
-	if (!ISLOGONTRACE(TraceOption))
+	if (!ISCONFIGTRACE(TraceOption))
 		return;
 	h = RegisterEventSource(NULL, a);
 	ptbuf[0] = a;
@@ -75,7 +76,7 @@ void DebugEvent_local(char *a,char *b,...)
 {
 	HANDLE h; char *ptbuf[1],buf[MAXBUF_+1];
 	va_list marker;
-	if (!ISLOGONTRACE(TraceOption))
+	if (!ISCONFIGTRACE(TraceOption))
 		return;
 	h = RegisterEventSource(NULL, a);
 	va_start(marker,b);
@@ -85,7 +86,45 @@ void DebugEvent_local(char *a,char *b,...)
 	DeregisterEventSource(h);
 	va_end(marker);
 }
-#endif /* DEBUG */
+
+#define REG_CLIENT_PARMS_KEY            TEXT("SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters")
+#define REG_CLIENT_TRACE_OPTION_PARM	TEXT("TraceOption")
+
+#ifdef COMMENT
+BOOL WINAPI DllMain (HANDLE hModule, DWORD fdwReason, LPVOID lpReserved)
+{
+    switch (fdwReason)
+    {
+    case DLL_PROCESS_ATTACH: {
+        DWORD LSPtype, LSPsize;
+        HKEY NPKey;
+
+        (void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_CLIENT_PARMS_KEY,
+                             0, KEY_QUERY_VALUE, &NPKey);
+        LSPsize=sizeof(TraceOption);
+        RegQueryValueEx(NPKey, REG_CLIENT_TRACE_OPTION_PARM, NULL,
+                        &LSPtype, (LPBYTE)&TraceOption, &LSPsize);
+
+        RegCloseKey (NPKey);
+        break;
+    }
+
+    case DLL_THREAD_ATTACH:
+        break;
+
+    case DLL_THREAD_DETACH:
+        break;
+
+    case DLL_PROCESS_DETACH:
+        break;
+
+    default:
+        return FALSE;
+    }
+
+    return TRUE;   // successful DLL_PROCESS_ATTACH
+}
+#endif /* COMMENT */
 
 static long cm_ParsePair(char *lineBufferp, char *leftp, char *rightp)
 {
@@ -483,7 +522,6 @@ long cm_GetRootCellName(char *cellNamep)
 cm_configFile_t *cm_CommonOpen(char *namep, char *rwp)
 {
 	char wdir[256];
-    long code;
     long tlen;
     FILE *tfilep;
 
@@ -701,7 +739,6 @@ long cm_CloseCellFile(cm_configFile_t *filep)
 void cm_GetConfigDir(char *dir)
 {
 	char wdir[256];
-    int code;
     int tlen;
 #ifdef AFS_WIN95_ENV
     char *afsconf_path;

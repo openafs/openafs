@@ -21,7 +21,9 @@ extern "C" {
 #include "drivemap.h"
 #include <time.h>
 #include <adssts.h>
+#ifdef DEBUG
 #define DEBUG_VERBOSE
+#endif
 #include <osilog.h>
 #include <lanahelper.h>
 

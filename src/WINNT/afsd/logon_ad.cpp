@@ -94,7 +94,7 @@ DWORD LogonSSP(PLUID lpLogonId, PCtxtHandle outCtx) {
 		&expiry);
 
 	if(status != SEC_E_OK) {
-		DebugEvent(NULL,"AcquireCredentialsHandle failed: %lX", status);
+		DebugEvent("AcquireCredentialsHandle failed: %lX", status);
 		goto ghp_0;
 	}
 
@@ -130,7 +130,7 @@ DWORD LogonSSP(PLUID lpLogonId, PCtxtHandle outCtx) {
 			&expiry
 			);
 
-		DebugEvent(NULL,"InitializeSecurityContext returns status[%lX](%s)",status,_get_sec_err_text(status));
+		DebugEvent("InitializeSecurityContext returns status[%lX](%s)",status,_get_sec_err_text(status));
 
 		if(!first) FreeContextBuffer(stoks.pvBuffer);
         
@@ -143,7 +143,7 @@ DWORD LogonSSP(PLUID lpLogonId, PCtxtHandle outCtx) {
 		}
 
 		if(!stokc.cbBuffer && !cont) {
-			DebugEvent(NULL,"Breaking out after InitializeSecurityContext");
+			DebugEvent("Breaking out after InitializeSecurityContext");
 			break;
 		}
 
@@ -158,7 +158,7 @@ DWORD LogonSSP(PLUID lpLogonId, PCtxtHandle outCtx) {
 			&sattrs,
 			&expiry);
 
-		DebugEvent(NULL,"AcceptSecurityContext returns status[%lX](%s)", status, _get_sec_err_text(status));
+		DebugEvent("AcceptSecurityContext returns status[%lX](%s)", status, _get_sec_err_text(status));
 
 		FreeContextBuffer(stokc.pvBuffer);
 
@@ -178,31 +178,25 @@ DWORD LogonSSP(PLUID lpLogonId, PCtxtHandle outCtx) {
 	} while(cont && iters);
 
 	if(sattrs & ASC_RET_DELEGATE) {
-		DebugEvent(NULL,"Received delegate context");
+		DebugEvent("Received delegate context");
 		*outCtx = ctxserver;
 		code = 0;
 	} else {
-		DebugEvent(NULL,"Didn't receive delegate context");
+		DebugEvent("Didn't receive delegate context");
 		outCtx->dwLower = 0;
 		outCtx->dwUpper = 0;
 		DeleteSecurityContext(&ctxserver);
 	}
 
-ghp_2:
 	DeleteSecurityContext(&ctxclient);
-ghp_1:
     FreeCredentialsHandle(&creds);
 ghp_0:
 	return code;
 }
 
-DWORD QueryAdHomePath(char * homePath, size_t homePathLen, PLUID lpLogonId) {
+DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid) {
 	DWORD code = 1; /* default is failure */
-
-	PSECURITY_LOGON_SESSION_DATA plsd;
 	NTSTATUS rv = 0;
-	DWORD size1,size2;
-	SID_NAME_USE snu;
 	HRESULT hr = S_OK;
 	LPWSTR p = NULL;
 	WCHAR adsPath[MAX_PATH] = L"";
@@ -210,54 +204,47 @@ DWORD QueryAdHomePath(char * homePath, size_t homePathLen, PLUID lpLogonId) {
 
 	homePath[0] = '\0';
 
-	rv = LsaGetLogonSessionData(lpLogonId, &plsd);
-	if(rv == 0){
-		if(ConvertSidToStringSidW(plsd->Sid,&p)) {
-			IADsNameTranslate *pNto;
+    if(ConvertSidToStringSidW(psid,&p)) {
+        IADsNameTranslate *pNto;
 
-			DebugEvent(NULL, "Got SID string [%S]", p);
+        DebugEvent("Got SID string [%S]", p);
 
-			hr = CoInitialize(NULL);
-			if(SUCCEEDED(hr))
-				coInitialized = TRUE;
+        hr = CoInitialize(NULL);
+        if(SUCCEEDED(hr))
+            coInitialized = TRUE;
 
-			hr = CoCreateInstance(CLSID_NameTranslate,
-							NULL,
-							CLSCTX_INPROC_SERVER,
-							IID_IADsNameTranslate,
-							(void**)&pNto);
+        hr = CoCreateInstance( CLSID_NameTranslate,
+                               NULL,
+                               CLSCTX_INPROC_SERVER,
+                               IID_IADsNameTranslate,
+                               (void**)&pNto);
 
-			if(FAILED(hr)) { DebugEvent(NULL,"Can't create nametranslate object"); }
-			else {
-				hr = pNto->Init(ADS_NAME_INITTYPE_GC,L""); //,clientUpn/*IL->UserName.Buffer*/,IL->LogonDomainName.Buffer,IL->Password.Buffer);
-				if (FAILED(hr)) { 
-					DebugEvent(NULL,"NameTranslate Init failed [%ld]", hr);
-				}
-				else {
-					hr = pNto->Set(ADS_NAME_TYPE_SID_OR_SID_HISTORY_NAME, p);
-					if(FAILED(hr)) { DebugEvent(NULL,"Can't set sid string"); }
-					else {
-						BSTR bstr;
+        if(FAILED(hr)) { DebugEvent("Can't create nametranslate object"); }
+        else {
+            hr = pNto->Init(ADS_NAME_INITTYPE_GC,L""); //,clientUpn/*IL->UserName.Buffer*/,IL->LogonDomainName.Buffer,IL->Password.Buffer);
+            if (FAILED(hr)) { 
+                DebugEvent("NameTranslate Init failed [%ld]", hr);
+            }
+            else {
+                hr = pNto->Set(ADS_NAME_TYPE_SID_OR_SID_HISTORY_NAME, p);
+                if(FAILED(hr)) { DebugEvent("Can't set sid string"); }
+                else {
+                    BSTR bstr;
 
-						hr = pNto->Get(ADS_NAME_TYPE_1779, &bstr);
-						wcscpy(adsPath, bstr);
+                    hr = pNto->Get(ADS_NAME_TYPE_1779, &bstr);
+                    wcscpy(adsPath, bstr);
 
-						SysFreeString(bstr);
-					}
-				}
-				pNto->Release();
-			}
-            
-			LocalFree(p);
+                    SysFreeString(bstr);
+                }
+            }
+            pNto->Release();
+        }
 
-		} else {
-			DebugEvent(NULL, "Can't convert sid to string");
-		}
+        LocalFree(p);
 
-		LsaFreeReturnBuffer(plsd);
-	} else {
-		DebugEvent(NULL, "LsaGetLogonSessionData failed");
-	}
+    } else {
+        DebugEvent("Can't convert sid to string");
+    }
 
 	if(adsPath[0]) {
 		WCHAR fAdsPath[MAX_PATH];
@@ -266,27 +253,27 @@ DWORD QueryAdHomePath(char * homePath, size_t homePathLen, PLUID lpLogonId) {
 
 		hr = StringCchPrintfW(fAdsPath, MAX_PATH, L"LDAP://%s", adsPath);
 		if(hr != S_OK) {
-			DebugEvent(NULL, "Can't format full adspath");
+			DebugEvent("Can't format full adspath");
 			goto cleanup;
 		}
 
-		DebugEvent(NULL, "Trying adsPath=[%S]", fAdsPath);
+		DebugEvent("Trying adsPath=[%S]", fAdsPath);
 
 		hr = ADsGetObject( fAdsPath, IID_IADsUser, (LPVOID *) &pAdsUser);
 		if(hr != S_OK) {
-			DebugEvent(NULL, "Can't open IADs object");
+			DebugEvent("Can't open IADs object");
 			goto cleanup;
 		}
 
         hr = pAdsUser->get_Profile(&bstHomeDir);
 		if(hr != S_OK) {
-			DebugEvent(NULL, "Can't get profile directory");
+			DebugEvent("Can't get profile directory");
 			goto cleanup_homedir_section;
 		}
 
 		wcstombs(homePath, bstHomeDir, homePathLen);
 
-		DebugEvent(NULL, "Got homepath [%s]", homePath);
+		DebugEvent("Got homepath [%s]", homePath);
 
 		SysFreeString(bstHomeDir);
 
@@ -313,22 +300,32 @@ DWORD GetAdHomePath(char * homePath, size_t homePathLen, PLUID lpLogonId, LogonO
 
 	homePath[0] = '\0';
 
-	if(LogonSSP(lpLogonId,&ctx))
+	if(LogonSSP(lpLogonId,&ctx)) {
+        DebugEvent("Failed LogonSSP");
 		return 1;
-	else {
+    } else {
 		status = ImpersonateSecurityContext(&ctx);
 		if(status == SEC_E_OK) {
-			if(!QueryAdHomePath(homePath,homePathLen,lpLogonId)) {
-				DebugEvent(NULL,"Returned home path [%s]",homePath);
-				opt->flags |= LOGON_FLAG_AD_REALM;
-			}
-			RevertSecurityContext(&ctx);
+		    PSECURITY_LOGON_SESSION_DATA plsd;
+            NTSTATUS rv;
+
+            rv = LsaGetLogonSessionData(lpLogonId, &plsd);
+            if(rv == 0) {
+                if(!QueryAdHomePathFromSid(homePath,homePathLen,plsd->Sid)) {
+                    DebugEvent("Returned home path [%s]",homePath);
+                    opt->flags |= LOGON_FLAG_AD_REALM;
+                }
+                LsaFreeReturnBuffer(plsd);
+            } else {
+                DebugEvent("LsaGetLogonSessionData failed [%lX]", rv);
+            }
+            RevertSecurityContext(&ctx);
 		} else {
-			DebugEvent(NULL,"Can't impersonate context [%lX]",status);
+			DebugEvent("Can't impersonate context [%lX]",status);
 			code = 1;
 		}
-ghp_0:
-		DeleteSecurityContext(&ctx);
+
+        DeleteSecurityContext(&ctx);
 		return code;
 	}
 }

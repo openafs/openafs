@@ -711,6 +711,7 @@ skipremove:
   WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Impersonate"  1
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "DLLName" "afslogon.dll"
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Logoff" "AFS_Logoff_Event"
+  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Startup" "AFS_Startup_Event"
 
   SetRebootFlag true
   
@@ -875,76 +876,6 @@ Section "AFS Control Center" secControl
  Call AFSLangFiles
  SetOutPath "$INSTDIR\Common"
 
-  SetOutPath "$INSTDIR\Common"
-!IFDEF DEBUG
-!IFDEF CL_1310
-   File "${SYSTEMDIR}\msvcr71d.dll"
-   File "${SYSTEMDIR}\msvcp71d.dll"
-   File "${SYSTEMDIR}\mfc71d.dll"
-   File "${SYSTEMDIR}\MFC71CHS.DLL"
-   File "${SYSTEMDIR}\MFC71CHT.DLL"
-   File "${SYSTEMDIR}\MFC71DEU.DLL"
-   File "${SYSTEMDIR}\MFC71ENU.DLL"
-   File "${SYSTEMDIR}\MFC71ESP.DLL"
-   File "${SYSTEMDIR}\MFC71FRA.DLL"
-   File "${SYSTEMDIR}\MFC71ITA.DLL"
-   File "${SYSTEMDIR}\MFC71JPN.DLL"
-   File "${SYSTEMDIR}\MFC71KOR.DLL"
-!ELSE
-!IFDEF CL_1300
-   File "${SYSTEMDIR}\msvcr70d.dll"
-   File "${SYSTEMDIR}\msvcp70d.dll"
-   File "${SYSTEMDIR}\mfc70d.dll"
-   File "${SYSTEMDIR}\MFC70CHS.DLL"
-   File "${SYSTEMDIR}\MFC70CHT.DLL"
-   File "${SYSTEMDIR}\MFC70DEU.DLL"
-   File "${SYSTEMDIR}\MFC70ENU.DLL"
-   File "${SYSTEMDIR}\MFC70ESP.DLL"
-   File "${SYSTEMDIR}\MFC70FRA.DLL"
-   File "${SYSTEMDIR}\MFC70ITA.DLL"
-   File "${SYSTEMDIR}\MFC70JPN.DLL"
-   File "${SYSTEMDIR}\MFC70KOR.DLL"
-!ELSE
-   File "${SYSTEMDIR}\mfc42d.dll"
-   File "${SYSTEMDIR}\msvcp60d.dll"
-   File "${SYSTEMDIR}\msvcrtd.dll"
-!ENDIF
-!ENDIF
-!ELSE
-!IFDEF CL_1310
-   File "${SYSTEMDIR}\mfc71.dll"
-   File "${SYSTEMDIR}\msvcr71.dll"
-   File "${SYSTEMDIR}\msvcp71.dll"
-   File "${SYSTEMDIR}\MFC71CHS.DLL"
-   File "${SYSTEMDIR}\MFC71CHT.DLL"
-   File "${SYSTEMDIR}\MFC71DEU.DLL"
-   File "${SYSTEMDIR}\MFC71ENU.DLL"
-   File "${SYSTEMDIR}\MFC71ESP.DLL"
-   File "${SYSTEMDIR}\MFC71FRA.DLL"
-   File "${SYSTEMDIR}\MFC71ITA.DLL"
-   File "${SYSTEMDIR}\MFC71JPN.DLL"
-   File "${SYSTEMDIR}\MFC71KOR.DLL"
-!ELSE
-!IFDEF CL_1300
-   File "${SYSTEMDIR}\mfc70.dll"
-   File "${SYSTEMDIR}\msvcr70.dll"
-   File "${SYSTEMDIR}\msvcp70.dll"
-   File "${SYSTEMDIR}\MFC70CHS.DLL"
-   File "${SYSTEMDIR}\MFC70CHT.DLL"
-   File "${SYSTEMDIR}\MFC70DEU.DLL"
-   File "${SYSTEMDIR}\MFC70ENU.DLL"
-   File "${SYSTEMDIR}\MFC70ESP.DLL"
-   File "${SYSTEMDIR}\MFC70FRA.DLL"
-   File "${SYSTEMDIR}\MFC70ITA.DLL"
-   File "${SYSTEMDIR}\MFC70JPN.DLL"
-   File "${SYSTEMDIR}\MFC70KOR.DLL"
-!ELSE
-   File "${SYSTEMDIR}\mfc42.dll"
-   File "${SYSTEMDIR}\msvcp60.dll"
-   File "${SYSTEMDIR}\msvcrt.dll"
-!ENDIF
-!ENDIF
-!ENDIF   
    ;Store install folder
   WriteRegStr HKCU "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "PathName" $INSTDIR
   WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "VersionString" ${AFS_VERSION}
@@ -2652,84 +2583,77 @@ Function AFSLangFiles
    File "${AFS_SERVER_BUILDDIR}\afskasadmin.dll"
    File "${AFS_SERVER_BUILDDIR}\afsptsadmin.dll"
 
+ SetOutPath "$INSTDIR\Common"
+
 !IFDEF DEBUG
 !IFDEF CL_1310
-   File "${SYSTEMDIR}\msvcr71d.dll"
-   File "${SYSTEMDIR}\msvcr71d.pdb"
-   File "${SYSTEMDIR}\msvcp71d.dll"
-   File "${SYSTEMDIR}\msvcp71d.pdb"
-   File "${SYSTEMDIR}\mfc71d.dll"
-   File "${SYSTEMDIR}\mfc71d.pdb"
-   File "${SYSTEMDIR}\MFC71CHS.DLL"
-   File "${SYSTEMDIR}\MFC71CHT.DLL"
-   File "${SYSTEMDIR}\MFC71DEU.DLL"
-   File "${SYSTEMDIR}\MFC71ENU.DLL"
-   File "${SYSTEMDIR}\MFC71ESP.DLL"
-   File "${SYSTEMDIR}\MFC71FRA.DLL"
-   File "${SYSTEMDIR}\MFC71ITA.DLL"
-   File "${SYSTEMDIR}\MFC71JPN.DLL"
-   File "${SYSTEMDIR}\MFC71KOR.DLL"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcr71d.dll" "$INSTDIR\Common\msvcr71d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcp71d.dll" "$INSTDIR\Common\msvcp71d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc71d.dll" "$INSTDIR\Common\mfc71d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71CHS.DLL" "$INSTDIR\Common\MFC71CHS.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71CHT.DLL" "$INSTDIR\Common\MFC71CHT.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71DEU.DLL" "$INSTDIR\Common\MFC71DEU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71ENU.DLL" "$INSTDIR\Common\MFC71ENU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71ESP.DLL" "$INSTDIR\Common\MFC71ESP.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71FRA.DLL" "$INSTDIR\Common\MFC71FRA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71ITA.DLL" "$INSTDIR\Common\MFC71ITA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71JPN.DLL" "$INSTDIR\Common\MFC71JPN.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71KOR.DLL" "$INSTDIR\Common\MFC71KOR.DLL" "$INSTDIR"
 !ELSE
 !IFDEF CL_1300
-   File "${SYSTEMDIR}\msvcr70d.dll"
-   File "${SYSTEMDIR}\msvcr70d.pdb"
-   File "${SYSTEMDIR}\msvcp70d.dll"
-   File "${SYSTEMDIR}\msvcp70d.pdb"
-   File "${SYSTEMDIR}\mfc70d.dll"
-   File "${SYSTEMDIR}\mfc70d.pdb"
-   File "${SYSTEMDIR}\MFC70CHS.DLL"
-   File "${SYSTEMDIR}\MFC70CHT.DLL"
-   File "${SYSTEMDIR}\MFC70DEU.DLL"
-   File "${SYSTEMDIR}\MFC70ENU.DLL"
-   File "${SYSTEMDIR}\MFC70ESP.DLL"
-   File "${SYSTEMDIR}\MFC70FRA.DLL"
-   File "${SYSTEMDIR}\MFC70ITA.DLL"
-   File "${SYSTEMDIR}\MFC70JPN.DLL"
-   File "${SYSTEMDIR}\MFC70KOR.DLL"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcr70d.dll" "$INSTDIR\Common\msvcr70d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcp70d.dll" "$INSTDIR\Common\msvcp70d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc70d.dll" "$INSTDIR\Common\mfc70d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70CHS.DLL" "$INSTDIR\Common\MFC70CHS.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70CHT.DLL" "$INSTDIR\Common\MFC70CHT.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70DEU.DLL" "$INSTDIR\Common\MFC70DEU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70ENU.DLL" "$INSTDIR\Common\MFC70ENU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70ESP.DLL" "$INSTDIR\Common\MFC70ESP.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70FRA.DLL" "$INSTDIR\Common\MFC70FRA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70ITA.DLL" "$INSTDIR\Common\MFC70ITA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70JPN.DLL" "$INSTDIR\Common\MFC70JPN.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70KOR.DLL" "$INSTDIR\Common\MFC70KOR.DLL" "$INSTDIR"
 !ELSE
-   File "${SYSTEMDIR}\mfc42d.dll"
-   File "${SYSTEMDIR}\mfc42d.pdb"
-   File "${SYSTEMDIR}\msvcp60d.dll"
-   File "${SYSTEMDIR}\msvcp60d.pdb"
-   File "${SYSTEMDIR}\msvcrtd.dll"
-   File "${SYSTEMDIR}\msvcrtd.pdb"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc42d.dll" "$INSTDIR\Common\mfc42d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcp60d.dll" "$INSTDIR\Common\msvcp60d.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcrtd.dll" "$INSTDIR\Common\msvcrtd.dll" "$INSTDIR"
 !ENDIF
 !ENDIF
 !ELSE
 !IFDEF CL_1310
-   File "${SYSTEMDIR}\mfc71.dll"
-   File "${SYSTEMDIR}\msvcr71.dll"
-   File "${SYSTEMDIR}\msvcp71.dll"
-   File "${SYSTEMDIR}\MFC71CHS.DLL"
-   File "${SYSTEMDIR}\MFC71CHT.DLL"
-   File "${SYSTEMDIR}\MFC71DEU.DLL"
-   File "${SYSTEMDIR}\MFC71ENU.DLL"
-   File "${SYSTEMDIR}\MFC71ESP.DLL"
-   File "${SYSTEMDIR}\MFC71FRA.DLL"
-   File "${SYSTEMDIR}\MFC71ITA.DLL"
-   File "${SYSTEMDIR}\MFC71JPN.DLL"
-   File "${SYSTEMDIR}\MFC71KOR.DLL"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc71.dll" "$INSTDIR\Common\mfc71.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcr71.dll" "$INSTDIR\Common\msvcr71.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcp71.dll" "$INSTDIR\Common\msvcp71.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71CHS.DLL" "$INSTDIR\Common\MFC71CHS.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71CHT.DLL" "$INSTDIR\Common\MFC71CHT.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71DEU.DLL" "$INSTDIR\Common\MFC71DEU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71ENU.DLL" "$INSTDIR\Common\MFC71ENU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71ESP.DLL" "$INSTDIR\Common\MFC71ESP.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71FRA.DLL" "$INSTDIR\Common\MFC71FRA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71ITA.DLL" "$INSTDIR\Common\MFC71ITA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71JPN.DLL" "$INSTDIR\Common\MFC71JPN.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC71KOR.DLL" "$INSTDIR\Common\MFC71KOR.DLL" "$INSTDIR"
 !ELSE
 !IFDEF CL_1300
-   File "${SYSTEMDIR}\mfc70.dll"
-   File "${SYSTEMDIR}\msvcr70.dll"
-   File "${SYSTEMDIR}\msvcp70.dll"
-   File "${SYSTEMDIR}\MFC70CHS.DLL"
-   File "${SYSTEMDIR}\MFC70CHT.DLL"
-   File "${SYSTEMDIR}\MFC70DEU.DLL"
-   File "${SYSTEMDIR}\MFC70ENU.DLL"
-   File "${SYSTEMDIR}\MFC70ESP.DLL"
-   File "${SYSTEMDIR}\MFC70FRA.DLL"
-   File "${SYSTEMDIR}\MFC70ITA.DLL"
-   File "${SYSTEMDIR}\MFC70JPN.DLL"
-   File "${SYSTEMDIR}\MFC70KOR.DLL"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc70.dll" "$INSTDIR\Common\mfc70.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcr70.dll" "$INSTDIR\Common\msvcr70.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcp70.dll" "$INSTDIR\Common\msvcp70.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70CHS.DLL" "$INSTDIR\Common\MFC70CHS.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70CHT.DLL" "$INSTDIR\Common\MFC70CHT.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70DEU.DLL" "$INSTDIR\Common\MFC70DEU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70ENU.DLL" "$INSTDIR\Common\MFC70ENU.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70ESP.DLL" "$INSTDIR\Common\MFC70ESP.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70FRA.DLL" "$INSTDIR\Common\MFC70FRA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70ITA.DLL" "$INSTDIR\Common\MFC70ITA.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70JPN.DLL" "$INSTDIR\Common\MFC70JPN.DLL" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\MFC70KOR.DLL" "$INSTDIR\Common\MFC70KOR.DLL" "$INSTDIR"
 !ELSE
-   File "${SYSTEMDIR}\mfc42.dll"
-   File "${SYSTEMDIR}\msvcp60.dll"
-   File "${SYSTEMDIR}\msvcrt.dll"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\mfc42.dll" "$INSTDIR\Common\mfc42.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcp60.dll" "$INSTDIR\Common\msvcp60.dll" "$INSTDIR"
+   !insertmacro ReplaceDLL "${SYSTEMDIR}\msvcrt.dll" "$INSTDIR\Common\msvcrt.dll" "$INSTDIR"
 !ENDIF
 !ENDIF
-!ENDIF
+!ENDIF   
 
    StrCmp $LANGUAGE ${LANG_ENGLISH} DoEnglish
    StrCmp $LANGUAGE ${LANG_GERMAN} DoGerman

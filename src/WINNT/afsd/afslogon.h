@@ -104,7 +104,7 @@ extern "C" {
 #endif
 
 void DebugEvent0(char *a);
-void DebugEvent(char *a,char *b,...);
+void DebugEvent(char *b,...);
 
 CHAR *GenRandomName(CHAR *pbuf);
 
@@ -119,6 +119,7 @@ static BOOL WINAPI UnicodeStringToANSI(UNICODE_STRING uInputString, LPSTR lpszOu
 void GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOptions_t *opt );
 DWORD GetFileCellName(char * path, char * cell, size_t cellLen);
 DWORD GetAdHomePath(char * homePath, size_t homePathLen, PLUID lpLogonId, LogonOptions_t * opt);
+DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid);
 
 #ifdef __cplusplus
 }
