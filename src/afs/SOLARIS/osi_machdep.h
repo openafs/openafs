@@ -39,7 +39,19 @@
  * Time related macros
  */
 #define	afs_hz	    hz
+#ifdef AFS_SUN59_ENV
+#define osi_Time() local_osi_Time()
+extern void gethrestime(timespec_t *);
+static int
+local_osi_Time()
+{
+   timespec_t start;
+   gethrestime(&start);
+   return start.tv_sec;
+}
+#else
 #define osi_Time() (hrestime.tv_sec)
+#endif
 
 #undef afs_osi_Alloc_NoSleep
 extern void *afs_osi_Alloc_NoSleep(size_t size);

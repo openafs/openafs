@@ -16,6 +16,10 @@
 #include <afs/param.h>
 #endif
 
+#ifdef AFS_SUN59_ENV
+#include <sys/time_impl.h>
+#endif
+ 
 #define INCLUDE_RXKAD_PRIVATE_DECLS
 
 RCSID("$Header$");

@@ -17,6 +17,10 @@
 #endif
 #include <afsconfig.h>
 
+#ifdef AFS_SUN59_ENV
+#include <sys/time_impl.h>
+#endif
+ 
 RCSID("$Header$");
 
 #ifdef KERNEL
