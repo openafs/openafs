@@ -15,3 +15,13 @@ Description: The AFS distributed filesystem- client support
    .
    This package provides basic client support to mount and manipulate
    AFS.
+
+Package: libopenafs-dev
+Architecture: any
+Description: The AFS distributed filesystem- development libraries
+   AFS is a distributed filesystem allowing cross-platform sharing of
+   files among multiple computers.  Facilities are provided for access
+   control, authentication, backup and administrative management.
+   .
+   This package provides static development libraries and headers
+   needed to compile AFS applications.
