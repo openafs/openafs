@@ -1414,7 +1414,7 @@ afs_lookup(adp, aname, avcp, acred)
 		ConvertSToRLock(&tvc->lock);
 		code = 0;
 	    }
-	    if (!code && !strchr(tvc->linkData, ':'))
+	    if (!code && !afs_strchr(tvc->linkData, ':'))
 		force_eval = 1;
 	    ReleaseReadLock(&tvc->lock);
 	}
