@@ -266,13 +266,14 @@ static SetVolumeSync(async, avol)
 static CallPreamble(acall, activecall)
     register struct rx_call **acall;
     int activecall;
-
 {
     struct host *thost;
     struct rx_connection *tconn;
     struct client *tclient;
     int retry_flag=1;
     int code = 0;
+    char hoststr[16];
+
     tconn = rx_ConnectionOf(*acall);
     *acall = (struct rx_call *)tconn;	    /* change it! */
 
