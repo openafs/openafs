@@ -65,6 +65,7 @@ int afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, enum vcexcl a
     struct server *hostp=0;
     struct vcache *tvc;
     struct volume*	volp = 0;
+    struct afs_fakestat_state fakestate;
     XSTATS_DECLS
     OSI_VC_CONVERT(adp)
 
@@ -75,6 +76,8 @@ int afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, enum vcexcl a
 
     afs_Trace3(afs_iclSetp, CM_TRACE_CREATE, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname, ICL_TYPE_INT32, amode);
+
+    afs_InitFakeStat(&fakestate);
 
 #ifdef AFS_SGI65_ENV
     /* If avcp is passed not null, it's the old reference to this file.
@@ -105,6 +108,8 @@ int afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, enum vcexcl a
 	code = EINVAL;		
 	goto done;
     }
+    code = afs_EvalFakeStat(&adp, &fakestate, &treq);
+    if (code) goto done;
 tagain:
     code = afs_VerifyVCache(adp, &treq);
     if (code) goto done;
@@ -458,6 +463,7 @@ done:
 	tvc->states |= CCore1;
 #endif
 
+    afs_PutFakeStat(&fakestate);
     code = afs_CheckCode(code, &treq, 20);
 
 done2:

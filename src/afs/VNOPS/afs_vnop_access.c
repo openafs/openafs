@@ -182,22 +182,32 @@ int afs_access(OSI_VC_DECL(avc), register afs_int32 amode, struct AFS_UCRED *acr
 {
     register afs_int32 code;
     struct vrequest treq;
+    struct afs_fakestat_state fakestate;
     OSI_VC_CONVERT(avc)
 
     AFS_STATCNT(afs_access);
     afs_Trace3(afs_iclSetp, CM_TRACE_ACCESS, ICL_TYPE_POINTER, avc, 
 		ICL_TYPE_INT32, amode,
 		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
+    afs_InitFakeStat(&fakestate);
     if (code = afs_InitReq(&treq, acred)) return code;
+
+    code = afs_EvalFakeStat(&avc, &fakestate, &treq);
+    if (code) {
+	afs_PutFakeStat(&fakestate);
+	return code;
+    }
 
     code = afs_VerifyVCache(avc, &treq);
     if (code) {
+      afs_PutFakeStat(&fakestate);
       code = afs_CheckCode(code, &treq, 16);
       return code; 
     }
 
     /* if we're looking for write access and we have a read-only file system, report it */
     if ((amode & VWRITE) && (avc->states & CRO)) {
+	afs_PutFakeStat(&fakestate);
 	return EROFS;
     }
     code = 1;		/* Default from here on in is access ok. */
@@ -264,11 +274,12 @@ int afs_access(OSI_VC_DECL(avc), register afs_int32 amode, struct AFS_UCRED *acr
 	       code = afs_AccessOK(avc, PRSFS_READ, &treq, CHECK_MODE_BITS);
 	}
     }
-    if (code)
+    afs_PutFakeStat(&fakestate);
+    if (code) {
 	return 0;		/* if access is ok */
-    else {
-      code = afs_CheckCode(EACCES, &treq, 17);	     /* failure code */
-      return code;
+    } else {
+	code = afs_CheckCode(EACCES, &treq, 17);	     /* failure code */
+	return code;
     }
 }
 

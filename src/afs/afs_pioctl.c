@@ -87,7 +87,7 @@ DECL_PIOCTL(PResidencyCmd);
 static int HandleClientContext(struct afs_ioctl *ablob, int *com, 
 	struct AFS_UCRED **acred, struct AFS_UCRED *credp);
 int HandleIoctl(register struct vcache *avc, register afs_int32 acom, struct afs_ioctl *adata);
-int afs_HandlePioctl(register struct vcache *avc, afs_int32 acom, 
+int afs_HandlePioctl(struct vcache *avc, afs_int32 acom, 
 	register struct afs_ioctl *ablob, int afollow, struct AFS_UCRED **acred);
 static int Prefetch(char *apath, struct afs_ioctl *adata, int afollow, struct AFS_UCRED *acred);
 
@@ -1046,7 +1046,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 }
   
   
-int afs_HandlePioctl(register struct vcache *avc, afs_int32 acom, 
+int afs_HandlePioctl(struct vcache *avc, afs_int32 acom, 
 	register struct afs_ioctl *ablob, int afollow, struct AFS_UCRED **acred)
 {
     struct vrequest treq;
@@ -1056,11 +1056,20 @@ int afs_HandlePioctl(register struct vcache *avc, afs_int32 acom,
     char *inData, *outData;
     int (*(*pioctlSw))();
     int pioctlSwSize;
+    struct afs_fakestat_state fakestate;
 
     afs_Trace3(afs_iclSetp, CM_TRACE_PIOCTL, ICL_TYPE_INT32, acom & 0xff,
 	       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, afollow);
     AFS_STATCNT(HandlePioctl);
     if (code = afs_InitReq(&treq, *acred)) return code;
+    afs_InitFakeStat(&fakestate);
+    if (avc) {
+	code = afs_EvalFakeStat(&avc, &fakestate, &treq);
+	if (code) {
+	    afs_PutFakeStat(&fakestate);
+	    return code;
+	}
+    }
     device = (acom & 0xff00) >> 8;
     switch (device) {
 	case 'V':	/* Original pioctl's */
@@ -1072,11 +1081,13 @@ int afs_HandlePioctl(register struct vcache *avc, afs_int32 acom,
 		pioctlSwSize = sizeof(CpioctlSw);
 		break;
 	default:
+		afs_PutFakeStat(&fakestate);
 		return EINVAL;
     }
     function = acom & 0xff;
     if (function >= (pioctlSwSize / sizeof(char *))) {
-      return EINVAL;	/* out of range */
+	afs_PutFakeStat(&fakestate);
+	return EINVAL;	/* out of range */
     }
     inSize = ablob->in_size;
     if (inSize >= PIGGYSIZE) return E2BIG;
@@ -1086,8 +1097,9 @@ int afs_HandlePioctl(register struct vcache *avc, afs_int32 acom,
     }
     else code = 0;
     if (code) {
-      osi_FreeLargeSpace(inData);
-      return code;
+	osi_FreeLargeSpace(inData);
+	afs_PutFakeStat(&fakestate);
+	return code;
     }
     outData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     outSize = 0;
@@ -1100,6 +1112,7 @@ int afs_HandlePioctl(register struct vcache *avc, afs_int32 acom,
 	AFS_COPYOUT(outData, ablob->out, outSize, code);
     }
     osi_FreeLargeSpace(outData);
+    afs_PutFakeStat(&fakestate);
     return afs_CheckCode(code, &treq, 41);
   }
   
@@ -1647,7 +1660,7 @@ DECL_PIOCTL(PNewStatMount)
 	code = ENOENT;
 	goto out;
     }
-    if (vType(tvc) != VLNK) {
+    if (tvc->mvstat != 1) {
 	afs_PutVCache(tvc, WRITE_LOCK);
 	code = EINVAL;
 	goto out;
@@ -2335,7 +2348,7 @@ DECL_PIOCTL(PRemoveMount)
 	afs_PutDCache(tdc);
 	goto out;
     }
-    if (vType(tvc) != VLNK) {
+    if (tvc->mvstat != 1) {
 	afs_PutDCache(tdc);
 	afs_PutVCache(tvc, WRITE_LOCK);
 	code = EINVAL;
@@ -3400,7 +3413,7 @@ DECL_PIOCTL(PFlushMount)
 	code = ENOENT;
 	goto out;
     }
-    if (vType(tvc) != VLNK) {
+    if (tvc->mvstat != 1) {
 	afs_PutVCache(tvc, WRITE_LOCK);
 	code = EINVAL;
 	goto out;
