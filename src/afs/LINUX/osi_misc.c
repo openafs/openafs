@@ -334,7 +334,8 @@ afs_osi_SetTime(osi_timeval_t * tvp)
     AFS_STATCNT(osi_SetTime);
 
     TO_USER_SPACE();
-    (void)(*sys_settimeofdayp) (tvp, NULL);
+    if (sys_settimeofdayp)
+	(void)(*sys_settimeofdayp) (tvp, NULL);
     TO_KERNEL_SPACE();
 #endif
 }

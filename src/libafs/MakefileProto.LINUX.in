@@ -154,6 +154,7 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 <ia64_linux24>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ia64 asm
 <i386_linux26>
+	$(RM) -f mach
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-i386/mach-default mach
 <all>
 	for m in ${MPS} ; do \

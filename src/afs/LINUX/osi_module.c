@@ -369,7 +369,6 @@ init_module(void)
 #endif /* EXPORTED_KALLSYMS_ADDRESS */
     if (!sys_call_table) {
 	printf("Failed to find address of sys_call_table\n");
-	sys_settimeofdayp = 0;
     } else {
 	printf("Found sys_call_table at %x\n", sys_call_table);
 #ifdef AFS_SPARC64_LINUX20_ENV
