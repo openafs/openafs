@@ -28,7 +28,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/afsfileprocs.c,v 1.2 2001/07/20 11:50:35 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/afsfileprocs.c,v 1.3 2001/09/11 14:23:06 hartmans Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -6403,16 +6403,16 @@ int CopyOnWrite(targetptr, volptr)
 			rc = IH_DEC(V_linkHandle(volptr), ino,
 				  V_parentId(volptr));
     			if (!rc ) {
-		    	    ViceLog(0,("CopyOnWrite failed: error %u after i_dec on disk full, volume %u in partition %s needs salvage\n",
-			    	    rc, V_id(volptr), volptr->partition->name));
+		    	    ViceLog(0,("CopyOnWrite failed: volume %u in partition %s needs salvage\n",
+			    	    V_id(volptr), volptr->partition->name));
 			    VTakeOffline (volptr);
 			}
 			free(buff);
 			return ENOSPC;
 		}
 		else {
-	    	    ViceLog(0,("CopyOnWrite failed: volume %u in partition %s  (tried reading %u, read %u, wrote %u, errno %u) volume needs salvage\n",
-		    	    V_id(volptr), volptr->partition->name, length, rdlen, wrlen, errno));
+	    	    ViceLog(0,("CopyOnWrite failed: volume %u in partition %s needs salvage\n",
+		    	    V_id(volptr), volptr->partition->name));
 		    /* Decrement this inode so salvager doesn't find it. */
 		    FDH_REALLYCLOSE(newFdP);
 		    IH_RELEASE(newH);

@@ -14,7 +14,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_packet.c,v 1.3 2001/07/21 16:45:40 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_packet.c,v 1.4 2001/09/11 14:23:02 hartmans Exp $");
 
 #ifdef KERNEL
 #if defined(UKERNEL)
@@ -1112,17 +1112,6 @@ struct rx_packet *rxi_ReceiveDebugPacket(ap, asocket, ahost, aport, istack)
     afs_int32 tl;
     struct rx_serverQueueEntry *np, *nqe;
 
-    /*
-     * Only respond to client-initiated Rx debug packets,
-     * and clear the client flag in the response.
-     */
-    if (ap->header.flags & RX_CLIENT_INITIATED) {
-	ap->header.flags = ap->header.flags & ~RX_CLIENT_INITIATED;
-	rxi_EncodePacketHeader(ap);
-    } else {
-	return ap;
-    }
-
     rx_packetread(ap, 0, sizeof(struct rx_debugIn), (char *)&tin);
     /* all done with packet, now set length to the truth, so we can 
      * reuse this packet */
@@ -1395,27 +1384,13 @@ struct rx_packet *rxi_ReceiveVersionPacket(ap, asocket, ahost, aport, istack)
   register struct rx_packet *ap;
   int istack;
 {
-    afs_int32 tl;
-
-    /*
-     * Only respond to client-initiated version requests, and
-     * clear that flag in the response.
-     */
-    if (ap->header.flags & RX_CLIENT_INITIATED) {
-	char buf[66];
-
-	ap->header.flags = ap->header.flags & ~RX_CLIENT_INITIATED;
-	rxi_EncodePacketHeader(ap);
-	bzero(buf, sizeof(buf));
-	strncpy(buf, cml_version_number+4, sizeof(buf)-1);
-	rx_packetwrite(ap, 0, 65, buf);
-	tl = ap->length;
+  afs_int32 tl;
+	rx_packetwrite(ap, 0, 65, cml_version_number+4);
+        tl = ap->length;
 	ap->length = 65;
 	rxi_SendDebugPacket(ap, asocket, ahost, aport, istack);
-	ap->length = tl;
-    }
-
-    return ap;
+        ap->length = tl;
+	return ap;
 }
 
 
