@@ -508,6 +508,9 @@ static void afs_TryFlushDcacheChildren(struct vcache *tvc)
     struct dentry *dentry;
     
 #if 1
+    afs_Trace1(afs_iclSetp, CM_TRACE_TRYFLUSHDCACHECHILDREN,
+	       ICL_TYPE_POINTER, ip);
+
     VN_HOLD(tvc);
     AFS_GUNLOCK();
     d_prune_aliases(ip);
