@@ -15,6 +15,8 @@
 #define AFS_USR_SUN7_ENV	1
 #define AFS_USR_SUN8_ENV	1
 
+#define AFS_64BIT_ENV          1
+
 #include <afs/afs_sysnames.h>
 
 /*#define AFS_GLOBAL_SUNLOCK	1	/* For global locking */

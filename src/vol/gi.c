@@ -26,6 +26,12 @@ char **argv;
 	int error=0;
 	struct stat status;
 	int dev, fd, inode;
+
+#if defined(AFS_NT40_ENV) || defined(AFS_NAMEI_ENV)
+	fprintf(stderr, "gi not supported on NT or NAMEI systems.\n");
+	exit(1);
+#else
+
 	argc--; argv++;
 	while (argc && **argv == '-') {
 		if (strcmp(*argv, "-stat") == 0)
@@ -65,6 +71,7 @@ char **argv;
 			write(1, buf, n);
 	}
 	exit(0);
+#endif /* AFS_NT40_ENV || AFS_NAMEI_ENV */
 }
 
 Perror(err, a1, a2, a3)
