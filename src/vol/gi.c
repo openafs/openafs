@@ -20,8 +20,7 @@ int statflag;
 
 #include "AFS_component_version_number.c"
 
-main(argc,argv)
-char **argv;
+int main(int argc, char **argv)
 {
 	int error=0;
 	struct stat status;
@@ -74,11 +73,10 @@ char **argv;
 #endif /* AFS_NT40_ENV || AFS_NAMEI_ENV */
 }
 
-Perror(err, a1, a2, a3)
-   char *err;
+void Perror(char *err, int a1, int a2, int a3)
 {
-	char msg[200];
-	sprintf(msg, err, a1, a2, a3);
-	perror(msg);
+    char msg[200];
+    sprintf(msg, err, a1, a2, a3);
+    perror(msg);
 }
 

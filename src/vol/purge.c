@@ -90,11 +90,9 @@ void VPurgeVolume(Error *ec, Volume *vp)
    things work and we should be called again, 1 if success full and done, and -1
    if an error occurred.  It adjusts offset appropriately on 0 or 1 return codes,
    and otherwise doesn't touch it */
-static ObliterateRegion(avp, aclass, afile, aoffset)
-afs_int32 *aoffset;
-StreamHandle_t *afile;
-VnodeClass aclass;
-Volume *avp; {
+static int ObliterateRegion(Volume *avp, VnodeClass aclass, 
+			    StreamHandle_t *afile, afs_int32 *aoffset)
+{
     register struct VnodeClassInfo *vcp;
     Inode inodes[MAXOBLITATONCE];
     register afs_int32 iindex, nscanned;
@@ -212,5 +210,3 @@ void PurgeHeader_r(Volume *vp)
     IH_DEC(V_linkHandle(vp), vp->linkHandle->ih_ino, V_parentId(vp));
 #endif
 }
-
-

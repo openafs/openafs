@@ -251,9 +251,7 @@ static void VInitPartition(char *path, char *devname, Device dev)
  *
  * Use partition name as devname.
  */
-int VCheckPartition(part, devname)
-     char *part;
-     char *devname;
+int VCheckPartition(char *part, char *devname)
 {
 #ifdef AFS_LARGEFILE_ENV
     struct stat64 status;
@@ -355,8 +353,7 @@ int VCheckPartition(part, devname)
  * mounted partition (return value 0).  For non-NAMEI environments, it
  * always returns 0.
  */
-static int VIsAlwaysAttach(part)
-    char *part;
+static int VIsAlwaysAttach(char *part)
 {
 #ifdef AFS_NAMEI_ENV
     struct stat st;
@@ -474,8 +471,7 @@ int VAttachPartitions(void)
  * (This function was grabbed from df.c)
  */
 int
-getmount(vmountpp)
-register struct vmount	**vmountpp;	/* place to tell where buffer is */
+getmount(register struct vmount	**vmountpp)
 {
 	int			size;
 	register struct vmount	*vm;

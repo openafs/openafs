@@ -151,8 +151,8 @@ private Vnode *VnodeHashTable[VNODE_HASH_TABLE_SIZE];
 /* Code to invalidate a vnode entry.  Called when we've damaged a vnode, and want
     to prevent future VGetVnode's from applying to it.  Leaves it in the same hash bucket
     but that shouldn't be important.  */
-VInvalidateVnode_r(avnode)
-register struct Vnode *avnode; {
+void VInvalidateVnode_r(register struct Vnode *avnode)
+{
     avnode->changed_newTime = 0;    /* don't let it get flushed out again */
     avnode->changed_oldTime = 0;
     avnode->delete = 0;	    /* it isn't deleted, erally */
@@ -160,9 +160,7 @@ register struct Vnode *avnode; {
 }
 
 /* Not normally called by general client; called by volume.c */
-VInitVnodes(class,nVnodes)
-    VnodeClass class;
-    int nVnodes;
+int VInitVnodes(VnodeClass class, int nVnodes)
 {
     byte *va;
     register struct VnodeClassInfo *vcp = &VnodeClassInfo[class];

@@ -29,9 +29,7 @@ struct versionStamp {       /* Stolen from <afs/volume.h> */
   int version;
 };
 
-main(argc, argv)
-  int  argc;
-  char **argv;
+int main(int argc, char **argv)
 {
   int fd, size, i;
 

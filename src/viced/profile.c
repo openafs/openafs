@@ -106,8 +106,7 @@ void AllocProfBuf()
 int ProfileToggle();
 
 /* Arrange to start and stop profiling when signo is sent. */
-ProfileSig(signo)
-    int signo;
+void ProfileSig(int signo)
 {
 #if !defined (AFS_AIX_ENV) && !defined (AFS_HPUX_ENV)
 /* Soon should handle aix profiling */

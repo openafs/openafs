@@ -104,9 +104,8 @@ RCSID("$Header$");
 /* ensure that we don't have a "/" instead of a "/dev/rxd0a" type of device.
  * returns pointer to static storage; copy it out quickly!
  */
-char *vol_DevName(adev, wpath)
-char *wpath;
-dev_t adev; {
+char *vol_DevName(dev_t adev, char *wpath)
+{
     static char pbuffer[128];
     char pbuf[128], *ptr;
     int code, i;
@@ -226,27 +225,25 @@ dev_t adev; {
 		return NULL;
 	}
     }
-#ifndef	AFS_AIX_ENV
 #ifdef	AFS_SUN5_ENV
    (void) fclose(mntfile);
 #else
 #if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX22_ENV)
     endmntent(mfd);
 #else
+#ifndef	AFS_AIX_ENV
     endfsent();
 #endif
-#endif /* AFS_SGI_ENV */
 #endif
+#endif /* AFS_SGI_ENV */
     return NULL;
 }
-
 
 /* Search for the raw device name. Will put an "r" in front of each
  * directory and file entry of the pathname until we find a character
  * device.
  */
-char *afs_rawname(devfile)
-  char *devfile;
+char *afs_rawname(char *devfile)
 {
   static char rawname[100];
   struct stat statbuf;

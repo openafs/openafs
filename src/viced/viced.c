@@ -1281,25 +1281,7 @@ Do_VLRegisterRPC() {
     return 0;
 }
 
-#if 0
-static int AddrsEqual(cnt, addr1, addr2) 
-    int cnt;
-    afs_int32 *addr1, *addr2; 
-{
-    register int i, j;
-
-    for (i = 0; i < cnt; i++) {
-	for (j = 0; j < cnt; j++) {
-	    if (addr1[i] == addr2[j]) break;
-	}
-	if (j == cnt) return 0;
-    }
-    return 1;
-}
-#endif
-
-afs_int32 
-InitVL() {
+afs_int32 InitVL() {
     int (*old)();
     afs_int32 code;
     afs_int32 cnt, i;

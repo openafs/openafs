@@ -62,9 +62,8 @@ struct ilist {
  * is the volume ID.  Returns true if we should keep this inode, otherwise false.
  * Note that ainfo->u.param[0] is always the volume ID, for any vice inode.
  */
-static NukeProc(ainfo, avolid)
-struct ViceInodeInfo *ainfo;
-afs_int32 avolid; {
+static int NukeProc(struct ViceInodeInfo *ainfo, afs_int32 avolid)
+{
     struct ilist *ti;
     register afs_int32 i;
 
@@ -98,9 +97,8 @@ afs_int32 avolid; {
  * cloned from that RW volume ID, too, since everything except for their
  * indices will be gone.
  */
-nuke(aname, avolid)
-char *aname;
-afs_int32 avolid; {
+int nuke(char *aname, afs_int32 avolid)
+{
     /* first process the partition containing this junk */
     struct stat tstat;
     struct ilist *ti, *ni;

@@ -238,8 +238,7 @@ void FSYNC_fsInit(void)
 #endif /* AFS_PTHREAD_ENV */
 }
 
-static int getport(addr)
-    struct sockaddr_in *addr;
+static int getport(struct sockaddr_in *addr)
 {
     int sd;
 
@@ -317,8 +316,7 @@ static void FSYNC_sync() {
     }
 }
 
-static void FSYNC_newconnection(afd)
-    int afd;
+static void FSYNC_newconnection(int afd)
 {
     struct sockaddr_in other;
     int junk, fd;
@@ -339,8 +337,7 @@ static void FSYNC_newconnection(afd)
 */
 
 afs_int32 FS_cnt = 0;
-static void FSYNC_com(fd)
-    int fd;
+static void FSYNC_com(int fd)
 {
     byte rc = FSYNC_OK;
     int n, i;
@@ -565,8 +562,7 @@ defect #2080 for details.
 #endif
 }
 
-static void FSYNC_Drop(fd)
-    int fd;
+static void FSYNC_Drop(int fd)
 {
     struct offlineInfo *p;
     register i;
@@ -645,9 +641,7 @@ static void CallHandler(fd_set *fdsetp)
     ReleaseReadLock(&FSYNC_handler_lock);
 }
 
-static int AddHandler (afd, aproc)
-    int afd;
-    int (*aproc)();
+static int AddHandler (int afd, int (*aproc)())
 {
     register int i;
     ObtainWriteLock(&FSYNC_handler_lock);
@@ -663,8 +657,7 @@ static int AddHandler (afd, aproc)
     return 1;
 }
 
-static int FindHandler (afd)
-    register int afd;
+static int FindHandler(register int afd)
 {
     register int i;
     ObtainReadLock(&FSYNC_handler_lock);
@@ -678,8 +671,7 @@ static int FindHandler (afd)
     return -1; /* satisfy compiler */
 }
 
-static int FindHandler_r (afd)
-    register int afd;
+static int FindHandler_r(register int afd)
 {
     register int i;
     for(i=0;i<MAXHANDLERS;i++)
@@ -690,8 +682,7 @@ static int FindHandler_r (afd)
     return -1; /* satisfy compiler */
 }
 
-static int RemoveHandler (afd)
-    register int afd;
+static int RemoveHandler(register int afd)
 {
     ObtainWriteLock(&FSYNC_handler_lock);
     HandlerFD[FindHandler_r(afd)] = -1;
@@ -699,7 +690,7 @@ static int RemoveHandler (afd)
     return 1;
 }
 
-static void GetHandler (fd_set *fdsetp, int *maxfdp)
+static void GetHandler(fd_set *fdsetp, int *maxfdp)
 {
     register int i;
     register int maxfd = -1;

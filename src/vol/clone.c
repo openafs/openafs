@@ -86,9 +86,8 @@ struct clone_head {
 void CloneVolume();
 void CloneVolume_r();
 
-static ci_AddItem(ah, aino)
-Inode aino;
-struct clone_head *ah; {
+static int ci_AddItem(struct clone_head *ah, Inode aino)
+{
     register struct clone_items *ti;
 
     /* if no last elt (first call) or last item full, get a new one */
@@ -151,19 +150,15 @@ int ci_Destroy(struct clone_head *ah)
     return 0;
 }
 
-static IDecProc(adata, aparm)
-Inode adata;
-struct clone_rock *aparm; {
+static int IDecProc(Inode adata, struct clone_rock *aparm) 
+{
     IH_DEC(aparm->h, adata, aparm->vol);
     DOPOLL;
     return 0;
 }
 
-afs_int32 DoCloneIndex(rwvp, clvp, class, reclone)
-   Volume     *rwvp;     /* The RW volume */
-   Volume     *clvp;     /* The cloned volume */
-   VnodeClass class;
-   int        reclone;   /* Whether to reclone or not */
+afs_int32 DoCloneIndex(Volume *rwvp, Volume *clvp,
+		       VnodeClass class, int reclone)
 {
    afs_int32 code, error=0;
    FdHandle_t     *rwFd=0,   *clFdIn=0,   *clFdOut=0;
@@ -374,9 +369,7 @@ afs_int32 DoCloneIndex(rwvp, clvp, class, reclone)
 }
 
 void
-CloneVolume(error, original, new, old)
-    Error *error;
-    Volume *original, *new, *old;
+CloneVolume(Error *error, Volume *original, Volume *new, Volume *old)
 {
     VOL_LOCK
     CloneVolume_r(error, original, new, old);
@@ -384,9 +377,7 @@ CloneVolume(error, original, new, old)
 }
 
 void
-CloneVolume_r(rerror, original, new, old)
-    Error *rerror;
-    Volume *original, *new, *old;
+CloneVolume_r(Error *rerror, Volume *original, Volume *new, Volume *old)
 {
     afs_int32 code, error=0;
     afs_int32 reclone;

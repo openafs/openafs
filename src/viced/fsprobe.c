@@ -29,8 +29,6 @@ RCSID("$Header$");
 #endif
 
 
-
-
 struct ubik_client *cstruct;
 struct rx_connection *serverconns[MAXSERVERS];
 char *(args[50]);
@@ -45,10 +43,9 @@ extern int AFS_BulkStatus(), AFS_BulkLookup(), AFS_RenewAllTokens();
 extern int AFS_BulkFetchVV(), AFS_BulkKeepAlive();
 extern int AFS_Spare1(), AFS_Spare2(), AFS_Spare3(), AFS_Spare4(), AFS_Spare5(), AFS_Spare6();
 
-afs_int32 pxclient_Initialize(auth, serverAddr)
-int auth;
-afs_int32 serverAddr;
-{   afs_int32 code;
+afs_int32 pxclient_Initialize(int auth, afs_int32 serverAddr)
+{
+    afs_int32 code;
     afs_int32 scIndex;
     struct rx_securityClass *sc;
 
@@ -89,9 +86,9 @@ afs_int32 serverAddr;
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-    int argc;
-    char **argv; {
+int
+main(int argc, char **argv)
+{
     char **av = argv;
     struct sockaddr_in host;
     register afs_int32 code;
@@ -138,7 +135,7 @@ main(argc, argv)
     else
 	printf("return code is %d\n", code);
 
-#ifdef	notdef
+#ifdef notdef
     while (1) {
 	char line[500];
 	int nargs;
@@ -248,10 +245,7 @@ main(argc, argv)
 }
 
 
-GetArgs(line,args, nargs)
-    register char *line;
-    register char **args;
-    register int *nargs;
+void GetArgs(register char *line, register char **args, register int *nargs)
 {
     *nargs = 0;
     while (*line) {
@@ -268,9 +262,8 @@ GetArgs(line,args, nargs)
     }
 }
 
-#ifdef	notdef
-FetchData(argp)
-    char **argp;
+#ifdef notdef
+afs_int32 FetchData(char **argp)
 {
     struct afsFetchStatus OutStatus;
     struct afsToken Token;
@@ -301,11 +294,11 @@ FetchData(argp)
 	code = EndAFS_FetchData(tcall, &OutStatus, &Token, &tsync);
     }
     code = rx_EndCall(tcall, code);
+    return code;
 }
 
 
-static FetchProc(acall)
-    register struct rx_call *acall;
+static afs_int32 FetchProc(register struct rx_call *acall)
 {
     extern char *malloc();
     register char *tbuffer;
@@ -330,8 +323,7 @@ static FetchProc(acall)
 }
 
 
-FetchStatus(argp)
-    char **argp;
+afs_int32 FetchStatus(char **argp)
 {
     struct afsFetchStatus OutStatus;
     struct afsToken Token;
@@ -354,8 +346,7 @@ FetchStatus(argp)
 }
 
 
-FetchACL(argp)
-    char **argp;
+afs_int32 FetchACL(char **argp)
 {
     struct afsFetchStatus OutStatus;
     struct afsACL AccessList;
@@ -379,8 +370,7 @@ FetchACL(argp)
 }
 
 
-StoreData(argp)
-    char **argp;
+afs_int32 StoreData(char **argp)
 {
     struct afsStoreStatus InStatus;
     struct afsFetchStatus OutStatus;
@@ -441,10 +431,8 @@ StoreData(argp)
 }
 
 
-static StoreProc(acall, string, length)
-    register struct rx_call *acall;
-    char *string;
-    int length;
+static afs_int32 StoreProc(register struct rx_call *acall,
+			   char *string, int length)
 {
     afs_int32 tlen, code;
 
@@ -460,8 +448,7 @@ static StoreProc(acall, string, length)
 }
 
 
-StoreStatus(argp)
-    char **argp;
+afs_int32 StoreStatus(char **argp)
 {
     struct afsStoreStatus InStatus;
     struct afsFetchStatus OutStatus;
@@ -503,8 +490,7 @@ StoreStatus(argp)
 }
 
 
-StoreACL(argp)
-    char **argp;
+afs_int32 StoreACL(char **argp)
 {
     struct afsFetchStatus OutStatus;
     struct afsACL AccessList;
@@ -533,8 +519,7 @@ StoreACL(argp)
 }
 
 
-RemoveFile(argp)
-    char **argp;
+afs_int32 RemoveFile(char **argp)
 {
     struct afsFetchStatus OutDirStatus, OutFidStatus;
     struct afsVolSync tsync;
@@ -562,8 +547,7 @@ RemoveFile(argp)
 }
 
 
-CreateFile(argp)
-    char **argp;
+afs_int32 CreateFile(char **argp)
 {
     struct afsFetchStatus OutDirStatus, OutFidStatus;
     struct afsStoreStatus InStatus;
@@ -609,8 +593,7 @@ CreateFile(argp)
 }
 
 
-Rename(argp)
-    char **argp;
+afs_int32 Rename(char **argp)
 {
     struct afsFetchStatus OutOldDirStatus, OutNewDirStatus;
     struct afsFetchStatus OutOldFileStatus, OutNewFileStatus;
@@ -653,8 +636,7 @@ Rename(argp)
 }
 
 
-Symlink(argp)
-    char **argp;
+afs_int32 Symlink(char **argp)
 {
     struct afsFetchStatus OutDirStatus, OutFidStatus;
     struct afsStoreStatus InStatus;
@@ -702,8 +684,7 @@ Symlink(argp)
 }
 
 
-HardLink(argp)
-    char **argp;
+afs_int32 HardLink(char **argp)
 {
     struct afsFetchStatus OutDirStatus, OutFidStatus;
     struct afsVolSync tsync;
@@ -736,8 +717,7 @@ HardLink(argp)
 }
 
 
-MakeDir(argp)
-    char **argp;
+afs_int32 MakeDir(char **argp)
 {
     struct afsFetchStatus OutDirStatus, OutFidStatus;
     struct afsStoreStatus InStatus;
@@ -783,8 +763,7 @@ MakeDir(argp)
 }
 
 
-RemoveDir(argp)
-    char **argp;
+afs_int32 RemoveDir(char **argp)
 {
     struct afsFetchStatus OutDirStatus;
     struct afsVolSync tsync;
@@ -812,8 +791,7 @@ RemoveDir(argp)
 }
 
 
-Readdir(argp)
-    char **argp;
+afs_int32 Readdir(char **argp)
 {
     struct afsFetchStatus OutDirStatus;
     struct afsVolSync tsync;
@@ -849,8 +827,7 @@ Readdir(argp)
 }
 
 
-static FetchDir(acall)
-    register struct rx_call *acall;
+static afs_int32 FetchDir(register struct rx_call *acall)
 {
     extern char *malloc();
     register char *tbuffer;
@@ -880,8 +857,7 @@ static FetchDir(acall)
 }
 
 
-Lookup(argp)
-    char **argp;
+afs_int32 Lookup(char **argp)
 {
     struct afsFetchStatus OutDirStatus, OutFidStatus;
     struct afsVolSync tsync;
@@ -906,8 +882,7 @@ Lookup(argp)
 }
 
 
-GetToken(argp)
-    char **argp;
+afs_int32 GetToken(char **argp)
 {
     struct afsFetchStatus OutStatus;
     struct afsVolSync tsync;
@@ -934,23 +909,19 @@ GetToken(argp)
 }
 
 
-MakeMountPoint(argp)
-char **argp;
+afs_int32 MakeMountPoint(char **argp)
 { }
 
 
-ReleaseTokens(argp)
-char **argp;
+afs_int32 ReleaseTokens(char **argp)
 { }
 
 
-BulkStatus(argp)
-char **argp;
+afs_int32 BulkStatus(char **argp)
 { }
 
 /*  printf("ka <vol.l> <vnode> <unique> <isExec> <kaTime>\n"); */
-KeepAlive(argp)
-    char **argp;
+afs_int32 KeepAlive(char **argp)
 {
     struct afsBulkFEX fex;
     afs_uint32 numExec, spare4;
@@ -973,4 +944,4 @@ KeepAlive(argp)
     code = ubik_Call(AFS_BulkKeepAlive, cstruct, 0, &fex, numExec, 0, 0, 0, &spare4);
     return (code);
 }
-#endif /* notfdef */
+#endif /* notdef */

@@ -31,10 +31,10 @@ RCSID("$Header$");
  * -1 - Unable to read the inodes.
  * -2 - Unable to completely write temp file. Produces warning message in log.
  */
-ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam, forcep, forceR, wpath)
-char *devname, *mountedOn, *resultFile, *wpath;
-int (*judgeInode)(); 
-int *forcep, forceR;
+int
+ListViceInodes(char *devname, char *mountedOn, char *resultFile, 
+	       int (*judgeInode)(), int judgeParam, int *forcep, int forceR,
+	       char *wpath)
 {
     Log("ListViceInodes not implemented for this platform!\n");
     return -1;
@@ -163,11 +163,11 @@ static struct superblock fs;
 struct dinode *ginode();
 
 
-
-ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam, forcep, forceR, wpath)
-char *devname, *mountedOn, *resultFile, *wpath;
-int (*judgeInode)(); 
-int *forcep, forceR; {
+int
+ListViceInodes(char *devname, char *mountedOn, char *resultFile, 
+	       int (*judgeInode)(), int judgeParam, int *forcep, int forceR,
+	       char *wpath)
+{
 	FILE *inodeFile = NULL;
 	char dev[50], rdev[51];
 	struct stat status;
@@ -458,11 +458,9 @@ afs_efs_figet(EFS_MOUNT *mp, struct efs_dinode *dinodeBuf, int *last_cgno,
 
 
 int
-efs_ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam,
-		   forcep, forceR, wpath)
-char *devname, *mountedOn, *resultFile, *wpath;
-int (*judgeInode)(); 
-int *forcep, forceR;
+efs_ListViceInodes(char *devname, char *mountedOn, char *resultFile, 
+	       int (*judgeInode)(), int judgeParam, int *forcep, int forceR,
+	       char *wpath)
 {
 	FILE *inodeFile = NULL;
 	char dev[50], rdev[51];
@@ -805,11 +803,10 @@ int xfs_RenameFiles(char *dir, xfs_Rename_t *renames, int n_renames)
 }
 
 
-xfs_ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam,
-		   forcep, forceR, wpath)
-char *devname, *mountedOn, *resultFile, *wpath;
-int (*judgeInode)(); 
-int *forcep, forceR;
+int
+xfs_ListViceInodes(char *devname, char *mountedOn, char *resultFile, 
+	       int (*judgeInode)(), int judgeParam, int *forcep, int forceR,
+	       char *wpath)
 {
     FILE *inodeFile = NULL;
     i_list_inode_t info;
@@ -1020,11 +1017,10 @@ int *forcep, forceR;
 
 #endif
 
-ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam, forcep,
-	       forceR, wpath)
-char *devname, *mountedOn, *resultFile, *wpath;
-int (*judgeInode)(); 
-int *forcep, forceR;
+int
+ListViceInodes(char *devname, char *mountedOn, char *resultFile, 
+	       int (*judgeInode)(), int judgeParam, int *forcep, int forceR,
+	       char *wpath)
 {
 	FILE *inodeFile = NULL;
 	char dev[50], rdev[51];
@@ -1099,9 +1095,10 @@ BUFAREA sblk;
 #endif /* AFS_HPUX_ENV */
 
 extern char *afs_rawname();
-int ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam, forcep, forceR, wpath)
-    char *devname, *mountedOn, *resultFile, *wpath;
-    int (*judgeInode)(), *forcep, forceR;
+int
+ListViceInodes(char *devname, char *mountedOn, char *resultFile, 
+	       int (*judgeInode)(), int judgeParam, int *forcep, int forceR,
+	       char *wpath)
 {
    union {
 #ifdef	AFS_AIX_ENV
@@ -1465,11 +1462,7 @@ out1:
 #define dbtob(db) ((unsigned)(db) << DEV_BSHIFT)
 #endif
 
-int bread(fd, buf, blk, size)
-	int fd;
-	char *buf;
-	daddr_t blk;
-	afs_int32 size;
+int bread(int fd, char *buf, daddr_t blk, afs_int32 size)
 {
 #ifdef	AFS_AIX_ENV
 #ifdef  AFS_AIX41_ENV
