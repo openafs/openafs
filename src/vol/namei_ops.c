@@ -876,11 +876,10 @@ static int GetFreeTag(IHandle_t *ih, int vno)
     }
 	
     /* Now find a free column in this row and claim it. */
-    coldata = 0x7;
     for (col = 0; col<NAMEI_MAXVOLS; col++) {
-	coldata <<= col * 3;
-	if ((row & coldata) == 0)
-	    break;
+        coldata = 7 << (col * 3);
+        if ((row & coldata) == 0)
+            break;
     }
     if (col >= NAMEI_MAXVOLS)
 	goto badGetFreeTag;
