@@ -225,7 +225,7 @@ static int DInit (abuffers)
     struct buffer *tb;
     Buffers = (struct buffer *) malloc(abuffers * sizeof(struct buffer));
     memset(Buffers, 0, abuffers * sizeof(struct buffer));
-    BufferData = (char *) malloc(abuffers * PAGESIZE);
+    BufferData = (char *) malloc(abuffers * UBIK_PAGESIZE);
     nbuffers = abuffers;
     for(i=0;i<PHSIZE;i++) phTable[i] = 0;
     for (i=0;i<abuffers;i++) {
@@ -233,7 +233,7 @@ static int DInit (abuffers)
 	tb = &Buffers[i];
         tb->lru_next = &(Buffers[i+1]);
 	tb->lru_prev = &(Buffers[i-1]);
-        tb->data = &BufferData[PAGESIZE*i];
+        tb->data = &BufferData[UBIK_PAGESIZE*i];
 	tb->file = BADFID;
     }
     Buffers[0].lru_prev = &(Buffers[abuffers-1]);
@@ -312,10 +312,10 @@ static char *DRead(dbase, fid, page)
     /* can't find it */
     tb = newslot(dbase, fid, page);
     if (!tb) return 0;
-    memset(tb->data, 0, PAGESIZE);
+    memset(tb->data, 0, UBIK_PAGESIZE);
 
     tb->lockers++;
-    code = (*dbase->read)(dbase, fid, tb->data, page*PAGESIZE, PAGESIZE);
+    code = (*dbase->read)(dbase, fid, tb->data, page*UBIK_PAGESIZE, UBIK_PAGESIZE);
     if (code < 0) {
        tb->file = BADFID;
        Dlru(tb);
@@ -340,7 +340,7 @@ static DTrunc(dbase, fid, length)
     struct buffer *tb;
     int   i;
     
-    maxPage = (length+PAGESIZE-1)>>LOGPAGESIZE;	/* first invalid page now in file */
+    maxPage = (length+UBIK_PAGESIZE-1)>>UBIK_LOGPAGESIZE;	/* first invalid page now in file */
     for (i=0,tb=Buffers; i<nbuffers; i++,tb++) {
 	if (tb->page >= maxPage && tb->file == fid && tb->dbase == dbase) {
 	    tb->file = BADFID;
@@ -482,7 +482,7 @@ static void DRelease (ap,flag)
     struct buffer *bp;
 
     if (!ap) return;
-    index = (ap - (char *)BufferData) >> LOGPAGESIZE;
+    index = (ap - (char *)BufferData) >> UBIK_LOGPAGESIZE;
     bp = &(Buffers[index]);
     bp->lockers--;
     if (flag) bp->dirty=1;
@@ -504,9 +504,9 @@ static DFlush (adbase)
     tb = Buffers;
     for(i=0;i<nbuffers;i++,tb++) {
         if (tb->dirty) {
-	    code = tb->page * PAGESIZE;	/* offset within file */
-	    code = (*adbase->write)(adbase, tb->file, tb->data, code, PAGESIZE);
-	    if (code != PAGESIZE) return UIOERROR;
+	    code = tb->page * UBIK_PAGESIZE;	/* offset within file */
+	    code = (*adbase->write)(adbase, tb->file, tb->data, code, UBIK_PAGESIZE);
+	    if (code != UBIK_PAGESIZE) return UIOERROR;
 	}
     }
     return 0;
@@ -564,7 +564,7 @@ static char *DNew (dbase, fid, page)
 
     if ((tb = newslot(dbase, fid, page)) == 0) return NULL;
     tb->lockers++;
-    memset(tb->data, 0, PAGESIZE);
+    memset(tb->data, 0, UBIK_PAGESIZE);
     return tb->data;
 }
 
@@ -582,11 +582,11 @@ udisk_read(atrans, afile, abuffer, apos, alen)
     totalLen = 0;
     dbase = atrans->dbase;
     while (alen > 0) {
-	bp = DRead(dbase, afile, apos>>LOGPAGESIZE);
+	bp = DRead(dbase, afile, apos>>UBIK_LOGPAGESIZE);
 	if (!bp) return UEOF;
 	/* otherwise, min of remaining bytes and end of buffer to user mode */
-	offset = apos & (PAGESIZE-1);
-	len = PAGESIZE - offset;
+	offset = apos & (UBIK_PAGESIZE-1);
+	len = UBIK_PAGESIZE - offset;
 	if (len > alen) len = alen;
 	memcpy(abuffer, bp+offset, len);
 	abuffer += len;
@@ -660,15 +660,15 @@ udisk_write(atrans, afile, abuffer, apos, alen)
     /* now update vm */
     totalLen = 0;
     while (alen > 0) {
-	bp = DRead(dbase, afile, apos>>LOGPAGESIZE);
+	bp = DRead(dbase, afile, apos>>UBIK_LOGPAGESIZE);
 	if (!bp) {
-	    bp = DNew(dbase, afile, apos>>LOGPAGESIZE);
+	    bp = DNew(dbase, afile, apos>>UBIK_LOGPAGESIZE);
 	    if (!bp) return UIOERROR;
-	    memset(bp, 0, PAGESIZE);
+	    memset(bp, 0, UBIK_PAGESIZE);
 	}
 	/* otherwise, min of remaining bytes and end of buffer to user mode */
-	offset = apos & (PAGESIZE-1);
-	len = PAGESIZE-offset;
+	offset = apos & (UBIK_PAGESIZE-1);
+	len = UBIK_PAGESIZE-offset;
 	if (len > alen) len = alen;
 	memcpy(bp+offset, abuffer, len);
 	abuffer += len;

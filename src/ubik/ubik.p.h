@@ -179,11 +179,8 @@ extern char *ubik_CheckRXSecurityRock;
 
 #ifdef UBIK_INTERNALS
 /* some ubik parameters */
-#ifdef	PAGESIZE
-#undef	PAGESIZE
-#endif
-#define	PAGESIZE	    1024	/* fits in current r packet */
-#define	LOGPAGESIZE	    10		/* base 2 log thereof */
+#define	UBIK_PAGESIZE	    1024	/* fits in current r packet */
+#define	UBIK_LOGPAGESIZE    10		/* base 2 log thereof */
 #define	NBUFFERS	    20		/* number of 1K buffers */
 #define	HDRSIZE		    64		/* bytes of header per dbfile */
 
