@@ -560,10 +560,6 @@ int afs_putpage(vp, off, len, flags, cred)
     /*
      * Putpage (ASYNC) is called every sec to flush out dirty vm pages 
      */
-    if (flags == B_ASYNC) {
-	/* XXX For testing only XXX */
-	return (EINVAL);
-    }
     AFS_GLOCK();
     afs_Trace4(afs_iclSetp, CM_TRACE_PAGEOUT, ICL_TYPE_POINTER, (afs_int32) vp,
 	       ICL_TYPE_LONG, (afs_int32) off, ICL_TYPE_LONG, (afs_int32) len,

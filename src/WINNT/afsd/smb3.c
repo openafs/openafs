@@ -2367,7 +2367,8 @@ nextEntry:
          * we're supposed to close the search if we're done, and we're done,
          * or if something went wrong, close the search.
          */
-        if ((searchFlags & 1) || ((searchFlags & 2) && eos)
+        /* ((searchFlags & 1) || ((searchFlags & 2) && eos) */
+	if ((searchFlags & 1) || (returnedNames == 0)
         	|| code != 0) smb_DeleteDirSearch(dsp);
 	if (code)
         	smb_SendTran2Error(vcp, p, opx, code);

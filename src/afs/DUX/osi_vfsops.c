@@ -200,6 +200,14 @@ int mp_afs_sync(struct mount *mp, int flags)
 }
 
 
+#ifdef AFS_DUX50_ENV
+int mp_afs_smoothsync(struct mount *mp, u_int age, u_int smsync_flag)
+{
+    AFS_STATCNT(afs_sync);
+    return 0;
+}
+#endif
+
 int mp_afs_fhtovp(struct mount *afsp, struct fid *fidp, struct vnode **avcp)
 {
     struct vrequest treq;
@@ -350,7 +358,10 @@ struct vfsops afs_vfsops = {
     mp_afs_vptofh,
     mp_Afs_init,
     mp_afs_mountroot,
-    mp_afs_swapvp
+    mp_afs_swapvp,
+#ifdef AFS_DUX50_ENV
+    mp_afs_smoothsync
+#endif
 };
 
 
@@ -469,8 +480,12 @@ int mp_Afs_init(void)
     
     AFS_GLOCK();
     sysent[AFS_SYSCALL].sy_call = afs3_syscall;
+#ifdef SY_NARG
+    sysent[AFS_SYSCALL].sy_info = 6;
+#else
     sysent[AFS_SYSCALL].sy_parallel = 0;
     sysent[AFS_SYSCALL].sy_narg = 6;
+#endif
     sysent[SYS_setgroups].sy_call = Afs_xsetgroups;
     afs_xioctl_func = afsxioctl;    
     afs_xsetgroups_func = afsxsetgroups;

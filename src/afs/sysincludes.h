@@ -79,7 +79,10 @@ struct xfs_inode_info {};
 #ifdef AFS_SGI64_ENV
 #include <ksys/behavior.h>
 #endif /* AFS_SGI64_ENV */
+#include "../fs/efs_inode.h"
+#ifdef AFS_SGI_EFS_IOPS_ENV
 #include "../sgiefs/efs.h"
+#endif
 #include "../sys/kmem.h"
 #include "../sys/cred.h"
 #include "../sys/resource.h"

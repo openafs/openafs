@@ -10,7 +10,7 @@
 /*
  * SGI specific vnodeops + other misc interface glue
  */
-#ident "$Revision: 1.1.1.2 $"
+#ident "$Revision: 1.1.1.3 $"
 
 #include "../afs/param.h"	/* Should be always first */
 #ifdef	AFS_SGI62_ENV
@@ -1829,6 +1829,7 @@ void afs_InitDualFSCacheOps(struct vnode *vp)
     inited = 1;
 
 
+#ifdef AFS_SGI_EFS_IOPS_ENV
     swp = vfs_getvfssw("efs");
     if (swp) {
         afs_efs_vnodeopsp = swp->vsw_vnodeops;
@@ -1838,6 +1839,7 @@ void afs_InitDualFSCacheOps(struct vnode *vp)
 	    found = 1;
 	}
     }
+#endif /* AFS_SGI_EFS_IOPS_ENV */
 
     swp = vfs_getvfssw("xfs");
     if (swp) {

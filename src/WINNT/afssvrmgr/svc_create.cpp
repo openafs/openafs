@@ -139,7 +139,7 @@ void Services_Create_OnInitDialog (HWND hDlg, LPIDENT lpi)
 
 void Services_Create_OnType (HWND hDlg)
 {
-   SERVICETYPE type;
+   AFSSERVICETYPE type;
    if (IsDlgButtonChecked (hDlg, IDC_SVC_TYPE_FS))
       type = SERVICETYPE_FS;
    else if (IsDlgButtonChecked (hDlg, IDC_SVC_TYPE_CRON))
