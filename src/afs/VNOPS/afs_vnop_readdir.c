@@ -827,7 +827,7 @@ afs1_readdir(avc, auio, acred)
 	return code;
     }
     afs_InitFakeStat(&fakestate);
-    code = afs_EvalFakeStat(&fakestate, &avc, &treq);
+    code = afs_EvalFakeStat(&avc, &fakestate, &treq);
     if (code) {
 #ifdef	AFS_HPUX_ENV
 	osi_FreeSmallSpace((char *)sdirEntry);

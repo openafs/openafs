@@ -916,7 +916,7 @@ afs_xflock () {
 		return;
 	    }
 #endif
-	    code = afs_EvalFakeStat(&fakestate, &tvc, &treq);
+	    code = afs_EvalFakeStat(&tvc, &fakestate, &treq);
 	    if (code) {
 		afs_PutFakeStat(&fakestate);
 		return code;
