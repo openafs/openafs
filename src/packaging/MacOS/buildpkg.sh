@@ -39,7 +39,7 @@ if [ ! -f CellServDB ]; then
    echo "A CellServDB file must be placed in the working directory"
    die=1
 fi
-FILES="ReadMe.rtf License.rtf CellServDB.list OpenAFS.info OpenAFS.post_install OpenAFS.pre_upgrade csrvdbmerge.pl"
+FILES="ReadMe.rtf License.rtf CellServDB.list OpenAFS.info OpenAFS.post_install OpenAFS.pre_upgrade csrvdbmerge.pl 2.0.txt"
 for f in $FILES; do
    if [ ! -f $f ]; then
      echo "file missing: " $f
@@ -89,7 +89,7 @@ mkdir $PKGROOT/private $PKGROOT/private/var $PKGROOT/private/var/db
 mkdir $PKGROOT/private/var/db/openafs $PKGROOT/private/var/db/openafs/cache
 mkdir $PKGROOT/private/var/db/openafs/etc $PKGROOT/private/var/db/openafs/etc/config
 cp $RESSRC/CellServDB $PKGROOT/private/var/db/openafs/etc/CellServDB.master
-echo andrew.cmu.edu > $PKGROOT/private/var/db/openafs/etc/ThisCell.sample
+echo openafs.org > $PKGROOT/private/var/db/openafs/etc/ThisCell.sample
 if [ $majorvers -ge 7 ]; then
     echo /afs:/var/db/openafs/cache:30000 > $PKGROOT/private/var/db/openafs/etc/cacheinfo.sample
     make AFSINCLUDE=$BINDEST/include
@@ -99,7 +99,7 @@ if [ $majorvers -ge 7 ]; then
 else
     echo /Network/afs:/var/db/openafs/cache:30000 > $PKGROOT/private/var/db/openafs/etc/cacheinfo.sample
 fi
-#echo '-stat 2000 -dcache 800 -daemons 3 -volumes 70 -rootvol root.afs.local' > $PKGROOT/private/var/db/openafs/etc/config/afsd.options.sample
+echo '-stat 2000 -dcache 800 -daemons 3 -volumes 70 -dynroot -fakestat-all' > $PKGROOT/private/var/db/openafs/etc/config/afsd.options.sample
 
 strip -X -S $PKGROOT/Library/OpenAFS/Tools/root.client/usr/vice/etc/afs.kext/Contents/MacOS/afs
 
