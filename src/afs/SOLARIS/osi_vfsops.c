@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/SOLARIS/osi_vfsops.c,v 1.1.1.8 2001/07/14 22:19:51 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/SOLARIS/osi_vfsops.c,v 1.1.1.9 2001/10/14 17:59:10 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -308,7 +308,7 @@ afsinit(struct vfssw *vfsswp, int fstype)
     if ( !nfs_checkauth ) afs_warn("nfs_checkauth not initialised");
 #endif
     ufs_iallocp = (int (*)()) modlookup("ufs", "ufs_ialloc");    
-    ufs_iupdatp = (int (*)()) modlookup("ufs", "ufs_iupdat");
+    ufs_iupdatp = (void (*)()) modlookup("ufs", "ufs_iupdat");
     ufs_igetp = (int (*)()) modlookup("ufs", "ufs_iget");    
     ufs_itimes_nolockp = (void (*)()) modlookup("ufs", "ufs_itimes_nolock");
     udp_infop = (struct streamtab *) modlookup("udp", "udpinfo");    

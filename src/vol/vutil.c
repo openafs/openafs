@@ -17,7 +17,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vutil.c,v 1.1.1.7 2001/09/20 06:17:04 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/vutil.c,v 1.1.1.8 2001/10/14 18:07:26 hartmans Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>

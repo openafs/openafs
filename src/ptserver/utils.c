@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/utils.c,v 1.1.1.7 2001/09/20 06:15:59 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/utils.c,v 1.1.1.8 2001/10/14 18:06:15 hartmans Exp $");
 
 #include <sys/types.h>
 #include <lock.h>
@@ -21,6 +21,13 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/utils.c,v 1.1.1.7 2001/09/20 0
 #else
 #include <netinet/in.h>
 #include <netdb.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #endif
 #include "ptserver.h"
 #include "pterror.h"

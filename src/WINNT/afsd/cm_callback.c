@@ -28,6 +28,16 @@
 /* read/write lock for all global storage in this module */
 osi_rwlock_t cm_callbackLock;
 
+/*
+#ifdef AFS_FREELANCE_CLIENT
+extern int cm_fakeDirCallback;
+extern int cm_fakeGettingCallback;
+#endif
+*/
+#ifdef AFS_FREELANCE_CLIENT
+extern osi_mutex_t cm_Freelance_Lock;
+#endif
+
 /* count of # of callback breaking messages received by this CM so far.  We use
  * this count in determining whether there have been any callback breaks that
  * apply to a call that returned a new callback.  If the counter doesn't
@@ -568,9 +578,50 @@ void cm_InitCallback(void)
  */
 int cm_HaveCallback(cm_scache_t *scp)
 {
-	if (scp->cbServerp != NULL)
-        	return 1;
-	else return 0;
+#ifdef AFS_FREELANCE_CLIENT
+    // yj: we handle callbacks specially for callbacks on the root directory
+    // Since it's local, we almost always say that we have callback on it
+    // The only time we send back a 0 is if we're need to initialize or
+    // reinitialize the fake directory
+
+    // There are 2 state variables cm_fakeGettingCallback and cm_fakeDirCallback
+    // cm_fakeGettingCallback is 1 if we're in the process of initialization and
+    // hence should return false. it's 0 otherwise
+    // cm_fakeDirCallback is 0 if we haven't loaded the fake directory, it's 1
+    // if the fake directory is loaded and this is the first time cm_HaveCallback
+    // is called since then. We return false in this case to allow cm_GetCallback
+    // to be called because cm_GetCallback has some initialization work to do.
+    // If cm_fakeDirCallback is 2, then it means that the fake directory is in
+    // good shape and we simply return true, provided no change is detected.
+  int fdc, fgc;
+
+    if (cm_freelanceEnabled && scp->fid.cell==0x1 && scp->fid.volume==0x20000001) {	// if it's something on /afs
+	if (!(scp->fid.vnode==0x1 && scp->fid.unique==0x1))  	// if it's not root.afs
+	    return 1;
+	else {
+	    lock_ObtainMutex(&cm_Freelance_Lock);
+	    fdc = cm_fakeDirCallback;
+	    fgc = cm_fakeGettingCallback;
+	    lock_ReleaseMutex(&cm_Freelance_Lock);
+	    
+	    if (fdc==1) {	// first call since init
+		return 0;
+	    } else if (fdc==2 && !fgc) { 	// we're in good shape
+		if (cm_getLocalMountPointChange()) {	// check for changes
+		    cm_clearLocalMountPointChange(); // clear the changefile
+		    cm_reInitLocalMountPoints();	// start reinit
+		    return 0;
+		}
+		return 1;			// no change
+	    }
+	    return 0;
+	}
+    }
+#endif
+
+    if (scp->cbServerp != NULL)
+	return 1;
+    else return 0;
 }
 
 /* need to detect a broken callback that races with our obtaining a callback.
@@ -694,6 +745,43 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
         int mustCall;
         long sflags;
 
+#ifdef AFS_FREELANCE_CLIENT
+	// yj
+	// The case where a callback is needed on /afs is handled
+	// specially. We need to fetch the status by calling
+	// cm_MergeStatus and mark that cm_fakeDirCallback is 2
+	if (cm_freelanceEnabled &&
+          scp->fid.cell==0x1 &&
+		scp->fid.volume==0x20000001 &&
+		scp->fid.unique==0x1 &&
+		scp->fid.vnode==0x1) {
+		// Start by indicating that we're in the process
+		// of fetching the callback
+
+	        lock_ObtainMutex(&cm_Freelance_Lock);
+		cm_fakeGettingCallback = 1;
+		lock_ReleaseMutex(&cm_Freelance_Lock);
+
+		// Fetch the status info 
+		cm_MergeStatus(scp, &afsStatus, &volSync, userp, 0);
+
+		// Indicate that the callback is not done
+		lock_ObtainMutex(&cm_Freelance_Lock);
+		cm_fakeDirCallback = 2;
+		// Indicate that we're no longer fetching the callback
+		cm_fakeGettingCallback = 0;
+		lock_ReleaseMutex(&cm_Freelance_Lock);
+
+		return 0;
+	}
+
+	/*if (scp->fid.cell==0x1 && scp->fid.volume==0x20000001) {
+		afsi_log("cm_getcallback should NEVER EVER get here... ");
+	}*/
+	// yj: end of getcallback modifications  ---------------
+		
+#endif /* AFS_FREELANCE_CLIENT */
+	
 	mustCall = (flags & 1);
 	cm_AFSFidFromFid(&tfid, &scp->fid);
 	while (1) {

@@ -11,7 +11,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/comerr/compile_et.c,v 1.1.1.5 2001/09/20 06:13:03 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/comerr/compile_et.c,v 1.1.1.6 2001/10/14 18:04:25 hartmans Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -370,7 +370,9 @@ int main (argc, argv) int argc; char **argv; {
     fprintf (hfile, "#define ERROR_TABLE_BASE_%s (%ldL)\n",
 	     lcname, (long int) table_number);
     fprintf (hfile, "#define init_%s_err_tbl initialize_%s_error_table\n",
-	     lcname, lcname);
+	     lcname, table_name);
+    fprintf (hfile, "#define initialize_%s_error_table initialize_%s_error_table\n",
+	     lcname, table_name);
     fprintf (hfile, "#define %s_err_base ERROR_TABLE_BASE_%s\n", lcname,
 	     lcname);
     fclose(hfile);		/* bye bye include file */

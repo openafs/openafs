@@ -16,7 +16,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/authclient.c,v 1.1.1.8 2001/09/20 06:14:55 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/authclient.c,v 1.1.1.9 2001/10/14 18:05:03 hartmans Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
@@ -44,6 +44,13 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/authclient.c,v 1.1.1.8 2001/09/20
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #endif
 #include <rx/rxkad.h>
 #include <afs/cellconfig.h>

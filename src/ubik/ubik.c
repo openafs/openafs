@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/ubik.c,v 1.1.1.8 2001/09/20 06:16:30 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/ubik.c,v 1.1.1.9 2001/10/14 18:06:46 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -22,6 +22,13 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/ubik.c,v 1.1.1.8 2001/09/20 06:16:
 #endif
 #include <time.h>
 #include <lock.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <afs/cellconfig.h>

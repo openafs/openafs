@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/read_pssword.c,v 1.1.1.7 2001/09/20 06:13:27 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/read_pssword.c,v 1.1.1.8 2001/10/14 18:04:48 hartmans Exp $");
 
 #include <mit-cpyright.h>
 #include <des.h>

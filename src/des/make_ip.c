@@ -11,10 +11,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/make_ip.c,v 1.1.1.4 2001/07/14 22:21:33 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/des/make_ip.c,v 1.1.1.5 2001/10/14 18:04:47 hartmans Exp $");
 
 #include <mit-cpyright.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include "des_internal.h"
 
 #define WANT_IP_TABLE

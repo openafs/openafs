@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vm.c,v 1.1.1.5 2001/07/14 22:19:48 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vm.c,v 1.1.1.6 2001/10/14 17:59:08 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -43,7 +43,7 @@ int osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
     struct inode *ip = (struct inode*)avc;
 
-    if (avc->vrefCount != 0)
+    if (VREFCOUNT(avc) != 0)
 	return EBUSY;
 
     if (avc->opens != 0)

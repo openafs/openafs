@@ -4,7 +4,10 @@
 
 OBJ = $(SYS_NAME)/obj
 DEST = $(SYS_NAME)/dest
+DESTDIR = DEST/
+SRCDIR = ${DESTDIR}
 #LINUX_SYS = i386_linux22
+TOP_SRCDIR = `pwd`/src
 
 all: afsd
 

@@ -22,7 +22,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.1.1.4 2001/07/14 22:19:57 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.1.1.5 2001/10/14 17:59:13 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -317,12 +317,12 @@ tagain:
     osi_dnlc_remove ( adp, aname, tvc);
     if (tvc) afs_symhint_inval(tvc);
 
-    Tadp1 = adp; Tadpr = adp->vrefCount; Ttvc = tvc; Tnam = aname; Tnam1 = 0;
-    if (tvc) Ttvcr = tvc->vrefCount;
+    Tadp1 = adp; Tadpr = VREFCOUNT(adp); Ttvc = tvc; Tnam = aname; Tnam1 = 0;
+    if (tvc) Ttvcr = VREFCOUNT(tvc);
 #ifdef	AFS_AIX_ENV
-    if (tvc && (tvc->vrefCount > 2) && tvc->opens > 0 && !(tvc->states & CUnlinked)) {
+    if (tvc && (VREFCOUNT(tvc) > 2) && tvc->opens > 0 && !(tvc->states & CUnlinked)) {
 #else
-    if (tvc && (tvc->vrefCount > 1) && tvc->opens > 0 && !(tvc->states & CUnlinked)) {
+    if (tvc && (VREFCOUNT(tvc) > 1) && tvc->opens > 0 && !(tvc->states & CUnlinked)) {
 #endif
 	char *unlname = newname();
 

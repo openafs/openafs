@@ -10,13 +10,20 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kadatabase.c,v 1.1.1.5 2001/09/11 14:32:54 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kadatabase.c,v 1.1.1.6 2001/10/14 18:05:05 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #else
 #include <netinet/in.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #endif
 #include <lock.h>
 #include <ubik.h>

@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/dir/salvage.c,v 1.1.1.6 2001/09/20 06:14:44 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/dir/salvage.c,v 1.1.1.7 2001/10/14 18:04:52 hartmans Exp $");
 
 #include <sys/types.h>
 #include <errno.h>

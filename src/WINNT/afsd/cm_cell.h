@@ -20,9 +20,11 @@ typedef struct cm_cell {
         struct cm_serverRef *vlServersp;	/* locked by cm_serverLock */
         osi_mutex_t mx;			/* mutex locking fields (flags) */
         long flags;			/* locked by mx */
+        long timeout;                   /* if dns, time at which the server addrs expire */
 } cm_cell_t;
 
 #define CM_CELLFLAG_SUID	1	/* setuid flag; not yet used */
+#define CM_CELLFLAG_DNS         2       /* cell servers are from DNS */
 
 extern void cm_InitCell(void);
 

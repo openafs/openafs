@@ -10,9 +10,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kpwvalid.c,v 1.1.1.4 2001/07/14 22:22:15 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kpwvalid.c,v 1.1.1.5 2001/10/14 18:05:10 hartmans Exp $");
 
 #include <stdio.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #ifdef AFS_NT40_ENV
 #include <WINNT/afsevent.h>
 #endif

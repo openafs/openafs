@@ -1059,6 +1059,14 @@ long cm_Unlink(cm_scache_t *dscp, char *namep, cm_user_t *userp, cm_req_t *reqp)
         AFSFetchStatus newDirStatus;
         AFSVolSync volSync;
 
+#ifdef AFS_FREELANCE_CLIENT
+	if (cm_freelanceEnabled && dscp == cm_rootSCachep) {
+	  /* deleting a mount point from the root dir. */
+	  code = cm_FreelanceRemoveMount(namep);
+	  return code;
+	}
+#endif
+
 	/* make sure we don't screw up the dir status during the merge */
         lock_ObtainMutex(&dscp->mx);
 	sflags = CM_SCACHESYNC_STOREDATA;
@@ -1498,6 +1506,21 @@ long cm_TryBulkProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 		}	/* got lock */
                 cm_ReleaseSCache(tscp);
         }	/* found entry */
+
+#ifdef AFS_FREELANCE_CLIENT
+	// yj: if this is a mountpoint under root.afs then we don't want it
+	// to be bulkstat-ed, instead, we call getSCache directly and under
+	// getSCache, it is handled specially.
+	if 	(cm_freelanceEnabled &&
+           tfid.cell==0x1 && tfid.volume==0x20000001 &&
+			   !(tfid.vnode==0x1 && tfid.unique==0x1) )
+	{
+#ifdef DEBUG
+	        afsi_log("   cm_trybulkproc going to call getscache");
+#endif
+		return cm_GetSCache(&tfid, &tscp, NULL, NULL);
+	}
+#endif /* AFS_FREELANCE_CLIENT */
 
 	i = bsp->counter++;
         bsp->fids[i].Volume = scp->fid.volume;

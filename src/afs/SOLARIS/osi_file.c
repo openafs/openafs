@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/SOLARIS/osi_file.c,v 1.1.1.6 2001/09/11 14:25:08 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/SOLARIS/osi_file.c,v 1.1.1.7 2001/10/14 17:59:09 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -339,8 +339,13 @@ afs_osi_Write(afile, offset, aptr, asize)
         osi_Panic("afs_osi_Write called with null param");
     if (offset != -1) afile->offset = offset;
     AFS_GUNLOCK();
+#ifdef AFS_SUN59_ENV
+    code = gop_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize, afile->offset,
+		  AFS_UIOSYS, 0, curproc->p_fsz_ctl.rlim_cur, &afs_osi_cred, &resid);
+#else
     code = gop_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize, afile->offset,
 		  AFS_UIOSYS, 0,  (u.u_rlimit[RLIMIT_FSIZE].rlim_cur), &afs_osi_cred, &resid);
+#endif
     AFS_GLOCK();
     if (code == 0) {
 	code = asize - resid;

@@ -19,7 +19,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/volume.c,v 1.1.1.10 2001/09/20 06:17:03 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/volume.c,v 1.1.1.11 2001/10/14 18:07:26 hartmans Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>

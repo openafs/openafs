@@ -10,12 +10,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaserver.c,v 1.1.1.8 2001/09/20 06:14:58 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaserver.c,v 1.1.1.9 2001/10/14 18:05:07 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
-#include <fcntl.h>
 #include <winsock2.h>
 #include <WINNT/afsevent.h>
 #else
@@ -26,6 +25,16 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaserver.c,v 1.1.1.8 2001/09/20 0
 #include "kalog.h"           /* for OpenLog() */
 #include <time.h>
 #include <stdio.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
+#endif
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif

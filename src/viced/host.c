@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/host.c,v 1.1.1.6 2001/09/11 14:35:35 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/host.c,v 1.1.1.7 2001/10/14 18:07:13 hartmans Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -114,8 +114,10 @@ static void GetCEBlock()
     register int i;
 
     block = (struct CEBlock *)malloc(sizeof(struct CEBlock));
-    if (!block)
+    if (!block) {
+	ViceLog(0, ("Failed malloc in GetCEBlock\n"));
 	ShutDownAndCore(PANIC);
+    }
 
     for(i = 0; i < (CESPERBLOCK -1); i++) {
 	Lock_Init(&block->entry[i].lock);
@@ -137,8 +139,10 @@ static struct client *GetCE()
 
     if (CEFree == 0)
 	GetCEBlock();
-    if (CEFree == 0)
+    if (CEFree == 0) {
+	ViceLog(0, ("CEFree NULL in GetCE\n"));
 	ShutDownAndCore(PANIC);
+    }
 
     entry = CEFree;
     CEFree = entry->next;
@@ -193,8 +197,10 @@ static void GetHTBlock()
     static int index = 0;
 
     block = (struct HTBlock *)malloc(sizeof(struct HTBlock));
-    if (!block)
+    if (!block) {
+	ViceLog(0, ("Failed malloc in GetHTBlock\n"));
 	ShutDownAndCore(PANIC);
+    }
 
 #ifdef AFS_PTHREAD_ENV
     for(i=0; i < (h_HTSPERBLOCK); i++)
@@ -264,14 +270,20 @@ int h_Release_r(host)
     register struct host *host;
 {	
     
-    if (!((host)->holds[h_holdSlot()] &= ~h_holdbit()) ) {
+    if (!((host)->holds[h_holdSlot()] & ~h_holdbit()) ) {
 	if (! h_OtherHolds_r(host) ) {
+	    /* must avoid masking this until after h_OtherHolds_r runs
+	       but it should be run before h_TossStuff_r */
+	    (host)->holds[h_holdSlot()] &= ~h_holdbit();
 	    if ( (host->hostFlags & HOSTDELETED) || 
 		(host->hostFlags & CLIENTDELETED) ) {
 		h_TossStuff_r(host);
 	    }		
-	}
-    }
+	} else 
+	    (host)->holds[h_holdSlot()] &= ~h_holdbit();
+    } else 
+      (host)->holds[h_holdSlot()] &= ~h_holdbit();
+
     return 0;
 }
 
@@ -1590,8 +1602,8 @@ static int h_DumpHost(host, held, file)
     char tmpStr[256];
 
     H_LOCK
-    sprintf(tmpStr, "ip:%x holds:%d port:%d hidx:%d cbid:%d lock:%x last:%u active:%u down:%d del:%d cons:%d cldel:%d\n\t hpfailed:%d hcpsCall:%u hcps [",
-	    host->host, host->holds, host->port, host->index, host->cblist,
+    sprintf(tmpStr, "ip:%x port:%d hidx:%d cbid:%d lock:%x last:%u active:%u down:%d del:%d cons:%d cldel:%d\n\t hpfailed:%d hcpsCall:%u hcps [",
+	    host->host, host->port, host->index, host->cblist,
 	    CheckLock(&host->lock), host->LastCall, host->ActiveCall, 
 	    (host->hostFlags & VENUSDOWN), host->hostFlags&HOSTDELETED, 
 	    host->Console, host->hostFlags & CLIENTDELETED, 
@@ -1609,8 +1621,16 @@ static int h_DumpHost(host, held, file)
 	    sprintf(tmpStr, " %x", host->interface->addr[i]);
 	    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
 	}
-    sprintf(tmpStr, "]\n");
+    sprintf(tmpStr, "] holds: ");
     STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+
+    for (i = 0 ; i < h_maxSlots ; i++) {
+      sprintf(tmpStr, "%04x", host->holds[i]);
+      STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+    }
+    sprintf(tmpStr, " slot/bit: %d/%d\n", h_holdSlot(), h_holdbit());
+    STREAM_WRITE(tmpStr, strlen(tmpStr), 1, file);
+
     H_UNLOCK
     return held;
 

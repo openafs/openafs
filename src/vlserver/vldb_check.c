@@ -24,7 +24,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/vldb_check.c,v 1.1.1.6 2001/09/20 06:16:56 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vlserver/vldb_check.c,v 1.1.1.7 2001/10/14 18:07:16 hartmans Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>

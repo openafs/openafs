@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/volser/vsutils.c,v 1.1.1.8 2001/09/20 06:17:12 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/vsutils.c,v 1.1.1.9 2001/10/14 18:07:32 hartmans Exp $");
 
 #include <afs/stds.h>
 #ifdef AFS_NT40_ENV
@@ -45,6 +45,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/volser/vsutils.c,v 1.1.1.8 2001/09/20 0
 #include "lockdata.h"
 
 struct ubik_client *cstruct;
+static rxkad_level vsu_rxkad_level = rxkad_clear;
 extern int VL_CreateEntry(), VL_CreateEntryN();
 extern int VL_GetEntryByID(), VL_GetEntryByIDN();
 extern int VL_GetEntryByNameO(), VL_GetEntryByNameN();
@@ -366,6 +367,23 @@ afs_int32 subik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9,
 
 
 /*
+  Set encryption.  If 'cryptflag' is nonzero, encrpytion is turned on
+  for authenticated connections; if zero, encryption is turned off.
+  Calling this function always results in a level of at least rxkad_auth;
+  to get a rxkad_clear connection, simply don't call this.
+*/
+void vsu_SetCrypt(cryptflag)
+    int cryptflag;
+{
+  if (cryptflag) {
+    vsu_rxkad_level = rxkad_crypt;
+  } else {
+    vsu_rxkad_level = rxkad_auth;
+  }
+}
+
+
+/*
   Get the appropriate type of ubik client structure out from the system.
 */
 afs_int32 vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc)
@@ -463,7 +481,7 @@ afs_int32 vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc
             break;
           case 2:
             sc = (struct rx_securityClass *)rxkad_NewClientSecurityObject(
-                 rxkad_clear, &ttoken.sessionKey, ttoken.kvno,
+                 vsu_rxkad_level, &ttoken.sessionKey, ttoken.kvno,
                  ttoken.ticketLen, ttoken.ticket);
             break;
           default:

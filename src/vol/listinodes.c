@@ -20,7 +20,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/listinodes.c,v 1.1.1.8 2001/09/20 06:17:00 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/listinodes.c,v 1.1.1.9 2001/10/14 18:07:22 hartmans Exp $");
 
 #ifndef AFS_NAMEI_ENV
 #ifdef AFS_LINUX20_ENV

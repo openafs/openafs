@@ -12,7 +12,7 @@ extern int errno;
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/db_verify.c,v 1.1.1.7 2001/09/20 06:15:55 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/db_verify.c,v 1.1.1.8 2001/10/14 18:06:10 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -26,6 +26,13 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/db_verify.c,v 1.1.1.7 2001/09/
 #include <sys/file.h>
 #endif
 #include <stdio.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <errno.h>
 #include <fcntl.h>
 #include <afs/cellconfig.h>

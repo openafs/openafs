@@ -10,14 +10,11 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/auth/writeconfig.c,v 1.1.1.6 2001/09/11 14:31:23 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/auth/writeconfig.c,v 1.1.1.7 2001/10/14 18:04:02 hartmans Exp $");
 
 #include <afs/pthread_glock.h>
 #include <afs/afsutil.h>
 #include <sys/types.h>
-#ifdef AFS_SUN5_ENV 
-#include <fcntl.h>
-#endif
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
 #include <fcntl.h>
@@ -30,6 +27,19 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/auth/writeconfig.c,v 1.1.1.6 2001/09/11
 #endif
 #include <stdio.h>
 #include <errno.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #include "cellconfig.h"
 #include "keys.h"
 

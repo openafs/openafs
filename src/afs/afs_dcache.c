@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_dcache.c,v 1.1.1.6 2001/09/11 14:24:39 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_dcache.c,v 1.1.1.7 2001/10/14 17:58:55 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -218,6 +218,17 @@ struct CTD_stats {
     int CTD_nSleeps;
 } CTD_stats;
 
+void afs_MaybeWakeupTruncateDaemon() {
+    if (!afs_CacheTooFull && afs_CacheIsTooFull()) {
+	afs_CacheTooFull = 1;
+	if (!afs_TruncateDaemonRunning)
+	    afs_osi_Wakeup((char *)afs_CacheTruncateDaemon);
+    } else if (!afs_TruncateDaemonRunning &&
+	       afs_blocksDiscarded > CM_MAXDISCARDEDCHUNKS) {
+	afs_osi_Wakeup((char *)afs_CacheTruncateDaemon);
+    }
+}
+
 u_int afs_min_cache = 0;
 void afs_CacheTruncateDaemon() {
     osi_timeval_t CTD_tmpTime;
@@ -294,7 +305,11 @@ void afs_CacheTruncateDaemon() {
 	    afs_stats_AddTo(CTD_stats.CTD_sleepTime, CTD_tmpTime);
 	}
 	if (afs_termState == AFSOP_STOP_TRUNCDAEMON) {
+#ifdef AFS_AFSDB_ENV
+	    afs_termState = AFSOP_STOP_AFSDB;
+#else
 	    afs_termState = AFSOP_STOP_RXEVENT;
+#endif
 	    afs_osi_Wakeup(&afs_termState);
 	    break;
 	}
@@ -1432,18 +1447,19 @@ struct tlocal1 {
 
 /* these fields are protected by the lock on the vcache and luck 
  * on the dcache */
-#define updateV2DC(l,v,d,src) { \
-    if (!l || 0 == NBObtainWriteLock(&((v)->lock),src)) { \
-	if (hsame((v)->m.DataVersion, (d)->f.versionNo) && (v)->callback) { \
-	    (v)->quick.dc = (d);                                          \
-	    (v)->quick.stamp = (d)->stamp = MakeStamp();                  \
-	    (v)->quick.minLoc = AFS_CHUNKTOBASE((d)->f.chunk);            \
-	    /* Don't think I need these next two lines forever */         \
-	    (v)->quick.len = (d)->f.chunkBytes;                           \
-	    (v)->h1.dchint = (d);                                         \
-	}                                                                 \
-	if(l) ReleaseWriteLock(&((v)->lock));                             \
-    } }
+void updateV2DC(int l, struct vcache *v, struct dcache *d, int src) {
+    if (!l || 0 == NBObtainWriteLock(&(v->lock),src)) {
+	if (hsame(v->m.DataVersion, d->f.versionNo) && v->callback) {
+	    v->quick.dc = d;
+	    v->quick.stamp = d->stamp = MakeStamp();
+	    v->quick.minLoc = AFS_CHUNKTOBASE(d->f.chunk);
+	    /* Don't think I need these next two lines forever */
+	    v->quick.len = d->f.chunkBytes;
+	    v->h1.dchint = d;
+	}
+	if(l) ReleaseWriteLock(&((v)->lock));
+    }
+}
 
 struct dcache *afs_GetDCache(avc, abyte, areq, aoffset, alen, aflags)
     register struct vcache *avc;    /*Held*/
@@ -1769,7 +1785,7 @@ struct dcache *afs_GetDCache(avc, abyte, areq, aoffset, alen, aflags)
 
 	/* Watch for standard race condition */
 	if (hsame(avc->m.DataVersion, tdc->f.versionNo)) {
-	  updateV2DC(0,avc,tdc,569);          /* set hint */
+	    updateV2DC(0,avc,tdc,569);          /* set hint */
 	    if (setLocks) ReleaseWriteLock(&avc->lock);
 	    afs_stats_cmperf.dcacheHits++;
 	    goto done;
@@ -1864,6 +1880,35 @@ struct dcache *afs_GetDCache(avc, abyte, areq, aoffset, alen, aflags)
         afs_stats_cmperf.dcacheMisses++; 
 	afs_Trace3(afs_iclSetp, CM_TRACE_FETCHPROC, ICL_TYPE_POINTER, avc,
 		   ICL_TYPE_INT32, Position, ICL_TYPE_INT32, size);
+
+	/*
+	 * Dynamic root support:  fetch data from local memory.
+	 */
+	if (afs_IsDynroot(avc)) {
+	    char *dynrootDir;
+	    int dynrootLen;
+
+	    afs_GetDynroot(&dynrootDir, &dynrootLen, &tsmall->OutStatus);
+
+	    dynrootDir += Position;
+	    dynrootLen -= Position;
+	    if (size > dynrootLen)
+		size = dynrootLen;
+	    if (size < 0) size = 0;
+	    code = afs_osi_Write(file, -1, dynrootDir, size);
+	    afs_PutDynroot();
+
+	    if (code == size)
+		code = 0;
+	    else
+		code = -1;
+
+	    tdc->validPos = Position + size;
+	    afs_CFileTruncate(file, size); /* prune it */
+	} else
+	/*
+	 * Not a dynamic vnode:  do the real fetch.
+	 */
 	do {
 	    tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
 	    if (tc) {

@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/test/test_interim_ktc.c,v 1.1.1.6 2001/09/20 06:15:03 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/test/test_interim_ktc.c,v 1.1.1.7 2001/10/14 18:05:13 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <afs/com_err.h>

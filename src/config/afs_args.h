@@ -39,6 +39,7 @@
 
 #define	AFSOP_ADDCELL2		 29	/* 2nd add cell protocol interface */
 #define	AFSOP_AFSDB_HANDLER	 30	/* userspace AFSDB lookup handler */
+#define	AFSOP_SET_DYNROOT	 31	/* enable/disable dynroot support */
 
 /* The range 20-30 is reserved for AFS system offsets in the afs_syscall */
 #define	AFSCALL_PIOCTL		20
@@ -105,6 +106,7 @@
 /* #define AFSOP_STOP_RXEVENT   214     defined in osi.h	      */
 /* #define AFSOP_STOP_COMPLETE     215  defined in osi.h	      */
 /* #define AFSOP_STOP_RXK_LISTENER   217     defined in osi.h	      */
+#define AFSOP_STOP_AFSDB	218	/* Stop AFSDB handler */
 
 /* Main afs syscall entry; this number may vary per system (i.e. defined in afs/param.h) */
 #ifndef	AFS_SYSCALL

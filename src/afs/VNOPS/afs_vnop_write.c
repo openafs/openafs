@@ -20,7 +20,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.1.1.8 2001/09/20 06:07:36 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.1.1.9 2001/10/14 17:59:14 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -909,7 +909,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 	ReleaseWriteLock(&avc->lock);
     }
 #ifdef	AFS_OSF_ENV
-    if ((avc->vrefCount <= 2) && (avc->states & CUnlinked)) {
+    if ((VREFCOUNT(avc) <= 2) && (avc->states & CUnlinked)) {
 	afs_remunlink(avc, 1);	/* ignore any return code */
     }
 #endif

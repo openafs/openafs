@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_analyze.c,v 1.1.1.7 2001/09/20 06:07:11 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_analyze.c,v 1.1.1.8 2001/10/14 17:58:52 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */

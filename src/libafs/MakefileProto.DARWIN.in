@@ -1,5 +1,5 @@
 #/* Copyright (C) 1995, 1989 Transarc Corporation - All rights reserved */
-# $Header: /tmp/cvstemp/openafs/src/libafs/MakefileProto.DARWIN.in,v 1.1.1.3 2001/09/20 06:15:23 hartmans Exp $
+# $Header: /tmp/cvstemp/openafs/src/libafs/MakefileProto.DARWIN.in,v 1.1.1.4 2001/10/14 18:05:40 hartmans Exp $
 # 
 # MakefileProto for Digital Unix systems
 #
@@ -47,14 +47,12 @@ AFS_OS_NONFSOBJS = osi_vfsops.o
 
 # System specific build commands and flags
 KDEFS=
-DBUG = -g
+DBUG = 
 DEFINES= -D_KERNEL -DKERNEL -DKERNEL_PRIVATE -DDIAGNOSTIC -DUSE_SELECT -DMACH_USER_API -DMACH_KERNEL
-OPTF=${OPT} 
-OPTF2=${OPT2} 
-KOPTS=-traditional-cpp -static -fno-common -finline -fno-keep-inline-functions -force_cpusubtype_ALL -msoft-float -mlong-branch 
+KOPTS=-no-precomp -static -fno-common -finline -fno-keep-inline-functions -force_cpusubtype_ALL -msoft-float -mlong-branch 
 #CFLAGS=-Werror-implicit-function-declaration -I. -I.. ${KINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 #CFLAGS=-framework Kernel -I. -I.. ${KINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
-CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${KINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${KINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG} ${OPTMZ}
 
 
 # Name of directory to hold object files and libraries.

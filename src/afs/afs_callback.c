@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_callback.c,v 1.1.1.6 2001/09/20 06:07:11 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_callback.c,v 1.1.1.7 2001/10/14 17:58:53 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -157,7 +157,7 @@ int SRXAFSCB_GetCE(a_call, a_index, a_result)
     a_result->DataVersion = hgetlo(tvc->m.DataVersion);
     a_result->callback = afs_data_pointer_to_int32(tvc->callback);		/* XXXX Now a pointer; change it XXXX */
     a_result->cbExpires = tvc->cbExpires;
-    a_result->refCount = tvc->vrefCount;
+    a_result->refCount = VREFCOUNT(tvc);
     a_result->opens = tvc->opens;
     a_result->writers = tvc->execsOrWriters;
     a_result->mvstat = tvc->mvstat;

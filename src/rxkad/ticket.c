@@ -14,7 +14,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/ticket.c,v 1.1.1.6 2001/09/11 14:34:43 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/ticket.c,v 1.1.1.7 2001/10/14 18:06:36 hartmans Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
@@ -32,6 +32,13 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/ticket.c,v 1.1.1.6 2001/09/11 14:
 #include <winsock2.h>
 #else
 #include <netinet/in.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #endif
 #include <rx/xdr.h>
 #include <rx/rx.h>

@@ -14,7 +14,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/ubikclient.c,v 1.1.1.6 2001/09/20 06:16:30 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/ubikclient.c,v 1.1.1.7 2001/10/14 18:06:47 hartmans Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"

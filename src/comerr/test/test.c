@@ -1,7 +1,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/comerr/test/test.c,v 1.1.1.4 2001/09/20 06:13:06 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/comerr/test/test.c,v 1.1.1.5 2001/10/14 18:04:27 hartmans Exp $");
 
 #include <stdio.h>
 #include <errno.h>

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/fsbnodeops.c,v 1.1.1.7 2001/09/20 06:12:45 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/bozo/fsbnodeops.c,v 1.1.1.8 2001/10/14 18:04:06 hartmans Exp $");
 
 #include <sys/types.h>
 #include <lwp.h>

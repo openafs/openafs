@@ -53,7 +53,3 @@ INSTALL=${TOP_SRCDIR}/pinstall/pinstall
 FS_CONV_SOL26         = fs_conv_sol26
 install_FS_CONV_SOL26 = $(DESTDIR)${afssrvsbindir}/fs_conv_sol26
 dest_FS_CONV_SOL26    = $(DEST)/root.server/usr/afs/bin/fs_conv_sol26
-#
-# This is the XBSA make flag and pathname to XBSA header files (xbsa.h)
-XBSA_FLAGS=-Dxbsa
-XBSADIR=/opt/tivoli/tsm/client/api/bin/xopen

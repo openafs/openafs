@@ -2,7 +2,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/comerr/error_table.y,v 1.1.1.5 2001/09/20 06:13:04 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/comerr/error_table.y,v 1.1.1.6 2001/10/14 18:04:26 hartmans Exp $");
 
 /*
  *

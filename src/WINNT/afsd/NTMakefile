@@ -36,12 +36,15 @@ INCFILES =\
 	$(INCFILEDIR)\smb_iocons.h \
 	$(INCFILEDIR)\smb_ioctl.h \
 	$(INCFILEDIR)\afsmsg95.h \
-	$(INCFILEDIR)\afsrpc.h
+	$(INCFILEDIR)\afsrpc.h \
+	$(INCFILEDIR)\cm_dns.h \
+	$(INCFILEDIR)\cm_dns_private.h
 
 IDLFILES =\
 	afsrpc.h afsrpc_c.obj
 
-CONFOBJS=cm_config.obj
+CONFOBJS=cm_config.obj \
+         cm_dns.obj
 
 AFSDOBJS=\
 	afsd_init.obj \
@@ -66,7 +69,8 @@ AFSDOBJS=\
 	cm_aclent.obj \
 	cm_dnlc.obj \
 	cm_rpc.obj \
-	afsrpc_s.obj
+	afsrpc_s.obj \
+     cm_freelance.obj
 
 cm_conn.obj: cm_conn.c
 	$(C2OBJ) -DAFS_PTHREAD_ENV $**
@@ -152,6 +156,10 @@ $(LOG95_DLLFILE): $(LOG95_DLLOBJS)
 
 ############################################################################
 # Install target; primary makefile target
+
+install_objs: cm_dns.obj cm_config.obj
+     $(COPY) cm_dns.obj $(DESTDIR)\lib
+     $(COPY) cm_config.obj $(DESTDIR)\lib
 
 install_headers: $(IDLFILES) $(INCFILES)
 

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_getaddr.c,v 1.1.1.7 2001/09/20 06:16:03 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_getaddr.c,v 1.1.1.8 2001/10/14 18:06:19 hartmans Exp $");
 
 #ifndef AFS_DJGPP_ENV
 #ifndef KERNEL
@@ -303,9 +303,9 @@ int rxi_getAllAddrMaskMtu (addrBuffer, maskBuffer, mtuBuffer, maxSize)
                     ifr.ifr_addr.sa_family=AF_INET;
                     strncpy(ifr.ifr_name, sdl->sdl_data, sdl->sdl_nlen);
                     if (ioctl(s, SIOCGIFMTU, (caddr_t)&ifr) < 0)
-                         mtuBuffer[count]=1500;
+                         mtuBuffer[count]=htonl(1500);
                     else
-                         mtuBuffer[count]=ifr.ifr_mtu;
+                         mtuBuffer[count]=htonl(ifr.ifr_mtu);
                     count++;
                }
                addrcount--;
@@ -464,14 +464,14 @@ int rxi_getAllAddrMaskMtu (addrBuffer, maskBuffer, mtuBuffer, maxSize)
 	 if ( ioctl(s, SIOCGIFMTU, (caddr_t)ifr) < 0) {
 	    perror("SIOCGIFMTU");
 	 } else {
-	    mtuBuffer[count] = ifr->ifr_metric;
+	    mtuBuffer[count] = htonl(ifr->ifr_metric);
 	 }
 #endif /* SIOCGIFMTU */
 #ifdef SIOCRIPMTU
 	 if ( ioctl(s, SIOCRIPMTU, (caddr_t)ifr) < 0) {
 	    perror("SIOCRIPMTU");
 	 } else {
-	    mtuBuffer[count] = ifr->ifr_metric;
+	    mtuBuffer[count] = htonl(ifr->ifr_metric);
 	 }
 #endif /* SIOCRIPMTU */
 

@@ -173,6 +173,7 @@
 #define ReleaseLockEvent	"AFS_SRX_RelLock"
 #define SetVolumeStatusEvent    "AFS_SRX_SetVolS"
 #define FlushCPSEvent           "AFS_SRX_FlusCPS"
+#define InlineBulkFetchStatusEvent     "AFS_SRX_BIFchSt"
 #define PrivilegeEvent		"AFS_Priv"
 #define PrivSetID		"AFS_PrivSet"
 /* Next 5 lines on behalf of MR-AFS */

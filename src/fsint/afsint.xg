@@ -101,9 +101,9 @@ struct AFSFetchStatus {
     afs_uint32 Group;
     afs_uint32 SyncCounter;
     afs_uint32 dataVersionHigh; /* For AFS/DFS translator, hi bits of dvn */
-    afs_uint32 spare2;
+    afs_uint32 lockCount;
     afs_uint32 spare3;
-    afs_uint32 spare4;
+    afs_uint32 errorCode;
 };
 
 struct AFSStoreStatus {
@@ -570,3 +570,10 @@ ResidencyCmd(
   IN struct ResidencyCmdInputs *Inputs,
   OUT struct ResidencyCmdOutputs *Outputs
 ) = 220; 
+
+InlineBulkStatus(
+  IN  AFSCBFids *FidsArray,
+  OUT AFSBulkStats *StatArray,
+  AFSCBs *CBArray,
+  AFSVolSync *Sync
+) = 65536;

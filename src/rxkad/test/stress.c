@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/test/stress.c,v 1.1.1.6 2001/09/20 06:16:20 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/test/stress.c,v 1.1.1.7 2001/10/14 18:06:37 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>

@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_server.c,v 1.1.1.8 2001/09/20 06:16:20 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_server.c,v 1.1.1.9 2001/10/14 18:06:36 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -23,6 +23,13 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_server.c,v 1.1.1.8 2001/09/
 #include <winsock2.h>
 #else
 #include <netinet/in.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #endif
 #include <rx/rx.h>
 #include <rx/xdr.h>

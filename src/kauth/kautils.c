@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kautils.c,v 1.1.1.6 2001/09/11 14:32:57 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kautils.c,v 1.1.1.7 2001/10/14 18:05:07 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -20,6 +20,13 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kautils.c,v 1.1.1.6 2001/09/11 14
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <sys/file.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #endif
 #include <time.h>
 #include <stdio.h>

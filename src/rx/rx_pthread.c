@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_pthread.c,v 1.1.1.7 2001/09/20 06:16:06 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_pthread.c,v 1.1.1.8 2001/10/14 18:06:23 hartmans Exp $");
 
 #include <sys/types.h>
 #include <errno.h>

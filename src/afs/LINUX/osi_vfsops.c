@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vfsops.c,v 1.1.1.9 2001/09/11 14:25:07 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vfsops.c,v 1.1.1.10 2001/10/14 17:59:08 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -335,8 +335,8 @@ int afs_statfs(struct super_block *sbp, struct statfs *statp, int size)
 void 
 afs_umount_begin(struct super_block *sbp)
 {
-    afs_shuttingdown=1;
     afs_put_super(sbp);      
+    afs_shuttingdown=1;
     afs_was_mounted=0;
 }
 
@@ -347,7 +347,7 @@ struct super_operations afs_sops = {
     delete_inode:      afs_delete_inode,
     put_super:         afs_put_super,
     statfs:            afs_statfs,
-    umount_begin:      afs_umount_begin,
+    umount_begin:      NULL /* afs_umount_begin */
 };
 #else
 struct super_operations afs_sops = {
@@ -361,7 +361,7 @@ struct super_operations afs_sops = {
     afs_statfs,
     NULL,		/* afs_remount_fs - see doc above */
     NULL,		/* afs_clear_inode */
-    afs_umount_begin,
+    NULL                /* afs_umount_begin */
 };
 #endif
 

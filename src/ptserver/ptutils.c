@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptutils.c,v 1.1.1.8 2001/09/11 14:34:08 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptutils.c,v 1.1.1.9 2001/10/14 18:06:13 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -19,7 +19,13 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptutils.c,v 1.1.1.8 2001/09/11
 #include <winsock2.h>
 #else
 #include <netinet/in.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
+#endif
 #endif
 #include <lock.h>
 #include <ubik.h>
@@ -104,7 +110,7 @@ static afs_int32 CorrectGroupName (ut, aname, cid, oid, cname)
 	if (ntohl(tentry.flags) & PRGRP) {
 	    if ((tentry.count == 0) && !admin) return PRGROUPEMPTY;
 	    /* terminate prefix at colon if there is one */
-	    if (prefix = strchr(tentry.name, ':')) *prefix = 0;
+	    if ((prefix = strchr(tentry.name, ':'))) *prefix = 0;
 	}
 	prefix = tentry.name;
     }
@@ -126,7 +132,7 @@ static afs_int32 CorrectGroupName (ut, aname, cid, oid, cname)
     }
   done:
     /* check for legal name with either group rules or user rules */
-    if (suffix = strchr(cname, ':')) {
+    if ((suffix = strchr(cname, ':'))) {
 	/* check for confusing characters */
 	if (strchr(cname, '\n') ||	/* restrict so recreate can work */
 	    strchr(suffix+1, ':'))	/* avoid multiple colons */
@@ -156,11 +162,12 @@ int AccessOK (ut, cid, tentry, mem, any)
     } else {
 	flags = oid = aid = 0;
     }
-    if (!(flags & PRACCESS))		/* provide default access */
+    if (!(flags & PRACCESS)) {		/* provide default access */
 	if (flags & PRGRP)
 	    flags |= PRP_GROUP_DEFAULT;
 	else
 	    flags |= PRP_USER_DEFAULT;
+    }
 
     if (flags & any) return 1;
     if (oid) {
@@ -622,7 +629,7 @@ afs_int32 AddToEntry (tt, entry, loc, aid)
     afs_int32 nptr;
     afs_int32 last;				/* addr of last cont. block */
     afs_int32 first = 0;
-    afs_int32 cloc;
+    afs_int32 cloc = 0;
     afs_int32 slot = -1;
 
     if (entry->id == aid) return PRINCONSISTENT;
@@ -796,7 +803,7 @@ afs_int32 GetList2 (at, tentry, tentry2 , alist, add)
   prlist *alist;
   afs_int32 add;
 {
-    afs_int32 code;
+    afs_int32 code = 0;
     afs_int32 i;
     struct contentry centry;
     afs_int32 nptr;

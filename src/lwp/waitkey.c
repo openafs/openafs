@@ -22,7 +22,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/waitkey.c,v 1.1.1.9 2001/09/20 06:15:32 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/waitkey.c,v 1.1.1.10 2001/10/14 18:05:48 hartmans Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>

@@ -194,7 +194,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef HAVE_RES_SEARCH
 //#undef HAVE_SOCKET
 
-#if ENDIANESS_IN_SYS_PARAM_H
+#ifdef ENDIANESS_IN_SYS_PARAM_H
 # ifndef KERNEL
 #  include <sys/types.h>
 #  include <sys/param.h>
@@ -204,7 +204,8 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 # endif
 #endif
 
-#undef AFS_AFSDB_ENV
+/*#undef AFS_AFSDB_ENV*/
+#define AFS_AFSDB_ENV 1
 #undef AFS_NAMEI_ENV
 #undef BOS_RESTRICTED_MODE
 

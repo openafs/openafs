@@ -10,8 +10,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/casestrcpy.c,v 1.1.1.4 2001/07/14 22:24:17 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/casestrcpy.c,v 1.1.1.5 2001/10/14 18:07:00 hartmans Exp $");
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <ctype.h>
 #include <stddef.h>
 #include <stdarg.h>

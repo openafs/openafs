@@ -1,4 +1,34 @@
-Openafs News -- history of user Visible changes. September 17, 2001
+OpenAFS News -- history of user-visible changes. October 13, 2001
+
+* Changes incorporated in OpenAFS 1.2.2
+
+** Solaris 9 and Linux PA-RISC are now supported
+
+** fileserver will not erroneously delay legitimate errors for 3 seconds
+   after 10 errors are returned (e.g. stat() on a directory you can't read)
+
+** Rx MTU calculation now works for Irix, Solaris and Linux
+
+** If afsd is started with the -dynroot flag, /afs will be locally
+   generated from the CellServDB.  AFSDB cells will be mounted
+   automatically upon access.
+
+** The namei fileserver allows vice "partitions" to be directories instead
+   of partitions and will attach and display accordingly. Creating the file
+   "AlwaysAttach" in the /vicepX directory is used as the trigger to attach it.
+
+** TSM support for butc no longer requires editing a Makefile, simply
+   specify the --enable-tivoli-tsm configure option.
+
+** Linux builds no longer require source changes every time the kernel
+   inode structure changes; the OpenAFS sources will now configure
+   itself to the actual inode structure as defined in the kernel
+   sources.
+
+* Changes incorporated in OpenAFS 1.2.1
+
+** vfsck on Digital UNIX and Solaris will now refuse to fsck mounted
+   mounted partitions.
 
 * Changes incorporated in OpenAFS 1.2.0
 
@@ -7,7 +37,6 @@ Openafs News -- history of user Visible changes. September 17, 2001
    /usr/local.  In order to get traditional AFS directory paths (/usr/afs
    and /usr/vice/etc) use the --enable-transarc-paths option to
    configure.  More details on the new directory layout are found in README.
-
 
 * Changes incorporated in OpenAFS 1.1.1a
  

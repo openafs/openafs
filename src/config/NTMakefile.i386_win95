@@ -164,7 +164,9 @@ afscdefs =\
 	-I$(DESTDIR)\include\rx \
 	-DWIN32_LEAN_AND_MEAN \
 	-DSTRICT \
-	-D_WIN32_IE=0x0400
+	-D_WIN32_IE=0x0400 \
+     -DAFS_AFSDB_ENV \
+     -DAFS_FREELANCE_CLIENT
 
 !	IF ((EXIST($(MSSDK)\include)) && (("$(SYS_NAME)"=="i386_win95" ) || ("$(SYS_NAME)"=="I386_WIN95" )))
 afscdefs=$(afscdefs) -I$(MSSDK)\include $(afscppdefs) \

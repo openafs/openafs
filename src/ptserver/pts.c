@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/pts.c,v 1.1.1.6 2001/07/14 22:23:18 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/pts.c,v 1.1.1.7 2001/10/14 18:06:12 hartmans Exp $");
 
 #include <stdio.h>
 #include <string.h>
@@ -833,7 +833,14 @@ int main (argc, argv)
 {
     register afs_int32 code;
     register struct cmd_syndesc *ts;
+#ifdef WIN32
+    WSADATA WSAjunk;
+#endif
 
+#ifdef WIN32
+    WSAStartup(0x0101, &WSAjunk);
+#endif
+    
 #ifdef	AFS_AIX32_ENV
     /*
      * The following signal action for AIX is necessary so that in case of a 

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_buffer.c,v 1.1.1.5 2001/09/11 14:24:36 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_buffer.c,v 1.1.1.6 2001/10/14 17:58:52 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #if !defined(UKERNEL)
@@ -232,17 +232,18 @@ char *DRead(fid,page)
       MReleaseWriteLock(&afs_bufferLock);
       return 0;
     }
+    MObtainWriteLock(&tb->lock,260);
+    MReleaseWriteLock(&afs_bufferLock);
+    tb->lockers++;
     tfile = afs_CFileOpen(fid[0]);
     sizep = (afs_int32 *)tfile;
     if (page * AFS_BUFFER_PAGESIZE >= *sizep) {
 	dirp_Zap(tb->fid);
+	tb->lockers--;
+	MReleaseWriteLock(&tb->lock);
 	afs_CFileClose(tfile);
-	MReleaseWriteLock(&afs_bufferLock);
 	return 0;
     }
-    MObtainWriteLock(&tb->lock,260);
-    MReleaseWriteLock(&afs_bufferLock);
-    tb->lockers++;
     code = afs_CFileRead(tfile, tb->page * AFS_BUFFER_PAGESIZE,
 			 tb->data, AFS_BUFFER_PAGESIZE);
     afs_CFileClose(tfile);

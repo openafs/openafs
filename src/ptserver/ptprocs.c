@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptprocs.c,v 1.1.1.7 2001/09/20 06:15:56 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptprocs.c,v 1.1.1.8 2001/10/14 18:06:11 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <ctype.h>
@@ -25,8 +25,14 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/ptserver/ptprocs.c,v 1.1.1.7 2001/09/20
 #ifdef AFS_NT40_ENV 
 #include <winsock2.h>
 #else
-#include <strings.h>
 #include <netinet/in.h>
+#endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
 #endif
 #include "ptserver.h"
 #include "pterror.h"
@@ -107,9 +113,9 @@ afs_int32 WhoIsThis (acall, at, aid)
 	goto done;			/* no longer supported */
     }
     else if (code == 2) {		/* kad class */
-	if (code = rxkad_GetServerInfo
+	if ((code = rxkad_GetServerInfo
 	    (acall->conn, (afs_int32 *) 0, 0/*was &exp*/,
-	     name, inst, tcell, (afs_int32 *) 0))
+	     name, inst, tcell, (afs_int32 *) 0)))
 	    goto done;
 #if 0
 	/* This test is unnecessary, since rxkad_GetServerInfo already check.
@@ -1153,10 +1159,11 @@ struct prcheckentry *aentry;
         ABORT_WITH(tt,PRPERM);
 
     aentry->flags = tentry.flags >> PRIVATE_SHIFT;
-    if (aentry->flags == 0)
+    if (aentry->flags == 0) {
 	if (tentry.flags & PRGRP)
 	    aentry->flags = PRP_GROUP_DEFAULT >> PRIVATE_SHIFT;
 	else aentry->flags = PRP_USER_DEFAULT >> PRIVATE_SHIFT;
+    }
     aentry->owner = tentry.owner;
     aentry->id = tentry.id;
     strncpy(aentry->name,tentry.name,PR_MAXNAMELEN);
@@ -1635,7 +1642,7 @@ static stolower(s)
 register char *s;
 {
     register int tc;
-    while (tc = *s) {
+    while ((tc = *s)) {
 	if (isupper(tc)) *s = tolower(tc);
 	s++;
     }
@@ -1656,7 +1663,7 @@ afs_int32 addWildCards(tt,alist,host)
     int size = 0, i, code;
     int added = 0;
  
-    while (host = (host & wild)) {
+    while ((host = (host & wild))) {
 	wild = htonl ( ntohl(wild) << 8) ;
 	iaddr.s_addr = host;
 	code = NameToID(tt, inet_ntoa(iaddr),&hostid);
@@ -1678,7 +1685,7 @@ afs_int32 addWildCards(tt,alist,host)
 	added +=  wlist.prlist_len;
 	for (i=0; i< wlist.prlist_len; i++) {
 	    if (!inCPS(*alist,wlist.prlist_val[i]))
-		if (code = AddToPRList (alist, &size, wlist.prlist_val[i] )) {
+		if ((code = AddToPRList (alist, &size, wlist.prlist_val[i] ))) {
 		    free(wlist.prlist_val);
 		    return(code);
 		}
@@ -1720,17 +1727,17 @@ afs_int32 WhoIsThisWithName(acall, at, aid, aname)
 	int clen;
 	extern char *pr_realmName;
 
-	if (code = rxkad_GetServerInfo
+	if ((code = rxkad_GetServerInfo
 	    (acall->conn, (afs_int32 *) 0, 0/*was &exp*/,
-	     name, inst, tcell, (afs_int32 *) 0))
+	     name, inst, tcell, (afs_int32 *) 0)))
 	    goto done;
 	strncpy (vname, name, sizeof(vname));
-	if (ilen = strlen (inst)) {
+	if ((ilen = strlen(inst))) {
 	    if (strlen(vname) + 1 + ilen >= sizeof(vname)) goto done;
 	    strcat (vname, ".");
 	    strcat (vname, inst);
 	}
-	if (clen = strlen (tcell)){
+	if ( (clen = strlen(tcell))) {
 
 #if	defined(AFS_ATHENA_STDENV) || defined(AFS_KERBREALM_ENV)
 	    static char local_realm[AFS_REALM_SZ] = "";

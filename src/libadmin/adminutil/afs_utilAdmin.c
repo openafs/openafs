@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/adminutil/afs_utilAdmin.c,v 1.1.1.6 2001/09/20 06:15:11 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/adminutil/afs_utilAdmin.c,v 1.1.1.7 2001/10/14 18:05:28 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <afs/afs_Admin.h>

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/decode_ticket.c,v 1.1.1.5 2001/09/20 06:14:55 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/decode_ticket.c,v 1.1.1.6 2001/10/14 18:05:04 hartmans Exp $");
 
 #include <des.h>
 #include <afs/com_err.h>

@@ -43,6 +43,9 @@
 #include "conf-i386-obsd.h"
 #else
 #if defined(AFS_LINUX20_ENV) || defined(AFS_DJGPP_ENV)
+#ifdef AFS_PARISC_LINUX20_ENV
+#include "conf-parisc-linux.h"
+#else
 #ifdef AFS_PPC_LINUX20_ENV
 #include "conf-ppc-linux.h"
 #else
@@ -67,7 +70,8 @@
 #endif /* AFS_S390_LINUX20_ENV */
 #endif /* AFS_SPARC64_LINUX20_ENV */
 #endif /* AFS_SPARC_LINUX20_ENV */
-#endif
+#endif /* AFS_PPC_LINUX20_ENV */
+#endif /* AFS_PARISC_LINUX24_ENV */
 #else
 #if defined(AFS_DARWIN_ENV) && defined(AFS_PPC_ENV)
 #include "conf-ppc-darwin.h"

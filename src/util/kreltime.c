@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/kreltime.c,v 1.1.1.5 2001/09/11 14:35:13 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/kreltime.c,v 1.1.1.6 2001/10/14 18:07:02 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -18,10 +18,12 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/util/kreltime.c,v 1.1.1.5 2001/09/11 14
 #include "ktime.h"
 #include <time.h>
 #include <ctype.h>
-#if defined(AFS_SUN5_ENV) || defined(AFS_NT40_ENV)
+#ifdef HAVE_STRING_H
 #include <string.h>
 #else
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
+#endif
 #endif
 #include "afsutil.h"
 
@@ -39,10 +41,10 @@ static struct parseseqS
     char ps_keychar;
     afs_int32 ps_maxValue;
 } parseseq[] = {
-    KTIMEDATE_YEAR, 'y', MAX_YEAR_VALUE,	/* no max. value */
-    KTIMEDATE_MONTH, 'm', MAX_MONTH_VALUE,	/* months max. 12 */
-    KTIMEDATE_DAY, 'd',	MAX_DAY_VALUE,		/* days max. 31 */
-    0, 0, 0,
+    { KTIMEDATE_YEAR, 'y', MAX_YEAR_VALUE, },		/* no max. value */
+    { KTIMEDATE_MONTH, 'm', MAX_MONTH_VALUE, },		/* months max. 12 */
+    { KTIMEDATE_DAY, 'd',	MAX_DAY_VALUE, },	/* days max. 31 */
+    { 0, 0, 0, }
 };
 
 /* Encodings to and from relative dates. The caller is responsible for

@@ -17,7 +17,7 @@
 #include <afs/param.h>
 #include <sys/wait.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/pam/afs_util.c,v 1.1.1.5 2001/09/11 14:34:02 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/pam/afs_util.c,v 1.1.1.6 2001/10/14 18:06:06 hartmans Exp $");
 
 #include "afs_util.h"
 
@@ -61,11 +61,12 @@ sigvec(int sig, const struct sigvec* vec, struct sigvec* ovec)
 {
 	assert(0);
 }
-#endif  /* AFS_HPUX110_ENV */
+
 sigsetmask(int mask)
 {
 	assert(0);
 }
+#endif  /* AFS_HPUX110_ENV */
 
 /* converts string to integer */
 

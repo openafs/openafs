@@ -52,7 +52,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/test/generator.c,v 1.1.1.6 2001/09/20 06:16:15 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/test/generator.c,v 1.1.1.7 2001/10/14 18:06:31 hartmans Exp $");
 
 #include <stdio.h>
 #include <string.h>

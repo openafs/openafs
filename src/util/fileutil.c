@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/fileutil.c,v 1.1.1.5 2001/07/14 22:24:21 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/fileutil.c,v 1.1.1.6 2001/10/14 18:07:02 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <stddef.h>
@@ -24,13 +24,24 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/util/fileutil.c,v 1.1.1.5 2001/07/14 22
 #include <windows.h>
 #include <io.h>
 #include "errmap_nt.h"
-#else
+#endif
+
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#ifdef HAVE_STRING_H
 #include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <sys/types.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
+#endif
 #include "fileutil.h"
 
 

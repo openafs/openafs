@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/auth/cellconfig.c,v 1.1.1.10 2001/09/20 06:12:38 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/auth/cellconfig.c,v 1.1.1.11 2001/10/14 18:04:01 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
@@ -24,12 +24,16 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/auth/cellconfig.c,v 1.1.1.10 2001/09/20
 #include <sys/utime.h>
 #include <io.h>
 #include <WINNT/afssw.h>
+#ifdef AFS_AFSDB_ENV
+#include <cm_dns.h>
+#endif /* AFS_AFSDB_ENV */
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <sys/file.h>
 #include <sys/time.h>
+#include <afs/afsint.h>
 #ifdef AFS_AFSDB_ENV
 #include <arpa/nameser.h>
 #include <resolv.h>
@@ -39,8 +43,19 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/auth/cellconfig.c,v 1.1.1.10 2001/09/20
 #include <ctype.h>
 #include <time.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #endif /* UKERNEL */
 #include <afs/afsutil.h>
 #include "cellconfig.h"
@@ -53,19 +68,19 @@ static afsconf_CloseInternal();
 static afsconf_Reopen();
 
 static struct afsconf_servPair serviceTable [] = {
-    "afs",	7000,
-    "afscb",	7001,
-    "afsprot",	7002,
-    "afsvldb",	7003,
-    "afskauth",	7004,
-    "afsvol",	7005,
-    "afserror",	7006,
-    "afsnanny",	7007,
-    "afsupdate",7008,
-    "afsrmtsys",7009,
-    "afsres",   7010,   /* residency database for MR-AFS */
-    "afsremio", 7011,   /* remote I/O interface for MR-AFS */
-    0, 0		/* insert new services before this spot */
+    { "afs",       7000, },
+    { "afscb",     7001, },
+    { "afsprot",   7002, },
+    { "afsvldb",   7003, },
+    { "afskauth",  7004, },
+    { "afsvol",    7005, },
+    { "afserror",  7006, },
+    { "afsnanny",  7007, },
+    { "afsupdate", 7008, },
+    { "afsrmtsys", 7009, },
+    { "afsres",    7010, },  /* residency database for MR-AFS */
+    { "afsremio",  7011, },  /* remote I/O interface for MR-AFS */
+    { 0, 0 }		     /* insert new services before this spot */
 };
 
 /*
@@ -106,7 +121,7 @@ char *abuffer; {
     register int tc;
 
     tp = abuffer;
-    while (tc = *tp) {
+    while ((tc = *tp)) {
 	if (!isspace(tc)) break;
 	tp++;
     }
@@ -353,9 +368,12 @@ char clones[];
 #else
     i = GetCellUnix(adir);
 #endif
+
+#ifndef AFS_FREELANCE_CLIENT  /* no local cell not fatal in freelance */
     if (i) {
 	return i;
     }
+#endif
 
     /* now parse the individual lines */
     curEntry = 0;
@@ -553,6 +571,7 @@ afsconf_GetExtendedCellInfo(adir, acellName, aservice, acellInfo, clones)
 }
 
 #ifdef AFS_AFSDB_ENV
+#if !defined(AFS_NT40_ENV)
 afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
     char *acellName;
     char *aservice;
@@ -563,6 +582,7 @@ afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
     size_t len;
     unsigned char answer[1024];
     unsigned char *p;
+    char realCellName[256];
     char host[256];
     int server_num = 0;
     int minttl = 0;
@@ -582,7 +602,6 @@ afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
     code = dn_expand(answer, answer + len, p, host, sizeof(host));
     if (code < 0)
 	return AFSCONF_NOTFOUND;
-    strncpy(acellInfo->name, host, sizeof(acellInfo->name));
 
     p += code + QFIXEDSZ;	/* Skip name */
 
@@ -606,6 +625,15 @@ afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
 	    short afsdb_type;
 
 	    afsdb_type = (p[0] << 8) | p[1];
+	    if (afsdb_type == 1) {
+		/*
+		 * We know this is an AFSDB record for our cell, of the
+		 * right AFSDB type.  Write down the true cell name that
+		 * the resolver gave us above.
+		 */
+		strcpy(realCellName, host);
+	    }
+
 	    code = dn_expand(answer, answer+len, p+2, host, sizeof(host));
 	    if (code < 0)
 		return AFSCONF_NOTFOUND;
@@ -630,6 +658,7 @@ afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
 
     if (server_num == 0)		/* No AFSDB records */
 	return AFSCONF_NOTFOUND;
+    strncpy(acellInfo->name, realCellName, sizeof(acellInfo->name));
     acellInfo->numServers = server_num;
 
     if (aservice) {
@@ -645,6 +674,58 @@ afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
 
     return 0;
 }
+#else  /* windows */
+int afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
+  char *aservice;
+  char *acellName;
+  struct afsconf_cell *acellInfo;
+{
+    register afs_int32 i;
+    int tservice;
+    struct afsconf_entry DNSce;
+    char *DNStmpStrp; /* a temp string pointer */
+    struct hostent *thp;
+    afs_int32 cellHosts[AFSMAXCELLHOSTS];
+    int numServers;
+    int rc;
+    int *ttl;
+
+    DNSce.cellInfo.numServers=0;
+    DNSce.next = NULL;
+    rc = getAFSServer(acellName, cellHosts, &numServers, &ttl);
+    /* ignore the ttl here since this code is only called by transitory programs
+       like klog, etc. */
+    if (rc < 0)
+      return -1;
+    if (numServers == 0)
+      return -1;
+
+    for (i = 0; i < numServers; i++)
+    {
+        memcpy(&acellInfo->hostAddr[i].sin_addr.s_addr, &cellHosts[i], sizeof(long));
+        acellInfo->hostAddr[i].sin_family = AF_INET;
+
+        /* sin_port supplied by connection code */
+    }
+
+    acellInfo->numServers = numServers;
+    strcpy(acellInfo->name, acellName);
+    if (aservice) {
+        LOCK_GLOBAL_MUTEX
+        tservice = afsconf_FindService(aservice);
+     UNLOCK_GLOBAL_MUTEX
+        if (tservice < 0) {
+            return AFSCONF_NOTFOUND;  /* service not found */
+     }
+     for(i=0; i< acellInfo->numServers; i++) {
+            acellInfo->hostAddr[i].sin_port = tservice;
+     }
+    }
+    acellInfo->linkedCell = NULL;    /* no linked cell */
+    acellInfo->flags = 0;
+    return 0;
+}
+#endif /* windows */
 #endif /* AFS_AFSDB_ENV */
 
 afsconf_GetCellInfo(adir, acellName, aservice, acellInfo)

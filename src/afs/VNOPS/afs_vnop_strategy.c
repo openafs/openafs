@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_strategy.c,v 1.1.1.6 2001/09/11 14:25:13 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_strategy.c,v 1.1.1.7 2001/10/14 17:59:13 hartmans Exp $");
 
 #if !defined(AFS_HPUX_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV)
 
@@ -132,7 +132,11 @@ afs_ustrategy(abp)
 	tuio.afsio_offset = (u_int) dbtob(abp->b_blkno);
 #ifdef	AFS_SUN5_ENV
 	tuio._uio_offset._p._u = 0;
+#ifdef	AFS_SUN59_ENV
+	tuio.uio_limit = curproc->p_fsz_ctl.rlim_cur;
+#else
 	tuio.uio_limit = u.u_rlimit[RLIMIT_FSIZE].rlim_cur;
+#endif
 #endif
 #else
 	tuio.afsio_offset = DEV_BSIZE * abp->b_blkno;
