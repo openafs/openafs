@@ -87,7 +87,7 @@ cache.
 cache.
 <P><LI>cacheFlushes: Number of files flushed from cache.
 <P><LI>cacheFilesReused: Number of cache files reused.
-<P><LI>ProtServerAddr: Address of Protection Server used.
+<P><LI>dcacheXAllocs: Additionally allocated dcaches.
 <P><LI>vcacheXAllocs: Additionally allocated vcaches.
 <P><LI>bufAlloced: Number of buffers allocated by AFS.
 <P><LI>bufHits: Number of pages found on buffer cache.
@@ -991,6 +991,7 @@ operations.
 operations.
 <P><LI>CallBack_ops_max: Maximum execution time observed for CallBack
 operations.
+<P><LI>CallBack_ops_sqr: Sum of the square of CallBack operations executed.
 <P><LI>InitCallBackState_ops: Number of InitCallBackState operations
 executed.
 <P><LI>InitCallBackState_ops_ok: Number of successful InitCallBackState
@@ -1001,6 +1002,8 @@ operations.
 InitCallBackState operations.
 <P><LI>InitCallBackState_ops_max: Maximum execution time observed for
 InitCallBackState operations.
+<P><LI>InitCallBackState_ops_sqr: Sum of squares of timings for InitCallBackState
+operations.
 <P><LI>Probe_ops: Number of Probe operations executed.
 <P><LI>Probe_ops_ok: Number of successful Probe operations.
 <P><LI>Probe_ops_sum: Sum of timings for Probe operations.
@@ -1008,6 +1011,7 @@ InitCallBackState operations.
 operations.
 <P><LI>Probe_ops_max: Maximum execution time observed for Probe
 operations.
+<P><LI>Probe_ops_sqr: Sum of squares of timings for Probe operations.
 <P><LI>GetLock_ops: Number of GetLock operations executed.
 <P><LI>GetLock_ops_ok: Number of successful GetLock operations.
 <P><LI>GetLock_ops_sum: Sum of timings for GetLock operations.
@@ -1015,6 +1019,7 @@ operations.
 operations.
 <P><LI>GetLock_ops_max: Maximum execution time observed for GetLock
 operations.
+<P><LI>GetLock_ops_sqr: Sum of squares of timings for GetLock operations.
 <P><LI>GetCE_ops: Number of GetCE operations executed.
 <P><LI>GetCE_ops_ok: Number of successful GetCE operations.
 <P><LI>GetCE_ops_sum: Sum of timings for GetCE operations.
@@ -1022,6 +1027,7 @@ operations.
 operations.
 <P><LI>GetCE_ops_max: Maximum execution time observed for GetCE
 operations.
+<P><LI>GetCE_ops_sqr: Sum of squares of timings for GetCE operations.
 <P><LI>XStatsVersion_CM_ops: Number of XStatsVersion operations
 executed.
 <P><LI>XStatsVersion_CM_ops_ok: Number of successful XStatsVersion
@@ -1032,6 +1038,8 @@ operations.
 XStatsVersion operations.
 <P><LI>XStatsVersion_CM_ops_max: Maximum execution time observed for
 XStatsVersion operations.
+<P><LI>XStatsVersion_CM_ops_sqr: Sum of squares of timings for XStatsVersion
+operations.
 <P><LI>GetXStats_CM_ops: Number of GetXStats operations executed.
 <P><LI>GetXStats_CM_ops_ok: Number of successful GetXStats
 operations.
@@ -1040,6 +1048,8 @@ operations.
 <P><LI>GetXStats_CM_ops_min: Minimum execution time observed for GetXStats
 operations.
 <P><LI>GetXStats_CM_ops_max: Maximum execution time observed for GetXStats
+operations.
+<P><LI>GetXStats_CM_ops_sqr: Sum of squares of timings for GetXStats
 operations.
 </UL>
 <P><H3><A NAME="Header_711" HREF="auagd002.htm#ToC_711">Authentication and Replicated File Access Section (Auth_Access_section)</A></H3>
