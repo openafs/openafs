@@ -746,6 +746,7 @@ private Volume *attach2(ec, path, header, partp, isbusy)
 	return NULL;
     }
     if (programType == fileServer) {
+#ifndef FAST_RESTART
 	if (V_inUse(vp) && VolumeWriteable(vp)) {
 	    if (!V_needsSalvaged(vp)) {
 		V_needsSalvaged(vp) = 1;
@@ -756,6 +757,7 @@ private Volume *attach2(ec, path, header, partp, isbusy)
 	    *ec = VSALVAGE;
 	    return NULL;
 	}
+#endif /* FAST_RESTART */
 	if (V_destroyMe(vp) == DESTROY_ME) {
 	    FreeVolume(vp);
 	    Log("VAttachVolume: volume %s is junk; it should be destroyed at next salvage\n", path);
@@ -767,6 +769,7 @@ private Volume *attach2(ec, path, header, partp, isbusy)
     AddVolumeToHashTable(vp, V_id(vp));
     vp->nextVnodeUnique = V_uniquifier(vp);
     vp->vnodeIndex[vSmall].bitmap = vp->vnodeIndex[vLarge].bitmap = NULL;
+#ifndef BITMAP_LATER
     if (programType == fileServer && VolumeWriteable(vp)) {
 	int i;
 	for (i = 0; i<nVNODECLASSES; i++) {
@@ -779,6 +782,7 @@ private Volume *attach2(ec, path, header, partp, isbusy)
 	    }
 	}
     }
+#endif /* BITMAP_LATER */
 
     if (programType == fileServer) {
         if (vp->specialStatus) vp->specialStatus = 0;
@@ -1209,6 +1213,43 @@ int VAllocBitmapEntry_r(ec,vp,index)
 	*ec = VREADONLY;
 	return 0;
     }
+#ifdef BITMAP_LATER
+    if ((programType == fileServer) && !index->bitmap) {
+        int i;
+        int wasVBUSY = 0;
+        if (vp->specialStatus == VBUSY) {
+            if (vp->goingOffline) { /* vos dump waiting for the volume to
+                                       go offline. We probably come here
+                                       from AddNewReadableResidency */
+                wasVBUSY = 1;
+            } else {
+                VOL_UNLOCK
+		while (vp->specialStatus == VBUSY)
+#ifdef AFS_PTHREAD_ENV
+		    sleep(2);
+#else /* AFS_PTHREAD_ENV */
+		    IOMGR_Sleep(2);
+#endif /* AFS_PTHREAD_ENV */
+                VOL_LOCK
+	    }
+        }
+        if (!index->bitmap) {
+            vp->specialStatus = VBUSY; /* Stop anyone else from using it.*/
+            for (i = 0; i<nVNODECLASSES; i++) {
+                VOL_UNLOCK
+                GetBitmap(ec,vp,i);
+                VOL_LOCK
+                if (*ec) {
+                    vp->specialStatus = 0;
+                    vp->shuttingDown = 1; /* Let who has it free it. */
+                    return NULL;
+                }
+            }
+            if (!wasVBUSY)
+                vp->specialStatus = 0; /* Allow others to have access. */
+        }
+    }
+#endif /* BITMAP_LATER */
     bp = index->bitmap + index->bitmapOffset;
     ep = index->bitmap + index->bitmapSize;
     while (bp < ep) {
@@ -1253,6 +1294,9 @@ void VFreeBitMapEntry_r(Error *ec, register struct vnodeIndex *index,
 {
     unsigned int offset;
      *ec = 0;
+#ifdef BITMAP_LATER
+     if (!index->bitmap) return;
+#endif /* BITMAP_LATER */
      offset = bitNumber>>3;
      if (offset >= index->bitmapSize) {
 	*ec = VNOVNODE;
@@ -1339,6 +1383,9 @@ static void GetBitmap(Error *ec, Volume *vp, VnodeClass class)
     struct VnodeDiskObject *vnode;
     unsigned int unique = 0;
     FdHandle_t *fdP;
+#ifdef BITMAP_LATER
+    byte *BitMap = 0;
+#endif /* BITMAP_LATER */
 
     *ec = 0;
 
@@ -1357,9 +1404,14 @@ static void GetBitmap(Error *ec, Volume *vp, VnodeClass class)
 				the whole thing is rounded up to nearest 4
 				bytes, because the bit map allocator likes
 				it that way */
+#ifdef BITMAP_LATER
+    BitMap = (byte *) calloc(1, vip->bitmapSize);
+    assert(BitMap != NULL);
+#else /* BITMAP_LATER */
     vip->bitmap = (byte *) calloc(1, vip->bitmapSize);
     assert(vip->bitmap != NULL);
     vip->bitmapOffset = 0;
+#endif /* BITMAP_LATER */
     if (STREAM_SEEK(file,vcp->diskSize,0) != -1) {
       int bitNumber = 0;
       for (bitNumber = 0; bitNumber < nVnodes+100; bitNumber++) {
@@ -1372,7 +1424,11 @@ static void GetBitmap(Error *ec, Volume *vp, VnodeClass class)
 	    *ec = VSALVAGE;
 	    break;
 	  }
+#ifdef BITMAP_LATER
+          *(BitMap + (bitNumber>>3)) |= (1 << (bitNumber & 0x7));
+#else /* BITMAP_LATER */
 	  *(vip->bitmap + (bitNumber>>3)) |= (1 << (bitNumber & 0x7));
+#endif /* BITMAP_LATER */
 	  if (unique <= vnode->uniquifier)
 	    unique = vnode->uniquifier + 1; 
 	}
@@ -1394,6 +1450,17 @@ static void GetBitmap(Error *ec, Volume *vp, VnodeClass class)
     STREAM_CLOSE(file);
     FDH_CLOSE(fdP);
     free(vnode);
+#ifdef BITMAP_LATER
+    /* There may have been a racing condition with some other thread, both
+     * creating the bitmaps for this volume. If the other thread was faster
+     * the pointer to bitmap should already be filled and we can free ours.
+     */
+    if (vip->bitmap == NULL) {
+        vip->bitmap = BitMap;
+        vip->bitmapOffset = 0;
+    } else 
+	free((byte *)BitMap);
+#endif /* BITMAP_LATER */
 }
 
 static void GetVolumePath(Error *ec, VolId volumeId, char **partitionp,
