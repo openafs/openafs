@@ -389,6 +389,10 @@ void NewCreds_OnCancel (HWND hDlg)
        pszCell = (LPTSTR)GetWindowLong (hDlg, DWL_USER);
    if (pszCell)
       {
+      HWND hTab = GetDlgItem (g.hMain, IDC_TABS);
+      LPTSTR pszTab = (LPTSTR)GetTabParam (hTab, TabCtrl_GetCurSel(hTab));
+      HWND hChildDlg = NULL;
+
       lock_ObtainMutex(&g.credsLock);
       for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
          {
@@ -399,17 +403,16 @@ void NewCreds_OnCancel (HWND hDlg)
 
             // Check the active tab, and fix its checkbox if necessary
             //
-            HWND hTab = GetDlgItem (g.hMain, IDC_TABS);
-            LPTSTR pszTab = (LPTSTR)GetTabParam (hTab, TabCtrl_GetCurSel(hTab));
             if (pszTab && HIWORD(pszTab) && (!lstrcmpi (pszTab, pszCell)))
                {
-               HWND hDlg = GetTabChild (hTab);
-               if (hDlg)
-                  CheckDlgButton (hDlg, IDC_CREDS_REMIND, FALSE);
+               hChildDlg = GetTabChild (hTab);
                }
             }
          }
       lock_ReleaseMutex(&g.credsLock);
-      }
+
+      if (hChildDlg)
+         CheckDlgButton (hChildDlg, IDC_CREDS_REMIND, FALSE);
+	  }
 }
 

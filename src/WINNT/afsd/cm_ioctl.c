@@ -259,7 +259,7 @@ void cm_SkipIoctlPath(smb_ioctl_t *ioctlp)
  * easier (because we can always jump past the initial "/afs" to find
  * the AFS path that should be written into afsdsbmt.ini).
  */
-void cm_NormalizeAfsPath (char *outpathp, char *inpathp)
+void cm_NormalizeAfsPath(char *outpathp, long outlen, char *inpathp)
 {
     char *cp;
     char bslash_mountRoot[256];
@@ -268,13 +268,13 @@ void cm_NormalizeAfsPath (char *outpathp, char *inpathp)
     bslash_mountRoot[0] = '\\';
        
     if (!strnicmp (inpathp, cm_mountRoot, strlen(cm_mountRoot)))
-        lstrcpy (outpathp, inpathp);
+        StringCbCopy(outpathp, outlen, inpathp);
     else if (!strnicmp (inpathp, bslash_mountRoot, strlen(bslash_mountRoot)))
-        lstrcpy (outpathp, inpathp);
+        StringCbCopy(outpathp, outlen, inpathp);
     else if ((inpathp[0] == '/') || (inpathp[0] == '\\'))
-        sprintf (outpathp, "%s%s", cm_mountRoot, inpathp);
+        StringCbPrintfA(outpathp, outlen, "%s%s", cm_mountRoot, inpathp);
     else // inpathp looks like "<cell>/usr"
-        sprintf (outpathp, "%s/%s", cm_mountRoot, inpathp);
+        StringCbPrintfA(outpathp, outlen, "%s/%s", cm_mountRoot, inpathp);
 
     for (cp = outpathp; *cp != 0; ++cp) {
         if (*cp == '\\')
@@ -286,10 +286,11 @@ void cm_NormalizeAfsPath (char *outpathp, char *inpathp)
     }
 
     if (!strcmpi (outpathp, cm_mountRoot)) {
-        strcpy (outpathp, cm_mountRoot);
+        StringCbCopy(outpathp, outlen, cm_mountRoot);
     }
 }
 
+#define LEAF_SIZE 256
 /* parse the passed-in file name and do a namei on its parent.  If we fail,
  * return an error code, otherwise return the vnode located in *scpp.
  */
@@ -301,7 +302,7 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     char *tp, *jp;
     cm_scache_t *substRootp;
 
-    strcpy(tbuffer, ioctlp->inDatap);
+    StringCbCopyA(tbuffer, sizeof(tbuffer), ioctlp->inDatap);
     tp = strrchr(tbuffer, '\\');
     jp = strrchr(tbuffer, '/');
     if (!tp)
@@ -309,14 +310,14 @@ long cm_ParseIoctlParent(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
     else if (jp && (tp - tbuffer) < (jp - tbuffer))
         tp = jp;
     if (!tp) {
-        strcpy(tbuffer, "\\");
+        StringCbCopyA(tbuffer, sizeof(tbuffer), "\\");
         if (leafp) 
-            strcpy(leafp, ioctlp->inDatap);
+            StringCbCopyA(leafp, LEAF_SIZE, ioctlp->inDatap);
     }
     else {
         *tp = 0;
         if (leafp) 
-            strcpy(leafp, tp+1);
+            StringCbCopyA(leafp, LEAF_SIZE, tp+1);
     }   
 
     if (tbuffer[0] == tbuffer[1] &&
@@ -463,7 +464,7 @@ long cm_IoctlGetFileCellName(struct smb_ioctl *ioctlp, struct cm_user *userp)
          scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
          scp->fid.volume==AFS_FAKE_ROOT_VOL_ID &&
          scp->fid.vnode==0x1 && scp->fid.unique==0x1 ) {
-        strcpy(ioctlp->outDatap, "Freelance.Local.Root");
+        StringCbCopyA(ioctlp->outDatap, 999999, "Freelance.Local.Root");
         ioctlp->outDatap += strlen(ioctlp->outDatap) + 1;
         code = 0;
     } else 
@@ -471,7 +472,7 @@ long cm_IoctlGetFileCellName(struct smb_ioctl *ioctlp, struct cm_user *userp)
     {
         cellp = cm_FindCellByID(scp->fid.cell);
         if (cellp) {
-            strcpy(ioctlp->outDatap, cellp->namep);
+            StringCbCopyA(ioctlp->outDatap, 999999, cellp->namep);
             ioctlp->outDatap += strlen(ioctlp->outDatap) + 1;
             code = 0;
         }
@@ -620,11 +621,11 @@ long cm_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cp = ioctlp->inDatap;
     memcpy((char *)&volStat, cp, sizeof(AFSFetchVolumeStatus));
     cp += sizeof(AFSFetchVolumeStatus);
-    strcpy(volName, cp);
+    StringCbCopyA(volName, sizeof(volName), cp);
     cp += strlen(volName)+1;
-    strcpy(offLineMsg, cp);
+    StringCbCopyA(offLineMsg, sizeof(offLineMsg), cp);
     cp +=  strlen(offLineMsg)+1;
-    strcpy(motd, cp);
+    StringCbCopyA(motd, sizeof(motd), cp);
     storeStat.Mask = 0;
     if (volStat.MinQuota != -1) {
         storeStat.MinQuota = volStat.MinQuota;
@@ -660,11 +661,11 @@ long cm_IoctlSetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cp = ioctlp->outDatap;
     memcpy(cp, (char *)&volStat, sizeof(VolumeStatus));
     cp += sizeof(VolumeStatus);
-    strcpy(cp, volName);
+    StringCbCopyA(cp, 999999, volName);
     cp += strlen(volName)+1;
-    strcpy(cp, offLineMsg);
+    StringCbCopyA(cp, 999999, offLineMsg);
     cp += strlen(offLineMsg)+1;
-    strcpy(cp, motd);
+    StringCbCopyA(cp, 999999, motd);
     cp += strlen(motd)+1;
 
     /* now return updated return data pointer */
@@ -716,11 +717,11 @@ long cm_IoctlGetVolumeStatus(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cp = ioctlp->outDatap;
     memcpy(cp, (char *)&volStat, sizeof(AFSFetchVolumeStatus));
     cp += sizeof(AFSFetchVolumeStatus);
-    strcpy(cp, volName);
+    StringCbCopyA(cp, 999999, volName);
     cp += strlen(volName)+1;
-    strcpy(cp, offLineMsg);
+    StringCbCopyA(cp, 999999, offLineMsg);
     cp += strlen(offLineMsg)+1;
-    strcpy(cp, motd);
+    StringCbCopyA(cp, 999999, motd);
     cp += strlen(motd)+1;
 
     /* return new size */
@@ -811,7 +812,7 @@ long cm_IoctlStatMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
     code = cm_ReadMountPoint(scp, userp, &req);
     if (code == 0) {
         cp = ioctlp->outDatap;
-        strcpy(cp, scp->mountPointStringp);
+        StringCbCopyA(cp, 999999, scp->mountPointStringp);
         cp += strlen(cp) + 1;
         ioctlp->outDatap = cp;
     }
@@ -1096,7 +1097,7 @@ long cm_IoctlGetCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
         }
         lock_ReleaseRead(&cm_serverLock);
         cp = basep + max * sizeof(afs_int32);
-        strcpy(cp, tcellp->namep);
+        StringCbCopyA(cp, 999999, tcellp->namep);
         cp += strlen(tcellp->namep)+1;
         ioctlp->outDatap = cp;
     }
@@ -1169,7 +1170,7 @@ long cm_IoctlGetWsCell(smb_ioctl_t *ioctlp, cm_user_t *userp)
     }
 
     /* return the default cellname to the caller */
-    strcpy(ioctlp->outDatap, cm_rootCellp->namep);
+    StringCbCopyA(ioctlp->outDatap, 999999, cm_rootCellp->namep);
     ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
 
     /* done: success */
@@ -1218,7 +1219,7 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
         osi_panic("cm_IoctlSysName: !cm_sysName\n", __FILE__, __LINE__);
 
     if (!setSysName) {      /* user just wants the info */
-        strcpy(outname, cm_sysName);
+        StringCbCopyA(outname, sizeof(outname), cm_sysName);
         foundname = cm_sysNameCount;
         *sysnamelist = cm_sysNameList;
     } else {        
@@ -1226,8 +1227,8 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
         /* clear @sys entries from the dnlc, once afs_lookup can
          * do lookups of @sys entries and thinks it can trust them */
         /* privs ok, store the entry, ... */
-        strcpy(cm_sysName, inname);
-		strcpy(cm_sysNameList[0], inname);
+        StringCbCopyA(cm_sysName, sizeof(cm_sysName), inname);
+        StringCbCopyA(cm_sysNameList[0], MAXSYSNAME, inname);
         if (setSysName > 1) {       /* ... or list */
             cp = ioctlp->inDatap;
             for (count = 1; count < setSysName; ++count) {
@@ -1235,7 +1236,7 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
                     osi_panic("cm_IoctlSysName: no cm_sysNameList entry to write\n",
                                __FILE__, __LINE__);
                 t = strlen(cp);
-                strcpy(cm_sysNameList[count], cp);
+                StringCbCopyA(cm_sysNameList[count], MAXSYSNAME, cp);
                 cp += t + 1;
             }
         }
@@ -1248,7 +1249,7 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
         memcpy(cp, (char *)&foundname, sizeof(afs_int32));
         cp += sizeof(afs_int32);	/* skip found flag */
         if (foundname) {
-            strcpy(cp, outname);
+            StringCbCopyA(cp, 999999, outname);
             cp += strlen(outname) + 1;	/* skip name and terminating null char */
             for ( count=1; count < foundname ; ++count) {   /* ... or list */
                 if ( !(*sysnamelist)[count] )
@@ -1258,7 +1259,7 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
                 if (t >= MAXSYSNAME)
                     osi_panic("cm_IoctlSysName: sysname entry garbled\n", 
                                __FILE__, __LINE__);
-                strcpy(cp, (*sysnamelist)[count]);
+                StringCbCopyA(cp, 999999, (*sysnamelist)[count]);
                 cp += t + 1;
             }
         }
@@ -1426,7 +1427,7 @@ long cm_IoctlStoreBehind(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
 long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-    char leaf[256];
+    char leaf[LEAF_SIZE];
     long code;
     cm_scache_t *dscp;
     cm_attr_t tattr;
@@ -1453,12 +1454,12 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
      */
 
     /* Extract the possibly partial cell name */
-    strcpy(cell, ioctlp->inDatap + 1);      /* Skip the mp type character */
+    StringCbCopyA(cell, sizeof(cell), ioctlp->inDatap + 1);      /* Skip the mp type character */
         
     if (cp = strchr(cell, ':')) {
         /* Extract the volume name */
         *cp = 0;
-        strcpy(volume,  cp + 1);
+        StringCbCopyA(volume,  sizeof(volume), cp + 1);
 	
         /* Get the full name for this cell */
         code = cm_SearchCellFile(cell, fullCell, 0, 0);
@@ -1469,10 +1470,10 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
         if (code)
             return CM_ERROR_NOSUCHCELL;
 	
-        sprintf(mpInfo, "%c%s:%s", *ioctlp->inDatap, fullCell, volume);
+        StringCbPrintfA(mpInfo, sizeof(mpInfo), "%c%s:%s", *ioctlp->inDatap, fullCell, volume);
     } else {
         /* No cell name specified */
-        strcpy(mpInfo, ioctlp->inDatap);
+        StringCbCopyA(mpInfo, sizeof(mpInfo), ioctlp->inDatap);
     }
 
 #ifdef AFS_FREELANCE_CLIENT
@@ -1504,7 +1505,7 @@ long cm_IoctlCreateMountPoint(struct smb_ioctl *ioctlp, struct cm_user *userp)
 
 long cm_IoctlSymlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
 {
-    char leaf[256];
+    char leaf[LEAF_SIZE];
     long code;
     cm_scache_t *dscp;
     cm_attr_t tattr;
@@ -1596,11 +1597,11 @@ long cm_IoctlListlink(struct smb_ioctl *ioctlp, struct cm_user *userp)
     if (code == 0) {
         cp = ioctlp->outDatap;
         if (newRootScp != NULL) {
-            strcpy(cp, cm_mountRoot);
-            strcat(cp, "/");
+            StringCbCopyA(cp, 999999, cm_mountRoot);
+            StringCbCatA(cp, 999999, "/");
             cp += strlen(cp);
         }
-        strcpy(cp, spacep->data);
+        StringCbCopyA(cp, 999999, spacep->data);
         cp += strlen(cp) + 1;
         ioctlp->outDatap = cp;
         cm_FreeSpace(spacep);
@@ -1814,7 +1815,8 @@ long cm_IoctlSetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
     ucellp->kvno = ct.AuthHandle;
     ucellp->expirationTime = ct.EndTimestamp;
     ucellp->gen++;
-    if (uname) strcpy(ucellp->userName, uname);
+    if (uname) 
+        StringCbCopyA(ucellp->userName, MAXKTCNAMELEN, uname);
     ucellp->flags |= CM_UCELLFLAG_RXKAD;
     lock_ReleaseMutex(&userp->mx);
 
@@ -1900,11 +1902,11 @@ long cm_IoctlGetTokenIter(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cp += sizeof(temp);
 
     /* cell name */
-    strcpy(cp, ucellp->cellp->namep);
+    StringCbCopyA(cp, 999999, ucellp->cellp->namep);
     cp += strlen(cp) + 1;
 
     /* user name */
-    strcpy(cp, ucellp->userName);
+    StringCbCopyA(cp, 999999, ucellp->userName);
     cp += strlen(cp) + 1;
 
     ioctlp->outDatap = cp;
@@ -1988,11 +1990,11 @@ long cm_IoctlGetToken(struct smb_ioctl *ioctlp, struct cm_user *userp)
     cp += sizeof(temp);
 
     /* cell name */
-    strcpy(cp, ucellp->cellp->namep);
+    StringCbCopyA(cp, 999999, ucellp->cellp->namep);
     cp += strlen(cp) + 1;
 
     /* user name */
-    strcpy(cp, ucellp->userName);
+    StringCbCopyA(cp, 999999, ucellp->userName);
     cp += strlen(cp) + 1;
 
     ioctlp->outDatap = cp;
@@ -2084,7 +2086,7 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
     /* Parse the input parameters--first the required afs path,
      * then the requested submount name (which may be "").
      */
-    cm_NormalizeAfsPath (afspath, ioctlp->inDatap);
+    cm_NormalizeAfsPath (afspath, sizeof(afspath), ioctlp->inDatap);
     submountreqp = ioctlp->inDatap + (strlen(ioctlp->inDatap)+1);
 
     /* If the caller supplied a suggested submount name, see if
@@ -2125,9 +2127,9 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
                            strlen(&afspath[strlen(cm_mountRoot)])+1:2);
 
             RegCloseKey( hkSubmounts );
-			strcpy(ioctlp->outDatap, submountreqp);
-			ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
-			lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
+            StringCbCopyA(ioctlp->outDatap, 999999, submountreqp);
+            ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
+            lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
             return 0;
         }
 
@@ -2135,9 +2137,9 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
          * supplied path matches the submount's path, we can still
          * use the suggested submount name.
          */
-        cm_NormalizeAfsPath (submountPathNormalized, submountPath);
+        cm_NormalizeAfsPath (submountPathNormalized, sizeof(submountPathNormalized), submountPath);
         if (!strcmp (submountPathNormalized, afspath)) {
-            strcpy(ioctlp->outDatap, submountreqp);
+            StringCbCopyA(ioctlp->outDatap, 999999, submountreqp);
             ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
             RegCloseKey( hkSubmounts );
             lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
@@ -2204,9 +2206,9 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
          * that our caller specified. If so, we can return
          * this submount.
          */
-        cm_NormalizeAfsPath (submountPathNormalized, submountPath);
+        cm_NormalizeAfsPath (submountPathNormalized, sizeof(submountPathNormalized), submountPath);
         if (!strcmp (submountPathNormalized, afspath)) {
-            strcpy(ioctlp->outDatap, submountName);
+            StringCbCopyA(ioctlp->outDatap, 999999, submountName);
             ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
             RegCloseKey(hkSubmounts);
             lock_ReleaseMutex(&cm_Afsdsbmt_Lock);
@@ -2221,7 +2223,7 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
      * when writing out the submount.
      */
 
-    sprintf(ioctlp->outDatap, "auto%ld", nextAutoSubmount);
+    StringCbPrintfA(ioctlp->outDatap, 999999, "auto%ld", nextAutoSubmount);
 
     RegSetValueEx( hkSubmounts, 
                    ioctlp->outDatap,

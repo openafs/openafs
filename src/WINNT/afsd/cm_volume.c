@@ -39,123 +39,212 @@ void cm_InitVolume(void)
 
 /*
  * Update a volume.  Caller holds volume's lock (volp->mx).
+ *
+ *
+ *  shadow / openafs / jhutz@CS.CMU.EDU {ANDREW.CMU.EDU}  01:38    (JHutz)
+ *    Yes, we support multihomed fileservers.
+ *    Since before we got the code from IBM.
+ *    But to find out about multiple addresses on a multihomed server, you need
+ *    to use VL_GetEntryByNameU and VL_GetAddrsU.  If you use
+ *    VL_GetEntryByNameO or VL_GetEntryByNameN, the vlserver just gives you one
+ *    address per server.
+ *  shadow / openafs / jhutz@CS.CMU.EDU {ANDREW.CMU.EDU}  01:39    (JHutz)
+ *    see src/afs/afs_volume.c, paying particular attention to
+ *    afs_NewVolumeByName, afs_SetupVolume, and InstallUVolumeEntry
+ *  shadow / openafs / jaltman {ANDREW.CMU.EDU}  01:40    (Jeffrey Altman)
+ *    thanks.  The windows client calls the 0 versions.
+ *  shadow / openafs / jhutz@CS.CMU.EDU {ANDREW.CMU.EDU}  01:51    (JHutz)
+ *    Oh.  Ew.
+ *    By not using the N versions, you only get up to 8 sites instead of 13.
+ *    By not using the U versions, you don't get to know about multihomed serve
+ *  shadow / openafs / jhutz@CS.CMU.EDU {ANDREW.CMU.EDU}  01:52    (JHutz)
+ *    Of course, you probably want to support the older versions for backward
+ *    compatibility.  If you do that, you need to call the newest interface
+ *    first, and fall back to successively older versions if you get
+ *    RXGEN_OPCODE.
  */
 long cm_UpdateVolume(struct cm_cell *cellp, cm_user_t *userp, cm_req_t *reqp,
 	cm_volume_t *volp)
 {
     cm_conn_t *connp;
     int i;
-	cm_serverRef_t *tsrp;
+    cm_serverRef_t *tsrp;
     cm_server_t *tsp;
     struct sockaddr_in tsockAddr;
     long tflags;
     u_long tempAddr;
-    struct vldbentry vldbEntry;	/* don't use NVLDB yet; they're not common */
-	int ROcount = 0;
-	long code;
+    struct vldbentry vldbEntry;
+    struct nvldbentry nvldbEntry;
+#ifdef MULTIHOMED
+    struct uvldbentry uvldbEntry;
+#endif
+    int type = -1;
+    int ROcount = 0;
+    long code;
 
-	/* clear out old bindings */
+    /* clear out old bindings */
     cm_FreeServerList(&volp->rwServersp);
     cm_FreeServerList(&volp->roServersp);
     cm_FreeServerList(&volp->bkServersp);
 
     /* now we have volume structure locked and held; make RPC to fill it */
     do {
-		code = cm_ConnByMServers(cellp->vlServersp, userp, reqp,
-                                  &connp);
-        if (code) continue;
-		osi_Log1(afsd_logp, "CALL VL_GetEntryByNameO name %s",
-                  volp->namep);
-        code = VL_GetEntryByNameO(connp->callp, volp->namep, &vldbEntry);
-	} while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
+        code = cm_ConnByMServers(cellp->vlServersp, userp, reqp, &connp);
+        if (code) 
+            continue;
+        osi_Log1(afsd_logp, "CALL VL_GetEntryByName{UNO} name %s", volp->namep);
+#ifdef MULTIHOMED
+        code = VL_GetEntryByNameU(connp->callp, volp->namep, &uvldbEntry);
+        if ( code == RXGEN_OPCODE ) 
+#endif
+        {
+            code = VL_GetEntryByNameN(connp->callp, volp->namep, &nvldbEntry);
+            type = 1;
+        }
+        if ( code == RXGEN_OPCODE ) {
+            code = VL_GetEntryByNameO(connp->callp, volp->namep, &vldbEntry);
+            type = 0;
+        }
+    } while (cm_Analyze(connp, userp, reqp, NULL, NULL, cellp->vlServersp, NULL, code));
     code = cm_MapVLRPCError(code, reqp);
 
     if (code == 0) {
-		/* decode the response */
-		lock_ObtainWrite(&cm_volumeLock);
-        if (vldbEntry.flags & VLF_RWEXISTS)
-            volp->rwID = vldbEntry.volumeId[0];
-		else
+        afs_int32 flags;
+        afs_int32 nServers;
+        afs_int32 rwID;
+        afs_int32 roID;
+        afs_int32 bkID;
+        afs_int32 serverNumber[NMAXNSERVERS];
+        afs_int32 serverFlags[NMAXNSERVERS];
+
+        switch ( type ) {
+        case 0:
+            flags = vldbEntry.flags;
+            nServers = vldbEntry.nServers;
+            rwID = vldbEntry.volumeId[0];
+            roID = vldbEntry.volumeId[1];
+            bkID = vldbEntry.volumeId[2];
+            for ( i=0; i<nServers; i++ ) {
+                serverFlags[i] = vldbEntry.serverFlags[i];
+                serverNumber[i] = vldbEntry.serverNumber[i];
+            }
+            break;
+        case 1:
+            flags = nvldbEntry.flags;
+            nServers = nvldbEntry.nServers;
+            rwID = nvldbEntry.volumeId[0];
+            roID = nvldbEntry.volumeId[1];
+            bkID = nvldbEntry.volumeId[2];
+            for ( i=0; i<nServers; i++ ) {
+                serverFlags[i] = nvldbEntry.serverFlags[i];
+                serverNumber[i] = nvldbEntry.serverNumber[i];
+            }
+            break;
+#ifdef MULTIHOMED
+        case 2:
+            flags = uvldbEntry.flags;
+            nServers = uvldbEntry.nServers;
+            rwID = uvldbEntry.volumeId[0];
+            roID = uvldbEntry.volumeId[1];
+            bkID = uvldbEntry.volumeId[2];
+            for ( i=0; i<nServers; i++ ) {
+                serverFlags[i] = uvldbEntry.serverFlags[i];
+                if ( !(flags & VLSERVER_FLAG_UUID) )
+                    serverNumber[i] = uvldbEntry.serverNumber[i].time_low;
+                else {
+                    /* see afs/afs_volume.c InstallUVolumeEntry().  We need to 
+                     * implement an equivalent to afs_FindServer() and afs_GetServer()
+                     * which support multiple addresses.
+                     */
+                }
+            }
+            break;
+#endif
+        }
+
+        /* decode the response */
+        lock_ObtainWrite(&cm_volumeLock);
+        if (flags & VLF_RWEXISTS)
+            volp->rwID = rwID;
+        else
             volp->rwID = 0;
-        if (vldbEntry.flags & VLF_ROEXISTS)
-            volp->roID = vldbEntry.volumeId[1];
+        if (flags & VLF_ROEXISTS)
+            volp->roID = roID;
         else
             volp->roID = 0;
-        if (vldbEntry.flags & VLF_BACKEXISTS)
-            volp->bkID = vldbEntry.volumeId[2];
-		else
+        if (flags & VLF_BACKEXISTS)
+            volp->bkID = bkID;
+        else
             volp->bkID = 0;
-		lock_ReleaseWrite(&cm_volumeLock);
-        for(i=0; i<vldbEntry.nServers; i++) {
-			/* create a server entry */
-			tflags = vldbEntry.serverFlags[i];
-			if (tflags & VLSF_DONTUSE) continue;
-			tsockAddr.sin_family = AF_INET;
-			tempAddr = htonl(vldbEntry.serverNumber[i]);
-			tsockAddr.sin_addr.s_addr = tempAddr;
-			tsp = cm_FindServer(&tsockAddr, CM_SERVER_FILE);
-			if (!tsp)
+        lock_ReleaseWrite(&cm_volumeLock);
+        for (i=0; i<nServers; i++) {
+            /* create a server entry */
+            tflags = serverFlags[i];
+            if (tflags & VLSF_DONTUSE) 
+                continue;
+            tsockAddr.sin_family = AF_INET;
+            tempAddr = htonl(serverNumber[i]);
+            tsockAddr.sin_addr.s_addr = tempAddr;
+            tsp = cm_FindServer(&tsockAddr, CM_SERVER_FILE);
+            if (!tsp)
                 tsp = cm_NewServer(&tsockAddr, CM_SERVER_FILE,
                                     cellp);
 
-			/* if this server was created by fs setserverprefs */
-			if ( !tsp->cellp ) 
-				tsp->cellp = cellp;
+            /* if this server was created by fs setserverprefs */
+            if ( !tsp->cellp ) 
+                tsp->cellp = cellp;
 
             osi_assert(tsp != NULL);
                         
             /* and add it to the list(s). */
-			/*
+            /*
              * Each call to cm_NewServerRef() increments the
              * ref count of tsp.  These reference will be dropped,
-			 * if and when the volume is reset; see reset code
-			 * earlier in this function.
-			 */
-			if ((tflags & VLSF_RWVOL)
-                 && (vldbEntry.flags & VLF_RWEXISTS)) {
-				tsrp = cm_NewServerRef(tsp);
+             * if and when the volume is reset; see reset code
+             * earlier in this function.
+             */
+            if ((tflags & VLSF_RWVOL) && (flags & VLF_RWEXISTS)) {
+                tsrp = cm_NewServerRef(tsp);
                 cm_InsertServerList(&volp->rwServersp, tsrp);
                 lock_ObtainWrite(&cm_serverLock);
                 tsrp->refCount--;       /* drop allocation reference */
                 lock_ReleaseWrite(&cm_serverLock);
-			}
-            if ((tflags & VLSF_ROVOL)
-                 && (vldbEntry.flags & VLF_ROEXISTS)) {
-				tsrp = cm_NewServerRef(tsp);
-				cm_InsertServerList(&volp->roServersp, tsrp);
+            }
+            if ((tflags & VLSF_ROVOL) && (flags & VLF_ROEXISTS)) {
+                tsrp = cm_NewServerRef(tsp);
+                cm_InsertServerList(&volp->roServersp, tsrp);
                 lock_ObtainWrite(&cm_serverLock);
                 tsrp->refCount--;       /* drop allocation reference */
                 lock_ReleaseWrite(&cm_serverLock);
-				ROcount++;
+                ROcount++;
             }
-			/* We don't use VLSF_BACKVOL !?! */
-            if ((tflags & VLSF_RWVOL)
-                 && (vldbEntry.flags & VLF_BACKEXISTS)) {
-				tsrp = cm_NewServerRef(tsp);
+            /* We don't use VLSF_BACKVOL !?! */
+            if ((tflags & VLSF_RWVOL) && (flags & VLF_BACKEXISTS)) {
+                tsrp = cm_NewServerRef(tsp);
                 cm_InsertServerList(&volp->bkServersp, tsrp);
                 lock_ObtainWrite(&cm_serverLock);
                 tsrp->refCount--;       /* drop allocation reference */
                 lock_ReleaseWrite(&cm_serverLock);
-			}
-			/* Drop the reference obtained by cm_FindServer() */
-			cm_PutServer(tsp);
-        }
+            }
+            /* Drop the reference obtained by cm_FindServer() */
+            cm_PutServer(tsp);
+        }       
 
-		/*
-		 * Randomize RO list
-		 *
-		 * If the first n servers have the same ipRank, then we 
-		 * randomly pick one among them and move it to the beginning.
-		 * We don't bother to re-order the whole list because
-		 * the rest of the list is used only if the first server is
-		 * down.  We only do this for the RO list; we assume the other
-		 * lists are length 1.
-		 */
-		if (ROcount > 1) {
-			cm_RandomizeServer(&volp->roServersp);
-		}
-	}
-	return code;
+        /*
+         * Randomize RO list
+         *
+         * If the first n servers have the same ipRank, then we 
+         * randomly pick one among them and move it to the beginning.
+         * We don't bother to re-order the whole list because
+         * the rest of the list is used only if the first server is
+         * down.  We only do this for the RO list; we assume the other
+         * lists are length 1.
+         */
+        if (ROcount > 1) {
+            cm_RandomizeServer(&volp->roServersp);
+        }
+    }
+    return code;
 }
 
 long cm_GetVolumeByID(cm_cell_t *cellp, long volumeID, cm_user_t *userp,
