@@ -6059,6 +6059,22 @@ void smb_NetbiosInit()
     int len;
     int lana_found = 0;
 
+    /*******************************************************************/
+    /*      ms loopback adapter scan                                   */
+    /*******************************************************************/
+    struct
+    {
+	ADAPTER_STATUS status;
+	NAME_BUFFER    NameBuff [30];
+    }       Adapter;
+    
+    int j;
+    BOOL wla_found;
+
+    /*      AFAIK, this is the default for the ms loopback adapter.*/
+    unsigned char kWLA_MAC[6] = { 0x02, 0x00, 0x4c, 0x4f, 0x4f, 0x50 };
+    /*******************************************************************/
+
     /* setup the NCB system */
     ncbp = GetNCB();
 #ifdef DJGPP
