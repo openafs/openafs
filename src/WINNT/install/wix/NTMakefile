@@ -30,7 +30,7 @@ languages:
 #	)
 	$(MAKE) /f NTMakefile /nologo LANG=en_US lang
 
-lang:: $(MSIFILE)
+lang:: lang_clean $(MSIFILE)
 
 customactions:
 	$(CD) custom
