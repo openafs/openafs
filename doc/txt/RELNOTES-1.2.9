@@ -34,6 +34,12 @@ All systems:
   across reboots.  This also allows clients to have an empty CellServDB
   as long as AFSDB support is enabled and ThisCell has AFSDB records.
 
+  A consequence of this is that an OpenAFS 1.2.9 afsd will not work
+  with kernel modules from OpenAFS releases prior to 1.2.9.  In general,
+  using mismatched afsd/kernel module pairs are considered unsupported;
+  it is not recommended that you use such a configuration on a regular
+  basis.
+
 - Corrected integer overflow in xdrmem_getbytes() routine in our xdr
   implementation, even thought it's unused.
 
@@ -48,6 +54,8 @@ Solaris:
 - Repaired Solaris x86 support.
 
 Linux:
+
+- On machines using 2.2 series kernels, 2.2.19 or higher is now required.
 
 - Notice NETUNREACH errors and timeout attempts to access AFS quickly
   when we're not on the network.
