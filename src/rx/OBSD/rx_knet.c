@@ -73,22 +73,9 @@ void osi_StopListener(void)
        psignal(p, SIGUSR1);
 }
 
-/* rx_NetSend - send asize bytes at adata from asocket to host at addr.
- *
- * Now, why do we allocate a new buffer when we could theoretically use the one
- * pointed to by adata?  Because PRU_SEND returns after queueing the message,
- * not after sending it.  If the sender changes the data after queueing it,
- * we'd see the already-queued data change.  One attempt to fix this without
- * adding a copy would be to have this function wait until the datagram is
- * sent; however this doesn't work well.  In particular, if a host is down, and
- * an ARP fails to that host, this packet will be queued until the ARP request
- * comes back, which could be hours later.  We can't block in this routine that
- * long, since it prevents RPC timeouts from happening.
+/*
+ * rx_NetSend - send asize bytes at adata from asocket to host at addr.
  */
-/* XXX In the brave new world, steal the data bufs out of the rx_packet iovec,
- * and just queue those.  XXX
- */
-
 
 int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
 		struct iovec *dvec, int nvecs, afs_int32 alength, int istack)

@@ -52,7 +52,7 @@
 #define CV_SIGNAL(cv)           wakeup_one(cv)
 #define CV_BROADCAST(cv)        wakeup(cv)
 
-#define osi_rxWakeup(cv)        wakeup(cv)
+/* #define osi_rxWakeup(cv)        wakeup(cv) */
 typedef int afs_kcondvar_t;
 
 #define HEAVY_LOCKS
