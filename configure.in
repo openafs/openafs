@@ -54,8 +54,8 @@ case $system in
 		else
 			LINUX_KERNEL_PATH="/usr/src/linux"
 		fi
-		if test -f "$with_linux_kernel_headers/include/linux/version.h"; then
-		 linux_kvers=`fgrep UTS_RELEASE $with_linux_kernel_headers/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $2 }'`
+		if test -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
+		 linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $2 }'`
 		 if test "x$linux_kvers" = "x"; then
 		  AC_MSG_ERROR(Linux headers lack version definition)
 		  exit 1
