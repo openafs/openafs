@@ -5,7 +5,7 @@ openafs (1.2.8-2) unstable; urgency=low
   * Fix debian/rules clean to remove  generated files, Closes: #174625
   * Fix AFS not to declare errno, Closes: #174059
 
- --
+ -- Sam Hartman <hartmans@debian.org>  Fri,  3 Jan 2003 15:28:30 -0500
 
 openafs (1.2.8-1) unstable; urgency=low
 
