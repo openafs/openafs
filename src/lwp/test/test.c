@@ -38,8 +38,8 @@ int argc; char *argv[];
     
     count = atoi(argv[1]);
 
-    assert(LWP_InitializeProcessSupport(0, &pid) == LWP_SUCCESS);
-    assert(LWP_CreateProcess(OtherProcess,4096,0, 0, c, &otherpid) == LWP_SUCCESS);
+    assert(LWP_InitializeProcessSupport(0, (PROCESS *) &pid) == LWP_SUCCESS);
+    assert(LWP_CreateProcess(OtherProcess,4096,0, 0, c, (PROCESS *) &otherpid) == LWP_SUCCESS);
 
     waitarray[0] = &semaphore;
     waitarray[1] = 0;

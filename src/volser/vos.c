@@ -1463,8 +1463,7 @@ static volOnline(as)
  *	As advertised.
  *------------------------------------------------------------------------
  */
-static volOffline(as)
-    register struct cmd_syndesc *as;
+static int volOffline(register struct cmd_syndesc *as)
 {
     afs_int32 server, partition, volid;
     afs_int32 code, err=0;
@@ -1506,8 +1505,7 @@ static volOffline(as)
     return 0;
 }
 
-static CreateVolume(as)
-register struct cmd_syndesc *as;
+static int CreateVolume(register struct cmd_syndesc *as)
 {
     afs_int32 pname;
     char part[10];

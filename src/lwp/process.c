@@ -29,11 +29,7 @@ extern char PRE_Block;             /* used in lwp.c and process.s */
 
 #if defined(USE_UCONTEXT) && defined(HAVE_UCONTEXT_H)
 
-afs_int32
-savecontext(ep, savearea, newsp)
-char	(*ep)();
-struct lwp_context *savearea;
-char*	newsp;
+afs_int32 savecontext(char (*ep)(), struct lwp_context *savearea, char *newsp)
 {
 #if defined(AFS_IA64_LINUX20_ENV)
 	register unsigned long sp __asm__("r12");
@@ -217,8 +213,7 @@ char*	sp;
 	return 0;
 }
 
-afs_int32 returnto(savearea)
-struct lwp_context *savearea;
+afs_int32 returnto(struct lwp_context *savearea)
 {
 #if	defined(DEBUG)
 	int i, *ptr = savearea->setjmp_buffer;
