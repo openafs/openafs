@@ -95,14 +95,14 @@ ${KERNELDIR}/afs/permit_xprt.h ../permit_xprt.h:
 	   perm_src=`pwd`/../xprt ; \
 	   echo "perm_src='$$perm_src'" ; \
 	   set -x ; \
-	   ln -s $$perm_src/permit_export.h ${KERNELDIR}/afs/permit_xprt.h ; \
+	   $(CP) $$perm_src/permit_export.h ${KERNELDIR}/afs/permit_xprt.h ; \
 	   ln -s $$perm_src/permit_xprt.h   ../permit_xprt.h ; \
 	else \
 	   echo "CONFIG" ; \
 	   perm_src=`pwd` ; \
 	   echo "perm_src='$$perm_src'" ; \
 	   set -x ; \
-	   ln -s $$perm_src/permit_xprt.h   ${KERNELDIR}/afs/permit_xprt.h ; \
+	   $(CP) $$perm_src/permit_xprt.h   ${KERNELDIR}/afs/permit_xprt.h ; \
 	   ln -s $$perm_src/permit_xprt.h   ../permit_xprt.h ; \
 	fi		     
 
