@@ -555,7 +555,7 @@ AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
 AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h)
 AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h)
 AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h)
-AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h)
+AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h)
 
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf re_comp re_exec)
 AC_CHECK_FUNCS(setprogname getprogname sigaction)
