@@ -35,16 +35,9 @@ export KVERS
 configure: configure-stamp
 configure-stamp:
 	dh_testdir
-	-mkdir $(SYS_NAME)
-	-mkdir $(SYS_NAME)/obj
-	-mkdir $(SYS_NAME)/dest
 	-ln -s @sys/dest dest
-	-ln -s @sys/obj obj
 	-ln -s $(SYS_NAME) @sys
-	-ln -s src/Makefile Makefile
-
-
-		$(MAKE) links
+	sh configure --with-afs-sysname=$(SYS_NAME)
 	install -d dest/root.client/usr/vice/etc
 	install -d dest/root.server/usr/afs/bin
 
@@ -54,7 +47,7 @@ build: configure-stamp build-stamp
 build-stamp:
 	dh_testdir
 
-	$(MAKE) SYS_NAME=$(SYS_NAME)
+	$(MAKE)
 	mkdir -p debian/openafs-dbserver/usr/share/man/man8
 		/usr/bin/docbook-to-man debian/pt_util.sgml  \
 		>debian/openafs-dbserver/usr/share/man/man8/pt_util.8
@@ -67,6 +60,8 @@ clean:
 	rm -f build-stamp configure-stamp
 	-rm -rf obj dest $(SYS_NAME) @sys Makefile debian/openafs-client.init
 	# Add here commands to clean up after the build process.
+	$(MAKE) -ki clean
+	-rm -f config.*
 
 
 	dh_clean
@@ -224,9 +219,11 @@ binary-source:
 
 build-modules: build-modules-stamp
 
-build-modules-stamp: configure-stamp
-	$(MAKE) SYS_NAME=$(SYS_NAME) lwp 
-	$(MAKE) SYS_NAME=$(SYS_NAME) libafs
+build-modules-stamp: 
+	-ln -s @sys/dest dest
+	-ln -s $(SYS_NAME) @sys
+	sh configure --with-afs-sysname=$(SYS_NAME) --with-linux-kernel-headers=$(KSRC)
+	$(MAKE) libafs
 	touch build-modules-stamp
 
 binary-modules: build-modules
