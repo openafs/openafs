@@ -4,7 +4,8 @@
         <Component Id="cmf_afslogon_DLL" Guid="123197FE-4F53-4035-8D51-FCFB6B50A777">
             <File Id="fileafslogon_DLL" Name="afslogon.dll" LongName="afslogon.dll" KeyPath="yes" DiskId="1" src="$(var.ClientDir)afslogon.dll" />
             <!--
-            Disable the WinLogon registration for now.  It's causing problems on XP SP2 machines.            <Registry Id="reg_afslogon01" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Action="createKeyAndRemoveKeyOnUninstall" />
+            Disable the WinLogon registration for now.  It's causing problems on XP SP2 machines.
+            <Registry Id="reg_afslogon01" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Action="createKeyAndRemoveKeyOnUninstall" />
             <Registry Id="reg_afslogon02" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" />
             <Registry Id="reg_afslogon03" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Asynchronous" Type="integer" Value="0" />
             <Registry Id="reg_afslogon04" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Impersonate" Type="integer" Value="1" />
@@ -12,6 +13,8 @@
             <Registry Id="reg_afslogon06" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Logoff" Type="string" Value="AFS_Logoff_Event" />
             <Registry Id="reg_afslogon07" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Name="Startup" Type="string" Value="AFS_Startup_Event" />
             -->
+            <!-- instead, remove the key if present -->
+            <Registry Id="reg_afslogonrem" Root="HKLM" Key="SOFTWARE\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" Action="removeKeyOnInstall" />
         </Component>
     <?ifdef DebugSyms?>
         <Component Id="cmp_ClientSystemDebug" Guid="DD34DA09-D9DA-4A5A-9521-87B7738A7D53">

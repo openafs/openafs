@@ -717,6 +717,8 @@ skipremove:
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "DLLName" "afslogon.dll"
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Logoff" "AFS_Logoff_Event"
   WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Startup" "AFS_Startup_Event"
+!else
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\AfsLogon"
 !endif
 
   SetRebootFlag true
