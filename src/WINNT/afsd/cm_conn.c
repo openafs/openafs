@@ -174,8 +174,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 		int same;
 
 		/* Log server being offline for this volume */
-		osi_Log4(afsd_logp, "cm_Analyze found server %d.%d.%d.%d
-marked offline for a volume",
+		osi_Log4(afsd_logp, "cm_Analyze found server %d.%d.%d.%d marked offline for a volume",
 			 ((serverp->addr.sin_addr.s_addr & 0xff)),
 			 ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
 			 ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),

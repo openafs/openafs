@@ -118,6 +118,7 @@ MIDL_FLAGS=/app_config \
 	   /Zp4 \
 	   /cpp_cmd $(cc) \
 	   /cpp_opt "-E" \
+	   /no_robust \
            /nologo
 
 .SUFFIXES: .h .idl
@@ -360,4 +361,3 @@ clean::
 	$(DEL) $(LOG95_DLLFILE)
 
 mkdir:
-	
