@@ -1,5 +1,5 @@
 #include <afs/param.h>
-#include <fsint/afscbint.h>	/*Callback interface defs */
+#include <afs/afscbint.h>	/*Callback interface defs */
 int afs_cb_inited = 0;
 struct interfaceAddr afs_cb_interface;
 static int
@@ -49,45 +49,52 @@ SRXAFSCB_Probe(rxcall)
 
 
 afs_int32
-SRXAFSCB_GetCE(rxcall)
+SRXAFSCB_GetCE(rxcall, index, ce)
      struct rx_call *rxcall;
-
+     afs_int32 index;
+     AFSDBCacheEntry * ce;
 {				/*SRXAFSCB_GetCE */
     return (0);
 }				/*SRXAFSCB_GetCE */
 
 
 afs_int32
-SRXAFSCB_GetCE64(rxcall)
+SRXAFSCB_GetCE64(rxcall, index, ce)
      struct rx_call *rxcall;
-
+     afs_int32 index;
+     AFSDBCacheEntry64 *ce;
 {				/*SRXAFSCB_GetCE64 */
     return (0);
 }				/*SRXAFSCB_GetCE64 */
 
 
 afs_int32
-SRXAFSCB_GetLock(rxcall)
+SRXAFSCB_GetLock(rxcall, index, lock)
      struct rx_call *rxcall;
-
+     afs_int32 index;
+     AFSDBLock *lock;
 {				/*SRXAFSCB_GetLock */
     return (0);
 
 }				/*SRXAFSCB_GetLock */
 
 afs_int32
-SRXAFSCB_XStatsVersion(rxcall)
+SRXAFSCB_XStatsVersion(rxcall, v)
      struct rx_call *rxcall;
-
+     afs_int32 *v;
 {				/*SRXAFSCB_XStatsVersion */
     return (0);
 
 }				/*SRXAFSCB_XStatsVersion */
 
 afs_int32
-SRXAFSCB_GetXStats(rxcall)
+SRXAFSCB_GetXStats(rxcall, clientVersionNumber, collectionNumber, srvVersionNumberP, timeP, dataP)
      struct rx_call *rxcall;
-
+     afs_int32 clientVersionNumber;
+     afs_int32 collectionNumber;
+     afs_int32 * srvVersionNumberP;
+     afs_int32 * timeP;
+     AFSCB_CollData * dataP;
 {				/*SRXAFSCB_GetXStats */
     return (0);
 }				/*SRXAFSCB_GetXStats */
@@ -149,8 +156,8 @@ afs_int32
 SRXAFSCB_GetCellServDB(rxcall, cellIndex, cellName, cellHosts)
      struct rx_call *rxcall;
      afs_int32 cellIndex;
-     char *cellName;
-     afs_int32 *cellHosts;
+     char **cellName;
+     serverList *cellHosts;
 {
     return RXGEN_OPCODE;
 }
@@ -159,7 +166,7 @@ SRXAFSCB_GetCellServDB(rxcall, cellIndex, cellName, cellHosts)
 afs_int32
 SRXAFSCB_GetLocalCell(rxcall, cellName)
      struct rx_call *rxcall;
-     char *cellName;
+     char **cellName;
 {
     return RXGEN_OPCODE;
 }
@@ -175,4 +182,23 @@ SRXAFSCB_GetCacheConfig(rxcall, callerVersion, serverVersion, configCount,
      cacheConfig *config;
 {
     return RXGEN_OPCODE;
+}
+
+afs_int32
+SRXAFSCB_GetCellByNum(rxcall, cellnum, cellname, cellhosts)
+     struct rx_call *rxcall;
+     afs_int32 cellnum;
+     char **cellname;
+     serverList *cellhosts;
+{
+     return RXGEN_OPCODE;
+}
+
+afs_int32
+SRXAFSCB_TellMeAboutYourself(rxcall, addr, cap)
+     struct rx_call *rxcall;
+     struct interfaceAddr *addr;
+     Capabilities *cap;
+{
+     return RXGEN_OPCODE;
 }

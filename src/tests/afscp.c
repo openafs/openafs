@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <sys/select.h>
 #include <sys/stat.h>
+#include <netdb.h>
 
 #include <afs/param.h>
 #include <afs/afsint.h>
@@ -36,6 +37,58 @@ statfile(char *path, char *cellname, afs_uint32 * server, struct AFSFid *f)
     struct VenusFid vf;
     afs_int32 srvbuf[MAXHOSTS];
     int code;
+
+    if (!strncmp(path, "@afs:", 5)) {
+	char *pdup, *p, *host, *id;
+	struct hostent *he;
+
+	pdup = strdup(path);
+	strtok(pdup, ":");
+
+	if (!(p = strtok(NULL, ":"))) {
+	    free(pdup);
+	    return -1;
+	}
+	strncpy(cellname, p, MAXCELLCHARS);
+
+	if (!(p = strtok(NULL, ":"))) {
+	    free(pdup);
+	    return -1;
+	}
+	he = gethostbyname(p);
+	if (!he) {
+	    printf("Unknown host %s\n", p);
+	    free(pdup);
+	    return -1;
+	}
+	memcpy(server, he->h_addr, he->h_length);
+
+	if (!(p = strtok(NULL, ":"))) {
+	    free(pdup);
+	    return -1;
+	}
+	f->Volume = atoi(p);
+
+	if (!(p = strtok(NULL, ":"))) {
+	    free(pdup);
+	    return -1;
+	}
+	f->Vnode = atoi(p);
+
+	if (!(p = strtok(NULL, ":"))) {
+	    free(pdup);
+	    return -1;
+	}
+	f->Unique = atoi(p);
+
+	if (strtok(NULL, ":")) {
+	    printf("Too much extra stuff after @afs:...\n");
+	    free(pdup);
+	    return -1;
+	}
+
+	return 0;
+    }
 
     v.in = 0;
     v.in_size = 0;
@@ -177,10 +230,11 @@ main(int argc, char **argv)
 	case 'o':
 	    dlcl = 1;
 	    break;
-	case 'a':
+	case 'u':
 	    unauth = 1;
 	    break;
 	default:
+	    printf("Unknown option '%c'\n", ch);
 	    exit(1);
 	}
     }
@@ -193,6 +247,8 @@ main(int argc, char **argv)
 	fprintf(stderr, "  -i   Source is local (copy into AFS)\n");
 	fprintf(stderr, "  -o   Dest is local (copy out of AFS)\n");
 	fprintf(stderr, "  -u   Run unauthenticated\n");
+	fprintf(stderr, "source and dest can be paths or specified as:\n");
+	fprintf(stderr, "     @afs:cellname:servername:volume:vnode:uniq\n");
 	exit(1);
     }
     srcf = argv[optind++];
