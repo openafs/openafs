@@ -1682,7 +1682,7 @@ StartRemove:
  
   RMDir  "$INSTDIR"
 
-!ifndef v2.0b4
+!ifdef v2.0b3
   ;Display the Finish header
   !insertmacro MUI_UNFINISHHEADER
 !endif
