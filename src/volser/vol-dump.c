@@ -48,7 +48,6 @@ RCSID
 #include "volume.h"
 #include "partition.h"
 #include "viceinode.h"
-#include "volinodes.h"
 #include <afs/afssyscalls.h>
 #include "acl.h"
 

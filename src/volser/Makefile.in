@@ -39,11 +39,22 @@ LIBS=\
 	${TOP_LIBDIR}/libusd.a \
 	${TOP_LIBDIR}/util.a
 
+VOLDUMP_LIBS = \
+	../vol/ihandle.o \
+	../vol/physio.o \
+	../vol/vlib.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libdir.a \
+	${TOP_LIBDIR}/liblwp.a  \
+	${TOP_LIBDIR}/libacl.a
+
 VSOBJS=vsprocs.o vsutils.o lockprocs.o volint.xdr.o volerr.o 
 SOBJS=volmain.o volprocs.o physio.o common.o voltrans.o volerr.o \
  volint.cs.o dumpstuff.o volint.ss.o volint.xdr.o
 
-all: volserver vos restorevol \
+all: volserver vos restorevol voldump \
 	${TOP_INCDIR}/afs/volser.h \
 	${TOP_INCDIR}/afs/volint.h \
 	${TOP_LIBDIR}/libvolser.a
@@ -58,6 +69,9 @@ vos: vos.o ${VSOBJS} libvolser.a ${LIBS}
 volserver: $(SOBJS) $(LIBS) ${TOP_LIBDIR}/libdir.a
 	${CC} ${DBUG} -o volserver $(SOBJS) ${TOP_LIBDIR}/libdir.a \
 		${LDFLAGS} $(LIBS) ${XLIBS}
+
+voldump: vol-dump.o ${VOLDUMP_LIBS}
+	${CC} ${CFLAGS} -o voldump vol-dump.o ${VOLDUMP_LIBS} ${XLIBS}
 
 libvolser.a: volint.cs.o  $(VSOBJS) volint.ss.o AFS_component_version_number.o
 	-$(RM) -f $@
@@ -106,6 +120,7 @@ lockprocs.o: lockprocs.c ${VINCLS} ${INTINCLS} ${RINCLS}
 #
 install: \
 	${DESTDIR}${sbindir}/restorevol \
+	${DESTDIR}${sbindir}/voldump \
 	${DESTDIR}${includedir}/afs/volser.h \
 	${DESTDIR}${includedir}/afs/volint.h \
 	${DESTDIR}${sbindir}/vos \
@@ -123,6 +138,9 @@ ${DEST}/include/afs/volint.h: volint.h
 ${DEST}/etc/restorevol: restorevol
 	${INSTALL} $? $@
 
+${DEST}/etc/voldump: voldump
+	${INSTALL} $? $@
+
 ${DEST}/etc/vos ${DEST}/root.server/usr/afs/bin/vos: vos
 	${INSTALL} $? $@
 
@@ -137,11 +155,14 @@ ${DEST}/root.server/usr/afs/bin/volserver: volserver
 # 
 clean:
 	$(RM) -f *.o *.a core volserver volint.ss.c volint.cs.c volint.h \
-	volint.xdr.c vos volser.h volerr.c AFS_component_version_number.c restorevol
+	volint.xdr.c vos volser.h volerr.c AFS_component_version_number.c restorevol voldump
 
 include ../config/Makefile.version
 
 ${DESTDIR}${sbindir}/restorevol: restorevol
+	${INSTALL} $? $@
+
+${DESTDIR}${sbindir}/voldump: voldump
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/afs/volser.h: volser.h
@@ -173,6 +194,7 @@ ${TOP_LIBDIR}/libvolser.a: libvolser.a
 
 dest: \
 	${DEST}/etc/restorevol \
+	${DEST}/etc/voldump \
 	${DEST}/include/afs/volser.h \
 	${DEST}/include/afs/volint.h \
 	${DEST}/etc/vos \
