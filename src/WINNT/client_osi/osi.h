@@ -19,13 +19,46 @@
 /* large int */
 #ifndef DJGPP
 #include <rpc.h>
+#if !defined(_MSC_VER) || (_MSC_VER < 1300)
 #include <largeint.h>
+#endif
 #include "osithrdnt.h"
 #else /* DJGPP */
 #include "largeint95.h"
 #endif /* !DJGPP */
 
 typedef LARGE_INTEGER osi_hyper_t;
+#if _MSC_VER >= 1300
+LARGE_INTEGER LargeIntegerAdd(LARGE_INTEGER a, LARGE_INTEGER b);
+LARGE_INTEGER LargeIntegerSubtract(LARGE_INTEGER a, LARGE_INTEGER b);
+LARGE_INTEGER ExtendedLargeIntegerDivide(LARGE_INTEGER a, unsigned long b, unsigned long *remainder);
+LARGE_INTEGER LargeIntegerDivide(LARGE_INTEGER a, LARGE_INTEGER b, LARGE_INTEGER *remainder);
+LARGE_INTEGER ConvertLongToLargeInteger(unsigned long a); 
+#define LargeIntegerGreaterThan(a, b) \
+ ((a).HighPart > (b).HighPart || \
+  ((a).HighPart == (b).HighPart && (a).LowPart > (b).LowPart))
+
+#define LargeIntegerGreaterThanOrEqualTo(a, b) \
+ ((a).HighPart > (b).HighPart || \
+  ((a).HighPart == (b).HighPart && (a).LowPart >= (b).LowPart))
+  
+#define LargeIntegerLessThan(a, b) \
+ ((a).HighPart < (b).HighPart || \
+  ((a).HighPart == (b).HighPart && (a).LowPart < (b).LowPart))
+
+#define LargeIntegerLessThanOrEqualTo(a, b) \
+ ((a).HighPart < (b).HighPart || \
+  ((a).HighPart == (b).HighPart && (a).LowPart <= (b).LowPart))
+
+#define LargeIntegerEqualTo(a, b) \
+  ((a).HighPart == (b).HighPart && (a).LowPart == (b).LowPart)
+  
+#define LargeIntegerGreaterOrEqualToZero(a) ((a).HighPart >= 0)
+  
+#define LargeIntegerLessThanZero(a) ((a).HighPart < 0)
+
+#define LargeIntegerNotEqualToZero(a) ((a).HighPart || (a).LowPart)
+#endif
 #ifndef DJGPP
 typedef GUID osi_uid_t;
 #else /* DJGPP */

@@ -77,6 +77,7 @@ AFSDOBJS=\
 	$(OJT)\cm_vnodeops.obj \
 	$(OJT)\cm_dir.obj \
 	$(OJT)\cm_utils.obj \
+	$(OJT)\largeintdotnet.obj \
 	$(OJT)\smb.obj \
 	$(OJT)\smb3.obj \
 	$(OJT)\smb_ioctl.obj \

@@ -13,7 +13,9 @@
 #define _OSISTATL_H_ENV_ 1
 
 #include "osibasel.h"
+#if !defined(_MSC_VER) || (_MSC_VER < 1300)
 #include <largeint.h>
+#endif
 #include "osiqueue.h"
 
 /* structure representing all information about someone holding a lock
