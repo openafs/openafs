@@ -258,7 +258,7 @@ extern FdHandle_t *ih_open(IHandle_t *ihP);
 extern int fd_close(FdHandle_t *fdP);
 extern int fd_reallyclose(FdHandle_t *fdP);
 extern StreamHandle_t *stream_fdopen(FD_t fd);
-extern StreamHandle_t *stream_open(char *file, char *mode);
+extern StreamHandle_t *stream_open(const char *file, const char *mode);
 extern int stream_read(void *ptr, int size, int nitems,
 		       StreamHandle_t *streamP);
 extern int stream_write(void *ptr, int size, int nitems,
