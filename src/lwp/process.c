@@ -31,7 +31,11 @@ extern char PRE_Block;             /* used in lwp.c and process.s */
 #elif	defined(AFS_HPUX_ENV)
 #define	LWP_SP	1
 #elif	defined(AFS_LINUX20_ENV)
+#if defined(AFS_PPC_LINUX20_ENV)
+#define LWP_SP 0
+#else
 #define LWP_SP 4
+#endif
 #else
      Need offset to SP in jmp_buf for this platform.
 #endif

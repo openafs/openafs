@@ -585,22 +585,37 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 		    struct list_head *cur;
 		    struct list_head *head = &ip->i_dentry;
 		    int all = 1;
-		retry:
+		restart:
+#if defined(AFS_LINUX24_ENV)
+		    spin_lock(&dcache_lock);
+#endif
 		    cur = head;
 		    while ((cur = cur->next) != head) {
 			struct dentry *dentry = list_entry(cur, struct dentry, d_alias);
+#if defined(AFS_LINUX24_ENV)
+			if (!atomic_read(&dentry->d_count)) {
+#else
 			if (!dentry->d_count) {
+#endif
 			    AFS_GUNLOCK();
+#if defined(AFS_LINUX24_ENV)
+			    dget_locked(dentry);
+			    spin_unlock(&dcache_lock);
+#else
 			    dget(dentry);
+#endif
 			    d_drop(dentry);
 			    dput(dentry);
 			    AFS_GLOCK();
-			    goto retry;
+			    goto restart;
 			}
 			else {
 			    all = 0;
 			}
 		    }
+#if defined(AFS_LINUX24_ENV)
+		    spin_unlock(&dcache_lock);
+#endif
 		    if (all) vn --;
 		}
 	    }
@@ -904,8 +919,17 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
     {
 	struct inode *ip = (struct inode*)tvc;
 	sema_init(&ip->i_sem, 1);
+#if defined(AFS_LINUX24_ENV)
+	sema_init(&ip->i_zombie, 1);
+	init_waitqueue_head(&ip->i_wait);
+	spin_lock_init(&ip->i_data.i_shared_lock);
+	INIT_LIST_HEAD(&ip->i_data.pages);
+	ip->i_data.host = (void*) ip;
+	ip->i_mapping = &ip->i_data;
+#else
 	sema_init(&ip->i_atomic_write, 1);
 	init_waitqueue(&ip->i_wait);
+#endif
 	INIT_LIST_HEAD(&ip->i_hash);
 	INIT_LIST_HEAD(&ip->i_dentry);
 	if (afs_globalVFS) {

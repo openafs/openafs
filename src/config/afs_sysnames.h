@@ -107,6 +107,13 @@
 
 #define SYS_NAME_ID_i386_linux2		1500
 #define SYS_NAME_ID_i386_linux22	1501
+#define SYS_NAME_ID_i386_linux24        1502
+
+#define SYS_NAME_ID_ppc_linux2          1600
+#define SYS_NAME_ID_ppc_linux22         1601
+#define SYS_NAME_ID_ppc_linux24         1602
+
+
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 

@@ -32,7 +32,7 @@ kinstall: AFS_component_version_number.c
 	case ${SYS_NAME} in \
 		sgi_* ) \
 			gencat -m afszcm.cat afs_trace.msf ;; \
-		i386_linux* ) \
+		*_linux* ) \
 			gencat --new afszcm.cat afs_trace.msf ;; \
 		* ) \
 			gencat afszcm.cat afs_trace.msf ;; \

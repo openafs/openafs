@@ -45,10 +45,14 @@ unsigned int afs_linux_hash_verify_count = 0; /* used by hash_verify */
 struct afs_lhash_stat afs_linux_lsb; /* hash table statistics */
 unsigned int afs_linux_hash_bucket_dist[MAX_BUCKET_LEN]; /* bucket population distribution in our hash table */
 
+#if defined(AFS_LINUX24_ENV)
+#include "../h/vmalloc.h"
+#else
 /* externs : can we do this in a better way. Including vmalloc.h causes other
  * problems.*/
 extern void vfree(void * addr);
 extern void *vmalloc(unsigned long size);
+#endif
 
 /* Allocator support functions (static) */
 
@@ -249,7 +253,11 @@ static void get_hash_stats()
 
 /************** Linux memory allocator interface functions **********/
 
+#if defined(AFS_LINUX24_ENV)
+DECLARE_MUTEX(afs_linux_alloc_sem);
+#else
 struct semaphore afs_linux_alloc_sem = MUTEX;
+#endif
 
 void *osi_linux_alloc(unsigned int asize)
 {

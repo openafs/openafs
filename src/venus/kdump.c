@@ -2423,8 +2423,13 @@ void print_vnode(kmem, vep, ptr, pnt)
 	   vep->i_nrpages);
     printf("\ti_op=0x%x, i_dev=0x%x, i_rdev=0x%x, i_sb=0x%x\n",
 	   vep->i_op, vep->i_dev, vep->i_rdev, vep->i_sb);
+#ifdef AFS_LINUX24_ENV
+    printf("\ti_sem: count=%d, sleepers=%d, wait=0x%x\n",
+	   vep->i_sem.count, vep->i_sem.sleepers, vep->i_sem.wait);
+#else
     printf("\ti_sem: count=%d, waking=%d, wait=0x%x\n",
 	   vep->i_sem.count, vep->i_sem.waking, vep->i_sem.wait);
+#endif
     printf("\ti_hash=0x%x:0x%x, i_list=0x%x:0x%x, i_dentry=0x%x:0x%x\n",
 	   vep->i_hash.prev, vep->i_hash.next,
 	   vep->i_list.prev, vep->i_list.next,

@@ -124,7 +124,7 @@ kinstall: includes
 		$(INSTALL) DUX/*.[ch] $(KERNELDIR)rx;; \
 	hp_ux* ) \
 		$(INSTALL) HPUX/*.[ch] $(KERNELDIR)rx;; \
-	i386_linux* ) \
+	*_linux* ) \
 		$(INSTALL) LINUX/*.[ch] $(KERNELDIR)rx;; \
 	rs_aix* ) \
 		$(INSTALL) AIX/*.[ch] $(KERNELDIR)rx;; \

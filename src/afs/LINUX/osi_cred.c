@@ -27,7 +27,11 @@ int ncreds_inuse = 0;
  * Also assuming a fast path through both down and up if no waiters. Otherwise,
  * test if no creds in pool before grabbing lock in crfree().
  */
+#if defined(AFS_LINUX24_ENV)
+static DECLARE_MUTEX(linux_cred_pool_lock);
+#else
 static struct semaphore linux_cred_pool_lock = MUTEX;
+#endif
 #define CRED_LOCK() down(&linux_cred_pool_lock)
 #define CRED_UNLOCK() up(&linux_cred_pool_lock)
 

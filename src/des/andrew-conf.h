@@ -41,7 +41,11 @@
 #include "conf-winnt.h"
 #else
 #ifdef AFS_LINUX20_ENV
+#ifdef AFS_PPC_LINUX20_ENV
+#include "conf-ppc-linux.h"
+#else
 #include "conf-i386-linux.h"
+#endif
 #else
 Sorry, you lose.
 Figure out what the machine looks like and fix this file to include it.

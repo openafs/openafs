@@ -15,6 +15,9 @@
 #include "../afs/param.h"
 #ifdef AFS_LINUX22_ENV
 #include "../rx/rx_kcommon.h"
+#if defined(AFS_LINUX24_ENV)
+#include "../h/smp_lock.h"
+#endif
 #include <asm/uaccess.h>
 
 /* rxk_NewSocket
@@ -38,7 +41,11 @@ struct osi_socket *rxk_NewSocket(short aport)
     code = sockp->ops->bind(sockp, (struct sockaddr*)&myaddr, sizeof(myaddr));
 
     if (code<0) {
+#if defined(AFS_LINUX24_ENV)
+	printk("sock_release(rx_socket) FIXME\n");
+#else
 	sock_release(sockp);
+#endif
 	return NULL;
     }
 

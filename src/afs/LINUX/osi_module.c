@@ -31,7 +31,11 @@ extern struct file_system_type afs_file_system;
 
 static long get_page_offset(void);
 
+#if defined(AFS_LINUX24_ENV)
+DECLARE_MUTEX(afs_global_lock);
+#else
 struct semaphore afs_global_lock = MUTEX;
+#endif
 int afs_global_owner = 0;
 unsigned long afs_linux_page_offset = 0; /* contains the PAGE_OFFSET value */
 
@@ -96,6 +100,9 @@ void cleanup_module(void)
 
 static long get_page_offset(void)
 {
+#if defined(AFS_PPC_LINUX22_ENV)
+    return PAGE_OFFSET;
+#else
     struct task_struct *p;
 
     /* search backward thru the circular list */
@@ -104,4 +111,5 @@ static long get_page_offset(void)
 	    return p->addr_limit.seg;
 
     return 0;
+#endif
 }

@@ -36,10 +36,17 @@ AFS_OS_NONFSOBJS =
 CC = gcc
 LD = ld
 # -Wall
+<i386_linux22 i386_linux24>
 CCFLAGS =   -O2 -fomit-frame-pointer \
 	-fno-strength-reduce -pipe -m486 -malign-loops=2 -malign-jumps=2 \
 	-malign-functions=2
 DEFINES = -D__KERNEL__  -DCPU=586 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+<ppc_linux22 ppc_linux24>
+CCFLAGS =   -O2 -fomit-frame-pointer -fno-strength-reduce \
+	-fno-strict-aliasing -fsigned-char -msoft-float -pipe \
+	-fno-builtin -ffixed-r2
+DEFINES = -D__KERNEL__  -D__powerpc__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+<all>
 INCLUDES = -I. -I../
 
 CFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES)
@@ -84,7 +91,11 @@ ${COMPDIRS}:
 		rm -f sys; \
 		ln -s $${IDIR} sys; \
 		rm -f asm; \
+<i386_linux22 i386_linux24>
 		ln -s ${LINUX_SRCDIR}$$v/include/asm-i386 asm ; \
+<ppc_linux22 ppc_linux24>
+		ln -s ${LINUX_SRCDIR}$$v/include/asm-ppc asm ; \
+<all>
 		for m in ${MPS} ; do \
 			KDIR=${KOBJ}-$$v-$$m ; \
 			echo Building in directory: $${KDIR} ; \

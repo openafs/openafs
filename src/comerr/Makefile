@@ -86,7 +86,7 @@ doc:	com_err.dvi
 #
 compile_et:	compile_et.o error_table.o
 	case $(SYS_NAME) in \
-	i386_linux* ) \
+	*_linux* ) \
 	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o ${utilib};; \
 	* ) \
 	${CC} ${CFLAGS} -o compile_et compile_et.o error_table.o ${utilib} -ll;; \

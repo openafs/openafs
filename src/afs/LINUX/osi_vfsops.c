@@ -17,6 +17,9 @@
 #include "../afs/afsincludes.h"
 #include "../afs/afs_stats.h"
 #include "../h/locks.h"
+#if defined(AFS_LINUX24_ENV)
+#include "../h/smp_lock.h"
+#endif
 
 #define __NO_VERSION__ /* don't define kernel_verion in module.h */
 #include <linux/module.h>
@@ -47,6 +50,9 @@ void put_inode_on_dummy_list(struct inode *ip);
  * 2) Mount call comes to us via do_mount -> read_super -> afs_read_super.
  *    We are expected to setup the super_block. See afs_read_super.
  */
+#if defined(AFS_LINUX24_ENV)
+DECLARE_FSTYPE(afs_file_system, "afs", afs_read_super, 0);
+#else
 struct file_system_type afs_file_system = {
     "afs",	/* name - used by mount operation. */
     0,		/* requires_dev - no for network filesystems. mount() will 
@@ -54,6 +60,7 @@ struct file_system_type afs_file_system = {
     afs_read_super, /* wrapper to afs_mount */
     NULL	/* pointer to next file_system_type once registered. */
 };
+#endif
 
 /* afs_read_super
  * read the "super block" for AFS - roughly eguivalent to struct vfs.
@@ -72,7 +79,9 @@ struct super_block *afs_read_super(struct super_block *sb, void *data,
     afs_was_mounted = 1;
 
     /* Set basics of super_block */
+#if !defined(AFS_LINUX24_ENV)
     lock_super(sb);
+#endif
     MOD_INC_USE_COUNT;
 
     afs_globalVFS = sb;
@@ -84,7 +93,9 @@ struct super_block *afs_read_super(struct super_block *sb, void *data,
     if (code)
 	MOD_DEC_USE_COUNT;
 
+#if !defined(AFS_LINUX24_ENV)
     unlock_super(sb);
+#endif
 
     AFS_GUNLOCK();
     return code ? NULL : sb;
@@ -110,13 +121,23 @@ static int afs_root(struct super_block *afsp)
 				(struct vcache*)0, WRITE_LOCK);
 	    if (tvp) {
 		extern struct inode_operations afs_dir_iops;
+#if defined(AFS_LINUX24_ENV)
+		extern struct file_operations afs_dir_fops;
+#endif
 		
 		/* "/afs" is a directory, reset inode ops accordingly. */
 		tvp->v.v_op = &afs_dir_iops;
+#if defined(AFS_LINUX24_ENV)
+		tvp->v.v_fop = &afs_dir_fops;
+#endif
 
 		/* setup super_block and mount point inode. */
 		afs_globalVp = tvp;
+#if defined(AFS_LINUX24_ENV)
+		afsp->s_root = d_alloc_root((struct inode*)tvp);
+#else
 		afsp->s_root = d_alloc_root((struct inode*)tvp, NULL);
+#endif
 		afsp->s_root->d_op = &afs_dentry_operations;
 	    } else
 		code = ENOENT;
@@ -212,15 +233,27 @@ void afs_delete_inode(struct inode *ip)
     struct vcache *vc = (struct vcache*)ip;
 
     AFS_GLOCK();
+#if defined(AFS_LINUX24_ENV)
+    lock_kernel();
+    if (atomic_read(&ip->i_count) > 1)
+#else
     if (ip->i_count > 1)
+#endif
 	printf("afs_put_inode: ino %d (0x%x) has count %d\n", ip->i_ino, ip);
 
     ObtainWriteLock(&vc->lock, 504);
     afs_InactiveVCache(vc, credp);
+#if defined(AFS_LINUX24_ENV)
+    atomic_set(&ip->i_count, 0);
+#else
     ip->i_count = 0;
+#endif
     ip->i_nlink = 0; /* iput checks this after calling this routine. */
     ReleaseWriteLock(&vc->lock);
 
+#ifdef AFS_LINUX24_ENV
+    unlock_kernel();
+#endif
     AFS_GUNLOCK();
     crfree(credp);
 }
@@ -273,16 +306,22 @@ int afs_remount_fs(struct super_block *sbp, int *, char *)
  * statp is in user space, so we need to cobble together a statfs, then
  * copy it.
  */
+#if defined(AFS_LINUX24_ENV)
+int afs_statfs(struct super_block *sbp, struct statfs *statp)
+#else
 int afs_statfs(struct super_block *sbp, struct statfs *statp, int size)
+#endif
 {
     struct statfs stat;
 
     AFS_STATCNT(afs_statfs);
 
+#if !defined(AFS_LINUX24_ENV)
     if (size < sizeof(struct statfs))
 	return;
 	
     memset(&stat, 0, size);
+#endif
     stat.f_type = 0; /* Can we get a real type sometime? */
     stat.f_bsize = sbp->s_blocksize;
     stat.f_blocks =  stat.f_bfree =  stat.f_bavail =  stat.f_files =
@@ -290,12 +329,25 @@ int afs_statfs(struct super_block *sbp, struct statfs *statp, int size)
     stat.f_fsid.val[0] = AFS_VFSMAGIC;
     stat.f_fsid.val[1] = AFS_VFSFSID;
     stat.f_namelen = 256;
-    
+
+#if defined(AFS_LINUX24_ENV)
+    *statp = stat;
+#else
     memcpy_tofs(statp, &stat, size);
+#endif
     return 0;
 }
 
 
+#if defined(AFS_LINUX24_ENV)
+struct super_operations afs_sops = {
+    read_inode:        afs_read_inode,
+    write_inode:       afs_write_inode,
+    delete_inode:      afs_delete_inode,
+    put_super:         afs_put_super,
+    statfs:            afs_statfs,
+};
+#else
 struct super_operations afs_sops = {
     afs_read_inode,
     afs_write_inode,		/* afs_write_inode - see doc above. */
@@ -309,6 +361,7 @@ struct super_operations afs_sops = {
     NULL,		/* afs_clear_inode */
     NULL,		/* afs_umount_begin */
 };
+#endif
 
 /************** Support routines ************************/
 
