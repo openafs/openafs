@@ -27,6 +27,7 @@
   SilentInstall normal
   SetCompressor bzip2
   !define MUI_ICON "..\..\client_config\afs_config.ico"
+  ; This is an absolute path to the NSIS install directory--we need to make this a variable
   !define MUI_UNICON "c:\Program Files\NSIS\Contrib\Icons\normal-uninstall.ico"
   !define AFS_COMPANY_NAME "OpenAFS"
   !define AFS_PRODUCT_NAME "OpenAFS"
@@ -195,8 +196,25 @@
    LangString UPGRADE_CLIENT ${LANG_JAPANESE} "Upgrade AFS Client"
    ;LangString UPGRADE_CLIENT ${LANG_KOREAN} "Upgrade AFS Client"
    LangString UPGRADE_CLIENT ${LANG_PORTUGUESEBR} "Upgrade AFS Client"
-   
-   
+ 
+   LangString REINSTALL_CLIENT ${LANG_ENGLISH} "Re-install AFS Client"
+   LangString REINSTALL_CLIENT ${LANG_GERMAN} "Re-install AFS Client"
+   LangString REINSTALL_CLIENT ${LANG_SPANISH} "Re-install AFS Client"
+   LangString REINSTALL_CLIENT ${LANG_SIMPCHINESE} "Re-install AFS Client"
+   LangString REINSTALL_CLIENT ${LANG_TRADCHINESE} "Re-install AFS Client"
+   LangString REINSTALL_CLIENT ${LANG_JAPANESE} "Re-install AFS Client"
+   ;LangString REINSTALL_CLIENT ${LANG_KOREAN} "Re-install AFS Client"
+   LangString REINSTALL_CLIENT ${LANG_PORTUGUESEBR} "Re-install AFS Client"
+  
+   LangString UPGRADE_SERVER ${LANG_ENGLISH} "Upgrade AFS Server"
+   LangString UPGRADE_SERVER ${LANG_GERMAN} "Upgrade AFS Server"
+   LangString UPGRADE_SERVER ${LANG_SPANISH} "Upgrade AFS Server"
+   LangString UPGRADE_SERVER ${LANG_SIMPCHINESE} "Upgrade AFS Server"
+   LangString UPGRADE_SERVER ${LANG_TRADCHINESE} "Upgrade AFS Server"
+   LangString UPGRADE_SERVER ${LANG_JAPANESE} "Upgrade AFS Server"
+   ;LangString UPGRADE_SERVER ${LANG_KOREAN} "Upgrade AFS Server"
+   LangString UPGRADE_SERVER ${LANG_PORTUGUESEBR} "Upgrade AFS Server"
+    
    LangString REINSTALL_SERVER ${LANG_ENGLISH} "Re-install AFS Server"
    LangString REINSTALL_SERVER ${LANG_GERMAN} "Re-install AFS Server"
    LangString REINSTALL_SERVER ${LANG_SPANISH} "Re-install AFS Server"
@@ -340,6 +358,16 @@
 Section "AFS Client" SecClient
 
   SetShellVarContext all
+  ; Stop any running services or we can't replace the files
+  ; Stop the running processes
+  ;GetTempFileName $R0
+  ;File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"   ; Might not have the MSVCR71.DLL file to run
+  ;nsExec::Exec '$R0 afscreds.exe'
+  ;nsExec::Exec '$R0 krbcc32s.exe'
+
+  nsExec::Exec "net stop TransarcAFSDaemon"
+  nsExec::Exec "net stop TransarcAFSServer"
+  
    ; Do client components
   SetOutPath "$INSTDIR\Client\Program"
   File "${AFS_CLIENT_BUILDDIR}\afsshare.exe"
@@ -548,39 +576,15 @@ Section "AFS Client" SecClient
    
    Call AFSLangFiles
    
-   ; Do SYSTEM32 DIR
-   SetOutPath "$SYSDIR"
-   File "${AFS_CLIENT_BUILDDIR}\afs_cpa.cpl"
-!IFDEF DEBUG
-   ;File "${SDK_DIR}\REDIST\msvcrtd.dll"
-   ;File "${SDK_DIR}\REDIST\msvcrtd.pdb"
-!IFDEF CL_1310
-   !insertmacro UpgradeDLL "${AFS_WININSTALL_DIR}\mfc71d.dll" "$SYSDIR\mfc71d.dll"
-!ELSE
-!IFDEF CL_1300
-   !insertmacro UpgradeDLL "${AFS_WININSTALL_DIR}\mfc70d.dll" "$SYSDIR\mfc70d.dll"
-!ELSE
-   !insertmacro UpgradeDLL "${AFS_WININSTALL_DIR}\mfc42d.dll" "$SYSDIR\mfc42d.dll"
-!ENDIF
-!ENDIF
-!ELSE
-   ;File "${SDK_DIR}\REDIST\msvcrt.dll"
-!IFDEF CL_1310
-   !insertmacro UpgradeDLL "${AFS_WININSTALL_DIR}\mfc71.dll" "$SYSDIR\mfc71.dll"
-!ELSE
-!IFDEF CL_1300
-   !insertmacro UpgradeDLL "${AFS_WININSTALL_DIR}\mfc70.dll" "$SYSDIR\mfc70.dll"
-!ELSE
-   !insertmacro UpgradeDLL "${AFS_WININSTALL_DIR}\mfc42.dll" "$SYSDIR\mfc42.dll"
-!ENDIF
-!ENDIF
-!ENDIF
+
    
   ; Do WINDOWSDIR components
   ; Get AFS CellServDB file
   Call afs.GetCellServDB
-  ;Call afs.InstallMSLoopback
-  
+!ifdef INSTALL_LOOPBACK
+  Call afs.InstallMSLoopback
+!endif
+
 !ifdef INSTALL_KFW
   ; Include Kerberos for Windows files in the installer...
   SetOutPath "$INSTDIR\kfw\bin\"
@@ -680,7 +684,7 @@ skipremove:
   ReadINIStr $R0 $1 "Field 2" "State"
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "Cell" $R0
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "ShowTrayIcon" 1
-  WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "SecurityLevel" 1  
+  ;WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "SecurityLevel" 1  
   SetRebootFlag true
   
   WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -692,6 +696,15 @@ SectionEnd
 Section "AFS Server" SecServer
 
   SetShellVarContext all
+  ; Stop any running services or we can't replace the files
+  ; Stop the running processes
+  ;GetTempFileName $R0
+  ;File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"   ; Might not have the MSVCR71.DLL file to run
+  ;nsExec::Exec '$R0 afscreds.exe'
+  ;nsExec::Exec '$R0 krbcc32s.exe'
+
+  nsExec::Exec "net stop TransarcAFSDaemon"
+  nsExec::Exec "net stop TransarcAFSServer"
 
   CreateDirectory "$INSTDIR\Server\usr\afs\etc"
   CreateDirectory "$INSTDIR\Server\usr\afs\local"
@@ -1046,22 +1059,31 @@ Function .onInit
    Abort
    
 contInstall:
+   ; Our logic should be like this.
+   ;     1) If no AFS components are installed, we do a clean install with default options. (Client/Docs)
+   ;     2) If existing modules are installed, we keep them selected
+   ;     3) If it is an upgrade, we set the text accordingly, else we mark it as a re-install
+   ;  TODO: Downgrade?
+   Call IsAnyAFSInstalled
+   Pop $R0
+   StrCmp $R0 "0" DefaultOptions
+   
    Call ShouldClientInstall
    Pop $R2
    
    StrCmp $R2 "0" NoClient
    StrCmp $R2 "2" UpgradeClient
+   StrCmp $R3 "3" DowngradeClient
    
-	StrCpy $1 ${secClient} ; Gotta remember which section we are at now...
 	SectionGetFlags ${secClient} $0
 	IntOp $0 $0 | ${SF_SELECTED}
 	SectionSetFlags ${secClient} $0
     ;# !insertmacro SelectSection ${secClient}
    goto skipClient
 NoClient:
-	StrCpy $1 ${secClient} ; Gotta remember which section we are at now...
+	;StrCpy $1 ${secClient} ; Gotta remember which section we are at now...
 	SectionGetFlags ${secClient} $0
-	IntOp $0 $0 | ${SECTION_OFF}
+	IntOp $0 $0 & ${SECTION_OFF}
 	SectionSetFlags ${secClient} $0
    goto skipClient
 UpgradeClient:
@@ -1070,38 +1092,107 @@ UpgradeClient:
 	SectionSetFlags ${secClient} $0
    SectionSetText ${secClient} $(UPGRADE_CLIENT)
    goto skipClient
+DowngradeClient:
+	SectionGetFlags ${secClient} $0
+	IntOp $0 $0 | ${SF_SELECTED}
+	SectionSetFlags ${secClient} $0
+   SectionSetText ${secClient} $(REINSTALL_CLIENT)
+   goto skipClient
 
    
 skipClient:   
    
-   
-   Call IsServerInstalled
+   Call ShouldServerInstall
    Pop $R2
    StrCmp $R2 "0" NoServer
+   StrCmp $R2 "2" UpgradeServer
+   StrCmp $R2 "3" DowngradeServer
    
 	SectionGetFlags ${secServer} $0
-	IntOp $0 $0 & ${SF_SELECTED}
+	IntOp $0 $0 | ${SF_SELECTED}
 	SectionSetFlags ${secServer} $0
 	;# !insertmacro UnselectSection ${secServer}
    goto skipServer
 
+UpgradeServer:
+   SectionGetFlags ${secServer} $0
+   IntOp $0 $0 | ${SF_SELECTED}
+   SectionSetFlags ${secServer} $0
+   SectionSetText ${secServer} $(UPGRADE_SERVER)
+   goto skipServer
+
+DowngradeServer:
+   SectionGetFlags ${secServer} $0
+   IntOp $0 $0 | ${SF_SELECTED}
+   SectionSetFlags ${secServer} $0
+   SectionSetText ${secServer} $(REINSTALL_SERVER)
+   goto skipServer
+   
 NoServer:
 	SectionGetFlags ${secServer} $0
 	IntOp $0 $0 & ${SECTION_OFF}
 	SectionSetFlags ${secServer} $0
 	;# !insertmacro UnselectSection ${secServer}
+   goto skipServer
    
-skipServer:   
+skipServer:
+   ; Check control center
+   Call IsControlInstalled
+   Pop $R2
+   StrCmp $R2 "0" NoControl
+
+	SectionGetFlags ${secControl} $0
+	IntOp $0 $0 | ${SF_SELECTED}
+	SectionSetFlags ${secControl} $0
+   goto CheckDocs
+   
+NoControl:   
 	SectionGetFlags ${secControl} $0
 	IntOp $0 $0 & ${SECTION_OFF}
 	SectionSetFlags ${secControl} $0
 	;# !insertmacro UnselectSection ${secControl}
 
+CheckDocs:
+   ; Check Documentation
+   Call IsDocumentationInstalled
+   Pop $R2
+   StrCmp $R2 "0" NoDocs
+	SectionGetFlags ${secDocs} $0
+	IntOp $0 $0 | ${SF_SELECTED}
+	SectionSetFlags ${secDocs} $0
+   goto end
+   
+NoDocs:
+	SectionGetFlags ${secDocs} $0
+	IntOp $0 $0 & ${SECTION_OFF}
+	SectionSetFlags ${secDocs} $0
+   goto end
+   
+DefaultOptions:
+   ; Client Selected
+	SectionGetFlags ${secClient} $0
+	IntOp $0 $0 | ${SF_SELECTED}
+	SectionSetFlags ${secClient} $0
+
+   ; Server NOT selected
+	SectionGetFlags ${secServer} $0
+	IntOp $0 $0 & ${SECTION_OFF}
+	SectionSetFlags ${secServer} $0
+   
+   ; Control Center NOT selected
+	SectionGetFlags ${secControl} $0
+	IntOp $0 $0 & ${SECTION_OFF}
+	SectionSetFlags ${secControl} $0
+	;# !insertmacro UnselectSection ${secControl}
+
+   ; Documentation selected
 	SectionGetFlags ${secDocs} $0
 	IntOp $0 $0 | ${SF_SELECTED}
 	SectionSetFlags ${secDocs} $0
 	;# !insertmacro UnselectSection ${secDocs}
+   goto end
 
+end:
 	Pop $0
   
   
@@ -1159,6 +1250,9 @@ Section "Uninstall"
   nsExec::Exec "net stop TransarcAFSDaemon"
   nsExec::Exec "net stop TransarcAFSServer"
   nsExec::Exec '$R0 u TransarcAFSDaemon'
+  ; After we stop the service, but before we delete it, we have to remove the volume data
+  ; This is because the storage locations are in the registry under the service key.
+  ; Call un.RemoveAFSVolumes
   nsExec::Exec '$R0 u TransarcAFSServer'
   Delete $R0
   
@@ -1256,13 +1350,13 @@ Section "Uninstall"
   Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\fms.exe"
   Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\kaserver.exe"
   Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\ptserver.exe"
-  Delete "$INSTDIR\Server\usr\afs\bin\salvager.exe"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\salvager.exe"
   Delete "$INSTDIR\Server\usr\afs\bin\ServerUninst.dll"
-  Delete "$INSTDIR\Server\usr\afs\bin\upclient.exe"
-  Delete "$INSTDIR\Server\usr\afs\bin\upserver.exe"
-  Delete "$INSTDIR\Server\usr\afs\bin\vlserver.exe"
-  Delete "$INSTDIR\Server\usr\afs\bin\volinfo.exe"
-  Delete "$INSTDIR\Server\usr\afs\bin\volserver.exe"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\upclient.exe"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\upserver.exe"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\vlserver.exe"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\volinfo.exe"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\volserver.exe"
 
 !ifdef DEBUG
   Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\afskill.pdb"
@@ -1285,6 +1379,7 @@ Section "Uninstall"
 !endif
 
   RMDir /r "$INSTDIR\Server\usr\afs\bin"
+  RmDir /r "$INSTDIR\Server\usr\afs\etc\logs"
   RmDir /r "$INSTDIR\Server\usr\afs\etc"
   RmDir /r "$INSTDIR\Server\usr\afs\local"
   RMDIR /r "$INSTDIR\Server\usr\afs\logs"
@@ -1461,6 +1556,14 @@ startOver:
   WriteINIStr $0 "Field 2" "Flags" "DISABLED"
   WriteINIStr $0 "Field 3" "State" "1"
   
+  ; If there is an existing afsdcell.ini file, allow the user to choose it and make it default
+  IfFileExists "$WINDIR\afsdcell.ini" +1 notpresent
+  WriteINIStr $0 "Field 2" "Flags" "ENABLED"
+  WriteINIStr $0 "Field 2" "State" "1"
+  WriteINIStr $0 "Field 3" "State" "3"
+  
+  notpresent:
+  
   !insertmacro MUI_HEADER_TEXT "CellServDB Configuration" "Please choose a method for installing the CellServDB file:" 
   InstallOptions::dialog $0
   Pop $R1
@@ -1586,12 +1689,70 @@ Function GetInstalledVersion
    Push $R1
    Push $R4
    
-   ReadRegDWORD $R0 HKLM "Software\TransarcCorporation\$R2\CurrentVersion" "VersionString"
-   StrCmp $R0 "" NotTransarc
+   ReadRegStr $R0 HKLM "Software\TransarcCorporation\$R2\CurrentVersion" "VersionString"
+   StrCmp $R0 "" NotTransarc done
    
    
 NotTransarc:
-   ReadRegDWORD $R0 HKLM "${AFS_REGKEY_ROOT}\$R2\CurrentVersion" "VersionString"
+   ReadRegStr $R0 HKLM "${AFS_REGKEY_ROOT}\$R2\CurrentVersion" "VersionString"
+   StrCmp $R0 "" done
+   
+done:
+   Pop $R4
+   Pop $R1
+   Exch $R0
+FunctionEnd
+
+; Functions to get each component of the version number
+Function GetInstalledVersionMajor
+   Push $R0
+   Push $R1
+   Push $R4
+   
+   ReadRegDWORD $R0 HKLM "Software\TransarcCorporation\$R2\CurrentVersion" "MajorVersion"
+   StrCmp $R0 "" NotTransarc done
+   
+   
+NotTransarc:
+   ReadRegDWORD $R0 HKLM "${AFS_REGKEY_ROOT}\$R2\CurrentVersion" "MajorVersion"
+   StrCmp $R0 "" done
+   
+done:
+   Pop $R4
+   Pop $R1
+   Exch $R0
+FunctionEnd
+
+Function GetInstalledVersionMinor
+   Push $R0
+   Push $R1
+   Push $R4
+   
+   ReadRegDWORD $R0 HKLM "Software\TransarcCorporation\$R2\CurrentVersion" "MinorVersion"
+   StrCmp $R0 "" NotTransarc done
+   
+   
+NotTransarc:
+   ReadRegDWORD $R0 HKLM "${AFS_REGKEY_ROOT}\$R2\CurrentVersion" "MinorVersion"
+   StrCmp $R0 "" done
+   
+done:
+   Pop $R4
+   Pop $R1
+   Exch $R0
+FunctionEnd
+
+Function GetInstalledVersionPatch
+   Push $R0
+   Push $R1
+   Push $R4
+   
+   ReadRegDWORD $R0 HKLM "Software\TransarcCorporation\$R2\CurrentVersion" "PatchLevel"
+   StrCmp $R0 "" NotTransarc done
+   
+   
+NotTransarc:
+   ReadRegDWORD $R0 HKLM "${AFS_REGKEY_ROOT}\$R2\CurrentVersion" "PatchLevel"
    StrCmp $R0 "" done
    
 done:
@@ -1601,28 +1762,100 @@ done:
 FunctionEnd
 
 
+
 ;-------------------------------
 ; Check if the client should be checked for default install
 Function ShouldClientInstall
    Push $R0
-   StrCpy $R2 "Client"
+   StrCpy $R2 "AFS Client"
    Call GetInstalledVersion
    Pop $R0
    
    StrCmp $R0 "" NotInstalled
+   ; Now we see if it's an older or newer version
+
+   Call GetInstalledVersionMajor
+   Pop $R0
+   IntCmpU $R0 ${MUI_MAJORVERSION} +1 Upgrade Downgrade
+
+   Call GetInstalledVersionMinor
+   Pop $R0
+   IntCmpU $R0 ${MUI_MINORVERSION} +1 Upgrade Downgrade
    
-   StrCpy $R0 "0"
+   Call GetInstalledVersionPatch
+   Pop $R0
+   IntCmpU $R0 ${MUI_PATCHLEVEL} Reinstall Upgrade Downgrade
+   
+Reinstall:
+   StrCpy $R0 "1"
    Exch $R0
    goto end
    
+Upgrade:
+   StrCpy $R0 "2"
+   Exch $R0
+   goto end
+   
+Downgrade:
+   StrCpy $R0 "3"
+   Exch $R0
+   goto end
+   
+   
 NotInstalled:
+   StrCpy $R0 "0"
+   Exch $R0
+end:   
+FunctionEnd
+
+;-------------------------------
+; Check how the server options should be set
+Function ShouldServerInstall
+   Push $R0
+   StrCpy $R2 "AFS Server"
+   Call GetInstalledVersion
+   Pop $R0
+   
+   StrCmp $R0 "" NotInstalled
+   ; Now we see if it's an older or newer version
+
+   Call GetInstalledVersionMajor
+   Pop $R0
+   IntCmpU $R0 ${MUI_MAJORVERSION} +1 Upgrade Downgrade
+
+   Call GetInstalledVersionMinor
+   Pop $R0
+   IntCmpU $R0 ${MUI_MINORVERSION} +1 Upgrade Downgrade
+   
+   Call GetInstalledVersionPatch
+   Pop $R0
+   IntCmpU $R0 ${MUI_PATCHLEVEL} Reinstall Upgrade Downgrade
+   
+Reinstall:
    StrCpy $R0 "1"
+   Exch $R0
+   goto end
+   
+Upgrade:
+   StrCpy $R0 "2"
+   Exch $R0
+   goto end
+   
+Downgrade:
+   StrCpy $R0 "3"
+   Exch $R0
+   goto end
+   
+   
+NotInstalled:
+   StrCpy $R0 "0"
    Exch $R0
 end:   
 FunctionEnd
 
 
-; See if AFS Client is installed
+; See if AFS Server is installed
+; Returns: "1" if it is, 0 if it is not (on the stack)
 Function IsServerInstalled
    Push $R0
    StrCpy $R2 "AFS Server"
@@ -1642,7 +1875,8 @@ end:
 FunctionEnd
 
 
-; See if AFS Server is installed
+; See if AFS Client is installed
+; Returns: "1" if it is, 0 if it is not (on the stack)
 Function IsClientInstalled
    Push $R0
    StrCpy $R2 "AFS Client"
@@ -1664,6 +1898,7 @@ FunctionEnd
 
 
 ; See if AFS Documentation is installed
+; Returns: "1" if it is, 0 if it is not (on the stack)
 Function IsDocumentationInstalled
    Push $R0
    StrCpy $R2 "AFS Supplemental Documentation"
@@ -1683,10 +1918,11 @@ end:
 FunctionEnd
 
 
-; See if COntrol Center is installed
+; See if Control Center is installed
+; Returns: "1" if it is, 0 if it is not (on the stack)
 Function IsControlInstalled
    Push $R0
-   StrCpy $R2 "Control_Center"
+   StrCpy $R2 "AFS Control Center"
    Call GetInstalledVersion
    Pop $R0
    
@@ -1735,8 +1971,35 @@ FunctionEnd
 
 
 ;Check to see if any AFS component is installed
+;Returns: Value on stack: "1" if it is, "0" if it is not
 Function IsAnyAFSInstalled
-
+   Push $R0
+   Push $R1
+   Push $R2
+   Push $R3
+   Call IsClientInstalled
+   Pop $R0
+   Call IsServerInstalled
+   Pop $R1
+   Call IsControlInstalled
+   Pop $R2
+   Call IsDocumentationInstalled
+   Pop $R3
+   ; Now we must see if ANY of the $Rn values are 1
+   StrCmp $R0 "1" SomethingInstalled
+   StrCmp $R1 "1" SomethingInstalled
+   StrCmp $R2 "1" SomethingInstalled
+   StrCmp $R3 "1" SomethingInstalled
+   ;Nothing installed
+   StrCpy $R0 "0"
+   goto end
+SomethingInstalled:
+   StrCpy $R0 "1"
+end:
+   Pop $R3
+   Pop $R2
+   Pop $R1
+   Exch $R0
 FunctionEnd
 
 
@@ -2322,17 +2585,18 @@ FunctionEnd
    Pop $R1
  FunctionEnd
 
- Function afs.InstallMSLoopback
-   ;GetTempFileName $R0
-   ;File /oname=$R0 "loopback_install.dll"
-   ;nsExec::Exec "rundll32.exe $R0 doLoopBackEntry quiet"
-   ;Call GetWindowsVersion
-   ;Pop $R1
-   ;StrCmp $R1 "2000" +1 +2
-   ;nsExec::Exec "rundll32.exe $R0 disableLoopBackEntry"
-   ;Delete $R0
+!ifdef INSTALL_LOOPBACK
+Function afs.InstallMSLoopback
+   GetTempFileName $R0
+   File /oname=$R0 "loopback_install.dll"
+   nsExec::Exec "rundll32.exe $R0 doLoopBackEntry quiet"
+   Call GetWindowsVersion
+   Pop $R1
+   StrCmp $R1 "2000" +1 +2
+   nsExec::Exec "rundll32.exe $R0 disableLoopBackEntry"
+   Delete $R0
 FunctionEnd
-
+!endif
 
 
 ; GetWindowsVersion
