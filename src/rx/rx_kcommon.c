@@ -1061,7 +1061,7 @@ void rxk_Listener(void)
 #endif
 #ifdef AFS_SUN5_ENV
     AFS_GUNLOCK();
-#ifdef AFS_SUN57_ENV
+#ifdef HAVE_P_COREFILE
     if (!curproc->p_corefile)  /* newproc doesn't set it, but exit frees it */
 	curproc->p_corefile = refstr_alloc("core");
 #endif

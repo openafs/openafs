@@ -153,6 +153,7 @@ case $system in
 		MKAFS_OSTYPE=SOLARIS
                 AC_MSG_RESULT(sun4)
 		SOLARIS_UFSVFS_HAS_DQRWLOCK
+		SOLARIS_PROC_HAS_P_COREFILE
                 ;;
         *-hpux*)
 		MKAFS_OSTYPE=HPUX
