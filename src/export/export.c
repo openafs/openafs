@@ -11,7 +11,8 @@
  * export -	EXPORT kernel extension
  */
 
-#include <afs/param.h>
+/* Unsafe: conflicts with _KERNEL inclusion of headers below */
+/* #include <afs/param.h> */
 #include <afsconfig.h>
 
 RCSID("$Header$");
