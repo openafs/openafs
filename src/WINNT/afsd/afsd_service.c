@@ -11,7 +11,9 @@
 #include <afs/stds.h>
 
 #include <windows.h>
+#include <softpub.h>
 #include <psapi.h>
+#include <winerror.h>
 #include <string.h>
 #include <setjmp.h>
 #include "afsd.h"
@@ -488,6 +490,66 @@ GetVersionInfo( CHAR * filename, CHAR * szOutput, DWORD dwOutput )
     return retval;
 }
 
+BOOL VerifyTrust(CHAR * filename)
+{
+    WINTRUST_DATA fTrust;
+    WINTRUST_FILE_INFO finfo;
+    GUID trustAction = WINTRUST_ACTION_GENERIC_VERIFY_V2;
+    GUID subject = WIN_TRUST_SUBJTYPE_RAW_FILEEX;
+    wchar_t wfilename[260];
+    LONG ret;
+
+    if (filename == NULL ) 
+        return FALSE;
+
+    mbstowcs(wfilename, filename, 260);
+
+    finfo.cbStruct = sizeof(finfo);
+    finfo.pcwszFilePath= wfilename;
+    finfo.hFile = INVALID_HANDLE_VALUE;
+    finfo.pgKnownSubject = &subject;
+
+    fTrust.cbStruct = sizeof(fTrust);
+    fTrust.pPolicyCallbackData = NULL;
+    fTrust.pSIPClientData = NULL;
+    fTrust.dwUIChoice = WTD_UI_NONE;
+    fTrust.fdwRevocationChecks = WTD_REVOKE_NONE;
+    fTrust.dwUnionChoice = WTD_CHOICE_FILE;
+    fTrust.pFile = &finfo;
+    fTrust.dwStateAction = WTD_STATEACTION_IGNORE;
+    fTrust.hWVTStateData = NULL;
+    fTrust.pwszURLReference = NULL;
+    fTrust.dwProvFlags = WTD_SAFER_FLAG | WTD_REVOCATION_CHECK_NONE;
+    fTrust.dwUIContext = WTD_UICONTEXT_EXECUTE;
+    
+    ret = WinVerifyTrust(INVALID_HANDLE_VALUE, &trustAction, &fTrust);
+
+    if (ret == ERROR_SUCCESS) {
+        return TRUE;
+    } else {
+        DWORD gle = GetLastError();
+        switch (gle) {
+        case TRUST_E_PROVIDER_UNKNOWN:
+            afsi_log("VerifyTrust failed: \"Generic Verify V2\" Provider Unknown");
+            break;  
+        case TRUST_E_NOSIGNATURE:
+            afsi_log("VerifyTrust failed: Unsigned executable");
+            break;
+        case TRUST_E_EXPLICIT_DISTRUST:
+            afsi_log("VerifyTrust failed: Certificate Marked as Untrusted by the user");
+            break;
+        case TRUST_E_SUBJECT_NOT_TRUSTED:
+            afsi_log("VerifyTrust failed: File is not trusted");
+            break;
+        case CRYPT_E_SECURITY_SETTINGS:
+            afsi_log("VerifyTrust failed: local security options prevent verification");
+            break;
+        default:
+            afsi_log("VerifyTrust failed: 0x%X", GetLastError());
+        }
+        return FALSE;
+    }
+}
 
 BOOL AFSModulesVerify(void)
 {
@@ -495,6 +557,7 @@ BOOL AFSModulesVerify(void)
     CHAR afsdVersion[128];
     CHAR modVersion[128];
     CHAR checkName[1024];
+    BOOL trustVerified = FALSE;
     HMODULE hMods[1024];
     HANDLE hProcess;
     DWORD cbNeeded;
@@ -508,6 +571,8 @@ BOOL AFSModulesVerify(void)
         return FALSE;
 
     afsi_log("%s version %s", filename, afsdVersion);
+
+    trustVerified = VerifyTrust(filename);
 
     // Get a list of all the modules in this process.
     hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
@@ -541,6 +606,10 @@ BOOL AFSModulesVerify(void)
                     afsi_log("%s version %s", szModName, modVersion);
                     if (strcmp(afsdVersion,modVersion)) {
                         afsi_log("Version mismatch: %s", szModName);
+                        success = FALSE;
+                    }
+                    if ( trustVerified && !VerifyTrust(szModName) ) {
+                        afsi_log("Signature Verification failed: %s", szModName);
                         success = FALSE;
                     }
                 }
