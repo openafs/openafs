@@ -44,6 +44,7 @@ extern afs_rwlock_t afs_xcbhash;
 extern afs_int32 afs_mariner, afs_marinerHost;
 extern struct srvAddr *afs_srvAddrs[NSERVERS];
 extern int afs_resourceinit_flag;
+extern afs_int32 cryptall;
 
 static int PBogus(), PSetAcl(), PGetAcl(), PSetTokens(), PGetVolumeStatus();
 static int PSetVolumeStatus(), PFlush(), PNewStatMount(), PGetTokens(), PUnlog();
@@ -3132,6 +3133,46 @@ static cred_t *crget(void)
     return cr;
 }
 #endif
+
+static int
+PGetRxkcrypt(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
+struct vcache *avc;
+int afun;
+struct vrequest *areq;
+char *ain, *aout;
+afs_int32 ainSize;
+afs_int32 *aoutSize;
+struct AFS_UCRED *acred;
+{
+    bcopy((char *)&cryptall, aout, sizeof(int32));
+    *aoutSize=sizeof(afs_int32);
+    return 0;
+}
+
+static int
+PSetRxkcrypt(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
+struct vcache *avc;
+int afun;
+struct vrequest *areq;
+char *ain, *aout;
+afs_int32 ainSize;
+afs_int32 *aoutSize;
+struct AFS_UCRED *acred;
+{
+    afs_int32 tmpval;
+
+    if (!afs_osi_suser(acred))
+      return EPERM;
+    if (ainSize != sizeof(afs_int32) || ain == NULL)
+      return EINVAL;
+    bcopy(ain, (char *)&tmpval, sizeof(afs_int32));
+    /* if new mappings added later this will need to be changed */
+    if (tmpval != 0 && tmpval != 1)
+      return EINVAL;
+    cryptall = tmpval;
+    return 0;
+}
+
 /*
  * Create new credentials to correspond to a remote user with given
  * <hostaddr, uid, g0, g1>.  This allows a server running as root to
