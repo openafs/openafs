@@ -1,0 +1,43 @@
+                  OpenAFS Release Notes - Version 1.2.1
+     _________________________________________________________________
+Linux clients: Major bugfix
+All other systems: Minor updates
+     _________________________________________________________________
+
+All systems:
+- com_err implementation is now compatible with all other known
+  implementations. This should have no visible effect to OpenAFS
+  clients and servers; However, users of OpenAFS libraries will need to
+  make sure to include the appropriate headers (99% of such applications
+  will already do so) and any users of previous versions of OpenAFS 
+  compile_et or IBM/Transarc compile_et with error tables including
+  lowercase characters in their names will now have new error codes 
+  allocated. Again, most users of com_err will use some other compile_et,
+  which is included in most Kerberos distributions and virtually all other
+  com_err using packages.
+- source cleanup has been undertaken to remove unused variables. This work
+  is part of an ongoing effort.
+
+Linux:
+- All Linux versions have a bug fix to make writes of files larger than
+  the AFS client cache work in all cases while preserving fixes which
+  prevent some writes from succeeding or failing (including cases where
+  a file write to an over-quota volume is being attempted, a problem
+  affecting all OpenAFS versions since release from IBM).
+- Linux 2.2 PowerPC should install correctly again
+
+Digital UNIX:
+- vfsck will now check for and exit if a partition is mounted.
+
+Windows NT/2000:
+- AFS Configuration Wizard will not check for version >= 3.5
+- Makefiles have more complete support for "make clean"
+
+OpenBSD:
+- User processes (but not kernel module/cache manager) included but not ready
+  for general deployment.
+
+Documentation:
+- README.CVS explains how to use OpenAFS CVS
+- NEWS file updated
+
