@@ -159,8 +159,6 @@
 #define AFS_USR_SGI64_ENV	1
 #define AFS_USR_SGI65_ENV	1
 
-#include <afs/afs_sysnames.h>
-
 													       /*#define AFS_GLOBAL_SUNLOCK    1 *//* For global locking */
 
 #define	AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */
@@ -180,6 +178,8 @@
 #define AFS_HAVE_STATVFS	0	/* System doesn't support statvfs */
 
 #define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
+
+#include <afs/afs_sysnames.h>
 
 /* Extra kernel definitions (from kdefs file) */
 #ifdef KERNEL
