@@ -564,6 +564,21 @@ else
         AC_MSG_RESULT($AFS_SYSNAME)
 fi
 
+# KDUMP64 defaults to KDUMP for systems without a separate kdump64
+KDUMP64='${KDUMP}'
+KDUMP=kdump
+case $AFS_SYSNAME in
+	sgi_6?)
+		KDUMP=kdump.IP20;;
+	sun4x_5[789] | hp_ux11*)
+		KDUMP=kdump32
+		KDUMP64=kdump64;;
+	*linux*)
+		KDUMP='kdump-${LINUX_VERSION}';;
+esac
+AC_SUBST(KDUMP)
+AC_SUBST(KDUMP64)
+
 case $AFS_SYSNAME in
 	*_darwin*)
 		DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
