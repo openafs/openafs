@@ -1,3 +1,13 @@
+openafs (1.1.1-1) unstable; urgency=low
+
+  * New upstream release to fix readlink sometimes giving permission
+    denied when it shouldn't.
+  * Bring back the upstream changelog, now with change descriptions
+  * Patch to give better error messages when  copyonwrite fails in the
+    fileserver (contributed upstream)
+
+ -- Sam Hartman <hartmans@debian.org>  Fri, 20 Jul 2001 08:12:24 -0400
+
 openafs (1.1.0-1) unstable; urgency=low
 
   * New Upstream release.
