@@ -1446,6 +1446,9 @@ VolRestore(acid, atrans, aflags, cookie)
     }
     strcpy(tt->lastProcName, "Restore");
     tt->rxCallPtr = acid;
+
+    DFlushVolume(V_parentId(tt->volume)); /* Ensure dir buffers get dropped */
+
     code = RestoreVolume(acid, tt->volume, (aflags & 1), cookie);	/* last is incrementalp */
     FSYNC_askfs(tt->volid, NULL, FSYNC_RESTOREVOLUME, 0l);	/*break call backs on the
 								 * restored volume */
