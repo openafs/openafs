@@ -537,7 +537,8 @@ SDISK_SendFile(rxcall, file, length, avers)
     (*dbase->truncate) (dbase, file, 0);	/* truncate first */
     tversion.epoch = 0;		/* start off by labelling in-transit db as invalid */
     tversion.counter = 0;
-    (*dbase->setlabel) (dbase, file, &tversion);	/* setlabel does sync */
+    (*dbase->setlabel) (dbase, file, &tversion);/* setlabel does sync */
+    memcpy(&ubik_dbase->version, &tversion, sizeof(struct ubik_version));
     while (length > 0) {
 	tlen = (length > sizeof(tbuffer) ? sizeof(tbuffer) : length);
 	code = rx_Read(rxcall, tbuffer, tlen);
