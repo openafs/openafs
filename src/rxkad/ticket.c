@@ -65,6 +65,22 @@ static int assemble_athena_ticket();
    interpreting the ticket and the values of the output parameters are
    undefined. */
 
+/* This union is used to insure we allocate enough space for a key
+ * schedule even if we are linked against a library that uses OpenSSL's
+ * larger representation.  This is necessary so we don't lose if an
+ * application uses both rxkad and openssl.
+ */
+union Key_schedule_safe {
+  Key_schedule schedule;
+  struct {
+    union {
+      char cblock[8];
+      long deslong[2];
+    } ks;
+    int weak_key;
+  } openssl_schedule[16];
+};
+
 int tkt_DecodeTicket (asecret, ticketLen, key,
 		      name, inst, cell, sessionKey, host, start, end)
   char		*asecret;
@@ -79,7 +95,7 @@ int tkt_DecodeTicket (asecret, ticketLen, key,
   afs_int32		*end;
 {   char	   clear_ticket[MAXKTCTICKETLEN];
     char	  *ticket;
-    Key_schedule   schedule;
+    union Key_schedule_safe   schedule;
     /* unsigned char  flags; */
     int		   code;
 
@@ -88,10 +104,10 @@ int tkt_DecodeTicket (asecret, ticketLen, key,
 	((ticketLen) % 8 != 0))		/* enc. part must be (0 mod 8) bytes */
 	return RXKADBADTICKET;
 
-    if (key_sched (key, schedule)) return RXKADBADKEY;
+    if (key_sched (key, schedule.schedule)) return RXKADBADKEY;
 
     ticket = clear_ticket;
-    pcbc_encrypt (asecret, ticket, ticketLen, schedule, key, DECRYPT);
+    pcbc_encrypt (asecret, ticket, ticketLen, schedule.schedule, key, DECRYPT);
 
     /* flags = *ticket; */		/* get the first byte: the flags */
 #if 0
@@ -141,7 +157,7 @@ int tkt_MakeTicket (ticket, ticketLen, key, name, inst, cell,
   char		*sname;			/* server */
   char		*sinst;
 {   int		 code;
-    Key_schedule schedule;
+    union Key_schedule_safe schedule;
 
     *ticketLen = 0;			/* in case we return early */
     code = assemble_athena_ticket (ticket, ticketLen, name, inst, cell,
@@ -150,11 +166,11 @@ int tkt_MakeTicket (ticket, ticketLen, key, name, inst, cell,
     if (code) return -1;
 
     /* encrypt ticket */
-    if (code = key_sched (key, schedule)) {
+    if (code = key_sched (key, schedule.schedule)) {
 	printf ("In tkt_MakeTicket: key_sched returned %d\n", code);
 	return RXKADBADKEY;
     }
-    pcbc_encrypt (ticket, ticket, *ticketLen, schedule, key, ENCRYPT);
+    pcbc_encrypt (ticket, ticket, *ticketLen, schedule.schedule, key, ENCRYPT);
     return 0;
 }
 
