@@ -914,6 +914,7 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 }
 
 #define SMB_SUPPORT_SEARCH_BITS        0x0001
+#define SMB_SHARE_IS_IN_DFS            0x0002
 
 long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
@@ -967,7 +968,7 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
         
     tidp = smb_FindTID(vcp, newTid, SMB_FLAG_CREATE);
 
-    if(!ipc) {
+    if (!ipc) {
         uidp = smb_FindUID(vcp, ((smb_t *)inp)->uid, 0);
 	shareFound = smb_FindShare(vcp, uidp, shareName, &sharePath);
         if (uidp)
@@ -980,7 +981,11 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
 	if (vcp->flags & SMB_VCFLAG_USENT)
         {
             int policy = smb_FindShareCSCPolicy(shareName);
-            smb_SetSMBParm(outp, 2, SMB_SUPPORT_SEARCH_BITS | (policy << 2));
+            smb_SetSMBParm(outp, 2, SMB_SUPPORT_SEARCH_BITS | 
+#ifdef DFS_SUPPORT
+                            SMB_SHARE_IS_IN_DFS |
+#endif
+                            (policy << 2));
         }
     } else {
         smb_SetSMBParm(outp, 2, 0);
@@ -990,7 +995,8 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     lock_ObtainMutex(&tidp->mx);
     tidp->userp = userp;
     tidp->pathname = sharePath;
-    if(ipc) tidp->flags |= SMB_TIDFLAG_IPC;
+    if (ipc) 
+        tidp->flags |= SMB_TIDFLAG_IPC;
     lock_ReleaseMutex(&tidp->mx);
     smb_ReleaseTID(tidp);
 
@@ -998,6 +1004,7 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     ((smb_t *)inp)->tid = newTid;
     tp = smb_GetSMBData(outp, NULL);
     if (!ipc) {
+        /* XXX - why is this a drive letter? - jaltman */
         *tp++ = 'A';
         *tp++ = ':';
         *tp++ = 0;
@@ -1135,7 +1142,7 @@ void smb_SendTran2Error(smb_vc_t *vcp, smb_tran2Packet_t *t2p,
 
     /* We can handle long names */
     if (vcp->flags & SMB_VCFLAG_USENT)
-        smbp->flg2 |= 0x40;	/* IS_LONG_NAME */
+        smbp->flg2 |= SMB_FLAGS2_IS_LONG_NAME;
         
     /* now copy important fields from the tran 2 packet */
     smbp->com = t2p->com;
@@ -1149,7 +1156,7 @@ void smb_SendTran2Error(smb_vc_t *vcp, smb_tran2Packet_t *t2p,
         smbp->reh = (unsigned char) ((NTStatus >> 8) & 0xff);
         smbp->errLow = (unsigned char) ((NTStatus >> 16) & 0xff);
         smbp->errHigh = (unsigned char) ((NTStatus >> 24) & 0xff);
-        smbp->flg2 |= 0x4000;
+        smbp->flg2 |= SMB_FLAGS2_ERR_STATUS;
     }
     else {
         smbp->rcls = errClass;
@@ -1175,7 +1182,7 @@ void smb_SendTran2Packet(smb_vc_t *vcp, smb_tran2Packet_t *t2p, smb_packet_t *tp
 
     /* We can handle long names */
     if (vcp->flags & SMB_VCFLAG_USENT)
-        smbp->flg2 |= 0x40;	/* IS_LONG_NAME */
+        smbp->flg2 |= SMB_FLAGS2_IS_LONG_NAME;
 
     /* now copy important fields from the tran 2 packet */
     smbp->com = t2p->com;
@@ -1600,9 +1607,9 @@ long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
 
     if (infoLevel == 0)
         totalData = sizeof(smb_rap_share_info_0_t);
-    else if(infoLevel == 1)
+    else if(infoLevel == SMB_INFO_STANDARD)
         totalData = sizeof(smb_rap_share_info_1_t) + 1; /* + empty string */
-    else if(infoLevel == 2)
+    else if(infoLevel == SMB_INFO_QUERY_EA_SIZE)
         totalData = sizeof(smb_rap_share_info_2_t) + 2; /* + two empty strings */
     else
         return CM_ERROR_INVAL;
@@ -1652,7 +1659,7 @@ long smb_ReceiveRAPNetShareGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pack
         smb_rap_share_info_0_t * info = (smb_rap_share_info_0_t *) outp->datap;
         strncpy(info->shi0_netname, shareName, sizeof(info->shi0_netname)-1);
         info->shi0_netname[sizeof(info->shi0_netname)-1] = 0;
-    } else if(infoLevel == 1) {
+    } else if(infoLevel == SMB_INFO_STANDARD) {
         smb_rap_share_info_1_t * info = (smb_rap_share_info_1_t *) outp->datap;
         strncpy(info->shi1_netname, shareName, sizeof(info->shi1_netname)-1);
         info->shi1_netname[sizeof(info->shi1_netname)-1] = 0;
@@ -1826,7 +1833,7 @@ long smb_ReceiveRAPNetServerGetInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_pac
         info0 = (smb_rap_server_info_0_t *) outp->datap;
         cstrp = (char *) (info0 + 1);
         strcpy(info0->sv0_name, "AFS");
-    } else { /* infoLevel == 1 */
+    } else { /* infoLevel == SMB_INFO_STANDARD */
         info1 = (smb_rap_server_info_1_t *) outp->datap;
         cstrp = (char *) (info1 + 1);
         strcpy(info1->sv1_name, "AFS");
@@ -2348,6 +2355,8 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
     case 0x103: responseSize = sizeof(qi.u.FSsizeInfo); break;
     case 0x104: responseSize = sizeof(qi.u.FSdeviceInfo); break;
     case 0x105: responseSize = sizeof(qi.u.FSattributeInfo); break;
+    case 0x200: /* CIFS Unix Info */
+    case 0x301: /* Mac FS Info */
     default: return CM_ERROR_INVAL;
     }
 
@@ -2520,13 +2529,20 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     cm_InitReq(&req);
 
     infoLevel = p->parmsp[0];
-    if (infoLevel == 6) nbytesRequired = 0;
-    else if (infoLevel == 1) nbytesRequired = 22;
-    else if (infoLevel == 2) nbytesRequired = 26;
-    else if (infoLevel == 0x101) nbytesRequired = 40;
-    else if (infoLevel == 0x102) nbytesRequired = 24;
-    else if (infoLevel == 0x103) nbytesRequired = 4;
-    else if (infoLevel == 0x108) nbytesRequired = 30;
+    if (infoLevel == SMB_INFO_IS_NAME_VALID) 
+        nbytesRequired = 0;
+    else if (infoLevel == SMB_INFO_STANDARD) 
+        nbytesRequired = 22;
+    else if (infoLevel == SMB_INFO_QUERY_EA_SIZE) 
+        nbytesRequired = 26;
+    else if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) 
+        nbytesRequired = 40;
+    else if (infoLevel == SMB_QUERY_FILE_STANDARD_INFO) 
+        nbytesRequired = 24;
+    else if (infoLevel == SMB_QUERY_FILE_EA_INFO) 
+        nbytesRequired = 4;
+    else if (infoLevel == SMB_QUERY_FILE_ALT_NAME_INFO) 
+        nbytesRequired = 30;
     else {
         osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
@@ -2548,7 +2564,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
      * the syntax, so we just OK things now.  In particular, we're *not*
      * being asked to verify anything about the state of any parent dirs.
      */
-    if (infoLevel == 6) {
+    if (infoLevel == SMB_INFO_IS_NAME_VALID) {
         smb_SendTran2Packet(vcp, outp, opx);
         smb_FreeTran2Packet(outp);
         return 0;
@@ -2583,7 +2599,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
      * yet been evaluated and for directories that haven't yet been
      * fetched.
      */
-    if (infoLevel == 0x101) {
+    if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) {
         spacep = cm_GetSpace();
         smb_StripLastComponent(spacep->data, &lastComp,
                                 (char *)(&p->parmsp[3]));
@@ -2659,7 +2675,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
         goto done;
     }
-    if (infoLevel == 1 || infoLevel == 2) {
+    if (infoLevel == SMB_INFO_STANDARD || infoLevel == SMB_INFO_QUERY_EA_SIZE) {
         smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
         *((u_long *)op) = dosTime; op += 4;	/* creation time */
         *((u_long *)op) = dosTime; op += 4;	/* access time */
@@ -2669,7 +2685,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         attributes = smb_Attributes(scp);
         *((u_short *)op) = attributes; op += 2;	/* attributes */
     }
-    else if (infoLevel == 0x101) {
+    else if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) {
         smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
         *((FILETIME *)op) = ft; op += 8;	/* creation time */
         *((FILETIME *)op) = ft; op += 8;	/* last access time */
@@ -2679,7 +2695,7 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         *((u_long *)op) = extAttributes; op += 4; /* extended attribs */
         *((u_long *)op) = 0; op += 4;	/* don't know what this is */
     }
-    else if (infoLevel == 0x102) {
+    else if (infoLevel == SMB_QUERY_FILE_STANDARD_INFO) {
         *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* alloc size */
         *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* EOF */
         *((u_long *)op) = scp->linkCount; op += 4;
@@ -2688,12 +2704,12 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         *op++ = (scp->fileType == CM_SCACHETYPE_DIRECTORY ? 1 : 0);
         *op++ = 0;
     }
-    else if (infoLevel == 0x103) {
+    else if (infoLevel == SMB_QUERY_FILE_EA_INFO) {
         memset(op, 0, 4); op += 4;	/* EA size */
     }
 
     /* now, if we are being asked about extended attrs, return a 0 size */
-    if (infoLevel == 2) {
+    if (infoLevel == SMB_INFO_QUERY_EA_SIZE) {
         *((u_long *)op) = 0; op += 4;
     }
 
@@ -2744,10 +2760,14 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     }
 
     infoLevel = p->parmsp[1];
-    if (infoLevel == 0x101) nbytesRequired = 40;
-    else if (infoLevel == 0x102) nbytesRequired = 24;
-    else if (infoLevel == 0x103) nbytesRequired = 4;
-    else if (infoLevel == 0x104) nbytesRequired = 6;
+    if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) 
+        nbytesRequired = 40;
+    else if (infoLevel == SMB_QUERY_FILE_STANDARD_INFO) 
+        nbytesRequired = 24;
+    else if (infoLevel == SMB_QUERY_FILE_EA_INFO)
+        nbytesRequired = 4;
+    else if (infoLevel == SMB_QUERY_FILE_NAME_INFO) 
+        nbytesRequired = 6;
     else {
         osi_Log2(smb_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
                   p->opcode, infoLevel);
@@ -2783,7 +2803,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
      * Marshall the output data.
      */
     op = outp->datap;
-    if (infoLevel == 0x101) {
+    if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) {
         smb_LargeSearchTimeFromUnixTime(&ft, scp->clientModTime);
         *((FILETIME *)op) = ft; op += 8;	/* creation time */
         *((FILETIME *)op) = ft; op += 8;	/* last access time */
@@ -2793,7 +2813,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         *((u_long *)op) = attributes; op += 4;
         *((u_long *)op) = 0; op += 4;
     }
-    else if (infoLevel == 0x102) {
+    else if (infoLevel == SMB_QUERY_FILE_STANDARD_INFO) {
         *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* alloc size */
         *((LARGE_INTEGER *)op) = scp->length; op += 8;	/* EOF */
         *((u_long *)op) = scp->linkCount; op += 4;
@@ -2802,10 +2822,10 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         *op++ = 0;
         *op++ = 0;
     }
-    else if (infoLevel == 0x103) {
+    else if (infoLevel == SMB_QUERY_FILE_EA_INFO) {
         *((u_long *)op) = 0; op += 4;
     }
-    else if (infoLevel == 0x104) {
+    else if (infoLevel == SMB_QUERY_FILE_NAME_INFO) {
         unsigned long len;
         char *name;
 
@@ -2864,12 +2884,12 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         return 0;
     }
 
-    if (infoLevel == 0x102 && !(fidp->flags & SMB_FID_OPENDELETE)) {
+    if (infoLevel == SMB_QUERY_FILE_STANDARD_INFO && !(fidp->flags & SMB_FID_OPENDELETE)) {
         smb_SendTran2Error(vcp, p, op, CM_ERROR_NOACCESS);
         smb_ReleaseFID(fidp);
         return 0;
     }
-    if ((infoLevel == 0x103 || infoLevel == 0x104)
+    if ((infoLevel == SMB_QUERY_FILE_EA_INFO || infoLevel == SMB_QUERY_FILE_NAME_INFO)
          && !(fidp->flags & SMB_FID_OPENWRITE)) {
         smb_SendTran2Error(vcp, p, op, CM_ERROR_NOACCESS);
         smb_ReleaseFID(fidp);
@@ -2892,7 +2912,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 
     scp = fidp->scp;
 
-    if (infoLevel == 0x101) {
+    if (infoLevel == SMB_QUERY_FILE_BASIC_INFO) {
         FILETIME lastMod;
         unsigned int attribute;
         cm_attr_t attr;
@@ -2948,7 +2968,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         else
             code = 0;
     }               
-    else if (infoLevel == 0x103 || infoLevel == 0x104) {
+    else if (infoLevel == SMB_QUERY_FILE_EA_INFO || infoLevel == SMB_QUERY_FILE_NAME_INFO) {
         LARGE_INTEGER size = *((LARGE_INTEGER *)(p->datap));
         cm_attr_t attr;
 
@@ -2957,7 +2977,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
         attr.length.HighPart = size.HighPart;
         code = cm_SetAttr(scp, &attr, userp, &req);
     }       
-    else if (infoLevel == 0x102) {
+    else if (infoLevel == SMB_QUERY_FILE_STANDARD_INFO) {
         if (*((char *)(p->datap))) {
             code = cm_CheckNTDelete(fidp->NTopen_dscp, scp, userp,
                                      &req);
@@ -3027,6 +3047,16 @@ smb_ReceiveTran2SessionSetup(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
 long 
 smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
+    /* This is a UNICODE only request (bit15 of Flags2) */
+    /* The TID must be IPC$ */
+
+    /* The documentation for the Flags response field is contradictory */
+
+    /* Use Version 1 Referral Element Format */
+    /* ServerType = 0; indicates the next server should be queried for the file */
+    /* ReferralFlags = 0x01; PathConsumed characters should be stripped */
+    /* Node = UnicodeString of UNC path of the next share name */
+
     osi_Log0(smb_logp,"ReceiveTran2GetDFSReferral - NOT_SUPPORTED");
     return CM_ERROR_BADOP;
 }
@@ -3034,6 +3064,15 @@ smb_ReceiveTran2GetDFSReferral(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 long 
 smb_ReceiveTran2ReportDFSInconsistency(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
+    /* This is a UNICODE only request (bit15 of Flags2) */
+
+    /* There is nothing we can do about this operation.  The client is going to
+     * tell us that there is a Version 1 Referral Element for which there is a DFS Error.
+     * Unfortunately, there is really nothing we can do about it other then log it 
+     * somewhere.  Even then I don't think there is anything for us to do.
+     * So let's return an error value.
+     */
+
     osi_Log0(smb_logp,"ReceiveTran2ReportDFSInconsistency - NOT_SUPPORTED");
     return CM_ERROR_BADOP;
 }
@@ -3893,7 +3932,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
         /* Need 8.3 name? */
         NeedShortName = 0;
-        if (infoLevel == 0x104
+        if (infoLevel == SMB_QUERY_FILE_NAME_INFO
              && dep->fid.vnode != 0
              && !cm_Is8Dot3(dep->name)) {
             cm_Gen8Dot3Name(dep, shortName, &shortNameEnd);
@@ -3933,12 +3972,12 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
             /* standard dir entry stuff */
             if (infoLevel < 0x101)
                 ohbytes = 23;	/* pre-NT */
-            else if (infoLevel == 0x103)
+            else if (infoLevel == SMB_QUERY_FILE_EA_INFO)
                 ohbytes = 12;	/* NT names only */
             else
                 ohbytes = 64;	/* NT */
 
-            if (infoLevel == 0x104)
+            if (infoLevel == SMB_QUERY_FILE_NAME_INFO)
                 ohbytes += 26;	/* Short name & length */
 
             if (searchFlags & 4) {
@@ -3975,7 +4014,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
             if (infoLevel <= 0x101)
                 *(origOp + ohbytes - 1) = (unsigned char) onbytes;
-            else if (infoLevel == 0x103)
+            else if (infoLevel == SMB_QUERY_FILE_EA_INFO)
                 *((u_long *)(op + 8)) = onbytes;
             else
                 *((u_long *)(op + 60)) = onbytes;
@@ -3984,7 +4023,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
                 CharToOem(origOp+ohbytes, origOp+ohbytes);
 
             /* Short name if requested and needed */
-            if (infoLevel == 0x104) {
+            if (infoLevel == SMB_QUERY_FILE_NAME_INFO) {
                 if (NeedShortName) {
                     strcpy(op + 70, shortName);
                     if (smb_StoreAnsiFilenames)
@@ -6084,7 +6123,7 @@ long smb_ReceiveNTTransact(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 
     /* We can handle long names */
     if (vcp->flags & SMB_VCFLAG_USENT)
-        ((smb_t *)outp)->flg2 |= 0x40;	/* IS_LONG_NAME */
+        ((smb_t *)outp)->flg2 |= SMB_FLAGS2_IS_LONG_NAME;
         
     switch (function) {
     case 6: 
@@ -6275,7 +6314,7 @@ void smb_NotifyChange(DWORD action, DWORD notifyFilter,
             ((smb_t *) watch)->errLow = 0;
             ((smb_t *) watch)->errHigh = 0;
             /* Set NT Status codes flag */
-            ((smb_t *) watch)->flg2 |= 0x4000;
+            ((smb_t *) watch)->flg2 |= SMB_FLAGS2_ERR_STATUS;
         }
 
         smb_SendPacket(vcp, watch);
@@ -6344,7 +6383,7 @@ long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
             ((smb_t *)watch)->reh = 0x1;
             ((smb_t *)watch)->errLow = 0;
             ((smb_t *)watch)->errHigh = 0xC0;
-            ((smb_t *)watch)->flg2 |= 0x4000;
+            ((smb_t *)watch)->flg2 |= SMB_FLAGS2_ERR_STATUS;
             smb_SendPacket(vcp, watch);
             if (watch->vcp)
                 smb_ReleaseVC(watch->vcp);

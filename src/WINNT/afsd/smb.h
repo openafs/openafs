@@ -35,6 +35,41 @@ typedef struct smb {
     unsigned char vdata[1];
 } smb_t;
 
+/* flg2 values */
+
+#define SMB_FLAGS2_KNOWS_LONG_NAMES        0x0001
+#define SMB_FLAGS2_KNOWS_EAS               0x0002
+#define SMB_FLAGS2_SECURITY_SIGNATURE      0x0004
+#define SMB_FLAGS2_RESERVED1               0x0008
+#define SMB_FLAGS2_IS_LONG_NAME            0x0040
+#define SMB_FLAGS2_EXT_SEC                 0x0800
+#define SMB_FLAGS2_DFS                     0x1000
+#define SMB_FLAGS2_PAGING_IO               0x2000
+#define SMB_FLAGS2_ERR_STATUS              0x4000
+#define SMB_FLAGS2_UNICODE                 0x8000
+
+/* Information Levels */
+#define SMB_INFO_STANDARD               1
+#define SMB_INFO_QUERY_EA_SIZE          2
+#define SMB_INFO_QUERY_EAS_FROM_LIST    3
+#define SMB_INFO_QUERY_ALL_EAS          4
+#define SMB_INFO_IS_NAME_VALID          6
+
+#define SMB_QUERY_FILE_BASIC_INFO       0x101
+#define SMB_QUERY_FILE_STANDARD_INFO    0x102
+#define SMB_QUERY_FILE_EA_INFO          0x103
+#define SMB_QUERY_FILE_NAME_INFO        0x104
+#define SMB_QUERY_FILE_ALL_INFO         0x107
+#define SMB_QUERY_FILE_ALT_NAME_INFO    0x108
+#define SMB_QUERY_FILE_STREAM_INFO      0x109
+#define SMB_QUERY_FILE_COMPRESSION_INFO 0x10B
+#define SMB_QUERY_FILE_UNIX_BASIC       0x200
+#define SMB_QUERY_FILE_UNIX_LINK        0x201
+
+#define SMB_SET_FILE_UNIX_BASIC         0x200
+#define SMB_SET_FILE_UNIX_LINK          0x201
+#define SMB_SET_FILE_UNIX_HLINK         0x203
+
 /* more defines */
 #define SMB_NOPCODES		256	/* # of opcodes in the dispatch table */
 
@@ -59,20 +94,20 @@ typedef struct smb {
 #define NEGOTIATE_SECURITY_SIGNATURES_REQUIRED      0x08
 
 /* Capabilities */
-#define NTNEGOTIATE_CAPABILITY_RAWMODE				0x00000001L
-#define NTNEGOTIATE_CAPABILITY_MPXMODE				0x00000002L
-#define NTNEGOTIATE_CAPABILITY_UNICODE				0x00000004L
-#define NTNEGOTIATE_CAPABILITY_LARGEFILES			0x00000008L
-#define NTNEGOTIATE_CAPABILITY_NTSMB				0x00000010L
-#define NTNEGOTIATE_CAPABILITY_RPCAPI				0x00000020L
-#define NTNEGOTIATE_CAPABILITY_NTSTATUS				0x00000040L
-#define NTNEGOTIATE_CAPABILITY_LEVEL_II_OPLOCKS		0x00000080L
+#define NTNEGOTIATE_CAPABILITY_RAWMODE			0x00000001L
+#define NTNEGOTIATE_CAPABILITY_MPXMODE			0x00000002L
+#define NTNEGOTIATE_CAPABILITY_UNICODE			0x00000004L
+#define NTNEGOTIATE_CAPABILITY_LARGEFILES		0x00000008L
+#define NTNEGOTIATE_CAPABILITY_NTSMB			0x00000010L
+#define NTNEGOTIATE_CAPABILITY_RPCAPI			0x00000020L
+#define NTNEGOTIATE_CAPABILITY_NTSTATUS			0x00000040L
+#define NTNEGOTIATE_CAPABILITY_LEVEL_II_OPLOCKS	        0x00000080L
 #define NTNEGOTIATE_CAPABILITY_LOCK_AND_READ		0x00000100L
-#define NTNEGOTIATE_CAPABILITY_NTFIND				0x00000200L
-#define NTNEGOTIATE_CAPABILITY_DFS					0x00001000L
+#define NTNEGOTIATE_CAPABILITY_NTFIND			0x00000200L
+#define NTNEGOTIATE_CAPABILITY_DFS			0x00001000L
 #define NTNEGOTIATE_CAPABILITY_NT_INFO_PASSTHRU		0x00002000L
 #define NTNEGOTIATE_CAPABILITY_BULK_TRANSFER		0x20000000L
-#define NTNEGOTIATE_CAPABILITY_COMPRESSED			0x40000000L
+#define NTNEGOTIATE_CAPABILITY_COMPRESSED		0x40000000L
 #define NTNEGOTIATE_CAPABILITY_EXTENDED_SECURITY	0x80000000L
 
 /* a packet structure for receiving SMB messages; locked by smb_globalLock.
@@ -296,16 +331,23 @@ typedef struct smb_fid {
 #define SMB_FID_NTOPEN			0x100	/* have dscp and pathp */
 
 /*
- * SMB file attributes
+ * SMB file attributes (32-bit)
  */
-#define SMB_ATTR_ARCHIVE  0x20
-#define SMB_ATTR_COMPRESSED 0x800 /* file or dir is compressed */
-#define SMB_ATTR_NORMAL 0x80 /* normal file. Only valid if used alone */
-#define SMB_ATTR_HIDDEN 0x2 /* hidden file for the purpose of dir listings */
-#define SMB_ATTR_READONLY 0x1
-#define SMB_ATTR_TEMPORARY 0x100
-#define SMB_ATTR_DIRECTORY 0x10
-#define SMB_ATTR_SYSTEM 0x4
+#define SMB_ATTR_READONLY       0x0001
+#define SMB_ATTR_HIDDEN         0x0002 /* hidden file for the purpose of dir listings */
+#define SMB_ATTR_SYSTEM         0x0004
+#define SMB_ATTR_VOLUMEID       0x0008 /* obsolete */
+#define SMB_ATTR_DIRECTORY      0x0010
+#define SMB_ATTR_ARCHIVE        0x0020
+#define SMB_ATTR_DEVICE         0x0040
+#define SMB_ATTR_NORMAL         0x0080 /* normal file. Only valid if used alone */
+#define SMB_ATTR_TEMPORARY      0x0100
+#define SMB_ATTR_SPARSE_FILE    0x0200
+#define SMB_ATTR_REPARSE_POINT  0x0400
+#define SMB_ATTR_COMPRESSED     0x0800 /* file or dir is compressed */
+#define SMB_ATTR_OFFLINE        0x1000
+#define SMB_ATTR_NOT_CONTENT_INDEXED 0x2000
+#define SMB_ATTR_ENCRYPTED      0x4000
 
 /* for tracking in-progress directory searches */
 typedef struct smb_dirSearch {

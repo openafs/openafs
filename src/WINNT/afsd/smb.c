@@ -2118,7 +2118,7 @@ void smb_FormatResponsePacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *op
         op->inCom = inSmbp->com;
     }
     outp->reb = 0x80;	/* SERVER_RESP */
-    outp->flg2 = 0x1;	/* KNOWS_LONG_NAMES */
+    outp->flg2 = SMB_FLAGS2_KNOWS_LONG_NAMES;
 
     /* copy fields in generic packet area */
     op->wctp = &outp->wct;
@@ -2764,8 +2764,12 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
          * 32-bit error codes *
          * and NT Find *
          * and NT SMB's *
-         * and raw mode */
+         * and raw mode 
+         * and DFS */
         caps = NTNEGOTIATE_CAPABILITY_NTSTATUS |
+#ifdef DFS_SUPPORT
+               NTNEGOTIATE_CAPABILITY_DFS |
+#endif
                NTNEGOTIATE_CAPABILITY_NTFIND |
                NTNEGOTIATE_CAPABILITY_RAWMODE |
                NTNEGOTIATE_CAPABILITY_NTSMB;
@@ -3372,7 +3376,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 
     /* We can handle long names */
     if (vcp->flags & SMB_VCFLAG_USENT)
-        ((smb_t *)outp)->flg2 |= 0x40;	/* IS_LONG_NAME */
+        ((smb_t *)outp)->flg2 |= SMB_FLAGS2_IS_LONG_NAME;
 
     /* make sure we got a whole search status */
     if (dataLength < 21) {
@@ -3738,7 +3742,7 @@ long smb_ReceiveCoreSearchDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
                 CharToOem(op, op);
 
             /* Uppercase if requested by client */
-            if ((((smb_t *)inp)->flg2 & 1) == 0)
+            if ((((smb_t *)inp)->flg2 & SMB_FLAGS2_KNOWS_LONG_NAMES) == 0)
                 _strupr(op);
 
             op += 13;
@@ -6382,7 +6386,7 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
                 smbp->reh = (unsigned char) ((NTStatus >> 8) & 0xff);
                 smbp->errLow = (unsigned char) ((NTStatus >> 16) & 0xff);
                 smbp->errHigh = (unsigned char) ((NTStatus >> 24) & 0xff);
-                smbp->flg2 |= 0x4000;
+                smbp->flg2 |= SMB_FLAGS2_ERR_STATUS;
                 break;
             }
             else {
