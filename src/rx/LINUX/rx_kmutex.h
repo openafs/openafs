@@ -39,6 +39,10 @@ typedef struct afs_kmutex {
     int owner;
 } afs_kmutex_t;
 
+#ifndef set_current_state
+#define set_current_state(X) current->state=X
+#endif
+
 #if defined(AFS_LINUX24_ENV)
 typedef wait_queue_head_t afs_kcondvar_t;
 #else
