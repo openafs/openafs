@@ -622,6 +622,8 @@ struct host *h_Alloc_r(r_con)
     /*host->hcpsfailed = 0; 	/* save cycles */
     /* h_gethostcps(host);      do this under host lock */
     host->FirstClient = 0;      
+    h_Hold_r(host);
+    h_Lock_r(host);
     h_InsertList_r(host);	/* update global host List */
 #if FS_STATS_DETAILED
     /*
@@ -1064,8 +1066,6 @@ retry:
 	}
     } else {
         host = h_Alloc_r(tcon);
-        h_Hold_r(host);
-        h_Lock_r(host);
 	h_gethostcps_r(host,FT_ApproxTime());
         if (!(host->Console&1)) {
 	    if (!identP || !interfValid) {
