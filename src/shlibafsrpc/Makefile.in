@@ -90,6 +90,8 @@ RXKADOBJS =\
 	ticket.o \
 	ticket5.o \
 	crc.o \
+	md4.o \
+	md5.o \
 	fcrypt.o \
 	crypt_conn.o
 
@@ -199,6 +201,12 @@ ticket5.o: ${RXKAD}/ticket5.c
 	${CCRULE}
 
 crc.o: ${RXKAD}/crc.c
+	${CCRULE}
+
+md4.o: ${RXKAD}/md4.c
+	${CCRULE}
+
+md5.o: ${RXKAD}/md5.c
 	${CCRULE}
 
 fcrypt.o: ${RXKAD}/fcrypt.c

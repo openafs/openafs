@@ -101,6 +101,8 @@ RCSID
 #include "v5gen.h"
 #include "v5der.c"
 #include "v5gen.c"
+#include "md4.h"
+#include "md5.h"
 
 /*
  * Principal conversion Taken from src/lib/krb5/krb/conv_princ from MIT Kerberos.  If you
@@ -384,6 +386,40 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 }
 
 static int
+verify_checksum_md4(void *data, size_t len,
+                    void *cksum, size_t cksumsz,
+                    struct ktc_encryptionKey *key)
+{
+      MD4_CTX md4;
+      unsigned char tmp[16];
+
+      MD4_Init(&md4);
+      MD4_Update(&md4, data, len);
+      MD4_Final (tmp, &md4);
+
+      if (memcmp(tmp, cksum, cksumsz) != 0)
+              return 1;
+      return 0;
+}
+
+static int
+verify_checksum_md5(void *data, size_t len,
+                    void *cksum, size_t cksumsz,
+                    struct ktc_encryptionKey *key)
+{
+      MD5_CTX md5;
+      unsigned char tmp[16];
+
+      MD5_Init(&md5);
+      MD5_Update(&md5, data, len);
+      MD5_Final (tmp, &md5);
+
+      if (memcmp(tmp, cksum, cksumsz) != 0)
+              return 1;
+      return 0;
+}
+
+static int
 verify_checksum_crc(void *data, size_t len, void *cksum, size_t cksumsz,
 		    struct ktc_encryptionKey *key)
 {
@@ -430,12 +466,12 @@ krb5_des_decrypt(struct ktc_encryptionKey *key, int etype, void *in,
     case ETYPE_DES_CBC_MD4:
 	memset(&ivec, 0, sizeof(ivec));
 	cksumsz = 16;
-	/* FIXME: cksum_func = verify_checksum_md4 */ ;
+	cksum_func = verify_checksum_md4;
 	break;
     case ETYPE_DES_CBC_MD5:
 	memset(&ivec, 0, sizeof(ivec));
 	cksumsz = 16;
-	/* FIXME: cksum_func = verify_checksum_md5 */ ;
+	cksum_func = verify_checksum_md5;
 	break;
     default:
 	abort();

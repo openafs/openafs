@@ -87,6 +87,8 @@ RXKADOBJS =\
 	ticket.o \
 	ticket5.o \
 	crc.o \
+	md4.o \
+	md5.o \
 	fcrypt.o \
 	crypt_conn.o
 
@@ -193,6 +195,12 @@ ticket5.o: ${RXKAD}/ticket5.c
 
 crc.o: ${RXKAD}/crc.c
 	${CCRULE} ${RXKAD}/crc.c
+
+md4.o: ${RXKAD}/md4.c
+	${CCRULE} ${RXKAD}/md4.c
+
+md5.o: ${RXKAD}/md5.c
+	${CCRULE} ${RXKAD}/md5.c
 
 fcrypt.o: ${TOP_OBJDIR}/src/rxkad/fcrypt.c
 	${CCRULE} ${TOP_OBJDIR}/src/rxkad/fcrypt.c
