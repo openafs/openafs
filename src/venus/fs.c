@@ -817,7 +817,7 @@ static afs_int32 GetCell(fname, cellname)
   blob.out      = cellname;
 
   code = pioctl(fname, VIOC_FILE_CELL_NAME, &blob, 1);
-  return code;
+  return code ? errno : 0;
 }
 
 /* Check if a username is valid: If it contains only digits (or a
@@ -1975,7 +1975,7 @@ static WhichCellCmd(as)
         if (errno == ENOENT)
 	   fprintf(stderr,"%s: no such cell as '%s'\n", pn, ti->data);
 	else
-	   Die(code, ti->data);
+	   Die(errno, ti->data);
 	error = 1;
 	continue;
      }
@@ -2796,7 +2796,7 @@ static afs_int32 SetCryptCmd(as)
     blob.out_size = 0;
     code = pioctl(0, VIOC_SETRXKCRYPT, &blob, 1);
     if (code)
-      Die(code, (char *) 0);
+      Die(errno, (char *) 0);
     return 0;
 }
 
@@ -2815,7 +2815,7 @@ static afs_int32 GetCryptCmd(as)
 
     code = pioctl(0, VIOC_GETRXKCRYPT, &blob, 1);
 
-    if (code) Die(code, (char *) 0);
+    if (code) Die(errno, (char *) 0);
     else {
       tp = space;
       bcopy(tp, &flag, sizeof(afs_int32));
