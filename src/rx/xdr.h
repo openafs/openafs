@@ -63,16 +63,7 @@
 #define mem_free(ptr, bsize)	free(ptr)
 #endif
 
-#ifdef	KERNEL
-#define	osi_alloc		afs_osi_Alloc
-#define	osi_free		afs_osi_Free
-
-/* keep here for now, 64 bit issues */
-extern void *afs_osi_Alloc(size_t x);
-extern void *afs_osi_Alloc_NoSleep(size_t x);
-extern void afs_osi_Free(void *x, size_t asize);
-
-#ifndef UKERNEL
+#if defined(AFS_AMD64_LINUX24_ENV) || (defined(KERNEL) && !defined(UKERNEL))
 #define xdr_void afs_xdr_void
 #define xdr_int afs_xdr_int
 #define xdr_u_int afs_xdr_u_int
@@ -98,6 +89,16 @@ extern void afs_osi_Free(void *x, size_t asize);
 #define xdr_int64 afs_xdr_int64
 #define xdr_uint64 afs_xdr_uint64
 #endif
+
+#ifdef	KERNEL
+#define	osi_alloc		afs_osi_Alloc
+#define	osi_free		afs_osi_Free
+
+/* keep here for now, 64 bit issues */
+extern void *afs_osi_Alloc(size_t x);
+extern void *afs_osi_Alloc_NoSleep(size_t x);
+extern void afs_osi_Free(void *x, size_t asize);
+
 #endif
 #ifndef major		/* ouch! */
 #include <sys/types.h>
