@@ -286,7 +286,11 @@ extern
  * cases, and also between machines apparently running the same OS
  * version.
  */
+#if defined(AFS_LINUX22_ENV)
+#define AFS_LWP_MINSTACKSIZE	(192 * 1024)
+#else
 #define AFS_LWP_MINSTACKSIZE	(48 * 1024)
+#endif
 
 /* Action to take on stack overflow. */
 #define LWP_SOQUIET	1		/* do nothing */
