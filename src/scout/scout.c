@@ -32,8 +32,9 @@ RCSID("$Header$");
 #include <stdio.h>		/*Standard I/O stuff*/
 #include <cmd.h>		/*Command interpretation library*/
 #include <fsprobe.h>		/*Interface for fsprobe module*/
+#include <errno.h>
 
-extern int errno;
+
 extern struct hostent *hostutil_GetHostByName();
 extern int gtx_InputServer();
 extern int gethostname();

@@ -28,10 +28,11 @@ RCSID("$Header$");
 #ifdef	AFS_SUN5_ENV
 #include <sys/ioccom.h>
 #endif
+#include <errno.h>
 #include <netinet/in.h>
 #include <afs/venus.h>
 #include "uss_common.h"
-extern int errno;
+
 
 
 /*

@@ -41,7 +41,7 @@ RCSID("$Header$");
 #include "gtxobjects.h"
 #include "gtxframe.h"
 
-extern int errno;               /* everybody else puts it in errno.h */
+
 
 int curses_debug;			    /*Is debugging turned on?*/
 static char mn[] = "gator_curseswindows";   /*Module name*/

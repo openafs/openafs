@@ -13,6 +13,7 @@
 RCSID("$Header$");
 
 #include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>	/* for malloc() */
 
 #ifdef AFS_LINUX24_ENV
@@ -518,7 +519,6 @@ void print_cmstats();
 #ifndef AFS_KDUMP_LIB
 extern struct cmd_syndesc *cmd_CreateSyntax();
 #endif
-extern int errno;
 int opencore();
 
 /* Note: this should agree with the definition in afs_buffer.c */

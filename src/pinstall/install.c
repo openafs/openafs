@@ -85,7 +85,6 @@ RCSID("$Header$");
 
 struct stat istat, ostat;
 
-extern int errno;
 #if !defined(AFS_DARWIN60_ENV)
 extern int sys_nerr;
 #endif

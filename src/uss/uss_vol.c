@@ -27,7 +27,7 @@ RCSID("$Header$");
 #include <sys/stat.h>
 #include <pwd.h>
 #include <netdb.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <afs/vlserver.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>
@@ -38,7 +38,6 @@ RCSID("$Header$");
 #include <afs/keys.h>
 #include <ubik.h>
 
-extern int errno;
 extern struct rx_connection *UV_Bind();
 extern  struct rx_securityClass *rxnull_NewClientSecurityObject();
 extern int line;

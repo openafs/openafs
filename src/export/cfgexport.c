@@ -15,6 +15,7 @@
 
 RCSID("$Header$");
 
+#include <errno.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -29,7 +30,6 @@ RCSID("$Header$");
 #include "sym.h"
 
 extern char    *malloc(), *optarg;
-extern int	errno;
 extern int	sysconfig(int cmd, void *arg, int len);
 
 int debug;

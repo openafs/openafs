@@ -84,7 +84,6 @@ RCSID("$Header$");
 int icount=0, iarraysize=0, *iarray;
 
 char *rawname(),  *unrawname(), *vol_DevName(), *blockcheck();
-extern int errno;
 #define ROOTINODE	2	
 int force = 0,  verbose = 0,  unconv = 0;
 

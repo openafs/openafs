@@ -15,6 +15,7 @@
 
 RCSID("$Header$");
 
+#include <errno.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -26,7 +27,7 @@ RCSID("$Header$");
 #include <signal.h>
 
 extern char    *malloc(), *optarg;
-extern int	errno;
+
 extern int	sysconfig(int cmd, void *arg, int len);
 
 #include "AFS_component_version_number.c"

@@ -27,6 +27,7 @@ RCSID("$Header$");
 #ifdef AFS_SGI_XFS_IOPS_ENV
 #include "xfsattrs.h"
 #endif
+#include <errno.h>
 #include "afssyscalls.h"
 
 #ifdef AFS_DEBUG_IOPS
@@ -238,8 +239,7 @@ struct iparam {
 icreate(dev, near_inode, param1, param2, param3, param4)
 int dev, near_inode, param1, param2, param3, param4;
 {
-    extern int errno;
-    int errcode;
+  int errcode;
     struct iparam iparams;
 
     iparams.param1 = param1;
@@ -255,7 +255,6 @@ int dev, near_inode, param1, param2, param3, param4;
 iopen(dev, inode, usrmod)
 int dev, inode, usrmod;
 {
-    extern int errno;
     int errcode;
 
     errcode = syscall(AFS_SYSCALL, AFSCALL_IOPEN, dev, inode, usrmod);
@@ -266,7 +265,6 @@ int dev, inode, usrmod;
 iinc(dev, inode, inode_p1)
 int dev, inode, inode_p1;
 {
-    extern int errno;
     int errcode;
 
     errcode = syscall(AFS_SYSCALL, AFSCALL_IINC, dev, inode, inode_p1);
@@ -277,7 +275,6 @@ int dev, inode, inode_p1;
 idec(dev, inode, inode_p1)
 int dev, inode, inode_p1;
 {
-    extern int errno;
     int errcode;
 
     errcode = syscall(AFS_SYSCALL, AFSCALL_IDEC, dev, inode, inode_p1);
@@ -292,7 +289,6 @@ unsigned int offset;
 char *cbuf;
 unsigned int count;
 {
-    extern int errno;
     int errcode;
     struct iparam iparams;
 
@@ -311,7 +307,6 @@ unsigned int offset;
 char *cbuf;
 unsigned int count;
 {
-    extern int errno;
     int errcode;
     struct iparam iparams;
 
@@ -329,7 +324,6 @@ unsigned int count;
 
 lsetpag()
 {
-    extern int errno;
     int errcode;
 
     errcode = syscall(AFS_SYSCALL, AFSCALL_SETPAG);
@@ -340,7 +334,6 @@ lpioctl(path, cmd, cmarg, follow)
 char *path, *cmarg;
 int cmd, follow;
 {
-    extern int errno;
     int errcode;
 
     errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);

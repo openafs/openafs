@@ -66,7 +66,7 @@ extern char *hostutil_GetNameByINet();
 extern struct hostent *hostutil_GetHostByName();
 extern afs_int32 VL_GetEntryByNameO();
 
-extern int errno;
+
 extern struct cmd_syndesc *cmd_CreateSyntax();
 static char pn[] = "fs";
 static int rxInitDone = 0;

@@ -28,7 +28,6 @@ RCSID("$Header$");
 #include <afs/kautils.h>	/*MAXKTCREALMLEN*/
 #include <afs/kaport.h>         /* pack_long */
 
-extern int errno;
 extern afs_int32 KAM_CreateUser();
 
 #define uss_kauth_MAX_SIZE	2048

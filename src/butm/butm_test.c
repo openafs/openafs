@@ -12,6 +12,7 @@
 
 RCSID("$Header$");
 
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #include <sys/stat.h>
@@ -23,7 +24,7 @@ RCSID("$Header$");
 #include <afs/butm.h>
 #include "AFS_component_version_number.c"
 
-extern int errno;
+
 
 static char *whoami = "TEST FAIL";
 

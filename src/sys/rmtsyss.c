@@ -25,6 +25,7 @@ RCSID("$Header$");
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <stdio.h>
+#include <errno.h>
 #include <rx/xdr.h>
 #include <signal.h>
 #ifdef HAVE_STRING_H
@@ -33,7 +34,6 @@ RCSID("$Header$");
 /*#include <afs/cellconfig.h>*/
 #include "rmtsys.h"
 
-extern int errno;   /* We ship this over the net if needed */
 extern RMTSYS_ExecuteRequest();
 
 #define	NFS_EXPORTER	    1	/* To probably handle more later */

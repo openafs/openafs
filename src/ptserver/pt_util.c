@@ -23,6 +23,7 @@
 
 RCSID("$Header$");
 
+#include <errno.h>
 #include <lock.h>
 #include <netinet/in.h>
 #define UBIK_INTERNALS
@@ -39,7 +40,6 @@ RCSID("$Header$");
 
 extern char *optarg;
 extern int optind;
-extern int errno;
 
 int display_entry();
 void add_group();

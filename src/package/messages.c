@@ -29,6 +29,8 @@
 #endif
 #include <varargs.h>
 #include "package.h"
+#include <errno.h>
+
 
 static char *putnum(dp, n, b)
     register char *dp;
@@ -98,7 +100,6 @@ static char *putformat(dp, fp, ap)
 	  }
 	case 'm':
 	  {
-	    extern int errno;
 	    extern int sys_nerr;
 	    extern char *sys_errlist[];
 

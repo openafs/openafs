@@ -59,7 +59,7 @@ RCSID("$Header$");
 #endif
 #endif /* AFS_VFSINCL_ENV */
 #endif	/* AFS_OSF_ENV */
-#include <sys/errno.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include <stdio.h>
 #include <sys/file.h>
@@ -811,7 +811,6 @@ void VSetPartitionDiskUsage_r(register struct DiskPartition *dp)
 #else
 void VSetPartitionDiskUsage_r(register struct DiskPartition *dp)
 {
-    extern int errno;
     int fd, totalblks, free, used, availblks, bsize, code;
     int reserved;
 #if AFS_HAVE_STATVFS

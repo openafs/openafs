@@ -7,7 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-extern int errno;
 
 #include <afsconfig.h>
 #include <afs/param.h>

@@ -20,10 +20,8 @@ RCSID("$Header$");
 
 #include "gtxdumbwin.h"			/*Interface definition*/
 #include <stdio.h>			/*Standard I/O package*/
+#include <errno.h>
 
-#if	!defined(NeXT)
-extern int errno;			/*System error number*/
-#endif /* NeXT */
 int dumb_debug;				/*Is debugging turned on?*/
 static char mn[] = "gator_dumbwindows";	/*Module name*/
 
