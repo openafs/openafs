@@ -7,6 +7,17 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+/*
+ *                      Transarc does not currently use opcodes past 520, but
+ *                      they *could* decide at any time to use more opcodes.
+ *                      If they did, then one part of our local mods,
+ *                      ListSupergroups, would break.  I've therefore
+ *                      renumbered it to 530, and put logic in to enable the
+ *                      old opcode to work (for now).
+ *
+ */
+
+
 package PR_
 prefix S
 statindex 8
@@ -227,3 +238,32 @@ ListEntries(
   OUT prentries *bulkentries,
   OUT afs_int32     *nextstartindex
 ) = PRLISTENTRIES;
+
+#if defined(SUPERGROUPS)
+/*
+ *
+ * Dummy stubs for "reserved to Transarc" opcodes; just so
+ * that ptint.ss.c uses nicer function table.
+ */
+%#define PR_Pr523(call) (RXGEN_OPCODE)
+%#define PR_Pr524(call) (RXGEN_OPCODE)
+%#define PR_Pr525(call) (RXGEN_OPCODE)
+%#define PR_Pr526(call) (RXGEN_OPCODE)
+%#define PR_Pr527(call) (RXGEN_OPCODE)
+%#define PR_Pr528(call) (RXGEN_OPCODE)
+%#define PR_Pr529(call) (RXGEN_OPCODE)
+Pr523()=523;
+Pr524()=524;
+Pr525()=525;
+Pr526()=526;
+Pr527()=527;
+Pr528()=528;
+Pr529()=529;
+
+ListSuperGroups(
+  IN long id,
+  OUT prlist *elist,
+  OUT long *over
+) = PRLISTSUPERGROUPS;
+
+#endif 

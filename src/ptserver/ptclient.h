@@ -42,5 +42,8 @@ extern int PR_ListOwned();
 extern int PR_GetCPS2();
 extern int PR_GetHostCPS();
 extern int PR_UpdateEntry();
+#if defined(SUPERGROUPS)
+extern int PR_ListSuperGroups();
+#endif
 
 #define pr_ErrorMsg error_message

@@ -27,6 +27,8 @@ AC_ARG_ENABLE( largefile-fileserver,
 [  --enable-largefile-filesever         enable large file support in fileserver],, enable_largefile_fileserver="no")
 AC_ARG_ENABLE( namei-fileserver,
 [  --enable-namei-fileserver 		force compilation of namei fileserver in preference to inode fileserver],, enable_namei_fileserver="no")
+AC_ARG_ENABLE( supergroups,
+[  --enable-supergroups 		enable support for nested pts groups],, enable_supergroups="no")
 AC_ARG_ENABLE( fast-restart,
 [  --enable-fast-restart 		enable fast startup of file server without salvaging],, enable_fast_restart="no")
 AC_ARG_ENABLE( bitmap-later,
@@ -606,6 +608,10 @@ if test "$enable_insecure" = "yes"; then
 fi
 
 # Fast restart
+if test "$enable_supergroups" = "yes"; then
+	AC_DEFINE(SUPERGROUPS, 1, [define if you want to have support for nested pts groups])
+fi
+
 if test "$enable_fast_restart" = "yes"; then
 	AC_DEFINE(FAST_RESTART, 1, [define if you want to have fast restart])
 fi

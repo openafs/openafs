@@ -32,6 +32,10 @@ RCSID("$Header$");
 #include "ptserver.h"
 #include "pterror.h"
 
+#if defined(SUPERGROUPS)
+extern afs_int32 depthsg;
+#endif
+
 afs_int32 IDHash(x)
 afs_int32 x;
 {
@@ -759,16 +763,21 @@ afs_int32 aid;
 afs_int32 gid;
 {
     /* returns true if aid is a member of gid */
+#if !defined(SUPERGROUPS)
     struct prentry tentry;
     struct contentry centry;
     register afs_int32 code;
     afs_int32 i;
     afs_int32 loc;
+#endif
 
     /* special case anyuser and authuser */
     if (gid == ANYUSERID) return 1;
     if (gid == AUTHUSERID && aid != ANONYMOUSID) return 1;
     if ((gid == 0) || (aid == 0)) return 0;
+#if defined(SUPERGROUPS)
+    return IsAMemberOfSG(at, aid, gid, depthsg);
+#else
     loc = FindByID(at,gid);
     if (!loc) return 0;
     memset(&tentry, 0, sizeof(tentry));
@@ -793,4 +802,66 @@ afs_int32 gid;
 	}
     }
     return 0;  /* actually, should never get here */
+#endif
 }
+
+
+#if defined(SUPERGROUPS)
+
+afs_int32 IsAMemberOfSG(at, aid, gid, depth)
+struct ubik_trans *at;
+afs_int32 aid;
+afs_int32 gid;
+afs_int32 depth;
+{
+    /* returns true if aid is a member of gid */
+    struct prentry tentry;
+    struct contentry centry;
+    register afs_int32 code;
+    afs_int32 i;
+    afs_int32 loc;
+
+    if (depth < 1) return 0;
+    loc = FindByID(at, gid);
+    if (!loc) return 0;
+    memset(&tentry, 0, sizeof(tentry));
+    code = pr_ReadEntry(at, 0, loc, &tentry);
+    if (code) return 0;
+    if (!(tentry.flags & PRGRP)) return 0;
+    for (i= 0;i<PRSIZE;i++) {
+	gid = tentry.entries[i];
+	if (gid == 0) return 0;
+	if (gid == aid) return 1;
+	if (gid == ANYUSERID) return 1;
+	if (gid == AUTHUSERID && aid != ANONYMOUSID) return 1;
+	if (gid < 0) {
+	    IOMGR_Poll();
+	    if (IsAMemberOfSG(at, aid, gid, depth-1))
+		return 1;
+	}
+    }
+    if (tentry.next) {
+	loc = tentry.next;
+	while (loc) {
+	    memset(&centry, 0, sizeof(centry));
+	    code = pr_ReadCoEntry(at, 0, loc, &centry);
+	    if (code) return 0;
+	    for (i=0;i<COSIZE;i++) {
+		gid = centry.entries[i];
+		if (gid == 0) return 0;
+		if (gid == aid) return 1;
+		if (gid == ANYUSERID) return 1;
+		if (gid == AUTHUSERID && aid != ANONYMOUSID) return 1;
+		if (gid < 0) {
+		    IOMGR_Poll();
+		    if (IsAMemberOfSG(at, aid, gid, depth-1))
+			return 1;
+		}
+	    }
+	    loc = centry.next;
+	}
+    }
+    return 0;  /* actually, should never get here */
+}
+
+#endif /* SUPERGROUPS */

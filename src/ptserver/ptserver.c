@@ -7,6 +7,107 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+/*
+ *                      A general description of the supergroup changes
+ *                      to ptserver:
+ *
+ *                      In AFS users can be members of groups. When you add
+ *                      a user, u1, to a group, g1, you add the user id for u1
+ *                      to an entries list in g1. This is a list of all the
+ *                      members of g1.
+ *                      You also add the id for g1 to an entries list in u1.
+ *                      This is a list of all the groups this user is a
+ *                      member of.
+ *                      The list has room for 10 entries. If more are required,
+ *                      a continuation record is created.
+ *
+ *                      With UMICH mods, u1 can be a group. When u1 is a group
+ *                      a new field is required to list the groups this group
+ *                      is a member of (since the entries field is used to
+ *                      list it's members). This new field is supergroups and
+ *                      has two entries. If more are required, a continuation
+ *                      record is formed. 
+ *                      There are two additional fields required, nextsg is
+ *                      an address of the next continuation record for this
+ *                      group, and countsg is the count for the number of 
+ *                      groups this group is a member of.
+ *                   
+ *
+ *
+ *      09/18/95 jjm    Add mdw's changes to afs-3.3a Changes:
+ *                      (1) Add the parameter -groupdepth or -depth to
+ *                          define the maximum search depth for supergroups.
+ *                          Define the variable depthsg to be the value of
+ *                          the parameter. The default value is set to 5.
+ *
+ *                      (3) Make sure the sizes of the struct prentry and
+ *                          struct prentryg are equal. If they aren't equal
+ *                          the pt database will be corrupted.
+ *                          The error is reported with an fprintf statement,
+ *                          but this doesn't print when ptserver is started by
+ *                          bos, so all you see is an error message in the
+ *                          /usr/afs/logs/BosLog file. If you start the
+ *                          ptserver without bos the fprintf will print
+ *                          on stdout.
+ *                          The program will terminate with a PT_EXIT(1).
+ *
+ *
+ *                      Transarc does not currently use opcodes past 520, but
+ *                      they *could* decide at any time to use more opcodes.
+ *                      If they did, then one part of our local mods,
+ *                      ListSupergroups, would break.  I've therefore
+ *                      renumbered it to 530, and put logic in to enable the
+ *                      old opcode to work (for now).
+ *
+ *      2/1/98 jjm      Add mdw's changes for bit mapping for supergroups
+ *                      Overview:
+ *                      Before fetching a supergroup, this version of ptserver
+ *                      checks to see if it was marked "found" and "not a
+ *                      member".  If and only if so, it doesn't fetch the group.
+ *                      Since this should be the case with most groups, this
+ *                      should save a significant amount of CPU in redundant
+ *                      fetches of the same group.  After fetching the group,
+ *                      it sets "found", and either sets or clears "not a
+ *                      member", depending on if the group was a member of
+ *                      other groups.  When it writes group entries to the
+ *                      database, it clears the "found" flag.
+ */
+
+#if defined(SUPERGROUPS)
+/*
+ *  A general description of the supergroup changes
+ *  to ptserver:
+ *
+ *  In AFS users can be members of groups. When you add a user, u1,
+ *  to a group, g1, you add the user id for u1 to an entries list
+ *  in g1. This is a list of all the members of g1.  You also add
+ *  the id for g1 to an entries list in u1.  This is a list of all
+ *  the groups this user is a member of.  The list has room for 10
+ *  entries. If more are required, a continuation record is created.
+ *
+ *  With UMICH mods, u1 can be a group. When u1 is a group a new
+ *  field is required to list the groups this group is a member of
+ *  (since the entries field is used to list it's members). This
+ *  new field is supergroups and has two entries. If more are
+ *  required, a continuation record is formed.
+ *
+ *  There are two additional fields required, nextsg is an address
+ *  of the next continuation record for this group, and countsg is
+ *  the count for the number of groups this group is a member of.
+ *
+ *  Bit mapping support for supergroups:
+ *
+ *  Before fetching a supergroup, this version of ptserver checks to
+ *  see if it was marked "found" and "not a member".  If and only if
+ *  so, it doesn't fetch the group.  Since this should be the case
+ *  with most groups, this should save a significant amount of CPU in
+ *  redundant fetches of the same group.  After fetching the group, it
+ *  sets "found", and either sets or clears "not a member", depending
+ *  on if the group was a member of other groups.  When it writes
+ *  group entries to the database, it clears the "found" flag.
+ */
+#endif
+
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -50,6 +151,10 @@ RCSID("$Header$");
 struct prheader cheader;
 struct ubik_dbase *dbase;
 struct afsconf_dir *prdir;
+
+#if defined(SUPERGROUPS)
+extern afs_int32 depthsg;
+#endif
 
 extern afs_int32 ubik_lastYesTime;
 extern afs_int32 ubik_nBuffers;
@@ -123,6 +228,21 @@ void main (argc, argv)
 
     pr_dbaseName = AFSDIR_SERVER_PRDB_FILEPATH;
 
+#if defined(SUPERGROUPS)
+    /* make sure the structures for database records are the same size */
+    if((sizeof(struct prentry) != ENTRYSIZE) ||
+        (sizeof(struct prentryg) != ENTRYSIZE)) {
+      fprintf(stderr,"The structures for the database records are different"
+		     " sizes\n"
+		     "struct prentry = %d\n"
+		     "struct prentryg = %d\n"
+		     "ENTRYSIZE = %d\n",
+                     sizeof(struct prentry), sizeof(struct prentryg),
+		     ENTRYSIZE); 
+      PT_EXIT(1);
+    }
+#endif
+
     for (a=1; a<argc; a++) {
 	int alen;
 	lcstring (arg, argv[a], sizeof(arg));
@@ -144,6 +264,12 @@ void main (argc, argv)
 	   }
 	}
 	else if (strncmp (arg, "-rebuild", alen) == 0) /* rebuildDB++ */ ;
+#if defined(SUPERGROUPS)
+	else if ((strncmp (arg, "-groupdepth", alen) == 0) ||
+		 (strncmp (arg, "-depth", alen) == 0)) {
+	    depthsg = atoi(argv[++a]);  /* Max search depth for supergroups */
+	}
+#endif
 	else if (strncmp (arg, "-enable_peer_stats", alen) == 0) {
 	    rx_enablePeerRPCStats();
 	}
@@ -163,21 +289,42 @@ void main (argc, argv)
 	else if (*arg == '-') {
 		/* hack in help flag support */
 
+#if defined(SUPERGROUPS)
+#ifndef AFS_NT40_ENV
+	    	printf ("Usage: ptserver [-database <db path>] "
+			"[-syslog[=FACILITY]] "
+			"[-p <number of processes>] [-rebuild] "
+			"[-groupdepth <depth>] "
+			"[-enable_peer_stats] [-enable_process_stats] "
+			"[-help]\n");
+#else /* AFS_NT40_ENV */
+	    	printf ("Usage: ptserver [-database <db path>] "
+			"[-p <number of processes>] [-rebuild] "
+			"[-groupdepth <depth>] "
+			"[-help]\n");
+#endif
+#else
 #ifndef AFS_NT40_ENV
 	    	printf ("Usage: ptserver [-database <db path>] "
 			"[-syslog[=FACILITY]] "
 			"[-p <number of processes>] [-rebuild] "
 			"[-enable_peer_stats] [-enable_process_stats] "
 			"[-help]\n");
-#else
+#else /* AFS_NT40_ENV */
 	    	printf ("Usage: ptserver [-database <db path>] "
 			"[-p <number of processes>] [-rebuild] "
 			"[-help]\n");
+#endif
 #endif
 		fflush(stdout);
 
 	    PT_EXIT(1);
 	}
+#if defined(SUPERGROUPS)
+	else {
+	    fprintf (stderr, "Unrecognized arg: '%s' ignored!\n", arg);
+	}
+#endif
     }
 
     OpenLog(AFSDIR_SERVER_PTLOG_FILEPATH);     /* set up logging */
@@ -258,6 +405,11 @@ void main (argc, argv)
 	com_err (whoami, code, "Ubik init failed");
 	PT_EXIT(2);
     }
+
+#if defined(SUPERGROUPS)
+    pt_hook_write();
+#endif
+
     sc[0] = rxnull_NewServerSecurityObject();
     sc[1] = 0;
     if (kerberosKeys) {
@@ -290,4 +442,5 @@ void main (argc, argv)
 
     rx_StartServer(1);
     osi_audit (PTS_FinishEvent, -1, AUD_END);
+    exit(0);
 }

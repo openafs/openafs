@@ -150,6 +150,9 @@ afs_int32 pr_Initialize (secLevel, confDir, cell)
 	/* If secLevel is two assume we're on a file server and use
          * ClientAuthSecure if possible. */
 	code = afsconf_ClientAuthSecure (tdir, &sc[2], &scIndex);
+	if (code)
+	    fprintf(stderr,"libprot: clientauthsecure returns %d %s"
+	    	    " (so trying noauth)\n",code, error_message(code));
 	if (code) scIndex = 0;		/* use noauth */
 	if (scIndex != 2)
 	    /* if there was a problem, an unauthenticated conn is returned */

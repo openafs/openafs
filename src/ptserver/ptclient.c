@@ -387,6 +387,28 @@ char **argv;
 	    else code = ubik_Call(PR_RemoveFromGroup,pruclient,0,id,gid);
 	    if (CodeOk(code)) printf("%s\n",pr_ErrorMsg(code));
 	}
+#if defined(SUPERGROUPS)
+	else if (!strcmp(op,"lsg")) {
+	    alist.prlist_len = 0;
+	    alist.prlist_val = 0;
+	    /* scanf("%d",&id); */
+	    if (GetInt32 (&id)) code = PRBADARG;
+	    else code = ubik_Call(PR_ListSuperGroups,pruclient,0,id, &alist, &over);
+	    if (CodeOk(code)) printf("%s\n",pr_ErrorMsg(code));
+	    if (code == PRSUCCESS) {
+		ptr = alist.prlist_val;
+		if (over) {
+		    printf("Number of groups greater than PR_MAXGROUPS!\n");
+		    printf("Excess of %d.\n",over);
+		}
+		for (i=0;i<alist.prlist_len;i++,ptr++)
+		    printf("%d\n",*ptr);
+		free(alist.prlist_val);
+		alist.prlist_len = 0;
+		alist.prlist_val = 0;
+	    }
+	}
+#endif /* SUPERGROUPS */
 	else if (!strcmp(op,"l")) {
 	    alist.prlist_len = 0;
 	    alist.prlist_val = 0;
@@ -432,6 +454,28 @@ char **argv;
 		alist.prlist_val = 0;
 	    }
 	}
+#if defined(SUPERGROUPS)
+	else if (!strcmp(op,"m")) {
+	    alist.prlist_len = 0;
+	    alist.prlist_val = 0;
+	    /* scanf("%d",&id); */
+	    if (GetInt32 (&id)) code = PRBADARG;
+	    else code = ubik_Call(PR_ListElements,pruclient,0,id, &alist, &over);
+	    if (CodeOk(code)) printf("%s\n",pr_ErrorMsg(code));
+	    if (code == PRSUCCESS) {
+		ptr = alist.prlist_val;
+		if (over) {
+		    printf("Number of groups greater than PR_MAXGROUPS!\n");
+		    printf("Excess of %d.\n",over);
+		}
+		for (i=0;i<alist.prlist_len;i++,ptr++)
+		    printf("%d\n",*ptr);
+		free(alist.prlist_val);
+		alist.prlist_len = 0;
+		alist.prlist_val = 0;
+	    }
+	}
+#endif /* SUPERGROUPS */
 	else if (!strcmp(op,"nu")) {
 	    /* scanf("%s",name); */
 	    if (GetString (name, sizeof(name))) code = PRBADARG;
@@ -535,6 +579,60 @@ char **argv;
 		continue;
 	    }
 	}
+#if defined(SUPERGROUPS)
+	else if (!strcmp(op,"fih")) {
+	    char tname[128];
+	    struct PrUpdateEntry uentry;
+	    bzero(&uentry, sizeof(uentry));
+	    /* scanf("%s",name); */
+	    if (GetString (name, sizeof(name))) {
+		code = PRBADARG; 
+		continue;
+	    }
+	    code = pr_SNameToId(name,&id);
+	    if (CodeOk(code)) {
+		printf("%s\n",pr_ErrorMsg(code));
+		continue;
+	    }
+	    code = pr_SIdToName(id, tname);
+	    if (code == PRSUCCESS) {
+		printf("Warning: Id hash for %s (id %d) seems correct at the db; rehashing it anyway\n", name, id);
+/*		continue;*/
+	    }
+	    uentry.Mask = PRUPDATE_IDHASH;
+	    code = ubik_Call(PR_UpdateEntry, pruclient, 0,0,name,&uentry);
+	    if (code) {
+		printf("Failed to update entry %s (err=%d)\n", name, code);
+		continue;
+	    }
+	}
+	else if (!strcmp(op,"fnh")) {
+	    int tid;
+	    struct PrUpdateEntry uentry;
+	    bzero(&uentry, sizeof(uentry));
+	    /* scanf("%d", &id); */
+	    if (GetInt32 (&id)) {
+		code = PRBADARG;
+		continue;
+	    }
+	    code = pr_SIdToName(id, name);
+	    if (CodeOk(code)) {
+		printf("%s\n",pr_ErrorMsg(code));
+		continue;
+	    }
+	    code = pr_SNameToId(name, &tid);
+	    if (code == PRSUCCESS) {
+		printf("Name hash for %d (name is %s) seems correct at the db; rehashing it anyway\n", id, name);
+/*		continue;*/
+	    }
+	    uentry.Mask = PRUPDATE_NAMEHASH;
+	    code = ubik_Call(PR_UpdateEntry, pruclient, 0,id,"_foo_",&uentry);
+	    if (code) {
+		printf("Failed to update entry with id %d (err=%d)\n", id, code);
+		continue;
+	    }
+	}
+#endif /* SUPERGROUPS */
 	else if (!strcmp(op,"?")) 
 	    PrintHelp();
 	else if (!strcmp(op,"q")) exit(0);
@@ -556,6 +654,10 @@ PrintHelp()
     printf("rm id gid - remove user id from group gid.\n");
     printf("l id - get the CPS for id.\n");
     printf("lh host - get the host CPS for host.\n");
+#if defined(SUPERGROUPS)
+    printf("lsg id - get the supergroups for id.\n");
+    printf("m id - list elements for id.\n");
+#endif
     printf("nu name - create new user with name - returns an id.\n");
     printf("ng name - create new group with name - returns an id.\n");
     printf("lm  - list max user id and max (really min) group id.\n");

@@ -7,6 +7,18 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+/*
+ *                      (3) add new pts commands:
+ *
+ *                          Interactive - allow the pts command
+ *                                        to be run interactively.
+ *                          Quit        - quit interactive mode.
+ *                          Source      - allow input to come from a file(s).
+ *                          Sleep       - pause for a specified number
+ *                                        of seconds.
+ *
+ */
+
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -39,6 +51,93 @@ RCSID("$Header$");
 char *whoami;
 int force = 0;
 
+#if defined(SUPERGROUPS)
+
+/*
+ *  Add new pts commands:
+ *
+ *      Interactive - allow the pts command to be run interactively.
+ *      Quit        - quit interactive mode.
+ *      Source      - allow input to come from a file(s).
+ *      Sleep       - pause for a specified number of seconds.
+ */
+
+static int finished;
+static FILE *source;
+extern struct ubik_client *pruclient;
+
+struct sourcestack {
+        struct sourcestack *s_next;
+        FILE *s_file;
+} *shead;
+
+int Interactive (as)
+  register struct cmd_syndesc *as;
+{ 
+    finished = 0;
+    return 0;
+}   
+
+int Quit (as)
+  register struct cmd_syndesc *as;
+{ 
+    finished = 1;
+    return 0;
+}   
+
+int Source (as)
+  register struct cmd_syndesc *as;
+{
+    FILE *fd;
+    struct sourcestack *sp;
+
+    finished = 0;
+    if (!as->parms[0].items) {
+/* can this happen? */
+        return 1;
+    }
+    fd = fopen(as->parms[0].items->data, "r");
+    if (!fd) {
+perror(as->parms[0].items->data);
+        return errno;
+    }
+    sp = (struct sourcestack *) malloc(sizeof *sp);
+    if (!sp) {
+        return errno ? errno : ENOMEM;
+    } else {
+        sp->s_next = shead;
+        sp->s_file = source;
+        shead = sp;
+        source = fd;
+    }
+    return 0;
+}
+
+int Sleep (as)
+  register struct cmd_syndesc *as;
+{
+    int delay;
+    if (!as->parms[0].items) {
+/* can this happen? */
+        return 1;
+    }
+    delay = atoi(as->parms[0].items->data);
+    IOMGR_Sleep(delay);
+}
+
+int
+popsource()
+{
+    register  struct sourcestack *sp;
+    if (!(sp = shead)) return 0;
+    if (source != stdin) fclose(source);
+    source = sp->s_file;
+    shead = sp->s_next;
+    free((char*) sp);
+    return 1;
+}
+
+#endif /* SUPERGROUPS */
 
 int osi_audit()
 {
@@ -83,10 +182,19 @@ int GetGlobals (as)
 int CleanUp (as)
   register struct cmd_syndesc *as;
 {
+#if defined(SUPERGROUPS)
+    if (as && !strcmp(as->name,"help")) return;
+    if (pruclient) {
+    /* Need to shutdown the ubik_client & other connections */
+        pr_End();
+        rx_Finalize();
+    }
+#else
     if (!strcmp(as->name,"help")) return;
     /* Need to shutdown the ubik_client & other connections */
     pr_End();
     rx_Finalize();
+#endif /* SUPERGROUPS */
 
     return 0;
 }
@@ -120,6 +228,12 @@ CreateGroup (as)
 			 "because group id %d was not negative", id);
 		return code;
 	    }
+#if defined(SUPERGROUPS)
+	    if (id == 0) {
+		printf ("0 isn't a valid user id; aborting\n");
+		return EINVAL;
+	    }
+#endif
 	    idi = idi->next;
 	} else id = 0;
 
@@ -833,6 +947,13 @@ int main (argc, argv)
 {
     register afs_int32 code;
     register struct cmd_syndesc *ts;
+#if defined(SUPERGROUPS)
+    char line[2048];
+    char *cp, *lastp;
+    int parsec; 
+    char *parsev[CMD_MAXPARMS];
+    char *savec;
+#endif
 #ifdef WIN32
     WSADATA WSAjunk;
 #endif
@@ -940,9 +1061,73 @@ int main (argc, argv)
     cmd_AddParm(ts, "-groups", CMD_FLAG, CMD_OPTIONAL, "list group entries");
     add_std_args (ts);
     
+#if defined(SUPERGROUPS)
+
+    ts = cmd_CreateSyntax("interactive",Interactive,0,
+	    "enter interactive mode");
+    add_std_args (ts);
+    cmd_CreateAlias (ts, "in");
+
+    ts = cmd_CreateSyntax("quit",Quit,0,
+	    "exit program");
+    add_std_args (ts);
+
+    ts = cmd_CreateSyntax("source",Source,0,
+	    "read commands from file");
+    cmd_AddParm(ts,"-file",CMD_SINGLE,0,"filename");
+    add_std_args (ts);
+
+    ts = cmd_CreateSyntax("sleep",Sleep,0,
+	    "pause for a bit");
+    cmd_AddParm(ts,"-delay",CMD_SINGLE,0,"seconds");
+    add_std_args (ts);
+
+#endif /* SUPERGROUPS */
+
     cmd_SetBeforeProc(GetGlobals,0);
+
+#if defined(SUPERGROUPS)
+    finished = 1;
+    if (code = cmd_Dispatch(argc,argv)) {
+	CleanUp(0);
+	exit(1);
+    }
+    source = stdin;
+    while (!finished) {
+	if (isatty(fileno(source)))
+	    fprintf(stderr,"pts> ");
+	if (!fgets(line, sizeof line, source)) {
+	    if (!popsource()) break;
+	    continue;
+	}
+	lastp = 0;
+	for (cp = line; *cp; ++cp)
+	    if (!isspace(*cp))
+		lastp = 0;
+	    else if (!lastp)
+		lastp = cp;
+	if (lastp) *lastp = 0; 
+	if (!*line) continue;
+	code = cmd_ParseLine(line, parsev, &parsec,
+			     sizeof(parsev)/sizeof(*parsev));
+	if (code) {
+	    com_err(whoami, code, "parsing line: <%s>", line);
+	    exit(2);
+	}
+	savec = parsev[0];
+	parsev[0] = argv[0];
+	code = cmd_Dispatch(parsec, parsev);
+	parsev[0] = savec;
+	cmd_FreeArgv(parsev);
+    }
+    CleanUp(0);
+    exit(0);
+
+#else  /* SUPERGROUPS */
+
     cmd_SetAfterProc(CleanUp,0);
     code = cmd_Dispatch(argc,argv);
     exit (code != 0);
+#endif /* SUPERGROUPS */
 }
 

@@ -7,6 +7,46 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+/*
+ *                      (3) function addToGroup
+ *
+ *                          1. Eliminate the code that tests for adding groups
+ *                             to groups. This is an error in normal AFS.
+ *                          2. If adding a group to a group call AddToSGEntry
+ *                             to add the id of the group it's a member of.
+ *                      
+ *                      (4) function Delete
+ *
+ *                          1. Print a messsage if an error is returned from
+ *                             FindByID() and PTDEBUG is defined. 
+ *                          2. If removing a group from a group call   
+ *                             RemoveFromSGEntry to remove the id of the  
+ *                             group it's a member of.            
+ *                          3. Remove supergroup continuation records.
+ *
+ *                      (5) function RemoveFromGroup 
+ *               
+ *                          1. Eliminate the code that tests for adding groups
+ *                             to groups. This is an error in normal AFS. 
+ *                          2. If removing a group from a group call 
+ *                             RemoveFromSGEntry to remove the id of the 
+ *                             group it's a member of.
+ *
+ *                      (6) Add new functions PR_ListSuperGroups and 
+ *                          listSuperGroups.
+ *                      
+ *                      (7) function isAMemberOf
+ *                      
+ *                          1. Allow groups to be members of groups.
+ *
+ *                      Transarc does not currently use opcodes past 520, but
+ *                      they *could* decide at any time to use more opcodes.
+ *                      If they did, then one part of our local mods,
+ *                      ListSupergroups, would break.  I've therefore
+ *                      renumbered it to 530, and put logic in to enable the
+ *                      old opcode to work (for now).
+ */
+
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -53,6 +93,10 @@ afs_int32 iNewEntry(), newEntry(), whereIsIt(), dumpEntry(), addToGroup(), nameT
 afs_int32 getCPS(), getCPS2(), getHostCPS(), listMax(), setMax(), listEntry();
 afs_int32 listEntries(), changeEntry(), setFieldsEntry(), put_prentries();
 afs_int32 listElements(), listOwned(), isAMemberOf(), idToName();
+
+#if defined(SUPERGROUPS)
+afs_int32 listSuperGroups();
+#endif
 
 static stolower();
 extern int IDCmp();
@@ -419,8 +463,12 @@ afs_int32 gid;
     memset(&uentry, 0, sizeof(uentry));
     code = pr_ReadEntry(tt,0,tempu,&uentry);
     if (code != 0)  ABORT_WITH(tt,code);
+
+#if !defined(SUPERGROUPS)
     /* we don't allow groups as members of groups at present */
     if (uentry.flags & PRGRP) ABORT_WITH(tt,PRNOTUSER);
+#endif
+
     tempg = FindByID(tt,gid);
     if (!tempg) ABORT_WITH(tt,PRNOENT);
     code = pr_ReadEntry(tt,0,tempg,&tentry);
@@ -431,6 +479,12 @@ afs_int32 gid;
     
     code = AddToEntry (tt, &tentry, tempg, aid);
     if (code != PRSUCCESS) ABORT_WITH(tt,code);
+
+#if defined(SUPERGROUPS)
+    if (uentry.flags & PRGRP)
+      code = AddToSGEntry (tt, &uentry, tempu, gid); /* mod group to be in sg */
+    else
+#endif
     /* now, modify the user's entry as well */
     code = AddToEntry (tt, &uentry, tempu, gid);
     if (code != PRSUCCESS) ABORT_WITH(tt,code);
@@ -615,6 +669,11 @@ afs_int32 Delete (call, aid)
 	for (i=0;i<COSIZE;i++) {
 	    if (centry.entries[i] == PRBADID) continue;
 	    if (centry.entries[i] == 0) break;
+#if defined(SUPERGROUPS)
+	    if (aid < 0 && centry.entries[i] < 0) /* Supergroup */
+	      code = RemoveFromSGEntry (tt, aid, centry.entries[i]);
+	    else
+#endif
 	    code = RemoveFromEntry (tt, aid, centry.entries[i]);
 	    if (code) ABORT_WITH(tt,code);
 	    tentry.count--;		/* maintain count */
@@ -643,6 +702,54 @@ afs_int32 Delete (call, aid)
 
 	nptr = tentry.next;
     }
+
+#if defined(SUPERGROUPS)
+    /* Delete each continuation block as a separate transaction
+     * so that no one transaction become too large to complete. */
+    {
+	struct prentryg *tentryg = (struct prentryg *)&tentry;
+	nptr = tentryg->nextsg;
+	while (nptr != NULL) {
+	    struct contentry centry;
+	    int i;
+
+	    code = pr_ReadCoEntry(tt, 0, nptr, &centry);
+	    if (code != 0) ABORT_WITH(tt,PRDBFAIL);
+	    for (i=0;i<COSIZE;i++) {
+		if (centry.entries[i] == PRBADID) continue;
+		if (centry.entries[i] == 0) break;
+		code = RemoveFromEntry (tt, aid, centry.entries[i]);
+		if (code) ABORT_WITH(tt,code);
+		tentryg->countsg--;	 /* maintain count */
+		if ((i&3) == 0) IOMGR_Poll();
+	    }
+	    tentryg->nextsg = centry.next;  /* thread out this block */
+	    code = FreeBlock (tt, nptr);    /* free continuation block */
+	    if (code) ABORT_WITH(tt,code);
+	    code = pr_WriteEntry (tt, 0, loc, &tentry); /* update main entry */
+	    if (code) ABORT_WITH(tt,code);
+
+	    /* end this trans and start a new one */
+	    code = ubik_EndTrans(tt);
+	    if (code) return code;
+	    IOMGR_Poll();	   /* just to keep the connection alive */
+
+	    code = ubik_BeginTrans(dbase,UBIK_WRITETRANS,&tt);
+	    if (code) return code;
+	    code = ubik_SetLock(tt,1,1,LOCKWRITE);
+	    if (code) ABORT_WITH(tt,code);
+
+	    /* re-read entry to get consistent uptodate info */
+	    loc = FindByID (tt, aid);
+	    if (loc == 0) ABORT_WITH(tt,PRNOENT);
+	    code = pr_ReadEntry (tt, 0, loc, &tentry);
+	    if (code) ABORT_WITH(tt,PRDBFAIL);
+
+	    nptr = tentryg->nextsg;
+	}
+    }
+
+#endif /* SUPERGROUPS */
 
     /* Then move the owned chain, except possibly ourself to the orphan list.
      * Because this list can be very long and so exceed the size of a ubik
@@ -805,11 +912,20 @@ afs_int32 gid;
     code = pr_ReadEntry(tt,0,tempg,&gentry);
     if (code != 0) ABORT_WITH(tt,code);
     if (!(gentry.flags & PRGRP)) ABORT_WITH(tt,PRNOTGROUP);
+#if !defined(SUPERGROUPS)
     if (uentry.flags & PRGRP) ABORT_WITH(tt,PRNOTUSER);
+#endif
     if (!AccessOK (tt, cid, &gentry, PRP_REMOVE_MEM, 0)) ABORT_WITH(tt,PRPERM);
     code = RemoveFromEntry(tt,aid,gid);
     if (code != PRSUCCESS) ABORT_WITH(tt,code);
+#if defined(SUPERGROUPS)
+    if (!(uentry.flags & PRGRP))
+#endif
     code = RemoveFromEntry(tt,gid,aid);
+#if defined(SUPERGROUPS)
+    else
+	code = RemoveFromSGEntry(tt,gid,aid);
+#endif
     if (code != PRSUCCESS) ABORT_WITH(tt,code);
 
     code = ubik_EndTrans(tt);
@@ -1501,6 +1617,65 @@ afs_int32 listElements (call, aid, alist, over)
     return code;
 }
 
+#if defined(SUPERGROUPS)
+
+afs_int32 SPR_ListSuperGroups (call, aid, alist, over)
+  struct rx_call *call;
+  afs_int32 aid;
+  prlist *alist; 
+  afs_int32 *over;
+{ 
+  afs_int32 code;
+
+  code = listSuperGroups (call, aid, alist, over);
+  osi_auditU (call, "PTS_LstSGrps", code, AUD_LONG, aid, AUD_END);
+  return code;
+} 
+  
+afs_int32 listSuperGroups (call, aid, alist, over)
+  struct rx_call *call;
+  afs_int32 aid;
+  prlist *alist; 
+  afs_int32 *over;
+{ 
+    register afs_int32 code;
+    struct ubik_trans *tt;
+    afs_int32 cid;
+    afs_int32 temp;
+    struct prentry tentry;
+
+    alist->prlist_len = 0;
+    alist->prlist_val = (afs_int32 *) 0;
+
+    code = Initdb();
+    if (code != PRSUCCESS) goto done;
+    code = ubik_BeginTransReadAny(dbase,UBIK_READTRANS,&tt);
+    if (code) goto done;
+    code = ubik_SetLock(tt,1,1,LOCKREAD);
+    if (code) ABORT_WITH(tt,code);
+    code = WhoIsThis(call,tt,&cid);
+    if (code) ABORT_WITH(tt,PRPERM);
+
+    temp = FindByID(tt,aid);
+    if (!temp) ABORT_WITH(tt,PRNOENT);
+    code = pr_ReadEntry (tt, 0, temp, &tentry);
+    if (code) ABORT_WITH(tt,code);
+    if (!AccessOK (tt, cid, &tentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
+       ABORT_WITH(tt,PRPERM);
+
+    code = GetSGList (tt, &tentry, alist);
+    *over = 0;
+    if (code == PRTOOMANY) *over = 1;
+    else if (code != PRSUCCESS) ABORT_WITH(tt,code);
+
+    code = ubik_EndTrans(tt);
+
+done:
+    return code;
+}
+
+#endif /* SUPERGROUPS */
+
 /* 
  * SPR_ListOwned
  * List the entries owned by this id.  If the id is zero,
@@ -1628,7 +1803,11 @@ afs_int32 *flag;
 	if (code) ABORT_WITH(tt,code);
 	code = pr_ReadEntry (tt, 0, gloc, &gentry);
 	if (code) ABORT_WITH(tt,code);
+#if !defined(SUPERGROUPS)
 	if ((uentry.flags & PRGRP) || !(gentry.flags & PRGRP)) ABORT_WITH(tt,PRBADARG);
+#else
+	if (!(gentry.flags & PRGRP)) ABORT_WITH(tt,PRBADARG);
+#endif
 	if (!AccessOK (tt, cid, &uentry, 0, PRP_MEMBER_ANY) &&
 	    !AccessOK (tt, cid, &gentry, PRP_MEMBER_MEM, PRP_MEMBER_ANY))
 	    ABORT_WITH(tt,PRPERM);

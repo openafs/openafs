@@ -125,6 +125,38 @@ struct prentry {
     char name[PR_MAXNAMELEN];		/* user or group name */
 };
 
+#if defined(SUPERGROUPS)
+
+struct prentryg {
+    afs_int32 flags;			/* random flags */
+    afs_int32 id;			/* user or group id */
+    afs_int32 cellid;			/* reserved for cellID */
+    afs_int32 next;			/* next block same entry (or freelist) */
+#ifdef PR_REMEMBER_TIMES
+    afs_uint32 createTime, addTime, removeTime, changeTime;
+    afs_int32 reserved[1];
+#else
+    afs_int32 reserved[5];
+#endif
+    afs_int32 entries[PRSIZE];		/* groups a user is a member of (or list of members */
+    afs_int32 nextID;			/* id hash table next pointer */
+    afs_int32 nextName;			/* name has table next ptr */
+    afs_int32 owner;			/* id of owner of entry */
+    afs_int32 creator;			/* may differ from owner */
+    afs_int32 ngroups;			/* number of groups this user has created - 0 for group entries */
+    afs_int32 nusers;			/* number of foreign user entries this user has created - 0 for group entries NYI */
+    afs_int32 count;			/* number of members/groups for this group/user */
+    afs_int32 countsg;			/* number of supergroups for this group */
+    afs_int32 owned;			/* chain of groups owned by this entry */
+    afs_int32 nextOwned;		/* chain of groups for owner of this entry */
+    afs_int32 nextsg;			/* next block same entry for supergroups */
+#define SGSIZE 2			/* number of supergroup entries */
+    afs_int32 supergroup[SGSIZE];	/* supergroups this group belongs to */
+    char name[PR_MAXNAMELEN];		/* user or group name */
+};
+
+#endif /* SUPERGROUPS */
+
 struct contentry {			/* continuation of entry */
     afs_int32 flags;		    
     afs_int32 id;

@@ -13,6 +13,24 @@
 
 RCSID("$Header$");
 
+/*
+ *                      (3) Define a structure, idused, instead of an
+ *                          array of long integers, idmap, to count group
+ *                          memberships. These structures are on a linked
+ *                          list, with each structure containing IDCOUNT
+ *                          slots for id's.
+ *                      (4) Add new functions to processs the structure
+ *                          described above:
+ *                             zeromap(), idcount(), inccount().
+ *                      (5) Add code, primarily in WalkNextChain():
+ *                           1. Test id's, allowing groups within groups.
+ *                           2. Count the membership list for supergroups,
+ *                              and follow the continuation chain for
+ *                              supergroups.
+ *                      (6) Add fprintf statements for various error
+ *                          conditions.
+ */
+
 #include <afs/stds.h>
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -48,7 +66,6 @@ int    fd;
 char *pr_dbaseName;
 char *whoami = "db_verify";
 #define UBIK_HEADERSIZE 64
-
 
 afs_int32 printheader(h)
      struct prheader *h;
@@ -146,8 +163,17 @@ struct misc_data {
     afs_int32 maxId;				/* user */
     afs_int32 minId;				/* group */
     afs_int32 maxForId;                             /* foreign user id */
+#if defined(SUPERGROUPS)
+#define IDCOUNT 512
+    struct idused {
+	int idstart;
+	afs_int32 idcount[IDCOUNT];
+	struct idused *idnext;
+    } *idmap;
+#else
     int idRange;			/* number of ids in map */
     afs_int32 *idmap;			/* map of all id's: midId is origin */
+#endif /* SUPERGROUPS */
     int  nusers;			/* counts of each type */
     int  ngroups;
     int  nforeigns;
@@ -163,6 +189,12 @@ struct misc_data {
     int  listentries;
     FILE *recreate;			/* stream for recreate instructions */
 };
+
+#if defined(SUPERGROUPS)
+void  zeromap(struct idused *idmap);
+void inccount(struct idused **idmapp, int id);
+int   idcount(struct idused **idmapp, int id);
+#endif
 
 int readUbikHeader(misc)
   struct misc_data *misc;
@@ -360,12 +392,21 @@ afs_int32 WalkNextChain (map, misc, ea, e)
     int i;
     int noErrors = 1;
     int length;				/* length of chain */
+#if defined(SUPERGROUPS)
+    int sgcount;			/* number of sgentrys */
+    afs_int32 sghead;
+#define g (((struct prentryg *)e))
+#endif
 
     if (e) {
 	head = ntohl(e->next);
 	eid = ntohl(e->id);
 	bit = MAP_CONT;
 	count = 0;			/* set to >9999 if list ends early */
+#if defined(SUPERGROUPS)
+	sgcount = 0;
+	sghead = ntohl(g->next);
+#endif
 	for (i=0; i<PRSIZE; i++) {
 	    afs_int32 id = ntohl(e->entries[i]);
 	    if (id == PRBADID) continue;
@@ -375,26 +416,124 @@ afs_int32 WalkNextChain (map, misc, ea, e)
 		/* in case the ids are large, convert to pure sign. */
 		if (id > 0) id_s = 1; else id_s = -1; 
 		if (eid > 0) eid_s = 1; else eid_s = -1; 
+#if defined(SUPERGROUPS)
+		if (id_s > 0 && eid_s > 0) {
+		    fprintf (stderr,
+		             "User can't be member of user in membership list\n");
+		    if (PrintEntryError (misc, ea, e, 2)) return PRDBBAD;
+		    noErrors = 0;
+		}
+#else
 		if (id_s * eid_s > 0) {	/* sign should be different */
 		    fprintf (stderr,
 			     "Bad user/group dicotomy in membership list\n");
 		    if (PrintEntryError (misc, ea, e, 2)) return PRDBBAD;
 		    noErrors = 0;
 		}
+#endif /* SUPERGROUPS */
 		/* count each user as a group, and each group a user is in */
+#if defined(SUPERGROUPS)
+		if (!(id < 0 && eid < 0) &&
+		    (id != ANONYMOUSID))
+		    inccount(&misc->idmap,id);
+#else
 		if ((id >= misc->minId) && (id <= misc->maxId) &&
 		    (id != ANONYMOUSID))
 		    misc->idmap[id - misc->minId]++;
+#endif /* SUPERGROUPS */
 	    }
 	    else if (head) count=9999;
 	    else break;
 	}
+#if defined(SUPERGROUPS)
+	sghead = g->nextsg;
+	if ((e->flags & PRGRP)) {
+	    for (i = 0; i<SGSIZE; ++i) {
+		afs_int32 id = ntohl(g->supergroup[i]);
+		if (id == PRBADID) continue;
+		else if (id) {
+		    if (id > 0) {
+			fprintf (stderr,
+				 "User can't be member of supergroup list\n");
+			if (PrintEntryError (misc, ea, e, 2)) return PRDBBAD;
+			noErrors = 0;
+		    }
+		    sgcount++;
+		    inccount(&misc->idmap, id);
+		}
+	    }
+    }
+#endif /* SUPERGROUPS */
     }
     else {
 	head = ntohl(cheader.freePtr);
+#if defined(SUPERGROUPS)
+	sghead = 0;
+#endif
 	bit = MAP_FREE;
     }
 
+#if defined(SUPERGROUPS)
+    length = 0;
+    for (na=sghead; na; na=ntohl(c.next)) {
+	code = ConvertDiskAddress (na, &ni);
+	if (code) {
+	    fprintf (stderr, "Bad continuation ptr %d", na);
+	    if (PrintEntryError (misc, ea, e, 2)) return PRDBBAD;
+	    if (na != sghead) {
+		fprintf (stderr, "last block: \n");
+		if (PrintEntryError (misc, na, &c, 4)) return PRDBBAD;
+	    }
+	    return 0;
+	}
+	code = pr_Read (na, (char *)&c, sizeof(c));
+	if (code) return code;
+	length++;
+
+	if (map[ni]) {
+	    fprintf (stderr, "Continuation entry reused\n");
+	    if (PrintEntryError (misc, ea, e, 2)) return PRDBBAD;
+	    if (PrintEntryError (misc, na, &c, 4)) return PRDBBAD;
+	    noErrors = 0;
+	    break;
+	}
+	map[ni] |= bit;
+	if ((ntohl(c.id) != eid)) {
+	    fprintf (stderr, "Continuation id mismatch\n");
+	    if (PrintEntryError (misc, ea, e, 2)) return PRDBBAD;
+	    if (PrintEntryError (misc, na, &c, 4)) return PRDBBAD;
+	    noErrors = 0;
+	    continue;
+	}
+
+	/* update membership count */
+	for (i=0; i<COSIZE; i++) {
+	    afs_int32 id = ntohl(c.entries[i]);
+	    if (id == PRBADID) continue;
+	    else if (id) {
+		int eid_s, id_s;
+		sgcount++;
+		/* in case the ids are large, convert to pure sign. */
+		if (id > 0) id_s = 1; else id_s = -1;
+		if (eid > 0) eid_s = 1; else eid_s = -1;
+		if (id_s > 0) {
+		    fprintf (stderr,
+			     "User can't be member of supergroup list\n");
+		    if (PrintEntryError (misc, ea, e, 2)) return PRDBBAD;
+		    if (PrintEntryError (misc, na, &c, 4)) return PRDBBAD;
+		    noErrors = 0;
+		}
+		/* count each user as a group, and each group a user is in */
+		if (
+		    (id != ANONYMOUSID))
+		    inccount(&misc->idmap, id);
+	    }
+	    else if (c.next) count = 9999;
+	    else break;
+	}
+    }
+    if (length > misc->maxContLength) misc->maxContLength = length;
+#endif /* SUPERGROUPS */
     length = 0;
     for (na=head; na; na=ntohl(c.next)) {
 	code = ConvertDiskAddress (na, &ni);
@@ -440,6 +579,16 @@ afs_int32 WalkNextChain (map, misc, ea, e)
 		/* in case the ids are large, convert to pure sign. */
 		if (id > 0) id_s = 1; else id_s = -1; 
 		if (eid > 0) eid_s = 1; else eid_s = -1; 
+#if defined(SUPERGROUPS)
+		if (id_s > 0 && eid_s > 0) {
+		    fprintf (stderr,
+			     "User can't be member of user in membership list\n"
+);
+		    if (PrintEntryError (misc, ea, e, 2)) return PRDBBAD;
+		    if (PrintEntryError (misc, na, &c, 4)) return PRDBBAD;
+		    noErrors = 0;
+		}
+#else
 		if (id_s * eid_s > 0) {	/* sign should be different */
 		    fprintf (stderr,
 			     "Bad user/group dicotomy in membership list\n");
@@ -447,20 +596,39 @@ afs_int32 WalkNextChain (map, misc, ea, e)
 		    if (PrintEntryError (misc, na, &c, 4)) return PRDBBAD;
 		    noErrors = 0;
 		}
+#endif /* SUPERGROUPS */
 		/* count each user as a group, and each group a user is in */
+#if defined(SUPERGROUPS)
+		if (!(id < 0 && eid < 0) &&
+		    (id != ANONYMOUSID))
+		    inccount(&misc->idmap, id);
+#else
 		if ((id >= misc->minId) && (id <= misc->maxId) &&
 		    (id != ANONYMOUSID))
 		    misc->idmap[id - misc->minId]++;
+#endif /* SUPERGROUPS */
 	    }
 	    else if (c.next) count = 9999;
 	    else break;
 	}
     }
     if (e && noErrors && (count != ntohl(e->count))) {
+#if defined(SUPERGROUPS)
+	if (count >= 9999) fprintf (stderr, "Membership list ends early\n");
+#else
 	if (count > 9999) fprintf (stderr, "Membership list ends early\n");
+#endif /* SUPERGROUPS */
 	fprintf (stderr, "Count was %d should be %d\n",
 		 count, ntohl(e->count));
 	if (PrintEntryError (misc, ea, e, 2)) return PRDBBAD;
+#if defined(SUPERGROUPS)
+	noErrors = 0;
+    }
+    if (e && (e->flags & PRGRP) && (sgcount != ntohl(g->countsg))) {
+	fprintf (stderr, "SGCount was %d should be %d\n",
+		 sgcount, ntohl(g->countsg));
+	if (PrintEntryError (misc, ea, e, 2)) return PRDBBAD;
+#endif
     }
 
     if (e) {
@@ -469,6 +637,9 @@ afs_int32 WalkNextChain (map, misc, ea, e)
     else misc->freeLength = length;
 
     return 0;
+#if defined(SUPERGROUPS)
+#undef g
+#endif
 }
 
 afs_int32 WalkOwnedChain (map, misc, ea, e)
@@ -598,7 +769,11 @@ afs_int32 WalkChains (map, misc)
 	    break;
 	  case PRUSER:
 	    if (id <= 0) {
+#if defined(SUPERGROUPS)
+		fprintf (stderr, "User id not positive\n");
+#else
 		fprintf (stderr, "User id negative\n");
+#endif
 		goto abort;
 	    }
 
@@ -673,10 +848,16 @@ afs_int32 GC (map, misc)
 		if (PrintEntryError (misc, ea, &e, 2)) return PRDBBAD;
 	    }
 	    id = ntohl(e.id);
+#if defined(SUPERGROUPS)
+	    if ((id != ANONYMOUSID) &&
+	       ((refCount = idcount(&misc->idmap, id)) !=
+		ntohl(e.count))) {
+#else
 	    if ((id >= misc->minId) && (id <= misc->maxId) &&
 		(id != ANONYMOUSID) &&
 		((refCount = misc->idmap[id - misc->minId]) !=
 		 ntohl(e.count))) {
+#endif /* SUPERGROUPS */
 		afs_int32 na;
 		fprintf (stderr, "Entry membership count is inconsistent: %d entries refer to this one\n", refCount);
 		if (PrintEntryError (misc, ea, &e, 2)) return PRDBBAD;
@@ -723,13 +904,21 @@ afs_int32 DumpRecreate (map, misc)
     char *name;
     int  builtinUsers = 0;
     int  createLow = 0;			/* users uncreate from here */
+#if defined(SUPERGROUPS)
+    struct idused *idmap;		/* map of all id's */
+#else
     afs_int32 *idmap;			/* map of all id's */
+#endif
     int found;    
     FILE *rc;
 
     rc = misc->recreate;
     idmap = misc->idmap;
+#if defined(SUPERGROUPS)
+    zeromap(idmap);
+#else
     memset(idmap, 0, misc->idRange*sizeof(misc->idmap[0]));
+#endif
     do {
 	found = 0;
 	for (ei=createLow; ei<misc->nEntries; ei++) {
@@ -762,7 +951,11 @@ afs_int32 DumpRecreate (map, misc)
 
 		/* check for duplicate id.  This may still lead to duplicate
                  * names. */
+#if defined(SUPERGROUPS)
+		if (idcount(&idmap, id)) {
+#else
 		if (idmap[id-misc->minId]) {
+#endif
 		    fprintf (stderr,
 			     "Skipping entry with duplicate id %di\n", id);
 		    goto user_done;
@@ -786,7 +979,11 @@ afs_int32 DumpRecreate (map, misc)
 		    fprintf (stderr, "Warning: orphan group %s will become self owning.\n", name);
 		    owner = id;
 		}
+#if defined(SUPERGROUPS)
+		else if (!idcount(&idmap, owner)) goto user_skip;
+#else
 		else if (idmap[owner-misc->minId] == 0) goto user_skip;
+#endif
 
 		if (rc) fprintf (rc, "cr %s %d %d\n", name, id, owner);
 		
@@ -806,7 +1003,11 @@ afs_int32 DumpRecreate (map, misc)
 		}
 user_done:
 		map[ei] |= MAP_RECREATE;
+#if defined(SUPERGROUPS)
+		if (id != ANONYMOUSID) inccount(&idmap, id);
+#else
 		if (id != ANONYMOUSID) idmap[id-misc->minId]++;
+#endif
 		found++;
 	    }
 	    /* bump low water mark if possible */
@@ -830,7 +1031,11 @@ user_skip:;
 	    name = QuoteName(e.name);
 	    fprintf (stderr, "Warning: group %s in self owning cycle\n", name);
 	    if (rc) fprintf (rc, "cr %s %d %d\n", name, id, id);
+#if defined(SUPERGROUPS)
+	    inccount(&idmap, id);
+#else
 	    idmap[id-misc->minId]++;
+#endif
 	}
     for (ei=0; ei<misc->nEntries; ei++)
 	if (((map[ei] & MAP_HASHES) == MAP_HASHES) &&
@@ -840,7 +1045,11 @@ user_skip:;
 	    if (code) return code;
 
 	    owner = ntohl(e.owner);
+#if defined(SUPERGROUPS)
+	    if (!idcount(&idmap, owner)) {
+#else
 	    if (idmap[owner-misc->minId] == 0) {
+#endif
 		fprintf (stderr,
 			 "Skipping chown of '%s' to non-existant owner %di\n",
 			 e.name, owner);
@@ -864,17 +1073,56 @@ user_skip:;
 	    if ((id < 0) && (flags & PRGRP)) {
 		int count = 0;
 		afs_int32 na;
+#if defined(SUPERGROUPS)
+		afs_int32 ng;
+#endif
 		int i;
 		for (i=0; i<PRSIZE; i++) {
 		    afs_int32 uid = ntohl(e.entries[i]);
 		    if (uid == 0) break;
 		    if (uid == PRBADID) continue;
+#if !defined(SUPERGROUPS)
 		    if (uid > 0) {
+#endif
 			fprintf (rc, "au %d %d\n", uid, id);
 			count++;
+#if !defined(SUPERGROUPS)
 		    } else fprintf (stderr,
 				    "Skipping %di in group %di\n", uid, id);
+#endif
 		}
+#if defined(SUPERGROUPS)
+#define g	(*((struct prentryg *)&e))
+		ng = ntohl(g.nextsg);
+		for (i=0; i<SGSIZE; i++) {
+		    afs_int32 uid = ntohl(g.supergroup[i]);
+		    if (uid == 0) break;
+		    if (uid == PRBADID) continue;
+		    fprintf (rc, "au %d %d\n", uid, id);
+		    count++;
+		}
+		while (ng) { 
+		    struct prentry c;
+		    code = pr_Read (ng, (char *)&c, sizeof(c));
+		    if (code) return code;
+
+		    if ((id == ntohl(c.id)) && (ntohl(c.flags) & PRCONT)) {
+			for (i=0; i<COSIZE; i++) {
+			    afs_int32 uid = ntohl(c.entries[i]);
+			    if (uid == 0) break;
+			    if (uid == PRBADID) continue;
+				fprintf (rc, "au %d %d\n", uid, id);
+				count++;
+			}
+		    } else {
+			fprintf (stderr,
+				 "Skipping continuation block at %d\n", ng);
+			break;
+		    }
+		    ng = ntohl(c.next);
+		}
+#undef g
+#endif /* SUPERGROUPS */
 		na = ntohl(e.next);
 		while (na) {
 		    struct prentry c;
@@ -886,12 +1134,16 @@ user_skip:;
 			    afs_int32 uid = ntohl(c.entries[i]);
 			    if (uid == 0) break;
 			    if (uid == PRBADID) continue;
+#if !defined(SUPERGROUPS)
 			    if (uid > 0) {
+#endif
 				fprintf (rc, "au %d %d\n", uid, id);
 				count++;
+#if !defined(SUPERGROUPS)
 			    } else fprintf (stderr,
 					    "Skipping %di in group %di\n",
 					    uid, id);
+#endif
 			}
 		    } else {
 			fprintf (stderr,
@@ -955,6 +1207,9 @@ afs_int32 CheckPrDatabase (misc)
     }
 
     /* hash walk calculates min and max id */
+#if defined(SUPERGROUPS)
+    misc->idmap = 0;
+#else
     n = ((misc->maxId > misc->maxForId) ? misc->maxId : misc->maxForId);
     misc->idRange = n - misc->minId + 1;
     misc->idmap = (afs_int32 *)malloc (misc->idRange * sizeof(afs_int32));
@@ -965,6 +1220,7 @@ afs_int32 CheckPrDatabase (misc)
 	goto abort;
     }
     memset(misc->idmap, 0, misc->idRange*sizeof(misc->idmap[0]));
+#endif /* SUPERGROUPS */
 
     if (misc->verbose) {
        printf ("\nChecking entry chains\n");
@@ -1114,3 +1370,64 @@ main (argc, argv)
 
   return cmd_Dispatch(argc, argv);
 }
+
+
+#if defined(SUPERGROUPS)
+
+/* new routines to deal with very large ID numbers */
+
+void zeromap(idmap)
+    struct idused *idmap;
+{
+    while (idmap) {
+	bzero((char*) idmap->idcount, sizeof idmap->idcount);
+	idmap = idmap->idnext;
+    }
+}
+
+void inccount(struct idused **idmapp, int id)
+{
+    struct idused *idmap;
+
+    if (IDCOUNT & (IDCOUNT-1)) {
+	fprintf(stderr,"IDCOUNT must be power of 2!\n");
+	exit(1);
+    }
+    while (idmap = *idmapp) {
+	if (idmap->idstart == (id & ~(IDCOUNT-1)))
+	    break;
+	idmapp = &idmap->idnext;
+    }
+    if (!idmap) {
+	idmap = (struct idused *) malloc(sizeof *idmap);
+	if (!idmap) {
+	    perror("idmap");
+	    exit(1);
+	}
+	bzero((char*) idmap, sizeof idmap);
+	idmap->idstart = id & ~(IDCOUNT-1);
+	idmap->idnext = *idmapp;
+	*idmapp = idmap;
+    }
+    ++idmap->idcount[id & (IDCOUNT-1)];
+}
+
+int idcount(idmapp, id)
+    struct idused **idmapp;
+{
+    struct idused *idmap;
+
+    if (IDCOUNT & (IDCOUNT-1)) {
+	fprintf(stderr,"IDCOUNT must be power of 2!\n");
+	exit(1);
+    }
+    while (idmap = *idmapp) {
+	    if (idmap->idstart == (id & ~(IDCOUNT-1))) {
+		return idmap->idcount[id & (IDCOUNT-1)];
+	    }
+	    idmapp = &idmap->idnext;
+    }
+    return 0;
+}
+
+#endif /* SUPERGROUPS */

@@ -7,6 +7,19 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+/* 
+ *                      (5) Add functions to process supergroups:
+ *                          ChangeIDEntry(), RemoveFromSGEntry(),
+ *                          AddToSGEntry(), GetListSG2().
+ *                      (6) Add code to existing functions to process
+ *                          supergroups.
+ *      2/1/98 jjm      Add mdw's changes for bit mapping for supergroups
+ *
+ *	09/26/02 kwc	Move depthsg definition here from ptserver.c since
+ *			pt_util needs it defined also, and this file is
+ *			common between the two programs.
+ */
+
 #include <afsconfig.h>
 #include <afs/param.h>
 
@@ -47,6 +60,130 @@ extern int IDCmp();
 
 extern afs_int32 AddToEntry();
 static char *whoami = "ptserver";
+
+#if defined(SUPERGROUPS)
+
+#include "map.h"
+
+afs_int32 depthsg = 5;  /* Maximum iterations used during IsAMemberOF */
+extern int IDCmp();
+afs_int32 GetListSG2 (struct ubik_trans *at, afs_int32 gid, prlist *alist,
+	afs_int32 *sizeP, afs_int32 depth);
+
+struct map *sg_flagged;
+struct map *sg_found;
+
+#define NIL_MAP ((struct map *) 0)
+
+/* pt_mywrite hooks into the logic that writes ubik records to disk
+ *  at a very low level.  It invalidates mappings in sg_flagged/sg_found.
+ *  By hoooking in at this level, we ensure that a ubik file reload
+ *  invalidates our incore cache.
+ *
+ * We assert records, cheaders and everything else are 0 mod 64.
+ *  So, we can always see the first 64 bytes of any record written.
+ *  The stuff we're interested in (flags, id) are in the first 8 bytes.
+ *  so we can always tell if we're writing a group record.
+ */
+
+int (*pt_save_dbase_write)();
+
+int pt_mywrite(tdb, fno, bp, pos, count)
+	struct ubik_dbase *tdb;
+	afs_int32 fno, pos, count;
+	char *bp;
+{
+	afs_uint32 headersize = ntohl(cheader.headerSize);
+
+	if (fno == 0 && pos+count > headersize)
+	{
+		afs_int32 p, l, c, o;
+		char *cp;
+		p = pos-headersize;
+		cp = bp;
+		l = count;
+		if (p < 0) {
+			l += p;
+			p = 0;
+		}
+		while (l > 0)
+		{
+			o = p%ENTRYSIZE;
+			c = ENTRYSIZE-o;
+			if (c > l)
+				c = l;
+#if DEBUG_SG_MAP
+			if (o)
+				fprintf (stderr,"Writing %d bytes of entry @ %#lx(+%d)\n",
+					c, p-o, o);
+			else if (c == ENTRYSIZE)
+				fprintf (stderr,"Writing %d bytes of entry @ %#lx (%d<%s>,%d)\n",
+					c, p,
+					((struct prentry *)cp)->flags,
+(((struct prentry *)cp)->flags&PRTYPE)==PRUSER ? "user" :
+(((struct prentry *)cp)->flags&PRTYPE)==PRFREE ? "free" :
+(((struct prentry *)cp)->flags&PRTYPE)==PRGRP ? "group" :
+(((struct prentry *)cp)->flags&PRTYPE)==PRCONT ? "cont" :
+(((struct prentry *)cp)->flags&PRTYPE)==PRCELL ? "cell" :
+(((struct prentry *)cp)->flags&PRTYPE)==PRFOREIGN ? "foreign" :
+(((struct prentry *)cp)->flags&PRTYPE)==PRINST ? "sub/super instance" :
+"?",
+					((struct prentry *)cp)->id);
+			else if (c >= 8)
+				fprintf (stderr,"Writing first %d bytes of entry @ %#lx (%d<%s>,%d)\n",
+					c, p,
+					((struct prentry *)cp)->flags,
+(((struct prentry *)cp)->flags&PRTYPE)==PRUSER ? "user" :
+(((struct prentry *)cp)->flags&PRTYPE)==PRFREE ? "free" :
+(((struct prentry *)cp)->flags&PRTYPE)==PRGRP ? "group" :
+(((struct prentry *)cp)->flags&PRTYPE)==PRCONT ? "cont" :
+(((struct prentry *)cp)->flags&PRTYPE)==PRCELL ? "cell" :
+(((struct prentry *)cp)->flags&PRTYPE)==PRFOREIGN ? "foreign" :
+(((struct prentry *)cp)->flags&PRTYPE)==PRINST ? "sub/super instance" :
+"?",
+					((struct prentry *)cp)->id);
+			else
+				fprintf (stderr,"Writing %d bytes of entry @ %#lx\n",
+					c, p);
+#endif
+			if (!o && c >= 8 &&
+				(((struct prentry *)cp)->flags&PRTYPE)==PRGRP)
+			{
+#if DEBUG_SG_MAP
+if (in_map(sg_found, -((struct prentry *)cp)->id))fprintf(stderr,"Unfound: Removing group %d\n",
+((struct prentry *)cp)->id);
+if (in_map(sg_flagged, -((struct prentry *)cp)->id))fprintf(stderr,"Unflag: Removing group %d\n",
+((struct prentry *)cp)->id);
+#endif
+				sg_found = bic_map(sg_found, add_map(NIL_MAP,
+					-((struct prentry *)cp)->id));
+				sg_flagged = bic_map(sg_flagged, add_map(NIL_MAP,
+					-((struct prentry *)cp)->id));
+			}
+			cp += c;
+			p += c;
+			l -= c;
+		}
+	}
+	return (*pt_save_dbase_write)(tdb, fno, bp, pos, count);
+}
+
+/*
+ * this function attaches pt_mywrite.  It's called once,
+ *  just after ubik_ServerInit.
+ */
+
+pt_hook_write()
+{
+	extern struct ubik_dbase *ubik_dbase;
+	if (ubik_dbase->write != pt_mywrite)
+	{
+		pt_save_dbase_write = ubik_dbase->write;
+		ubik_dbase->write = pt_mywrite;
+	}
+}
+
+#endif /* SUPERGROUPS */
 
 /* CorrectUserName - Check to make sure a user name is OK.  It must not include
  *   either a colon (or it would look like a group) or an atsign (or it would
@@ -501,6 +638,163 @@ afs_int32 RemoveFromEntry (at, aid, bid)
     return PRNOENT;
 }
 
+#if defined(SUPERGROUPS)
+/* ChangeIDEntry - remove aid from bid's entries list, freeing a continuation
+ * entry if appropriate */
+
+afs_int32 ChangeIDEntry (at, aid, newid, bid)
+  register struct ubik_trans *at;
+  register afs_int32 aid;
+  register afs_int32 bid;
+  afs_int32 newid;
+{
+    register afs_int32 code;
+    struct prentry tentry;
+    struct contentry centry;
+    afs_int32 temp;
+    afs_int32 i,j;
+    afs_int32 nptr;
+
+    if (aid == bid) return PRINCONSISTENT;
+    temp = FindByID(at,bid);
+    if (temp == 0) {
+        return PRNOENT;
+    }
+    code = pr_ReadEntry(at, 0, temp, &tentry);
+    if (code != 0) return code;
+    for (i=0;i<PRSIZE;i++) {
+        if (tentry.entries[i] == aid) {
+            tentry.entries[i] = newid;
+            code = pr_WriteEntry(at,0,temp,&tentry);
+            if (code != 0) return code;
+            return PRSUCCESS;
+        }
+        if (tentry.entries[i] == 0) {   /* found end of list */
+            return PRNOENT;
+        }
+    }
+
+    nptr = tentry.next;
+    while (nptr != NULL) {
+        code = pr_ReadCoEntry(at,0,nptr,&centry);
+        if (code != 0) return code;
+        if ((centry.id != bid) || !(centry.flags & PRCONT)) {
+fprintf(stderr,"ChangeIDEntry: bad database bid=%d centry.id=%d .flags=%d\n",
+bid, centry.id, centry.flags); 
+            return PRDBBAD;
+        }
+        for (i=0;i<COSIZE;i++) {
+            if (centry.entries[i] == aid) {
+                centry.entries[i] = newid;
+                for (j=0;j<COSIZE;j++)
+                    if (centry.entries[j] != PRBADID &&
+                        centry.entries[j] != 0) break;
+                code = pr_WriteCoEntry(at,0,nptr,&centry);
+                if (code != 0) return code;
+                return 0;
+            }
+            if (centry.entries[i] == 0) {
+                return PRNOENT;
+            }
+        } /* for all coentry slots */
+        nptr = centry.next;
+    } /* while there are coentries */
+    return PRNOENT;
+}
+
+/*  #ifdef SUPERGROUPS */
+/* RemoveFromSGEntry - remove aid from bid's supergroups list, freeing a
+ * continuation entry if appropriate */
+
+afs_int32 RemoveFromSGEntry (at, aid, bid)
+  register struct ubik_trans *at;
+  register afs_int32 aid;
+  register afs_int32 bid;
+{
+    register afs_int32 code;
+    struct prentry tentry;
+    struct prentryg *tentryg;
+    struct contentry centry;
+    struct contentry hentry;
+    afs_int32 temp;
+    afs_int32 i,j;
+    afs_int32 nptr;
+    afs_int32 hloc;
+
+    if (aid == bid) return PRINCONSISTENT;
+    memset(&hentry, 0, sizeof(hentry));
+    temp = FindByID(at,bid);
+    if (temp == 0) {
+        return PRNOENT;
+    }
+    code = pr_ReadEntry(at, 0, temp, &tentry);
+    if (code != 0) return code;
+#ifdef PR_REMEMBER_TIMES
+    tentry.removeTime = time((afs_int32*)0);
+#endif
+    tentryg = (struct prentryg *)&tentry;
+    for (i=0;i<SGSIZE;i++) {
+        if (tentryg->supergroup[i] == aid) {
+            tentryg->supergroup[i] = PRBADID;
+            tentryg->countsg--;
+            code = pr_WriteEntry(at,0,temp,&tentry);
+            if (code != 0) return code;
+            return PRSUCCESS;
+        }
+        if (tentryg->supergroup[i] == 0) {   /* found end of list */
+            return PRNOENT;
+        }
+    }
+    hloc = 0;
+    nptr = tentryg->nextsg;
+    while (nptr != NULL) {
+        code = pr_ReadCoEntry(at,0,nptr,&centry);
+        if (code != 0) return code;
+        if ((centry.id != bid) || !(centry.flags & PRCONT)) {
+	    fprintf(stderr,"ChangeIDEntry: bad database bid=%d centry.id=%d .flags=%d\n",
+		bid, centry.id, centry.flags);
+            return PRDBBAD;
+        }
+        for (i=0;i<COSIZE;i++) {
+            if (centry.entries[i] == aid) {
+                centry.entries[i] = PRBADID;
+                for (j=0;j<COSIZE;j++)
+                    if (centry.entries[j] != PRBADID &&
+                        centry.entries[j] != 0) break;
+                if (j == COSIZE) {   /* can free this block */
+                    if (hloc == 0) {
+                        tentryg->nextsg = centry.next;
+                    }
+                    else {
+                        hentry.next = centry.next;
+                        code = pr_WriteCoEntry (at, 0, hloc, &hentry);
+                        if (code != 0) return code;
+                    }
+                    code = FreeBlock (at, nptr);
+                    if (code) return code;
+                }
+                else { /* can't free it yet */
+                    code = pr_WriteCoEntry(at,0,nptr,&centry);
+                    if (code != 0) return code;
+                }
+                tentryg->countsg--;
+                code = pr_WriteEntry(at,0,temp,&tentry);
+                if (code) return PRDBFAIL;
+                return 0;
+            }
+            if (centry.entries[i] == 0) {
+                return PRNOENT;
+            }
+        } /* for all coentry slots */
+        hloc = nptr;
+        nptr = centry.next;
+        bcopy((char*)&centry,(char*)&hentry,sizeof(centry));
+    } /* while there are coentries */
+    return PRNOENT;
+}
+
+#endif /* SUPERGROUPS */
+
 /* DeleteEntry - delete the entry in tentry at loc, removing it from all
  * groups, putting groups owned by it on orphan chain, and freeing the space */
 
@@ -539,9 +833,27 @@ afs_int32 DeleteEntry (at, tentry, loc)
     for (i=0;i<PRSIZE;i++) {
 	if (tentry->entries[i] == PRBADID) continue;
 	if (tentry->entries[i] == 0) break;
+#if defined(SUPERGROUPS)
+	if ((tentry->flags & PRGRP) && tentry->entries[i] < 0) /* Supergroup */
+	  code = RemoveFromSGEntry (at, tentry->id, tentry->entries[i]);
+	else
+#endif
 	code = RemoveFromEntry (at, tentry->id, tentry->entries[i]);
 	if (code) return code;
     }
+#if defined(SUPERGROUPS)
+    {
+	struct prentryg *tentryg = (struct prentryg *)tentry;
+
+	/* Then remove the entire supergroup list */
+	for (i=0;i<SGSIZE;i++) {
+	    if (tentryg->supergroup[i] == PRBADID) continue;
+	    if (tentryg->supergroup[i] == 0) break; 
+	    code = RemoveFromEntry (at, tentry->id, tentryg->supergroup[i]);
+	    if (code) return code;
+	}
+    }
+#endif /* SUPERGROUPS */
     nptr = tentry->next;
     while (nptr != (afs_int32)NULL) {
 	code = pr_ReadCoEntry(at,0,nptr,&centry);
@@ -721,6 +1033,119 @@ afs_int32 AddToEntry (tt, entry, loc, aid)
 	
 }
 
+#if defined(SUPERGROUPS)
+
+/* AddToSGEntry - add aid to entry's supergroup list, alloc'ing a
+ * continuation block if needed.
+ *
+ * Note the entry is written out by this routine. */
+ 
+afs_int32 AddToSGEntry (tt, entry, loc, aid)
+  struct ubik_trans *tt;
+  struct prentry *entry;
+  afs_int32 loc;
+  afs_int32 aid;
+{ 
+    register afs_int32 code;
+    afs_int32 i; 
+    struct contentry nentry;
+    struct contentry aentry;
+    struct prentryg *entryg;
+    afs_int32 nptr;
+    afs_int32 last;                          /* addr of last cont. block */
+    afs_int32 first = 0;
+    afs_int32 cloc;
+    afs_int32 slot = -1;
+
+    if (entry->id == aid) return PRINCONSISTENT;
+#ifdef PR_REMEMBER_TIMES
+    entry->addTime = time((afs_int32*)0);
+#endif
+    entryg = (struct prentryg *)entry;
+    for (i=0;i<SGSIZE;i++) {
+	if (entryg->supergroup[i] == aid)
+	    return PRIDEXIST;
+	if (entryg->supergroup[i] == PRBADID) { /* remember this spot */
+	    first = 1;
+	    slot = i;
+	}
+	else if (entryg->supergroup[i] == 0) { /* end of the line */
+	    if (slot == -1) {
+		first = 1;
+		slot = i;
+	    }
+	    break;
+	}
+    }
+    last = 0;
+    nptr = entryg->nextsg;
+    while (nptr != NULL) {
+	code = pr_ReadCoEntry(tt,0,nptr,&nentry);
+	if (code != 0) return code;
+	last = nptr;
+	if (!(nentry.flags & PRCONT)) return PRDBFAIL;
+	for (i=0;i<COSIZE;i++) {
+	    if (nentry.entries[i] == aid)
+		return PRIDEXIST;
+	    if (nentry.entries[i] == PRBADID) {
+		if (slot == -1) {
+		    slot = i;
+		    cloc = nptr;
+		}
+	    }
+	    else if (nentry.entries[i] == 0) {
+		if (slot == -1) {
+		    slot = i;
+		    cloc = nptr;
+		}
+		break;
+	    }
+	}
+	nptr = nentry.next;
+    }
+    if (slot != -1) {                   /* we found a place */
+	entryg->countsg++;
+	if (first) {  /* place is in first block */
+	    entryg->supergroup[slot] = aid;
+	    code = pr_WriteEntry (tt, 0, loc, entry);
+	    if (code != 0) return code;
+	    return PRSUCCESS;
+	}
+	code = pr_WriteEntry (tt, 0, loc, entry);
+	if (code) return code;
+	code = pr_ReadCoEntry(tt,0,cloc,&aentry);
+	if (code != 0) return code;
+	aentry.entries[slot] = aid;
+	code = pr_WriteCoEntry(tt,0,cloc,&aentry);
+	if (code != 0) return code;
+	return PRSUCCESS;
+    }
+    /* have to allocate a continuation block if we got here */
+    nptr = AllocBlock(tt);
+    if (last) {
+	/* then we should tack new block after last block in cont. chain */
+	nentry.next = nptr;
+	code = pr_WriteCoEntry(tt,0,last,&nentry);
+	if (code != 0) return code;
+    }
+    else {
+	entryg->nextsg = nptr;
+    }
+    memset(&aentry, 0, sizeof(aentry));
+    aentry.flags |= PRCONT;
+    aentry.id = entry->id;
+    aentry.next = NULL;
+    aentry.entries[0] = aid;
+    code = pr_WriteCoEntry(tt,0,nptr,&aentry);
+    if (code != 0) return code;
+    /* don't forget to update count, here! */ 
+    entryg->countsg++;
+    code = pr_WriteEntry (tt, 0, loc, entry);
+    return code;
+
+}
+#endif /* SUPERGROUPS */
+
 afs_int32 AddToPRList (alist, sizeP, id)
   prlist *alist;
   int *sizeP;
@@ -766,6 +1191,11 @@ afs_int32 GetList (at, tentry, alist, add)
 	if (tentry->entries[i] == 0) break;
 	code = AddToPRList (alist, &size, tentry->entries[i]);
 	if (code) return code;
+#if defined(SUPERGROUPS)
+	if (!add) continue;
+	code = GetListSG2 (at, tentry->entries[i], alist, &size, depthsg);
+	if (code) return code;
+#endif
     }
 
     for (nptr = tentry->next; nptr != 0; nptr = centry.next) {
@@ -777,6 +1207,11 @@ afs_int32 GetList (at, tentry, alist, add)
 	    if (centry.entries[i] == 0) break;
 	    code = AddToPRList (alist, &size, centry.entries[i]);
 	    if (code) return code;
+#if defined(SUPERGROUPS)
+	    if (!add) continue;
+	    code = GetListSG2 (at, centry.entries[i], alist, &size, depthsg);
+	    if (code) return code;
+#endif
 	}
 	if (count++ > 50) IOMGR_Poll(), count = 0;
     }
@@ -820,6 +1255,11 @@ afs_int32 GetList2 (at, tentry, tentry2 , alist, add)
 	if (tentry->entries[i] == 0) break;
 	code = AddToPRList (alist, &size, tentry->entries[i]);
 	if (code) return code;
+#if defined(SUPERGROUPS)
+	if (!add) continue;
+	code = GetListSG2 (at, tentry->entries[i], alist, &size, depthsg);
+	if (code) return code;
+#endif
     }
 
     nptr = tentry->next;
@@ -832,6 +1272,11 @@ afs_int32 GetList2 (at, tentry, tentry2 , alist, add)
 	    if (centry.entries[i] == 0) break;
 	    code = AddToPRList (alist, &size, centry.entries[i]);
 	    if (code) return code;
+#if defined(SUPERGROUPS)
+	    if (!add) continue;
+	    code = GetListSG2 (at, centry.entries[i], alist, &size, depthsg);
+	    if (code) return code;
+#endif
 	}
 	nptr = centry.next;
 	if (count++ > 50) IOMGR_Poll(), count = 0;
@@ -875,6 +1320,158 @@ afs_int32 GetList2 (at, tentry, tentry2 , alist, add)
     qsort(alist->prlist_val,alist->prlist_len,sizeof(afs_int32),IDCmp);
     return PRSUCCESS;
 }
+
+#if defined(SUPERGROUPS)
+
+afs_int32 GetListSG2 (at, gid, alist, sizeP, depth)
+    struct ubik_trans *at;
+    afs_int32 gid;
+    prlist *alist;
+    afs_int32 depth;
+    afs_int32 *sizeP;
+{
+    register afs_int32 code;
+    struct prentry tentry;
+    struct prentryg *tentryg = (struct prentryg *)&tentry;
+    afs_int32 i;
+    struct contentry centry;
+    afs_int32 nptr;
+    int count = 0;
+    afs_int32 temp;
+    int didsomething;
+#if DEBUG_SG_MAP
+    int predictfound, predictflagged;
+#endif
+
+#if DEBUG_SG_MAP
+    predictfound = 0;
+    if (!in_map(sg_flagged, -gid))
+    {
+	predictflagged = 0;
+	fprintf(stderr,"GetListSG2: I have not yet searched for gid=%d\n", gid);
+    }
+    else if (predictflagged = 1, in_map(sg_found, -gid)) {
+	predictfound = 1;
+	fprintf (stderr,
+		"GetListSG2: I have already searched for gid=%d, and predict success.\n",
+		gid);
+    }
+#endif
+
+    if (in_map(sg_flagged, -gid) && !in_map(sg_found, -gid)) {
+#if DEBUG_SG_MAP
+	fprintf (stderr,
+		"GetListSG2: I have already searched for gid=%d, and predict failure.\n",
+		gid);
+#else
+        return 0;
+#endif
+    }
+
+    if (depth < 1) return 0;
+    temp = FindByID (at, gid);
+    if (!temp) {
+        code = PRNOENT;
+        return code;
+    }
+    code = pr_ReadEntry (at, 0, temp, &tentry);
+    if (code) return code;
+#if DEBUG_SG_MAP
+    fprintf (stderr,"GetListSG2: lookup for gid=%d [\n", gid);
+#endif
+    didsomething = 0;
+
+    for (i=0;i<SGSIZE;i++) {
+        if (tentryg->supergroup[i] == PRBADID) continue;
+        if (tentryg->supergroup[i] == 0) break;
+        didsomething = 1;
+#if DEBUG_SG_MAP
+	fprintf (stderr,"via gid=%d, added %d\n", gid, e.tentryg.supergroup[i]);
+#endif
+        code = AddToPRList (alist, sizeP, tentryg->supergroup[i]);
+        if (code) return code;
+        code = GetListSG2 (at, tentryg->supergroup[i], alist, sizeP, depth-1);
+        if (code) return code;
+    }
+
+    nptr = tentryg->nextsg;
+    while (nptr != NULL) {
+        didsomething = 1;
+        /* look through cont entries */
+        code = pr_ReadCoEntry(at,0,nptr,&centry);
+        if (code != 0) return code;
+        for (i=0;i<COSIZE;i++) {
+            if (centry.entries[i] == PRBADID) continue;
+            if (centry.entries[i] == 0) break;
+#if DEBUG_SG_MAP
+	    fprintf (stderr,"via gid=%d, added %d\n", gid, e.centry.entries[i]);
+#endif
+            code = AddToPRList (alist, sizeP, centry.entries[i]);
+            if (code) return code;
+            code = GetListSG2 (at, centry.entries[i], alist, sizeP, depth-1);
+            if (code) return code;
+        }
+        nptr = centry.next;
+        if (count++ > 50) IOMGR_Poll(), count = 0;
+    }
+#if DEBUG_SG_MAP
+    fprintf (stderr,"] for gid %d, done [flag=%s]\n", gid, didsomething ? "TRUE" : "FALSE");
+    if (predictflagged && didsomething != predictfound)
+    fprintf (stderr,"**** for gid=%d, didsomething=%d predictfound=%d\n",
+		didsomething, predictfound);
+#endif
+    if (didsomething)
+        sg_found = add_map(sg_found, -gid);
+        else sg_found = bic_map(sg_found, add_map(NIL_MAP, -gid));
+    sg_flagged = add_map(sg_flagged, -gid);
+    return 0;
+}
+
+afs_int32 GetSGList (at, tentry, alist)
+    struct ubik_trans *at;
+    struct prentry *tentry;
+    prlist *alist;
+{
+    register afs_int32 code;
+    afs_int32 i;
+    struct contentry centry;
+    struct prentryg *tentryg;
+    afs_int32 nptr;
+    int size;
+    int count = 0;
+
+    size = 0;
+    alist->prlist_val = 0;
+    alist->prlist_len = 0;
+
+    tentryg = (struct prentryg *)tentry;
+    for (i=0;i<SGSIZE;i++) {
+        if (tentryg->supergroup[i] == PRBADID) continue;
+        if (tentryg->supergroup[i] == 0) break;
+        code = AddToPRList (alist, &size, tentryg->supergroup[i]);
+        if (code) return code; 
+    }
+
+    nptr = tentryg->nextsg;
+    while (nptr != NULL) {
+        /* look through cont entries */
+        code = pr_ReadCoEntry(at,0,nptr,&centry);
+        if (code != 0) return code;
+        for (i=0;i<COSIZE;i++) {
+            if (centry.entries[i] == PRBADID) continue;
+            if (centry.entries[i] == 0) break;
+            code = AddToPRList (alist, &size, centry.entries[i]);
+            if (code) return code;
+        }
+        nptr = centry.next;
+        if (count++ > 50) IOMGR_Poll(), count = 0;
+    }
+
+    if (alist->prlist_len > 100) IOMGR_Poll();
+    qsort((char*)alist->prlist_val,(int)alist->prlist_len,sizeof(afs_int32),IDCmp);
+    return PRSUCCESS;
+}
+#endif /* SUPERGROUPS */
 
 afs_int32 GetOwnedChain (ut, next, alist)
   struct ubik_trans *ut;
@@ -1091,6 +1688,9 @@ afs_int32 ChangeEntry (at, aid, cid, name, oid, newid)
 {
     afs_int32 code;
     afs_int32 i, nptr, pos;
+#if defined(SUPERGROUPS)
+    afs_int32 nextpos;
+#endif
     struct contentry centry;
     struct prentry tentry, tent;
     afs_int32 loc;
@@ -1137,6 +1737,66 @@ afs_int32 ChangeEntry (at, aid, cid, name, oid, newid)
 	code = pr_ReadEntry(at, 0, loc, &tentry);
 	if (code) return PRDBFAIL;
 
+#if defined(SUPERGROUPS)
+	if (tentry.id > (afs_int32)ntohl(cheader.maxID))
+	    code = set_header_word (at, maxID, htonl(tentry.id));
+	if (code) return PRDBFAIL; 
+
+	/* need to fix up: membership
+	 * (supergroups?)
+	 * ownership
+	 */
+
+	for (i=0;i<PRSIZE;i++) {
+	    if (tentry.entries[i] == PRBADID) continue;
+	    if (tentry.entries[i] == 0) break;
+	    if ((tentry.flags & PRGRP) && tentry.entries[i] < 0) { /* Supergroup */
+		return 5;       /* not yet, in short. */
+	    }
+	    else {
+		code = ChangeIDEntry (at, aid, newid, tentry.entries[i]);
+	    }
+	    if (code) return code;
+	}
+	for (pos = ntohl(tentry.owned); pos; pos = nextpos) {
+	    code = pr_ReadEntry(at, 0, pos, &tent);
+	    if (code) break;
+	    tent.owner = newid;
+	    nextpos = tent.nextOwned;
+	    code = pr_WriteEntry(at, 0, pos, &tent);
+	    if (code) break;
+	}
+	pos = tentry.next;
+	while (pos != NULL) {
+#define centry  (*(struct contentry*)&tent)
+	    code = pr_ReadCoEntry(at,0,pos,&centry);
+	    if ((centry.id != aid)
+		    || !(centry.flags & PRCONT)) {
+		fprintf(stderr,"ChangeEntry: bad database aid=%d centry.id=%d .flags=%d\n",
+			aid, centry.id, centry.flags);
+		return PRDBBAD;
+	    }
+	    centry.id = newid;
+	    for (i=0;i<COSIZE;i++) {
+		if (centry.entries[i] == PRBADID) continue;
+		if (centry.entries[i] == 0) break;
+		if ((centry.flags & PRGRP) && centry.entries[i] < 0) { /* Supergroup */
+ 		    return 5;   /* not yet, in short. */
+		}
+		else {
+		    code = ChangeIDEntry (at, aid, newid, centry.entries[i]);
+		}
+		if (code) return code;
+	    }
+	    code = pr_WriteCoEntry (at, 0, pos, &centry);
+	    pos = centry.next;
+#undef centry
+	}
+	if (code) return code;
+
+#else /* SUPERGROUPS */
+
+
 	/* Also change the references from the membership list */
 	for (i=0; i<PRSIZE; i++) {
 	   if (tentry.entries[i] == PRBADID) continue;
@@ -1170,6 +1830,7 @@ afs_int32 ChangeEntry (at, aid, cid, name, oid, newid)
 	      if (code) return code;
 	   }
        }
+#endif /* SUPERGROUPS */
     }
 
     atsign = strchr(tentry.name, '@'); /* check for foreign entry */
