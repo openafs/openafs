@@ -339,6 +339,7 @@ long buf_Init(cm_buf_ops_t *opsp)
                               0, 0,   
                               buf_nbuffers * buf_bufferSize);
         if (data == NULL) {
+            afsi_log("Error mapping view of file: 0x%X", GetLastError());
             if (hf != INVALID_HANDLE_VALUE)
                 CloseHandle(hf);
             CloseHandle(hm);

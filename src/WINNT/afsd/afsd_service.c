@@ -96,7 +96,9 @@ static void afsd_notifier(char *msgp, char *filep, long line)
     smb_DumpVCP(afsi_file, "a");			
     afsi_log("--- end   dump ---");
     
+#ifdef DEBUG
     DebugBreak();	
+#endif
 
     SetEvent(WaitToTerminate);
 
@@ -490,12 +492,111 @@ GetVersionInfo( CHAR * filename, CHAR * szOutput, DWORD dwOutput )
     return retval;
 }
 
+#define ENCODING (X509_ASN_ENCODING | PKCS_7_ASN_ENCODING)
+
+PCCERT_CONTEXT GetCertCtx(CHAR * filename)
+{
+    wchar_t wfilename[260];
+    BOOL fResult;
+    DWORD dwEncoding;
+    DWORD dwContentType;
+    DWORD dwFormatType;
+    DWORD dwSignerInfo;
+    HCERTSTORE hStore = NULL;
+    HCRYPTMSG hMsg = NULL;
+    PCMSG_SIGNER_INFO pSignerInfo = NULL;
+    PCCERT_CONTEXT pCertContext = NULL;
+    CERT_INFO CertInfo;
+
+    ZeroMemory(&CertInfo, sizeof(CertInfo));
+    mbstowcs(wfilename, filename, 260);
+
+    fResult = CryptQueryObject(CERT_QUERY_OBJECT_FILE,
+			       wfilename,
+			       CERT_QUERY_CONTENT_FLAG_PKCS7_SIGNED_EMBED,
+			       CERT_QUERY_FORMAT_FLAG_BINARY,
+			       0,
+			       &dwEncoding,
+			       &dwContentType,
+			       &dwFormatType,
+			       &hStore,
+			       &hMsg,
+			       NULL);
+
+    if (!fResult) {
+        afsi_log("CryptQueryObject failed for [%s] with error 0x%x",
+		 filename,
+		 GetLastError());
+	goto __exit;
+    }
+
+    fResult = CryptMsgGetParam(hMsg,
+			       CMSG_SIGNER_INFO_PARAM,
+			       0,
+			       NULL,
+			       &dwSignerInfo);
+
+    if (!fResult) {
+        afsi_log("CryptMsgGetParam failed for [%s] with error 0x%x",
+		 filename,
+		 GetLastError());
+	goto __exit;
+    }
+
+    pSignerInfo = (PCMSG_SIGNER_INFO)LocalAlloc(LPTR, dwSignerInfo);
+
+    fResult = CryptMsgGetParam(hMsg,
+			       CMSG_SIGNER_INFO_PARAM,
+			       0,
+			       (PVOID)pSignerInfo,
+			       &dwSignerInfo);
+    
+    if (!fResult) {
+        afsi_log("CryptMsgGetParam failed for [%s] with error 0x%x",
+		 filename,
+		 GetLastError());
+	goto __exit;
+    }
+
+    CertInfo.Issuer = pSignerInfo->Issuer;
+    CertInfo.SerialNumber = pSignerInfo->SerialNumber;
+
+    pCertContext = CertFindCertificateInStore(hStore,
+					      ENCODING,
+					      0,
+					      CERT_FIND_SUBJECT_CERT,
+					      (PVOID) &CertInfo,
+					      NULL);
+
+    if (!pCertContext) {
+      afsi_log("CertFindCertificateInStore for file [%s] failed with 0x%x",
+	       filename,
+	       GetLastError());
+      goto __exit;
+    }
+
+  __exit:
+    if (pSignerInfo)
+      LocalFree(pSignerInfo);
+
+    /*    if (pCertContext)
+	  CertFreeCertificateContext(pCertContext);*/
+
+    if (hStore)
+      CertCloseStore(hStore,0);
+
+    if (hMsg)
+      CryptMsgClose(hMsg);
+
+    return pCertContext;
+}
+
 BOOL VerifyTrust(CHAR * filename)
 {
-    WINTRUST_DATA fTrust;
-    WINTRUST_FILE_INFO finfo;
-    GUID trustAction = WINTRUST_ACTION_GENERIC_VERIFY_V2;
-    GUID subject = WIN_TRUST_SUBJTYPE_RAW_FILEEX;
+    WIN_TRUST_ACTDATA_CONTEXT_WITH_SUBJECT fContextWSubject;
+    WIN_TRUST_SUBJECT_FILE fSubjectFile;
+    GUID trustAction = WIN_SPUB_ACTION_PUBLISHED_SOFTWARE;
+    GUID subject = WIN_TRUST_SUBJTYPE_PE_IMAGE;
     wchar_t wfilename[260];
     LONG ret;
 
@@ -504,25 +605,20 @@ BOOL VerifyTrust(CHAR * filename)
 
     mbstowcs(wfilename, filename, 260);
 
-    finfo.cbStruct = sizeof(finfo);
-    finfo.pcwszFilePath= wfilename;
-    finfo.hFile = INVALID_HANDLE_VALUE;
-    finfo.pgKnownSubject = &subject;
+    fSubjectFile.hFile = CreateFile(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING,
+                             0, NULL);
+    fSubjectFile.lpPath = wfilename;
+    fContextWSubject.hClientToken = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+                                                FALSE, GetCurrentProcessId());
+    fContextWSubject.SubjectType = &subject;
+    fContextWSubject.Subject = &fSubjectFile;
 
-    fTrust.cbStruct = sizeof(fTrust);
-    fTrust.pPolicyCallbackData = NULL;
-    fTrust.pSIPClientData = NULL;
-    fTrust.dwUIChoice = WTD_UI_NONE;
-    fTrust.fdwRevocationChecks = WTD_REVOKE_NONE;
-    fTrust.dwUnionChoice = WTD_CHOICE_FILE;
-    fTrust.pFile = &finfo;
-    fTrust.dwStateAction = WTD_STATEACTION_IGNORE;
-    fTrust.hWVTStateData = NULL;
-    fTrust.pwszURLReference = NULL;
-    fTrust.dwProvFlags = WTD_SAFER_FLAG | WTD_REVOCATION_CHECK_NONE;
-    fTrust.dwUIContext = WTD_UICONTEXT_EXECUTE;
-    
-    ret = WinVerifyTrust(INVALID_HANDLE_VALUE, &trustAction, &fTrust);
+    ret = WinVerifyTrust(INVALID_HANDLE_VALUE, &trustAction, &fContextWSubject);
+
+    if ( fSubjectFile.hFile != INVALID_HANDLE_VALUE )
+        CloseHandle( fSubjectFile.hFile );
+    if ( fContextWSubject.hClientToken != INVALID_HANDLE_VALUE )
+        CloseHandle( fContextWSubject.hClientToken );
 
     if (ret == ERROR_SUCCESS) {
         return TRUE;
@@ -551,6 +647,74 @@ BOOL VerifyTrust(CHAR * filename)
     }
 }
 
+void LogCertCtx(PCCERT_CONTEXT pCtx) {
+    DWORD dwData;
+    LPTSTR szName = NULL;
+
+    // Get Issuer name size.
+    if (!(dwData = CertGetNameString(pCtx,
+				     CERT_NAME_SIMPLE_DISPLAY_TYPE,
+				     CERT_NAME_ISSUER_FLAG,
+				     NULL,
+				     NULL,
+				     0))) {
+        afsi_log("CertGetNameString failed: 0x%x", GetLastError());
+	goto __exit;
+    }
+
+    // Allocate memory for Issuer name.
+    szName = (LPTSTR)LocalAlloc(LPTR, dwData * sizeof(TCHAR));
+
+    // Get Issuer name.
+    if (!(CertGetNameString(pCtx,
+			    CERT_NAME_SIMPLE_DISPLAY_TYPE,
+			    CERT_NAME_ISSUER_FLAG,
+			    NULL,
+			    szName,
+			    dwData))) {
+        afsi_log("CertGetNameString failed: 0x%x", GetLastError());
+	goto __exit;
+    }
+
+    // print Issuer name.
+    afsi_log("Issuer Name: %s", szName);
+    LocalFree(szName);
+    szName = NULL;
+
+    // Get Subject name size.
+    if (!(dwData = CertGetNameString(pCtx,
+				     CERT_NAME_SIMPLE_DISPLAY_TYPE,
+				     0,
+				     NULL,
+				     NULL,
+				     0))) {
+        afsi_log("CertGetNameString failed: 0x%x", GetLastError());
+	goto __exit;
+    }
+
+    // Allocate memory for subject name.
+    szName = (LPTSTR)LocalAlloc(LPTR, dwData * sizeof(TCHAR));
+
+    // Get subject name.
+    if (!(CertGetNameString(pCtx,
+			    CERT_NAME_SIMPLE_DISPLAY_TYPE,
+			    0,
+			    NULL,
+			    szName,
+			    dwData))) {
+        afsi_log("CertGetNameString failed: 0x%x", GetLastError());
+	goto __exit;
+    }
+
+    // Print Subject Name.
+    afsi_log("Subject Name: %s", szName);
+
+  __exit:
+
+    if (szName)
+        LocalFree(szName);
+}
+
 BOOL AFSModulesVerify(void)
 {
     CHAR filename[1024];
@@ -563,6 +727,7 @@ BOOL AFSModulesVerify(void)
     DWORD cbNeeded;
     unsigned int i;
     BOOL success = TRUE;
+    PCCERT_CONTEXT pCtxService = NULL;
 
     if (!GetModuleFileName(NULL, filename, sizeof(filename)))
         return FALSE;
@@ -573,6 +738,13 @@ BOOL AFSModulesVerify(void)
     afsi_log("%s version %s", filename, afsdVersion);
 
     trustVerified = VerifyTrust(filename);
+
+    if (trustVerified) {
+        // get a certificate context for the signer of afsd_service.
+        pCtxService = GetCertCtx(filename);
+        if (pCtxService)
+            LogCertCtx(pCtxService);
+    }
 
     // Get a list of all the modules in this process.
     hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
@@ -608,14 +780,35 @@ BOOL AFSModulesVerify(void)
                         afsi_log("Version mismatch: %s", szModName);
                         success = FALSE;
                     }
-                    if ( trustVerified && !VerifyTrust(szModName) ) {
-                        afsi_log("Signature Verification failed: %s", szModName);
-                        success = FALSE;
+                    if ( trustVerified ) {
+                        if ( !VerifyTrust(szModName) ) {
+                            afsi_log("Signature Verification failed: %s", szModName);
+                            success = FALSE;
+                        } 
+                        else if (pCtxService) {
+                            PCCERT_CONTEXT pCtx = GetCertCtx(szModName);
+
+                            if (!pCtx || !CertCompareCertificate(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
+                                                                  pCtxService->pCertInfo,
+                                                                  pCtx->pCertInfo)) {
+                                afsi_log("Certificate mismatch: %s", szModName);
+                                if (pCtx)
+                                    LogCertCtx(pCtx);
+                                
+                                success = FALSE;
+                            }
+                            
+                            if (pCtx)
+                                CertFreeCertificateContext(pCtx);
+                        }
                     }
                 }
             }
         }
     }
+
+    if (pCtxService)
+        CertFreeCertificateContext(pCtxService);
 
     CloseHandle(hProcess);
     return success;
