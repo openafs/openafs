@@ -199,6 +199,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 		    FILE_FLAG_WRITE_THROUGH, NULL);
     fflush(stdout);
     if (fh == INVALID_HANDLE_VALUE) {
+        int  gonext = 0;
+
         gle = GetLastError();
         if (gle && ioctlDebug ) {
             char buf[4096];
@@ -246,17 +248,21 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                     fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
                              szPath,szUser,res);
                 }
-
-                sprintf(szPath, "\\\\%s\\all", szClient);
-                res = WNetAddConnection2(&nr,NULL,szUser,0);
-                if (res) {
-                    if ( ioctlDebug ) {
-                        fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
-                                 szPath,szUser,res);
-                    }
-                    goto next_attempt;
-                }
+                gonext = 1;
             }
+
+            sprintf(szPath, "\\\\%s\\all", szClient);
+            res = WNetAddConnection2(&nr,NULL,szUser,0);
+            if (res) {
+                if ( ioctlDebug ) {
+                    fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
+                             szPath,szUser,res);
+                }
+                gonext = 1;
+            }
+
+            if (gonext)
+                goto next_attempt;
 
             fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
                              FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
@@ -301,16 +307,16 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                     fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
                              szPath,szUser,res);
                 }
+            }
 
-                sprintf(szPath, "\\\\%s\\all", szClient);
-                res = WNetAddConnection2(&nr,NULL,szUser,0);
-                if (res) {
-                    if ( ioctlDebug ) {
-                        fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
-                                 szPath,szUser,res);
-                    }
-                    return -1;
+            sprintf(szPath, "\\\\%s\\all", szClient);
+            res = WNetAddConnection2(&nr,NULL,szUser,0);
+            if (res) {
+                if ( ioctlDebug ) {
+                    fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
+                             szPath,szUser,res);
                 }
+                return -1;
             }
 
             fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
