@@ -1779,11 +1779,12 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
     lock_ReleaseMutex(&dscp->mx);
     /* first, assemble the file IDs we need to stat */
     code = cm_ApplyDir(dscp, cm_TryBulkProc, (void *) &bb, offsetp, userp, reqp, NULL);
-    lock_ObtainMutex(&dscp->mx);
 
     /* if we failed, bail out early */
-    if (code && code != CM_ERROR_STOPNOW) 
+    if (code && code != CM_ERROR_STOPNOW) {
+        lock_ObtainMutex(&dscp->mx);
         return;
+    }
 
     /* otherwise, we may have one or more bulk stat's worth of stuff in bb;
      * make the calls to create the entries.  Handle AFSCBMAX files at a
@@ -1875,6 +1876,7 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
 
         filex += filesThisCall;
     }	/* while there are still more files to process */
+    lock_ObtainMutex(&dscp->mx);
     osi_Log0(afsd_logp, "END cm_TryBulkStat");
 }       
 
@@ -2028,15 +2030,16 @@ long cm_SetAttr(cm_scache_t *scp, cm_attr_t *attrp, cm_user_t *userp,
     /* make the attr structure */
     cm_StatusFromAttr(&afsInStatus, scp, attrp);
 
+    tfid.Volume = scp->fid.volume;
+    tfid.Vnode = scp->fid.vnode;
+    tfid.Unique = scp->fid.unique;
+
     lock_ReleaseMutex(&scp->mx);
     if (code) 
         return code;
 
     /* now make the RPC */
     osi_Log1(afsd_logp, "CALL StoreStatus scp 0x%x", (long) scp);
-    tfid.Volume = scp->fid.volume;
-    tfid.Vnode = scp->fid.vnode;
-    tfid.Unique = scp->fid.unique;
     do {
         code = cm_Conn(&scp->fid, userp, reqp, &connp);
         if (code) 
