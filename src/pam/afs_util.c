@@ -166,7 +166,7 @@ out:
 /* get the current AFS pag for the calling process */
 static afs_int32 curpag()
 {
-   gid_t groups[30];
+   gid_t groups[NGROUPS_MAX];
    afs_uint32 g0, g1;
    afs_uint32 h, l, ret;
       
