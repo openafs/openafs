@@ -183,6 +183,7 @@
 
 #define SYS_NAME_ID_i386_obsd31		2600
 #define SYS_NAME_ID_i386_obsd32		2601
+#define SYS_NAME_ID_i386_obsd33		2602
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 
