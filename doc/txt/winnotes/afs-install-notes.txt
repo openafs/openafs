@@ -1,4 +1,4 @@
-OpenAFS for Windows 1.3.71 Installation Notes
+OpenAFS for Windows 1.3.72 Installation Notes
 ---------------------------------------------
 
 The OpenAFS for Windows product was very poorly maintained throughout the 
@@ -97,7 +97,7 @@ discover cell information when it is not located in the local CellServDB file
 (\Program Files\OpenAFS\Client\CellServDB).
 
 
-5. OpenAFS for Windows 1.3.71 only supports Windows 2000, Windows XP, and 
+5. OpenAFS for Windows 1.3.72 only supports Windows 2000, Windows XP, and 
 Windows 2003.  Windows NT 4.0 and the entire Windows 9x/Me line are no
 longer supported.  Older releases of OpenAFS are available for download
 if those operating systems must be supported.  The last version with support
@@ -167,10 +167,12 @@ after install time although these options may be altered via the registry either
 per machine or per user.  See AfscredsShortcutParams in registry.txt.
 
 
-8. Some attempts have been made to restrict the ability  
-of users to alter the state of the AFS Client 
-Service.  For example, the following fs.exe commands are now restricted to 
-Administrator:
+8. As of 1.3.71, the OpenAFS for Windows client supports a local Windows
+authorization group called "AFS Client Admins".  This group is used in
+place of the "Administrators" group to determine which users are allowed
+to modify the AFS Client Service configuration via either afs_config.exe
+or fs.exe.  For example, the following fs.exe commands are now restricted 
+to members of the "AFS Client Admin" group:
 
     - checkservers with a non-zero timer value
     - setcachesize
@@ -184,11 +186,13 @@ Administrator:
     - cscpolicy
     - trace
 
-setting the default sysname for a machine should be done via the registry and 
+Setting the default sysname for a machine should be done via the registry and 
 not via "fs sysname".
 
-Some of the AFS Client Configuration Control Panel options are also restricted 
-to use by the "Administrator" account.
+The local "SYSTEM" account is always a member of the "AFS Client Admin" group.
+
+The initial membership of the "AFS Client Admin" group when created by the 
+installer is equivalent to the local "Administrators" group.
 
 
 9. The AFS Client should support UNC paths everywhere.  Power users that make
@@ -216,7 +220,7 @@ Usage: aklog [-d] [[-cell | -c] cell [-k krb_realm]]
    No commandline arguments means authenticate to the local cell.
 
 
-11. The AFS Server functionality provided with OpenAFS 1.3.71 might work but 
+11. The AFS Server functionality provided with OpenAFS 1.3.72 might work but 
 should be considered highly experimental.  It has not been thoroughly tested.
 Any data which would cause pain if lost should not be stored in an OpenAFS 
 Server on Windows.
@@ -243,29 +247,21 @@ statements were compiled into the binaries.
 13. OpenAFS for Windows does not support files larger than 2GB.  
 
 
-14. There are reported problems running the AFS Client on Hyperthreaded 
-Pentium 4 machines.  A registry entry may be created to specify
-that the AFS Client Service should only use a single processor.  If you have
-a hyperthreaded system and you are experiencing crashes, it is advised that
-you create the "MaxCPUs" registry value and set it to "1".
-See "registry.txt" for details. 
-
-
-15. Local RPC is used as the default RPC mechanism for setting 
+14. Local RPC is used as the default RPC mechanism for setting 
 tokens.  TCP RPC is required to be installed and is used for debugging 
 and other functions.
 
 
-16. OpenAFS for Windows automatically open ports in the Windows 
+15. OpenAFS for Windows automatically open ports in the Windows 
 Internet Connection Firewall.
 
 
-17. The OpenAFS for Windows installer by default activates a weak form of 
+16. The OpenAFS for Windows installer by default activates a weak form of 
 encrypted data transfer between the AFS client and the AFS servers.  This
 is often referred to as "fcrypt" mode.
 
 
-18. OpenAFS 1.3.71 adds support for authenticated SMB connections using 
+17. OpenAFS 1.3.71 adds support for authenticated SMB connections using 
 either NTLM or GSS SPNEGO (NTLM, Kerberos 5, ...).  In previous versions
 of OpenAFS the SMB connections were unauthenticated which left open the
 door for several security holes which could be used to obtain access to
@@ -288,7 +284,7 @@ add these service principals to the list of principals to be maintained
 for each host.
 
 
-19. As of 1.3.70, INI files are no longer used for the storage of AFS 
+18. As of 1.3.70, INI files are no longer used for the storage of AFS 
 configuration data.  No longer are there any AFS related files stored in the
 %WINDIR% directory.  The CellServDB file is no longer called "afsdsbmt.ini"
 and it is stored in the OpenAFS\Client directory.  The afs_freelance.ini
@@ -299,7 +295,7 @@ data will be automatically migrated; there is no mechanism for automatic
 migration of Submounts, Drive Mappings, Active Maps, and CSCPolicy data.
 
 
-20. As of 1.3.70, the OpenAFS Client is compatible with Windows XP SP2
+19. As of 1.3.70, the OpenAFS Client is compatible with Windows XP SP2
 and Windows 2003 SP1.  The Internet Connection Firewall will be 
 automatically adjusted to allow the receipt of incoming callback messages 
 from the AFS file server.  In addition, the appropriate Back Connection 
@@ -307,41 +303,35 @@ entries are added to the registry to allow SMB authentication to be
 performed across the loopback connection.
 
 
-21. As of 1.3.70, the OpenAFS Client Service supports the CIFS Remote
+20. As of 1.3.70, the OpenAFS Client Service supports the CIFS Remote
 Admin Protocol which provides browsing of server and share information.
 This significantly enhances the interoperability of AFS volumes within the
 Explorer Shell and Microsoft Office applications.
 
 
-22. OpenAFS will now automatically forget a user's tokens upon Logoff
+21. OpenAFS will now automatically forget a user's tokens upon Logoff
 unless the user's profile was loaded from an AFS volume.  In this situation
 there is no mechanism to determine when the profile has been successfully
 written back to the network.  It is therefore unsafe to release the user's
-tokens.
+tokens.  Whether or not the profile has been loaded from the registry can
+be determined for Local Accounts, Active Directory accounts and NT4 
+accounts.
                                                    
 
-23. Terminal Server installations.
+22. Terminal Server installations.
 When installing under Terminal Server, you must execute the NSIS installer
 (.exe) from within the Add/Remove Programs Control Panel.  Failure to do so 
 will result in AFS not running properly.  The AFS Server should not 
 be installed on a machine with Terminal Server installed.
 
 
-24. AFS is a Unix native file system.  As such the OpenAFS client attempts
+23. AFS is a Unix native file system.  As such the OpenAFS client attempts
 to treat the files stored in AFS as they would be on Unix.  File and directory
 names beginning with a "." are automatically given the Hidden attribute so
 they will not normally be displayed.
 
 
-25. As of 1.3.71, the OpenAFS for Windows client supports a local Windows
-authorization group called "AFS Client Admins".  This group is used in
-place of the "Administrators" group to determine which users are allowed
-to modify the AFS Client Service configuration via either afs_config.exe
-or fs.exe.  During installation this group is created and the current
-contents of the Administrators group is copied.
-
-
-26. Some organizations which have AFS cell names and Kerberos realm names
+24. Some organizations which have AFS cell names and Kerberos realm names
 which differ by more then just lower and upper case rely on a modification
 to krb524d which maps a Kerberos 5 ticket from realm FOO to a Kerberos 4
 ticket in realm BAR.  This allows user@FOO to appear to be user@bar for

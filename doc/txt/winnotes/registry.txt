@@ -336,6 +336,12 @@ Default : 100K
   the file will be reset to 0 bytes.  If this value is 0, it means the file
   should be allowed to grow indefinitely.
 
+Value   : FlushOnHibernate
+Type    : DWORD {0,1}
+Default : 1
+
+  If set, flushes all volumes before the machine goes on hibernate or
+  stand-by.
 
 Regkey:
 [HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters\GlobalAutoMapper]

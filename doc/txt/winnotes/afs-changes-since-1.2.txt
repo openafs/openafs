@@ -1,4 +1,17 @@
 Since 1.3.71:
+  * Add code to block the issuance of AFS tokens by aklog.exe or
+    afscreds.exe when the Kerberos 5 principal name contains a dot.
+
+  * Modify the IsAdmin() function to always treat the local SYSTEM
+    account as an AFS client administrator.  Affects fs.exe and 
+    afs_config.exe.
+
+  * Modify the internal handling of Quota Exceeded errors
+
+  * Upgrade all reference count fields in the Windows cache manager
+    and the osi library to use unsigned long instead of signed short.
+    A similar fix has been applied to the afs rpc (rx) library.
+
   * fix the Windows cache manager to prevent it from replacing the 
     rx_connection object associated with the cm_conn_t object on each
     and every operation if "fs crypt" was set.  This explains the 
@@ -14,6 +27,9 @@ Since 1.3.71:
     rx_DestroyConnection might be called from another thread if:
         - the user's tokens have changed or expired
         - the crypt mode has changed
+
+    This fix appears to have also taken care of the problems associated
+    with Overlapped Writes resulting in Delayed Write errors.
 
   * fix NSIS installer's AdminGroup.exe to properly create and
     remove groups when given -create or -remove.  The string comparison
