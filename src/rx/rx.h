@@ -250,7 +250,7 @@ struct rx_connection {
     /* client-- to retransmit the challenge */
     struct rx_service *service;	/* used by servers only */
     u_short serviceId;		/* To stamp on requests (clients only) */
-    u_short refCount;		/* Reference count */
+    afs_uint32 refCount;		/* Reference count */
     u_char flags;		/* Defined below */
     u_char type;		/* Type of connection, defined below */
     u_char secondsUntilPing;	/* how often to ping for each active call */
@@ -365,7 +365,7 @@ struct rx_peer {
 
     /* For garbage collection */
     afs_uint32 idleWhen;	/* When the refcountwent to zero */
-    short refCount;		/* Reference count for this structure */
+    afs_uint32 refCount;		/* Reference count for this structure */
 
     /* Congestion control parameters */
     u_char burstSize;		/* Reinitialization size for the burst parameter */
