@@ -1,3 +1,12 @@
+openafs (1.2.3final2-2) unstable; urgency=low
+
+  * Add dynroot support to debconf; currently no support for creating
+    CellAliases  automatically
+  * Don't call depmod since we call update-modules, closes: #132851
+  * Add hppa to debian/sysname, process.c patch from Lamont, closes: #134173
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 25 Feb 2002 15:45:32 -0500
+
 openafs (1.2.3final2-1) unstable; urgency=low
 
   * Upstream released a new version that they call 1.2.3 after things were
