@@ -151,9 +151,9 @@ case "$1" in
 		exit 1
 	fi
 
-	echo -n "Starting AFS services: "
 	# Start AFS client
 	if  is_on $AFS_CLIENT && test -x /usr/sbin/afsd  ; then
+	    echo -n "Starting AFS services: "
 	start_client
 		echo "."
 		$AFS_POST_INIT
@@ -169,9 +169,9 @@ force-start)
 		exit 1
 	fi
 
-	echo -n "Starting AFS services: "
 	# Start AFS client
 	if test -x /usr/sbin/afsd  ; then
+	    echo -n "Starting AFS services: "
 	start_client
 		echo "."
 		$AFS_POST_INIT
