@@ -1450,8 +1450,8 @@ struct cmd_syndesc *as; {
                 printf("Can't specify -Residencies with -SalvageRemote or -SalvageArchival\n");
                 return EINVAL;
             }
-            code = GetUInt32(as->parms[MRAFS_OFFSET + 17].items->data, 
-                                       &mrafsParm.OptResidencies);
+            code = util_GetUInt32(as->parms[MRAFS_OFFSET + 17].items->data, 
+				  &mrafsParm.OptResidencies);
             if (code) {
                 printf("bos: '%s' is not a valid residency mask.\n",
                        as->parms[MRAFS_OFFSET + 13].items->data);

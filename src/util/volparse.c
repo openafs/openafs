@@ -24,8 +24,8 @@ RCSID("$Header$");
 #endif
 
 /* map a partition id from any partition-style name */
-afs_int32 volutil_GetPartitionID(aname)
-char *aname; {
+afs_int32 volutil_GetPartitionID(char *aname) 
+{
     register char tc;
     afs_int32 temp;
     char ascii[3];
@@ -113,9 +113,8 @@ char *volutil_PartitionName(int avalue)
 }
 
 /* is this a digit or a digit-like thing? */
-static int ismeta(ac, abase)
-register int abase;
-register int ac; {
+static int ismeta(register int ac, register int abase)
+{
 /*    if (ac == '-' || ac == 'x' || ac == 'X') return 1; */
     if (ac >= '0' && ac <= '7') return 1;
     if (abase <= 8) return 0;
@@ -127,17 +126,15 @@ register int ac; {
 }
 
 /* given that this is a digit or a digit-like thing, compute its value */
-static int getmeta(ac)
-register int ac; {
+static int getmeta(register int ac)
+{
     if (ac >= '0' && ac <= '9') return ac - '0';
     if (ac >= 'a' && ac <= 'f') return ac - 'a' + 10;
     if (ac >= 'A' && ac <= 'F') return ac - 'A' + 10;
     return 0;
 }
 
-afs_int32 util_GetInt32 (as, aval)
-register char *as;
-afs_int32 *aval;
+afs_int32 util_GetInt32(register char *as, afs_int32 *aval)
 {
     register afs_int32 total;
     register int tc;
@@ -183,9 +180,7 @@ afs_int32 *aval;
 }
 
 afs_uint32
-GetUInt32 (as, aval)
-register char *as;
-afs_uint32 *aval;
+util_GetUInt32(register char *as, afs_uint32 *aval)
 {
     register afs_uint32 total;
     register int tc;

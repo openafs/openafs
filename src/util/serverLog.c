@@ -82,9 +82,7 @@ int mrafsStyleLogs = 0;
 int printLocks = 0;
 static char ourName[MAXPATHLEN];
 
-void WriteLogBuffer(buf,len)
-    char *buf;
-    afs_uint32 len;
+void WriteLogBuffer(char *buf, afs_uint32 len)
 {
     LOCK_SERVERLOG();
     if (serverLogFD > 0)

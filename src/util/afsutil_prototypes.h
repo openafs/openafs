@@ -17,31 +17,49 @@
 
 
 /* assert.c */
+extern void AssertionFailed(char *file, int line);
 
 
 /* base32.c */
-
+extern char *int_to_base32(b32_string_t s, int a);
+extern int base32_to_int(char *s);
 
 /* base64.c */
-
+extern char *int_to_base64(b64_string_t s, int a);
+extern int base64_to_int(char *s);
 
 /* casestrcpy.c */
-
+extern char *lcstring (char *d, char *s, int n);
+extern char *ucstring (char *d, char *s, int n);
 
 /* dirpath.c */
-
+extern unsigned int initAFSDirPath(void);
+extern const char *getDirPath(afsdir_id_t string_id);
+extern int ConstructLocalPath(const char *cpath, const char *relativeTo,
+			      char **fullPathBufp);
+extern int ConstructLocalBinPath(const char *cpath, char **fullPathBufp);
+extern int ConstructLocalLogPath(const char *cpath, char **fullPathBufp);
 
 /* errmap_nt.c */
-
+extern int nterr_nt2unix(long ntErr, int defaultErr);
 
 /* fileutil.c */
-
+extern int renamefile(const char *oldname, const char *newname);
+extern void FilepathNormalizeEx(char *path, int slashType);
+extern void FilepathNormalize(char *path);
 
 /* flipbase64.c */
+#ifdef AFS_64BIT_ENV
+extern char *int64_to_flipbase64(lb64_string_t s, afs_int64 a);
+extern afs_int64 flipbase64_to_int64(char *s);
+#else
+extern char *int64_to_flipbase64(lb64_string_t s, u_int64_t a);
+extern int64_t flipbase64_to_int64(char *s);
+#endif
 
 
 /* get_krbrlm.c */
-
+extern int afs_krb_get_lrealm(char *r, int n);
 
 /* hostparse.c */
 extern struct hostent *hostutil_GetHostByName(register char *ahost);
@@ -52,10 +70,19 @@ extern char *afs_inet_ntoa_r(afs_uint32 addr, char *buf);
 extern char *gettmpdir(void);
 
 /* hputil.c */
-
+#ifdef AFS_HPUX_ENV
+#ifndef AFS_HPUX102_ENV
+extern int utimes(char *file, struct timeval tvp[2]);
+#endif
+extern int random(void);
+extern void srandom(int seed);
+extern int getdtablesize(void);
+extern void setlinebuf(FILE *file);
+extern void psignal(unsigned int sig, char *s);
+#endif
 
 /* isathing.c */
-
+extern int util_isint(char *str);
 
 /* kreltime.c */
 extern afs_int32 ktimeRelDate_ToInt32(struct ktime_date *kdptr);
@@ -65,9 +92,15 @@ extern afs_int32 ParseRelDate(char *dateStr, struct ktime_date *relDatePtr);
 extern char *RelDatetoString(struct ktime_date *datePtr);
 extern afs_int32 Add_RelDate_to_Time(struct ktime_date *relDatePtr, afs_int32 atime);
 
-
 /* ktime.c */
-
+extern char *ktime_DateOf(afs_int32 atime);
+extern afs_int32 ktime_Str2int32(register char *astr);
+extern int ktime_ParsePeriodic(char *adate, register struct ktime *ak);
+extern int ktime_DisplayString(struct ktime *aparm, register char *astring);
+extern afs_int32 ktime_next(struct ktime *aktime, afs_int32 afrom);
+extern afs_int32 ktime_DateToInt32(char *adate, afs_int32 *aint32);
+extern char *ktime_GetDateUsage(void);
+extern afs_int32 ktime_InterpretDate(struct ktime_date *akdate);
 
 /* netutils.c */
 extern afs_uint32 extract_Addr(char *line, int maxSize);
@@ -96,7 +129,12 @@ extern int parseNetFiles(afs_uint32 addrbuf[], afs_uint32 maskbuf[], afs_uint32 
 
 
 /* serverLog.c */
-
+extern void WriteLogBuffer(char *buf, afs_uint32 len);
+extern void SetDebug_Signal(int signo);
+extern void ResetDebug_Signal(int signo);
+extern void SetupLogSignals(void);
+extern int OpenLog(const char *fileName);
+extern int ReOpenLog(const char *fileName);
 
 /* snprintf.c */
 
@@ -112,9 +150,12 @@ extern void afs_ntohuuid(afsUUID *uuidp);
 extern afs_int32 afs_uuid_create (afsUUID *uuid);
 extern u_short afs_uuid_hash (afsUUID *uuid);
 
-
 /* volparse.c */
-
+extern afs_int32 volutil_GetPartitionID(char *aname);
+extern char *volutil_PartitionName_r(int avalue, char *tbuffer, int buflen);
+extern char *volutil_PartitionName(int avalue);
+extern afs_int32 util_GetInt32(register char *as, afs_int32 *aval);
+extern afs_uint32 util_GetUInt32(register char *as, afs_uint32 *aval);
 
 /* winsock_nt.c */
 
