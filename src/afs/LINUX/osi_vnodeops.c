@@ -807,6 +807,8 @@ static int afs_linux_dentry_revalidate(struct dentry *dp)
 
     AFS_GLOCK();
 
+    sysState.allocked = 0;
+
     /* If it's a negative dentry, then there's nothing to do. */
     if (!vcp || !parentvcp)
         goto done;
