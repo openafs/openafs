@@ -1142,6 +1142,7 @@ struct rx_packet *rxi_ReceiveDebugPacket(ap, asocket, ahost, aport, istack)
 #ifndef	RX_ENABLE_LOCKS
 	    tstat.waitingForPackets = rx_waitingForPackets;
 #endif
+	    MUTEX_ENTER(&rx_serverPool_lock);
 	    tstat.nFreePackets = htonl(rx_nFreePackets);
 	    tstat.callsExecuted = htonl(rxi_nCalls);
 	    tstat.packetReclaims = htonl(rx_packetReclaims);
@@ -1149,6 +1150,7 @@ struct rx_packet *rxi_ReceiveDebugPacket(ap, asocket, ahost, aport, istack)
 	    tstat.nWaiting = htonl(rx_nWaiting);
 	    queue_Count( &rx_idleServerQueue, np, nqe, 
 				rx_serverQueueEntry, tstat.idleThreads); 
+	    MUTEX_EXIT(&rx_serverPool_lock);
 	    tstat.idleThreads = htonl(tstat.idleThreads);
 	    tl = sizeof(struct rx_debugStats) - ap->length;
 	    if (tl > 0)
