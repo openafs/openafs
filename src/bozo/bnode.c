@@ -534,10 +534,10 @@ static int bproc() {
 			    tb->errorSignal = 0;
 			}
 			if (tp->coreName)
-			    bozo_Log("%s:%s exited with code %d",
+			    bozo_Log("%s:%s exited with code %d\n",
 				tb->name, tp->coreName, tp->lastExit);
 			else
-			    bozo_Log("%s exited with code %d",
+			    bozo_Log("%s exited with code %d\n",
 				tb->name, tp->lastExit);
 		    }
 		    else {
