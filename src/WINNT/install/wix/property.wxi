@@ -26,6 +26,9 @@
 	<!-- empty property
 	<Property Id="AFSCACHESIZE"></Property>
 	-->
+	<!-- empty property
+	<Property Id="STOREANSIFILENAMES"></Property>
+	-->
 
     <!-- Add/remove programs -->
     <Property Id="ARPCOMMENTS">$(var.ProductComments)</Property>
