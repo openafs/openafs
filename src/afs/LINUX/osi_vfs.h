@@ -81,6 +81,9 @@ typedef struct vnode {
 #if defined(AFS_LINUX24_ENV)
         struct pipe_inode_info  *i_pipe;
         struct block_device     *i_bdev;
+#if defined(STRUCT_INODE_HAS_I_CDEV)
+        struct char_device      *i_cdev;
+#endif
         unsigned long           i_dnotify_mask;
         struct dnotify_struct   *i_dnotify;
 #endif
