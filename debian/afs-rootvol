@@ -27,21 +27,7 @@ Sam Hartman <hartmans@mit.edu>
 
 use vars qw($rl $server  $part $requirements_met);
 use vars qw( @unwinds);
-
-sub run ($) {
-  print join(' ', @_);
-  print "\n";
-  system (@_)  == 0
-    or die "Filed: $?\n";
-}
-
-# This subroutine takes a command to run in case of failure.  After
-# each succesful step, this routine should be run with a command to
-# undo the successful step.
-
-	 sub unwind($) {
-	   push @unwinds, $_[0];
-	 }
+use Debian::OpenAFS::ConfigUtils;
 
 
 # This subroutine creates a volume, mounts it and then sets the access
@@ -78,14 +64,11 @@ In order to set up the root.afs volume, you must meet the following pre-conditio
     system:administrators and with a principal that is in the susers
     file of the servers in the cell.
 
-3) You need a fileserver in the cell with partitions mounted.
+3) You need a fileserver in the cell with partitions mounted and a root.afs volume created.
    Presumably, it has no volumes on it, although the script will work
-   so long as root.afs and root.cell do not exist.
+   so long as nothing besides root.afs exists.
 
-4) The AFS client must not be running on this workstation.  The
-   workstation will be moved into the new cell and the client started
-   as part of the process.
-
+4) The AFS client must be running pointed at the new cell.
 eotext
     $_ = $rl->readline("Do you meet these conditions? (Y/n) ");
     unless (/^y/i ) {
@@ -94,20 +77,7 @@ eotext
     }
 
 }
-
-open(MOUNT, "mount |") or die "Failed to run mount: $!\n";
-while(<MOUNT>) {
-if(m:^AFS:) {
-print "The AFS client is currently running on this workstation.\n";
-print "Please restart this script after running /etc/init.d/openafs-client stop\n";
-exit(1);
-}
-}
-close MOUNT;
-
-
 # Get configuration information we need
-
 open(CELL, "/etc/openafs/server/ThisCell")
 or die "Unable to find out what cell this machine serves: $!\n";
 my $cell = <CELL>;
@@ -128,19 +98,6 @@ unless ($part) {
 $part = "a" unless $part;
 }
 
-
-
-
-run("echo $cell >/etc/openafs/ThisCell");
-
-run("vos create $server $part root.afs -localauth -cell $cell");
-unwind("vos remove $server $part root.afs -localauth");
-
-
-run("/etc/init.d/openafs-client start");
-unwind("/etc/init.d/openafs-client stop");
-
-run("aklog snorklewacker.mit.edu -k ZONE.MIT.EDU");
 
 run("fs sa /afs system:anyuser rl");
 
@@ -178,7 +135,7 @@ run( "vos release root.cell -localauth" );
 unwind( "vos remove $server $part root.cell.readonly -localauth ");
 unwind( "vos remove $server $part root.afs.readonly -localauth ");
 
-#@unwinds = ();
+@unwinds = ();
 
 END {
   run(pop @unwinds) while @unwinds;

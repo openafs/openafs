@@ -1,0 +1,131 @@
+#!/usr/bin/perl -w
+
+use Term::ReadLine;
+use strict;
+use Debian::OpenAFS::ConfigUtils;
+use vars qw($admin $server
+	   $requirements_met );
+my $rl = new Term::ReadLine('afs-newcell');
+
+# main script
+
+unless ($requirements_met) {
+  print <<eoreqs;
+			    Prerequisites
+
+In order to set up a new AFS cell, you must meet the following:
+
+1) You need a working Kerberos realm with Kerberos4 support.  You
+   should install Heimdal with Kth-kerberos compatibility or MIT
+   Kerberos5.
+
+2) You need to create the AFS key and load it into
+   /etc/openafs/server/KeyFile.  If your cell's name is the same as
+   your Kerberos realm then create a principal called afs.  Otherwise,
+   create a principal called afs/cellname in your realm.  The cell
+   name should be all lower case, unlike Kerberos realms which are all
+   upper case.  You can use asetkey from the openafs-krb5 package, or
+   if you used AFS3 salt to create the key, the bos addkey command.
+
+3) This machine should have a filesystem mounted on /vicepa.  If you
+   do not have a free partition, then create a large file by using dd
+   to extract bytes from /dev/zero.  Create a filesystem on this file
+   and mount it using -oloop.  
+
+4) You will need an administrative principal created in a Kerberos
+realm.  This principal will be added to susers and
+system:administrators and thus will be able to run administrative
+commands.  Generally the user is a root instance of some administravie
+user.  For example if jruser is an administrator then it would be
+reasonable to create jruser/root and specify jruser/root as the user
+to be added in this script.
+
+5) The AFS client must not be running on this workstation.  It will be
+at the end of this script.
+
+eoreqs
+
+  $_ = $rl->readline("Do you meet these requirements? [y/n] ");
+  unless (/^y/i ) {
+    print "Run this script again when you meet the requirements\n";
+    exit(1);
+  }
+}
+open(MOUNT, "mount |") or die "Failed to run mount: $!\n";
+while(<MOUNT>) {
+if(m:^AFS:) {
+print "The AFS client is currently running on this workstation.\n";
+print "Please restart this script after running /etc/init.d/openafs-client stop\n";
+exit(1);
+}
+}
+close MOUNT;
+
+unless ( -f "/etc/openafs/server/KeyFile") {
+  print "You do not have an AFS keyfile.  Please create this using asetkey from openafs-krby or 
+the bos addkey command";
+  exit(1);
+}
+
+unlink("/etc/openafs/Server/CellServDB"); # ignore errors
+# stop bosserver here
+$server = `hostname`;
+chomp $server;
+$admin = $rl->readline("What administrative principal should be used?");
+ die "Please specify an administrative user\n" unless $admin;
+$admin =~ s:/:.:g;
+if($admin =~ /@/) {
+die "The administrative user must be in the same realm as the cell and no realm may be specified.\n";
+}
+open(CELL, "/etc/openafs/server/ThisCell") 
+  or die "Cannot open /etc/openafs/server/ThisCell: $!\n";
+my $cell = <CELL>;
+chomp $cell;
+run ("bos addhost $server $server -localauth ||true");
+run("bos adduser $server $admin -localauth");
+unwind("bos removeuser $server $admin -localauth");
+if ( -f "/var/lib/openafs/db/prdb.DB0" ) {
+  die "Protection database already exists; cell already partially created\n";
+  }
+open(PRDB, "|pt_util -p /var/lib/openafs/db/prdb.DB0 -w ")
+or die "Unable to start pt_util: $!\n";
+print PRDB "$admin 128/20 1 -204 -204\n";
+print PRDB "system:administrators 130/20 -204 -204 -204\n";
+print PRDB" $admin 1\n";
+close PRDB;
+unwind( "rm /var/lib/openafs/db/prdb* ");
+
+# Start up ptserver and vlserver
+run("bos create $server ptserver simple /usr/lib/openafs/ptserver -localauth");
+unwind("bos delete $server ptserver -localauth");
+
+run("bos create $server vlserver simple /usr/lib/openafs/vlserver -localauth");
+unwind("bos delete $server vlserver -localauth");
+
+run( "bos create $server fs fs ".
+     "-cmd /usr/lib/openafs/fileserver ".
+     "-cmd /usr/lib/openafs/volserver ".
+     "-cmd /usr/lib/openafs/salvager -localauth");
+unwind( "bos delete $server fs -localauth ");
+
+run("vos create $server a root.afs -localauth");
+
+# bring up client
+run("echo $cell >/etc/openafs/ThisCell");
+run("/etc/init.d/openafs-client force-start");
+
+print <<eomsg; 
+Now, get tokens as $admin in the $cell cell.  Then, run
+afs-rootvol.
+eomsg
+
+
+
+
+@unwinds = ();
+END {
+# We need to do a bos shutdown first; it may fail
+# if didn't get far enough in
+#    system("bos shutdown $server -localauth");
+  run(pop @unwinds) while @unwinds;
+  }
