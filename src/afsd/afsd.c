@@ -1067,6 +1067,9 @@ static AfsdbLookupHandler()
 	    continue;
 	}
 
+	if (*acellName == 1)	/* Shutting down */
+	    break;
+
 	code = afsconf_GetAfsdbInfo(acellName, 0, &acellInfo);
 	if (code) {
 	    kernelMsg[0] = 0;
@@ -1081,6 +1084,8 @@ static AfsdbLookupHandler()
 		kernelMsg[i+2] = acellInfo.hostAddr[i].sin_addr.s_addr;
 	}    
     }
+
+    exit(1);
 }
 #endif
 

@@ -609,8 +609,16 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	int cellLen = (sizeArg & 0xffff0000) >> 16;
 	afs_int32 *kmsg = afs_osi_Alloc(kmsgLen);
 	char *cellname = afs_osi_Alloc(cellLen);
+
 	AFS_COPYIN((afs_int32 *)parm3, kmsg, kmsgLen, code);
-	if (!code) code = afs_AfsdbHandler(cellname, cellLen, kmsg);
+	if (!code) {
+	    code = afs_AfsdbHandler(cellname, cellLen, kmsg);
+	    if (*cellname == 1) *cellname = 0;
+	    if (code == -2) {	/* Shutting down? */
+		*cellname = 1;
+		code = 0;
+	    }
+	}
 	if (!code) AFS_COPYOUT(cellname, (char *)parm2, cellLen, code);
 	afs_osi_Free(kmsg, kmsgLen);
 	afs_osi_Free(cellname, cellLen);
@@ -1201,6 +1209,12 @@ afs_shutdown()
 	afs_osi_Wakeup((char*)&afs_CacheTruncateDaemon);
 	afs_osi_Sleep(&afs_termState);
     }
+#ifdef AFS_AFSDB_ENV
+    afs_warn("AFSDB... ");
+    afs_StopAfsdb();
+    while (afs_termState == AFSOP_STOP_AFSDB)
+	afs_osi_Sleep(&afs_termState);
+#endif
 #if	defined(AFS_SUN5_ENV) || defined(RXK_LISTENER_ENV)
     afs_warn("RxEvent... ");
     /* cancel rx event deamon */

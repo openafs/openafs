@@ -57,6 +57,7 @@ static char afs_AfsdbLookupWait;
 
 char afs_AfsdbHandlerPresent = 0;
 char afs_AfsdbHandlerInuse = 0;
+char afs_AfsdbHandlerShutdown = 0;
 
 char *afs_AfsdbHandler_CellName;
 afs_int32 *afs_AfsdbHandler_CellHosts;
@@ -87,6 +88,16 @@ int afs_strcasecmp(s1, s2)
 
 
 #ifdef AFS_AFSDB_ENV
+void afs_StopAfsdb()
+{
+    if (afs_AfsdbHandlerPresent) {
+	afs_osi_Wakeup(&afs_AfsdbHandlerWait);
+    } else {
+	afs_AfsdbHandlerShutdown = 1;
+	afs_termState = AFSOP_STOP_RXEVENT;
+    }
+}
+
 int afs_AfsdbHandler(acellName, acellNameLen, kernelMsg)
     char *acellName;
     int acellNameLen;
@@ -94,6 +105,7 @@ int afs_AfsdbHandler(acellName, acellNameLen, kernelMsg)
 {
     /* afs_syscall_call() has already grabbed the global lock */
 
+    if (afs_AfsdbHandlerShutdown) return -2;
     afs_AfsdbHandlerPresent = 1;
 
     if (afs_AfsdbHandler_ReqPending) {
@@ -117,8 +129,20 @@ int afs_AfsdbHandler(acellName, acellNameLen, kernelMsg)
     }
 
     /* Wait for a request */
-    while (afs_AfsdbHandler_ReqPending == 0)
+    while (afs_AfsdbHandler_ReqPending == 0 && afs_termState != AFSOP_STOP_AFSDB)
 	afs_osi_Sleep(&afs_AfsdbHandlerWait);
+
+    /* Check if we're shutting down */
+    if (afs_termState == AFSOP_STOP_AFSDB) {
+	/* Inform anyone waiting for us that we're going away */
+	afs_AfsdbHandlerShutdown = 1;
+	afs_AfsdbHandlerPresent = 0;
+	afs_osi_Wakeup(&afs_AfsdbLookupWait);
+
+	afs_termState = AFSOP_STOP_RXEVENT;
+	afs_osi_Wakeup(&afs_termState);
+	return -2;
+    }
 
     /* Copy the requested cell name into the request buffer */
     strncpy(acellName, afs_AfsdbHandler_CellName, acellNameLen);
@@ -138,6 +162,9 @@ int afs_GetCellHostsFromDns(acellName, acellHosts, timeout)
     char grab_glock = 0;
 
     if (!afs_AfsdbHandlerPresent) return ENOENT;
+
+    /* Initialize host list to empty in case the handler is gone */
+    *acellHosts = 0;
 
     if (!ISAFS_GLOCK()) {
 	grab_glock = 1;
@@ -160,7 +187,7 @@ int afs_GetCellHostsFromDns(acellName, acellHosts, timeout)
     afs_osi_Wakeup(&afs_AfsdbHandlerWait);
 
     /* Wait for the handler to get back to us with the reply */
-    while (!afs_AfsdbHandler_Completed)
+    while (afs_AfsdbHandlerPresent && !afs_AfsdbHandler_Completed)
 	afs_osi_Sleep(&afs_AfsdbLookupWait);
 
     /* Release the AFSDB handler and wake up others waiting for it */
