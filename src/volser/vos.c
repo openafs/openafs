@@ -3772,7 +3772,7 @@ char **argv; {
 
     ts = cmd_CreateSyntax("release", ReleaseVolume, 0, "release a volume");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
-    cmd_AddParm(ts, "-f", CMD_FLAG, CMD_OPTIONAL, "force a complete release");
+    cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL, "force a complete release");
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("dump", DumpVolume, 0, "dump a volume");
