@@ -375,4 +375,5 @@ src/config/Makefile.version-NOCML \
 src/config/Makefile.${AFS_SYSNAME} \
 src/libafs/MakefileProto.${MKAFS_OSTYPE} \
 src/pam/Makefile \
+src/afsd/afs.ppc_darwin.plist \
 )

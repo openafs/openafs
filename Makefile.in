@@ -517,7 +517,7 @@ distclean: clean
 	/bin/rm -f config.log config.cache config.status Makefile
 	/bin/rm -f src/config/afsconfig.h src/config/Makefile.${SYS_NAME} 
 	/bin/rm -f src/libafs/Makefile src/libafs/MakefileProto.${MKAFS_OSTYPE}
-	/bin/rm -f src/libuafs/Makefile
+	/bin/rm -f src/libuafs/Makefile afs.ppc_darwin.plist src/pam/Makefile
 
 pristine: distclean
 	/bin/rm -f src/config/afsconfig.h.in configure aclocal.m4

@@ -7,8 +7,6 @@ RCSID("$Header$");
 #include "../afs/afsincludes.h"
 #include "../sys/syscall.h"
 #include <mach/kmod.h>
-#define VERSION "1.0.3"
-
 
 struct vfsconf afs_vfsconf;
 extern struct vfsops afs_vfsops;
