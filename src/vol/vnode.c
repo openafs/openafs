@@ -746,9 +746,9 @@ VPutVnode_r(ec,vnp)
 			    PrintInode(NULL, vp->vnodeIndex[class].handle->ih_ino));
 			*ec = VIO;
 		    } else {
-			Log("VPutVnode: Couldn't write vnode %d, volume %u (%s)\n",
+			Log("VPutVnode: Couldn't write vnode %d, volume %u (%s) (error %d)\n",
 			    vnp->vnodeNumber, V_id(vnp->volumePtr),
-			    V_name(vnp->volumePtr));
+			    V_name(vnp->volumePtr), code);
 			VForceOffline_r(vp);
 			*ec = VSALVAGE;
 		    }
