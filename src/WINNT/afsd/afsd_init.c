@@ -205,6 +205,7 @@ int afsd_InitCM(char **reasonP)
 	long logChunkSize;
 	long stats;
 	long traceBufSize;
+    long maxcpus;
 	long ltt, ltto;
     long rx_mtu, rx_nojumbo;
 	char rootCellName[256];
@@ -257,6 +258,42 @@ int afsd_InitCM(char **reasonP)
 			msgBuf);
 		osi_panic(buf, __FILE__, __LINE__);
 	}
+
+    dummyLen = sizeof(maxcpus);
+	code = RegQueryValueEx(parmKey, "MaxCPUs", NULL, NULL,
+				(BYTE *) &maxcpus, &dummyLen);
+	if (code == ERROR_SUCCESS) {
+        HANDLE hProcess;
+        DWORD_PTR processAffinityMask, systemAffinityMask;
+
+        hProcess = OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_SET_INFORMATION,
+                               FALSE, GetCurrentProcessId());
+        if ( hProcess != NULL &&
+             GetProcessAffinityMask(hProcess, &processAffinityMask, &systemAffinityMask) )
+        {
+            int i, n, bits;
+            DWORD_PTR mask, newAffinityMask;
+
+#if defined(_WIN64)
+            bits = 64;
+#else
+            bits = 32;
+#endif
+            for ( i=0, n=0, mask=1, newAffinityMask=0; i<bits && n<maxcpus; i++ ) {
+                if ( processAffinityMask & mask ) {
+                    newAffinityMask |= mask;
+                    n++;
+                }
+                mask *= 2;
+            }
+
+            SetProcessAffinityMask(hProcess, newAffinityMask);
+            CloseHandle(hProcess);
+            afsi_log("CPU Restrictions set to %d cpu(s); %d cpu(s) available", maxcpus, n);
+        } else {
+            afsi_log("CPU Restrictions set to %d cpu(s); unable to access process information", maxcpus);
+        }
+    }
 
 	dummyLen = sizeof(traceBufSize);
 	code = RegQueryValueEx(parmKey, "TraceBufferSize", NULL, NULL,
