@@ -129,3 +129,11 @@ Openafs News -- history of user Visible changes. 11 July 2001
    install directory.  These commands include klog, unlog, tokens, kpasswd,
    symlink, fs and pts.  The installable includes a readme file that contains
    more information on how to use the client program and known issues.
+
+** support for large caches in afsd.  Cachefiles are stored in
+   subdirectories.  The default is 2048 files per subdirectory, which
+   should work fine in most situations.  You can use the new afsd
+   option -files_per_subdir to change this number.  Note that the first
+   time you run afsd with this patch, your cachefiles will get moved
+   into subdirectories.  If you subsequently run an older version of
+   afsd, you will lose all your cached files.
