@@ -32,7 +32,7 @@ RCSID("$Header$");
 /* opendir() - The case insensitive version of opendir */
 DIR *opendir(const char *path)
 {
-    struct DIR *tDir;
+    DIR *tDir;
     HANDLE tH;
     char tPath[MAX_PATH];
     WIN32_FIND_DATA tData;
