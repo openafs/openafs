@@ -152,6 +152,7 @@ struct partList {   /*used by the backup system */
 /* Values for the UV_RestoreVolume flags parameter */
 #define RV_FULLRST 0x1
 #define RV_OFFLINE 0x2
+#define RV_RDONLY  0x10000
 
 #endif /* _VOLSER_ */
 

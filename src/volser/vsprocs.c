@@ -2561,7 +2561,7 @@ UV_RestoreVolume(toserver, topart, tovolid, tovolname, flags, WriteData, rock)
     int islocked;
     struct restoreCookie cookie;
     int reuseID;
-    afs_int32 newDate, volflag;
+    afs_int32 newDate, volflag, voltype, volsertype;
     int index, same, errcode;
     char apartName[10];
 
@@ -2577,6 +2577,14 @@ UV_RestoreVolume(toserver, topart, tovolid, tovolname, flags, WriteData, rock)
     totid = 0;
     temptid = 0;
 
+    if (flags & RV_RDONLY) {
+	voltype    = ROVOL;
+	volsertype = volser_RO;
+    } else {
+	voltype    = RWVOL;
+	volsertype = volser_RW;
+    }
+
     pvolid = tovolid;
     toconn = UV_Bind(toserver, AFSCONF_VOLUMEPORT);
     if(pvolid == 0) {/*alot a new id if needed */
@@ -2589,8 +2597,19 @@ UV_RestoreVolume(toserver, topart, tovolid, tovolname, flags, WriteData, rock)
 		goto refail;
 	    }
 	    reuseID = 0;
-        }
-	else{
+        } else if (flags & RV_RDONLY) {
+	    if (entry.flags & RW_EXISTS) {
+		fprintf(STDERR,"Entry for ReadWrite volume %s already exists!\n",entry.name);
+		error = VOLSERBADOP;
+		goto refail;
+	    }
+	    if (!entry.volumeId[ROVOL]) {
+		fprintf(STDERR,"Existing entry for volume %s has no ReadOnly ID\n",tovolname);
+		error = VOLSERBADOP;
+		goto refail;
+	    }
+	    pvolid = entry.volumeId[ROVOL];
+	} else {
 	    pvolid = entry.volumeId[RWVOL];
       	}
     }/* at this point we have a volume id to use/reuse for the volume to be restored */
@@ -2604,9 +2623,7 @@ UV_RestoreVolume(toserver, topart, tovolid, tovolname, flags, WriteData, rock)
     fprintf(STDOUT,"Restoring volume %s Id %u on server %s partition %s ..", tovolname,
 	    pvolid, hostutil_GetNameByINet(toserver), partName);
     fflush(STDOUT);
-    /*what should the volume be restored as ? rw or ro or bk ?
-      right now the default is rw always */
-    code = AFSVolCreateVolume(toconn, topart, tovolname, volser_RW, 0,&pvolid, &totid);
+    code = AFSVolCreateVolume(toconn, topart, tovolname, volsertype, 0,&pvolid, &totid);
     if (code){
 	if (flags & RV_FULLRST) { /* full restore: delete then create anew */
 	    if(verbose) {
@@ -2640,7 +2657,7 @@ UV_RestoreVolume(toserver, topart, tovolid, tovolname, flags, WriteData, rock)
 		goto refail;
 	    }
 	    if (verbose) fprintf(STDOUT," done\n");
-	    code = AFSVolCreateVolume(toconn, topart, tovolname, volser_RW, 0,&pvolid, &totid);
+	    code = AFSVolCreateVolume(toconn, topart, tovolname, volsertype, 0,&pvolid, &totid);
 	    if (code){
 		fprintf(STDERR,"Could not create new volume %u\n",pvolid);
 		error = code;
@@ -2657,7 +2674,7 @@ UV_RestoreVolume(toserver, topart, tovolid, tovolname, flags, WriteData, rock)
 	}
     }
     cookie.parent = pvolid;
-    cookie.type = RWVOL;
+    cookie.type = voltype;
     cookie.clone = 0;
     strncpy(cookie.name,tovolname,VOLSER_OLDMAXVOLNAME);
 
@@ -2683,11 +2700,11 @@ UV_RestoreVolume(toserver, topart, tovolid, tovolname, flags, WriteData, rock)
     }
     code = AFSVolGetStatus(toconn,totid, &tstatus);
     if(code) {
-	fprintf(STDERR,"Could not get status information about the volume %u\n",tovolid);
+	fprintf(STDERR,"Could not get status information about the volume %u\n",pvolid);
 	error = code;
 	goto refail;
     }
-    code = AFSVolSetIdsTypes(toconn,totid, tovolname, RWVOL, pvolid,0,0);
+    code = AFSVolSetIdsTypes(toconn,totid, tovolname, voltype, pvolid,0,0);
     if(code) {
 	fprintf(STDERR,"Could not set the right type and ID on %u\n",pvolid); 
 	error = code;
@@ -2726,7 +2743,7 @@ UV_RestoreVolume(toserver, topart, tovolid, tovolname, flags, WriteData, rock)
         /* Volume was restored on the file server, update the 
 	 * VLDB to reflect the change.
 	 */
-	vcode = VLDB_GetEntryByID(pvolid,RWVOL, &entry);
+	vcode = VLDB_GetEntryByID(pvolid,voltype, &entry);
 	if(vcode && vcode != VL_NOENT && vcode != VL_ENTDELETED) {
 	    fprintf(STDERR,"Could not fetch the entry for volume number %u from VLDB \n",pvolid);
 	    error = vcode;
@@ -2740,9 +2757,11 @@ UV_RestoreVolume(toserver, topart, tovolid, tovolname, flags, WriteData, rock)
 	    entry.nServers = 1;
 	    entry.serverNumber[0] = toserver;/*should be indirect */
 	    entry.serverPartition[0] = topart;
-	    entry.serverFlags[0] = ITSRWVOL;
-	    entry.flags = RW_EXISTS;
-	    if(tstatus.cloneID != 0){
+	    entry.serverFlags[0] = (flags & RV_RDONLY) ? ITSROVOL : ITSRWVOL;
+	    entry.flags = (flags & RV_RDONLY) ? RO_EXISTS : RW_EXISTS;
+	    if (flags & RV_RDONLY)
+		entry.volumeId[ROVOL] = pvolid;
+	    else if(tstatus.cloneID != 0){
 		entry.volumeId[ROVOL] = tstatus.cloneID;/*this should come from status info on the volume if non zero */
 	    }
 	    else
@@ -2772,7 +2791,7 @@ UV_RestoreVolume(toserver, topart, tovolid, tovolname, flags, WriteData, rock)
 		EnumerateEntry(&entry);
 		fprintf(STDOUT,"------- New entry -------\n");
 	    }
-	    vcode = ubik_Call(VL_SetLock,cstruct, 0, pvolid, RWVOL, VLOP_RESTORE);
+	    vcode = ubik_Call(VL_SetLock,cstruct, 0, pvolid, voltype, VLOP_RESTORE);
 	    if(vcode) {
 		fprintf(STDERR,"Could not lock the entry for volume number %u \n",pvolid);
 		error = vcode;
@@ -2782,12 +2801,16 @@ UV_RestoreVolume(toserver, topart, tovolid, tovolname, flags, WriteData, rock)
 	    strcpy(entry.name, tovolname);
 
 	    /* Update the vlentry with the new information */
-	    index = Lp_GetRwIndex(&entry);
+	    if (flags & RV_RDONLY)
+		index = Lp_ROMatch(toserver, topart, &entry) - 1;
+	    else
+		index = Lp_GetRwIndex(&entry);
 	    if (index == -1) {
-	       /* Add the rw site for the volume being restored */
+	       /* Add the new site for the volume being restored */
 	       entry.serverNumber[entry.nServers]    = toserver;
 	       entry.serverPartition[entry.nServers] = topart;
-	       entry.serverFlags[entry.nServers]     = ITSRWVOL;
+	       entry.serverFlags[entry.nServers]     =
+			(flags & RV_RDONLY) ? ITSROVOL : ITSRWVOL;
 	       entry.nServers++;
 	    } else {
 	       /* This volume should be deleted on the old site
@@ -2837,9 +2860,9 @@ UV_RestoreVolume(toserver, topart, tovolid, tovolname, flags, WriteData, rock)
 	       entry.serverPartition[index] = topart;
 	    }
 
-	    entry.flags |= RW_EXISTS;
+	    entry.flags |= (flags & RV_RDONLY) ? RO_EXISTS : RW_EXISTS;
 	    MapNetworkToHost(&entry,&storeEntry);
-	    vcode = VLDB_ReplaceEntry(pvolid,RWVOL, &storeEntry,LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP );
+	    vcode = VLDB_ReplaceEntry(pvolid,voltype, &storeEntry,LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP );
 	    if(vcode) {
 		fprintf(STDERR,"Could not update the entry for volume number %u  \n",pvolid);
 		error = vcode;
@@ -2857,7 +2880,7 @@ UV_RestoreVolume(toserver, topart, tovolid, tovolname, flags, WriteData, rock)
 	  if (!error) error = code;
       }
       if(islocked) {
-	  vcode = ubik_Call(VL_ReleaseLock,cstruct, 0, pvolid, RWVOL, LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
+	  vcode = ubik_Call(VL_ReleaseLock,cstruct, 0, pvolid, voltype, LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	  if(vcode) {
 	      fprintf(STDERR,"Could not release lock on the VLDB entry for the volume %u\n",pvolid);
 	      if(!error) error = vcode;
@@ -3053,6 +3076,55 @@ afs_int32 server, part, volid;
 	vcode = VLDB_ReplaceEntry(volid,RWVOL,&storeEntry,LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	if(vcode){ 
 	    fprintf(STDERR,"Could not release lock on volume entry for %u \n",volid);
+	    PrintError("",vcode);
+	    ubik_Call(VL_ReleaseLock,cstruct, 0, volid, RWVOL, LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
+	    return(vcode);
+	}
+	if(verbose) fprintf(STDOUT," done\n");
+    }
+    return 0;
+}
+
+/*sets <server> <part> as read/write site for <volid> in the vldb */
+UV_ChangeLocation(server, part, volid)
+afs_int32 server, part, volid;
+{
+    afs_int32 vcode;
+    struct nvldbentry entry,storeEntry;
+    int index;
+
+    vcode = ubik_Call(VL_SetLock,cstruct, 0,volid,RWVOL, VLOP_ADDSITE);
+    if(vcode) {
+	fprintf(STDERR," Could not lock the VLDB entry for volume %u \n", volid);
+	PrintError("",vcode);
+	return(vcode);
+    }
+    vcode = VLDB_GetEntryByID(volid,RWVOL, &entry);
+    if(vcode) {
+	fprintf(STDERR,"Could not fetch the entry for volume number %u from VLDB \n",volid);
+	PrintError("",vcode);
+	return (vcode);
+    }
+    MapHostToNetwork(&entry);
+    index = Lp_GetRwIndex(&entry);
+    if (index < 0) {
+	/* no RW site exists  */
+	fprintf(STDERR,"No existing RW site for volume %u", volid);
+	vcode = ubik_Call(VL_ReleaseLock,cstruct, 0, volid, RWVOL, LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
+	if(vcode) {
+	    fprintf(STDERR,"Could not release lock on entry for volume %u \n",volid);
+	    PrintError("",vcode);
+	    return(vcode);
+	}
+	return VOLSERBADOP;
+    }
+    else { /* change the RW site */
+	entry.serverNumber[index] = server;
+	entry.serverPartition[index] = part;
+	MapNetworkToHost(&entry,&storeEntry);
+	vcode = VLDB_ReplaceEntry(volid,RWVOL,&storeEntry,LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
+	if(vcode){ 
+	    fprintf(STDERR,"Could not update entry for volume %u \n",volid);
 	    PrintError("",vcode);
 	    ubik_Call(VL_ReleaseLock,cstruct, 0, volid, RWVOL, LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	    return(vcode);
@@ -4911,9 +4983,49 @@ UV_SetVolume(server, partition, volid, transflag, setflag, sleeptime)
  error_exit:
   if (tid) {
      rcode = 0;
-     code = AFSVolEndTrans(conn, tid, &code);
+     code = AFSVolEndTrans(conn, tid, &rcode);
      if (code || rcode) {
         fprintf(STDERR, "SetVolumeStatus: EndTrans Failed\n");
+	if (!error) error = (code ? code : rcode);
+     }
+  }
+
+  if (conn) rx_DestroyConnection(conn);
+  return(error);
+}
+
+UV_SetVolumeInfo(server, partition, volid, infop)
+  afs_int32 server, partition, volid;
+  volintInfo *infop;
+{
+  struct rx_connection *conn = 0;
+  afs_int32 tid=0;
+  afs_int32 code, error=0, rcode;
+
+  conn = UV_Bind(server, AFSCONF_VOLUMEPORT);
+  if (!conn) {
+     fprintf(STDERR, "SetVolumeInfo: Bind Failed");
+     ERROR_EXIT(-1);
+  }
+
+  code = AFSVolTransCreate(conn, volid, partition, ITOffline, &tid);
+  if (code) {
+     fprintf(STDERR, "SetVolumeInfo: TransCreate Failed\n");
+     ERROR_EXIT(code);
+  }
+  
+  code = AFSVolSetInfo(conn, tid, infop);
+  if (code) {
+     fprintf(STDERR, "SetVolumeInfo: SetInfo Failed\n");
+     ERROR_EXIT(code);
+  }
+  
+ error_exit:
+  if (tid) {
+     rcode = 0;
+     code = AFSVolEndTrans(conn, tid, &rcode);
+     if (code || rcode) {
+        fprintf(STDERR, "SetVolumeInfo: EndTrans Failed\n");
 	if (!error) error = (code ? code : rcode);
      }
   }
