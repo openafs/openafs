@@ -32,6 +32,7 @@ VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync.o purge.o \
 OBJECTS=${VLIBOBJS} physio.o vol-salvage.o vol-info.o 
 
 all:	${DESTDIR}lib/afs/vlib.a \
+	${DESTDIR}lib/afs/libvlib.a \
 	${DESTDIR}root.server/usr/afs/bin/salvager \
 	${DESTDIR}root.server/usr/afs/bin/volinfo \
 	gi
@@ -48,6 +49,9 @@ ${DESTDIR}root.server/usr/afs/bin/volinfo: volinfo
 	${INSTALL} -s $? $@
 
 ${DESTDIR}lib/afs/vlib.a: vlib.a
+	${INSTALL} $? $@
+
+${DESTDIR}lib/afs/libvlib.a: vlib.a
 	${INSTALL} $? $@
 
 $(DESTDIR)root.server/usr/afs/bin/fs_conv_dux40D:  fs_conv_dux40D
