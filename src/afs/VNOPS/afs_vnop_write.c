@@ -721,7 +721,7 @@ struct vrequest *areq; {
 afs_closex(afd)
     register struct file *afd; {
     struct vrequest treq;
-    register struct vcache *tvc;
+    struct vcache *tvc;
     afs_int32 flags;
     int closeDone;
     afs_int32 code = 0;
