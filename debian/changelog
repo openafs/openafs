@@ -1,3 +1,9 @@
+openafs (1.0.3-1) unstable; urgency=low
+
+  * New upstream version
+
+ -- Sam Hartman <hartmans@mit.edu>  Thu,  8 Mar 2001 00:56:41 -0500
+
 openafs (1.0.2-3) unstable; urgency=low
 
   * Apply patch from  Stefan Kluth  <skluth@mppmu.mpg.de> for ppc_linux22

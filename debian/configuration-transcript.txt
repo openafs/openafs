@@ -1,3 +1,8 @@
+[This transcript includes creation of a loopback mount on /vicepa
+using file full of zeros.  This is useful to know how to do because it
+allows you to test an AFS server without repartitioning.  However, for
+production cells, you should repartition and create a /vicepa
+partition.]
 
 snorklewacker:/# apt-get -q install openafs-dbserver openafs-krb5 krb5-admin-server
 Reading Package Lists...
