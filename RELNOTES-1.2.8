@@ -1,0 +1,103 @@
+                  OpenAFS Release Notes - Version 1.2.8
+     _________________________________________________________________
+New platform support.
+All systems: New functionality and minor bugfixes.
+     _________________________________________________________________
+
+* Native Kerberos 5 support: rxkad 2b
+
+AFS is now capable of using Kerberos 5 for authentication via rxkad
+2b.  Clients do not need to be updated to take advantage of this,
+although they must be using a Kerberos 5 based aklog.  A krb5 aklog is
+available as part of Ken Hornstein's afs-krb5 migration kit.  To use
+rxkad 2b, your AFS servers must be running OpenAFS 1.2.8, and your
+KDCs must be running MIT Kerberos 5 1.2.6 or later.  The krb524d
+included in MIT Kerberos 5 1.2.6 will respond to requests for AFS
+service tickets with only the encrypted part of a Kerberos 5 ticket.
+krb524d can be configured to not do this on a per principal basis.
+More information on configuring this krb524d behavior is available in
+the README for MIT Kerberos 5 1.2.6 and later.
+
+Support for this is not yet available in Heimdal, but will be present
+in a forthcoming release.
+
+Note that to use this feature, you must be running a krb524d.  A new
+version of aklog that eliminates the need for krb524d is under development
+and will be available in the near future.
+
+OpenAFS servers will continue to accept Kerberos 4 derived tokens, so
+it is not necessary to immediately upgrade your aklog or KDCs if you do
+not wish to take advantage of this new feature.
+
+* New platform support: HP-UX 11.0
+
+HP-UX 11.0 is now supported.  Building for HP-UX 11.0 requires a
+header called vfs_vm.h which HP has provided on their web site:
+
+http://h21007.www2.hp.com/dspp/tech/tech_TechSoftwareDetailPage_IDX/1,1703,687,00.html
+
+To navigate down from the top level of the portal, one would do
+www.hp.com/dspp -> i want to... -> download software -> operating
+systems to get to the same page.
+
+All systems:
+
+- A memory leak in the dynroot directory creation process was fixed.
+
+- Modified the meaning of the -fakestat flag to afsd so that only mounpoints
+  for volumes outside the local cell have stat information faked.  The
+  -fakestat-all flag to afsd will provide the former behavior.
+
+- Dynamically allocate memory for the array of client interface addresses
+  to avoid running over the end of the array.
+
+- Don't assume getchar() returns char; it returns int.
+
+- Modify Rx semantics of the serial number field in ack packets to provide
+  more reliable RTT computation.
+
+- Change some ints to unsigned for correct quota calculation.
+
+- Return EINVAL when the user tries to create a FIFO in AFS, instead of
+  silently creating a regular file.
+
+Linux: 
+
+- Disable new Linux kernel threads model in client to fix compilation
+  errors on RedHat 2.4.7-10 kernels.
+
+- Downmap F_*LK64 macros to F_*LK if they're different, which is safe 
+  since we have no large files for now.
+
+- Some rw locks that were previously not initialized now are.
+
+- Patches to make the client work on Linux kernels that do not export
+  sys_call_table are now part of the base source distribution.
+
+- Make PAGs under Linux deal correctly with the case of ngroups = 0.
+
+Solaris:
+
+- An NFS translator kernel module is now provided.
+
+- Fix a fakestat related kernel panic: Only clean up the open count in
+  VOP_INACTIVE when the vcache is mvstat 0 (necessary because
+  executables don't get VOP_CLOSE'd). Volume roots (mvstat 2) need to
+  keep their open counts, because under fakestat, the mountpoint above
+  it is still considered open by the kernel.
+
+- Don't silently drop bits if ino_t is a larger type than afs_int32.
+
+MacOS X:
+
+- Recognize MacOS X 10.2.2 as ppc_darwin_60.
+
+Windows:
+
+- The Windows AFS client will now handle move and rename operations
+  performed through Explorer correctly, and will warn the user when
+  the destination file name already exists.
+
+- Files created in AFS via the Windows client will no longer be given
+  a timestamp of -1 (1969).
+

@@ -1,3 +1,734 @@
+2002-12-10 18:17  shadow
+
+	* src/afs/afs_nfsdisp.c: DELTA
+	STABLE12-nfstrans-solaris-pre-7-support-20021210 AUTHOR
+	shadow@dementia.org
+	
+	make it work for 2.6 and earlier
+
+2002-12-10 17:55  shadow
+
+	* src/WINNT/client_exp/shell_ext.cpp: DELTA
+	STABLE12-windows-wide-char-fix-20021210 AUTHOR leg@andrew.cmu.edu
+	
+	include afxpriv.h so we get macros call GetSize() and not
+	GetCount()
+
+2002-12-10 14:11  shadow
+
+	* src/afs/: UKERNEL/afs_usrops.c, VNOPS/afs_vnop_lookup.c: DELTA
+	STABLE12-use-afs-strchr-instead-of-strchr-20021210 AUTHOR
+	mattiasa@e.kth.se
+	
+	make dux happy
+
+2002-12-10 11:41  shadow
+
+	* src/WINNT/afsd/smb.c: DELTA
+	STABLE12-windows-loopback-adapter-support-20021126 AUTHOR
+	sdw@email.unc.edu
+	
+	try to bind to loopback on windows
+
+2002-12-09 23:32  shadow
+
+	* src/afs/LINUX/: osi_module.c, osi_vnodeops.c: DELTA
+	STABLE12-linux-ia64-updates-20021209 AUTHOR jmoss@ichips.intel.com
+	
+	deal with *LK64 not defined deal with ia64 sys_call_table
+
+2002-12-09 22:42  zacheiss
+
+	* doc/txt/RELNOTES-1.2.8: file RELNOTES-1.2.8 was initially added
+	on branch openafs-stable-1_2_x.
+
+2002-12-09 22:42  zacheiss
+
+	* doc/txt/RELNOTES-1.2.8: 
+	DELTA STABLE12-add-1_2_8-release-notes-20021209 AUTHOR
+	zacheiss@mit.edu
+	
+	Add 1.2.8 release notes.
+
+2002-12-09 18:13  zacheiss
+
+	* NEWS: 
+	DELTA STABLE12-update-news-20021209 AUTHOR zacheiss@mit.edu
+	
+	Update NEWS file with user visible changes and other noteworthy
+	things about OpenAFS 1.2.8.
+
+2002-12-09 17:54  zacheiss
+
+	* configure-libafs.in, configure.in: 
+	DELTA STABLE12-create-openafs-1_2_8-20021209 AUTHOR
+	zacheiss@mit.edu
+	
+	Begin release cycle.
+
+2002-12-05 00:59  shadow
+
+	* src/: WINNT/client_creds/NTMakefile,
+	WINNT/install/InstallShield5/NTMakefile,
+	config/NTMakefile.i386_nt40, config/util_cr.c: DELTA
+	STABLE12-windows-versioning-updates-20021205 AUTHOR
+	james@abrakus.com
+	
+	conditionalize parts of windows build process on what platform the
+	build is on
+
+2002-12-04 19:45  shadow
+
+	* acinclude.m4: DELTA
+	
+	fix broken test
+	STABLE12-deal-with-non-modversioned-non-exported-sys-call-table-200
+	21204 AUTHOR nneul@umr.edu
+
+2002-12-04 09:27  shadow
+
+	* src/config/NTMakefile.version-NOCML: DELTA
+	STABLE12-windows-fake-cml-info-20021126 AUTHOR sdw@email.unc.edu
+	
+	fake up cml info for windows
+
+2002-12-04 09:26  shadow
+
+	* src/WINNT/afsd/smb.c: DELTA
+	STABLE12-windows-rename-warning-20021126 AUTHOR james@abrakus.com
+	
+	Currently AFS doesn't handle Explorer operations 'rename' and
+	'move' correctly.  Normal operation of 'rename' and 'move' is to
+	warn the operator when the destination file name already exist.
+
+2002-12-04 09:25  shadow
+
+	* src/WINNT/client_exp/: afs_shl_ext.cpp, gui2fs.cpp, gui2fs.h,
+	resource.h, shell_ext.cpp, shell_ext.h, lang/en_US/afs_shl_ext.rc,
+	lang/es_ES/afs_shl_ext.rc, lang/ja_JP/afs_shl_ext.rc,
+	lang/ko_KR/afs_shl_ext.rc, lang/pt_BR/afs_shl_ext.rc,
+	lang/zh_CN/afs_shl_ext.rc, lang/zh_TW/afs_shl_ext.rc: DELTA
+	STABLE12-windows-rename-20021126 AUTHOR james@abrakus.com
+	
+	fix rename on windows client
+
+2002-12-04 09:24  shadow
+
+	* src/WINNT/afsd/smb.c: DELTA
+	STABLE12-windows-loopback-adapter-support-20021126 AUTHOR
+	sdw@email.unc.edu
+	
+	try to bind to loopback on windows
+
+2002-12-04 09:20  shadow
+
+	* src/: WINNT/afsapplib/NTMakefile, WINNT/afsd/cm_config.c,
+	WINNT/afsd/cm_conn.c, WINNT/afsd/smb3.c,
+	WINNT/client_config/NTMakefile, WINNT/client_creds/NTMakefile,
+	WINNT/client_creds/shortcut.cpp, WINNT/eventlog/lang/NTMakefile,
+	WINNT/install/InstallShield5/NTMakefile,
+	config/NTMakefile.i386_nt40, config/NTMakefile.i386_win95,
+	config/util_cr.c, libafsrpc/NTMakefile, rxkad/NTMakefile: DELTA
+	STABLE12-windows-build-cleanup-20021204 AUTHOR james@abrakus.com
+	
+	makefile changes.  initialize variables to NULL before use clean up
+	CellServDB parsing make sure files do not get timestamp of -1
+	(1969) update product version
+
+2002-11-26 18:54  shadow
+
+	* src/cf/linux-test4.m4: DELTA
+	disable-new-afs-thread-model-in-old-kernels-20021126 AUTHOR
+	shadow@dementia.org
+	
+	so COMPLETION_H_EXISTS doesn't happen with 2.4.7-10
+
+2002-11-26 18:40  shadow
+
+	* src/afs/HPUX/osi_machdep.h, README: DELTA
+	STABLE12-hpux-readme-and-comments-on-header-20021126 AUTHOR
+	shadow@dementia.org
+	
+	Thanks to Carl Davidson for making it happen.
+
+2002-11-22 20:27  shadow
+
+	* README: DELTA
+	STABLE12-update-README-with-current-systems-20021122 AUTHOR
+	shadow@dementia.org
+	
+	note that logging ufs on solaris can be bad
+
+2002-11-22 16:01  zacheiss
+
+	* src/afs/LINUX/osi_vnodeops.c: 
+	DELTA STABLE12-linux-flock-downmap-64-ops-20021120 AUTHOR
+	kvanhees@sinenomine.net
+	
+	downmap F_*LK64 to F_*LK if they're different. we have no large
+	files for now.
+
+2002-11-22 14:14  shadow
+
+	* src/afs/VNOPS/afs_vnop_readdir.c: DELTA
+	address-operator-cant-be-applied-to-register-vars-on-hpux-20021122
+	AUTHOR nneul@umr.edu
+	
+	so we have a working hpux port
+
+2002-11-19 22:24  shadow
+
+	* src/afs/afs_dynroot.c: DELTA
+	STABLE12-misc-dynroot-cleanup-20021119 AUTHOR kolya@mit.edu
+	
+	Fix a memory leak in the dynroot directory creation process and
+	factor out common code to compute directory size.
+
+2002-11-19 22:18  zacheiss
+
+	* src/afs/afs_vcache.c: 
+	DELTA STABLE12-linux-dcache-flushing-fix-22-kernels-20021119 AUTHOR
+	zacheiss@mit.edu
+	
+	Make this work with Linux 2.2 kernels again.  In particular,
+	
+	- Use the DCOUNT() macro from afs.h instead of atomic_read, because
+	  the d_count member of a struct dentry is an int in the 2.2
+	series,   not an atomic_t.
+	
+	- Use list_del() + INIT_LIST_HEAD() on 2.2, which doesn't have
+	list_del_init().
+	
+	- BUG() only exists on 2.4 kernels.  Just don't use it on 2.2.
+
+2002-11-19 22:05  shadow
+
+	* src/afs/afs_dynroot.c: DELTA
+	STABLE12-dynamic-root-allocate-space-for-dot-and-dotdot-20011102
+	AUTHOR kolya@mit.edu
+	
+	reserve space for . and .. in dynroot/freelance fix my
+	(shadow@dementia.org) screwup
+
+2002-11-17 23:35  zacheiss
+
+	* src/: rxkad/Makefile.in, libafs/Makefile.common,
+	libuafs/Makefile.common, libafsrpc/Makefile.in,
+	shlibafsrpc/Makefile.in: 
+	DELTA STABLE12-revert-bg-fcrypt-20021117 AUTHOR zacheiss@mit.edu
+	
+	Revert to previous fcrypt implementation until the new one actually
+	works.
+
+2002-11-16 14:28  shadow
+
+	* src/rxkad/test/Makefile.in: DELTA
+	STABLE12-rxkad-make-stress-compile-again-20020119 AUTHOR
+	lha@e.kth.se
+	
+	Make stress compile again.
+
+2002-11-15 08:45  shadow
+
+	* src/rxkad/bg-fcrypt.c: DELTA STABLE12-bg-fcrypt-cleanup-20021030
+	AUTHOR shadow@dementia.org
+	
+	and readd rx/rx.h so private_data's struct clock ref is resolved
+
+2002-11-15 08:40  shadow
+
+	* src/rxkad/bg-fcrypt.c: DELTA STABLE12-bg-fcrypt-cleanup-20021030
+	AUTHOR shadow@dementia.org
+	
+	un-nocopy bg-fcrypt
+
+2002-11-15 08:29  shadow
+
+	* src/afs/afs_trace.et: DELTA
+	STABLE12-linux-dcache-flushing-experimental-20020819 AUTHOR
+	chas@cmf.nrl.navy.mil
+	
+	shadow@dementia.org at least partly to blame.
+	
+	hold the dcache lock only briefly; instead put dcache entries to be
+	junked onto a free list, by unhashing them, then grab the dcache
+	lock, junk them, and release it.
+
+2002-11-15 08:28  shadow
+
+	* src/afs/afs_init.c: DELTA STABLE12-linux-init-rwlocks-20020926
+	AUTHOR dhowells@warthog.cambridge.redhat.com
+	
+	init linux rwlocks we missed before
+
+2002-11-15 08:17  shadow
+
+	* src/vol/fssync.c: DELTA
+	
+	not ready yet, needs work
+	STABLE12-REVERT-volserver-dont-deal-poorly-with-fssync-blockage-200
+	21016 AUTHOR cg2v@andrew.cmu.edu
+
+2002-11-15 01:05  zacheiss
+
+	* src/afs/afs_init.c: 
+	DELTA STABLE12-linux-init-rwlocks-20020926 AUTHOR zacheiss@mit.edu
+	
+	Need to declare new lock extern.
+
+2002-11-15 00:50  shadow
+
+	* src/libafsrpc/Makefile.in: DELTA
+	STABLE12-bg-fcrypt-cleanup-20021030 AUTHOR shadow@dementia.org
+	
+	add missing include path
+
+2002-11-15 00:43  shadow
+
+	* src/rxkad/Makefile.in: DELTA STABLE12-rxkad-new-fcrypt-20021028
+	AUTHOR lha@it.su.se
+	
+	rxkad fcrypt from bg@pdc.kth.se. we should also add autoconf test
+	for what to use for EFF_NTOHL
+
+2002-11-15 00:04  shadow
+
+	* src/rxkad/ticket5.c: DELTA
+	STABLE12-rxkad5-dont-allow-dot-in-aname-20021114 AUTHOR
+	lha@e.kth.se
+	
+	otherwise we need to deal with the fact that we're using . as a
+	separator
+
+2002-11-14 23:08  zacheiss
+
+	* src/rx/rx_kernel.h: 
+	DELTA fix-typo-20021114 AUTHOR zacheiss@mit.edu
+	
+	Fix typo introduced during merge.
+
+2002-11-14 23:07  zacheiss
+
+	* src/viced/callback.c: 
+	DELTA fix-typo-20021114 AUTHOR zacheiss@mit.edu
+	
+	fix typo introduced during merge.
+
+2002-11-14 18:02  zacheiss
+
+	* src/: libafs/Makefile.common, libafsrpc/Makefile.in,
+	libuafs/Makefile.common, rxkad/bg-fcrypt.c,
+	shlibafsrpc/Makefile.in: 
+	DELTA STABLE12-bg-fcrypt-cleanup-20021030 AUTHOR
+	shadow@dementia.org
+	
+	readd missing statistics make cm and ukernel compile with new stuff
+
+2002-11-14 17:51  zacheiss
+
+	* src/rxkad/: Makefile.in, bg-fcrypt.c: 
+	DELTA STABLE12-rxkad-new-fcrypt-20021028 AUTHOR lha@it.su.se
+	
+	rxkad fcrypt from bg@pdc.kth.se. we should also add autoconf test
+	for what to use for EFF_NTOHL
+
+2002-11-14 17:46  zacheiss
+
+	* src/rxkad/: der.h, v5gen.c: 
+	DELTA STABLE12-rxkad-krb5-windows-fix-20021028 AUTHOR
+	shadow@dementia.org
+	
+	based on report from leg@andrew.cmu.edu
+
+2002-11-14 17:44  zacheiss
+
+	* src/: libafsrpc/Makefile.in, shlibafsrpc/Makefile.in,
+	rxkad/Makefile.in, rxkad/README.v5, rxkad/asn1-common.h,
+	rxkad/asn1_err.h, rxkad/crc.c, rxkad/der.h, rxkad/rxkad.p.h,
+	rxkad/rxkad_server.c, rxkad/ticket5.c, rxkad/v5der.c,
+	rxkad/v5gen-rewrite.h, rxkad/v5gen.c, rxkad/v5gen.h,
+	rxkad/test/Makefile.in, rxkad/test/stress.c, rxkad/test/stress_c.c,
+	rxkad/test/stress_internal.h, rxkad/test/stress_s.c: 
+	DELTA STABLE12-rxkad-krb5-20021027 AUTHOR lha@it.su.se
+	
+	Added support to rxkad for servers accepting Kerberos V5 tickets
+	and truncated "proposal 2b" tickets.  When used with an appropriate
+	aklog or krb524d (such as shipped with Heimdal and MIT Kerberos),
+	this allows the use of Kerberos V5 tickets (with DES session keys)
+	to authenticate connections to OpenAFS servers.
+
+2002-11-14 17:27  zacheiss
+
+	* src/: util/afs_lhash.c, rx/rx_kcommon.h: 
+	DELTA STABLE12-hpux-20021106 AUTHOR deengert@anl.gov
+	
+	Minor fixes for HPUX110.
+
+2002-11-14 17:23  zacheiss
+
+	* src/afs/afs_nfsdisp.c: 
+	DELTA STABLE12-nfs-translator-nfsv2-fixup-20021112 AUTHOR
+	shadow@dementia.org
+	
+	rewrite so we treat the ptr args as such
+
+2002-11-14 17:21  zacheiss
+
+	* acinclude.m4: 
+	DELTA STABLE12-darwin-map-more-versions-20021112 AUTHOR
+	zacheiss@mit.edu
+	
+	Recognize MacOS X 10.2.2 as ppc_darwin_60.  It's compatible.
+
+2002-11-14 17:19  zacheiss
+
+	* src/rx/rx.c: 
+	DELTA STABLE12-rx-cleanup-20021112 AUTHOR kolya@mit.edu
+	
+	Clean up code in rxi_FindConnection.
+
+2002-11-14 17:17  zacheiss
+
+	* acconfig.h, acinclude.m4, src/afs/LINUX/osi_module.c,
+	src/cf/linux-test4.m4, src/cf/linux-test5.m4,
+	src/libafs/MakefileProto.LINUX.in: 
+	DELTA STABLE12-handle-unexported-sys_call_table-20021112 AUTHOR
+	cg2v@andrew.cmu.edu
+	
+	Handle Linux kernels that don't export sys_call_table.
+
+2002-11-14 16:58  zacheiss
+
+	* src/afs/SOLARIS/osi_vnodeops.c: 
+	DELTA
+	STABLE12-solaris-fakestat-fix-open-count-for-volume-roots-20021104
+	AUTHOR kolya@mit.edu
+	
+	Under Solaris, only clean up the open count in VOP_INACTIVE when
+	the vcache is mvstat 0 (necessary because executables don't get
+	VOP_CLOSE'd).  Volume roots (mvstat 2) need to keep their open
+	counts, because under fakestat, the mountpoint above it is still
+	considered open by the kernel.
+
+2002-11-14 16:56  zacheiss
+
+	* src/viced/: callback.c, host.c: 
+	DELTA STABLE12-dynamic-interface-addr-array-sizing-20021030 AUTHOR
+	kolya@mit.edu
+	
+	Allocate memory for the interface addr arrays dynamically to avoid
+	potential overruns.
+
+2002-11-14 16:51  zacheiss
+
+	* src/des/read_pssword.c: 
+	DELTA STABLE12-darwin-restore-terminal-after-read-password-20021028
+	AUTHOR ses@unc.edu
+	
+	turn echo back on
+
+2002-11-14 16:45  zacheiss
+
+	* acinclude.m4: 
+	DELTA STABLE12-acinclude-updates-20021027 AUTHOR lha@it.su.se
+	
+	so AC_DEFINE() specifies 3 arguments for everything defined
+
+2002-11-14 16:40  zacheiss
+
+	* src/: butc/read_tape.c, butc/recoverDb.c, kauth/klogin.c,
+	login/login.c, lwp/waitkey.c, volser/vos.c, volser/vsprocs.c: 
+	DELTA STABLE12-getchar-returns-int-20021026 AUTHOR hartmans@mit.edu
+	
+	don't assume it returns char
+
+2002-11-14 16:38  zacheiss
+
+	* src/rx/rx.c: 
+	DELTA STABLE12-rx-improved-rtt-computation-20021020 AUTHOR
+	kolya@mit.edu
+	
+	Slight change to the semantics of the serial number field in the
+	ack packet, which results in more reliable RTT computation.
+
+2002-11-14 16:37  zacheiss
+
+	* src/viced/afsfileprocs.c: 
+	DELTA STABLE12-fix-quota-calcs-with-unsigned-20021018 AUTHOR
+	ksatish@in.ibm.com
+	
+	Change some ints to unsigned for correct quota calculation.  From
+	Gregory via Satish Kumar.
+
+2002-11-14 16:35  zacheiss
+
+	* src/vol/fssync.c: 
+	DELTA
+	STABLE12-volserver-dont-deal-poorly-with-fssync-blockage-20021016
+	AUTHOR cg2v@andrew.cmu.edu
+	
+	The attached patch attempts to deal with the issue that the
+	volserver blocks if the fileserver's fssync interface isn't
+	responsive by doing a select (IOMGR_Select) before trying to read
+	the server's response.
+
+2002-11-14 16:34  zacheiss
+
+	* src/libafs/MakefileProto.SOLARIS.in: 
+	DELTA STABLE12-solaris-build-translator-kernel-module-20021015
+	AUTHOR shadow@dementia.org
+	
+	make libafs.o get built on solaris
+
+2002-11-14 16:32  zacheiss
+
+	* src/rx/rx.c: 
+	DELTA STABLE12-rx-force-send-delayack-upon-endcall-20021013 AUTHOR
+	kolya@mit.edu
+	
+	If the user calls rx_EndCall and we still have an outstanding
+	delayack, force-send it now, to be nice to the server (otherwise
+	the server will keep retransmitting to us for a while).
+
+2002-11-14 16:31  zacheiss
+
+	* src/afs/afs_nfsdisp.c: 
+	DELTA
+	STABLE12-solaris-nfs-translator-expand-macros-and-cleanup-20021011
+	AUTHOR shadow@dementia.org
+	
+	Working NFS translator on Solaris.
+
+2002-11-14 16:24  zacheiss
+
+	* src/afs/: LINUX/osi_vnodeops.c, VNOPS/afs_vnop_lookup.c: 
+	DELTA STABLE12-fakestat-for-crosscell-mountpoints-only-20021009
+	AUTHOR kolya@mit.edu
+	
+	A better way to do cross-cell-only fakestat, which should also
+	avoid problems with Linux's attribute validation.
+
+2002-11-14 16:03  zacheiss
+
+	* src/: afs/afs_prototypes.h, afs/afs_util.c,
+	afs/LINUX/osi_vnodeops.c, afs/VNOPS/afs_vnop_lookup.c, afsd/afsd.c:
+	
+	DELTA STABLE12-fakestat-for-crosscell-mountpoints-only-20021006
+	AUTHOR kolya@mit.edu
+	
+	Change the meaning of the -fakestat switch to only enable fakestat
+	for cross-cell mountpoints.  The -fakestat-all switch can now be
+	used to enable fakestat for all mountpoints (old behavior).
+
+2002-11-14 15:41  zacheiss
+
+	* src/vol/: ihandle.c, volume.c: 
+	DELTA
+	
+	also avoid potential null deref in ih_open but with the
+	ReadVolumeHeader patch we should never get there.
+	
+	thanks to Kris Van Hees for discovering this
+	STABLE12-fileserver-may-not-have-valid-diskDataHandle-if-volume-was
+	-offlined-20021003 AUTHOR shadow@dementia.org
+
+2002-11-14 15:39  zacheiss
+
+	* src/afs/: LINUX/osi_vfs.hin, VNOPS/afs_vnop_create.c: 
+	DELTA STABLE12-dont-allow-creating-a-fifo-under-afs-20021001 AUTHOR
+	kolya@mit.edu
+	
+	Return EINVAL when the user tries to create a FIFO under afs,
+	instead of silently creating a regular file.
+
+2002-11-14 15:37  zacheiss
+
+	* acinclude.m4: 
+	DELTA STABLE12-configure-check-for-timegm-20021001 AUTHOR
+	lha@stacken.kth.se
+	
+	check for timegm. lha needs it for rxkad but it's "safe"
+
+2002-11-14 15:36  zacheiss
+
+	* src/afs/SOLARIS/osi_file.c: 
+	DELTA STABLE12-solaris-dont-truncate-inode-number-20020930 AUTHOR
+	shadow@dementia.org
+	
+	if ino_t is a larger type than afs_int32, we lose bits, then treat
+	it as if nothing happened...
+
+2002-11-14 15:30  zacheiss
+
+	* src/rx/: rx_kernel.h, xdr.h, xdr_rx.c: 
+	DELTA STABLE12-hpux-rx-cleanup-20020930 AUTHOR nneul@umr.edu
+	
+	make the hpux client work
+
+2002-11-14 15:20  zacheiss
+
+	* src/afs/sysincludes.h: 
+	DELTA STABLE12-completion-deal-with-redhat-patch-20020930 AUTHOR
+	shadow@dementia.org
+	
+	just include the header directly if we caN
+
+2002-11-14 15:18  zacheiss
+
+	* src/viced/afsfileprocs.c: 
+	DELTA
+	STABLE12-handle-cow-differently-if-volume-wont-be-salvaged-20020930
+	AUTHOR nneul@umr.edu
+	
+	as edited by shadow@dementia.org
+
+2002-11-14 15:12  zacheiss
+
+	* src/rx/HPUX/rx_kmutex.h: 
+	DELTA STABLE12-hpux-updated-rx-kmutex-from-ibm-20020926 AUTHOR
+	shadow@dementia.org
+	
+	as provided by Srikanth Vishwanathan
+
+2002-11-14 15:10  zacheiss
+
+	* src/rx/HPUX/rx_kmutex.h: 
+	DELTA STABLE12-hpux-kmutex-cleanup-20020926 AUTHOR nneul@umr.edu
+	
+	clean up missed and won't-compile stuff
+
+2002-11-14 15:09  zacheiss
+
+	* src/rx/HPUX/rx_kmutex.h: 
+	DELTA STABLE12-hpux-rx-kmutex-h-20020926 AUTHOR shadow@dementia.org
+	
+	basically verbatim import from ibm afs, per laura stentz: Derrick,
+	
+	I have gotten approval to allow you to publish this header in
+	OpenAFS.  Enjoy!
+	
+	Laura
+
+2002-11-14 15:08  zacheiss
+
+	* src/: rx/rx_kcommon.c, rx/HPUX/rx_kmutex.h,
+	afs/HPUX/osi_machdep.h, afs/HPUX/osi_vnodeops.c,
+	config/param.hp_ux110.h, libafs/MakefileProto.HPUX.in: 
+	DELTA STABLE12-hpux-updates-20020716 AUTHOR shadow@dementia.org
+	
+	get us closer to building
+
+2002-11-14 15:01  zacheiss
+
+	* src/: config/Makefile.hp_ux110.in, rx/Makefile.in,
+	libafsrpc/Makefile.in: 
+	DELTA STABLE12-xdr-build-ours-entirely-20020926 AUTHOR
+	nneul@umr.edu
+	
+	If we're doing our own xdr, we should be doing ALL of of own xdr,
+	not piecemeal.	This impacted on HP w/ duplicate symbols if -lnsl,
+	and missing symbols if no -lnsl.
+
+2002-11-14 14:53  zacheiss
+
+	* src/afs/: afs_init.c, LINUX/osi_module.c, LINUX/osi_prototypes.h:
+	
+	DELTA STABLE12-linux-init-rwlocks-20020926 AUTHOR
+	dhowells@warthog.cambridge.redhat.com
+	
+	init linux rwlocks we missed before
+
+2002-11-14 14:47  zacheiss
+
+	* src/afs/LINUX/osi_groups.c: 
+	DELTA STABLE12-linux-pag-deal-with-no-groups-20020926 AUTHOR
+	ingolia@mit.edu
+	
+	If ngroups in the parent is 0, but the first two elements of the
+	groups array represent a valid PAG (perhaps because they weren't
+	zeroed), then set_pag_in_parent won't add 2 to ngroups and the
+	parent process won't join the PAG.
+
+2002-11-14 10:12  shadow
+
+	* src/afs/afs_vcache.c: DELTA
+	STABLE12-linux-dcache-flushing-experimental-20020819 AUTHOR
+	chas@cmf.nrl.navy.mil
+	
+	shadow@dementia.org at least partly to blame.
+	
+	hold the dcache lock only briefly; instead put dcache entries to be
+	junked onto a free list, by unhashing them, then grab the dcache
+	lock, junk them, and release it.
+
+2002-11-12 16:17  zacheiss
+
+	* src/cf/linux-test5.m4: 
+	DELTA handle-unexported-sys_call_table-20021112 AUTHOR
+	cg2v@andrew.cmu.edu
+	
+	Handle Linux kernels that don't export sys_call_table.
+
+2002-11-02 12:25  shadow
+
+	* src/shlibafsauthent/mapfile: DELTA
+	STABLE12-shlibafsauthent-extra-functions-20021102 AUTHOR
+	shadow@dementia.org
+	
+	export more on solaris
+
+2002-10-30 19:19  shadow
+
+	* src/rxkad/bg-fcrypt.c: DELTA bg-fcrypt-cleanup-20021030 AUTHOR
+	shadow@dementia.org
+	
+	make it work with ukernel macros
+
+2002-10-30 19:10  shadow
+
+	* src/rxkad/bg-fcrypt.c: DELTA bg-fcrypt-cleanup-20021030 AUTHOR
+	shadow@dementia.org
+	
+	readd missing statistics make cm and ukernel compile with new stuff
+
+2002-10-30 17:58  shadow
+
+	* src/rxkad/bg-fcrypt.c: DELTA bg-fcrypt-cleanup-20021030 AUTHOR
+	shadow@dementia.org
+	
+	readd missing statistics make cm and ukernel compile with new stuff
+
+2002-10-28 19:05  shadow
+
+	* src/rxkad/bg-fcrypt.c: DELTA rxkad-new-fcrypt-20021028 AUTHOR
+	lha@it.su.se
+	
+	rxkad fcrypt from bg@pdc.kth.se. we should also add autoconf test
+	for what to use for EFF_NTOHL
+
+2002-10-28 17:51  shadow
+
+	* src/rxkad/: der.h, v5gen.c: DELTA rxkad-krb5-windows-fix-20021028
+	AUTHOR shadow@dementia.org
+	
+	based on report from leg@andrew.cmu.edu
+
+2002-10-27 20:18  jhutz
+
+	* src/rxkad/: README.v5, asn1-common.h, asn1_err.h, crc.c, der.h,
+	ticket5.c, v5der.c, v5gen-rewrite.h, v5gen.c, v5gen.h: DELTA
+	rxkad-krb5-20021027 AUTHOR lha@it.su.se
+	
+	Added support to rxkad for servers accepting Kerberos V5 tickets
+	and truncated "proposal 2b" tickets.  When used with an appropriate
+	aklog or krb524d (such as shipped with Heimdal and MIT Kerberos),
+	this allows the use of Kerberos V5 tickets (with DES session keys)
+	to authenticate connections to OpenAFS servers.
+
+2002-10-16 00:16  shadow
+
+	* src/rxkad/README.v5: file README.v5 was initially added on branch
+	openafs-rxkad-krb5-lha.
 2002-09-25 18:14  zacheiss
 
 	* configure-libafs.in, configure.in: 
