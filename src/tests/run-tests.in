@@ -9,7 +9,7 @@ VERSION=@VERSION@
 PACKAGE=@PACKAGE@
 host=@host@
 RUNAS=nobody
-FS=/usr/local/bin/fs
+FS=@afssrvbindir@/fs
 export FS
 
 AFSROOT=${AFSROOT-/afs}
