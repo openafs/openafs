@@ -2895,6 +2895,17 @@ afs_vcacheInit(int astatSize)
     LOCK_INIT(&afs_xvcb, "afs_xvcb");
 
 #if	!defined(AFS_OSF_ENV)
+#ifdef AFS_LINUX26_ENV
+    printf("old style would have needed %d contiguous bytes\n", astatSize *
+	   sizeof(struct vcache));
+    Initial_freeVCList = freeVCList = tvp = (struct vcache *)
+	afs_osi_Alloc(sizeof(struct vcache));
+    for (i = 0; i < astatSize; i++) {
+	tvp->nextfree = (struct vcache *) afs_osi_Alloc(sizeof(struct vcache));
+	tvp = tvp->nextfree;
+    }
+    tvp->nextfree = NULL;
+#else
     /* Allocate and thread the struct vcache entries */
     tvp = (struct vcache *)afs_osi_Alloc(astatSize * sizeof(struct vcache));
     memset((char *)tvp, 0, sizeof(struct vcache) * astatSize);
@@ -2909,7 +2920,7 @@ afs_vcacheInit(int astatSize)
     pin((char *)tvp, astatSize * sizeof(struct vcache));	/* XXX */
 #endif
 #endif
-
+#endif
 
 #if defined(AFS_SGI_ENV)
     for (i = 0; i < astatSize; i++) {
@@ -3019,12 +3030,25 @@ shutdown_vcache(void)
     }
     afs_cbrSpace = 0;
 
+#ifdef AFS_LINUX26_ENV
+    {
+	struct vcache *tvp = Initial_freeVCList;
+	while (tvp) {
+	    struct vcache *next = tvp->nextfree;
+	    
+	    afs_osi_Free(tvp, sizeof(struct vcache));
+	    tvp = next;
+	}
+    }
+#else
 #ifdef  KERNEL_HAVE_PIN
     unpin(Initial_freeVCList, afs_cacheStats * sizeof(struct vcache));
 #endif
 #if	!defined(AFS_OSF_ENV)
     afs_osi_Free(Initial_freeVCList, afs_cacheStats * sizeof(struct vcache));
 #endif
+#endif
+
 #if	!defined(AFS_OSF_ENV)
     freeVCList = Initial_freeVCList = 0;
 #endif
