@@ -95,7 +95,7 @@ char *date(time_t date)
     struct tm *tm = localtime(&date);
     char buf[32];
 
-    strftime (buf, 32, "%Y/%m/%d.%H:%M:%S", tm); /* NT does not have %T */
+    (void) strftime (buf, 32, "%Y/%m/%d.%H:%M:%S", tm); /* NT does not have %T */
     sprintf(results[next = (next+1)&7], "%lu (%s)", (unsigned long) date, buf);
     return results[next];
 }
@@ -306,7 +306,7 @@ static int handleit(struct cmd_syndesc *as)
 		exit(1);
 	    }
 	}
-	sprintf(name1,VFORMAT,volumeId);
+	sprintf(name1,VFORMAT, (unsigned long) volumeId);
 	if (dsizeOnly && !saveinodes)
 	    printf("Volume-Id\t  Volsize  Auxsize Inodesize  AVolsize SizeDiff                (VolName)\n");
 	HandleVolume(partP, name1);
@@ -402,7 +402,7 @@ void HandlePart(struct DiskPartition *partP)
     }
     if (dsizeOnly && !saveinodes)
 	printf("Volume-Id\t  Volsize  Auxsize Inodesize  AVolsize SizeDiff                (VolName)\n");
-    while (dp = readdir(dirp)) {
+    while ((dp = readdir(dirp))) {
 	p = (char *)strrchr(dp->d_name, '.');
 	if (p != NULL && strcmp(p, VHDREXT) == 0) {
 	    HandleVolume(partP, dp->d_name);		

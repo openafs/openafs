@@ -178,3 +178,10 @@ dest: \
 	${DEST}/root.server/usr/afs/bin/volserver \
 	${DEST}/lib/afs/libvolser.a
 
+
+splint::
+	splint $(CFLAGS) \
+	    vos.c \
+	    vsprocs.c vsutils.c lockprocs.c volerr.c \
+	    volmain.c volprocs.c physio.c common.c voltrans.c volerr.c \
+	    dumpstuff.c

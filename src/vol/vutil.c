@@ -76,7 +76,7 @@ void ClearVolumeStats_r();
    volume header ON:  this means that the volumes will not be attached by the
    file server and WILL BE DESTROYED the next time a system salvage is performed */
 
-static void RemoveInodes(Device dev, int vid)
+static void RemoveInodes(Device dev, VolumeId vid)
 {
     register int i;
     IHandle_t *handle;

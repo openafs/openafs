@@ -28,7 +28,7 @@ typedef struct ViceLock
 #define ROOTVNODE 1
 
 /*typedef enum {vNull=0, vFile=1, vDirectory=2, vSymlink=3} VnodeType;*/
-typedef int VnodeType;
+typedef unsigned int VnodeType;
 #define vNull 0
 #define vFile 1
 #define vDirectory 2
@@ -68,7 +68,7 @@ extern struct VnodeClassInfo VnodeClassInfo[nVNODECLASSES];
    of the index.  The header record is the same size as a vnode */
 #define vnodeIndexOffset(vcp,vnodeNumber) \
     ((vnodeIdToBitNumber(vnodeNumber)+1)<<(vcp)->logSize)
-#define bitNumberToVnodeNumber(b,class) (((b)<<VNODECLASSWIDTH)+(class)+1)
+#define bitNumberToVnodeNumber(b,class) ((VnodeId)(((b)<<VNODECLASSWIDTH)+(class)+1))
 #define vnodeIsDirectory(vnodeNumber) (vnodeIdToClass(vnodeNumber) == vLarge)
 
 typedef struct VnodeDiskObject {

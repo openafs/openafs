@@ -68,7 +68,7 @@ int (*vol_PollProc)() =	0;  /* someone must init this */
  */
 struct clone_rock {
     IHandle_t *h;
-    afs_int32 vol;
+    VolId vol;
 };
 
 #define CLONE_MAXITEMS	100

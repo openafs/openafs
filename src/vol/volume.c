@@ -208,7 +208,7 @@ int VInit;    /* 0 - uninitialized,
                      VConnectFS() has completed. */
 
 
-int VolumeCacheCheck;	/* Incremented everytime a volume goes on line--
+bit32 VolumeCacheCheck;	/* Incremented everytime a volume goes on line--
 			 * used to stamp volume headers and in-core
 			 * vnodes.  When the volume goes on-line the
 			 * vnode will be invalidated */
@@ -386,7 +386,7 @@ void VShutdown(void)
 
 
 static void ReadHeader(Error *ec, IHandle_t *h, char *to, int size,
-		     int magic, int version)
+		       bit32 magic, bit32 version)
 {
     struct versionStamp *vsn;
     FdHandle_t *fdP;
@@ -465,14 +465,15 @@ void DiskToVolumeHeader(VolumeHeader_t *h, VolumeDiskHeader_t *dh)
     h->parent = dh->parent;
 
 #ifdef AFS_64BIT_IOPS_ENV
-    h->volumeInfo = dh->volumeInfo_lo | ((Inode)dh->volumeInfo_hi << 32);
+    h->volumeInfo = (Inode)dh->volumeInfo_lo |
+	((Inode)dh->volumeInfo_hi << 32);
     
-    h->smallVnodeIndex = dh->smallVnodeIndex_lo |
+    h->smallVnodeIndex = (Inode)dh->smallVnodeIndex_lo |
 	((Inode)dh->smallVnodeIndex_hi << 32);
 
-    h->largeVnodeIndex = dh->largeVnodeIndex_lo |
+    h->largeVnodeIndex = (Inode)dh->largeVnodeIndex_lo |
 	((Inode)dh->largeVnodeIndex_hi << 32);
-    h->linkTable = dh->linkTable_lo |
+    h->linkTable = (Inode)dh->linkTable_lo |
 	((Inode)dh->linkTable_hi << 32);
 #else
     h->volumeInfo = dh->volumeInfo_lo;
@@ -681,7 +682,7 @@ private Volume *attach2(Error *ec, char *path, register struct VolumeHeader
     VOL_UNLOCK
     vp = (Volume *) calloc(1, sizeof(Volume));
     assert(vp != NULL);
-    vp->specialStatus = (isbusy ? VBUSY : 0);
+    vp->specialStatus = (byte) (isbusy ? VBUSY : 0);
     vp->device = partp->device;
     vp->partition = partp;
     IH_INIT(vp->vnodeIndex[vLarge].handle, partp->device, header->parent,
@@ -1224,14 +1225,14 @@ void VDetachVolume(Error *ec, Volume *vp)
 }
 
 
-int VAllocBitmapEntry_r(Error *ec, Volume *vp, register struct vnodeIndex
+VnodeId VAllocBitmapEntry_r(Error *ec, Volume *vp, register struct vnodeIndex
 			*index)
 {
     register byte *bp,*ep;
     *ec = 0;
     /* This test is probably redundant */
     if (!VolumeWriteable(vp)) {
-	*ec = VREADONLY;
+	*ec = (bit32) VREADONLY;
 	return 0;
     }
 #ifdef BITMAP_LATER
@@ -1274,14 +1275,14 @@ int VAllocBitmapEntry_r(Error *ec, Volume *vp, register struct vnodeIndex
     bp = index->bitmap + index->bitmapOffset;
     ep = index->bitmap + index->bitmapSize;
     while (bp < ep) {
-	if ((*(bit32 *)bp) != 0xffffffff) {
+	if ((*(bit32 *)bp) != (bit32)0xffffffff) {
 	    int o;
-	    index->bitmapOffset = bp - index->bitmap;
+	    index->bitmapOffset = (afs_uint32) (bp - index->bitmap);
 	    while (*bp == 0xff)
 	    	bp++;	    
 	    o = ffs(~*bp)-1;  /* ffs is documented in BSTRING(3) */
 	    *bp |= (1 << o);
-	    return (bp - index->bitmap)*8 + o;
+	    return (VnodeId) ((bp - index->bitmap)*8 + o);
 	}
 	bp += sizeof(bit32) /* i.e. 4 */;
     }
@@ -1298,9 +1299,9 @@ int VAllocBitmapEntry_r(Error *ec, Volume *vp, register struct vnodeIndex
     return index->bitmapOffset*8;
 }
 
-int VAllocBitmapEntry(Error *ec, Volume *vp, register struct vnodeIndex *index)
+VnodeId VAllocBitmapEntry(Error *ec, Volume *vp, register struct vnodeIndex *index)
 {
-    int retVal;
+    VnodeId retVal;
     VOL_LOCK
     retVal = VAllocBitmapEntry_r(ec,vp,index);
     VOL_UNLOCK
@@ -1308,7 +1309,7 @@ int VAllocBitmapEntry(Error *ec, Volume *vp, register struct vnodeIndex *index)
 }
 
 void VFreeBitMapEntry_r(Error *ec, register struct vnodeIndex *index,
-		      int bitNumber)
+		      unsigned bitNumber)
 {
     unsigned int offset;
      *ec = 0;
@@ -1326,7 +1327,7 @@ void VFreeBitMapEntry_r(Error *ec, register struct vnodeIndex *index,
 }
 
 void VFreeBitMapEntry(Error *ec, register struct vnodeIndex *index,
-		      int bitNumber)
+		      unsigned bitNumber)
 {
     VOL_LOCK
     VFreeBitMapEntry_r(ec, index, bitNumber);
@@ -1394,7 +1395,6 @@ static void GetBitmap(Error *ec, Volume *vp, VnodeClass class)
     StreamHandle_t *file;
     int nVnodes;
     int size;
-    int counter = 0;
     struct VnodeClassInfo *vcp = &VnodeClassInfo[class];
     struct vnodeIndex *vip = &vp->vnodeIndex[class];
     struct VnodeDiskObject *vnode;
@@ -1682,7 +1682,7 @@ static void VScanUpdateList() {
     register int i, gap;
     register Volume *vp;
     Error error;
-    afs_int32 now = FT_ApproxTime();
+    afs_uint32 now = FT_ApproxTime();
     /* Be careful with this code, since it works with interleaved calls to AddToVolumeUpdateList */
     for (i = gap = 0; i<nUpdatedVolumes; i++) {
         vp = VGetVolume_r(&error, UpdateList[i-gap] = UpdateList[i]);

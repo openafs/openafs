@@ -122,3 +122,10 @@ ${TOP_INCDIR}/afs/fs_stats.h: fs_stats.h
 
 dest:    ${DEST}/root.server/usr/afs/bin/fileserver ${DEST}/include/afs/fs_stats.h
 
+splint::
+	splint $(CFLAGS) \
+	    viced.c		\
+	    afsfileprocs.c	\
+	    host.c		\
+	    physio.c	\
+	    callback.c

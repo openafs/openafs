@@ -59,6 +59,7 @@ RCSID("$Header$");
 #include <afs/fssync.h>
 #include <afs/acl.h>
 #include "afs/audit.h"
+#include <afs/dir.h>
 
 #include "volser.h"
 #include "volint.h"
@@ -138,7 +139,7 @@ char *aname;
 afs_int32 asize; {
     if (asize < 18) return -1;
     /* It's better using the Generic VFORMAT since otherwise we have to make changes to too many places... The 14 char limitation in names hits us again in AIX; print in field of 9 digits (still 10 for the rest), right justified with 0 padding */
-    sprintf(aname, VFORMAT, avol);
+    sprintf(aname, VFORMAT, (unsigned long) avol);
     return 0;
 }
 
@@ -1123,7 +1124,7 @@ afs_int32 destTrans;
     
 fail:
     if (tcon) {
-	rx_EndCall(tcall,0); 
+	(void) rx_EndCall(tcall,0); 
 	rx_DestroyConnection(tcon);
     }
     if (tt){
@@ -1209,7 +1210,7 @@ afs_int32 SAFSVolForwardMultiple (acid, fromTrans, fromDate, destinations,
 	codes[i] = StartAFSVolRestore(tcalls[i], dest->trans,
 				      is_incremental,cookie);
 	if (codes[i]) {
-	  rx_EndCall (tcalls[i],0); tcalls[i] = 0;
+	  (void) rx_EndCall (tcalls[i],0); tcalls[i] = 0;
 	  rx_DestroyConnection(tcons[i]); tcons[i] = 0;
 	}
       }

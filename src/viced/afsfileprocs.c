@@ -2227,7 +2227,8 @@ afs_int32 common_FetchData64 (struct rx_call *acall,
 
 Bad_FetchData: 
     /* Update and store volume/vnode and parent vnodes back */
-    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
+    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
+			    volptr);
     ViceLog(2, ("SRXAFS_FetchData returns %d\n", errorCode)); 
     errorCode = CallPostamble(tcon, errorCode);
 
@@ -2379,7 +2380,8 @@ afs_int32 SRXAFS_FetchACL (struct rx_call *acall,
 
 Bad_FetchACL: 
     /* Update and store volume/vnode and parent vnodes back */
-    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
+    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
+			    volptr);
     ViceLog(2, ("SAFS_FetchACL returns %d (ACL=%s)\n",
 	    errorCode, AccessList->AFSOpaque_val));
     errorCode = CallPostamble(tcon, errorCode);
@@ -2475,7 +2477,8 @@ afs_int32 SAFSS_FetchStatus (struct rx_call *acall,
 
 Bad_FetchStatus: 
     /* Update and store volume/vnode and parent vnodes back */
-    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
+    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
+			    volptr);
     ViceLog(2, ("SAFS_FetchStatus returns %d\n", errorCode)); 
     return errorCode;
 
@@ -2587,7 +2590,8 @@ afs_int32 SRXAFS_BulkStatus(struct rx_call *acall,
 	}
 
 	/* put back the file ID and volume */
-	PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0, volptr);
+	(void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0,
+				volptr);
 	parentwhentargetnotdir = (Vnode *) 0;
 	targetptr = (Vnode *) 0;
 	volptr = (Volume *) 0;
@@ -2595,7 +2599,8 @@ afs_int32 SRXAFS_BulkStatus(struct rx_call *acall,
 
 Bad_BulkStatus: 
     /* Update and store volume/vnode and parent vnodes back */
-    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
+    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
+			    volptr);
     errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
@@ -2718,7 +2723,7 @@ afs_int32 SRXAFS_InlineBulkStatus(struct rx_call *acall,
 						   CHK_FETCHSTATUS, 0))) {
 		tstatus = &OutStats->AFSBulkStats_val[i];
 		tstatus->errorCode = errorCode;
-		PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0, volptr);
+		(void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0, volptr);
 		parentwhentargetnotdir = (Vnode *) 0;
 		targetptr = (Vnode *) 0;
 		volptr = (Volume *) 0;
@@ -2743,7 +2748,7 @@ afs_int32 SRXAFS_InlineBulkStatus(struct rx_call *acall,
 	}
 
 	/* put back the file ID and volume */
-	PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0, volptr);
+	(void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0, volptr);
 	parentwhentargetnotdir = (Vnode *) 0;
 	targetptr = (Vnode *) 0;
 	volptr = (Volume *) 0;
@@ -2751,7 +2756,7 @@ afs_int32 SRXAFS_InlineBulkStatus(struct rx_call *acall,
 
 Bad_InlineBulkStatus: 
     /* Update and store volume/vnode and parent vnodes back */
-    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
+    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
     errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
@@ -3042,7 +3047,8 @@ afs_int32 common_StoreData64 (struct rx_call *acall,
 
 Bad_StoreData: 
     /* Update and store volume/vnode and parent vnodes back */
-    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
+    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
+			    volptr);
     ViceLog(2, ("SAFS_StoreData	returns	%d\n", errorCode));
 
     errorCode = CallPostamble(tcon, errorCode);
@@ -3626,7 +3632,8 @@ SAFSS_CreateFile (struct rx_call *acall,
 
 Bad_CreateFile:
     /* Update and store volume/vnode and parent vnodes back */
-    PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr, volptr);
+    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr,
+			    volptr);
     FidZap(&dir);
     ViceLog(2, ("SAFS_CreateFile returns %d\n",	errorCode)); 
     return errorCode;
@@ -4093,8 +4100,9 @@ Bad_Rename:
 	VPutVnode(&fileCode, newfileptr);
 	assert(fileCode == 0);
     }
-    PutVolumePackage(fileptr, (newvptr && newvptr != oldvptr? newvptr : 0),
-		     oldvptr, volptr);
+    (void) PutVolumePackage(fileptr,
+			    (newvptr && newvptr != oldvptr? newvptr : 0),
+			    oldvptr, volptr);
     FidZap(&olddir);
     FidZap(&newdir);
     FidZap(&filedir);
@@ -4293,7 +4301,8 @@ SAFSS_Symlink (struct rx_call *acall,
 
 Bad_SymLink: 
     /* Write the all modified vnodes (parent, new files) and volume back */
-    PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr, volptr);
+    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr,
+			    volptr);
     FidZap(&dir);
     ViceLog(2, ("SAFS_Symlink returns %d\n", errorCode));
     return errorCode;
@@ -4496,7 +4505,8 @@ SAFSS_Link (struct rx_call *acall,
 
 Bad_Link:
     /* Write the all modified vnodes (parent, new files) and volume back */
-    PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr, volptr);
+    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr,
+			    volptr);
     FidZap(&dir);
     ViceLog(2, ("SAFS_Link returns %d\n", errorCode));
     return errorCode;
@@ -4691,7 +4701,8 @@ SAFSS_MakeDir (struct rx_call *acall,
 
 Bad_MakeDir: 
     /* Write the all modified vnodes (parent, new files) and volume back */
-    PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr, volptr);
+    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr,
+			    volptr);
     FidZap(&dir);
     FidZap(&parentdir);
     ViceLog(2, ("SAFS_MakeDir returns %d\n", errorCode)); 
@@ -4853,7 +4864,8 @@ SAFSS_RemoveDir (struct rx_call *acall,
 
 Bad_RemoveDir: 
     /* Write the all modified vnodes (parent, new files) and volume back */
-    PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr, volptr);
+    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr,
+			    volptr);
     FidZap(&dir);
     ViceLog(2, ("SAFS_RemoveDir	returns	%d\n", errorCode));
     return errorCode;
@@ -4972,7 +4984,8 @@ SAFSS_SetLock (struct rx_call *acall,
 
 Bad_SetLock: 
     /* Write the all modified vnodes (parent, new files) and volume back */
-    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
+    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
+			    volptr);
 
     if ((errorCode == VREADONLY) && (type == LockRead))
        errorCode = 0;  /* allow read locks on RO volumes without saving state */
@@ -5096,7 +5109,8 @@ SAFSS_ExtendLock (struct rx_call *acall,
 
 Bad_ExtendLock: 
     /* Put back file's vnode and volume */
-    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
+    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
+			    volptr);
 
     if ((errorCode == VREADONLY))  /* presumably, we already granted this lock */
        errorCode = 0;              /* under our generous policy re RO vols */
@@ -5228,7 +5242,8 @@ SAFSS_ReleaseLock (struct rx_call *acall,
 
 Bad_ReleaseLock: 
     /* Put back file's vnode and volume */
-    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
+    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
+			    volptr);
 
     if ((errorCode == VREADONLY))  /* presumably, we already granted this lock */
        errorCode = 0;              /* under our generous policy re RO vols */
@@ -6260,10 +6275,12 @@ afs_int32 SRXAFS_GetVolumeStatus(struct rx_call *acall,
 	errorCode = EACCES;
 	goto Bad_GetVolumeStatus;
     }
-    RXGetVolumeStatus(FetchVolStatus, Name, OfflineMsg, Motd, volptr);
+    (void) RXGetVolumeStatus(FetchVolStatus, Name, OfflineMsg, Motd,
+			     volptr);
 
 Bad_GetVolumeStatus:
-    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
+    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
+			    volptr);
     ViceLog(2,("SAFS_GetVolumeStatus returns %d\n",errorCode));
     /* next is to guarantee out strings exist for stub */
     if (*Name == 0) {*Name = (char *) malloc(1); **Name = 0;}
@@ -6671,7 +6688,7 @@ FetchData_RXStyle(Volume *volptr,
     }
 
     if (Pos + Len > tlen) Len =	tlen - Pos;	/* get length we should send */
-    FDH_SEEK(fdP, Pos, 0);
+    (void) FDH_SEEK(fdP, Pos, 0);
     tlen = htonl(Len);
     if (Int64Mode) {
         afs_int32 zero = 0;

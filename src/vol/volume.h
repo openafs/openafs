@@ -63,8 +63,8 @@ struct versionStamp {		/* Version stamp for critical volume files */
 };
 
 /* Magic numbers and version stamps for each type of file */
-#define VOLUMEHEADERMAGIC	0x88a1bb3c
-#define VOLUMEINFOMAGIC		0x78a1b2c5
+#define VOLUMEHEADERMAGIC	((bit32)0x88a1bb3c)
+#define VOLUMEINFOMAGIC		((bit32)0x78a1b2c5)
 #define	SMALLINDEXMAGIC		0x99776655
 #define LARGEINDEXMAGIC		0x88664433
 #define	MOUNTMAGIC		0x9a8b7c6d
@@ -321,7 +321,7 @@ typedef struct Volume {
     byte	specialStatus;	/* An error code to return on VGetVolume: the
 				   volume is unavailable for the reason quoted,
 				   currently VBUSY or VMOVED */
-    afs_int32	updateTime;	/* Time that this volume was put on the updated
+    afs_uint32	updateTime;	/* Time that this volume was put on the updated
 				   volume list--the list of volumes that will be
 				   salvaged should the file server crash */
 } Volume;
@@ -410,12 +410,14 @@ extern Volume * VAttachVolume();
 extern Volume * VAttachVolume_r();
 extern Volume * VCreateVolume();
 extern Volume * VCreateVolume_r();
-extern VnodeId VallocBitMapEntry();
-extern VnodeId VallocBitMapEntry_r();
+extern VnodeId VAllocBitmapEntry(Error *ec, Volume *vp,
+				 struct vnodeIndex *index);
+extern VnodeId VAllocBitmapEntry_r(Error *ec, Volume *vp,
+				   struct vnodeIndex *index);
 extern void VFreeBitMapEntry(Error *ec, register struct vnodeIndex *index,
-			     int bitNumber);
+			     unsigned bitNumber);
 extern void VFreeBitMapEntry_r(Error *ec, register struct vnodeIndex *index,
-			       int bitNumber);
+			       unsigned bitNumber);
 extern int VolumeNumber();
 extern int VolumeNumber_r();
 extern char * VolumeExternalName();
@@ -430,7 +432,9 @@ extern void VAddToVolumeUpdateList_r(Error *ec, Volume *vp);
 extern void VDetachVolume(Error *ec, Volume *vp);
 extern void VDetachVolume_r(Error *ec, Volume *vp);
 extern void VForceOffline(Volume *vp);
+extern void VForceOffline_r(Volume *vp);
 extern void VBumpVolumeUsage(register Volume *vp);
+extern void VBumpVolumeUsage_r(register Volume *vp);
 extern void VSetDiskUsage(void);
 extern void VPrintCacheStats(void);
 extern void VReleaseVnodeFiles_r(Volume *vp);

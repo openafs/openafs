@@ -280,3 +280,11 @@ dest: \
 	${DEST}/include/afs/ihandle.h \
 	${DEST}/include/afs/namei_ops.h
 
+splint::
+	for FILE in \
+	    vnode.c volume.c vutil.c partition.c fssync.c purge.c \
+	    clone.c nuke.c devname.c listinodes.c common.c ihandle.c \
+	    namei_ops.c \
+	    physio.c vol-salvage.c vol-info.c ; do \
+		splint $(CFLAGS) $$FILE ; \
+	done

@@ -328,7 +328,7 @@ CheckAdminName()
 	strcpy(adminName, "System:Administrators");	/* use the default name */
     }
     else {
-	read(fd, adminName, status.st_size);	/* use name from the file */
+	(void)read(fd, adminName, status.st_size); /* use name from the file */
     }
     if (fd)
 	close(fd);	/* close fd if it was opened */

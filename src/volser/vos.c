@@ -59,6 +59,7 @@ RCSID("$Header$");
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
+#include "volser_prototypes.h"
 
 struct tqElem {
     afs_int32 volid;
@@ -102,9 +103,6 @@ extern VL_ChangeAddr();
 
 extern int vsu_ExtractName();
 extern PrintError();
-extern int MapPartIdIntoName();
-extern int MapHostToNetwork();
-extern int MapNetworkToHost();
 extern void EnumerateEntry();
 extern void SubEnumerateEntry();
 
@@ -470,12 +468,12 @@ int fast,longlist, disp;
     char pname[10];
 
     if(fast){
-	fprintf(STDOUT,"%-10u\n",pntr->volid);
+	fprintf(STDOUT,"%-10lu\n", (unsigned long) pntr->volid);
     }
     else if(longlist){
 	if(pntr->status == VOK){
 	    fprintf(STDOUT,"%-32s ",pntr->name);
-	    fprintf(STDOUT,"%10u ",pntr->volid);
+	    fprintf(STDOUT,"%10lu ", (unsigned long) pntr->volid);
 	    if(pntr->type == 0) fprintf(STDOUT,"RW ");
 	    if(pntr->type == 1) fprintf(STDOUT,"RO ");
 	    if(pntr->type == 2) fprintf(STDOUT,"BK ");
@@ -491,7 +489,10 @@ int fast,longlist, disp;
 	    fprintf(STDOUT,"\n");
 	    MapPartIdIntoName(part,pname);
 	    fprintf(STDOUT,"    %s %s \n",hostutil_GetNameByINet(server),pname);
-	    fprintf(STDOUT,"    RWrite %10u ROnly %10u Backup %10u \n", pntr->parentID,pntr->cloneID, pntr->backupID);
+	    fprintf(STDOUT,"    RWrite %10lu ROnly %10lu Backup %10lu \n",
+		    (unsigned long) pntr->parentID,
+		    (unsigned long) pntr->cloneID,
+		    (unsigned long) pntr->backupID);
 	    fprintf(STDOUT,"    MaxQuota %10d K \n",pntr->maxquota);
 	    fprintf(STDOUT,"    Creation    %s",
 		    ctime((time_t *)&pntr->creationDate));
@@ -519,19 +520,21 @@ int fast,longlist, disp;
 	else if (pntr->status == VBUSY) {
 	    *totalBusy += 1;
 	    qPut(&busyHead,pntr->volid);
-	    if (disp) fprintf(STDOUT,"**** Volume %u is busy ****\n",pntr->volid);
+	    if (disp) fprintf(STDOUT,"**** Volume %lu is busy ****\n",
+			      (unsigned long) pntr->volid);
 	}
 	else {
 	    *totalNotOK += 1;
 	    qPut(&notokHead,pntr->volid);
-	    if (disp) fprintf(STDOUT,"**** Could not attach volume %u ****\n",pntr->volid);
+	    if (disp) fprintf(STDOUT,"**** Could not attach volume %lu ****\n",
+			      (unsigned long) pntr->volid);
 	}
 	fprintf(STDOUT,"\n");
     }
     else {/* default listing */
 	if(pntr->status == VOK){
 	    fprintf(STDOUT,"%-32s ",pntr->name);
-	    fprintf(STDOUT,"%10u ",pntr->volid);
+	    fprintf(STDOUT,"%10lu ",(unsigned long) pntr->volid);
 	    if(pntr->type == 0) fprintf(STDOUT,"RW ");
 	    if(pntr->type == 1) fprintf(STDOUT,"RO ");
 	    if(pntr->type == 2) fprintf(STDOUT,"BK ");
@@ -549,12 +552,14 @@ int fast,longlist, disp;
 	else if (pntr->status == VBUSY) {
 	    *totalBusy += 1;
 	    qPut(&busyHead,pntr->volid);
-	    if (disp) fprintf(STDOUT,"**** Volume %u is busy ****\n",pntr->volid);
+	    if (disp) fprintf(STDOUT,"**** Volume %lu is busy ****\n",
+			      (unsigned long) pntr->volid);
 	}
 	else {
 	    *totalNotOK += 1;
 	    qPut(&notokHead,pntr->volid);
-	    if (disp) fprintf(STDOUT,"**** Could not attach volume %u ****\n",pntr->volid);
+	    if (disp) fprintf(STDOUT,"**** Could not attach volume %lu ****\n",
+			      (unsigned long) pntr->volid);
 	}
     }
 }
@@ -607,7 +612,7 @@ static void XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP,
 	/*
 	 * Short & sweet.
 	 */
-	fprintf(STDOUT, "%-10u\n", a_xInfoP->volid);
+	fprintf(STDOUT, "%-10lu\n", (unsigned long) a_xInfoP->volid);
     }
     else
 	if (a_int32) {
@@ -619,7 +624,7 @@ static void XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP,
 		 * Volume's status is OK - all the fields are valid.
 		 */
 		fprintf(STDOUT, "%-32s ", a_xInfoP->name);
-		fprintf(STDOUT, "%10u ",  a_xInfoP->volid);
+		fprintf(STDOUT, "%10lu ",  (unsigned long) a_xInfoP->volid);
 		if (a_xInfoP->type == 0) fprintf(STDOUT,"RW ");
 		if (a_xInfoP->type == 1) fprintf(STDOUT,"RO ");
 		if (a_xInfoP->type == 2) fprintf(STDOUT,"BK ");
@@ -638,8 +643,10 @@ static void XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP,
 		fprintf(STDOUT, "    %s %s \n",
 			hostutil_GetNameByINet(a_servID),
 			pname);
-		fprintf(STDOUT, "    RWrite %10u ROnly %10u Backup %10u \n",
-			a_xInfoP->parentID, a_xInfoP->cloneID, a_xInfoP->backupID);
+		fprintf(STDOUT, "    RWrite %10lu ROnly %10lu Backup %10lu \n",
+			(unsigned long) a_xInfoP->parentID,
+			(unsigned long) a_xInfoP->cloneID,
+			(unsigned long) a_xInfoP->backupID);
 		fprintf(STDOUT, "    MaxQuota %10d K \n",
 			a_xInfoP->maxquota);
 		fprintf(STDOUT, "    Creation    %s",
@@ -751,15 +758,15 @@ static void XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP,
 		    (*a_totalBusyP)++;
 		    qPut(&busyHead, a_xInfoP->volid);
 		    if (a_showProblems)
-			fprintf(STDOUT, "**** Volume %u is busy ****\n",
-				a_xInfoP->volid);
+			fprintf(STDOUT, "**** Volume %lu is busy ****\n",
+				(unsigned long) a_xInfoP->volid);
 		} /*Busy volume*/
 		else {
 		    (*a_totalNotOKP)++;
 		    qPut(&notokHead, a_xInfoP->volid);
 		    if (a_showProblems)
-			fprintf(STDOUT, "**** Could not attach volume %u ****\n",
-				a_xInfoP->volid);
+			fprintf(STDOUT, "**** Could not attach volume %lu ****\n",
+				(unsigned long) a_xInfoP->volid);
 		} /*Screwed volume*/
 	    fprintf(STDOUT,"\n");
 	} /*Long listing*/
@@ -769,7 +776,7 @@ static void XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP,
 	     */
 	    if (a_xInfoP->status == VOK) {
 		fprintf(STDOUT, "%-32s ", a_xInfoP->name);
-		fprintf(STDOUT, "%10u ", a_xInfoP->volid);
+		fprintf(STDOUT, "%10lu ", (unsigned long) a_xInfoP->volid);
 		if (a_xInfoP->type == 0) fprintf(STDOUT, "RW ");
 		if (a_xInfoP->type == 1) fprintf(STDOUT, "RO ");
 		if (a_xInfoP->type == 2) fprintf(STDOUT, "BK ");
@@ -788,15 +795,15 @@ static void XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP,
 		    (*a_totalBusyP)++;
 		    qPut(&busyHead, a_xInfoP->volid);
 		    if (a_showProblems)
-			fprintf(STDOUT,"**** Volume %u is busy ****\n",
-				a_xInfoP->volid);
+			fprintf(STDOUT,"**** Volume %lu is busy ****\n",
+				(unsigned long) a_xInfoP->volid);
 		} /*Busy volume*/
 		else {
 		    (*a_totalNotOKP)++;
 		    qPut(&notokHead, a_xInfoP->volid);
 		    if (a_showProblems)
-			fprintf(STDOUT,"**** Could not attach volume %u ****\n",
-				a_xInfoP->volid);
+			fprintf(STDOUT,"**** Could not attach volume %lu ****\n",
+				(unsigned long) a_xInfoP->volid);
 		} /*Screwed volume*/
 	} /*Default listing*/
 } /*XDisplayFormat*/
@@ -913,13 +920,15 @@ int quiet;
     if(totalBusy){
 	while(busyHead.count){
 	    qGet(&busyHead,&volid);
-	    fprintf(STDOUT,"**** Volume %u is busy ****\n",volid);
+	    fprintf(STDOUT,"**** Volume %lu is busy ****\n",
+		    (unsigned long) volid);
 	}
     }
     if(totalNotOK){
 	while(notokHead.count){
 	    qGet(&notokHead,&volid);
-	    fprintf(STDOUT,"**** Could not attach volume %u ****\n",volid);
+	    fprintf(STDOUT,"**** Could not attach volume %lu ****\n",
+		    (unsigned long) volid);
 	}
     }
     if(!quiet){
@@ -1004,13 +1013,15 @@ static void XDisplayVolumes(a_servID, a_partID, a_xInfoP,
     if (totalBusy) {
 	while (busyHead.count) {
 	    qGet(&busyHead, &volid);
-	    fprintf(STDOUT, "**** Volume %u is busy ****\n", volid);
+	    fprintf(STDOUT, "**** Volume %lu is busy ****\n", 
+		    (unsigned long) volid);
 	}
     }
     if (totalNotOK) {
 	while (notokHead.count) {
 	    qGet(&notokHead, &volid);
-	    fprintf(STDOUT, "**** Could not attach volume %u ****\n", volid);
+	    fprintf(STDOUT, "**** Could not attach volume %lu ****\n",
+		    (unsigned long) volid);
 	}
     }
 
@@ -1216,12 +1227,14 @@ register struct cmd_syndesc *as;
     }
 
     if (verbose) {
-       fprintf(STDOUT, "Fetching VLDB entry for %u .. ", volid);
+       fprintf(STDOUT, "Fetching VLDB entry for %lu .. ",
+	       (unsigned long) volid);
        fflush(STDOUT);
     }
     vcode = VLDB_GetEntryByID (volid, -1, &entry);
     if (vcode) {
-	fprintf(STDERR, "Could not fetch the entry for volume number %u from VLDB \n",volid);
+	fprintf(STDERR, "Could not fetch the entry for volume number %lu from VLDB \n",
+		(unsigned long) volid);
 	return (vcode);
     }
     if (verbose)
@@ -1351,7 +1364,8 @@ register struct cmd_syndesc *as;
 
     code = VLDB_GetEntryByID (volid, RWVOL, &entry);
     if (code) {
-	fprintf(STDERR, "Could not fetch the entry for volume number %u from VLDB \n",volid);
+	fprintf(STDERR, "Could not fetch the entry for volume number %lu from VLDB \n",
+		(unsigned long) volid);
 	return (code);
     }
     MapHostToNetwork(&entry);
@@ -1387,7 +1401,8 @@ register struct cmd_syndesc *as;
     }
     code = UV_SetVolumeInfo(aserver, apart, volid, &info);
     if (code)
-	fprintf(STDERR,"Could not update volume info fields for volume number %u\n",volid);
+	fprintf(STDERR,"Could not update volume info fields for volume number %lu\n",
+		(unsigned long) volid);
     return (code);
 }
 
@@ -1569,7 +1584,8 @@ static int CreateVolume(register struct cmd_syndesc *as)
 	return code;
     }
     MapPartIdIntoName(pname, part);
-    fprintf(STDOUT,"Volume %u created on partition %s of %s\n", volid, part,as->parms[0].items->data );
+    fprintf(STDOUT,"Volume %lu created on partition %s of %s\n",
+	    (unsigned long) volid, part,as->parms[0].items->data );
 
     return 0;
 }
@@ -1651,8 +1667,8 @@ static DeleteVolume(as)
 
        code = VLDB_GetEntryByID(volid, -1, &entry);
        if (code) {
-	  fprintf(STDERR,"Could not fetch the entry for volume %u from VLDB\n",
-		  volid);
+	  fprintf(STDERR,"Could not fetch the entry for volume %lu from VLDB\n",
+		  (unsigned long) volid);
 	  PrintError("",code);
 	  return (code);
        }
@@ -1703,8 +1719,8 @@ static DeleteVolume(as)
     }
 
     MapPartIdIntoName(partition, pname);
-    fprintf(STDOUT,"Volume %u on partition %s server %s deleted\n",
-	    volid, pname, hostutil_GetNameByINet(server));
+    fprintf(STDOUT,"Volume %lu on partition %s server %s deleted\n",
+	    (unsigned long) volid, pname, hostutil_GetNameByINet(server));
     return 0;
 }
 
@@ -1782,16 +1798,18 @@ register struct cmd_syndesc *as;
 	code=UV_ListOneVolume(fromserver,frompart,volid,&p);
 	if(code)
 	{
-		fprintf(STDERR,"vos:cannot access volume %u\n",volid);
+		fprintf(STDERR,"vos:cannot access volume %lu\n",
+			(unsigned long) volid);
 		free(p);
 		exit(1);
 	}
 	if(TESTM)
-		fprintf(STDOUT,"volume %u size %d\n",volid,p->size);
+		fprintf(STDOUT,"volume %lu size %d\n",
+			(unsigned long) volid,p->size);
 	if(partition.free<=p->size)
 	{
-		fprintf(STDERR,"vos: no space on target partition %s to move volume %u\n",
-			toPartName,volid);
+		fprintf(STDERR,"vos: no space on target partition %s to move volume %lu\n",
+			toPartName,(unsigned long) volid);
 		free(p);
 		exit(1);
 	}
@@ -1812,7 +1830,10 @@ register struct cmd_syndesc *as;
 	}
 	MapPartIdIntoName(topart,toPartName);
 	MapPartIdIntoName(frompart, fromPartName);
-	fprintf(STDOUT,"Volume %u moved from %s %s to %s %s \n",volid,as->parms[1].items->data,fromPartName,as->parms[3].items->data,toPartName);
+	fprintf(STDOUT,"Volume %lu moved from %s %s to %s %s \n",
+		(unsigned long) volid,
+		as->parms[1].items->data,fromPartName,
+		as->parms[3].items->data,toPartName);
 
     return 0;
 }
@@ -1913,15 +1934,16 @@ register struct cmd_syndesc *as;
     code=UV_ListOneVolume(fromserver,frompart,volid,&p);
     if(code)
     {
-	fprintf(STDERR,"vos:cannot access volume %u\n",volid);
+	fprintf(STDERR,"vos:cannot access volume %lu\n",
+		(unsigned long) volid);
 	free(p);
 	exit(1);
     }
 
     if(partition.free<=p->size)
     {
-	fprintf(STDERR,"vos: no space on target partition %s to copy volume %u\n",
-		toPartName,volid);
+	fprintf(STDERR,"vos: no space on target partition %s to copy volume %lu\n",
+		toPartName,(unsigned long) volid);
 	free(p);
 	exit(1);
     }
@@ -1936,7 +1958,8 @@ register struct cmd_syndesc *as;
     }
     MapPartIdIntoName(topart,toPartName);
     MapPartIdIntoName(frompart, fromPartName);
-    fprintf(STDOUT,"Volume %u copied from %s %s to %s on %s %s \n",volid,
+    fprintf(STDOUT,"Volume %lu copied from %s %s to %s on %s %s \n",
+	    (unsigned long) volid,
 	    as->parms[1].items->data,fromPartName,
 	    tovolume, as->parms[4].items->data,toPartName);
 
@@ -1992,8 +2015,9 @@ register struct cmd_syndesc *as;
 		}
 		if (!code)
 		{
-			fprintf(STDERR,"FATAL ERROR: backup volume %u exists on server %u\n",
-				buvolid,buserver);
+			fprintf(STDERR,"FATAL ERROR: backup volume %lu exists on server %lu\n",
+				(unsigned long) buvolid,
+				(unsigned long) buserver);
 			exit(1);
 		}
 	}
@@ -2299,8 +2323,8 @@ register struct cmd_syndesc *as;
 	        restoreflags = 0;
 	        if (vol_elsewhere) {
 		    fprintf(STDERR,
-			    "%s volume %u already exists on a different server/part; not allowed\n",
-			    readonly ? "RO" : "RW", avolid);
+			    "%s volume %lu already exists on a different server/part; not allowed\n",
+			    readonly ? "RO" : "RW", (unsigned long) avolid);
 		    exit(1);
 		}
 	    }
@@ -2733,7 +2757,7 @@ register struct cmd_syndesc *as;
 	    }
 	    MapPartIdIntoName(dummyPartList.partId[i],pname);
 	    if(!quiet)
-		fprintf(STDOUT,"Total number of volumes on server %s partition %s: %u \n",as->parms[0].items->data,pname,count);
+		fprintf(STDOUT,"Total number of volumes on server %s partition %s: %lu \n",as->parms[0].items->data,pname, (unsigned long) count);
 	    if (wantExtendedInfo) {
 		XDisplayVolumes(aserver,
 				dummyPartList.partId[i],
@@ -2948,8 +2972,8 @@ register struct cmd_syndesc *as;
     if (!code) {
         if (volid == entry.volumeId[RWVOL])
 	    backupid = entry.volumeId[BACKVOL];
-	fprintf(STDERR,"Warning: Entry for volume number %u exists in VLDB (but we're zapping it anyway!)\n",
-		volid);
+	fprintf(STDERR,"Warning: Entry for volume number %lu exists in VLDB (but we're zapping it anyway!)\n",
+		(unsigned long) volid);
     }
     if (zapbackupid) {
 	volintInfo *pntr = (volintInfo *)0;
@@ -2968,7 +2992,8 @@ register struct cmd_syndesc *as;
 		PrintDiagnostics("zap", code);
 		exit(1);
 	    }
-	    fprintf(STDOUT,"Backup Volume %u deleted\n", backupid);
+	    fprintf(STDOUT,"Backup Volume %lu deleted\n",
+		    (unsigned long) backupid);
 	}
     }
     code = UV_VolumeZap(server,part,volid);
@@ -2976,7 +3001,7 @@ register struct cmd_syndesc *as;
 	PrintDiagnostics("zap", code);
 	exit(1);
     }
-    fprintf(STDOUT,"Volume %u deleted\n",volid);
+    fprintf(STDOUT,"Volume %lu deleted\n", (unsigned long) volid);
 
     return 0;
 }
@@ -3010,10 +3035,12 @@ register struct cmd_syndesc *as;
     for(i = 0; i < count ; i++){
 	/*print out the relevant info */
 	fprintf(STDOUT,"--------------------------------------\n");
-	fprintf(STDOUT,"transaction: %u  created: %s",pntr->tid,
+	fprintf(STDOUT,"transaction: %lu  created: %s",
+		(unsigned long) pntr->tid,
 		ctime((time_t *)&pntr->time));
 	if(pntr->returnCode){
-	    fprintf(STDOUT,"returnCode: %u\n",pntr->returnCode);
+	    fprintf(STDOUT,"returnCode: %lu\n",
+		    (unsigned long) pntr->returnCode);
 	}
 	if(pntr->iflags){
 	    fprintf(STDOUT,"attachFlags:  ");
@@ -3045,9 +3072,13 @@ register struct cmd_syndesc *as;
 	    fprintf(STDOUT,"delete\n");
 	}
 	MapPartIdIntoName(pntr->partition ,pname);
-	fprintf(STDOUT,"volume: %u  partition: %s  procedure: %s\n",pntr->volid,pname, pntr->lastProcName);
+	fprintf(STDOUT,"volume: %lu  partition: %s  procedure: %s\n",
+		(unsigned long) pntr->volid, pname,
+		pntr->lastProcName);
 	if(pntr->callValid){
-	    fprintf(STDOUT,"packetRead: %u  lastReceiveTime: %d  packetSend: %u  lastSendTime: %d\n",pntr->readNext,pntr->lastReceiveTime,pntr->transmitNext, pntr->lastSendTime);
+	    fprintf(STDOUT,"packetRead: %lu  lastReceiveTime: %d  packetSend: %lu  lastSendTime: %d\n",
+		    (unsigned long) pntr->readNext,pntr->lastReceiveTime,
+		    (unsigned long) pntr->transmitNext, pntr->lastSendTime);
 	}
 	pntr++;
 	fprintf(STDOUT,"--------------------------------------\n");
@@ -3113,7 +3144,8 @@ register struct nvldbentry *rentry;
 
     vcode = VLDB_GetEntryByID(volid, -1, rentry);
     if(vcode) {
-		fprintf(STDERR,"Could not fetch the entry for volume %u from VLDB \n",volid);
+		fprintf(STDERR,"Could not fetch the entry for volume %lu from VLDB \n",
+			(unsigned long) volid);
 		PrintError("",vcode);
 		return (vcode);
     }
@@ -3126,7 +3158,7 @@ register struct nvldbentry *rentry;
 		index = i;
 	}
 	if(index == -1) {
-	    fprintf(STDERR,"RO volume is not found in VLDB entry for volume %u\n", volid);
+	    fprintf(STDERR,"RO volume is not found in VLDB entry for volume %lu\n", (unsigned long) volid);
 	    return -1;
 	}
 
@@ -3137,7 +3169,8 @@ register struct nvldbentry *rentry;
 		
     index = Lp_GetRwIndex(rentry);
     if(index == -1) {
-        fprintf(STDERR,"RW Volume is not found in VLDB entry for volume %u\n", volid);
+        fprintf(STDERR,"RW Volume is not found in VLDB entry for volume %lu\n",
+		(unsigned long) volid);
         return -1;
     }
     if(volid == rentry->volumeId[RWVOL]){
@@ -3309,7 +3342,8 @@ register struct cmd_syndesc *as;
     } /*for*/
 
     fprintf(STDOUT,"----------------------\n");
-    fprintf(STDOUT,"Total VLDB entries deleted: %u; failed to delete: %u\n",totalBack,totalFail);
+    fprintf(STDOUT,"Total VLDB entries deleted: %lu; failed to delete: %lu\n",
+	    (unsigned long) totalBack, (unsigned long) totalFail);
     if (arrayEntries.nbulkentries_val) free(arrayEntries.nbulkentries_val);
     return 0;
 }
@@ -3514,7 +3548,8 @@ static ListVLDB(as)
     }
 
 bypass:
-    if (!quiet) fprintf(STDOUT,"\nTotal entries: %u\n", nentries);
+    if (!quiet) fprintf(STDOUT,"\nTotal entries: %lu\n",
+			(unsigned long) nentries);
     if (tarray) free(tarray);
     return 0;
 }
@@ -3754,7 +3789,8 @@ static BackSys(as)
 	fflush(STDOUT);
     } /* process each vldb entry */
     fprintf(STDOUT,"done\n");
-    fprintf(STDOUT,"Total volumes backed up: %u; failed to backup: %u\n",totalBack,totalFail);
+    fprintf(STDOUT,"Total volumes backed up: %lu; failed to backup: %lu\n",
+	    (unsigned long) totalBack, (unsigned long) totalFail);
     fflush(STDOUT);
     if(arrayEntries.nbulkentries_val) free(arrayEntries.nbulkentries_val);
     return 0;
@@ -3823,7 +3859,7 @@ register struct cmd_syndesc *as;
 	    
     }
     MapPartIdIntoName(apart,pname);
-    if(totalE) fprintf(STDOUT,"Could not lock %u VLDB entries of %u locked entries\n",totalE,nentries);
+    if(totalE) fprintf(STDOUT,"Could not lock %lu VLDB entries of %lu locked entries\n", (unsigned long) totalE, (unsigned long) nentries);
     else {
 	if(as->parms[0].items) {
 	    fprintf(STDOUT,"Unlocked all the VLDB entries for volumes on server %s ",as->parms[0].items->data);
@@ -4201,8 +4237,8 @@ register struct cmd_syndesc *as;
 
     vcode = VLDB_GetEntryByID (volid, -1, &entry);
     if(vcode) {
-        fprintf(STDERR,"Could not fetch the entry for volume %u from VLDB\n",
-                volid);
+        fprintf(STDERR,"Could not fetch the entry for volume %lu from VLDB\n",
+                (unsigned long) volid);
         PrintError("convertROtoRW", code);
         return vcode;
     }
@@ -4260,7 +4296,7 @@ register struct cmd_syndesc *as;
     aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
     code = AFSVolConvertROtoRWvolume(aconn, partition, volid);
     if (code) {
-        fprintf(STDERR,"Converting RO volume %u to RW volume failed with code %d\n", volid, code);
+        fprintf(STDERR,"Converting RO volume %lu to RW volume failed with code %d\n", (unsigned long) volid, code);
         PrintError("convertROtoRW ", code);
         return -1;
     }
@@ -4333,9 +4369,10 @@ char *arock; {
 	sauth = 1;
     if(as->parms[16].items)	/* -crypt specified */
 	vsu_SetCrypt(1);
-    if (code = vsu_ClientInit((as->parms[13].items != 0), confdir, tcell, sauth,
-			      &cstruct, UV_SetSecurity)) {
-	fprintf(STDERR,"could not initialize VLDB library (code=%u) \n",code);
+    if ((code = vsu_ClientInit((as->parms[13].items != 0), confdir, tcell, sauth,
+			       &cstruct, UV_SetSecurity))) {
+	fprintf(STDERR,"could not initialize VLDB library (code=%lu) \n",
+		(unsigned long) code);
 	exit(1);
     }
     rxInitDone = 1;
@@ -4610,7 +4647,7 @@ char **argv; {
     if (rxInitDone) {
 	/* Shut down the ubik_client and rx connections */
 	if (cstruct) {
-	    ubik_ClientDestroy (cstruct);
+	    (void) ubik_ClientDestroy (cstruct);
 	    cstruct = 0;
 	}
 	rx_Finalize();

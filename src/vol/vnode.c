@@ -282,7 +282,7 @@ Vnode *VAllocVnode_r(ec,vp,type)
     vcp = &VnodeClassInfo[class];
 
     if (!VolumeWriteable(vp)) {
-	*ec = VREADONLY;
+	*ec = (bit32) VREADONLY;
 	return NULL;
     }
 
@@ -392,7 +392,7 @@ Vnode *VAllocVnode_r(ec,vp,type)
 	      char *buf = (char *)malloc(16*1024);
 	      if (!buf) Abort("VAllocVnode: malloc failed\n");
 	      memset(buf, 0, 16*1024);
-	      FDH_WRITE(fdP, buf, 16*1024);
+	      (void) FDH_WRITE(fdP, buf, 16*1024);
 	      free(buf);
 	  }
 	  FDH_CLOSE(fdP);
@@ -468,7 +468,7 @@ Vnode *VGetVnode_r(ec,vp,vnodeNumber,locktype)
     class = vnodeIdToClass(vnodeNumber);
     vcp = &VnodeClassInfo[class];
     if (locktype == WRITE_LOCK && !VolumeWriteable(vp)) {
-	*ec = VREADONLY;
+	*ec = (bit32) VREADONLY;
 	mlkReason = 3;
 	return NULL;
     }
@@ -584,8 +584,8 @@ Vnode *VGetVnode_r(ec,vp,vnodeNumber,locktype)
 	    }
 	    else {
 		struct vnodeIndex *index = &vp->vnodeIndex[class];
-		int bitNumber = vnodeIdToBitNumber(vnodeNumber);
-		int offset = bitNumber >> 3;
+		unsigned int bitNumber = vnodeIdToBitNumber(vnodeNumber);
+		unsigned int offset = bitNumber >> 3;
 
 		/* Test to see if vnode number is valid. */
 		if ((offset >= index->bitmapSize) ||
@@ -703,7 +703,7 @@ VPutVnode_r(ec,vnp)
 	    Abort("VPutVnode: Vnode at 0x%x locked by another process!\n",vnp);
 	if (vnp->changed_oldTime || vnp->changed_newTime || vnp->delete) {
 	    Volume *vp = vnp->volumePtr;
-	    afs_int32 now = FT_ApproxTime();
+	    afs_uint32 now = FT_ApproxTime();
 	    assert(vnp->cacheCheck == vp->cacheCheck);
 
 	    if (vnp->delete) {
@@ -846,7 +846,7 @@ int VVnodeWriteToRead_r(ec,vnp)
     }
     if (vnp->changed_oldTime || vnp->changed_newTime) {
 	Volume *vp = vnp->volumePtr;
-	afs_int32 now = FT_ApproxTime();
+	afs_uint32 now = FT_ApproxTime();
 	assert(vnp->cacheCheck == vp->cacheCheck);
 	if (vnp->changed_newTime)
 	    vnp->disk.serverModifyTime = now;

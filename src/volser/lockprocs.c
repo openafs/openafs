@@ -232,15 +232,15 @@ Lp_QTraverse(ahead)
     printf("traversing the internal queue, which groups all the related volumes on a per partition basis\n");
     while(count >  0) {
 	printf("---------------------------\n");
-	printf("%s RW-Id %u",old->name,old->ids[RWVOL]);
+	printf("%s RW-Id %lu",old->name,(unsigned long) old->ids[RWVOL]);
 	if(old->isValid[RWVOL])
 	    printf(" valid ");
 	else printf(" invalid ");
-	printf("RO-Id %u",old->ids[ROVOL]);
+	printf("RO-Id %lu",(unsigned long) old->ids[ROVOL]);
 	if(old->isValid[ROVOL])
 	    printf(" valid ");
 	else printf(" invalid ");
-	printf("BACKUP-Id %u",old->ids[BACKVOL]);
+	printf("BACKUP-Id %lu",(unsigned long) old->ids[BACKVOL]);
 	if(old->isValid[BACKVOL])
 	    printf(" valid ");
 	else printf(" invalid ");

@@ -583,7 +583,7 @@ char *astring; {
     str = astring;
     ptr = astring;
     tryname = 0;
-    while (curval = *str++){
+    while ((curval = *str++)){
 	if(curval < '0' || curval > '9')
 	    tryname = 1;
     }
@@ -605,7 +605,7 @@ char *astring; {
     }
 
     value = 0;
-    while (tc = *astring++) {
+    while ((tc = *astring++)) {
 	if (tc & 0x80) {
 	    if(!tryname) fprintf(STDERR,"goofed in volid \n");
 	    else {fprintf(STDERR,"Could not get entry from vldb for %s\n",ptr);PrintError("",vcode);}

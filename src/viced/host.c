@@ -2000,7 +2000,7 @@ int CheckHost(register struct host *host, int held)
 		    if ( code )
 		    {
 			char hoststr[16];
-			afs_inet_ntoa_r(host->host, hoststr);
+			(void) afs_inet_ntoa_r(host->host, hoststr);
                         ViceLog(0,
 				("CB: RCallBackConnectBack (host.c) failed for host %s:%d\n",
 				 hoststr, ntohs(host->port)));
@@ -2024,7 +2024,7 @@ int CheckHost(register struct host *host, int held)
 			if(code) {
 			    if ( MultiProbeAlternateAddress_r(host) ) {
 				char hoststr[16];
-				afs_inet_ntoa_r(host->host, hoststr);
+				(void) afs_inet_ntoa_r(host->host, hoststr);
                                 ViceLog(0,
 					("ProbeUuid failed for host %s:%d\n",
 					 hoststr, ntohs(host->port)));
@@ -2037,7 +2037,7 @@ int CheckHost(register struct host *host, int held)
 			H_LOCK
 			if (code) {
 			    char hoststr[16];
-			    afs_inet_ntoa_r(host->host, hoststr);
+			    (void) afs_inet_ntoa_r(host->host, hoststr);
 			    ViceLog(0, ("Probe failed for host %s:%d\n",
 					hoststr, ntohs(host->port)));
 			    host->hostFlags |= VENUSDOWN;

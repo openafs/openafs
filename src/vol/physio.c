@@ -42,8 +42,8 @@ RCSID("$Header$");
 #include <afs/afsint.h>
 #include <errno.h>
 #include <afs/afssyscalls.h>
-#include "ihandle.h"
 #include "nfs.h"
+#include "ihandle.h"
 #include "salvage.h"
 #include "afs/assert.h"
 #include "afs/dir.h"

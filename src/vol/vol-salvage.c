@@ -507,11 +507,11 @@ static int handleit(struct cmd_syndesc *as)
       Exit(0);
     }
 #endif /* FAST_RESTART */
-    if (ti = as->parms[0].items) {	/* -partition */
+    if ((ti = as->parms[0].items)) {	/* -partition */
 	seenpart = 1;
 	strncpy(pname, ti->data, 100);
     }
-    if (ti = as->parms[1].items) {	/* -volumeid */
+    if ((ti = as->parms[1].items)) {	/* -volumeid */
 	if (!seenpart) {
 	    printf("You must also specify '-partition' option with the '-volumeid' option\n");
 	    exit(-1);
@@ -535,7 +535,7 @@ static int handleit(struct cmd_syndesc *as)
 	RebuildDirs = 1;
     if (as->parms[9].items)	/* -ForceReads */
 	forceR = 1;
-    if (ti = as->parms[10].items) {/* -Parallel # */
+    if ((ti = as->parms[10].items)) {/* -Parallel # */
         temp = ti->data;
 	if (strncmp(temp,"all",3) == 0) {
 	   PartsPerDisk = 1;
@@ -550,7 +550,7 @@ static int handleit(struct cmd_syndesc *as)
 	   }
 	}
     }
-    if (ti = as->parms[11].items) {/* -tmpdir */
+    if ((ti = as->parms[11].items)) {/* -tmpdir */
 	DIR *dirp;
 
 	tmpdir = ti->data;
@@ -561,19 +561,19 @@ static int handleit(struct cmd_syndesc *as)
 	} else
 	    closedir(dirp);
     }
-    if (ti = as->parms[12].items) /* -showlog */
+    if ((ti = as->parms[12].items)) /* -showlog */
 	ShowLog = 1;
-    if (ti = as->parms[13].items) { /* -log */
+    if ((ti = as->parms[13].items)) { /* -log */
 	Testing = 1;
 	ShowSuid = 1;
 	Showmode = 1;
     }
-    if (ti = as->parms[14].items) { /* -showmounts */
+    if ((ti = as->parms[14].items)) { /* -showmounts */
 	Testing = 1;
 	Showmode = 1;
 	ShowMounts = 1;
     }
-    if (ti = as->parms[15].items) { /* -orphans */
+    if ((ti = as->parms[15].items)) { /* -orphans */
        if (Testing)
 	  orphans = ORPH_IGNORE;
        else if (strcmp(ti->data, "remove")==0 || strcmp(ti->data, "r")==0)
@@ -583,15 +583,15 @@ static int handleit(struct cmd_syndesc *as)
     }
 
 #ifndef AFS_NT40_ENV /* ignore options on NT */
-    if ( ti = as->parms[16].items) { /* -syslog */
+    if ((ti = as->parms[16].items)) { /* -syslog */
 	useSyslog = 1;
 	ShowLog = 0;
     }
-    if ( ti = as->parms[17].items) { /* -syslogfacility */
+    if ((ti = as->parms[17].items)) { /* -syslogfacility */
 	useSyslogFacility = atoi(ti->data);
     }
     
-    if (ti = as->parms[18].items) {  /* -datelogs */
+    if ((ti = as->parms[18].items)) {  /* -datelogs */
 	TimeStampLogFile();
     }
 #endif
@@ -1089,7 +1089,7 @@ void SalvageFileSysParallel(struct DiskPartition *partP)
     if (!partP) {
        for (i=0; i<jobcount; i++) {
 	  sprintf(logFileName, "%s.%d", AFSDIR_SERVER_SLVGLOG_FILEPATH, i);
-	  if (passLog = fopen(logFileName, "r")) {
+	  if ((passLog = fopen(logFileName, "r"))) {
 	     while(fgets(buf, sizeof(buf), passLog)) {
 	        fputs(buf, logFile);
 	     }
@@ -1187,7 +1187,7 @@ void SalvageFileSys1(struct DiskPartition *partP, VolumeId singleVolumeNumber)
 	struct dirent *dp;
 
 	assert((dirp = opendir(fileSysPath)) != NULL);
-	while (dp = readdir(dirp)) {
+	while ((dp = readdir(dirp))) {
 	    if (!strncmp(dp->d_name, "salvage.inodes.", 15) ||
 		!strncmp(dp->d_name, "salvage.temp.", 13)) {
 		char npath[1024];
@@ -1602,7 +1602,7 @@ void GetVolumeSummary(VolumeId singleVolumeNumber)
     if (chdir(fileSysPath) == -1 || (dirp = opendir(".")) == NULL)
 	Abort("Can't read directory %s; not salvaged\n", fileSysPath);
     if (!singleVolumeNumber) {
-	while (dp = readdir(dirp)) {
+	while ((dp = readdir(dirp))) {
 	    char *p = dp->d_name;
 	    p = strrchr(dp->d_name, '.');
 	    if (p != NULL && strcmp(p, VHDREXT) == 0) {
@@ -1630,7 +1630,7 @@ void GetVolumeSummary(VolumeId singleVolumeNumber)
 
     nVolumes = 0;
     vsp = volumeSummaryp;
-    while (dp = readdir(dirp)) {
+    while ((dp = readdir(dirp))) {
 	char *p = dp->d_name;
 	p = strrchr(dp->d_name, '.');
 	if (p != NULL && strcmp(p, VHDREXT) == 0) {
@@ -3578,9 +3578,9 @@ static char *TimeStamp(time_t clock, int precision)
     static char timestamp[20];
     lt = localtime(&clock);
     if (precision)
-        strftime (timestamp, 20, "%m/%d/%Y %T", lt);
+        (void) strftime (timestamp, 20, "%m/%d/%Y %T", lt);
     else
-        strftime (timestamp, 20, "%m/%d/%Y %H:%M", lt);
+        (void) strftime (timestamp, 20, "%m/%d/%Y %H:%M", lt);
     return timestamp;
 }
 

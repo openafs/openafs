@@ -427,10 +427,11 @@ void SubEnumerateEntry(struct nvldbentry *entry)
     if (entry->flags & BACK_EXISTS)
 	fprintf(STDOUT,"    Backup: %-10u",entry->volumeId[BACKVOL]);
     if ((entry->cloneId != 0) && (entry->flags & RO_EXISTS))
-	fprintf(STDOUT,"    RClone: %-10u",entry->cloneId);
+	fprintf(STDOUT,"    RClone: %-10lu", (unsigned long) entry->cloneId);
     fprintf(STDOUT,"\n");
 #endif
-    fprintf(STDOUT,"    number of sites -> %u\n",entry->nServers);
+    fprintf(STDOUT,"    number of sites -> %lu\n",
+	    (unsigned long) entry->nServers);
     for(i = 0; i < entry->nServers; i++) {
 	if(entry->serverFlags[i] & NEW_REPSITE)
 	    isMixed = 1;
@@ -564,7 +565,8 @@ int UV_CreateVolume2(afs_int32 aserver, afs_int32 apart, char *aname, afs_int32 
     /* create the vldb entry */
     vcode = VLDB_CreateEntry(&storeEntry);
     if(vcode) {
-	fprintf(STDERR,"Could not create a VLDB entry for the volume %s %u\n", aname,*anewid);
+	fprintf(STDERR,"Could not create a VLDB entry for the volume %s %lu\n",
+		aname, (unsigned long) *anewid);
 	/*destroy the created volume*/
 	VPRINT1("Deleting the newly created volume %u\n",*anewid);
 	AFSVolDeleteVolume(aconn,tid);
@@ -578,7 +580,8 @@ int UV_CreateVolume2(afs_int32 aserver, afs_int32 apart, char *aname, afs_int32 
 	    vldb entry exists then the volume is guaranteed to exist too wrt create*/
     tid = 0;
     if(code){
-	fprintf(STDERR,"Failed to end the transaction on the volume %s %u\n",aname,*anewid); 
+	fprintf(STDERR,"Failed to end the transaction on the volume %s %lu\n",
+		aname, (unsigned long) *anewid); 
 	error = code;
 	goto cfail;
     }
@@ -632,7 +635,8 @@ int UV_AddVLDBEntry(afs_int32 aserver, afs_int32 apart, char *aname, afs_int32 a
     /* create the vldb entry */
     vcode = VLDB_CreateEntry(&storeEntry);
     if(vcode) {
-	fprintf(STDERR,"Could not create a VLDB entry for the  volume %s %u\n", aname,aid);
+	fprintf(STDERR,"Could not create a VLDB entry for the  volume %s %lu\n",
+		aname, (unsigned long) aid);
 	error = vcode;
 	goto cfail;
     }
@@ -734,7 +738,8 @@ int UV_DeleteVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
 	}
 	
 	if (verbose)
-	   fprintf(STDOUT,"Marking the readonly volume %u deleted in the VLDB\n", avolid);
+	   fprintf(STDOUT,"Marking the readonly volume %lu deleted in the VLDB\n",
+		   (unsigned long) avolid);
 
 	Lp_SetROValue(&entry, aserver, apart, 0, 0);  /* delete the site */
 	entry.nServers--;
@@ -773,8 +778,8 @@ int UV_DeleteVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
 	}
 
 	if (verbose)
-	   fprintf(STDOUT,"Marking the readwrite volume %u%s deleted in the VLDB\n", 
-		   avolid, ((entry.flags & BACK_EXISTS)?", and its backup volume,":""));
+	   fprintf(STDOUT,"Marking the readwrite volume %lu%s deleted in the VLDB\n", 
+		   (unsigned long) avolid, ((entry.flags & BACK_EXISTS)?", and its backup volume,":""));
 
 	Lp_SetRWValue(&entry, aserver, apart, 0L, 0L);
 	entry.nServers--;
@@ -793,7 +798,8 @@ int UV_DeleteVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
     /* Either delete or replace the VLDB entry */
     if ((entry.nServers <= 0) || !(entry.flags & (RO_EXISTS | RW_EXISTS))) {
        if (verbose)
-	  fprintf(STDOUT,"Last reference to the VLDB entry for %u - deleting entry\n", avolid);
+	  fprintf(STDOUT,"Last reference to the VLDB entry for %lu - deleting entry\n",
+		  (unsigned long) avolid);
        code = ubik_Call(VL_DeleteEntry, cstruct, 0, avolid, vtype);
        EGOTO1(error_exit, code, "Could not delete the VLDB entry for the volume %u \n",avolid);
     } else {
@@ -813,18 +819,21 @@ int UV_DeleteVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
        if (!error) error = VOLSERNOVOL;
     }
     else if (notondisk) {
-       fprintf(STDERR,"WARNING: Volume %u did not exist on the partition\n", avolid);
+       fprintf(STDERR,"WARNING: Volume %lu did not exist on the partition\n",
+	       (unsigned long) avolid);
     }
     else if (notinvldb) {
-       fprintf(STDERR,"WARNING: Volume %u does not exist in VLDB %s\n",
-	       avolid, ((notinvldb == 2)?"on server and partition":""));
+       fprintf(STDERR,"WARNING: Volume %lu does not exist in VLDB %s\n",
+	       (unsigned long) avolid,
+	       ((notinvldb == 2)?"on server and partition":""));
     }
 
     if (ttid) {
 	code = AFSVolEndTrans(aconn, ttid, &rcode);
 	code = (code ? code : rcode);
 	if (code) {
-	    fprintf(STDERR,"Could not end transaction on the volume %u\n", avolid);
+	    fprintf(STDERR,"Could not end transaction on the volume %lu\n",
+		    (unsigned long) avolid);
 	    PrintError("", code);
 	    if (!error) error = code;
 	}
@@ -964,7 +973,8 @@ int UV_MoveVolume(afs_int32 afromvol, afs_int32 afromserver,
 	if ( !Lp_Match(atoserver, atopart, &entry) ) 
 	{
 	    /* the to server and partition do not exist in the vldb entry corresponding to volid */
-	    fprintf(STDERR,"The volume %u is not on the specified site. \n", afromvol);
+	    fprintf(STDERR,"The volume %lu is not on the specified site. \n",
+		    (unsigned long) afromvol);
 	    fprintf(STDERR,"The current site is :");
 	    for (i=0; i<entry.nServers; i++)
 	    {
@@ -1269,8 +1279,8 @@ int UV_MoveVolume(afs_int32 afromvol, afs_int32 afromserver,
 			       (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
     if (vcode) 
     {
-        fprintf(STDERR," Could not release the lock on the VLDB entry for the volume %s %u \n",
-		storeEntry.name,afromvol);
+        fprintf(STDERR," Could not release the lock on the VLDB entry for the volume %s %lu \n",
+		storeEntry.name, (unsigned long) afromvol);
 	error = vcode;
 	goto mfail;
     }
@@ -1411,8 +1421,8 @@ int UV_MoveVolume(afs_int32 afromvol, afs_int32 afromserver,
         if (vcode) 
 	{
 	    VPRINT("\n");
-	    fprintf(STDERR," Could not release the lock on the VLDB entry for the volume %u \n",
-		    afromvol);
+	    fprintf(STDERR," Could not release the lock on the VLDB entry for the volume %lu \n",
+		    (unsigned long) afromvol);
 	    if (!error) error = vcode;
 	}
 	VDONE;
@@ -1425,7 +1435,8 @@ int UV_MoveVolume(afs_int32 afromvol, afs_int32 afromserver,
 	if (code || rcode)
 	{
 	    VPRINT("\n");
-	    fprintf(STDERR,"Could not end transaction on the source's clone volume %u\n", newVol);
+	    fprintf(STDERR,"Could not end transaction on the source's clone volume %lu\n",
+		    (unsigned long) newVol);
 	    if (!error) error = (code ? code : rcode);
 	}
 	VDONE;
@@ -1438,7 +1449,8 @@ int UV_MoveVolume(afs_int32 afromvol, afs_int32 afromserver,
 	if (code || rcode) 
 	{
 	    VPRINT("\n");
-	    fprintf(STDERR,"Could not end transaction on the source's clone volume %u\n",newVol);
+	    fprintf(STDERR,"Could not end transaction on the source's clone volume %lu\n",
+		    (unsigned long) newVol);
 	    if (!error) error = (code ? code : rcode);
 	}
 	VDONE;
@@ -1451,7 +1463,8 @@ int UV_MoveVolume(afs_int32 afromvol, afs_int32 afromserver,
 	if (code) 
 	{
 	    VPRINT("\n");
-	    fprintf(STDERR,"Could not end transaction on destination volume %u\n",afromvol);
+	    fprintf(STDERR,"Could not end transaction on destination volume %lu\n",
+		    (unsigned long) afromvol);
 	    if (!error) error = (code ? code : rcode);
 	}
 	VDONE;
@@ -1932,7 +1945,8 @@ and partition - if so, just use a clone to save disk space */
     /* create the vldb entry */
     vcode = VLDB_CreateEntry(&storeEntry);
     if(vcode) {
-		fprintf(STDERR,"Could not create a VLDB entry for the volume %s %u\n", atovolname,newVol);
+		fprintf(STDERR,"Could not create a VLDB entry for the volume %s %lu\n",
+			atovolname, (unsigned long) newVol);
 		/*destroy the created volume*/
 		VPRINT1("Deleting the newly created volume %u\n",newVol);
 		AFSVolDeleteVolume(toconn,totid);
@@ -1950,7 +1964,8 @@ and partition - if so, just use a clone to save disk space */
 	if (code || rcode)
 	{
 	    VPRINT("\n");
-	    fprintf(STDERR,"Could not end transaction on the source volume %u\n", afromvol);
+	    fprintf(STDERR,"Could not end transaction on the source volume %lu\n",
+		    (unsigned long) afromvol);
 	    if (!error) error = (code ? code : rcode);
 	}
 	VDONE;
@@ -1963,7 +1978,8 @@ and partition - if so, just use a clone to save disk space */
 	if (code || rcode) 
 	{
 	    VPRINT("\n");
-	    fprintf(STDERR,"Could not end transaction on the source's clone volume %u\n",cloneVol);
+	    fprintf(STDERR,"Could not end transaction on the source's clone volume %lu\n",
+		    (unsigned long) cloneVol);
 	    if (!error) error = (code ? code : rcode);
 	}
 	VDONE;
@@ -1976,7 +1992,8 @@ and partition - if so, just use a clone to save disk space */
 	if (code) 
 	{
 	    VPRINT("\n");
-	    fprintf(STDERR,"Could not end transaction on destination volume %u\n", newVol);
+	    fprintf(STDERR,"Could not end transaction on destination volume %lu\n",
+		    (unsigned long) newVol);
 	    if (!error) error = (code ? code : rcode);
 	}
 	VDONE;
@@ -2082,7 +2099,8 @@ int UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
      * since we are following the RW hash chain for searching */
     code = VLDB_GetEntryByID(avolid, RWVOL, &entry); 
     if (code) {
-       fprintf(STDERR, "Could not fetch the entry for the volume %u from the VLDB \n", avolid);
+       fprintf(STDERR, "Could not fetch the entry for the volume %lu from the VLDB \n", 
+	       (unsigned long) avolid);
        error = code; goto bfail;
     }
     MapHostToNetwork(&entry); 
@@ -2096,7 +2114,8 @@ int UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
 
        code = ubik_Call(VL_SetLock,cstruct, 0, avolid, RWVOL, VLOP_BACKUP);
        if (code) {
-	  fprintf(STDERR,"Could not lock the VLDB entry for the volume %u\n",avolid);
+	  fprintf(STDERR,"Could not lock the VLDB entry for the volume %lu\n",
+		  (unsigned long) avolid);
 	  error = code;
 	  goto bfail;
        }
@@ -2105,7 +2124,8 @@ int UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
        /* Reread the vldb entry */
        code = VLDB_GetEntryByID(avolid, RWVOL, &entry);
        if (code) {
-	  fprintf(STDERR,"Could not fetch the entry for the volume %u from the VLDB \n",avolid);
+	  fprintf(STDERR,"Could not fetch the entry for the volume %lu from the VLDB \n",
+		  (unsigned long) avolid);
 	  error = code;
 	  goto bfail;
        }
@@ -2126,8 +2146,8 @@ int UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
        code = ubik_Call(VL_GetNewVolumeId, cstruct, 0, 1, &backupID);
        if (code) {
 	  fprintf(STDERR,
-		  "Could not allocate ID for the backup volume of  %u from the VLDB\n",
-		  avolid);
+		  "Could not allocate ID for the backup volume of  %lu from the VLDB\n",
+		  (unsigned long) avolid);
 	  error = code;
 	  goto bfail;
        }
@@ -2141,7 +2161,8 @@ int UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
     code = AFSVolTransCreate(aconn, backupID, apart, ITOffline, &btid);
     if (code) {
        if (code != VNOVOL) {
-	  fprintf(STDERR,"Could not reach the backup volume %u\n", backupID);
+	  fprintf(STDERR,"Could not reach the backup volume %lu\n",
+		  (unsigned long) backupID);
 	  error = code;
 	  goto bfail;
        }
@@ -2152,8 +2173,8 @@ int UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
        btid = 0;
        if (code || rcode) {
 	  fprintf(STDERR,
-		  "Could not end transaction on the previous backup volume %u\n",
-		  backupID);
+		  "Could not end transaction on the previous backup volume %lu\n",
+		  (unsigned long) backupID);
 	  error = (code ? code : rcode);
 	  goto bfail;
        }
@@ -2164,7 +2185,8 @@ int UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
      */
     code = AFSVolTransCreate(aconn, avolid, apart, ITBusy, &ttid);
     if (code) {
-       fprintf(STDERR,"Could not start a transaction on the volume %u\n",avolid);
+       fprintf(STDERR,"Could not start a transaction on the volume %lu\n",
+	       (unsigned long) avolid);
        error = code;
        goto bfail;
     }
@@ -2177,7 +2199,8 @@ int UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
 
        code = AFSVolReClone(aconn, ttid, backupID);
        if (code) {
-	  fprintf(STDERR,"Could not re-clone backup volume %u\n", backupID);
+	   fprintf(STDERR,"Could not re-clone backup volume %lu\n",
+		   (unsigned long) backupID);
 	  error = code;
 	  goto bfail;
        }
@@ -2190,7 +2213,8 @@ int UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
 
        code = AFSVolClone(aconn, ttid, 0,backupVolume, vname, &backupID);
        if (code) {
-	  fprintf(STDERR,"Failed to clone the volume %u\n",avolid);
+	  fprintf(STDERR,"Failed to clone the volume %lu\n",
+		  (unsigned long) avolid);
 	  error = code;
 	  goto bfail;
        }
@@ -2200,7 +2224,8 @@ int UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
     code = AFSVolEndTrans(aconn, ttid, &rcode);
     ttid = 0;
     if (code || rcode) {
-	fprintf(STDERR, "Failed to end the transaction on the rw volume %u\n", avolid); 
+	fprintf(STDERR, "Failed to end the transaction on the rw volume %lu\n",
+		(unsigned long) avolid); 
 	error = (code ? code : rcode);
 	goto bfail;
     }
@@ -2214,14 +2239,16 @@ int UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
     /* Now go back to the backup volume and bring it on line */
     code = AFSVolTransCreate(aconn, backupID, apart, ITOffline, &btid);
     if (code) {
-	fprintf(STDERR,"Failed to start a transaction on the backup volume %u\n",backupID); 
+	fprintf(STDERR,"Failed to start a transaction on the backup volume %lu\n",
+		(unsigned long) backupID); 
 	error = code;
 	goto bfail;
     }
 
     code = AFSVolSetFlags(aconn, btid, 0);
     if (code) {
-	fprintf(STDERR,"Could not mark the backup volume %u on line \n",backupID);
+	fprintf(STDERR,"Could not mark the backup volume %lu on line \n",
+		(unsigned long) backupID);
 	error = code;
 	goto bfail;
     }
@@ -2229,7 +2256,8 @@ int UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
     code = AFSVolEndTrans(aconn, btid, &rcode);
     btid = 0;
     if (code || rcode) {
-	fprintf(STDERR, "Failed to end the transaction on the backup volume %u\n", backupID);
+	fprintf(STDERR, "Failed to end the transaction on the backup volume %lu\n",
+		(unsigned long) backupID);
 	error = (code ? code : rcode);
 	goto bfail;
     }
@@ -2242,7 +2270,8 @@ int UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
     if (ttid) {
        code =  AFSVolEndTrans(aconn, ttid, &rcode);
        if (code || rcode) {
-	  fprintf(STDERR, "Could not end transaction on the volume %u\n", avolid);
+	  fprintf(STDERR, "Could not end transaction on the volume %lu\n",
+		  (unsigned long) avolid);
 	  if (!error)
 	     error = (code ? code : rcode);
        }
@@ -2251,7 +2280,8 @@ int UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
     if (btid) {
        code = AFSVolEndTrans(aconn, btid, &rcode);
        if (code || rcode) {
-	  fprintf(STDERR,"Could not end transaction the backup volume %u\n",backupID);
+	  fprintf(STDERR,"Could not end transaction the backup volume %lu\n",
+		  (unsigned long) backupID);
 	  if (!error)
 	     error = (code ? code : rcode);
        }
@@ -2264,7 +2294,8 @@ int UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
 	  code = VLDB_ReplaceEntry(avolid, RWVOL, &storeEntry,
 				    (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
 	  if (code) {
-	     fprintf(STDERR,"Could not update the VLDB entry for the volume %u \n",avolid);
+	     fprintf(STDERR,"Could not update the VLDB entry for the volume %lu \n",
+		     (unsigned long) avolid);
 	     if (!error)
 	        error = code;
 	  }
@@ -2273,7 +2304,8 @@ int UV_BackupVolume(afs_int32 aserver, afs_int32 apart, afs_int32 avolid)
 	  code = ubik_Call(VL_ReleaseLock,cstruct, 0, avolid, RWVOL, 
 			   (LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP));
 	  if (code) {
-	     fprintf(STDERR,"Could not unlock the VLDB entry for the volume %u \n",avolid);
+	     fprintf(STDERR,"Could not unlock the VLDB entry for the volume %lu \n",
+		     (unsigned long) avolid);
 	     if (!error)
 	        error = code;
 	  }
@@ -2296,14 +2328,15 @@ static int DelVol (struct rx_connection *conn, afs_int32 vid, afs_int32 part, af
   if (!acode) {              /* It really was there */
     acode = AFSVolDeleteVolume(conn, tid);
     if (acode) {
-      fprintf(STDERR, "Failed to delete volume %u.\n", vid);
+      fprintf(STDERR, "Failed to delete volume %lu.\n", (unsigned long) vid);
       PrintError ("", acode);
     }
     ccode = AFSVolEndTrans(conn, tid, &rcode);
     if (!ccode) 
       ccode = rcode;
     if (ccode) {
-      fprintf(STDERR, "Failed to end transaction on volume %u.\n", vid);
+      fprintf(STDERR, "Failed to end transaction on volume %lu.\n",
+	      (unsigned long) vid);
       PrintError ("", ccode);
     }
   }
@@ -2352,8 +2385,9 @@ static int GetTrans (struct nvldbentry *vldbEntryPtr, afs_int32 index, struct rx
       strcat(volname, ".readonly");
       
       if (verbose) {
-          fprintf(STDOUT,"Creating new volume %u on replication site %s: ", 
-		  volid, hostutil_GetNameByINet(vldbEntryPtr->serverNumber[index]));
+          fprintf(STDOUT,"Creating new volume %lu on replication site %s: ", 
+		  (unsigned long) volid,
+		  hostutil_GetNameByINet(vldbEntryPtr->serverNumber[index]));
 	  fflush(STDOUT);
       }
 
@@ -2537,7 +2571,8 @@ int UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afromp
 
   if (verbose) {
      if (fullrelease) {
-        fprintf(STDOUT,"This is a complete release of the volume %u\n", afromvol);
+        fprintf(STDOUT,"This is a complete release of the volume %lu\n", 
+		(unsigned long) afromvol);
      } else {
         fprintf(STDOUT,"This is a completion of the previous release\n");
      }
@@ -2770,8 +2805,8 @@ int UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afromp
      if (!volcount) continue;
 
      if (verbose) {
-        fprintf(STDOUT,"Starting ForwardMulti from %u to %u on %s",
-		cloneVolId, entry.volumeId[ROVOL], 
+        fprintf(STDOUT,"Starting ForwardMulti from %lu to %u on %s",
+		(unsigned long) cloneVolId, entry.volumeId[ROVOL], 
 		hostutil_GetNameByINet(entry.serverNumber[times[0].vldbEntryIndex]));
 
 	for (s=1; s<volcount; s++) {
@@ -2878,8 +2913,8 @@ int UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afromp
   }
   if (failure) {
      char pname[10];
-     fprintf(STDERR, "The volume %u could not be released to the following %d sites:\n",
-	     afromvol, failure);
+     fprintf(STDERR, "The volume %lu could not be released to the following %d sites:\n",
+	     (unsigned long) afromvol, failure);
      for (i=0; i<entry.nServers; i++) {
         if (!(entry.serverFlags[i] & NEW_REPSITE)) {
 	   MapPartIdIntoName(entry.serverPartition[i],pname);
@@ -2898,7 +2933,8 @@ int UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afromp
   /* All the ROs were release successfully. Remove the temporary clone */
   if (!roclone) {
       if (verbose) {
-	  fprintf(STDOUT,"Deleting the releaseClone %u ...", cloneVolId);
+	  fprintf(STDOUT,"Deleting the releaseClone %lu ...",
+		  (unsigned long) cloneVolId);
 	  fflush(STDOUT);
       }
       code = DelVol (fromconn, cloneVolId, afrompart, ITOffline);
@@ -2924,7 +2960,8 @@ int UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afromp
       code = AFSVolEndTrans(fromconn, clonetid, &rcode);
       clonetid = 0;
       if (code) {
-	  fprintf (STDERR,"Failed to end cloning transaction on the RW volume %u\n", afromvol);
+	  fprintf (STDERR,"Failed to end cloning transaction on the RW volume %lu\n",
+		   (unsigned long) afromvol);
 	  if (!error) error = code;
       }
   }
@@ -2932,7 +2969,8 @@ int UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afromp
       code = AFSVolEndTrans(fromconn, fromtid, &rcode);
       fromtid = 0;
       if (code) {
-	  fprintf (STDERR,"Failed to end transaction on the release clone %u\n", cloneVolId);
+	  fprintf (STDERR,"Failed to end transaction on the release clone %lu\n",
+		   (unsigned long) cloneVolId);
 	  if (!error) error = code;
       }
   }
@@ -2956,7 +2994,8 @@ int UV_ReleaseVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afromp
       vcode = ubik_Call(VL_ReleaseLock,cstruct, 0, afromvol, RWVOL, 
 			LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
       if (vcode) {
-	  fprintf(STDERR,"Could not release lock on the VLDB entry for volume %u\n", afromvol);
+	  fprintf(STDERR,"Could not release lock on the VLDB entry for volume %lu\n",
+		  (unsigned long) afromvol);
 	  if (!error) error = vcode;
       }
   }
@@ -3038,7 +3077,8 @@ int UV_DumpVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afrompart
       VPRINT1("Ending transaction on volume %u...", afromvol);
       code = AFSVolEndTrans(fromconn, fromtid, &rcode);
       if (code || rcode) {
-	 fprintf(STDERR,"Could not end transaction on the volume %u\n", afromvol);
+	 fprintf(STDERR,"Could not end transaction on the volume %lu\n",
+		 (unsigned long) afromvol);
 	 if (!error) error = (code?code:rcode);
       }
       VDONE;
@@ -3141,7 +3181,8 @@ int UV_DumpClonedVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afr
     code = AFSVolDeleteVolume(fromconn, clonetid);
 	if ( code )
 	{	
-	    fprintf(STDERR,"Failed to delete the cloned volume %u\n", clonevol);
+	    fprintf(STDERR,"Failed to delete the cloned volume %lu\n",
+		    (unsigned long) clonevol);
 	}
 	else
 	{
@@ -3159,7 +3200,8 @@ int UV_DumpClonedVolume(afs_int32 afromvol, afs_int32 afromserver, afs_int32 afr
 		VPRINT1("Ending transaction on cloned volume %u...", clonevol);
 		code = AFSVolEndTrans(fromconn, clonetid, &rcode);
 		if (code || rcode) {
-			fprintf(STDERR,"Could not end transaction on the cloned volume %u\n", clonevol);
+			fprintf(STDERR,"Could not end transaction on the cloned volume %lu\n",
+				(unsigned long) clonevol);
 			if (!error) error = (code?code:rcode);
 		}
 		VDONE;
@@ -3252,8 +3294,10 @@ int UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	EGOTO1(refail, VOLSERBADOP, "The volume name %s exceeds the maximum limit of (VOLSER_OLDMAXVOLNAME -1 ) bytes\n",tovolname);
     }
     MapPartIdIntoName(topart, partName);
-    fprintf(STDOUT,"Restoring volume %s Id %u on server %s partition %s ..", tovolname,
-	    pvolid, hostutil_GetNameByINet(toserver), partName);
+    fprintf(STDOUT,"Restoring volume %s Id %lu on server %s partition %s ..",
+	    tovolname,
+	    (unsigned long) pvolid,
+	    hostutil_GetNameByINet(toserver), partName);
     fflush(STDOUT);
     code = AFSVolCreateVolume(toconn, topart, tovolname, volsertype, 0,&pvolid, &totid);
     if (code){
@@ -3311,20 +3355,23 @@ int UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
     }
     code = AFSVolGetStatus(toconn,totid, &tstatus);
     if(code) {
-	fprintf(STDERR,"Could not get status information about the volume %u\n",pvolid);
+	fprintf(STDERR,"Could not get status information about the volume %lu\n",
+		(unsigned long) pvolid);
 	error = code;
 	goto refail;
     }
     code = AFSVolSetIdsTypes(toconn,totid, tovolname, voltype, pvolid,0,0);
     if(code) {
-	fprintf(STDERR,"Could not set the right type and ID on %u\n",pvolid); 
+	fprintf(STDERR,"Could not set the right type and ID on %lu\n",
+		(unsigned long) pvolid); 
 	error = code;
 	goto refail;
     }
     newDate = time(0);
     code = AFSVolSetDate(toconn,totid, newDate);
     if(code) {
-	fprintf(STDERR,"Could not set the date on %u\n",pvolid); 
+	fprintf(STDERR,"Could not set the date on %lu\n",
+		(unsigned long) pvolid); 
 	error = code;
 	goto refail;
     }
@@ -3332,7 +3379,7 @@ int UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
     volflag = ((flags & RV_OFFLINE) ? VTOutOfService : 0); /* off or on-line */
     code = AFSVolSetFlags(toconn, totid, volflag);
     if (code){
-	fprintf(STDERR,"Could not mark %u online\n",pvolid );
+	fprintf(STDERR,"Could not mark %lu online\n", (unsigned long) pvolid );
 	error = code;
 	goto refail;
     }
@@ -3342,7 +3389,8 @@ int UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
     totid = 0;
     if(!code) code = rcode;
     if(code) {
-	fprintf(STDERR,"Could not end transaction on %u\n",pvolid);
+	fprintf(STDERR,"Could not end transaction on %lu\n",
+		(unsigned long) pvolid);
 	error = code;
 	goto refail;
     }
@@ -3356,7 +3404,8 @@ int UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	 */
 	vcode = VLDB_GetEntryByID(pvolid,voltype, &entry);
 	if(vcode && vcode != VL_NOENT && vcode != VL_ENTDELETED) {
-	    fprintf(STDERR,"Could not fetch the entry for volume number %u from VLDB \n",pvolid);
+	    fprintf(STDERR,"Could not fetch the entry for volume number %lu from VLDB \n",
+		    (unsigned long) pvolid);
 	    error = vcode;
 	    goto refail;
 	}
@@ -3388,7 +3437,8 @@ int UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	    MapNetworkToHost(&entry,&storeEntry);
 	    vcode = VLDB_CreateEntry(&storeEntry);
 	    if(vcode) {
-		fprintf(STDERR,"Could not create the VLDB entry for volume number %u  \n",pvolid);
+		fprintf(STDERR,"Could not create the VLDB entry for volume number %lu  \n",
+			(unsigned long) pvolid);
 		error = vcode;
 		goto refail;
 	    }
@@ -3404,7 +3454,8 @@ int UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	    }
 	    vcode = ubik_Call(VL_SetLock,cstruct, 0, pvolid, voltype, VLOP_RESTORE);
 	    if(vcode) {
-		fprintf(STDERR,"Could not lock the entry for volume number %u \n",pvolid);
+		fprintf(STDERR,"Could not lock the entry for volume number %lu \n",
+			(unsigned long) pvolid);
 		error = vcode;
 		goto refail;
 	    }
@@ -3441,13 +3492,15 @@ int UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 		  if (!code){
 		     code = AFSVolSetFlags(tempconn, temptid, VTDeleteOnSalvage | VTOutOfService);
 		     if(code) {
-		        fprintf(STDERR,"Could not set flags on volume %u on the older site\n",pvolid);
+		        fprintf(STDERR,"Could not set flags on volume %lu on the older site\n",
+				(unsigned long) pvolid);
 			error = code;
 			goto refail;
 		     }
 		     code = AFSVolDeleteVolume(tempconn,temptid);
 		     if(code){
-		        fprintf(STDERR,"Could not delete volume %u on the older site\n",pvolid);
+		        fprintf(STDERR,"Could not delete volume %lu on the older site\n",
+				(unsigned long) pvolid);
 			error = code;
 			goto refail;
 		     }
@@ -3455,7 +3508,8 @@ int UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 		     temptid = 0;
 		     if(!code) code = rcode;
 		     if(code){
-		        fprintf(STDERR,"Could not end transaction on volume %u on the older site\n",pvolid);
+		        fprintf(STDERR,"Could not end transaction on volume %lu on the older site\n",
+				(unsigned long) pvolid);
 			error = code;
 			goto refail;
 		     }
@@ -3471,7 +3525,8 @@ int UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	    MapNetworkToHost(&entry,&storeEntry);
 	    vcode = VLDB_ReplaceEntry(pvolid,voltype, &storeEntry,LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP );
 	    if(vcode) {
-		fprintf(STDERR,"Could not update the entry for volume number %u  \n",pvolid);
+		fprintf(STDERR,"Could not update the entry for volume number %lu  \n",
+			(unsigned long) pvolid);
 		error = vcode;
 		goto refail;
 	    }
@@ -3489,7 +3544,8 @@ int UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
       if(islocked) {
 	  vcode = ubik_Call(VL_ReleaseLock,cstruct, 0, pvolid, voltype, LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	  if(vcode) {
-	      fprintf(STDERR,"Could not release lock on the VLDB entry for the volume %u\n",pvolid);
+	      fprintf(STDERR,"Could not release lock on the VLDB entry for the volume %lu\n",
+		      (unsigned long) pvolid);
 	      if(!error) error = vcode;
 	  }
       }
@@ -3497,7 +3553,8 @@ int UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	  code = AFSVolEndTrans(toconn, totid, &rcode);
 	  if(!code) code = rcode;
 	  if(code) {
-	      fprintf(STDERR,"Could not end transaction on the volume %u \n",pvolid);
+	      fprintf(STDERR,"Could not end transaction on the volume %lu \n",
+		      (unsigned long) pvolid);
 	      if(!error) error = code;
 	  }
       }
@@ -3505,7 +3562,8 @@ int UV_RestoreVolume(afs_int32 toserver, afs_int32 topart, afs_int32 tovolid,
 	  code = AFSVolEndTrans(toconn, temptid, &rcode);
 	  if(!code) code = rcode;
 	  if(code) {
-	      fprintf(STDERR,"Could not end transaction on the volume %u \n",pvolid);
+	      fprintf(STDERR,"Could not end transaction on the volume %lu \n",
+		      (unsigned long) pvolid);
 	      if(!error) error = code;
 	  }
       }
@@ -3526,7 +3584,8 @@ int UV_LockRelease(afs_int32 volid)
     VPRINT("Binding to the VLDB server\n");
     vcode = ubik_Call(VL_ReleaseLock,cstruct, 0,volid,-1,LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP );
     if(vcode) {
-	fprintf(STDERR,"Could not unlock the entry for volume number %u in VLDB \n",volid);
+	fprintf(STDERR,"Could not unlock the entry for volume number %lu in VLDB \n",
+		(unsigned long) volid);
 	PrintError("",vcode);
 	return (vcode);
     }
@@ -3546,14 +3605,16 @@ int UV_AddSite(afs_int32 server, afs_int32 part, afs_int32 volid)
 
     error = ubik_Call(VL_SetLock,cstruct, 0,volid,RWVOL, VLOP_ADDSITE);
     if (error) {
-	fprintf(STDERR," Could not lock the VLDB entry for the volume %u \n", volid);
+	fprintf(STDERR," Could not lock the VLDB entry for the volume %lu \n",
+		(unsigned long) volid);
 	goto asfail;
     }
     islocked = 1;
 
     error = VLDB_GetEntryByID(volid,RWVOL, &entry);
     if (error) {
-	fprintf(STDERR,"Could not fetch the VLDB entry for volume number %u  \n",volid);
+	fprintf(STDERR,"Could not fetch the VLDB entry for volume number %lu  \n",
+		(unsigned long) volid);
 	goto asfail;
 
     }
@@ -3605,7 +3666,8 @@ int UV_AddSite(afs_int32 server, afs_int32 part, afs_int32 volid)
     MapNetworkToHost(&entry,&storeEntry);
     error = VLDB_ReplaceEntry(volid,RWVOL,&storeEntry,LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
     if (error) {
-       fprintf(STDERR,"Could not update entry for volume %u \n",volid);
+	fprintf(STDERR,"Could not update entry for volume %lu \n",
+		(unsigned long) volid);
        goto asfail;
     }
     islocked = 0;
@@ -3615,7 +3677,8 @@ int UV_AddSite(afs_int32 server, afs_int32 part, afs_int32 volid)
     if (islocked) {
        vcode = ubik_Call(VL_ReleaseLock,cstruct, 0, volid, RWVOL, LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
        if (vcode) {
-	  fprintf(STDERR,"Could not release lock on volume entry for %u \n",volid);
+	   fprintf(STDERR,"Could not release lock on volume entry for %lu \n",
+		   (unsigned long) volid);
 	  PrintError("", vcode);
        }
     }
@@ -3633,14 +3696,16 @@ int UV_RemoveSite(afs_int32 server, afs_int32 part, afs_int32 volid)
 
     vcode = ubik_Call(VL_SetLock,cstruct, 0,volid,RWVOL, VLOP_ADDSITE);
     if(vcode) {
-	fprintf(STDERR," Could not lock the VLDB entry for volume %u \n", volid);
+	fprintf(STDERR," Could not lock the VLDB entry for volume %lu \n",
+		(unsigned long) volid);
 	PrintError("",vcode);
 	return(vcode);
     }
     islocked = 1;
     vcode = VLDB_GetEntryByID(volid,RWVOL, &entry);
     if(vcode) {
-	fprintf(STDERR,"Could not fetch the entry for volume number %u from VLDB \n",volid);
+	fprintf(STDERR,"Could not fetch the entry for volume number %lu from VLDB \n",
+		(unsigned long) volid);
 	PrintError("",vcode);
 	return (vcode);
     }
@@ -3650,7 +3715,8 @@ int UV_RemoveSite(afs_int32 server, afs_int32 part, afs_int32 volid)
 	fprintf(STDERR,"This site is not a replication site \n");
 	vcode = ubik_Call(VL_ReleaseLock,cstruct, 0, volid, RWVOL, LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	if(vcode) {
-	    fprintf(STDERR,"Could not update entry for volume %u \n",volid);
+	    fprintf(STDERR,"Could not update entry for volume %lu \n",
+		    (unsigned long) volid);
 	    PrintError("",vcode);
 	    ubik_Call(VL_ReleaseLock,cstruct, 0, volid, RWVOL, LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	    return(vcode);
@@ -3667,18 +3733,21 @@ int UV_RemoveSite(afs_int32 server, afs_int32 part, afs_int32 volid)
 	    fflush(STDOUT);
 	    vcode = ubik_Call(VL_DeleteEntry,cstruct, 0,volid, ROVOL);
 	    if(vcode) {
-		fprintf(STDERR,"Could not delete VLDB entry for volume %u \n",volid);
+		fprintf(STDERR,"Could not delete VLDB entry for volume %lu \n",
+			(unsigned long) volid);
 		PrintError("",vcode);
 		return(vcode);
 	    }
 	    VDONE;
 	}
 	MapNetworkToHost(&entry,&storeEntry);
-	fprintf(STDOUT,"Deleting the replication site for volume %u ...",volid);
+	fprintf(STDOUT,"Deleting the replication site for volume %lu ...",
+		(unsigned long) volid);
 	fflush(STDOUT);
 	vcode = VLDB_ReplaceEntry(volid,RWVOL,&storeEntry,LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	if(vcode){ 
-	    fprintf(STDERR,"Could not release lock on volume entry for %u \n",volid);
+	    fprintf(STDERR,"Could not release lock on volume entry for %lu \n",
+		    (unsigned long) volid);
 	    PrintError("",vcode);
 	    ubik_Call(VL_ReleaseLock,cstruct, 0, volid, RWVOL, LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	    return(vcode);
@@ -3697,13 +3766,15 @@ int UV_ChangeLocation(afs_int32 server, afs_int32 part, afs_int32 volid)
 
     vcode = ubik_Call(VL_SetLock,cstruct, 0,volid,RWVOL, VLOP_ADDSITE);
     if(vcode) {
-	fprintf(STDERR," Could not lock the VLDB entry for volume %u \n", volid);
+	fprintf(STDERR," Could not lock the VLDB entry for volume %lu \n",
+		(unsigned long) volid);
 	PrintError("",vcode);
 	return(vcode);
     }
     vcode = VLDB_GetEntryByID(volid,RWVOL, &entry);
     if(vcode) {
-	fprintf(STDERR,"Could not fetch the entry for volume number %u from VLDB \n",volid);
+	fprintf(STDERR,"Could not fetch the entry for volume number %lu from VLDB \n",
+		(unsigned long) volid);
 	PrintError("",vcode);
 	return (vcode);
     }
@@ -3711,10 +3782,12 @@ int UV_ChangeLocation(afs_int32 server, afs_int32 part, afs_int32 volid)
     index = Lp_GetRwIndex(&entry);
     if (index < 0) {
 	/* no RW site exists  */
-	fprintf(STDERR,"No existing RW site for volume %u", volid);
+	fprintf(STDERR,"No existing RW site for volume %lu",
+		(unsigned long) volid);
 	vcode = ubik_Call(VL_ReleaseLock,cstruct, 0, volid, RWVOL, LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	if(vcode) {
-	    fprintf(STDERR,"Could not release lock on entry for volume %u \n",volid);
+	    fprintf(STDERR,"Could not release lock on entry for volume %lu \n",
+		    (unsigned long) volid);
 	    PrintError("",vcode);
 	    return(vcode);
 	}
@@ -3726,7 +3799,8 @@ int UV_ChangeLocation(afs_int32 server, afs_int32 part, afs_int32 volid)
 	MapNetworkToHost(&entry,&storeEntry);
 	vcode = VLDB_ReplaceEntry(volid,RWVOL,&storeEntry,LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	if(vcode){ 
-	    fprintf(STDERR,"Could not update entry for volume %u \n",volid);
+	    fprintf(STDERR,"Could not update entry for volume %lu \n",
+		    (unsigned long) volid);
 	    PrintError("",vcode);
 	    ubik_Call(VL_ReleaseLock,cstruct, 0, volid, RWVOL, LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	    return(vcode);
@@ -3818,7 +3892,8 @@ int UV_ZapVolumeClones(afs_int32 aserver, afs_int32 apart, struct volDescription
 		if(code || rcode) success = 0;
 	    }
 	    if(success) curPtr->volFlags |= CLONEZAPPED;
-	    if(!success) fprintf(STDERR,"Could not zap volume %u\n",curPtr->volCloneId);
+	    if(!success) fprintf(STDERR,"Could not zap volume %lu\n",
+				 (unsigned long) curPtr->volCloneId);
 	    if(success) VPRINT2("Clone of %s %u deleted\n", curPtr->volName,curPtr->volCloneId);
 	    curPos++;
 	    tid = 0;
@@ -3882,7 +3957,8 @@ int UV_GenerateVolumeClones(afs_int32 aserver, afs_int32 apart, struct volDescri
 	    if(code){
 		curPtr->volFlags &= ~CLONEVALID;
 		curPos++;
-		fprintf(STDERR,"Could not clone %s due to error %u\n", curPtr->volName,code);
+		fprintf(STDERR,"Could not clone %s due to error %lu\n", curPtr->volName,
+			(unsigned long) code);
 		code=AFSVolEndTrans(aconn, tid, &rcode);
 		if(code)
 			fprintf(STDERR,"WARNING: could not end transaction\n");
@@ -4029,7 +4105,8 @@ int UV_ListOneVolume(afs_int32 aserver, afs_int32 apart, afs_int32 volid, struct
     aconn = UV_Bind(aserver,AFSCONF_VOLUMEPORT);
     code = AFSVolListOneVolume(aconn, apart, volid, &volumeInfo);
     if(code) {
-	fprintf(STDERR,"Could not fetch the information about volume %u from the server\n",volid);
+	fprintf(STDERR,"Could not fetch the information about volume %lu from the server\n",
+		(unsigned long) volid);
     }
     else{
 	*resultPtr = volumeInfo.volEntries_val;
@@ -4151,7 +4228,8 @@ static afs_int32 CheckVolume(volintInfo *volumeinfo, afs_int32 aserver, afs_int3
    if (++pass == 2) {
       code = ubik_Call(VL_SetLock, cstruct, 0, rwvolid, RWVOL, VLOP_DELETE);
       if (code) {
-	 fprintf(STDERR, "Could not lock VLDB entry for %u\n", rwvolid);
+	 fprintf(STDERR, "Could not lock VLDB entry for %lu\n",
+		 (unsigned long) rwvolid);
 	 ERROR_EXIT(code);
       }
       islocked = 1;
@@ -4165,7 +4243,8 @@ static afs_int32 CheckVolume(volintInfo *volumeinfo, afs_int32 aserver, afs_int3
    code = VLDB_GetEntryByID(rwvolid, RWVOL, &entry);
    if (code) {
       if (code != VL_NOENT) {
-	 fprintf(STDOUT,"Could not retreive the VLDB entry for volume %u \n", rwvolid);
+	 fprintf(STDOUT,"Could not retreive the VLDB entry for volume %lu \n",
+		 (unsigned long) rwvolid);
 	 ERROR_EXIT(code);
       }
 
@@ -4214,11 +4293,12 @@ static afs_int32 CheckVolume(volintInfo *volumeinfo, afs_int32 aserver, afs_int3
 		  /* The RW volume exists elsewhere - report this one a duplicate */
 		  if (pass == 1) {
 		     MapPartIdIntoName(apart, pname);
-		     fprintf(STDERR,"*** Warning: Orphaned RW volume %u exists on %s %s\n",
-			     rwvolid, hostutil_GetNameByINet(aserver), pname);
+		     fprintf(STDERR,"*** Warning: Orphaned RW volume %lu exists on %s %s\n",
+			     (unsigned long) rwvolid,
+			     hostutil_GetNameByINet(aserver), pname);
 		     MapPartIdIntoName(entry.serverPartition[idx], pname);
-		     fprintf(STDERR,"    VLDB reports RW volume %u exists on %s %s\n",
-			     rwvolid,
+		     fprintf(STDERR,"    VLDB reports RW volume %lu exists on %s %s\n",
+			     (unsigned long) rwvolid,
 			     hostutil_GetNameByINet(entry.serverNumber[idx]), pname);
 		  }
 	       } else {
@@ -4233,8 +4313,9 @@ static afs_int32 CheckVolume(volintInfo *volumeinfo, afs_int32 aserver, afs_int3
 				entry.volumeId[BACKVOL],
 				hostutil_GetNameByINet(entry.serverNumber[idx]), pname);
 			MapPartIdIntoName(apart, pname);
-		        fprintf(STDERR,"    VLDB reports its RW volume %u exists on %s %s\n",
-				rwvolid, hostutil_GetNameByINet(aserver), pname);
+		        fprintf(STDERR,"    VLDB reports its RW volume %lu exists on %s %s\n",
+				(unsigned long) rwvolid,
+				hostutil_GetNameByINet(aserver), pname);
 		     }
 		  }
 	       }
@@ -4293,11 +4374,12 @@ static afs_int32 CheckVolume(volintInfo *volumeinfo, afs_int32 aserver, afs_int3
 	       /* VLDB says RW and/or BK is elsewhere - report this BK volume orphaned */
 	       if (pass == 1) {
 		  MapPartIdIntoName(apart, pname);
-		  fprintf(STDERR,"*** Warning: Orphaned BK volume %u exists on %s %s\n",
-			  volumeinfo->volid, hostutil_GetNameByINet(aserver), pname);
+		  fprintf(STDERR,"*** Warning: Orphaned BK volume %lu exists on %s %s\n",
+			  (unsigned long) volumeinfo->volid,
+			  hostutil_GetNameByINet(aserver), pname);
 		  MapPartIdIntoName(entry.serverPartition[idx], pname);
-		  fprintf(STDERR,"    VLDB reports its RW/BK volume %u exists on %s %s\n",
-			  rwvolid,
+		  fprintf(STDERR,"    VLDB reports its RW/BK volume %lu exists on %s %s\n",
+			  (unsigned long) rwvolid,
 			  hostutil_GetNameByINet(entry.serverNumber[idx]), pname);
 	      }
 	    } else {
@@ -4312,14 +4394,15 @@ static afs_int32 CheckVolume(volintInfo *volumeinfo, afs_int32 aserver, afs_int3
 			MapPartIdIntoName(entry.serverPartition[idx], pname);
 			fprintf(STDERR,"*** Warning: Orphaned BK volume %u exists on %s %s\n",
 				entry.volumeId[BACKVOL], hostutil_GetNameByINet(aserver), pname);
-			fprintf(STDERR,"    VLDB reports its BK volume ID is %u\n",
-				volumeinfo->volid);
+			fprintf(STDERR,"    VLDB reports its BK volume ID is %lu\n",
+				(unsigned long) volumeinfo->volid);
 		     }
 		  } else {
 		     if (pass == 1) {
 			MapPartIdIntoName(entry.serverPartition[idx], pname);
-			fprintf(STDERR,"*** Warning: Orphaned BK volume %u exists on %s %s\n",
-				volumeinfo->volid, hostutil_GetNameByINet(aserver), pname);
+			fprintf(STDERR,"*** Warning: Orphaned BK volume %lu exists on %s %s\n",
+				(unsigned long) volumeinfo->volid,
+				hostutil_GetNameByINet(aserver), pname);
 			fprintf(STDERR,"    VLDB reports its BK volume ID is %u\n",
 				entry.volumeId[BACKVOL]);
 		     }
@@ -4387,8 +4470,8 @@ static afs_int32 CheckVolume(volintInfo *volumeinfo, afs_int32 aserver, afs_int3
 		     fprintf(STDERR,"*** Warning: Orphaned RO volume %u exists on %s %s\n",
 			     entry.volumeId[ROVOL],
 			     hostutil_GetNameByINet(entry.serverNumber[j]), pname);
-		     fprintf(STDERR,"    VLDB reports its RO volume ID is %u\n",
-			     volumeinfo->volid);
+		     fprintf(STDERR,"    VLDB reports its RO volume ID is %lu\n",
+			     (unsigned long) volumeinfo->volid);
 		  }
 		  
 		  Lp_SetRWValue(entry, entry.serverNumber[idx],
@@ -4409,8 +4492,9 @@ static afs_int32 CheckVolume(volintInfo *volumeinfo, afs_int32 aserver, afs_int3
 	     */
 	    if (pass == 1) {
 	       MapPartIdIntoName(apart, pname);
-	       fprintf(STDERR,"*** Warning: Orphaned RO volume %u exists on %s %s\n",
-		       volumeinfo->volid, hostutil_GetNameByINet(aserver), pname);
+	       fprintf(STDERR,"*** Warning: Orphaned RO volume %lu exists on %s %s\n",
+		       (unsigned long) volumeinfo->volid,
+		       hostutil_GetNameByINet(aserver), pname);
 	       fprintf(STDERR,"    VLDB reports its RO volume ID is %u\n",
 		       entry.volumeId[ROVOL]);
 	    }
@@ -4453,7 +4537,8 @@ static afs_int32 CheckVolume(volintInfo *volumeinfo, afs_int32 aserver, afs_int3
       if (createentry) {
 	 code = VLDB_CreateEntry(&storeEntry);
 	 if (code) {
-	    fprintf(STDOUT,"Could not create a VLDB entry for the volume %u\n", rwvolid);
+	    fprintf(STDOUT,"Could not create a VLDB entry for the volume %lu\n",
+		    (unsigned long) rwvolid);
 	    ERROR_EXIT(code);
 	 }
       }
@@ -4462,7 +4547,8 @@ static afs_int32 CheckVolume(volintInfo *volumeinfo, afs_int32 aserver, afs_int3
 	 code = VLDB_ReplaceEntry(rwvolid, RWVOL, &storeEntry,
 				  LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
 	 if (code) {
-	    fprintf(STDERR,"Could not update entry for %u\n", rwvolid);
+	    fprintf(STDERR,"Could not update entry for %lu\n",
+		    (unsigned long) rwvolid);
 	    ERROR_EXIT(code);
 	 }
       }
@@ -4772,8 +4858,8 @@ int UV_SyncVldb(afs_int32 aserver, afs_int32 apart, int flags, int force)
 	  tentries++;
 
 	  if (verbose) {
-	     fprintf(STDOUT,"Processing volume entry %d: %s (%u) on server %s %s...\n",
-		     j+1, vi->name, vi->volid,
+	     fprintf(STDOUT,"Processing volume entry %d: %s (%lu) on server %s %s...\n",
+		     j+1, vi->name, (unsigned long) vi->volid,
 		     hostutil_GetNameByINet(aserver), pname);
 	     fflush(STDOUT);
 	  }
@@ -5455,13 +5541,15 @@ int UV_VolumeZap(afs_int32 server, afs_int32 part, afs_int32 volid)
     aconn = UV_Bind(server, AFSCONF_VOLUMEPORT);
     code = AFSVolTransCreate(aconn, volid, part, ITOffline, &ttid);
     if(code){
-	fprintf(STDERR,"Could not start transaction on volume %u\n",volid);
+	fprintf(STDERR,"Could not start transaction on volume %lu\n",
+		(unsigned long) volid);
 	error = code;
 	goto zfail;
     }
     code = AFSVolDeleteVolume(aconn, ttid);
     if(code){
-	fprintf(STDERR,"Could not delete volume %u\n",volid);
+	fprintf(STDERR,"Could not delete volume %lu\n",
+		(unsigned long) volid);
 	error = code;
 	goto zfail;
     }
@@ -5469,7 +5557,8 @@ int UV_VolumeZap(afs_int32 server, afs_int32 part, afs_int32 volid)
     ttid = 0;
     if(!code) code = rcode;
     if(code){
-	fprintf(STDERR,"Could not end transaction on volume %u\n",volid);
+	fprintf(STDERR,"Could not end transaction on volume %lu\n",
+		(unsigned long) volid);
 	error = code;
 	goto zfail;
     }

@@ -212,7 +212,7 @@ int namei_ViceREADME(char *partition)
    sprintf(filename, "%s/%s/README", partition, INODEDIR);
    fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0444);
    if (fd >= 0) {
-      write(fd, VICE_README, strlen(VICE_README));
+      (void) write(fd, VICE_README, strlen(VICE_README));
       close(fd);
    }
    return(errno);
@@ -1448,7 +1448,7 @@ int namei_ConvertROtoRWvolume(IHandle_t * h, afs_uint32 vid)
         return EIO;
     }
 
-    while (dp = readdir(dirp)) {
+    while ((dp = readdir(dirp))) {
         /* struct ViceInodeInfo info; */
 
         if (*dp->d_name == '.') continue;
