@@ -342,8 +342,6 @@ int ParseCacheInfoFile()
 	    printf("\t%d out of 3 fields successfully parsed.\n",
 		   parseResult);
 
-	printf("\tcacheMountDir: '%s'\n\tcacheBaseDir: '%s'\n\tcacheBlocks: %d\n",
-	       cacheMountDir, cacheBaseDir, cacheBlocks);
 	return(1);
     }
 
