@@ -35,7 +35,7 @@ all: kinstall ukinstall ${TOP_INCDIR}/afs/afs.h ${TOP_INCDIR}/afs/osi_inode.h ${
 		pmax_ul43 | pmax_ul43a) \
 			${INSTALL} longc_procs.h ${TOP_INCDIR}/afs ;; \
 	esac
-	case ${SYS_NAME} in \
+	-case ${SYS_NAME} in \
 		*linux* ) \
 			${INSTALL} ${AFS_OSTYPE}/osi_vfs.h ${TOP_INCDIR}/afs ;;\
 		* ) \
@@ -156,7 +156,7 @@ dest:   ${DEST}/include/afs/afs.h ${DEST}/include/afs/osi_inode.h ${DEST}/includ
 		* ) \
 			${INSTALL} afszcm.cat ${DEST}/root.client/usr/vice/etc/C ;; \
 	esac
-	case ${SYS_NAME} in \
+	-case ${SYS_NAME} in \
 		*linux* ) \
 			${INSTALL} ${AFS_OSTYPE}/osi_vfs.h ${DEST}/include/afs ;;\
 		* ) \
