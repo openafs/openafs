@@ -377,7 +377,9 @@ rxi_Listen(sock)
 	printf("Unable to create socket listener thread\n");
 	exit(1);
     }
+    MUTEX_ENTER(&rx_stats_mutex);
     ++rxi_pthread_hinum;
+    MUTEX_EXIT(&rx_stats_mutex);
     AFS_SIGSET_RESTORE();
     return 0;
 }

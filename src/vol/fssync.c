@@ -252,10 +252,23 @@ static void FSYNC_sync() {
     extern VInit;
     int code;
     int numTries;
+#ifdef AFS_PTHREAD_ENV
+    int tid;
+#endif
 
 #ifndef AFS_NT40_ENV
     signal(SIGPIPE, SIG_IGN);
 #endif
+
+#ifdef AFS_PTHREAD_ENV
+    /* set our 'thread-id' so that the host hold table works */ 
+    MUTEX_ENTER(&rx_stats_mutex);   /* protects rxi_pthread_hinum */
+    tid=++rxi_pthread_hinum;
+    MUTEX_EXIT(&rx_stats_mutex);
+    pthread_setspecific(rx_thread_id_key, (void *)tid);
+    Log("Set thread id %d for FSYNC_sync\n", tid);
+#endif /* AFS_PTHREAD_ENV */
+
     while (!VInit) {
       /* Let somebody else run until level > 0.  That doesn't mean that 
        * all volumes have been attached. */
