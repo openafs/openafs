@@ -201,6 +201,7 @@ struct cell {
     u_short vlport;			    /* volume server port */
     short states;			    /* state flags */
     short cellIndex;			    /* relative index number per cell */
+    short realcellIndex;		    /* as above but ignoring aliases */
     time_t timeout;			    /* data expire time, if non-zero */
     char *realName;			    /* who this cell is an alias for */
 };
@@ -616,7 +617,7 @@ struct vcache {
 #ifdef AFS_DARWIN_ENV
     struct lock__bsd__      rwlock;
 #endif
-    afs_int32 parentVnode;			/* Parent dir, if a file. */
+    afs_int32 parentVnode;		/* Parent dir, if a file. */
     afs_int32 parentUnique;
     struct VenusFid *mvid;		/* Either parent dir (if root) or root (if mt pt) */
     char *linkData;			/* Link data if a symlink. */
@@ -1140,6 +1141,18 @@ extern int afs_norefpanic;
 #endif /* AFS_DECOSF_ENV */
 #endif /* AFS_SGI62_ENV */
 #endif
+
+/* fakestat support: opaque storage for afs_EvalFakeStat to remember
+ * what vcache should be released.
+ */
+struct afs_fakestat_state {
+    char valid;
+    char did_eval;
+    char need_release;
+    struct vcache *root_vp;
+};
+
+extern int afs_fakestat_enable;
 
 #endif	/* _AFS_H_ */
 

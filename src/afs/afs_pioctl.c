@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_pioctl.c,v 1.13 2002/06/10 12:02:03 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_pioctl.c,v 1.14 2002/08/02 04:57:37 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -131,18 +131,18 @@ static int (*(VpioctlSw[]))() = {
   PRxStatPeer,			/* 54 - control peer RX statistics */
   PGetRxkcrypt,			/* 55 -- Get rxkad encryption flag */
   PSetRxkcrypt,			/* 56 -- Set rxkad encryption flag */
-  PNoop,			/* 57 -- arla: set file prio */
-  PNoop,			/* 58 -- arla: fallback getfh */
-  PNoop,			/* 59 -- arla: fallback fhopen */
-  PNoop,			/* 60 -- arla: controls xfsdebug */
-  PNoop,			/* 61 -- arla: controls arla debug */
-  PNoop,			/* 62 -- arla: debug interface */
-  PNoop,			/* 63 -- arla: print xfs status */
-  PNoop,			/* 64 -- arla: force cache check */
-  PNoop,			/* 65 -- arla: break callback */
+  PBogus,			/* 57 -- arla: set file prio */
+  PBogus,			/* 58 -- arla: fallback getfh */
+  PBogus,			/* 59 -- arla: fallback fhopen */
+  PBogus,			/* 60 -- arla: controls xfsdebug */
+  PBogus,			/* 61 -- arla: controls arla debug */
+  PBogus,			/* 62 -- arla: debug interface */
+  PBogus,			/* 63 -- arla: print xfs status */
+  PBogus,			/* 64 -- arla: force cache check */
+  PBogus,			/* 65 -- arla: break callback */
   PPrefetchFromTape,            /* 66 -- MR-AFS: prefetch file from tape */
   PResidencyCmd,                /* 67 -- MR-AFS: generic commnd interface */
-  PNoop,			/* 68 -- arla: fetch stats */
+  PBogus,			/* 68 -- arla: fetch stats */
 };
 
 static int (*(CpioctlSw[]))() = {
@@ -1021,7 +1021,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
   
   
 afs_HandlePioctl(avc, acom, ablob, afollow, acred)
-     register struct vcache *avc;
+     struct vcache *avc;
      afs_int32 acom;
      struct AFS_UCRED **acred;
      register struct afs_ioctl *ablob;
@@ -1034,11 +1034,20 @@ afs_HandlePioctl(avc, acom, ablob, afollow, acred)
     char *inData, *outData;
     int (*(*pioctlSw))();
     int pioctlSwSize;
+    struct afs_fakestat_state fakestate;
 
     afs_Trace3(afs_iclSetp, CM_TRACE_PIOCTL, ICL_TYPE_INT32, acom & 0xff,
 	       ICL_TYPE_POINTER, avc, ICL_TYPE_INT32, afollow);
     AFS_STATCNT(HandlePioctl);
     if (code = afs_InitReq(&treq, *acred)) return code;
+    afs_InitFakeStat(&fakestate);
+    if (avc) {
+	code = afs_EvalFakeStat(&avc, &fakestate, &treq);
+	if (code) {
+	    afs_PutFakeStat(&fakestate);
+	    return code;
+	}
+    }
     device = (acom & 0xff00) >> 8;
     switch (device) {
 	case 'V':	/* Original pioctl's */
@@ -1050,11 +1059,13 @@ afs_HandlePioctl(avc, acom, ablob, afollow, acred)
 		pioctlSwSize = sizeof(CpioctlSw);
 		break;
 	default:
+		afs_PutFakeStat(&fakestate);
 		return EINVAL;
     }
     function = acom & 0xff;
     if (function >= (pioctlSwSize / sizeof(char *))) {
-      return EINVAL;	/* out of range */
+	afs_PutFakeStat(&fakestate);
+	return EINVAL;	/* out of range */
     }
     inSize = ablob->in_size;
     if (inSize >= PIGGYSIZE) return E2BIG;
@@ -1064,8 +1075,9 @@ afs_HandlePioctl(avc, acom, ablob, afollow, acred)
     }
     else code = 0;
     if (code) {
-      osi_FreeLargeSpace(inData);
-      return code;
+	osi_FreeLargeSpace(inData);
+	afs_PutFakeStat(&fakestate);
+	return code;
     }
     outData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     outSize = 0;
@@ -1081,6 +1093,7 @@ afs_HandlePioctl(avc, acom, ablob, afollow, acred)
 	AFS_COPYOUT(outData, ablob->out, outSize, code);
     }
     osi_FreeLargeSpace(outData);
+    afs_PutFakeStat(&fakestate);
     return afs_CheckCode(code, &treq, 41);
   }
   
@@ -1415,7 +1428,7 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
       ain += sizeof(afs_int32);			/* skip id field */
       /* rest is cell name, look it up */
       /* some versions of gcc appear to need != 0 in order to get this right */
-      if (flag & 0x8000 != 0) {			/* XXX Use Constant XXX */
+      if ((flag & 0x8000) != 0) {		/* XXX Use Constant XXX */
 	  flag &= ~0x8000;
 	  set_parent_pag = 1;
       }
@@ -1715,7 +1728,7 @@ static PNewStatMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
 	code = ENOENT;
 	goto out;
     }
-    if (vType(tvc) != VLNK) {
+    if (tvc->mvstat != 1) {
 	afs_PutVCache(tvc, WRITE_LOCK);
 	code = EINVAL;
 	goto out;
@@ -2374,17 +2387,7 @@ static PListCells(avc, afun, areq, ain, aout, ainSize, aoutSize)
 
     memcpy((char *)&whichCell, tp, sizeof(afs_int32));
     tp += sizeof(afs_int32);
-    ObtainReadLock(&afs_xcell);
-    for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
-	tcell = QTOC(cq); tq = QNext(cq);
-	if (tcell->states & CAlias) {
-	    tcell = 0;
-	    continue;
-	}
-	if (whichCell == 0) break;
-	tcell = 0;
-	whichCell--;
-    }
+    tcell = afs_GetRealCellByIndex(whichCell, READ_LOCK, 0);
     if (tcell) {
 	cp = aout;
 	memset(cp, 0, MAXCELLHOSTS * sizeof(afs_int32));
@@ -2398,7 +2401,6 @@ static PListCells(avc, afun, areq, ain, aout, ainSize, aoutSize)
 	cp += strlen(tcell->cellName)+1;
 	*aoutSize = cp - aout;
     }
-    ReleaseReadLock(&afs_xcell);
     if (tcell) return 0;
     else return EDOM;
 }
@@ -2501,7 +2503,7 @@ static PRemoveMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
 	afs_PutDCache(tdc);
 	goto out;
     }
-    if (vType(tvc) != VLNK) {
+    if (tvc->mvstat != 1) {
 	afs_PutDCache(tdc);
 	afs_PutVCache(tvc, WRITE_LOCK);
 	code = EINVAL;
@@ -3698,7 +3700,7 @@ static PFlushMount(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
 	code = ENOENT;
 	goto out;
     }
-    if (vType(tvc) != VLNK) {
+    if (tvc->mvstat != 1) {
 	afs_PutVCache(tvc, WRITE_LOCK);
 	code = EINVAL;
 	goto out;

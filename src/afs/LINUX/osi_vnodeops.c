@@ -23,7 +23,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.12 2002/05/12 05:50:42 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.13 2002/08/02 04:57:38 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -42,6 +42,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.12 2002/05
 #endif
 
 extern struct vcache *afs_globalVp;
+extern afs_rwlock_t afs_xvcache;
 
 extern struct dentry_operations *afs_dops;
 #if defined(AFS_LINUX24_ENV)
@@ -169,6 +170,7 @@ static int afs_linux_readdir(struct file *fp,
     int len;
     int origOffset;
     cred_t *credp = crref();
+    struct afs_fakestat_state fakestat;
 
     AFS_GLOCK();
     AFS_STATCNT(afs_readdir);
@@ -180,10 +182,19 @@ static int afs_linux_readdir(struct file *fp,
 	return -code;
     }
 
+    afs_InitFakeStat(&fakestat);
+    code = afs_EvalFakeStat(&avc, &fakestat, &treq);
+    if (code) {
+	afs_PutFakeStat(&fakestat);
+	AFS_GUNLOCK();
+	return -code;
+    }
+
     /* update the cache entry */
 tagain:
     code = afs_VerifyVCache(avc, &treq);
     if (code) {
+	afs_PutFakeStat(&fakestat);
 	AFS_GUNLOCK();
 	return -code;
     }
@@ -191,6 +202,7 @@ tagain:
     /* get a reference to the entire directory */
     tdc = afs_GetDCache(avc, 0, &treq, &origOffset, &len, 1);
     if (!tdc) {
+	afs_PutFakeStat(&fakestat);
 	AFS_GUNLOCK();
 	return -ENOENT;
     }
@@ -284,6 +296,7 @@ tagain:
 
     afs_PutDCache(tdc);
     ReleaseReadLock(&avc->lock);
+    afs_PutFakeStat(&fakestat);
     AFS_GUNLOCK();
     return 0;
 }
@@ -530,6 +543,13 @@ static int afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
     AFS_GLOCK();
     code = afs_lockctl(vcp, &flock, cmd, credp);
     AFS_GUNLOCK();
+
+    /* Convert flock back to Linux's file_lock */
+    flp->fl_type = flock.l_type;
+    flp->fl_pid = flock.l_pid;
+    flp->fl_start = flock.l_start;
+    flp->fl_end = flock.l_start + flock.l_len;
+
     crfree(credp);
     return -code;
     
@@ -654,20 +674,33 @@ static int afs_linux_revalidate(struct dentry *dp)
     cred_t *credp;
     struct vrequest treq;
     struct vcache *vcp = ITOAFS(dp->d_inode);
+    struct vcache *rootvp = NULL;
 
     AFS_GLOCK();
+
+    if (afs_fakestat_enable && vcp->mvstat == 1 && vcp->mvid &&
+	(vcp->states & CMValid) && (vcp->states & CStatd)) {
+	ObtainSharedLock(&afs_xvcache, 680);
+	rootvp = afs_FindVCache(vcp->mvid, 0, 0, 0, 0);
+	ReleaseSharedLock(&afs_xvcache);
+    }
+
 #ifdef AFS_LINUX24_ENV
     lock_kernel();
 #endif
 
     /* Make this a fast path (no crref), since it's called so often. */
     if (vcp->states & CStatd) {
-        if (*dp->d_name.name != '/' && vcp->mvstat == 2) /* root vnode */
+	if (*dp->d_name.name != '/' && vcp->mvstat == 2) /* root vnode */
 	    check_bad_parent(dp); /* check and correct mvid */
-	vcache2inode(vcp);
+	if (rootvp)
+	    vcache2fakeinode(rootvp, vcp);
+	else
+	    vcache2inode(vcp);
 #ifdef AFS_LINUX24_ENV
 	unlock_kernel();
 #endif
+	if (rootvp) afs_PutVCache(rootvp);
 	AFS_GUNLOCK();
 	return 0;
     }
@@ -808,13 +841,39 @@ static int afs_linux_dentry_revalidate(struct dentry *dp)
 /* afs_dentry_iput */
 static void afs_dentry_iput(struct dentry *dp, struct inode *ip)
 {
+    if (ICL_SETACTIVE(afs_iclSetp)) {
+	AFS_GLOCK();
+	afs_Trace3(afs_iclSetp, CM_TRACE_DENTRYIPUT,
+		   ICL_TYPE_POINTER, ip,
+		   ICL_TYPE_STRING, dp->d_parent->d_name.name,
+		   ICL_TYPE_STRING, dp->d_name.name);
+	AFS_GUNLOCK();
+    }
+
     osi_iput(ip);
+}
+
+static int afs_dentry_delete(struct dentry *dp)
+{
+    if (ICL_SETACTIVE(afs_iclSetp)) {
+	AFS_GLOCK();
+	afs_Trace3(afs_iclSetp, CM_TRACE_DENTRYDELETE, ICL_TYPE_POINTER, 
+		   dp->d_inode, ICL_TYPE_STRING, dp->d_parent->d_name.name,
+		   ICL_TYPE_STRING, dp->d_name.name);
+	AFS_GUNLOCK();
+    }
+
+    if (dp->d_inode && (ITOAFS(dp->d_inode)->states & CUnlinked))
+	return 1;               /* bad inode? */
+
+    return 0;
 }
 
 #if defined(AFS_LINUX24_ENV)
 struct dentry_operations afs_dentry_operations = {
        d_revalidate:   afs_linux_dentry_revalidate,
        d_iput:         afs_dentry_iput,
+       d_delete:       afs_dentry_delete,
 };
 struct dentry_operations *afs_dops = &afs_dentry_operations;
 #else
@@ -822,7 +881,7 @@ struct dentry_operations afs_dentry_operations = {
 	afs_linux_dentry_revalidate,	/* d_validate(struct dentry *) */
 	NULL,			/* d_hash */
 	NULL,			/* d_compare */
-	NULL,			/* d_delete(struct dentry *) */
+	afs_dentry_delete,	/* d_delete(struct dentry *) */
 	NULL,			/* d_release(struct dentry *) */
 	afs_dentry_iput		/* d_iput(struct dentry *, struct inode *) */
 };
@@ -977,7 +1036,6 @@ int afs_linux_unlink(struct inode *dip, struct dentry *dp)
     int code;
     cred_t *credp = crref();
     const char *name = dp->d_name.name;
-    int putback = 0;
 
     AFS_GLOCK();
     code = afs_remove(ITOAFS(dip), name, credp);
@@ -1347,13 +1405,24 @@ int afs_linux_writepage_sync(struct inode *ip, struct page *pp,
               ICL_TYPE_POINTER, pp,
               ICL_TYPE_INT32, atomic_read(&pp->count),
               ICL_TYPE_INT32, 99999);
+
     setup_uio(&tuio, &iovec, buffer, base, count, UIO_WRITE, AFS_UIOSYS);
 
     code = afs_write(vcp, &tuio, f_flags, credp, 0);
 
     vcache2inode(vcp);
 
+    if (!code && afs_stats_cmperf.cacheCurrDirtyChunks >
+		 afs_stats_cmperf.cacheMaxDirtyChunks) {
+	struct vrequest treq;
+
+	ObtainWriteLock(&vcp->lock, 533);
+	if (!afs_InitReq(&treq, credp))
+	    code = afs_DoPartialWrite(vcp, &treq);
+	ReleaseWriteLock(&vcp->lock);
+    }
     code = code ? -code : count - tuio.uio_resid;
+
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
               ICL_TYPE_POINTER, pp,
               ICL_TYPE_INT32, atomic_read(&pp->count),
