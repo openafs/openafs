@@ -1,3 +1,10 @@
+openafs (1.2.11-1) unstable; urgency=high
+
+  * Versions prior to 1.2.10 stopped working with multiple servers in a
+    cell because of a ubik bug prompting the 1.2.11 release.
+
+ -- Sam Hartman <hartmans@debian.org>  Sat, 10 Jan 2004 16:23:54 -0500
+
 openafs (1.2.10-3) unstable; urgency=low
 
   * Fix Openafs not to include kernel headers from /usr/include,
