@@ -597,7 +597,7 @@ KDUMP=kdump
 case $AFS_SYSNAME in
 	sgi_6?)
 		KDUMP=kdump.IP20;;
-	sun4x_5[789] | hp_ux11*)
+	sun4x_5[[789]] | hp_ux11*)
 		KDUMP=kdump32
 		KDUMP64=kdump64;;
 	*linux*)

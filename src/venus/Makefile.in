@@ -102,7 +102,7 @@ ${DEST}/etc/${KDUMP}: ${KDUMP}
 		${INSTALL} -s $? $@ ;; \
 	esac
 
-${DEST}/etc/kdump64: kdump64
+${DEST}/etc/${KDUMP64}: ${KDUMP64}
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_5[789] | hp_ux11* |sunx86_5[789] ) \
@@ -239,23 +239,23 @@ ${KDUMP}.o: kdump.c ${INCLS} AFS_component_version_number.c
 		*nbsd*) \
 			touch kdump.o ;; \
 		*) \
-			${CC} ${KERN_DBG} ${KERN_OPTMZ} -I${TOP_INCDIR}/afs -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} -c ${srcdir}/kdump.c ;; \
+			${CC} ${KERN_DBG} ${KERN_OPTMZ} -I${TOP_SRCDIR} -I${TOP_INCDIR}/afs -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS} -o ${KDUMP}.o -c ${srcdir}/kdump.c ;; \
 	esac ;
 
-kdump64.o : kdump.c ${INCLS} AFS_component_version_number.c
+${KDUMP64}.o : kdump.c ${INCLS} AFS_component_version_number.c
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_5[789] | hp_ux11* |sunx86_5[789] ) \
-		${CC} ${KERN_DBG} ${KERN_OPTMZ} -I${TOP_INCDIR}/afs -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS64} -o kdump64.o -c ${srcdir}/kdump.c ;; \
+		${CC} ${KERN_DBG} ${KERN_OPTMZ} -I${TOP_SRCDIR} -I${TOP_INCDIR}/afs -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS64} -o ${KDUMP64}.o -c ${srcdir}/kdump.c ;; \
 	esac
 
 ${KDUMP}:  ${KDUMP}.o
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53 | sun4_53 | sun4_54 | sun4c_54 | sun4m_54 | sunx86_5? ) \
-		${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a /usr/lib/libkvm.a -lelf ${XLIBS} ;; \
+		${CC} -o ${KDUMP} ${KDUMP}.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a /usr/lib/libkvm.a -lelf ${XLIBS} ;; \
 	sun*_5? ) \
-		${CC} -o kdump kdump.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a  ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
+		${CC} -o ${KDUMP} ${KDUMP}.o ${TOP_LIBDIR}/libcmd.a  ${TOP_LIBDIR}/util.a  ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
 	sgi_6? ) \
 		for f in ../libafs/STATIC.IP*/CPU_KDEFS; \
 		do	IP=`expr "$$f" : '../libafs/STATIC.\(IP..\)'`; \
@@ -288,11 +288,11 @@ ${KDUMP}:  ${KDUMP}.o
 
 ## kdump to read from 64 bit kernel dumps
 
-kdump64 : kdump64.o
+${KDUMP64}: ${KDUMP64}.o
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_5[789] | hp_ux11* |sunx86_5[789] )  \
-		${CC} ${XCFLAGS64} -o kdump64 kdump64.o ${TOP_LIBDIR}/libcmd64.a ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
+		${CC} ${XCFLAGS64} -o ${KDUMP64} ${KDUMP64}.o ${TOP_LIBDIR}/libcmd64.a ${XLIBELFA} ${XLIBKVM} ${XLIBS} ;; \
 	esac
 
 #
