@@ -299,7 +299,7 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 #endif
 	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
-#if !defined(AFS_VM_RDWR_ENV) || defined(AFS_LINUX22_ENV)
+#if !defined(AFS_VM_RDWR_ENV)
 	/*
 	 * If write is implemented via VM, afs_DoPartialWrite() is called from
 	 * the high-level write op.
@@ -618,7 +618,7 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
 	osi_UFSClose(tfile);
 	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
-#if !defined(AFS_VM_RDWR_ENV) || defined(AFS_LINUX22_ENV)
+#if !defined(AFS_VM_RDWR_ENV)
 	/*
 	 * If write is implemented via VM, afs_DoPartialWrite() is called from
 	 * the high-level write op.
