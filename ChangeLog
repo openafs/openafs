@@ -1,3 +1,772 @@
+2002-05-15 16:07  zacheiss
+
+        * src/: afs/LINUX/osi_misc.c, rx/LINUX/rx_knet.c: 
+        DELTA STABLE12-linux-really-fix-shutdown-hang-20020515 AUTHOR
+        warlord@mit.edu
+        
+        osi_linux_unmask() needs to explicitly flush_signals() before
+        calling recalc_sigpending(), otherwise recent kernels don't appear
+        to deliver new instances of any signals already received.
+        
+        Revert back to using SIGKILL at shutdown time, but use SIGKILL
+        instead of explicitly using signal 9, because abstraction is your
+        friend.
+
+2002-05-14 19:09  zacheiss
+
+        * src/rx/LINUX/rx_knet.c: 
+        DELTA STABLE12-linux-use-sigterm-at-shutdown-time-20020514 AUTHOR
+        warlord@mit.edu
+        
+        Seems to fix a hang at shutdown time seen on Redhat 7.3 kernels;
+        doesn't appear to affect older kernels.
+
+2002-05-14 18:53  zacheiss
+
+        * src/libafs/MakefileProto.LINUX.in: 
+        DELTA STABLE12-build-support-for-bigmem-kernels-20020514 AUTHOR
+        warlord@mit.edu
+        
+        Allows us to build modules for the bigmem kernels redhat started
+        shipping.
+
+2002-05-12 21:17  zacheiss
+
+        * NEWS: 
+        DELTA STABLE12-update-news-file-20020512 AUTHOR zacheiss@mit.edu
+        
+        Update NEWS file for user visible changes in 1.2.4.
+
+2002-05-12 21:15  zacheiss
+
+        * doc/txt/RELNOTES-1.2.4: 
+        DELTA STABLE12-add-1_2_4-release-notes-20020512 AUTHOR
+        zacheiss@mit.edu
+        
+        Add 1.2.4 release notes.
+
+2002-05-10 15:02  zacheiss
+
+	* configure-libafs.in, configure.in: 
+	DELTA STABLE12-create-openafs-1_2_4-20020510 AUTHOR
+	zacheiss@mit.edu
+	
+	begin release cycle.
+
+2002-05-09 18:07  zacheiss
+
+	* src/afs/afs_dcache.c: 
+	DELTA STABLE12-fix-dynroot-support-with-memcache-20020509 AUTHOR
+	kolya@mit.edu
+	
+	Avoid kernel panic when dynroot and memcache are used
+	simultaneously.
+
+2002-05-06 12:21  shadow
+
+	* src/afs/LINUX/osi_vnodeops.c: DELTA
+	STABLE12-need-prototype-for-osi-dnlc-lookup-20020503 AUTHOR
+	chas@cmf.nrl.navy.mil
+	
+	Include afs_osidnlc.h for osi_dnlc_lookup() prototype.	Apparently
+	fixes a panic on ia64.
+
+2002-05-03 15:06  zacheiss
+
+	* src/afs/LINUX/osi_vnodeops.c: 
+	DELTA STABLE12-need-prototype-for-osi-dnlc-lookup-20020503 AUTHOR
+	chas@cmf.nrl.navy.mil
+	
+	Include afs_osidnlc.h for osi_dnlc_lookup() prototype.	Apparently
+	fixes a panic on ia64.
+
+2002-05-02 11:59  zacheiss
+
+	* Makefile.in, src/config/Makefile.ia64_linux24.in: 
+	DELTA STABLE12-linux-ia64-build-pam-module-20020502 AUTHOR
+	chas@cmf.nrl.navy.mil
+	
+	keep small globals from being gprel
+
+2002-05-02 11:38  zacheiss
+
+	* src/afs/LINUX/osi_module.c: 
+	DELTA STABLE12-linux-ia64-no-asm-syscall-stubs-20020502 AUTHOR
+	chas@cmf.nrl.navy.mil
+	
+	rewrite syscall stubs not in machine code
+
+2002-05-02 11:36  zacheiss
+
+	* src/afs/LINUX/osi_vnodeops.c: 
+	DELTA STABLE12-linux-revalidate-root-always-good-20020502 AUTHOR
+	kwc@citi.umich.edu
+	
+	avoid ESTALE in 2.4.19-pre7
+
+2002-04-29 15:17  zacheiss
+
+	* src/rx/rx_kcommon.c: 
+	DELTA STABLE12-dont-spawn-kernel-thread-for-rxk-listener-20020426
+	AUTHOR kolya@mit.edu
+	
+	Don't spawn a separate kernel thread for rx kernel listener under
+	Solaris, but instead just use the afsd fork for the listener. Use
+	of newproc() is deprecated, according to Frank.Batschulat@Sun.COM.
+
+2002-04-29 15:13  zacheiss
+
+	* src/afs/SOLARIS/osi_inode.c: 
+	DELTA STABLE12-dont-bother-updating-free-inodes-20020426 AUTHOR
+	kolya@mit.edu
+	
+	If the inode is not allocated, don't bother updating timestamps. 
+	Pointed out by Frank.Batschulat@Sun.COM.
+
+2002-04-29 11:33  shadow
+
+	* src/config/param.ppc_darwin_14.h: DELTA
+	STABLE12-darwin-use-namei-fileserver-20020429 AUTHOR
+	cg2v@andrew.cmu.edu
+	
+	build namei fileserver for darwin
+
+2002-04-29 11:27  shadow
+
+	* .cvsignore, src/rxkad/.cvsignore, src/venus/.cvsignore: DELTA
+	STABLE12-cvsignore-updates-20020429 AUTHOR cg2v@andrew.cmu.edu
+	
+	stuff missed in the stable branch
+
+2002-04-25 17:47  shadow
+
+	* acinclude.m4: DELTA STABLE12-darwin-map-more-versions-20020425
+	AUTHOR cg2v@andrew.cmu.edu
+	
+	5.3 and 5.4 are "Same" enough
+
+2002-04-25 17:22  shadow
+
+	* src/afs/DARWIN/osi_vnodeops.c: DELTA
+	STABLE12-darwin-fix-build-20020401 AUTHOR shadow@dementia.org
+	
+	add missing )
+
+2002-04-25 17:19  shadow
+
+	* src/rxkad/rxkad_common.c: DELTA
+	STABLE12-rxkad-stats-initialize-to-placate-darwin-compiler-20020425
+	AUTHOR cg2v@andrew.cmu.edu
+	
+	because it deals badly with common symbols
+
+2002-04-23 21:49  zacheiss
+
+	* src/afs/: afs.h, afs_vcache.c, LINUX/osi_misc.c,
+	LINUX/osi_vfsops.c, LINUX/osi_vm.c, LINUX/osi_vnodeops.c: 
+	DELTA
+	STABLE12-convert-linux-macros-for-inodes-appropriately-20020325
+	AUTHOR shadow@dementia.org
+	
+	even though right now a vnode and an inode are basically but not
+	exactly the same, part of the usefulness of this change is the
+	ability to convert to inodes linked from vcaches later. make the
+	macros fit with this view of the fture
+
+2002-04-23 21:41  zacheiss
+
+	* src/afs/: afs.h, afs_daemons.c, afs_nfsdisp.c, afs_osi.c,
+	afs_pioctl.c, afs_vcache.c, AIX/osi_vfsops.c, AIX/osi_vm.c,
+	AIX/osi_vnodeops.c, DARWIN/osi_vfsops.c, DARWIN/osi_vm.c,
+	DARWIN/osi_vnodeops.c, DUX/osi_machdep.h, DUX/osi_vfsops.c,
+	DUX/osi_vm.c, DUX/osi_vnodeops.c, FBSD/osi_vfsops.c, FBSD/osi_vm.c,
+	HPUX/osi_machdep.h, HPUX/osi_vfsops.c, HPUX/osi_vm.c,
+	HPUX/osi_vnodeops.c, IRIX/osi_machdep.h, IRIX/osi_vfsops.c,
+	IRIX/osi_vm.c, IRIX/osi_vnodeops.c, LINUX/osi_misc.c,
+	LINUX/osi_vfsops.c, LINUX/osi_vm.c, LINUX/osi_vnodeops.c,
+	SOLARIS/osi_machdep.h, SOLARIS/osi_vfsops.c, SOLARIS/osi_vm.c,
+	SOLARIS/osi_vnodeops.c, UKERNEL/afs_usrops.c,
+	UKERNEL/osi_machdep.h, UKERNEL/osi_vfsops.c,
+	UKERNEL/osi_vnodeops.c, VNOPS/afs_vnop_attrs.c,
+	VNOPS/afs_vnop_create.c, VNOPS/afs_vnop_dirops.c,
+	VNOPS/afs_vnop_fid.c, VNOPS/afs_vnop_flock.c,
+	VNOPS/afs_vnop_link.c, VNOPS/afs_vnop_lookup.c,
+	VNOPS/afs_vnop_open.c, VNOPS/afs_vnop_remove.c,
+	VNOPS/afs_vnop_rename.c, VNOPS/afs_vnop_strategy.c,
+	VNOPS/afs_vnop_symlink.c, VNOPS/afs_vnop_write.c: 
+	DELTA STABLE12-convert-vcache-casts-to-macros-20020325 AUTHOR
+	joda@pdc.kth.se
+	
+	convert vcache casting in cache manager to macros
+	
+	should ease further changes later
+
+2002-04-23 18:22  zacheiss
+
+	* src/libafs/MakefileProto.LINUX.in: 
+	DELTA STABLE12-linux-provide-sysctl-interface-20020206 AUTHOR
+	aedil@sinenomine.net
+	
+	provide sysctl interface for toggling module state. provide hooks
+	for all currently known tweakable items
+	
+	(complete earlier incomplete pullup)
+
+2002-04-23 09:46  shadow
+
+	* src/afs/LINUX/osi_module.c: DELTA
+	STABLE12-linux-ia64-cleanup-casting-20020423 AUTHOR
+	chas@cmf.nrl.navy.mil
+	
+	so we don't need the SYSCALL2POINTER change
+
+2002-04-22 23:32  zacheiss
+
+	* src/afs/: afs_call.c, LINUX/osi_alloc.c, LINUX/osi_groups.c: 
+	DELTA STABLE12-sparc64-linux-and-setgroups32-cleanup-20020422
+	AUTHOR cg2v@andrew.cmu.edu
+	
+	update setgroups32 for 2.4 and make sparc64 linux2.4 work again
+
+2002-04-22 23:22  shadow
+
+	* src/config/Makefile.ia64_linux24.in: file
+	Makefile.ia64_linux24.in was initially added on branch
+	openafs-stable-1_2_x.
+
+2002-04-22 23:22  shadow
+
+	* Makefile.in, src/afs/LINUX/osi_module.c,
+	src/config/Makefile.ia64_linux24.in, src/kauth/client.c,
+	src/libafs/MakefileProto.LINUX.in: DELTA
+	STABLE12-linux-ia64-updates-20020422 AUTHOR chas@cmf.nrl.navy.mil
+	
+	updates to make it work with later 2.4
+	
+	SYSCALL2POINTER change may be unnecessary (sparc64 way should work)
+	but without any way to test...
+
+2002-04-22 12:06  shadow
+
+	* src/afs/VNOPS/afs_vnop_remove.c: DELTA
+	STABLE12-darwin-vnops-make-unlink-fix-fake-references-20020422
+	AUTHOR cg2v@andrew.cmu.edu
+	
+	so unlink doesn't panic us
+
+2002-04-22 11:43  shadow
+
+	* src/libadmin/pts/: afs_ptsAdmin.c, afs_ptsAdmin.h: DELTA
+	STABLE12-libadmin-pts-allow-listing-all-users-and-groups-20020422
+	AUTHOR strib@uclink4.berkeley.edu
+	
+	so the java api can take advantage of this
+
+2002-04-21 23:25  zacheiss
+
+	* src/afs/afs_nfsdisp.c: 
+	DELTA STABLE12-solaris-nfstrans-make-it-compile-20020404 AUTHOR
+	shadow@dementia.org
+	
+	it compiles. it's not pretty, but it does compile
+
+2002-04-21 17:16  zacheiss
+
+	* src/afs/VNOPS/afs_vnop_write.c: 
+	DELTA STABLE12-fix-aix-build-20020402 AUTHOR kolya@mit.edu
+	
+	Don't make tvc a register, since we want to dereference it later
+	on.  Pointed out by nneul@umr.edu.
+
+2002-04-21 17:11  zacheiss
+
+	* src/WINNT/afssvrmgr/cmdline.cpp: 
+	DELTA STABLE12-winnt-servermgr-use-existing-creds-option-20020401
+	AUTHOR D.Bailey@Bristol.ac.uk
+	
+	This adds /useexisting to use current AFS creds, bypassing the
+	initial authentication dialog box. It's useful if you're not
+	running kaserver (i.e. if you've moved over to kerberos 5) and
+	can't authenticate again by the normal AFS means.
+
+2002-04-21 17:08  zacheiss
+
+	* src/afs/VNOPS/afs_vnop_lookup.c: 
+	DELTA STABLE12-afs-dont-mask-rights-granted-by-lookup-20020328
+	AUTHOR shadow@dementia.org
+	
+	lookup is sufficient for this, fix the client not to bogusly
+	enforce extra restrictions
+
+2002-04-21 17:05  zacheiss
+
+	* src/venus/fstrace.c: 
+	DELTA STABLE12-fstrace-fix-memory-leak-20020325 AUTHOR
+	nneul@umr.edu
+	
+	avoid leaking catalog reference on failure
+
+2002-04-21 17:04  zacheiss
+
+	* .cvsignore: 
+	DELTA STABLE12-cvsignore-update-for-autoconf-25-20020325 AUTHOR
+	nneul@umr.edu
+	
+	autoconf 2.5x turds to ignore
+
+2002-04-21 17:01  zacheiss
+
+	* src/afs/VNOPS/: afs_vnop_create.c, afs_vnop_dirops.c,
+	afs_vnop_link.c, afs_vnop_remove.c, afs_vnop_rename.c,
+	afs_vnop_symlink.c: 
+	DELTA STABLE12-verify-name-lengths-in-vnops-20020324 AUTHOR
+	kolya@mit.edu
+	
+	Verify that name lengths are at most AFSNAMEMAX and symlink
+	contents are at most AFSPATHMAX (notably, the Linux kernel doesn't
+	check this for us); bug report by nneul@umr.edu.
+
+2002-04-21 16:58  zacheiss
+
+	* src/afs/VNOPS/afs_vnop_remove.c: 
+	DELTA STABLE12-initialize-tvc-on-osf-20020324 AUTHOR kolya@mit.edu
+	
+	Initialize tvc in afs_remove so that we don't call afs_PutVCache on
+	stack garbage in case of some failure.
+
+2002-04-21 16:54  zacheiss
+
+	* src/viced/host.c: 
+	DELTA
+	STABLE12-be-more-consistent-about-host-format-in-logfiles-20020324
+	AUTHOR kolya@mit.edu
+	
+	Clean up some more ViceLog calls to consistently refer to hosts in
+	a format like 18.239.2.102:7001, rather than memory address or hex
+	IP.
+
+2002-04-21 16:53  zacheiss
+
+	* src/afs/VNOPS/afs_vnop_write.c: 
+	DELTA
+	
+	prototyping caught this; the usage is inconsistent with other cases
+	and i believe this is the correct fix. it's not clear to me why we
+	weren't seeing problems from this, though
+	STABLE12-afs-memcachetruncate-takes-memcacheentry-not-inode-2002032
+	1 AUTHOR shadow@dementia.org
+
+2002-04-21 16:50  zacheiss
+
+	* src/afs/afs_server.c: 
+	DELTA
+	STABLE12-afs-checkservers-call-getuser-with-cell-index-20020321
+	AUTHOR nneul@umr.edu
+	
+	this means to be calling afs_GetUser with a cell index, not with
+	the cell structure itself
+
+2002-04-21 16:45  zacheiss
+
+	* src/afs/VNOPS/: afs_vnop_create.c, afs_vnop_dirops.c,
+	afs_vnop_link.c, afs_vnop_remove.c, afs_vnop_symlink.c: 
+	DELTA STABLE12-tru64-avoid-leaking-vnodes-when-failure-20020320
+	AUTHOR mattiasa@e.kth.se
+	
+	tru64 needs vrele when an error happens, rather than just
+	returning. make sure we do so
+
+2002-04-21 16:27  zacheiss
+
+	* src/vol/ihandle.c: 
+	DELTA STABLE12-nbsd-fileserver-dont-leak-fds-20020317 AUTHOR
+	lha@stacken.kth.se
+	
+	file server now works usefully on netbsd
+
+2002-04-21 16:23  zacheiss
+
+	* src/afs/afs_callback.c: 
+	DELTA STABLE12-do-afs-putcell-after-getcellbyindex-20020317 AUTHOR
+	kolya@mit.edu
+	
+	Call afs_PutCell after afs_GetCellByIndex, even though right now it
+	doesn't do anything.
+
+2002-04-21 16:12  zacheiss
+
+	* src/afs/afs_callback.c: 
+	DELTA STABLE12-callback-function-fixes-20020317 AUTHOR
+	shadow@dementia.org
+	
+	suggested by lha@stacken.kth.se
+	
+	drop locks when rxi_Alloc fails, and rework SRXAFSCB_GetCellServDB
+	to use afs_GetCellByIndex. He suggested same for GetLocalCell, and
+	as long as cell 1 and not CPrimary is the local cell indicator that
+	works, but I left that part of the code as is for now.
+
+2002-04-21 15:54  zacheiss
+
+	* src/afs/LINUX/osi_vnodeops.c: 
+	DELTA STABLE12-avoid-double-freeing-20020314 AUTHOR nneul@umr.edu
+	
+	Zero out the "allocated" flag so that we don't accidentally free
+	something that wasn't allocated.
+
+2002-04-21 15:51  zacheiss
+
+	* src/WINNT/afsd/smb3.h: 
+	DELTA STABLE12-winnt-deal-with-compiler-packing-20020310 AUTHOR
+	yeejiun@yahoo.com
+	
+	use pragmas to hit compiler into packing smb_tran2QFSInfo usefully
+
+2002-04-21 15:48  zacheiss
+
+	* src/libafs/MakefileProto.LINUX.in: 
+	DELTA STABLE12-fix-fomit-frame-pointer-typo-20020314 AUTHOR
+	nneul@umr.edu
+	
+	Fix typo: OMIT_FRAME_POINTER not FOMIT_FRAME_POINTER
+
+2002-04-21 15:46  zacheiss
+
+	* acinclude.m4, src/libafs/MakefileProto.LINUX.in: 
+	DELTA STABLE12-configure-allow-kernel-debugging-support-20020310
+	AUTHOR warlord@mit.edu
+	
+	currently for linux only, but allow it for others in the future
+
+2002-04-21 01:13  zacheiss
+
+	* src/afs/LINUX/osi_misc.c: 
+	DELTA STABLE12-linux24-fix-memcache-20020307 AUTHOR warlord@mit.edu
+	
+	The problem is that on 2.4 the 'code' variable is over-written
+	during the path walk, such that by the time it's checking if the
+	inode exists, code is already '0'.  But if the inode does not
+	exist, code should be ENOENT to show that the file does not exist.
+
+2002-04-21 01:04  zacheiss
+
+	* src/: config/param.alpha_dux50.h, vol/partition.c: 
+	DELTA STABLE12-dux-make-namei-fileserver-work-20020304 AUTHOR
+	mattiasa@e.kth.se
+	
+	namei should now work on tru64 (tested on 5.0a)
+
+2002-04-21 00:38  zacheiss
+
+	* src/afs/afs_server.c: 
+	DELTA STABLE12-use-afs-rxdeadtime-constant-20020228 AUTHOR
+	kolya@mit.edu
+	
+	Use AFS_RXDEADTIME instead of hardcoding a value of 50
+
+2002-04-21 00:31  zacheiss
+
+	* src/rxkad/: Makefile.in, fc_test.c: 
+	DELTA STABLE12-rxkad-regression-test-20020228 AUTHOR lha@e.kth.se
+	
+	regression test for rxkad
+
+2002-04-21 00:14  zacheiss
+
+	* src/: bozo/bosserver.c, budb/server.c, kauth/kaserver.c,
+	ptserver/ptserver.c, vlserver/vlserver.c, volser/volmain.c: 
+	DELTA STABLE12-afs-servers-use-rx-setnojumbo-interface-20020228
+	AUTHOR mattiasa@e.kth.se
+	
+	use rx library interface instead of tweaking in each program
+
+2002-04-21 00:09  zacheiss
+
+	* src/ubik/ubik.p.h: 
+	DELTA STABLE12-dont-doubly-declare-ubik-tid-etc-20020226 AUTHOR
+	kolya@mit.edu
+	
+	ubik_tid and ubik_version now come from ubik-int.h
+
+2002-04-21 00:01  zacheiss
+
+	* src/: kauth/kaprocs.c, kauth/kauth.rg, ptserver/ptint.xg,
+	ptserver/ptprocs.c, ubik/ubik_int.xg, ubik/utst_server.c,
+	vlserver/vldbint.xg, vlserver/vlprocs.c: 
+	DELTA STABLE12-fix-linux-build-with-prototypes-20020225 AUTHOR
+	kolya@mit.edu
+	
+	Fix some of the fallout from having rxgen-fabricated prototypes.
+
+2002-04-20 23:56  zacheiss
+
+	* src/ptserver/ptprocs.c: 
+	DELTA STABLE12-check-malloc-return-value-in-ptserver-20020223
+	AUTHOR kolya@mit.edu
+	
+	Make sure we have enough memory to allocate the return list.
+
+2002-04-20 23:55  zacheiss
+
+	* src/afs/afs_callback.c: 
+	DELTA STABLE12-fix-build-without-instrument-locks-20020222 AUTHOR
+	kolya@mit.edu
+	
+	Fix build when INSTRUMENT_LOCKS isn't defined
+
+2002-04-20 23:52  zacheiss
+
+	* src/: bubasics/butc.xg, fsprobe/fsprobe_callback.c,
+	libadmin/bos/afs_bosAdmin.c, xstat/xstat_fs_callback.c: 
+	DELTA STABLE12-fix-build-errors-20020222 AUTHOR kolya@mit.edu
+	
+	Fix minor build errors, and rename the dumpId argument of butc's
+	DeleteDump to avoid collision with budb's #define dumpId.
+
+2002-04-20 14:53  zacheiss
+
+	* src/tests/: build-openafs, run-tests.in: 
+	DELTA STABLE12-test-suite-updates-20020221 AUTHOR
+	shadow@dementia.org
+	
+	minor tweaks found making solaris work
+
+2002-04-20 14:49  zacheiss
+
+	* src/tests/: run-suite.pl, run-tests.in: 
+	DELTA STABLE12-test-suite-run-tests-export-shell-20020221 AUTHOR
+	shadow@dementia.org
+	
+	set $SHELL to override whatever your shell sets
+
+2002-04-20 14:45  zacheiss
+
+	* src/tests/run-suite.pl: 
+	DELTA
+	
+	was a case where we could end up testing "localcell" by accident
+	STABLE12-test-suite-run-script-make-setup-not-use-localcell-inadver
+	tantly-20020221 AUTHOR shadow@dementia.org
+
+2002-04-20 14:43  zacheiss
+
+	* src/tests/Makefile.in: 
+	DELTA test-suite-make-sure-test-script-is-executable-20020221
+	AUTHOR shadow@dementia.org
+	
+	since configure creates the script, just chmod it
+
+2002-04-20 14:38  zacheiss
+
+	* acinclude.m4, src/tests/KeyFile, src/tests/Makefile.in,
+	src/tests/fs_lib.c, src/tests/fsx.c, src/tests/kaserver.DB0,
+	src/tests/kaserver.DBSYS1, src/tests/make-page.c,
+	src/tests/run-suite.pl, src/tests/snprintf.c, src/tests/verr.c,
+	src/tests/verrx.c, src/tests/vwarn.c, src/tests/vwarnx.c,
+	src/tests/warnerr.c, src/tests/write-rand.c,
+	src/tests/OpenAFS/Auth-Kaserver.pm: 
+	DELTA
+	STABLE12-test-suite-solaris-fixes-plus-some-kaserver-glue-20020216
+	AUTHOR shadow@dementia.org
+	
+	make it all build on solaris. provide necessary files to set up a
+	kaserver and authenticate against it (albeit with "known" keys)
+
+2002-04-19 01:57  zacheiss
+
+	* src/tests/boslistkeys.pl: 
+	DELTA STABLE12-bos-listkeys-fix-test-20020221 AUTHOR
+	shadow@dementia.org
+	
+	cksum can be either number
+
+2002-04-19 01:37  zacheiss
+
+	* src/pam/Makefile.in: 
+	DELTA STABLE12-pam-makefile-fix-dependancies-20020219 AUTHOR
+	Jaroslaw.Polok@cern.ch
+
+2002-04-19 00:47  zacheiss
+
+	* acinclude.m4, src/cf/solaris-pcorefile.m4, src/rx/rx_kcommon.c: 
+	DELTA STABLE12-check-for-p_corefile-using-autoconf-20020215 AUTHOR
+	kolya@mit.edu
+	
+	Use autoconf to check for p_corefile in struct proc, rather than
+	assuming it exists in Solaris 7 and above; nneul@umr.edu reports
+	that it doesn't for some kernel revision.
+
+2002-04-19 00:42  zacheiss
+
+	* src/rx/rx_event.c: 
+	DELTA
+	STABLE12-rx-event-deal-with-gcc-296-this-time-for-sure-20020214
+	AUTHOR shadow@dementia.org
+	
+	somehow i suspect one of our platforms doesn't do volatile and i'll
+	regret this, but this stops linux i386 when afs_int32 is an int
+	from going off into la-la land when an Rx retransmit is needed
+
+2002-04-19 00:39  zacheiss
+
+	* src/vol/vol-salvage.c: 
+	DELTA
+	STABLE12-vol-salvage-add-missing-parameter-to-logging-20020213
+	AUTHOR ota@transarc.com
+	
+	bad trace statement due to missing parameter; added
+
+2002-04-19 00:34  zacheiss
+
+	* src/afsweb/: Makefile.in, afswsNetscape_config.sh: 
+	DELTA STABLE12-afsweb-add-netscape-config-script-20020213 AUTHOR
+	stentz@us.ibm.com
+	
+	this was omitted from the original release and now can be included
+
+2002-04-19 00:15  zacheiss
+
+	* src/viced/: afsfileprocs.c, physio.c: 
+	DELTA STABLE12-viced-printinode-returns-string-not-number-20020212
+	AUTHOR nneul@umr.edu
+	
+	based on feedback from ota@transarc.com
+	
+	PrintInode returns a string, use it
+
+2002-04-19 00:10  zacheiss
+
+	* src/afs/SOLARIS/osi_vfsops.c: 
+	DELTA STABLE12-solaris-release-glock-when-returning-20020208 AUTHOR
+	kolya@mit.edu
+	
+	Properly AFS_GUNLOCK() when returning an error after having
+	previously AFS_GLOCK()'ed, in afs_mount() and afs_unmount().
+
+2002-04-18 23:55  zacheiss
+
+	* src/: afs/SOLARIS/osi_vfsops.c, rx/rx_kcommon.c,
+	rx/SOLARIS/rx_knet.c: 
+	DELTA STABLE12-allow-solaris-kernel-module-reloading-20020208
+	AUTHOR kolya@mit.edu
+	
+	Allow AFS to shutdown on Solaris (and subsequently be reloaded and
+	restarted).  Still leaks memory, unlike the Linux module.
+
+2002-04-18 23:50  zacheiss
+
+	* src/viced/callback.c: 
+	DELTA
+	STABLE12-viced-callback-avoid-potential-looping-problem-20020201
+	AUTHOR reuter@rzg.mpg.de
+	
+	avoid case where we never come out of loop attempting to clear host
+	callbacks
+
+2002-04-18 22:22  zacheiss
+
+	* src/bozo/bosoprocs.c: 
+	DELTA
+	STABLE12-back-out-bosserver-dont-enforce-world-readability-on-serve
+	r-etcdir-20011126 AUTHOR shadow@dementia.org
+
+2002-04-05 23:57  shadow
+
+	* src/afs/afs_vcache.c: DELTA
+	STABLE12-linux-newvcache-more-simplification-20020405 AUTHOR
+	shadow@dementia.org
+	
+	based on suggestion from vsrikanth@in.ibm.com
+	
+	eliminate extra for loop, flatten function to drop dentries, fix
+	locking error i introduced
+
+2002-04-01 21:13  shadow
+
+	* src/afs/afs_vcache.c: DELTA
+	
+	based on patch by Srikanth Vishwanathan and modifications based on
+	suggestions from Ted Anderson applicable to this part of the code.
+	
+	the original theory we operated under, namely that negative
+	dentries could be banished entirely, causes file creation to stop
+	working under linux 2.2 kernels. reverting that change means we
+	have to deal with these negative dentries, and Srikanth's original
+	suggested patch does so.
+	STABLE12-linux-dcache-create-negative-dentries-22-needs-while-still
+	-avoiding-vlru-cycle-20020328 AUTHOR shadow@dementia.org
+
+2002-04-01 21:12  shadow
+
+	* src/afs/LINUX/osi_vnodeops.c: DELTA
+	STABLE12-revert-part-of-linux-dcache-inconsistency-fix-20020115
+	AUTHOR shadow@dementia.org
+	
+	may revisit this before release; however, open_namei on 2.2 wants a
+	dentry returned to it and so without this change, creating files in
+	afs breaks
+
+2002-04-01 21:11  shadow
+
+	* src/afs/LINUX/osi_alloc.c: DELTA
+	
+	Based on report from David Howells of RedHat (via Guy Streeter)
+	STABLE12-linux-osi-alloc-up-alloc-sem-while-alloc-to-avoid-deadlock
+	-against-glock-20020215 AUTHOR shadow@dementia.org
+
+2002-04-01 21:10  shadow
+
+	* src/vfsck/pass1.c: DELTA
+	
+	if running with -y report old inodes and continue anyway
+	STABLE12-solaris-vfsck-allow-force-runs-when-old-inodes-exist-20020
+	310 AUTHOR shadow@dementia.org
+
+2002-04-01 21:10  shadow
+
+	* src/afs/LINUX/osi_sysctl.c: DELTA
+	STABLE12-linux-sysctl-fix-includes-20020206 AUTHOR kolya@mit.edu
+	
+	Include linux/sysctl.h after afsconfig.h, since we need the
+	modversion stuff first.
+
+2002-04-01 21:07  shadow
+
+	* src/afs/LINUX/: osi_module.c, osi_sysctl.c: DELTA
+	STABLE12-linux-provide-sysctl-interface-20020206 AUTHOR
+	aedil@sinenomine.net
+	
+	provide sysctl interface for toggling module state. provide hooks
+	for all currently known tweakable items
+
+2002-04-01 21:06  shadow
+
+	* src/afs/: afs_call.c, SOLARIS/osi_groups.c: DELTA
+	
+	crset() expects p_crlock to not be held when it's called; deal
+	accordingly
+	STABLE12-solaris-p-crlock-not-safe-to-hold-across-call-to-crset-200
+	20206 AUTHOR kolya@mit.edu
+
+2002-04-01 21:05  shadow
+
+	* src/afs/afs_volume.c: DELTA
+	
+	it's ok to support a null request being passed in, but if a real
+	one is passed in we shouldn't analyze it when it's not the one we
+	used when making calls.
+	STABLE12-newvolumebyname-analyze-the-vrequest-actually-used-2002020
+	5 AUTHOR shadow@dementia.org
+
+2002-03-17 22:24  kolya
+
+	* src/afs/VNOPS/afs_vnop_symlink.c: 
+	DELTA STABLE12-allocate-correct-size-string-for-symlinks-20020317
+	AUTHOR kolya@mit.edu
+	
+	Allocate the exact string length needed for the string in symlink
+	contents, rather than assuming that symlink data never contains
+	nulls (or that it's of the length we expect).
 2001-10-13 05:28  shadow
 
 	* src/afs/VNOPS/afs_vnop_lookup.c:
