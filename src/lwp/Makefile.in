@@ -27,12 +27,12 @@ liblwp.a: ${LIBOBJS}
 	$(AR) crv $@ ${LIBOBJS}
 	$(RANLIB) $@
 
+# This is required so sgi_64+ does not try to build this file.
 process.s:
 	echo Nothing to be done for process.s
-	# This is required so sgi_64+ does not try to build this file.
 
+# Making process.o for $(SYS_NAME)
 process.o	: process.s process.i386.s process.c
-	# Making process.o for $(SYS_NAME)
 	@case "$(SYS_NAME)" in \
 	pmax_he1) \
 		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c -I${TOP_INCDIR} process.s;; \
