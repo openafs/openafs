@@ -853,7 +853,7 @@ VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
      */
     if (QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid, pInfo->Domain)) {
         WCHAR Domain[64]=L"";
-        GetLocalShortDomain(Domain);
+        GetLocalShortDomain(Domain, sizeof(Domain));
         if (QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid, Domain))
             GetUserProfileDirectory(pInfo->hToken, profileDir, &len);
     }

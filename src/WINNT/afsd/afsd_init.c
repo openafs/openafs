@@ -69,7 +69,7 @@ int logReady = 0;
 char cm_HostName[200];
 long cm_HostAddr;
 
-char cm_NetbiosName[MAX_NB_NAME_LENGTH];
+char cm_NetbiosName[MAX_NB_NAME_LENGTH] = "";
 
 char cm_CachePath[200];
 DWORD cm_CachePathLen;
@@ -99,8 +99,6 @@ HANDLE afsi_file;
 #ifdef AFS_AFSDB_ENV
 int cm_dnsEnabled = 1;
 #endif
-
-char cm_NetBiosName[32];
 
 extern initUpperCaseTable();
 void afsd_initUpperCaseTable() 
@@ -698,21 +696,24 @@ int afsd_InitCM(char **reasonP)
 	}
 #endif /* AFS_FREELANCE_CLIENT */
 
+#ifdef COMMENT
+    /* The netbios name is looked up in lana_GetUNCServerNameEx */
     dummyLen = sizeof(buf);
     code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,
                            (BYTE *) &buf, &dummyLen);
     if (code == ERROR_SUCCESS) {
-        DWORD len = ExpandEnvironmentStrings(buf, cm_NetBiosName, MAX_NB_NAME_LENGTH);
+        DWORD len = ExpandEnvironmentStrings(buf, cm_NetbiosName, MAX_NB_NAME_LENGTH);
         if ( len > 0 && len <= MAX_NB_NAME_LENGTH ) {
-            afsi_log("Explicit NetBios name is used %s", cm_NetBiosName);
+            afsi_log("Explicit NetBios name is used %s", cm_NetbiosName);
         } else {
             afsi_log("Unable to Expand Explicit NetBios name: %s", buf);
-            cm_NetBiosName[0] = 0;  /* turn it off */
+            cm_NetbiosName[0] = 0;  /* turn it off */
         }
     }
     else {
-        cm_NetBiosName[0] = 0;   /* default off */
+        cm_NetbiosName[0] = 0;   /* default off */
     }
+#endif
 
     dummyLen = sizeof(smb_hideDotFiles);
     code = RegQueryValueEx(parmKey, "HideDotFiles", NULL, NULL,

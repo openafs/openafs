@@ -244,9 +244,15 @@ DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid, PWS
                     BSTR bstr;
 
                     hr = pNto->Get(ADS_NAME_TYPE_1779, &bstr);
-                    wcscpy(adsPath, bstr);
+                    if(SUCCEEDED(hr)) {
+                        hr = StringCchCopyW(adsPath, MAX_PATH, bstr);
+                        if(FAILED(hr)) {
+                            DebugEvent("Overflow while copying ADS path");
+                            adsPath[0] = L'\0';
+                        }
 
-                    SysFreeString(bstr);
+                        SysFreeString(bstr);
+                    }
                 }
             }
             pNto->Release();
@@ -349,7 +355,7 @@ DWORD GetAdHomePath(char * homePath, size_t homePathLen, PLUID lpLogonId, LogonO
 	}
 }
 
-BOOL GetLocalShortDomain(PWSTR Domain)
+BOOL GetLocalShortDomain(PWSTR Domain, DWORD cbDomain)
 {
     HRESULT hr;
     IADsADSystemInfo *pADsys;
@@ -370,9 +376,11 @@ BOOL GetLocalShortDomain(PWSTR Domain)
 
         hr = pADsys->get_DomainShortName(&bstr);
         if ( !FAILED(hr) ) {
-            wcscpy( Domain, bstr );
+            hr = StringCbCopyW( Domain, cbDomain, bstr );
+            if(SUCCEEDED(hr)) {
+                retval = TRUE;
+            }
             SysFreeString(bstr);
-            retval = TRUE;
         }
         pADsys->Release();
     }

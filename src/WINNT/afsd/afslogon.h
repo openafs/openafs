@@ -120,7 +120,7 @@ void GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, Log
 DWORD GetFileCellName(char * path, char * cell, size_t cellLen);
 DWORD GetAdHomePath(char * homePath, size_t homePathLen, PLUID lpLogonId, LogonOptions_t * opt);
 DWORD QueryAdHomePathFromSid(char * homePath, size_t homePathLen, PSID psid, PWSTR domain);
-BOOL GetLocalShortDomain(PWSTR Domain);
+BOOL GetLocalShortDomain(PWSTR Domain, DWORD cbDomain);
 
 #ifdef __cplusplus
 }
