@@ -64,6 +64,23 @@ afs_CopyOutAttrs(avc, attrs)
 	if (tcell && (tcell->states & CNoSUID))
 	    attrs->va_mode &= ~(VSUID|VSGID);
     }
+#if defined(AFS_DARWIN_ENV)
+    /* Mac OS X uses the mode bits to determine whether a file or directory
+     * is accessible, and believes them, even though under AFS they're almost
+     * assuredly wrong, especially if the local uid does not match the AFS
+     * ID.  So we set the mode bits conservatively.
+     */
+    if (S_ISDIR(attrs->va_mode)) {
+      /* all access bits need to be set for directories, since even
+       * a mode 0 directory can still be used normally.
+       */
+      attrs->va_mode |= ACCESSPERMS;
+    } else {
+      /* for other files, replicate the user bits to group and other */
+      mode_t ubits = (attrs->va_mode & S_IRWXU) >> 6;
+      attrs->va_mode |= ubits | (ubits << 3);
+    }
+#endif /* AFS_DARWIN_ENV */
     attrs->va_uid = fakedir ? 0 : avc->m.Owner;
     attrs->va_gid = fakedir ? 0 : avc->m.Group;   /* yeah! */
 #if	defined(AFS_SUN56_ENV)
