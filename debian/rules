@@ -73,7 +73,7 @@ install: build
 	dh_installdirs
 
 	# Add here commands to install the package into debian/tmp.
-	cat debian/filelist |debian/movefiles
+	cat debian/filelist |sh debian/movefiles
 	cp dest/root.client/usr/vice/etc/afs.rc debian/openafs-client/etc/init.d/openafs-client
 	chmod 755 debian/openafs-client/etc/init.d/openafs-client
 	cp dest/root.client/usr/vice/etc/afs.conf debian/openafs-client/etc/openafs/afs.conf

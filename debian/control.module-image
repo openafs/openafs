@@ -16,4 +16,3 @@ Description: The AFS distributed filesystem- Kernel Module
    control, authentication, backup and administrative management.
    .
    This package provides the kernel module for the filesystem
-

@@ -1,3 +1,9 @@
+openafs (1.0.snap20001106-4) unstable; urgency=low
+
+  * Fix so dpkg-buildpackage works.  Oops.
+
+ --  Sam Hartman <hartmans@mit.edu>  Sun, 19 Nov 2000 02:18:05 -0500
+
 openafs (1.0.snap20001106-3) unstable; urgency=low
 
   * Increase stacksize for server processes so they don't dump core.
