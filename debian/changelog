@@ -1,3 +1,16 @@
+openafs (1.2.2-2) unstable; urgency=low
+
+  * Don't declare lseek in auth/ktc.c; sent upstream
+  * Allow /etc/openafs/server to be mode 700 and /var/lib/openafs to be
+    755, closes: #120072
+  *  Don't try to shut down during afs-newcell until we've done enough
+    that works, closes: #119452
+  * Fix message  output on server failed to start, closes: #119461
+  * Fix openafs to deal if /etc/openafs/server/ThisCell has a newline,
+    closes: #118086 
+
+ -- Sam Hartman <hartmans@debian.org>  Sun, 25 Nov 2001 20:03:01 -0500
+
 openafs (1.2.2-1) unstable; urgency=low
 
   * New upstream release.

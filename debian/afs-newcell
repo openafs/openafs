@@ -10,7 +10,6 @@ use Getopt::Long;
 use vars qw($admin $server
 	   $requirements_met  $shutdown_needed);
 my $rl = new Term::ReadLine('afs-newcell');
-$shutdown_needed = 1;
 
 =head1  NAME
 
@@ -125,6 +124,7 @@ chomp $cell;
 
 run( "echo \\>$cell >/etc/openafs/server/CellServDB");
 run("/etc/init.d/openafs-fileserver start");
+$shutdown_needed = 1;
 run ("bos addhost $server $server -localauth ||true");
 run("bos adduser $server $admin -localauth");
 unwind("bos removeuser $server $admin -localauth");
@@ -169,8 +169,8 @@ if(m:^AFS:) {
 }
 	}
 unless ($afs_running) {
-print "The AFS client failed to start.\n";
-print  "Please fix whatever problem kept it from running.";
+print "*** The AFS client failed to start.\n";
+print  "Please fix whatever problem kept it from running.\n";
 	exit(1);
 }
 
