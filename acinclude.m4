@@ -269,6 +269,9 @@ else
 		powerpc-apple-darwin5.4*)
 			AFS_SYSNAME="ppc_darwin_14"
 			;;
+		powerpc-apple-darwin5.5*)
+			AFS_SYSNAME="ppc_darwin_14"
+			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
 			;;
