@@ -578,6 +578,8 @@ AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf re_comp re_exec)
 AC_CHECK_FUNCS(setprogname getprogname sigaction)
 AC_CHECK_TYPE(ssize_t, int)
 
+AC_CHECK_FUNCS(timegm)
+
 dnl Directory PATH handling
 if test "x$enable_transarc_paths" = "xyes"  ; then 
     afsconfdir=${afsconfdir=/usr/afs/etc}
