@@ -232,17 +232,18 @@ char *DRead(fid,page)
       MReleaseWriteLock(&afs_bufferLock);
       return 0;
     }
+    MObtainWriteLock(&tb->lock,260);
+    MReleaseWriteLock(&afs_bufferLock);
+    tb->lockers++;
     tfile = afs_CFileOpen(fid[0]);
     sizep = (afs_int32 *)tfile;
     if (page * AFS_BUFFER_PAGESIZE >= *sizep) {
 	dirp_Zap(tb->fid);
+	tb->lockers--;
+	MReleaseWriteLock(&tb->lock);
 	afs_CFileClose(tfile);
-	MReleaseWriteLock(&afs_bufferLock);
 	return 0;
     }
-    MObtainWriteLock(&tb->lock,260);
-    MReleaseWriteLock(&afs_bufferLock);
-    tb->lockers++;
     code = afs_CFileRead(tfile, tb->page * AFS_BUFFER_PAGESIZE,
 			 tb->data, AFS_BUFFER_PAGESIZE);
     afs_CFileClose(tfile);
