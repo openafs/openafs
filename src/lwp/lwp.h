@@ -20,7 +20,7 @@
 
 #if !defined(KERNEL) && !defined(_KMEMUSER) && !defined(AFS_PTHREAD_ENV)
 #include <afs/param.h>
-#ifdef HAVE_UCONTEXT_H
+#if defined(USE_UCONTEXT) && defined(HAVE_UCONTEXT_H)
 #include <ucontext.h>
 #else
 #include <setjmp.h>
@@ -195,7 +195,7 @@ typedef struct lwp_pcb {
 #else
 struct lwp_context {	/* saved context for dispatcher */
     char *topstack;	/* ptr to top of process stack */
-#ifdef HAVE_UCONTEXT_H
+#if defined(USE_UCONTEXT) && defined(HAVE_UCONTEXT_H)
     ucontext_t ucontext;
     int state;
 #else /* !HAVE_UCONTEXT_H */

@@ -75,6 +75,6 @@
 #endif
 #endif /* KERNEL */
 
-#define HAVE_UCONTEXT_H		/* should be in afsconfig.h */
+#define USE_UCONTEXT		/* should be in afsconfig.h */
 
 #endif /* _PARAM_IA64_LINUX20_H_ */

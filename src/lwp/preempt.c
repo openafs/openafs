@@ -24,6 +24,9 @@ int PRE_Block = 0;
 #else
 #include <sys/time.h>
 #include <signal.h>
+#ifdef HAVE_UCONTEXT_H
+#include <ucontext.h>
+#endif
 #include "lwp.h"
 #include "preempt.h"
 

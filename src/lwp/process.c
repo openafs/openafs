@@ -27,7 +27,7 @@ extern int PRE_Block;              /* used in lwp.c and process.s */
 extern char PRE_Block;             /* used in lwp.c and process.s */
 #endif
 
-#ifdef HAVE_UCONTEXT_H
+#if defined(USE_UCONTEXT) && defined(HAVE_UCONTEXT_H)
 
 afs_int32
 savecontext(ep, savearea, newsp)
