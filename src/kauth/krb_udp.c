@@ -322,7 +322,7 @@ afs_int32 UDP_Authenticate (ksoc, client, name, inst, startTime, endTime, sname,
 			startTime + ntohl(tentry.max_ticket_lifetime));
 	if ((code = ka_LookupKey (tt, sname, sinst, &tgskvno, &tgskey)) ||
 	    (code = tkt_MakeTicket (ticket, &ticketLen, &tgskey,
-				    name, inst, "",
+				    name, inst, lrealm,
 				    startTime, endTime, &sessionKey,
 				    htonl(client->sin_addr.s_addr), sname, sinst)))
 	    goto abort;
