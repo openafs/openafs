@@ -71,10 +71,11 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     struct vcache *tvc;
     struct volume *volp = 0;
     struct afs_fakestat_state fakestate;
-    XSTATS_DECLS OSI_VC_CONVERT(adp)
+    XSTATS_DECLS;
+    OSI_VC_CONVERT(adp);
 
 
-      AFS_STATCNT(afs_create);
+    AFS_STATCNT(afs_create);
     if ((code = afs_InitReq(&treq, acred)))
 	goto done2;
 

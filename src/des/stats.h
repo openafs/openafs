@@ -37,8 +37,8 @@ struct rxkad_stats {
 #include <pthread.h>
 #include <assert.h>
 extern pthread_mutex_t rxkad_stats_mutex;
-#define LOCK_RXKAD_STATS assert(pthread_mutex_lock(&rxkad_stats_mutex)==0);
-#define UNLOCK_RXKAD_STATS assert(pthread_mutex_unlock(&rxkad_stats_mutex)==0);
+#define LOCK_RXKAD_STATS assert(pthread_mutex_lock(&rxkad_stats_mutex)==0)
+#define UNLOCK_RXKAD_STATS assert(pthread_mutex_unlock(&rxkad_stats_mutex)==0)
 #else
 #define LOCK_RXKAD_STATS
 #define UNLOCK_RXKAD_STATS

@@ -11,7 +11,7 @@
 
 #include <mit-cpyright.h>
 
-										  /* #include <krb_conf.h> *//* removed 890221 */
+																	/* #include <krb_conf.h> *//* removed 890221 */
 
 #ifndef PROT_DEFS
 #define PROT_DEFS
@@ -60,9 +60,9 @@
 
 /* Routines to create and read packets may be found in prot.c */
 
-												 /* KTEXT create_auth_reply(); *//* removed 890221 */
-												       /* KTEXT create_death_packet(); *//* removed 890221 */
-									    /* KTEXT pkt_cipher(); *//* removed 890221 */
+																				 /* KTEXT create_auth_reply(); *//* removed 890221 */
+																					   /* KTEXT create_death_packet(); *//* removed 890221 */
+															      /* KTEXT pkt_cipher(); *//* removed 890221 */
 
 /* Message types , always leave lsb for byte order */
 

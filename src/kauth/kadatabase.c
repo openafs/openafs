@@ -689,11 +689,12 @@ ka_debugKeyCache(info)
 		    (keyCache[i].superseded == NEVERDATE);
 		info->kcInfo[j].keycksum = 0;
 #if DEBUG_KEY_CACHE
-        {
-        int k;
-		for (k = 0; k < sizeof(struct ktc_encryptionKey); k++)
-		    info->kcInfo[j].keycksum += ((char *)&keyCache[i].key)[k];
-        }
+		{
+		    int k;
+		    for (k = 0; k < sizeof(struct ktc_encryptionKey); k++)
+			info->kcInfo[j].keycksum +=
+			    ((char *)&keyCache[i].key)[k];
+		}
 #endif
 		strcpy(principal, keyCache[i].name);
 		strcat(principal, ".");

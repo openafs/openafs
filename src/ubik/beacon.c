@@ -494,8 +494,8 @@ verifyInterfaceAddress(ame, info, aservers)
     }
 
 #ifdef AFS_NT40_ENV
-	/* get all my interface addresses in net byte order */
-	count = rx_getAllAddr(myAddr, UBIK_MAX_INTERFACE_ADDR);
+    /* get all my interface addresses in net byte order */
+    count = rx_getAllAddr(myAddr, UBIK_MAX_INTERFACE_ADDR);
 #else
     if (AFSDIR_SERVER_NETRESTRICT_FILEPATH || AFSDIR_SERVER_NETINFO_FILEPATH) {
 	/*
@@ -569,8 +569,7 @@ verifyInterfaceAddress(ame, info, aservers)
     for (j = 0, found = 0; j < count; j++) {
 	for (i = 0; i < totalServers; i++) {
 	    if (info)
-		tmpAddr =
-		    (afs_uint32) info->hostAddr[i].sin_addr.s_addr;
+		tmpAddr = (afs_uint32) info->hostAddr[i].sin_addr.s_addr;
 	    else
 		tmpAddr = aservers[i];
 	    if (myAddr[j] == tmpAddr) {

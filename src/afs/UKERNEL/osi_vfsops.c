@@ -75,9 +75,9 @@ afs_root(OSI_VFS_ARG(afsp), avpp)
     register afs_int32 code = 0;
     struct vrequest treq;
     register struct vcache *tvp = 0;
-    OSI_VFS_CONVERT(afsp)
+    OSI_VFS_CONVERT(afsp);
 
-	AFS_STATCNT(afs_root);
+    AFS_STATCNT(afs_root);
     if (afs_globalVp && (afs_globalVp->states & CStatd)) {
 	tvp = afs_globalVp;
     } else {

@@ -75,7 +75,7 @@ afs_fid(OSI_VC_ARG(avc), fidpp, credp)
 #else
 afs_fid(OSI_VC_ARG(avc), fidpp)
 #endif				/* AFS_AIX41_ENV */
-OSI_VC_DECL(avc);
+     OSI_VC_DECL(avc);
 #if	defined(AFS_AIX_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN54_ENV)
      struct fid *fidpp;
 #else
@@ -88,9 +88,9 @@ OSI_VC_DECL(avc);
     extern struct vcache *afs_globalVp;
     int SizeOfSmallFid = SIZEOF_SMALLFID;
     int rootvp = 0;
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
 
-	AFS_STATCNT(afs_fid);
+    AFS_STATCNT(afs_fid);
 
     if (afs_shuttingdown)
 	return EIO;

@@ -47,7 +47,8 @@ afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
     register afs_int32 code;
     register struct rx_call *tcall;
     afs_size_t tlen, xlen = 0;
-    XSTATS_DECLS AFS_STATCNT(afs_StoreMini);
+    XSTATS_DECLS;
+    AFS_STATCNT(afs_StoreMini);
     afs_Trace2(afs_iclSetp, CM_TRACE_STOREMINI, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_INT32, avc->m.Length);
     tlen = avc->m.Length;
@@ -305,7 +306,8 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 	    struct conn *tc;
 	    struct osi_file *tfile;
 	    struct rx_call *tcall;
-	    XSTATS_DECLS for (bytes = 0, j = 0; !code && j <= high; j++) {
+	    XSTATS_DECLS;
+	    for (bytes = 0, j = 0; !code && j <= high; j++) {
 		if (dcList[j]) {
 		    ObtainSharedLock(&(dcList[j]->lock), 629);
 		    if (!bytes)

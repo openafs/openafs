@@ -55,9 +55,9 @@ char *tab_vcache[] = {
 int
 idbg_prafsnode(OSI_VC_DECL(avc))
 {
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
 
-	AFS_GLOCK();
+    AFS_GLOCK();
     qprintf("   Len %d DV %d Date %d Own %d Grp %d Mode 0%o Lnk %d\n",
 	    avc->m.Length, avc->m.DataVersion, avc->m.Date, avc->m.Owner,
 	    avc->m.Group, avc->m.Mode, avc->m.LinkCount);

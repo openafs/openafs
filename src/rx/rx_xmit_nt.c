@@ -79,12 +79,12 @@ recvmsg(int socket, struct msghdr *msgP, int flags)
 	code -= size;
     } else {
 #ifdef AFS_NT40_ENV
-    if (code == SOCKET_ERROR)
-        code = WSAGetLastError();
-    if (code == WSAEWOULDBLOCK)
-        errno = WSAEWOULDBLOCK;
-    else
-        errno = EIO;
+	if (code == SOCKET_ERROR)
+	    code = WSAGetLastError();
+	if (code == WSAEWOULDBLOCK)
+	    errno = WSAEWOULDBLOCK;
+	else
+	    errno = EIO;
 #endif /* AFS_NT40_ENV */
 	code = -1;
     }
@@ -136,9 +136,9 @@ sendmsg(int socket, struct msghdr *msgP, int flags)
 	case WSAENOBUFS:
 	    errno = 0;
 	    break;
-    case WSAEWOULDBLOCK:
-        errno = WSAEWOULDBLOCK;
-        break;
+	case WSAEWOULDBLOCK:
+	    errno = WSAEWOULDBLOCK;
+	    break;
 	default:
 	    errno = EIO;
 	    break;

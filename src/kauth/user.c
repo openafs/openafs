@@ -68,7 +68,7 @@ RCSID
 
 afs_int32
 GetTickets(char *name, char *instance, char *realm,
-	   struct ktc_encryptionKey *key, Date lifetime,
+	   struct ktc_encryptionKey * key, Date lifetime,
 	   afs_int32 * pwexpires, afs_int32 flags)
 {
     afs_int32 code;

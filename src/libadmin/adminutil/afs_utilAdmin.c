@@ -446,7 +446,8 @@ util_AdminServerAddressGetFromName(const char *serverName, int *serverAddress,
     if (num_converted == 4) {
 	*serverAddress = (part1 << 24) | (part2 << 16) | (part3 << 8) | part4;
     } else {
-	LOCK_GLOBAL_MUTEX server = gethostbyname(serverName);
+	LOCK_GLOBAL_MUTEX;
+	server = gethostbyname(serverName);
 	if (server != NULL) {
 	    memcpy((void *)serverAddress, (const void *)server->h_addr,
 		   sizeof(serverAddress));
@@ -456,7 +457,8 @@ util_AdminServerAddressGetFromName(const char *serverName, int *serverAddress,
 	    UNLOCK_GLOBAL_MUTEX;
 	    goto fail_util_AdminServerAddressGetFromName;
 	}
-    UNLOCK_GLOBAL_MUTEX}
+	UNLOCK_GLOBAL_MUTEX;
+    }
     rc = 1;
 
   fail_util_AdminServerAddressGetFromName:

@@ -226,7 +226,8 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
     struct AFSVolSync tsync;
     afs_int32 lockType;
     struct AFS_FLOCK flock;
-    XSTATS_DECLS AFS_STATCNT(HandleFlock);
+    XSTATS_DECLS;
+    AFS_STATCNT(HandleFlock);
     code = 0;			/* default when we don't make any network calls */
     lockIdSet(&flock, NULL, clid);
 
@@ -804,7 +805,8 @@ GetFlockCount(struct vcache *avc, struct vrequest *areq)
     struct AFSCallBack CallBack;
     struct AFSVolSync tsync;
     int temp;
-    XSTATS_DECLS temp = areq->flags & O_NONBLOCK;
+    XSTATS_DECLS;
+    temp = areq->flags & O_NONBLOCK;
     areq->flags |= O_NONBLOCK;
 
     do {

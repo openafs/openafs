@@ -115,35 +115,40 @@ afsconf_SetExtendedCellInfo(adir, apath, acellInfo, clones)
     register FILE *tf;
     register afs_int32 i;
 
-    LOCK_GLOBAL_MUTEX
-	/* write ThisCell file */
-	strcompose(tbuffer, 1024, apath, "/", AFSDIR_THISCELL_FILE, NULL);
+    LOCK_GLOBAL_MUTEX;
+    /* write ThisCell file */
+    strcompose(tbuffer, 1024, apath, "/", AFSDIR_THISCELL_FILE, NULL);
 
     fd = open(tbuffer, O_RDWR | O_CREAT | O_TRUNC, 0666);
     if (fd < 0) {
-	UNLOCK_GLOBAL_MUTEX return errno;
+	UNLOCK_GLOBAL_MUTEX;
+	return errno;
     }
     i = strlen(acellInfo->name);
     code = write(fd, acellInfo->name, i);
     if (code != i) {
-	UNLOCK_GLOBAL_MUTEX return AFSCONF_FAILURE;
+	UNLOCK_GLOBAL_MUTEX;
+	return AFSCONF_FAILURE;
     }
     if (close(fd) < 0) {
-	UNLOCK_GLOBAL_MUTEX return errno;
+	UNLOCK_GLOBAL_MUTEX;
+	return errno;
     }
 
     /* make sure we have both name and address for each host, looking up other
      * if need be */
     code = VerifyEntries(acellInfo);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX return code;
+	UNLOCK_GLOBAL_MUTEX;
+	return code;
     }
 
     /* write CellServDB */
     strcompose(tbuffer, 1024, apath, "/", AFSDIR_CELLSERVDB_FILE, NULL);
     tf = fopen(tbuffer, "w");
     if (!tf) {
-	UNLOCK_GLOBAL_MUTEX return AFSCONF_NOTFOUND;
+	UNLOCK_GLOBAL_MUTEX;
+	return AFSCONF_NOTFOUND;
     }
     fprintf(tf, ">%s	#Cell name\n", acellInfo->name);
     for (i = 0; i < acellInfo->numServers; i++) {
@@ -162,7 +167,8 @@ afsconf_SetExtendedCellInfo(adir, apath, acellInfo, clones)
     }
     if (ferror(tf)) {
 	fclose(tf);
-	UNLOCK_GLOBAL_MUTEX return AFSCONF_FAILURE;
+	UNLOCK_GLOBAL_MUTEX;
+	return AFSCONF_FAILURE;
     }
     code = fclose(tf);
 
@@ -173,7 +179,8 @@ afsconf_SetExtendedCellInfo(adir, apath, acellInfo, clones)
     if (adir)
 	adir->timeRead = 0;
 
-    UNLOCK_GLOBAL_MUTEX if (code == EOF)
+    UNLOCK_GLOBAL_MUTEX;
+    if (code == EOF)
 	return AFSCONF_FAILURE;
     return 0;
 }

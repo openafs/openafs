@@ -1535,7 +1535,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
     int doReallyAdjustSize = 0;
     int overWriteWholeChunk = 0;
 
-    XSTATS_DECLS
+    XSTATS_DECLS;
 #ifndef AFS_NOSTATS
     struct afs_stats_xferData *xferP;	/* Ptr to this op's xfer struct */
     osi_timeval_t xferStartTime,	/*FS xfer start time */
@@ -2618,7 +2618,7 @@ afs_WriteThroughDSlots(void)
 #define DQTODC(q)	((struct dcache *)(((char *) (q)) - sizeof(struct afs_q)))
 
     for (tq = DirtyQ.prev; tq != &DirtyQ; tq = QPrev(tq)) {
-        tdc = DQTODC(tq);
+	tdc = DQTODC(tq);
 	if (tdc->dflags & DFEntryMod) {
 	    int wrLock;
 
