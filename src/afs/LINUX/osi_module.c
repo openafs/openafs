@@ -86,7 +86,7 @@ static void **ia32_sys_call_table;
 #endif
 
 static void *ia32_ni_syscall = 0;
-asmlinkage long (*sys32_setgroupsp) (int gidsetsize, old_gid_t * grouplist);
+asmlinkage long (*sys32_setgroupsp) (int gidsetsize, u16 * grouplist);
 #if defined(__NR_ia32_setgroups32)
 asmlinkage long (*sys32_setgroups32p) (int gidsetsize, gid_t * grouplist);
 #endif /* __NR_ia32_setgroups32 */
@@ -167,7 +167,7 @@ init_module(void)
 #endif
 {
 #if defined(AFS_IA64_LINUX20_ENV)
-    unsigned long kernel_gp;
+    unsigned long kernel_gp = 0;
     static struct fptr sys_settimeofday, sys_setgroups;
 #endif
     extern int afs_syscall();
@@ -187,19 +187,19 @@ init_module(void)
 
 #if !defined(EXPORTED_SYS_CALL_TABLE) || (defined(AFS_AMD64_LINUX20_ENV) && !defined(EXPORTED_IA32_SYS_CALL_TABLE))
     unsigned long *ptr;
-    unsigned long offset;
-    unsigned long datalen;
+    unsigned long offset=0;
+    unsigned long datalen=0;
     int ret;
-    unsigned long token;
+    unsigned long token=0;
     char *mod_name;
-    unsigned long mod_start;
-    unsigned long mod_end;
+    unsigned long mod_start=0;
+    unsigned long mod_end=0;
     char *sec_name;
-    unsigned long sec_start;
-    unsigned long sec_end;
+    unsigned long sec_start=0;
+    unsigned long sec_end=0;
     char *sym_name;
-    unsigned long sym_start;
-    unsigned long sym_end;
+    unsigned long sym_start=0;
+    unsigned long sym_end=0;
 #endif /* EXPORTED_SYS_CALL_TABLE */
 
     RWLOCK_INIT(&afs_xosi, "afs_xosi");

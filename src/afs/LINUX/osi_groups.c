@@ -185,9 +185,9 @@ afs_xsetgroups32(int gidsetsize, gid_t * grouplist)
 
 #if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_AMD64_LINUX20_ENV)
 /* Intercept the uid16 system call as used by 32bit programs. */
-extern long (*sys32_setgroupsp) (int gidsetsize, old_gid_t * grouplist);
+extern long (*sys32_setgroupsp) (int gidsetsize, u16 * grouplist);
 asmlinkage long
-afs32_xsetgroups(int gidsetsize, old_gid_t * grouplist)
+afs32_xsetgroups(int gidsetsize, u16 * grouplist)
 {
     long code;
     cred_t *cr = crref();
