@@ -1114,7 +1114,7 @@ char *wpath, *pbuffer;
 void SalvageFileSys1(struct DiskPartition *partP, VolumeId singleVolumeNumber)
 {
     char *name, *tdir;
-    char inodeListPath[50];
+    char inodeListPath[256];
     static char tmpDevName[100];
     static char wpath[100];
     struct VolumeSummary *vsp, *esp;
@@ -1180,9 +1180,9 @@ void SalvageFileSys1(struct DiskPartition *partP, VolumeId singleVolumeNumber)
     tdir = (tmpdir ? tmpdir : fileSysPath);
 #ifdef AFS_NT40_ENV
     (void) _putenv("TMP="); /* If "TMP" is set, then that overrides tdir. */
-    (void) strcpy(inodeListPath, _tempnam(tdir, "salvage.inodes."));
+    (void) strncpy(inodeListPath, _tempnam(tdir, "salvage.inodes."), 255);
 #else
-    sprintf(inodeListPath, "%s/salvage.inodes.%s.%d", tdir, name, getpid());
+    snprintf(inodeListPath, 255, "%s/salvage.inodes.%s.%d", tdir, name, getpid());
 #endif
     if (GetInodeSummary(inodeListPath, singleVolumeNumber) < 0) {
 	unlink(inodeListPath);
