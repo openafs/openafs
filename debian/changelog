@@ -3,8 +3,9 @@ openafs (1.3.73-1) UNRELEASED; urgency=low
   * New upstream version
   * Remove call to dh_suidregister
   * Update sysname to prefer 2.4 on more arches for largefile issues
+  * Patch from pnelson@ANDREW.CMU.EDU to add x86_64 support to sysname scripts
 
- -- Sam Hartman <hartmans@mit.edu>  Sun, 24 Oct 2004 12:39:02 -0400
+ -- Sam Hartman <hartmans@mit.edu>  Sun, 24 Oct 2004 14:45:22 -0400
 
 openafs (1.3.71-1) experimental; urgency=low
 
