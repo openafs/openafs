@@ -1035,7 +1035,6 @@ struct rx_call *rx_NewCall(conn)
 	    }
 	    else {
 		call = rxi_NewCall(conn, i);
-		MUTEX_ENTER(&call->lock);
 		break;
 	    }
 	}
@@ -1950,7 +1949,7 @@ struct rx_service *rxi_FindService(socket, serviceId)
 
 /* Allocate a call structure, for the indicated channel of the
  * supplied connection.  The mode and state of the call must be set by
- * the caller. */
+ * the caller. Returns the call with mutex locked. */
 struct rx_call *rxi_NewCall(conn, channel)
     register struct rx_connection *conn;
     register int channel;
@@ -2032,7 +2031,6 @@ struct rx_call *rxi_NewCall(conn, channel)
 	the call number is valid from the last time this channel was used */
     if (*call->callNumber == 0) *call->callNumber = 1;
 
-    MUTEX_EXIT(&call->lock);
     return call;
 }
 
@@ -2558,7 +2556,6 @@ struct rx_packet *rxi_ReceivePacket(np, socket, host, port, tnop, newcallp)
 	}
 	if (!call) {
 	    call = rxi_NewCall(conn, channel);
-	    MUTEX_ENTER(&call->lock);
 	    *call->callNumber = np->header.callNumber;
 	    call->state = RX_STATE_PRECALL;
 	    clock_GetTime(&call->queueTime);
