@@ -953,7 +953,6 @@ static void afs_GetDownDSlot(int anumber)
     struct afs_q *tq, *nq;
     struct dcache *tdc;
     int ix;
-    unsigned int i=0;
     unsigned int cnt;
 
     AFS_STATCNT(afs_GetDownDSlot);
@@ -1483,7 +1482,7 @@ struct dcache *afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	register struct vrequest *areq, afs_size_t *aoffset, afs_size_t *alen, 
 	int aflags)
 {
-    register afs_int32 i, code, code1, shortcut , adjustsize=0;
+    register afs_int32 i, code, code1=0, shortcut, adjustsize=0;
     int setLocks;
     afs_int32 index;
     afs_int32 us;
@@ -1493,9 +1492,9 @@ struct dcache *afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
     afs_size_t Position = 0;
 #ifdef AFS_64BIT_CLIENT
     afs_size_t tsize;
+    afs_size_t lengthFound;		/* as returned from server */
 #endif /* AFS_64BIT_CLIENT */
     afs_int32 size, tlen;		/* size of segment to transfer */
-    afs_size_t lengthFound;		/* as returned from server */
     struct tlocal1 *tsmall = 0;
     register struct dcache *tdc;
     register struct osi_file *file;
@@ -2614,9 +2613,7 @@ void afs_WriteThroughDSlots(void)
 
 struct dcache *afs_MemGetDSlot(register afs_int32 aslot, register struct dcache *tmpdc)
 {
-    register afs_int32 code;
     register struct dcache *tdc;
-    register char *tfile;
     int existing = 0;
 
     AFS_STATCNT(afs_MemGetDSlot);
@@ -2819,7 +2816,6 @@ struct dcache *afs_UFSGetDSlot(register afs_int32 aslot, register struct dcache 
 
 int afs_WriteDCache(register struct dcache *adc, int atime)
 {
-    register struct osi_file *tfile;
     register afs_int32 code;
 
     if (cacheDiskType == AFS_FCACHE_TYPE_MEM) return 0;

@@ -140,7 +140,7 @@ struct irix5_min_dirent {     /* miniature dirent structure */
 #else
 struct min_direct {	/* miniature direct structure */
 			/* If struct direct changes, this must too */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     afs_uint32  d_fileno;
     u_short     d_reclen;
     u_char      d_type;
@@ -226,7 +226,7 @@ int	afs_rd_stash_i = 0;
 #endif /* AFS_SUN56_ENV */
 #endif	/* AFS_HPUX100_ENV */
 
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int afs_readdir_type(avc, ade) 
 struct DirEntry *	ade;
 struct vcache *		avc;
@@ -386,7 +386,7 @@ afs_size_t		off;
 #if defined(AFS_SUN_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_SGI_ENV)
     sdirEntry.d_off = off;
 #endif
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     sdirEntry.d_type=afs_readdir_type(vc, de);
 #endif
 
@@ -452,7 +452,6 @@ void afs_bulkstat_send( avc, req )
     struct vcache * avc;
     struct vrequest * req;
 {
-    XSTATS_DECLS
     afs_rd_stash_i = 0;
 }
 
@@ -461,7 +460,7 @@ void afs_bulkstat_send( avc, req )
  * It has to do with 'offset' (seek locations).
 */
 
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_readdir(OSI_VC_ARG(avc), auio, acred, eofp)
     int *eofp;
 #else
@@ -521,7 +520,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 #endif /* AFS_SGI61_ENV */
 #endif /* defined(AFS_SGI53_ENV) */
 
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     /* Not really used by the callee so we ignore it for now */
     if (eofp) *eofp = 0;
 #endif
@@ -657,7 +656,7 @@ tagain:
 	    } else {
 		/* nothin to hand over */
 	    }
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	if (eofp) *eofp = 1;	/* Set it properly */
 #endif
 	    if (ode) DRelease(ode, 0);

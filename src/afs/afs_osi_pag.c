@@ -137,7 +137,7 @@ afs_uint32 getpag(void)
 int
 #if	defined(AFS_SUN5_ENV)
 afs_setpag (struct AFS_UCRED **credpp)
-#elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_setpag (struct proc *p, void *args, int *retval)
 #else
 afs_setpag (void) 
@@ -164,7 +164,7 @@ afs_setpag (void)
 
 #if	defined(AFS_SUN5_ENV)
     code = AddPag(genpag(), credpp);
-#elif	defined(AFS_OSF_ENV) || defined(AFS_FBSD_ENV)
+#elif	defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV)
     code = AddPag(p, genpag(), &p->p_rcred);
 #elif	defined(AFS_AIX41_ENV)
     {
@@ -196,7 +196,7 @@ afs_setpag (void)
 	code = AddPag(genpag(), &credp);
 	crfree(credp);
     }
-#elif defined(AFS_DARWIN_ENV)  || defined(AFS_FBSD_ENV)
+#elif defined(AFS_DARWIN_ENV)  || defined(AFS_XBSD_ENV)
     {
        struct ucred *credp=crdup(p->p_cred->pc_ucred);
        code=AddPag(p, genpag(), &credp);
@@ -228,7 +228,7 @@ afs_setpag (void)
 int
 #if	defined(AFS_SUN5_ENV)
 afs_setpag_val (struct AFS_UCRED **credpp, int pagval)
-#elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_setpag_val (struct proc *p, void *args, int *retval, int pagval)
 #else
 afs_setpag_val (int pagval) 
@@ -255,7 +255,7 @@ afs_setpag_val (int pagval)
 
 #if	defined(AFS_SUN5_ENV)
     code = AddPag(pagval, credpp);
-#elif	defined(AFS_OSF_ENV) || defined(AFS_FBSD_ENV)
+#elif	defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV)
     code = AddPag(p, pagval, &p->p_rcred);
 #elif	defined(AFS_AIX41_ENV)
     {
@@ -287,7 +287,7 @@ afs_setpag_val (int pagval)
 	code = AddPag(pagval, &credp);
 	crfree(credp);
     }
-#elif defined(AFS_DARWIN_ENV)  || defined(AFS_FBSD_ENV)
+#elif defined(AFS_DARWIN_ENV)  || defined(AFS_XBSD_ENV)
     {
        struct ucred *credp=crdup(p->p_cred->pc_ucred);
        code=AddPag(p, pagval, &credp);
@@ -325,20 +325,20 @@ int afs_getpag_val()
 
 
 /* Note - needs to be available on AIX, others can be static - rework this */
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int AddPag(struct proc *p, afs_int32 aval, struct AFS_UCRED **credpp)
-#else	/* AFS_OSF_ENV || AFS_FBSD_ENV */
+#else	/* AFS_OSF_ENV || AFS_XBSD_ENV */
 int AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
 #endif
 {
     afs_int32 newpag, code;
     AFS_STATCNT(AddPag);
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if ((code = setpag(p, credpp, aval, &newpag, 0)))
 #else	/* AFS_OSF_ENV */
     if ((code = setpag(credpp, aval, &newpag, 0)))
 #endif
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	return (code);
 #else
 	return (setuerror(code), code);
@@ -358,7 +358,7 @@ int afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
 	 * think it's ok to use the real uid to make setuid
          * programs (without setpag) to work properly.
          */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
         av->uid = acred->cr_uid;    /* default when no pag is set */
                                     /* bsd creds don't have ruid */
 #else
@@ -426,7 +426,7 @@ afs_int32 PagInCred(const struct AFS_UCRED *cred)
     if (cred == NULL) {
 	return NOPAG;
     }
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if (cred == NOCRED || cred == FSCRED) {
         return NOPAG;
     }
@@ -446,7 +446,7 @@ afs_int32 PagInCred(const struct AFS_UCRED *cred)
     }
 #endif
 #else
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DUX40_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DUX40_ENV) || defined(AFS_LINUX_ENV) || defined(AFS_XBSD_ENV)
     if (cred->cr_ngroups < 2) return NOPAG;
 #endif
 #endif

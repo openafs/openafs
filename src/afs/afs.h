@@ -886,28 +886,30 @@ struct afs_fheader {
     afs_int32 otherCSize;
 };
 
+#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_64BIT_ENV)
+/* Using ino64_t here so that user level debugging programs compile
+ * the size correctly.
+ */
+#define afs_inode_t ino64_t
+#else
+#if defined(AFS_LINUX_64BIT_KERNEL)
+#define afs_inode_t long
+#else
+#if defined(AFS_AIX51_ENV)
+#define afs_inode_t ino_t
+#else
+#define afs_inode_t afs_int32
+#endif
+#endif
+#endif
+
 /* kept on disk and in dcache entries */
 struct fcache {
     struct VenusFid fid;	/* Fid for this file */
     afs_int32 modTime;		/* last time this entry was modified */
     afs_hyper_t versionNo;	/* Associated data version number */
     afs_int32 chunk;		/* Relative chunk number */
-#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_64BIT_ENV)
-    /* Using ino64_t here so that user level debugging programs compile
-     * the size correctly.
-     */
-    ino64_t inode;		/* Unix inode for this chunk */
-#else
-#if defined(AFS_LINUX_64BIT_KERNEL)
-    long inode;	 		/* Unix inode for this chunk */
-#else
-#if defined(AFS_AIX51_ENV)
-    ino_t     inode;		/* Unix inode for this chunk */
-#else
-    afs_int32 inode;		/* Unix inode for this chunk */
-#endif
-#endif
-#endif
+    afs_inode_t inode;		/* Unix inode for this chunk */
     afs_int32 chunkBytes;	/* Num bytes in this chunk */
     char states;		/* Has this chunk been modified? */
 };

@@ -87,7 +87,7 @@ static int nbuffers;
 static afs_int32 timecounter;
 
 /* Prototypes for static routines */
-static struct buffer *afs_newslot (ino_t *afid, afs_int32 apage,register struct buffer *lp);
+static struct buffer *afs_newslot (afs_inode_t *afid, afs_int32 apage,register struct buffer *lp);
 
 static int dinit_flag = 0;
 void DInit (int abuffers)
@@ -143,7 +143,7 @@ void DInit (int abuffers)
     return;
 }
 
-char *DRead(register ino_t *fid, register int page)
+char *DRead(register afs_inode_t *fid, register int page)
 {
     /* Read a page from the disk. */
     register struct buffer *tb, *tb2;
@@ -267,7 +267,7 @@ static void FixupBucket(register struct buffer *ap)
 }
 
 /* lp is pointer to a fairly-old buffer */
-static struct buffer *afs_newslot (ino_t *afid, afs_int32 apage,register struct buffer *lp)
+static struct buffer *afs_newslot (afs_inode_t *afid, afs_int32 apage,register struct buffer *lp)
 {
     /* Find a usable buffer slot */
     register afs_int32 i;
@@ -419,7 +419,7 @@ int DVOffset (register void *ap)
  * of the hash function.  Oh well.  This should use the list traversal 
  * method of DRead...
  */
-void DZap (ino_t *fid)
+void DZap (afs_inode_t *fid)
 {
     register int i;
     /* Destroy all buffers pertaining to a particular fid. */
@@ -469,7 +469,7 @@ void DFlush (void)
     MReleaseReadLock(&afs_bufferLock);
 }
 
-char *DNew (register ino_t *fid, register int page)
+char *DNew (register afs_inode_t *fid, register int page)
 {
     /* Same as read, only do *not* even try to read the page, since it probably doesn't exist. */
     register struct buffer *tb;

@@ -476,8 +476,6 @@ void *afs_osi_Alloc_NoSleep(size_t x)
 
 void afs_osi_Free(void *x, size_t asize)
 {
-    register struct osimem *tm, **lm, *um;
-
     AFS_STATCNT(osi_Free);
     if (x == &memZero) return;	/* check for putting memZero back */
 
