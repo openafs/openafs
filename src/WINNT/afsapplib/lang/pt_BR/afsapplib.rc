@@ -18,6 +18,11 @@
 #include <commctrl.h>
 #ifndef APSTUDIO_INVOKED
 #define AFS_VERINFO_FILE_DESCRIPTION "DLL Base da Aplicação AFS"
+#define AFS_VERINFO_DLL
+#define AFS_VERINFO_NAME "afsapplib"
+#define AFS_VERINFO_FILENAME "afsapplib.dll"
+#define AFS_VERINFO_LANG_CODE 0x416
+#define AFS_VERINFO_CHARSET 1252
 #include "AFS_component_version_number.h"
 #include "..\..\config\NTVersioninfo.rc"
 #endif // APSTUDIO_INVOKED

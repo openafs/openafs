@@ -16,6 +16,10 @@
 //
 #include <windows.h>
 #define  AFS_VERINFO_FILE_DESCRIPTION "AFS サーバー構成アプリケーション"
+#define AFS_VERINFO_NAME "afssvrcpa"
+#define AFS_VERINFO_FILENAME "afssvrcpa.exe"
+#define AFS_VERINFO_LANG_CODE 0x411
+#define AFS_VERINFO_CHARSET 932
 #include "AFS_component_version_number.h"
 #include "..\..\config\NTVersioninfo.rc"
 

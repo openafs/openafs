@@ -16,6 +16,10 @@
 //
 #include <windows.h>
 #define  AFS_VERINFO_FILE_DESCRIPTION "DLL dos Utilitários de Configuração do AFS"
+#define AFS_VERINFO_NAME "afs_setup_utils"
+#define AFS_VERINFO_FILENAME "afs_setup_utils.exe"
+#define AFS_VERINFO_CHARSET 1252
+#define AFS_VERINFO_LANG_CODE 0x416
 #include "AFS_component_version_number.h"
 #include "..\..\..\..\config\NTVersioninfo.rc"
 

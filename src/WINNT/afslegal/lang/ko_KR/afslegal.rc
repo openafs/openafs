@@ -17,6 +17,10 @@
 #include <windows.h>
 #ifndef APSTUDIO_INVOKED
 #define AFS_VERINFO_FILE_DESCRIPTION "AFS 서버 시동 메시지"
+#define AFS_VERINFO_NAME "afslegal"
+#define AFS_VERINFO_FILENAME "afslegal.exe"
+#define AFS_VERINFO_LANG_CODE 0x412
+#define AFS_VERINFO_CHARSET 949
 #include "AFS_component_version_number.h"
 #include "..\..\config\NTVersioninfo.rc"
 #endif // APSTUDIO_INVOKED

@@ -29,6 +29,19 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// Version
+//
+
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Client"
+
+#define AFS_VERINFO_NAME "afscreds"
+#define AFS_VERINFO_FILENAME "afscreds.exe"
+#define AFS_VERINFO_LANG_CODE 0x411
+#define AFS_VERINFO_CHARSET 932
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+/////////////////////////////////////////////////////////////////////////////
+//
 // Icon
 //
 

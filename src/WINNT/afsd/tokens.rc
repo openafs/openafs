@@ -10,6 +10,8 @@
 /* Define VERSIONINFO resource */
 
 #define  AFS_VERINFO_FILE_DESCRIPTION "AFS Tokens Command"
+#define AFS_VERINFO_NAME "tokens"
+#define AFS_VERINFO_FILENAME "tokens.exe"
 
 #include "AFS_component_version_number.h"
 #include "..\..\config\NTVersioninfo.rc"

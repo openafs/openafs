@@ -10,7 +10,10 @@
 /* Define VERSIONINFO resource */
 
 #define  AFS_VERINFO_FILE_DESCRIPTION "AFS Event Log Message DLL"
+#define AFS_VERINFO_DLL
 
+#define AFS_VERINFO_NAME "afseventmsg"
+#define AFS_VERINFO_FILENAME "afseventmsg.dll"
 #include "AFS_component_version_number.h"
 #include "..\..\config\NTVersioninfo.rc"
 

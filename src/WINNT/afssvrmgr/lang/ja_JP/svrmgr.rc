@@ -19,6 +19,10 @@
 #include <WINNT\al_resource.h>
 #ifndef APSTUDIO_INVOKED
 #define AFS_VERINFO_FILE_DESCRIPTION "AFS サーバー・マネージャー"
+#define AFS_VERINFO_NAME "svrmgr"
+#define AFS_VERINFO_FILENAME "svrmgr.exe"
+#define AFS_VERINFO_LANG_CODE 0x411
+#define AFS_VERINFO_CHARSET 932
 #include "AFS_component_version_number.h"
 #include "..\..\config\NTVersioninfo.rc"
 #endif // APSTUDIO_INVOKED

@@ -10,6 +10,8 @@
 /* Define VERSIONINFO resource */
 
 #define  AFS_VERINFO_FILE_DESCRIPTION "AFS Protection Database Server"
+#define  AFS_VERINFO_NAME "ptserver"
+#define  AFS_VERINFO_FILENAME "ptserver.exe"
 
 #include "AFS_component_version_number.h"
 #include "..\config\NTVersioninfo.rc"

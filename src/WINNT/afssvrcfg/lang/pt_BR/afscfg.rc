@@ -17,6 +17,10 @@
 #include "afxres.h"
 #include <windows.h>
 #define  AFS_VERINFO_FILE_DESCRIPTION "Aplicação e assistente de Configuração do AFS®"
+#define AFS_VERINFO_NAME "afscfg"
+#define AFS_VERINFO_FILENAME "afscfg.exe"
+#define AFS_VERINFO_LANG_CODE 0x416
+#define AFS_VERINFO_CHARSET 1252
 #include "AFS_component_version_number.h"
 #include "..\..\config\NTVersioninfo.rc"
 
