@@ -70,7 +70,7 @@ In order to set up the root.afs volume, you must meet the following pre-conditio
 
 4) The AFS client must be running pointed at the new cell.
 eotext
-    $_ = $rl->readline("Do you meet these conditions? (Y/n) ");
+    $_ = $rl->readline("Do you meet these conditions? (y/n) ");
     unless (/^y/i ) {
 	print "Please restart the script when you meet these conditions.\n";
 	exit(1);

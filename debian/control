@@ -7,9 +7,8 @@ Standards-Version: 3.1.1
 
 Package: openafs-client
 Architecture: i386
-Depends: ${shlibs:Depends}, debconf, dnsutils
+Depends: ${shlibs:Depends}, debconf, dnsutils, openafs-modules
 Conflicts: arla
-Recommends: openafs-modules
 Description: The AFS distributed filesystem- client support
  AFS is a distributed filesystem allowing cross-platform sharing of
  files among multiple computers.  Facilities are provided for access

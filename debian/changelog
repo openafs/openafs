@@ -1,3 +1,13 @@
+openafs (1.0.snap20001106-8) unstable; urgency=low
+
+  * Modules no longer depend on the tlient; client depends on modules.
+    This works better for AFS, even though it is not the way packages like
+    alsa-base work.
+  * Fix several typos in configuration scripts.
+  * Clarify that it starts the client just after debconf.
+
+ -- Sam Hartman <hartmans@mit.edu>  Wed, 29 Nov 2000 13:10:43 -0500
+
 openafs (1.0.snap20001106-7) unstable; urgency=low
 
   * Add command line options to afs-newcell

@@ -12,7 +12,6 @@ Description: What hosts are DB servers for your home cell?
  is configured.  When you are ready you can edit
  /etc/openafs/afs.conf.client to enable the client.
 
-
 Template: openafs-client/thiscell
 Type: string
 Description:  What AFS cell does this workstation belong to?
@@ -33,10 +32,11 @@ Description:  How large is your AFS cache (kb)?
 Template: openafs-client/run-client
 Type: boolean
 Default: true
-Description: Run Openafs client at boot?
+Description: Run Openafs client now and at boot?
  Should the Openafs filesystem be started and mounted at boot?
  Normally, most users who install the openafs-client package expect to
  run it at boot.  However, if you are planning on setting up a new
  cell or are on a laptop, you may not want it started at boot time.
  If you answer no to this question, run /etc/init.d/openafs-client
  force-start to run.
+

@@ -105,7 +105,7 @@ print "If the fileserver is not running, this may hang for 30 seconds.\n";
 run("/etc/init.d/openafs-fileserver stop");
 $server = `hostname`;
 chomp $server;
-$admin = $rl->readline("What administrative principal should be used?") unless $admin;
+$admin = $rl->readline("What administrative principal should be used? ") unless $admin;
  die "Please specify an administrative user\n" unless $admin;
 $admin =~ s:/:.:g;
 if($admin =~ /@/) {
