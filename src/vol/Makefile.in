@@ -25,7 +25,7 @@ VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync.o purge.o \
 	 clone.o nuke.o devname.o listinodes.o common.o ihandle.o \
 	 namei_ops.o fstab.o
 
-OBJECTS=${VLIBOBJS} physio.o vol-salvage.o vol-info.o vol-dump.o
+OBJECTS=${VLIBOBJS} physio.o vol-salvage.o vol-info.o vol-dump.o vol-bless.o
 
 all: gi \
 	${TOP_LIBDIR}/vlib.a \
@@ -164,6 +164,9 @@ volinfo: vol-info.o physio.o ihandle.o fstab.o ${LIBS}
 	${CC} ${CFLAGS} -o volinfo vol-info.o physio.o \
 		ihandle.o fstab.o ${LIBS} ${XLIBS}
 
+vol-bless: vol-bless.o physio.o ihandle.o ${LIBS}
+	${CC} ${CFLAGS} -o vol-bless vol-bless.o physio.o ${LIBS} ${XLIBS}
+
 fs_conv_dux40D: fs_conv_411.o
 	${CC} ${CFLAGS} ${TOP_LIBDIR}/libcmd.a -o fs_conv_dux40D fs_conv_411.o  ${LIBS} ${XLIBS}
 
@@ -282,4 +285,4 @@ check-splint::
 	    vnode.c volume.c vutil.c partition.c fssync.c purge.c \
 	    clone.c nuke.c devname.c listinodes.c common.c ihandle.c \
 	    namei_ops.c \
-	    physio.c vol-salvage.c vol-info.c
+	    physio.c vol-salvage.c vol-info.c vol-bless.c
