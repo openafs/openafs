@@ -174,9 +174,7 @@ int pr_rxstat_userok(call)
     return afsconf_SuperUser(prdir, call, NULL);
 }
 
-void main (argc, argv)
-  int argc;
-  char **argv;
+int main (int argc, char **argv)
 {
     register afs_int32 code;
     afs_int32 myHost;
