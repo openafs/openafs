@@ -195,13 +195,20 @@ EvalMountPoint(register struct vcache *avc, struct vcache *advc,
     }
 
     if (avc->mvid == 0)
+#ifndef DISCONN
 	avc->mvid =
 	    (struct VenusFid *)osi_AllocSmallSpace(sizeof(struct VenusFid));
+#else   /* DISCONN */
+        avc->mvid = &avc->dmvid;
+#endif  /* DISCONN */
     avc->mvid->Cell = tvp->cell;
     avc->mvid->Fid.Volume = tvp->volume;
     avc->mvid->Fid.Vnode = 1;
     avc->mvid->Fid.Unique = 1;
     avc->states |= CMValid;
+#ifdef  DISCONN
+    avc->dflags |= VC_DIRTY;
+#endif  /* DISCONN */
 
     /* Used to: if the mount point is stored within a backup volume,
      * then we should only update the parent pointer information if
@@ -1172,6 +1179,19 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	}
 	/* otherwise we have the fid here, so we use it */
 	tvc = afs_GetVCache(adp->mvid, &treq, NULL, NULL);
+#ifdef  DISCONN
+        if (!tvc) {
+	  /*
+	   * XXX lhuston hack to fix .. problem during replay, fix
+	   * in a better manner.
+	   */
+            struct translations *trans;
+
+            trans = get_translation(adp->mvid);
+            if (trans->newfid.Fid.Volume)
+                tvc = afs_GetVCache(&trans->newfid, &treq, (long *)0, 0);
+        }
+#endif  /* DISCONN */
 	afs_Trace3(afs_iclSetp, CM_TRACE_GETVCDOTDOT, ICL_TYPE_FID, adp->mvid,
 		   ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32, code);
 	*avcp = tvc;
@@ -1413,6 +1433,9 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	    tvc->states |= CForeign;
 	tvc->parentVnode = adp->fid.Fid.Vnode;
 	tvc->parentUnique = adp->fid.Fid.Unique;
+#ifdef DISCONN
+        tvc->dflags |= VC_DIRTY;
+#endif
 	tvc->states &= ~CBulkStat;
 
 	if (afs_fakestat_enable == 2 && tvc->mvstat == 1) {
@@ -1480,11 +1503,18 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 		    if (tvolp) {
 			ObtainWriteLock(&tvc->lock, 134);
 			if (tvc->mvid == NULL) {
+#ifndef DISCONN
 			    tvc->mvid = (struct VenusFid *)
 				osi_AllocSmallSpace(sizeof(struct VenusFid));
+#else   /* DISCONN */
+                        tvc->mvid = &tvc->dmvid;
+#endif  /* DISCONN */
 			}
 			/* setup backpointer */
 			*tvc->mvid = tvolp->dotdot;
+#ifdef  DISCONN
+			tvc->dflags |= VC_DIRTY;
+#endif  /* DISCONN */
 			ReleaseWriteLock(&tvc->lock);
 			afs_PutVolume(tvolp, WRITE_LOCK);
 		    }
@@ -1502,10 +1532,38 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	}
 	code = 0;
     } else {
+#ifdef DISCONN
+      /*
+       * try to handle names that may not have been patched up
+       * yet.
+       *
+       * XXX lhuston this is a  hack, fix !!
+       */
+        struct translations *trans;
+        trans = get_translation(&tfid);
+
+        if (trans->newfid.Fid.Volume) {
+            tvc = afs_GetVCache(&trans->newfid, &treq, (long *)0, 0);
+            if (tvc) {
+	      /* XXX lhuston, should patch up the dir entry here */
+                *avcp = tvc;
+                code = 0;
+                goto done;
+            }
+        }
+#endif
 	/* if we get here, we found something in a directory that couldn't
 	 * be located (a Multics "connection failure").  If the volume is
 	 * read-only, we try flushing this entry from the cache and trying
 	 * again. */
+#ifdef  DISCONN
+
+        /*
+	** we don't do this if we are disconnected because we don't have
+        ** the ablility to see if the file actually exists.
+        */
+        if (!USE_OPTIMISTIC(discon_state)) {
+#endif  /* DISCONN */
 	if (pass == 0) {
 	    struct volume *tv;
 	    tv = afs_GetVolume(&adp->fid, &treq, READ_LOCK);
@@ -1524,6 +1582,16 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 		afs_PutVolume(tv, READ_LOCK);
 	    }
 	}
+#ifdef DISCONN
+        }
+        /* we don't want to return ENOENT when running disconnected, because
+	** we don't actually know if the entry does exist, instead we
+        ** will return ENETDOWN
+        */
+        if (IS_DISCONNECTED(discon_state))
+                code = ENETDOWN;
+        else
+#endif
 	code = ENOENT;
     }
 

@@ -289,7 +289,11 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 	    osi_FreeSmallSpace(avc->slocks);
 	    avc->slocks = 0;
 	}
-	if (avc->flockCount == 0) {
+#ifndef DISCONN
+        if (avc->flockCount == 0) {
+#else
+        if (avc->flockCount == 0 && !LOG_OPERATIONS(discon_state)) {
+#endif
 	    do {
 		tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
 		if (tc) {
@@ -342,7 +346,11 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 			slp = *slpp;
 		    }
 		}
-		if (!code && avc->flockCount == 0) {
+#ifndef DISCONN
+                if (!code && avc->flockCount == 0) {
+#else
+                if (!code && avc->flockCount == 0 && !LOG_OPERATIONS(discon_state)) {
+#endif
 		    do {
 			tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
 			if (tc) {
@@ -373,7 +381,11 @@ HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
 		 * we've already got the file locked (and thus read-locked, since
 		 * we've already checked for compatibility), we shouldn't send
 		 * the call through to the server again */
-		if (avc->flockCount == 0) {
+#ifndef DISCONN
+                if (avc->flockCount == 0) {
+#else
+                if (avc->flockCount == 0 && !LOG_OPERATIONS(discon_state)) {
+#endif
 		    /* we're the first on our block, send the call through */
 		    lockType = ((acom & LOCK_EX) ? LockWrite : LockRead);
 		    do {

@@ -211,6 +211,36 @@ afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq,
 #endif
 	    osi_VM_StoreAllSegments(avc);
     }
+#ifdef  DISCONN
+    if(LOG_OPERATIONS(discon_state)) {
+      ObtainWriteLock(&afs_xdcache);
+      for(index = afs_dvhashTbl[hash]; index != NULLIDX;) {
+	tdc = afs_GetDSlot(index, 0);
+	if ((afs_indexFlags[index] & IFDataMod) &&
+	    !FidCmp(&tdc->f.fid, &avc->fid)) {
+
+	  tdc->f.dflags |= KEEP_DC;
+	  tdc->flags |= DFEntryMod;
+	  afs_indexFlags[tdc->index] |= IFFKeep_DC;
+	  afs_indexFlags[index] &= ~IFDataMod;
+	  didAny = 1;
+
+	}
+	index = tdc->f.hvNextp;
+	lockedPutDCache(tdc);
+      }
+      if (didAny) {
+	long cur_op;
+	cur_op = log_dis_store(avc);
+	avc->last_mod_op = cur_op;
+	avc->dflags |= (KEEP_VC | VC_DIRTY);
+	afs_VindexFlags[avc->index] |= KEEP_VC;
+      }
+
+      ReleaseWriteLock(&afs_xdcache);
+      return 0;
+    }
+#endif  /* DISCONN */
 
     ConvertWToSLock(&avc->lock);
 
@@ -902,7 +932,9 @@ afs_InvalidateAllSegments(struct vcache *avc)
     }
 
     osi_Free(dcList, dcListMax * sizeof(struct dcache *));
-
+#ifdef  DISCONN
+    avc->dflags |= VC_DIRTY;
+#endif
     return 0;
 }
 
@@ -977,8 +1009,14 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
 
     avc->m.Length = alen;
 
+#ifdef  DISCONN
+    if (IS_CONNECTED(discon_state))
+	if (alen < avc->truncPos)
+	    avc->truncPos = alen;
+#else   /* DISCONN */
     if (alen < avc->truncPos)
 	avc->truncPos = alen;
+#endif  /* DISCONN */
     code = DVHash(&avc->fid);
 
     /* block out others from screwing with this table */
@@ -1061,5 +1099,8 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
     }
     ReleaseWriteLock(&avc->vlock);
 #endif
+#ifdef DISCONN
+    avc->dflags |= VC_DIRTY;
+#endif  /* DISCONN */
     return 0;
 }

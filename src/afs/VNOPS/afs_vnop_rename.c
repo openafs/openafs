@@ -164,6 +164,107 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
     }
 
     /* locks are now set, proceed to do the real work */
+#ifdef DISCONN
+    if (LOG_OPERATIONS(discon_state)) {
+        long cur_op;
+        struct vcache *rvc;
+        struct vcache *ovc;
+
+        /* XXX lhuston
+         * we need to return EXDEV if the link count > 1 and
+         * the file is being renamed across directories
+         */
+
+        /* set some dcache flags to keep it in the cache */
+
+        tdc1 = afs_FindDCache(aodp, 0);
+        if (tdc1) {
+            tdc1->f.dflags |= (KEEP_DC | DFEntryMod);
+            afs_indexFlags[tdc1->index] |= (IFFKeep_DC | IFDataMod);
+            afs_PutDCache(tdc1);
+        }
+
+        /* set the rest of the fid information, and get the vcache */
+
+        fileFid.Fid.Volume = aodp->fid.Fid.Volume;
+        fileFid.Cell = aodp->fid.Cell;
+        rvc = afs_GetVCache(&fileFid, &treq, (long *) 0, WRITE_LOCK);
+
+        if (rvc) {
+	  /* fix parent pointers so fix_dirents will work on replay */
+            rvc->parentVnode = andp->fid.Fid.Vnode;
+            rvc->parentUnique = andp->fid.Fid.Unique;
+            rvc->dflags |= (KEEP_VC | VC_DIRTY);
+            afs_VindexFlags[rvc->index] |= KEEP_VC;
+        }
+
+        /* lookup the file being removed */
+
+        tdc2 = afs_FindDCache(andp, 0);
+
+        if (!tdc2) {
+            ReleaseWriteLock(&aodp->lock);
+            if (!oneDir) ReleaseWriteLock(&andp->lock);
+            if (rvc)
+                afs_PutVCache(rvc, WRITE_LOCK);
+            return ENETDOWN;
+        }
+
+        code = dir_Lookup(&tdc2->f.inode, aname2, &unlinkFid.Fid);
+
+        tdc2->f.dflags |= (KEEP_DC | DFEntryMod);
+        afs_indexFlags[tdc2->index] |= (IFFKeep_DC | IFDataMod);
+
+        afs_PutDCache(tdc2);
+
+        if (code) {
+	  /* dest does not exist */
+            ovc = (struct vcache *) 0;
+        } else {
+	  /*
+	   * if we overwrite a file, keep track of it for
+	   * replay.
+	   * XXX lhuston do we need to keep the vc ?
+	   */
+
+            unlinkFid.Fid.Volume = andp->fid.Fid.Volume;
+            unlinkFid.Cell = andp->fid.Cell;
+
+            ovc = afs_GetVCache(&unlinkFid, &treq, (long *) 0, WRITE_LOCK);
+
+            if (ovc) {
+                ovc->dflags |= (KEEP_VC | VC_DIRTY);
+                afs_VindexFlags[ovc->index] |= KEEP_VC;
+            }
+        }
+
+
+        /* write the log entry */
+
+        cur_op = log_dis_rename(aodp, andp, &fileFid, ovc, aname1, aname2);
+
+        /* mark the vcaches to lock them into the cache */
+        aodp->last_mod_op = cur_op;
+        aodp->dflags |= (KEEP_VC| VC_DIRTY);
+        afs_VindexFlags[aodp->index] |= KEEP_VC;
+
+        andp->last_mod_op = cur_op;
+        andp->dflags |= (KEEP_VC | VC_DIRTY);
+        afs_VindexFlags[andp->index] |= KEEP_VC;
+
+        if (rvc) {
+            rvc->last_mod_op = cur_op;
+            afs_PutVCache(rvc, WRITE_LOCK);
+        }
+
+        if (ovc) {
+            ovc->last_mod_op = cur_op - 1;
+            afs_PutVCache(ovc, WRITE_LOCK);
+        }
+
+        code = 0;
+    } else {
+#endif  /* DISCONN */
     do {
 	tc = afs_Conn(&aodp->fid, areq, SHARED_LOCK);
 	if (tc) {
@@ -181,6 +282,9 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
     } while (afs_Analyze
 	     (tc, code, &andp->fid, areq, AFS_STATS_FS_RPCIDX_RENAME,
 	      SHARED_LOCK, NULL));
+#ifdef DISCONN
+    }
+#endif  /* DISCONN */
 
     returnCode = code;		/* remember for later */
 

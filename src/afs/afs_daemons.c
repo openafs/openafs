@@ -175,10 +175,13 @@ afs_Daemon(void)
 	    DFlush();		/* write out dir buffers */
 	    afs_WriteThroughDSlots();	/* write through cacheinfo entries */
 	    afs_FlushActiveVcaches(1);	/* keep flocks held & flush nfs writes */
-#ifdef AFS_DISCON_ENV
-	    afs_StoreDirtyVcaches();
+#if defined(DISCONN)
+                store_dirty_vcaches(); /* OpenBSD no longer calls afs_sync() periodically */
 #endif
-	    afs_CheckRXEpoch();
+                afs_CheckRXEpoch();
+#ifdef DISCONN
+                afs_CheckServers(0, NULL);
+#endif
 	    last1MinCheck = now;
 	}
 
@@ -213,8 +216,10 @@ afs_Daemon(void)
 		afs_FlushCBs();
 	    }
 #endif /* else AFS_USERSPACE_IP_ADDR */
+#ifndef DISCONN
 	    if (!afs_CheckServerDaemonStarted)
 		afs_CheckServers(0, NULL);
+#endif
 	    afs_GCUserData(0);	/* gc old conns */
 	    /* This is probably the wrong way of doing GC for the various exporters but it will suffice for a while */
 	    for (exporter = root_exported; exporter;
@@ -222,6 +227,8 @@ afs_Daemon(void)
 		(void)EXP_GC(exporter, 0);	/* Generalize params */
 	    }
 	    {
+	      /* XXX probably only skip this while disconnected? */
+#ifndef DISCONN
 		static int cnt = 0;
 		if (++cnt < 12) {
 		    afs_CheckVolumeNames(AFS_VOLCHECK_EXPIRED |
@@ -232,6 +239,7 @@ afs_Daemon(void)
 					 AFS_VOLCHECK_BUSY |
 					 AFS_VOLCHECK_MTPTS);
 		}
+#endif
 	    }
 	    last10MinCheck = now;
 	}

@@ -739,6 +739,10 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
     if (vlport)
 	tc->vlport = vlport;
 
+#ifdef DISCONN
+    tc->dindex = 0;
+#endif
+
     if (aflags & CLinkedCell) {
 	if (!linkedcname) {
 	    code = EINVAL;
@@ -772,6 +776,9 @@ afs_NewCell(char *acellName, afs_int32 * acellHosts, int aflags,
 	afs_PutServer(ts, WRITE_LOCK);
     }
     afs_SortServers(tc->cellHosts, MAXCELLHOSTS);	/* randomize servers */
+#ifdef DISCONN
+    tc->dflags |= CELL_DIRTY;
+#endif
 
     if (newc) {
 	struct cell_name *cn;

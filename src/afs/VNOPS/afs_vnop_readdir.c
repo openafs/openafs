@@ -650,9 +650,22 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
     tdc = afs_GetDCache(avc, (afs_size_t) 0, &treq, &origOffset, &tlen, 1);
     len = tlen;
     if (!tdc) {
-	code = ENOENT;
+#ifdef DISCONN
+      /* return different error since we don't know ENOENT */
+      /* XXX rethink the above statement */
+        code = ENETDOWN;
+#else   /* DISCONN */
+        code = ENOENT;
+#endif  /* DISCONN */
 	goto done;
     }
+#ifdef DISCONN
+    if (LOG_OPERATIONS(discon_state)) {
+        ObtainWriteLock(&log_lock);
+        discoLog(avc,&treq,DIS_READIR);
+        ReleaseWriteLock(&log_lock);
+    }
+#endif  /* DISCONN */
     ObtainReadLock(&avc->lock);
     ObtainReadLock(&tdc->lock);
 

@@ -470,6 +470,13 @@ afs_Analyze(register struct conn *aconn, afs_int32 acode,
     afs_int32 shouldRetry = 0;
     struct afs_stats_RPCErrors *aerrP;
 
+#ifdef DISCONN
+    if (IS_DISCONNECTED(discon_state)) {
+        afs_warnuser("afs_Analyze: disconnected\n");
+        return 0;
+    }
+#endif
+
     AFS_STATCNT(afs_Analyze);
     afs_Trace4(afs_iclSetp, CM_TRACE_ANALYZE, ICL_TYPE_INT32, op,
 	       ICL_TYPE_POINTER, aconn, ICL_TYPE_INT32, acode, ICL_TYPE_LONG,

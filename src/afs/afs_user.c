@@ -45,6 +45,10 @@ RCSID
 #include <inet/ip.h>
 #endif
 
+#ifdef DISCONN
+#include "discon.h"
+extern discon_modes_t discon_state;
+#endif
 
 /* Exported variables */
 afs_rwlock_t afs_xuser;
@@ -53,6 +57,37 @@ struct unixuser *afs_users[NUSERS];
 
 /* Forward declarations */
 void afs_ResetAccessCache(afs_int32 uid, int alock);
+
+#ifdef DISCONN
+/*
+ * Remove all conns.  Called at discon time.
+ */
+afs_RemoveAllConns()
+{
+    register int i;
+    register struct server *ts;
+    register struct conn *tc, **lc;
+
+    ObtainReadLock(&afs_xserver);
+    ObtainWriteLock(&afs_xconn);
+
+    for (i = 0; i < NSERVERS; i++) {
+        for (ts = afs_servers[i]; ts; ts = ts->next) {
+            for (tc = ts->conns, lc = &ts->conns; tc; tc = *lc) {
+                *lc = tc->next;
+                rx_DestroyConnection(tc->id);
+                osi_Free(tc, sizeof(struct conn));
+            } /*For each connection on the server*/
+        } /*For each server on chain*/
+    } /*For each chain*/
+
+    ReleaseWriteLock(&afs_xconn);
+    ReleaseReadLock(&afs_xserver);
+
+    rx_Finalize();
+
+} /*RemoveAllConns*/
+#endif
 
 /*
  * Called with afs_xuser, afs_xserver and afs_xconn locks held, to delete
@@ -159,7 +194,11 @@ afs_CheckTokenCache(void)
     afs_int32 now;
 
     AFS_STATCNT(afs_CheckCacheResets);
+#ifndef DISCONN
     ObtainReadLock(&afs_xvcache);
+#else
+    ObtainWriteLock(&afs_xvcache);
+#endif
     ObtainReadLock(&afs_xuser);
     now = osi_Time();
     for (i = 0; i < NUSERS; i++) {
@@ -193,7 +232,11 @@ afs_CheckTokenCache(void)
 	}
     }
     ReleaseReadLock(&afs_xuser);
+#ifndef DISCONN
     ReleaseReadLock(&afs_xvcache);
+#else
+    ReleaseWriteLock(&afs_xvcache);
+#endif
 
 }				/*afs_CheckTokenCache */
 
@@ -206,6 +249,7 @@ afs_ResetAccessCache(afs_int32 uid, int alock)
     struct axscache *ac;
 
     AFS_STATCNT(afs_ResetAccessCache);
+#ifndef DISCONN
     if (alock)
 	ObtainReadLock(&afs_xvcache);
     for (i = 0; i < VCSIZE; i++) {
@@ -219,7 +263,30 @@ afs_ResetAccessCache(afs_int32 uid, int alock)
     }
     if (alock)
 	ReleaseReadLock(&afs_xvcache);
+#else
+    if (alock) ObtainWriteLock(&afs_xvcache);
 
+    for(i=0;i<afs_num_vslots;i++) {
+      /*
+       * we look to see if the vcache is in memory, if so clear the
+       * access cache, otherwise we set a flag to clear the cache
+       * the next time it is read in from disk.
+       */
+        tvc = afs_indexVTable[i];
+        if (tvc) {
+                for(j=0;j<CPSIZE;j++) {
+		  /* really should do this under cache write lock, but that.
+		     is hard to under locking hierarchy */
+                    if (tvc->Access && (ac = afs_FindAxs(tvc->Access, uid))) {
+                        afs_RemoveAxs (&tvc->Access, ac);
+                    }
+                }
+        } else {
+                afs_VindexFlags[i] |= VC_CLEARAXS;
+        }
+    }
+    if (alock) ReleaseWriteLock(&afs_xvcache);
+#endif
 }				/*afs_ResetAccessCache */
 
 

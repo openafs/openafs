@@ -24,6 +24,9 @@ RCSID
 #include "afs/afs_stats.h"	/* afs statistics */
 #include "afs/vice.h"
 #include "rx/rx_globals.h"
+#ifdef DISCONN
+#include "discon.h"
+#endif
 
 struct VenusFid afs_rootFid;
 afs_int32 afs_waitForever = 0;
@@ -89,6 +92,14 @@ DECL_PIOCTL(PRxStatPeer);
 DECL_PIOCTL(PPrefetchFromTape);
 DECL_PIOCTL(PResidencyCmd);
 DECL_PIOCTL(PCallBackAddr);
+#ifdef DISCONN
+DECL_PIOCTL(PDisconnect);
+DECL_PIOCTL(PReplayOp);
+DECL_PIOCTL(PSetDOps);
+extern long    afs_num_vslots;
+extern struct vcache* afs_GetVSlot();
+extern char *afs_VindexFlags;
+#endif
 
 /*
  * A macro that says whether we're going to need HandleClientContext().
@@ -190,6 +201,13 @@ static int (*(CpioctlSw[])) () = {
 	PNewAlias,		/* 1 -- create new cell alias */
 	PListAliases,		/* 2 -- list cell aliases */
 	PCallBackAddr,		/* 3 -- request addr for callback rxcon */
+};
+
+static int (*(OpioctlSw[])) () = {
+    PBogus,			/* 0 */
+    PReplayOp,		        /* 1 -- replay disconnected op */
+    PSetDOps,		        /* 2 -- change disconn log */
+    PDisconnect,		/* 3 -- disconnect now */
 };
 
 #define PSetClientContext 99	/*  Special pioctl to setup caller's creds  */
@@ -1104,6 +1122,10 @@ afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
 	pioctlSw = CpioctlSw;
 	pioctlSwSize = sizeof(CpioctlSw);
 	break;
+    case 'O':			/* OpenAFS pioctls */
+	pioctlSw = OpioctlSw;
+	pioctlSwSize = sizeof(OpioctlSw);
+	break;
     default:
 	afs_PutFakeStat(&fakestate);
 	return EINVAL;
@@ -1686,6 +1708,10 @@ DECL_PIOCTL(PFlush)
     ReleaseWriteLock(&afs_xcbhash);
     /* now find the disk cache entries */
     afs_TryToSmush(avc, *acred, 1);
+#ifdef DISCONN
+    /* Mark the vc as bad, so we will trash it later */
+    avc->dflags |= DBAD_VC;
+#endif
     osi_dnlc_purgedp(avc);
     afs_symhint_inval(avc);
     if (avc->linkData && !(avc->states & CCore)) {
@@ -2546,6 +2572,9 @@ DECL_PIOCTL(PFlushVolumeData)
     register struct vcache *tvc;
     register struct volume *tv;
     afs_int32 cell, volume;
+#ifdef DISCONN
+    struct vcache tempvc;
+#endif
 
     AFS_STATCNT(PFlushVolumeData);
     if (!avc)
@@ -2561,8 +2590,13 @@ DECL_PIOCTL(PFlushVolumeData)
      * the vcaches associated with the volume.
      */
     ObtainReadLock(&afs_xvcache);
+#ifndef DISCONN
     for (i = 0; i < VCSIZE; i++) {
 	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+#else
+    for (i = 0; i < afs_num_vslots; i++) {
+        tvc = afs_GetVSlot(i, &tempvc);
+#endif
 	    if (tvc->fid.Fid.Volume == volume && tvc->fid.Cell == cell) {
 #if	defined(AFS_SGI_ENV) || defined(AFS_ALPHA_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
 		VN_HOLD(AFSTOV(tvc));

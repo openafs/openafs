@@ -263,6 +263,12 @@ afs_ConnByHost(struct server *aserver, unsigned short aport, afs_int32 acell,
     struct srvAddr *sa = 0;
 
     AFS_STATCNT(afs_ConnByHost);
+#ifdef DISCONN
+    if (IS_DISCONNECTED(discon_state)) {
+        afs_warnuser("afs_Conn: disconnected\n");
+        return (struct conn *)0;
+    }
+#endif
 /* 
   1.  look for an existing connection
   2.  create a connection at an address believed to be up

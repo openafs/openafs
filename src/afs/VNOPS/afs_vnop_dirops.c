@@ -92,6 +92,100 @@ afs_mkdir(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     InStatus.UnixModeBits = attrs->va_mode & 0xffff;	/* only care about protection bits */
     InStatus.Group = (afs_int32) acred->cr_gid;
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);
+#ifdef DISCONN
+    /* do some error checking to make sure this doesn't already exist */
+
+    if(!tdc) {
+        uprintf("Failed to make directory, can't get parent \n");
+        return ENETDOWN;
+        }
+
+    code = dir_Lookup(&tdc->f.inode, aname, &newFid.Fid);
+    if (!code) {
+        afs_PutDCache(tdc);
+        return ENOENT;
+    }
+
+
+    if (LOG_OPERATIONS(discon_state)) {
+        struct dcache *newdc;
+        long cur_op;
+        /*
+	**  We need to get a new fid, then get a dcache and a vcache
+        **  entry, and store the items in our local cache
+        */
+
+        generateDFID(adp,&newFid);
+
+
+        ObtainWriteLock(&afs_xvcache);
+        tvc = afs_NewVCache(&newFid, 0, 0, 0);
+
+        if(tvc->index==NULLIDX) panic(" afs_mkdir: got tvc with bad index");
+
+        ObtainWriteLock(&adp->lock);
+        ObtainWriteLock(&tvc->lock);
+        ReleaseWriteLock(&afs_xvcache);
+
+        *avcp = tvc;
+        code = dir_Create(&tdc->f.inode, aname, &newFid.Fid);
+
+
+        tvc->m.Owner = osi_curcred()->cr_uid;
+        tvc->m.Group = osi_curcred()->cr_gid;
+
+        hzero(tvc->m.DataVersion);
+
+        /*  XXX Nasty hack  for len, fix! */
+        tvc->m.Length =  2048;
+        tvc->m.LinkCount =  2;
+        tvc->m.Date = osi_Time();
+        tvc->m.Mode = attrs->va_mode & 0xffff;
+
+        tvc->callback = 0;
+        /* clear callback flag */
+        afs_VindexFlags[tvc->index] &= ~VC_HAVECB;
+        tvc->cbExpires = osi_Time();
+        tvc->states |= CStatd;
+        vSetType(tvc,VDIR);
+        tvc->m.Mode |= S_IFDIR;
+
+
+
+        /* XXX create the data for it! */
+        newdc = get_newDCache(tvc);
+        if(!newdc) panic("failed to get a newDC ");
+        code = dir_MakeDir(&newdc->f.inode,&tvc->fid.Fid,&adp->fid.Fid);
+
+        tvc->parentVnode = adp->fid.Fid.Vnode;
+        tvc->parentUnique = adp->fid.Fid.Unique;
+
+        cur_op = log_dis_mkdir(tvc, adp, attrs, aname);
+
+        /* mark the vcaches to lock them into the cache */
+        adp->last_mod_op = cur_op;
+        adp->dflags |= (KEEP_VC | VC_DIRTY);
+        afs_VindexFlags[adp->index] |= KEEP_VC;
+        ReleaseWriteLock(&adp->lock);
+
+        tvc->last_mod_op = cur_op;
+        tvc->dflags |= (KEEP_VC | VC_DIRTY);
+        afs_VindexFlags[tvc->index] |= KEEP_VC;
+
+
+        /* mark the dcaches that need to be kept in the cache */
+        tdc->f.dflags |= KEEP_DC;
+        afs_indexFlags[tdc->index] |= IFFKeep_DC;
+        tdc->flags |= DFEntryMod;
+        newdc->f.dflags |= KEEP_DC;
+        afs_indexFlags[newdc->index] |= IFFKeep_DC;
+        newdc->flags |= DFEntryMod;
+
+        ReleaseWriteLock(&tvc->lock);
+
+        return 0;
+    }
+#endif  /* DISCONN */
     ObtainWriteLock(&adp->lock, 153);
     do {
 	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
@@ -213,9 +307,101 @@ afs_rmdir(OSI_VC_DECL(adp), char *aname, struct AFS_UCRED *acred)
     }
 
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);	/* test for error below */
+ifdef  DISCONN
+  /* Check to make sure a dcache was returned */
+    if(!tdc) return ENETDOWN;
+#endif  /* DISCONN */
     ObtainWriteLock(&adp->lock, 154);
     if (tdc)
 	ObtainSharedLock(&tdc->lock, 633);
+#ifdef  DISCONN
+    /*
+    **  This is the stuff we do when we are running is disconnected mode.
+    **  First we need to check all the conditions to make sure it is
+    **  legal for us to remove the directory.  If it is not, then
+    **  we need to return an error message.
+    */
+    if (LOG_OPERATIONS(discon_state)) {
+        struct vcache *dvc;
+        struct dcache *ddc;
+        struct VenusFid dirFid;
+        long cur_op;
+        int     namelen = strlen(aname);
+
+
+        /*  we need to get the dcache entries of the directory */
+        code = dir_Lookup(&tdc->f.inode, aname, &dirFid.Fid);
+        dirFid.Cell = adp->fid.Cell;
+        dirFid.Fid.Volume = adp->fid.Fid.Volume;
+
+
+        ObtainWriteLock(&afs_xvcache);
+        dvc = afs_FindVCache(&dirFid, 0, 0);
+        ReleaseWriteLock(&afs_xvcache);
+        ddc = afs_GetDCache(dvc, 0, &treq, &offset, &len, 1);
+        /* Check some error conditions */
+        if(!ddc)
+                code = ENETDOWN;
+
+        if ((!code) && (namelen == 1 && bcmp(aname, ".",1) ==0))
+                code = EINVAL;
+
+        if((!code) && (namelen == 2 && bcmp(aname, "..",2) ==0))
+                code = ENOTEMPTY;
+
+        /* Let's make sure there are no entries in the directory */
+        if (!code)
+                code = dir_IsEmpty(&ddc->f.inode);
+
+        if (code) {
+                ReleaseWriteLock(&adp->lock);
+                afs_PutVCache(dvc, 0);
+                if (tdc) {
+		    ReleaseSharedLock(&tdc->lock);
+		    afs_PutDCache(tdc);
+		}
+                afs_PutDCache(ddc);
+                return (code);
+        }
+
+
+        /* everything looks good, log the rmdir */
+        ObtainWriteLock(&dvc->lock);
+
+        cur_op = log_dis_rmdir(dvc, adp, aname);
+
+        /* mark the vcaches to lock them into the cache */
+        dvc->last_mod_op = cur_op;
+        dvc->dflags |= (KEEP_VC | VC_DIRTY);
+        afs_VindexFlags[dvc->index] |= KEEP_VC;
+        ReleaseWriteLock(&dvc->lock);
+
+        adp->last_mod_op = cur_op;
+        adp->dflags |= (KEEP_VC | VC_DIRTY);
+        afs_VindexFlags[adp->index] |= KEEP_VC;
+
+        /* mark the dcaches that need to be kept in the cache */
+        ddc->f.dflags |= KEEP_DC;
+        afs_indexFlags[ddc->index] |= IFFKeep_DC;
+        ddc->flags |= DFEntryMod;
+
+        tdc->f.dflags |= KEEP_DC;
+        afs_indexFlags[tdc->index] |= IFFKeep_DC;
+        tdc->flags |= DFEntryMod;
+
+        /* do some house-cleaning on our local cache */
+        code = dir_Delete(&tdc->f.inode, aname);
+
+        ReleaseWriteLock(&adp->lock);
+        afs_PutDCache(tdc);     /* drop ref count */
+        afs_PutDCache(ddc);     /* drop ref count */
+        afs_PutVCache(dvc, 0);     /* drop ref count */
+        return 0;
+
+    }
+    else
+
+#endif  /* DISCONN */
     if (tdc && (adp->states & CForeign)) {
 	struct VenusFid unlinkFid;
 

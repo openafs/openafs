@@ -54,6 +54,9 @@ afs_StoreOnLastReference(register struct vcache *avc,
 #if defined(AFS_SGI_ENV)
 	osi_Assert(avc->opens > 0 && avc->execsOrWriters > 0);
 #endif
+#ifdef  DISCONN
+        afs_VindexFlags[avc->index] &= ~HAS_CCORE;
+#endif  /* DISCONN */
 	/* WARNING: Our linux cm code treats the execsOrWriters counter differently 
 	 * depending on the flags the file was opened with. So, if you make any 
 	 * changes to the way the execsOrWriters flag is handled check with the 
@@ -303,6 +306,9 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	    avc->m.Length = filePos;
 	}
 #endif
+#ifdef DISCONN
+        avc->dflags |= VC_DIRTY;
+#endif  /* DISCONN */
 	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
 #if !defined(AFS_VM_RDWR_ENV)
@@ -889,6 +895,28 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 #endif /* AFS_SGI_ENV */
 #endif /* AFS_SUN5_ENV */
     if (aflags & (FWRITE | FTRUNC)) {
+#ifdef  DISCONN
+      /* we need to set the DWriting flag on the dcache off so
+      ** that when we restart we don't toss the data.
+      */
+
+        struct dcache *tdc;
+        tdc = afs_FindDCache(avc, 0);
+
+        if(!tdc) {
+	  /* XXX should do something ? */
+                }
+        else if (tdc->f.states & DWriting){
+                tdc->f.states&=~DWriting;
+                tdc->flags |= DFEntryMod;
+                afs_PutDCache(tdc);
+                }
+
+        /* XXX lhuston debug, don't use background daemon */
+        ObtainWriteLock(&avc->lock);
+        code = afs_StoreOnLastReference(avc, &treq);
+        ReleaseWriteLock(&avc->lock);
+#else   /* DISCONN */
 	if (afs_BBusy()) {
 	    /* do it yourself if daemons are all busy */
 	    ObtainWriteLock(&avc->lock, 124);
@@ -914,6 +942,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 	    code = tb->code;
 	    afs_BRelease(tb);
 	}
+#endif  /* DISCONN */
 
 	/* VNOVNODE is "acceptable" error code from close, since
 	 * may happen when deleting a file on another machine while
@@ -955,6 +984,10 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 	    afs_warnuser("afs: failed to store file (%d)\n", code);
 
 	/* finally, we flush any text pages lying around here */
+#ifdef  DISCONN
+	/* If we are disconnected we don't want to set FlushDV */
+      if (IS_CONNECTED(discon_state))
+#endif  /* DISCONN */
 	hzero(avc->flushDV);
 	osi_FlushText(avc);
     } else {
@@ -1014,6 +1047,13 @@ afs_fsync(OSI_VC_DECL(avc), struct AFS_UCRED *acred)
 #endif
 
     AFS_STATCNT(afs_fsync);
+#ifdef  DISCONN
+    if (LOG_OPERATIONS(discon_state)) {
+        long cur_op;
+        cur_op = log_dis_fsync(avc);
+        return 0;
+        }
+#endif  /* DISCONN */
     afs_Trace1(afs_iclSetp, CM_TRACE_FSYNC, ICL_TYPE_POINTER, avc);
     if ((code = afs_InitReq(&treq, acred)))
 	return code;
@@ -1046,3 +1086,4 @@ afs_fsync(OSI_VC_DECL(avc), struct AFS_UCRED *acred)
     ReleaseSharedLock(&avc->lock);
     return code;
 }
+

@@ -1,0 +1,119 @@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+
+SHELL = /bin/sh
+SRCDIR = ${DESTDIR}
+
+CFLAGS=-g -I/usr/include -I${TOP_INCDIR} -I${TOP_INCDIR}/afs ${XCFLAGS} -g -DDISCONN -DLHUSTON
+
+CFLAGS2=-g -I${TOP_INCDIR}/afs -I${TOP_INCDIR} ${XCFLAGS} -g -DDISCONN -DLHUSTON
+
+TARGETS=discon scanlog playlog preprocess post copt sortents
+
+INCLS=${TOP_INCDIR}/afs/afsint.h ${TOP_INCDIR}/afs/cmd.h
+VLIB=${TOP_LIBDIR}/afs/
+LIB=${TOP_LIBDIR}/
+FSLIBS=${VLIB}libsys.a ${LIB}libubik.a ${VLIB}libvldb.a \
+  ${LIB}librxkad.a ${VLIB}libauth.a ${VLIB}libcom_err.a ${VLIB}libcmd.a \
+  ${LIB}librx.a ${LIB}librxkad.a ${LIB}librx.a $(VLIB)util.a ${LIB}liblwp.a ${LIB}libdes.a 
+CMLIBS=${VLIB}libsys.a ${VLIB}libafsint.a \
+  ${LIB}librxkad.a ${VLIB}libauth.a ${VLIB}libcom_err.a ${VLIB}libcmd.a \
+  ${LIB}librx.a $(VLIB)util.a ${LIB}liblwp.a ${LIB}librxkad.a
+LIBS= ${FSLIBS} ${XLIBS}
+
+
+all:	${TARGETS}
+
+install:	${TARGETS} pass1 pass2
+	cp -p discon scanlog playlog ${DESTDIR}/bin
+	cp -p preprocess post copt sortents pass1 pass2 ${DESTDIR}/etc
+
+clean:
+	rm -f ${TARGETS} *.o
+
+#system: discon scanlog playlog
+
+discon.o : discon.c ${INCLS}
+
+common.o : common.c ${INCLS}
+	${CC} ${CFLAGS2} -c common.c 
+
+token.o : token.c ${INCLS}
+
+giveup_cb.o : giveup_cb.c ${INCLS}
+	${CC} ${CFLAGS2} -c giveup_cb.c 
+
+print_info.o : print_info.c ${INCLS}
+	${CC} ${CFLAGS2} -c print_info.c 
+
+check_net.o : check_net.c ${INCLS}
+	${CC} ${CFLAGS2} -c check_net.c 
+
+playlog.o : playlog.c
+	${CC} ${CFLAGS2} -c playlog.c 
+
+post.o: post.c
+	${CC} ${CFLAGS2}  -c post.c
+
+post: post.o display.o
+	${CC} ${CFLAGS2}  -o post post.o display.o
+
+copt: copt.c
+	${CC} ${CFLAGS2} -o copt copt.c
+
+preprocess: preprocess.c
+	${CC} ${CFLAGS2}  -o preprocess preprocess.c
+
+dump_stats.o : dump_stats.c
+	${CC} ${CFLAGS2} -c dump_stats.c 
+
+print_log.o : print_log.c
+	${CC} ${CFLAGS2} -c print_log.c 
+
+queue_info.o : queue_info.c
+	${CC} ${CFLAGS2} -c queue_info.c 
+
+test.o : test.c
+	${CC} ${CFLAGS2} -c test.c 
+
+display.o : display.c
+	${CC} ${CFLAGS2} -c display.c 
+
+scanlog.o : scanlog.c
+	${CC} ${CFLAGS2} -c scanlog.c 
+
+discon: discon.o common.o token.o $(LIBS)
+	${CC} -static -o discon discon.o common.o token.o $(LIBS)
+
+giveup_cb: giveup_cb.o $(LIBS)
+	${CC} -o giveup_cb giveup_cb.o $(LIBS)
+
+print_info: print_info.o $(LIBS)
+	${CC} -o print_info print_info.o $(LIBS)
+
+scanlog: scanlog.o display.o
+	${CC} -o scanlog scanlog.o  display.o
+
+#scanlog: scanlog.o display.o common.o
+#	${CC} -o scanlog scanlog.o  display.o common.o $(LIBS)
+
+sortents: sortents.c
+	${CC} ${CFLAGS2}  -o sortents sortents.c
+
+playlog: playlog.o display.o common.o token.o check_net.o
+	${CC}  -o playlog playlog.o common.o display.o token.o check_net.o $(LIBS)
+
+dump_stats: dump_stats.o 
+	${CC} -o dump_stats dump_stats.o
+
+print_log: print_log.o 
+	${CC} -o print_log print_log.o
+
+queue_info : queue_info.o
+	${CC} -o queue_info queue_info.o
+
+test: test.o display.o
+	${CC} -o test test.o display.o
+
+q_print: q_print.c
+	${CC} ${CFLAGS2} -o q_print q_print.c

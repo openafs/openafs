@@ -299,3 +299,14 @@ shutdown_osifile(void)
 	afs_osicred_initialized = 0;
     }
 }
+
+
+#ifdef DISCONN
+long
+afs_osi_Fsync(struct osi_file *afile)
+{
+  long code;
+  code = VOP_FSYNC(afile->vnode, &osi_cred);
+  return code;
+}
+#endif

@@ -568,6 +568,19 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 #if defined(AFS_SGI_ENV)
     AFS_RWLOCK((vnode_t *) avc, VRWLOCK_WRITE);
 #endif
+#ifdef  DISCONN
+    /*
+     * We don't want to truncate the local version during
+     * reconciliation because the file may contain data that was
+     * written at a latter time.  If we go ahead and truncate
+     * the file, then we will lose this data.
+     *
+     * XXX actually we will need some way to determine if the data
+     *     was later modified, because if it wasn't then we want
+     *     to go ahead with the truncate.
+     */
+
+#endif  /* DISCONN */
 #if	defined(AFS_LINUX22_ENV)
     if (attrs->va_mask & ATTR_SIZE) {
 #elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
@@ -587,6 +600,9 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	    astat.Mask |= AFS_SETMODTIME;
 	    astat.ClientModTime = osi_Time();
 	}
+#ifdef  DISCONN
+        if (!LOG_OPERATIONS(discon_state))
+#endif  /* DISCONN */
 	if (code == 0) {
 	    if (((avc->execsOrWriters <= 0) && (avc->states & CCreating) == 0)
 		|| (avc->execsOrWriters == 1 && AFS_NFSXLATORREQ(acred))) {
@@ -596,6 +612,11 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	    }
 	} else
 	    avc->states &= ~CDirty;
+#ifdef  DISCONN
+	/* XXX still true? djb */
+        if (LOG_OPERATIONS(discon_state))
+	    avc->states &= ~CDirty;
+#endif  /* DISCONN */
 
 	ReleaseWriteLock(&avc->lock);
 	hzero(avc->flushDV);
@@ -605,6 +626,33 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	afs_gfshack((struct gnode *)avc);
 #endif
     }
+#ifdef  DISCONN
+
+        if (LOG_OPERATIONS(discon_state)) {
+            long cur_op;
+            ObtainWriteLock(&avc->lock);
+
+            cur_op = log_dis_setattr(avc, attrs);
+
+            /* now set the attributes in the vcache */
+
+            if(astat.Mask & AFS_SETMODTIME)
+                 avc->m.Date = astat.ClientModTime;
+            if(astat.Mask & AFS_SETOWNER)
+                 avc->m.Owner = astat.Owner;
+            if(astat.Mask & AFS_SETGROUP)
+                 avc->m.Group =  astat.Group;
+            if(astat.Mask & AFS_SETMODE)
+                 avc->m.Mode = astat.UnixModeBits;
+
+            /* mark the vcache so we don't flush it */
+            avc->last_mod_op = cur_op;
+            avc->dflags |= (KEEP_VC | VC_DIRTY);
+            afs_VindexFlags[avc->index] |= KEEP_VC;
+            ReleaseWriteLock(&avc->lock);
+    }
+    else
+#endif  /* DISCONN */
     if (code == 0) {
 	ObtainSharedLock(&avc->lock, 16);	/* lock entry */
 	code = afs_WriteVCache(avc, &astat, &treq);	/* send request */

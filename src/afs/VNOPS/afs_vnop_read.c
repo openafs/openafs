@@ -395,6 +395,14 @@ afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 	ReleaseReadLock(&adc->lock);
 
 	tdc = afs_GetDCache(avc, offset, areq, &j1, &j2, 2);	/* type 2 never returns 0 */
+#ifdef DISCONN
+        /*
+         * in disconnected mode type 2 can return 0 because it doesn't
+         * make any sense to allocate a dcache we can never fill
+         */
+        if (tdc == (struct dcache *) 0)
+                return;
+#endif
 	ObtainSharedLock(&tdc->mflock, 651);
 	if (!(tdc->mflags & DFFetchReq)) {
 	    /* ask the daemon to do the work */
@@ -551,6 +559,12 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 		afs_PutDCache(tdc);	/* before reusing tdc */
 	    }
 	    tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 2);
+#ifdef DISCONN
+            if(!tdc) {
+                error = ENETDOWN;
+                break;
+            }
+#endif  /* DISCONN */
 	    ObtainReadLock(&tdc->lock);
 	    /* now, first try to start transfer, if we'll need the data.  If
 	     * data already coming, we don't need to do this, obviously.  Type

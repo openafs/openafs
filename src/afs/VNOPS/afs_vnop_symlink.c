@@ -65,6 +65,9 @@ int afs_symlink
     struct AFSVolSync tsync;
     struct volume *volp = 0;
     struct afs_fakestat_state fakestate;
+#ifdef  DISCONN
+    long cur_op;
+#endif  /* DISCONN */
     XSTATS_DECLS;
     OSI_VC_CONVERT(adp);
 
@@ -121,6 +124,56 @@ int afs_symlink
     if (tdc)
 	ObtainWriteLock(&tdc->lock, 636);
     ObtainSharedLock(&afs_xvcache, 17);	/* prevent others from creating this entry */
+#ifdef  DISCONN
+    if (LOG_OPERATIONS(discon_state)) {
+
+      /* if we don't have parent dcache, we are not able to do this */
+        if(!tdc) {
+            ReleaseWriteLock(&adp->lock);
+            ReleaseSharedLock(&afs_xvcache);
+            return ENETDOWN;
+            }
+
+        /* make sure an entry with this name doesn't already exist */
+        code = dir_Lookup(&tdc->f.inode, aname, &newFid.Fid);
+        if(!code) {
+            afs_PutDCache(tdc);
+            ReleaseWriteLock(&adp->lock);
+            ReleaseSharedLock(&afs_xvcache);
+            return EEXIST;
+            }
+
+
+        /* okay, every thing looks okay, lets log the operation */
+        generateFFID(adp,&newFid);
+        cur_op = log_dis_symlink(&newFid, adp, aname, atargetName, attrs);
+
+        /* mark the vcaches to lock them into the cache */
+        adp->last_mod_op = cur_op;
+        adp->dflags |= (KEEP_VC | VC_DIRTY);
+        afs_VindexFlags[adp->index] |= KEEP_VC;
+
+        /* mark the dcaches that need to be kept in the cache */
+        tdc->f.dflags |= KEEP_DC;
+        tdc->flags |= DFEntryMod;
+        afs_indexFlags[tdc->index] |= IFFKeep_DC;
+
+        /* Create a fake OutFidStatus so that processFS will work corrctly */
+
+        OutFidStatus.Length = alen;
+        OutFidStatus.ClientModTime = osi_Time();
+        OutFidStatus.DataVersion = 0;
+        OutFidStatus.dataVersionHigh = 0;
+        OutFidStatus.Owner = osi_curcred()->cr_uid;
+        OutFidStatus.Group = osi_curcred()->cr_gid;
+        OutFidStatus.LinkCount = 1;
+        OutFidStatus.UnixModeBits = attrs->va_mode | 0111;
+        OutFidStatus.FileType = SymbolicLink;
+        code = 0;
+        }
+     else
+
+#endif  /* DISCONN */
     /* XXX Pay attention to afs_xvcache around the whole thing!! XXX */
     do {
 	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
@@ -191,6 +244,17 @@ int afs_symlink
      * no one can get a pointer to the new cache entry until we release 
      * the xvcache lock. */
     tvc = afs_NewVCache(&newFid, hostp);
+#ifdef  DISCONN
+    if(tvc->index==NULLIDX) panic("afs_symlink: got tvc with bad index");
+    /* populate the parent pointers */
+    /* XXX lhuston should we have lock on this ? */
+    tvc->parentVnode = adp->fid.Fid.Vnode;
+    tvc->parentUnique = adp->fid.Fid.Unique;
+    if (LOG_OPERATIONS(discon_state)) {
+        tvc->last_mod_op = cur_op;
+        tvc->dflags |= (KEEP_VC | VC_DIRTY);
+    }
+#endif  /* DISCONN */
     ObtainWriteLock(&tvc->lock, 157);
     ObtainWriteLock(&afs_xcbhash, 500);
     tvc->states |= CStatd;	/* have valid info */
@@ -214,6 +278,9 @@ int afs_symlink
 	tvc->linkData = (char *)afs_osi_Alloc(alen);
 	strncpy(tvc->linkData, atargetName, alen - 1);
 	tvc->linkData[alen - 1] = 0;
+#ifdef  DISCONN
+        tvc->name_idx = allocate_name(tvc->linkData);
+#endif  /* DISCONN */
     }
     ReleaseWriteLock(&tvc->lock);
     ReleaseWriteLock(&afs_xvcache);
@@ -298,6 +365,17 @@ afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq)
 		   ICL_TYPE_POINTER, tdc, ICL_TYPE_OFFSET,
 		   ICL_HANDLE_OFFSET(avc->m.Length));
 	if (!tdc) {
+#ifdef  DISCONN
+
+	  /*
+	   * if we don't have the data cached, give a more appropriate
+	   * error if disconnected.
+	   */
+
+         if(IS_DISCONNECTED(discon_state))
+            return ENETDOWN;
+         else
+#endif  /* DISCONN */
 	    return EIO;
 	}
 	/* otherwise we have the data loaded, go for it */
@@ -327,6 +405,10 @@ afs_UFSHandleLink(register struct vcache *avc, struct vrequest *areq)
 	    return EIO;
 	}
 	avc->linkData = tp;
+#ifdef  DISCONN
+        avc->name_idx = allocate_name(avc->linkData);
+        avc->dflags |= VC_DIRTY;
+#endif  /* DISCONN */
     }
     return 0;
 }
@@ -359,6 +441,21 @@ afs_readlink(OSI_VC_ARG(avc), auio, acred)
 	goto done;
     }
     ObtainWriteLock(&avc->lock, 158);
+#ifdef  DISCONN
+    /*
+    ** there is not much we can do here, if we are
+    ** running in disconnected mode.  We will log that we
+    ** tried to do the afs_readlink.  afs_UFSHandleLink has
+    ** been modifed slightly so that it will return an ENETDOWN
+    ** error instead of EIO when we are running is disconnected
+    */
+
+    if (LOG_OPERATIONS(discon_state)) {
+        long cur_op;
+        cur_op = log_dis_readlink(avc);
+    }
+
+#endif  /* DISCONN */
     code = afs_HandleLink(avc, &treq);
     /* finally uiomove it to user-land */
     if (code == 0) {

@@ -830,7 +830,9 @@ extern struct vcache *Initial_freeVCList;
 extern struct afs_q VLRU;
 extern afs_int32 vcachegen;
 extern unsigned int afs_paniconwarn;
+#ifndef DISCONN
 extern struct vcache *afs_vhashT[VCSIZE];
+#endif
 extern afs_int32 afs_bulkStatsLost;
 extern int afs_norefpanic;
 

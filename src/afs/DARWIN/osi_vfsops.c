@@ -77,6 +77,12 @@ afs_mount(mp, path, data, ndp, p)
 	AFS_GUNLOCK();
 	return (EBUSY);
     }
+#ifdef DISCONN
+    /* initialize the vcache entries before we start using them */
+
+    /* XXX find a better place for this if possible  */
+    init_vcache_entries();
+#endif
 
     afs_globalVFS = mp;
     mp->vfs_bsize = 8192;
@@ -147,6 +153,9 @@ afs_unmount(mp, flags, p)
 
     AFS_GLOCK();
     AFS_STATCNT(afs_unmount);
+#ifdef DISCONN
+    give_up_cbs();
+#endif
 
     if (mp->mnt_data != (qaddr_t) - 1) {
 	if (mp->mnt_data != NULL) {
@@ -285,6 +294,10 @@ afs_sync(mp, waitfor, cred, p)
      struct ucred *cred;
      struct prioc *p;
 {
+#if defined(DISCONN)
+  /* Can't do this in OpenBSD 2.7, it faults when called from apm_suspend() */
+    store_dirty_vcaches();
+#endif
     return 0;
 }
 

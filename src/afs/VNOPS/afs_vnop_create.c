@@ -244,6 +244,82 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	}
     }
 
+#ifdef DISCONN
+	/* XXX if no tdc and disconnected then return error */
+    if (IS_DISCONNECTED(discon_state) && (!tdc)) {
+        ReleaseWriteLock(&adp->lock);
+        code = ENETDOWN;
+        goto done;
+    } else if (LOG_OPERATIONS(discon_state) && tdc) {
+        long cur_op;
+
+        /*
+	**  We need to get a new fid, then get a dcache and a vcache
+        **  entry, and store the items in our local cache
+        */
+
+        generateFFID(adp, &newFid);
+
+        ObtainWriteLock(&afs_xvcache);
+        tvc = afs_NewVCache(&newFid, 0, 0, 0);
+        ObtainWriteLock(&tvc->lock);
+        ReleaseWriteLock(&afs_xvcache);
+
+        if (tvc->index==NULLIDX)
+            panic("afs_create: got tvc with bad index");
+
+        *avcp = tvc;
+        code = dir_Create(&tdc->f.inode, aname, &newFid.Fid);
+
+        tvc->m.Owner = osi_curcred()->cr_uid;
+        tvc->m.Group = osi_curcred()->cr_gid;
+        hzero(tvc->m.DataVersion);
+
+        tvc->m.Length = 0;
+        tvc->m.LinkCount = 1;
+        tvc->m.Date = osi_Time();
+        tvc->m.Mode = attrs->va_mode;
+
+        tvc->callback = 0;
+        /* clear callback flag */
+        afs_VindexFlags[tvc->index] &= ~VC_HAVECB;
+
+        /* XXX lhuston what the hell */
+        tvc->cbExpires = osi_Time();
+        tvc->states |= CStatd;
+
+        newdc = get_newDCache(tvc);
+
+        cur_op = log_dis_create(tvc, adp, attrs, amode, aname, aexcl);
+
+        /* mark the vcaches so they are not tossed */
+        adp->last_mod_op = cur_op;
+        adp->dflags |= (KEEP_VC|VC_DIRTY);
+        afs_VindexFlags[adp->index] |= KEEP_VC;
+
+        tvc->dflags |= (KEEP_VC|VC_DIRTY);
+        tvc->last_mod_op = cur_op;
+        afs_VindexFlags[tvc->index] |= KEEP_VC;
+
+        /* Mark the dcaches we need to keep in the cache */
+        tdc->f.dflags |= KEEP_DC;
+        afs_indexFlags[tdc->index] |= IFFKeep_DC;
+        tdc->flags |= DFEntryMod;
+
+        newdc->f.dflags |= KEEP_DC;
+        afs_indexFlags[newdc->index] |= IFFKeep_DC;
+        newdc->flags |= DFEntryMod;
+
+        /* set the parent back pointers */
+        tvc->parentVnode = adp->fid.Fid.Vnode;
+        tvc->parentUnique = adp->fid.Fid.Unique;
+
+        ReleaseWriteLock(&tvc->lock);
+        ReleaseWriteLock(&adp->lock);
+        return 0;
+    }
+#endif  /* DISCONN */
+
     /* if we create the file, we don't do any access checks, since
      * that's how O_CREAT is supposed to work */
     if (adp->states & CForeign) {
@@ -328,6 +404,9 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	if (code < 0) {
 	    ObtainWriteLock(&afs_xcbhash, 488);
 	    afs_DequeueCallback(adp);
+#ifdef DISCONN
+	    afs_VindexFlags[tvc->index] &= ~VC_HAVECB;
+#endif
 	    adp->states &= ~CStatd;
 	    ReleaseWriteLock(&afs_xcbhash);
 	    osi_dnlc_purgedp(adp);
@@ -409,6 +488,9 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 		afs_DequeueCallback(tvc);
 		tvc->states &= ~(CStatd | CUnique);
 		tvc->callback = 0;
+#ifdef DISCONN
+		afs_VindexFlags[tvc->index] &= ~VC_HAVECB;
+#endif
 		if (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
 		    osi_dnlc_purgedp(tvc);
 	    }
@@ -473,6 +555,13 @@ afs_LocalHero(register struct vcache *avc, register struct dcache *adc,
     afs_hyper_t avers;
 
     AFS_STATCNT(afs_LocalHero);
+#ifdef DISCONN
+    /*
+     * If we are logging operations, then the data passed in here will
+     * be invalid.
+     */
+    if (LOG_OPERATIONS(discon_state)) return 1;
+#endif
     hset64(avers, astat->dataVersionHigh, astat->DataVersion);
     /* this *is* the version number, no matter what */
     if (adc) {
@@ -495,6 +584,9 @@ afs_LocalHero(register struct vcache *avc, register struct dcache *adc,
 #endif /* AFS_64BIT_ENV */
 	avc->m.Date = astat->ClientModTime;
     }
+#ifdef  DISCONN
+    avc->dflags |= VC_DIRTY;
+#endif  /* DISCONN */
     if (ok) {
 	/* we've been tracking things correctly */
 	adc->dflags |= DFEntryMod;

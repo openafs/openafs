@@ -181,4 +181,12 @@ struct cm_initparams {
 #define VIOC_GETALIAS		_CVICEIOCTL(2)	/* get alias info */
 #define VIOC_CBADDR		_CVICEIOCTL(3)	/* push callback addr */
 
+#ifdef DISCONN
+#ifdef LHUSTON
+#define VIOCREPLAYOP            _OVICEIOCTL(1)  /* replay logged operation */
+#endif
+#define VIOCSETDOPS             _OVICEIOCTL(2)  /* change discon log file */
+#define VIOCDISCONNECT          _OVICEIOCTL(3)  /* Wait for dead servers forever */
+#endif
+
 #endif /* AFS_VENUS_H */

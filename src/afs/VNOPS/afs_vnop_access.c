@@ -58,6 +58,16 @@ afs_GetAccessBits(register struct vcache *avc, register afs_int32 arights,
 {
     AFS_STATCNT(afs_GetAccessBits);
     /* see if anyuser has the required access bits */
+#ifdef  DISCONN
+    /*
+     * if we are using optimistice protocol or we have a locally
+     * modified file, then assume we have the right access rights
+     * XXX lhuston: can we do something better?
+     */
+        if (USE_OPTIMISTIC(discon_state) || (avc->dflags & KEEP_VC))
+             avc->anyAccess |= arights;
+
+#endif  /* DISCONN */
     if ((arights & avc->anyAccess) == arights) {
 	return arights;
     }
@@ -136,6 +146,10 @@ afs_AccessOK(struct vcache *avc, afs_int32 arights, struct vrequest *areq,
 	    /* Avoid this GetVCache call */
 	    tvc = afs_GetVCache(&dirFid, areq, NULL, NULL);
 	    if (tvc) {
+#ifdef  DISCONN
+		if(tvc->index == NULLIDX)
+		    panic("afs_accessOK: getVC gave bad index");
+#endif  /* DISCONN */
 		dirBits = afs_GetAccessBits(tvc, arights, areq);
 		afs_PutVCache(tvc);
 	    }
@@ -211,6 +225,11 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
 	code = afs_CheckCode(code, &treq, 16);
 	return code;
     }
+
+#ifdef  DISCONN
+    if (LOG_OPERATIONS(discon_state))
+        log_dis_access(avc);
+#endif  /* DISCONN */
 
     /* if we're looking for write access and we have a read-only file system, report it */
     if ((amode & VWRITE) && (avc->states & CRO)) {

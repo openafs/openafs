@@ -73,6 +73,44 @@ afs_size_t afs_vmMappingEnd;	/* for large files (>= 2GB) the VM
 #endif /* AFS_VM_RDWR_ENV */
 #endif /* AFS_64BIT_CLIENT */
 
+#ifdef DISCONN
+#include "discon.h"
+
+#include "discon_stats.h"
+
+
+extern struct vcache *afs_GetVSlot();
+extern struct serv_cbcount *afs_scbs[NSERVERS];
+extern get_file_name();
+extern long    integrity_check;
+extern long    afs_num_vslots;
+extern struct afs_lock log_lock;
+discon_modes_t discon_state;
+struct osi_file *disconnected_log;
+struct vcache *LowVSrange;
+struct vcache *HighVSrange;
+short  freeDVCList;                     /*Free list for stat cache entries*/
+int     afs_vchashTable[VCSIZE];          /*Data cache hash table*/
+struct vcache **afs_indexVTable;        /*Pointers to vcache entries*/
+struct vcache *freeVSList;              /*Free list for disk slots */
+struct vcache *Initial_freeVSList;              /*Free list for disk slots */
+extern long freeVScount;
+char *afs_VindexFlags;                  /*(only one) Is there data there?*/
+long *afs_indexVTimes;                  /*Dcache entry Access times*/
+long afs_indexVCounter;                 /*Fake time for marking index*/
+struct llist *llist;
+struct llist *cur_llist;
+long  llist_done = 0;
+
+extern        struct vcache *Lookup_VC();
+
+#endif DISCONN
+
+#ifdef LHUSTON
+#include "discon_log.h"
+#include "proto.h"
+#endif
+
 /* The following is used to ensure that new dcache's aren't obtained when
  * the cache is nearly full.
  */
@@ -424,7 +462,12 @@ afs_GetDownD(int anumber, int *aneedSpace)
 	hzero(maxVictimTime);
 	/* select victims from access time array */
 	for (i = 0; i < afs_cacheFiles; i++) {
-	    if (afs_indexFlags[i] & (IFDataMod | IFFree | IFDiscarded)) {
+#ifndef DISCONN
+	  if (afs_indexFlags[i] & (IFDataMod | IFFree | IFDiscarded )) {
+#else
+	      /* check another flag for disconnected mode */
+            if (afs_indexFlags[i] & (IFDataMod | IFFree | IFDiscarded |IFFKeep_DC)) {
+#endif
 		/* skip if dirty or already free */
 		continue;
 	    }
@@ -767,6 +810,11 @@ afs_FlushDCache(register struct dcache *adc)
      */
     afs_stats_cmperf.cacheFlushes++;
 
+#ifdef DISCONN
+    /* if this dcache is marked as important, then we don't flush it */
+
+    if(adc->f.dflags & KEEP_DC) return;
+#endif
     /* remove from all hash tables */
     afs_HashOutDCache(adc);
 
@@ -1144,7 +1192,11 @@ afs_TryToSmush(register struct vcache *avc, struct AFS_UCRED *acred, int sync)
 	    tdc = afs_GetDSlot(index, NULL);
 	    if (!FidCmp(&tdc->f.fid, &avc->fid)) {
 		if (sync) {
+#ifndef DISCONN
 		    if ((afs_indexFlags[index] & IFDataMod) == 0
+#else
+		    if ((afs_indexFlags[index] & (IFDataMod| IFFKeep_DC)) == 0
+#endif
 			&& tdc->refCount == 1) {
 			ReleaseReadLock(&tdc->tlock);
 			releaseTlock = 0;
@@ -1152,6 +1204,13 @@ afs_TryToSmush(register struct vcache *avc, struct AFS_UCRED *acred, int sync)
 		    }
 		} else
 		    afs_indexTable[index] = 0;
+#ifdef DISCONN
+		    /* make sure afs_truncpos = AFS_NOTRUNC */
+		    if (avc->truncPos != AFS_NOTRUNC) {
+			avc->truncPos = AFS_NOTRUNC;
+			avc->dflags |= VC_DIRTY;
+		    }
+#endif
 	    }
 	    if (releaseTlock)
 		ReleaseReadLock(&tdc->tlock);
@@ -1693,6 +1752,17 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	    index = afs_dcnextTbl[index];
 	}
 
+#ifdef DISCONN
+	/*
+	 *  If we are running disconnected, then we can't request the file.
+	 *  Instead we just need to return nothing.
+	 */
+	if((IS_DISCONNECTED(discon_state)) && (index == NULLIDX)) {
+	    ReleaseWriteLock(&afs_xdcache);
+	    return (struct dcache *) 0;
+	}
+#endif /* DISCONN */
+
 	/*
 	 * If we didn't find the entry, we'll create one.
 	 */
@@ -1931,6 +2001,28 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 	/*
 	 * Version number mismatch.
 	 */
+#ifdef  DISCONN
+        /*
+         * If we are disconnected, then we can't do much of anything
+         * because the data doesn't match the file.  What we need to
+         * do is return 0, and we will log this to see how often this
+         * occurs.
+         */
+        if(IS_DISCONNECTED(discon_state)) {
+	    ReleaseSharedLock(&tdc->lock);
+	    if (setLocks) {
+		if (slowPass)
+		    ReleaseWriteLock(&avc->lock);
+		else
+		    ReleaseReadLock(&avc->lock);
+            /* lhuston should flush the dcache, because we won't
+             * ever use it.
+             */
+            afs_PutDCache(tdc);
+
+            return (struct dcache *) 0;
+        }
+#endif  /* DISCONN */
 	UpgradeSToWLock(&tdc->lock, 609);
 
 	/*
@@ -2142,6 +2234,16 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 			newCallback = tc->srvr->server;
 			setNewCallback = 1;
 		    }
+#ifdef DISCONN
+		    /* put the server on the list of servers we have callback from.
+		    ** see comment in disconnected HaveCallbacks from for details
+		    */
+		    bump_cbcount(tc->server->host);
+		    /*  set the modified bit in the vcache entry */
+		    avc->dflags |= VC_DIRTY;
+		    /* set the callback flag */
+		    afs_VindexFlags[avc->index] |= VC_HAVECB;
+#endif  /* DISCONN */
 		    i = osi_Time();
 		    RX_AFS_GUNLOCK();
 		    tcall = rx_NewCall(tc->id);
@@ -2353,6 +2455,9 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
 			afs_DequeueCallback(avc);
 			avc->states &= ~(CStatd | CUnique);
 			avc->callback = NULL;
+#ifdef DISCONN
+			afs_VindexFlags[avc->index] &= ~VC_HAVECB;
+#endif
 			ReleaseWriteLock(&afs_xcbhash);
 			if (avc->fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
 			    osi_dnlc_purgedp(avc);
@@ -2836,6 +2941,9 @@ afs_UFSGetDSlot(register afs_int32 aslot, register struct dcache *tmpdc)
 	tdc->f.chunk = -1;
 	hones(tdc->f.versionNo);
 	tdc->dflags |= DFEntryMod;
+#ifdef DISCONN
+        tdc->f.dflags = 0;
+#endif
 #if defined(KERNEL_HAVE_UERROR)
 	last_error = getuerror();
 #endif
@@ -3055,10 +3163,12 @@ afs_InitCacheFile(char *afile, ino_t ainode)
      * the cache info file may be incorrectly identified, and so slot
      * may be bad.
      */
+#ifndef DISCONN
     if (cacheInfoModTime < tstat.mtime + 120)
 	fileIsBad = 1;
     if (cacheInfoModTime < tdc->f.modTime + 120)
 	fileIsBad = 1;
+#endif
     /* In case write through is behind, make sure cache items entry is
      * at least as new as the chunk.
      */
@@ -3100,6 +3210,11 @@ afs_InitCacheFile(char *afile, ino_t ainode)
 	}
 	afs_indexUnique[index] = tdc->f.fid.Fid.Unique;
     }				/*File is not bad */
+#ifdef DISCONN
+    /* If the KEEP_DC is set in the dflags we set it in the afs_indexFlags */
+    if(tdc->f.dflags & KEEP_DC) afs_indexFlags[tdc->index] |= IFFKeep_DC;
+
+#endif
 
     osi_UFSClose(tfile);
     tdc->f.states &= ~DWriting;
@@ -3287,3 +3402,175 @@ shutdown_dcache(void)
     QInit(&afs_DLRU);
 
 }
+#ifdef DISCONN
+/*
+ * This is the out of band get_dcache.  It is used for the
+ * reconciliation.  It allows the replay to get the current
+ * version of the dcache data without destroying the state of the
+ * cache.
+ */
+
+struct dcache *
+OB_GetDCache(struct vcache *avc, struct VenusFid *fidp, afs_int32 abyte, struct vrequest *areq, int aflags)
+{
+    long i, code;
+    long chunk = 0;
+    struct rx_call *tcall;
+    long Position = 0;          /* Not used yet */
+    long size;                  /* size of segment to transfer */
+    struct tlocal1 *tsmall;
+    struct dcache *tdc;
+    struct osi_file *file;
+    struct conn *tc;
+    long bytesToXfer;                   /* # bytes to xfer*/
+    long bytesXferred;                  /* # bytes actually xferred*/
+
+    if (!VCTOV(avc))
+        panic("OB_GetDCache: null vcache");
+    if (vType(avc) == VDIR)
+        chunk = 0;
+    else
+        panic("OB_GetDCache: non-dir");
+
+    /* Get an empty dcache to dump this stuff into */
+    ObtainWriteLock(&afs_xdcache);
+
+    if (freeDCList == NULLIDX)
+        afs_GetDownD(5, 0);     /* just need slots */
+    if (freeDCList == NULLIDX)
+        panic("OB_GetDCache: no freeDCList");
+    tdc = afs_GetDSlot(freeDCList, 0);
+    afs_indexFlags[freeDCList] &= ~IFFree;
+    freeDCList = tdc->f.hvNextp;
+    freeDCCount--;
+
+    /* take it off lruq so it can go in the little cache (see replay_check_name)*/
+    QRemove(&tdc->lruq);
+
+    /*
+     * Fill in the newly-allocated dcache record.
+     */
+
+    tdc->f.fid = *fidp;
+    tdc->f.versionNo.low = tdc->f.versionNo.high = -1; /* invalid value */
+    tdc->f.chunk = chunk;
+
+    ReleaseWriteLock(&afs_xdcache);
+
+    size = avc->m.Length;
+    if (size > tdc->f.chunkBytes) {
+        /* pre-reserve space for file */
+        afs_CheckSize((size - tdc->f.chunkBytes)>>10);
+        afs_AdjustSize(tdc, size);
+    }
+    size = 999999999;       /* max size for transfer */
+
+    file = afs_CFileOpen(&tdc->f);
+
+    if (!file) panic("OB_getdcache open");
+    tdc->f.states |= DWriting;
+    tdc->flags |= DFFetching;
+    tdc->validPos = Position;   /*Last valid position in this chunk*/
+    if (tdc->flags & DFFetchReq) {
+        tdc->flags &= ~DFFetchReq;
+        osi_Wakeup(&tdc->validPos);
+    }
+    tsmall = (struct tlocal1 *) osi_AllocSmallSpace(sizeof(struct tlocal1));
+
+    do {
+        osi_Seek(file, 0);      /* on retries, we need this */
+        tc = afs_Conn(fidp, areq, 0);
+
+        if (tc) {
+            i = osi_Time();
+            tcall = rx_NewCall(tc->id);
+            code = StartRXAFS_FetchData(tcall, (struct AFSFid *) &fidp->Fid, Pos
+					ition, size);
+            if (code == 0) {
+#ifndef AFS_NOSTATS
+                code = CacheFetchProc(tcall, file, Position, tdc, avc, &bytesToXfer, &bytesXferred);
+#else
+                code = CacheFetchProc(tcall, file, Position, tdc, avc);
+#endif
+            }
+            if (code == 0)
+                code = EndRXAFS_FetchData(tcall,
+                                          &tsmall->OutStatus, &tsmall->CallBack,
+                                          &tsmall->tsync);
+            code = rx_EndCall(tcall, code);
+        } else {
+            code = -1;
+        }
+        if (code == 0) {
+            /*
+             * validPos is updated by CacheFetchProc, and can only
+             * be modifed under an S or W lock, which we've
+             * blocked out
+             */
+            size = tdc->validPos - Position; /* actual seg size */
+            if (size < 0) size = 0;
+            afs_CFileTruncate(&tdc->f, size); /* prune it */
+            afs_CheckVolSync(fidp, &tsmall->tsync);
+        }
+    } while(afs_Analyze(tc, code, fidp, areq, 0));
+
+    tdc->flags &= ~DFFetching;
+    if (tdc->flags & DFWaiting) {
+        tdc->flags &= ~DFWaiting;
+        osi_Wakeup(&tdc->validPos);
+    }
+
+    /* now, if code != 0, we have an error and should punt */
+    if (code) {
+        afs_CFileTruncate(&tdc->f, 0);
+        afs_AdjustSize(tdc, 0);
+        osi_Close(file);
+        ZapDCE(tdc);            /* sets DFEntryMod */
+        tdc->refCount--;
+        osi_FreeSmallSpace(tsmall);
+        return (struct dcache *) 0;
+    }
+
+    /* otherwise we copy in the just-fetched info */
+
+    osi_Close(file);
+    afs_AdjustSize(tdc, size);  /* new size */
+    /* don't copy appropriate fields into vcache */
+    /* afs_ProcessFS(avc, &tsmall->OutStatus, areq); */
+    tdc->f.versionNo.low = tsmall->OutStatus.DataVersion;
+    tdc->f.versionNo.high = tsmall->OutStatus.dataVersionHigh;
+    tdc->flags |= DFEntryMod;
+    afs_indexFlags[tdc->index] |= IFEverUsed;
+    osi_FreeSmallSpace(tsmall);
+
+    return tdc;
+}
+
+int
+Free_OBDcache(struct dcache *tdc)
+{
+    ObtainWriteLock(&afs_xdcache);
+    DZap(&tdc->f.inode);
+    tdc->f.fid.Fid.Volume = 0;  /* invalid */
+
+    /* Free its space */
+
+    afs_CFileTruncate(&tdc->f, 0);
+    afs_AdjustSize(tdc, 0);
+
+    /* finally, put the entry in the free list */
+    tdc->f.hvNextp = freeDCList;
+    freeDCList = tdc->index;
+    freeDCCount++;
+
+    afs_indexFlags[tdc->index] |= IFFree;
+    tdc->flags |= DFEntryMod;
+    lockedPutDCache(tdc);
+
+    /* put it back on DLRU (we took it off in OB_GetDCache) */
+    QAdd(&DLRU, &tdc->lruq);
+
+    ReleaseWriteLock(&afs_xdcache);
+    return (0);
+}
+#endif  /* DISCONN */

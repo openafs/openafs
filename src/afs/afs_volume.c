@@ -63,6 +63,9 @@ struct volume *afs_freeVolList;
 struct volume *afs_volumes[NVOLS];
 afs_int32 afs_volCounter = 1;	/* for allocating volume indices */
 afs_int32 fvTable[NFENTRIES];
+#ifdef DISCONN
+struct serv_cbcount *afs_scbs[NSERVERS];
+#endif
 
 /* Forward declarations */
 static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell,
@@ -115,6 +118,19 @@ afs_UFSGetVolSlot(void)
 
     AFS_STATCNT(afs_UFSGetVolSlot);
     if (!afs_freeVolList) {
+#ifdef DISCONN
+
+      /*
+      ** In my observation volumes rarely get flushed out
+      ** to the disk, and if they do, the space used is minimal,
+      ** so I will just allocate a couple more spaces, and put
+      ** them on the free list.
+      */
+
+      /* XXX allocate more than one at once. */
+        
+        tv = (struct volume *) osi_Alloc(sizeof(struct volume));
+#else
 	/* get free slot */
 	bestTime = 0x7fffffff;
 	bestVp = 0;
@@ -175,6 +191,7 @@ afs_UFSGetVolSlot(void)
 	if (code != sizeof(struct fvolume))
 	    osi_Panic("write volumeinfo");
 	osi_UFSClose(tfile);
+#endif
     } else {
 	tv = afs_freeVolList;
 	afs_freeVolList = tv->next;
@@ -284,10 +301,23 @@ afs_CheckVolumeNames(int flags)
 
     /* next ensure all mt points are re-evaluated */
     if (nvols || (flags & (AFS_VOLCHECK_FORCE | AFS_VOLCHECK_MTPTS))) {
+#ifndef DISCONN
 	ObtainReadLock(&afs_xvcache);
-	for (i = 0; i < VCSIZE; i++) {
-	    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+#else   /* DISCONN */
+	ObtainWriteLock(&afs_xvcache);
+#endif  /* DISCONN */
+#ifndef DISCONN
+        for(i=0;i<VCSIZE;i++)
+            for(tvc = afs_vhashT[i]; tvc; tvc=tvc->hnext) {
+#else
+        for (i = 0; i < afs_num_vslots; i++) {
+            struct vcache tempvc;
+            int need_save;
 
+            tvc = afs_GetVSlot(i, &tempvc);
+            need_save = ((tvc->states & CMValid) ||
+                         ((tvc->states & CRO) && tvc->states & CStatd));
+#endif
 		/* if the volume of "mvid" of the vcache entry is among the
 		 * ones we found earlier, then we re-evaluate it.  Also, if the
 		 * force bit is set or we explicitly asked to reevaluate the
@@ -307,17 +337,29 @@ afs_CheckVolumeNames(int flags)
 			|| (flags & AFS_VOLCHECK_FORCE))) {
 
 		    AFS_FAST_HOLD(tvc);
+#ifndef DISCONN
 		    ReleaseReadLock(&afs_xvcache);
+#else
+		    ReleaseWriteLock(&afs_xvcache);
+#endif
 
 		    ObtainWriteLock(&afs_xcbhash, 485);
 		    /* LOCKXXX: We aren't holding tvc write lock? */
 		    afs_DequeueCallback(tvc);
 		    tvc->states &= ~CStatd;
 		    ReleaseWriteLock(&afs_xcbhash);
+#ifdef  DISCONN
+		    if (need_save)
+			afs_SaveVCache(tvc, 1);
+#endif
 		    if (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
 			osi_dnlc_purgedp(tvc);
 
+#ifndef DISCONN
 		    ObtainReadLock(&afs_xvcache);
+#else   /* DISCONN */
+		    ObtainWriteLock(&afs_xvcache);
+#endif  /* DISCONN */
 
 		    /* our tvc ptr is still good until now */
 		    AFS_FAST_RELE(tvc);
@@ -373,7 +415,11 @@ afs_FindVolume(struct VenusFid *afid, afs_int32 locktype)
     ObtainWriteLock(&afs_xvolume, 106);
     for (tv = afs_volumes[i]; tv; tv = tv->next) {
 	if (tv->volume == afid->Fid.Volume && tv->cell == afid->Cell
-	    && (tv->states & VRecheck) == 0) {
+#ifdef DISCONN
+            && (USE_OPTIMISTIC(discon_state) || (tv->states & VRecheck) == 0)) {
+#else
+            && (tv->states & VRecheck) == 0) {
+#endif
 	    tv->refCount++;
 	    break;
 	}
@@ -511,6 +557,9 @@ afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
     for (i = 0; i < NMAXNSERVERS; i++) {
 	tv->status[i] = not_busy;
     }
+#ifdef DISCONN
+    tv->dflags |= VOL_DIRTY;
+#endif
     ReleaseWriteLock(&tv->lock);
     return tv;
 }
@@ -528,7 +577,11 @@ afs_GetVolumeByName(register char *aname, afs_int32 acell, int agood,
     for (i = 0; i < NVOLS; i++) {
 	for (tv = afs_volumes[i]; tv; tv = tv->next) {
 	    if (tv->name && !strcmp(aname, tv->name) && tv->cell == acell
-		&& (tv->states & VRecheck) == 0) {
+#ifdef DISCONN
+                && (USE_OPTIMISTIC(discon_state) || (tv->states&VRecheck) == 0)) {
+#else
+                && (tv->states&VRecheck) == 0) {
+#endif
 		tv->refCount++;
 		ReleaseWriteLock(&afs_xvolume);
 		return tv;
@@ -537,6 +590,10 @@ afs_GetVolumeByName(register char *aname, afs_int32 acell, int agood,
     }
 
     ReleaseWriteLock(&afs_xvolume);
+#ifdef DISCONN
+    if (IS_DISCONNECTED(discon_state))
+      return (struct volume *) 0;
+#endif
 
     tv = afs_NewVolumeByName(aname, acell, agood, areq, locktype);
     return (tv);
@@ -789,6 +846,9 @@ InstallVolumeEntry(struct volume *av, struct vldbentry *ve, int acell)
 	av->serverHost[j++] = 0;
     }
     afs_SortServers(av->serverHost, MAXHOSTS);
+#ifdef DISCONN
+    av->dflags |= VOL_DIRTY;
+#endif
 }				/*InstallVolumeEntry */
 
 
@@ -1016,9 +1076,11 @@ afs_ResetVolumeInfo(struct volume *tv)
     tv->states |= VRecheck;
     for (i = 0; i < MAXHOSTS; i++)
 	tv->status[i] = not_busy;
+#ifndef DISCONN
     if (tv->name) {
 	afs_osi_Free(tv->name, strlen(tv->name) + 1);
 	tv->name = NULL;
     }
+#endif
     ReleaseWriteLock(&tv->lock);
 }

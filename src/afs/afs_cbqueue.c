@@ -84,6 +84,13 @@ RCSID
 #include "afs/lock.h"
 #include "afs/afs_stats.h"
 
+#ifdef DISCONN
+#include "../afs/discon.h"
+
+extern long    afs_num_vslots;
+extern char *afs_VindexFlags;
+#endif
+
 static unsigned int base = 0;
 static unsigned int basetime = 0;
 static struct vcache *debugvc;	/* used only for post-mortem debugging */
@@ -197,6 +204,9 @@ afs_CheckCallbacks(unsigned int secs)
     afs_uint32 now;
     struct volume *tvp;
     register int safety;
+#ifdef DISCONN
+    struct vcache tempvc;
+#endif
 
     ObtainWriteLock(&afs_xcbhash, 85);	/* pretty likely I'm going to remove something */
     now = osi_Time();
@@ -229,6 +239,10 @@ afs_CheckCallbacks(unsigned int secs)
 			    tvc->quick.stamp = 0;
 			    tvc->h1.dchint = NULL;	/*invalidate em */
 			    afs_ResetVolumeInfo(tvp);
+#ifdef DISCONN
+			    afs_VindexFlags[tvc->index] &= ~VC_HAVECB;
+			    tvc->dflags |= VC_DIRTY;
+#endif
 			    break;
 			}
 		    }
@@ -241,6 +255,10 @@ afs_CheckCallbacks(unsigned int secs)
 		QRemove(tq);
 		tq->prev = tq->next = NULL;
 		tvc->states &= ~(CStatd | CMValid | CUnique);
+#ifdef DISCONN
+		afs_VindexFlags[tvc->index] &= ~VC_HAVECB;
+		tvc->dflags |= VC_DIRTY;
+#endif
 		if ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR))
 		    osi_dnlc_purgedp(tvc);
 	    }
@@ -306,6 +324,7 @@ afs_FlushCBs(void)
 
     ObtainWriteLock(&afs_xcbhash, 86);	/* pretty likely I'm going to remove something */
 
+#ifndef DISCONN
     for (i = 0; i < VCSIZE; i++)	/* reset all the vnodes */
 	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 	    tvc->callback = 0;
@@ -316,6 +335,20 @@ afs_FlushCBs(void)
 		osi_dnlc_purgedp(tvc);
 	    tvc->callsort.prev = tvc->callsort.next = NULL;
 	}
+#else
+    for (i = 0; i < afs_num_vslots; i++) {
+        tvc = afs_GetVSlot(i, &tempvc);
+
+        tvc->callback = 0;
+        tvc->quick.stamp = 0; 
+        tvc->dchint = NULL; /* invalidate hints */
+        tvc->states &= ~(CStatd);
+        tvc->callsort.prev = tvc->callsort.next = NULL;
+
+        afs_VindexFlags[tvc->index] &= ~VC_HAVECB;
+        afs_SaveVCache(tvc, 1);
+    }
+#endif
 
     afs_InitCBQueue(0);
 

@@ -355,6 +355,9 @@ afs_InitCacheInfo(register char *afile)
     struct vnode *filevp;
 #endif
     int goodFile;
+#ifdef  DISCONN
+    extern int do_cold_cache;
+#endif  /* DISCONN */
 
     AFS_STATCNT(afs_InitCacheInfo);
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS)
@@ -448,15 +451,27 @@ afs_InitCacheInfo(register char *afile)
     goodFile = 0;
     if (code == sizeof(theader)) {
 	/* read the header correctly */
-	if (theader.magic == AFS_FHMAGIC
+#ifndef DISCONN
+        if (theader.magic == AFS_FHMAGIC 
+#else   /* DISCONN */
+        if (theader.magic == AFS_DHMAGIC 
+#endif  /* DISCONN */
 	    && theader.firstCSize == AFS_FIRSTCSIZE
 	    && theader.otherCSize == AFS_OTHERCSIZE
 	    && theader.version == AFS_CI_VERSION)
 	    goodFile = 1;
     }
     if (!goodFile) {
+#ifdef  DISCONN
+        do_cold_cache = 1;
+        printf("cold...");
+#endif  /* DISCONN */
 	/* write out a good file label */
-	theader.magic = AFS_FHMAGIC;
+#ifndef DISCONN
+        theader.magic = AFS_FHMAGIC;
+#else   /* DISCONN */
+        theader.magic = AFS_DHMAGIC;
+#endif  /* DISCONN */
 	theader.firstCSize = AFS_FIRSTCSIZE;
 	theader.otherCSize = AFS_OTHERCSIZE;
 	theader.version = AFS_CI_VERSION;

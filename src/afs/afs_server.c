@@ -85,6 +85,9 @@ int afs_reuseServers = 0;
 int afs_reuseSrvAddrs = 0;
 int afs_totalServers = 0;
 int afs_totalSrvAddrs = 0;
+#ifdef DISCONN
+#include "discon.h"
+#endif
 
 
 
@@ -108,6 +111,26 @@ GetUpDownStats(struct server *srv)
 	return &upDownP[AFS_STATS_UPDOWN_IDX_DIFF_CELL];
 }
 
+#ifdef DISCONN
+/*
+ * Mark all servers up.  Called when leaving discon mode.
+ * This is kind of a big hammer, and I'm not sure it's the right thing to do.
+ */
+afs_MarkAllServersUp()
+{
+    register int i;
+    register struct server *ts;
+
+    ObtainReadLock(&afs_xserver);
+
+    for (i=0;i<NSERVERS;i++) {
+        for (ts = afs_servers[i]; ts; ts=ts->next)
+            ts->isDown = 0;
+    }
+
+    ReleaseReadLock(&afs_xserver);
+}
+#endif
 
 /*------------------------------------------------------------------------
  * afs_MarkServerUpOrDown
@@ -248,6 +271,9 @@ afs_ServerDown(struct srvAddr *sa)
     if (aserver->flags & SRVR_ISDOWN || sa->sa_flags & SRVADDR_ISDOWN)
 	return;
     afs_MarkServerUpOrDown(sa, SRVR_ISDOWN);
+#ifdef  DISCONN
+    remove_cbserver(aserver->host);
+#endif
     if (sa->sa_portal == aserver->cell->vlport)
 	print_internet_address
 	    ("afs: Lost contact with volume location server ", sa, "", 1);
@@ -258,6 +284,7 @@ afs_ServerDown(struct srvAddr *sa)
 }				/*ServerDown */
 
 
+#ifndef DISCONN
 /* return true if we have any callback promises from this server */
 int
 afs_HaveCallBacksFrom(struct server *aserver)
@@ -282,6 +309,106 @@ afs_HaveCallBacksFrom(struct server *aserver)
     return 0;
 
 }				/*HaveCallBacksFrom */
+#else
+int
+afs_HaveCallBacksFrom(aserver)
+     struct server *aserver; {
+
+  int i;
+  struct serv_cbcount *scb;
+
+  i = SHash(aserver->host);
+  for(scb = afs_scbs[i]; scb; scb=scb->next){
+    if(scb->server == aserver->host) {
+      return scb->count;
+    }
+  }
+
+  /* we didn't find a match, this means we don't have any vcaches
+  ** from this server, return 0.
+  */
+
+  return 0;
+}
+
+
+bump_cbcount(aserver)
+
+     long aserver; {
+
+
+  int i;
+  struct serv_cbcount *scb;
+
+  i = SHash(aserver);
+  for(scb = afs_scbs[i]; scb; scb=scb->next){
+    if(scb->server == aserver) {
+      scb->count++;
+      return;
+    }
+  }
+        
+  /* we didn't find this server on the list, so lets add it */
+
+  scb = (struct serv_cbcount *) osi_Alloc(sizeof(struct serv_cbcount));
+  scb->server = aserver;
+  scb->count = 1;
+  scb->next = afs_scbs[i];
+  afs_scbs[i] = scb;
+
+}
+init_cblist()
+
+{
+  int i;
+
+  for(i=0;i<NSERVERS;i++) {
+    afs_scbs[i] = (struct serv_cbcount *) 0;
+  }
+}
+
+
+/*
+** When a server is marked as down, this function is called which
+** removes that server from the list of servers we might have
+** callbacks from.
+*/
+
+remove_cbserver(aserver)
+
+     long aserver;
+
+{
+  int i;
+  struct serv_cbcount *scb;
+  struct serv_cbcount *current;
+  int found = 0;
+
+  i = SHash(aserver);
+
+
+  if(afs_scbs[i] == (struct serv_cbcount *) 0)  return;
+
+  /* we need to remove the pointer to the server */
+   
+  if(afs_scbs[i]->server == aserver) {
+    current = afs_scbs[i];
+    afs_scbs[i] = current->next;
+    osi_Free(current, sizeof(struct serv_cbcount));
+    return;
+  }   
+
+  /* it wasn't at the first position */
+  for(scb = afs_scbs[i]; scb->next; scb=scb->next){
+    if(scb->next->server == aserver) {
+      current = scb->next;
+      scb->next = current->next;
+      osi_Free(current, sizeof(struct serv_cbcount));
+      return;
+    }
+  }
+}
+#endif /* DISCONN */
 
 
 static void
@@ -512,6 +639,18 @@ afs_CheckServers(int adown, struct cell *acellp)
 
     AFS_STATCNT(afs_CheckServers);
 
+#ifdef DISCONN
+    /*
+     * no sense in doing the server checks if we are running in disconnected
+     * mode.  Presumably we know we can't talk to the server so why should
+     * we try.
+     * Also, if we're in an optimistic mode, don't check running servers.
+     */
+    if (IS_DISCONNECTED(discon_state))
+        return;
+    if (USE_OPTIMISTIC(discon_state))
+        adown = 1;
+#endif
     conns = (struct conn **)0;
     rxconns = (struct rx_connection **) 0;
     conntimer = 0;
@@ -1689,6 +1828,9 @@ struct server *afs_GetServer(afs_uint32 * aserverp, afs_int32 nservers,
 	    afs_stats_cmperf.srvRecordsHWM = afs_stats_cmperf.srvRecords;
     }
 
+#ifdef  DISCONN
+    ts->dflags |= SERV_DIRTY;
+#endif
     ReleaseWriteLock(&afs_xsrvAddr);
     ReleaseWriteLock(&afs_xserver);
     return (newts);

@@ -185,6 +185,29 @@ kern_return_t DiskArbDiskAppearedWithMountpointPing_auto(char *, unsigned int,
 #define	VOLINFOFILE	"VolumeItems"
 #define CELLINFOFILE	"CellItems"
 
+#ifdef DISCONN
+#define VCACHEFILE      "DVCacheItems"
+#define DVOLUMEFILE     "DVolumeItems"
+#define DSERVERFILE     "DServerItems"
+#define DCELLFILE       "DCellItems"
+#define DLOGFILE        "DisconnectedLog"
+#define DBLOGFILE       "DisconnectedLog.backup"
+#define DSTATFILE       "Stats"
+#define DNAMEFILE       "DNameInfo"
+#define DTRANSFILE      "DTransFile"
+#define DTRANSDATA      "DTransData"
+/* This is broken into two components so that if RLOGFILE is in
+** the cache directory we won't toss it out.
+*/
+#ifdef AFS_NETBSD_ENV
+#define RLOG_PATH       "/var/log/"
+#else
+#define RLOG_PATH       "/usr/adm/"
+#endif
+#define AFSRLOGFILE     "ReplayLog"
+
+#endif /* DISCONN */
+
 #define MAXIPADDRS 1024
 
 char LclCellName[64];
@@ -234,6 +257,24 @@ char fullpn_CellInfoFile[1024];	/*Full pathanem of CELLINFOFILE */
 char fullpn_AFSLogFile[1024];	/*Full pathname of AFSLOGFILE */
 char fullpn_CacheInfo[1024];	/*Full pathname of CACHEINFO */
 char fullpn_VFile[1024];	/*Full pathname of data cache files */
+#ifdef DISCONN
+char fullpn_VCacheFile[1024];           /*Full pathname of VCACHEFILE*/
+char fullpn_DVolumeFile[1024];          /*Full pathname of DVOLUMEFILE*/
+char fullpn_DServerFile[1024];          /*Full pathname of DSERVERFILE*/
+char fullpn_DCellFile[1024];            /*Full pathname of DCELLFILE*/
+char fullpn_DLogFile[1024];             /*Full pathname of DLOG*/
+char fullpn_DBLogFile[1024];            /*Full pathname of DLOG backup*/
+char fullpn_AFSRLogFile[1024];          /*Full pathname of replay log file */
+char fullpn_DStatFile[1024];            /*Full pathname of statistics file*/
+char fullpn_DNameFile[1024];            /*Full pathname of name info file*/
+char fullpn_DTransData[1024];            /*Full pathname of translation data */
+char fullpn_DTransFile[1024];            /*Full pathname of translations */
+
+static int do_discon_init;
+static int statSet;                     /* true if -stat explicitly set */
+static int vslots_set = 0;              /* true if vslots explicitly set */
+afs_int32 nVslots = 0;
+#endif
 char *vFilePtr;			/*Ptr to the number part of above pathname */
 int sawCacheMountDir = 0;	/* from cmd line */
 int sawCacheBaseDir = 0;
@@ -248,6 +289,9 @@ afs_int32 isHomeCell;		/*Is current cell info for the home cell? */
 int createAndTrunc = O_RDWR | O_CREAT | O_TRUNC;	/*Create & truncate on open */
 #else
 int createAndTrunc = O_CREAT | O_TRUNC;	/*Create & truncate on open */
+#endif
+#ifdef DISCONN
+int all_readmode = 0644;        /*Read/write by owner read by all*/
 #endif
 int ownerRWmode = 0600;		/*Read/write OK by owner */
 static int filesSet = 0;	/*True if number of files explicitly set */
@@ -295,6 +339,16 @@ int *dir_for_V = NULL;		/* Array: dir of each cache file.
 				 */
 AFSD_INO_T *inode_for_V;	/* Array of inodes for desired
 				 * cache files */
+#ifdef DISCONN
+int missing_VCacheFile  = 1;            /*Is the VCACHEFILE missing?*/
+int missing_DVolumeFile = 1;            /*Is the volume file missing?*/
+int missing_DServerFile = 1;            /*Is the server file missing?*/
+int missing_DCellFile   = 1;            /*Is the cell file missing?*/
+int missing_DStatFile   = 1;            /*Is the statistics file missing?*/
+int missing_DNameFile   = 1;            /*Is the name file missing?*/
+int missing_DTransFile   = 1;            /*Is the translation file missing?*/
+int missing_DTransData   = 1;            /*Is the translation data missing?*/
+#endif
 int missing_DCacheFile = 1;	/*Is the DCACHEFILE missing? */
 int missing_VolInfoFile = 1;	/*Is the VOLINFOFILE missing? */
 int missing_CellInfoFile = 1;	/*Is the CELLINFOFILE missing? */
@@ -640,7 +694,11 @@ CreateCacheFile(fname, statp)
 
     if (afsd_verbose)
 	printf("%s: Creating cache file '%s'\n", rn, fname);
+#ifndef DISCONN
     cfd = open(fname, createAndTrunc, ownerRWmode);
+#else
+    cfd = open(fname, createAndTrunc, all_readmode);
+#endif
     if (cfd <= 0) {
 	printf("%s: Can't create '%s', error return is %d (%d)\n", rn, fname,
 	       cfd, errno);
@@ -845,6 +903,46 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 		       currp->d_name);
 		return retval;
 	    }
+#ifdef DISCONN
+	} else if (strcmp(currp->d_name, VCACHEFILE) == 0) {
+            /*
+             * Found the file holding the vcache entries.
+             */
+            missing_VCacheFile = 0;
+        } else if (strcmp(currp->d_name, DVOLUMEFILE) == 0) {
+            /*
+             * Found the file holding the vcache entries.
+             */
+            missing_DVolumeFile = 0;
+        } else if (strcmp(currp->d_name, DCELLFILE) == 0) {
+            /*
+             * Found the file holding the vcache entries.
+             */
+            missing_DCellFile = 0;
+        } else if (strcmp(currp->d_name, DSERVERFILE) == 0) {
+            /*
+             * Found the file holding the vcache entries.
+             */
+            missing_DServerFile = 0;
+        } else if (strcmp(currp->d_name, DSTATFILE) == 0) {
+            /*
+             * Found the file holding the vcache entries.
+             */
+            missing_DStatFile = 0;
+        } else if (strcmp(currp->d_name, DNAMEFILE) == 0) {
+            /*
+             * Found the file holding the vcache entries.
+             */
+            missing_DNameFile = 0;
+        } else if (strcmp(currp->d_name, DTRANSFILE) == 0) {
+            /* Found the file holding the translation data */
+            missing_DTransFile = 0;
+        } else if (strcmp(currp->d_name, DTRANSDATA) == 0) {
+            /* Found the file holding the translation data */
+            missing_DTransData = 0;
+        } else if (strcmp(currp->d_name, AFSRLOGFILE) == 0) {
+            /* we don't want to do anything, just don't remove it */
+#endif
 	} else if (dirNum < 0 && strcmp(currp->d_name, DCACHEFILE) == 0) {
 	    /*
 	     * Found the file holding the dcache entries.
@@ -904,7 +1002,17 @@ doSweepAFSCache(vFilesFound, directory, dirNum, maxDir)
 	CreateFileIfMissing(fullpn_DCacheFile, missing_DCacheFile);
 	CreateFileIfMissing(fullpn_VolInfoFile, missing_VolInfoFile);
 	CreateFileIfMissing(fullpn_CellInfoFile, missing_CellInfoFile);
-
+#ifdef DISCONN
+	if (do_discon_init) {
+	    CreateFileIfMissing(fullpn_VCacheFile, missing_VCacheFile);
+	    CreateFileIfMissing(fullpn_DVolumeFile, missing_DVolumeFile);
+	    CreateFileIfMissing(fullpn_DServerFile, missing_DServerFile);
+	    CreateFileIfMissing(fullpn_DCellFile, missing_DCellFile);
+	    CreateFileIfMissing(fullpn_DStatFile, missing_DStatFile);
+	    CreateFileIfMissing(fullpn_DNameFile, missing_DNameFile);
+	    CreateFileIfMissing(fullpn_DTransFile, missing_DTransFile);
+	}
+#endif
 	/* ADJUST CACHE FILES */
 
 	/* First, let's walk through the list of files and figure out
@@ -1340,6 +1448,9 @@ mainproc(as, arock)
     if (as->parms[3].items) {
 	/* -stat */
 	cacheStatEntries = atoi(as->parms[3].items->data);
+#ifdef DISCONN
+        statSet = 1;
+#endif
     }
     if (as->parms[4].items) {
 	/* -memcache */
@@ -1501,6 +1612,26 @@ mainproc(as, arock)
 	/* -rxbind */
 	enable_rxbind = 1;
     }
+#ifdef DISCONN
+    /*
+     * Check whether the disconnected version of afs is loaded in the kernel.
+     * Oddly enough, this call succeeds for connected and fails for disconnected.
+    */
+    if (call_syscall(AFSOP_SETVSLOTS, &nVslots) < 0)
+        do_discon_init = 1;
+
+    if (as->parms[32].items) {
+        /* -vslots */
+        nVslots = atoi(as->parms[32].items->data);
+        vslots_set = 1;   /* set when spec'd on cmd line */
+    }
+
+    if (as->parms[33].items) {
+        /* -replaylog */
+        strcpy(fullpn_AFSRLogFile, as->parms[33].items->data);
+    } else
+        sprintf(fullpn_AFSRLogFile, "%s%s", RLOG_PATH, AFSRLOGFILE);
+#endif
 
     
     /*
@@ -1539,6 +1670,46 @@ mainproc(as, arock)
 	}
     } else
 	fclose(logfd);
+
+#ifdef DISCONN
+    if (do_discon_init) {
+        sprintf(fullpn_DLogFile,  "%s%s", RLOG_PATH, DLOGFILE);
+        sprintf(fullpn_DBLogFile,  "%s%s", RLOG_PATH, DBLOGFILE);
+
+        /* make sure the file for the replay log exists */
+        if ((logfd = fopen(fullpn_AFSRLogFile,"r")) == 0) {
+            if (afsd_verbose)
+                printf("%s: Creating '%s'\n", rn, fullpn_AFSRLogFile);
+            if (CreateCacheFile(fullpn_AFSRLogFile)) {
+                printf("%s: Can't create '%s'\n",  rn, fullpn_AFSRLogFile);
+                exit(1);
+            }
+        } else
+            fclose(logfd);
+
+        /* make sure file to log the deffered operations exists */
+        if ((logfd = fopen(fullpn_DLogFile,"r")) == 0) {
+            if (afsd_verbose)
+                printf("%s: Creating '%s'\n", rn, fullpn_DLogFile);
+            if (CreateCacheFile(fullpn_DLogFile)) {
+                printf("%s: Can't create '%s'\n",  rn, fullpn_DLogFile);
+                exit(1);
+            }
+        } else
+            fclose(logfd);
+
+        /* make sure file to backup log for deffered operations exists */
+        if ((logfd = fopen(fullpn_DBLogFile,"r")) == 0) {
+            if (afsd_verbose)
+                printf("%s: Creating '%s'\n", rn, fullpn_DBLogFile);
+            if (CreateCacheFile(fullpn_DBLogFile)) {
+                printf("%s: Can't create '%s'\n",  rn, fullpn_DBLogFile);
+                exit(1);
+            }
+        } else
+            fclose(logfd);
+    }
+#endif
 
     /* do some random computations in memcache case to get things to work
      * reasonably no matter which parameters you set.
@@ -1640,6 +1811,16 @@ mainproc(as, arock)
     /*
      * Set up all the pathnames we'll need for later.
      */
+#ifdef DISCONN
+    sprintf(fullpn_VCacheFile,  "%s/%s", cacheBaseDir, VCACHEFILE);
+    sprintf(fullpn_DVolumeFile,  "%s/%s", cacheBaseDir, DVOLUMEFILE);
+    sprintf(fullpn_DCellFile,  "%s/%s", cacheBaseDir, DCELLFILE);
+    sprintf(fullpn_DServerFile,  "%s/%s", cacheBaseDir, DSERVERFILE);
+    sprintf(fullpn_DStatFile,  "%s/%s", cacheBaseDir, DSTATFILE);
+    sprintf(fullpn_DNameFile,  "%s/%s", cacheBaseDir, DNAMEFILE);
+    sprintf(fullpn_DTransData,  "%s/%s", cacheBaseDir, DTRANSDATA);
+    sprintf(fullpn_DTransFile,  "%s/%s", cacheBaseDir, DTRANSFILE);
+#endif
     sprintf(fullpn_DCacheFile, "%s/%s", cacheBaseDir, DCACHEFILE);
     sprintf(fullpn_VolInfoFile, "%s/%s", cacheBaseDir, VOLINFOFILE);
     sprintf(fullpn_CellInfoFile, "%s/%s", cacheBaseDir, CELLINFOFILE);
@@ -1751,6 +1932,16 @@ mainproc(as, arock)
     if (code)
 	printf("%s: Error %d in basic initialization.\n", rn, code);
 
+#ifdef DISCONN
+    if (do_discon_init) {
+        /* tell the kernel how many vcaches to use */
+        if (!vslots_set)
+            nVslots = cacheFiles * 2;
+        if (!statSet)
+            cacheStatEntries = nVslots / 4;
+        call_syscall(AFSOP_SETVSLOTS, &nVslots);
+    }
+#endif
     /*
      * Tell the kernel some basic information about the workstation's cache.
      */
@@ -1824,6 +2015,22 @@ mainproc(as, arock)
 	printf("%s: Calling AFSOP_CELLINFO: cell info file is '%s'\n", rn,
 	       fullpn_CellInfoFile);
     call_syscall(AFSOP_CELLINFO, fullpn_CellInfoFile);
+
+#ifdef DISCONN
+    if (do_discon_init) {
+        call_syscall(AFSOP_SETNAMEFILE, fullpn_DNameFile);
+        call_syscall(AFSOP_SETTRANSDATA, fullpn_DTransData);
+        call_syscall(AFSOP_SETTRANSFILE, fullpn_DTransFile);
+        call_syscall(AFSOP_DLOG, fullpn_DLogFile);
+        call_syscall(AFSOP_DBLOG, fullpn_DBLogFile);
+        call_syscall(AFSOP_VCACHEINFO, fullpn_VCacheFile);
+        call_syscall(AFSOP_DCELLINFO, fullpn_DCellFile);
+        call_syscall(AFSOP_DSERVERINFO, fullpn_DServerFile);
+        call_syscall(AFSOP_DVOLUMEINFO, fullpn_DVolumeFile);
+        call_syscall(AFSOP_SETREPLAYLOG, fullpn_AFSRLogFile);
+        call_syscall(AFSOP_SETSTATFILE, fullpn_DStatFile);
+    }
+#endif
 
     if (enable_dynroot) {
 	if (afsd_verbose)
@@ -2179,6 +2386,14 @@ main(argc, argv)
     cmd_AddParm(ts, "-backuptree", CMD_FLAG, CMD_OPTIONAL,
 		"Prefer backup volumes for mointpoints in backup volumes");
     cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL, "Bind the Rx socket (one interface only)");
+#ifdef DISCONN
+    /* add parameters for the disconnected options */
+    cmd_AddParm(ts, "-vslots", CMD_SINGLE, CMD_OPTIONAL,
+		"Number of vslots to use");
+    cmd_AddParm(ts, "-replaylog", CMD_SINGLE, CMD_OPTIONAL,
+		"Place to store Replay Log");
+#endif
+
     return (cmd_Dispatch(argc, argv));
 }
 

@@ -109,6 +109,11 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
     struct AFSFetchStatus OutDirStatus;
     struct AFSVolSync tsync;
     XSTATS_DECLS;
+#ifdef DISCONN
+    if (LOG_OPERATIONS(discon_state))
+	code = 0;
+    else
+#endif
     do {
 	tc = afs_Conn(&adp->fid, treqp, SHARED_LOCK);
 	if (tc) {
@@ -150,7 +155,11 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
     }
     if (tdc)
 	UpgradeSToWLock(&tdc->lock, 637);
+#ifdef  DISCONN
+    if (LOG_OPERATIONS(discon_state) || afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
+#else
     if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
+#endif
 	/* we can do it locally */
 	code = afs_dir_Delete(tdc, aname);
 	if (code) {
@@ -179,6 +188,10 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
 	tvc->m.LinkCount--;
 	tvc->states &= ~CUnique;	/* For the dfs xlator */
 	if (tvc->m.LinkCount == 0 && !osi_Active(tvc)) {
+#ifdef  DISCONN
+            /* we set a flag, so we will try to reclaim the vcache */
+            flush_vc = 1;
+#endif  /* DISCONN */
 	    if (!AFS_NFSXLATORREQ(acred))
 		afs_TryToSmush(tvc, acred, 0);
 	}
@@ -187,6 +200,17 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
 	afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
 	afs_PutVCache(tvc);
+#ifdef  DISCONN
+        /*
+         * try to reclaim the vcache, we need to do this after we
+         * putvcache.
+         */
+        if (flush_vc) {
+            ObtainWriteLock(&afs_xvcache);
+            afs_ReclaimVCache(tvc);
+            ReleaseWriteLock(&afs_xvcache);
+        }
+#endif  /* DISCONN */
     }
     return (0);
 }
@@ -229,6 +253,9 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     register struct vcache *tvc;
     afs_size_t offset, len;
     struct afs_fakestat_state fakestate;
+#ifdef  DISCONN
+    int flush_vc = 0;
+#endif  /* DISCONN */
     OSI_VC_CONVERT(adp);
 
     AFS_STATCNT(afs_remove);
@@ -341,13 +368,28 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 			afs_LookupVCache(&unlinkFid, &treq, &cached, adp,
 					 aname);
 		} else {
-		    ObtainReadLock(&afs_xvcache);
+#ifndef DISCONN
+		  ObtainReadLock(&afs_xvcache);
+#else   /* DISCONN */
+		  ObtainWriteLock(&afs_xvcache);
+#endif  /* DISCONN */
 		    tvc = afs_FindVCache(&unlinkFid, 0, DO_STATS);
+#ifndef DISCONN
 		    ReleaseReadLock(&afs_xvcache);
+#else   /* DISCONN */
+		    ReleaseWriteLock(&afs_xvcache);
+#endif  /* DISCONN */
 		}
 	    }
 	}
-
+#ifdef DISCONN
+    /*
+     *  if we are running disconnect, we will not do this
+     *  code since we cannot get the whole file from the
+     *  server anyway.
+     */
+    if (IS_CONNECTED(discon_state))
+#endif  /* DISCONN */
     if (tvc && osi_Active(tvc)) {
 	/* about to delete whole file, prefetch it first */
 	ReleaseWriteLock(&adp->lock);
@@ -361,6 +403,53 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 	ObtainWriteLock(&adp->lock, 144);
     }
 
+#ifdef DISCONN
+    /*
+     *  If we are running in disconnected mode, we can't actually remove
+     *  the file, so we will log the attempt to remove it.
+     */
+
+    if (LOG_OPERATIONS(discon_state)) {
+        long cur_op;
+
+        /*
+         * if there is no vcache then punt, we can't get one.
+         * We could log a bogus entry, but then generic vn
+         * layer usually doesn't let us get this far.
+         */
+
+        if (!tvc) {
+            ReleaseWriteLock(&adp->lock);
+            if (tdc)
+                afs_PutDCache(tdc);
+            return ENETDOWN;
+        }
+
+        ObtainWriteLock(&tvc->lock);
+
+        cur_op = log_dis_remove(tvc, adp, aname);
+
+        /* mark the vcaches to lock them into the cache */
+        adp->last_mod_op = cur_op;
+        adp->dflags |= (KEEP_VC| VC_DIRTY);
+        afs_VindexFlags[adp->index] |= KEEP_VC;
+
+        tvc->last_mod_op = cur_op;
+        tvc->dflags |= (KEEP_VC | VC_DIRTY);
+        afs_VindexFlags[tvc->index] |= KEEP_VC;
+
+        ReleaseWriteLock(&tvc->lock);
+
+        /* mark the dcaches that need to be kept in the cache */
+        if(tdc) {
+            tdc->f.dflags |= KEEP_DC;
+            afs_indexFlags[tdc->index] |= IFFKeep_DC;
+            tdc->flags |= DFEntryMod;
+        }
+
+        code = 0;
+    } else {
+#endif  /* DISCONN  */
     osi_dnlc_remove(adp, aname, tvc);
     if (tvc)
 	afs_symhint_inval(tvc);
@@ -372,18 +461,25 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     Tnam1 = 0;
     if (tvc)
 	Ttvcr = VREFCOUNT(tvc);
+#ifdef DISCONN
+    }
+#endif  /* DISCONN  */
 #ifdef	AFS_AIX_ENV
     if (tvc && (VREFCOUNT(tvc) > 2) && tvc->opens > 0
-	&& !(tvc->states & CUnlinked))
+	&& !(tvc->states & CUnlinked)
 #else
 #ifdef AFS_DARWIN14_ENV
     if (tvc && (VREFCOUNT(tvc) > 1 + DARWIN_REFBASE) && tvc->opens > 0
-	&& !(tvc->states & CUnlinked))
+	&& !(tvc->states & CUnlinked)
 #else
     if (tvc && (VREFCOUNT(tvc) > 1) && tvc->opens > 0
-	&& !(tvc->states & CUnlinked))
+	&& !(tvc->states & CUnlinked)
 #endif
 #endif
+#ifdef DISCONN
+      && !LOG_OPERATIONS(discon_state)
+#endif
+      )
     {
 	char *unlname = afs_newname();
 

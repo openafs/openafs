@@ -92,6 +92,77 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
 
     tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);	/* test for error below */
     ObtainWriteLock(&adp->lock, 145);
+#ifdef  DISCONN
+    if (LOG_OPERATIONS(discon_state)) {
+        struct VenusFid destFid;
+        long    cur_op;
+        /*
+	**  Make sure this link is in the same directory.  AFS only
+        **  supports hard links that are in the same directory
+        */
+
+        if((avc->parentVnode != adp->fid.Fid.Vnode) ||
+           (avc->parentUnique != adp->fid.Fid.Unique))
+           {
+           ReleaseWriteLock(&adp->lock);
+           code = EXDEV;
+           goto done;
+           }
+
+        /* make sure we have the dcache or else we can't do this */
+
+        if(!tdc) {
+            ReleaseWriteLock(&adp->lock);
+            return ENETDOWN;
+            }       
+
+        /* make sure that there is not already of file with the dest name */
+        code = dir_Lookup(&tdc->f.inode, aname, &destFid.Fid);
+        if(!code) {
+            afs_PutDCache(tdc);
+            ReleaseWriteLock(&adp->lock);
+            return EEXIST;
+        }
+        /* make sure that the file being linked to is not a directory */
+        if (vType(avc) == VDIR) {
+            afs_PutDCache(tdc);
+            ReleaseWriteLock(&adp->lock);
+            return(EPERM);
+            }
+
+
+        /*
+	** everything is ok, lets go ahead and record our desire to
+        ** make this link, and then fall through to cleanup the
+        ** local cached copies.
+        */
+
+        ObtainWriteLock(&avc->lock);
+        cur_op = log_dis_link(avc, adp, aname);
+
+        /* mark the vcaches to lock them into the cache */
+
+        avc->dflags |= (KEEP_VC| VC_DIRTY);
+        avc->last_mod_op = cur_op;
+        afs_VindexFlags[avc->index] |= KEEP_VC;
+        ReleaseWriteLock(&avc->lock);
+
+        adp->last_mod_op = cur_op;
+        adp->dflags |= (KEEP_VC| VC_DIRTY);
+        afs_VindexFlags[adp->index] |= KEEP_VC;
+
+        /* mark the dcaches that need to be kept in the cache */
+        tdc->f.dflags |= KEEP_DC;
+        afs_indexFlags[tdc->index] |= IFFKeep_DC;
+        tdc->flags |= DFEntryMod;
+
+        code = 0;
+
+
+        }
+
+    else
+#endif  /* DISCONN */
     do {
 	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
 	if (tc) {
@@ -149,7 +220,17 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
 
     ObtainWriteLock(&afs_xcbhash, 493);
     afs_DequeueCallback(avc);
-    avc->states &= ~CStatd;	/* don't really know new link count */
+#ifdef  DISCONN
+    if (LOG_OPERATIONS(discon_state)) {
+        avc->m.LinkCount++;
+        avc->dflags |= VC_DIRTY;
+    } else {
+	avc->states     &= ~CStatd;     /* don't really know new link count */
+        avc->dflags |= VC_DIRTY;
+    }
+#else   /* DISCONN */
+    avc->states &= ~CStatd;     /* don't really know new link count */
+#endif  /*DISCONN */
     ReleaseWriteLock(&afs_xcbhash);
     if (avc->fid.Fid.Vnode & 1 || (vType(avc) == VDIR))
 	osi_dnlc_purgedp(avc);
