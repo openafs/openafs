@@ -176,7 +176,7 @@ afs_int32 pr_Initialize (secLevel, confDir, cell)
 		scIndex = 2;
 	    }
 	    sc[2] = rxkad_NewClientSecurityObject
-		(rxkad_clear, &ttoken.sessionKey, ttoken.kvno,
+		(secLevel, &ttoken.sessionKey, ttoken.kvno,
 		 ttoken.ticketLen, ttoken.ticket);
 	}
     }
