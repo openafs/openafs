@@ -528,16 +528,16 @@ afs_xioctl(void)
     register int ioctlDone = 0, code = 0;
 
     AFS_STATCNT(afs_xioctl);
-#if defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN_ENV)
+    if ((code = fdgetf(p, uap->fd, &fd)))
+	return code;
+#elif defined(AFS_XBSD_ENV)
     fdp = p->p_fd;
     if ((u_int) uap->fd >= fdp->fd_nfiles
 	|| (fd = fdp->fd_ofiles[uap->fd]) == NULL)
 	return EBADF;
     if ((fd->f_flag & (FREAD | FWRITE)) == 0)
 	return EBADF;
-#elif defined(AFS_DARWIN_ENV)
-    if ((code = fdgetf(p, uap->fd, &fd)))
-	return code;
 #elif defined(AFS_LINUX22_ENV)
     ua.com = com;
     ua.arg = arg;

@@ -551,7 +551,7 @@ struct SimpleLocks {
 #define VPageCleaning 0x2	/* Solaris - Cache Trunc Daemon sez keep out */
 
 #define	CPSIZE	    2
-#if defined(AFS_XBSD_ENV)
+#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
 #define vrefCount   v->v_usecount
 #else
 #define vrefCount   v.v_count
@@ -594,7 +594,7 @@ struct vtodc {
 extern afs_uint32 afs_stampValue;	/* stamp for pair's usage */
 #define	MakeStamp()	(++afs_stampValue)
 
-#if defined(AFS_XBSD_ENV)
+#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
 #define VTOAFS(v) ((struct vcache *)(v)->v_data)
 #define AFSTOV(vc) ((vc)->v)
 #else
@@ -612,7 +612,7 @@ extern afs_uint32 afs_stampValue;	/* stamp for pair's usage */
  * !(avc->nextfree) && !avc->vlruq.next => (FreeVCList == avc->nextfree)
  */
 struct vcache {
-#if defined(AFS_XBSD_ENV)
+#if defined(AFS_XBSD_ENV)||defined(AFS_DARWIN_ENV)
     struct vnode *v;
 #else
     struct vnode v;		/* Has reference count in v.v_count */
