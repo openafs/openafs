@@ -224,7 +224,7 @@ int afs_vsnprintf(char *p, size_t avail, const char *fmt, va_list ap)
       case 'd': /* signed decimal integer */
         if      (lflag > 1) SVAL = va_arg(ap, afs_intmax_t);
 	else if (lflag) SVAL = va_arg(ap, long);
-        else if (hflag) SVAL = va_arg(ap, short);
+        else if (hflag) SVAL = va_arg(ap, int);
         else            SVAL = va_arg(ap, int);
         UVAL = (SVAL < 0) ? -SVAL : SVAL;
 
@@ -249,7 +249,7 @@ int afs_vsnprintf(char *p, size_t avail, const char *fmt, va_list ap)
       case 'o': /* unsigned octal integer */
         if      (lflag > 1) UVAL = va_arg(ap, afs_uintmax_t);
         else if (lflag) UVAL = va_arg(ap, unsigned long);
-        else if (hflag) UVAL = va_arg(ap, unsigned short);
+        else if (hflag) UVAL = va_arg(ap, unsigned int);
         else            UVAL = va_arg(ap, unsigned int);
 
         xbuf[0] = '0';
@@ -268,7 +268,7 @@ int afs_vsnprintf(char *p, size_t avail, const char *fmt, va_list ap)
       case 'u': /* unsigned decimal integer */
         if      (lflag > 1) UVAL = va_arg(ap, afs_uintmax_t);
         else if (lflag) UVAL = va_arg(ap, unsigned long);
-        else if (hflag) UVAL = va_arg(ap, unsigned short);
+        else if (hflag) UVAL = va_arg(ap, unsigned int);
         else            UVAL = va_arg(ap, unsigned int);
 
         if (!haveprec) {
@@ -286,7 +286,7 @@ int afs_vsnprintf(char *p, size_t avail, const char *fmt, va_list ap)
       case 'X': /* unsigned hexadecimal integer */
         if      (lflag > 1) UVAL = va_arg(ap, afs_uintmax_t);
 	else if (lflag) UVAL = va_arg(ap, unsigned long);
-        else if (hflag) UVAL = va_arg(ap, unsigned short);
+        else if (hflag) UVAL = va_arg(ap, unsigned int);
         else            UVAL = va_arg(ap, unsigned int);
 
         xbuf[0] = '0';
