@@ -182,14 +182,14 @@ typedef bool_t (*xdrproc_t) (void *, ...);
 typedef struct {
 	enum xdr_op	x_op;		/* operation; fast additional param */
 	struct xdr_ops {
-#if defined(AFS_SGI61_ENV) && defined(KERNEL) && (_MIPS_SZLONG != _MIPS_SZINT)
+#if defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV))
 /* NOTE: SGI 6.1 adds two routines to the xdr_ops if the size of a long is
  * 64 bits. I've only done this for the kernel, since other changes may
  * be necessary if we make a 64 bit user version of AFS.
  */
 		bool_t	(*x_getint64)(void *xdrs, afs_int64 *lp); /* get 32 bits into a long */
 		bool_t	(*x_putint64)(void *xdrs, afs_int64 *lp); /* send 32 bits of a long */
-#endif /* AFS_SGI61_ENV */
+#endif /* defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)) */
 #if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
 		bool_t	(*x_getint32)(void *xdrs, afs_int32 *lp);	/* get an afs_int32 from underlying stream */
 		bool_t	(*x_putint32)(void *xdrs, afs_int32 *lp);	/* put an afs_int32 to " */
@@ -221,7 +221,7 @@ typedef struct {
  * u_int	 len;
  * u_int	 pos;
  */
-#if defined(AFS_SGI61_ENV) && defined(KERNEL) && (_MIPS_SZLONG != _MIPS_SZINT)
+#if defined(AFS_SGI61_ENV) && defined(KERNEL) && (_MIPS_SZLONG != _MIPS_SZINT) || defined(AFS_HPUX_64BIT_ENV)
 #define XDR_GETINT64(xdrs, int64p)			\
 	(*(xdrs)->x_ops->x_getint64)(xdrs, int64p)
 #define xdr_getint64(xdrs, int64p)			\
@@ -231,7 +231,7 @@ typedef struct {
 	(*(xdrs)->x_ops->x_putint64)(xdrs, int64p)
 #define xdr_putint64(xdrs, int64p)			\
 	(*(xdrs)->x_ops->x_putint64)(xdrs, int64p)
-#endif /* defined(AFS_SGI61_ENV) && KERNEL && (_MIPS_SZLONG != _MIPS_SZINT) */
+#endif /* defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)) */
 
 #define XDR_GETINT32(xdrs, int32p)			\
 	(*(xdrs)->x_ops->x_getint32)(xdrs, int32p)

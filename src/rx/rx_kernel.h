@@ -24,7 +24,7 @@
 typedef struct socket *osi_socket;
 #define	OSI_NULLSOCKET	((osi_socket) 0)
 
-#if (!defined(AFS_GLOBAL_SUNLOCK) && !defined(RX_ENABLE_LOCKS)) || (defined(AFS_HPUX_ENV) && !defined(RX_ENABLE_LOCKS))
+#if (!defined(AFS_GLOBAL_SUNLOCK) && !defined(RX_ENABLE_LOCKS))
 #define RX_KERNEL_TRACE 1
 #ifdef RX_KERNEL_TRACE
 #include "../afs/icl.h"

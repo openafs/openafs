@@ -91,7 +91,8 @@ RCSID("$Header$");
 #if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)
 static bool_t xdrrx_getint64(XDR *xdrs, long *lp);
 static bool_t xdrrx_putint64(XDR *xdrs, long *lp);
-#endif
+#endif /* (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV) */
+
 static bool_t xdrrx_getint32(XDR *xdrs, afs_int32 *lp);
 static bool_t xdrrx_putint32(register XDR *xdrs, register afs_int32 *lp);
 static bool_t xdrrx_getbytes(register XDR *xdrs,
@@ -105,11 +106,11 @@ static AFS_RPC_INLINE_T *xdrrx_inline(register XDR *xdrs, register u_int len);
  * Ops vector for stdio type XDR
  */
 static struct xdr_ops	xdrrx_ops = {
-#if (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)
+#if defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV))
 	xdrrx_getint64,
 	xdrrx_putint64,
-#endif /* (defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV) */
-#if !(defined(KERNEL) && defined(AFS_SUN57_ENV)) && !defined(AFS_HPUX_64BIT_ENV)
+#endif /* defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)) */
+#if !(defined(KERNEL) && defined(AFS_SUN57_ENV)) 
 	xdrrx_getint32,	/* deserialize an afs_int32 */
 	xdrrx_putint32,	/* serialize an afs_int32 */
 #endif
