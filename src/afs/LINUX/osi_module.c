@@ -283,6 +283,13 @@ int init_module(void)
 	    break;
 	}
 #else
+#if defined(EXPORTED_SYS_WAIT4) && defined(EXPORTED_SYS_CLOSE)
+        if (ptr[0] == (unsigned long)&sys_close &&
+            ptr[__NR_wait4 - __NR_close] == (unsigned long)&sys_wait4) {
+            sys_call_table=ptr - __NR_close;
+            break;
+        }
+#else
 #if defined(EXPORTED_SYS_CHDIR) && defined(EXPORTED_SYS_CLOSE)
         if (ptr[0] == (unsigned long)&sys_close &&
 	    ptr[__NR_chdir - __NR_close] == (unsigned long)&sys_chdir) {
@@ -295,6 +302,7 @@ int init_module(void)
 	    sys_call_table=ptr - __NR_exit;
 	    break;
 	}
+#endif
 #endif
 #endif
     }
