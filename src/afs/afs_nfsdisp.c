@@ -553,7 +553,7 @@ void afs_acl2_getacl(char *args, char *xp, char *exp, char *rp, char *crp) {
     curthread->t_cred = (struct cred*)crp; 
     call=afs_nfs2_dispatcher(1, ACLPROC2_GETACL, (char *)args, &exp, rp, crp); 
     if (call>1) afs_nfs2_noaccess((struct afs_nfs2_resp *)xp); 
-    else (*afs_rfs_disp_tbl[ACLPROC2_GETACL].orig_proc)(args, xp, exp, rp, crp); 
+    else (*afs_acl_disp_tbl[ACLPROC2_GETACL].orig_proc)(args, xp, exp, rp, crp); 
     curthread->t_cred = svcred; 
     return; 
 }
@@ -564,7 +564,7 @@ void afs_acl2_setacl(char *args, char *xp, char *exp, char *rp, char *crp) {
     curthread->t_cred = (struct cred*)crp; 
     call=afs_nfs2_dispatcher(1, ACLPROC2_SETACL, (char *)args, &exp, rp, crp); 
     if (call>1) afs_nfs2_noaccess((struct afs_nfs2_resp *)xp); 
-    else (*afs_rfs_disp_tbl[ACLPROC2_SETACL].orig_proc)(args, xp, exp, rp, crp); 
+    else (*afs_acl_disp_tbl[ACLPROC2_SETACL].orig_proc)(args, xp, exp, rp, crp); 
     curthread->t_cred = svcred; 
     return; 
 }
@@ -575,7 +575,7 @@ void afs_acl2_getattr(char *args, char *xp, char *exp, char *rp, char *crp) {
     curthread->t_cred = (struct cred*)crp; 
     call=afs_nfs2_dispatcher(1, ACLPROC2_GETATTR, (char *)args, &exp, rp, crp); 
     if (call>1) afs_nfs2_noaccess((struct afs_nfs2_resp *)xp); 
-    else (*afs_rfs_disp_tbl[ACLPROC2_GETATTR].orig_proc)(args, xp, exp, rp, crp); 
+    else (*afs_acl_disp_tbl[ACLPROC2_GETATTR].orig_proc)(args, xp, exp, rp, crp); 
     curthread->t_cred = svcred; 
     return; 
 }
@@ -586,7 +586,7 @@ void afs_acl2_access(char *args, char *xp, char *exp, char *rp, char *crp) {
     curthread->t_cred = (struct cred*)crp; 
     call=afs_nfs2_dispatcher(1, ACLPROC2_ACCESS, (char *)args, &exp, rp, crp); 
     if (call>1) afs_nfs2_noaccess((struct afs_nfs2_resp *)xp); 
-    else (*afs_rfs_disp_tbl[ACLPROC2_ACCESS].orig_proc)(args, xp, exp, rp, crp); 
+    else (*afs_acl_disp_tbl[ACLPROC2_ACCESS].orig_proc)(args, xp, exp, rp, crp); 
     curthread->t_cred = svcred; 
     return; 
 }
@@ -1244,7 +1244,7 @@ void afs_acl3_getacl(char *args, char *xp, char *exp, char *rp, char *crp) {
     curthread->t_cred = (struct cred*)crp; 
     call=afs_nfs3_dispatcher(1, ACLPROC3_GETACL, (char *)args, &exp, rp, crp); 
     if (call>1) afs_nfs3_noaccess((struct afs_nfs3_resp *)xp); 
-    else (*afs_rfs3_disp_tbl[ACLPROC3_GETACL].orig_proc)(args, xp, exp, rp, crp); 
+    else (*afs_acl3_disp_tbl[ACLPROC3_GETACL].orig_proc)(args, xp, exp, rp, crp); 
     curthread->t_cred = svcred; 
     return; 
 }
@@ -1255,7 +1255,7 @@ void afs_acl3_setacl(char *args, char *xp, char *exp, char *rp, char *crp) {
     curthread->t_cred = (struct cred*)crp; 
     call=afs_nfs3_dispatcher(1, ACLPROC3_SETACL, (char *)args, &exp, rp, crp); 
     if (call>1) afs_nfs3_noaccess((struct afs_nfs3_resp *)xp); 
-    else (*afs_rfs3_disp_tbl[ACLPROC3_SETACL].orig_proc)(args, xp, exp, rp, crp); 
+    else (*afs_acl3_disp_tbl[ACLPROC3_SETACL].orig_proc)(args, xp, exp, rp, crp); 
     curthread->t_cred = svcred; 
     return; 
 }
