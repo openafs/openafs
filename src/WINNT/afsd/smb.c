@@ -5179,7 +5179,7 @@ long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
 
 	code = cm_NameI(cm_rootSCachep, spacep->data,
                     caseFold | CM_FLAG_FOLLOW | CM_FLAG_CHECKPATH,
-                    userp, tidPat   hp, &req, &dscp);
+                    userp, tidPathp, &req, &dscp);
 
     if (code) {
         cm_ReleaseUser(userp);
@@ -6524,18 +6524,6 @@ void smb_NetbiosInit()
     int lana_found = 0;
     OSVERSIONINFO Version;
 
-    /*******************************************************************/
-    /*      ms loopback adapter scan                                   */
-    /*******************************************************************/
-    struct
-    {
-        ADAPTER_STATUS status;
-        NAME_BUFFER    NameBuff [30];
-    } Adapter;
-    
-    int j;
-    BOOL wla_found;
-
     /* AFAIK, this is the default for the ms loopback adapter.*/
     unsigned char kWLA_MAC[6] = { 0x02, 0x00, 0x4c, 0x4f, 0x4f, 0x50 };
     /*******************************************************************/
@@ -6969,7 +6957,7 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 
     phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_Daemon,
                           NULL, 0, &lpid, "smb_Daemon");
-	osi_assert(phandle != N ULL);
+	osi_assert(phandle != NULL);
 	thrd_CloseHandle(phandle);
 
 	phandle = thrd_Create(NULL, 65536, (ThreadFunc) smb_WaitingLocksDaemon,
