@@ -1,3 +1,20 @@
+openafs (1.0.snap20001106-3) unstable; urgency=low
+
+  * Increase stacksize for server processes so they don't dump core.
+  * New script: afs-rootvol--creates the root.afs and root.cell.  Works
+    fairly well except that it is overly verbose and that it has my test
+    cell hardcoded.  This script will evolve into part of a new cell
+    config tool. 
+
+
+  --
+  * Support removing module for smP
+  * Prune build directories out of modules sources--oops
+  * Fix bogus depends for module sources--note that it really does want
+    bison and flex at least for now.
+
+ --  Sam Hartman <hartmans@mit.edu>  Thu, 16 Nov 2000 01:39:48 -0500
+
 openafs (1.0.snap20001106-2) unstable; urgency=low
 
   * Fix directories for servers to be FHS-reasonable

@@ -1,0 +1,186 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Term::ReadLine;
+use Getopt::Long;
+
+=head1  NAME
+
+   afs-rootvol - Generate and populate root volumes for new AFS cells.
+
+=head1 SYNOPSIS
+
+B<afs-rootvol> [B<--requirements-met>] [B<--server> server-name] [B<--partition> partition-letter]
+
+=head1 DESCRIPTION
+
+This script sets up an AFS cell's root volumes.  It assumes that you
+already have a fileserver and database servers.  The fileserver should
+have an empty root.afs.
+  This script creates root.cell, user, service and populates root.afs.  
+
+=head1 AUTHOR
+
+Sam Hartman <hartmans@mit.edu>
+
+=cut
+
+use vars qw($rl $server  $part $requirements_met);
+use vars qw( @unwinds);
+
+sub run ($) {
+  print join(' ', @_);
+  print "\n";
+  system (@_)  == 0
+    or die "Filed: $?\n";
+}
+
+# This subroutine takes a command to run in case of failure.  After
+# each succesful step, this routine should be run with a command to
+# undo the successful step.
+
+	 sub unwind($) {
+	   push @unwinds, $_[0];
+	 }
+
+
+# This subroutine creates a volume, mounts it and then sets the access
+# to allow read by anyuser.  The volume is scheduled for deletion in
+# case of error.
+# mkvol(volume, mount)
+		    sub mkvol($$) {
+		      my ($vol, $mnt) = @_;
+		      run("vos create $server $part $vol -localauth");
+		      unwind("vos remove $server $part $vol -localauth");
+		      run("fs mkm $mnt $vol ");
+		      run("fs sa $mnt system:anyuser rl");
+		    }
+
+# main script
+$rl = new Term::ReadLine('AFS');
+
+
+GetOptions (
+	    "requirements-met" => \$requirements_met, 
+	    "server=s" => \$server,
+	    "partition=s" => \$part
+	    );
+unless ($requirements_met) {
+      print <<eotext;
+			    Prerequisites
+
+In order to set up the root.afs volume, you must meet the following pre-conditions:
+
+1) The cell must be configured, running a database server with a
+   volume location and protection server.
+
+2)  You must be logged into the cell with  tokens in
+    system:administrators and with a principal that is in the susers
+    file of the servers in the cell.
+
+3) You need a fileserver in the cell with partitions mounted.
+   Presumably, it has no volumes on it, although the script will work
+   so long as root.afs and root.cell do not exist.
+
+4) The AFS client must not be running on this workstation.  The
+   workstation will be moved into the new cell and the client started
+   as part of the process.
+
+eotext
+    $_ = $rl->readline("Do you meet these conditions? (Y/n) ");
+    unless (/^y/i ) {
+	print "Please restart the script when you meet these conditions.\n";
+	exit(1);
+    }
+
+}
+
+open(MOUNT, "mount |") or die "Failed to run mount: $!\n";
+while(<MOUNT>) {
+if(m:^AFS:) {
+print "The AFS client is currently running on this workstation.\n";
+print "Please restart this script after running /etc/init.d/openafs-client stop\n";
+exit(1);
+}
+}
+close MOUNT;
+
+
+# Get configuration information we need
+
+open(CELL, "/etc/openafs/server/ThisCell")
+or die "Unable to find out what cell this machine serves: $!\n";
+my $cell = <CELL>;
+close CELL;
+chomp $cell;
+
+unless ($server) {
+  print <<eotext; 
+You will need to select a server (hostname) and AFS
+partition on which to create the root volumes.
+eotext
+
+  $server = $rl->readline("What AFS Server should volumes be placed on? ");
+  die "Please select a server.\n" unless $server;
+}
+unless ($part) {
+  $part = $rl    ->readline("What partition? [a] ");
+$part = "a" unless $part;
+}
+
+
+
+
+run("echo $cell >/etc/openafs/ThisCell");
+
+run("vos create $server $part root.afs -localauth -cell $cell");
+unwind("vos remove $server $part root.afs -localauth");
+
+
+run("/etc/init.d/openafs-client start");
+unwind("/etc/init.d/openafs-client stop");
+
+run("aklog snorklewacker.mit.edu -k ZONE.MIT.EDU");
+
+run("fs sa /afs system:anyuser rl");
+
+run("vos create $server $part root.cell -localauth");
+unwind("vos remove $server $part root.cell -localauth");
+# We make root.cell s:anyuser readable after we mount in the next
+# loop.
+
+
+open(CELLSERVDB, "/etc/openafs/CellServDB")
+    or die "Unable to open /etc/openafs/CellServDB: $!\n";
+while(<CELLSERVDB>) {
+    chomp;
+    if (/^>\s*([a-z0-9_\-.]+)/ ) {
+	run("fs mkm /afs/$1 root.cell -cell $1 ");
+    }
+}
+
+run("fs sa /afs/$cell system:anyuser rl");
+run ("fs mkm /afs/.$cell root.cell -cell $cell -rw");
+run("fs mkm /afs/.root.afs root.afs -rw");
+
+mkvol( "user", "/afs/$cell/user" );
+mkvol( "service", "/afs/$cell/service" );
+
+$cell =~ /^([^.]*)/;
+my $cellpart = $1;
+run("ln -s /afs/$cell /afs/$cellpart");
+run( "ln -s /afs/.$cell /afs/.$cellpart" );
+
+run( "vos addsite $server $part root.afs -localauth" );
+run( "vos addsite $server $part root.cell -localauth" );
+run( "vos release root.afs -localauth" );
+run( "vos release root.cell -localauth" );
+unwind( "vos remove $server $part root.cell.readonly -localauth ");
+unwind( "vos remove $server $part root.afs.readonly -localauth ");
+
+#@unwinds = ();
+
+END {
+  run(pop @unwinds) while @unwinds;
+  }
+

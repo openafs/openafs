@@ -30,7 +30,7 @@ Description: The AFS distributed filesystem- file server
 
 Package: openafs-dbserver
 Architecture: i386
-Depends: ${shlibs:Depends}, debconf, openafs-fileserver (= ${Source-Version})
+Depends: ${shlibs:Depends}, debconf, openafs-fileserver (= ${Source-Version}), perl5
 Description: The AFS distributed filesystem- database server
    AFS is a distributed filesystem allowing cross-platform sharing of
    files among multiple computers.  Facilities are provided for access
@@ -52,7 +52,7 @@ Description: The AFS distributed filesystem- development libraries
 
 Package: openafs-modules-source
 Priority: extra
-Depends: libncurses5-dev, libpam0g-dev
+Depends: bison, flex
 Architecture: all
 Description: The AFS distributed filesystem- Module Sources
    AFS is a distributed filesystem allowing cross-platform sharing of

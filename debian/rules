@@ -77,6 +77,9 @@ install: build
 	cp dest/root.client/usr/vice/etc/afs.rc debian/openafs-client/etc/init.d/openafs-client
 	chmod 755 debian/openafs-client/etc/init.d/openafs-client
 	cp dest/root.client/usr/vice/etc/afs.conf debian/openafs-client/etc/openafs/afs.conf
+	install -m 755 -o root -g root debian/afs-rootvol debian/openafs-dbserver/usr/sbin
+	(cd debian&&pod2man --section 8 --center "Debian GNU/Linux"  \
+		afs-rootvol ) >debian/openafs-dbserver/usr/share/man/man8/afs-rootvol.8
 
 # Build architecture-independent files here.
 # Pass -i to all debhelper commands in this target to reduce clutter.
@@ -180,7 +183,9 @@ binary-source:
 # Clean up the sources	
 	install -d debian/$(srcpkg)/usr/src/modules/$(package)
 	find . \( -name \*.o -o -path ./debian/$(srcpkg) -o -path \*/CVS -o -path ./src/WINNT  \
-		-o -path ./obj -o -path ./$(SYS_NAME) \) -prune -o -print | \
+		-o -path ./obj -o -path ./$(SYS_NAME)  \
+	-o \( -path ./debian/\* -type d \) \
+	-o -path ./debian/\*debhelper \) -prune -o -print | \
 		cpio -admp debian/$(srcpkg)/usr/src/modules/$(package)
 	( cd debian/$(srcpkg)/usr/src/modules/$(package); \
 		$(MAKE) -f debian/rules clean)
