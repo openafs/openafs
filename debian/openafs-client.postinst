@@ -21,13 +21,37 @@ case "$1" in
 
 	db_get openafs-client/thiscell
 	echo $RET >/etc/openafs/ThisCell
-	if grep  -q -F $RET /etc/openafs/CellServDB ; then :
-		else db_input high openafs-client/nohomecell ||true
-		db_go
-		    fi
+	THISCELL=$RET
 
+	if test -f /etc/openafs/CellServDB; then :
+	    else cp /usr/share/doc/openafs-client/examples/CellServDB \
+	      /etc/openafs
+	    fi
+	if grep  -q -F $RET /etc/openafs/CellServDB ; then :
+		else db_input critical  openafs-client/cell-info || true
+	    db_input high openafs-client/run-client ||true
+	    db_go
+	    db_get openafs-client/cell-info
+	    if [ "x$RET" != "x" ] ; then
+		echo \>$THISCELL >/etc/openafs/CellServDB.new
+		for hname in $RET ; do 
+		    host $hname |perl -anle \
+		      'print "$F[2] # $F[0]" if $F[1] eq "A"' \
+		      >>/etc/openafs/CellServDB.new
+		    done
+		    cat /etc/openafs/CellServDB.new \
+		      /etc/openafs/CellServDB  >/etc/openafs/CellServDB.tmp
+		    mv /etc/openafs/CellServDB.tmp \
+		      /etc/openafs/CellServDB
+		    rm /etc/openafs/CellServDB.new
+		fi
+	    fi
+		    
 	db_get openafs-client/cachesize
 	echo /afs:/var/cache/openafs:$RET >/etc/openafs/cacheinfo
+
+	db_get openafs-client/run-client
+	echo AFS_CLIENT=$RET >/etc/openafs/afs.conf.client
 
     ;;
 
