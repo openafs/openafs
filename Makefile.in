@@ -517,7 +517,10 @@ distclean: clean
 	/bin/rm -f config.log config.cache config.status Makefile
 	/bin/rm -f src/config/afsconfig.h src/config/Makefile.${SYS_NAME} 
 	/bin/rm -f src/libafs/Makefile src/libafs/MakefileProto.${MKAFS_OSTYPE}
-	/bin/rm -f src/libuafs/Makefile src/kauth/Kkauth.cs.c
+	/bin/rm -f src/libuafs/Makefile
+
+pristine: distclean
+	/bin/rm -f src/config/afsconfig.h.in configure aclocal.m4
 
 links:
 	echo "Remove the obj directory"

@@ -70,7 +70,7 @@ test tests: install
 	cd test; $(MAKE)
 
 clean:
-	rm -f *.o kaserver kas klog multiklog kpasswd klogin rebuild kauth.cs.c kauth.ss.c kauth.xdr.c kauth.h kautils.h kaerrors.c *.a core kpwvalid AFS_component_version_number.c klog.krb knfs klogin.krb kdb Kkauth.xdr.c Kkauth.h 
+	rm -f *.o kaserver kas klog multiklog kpasswd klogin rebuild kauth.cs.c kauth.ss.c kauth.xdr.c kauth.h kautils.h kaerrors.c *.a core kpwvalid AFS_component_version_number.c klog.krb knfs klogin.krb kdb Kkauth.xdr.c Kkauth.h Kkauth.cs.c
 
 kaserver: kautils.o kalocalcell.o kadatabase.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaserver.o kaaux.o krb_udp.o kaauxdb.o $(LIBS) ${auditlib}
 	${CC} ${LDFLAGS} -o kaserver kaserver.o kautils.o kalocalcell.o kadatabase.o krb_udp.o kaprocs.o kalog.o kauth.ss.o kauth.xdr.o kaaux.o kaauxdb.o $(LIBS) ${XLIBS} ${auditlib}
