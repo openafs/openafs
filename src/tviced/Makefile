@@ -184,9 +184,6 @@ fileserver: callback_clean1 viced.o ${objects} ${LIBS}
 	*linux*) \
 	    ${CC} ${LDFLAGS} -o fileserver ${objects} ${LIBS} \
 	    ${MTLIBS} ${XLIBS} ;; \
-	sgi_6*) \
-	    ${CC} ${LDFLAGS} -o fileserver ${objects} ${LIBS} \
-	    ${MTLIBS} ${XLIBS} ../sgiefs/libefs.a ;; \
 	*) \
 	    ${CC} ${LDFLAGS} -o fileserver ${objects} ${LIBS} \
 	    ${MTLIBS} ${XLIBS} ;; \
