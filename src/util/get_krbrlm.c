@@ -6,7 +6,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/get_krbrlm.c,v 1.1.1.3 2001/07/14 22:24:22 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/util/get_krbrlm.c,v 1.6 2003/11/29 22:08:19 jaltman Exp $");
 
 #include <stdio.h>
 #include "afsutil.h"
@@ -23,24 +24,23 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/util/get_krbrlm.c,v 1.1.1.3 2001/07/14 
  *
  */
 #define	KSUCCESS	0
-#define	KFAILURE	-1
+#define	KFAILURE	(-1)
 
-afs_krb_get_lrealm(r,n)
-    char *r;
-    int n;
+int
+afs_krb_get_lrealm(char *r, int n)
 {
-    FILE *cnffile, *fopen();
+    FILE *cnffile/*, *fopen()*/;
 
     if (n > 1)
-	return(KFAILURE);  /* Temporary restriction */
+	return (KFAILURE);	/* Temporary restriction */
 
     if ((cnffile = fopen(AFSDIR_SERVER_KCONF_FILEPATH, "r")) == NULL) {
-	return(KFAILURE);
+	return (KFAILURE);
     }
-    if (fscanf(cnffile,"%s",r) != 1) {
-        (void) fclose(cnffile);
-        return(KFAILURE);
+    if (fscanf(cnffile, "%s", r) != 1) {
+	(void)fclose(cnffile);
+	return (KFAILURE);
     }
-    (void) fclose(cnffile);
-    return(KSUCCESS);
+    (void)fclose(cnffile);
+    return (KSUCCESS);
 }

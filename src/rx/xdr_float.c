@@ -29,7 +29,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_float.c,v 1.1.1.3 2001/07/14 22:23:38 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rx/xdr_float.c,v 1.5 2003/07/15 23:16:12 shadow Exp $");
 
 #ifndef	NeXT
 
@@ -52,65 +53,49 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_float.c,v 1.1.1.3 2001/07/14 22:
  * in the system libraries.
  */
 
+bool_t
+xdr_float(register XDR * xdrs, register float *fp)
+{
 #ifdef AFS_NT40_ENV
-bool_t 
-xdr_float(xdrs, fp)
-	register XDR *xdrs;
-	register float *fp;
-{
-	switch (xdrs->x_op) {
+    return (FALSE);
+#else
+    switch (xdrs->x_op) {
 
-	case XDR_ENCODE:
-		return (XDR_PUTINT32(xdrs, (afs_int32 *)fp));
+    case XDR_ENCODE:
+	return (XDR_PUTINT32(xdrs, (afs_int32 *) fp));
 
-	case XDR_DECODE:
-		return (XDR_GETINT32(xdrs, (afs_int32 *)fp));
+    case XDR_DECODE:
+	return (XDR_GETINT32(xdrs, (afs_int32 *) fp));
 
-	case XDR_FREE:
-		return (TRUE);
-	}
-	return (FALSE);
+    case XDR_FREE:
+	return (TRUE);
+    }
+    return (FALSE);
+#endif
 }
 
-bool_t           
-xdr_double(xdrs, dp)
-	register XDR *xdrs;
-	double *dp;
+bool_t
+xdr_double(register XDR * xdrs, double *dp)
 {
-	afs_int32 *ip;
-	switch (xdrs->x_op) {
+#ifdef AFS_NT40_ENV
+    return (FALSE);
+#else
+    afs_int32 *ip;
+    switch (xdrs->x_op) {
 
-	case XDR_ENCODE:
-		ip = (afs_int32 *)(dp);
-		return(XDR_PUTINT32(xdrs, *(ip+1)) && XDR_PUTINT32(xdrs, *ip));
+    case XDR_ENCODE:
+	ip = (afs_int32 *) (dp);
+	return (XDR_PUTINT32(xdrs, *(ip + 1)) && XDR_PUTINT32(xdrs, *ip));
 
-	case XDR_DECODE:
-		ip = (afs_int32 *)(dp);
-		return(XDR_GETINT32(xdrs, *(ip+1)) && XDR_GETINT32(xdrs, *ip));
+    case XDR_DECODE:
+	ip = (afs_int32 *) (dp);
+	return (XDR_GETINT32(xdrs, *(ip + 1)) && XDR_GETINT32(xdrs, *ip));
 
-	case XDR_FREE:
-		return (TRUE);
-	}
-	return (FALSE);
+    case XDR_FREE:
+	return (TRUE);
+    }
+    return (FALSE);
+#endif
 }
-
-#else /* AFS_NT40_ENV */
-
-bool_t           
-xdr_float(xdrs, fp)
-	register XDR *xdrs;
-	float *fp;
-{
-	return(FALSE);
-}
-
-bool_t           
-xdr_double(xdrs, dp)
-	register XDR *xdrs;
-	double *dp;
-{
-	return(FALSE);
-}
-#endif /* AFS_NT40_ENV */
 
 #endif /* NeXT */

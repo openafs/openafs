@@ -10,11 +10,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaaux.c,v 1.1.1.4 2001/07/14 22:22:10 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/kauth/kaaux.c,v 1.6 2003/07/15 23:15:16 shadow Exp $");
 
 #if defined(UKERNEL)
-#include "../rx/xdr.h"
-#include "../afsint/kauth.h"
+#include "rx/xdr.h"
+#include "afs/kauth.h"
 #else /* defined(UKERNEL) */
 #include <rx/xdr.h>
 #include "kauth.h"
@@ -22,9 +23,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaaux.c,v 1.1.1.4 2001/07/14 22:2
 
 #define MAXBS	2048		/* try to avoid horrible allocs */
 
-int xdr_ka_CBS(
-  XDR *x,
-  struct ka_CBS *abbs)
+int
+xdr_ka_CBS(XDR * x, struct ka_CBS *abbs)
 {
     afs_int32 len;
     if (x->x_op == XDR_FREE) {
@@ -36,20 +36,20 @@ int xdr_ka_CBS(
 	xdr_afs_int32(x, &abbs->SeqLen);
 	xdr_opaque(x, abbs->SeqBody, abbs->SeqLen);
 	return TRUE;
-    }
-    else {
+    } else {
 	xdr_afs_int32(x, &len);
-	if (len < 0 || len > MAXBS) return FALSE;
-	if (!abbs->SeqBody) abbs->SeqBody = (char *) malloc(len);
+	if (len < 0 || len > MAXBS)
+	    return FALSE;
+	if (!abbs->SeqBody)
+	    abbs->SeqBody = (char *)malloc(len);
 	abbs->SeqLen = len;
 	xdr_opaque(x, abbs->SeqBody, len);
 	return TRUE;
     }
 }
 
-int xdr_ka_BBS(
-  XDR *x,
-  struct ka_BBS *abbs)
+int
+xdr_ka_BBS(XDR * x, struct ka_BBS *abbs)
 {
     afs_int32 maxLen, len;
     if (x->x_op == XDR_FREE) {
@@ -58,22 +58,21 @@ int xdr_ka_BBS(
     }
 
     if (x->x_op == XDR_ENCODE) {
-	if (!xdr_afs_int32(x, &abbs->MaxSeqLen) ||
-	    !xdr_afs_int32(x, &abbs->SeqLen) ||
-	    !xdr_opaque(x, abbs->SeqBody, abbs->SeqLen))
+	if (!xdr_afs_int32(x, &abbs->MaxSeqLen)
+	    || !xdr_afs_int32(x, &abbs->SeqLen)
+	    || !xdr_opaque(x, abbs->SeqBody, abbs->SeqLen))
 	    return FALSE;
 	return TRUE;
-    }
-    else {
-	if (!xdr_afs_int32(x, &maxLen) ||
-	    !xdr_afs_int32(x, &len) ||
-	    (len < 0) || (len > MAXBS) || (len > maxLen))
+    } else {
+	if (!xdr_afs_int32(x, &maxLen) || !xdr_afs_int32(x, &len) || (len < 0)
+	    || (len > MAXBS) || (len > maxLen))
 	    return FALSE;
-	if (!abbs->SeqBody) abbs->SeqBody = (char *) malloc(maxLen);
+	if (!abbs->SeqBody)
+	    abbs->SeqBody = (char *)malloc(maxLen);
 	abbs->MaxSeqLen = maxLen;
 	abbs->SeqLen = len;
-	if (!xdr_opaque(x, abbs->SeqBody, len)) return FALSE;
+	if (!xdr_opaque(x, abbs->SeqBody, len))
+	    return FALSE;
 	return TRUE;
     }
 }
-

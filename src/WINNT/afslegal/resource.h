@@ -7,11 +7,11 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#define IDS_MESSAGE_1                   1
-#define IDS_MESSAGE_2                   2
-#define IDS_MESSAGE_3                   3
-#define IDS_MESSAGE_4                   4
-#define IDS_MESSAGE_5                   5
+#define IDS_MESSAGE_1                   0
+#define IDS_MESSAGE_2                   1
+#define IDS_MESSAGE_3                   2
+#define IDS_MESSAGE_4                   3
+#define IDS_MESSAGE_5                   4
 #define IDD_LAWYER                      101
 #define IDC_TITLE                       1000
 #define IDC_MESSAGE                     1001

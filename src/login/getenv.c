@@ -18,7 +18,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/login/getenv.c,v 1.1.1.3 2001/07/14 22:22:52 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/login/getenv.c,v 1.4 2003/07/15 23:15:44 shadow Exp $");
 
 #include <stdio.h>
 
@@ -28,12 +29,12 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/login/getenv.c,v 1.1.1.3 2001/07/14 22:
  */
 char *
 getenv(name)
-	char *name;
+     char *name;
 {
-	int offset;
-	char *_findenv();
+    int offset;
+    char *_findenv();
 
-	return(_findenv(name, &offset));
+    return (_findenv(name, &offset));
 }
 
 /*
@@ -47,19 +48,19 @@ getenv(name)
  */
 char *
 _findenv(name, offset)
-	register char *name;
-	int *offset;
+     register char *name;
+     int *offset;
 {
-	extern char **environ;
-	register int len;
-	register char **P, *C;
+    extern char **environ;
+    register int len;
+    register char **P, *C;
 
-	for (C = name, len = 0; *C && *C != '='; ++C, ++len);
-	for (P = environ; *P; ++P)
-		if (!strncmp(*P, name, len))
-			if (*(C = *P + len) == '=') {
-				*offset = P - environ;
-				return(++C);
-			}
-	return(NULL);
+    for (C = name, len = 0; *C && *C != '='; ++C, ++len);
+    for (P = environ; *P; ++P)
+	if (!strncmp(*P, name, len))
+	    if (*(C = *P + len) == '=') {
+		*offset = P - environ;
+		return (++C);
+	    }
+    return (NULL);
 }

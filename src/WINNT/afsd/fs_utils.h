@@ -25,14 +25,22 @@
 /* Fake error code since NT errno.h doesn't define it */
 #include <afs/errmap_nt.h>
 
-extern char *hostutil_GetNameByINet(long addr);
+#ifndef hostutil_GetNameByINet
+extern char *hostutil_GetNameByINet(afs_uint32 addr);
+#endif
 
+#ifndef hostutil_GetHostByName
 extern struct hostent *hostutil_GetHostByName(char *namep);
+#endif
 
-extern long util_GetInt32(char *stringp, long *valuep);
+// extern long util_GetInt32(char *stringp, long *valuep);
 
 extern long fs_StripDriveLetter(char *inPathp, char *outPathp, long outSize);
 
 extern long fs_ExtractDriveLetter(char *inPathp, char *outPathp);
 
+extern char *cm_mount_root;             /*"afs"*/
+extern char *cm_slash_mount_root;       /*"/afs"*/
+extern char *cm_back_slash_mount_root;  /*"\\afs"*/
+extern void fs_utils_InitMountRoot();
 #endif /* FS_UTILS_H_ENV */

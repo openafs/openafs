@@ -12,45 +12,17 @@
 # # supported (if not supported, don't show it).
 # ######################################################################
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-SHELL = /bin/sh
+CFLAGS=-I. -I${srcdir} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 
-include ../config/Makefile.${SYS_NAME}
-
-UKERNELDIR = ../libuafs
-
-CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
-
-all: ukinstall ${TOP_LIBDIR}/libaudit.a ${TOP_INCDIR}/afs/audit.h
+all: ${TOP_LIBDIR}/libaudit.a ${TOP_INCDIR}/afs/audit.h
 
 # XXX-INST: where to install the AIX audit files?
-install:  ${DESTDIR}${libdir}/afs/libaudit.a ${DESTDIR}${includedir}/afs/audit.h
-
-ukinstall: ${UKERNELDIR}/afs ${UKERNELDIR}/afs/audit.h
-
-${UKERNELDIR}/afs:
-	mkdir -p ${UKERNELDIR}/afs
-
-${UKERNELDIR}/afs/audit.h: audit.h
-	${INSTALL} $? $@
+install: \
+	${DESTDIR}${libdir}/afs/libaudit.a \
+	${DESTDIR}${includedir}/afs/audit.h
 
 ${DEST}/include/afs/audit.h: audit.h
 	${INSTALL} $? $@
@@ -64,7 +36,7 @@ libaudit.a: audit.o AFS_component_version_number.o
 	$(RANLIB) libaudit.a
 
 audit.o: audit.c audit.h 
-	${CC} ${CFLAGS} -c audit.c
+	${CC} ${CFLAGS} -c ${srcdir}/audit.c
 	-mkdir -p ../pic/audit
 	${CC} ${CFLAGS} -c audit.c -fPIC -o ../pic/audit/audit.o
 
@@ -87,10 +59,10 @@ ${TOP_INCDIR}/afs/audit.h: audit.h
 dest:  ${DEST}/lib/afs/libaudit.a ${DEST}/include/afs/audit.h
 	case ${SYS_NAME} in \
 	rs_aix*) \
-	   ${INSTALL} Audit              ${DEST}/root.server/usr/afs/local ;  \
-	   ${INSTALL} objects.aix.sample ${DEST}/root.server/usr/afs/local/audit/objects.sample ;  \
-	   ${INSTALL} events.aix.sample  ${DEST}/root.server/usr/afs/local/audit/events.sample  ;  \
-	   ${INSTALL} config.aix.sample  ${DEST}/root.server/usr/afs/local/audit/config.sample  ;; \
+	   ${INSTALL} ${srcdir}/Audit              ${DEST}/root.server/usr/afs/local ;  \
+	   ${INSTALL} ${srcdir}/objects.aix.sample ${DEST}/root.server/usr/afs/local/audit/objects.sample ;  \
+	   ${INSTALL} ${srcdir}/events.aix.sample  ${DEST}/root.server/usr/afs/local/audit/events.sample  ;  \
+	   ${INSTALL} ${srcdir}/config.aix.sample  ${DEST}/root.server/usr/afs/local/audit/config.sample  ;; \
         *) ;; \
         esac ;
 

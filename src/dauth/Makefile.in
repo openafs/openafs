@@ -5,32 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
-
-SHELL = 	/bin/sh
-
-include ../config/Makefile.${SYS_NAME}
-
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-
-CFLAGS=${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
-LDFLAGS =	${XLDFLAGS}
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 INCLS=${TOP_INCDIR}/ubik.h \
 	       	${TOP_INCDIR}/lwp.h \
@@ -59,9 +35,6 @@ USNS=		cellname
 
 include ../config/Makefile.version
 
-ukinstall webinstall:
-		echo No $@ source here
-
 noversion:	install
 
 all: dlog dpass
@@ -71,8 +44,15 @@ clean:
 
 adkint.cs.o:	adkint.cs.c
 adkint.xdr.o:	adkint.xdr.c adkint.h
-adkint.cs.c	adkint.xdr.c adkint.h: adkint.xg
-		${RXGEN} adkint.xg
+
+adkint.cs.c: adkint.xg
+	${RXGEN} -C -o $@ ${srcdir}/adkint.xg
+
+adkint.xdr.c: adkint.xg
+	${RXGEN} -c -o $@ ${srcdir}/adkint.xg
+
+adkint.h: adkint.xg
+	${RXGEN} -h -o $@ ${srcdir}/adkint.xg
 
 dlog:		dlog.o $(VERS) $(OBJS) $(LIBS)
 		$(CC) ${LDFLAGS} -o dlog dlog.o $(VERS) $(OBJS) ${LIBS} \

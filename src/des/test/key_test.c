@@ -11,7 +11,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/test/key_test.c,v 1.1.1.4 2001/07/14 22:21:38 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/des/test/key_test.c,v 1.6 2003/07/15 23:15:01 shadow Exp $");
 
 #include <mit-cpyright.h>
 #include <stdio.h>
@@ -31,33 +32,27 @@ int mflag;
 int pid;
 extern int des_debug;
 
-unsigned long dummy[2];
-unsigned char dum_c[8] = { 0x80,1,1,1,1,1,1,1 };
+afs_int32 dummy[2];
+unsigned char dum_c[8] = { 0x80, 1, 1, 1, 1, 1, 1, 1 };
 des_key_schedule KS;
 des_cblock kk;
 
-main(argc,argv)
-    int argc;
-    char *argv[];
+main(argc, argv)
+     int argc;
+     char *argv[];
 {
-    /*	Local Declarations */
+    /*  Local Declarations */
 
     int i;
-    progname=argv[0];		/* salt away invoking program */
-
-    /* Assume a long is four bytes */
-    if (sizeof(long) != 4) {
-	fprintf(stderr,"\nERROR,  size of long is %d",sizeof(long));
-	exit(-1);
-    }
+    progname = argv[0];		/* salt away invoking program */
 
     while (--argc > 0 && (*++argv)[0] == '-')
-	for (i=1; argv[0][i] != '\0'; i++) {
+	for (i = 1; argv[0][i] != '\0'; i++) {
 	    switch (argv[0][i]) {
 
 		/* debug flag */
 	    case 'd':
-		des_debug=1;
+		des_debug = 1;
 		continue;
 
 		/* keys flag */
@@ -71,150 +66,147 @@ main(argc,argv)
 		continue;
 
 	    default:
-		printf("%s: illegal flag \"%c\" ",
-		       progname,argv[0][i]);
+		printf("%s: illegal flag \"%c\" ", progname, argv[0][i]);
 		exit(1);
 	    }
 	};
 
-    if (argc < MIN_ARGC || argc >MAX_ARGC) {
+    if (argc < MIN_ARGC || argc > MAX_ARGC) {
 	printf("Usage: xxx [-xxx]  xxx xxx\n");
 	exit(1);
     }
 
-    /*	argv[0] now points to first non-option arg, if any */
+    /*  argv[0] now points to first non-option arg, if any */
 
 
     if (des_debug) {
 	if (mflag) {
-	    fprintf(stderr,"\nChecking a key 0x 80 01 01 01 01 01 01 01 ");
-	    fprintf(stderr,"\nKey = ");
-	    des_key_sched(dum_c,KS);
-	    des_cblock_print (dum_c);
+	    fprintf(stderr, "\nChecking a key 0x 80 01 01 01 01 01 01 01 ");
+	    fprintf(stderr, "\nKey = ");
+	    des_key_sched(dum_c, KS);
+	    des_cblock_print(dum_c);
 	    return;
 	}
 
 	if (kflag) {
 	    printf("\nCHecking a weak key...");
-	    dummy[0] =	0x01fe01fe;
-	    dummy[1] =	0x01fe01fe;
-	    des_key_sched(dummy,KS);
+	    dummy[0] = 0x01fe01fe;
+	    dummy[1] = 0x01fe01fe;
+	    des_key_sched(dummy, KS);
 #ifdef BSDUNIX
-	    fprintf(stderr,"\nKey[0] = %x Key[1] = %x",dummy[0],dummy[1]);
+	    fprintf(stderr, "\nKey[0] = %x Key[1] = %x", dummy[0], dummy[1]);
 #endif
 #ifdef CROSSMSDOS
-	    fprintf(stderr,"\nKey[0] = %X Key[1] = %X",dummy[0],dummy[1]);
+	    fprintf(stderr, "\nKey[0] = %X Key[1] = %X", dummy[0], dummy[1]);
 #endif
 
 	    dummy[0] = 0x01010101;
 	    dummy[1] = 0x01010101;
 #ifdef BSDUNIX
-	    fprintf(stderr,"\nKey[0] = %x Key[1] = %x",dummy[0],dummy[1]);
+	    fprintf(stderr, "\nKey[0] = %x Key[1] = %x", dummy[0], dummy[1]);
 #endif
 #ifdef CROSSMSDOS
-	    fprintf(stderr,"\nKey[0] = %X Key[1] = %X",dummy[0],dummy[1]);
+	    fprintf(stderr, "\nKey[0] = %X Key[1] = %X", dummy[0], dummy[1]);
 #endif
-	    des_key_sched(dummy,KS);
+	    des_key_sched(dummy, KS);
 #ifdef BSDUNIX
-	    fprintf(stderr,"\nKS= %x",* (long *)KS);
+	    fprintf(stderr, "\nKS= %x", *(afs_int32 *) KS);
 #endif
 #ifdef CROSSMSDOS
-	    fprintf(stderr,"\nKS= %X",* (long *)KS);
+	    fprintf(stderr, "\nKS= %X", *(afs_int32 *) KS);
 #endif
 	    dummy[0] = 0x01010101;
 	    dummy[1] = 0x01010101;
 #ifdef BSDUNIX
-	    fprintf(stderr,"\nKey[0] = %x Key[1] = %x",dummy[0],dummy[1]);
+	    fprintf(stderr, "\nKey[0] = %x Key[1] = %x", dummy[0], dummy[1]);
 #endif
 #ifdef CROSSMSDOS
-	    fprintf(stderr,"\nKey[0] = %X Key[1] = %X",dummy[0],dummy[1]);
+	    fprintf(stderr, "\nKey[0] = %X Key[1] = %X", dummy[0], dummy[1]);
 #endif
-	    des_key_sched(dummy,KS);
+	    des_key_sched(dummy, KS);
 #ifdef BSDUNIX
-	    fprintf(stderr,"\nKS= %x",	*(long *)KS);
+	    fprintf(stderr, "\nKS= %x", *(afs_int32 *) KS);
 #endif
 #ifdef CROSSMSDOS
-	    fprintf(stderr,"\nKS= %X",	*(long *)KS);
+	    fprintf(stderr, "\nKS= %X", *(afs_int32 *) KS);
 #endif
 
 	    dummy[0] = 0x80808080;
 	    dummy[1] = 0x80808080;
 #ifdef BSDUNIX
-	    fprintf(stderr,"\nKey[0] = %x Key[1] = %x",dummy[0],dummy[1]);
+	    fprintf(stderr, "\nKey[0] = %x Key[1] = %x", dummy[0], dummy[1]);
 #endif
 #ifdef CROSSMSDOS
-	    fprintf(stderr,"\nKey[0] = %X Key[1] = %X",dummy[0],dummy[1]);
+	    fprintf(stderr, "\nKey[0] = %X Key[1] = %X", dummy[0], dummy[1]);
 #endif
-	    des_key_sched(dummy,KS);
+	    des_key_sched(dummy, KS);
 #ifdef BSDUNIX
-	    fprintf(stderr,"\nKS[0]= %x",* (long * ) KS);
+	    fprintf(stderr, "\nKS[0]= %x", *(afs_int32 *) KS);
 #endif
 #ifdef CROSSMSDOS
-	    fprintf(stderr,"\nKS[0]= %X",* (long * ) KS);
+	    fprintf(stderr, "\nKS[0]= %X", *(afs_int32 *) KS);
 #endif
 
 	    printf("\nstring to key 'a'");
-	    des_string_to_key("a",dummy);
+	    des_string_to_key("a", dummy);
 #ifdef BSDUNIX
-	    fprintf(stderr,"\nKey[0] = %x Key[1] = %x",dummy[0],dummy[1]);
+	    fprintf(stderr, "\nKey[0] = %x Key[1] = %x", dummy[0], dummy[1]);
 #endif
 #ifdef CROSSMSDOS
-	    fprintf(stderr,"\nKey[0] = %X Key[1] = %X",dummy[0],dummy[1]);
+	    fprintf(stderr, "\nKey[0] = %X Key[1] = %X", dummy[0], dummy[1]);
 #endif
-	    des_key_sched(dummy,KS);
+	    des_key_sched(dummy, KS);
 #ifdef BSDUNIX
-	    fprintf(stderr,"\nKS= %x",* (long *) KS);
+	    fprintf(stderr, "\nKS= %x", *(afs_int32 *) KS);
 #endif
 #ifdef CROSSMSDOS
-	    fprintf(stderr,"\nKS= %X",* (long *) KS);
+	    fprintf(stderr, "\nKS= %X", *(afs_int32 *) KS);
 #endif
 
 	    printf("\nstring to key 'c'");
-	    des_string_to_key("c",dummy);
+	    des_string_to_key("c", dummy);
 #ifdef BSDUNIX
-	    fprintf(stderr,"\nKey[0] = %x Key[1] = %x",dummy[0],dummy[1]);
+	    fprintf(stderr, "\nKey[0] = %x Key[1] = %x", dummy[0], dummy[1]);
 #endif
 #ifdef CROSSMSDOS
-	    fprintf(stderr,"\nKey[0] = %X Key[1] = %X",dummy[0],dummy[1]);
+	    fprintf(stderr, "\nKey[0] = %X Key[1] = %X", dummy[0], dummy[1]);
 #endif
-	    des_key_sched(dummy,KS);
+	    des_key_sched(dummy, KS);
 #ifdef BSDUNIX
-	    fprintf(stderr,"\nKS= %x", * (long * ) KS);
+	    fprintf(stderr, "\nKS= %x", *(afs_int32 *) KS);
 #endif
 #ifdef CROSSMSDOS
-	    fprintf(stderr,"\nKS= %X", * (long * ) KS);
+	    fprintf(stderr, "\nKS= %X", *(afs_int32 *) KS);
 #endif
 	}
 
 	printf("\nstring to key 'e'");
-	des_string_to_key("e",dummy);
+	des_string_to_key("e", dummy);
 #ifdef BSDUNIX
-	fprintf(stderr,"\nKey[0] = %x Key[1] = %x",dummy[0],dummy[1]);
+	fprintf(stderr, "\nKey[0] = %x Key[1] = %x", dummy[0], dummy[1]);
 #endif
 #ifdef CROSSMSDOS
-	fprintf(stderr,"\nKey[0] = %X Key[1] = %X",dummy[0],dummy[1]);
+	fprintf(stderr, "\nKey[0] = %X Key[1] = %X", dummy[0], dummy[1]);
 #endif
-	des_key_sched(dummy,KS);
+	des_key_sched(dummy, KS);
 #ifdef BSDUNIX
-	fprintf(stderr,"\nKS= %x",KS[0]);
+	fprintf(stderr, "\nKS= %x", KS[0]);
 #endif
 #ifdef CROSSMSDOS
-	fprintf(stderr,"\nKS= %X",KS[0]);
+	fprintf(stderr, "\nKS= %X", KS[0]);
 #endif
 
-	printf("\ndes_string_to_key '%s'",argv[0]);
-	des_string_to_key(argv[0],dummy);
+	printf("\ndes_string_to_key '%s'", argv[0]);
+	des_string_to_key(argv[0], dummy);
 #ifdef notdef
-	des_string_to_key(argv[0],dummy);
+	des_string_to_key(argv[0], dummy);
 
-	for (i =0; i<1; i++)
-	    des_key_sched(dummy,KS);
-    }
-    else
-    {
-	for (i =0; i<1000; i++) {
-	    des_string_to_key(argv[0],kk);
-	    des_key_sched(kk,KS);
+	for (i = 0; i < 1; i++)
+	    des_key_sched(dummy, KS);
+    } else {
+	for (i = 0; i < 1000; i++) {
+	    des_string_to_key(argv[0], kk);
+	    des_key_sched(kk, KS);
 	}
 #endif
     }

@@ -30,7 +30,7 @@
  * 2 uniquifier
  * 3 data version
  */
-typedef int afs_inode_params_t[4]; /* Use to pass param[4] to kernel. */
+typedef int afs_inode_params_t[4];	/* Use to pass param[4] to kernel. */
 
 /* XFS attribute must be at most 36 bytes to fit in inode. This includes
  * the null terminated name of the attribute.
@@ -57,13 +57,13 @@ typedef int afs_inode_params_t[4]; /* Use to pass param[4] to kernel. */
  */
 typedef struct {
 #ifdef KERNEL
-    ino_t at_pino;			/* inode# of parent directory. */
+    ino_t at_pino;		/* inode# of parent directory. */
 #else
-    uint64_t at_pino;			/* inode# of parent directory. */
+    uint64_t at_pino;		/* inode# of parent directory. */
 #endif
-    u_char at_attr_version; /* version number of struct, currently 0. */
-    u_char at_name_version;		/* version number of file names. */
-    u_short at_tag;			/* guarantees unique file names. */
+    u_char at_attr_version;	/* version number of struct, currently 0. */
+    u_char at_name_version;	/* version number of file names. */
+    u_short at_tag;		/* guarantees unique file names. */
     afs_inode_params_t at_param;	/* vice parameters. */
 } afs_xfs_attr_t;
 
@@ -107,12 +107,12 @@ typedef struct {
 
 typedef struct {
 #define AFS_XFS_ILI_VERSION 1
-    u_int ili_version; /* input is requested struct version. */
+    u_int ili_version;		/* input is requested struct version. */
     u_char ili_attr_version;	/* attr's version */
     u_char ili_name_version;	/* attr's name version */
-    u_short ili_tag;	/* at_tag number. */
-    uint64_t ili_pino;	/* parent inode number. */
-    vice_inode_info_t ili_info; /* Must be at a 64 bit offset. */
+    u_short ili_tag;		/* at_tag number. */
+    uint64_t ili_pino;		/* parent inode number. */
+    vice_inode_info_t ili_info;	/* Must be at a 64 bit offset. */
     u_int ili_vno, ili_magic;
 } i_list_inode_t;
 

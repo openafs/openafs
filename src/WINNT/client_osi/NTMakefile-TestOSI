@@ -1,0 +1,39 @@
+# Copyright (C)  1998  Transarc Corporation.  All rights reserved.
+#
+
+!INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\config\NTMakefile.version
+
+
+EXEFILE = $(DESTDIR)\root.client\usr\vice\etc\osidebug.exe
+
+EXEOBJS = \
+	osidebug.obj
+
+EXELIBS = \
+	$(DESTDIR)\lib\libosi.lib
+
+VCLIBS =\
+	$(DESTDIR)\lib\libosi.lib
+
+
+$(EXEFILE) : $(EXEOBJS)
+	$(EXEGUILINK) $(VCLIBS)
+
+############################################################################
+# generate versioninfo resources
+
+osidebug.res: osidebug.rc
+
+############################################################################
+# Install target; primary makefile target
+
+install: $(EXEFILE)
+
+############################################################################
+# Local clean target; augments predefined clean target
+
+clean::
+	$(DEL) osidebug.obj osidebug.exe osidebug.res
+
+

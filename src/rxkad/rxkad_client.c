@@ -13,30 +13,33 @@
 
 #include <afsconfig.h>
 #ifdef KERNEL
-#include "../afs/param.h"
+#include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_client.c,v 1.1.1.9 2002/09/26 19:07:58 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rxkad/rxkad_client.c,v 1.18 2004/04/19 05:43:58 kolya Exp $");
 
 #ifdef KERNEL
-#include "../afs/stds.h"
+#include "afs/stds.h"
 #ifndef UKERNEL
-#include "../h/types.h"
-#include "../h/time.h"
+#include "h/types.h"
+#include "h/time.h"
 #ifdef AFS_LINUX20_ENV
-#include "../h/socket.h"
+#include "h/socket.h"
 #endif
-#include "../netinet/in.h"
+#ifndef AFS_OBSD_ENV
+#include "netinet/in.h"
+#endif
 #else /* !UKERNEL */
-#include "../afs/sysincludes.h"
+#include "afs/sysincludes.h"
 #endif /* !UKERNEL */
 #ifndef AFS_LINUX22_ENV
-#include "../rpc/types.h"
-#include "../rx/xdr.h"
+#include "rpc/types.h"
+#include "rx/xdr.h"
 #endif
-#include "../rx/rx.h"
+#include "rx/rx.h"
 #else /* ! KERNEL */
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -56,14 +59,12 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/rxkad_client.c,v 1.1.1.9 2002/09/
 #include <rx/rx.h>
 #include <rx/xdr.h>
 #ifdef AFS_PTHREAD_ENV
-#include "../rxkad/rxkad.h"
+#include "rx/rxkad.h"
 #endif /* AFS_PTHREAD_ENV */
 #endif /* KERNEL */
 
 #include "private_data.h"
 #define XPRT_RXKAD_CLIENT
-
-char *rxi_Alloc();
 
 #ifndef max
 #define	max(a,b)    ((a) < (b)? (b) : (a))
@@ -71,15 +72,15 @@ char *rxi_Alloc();
 
 static struct rx_securityOps rxkad_client_ops = {
     rxkad_Close,
-    rxkad_NewConnection,		/* every new connection */
-    rxkad_PreparePacket,		/* once per packet creation */
-    0,					/* send packet (once per retrans.) */
+    rxkad_NewConnection,	/* every new connection */
+    rxkad_PreparePacket,	/* once per packet creation */
+    0,				/* send packet (once per retrans.) */
     0,
     0,
     0,
-    rxkad_GetResponse,			/* respond to challenge packet */
+    rxkad_GetResponse,		/* respond to challenge packet */
     0,
-    rxkad_CheckPacket,			/* check data packet */
+    rxkad_CheckPacket,		/* check data packet */
     rxkad_DestroyConnection,
     rxkad_GetStats,
     0,
@@ -107,20 +108,18 @@ pthread_mutex_t rxkad_client_uid_mutex;
 #define UNLOCK_CUID
 #endif /* AFS_PTHREAD_ENV */
 
-static afs_int32 Cuid[2];			/* set once and shared by all */
-int rxkad_EpochWasSet = 0;		/* TRUE => we called rx_SetEpoch */
+static afs_int32 Cuid[2];	/* set once and shared by all */
+int rxkad_EpochWasSet = 0;	/* TRUE => we called rx_SetEpoch */
 
 /* allocate a new connetion ID in place */
-rxkad_AllocCID(aobj, aconn)
-  struct rx_securityClass *aobj;
-  struct rx_connection *aconn;
+int
+rxkad_AllocCID(struct rx_securityClass *aobj, struct rx_connection *aconn)
 {
     struct rxkad_cprivate *tcp;
     struct rxkad_cidgen tgen;
-    static afs_int32 counter = 0;		/* not used anymore */
+    static afs_int32 counter = 0;	/* not used anymore */
 
-    LOCK_CUID
-    if (Cuid[0] == 0) {
+    LOCK_CUID if (Cuid[0] == 0) {
 	afs_uint32 xor[2];
 	tgen.ipAddr = rxi_getaddr();	/* comes back in net order */
 	clock_GetTime(&tgen.time);	/* changes time1 and time2 */
@@ -137,30 +136,30 @@ rxkad_AllocCID(aobj, aconn)
 #endif
 	if (aobj) {
 	    /* block is ready for encryption with session key, let's go for it. */
-	    tcp = (struct rxkad_cprivate *) aobj->privateData;
-	    memcpy((void *)xor, (void *)tcp->ivec, 2*sizeof(afs_int32));
-	    fc_cbc_encrypt((char *) &tgen, (char *) &tgen, sizeof(tgen),
+	    tcp = (struct rxkad_cprivate *)aobj->privateData;
+	    memcpy((void *)xor, (void *)tcp->ivec, 2 * sizeof(afs_int32));
+	    fc_cbc_encrypt((char *)&tgen, (char *)&tgen, sizeof(tgen),
 			   tcp->keysched, xor, ENCRYPT);
 	} else {
 	    /* Create a session key so that we can encrypt it */
 
 	}
-	memcpy((void *)Cuid, ((char *)&tgen) + sizeof(tgen) - ENCRYPTIONBLOCKSIZE, ENCRYPTIONBLOCKSIZE);
+	memcpy((void *)Cuid,
+	       ((char *)&tgen) + sizeof(tgen) - ENCRYPTIONBLOCKSIZE,
+	       ENCRYPTIONBLOCKSIZE);
 	Cuid[0] = (Cuid[0] & ~0x40000000) | 0x80000000;
 	Cuid[1] &= RX_CIDMASK;
-	rx_SetEpoch (Cuid[0]);		/* for future rxnull connections */
+	rx_SetEpoch(Cuid[0]);	/* for future rxnull connections */
 	rxkad_EpochWasSet++;
     }
 
     if (!aconn) {
-	UNLOCK_CUID
-	return 0;
+	UNLOCK_CUID return 0;
     }
     aconn->epoch = Cuid[0];
     aconn->cid = Cuid[1];
-    Cuid[1] += 1<<RX_CIDSHIFT;
-    UNLOCK_CUID
-    return 0;
+    Cuid[1] += 1 << RX_CIDSHIFT;
+    UNLOCK_CUID return 0;
 }
 
 /* Allocate a new client security object.  Called with the encryption level,
@@ -168,117 +167,123 @@ rxkad_AllocCID(aobj, aconn)
  * AuthServer.  Refers to export control to determine level. */
 
 struct rx_securityClass *
-rxkad_NewClientSecurityObject(level, sessionkey, kvno, ticketLen, ticket)
-  rxkad_level      level;
-  struct ktc_encryptionKey *sessionkey;
-  afs_int32		   kvno;
-  int		   ticketLen;
-  char		  *ticket;
-{   struct rx_securityClass *tsc;
-    struct rxkad_cprivate   *tcp;
-    int			     code;
-    int			     size;
+rxkad_NewClientSecurityObject(rxkad_level level,
+			      struct ktc_encryptionKey *sessionkey,
+			      afs_int32 kvno, int ticketLen, char *ticket)
+{
+    struct rx_securityClass *tsc;
+    struct rxkad_cprivate *tcp;
+    int code;
+    int size;
 
     size = sizeof(struct rx_securityClass);
-    tsc = (struct rx_securityClass *) rxi_Alloc (size);
+    tsc = (struct rx_securityClass *)rxi_Alloc(size);
     memset((void *)tsc, 0, size);
-    tsc->refCount = 1;			/* caller gets one for free */
+    tsc->refCount = 1;		/* caller gets one for free */
     tsc->ops = &rxkad_client_ops;
 
     size = sizeof(struct rxkad_cprivate);
-    tcp = (struct rxkad_cprivate *) rxi_Alloc (size);
+    tcp = (struct rxkad_cprivate *)rxi_Alloc(size);
     memset((void *)tcp, 0, size);
-    tsc->privateData = (char *) tcp;
+    tsc->privateData = (char *)tcp;
     tcp->type |= rxkad_client;
     tcp->level = level;
-    code = fc_keysched (sessionkey, tcp->keysched);
-    if (code) return 0;			/* bad key */
+    code = fc_keysched(sessionkey, tcp->keysched);
+    if (code) {
+	rxi_Free(tcp, sizeof(struct rxkad_cprivate));
+	rxi_Free(tsc, sizeof(struct rx_securityClass));
+	return 0;		/* bad key */
+    }
     memcpy((void *)tcp->ivec, (void *)sessionkey, sizeof(tcp->ivec));
-    tcp->kvno = kvno;			/* key version number */
-    tcp->ticketLen = ticketLen;		/* length of ticket */
-    if (tcp->ticketLen > MAXKTCTICKETLEN) return 0; /* bad key */
+    tcp->kvno = kvno;		/* key version number */
+    tcp->ticketLen = ticketLen;	/* length of ticket */
+    if (tcp->ticketLen > MAXKTCTICKETLEN) {
+	rxi_Free(tcp, sizeof(struct rxkad_cprivate));
+	rxi_Free(tsc, sizeof(struct rx_securityClass));
+	return 0;		/* bad key */
+    }
     memcpy(tcp->ticket, ticket, ticketLen);
 
-    LOCK_RXKAD_STATS
-    rxkad_stats_clientObjects++;
-    UNLOCK_RXKAD_STATS
-    return tsc;
+    LOCK_RXKAD_STATS rxkad_stats_clientObjects++;
+    UNLOCK_RXKAD_STATS return tsc;
 }
 
 /* client: respond to a challenge packet */
 
-rxs_return_t rxkad_GetResponse (aobj, aconn, apacket)
-  IN struct rx_securityClass *aobj;
-  IN struct rx_packet *apacket;
-  IN struct rx_connection *aconn;
-{   struct rxkad_cprivate *tcp;
+int
+rxkad_GetResponse(struct rx_securityClass *aobj, struct rx_connection *aconn,
+		  struct rx_packet *apacket)
+{
+    struct rxkad_cprivate *tcp;
     char *tp;
-    int   v2;				/* whether server is old style or v2 */
-    afs_int32  challengeID;
+    int v2;			/* whether server is old style or v2 */
+    afs_int32 challengeID;
     rxkad_level level;
     char *response;
-    int   responseSize, missing;
-    struct rxkad_v2ChallengeResponse  r_v2;
+    int responseSize, missing;
+    struct rxkad_v2ChallengeResponse r_v2;
     struct rxkad_oldChallengeResponse r_old;
 
-    tcp = (struct rxkad_cprivate *) aobj->privateData;
+    tcp = (struct rxkad_cprivate *)aobj->privateData;
 
-    if (!(tcp->type & rxkad_client)) return RXKADINCONSISTENCY;
+    if (!(tcp->type & rxkad_client))
+	return RXKADINCONSISTENCY;
 
     v2 = (rx_Contiguous(apacket) > sizeof(struct rxkad_oldChallenge));
     tp = rx_DataOf(apacket);
 
-    if (v2) {                                  /* v2 challenge */
+    if (v2) {			/* v2 challenge */
 	struct rxkad_v2Challenge *c_v2;
 	if (rx_GetDataSize(apacket) < sizeof(struct rxkad_v2Challenge))
-	   return RXKADPACKETSHORT;
+	    return RXKADPACKETSHORT;
 	c_v2 = (struct rxkad_v2Challenge *)tp;
 	challengeID = ntohl(c_v2->challengeID);
-	level       = ntohl(c_v2->level);
-    } else {                                   /* old format challenge */
+	level = ntohl(c_v2->level);
+    } else {			/* old format challenge */
 	struct rxkad_oldChallenge *c_old;
 	if (rx_GetDataSize(apacket) < sizeof(struct rxkad_oldChallenge))
-	   return RXKADPACKETSHORT;
+	    return RXKADPACKETSHORT;
 	c_old = (struct rxkad_oldChallenge *)tp;
 	challengeID = ntohl(c_old->challengeID);
-	level       = ntohl(c_old->level);
+	level = ntohl(c_old->level);
     }
 
-    if (level > tcp->level) return RXKADLEVELFAIL;
-    LOCK_RXKAD_STATS
-    rxkad_stats.challenges[rxkad_LevelIndex(tcp->level)]++;
-    UNLOCK_RXKAD_STATS
-
-    if (v2) {
+    if (level > tcp->level)
+	return RXKADLEVELFAIL;
+    LOCK_RXKAD_STATS rxkad_stats.challenges[rxkad_LevelIndex(tcp->level)]++;
+    UNLOCK_RXKAD_STATS if (v2) {
 	int i;
 	afs_uint32 xor[2];
 	memset((void *)&r_v2, 0, sizeof(r_v2));
 	r_v2.version = htonl(RXKAD_CHALLENGE_PROTOCOL_VERSION);
-	r_v2.spare   = 0;
-	(void) rxkad_SetupEndpoint (aconn, &r_v2.encrypted.endpoint);
-	(void) rxi_GetCallNumberVector (aconn, r_v2.encrypted.callNumbers);
-	for (i=0; i<RX_MAXCALLS; i++) {
-	    if (r_v2.encrypted.callNumbers[i] < 0) return RXKADINCONSISTENCY;
-	    r_v2.encrypted.callNumbers[i] = htonl(r_v2.encrypted.callNumbers[i]);
+	r_v2.spare = 0;
+	(void)rxkad_SetupEndpoint(aconn, &r_v2.encrypted.endpoint);
+	(void)rxi_GetCallNumberVector(aconn, r_v2.encrypted.callNumbers);
+	for (i = 0; i < RX_MAXCALLS; i++) {
+	    if (r_v2.encrypted.callNumbers[i] < 0)
+		return RXKADINCONSISTENCY;
+	    r_v2.encrypted.callNumbers[i] =
+		htonl(r_v2.encrypted.callNumbers[i]);
 	}
 	r_v2.encrypted.incChallengeID = htonl(challengeID + 1);
-	r_v2.encrypted.level          = htonl((afs_int32)tcp->level);
-	r_v2.kvno                     = htonl(tcp->kvno);
-	r_v2.ticketLen                = htonl(tcp->ticketLen);
-	r_v2.encrypted.endpoint.cksum = rxkad_CksumChallengeResponse (&r_v2);
-	memcpy((void *)xor, (void *)tcp->ivec, 2*sizeof(afs_int32));
-	fc_cbc_encrypt (&r_v2.encrypted, &r_v2.encrypted, 
-			sizeof(r_v2.encrypted), tcp->keysched, xor, ENCRYPT);
-	response     = (char *)&r_v2;
+	r_v2.encrypted.level = htonl((afs_int32) tcp->level);
+	r_v2.kvno = htonl(tcp->kvno);
+	r_v2.ticketLen = htonl(tcp->ticketLen);
+	r_v2.encrypted.endpoint.cksum = rxkad_CksumChallengeResponse(&r_v2);
+	memcpy((void *)xor, (void *)tcp->ivec, 2 * sizeof(afs_int32));
+	fc_cbc_encrypt(&r_v2.encrypted, &r_v2.encrypted,
+		       sizeof(r_v2.encrypted), tcp->keysched, xor, ENCRYPT);
+	response = (char *)&r_v2;
 	responseSize = sizeof(r_v2);
     } else {
 	memset((void *)&r_old, 0, sizeof(r_old));
 	r_old.encrypted.incChallengeID = htonl(challengeID + 1);
-	r_old.encrypted.level          = htonl((afs_int32)tcp->level);
-	r_old.kvno                     = htonl(tcp->kvno);
-	r_old.ticketLen                = htonl(tcp->ticketLen);
-	fc_ecb_encrypt (&r_old.encrypted, &r_old.encrypted, tcp->keysched, ENCRYPT);
-	response     = (char *)&r_old;
+	r_old.encrypted.level = htonl((afs_int32) tcp->level);
+	r_old.kvno = htonl(tcp->kvno);
+	r_old.ticketLen = htonl(tcp->ticketLen);
+	fc_ecb_encrypt(&r_old.encrypted, &r_old.encrypted, tcp->keysched,
+		       ENCRYPT);
+	response = (char *)&r_old;
 	responseSize = sizeof(r_old);
     }
 
@@ -287,23 +292,21 @@ rxs_return_t rxkad_GetResponse (aobj, aconn, apacket)
 
     rx_computelen(apacket, missing);
     missing = responseSize + tcp->ticketLen - missing;
-    if (missing > 0) 
-       if (rxi_AllocDataBuf(apacket, missing) > 0)
-	  return RXKADPACKETSHORT;	/* not enough space */
+    if (missing > 0)
+	if (rxi_AllocDataBuf(apacket, missing, RX_PACKET_CLASS_SEND) > 0)
+	    return RXKADPACKETSHORT;	/* not enough space */
 
     /* copy response and ticket into packet */
     rx_packetwrite(apacket, 0, responseSize, response);
     rx_packetwrite(apacket, responseSize, tcp->ticketLen, tcp->ticket);
 
-    rx_SetDataSize (apacket, responseSize + tcp->ticketLen);
+    rx_SetDataSize(apacket, responseSize + tcp->ticketLen);
     return 0;
 }
 
-
-rxkad_ResetState()
+void
+rxkad_ResetState(void)
 {
-    LOCK_CUID
-    Cuid[0] = 0;
-    rxkad_EpochWasSet=0;
-    UNLOCK_CUID
-}
+    LOCK_CUID Cuid[0] = 0;
+    rxkad_EpochWasSet = 0;
+UNLOCK_CUID}

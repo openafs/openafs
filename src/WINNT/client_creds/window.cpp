@@ -10,10 +10,11 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/afskfw.h>
+#include "ipaddrchg.h"
 }
 
 #include "afscreds.h"
-
 
 /*
  * DEFINITIONS ________________________________________________________________
@@ -162,11 +163,13 @@ BOOL CALLBACK Main_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                   InsertMenu (hmDummy, 0, MF_POPUP, (UINT)hm, NULL);
 
                   BOOL fRemind = FALSE;
+                  lock_ObtainMutex(&g.credsLock);
                   for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
                      {
                      if (g.aCreds[ iCreds ].fRemind)
                         fRemind = TRUE;
                      }
+                  lock_ReleaseMutex(&g.credsLock);
                   CheckMenuItem (hm, M_REMIND, MF_BYCOMMAND | ((fRemind) ? MF_CHECKED : MF_UNCHECKED));
 
                   TrackPopupMenu (GetSubMenu (hmDummy, 0),
@@ -182,6 +185,41 @@ BOOL CALLBACK Main_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                break;
             }
          break;
+      case WM_OBTAIN_TOKENS:
+          if ( InterlockedIncrement (&g.fShowingMessage) != 1 )
+              InterlockedDecrement (&g.fShowingMessage);
+          else
+              ShowObtainCreds (wp, (char *)lp);
+          GlobalFree((void *)lp);
+          break;
+
+      case WM_START_SERVICE:
+          {
+              SC_HANDLE hManager;
+              if ((hManager = OpenSCManager ( NULL, NULL, 
+                                              SC_MANAGER_CONNECT |
+                                              SC_MANAGER_ENUMERATE_SERVICE |
+                                              SC_MANAGER_QUERY_LOCK_STATUS)) != NULL)
+              {
+                  SC_HANDLE hService;
+                  if ((hService = OpenService ( hManager, TEXT("TransarcAFSDaemon"), 
+                                                SERVICE_QUERY_STATUS | SERVICE_START)) != NULL)
+                  {
+                      if (StartService (hService, 0, 0))
+                          TestAndDoMapShare(SERVICE_START_PENDING);
+		                  if ( KFW_is_available() && KFW_AFS_wait_for_service_start() ) {
+			                  KFW_AFS_renew_tokens_for_all_cells();
+						  }
+
+                      CloseServiceHandle (hService);
+                  }
+
+                  CloseServiceHandle (hManager);
+              }
+              KFW_AFS_wait_for_service_start();
+              ObtainTokensFromUserIfNeeded(g.hMain);
+          }
+          break;
       }
 
    return FALSE;
@@ -232,25 +270,36 @@ void Main_OnInitDialog (HWND hDlg)
       }
 
    BOOL fFoundUserName = FALSE;
-   if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"), &hk) == 0)
-      {
-      DWORD dwSize = sizeof(szUser);
-      DWORD dwType = REG_SZ;
-      if (RegQueryValueEx (hk, TEXT("DefaultUserName"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
-         fFoundUserName = TRUE;
-      RegCloseKey (hk);
-      }
-   if (!fFoundUserName)
-      {
-      if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Network\\Logon"), &hk) == 0)
-         {
-         DWORD dwSize = sizeof(szUser);
-         DWORD dwType = REG_SZ;
-         if (RegQueryValueEx (hk, TEXT("UserName"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
+    if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Software\\Microsoft\\Windows NT\\CurrentVersion\\Explorer"), &hk) == 0)
+    {
+        DWORD dwSize = sizeof(szUser);
+        DWORD dwType = REG_SZ;
+        if (RegQueryValueEx (hk, TEXT("Logon User Name"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
             fFoundUserName = TRUE;
-         RegCloseKey (hk);
-         }
-      }
+        RegCloseKey (hk);
+    }
+    if (!fFoundUserName ) 
+    {
+        if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"), &hk) == 0)
+        {
+            DWORD dwSize = sizeof(szUser);
+            DWORD dwType = REG_SZ;
+            if (RegQueryValueEx (hk, TEXT("DefaultUserName"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
+                fFoundUserName = TRUE;
+            RegCloseKey (hk);
+        }
+    }
+   if (!fFoundUserName)
+   {
+       if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Network\\Logon"), &hk) == 0)
+       {
+           DWORD dwSize = sizeof(szUser);
+           DWORD dwType = REG_SZ;
+           if (RegQueryValueEx (hk, TEXT("UserName"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
+               fFoundUserName = TRUE;
+           RegCloseKey (hk);
+       }
+   }
 
    TCHAR szSource[ cchRESOURCE ];
    TCHAR szTarget[ cchRESOURCE ];
@@ -268,6 +317,7 @@ void Main_OnInitDialog (HWND hDlg)
 void Main_OnCheckMenuRemind (void)
 {
    BOOL fRemind = FALSE;
+   lock_ObtainMutex(&g.credsLock);
    for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
       {
       if (g.aCreds[ iCreds ].fRemind)
@@ -283,6 +333,7 @@ void Main_OnCheckMenuRemind (void)
          SaveRemind (iCreds);
          }
       }
+   lock_ReleaseMutex(&g.credsLock);
 
    // Check the active tab, and fix its checkbox if necessary
    //
@@ -297,7 +348,7 @@ void Main_OnCheckMenuRemind (void)
 
    // Make sure the reminder timer is going
    //
-   Main_EnableRemindTimer (TRUE);
+   Main_EnableRemindTimer (fRemind);
 }
 
 
@@ -346,19 +397,27 @@ void Main_OnSelectTab (void)
 
 void Main_OnCheckTerminate (void)
 {
-   HKEY hk;
-   if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"), &hk) == 0)
-      {
+    HKEY hk;
+
+    if (RegOpenKey (HKEY_CURRENT_USER, REGSTR_PATH_OPENAFS_CLIENT, &hk) == 0)
+    {
+        DWORD dwSize = sizeof(g.fStartup);
+        DWORD dwType = REG_DWORD;
+        RegQueryValueEx (hk, TEXT("ShowTrayIcon"), NULL, &dwType, (PBYTE)&g.fStartup, &dwSize);
+        RegCloseKey (hk);
+    }
+    else if (RegOpenKey (HKEY_LOCAL_MACHINE, REGSTR_PATH_OPENAFS_CLIENT, &hk) == 0)
+    {
       DWORD dwSize = sizeof(g.fStartup);
       DWORD dwType = REG_DWORD;
       RegQueryValueEx (hk, TEXT("ShowTrayIcon"), NULL, &dwType, (PBYTE)&g.fStartup, &dwSize);
       RegCloseKey (hk);
-      }
+    }
 
-   Shortcut_FixStartup (cszSHORTCUT_NAME, g.fStartup);
+    Shortcut_FixStartup (cszSHORTCUT_NAME, g.fStartup);
 
-   if (!g.fStartup)
-      Quit();
+    if (!g.fStartup)
+        Quit();
 }
 
 
@@ -405,7 +464,6 @@ void Main_RepopulateTabs (BOOL fDestroyInvalid)
 
       if (IsWindowVisible (g.hMain))
          fDestroyInvalid = FALSE;
-      Main_EnableRemindTimer (FALSE);
 
       // First we'll have to look around and see what credentials we currently
       // have. This call just updates g.aCreds[]; it doesn't do anything else.
@@ -424,6 +482,7 @@ void Main_RepopulateTabs (BOOL fDestroyInvalid)
       size_t iTabOut = 0;
 
       size_t nCreds = 0;
+      lock_ObtainMutex(&g.credsLock);
       for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
          {
          if (g.aCreds[ iCreds ].szCell[0])
@@ -471,6 +530,7 @@ void Main_RepopulateTabs (BOOL fDestroyInvalid)
                }
             }
          }
+      lock_ReleaseMutex(&g.credsLock);
 
       if (REALLOC (aTabs, cTabs, 1+iTabOut, cREALLOC_TABS))
          aTabs[ iTabOut++ ] = dwTABPARAM_MOUNT;
@@ -533,7 +593,6 @@ void Main_RepopulateTabs (BOOL fDestroyInvalid)
 
       TabCtrl_SetCurSel (hTab, iTabSel);
       Main_OnSelectTab ();
-      Main_EnableRemindTimer (TRUE);
 
       fInHere = FALSE;
       }
@@ -542,15 +601,25 @@ void Main_RepopulateTabs (BOOL fDestroyInvalid)
 
 void Main_EnableRemindTimer (BOOL fEnable)
 {
-   KillTimer (g.hMain, ID_REMIND_TIMER);
+   static BOOL bEnabled = FALSE;
 
-   if (fEnable)
+   if ( fEnable == FALSE && bEnabled == TRUE ) {
+       KillTimer (g.hMain, ID_REMIND_TIMER);
+       bEnabled = FALSE;
+   } else if ( fEnable == TRUE && bEnabled == FALSE ) {
       SetTimer (g.hMain, ID_REMIND_TIMER, (ULONG)cmsec1MINUTE * cminREMIND_TEST, NULL);
+      bEnabled = TRUE;
+   }
 }
 
 
 size_t Main_FindExpiredCreds (void)
 {
+   size_t retval = (size_t) -1;
+   lock_ObtainMutex(&g.expirationCheckLock);
+   if ( KFW_is_available() )
+       KFW_AFS_renew_expiring_tokens();
+   lock_ObtainMutex(&g.credsLock);
    for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
       {
       if (!g.aCreds[ iCreds ].szCell[0])
@@ -574,10 +643,19 @@ size_t Main_FindExpiredCreds (void)
       llExpires /= c100ns1SECOND;
 
       if (llExpires <= (llNow + (LONGLONG)cminREMIND_WARN * csec1MINUTE))
-         return iCreds;
+         {
+         if ( KFW_is_available() &&
+              KFW_AFS_renew_token_for_cell(g.aCreds[ iCreds ].szCell) )
+             continue;
+         retval = (size_t) iCreds;
+         break;
+         }
       }
+   
+   lock_ReleaseMutex(&g.credsLock);
+   lock_ReleaseMutex(&g.expirationCheckLock);
 
-   return (size_t)-1;
+   return retval;
 }
 
 
@@ -624,10 +702,14 @@ void Terminate_OnOK (HWND hDlg)
       if (IsDlgButtonChecked (hDlg, IDC_STOP))
          {
          SC_HANDLE hManager;
-         if ((hManager = OpenSCManager (NULL, NULL, SC_MANAGER_ALL_ACCESS)) != NULL)
+             if ((hManager = OpenSCManager (NULL, NULL, 
+                                            SC_MANAGER_CONNECT |
+                                            SC_MANAGER_ENUMERATE_SERVICE |
+                                            SC_MANAGER_QUERY_LOCK_STATUS)) != NULL)
             {
             SC_HANDLE hService;
-            if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), SERVICE_ALL_ACCESS)) != NULL)
+            if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), 
+                                         SERVICE_QUERY_STATUS | SERVICE_START)) != NULL)
                {
                SERVICE_STATUS Status;
                ControlService (hService, SERVICE_CONTROL_STOP, &Status);
@@ -642,14 +724,14 @@ void Terminate_OnOK (HWND hDlg)
 
    g.fStartup = IsDlgButtonChecked (hDlg, IDC_STARTUP);
 
-   HKEY hk;
-   if (RegCreateKey (HKEY_LOCAL_MACHINE, TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"), &hk) == 0)
-      {
-      DWORD dwSize = sizeof(g.fStartup);
-      DWORD dwType = REG_DWORD;
-      RegSetValueEx (hk, TEXT("ShowTrayIcon"), NULL, dwType, (PBYTE)&g.fStartup, dwSize);
-      RegCloseKey (hk);
-      }
+    HKEY hk;
+    if (RegCreateKey (HKEY_CURRENT_USER, REGSTR_PATH_OPENAFS_CLIENT, &hk) == 0)
+    {
+        DWORD dwSize = sizeof(g.fStartup);
+        DWORD dwType = REG_DWORD;
+        RegSetValueEx (hk, TEXT("ShowTrayIcon"), NULL, dwType, (PBYTE)&g.fStartup, dwSize);
+        RegCloseKey (hk);
+    }
 
    Shortcut_FixStartup (cszSHORTCUT_NAME, g.fStartup);
 

@@ -70,7 +70,7 @@ static void CheckEnableSc();
 static void EnableScMachine(BOOL bEnable = TRUE);
 static void OnScMachineChange();
 static void CheckEnableBak();
-static void PrepareToConfig(CONFIG_STATE& state, BOOL bRunning, BOOL bOn);
+static BOOL PrepareToConfig(CONFIG_STATE& state, BOOL bRunning, BOOL bOn, UINT uiCtrlID);
 static BOOL PrepareToConfig();
 static void CheckEnableApply();
 

@@ -48,17 +48,17 @@
 #include <err.h>
 
 static void
-doit (const char *filename)
+doit(const char *filename)
 {
     int ret;
     struct timeval tv[2];
 
-    ret = mkdir (filename, 0700);
+    ret = mkdir(filename, 0700);
     if (ret < 0)
-	err (1, "mkdir %s", filename);
-    gettimeofday (&tv[0], NULL);
+	err(1, "mkdir %s", filename);
+    gettimeofday(&tv[0], NULL);
     tv[1] = tv[0];
-    ret = utimes (filename, tv);
+    ret = utimes(filename, tv);
     if (ret < 0)
 	err(1, "utimes %s", filename);
 }
@@ -69,9 +69,9 @@ main(int argc, char **argv)
     const char *file = "blaha";
 
     if (argc != 1 && argc != 2)
-	errx (1, "usage: %s [file]", argv[0]);
+	errx(1, "usage: %s [file]", argv[0]);
     if (argc == 2)
 	file = argv[1];
-    doit (file);
+    doit(file);
     return 0;
 }

@@ -54,7 +54,7 @@
 #endif
 
 int
-main (int argc, char **argv)
+main(int argc, char **argv)
 {
     int mb = 10;
     int ret;
@@ -66,31 +66,32 @@ main (int argc, char **argv)
     sz = mb * 1024 * 1024;
 
 #ifdef MAP_ANON
-    mmap_buf = mmap (NULL, sz, PROT_READ|PROT_WRITE,
-		     MAP_ANON|MAP_PRIVATE, -1, 0);
+    mmap_buf =
+	mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
 #else
     {
 	int fd;
 
-	fd = open ("/dev/zero", O_RDWR);
+	fd = open("/dev/zero", O_RDWR);
 	if (fd < 0)
-	    err (1, "open /dev/zero");
-	mmap_buf = mmap (NULL, sz, PROT_READ | PROT_WRITE,
-			 MAP_PRIVATE, fd, 0);
-	close (fd);
+	    err(1, "open /dev/zero");
+	mmap_buf = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
+	close(fd);
     }
 #endif
     if (mmap_buf == (void *)MAP_FAILED)
-	err (1, "mmap");    
+	err(1, "mmap");
 
     while (1) {
-	int *foo = (int *) ((unsigned char *) mmap_buf + (((rand() % (sz - 9)) + 7) & ~7));
-	struct timeval tv = { 0, 1000} ;
+	int *foo =
+	    (int *)((unsigned char *)mmap_buf +
+		    (((rand() % (sz - 9)) + 7) & ~7));
+	struct timeval tv = { 0, 1000 };
 	*foo = 10;
-	select (0, NULL, NULL, NULL, &tv);
+	select(0, NULL, NULL, NULL, &tv);
     }
-    
-    ret = munmap (mmap_buf, sz);
+
+    ret = munmap(mmap_buf, sz);
     if (ret)
-	err (1, "munmap");
+	err(1, "munmap");
 }

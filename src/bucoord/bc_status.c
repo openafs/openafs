@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/bc_status.c,v 1.1.1.5 2001/09/11 14:31:32 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/bucoord/bc_status.c,v 1.11 2003/12/07 22:49:18 jaltman Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -40,13 +41,17 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/bc_status.c,v 1.1.1.5 2001/09/1
     curPollPtr->flags &= ~(clear);		\
     unlock_Status();
 
+extern struct bc_config *bc_globalConfig;
+extern afs_int32 bc_GetConn(struct bc_config *aconfig, afs_int32 aport, struct rx_connection **tconn);
+extern statusP findStatus(afs_uint32 taskId);
+
 /* globals for backup coordinator status management */
 
-dlqlinkT statusHead;			/* chain of status blocks */
-struct Lock statusQueueLock;		/* access control for status chain */
-struct Lock cmdLineLock;		/* lock on the cmdLine */
+dlqlinkT statusHead;		/* chain of status blocks */
+struct Lock statusQueueLock;	/* access control for status chain */
+struct Lock cmdLineLock;	/* lock on the cmdLine */
 
-afs_int32  lastTaskCode;                    /* Error code from task that last finished */
+afs_int32 lastTaskCode;		/* Error code from task that last finished */
 
 /* nextItem
  *	get next item for status interrogation, if any.
@@ -55,24 +60,23 @@ static statusP
 nextItem(linkPtr)
      statusP linkPtr;
 {
-    dlqlinkP	ptr;
+    dlqlinkP ptr;
 
     ptr = (dlqlinkP) linkPtr;
 
     /* if last known item has terminated, reset ptr */
-    if ( ptr == 0 )
-    {
+    if (ptr == 0) {
 	ptr = &statusHead;
-	if ( dlqEmpty(ptr) )
-	    return(0);
+	if (dlqEmpty(ptr))
+	    return (0);
     }
 
     ptr = ptr->dlq_next;
 
     /* if we're back at the head again */
-    if ( ptr ==  &statusHead )
-	return(0);
-    return((statusP) ptr);
+    if (ptr == &statusHead)
+	return (0);
+    return ((statusP) ptr);
 }
 
 #ifdef notdef
@@ -80,36 +84,35 @@ static statusP
 nextItem(linkPtr)
      statusP linkPtr;
 {
-    dlqlinkP	ptr;
+    dlqlinkP ptr;
 
     ptr = (dlqlinkP) linkPtr;
 
     /* if last known item has terminated, reset ptr */
-    if ( ptr == 0 )
-    {
+    if (ptr == 0) {
 	ptr = &statusHead;
-	if ( dlqEmpty(ptr) )
-	    return(0);
+	if (dlqEmpty(ptr))
+	    return (0);
     }
 
     ptr = ptr->dlq_next;
 
     /* if we're back at the head again */
-    if ( ptr ==  &statusHead )
-    {
+    if (ptr == &statusHead) {
 	ptr = ptr->dlq_next;
     }
-    return((statusP) ptr);
+    return ((statusP) ptr);
 }
 #endif /* notdef */
 
 char *cmdLine;
 
+int
 cmdDispatch()
 {
 #define	MAXV	100
-    char **targv[MAXV];			    /*Ptr to parsed argv stuff*/
-    afs_int32 targc;				    /*Num parsed arguments*/
+    char **targv[MAXV];		/*Ptr to parsed argv stuff */
+    afs_int32 targc;		/*Num parsed arguments */
     afs_int32 code;
     char *internalCmdLine;
 
@@ -118,22 +121,23 @@ cmdDispatch()
 
     code = cmd_ParseLine(internalCmdLine, targv, &targc, MAXV);
     if (code) {
-        printf("Couldn't parse line: '%s'", error_message(code));
-	return(1);
+	printf("Couldn't parse line: '%s'", error_message(code));
+	return (1);
     }
     free(internalCmdLine);
-    
+
     /*
      * Because the "-at" option cannot be wildcarded, we cannot fall
      * into recusive loop here by setting dispatchCount to 1.
      */
     doDispatch(targc, targv, 1);
     cmd_FreeArgv(targv);
+    return(0);
 }
 
 statusWatcher()
 {
-     struct rx_connection *tconn = (struct rc_connection *)0;
+    struct rx_connection *tconn = (struct rc_connection *)0;
     statusP curPollPtr = 0;
 
     struct tciStatusS statusPtr;
@@ -141,39 +145,36 @@ statusWatcher()
     /* task information */
     afs_uint32 taskFlags;
     afs_uint32 localTaskFlags;
-    afs_uint32 temp;			/* for flag manipulation */
+    afs_uint32 temp;		/* for flag manipulation */
     afs_int32 jobNumber;
     afs_int32 taskId;
     afs_int32 port;
     afs_int32 atTime;
     PROCESS dispatchPid;
-	
+
     afs_int32 code = 0;
-    extern struct bc_config *bc_globalConfig;
-    extern struct rx_connection *bc_GetConn();
 
     lastTaskCode = 0;
 
-    while ( 1 )
-    { /*w*/
-	if (tconn) rx_DestroyConnection(tconn);
+    while (1) {			/*w */
+	if (tconn)
+	    rx_DestroyConnection(tconn);
 	tconn = (struct rc_connection *)0;
 
 	lock_Status();
 	curPollPtr = nextItem(curPollPtr);
 
-	if ( curPollPtr == 0 )
-	{
+	if (curPollPtr == 0) {
 #ifdef AFS_PTHREAD_ENV
 	    struct timespec delaytime;
 	    unlock_Status();
-	    delayTime.tv_sec  = 5;
+	    delayTime.tv_sec = 5;
 	    delayTime.tv_nsec = 0;
 	    pthread_delay_np(&delayTime);
 #else
 	    unlock_Status();
-	    IOMGR_Sleep(5);				/* wait a while */
-#endif /*else AFS_PTHREAD_ENV*/
+	    IOMGR_Sleep(5);	/* wait a while */
+#endif /*else AFS_PTHREAD_ENV */
 	    continue;
 	}
 
@@ -189,21 +190,19 @@ statusWatcher()
 	CLEAR_FLAG(ABORT_LOCAL);
 
 	/* An abort request before the command even started */
-	if ( atTime && (localTaskFlags & ABORT_REQUEST) )
-	{
+	if (atTime && (localTaskFlags & ABORT_REQUEST)) {
 	    if (localTaskFlags & NOREMOVE) {
-	       curPollPtr->flags |= (STARTING|ABORT_DONE);  /* Will ignore on other passes */
-	       curPollPtr->scheduledDump = 0;
+		curPollPtr->flags |= (STARTING | ABORT_DONE);	/* Will ignore on other passes */
+		curPollPtr->scheduledDump = 0;
 	    } else {
-	       deleteStatusNode(curPollPtr);
+		deleteStatusNode(curPollPtr);
 	    }
 	    curPollPtr = 0;
 	    continue;
 	}
 
 	/* A task not started yet - check its start time */
-	if ( localTaskFlags & STARTING || atTime )
-	{
+	if (localTaskFlags & STARTING || atTime) {
 	    /*
 	     * Start a timed dump if its time has come.  When the job is 
 	     * started, it will allocate its own status structure so this 
@@ -212,84 +211,75 @@ statusWatcher()
 	     * Avoid multiple processes trouncing the cmdLine by placing 
 	     * lock around it.
 	     */
-	    if ( atTime && (atTime <= time(0)) )
-	    {
-	        lock_cmdLine();                       /* Will unlock in cmdDispatch */
+	    if (atTime && (atTime <= time(0))) {
+		lock_cmdLine();	/* Will unlock in cmdDispatch */
 
-	        cmdLine = curPollPtr->cmdLine;
+		cmdLine = curPollPtr->cmdLine;
 		lock_Status();
 		curPollPtr->cmdLine = 0;
 		unlock_Status();
 
-	        printf("Starting scheduled dump: job %d\n", jobNumber);
-	        printf("schedD> %s\n", cmdLine);
+		printf("Starting scheduled dump: job %d\n", jobNumber);
+		printf("schedD> %s\n", cmdLine);
 
-		code = LWP_CreateProcess(cmdDispatch, 16384, LWP_NORMAL_PRIORITY, 2,
-					 "cmdDispatch", &dispatchPid);
-		if ( code )
-		{
-		    if (cmdLine) 
-		        free(cmdLine);
+		code =
+		    LWP_CreateProcess(cmdDispatch, 16384, LWP_NORMAL_PRIORITY,
+				      (void *)2, "cmdDispatch", &dispatchPid);
+		if (code) {
+		    if (cmdLine)
+			free(cmdLine);
 		    unlock_cmdLine();
 		    printf("Couldn't create cmdDispatch task\n");
 		}
 
 		if (localTaskFlags & NOREMOVE) {
-		   curPollPtr->flags |= STARTING;  /* Will ignore on other passes */
-		   curPollPtr->flags |= (code?TASK_ERROR:TASK_DONE);
-		   curPollPtr->scheduledDump = 0;
+		    curPollPtr->flags |= STARTING;	/* Will ignore on other passes */
+		    curPollPtr->flags |= (code ? TASK_ERROR : TASK_DONE);
+		    curPollPtr->scheduledDump = 0;
 		} else {
-		   deleteStatusNode(curPollPtr);
+		    deleteStatusNode(curPollPtr);
 		}
 		curPollPtr = 0;
 	    }
 	    continue;
 	}
 
-	if ( localTaskFlags & ABORT_LOCAL )
-	{
+	if (localTaskFlags & ABORT_LOCAL) {
 	    /* kill the local task */
-	    if ( (localTaskFlags & CONTACT_LOST) != 0 )
-	    {
-		printf("Job %d: in contact with butc at port %d\n",
-		       jobNumber, port);
+	    if ((localTaskFlags & CONTACT_LOST) != 0) {
+		printf("Job %d: in contact with butc at port %d\n", jobNumber,
+		       port);
 		printf("Job %d cont: Local kill ignored - use normal kill\n",
 		       jobNumber);
 	    }
 	}
 
-	code = (afs_int32)bc_GetConn(bc_globalConfig, port, &tconn);
-	if (code)
-	{
+	code = (afs_int32) bc_GetConn(bc_globalConfig, port, &tconn);
+	if (code) {
 	    SET_FLAG(CONTACT_LOST);
 	    continue;
 	}
 
-	if ( CheckTCVersion(tconn) )
-	{
+	if (CheckTCVersion(tconn)) {
 	    SET_FLAG(CONTACT_LOST);
 	    continue;
 	}
 
 	/* Send abort to TC requst if we have to */
-	if ( localTaskFlags & ABORT_REQUEST )
-	{
+	if (localTaskFlags & ABORT_REQUEST) {
 	    code = TC_RequestAbort(tconn, taskId);
-	    if ( code )
-            {
+	    if (code) {
 		com_err("statusWatcher", code, "; Can't post abort request");
-	        com_err("statusWatcher", 0, "...Deleting job");
+		com_err("statusWatcher", 0, "...Deleting job");
 		if (localTaskFlags & NOREMOVE) {
-		   curPollPtr->flags |= (STARTING|TASK_ERROR);
-		   curPollPtr->scheduledDump = 0;
+		    curPollPtr->flags |= (STARTING | TASK_ERROR);
+		    curPollPtr->scheduledDump = 0;
 		} else {
-		   deleteStatusNode(curPollPtr);
+		    deleteStatusNode(curPollPtr);
 		}
 		curPollPtr = 0;
 		continue;
-	    }
-	    else
-	    {
+	    } else {
 		lock_Status();
 		curPollPtr->flags &= ~ABORT_REQUEST;
 		curPollPtr->flags |= ABORT_SENT;
@@ -299,21 +289,19 @@ statusWatcher()
 
 	/* otherwise just get the status */
 	code = TC_GetStatus(tconn, taskId, &statusPtr);
-	if (code)
-	{
-	    if (code == TC_NODENOTFOUND)
-	    {
-                printf("Job %d: %s - no such task on port %d, deleting\n",
-                       jobNumber, curPollPtr->taskName, port);
+	if (code) {
+	    if (code == TC_NODENOTFOUND) {
+		printf("Job %d: %s - no such task on port %d, deleting\n",
+		       jobNumber, curPollPtr->taskName, port);
 
 		if (localTaskFlags & NOREMOVE) {
-		   curPollPtr->flags |= (STARTING|TASK_ERROR);
-		   curPollPtr->scheduledDump = 0;
+		    curPollPtr->flags |= (STARTING | TASK_ERROR);
+		    curPollPtr->scheduledDump = 0;
 		} else {
-		   deleteStatusNode(curPollPtr);      /* delete this status node */
+		    deleteStatusNode(curPollPtr);	/* delete this status node */
 		}
 		curPollPtr = 0;
-                continue;
+		continue;
 	    }
 
 	    SET_FLAG(CONTACT_LOST);
@@ -330,8 +318,10 @@ statusWatcher()
 	lock_Status();
 
 	/* remember some status flags in local struct */
-	temp = (DRIVE_WAIT | OPR_WAIT | CALL_WAIT | TASK_DONE | ABORT_DONE | TASK_ERROR);
-	curPollPtr->flags &= ~temp;			/* clear */
+	temp =
+	    (DRIVE_WAIT | OPR_WAIT | CALL_WAIT | TASK_DONE | ABORT_DONE |
+	     TASK_ERROR);
+	curPollPtr->flags &= ~temp;	/* clear */
 	curPollPtr->flags |= (taskFlags & temp);	/* update */
 
 	curPollPtr->dbDumpId = statusPtr.dbDumpId;
@@ -342,50 +332,49 @@ statusWatcher()
 	unlock_Status();
 
 	/* Are we done */
-	if (taskFlags & TASK_DONE)
-	{ /*done*/
-	    if (taskFlags & ABORT_DONE)
-	    {
-	        if (curPollPtr->dbDumpId)
-		    printf("Job %d: %s: DumpID %u Aborted",
-			   jobNumber, curPollPtr->taskName, curPollPtr->dbDumpId);
+	if (taskFlags & TASK_DONE) {	/*done */
+	    if (taskFlags & ABORT_DONE) {
+		if (curPollPtr->dbDumpId)
+		    printf("Job %d: %s: DumpID %u Aborted", jobNumber,
+			   curPollPtr->taskName, curPollPtr->dbDumpId);
 		else
-		    printf("Job %d: %s Aborted", jobNumber, curPollPtr->taskName);
+		    printf("Job %d: %s Aborted", jobNumber,
+			   curPollPtr->taskName);
 
-		if ( taskFlags & TASK_ERROR ) printf(" with errors\n");
-		else                          printf("\n");
-		
+		if (taskFlags & TASK_ERROR)
+		    printf(" with errors\n");
+		else
+		    printf("\n");
+
 		lastTaskCode = 1;
 	    }
 
-	    else if (taskFlags & TASK_ERROR)
-	    {
-	        if ( !(localTaskFlags & SILENT) ) {
-		   if (curPollPtr->dbDumpId)
-		      printf("Job %d: DumpID %u Failed with errors\n", 
-			     jobNumber, curPollPtr->dbDumpId);
-		   else
-		      printf("Job %d Failed with errors\n", jobNumber);
+	    else if (taskFlags & TASK_ERROR) {
+		if (!(localTaskFlags & SILENT)) {
+		    if (curPollPtr->dbDumpId)
+			printf("Job %d: DumpID %u Failed with errors\n",
+			       jobNumber, curPollPtr->dbDumpId);
+		    else
+			printf("Job %d Failed with errors\n", jobNumber);
 		}
 		lastTaskCode = 2;
 	    }
 
-	    else
-	    {
-		if ( !(localTaskFlags & SILENT) )
-		{
+	    else {
+		if (!(localTaskFlags & SILENT)) {
 		    if (curPollPtr->dbDumpId)
-		        printf("Job %d: %s: DumpID %u finished", 
-			       jobNumber, curPollPtr->taskName, curPollPtr->dbDumpId);
+			printf("Job %d: %s: DumpID %u finished", jobNumber,
+			       curPollPtr->taskName, curPollPtr->dbDumpId);
 		    else
-		        printf("Job %d: %s finished", jobNumber, curPollPtr->taskName);
+			printf("Job %d: %s finished", jobNumber,
+			       curPollPtr->taskName);
 
-		    if (curPollPtr->volsTotal)
-		    {
-			printf(". %d volumes dumped", (curPollPtr->volsTotal-
-						       curPollPtr->volsFailed));
-			if ( curPollPtr->volsFailed)
-			   printf(", %d failed", curPollPtr->volsFailed);
+		    if (curPollPtr->volsTotal) {
+			printf(". %d volumes dumped",
+			       (curPollPtr->volsTotal -
+				curPollPtr->volsFailed));
+			if (curPollPtr->volsFailed)
+			    printf(", %d failed", curPollPtr->volsFailed);
 		    }
 
 		    printf("\n");
@@ -395,19 +384,19 @@ statusWatcher()
 
 	    /* make call to destroy task on server */
 	    code = TC_EndStatus(tconn, taskId);
-	    if ( code )
-	       printf("Job %d: %s, error in job termination cleanup\n",
-		      jobNumber, curPollPtr->taskName);
-	    
+	    if (code)
+		printf("Job %d: %s, error in job termination cleanup\n",
+		       jobNumber, curPollPtr->taskName);
+
 	    if (localTaskFlags & NOREMOVE) {
-	       curPollPtr->flags |= STARTING;
-	       curPollPtr->scheduledDump = 0;
+		curPollPtr->flags |= STARTING;
+		curPollPtr->scheduledDump = 0;
 	    } else {
-	       deleteStatusNode(curPollPtr);        /* unlink and destroy local task */
+		deleteStatusNode(curPollPtr);	/* unlink and destroy local task */
 	    }
 	    curPollPtr = 0;
-	} /*done*/
-    } /*w*/
+	}			/*done */
+    }				/*w */
 }
 
 /* bc_jobNumber
@@ -423,16 +412,15 @@ bc_jobNumber()
     dlqlinkP ptr;
 
     ptr = statusHead.dlq_next;
-    while ( ptr != &statusHead )
-    {
+    while (ptr != &statusHead) {
 	/* compute max of all job numbers */
-	if ( ((statusP) ptr)->jobNumber > retval )
+	if (((statusP) ptr)->jobNumber > retval)
 	    retval = ((statusP) ptr)->jobNumber;
 
 	ptr = ptr->dlq_next;
     }
     retval++;
-    return(retval);
+    return (retval);
 }
 
 /* waitForTask
@@ -441,32 +429,31 @@ bc_jobNumber()
  *    had been cleaned up, then just return 0.
  */
 waitForTask(taskId)
-    afs_uint32 taskId;
+     afs_uint32 taskId;
 {
     statusP ptr;
-    afs_int32 done=0, rcode, t;
-    extern statusP findStatus();
+    afs_int32 done = 0, rcode, t;
 
     t = (TASK_DONE | ABORT_DONE | TASK_ERROR);
     while (!done) {
-       /* Sleep 2 seconds */
+	/* Sleep 2 seconds */
 #ifdef AFS_PTHREAD_ENV
-       struct timespec delaytime;
-       delayTime.tv_sec  = 2;
-       delayTime.tv_nsec = 0;
-       pthread_delay_np(&delayTime);
+	struct timespec delaytime;
+	delayTime.tv_sec = 2;
+	delayTime.tv_nsec = 0;
+	pthread_delay_np(&delayTime);
 #else
-       IOMGR_Sleep(2);
-#endif /*else AFS_PTHREAD_ENV*/
+	IOMGR_Sleep(2);
+#endif /*else AFS_PTHREAD_ENV */
 
-       /* Check if we are done */
-       lock_Status();
-       ptr = findStatus(taskId);
-       if (!ptr || (ptr->flags & t)) {
-	  rcode = (ptr ? ptr->flags : 0);
-	  done=1;
-       }
-       unlock_Status();
+	/* Check if we are done */
+	lock_Status();
+	ptr = findStatus(taskId);
+	if (!ptr || (ptr->flags & t)) {
+	    rcode = (ptr ? ptr->flags : 0);
+	    done = 1;
+	}
+	unlock_Status();
     }
     return rcode;
 }

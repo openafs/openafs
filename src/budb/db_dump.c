@@ -15,7 +15,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/budb/db_dump.c,v 1.1.1.5 2001/09/11 14:31:41 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/budb/db_dump.c,v 1.7 2003/07/15 23:14:48 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -27,6 +28,14 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/budb/db_dump.c,v 1.1.1.5 2001/09/11 14:
 #include <sys/types.h>
 #include <ubik.h>
 #include <lock.h>
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 
 #include "database.h"
 #include "budb.h"
@@ -47,8 +56,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/budb/db_dump.c,v 1.1.1.5 2001/09/11 14:
 
 /* interlocking for database dump */
 
-dumpSyncT       dumpSync;
-dumpSyncP       dumpSyncPtr = &dumpSync;
+dumpSyncT dumpSync;
+dumpSyncP dumpSyncPtr = &dumpSync;
 
 
 /* canWrite
@@ -68,21 +77,19 @@ canWrite(fid)
     ObtainWriteLock(&dumpSyncPtr->ds_lock);
 
     /* let the pipe drain */
-    while ( dumpSyncPtr->ds_bytes > 0 )
-    {
-        if ( dumpSyncPtr->ds_readerStatus == DS_WAITING )
-        {
-            dumpSyncPtr->ds_readerStatus = 0;
-            code = LWP_SignalProcess(&dumpSyncPtr->ds_readerStatus);
-	    if ( code )
+    while (dumpSyncPtr->ds_bytes > 0) {
+	if (dumpSyncPtr->ds_readerStatus == DS_WAITING) {
+	    dumpSyncPtr->ds_readerStatus = 0;
+	    code = LWP_SignalProcess(&dumpSyncPtr->ds_readerStatus);
+	    if (code)
 		LogError(code, "canWrite: Signal delivery failed\n");
-        }
-        dumpSyncPtr->ds_writerStatus = DS_WAITING;
-        ReleaseWriteLock(&dumpSyncPtr->ds_lock);
-        LWP_WaitProcess(&dumpSyncPtr->ds_writerStatus);
-        ObtainWriteLock(&dumpSyncPtr->ds_lock);
+	}
+	dumpSyncPtr->ds_writerStatus = DS_WAITING;
+	ReleaseWriteLock(&dumpSyncPtr->ds_lock);
+	LWP_WaitProcess(&dumpSyncPtr->ds_writerStatus);
+	ObtainWriteLock(&dumpSyncPtr->ds_lock);
     }
-    return(1);
+    return (1);
 }
 
 
@@ -100,11 +107,10 @@ haveWritten(nbytes)
     extern dumpSyncP dumpSyncPtr;
 
     dumpSyncPtr->ds_bytes += nbytes;
-    if ( dumpSyncPtr->ds_readerStatus == DS_WAITING )
-    {
-        dumpSyncPtr->ds_readerStatus = 0;
-        code = LWP_SignalProcess(&dumpSyncPtr->ds_readerStatus);
-	if ( code )
+    if (dumpSyncPtr->ds_readerStatus == DS_WAITING) {
+	dumpSyncPtr->ds_readerStatus = 0;
+	code = LWP_SignalProcess(&dumpSyncPtr->ds_readerStatus);
+	if (code)
 	    LogError(code, "haveWritten: Signal delivery failed\n");
     }
     ReleaseWriteLock(&dumpSyncPtr->ds_lock);
@@ -116,33 +122,34 @@ haveWritten(nbytes)
  */
 
 doneWriting(error)
-    afs_int32 error;
+     afs_int32 error;
 {
     afs_int32 code = 0;
 
     /* wait for the reader */
     ObtainWriteLock(&dumpSyncPtr->ds_lock);
-    while ( dumpSyncPtr->ds_readerStatus != DS_WAITING )
-    {
+    while (dumpSyncPtr->ds_readerStatus != DS_WAITING) {
 	LogDebug(4, "doneWriting: waiting for Reader\n");
-        dumpSyncPtr->ds_writerStatus = DS_WAITING;
+	dumpSyncPtr->ds_writerStatus = DS_WAITING;
 	ReleaseWriteLock(&dumpSyncPtr->ds_lock);
-        LWP_WaitProcess(&dumpSyncPtr->ds_writerStatus);
-        ObtainWriteLock(&dumpSyncPtr->ds_lock);
+	LWP_WaitProcess(&dumpSyncPtr->ds_writerStatus);
+	ObtainWriteLock(&dumpSyncPtr->ds_lock);
     }
 
     LogDebug(4, "doneWriting: setting done\n");
 
     /* signal that we are done */
-    if (error) dumpSyncPtr->ds_writerStatus = DS_DONE_ERROR;
-    else       dumpSyncPtr->ds_writerStatus = DS_DONE;
+    if (error)
+	dumpSyncPtr->ds_writerStatus = DS_DONE_ERROR;
+    else
+	dumpSyncPtr->ds_writerStatus = DS_DONE;
     dumpSyncPtr->ds_readerStatus = 0;
     code = LWP_NoYieldSignal(&dumpSyncPtr->ds_readerStatus);
-    if ( code )
+    if (code)
 	LogError(code, "doneWriting: Signal delivery failed\n");
     ReleaseWriteLock(&dumpSyncPtr->ds_lock);
 }
- 
+
 /* notes:
  *	ut - setup and pass down
  */
@@ -161,44 +168,43 @@ writeStructHeader(fid, type)
     hostDumpHeader.type = type;
     hostDumpHeader.structversion = 1;
 
-    
-    switch ( type )
-    {
-      case SD_DBHEADER:
+
+    switch (type) {
+    case SD_DBHEADER:
 	hostDumpHeader.size = sizeof(struct DbHeader);
 	break;
 
-      case SD_DUMP:
+    case SD_DUMP:
 	hostDumpHeader.size = sizeof(struct budb_dumpEntry);
 	break;
 
-      case SD_TAPE:
+    case SD_TAPE:
 	hostDumpHeader.size = sizeof(struct budb_tapeEntry);
 	break;
 
-      case SD_VOLUME:
+    case SD_VOLUME:
 	hostDumpHeader.size = sizeof(struct budb_volumeEntry);
 	break;
 
-      case SD_END:
+    case SD_END:
 	hostDumpHeader.size = 0;
 	break;
 
-      default:
+    default:
 	LogError(0, "writeStructHeader: invalid type %d\n", type);
 	BUDB_EXIT(1);
     }
 
     structDumpHeader_hton(&hostDumpHeader, &netDumpHeader);
 
-    if ( canWrite(fid) <= 0 )
-	return(BUDB_DUMPFAILED);
-    if ( write(fid, &netDumpHeader, sizeof(netDumpHeader)) !=
-		sizeof(netDumpHeader) )
-	return(BUDB_DUMPFAILED);
+    if (canWrite(fid) <= 0)
+	return (BUDB_DUMPFAILED);
+    if (write(fid, &netDumpHeader, sizeof(netDumpHeader)) !=
+	sizeof(netDumpHeader))
+	return (BUDB_DUMPFAILED);
     haveWritten(sizeof(netDumpHeader));
-    
-    return(0);
+
+    return (0);
 }
 
 /* writeTextHeader
@@ -211,24 +217,23 @@ writeTextHeader(fid, type)
      afs_int32 type;
 {
     struct structDumpHeader hostDumpHeader, netDumpHeader;
-    
+
     hostDumpHeader.structversion = 1;
 
-    switch ( type )
-    {	
-      case TB_DUMPSCHEDULE:
+    switch (type) {
+    case TB_DUMPSCHEDULE:
 	hostDumpHeader.type = SD_TEXT_DUMPSCHEDULE;
 	break;
 
-      case TB_VOLUMESET:
+    case TB_VOLUMESET:
 	hostDumpHeader.type = SD_TEXT_VOLUMESET;
 	break;
 
-      case TB_TAPEHOSTS:
+    case TB_TAPEHOSTS:
 	hostDumpHeader.type = SD_TEXT_TAPEHOSTS;
 	break;
 
-      default:
+    default:
 	LogError(0, "writeTextHeader: invalid type %d\n", type);
 	BUDB_EXIT(1);
     }
@@ -237,14 +242,15 @@ writeTextHeader(fid, type)
     structDumpHeader_hton(&hostDumpHeader, &netDumpHeader);
 
     if (canWrite(fid) <= 0)
-	return(BUDB_DUMPFAILED);
+	return (BUDB_DUMPFAILED);
 
-    if (write(fid, &netDumpHeader, sizeof(netDumpHeader)) != sizeof(netDumpHeader))
-	return(BUDB_DUMPFAILED);
+    if (write(fid, &netDumpHeader, sizeof(netDumpHeader)) !=
+	sizeof(netDumpHeader))
+	return (BUDB_DUMPFAILED);
 
     haveWritten(sizeof(netDumpHeader));
-    
-    return(0);
+
+    return (0);
 }
 
 afs_int32
@@ -258,7 +264,7 @@ writeDbHeader(fid)
     extern struct memoryDB db;
 
     /* check the memory database header for integrity */
-    if ( db.h.version != db.h.checkVersion )
+    if (db.h.version != db.h.checkVersion)
 	ERROR(BUDB_DATABASEINCONSISTENT);
 
     curtime = time(0);
@@ -276,29 +282,29 @@ writeDbHeader(fid)
 	ERROR(tcode);
 
     if (canWrite(fid) <= 0)
-        ERROR(BUDB_DUMPFAILED);
+	ERROR(BUDB_DUMPFAILED);
 
     if (write(fid, &header, sizeof(header)) != sizeof(header))
-        ERROR(BUDB_DUMPFAILED);
+	ERROR(BUDB_DUMPFAILED);
 
     haveWritten(sizeof(header));
 
-error_exit:
-    return(code);
+  error_exit:
+    return (code);
 }
 
 /* writeDump
  *	write out a dump entry structure
  */
 
-afs_int32    
+afs_int32
 writeDump(fid, dumpPtr)
      int fid;
      dbDumpP dumpPtr;
 {
     struct budb_dumpEntry dumpEntry;
     afs_int32 code = 0, tcode;
-    
+
     tcode = dumpToBudbDump(dumpPtr, &dumpEntry);
     if (tcode)
 	ERROR(tcode);
@@ -308,12 +314,12 @@ writeDump(fid, dumpPtr)
     if (canWrite(fid) <= 0)
 	ERROR(BUDB_DUMPFAILED);
 
-    if ( write(fid, &dumpEntry, sizeof(dumpEntry)) != sizeof(dumpEntry) )
+    if (write(fid, &dumpEntry, sizeof(dumpEntry)) != sizeof(dumpEntry))
 	ERROR(BUDB_DUMPFAILED);
     haveWritten(sizeof(dumpEntry));
 
-error_exit:
-    return(code);
+  error_exit:
+    return (code);
 }
 
 afs_int32
@@ -324,7 +330,7 @@ writeTape(fid, tapePtr, dumpid)
 {
     struct budb_tapeEntry tapeEntry;
     afs_int32 code = 0, tcode;
-    
+
     tcode = writeStructHeader(fid, SD_TAPE);
     if (tcode)
 	ERROR(tcode);
@@ -341,8 +347,8 @@ writeTape(fid, tapePtr, dumpid)
 
     haveWritten(sizeof(tapeEntry));
 
-error_exit:
-    return(code);
+  error_exit:
+    return (code);
 }
 
 /* combines volFragment and volInfo */
@@ -352,13 +358,13 @@ writeVolume(ut, fid, volFragmentPtr, volInfoPtr, dumpid, tapeName)
      struct ubik_trans *ut;
      int fid;
      struct volFragment *volFragmentPtr;
-     struct volInfo     *volInfoPtr;
+     struct volInfo *volInfoPtr;
      afs_int32 dumpid;
      char *tapeName;
 {
     struct budb_volumeEntry budbVolume;
     afs_int32 code = 0;
-    
+
     volsToBudbVol(volFragmentPtr, volInfoPtr, &budbVolume);
 
     budbVolume.dump = htonl(dumpid);
@@ -374,8 +380,8 @@ writeVolume(ut, fid, volFragmentPtr, volInfoPtr, dumpid, tapeName)
 
     haveWritten(sizeof(budbVolume));
 
-error_exit:
-    return(code);
+  error_exit:
+    return (code);
 }
 
 /* -------------------
@@ -394,16 +400,16 @@ afs_int32
 checkLock(textType)
      afs_int32 textType;
 {
-    db_lockP	lockPtr;
+    db_lockP lockPtr;
 
-    if ( (textType < 0) || (textType > TB_NUM-1) )
-	return(BUDB_BADARGUMENT);
+    if ((textType < 0) || (textType > TB_NUM - 1))
+	return (BUDB_BADARGUMENT);
 
     lockPtr = &db.h.textLocks[textType];
 
-    if ( lockPtr->lockState != 0 )
-	return(BUDB_LOCKED);
-    return(0);
+    if (lockPtr->lockState != 0)
+	return (BUDB_LOCKED);
+    return (0);
 }
 
 /* checkText
@@ -415,7 +421,7 @@ checkText(ut, textType)
      afs_int32 textType;
 {
     struct textBlock *tbPtr;
-    afs_int32 nBytes = 0;			/* accumulated actual size */
+    afs_int32 nBytes = 0;	/* accumulated actual size */
     afs_int32 size;
     struct block block;
     dbadr blockAddr;
@@ -426,15 +432,15 @@ checkText(ut, textType)
     blockAddr = ntohl(tbPtr->textAddr);
     size = ntohl(tbPtr->size);
 
-    while ( blockAddr != 0 )
-    {
+    while (blockAddr != 0) {
 	/* read the block */
-	code = cdbread(ut, text_BLOCK, blockAddr, (char *) &block, sizeof(block));
-	if ( code )
+	code =
+	    cdbread(ut, text_BLOCK, blockAddr, (char *)&block, sizeof(block));
+	if (code)
 	    ERROR(code);
-	
+
 	/* check its type */
-	if ( block.h.type != text_BLOCK )
+	if (block.h.type != text_BLOCK)
 	    ERROR(BUDB_DATABASEINCONSISTENT);
 
 	/* add up the size */
@@ -444,11 +450,11 @@ checkText(ut, textType)
     }
 
     /* ensure that we have at least the expected amount of text */
-    if ( nBytes < size )
+    if (nBytes < size)
 	ERROR(BUDB_DATABASEINCONSISTENT);
-    
-error_exit:
-    return(code);
+
+  error_exit:
+    return (code);
 }
 
 /* writeText
@@ -456,7 +462,7 @@ error_exit:
  *	textType - type of text block, e.g. TB_DUMPSCHEDULE
  */
 
-afs_int32	
+afs_int32
 writeText(ut, fid, textType)
      struct ubik_trans *ut;
      int fid;
@@ -467,13 +473,13 @@ writeText(ut, fid, textType)
     dbadr dbAddr;
     struct block block;
     afs_int32 code = 0;
-    
+
     /* check lock is free */
     code = checkLock(textType);
     if (code)
 	ERROR(code);
 
-     /* ensure that this block has the correct type */
+    /* ensure that this block has the correct type */
     code = checkText(ut, textType);
     if (code) {
 	LogError(0, "writeText: text type %d damaged\n", textType);
@@ -485,12 +491,12 @@ writeText(ut, fid, textType)
     dbAddr = ntohl(tbPtr->textAddr);
 
     if (!dbAddr)
-       goto error_exit;                    /* Don't save anything if no blocks */
+	goto error_exit;	/* Don't save anything if no blocks */
 
     writeTextHeader(fid, textType);
 
     while (dbAddr) {
-	code = cdbread(ut, text_BLOCK, dbAddr, (char *) &block, sizeof(block));
+	code = cdbread(ut, text_BLOCK, dbAddr, (char *)&block, sizeof(block));
 	if (code)
 	    ERROR(code);
 
@@ -501,7 +507,7 @@ writeText(ut, fid, textType)
 	if (canWrite(fid) <= 0)
 	    ERROR(BUDB_DUMPFAILED);
 
-	if (write(fid, &block.a[0], writeSize) != writeSize) 
+	if (write(fid, &block.a[0], writeSize) != writeSize)
 	    ERROR(BUDB_IO);
 
 	haveWritten(writeSize);
@@ -510,8 +516,8 @@ writeText(ut, fid, textType)
 	dbAddr = ntohl(block.h.next);
     }
 
-error_exit:
-    return(code);
+  error_exit:
+    return (code);
 }
 
 #define MAXAPPENDS 200
@@ -527,7 +533,7 @@ writeDatabase(ut, fid)
     struct tape diskTape;
     dbadr volFragAddr;
     struct volFragment diskVolFragment;
-    struct volInfo     diskVolInfo;
+    struct volInfo diskVolInfo;
     int length, hash;
     int old = 0;
     int entrySize;
@@ -541,208 +547,232 @@ writeDatabase(ut, fid)
     /* write out a header identifying this database etc */
     tcode = writeDbHeader(fid);
     if (tcode) {
-        LogError(tcode, "writeDatabase: Can't write Header\n");
+	LogError(tcode, "writeDatabase: Can't write Header\n");
 	ERROR(tcode);
     }
 
     /* write out the tree of dump structures */
 
-    mht = ht_GetType (HT_dumpIden_FUNCTION, &entrySize);
+    mht = ht_GetType(HT_dumpIden_FUNCTION, &entrySize);
     if (!mht) {
-        LogError(tcode, "writeDatabase: Can't get dump type\n");
+	LogError(tcode, "writeDatabase: Can't get dump type\n");
 	ERROR(BUDB_BADARGUMENT);
     }
 
     for (old = 0; old <= 1; old++) {
-        /*oldnew*/
+	/*oldnew */
 	/* only two states, old or not old */
-        length = (old ? mht->oldLength : mht->length);
+	length = (old ? mht->oldLength : mht->length);
 	if (!length)
 	    continue;
-	
-	for (hash=0; hash<length; hash++) { 
-	    /*hashBuckets*/
+
+	for (hash = 0; hash < length; hash++) {
+	    /*hashBuckets */
 	    /* dump all the dumps in this hash bucket
 	     */
-	    for (dbAddr = ht_LookupBucket (ut, mht, hash, old);
-		 dbAddr;
-		 dbAddr = ntohl(diskDump.idHashChain))
-	    { /*initialDumps*/
+	    for (dbAddr = ht_LookupBucket(ut, mht, hash, old); dbAddr; dbAddr = ntohl(diskDump.idHashChain)) {	/*initialDumps */
 		/* now check if this dump had any errors/inconsistencies.
 		 * If so, don't dump it
 		 */
 		if (badEntry(dbAddr)) {
-		    LogError(0, "writeDatabase: Damaged dump entry at addr 0x%x\n", dbAddr);
-		    Log ("     Skipping remainder of dumps on hash chain %d\n", hash);
+		    LogError(0,
+			     "writeDatabase: Damaged dump entry at addr 0x%x\n",
+			     dbAddr);
+		    Log("     Skipping remainder of dumps on hash chain %d\n",
+			hash);
 		    break;
 		}
 
-		tcode = cdbread(ut, dump_BLOCK, dbAddr, &diskDump, sizeof(diskDump));
+		tcode =
+		    cdbread(ut, dump_BLOCK, dbAddr, &diskDump,
+			    sizeof(diskDump));
 		if (tcode) {
-		   LogError(tcode, "writeDatabase: Can't read dump entry (addr 0x%x)\n", dbAddr);
-		   Log ("     Skipping remainder of dumps on hash chain %d\n", hash);
-		   break;
+		    LogError(tcode,
+			     "writeDatabase: Can't read dump entry (addr 0x%x)\n",
+			     dbAddr);
+		    Log("     Skipping remainder of dumps on hash chain %d\n",
+			hash);
+		    break;
 		}
 
 		/* Skip appended dumps, only start with initial dumps */
 		if (diskDump.initialDumpID != 0)
-		   continue;
+		    continue;
 
 		/* Skip appended dumps, only start with initial dumps. Then
 		 * follow the appended dump chain so they are in order for restore.
 		 */
 		appcount = numaddrs = 0;
-		for (dbAppAddr=dbAddr; dbAppAddr; dbAppAddr = ntohl(apDiskDump.appendedDumpChain)) {
-		    /*appendedDumps*/
+		for (dbAppAddr = dbAddr; dbAppAddr;
+		     dbAppAddr = ntohl(apDiskDump.appendedDumpChain)) {
+		    /*appendedDumps */
 		    /* Check to see if we have a circular loop of appended dumps */
-		    for (j=0; j<numaddrs; j++) {
-		       if (appDumpAddrs[j] == dbAppAddr) break;/* circular loop */
+		    for (j = 0; j < numaddrs; j++) {
+			if (appDumpAddrs[j] == dbAppAddr)
+			    break;	/* circular loop */
 		    }
-		    if (j < numaddrs) {                   /* circular loop */
-		       Log("writeDatabase: Circular loop found in appended dumps\n");
-		       Log("Skipping rest of appended dumps of dumpID %u\n",
+		    if (j < numaddrs) {	/* circular loop */
+			Log("writeDatabase: Circular loop found in appended dumps\n");
+			Log("Skipping rest of appended dumps of dumpID %u\n",
 			    ntohl(diskDump.id));
-		       break;
+			break;
 		    }
-		    if (numaddrs >= MAXAPPENDS) numaddrs = MAXAPPENDS-1;    /* don't overflow */
+		    if (numaddrs >= MAXAPPENDS)
+			numaddrs = MAXAPPENDS - 1;	/* don't overflow */
 		    appDumpAddrs[numaddrs] = dbAppAddr;
 		    numaddrs++;
 
 		    /* If we dump a 1000 appended dumps, assume a loop */
 		    if (appcount >= 5 * MAXAPPENDS) {
-		       Log("writeDatabase: Potential circular loop of appended dumps\n");
-		       Log("Skipping rest of appended dumps of dumpID %u. Dumped %d\n",
-			    ntohl(diskDump.id), appcount);
-		       break;
+			Log("writeDatabase: Potential circular loop of appended dumps\n");
+			Log("Skipping rest of appended dumps of dumpID %u. Dumped %d\n", ntohl(diskDump.id), appcount);
+			break;
 		    }
 		    appcount++;
 
 		    /* Read the dump entry */
 		    if (dbAddr == dbAppAddr) {
-		       /* First time through, don't need to read the dump entry again */
-		       memcpy(&apDiskDump, &diskDump, sizeof(diskDump));
-		    }
-		    else {
-		       if (badEntry(dbAppAddr)) {
-			  LogError(0, "writeDatabase: Damaged appended dump entry at addr 0x%x\n", dbAddr);
-			  Log ("     Skipping this and remainder of appended dumps of initial DumpID %u\n",
-			       ntohl(diskDump.id));
-			  break;
-		       }
-		       
-		       tcode = cdbread(ut, dump_BLOCK, dbAppAddr, &apDiskDump, sizeof(apDiskDump));
-		       if (tcode) {
-			  LogError(tcode, "writeDatabase: Can't read appended dump entry (addr 0x%x)\n",
-				   dbAppAddr);
-			  Log ("     Skipping this and remainder of appended dumps of initial DumpID %u\n",
-			       ntohl(diskDump.id));
-			  break;
-		       }
+			/* First time through, don't need to read the dump entry again */
+			memcpy(&apDiskDump, &diskDump, sizeof(diskDump));
+		    } else {
+			if (badEntry(dbAppAddr)) {
+			    LogError(0,
+				     "writeDatabase: Damaged appended dump entry at addr 0x%x\n",
+				     dbAddr);
+			    Log("     Skipping this and remainder of appended dumps of initial DumpID %u\n", ntohl(diskDump.id));
+			    break;
+			}
 
-		       /* Verify that this appended dump points to the initial dump */
-		       if (ntohl(apDiskDump.initialDumpID) != ntohl(diskDump.id)) {
-			  LogError(0, "writeDatabase: Appended dumpID %u does not reference initial dumpID %u\n", 
-				   ntohl(apDiskDump.id), ntohl(diskDump.id));
-			  Log ("     Skipping this appended dump\n");
-			  continue;
-		       }
+			tcode =
+			    cdbread(ut, dump_BLOCK, dbAppAddr, &apDiskDump,
+				    sizeof(apDiskDump));
+			if (tcode) {
+			    LogError(tcode,
+				     "writeDatabase: Can't read appended dump entry (addr 0x%x)\n",
+				     dbAppAddr);
+			    Log("     Skipping this and remainder of appended dumps of initial DumpID %u\n", ntohl(diskDump.id));
+			    break;
+			}
+
+			/* Verify that this appended dump points to the initial dump */
+			if (ntohl(apDiskDump.initialDumpID) !=
+			    ntohl(diskDump.id)) {
+			    LogError(0,
+				     "writeDatabase: Appended dumpID %u does not reference initial dumpID %u\n",
+				     ntohl(apDiskDump.id),
+				     ntohl(diskDump.id));
+			    Log("     Skipping this appended dump\n");
+			    continue;
+			}
 		    }
 
 		    /* Save the dump entry */
 		    tcode = writeDump(fid, &apDiskDump);
 		    if (tcode) {
-		       LogError(tcode, "writeDatabase: Can't write dump entry\n");
-		       ERROR(tcode);
+			LogError(tcode,
+				 "writeDatabase: Can't write dump entry\n");
+			ERROR(tcode);
 		    }
-		
+
 		    /* For each tape on this dump
 		     */
-		    for (tapeAddr = ntohl(apDiskDump.firstTape);
-			 tapeAddr;
-			 tapeAddr = ntohl(diskTape.nextTape))
-		    { /*tapes*/
-		        /* read the tape entry */
-		        tcode = cdbread(ut, tape_BLOCK, tapeAddr, &diskTape, sizeof(diskTape));
+		    for (tapeAddr = ntohl(apDiskDump.firstTape); tapeAddr; tapeAddr = ntohl(diskTape.nextTape)) {	/*tapes */
+			/* read the tape entry */
+			tcode =
+			    cdbread(ut, tape_BLOCK, tapeAddr, &diskTape,
+				    sizeof(diskTape));
 			if (tcode) {
-			   LogError(tcode, "writeDatabase: Can't read tape entry (addr 0x%x) of dumpID %u\n", 
-				    tapeAddr, ntohl(apDiskDump.id));
-			   Log("     Skipping this and remaining tapes in the dump (and all their volumes)\n");
-			   break;
+			    LogError(tcode,
+				     "writeDatabase: Can't read tape entry (addr 0x%x) of dumpID %u\n",
+				     tapeAddr, ntohl(apDiskDump.id));
+			    Log("     Skipping this and remaining tapes in the dump (and all their volumes)\n");
+			    break;
 			}
 
 			/* Save the tape entry */
-			tcode = writeTape(fid, &diskTape, ntohl(apDiskDump.id));
+			tcode =
+			    writeTape(fid, &diskTape, ntohl(apDiskDump.id));
 			if (tcode) {
-			   LogError(tcode, "writeDatabase: Can't write tape entry\n");
-			   ERROR(tcode);
+			    LogError(tcode,
+				     "writeDatabase: Can't write tape entry\n");
+			    ERROR(tcode);
 			}
-		    
+
 			/* For each volume on this tape.
 			 */
-			for (volFragAddr = ntohl(diskTape.firstVol); 
-			     volFragAddr; 
-			     volFragAddr = ntohl(diskVolFragment.sameTapeChain))
-			{ /*volumes*/
+			for (volFragAddr = ntohl(diskTape.firstVol); volFragAddr; volFragAddr = ntohl(diskVolFragment.sameTapeChain)) {	/*volumes */
 			    /* Read the volume Fragment entry */
-			    tcode = cdbread(ut, volFragment_BLOCK, volFragAddr, 
-					    &diskVolFragment, sizeof(diskVolFragment));
+			    tcode =
+				cdbread(ut, volFragment_BLOCK, volFragAddr,
+					&diskVolFragment,
+					sizeof(diskVolFragment));
 			    if (tcode) {
-			       LogError(tcode, "writeDatabase: Can't read volfrag entry (addr 0x%x) of dumpID %u\n",
-					volFragAddr, ntohl(apDiskDump.id));
-			       Log("     Skipping this and remaining volumes on tape '%s'\n", diskTape.name);
-			       break;
+				LogError(tcode,
+					 "writeDatabase: Can't read volfrag entry (addr 0x%x) of dumpID %u\n",
+					 volFragAddr, ntohl(apDiskDump.id));
+				Log("     Skipping this and remaining volumes on tape '%s'\n", diskTape.name);
+				break;
 			    }
 
 			    /* Read the volume Info entry */
-			    tcode = cdbread(ut, volInfo_BLOCK, ntohl(diskVolFragment.vol), 
-					    &diskVolInfo, sizeof(diskVolInfo));
+			    tcode =
+				cdbread(ut, volInfo_BLOCK,
+					ntohl(diskVolFragment.vol),
+					&diskVolInfo, sizeof(diskVolInfo));
 			    if (tcode) {
-			       LogError(tcode, "writeDatabase: Can't read volinfo entry (addr 0x%x) of dumpID %u\n",
-					ntohl(diskVolFragment.vol), ntohl(apDiskDump.id));
-			       Log("     Skipping volume on tape '%s'\n", diskTape.name);
-			       continue;
+				LogError(tcode,
+					 "writeDatabase: Can't read volinfo entry (addr 0x%x) of dumpID %u\n",
+					 ntohl(diskVolFragment.vol),
+					 ntohl(apDiskDump.id));
+				Log("     Skipping volume on tape '%s'\n",
+				    diskTape.name);
+				continue;
 			    }
 
 			    /* Save the volume entry */
-			    tcode = writeVolume(ut, fid, &diskVolFragment, &diskVolInfo, 
-						ntohl(apDiskDump.id), diskTape.name);
+			    tcode =
+				writeVolume(ut, fid, &diskVolFragment,
+					    &diskVolInfo,
+					    ntohl(apDiskDump.id),
+					    diskTape.name);
 			    if (tcode) {
-			       LogError(tcode, "writeDatabase: Can't write volume entry\n");
-			       ERROR(tcode);
+				LogError(tcode,
+					 "writeDatabase: Can't write volume entry\n");
+				ERROR(tcode);
 			    }
-			} /*volumes*/
-		    } /*tapes*/
-		} /*appendedDumps*/
-	    } /*initialDumps*/
-	} /*hashBuckets*/
-    } /*oldnew*/
+			}	/*volumes */
+		    }		/*tapes */
+		}		/*appendedDumps */
+	    }			/*initialDumps */
+	}			/*hashBuckets */
+    }				/*oldnew */
 
     /* write out the textual configuration information */
     tcode = writeText(ut, fid, TB_DUMPSCHEDULE);
     if (tcode) {
-        LogError(tcode, "writeDatabase: Can't write dump schedule\n");
+	LogError(tcode, "writeDatabase: Can't write dump schedule\n");
 	ERROR(tcode);
     }
     tcode = writeText(ut, fid, TB_VOLUMESET);
     if (tcode) {
-        LogError(tcode, "writeDatabase: Can't write volume set\n");
+	LogError(tcode, "writeDatabase: Can't write volume set\n");
 	ERROR(tcode);
     }
     tcode = writeText(ut, fid, TB_TAPEHOSTS);
     if (tcode) {
-        LogError(tcode, "writeDatabase: Can't write tape hosts\n");
+	LogError(tcode, "writeDatabase: Can't write tape hosts\n");
 	ERROR(tcode);
     }
 
     tcode = writeStructHeader(fid, SD_END);
     if (tcode) {
-        LogError(tcode, "writeDatabase: Can't write end savedb\n");
+	LogError(tcode, "writeDatabase: Can't write end savedb\n");
 	ERROR(tcode);
     }
-    
-error_exit:
+
+  error_exit:
     doneWriting(code);
-    return(code);
+    return (code);
 }
 
 
@@ -759,12 +789,12 @@ canWrite(fid)
     tp.tv_sec = 0;
     tp.tv_usec = 0;
 
-    out = ( 1 << fid );
+    out = (1 << fid);
     in = 0;
     except = 0;
 
     code = IOMGR_Select(32, &in, &out, &except, &tp);
-    return(code);
+    return (code);
 }
 
 #endif /* notdef */

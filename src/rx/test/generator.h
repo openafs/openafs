@@ -8,13 +8,13 @@
  */
 
 #define PRIVATE static
-#define IN 
+#define IN
 #define INOUT
 #define MACRO_BEGIN     do {
 #define MACRO_END       } while (0)
 
 
-typedef enum {FALSE, TRUE} boolean_t;
+typedef enum { FALSE, TRUE } boolean_t;
 
 /* no. tests per file */
 #define TESTS_PER_FILE		50
@@ -40,10 +40,10 @@ typedef enum {FALSE, TRUE} boolean_t;
 #define ATTRIB_NO 3
 
 typedef struct {
-    char direction[ MAX_DIR_STR ];
-    char type[ MAX_TYP_STR ];
+    char direction[MAX_DIR_STR];
+    char type[MAX_TYP_STR];
     int attrib_ct;
-    char attrib [ATTRIB_NO][ATTRIB_LEN];
+    char attrib[ATTRIB_NO][ATTRIB_LEN];
     boolean_t first;
     boolean_t last;
     boolean_t length;
@@ -55,7 +55,7 @@ typedef struct {
     char *outValue[IDL_FIX_ARRAY_SIZE];	/* value returned via RPC */
     char *outValue2[IDL_FIX_ARRAY_SIZE];
     int vc_low, vc_high, vc_max;	/* array bounds ([in] value) */
-    int ovc_low, ovc_high;		/* array bounds ([out] value) */
+    int ovc_low, ovc_high;	/* array bounds ([out] value) */
 } arg_tuple;
 
 typedef struct {
@@ -65,7 +65,7 @@ typedef struct {
 
 #define MEM_CHK(x, y) if(!x) {fprintf(stderr, y); exit(1);}
 
-#define FATAL( y ) {fprintf(stderr, y); exit(1);} 
+#define FATAL( y ) {fprintf(stderr, y); exit(1);}
 
 /* for vary/conf array for testing pusrposes we will assume a
 high index of at least 5, so IDL_FIX_ARRAY_SIZE should never be 
@@ -120,5 +120,3 @@ MACRO_END
 #define MAX_FLT 1.00000000
 #define MIN_DBL 0.0000000000000000
 #define MAX_DBL 1.0000000000000000
-
-

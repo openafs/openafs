@@ -44,7 +44,7 @@
 #include <err.h>
 
 #ifdef RCSID
-RCSID("$Id: hardlink2.c,v 1.1 2002/01/22 19:54:41 hartmans Exp $");
+RCSID("$Id: hardlink2.c,v 1.2 2003/07/15 23:17:00 shadow Exp $");
 #endif
 
 int
@@ -55,17 +55,17 @@ main(int argc, char *argv[])
     struct stat sb1;
 
 
-    ret = mkdir ("1", 0777);
+    ret = mkdir("1", 0777);
     if (ret < 0)
-	err (1, "mkdir 1");
+	err(1, "mkdir 1");
 
-    ret = link ("1", "2");
+    ret = link("1", "2");
     if (ret == 0)
-	errx (1, "link 1 2 should have failed");
+	errx(1, "link 1 2 should have failed");
 
-    ret = rmdir ("1");
+    ret = rmdir("1");
     if (ret < 0)
-	err (1, "rmdir 1");
+	err(1, "rmdir 1");
 
     return 0;
 }

@@ -181,7 +181,7 @@ void cdecl vFormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, LONG ids, LPCT
 void cdecl FormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, LPCTSTR pszTemplate, LPCTSTR pszFormat, ...)
 {
    va_list arg;
-   if (pszFormat != NULL)
+   //if (pszFormat != NULL)
       va_start (arg, pszFormat);
    vFormatMultiString (ppszTarget, fAddHead, (LONG)pszTemplate, pszFormat, arg);
 }
@@ -189,7 +189,7 @@ void cdecl FormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, LPCTSTR pszTemp
 void cdecl FormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, int idsTemplate, LPCTSTR pszFormat, ...)
 {
    va_list arg;
-   if (pszFormat != NULL)
+   //if (pszFormat != NULL)
       va_start (arg, pszFormat);
    vFormatMultiString (ppszTarget, fAddHead, (LONG)idsTemplate, pszFormat, arg);
 }
@@ -212,7 +212,7 @@ void cdecl vFormatMultiString (LPTSTR *ppszTarget, BOOL fAddHead, int idsTemplat
 LPTSTR cdecl FormatString (LPCTSTR psz, LPCTSTR pszFmt, ...)
 {
    va_list arg;
-   if (pszFmt != NULL)
+   //if (pszFmt != NULL)
       va_start (arg, pszFmt);
    return vFormatString ((LONG)psz, pszFmt, arg);
 }
@@ -220,7 +220,7 @@ LPTSTR cdecl FormatString (LPCTSTR psz, LPCTSTR pszFmt, ...)
 LPTSTR cdecl FormatString (int ids, LPCTSTR pszFmt, ...)
 {
    va_list  arg;
-   if (pszFmt != NULL)
+   //if (pszFmt != NULL)
       va_start (arg, pszFmt);
    return vFormatString ((LONG)ids, pszFmt, arg);
 }
@@ -1491,59 +1491,66 @@ void FreeString (LPCVOID pszString, LPCVOID pszOriginalString)
 
 LPSTR StringToAnsi (LPCTSTR pszOriginal)
 {
-#ifndef UNICODE
-   return (LPSTR)pszOriginal;
+    if (!pszOriginal)
+        return NULL;
+    LPSTR pszTargetA;
+    int len = lstrlen(pszOriginal);
+    if ((pszTargetA = AllocateAnsi (1+len)) != NULL) {
+#ifdef UNICODE
+        CopyUnicodeToAnsi (pszTargetA, pszOriginal);
 #else
-   if (!pszOriginal)
-      return NULL;
-   LPSTR pszTargetA;
-   if ((pszTargetA = AllocateAnsi (1+lstrlen(pszOriginal))) != NULL)
-      CopyUnicodeToAnsi (pszTargetA, pszOriginal);
-   return pszTargetA;
+        lstrcpy (pszTargetA, (LPSTR)pszOriginal);
 #endif
+    }
+    return pszTargetA;
 }
 
 LPTSTR AnsiToString (LPCSTR pszOriginalA)
 {
-#ifndef UNICODE
-   return (LPTSTR)pszOriginalA;
+    if (!pszOriginalA)
+        return NULL;
+    LPTSTR pszTarget;
+    int lenA = lstrlenA(pszOriginalA);
+    if ((pszTarget = AllocateString (1+lenA)) != NULL) {
+#ifdef UNICODE
+        CopyAnsiToUnicode (pszTarget, pszOriginalA);
 #else
-   if (!pszOriginalA)
-      return NULL;
-   LPTSTR pszTarget;
-   if ((pszTarget = AllocateString (1+lstrlenA(pszOriginalA))) != NULL)
-      CopyAnsiToUnicode (pszTarget, pszOriginalA);
-   return pszTarget;
+        lstrcpy (pszTarget, (LPSTR)pszOriginalA);
 #endif
+    }
+    return pszTarget;
 }
 
 
 LPWSTR StringToUnicode (LPCTSTR pszOriginal)
 {
+    if (!pszOriginal)
+        return NULL;
+    LPWSTR pszTargetW;
+    int len = lstrlen(pszOriginal);
+    if ((pszTargetW = AllocateUnicode (1+len)) != NULL) {
 #ifdef UNICODE
-   return (LPWSTR)pszOriginal;
+        lstrcpyW ((LPWSTR)pszTargetW, (LPWSTR)pszOriginal);
 #else
-   if (!pszOriginal)
-      return NULL;
-   LPWSTR pszTargetW;
-   if ((pszTargetW = AllocateUnicode (1+lstrlen(pszOriginal))) != NULL)
-      CopyAnsiToUnicode (pszTargetW, pszOriginal);
-   return pszTargetW;
+        CopyAnsiToUnicode (pszTargetW, pszOriginal);
 #endif
+    }
+    return pszTargetW;
 }
 
 LPTSTR UnicodeToString (LPCWSTR pszOriginalW)
 {
+    if (!pszOriginalW)
+        return NULL;
+    LPTSTR pszTarget;
+    if ((pszTarget = AllocateString (1+lstrlenW(pszOriginalW))) != NULL) {
 #ifdef UNICODE
-   return (LPTSTR)pszOriginalW;
+        lstrcpyW ((LPWSTR)pszTargetW, (LPWSTR)pszOriginal);
 #else
-   if (!pszOriginalW)
-      return NULL;
-   LPTSTR pszTarget;
-   if ((pszTarget = AllocateString (1+lstrlenW(pszOriginalW))) != NULL)
-      CopyUnicodeToAnsi (pszTarget, pszOriginalW);
-   return pszTarget;
+        CopyUnicodeToAnsi (pszTarget, pszOriginalW);
 #endif
+    }
+    return pszTarget;
 }
 
 

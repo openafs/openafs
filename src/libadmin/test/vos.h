@@ -30,4 +30,4 @@
 #include "common.h"
 
 void
-SetupVosAdminCmd(void);
+  SetupVosAdminCmd(void);

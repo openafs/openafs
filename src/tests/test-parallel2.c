@@ -47,136 +47,136 @@
 #include <fcntl.h>
 
 #ifdef RCSID
-RCSID("$Id: test-parallel2.c,v 1.1 2002/01/22 19:54:43 hartmans Exp $");
+RCSID("$Id: test-parallel2.c,v 1.2 2003/07/15 23:17:02 shadow Exp $");
 #endif
 
 #define WORKER_TIMES 1000
 #define NUM_WORKER 100
 
 static int
-getcwd_worker (int num)
+getcwd_worker(int num)
 {
     char name[17];
     int i;
 
-    snprintf (name, sizeof(name), "%d", num);
-    if (mkdir (name, 0777) < 0)
-	err (1, "mkdir %s", name);
-    if (chdir (name) < 0)
-	err (1, "chdir %s", name);
+    snprintf(name, sizeof(name), "%d", num);
+    if (mkdir(name, 0777) < 0)
+	err(1, "mkdir %s", name);
+    if (chdir(name) < 0)
+	err(1, "chdir %s", name);
     for (i = 0; i < WORKER_TIMES; ++i) {
 	char buf[256];
 
-	getcwd (buf, sizeof(buf));
+	getcwd(buf, sizeof(buf));
     }
     return 0;
 }
 
 static int
-mkdir_worker (int num)
+mkdir_worker(int num)
 {
     int i;
 
-    for (i = 0; i < WORKER_TIMES; ++i){
+    for (i = 0; i < WORKER_TIMES; ++i) {
 	char name[256];
 
-	snprintf (name, sizeof(name), "m%d-%d", num, i);
-	mkdir (name, 0777);
+	snprintf(name, sizeof(name), "m%d-%d", num, i);
+	mkdir(name, 0777);
     }
     return 0;
 }
 
 static int
-mkdir_rmdir_worker (int num)
+mkdir_rmdir_worker(int num)
 {
     int i;
 
-    for (i = 0; i < WORKER_TIMES; ++i){
+    for (i = 0; i < WORKER_TIMES; ++i) {
 	char name[256];
 
-	snprintf (name, sizeof(name), "rm%d-%d", num, i);
-	mkdir (name, 0777);
+	snprintf(name, sizeof(name), "rm%d-%d", num, i);
+	mkdir(name, 0777);
     }
-    for (i = 0; i < WORKER_TIMES; ++i){
+    for (i = 0; i < WORKER_TIMES; ++i) {
 	char name[256];
 
-	snprintf (name, sizeof(name), "rm%d-%d", num, i);
-	rmdir (name);
+	snprintf(name, sizeof(name), "rm%d-%d", num, i);
+	rmdir(name);
     }
     return 0;
 }
 
 static int
-rename_worker (int num)
+rename_worker(int num)
 {
     int i;
 
-    for (i = 0; i < WORKER_TIMES; ++i){
+    for (i = 0; i < WORKER_TIMES; ++i) {
 	char name[256];
 	int fd;
 
-	snprintf (name, sizeof(name), "rm%d-%d", num, i);
-	fd = open (name, O_WRONLY | O_CREAT, 0777);
-	close (fd);
+	snprintf(name, sizeof(name), "rm%d-%d", num, i);
+	fd = open(name, O_WRONLY | O_CREAT, 0777);
+	close(fd);
     }
-    for (i = 0; i < WORKER_TIMES; ++i){
+    for (i = 0; i < WORKER_TIMES; ++i) {
 	char name[256], name2[256];
 
-	snprintf (name, sizeof(name), "rm%d-%d", num, i);
-	snprintf (name2, sizeof(name2), "rn%d-%d", num, i);
-	rename (name, name2);
+	snprintf(name, sizeof(name), "rm%d-%d", num, i);
+	snprintf(name2, sizeof(name2), "rn%d-%d", num, i);
+	rename(name, name2);
     }
     return 0;
 }
 
 static int
-stat_worker (int num)
+stat_worker(int num)
 {
     char name[17];
     int i;
     char buf[256];
     struct stat sb;
 
-    snprintf (name, sizeof(name), "%d", num);
-    if (mkdir (name, 0777) < 0)
-	err (1, "mkdir %s", name);
-    if (chdir (name) < 0)
-	err (1, "chdir %s", name);
+    snprintf(name, sizeof(name), "%d", num);
+    if (mkdir(name, 0777) < 0)
+	err(1, "mkdir %s", name);
+    if (chdir(name) < 0)
+	err(1, "chdir %s", name);
     for (i = 0; i < WORKER_TIMES; ++i) {
-	getcwd (buf, sizeof(buf));
-	stat (buf, &sb);
+	getcwd(buf, sizeof(buf));
+	stat(buf, &sb);
     }
     return 0;
 }
 
-static int (*workers[])(int) = {getcwd_worker, mkdir_worker,
-				mkdir_rmdir_worker, rename_worker,
-				stat_worker};
+static int (*workers[]) (int) = {
+getcwd_worker, mkdir_worker, mkdir_rmdir_worker, rename_worker,
+	stat_worker};
 
-static int nworkers = sizeof(workers)/sizeof(*workers);
+static int nworkers = sizeof(workers) / sizeof(*workers);
 
 int
 main(int argc, char **argv)
 {
     int i, ret;
-    
 
-    for (i = 0; i < NUM_WORKER ; i++) {
+
+    for (i = 0; i < NUM_WORKER; i++) {
 	int ret;
-	
+
 	ret = fork();
 	switch (ret) {
 	case 0:
-	    return (*workers[i % nworkers])(i);
+	    return (*workers[i % nworkers]) (i);
 	case -1:
-	    err (1, "fork");
+	    err(1, "fork");
 	}
     }
     i = NUM_WORKER;
-    while (i && wait (&ret)) {
+    while (i && wait(&ret)) {
 	i--;
 	if (ret)
-	    err (1, "wait: %d", ret);
+	    err(1, "wait: %d", ret);
     }
     return 0;
 }

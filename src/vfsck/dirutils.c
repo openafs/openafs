@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/dirutils.c,v 1.1.1.4 2001/07/14 22:24:40 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/vfsck/dirutils.c,v 1.5 2003/07/15 23:17:27 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -21,7 +22,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/dirutils.c,v 1.1.1.4 2001/07/14 2
  * Overwrites abuffer with the corrected name.
  */
 EnsureDevice(abuffer)
-char *abuffer; {
+     char *abuffer;
+{
     struct dirent *dp;
     char pbuffer[128];
     struct stat tstat;
@@ -31,29 +33,29 @@ char *abuffer; {
     short dev;
 
     code = stat(abuffer, &tstat);
-    if (code) return code;
-    if (((tstat.st_mode & S_IFMT) == S_IFBLK) || ((tstat.st_mode & S_IFMT) == S_IFCHR)) {
-	return 0;	/* already a block or char device */
+    if (code)
+	return code;
+    if (((tstat.st_mode & S_IFMT) == S_IFBLK)
+	|| ((tstat.st_mode & S_IFMT) == S_IFCHR)) {
+	return 0;		/* already a block or char device */
     }
     /* otherwise, assume we've got a normal file, and we look up its device */
     dev = tstat.st_dev;		/* remember device for this file */
 
     /* now, look in /dev for the appropriate file */
     dirp = opendir(dirName = AFS_DSKDEV);
-    while (dp=readdir(dirp)) {
+    while (dp = readdir(dirp)) {
 	strcpy(pbuffer, dirName);
 	strcat(pbuffer, "/");
 	strcat(pbuffer, dp->d_name);
-	if (stat(pbuffer, &tstat) != -1 &&
-	    (tstat.st_mode & S_IFMT) == S_IFBLK &&
-	    (tstat.st_rdev == dev)) {
-		strcpy(abuffer, pbuffer);
-		closedir(dirp);
-		return 0;
-	    }
+	if (stat(pbuffer, &tstat) != -1 && (tstat.st_mode & S_IFMT) == S_IFBLK
+	    && (tstat.st_rdev == dev)) {
+	    strcpy(abuffer, pbuffer);
+	    closedir(dirp);
+	    return 0;
+	}
     }
     closedir(dirp);
 
-    return 1;	/* failed */
+    return 1;			/* failed */
 }
-

@@ -15,9 +15,9 @@
 
 #ifdef	KERNEL
 #if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV)
-#include "../h/systm.h"
-#include "../h/time.h"
-#endif	/* System V */
+#include "h/systm.h"
+#include "h/time.h"
+#endif /* System V */
 #else /* KERNEL */
 #ifndef AFS_NT40_ENV
 #ifndef ITIMER_REAL
@@ -38,8 +38,8 @@
 
 /* A clock value is the number of seconds and microseconds that have elapsed since calling clock_Init. */
 struct clock {
-    afs_int32 sec;	    /* Seconds since clock_Init */
-    afs_int32 usec;	    /* Microseconds since clock_Init */
+    afs_int32 sec;		/* Seconds since clock_Init */
+    afs_int32 usec;		/* Microseconds since clock_Init */
 };
 
 #ifndef	KERNEL
@@ -47,9 +47,17 @@ struct clock {
 #define clock_Init()
 #define clock_NewTime()
 #define clock_UpdateTime()
-#define clock_GetTime(cv) (gettimeofday((struct timeval *)cv, NULL))
 #define clock_Sec() (time(NULL))
 #define clock_haveCurrentTime 1
+
+#define        clock_GetTime(cv)                               \
+    BEGIN                                              \
+       struct timeval tv;                              \
+       gettimeofday(&tv, NULL);                        \
+       (cv)->sec = (afs_int32)tv.tv_sec;               \
+       (cv)->usec = (afs_int32)tv.tv_usec;             \
+    END
+
 #else /* AFS_USE_GETTIMEOFDAY || AFS_PTHREAD_ENV */
 
 /* For internal use.  The last value returned from clock_GetTime() */
@@ -62,34 +70,40 @@ extern int clock_haveCurrentTime;
 extern int clock_nUpdates;
 
 /* Initialize the clock package */
-extern void clock_Init();
 
 #define	clock_NewTime()	(clock_haveCurrentTime = 0)
 
-/* Update the value to be returned by gettime */
-extern void clock_UpdateTime();
-
 /* Return the current clock time.  If the clock value has not been updated since the last call to clock_NewTime, it is updated now */
-#define	clock_GetTime(cv)				\
-    BEGIN						\
-	if (!clock_haveCurrentTime) clock_UpdateTime(); \
-	(cv)->sec = clock_now.sec;			\
-	(cv)->usec = clock_now.usec;			\
+#define        clock_GetTime(cv)                               \
+    BEGIN                                              \
+       if (!clock_haveCurrentTime) clock_UpdateTime(); \
+       (cv)->sec = clock_now.sec;                      \
+       (cv)->usec = clock_now.usec;                    \
     END
 
 /* Current clock time, truncated to seconds */
 #define	clock_Sec() ((!clock_haveCurrentTime)? clock_UpdateTime(), clock_now.sec:clock_now.sec)
 #endif /* AFS_USE_GETTIMEOFDAY || AFS_PTHREAD_ENV */
 #else /* KERNEL */
-#include "../afs/afs_osi.h"
+#include "afs/afs_osi.h"
 #define clock_Init()
 #if defined(AFS_SGI61_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX_64BIT_KERNEL)
 #define clock_GetTime(cv) osi_GetTime((osi_timeval_t *)cv)
 #else
+#if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)
+#define        clock_GetTime(cv)                               \
+    BEGIN                                              \
+       struct timeval tv;                              \
+       osi_GetTime(&tv);                        \
+       (cv)->sec = (afs_int32)tv.tv_sec;               \
+       (cv)->usec = (afs_int32)tv.tv_usec;             \
+    END
+#else /* defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL) */
 #define clock_GetTime(cv) osi_GetTime((struct timeval *)cv)
+#endif /* defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL) */
 #endif
 #define clock_Sec() osi_Time()
-#define	clock_NewTime()    /* don't do anything; clock is fast enough in kernel */
+#define	clock_NewTime()		/* don't do anything; clock is fast enough in kernel */
 #endif /* KERNEL */
 
 /* Returns the elapsed time in milliseconds between clock values (*cv1) and (*cv2) */

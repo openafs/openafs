@@ -5,34 +5,11 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
-
-SHELL = /bin/sh
-
-include ../config/Makefile.${SYS_NAME}
-
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 LIBOBJS=cmd_errors.o cmd.o 
 LIB64OBJS=cmd_errors64.o cmd64.o 
-
-CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
 
 PICTARGET =../pic/cmd
 PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(LIBOBJS))
@@ -50,15 +27,21 @@ all: ${TOP_LIBDIR}/libcmd.a ${TOP_INCDIR}/afs/cmd.h
 
 all64: all ${TOP_LIBDIR}/libcmd64.a
 
-cmd.h cmd_errors.c: cmd_errors.et cmd.p.h
+cmd.h: cmd_errors.et cmd.p.h
 	$(RM) -f cmd.h cmd_errors.c
-	${COMPILE_ET} cmd_errors -h cmd
+	${COMPILE_ET} -p ${srcdir} cmd_errors -h cmd
+
+cmd_errors.c: cmd.h 
+
+cmd_errors.o: cmd_errors.c
+
+cmd.o: cmd.c cmd.h
 
 cmd_errors64.o: cmd_errors.c
-	${CC} ${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS64} -c -o cmd_errors64.o cmd_errors.c
+	${CC} ${OPTMZ} -I. -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS64} -c -o cmd_errors64.o cmd_errors.c
 
 cmd64.o: cmd.c cmd.h
-	${CC} ${OPTMZ} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS64} -c -o cmd64.o cmd.c
+	${CC} ${OPTMZ} -I. -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS64} -c -o cmd64.o ${srcdir}/cmd.c
 
 
 libcmd64.a: ${LIB64OBJS} AFS_component_version_number64.o 

@@ -34,28 +34,28 @@
 #include "intNN.h"
 
 /* Stage-related constants */
-#define STAGE_MAGIC    0x00adf8bc       /* magic number for stage header */
-#define STAGE_CHECKSUM 84446            /* checksum (same as 4.2bsd dump) */
-#define STAGE_VERSMIN  20               /* minimum version */
-#define STAGE_NAMLEN   64               /* length of host/part/vol names */
-#define STAGE_HDRLEN   1024             /* size of the header */
+#define STAGE_MAGIC    0x00adf8bc	/* magic number for stage header */
+#define STAGE_CHECKSUM 84446	/* checksum (same as 4.2bsd dump) */
+#define STAGE_VERSMIN  20	/* minimum version */
+#define STAGE_NAMLEN   64	/* length of host/part/vol names */
+#define STAGE_HDRLEN   1024	/* size of the header */
 
 struct stage_header {
-  unsigned char c_vers;               /* header version (starts at 20) */
-  unsigned char c_notused[3];
-  afs_uint32       c_fdate;              /* dump "from" date */
-  afs_uint32       c_tdate;              /* dump "to" date */
-  afs_uint32       c_filenum;            /* tape file number */
-  afs_uint32       c_time;               /* time dump was done */
-  char          c_host[STAGE_NAMLEN]; /* hostname volume came from */
-  char          c_disk[STAGE_NAMLEN]; /* partition volume came from */
-  char          c_name[STAGE_NAMLEN]; /* volume name */
-  afs_uint32       c_id;                 /* volume ID */
-  afs_uint32       c_length;             /* length of the dump */
-  afs_uint32       c_level;              /* dump level */
-  afs_uint32       c_magic;              /* magic number */
-  afs_uint32       c_checksum;           /* checksum of backup header */
-  afs_uint32       c_flags;              /* feature flags */
+    unsigned char c_vers;	/* header version (starts at 20) */
+    unsigned char c_notused[3];
+    afs_uint32 c_fdate;		/* dump "from" date */
+    afs_uint32 c_tdate;		/* dump "to" date */
+    afs_uint32 c_filenum;	/* tape file number */
+    afs_uint32 c_time;		/* time dump was done */
+    char c_host[STAGE_NAMLEN];	/* hostname volume came from */
+    char c_disk[STAGE_NAMLEN];	/* partition volume came from */
+    char c_name[STAGE_NAMLEN];	/* volume name */
+    afs_uint32 c_id;		/* volume ID */
+    afs_uint32 c_length;	/* length of the dump */
+    afs_uint32 c_level;		/* dump level */
+    afs_uint32 c_magic;		/* magic number */
+    afs_uint32 c_checksum;	/* checksum of backup header */
+    afs_uint32 c_flags;		/* feature flags */
 };
 
 #endif /* _STAGEHDR_H_ */

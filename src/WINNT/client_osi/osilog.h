@@ -83,6 +83,7 @@ extern char *osi_LogSaveString(osi_log_t *logp, char *s);
 extern void osi_InitTraceOption();
 extern void osi_LogEvent0(char *a,char *b);
 extern void osi_LogEvent(char *a,char *b,char *c,...);
+extern char *osi_HexifyString(char *s);
 
 /* define macros */
 #define osi_Log0(l,f)		osi_LogAdd((l), (f), 0, 0, 0, 0)

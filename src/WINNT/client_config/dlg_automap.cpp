@@ -10,10 +10,12 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/fs_utils.h>
 }
 
 #include "afs_config.h"
 #include <stdio.h>
+#include <lanahelper.h>
 
 /*
  * DEFINITIONS ________________________________________________________________
@@ -32,7 +34,6 @@ enum DDDACTION  { DDD_ADD, DDD_REMOVE };
  * PROTOTYPES _________________________________________________________________
  *
  */
-
 void AutoMap_OnInitDialog (HWND hDlg);
 void AutoMap_OnAdd (HWND hDlg);
 void AutoMap_OnSelect (HWND hDlg);
@@ -217,7 +218,7 @@ BOOL UpdateRegistry(DRIVEMAP *pDrive, BOOL bRemove)
    if (!pDrive)
       return FALSE;
 
-   _stprintf(szKeyName, TEXT("%s\\GlobalAutoMapper"), AFSConfigKeyName);
+   _stprintf(szKeyName, TEXT("%s\\GlobalAutoMapper"), AFSDConfigKeyName);
 
    if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, szKeyName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, &dwDispo) != ERROR_SUCCESS)
       return FALSE;
@@ -448,7 +449,7 @@ void AutoMapEdit_OnInitDialog (HWND hDlg)
    SendMessage (hCombo, CB_SETCURSEL, iItemSel, 0);
 
    TCHAR szMapping[ MAX_PATH ];
-   AdjustAfsPath (szMapping, ((pMap->szMapping[0]) ? pMap->szMapping : TEXT("/afs")), TRUE, FALSE);
+   AdjustAfsPath (szMapping, ((pMap->szMapping[0]) ? pMap->szMapping : cm_slash_mount_root), TRUE, FALSE);
    SetDlgItemText (hDlg, IDC_PATH, szMapping);
    SetDlgItemText (hDlg, IDC_DESC, pMap->szSubmount);
 
@@ -476,12 +477,12 @@ void AutoMapEdit_OnOK (HWND hDlg)
       return;
       }
 
-   if ( (lstrncmpi (pMap->szMapping, TEXT("/afs"), lstrlen(TEXT("/afs")))) &&
-        (lstrncmpi (pMap->szMapping, TEXT("\\afs"), lstrlen(TEXT("\\afs")))) )
-      {
-      Message (MB_ICONHAND, GetErrorTitle(), IDS_BADMAP_DESC);
-      return;
-      }
+    if ( (lstrncmpi (pMap->szMapping, cm_slash_mount_root, lstrlen(cm_slash_mount_root))) &&
+         (lstrncmpi (pMap->szMapping, cm_back_slash_mount_root, lstrlen(cm_back_slash_mount_root))) )
+    {
+        Message (MB_ICONHAND, GetErrorTitle(), IDS_BADMAP_DESC);
+        return;
+    }
 
    // First get a proper submount
    if (pMap->szSubmount[0]) {

@@ -44,7 +44,9 @@ void ChangeTrayIcon (int nim)
       nid.uID = 0;
       nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
       nid.uCallbackMessage = WM_TRAYICON;
+      lock_ObtainMutex(&g.credsLock);
       nid.hIcon = ((g.cCreds != 0) && (iExpired == (size_t)-1)) ? ICON_CREDS_YES : ICON_CREDS_NO;
+      lock_ReleaseMutex(&g.credsLock);
       GetString (nid.szTip, (g.fIsWinNT) ? IDS_TOOLTIP : IDS_TOOLTIP_95);
       Shell_NotifyIcon (nim, &nid);
       }

@@ -67,7 +67,7 @@
  */
 #ifndef HTTPD_ROOT
 #ifdef __EMX__
-/* Set default for OS/2 file system */ 
+/* Set default for OS/2 file system */
 #define HTTPD_ROOT "/os2httpd"
 #else
 #define HTTPD_ROOT "/usr/local/etc/httpd"
@@ -77,7 +77,7 @@
 #ifndef DOCUMENT_LOCATION
 /* Root of server */
 #ifdef __EMX__
-/* Set default for OS/2 file system */ 
+/* Set default for OS/2 file system */
 #define DOCUMENT_LOCATION "/os2httpd/docs"
 #else
 #define DOCUMENT_LOCATION "/usr/local/etc/httpd/htdocs"
@@ -116,7 +116,7 @@
 /* The name of the log files */
 #ifndef DEFAULT_XFERLOG
 #ifdef __EMX__
-/* Set default for OS/2 file system */ 
+/* Set default for OS/2 file system */
 #define DEFAULT_XFERLOG "logs/access.log"
 #else
 #define DEFAULT_XFERLOG "logs/access_log"
@@ -124,7 +124,7 @@
 #endif /* DEFAULT_XFERLOG */
 #ifndef DEFAULT_ERRORLOG
 #ifdef __EMX__
-/* Set default for OS/2 file system */ 
+/* Set default for OS/2 file system */
 #define DEFAULT_ERRORLOG "logs/error.log"
 #else
 #define DEFAULT_ERRORLOG "logs/error_log"
@@ -152,7 +152,7 @@
 
 /* Define this to be what your per-directory security files are called */
 #ifdef __EMX__
-/* Set default for OS/2 file system */ 
+/* Set default for OS/2 file system */
 #define DEFAULT_ACCESS_FNAME "htaccess"
 #else
 #define DEFAULT_ACCESS_FNAME ".htaccess"
@@ -191,7 +191,7 @@
 /* The path to the Bourne shell, for parsed docs */
 #ifndef SHELL_PATH
 #ifdef __EMX__
-/* Set default for OS/2 file system */ 
+/* Set default for OS/2 file system */
 #define SHELL_PATH "CMD.EXE"
 #else
 #define SHELL_PATH "/bin/sh"
@@ -274,7 +274,7 @@
  * Example: "Apache/1.1.0 MrWidget/0.1-alpha" 
  */
 
-#define SERVER_BASEVERSION "Apache/1.2.6" /* SEE COMMENTS ABOVE */
+#define SERVER_BASEVERSION "Apache/1.2.6"	/* SEE COMMENTS ABOVE */
 #ifdef SERVER_SUBVERSION
 #define SERVER_VERSION	SERVER_BASEVERSION " " SERVER_SUBVERSION
 #else
@@ -420,11 +420,10 @@
 /* This represents the result of calling htaccess; these are cached for
  * each request.
  */
-struct htaccess_result
-{
-    char *dir;              /* the directory to which this applies */
-    int override;           /* the overrides allowed for the .htaccess file */
-    void *htaccess;         /* the configuration directives */
+struct htaccess_result {
+    char *dir;			/* the directory to which this applies */
+    int override;		/* the overrides allowed for the .htaccess file */
+    void *htaccess;		/* the configuration directives */
 /* the next one, or NULL if no more; N.B. never change this */
     const struct htaccess_result *next;
 };
@@ -437,109 +436,109 @@ typedef struct listen_rec listen_rec;
 
 struct request_rec {
 
-  pool *pool;
-  conn_rec *connection;
-  server_rec *server;
+    pool *pool;
+    conn_rec *connection;
+    server_rec *server;
 
-  request_rec *next;		/* If we wind up getting redirected,
+    request_rec *next;		/* If we wind up getting redirected,
 				 * pointer to the request we redirected to.
 				 */
-  request_rec *prev;		/* If this is an internal redirect,
+    request_rec *prev;		/* If this is an internal redirect,
 				 * pointer to where we redirected *from*.
 				 */
-  
-  request_rec *main;		/* If this is a sub_request (see request.h) 
+
+    request_rec *main;		/* If this is a sub_request (see request.h) 
 				 * pointer back to the main request.
 				 */
 
-  /* Info about the request itself... we begin with stuff that only
-   * protocol.c should ever touch...
-   */
-  
-  char *the_request;		/* First line of request, so we can log it */
-  int assbackwards;		/* HTTP/0.9, "simple" request */
-  int proxyreq;                 /* A proxy request */
-  int header_only;		/* HEAD request, as opposed to GET */
-  char *protocol;		/* Protocol, as given to us, or HTTP/0.9 */
-  int proto_num;		/* Number version of protocol; 1.1 = 1001 */
-  char *hostname;		/* Host, as set by full URI or Host: */
-  int hostlen;			/* Length of http://host:port in full URI */
+    /* Info about the request itself... we begin with stuff that only
+     * protocol.c should ever touch...
+     */
 
-  time_t request_time;		/* When the request started */
+    char *the_request;		/* First line of request, so we can log it */
+    int assbackwards;		/* HTTP/0.9, "simple" request */
+    int proxyreq;		/* A proxy request */
+    int header_only;		/* HEAD request, as opposed to GET */
+    char *protocol;		/* Protocol, as given to us, or HTTP/0.9 */
+    int proto_num;		/* Number version of protocol; 1.1 = 1001 */
+    char *hostname;		/* Host, as set by full URI or Host: */
+    int hostlen;		/* Length of http://host:port in full URI */
 
-  char *status_line;		/* Status line, if set by script */
-  int status;			/* In any case */
-  
-  /* Request method, two ways; also, protocol, etc..  Outside of protocol.c,
-   * look, but don't touch.
-   */
-  
-  char *method;			/* GET, HEAD, POST, etc. */
-  int method_number;		/* M_GET, M_POST, etc. */
-  int allowed;			/* Allowed methods - for 405, OPTIONS, etc */
+    time_t request_time;	/* When the request started */
 
-  int sent_bodyct;		/* byte count in stream is for body */
-  long bytes_sent;		/* body byte count, for easy access */
+    char *status_line;		/* Status line, if set by script */
+    int status;			/* In any case */
 
-  /* HTTP/1.1 connection-level features */
+    /* Request method, two ways; also, protocol, etc..  Outside of protocol.c,
+     * look, but don't touch.
+     */
 
-  int chunked;			/* sending chunked transfer-coding */
-  int byterange;		/* number of byte ranges */
-  char *boundary;		/* multipart/byteranges boundary */
-  char *range;			/* The Range: header */
-  long clength;			/* The "real" content length */
+    char *method;		/* GET, HEAD, POST, etc. */
+    int method_number;		/* M_GET, M_POST, etc. */
+    int allowed;		/* Allowed methods - for 405, OPTIONS, etc */
 
-  long remaining;		/* bytes left to read */
-  long read_length;		/* bytes that have been read */
-  int read_body;   		/* how the request body should be read */
-  int read_chunked;		/* reading chunked transfer-coding */
+    int sent_bodyct;		/* byte count in stream is for body */
+    long bytes_sent;		/* body byte count, for easy access */
 
-  /* MIME header environments, in and out.  Also, an array containing
-   * environment variables to be passed to subprocesses, so people can
-   * write modules to add to that environment.
-   *
-   * The difference between headers_out and err_headers_out is that the
-   * latter are printed even on error, and persist across internal redirects
-   * (so the headers printed for ErrorDocument handlers will have them).
-   *
-   * The 'notes' table is for notes from one module to another, with no
-   * other set purpose in mind...
-   */
-  
-  table *headers_in;
-  table *headers_out;
-  table *err_headers_out;
-  table *subprocess_env;
-  table *notes;
+    /* HTTP/1.1 connection-level features */
 
-  char *content_type;		/* Break these out --- we dispatch on 'em */
-  char *handler;		/* What we *really* dispatch on           */
+    int chunked;		/* sending chunked transfer-coding */
+    int byterange;		/* number of byte ranges */
+    char *boundary;		/* multipart/byteranges boundary */
+    char *range;		/* The Range: header */
+    long clength;		/* The "real" content length */
 
-  char *content_encoding;
-  char *content_language;	/* for back-compat. only -- do not use */
-  array_header *content_languages; /* array of (char*) */
-  
-  int no_cache;
-  int no_local_copy;
-  
-  /* What object is being requested (either directly, or via include
-   * or content-negotiation mapping).
-   */
+    long remaining;		/* bytes left to read */
+    long read_length;		/* bytes that have been read */
+    int read_body;		/* how the request body should be read */
+    int read_chunked;		/* reading chunked transfer-coding */
 
-  char *uri;                    /* complete URI for a proxy req, or
-                                   URL path for a non-proxy req */
-  char *filename;
-  char *path_info;
-  char *args;			/* QUERY_ARGS, if any */
-  struct stat finfo;		/* ST_MODE set to zero if no such file */
-  
-  /* Various other config info which may change with .htaccess files
-   * These are config vectors, with one void* pointer for each module
-   * (the thing pointed to being the module's business).
-   */
-  
-  void *per_dir_config;		/* Options set in config files, etc. */
-  void *request_config;		/* Notes on *this* request */
+    /* MIME header environments, in and out.  Also, an array containing
+     * environment variables to be passed to subprocesses, so people can
+     * write modules to add to that environment.
+     *
+     * The difference between headers_out and err_headers_out is that the
+     * latter are printed even on error, and persist across internal redirects
+     * (so the headers printed for ErrorDocument handlers will have them).
+     *
+     * The 'notes' table is for notes from one module to another, with no
+     * other set purpose in mind...
+     */
+
+    table *headers_in;
+    table *headers_out;
+    table *err_headers_out;
+    table *subprocess_env;
+    table *notes;
+
+    char *content_type;		/* Break these out --- we dispatch on 'em */
+    char *handler;		/* What we *really* dispatch on           */
+
+    char *content_encoding;
+    char *content_language;	/* for back-compat. only -- do not use */
+    array_header *content_languages;	/* array of (char*) */
+
+    int no_cache;
+    int no_local_copy;
+
+    /* What object is being requested (either directly, or via include
+     * or content-negotiation mapping).
+     */
+
+    char *uri;			/* complete URI for a proxy req, or
+				 * URL path for a non-proxy req */
+    char *filename;
+    char *path_info;
+    char *args;			/* QUERY_ARGS, if any */
+    struct stat finfo;		/* ST_MODE set to zero if no such file */
+
+    /* Various other config info which may change with .htaccess files
+     * These are config vectors, with one void* pointer for each module
+     * (the thing pointed to being the module's business).
+     */
+
+    void *per_dir_config;	/* Options set in config files, etc. */
+    void *request_config;	/* Notes on *this* request */
 
 /*
  * a linked list of the configuration directives in the .htaccess files
@@ -547,7 +546,7 @@ struct request_rec {
  * N.B. always add to the head of the list, _never_ to the end.
  * that way, a sub request's list can (temporarily) point to a parent's list
  */
-  const struct htaccess_result *htaccess;
+    const struct htaccess_result *htaccess;
 };
 
 
@@ -555,39 +554,39 @@ struct request_rec {
  */
 
 struct conn_rec {
-  
-  pool *pool;
-  server_rec *server;
-  server_rec *base_server;      /* Physical vhost this conn come in on */
-  
-  /* Information about the connection itself */
 
-  int child_num;                /* The number of the child handling conn_rec */
-  BUFF *client;			/* Connetion to the guy */
-  int aborted;			/* Are we still talking? */
-  
-  /* Who is the client? */
-  
-  struct sockaddr_in local_addr; /* local address */
-  struct sockaddr_in remote_addr;/* remote address */
-  char *remote_ip;		/* Client's IP address */
-  char *remote_host;		/* Client's DNS name, if known.
-                                 * NULL if DNS hasn't been checked,
-                                 * "" if it has and no address was found.
-                                 * N.B. Only access this though
+    pool *pool;
+    server_rec *server;
+    server_rec *base_server;	/* Physical vhost this conn come in on */
+
+    /* Information about the connection itself */
+
+    int child_num;		/* The number of the child handling conn_rec */
+    BUFF *client;		/* Connetion to the guy */
+    int aborted;		/* Are we still talking? */
+
+    /* Who is the client? */
+
+    struct sockaddr_in local_addr;	/* local address */
+    struct sockaddr_in remote_addr;	/* remote address */
+    char *remote_ip;		/* Client's IP address */
+    char *remote_host;		/* Client's DNS name, if known.
+				 * NULL if DNS hasn't been checked,
+				 * "" if it has and no address was found.
+				 * N.B. Only access this though
 				 * get_remote_host() */
-  char *remote_logname;		/* Only ever set if doing rfc1413 lookups.
-                                 * N.B. Only access this through
+    char *remote_logname;	/* Only ever set if doing rfc1413 lookups.
+				 * N.B. Only access this through
 				 * get_remote_logname() */
     char *user;			/* If an authentication check was made,
 				 * this gets set to the user name.  We assume
 				 * that there's only one user per connection(!)
 				 */
-  char *auth_type;		/* Ditto. */
+    char *auth_type;		/* Ditto. */
 
-  int keepalive;		/* Are we using HTTP Keep-Alive? */
-  int keptalive;		/* Did we use HTTP Keep-Alive? */
-  int keepalives;		/* How many times have we used it? */
+    int keepalive;		/* Are we using HTTP Keep-Alive? */
+    int keptalive;		/* Did we use HTTP Keep-Alive? */
+    int keepalives;		/* How many times have we used it? */
 };
 
 /* Per-vhost config... */
@@ -601,7 +600,7 @@ typedef struct server_addr_rec server_addr_rec;
 struct server_addr_rec {
     server_addr_rec *next;
     struct in_addr host_addr;	/* The bound address, for this server */
-    unsigned short host_port;	/* The bound port, for this server */   
+    unsigned short host_port;	/* The bound port, for this server */
     char *virthost;		/* The name given in <VirtualHost> */
 };
 
@@ -609,26 +608,26 @@ struct server_addr_rec {
 struct server_rec {
 
     server_rec *next;
-  
+
     /* Full locations of server config info */
-  
+
     char *srm_confname;
     char *access_confname;
-  
+
     /* Contact information */
-  
+
     char *server_admin;
     char *server_hostname;
-    unsigned short port;           /* for redirects, etc. */
-  
+    unsigned short port;	/* for redirects, etc. */
+
     /* Log files --- note that transfer log is now in the modules... */
-  
+
     char *error_fname;
     FILE *error_log;
-  
+
     /* Module-specific configuration for server, and defaults... */
 
-    int is_virtual;             /* true if this is the virtual server */
+    int is_virtual;		/* true if this is the virtual server */
     void *module_config;	/* Config vector containing pointers to
 				 * modules' per-server config structures.
 				 */
@@ -642,7 +641,7 @@ struct server_rec {
     int keep_alive_timeout;	/* Seconds we'll wait for another request */
     int keep_alive_max;		/* Maximum requests per connection */
     int keep_alive;		/* Use persistent connections? */
-    int send_buffer_size;       /* size of TCP send buffer (in bytes) */
+    int send_buffer_size;	/* size of TCP send buffer (in bytes) */
 
     char *path;			/* Pathname for ServerPath */
     int pathlen;		/* Length of path */
@@ -656,9 +655,9 @@ struct server_rec {
 /* These are more like real hosts than virtual hosts */
 struct listen_rec {
     listen_rec *next;
-    struct sockaddr_in local_addr; /* local IP address and port */
+    struct sockaddr_in local_addr;	/* local IP address and port */
     int fd;
-    int used;	/* Only used during restart */
+    int used;			/* Only used during restart */
 /* more stuff here, like which protocol is bound to the port */
 };
 
@@ -670,70 +669,70 @@ extern const char month_snames[12][4];
 
 struct tm *get_gmtoff(int *tz);
 char *get_time();
-char *ht_time (pool *p, time_t t, const char *fmt, int gmt);     
-char *gm_timestr_822(pool *p, time_t t);
-     
+char *ht_time(pool * p, time_t t, const char *fmt, int gmt);
+char *gm_timestr_822(pool * p, time_t t);
+
 /* String handling. The *_nc variants allow you to use non-const char **s as
 arguments (unfortunately C won't automatically convert a char ** to a const
-char **) */     
-     
-char *getword(pool *p, const char **line, char stop);
-char *getword_nc(pool *p, char **line, char stop);
-char *getword_white(pool *p, const char **line);
-char *getword_white_nc(pool *p, char **line);
-char *getword_nulls (pool *p, const char **line, char stop);
-char *getword_nulls_nc (pool *p, char **line, char stop);
-char *getword_conf (pool *p, const char **line);      
-char *getword_conf_nc (pool *p, char **line);      
+char **) */
 
-char *get_token (pool *p, char **accept_line, int accept_white);
-int find_token (pool *p, const char *line, const char *tok);
-int find_last_token (pool *p, const char *line, const char *tok);
-     
+char *getword(pool * p, const char **line, char stop);
+char *getword_nc(pool * p, char **line, char stop);
+char *getword_white(pool * p, const char **line);
+char *getword_white_nc(pool * p, char **line);
+char *getword_nulls(pool * p, const char **line, char stop);
+char *getword_nulls_nc(pool * p, char **line, char stop);
+char *getword_conf(pool * p, const char **line);
+char *getword_conf_nc(pool * p, char **line);
+
+char *get_token(pool * p, char **accept_line, int accept_white);
+int find_token(pool * p, const char *line, const char *tok);
+int find_last_token(pool * p, const char *line, const char *tok);
+
 int is_url(const char *u);
 extern int unescape_url(char *url);
 void no2slash(char *name);
 void getparents(char *name);
-char *escape_path_segment(pool *p, const char *s);
-char *os_escape_path(pool *p,const char *path,int partial);
+char *escape_path_segment(pool * p, const char *s);
+char *os_escape_path(pool * p, const char *path, int partial);
 #define escape_uri(ppool,path) os_escape_path(ppool,path,1)
-extern char *escape_html(pool *p, const char *s);
-char *construct_server(pool *p, const char *hostname, unsigned port);
-char *construct_url (pool *p, const char *path, const server_rec *s);     
-char *escape_shell_cmd (pool *p, const char *s);
-     
+extern char *escape_html(pool * p, const char *s);
+char *construct_server(pool * p, const char *hostname, unsigned port);
+char *construct_url(pool * p, const char *path, const server_rec * s);
+char *escape_shell_cmd(pool * p, const char *s);
+
 int count_dirs(const char *path);
-char *make_dirstr(pool *a, const char *s, int n);
-char *make_full_path(pool *a, const char *dir, const char *f);
-     
+char *make_dirstr(pool * a, const char *s, int n);
+char *make_full_path(pool * a, const char *dir, const char *f);
+
 int is_matchexp(const char *str);
 int strcmp_match(const char *str, const char *exp);
 int strcasecmp_match(const char *str, const char *exp);
-char *uudecode (pool *, const char *);
+char *uudecode(pool *, const char *);
 
-char *pregsub(pool *p, const char *input, const char *source,
-	      size_t nmatch, regmatch_t pmatch[]);
+char *pregsub(pool * p, const char *input, const char *source, size_t nmatch,
+	      regmatch_t pmatch[]);
 
-void str_tolower (char *);
-int ind (const char *, char);	/* Sigh... */
-int rind (const char *, char);     
+void str_tolower(char *);
+int ind(const char *, char);	/* Sigh... */
+int rind(const char *, char);
 
-int cfg_getline(char *s, int n, FILE *f);
+int cfg_getline(char *s, int n, FILE * f);
 
 #ifdef NEED_STRERROR
-char *strerror (int err);
+char *strerror(int err);
 #endif
 
 /* Misc system hackery */
-     
+
 uid_t uname2id(const char *name);
 gid_t gname2id(const char *name);
 int is_directory(const char *name);
-int can_exec(const struct stat *);     
+int can_exec(const struct stat *);
 void chdir_file(const char *file);
-     
+
 char *get_local_host(pool *);
-unsigned long get_virthost_addr (const char *hostname, unsigned short *port);
+unsigned long get_virthost_addr(const char *hostname, unsigned short *port);
 
 extern time_t restart_time;
 
@@ -761,6 +760,6 @@ extern time_t restart_time;
  * never fails.  If the high line was requested and it fails it will also try
  * the low line.
  */
-int ap_slack (int fd, int line);
+int ap_slack(int fd, int line);
 #define AP_SLACK_LOW	1
 #define AP_SLACK_HIGH	2

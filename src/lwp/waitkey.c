@@ -22,7 +22,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/waitkey.c,v 1.2 2002/10/20 19:01:31 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/lwp/waitkey.c,v 1.13 2003/11/29 22:08:14 jaltman Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -34,9 +35,16 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/waitkey.c,v 1.2 2002/10/20 19:01:31
 #include <sys/time.h>
 #include <unistd.h>
 #endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include "lwp.h"
 
-#define LWP_KEYSTROKE_DELAY   250 /* 250ms. Must be < 1000 */
+#define LWP_KEYSTROKE_DELAY   250	/* 250ms. Must be < 1000 */
 #define LWP_MAXLINELEN  256
 
 #ifdef AFS_NT40_ENV
@@ -50,43 +58,43 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/waitkey.c,v 1.2 2002/10/20 19:01:31
  *    1:  Keyboard input available
  *    0:  seconds elapsed. Timeout.
  */
-int LWP_WaitForKeystroke(int seconds)
+int
+LWP_WaitForKeystroke(int seconds)
 {
-  time_t startTime, nowTime;
-  double timeleft = 1;
-  struct timeval twait;
+    time_t startTime, nowTime;
+    double timeleft = 1;
+    struct timeval twait;
 
-  time(&startTime); 
+    time(&startTime);
 
-  twait.tv_sec = 0;
-  twait.tv_usec = LWP_KEYSTROKE_DELAY;
+    twait.tv_sec = 0;
+    twait.tv_usec = LWP_KEYSTROKE_DELAY;
 
-  if (seconds >= 0)
-      timeleft = seconds; 
+    if (seconds >= 0)
+	timeleft = seconds;
 
-  do
-  {
-      /* check if we have a keystroke */
-      if (_kbhit()) 
-	  return 1;
-      
-      if (timeleft == 0)
-	  break;
+    do {
+	/* check if we have a keystroke */
+	if (_kbhit())
+	    return 1;
 
-      /* sleep for  LWP_KEYSTROKE_DELAY ms and let other
-       * process run some*/
-      IOMGR_Select(0, 0, 0, 0, &twait);
+	if (timeleft == 0)
+	    break;
 
-      if (seconds > 0) { /* we only worry about elapsed time if 
-			   * not looping forever (seconds < 0) */
-	  /* now check elapsed time */
-	  time(&nowTime);
-	  timeleft = seconds - difftime(nowTime, startTime);
-      }
-  }
-  while(timeleft > 0);
+	/* sleep for  LWP_KEYSTROKE_DELAY ms and let other
+	 * process run some*/
+	IOMGR_Select(0, 0, 0, 0, &twait);
 
-  return 0;
+	if (seconds > 0) {	/* we only worry about elapsed time if 
+				 * not looping forever (seconds < 0) */
+	    /* now check elapsed time */
+	    time(&nowTime);
+	    timeleft = seconds - difftime(nowTime, startTime);
+	}
+    }
+    while (timeleft > 0);
+
+    return 0;
 }
 
 /* LWP_GetLine() - Waits indefinitely until a newline has been typed
@@ -101,45 +109,43 @@ int LWP_WaitForKeystroke(int seconds)
  *   -1 - line with only EOF
  */
 
-int LWP_GetLine(char *linebuf, int len)
+int
+LWP_GetLine(char *linebuf, int len)
 {
-  int cnt = 0;
-  char ch = '\0';
+    int cnt = 0;
+    int ch = 0;
 
-  fflush(stdin);
-  /* loop until a new line has been entered */
-  while (ch != '\r' && cnt < len-1) 
-    { 
-      LWP_WaitForKeystroke(-1);
-      ch = getch(); 
-      
-      if ((ch == EOF) && (cnt == 0))
-	return -1;
+    fflush(stdin);
+    /* loop until a new line has been entered */
+    while (ch != '\r' && cnt < len - 1) {
+	LWP_WaitForKeystroke(-1);
+	ch = getch();
 
-      if (ch == '\b') {/* print and throw away a backspace */
-	if (!cnt) /* if we are at the start of the line don't bspace */
-	  continue;
-	/* print a space to delete char and move cursor back */
-	printf("\b \b");
-	cnt--; 
-      }
-      else {
-	putchar(ch);
-	linebuf[cnt++] = ch;
-      }
+	if ((ch == EOF) && (cnt == 0))
+	    return -1;
+
+	if (ch == '\b') {	/* print and throw away a backspace */
+	    if (!cnt)		/* if we are at the start of the line don't bspace */
+		continue;
+	    /* print a space to delete char and move cursor back */
+	    printf("\b \b");
+	    cnt--;
+	} else {
+	    putchar(ch);
+	    linebuf[cnt++] = ch;
+	}
     }
 
-  if (ch == '\r') { /* got a cr. translate to nl */
-    linebuf[cnt-1] = '\n'; 
-    linebuf[cnt]='\0';
-    putchar('\n');
-    return cnt;
-  }
-  else { /* buffer too small */
-    linebuf[cnt] = '\0';
-    return 0;
-  }
-    
+    if (ch == '\r') {		/* got a cr. translate to nl */
+	linebuf[cnt - 1] = '\n';
+	linebuf[cnt] = '\0';
+	putchar('\n');
+	return cnt;
+    } else {			/* buffer too small */
+	linebuf[cnt] = '\0';
+	return 0;
+    }
+
 }
 #else
 /* LWP_WaitForKeystroke(Unix) :Wait until a key has been struck or time (secconds)
@@ -152,7 +158,8 @@ int LWP_GetLine(char *linebuf, int len)
  *    1:  Keyboard input available
  *    0:  seconds elapsed. Timeout.
  */
-int LWP_WaitForKeystroke(int seconds)
+int
+LWP_WaitForKeystroke(int seconds)
 {
     fd_set rdfds;
     int code;
@@ -166,7 +173,7 @@ int LWP_WaitForKeystroke(int seconds)
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if (stdin->_bf._size > 0)
-        return 1;
+	return 1;
 #else
     if (stdin->_cnt > 0)
 	return 1;
@@ -180,13 +187,13 @@ int LWP_WaitForKeystroke(int seconds)
     FD_ZERO(&rdfds);
     FD_SET(fileno(stdin), &rdfds);
 
-    if (seconds>=0) {
+    if (seconds >= 0) {
 	twait.tv_sec = seconds;
 	twait.tv_usec = 0;
 	tp = &twait;
     }
 
-    code = IOMGR_Select(1+fileno(stdin), &rdfds, NULL, NULL, tp);
+    code = IOMGR_Select(1 + fileno(stdin), &rdfds, NULL, NULL, tp);
 
     return (code == 1) ? 1 : 0;
 }
@@ -203,24 +210,26 @@ int LWP_WaitForKeystroke(int seconds)
  *   -1 - line with only EOF
  */
 
-int LWP_GetLine(char *linebuf, int len)
+int
+LWP_GetLine(char *linebuf, int len)
 {
-  int linelen;
-  char *s;
+    int linelen;
+    char *s;
 
-  LWP_WaitForKeystroke(-1);
+    LWP_WaitForKeystroke(-1);
 
-  s = fgets(linebuf, len, stdin);
-  if (s == NULL) return -1;
+    s = fgets(linebuf, len, stdin);
+    if (s == NULL)
+	return -1;
 
-  linelen = strlen(linebuf);
-  if (linebuf[linelen-1] != '\n') /* buffer too small */
-    return 0;
-  else
-    return linelen;
+    linelen = strlen(linebuf);
+    if (linebuf[linelen - 1] != '\n')	/* buffer too small */
+	return 0;
+    else
+	return linelen;
 }
-  
-#endif /* else NT40*/
+
+#endif /* else NT40 */
 
 /* LWP_GetResponseKey() - Waits for a specified period of time and
  * returns a char when one has been typed by the user.
@@ -232,29 +241,30 @@ int LWP_GetLine(char *linebuf, int len)
  *    1 - Valid char is being returned.
  */
 
-int LWP_GetResponseKey(int seconds, char *key)
+int
+LWP_GetResponseKey(int seconds, char *key)
 {
-  int rc;
+    int rc;
 
-  if (key == NULL)
-    return 0;     /* need space to store char */
+    if (key == NULL)
+	return 0;		/* need space to store char */
 
-  
-  fflush(stdin); /* flush all existing data and start anew */
 
-  
-  rc = LWP_WaitForKeystroke(seconds);
-  if (rc == 0) { /* time ran out */
-    *key = 0;
-    return rc;
-  }
-  
-  /* now read the char. */
+    fflush(stdin);		/* flush all existing data and start anew */
+
+
+    rc = LWP_WaitForKeystroke(seconds);
+    if (rc == 0) {		/* time ran out */
+	*key = 0;
+	return rc;
+    }
+
+    /* now read the char. */
 #ifdef AFS_NT40_ENV
-  *key = getche(); /* get char and echo it to screen */
+    *key = getche();		/* get char and echo it to screen */
 #else
-  *key = (char ) getchar();
+    *key = (char)getchar();
 #endif
 
-  return rc;
+    return rc;
 }

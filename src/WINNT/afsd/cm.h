@@ -17,11 +17,12 @@
 #endif /* DJGPP */
 
 /* from .xg file */
-long VL_GetEntryByID(struct rx_connection *, long, long, struct vldbentry *);
-long VL_GetEntryByNameO(struct rx_connection *, char *, struct vldbentry *);
-long VL_ProbeServer(struct rx_connection *);
-long VL_GetEntryBYIDN(struct rx_connection *, long, long, struct nvldbentry *);
-long VL_GetEntryByNameN(struct rx_connection *, char *, struct nvldbentry *);
+/* FIXME: these were "long" but Windows NT wants "int" */
+int VL_GetEntryByID(struct rx_connection *, afs_int32, afs_int32, struct vldbentry *);
+int VL_GetEntryByNameO(struct rx_connection *, char *, struct vldbentry *);
+int VL_ProbeServer(struct rx_connection *);
+int VL_GetEntryBYIDN(struct rx_connection *, afs_int32, afs_int32, struct nvldbentry *);
+int VL_GetEntryByNameN(struct rx_connection *, char *, struct nvldbentry *);
 
 /* from .xg file */
 extern StartRXAFS_FetchData (struct rx_call *,
@@ -48,9 +49,9 @@ extern RXAFS_FetchStatus (struct rx_connection *,
 int StartRXAFS_StoreData (struct rx_call *,
 	struct AFSFid *Fid, 
 	struct AFSStoreStatus *InStatus, 
-	afs_int32 Pos, 
-	afs_int32 Length, 
-	afs_int32 FileLength);
+	afs_uint32 Pos, 
+	afs_uint32 Length, 
+	afs_uint32 FileLength);
 
 int EndRXAFS_StoreData(struct rx_call *,
 	struct AFSFetchStatus *OutStatus, 
@@ -218,7 +219,6 @@ int RXAFS_Lookup (struct rx_connection *,
 #define CM_ERROR_EXISTS			(CM_ERROR_BASE+11)
 #define CM_ERROR_CROSSDEVLINK		(CM_ERROR_BASE+12)
 #define CM_ERROR_BADOP			(CM_ERROR_BASE+13)
-#define CM_ERROR_BADSMB			(CM_ERROR_BASE+32)
 /* CM_ERROR_BADPASSWORD used to be here */
 #define CM_ERROR_NOTDIR			(CM_ERROR_BASE+15)
 #define CM_ERROR_ISDIR			(CM_ERROR_BASE+16)
@@ -235,9 +235,8 @@ int RXAFS_Lookup (struct rx_connection *,
 #define CM_ERROR_REMOTECONN		(CM_ERROR_BASE+27)
 #define CM_ERROR_ATSYS			(CM_ERROR_BASE+28)
 #define CM_ERROR_NOSUCHPATH		(CM_ERROR_BASE+29)
-
 #define CM_ERROR_CLOCKSKEW		(CM_ERROR_BASE+31)
-
+#define CM_ERROR_BADSMB			(CM_ERROR_BASE+32)
 #define CM_ERROR_ALLBUSY		(CM_ERROR_BASE+33)
 #define CM_ERROR_NOFILES		(CM_ERROR_BASE+34)
 #define CM_ERROR_PARTIALWRITE		(CM_ERROR_BASE+35)
@@ -246,5 +245,5 @@ int RXAFS_Lookup (struct rx_connection *,
 #define CM_ERROR_BUFFERTOOSMALL		(CM_ERROR_BASE+38)
 #define CM_ERROR_RENAME_IDENTICAL	(CM_ERROR_BASE+39)
 #define CM_ERROR_ALLOFFLINE             (CM_ERROR_BASE+40)
-
+#define CM_ERROR_AMBIGUOUS_FILENAME (CM_ERROR_BASE+41)
 #endif /*  __CM_H_ENV__ */

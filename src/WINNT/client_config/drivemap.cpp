@@ -11,15 +11,21 @@ extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
 #include <rx/rxkad.h>
+#include <afs/fs_utils.h>
 }
 #include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <WINNT/TaLocale.h>
+#undef REALLOC
 #include "drivemap.h"
 #include <time.h>
 #include <adssts.h>
+#define DEBUG_VERBOSE
 #include <osilog.h>
+#include <lanahelper.h>
+
+extern void Config_GetLanAdapter (ULONG *pnLanAdapter);
 
 /*
  * REGISTRY ___________________________________________________________________
@@ -40,6 +46,7 @@ const TCHAR sAFSConfigKeyName[] = TEXT("SYSTEM\\CurrentControlSet\\Services\\Tra
 static TCHAR cszINIFILE[] = TEXT("afsdsbmt.ini");
 static TCHAR cszSECTION_SUBMOUNTS[] = TEXT("AFS Submounts");
 static TCHAR cszSECTION_MAPPINGS[] = TEXT("AFS Mappings");
+static TCHAR cszSECTION_ACTIVE[] = TEXT("AFS Active");
 
 static TCHAR cszAUTOSUBMOUNT[] = TEXT("Auto");
 static TCHAR cszLANMANDEVICE[] = TEXT("\\Device\\LanmanRedirector\\");
@@ -148,7 +155,8 @@ static BOOL IsWindowsNT (void)
    return fIsWinNT;
 }
 
-
+/* Check if the OS is Windows 2000 or higher.
+*/
 BOOL IsWindows2000 (void)
 {
    static BOOL fChecked = FALSE;
@@ -180,45 +188,12 @@ BOOL IsWindows2000 (void)
 
 void GetClientNetbiosName (LPTSTR pszName)
 {
-   *pszName = TEXT('\0');
+    static TCHAR szNetbiosName[32] = "";
 
-   if (IsWindowsNT())
-      {
-      HKEY hk;
-      if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("System\\CurrentControlSet\\Control\\ComputerName\\ComputerName"), &hk) == 0)
-         {
-         DWORD dwSize = MAX_PATH;
-         DWORD dwType = REG_SZ;
-         RegQueryValueEx (hk, TEXT("ComputerName"), NULL, &dwType, (PBYTE)pszName, &dwSize);
-         }
-      }
-   else // (!IsWindowsNT())
-      {
-      HKEY hk;
-      if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"), &hk) == 0)
-         {
-         DWORD dwSize = MAX_PATH;
-         DWORD dwType = REG_SZ;
-         RegQueryValueEx (hk, TEXT("Gateway"), NULL, &dwType, (PBYTE)pszName, &dwSize);
-         }
-      }
-
-   // Shorten the server name from its FQDN
-   //
-   for (LPTSTR pch = pszName; *pch; ++pch)
-      {
-      if (*pch == TEXT('.'))
-         {
-         *(LPTSTR)pch = TEXT('\0');
-         break;
-         }
-      }
-
-   // Form NetBIOS name from client's (possibly truncated) simple host name.
-   if (*pszName != TEXT('\0')) {
-       pszName[11] = TEXT('\0');
-       lstrcat(pszName, TEXT("-AFS"));
-   }
+    if ( szNetbiosName[0] == 0 ) {
+        lana_GetNetbiosName(szNetbiosName, LANA_NETBIOS_NAME_FULL);
+    }
+    _tcscpy(pszName, szNetbiosName);
 }
 
 
@@ -233,7 +208,7 @@ BOOL SubmountToPath (PDRIVEMAPLIST pList, LPTSTR pszPath, LPTSTR pszSubmount, BO
    //
    if (!lstrcmpi (pszSubmount, TEXT("all")))
       {
-      lstrcpy (pszPath, TEXT("/afs"));
+      lstrcpy (pszPath, cm_slash_mount_root);
       return TRUE;
       }
 
@@ -420,6 +395,31 @@ void QueryDriveMapList_ReadMappings (PDRIVEMAPLIST pList)
    FreeStringMemory (mszLHS);
 }
 
+BOOL ForceMapActive (TCHAR chDrive)
+{
+    TCHAR szDrive[2];
+    TCHAR szActive[32];
+
+    szDrive[0] = chDrive;
+    szDrive[1] = 0;
+
+    GetPrivateProfileString (cszSECTION_ACTIVE, szDrive, TEXT("0"), szActive, sizeof(szActive), cszINIFILE);
+
+    if ( !lstrcmp(szActive,"1") || !lstrcmpi(szActive,"true") || !lstrcmpi(szActive,"on") || !lstrcmpi(szActive,"yes") )
+        return TRUE;
+    return FALSE;
+}
+
+
+void WriteActiveMap (TCHAR chDrive, BOOL on)
+{
+    TCHAR szDrive[2];
+
+    szDrive[0] = chDrive;
+    szDrive[1] = 0;
+
+    WritePrivateProfileString (cszSECTION_ACTIVE, szDrive, on ? "1" : "0", cszINIFILE);
+}
 
 void QueryDriveMapList_WriteMappings (PDRIVEMAPLIST pList)
 {
@@ -587,8 +587,11 @@ BOOL PathToSubmount (LPTSTR pszSubmount, LPTSTR pszMapping, LPTSTR pszSubmountRe
    IOInfo.out = (char *)OutData;
    IOInfo.out_size = PIOCTL_MAXSIZE;
 
-   ULONG status;
-   if ((status = pioctl (0, VIOC_MAKESUBMOUNT, &IOInfo, 1)) != 0)
+   ULONG status = pioctl (0, VIOC_MAKESUBMOUNT, &IOInfo, 1);
+   if (pStatus)
+       *pStatus = status;
+
+   if (status)
       return FALSE;
 
    lstrcpy (pszSubmount, (LPCTSTR)OutData);
@@ -600,8 +603,8 @@ BOOL ActivateDriveMap (TCHAR chDrive, LPTSTR pszMapping, LPTSTR pszSubmountReq, 
 {
    // We can only map drives to places in AFS using this function.
    //
-   if ( (lstrncmpi (pszMapping, TEXT("/afs"), lstrlen(TEXT("/afs")))) &&
-        (lstrncmpi (pszMapping, TEXT("\\afs"), lstrlen(TEXT("\\afs")))) )
+   if ( (lstrncmpi (pszMapping, cm_slash_mount_root, lstrlen(cm_slash_mount_root))) &&
+        (lstrncmpi (pszMapping, cm_back_slash_mount_root, lstrlen(cm_back_slash_mount_root))) )
       {
       if (pdwStatus)
          *pdwStatus = ERROR_BAD_NETPATH;
@@ -621,27 +624,7 @@ BOOL ActivateDriveMap (TCHAR chDrive, LPTSTR pszMapping, LPTSTR pszSubmountReq, 
       }
 
    // We now have a submount name and drive letter--map the network drive.
-   //
-   TCHAR szClient[ MAX_PATH ];
-   GetClientNetbiosName (szClient);
-
-   TCHAR szLocal[ MAX_PATH ] = TEXT("*:");
-   szLocal[0] = chDrive;
-
-   TCHAR szRemote[ MAX_PATH ];
-   wsprintf (szRemote, TEXT("\\\\%s\\%s"), szClient, szSubmount);
-
-   NETRESOURCE Resource;
-   memset (&Resource, 0x00, sizeof(NETRESOURCE));
-   Resource.dwScope = RESOURCE_GLOBALNET;
-   Resource.dwType = RESOURCETYPE_DISK;
-   Resource.dwDisplayType = RESOURCEDISPLAYTYPE_SHARE;
-   Resource.dwUsage = RESOURCEUSAGE_CONNECTABLE;
-   Resource.lpLocalName = szLocal;
-   Resource.lpRemoteName = szRemote;
-
-   // DWORD rc = WNetAddConnection2 (&Resource, NULL, NULL, ((fPersistent) ? CONNECT_UPDATE_PROFILE : 0));
-   DWORD rc=MountDOSDrive(chDrive,szSubmount,fPersistent);
+   DWORD rc=MountDOSDrive(chDrive,szSubmount,fPersistent,NULL);
    if (rc == NO_ERROR)
       return TRUE;
 
@@ -681,21 +664,21 @@ void RemoveSubMount (LPTSTR pszSubmount)
 
 void AdjustAfsPath (LPTSTR pszTarget, LPCTSTR pszSource, BOOL fWantAFS, BOOL fWantForwardSlashes)
 {
-   if (!*pszSource)
-      lstrcpy (pszTarget, (fWantAFS) ? TEXT("/afs") : TEXT(""));
-   else if ((*pszSource != TEXT('/')) && (*pszSource != TEXT('\\')))
-      wsprintf (pszTarget, TEXT("/afs/%s"), pszSource);
-   // We don't want to strip afs off the start if it is part of something for example afscell.company.com
-   else if (fWantAFS && (lstrncmpi (&pszSource[1], TEXT("afs"), 3)) || !((pszSource[4] == TEXT('/')) ||
-                                                                         (pszSource[4] == TEXT('\\')) ||
-                                                                         (lstrlen(pszSource) == 4)))
-      wsprintf (pszTarget, TEXT("/afs%s"), pszSource);
-   else if (!fWantAFS && (!lstrncmpi (&pszSource[1], TEXT("afs"), 3) && ((pszSource[4] == TEXT('/')) ||
-                                                                        (pszSource[4] == TEXT('\\')) ||
-                                                                        (lstrlen(pszSource) == 4))))
-      lstrcpy (pszTarget, &pszSource[4]);
-   else
-      lstrcpy (pszTarget, pszSource);
+    if (!*pszSource)
+        lstrcpy (pszTarget, (fWantAFS) ? cm_slash_mount_root : TEXT(""));
+    else if ((*pszSource != TEXT('/')) && (*pszSource != TEXT('\\')))
+        wsprintf (pszTarget, TEXT("%s/%s"),cm_slash_mount_root, pszSource);
+    // We don't want to strip afs off the start if it is part of something for example afscell.company.com
+    else if (fWantAFS && (lstrncmpi (&pszSource[1], cm_mount_root, strlen(cm_mount_root))) || !((pszSource[strlen(cm_slash_mount_root)] == TEXT('/')) ||
+                                                                                                 (pszSource[strlen(cm_slash_mount_root)] == TEXT('\\')) ||
+                                                                                                 (lstrlen(pszSource) == strlen(cm_slash_mount_root))))
+        wsprintf (pszTarget, TEXT("%s%s"),cm_slash_mount_root, pszSource);
+    else if (!fWantAFS && (!lstrncmpi (&pszSource[1], cm_mount_root, strlen(cm_mount_root)) && ((pszSource[strlen(cm_slash_mount_root)] == TEXT('/')) ||
+                                                                                                 (pszSource[strlen(cm_slash_mount_root)] == TEXT('\\')) ||
+                                                                                                 (lstrlen(pszSource) == strlen(cm_slash_mount_root)))))
+        lstrcpy (pszTarget, &pszSource[strlen(cm_slash_mount_root)]);
+    else
+        lstrcpy (pszTarget, pszSource);
 
    for (LPTSTR pch = pszTarget; *pch; ++pch)
       {
@@ -717,33 +700,48 @@ void AdjustAfsPath (LPTSTR pszTarget, LPCTSTR pszSource, BOOL fWantAFS, BOOL fWa
       }
 }
 
-
 BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
 {
-   TCHAR szDrive[] = TEXT("*:");
-   szDrive[0] = chDrive;
+	BOOL isWinNT = IsWindowsNT();
 
-   TCHAR szMapping[ MAX_PATH ] = TEXT("");
-   LPTSTR pszSubmount = szMapping;
+	TCHAR szDrive[] = TEXT("*:");
+    szDrive[0] = chDrive;
 
-   if (IsWindowsNT())
-      {
-      QueryDosDevice (szDrive, szMapping, MAX_PATH);
+    TCHAR szMapping[ _MAX_PATH ] = TEXT("");
 
+    if (isWinNT && !QueryDosDevice (szDrive, szMapping, MAX_PATH))
+           return FALSE;
+
+    LPTSTR pszSubmount = szMapping;
+    
+	TCHAR szNetBiosName[32];
+    memset(szNetBiosName, '\0', sizeof(szNetBiosName));
+    GetClientNetbiosName(szNetBiosName);
+    _tcscat(szNetBiosName, TEXT("\\"));
+
+   if (isWinNT)
+   {
       // Now if this is an AFS network drive mapping, {szMapping} will be:
       //
-      //   \Device\LanmanRedirector\Q:\machine-afs\submount
+      //   \Device\LanmanRedirector\<Drive>:\<netbiosname>\submount
       //
       // on Windows NT. On Windows 2000, it will be:
       //
-      //   \Device\LanmanRedirector\;Q:0\machine-afs\submount
+      //   \Device\LanmanRedirector\;<Drive>:0\<netbiosname>\submount
       //
       // (This is presumably to support multiple drive mappings with
       // Terminal Server).
       //
-      if (lstrncmpi (szMapping, cszLANMANDEVICE, lstrlen(cszLANMANDEVICE)))
+      // on Windows XP and 2003, it will be :
+      //   \Device\LanmanRedirector\;<Drive>:<AuthID>\<netbiosname>\submount
+      //
+      //   where : <Drive> : DOS drive letter
+      //           <AuthID>: Authentication ID, 16 char hex.
+      //           <netbiosname>: Netbios name of server
+      //
+      if (_tcsnicmp(szMapping, cszLANMANDEVICE, _tcslen(cszLANMANDEVICE)))
          return FALSE;
-      pszSubmount = &szMapping[ lstrlen(cszLANMANDEVICE) ];
+      pszSubmount = &szMapping[ _tcslen(cszLANMANDEVICE) ];
 
       if (IsWindows2000())
 	  {
@@ -758,9 +756,12 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
       if (*(++pszSubmount) != TEXT(':'))
          return FALSE;
 
+#ifdef COMMENT
+       // No longer a safe assumption on XP
       if (IsWindows2000())
           if (*(++pszSubmount) != TEXT('0'))
              return FALSE;
+#endif
 
       // scan for next "\"
       while (*(++pszSubmount) != TEXT('\\'))
@@ -768,12 +769,15 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
 	  if (*pszSubmount==0)
               return FALSE;
       }
+
+       // note that szNetBiosName has a '\\' tagged in the end earlier
       for (++pszSubmount; *pszSubmount && (*pszSubmount != TEXT('\\')); ++pszSubmount)
-         if (!lstrncmpi (pszSubmount, TEXT("-afs\\"), lstrlen(TEXT("-afs\\"))))
+         if (!_tcsncicmp(pszSubmount, szNetBiosName, _tcslen(szNetBiosName)))
             break;
       if ((!*pszSubmount) || (*pszSubmount == TEXT('\\')))
          return FALSE;
-      pszSubmount += lstrlen("-afs\\");
+
+       pszSubmount += _tcslen(szNetBiosName);
       }
    else // (!IsWindowsNT())
       {
@@ -785,11 +789,11 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
       if (*(pszSubmount++) != TEXT('\\'))
          return FALSE;
       for ( ; *pszSubmount && (*pszSubmount != TEXT('\\')); ++pszSubmount)
-         if (!lstrncmpi (pszSubmount, TEXT("-afs\\"), lstrlen(TEXT("-afs\\"))))
+         if (!lstrncmpi (pszSubmount, szNetBiosName, lstrlen(szNetBiosName)))
             break;
       if ((!*pszSubmount) || (*pszSubmount == TEXT('\\')))
          return FALSE;
-      pszSubmount += lstrlen("-afs\\");
+      pszSubmount += lstrlen(szNetBiosName);
       }
 
    if (!pszSubmount || !*pszSubmount)
@@ -801,7 +805,7 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
 
 /* Generate Random User name random acording to time*/
 DWORD dwOldState=0;
-TCHAR pUserName[MAXRANDOMNAMELEN];
+TCHAR pUserName[MAXRANDOMNAMELEN]=TEXT("");
 BOOL fUserName=FALSE;
 #define AFSLogonOptionName TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\NetworkProvider")
 
@@ -912,19 +916,22 @@ void TestAndDoUnMapShare()
 
 void DoUnMapShare(BOOL drivemap)	//disconnect drivemap 
 {
-	TCHAR szMachine[ MAX_PATH],szPath[MAX_PATH];
+	TCHAR szMachine[MAX_PATH],szPath[MAX_PATH];
 	DWORD rc=28;
 	HANDLE hEnum;
 	LPNETRESOURCE lpnrLocal,lpnr=NULL;
 	DWORD res;
 	DWORD cbBuffer=16384;
 	DWORD cEntries=-1;
-	GetComputerName(szMachine,&rc);
 	CHAR *pSubmount="";
+
+    memset(szMachine, '\0', sizeof(szMachine));
+    GetClientNetbiosName(szMachine);
+
    // Initialize the data structure
 	if ((res=WNetOpenEnum(RESOURCE_CONNECTED,RESOURCETYPE_DISK,RESOURCEUSAGE_CONNECTABLE,lpnr,&hEnum))!=NO_ERROR)
 		return;
-	sprintf(szPath,"\\\\%s-afs\\",szMachine);
+	sprintf(szPath,"\\\\%s\\",szMachine);
 	_strlwr(szPath);
 	lpnrLocal=(LPNETRESOURCE) GlobalAlloc(GPTR,cbBuffer);
 	do {
@@ -937,13 +944,14 @@ void DoUnMapShare(BOOL drivemap)	//disconnect drivemap
 				{
 					if ((lpnrLocal[i].lpLocalName) && (strlen(lpnrLocal[i].lpLocalName)>0))
 					{
-						if (drivemap)
+						if (drivemap) {
 						    DisMountDOSDrive(*lpnrLocal[i].lpLocalName);
-                                                //WNetCancelConnection(lpnrLocal[i].lpLocalName,TRUE);
-					} else
+                            DEBUG_EVENT1("AFS DriveUnMap","UnMap-Local=%x",res);
+                        }
+					} else {
 					    DisMountDOSDriveFull(lpnrLocal[i].lpRemoteName);
-					//WNetCancelConnection(lpnrLocal[i].lpRemoteName,TRUE);
-					DEBUG_EVENT1("AFS DriveUnMap","UnMap-Remote=%x",res);
+                        DEBUG_EVENT1("AFS DriveUnMap","UnMap-Remote=%x",res);
+                    }
 				}
 			}
 		}
@@ -960,11 +968,13 @@ BOOL DoMapShareChange()
 	HANDLE hEnum;
 	LPNETRESOURCE lpnrLocal,lpnr=NULL;
 	DWORD res;
-	DWORD cbBuffer=16384;
 	DWORD cEntries=-1;
-	GetComputerName(szMachine,&rc);
-	CHAR szUser[MAXRANDOMNAMELEN];
-   // Initialize the data structure
+    DWORD cbBuffer=16384;
+
+    memset(szMachine, '\0', sizeof(szMachine));
+    GetClientNetbiosName(szMachine);
+
+    // Initialize the data structure
 	if (!IsServiceActive())
 		return TRUE;
 	memset (&List, 0x00, sizeof(DRIVEMAPLIST));
@@ -974,7 +984,7 @@ BOOL DoMapShareChange()
 	if ((res=WNetOpenEnum(RESOURCE_CONNECTED,RESOURCETYPE_DISK,RESOURCEUSAGE_CONNECTABLE,lpnr,&hEnum))!=NO_ERROR)
 		return FALSE;
 	lpnrLocal=(LPNETRESOURCE) GlobalAlloc(GPTR,cbBuffer);
-	sprintf(szPath,"\\\\%s-afs\\",szMachine);
+	sprintf(szPath,"\\\\%s\\",szMachine);
 	_strlwr(szPath);
 	do {
 		memset(lpnrLocal,0,cbBuffer);
@@ -985,13 +995,13 @@ BOOL DoMapShareChange()
 				if (strstr(_strlwr(lpnrLocal[i].lpRemoteName),szPath)==NULL)
 					continue;	//only look at real afs mappings
 				CHAR * pSubmount=strrchr(lpnrLocal[i].lpRemoteName,'\\')+1;
-				if (strcmpi(pSubmount,"all")==0) 
+				if (lstrcmpi(pSubmount,"all")==0) 
 					continue;				// do not remove 'all'
 				for (DWORD j=0;j<List.cSubmounts;j++)
 				{
 					if (
 						(List.aSubmounts[j].szSubmount[0]) &&
-						(strcmpi(List.aSubmounts[j].szSubmount,pSubmount)==0)
+						(lstrcmpi(List.aSubmounts[j].szSubmount,pSubmount)==0)
 						) 
 					{
 						List.aSubmounts[j].fInUse=TRUE; 
@@ -1006,28 +1016,30 @@ BOOL DoMapShareChange()
 	} while (res!=ERROR_NO_MORE_ITEMS);
 	GlobalFree((HGLOBAL)lpnrLocal);
 	WNetCloseEnum(hEnum);
-	sprintf(szPath,"\\\\%s-afs\\all",szMachine);
-	cbBuffer=MAXRANDOMNAMELEN-1;
+	sprintf(szPath,"\\\\%s\\all",szMachine);
+
 	// Lets connect all submounts that weren't connectd
-	CHAR * pUser=szUser;
-	if (WNetGetUser(szPath,(LPSTR)szUser,&cbBuffer)!=NO_ERROR)
-		GenRandomName(szUser,MAXRANDOMNAMELEN-1);
-	else {
-		if ((pUser=strchr(szUser,'\\'))==NULL)
-			return FALSE;
-		pUser++;
+    DWORD cbUser=MAXRANDOMNAMELEN-1;
+	CHAR szUser[MAXRANDOMNAMELEN];
+    CHAR * pUser = NULL;
+	if (WNetGetUser(szPath,(LPSTR)szUser,&cbUser)!=NO_ERROR) {
+        if (RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY)) {
+            if (!pUserName[0]) {
+                GenRandomName(szUser,MAXRANDOMNAMELEN-1);
+                pUser = szUser;
+            } else {
+                pUser = pUserName;
+            }
+        }
+    } else {
+		if ((pUser=strchr(szUser,'\\'))!=NULL)
+            pUser++;
 	}
-	for (DWORD j=0;j<List.cSubmounts;j++)
+
+    for (DWORD j=0;j<List.cSubmounts;j++)
 	{
 		if (List.aSubmounts[j].fInUse)
 			continue;
-		sprintf(szPath,"\\\\%s-afs\\%s",szMachine,List.aSubmounts[j].szSubmount);
-		NETRESOURCE nr;
-		memset (&nr, 0x00, sizeof(NETRESOURCE));
-		nr.dwType=RESOURCETYPE_DISK;
-		nr.lpLocalName="";
-		nr.lpRemoteName=szPath;
-		//DWORD res=WNetAddConnection2(&nr,NULL,pUser,0);
 		DWORD res=MountDOSDrive(0,List.aSubmounts[j].szSubmount,FALSE,pUser);
 	}
 	return TRUE;
@@ -1036,11 +1048,9 @@ BOOL DoMapShareChange()
 BOOL DoMapShare()
 {
 	DRIVEMAPLIST List;
-	TCHAR szMachine[ MAX_PATH ];
-	TCHAR szPath[ MAX_PATH ];
 	DWORD rc=28;
 	BOOL bMappedAll=FALSE;
-	GetComputerName(szMachine,&rc);
+
    // Initialize the data structure
 	DEBUG_EVENT0("AFS DoMapShare");
 	QueryDriveMapList (&List);
@@ -1048,47 +1058,64 @@ BOOL DoMapShare()
 	// All connections have been removed
 	// Lets restore them after making the connection from the random name
 
-	GenRandomName(pUserName,MAXRANDOMNAMELEN-1);
+	TCHAR szMachine[ MAX_PATH],szPath[MAX_PATH];
+    memset(szMachine, '\0', sizeof(szMachine));
+    GetClientNetbiosName(szMachine);
+    sprintf(szPath,"\\\\%s\\all",szMachine);
+
+    // Lets connect all submounts that weren't connectd
+    DWORD cbUser=MAXRANDOMNAMELEN-1;
+	CHAR szUser[MAXRANDOMNAMELEN];
+    CHAR * pUser = NULL;
+	if (WNetGetUser(szPath,(LPSTR)szUser,&cbUser)!=NO_ERROR) {
+        if (RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY)) {
+            if (!pUserName[0]) {
+                GenRandomName(szUser,MAXRANDOMNAMELEN-1);
+                pUser = szUser;
+            } else {
+                pUser = pUserName;
+            }
+        }
+    } else {
+		if ((pUser=strchr(szUser,'\\'))!=NULL)
+            pUser++;
+	}
+
 	for (DWORD i=0;i<List.cSubmounts;i++)
 	{
 		if (List.aSubmounts[i].szSubmount[0])
 		{
-			sprintf(szPath,"\\\\%s-afs\\%s",szMachine,List.aSubmounts[i].szSubmount);
-			NETRESOURCE nr;
-			memset (&nr, 0x00, sizeof(NETRESOURCE));
-			nr.dwType=RESOURCETYPE_DISK;
-			nr.lpLocalName="";
-			nr.lpRemoteName=szPath;
-			//DWORD res=WNetAddConnection2(&nr,NULL,pUserName,0);
-			DWORD res=MountDOSDrive(0,List.aSubmounts[i].szSubmount,FALSE,pUserName);
-			DEBUG_EVENT2("AFS DriveMap","Remote[%s]=%x",szPath,res);
-			if (strcmpi("all",List.aSubmounts[i].szSubmount)==0)
+			DWORD res=MountDOSDrive(0,List.aSubmounts[i].szSubmount,FALSE,pUser);
+			if (lstrcmpi("all",List.aSubmounts[i].szSubmount)==0)
 				bMappedAll=TRUE;
 		}
 	}
 	if (!bMappedAll)	//make sure all is mapped also
 	{
-			sprintf(szPath,"\\\\%s-afs\\all",szMachine);
-			NETRESOURCE nr;
-			memset (&nr, 0x00, sizeof(NETRESOURCE));
-			nr.dwType=RESOURCETYPE_DISK;
-			nr.lpLocalName="";
-			nr.lpRemoteName=szPath;
-			DWORD res=MountDOSDrive(0,"all",FALSE,pUserName);
-			DEBUG_EVENT2("AFS DriveMap","Remote[%s]=%x",szPath,res);
-			if (res==ERROR_SESSION_CREDENTIAL_CONFLICT)
-			{
-			    DisMountDOSDrive("all");
-			    MountDOSDrive(0,"all",FALSE,pUserName);
-			}
+        DWORD res=MountDOSDrive(0,"all",FALSE,pUser);
+        if (res==ERROR_SESSION_CREDENTIAL_CONFLICT)
+        {
+            DisMountDOSDrive("all");
+            MountDOSDrive(0,"all",FALSE,pUser);
+        }
 	}
 	for (TCHAR chDrive = chDRIVE_A; chDrive <= chDRIVE_Z; ++chDrive)
 	{
-		if (List.aDriveMap[chDrive-chDRIVE_A].fActive)
+		if (List.aDriveMap[chDrive-chDRIVE_A].fActive ||
+            ForceMapActive(chDrive))
 		{
+            TCHAR szSubmount[ MAX_PATH ];
+            if (List.aDriveMap[chDrive-chDRIVE_A].szSubmount[0])
+                lstrcpy(szSubmount,List.aDriveMap[chDrive-chDRIVE_A].szSubmount);
+            else if (!PathToSubmount (szSubmount, List.aDriveMap[chDrive-chDRIVE_A].szMapping, NULL, NULL))
+                continue;
+
+            BOOL fPersistent = List.aDriveMap[chDrive-chDRIVE_A].fPersistent;
+            if (RWLogonOption(TRUE,LOGON_OPTION_HIGHSECURITY))
+                fPersistent = FALSE;
 		    DWORD res=MountDOSDrive(chDrive
-					    ,List.aDriveMap[chDrive-chDRIVE_A].szSubmount
-					    ,List.aDriveMap[chDrive-chDRIVE_A].fPersistent);
+					    ,szSubmount
+					    ,fPersistent,pUser);
 		}
 	}
 	return TRUE;
@@ -1126,12 +1153,12 @@ BOOL GlobalMountDrive()
 	    if (dwResult != ERROR_SUCCESS) {
 		if (dwResult != ERROR_NO_MORE_ITEMS)
 		{
-		    DEBUG_EVENT1("AFS DriveMap","Failed to read \GlobalAutoMapper values: %d",dwResult);
+		    DEBUG_EVENT1("AFS DriveMap","Failed to read GlobalAutoMapper values: %d",dwResult);
 		}
 		break;
 	    }
 	}
-	dwResult=MountDOSDrive(*szDriveToMapTo,(const char *)szSubMount,FALSE);
+	dwResult=MountDOSDrive(*szDriveToMapTo,(const char *)szSubMount,FALSE,NULL);
     }
     RegCloseKey(hKey);
     return TRUE;
@@ -1150,17 +1177,19 @@ DWORD MountDOSDrive(char chDrive,const char *szSubmount,BOOL bPersistent,const c
     nr.dwType=RESOURCETYPE_DISK;
     nr.lpLocalName=szDrive;
     nr.lpRemoteName=szPath;
-    nr.dwDisplayType = RESOURCEDISPLAYTYPE_GENERIC;
     nr.dwDisplayType = RESOURCEDISPLAYTYPE_SHARE;
     DWORD res=WNetAddConnection2(&nr,NULL,pUsername,(bPersistent)?CONNECT_UPDATE_PROFILE:0);
-    DEBUG_EVENT3("AFS DriveMap","Mount %s Remote[%s]=%x",(bPersistent)?"Persistant" : "NonPresistant",szPath,res);
+    DEBUG_EVENT5("AFS DriveMap","Mount %s Local[%s] Remote[%s] User[%s]=%x",
+                  (bPersistent)?"Persistant" : "NonPresistant",
+                  szDrive,szPath,pUsername?pUsername:"NULL",res);
     return res;
 }
 
 DWORD DisMountDOSDriveFull(const char *szPath,BOOL bForce)
 {
     DWORD res=WNetCancelConnection(szPath,bForce);
-    DEBUG_EVENT2("AFS DriveMap","Dismount Remote[%s]=%x",szPath,res);
+    DEBUG_EVENT3("AFS DriveMap","%sDismount Remote[%s]=%x",
+                  bForce ? "Forced " : "",szPath,res);
     return (res==ERROR_NOT_CONNECTED)?NO_ERROR:res;
 }
 

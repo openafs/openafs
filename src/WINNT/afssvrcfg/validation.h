@@ -25,4 +25,3 @@ enum VALIDATION_TYPE {
 BOOL Validation_IsValid(TCHAR *pszInput, VALIDATION_TYPE type, BOOL bShowErorr = TRUE);
 
 #endif	// _VALIDATION_H_
-

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kdb.c,v 1.1.1.5 2001/09/11 14:32:58 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/kauth/kdb.c,v 1.7 2003/07/15 23:15:16 shadow Exp $");
 
 #include <fcntl.h>
 #include <sys/types.h>
@@ -28,9 +29,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kdb.c,v 1.1.1.5 2001/09/11 14:32:
 
 char *dbmfile;
 
-static cmdproc(
-  register struct cmd_syndesc *as,
-  afs_int32 arock)
+static
+cmdproc(register struct cmd_syndesc *as, afs_int32 arock)
 {
     DBM *kdb;
     datum key, data;
@@ -40,10 +40,10 @@ static cmdproc(
 
     if (as->parms[0].items) {
 	dbmfile = as->parms[0].items->data;
-    } 
+    }
     kdb = dbm_open(dbmfile, O_RDONLY, KALOG_DB_MODE);
     if (!kdb) {
-        perror(dbmfile);
+	perror(dbmfile);
 	exit(1);
     }
     if (!(ti = as->parms[1].items)) {
@@ -67,8 +67,8 @@ static cmdproc(
 		continue;
 	    }
 	    memcpy(&rdata, data.dptr, sizeof(kalog_elt));
-	    printf("%s: last operation from host %x at %s", ti->data, rdata.host, 
-		   ctime(&rdata.last_use));
+	    printf("%s: last operation from host %x at %s", ti->data,
+		   rdata.host, ctime(&rdata.last_use));
 	}
     }
     dbm_close(kdb);
@@ -77,19 +77,20 @@ static cmdproc(
 
 #include "AFS_component_version_number.c"
 
-int main(
-  int argc,
-  char **argv)
+int
+main(int argc, char **argv)
 {
     register struct cmd_syndesc *ts;
     register afs_int32 code;
     char dbmfile_help[AFSDIR_PATH_MAX];
 
-    sprintf(dbmfile_help, "dbmfile to use (default %s)",  AFSDIR_SERVER_KALOGDB_FILEPATH);
+    sprintf(dbmfile_help, "dbmfile to use (default %s)",
+	    AFSDIR_SERVER_KALOGDB_FILEPATH);
     dbmfile = AFSDIR_SERVER_KALOGDB_FILEPATH;
-    ts = cmd_CreateSyntax((char *) 0, cmdproc, 0, "Dump contents of dbm database");
+    ts = cmd_CreateSyntax(NULL, cmdproc, 0, "Dump contents of dbm database");
     cmd_AddParm(ts, "-dbmfile", CMD_SINGLE, CMD_OPTIONAL, dbmfile_help);
-    cmd_AddParm(ts, "-key", CMD_SINGLE, CMD_OPTIONAL, "extract entries that match specified key");
+    cmd_AddParm(ts, "-key", CMD_SINGLE, CMD_OPTIONAL,
+		"extract entries that match specified key");
     code = cmd_Dispatch(argc, argv);
     return code;
 }
@@ -97,7 +98,8 @@ int main(
 
 #include "AFS_component_version_number.c"
 
-int main(void)
+int
+main(void)
 {
     printf("kdb not supported\n");
 }

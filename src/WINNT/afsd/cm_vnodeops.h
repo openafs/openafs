@@ -33,7 +33,7 @@ typedef struct cm_lookupSearch {
         cm_fid_t fid;
         char *searchNamep;
         int found;
-        int LCfound, UCfound, NCfound;
+        int LCfound, UCfound, NCfound, ExactFound;
         int caseFold;
         int hasTilde;
 } cm_lookupSearch_t;

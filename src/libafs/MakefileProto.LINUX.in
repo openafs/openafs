@@ -5,29 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-# MakefileProto for Linux i386 systems
-#
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-TOP_SRCDIR=@TOP_SRCDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-afskerneldir=@afskerneldir@
-SYS_NAME=@AFS_SYSNAME@
-KDEBUG=@KERN_DEBUG_OPT@
-FOMIT=@OMIT_FRAME_POINTER@
+srcdir=@srcdir@
 
-include config/Makefile.${SYS_NAME}
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 # OS specific object files:
 AFS_OS_OBJS = \
@@ -42,61 +22,71 @@ AFS_OS_OBJS = \
 	osi_sysctl.o \
 	osi_vfsops.o \
 	osi_vm.o \
-	osi_vnodeops.o
+	osi_vnodeops.o 
 
 AFS_OS_NFSOBJS =
 
 AFS_OS_NONFSOBJS =
 
+COMMON_KERN_CFLAGS=$(KERN_DBG) $(KERN_OPTMZ) @LINUX_GCC_KOPTS@
+
+COMMON_DEFINES=-D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+
+LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
 
 # System specific build commands and flags
-CC = gcc
-LD = ld
-GCC_KOPTS=@LINUX_GCC_KOPTS@
-# -Wall
-<i386_umlinux22 i386_umlinux24>
-P5PLUS=@P5PLUS_KOPTS@
-CCFLAGS =  $(KDEBUG) -O2 $(FOMIT) $(GCC_KOPTS) -pipe $(P5PLUS) -I/usr/src/linux/arch/um/include -I/usr/src/linux/arch/um/kernel/tt/include -I/usr/src/linux/arch/um/kernel/skas/include
-DEFINES = -D__KERNEL__  -DCPU=586 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF} ${KDEFINES}
+<i386_linux26>
+CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@ -I../mach
+DEFINES = $(COMMON_DEFINES) -DCPU=586 -DKBUILD_BASENAME=libafs_$(subst .,_,$(subst -,_,${CLIENT})) -DKBUILD_MODNAME=libafs_$(subst .,_,$(subst -,_,${CLIENT}))
+
 <i386_linux22 i386_linux24>
-P5PLUS=@P5PLUS_KOPTS@
-CCFLAGS =  $(KDEBUG) -O2 $(FOMIT) $(GCC_KOPTS) -pipe $(P5PLUS)
-DEFINES = -D__KERNEL__  -DCPU=586 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF} ${KDEFINES}
+CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@
+DEFINES = $(COMMON_DEFINES) -DCPU=586
+
 <amd64_linux24>
-CCFLAGS = $(KDEBUG) -O2 $(FOMIT) $(GCC_KOPTS) -pipe -mcmodel=kernel
-DEFINES = -D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+CCFLAGS = $(COMMON_KERN_CFLAGS) -mcmodel=kernel
+DEFINES = $(COMMON_DEFINES) 
+
+<i386_umlinux22 i386_umlinux24>
+CCFLAGS = $(COMMON_KERN_CFLAGS) @P5PLUS_KOPTS@ -I$(LINUX_KERNEL_PATH)/arch/um/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/tt/include -I$(LINUX_KERNEL_PATH)/arch/um/kernel/skas/include
+DEFINES = $(COMMON_DEFINES) -DCPU=586
+
 <alpha_linux_22 alpha_linux_24>
-CCFLAGS = $(KDEBUG) -O2 $(FOMIT) $(GCC_KOPTS) -pipe -mno-fp-regs -ffixed-8
-DEFINES = -D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+CCFLAGS = $(COMMON_KERN_CFLAGS) -mno-fp-regs -ffixed-8
+DEFINES = $(COMMON_DEFINES)
+
 <s390_linux22 s390_linux24>
-CCFLAGS =   -O $(FOMIT) $(GCC_KOPTS) -fsigned-char 
-DEFINES = -D__KERNEL__  -D__s390__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char
+DEFINES = $(COMMON_DEFINES) -D__s390__ 
+
 <sparc_linux22 sparc_linux24>
 LD = ld -m elf32_sparc
-CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) $(GCC_KOPTS) \
-	-pipe -mcpu=v8 -mno-fpu -fcall-used-g5 -fcall-used-g7
-DEFINES = -D__KERNEL__  -DCPU=sparc -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+CCFLAGS = $(COMMON_KERN_CFLAGS) -mcpu=v8 -mno-fpu -fcall-used-g5 -fcall-used-g7
+DEFINES = $(COMMON_DEFINES) -DCPU=sparc
+
 <sparc64_linux22 sparc64_linux24>
 CC = sparc64-linux-gcc
 LD = ld -m elf64_sparc
-CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) $(GCC_KOPTS) \
-	-pipe -mcpu=ultrasparc -m64 -mno-fpu -mcmodel=medlow -ffixed-g4 -fcall-used-g5 -fcall-used-g7 -Wno-sign-compare
-DEFINES = -D__KERNEL__  -DCPU=sparc64 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
-<ppc_linux22 ppc_linux24>
-CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) $(GCC_KOPTS) -fsigned-char -msoft-float -pipe \
-	-fno-builtin -ffixed-r2
-DEFINES = -D__KERNEL__  -D__powerpc__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+CCFLAGS = $(COMMON_KERN_CFLAGS) \
+      -mcpu=ultrasparc -m64 -mno-fpu -mcmodel=medlow -ffixed-g4 -fcall-used-g5 -fcall-used-g7 -Wno-sign-compare
+DEFINES = $(COMMON_DEFINES) -DCPU=sparc64
+
+<ppc_linux22 ppc_linux24 ppc64_linux24>
+CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char -msoft-float -fno-builtin -ffixed-r2
+DEFINES = $(COMMON_DEFINES) -D__powerpc__
+
 <parisc_linux24>
-CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) $(GCC_KOPTS) -fsigned-char -mno-space-regs \
-	-mfast-indirect-calls -mdisable-fpregs -ffunction-sections \
-	-march=1.1 -mschedule=7100
-DEFINES = -D__KERNEL__  -D__linux__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+CCFLAGS = $(COMMON_KERN_CFLAGS) -fsigned-char -mno-space-regs \
+      -mfast-indirect-calls -mdisable-fpregs -ffunction-sections \
+      -march=1.1 -mschedule=7100
+DEFINES = $(COMMON_DEFINES) -D__linux__
+
 <ia64_linux24>
-CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) $(GCC_KOPTS) -pipe -ffixed-r13 \
-	 -mfixed-range=f10-f15,f32-f127 -falign-functions=32 -mb-step
-DEFINES = -D__KERNEL__ -DKERNEL -D_KERNEL ${SMP_DEF} -DMODULE
+CCFLAGS = $(COMMON_KERN_CFLAGS) -ffixed-r13 -mfixed-range=f10-f15,f32-f127 -falign-functions=32 -mb-step
+DEFINES = $(COMMON_DEFINES)
+
 <all>
-INCLUDES = -I. -I../ -I${LINUX_KERNEL_PATH}/include -I${TOP_SRCDIR}/config
+INCLUDES = -I. -I../ -I${TOP_OBJDIR}/src/config
 
 CFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES)
 
@@ -111,16 +101,14 @@ DESTDIRS=linux_destdirs
 
 include Makefile.common
 
-LINUX_VERS=@LINUX_VERSION@
-LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
 LINUX_MODULE_NAME=
 LOCAL_SMP_DEF=
 
 setup:
 	-$(RM) -f h net netinet sys rpc
-	-ln -s rx rpc
+	-ln -fs rx rpc
 	for m in ${MPS} ; do \
-		KDIR=$(KOBJ)-${LINUX_VERS}${LINUX_MODULE_NAME}-$$m; \
+		KDIR=$(KOBJ)-${LINUX_VERSION}${LINUX_MODULE_NAME}-$$m; \
 		mkdir -p $${KDIR}; \
 		ln -fs ../Makefile $${KDIR}/Makefile ; \
 		ln -fs ../Makefile.common $${KDIR}/Makefile.common; \
@@ -131,39 +119,45 @@ setup:
 
 ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 	$(RM) -f h 
-	ln -s ${LINUX_KERNEL_PATH}/include/linux h 
+	ln -fs ${LINUX_KERNEL_PATH}/include/linux h 
 	$(RM) -f linux 
-	ln -s ${LINUX_KERNEL_PATH}/include/linux linux 
+	ln -fs ${LINUX_KERNEL_PATH}/include/linux linux 
 	$(RM) -f net 
-	ln -s ${LINUX_KERNEL_PATH}/include/net net 
+	ln -fs ${LINUX_KERNEL_PATH}/include/net net 
 	$(RM) -f netinet 
-	ln -s ${LINUX_KERNEL_PATH}/include/linux netinet 
+	ln -fs ${LINUX_KERNEL_PATH}/include/linux netinet 
 	$(RM) -f sys
-	ln -s ${LINUX_KERNEL_PATH}/include/linux sys
+	ln -fs ${LINUX_KERNEL_PATH}/include/linux sys
 	$(RM) -f asm-generic
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-generic asm-generic
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-generic asm-generic
 	$(RM) -f asm
+<parisc_linux22 parisc_linux24>
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-parisc asm
 <alpha_linux_22 alpha_linux_24>
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-alpha asm
-<i386_linux22 i386_linux24>
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-i386 asm
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-alpha asm
+<i386_linux22 i386_linux24 i386_linux26>
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-i386 asm
 <i386_umlinux22 i386_umlinux24>
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-um asm
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-um asm
 <amd64_linux24>
 	ln -fs ${LINUX_KERNEL_PATH}/include/asm-x86_64 asm
 <s390_linux22 s390_linux24>
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-s390 asm
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-s390 asm
 <ppc_linux22 ppc_linux24>
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-ppc asm 
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ppc asm 
+<ppc64_linux24>
+	ln -s ${LINUX_KERNEL_PATH}/include/asm-ppc64 asm 
 <sparc_linux22 sparc_linux24>
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-sparc asm
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-sparc asm
 <sparc64_linux22 sparc64_linux24>
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-sparc64 asm
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-sparc64 asm
 <ia64_linux24>
-	ln -s ${LINUX_KERNEL_PATH}/include/asm-ia64 asm
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-ia64 asm
+<i386_linux26>
+	ln -fs ${LINUX_KERNEL_PATH}/include/asm-i386/mach-default mach
 <all>
 	for m in ${MPS} ; do \
-		KDIR=${KOBJ}-${LINUX_VERS}${LINUX_MODULE_NAME}-$$m ; \
+		KDIR=${KOBJ}-${LINUX_VERSION}${LINUX_MODULE_NAME}-$$m ; \
 		echo Building in directory: $${KDIR} ; \
 		if [ "$$m" = "MP" ] ; then \
 			SMP_DEF="-DAFS_SMP @RHCONFIG_MP@ ${LOCAL_SMP_DEF}" ; \
@@ -179,14 +173,14 @@ ${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
 			TARG=libafs ; \
 		fi ; \
 		cd $${KDIR} ; \
-		$(MAKE) SMP_DEF="$${SMP_DEF}" $@_$${TARG} CLIENT=${LINUX_VERS}${LINUX_MODULE_NAME} || exit $$?; \
+		$(MAKE) SMP_DEF="$${SMP_DEF}" $@_$${TARG} CLIENT=${LINUX_VERSION}${LINUX_MODULE_NAME} || exit $$?; \
 		cd ../ ; \
 	done
 
-linux_compdirs_libafs: libafs
-linux_compdirs_libafs.mp: libafs.mp
-linux_compdirs_libafs.ep: libafs.ep
-linux_compdirs_libafs.bm: libafs.bm
+linux_compdirs_libafs: depsrcs libafs
+linux_compdirs_libafs.mp: depsrcs libafs.mp
+linux_compdirs_libafs.ep: depsrcs libafs.ep
+linux_compdirs_libafs.bm: depsrcs libafs.bm
 linux_instdirs_libafs: install_libafs
 linux_instdirs_libafs.mp: install_libafs.mp
 linux_instdirs_libafs.ep: install_libafs.ep
@@ -288,30 +282,3 @@ $(DEST_LIBAFS_EP): $(LIBAFS_EP)
 
 $(DEST_LIBAFS_BM): $(LIBAFS_BM)
 	${INSTALL} -f $? $@
-
-
-# Linux specific objects
-osi_alloc.o: $(AFS)/osi_alloc.c
-	$(CRULE1)
-osi_cred.o: $(AFS)/osi_cred.c
-	$(CRULE1)
-osi_groups.o: $(AFS)/osi_groups.c
-	$(CRULE1)
-osi_file.o: $(AFS)/osi_file.c
-	$(CRULE1)
-osi_inode.o: $(AFS)/osi_inode.c
-	$(CRULE1)
-osi_misc.o: $(AFS)/osi_misc.c
-	$(CRULE1)
-osi_module.o: $(AFS)/osi_module.c
-	$(CRULE1)
-osi_sleep.o: $(AFS)/osi_sleep.c
-	$(CRULE1)
-osi_sysctl.o: $(AFS)/osi_sysctl.c
-	$(CRULE1)
-osi_vfsops.o: $(AFS)/osi_vfsops.c
-	$(CRULE1)
-osi_vm.o: $(AFS)/osi_vm.c
-	$(CRULE1)
-osi_vnodeops.o: $(AFS)/osi_vnodeops.c
-	$(CRULE1)

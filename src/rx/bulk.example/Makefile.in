@@ -5,17 +5,15 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DESTDIR=@DESTDIR@
-SRCDIR=@SRCDIR@
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-SRCDIR=/usr/andy/
-LIBRX=${SRCDIR}/lib/librx.a
-DESTDIR=/usr/andy/
-INSTALL=${SRCDIR}/bin/install
-LIBS=${LIBRX} ${SRCDIR}/lib/liblwp.a
-CFLAGS=${DBG} -I.. -I. -I${SRCDIR}/include -DDEBUG ${XCFLAGS}
+
+SRCDIR=@srcdir@
+LIBRX=@TOP_OBJDIR@/lib/librx.a
+DESTDIR=@srcdir@
+LIBS=${LIBRX} ${TOP_OBJDIR}/lib/liblwp.a ${TOP_OBJDIR}/lib/libafsutil.a
+CFLAGS=-g ${COMMON_INCL} -DDEBUG ${XCFLAGS}
 
 all: bulk_client bulk_server
 
@@ -28,4 +26,7 @@ bulk_server: bulk_server.o bulk_io.o bulk.ss.o ${LIBS}
 bulk_client.o bulk_server.o bulk_io.o:	bulk.h
 
 bulk.cs.c bulk.ss.c bulk.er.c bulk.h: bulk.xg
-	rxgen bulk.xg
+	${RXGEN} bulk.xg
+
+clean:
+	rm -f *.o bulk.cs.c bulk.ss.c bulk.xdr.c bulk.h bulk_client bulk_server *~

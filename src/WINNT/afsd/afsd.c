@@ -21,6 +21,9 @@
 #include <stdlib.h>
 #include <winsock2.h>
 
+#ifdef _DEBUG
+#include <crtdbg.h>
+#endif
 
 HANDLE main_inst;
 HWND main_wnd;
@@ -29,6 +32,9 @@ RECT main_rect;
 osi_log_t *afsd_logp;
 
 extern int traceOnPanic;
+
+extern void afsd_DbgBreakAllocInit();
+extern void afsd_DbgBreakAdd(DWORD requestNumber);
 
 /*
  * Notifier function for use by osi_panic
@@ -69,7 +75,23 @@ int WINAPI WinMain(
 {
 	MSG msg;
 	
-	if (!InitClass(hInstance))
+    afsd_SetUnhandledExceptionFilter();
+       
+#ifdef _DEBUG
+    afsd_DbgBreakAllocInit();
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF /* | _CRTDBG_CHECK_ALWAYS_DF */ | _CRTDBG_CHECK_CRT_DF | _CRTDBG_DELAY_FREE_MEM_DF );
+    if (lpCmdLine)
+    {
+        char *allocRequest = strtok(lpCmdLine, " \t");
+        while (allocRequest)
+        {
+            afsd_DbgBreakAdd(atoi(allocRequest));
+            allocRequest = strtok(NULL, " \t");
+        }
+    }
+#endif 
+
+    if (!InitClass(hInstance))
 		return (FALSE);
 
 	if (!InitInstance(hInstance, nCmdShow))
@@ -111,9 +133,8 @@ BOOL InitInstance(
 	HWND hWnd;
 	HDC hDC;
 	TEXTMETRIC textmetric;
-	RECT rect;
 	INT nLineHeight;
-        long code;
+    long code;
 	char *reason;
  
 	/* remember this, since it is a useful thing for some of the Windows
@@ -137,7 +158,6 @@ BOOL InitInstance(
 
 	if (!hWnd)
 	        return (FALSE);
-
 
 	/* lookup text dimensions */
 	hDC = GetDC(hWnd);

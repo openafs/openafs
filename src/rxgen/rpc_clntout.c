@@ -35,94 +35,94 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxgen/rpc_clntout.c,v 1.1.1.5 2001/09/11 14:34:38 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rxgen/rpc_clntout.c,v 1.7 2003/07/15 23:16:39 shadow Exp $");
 
 #include <stdio.h>
 #include <string.h>
+#include "rpc_scan.h"
 #include "rpc_parse.h"
 #include "rpc_util.h"
 
 #define DEFAULT_TIMEOUT 25	/* in seconds */
 
-static write_program();
-static printbody();
+/* static prototypes */
+static void write_program(definition * def);
+static char *ampr(char *type);
+static void printbody(proc_list * proc);
 
 void
-write_stubs()
+write_stubs(void)
 {
-	list *l;
-	definition *def;
+    list *l;
+    definition *def;
 
-	f_print(fout, "\nstatic struct timeval TIMEOUT = { %d, 0 };\n",
-		DEFAULT_TIMEOUT);
-	for (l = defined; l != NULL; l = l->next) {
-		def = (definition *) l->val;
-		if (def->def_kind == DEF_PROGRAM) {
-			write_program(def);
-		}
+    f_print(fout, "\nstatic struct timeval TIMEOUT = { %d, 0 };\n",
+	    DEFAULT_TIMEOUT);
+    for (l = defined; l != NULL; l = l->next) {
+	def = (definition *) l->val;
+	if (def->def_kind == DEF_PROGRAM) {
+	    write_program(def);
 	}
+    }
 }
 
 
-static
-write_program(def)
-	definition *def;
+static void
+write_program(definition * def)
 {
-	version_list *vp;
-	proc_list *proc;
+    version_list *vp;
+    proc_list *proc;
 
-	for (vp = def->def.pr.versions; vp != NULL; vp = vp->next) {
-		for (proc = vp->procs; proc != NULL; proc = proc->next) {
-			f_print(fout, "\n");
-			ptype(proc->res_prefix, proc->res_type, 1);
-			f_print(fout, "*\n");
-			pvname(proc->proc_name, vp->vers_num);
-			f_print(fout, "(argp, clnt)\n");
-			f_print(fout, "\t");
-			ptype(proc->arg_prefix, proc->arg_type, 1);
-			f_print(fout, "*argp;\n");
-			f_print(fout, "\tCLIENT *clnt;\n");
-			f_print(fout, "{\n");
-			printbody(proc);
-			f_print(fout, "}\n\n");
-		}
+    for (vp = def->def.pr.versions; vp != NULL; vp = vp->next) {
+	for (proc = vp->procs; proc != NULL; proc = proc->next) {
+	    f_print(fout, "\n");
+	    ptype(proc->res_prefix, proc->res_type, 1);
+	    f_print(fout, "*\n");
+	    pvname(proc->proc_name, vp->vers_num);
+	    f_print(fout, "(argp, clnt)\n");
+	    f_print(fout, "\t");
+	    ptype(proc->arg_prefix, proc->arg_type, 1);
+	    f_print(fout, "*argp;\n");
+	    f_print(fout, "\tCLIENT *clnt;\n");
+	    f_print(fout, "{\n");
+	    printbody(proc);
+	    f_print(fout, "}\n\n");
 	}
+    }
 }
 
 static char *
-ampr(type)
-	char *type;
+ampr(char *type)
 {
-	if (isvectordef(type, REL_ALIAS)) {
-		return ("");
-	} else {
-		return ("&");
-	}
+    if (isvectordef(type, REL_ALIAS)) {
+	return ("");
+    } else {
+	return ("&");
+    }
 }
 
-static
-printbody(proc)
-	proc_list *proc;
+static void
+printbody(proc_list * proc)
 {
-	f_print(fout, "\tstatic ");
-	if (streq(proc->res_type, "void")) {
-		f_print(fout, "char ");
-	} else {
-		ptype(proc->res_prefix, proc->res_type, 0);
-	}
-	f_print(fout, "res;\n");
-	f_print(fout, "\n");
-	f_print(fout, "\tmemset(%sres, 0, sizeof(res));\n", ampr(proc->res_type));
-	f_print(fout,
-		"\tif (clnt_call(clnt, %s, xdr_%s, argp, xdr_%s, %sres, TIMEOUT) != RPC_SUCCESS) {\n",
-		proc->proc_name, stringfix(proc->arg_type),
-		stringfix(proc->res_type), ampr(proc->res_type));
-	f_print(fout, "\t\treturn (NULL);\n");
-	f_print(fout, "\t}\n");
-	if (streq(proc->res_type, "void")) {
-		f_print(fout, "\treturn ((void *)%sres);\n",
-			ampr(proc->res_type));
-	} else {
-		f_print(fout, "\treturn (%sres);\n", ampr(proc->res_type));
-	}
+    f_print(fout, "\tstatic ");
+    if (streq(proc->res_type, "void")) {
+	f_print(fout, "char ");
+    } else {
+	ptype(proc->res_prefix, proc->res_type, 0);
+    }
+    f_print(fout, "res;\n");
+    f_print(fout, "\n");
+    f_print(fout, "\tmemset(%sres, 0, sizeof(res));\n", ampr(proc->res_type));
+    f_print(fout,
+	    "\tif (clnt_call(clnt, %s, xdr_%s, argp, xdr_%s, %sres, TIMEOUT) != RPC_SUCCESS) {\n",
+	    proc->proc_name, stringfix(proc->arg_type),
+	    stringfix(proc->res_type), ampr(proc->res_type));
+    f_print(fout, "\t\treturn (NULL);\n");
+    f_print(fout, "\t}\n");
+    if (streq(proc->res_type, "void")) {
+	f_print(fout, "\treturn ((void *)%sres);\n", ampr(proc->res_type));
+    } else {
+	f_print(fout, "\treturn (%sres);\n", ampr(proc->res_type));
+    }
 }

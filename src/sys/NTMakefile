@@ -5,6 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=sys
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
 
@@ -20,10 +21,10 @@ INCFILES =\
 LIBFILE = $(DESTDIR)\lib\afs\afspioctl.lib
 
 LIBOBJS =\
-	pioctl_nt.obj
+	$(OUT)\pioctl_nt.obj
 
-$(LIBFILE): $(LIBOBJS)
-	$(LIBARCH)
+$(LIBFILE): $(LIBOBJS) $(DESTDIR)\lib\lanahelper.lib
+	$(LIBARCH) $(DESTDIR)\lib\lanahelper.lib
 
 ############################################################################
 # Install target; primary makefile target

@@ -14,32 +14,15 @@ LIBAFSRPCMINOR=0
 
 # This is a pthread safe library containing rx, rxkad and des.
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
 srcdir=@srcdir@
-SYS_NAME=@AFS_SYSNAME@
-include ../config/Makefile.${SYS_NAME}
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 CC=${MT_CC}
-INCLUDES=-I. -I${srcdir} -I${TOP_INCDIR} -I.. -I${srcdir}/../rx -I${srcdir}../des -I../des \
+INCLUDES=-I.. -I${srcdir}/../rx -I${srcdir}../des -I../des \
 	-I../rxkad -I${srcdir}/../rxkad -I../rxstat -I../fsint
-CFLAGS = ${OPTMZ} ${DBG} ${INCLUDES} -DRXDEBUG ${MT_CFLAGS} -I${TOP_SRCDIR}/config ${SHLIB_CFLAGS}
+CFLAGS = ${COMMON_CFLAGS} ${INCLUDES} -DRXDEBUG ${MT_CFLAGS} ${SHLIB_CFLAGS}
 SFLAGS=-P -I${TOP_INCDIR}
+
 RX = ../rx
 CCRULE = ${CC} ${CFLAGS} -c $?
 RXKAD = ../rxkad
@@ -67,6 +50,7 @@ XDROBJS =\
 	xdr_array.o \
 	xdr_arrayn.o \
 	xdr_rx.o \
+	xdr_int32.o \
 	xdr_int64.o \
 	xdr_afsuuid.o \
 	AFS_component_version_number.o
@@ -106,6 +90,8 @@ RXKADOBJS =\
 	ticket.o \
 	ticket5.o \
 	crc.o \
+	md4.o \
+	md5.o \
 	fcrypt.o \
 	crypt_conn.o
 
@@ -152,8 +138,8 @@ ${DEST}/lib/libafsrpc.${SHLIB_SUFFIX}: ${DEST}/lib/${LIBAFSRPC}
 
 ${LIBAFSRPC}: ${LIBOBJS}
 	case ${SYS_NAME} in \
-	rs_aix4*) \
-		${SHLIB_LINKER} -o ${LIBAFSRPC} ${LIBOBJS} -bE:afsrpc.exp ${MT_LIBS};; \
+	rs_aix4* | rs_aix5*) \
+		${SHLIB_LINKER} -o ${LIBAFSRPC} ${LIBOBJS} -bE:${srcdir}/afsrpc.exp ${MT_LIBS};; \
 	sun*_5*) \
 		${SHLIB_LINKER} -h ${LIBAFSRPC} -o ${LIBAFSRPC} ${LIBOBJS} ${MT_LIBS};; \
 	*) \
@@ -217,6 +203,12 @@ ticket5.o: ${RXKAD}/ticket5.c
 crc.o: ${RXKAD}/crc.c
 	${CCRULE}
 
+md4.o: ${RXKAD}/md4.c
+	${CCRULE}
+
+md5.o: ${RXKAD}/md5.c
+	${CCRULE}
+
 fcrypt.o: ${RXKAD}/fcrypt.c
 	${CCRULE}
 
@@ -227,6 +219,9 @@ AFS_component_version_number.o: ${RX}/AFS_component_version_number.c
 	${CCRULE}
 
 xdr.o: ${RX}/xdr.c
+	${CCRULE}
+
+xdr_int32.o: ${RX}/xdr_int32.c
 	${CCRULE}
 
 xdr_int64.o: ${RX}/xdr_int64.c
@@ -278,7 +273,7 @@ xdr_afsuuid.o: ${RX}/xdr_afsuuid.c
 #
 #   $ what /opt/langtools/bin/pxdb32
 #   /opt/langtools/bin/pxdb32:
-#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.1.1.4 $
+#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.15 $
 #
 # The problem occurs when -g and -O are both used when compiling des.c.
 # The simplest way to work around the problem is to leave out either -g or -O.
@@ -353,7 +348,7 @@ base64.o: ${UTIL}/base64.c
 
 syscall.o: ${SYS}/syscall.s
 	case "$(SYS_NAME)" in \
-	     sun*_5* ) \
+	     sun4x_5* | sunx86_5*) \
 		/usr/ccs/lib/cpp  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\

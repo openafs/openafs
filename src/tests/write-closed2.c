@@ -63,54 +63,54 @@
 #endif
 
 static int
-set_acl (char *dir)
+set_acl(char *dir)
 {
     struct ViceIoctl a_params;
     char *foo = "1\n0\nsystem:anyuser 0\n";
 
-    a_params.in_size  = strlen(foo);
+    a_params.in_size = strlen(foo);
     a_params.out_size = 0;
-    a_params.in       = foo;
-    a_params.out      = NULL;
+    a_params.in = foo;
+    a_params.out = NULL;
 
-    return pioctl (dir, VIOCSETAL, &a_params, 1);
+    return pioctl(dir, VIOCSETAL, &a_params, 1);
 }
 
 static void
-doit (const char *filename)
+doit(const char *filename)
 {
     int fd;
     int ret;
     void *buf;
 
-    ret = mkdir ("bad", 0777);
+    ret = mkdir("bad", 0777);
     if (ret < 0)
-	err (1, "mkdir bad");
+	err(1, "mkdir bad");
 
-    ret = chdir ("bad");
+    ret = chdir("bad");
     if (ret < 0)
-	err (1, "chdir bad");
+	err(1, "chdir bad");
 
-    fd = open (filename, O_RDWR | O_CREAT | O_TRUNC, 0600);
+    fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, 0600);
     if (fd < 0)
-	err (1, "open %s", filename);
-    ret = ftruncate (fd, 1);
+	err(1, "open %s", filename);
+    ret = ftruncate(fd, 1);
     if (ret < 0)
-	err (1, "ftruncate %s", filename);
-    buf = mmap (NULL, 1, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (buf == (void *) MAP_FAILED)
-	err (1, "mmap");
-    ret = set_acl (".");
+	err(1, "ftruncate %s", filename);
+    buf = mmap(NULL, 1, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (buf == (void *)MAP_FAILED)
+	err(1, "mmap");
+    ret = set_acl(".");
     if (ret < 0)
-	err (1, "setacl failed");
+	err(1, "setacl failed");
 
-    ret = close (fd);
+    ret = close(fd);
     if (ret < 0)
-	err (1, "close %s", filename);
+	err(1, "close %s", filename);
     *((char *)buf) = 0x17;
-    ret = munmap (buf, 1);
+    ret = munmap(buf, 1);
     if (ret < 0)
-	err (1, "munmap");
+	err(1, "munmap");
 }
 
 int
@@ -120,9 +120,9 @@ main(int argc, char **argv)
 
 
     if (argc != 1 && argc != 2)
-	errx (1, "usage: %s [file]", argv[0]);
+	errx(1, "usage: %s [file]", argv[0]);
     if (argc == 2)
 	file = argv[1];
-    doit (file);
+    doit(file);
     return 0;
 }

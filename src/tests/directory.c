@@ -46,117 +46,134 @@ static afs_dir_page page;
 #define allocbit(x) (page.header.freebitmap[(x)>>3] & (1 << ((x) & 7)))
 #define DPHE (DHE + 1)
 
-static void fixup(char *name, int l)
+static void
+fixup(char *name, int l)
 {
-  name += 16;
-  l -= 15;
+    name += 16;
+    l -= 15;
 
-  while (l-- > 0) {
-    name[0] = name[4];
-    name++;
-  }
+    while (l-- > 0) {
+	name[0] = name[4];
+	name++;
+    }
 }
 
-afs_uint32 parse_directory(XFILE *X, dump_parser *p, afs_vnode *v,
-                        afs_uint32 size, int toeof)
+afs_uint32
+parse_directory(XFILE * X, dump_parser * p, afs_vnode * v, afs_uint32 size,
+		int toeof)
 {
-  afs_dir_entry de;
-  int pgno, i, j, l, n;
-  afs_uint32 r;
-  u_int64 where;
+    afs_dir_entry de;
+    int pgno, i, j, l, n;
+    afs_uint32 r;
+    u_int64 where;
 
-  if (p->print_flags & DSPRINT_DIR) {
-    printf("  VNode      Uniqifier   Name\n");
-    printf("  ========== ==========  ==============================\n");
-  }
-  if ((p->flags & DSFLAG_SEEK) && (r = xftell(X, &where))) return r;
-  for (pgno = 0; toeof || size; pgno++, size -= (toeof ? 0 : AFS_PAGESIZE)) {
-    if ((p->flags & DSFLAG_SEEK) && (r = xfseek(X, &where))) return r;
-    if (r = xfread(X, &page, AFS_PAGESIZE)) {
-      if (toeof && r == ERROR_XFILE_EOF) break;
-      return r;
+    if (p->print_flags & DSPRINT_DIR) {
+	printf("  VNode      Uniqifier   Name\n");
+	printf("  ========== ==========  ==============================\n");
     }
-    if ((p->flags & DSFLAG_SEEK) && (r = xftell(X, &where))) return r;
-    if (page.header.tag != htons(1234)) {
-      if (p->cb_error)
-        (p->cb_error)(DSERR_MAGIC, 1, p->err_refcon,
-                      "Invalid page tag (%d) in page %d",
-                      ntohs(page.header.tag), pgno);
-      return DSERR_MAGIC;
-    }
-    for (i = (pgno ? 1 : DPHE); i < EPP; i++) {
-      if (!allocbit(i)) continue;
-      if (page.entry[i].flag != FFIRST) {
-        if (p->cb_error)
-          (p->cb_error)(DSERR_MAGIC, 0, p->err_refcon,
-                        "Invalid entry flag %d in entry %d/%d; skipping...",
-                        page.entry[i].flag, pgno, i);
-        continue;
-      }
-      n = (EPP - i - 1) * 32 + 16;
-      for (l = 0; n && page.entry[i].name[l]; l++, n--);
-      if (page.entry[i].name[l]) {
-        if (p->cb_error)
-          (p->cb_error)(DSERR_FMT, 0, p->err_refcon,
-                        "Filename too long in entry %d/%d; skipping page",
-                        pgno, i);
-        break;
-      }
+    if ((p->flags & DSFLAG_SEEK) && (r = xftell(X, &where)))
+	return r;
+    for (pgno = 0; toeof || size; pgno++, size -= (toeof ? 0 : AFS_PAGESIZE)) {
+	if ((p->flags & DSFLAG_SEEK) && (r = xfseek(X, &where)))
+	    return r;
+	if (r = xfread(X, &page, AFS_PAGESIZE)) {
+	    if (toeof && r == ERROR_XFILE_EOF)
+		break;
+	    return r;
+	}
+	if ((p->flags & DSFLAG_SEEK) && (r = xftell(X, &where)))
+	    return r;
+	if (page.header.tag != htons(1234)) {
+	    if (p->cb_error)
+		(p->cb_error) (DSERR_MAGIC, 1, p->err_refcon,
+			       "Invalid page tag (%d) in page %d",
+			       ntohs(page.header.tag), pgno);
+	    return DSERR_MAGIC;
+	}
+	for (i = (pgno ? 1 : DPHE); i < EPP; i++) {
+	    if (!allocbit(i))
+		continue;
+	    if (page.entry[i].flag != FFIRST) {
+		if (p->cb_error)
+		    (p->cb_error) (DSERR_MAGIC, 0, p->err_refcon,
+				   "Invalid entry flag %d in entry %d/%d; skipping...",
+				   page.entry[i].flag, pgno, i);
+		continue;
+	    }
+	    n = (EPP - i - 1) * 32 + 16;
+	    for (l = 0; n && page.entry[i].name[l]; l++, n--);
+	    if (page.entry[i].name[l]) {
+		if (p->cb_error)
+		    (p->cb_error) (DSERR_FMT, 0, p->err_refcon,
+				   "Filename too long in entry %d/%d; skipping page",
+				   pgno, i);
+		break;
+	    }
 /*    fixup(page.entry[i].name, l); */
-      if (pgno) de.slot = i - 1 + (pgno - 1) * (EPP - 1) + (EPP - DPHE);
-      else de.slot = i - DPHE;
-      de.name  = page.entry[i].name;
-      de.vnode = ntohl(page.entry[i].vnode);
-      de.uniq  = ntohl(page.entry[i].vunique);
-      if (p->print_flags & DSPRINT_DIR)
-        printf("  %10d %10d  %s\n", de.vnode, de.uniq, de.name);
-      if (p->cb_dirent) {
-        r = (p->cb_dirent)(v, &de, X, p->refcon);
-      }
-      if (p->cb_dirent && (r = (p->cb_dirent)(v, &de, X, p->refcon)))
-        return r;
-      i += ((l + 16) >> 5);
+	    if (pgno)
+		de.slot = i - 1 + (pgno - 1) * (EPP - 1) + (EPP - DPHE);
+	    else
+		de.slot = i - DPHE;
+	    de.name = page.entry[i].name;
+	    de.vnode = ntohl(page.entry[i].vnode);
+	    de.uniq = ntohl(page.entry[i].vunique);
+	    if (p->print_flags & DSPRINT_DIR)
+		printf("  %10d %10d  %s\n", de.vnode, de.uniq, de.name);
+	    if (p->cb_dirent) {
+		r = (p->cb_dirent) (v, &de, X, p->refcon);
+	    }
+	    if (p->cb_dirent && (r = (p->cb_dirent) (v, &de, X, p->refcon)))
+		return r;
+	    i += ((l + 16) >> 5);
+	}
     }
-  }
-  if ((p->flags & DSFLAG_SEEK) && (r = xfseek(X, &where))) return r;
-  return 0;
+    if ((p->flags & DSFLAG_SEEK) && (r = xfseek(X, &where)))
+	return r;
+    return 0;
 }
 
 
-afs_uint32 ParseDirectory(XFILE *X, dump_parser *p, afs_uint32 size, int toeof)
+afs_uint32
+ParseDirectory(XFILE * X, dump_parser * p, afs_uint32 size, int toeof)
 {
-  afs_uint32 r;
+    afs_uint32 r;
 
-  r = parse_directory(X, p, 0, size, toeof);
+    r = parse_directory(X, p, 0, size, toeof);
 }
 
 
 typedef struct {
-  char **name;
-  afs_uint32 *vnode;
-  afs_uint32 *vuniq;
+    char **name;
+    afs_uint32 *vnode;
+    afs_uint32 *vuniq;
 } dirlookup_stat;
 
 
-static afs_uint32 dirlookup_cb(afs_vnode *v, afs_dir_entry *de,
-                            XFILE *X, void *refcon)
+static afs_uint32
+dirlookup_cb(afs_vnode * v, afs_dir_entry * de, XFILE * X, void *refcon)
 {
-  dirlookup_stat *s = (dirlookup_stat *)refcon;
+    dirlookup_stat *s = (dirlookup_stat *) refcon;
 
-  if (s->name && s->name[0]) {                  /* Search by filename */
-    if (strcmp(de->name, s->name[0])) return 0; /* Not it! */
-    if (s->vnode) s->vnode[0] = de->vnode;
-    if (s->vuniq) s->vuniq[0] = de->uniq;
-  } else if (s->vnode) {                        /* Search by vnode */
-    if (de->vnode != s->vnode[0]) return 0;     /* Not it! */
-    if (s->name) {
-      s->name[0] = (char *)malloc(strlen(de->name) + 1);
-      if (!s->name[0]) return ENOMEM;
-      strcpy(s->name[0], de->name);
+    if (s->name && s->name[0]) {	/* Search by filename */
+	if (strcmp(de->name, s->name[0]))
+	    return 0;		/* Not it! */
+	if (s->vnode)
+	    s->vnode[0] = de->vnode;
+	if (s->vuniq)
+	    s->vuniq[0] = de->uniq;
+    } else if (s->vnode) {	/* Search by vnode */
+	if (de->vnode != s->vnode[0])
+	    return 0;		/* Not it! */
+	if (s->name) {
+	    s->name[0] = (char *)malloc(strlen(de->name) + 1);
+	    if (!s->name[0])
+		return ENOMEM;
+	    strcpy(s->name[0], de->name);
+	}
+	if (s->vuniq)
+	    s->vuniq[0] = de->uniq;
     }
-    if (s->vuniq) s->vuniq[0] = de->uniq;
-  }
-  return DSERR_DONE;
+    return DSERR_DONE;
 }
 
 
@@ -171,27 +188,29 @@ static afs_uint32 dirlookup_cb(afs_vnode *v, afs_dir_entry *de,
  * and size set to the length of the directory.
  * Returns 0 on success, whether or not the entry is found.
  */
-afs_uint32 DirectoryLookup(XFILE *X, dump_parser *p, afs_uint32 size,
-                    char **name, afs_uint32 *vnode, afs_uint32 *vuniq)
+afs_uint32
+DirectoryLookup(XFILE * X, dump_parser * p, afs_uint32 size, char **name,
+		afs_uint32 * vnode, afs_uint32 * vuniq)
 {
-  dump_parser my_p;
-  dirlookup_stat my_s;
-  afs_uint32 r;
+    dump_parser my_p;
+    dirlookup_stat my_s;
+    afs_uint32 r;
 
-  memset(&my_s, 0, sizeof(my_s));
-  my_s.name  = name;
-  my_s.vnode = vnode;
-  my_s.vuniq = vuniq;
+    memset(&my_s, 0, sizeof(my_s));
+    my_s.name = name;
+    my_s.vnode = vnode;
+    my_s.vuniq = vuniq;
 
-  memset(&my_p, 0, sizeof(my_p));
-  my_p.refcon = (void *)&my_s;
-  my_p.err_refcon = p->err_refcon;
-  my_p.cb_error = p->cb_error;
-  my_p.cb_dirent  = dirlookup_cb;
+    memset(&my_p, 0, sizeof(my_p));
+    my_p.refcon = (void *)&my_s;
+    my_p.err_refcon = p->err_refcon;
+    my_p.cb_error = p->cb_error;
+    my_p.cb_dirent = dirlookup_cb;
 
-  r = parse_directory(X, &my_p, 0, size, 0);
-  if (!r) r = DSERR_DONE;
-  return handle_return(r, X, 0, p);
+    r = parse_directory(X, &my_p, 0, size, 0);
+    if (!r)
+	r = DSERR_DONE;
+    return handle_return(r, X, 0, p);
 }
 
 

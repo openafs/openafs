@@ -76,7 +76,7 @@ int ModalDialogParam (int idd, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwI
 int cdecl Message (UINT type, LPCTSTR title, LPCTSTR text, LPCTSTR fmt, ...)
 {
    va_list  arg;
-   if (fmt != NULL)
+   // if (fmt != NULL)
       va_start (arg, fmt);
    return vMessage (type, (LONG)title, (LONG)text, fmt, arg);
 }
@@ -85,7 +85,7 @@ int cdecl Message (UINT type, LPCTSTR title, LPCTSTR text, LPCTSTR fmt, ...)
 int cdecl Message (UINT type, LPCTSTR title, int text, LPCTSTR fmt, ...)
 {
    va_list  arg;
-   if (fmt != NULL)
+   // if (fmt != NULL)
       va_start (arg, fmt);
    return vMessage (type, (LONG)title, (LONG)text, fmt, arg);
 }
@@ -94,7 +94,7 @@ int cdecl Message (UINT type, LPCTSTR title, int text, LPCTSTR fmt, ...)
 int cdecl Message (UINT type, int title, LPCTSTR text, LPCTSTR fmt, ...)
 {
    va_list  arg;
-   if (fmt != NULL)
+   // if (fmt != NULL)
       va_start (arg, fmt);
    return vMessage (type, (LONG)title, (LONG)text, fmt, arg);
 }
@@ -103,7 +103,7 @@ int cdecl Message (UINT type, int title, LPCTSTR text, LPCTSTR fmt, ...)
 int cdecl Message (UINT type, int title, int text, LPCTSTR fmt, ...)
 {
    va_list  arg;
-   if (fmt != NULL)
+   // if (fmt != NULL)
       va_start (arg, fmt);
    return vMessage (type, (LONG)title, (LONG)text, fmt, arg);
 }

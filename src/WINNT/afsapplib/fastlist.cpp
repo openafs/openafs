@@ -229,7 +229,7 @@ void FastList_OnStyleChange (HWND hList);
 void FastList_OnSize (HWND hList);
 void FastList_OnPaint (HWND hList);
 void FastList_OnPaintItem (LPFASTLIST pfl, LPFASTLISTDRAWITEM pdi);
-void FastList_OnPaintItem_DrawImage (LPFASTLIST pfl, LPFASTLISTDRAWITEM pdi, int iImage, LONG xImage, LONG yImage, BOOL fHLines);
+BOOL FastList_OnPaintItem_DrawImage (LPFASTLIST pfl, LPFASTLISTDRAWITEM pdi, HIMAGELIST hil, int iImage, LONG xImage, LONG yImage, BOOL fHLines);
 void FastList_OnPaintItem_GetItemColors (LPFASTLIST pfl, LPFASTLISTDRAWITEM pdi, COLORREF *pclrFore, COLORREF *pclrBack);
 void FastList_OnPaintItem_TreeLines (LPFASTLIST pfl, LPFASTLISTDRAWITEM pdi, DWORD dwLines, RECT *prLines);
 void FastList_OnPaintItem_Large (LPFASTLIST pfl, LPFASTLISTDRAWITEM pdi);

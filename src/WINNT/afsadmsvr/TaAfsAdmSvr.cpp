@@ -22,7 +22,7 @@
       // ...obtains a cookie to represent the calling process. The cookie should
       //    be freed with AfsAdmSvr_Disconnect when the process disconnects.
       //
-int AfsAdmSvr_Connect (STRING szClientAddress, DWORD *pidClient, ULONG *pStatus)
+extern "C" int AfsAdmSvr_Connect (STRING szClientAddress, DWORD *pidClient, ULONG *pStatus)
 {
    // Make sure AfsClass initialized properly. If it's already init'd,
    // this won't hurt at all.
@@ -51,7 +51,7 @@ int AfsAdmSvr_Connect (STRING szClientAddress, DWORD *pidClient, ULONG *pStatus)
       //    seconds, lest the admin server think you've disconnected. (The
       //    client library TaAfsAdmSvrClient.lib automatically handles this.)
       //
-int AfsAdmSvr_Ping (DWORD idClient, ULONG *pStatus)
+extern "C" int AfsAdmSvr_Ping (DWORD idClient, ULONG *pStatus)
 {
    AfsAdmSvr_Enter();
 
@@ -67,7 +67,7 @@ int AfsAdmSvr_Ping (DWORD idClient, ULONG *pStatus)
       // AfsAdmSvr_Disconnect
       // ...releases and invalidates the cookie representing the calling process.
       //
-int AfsAdmSvr_Disconnect (DWORD idClient, ULONG *pStatus)
+extern "C" int AfsAdmSvr_Disconnect (DWORD idClient, ULONG *pStatus)
 {
    AfsAdmSvr_Enter();
 
@@ -88,7 +88,7 @@ int AfsAdmSvr_Disconnect (DWORD idClient, ULONG *pStatus)
       // ...queries the specified AFS credentials token for its cell, user
       //    and expiration date.
       //
-int AfsAdmSvr_CrackCredentials (DWORD idClient, DWORD hCreds, STRING pszCell, STRING pszUser, SYSTEMTIME *pstExpiration, ULONG *pStatus)
+extern "C" int AfsAdmSvr_CrackCredentials (DWORD idClient, DWORD hCreds, STRING pszCell, STRING pszUser, SYSTEMTIME *pstExpiration, ULONG *pStatus)
 {
    ULONG status;
    size_t iOp = AfsAdmSvr_BeginOperation (idClient);
@@ -121,7 +121,7 @@ int AfsAdmSvr_CrackCredentials (DWORD idClient, DWORD hCreds, STRING pszCell, ST
       //    if the user already has credentials in the cell, returns a nonzero
       //    token {hCreds}, suitable for use in AfsAdmSvr_OpenCell().
       //
-DWORD AfsAdmSvr_GetCredentials (DWORD idClient, STRING pszCell, ULONG *pStatus)
+extern "C" DWORD AfsAdmSvr_GetCredentials (DWORD idClient, STRING pszCell, ULONG *pStatus)
 {
    ULONG status;
    size_t iOp = AfsAdmSvr_BeginOperation (idClient);
@@ -147,7 +147,7 @@ DWORD AfsAdmSvr_GetCredentials (DWORD idClient, STRING pszCell, ULONG *pStatus)
       //    on behalf of the specified user. if successful, returns a nonzero
       //    token {hCreds}, suitable for use in AfsAdmSvr_OpenCell().
       //
-DWORD AfsAdmSvr_SetCredentials (DWORD idClient, STRING pszCell, STRING pszUser, STRING pszPassword, ULONG *pStatus)
+extern "C" DWORD AfsAdmSvr_SetCredentials (DWORD idClient, STRING pszCell, STRING pszUser, STRING pszPassword, ULONG *pStatus)
 {
    ULONG status;
    size_t iOp = AfsAdmSvr_BeginOperation (idClient);
@@ -173,7 +173,7 @@ DWORD AfsAdmSvr_SetCredentials (DWORD idClient, STRING pszCell, STRING pszUser, 
       //    when manipulating the specified cell. You should follow this
       //    call with a Refresh request if necessary.
       //
-int AfsAdmSvr_PushCredentials (DWORD idClient, DWORD hCreds, ASID idCell, ULONG *pStatus)
+extern "C" int AfsAdmSvr_PushCredentials (DWORD idClient, DWORD hCreds, ASID idCell, ULONG *pStatus)
 {
    ULONG status;
    size_t iOp = AfsAdmSvr_BeginOperation (idClient);
@@ -201,7 +201,7 @@ int AfsAdmSvr_PushCredentials (DWORD idClient, DWORD hCreds, ASID idCell, ULONG 
       // AfsAdmSvr_GetLocalCell
       // ...obtains the name of the primary cell used by the admin server
       //
-int AfsAdmSvr_GetLocalCell (DWORD idClient, STRING pszCellName, ULONG *pStatus)
+extern "C" int AfsAdmSvr_GetLocalCell (DWORD idClient, STRING pszCellName, ULONG *pStatus)
 {
    size_t iOp = AfsAdmSvr_BeginOperation (idClient);
 
@@ -224,7 +224,7 @@ int AfsAdmSvr_GetLocalCell (DWORD idClient, STRING pszCellName, ULONG *pStatus)
       // AfsAdmSvr_ErrorCodeTranslate
       // ...translates an error code into an English string
       //
-int AfsAdmSvr_ErrorCodeTranslate (DWORD idClient, ULONG code, LANGID idLanguage, STRING pszErrorText, ULONG *pStatus)
+extern "C" int AfsAdmSvr_ErrorCodeTranslate (DWORD idClient, ULONG code, LANGID idLanguage, STRING pszErrorText, ULONG *pStatus)
 {
    if (!AfsAppLib_TranslateError (pszErrorText, code, idLanguage))
       return FALSE_(ERROR_INVALID_PARAMETER,pStatus);
@@ -241,7 +241,7 @@ int AfsAdmSvr_ErrorCodeTranslate (DWORD idClient, ULONG code, LANGID idLanguage,
       // AfsAdmSvr_GetAction
       // ...returns information about a particular operation in progress.
       //
-int AfsAdmSvr_GetAction (DWORD idClient, DWORD idAction, LPASACTION pAction, ULONG *pStatus)
+extern "C" int AfsAdmSvr_GetAction (DWORD idClient, DWORD idAction, LPASACTION pAction, ULONG *pStatus)
 {
    Print (dlDETAIL, TEXT("Client 0x%08lX: GetAction (idAction=0x%08lX)"), idClient, idAction);
 
@@ -261,7 +261,7 @@ int AfsAdmSvr_GetAction (DWORD idClient, DWORD idAction, LPASACTION pAction, ULO
       //    be constrained to only including those operations initiated by
       //    a particular client and/or performed in a particular cell.
       //
-int AfsAdmSvr_GetActions (DWORD idClient, DWORD idClientSearch, ASID idCellSearch, LPASACTIONLIST *ppList, ULONG *pStatus)
+extern "C" int AfsAdmSvr_GetActions (DWORD idClient, DWORD idClientSearch, ASID idCellSearch, LPASACTIONLIST *ppList, ULONG *pStatus)
 {
    Print (dlDETAIL, TEXT("Client 0x%08lX: GetActions (idClientSearch=0x%08lX, idCellSearch=0x%08lX)"), idClient, idClientSearch, idCellSearch);
 
@@ -282,7 +282,7 @@ int AfsAdmSvr_GetActions (DWORD idClient, DWORD idClientSearch, ASID idCellSearc
       // AfsAdmSvr_OpenCell
       // ...opens a cell for administration.
       //
-int AfsAdmSvr_OpenCell (DWORD idClient, DWORD hCreds, STRING pszCellName, DWORD dwScopeFlags, ASID *pidCell, ULONG *pStatus)
+extern "C" int AfsAdmSvr_OpenCell (DWORD idClient, DWORD hCreds, STRING pszCellName, DWORD dwScopeFlags, ASID *pidCell, ULONG *pStatus)
 {
    size_t iOp = AfsAdmSvr_BeginOperation (idClient);
 
@@ -311,7 +311,7 @@ int AfsAdmSvr_OpenCell (DWORD idClient, DWORD hCreds, STRING pszCellName, DWORD 
       // AfsAdmSvr_CloseCell
       // ...used by client to open a cell for administration.
       //
-int AfsAdmSvr_CloseCell (DWORD idClient, ASID idCell, ULONG *pStatus)
+extern "C" int AfsAdmSvr_CloseCell (DWORD idClient, ASID idCell, ULONG *pStatus)
 {
    size_t iOp = AfsAdmSvr_BeginOperation (idClient);
 
@@ -344,7 +344,7 @@ int AfsAdmSvr_CloseCell (DWORD idClient, ASID idCell, ULONG *pStatus)
       //    which match the specified criteria--all volumes on a partition,
       //    or all users named "b*" within a cell.
       //
-int AfsAdmSvr_FindObject (DWORD idClient, ASID idSearchScope, ASOBJTYPE ObjectType, AFSADMSVR_SEARCH_REFRESH SearchRefresh, STRING szName, ASID *pidObject, ULONG *pStatus)
+extern "C" int AfsAdmSvr_FindObject (DWORD idClient, ASID idSearchScope, ASOBJTYPE ObjectType, AFSADMSVR_SEARCH_REFRESH SearchRefresh, STRING szName, ASID *pidObject, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -445,7 +445,7 @@ int AfsAdmSvr_FindObject (DWORD idClient, ASID idSearchScope, ASOBJTYPE ObjectTy
 }
 
 
-int AfsAdmSvr_FindObjects (DWORD idClient, ASID idSearchScope, ASOBJTYPE ObjectType, AFSADMSVR_SEARCH_REFRESH SearchRefresh, STRING szPattern, LPAFSADMSVR_SEARCH_PARAMS pSearchParams, LPASIDLIST *ppList, ULONG *pStatus)
+extern "C" int AfsAdmSvr_FindObjects (DWORD idClient, ASID idSearchScope, ASOBJTYPE ObjectType, AFSADMSVR_SEARCH_REFRESH SearchRefresh, STRING szPattern, LPAFSADMSVR_SEARCH_PARAMS pSearchParams, LPASIDLIST *ppList, ULONG *pStatus)
 {
    BOOL rc = TRUE;
    ULONG status = 0;
@@ -549,7 +549,7 @@ int AfsAdmSvr_FindObjects (DWORD idClient, ASID idSearchScope, ASOBJTYPE ObjectT
       // ...returns server-cached information about the specified object (or
       //    objects).
       //
-int AfsAdmSvr_GetObject (DWORD idClient, AFSADMSVR_GET_TYPE GetType, AFSADMSVR_GET_LEVEL GetLevel, ASID idObject, DWORD verProperties, LPASOBJPROP pProperties, ULONG *pStatus)
+extern "C" int AfsAdmSvr_GetObject (DWORD idClient, AFSADMSVR_GET_TYPE GetType, AFSADMSVR_GET_LEVEL GetLevel, ASID idObject, DWORD verProperties, LPASOBJPROP pProperties, ULONG *pStatus)
 {
    size_t iOp = AfsAdmSvr_BeginOperation (idClient);
 
@@ -595,7 +595,7 @@ int AfsAdmSvr_GetObject (DWORD idClient, AFSADMSVR_GET_TYPE GetType, AFSADMSVR_G
 }
 
 
-int AfsAdmSvr_GetObjects (DWORD idClient, AFSADMSVR_GET_TYPE GetType, AFSADMSVR_GET_LEVEL GetLevel, LPASIDLIST pListObjects, LPASOBJPROPLIST *ppListObjectProperties, ULONG *pStatus)
+extern "C" int AfsAdmSvr_GetObjects (DWORD idClient, AFSADMSVR_GET_TYPE GetType, AFSADMSVR_GET_LEVEL GetLevel, LPASIDLIST pListObjects, LPASOBJPROPLIST *ppListObjectProperties, ULONG *pStatus)
 {
    size_t iOp = AfsAdmSvr_BeginOperation (idClient);
 
@@ -634,7 +634,7 @@ int AfsAdmSvr_GetObjects (DWORD idClient, AFSADMSVR_GET_TYPE GetType, AFSADMSVR_
       // ...invalidates the server's cache of information about the specified
       //    object or objects.
       //
-int AfsAdmSvr_RefreshObject (DWORD idClient, ASID idObject, ULONG *pStatus)
+extern "C" int AfsAdmSvr_RefreshObject (DWORD idClient, ASID idObject, ULONG *pStatus)
 {
    size_t iOp = AfsAdmSvr_BeginOperation (idClient);
 
@@ -654,7 +654,7 @@ int AfsAdmSvr_RefreshObject (DWORD idClient, ASID idObject, ULONG *pStatus)
 }
 
 
-int AfsAdmSvr_RefreshObjects (DWORD idClient, LPASIDLIST pListObjects, ULONG *pStatus)
+extern "C" int AfsAdmSvr_RefreshObjects (DWORD idClient, LPASIDLIST pListObjects, ULONG *pStatus)
 {
    size_t iOp = AfsAdmSvr_BeginOperation (idClient);
 
@@ -681,7 +681,7 @@ int AfsAdmSvr_RefreshObjects (DWORD idClient, LPASIDLIST pListObjects, ULONG *pS
       //    be called on a dedicated thread by the client. (TaAfsAdmSvrClient.lib
       //    automatically handles this.)
       //
-void AfsAdmSvr_CallbackHost (void)
+extern "C" void AfsAdmSvr_CallbackHost (void)
 {
    AfsAdmSvr_CallbackManager();
 }
@@ -691,7 +691,7 @@ void AfsAdmSvr_CallbackHost (void)
       // AfsAdmSvr_GetRandomKey
       // ...returns a randomly-generated 8-byte encryption key
       //
-int AfsAdmSvr_GetRandomKey (DWORD idClient, ASID idCell, BYTE keyData[ ENCRYPTIONKEYLENGTH ], ULONG *pStatus)
+extern "C" int AfsAdmSvr_GetRandomKey (DWORD idClient, ASID idCell, BYTE keyData[ ENCRYPTIONKEYLENGTH ], ULONG *pStatus)
 {
    if (!AfsAdmSvr_fIsValidClient (idClient))
       return FALSE_(ERROR_INVALID_PARAMETER,pStatus);

@@ -4,9 +4,11 @@
 #
 # Created By:	Derek Atkins <warlord@MIT.EDU>
 #
+use File::Path;
 
 $linux_header_dir="/usr/src/linux";
 $outdir="./src/afs/LINUX";
+$tmpldir="./src/afs/LINUX";
 
 $sepline="/* LINUX VNODE INCLUDED BELOW -- DO NOT MODIFY */\n";
 
@@ -87,12 +89,16 @@ sub testArg {
 while ($_ = shift @ARGV) {
     if (m/^-i/) { $linux_header_dir = testArg(shift @ARGV); next; }
     if (m/^-o/) { $outdir = testArg(shift @ARGV); next; }
+    if (m/^-t/) { $tmpldir = testArg(shift @ARGV); next; }
     usage;
 }
 
 $linux_fs_h="$linux_header_dir/include/linux/fs.h";
 $vfs_h="$outdir/osi_vfs.h";
-$vfs_hin="$outdir/osi_vfs.hin";
+$vfs_hin="$tmpldir/osi_vfs.hin";
+
+# we're running prior to configure finishing, so outdir might not exist yet
+mkpath([$outdir], 0, 0755);
 
 makeVfs ($linux_fs_h, $vfs_hin, "$vfs_h.new");
 

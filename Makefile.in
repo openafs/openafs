@@ -7,35 +7,8 @@
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
 
-SHELL=/bin/sh
-DEST=@DEST@
-TOP_SRCDIR=@TOP_SRCDIR@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afskerneldir=@afskerneldir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-
-# Systype-generic items
-SYS_NAME=@AFS_SYSNAME@
-MKAFS_OSTYPE=@MKAFS_OSTYPE@
-
-# Systype-specific items
-LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
-LINUX_VERSION=@LINUX_VERSION@
-DARWIN_INFOFILE=@DARWIN_INFOFILE@
-
-# Other items
-LIB_AFSDB=@LIB_AFSDB@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 # Enable build+install of obsolete and insecure packages
 # Set to anything other than YES, or comment out to disable the build
@@ -44,8 +17,6 @@ WITH_INSECURE=@WITH_INSECURE@
 
 ENABLE_KERNEL_MODULE=@ENABLE_KERNEL_MODULE@
 
-include src/config/Makefile.${SYS_NAME}
-
 # To compile AFS from scratch in the src tree run "make".
 #   This recursively calls "make install ..." and does not depend on the
 #   existence of any non-standard programs.
@@ -53,11 +24,12 @@ include src/config/Makefile.${SYS_NAME}
 #   rxgen, compile_et and others already exist and runs it with
 #   "-argument kinstall".
 
-COMPILE_PART1  = cd src; cd
-COMPILE_PART2A = ; $(MAKE)
+COMPILE_PART1  = cd src && cd
+COMPILE_PART2A = && $(MAKE)
 COMPILE_PART2B = all
 COMPILE_PART2  = ${COMPILE_PART2A} ${COMPILE_PART2B}
 COMPILE_CLEAN  = ${COMPILE_PART2A} clean
+COMPILE_DEPINSTALL  = ${COMPILE_PART2A} depinstall
 
 all: force ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}
 	$(MAKE) build
@@ -99,11 +71,13 @@ packages: dest
 		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.11 ;; \
 	ia64_hpux1122 ) \
 		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.22 ;; \
+	ia64_hpux1123 ) \
+		${COMPILE_PART1} packaging/HP-UX && swpackage -s  psf-1.2.10-transarc-paths-11.23 ;; \
 	*) \
 		echo Not building packages for ${SYS_NAME} ;; \
 	esac
 
-${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}:
+${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR} ${TOP_JLIBDIR}:
 	mkdir -p $@
 
 install_dirs: force
@@ -136,103 +110,89 @@ config:
 pinstall: config
 	${COMPILE_PART1} pinstall ${COMPILE_PART2}
 
-procmgmt: config pinstall
+procmgmt: pinstall
 	${COMPILE_PART1} procmgmt ${COMPILE_PART2}
 
-util: pinstall procmgmt
+util: procmgmt
 	${COMPILE_PART1} util ${COMPILE_PART2}
 
-audit: pinstall rx rxkad fsint
-	${COMPILE_PART1} audit ${COMPILE_PART2}
+audit: util rx rxkad
+	${COMPILE_PART1} audit ${COMPILE_PART2} #TODO
 
 comerr: util
 	${COMPILE_PART1} comerr ${COMPILE_PART2}
 
 cmd: comerr
 	@case ${SYS_NAME} in \
-	sgi_6* | sun4x_5[789] | hp_ux11* | ia64_hpux* | sparc64_linux* | alpha_linux* ) \
+	sgi_6* | sun*_5[789] | hp_ux11* | ia64_hpux* | sparc64_linux* | alpha_linux* ) \
 		${COMPILE_PART1} cmd ${COMPILE_PART2}64 ;; \
 	*) \
 		${COMPILE_PART1} cmd ${COMPILE_PART2} ;; \
 	esac
 
-lwp: project util
+lwp: util lwp_depinstall
 	${COMPILE_PART1} lwp ${COMPILE_PART2}
 
-rxgen: pinstall
+rxgen: pinstall 
 	${COMPILE_PART1} rxgen ${COMPILE_PART2}
 
-rxobj:
-
-kernrx: 
+rx: pinstall lwp rxgen rx_depinstall
 	${COMPILE_PART1} rx ${COMPILE_PART2}
 
-rx: project lwp rxgen
-	${COMPILE_PART1} rx ${COMPILE_PART2}
-
-rxstat: rx
+rxstat: rx rxstat_depinstall
 	${COMPILE_PART1} rxstat ${COMPILE_PART2}
 
-rxincls: rxobj
-	${COMPILE_PART1} rx ${COMPILE_PART2}
-
 rxtests: rxdebug
-rxdebug: rx
+rxdebug: rx sys
 	${COMPILE_PART1} rxdebug ${COMPILE_PART2}
 
-fsint: project kfsint
-
-kfsint: lwp rxgen rxincls
+fsint: cmd comerr rxgen rx lwp fsint_depinstall
 	${COMPILE_PART1} fsint ${COMPILE_PART2}
 
-export2: project fsint
+export2: project 
 
-export: fsint
+export: 
 	@case ${SYS_NAME} in \
-	rs_aix*)	\
-	    ${COMPILE_PART1} export ${COMPILE_PART2} ;; \
-	  * ) echo skipping export for ${SYS_NAME} ;; \
+	rs_aix*) \
+		${MAKE} export_build ; \
 	esac
 
-afs: export
+export_build: fsint
+	${COMPILE_PART1} export ${COMPILE_PART2}
+
+afs: export pinstall comerr afs_depinstall
 	${COMPILE_PART1} afs ${COMPILE_PART2}
 
-des: config
+des: config pinstall
 	${COMPILE_PART1} des ${COMPILE_PART2} 
 
-sys: project des rx rxstat fsint
+sys: cmd comerr afs des rx rxstat fsint
 	${COMPILE_PART1} sys ${COMPILE_PART2}
 
-rxkad: project des
+rxkad: cmd comerr sys des rx rxkad_depinstall
 	${COMPILE_PART1} rxkad ${COMPILE_PART2}
 
-kernauth: 
+auth: cmd comerr comerr des lwp rx sys rxkad audit auth_depinstall
 	${COMPILE_PART1} auth ${COMPILE_PART2}
 
-auth: project comerr des lwp rx sys rxkad audit
-	${COMPILE_PART1} auth ${COMPILE_PART2}
-
-ubik: project auth 
+ubik: cmd comerr auth ubik_depinstall
 	${COMPILE_PART1} ubik ${COMPILE_PART2}
 
 ubiktests: ubik
 
-ptserver: project ubik cmd comerr auth audit
+ptserver: cmd comerr ubik cmd comerr auth audit ptserver_depinstall
 	${COMPILE_PART1} ptserver ${COMPILE_PART2}
 
-kauth: project ubik cmd auth comerr ptserver audit libacl
+kauth: cmd comerr ubik cmd auth comerr ptserver audit libacl kauth_depinstall
 	${COMPILE_PART1} kauth ${COMPILE_PART2}
 
-dauth: project ubik cmd auth comerr
+dauth: cmd comerr ubik cmd auth kauth comerr
 	${COMPILE_PART1} dauth ${COMPILE_PART2}
 
-libacl: project ptserver
+libacl: cmd comerr ptserver libacl_depinstall
 	${COMPILE_PART1} libacl ${COMPILE_PART2}
 
-kerndir: 
-	${COMPILE_PART1} dir ${COMPILE_PART2}
-
-dir: project libacl
+dir: cmd comerr libacl dir_depinstall
 	${COMPILE_PART1} dir ${COMPILE_PART2}
 
 # Removed from sgi_* case below:
@@ -245,19 +205,19 @@ sgiefs:
 		echo No efs stuff for ${SYS_NAME};; \
 	esac
 
-vol: project dir afs sgiefs
+vol: cmd comerr dir afs sgiefs
 	${COMPILE_PART1} vol ${COMPILE_PART2}
 
-vlserver: project vol audit
+vlserver: cmd comerr vol audit vlserver_depinstall
 	${COMPILE_PART1} vlserver ${COMPILE_PART2}
 
-viced: project vlserver audit
-	${COMPILE_PART1} viced  ${COMPILE_PART2}
+viced: cmd comerr vlserver audit
+	${COMPILE_PART1} viced ${COMPILE_PART2}
 
-tviced: project viced vlserver libafsrpc libafsauthent
+tviced: cmd comerr viced vlserver libafsrpc libafsauthent
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
-		${COMPILE_PART1} tviced  ${COMPILE_PART2} ;; \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*fbsd*|*nbsd2*) \
+		${COMPILE_PART1} tviced ${COMPILE_PART2} ;; \
 	*_darwin_[1-6][0-9]) \
 		echo Not building MT viced for ${SYS_NAME} ;; \
 	*_darwin_*) \
@@ -266,144 +226,189 @@ tviced: project viced vlserver libafsrpc libafsauthent
 		echo Not building MT viced for ${SYS_NAME} ;; \
 	esac
 
-volser: project tviced usd kauth audit
+volser: cmd comerr tviced usd kauth audit
 	${COMPILE_PART1} volser ${COMPILE_PART2}
 
-venus: project volser ptserver
+tvolser: project tviced usd libafsrpc libafsauthent
+	case ${SYS_NAME} in                                             \
+	alpha_dux*|sgi_*|sun*_5*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*)   \
+		${COMPILE_PART1} tvolser  ${COMPILE_PART2} ;;           \
+	*_darwin_[1-6][0-9])                                            \
+		echo Not building MT volser for ${SYS_NAME} ;;          \
+	*_darwin_*)                                                     \
+		${COMPILE_PART1} tvolser ${COMPILE_PART2} ;;            \
+	*)                                                              \
+		echo Not building MT volser for ${SYS_NAME} ;;          \
+	esac
+
+venus: cmd comerr volser ptserver
 	${COMPILE_PART1} venus ${COMPILE_PART2}
 	${COMPILE_PART1} venus/test ${COMPILE_PART2}
 
-afsd: project sys kauth
+afsd: cmd comerr sys kauth
 	${COMPILE_PART1} afsd ${COMPILE_PART2}
 
-null: project
+null: cmd comerr
 	${COMPILE_PART1} null ${COMPILE_PART2}
 
-gtx: project null auth # kauth rxkad ?
+${TOP_LIBDIR}/libtermlib.a: 
+	$(RM) -f ${TOP_LIBDIR}/libtermlib.a
 	case ${SYS_NAME} in \
-	  rs_aix* | sun*_5? | sgi_6? | *linux* | *_darwin_* | *fbsd* | ia64_hpux*) \
-		$(RM) -f ${TOP_LIBDIR}/libtermlib.a; \
-		ln -s libnull.a ${TOP_LIBDIR}/libtermlib.a; \
-		${COMPILE_PART1} gtx ${COMPILE_PART2};; \
-	  *) \
-		$(RM) -f ${TOP_LIBDIR}/libtermlib.a; \
-		ln -s /usr/lib/libtermlib.a ${TOP_LIBDIR}/libtermlib.a; \
-		${COMPILE_PART1} gtx ${COMPILE_PART2};; \
+	rs_aix* | sun4x_* | sunx86_* | sgi_6? | *linux* | *_darwin* | *fbsd* | ia64_hpux*) \
+		ln -s libnull.a ${TOP_LIBDIR}/libtermlib.a ;; \
+	*) \
+		ln -s /usr/lib/libtermlib.a ${TOP_LIBDIR}/libtermlib.a ;; \
 	esac
 
-fsprobe: project util fsint
+gtx: cmd comerr null auth kauth ${TOP_LIBDIR}/libtermlib.a
+	${COMPILE_PART1} gtx ${COMPILE_PART2}
+
+fsprobe: cmd comerr util fsint volser
 	${COMPILE_PART1} fsprobe ${COMPILE_PART2}
 
-scout: project gtx fsprobe
+scout: cmd comerr gtx fsprobe
 	${COMPILE_PART1} scout ${COMPILE_PART2}
 
-uss: des kauth project rx vlserver vol
+uss: des kauth cmd comerr rx vlserver vol volser
 	${COMPILE_PART1} uss ${COMPILE_PART2}
 
-bozo: project ntp audit
+bozo: cmd comerr ntp audit
 	${COMPILE_PART1} bozo ${COMPILE_PART2}
 
-
-# Removed from respective case statements below:
-# ${COMPILE_PART1} vfsckaix42 ${COMPILE_PART2} ;;
-# ${COMPILE_PART1} vfscksol25 ${COMPILE_PART2} ;;
-# ${COMPILE_PART1} vfscksol26 ${COMPILE_PART2} ;;
-# ${COMPILE_PART1} vfscksol27 ${COMPILE_PART2} ;;
 vfsck:	vol
 	set -x; \
 	case ${SYS_NAME} in \
-	sgi_* | *linux* | rs_aix42 | *_darwin_* | hp_ux* | ia64_hpux* | *fbsd* | *_obsd* | sun*_4* ) \
+	sgi_* | *linux* | rs_aix42 | *_darwin* | hp_ux* | ia64_hpux* | *fbsd* | *_obsd* | *_nbsd* | sun*_4* | rs_aix5* ) \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
 	esac
 
-login: project kauth rxkad
+pam: cmd comerr kauth rxkad
+	set -x; \
+	if test "@HAVE_PAM@" = "yes"; then \
+		${COMPILE_PART1} pam ${COMPILE_PART2} ; \
+	else \
+		echo Skipping pam for ${SYS_NAME} ; \
+	fi
+
+tsm41: cmd comerr kauth rxkad
+	set -x; \
+	case ${SYS_NAME} in \
+	rs_aix* ) \
+		${COMPILE_PART1} tsm41 ${COMPILE_PART2} ;; \
+	* ) \
+		echo Skipping tsm41 for ${SYS_NAME} ;; \
+	esac
+
+sia: cmd comerr kauth rxkad
+	set -x; \
+	case ${SYS_NAME} in \
+	alpha_dux* ) \
+		${COMPILE_PART1} sia ${COMPILE_PART2} ;; \
+	* ) \
+		echo Skipping sia for ${SYS_NAME} ;; \
+	esac
+
+sgistuff: cmd comerr kauth rxkad
 	set -x; \
 	case ${SYS_NAME} in \
 	sgi_* ) \
 		${COMPILE_PART1} sgistuff ${COMPILE_PART2} ;; \
-	rs_aix42 ) \
-		${COMPILE_PART1} tsm41 ${COMPILE_PART2} ;; \
-	alpha_dux* ) \
-		${COMPILE_PART1} sia ${COMPILE_PART2} ;; \
-	sun4x_55 ) \
-		${COMPILE_PART1} login ${COMPILE_PART2} ;; \
-	amd64_linux24) \
-		echo Skipping pam/login for amd64_linux24 ;; \
-	sun*_* | hp_ux11* | ia64_hpux* | *linux* | *fbsd* ) \
-		if test "@HAVE_PAM@" = "yes"; then \
-			${COMPILE_PART1} pam ${COMPILE_PART2} ; \
-		else \
-			echo Skipping pam for ${SYS_NAME} ; \
-		fi ;; \
-	*_darwin_* | *_obsd* ) \
-		echo Skipping login for ${SYS_NAME} ;; \
 	* ) \
-		${COMPILE_PART1} login ${COMPILE_PART2} ;; \
+		echo Skipping sgistuff for ${SYS_NAME} ;; \
 	esac
 
-KERNELDIR= \
-  afs \
-  dir \
-  rx \
-  fsint \
-  auth \
-  rxkad \
-  util \
-  libacl \
-  vlserver \
-  sgiefs  \
-  rxstat
+login: cmd comerr kauth rxkad pam sia tsm41 sgistuff
+	set -x; \
+	if test "@BUILD_LOGIN@" = "yes"; then \
+		${COMPILE_PART1} login ${COMPILE_PART2} ; \
+	else \
+		echo Skipping login for ${SYS_NAME} ; \
+	fi
+
+#
+# _depinstall targets - only build and install headers/sources that are needed by libafs/libuafs
+#
+# encode dependencies within the _depinstall targets as required
+#
+lwp_depinstall: pinstall
+	${COMPILE_PART1} lwp ${COMPILE_DEPINSTALL}
+
+rx_depinstall: pinstall
+	${COMPILE_PART1} rx ${COMPILE_DEPINSTALL}
+
+rxkad_depinstall: pinstall comerr
+	${COMPILE_PART1} rxkad ${COMPILE_DEPINSTALL}
+
+ubik_depinstall: pinstall comerr rxgen
+	${COMPILE_PART1} ubik ${COMPILE_DEPINSTALL}
+
+vlserver_depinstall: pinstall rxgen ubik_depinstall auth_depinstall
+	${COMPILE_PART1} vlserver ${COMPILE_DEPINSTALL}
+
+auth_depinstall: pinstall comerr
+	${COMPILE_PART1} auth ${COMPILE_DEPINSTALL}
+
+fsint_depinstall: pinstall rxgen
+	${COMPILE_PART1} fsint ${COMPILE_DEPINSTALL}
+
+rxstat_depinstall: pinstall rxgen
+	${COMPILE_PART1} rxstat ${COMPILE_DEPINSTALL}
+
+libacl_depinstall: pinstall
+	${COMPILE_PART1} libacl ${COMPILE_DEPINSTALL}
+
+afs_depinstall: pinstall comerr
+	${COMPILE_PART1} afs ${COMPILE_DEPINSTALL}
+
+dir_depinstall: pinstall
+	${COMPILE_PART1} dir ${COMPILE_DEPINSTALL}
+
+kauth_depinstall: pinstall rxgen comerr
+	${COMPILE_PART1} kauth ${COMPILE_DEPINSTALL}
+
+ptserver_depinstall: pinstall rxgen comerr
+	${COMPILE_PART1} ptserver ${COMPILE_DEPINSTALL}
 
 
-UKERNELDIR= \
-  afs \
-  dir \
-  rx \
-  fsint \
-  util \
-  auth \
-  rxkad \
-  vlserver \
-  kauth \
-  des \
-  afsweb \
-  rxstat
+#
+# libafs build targets
+#
+libafs_setup: config export
+	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE} src/libafs/Makefile ${SYS_NAME}
 
-
-libafs: libafs_setup ${KERNELDIR}
+libafs: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall rxkad_depinstall fsint_depinstall \
+		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall
 	${COMPILE_PART1} libafs ${COMPILE_PART2}
 
-libafs_tree: libafs_setup ${KERNELDIR}
-	-/bin/rm -rf libafs_tree
-	for d in afs afsint rx config; do \
-		[ -d libafs_tree/$$d ] || mkdir -p libafs_tree/$$d; \
-	done
-	for f in `cd src/libafs; find . -name '*.[ch]'` \
-		Makefile.common Makefile.extradefs ${DARWIN_INFOFILE} \
-		afs.shutdown afs.startup redhat.sh sgi_master sgi_system \
-		; do \
-		${INSTALL} -c -f src/libafs/$$f libafs_tree/$$f; \
-	done
-	for f in config.guess config.sub install-sh missing mkinstalldirs \
-		; do \
-		${INSTALL} -c -f $$f libafs_tree/$$f; \
-	done
-	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE}.in libafs_tree/Makefile.in ${SYS_NAME}
-	${INSTALL} -c src/config/Makefile.${SYS_NAME}.in libafs_tree/config
-	${INSTALL} -c src/config/afsconfig.h.in libafs_tree/config
-	${INSTALL} -c -f -ns configure-libafs libafs_tree/configure
-	case ${SYS_NAME} in \
-	*linux*) \
-		${INSTALL} -c src/config/make_vnode.pl libafs_tree/config ; \
-		${INSTALL} -c src/afs/LINUX/osi_vfs.hin libafs_tree/afs ;; \
-	esac
+libafs_tree: libafs_setup lwp_depinstall rx_depinstall vlserver_depinstall rxkad_depinstall fsint_depinstall \
+		libacl_depinstall afs_depinstall dir_depinstall rxstat_depinstall
+	${TOP_SRCDIR}/config/make_libafs_tree.pl \
+		-sn $(SYS_NAME) \
+		-os $(MKAFS_OSTYPE) \
+		-t @TOP_OBJDIR@/libafs_tree \
+		-o @TOP_OBJDIR@ \
+		-p @srcdir@
 
-libuafs: libuafs_setup ${UKERNELDIR}
+#
+# libuafs build targets
+#
+
+UKERNELDIR= \
+  des \
+  afsweb 
+
+libuafs_setup: config export
+	src/config/config src/libuafs/MakefileProto.${MKAFS_OSTYPE} src/libuafs/Makefile ${SYS_NAME}
+
+libuafs: libuafs_setup vlserver_depinstall rx_depinstall fsint_depinstall \
+		auth_depinstall dir_depinstall libacl_depinstall rxkad_depinstall \
+		ubik_depinstall afs_depinstall kauth_depinstall ptserver_depinstall \
+		rxstat_depinstall lwp_depinstall des
 	set -x; \
 	case ${SYS_NAME} in \
-	hp_ux102* | *_obsd* | sun*_4* ) \
+	hp_ux102* | *_obsd* | sun*_4* | *_nbsd*| hp_ux11i | ia64_hpux112*) \
 		echo Skipping libuafs for ${SYS_NAME} ;; \
 	* ) \
 		${COMPILE_PART1} libuafs ${COMPILE_PART2} ;; \
@@ -412,45 +417,45 @@ libuafs: libuafs_setup ${UKERNELDIR}
 afsweb: kauth dauth 
 	${COMPILE_PART1} afsweb ${COMPILE_PART2}
 
-update: project auth
+update: cmd comerr auth
 	${COMPILE_PART1} update ${COMPILE_PART2}
 
-log: project auth 
+log: cmd comerr auth 
 	${COMPILE_PART1} log ${COMPILE_PART2}
 
-bu_utils: project
+bu_utils: cmd comerr usd
 	${COMPILE_PART1} bu_utils ${COMPILE_PART2}
 
-usd: project
+usd: cmd comerr
 	${COMPILE_PART1} usd ${COMPILE_PART2}
 
-bubasics: project comerr
+bubasics: cmd comerr comerr rx
 	${COMPILE_PART1} bubasics ${COMPILE_PART2}
 
-butm: project bubasics usd
+butm: cmd comerr bubasics usd uss
 	${COMPILE_PART1} butm ${COMPILE_PART2}
 
-butc: project bubasics butm budb bucoord cmd
+butc: cmd comerr bubasics butm budb bucoord cmd rxgen rx
 	${COMPILE_PART1} butc ${COMPILE_PART2}
 
-tbutc: project bubasics butm budb bucoord cmd butc
+tbutc: cmd comerr bubasics butm budb bucoord cmd butc
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_*|rs_aix4*|*linux*|hp_ux11*|ia64_hpux*) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix4*|*linux*|hp_ux11*|ia64_hpux*) \
 		${COMPILE_PART1} tbutc ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT butc for ${SYS_NAME} ;; \
 	esac
 
-budb: project bubasics
+budb: cmd comerr bubasics uss
 	${COMPILE_PART1} budb ${COMPILE_PART2}
 
-bucoord: project bubasics budb volser
+bucoord: cmd comerr bubasics budb volser
 	${COMPILE_PART1} bucoord ${COMPILE_PART2}
 
-xstat: project
+xstat: cmd comerr fsint viced
 	${COMPILE_PART1} xstat ${COMPILE_PART2}
 
-afsmonitor: project gtx xstat
+afsmonitor: cmd comerr gtx xstat
 	${COMPILE_PART1} afsmonitor ${COMPILE_PART2}
 
 tests: rxtests ubiktests
@@ -458,33 +463,34 @@ tests: rxtests ubiktests
 # pthread based user space RX library
 libafsrpc: rx rxkad des
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*fbsd*) \
-	${COMPILE_PART1} libafsrpc  ${COMPILE_PART2} ;; \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*fbsd*|*nbsd2*) \
+	${COMPILE_PART1} libafsrpc ${COMPILE_PART2} ;; \
 	*_darwin_[1-6][0-9]) \
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
 	*_darwin_*) \
-	${COMPILE_PART1} libafsrpc  ${COMPILE_PART2} ;; \
+		${COMPILE_PART1} libafsrpc  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
 	esac
 
 libafsauthent: ubik auth kauth libafsrpc
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*fbsd*) \
-	${COMPILE_PART1} libafsauthent  ${COMPILE_PART2} ;; \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*|*fbsd*|*nbsd2*) \
+	${COMPILE_PART1} libafsauthent ${COMPILE_PART2} ;; \
 	*_darwin_[1-6][0-9]) \
 		echo Not building MT libafsauthent for ${SYS_NAME} ;; \
 	*_darwin_*) \
-	${COMPILE_PART1} libafsauthent  ${COMPILE_PART2} ;; \
+		${COMPILE_PART1} libafsauthent  ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building MT libafsauthent for ${SYS_NAME} ;; \
 	esac
 
+# pthread based user space RX library
 shlibafsrpc: rx rxkad des
 	case ${SYS_NAME} in \
 	*linux*) \
-		echo Skipping shlibafsprc for amd64_linux24 ;; \
-	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
+		echo Skipping shlibafsrpc for amd64_linux24 ;; \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 	${COMPILE_PART1} shlibafsrpc ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
@@ -494,7 +500,7 @@ shlibafsauthent: ubik auth kauth shlibafsrpc
 	case ${SYS_NAME} in \
 	*linux*) \
 		echo Skipping shlibafsauthent for amd64_linux24 ;; \
-	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building shared libafsauthent for ${SYS_NAME} ;; \
@@ -514,7 +520,7 @@ libadmin_real:
 
 libadmin: libafsauthent bozo
 	case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
+	alpha_dux*|sgi_*|sun4x_*|sunx86_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
 			$(MAKE) libadmin_real ;; \
 	*_darwin_[1-6][0-9]) \
 		echo Not building MT libadmin for ${SYS_NAME} ;; \
@@ -523,6 +529,20 @@ libadmin: libafsauthent bozo
 	*) \
 		echo Not building MT libadmin for ${SYS_NAME} ;; \
 	esac
+
+libjafs: libadmin
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux110) \
+	${COMPILE_PART1} JAVA/libjafs  ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building MT libjafs for ${SYS_NAME} ;; \
+	esac
+
+libjafsadm: libjafs
+
+jafs: libjafs
+
+jafsadm: libjafsadm
 
 finale: project cmd comerr afsd allrcmds butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
@@ -537,12 +557,6 @@ finale_nolibafs: project cmd comerr afsd allrcmds butc tbutc libuafs audit kauth
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 # Use washtool to ensure MakefileProto is current and obj/libafs exists.
-
-libafs_setup: config export
-	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE} src/libafs/Makefile ${SYS_NAME}
-
-libuafs_setup: config export
-	src/config/config src/libuafs/MakefileProto.${MKAFS_OSTYPE} src/libuafs/Makefile ${SYS_NAME}
 
 force:
 
@@ -638,6 +652,7 @@ clean2:
 	-${COMPILE_PART1} libadmin/cfg ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin/test ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libadmin/samples ${COMPILE_CLEAN}
+	-${COMPILE_PART1} JAVA/libjafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} finale ${COMPILE_CLEAN}
 	-${COMPILE_PART1} mpp ${COMPILE_CLEAN}
 	-${COMPILE_PART1} package ${COMPILE_CLEAN}
@@ -651,11 +666,12 @@ clean2:
 	-${COMPILE_PART1} libuafs ${COMPILE_CLEAN}
 	-(cd src/libafs; /bin/rm -rf afs afsint config rx)
 	-(cd src/libuafs; /bin/rm -rf afs afsint config rx des)
-	-/bin/rm -rf ${TOP_INCDIR} ${TOP_LIBDIR}
+	-/bin/rm -rf ${TOP_INCDIR} ${TOP_LIBDIR} ${TOP_JLIBDIR}
 	-/bin/rm -rf libafs_tree ${SYS_NAME}
 
  
 distclean: clean
+	/bin/rm -rf lib include
 	/bin/rm -f config.log config.cache config.status \
 	src/config/afsconfig.h \
 	Makefile \
@@ -682,7 +698,7 @@ distclean: clean
 	src/config/Makefile \
 	src/config/Makefile.version \
 	src/config/Makefile.version-NOCML \
-	src/config/Makefile.${SYS_NAME} \
+	src/config/Makefile.config \
 	src/dauth/Makefile \
 	src/des/test/Makefile \
 	src/des/Makefile \
@@ -711,11 +727,14 @@ distclean: clean
 	src/libadmin/samples/Makefile \
 	src/libadmin/test/Makefile \
 	src/libadmin/vos/Makefile \
+	src/JAVA/libjafs/Makefile \
 	src/libafs/Makefile \
+	src/libafs/Makefile.common \
 	src/libafs/MakefileProto.${MKAFS_OSTYPE} \
 	src/libafsauthent/Makefile \
 	src/libafsrpc/Makefile \
 	src/libuafs/Makefile \
+	src/libuafs/Makefile.common \
 	src/libuafs/MakefileProto.${MKAFS_OSTYPE} \
 	src/log/test/Makefile \
 	src/log/Makefile \
@@ -776,6 +795,8 @@ distclean: clean
 pristine: distclean
 	/bin/rm -f src/config/afsconfig.h.in configure configure-libafs aclocal.m4
 
+maintainer-clean: pristine
+
 #
 # Below targets are all deprecated, insecure, or obsolte, 
 # see README.OBSOLETE and README.INSECURE for more info
@@ -802,7 +823,7 @@ package.files: package
 ntp: project volser
 	@case ${WITH_OBSOLETE} in \
 	YES) 	case ${SYS_NAME} in \
-		sun*_5[89] | *linux* | *fbsd* | *_darwin_* ) echo skipping ntp for ${SYS_NAME} ;; \
+		sun4x_58 | sunx86_* | *linux* | *fbsd* | *_darwin* | *nbsd*) echo skipping ntp for ${SYS_NAME} ;; \
 		* ) ${COMPILE_PART1} ntp ${COMPILE_PART2} ;; \
 		esac ;; \
 	*)	echo skipping deprecated target: ntp ;; \
@@ -849,5 +870,7 @@ rcp: project rsh inetd
 	esac
 
 allrcmds: project rcp rlogind
+
+
 
 

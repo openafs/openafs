@@ -51,46 +51,55 @@ static char spbuf[SPBUFLEN + 1] = "";
  * to receive it.  The minimum length is <prec> or ceil(log{base}(val)),
  * whichever is larger, plus room for a trailing NUL.
  */
-static void mkint(char *buf, unsigned long val, int base, int uc, int prec)
+static void
+mkint(char *buf, unsigned long val, int base, int uc, int prec)
 {
-  int len = 0, dig, i;
+    int len = 0, dig, i;
 
-  while (val) {
-    dig = val % base;
-    val = (val - dig) / base;
-    if (dig < 10)  dig = dig + '0';
-    else if (uc) dig = dig + 'A' - 10;
-    else         dig = dig + 'a' - 10;
-    buf[len++] = dig;
-  }
-  while (len < prec) buf[len++] = '0';
-  for (i = 0; i < (len + 1) / 2; i++) {
-    dig = buf[i];
-    buf[i] = buf[len - i - 1];
-    buf[len - i - 1] = dig;
-  }
-  buf[len] = 0;
+    while (val) {
+	dig = val % base;
+	val = (val - dig) / base;
+	if (dig < 10)
+	    dig = dig + '0';
+	else if (uc)
+	    dig = dig + 'A' - 10;
+	else
+	    dig = dig + 'a' - 10;
+	buf[len++] = dig;
+    }
+    while (len < prec)
+	buf[len++] = '0';
+    for (i = 0; i < (len + 1) / 2; i++) {
+	dig = buf[i];
+	buf[i] = buf[len - i - 1];
+	buf[len - i - 1] = dig;
+    }
+    buf[len] = 0;
 }
 
 
 /* Write spaces faster than one at a time */
-static afs_uint32 wsp(XFILE *X, int count)
+static afs_uint32
+wsp(XFILE * X, int count)
 {
-  char *x;
-  afs_uint32 err;
-  int i;
+    char *x;
+    afs_uint32 err;
+    int i;
 
-  if (!spbuf[0]) {
-    for (x = spbuf, i = SPBUFLEN; i; x++, i--) *x = ' ';
-  }
+    if (!spbuf[0]) {
+	for (x = spbuf, i = SPBUFLEN; i; x++, i--)
+	    *x = ' ';
+    }
 
-  while (count > SPBUFLEN) {
-    err = xfwrite(X, spbuf, SPBUFLEN);
-    if (err) return err;
-    count -= SPBUFLEN;
-  }
-  if (count > 0) return xfwrite(X, spbuf, count);
-  return 0;
+    while (count > SPBUFLEN) {
+	err = xfwrite(X, spbuf, SPBUFLEN);
+	if (err)
+	    return err;
+	count -= SPBUFLEN;
+    }
+    if (count > 0)
+	return xfwrite(X, spbuf, count);
+    return 0;
 }
 
 
@@ -165,280 +174,359 @@ static afs_uint32 wsp(XFILE *X, int count)
  *     + The '#' and '+' flags have no effect.
  */
 
-afs_uint32 vxfprintf(XFILE *X, char *fmt, va_list ap)
+afs_uint32
+vxfprintf(XFILE * X, char *fmt, va_list ap)
 {
-  unsigned int width, precision, haveprec, len;
-  int ljust, plsign, spsign, altform, zfill;
-  int hflag, lflag, count, *countp, j;
-  char *x, *y, *lit = 0, xbuf[MAXPREC + 21], fbuf[20];
-  struct hostent *he;
-  struct in_addr ia;
-  unsigned long UVAL;
-  long SVAL, *lcountp;
-  double FVAL;
-  short *hcountp;
-  afs_uint32 err;
+    unsigned int width, precision, haveprec, len;
+    int ljust, plsign, spsign, altform, zfill;
+    int hflag, lflag, count, *countp, j;
+    char *x, *y, *lit = 0, xbuf[MAXPREC + 21], fbuf[20];
+    struct hostent *he;
+    struct in_addr ia;
+    unsigned long UVAL;
+    long SVAL, *lcountp;
+    double FVAL;
+    short *hcountp;
+    afs_uint32 err;
 
-  count = 0;
-  while (*fmt) {
-    if (*fmt != '%') {
-      if (!lit) lit = fmt;
-      fmt++;
-      count++;
-      continue;
-    }
-    if (lit) {
-      if ((err = xfwrite(X, lit, fmt - lit))) return err;
-      lit = 0;
-    }
+    count = 0;
+    while (*fmt) {
+	if (*fmt != '%') {
+	    if (!lit)
+		lit = fmt;
+	    fmt++;
+	    count++;
+	    continue;
+	}
+	if (lit) {
+	    if ((err = xfwrite(X, lit, fmt - lit)))
+		return err;
+	    lit = 0;
+	}
 
     /** Found a format specifier **/
-    ljust = plsign = spsign = altform = zfill = 0;
-    width = precision = haveprec = 0;
-    hflag = lflag = 0;
-    fmt++;
+	ljust = plsign = spsign = altform = zfill = 0;
+	width = precision = haveprec = 0;
+	hflag = lflag = 0;
+	fmt++;
 
-    /* parse format flags */
-    while (*fmt) {
-      switch (*fmt) {
-        case '-': ljust   = 1; fmt++; continue;      /* left justify */
-        case '+': plsign  = 1; fmt++; continue;      /* use + or - */
-        case ' ': spsign  = 1; fmt++; continue;      /* use space or - */
-        case '#': altform = 1; fmt++; continue;      /* alternate form */
-        case '0': zfill   = 1; fmt++; continue;      /* pad with 0 */
-        default: break;
-      }
-      break;
+	/* parse format flags */
+	while (*fmt) {
+	    switch (*fmt) {
+	    case '-':
+		ljust = 1;
+		fmt++;
+		continue;	/* left justify */
+	    case '+':
+		plsign = 1;
+		fmt++;
+		continue;	/* use + or - */
+	    case ' ':
+		spsign = 1;
+		fmt++;
+		continue;	/* use space or - */
+	    case '#':
+		altform = 1;
+		fmt++;
+		continue;	/* alternate form */
+	    case '0':
+		zfill = 1;
+		fmt++;
+		continue;	/* pad with 0 */
+	    default:
+		break;
+	    }
+	    break;
+	}
+
+	/* parse minimum width */
+	if (*fmt == '*') {
+	    width = va_arg(ap, int);
+	    fmt++;
+	} else
+	    while (isdigit(*fmt)) {
+		width = (width * 10) + (*fmt - '0');
+		fmt++;
+	    }
+
+	/* parse precision */
+	if (*fmt == '.') {
+	    fmt++;
+	    haveprec = 1;
+	    if (*fmt == '*') {
+		precision = va_arg(ap, int);
+		fmt++;
+	    } else
+		while (isdigit(*fmt)) {
+		    precision = (precision * 10) + (*fmt - '0');
+		    fmt++;
+		}
+	}
+
+	/* parse size flags */
+	while (*fmt) {
+	    switch (*fmt) {
+	    case 'h':
+		hflag = 1;
+		fmt++;
+		continue;	/* short argument */
+	    case 'l':
+		lflag = 1;
+		fmt++;
+		continue;	/* long argument */
+	    default:
+		break;
+	    }
+	    break;
+	}
+
+	/* parse format specifier */
+	if (!*fmt)
+	    break;
+	switch (*fmt++) {
+	case 'e':
+	case 'E':
+	case 'f':
+	case 'g':
+	case 'G':
+	    FVAL = va_arg(ap, double);
+	    sprintf(fbuf, "%%%s%s.*L%c", plsign ? "+" : (spsign ? " " : ""),
+		    altform ? "#" : "", fmt[-1]);
+	    if (!haveprec)
+		precision = 6;
+	    if (precision > MAXPREC)
+		precision = MAXPREC;
+	    sprintf(xbuf, fbuf, precision, FVAL);
+	    x = xbuf;
+	    len = strlen(x);
+	    break;
+
+	case 'i':
+	case 'd':		/* signed decimal integer */
+	    if (lflag)
+		SVAL = va_arg(ap, long);
+	    else if (hflag)
+		SVAL = va_arg(ap, int);
+	    else
+		SVAL = va_arg(ap, int);
+	    UVAL = (SVAL < 0) ? -SVAL : SVAL;
+
+	    if (SVAL < 0)
+		xbuf[0] = '-';
+	    else if (plsign)
+		xbuf[0] = '+';
+	    else if (spsign)
+		xbuf[0] = ' ';
+	    else
+		xbuf[0] = 0;
+
+	    if (!haveprec) {
+		if (zfill && !ljust)
+		    precision = width - !!xbuf[0];
+		else
+		    precision = 1;
+		if (precision < 1 + !!xbuf[0])
+		    precision = 1 + !!xbuf[0];
+	    }
+	    if (precision > MAXPREC)
+		precision = MAXPREC;
+
+	    mkint(xbuf + 1, UVAL, 10, 0, precision);
+	    x = xbuf + !xbuf[0];
+	    len = strlen(x);
+	    break;
+
+
+	case 'o':		/* unsigned octal integer */
+	    if (lflag)
+		UVAL = va_arg(ap, unsigned long);
+	    else if (hflag)
+		UVAL = va_arg(ap, unsigned int);
+	    else
+		UVAL = va_arg(ap, unsigned int);
+
+	    xbuf[0] = '0';
+
+	    if (!haveprec) {
+		if (zfill && !ljust)
+		    precision = width;
+		else
+		    precision = 1;
+	    }
+	    if (precision > MAXPREC)
+		precision = MAXPREC;
+
+	    mkint(xbuf + 1, UVAL, 8, 0, precision);
+	    x = xbuf + (xbuf[1] == '0' || !altform);
+	    len = strlen(x);
+	    break;
+
+	case 'u':		/* unsigned decimal integer */
+	    if (lflag)
+		UVAL = va_arg(ap, unsigned long);
+	    else if (hflag)
+		UVAL = va_arg(ap, unsigned int);
+	    else
+		UVAL = va_arg(ap, unsigned int);
+
+	    if (!haveprec) {
+		if (zfill && !ljust)
+		    precision = width;
+		else
+		    precision = 1;
+	    }
+	    if (precision > MAXPREC)
+		precision = MAXPREC;
+
+	    mkint(xbuf, UVAL, 10, 0, precision);
+	    x = xbuf;
+	    len = strlen(x);
+	    break;
+
+	case 'x':
+	case 'X':		/* unsigned hexadecimal integer */
+	    if (lflag)
+		UVAL = va_arg(ap, unsigned long);
+	    else if (hflag)
+		UVAL = va_arg(ap, unsigned int);
+	    else
+		UVAL = va_arg(ap, unsigned int);
+
+	    xbuf[0] = '0';
+	    xbuf[1] = 'x';
+
+	    if (!haveprec) {
+		if (zfill && !ljust)
+		    precision = width;
+		else
+		    precision = 1;
+	    }
+	    if (precision > MAXPREC)
+		precision = MAXPREC;
+
+	    mkint(xbuf + 2, UVAL, 16, 0, precision);
+	    x = xbuf + ((altform && UVAL) ? 0 : 2);
+	    len = strlen(x);
+	    break;
+
+	case '%':		/* literal % */
+	    xbuf[0] = '%';
+	    xbuf[1] = 0;
+	    x = xbuf;
+	    len = 1;
+	    break;
+
+	case 'c':		/* character */
+	    xbuf[0] = va_arg(ap, int);
+	    xbuf[1] = 0;
+	    x = xbuf;
+	    len = 1;
+	    break;
+
+	case 's':		/* string */
+	    x = va_arg(ap, char *);
+	    if (!x)
+		x = "<null>";
+	    len = strlen(x);
+	    if (haveprec && precision < len)
+		len = precision;
+	    break;
+
+	case 'I':		/* IP address:
+				 * value is provided as a network-order unsigned long integer
+				 * precision specifies max hostname length, as for %s
+				 * if precision is explicitly 0, no hostname lookup is done
+				 * if 0fill specified, IPaddr fields are 0-filled to 3 digits
+				 * if spsign specified, IPaddr fields are space-filled to 3 digits
+				 */
+	    UVAL = va_arg(ap, unsigned long);
+	    ia.s_addr = UVAL;
+	    /* XXX: add support for an application-provided function
+	     * for doing hostname lookups.  We don't do it automatically
+	     * because on some platforms that would prevent us from
+	     * being fully statically linked.
+	     */
+	    if (haveprec && !precision)
+		he = 0;
+	    else
+		he = gethostbyaddr((char *)&ia, 4, AF_INET);
+	    if (he) {
+		x = he->h_name;
+		len = strlen(x);
+		if (haveprec && precision < len)
+		    len = precision;
+		if (altform)
+		    for (y = x; *y; y++)
+			if (isupper(*y))
+			    *y = tolower(*y);
+			else if (plsign)
+			    for (y = x; *y; y++)
+				if (islower(*y))
+				    *y = toupper(*y);
+	    } else {
+		UVAL = ntohl(UVAL);
+		if (zfill)
+		    x = "%03u.%03u.%03u.%03u";
+		else if (spsign)
+		    x = "%3u.%3u.%3u.%3u";
+		else
+		    x = "%u.%u.%u.%u";
+		sprintf(xbuf, x, (UVAL & 0xff000000) >> 24,
+			(UVAL & 0x00ff0000) >> 16, (UVAL & 0x0000ff00) >> 8,
+			(UVAL & 0x000000ff));
+		x = xbuf;
+		len = strlen(xbuf);
+	    }
+	    break;
+
+	case 'n':		/* report count so far */
+	    if (lflag) {
+		lcountp = va_arg(ap, long *);
+		*lcountp = count;
+	    } else if (hflag) {
+		hcountp = va_arg(ap, short *);
+		*hcountp = count;
+	    } else {
+		countp = va_arg(ap, int *);
+		*countp = count;
+	    }
+	    continue;
+
+	default:		/* unknown specifier */
+	    continue;
+	}
+
+	/* render the results */
+	if (!width)
+	    width = len;
+	j = width - len;
+	if (j > 0)
+	    count += j;
+	count += len;
+
+	if (!ljust && (err = wsp(X, j)))
+	    return err;
+	if ((err = xfwrite(X, x, len)))
+	    return err;
+	if (ljust && (err = wsp(X, j)))
+	    return err;
     }
-
-    /* parse minimum width */
-    if (*fmt == '*') {
-      width = va_arg(ap, int);
-      fmt++;
-    } else while (isdigit(*fmt)) {
-      width = (width * 10) + (*fmt - '0');
-      fmt++;
-    }
-
-    /* parse precision */
-    if (*fmt == '.') {
-      fmt++;
-      haveprec = 1;
-      if (*fmt == '*') {
-        precision = va_arg(ap, int);
-        fmt++;
-      } else while (isdigit(*fmt)) {
-        precision = (precision * 10) + (*fmt - '0');
-        fmt++;
-      }
-    }
-
-    /* parse size flags */
-    while (*fmt) {
-      switch (*fmt) {
-        case 'h': hflag   = 1; fmt++; continue;      /* short argument */
-        case 'l': lflag   = 1; fmt++; continue;      /* long argument */
-        default: break;
-      }
-      break;
-    }
-
-    /* parse format specifier */
-    if (!*fmt) break;
-    switch (*fmt++) {
-      case 'e':
-      case 'E':
-      case 'f':
-      case 'g':
-      case 'G':
-        FVAL = va_arg(ap, double);
-        sprintf(fbuf, "%%%s%s.*L%c", plsign ? "+" : (spsign ? " " : ""),
-                altform ? "#" : "", fmt[-1]);
-        if (!haveprec) precision = 6;
-        if (precision > MAXPREC) precision = MAXPREC;
-        sprintf(xbuf, fbuf, precision, FVAL);
-        x = xbuf;
-        len = strlen(x);
-        break;
-
-      case 'i': 
-      case 'd': /* signed decimal integer */
-        if      (lflag) SVAL = va_arg(ap, long);
-        else if (hflag) SVAL = va_arg(ap, int);
-        else            SVAL = va_arg(ap, int);
-        UVAL = (SVAL < 0) ? -SVAL : SVAL;
-
-        if (SVAL < 0)    xbuf[0] = '-';
-        else if (plsign) xbuf[0] = '+';
-        else if (spsign) xbuf[0] = ' ';
-        else             xbuf[0] = 0;
-
-        if (!haveprec) {
-          if (zfill && !ljust) precision = width - !!xbuf[0];
-          else precision = 1;
-          if (precision < 1 + !!xbuf[0]) precision = 1 + !!xbuf[0];
-        }
-        if (precision > MAXPREC) precision = MAXPREC;
-
-        mkint(xbuf + 1, UVAL, 10, 0, precision);
-        x = xbuf + !xbuf[0];
-        len = strlen(x);
-        break;
-
-
-      case 'o': /* unsigned octal integer */
-        if      (lflag) UVAL = va_arg(ap, unsigned long);
-        else if (hflag) UVAL = va_arg(ap, unsigned int);
-        else            UVAL = va_arg(ap, unsigned int);
-
-        xbuf[0] = '0';
-
-        if (!haveprec) {
-          if (zfill && !ljust) precision = width;
-          else precision = 1;
-        }
-        if (precision > MAXPREC) precision = MAXPREC;
-
-        mkint(xbuf + 1, UVAL, 8, 0, precision);
-        x = xbuf + (xbuf[1] == '0' || !altform);
-        len = strlen(x);
-        break;
-
-      case 'u': /* unsigned decimal integer */
-        if      (lflag) UVAL = va_arg(ap, unsigned long);
-        else if (hflag) UVAL = va_arg(ap, unsigned int);
-        else            UVAL = va_arg(ap, unsigned int);
-
-        if (!haveprec) {
-          if (zfill && !ljust) precision = width;
-          else precision = 1;
-        }
-        if (precision > MAXPREC) precision = MAXPREC;
-
-        mkint(xbuf, UVAL, 10, 0, precision);
-        x = xbuf;
-        len = strlen(x);
-        break;
-
-      case 'x': 
-      case 'X': /* unsigned hexadecimal integer */
-        if      (lflag) UVAL = va_arg(ap, unsigned long);
-        else if (hflag) UVAL = va_arg(ap, unsigned int);
-        else            UVAL = va_arg(ap, unsigned int);
-
-        xbuf[0] = '0';
-        xbuf[1] = 'x';
-
-        if (!haveprec) {
-          if (zfill && !ljust) precision = width;
-          else precision = 1;
-        }
-        if (precision > MAXPREC) precision = MAXPREC;
-
-        mkint(xbuf + 2, UVAL, 16, 0, precision);
-        x = xbuf + ((altform && UVAL) ? 0 : 2);
-        len = strlen(x);
-        break;
-
-      case '%': /* literal % */
-        xbuf[0] = '%';
-        xbuf[1] = 0;
-        x = xbuf;
-        len = 1;
-        break;
-
-      case 'c': /* character */
-        xbuf[0] = va_arg(ap, int);
-        xbuf[1] = 0;
-        x = xbuf;
-        len = 1;
-        break;
-
-      case 's': /* string */
-        x = va_arg(ap, char *);
-        if (!x) x = "<null>";
-        len = strlen(x);
-        if (haveprec && precision < len) len = precision;
-        break;
-
-      case 'I': /* IP address:
-         * value is provided as a network-order unsigned long integer
-         * precision specifies max hostname length, as for %s
-         * if precision is explicitly 0, no hostname lookup is done
-         * if 0fill specified, IPaddr fields are 0-filled to 3 digits
-         * if spsign specified, IPaddr fields are space-filled to 3 digits
-         */
-        UVAL = va_arg(ap, unsigned long);
-        ia.s_addr = UVAL;
-        /* XXX: add support for an application-provided function
-         * for doing hostname lookups.  We don't do it automatically
-         * because on some platforms that would prevent us from
-         * being fully statically linked.
-         */
-        if (haveprec && !precision) he = 0;
-        else he = gethostbyaddr((char *)&ia, 4, AF_INET);
-        if (he) {
-          x = he->h_name;
-          len = strlen(x);
-          if (haveprec && precision < len) len = precision;
-          if (altform)
-            for (y = x; *y; y++) if (isupper(*y)) *y = tolower(*y);
-          else if (plsign)
-            for (y = x; *y; y++) if (islower(*y)) *y = toupper(*y);
-        } else {
-          UVAL = ntohl(UVAL);
-          if      (zfill)  x = "%03u.%03u.%03u.%03u";
-          else if (spsign) x = "%3u.%3u.%3u.%3u";
-          else             x = "%u.%u.%u.%u";
-          sprintf(xbuf, x,
-                  (UVAL & 0xff000000) >> 24, (UVAL & 0x00ff0000) >> 16,
-                  (UVAL & 0x0000ff00) >> 8,  (UVAL & 0x000000ff));
-          x = xbuf;
-          len = strlen(xbuf);
-        }
-        break;
-
-      case 'n': /* report count so far */
-        if (lflag) {
-          lcountp = va_arg(ap, long *);
-          *lcountp = count;
-        } else if (hflag) {
-          hcountp = va_arg(ap, short *);
-          *hcountp = count;
-        } else {
-          countp = va_arg(ap, int *);
-          *countp = count;
-        }
-        continue;
-
-      default: /* unknown specifier */
-        continue;
-    }
-
-    /* render the results */
-    if (!width)        width = len;
-    j = width - len;
-    if (j > 0) count += j;
-    count += len;
-
-    if (!ljust && (err = wsp(X, j))) return err;
-    if ((err = xfwrite(X, x, len))) return err;
-    if (ljust && (err = wsp(X, j))) return err;
-  }
-  if (lit && (err = xfwrite(X, lit, fmt - lit))) return err;
-  return 0;
-lose:
-  return err;
+    if (lit && (err = xfwrite(X, lit, fmt - lit)))
+	return err;
+    return 0;
+  lose:
+    return err;
 }
 
 
-afs_uint32 xfprintf(XFILE *X, char *fmt, ...)
+afs_uint32
+xfprintf(XFILE * X, char *fmt, ...)
 {
-  va_list ap;
-  afs_uint32 err;
+    va_list ap;
+    afs_uint32 err;
 
-  va_start(ap, fmt);
-  err = vxfprintf(X, fmt, ap);
-  va_end(ap);
-  return err;
+    va_start(ap, fmt);
+    err = vxfprintf(X, fmt, ap);
+    va_end(ap);
+    return err;
 }

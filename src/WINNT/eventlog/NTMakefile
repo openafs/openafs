@@ -5,6 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=WINNT\eventlog
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
@@ -12,7 +13,10 @@
 LIBFILE = $(DESTDIR)\lib\afs\afseventlog.lib
 
 LIBOBJS =\
-	logevent.obj
+	$(OUT)\logevent.obj
+
+$(LIBOBJS): $$(@B).c
+    $(C2OBJ) $**
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
@@ -78,4 +82,8 @@ clean::
 	if exist $(NTLANG) $(NTLANG) de_DE $(MAKECMD) /nologo /f NTMakefile clean
     $(CD) ..
 
-
+mkdir:
+	-mkdir $(OUT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..

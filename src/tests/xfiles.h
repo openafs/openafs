@@ -42,17 +42,17 @@ struct rx_connection;
 /* The XFILE structure */
 typedef struct XFILE XFILE;
 struct XFILE {
-  afs_uint32 (*do_read)(XFILE *, void *, afs_uint32);   /* read data */
-  afs_uint32 (*do_write)(XFILE *, void *, afs_uint32);  /* write data */
-  afs_uint32 (*do_tell)(XFILE *, u_int64 *);         /* find position */
-  afs_uint32 (*do_seek)(XFILE *, u_int64 *);         /* set position */
-  afs_uint32 (*do_skip)(XFILE *, afs_uint32);           /* skip forward */
-  afs_uint32 (*do_close)(XFILE *);                   /* close */
-  u_int64 filepos;                                /* position (counted) */
-  int is_seekable;                                /* 1 if seek works */
-  int is_writable;                                /* 1 if write works */
-  XFILE *passthru;                                /* XFILE to pass thru to */
-  void *refcon;                                   /* type-specific data */
+    afs_uint32(*do_read) (XFILE *, void *, afs_uint32);	/* read data */
+    afs_uint32(*do_write) (XFILE *, void *, afs_uint32);	/* write data */
+    afs_uint32(*do_tell) (XFILE *, u_int64 *);	/* find position */
+    afs_uint32(*do_seek) (XFILE *, u_int64 *);	/* set position */
+    afs_uint32(*do_skip) (XFILE *, afs_uint32);	/* skip forward */
+    afs_uint32(*do_close) (XFILE *);	/* close */
+    u_int64 filepos;		/* position (counted) */
+    int is_seekable;		/* 1 if seek works */
+    int is_writable;		/* 1 if write works */
+    XFILE *passthru;		/* XFILE to pass thru to */
+    void *refcon;		/* type-specific data */
 };
 
 
@@ -62,27 +62,27 @@ struct XFILE {
  * Other open modes may or may not be used, depending on the object type.
  * Remaining arguments are a function of the object type
  */
-extern afs_uint32 xfopen     (XFILE *, int, char *);      /* open by TYPE:name */
-extern afs_uint32 xfopen_path(XFILE *, int, char *, int); /* open by path   */
-extern afs_uint32 xfopen_FILE(XFILE *, int, FILE *);      /* open by FILE * */
-extern afs_uint32 xfopen_fd  (XFILE *, int, int);         /* open by fd     */
-extern afs_uint32 xfopen_rxcall (XFILE *, int, struct rx_call *);
-extern afs_uint32 xfopen_voldump(XFILE *, struct rx_connection *,
-                              afs_int32, afs_int32, afs_int32);
+extern afs_uint32 xfopen(XFILE *, int, char *);	/* open by TYPE:name */
+extern afs_uint32 xfopen_path(XFILE *, int, char *, int);	/* open by path   */
+extern afs_uint32 xfopen_FILE(XFILE *, int, FILE *);	/* open by FILE * */
+extern afs_uint32 xfopen_fd(XFILE *, int, int);	/* open by fd     */
+extern afs_uint32 xfopen_rxcall(XFILE *, int, struct rx_call *);
+extern afs_uint32 xfopen_voldump(XFILE *, struct rx_connection *, afs_int32,
+				 afs_int32, afs_int32);
 extern afs_uint32 xfopen_profile(XFILE *, int, char *, char *);
 
-extern afs_uint32 xfregister(char *, afs_uint32 (*)(XFILE *, int, char *));
+extern afs_uint32 xfregister(char *, afs_uint32(*)(XFILE *, int, char *));
 
 /* Standard operations on XFILEs */
-extern afs_uint32 xfread(XFILE *, void *, afs_uint32);     /* read data */
-extern afs_uint32 xfwrite(XFILE *, void *, afs_uint32);    /* write data */
-extern afs_uint32 xfprintf(XFILE *, char *, ...);          /* formatted */
-extern afs_uint32 vxfprintf(XFILE *, char *, va_list);     /* formatted VA */
-extern afs_uint32 xftell(XFILE *, u_int64 *);              /* get position */
-extern afs_uint32 xfseek(XFILE *, u_int64 *);              /* set position */
-extern afs_uint32 xfskip(XFILE *, afs_uint32);             /* skip forward */
-extern afs_uint32 xfpass(XFILE *, XFILE *);                /* set passthru */
-extern afs_uint32 xfunpass(XFILE *);                       /* unset passthru */
-extern afs_uint32 xfclose(XFILE *);                        /* close */
+extern afs_uint32 xfread(XFILE *, void *, afs_uint32);	/* read data */
+extern afs_uint32 xfwrite(XFILE *, void *, afs_uint32);	/* write data */
+extern afs_uint32 xfprintf(XFILE *, char *, ...);	/* formatted */
+extern afs_uint32 vxfprintf(XFILE *, char *, va_list);	/* formatted VA */
+extern afs_uint32 xftell(XFILE *, u_int64 *);	/* get position */
+extern afs_uint32 xfseek(XFILE *, u_int64 *);	/* set position */
+extern afs_uint32 xfskip(XFILE *, afs_uint32);	/* skip forward */
+extern afs_uint32 xfpass(XFILE *, XFILE *);	/* set passthru */
+extern afs_uint32 xfunpass(XFILE *);	/* unset passthru */
+extern afs_uint32 xfclose(XFILE *);	/* close */
 
 #endif /* _XFILES_H_ */

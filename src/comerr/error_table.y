@@ -2,7 +2,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/comerr/error_table.y,v 1.1.1.6 2001/10/14 18:04:26 hartmans Exp $");
+RCSID("$Header: /cvs/openafs/src/comerr/error_table.y,v 1.7 2003/03/10 01:59:29 shadow Exp $");
 
 /*
  *
@@ -46,6 +46,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/comerr/error_table.y,v 1.1.1.6 2001/10/
 
 #include "internal.h"
 
+int char_to_num(char c);
+char *gensym(const char *x);
 char *current_token = (char *)NULL;
 extern char *table_name;
 
@@ -129,8 +131,13 @@ description	:	QUOTED_STRING
 
 %%
 
-/* Copyright (C)  1998  Transarc Corporation.  All rights reserved.
- *
+/* 
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  */
 
 extern FILE *hfile, *cfile, *msfile;

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/sys/pagsh.c,v 1.1.1.6 2002/01/22 19:54:37 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/sys/pagsh.c,v 1.9 2003/07/15 23:16:54 shadow Exp $");
 
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
@@ -34,13 +35,12 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/sys/pagsh.c,v 1.1.1.6 2002/01/22 19:54:
 
 extern afs_int32 setpag();
 
-int main(argc, argv)
-int argc;
-char **argv;
+int
+main(int argc, char *argv[])
 {
-	struct passwd *pwe;
-	int uid, gid;
-	char *shell = "/bin/sh";
+    struct passwd *pwe;
+    int uid, gid;
+    char *shell = "/bin/sh";
 
 #ifdef	AFS_AIX32_ENV
     /*
@@ -50,46 +50,48 @@ char **argv;
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
-	gid = getgid();
-	uid = getuid();
-	pwe = getpwuid(uid);
-	if (pwe == 0) {
-		fprintf(stderr, "Intruder alert.\n");
-	} else {
+    gid = getgid();
+    uid = getuid();
+    pwe = getpwuid(uid);
+    if (pwe == 0) {
+	fprintf(stderr, "Intruder alert.\n");
+    } else {
 /*		shell = pwe->pw_shell; */
-	}
-	if (setpag() == -1) {
-		perror("setpag");
-	}
+    }
+    if (setpag() == -1) {
+	perror("setpag");
+    }
 #ifdef AFS_KERBEROS_ENV
- 	ktc_newpag();
+    ktc_newpag();
 #endif
-	(void) setuid(uid);
-	(void) setgid(gid);
-	argv[0] = shell;
-	execvp(shell, argv);
-	perror(shell);
-	fprintf(stderr, "No shell\n");
-	exit(1);
+    (void)setuid(uid);
+    (void)setgid(gid);
+    argv[0] = shell;
+    execvp(shell, argv);
+    perror(shell);
+    fprintf(stderr, "No shell\n");
+    exit(1);
 }
 
 
 #ifdef AFS_KERBEROS_ENV
 /* stolen from auth/ktc.c */
 
-static afs_uint32 curpag()
+static afs_uint32
+curpag(void)
 {
     afs_uint32 groups[NGROUPS_MAX];
     afs_uint32 g0, g1;
     afs_uint32 h, l, ret;
 
-    if (getgroups(sizeof groups/sizeof groups[0], groups) < 2) return 0;
+    if (getgroups(sizeof groups / sizeof groups[0], groups) < 2)
+	return 0;
 
     g0 = groups[0] & 0xffff;
     g1 = groups[1] & 0xffff;
@@ -109,7 +111,8 @@ static afs_uint32 curpag()
     return -1;
 }
 
-ktc_newpag()
+int
+ktc_newpag(void)
 {
     extern char **environ;
 
@@ -126,17 +129,18 @@ ktc_newpag()
     pag = curpag() & 0xffffffff;
     if (pag == -1) {
 	sprintf(fname, "%s%d", prefix, getuid());
-    }
-    else {
+    } else {
 	sprintf(fname, "%sp%ld", prefix, pag);
     }
 /*    ktc_set_tkt_string(fname); */
 
-    for (senv=environ, numenv=0; *senv; senv++) numenv++;
-    newenv = (char **)malloc((numenv+2) * sizeof(char *));
+    for (senv = environ, numenv = 0; *senv; senv++)
+	numenv++;
+    newenv = (char **)malloc((numenv + 2) * sizeof(char *));
 
-    for (senv=environ, denv=newenv; *senv; *senv++) {
-	if (strncmp(*senv, "KRBTKFILE=", 10) != 0) *denv++ = *senv;
+    for (senv = environ, denv = newenv; *senv; *senv++) {
+	if (strncmp(*senv, "KRBTKFILE=", 10) != 0)
+	    *denv++ = *senv;
     }
 
     *denv = malloc(10 + strlen(fname) + 1);
@@ -147,5 +151,3 @@ ktc_newpag()
 }
 
 #endif
-
-

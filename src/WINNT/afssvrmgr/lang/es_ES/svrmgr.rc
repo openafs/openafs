@@ -2441,23 +2441,6 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_SERVER_SERVICE      "%1:%2"
-    IDS_SERVICETYPE_SIMPLE  "Sencillo"
-    IDS_SERVICETYPE_CRON    "Cron"
-    IDS_SERVICESTATE_STOPPED "Detenido"
-    IDS_SERVICESTATE_STOPPING "Deteniéndose"
-    IDS_SERVICESTATE_STARTING "Iniciándose"
-    IDS_SERVICESTATE_RUNNING "Ejecutándose"
-    IDS_SERVICETYPE_FS_LONG "FS (sistema de archivos)"
-    IDS_SERVICETYPE_FS      "FS"
-    IDS_SERVICE_LASTERROR   "%1"
-    IDS_SERVICES_IN_CELL    "Todos los servicios de la célula %1:"
-    IDS_SERVICE_STARTDATE   "Iniciado %1"
-    IDS_SERVICE_STOPDATE    "Detenido %1"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_PERCENTAGE          "%1 %%"
     IDS_AGGREGATES_IN_SERVER "Particiones en servidor %1:"
     IDS_AGGREGATES_IN_CELL  "Todas las particiones de la célula %1:"
@@ -2505,11 +2488,11 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_ERROR_BAD_CREDENTIALS 
+    IDS_SVR_ERROR_BAD_CREDENTIALS 
                             "La identidad de AFS que ha entrado no está reconocida, o bien la contraseña que ha especificado es incorrecta."
-    IDS_CREDS_NONE          "(no hay señales)"
-    IDS_CREDS_VALID         "%2, caduca %3"
-    IDS_CREDS_EXPIRED       "(señales caducadas %3)"
+    IDS_SVR_CREDS_NONE          "(no hay señales)"
+    IDS_SVR_CREDS_VALID         "%2, caduca %3"
+    IDS_SVR_CREDS_EXPIRED       "(señales caducadas %3)"
 END
 
 STRINGTABLE DISCARDABLE 
@@ -3041,6 +3024,23 @@ BEGIN
                             "El AFS Server Manager no ha podido iniciarse debido a un problema desconocido.\n\nEs posible que tenga que volver a instalar el AFS Control Center."
     IDS_ERROR_CANT_CHANGEADDR 
                             "El AFS Server Manager no ha podido cambiar la dirección IP en VLDB para el servidor %1."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_SERVER_SERVICE      "%1:%2"
+    IDS_SERVICETYPE_SIMPLE  "Sencillo"
+    IDS_SERVICETYPE_CRON    "Cron"
+    IDS_SERVICESTATE_STOPPED "Detenido"
+    IDS_SERVICESTATE_STOPPING "Deteniéndose"
+    IDS_SERVICESTATE_STARTING "Iniciándose"
+    IDS_SERVICESTATE_RUNNING "Ejecutándose"
+    IDS_SERVICETYPE_FS_LONG "FS (sistema de archivos)"
+    IDS_SERVICETYPE_FS      "FS"
+    IDS_SERVICE_LASTERROR   "%1"
+    IDS_SERVICES_IN_CELL    "Todos los servicios de la célula %1:"
+    IDS_SERVICE_STARTDATE   "Iniciado %1"
+    IDS_SERVICE_STOPDATE    "Detenido %1"
 END
 
 #endif    // English (U.S.) resources

@@ -22,7 +22,7 @@
       // AfsAdmSvr_ChangeCell
       // ...changes a cell's properties.
       //
-int AfsAdmSvr_ChangeCell (DWORD idClient, ASID idCell, LPAFSADMSVR_CHANGECELL_PARAMS pChange, ULONG *pStatus)
+extern "C" int AfsAdmSvr_ChangeCell (DWORD idClient, ASID idCell, LPAFSADMSVR_CHANGECELL_PARAMS pChange, ULONG *pStatus)
 {
    ASACTION Action;
    Action.Action = ACTION_CELL_CHANGE;
@@ -60,7 +60,7 @@ int AfsAdmSvr_ChangeCell (DWORD idClient, ASID idCell, LPAFSADMSVR_CHANGECELL_PA
       // AfsAdmSvr_SetRefreshRate
       // ...changes the refresh rate for a specific cell
       //
-int AfsAdmSvr_SetRefreshRate (DWORD idClient, ASID idCell, ULONG cminRefreshRate, ULONG *pStatus)
+extern "C" int AfsAdmSvr_SetRefreshRate (DWORD idClient, ASID idCell, ULONG cminRefreshRate, ULONG *pStatus)
 {
    if (!AfsAdmSvr_fIsValidClient (idClient))
       return FALSE_(ERROR_INVALID_PARAMETER,pStatus);

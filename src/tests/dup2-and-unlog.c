@@ -14,19 +14,19 @@ main(int argc, char **argv)
     int fd;
 
 
-    fd = open ("foo", O_RDWR|O_CREAT, 0666);
+    fd = open("foo", O_RDWR | O_CREAT, 0666);
     if (fd < 0)
-	err (1, "open");
+	err(1, "open");
 
-    dup2 (fd + 1, fd);
-    
-    if (write (fd, "foo\n", 4) != 4)
-	errx (1, "write");
+    dup2(fd + 1, fd);
+
+    if (write(fd, "foo\n", 4) != 4)
+	errx(1, "write");
 
     ktc_ForgetAllTokens();
 
-    close (fd);
-    close (fd + 1);
+    close(fd);
+    close(fd + 1);
 
-    exit (0);
+    exit(0);
 }

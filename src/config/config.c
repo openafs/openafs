@@ -19,14 +19,17 @@
 /* prototypes */
 int mc_copy(FILE *, FILE *, char **);
 
-int main(int argc, char **argv) {
+int
+main(int argc, char **argv)
+{
     register FILE *infile;
     register FILE *outfile;
     char *alist[3];
     register int code;
 
     if (argc != 4) {
-	printf("config: usage is 'config <from file> <to file> <system name>'\n");
+	printf
+	    ("config: usage is 'config <from file> <to file> <system name>'\n");
 	exit(1);
     }
     infile = fopen(argv[1], "r");
@@ -41,14 +44,13 @@ int main(int argc, char **argv) {
     }
     alist[0] = argv[3];
     alist[1] = "all";
-    alist[2] = (char *) 0;
+    alist[2] = NULL;
     code = mc_copy(infile, outfile, alist);
     if (code) {
 	printf("config: failed to correctly write makefile '%s', code %d\n",
-		argv[2], code);
+	       argv[2], code);
 	exit(1);
-    }
-    else {
+    } else {
 	printf("Wrote new makefile '%s'.\n", argv[2]);
 	exit(0);
     }

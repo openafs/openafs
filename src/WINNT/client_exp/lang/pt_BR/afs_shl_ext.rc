@@ -600,11 +600,6 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    AFX_IDS_APP_TITLE       "AFS Client"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_MP_REMOVE_ITEM      "&Remover..."
     IDS_MP_MAKE_ITEM        "&Fazer..."
     IDS_FLUSH_FILE_DIR_ITEM "&Esvaziar Arquivo/Dir"
@@ -631,6 +626,11 @@ BEGIN
     IDS_SHOW_FS_COLUMN      "Servidor(es) de Arquivos"
     IDS_REMOVE_MP           "Remover Pontos de Montagem"
     IDS_REMOVE_MP_COLUMN    "Resultado"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "AFS Client"
 END
 
 #endif    // English (U.S.) resources

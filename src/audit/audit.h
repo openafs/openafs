@@ -7,19 +7,19 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#define AUD_END  0         /* End           of veriable list */
-#define AUD_STR  1         /* String        in variable list */
-#define AUD_INT  2         /* int           in variable list */
-#define AUD_LST  3         /* Variable list in a variable list */
-#define AUD_HOST 4         /* A host # to be changed to string */
-#define AUD_LONG 5         /* long          in variable list */
-#define AUD_DATE 6         /* date (unsigned long)           */
-#define AUD_FID  7         /* File ID                        */
-#define AUD_FIDS 8         /* array of Fids                  */
+#define AUD_END  0		/* End           of veriable list */
+#define AUD_STR  1		/* String        in variable list */
+#define AUD_INT  2		/* int           in variable list */
+#define AUD_LST  3		/* Variable list in a variable list */
+#define AUD_HOST 4		/* A host # to be changed to string */
+#define AUD_LONG 5		/* long          in variable list */
+#define AUD_DATE 6		/* date (unsigned long)           */
+#define AUD_FID  7		/* File ID                        */
+#define AUD_FIDS 8		/* array of Fids                  */
 /* next 3 lines on behalf of MR-AFS */
-#define AUD_RESID 20       /* resid         in variable list */
-#define AUD_RSSIZERANGE 21 /* rssizerange   in variable list */
-#define AUD_LOOKUPINFO 22  /* LookupInfo    in variable list */ 
+#define AUD_RESID 20		/* resid         in variable list */
+#define AUD_RSSIZERANGE 21	/* rssizerange   in variable list */
+#define AUD_LOOKUPINFO 22	/* LookupInfo    in variable list */
 
 /*
  * Note: the master definitions of these error codes come from *.et
@@ -27,13 +27,13 @@
  * simple way to avoid circular dependence problems in the build.
  */
 
-#define KANOAUTH                                 (180488L)      /* kauth/kaerrors.et */
-#define RXKADNOAUTH                              (19270405L)    /* rxkad/rxkad_errs.et */
-#define PRPERM                                   (267269L)      /* ptserver/pterror.et */
-#define VL_PERM                                  (363546L)      /* vlserver/vl_errors.et */
-#define BUDB_NOTPERMITTED                        (156303880L)   /* budb/budb_errs.et */
-#define BZACCESS                                 (39430L)       /* bozo/boserr.et */
-#define VOLSERBAD_ACCESS                         (1492325127L)  /* volser/volerr.et */
+#define KANOAUTH                                 (180488L)	/* kauth/kaerrors.et */
+#define RXKADNOAUTH                              (19270405L)	/* rxkad/rxkad_errs.et */
+#define PRPERM                                   (267269L)	/* ptserver/pterror.et */
+#define VL_PERM                                  (363546L)	/* vlserver/vl_errors.et */
+#define BUDB_NOTPERMITTED                        (156303880L)	/* budb/budb_errs.et */
+#define BZACCESS                                 (39430L)	/* bozo/boserr.et */
+#define VOLSERBAD_ACCESS                         (1492325127L)	/* volser/volerr.et */
 
 
 #define VS_StartEvent	   "AFS_VS_Start"
@@ -281,6 +281,5 @@
 
 
 /* prototypes for audit functions */
-int osi_audit (char *audEvent, afs_int32 errCode, ...);
-int osi_auditU (struct rx_call *call, char *audEvent, int errCode, ...);
-
+int osi_audit(char *audEvent, afs_int32 errCode, ...);
+int osi_auditU(struct rx_call *call, char *audEvent, int errCode, ...);

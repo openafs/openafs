@@ -13,9 +13,10 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/vprintf.c,v 1.1.1.4 2001/07/14 22:24:44 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/vfsck/vprintf.c,v 1.5 2003/07/15 23:17:27 shadow Exp $");
 
-#define VICE	/* allow us to put our changes in at will */
+#define VICE			/* allow us to put our changes in at will */
 #include <stdio.h>
 
 #include <sys/param.h>
@@ -41,7 +42,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/vprintf.c,v 1.1.1.4 2001/07/14 22
 #include <ufs/dir.h>
 #undef	_KERNEL
 #undef	_BSD
-#else	/* AFS_OSF_ENV */
+#else /* AFS_OSF_ENV */
 #ifdef AFS_VFSINCL_ENV
 #define VFS
 #include <sys/vnode.h>
@@ -78,7 +79,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/vprintf.c,v 1.1.1.4 2001/07/14 22
 #endif
 #include <sys/fs.h>
 #endif /* AFS_VFSINCL_ENV */
-#endif	/* AFS_OSF_ENV */
+#endif /* AFS_OSF_ENV */
 
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -94,8 +95,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/vprintf.c,v 1.1.1.4 2001/07/14 22
 /* Vice printf:  lob the message into /vice/file/vfsck.log if it isn't the root */
 /* If we're salvaging the root, it wouldn't be such a good idea to lob stuff there */
 vfscklogprintf(s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)
-char *s;
-long a1, a2, a3, a4, a5, a6, a7, a8, a9, a10;
+     char *s;
+     long a1, a2, a3, a4, a5, a6, a7, a8, a9, a10;
 {
     printf(s, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     if (logfile) {

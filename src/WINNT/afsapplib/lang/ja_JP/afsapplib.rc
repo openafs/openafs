@@ -360,10 +360,6 @@ BEGIN
     IDS_BADCREDS_DESC3_ADM  "代わりに管理者としてログインしますか?"
     IDS_BADCREDS_DESC_DESTROYED 
                             "%1 セル内のトークンが有効でなくなりました。\n\n%2\n\n%3"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_ERROR_BAD_CREDENTIALS 
                             "入力した AFS ID が認識されないか、または指定したパスワードが正しくありません。"
     IDS_BROWSE_WAITING      "サーバーを照会中です--お待ちください..."

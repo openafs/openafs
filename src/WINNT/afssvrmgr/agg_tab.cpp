@@ -27,10 +27,10 @@ extern "C" {
  */
 
 rwWindowData awdAggregates[] = {
-    { IDC_AGG_DESC,        raSizeX           },
-    { IDC_AGG_LIST,        raSizeX | raSizeY },
-    { IDC_AGG_CREATESET,   raMoveX | raMoveY },
-    { idENDLIST,           0                 }
+    { IDC_AGG_DESC,        raSizeX,		0,	0 },
+    { IDC_AGG_LIST,        raSizeX | raSizeY,	0,	0 },
+    { IDC_AGG_CREATESET,   raMoveX | raMoveY,	0,	0 },
+    { idENDLIST,           0,			0,	0 }
  };
 
 

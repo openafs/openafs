@@ -1,0 +1,440 @@
+openafs (1.2.6-1) unstable; urgency=low
+
+
+  * New upstream version
+  * Update CellServDB, Closes: #154893
+  * Add debconf support for fakestat
+  * Patch from Sergio Gelato to avoid use of host, Closes: #144264
+  * Install sys because it was requested
+  * Fix version string, Closes: #153136
+ -- Sam Hartman <hartmans@debian.org>  Fri,  2 Aug 2002 17:33:11 -0400
+
+openafs (1.2.5-1) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 10 Jun 2002 08:09:05 -0400
+
+openafs (1.2.4-1) unstable; urgency=low
+
+  * New upstream version
+  * Now builds for ia64, closes: #142287
+  * Now works again with 2.2 kernels, thanks to upstream fix, closes: #140187
+  * openafs-modules-source depends on kernel-package, Closes: #137169
+  * Fix typo in readme.modules, Closes: #148155
+
+ -- Sam Hartman <hartmans@debian.org>  Sun,  2 Jun 2002 17:54:42 -0400
+
+openafs (1.2.3final2-5) unstable; urgency=medium
+
+  * Fix subarch handling, closes: #139662
+  * Update module control files to use  net not non-us
+
+ -- Sam Hartman <hartmans@debian.org>  Thu, 18 Apr 2002 13:13:16 -0400
+
+openafs (1.2.3final2-4) unstable; urgency=low
+
+  * Move from non-us to main.
+  * Fix ultrasparc 2.4 build to actually work.
+
+ -- Sam Hartman <hartmans@debian.org>  Sat, 16 Mar 2002 15:33:33 -0500
+
+openafs (1.2.3final2-3) unstable; urgency=medium
+
+  * Oops, install backup
+
+ -- Sam Hartman <hartmans@debian.org>  Thu,  7 Mar 2002 08:12:34 -0500
+
+openafs (1.2.3final2-2) unstable; urgency=low
+
+  * Add dynroot support to debconf; currently no support for creating
+    CellAliases  automatically
+  * Don't call depmod since we call update-modules, closes: #132851
+  * Add hppa to debian/sysname, process.c patch from Lamont, closes: #134173
+
+ -- Sam Hartman <hartmans@debian.org>  Mon, 25 Feb 2002 15:45:32 -0500
+
+openafs (1.2.3final2-1) unstable; urgency=low
+
+  * Upstream released a new version that they call 1.2.3 after things were
+    tagged  in the Debian repository.
+
+ -- Sam Hartman <hartmans@debian.org>  Wed, 30 Jan 2002 16:59:04 -0500
+
+openafs (1.2.3final-1) unstable; urgency=low
+
+  * New upstream release
+  * Add support for fs setcrypt in debconf; by default traffic is encrypted.
+
+ -- Sam Hartman <hartmans@debian.org>  Wed, 30 Jan 2002 10:46:46 -0500
+
+openafs (1.2.3candidate3-1) unstable; urgency=low
+
+  *  New  upstream release candidate
+  * Use different version number format; people who installed rc1 will
+    need to upgrade manually.  Sorry, but rc1 was never uploaded to Debian.
+  * Support sparc_linux24
+
+ -- Sam Hartman <hartmans@debian.org>  Sun, 27 Jan 2002 19:57:04 -0500
+
+openafs (1.2.3.candidate1-1) unstable; urgency=low
+
+  *  New upstream release candidate
+  * Add ia64 as a potential architecture
+
+ -- Sam Hartman <hartmans@debian.org>  Tue, 22 Jan 2002 19:00:51 -0500
+
+openafs (1.2.2-3) unstable; urgency=low
+
+  * Support s390, closes: #123540
+  * Support update-alternatives for pagsh, closes: #122144
+  * Note that alpha port doesn't work for fileservers, closes: #127387
+  * Implement subarch, closes: #126192
+
+ -- Sam Hartman <hartmans@debian.org>  Mon,  7 Jan 2002 05:26:03 -0500
+
+openafs (1.2.2-2) unstable; urgency=low
+
+  * Don't declare lseek in auth/ktc.c; sent upstream
+  * Allow /etc/openafs/server to be mode 700 and /var/lib/openafs to be
+    755, closes: #120072
+  *  Don't try to shut down during afs-newcell until we've done enough
+    that works, closes: #119452
+  * Fix message  output on server failed to start, closes: #119461
+  * Fix openafs to deal if /etc/openafs/server/ThisCell has a newline,
+    closes: #118086 
+
+ -- Sam Hartman <hartmans@debian.org>  Sun, 25 Nov 2001 20:03:01 -0500
+
+openafs (1.2.2-1) unstable; urgency=low
+
+  * New upstream release.
+  * We now require openafs-modules1 and conflict with openafs-modules.
+  Our modules packages now provide openafs-modules1.  This is because
+  upstream made a forward and backward incompatible change in the modules
+  interface.
+   * Include buserver in openafs-dbserver, butc and fms in openafs-client.c
+    butc and fms may move, but they are there for now, closes: #114313
+
+ -- Sam Hartman <hartmans@debian.org>  Sun, 14 Oct 2001 15:07:10 -0400
+
+openafs (1.2.1-1) unstable; urgency=low
+
+  * New upstream version.
+  * Document that you may need to append a version for newer kernels,
+    closes: #112246 
+
+ -- Sam Hartman <hartmans@debian.org>  Thu, 20 Sep 2001 03:10:54 -0400
+
+openafs (1.2.0-3) unstable; urgency=high
+
+  * High until we get this into testing.
+  * Fix dependency on ncurses, closes: #112244
+  * Fix typo in German template added in last version, closes: #112289
+
+ -- Sam Hartman <hartmans@debian.org>  Fri, 14 Sep 2001 23:40:25 -0400
+
+openafs (1.2.0-2) unstable; urgency=high
+
+  * Fix PPC makefile so that it finds install; this time actually
+    submitted upstream. 
+  * Have openafs-modules-source depend on libpam0g-dev because upstream
+    seems to need it.  Bug opened upstream asking if this is really necessary.
+  * Include German template, closes: #110087
+
+ -- Sam Hartman <hartmans@debian.org>  Thu, 13 Sep 2001 16:58:53 -0400
+
+openafs (1.2.0-1) unstable; urgency=high
+
+  * Fix typo in  README.servers; thanks to mdz@debian.org, closes: #109199
+  * Upstream patch for configure-style path handling accepted, closes: #88897
+  * New upstream version.
+  * Update upstream changelog
+
+ -- Sam Hartman <hartmans@debian.org>  Tue, 11 Sep 2001 16:21:35 -0400
+
+openafs (1.1.1-3) unstable; urgency=low
+
+  * Oops, that last upstream patch for rx debug and version didn't work on
+    Linux.  Since some Debian users may run Linux, let's try again.
+
+ -- Sam Hartman <hartmans@debian.org>  Sat, 21 Jul 2001 12:48:00 -0400
+
+openafs (1.1.1-2) unstable; urgency=medium
+
+  * Swallow before vomiting, for it is the Debconf way, closes: #106030
+  * Fix setting of INSTALL macro on powerpc, closes: #106019
+  * Support AFSDB in debconf.  By default now (assuming you take the new
+    /etc/openafs/afs.conf), AFS will look up cells  it doesn't know
+    about in DNS.
+  * Include upstream patch to prevent potential DOS with two RX servers
+    looping rxdebug and version amongst each other.
+  * Install rxdebug (oops)
+  * Fix lintian overrides to get Lintian to stop complaining about
+    non-problems. 
+
+ -- Sam Hartman <hartmans@debian.org>  Sat, 21 Jul 2001 08:53:10 -0400
+
+openafs (1.1.1-1) unstable; urgency=low
+
+  * New upstream release to fix readlink sometimes giving permission
+    denied when it shouldn't.
+  * Bring back the upstream changelog, now with change descriptions
+  * Patch to give better error messages when  copyonwrite fails in the
+    fileserver (contributed upstream)
+  * New CellServDB
+  
+ -- Sam Hartman <hartmans@debian.org>  Fri, 20 Jul 2001 08:12:24 -0400
+
+openafs (1.1.0-1) unstable; urgency=low
+
+  * New Upstream release.
+  * Warn if not running as root for afs-newcell|rootvol, closes: #103532
+  * Work around upstream make clean target not working correctly.
+ -- Sam Hartman <hartmans@debian.org>  Mon, 16 Jul 2001 06:13:41 -0400
+
+openafs (1.0.90.20010710.snapshot-1) experimental; urgency=low
+
+  *  New upstream snapshot
+  * Fix module package to not have build cruft
+  * Use --disable-kernel-module option except for module sources
+  * Attempt to build modules correctly, although still not in right place
+  * Pretend we build for alpha. This is mostly not a fiction, although I
+    don't really know that much more than the kernel module and afsd
+    work.  The pointer cast warnings are frightening.
+
+ -- Sam Hartman <hartmans@debian.org>  Wed, 11 Jul 2001 11:41:22 -0400
+
+openafs (1.0.90.20010704.snapshot-1) experimental; urgency=low
+
+  * New upstream snapshot.  Support AFSDB records and many other
+    features.  Not at all stable yet.  This is packaged so I and others
+    can try it out.
+
+ -- Sam Hartman <hartmans@debian.org>  Thu,  5 Jul 2001 04:04:20 -0400
+
+openafs (1.0.4-3) unstable; urgency=medium
+
+  * Fix patch introduced in -2 to be consistent with what is sent upstream.
+  * openafs-modules-source depends on debhelper
+
+ -- Sam Hartman <hartmans@debian.org>  Wed,  4 Jul 2001 03:52:37 -0400
+
+openafs (1.0.4-2) unstable; urgency=low
+
+  * Fix modversions and athlon memcpy mmx bug, closes: #91925
+  * Fix openafs-client to fail rather than starting a useless afsd if we don't have any db servers
+  * If AFS client fails to start for afs-newcell, then complain, closes: #98303
+  * New CellServDB
+  * Fix module builds on non-i386, closes: #100939
+
+ -- Sam Hartman <hartmans@debian.org>  Sun, 17 Jun 2001 01:22:37 -0400
+
+openafs (1.0.4-1) unstable; urgency=low
+
+  * New upstream version, closes: #92776
+  * Allow openafs-client to depend on openafs-modules-source not just
+    openafs-modules.  This allows us to be installable on testing even
+    without binary modules which may become a necessity given the current
+    kernel image mess.
+  *  implement target for modules_clean, closes: #95049
+
+ -- Sam Hartman <hartmans@debian.org>  Tue, 24 Apr 2001 14:56:57 -0400
+
+openafs (1.0.3-2) unstable; urgency=low
+
+  * Fix  direntry type to be DT_UNKNOWN not DT_DIR on Linux (contributed upstream)
+  * Return ENOTEMPTY not ENOTDIR for rmdir of non-empty directory, closes: #82589
+  * Include build instructions in modules, closes: #92032
+  * Don't grep a file for a potentially null string, closes: #89967
+
+ -- Sam Hartman <hartmans@debian.org>  Thu, 29 Mar 2001 22:09:29 -0500
+
+openafs (1.0.3-1) unstable; urgency=low
+
+  * New upstream version
+  * Allow host to be used instead of dnsutils, closes: #87915
+  * Document kernel module build.
+  * Include upstream changelog
+
+ -- Sam Hartman <hartmans@debian.org>  Thu,  8 Mar 2001 14:35:57 -0500
+
+openafs (1.0.2-3) unstable; urgency=low
+
+  * Apply patch from  Stefan Kluth  <skluth@mppmu.mpg.de> for ppc_linux22
+  * Back out architecture change from last version; no good way to
+    actually solve that problem apparently. 
+
+
+ -- Sam Hartman <hartmans@debian.org>  Sat, 17 Feb 2001 23:45:06 -0500
+
+openafs (1.0.2-2) unstable; urgency=low
+
+  * Provide openafs-ptutil in hope that apt will deal better with upgrade,
+    closes: #84303
+  * Make thiscell default to dnsdomainname so things don't break quite as
+    bad if you don't enter it, closes: #81149 
+  * Include source architecture line, Closes: #84530
+  * Rebuild with new debhelper to fix dh_installinit not shutting down on
+    removal (Thanks Joey) (now requires debhelper 2.2.20)
+  * Move CellServDB to /usr/share/openafs  so we comply with policy 3.5
+
+ -- Sam Hartman <hartmans@debian.org>  Mon,  5 Feb 2001 13:23:51 -0500
+
+openafs (1.0.2-1) unstable; urgency=low
+
+  * Add support for ppc and sparc, closes: #80835
+  * Update maintainer address for modules.
+  * Support for 2.4.0 final (and not just prereleases as before), closes: #82751
+  * New upstream version.
+  * Conflict with openafs-ptutil since it is now included
+  * Fix message in RC script, closes: #82489
+  * Attempt to avoid using pinstall  in kernel module build
+
+ -- Sam Hartman <hartmans@debian.org>  Fri, 19 Jan 2001 22:38:32 -0500
+
+openafs (1.0.1-3) unstable; urgency=low
+
+  * Add support for Linux Kernel 2.4.x.
+  * Note that administration scripts are released under the GPL.
+
+ -- Sam Hartman <hartmans@debian.org>  Mon,  18 Dec 2000 19:06:00 -0500
+
+
+openafs (1.0.1-2) unstable; urgency=medium
+
+  * New maintainer address.
+  * Depend on debhelper 2.1.16 for /usr/share/doc symlinks.
+  * Only run init script once; confusion with DH_OPTIONS
+  * Fix bosserver to look in /usr/openafs/lib so it restarts correctly every Sunday.
+  * Upload to Debian (Gloses: BUG#69336)
+ -- Sam Hartman <hartmans@debian.org>  Wed,  6 Dec 2000 11:21:53 -0500
+
+Do not generate .map file for module; depmod complains.  * 
+
+ --
+
+openafs (1.0.1-1) unstable; urgency=low
+
+  * New upstream version
+  * Fix typo in openafs-client templates.
+  * Clarify that afs-newcell sets up for afs-rootvol 
+
+ -- Sam Hartman <hartmans@mit.edu>  Sun,  3 Dec 2000 02:04:50 -0500
+
+openafs (1.0.snap20001106-10) unstable; urgency=low
+
+  * Release (Closes: BUG#69336)
+  * Fix typo and afs-rootvol and test from CLI
+
+ -- Sam Hartman <hartmans@mit.edu>  Sat,  2 Dec 2000 00:44:37 -0500
+
+openafs (1.0.snap20001106-9) unstable; urgency=medium
+
+  * Fix openafs-fileserver restart to do a bos restart
+  * Document that AFS key must be single-DES.
+  * afs-rootvol: use the -fast option so we do not hang forever on bad cells or firewalls.
+  * Fix priority on openafs-client rc script to run after server starts.
+
+ -- Sam Hartman <hartmans@mit.edu>  Wed, 29 Nov 2000 20:43:59 -0500
+
+openafs (1.0.snap20001106-8) unstable; urgency=low
+
+  * Modules no longer depend on the tlient; client depends on modules.
+    This works better for AFS, even though it is not the way packages like
+    alsa-base work.
+  * Fix several typos in configuration scripts.
+  * Clarify that it starts the client just after debconf.
+
+ -- Sam Hartman <hartmans@mit.edu>  Wed, 29 Nov 2000 13:10:43 -0500
+
+openafs (1.0.snap20001106-7) unstable; urgency=low
+
+  * Add command line options to afs-newcell
+  * Fix control.module for real this time.
+  * Add kpasswd and kas to the openafs-kpasswd package.
+  * Add manpage for afs-newcell and many undocumented links.
+  * Remove PAM module from libopenafs-dev.
+  * Instal udebug, pagsh, cmdebug.
+  * Remove execute bit from some includes in /usr/include.
+
+ --  Sam Hartman <hartmans@mit.edu>  Mon, 27 Nov 2000 03:02:57 -0500
+
+openafs (1.0.snap20001106-6) unstable; urgency=medium
+
+  * Add config option to disable  client on boot
+  * Create rc.d links
+  * Make CellServDB handled by postinst not a conffile.  Sadly AFSDB
+    records will be a while in the future.
+  * New script: afs-newcell to configure a dbserver
+  * Use the native Debian install instead of afs install while building;
+    works  under fakeroot.  Important for modules package.
+  * Fix purge to delete configuration files
+
+ --  <Sam Hartman <hartmans@mit.edu>  Sat, 25 Nov 2000 01:09:55 -0500
+
+openafs (1.0.snap20001106-5) unstable; urgency=low
+
+  * Make change so kdump builds on potato
+
+ --  Sam Hartman <hartmans@mit.edu>  Sun, 19 Nov 2000 19:27:01 -0500
+
+openafs (1.0.snap20001106-4) unstable; urgency=low
+
+  * Fix so dpkg-buildpackage works.  Oops.
+
+ --  Sam Hartman <hartmans@mit.edu>  Sun, 19 Nov 2000 02:18:05 -0500
+
+openafs (1.0.snap20001106-3) unstable; urgency=low
+
+  * Increase stacksize for server processes so they don't dump core.
+  * New script: afs-rootvol--creates the root.afs and root.cell.  Works
+    fairly well except that it is overly verbose and that it has my test
+    cell hardcoded.  This script will evolve into part of a new cell
+    config tool. 
+
+
+  --
+  * Support removing module for smP
+  * Prune build directories out of modules sources--oops
+  * Fix bogus depends for module sources--note that it really does want
+    bison and flex at least for now.
+
+ --  Sam Hartman <hartmans@mit.edu>  Thu, 16 Nov 2000 01:39:48 -0500
+
+openafs (1.0.snap20001106-2) unstable; urgency=low
+
+  * Fix directories for servers to be FHS-reasonable
+  * Fix init.d script to actually work for stop this time--tested and works
+  * Add server packages; fairly useless right now but at least we
+      ship the binaries
+  * Check to make sure home cell exists and warn user if not
+  * Fix purge for openafs-client
+
+ --  Sam Hartman <hartmans@mit.edu>  Fri, 10 Nov 2000 23:35:30 -0500
+
+openafs (1.0.snap20001106-1) unstable; urgency=low
+
+  * New Upstream version
+  * Fix init.d script to properly remove openafs.o
+
+ --  Sam Hartman <hartmans@mit.edu>  Tue,  7 Nov 2000 13:55:47 -0500
+
+openafs (1.0.snap20001104-1) unstable; urgency=low
+
+  * New upstream snapshot
+  * Fix path to afsd in /etc/init.d/openafs-client
+  * Build openafs module packages
+
+ --  Sam Hartman <hartmans@mit.edu>  Mon,  6 Nov 2000 09:39:11 -0500
+
+openafs (1.0.snap20001103-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- unknown <hartmans@snorklewacker.mit.edu>  Fri,  3 Nov 2000 23:41:41 -0500
+
+Local variables:
+mode: debian-changelog
+add-log-mailing-address "hartmans@snorklewacker.mit.edu"
+End:

@@ -28,10 +28,15 @@
 # These options should be given in /etc/config/afsd.options.
 # If afsd.options does not exist then $OPTIONS is used.
 #
+
+# EXTRAOPTS can be used to enable/disable AFSDB support (-afsdb)
+# and Dynroot (dynamically-generated /afs) support (-dynroot).
+EXTRAOPTS="-afsdb"
+
 LARGE="-stat 2800 -dcache 2400 -daemons 5 -volumes 128"
 MEDIUM="-stat 2000 -dcache 800 -daemons 3 -volumes 70"
 SMALL="-stat 300 -dcache 100 -daemons 2 -volumes 50"
-OPTIONS=$MEDIUM
+OPTIONS="$MEDIUM $EXTRAOPTS"
 
 CONFIG=/etc/config
 IS_ON=/etc/chkconfig

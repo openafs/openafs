@@ -7,31 +7,14 @@
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
+HELPER_SPLINT=@HELPER_SPLINT@
 
-SHELL = /bin/sh
 
-include ../config/Makefile.${SYS_NAME}
-
-CFLAGS=-DNINTERFACE -I${TOP_SRCDIR}/config -I. -I${TOP_INCDIR} -I${TOP_INCDIR}/afs \
-	 ${XCFLAGS} -DRXDEBUG
+CFLAGS=${DBG} ${OPTMZ} -I${TOP_OBJDIR}/src/config -I. -I${TOP_INCDIR} \
+	-I${TOP_INCDIR}/afs -I${TOP_OBJDIR} -I${TOP_OBJDIR}/fsint\
+	 ${XCFLAGS} -DRXDEBUG -DNINTERFACE
 
 LDFLAGS = ${DBUG} ${XLDFLAGS}
 
@@ -51,8 +34,8 @@ LIBS=${TOP_LIBDIR}/libacl.a	\
 	${TOP_LIBDIR}/libsys.a	\
 	${TOP_LIBDIR}/libdes.a		\
 	${TOP_LIBDIR}/libcom_err.a	\
-	${TOP_LIBDIR}/util.a		\
-	${TOP_LIBDIR}/liblwp.a
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libafsutil.a
 
 headers=${TOP_INCDIR}/lwp.h		\
 	${TOP_INCDIR}/afs/acl.h	\
@@ -82,7 +65,7 @@ ${objects}: ${headers}
 viced.o: AFS_component_version_number.o
 
 check_sysid: check_sysid.c
-	${CC} ${CFLAGS} -o check_sysid check_sysid.c
+	${CC} ${CFLAGS} -o check_sysid ${srcdir}/check_sysid.c
 
 fileserver: ${objects} ${headers} ${LIBS}
 	set -x; \
@@ -96,20 +79,20 @@ fileserver: ${objects} ${headers} ${LIBS}
 	esac
 
 fsprobe.o: fsprobe.c AFS_component_version_number.c
-	${CC} ${CFLAGS} -DINTERPRET_DUMP -c fsprobe.c
+	${CC} ${CFLAGS} -DINTERPRET_DUMP -c ${srcdir}/fsprobe.c
 
 fsprobe: fsprobe.o
 	${CC} ${CFLAGS} -o fsprobe fsprobe.o ${LIBS} ${XLIBS} 
 
 cbd.o: callback.c AFS_component_version_number.c
-	${CC} ${CFLAGS} -DINTERPRET_DUMP -c -o cbd.o callback.c
+	${CC} ${CFLAGS} -DINTERPRET_DUMP -c -o cbd.o ${srcdir}/callback.c
 
 cbd: cbd.o
 	${CC} ${CFLAGS} -DINTERPRET_DUMP -o cbd cbd.o ${LIBS} ${XLIBS} 
 
 ${DEST}/root.server/usr/afs/bin/fileserver: fileserver
 	@case ${SYS_NAME} in \
-	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun*) \
+	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
 	echo "Don't install fileserver for ${SYS_NAME}" ;; \
 	*_darwin_[1-6][0-9]) \
 	echo ${INSTALL} -ns $? $@ ; \
@@ -132,7 +115,7 @@ clean:
 include ../config/Makefile.version
 ${DESTDIR}${afssrvlibexecdir}/fileserver: fileserver
 	@case ${SYS_NAME} in \
-	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun*) \
+	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*|sunx86*) \
 	echo "Don't install fileserver for ${SYS_NAME}" ;; \
 	*_darwin_[1-6][0-9]) \
 	echo ${INSTALL} -ns $? $@ ; \
@@ -152,3 +135,10 @@ ${TOP_INCDIR}/afs/fs_stats.h: fs_stats.h
 
 dest:    ${DEST}/root.server/usr/afs/bin/fileserver ${DEST}/include/afs/fs_stats.h
 
+check-splint::
+	sh $(HELPER_SPLINT) $(CFLAGS) \
+	    viced.c		\
+	    afsfileprocs.c	\
+	    host.c		\
+	    physio.c	\
+	    callback.c

@@ -10,6 +10,7 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/fs_utils.h>
 }
 
 #include "afscreds.h"
@@ -74,12 +75,12 @@ typedef enum
    } WIZSTEP;
 
 static WIZARD_STATE aStates[] = {
-   { STEP_START,     IDD_WIZ_START,     WizStart_DlgProc     },
-   { STEP_STARTING,  IDD_WIZ_STARTING,  WizStarting_DlgProc  },
-   { STEP_CREDS,     IDD_WIZ_CREDS,     WizCreds_DlgProc     },
-   { STEP_MOUNT,     IDD_WIZ_MOUNT,     WizMount_DlgProc     },
-   { STEP_MOUNTING,  IDD_WIZ_MOUNTING,  WizMounting_DlgProc  },
-   { STEP_FINISH,    IDD_WIZ_FINISH,    WizFinish_DlgProc    },
+   { STEP_START,     IDD_WIZ_START,     WizStart_DlgProc,	0 },
+   { STEP_STARTING,  IDD_WIZ_STARTING,  WizStarting_DlgProc,	0 },
+   { STEP_CREDS,     IDD_WIZ_CREDS,     WizCreds_DlgProc,	0 },
+   { STEP_MOUNT,     IDD_WIZ_MOUNT,     WizMount_DlgProc,	0 },
+   { STEP_MOUNTING,  IDD_WIZ_MOUNTING,  WizMounting_DlgProc,	0 },
+   { STEP_FINISH,    IDD_WIZ_FINISH,    WizFinish_DlgProc,	0 }
 };
 
 static const int cStates = sizeof(aStates) / sizeof(aStates[0]);
@@ -220,10 +221,14 @@ void WizStarting_OnInitDialog (HWND hDlg)
    ShowWindow (GetDlgItem (hDlg, IDC_START_TRY), SW_SHOW);
 
    SC_HANDLE hManager;
-   if ((hManager = OpenSCManager (NULL, NULL, SC_MANAGER_ALL_ACCESS)) != NULL)
+    if ((hManager = OpenSCManager (NULL, NULL, 
+                                   SC_MANAGER_CONNECT |
+                                   SC_MANAGER_ENUMERATE_SERVICE |
+                                   SC_MANAGER_QUERY_LOCK_STATUS)) != NULL)
       {
       SC_HANDLE hService;
-      if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), SERVICE_ALL_ACCESS)) != NULL)
+          if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), 
+                                       SERVICE_QUERY_STATUS | SERVICE_START)) != NULL)
          {
          if (StartService (hService, 0, 0))
 			TestAndDoMapShare(SERVICE_START_PENDING);
@@ -308,7 +313,7 @@ BOOL CALLBACK WizCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
                      WizCreds_OnEnable (hDlg, FALSE);
 
-                     if (ObtainNewCredentials (szCell, szUser, szPassword) == 0)
+                     if (ObtainNewCredentials (szCell, szUser, szPassword, FALSE) == 0)
                         {
                         g.pWizard->SetState (STEP_MOUNT);
                         }
@@ -495,7 +500,7 @@ void WizMount_OnInitDialog (HWND hDlg)
    SendMessage (hCombo, WM_SETREDRAW, TRUE, 0);
    SendMessage (hCombo, CB_SETCURSEL, iItemSel, 0);
 
-   SetDlgItemText (hDlg, IDC_MAP_PATH, TEXT("/afs"));
+   SetDlgItemText (hDlg, IDC_MAP_PATH, cm_slash_mount_root);
 
    CheckDlgButton (hDlg, IDC_NOMAP, FALSE);
    CheckDlgButton (hDlg, IDC_YESMAP, TRUE);

@@ -40,7 +40,8 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/crc.c,v 1.1 2002/12/11 02:44:46 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rxkad/crc.c,v 1.3 2003/07/15 23:16:42 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
@@ -82,9 +83,10 @@ _rxkad_crc_init_table(void)
 {
     static int flag = 0;
     unsigned long crc, poly;
-    int     i, j;
-    
-    if(flag) return;
+    int i, j;
+
+    if (flag)
+	return;
     poly = CRC_GEN;
     for (i = 0; i < 256; i++) {
 	crc = i;
@@ -101,7 +103,7 @@ _rxkad_crc_init_table(void)
 }
 
 afs_uint32
-_rxkad_crc_update (const char *p, size_t len, afs_uint32 res)
+_rxkad_crc_update(const char *p, size_t len, afs_uint32 res)
 {
     while (len--)
 	res = table[(res ^ *p++) & 0xFF] ^ (res >> 8);

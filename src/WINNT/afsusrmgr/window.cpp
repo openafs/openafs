@@ -52,18 +52,18 @@ static size_t cTABS = sizeof(aTABS) / sizeof(aTABS[0]);
 #define cyMIN_TABS    100
 
 rwWindowData awdMain[] = {
-   { IDC_TAB, raSizeX | raSizeY, MAKELONG(cxMIN_TABS,cyMIN_TABS) },
-   { IDC_CELL, raSizeX | raRepaint },
-   { IDC_CREDS, raSizeX | raRepaint },
-   { IDC_ANIM, raMoveX },
-   { IDC_BAR, raSizeX },
-   { IDC_STATIC, raRepaint },
-   { idENDLIST, 0 }
+   { IDC_TAB, raSizeX | raSizeY, 		MAKELONG(cxMIN_TABS,cyMIN_TABS),	0 },
+   { IDC_CELL, raSizeX | raRepaint,		0,									0 },
+   { IDC_CREDS, raSizeX | raRepaint,	0,									0 },
+   { IDC_ANIM, raMoveX,					0,									0 },
+   { IDC_BAR, raSizeX,					0,									0 },
+   { IDC_STATIC, raRepaint,				0,									0 },
+   { idENDLIST, 0,						0,									0 }
 };
 
 rwWindowData awdTabChild[] = {
-    { 0, raSizeX | raSizeY },
-    { idENDLIST, 0  }
+    { 0, raSizeX | raSizeY,								0,	0 },
+    { idENDLIST, 0,										0,	0 }
  };
 
 

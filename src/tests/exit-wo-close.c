@@ -47,26 +47,26 @@
 #include <err.h>
 
 #ifdef RCSID
-RCSID("$Id: exit-wo-close.c,v 1.1 2002/01/22 19:54:41 hartmans Exp $");
+RCSID("$Id: exit-wo-close.c,v 1.2 2003/07/15 23:16:59 shadow Exp $");
 #endif
 
-static int 
-child (const char *filename)
+static int
+child(const char *filename)
 {
     int fd;
     int ret;
 
-    fd = open (filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fd < 0)
-	err (1, "open %s", filename);
-    ret = write (fd, "hej", 3);
+	err(1, "open %s", filename);
+    ret = write(fd, "hej", 3);
     if (ret != 3)
-	err (1, "write %s", filename);
+	err(1, "write %s", filename);
     return 0;
 }
 
-static int 
-parent (const char *filename, pid_t child_pid)
+static int
+parent(const char *filename, pid_t child_pid)
 {
     int stat;
     int ret;
@@ -74,43 +74,43 @@ parent (const char *filename, pid_t child_pid)
     struct stat sb;
     char buf[3];
 
-    ret = waitpid (child_pid, &stat, 0);
+    ret = waitpid(child_pid, &stat, 0);
     if (ret < 0)
-	err (1, "waitpid %u", (unsigned)child_pid);
+	err(1, "waitpid %u", (unsigned)child_pid);
     if (!WIFEXITED(stat) || WEXITSTATUS(stat) != 0)
-	errx (1, "weird child %u", (unsigned)child_pid);
-    fd = open (filename, O_RDONLY, 0);
+	errx(1, "weird child %u", (unsigned)child_pid);
+    fd = open(filename, O_RDONLY, 0);
     if (fd < 0)
-	err (1, "open %s", filename);
-    ret = fstat (fd, &sb);
+	err(1, "open %s", filename);
+    ret = fstat(fd, &sb);
     if (ret < 0)
-	err (1, "fstat %s", filename);
+	err(1, "fstat %s", filename);
     if (sb.st_size != 3)
-	errx (1, "size of %s = %u != 3", filename, (unsigned)sb.st_size);
-    ret = read (fd, buf, sizeof(buf));
+	errx(1, "size of %s = %u != 3", filename, (unsigned)sb.st_size);
+    ret = read(fd, buf, sizeof(buf));
     if (ret < 0)
-	err (1, "read %s", filename);
+	err(1, "read %s", filename);
     if (ret != 3)
-	errx (1, "short read from %s", filename);
-    if (memcmp (buf, "hej", 3) != 0)
-	errx (1, "bad contents of %s = `%.3s'\n", filename, buf);
-    close (fd);
+	errx(1, "short read from %s", filename);
+    if (memcmp(buf, "hej", 3) != 0)
+	errx(1, "bad contents of %s = `%.3s'\n", filename, buf);
+    close(fd);
     return 0;
 }
 
 static int
-doit (const char *filename)
+doit(const char *filename)
 {
     pid_t pid;
 
-    pid = fork ();
+    pid = fork();
     if (pid < 0)
-	err (1, "fork");
+	err(1, "fork");
 
     if (pid == 0)
-	return child (filename);
+	return child(filename);
     else
-	return parent (filename, pid);
+	return parent(filename, pid);
 }
 
 int
@@ -120,8 +120,8 @@ main(int argc, char **argv)
 
 
     if (argc != 2 && argc != 1)
-	errx (1, "usage: %s [file]", argv[0]);
+	errx(1, "usage: %s [file]", argv[0]);
     if (argc == 2)
 	file = argv[1];
-    return doit (file);
+    return doit(file);
 }

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/lock.c,v 1.1.1.7 2001/10/14 18:06:45 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/ubik/lock.c,v 1.13 2003/12/12 23:16:12 shadow Exp $");
 
 #include <sys/types.h>
 #ifndef AFS_NT40_ENV
@@ -48,9 +49,9 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/lock.c,v 1.1.1.7 2001/10/14 18:06:
   ((((lock)->excl_locked & WRITE_LOCK) || (lock)->wait_states) ? 0 : 1)
 #define WouldWriteBlock(lock)\
   ((((lock)->excl_locked & WRITE_LOCK) || (lock)->readers_reading) ? 0 : 1)
-  
+
 struct Lock rwlock;
-int         rwlockinit=1;
+int rwlockinit = 1;
 
 /* Set a transaction lock.  Atype is LOCKREAD or LOCKWRITE, await is
  * true if you want to wait for the lock instead of returning
@@ -59,94 +60,123 @@ int         rwlockinit=1;
  * The DBHOLD lock must be held.
  */
 ulock_getLock(atrans, atype, await)
-  struct ubik_trans *atrans;
-  int               atype, await;
+     struct ubik_trans *atrans;
+     int atype, await;
 {
-  struct ubik_dbase *dbase=atrans->dbase;
+    struct ubik_dbase *dbase = atrans->dbase;
 
-  /* On first pass, initialize the lock */
-  if (rwlockinit) {
-     Lock_Init(&rwlock);
-     rwlockinit = 0;
-  }
+    /* On first pass, initialize the lock */
+    if (rwlockinit) {
+	Lock_Init(&rwlock);
+	rwlockinit = 0;
+    }
 
-  if ((atype != LOCKREAD) && (atype != LOCKWRITE))
-     return EINVAL;
+    if ((atype != LOCKREAD) && (atype != LOCKWRITE))
+	return EINVAL;
 
-  if (atrans->flags & TRDONE)
-     return UDONE;
+    if (atrans->flags & TRDONE)
+	return UDONE;
 
-  if (atrans->locktype != 0) {
-     ubik_print("Ubik: Internal Error: attempted to take lock twice\n");
-     abort();
-  }
+    if (atrans->locktype != 0) {
+	ubik_print("Ubik: Internal Error: attempted to take lock twice\n");
+	abort();
+    }
 
 /*
  *ubik_print("Ubik: DEBUG: Thread 0x%x request %s lock\n", lwp_cpptr,
  *	     ((atype == LOCKREAD) ? "READ" : "WRITE"));
  */
 
-  /* Check if the lock would would block */
-  if (!await) {
-     if (atype == LOCKREAD) {
-        if (WouldReadBlock(&rwlock))  return EAGAIN;
-     } else {
-        if (WouldWriteBlock(&rwlock)) return EAGAIN;
-     }
-  }
+    /* Check if the lock would would block */
+    if (!await) {
+	if (atype == LOCKREAD) {
+	    if (WouldReadBlock(&rwlock))
+		return EAGAIN;
+	} else {
+	    if (WouldWriteBlock(&rwlock))
+		return EAGAIN;
+	}
+    }
 
-  /* Create new lock record and add to spec'd transaction:
-   * locktype. This field also tells us if the thread is 
-   * waiting for a lock: It will be equal to LOCKWAIT.
-   */
-  atrans->locktype = LOCKWAIT;
-  DBRELE(dbase);
-  if (atype == LOCKREAD) {
-     ObtainReadLock(&rwlock);
-  } else {
-     ObtainWriteLock(&rwlock);
-  }
-  DBHOLD(dbase);
-  atrans->locktype = atype;
+    /* Create new lock record and add to spec'd transaction:
+     * #if defined(UBIK_PAUSE)
+     * * locktype.  Before doing that, set TRSETLOCK,
+     * * to tell udisk_end that another thread (us) is waiting.
+     * #else
+     * * locktype. This field also tells us if the thread is 
+     * * waiting for a lock: It will be equal to LOCKWAIT.
+     * #endif 
+     */
+#if defined(UBIK_PAUSE)
+    if (atrans->flags & TRSETLOCK) {
+	printf("Ubik: Internal Error: TRSETLOCK already set?\n");
+	return EBUSY;
+    }
+    atrans->flags |= TRSETLOCK;
+#else
+    atrans->locktype = LOCKWAIT;
+#endif /* UBIK_PAUSE */
+    DBRELE(dbase);
+    if (atype == LOCKREAD) {
+	ObtainReadLock(&rwlock);
+    } else {
+	ObtainWriteLock(&rwlock);
+    }
+    DBHOLD(dbase);
+    atrans->locktype = atype;
+#if defined(UBIK_PAUSE)
+    atrans->flags &= ~TRSETLOCK;
+#if 0
+    /* We don't do this here, because this can only happen in SDISK_Lock,
+     *  and there's already code there to catch this condition.
+     */
+    if (atrans->flags & TRSTALE) {
+	udisk_end(atrans);
+	return UINTERNAL;
+    }
+#endif
+#endif /* UBIK_PAUSE */
 
 /*
  *ubik_print("Ubik: DEBUG: Thread 0x%x took %s lock\n", lwp_cpptr,
  *	     ((atype == LOCKREAD) ? "READ" : "WRITE"));
  */
-  return 0;
+    return 0;
 }
 
 /* Release the transaction lock */
-int
+void
 ulock_relLock(atrans)
-  struct ubik_trans *atrans;
+     struct ubik_trans *atrans;
 {
-  if (rwlockinit) return EINVAL;
+    if (rwlockinit)
+	return;
 
-  if (atrans->locktype == LOCKREAD) {
-     ReleaseReadLock(&rwlock);
-  } else if (atrans->locktype == LOCKWRITE) {
-     ReleaseWriteLock(&rwlock);
-  }
+    if (atrans->locktype == LOCKREAD) {
+	ReleaseReadLock(&rwlock);
+    } else if (atrans->locktype == LOCKWRITE) {
+	ReleaseWriteLock(&rwlock);
+    }
 
 /*
  *ubik_print("Ubik: DEBUG: Thread 0x%x %s unlock\n", lwp_cpptr,
  *	     ((atrans->locktype == LOCKREAD) ? "READ" : "WRITE"));
  */
 
-  atrans->locktype = 0;
+    atrans->locktype = 0;
+    return;
 }
 
 /* debugging hooks */
 ulock_Debug(aparm)
-  struct ubik_debug *aparm;
+     struct ubik_debug *aparm;
 {
-  if (rwlockinit) {
-     aparm->anyReadLocks  = 0;
-     aparm->anyWriteLocks = 0;
-  } else {
-     aparm->anyReadLocks  = rwlock.readers_reading;
-     aparm->anyWriteLocks = ((rwlock.excl_locked == WRITE_LOCK) ? 1 : 0);
-  }
+    if (rwlockinit) {
+	aparm->anyReadLocks = 0;
+	aparm->anyWriteLocks = 0;
+    } else {
+	aparm->anyReadLocks = rwlock.readers_reading;
+	aparm->anyWriteLocks = ((rwlock.excl_locked == WRITE_LOCK) ? 1 : 0);
+    }
+    return 0;
 }
-

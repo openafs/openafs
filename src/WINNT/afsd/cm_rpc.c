@@ -37,7 +37,7 @@
  * can match them up.  A list of session keys, searched by UUID, is maintained.
  */
 
-extern void afsi_log();
+extern void afsi_log(char *pattern, ...);
 
 typedef struct tokenEvent {
 	afs_uuid_t uuid;

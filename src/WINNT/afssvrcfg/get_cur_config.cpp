@@ -44,7 +44,6 @@ static vos_vldbEntry_t vldbRootCellEntry;
  */
 BOOL CALLBACK GetCurConfigDlgProc(HWND hwndDlg, UINT msg, WPARAM wp, LPARAM lp);
 static DWORD CALLBACK GetCurrentConfigState(LPPROGRESSDISPLAY ppd, LPARAM lp);
-static void SetConfigDefaults();
 static void ShowMsg(UINT uiMsgID);
 static void NextStep(UINT uiMsgID);
 
@@ -59,7 +58,7 @@ int GetCurrentConfig(HWND hParent, BOOL& bCanceled)
 	bCancel = FALSE;
 	bBakConfigured = FALSE;
 
-	pProg = new PROGRESSDISPLAY(hParent, IDD_GET_CURRENT_CONFIG, (DLGPROC)GetCurConfigDlgProc);
+	pProg = New2 (PROGRESSDISPLAY,(hParent, IDD_GET_CURRENT_CONFIG, (DLGPROC)GetCurConfigDlgProc));
 	pProg->SetProgressRange(0, MAX_STEPS);
 
 	HWND hLogo = GetDlgItem(pProg->GetWindow(), IDC_LOGO);

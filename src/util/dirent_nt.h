@@ -31,8 +31,8 @@ typedef struct {
 } DIR;
 
 extern DIR *opendir(const char *path);
-extern int closedir(DIR *dir);
-extern struct dirent *readdir(DIR *dir);
+extern int closedir(DIR * dir);
+extern struct dirent *readdir(DIR * dir);
 
 
 #endif /* _DIRENT_H_ */

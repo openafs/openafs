@@ -19,7 +19,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/lwp_nt.c,v 1.1.1.6 2001/07/14 22:22:55 hartmans Exp $");
+RCSID("$Header: /cvs/openafs/src/lwp/lwp_nt.c,v 1.7 2003/12/07 22:49:33 jaltman Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <stdio.h>
@@ -498,7 +498,7 @@ static void Initialize_PCB(PROCESS pcb, int priority, int stacksize,
 }
 
 
-VOID WINAPI Enter_LWP(PVOID fiberData)
+static VOID WINAPI Enter_LWP(PVOID fiberData)
 {
     PROCESS pcb = (PROCESS)fiberData;
 

@@ -14,7 +14,7 @@ AFSDEV_AUXCDEFINES = $(AFSDEV_AUXCDEFINES) -WX
 AFSDEV_AUXRCFLAGS = $(AFSDEV_AUXRCFLAGS) -I$(DESTDIR)\include
 
 # include the primary makefile
-
+RELDIR=WINNT\afssvrmgr
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
@@ -26,67 +26,67 @@ AFSDEV_AUXRCFLAGS = $(AFSDEV_AUXRCFLAGS) -I$(DESTDIR)\include
 EXEFILE = $(DESTDIR)\root.server\usr\afs\bin\TaAfsServerManager.exe
 
 EXEOBJS = \
-	svrmgr_stub.res \
-	action.obj \
-	agg_col.obj \
-	agg_general.obj \
-	agg_prop.obj \
-	agg_tab.obj \
-	alert.obj \
-	cmdline.obj \
-	columns.obj \
-	command.obj \
-	creds.obj \
-	dispatch.obj \
-	dispguts.obj \
-	display.obj \
-	general.obj \
-	helpfunc.obj \
-	options.obj \
-	prefs.obj \
-	problems.obj \
-	propcache.obj \
-	set_clone.obj \
-	set_col.obj \
-	set_create.obj \
-	set_createrep.obj \
-	set_delete.obj \
-	set_dump.obj \
-	set_general.obj \
-	set_move.obj \
-	set_prop.obj \
-	set_quota.obj \
-	set_release.obj \
-	set_rename.obj \
-	set_repprop.obj \
-	set_restore.obj \
-	set_tab.obj \
-	subset.obj \
-	svc_col.obj \
-	svc_create.obj \
-	svc_delete.obj \
-	svc_general.obj \
-	svc_prop.obj \
-	svc_startstop.obj \
-	svc_tab.obj \
-	svc_viewlog.obj \
-	svr_address.obj \
-	svr_col.obj \
-	svr_execute.obj \
-	svr_general.obj \
-	svr_getdates.obj \
-	svr_hosts.obj \
-	svr_install.obj \
-	svr_prop.obj \
-	svr_prune.obj \
-	svr_salvage.obj \
-	svr_security.obj \
-	svr_syncvldb.obj \
-	svr_uninstall.obj \
-	svr_window.obj \
-	svrmgr.obj \
-	task.obj \
-	window.obj
+	$(OUT)\svrmgr_stub.res \
+	$(OUT)\action.obj \
+	$(OUT)\agg_col.obj \
+	$(OUT)\agg_general.obj \
+	$(OUT)\agg_prop.obj \
+	$(OUT)\agg_tab.obj \
+	$(OUT)\alert.obj \
+	$(OUT)\cmdline.obj \
+	$(OUT)\columns.obj \
+	$(OUT)\command.obj \
+	$(OUT)\creds.obj \
+	$(OUT)\dispatch.obj \
+	$(OUT)\dispguts.obj \
+	$(OUT)\display.obj \
+	$(OUT)\general.obj \
+	$(OUT)\helpfunc.obj \
+	$(OUT)\options.obj \
+	$(OUT)\prefs.obj \
+	$(OUT)\problems.obj \
+	$(OUT)\propcache.obj \
+	$(OUT)\set_clone.obj \
+	$(OUT)\set_col.obj \
+	$(OUT)\set_create.obj \
+	$(OUT)\set_createrep.obj \
+	$(OUT)\set_delete.obj \
+	$(OUT)\set_dump.obj \
+	$(OUT)\set_general.obj \
+	$(OUT)\set_move.obj \
+	$(OUT)\set_prop.obj \
+	$(OUT)\set_quota.obj \
+	$(OUT)\set_release.obj \
+	$(OUT)\set_rename.obj \
+	$(OUT)\set_repprop.obj \
+	$(OUT)\set_restore.obj \
+	$(OUT)\set_tab.obj \
+	$(OUT)\subset.obj \
+	$(OUT)\svc_col.obj \
+	$(OUT)\svc_create.obj \
+	$(OUT)\svc_delete.obj \
+	$(OUT)\svc_general.obj \
+	$(OUT)\svc_prop.obj \
+	$(OUT)\svc_startstop.obj \
+	$(OUT)\svc_tab.obj \
+	$(OUT)\svc_viewlog.obj \
+	$(OUT)\svr_address.obj \
+	$(OUT)\svr_col.obj \
+	$(OUT)\svr_execute.obj \
+	$(OUT)\svr_general.obj \
+	$(OUT)\svr_getdates.obj \
+	$(OUT)\svr_hosts.obj \
+	$(OUT)\svr_install.obj \
+	$(OUT)\svr_prop.obj \
+	$(OUT)\svr_prune.obj \
+	$(OUT)\svr_salvage.obj \
+	$(OUT)\svr_security.obj \
+	$(OUT)\svr_syncvldb.obj \
+	$(OUT)\svr_uninstall.obj \
+	$(OUT)\svr_window.obj \
+	$(OUT)\svrmgr.obj \
+	$(OUT)\task.obj \
+	$(OUT)\window.obj
 
 VCLIBS =\
 	comctl32.lib \
@@ -114,5 +114,11 @@ install : $(EXEFILE) lang
 # Dependencies
 #
 
-svrmgr_stub.res : svrmgr_stub.rc AFS_component_version_number.h
+$(OUT)\svrmgr_stub.res : AFS_component_version_number.h
 
+mkdir:
+	-mkdir $(OUT)\lang
+	cd lang
+	nmake /nologo /f ntmakefile SRC=$(SRC) OBJ=$(OBJ) mkdir
+	cd ..
+	

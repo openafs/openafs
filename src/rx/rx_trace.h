@@ -11,7 +11,7 @@
 #define _RX_TRACE
 
 #ifndef	RXDEBUG
-#define rxi_calltrace(a,b) 
+#define rxi_calltrace(a,b)
 #define rxi_flushtrace()
 #else
 extern void rxi_calltrace(), rxi_flushtrace();

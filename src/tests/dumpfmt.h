@@ -125,26 +125,26 @@
 #define AFS_DIR_EPP 64
 
 typedef struct {
-  afs_uint16 pgcount;
-  afs_uint16 tag;
-  char freecount;
-  char freebitmap[AFS_DIR_EPP/8];
-  char padding[32 - (5 + AFS_DIR_EPP/8)];
+    afs_uint16 pgcount;
+    afs_uint16 tag;
+    char freecount;
+    char freebitmap[AFS_DIR_EPP / 8];
+    char padding[32 - (5 + AFS_DIR_EPP / 8)];
 } afs_dir_pagehdr;
 
 typedef struct {
-  char flag;
-  char length;
-  afs_uint16 next;
-  afs_uint32 vnode;
-  afs_uint32 vunique;
-  char name[16];
-  char padding[4];
+    char flag;
+    char length;
+    afs_uint16 next;
+    afs_uint32 vnode;
+    afs_uint32 vunique;
+    char name[16];
+    char padding[4];
 } afs_dir_direntry;
 
 typedef union {
-  afs_dir_pagehdr header;
-  afs_dir_direntry entry[AFS_DIR_EPP];
+    afs_dir_pagehdr header;
+    afs_dir_direntry entry[AFS_DIR_EPP];
 } afs_dir_page;
 
 #endif /* _DUMPFMT_H_ */

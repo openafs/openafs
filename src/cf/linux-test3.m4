@@ -42,9 +42,10 @@ else
   AC_MSG_CHECKING(if kernel uses MODVERSIONS)
   AC_CACHE_VAL(ac_cv_linux_config_modversions,[
   AC_TRY_COMPILE(
-[#include <linux/config.h>
+[#include <linux/version.h>
+#include <linux/config.h>
 ],
-[#ifndef CONFIG_MODVERSIONS
+[#if !defined(CONFIG_MODVERSIONS) || (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0))
 lose;
 #endif
 ],

@@ -1,7 +1,7 @@
 AC_DEFUN(LINUX_INODE_SETATTR_RETURN_TYPE,[
 AC_MSG_CHECKING(for inode_setattr return type)
 save_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_func_inode_setattr_returns_int,
 [
 AC_TRY_COMPILE(

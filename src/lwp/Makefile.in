@@ -7,34 +7,10 @@
 #
 # Portions Copyright (c) 2003 Apple Computer, Inc.
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-SHELL = /bin/sh
-
-include ../config/Makefile.${SYS_NAME}
-
-# this is important code, so let's optimize it.  The optimizer aggravates any
-# subtle bugs that may have been introduced in process.s, be warned!
-OPTIMIZE=${LWP_OPTMZ}
-
-CFLAGS=${OPTIMIZE} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=${LWP_DBG} ${LWP_OPTMZ} ${XCFLAGS} ${COMMON_INCL}
 
 LIBOBJS=lwp.o process.o lock.o iomgr.o timer.o fasttime.o preempt.o \
 	waitkey.o threadname.o AFS_component_version_number.o
@@ -44,10 +20,15 @@ PICOBJS = $(patsubst %.o,$(PICTARGET)/%.o,$(LIBOBJS))
 $(PICTARGET)/%.o: %.c $(PICTARGET)
 	$(CC) -c $(PAM_CFLAGS) $(CFLAGS) $< -o $@
 
+
+all: ${TOP_LIBDIR}/liblwp.a ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/preempt.h ${TOP_INCDIR}/timer.h $(PICOBJS)
+
+
 $(PICTARGET):
 	mkdir -p $(PICTARGET)
 
-all: ${TOP_LIBDIR}/liblwp.a ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/preempt.h ${TOP_INCDIR}/timer.h $(PICOBJS)
+depinstall: ${TOP_INCDIR}/lock.h ${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/preempt.h ${TOP_INCDIR}/timer.h
+
 
 #
 # Build rules
@@ -61,56 +42,65 @@ process.s:
 	echo Nothing to be done for process.s
 	# This is required so sgi_64+ does not try to build this file.
 
-process.o	: process.s process.c
+process.o	: process.s process.i386.s process.c
 	@case "$(SYS_NAME)" in \
 	pmax_he1) \
-		$(CC) -c -I${TOP_INCDIR} process.s;; \
-	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5? | sunx86_5? | ncrx86_*) \
-		/usr/ccs/lib/cpp -P -I${TOP_INCDIR} process.s process.ss; \
+		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c -I${TOP_INCDIR} process.s;; \
+	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5?) \
+		/usr/ccs/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s process.ss; \
 		${AS} process.ss -o process.o; \
 			$(RM) process.ss ;; \
 	sgi_5* ) \
-		$(CC) -c -I${TOP_INCDIR} -KPIC -G0  process.s;; \
+		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c -I${TOP_INCDIR} -KPIC -G0  ${srcdir}/process.s;; \
 	sgi_61 | sgi_62 | sgi_63 ) \
-		$(CC) -c ${XCFLAGS} -I${TOP_INCDIR} -KPIC -G0  process.s;; \
+		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} -I${TOP_INCDIR} -KPIC -G0  ${srcdir}/process.s;; \
 	s390*) \
-		/lib/cpp -P -I${TOP_INCDIR} process.s >process.ss; \
+		/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s >process.ss; \
 		${AS} -ahlns process.ss -o process.o >process.lst; \
 		$(RM) process.ss ;; \
-	*_darwin_* ) \
-		$(CC) -c ${XCFLAGS} -I${TOP_INCDIR} process.s;; \
-	i386_fbsd* ) \
-		/usr/bin/cpp -P process.fbsd.s > process.ss; \
-		${AS} -o process.o process.ss; \
-		$(RM) process.ss ;; \
-	hp* | *_linux* | *_umlinux* | sgi_64 | sgi_65 | ia64_hpux* ) \
-		${CC} ${CFLAGS} -c process.c;; \
-	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux?? ) \
-		${AS} -v  -P -DOSF -I${TOP_INCDIR} -DASSEMBLER process.s; \
-		${AS} -v process.i -o process.o;; \
-	*_obsd* ) \
-		cp process.s process.S ; \
-		${CC} -E -I${TOP_INCDIR} process.S >process.ss ; \
+	*_darwin* ) \
+		$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} -I${TOP_INCDIR} ${srcdir}/process.s;; \
+	i386_*bsd*) \
+		echo foo ; \
+		cp ${srcdir}/process.i386.s process.S ; \
+		${CCOBJ} -E -I${srcdir} -I${TOP_INCDIR} process.S >process.ss ; \
 		${AS} process.ss -o process.o ;  \
 		$(RM) -f process.S ;;\
-	hp_ux110 ) \
-		${CC} ${CFLAGS} -c process.c;; \
+	ncrx86_* | sunx86_*) \
+		/usr/ccs/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.i386.s process.ss; \
+		${AS} -o process.o process.ss; \
+		$(RM) process.ss ;; \
+	alpha_nbsd* ) \
+		/usr/bin/cpp -DASSEMBLER -P -I${TOP_INCDIR} ${srcdir}/process.s > process.ss; \
+		${AS} -o process.o process.ss; \
+		$(RM) process.ss ;; \
+	hp* | *_linux* | *_umlinux* | sgi_64 | sgi_65 ) \
+		${CCOBJ} ${CFLAGS} -c ${srcdir}/process.c;; \
+	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux?? ) \
+		${AS} -v  -P -DOSF -I${TOP_INCDIR} -DASSEMBLER ${srcdir}/process.s; \
+		${AS} -v process.i -o process.o;; \
+	ia64_hpux11* | hp_ux11* ) \
+		${CC} ${CFLAGS} -c ${srcdir}/process.c;; \
+	i386_*) \
+		/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.i386.s process.ss; \
+		${AS} process.ss -o process.o; \
+		$(RM) process.ss ;; \
 	*) \
-		/lib/cpp -P -I${TOP_INCDIR} process.s process.ss; \
+		/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s process.ss; \
 		${AS} process.ss -o process.o; \
 		$(RM) process.ss ;; \
 	esac
 
 iomgr.o		: iomgr.c lwp.h timer.h
-		${CC} -c ${CFLAGS} iomgr.c
+		${CCOBJ} -c ${CFLAGS} ${srcdir}/iomgr.c
 
 preempt.o	: preempt.c lwp.h preempt.h
 lwp.o		: lwp.c lwp.h
 	case "$(SYS_NAME)" in \
 		rs_aix*) \
-			$(CC) -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -c lwp.c;; \
+			$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -I${srcdir} -I. -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} -c ${srcdir}/lwp.c;; \
 		*)  \
-			$(CC) ${CFLAGS} -c lwp.c;; \
+			$(CCOBJ) ${CFLAGS} -c ${srcdir}/lwp.c;; \
 		esac
 lock.o		: lock.c lock.h lwp.h
 timer.o		: timer.c
@@ -126,7 +116,7 @@ rw: rw.o liblwp.a $(TOP_LIBDIR)/util.a
 	${CC} ${CFLAGS} -o rw rw.o liblwp.a $(TOP_LIBDIR)/util.a
 
 rw.o: rw.c
-	${CC} ${CFLAGS} -c rw.c
+	${CC} ${CFLAGS} -c ${srcdir}/rw.c
 
 
 #

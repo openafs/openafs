@@ -10,21 +10,26 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/test/testqueue.c,v 1.1.1.4 2001/07/14 22:23:47 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rx/test/testqueue.c,v 1.5 2003/07/15 23:16:37 shadow Exp $");
 
 #include <rx/rx_queue.h>
 
 struct myq {
     struct rx_queue queue_header;
-    int     value;
+    int value;
 };
 
-void qprint(char *s, struct myq *qe) {
-    printf("%s/%x: next:%x, prev:%x, value=%d\n",
-	   s, qe, queue_Next(qe, myq), queue_Prev(qe, myq), qe->value);
+void
+qprint(char *s, struct myq *qe)
+{
+    printf("%s/%x: next:%x, prev:%x, value=%d\n", s, qe, queue_Next(qe, myq),
+	   queue_Prev(qe, myq), qe->value);
 }
 
-void qremove(char *s, struct myq *q) {
+void
+qremove(char *s, struct myq *q)
+{
     struct myq *qe, *nqe;
     printf("*head* ");
     qprint(s, q);
@@ -37,25 +42,28 @@ void qremove(char *s, struct myq *q) {
 }
 
 /* Separate test for the splice macros */
-struct rx_queue *createQueue(int n) {
-    int     i;
+struct rx_queue *
+createQueue(int n)
+{
+    int i;
     struct rx_queue *q;
     struct myq *qe;
-    q = (struct rx_queue *) malloc(sizeof(struct rx_queue));
+    q = (struct rx_queue *)malloc(sizeof(struct rx_queue));
     queue_Init(q);
     for (i = 0; i < 3; i++) {
-	qe = (struct myq *) malloc(sizeof(struct myq));
+	qe = (struct myq *)malloc(sizeof(struct myq));
 	qe->value = n * 1000 + i;
 	queue_Append(q, qe);
     }
     return q;
 }
 
-void testSplice(void)
+void
+testSplice(void)
 {
     struct rx_queue *q[10];
     struct myq *qe, *nqe;
-    int     i;
+    int i;
     for (i = 0; i < 10; i++)
 	q[i] = createQueue(i);
     for (i = 0; i < 9; i++) {
@@ -87,8 +95,10 @@ void testSplice(void)
     }
 }
 
-void testAppend(void) {
-    int     i;
+void
+testAppend(void)
+{
+    int i;
     struct myq x;
     struct myq xa[20];
     struct myq y;
@@ -108,7 +118,9 @@ void testAppend(void) {
     qremove("y, later", &y);
 }
 
-int main(int argc, char **argv) {
+int
+main(int argc, char **argv)
+{
 
     if (argc > 1) {
 	testSplice();

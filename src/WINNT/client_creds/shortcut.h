@@ -18,7 +18,7 @@
 
 void Shortcut_Init (void);
 void Shortcut_Exit (void);
-BOOL Shortcut_Create (LPTSTR pszTarget, LPCTSTR pszSource, LPTSTR pszDesc = NULL);
+BOOL Shortcut_Create (LPTSTR pszTarget, LPCTSTR pszSource, LPTSTR pszDesc = NULL, LPTSTR pszArgs = NULL);
 void Shortcut_FixStartup (LPCTSTR pszLinkName, BOOL fAutoStart);
 
 

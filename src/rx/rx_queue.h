@@ -15,7 +15,7 @@
 #define _RX_QUEUE_
 
 /* A queue head is simply a queue element linked to itself (i.e. the null queue is a queue with exactly one element).  Queue elements can be prepended to any structure:  these macros assume that the structure passed is coercible to a (struct q).  Since all of these operations are implemented as macros, the user should beware of side-effects in macro parameters.  Also beware that implicit casting of queue types occurs, so be careful to supply the right parameters at the right times! */
-#undef queue /* Since some OS (ultrix, etc) have their own */
+#undef queue			/* Since some OS (ultrix, etc) have their own */
 struct rx_queue {
     struct rx_queue *prev;
     struct rx_queue *next;
@@ -165,5 +165,5 @@ for (n=0, queue_Scan(&myqueue, qe, nqe, myelement), n++) {}
 	(qe) = prev, prev = queue_Prev(qe, s)
 
 #define queue_Count(q, qe, nqe, s, n) 			\
-    for (n=0, queue_Scan(q, qe, nqe, s), n++) {}	
+    for (n=0, queue_Scan(q, qe, nqe, s), n++) {}
 #endif /* _RX_QUEUE_ */

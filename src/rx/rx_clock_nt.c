@@ -13,7 +13,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_clock_nt.c,v 1.1.1.5 2001/07/14 22:23:27 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rx/rx_clock_nt.c,v 1.9 2004/02/26 19:23:02 jaltman Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <stdio.h>
@@ -22,7 +23,9 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_clock_nt.c,v 1.1.1.5 2001/07/14 2
 #include <winbase.h>
 #include "rx_clock.h"
 
-struct clock clock_now;	/* The last elapsed time ready by clock_GetTimer */
+void clock_UpdateTime(void);    /* forward reference */
+
+struct clock clock_now;		/* The last elapsed time ready by clock_GetTimer */
 
 /* This is set to 1 whenever the time is read, and reset to 0 whenever
  * clock_NewTime is called.  This is to allow the caller to control the
@@ -36,7 +39,12 @@ static int clockInitialized = 0;
 /* Timing tests show that we can compute times at about 4uS per call. */
 LARGE_INTEGER rxi_clock0;
 LARGE_INTEGER rxi_clockFreq;
-void clock_Init()
+
+#undef clock_UpdateTime
+void clock_UpdateTime(void);
+
+void
+clock_Init(void)
 {
     if (!QueryPerformanceFrequency(&rxi_clockFreq)) {
 	printf("No High Performance clock, exiting.\n");
@@ -44,33 +52,36 @@ void clock_Init()
     }
 
     clockInitialized = 1;
-    (void) QueryPerformanceCounter(&rxi_clock0);
+    (void)QueryPerformanceCounter(&rxi_clock0);
 
     clock_UpdateTime();
 }
 
 #ifndef KERNEL
 /* Make clock uninitialized. */
-clock_UnInit()
+int
+clock_UnInit(void)
 {
     clockInitialized = 0;
+	return 0;
 }
 #endif
 
-void clock_UpdateTime(void)
+void
+clock_UpdateTime(void)
 {
     LARGE_INTEGER now, delta;
     double seconds;
 
-    (void) QueryPerformanceCounter(&now);
+    (void)QueryPerformanceCounter(&now);
 
     delta.QuadPart = now.QuadPart - rxi_clock0.QuadPart;
 
     seconds = (double)delta.QuadPart / (double)rxi_clockFreq.QuadPart;
 
-    clock_now.sec = (int) seconds;
-    clock_now.usec = (int) ((seconds - (double)clock_now.sec)
-			    * (double)1000000);
+    clock_now.sec = (int)seconds;
+    clock_now.usec = (int)((seconds - (double)clock_now.sec)
+			   * (double)1000000);
     clock_haveCurrentTime = 1;
     clock_nUpdates++;
 

@@ -42,13 +42,13 @@
 #include "package.h"
 
 
-int mv(from,to)
-register char *from;
-register char *to;
+int
+mv(from, to)
+     register char *from;
+     register char *to;
 {
-    loudonly_message("mv %s %s",from,to);
-    if (!opt_lazy && rename(from,to) < 0)
-    {
+    loudonly_message("mv %s %s", from, to);
+    if (!opt_lazy && rename(from, to) < 0) {
 #if defined(AFS_HPUX_ENV)
 	char pnameBusy[512];
 
@@ -59,81 +59,74 @@ register char *to;
 		if (rename(from, to) < 0) {
 		    unlink(pnameBusy);
 		    if (errno == ETXTBSY) {
-			message("rename %s %s; %m (ignored)",from,to);				
+			message("rename %s %s; %m (ignored)", from, to);
 			return 0;
 		    }
-		    message("rename %s %s; %m",from,to);	
+		    message("rename %s %s; %m", from, to);
 		    return -1;
 		}
 		unlink(pnameBusy);
 		return 0;
 	    } else if (errno == ETXTBSY) {
-		message("rename %s %s; %m (ignored)", to, pnameBusy);				
+		message("rename %s %s; %m (ignored)", to, pnameBusy);
 		return 0;
 	    }
 	}
 #endif /* AFS_HPUX_ENV */
-	message("rename %s %s; %m",from,to);	
+	message("rename %s %s; %m", from, to);
 	return -1;
     }
     return 0;
 }
 
-int rm(path)
-register char *path;
+int
+rm(path)
+     register char *path;
 {
     register char *endp;
     register struct dirent *de;
     register DIR *dp;
     struct stat stb;
 
-    if (lstat(path,&stb) < 0)
-    {
+    if (lstat(path, &stb) < 0) {
 	/* message("lstat %s; %m",path); */
 	return;
     }
 #ifdef	KFLAG
-    if (opt_kflag && (stb.st_mode & 0222) == 0)
-    {
-	loudonly_message("INHIBIT %s removal",path);
+    if (opt_kflag && (stb.st_mode & 0222) == 0) {
+	loudonly_message("INHIBIT %s removal", path);
 	return;
     }
 #endif /* KFLAG */
-    if ((stb.st_mode & S_IFMT) != S_IFDIR)
-    {
-	loudonly_message("rm %s",path);
-	if (!opt_lazy && unlink(path) < 0)
-	{
-	    message("unlink %s; %m",path);
+    if ((stb.st_mode & S_IFMT) != S_IFDIR) {
+	loudonly_message("rm %s", path);
+	if (!opt_lazy && unlink(path) < 0) {
+	    message("unlink %s; %m", path);
 	    return;
 	}
 	return;
     }
     endp = path + strlen(path);
-    if ((dp = opendir(path)) == 0)
-    {
-	message("opendir %s; %m",path);
+    if ((dp = opendir(path)) == 0) {
+	message("opendir %s; %m", path);
 	return;
     }
     *endp++ = '/';
-    while ((de = readdir(dp)) != 0)
-    {
-	if (de->d_name[0] == '.')
-	{
+    while ((de = readdir(dp)) != 0) {
+	if (de->d_name[0] == '.') {
 	    if (de->d_name[1] == 0)
 		continue;
 	    if (de->d_name[1] == '.' && de->d_name[2] == 0)
 		continue;
 	}
-	(void)strcpy(endp,de->d_name);
+	(void)strcpy(endp, de->d_name);
 	(void)rm(path);
     }
     *--endp = 0;
     (void)closedir(dp);
-    loudonly_message("rmdir %s",path);
-    if (!opt_lazy && rmdir(path) < 0)
-    {
-	message("rmdir %s; %m",path);
+    loudonly_message("rmdir %s", path);
+    if (!opt_lazy && rmdir(path) < 0) {
+	message("rmdir %s; %m", path);
 	return;
     }
     return;
@@ -141,69 +134,63 @@ register char *path;
 
 
 
-int cp(from,to)
-register char	*from;
-register char	*to;
+int
+cp(from, to)
+     register char *from;
+     register char *to;
 {
     register int ffd, tfd, cc;
     char buffer[8192];
 
-    loudonly_message("cp %s %s",from,to);
+    loudonly_message("cp %s %s", from, to);
     if (opt_lazy)
 	return 0;
-    if ((ffd = open(from,O_RDONLY)) < 0)
-    {
-	message("open %s; %m",from);
+    if ((ffd = open(from, O_RDONLY)) < 0) {
+	message("open %s; %m", from);
 	return -1;
     }
-    if ((tfd = open(to,O_WRONLY|O_CREAT|O_TRUNC,0666)) < 0)
-    {
-	message("open %s; %m",to);
+    if ((tfd = open(to, O_WRONLY | O_CREAT | O_TRUNC, 0666)) < 0) {
+	message("open %s; %m", to);
 	(void)close(ffd);
 	return -1;
     }
-    for (;;)
-    {
-	if ((cc = read(ffd,buffer,sizeof(buffer))) < 0)
-	{
-	    message("read %s; %m",from);
+    for (;;) {
+	if ((cc = read(ffd, buffer, sizeof(buffer))) < 0) {
+	    message("read %s; %m", from);
 	    (void)close(ffd);
 	    (void)close(tfd);
 	    return -1;
 	}
 	if (cc == 0)
 	    break;
-	if (cc != write(tfd,buffer,cc))
-	{
-	    message("write %s; %m",to);
+	if (cc != write(tfd, buffer, cc)) {
+	    message("write %s; %m", to);
 	    (void)close(ffd);
 	    (void)close(tfd);
 	    return -1;
 	}
     }
-    if (close(ffd) < 0)
-    {
-	message("close %s; %m",from);
+    if (close(ffd) < 0) {
+	message("close %s; %m", from);
 	(void)close(tfd);
 	return -1;
     }
-    if (close(tfd) < 0)
-    {
-	message("close %s; %m",to);
+    if (close(tfd) < 0) {
+	message("close %s; %m", to);
 	return -1;
     }
     return 0;
 }
 
 
-int ln(from,to)
-register char *from;
-register char *to;
+int
+ln(from, to)
+     register char *from;
+     register char *to;
 {
-    loudonly_message("ln %s %s",from,to);
-    if (!opt_lazy && link(from,to) < 0)
-    {
-	message("ln %s %s; %m",from,to);
+    loudonly_message("ln %s %s", from, to);
+    if (!opt_lazy && link(from, to) < 0) {
+	message("ln %s %s; %m", from, to);
 	return -1;
     }
     return 0;
@@ -212,47 +199,42 @@ register char *to;
 
 
 
-int mklostfound(path)
-register char	*path;
+int
+mklostfound(path)
+     register char *path;
 {
     register char *u, *l, *endp;
     register int f;
     struct stat stb;
 
-    loudonly_message("mklost+found %s",path);
+    loudonly_message("mklost+found %s", path);
     if (opt_lazy)
 	return 0;
     endp = path + strlen(path);
     *endp++ = '/';
     endp[2] = 0;
-    for (u = "0123456789abcdef"; *u; u++)
-    {
-	for (l = "0123456789abcdef"; *l; l++)
-	{
+    for (u = "0123456789abcdef"; *u; u++) {
+	for (l = "0123456789abcdef"; *l; l++) {
 	    endp[0] = *u;
 	    endp[1] = *l;
-	    f = open(path,O_CREAT|O_TRUNC|O_WRONLY,0666);
-	    if (f < 0)
-	    {
-		message("open %s; %m",path);
+	    f = open(path, O_CREAT | O_TRUNC | O_WRONLY, 0666);
+	    if (f < 0) {
+		message("open %s; %m", path);
 		continue;
 	    }
 	    (void)close(f);
 	}
     }
-    for (u = "0123456789abcdef"; *u; u++)
-    {
-	for (l = "0123456789abcdef"; *l; l++)
-	{
+    for (u = "0123456789abcdef"; *u; u++) {
+	for (l = "0123456789abcdef"; *l; l++) {
 	    endp[0] = *u;
 	    endp[1] = *l;
-	    if (lstat(path,&stb) >= 0)
+	    if (lstat(path, &stb) >= 0)
 		if ((stb.st_mode & S_IFMT) != S_IFDIR)
 		    if (unlink(path) < 0)
-			message("unlink %s; %m",path);
+			message("unlink %s; %m", path);
 	}
     }
     *--endp = 0;
     return 0;
 }
-

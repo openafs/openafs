@@ -58,13 +58,12 @@ doit_mmap(int fd, struct stat *sb)
     void *mmap_buf;
     int ret;
 
-    mmap_buf = mmap (NULL, sb->st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+    mmap_buf = mmap(NULL, sb->st_size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (mmap_buf == (void *)MAP_FAILED)
-	err (1, "mmap");
-    ret = write (1, mmap_buf, sb->st_size);
+	err(1, "mmap");
+    ret = write(1, mmap_buf, sb->st_size);
     if (ret != sb->st_size)
-	err(1, "write returned %d wanted to write %d",
-	    ret, (int)sb->st_size);
+	err(1, "write returned %d wanted to write %d", ret, (int)sb->st_size);
     munmap(mmap_buf, sb->st_size);
 }
 
@@ -80,30 +79,28 @@ doit_read(int fd, struct stat *sb)
 	err(1, "malloc(%d)", (int)sb->st_size);
     ret = read(fd, read_buf, sb->st_size);
     if (ret != sb->st_size)
-	err(1, "read returned %d wanted to write %d",
-	    ret, (int)sb->st_size);
-    ret = write (1, read_buf, sb->st_size);
+	err(1, "read returned %d wanted to write %d", ret, (int)sb->st_size);
+    ret = write(1, read_buf, sb->st_size);
     if (ret != sb->st_size)
-	err(1, "write returned %d wanted to write %d",
-	    ret, (int)sb->st_size);
+	err(1, "write returned %d wanted to write %d", ret, (int)sb->st_size);
     free(read_buf);
 }
 
 static void
-doit (const char *filename, void (*func)(int, struct stat *))
+doit(const char *filename, void (*func) (int, struct stat *))
 {
     struct stat sb;
     int fd;
     int ret;
 
-    fd = open (filename, O_RDONLY);
+    fd = open(filename, O_RDONLY);
     if (fd < 0)
 	err(1, "open %s", filename);
-    ret = fstat (fd, &sb);
-    (*func)(fd, &sb);
+    ret = fstat(fd, &sb);
+    (*func) (fd, &sb);
     if (ret < 0)
-	err (1, "stat %s", filename);
-    close (fd);
+	err(1, "stat %s", filename);
+    close(fd);
 }
 
 static int read_flag;
@@ -111,10 +108,10 @@ static int mmap_flag;
 static int help_flag;
 
 static void
-usage (int exit_val)
+usage(int exit_val)
 {
     fprintf(stderr, "mmap-cat [-m|-r] filename\n");
-    exit (exit_val);
+    exit(exit_val);
 }
 
 int
@@ -125,13 +122,12 @@ main(int argc, char **argv)
     if (argc != 2)
 	usage(1);
 
-    if (!strcmp(argv[1],"-m")) {
-      mmap_flag++;
+    if (!strcmp(argv[1], "-m")) {
+	mmap_flag++;
+    } else if (!strcmp(argv[1], "-r")) {
+	read_flag++;
     } else
-    if (!strcmp(argv[1],"-r")) {
-      read_flag++;
-    } else
-      usage (1);
+	usage(1);
 
     if (read_flag && mmap_flag)
 	errx(1, "can't do both mmap and read");

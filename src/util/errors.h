@@ -32,28 +32,28 @@
 #define VSALVAGE	101	/* Volume needs salvage */
 #define VNOVNODE	102	/* Bad vnode number quoted */
 #define VNOVOL		103	/* Volume not attached, doesn't exist, 
-				   not created or not online */
+				 * not created or not online */
 #define VVOLEXISTS	104	/* Volume already exists */
 #define VNOSERVICE	105	/* Volume is not in service (i.e. it's
-				   is out of funds, is obsolete, or somesuch) */
+				 * is out of funds, is obsolete, or somesuch) */
 #define VOFFLINE	106	/* Volume is off line, for the reason
-				   given in the offline message */
+				 * given in the offline message */
 #define VONLINE		107	/* Volume is already on line */
-#define VDISKFULL	108 	/* ENOSPC - Partition is "full", i.e. rougly within
-				   n% of full */
+#define VDISKFULL	108	/* ENOSPC - Partition is "full", i.e. rougly within
+				 * n% of full */
 #define VOVERQUOTA	109	/* EDQUOT- Volume max quota exceeded */
 #define VBUSY		110	/* Volume temporarily unavailable; try again.
-				   The volume should be available again shortly; if
-				   it isn't something is wrong.  Not normally to be
-				   propagated to the application level */
+				 * The volume should be available again shortly; if
+				 * it isn't something is wrong.  Not normally to be
+				 * propagated to the application level */
 #define VMOVED		111	/* Volume has moved to another server; do a VGetVolumeInfo
-				   to THIS server to find out where */
+				 * to THIS server to find out where */
 #define VIO		112	/* Vnode temporarily unaccessible, but not known 
-				   to be permanently bad. */
-#define VRESTRICTED     120     /* Volume is restricted from using one or more
-                                   of the given residencies; do a
-                                   vos examine to find out the current
-                                   restrictions. */
-#define VRESTARTING	-100    /* server is restarting, otherwise similar to 
-				   VBUSY above.  This is negative so that old
-				   cache managers treat it as "server is down"*/
+				 * to be permanently bad. */
+#define VRESTRICTED     120	/* Volume is restricted from using one or more
+				 * of the given residencies; do a
+				 * vos examine to find out the current
+				 * restrictions. */
+#define VRESTARTING	-100	/* server is restarting, otherwise similar to 
+				 * VBUSY above.  This is negative so that old
+				 * cache managers treat it as "server is down" */

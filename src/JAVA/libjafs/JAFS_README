@@ -1,0 +1,123 @@
+Java API for OpenAFS (Jafs) README
+Current as of 6/5/02
+
+ ##########################################################################
+ # Copyright (c) 2001-2002 International Business Machines Corp.          #
+ # All rights reserved.                                                   #
+ #                                                                        #
+ # This software has been released under the terms of the IBM Public      #
+ # License.  For details, see the LICENSE file in the top-level source    #
+ # directory or online at http://www.openafs.org/dl/license10.html        #
+ #                                                                        #
+ # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS    #
+ # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT      #
+ # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR  #
+ # A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR #
+ # CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,  #
+ # EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,    #
+ # PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR     #
+ # PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF #
+ # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING   #
+ # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS     #
+ # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.           #
+ ##########################################################################
+
+*** INTRODUCTION ***
+
+Jafs is an open source API designed to allow Java programmers the ability
+to create applications for the administration or use of OpenAFS file systems.
+It works by accessing libadmin and libuafs (administrative and user-level 
+libraries that come with OpenAFS) through JNI.  It consists of a Java package 
+called org.openafs.jafs, and a shared libraries libjafsadm.so and libjafs.so.
+
+*** USE ***
+
+There is a version of Jafs that has been compiled on Red Hat Linux 7.1, 
+and can be directly used without compilation.  It was compiled using
+OpenAFS 1.2.4 libraries (with a modified version of libjuafs.a).  It 
+consists of a JAR file (jafs.jar) and two shared libraries 
+(libjafsadm.so and libjafs.so).  It was compiled using the 
+--enable-transarc-paths on compilation (for use with the OpenAFS RPMs), 
+gcc 2.96, and Java Classic VM version 1.4.0.
+
+When you write Java code to use this API, import the
+org.openafs.jafs package. During compilation of your Java code, 
+ensure one of the following conditions are met:
+  - Use the "-classpath" option to javac to specify the jafs.jar file.
+  - Change your $CLASSPATH environment variable to include the
+    jafs.jar file (e.g. export CLASSPATH=$CLASSPATH:jafs.jar
+
+When running an application that uses Jafs, the shared libraries
+need to be found by Java's library loader.  The easiest way to
+accomplish this is to copy these files into the /usr/lib/ directory,
+or create symbolic links from that directory to the files.  Alternatively, 
+the directory containing the libraries can also be added to the
+LD_LIBRARY_PATH environment variable, instead.
+
+You also need to have an OpenAFS client set up on your machine
+(preferably version 1.2.4, but it should work for some past versions as well).
+You can obtain the OpenAFS client and view installation documentation at 
+http://www.openafs.org (the RPMs are easiest to use for Linux).  Also any 
+cells you plan to access through the API must have entries in your
+client's CellServDB file (located in the /usr/vice/etc/ directory in most
+setups).
+
+This API is most effective when used with a cell that uses the kaserver
+for authentication.  It does not currently support alternative methods of
+authentication such as Kerberos V.
+
+If you have successfully set up your Linux 7.1 environment as described
+above, you will be able to develop and execute applications that use
+the Jafs API.
+
+*** BUILD ***
+
+The first step in compiling your own versions of the library and jar file
+is to download the OpenAFS source code.  If the code doesn't contain the
+libjuafs version of the libuafs library -- noted by the README file located
+in the src/libuafs directory (if a README file doesn't exist in this directory
+then the libjuafs patch (libuafs.diff) has not been applied) -- you must 
+first apply the libjuafs patch. You can apply the libjuafs patch with the 
+following command, executed from the root directory of the download code 
+(i.e. openafs-1.2.4/):
+
+  patch -p1 < libuafs.diff
+
+Next, if the code doesn't contain the src/JAVA/libjafs directory, you can 
+apply the jafs patch to it with the following command, executed from the 
+root directory of the download code (i.e. openafs-1.2.4/):
+
+  patch -p1 < jafs.diff
+
+Note that the source code you download needs to be newer than 4/22/02,
+in order for the full functionality of the API to be effective.  Otherwise,
+you may experience link errors.
+
+From that same directory, run the configure script as you normally would 
+to compile OpenAFS, but run it with a java_home argument so the script can
+find your java distribution.  For example:
+
+  ./configure [other options] --java_home=/usr/local/jdk
+
+The configure script will ensure that this directory contains bin/ and lib/ 
+subdirectories, and that there are /bin/javac and/bin/javah executables and 
+an include/jni.h file.  If you don't supply a command line argument for the 
+java home, the script will look for it in environment variables: first in
+$JAVA_HOME and then in $JDK_HOME.  Also, note that if you have installed
+(or are planning to install) OpenAFS by using the RPMs for Linux, you
+should provide the --enable-transarc-paths configuration option.  If you
+get a "** Can't determine local cell name" error message, the most likely
+reason is that you didn't supply this option.
+
+Next, do a full build of OpenAFS by executing a make in the current
+directory.  After it finishes, you are ready to compile Jafs.  Execute
+'make jafs' from that same directory.  Afterward, there will be 
+libjafsadm.so and libjafs.so in the lib/ directory, and a jafs.jar in the 
+jlib/ directory. These can be used according to the instructions in the 
+'USE' section of this document. 
+
+If you'd like to edit the source code, you'll find the native C code in
+the src/libjafs directory, and the Java code in the 
+src/JAVA/org/openafs/jafs/ directory.  Please reference the 
+src/TechNotes-JavaAPI document for more information.
+

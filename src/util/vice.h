@@ -26,17 +26,17 @@
 #if defined(KERNEL)
 /* a fixed size, whether the kernel uses the ILP32 or LP64 data models */
 struct ViceIoctl32 {
-	unsigned int in, out;	/* Data to be transferred in, or out */
-	short in_size;		/* Size of input buffer <= 2K */
-	short out_size;		/* Maximum size of output buffer, <= 2K */
+    unsigned int in, out;	/* Data to be transferred in, or out */
+    short in_size;		/* Size of input buffer <= 2K */
+    short out_size;		/* Maximum size of output buffer, <= 2K */
 };
 #endif
 
-#ifndef AFS_NT40_ENV  /* NT decl in sys/pioctl_nt.h with pioctl() decl */
+#ifndef AFS_NT40_ENV		/* NT decl in sys/pioctl_nt.h with pioctl() decl */
 struct ViceIoctl {
-	caddr_t in, out;	/* Data to be transferred in, or out */
-	short in_size;		/* Size of input buffer <= 2K */
-	short out_size;		/* Maximum size of output buffer, <= 2K */
+    caddr_t in, out;		/* Data to be transferred in, or out */
+    short in_size;		/* Size of input buffer <= 2K */
+    short out_size;		/* Maximum size of output buffer, <= 2K */
 };
 #endif
 
@@ -75,4 +75,3 @@ struct ViceIoctl {
    values in the ViceIoctl structure.  This structure is itself passed
    into the kernel by the normal ioctl parameter passing mechanism.
  */
-

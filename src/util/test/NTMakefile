@@ -5,6 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=util\test
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
@@ -12,14 +13,13 @@ LIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib
 
-dirpath_test.exe: dirpath_test.obj $(LIBS)
+$(OUT)\dirpath_test.exe: $(OUT)\dirpath_test.obj $(LIBS)
 	$(EXECONLINK)
 
-test tests: dirpath_test.exe
+test tests: $(OUT)\dirpath_test.exe
 
 clean::
-	$(DEL) dirpath_test.exe
+	$(DEL) $(OUT)\dirpath_test.exe
 
-
-
-
+mkdir:
+	

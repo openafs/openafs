@@ -1,16 +1,13 @@
 @BOTTOM@
 #undef PACKAGE
 #undef VERSION
- 
 #define RCSID(msg) \
 static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
-
 #undef HAVE_CONNECT
 #undef HAVE_GETHOSTBYNAME
 #undef HAVE_RES_SEARCH
 #undef HAVE_SOCKET
 #undef STRUCT_SOCKADDR_HAS_SA_LEN
-
 #if ENDIANESS_IN_SYS_PARAM_H
 # ifndef KERNEL
 #  include <sys/types.h>
@@ -20,16 +17,14 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #  endif
 # endif
 #endif
-
 #undef AFS_AFSDB_ENV
+#undef AFS_LARGEFILE_ENV
 #undef AFS_NAMEI_ENV
-
 #undef BITMAP_LATER
 #undef BOS_RESTRICTED_MODE
 #undef BOS_NEW_CONFIG
 #undef FAST_RESTART
 #undef FULL_LISTVOL_SWITCH
-
 #undef COMPLETION_H_EXISTS
 #undef DEFINED_FOR_EACH_PROCESS
 #undef DEFINED_PREV_TASK
@@ -39,6 +34,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef EXPORTED_IA32_SYS_CALL_TABLE
 #undef EXPORTED_TASKLIST_LOCK
 #undef INODE_SETATTR_NOT_VOID
+#undef IRIX_HAS_MEM_FUNCS
 #undef RECALC_SIGPENDING_TAKES_VOID
 #undef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
 #undef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
@@ -53,10 +49,10 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef STRUCT_TASK_STRUCT_HAS_SIGHAND
 #undef STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
 #undef ssize_t
-
+#undef HAVE_STRUCT_BUF
+#undef HAVE_ARPA_NAMESER_COMPAT_H
 /* glue for RedHat kernel bug */
 #undef ENABLE_REDHAT_BUILDSYS
-
 #if defined(ENABLE_REDHAT_BUILDSYS) && defined(KERNEL) && defined(REDHAT_FIX)
 #include "redhat-fix.h"
 #endif

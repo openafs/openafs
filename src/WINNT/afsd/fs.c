@@ -23,11 +23,6 @@
 #include <osi.h>
 #include <afsint.h>
 
-typedef long afs_int32;
-typedef unsigned long afs_uint32;
-typedef short afs_int16;
-typedef unsigned short afs_uint16;
-
 #include "fs.h"
 #include "fs_utils.h"
 #include "cmd.h"
@@ -48,6 +43,8 @@ static char tspace[1024];
 static struct ubik_client *uclient;
 #endif /* not WIN32 */
 
+static MemDumpCmd(struct cmd_syndesc *asp);
+static CSCPolicyCmd(struct cmd_syndesc *asp);
 
 extern afs_int32 VL_GetEntryByNameO();
 
@@ -519,25 +516,25 @@ char *name; {
     double QuotaUsed =0.0;
     double PartUsed =0.0;
     int WARN = 0;
-    printf("%-20s",name);
+    printf("%-25.25s",name);
 
     if (status->MaxQuota != 0) {
-	printf("%8d%8d", status->MaxQuota, status->BlocksInUse);
+	printf("%10d%10d", status->MaxQuota, status->BlocksInUse);
 	QuotaUsed = ((((double)status->BlocksInUse)/status->MaxQuota) * 100.0);
     } else {
-	printf("no limit%8d", status->BlocksInUse);
+	printf("no limit%10d", status->BlocksInUse);
     }
     if (QuotaUsed > 90.0){
-	printf(" %8.0f%%<<", QuotaUsed);
+	printf(" %5.0f%%<<", QuotaUsed);
 	WARN = 1;
     }
-    else printf(" %8.0f%%  ", QuotaUsed);
+    else printf(" %5.0f%%  ", QuotaUsed);
     PartUsed = (100.0 - ((((double)status->PartBlocksAvail)/status->PartMaxBlocks) * 100.0));
     if (PartUsed > 97.0){
-	printf(" %8.0f%%<<", PartUsed);
+	printf(" %9.0f%%<<", PartUsed);
 	WARN = 1;
     }
-    else printf(" %8.0f%%  ", PartUsed);
+    else printf(" %9.0f%%  ", PartUsed);
     if (WARN){
 	printf("\t<<WARNING\n");
     }
@@ -549,16 +546,16 @@ VolumeStatus *status;
 char *name; {
     double PartUsed =0.0;
     int WARN = 0;
-    printf("%-20s",name);
+    printf("%-25.25s",name);
 
-    printf("%8d%8d%8d", status->PartMaxBlocks, status->PartMaxBlocks - status->PartBlocksAvail, status->PartBlocksAvail);
+    printf("%10d%10d%10d", status->PartMaxBlocks, status->PartMaxBlocks - status->PartBlocksAvail, status->PartBlocksAvail);
 	
     PartUsed = (100.0 - ((((double)status->PartBlocksAvail)/status->PartMaxBlocks) * 100.0));
     if (PartUsed > 90.0){
-	printf(" %8.0f%%<<", PartUsed);
+	printf(" %4.0f%%<<", PartUsed);
 	WARN = 1;
     }
-    else printf(" %8.0f%%  ", PartUsed);
+    else printf(" %4.0f%%  ", PartUsed);
     if (WARN){
 	printf("\t<<WARNING\n");
     }
@@ -1114,8 +1111,8 @@ register struct cmd_syndesc *as; {
     struct VolumeStatus *status;
     char *name;
     
-    printf("%-20s%-9s%-8s%-11s%-11s\n",
-	    "Volume Name","   Quota", "   Used", "   % Used", " Partition");
+    printf("%-25s%-10s%-10s%-7s%-13s\n", 
+           "Volume Name", "     Quota", "      Used", "  %Used", "    Partition");
     SetDotDefault(&as->parms[0].items);
     for(ti=as->parms[0].items; ti; ti=ti->next) {
 	/* once per file */
@@ -1176,8 +1173,8 @@ register struct cmd_syndesc *as; {
     char *name;
     struct VolumeStatus *status;
     
-    printf("%-20s%-9s%-8s%-11s%-11s\n",
-	    "Volume Name","  kbytes ", " used", "  avail ", " %used");
+    printf("%-25s%-10s%-10s%-10s%-6s\n", "Volume Name", "    kbytes",
+	   "      used", "     avail", " %used");
     SetDotDefault(&as->parms[0].items);
     for(ti=as->parms[0].items; ti; ti=ti->next) {
 	/* once per file */
@@ -1855,9 +1852,22 @@ register struct cmd_syndesc *as; {
 	Die(errno, 0);
     return 0;
 #else /* WIN32 */
-	fprintf(stderr, "fs: 'newcell' not implemented, since afsdcell.ini is\n");
-	fprintf(stderr, "fs: re-read on every reference to a new cell, on Windows/NT.\n");
-        return -1;
+    register afs_int32 code;
+    struct ViceIoctl blob;
+    
+    blob.in_size = 0;
+    blob.in = (char *) 0;
+    blob.out_size = MAXSIZE;
+    blob.out = space;
+
+    code = pioctl((char *) 0, VIOCNEWCELL, &blob, 1);
+
+    if (code) {
+       Die(errno, (char *) 0);
+    }
+    else
+       printf("Cell servers information refreshed\n");
+    return 0;
 #endif /* WIN32 */
 }
 
@@ -2099,6 +2109,7 @@ register struct cmd_syndesc *as; {
 	    }
 	}
     }
+    return(0);
 }
 
 
@@ -2282,6 +2293,8 @@ struct afsconf_cell *info;
 					  info->hostAddr[i].sin_port, USER_SERVICE_ID,
 					  sc, scIndex);
 
+    if (sc)
+        rxs_Release(sc);    /* Decrement the initial refCount */
     code = ubik_ClientInit(serverconns, &uclient);
 
     if (code) {
@@ -2360,6 +2373,92 @@ static addServer(name, rank)
 	return code;
 }
 
+static BOOL IsWindowsNT (void)
+{
+    static BOOL fChecked = FALSE;
+    static BOOL fIsWinNT = FALSE;
+
+    if (!fChecked)
+    {
+        OSVERSIONINFO Version;
+
+        fChecked = TRUE;
+
+        memset (&Version, 0x00, sizeof(Version));
+        Version.dwOSVersionInfoSize = sizeof(Version);
+
+        if (GetVersionEx (&Version))
+        {
+            if (Version.dwPlatformId == VER_PLATFORM_WIN32_NT)
+                fIsWinNT = TRUE;
+        }
+    }
+    return fIsWinNT;
+}
+
+
+BOOL IsAdmin (void)
+{
+    static BOOL fAdmin = FALSE;
+    static BOOL fTested = FALSE;
+
+    if (!fTested)
+    {
+        /* Obtain the SID for BUILTIN\Administrators. If this is Windows NT,
+         * expect this call to succeed; if it does not, we can presume that
+         * it's not NT and therefore the user always has administrative
+         * privileges.
+         */
+        PSID psidAdmin = NULL;
+        SID_IDENTIFIER_AUTHORITY auth = SECURITY_NT_AUTHORITY;
+
+        fTested = TRUE;
+
+        if (!AllocateAndInitializeSid (&auth, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &psidAdmin))
+            fAdmin = TRUE;
+        else
+        {
+            /* Then open our current ProcessToken */
+            HANDLE hToken;
+
+            if (OpenProcessToken (GetCurrentProcess(), TOKEN_QUERY, &hToken))
+            {
+                /* We'll have to allocate a chunk of memory to store the list of
+                 * groups to which this user belongs; find out how much memory
+                 * we'll need.
+                 */
+                DWORD dwSize = 0;
+                PTOKEN_GROUPS pGroups;
+                
+                GetTokenInformation (hToken, TokenGroups, NULL, dwSize, &dwSize);
+            
+                pGroups = (PTOKEN_GROUPS)malloc(dwSize);
+                
+                /* Allocate that buffer, and read in the list of groups. */
+                if (GetTokenInformation (hToken, TokenGroups, pGroups, dwSize, &dwSize))
+                {
+                    /* Look through the list of group SIDs and see if any of them
+                     * matches the Administrator group SID.
+                     */
+                    size_t iGroup = 0;
+                    for (; (!fAdmin) && (iGroup < pGroups->GroupCount); ++iGroup)
+                    {
+                        if (EqualSid (psidAdmin, pGroups->Groups[ iGroup ].Sid))
+                            fAdmin = TRUE;
+                    }
+                }
+
+                if (pGroups)
+                    free(pGroups);
+            }
+        }
+
+        if (psidAdmin)
+            FreeSid (psidAdmin);
+    }
+
+    return fAdmin;
+}
 
 static SetPrefCmd(as)
 register struct cmd_syndesc *as; {
@@ -2379,11 +2478,16 @@ register struct cmd_syndesc *as; {
   gblob.out_size = MAXSIZE;
 
 
-#ifndef WIN32
-  if (geteuid()) {
-    fprintf (stderr,"Permission denied: requires root access.\n");
-    return EACCES;
-  }
+#ifdef WIN32
+    if ( !IsAdmin() ) {
+        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        return EACCES;
+    }
+#else /* WIN32 */
+    if (geteuid()) {
+        fprintf (stderr,"Permission denied: requires root access.\n");
+        return EACCES;
+    }
 #endif /* WIN32 */
 
   code = 0;
@@ -2716,7 +2820,7 @@ char **argv; {
     cmd_AddParm(ts, "-file", CMD_SINGLE, CMD_OPTIONAL, "output to named file");
     cmd_AddParm(ts, "-numeric", CMD_FLAG, CMD_OPTIONAL, "addresses only");
     cmd_AddParm(ts, "-vlservers", CMD_FLAG, CMD_OPTIONAL, "VL servers");
-/*    cmd_AddParm(ts, "-cell", CMD_FLAG, CMD_OPTIONAL, "cellname"); */
+    /* cmd_AddParm(ts, "-cell", CMD_FLAG, CMD_OPTIONAL, "cellname"); */
     cmd_CreateAlias(ts, "gp");
 
     ts = cmd_CreateSyntax("setacl", SetACLCmd, 0, "set access control list");
@@ -2791,12 +2895,12 @@ char **argv; {
     cmd_AddParm(ts, "-rw", CMD_FLAG, CMD_OPTIONAL, "force r/w volume");
     cmd_AddParm(ts, "-fast", CMD_FLAG, CMD_OPTIONAL, "don't check name with VLDB");
 
-/*
-
-defect 3069
-
+    /*
+     *
+     * defect 3069
+     * 
     cmd_AddParm(ts, "-root", CMD_FLAG, CMD_OPTIONAL, "create cellular mount point");
-*/
+    */
 
     
     ts = cmd_CreateSyntax("rmmount", RemoveMountCmd, 0, "remove mount point");
@@ -2831,17 +2935,19 @@ defect 3069
     cmd_CreateAlias(ts, "sq");
 
     ts = cmd_CreateSyntax("newcell", NewCellCmd, 0, "configure new cell");
+#ifndef WIN32
     cmd_AddParm(ts, "-name", CMD_SINGLE, 0, "cell name");
     cmd_AddParm(ts, "-servers", CMD_LIST, CMD_REQUIRED, "primary servers");
     cmd_AddParm(ts, "-linkedcell", CMD_SINGLE, CMD_OPTIONAL, "linked cell name");
+#endif
 
 #ifdef FS_ENABLE_SERVER_DEBUG_PORTS
-/*
- * Turn this on only if you wish to be able to talk to a server which is listening
- * on alternative ports. This is not intended for general use and may not be
- * supported in the cache manager. It is not a way to run two servers at the
- * same host, since the cache manager cannot properly distinguish those two hosts.
- */
+    /*
+     * Turn this on only if you wish to be able to talk to a server which is listening
+     * on alternative ports. This is not intended for general use and may not be
+     * supported in the cache manager. It is not a way to run two servers at the
+     * same host, since the cache manager cannot properly distinguish those two hosts.
+     */
     cmd_AddParm(ts, "-fsport", CMD_SINGLE, CMD_OPTIONAL, "cell's fileserver port");
     cmd_AddParm(ts, "-vlport", CMD_SINGLE, CMD_OPTIONAL, "cell's vldb server port");
 #endif
@@ -2854,9 +2960,9 @@ defect 3069
 
     ts = cmd_CreateSyntax("wscell", WSCellCmd, 0, "list workstation's cell");
     
-/*
-    ts = cmd_CreateSyntax("primarycell", PrimaryCellCmd, 0, "obsolete (listed primary cell)");
-*/
+    /*
+     ts = cmd_CreateSyntax("primarycell", PrimaryCellCmd, 0, "obsolete (listed primary cell)");
+     */
     
     ts = cmd_CreateSyntax("monitor", MonitorCmd, 0, "set cache monitor host address");
     cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_OPTIONAL, "host name or 'off'");
@@ -2903,6 +3009,17 @@ defect 3069
     cmd_AddParm(ts, "-reset", CMD_FLAG, CMD_OPTIONAL, "reset log contents");
     cmd_AddParm(ts, "-dump", CMD_FLAG, CMD_OPTIONAL, "dump log contents");
     cmd_CreateAlias(ts, "tr");
+
+    ts = cmd_CreateSyntax("memdump", MemDumpCmd, 0, "dump memory allocs in debug builds");
+    cmd_AddParm(ts, "-begin", CMD_FLAG, CMD_OPTIONAL, "set a memory checkpoint");
+    cmd_AddParm(ts, "-end", CMD_FLAG, CMD_OPTIONAL, "dump memory allocs");
+    
+    ts = cmd_CreateSyntax("cscpolicy", CSCPolicyCmd, 0, "change client side caching policy for AFS shares");
+    cmd_AddParm(ts, "-share", CMD_SINGLE, CMD_OPTIONAL, "AFS share");
+    cmd_AddParm(ts, "-manual", CMD_FLAG, CMD_OPTIONAL, "manual caching of documents");
+    cmd_AddParm(ts, "-programs", CMD_FLAG, CMD_OPTIONAL, "automatic caching of programs and documents");
+    cmd_AddParm(ts, "-documents", CMD_FLAG, CMD_OPTIONAL, "automatic caching of documents");
+    cmd_AddParm(ts, "-disable", CMD_FLAG, CMD_OPTIONAL, "disable caching");
 
     code = cmd_Dispatch(argc, argv);
 
@@ -2960,3 +3077,95 @@ void Die(code, filename)
 #endif /* not WIN32 */
     }
 } /*Die*/
+
+static MemDumpCmd(struct cmd_syndesc *asp)
+{
+    long code;
+    struct ViceIoctl blob;
+    long inValue;
+    long outValue;
+  
+    if ((asp->parms[0].items && asp->parms[1].items)) {
+        fprintf(stderr, "fs trace: must use at most one of '-begin' or '-end'\n");
+        return EINVAL;
+    }
+  
+    /* determine if we're turning this tracing on or off */
+    inValue = 0;
+    if (asp->parms[0].items)
+        inValue = 1;            /* begin */
+    else if (asp->parms[1].items) 
+        inValue = 0;            /* end */
+  
+    blob.in_size = sizeof(long);
+    blob.in = (char *) &inValue;
+    blob.out_size = sizeof(long);
+    blob.out = (char *) &outValue;
+
+    code = pioctl(NULL, VIOC_TRACEMEMDUMP, &blob, 1);
+    if (code) {
+        Die(errno, NULL);
+        return code;
+    }
+
+    if (outValue) printf("AFS memdump begin.\n");
+    else printf("AFS memdump end.\n");
+
+    return 0;
+}
+
+static CSCPolicyCmd(struct cmd_syndesc *asp)
+{
+	struct cmd_item *ti;
+	char *share = NULL;
+	char sbmtpath[256];
+	char *policy;
+	
+	for(ti=asp->parms[0].items; ti;ti=ti->next) {
+		share = ti->data;
+		if (share)
+		{
+			break;
+		}
+	}
+	
+	if (share)
+	{
+		policy = "manual";
+		
+		if (asp->parms[1].items)
+			policy = "manual";
+		if (asp->parms[2].items)
+			policy = "programs";
+		if (asp->parms[3].items)
+			policy = "documents";
+		if (asp->parms[4].items)
+			policy = "disable";
+		
+		strcpy(sbmtpath, "afsdsbmt.ini");
+		WritePrivateProfileString("CSC Policy", share, policy, sbmtpath);
+		
+		printf("CSC policy on share \"%s\" changed to \"%s\".\n\n", share, policy);
+		printf("Close all applications that accessed files on this share or restart AFS Client for the change to take effect.\n"); 
+	}
+	else
+	{
+		char policies[1024];
+		DWORD len = sizeof(policies);
+
+		/* list current csc policies */
+		strcpy(sbmtpath, "afsdsbmt.ini");
+				
+		GetPrivateProfileSection("CSC Policy", policies, len, sbmtpath);
+		
+		printf("Current CSC policies:\n");
+		policy = policies;
+		while (policy[0])
+		{
+			printf("  %s\n", policy);
+			policy += strlen(policy) + 1;
+		}
+	}
+
+	return (0);
+}

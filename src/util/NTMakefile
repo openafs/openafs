@@ -7,6 +7,7 @@
 
 # General AFS utilities.
 
+RELDIR=util
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 
 INCFILEDIR = $(DESTDIR)\include\afs  # header file install directory
@@ -24,6 +25,7 @@ INCFILES =\
 	$(INCFILEDIR)\dirpath.h \
 	$(INCFILEDIR)\ktime.h \
 	$(INCFILEDIR)\fileutil.h \
+	$(INCFILEDIR)\afsutil_prototypes.h \
 	$(INCFILEDIR)\secutil_nt.h
 
 $(DESTDIR)\include\afs\dirent.h: dirent_nt.h
@@ -35,33 +37,38 @@ $(DESTDIR)\include\afs\dirpath.h: dirpath_nt.h
 LIBFILE = $(DESTDIR)\lib\afs\afsutil.lib
 
 LIBOBJS = \
-	assert.obj \
-	base32.obj \
-	casestrcpy.obj \
-	get_krbrlm.obj \
-	hostparse.obj \
-	isathing.obj \
-	kreltime.obj \
-	ktime.obj \
-	regex.obj \
-	readdir_nt.obj \
-	serverLog.obj \
-	uuid.obj \
-	volparse.obj \
-	winsock_nt.obj \
-	errmap_nt.obj \
-	dirpath.obj \
-	fileutil.obj \
-	secutil_nt.obj
+	$(OUT)\assert.obj \
+	$(OUT)\base32.obj \
+	$(OUT)\casestrcpy.obj \
+	$(OUT)\get_krbrlm.obj \
+	$(OUT)\hostparse.obj \
+	$(OUT)\isathing.obj \
+	$(OUT)\kreltime.obj \
+	$(OUT)\ktime.obj \
+	$(OUT)\regex.obj \
+	$(OUT)\readdir_nt.obj \
+	$(OUT)\serverLog.obj \
+    $(OUT)\snprintf.obj \
+	$(OUT)\uuid.obj \
+	$(OUT)\volparse.obj \
+	$(OUT)\winsock_nt.obj \
+	$(OUT)\errmap_nt.obj \
+	$(OUT)\dirpath.obj \
+	$(OUT)\fileutil.obj \
+	$(OUT)\secutil_nt.obj
 
+$(LIBOBJS): $$(@B).c
+    $(C2OBJ) $**
 
 $(LIBFILE): $(LIBOBJS)
 	$(LIBARCH)
 
-
-install: $(INCFILES) $(LIBFILE)
+install: $(INCFILES) $(LIBOBJS) $(LIBFILE)
 
 install9x: install
 
 clean::
 	$(DEL) $(LIBFILE)
+
+mkdir:
+	

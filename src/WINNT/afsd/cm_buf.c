@@ -22,7 +22,7 @@
 
 #include "afsd.h"
 
-void afsi_log();
+extern void afsi_log(char *pattern, ...);
 
 /* This module implements the buffer package used by the local transaction
  * system (cm).  It is initialized by calling cm_Init, which calls buf_Init;
@@ -400,6 +400,9 @@ long buf_AddBuffers(long nbuffers)
 #ifndef DJGPP
 	HANDLE hm;
 	long cs;
+
+    afsi_log("%d buffers being added to the existing cache of size %d",
+              nbuffers, buf_nbuffers);
 
 	/*
 	 * Cache file mapping constrained by
@@ -1368,43 +1371,83 @@ long buf_CleanVnode(struct cm_scache *scp, cm_user_t *userp, cm_req_t *reqp)
 {
 	long code;
 	cm_buf_t *bp;		/* buffer we're hacking on */
-        cm_buf_t *nbp;		/* next one */
+    cm_buf_t *nbp;		/* next one */
 	long i;
 
 	i = BUF_FILEHASH(&scp->fid);
 
 	code = 0;
 	lock_ObtainWrite(&buf_globalLock);
-        bp = buf_fileHashTablepp[i];
-        if (bp) bp->refCount++;
-        lock_ReleaseWrite(&buf_globalLock);
+    bp = buf_fileHashTablepp[i];
+    if (bp) bp->refCount++;
+    lock_ReleaseWrite(&buf_globalLock);
 	for(; bp; bp = nbp) {
 		/* clean buffer synchronously */
 		if (cm_FidCmp(&bp->fid, &scp->fid) == 0) {
 			if (userp) {
+                cm_HoldUser(userp);
 				lock_ObtainMutex(&bp->mx);
-				if (bp->userp) cm_ReleaseUser(bp->userp);
-                                bp->userp = userp;
+				if (bp->userp) 
+                    cm_ReleaseUser(bp->userp);
+                bp->userp = userp;
 				lock_ReleaseMutex(&bp->mx);
-                                cm_HoldUser(userp);
-                        }
+            }
 			buf_CleanAsync(bp, reqp);
-	                buf_CleanWait(bp);
-                        lock_ObtainMutex(&bp->mx);
+            buf_CleanWait(bp);
+            lock_ObtainMutex(&bp->mx);
 			if (bp->flags & CM_BUF_ERROR) {
 				if (code == 0 || code == -1) code = bp->error;
-                                if (code == 0) code = -1;
-                        }
-                        lock_ReleaseMutex(&bp->mx);
+                if (code == 0) code = -1;
+            }
+            lock_ReleaseMutex(&bp->mx);
 		}
 
 		lock_ObtainWrite(&buf_globalLock);
 		buf_LockedRelease(bp);
-                nbp = bp->fileHashp;
-                if (nbp) nbp->refCount++;
+        nbp = bp->fileHashp;
+        if (nbp) nbp->refCount++;
 		lock_ReleaseWrite(&buf_globalLock);
 	}	/* for loop over a bunch of buffers */
 	
-        /* done */
+    /* done */
 	return code;
 }
+
+/* dump the contents of the buf_hashTablepp. */
+int cm_DumpBufHashTable(FILE *outputFile, char *cookie)
+{
+    int zilch;
+    cm_buf_t *bp;
+    char output[1024];
+    int i;
+  
+	if (buf_hashTablepp == NULL)
+		return -1;
+
+    lock_ObtainRead(&buf_globalLock);
+  
+    sprintf(output, "%s - dumping buf_HashTable - buf_hashSize=%d\n", cookie, buf_hashSize);
+    WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+  
+    for (i = 0; i < buf_hashSize; i++)
+    {
+        for(bp = buf_hashTablepp[i]; bp; bp=bp->hashp) 
+        {
+            if (bp->refCount)
+            {
+                sprintf(output, "%s bp=0x%08X, hash=%d, fid (cell=%d, volume=%d,"
+                        "vnode=%d, unique=%d), size=%d refCount=%d\n", 
+                        cookie, (void *)bp, i, bp->fid.cell, bp->fid.volume, 
+                        bp->fid.vnode, bp->fid.unique, bp->size, bp->refCount);
+                WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+            }
+        }
+    }
+  
+    sprintf(output, "%s - Done dumping buf_HashTable.\n", cookie);
+    WriteFile(outputFile, output, strlen(output), &zilch, NULL);
+
+    lock_ReleaseRead(&buf_globalLock);
+    return 0;
+}
+

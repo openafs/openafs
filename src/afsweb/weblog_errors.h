@@ -11,7 +11,7 @@
 #define _WEBLOG_ERRORS_H_INCLUDED_
 
 /* error code definitions */
-#define PIPEREAD 1 
+#define PIPEREAD 1
 #define PIPESEND 2
 #define KA       3
 #define PARSE    4
@@ -20,7 +20,7 @@
 
 #define WEBLOGMINERROR  ((10<<16))
 #define PIPEREADERROR   (WEBLOGMINERROR + PIPEREAD)
-#define PIPESENDERROR   (WEBLOGMINERROR + PIPESEND) 
+#define PIPESENDERROR   (WEBLOGMINERROR + PIPESEND)
 #define KAERROR         (WEBLOGMINERROR + KA)
 #define NULLARGSERROR   (WEBLOGMINERROR + PARSE)
 #define PARSEERROR      (WEBLOGMINERROR + NULLARGS)
@@ -39,4 +39,3 @@ rx_Finalize(); \
 (!code ? exit(0) : exit((code)-WEBLOGMINERROR))
 
 #endif /* _WEBLOG_ERRORS_H_INCLUDED_ */
-
