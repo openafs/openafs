@@ -853,7 +853,7 @@ SetFields(register struct cmd_syndesc *as)
     idlist ids;
     namelist names;
     int i;
-    afs_int32 mask, flags, ngroups, nusers;
+    afs_int32 mask, flags=0, ngroups, nusers;
 
     if (GetNameOrId(as, &ids, &names))
 	return PRBADARG;
