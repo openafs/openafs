@@ -52,9 +52,9 @@ rlogin.o: rlogin.c AFS_component_version_number.c
 rsh.o: rsh.c AFS_component_version_number.c
 
 ../rlogind/herror.o: ../rlogind/herror.c
-	(cd ../rlogind ; make herror.o )
+	(cd ../rlogind ; $(MAKE) herror.o )
 ../inetd/ta-rauth.o : ../inetd/ta-rauth.c
-	(cd ../inetd ; make ta-rauth.o DESTDIR=${DESTDIR})
+	(cd ../inetd ; $(MAKE) ta-rauth.o DESTDIR=${DESTDIR})
 
 clean:
 	rm -f ${OBJS} core rsh *.BAK AFS_component_version_number.c

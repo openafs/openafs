@@ -149,7 +149,7 @@ install: AFS_component_version_number.c ntest ntpd ntp ntpdc runntp
 #	make ${MFLAGS} DESTDIR=${DESTDIR} install-link
 
 install-man:
-	cd man; make ${MFLAGS} DESTDIR=${DESTDIR} install
+	cd man; $(MAKE) ${MFLAGS} DESTDIR=${DESTDIR} install
 
 install-link:
 	rm -f ${BINDIR}/${LINKDIR}/ntpd
