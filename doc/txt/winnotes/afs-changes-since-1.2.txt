@@ -1,4 +1,9 @@
 Since 1.3.71:
+  * Fix bug in loading of registry value HKLM\SOFTWARE\OpenAFS\Client
+    "EnableKFW".  This value will not be read if the key
+    HKCU\SOFTWARE\OpenAFS\Client exists; even if the "EnableKFW" 
+    value under that key does not.
+
   * provide mechanisms to force the use of krb524d for Kerberos 5
     ticket to AFS token conversion.  For afslogon.dll and afscreds.exe
     there is a new registry value "Use524" and for aklog.exe a new
