@@ -886,7 +886,9 @@ restart:
 #if defined(AFS_LINUX22_ENV)
     {
 	struct inode *ip = AFSTOI(tvc);
+#if defined(AFS_LINUX24_ENV)
 	struct address_space *mapping = &ip->i_data;
+#endif
 
 #if defined(AFS_LINUX26_ENV)
 	inode_init_once(ip);

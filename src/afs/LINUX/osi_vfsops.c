@@ -369,7 +369,7 @@ afs_statfs(struct super_block *sbp, struct statfs *__statp, int size)
 #endif
 {
 #if !defined(AFS_LINUX24_ENV)
-    struct statfs stat;
+    struct statfs stat, *statp;
 
     if (size < sizeof(struct statfs))
 	return;

@@ -52,6 +52,7 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 #endif
+#ifdef AFS_LINUX24_ENV
 #include <linux/module.h> /* early to avoid printf->printk mapping */
 #ifndef OSI_PROBE_STANDALONE
 #include "afs/sysincludes.h"
@@ -1223,4 +1224,5 @@ void osi_probe_exit(void) { }
 
 module_init(osi_probe_init);
 module_exit(osi_probe_exit);
+#endif
 #endif

@@ -415,7 +415,9 @@ osi_clear_inode(struct inode *ip)
     afs_InactiveVCache(vcp, credp);
     ObtainWriteLock(&vcp->lock, 504);
     ip->i_nlink = 0;		/* iput checks this after calling this routine. */
+#ifdef I_CLEAR
     ip->i_state = I_CLEAR;
+#endif
     ReleaseWriteLock(&vcp->lock);
     crfree(credp);
 }
