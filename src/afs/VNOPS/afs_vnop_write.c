@@ -59,7 +59,7 @@ register struct vrequest *treq;
 	 * top level code.  */
 	avc->opens--;
 	avc->execsOrWriters--;
-	AFS_RELE((struct vnode *)avc); /* VN_HOLD at set CCore(afs_FakeClose)*/
+	AFS_RELE(AFSTOV(avc)); /* VN_HOLD at set CCore(afs_FakeClose)*/
 	crfree((struct AFS_UCRED *)avc->linkData);	/* "crheld" in afs_FakeClose */
 	avc->linkData =	(char *)0;
     }
@@ -735,9 +735,9 @@ afs_closex(afd)
      * close the file and release the lock when done.  Otherwise, just
      * let the regular close code work.      */
     if (afd->f_type == DTYPE_VNODE) {
-	tvc = (struct vcache *) afd->f_data;
-	if (IsAfsVnode((struct vnode *)tvc)) {
-	    VN_HOLD((struct vnode *) tvc);
+	tvc = VTOAFS(afd->f_data);
+	if (IsAfsVnode(AFSTOV(tvc))) {
+	    VN_HOLD(AFSTOV(tvc));
 	    flags = afd->f_flag & (FSHLOCK | FEXLOCK);
 	    afd->f_flag &= ~(FSHLOCK | FEXLOCK);
 	    code = vno_close(afd);
@@ -751,7 +751,7 @@ afs_closex(afd)
 #ifdef	AFS_DEC_ENV
 	    grele((struct gnode *) tvc);
 #else
-	    AFS_RELE((struct vnode *) tvc);
+	    AFS_RELE(AFSTOV(tvc));
 #endif
 	    closeDone = 1;
 	}

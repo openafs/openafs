@@ -50,7 +50,7 @@ osi_VM_GetDownD(avc, adc)
     int code;
 
     AFS_GUNLOCK();
-    code = afs_putpage((struct vnode *)avc,
+    code = afs_putpage(AFSTOV(avc),
 		       (offset_t) AFS_CHUNKTOBASE(adc->f.chunk),
 		       AFS_CHUNKTOSIZE(adc->f.chunk),
 		       B_INVAL, CRED());
@@ -91,11 +91,11 @@ osi_VM_FlushVCache(avc, slept)
 	return EBUSY;
 
     AFS_GUNLOCK();
-    pvn_vplist_dirty((struct vnode *)avc, 0, NULL, B_TRUNC|B_INVAL, CRED());
+    pvn_vplist_dirty(AFSTOV(avc), 0, NULL, B_TRUNC|B_INVAL, CRED());
     AFS_GLOCK();
 
     /* Might as well make the obvious check */
-    if (((struct vnode *)avc)->v_pages)
+    if (AFSTOV(avc)->v_pages)
 	return EBUSY;	/* should be all gone still */
 
     rw_destroy(&avc->rwlock);
@@ -119,10 +119,10 @@ osi_VM_StoreAllSegments(avc)
 {
     AFS_GUNLOCK();
 #if	defined(AFS_SUN56_ENV)
-    (void) pvn_vplist_dirty((struct vnode *)avc, (u_offset_t)0, afs_putapage,
+    (void) pvn_vplist_dirty(AFSTOV(avc), (u_offset_t)0, afs_putapage,
 			    0, CRED());
 #else
-    (void) pvn_vplist_dirty((struct vnode *)avc, 0, afs_putapage, 0, CRED());
+    (void) pvn_vplist_dirty(AFSTOV(avc), 0, afs_putapage, 0, CRED());
 #endif
     AFS_GLOCK();
 }
@@ -141,10 +141,10 @@ osi_VM_TryToSmush(avc, acred, sync)
 {
     AFS_GUNLOCK();
 #if	defined(AFS_SUN56_ENV)
-    (void) pvn_vplist_dirty((struct vnode *)avc, (u_offset_t)0, afs_putapage,
+    (void) pvn_vplist_dirty(AFSTOV(avc), (u_offset_t)0, afs_putapage,
 			    (sync ? B_INVAL : B_FREE), acred);
 #else
-    (void) pvn_vplist_dirty((struct vnode *)avc, 0, afs_putapage,
+    (void) pvn_vplist_dirty(AFSTOV(avc), 0, afs_putapage,
 			    (sync ? B_INVAL : B_FREE), acred);
 #endif
     AFS_GLOCK();
@@ -162,7 +162,7 @@ osi_VM_FlushPages(avc, credp)
     extern int afs_pvn_vptrunc;
 
     afs_pvn_vptrunc++;
-    (void) afs_putpage((struct vnode *)avc, (offset_t)0, 0,
+    (void) afs_putpage(AFSTOV(avc), (offset_t)0, 0,
 			B_TRUNC|B_INVAL, credp);
 }
 
@@ -189,7 +189,7 @@ osi_VM_PreTruncate(avc, alen, acred)
 
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
-    pp = page_lookup((struct vnode *)avc, alen - pageOffset, SE_EXCL);
+    pp = page_lookup(AFSTOV(avc), alen - pageOffset, SE_EXCL);
     if (pp) {
 	pagezero(pp, pageOffset, PAGESIZE - pageOffset);
 	page_unlock(pp);
@@ -213,7 +213,7 @@ osi_VM_Truncate(avc, alen, acred)
      * It's OK to specify afs_putapage here, even though we aren't holding
      * the vcache entry lock, because it isn't going to get called.
      */
-    pvn_vplist_dirty((struct vnode *)avc, alen, afs_putapage, B_TRUNC|B_INVAL,
+    pvn_vplist_dirty(AFSTOV(avc), alen, afs_putapage, B_TRUNC|B_INVAL,
 		     acred);
 }
 

@@ -935,7 +935,7 @@ afs_lookup(adp, aname, avcp, acred)
 
     AFS_STATCNT(afs_lookup);
 #ifdef	AFS_OSF_ENV
-    ndp->ni_dvp = (struct vnode *)adp;
+    ndp->ni_dvp = AFSTOV(adp);
     memcpy(aname, ndp->ni_ptr, ndp->ni_namelen);
     aname[ndp->ni_namelen] = '\0';
 #endif	/* AFS_OSF_ENV */
@@ -967,7 +967,7 @@ afs_lookup(adp, aname, avcp, acred)
 #ifdef	AFS_OSF_ENV
 	    extern struct vcache *afs_globalVp;
 	    if (adp == afs_globalVp) {
-		struct vnode *rvp = (struct vnode *)adp;
+		struct vnode *rvp = AFSTOV(adp);
 /*
 		ndp->ni_vp = rvp->v_vfsp->vfs_vnodecovered;
 		ndp->ni_dvp = ndp->ni_vp;

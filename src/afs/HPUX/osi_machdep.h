@@ -32,7 +32,7 @@ extern struct timeval time;
 #define	AFS_UCRED	ucred
 #define	AFS_PROC	proc_t
 
-#define osi_vnhold(avc, r)  do { VN_HOLD((struct vnode *)(avc)); } while(0)
+#define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
 #define gop_rdwr(rw,gp,base,len,offset,segflg,unit,aresid) \
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(aresid),0)
 

@@ -572,6 +572,9 @@ struct	vtodc
 extern afs_uint32 afs_stampValue;		/* stamp for pair's usage */
 #define	MakeStamp()	(++afs_stampValue)
 
+#define VTOAFS(V) ((struct vcache*)(V))
+#define AFSTOV(V) (&(V)->v)
+
 /* INVARIANTs: (vlruq.next != NULL) == (vlruq.prev != NULL)
  *             nextfree => !vlruq.next && ! vlruq.prev
  * !(avc->nextfree) && !avc->vlruq.next => (FreeVCList == avc->nextfree)
@@ -707,9 +710,9 @@ struct vcache {
 #ifdef AFS_SGI64_ENV
 #include <ksys/behavior.h>
 #define AFS_RWLOCK(V,F) \
-	afs_rwlock(&(((struct vcache *)(V))->vc_bhv_desc), (F));
+	afs_rwlock(&VTOAFS(V)->vc_bhv_desc, (F));
 #define AFS_RWUNLOCK(V,F) \
-	afs_rwunlock(&(((struct vcache *)(V))->vc_bhv_desc), (F));
+	afs_rwunlock(&VTOAFS(V)->vc_bhv_desc, (F));
 
 #else
 #define AFS_RWLOCK(V,F) afs_rwlock((vnode_t *)(V), (F) )
@@ -954,7 +957,7 @@ struct dcache {
 	avc->states |= CCore;	/* causes close to be called later */ \
                                                                       \
 	/* The cred and vnode holds will be released in afs_FlushActiveVcaches */  \
-	VN_HOLD((struct vnode *)avc);	/* So it won't disappear */           \
+	VN_HOLD(AFSTOV(avc));	/* So it won't disappear */           \
 	CRKEEP(avc, acred); /* Should use a better place for the creds */ \
     }                                                                         \
     else {                                                                    \

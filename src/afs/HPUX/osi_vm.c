@@ -68,7 +68,7 @@ osi_VM_TryToSmush(avc, acred, sync)
     struct AFS_UCRED *acred;
     int sync;
 {
-    struct vnode *vp = (struct vnode *)avc;
+    struct vnode *vp = AFSTOV(avc);
 
     /* Flush the delayed write blocks associated with this vnode
      * from the buffer cache

@@ -242,7 +242,7 @@ cred_t *cr;
      * rootvp gets lots of ref counts
      */
     if (rootvp) {
-	tvc = (struct vcache *)rootvp;
+	tvc = VTOAFS(rootvp);
         if (tvc->opens || CheckLock(&tvc->lock) || LockWaiters(&tvc->lock)) {
 	    ReleaseWriteLock(&afs_xvcache);
 	    return EBUSY;
@@ -290,13 +290,13 @@ afs_root (OSI_VFS_ARG(afsp), avpp)
     }
     if (tvp) {
 	int s;
-	VN_HOLD((struct vnode *)tvp);
-	s = VN_LOCK((struct vnode *)tvp);
-	tvp->v.v_flag |= VROOT;	
-	VN_UNLOCK((struct vnode *)tvp, s);
+	VN_HOLD(AFSTOV(tvp));
+	s = VN_LOCK(AFSTOV(tvp));
+	AFSTOV(tvp)->v_flag |= VROOT;	
+	VN_UNLOCK(AFSTOV(tvp), s);
 
 	afs_globalVFS = afsp;
-	*avpp = (struct vnode *) tvp;
+	*avpp = AFSTOV(tvp);
     }
 
     afs_Trace2(afs_iclSetp, CM_TRACE_VFSROOT, ICL_TYPE_POINTER, *avpp,

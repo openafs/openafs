@@ -175,7 +175,7 @@ afs_CopyOutAttrs(avc, attrs)
 
 #ifdef AFS_LINUX22_ENV
     /* And linux has it's own stash as well. */
-    vattr2inode((struct inode*)avc, attrs);
+    vattr2inode(AFSTOV(avc), attrs);
 #endif
     return 0;
 }
@@ -279,8 +279,8 @@ afs_getattr(OSI_VC_ARG(avc), attrs, acred)
 		    attrs->va_nodeid = ip->i_ino;
 		}
 #else
-		if (avc->v.v_flag & VROOT) {
-		    struct vnode *vp = (struct vnode *)avc;
+		if (AFSTOV(avc)->v_flag & VROOT) {
+		    struct vnode *vp = AFSTOV(avc);
 
 		    vp = vp->v_vfsp->vfs_vnodecovered;
 		    if (vp) {	/* Ignore weird failures */

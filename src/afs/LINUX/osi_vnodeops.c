@@ -61,7 +61,7 @@ static ssize_t afs_linux_read(struct file *fp, char *buf, size_t count,
 			      loff_t *offp)
 {
     ssize_t code;
-    struct vcache *vcp = (struct vcache*)fp->f_dentry->d_inode;
+    struct vcache *vcp = VTOAFS(fp->f_dentry->d_inode);
     cred_t *credp = crref();
     struct vrequest treq;
 
@@ -142,7 +142,7 @@ static ssize_t afs_linux_write(struct file *fp, const char *buf, size_t count,
 {
     ssize_t code = 0;
     int code2;
-    struct vcache *vcp = (struct vcache *)fp->f_dentry->d_inode;
+    struct vcache *vcp = VTOAFS(fp->f_dentry->d_inode);
     struct vrequest treq;
     cred_t *credp = crref();
 
@@ -250,7 +250,7 @@ static int afs_linux_readdir(struct file *fp,
 			     void *dirbuf, filldir_t filldir)
 {
     extern struct DirEntry * afs_dir_GetBlob();
-    struct vcache *avc = (struct vcache*)FILE_INODE(fp);
+    struct vcache *avc = VTOAFS(FILE_INODE(fp));
     struct vrequest treq;
     register struct dcache *tdc;
     int code;
@@ -411,7 +411,7 @@ void afs_linux_vma_close(struct vm_area_struct *vmap)
     if (!vmap->vm_file)
 	return;
 
-    vcp = (struct vcache*)FILE_INODE(vmap->vm_file);
+    vcp = VTOAFS(FILE_INODE(vmap->vm_file));
     if (!vcp)
 	return;
 
@@ -447,7 +447,7 @@ void afs_linux_vma_close(struct vm_area_struct *vmap)
 
 static int afs_linux_mmap(struct file *fp, struct vm_area_struct *vmap)
 {
-    struct vcache *vcp = (struct vcache*)FILE_INODE(fp);
+    struct vcache *vcp = VTOAFS(FILE_INODE(fp));
     cred_t *credp = crref();
     struct vrequest treq;
     int code;
@@ -548,7 +548,7 @@ static int afs_linux_release(struct inode *ip, struct file *fp)
 {
     int code = 0;
     cred_t *credp = crref();
-    struct vcache *vcp = (struct vcache*)ip;
+    struct vcache *vcp = VTOAFS(ip);
 
     AFS_GLOCK();
 #ifdef AFS_LINUX24_ENV
@@ -583,7 +583,7 @@ static int afs_linux_fsync(struct file *fp, struct dentry *dp)
 #ifdef AFS_LINUX24_ENV
     lock_kernel();
 #endif
-    code = afs_fsync((struct vcache*)ip, credp);
+    code = afs_fsync(VTOAFS(ip), credp);
 #ifdef AFS_LINUX24_ENV
     unlock_kernel();
 #endif
@@ -607,7 +607,7 @@ int afs_linux_file_revalidate(kdev_t dev);
 static int afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
 {
     int code = 0;
-    struct vcache *vcp = (struct vcache*)FILE_INODE(fp);
+    struct vcache *vcp = VTOAFS(FILE_INODE(fp));
     cred_t *credp = crref();
 #ifdef AFS_LINUX24_ENV
     struct flock64 flock;
@@ -645,7 +645,7 @@ static int afs_linux_lock(struct file *fp, int cmd, struct file_lock *flp)
  */
 int afs_linux_flush(struct file *fp)
 {
-    struct vcache *vcp = (struct vcache *)FILE_INODE(fp);
+    struct vcache *vcp = VTOAFS(FILE_INODE(fp));
     int code = 0;
     cred_t *credp;
 
@@ -749,7 +749,7 @@ static int afs_linux_revalidate(struct dentry *dp)
     int code;
     cred_t *credp;
     struct vrequest treq;
-    struct vcache *vcp = (struct vcache*)dp->d_inode;
+    struct vcache *vcp = VTOAFS(dp->d_inode);
 
     AFS_GLOCK();
 #ifdef AFS_LINUX24_ENV
@@ -802,8 +802,8 @@ static int afs_linux_dentry_revalidate(struct dentry *dp)
     struct vcache *lookupvcp = NULL;
     int code, bad_dentry = 1;
     struct sysname_info sysState;
-    struct vcache *vcp = (struct vcache*) dp->d_inode;
-    struct vcache *parentvcp = (struct vcache*) dp->d_parent->d_inode;
+    struct vcache *vcp = VTOAFS(dp->d_inode);
+    struct vcache *parentvcp = VTOAFS(dp->d_parent->d_inode);
 
     AFS_GLOCK();
 
@@ -869,7 +869,7 @@ static int afs_linux_dentry_revalidate(struct dentry *dp)
     int code;
     cred_t *credp;
     struct vrequest treq;
-    struct inode *ip = (struct inode *)dp->d_inode;
+    struct inode *ip = AFSTOV(dp->d_inode);
 
     unsigned long timeout = 3*HZ; /* 3 seconds */
 
@@ -943,7 +943,7 @@ int afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
     vattr.va_mode = mode;
 
     AFS_GLOCK();
-    code = afs_create((struct vcache*)dip, name, &vattr, NONEXCL, mode,
+    code = afs_create(VTOAFS(dip), name, &vattr, NONEXCL, mode,
 		      (struct vcache**)&ip, credp);
 
     if (!code) {
@@ -992,10 +992,10 @@ int afs_linux_lookup(struct inode *dip, struct dentry *dp)
     struct vcache *vcp=NULL;
     const char *comp = dp->d_name.name;
     AFS_GLOCK();
-    code = afs_lookup((struct vcache *)dip, comp, &vcp, credp);
+    code = afs_lookup(VTOAFS(dip), comp, &vcp, credp);
 
     if (vcp) {
-	struct inode *ip = (struct inode*)vcp;
+	struct inode *ip = AFSTOV(vcp);
 	/* Reset ops if symlink or directory. */
 #if defined(AFS_LINUX24_ENV)
        if (S_ISREG(ip->i_mode)) {
@@ -1020,7 +1020,7 @@ int afs_linux_lookup(struct inode *dip, struct dentry *dp)
     } 
     dp->d_time = jiffies;
     dp->d_op = afs_dops;
-    d_add(dp, (struct inode*)vcp);
+    d_add(dp, AFSTOV(vcp));
 
     AFS_GUNLOCK();
     crfree(credp);
@@ -1054,7 +1054,7 @@ int afs_linux_link(struct dentry *olddp, struct inode *dip,
     d_drop(newdp);
 
     AFS_GLOCK();
-    code = afs_link((struct vcache*)oldip, (struct vcache*)dip, name, credp);
+    code = afs_link(VTOAFS(oldip), VTOAFS(dip), name, credp);
 
     AFS_GUNLOCK();
     crfree(credp);
@@ -1069,7 +1069,7 @@ int afs_linux_unlink(struct inode *dip, struct dentry *dp)
     int putback = 0;
 
     AFS_GLOCK();
-    code = afs_remove((struct vcache*)dip, name, credp);
+    code = afs_remove(VTOAFS(dip), name, credp);
     AFS_GUNLOCK();
     if (!code)
 	d_drop(dp);
@@ -1093,7 +1093,7 @@ int afs_linux_symlink(struct inode *dip, struct dentry *dp,
 
     AFS_GLOCK();
     VATTR_NULL(&vattr);
-    code = afs_symlink((struct vcache*)dip, name, &vattr, target, credp);
+    code = afs_symlink(VTOAFS(dip), name, &vattr, target, credp);
     AFS_GUNLOCK();
     crfree(credp);
     return -code;
@@ -1111,7 +1111,7 @@ int afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
     VATTR_NULL(&vattr);
     vattr.va_mask = ATTR_MODE;
     vattr.va_mode = mode;
-    code = afs_mkdir((struct vcache*)dip, name, &vattr, &tvcp, credp);
+    code = afs_mkdir(VTOAFS(dip), name, &vattr, &tvcp, credp);
 
     if (tvcp) {
 	tvcp->v.v_op = &afs_dir_iops;
@@ -1120,7 +1120,7 @@ int afs_linux_mkdir(struct inode *dip, struct dentry *dp, int mode)
 #endif
 	dp->d_op = afs_dops;
 	dp->d_time = jiffies;
-	d_instantiate(dp, (struct inode*)tvcp);
+	d_instantiate(dp, AFSTOV(tvcp));
     }
 
     AFS_GUNLOCK();
@@ -1135,7 +1135,7 @@ int afs_linux_rmdir(struct inode *dip, struct dentry *dp)
     const char *name = dp->d_name.name;
 
     AFS_GLOCK();
-    code = afs_rmdir((struct vcache*)dip, name, credp);
+    code = afs_rmdir(VTOAFS(dip), name, credp);
 
     /* Linux likes to see ENOTEMPTY returned from an rmdir() syscall
      * that failed because a directory is not empty. So, we map
@@ -1176,7 +1176,7 @@ int afs_linux_rename(struct inode *oldip, struct dentry *olddp,
 	d_drop(newdp);
     }
     AFS_GLOCK();
-    code = afs_rename((struct vcache*)oldip, oldname, (struct vcache*)newip,
+    code = afs_rename(VTOAFS(oldip), oldname, VTOAFS(newip),
 		      newname, credp);
     AFS_GUNLOCK();
 
@@ -1204,7 +1204,7 @@ static int afs_linux_ireadlink(struct inode *ip, char *target, int maxlen,
     struct iovec iov;
 
     setup_uio(&tuio, &iov, target, (afs_offs_t) 0, maxlen, UIO_READ, seg);
-    code = afs_readlink((struct vcache*)ip, &tuio, credp);
+    code = afs_readlink(VTOAFS(ip), &tuio, credp);
     crfree(credp);
 
     if (!code)
@@ -1306,7 +1306,7 @@ int afs_linux_readpage(struct file *fp, struct page *pp)
 
     setup_uio(&tuio, &iovec, (char*)address, offset, PAGESIZE,
 	      UIO_READ, AFS_UIOSYS);
-    code = afs_rdwr((struct vcache*)ip, &tuio, UIO_READ, 0, credp);
+    code = afs_rdwr(VTOAFS(ip), &tuio, UIO_READ, 0, credp);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     unlock_kernel();
 #endif
@@ -1401,7 +1401,7 @@ int afs_linux_permission(struct inode *ip, int mode)
     if (mode & MAY_EXEC) tmp |= VEXEC;
     if (mode & MAY_READ) tmp |= VREAD;
     if (mode & MAY_WRITE) tmp |= VWRITE;
-    code = afs_access((struct vcache*)ip, tmp, credp);
+    code = afs_access(VTOAFS(ip), tmp, credp);
 
     AFS_GUNLOCK();
     crfree(credp);
@@ -1419,7 +1419,7 @@ int afs_linux_writepage_sync(struct inode *ip, struct page *pp,
                         unsigned long offset,
                         unsigned int count)
 {
-    struct vcache *vcp = (struct vcache *) ip;
+    struct vcache *vcp = VTOAFS(ip);
     char *buffer;
     afs_offs_t base;
     int code = 0;
@@ -1472,7 +1472,7 @@ int afs_linux_updatepage(struct file *fp, struct page *pp,
 			 unsigned long offset,
 			 unsigned int count, int sync)
 {
-    struct vcache *vcp = (struct vcache *)FILE_INODE(fp);
+    struct vcache *vcp = VTOAFS(FILE_INODE(fp));
     u8 *page_addr = (u8*) afs_linux_page_address(pp);
     int code = 0;
     cred_t *credp;

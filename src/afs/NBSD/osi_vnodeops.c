@@ -752,7 +752,7 @@ int mp_afs_getpage(vop, offset, len, protp, pl, plsz, mape, addr, rw, cred)
     vm_page_t *pagep;
     vm_offset_t off;
 
-   struct vcache *avc =  (struct vcache *)vop->vu_vp;
+   struct vcache *avc =  VTOAFS(vop->vu_vp);
 
     /* first, obtain the proper lock for the VM system */
 
@@ -852,7 +852,7 @@ int mp_afs_putpage(vop, pl, pcnt, flags, cred)
     struct ucred *cred;
 {
     register afs_int32 code=0;
-    struct vcache *avc = (struct vcache *)vop->vu_vp;
+    struct vcache *avc = VTOAFS(vop->vu_vp);
     struct vnode *vp = (struct vnode *)avc;
     int i;
 
@@ -972,7 +972,7 @@ mp_afs_bread(vp, lbn, bpp, cred)
 	uio.afsio_offset = offset;
 	uio.afsio_resid = fsbsize;
 	*bpp = 0;
-	error = afs_read((struct vcache *)vp, &uio, cred, lbn, bpp, 0);
+	error = afs_read(VTOAFS(vp), &uio, cred, lbn, bpp, 0);
 	if (error) {
 		afs_bread_freebp = bp;
 		AFS_GUNLOCK();

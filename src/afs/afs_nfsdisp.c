@@ -296,7 +296,7 @@ afs_nfs2_smallfidder(struct nfsdiropres *dr)
 #endif
 
     AFS_GLOCK();
-    vcp = (struct vcache *)addr[0];
+    vcp = VTOAFS((struct vnode*)addr[0]);
 
     /* See also afs_osi_vget */
     if (addr[1] == AFS_XLATOR_MAGIC)
@@ -318,7 +318,7 @@ afs_nfs2_smallfidder(struct nfsdiropres *dr)
 
 	/* If we have a ref, release it */
 	if (vcp->vrefCount >= 1) 
-	    AFS_RELE((struct vnode *) vcp);
+	    AFS_RELE(AFSTOV(vcp));
     } 
     AFS_GUNLOCK();
 }
@@ -731,7 +731,7 @@ afs_nfs3_smallfidder(struct nfs_fh3 *fhp int status)
 #endif
 
     AFS_GLOCK();
-    vcp = (struct vcache *)addr[0];
+    vcp = VTOAFS((struct vnode*)addr[0]);
 
     /* See also afs_osi_vget */
     if (addr[1] == AFS_XLATOR_MAGIC)
@@ -753,7 +753,7 @@ afs_nfs3_smallfidder(struct nfs_fh3 *fhp int status)
 
 	/* If we have a ref, release it */
 	if (vcp->vrefCount >= 1) 
-	    AFS_RELE((struct vnode *) vcp);
+	    AFS_RELE(AFSTOV(vcp));
     } 
     AFS_GUNLOCK();
 }

@@ -265,7 +265,7 @@ int mp_afs_vptofh(struct vnode *avn, struct fid *fidp)
     long addr[2];
     register struct cell *tcell;
     int rootvp = 0;
-    struct vcache *avc = (struct vcache *)avn;
+    struct vcache *avc = VTOAFS(avn);
 
     AFS_GLOCK();
     AFS_STATCNT(afs_fid);

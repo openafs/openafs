@@ -213,7 +213,7 @@ char *Tnam1;
 #ifdef	AFS_OSF_ENV
 afs_remove(ndp)
     struct nameidata *ndp; {
-    register struct vcache *adp = (struct vcache *)ndp->ni_dvp;
+    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
     char *aname = ndp->ni_dent.d_name;
     struct ucred *acred = ndp->ni_cred;
 #else	/* AFS_OSF_ENV */
@@ -267,7 +267,7 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
 tagain:
     code = afs_VerifyVCache(adp, &treq);
 #ifdef	AFS_OSF_ENV
-    tvc = (struct vcache *)ndp->ni_vp;  /* should never be null */
+    tvc = VTOAFS(ndp->ni_vp);  /* should never be null */
     if (code) {
 	afs_PutVCache(adp, 0);
 	afs_PutVCache(tvc, 0);

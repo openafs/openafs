@@ -28,7 +28,7 @@ extern time_t time;
 
 #define	AFS_UCRED	ucred
 
-#define osi_vnhold(avc, r)  do { VN_HOLD((struct vnode *)(avc)); } while(0)
+#define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
 
 #undef afs_osi_Alloc_NoSleep
 extern void *afs_osi_Alloc_NoSleep(size_t size);
@@ -379,7 +379,7 @@ extern long afs_global_owner;
 #undef OSI_VC_DECL
 #define OSI_VC_DECL(V)  bhv_desc_t *bhv_##V
 #undef OSI_VC_CONVERT
-#define OSI_VC_CONVERT(V) struct vcache * V = (struct vcache*)BHV_TO_VNODE(bhv_##V);
+#define OSI_VC_CONVERT(V) struct vcache * V = VTOAFS(BHV_TO_VNODE(bhv_##V));
 #undef OSI_VFS_ARG
 #define OSI_VFS_ARG(V) bhv_##V
 #undef OSI_VFS_DECL

@@ -165,7 +165,7 @@ osi_VM_TryToSmush(avc, acred, sync)
        vm_object_page_remove(obj, 0, 0, FALSE);
     }
     simple_unlock(&vp->v_interlock);
-    /*vinvalbuf(((struct vnode *)avc),0, NOCRED, curproc, 0,0);*/
+    /*vinvalbuf(AFSTOV(avc),0, NOCRED, curproc, 0,0);*/
     AFS_GLOCK();
     ObtainWriteLock(&avc->lock,59);
 }
@@ -189,7 +189,7 @@ osi_VM_FlushPages(avc, credp)
        vm_object_page_remove(obj, 0, 0, FALSE);
     }
     simple_unlock(&vp->v_interlock);
-    /*vinvalbuf(((struct vnode *)avc),0, NOCRED, curproc, 0,0);*/
+    /*vinvalbuf(AFSTOV(avc),0, NOCRED, curproc, 0,0);*/
 }
 
 /* Purge pages beyond end-of-file, when truncating a file.
@@ -204,5 +204,5 @@ osi_VM_Truncate(avc, alen, acred)
     int alen;
     struct AFS_UCRED *acred;
 {
-    vnode_pager_setsize(((struct vnode *)avc), alen);
+    vnode_pager_setsize(AFSTOV(avc), alen);
 }

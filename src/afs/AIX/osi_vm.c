@@ -59,7 +59,7 @@ osi_VM_FlushVCache(avc, slept)
     }
 
     /* Free the alloced gnode that was accompanying the vcache's vnode */
-    aix_gnode_rele((struct vnode *)avc);
+    aix_gnode_rele(AFSTOV(avc));
 
     return 0;
 }
@@ -107,7 +107,7 @@ osi_VM_StoreAllSegments(avc)
 	    avc->states &= ~CCore;
 	    avc->opens--;
 	    avc->execsOrWriters--;
-	    AFS_RELE((struct vnode *)avc);	
+	    AFS_RELE(AFSTOV(avc));	
 	    crfree((struct ucred *)avc->linkData);	
 	    avc->linkData = (char *)0;
 	}

@@ -875,14 +875,14 @@ afs_xflock () {
     /* first determine whether this is any sort of vnode */
     if (fd->f_type == DTYPE_VNODE) {
 	/* good, this is a vnode; next see if it is an AFS vnode */
-	tvc = (struct vcache *) fd->f_data;	/* valid, given a vnode */
-	if (IsAfsVnode((struct vnode *)tvc)) {
+	tvc = VTOAFS(fd->f_data);	/* valid, given a vnode */
+	if (IsAfsVnode(AFSTOV(tvc))) {
 	    /* This is an AFS vnode, so do the work */
 #ifdef AFS_DEC_ENV
 	    /* find real vcache entry; shouldn't be null if gnode ref count
 	     * is greater than 0.
 	     */
-	    tvc = (struct vcache *) afs_gntovn(tvc);
+	    tvc = VTOAFS(afs_gntovn)(tvc);
 	    if (!tvc) {
 		u.u_error = ENOENT;
 		return;

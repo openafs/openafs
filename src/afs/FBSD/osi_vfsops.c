@@ -137,10 +137,10 @@ afs_root(struct mount *mp,
     if (tvp) {
         osi_vnhold(tvp,0);
     AFS_GUNLOCK();
-        vn_lock((struct vnode *)tvp, LK_EXCLUSIVE | LK_RETRY, p);
+        vn_lock(AFSTOV(tvp), LK_EXCLUSIVE | LK_RETRY, p);
     AFS_GLOCK();
 	afs_globalVFS = mp;
-	*vpp = (struct vnode *) tvp;
+	*vpp = AFSTOV(tvp);
         tvp->v.v_flag |= VROOT;
     }
 

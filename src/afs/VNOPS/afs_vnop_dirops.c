@@ -38,7 +38,7 @@ extern afs_rwlock_t afs_xcbhash;
 afs_mkdir(ndp, attrs)
     struct nameidata *ndp;
     struct vattr *attrs; {
-    register struct vcache *adp = (struct vcache *)ndp->ni_dvp;
+    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
     char *aname = ndp->ni_dent.d_name;
     register struct vcache **avcp = (struct vcache **)&(ndp->ni_vp);
     struct ucred *acred = ndp->ni_cred;
@@ -171,7 +171,7 @@ done2:
 #ifdef	AFS_OSF_ENV
 afs_rmdir(ndp)
     struct nameidata *ndp; {
-    register struct vcache *adp = (struct vcache *)ndp->ni_dvp;
+    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
     char *aname = ndp->ni_dent.d_name;
     struct ucred *acred = ndp->ni_cred;
 #else	/* AFS_OSF_ENV */

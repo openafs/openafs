@@ -36,7 +36,7 @@ extern afs_rwlock_t afs_xcbhash;
 afs_create(ndp, attrs)
     struct nameidata *ndp;
     struct vattr *attrs; {
-    register struct vcache *adp = (struct vcache *)ndp->ni_dvp;
+    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
     char *aname = ndp->ni_dent.d_name;
     enum vcexcl aexcl = NONEXCL; /* XXX - create called properly */
     int amode = 0; /* XXX - checked in higher level */
@@ -89,7 +89,7 @@ afs_create(OSI_VC_ARG(adp), aname, attrs, aexcl, amode, avcp, acred)
      * the reference count on it.
      */
     if (*avcp) {
-	AFS_RELE((struct vnode*)(*avcp));
+	AFS_RELE(AFSTOV(*avcp));
 	*avcp = NULL;
     }
 #endif

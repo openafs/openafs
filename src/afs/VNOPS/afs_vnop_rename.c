@@ -367,9 +367,9 @@ done:
 #ifdef	AFS_OSF_ENV
 afs_rename(fndp, tndp)
     struct nameidata *fndp, *tndp; {
-    register struct vcache *aodp = (struct vcache *)fndp->ni_dvp;
+    register struct vcache *aodp = VTOAFS(fndp->ni_dvp);
     char *aname1 = fndp->ni_dent.d_name;
-    register struct vcache *andp = (struct vcache *)tndp->ni_dvp;
+    register struct vcache *andp = VTOAFS(tndp->ni_dvp);
     char *aname2 = tndp->ni_dent.d_name;
     struct ucred *acred = tndp->ni_cred;
 #else	/* AFS_OSF_ENV */
