@@ -682,7 +682,7 @@ struct host *h_LookupUuid_r(afsUUID *uuidp)
  */
 
 /* h_TossStuff_r:  Toss anything in the host structure (the host or
- * clients marked for deletion.  Called from r_Release ONLY.
+ * clients marked for deletion.  Called from h_Release_r ONLY.
  * To be called, there must be no holds, and either host->deleted
  * or host->clientDeleted must be set.
  */
@@ -695,6 +695,16 @@ int h_TossStuff_r(register struct host *host)
     for (i=0; (i<h_maxSlots)&&(!(host)->holds[i]); i++);
     if  (i!=h_maxSlots)
 	return;
+
+    /* if somebody still has this host locked */
+    if (h_NBLock_r(host) != 0) {
+	char hoststr[16];
+	ViceLog(0, ("Warning:  h_TossStuff_r failed; Host %s:%d was locked.\n",
+		    afs_inet_ntoa_r(host->host, hoststr), host->port)); 
+	return;
+    } else {
+	h_Unlock_r(host);
+    }
 
     /* ASSUMPTION: r_FreeConnection() does not yield */
     for (cp = &host->FirstClient; (client = *cp); ) {
