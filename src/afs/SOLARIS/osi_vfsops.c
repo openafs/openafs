@@ -246,6 +246,9 @@ void (*ufs_iupdatp)();
 int (*ufs_igetp)();
 void (*ufs_itimes_nolockp)();
 
+int (*afs_orig_ioctl)(), (*afs_orig_ioctl32)();
+int (*afs_orig_setgroups)(), (*afs_orig_setgroups32)();
+
 struct streamtab *udp_infop = 0;
 struct ill_s *ill_g_headp = 0;
 
@@ -264,15 +267,19 @@ extern Afs_syscall();
 
 afsinit(struct vfssw *vfsswp, int fstype)
 {
-    extern int afs_xioctl(), afs_xflock();
+    extern int afs_xioctl();
     extern int afs_xsetgroups();
 
     AFS_STATCNT(afsinit);
 
+    afs_orig_setgroups = sysent[SYS_setgroups].sy_callc;
+    afs_orig_ioctl = sysent[SYS_ioctl].sy_call;
     sysent[SYS_setgroups].sy_callc = afs_xsetgroups;
     sysent[SYS_ioctl].sy_call = afs_xioctl;
 
 #if defined(AFS_SUN57_64BIT_ENV)
+    afs_orig_setgroups32 = sysent32[SYS_setgroups].sy_callc;
+    afs_orig_ioctl32 = sysent32[SYS_ioctl].sy_call;
     sysent32[SYS_setgroups].sy_callc = afs_xsetgroups;
     sysent32[SYS_ioctl].sy_call = afs_xioctl;
 #endif
@@ -405,6 +412,9 @@ _init()
     extern struct bind *sb_hashtab[];
     struct modctl *mp = 0;
 
+    if (afs_sinited)
+	return EBUSY;
+
     if ((!(mp = mod_find_by_filename("fs", "ufs")) && 
 	!(mp = mod_find_by_filename(NULL, "/kernel/fs/ufs")) &&
 	!(mp = mod_find_by_filename(NULL, "sys/ufs"))) ||
@@ -486,8 +496,17 @@ _fini()
 {
     int code;
 
-    if (afs_sinited)
-	return (EBUSY);
+    if (afs_globalVFS)
+	return EBUSY;
+
+    if (afs_sinited) {
+	sysent[SYS_setgroups].sy_callc = afs_orig_setgroups;
+	sysent[SYS_ioctl].sy_call = afs_orig_ioctl;
+#if defined(AFS_SUN57_64BIT_ENV)
+	sysent32[SYS_setgroups].sy_callc = afs_orig_setgroups32;
+	sysent32[SYS_ioctl].sy_call = afs_orig_ioctl32;
+#endif
+    }
     code = mod_remove(&afs_modlinkage);
     return code;
 }
