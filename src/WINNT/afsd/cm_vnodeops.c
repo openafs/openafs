@@ -552,10 +552,13 @@ long cm_ApplyDir(cm_scache_t *scp, cm_DirFuncp_t funcp, void *parmp,
             lock_ObtainRead(&scp->bufCreateLock);
             code = buf_Get(scp, &thyper, &bufferp);
             lock_ReleaseRead(&scp->bufCreateLock);
+			if (code) {
+				/* if buf_Get() fails we do not have a buffer object to lock */
+                bufferp = NULL;
+                break;
+			}
 
             lock_ObtainMutex(&bufferp->mx);
-            if (code) 
-                break;
             bufferOffset = thyper;
 
             /* now get the data in the cache */
