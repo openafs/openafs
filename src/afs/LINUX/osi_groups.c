@@ -42,7 +42,7 @@ int set_pag_in_parent(int pag, int g0, int g1)
     gp = current->p_pptr->groups;
 
 
-    if (afs_get_pag_from_groups(gp[0], gp[1]) == NOPAG) {
+    if ((ngroups < 2) || (afs_get_pag_from_groups(gp[0], gp[1]) == NOPAG)) {
 	/* We will have to shift grouplist to make room for pag */
 	if (ngroups + 2 > NGROUPS) {
 	    return EINVAL;
