@@ -5,6 +5,7 @@
 srcdir=@srcdir@
 objdir=`pwd`
 SHELL=/bin/sh
+SHELLVERBOSE=
 VERSION=@VERSION@
 PACKAGE=@PACKAGE@
 host=@host@
