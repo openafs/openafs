@@ -142,6 +142,7 @@ $cachesize = $rl->readline("What size cache (in 1k blocks)? ") unless $cachesize
 die "Please specify a cache size\n" unless $cachesize;
 
 mkdir "/usr/vice/cache", 0700;
+mkdir "/afs", 0777;
 
 run("echo /afs:/usr/vice/cache:${cachesize} >$openafsdirpath->{'viceetcdir'}/cacheinfo");
 run("$openafsinitcmd->{'client-forcestart'}");
