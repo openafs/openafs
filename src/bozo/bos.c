@@ -1259,7 +1259,10 @@ char *orphans;
     parms[1] = "now";	    /* when to do it */
     code = BOZO_CreateBnode(aconn, "cron", "salvage-tmp", parms[0], parms[1],
 			    parms[2], parms[3], parms[4], notifier);
-    if (code) goto done;
+    if (code) {
+	printf("bos: failed to start 'salvager' (%s)\n", em(code));
+	goto done;
+    }
     /* now wait for bnode to disappear */
     while (1) {
 	IOMGR_Sleep(5);
@@ -1485,7 +1488,6 @@ struct cmd_syndesc *as; {
 	/* now do the salvage operation */
 	printf("Starting salvage.\n");
 	rc = DoSalvage(tconn, (char *) 0, (char *) 0, outName, showlog,parallel,tmpDir,orphans);
-	if (rc) printf("bos: failed to start 'salvager' (%s)\n", em(rc));
 	if (curGoal == BSTAT_NORMAL) {
 	    printf("bos: restarting fs.\n");
 	    code = BOZO_SetTStatus(tconn, "fs", BSTAT_NORMAL);
@@ -1526,7 +1528,6 @@ struct cmd_syndesc *as; {
 	printf("Starting salvage.\n");
 	rc = DoSalvage(tconn, as->parms[1].items->data, (char *) 0,
 		       outName, showlog,parallel,tmpDir,orphans);
-	if (rc) printf("bos: failed to start 'salvager' (%s)\n", em(rc));
 	if (curGoal == BSTAT_NORMAL) {
 	    printf("bos: restarting fs.\n");
 	    code = BOZO_SetTStatus(tconn, "fs", BSTAT_NORMAL);
@@ -1578,10 +1579,8 @@ struct cmd_syndesc *as; {
 	printf("Starting salvage.\n");
 	rc = DoSalvage(tconn, as->parms[1].items->data, tname, outName,
 		       showlog,parallel,tmpDir,orphans);
-	if (rc) {
-	   printf("bos: failed to start 'salvager' (%s)\n", em(rc));
+	if (rc) 
 	   return rc;
-	}
     }
     return 0;
 }
