@@ -49,8 +49,13 @@ typedef unsigned short afs_uint16;
 #ifdef  AFS_64BIT_ENV
 typedef int afs_int32;
 typedef unsigned int afs_uint32;
+#if defined(AFS_NT40_ENV) && defined(_MSC_VER)
+typedef __int64 afs_int64;
+typedef unsigned __int64 afs_uint64;
+#else
 typedef long long afs_int64;
 typedef unsigned long long afs_uint64;
+#endif
 #define ZeroInt64(a)       (a) = 0
 #define AssignInt64(a, b)   *(a) = (b)
 #define AddInt64(a,b,c) *(c) = (afs_int64)(a) + (afs_int64)(b)
