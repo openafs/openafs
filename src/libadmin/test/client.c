@@ -38,6 +38,19 @@ RCSID
 #include <pthread.h>
 #endif
 
+/* These aren't coming from a header, currently, so they must stay here. 
+   Fix elsewhere, or leave alone. */
+extern int RXSTATS_RetrieveProcessRPCStats();
+extern int RXSTATS_RetrievePeerRPCStats();
+extern int RXSTATS_QueryProcessRPCStats();
+extern int RXSTATS_QueryPeerRPCStats();
+extern int RXSTATS_EnableProcessRPCStats();
+extern int RXSTATS_EnablePeerRPCStats();
+extern int RXSTATS_DisableProcessRPCStats();
+extern int RXSTATS_DisablePeerRPCStats();
+extern int RXSTATS_ClearProcessRPCStats();
+extern int RXSTATS_ClearPeerRPCStats();
+
 /*
  * This structure stores the client and server function lists.
  * This is kept separate from the actual interface definitions
