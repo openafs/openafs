@@ -418,15 +418,7 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
 	     int tokenLen, struct ktc_principal *client)
 {
     struct ViceIoctl iob;
-<<<<<<< ktc_nt.c
     char tbuffer[TBUFFERSIZE];
-=======
-<<<<<<< ktc_nt.c
-    char tbuffer[TBUFFERSIZE];
-=======
-    char tbuffer[MAXKTCTICKETLEN];
->>>>>>> 1.11
->>>>>>> 1.12
     char *tp, *cp;
     char *ticketP;
     int ticketLen, temp;
