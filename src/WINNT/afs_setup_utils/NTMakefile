@@ -86,11 +86,13 @@ $(AFSRM_EXEFILE): $(AFSRM_EXEOBJS) $(AFSRM_EXELIBS)
 
 ############################################################################
 
+DIRLANG= ZH_TW ZH_CN PT_BR KO_KR JA_JP ES_ES EN_US DE_DE
+
 install : $(INSTALL_UTILS_DLLFILE) $(SERVER_UNINST_DLLFILE) $(CLIENT_UNINST_DLLFILE) \
           $(CC_UNINST_DLLFILE) $(LIGHT_CLIENT_UNINST_DLLFILE) $(DOCS_UNINST_DLLFILE) \
 
 media : install
-          $(AFSRM_EXEFILE) lang
+          $(AFSRM_EXEFILE) $(DIRLANG)
 		  cd _isuser
 		  nmake -fntmakefile install
           $(CD) ..
@@ -99,9 +101,9 @@ media : install
           $(CD) ..
 		  echo 
 
-lang ::
+$(DIRLANG) ::
 	$(CD) lang
-	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile install
+	@$(NTLANG) $@ $(MAKECMD) /nologo /f NTMakefile install
 	$(CD) ..
    echo done lang
 

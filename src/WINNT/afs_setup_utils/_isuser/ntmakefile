@@ -16,7 +16,8 @@ OutDir=.
 # End Custom Macros
 
 INSTALL : "$(OUTDIR)\_IsUser.dll"
-
+	$(DEL) *.PCH 
+	$(DEL) *.IDB
 
 CLEAN ::
 	-@erase "$(INTDIR)\_isuser.obj"
@@ -33,6 +34,9 @@ HEADERS = ".\sdrc.h"
 
 ".\sdrc.h" : $(IS5ROOT)\INCLUDE\sdrc.h
     $(COPY) $(IS5ROOT)\INCLUDE\sdrc.h .
+!   IF EXIST($(IS5ROOT)\Script\ISRT\Include\sdrc.h)
+    $(COPY) $(IS5ROOT)\Script\ISRT\Include\sdrc.h .
+!      ENDIF
 
 CPP=cl.exe
 CPP_PROJ=/nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "_ISUSER_EXPORTS" /YX /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
