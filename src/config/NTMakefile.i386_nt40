@@ -28,7 +28,8 @@
 #
 ####### Special optional defines
 
-!IFNDEF NO_CRTDBG		#don't set _CRTDBG_MAP_ALLOC flag for some module compliations
+!IFNDEF NO_CRTDBG		
+#don't set _CRTDBG_MAP_ALLOC flag for some module compliations
 #_CRTDBG_MAP_ALLOC=1
 !ENDIF
 
@@ -79,10 +80,11 @@ LIB = $(AFSDEV_LIB)
 #define used in WinNT/2000 installation and program version display
 AFSPRODUCT_VER_MAJOR=1
 AFSPRODUCT_VER_MINOR=3
-AFSPRODUCT_VER_PATCH=7001
+AFSPRODUCT_VER_PATCH=7004
 AFSPRODUCT_VER_BUILD=0
 
 # For MSI installer, each major release should have a different GUID
+# http://msdn.microsoft.com/library/en-us/msi/setup/changing_the_product_code.asp
 AFSPRODUCT_VER_GUID=CCAF9E14-976E-46C0-8A1B-A218EAB7ADC5
 
 AFSPRODUCT_VERSION=$(AFSPRODUCT_VER_MAJOR).$(AFSPRODUCT_VER_MINOR).$(AFSPRODUCT_VER_PATCH)
@@ -93,7 +95,7 @@ CELLSERVDB_INSTALL=CellServDB.GrandCentral
 CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
 TARGETOS = WINNT
 
-#		Define defaults folder locations
+# Define defaults folder locations
 DEST=dest
 SRC=src
 OBJ=obj

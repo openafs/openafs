@@ -1037,6 +1037,8 @@
 	  <Error Id="4003">$(loc.ErrSCSFailed)</Error>
 	  <Error Id="4004">$(loc.ErrAbort)</Error>
 	  <Error Id="4005">$(loc.ErrNsisFailed)</Error>
+	  <Error Id="4006">$(loc.ErrCantCreateGroup)</Error>
+	  <Error Id="4007">$(loc.ErrCantAddMembers)</Error>
 	  <ProgressText Action="RemoveLoopback" Template="[1]:([2])([3])([4])">$(loc.ActRemoveLoopback)</ProgressText>
 	  <ProgressText Action="InstallLoopback" Template="[1]:([2])([3])([4])">$(loc.ActInstallLoopback)</ProgressText>
 	  <ProgressText Action="RemoveNetProvider">$(loc.ActRemoveNetProvider)</ProgressText>

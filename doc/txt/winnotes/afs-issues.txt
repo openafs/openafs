@@ -175,26 +175,24 @@ List of unfunded projects:
         12. miscellaneous
         13. need to add support for all of the new registry values since 1.2.8
   11. Identify why 16-bit DOS applications executed out of AFS fail
-  12. Create new Windows Security Group to which users can be added for them to become AFS 
-      Client Administrators
-  13. Add support for configurable Icon file representing AFS folders within the Explorer Shell
-  14. Documentation Documentation Documentation
-  15. Large File support (> 2GB)
-  16. Integrate KFW installation into the NSIS installer
-  17. Add support for record locking to AFS (requires changes to the servers)
-  18. Unicode enable the SMB/CIFS server.  OEM Code Pages: 
+  12. Add support for configurable Icon file representing AFS folders within the Explorer Shell
+  13. Documentation Documentation Documentation
+  14. Large File support (> 2GB)
+  15. Integrate KFW installation into the NSIS installer
+  16. Add support for record locking to AFS (requires changes to the servers)
+  17. Unicode enable the SMB/CIFS server.  OEM Code Pages: 
       1. prevent the use of interoperable file names
       2. force the use of paths no longer than 256 characters
       3. force share names to be no longer than 13 characters
       4. restrict authentication to ASCII only names and passwords
-  19. Complete implementation of CIFS Remote Administration Protocol
-  20. Correct the problems with overlapped writes which adversely affect 
+  18. Complete implementation of CIFS Remote Administration Protocol
+  19. Correct the problems with overlapped writes which adversely affect 
       Microsoft Office applications storing documents and temporary files
       within AFS volumes
-  21. Add support for SMB/CIFS Digital Signatures
-  22. Development of afsmap.exe tool to provide AFS aware NET USE functionality
+  20. Add support for SMB/CIFS Digital Signatures
+  21. Development of afsmap.exe tool to provide AFS aware NET USE functionality
       afsmap.exe <drive> <afs-path> [/PERSISTENT]
       afsmap.exe <drive> <unc-path> [/PERSISTENT]
       afsmap.exe <drive> /DELETE
-  23. Write-through caching appears to be unsupported.   Files copied to AFS
+  22. Write-through caching appears to be unsupported.   Files copied to AFS
       do not end up in the local cache.

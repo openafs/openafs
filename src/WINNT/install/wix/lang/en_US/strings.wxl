@@ -42,6 +42,8 @@
 	<String Id="ErrSCSFailed">Configuration of server service failed.  System error [2]</String>
 	<String Id="ErrAbort">Installation aborted : [2]</String>
 	<String Id="ErrNsisFailed">Uninstallation of the NSIS installation of OpenAFS failed with code [2]</String>
+	<String Id="ErrCantCreateGroup">Can't create AFS Client Admin group.  NET_API_Error [2]</String>
+	<String Id="ErrCantAddMembers">Can't add members to AFS Client Admin group. NET_API_Error [2]</String>
 	
 	<String Id="ActInstallLoopback">Installing loopback adapter</String>
 	<String Id="ActRemoveLoopback">Removing existing loopback adapter</String>

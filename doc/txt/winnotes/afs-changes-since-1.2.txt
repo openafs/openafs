@@ -1,4 +1,14 @@
 Since 1.3.70:
+  * A new Windows authorization group "AFS Client Admins" is now 
+    created and populated with the members of the "Administrators"
+    group.  The group is used to determine which accounts on the
+    machine may be used to modify the AFS Client Configuration via
+    the UI and command line tools.  afs_config.exe, fs.exe, 
+
+  * Modify the WinLogon Logoff Event Handler to query NT4 domain
+    controllers for the remote profile path if Active Directory
+    services are not available.
+
   * Fix aklog.exe to not add the AFS ID to the username
 
   * PTS registration of new users to foreign cells has been added to 
