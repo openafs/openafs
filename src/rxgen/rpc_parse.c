@@ -1166,7 +1166,7 @@ int split_flag;
 	    }
 	    plist->pl.param_flag |= PROCESSED_PARAM;
 	    for (plist1 = defp->pc.plists; plist1; plist1 = plist1->next) {
-		if (streq(plist->pl.param_type, plist1->pl.param_type) && !(plist1->pl.param_flag & PROCESSED_PARAM)) {
+		if ((plist1->component_kind == DEF_PARAM) && streq(plist->pl.param_type, plist1->pl.param_type) && !(plist1->pl.param_flag & PROCESSED_PARAM)) {
 		    char *star="";
 		    char *pntr = index(plist1->pl.param_type, '*');
 		    if (pntr) star = "*";
@@ -1407,7 +1407,7 @@ int *somefrees;
 	    }
 	    plist->pl.param_flag |= PROCESSED_PARAM;
 	    for (plist1 = defp->pc.plists; plist1; plist1 = plist1->next) {
-		if (streq(plist->pl.param_type, plist1->pl.param_type) && !(plist1->pl.param_flag & PROCESSED_PARAM)) {
+		if ((plist1->component_kind == DEF_PARAM) && streq(plist->pl.param_type, plist1->pl.param_type) && !(plist1->pl.param_flag & PROCESSED_PARAM)) {
 		    if (plist1->pl.param_flag & INDIRECT_PARAM) {
 			    f_print(fout, ", %s", plist1->pl.param_name);
 		    } else if (index(plist1->pl.param_type, '*') == 0) {
