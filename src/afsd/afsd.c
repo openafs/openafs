@@ -1484,6 +1484,37 @@ mainproc(as, arock)
     sprintf(fullpn_VFile,       "%s/",  cacheBaseDir);
     vFilePtr = fullpn_VFile + strlen(fullpn_VFile);
 
+#ifdef AFS_SUN5_ENV
+    {
+	FILE *vfstab;
+	struct mnttab mnt;
+	struct stat statmnt, statci;
+
+	if ((stat(cacheBaseDir, &statci) == 0) &&
+	    ((vfstab = fopen(MNTTAB, "r")) != NULL)) {
+	    while (getmntent(vfstab, &mnt) == 0) {
+		if (strcmp(cacheBaseDir, mnt.mnt_mountp) != 0) {
+		    char *cp;
+		    int rdev = 0;
+
+		    if (cp = hasmntopt(&mnt, "dev="))
+			rdev=(int)strtol(cp+strlen("dev="), (char **)NULL, 16);
+
+		    if ((rdev == 0) && (stat(mnt.mnt_mountp, &statmnt) == 0))
+			rdev=statmnt.st_dev;
+
+		    if ((rdev == statci.st_dev) &&
+			(hasmntopt (&mnt, "logging") != NULL)) {
+			printf("WARNING: Mounting a multi-use partition which contains the AFS cache with the\n\"logging\" option may deadlock your system.\n\n");
+			fflush(stdout);
+		    }
+		}
+	    }
+	    fclose(vfstab);
+	}
+    }
+#endif
+
 #if 0
     fputs(AFS_GOVERNMENT_MESSAGE, stdout); 
     fflush(stdout);
