@@ -55,7 +55,7 @@ Afs_xsetgroups(p, args, retval)
     AFS_STATCNT(afs_xsetgroups);
     AFS_GLOCK();
 
-    code = afs_InitReq(&treq, osi_curcred());
+    code = afs_InitReq(&treq, p->p_rcred);
     AFS_GUNLOCK();
     if (code)
 	return code;
@@ -65,7 +65,7 @@ Afs_xsetgroups(p, args, retval)
      * Note that if there is a pag already in the new groups we don't
      * overwrite it with the old pag.
      */
-    if (PagInCred(osi_curcred()) == NOPAG) {
+    if (PagInCred(p->p_rcred) == NOPAG) {
 	if (((treq.uid >> 24) & 0xff) == 'A') {
 	    AFS_GLOCK();
 	    /* we've already done a setpag, so now we redo it */
@@ -130,26 +130,23 @@ afs_setgroups(
     gid_t *gidset,
     int change_parent)
 {
-    gid_t *gp;
-    struct ucred *newcr, *cr;
+    struct ucred *cr = *cred;
+    int i;
 
     AFS_STATCNT(afs_setgroups);
-    /*
-     * The real setgroups() call does this, so maybe we should too.
-     */
+
     if (ngroups > NGROUPS)
 	return EINVAL;
-    cr = *cred;
+
     if (!change_parent)
-	newcr = crdup(cr);
-    else
-	newcr = cr;
-    newcr->cr_ngroups = ngroups;
-    gp = newcr->cr_groups;
-    while (ngroups--)
-	*gp++ = *gidset++;
-    for ( ; gp < &(*cred)->cr_groups[NGROUPS]; gp++)
-	*gp = NOGROUP;
-    *cred = newcr;
+	cr = crcopy(cr);
+
+    for (i = 0; i < ngroups; i++)
+	cr->cr_groups[i] = gidset[i];
+    for (i = ngroups; i < NGROUPS; i++)
+	cr->cr_groups[i] = NOGROUP;
+    cr->cr_ngroups = ngroups;
+
+    *cred = cr;
     return(0);
 }
