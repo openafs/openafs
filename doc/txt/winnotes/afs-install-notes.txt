@@ -56,6 +56,19 @@ is in use, the NETBIOS name associated with the AFS Client Service is simply
 
 When the MLA is installed, UNC paths of the form \\AFS\cellname\path may be used.
 
+The MLA is installed without binding the "Client for Microsoft Networks" or 
+"File and Printer Sharing for Microsoft Networks".  If you bind these options
+to the MLA there will be a conflict between the name "AFS" and the name of 
+the machine on the published IP Address.  This may result in a failure to be
+able to access files in AFS.  The "NET VIEW" command will return a "System 
+Error 52" message when this conflict exists.  To correct the problem:
+
+ * stop the AFS Client Service
+ * unbind the "Client for Microsoft Networks" and "File and Printer Sharing
+   for Microsoft Networks" from the MLA
+ * Disable and then Enable the MLA
+ * start the AFS Client Service
+
 
 3. Traditionally, when the AFS Client Service starts it must be able to 
 access the "root.afs" volume of the default cell.  The "root.afs" volume
@@ -474,6 +487,7 @@ to write the profile back to AFS will fail.  OpenAFS for Windows does
 not currently support UNICODE.  To avoid this problem some sites run
 logoff scripts (assigned by group policy) which rename all files to use
 only the supported characters for the locale.
+
 
 
 ------------------------------------------------------------------------
