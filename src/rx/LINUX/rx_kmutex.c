@@ -23,7 +23,7 @@ RCSID
 #include "rx_kmutex.h"
 #include "rx/rx_kernel.h"
 
-#ifdef CONFIG_SMP
+#if defined(CONFIG_SMP) || defined(CONFIG_PREEMPT)
 
 void
 afs_mutex_init(afs_kmutex_t * l)

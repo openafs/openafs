@@ -24,7 +24,7 @@
 #define	AFS_GLOBAL_RXLOCK_KERNEL 1
 
 
-#ifdef CONFIG_SMP
+#if defined(CONFIG_SMP) || defined(CONFIG_PREEMPT)
 #define RX_ENABLE_LOCKS 1
 
 #ifndef _LINUX_CODA_FS_I
