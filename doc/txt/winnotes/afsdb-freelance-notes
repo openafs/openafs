@@ -1,6 +1,12 @@
 New features for the Windows Clients
 ------------------------------------
 
+NOTE: This file is very out of date.  It does not describe the DNS conversion
+to the use of the Windows DNSAPI nor does it describe the modifications to 
+Freelance to support r/w mount points, symlinks, and correct stability issues.
+INI files are no longer used and there are new registry keys.  See registry.txt.
+
+
 This file describes new features that have been added to the Windows AFS
 clients.
 
