@@ -952,6 +952,9 @@ restart:
 #endif
 	ip->i_sb = afs_globalVFS;
 	put_inode_on_dummy_list(ip);
+#ifdef STRUCT_INODE_HAS_I_SB_LIST
+	list_add(&ip->i_sb_list, &ip->i_sb->s_inodes);
+#endif
     }
 #endif
 
