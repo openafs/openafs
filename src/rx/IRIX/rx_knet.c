@@ -314,7 +314,7 @@ static int rxi_MatchIfnet(struct hashbucket *h, caddr_t key, caddr_t arg1,
 	}
     }
     *(int*)arg1 = match_value;
-    return (match_value ? 1 : 0);
+    return 0;
 }
 
     
@@ -324,7 +324,6 @@ struct ifnet * rxi_FindIfnet(addr, pifad)
 {
   afs_uint32 ppaddr;
   int match_value = 0;
-  struct hashbucket *slop;
 
   if (numMyNetAddrs == 0)
     (void) rxi_GetIFInfo();
@@ -332,15 +331,13 @@ struct ifnet * rxi_FindIfnet(addr, pifad)
   ppaddr = ntohl(addr);
   *pifad = (struct in_ifaddr*)&hashinfo_inaddr;
 
-  slop = hash_enum(&hashinfo_inaddr, rxi_MatchIfnet, HTF_INET,
+  (void) hash_enum(&hashinfo_inaddr, rxi_MatchIfnet, HTF_INET,
 		   (caddr_t)&ppaddr, (caddr_t)&match_value, (caddr_t)pifad);
-
-  if (slop)
-      return ((struct in_ifaddr*)slop)->ia_ifp;
+   
+  if (match_value)
+      return (*pifad)->ia_ifp;
   else
       return NULL;
-
-      
 }
 
 static int rxi_EnumGetIfInfo(struct hashbucket *h, caddr_t key, caddr_t arg1,
