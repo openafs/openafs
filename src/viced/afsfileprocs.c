@@ -3106,7 +3106,7 @@ SRXAFS_MakeDir (acall, DirFid, Name, InStatus, OutFid, OutFidStatus, OutDirStatu
     if (code = CallPreamble(acall, ACTIVECALL, &tcon))
 	goto Bad_MakeDir;
 
-    code = SAFSS_MakeDir (tcon, DirFid, Name, InStatus, OutFid,
+    code = SAFSS_MakeDir (acall, DirFid, Name, InStatus, OutFid,
 			 OutFidStatus, OutDirStatus, CallBack, Sync);
     
 Bad_MakeDir:
@@ -3262,7 +3262,7 @@ SRXAFS_RemoveDir (acall, DirFid, Name, OutDirStatus, Sync)
     if (code = CallPreamble(acall, ACTIVECALL, &tcon))
 	goto Bad_RemoveDir;
 
-    code = SAFSS_RemoveDir (tcon, DirFid, Name, OutDirStatus, Sync);
+    code = SAFSS_RemoveDir (acall, DirFid, Name, OutDirStatus, Sync);
     
 Bad_RemoveDir:
     CallPostamble(tcon);
@@ -3396,7 +3396,7 @@ SRXAFS_SetLock (acall, Fid, type, Sync)
     if (code = CallPreamble(acall, ACTIVECALL, &tcon))
 	goto Bad_SetLock;
 
-    code = SAFSS_SetLock (tcon, Fid, type, Sync);
+    code = SAFSS_SetLock (acall, Fid, type, Sync);
     
 Bad_SetLock:
     CallPostamble(tcon);
@@ -3520,7 +3520,7 @@ SRXAFS_ExtendLock (acall, Fid, Sync)
     if (code = CallPreamble(acall, ACTIVECALL, &tcon))
 	goto Bad_ExtendLock;
 
-    code = SAFSS_ExtendLock (tcon, Fid, Sync);
+    code = SAFSS_ExtendLock (acall, Fid, Sync);
 
 Bad_ExtendLock:
     CallPostamble(tcon);
@@ -3654,7 +3654,7 @@ SRXAFS_ReleaseLock (acall, Fid, Sync)
     if (code = CallPreamble(acall, ACTIVECALL, &tcon))
 	goto Bad_ReleaseLock;
 
-    code = SAFSS_ReleaseLock (tcon, Fid, Sync);
+    code = SAFSS_ReleaseLock (acall, Fid, Sync);
     
 Bad_ReleaseLock:
     CallPostamble(tcon);
