@@ -70,23 +70,23 @@ typedef  unsigned long long afs_uint64;
 typedef long             afs_int32;
 typedef unsigned long    afs_uint32;
 
- struct Int64 {
+struct Int64 {
     afs_int32 high;
     afs_uint32 low;
- };
- typedef struct Int64 afs_int64;
+};
+typedef struct Int64 afs_int64;
 
- struct u_Int64 {
+struct u_Int64 {
     afs_uint32 high;
     afs_uint32 low;
- };
- typedef struct u_Int64 afs_uint64;
- #define ZeroInt64(a) (a).high = (a).low = 0
- #define AssignInt64(a, b) (b)->high = (a).high; (b)->low = (a).low
- #define NonZeroInt64(a)   (a).low || (a).high
- #define Int64ToInt32(a)    (a).low
- #define FillInt64(t,h,l) (t).high = (h); (t).low = (l);
- #define SplitInt64(t,h,l) (h) = (t).high; (l) = (t).low;
+};
+typedef struct u_Int64 afs_uint64;
+#define ZeroInt64(a) (a).high = (a).low = 0
+#define AssignInt64(a, b) (b)->high = (a).high; (b)->low = (a).low
+#define NonZeroInt64(a)   (a).low || (a).high
+#define Int64ToInt32(a)    (a).low
+#define FillInt64(t,h,l) (t).high = (h); (t).low = (l);
+#define SplitInt64(t,h,l) (h) = (t).high; (l) = (t).low;
 #endif  /* AFS_64BIT_ENV */
 
 /* AFS_64BIT_CLIENT should presently be set only for AFS_64BIT_ENV systems */
