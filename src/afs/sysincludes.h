@@ -72,6 +72,9 @@ struct xfs_inode_info {};
 #include <linux/string.h>
 #include <asm/semaphore.h>
 #include <linux/errno.h>
+#ifdef COMPLETION_H_EXISTS
+#include <linux/completion.h>
+#endif
 
 #else /* AFS_LINUX22_ENV */
 #if defined(AFS_DARWIN_ENV)
