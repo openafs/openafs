@@ -332,25 +332,25 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   ;------------------------
   ;Check file and version
   ;
-  ;IfFileExists $R4 0 upgradedll.copy_${REPLACEDLL_UNIQUE}
-  ;
+  IfFileExists $R4 0 replacedll.copy_${REPLACEDLL_UNIQUE}
+  
   ;ClearErrors
   ;  GetDLLVersionLocal "${LOCALFILE}" $R0 $R1
   ;  GetDLLVersion $R4 $R2 $R3
-  ;IfErrors upgradedll.upgrade_${REPLACEDLL_UNIQUE}
+  ;IfErrors replacedll.upgrade_${REPLACEDLL_UNIQUE}
   ;
-  ;IntCmpU $R0 $R2 0 upgradedll.done_${REPLACEDLL_UNIQUE} \
-  ;  upgradedll.upgrade_${REPLACEDLL_UNIQUE}
-  ;IntCmpU $R1 $R3 upgradedll.done_${REPLACEDLL_UNIQUE} \
-  ;  upgradedll.done_${REPLACEDLL_UNIQUE} \
-  ;  upgradedll.upgrade_${REPLACEDLL_UNIQUE}
+  ;IntCmpU $R0 $R2 0 replacedll.done_${REPLACEDLL_UNIQUE} \
+  ;  replacedll.upgrade_${REPLACEDLL_UNIQUE}
+  ;IntCmpU $R1 $R3 replacedll.done_${REPLACEDLL_UNIQUE} \
+  ;  replacedll.done_${REPLACEDLL_UNIQUE} \
+  ;  replacedll.upgrade_${REPLACEDLL_UNIQUE}
 
   ;------------------------
   ;Let's replace the DLL!
 
   SetOverwrite try
 
-  upgradedll.upgrade_${REPLACEDLL_UNIQUE}:
+  ;replacedll.upgrade_${REPLACEDLL_UNIQUE}:
     !ifndef REPLACEDLL_NOREGISTER
       ;Unregister the DLL
       UnRegDLL $R4
@@ -361,14 +361,14 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
 
   ClearErrors
     StrCpy $R0 $R4
-    Call :upgradedll.file_${REPLACEDLL_UNIQUE}
-  IfErrors 0 upgradedll.noreboot_${REPLACEDLL_UNIQUE}
+    Call :replacedll.file_${REPLACEDLL_UNIQUE}
+  IfErrors 0 replacedll.noreboot_${REPLACEDLL_UNIQUE}
 
   ;------------------------
   ;DLL is in use. Copy it to a temp file and Rename it on reboot.
 
   GetTempFileName $R0 $R5
-    Call :upgradedll.file_${REPLACEDLL_UNIQUE}
+    Call :replacedll.file_${REPLACEDLL_UNIQUE}
   Rename /REBOOTOK $R0 $R4
 
   ;------------------------
@@ -379,19 +379,19 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
       "Register $R4" 'rundll32.exe "$R4",DllRegisterServer'
   !endif
 
-  Goto upgradedll.done_${REPLACEDLL_UNIQUE}
+  Goto replacedll.done_${REPLACEDLL_UNIQUE}
 
   ;------------------------
   ;DLL does not exist - just extract
 
-  upgradedll.copy_${REPLACEDLL_UNIQUE}:
+  replacedll.copy_${REPLACEDLL_UNIQUE}:
     StrCpy $R0 $R4
-    Call :upgradedll.file_${REPLACEDLL_UNIQUE}
+    Call :replacedll.file_${REPLACEDLL_UNIQUE}
 
   ;------------------------
   ;Register the DLL
 
-  upgradedll.noreboot_${REPLACEDLL_UNIQUE}:
+  replacedll.noreboot_${REPLACEDLL_UNIQUE}:
     !ifndef REPLACEDLL_NOREGISTER
       RegDLL $R4
     !endif
@@ -399,7 +399,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   ;------------------------
   ;Done
 
-  upgradedll.done_${REPLACEDLL_UNIQUE}:
+  replacedll.done_${REPLACEDLL_UNIQUE}:
 
   Pop $R5
   Pop $R4
@@ -411,16 +411,16 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   ;------------------------
   ;End
 
-  Goto upgradedll.end_${REPLACEDLL_UNIQUE}
+  Goto replacedll.end_${REPLACEDLL_UNIQUE}
 
   ;------------------------
   ;Called to extract the DLL
 
-  upgradedll.file_${REPLACEDLL_UNIQUE}:
+  replacedll.file_${REPLACEDLL_UNIQUE}:
     File /oname=$R0 "${LOCALFILE}"
     Return
 
-  upgradedll.end_${REPLACEDLL_UNIQUE}:
+  replacedll.end_${REPLACEDLL_UNIQUE}:
 
  ;------------------------
  ;Restore settings
@@ -1654,10 +1654,13 @@ StartRemove:
 !endif
 
   RMDir /r "$INSTDIR\Server\usr\afs\bin"
-  RmDir /r "$INSTDIR\Server\usr\afs\etc\logs"
-  RmDir /r "$INSTDIR\Server\usr\afs\etc"
-  RmDir /r "$INSTDIR\Server\usr\afs\local"
-  RMDIR /r "$INSTDIR\Server\usr\afs\logs"
+  ; do not delete the server configuration files
+  ; or we will lose the volumes and authentication
+  ; databases
+  ;RmDir /r "$INSTDIR\Server\usr\afs\etc\logs"
+  ;RmDir /r "$INSTDIR\Server\usr\afs\etc"
+  ;RmDir /r "$INSTDIR\Server\usr\afs\local"
+  ;RMDIR /r "$INSTDIR\Server\usr\afs\logs"
   
   Delete /REBOOTOK "$SYSDIR\afsserver.cpl"
   Delete /REBOOTOK "$SYSDIR\afs_cpa.cpl"
