@@ -14,7 +14,6 @@ include ../config/Makefile.${SYS_NAME}
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 UKERNELDIR=../libuafs/
-INSTALL = ${SRCDIR}bin/install
 CFLAGS= ${DBUG}  -I${SRCDIR}include  ${XCFLAGS} ${DBG_DEFS}
 SFLAGS=-P -I${SRCDIR}include  
 LIBS= libsys.a ${SRCDIR}lib/librx.a libsys.a ${SRCDIR}lib/liblwp.a ${SRCDIR}lib/afs/util.a ${XLIBS}
@@ -80,13 +79,15 @@ syscall.o: syscall.s
 		/usr/ccs/lib/cpp  ${SFLAGS} syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		rm syscall.ss;;				\
-	 sgi_* ) \
+	 sgi_* |ppc_darwin* ) \
                 ${CC} ${CFLAGS} -c syscall.s;;          \
 	 alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux?? ) \
 		${AS} -P ${CFLAGS} -D_NO_PROTO -DMACH -DOSF -nostdinc -traditional -DASSEMBLER syscall.s; \
 		${AS} -o syscall.o syscall.i; \
 		rm -f syscall.ss syscall.i;; \
 	 hp_ux11? ) \
+		touch syscall.o;; \
+	i386_fbsd* ) \
 		touch syscall.o;; \
 	 *) \
 		/lib/cpp  ${SFLAGS} syscall.s syscall.ss; \

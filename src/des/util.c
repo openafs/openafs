@@ -12,7 +12,7 @@
 #include <sys/types.h>
 #include <des.h>
 
-des_cblock_print_file(x, fp)
+int des_cblock_print_file(x, fp)
     des_cblock *x;
     FILE *fp;
 {
@@ -26,6 +26,8 @@ des_cblock_print_file(x, fp)
 	    fprintf(fp,", ");
     }
     fprintf(fp," }");
+
+	return(0);
 }
 
 #ifdef DEBUG

@@ -12,8 +12,6 @@ SHELL=/bin/sh
 COMPONENT=uss
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL = ${SRCDIR}bin/install
-
 #
 # This makefile creates the following things:
 #

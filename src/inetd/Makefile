@@ -4,7 +4,6 @@ include ../config/Makefile.${SYS_NAME}
 
 INCLUDES = -I${DESTDIR}include
 DEFINES = ${INCLUDES}
-INSTALL = ${DESTDIR}bin/install
 LIBDIR = ${DESTDIR}lib/
 AFSLIBS =  ${LIBDIR}afs/libkauth.a ${LIBDIR}libubik.a\
 		   ${LIBDIR}afs/libauth.a ${LIBDIR}afs/libsys.a \

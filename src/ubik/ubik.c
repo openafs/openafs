@@ -500,7 +500,7 @@ int ubik_EndTrans(transPtr)
 	    to us, or timeout.  Put safety check in anyway */
 	if (now - realStart > 10 * BIGTIME) {
 	    ubik_stats.escapes++;
-	    printf("ubik escaping from commit wait\n");
+	    ubik_print("ubik escaping from commit wait\n");
 	    break;
 	}
 	for(ts = ubik_servers; ts; ts=ts->next) {
@@ -824,9 +824,9 @@ int panic(a, b, c, d)
     char *a, *b, *c, *d;
 {
     ubik_print("Ubik PANIC: ");
-    printf(a, b, c, d);
+    ubik_print(a, b, c, d);
     abort();
-    printf("BACK FROM ABORT\n");    /* shouldn't come back */
+    ubik_print("BACK FROM ABORT\n");    /* shouldn't come back */
     exit(1);	                    /* never know, though  */
 }
 

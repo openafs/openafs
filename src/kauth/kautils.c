@@ -42,9 +42,6 @@
 #include "kauth.h"
 #include "kautils.h"
 
-#include "../permit_xprt.h"
-
-
 
 /* This should match the behavior of ParseLoginName on input so that the output
  * and input are compatible.  In names "." should show as \056 and in names and
@@ -184,12 +181,14 @@ void ka_timestr (
   afs_int32 tlen)
 {
     char tbuffer[32]; /* need at least 26 bytes */
+    time_t passtime; /* modern systems have 64 bit time */
 
     if (!time) strcpy (tstr, "no date");/* special case this */
     else if (time == NEVERDATE) strcpy(tstr, "never");
     else {
+	passtime = time;
 	strncpy(tstr,
-		afs_ctime((time_t *)&time, tbuffer, sizeof(tbuffer)), tlen);
+		afs_ctime(&passtime, tbuffer, sizeof(tbuffer)), tlen);
 	tstr[strlen(tstr)-1] = '\0';	/* punt the newline character */
     }
 }

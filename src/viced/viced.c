@@ -563,8 +563,8 @@ main(argc, argv)
     assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
     /* Block signals in the threads */
     AFS_SIGSET_CLEAR();
-    assert(pthread_create(&serverPid, &tattr, FiveMinuteCheckLWP, &fiveminutes) == 0);
-    assert(pthread_create(&serverPid, &tattr, HostCheckLWP, &fiveminutes) == 0);
+    assert(pthread_create(&serverPid, &tattr, (void *)FiveMinuteCheckLWP, &fiveminutes) == 0);
+    assert(pthread_create(&serverPid, &tattr, (void *)HostCheckLWP, &fiveminutes) == 0);
     AFS_SIGSET_RESTORE();
 #else /* AFS_PTHREAD_ENV */
     assert(LWP_CreateProcess(FiveMinuteCheckLWP, stack*1024, LWP_MAX_PRIORITY - 2,
@@ -1177,6 +1177,18 @@ static ParseArgs(argc, argv)
 	    if (!strcmp(argv[i], "-enable_process_stats")) {
 		rx_enableProcessRPCStats();
 	    }
+#ifndef AFS_NT40_ENV
+        else 
+	    if (strcmp(argv[i], "-syslog")==0) {
+		/* set syslog logging flag */
+		serverLogSyslog = 1;
+	    } 
+	else 
+	    if (strncmp(argv[i], "-syslog=", 8)==0) {
+		serverLogSyslog = 1;
+		serverLogSyslogFacility = atoi(argv[i]+8);
+	    }
+#endif
 	else {
 	    return(-1);
 	}

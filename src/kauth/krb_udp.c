@@ -41,9 +41,6 @@
 #include "afs/audit.h"
 #include "kalog.h"
 
-#include "../permit_xprt.h"
-
-
 /* my kerberos error codes */
 #define KERB_ERR_BAD_MSG_TYPE  99
 #define KERB_ERR_BAD_LIFETIME  98
@@ -446,7 +443,10 @@ afs_int32 UDP_GetTicket (ksoc, pkt, kvno, authDomain, ticket, ticketLen, auth, a
       code = KERB_ERR_PKT_VER;	/* was KABADTICKET */
       goto abort;
     }
-    if (celllen == 0) strcpy (cell, lrealm);
+    if (celllen == 0) {
+	strncpy (cell, lrealm, MAXKTCREALMLEN-1);
+	cell[MAXKTCREALMLEN-1] = 0;
+    };
 
     if (krb_udp_debug) {
 	printf ("UGetTicket: got ticket from '%s'.'%s'@'%s'\n",

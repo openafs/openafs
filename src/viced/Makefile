@@ -10,7 +10,6 @@ COMPONENT=viced
 include ../config/Makefile.${SYS_NAME}
 
 DBUG = -g
-INSTALL = ${SRCDIR}bin/install
 CFLAGS =  -DNINTERFACE ${DBUG} -I. -I${SRCDIR}include -I${SRCDIR}include/afs \
 	 ${XCFLAGS} ${DBG_DEFS} -DRXDEBUG
 LDFLAGS = ${DBUG} ${XLDFLAGS}
@@ -70,7 +69,7 @@ viced.o: AFS_component_version_number.o
 check_sysid: check_sysid.c
 	${CC} ${CFLAGS} -IDEST/include -o check_sysid check_sysid.c
 
-fileserver: callback_clean1 viced.o ${objects} ${headers} ${LIBS}
+fileserver: viced.o ${objects} ${headers} ${LIBS}
 	set -x; \
 	case ${SYS_NAME} in \
 	*linux*) \
@@ -84,10 +83,17 @@ fileserver: callback_clean1 viced.o ${objects} ${headers} ${LIBS}
 	    ${auditlib} ${LIBS} ${XLIBS} ;; \
 	esac
 
-fsprobe: fsprobe.c  AFS_component_version_number.c
-	${CC} ${CFLAGS} -DINTERPRET_DUMP -o fsprobe fsprobe.c ${LIBS} ${XLIBS}  
-cbd: callback_clean2 callback.c AFS_component_version_number.c
-	${CC} ${CFLAGS} -DINTERPRET_DUMP -o cbd callback.c ${LIBS} ${XLIBS}  
+fsprobe.o: fsprobe.c  AFS_component_version_number.c
+	${CC} ${CFLAGS} -DINTERPRET_DUMP -c fsprobe.c
+
+fsprobe: fsprobe.o
+	${CC} ${CFLAGS} -o fsprobe fsprobe.o ${LIBS} ${XLIBS}  
+
+cbd.o: callback.c AFS_component_version_number.c
+	${CC} ${CFLAGS} -DINTERPRET_DUMP -c -o cbd.o callback.c
+
+cbd: cbd.o
+	${CC} ${CFLAGS} -DINTERPRET_DUMP -o cbd cbd.o ${LIBS} ${XLIBS}  
 
 lint:
 	lint -uvn  -I${SRCDIR}include viced.c afsfileprocs.c host.c physio.c callback.c ${SRCDIR}lib/afs/llib-lutil.ln
@@ -105,13 +111,6 @@ install: all  ${DESTDIR}root.server/usr/afs/bin/fileserver
 	${INSTALL} fs_stats.h ${DESTDIR}/include/afs
 
 system: install
-
-callback_clean1 callback_clean2: 
-	case ${SYS_NAME} in \
-	ncrx86_*) \
-		${RM}  -f callback.o;\
-		echo ${RM} callback.o;;\
-	esac;
 
 clean:
 	rm -f *.o llib-lvice.ln fileserver core AFS_component_version_number.c

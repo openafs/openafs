@@ -9,7 +9,6 @@ COMPONENT=rxgen
 include ../config/Makefile.${SYS_NAME}
 
 UKERNELDIR=../libuafs/
-INSTALL =${SRCDIR}bin/install
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 SRCS= rpc_main.c rpc_hout.c rpc_cout.c rpc_parse.c rpc_scan.c rpc_util.c \

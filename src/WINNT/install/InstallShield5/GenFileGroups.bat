@@ -1262,7 +1262,7 @@ echo file0=%IS5_INCL%\afs\afs_args.h >> Client_Afs_Header_Files.fgl
 echo file1=%IS5_INCL%\afs\debug.h >> Client_Afs_Header_Files.fgl
 echo file2=%IS5_INCL%\afs\param.h >> Client_Afs_Header_Files.fgl
 echo file3=%IS5_INCL%\afs\afs_sysnames.h >> Client_Afs_Header_Files.fgl
-echo file4=%IS5_INCL%\afs\permit_xprt.h >> Client_Afs_Header_Files.fgl
+echo file4=%IS5_INCL%\afs\bnode.h >> Client_Afs_Header_Files.fgl
 echo file5=%IS5_INCL%\afs\stds.h >> Client_Afs_Header_Files.fgl
 echo file6=%IS5_INCL%\afs\icl.h >> Client_Afs_Header_Files.fgl
 echo file7=%IS5_INCL%\afs\procmgmt.h >> Client_Afs_Header_Files.fgl
@@ -1349,7 +1349,6 @@ echo file87=%IS5_INCL%\afs\volser.h >> Client_Afs_Header_Files.fgl
 echo file88=%IS5_INCL%\afs\volint.h >> Client_Afs_Header_Files.fgl
 echo file89=%IS5_INCL%\afs\fs_stats.h >> Client_Afs_Header_Files.fgl
 echo file90=%IS5_INCL%\afs\bosint.h >> Client_Afs_Header_Files.fgl
-echo file91=%IS5_INCL%\afs\bnode.h >> Client_Afs_Header_Files.fgl
 echo. >> Client_Afs_Header_Files.fgl
 echo [General] >> Client_Afs_Header_Files.fgl
 echo Type=FILELIST >> Client_Afs_Header_Files.fgl

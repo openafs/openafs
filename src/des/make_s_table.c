@@ -8,6 +8,8 @@
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include "des_internal.h"
+
+#define WANT_S_TABLE
 #include "tables.h"
 
 extern afs_uint32 swap_bit_pos_0();
@@ -51,12 +53,16 @@ void gen(stream)
     }
 
     for (i = 0; i<=7; i++) {
-        fprintf(stream,"\n");
+        fprintf(stream,"\n{ ");
         k =0;
         for (j = 0; j<= 3; j++) {
             fprintf(stream,"\n");
             for (m = 0; m <= 15; m++) {
                 fprintf(stream,"%2d",temp[i][k]);
+		if (k==63)
+		{
+		    fprintf(stream,"\n}");
+		}
                 if ((k++ != 63) || (i !=7)) {
                     fprintf(stream,", ");
                 }

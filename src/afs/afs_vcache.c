@@ -66,6 +66,8 @@ extern struct vcache *afs_globalVp;
 #ifdef AFS_OSF_ENV
 extern struct mount *afs_globalVFS;
 extern struct vnodeops Afs_vnodeops;
+#elif defined(AFS_DARWIN_ENV)
+extern struct mount *afs_globalVFS;
 #else
 extern struct vfs *afs_globalVFS;
 #endif /* AFS_OSF_ENV */
@@ -703,6 +705,17 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 	   else if (QNext(uq) != tq)
 		refpanic("VLRU inconsistent");
 
+#ifdef AFS_DARWIN_ENV
+	   if (tvc->opens == 0 && ((tvc->states & CUnlinkedDel) == 0) &&
+                tvc->vrefCount == 1 && UBCINFOEXISTS(&tvc->v)) {
+               osi_VM_TryReclaim(tvc, &fv_slept);
+               if (fv_slept) {
+                  uq = VLRU.prev;
+                  i = 0;
+                  continue;  /* start over - may have raced. */
+               }
+            }
+#endif
 	   if (tvc->vrefCount == 0 && tvc->opens == 0
 	       && (tvc->states & CUnlinkedDel) == 0) {
 		code = afs_FlushVCache(tvc, &fv_slept);
@@ -867,6 +880,17 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 #else
     SetAfsVnode((struct vnode *)tvc);
 #endif /* AFS_SGI64_ENV */
+#ifdef AFS_DARWIN_ENV
+    tvc->v.v_ubcinfo = UBC_INFO_NULL;
+    lockinit(&tvc->rwlock, PINOD, "vcache rwlock", 0, 0);
+    cache_purge((struct vnode *)tvc); 
+    tvc->v.v_data=tvc;
+    tvc->v.v_tag=VT_AFS;
+    /* VLISTNONE(&tvc->v); */
+    tvc->v.v_freelist.tqe_next=0;
+    tvc->v.v_freelist.tqe_prev=(struct vnode **)0xdeadb;
+    /*tvc->vrefCount++;*/
+#endif 
     /*
      * The proper value for mvstat (for root fids) is setup by the caller.
      */
@@ -1113,6 +1137,12 @@ afs_FlushActiveVcaches(doflocks)
 		    crfree(cred);
 		}
 	    }	       
+#ifdef AFS_DARWIN_ENV
+            if (tvc->vrefCount == 1 && UBCINFOEXISTS(&tvc->v)) {
+		if (tvc->opens) panic("flushactive open, hasubc, but refcnt 1");
+		osi_VM_TryReclaim(tvc,0);
+	    }
+#endif
 	}
     }
     ReleaseReadLock(&afs_xvcache);
@@ -1601,6 +1631,9 @@ loop:
 	vcache2inode(tvc);
 #endif
 	ReleaseWriteLock(&tvc->lock);
+#ifdef AFS_DARWIN_ENV
+        osi_VM_Setup(tvc);
+#endif
 	return tvc;
     }
 
@@ -1657,6 +1690,9 @@ loop:
     }
 
     ReleaseWriteLock(&tvc->lock);
+#ifdef AFS_DARWIN_ENV
+    osi_VM_Setup(avc);
+#endif
     return tvc;
 
 } /*afs_GetVCache*/
@@ -1812,6 +1848,9 @@ struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     afs_ProcessFS(tvc, &OutStatus, areq);
 
     ReleaseWriteLock(&tvc->lock);
+#ifdef AFS_DARWIN_ENV
+    osi_VM_Setup(tvc);
+#endif
     return tvc;
 
 }
@@ -2116,6 +2155,7 @@ else {     /* used to undo the local callback, but that's too extreme.
 return code;
 }
 
+#if 0
 /*
  * afs_StuffVcache
  *
@@ -2254,6 +2294,7 @@ afs_StuffVcache(afid, OutStatus, CallBack, tc, areq)
      */
     afs_PutVCache(tvc, WRITE_LOCK);
 } /*afs_StuffVcache*/
+#endif
 
 /*
  * afs_PutVCache
@@ -2376,6 +2417,10 @@ struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 lockit,
 #ifdef AFS_LINUX22_ENV
     if (tvc && (tvc->states & CStatd))
 	vcache2inode(tvc); /* mainly to reset i_nlink */
+#endif
+#ifdef AFS_DARWIN_ENV
+    if (tvc)
+        osi_VM_Setup(tvc);
 #endif
     return tvc;
 } /*afs_FindVCache*/

@@ -89,6 +89,9 @@ struct super_block *afs_read_super(struct super_block *sb, void *data,
     sb->s_blocksize_bits = 10;
     sb->s_magic = AFS_VFSMAGIC;
     sb->s_op = &afs_sops;	/* Super block (vfs) ops */
+#if defined(MAX_NON_LFS)
+    sb->s_maxbytes = MAX_NON_LFS;
+#endif
     code = afs_root(sb);
     if (code)
 	MOD_DEC_USE_COUNT;
@@ -134,7 +137,7 @@ static int afs_root(struct super_block *afsp)
 		/* setup super_block and mount point inode. */
 		afs_globalVp = tvp;
 #if defined(AFS_LINUX24_ENV)
-		afsp->s_root = d_alloc_root((struct inode*)tvp);
+		afsp->s_root = d_alloc_root((struct inode*)&tvp->v);
 #else
 		afsp->s_root = d_alloc_root((struct inode*)tvp, NULL);
 #endif
@@ -255,8 +258,10 @@ void afs_put_super(struct super_block *sbp)
     AFS_GLOCK();
     AFS_STATCNT(afs_unmount);
 
-    if (!suser())
+    if (!suser()) {
+	AFS_GUNLOCK();
 	return;
+    }
 
     afs_globalVFS = 0;
     afs_globalVp = 0;

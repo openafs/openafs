@@ -23,10 +23,10 @@
 #include <afs/param.h>
 
 #define XPRT_CBC_ENCRYPT
-#include "../permit_xprt.h"
 
 extern int des_debug;
 extern int des_debug_print();
+extern int des_ecb_encrypt();
 
 /*
  * This routine performs DES cipher-block-chaining operation, either
@@ -47,7 +47,7 @@ extern int des_debug_print();
  * cleartext.
  */
 
-AFS_HIDE afs_int32
+afs_int32
 des_cbc_encrypt(in,out,length,key,iv,encrypt)
     des_cblock *in;		/* >= length bytes of input text */
     des_cblock *out;		/* >= length bytes of output text */

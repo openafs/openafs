@@ -18,6 +18,7 @@
 
 #ifdef AFS_NT40_ENV
 #include <windows.h>
+#include <io.h>
 #include "errmap_nt.h"
 #else
 #include <unistd.h>
@@ -105,14 +106,16 @@ FilepathNormalize(char *path)
 bufio_p BufioOpen(char *path, int oflag, int mode)
 {
     bufio_p bp;
-    BUFIO_FD fd;
 
     bp = (bufio_p)malloc(sizeof(bufio_t));
     if (bp == NULL) {
 	return NULL;
     }
-
+#ifdef AFS_NT40_ENV
+    bp->fd = _open(path, oflag, mode);
+#else
     bp->fd = open(path, oflag, mode);
+#endif
     if (bp->fd == BUFIO_INVALID_FD) {
 	free(bp);
 	return NULL;
@@ -144,7 +147,11 @@ int BufioGets(bufio_p bp, char *buf, int buflen)
     len = bp->len;
     while (1) {
 	if (pos >= len) {
+#ifdef AFS_NT40_ENV
+	    rc = _read(bp->fd, bp->buf, BUFIO_BUFSIZE);
+#else
 	    rc = read(bp->fd, bp->buf, BUFIO_BUFSIZE);
+#endif
 	    if (rc < 0) {
 		bp->eof = 1;
 		return -1;
@@ -190,7 +197,11 @@ int BufioClose(bufio_p bp)
     }
     fd = bp->fd;
     free(bp);
+#ifdef AFS_NT40_ENV
+    rc = _close(fd);
+#else
     rc = close(fd);
+#endif
 
     return rc;
 }

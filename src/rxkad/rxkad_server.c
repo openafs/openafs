@@ -26,8 +26,6 @@
 #include <afs/afsutil.h>
 #include "private_data.h"
 #define XPRT_RXKAD_SERVER
-#include "../permit_xprt.h"
-
 
 /*
  * This can be set to allow alternate ticket decoding.

@@ -24,7 +24,6 @@ SRCS=	rcp.c
 OBJS=   rcp.o ../rsh/rcmd.o ../rsh/herror.o ../inetd/ta-rauth.o
 COMPONENT=rcp
 
-INSTALL = ${DESTDIR}bin/install
 CFLAGS = ${OPTMZ} -I${DESTDIR}include ${XCFLAGS}
 LIBDIR = ${DESTDIR}lib/
 AFSLIBS =  ${LIBDIR}afs/libkauth.a ${LIBDIR}libubik.a\

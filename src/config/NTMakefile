@@ -26,25 +26,12 @@ INCFILES =\
 	$(INCFILEDIR)\debug.h \
 	$(INCFILEDIR)\param.h \
 	$(INCFILEDIR)\afs_sysnames.h \
-	$(INCFILEDIR)\permit_xprt.h \
 	$(INCFILEDIR)\stds.h \
-	$(INCFILEDIR)\icl.h \
-	..\permit_xprt.h
+	$(INCFILEDIR)\icl.h 
 
 
 $(INCFILEDIR)\param.h: param.$(SYS_NAME).h
 	$(COPY) $? $@
-
-!IF (EXIST($(SRCROOT)\xprt\permit_xprt.h))
-..\permit_xprt.h: $(SRCROOT)\xprt\permit_xprt.h
-	$(DEL) ..\permit_xprt.h
-	$(COPY) $(SRCROOT)\xprt\permit_xprt.h ..\permit_xprt.h
-!ELSE
-..\permit_xprt.h: .\permit_xprt.h
-	$(DEL) ..\permit_xprt.h
-	$(COPY) .\permit_xprt.h ..\permit_xprt.h
-!ENDIF
-
 
 idirs: doclink
 !	IF (!EXIST($(DESTDIR)\include))

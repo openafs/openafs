@@ -1386,7 +1386,11 @@ restoreText(tapeInfo, rstTapeInfoPtr, nextHeader)
 
     /* open the text file */
     sprintf(filename, "%s/bu_XXXXXX", gettmpdir());
+#ifdef AFS_LINUX20_ENV
+    fid = open(mkstemp(filename), O_RDWR|O_CREAT|O_EXCL, 0600);
+#else
     fid = open(mktemp(filename), O_RDWR|O_CREAT|O_EXCL, 0600);
+#endif
     if (fid < 0) 
     {
         ErrorLog(0, rstTapeInfoPtr->taskId, errno, 0, 

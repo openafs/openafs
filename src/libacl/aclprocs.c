@@ -248,13 +248,15 @@ struct acl_accessList **acl;
 	if (sscanf(nextc, "%s\t%d\n", lnames.namelist_val[i], &k) != 2)
 	    return(-1);
 	(*acl)->entries[i].rights = k;
-	nextc = (char *) (1 + index(nextc, '\n'));
+	nextc = (char *) (index(nextc, '\n'));
+	nextc ++;       /* 1 + index can cast ptr to integer */
     }
     j=i;
     for (i = (*acl)->total - 1; i >= (*acl)->total -  (*acl)->negative; i--,j++) {
 	if (sscanf(nextc, "%s\t%d\n", lnames.namelist_val[j], &((*acl)->entries[j].rights)) != 2)
 	    return(-1);
-	nextc = (char *) (1 + index(nextc, '\n'));
+	nextc = (char *) (index(nextc, '\n'));
+	nextc ++;
     }
     lids.idlist_len = 0;
     lids.idlist_val = 0;

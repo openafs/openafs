@@ -141,7 +141,7 @@ struct FileEntry {
     u_short	    ncbs;
     u_short	    firstcb;
     u_short	    spare;
-#ifdef	AFS_ALPHA_ENV
+#if defined(AFS_ALPHA_ENV) || defined(AFS_ALPHA_LINUX20_ENV)
     u_short	    spare1;
     u_short	    spare2;
 #endif

@@ -16,7 +16,7 @@
 #include "../afs/afsincludes.h"
 #include "../rx/xdr.h"
 #else /* defined(UKERNEL) */
-#if defined(AFS_ALPHA_ENV) || defined(AFS_LINUX20_ENV)
+#if defined(AFS_ALPHA_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #else
@@ -57,12 +57,13 @@ static afs_int32 bslosers = 0;
 /* these things are defined in R (but not RX's) library.  For now, we add them
     only for the kernel system.  Later, when R is expunged, we'll remove the ifdef */
 #ifdef KERNEL
+#ifndef AFS_USR_DARWIN_ENV
 #ifdef	AFS_AIXNFS11
 #define	AUTH_DES 1
 #endif
 #if (defined(AFS_AIX_ENV) && !defined(AUTH_DES)) || (!defined(AFS_SUN_ENV)) && !defined(AFS_SGI_ENV) && !defined(AFS_ALPHA_ENV) && !defined(AFS_SUN5_ENV)
 #ifndef	AFS_AIX32_ENV
-#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
 /*
  * XDR chars; from user mode xdr package.
  */
@@ -145,6 +146,7 @@ xdr_vector(xdrs, basep, nelem, elemsize, xdr_elem)
 	}
 	return(TRUE);	
 }
+#endif
 #endif /* KERNEL */
 
 #ifndef KERNEL

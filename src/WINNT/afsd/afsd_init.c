@@ -31,6 +31,8 @@
 extern int RXAFSCB_ExecuteRequest();
 extern int RXSTATS_ExecuteRequest();
 
+extern afs_int32 cryptall;
+
 char AFSConfigKeyName[] =
 	"SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters";
 
@@ -378,6 +380,16 @@ int afsd_InitCM(char **reasonP)
 	else {
 		strcat(cm_sysName, "i386_nt40");
 		afsi_log("Default sys name %s", cm_sysName);
+	}
+
+	dummyLen = sizeof(cryptall);
+	code = RegQueryValueEx(parmKey, "SecurityLevel", NULL, NULL,
+				(BYTE *) &cryptall, &dummyLen);
+	if (code == ERROR_SUCCESS)
+		afsi_log("SecurityLevel is %s", cryptall?"crypt":"clear");
+	else {
+		cryptall = rxkad_clear;
+		afsi_log("Default SecurityLevel is clear");
 	}
 
 	RegCloseKey (parmKey);

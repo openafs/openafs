@@ -11,7 +11,6 @@ include ../config/Makefile.${SYS_NAME}
 include ../config/Makefile.version
 
 INCDIRS= -I. -I${DESTDIR}include ${FSINCLUDES}
-INSTALL = ${SRCDIR}bin/install
 LDFLAGS = ${OPTMZ} ${PROF} ${LDIRS} ${XLDFLAGS}
 
 LIBS= ${DESTDIR}lib/afs/libcmd.a vlib.a ${SRCDIR}lib/afs/util.a \
@@ -77,14 +76,7 @@ vlib.a:	${VLIBOBJS} AFS_component_version_number.o
 
 # new salvager:  remove references to /vice by linking with novice.o
 salvager: vol-salvage.o physio.o vlib.a
-	case ${SYS_NAME} in \
-                *linux* ) \
-                        ${CC} ${LDFLAGS} -o salvager vol-salvage.o physio.o \
-				${LIBS}  ;; \
-                *) \
-                        ${CC} ${LDFLAGS} -o salvager vol-salvage.o physio.o \
-				${LIBS};; \
-        esac
+	${CC} ${LDFLAGS} -o salvager vol-salvage.o physio.o ${LIBS}
 
 vol-salvage: vol-salvage.o
 vol-info: vol-info.o physio.o ihandle.o
@@ -100,7 +92,7 @@ listinodes.o: listinodes.c AFS_component_version_number.c
 
 gi: ${DESTDIR}/lib/afs/libsys.a
 	case ${SYS_NAME} in \
-                *linux* | sgi_* ) \
+                *linux* | sgi_* | *fbsd* ) \
 			echo "Don't build gi on ${SYS_NAME}";; \
                 *) \
 			${CC} ${CFLAGS} -c gi.c ; \

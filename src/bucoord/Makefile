@@ -9,7 +9,6 @@ SHELL = /bin/sh
 COMPONENT=bucoord
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL=${SRCDIR}bin/install
 COMPILE_ET = ${SRCDIR}bin/compile_et
 
 CFLAGS= ${DBUG} -w -I${SRCDIR}include -I${SRCDIR}include/afs ${XCFLAGS}

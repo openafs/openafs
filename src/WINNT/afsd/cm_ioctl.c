@@ -35,6 +35,8 @@
 
 osi_mutex_t cm_Afsdsbmt_Lock;
 
+extern afs_int32 cryptall;
+
 void cm_InitIoctl(void)
 {
 	lock_InitializeMutex(&cm_Afsdsbmt_Lock, "AFSDSBMT.INI Access Lock");
@@ -1788,3 +1790,19 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 	return 0;
 }
 
+long cm_IoctlGetRxkcrypt(smb_ioctl_t *ioctlp, cm_user_t *userp)
+{
+	memcpy(ioctlp->outDatap, &cryptall, sizeof(cryptall));
+        ioctlp->outDatap += sizeof(cryptall);
+
+	return 0;
+}
+
+long cm_IoctlSetRxkcrypt(smb_ioctl_t *ioctlp, cm_user_t *userp)
+{
+	cm_SkipIoctlPath(ioctlp);
+
+	memcpy(&cryptall, ioctlp->inDatap, sizeof(cryptall));
+
+	return 0;
+}

@@ -198,7 +198,9 @@ CommandProc (as, arock)
 
     struct ubik_client *conn = 0;
     struct ktc_encryptionKey key;
+    struct ktc_encryptionKey mitkey;
     struct ktc_encryptionKey newkey;
+    struct ktc_encryptionKey newmitkey;
 
     struct ktc_token    token;
 
@@ -211,6 +213,13 @@ CommandProc (as, arock)
     int	foundPassword =	0;		/*Not yet, anyway*/
     int	foundNewPassword = 0;		/*Not yet, anyway*/
     int	foundExplicitCell = 0;		/*Not yet, anyway*/
+#ifdef DEFAULT_MITV4_STRINGTOKEY
+    int dess2k = 1;
+#elif DEFAULT_AFS_STRINGTOKEY
+    int dess2k = 0;
+#else
+    int dess2k = -1;
+#endif
 
     /* blow away command line arguments */
     for (i=1; i<zero_argc; i++) bzero (zero_argv[i], strlen(zero_argv[i]));
@@ -352,6 +361,7 @@ CommandProc (as, arock)
 	    code = read_pass (passwd, sizeof(passwd), "Old password: ", 0);
 	    if (code || (strlen (passwd) == 0)) {
 		if (code) code = KAREADPW;
+		bzero (&mitkey, sizeof(mitkey));
 		bzero (&key, sizeof(key));
 		bzero (passwd, sizeof(passwd));
 		if (code) com_err (rn, code, "reading password");
@@ -360,6 +370,7 @@ CommandProc (as, arock)
 	}
     } 
     ka_StringToKey (passwd, realm, &key);
+    des_string_to_key(passwd, &mitkey);
     give_to_child(passwd);
 
     /* Get new password if it wasn't provided. */
@@ -407,6 +418,7 @@ CommandProc (as, arock)
 	npasswd[8] = 0;	/* in case the password was exactly 8 chars long */
 #endif
     ka_StringToKey (npasswd, realm, &newkey);
+    des_string_to_key(npasswd, &newmitkey);
     bzero (npasswd, sizeof(npasswd));
 
     if (lexplicit) ka_ExplicitCell (realm, serverList);
@@ -422,26 +434,40 @@ CommandProc (as, arock)
 
     code = ka_GetAdminToken (pw->pw_name, instance, realm,
 			     &key, ADMIN_LIFETIME, &token, /*!new*/0);
-
-    if ((code == KABADREQUEST) && (strlen (passwd) > 8)) {
-	/* try with only the first 8 characters incase they set their password
-         * with an old style passwd program. */
-	char pass8[9];
-	strncpy (pass8, passwd, 8);
-	pass8[8] = 0;
-	ka_StringToKey (pass8, realm, &key);
-	bzero (pass8, sizeof(pass8));
-	bzero (passwd, sizeof(passwd));
+    if (code == KABADREQUEST) {
 	code = ka_GetAdminToken (pw->pw_name, instance, realm,
-				 &key, ADMIN_LIFETIME, &token, /*!new*/0);
+				 &mitkey, ADMIN_LIFETIME, &token, /*!new*/0);
+	if ((code == KABADREQUEST) && (strlen (passwd) > 8)) {
+	    /* try with only the first 8 characters incase they set their password
+	     * with an old style passwd program. */
+	    char pass8[9];
+	    strncpy (pass8, passwd, 8);
+	    pass8[8] = 0;
+	    ka_StringToKey (pass8, realm, &key);
+	    bzero (pass8, sizeof(pass8));
+	    bzero (passwd, sizeof(passwd));
+	    code = ka_GetAdminToken (pw->pw_name, instance, realm,
+				     &key, ADMIN_LIFETIME, &token, /*!new*/0);
 #ifdef notdef
-	/* the folks in testing really *hate* this message */
-	if (code == 0) {
-	    fprintf (stderr, "Warning: only the first 8 characters of your old password were significant.\n");
-	}
+	    /* the folks in testing really *hate* this message */
+	    if (code == 0) {
+		fprintf (stderr, "Warning: only the first 8 characters of your old password were significant.\n");
+	    }
 #endif
-    }	
+	    if (code == 0) {
+		if (dess2k == -1)
+		    dess2k=0;
+	    }
+	} else {
+	    if (dess2k == -1)
+		dess2k=1;
+	}
+    } else {
+	if (dess2k == -1)
+	    dess2k=0;
+    } 
 
+    bzero (&mitkey, sizeof(mitkey));
     bzero (&key, sizeof(key));
     if (code == KAUBIKCALL) com_err (rn, code, "(Authentication Server unavailable, try later)");
     else if (code) {
@@ -454,8 +480,12 @@ CommandProc (as, arock)
 	code = ka_AuthServerConn (realm, KA_MAINTENANCE_SERVICE, &token, &conn);
 	if (code) com_err (rn, code, "contacting Admin Server");
 	else {
-	    code = ka_ChangePassword (pw->pw_name, instance, conn, 0, &newkey);
+	    if (dess2k == 1)
+		code = ka_ChangePassword (pw->pw_name, instance, conn, 0, &newmitkey);
+	    else
+		code = ka_ChangePassword (pw->pw_name, instance, conn, 0, &newkey);
 	    bzero (&newkey, sizeof(newkey));
+	    bzero (&newmitkey, sizeof(newmitkey));
 	    if (code) {
 	      char * reason;
 	      reason = (char *) error_message(code);
@@ -465,6 +495,7 @@ CommandProc (as, arock)
 	}
     }
     bzero (&newkey, sizeof(newkey));
+    bzero (&newmitkey, sizeof(newmitkey));
 
     /* Might need to close down the ubik_Client connection */
     if (conn) {

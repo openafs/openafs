@@ -27,8 +27,6 @@ extern int des_key_sched();
 extern int des_ecb_encrypt();
 extern int des_cbc_encrypt();
 
-#include "../../permit_xprt.h"
-
 char *progname;
 int nflag = 2;
 int vflag;

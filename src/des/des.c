@@ -48,7 +48,6 @@
 #include "stats.h"
 
 #define XPRT_DES
-#include "../permit_xprt.h"
 
 #ifdef DEBUG
 #define DBG_PRINT(s) if (des_debug & 2) \
@@ -59,14 +58,15 @@
 #endif
 
 extern int des_debug;
-extern des_cblock_print_file ();
-extern des_debug_print ();
+extern int des_cblock_print_file ();
+extern int des_debug_print ();
+extern int swap_long_bytes_bit_number(int);
 
 #ifdef AFS_PTHREAD_ENV
 pthread_mutex_t rxkad_stats_mutex;
 #endif /* AFS_PTHREAD_ENV */
     
-AFS_HIDE afs_int32
+afs_int32
 des_ecb_encrypt(clear, cipher, schedule, encrypt)
     afs_uint32 *clear;
     afs_uint32 *cipher;

@@ -9,7 +9,6 @@
 #
 
 SHELL=/bin/sh
-INSTALL = ${SRCDIR}bin/install
 INCLUDE=  -I. -I/usr/include
 UOBJ	=../UAFS
 WEBOBJ	=../AFSWEB
@@ -28,16 +27,22 @@ webinstall: AFSWEB/$(LIBAFSWEB) AFSWEB/$(LIBAFSWEBKRB)
 	${INSTALL} AFSWEB/$(LIBAFSWEB) ${DESTDIR}root.afsweb/usr/lib
 	${INSTALL} AFSWEB/$(LIBAFSWEBKRB) ${DESTDIR}root.afsweb/usr/lib
 
-ukinstall: UAFS/$(LIBUAFS)
+ukinsthdrs:
 	${INSTALL} afs/param.h ${DESTDIR}root.perf/include/afs
 	${INSTALL} afs/stds.h ${DESTDIR}root.perf/include/afs
 	${INSTALL} afs/afs_sysnames.h ${DESTDIR}root.perf/include/afs
 	${INSTALL} afs/afs_stats.h ${DESTDIR}root.perf/include/afs
 	${INSTALL} afs/sysincludes.h ${DESTDIR}root.perf/include/afs
 	${INSTALL} afs/afs_usrops.h ${DESTDIR}root.perf/include/afs
+
+ukinstlibs:
 	${INSTALL} des/libdes.a ${DESTDIR}root.perf/lib
-	${INSTALL} UAFS/$(LIBUAFS) ${DESTDIR}root.perf/lib
-	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest linktest.c -I${DESTDIR}include -I${DESTDIR}include/rx -I${DESTDIR}root.perf/include ${DESTDIR}root.perf/lib/$(LIBUAFS) ${DESTDIR}root.perf/lib/libdes.a $(TEST_LIBS)
+	${INSTALL} UAFS/$(LIBUAFS) ${DESTDIR}root.perf/lib	
+
+ukinstall: ukinsthdrs UAFS/$(LIBUAFS) linktest ukinstlibs
+
+linktest: UAFS/$(LIBUAFS) des/libdes.a
+	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) -o linktest linktest.c -I${DESTDIR}include -I${DESTDIR}include/rx -I${DESTDIR}root.perf/include UAFS/$(LIBUAFS) des/libdes.a $(TEST_LIBS)
 
 CRULE1=	$(CC) $(OPTF) -DKERNEL $(CFLAGS) -c $?
 CRULE2=	$(CC) $(OPTF) $(WEBOPTS) -DKERNEL $(CFLAGS) -c $?

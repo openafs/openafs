@@ -211,12 +211,16 @@ ubeacon_InitServerListCommon(ame, info, clones, aservers)
                 }
                 ++nServers;
             }
-	    ts->vote_rxcid = rx_NewConnection(servAddr, ubik_callPortal, 
-		VOTE_SERVICE_ID, 
-		ubikSecClass, ubikSecIndex);		/* for vote reqs */
-	    ts->disk_rxcid = rx_NewConnection(servAddr, ubik_callPortal, 
-		DISK_SERVICE_ID, ubikSecClass, 
-		ubikSecIndex);				/* for disk reqs */
+	    /* for vote reqs */
+	    ts->vote_rxcid = rx_NewConnection(info->hostAddr[i].sin_addr.s_addr,
+					      ubik_callPortal, 
+					      VOTE_SERVICE_ID, 
+					      ubikSecClass, ubikSecIndex);
+	    /* for disk reqs */
+	    ts->disk_rxcid = rx_NewConnection(info->hostAddr[i].sin_addr.s_addr,
+					      ubik_callPortal, 
+					      DISK_SERVICE_ID, ubikSecClass, 
+					      ubikSecIndex);		     
 	    ts->up = 1;
 	}
     } else {
@@ -611,9 +615,8 @@ afs_uint32 ubik_host[UBIK_MAX_INTERFACE_ADDR];
 		code = UBADHOST; /* remote CellServDB inconsistency */
 		ubik_print("Inconsistent Cell Info on server: ");
 		for ( j=0; j < UBIK_MAX_INTERFACE_ADDR && ts->addr[j]; j++)
-		    printf("%s ", afs_inet_ntoa(ts->addr[j]));
-		printf("\n");
-		fflush(stdout); fflush(stderr);     
+		    ubik_print("%s ", afs_inet_ntoa(ts->addr[j]));
+		ubik_print("\n");
 	    }
 	    else {
 		ts->up= 0;	/* mark the remote server as down */

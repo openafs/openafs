@@ -19,7 +19,6 @@
 #endif
 #include "../h/types.h"
 #include "../h/time.h"
-#include "../netinet/in.h"
 #ifndef AFS_LINUX22_ENV
 #include "../rpc/types.h"
 #include "../rpc/xdr.h"
@@ -50,12 +49,6 @@
 
 #include "private_data.h"
 #define XPRT_RXKAD_COMMON
-#ifdef KERNEL
-#include "../afs/permit_xprt.h"
-#else
-#include "../permit_xprt.h"
-#endif
-
 
 char *rxi_Alloc();
 

@@ -9,7 +9,6 @@ SHELL = /bin/sh
 COMPONENT=bu_utils
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL=${SRCDIR}bin/install
 COMPILE_ET = ${DESTDIR}/bin/compile_et
 CFLAGS= -g -w -I${SRCDIR}include -I${SRCDIR}include/afs ${XCFLAGS}
 LDFLAGS = ${XLDFLAGS}

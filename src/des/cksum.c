@@ -30,10 +30,10 @@
 #include "des_internal.h"
 
 #define XPRT_CKSUM
-#include "../permit_xprt.h"
 
 extern int des_debug;
 extern int des_debug_print();
+extern int des_ecb_encrypt();
 
 /*
  * This routine performs DES cipher-block-chaining checksum operation,
@@ -50,7 +50,7 @@ extern int des_debug_print();
  * multiple of eight bytes.
  */
 
-AFS_HIDE afs_uint32
+afs_uint32
 des_cbc_cksum(in,out,length,key,iv)
     des_cblock *in;		/* >= length bytes of inputtext */
     des_cblock *out;		/* >= length bytes of outputtext */

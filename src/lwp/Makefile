@@ -9,9 +9,6 @@ SHELL = /bin/sh
 COMPONENT=lwp
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL = ${SRCDIR}bin/install
-
-include ../config/Makefile.${SYS_NAME}
 # this is important code, so let's optimize it.  The optimizer aggravates any
 # subtle bugs that may have been introduced in process.s, be warned!
 OPTIMIZE=${LWP_OPTMZ}
@@ -70,7 +67,13 @@ process.o	: process.s process.c
 					/lib/cpp -P -I${SRCDIR}include process.s >process.ss; \
 					${AS} -ahlns process.ss -o process.o >process.lst; \
 					rm process.ss ;; \
-				hp* | *_linux* | sgi_64 | sgi_65) \
+				ppc_darwin* ) \
+					$(CC) -c ${XCFLAGS} -I${SRCDIR}include process.s;; \
+				i386_fbsd* ) \
+					/usr/bin/cpp -P process.fbsd.s > process.ss; \
+					${AS} -o process.o process.ss; \
+					rm process.ss ;; \
+				hp* | *_linux* | sgi_64 | sgi_65 ) \
 					${CC} ${CFLAGS} -c process.c;; \
 				ncrx86_*) \
 					/usr/ccs/lib/cpp -P -I${SRCDIR}include process.s process.ss; \

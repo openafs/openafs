@@ -7,18 +7,6 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/*
- * Revision 2.3  90/08/31  16:19:53
- * Move permit_xprt.h.
- * 
- * Revision 2.2  90/08/20  10:21:25
- * Include permit_xprt.h.
- * Cleanup; prune log, flush andrew style ticket functions.
- * 
- * Revision 2.1  90/08/07  19:33:44
- * Start with clean version to sync test and dev trees.
- * */
-
 #if defined(UKERNEL)
 #include "../afs/param.h"
 #include "../afs/sysincludes.h"
@@ -29,8 +17,6 @@
 #include "../des/des.h"
 #include "../afs/lifetimes.h"
 #include "../afs/rxkad.h"
-
-#include "../afs/permit_xprt.h"
 #else /* defined(UKERNEL) */
 #include <afs/param.h>
 #include <afs/stds.h>
@@ -45,8 +31,6 @@
 #include <des.h>
 #include "lifetimes.h"
 #include "rxkad.h"
-
-#include "../permit_xprt.h"
 #endif /* defined(UKERNEL) */
 
 

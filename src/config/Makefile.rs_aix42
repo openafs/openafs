@@ -29,13 +29,13 @@ MT_CC=xlc_r
 AR=ar
 AS=as
 CP=cp
-INSTALL=${SRCDIR}bin/install
 LD=ld   
 LEX=lex
 MV=mv
 RANLIB=ranlib
 RM=rm
-WASHTOOL=${SRCDIR}bin/washtool
+WASHTOOL=${DESTDIR}bin/washtool
+INSTALL=${DESTDIR}bin/install
 #
 # This is the XBSA make flag and pathname to XBSA header files (xbsa.h)
 XBSA_FLAGS=-Dxbsa

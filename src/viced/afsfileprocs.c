@@ -74,7 +74,7 @@
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <sys/stat.h>
-#if ! defined(AFS_SGI_ENV) && ! defined(AFS_AIX32_ENV) && ! defined(AFS_NT40_ENV) && ! defined(AFS_LINUX20_ENV)
+#if ! defined(AFS_SGI_ENV) && ! defined(AFS_AIX32_ENV) && ! defined(AFS_NT40_ENV) && ! defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 #include <sys/map.h>
 #endif
 #if !defined(AFS_NT40_ENV)
@@ -85,7 +85,7 @@
 #include <sys/statfs.h>
 #include <sys/lockf.h>
 #else
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 #include <sys/dk.h>
 #endif
 #endif
@@ -314,7 +314,18 @@ retry:
     else if (thost->hostFlags & VENUSDOWN) {
       if (BreakDelayedCallBacks_r(thost)) {
 	ViceLog(0,("BreakDelayedCallbacks FAILED for host %08x which IS UP.  Possible network or routing failure.\n",thost->host));
-	code = -1;
+	if ( MultiProbeAlternateAddress_r (thost) ) {
+	    ViceLog(0, ("MultiProbe failed to find new address for host %x.%d\n",
+			thost->host, thost->port));
+	    code = -1;
+	} else {
+	    ViceLog(0, ("MultiProbe found new address for host %x.%d\n",
+			thost->host, thost->port));
+	    if (BreakDelayedCallBacks_r(thost)) {
+		ViceLog(0,("BreakDelayedCallbacks FAILED AGAIN for host %08x which IS UP.  Possible network or routing failure.\n",thost->host));
+		code = -1;
+	    }
+	}
       }
     } else {
        code =  0;

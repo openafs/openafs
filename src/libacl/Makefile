@@ -9,7 +9,6 @@ SHELL = /bin/sh
 COMPONENT=libacl
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL = ${SRCDIR}bin/install
 INCDIRS= -I${DESTDIR}include -I.. -I${BACKDIR}include -I${DESTDIR}include/afs 
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
@@ -26,7 +25,7 @@ libacl.a: $(LIBOBJS)  AFS_component_version_number.o
 	rm -f libacl.a
 	ar rv libacl.a $(LIBOBJS) AFS_component_version_number.o
 	$(RANLIB) libacl.a
-	
+
 aclprocs.o: aclprocs.c acl.h
 
 netprocs.o: netprocs.c acl.h

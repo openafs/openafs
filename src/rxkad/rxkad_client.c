@@ -51,12 +51,6 @@
 
 #include "private_data.h"
 #define XPRT_RXKAD_CLIENT
-#ifdef KERNEL
-#include "../afs/permit_xprt.h"
-#else
-#include "../permit_xprt.h"
-#endif
-
 
 char *rxi_Alloc();
 
@@ -185,7 +179,7 @@ rxkad_NewClientSecurityObject(level, sessionkey, kvno, ticketLen, ticket)
     bzero ((void *)tcp, size);
     tsc->privateData = (char *) tcp;
     tcp->type |= rxkad_client;
-    tcp->level = xprt_CoerceLevel(level);
+    tcp->level = level;
     code = fc_keysched (sessionkey, tcp->keysched);
     if (code) return 0;			/* bad key */
     bcopy ((void *)sessionkey, (void *)tcp->ivec, sizeof(tcp->ivec));

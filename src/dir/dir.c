@@ -20,7 +20,7 @@
 #include "../h/errno.h"
 #endif
 #include "../h/time.h"
-#if defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV)
+#if defined(AFS_AIX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_FBSD_ENV)
 #include "../h/errno.h"
 #else
 #if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV)
@@ -31,6 +31,13 @@
 #include "../afs/sysincludes.h"
 #endif
 #ifndef AFS_SGI64_ENV
+#if defined(AFS_FBSD_ENV)
+#include "../h/lock.h"
+#include "../vm/vm.h"
+#include "../vm/vm_extern.h"
+#include "../vm/pmap.h"
+#include "../vm/vm_map.h"
+#endif /* AFS_FBSD_ENV */
 #include "../h/user.h"
 #endif /* AFS_SGI64_ENV */
 #include "../h/uio.h"

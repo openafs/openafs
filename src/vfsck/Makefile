@@ -19,7 +19,6 @@
 COMPONENT=vfsck
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL=${SRCDIR}bin/install
 CFLAGS=	${DBUG} -w -I${SRCDIR}include ${XCFLAGS}
 LIBC=	/lib/libc.a
 SRCS=	dir.c inode.c main.c pass1.c pass1b.c pass2.c pass3.c pass4.c \
@@ -44,7 +43,7 @@ ${OBJS}:	${SRCS}
 	    ${CC} -o vfsck -I/usr/old/usr/include ${DBUG} -w -I${SRCDIR}include ${SRCS} ${NON_SHARED} +DA1.0 -Wl,-a,archive -D_FILE64 \
 			;;					\
 	  hp?00_ux101 | hp_ux10? )				\
-    	    ${CC} -o vfsck ${CFLAGS} ${SRCS} ${NON_SHARED} ${XLIBS} -D_FILE64\
+	    ${CC} -o vfsck ${CFLAGS} ${SRCS} ${NON_SHARED} ${XLIBS} -D_FILE64\
 			;;					\
 	    * )							\
 	    ${CC} -o vfsck ${CFLAGS} ${SRCS} ${NON_SHARED} ${XLIBS}\

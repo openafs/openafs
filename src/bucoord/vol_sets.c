@@ -188,6 +188,12 @@ afs_int32 bc_DeleteVolEntryCmd(as, arock)
 
     vsname = as->parms[0].items->data;
 
+    code = bc_UpdateVolumeSet();
+    if (code) {
+       com_err(whoami, code, "; Can't retrieve volume sets");
+       return(code);
+    }
+
     /* lock schedules and check validity */
     ctPtr = &bc_globalConfig->configText[TB_VOLUMESET];
 

@@ -47,7 +47,12 @@ pinstall: install.c  AFS_component_version_number.c
 	- [ -d test ] && ./test/test_install
 
 ${DESTDIR}bin/install: pinstall
-	./pinstall -f pinstall ${DESTDIR}bin/install
+	case ${SYS_NAME} in \
+		ppc_darwin*) \
+			./pinstall -f pinstall ${DESTDIR}bin/pinstall ;;\
+		*) \
+			./pinstall -f pinstall ${DESTDIR}bin/install ;;\
+	esac
 
 # Note: Some rule needs to appear here so that OSF's make does not try to
 # compile install from install.c. A ";" will not work since other platforms

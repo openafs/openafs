@@ -66,12 +66,12 @@ extern struct cmd_syndesc *cmd_CreateSyntax(
   char *helpp
 );
 
-extern cmd_SetBeforeProc(
+extern int cmd_SetBeforeProc(
   int (*aproc)(),
   char *arock
 );
 
-extern cmd_SetAfterProc(
+extern int cmd_SetAfterProc(
   int (*aproc)(),
   char *arock
 );
@@ -94,16 +94,16 @@ extern int cmd_AddParm(
   char *ahelp
 );
 
-extern cmd_Dispatch(
+extern int cmd_Dispatch(
   int argc,
   char **argv
 );
 
-extern cmd_FreeArgv(
+extern int cmd_FreeArgv(
   char **argv
 );
 
-extern cmd_ParseLine(
+extern int cmd_ParseLine(
   char *aline,
   char **argv,
   afs_int32 *an,

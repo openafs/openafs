@@ -10,13 +10,11 @@ COMPONENT=ptserver
 include ../config/Makefile.${SYS_NAME}
 
 UKERNELDIR=../libuafs/
-INSTALL=${SRCDIR}bin/install
 RXGEN=${SRCDIR}bin/rxgen
 COMPILE_ET = ${SRCDIR}bin/compile_et
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 CFLAGS = $(DBUG) -I${SRCDIR}include ${XCFLAGS}
-PE = ../permit_xprt.h
 INCLS=${SRCDIR}include/ubik.h \
 	${SRCDIR}include/lock.h  \
 	${SRCDIR}include/lwp.h \
@@ -99,7 +97,7 @@ ptclient: ptclient.o display.o libprot.a $(LIBS)
 
 ptclient.o: ptclient.c ${INCLS} AFS_component_version_number.c
 
-ptuser.o: ptuser.c ${LINCLS} ${PE}
+ptuser.o: ptuser.c ${LINCLS}
 
 pterror.h pterror.c: pterror.et
 	$(RM) -f pterror.h pterror.c; ${COMPILE_ET} pterror
@@ -125,7 +123,12 @@ readpwd: readpwd.o libprot.a $(LIBS)
 readpwd.o: readpwd.c ${LINCLS} AFS_component_version_number.c
 
 testpt: testpt.o libprot.a ${SRCDIR}lib/afs/libcmd.a $(LIBS)
-	$(CC) ${CFLAGS} -o testpt testpt.o -lm ${SRCDIR}lib/afs/libcmd.a libprot.a $(LIBS) ${XLIBS}
+	case "$(SYS_NAME)" in \
+	ppc_darwin_12 ) \
+		$(CC) ${CFLAGS} -o testpt testpt.o ${SRCDIR}lib/afs/libcmd.a libprot.a $(LIBS) ;; \
+	* ) \
+		$(CC) ${CFLAGS} -o testpt testpt.o -lm ${SRCDIR}lib/afs/libcmd.a libprot.a $(LIBS) ${XLIBS} ;; \
+	esac
 
 testpt.o: testpt.c ${INCLS} ${SRCDIR}include/afs/cmd.h AFS_component_version_number.c
 

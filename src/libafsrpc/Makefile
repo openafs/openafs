@@ -11,7 +11,6 @@ SHELL = /bin/sh
 COMPONENT=libafsrpc
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL = ${SRCDIR}bin/install
 CC=${MT_CC}
 INCLUDES = -I${SRCDIR}include -I.. -I../rx
 CFLAGS = ${OPTMZ} ${DBG} ${INCLUDES} -DRXDEBUG ${MT_CFLAGS}
@@ -242,7 +241,7 @@ xdr_afsuuid.o: ${RX}/xdr_afsuuid.c
 #
 #   $ what /opt/langtools/bin/pxdb32
 #   /opt/langtools/bin/pxdb32:
-#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.1.1.4 $
+#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.1.1.5 $
 #
 # The problem occurs when -g and -O are both used when compiling des.c.
 # The simplest way to work around the problem is to leave out either -g or -O.
@@ -321,12 +320,14 @@ syscall.o: ${SYS}/syscall.s
 		/usr/ccs/lib/cpp  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		rm syscall.ss;;				\
-	 sgi_* ) \
+	 sgi_* | ppc_darwin* ) \
                 ${CC} ${CFLAGS} -c ${SYS}/syscall.s;;          \
 	 alpha_dux?? ) \
 		${AS} -P ${CFLAGS} -D_NO_PROTO -DMACH -DOSF -nostdinc -traditional -DASSEMBLER ${SYS}/syscall.s; \
 		${AS} -o syscall.o syscall.i; \
 		rm -f syscall.ss syscall.i;; \
+	 *fbsd* ) \
+		touch syscall.o ;; \
 	 *) \
 		/lib/cpp  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\

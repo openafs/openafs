@@ -39,14 +39,7 @@
 
 #include "private_data.h"
 #define XPRT_RXKAD_CRYPT
-#ifdef KERNEL
-#include "../afs/permit_xprt.h"
-#else
-#include "../permit_xprt.h"
-#endif
 
-
-AFS_HIDE
 afs_int32 rxkad_DecryptPacket (conn, schedule, ivec, len, packet)
   IN struct rx_connection *conn;
   IN fc_KeySchedule *schedule;
@@ -60,7 +53,6 @@ afs_int32 rxkad_DecryptPacket (conn, schedule, ivec, len, packet)
     char * data;
     int i,tlen;
 
-    if (!xprt_CryptOK (conn)) return RXKADILLEGALLEVEL;
     obj = rx_SecurityObjectOf(conn);
     tp = (struct rxkad_cprivate *)obj->privateData;
     LOCK_RXKAD_STATS
@@ -84,7 +76,6 @@ afs_int32 rxkad_DecryptPacket (conn, schedule, ivec, len, packet)
     return 0;
 }
 
-AFS_HIDE
 afs_int32 rxkad_EncryptPacket (conn, schedule, ivec, len, packet)
   IN struct rx_connection *conn;
   IN fc_KeySchedule *schedule;
@@ -98,7 +89,6 @@ afs_int32 rxkad_EncryptPacket (conn, schedule, ivec, len, packet)
     char *data;
     int i,tlen;
 
-    if (!xprt_CryptOK (conn)) return RXKADILLEGALLEVEL;
     obj = rx_SecurityObjectOf(conn);
     tp = (struct rxkad_cprivate *)obj->privateData;
     LOCK_RXKAD_STATS

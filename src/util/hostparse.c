@@ -41,7 +41,7 @@ register char *ahost; {
     static char *addrp[2];
     static char addr[4];
     register char *ptr = ahost;
-    afs_int32 tval, numeric=0;
+    afs_uint32 tval, numeric=0;
     int dots=0;
 
     tc = *ahost;    /* look at the first char */
@@ -103,7 +103,7 @@ register char *ahost; {
  * variable addr is in network byte order.
  */
 char *hostutil_GetNameByINet(addr)
-  afs_int32 addr;
+  afs_uint32 addr;
 {
   struct hostent *th;
   static char    tbuffer[256];
@@ -130,7 +130,7 @@ char *hostutil_GetNameByINet(addr)
 ** w.x.y.z 	# machineName
 ** returns the network interface in network byte order 
 */
-afs_int32
+afs_uint32
 extractAddr(line, maxSize)
 char* line;
 int maxSize;
@@ -138,8 +138,8 @@ int maxSize;
 	char byte1[32], byte2[32], byte3[32], byte4[32];
 	int i=0;
 	char*	endPtr;
-	afs_int32 val1, val2, val3, val4;
-	afs_int32 val=0;
+	afs_uint32 val1, val2, val3, val4;
+	afs_uint32 val=0;
 
 	/* skip empty spaces */
 	while ( isspace(*line) && maxSize ) 
@@ -224,7 +224,7 @@ int maxSize;
 ** On Solaris, if we pass a 4 byte integer directly into inet_ntoa(), it
 ** causes a memory fault. 
 */
-char* afs_inet_ntoa(afs_int32 addr)
+char* afs_inet_ntoa(afs_uint32 addr)
 {
     struct in_addr temp;
     temp.s_addr = addr;

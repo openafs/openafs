@@ -16,7 +16,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
+#ifndef __APPLE_CC__
 #include <malloc.h>
+#endif
 #include <assert.h>
 #include <string.h>
 

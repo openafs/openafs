@@ -15,7 +15,6 @@ COMPONENT=tbutc
 include ../config/Makefile.${SYS_NAME}
 
 CC      =${MT_CC}
-INSTALL =${SRCDIR}bin/install
 CFLAGS  = ${DBG} -w ${MT_CFLAGS}
 
 LDFLAGS = ${DBG} ${XLDFLAGS}

@@ -27,6 +27,7 @@
 #endif
 #include <sys/param.h>
 #include <sys/time.h>
+#include <syslog.h>
 #endif
 #include <afs/procmgmt.h>  /* signal(), kill(), wait(), etc. */
 #include <fcntl.h>
@@ -60,25 +61,20 @@ static pthread_mutex_t serverLogMutex;
 #define F_OK 0
 #endif
 
-char *threadname();
+char *(*threadNameProgram)();
 
 static int serverLogFD = -1;
+
+#ifndef AFS_NT40_ENV
+int serverLogSyslog = 0;
+int serverLogSyslogFacility = LOG_DAEMON;
+#endif
 
 #include <stdarg.h>
 int LogLevel;
 int mrafsStyleLogs = 0;
 int printLocks = 0;
 static char ourName[MAXPATHLEN];
-
-void WriteLogBuffer(buf,len)
-    char *buf;
-    afs_uint32 len;
-{
-    LOCK_SERVERLOG();
-    if (serverLogFD > 0)
-        write(serverLogFD, buf, len);
-    UNLOCK_SERVERLOG();
-}
 
 /* VARARGS1 */
 void FSLog (const char *format, ...)
@@ -99,7 +95,7 @@ void FSLog (const char *format, ...)
     info = &timeStamp[25];
 
     if (mrafsStyleLogs) {
-       name = threadname();
+       name = (*threadNameProgram)();
        sprintf(info, "[%s] ", name);
        info += strlen(info);
     }
@@ -110,13 +106,20 @@ void FSLog (const char *format, ...)
 
     len = strlen(tbuffer);
     LOCK_SERVERLOG();
-    if (serverLogFD > 0)
-	write(serverLogFD, tbuffer, len);
+#ifndef AFS_NT40_ENV
+    if ( serverLogSyslog ){
+	syslog(LOG_INFO, "%s", info);
+    } else 
+#endif
+	if (serverLogFD > 0)
+	    write(serverLogFD, tbuffer, len);
     UNLOCK_SERVERLOG();
 
-#if !defined(AFS_PTHREAD_ENV)
-    fflush(stdout);
-    fflush(stderr);     /* in case they're sharing the same FD */
+#if !defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+    if ( ! serverLogSyslog ) {
+        fflush(stdout);
+        fflush(stderr);     /* in case they're sharing the same FD */
+    }
 #endif
 }
 
@@ -189,6 +192,13 @@ int OpenLog(const char *fileName)
     struct tm *TimeFields;
     char FileName[MAXPATHLEN]; 
 
+#ifndef AFS_NT40_ENV
+    if ( serverLogSyslog ) {
+	openlog(NULL, LOG_PID, serverLogSyslogFacility);
+	return;
+    }
+#endif
+
     if (mrafsStyleLogs) {
         TM_GetTimeOfDay(&Start, 0);
         TimeFields = localtime(&Start.tv_sec);
@@ -243,6 +253,12 @@ int ReOpenLog(const char *fileName)
 
     if (access(fileName, F_OK)==0)
 	return 0; /* exists, no need to reopen. */
+
+#if !defined(AFS_NT40_ENV)
+    if ( serverLogSyslog ) {
+	return 0;
+    }
+#endif
 
 #if defined(AFS_PTHREAD_ENV)
     LOCK_SERVERLOG();

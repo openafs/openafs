@@ -13,13 +13,11 @@ COMPONENT=kauth
 include ../config/Makefile.${SYS_NAME}
 
 UKERNELDIR = ../libuafs/
-INSTALL=${SRCDIR}bin/install
 COMPILE_ET = ${SRCDIR}bin/compile_et
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 CFLAGS = ${OPTMZ} -I${SRCDIR}include ${XCFLAGS}
 LDFLAGS = ${OPTMZ} ${XLDFLAGS}
-PE = ../permit_xprt.h
 INCLS=${SRCDIR}include/ubik.h \
              ${SRCDIR}include/lwp.h \
              ${SRCDIR}include/lock.h  \
@@ -94,10 +92,10 @@ xkaprocs: kaprocs.c ${INCLS}
 # tightly controlled.
 #	${CC} ${CFLAGS} -c kaprocs.c -DSPECIAL=1 -DGETPASSWORD
 
-kaprocs.o: kaprocs.c ${INCLS} ${PE} kaport.h
+kaprocs.o: kaprocs.c ${INCLS} kaport.h
 	${CC} ${CFLAGS} -c kaprocs.c -DSPECIAL=1
 
-authclient.o: authclient.c ${INCLS} ${PE}
+authclient.o: authclient.c ${INCLS}
 
 
 #authserver.o: authserver.c ${INCLS}
@@ -190,8 +188,7 @@ kpwvalid: kpwvalid.o $(LIBS)
 	${CC} ${LDFLAGS} -o kpwvalid kpwvalid.o ${LIBS} ${XLIBS}
 
 user.krb.o: user.c ${INCLS} ${SRCDIR}include/afs/vice.h
-	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c user.c
-	mv user.o user.krb.o
+	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c user.c -o user.krb.o
 
 user.o: user.c ${INCLS} ${SRCDIR}include/afs/vice.h
 	${CC} ${CFLAGS} -c user.c
@@ -201,7 +198,7 @@ kdb: kdb.o ${INCLS}
 kdb.o: kdb.c AFS_component_version_number.o
 
 krb_udp.o: krb_udp.c kaserver.h kautils.h kauth.h prot.h \
-	   ${SRCDIR}include/lwp.h ${PE} AFS_component_version_number.o
+	   ${SRCDIR}include/lwp.h AFS_component_version_number.o
 
 krb_udp: krb_udp.o libkauth.a
 	${CC} ${LDFLAGS} -o krb_udp krb_udp.o libkauth.a ${SRCDIR}lib/liblwp.a ${deslib} ${rxkadlib} ${SRCDIR}lib/afs/libcom_err.a ${utilib} ${auditlib}

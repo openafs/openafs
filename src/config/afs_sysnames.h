@@ -47,6 +47,8 @@
 #define SYS_NAME_ID_mac2_51		 500	
 #define SYS_NAME_ID_mac_aux10		 501
 #define SYS_NAME_ID_mac_mach51		 502
+#define SYS_NAME_ID_ppc_darwin_12        503
+#define SYS_NAME_ID_ppc_darwin_13        504
 
 #define SYS_NAME_ID_next_mach20		 601
 #define SYS_NAME_ID_next_mach30		 602
@@ -125,6 +127,11 @@
 #define SYS_NAME_ID_s390_linux22        1901
 #define SYS_NAME_ID_s390_linux24        1902
 
+#define SYS_NAME_ID_alpha_linux_2       2000
+#define SYS_NAME_ID_alpha_linux_22      2001
+#define SYS_NAME_ID_alpha_linux_24      2002
+
+#define SYS_NAME_ID_i386_fbsd_42        2100
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 

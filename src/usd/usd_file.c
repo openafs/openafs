@@ -17,6 +17,9 @@
 #include <sys/tape.h>
 #include <sys/statfs.h>
 #else
+#ifdef AFS_DARWIN_ENV
+#include <sys/ioccom.h>
+#endif
 #include <sys/mtio.h>
 #endif /* AFS_AIX_ENV */
 #ifdef AFS_DUX40_ENV
@@ -333,8 +336,10 @@ static int usd_FileOpen(
 
     oflags = (flags & USD_OPEN_RDWR) ? O_RDWR : O_RDONLY;
 
+#ifdef O_SYNC /* AFS_DARWIN_ENV XXX */
     if (flags & USD_OPEN_SYNC)
 	oflags |= O_SYNC;
+#endif
 
     if (flags & USD_OPEN_CREATE)
 	oflags |= O_CREAT;

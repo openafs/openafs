@@ -6,14 +6,12 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 SHELL=/bin/sh
-INSTALL = ${SRCDIR}bin/install
 KERNELDIR = ../libafs/
 
 COMPONENT=afs
 include ../config/Makefile.${SYS_NAME}
 
 LIBDIR = ${DESTDIR}lib/
-INSTALL=${SRCDIR}bin/install
   LIBSA = ${LIBDIR}afs/libprot.a ${LIBDIR}libubik.a
 AFSLIBS = ${DESTDIR}lib/librxkad.a 	    \
 	  ${LIBDIR}afs/libsys.a ${DESTDIR}lib/libdes.a 	    \
@@ -54,6 +52,8 @@ pam_afs.so.1: $(SHOBJS) afs_setcred.o
 			$(SHOBJS) $(LIBS) ;; \
 	*linux*) \
 		$(CC) $(LDFLAGS) -o $@ afs_setcred.o $(SHOBJS) $(LIBS) ;;\
+	*fbsd*) \
+		$(CC) $(LDFLAGS) -o $@ afs_setcred.o $(SHOBJS) $(LIBS) ;;\
 	* ) \
 		echo No link line for system $(SYS_NAME). ;; \
 	esac
@@ -69,6 +69,8 @@ pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o
 			afs_setcred_krb.o $(SHOBJS) $(LDFLAGS) $(KLIBS) ;; \
 	*linux*) \
 		$(CC) $(LDFLAGS) -o $@ afs_setcred_krb.o $(SHOBJS) $(KLIBS) ;;\
+	*fbsd*) \
+		$(CC) $(LDFLAGS) -o $@ afs_setcred_krb.o $(SHOBJS) $(KLIBS) ;;\
 	* ) \
 		echo No link line for system $(SYS_NAME). ;; \
 	esac
@@ -82,6 +84,8 @@ test_pam: test_pam.o
 		$(CC) $(CFLAGS) -o $@ test_pam.o ${PAMLIBS};; \
 	*linux*) \
 		$(CC) $(CFLAGS) -rdynamic -o $@ test_pam.o -lpam -ldl;; \
+	*fbsd*) \
+		$(CC) $(CFLAGS) -rdynamic -o $@ test_pam.o -lpam ;; \
 	*) \
 		echo No link line for system $(SYS_NAME). ;; \
 	esac

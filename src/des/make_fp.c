@@ -11,10 +11,13 @@
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include "des_internal.h"
+
+#define WANT_FP_TABLE
 #include "tables.h"
 
 extern unsigned int swap_bit_pos_0_to_ansi PROTOTYPE((unsigned int));
 extern afs_int32 swap_long_bytes();
+extern afs_int32 swap_long_bytes_bit_number();
 extern void test_set PROTOTYPE((FILE *, char const *, int,
 				char const *, int));
 

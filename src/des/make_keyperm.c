@@ -186,9 +186,10 @@ void gen(stream)
         }
 
         /* now output the resulting key permutation */
-        fprintf(stream, "    /* ks permutation iteration = %2d */",
+        fprintf(stream, "\n    /* ks permutation iteration = %2d */",
                 iter);
         for (i = 1; i <= 6; i++) {
+			if ( i == 1 ) fprintf(stream, "\n    {");
             fprintf(stream, "\n    ");
             for (j = 1; j <= 8; j++) {
                 /*
@@ -197,11 +198,16 @@ void gen(stream)
                  */
                 fprintf(stream, "%d", ks_perm[iter][(i-1)*8+j]-1);
                 /* omit last comma */
-                if ((j != 8) || (i != 6) || (iter != 16)) {
+                if ((j != 8) || (i != 6)) {
                     fprintf(stream,", ");
                 }
             }
         }
+		if ( iter != 16) {
+			fprintf(stream, "\n    }, ");
+		} else {
+			fprintf(stream, "\n    }");
+		}
     }
     fprintf(stream,"\n};\n");
 }

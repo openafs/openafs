@@ -212,13 +212,14 @@ BOOL UpdateRegistry(DRIVEMAP *pDrive, BOOL bRemove)
    TCHAR szValueName[128];
    HKEY hKey;
    LONG result;
+   DWORD dwDispo;
 
    if (!pDrive)
       return FALSE;
 
    _stprintf(szKeyName, TEXT("%s\\GlobalAutoMapper"), AFSConfigKeyName);
 
-   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKeyName, 0, KEY_SET_VALUE, &hKey) != ERROR_SUCCESS)
+   if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, szKeyName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, &dwDispo) != ERROR_SUCCESS)
       return FALSE;
 
    _stprintf(szValueName, TEXT("%c:"), pDrive->chDrive);

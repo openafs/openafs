@@ -28,13 +28,17 @@
 #ifdef	AFS_SUN5_ENV
 #define BSD_COMP
 #endif
+#if defined(AFS_FBSD_ENV)
+#define USE_OLD_TTY
+#endif
 #include <sys/ioctl.h>
 #include <signal.h>
 #include <setjmp.h>
 #endif
 
-#if defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #include <signal.h>
+#include <unistd.h>
 #endif
 
 #ifdef	AFS_HPUX_ENV
@@ -48,6 +52,9 @@ static int intrupt;
 #include <termios.h>
 #endif
 
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#include <termios.h>
+#endif
 #ifdef AFS_NT40_ENV
 #include <windows.h>
 #endif
@@ -70,8 +77,10 @@ typedef int sigtype;
 #endif
 static sigtype sig_restore();
 static push_signals(), pop_signals();
-int des_read_pw_string();
 #endif
+
+int des_read_pw_string(char *, int, char *, int);
+int des_string_to_key(char *, des_cblock *);
 
 /*** Routines ****************************************************** */
 int
@@ -94,12 +103,14 @@ des_read_password(k,prompt,verify)
     if (ok == 0)
 	des_string_to_key(key_string, k);
 
+#ifdef BSDUNIX
 lose:
+#endif
     bzero(key_string, sizeof (key_string));
     return ok;
 }
 
-#if	defined	(AFS_AIX_ENV) || defined (AFS_HPUX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_LINUX20_ENV)
+#if	defined	(AFS_AIX_ENV) || defined (AFS_HPUX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 static void catch(int);
 #endif
 
@@ -121,10 +132,13 @@ des_read_pw_string(s,maxa,prompt,verify)
 {
     int ok = 0, cnt1=0;
     char *ptr;
-#ifdef	AFS_HPUX_ENV
+#if defined(AFS_HPUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     register int fno;
     struct sigaction newsig, oldsig;
     struct termios save_ttyb, ttyb;
+#endif
+#if defined(AFS_DARWIN_ENV)
+    FILE *fi;
 #endif
 #if	defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
     struct termios ttyb;
@@ -156,7 +170,7 @@ des_read_pw_string(s,maxa,prompt,verify)
 	return -1;
     }
 
-#ifdef	AFS_HPUX_ENV
+#if defined(AFS_HPUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     if ((fi = fopen("/dev/tty", "r")) == NULL)
         return -1;
     setbuf(fi, (char *)NULL);			/* We don't want any buffering for our i/o. */
@@ -288,7 +302,9 @@ des_read_pw_string(s,maxa,prompt,verify)
 	ok = 1;
     }
 
+#ifdef BSDUNIX
 lose:
+#endif
     if (!ok)
 	bzero(s, maxa);
     printf("\n");
@@ -382,7 +398,7 @@ sig_restore()
 #endif
 
 
-#if	defined	(AFS_AIX_ENV) || defined (AFS_HPUX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_LINUX20_ENV)
+#if	defined	(AFS_AIX_ENV) || defined (AFS_HPUX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 static void
 catch(int junk)
 {

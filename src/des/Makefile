@@ -26,7 +26,6 @@ SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 UKERNELDIR=../libuafs/
-INSTALL=${SRCDIR}bin/install
 SRC	=.
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
@@ -208,9 +207,6 @@ ${DES_LIB}: ${TARGOBJS} ${COMMONOBJS} AFS_component_version_number.o
 	rm -f ${DES_LIB}
 	ar r ${DES_LIB} ${TARGOBJS} ${COMMONOBJS} AFS_component_version_number.o
 	$(RANLIB) ${DES_LIB}
-
-# export stuff
-des.o cbc_encrypt.o pcbc_encrypt.o new_rnd_key.o cksum.o testit.o verify.o: ../permit_xprt.h
 
 #	host system stuff
 make_ip: make_ip.o misc.o

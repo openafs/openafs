@@ -223,7 +223,7 @@ register struct cmd_syndesc *as; {
     }
 }
 
-static AproposProc(as, arock)
+static int AproposProc(as, arock)
 char *arock;
 register struct cmd_syndesc *as; {
     register struct cmd_syndesc *ts;
@@ -249,7 +249,7 @@ register struct cmd_syndesc *as; {
     return 0;
 }
 
-static HelpProc(as, arock)
+static int HelpProc(as, arock)
 char *arock;
 register struct cmd_syndesc *as; {
     register struct cmd_syndesc *ts;
@@ -294,7 +294,7 @@ register struct cmd_syndesc *as; {
     return(code);
 }
 
-cmd_SetBeforeProc(aproc, arock)
+int cmd_SetBeforeProc(aproc, arock)
 int (*aproc)();
 char *arock; {
     beforeProc = aproc;
@@ -302,7 +302,7 @@ char *arock; {
     return 0;
 }
 
-cmd_SetAfterProc(aproc, arock)
+int cmd_SetAfterProc(aproc, arock)
 int (*aproc)();
 char *arock; {
     afterProc = aproc;
@@ -311,7 +311,7 @@ char *arock; {
 }
 
 /* thread on list in alphabetical order */
-static SortSyntax(as)
+static int SortSyntax(as)
 struct cmd_syndesc *as; {
     register struct cmd_syndesc **ld, *ud;
 
@@ -440,7 +440,7 @@ afs_int32 aflags;{
 }
 
 /* add a text item to the end of the parameter list */
-static AddItem(aparm, aval)
+static int AddItem(aparm, aval)
 register struct cmd_parmdesc *aparm;
 register char *aval; {
     register struct cmd_item *ti, *ni;
@@ -450,7 +450,7 @@ register char *aval; {
     assert(ti->data);
     strcpy(ti->data, aval);
     /* now put ti at the *end* of the list */
-    if (ni=aparm->items) {
+    if ((ni=aparm->items)) {
 	for(;ni;ni=ni->next) if	(ni->next == 0)	break;	/* skip to last one */
 	ni->next = ti;
     }
@@ -459,7 +459,7 @@ register char *aval; {
 }
 
 /* skip to next non-flag item, if any */
-static AdvanceType(as, aval)
+static int AdvanceType(as, aval)
 register afs_int32 aval;
 register struct cmd_syndesc *as; {
     register afs_int32 next;
@@ -504,7 +504,7 @@ register struct cmd_syndesc *as; {
 }
 
 /* move the expands flag to the last one in the list */
-static SetupExpandsFlag(as)
+static int SetupExpandsFlag(as)
 register struct cmd_syndesc *as; {
     register struct cmd_parmdesc *tp;
     register int last, i;
@@ -563,7 +563,7 @@ char **aargv;
 
 } /*InsertInitOpcode*/
 
-static NoParmsOK(as)
+static int NoParmsOK(as)
 register struct cmd_syndesc *as; {
     register int i;
     register struct cmd_parmdesc *td;
@@ -580,7 +580,7 @@ register struct cmd_syndesc *as; {
 }
 
 /* Call the appropriate function, or return syntax error code.  Note: if no opcode is specified, an initialization routine exists, and it has NOT been called before, we invoke the special initialization opcode*/
-cmd_Dispatch(argc, argv)
+int cmd_Dispatch(argc, argv)
 int argc;
 char **argv;
  {
@@ -831,7 +831,7 @@ char **argv;
 }
 
 /* free token list returned by parseLine */
-static FreeTokens(alist)
+static int FreeTokens(alist)
     register struct cmd_token *alist; {
     register struct cmd_token *nlist;
     for(; alist; alist = nlist) {
@@ -843,7 +843,7 @@ static FreeTokens(alist)
 }
 
 /* free an argv list returned by parseline */
-cmd_FreeArgv(argv)
+int cmd_FreeArgv(argv)
 register char **argv; {
     register char *tp;
     for(tp = *argv; tp; argv++, tp = *argv)
@@ -855,7 +855,7 @@ register char **argv; {
     data is still malloc'd, and will be freed when the caller calls cmd_FreeArgv
     later on */
 #define INITSTR ""
-static CopyBackArgs(alist, argv, an, amaxn)
+static int CopyBackArgs(alist, argv, an, amaxn)
 register struct cmd_token *alist;
 register char **argv;
 afs_int32 amaxn;
@@ -887,25 +887,25 @@ afs_int32 *an; {
     return 0;
 }
 
-static quote(x)
+static int quote(x)
 register int x; {
     if (x == '"' || x == 39 /* single quote */) return 1;
     else return 0;
 }
 
-static space(x)
+static int space(x)
 register int x; {
     if (x == 0 || x == ' ' || x == '\t' || x== '\n') return 1;
     else return 0;
 }
 
-cmd_ParseLine(aline, argv, an, amaxn)
+int cmd_ParseLine(aline, argv, an, amaxn)
 char **argv;
 afs_int32 *an;
 afs_int32 amaxn;
 char *aline; {
     char tbuffer[256];
-    register char *tptr;
+    register char *tptr = 0;
     int inToken, inQuote;
     struct cmd_token *first, *last;
     register struct cmd_token *ttok;
@@ -920,7 +920,10 @@ char *aline; {
 	if (tc == 0 || (!inQuote && space(tc))) {    /* terminating null gets us in here, too */
 	    if (inToken) {
 		inToken	= 0;	/* end of this token */
-		*tptr++ = 0;
+		if ( !tptr )
+		    return -1; /* should never get here */
+		else
+		    *tptr++ = 0;
 		ttok = (struct cmd_token *) malloc(sizeof(struct cmd_token));
 		assert(ttok);
 		ttok->next = (struct cmd_token *) 0;

@@ -52,7 +52,7 @@ typedef unsigned char bool;
 
 static globalInitDone = 0;
 
-#if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(AFS_HPUX_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
 extern insque();
 #endif
 
@@ -256,7 +256,7 @@ struct TM_Elem *TM_GetEarliest(tlist)
     return (e == tlist ? NULL : e);
 }
 
-#if defined(AFS_HPUX_ENV) || defined(AFS_NT40_ENV)
+#if defined(AFS_HPUX_ENV) || defined(AFS_NT40_ENV) || defined(AFS_FBSD_ENV)
 /* This used to be in hputils.c, but it's only use is in the LWP package. */
 /*
  * Emulate the vax instructions for queue insertion and deletion, somewhat.
@@ -285,4 +285,4 @@ void remque(struct TM_Elem *elementp)
     elementp->Prev = elementp->Next = (struct TM_Elem*)0;
 }
 
-#endif /* AFS_HPUX_ENV || AFS_NT40_ENV */
+#endif /* AFS_HPUX_ENV || AFS_NT40_ENV || AFS_FBSD_ENV */

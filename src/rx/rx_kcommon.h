@@ -14,6 +14,12 @@
 #ifndef _RX_KCOMMON_H_
 #define _RX_KCOMMON_H_
 
+#ifdef AFS_DARWIN_ENV
+#ifndef _MACH_ETAP_H_
+#define _MACH_ETAP_H_
+typedef unsigned short                  etap_event_t;
+#endif
+#endif  
 #include "../h/types.h"
 #include "../h/param.h"
 #ifndef AFS_LINUX22_ENV
@@ -29,11 +35,19 @@
 #ifndef AFS_LINUX22_ENV
 #include "../h/socketvar.h"
 #include "../h/protosw.h"
-#ifndef AFS_SUN5_ENV
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_FBSD_ENV)
 #include "../h/domain.h"
 #include "../h/dir.h"
 #include "../h/buf.h"
 #include "../h/mbuf.h"
+#else
+#if defined(AFS_FBSD_ENV)
+#include "../h/dirent.h"
+#include "../h/socket.h"
+#include "../h/domain.h"
+#include "../h/buf.h"
+#include "../h/mbuf.h"
+#endif /* AFS_FBSD_ENV */
 #endif
 #endif /* AFS_LINUX22_ENV */
 #ifdef AFS_SGI62_ENV
@@ -99,5 +113,9 @@ extern struct osi_socket *rxk_NewSocket(short aport);
 extern struct ifnet *rxi_FindIfnet();
 
 extern int rxk_initDone;
+
+#if defined(AFS_FBSD_ENV)
+extern struct domain inetdomain;
+#endif /* AFS_FBSD_ENV */
 
 #endif /* _RX_KCOMMON_H_ */

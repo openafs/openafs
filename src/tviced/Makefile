@@ -10,7 +10,6 @@ COMPONENT=tviced
 include ../config/Makefile.${SYS_NAME}
 
 CC=${MT_CC}
-INSTALL=${SRCDIR}bin/install
 INCLUDES=-I. -I.. -I${SRCDIR}include -I${SRCDIR}include/afs
 CFLAGS=${DBG} ${OPTMZ} -DNINTERFACE ${INCLUDES} ${MT_CFLAGS} -DRXDEBUG
 LDFLAGS=${DBG} ${XLDFLAGS}
@@ -183,14 +182,7 @@ afsint.xdr.o: ${FSINT}/afsint.xdr.c
 	${CC} -c ${CFLAGS} ${FSINT}/afsint.xdr.c
 
 fileserver: callback_clean1 viced.o ${objects} ${LIBS}
-	case ${SYS_NAME} in \
-	*linux*) \
-	    ${CC} ${LDFLAGS} -o fileserver ${objects} ${LIBS} \
-	    ${MTLIBS} ${XLIBS} ;; \
-	*) \
-	    ${CC} ${LDFLAGS} -o fileserver ${objects} ${LIBS} \
-	    ${MTLIBS} ${XLIBS} ;; \
-	esac;
+	${CC} ${LDFLAGS} -o fileserver ${objects} ${LIBS} ${MTLIBS} ${XLIBS}
 
 ${DESTDIR}root.server/usr/afs/bin/fileserver : fileserver
 	${INSTALL} -ns fileserver ${DESTDIR}root.server/usr/afs/bin/fileserver

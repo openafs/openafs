@@ -930,7 +930,6 @@ PRIVATE void WriteCltHeader(char *serverName, int srv_no, FILE *itl_h)
 	    "#include <rx/rx_null.h>\n"
 	    "#include <rx/rxkad.h>\n"
 	    "#include <afs/cmd.h>\n"
-	    "#include \"../../../permit_xprt.h\"\n"
 	    "#include \"%s%d.h\"\n"
 	    ,
 	    platform[4], serverName, srv_no);
@@ -1264,7 +1263,6 @@ PRIVATE void WriteServHeader(FILE *srv_h, char *serverName, int srv_no)
 	"#include <rx/rx_null.h>\n"
 	"#include <rx/rxkad.h>\n"
 	"#include <afs/cmd.h>\n"
-	"#include \"../../../permit_xprt.h\"\n"
 	"#include \"%s.h\"\n\n"
 	"struct ktc_encryptionKey serviceKey =\n"
 	"\t{0x45, 0xe3, 0x3d, 0x16, 0x29, 0x64, 0x8a, 0x8f};\n"

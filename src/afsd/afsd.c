@@ -93,7 +93,7 @@
 #endif
 #endif
 
-#if defined(AFS_OSF_ENV) || defined(AFS_DEC_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DEC_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #include <sys/mount.h>
 #else
 #include <sys/vfs.h>
@@ -132,7 +132,7 @@ void set_staticaddrs(void);
 #if AFS_HAVE_STATVFS
 #include <sys/statvfs.h>
 #else
-#if !defined(AFS_OSF_ENV)
+#if !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 #include <sys/statfs.h>
 #endif
 #endif
@@ -601,6 +601,12 @@ int SweepAFSCache(vFilesFound)
 	}
 	else  if ((strcmp(currp->d_name,          ".") == 0) ||
 	          (strcmp(currp->d_name,         "..") == 0) ||
+#ifdef AFS_DECOSF_ENV
+		  /* these are magic AdvFS files */
+		  (strcmp(currp->d_name,         ".tags") == 0) ||
+		  (strcmp(currp->d_name,         "quota.user") == 0) ||
+		  (strcmp(currp->d_name,         "quota.group") == 0) ||
+#endif
 		  (strcmp(currp->d_name, "lost+found") == 0)) {
 	    /*
 	     * Don't do anything - this file is legit, and is to be left alone.
@@ -1337,6 +1343,9 @@ mainproc(as, arock)
 #ifdef AFS_DEC_ENV
     if ((mount("AFS",cacheMountDir,mountFlags,GT_AFS,(caddr_t) 0)) < 0) {
 #else
+#ifdef AFS_FBSD_ENV
+    if ((mount("AFS",cacheMountDir,mountFlags,(caddr_t) 0)) < 0) {
+#else
 #ifdef	AFS_AUX_ENV
     if ((fsmount(MOUNT_AFS,cacheMountDir,mountFlags,(caddr_t) 0)) < 0)	{
 #else
@@ -1374,7 +1383,6 @@ mainproc(as, arock)
 #else
 #if defined(AFS_SGI_ENV)
     mountFlags = MS_FSS;
-
     if ((mount(MOUNT_AFS,cacheMountDir,mountFlags,(caddr_t) MOUNT_AFS)) < 0) {
 #else
 #ifdef AFS_LINUX20_ENV
@@ -1389,6 +1397,7 @@ mainproc(as, arock)
 #endif /* AFS_HPUX_ENV */
 #endif /* AFS_AIX_ENV */
 #endif /* AFS_AUX_ENV */
+#endif /* AFS_FBSD_ENV */
 #endif /* AFS_DEC_ENV */
          printf("%s: Can't mount AFS on %s(%d)\n",
 		   rn, cacheMountDir, errno);

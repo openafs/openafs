@@ -53,6 +53,8 @@ char copyright[] =
 #if  !defined(AFS_HPUX_ENV) && !defined(AFS_AIX_ENV)
 #if defined(AFS_SUN_ENV) || (defined(AFS_ATHENA_STDENV) && !defined(AFS_DEC_ENV)) || defined(AFS_OSF_ENV)
 #include <ufs/quota.h>
+#elif defined(AFS_FBSD_ENV)
+#include <ufs/ufs/quota.h>
 #else
 #include <sys/quota.h>
 #endif
@@ -71,6 +73,10 @@ char copyright[] =
 #include <sys/ttold.h>
 #include <sys/filio.h>
 #endif
+#ifdef AFS_FBSD_ENV
+#define USE_OLD_TTY 1
+#include <sys/ttydefaults.h>
+#endif
 #include <sys/ioctl.h>
 
 #include <utmp.h>
@@ -79,7 +85,7 @@ char copyright[] =
 #include <dirent.h>
 #endif
 #include <signal.h>
-#if !defined(AIX) && !defined(AFS_HPUX_ENV) && !defined(AFS_AIX32_ENV)
+#if !defined(AIX) && !defined(AFS_HPUX_ENV) && !defined(AFS_AIX32_ENV) && !defined(AFS_FBSD_ENV)
 #include <lastlog.h>
 #endif
 #include <errno.h>

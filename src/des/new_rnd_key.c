@@ -19,19 +19,21 @@
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
 #endif
+#include <string.h>
 #include <des.h>
 #include "des_internal.h"
 #include "stats.h"
 
 extern void des_fixup_key_parity();
 extern int des_is_weak_key();
+extern int des_ecb_encrypt();
+extern int des_key_sched();
 
 void des_set_random_generator_seed();
 static afs_int32 des_set_sequence_number(des_cblock new_sequence_number);
 static afs_int32 des_generate_random_block(des_cblock block);
 
 #define XPRT_NEW_RND_KEY
-#include "../permit_xprt.h"
 
 static int is_inited = 0;
 #ifdef AFS_PTHREAD_ENV
@@ -93,7 +95,7 @@ des_random_key(key)
  *
  * Note: this routine calls des_set_random_generator_seed.
  */
-#if !defined(BSDUNIX) && !defined(AFS_SGI_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV)
+#if !defined(BSDUNIX) && !defined(AFS_SGI_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
   you lose...   (aka, you get to implement an analog of this for your
 		 system...)
 #else
@@ -104,6 +106,7 @@ des_random_key(key)
 #include <afs/afsutil.h>
 #else
 #include <sys/time.h>
+#include <unistd.h>
 #endif
 
 void des_init_random_number_generator(key)

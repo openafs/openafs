@@ -20,7 +20,6 @@ SHELL=/bin/sh
 COMPONENT=rsh
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL = ${SRCDIR}bin/install
 LIBDIR = ${DESTDIR}lib/
 INCLUDES= -I${SRCDIR}include
 CFLAGS=	${DBUG} ${INCLUDES} ${XCFLAGS}
