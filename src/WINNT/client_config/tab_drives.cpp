@@ -155,6 +155,9 @@ void DrivesTab_OnCheck (HWND hDlg)
             Message (MB_OK | MB_ICONHAND, IDS_ERROR_UNMAP, IDS_ERROR_UNMAP_DESC, TEXT("%08lX"), dwStatus);
          DrivesTab_FillList (hDlg);
          }
+      WriteActiveMap(g.Configuration.NetDrives.aDriveMap[ iDriveSel ].chDrive, fChecked && 
+                     g.Configuration.NetDrives.aDriveMap[ iDriveSel ].fPersistent );
+
       }
 }
 
@@ -199,6 +202,7 @@ void DrivesTab_OnRemove (HWND hDlg)
 
          DrivesTab_FillList (hDlg);
          }
+      WriteActiveMap(g.Configuration.NetDrives.aDriveMap[ iDriveSel ].chDrive, FALSE );
       }
 }
 
@@ -350,6 +354,13 @@ void DrivesTab_EditMapping (HWND hDlg, int iDrive)
          memcpy (&g.Configuration.NetDrives.aDriveMap[ DriveMap.chDrive-chDRIVE_A ], &DriveMap, sizeof(DRIVEMAP));
          lstrcpy (g.Configuration.NetDrives.aDriveMap[ DriveMap.chDrive-chDRIVE_A ].szMapping, szAfsPathNew);
          WriteDriveMappings (&g.Configuration.NetDrives);
+
+         if (iDrive == -1) {
+             WriteActiveMap(DriveMap.chDrive, DriveMap.fPersistent);
+         } else if ( (chDRIVE_A + iDrive) != DriveMap.chDrive ) {
+             WriteActiveMap(chDRIVE_A+iDrive, FALSE);
+             WriteActiveMap(DriveMap.chDrive, DriveMap.fPersistent);
+         }
 
          DrivesTab_FillList (hDlg);
          }
