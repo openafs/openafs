@@ -469,8 +469,8 @@ extern int afs_osi_Stat(register struct osi_file *afile, register struct osi_sta
 extern int osi_UFSClose(register struct osi_file *afile);
 extern int osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize);
 extern void osi_DisableAtimes(struct vnode *avp);
-extern int afs_osi_Read(register struct osi_file *afile, int offset, char *aptr, afs_int32 asize);
-extern int afs_osi_Write(register struct osi_file *afile, afs_int32 offset, char *aptr, afs_int32 asize);
+extern int afs_osi_Read(register struct osi_file *afile, int offset, void *aptr, afs_int32 asize);
+extern int afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr, afs_int32 asize);
 extern int afs_osi_MapStrategy(int (*aproc)(), register struct buf *bp);
 extern void shutdown_osifile(void);
 

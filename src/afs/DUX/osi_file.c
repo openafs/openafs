@@ -174,7 +174,7 @@ void osi_DisableAtimes(struct vnode *avp)
 
 
 /* Generic read interface */
-int afs_osi_Read(register struct osi_file *afile, int offset, char *aptr, afs_int32 asize)
+int afs_osi_Read(register struct osi_file *afile, int offset, void *aptr, afs_int32 asize)
 {
     struct AFS_UCRED *oldCred;
     unsigned int resid;
@@ -212,7 +212,7 @@ int afs_osi_Read(register struct osi_file *afile, int offset, char *aptr, afs_in
 }
 
 /* Generic write interface */
-int afs_osi_Write(register struct osi_file *afile, afs_int32 offset, char *aptr, afs_int32 asize)
+int afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr, afs_int32 asize)
 {
     struct AFS_UCRED *oldCred;
     unsigned int resid;
