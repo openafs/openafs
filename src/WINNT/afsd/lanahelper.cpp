@@ -518,14 +518,11 @@ extern "C" long lana_GetUncServerNameEx(char *buffer, lana_number_t * pLana, int
             regLana = nLana;
 	}
 
-	if(regLana >=0 && lana_IsLoopback((lana_number_t) regLana)) {
-		if(regNbName[0]) {
-			strncpy(nbName,regNbName,15);
-			nbName[16] = 0;
-			strupr(nbName);
-		}
-		else
-			strcpy(nbName,"AFS");
+	if(rebNbName[0] &&
+       (regLana >=0 && lana_IsLoopback((lana_number_t) regLana))) {
+        strncpy(nbName,regNbName,15);
+        nbName[16] = 0;
+        strupr(nbName);
 	} else {
 		char * dot;
 
