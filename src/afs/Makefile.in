@@ -50,7 +50,7 @@ kinstall: ${KERNELDIR}/afs AFS_component_version_number.c
 			gencat -m afszcm.cat afs_trace.msf ;; \
 		sun*_4* ) \
 			/usr/etc/gencat afszcm.cat afs_trace.msf ;; \
-		*_linux* ) \
+		*_linux* | *_umlinux* ) \
 			gencat --new afszcm.cat afs_trace.msf ;; \
 		ppc_darwin* | i386_fbsd*) \
 			echo No gencat for ${SYS_NAME} ;; \

@@ -7,6 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#define SYS_NAME_ID_i386_umlinux2	2700
+#define SYS_NAME_ID_i386_umlinux22	2701
+#define SYS_NAME_ID_i386_umlinux24	2702
+
 /*
  * File: afs_sysnames.h
  *

@@ -486,6 +486,11 @@ else
 			fi
 			_AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/XX\$/$AFS_SYSKVERS/`
 			AFS_SYSNAME="$_AFS_SYSNAME"
+			AFS_ISUML=`cat /proc/cpuinfo | awk '/^model name/ {print $[]4}'`
+			if test "x${AFS_ISUML}" = "xUML"; then
+			 _AFS_SYSNAME=`echo $AFS_SYSNAME|sed s/linux/umlinux/`
+			fi
+			AFS_SYSNAME="$_AFS_SYSNAME"
 			;;
 	esac
         AC_MSG_RESULT($AFS_SYSNAME)

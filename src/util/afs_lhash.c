@@ -179,7 +179,7 @@ afs_lhash_expand(
 	size_t old_address;	/* index of bucket to split */
 	size_t new_address;	/* index of new bucket */
 
-	struct bucket *current;	/* for scanning down old chain */
+	struct bucket *curr;	/* for scanning down old chain */
 	struct bucket *previous;
 
 	struct bucket *last_of_new;	/* last element in new chain */
@@ -216,36 +216,36 @@ afs_lhash_expand(
 
 	/* relocate records to the new bucket */
 
-	current = lh->table[old_address];
+	curr = lh->table[old_address];
 	previous = 0;
 	last_of_new = 0;
 	lh->table[new_address] = 0;
 
-	while (current) {
+	while (curr) {
 		size_t addr;
-		addr = afs_lhash_address(lh, current->key);
+		addr = afs_lhash_address(lh, curr->key);
 		if (addr == new_address) {
 			/* attach it to the end of the new chain */
 			if (last_of_new) {
-				last_of_new->next = current;
+				last_of_new->next = curr;
 			} else {
-				lh->table[new_address] = current;
+				lh->table[new_address] = curr;
 			}
 			if (previous) {
-				previous->next = current->next;
+				previous->next = curr->next;
 			} else {
-				lh->table[old_address] = current->next;
+				lh->table[old_address] = curr->next;
 			}
-			last_of_new = current;
-			current = current->next;
+			last_of_new = curr;
+			curr = curr->next;
 			last_of_new->next = 0;
 		} else {
 #ifdef CHECK_INVARIANTS
 			assert(addr == old_address);
 #endif	/* CHECK_INVARIANTS */
 			/* leave it on the old chain */
-			previous = current;
-			current = current->next;
+			previous = curr;
+			curr = curr->next;
 		}
 	}
 }
@@ -345,12 +345,12 @@ afs_lhash_iter(
 #endif	/* CHECK_INVARIANTS */
 
 	for (i = 0; i < lh->ltable; i++) {
-		struct bucket *current;
+		struct bucket *curr;
 
-		for (current = lh->table[i];
-		     current;
-		     current = current->next) {
-			f(i, current->key, current->data);
+		for (curr = lh->table[i];
+		     curr;
+		     curr = curr->next) {
+			f(i, curr->key, curr->data);
 		}
 	}
 }
@@ -364,16 +364,16 @@ afs_lhash_search(
 {
 	size_t k;
 	struct bucket *previous;
-	struct bucket *current;
+	struct bucket *curr;
 
 	lh->search_calls++;
 
 	k = afs_lhash_address(lh, key);
-	for (previous = 0, current = lh->table[k];
-	     current;
-	     previous = current, current = current->next) {
+	for (previous = 0, curr = lh->table[k];
+	     curr;
+	     previous = curr, curr = curr->next) {
 		lh->search_tests++;
-		if (lh->equal(data, current->data)) {
+		if (lh->equal(data, curr->data)) {
 
 			/*
 			 * Since we found what we were looking for, move
@@ -389,12 +389,12 @@ afs_lhash_search(
 			 */
 
 			if (previous) {
-				previous->next = current->next;
-				current->next = lh->table[k];
-				lh->table[k] = current;
+				previous->next = curr->next;
+				curr->next = lh->table[k];
+				lh->table[k] = curr;
 			}
 
-			return current->data;
+			return curr->data;
 		}
 	}
 
@@ -409,14 +409,14 @@ afs_lhash_rosearch(
 )
 {
 	size_t k;
-	struct bucket *current;
+	struct bucket *curr;
 
 	k = afs_lhash_address(lh, key);
-	for (current = lh->table[k];
-	     current;
-	     current = current->next) {
-		if (lh->equal(data, current->data)) {
-			return current->data;
+	for (curr = lh->table[k];
+	     curr;
+	     curr = curr->next) {
+		if (lh->equal(data, curr->data)) {
+			return curr->data;
 		}
 	}
 
