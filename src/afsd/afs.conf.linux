@@ -15,7 +15,7 @@ AFS_SERVER=off
 
 # ENABLE_AFSDB and ENABLE_DYNROOT determine whether AFSDB support and
 # Dynroot support (dynamically generated /afs), respectively, should be
-* enabled in the AFS client.
+# enabled in the AFS client.
 ENABLE_AFSDB=on
 ENABLE_DYNROOT=off
 
