@@ -420,7 +420,15 @@ afs_UFSReadFast(avc, auio, acred, albn, abpp, noLock)
 	    code = osi_file_uio_rdwr(tfile, auio, UIO_READ);
 	    AFS_GLOCK();
 #else
+#if defined(AFS_DARWIN_ENV)
+            AFS_GUNLOCK();
+            VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, current_proc());
+            code = VOP_READ(tfile->vnode, auio, 0, &afs_osi_cred);
+            VOP_UNLOCK(tfile->vnode, 0, current_proc());
+            AFS_GLOCK();
+#else
 	    code = VOP_RDWR(tfile->vnode, auio, UIO_READ, 0, &afs_osi_cred);
+#endif
 #endif
 #endif
 #endif
@@ -750,7 +758,15 @@ tagain:
 	    code = osi_file_uio_rdwr(tfile, &tuio, UIO_READ);
 	    AFS_GLOCK();
 #else
+#if defined(AFS_DARWIN_ENV)
+            AFS_GUNLOCK();
+            VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, current_proc());
+            code = VOP_READ(tfile->vnode, &tuio, 0, &afs_osi_cred);
+            VOP_UNLOCK(tfile->vnode, 0, current_proc());
+            AFS_GLOCK();
+#else
 	    code = VOP_RDWR(tfile->vnode, &tuio, UIO_READ, 0, &afs_osi_cred);
+#endif
 #endif
 #endif
 #endif

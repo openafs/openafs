@@ -22,8 +22,8 @@ DBG=-g3
 CP=cp
 CSTATIC=-non_shared
 RANLIB=/bin/true
-WASHTOOL=${SRCDIR}bin/washtool
-INSTALL=${SRCDIR}bin/install
+WASHTOOL=${DESTDIR}bin/washtool
+INSTALL=${DESTDIR}bin/install
 
 #this is for the vol package
 FS_CONV_OSF40D= $(DESTDIR)root.server/usr/afs/bin/fs_conv_dux40D

@@ -90,6 +90,8 @@ static char *cmdname;
 static char CPP[] = "/usr/ccs/lib/cpp";
 #elif defined(AFS_NT40_ENV)
 static char CPP[MAXCMDLINE];
+#elif defined(AFS_DARWIN_ENV)
+static char CPP[] = "cc -E";
 #else
 static char CPP[] = "/lib/cpp";
 #endif

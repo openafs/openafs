@@ -51,6 +51,6 @@
 #include "../afs/afs_axscache.h"
 #include "../afs/icl.h"
 #include "../afs/afs_prototypes.h"
-#ifdef AFS_LINUX20_ENV
+#if defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
 #include "../afs/osi_machdep.h"
 #endif

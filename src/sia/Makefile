@@ -27,8 +27,6 @@ KLIBS = ${DESTDIR}/lib/afs/libkauth.krb.a ${LIBS1} ${DESTDIR}/lib/afs/libauth.kr
 
 all: test-reauth ${DESTDIR}/lib/afs/libafssiad.so ${DESTDIR}/lib/afs/libafssiad.krb.so
 
-INSTALL=${SRCDIR}bin/install
-
 CFLAGS = $(DEBUG) -I${SRCDIR}include ${XCFLAGS}
 
 ${DESTDIR}/lib/afs/libafssiad.so: libafssiad.so

@@ -26,6 +26,9 @@ static pthread_once_t dirInit_once = PTHREAD_ONCE_INIT;
 #include <windows.h>
 #include <WINNT\afssw.h>
 #endif
+#ifdef AFS_DARWIN_ENV
+#include <unistd.h>
+#endif
 
 /* local vars */
 /* static storage for path strings */
@@ -153,6 +156,11 @@ static void initDirPathArray(void)
     strcpy(afsSrvDirPath, AFSDIR_CANONICAL_SERVER_AFS_DIRPATH);
 
     /* setup the root client directory path */
+#ifdef AFS_DARWIN_ENV
+    if (access(AFSDIR_ALTERNATE_CLIENT_VICE_DIRPATH, F_OK) == 0)
+        strcpy(afsClntDirPath, AFSDIR_ALTERNATE_CLIENT_VICE_DIRPATH);
+    else 
+#endif
     strcpy(afsClntDirPath, AFSDIR_CANONICAL_CLIENT_VICE_DIRPATH);
 
     /* setup top level dirpath; valid for both server and client */

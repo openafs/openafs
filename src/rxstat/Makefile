@@ -11,7 +11,6 @@ include ../config/Makefile.version
 
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
-INSTALL=${SRCDIR}bin/install
 RXGEN=${SRCDIR}bin/rxgen
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 

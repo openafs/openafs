@@ -9,7 +9,6 @@ SHELL = /bin/sh
 COMPONENT=update
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL=${SRCDIR}bin/install
 LIBRX=${SRCDIR}lib/librx.a
 LIBS = ${SRCDIR}lib/afs/libauth.a ${SRCDIR}lib/librxkad.a \
        ${SRCDIR}lib/libdes.a ${LIBRX} ${SRCDIR}lib/liblwp.a \

@@ -381,6 +381,18 @@ afs_xioctl (p, args, retval)
         caddr_t arg;
     } *uap = (struct a *)args;
 #else /* AFS_OSF_ENV */
+#ifdef AFS_DARWIN_ENV
+struct ioctl_args {
+        int fd;
+        u_long com;
+        caddr_t arg;
+};
+afs_xioctl(p, uap, retval) 
+        struct proc *p; 
+        register struct ioctl_args *uap;
+        register_t *retval;
+{
+#else
 #ifdef AFS_LINUX22_ENV
 struct afs_ioctl_sys {
     unsigned int com;
@@ -399,11 +411,12 @@ afs_xioctl ()
 	caddr_t arg;
       } *uap = (struct a *)u.u_ap;
 #endif /* AFS_LINUX22_ENV */
+#endif /* AFS_DARWIN_ENV */
 #endif /* AFS_OSF_ENV */
 #endif	/* AFS_SUN5_ENV */
 #endif
 #ifndef AFS_LINUX22_ENV
-#if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV)
+#if	defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
       struct file *fd;
 #else
       register struct file *fd;
@@ -413,6 +426,10 @@ afs_xioctl ()
       register int ioctlDone = 0, code = 0;
       
       AFS_STATCNT(afs_xioctl);
+#ifdef AFS_DARWIN_ENV
+        if ((code=fdgetf(p, uap->fd, &fd)))
+           return code;
+#else
 #ifdef AFS_LINUX22_ENV
     ua.com = com;
     ua.arg = arg;
@@ -445,6 +462,7 @@ afs_xioctl ()
 #else
       fd = getf(uap->fd);
       if (!fd) return;
+#endif
 #endif
 #endif
 #endif
@@ -484,6 +502,9 @@ afs_xioctl ()
 	    if (code) {
 	      osi_FreeSmallSpace(datap);
 	      AFS_GUNLOCK();
+#ifdef AFS_DARWIN_ENV
+              return code;
+#else 
 #if	defined(AFS_SUN5_ENV)
 #ifdef	AFS_SUN54_ENV
 	      releasef(uap->fd);
@@ -508,6 +529,7 @@ afs_xioctl ()
 #else
 	      setuerror(code);
 	      return;
+#endif
 #endif
 #endif
 #endif
@@ -553,6 +575,9 @@ afs_xioctl ()
 #endif
           code = ioctl(uap, rvp);
 #else
+#if defined(AFS_DARWIN_ENV)
+        return ioctl(p, uap, retval);
+#else
 #ifdef  AFS_OSF_ENV
 	  code = ioctl(p, args, retval);
 #ifdef	AFS_OSF30_ENV
@@ -564,6 +589,7 @@ afs_xioctl ()
 #else   /* AFS_OSF_ENV */
 #ifndef AFS_LINUX22_ENV
           ioctl();
+#endif
 #endif
 #endif
 #endif
@@ -582,7 +608,7 @@ afs_xioctl ()
 #ifdef AFS_LINUX22_ENV
       return -code;
 #else
-#if	!defined(AFS_OSF_ENV)
+#if    !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV)
       if (!getuerror())
 	  setuerror(code);
 #if	defined(AFS_AIX32_ENV) && !defined(AFS_AIX41_ENV)
@@ -593,7 +619,7 @@ afs_xioctl ()
 #endif
 #endif /* AFS_LINUX22_ENV */
 #endif	/* AFS_SUN5_ENV */
-#ifdef	AFS_OSF_ENV
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
       return (code);
 #endif
     }
@@ -645,7 +671,27 @@ afs_pioctl(p, args, retval)
 
 extern struct mount *afs_globalVFS;
 #else	/* AFS_OSF_ENV */
+#ifdef AFS_DARWIN_ENV
+afs_pioctl(p, args, retval)
+        struct proc *p;
+        void *args;
+        int *retval;
+{
+    struct a {
+        char    *path;
+        int     cmd;
+        caddr_t cmarg;
+        int     follow; 
+    } *uap = (struct a *) args;
+    
+    AFS_STATCNT(afs_pioctl);
+    return (afs_syscall_pioctl(uap->path, uap->cmd, uap->cmarg, uap->follow, p->p_cred->pc_ucred));
+}   
+
+extern struct mount *afs_globalVFS;
+#else   /* AFS_OSF_ENV */
 extern struct vfs *afs_globalVFS;
+#endif
 #endif
 
 /* macro to avoid adding any more #ifdef's to pioctl code. */
@@ -660,7 +706,12 @@ afs_syscall_pioctl(path, com, cmarg, follow, rvp, credp)
     rval_t *rvp;
     struct AFS_UCRED *credp;
 #else
+#ifdef AFS_DARWIN_ENV
+afs_syscall_pioctl(path, com, cmarg, follow, credp)
+    struct AFS_UCRED *credp;
+#else
 afs_syscall_pioctl(path, com, cmarg, follow)
+#endif
 #endif
     char *path;
     unsigned int	com;
@@ -686,7 +737,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #ifndef	AFS_SUN5_ENV
     if (! _VALIDVICEIOCTL(com)) {
 	PIOCTL_FREE_CRED();
-#ifdef AFS_OSF_ENV
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
         return EINVAL;
 #else	/* AFS_OSF_ENV */
 #if defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV)
@@ -701,7 +752,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     code = copyin_afs_ioctl(cmarg, &data);
     if (code) {
 	PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
 	return (code);
 #else
 	setuerror(code);
@@ -709,9 +760,9 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
   }
     if ((com & 0xff) == PSetClientContext) {
-#ifdef AFS_LINUX22_ENV
+#if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
 	return EINVAL; /* Not handling these yet. */
-#endif
+#else
 #if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV)
 	code = HandleClientContext(&data, &com, &foreigncreds, credp);
 #else
@@ -725,19 +776,20 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif /* AFS_SGI_ENV */
 #endif
 #endif
+#endif
       if (code) {
 	  if (foreigncreds) {
 	      crfree(foreigncreds);
 	  }
 	  PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
 	  return (code);
 #else
 	  return (setuerror(code), code);
 #endif
       }
     } 
-#ifndef AFS_LINUX22_ENV
+#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
     if (foreigncreds) {
       /*
        * We could have done without temporary setting the u.u_cred below
@@ -774,7 +826,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     if ((com & 0xff) == 15) {
       /* special case prefetch so entire pathname eval occurs in helper process.
 	 otherwise, the pioctl call is essentially useless */
-#if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
 	code =  Prefetch(path, &data, follow,
 			 foreigncreds ? foreigncreds : credp);
 #else
@@ -788,7 +840,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif /* AFS_SGI64_ENV */
 #endif /* AFS_HPUX101_ENV */
 #endif
-#ifndef AFS_LINUX22_ENV
+#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
 	if (foreigncreds) {
 #ifdef	AFS_AIX41_ENV
  	    crset(tmpcred);	/* restore original credentials */
@@ -809,7 +861,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	}
 #endif /* AFS_LINUX22_ENV */
 	PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
 	return (code);
 #else
 	return (setuerror(code), code);
@@ -831,7 +883,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif /* AFS_AIX41_ENV */
 	AFS_GLOCK();
 	if (code) {
-#ifndef AFS_LINUX22_ENV
+#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
 	    if (foreigncreds) {
 #ifdef	AFS_AIX41_ENV
 		crset(tmpcred);	/* restore original credentials */
@@ -852,7 +904,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	    }
 #endif /* AFS_LINUX22_ENV */
 	    PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
 	    return (code);
 #else
 	    return(setuerror(code), code);
@@ -907,7 +959,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
       code = afs_HandlePioctl(vp, com, &data, follow, &credp);
       }
 #else
-#ifdef AFS_LINUX22_ENV
+#if defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
       code = afs_HandlePioctl(vp, com, &data, follow, &credp);
 #else
       code = afs_HandlePioctl(vp, com, &data, follow, &u.u_cred);
@@ -917,7 +969,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif /* AFS_AIX41_ENV */
 #endif /* AFS_SUN5_ENV */
     } else {
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
 	code = EINVAL;	/* not in /afs */
 #else
 	setuerror(EINVAL);
@@ -930,7 +982,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
     }
 
-#ifndef AFS_LINUX22_ENV
+#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
     if (foreigncreds) {
 #ifdef	AFS_AIX41_ENV
 	crset(tmpcred);
@@ -958,7 +1010,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 #endif
     }
     PIOCTL_FREE_CRED();
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
     return (code);
 #else
     if (!getuerror()) 	
@@ -1369,10 +1421,17 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     afs_PutCell(tcell, READ_LOCK);
     if (set_parent_pag) {
 	int pag;
+#ifdef AFS_DARWIN_ENV
+        struct proc *p=current_proc(); /* XXX */
+        uprintf("Process %d (%s) tried to change pags in PSetTokens\n",
+                p->p_pid, p->p_comm);
+        if (!setpag(p, acred, -1, &pag, 1)) {
+#else   
 #ifdef	AFS_OSF_ENV
 	if (!setpag(u.u_procp, acred, -1, &pag, 1)) {	/* XXX u.u_procp is a no-op XXX */
 #else
 	if (!setpag(acred, -1, &pag, 1)) {
+#endif
 #endif
 	    afs_InitReq(&treq, *acred);
 	    areq = &treq;
@@ -1976,7 +2035,11 @@ struct AFS_UCRED *acred;
 {
     register char *tp;
     register afs_int32 code;
+#if defined(AFS_SGI61_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_DARWIN_ENV)
+    size_t bufferSize;
+#else
     u_int bufferSize;
+#endif
 
     AFS_STATCNT(Prefetch);
     if (!apath) return EINVAL;
@@ -2478,7 +2541,11 @@ struct AFS_UCRED *acred;
 #if	defined(AFS_SGI_ENV) || defined(AFS_ALPHA_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV)
 		VN_HOLD((struct vnode *)tvc);
 #else
+#if defined(AFS_DARWIN_ENV)
+		osi_vnhold(tvc, 0);
+#else
 		tvc->vrefCount++;
+#endif
 #endif
 		ReleaseReadLock(&afs_xvcache);
 #if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
@@ -2625,7 +2692,7 @@ register struct AFS_UCRED *acred;
     AFS_STATCNT(PSetSysName);
     if (!afs_globalVFS) {
       /* Afsd is NOT running; disable it */
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SGI64_ENV) || defined(AFS_LINUX22_ENV) || defined(AFS_DARWIN_ENV)
 	return (EINVAL);
 #else
 	return (setuerror(EINVAL), EINVAL);

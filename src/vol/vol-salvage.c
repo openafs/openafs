@@ -120,7 +120,12 @@ Vnodes with 0 inode pointers in RW volumes are now deleted.
 #ifdef	AFS_SUN5_ENV
 #include <sys/fs/ufs_inode.h>
 #else
+#ifdef AFS_DARWIN_ENV
+#include <ufs/ufs/dinode.h>
+#include <ufs/ffs/fs.h>
+#else
 #include <ufs/inode.h>
+#endif
 #endif
 #else /* AFS_VFSINCL_ENV */
 #ifdef	AFS_OSF_ENV
@@ -745,7 +750,11 @@ void ObtainSalvageLock(void)
 #else
     salvageLock = open(AFSDIR_SERVER_SLVGLOCK_FILEPATH, O_CREAT|O_RDWR, 0666);
     assert(salvageLock >= 0);
+#ifdef AFS_DARWIN_ENV
+    if (flock(salvageLock, LOCK_EX) == -1) {
+#else
     if (lockf(salvageLock, F_LOCK, 0) == -1) {
+#endif
 	fprintf(stderr,
 		"salvager:  There appears to be another salvager running!  Aborted.\n");
 	Exit(1);

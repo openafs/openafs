@@ -49,7 +49,13 @@ int *forcep, forceR;
 #ifdef	  AFS_SUN5_ENV
 #include <sys/fs/ufs_fs.h>
 #else
+#ifdef AFS_DARWIN_ENV
+#include <ufs/ufs/dinode.h>
+#include <ufs/ffs/fs.h>
+#define itod ino_to_fsba
+#else
 #include <ufs/fs.h>
+#endif
 #endif
 #else /* AFS_VFSINCL_ENV */
 #ifdef	AFS_AIX_ENV
@@ -65,7 +71,9 @@ int *forcep, forceR;
 #ifdef	  AFS_SUN5_ENV
 #include <sys/fs/ufs_inode.h>
 #else
+#ifndef AFS_DARWIN_ENV
 #include <ufs/inode.h>
+#endif
 #endif
 #else /* AFS_VFSINCL_ENV */
 #ifdef AFS_DEC_ENV
@@ -1243,7 +1251,7 @@ int ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam, force
    if (
       (super.fs.fs_magic != FS_MAGIC)
    || (super.fs.fs_ncg < 1)
-#if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV)
+#if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
    || (super.fs.fs_cpg < 1)
 #else
    || (super.fs.fs_cpg < 1 || super.fs.fs_cpg > MAXCPG)
@@ -1279,8 +1287,12 @@ int ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam, force
 #else
    for (c = 0; c < super.fs.fs_ncg; c++) {
        daddr_t dblk1;
-#ifdef	AFS_SUN5_ENV
+#if defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV)
        daddr_t f1;
+#if defined(AFS_DARWIN_ENV)
+#define offset_t off_t
+#define llseek lseek
+#endif
        offset_t off;
 #endif /* AFS_SUN5_ENV */
 	i = c*super.fs.fs_ipg; e = i+super.fs.fs_ipg;
@@ -1288,7 +1300,7 @@ int ListViceInodes(devname, mountedOn, resultFile, judgeInode, judgeParam, force
 	dblk1 = fsbtodb(&super.fs, itod(&super.fs, i));
 	if (lseek(pfd, (off_t) ((off_t)dblk1 * DEV_BSIZE), L_SET) == -1) {
 #else
-#ifdef	AFS_SUN5_ENV 
+#if defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV)
 	f1 = fsbtodb(&super.fs,itod(&super.fs,i));
 	off = (offset_t)f1 << DEV_BSHIFT;
 	if (llseek(pfd, off, L_SET) == -1) {
@@ -1444,6 +1456,11 @@ out1:
 }
 #endif 	/* !AFS_SGI_ENV */
 #endif	/* !AFS_AIX31_ENV	*/
+
+#ifdef AFS_DARWIN_ENV
+#undef dbtob
+#define dbtob(db) ((unsigned)(db) << DEV_BSHIFT)
+#endif
 
 int bread(fd, buf, blk, size)
 	int fd;

@@ -78,7 +78,7 @@ static char sccsid[] = "@(#)rcp.c	5.11 (Berkeley) 9/22/88";
 int	rem;
 char	*colon(), *index(), *rindex(), *malloc(), *strcpy();
 int	errs;
-#ifndef AFS_LINUX20_ENV
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
 extern char *sys_errlist[];
 #endif
 void	lostconn();

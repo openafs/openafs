@@ -8,7 +8,6 @@
 # Makefile for the null library.
 DESTDIR=DEST/
 SRCDIR=DEST/
-INSTALL=${SRCDIR}bin/install
 SHELL=/bin/sh
 
 COMPONENT=null

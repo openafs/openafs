@@ -11,7 +11,6 @@ include ../config/Makefile.${SYS_NAME}
 
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
-INSTALL=${SRCDIR}bin/install
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 #CC=pcc
@@ -82,8 +81,8 @@ rx_trace.o: rx_trace.h
 
 rxdumptrace: rx_trace.c
 	rm -f rxdumptrace
-	$(CC) $(CFLAGS) -DDUMPTRACE -o rxdumptrace rx_trace.c  ${LIBS} ${XLIBS}
-	rm -f rx_trace.o
+	$(CC) $(CFLAGS) -DDUMPTRACE -c -o rxdumptrace.o rx_trace.c
+	$(CC) $(CFLAGS) -o rxdumptrace rxdumptrace.o  ${LIBS} ${XLIBS}
 
 rx_getaddr.o: rx.h rx_getaddr.c
 
@@ -131,6 +130,8 @@ kinstall: includes
 		$(INSTALL) AIX/*.[ch] $(KERNELDIR)rx;; \
 	sgi_* ) \
 		$(INSTALL) IRIX/*.[ch] $(KERNELDIR)rx;; \
+	ppc_darwin* ) \
+		$(INSTALL) DARWIN/*.[ch]  $(KERNELDIR)rx;; \
 	sun4x_5* ) \
 		$(INSTALL) SOLARIS/*.[ch]  $(KERNELDIR)rx;; \
 	* ) \

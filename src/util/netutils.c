@@ -14,14 +14,14 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <errno.h>
-#include <sys/errno.h>
 #ifdef KERNEL
 #include "../afs/param.h"
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #else
 #include <netinet/in.h>
+#include <errno.h>
+#include <sys/errno.h>
 #endif
 
 #include "assert.h"

@@ -50,6 +50,9 @@ void osi_Init()
 #elif defined(AFS_OSF_ENV)
     usimple_lock_init(&afs_global_lock);
     afs_global_owner = (thread_t)0;
+#elif defined(AFS_DARWIN_ENV)
+    lockinit(&afs_global_lock, PLOCK, "afs global lock", 0, 0);
+    afs_global_owner = (thread_t)0;
 #elif defined(AFS_AIX41_ENV)
     lock_alloc((void*)&afs_global_lock, LOCK_ALLOC_PIN, 1, 1);
     simple_lock_init((void *)&afs_global_lock);
@@ -77,7 +80,7 @@ void osi_Init()
 osi_Active(avc)
 register struct vcache *avc; {
     AFS_STATCNT(osi_Active);
-#if defined(AFS_SUN_ENV) || defined(AFS_AIX_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || (AFS_LINUX20_ENV)
+#if defined(AFS_SUN_ENV) || defined(AFS_AIX_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || (AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
     if ((avc->opens > 0) || (avc->states & CMAPPED))	return 1;   /* XXX: Warning, verify this XXX  */
 #else
 #if	defined(AFS_MACH_ENV)
@@ -292,9 +295,13 @@ void afs_osi_Invisible() {
 #if	defined(AFS_HPUX101_ENV)
     set_system_proc(u.u_procp);
 #else
+#if defined(AFS_DARWIN_ENV)
+    current_proc()->p_flag |= P_SYSTEM;
+#else
 #if !defined(AFS_SGI64_ENV) && !defined(AFS_LINUX20_ENV)
     u.u_procp->p_flag |= SSYS;
 #endif /* AFS_SGI64_ENV */
+#endif
 #endif
 #endif
 #endif
@@ -344,6 +351,11 @@ afs_osi_SetTime(atv)
     stime(&sta);
     AFS_GLOCK();
 #else
+#ifdef AFS_DARWIN_ENV
+    AFS_GUNLOCK();
+    setthetime(atv);
+    AFS_GLOCK();
+#else
     /* stolen from kern_time.c */
 #ifndef	AFS_AUX_ENV
     boottime.tv_sec += atv->tv_sec - time.tv_sec;
@@ -367,6 +379,7 @@ afs_osi_SetTime(atv)
 #ifdef	AFS_AUX_ENV
     logtchg(atv->tv_sec);
 #endif
+#endif  /* AFS_DARWIN_ENV */
 #endif	/* AFS_SGI_ENV */
 #endif /* AFS_SUN55_ENV */
 #endif /* AFS_SUN5_ENV */
@@ -729,6 +742,22 @@ extern int npid;
 }
 #endif
 
+#if defined(AFS_DARWIN_ENV)
+void afs_osi_TraverseProcTable()
+{   
+    struct proc *p;
+    LIST_FOREACH(p, &allproc, p_list) {
+        if (p->p_stat == SIDL)
+            continue;
+        if (p->p_stat == SZOMB)
+            continue;
+        if (p->p_flag & P_SYSTEM)
+            continue;
+          afs_GCPAGs_perproc_func(p);
+    }
+}   
+#endif
+
 /* return a pointer (sometimes a static copy ) to the cred for a
  * given AFS_PROC.
  * subsequent calls may overwrite the previously returned value.
@@ -885,6 +914,31 @@ const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
 
     return rv;
 }
+#elif defined(AFS_DARWIN_ENV)
+const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
+{   
+    struct AFS_UCRED *rv=NULL;
+    static struct AFS_UCRED cr;
+
+    if(pr == NULL) {
+       return NULL;
+    }
+   
+    if((pr->p_stat == SSLEEP) ||
+       (pr->p_stat == SRUN) ||
+       (pr->p_stat == SSTOP)) {
+       pcred_readlock(pr);
+       cr.cr_ref=1;
+       cr.cr_uid=pr->p_cred->pc_ucred->cr_uid;
+       cr.cr_ngroups=pr->p_cred->pc_ucred->cr_ngroups;
+       bcopy(pr->p_cred->pc_ucred->cr_groups, cr.cr_groups,NGROUPS *
+             sizeof(gid_t));
+       pcred_unlock(pr);
+       rv = &cr;
+    }
+    
+    return rv;
+}  
 #else
 const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
 {

@@ -97,7 +97,7 @@ extern afs_lock_t afs_ftf;
 /* Exported variables */
 struct osi_dev cacheDev;           /*Cache device*/
 afs_int32 cacheInfoModTime;			/*Last time cache info modified*/
-#if	defined(AFS_OSF_ENV) || defined(AFS_DEC_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DEC_ENV) || defined(AFS_DARWIN_ENV)
 struct mount *afs_cacheVfsp=0;
 #elif defined(AFS_LINUX20_ENV)
 struct super_block *afs_cacheSBp = 0;
@@ -432,7 +432,11 @@ afs_InitCacheInfo(afile)
 	      TO_KERNEL_SPACE();
 	  }
 #else
+#ifdef AFS_DARWIN_ENV
+        if (!VFS_STATFS(filevp->v_mount, &st, current_proc()))
+#else 
 	if (!VFS_STATFS(filevp->v_vfsp, &st))  
+#endif /* AFS_DARWIN_ENV */
 #endif /* AFS_LINUX20_ENV */
 #endif /* AIX41 */
 #endif /* OSF */
@@ -450,7 +454,7 @@ afs_InitCacheInfo(afile)
 #else
     cacheInode = afs_vnodeToInumber(filevp);
     cacheDev.dev = afs_vnodeToDev(filevp);
-#if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS)
+#if defined(AFS_SGI62_ENV) || defined(AFS_HAVE_VXFS) || defined(AFS_DARWIN_ENV)
     afs_InitDualFSCacheOps(filevp);
 #endif
     afs_cacheVfsp = filevp->v_vfsp;

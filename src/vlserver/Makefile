@@ -12,7 +12,6 @@ MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 KERNELDIR=../libafs/
 UKERNELDIR=../libuafs/
-INSTALL=${SRCDIR}bin/install
 COMPILE_ET = ${SRCDIR}bin/compile_et
 
 CFLAGS = ${DBUG} -I. -I.. -I${SRCDIR}include ${XCFLAGS}

@@ -202,7 +202,7 @@ null: project
 
 gtx: project null auth # kauth rxkad ?
 	case ${SYS_NAME} in \
-	  rs_aix* | sun4x_5? | sgi_6? | *linux*) \
+	  rs_aix* | sun4x_5? | sgi_6? | *linux* | ppc_darwin*) \
 		rm -f ${DESTDIR}lib/afs/libtermlib.a; \
 		ln -s libnull.a ${DESTDIR}lib/afs/libtermlib.a; \
 		${COMPILE_PART1} gtx ${COMPILE_PART2};; \
@@ -234,6 +234,7 @@ ntp: project volser
 	case ${SYS_NAME} in \
 	  sun4x_58 ) echo skipping ntp for ${SYS_NAME} ;; \
 	  *linux* ) echo skipping ntp for ${SYS_NAME} ;; \
+	  ppc_darwin* ) echo skipping ntp for ${SYS_NAME} ;; \
 	  * ) ${COMPILE_PART1} ntp ${COMPILE_PART2} ;; \
 	esac
 
@@ -252,9 +253,7 @@ bozo: project ntp audit
 vfsck:	minproject vol
 	set -x; \
 	case ${SYS_NAME} in \
-	sgi_* | *linux*) \
-		echo skip vfsck for ${SYS_NAME} ;; \
-	rs_aix42)	\
+	sgi_* | *linux* | rs_aix42 | ppc_darwin* ) \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
@@ -274,6 +273,8 @@ login: project kauth rxkad
 		 ${COMPILE_PART1} login ${COMPILE_PART2} ;; \
 	sun4x_* | hp_ux11* | *linux* ) \
 		${COMPILE_PART1} pam ${COMPILE_PART2} ;; \
+	ppc_darwin* ) \
+		echo Skipping login for ${SYS_NAME} ;; \
 	* ) \
 		${COMPILE_PART1} login ${COMPILE_PART2} ;; \
 	esac
@@ -411,12 +412,22 @@ tests: rxtests ubiktests
 
 # pthread based user space RX library
 libafsrpc: rx rxkad des
-	${COMPILE_PART1} libafsrpc  ${COMPILE_PART2}
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux*) \
+	${COMPILE_PART1} libafsrpc  ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
+	esac
 
 libafsauthent: ubik auth kauth libafsrpc
-	${COMPILE_PART1} libafsauthent  ${COMPILE_PART2}
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux*) \
+	${COMPILE_PART1} libafsauthent  ${COMPILE_PART2} ;; \
+	*) \
+		echo Not building MT libafsrpc for ${SYS_NAME} ;; \
+	esac
 
-libadmin: libafsauthent bozo
+libadmin_real: libafsauthent bozo
 	${COMPILE_PART1} libadmin ${COMPILE_PART2}
 	${COMPILE_PART1} libadmin/adminutil ${COMPILE_PART2}
 	${COMPILE_PART1} libadmin/vos ${COMPILE_PART2}
@@ -427,6 +438,19 @@ libadmin: libafsauthent bozo
 	${COMPILE_PART1} libadmin/cfg ${COMPILE_PART2}
 	${COMPILE_PART1} libadmin/test ${COMPILE_PART2}
 	${COMPILE_PART1} libadmin/samples ${COMPILE_PART2}
+
+libadmin: libafsauthent bozo
+	case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix*|*linux*|hp_ux*) \
+			$(MAKE) libadmin_real SYS_NAME=$(SYS_NAME) \
+			WASHTOOL="$(WASHTOOL)" \
+			COMPILE_PART1="$(COMPILE_PART1)" \
+			COMPILE_PART2="$(COMPILE_PART2)" \
+			SRCDIR=$(SRCDIR) DESTDIR=$(DESTDIR) \
+			DBG_DEFS=$(DBG_DEFS) ;; \
+	*) \
+		echo Not building MT libadmin for ${SYS_NAME} ;; \
+	esac
 
 finale: project cmd comerr afsd allrcmds butc tbutc libafs libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
@@ -455,6 +479,8 @@ libafs_setup: config minproject export
 		MKAFS_OSTYPE=IRIX;; \
 	sun4x_5* ) \
 		MKAFS_OSTYPE=SOLARIS;; \
+	ppc_darwin* ) \
+		MKAFS_OSTYPE=DARWIN;; \
 	* ) \
 		echo WARNING: No MakefileProto for sys ${SYS_NAME} ; \
 	esac; \
@@ -478,6 +504,8 @@ libuafs_setup: config minproject export
 		MKAFS_OSTYPE=DUX;; \
 	sgi_6* ) \
 		MKAFS_OSTYPE=IRIX;; \
+	ppc_darwin* ) \
+		MKAFS_OSTYPE=DARWIN;; \
 	* ) \
 		echo WARNING: No MakefileProto for sys ${SYS_NAME} ; \
 	esac; \

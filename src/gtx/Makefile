@@ -12,7 +12,6 @@ SHELL=/bin/sh
 COMPONENT=gtx
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL=${SRCDIR}bin/install
 COMPILE_ET=$(SRCDIR)bin/compile_et
 CFLAGS= ${DBUG} -I. -I${SRCDIR}include -I${SRCDIR}include/afs ${XCFLAGS}
 LDFLAGS = ${XLDFLAGS}

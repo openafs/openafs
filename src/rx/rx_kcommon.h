@@ -14,6 +14,12 @@
 #ifndef _RX_KCOMMON_H_
 #define _RX_KCOMMON_H_
 
+#ifdef AFS_DARWIN_ENV
+#ifndef _MACH_ETAP_H_
+#define _MACH_ETAP_H_
+typedef unsigned short                  etap_event_t;
+#endif
+#endif  
 #include "../h/types.h"
 #include "../h/param.h"
 #ifndef AFS_LINUX22_ENV

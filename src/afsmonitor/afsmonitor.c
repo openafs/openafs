@@ -1722,7 +1722,7 @@ int a_newProbeCycle;	/* start of a new probe cycle ? */
    }
 
    /* copy connection information */
-#ifdef AFS_LINUX20_ENV
+#if defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
    bcopy(&(xstat_fs_Results.connP->skt), &(tmp_fsPR->connP->skt), 
 		sizeof(struct sockaddr_in));
 #else
@@ -2454,7 +2454,7 @@ int a_newProbeCycle;	/* start of new probe cycle ? */
 
 
    /* copy connection information */
-#ifdef AFS_LINUX20_ENV
+#if defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
    bcopy(&(xstat_cm_Results.connP->skt), &(tmp_cmPR->connP->skt), 
 		sizeof(struct sockaddr_in));
 #else

@@ -20,6 +20,11 @@
 #include <net/if.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>
+#ifdef AFS_DARWIN_ENV
+#include <sys/sysctl.h>
+#include <net/route.h>
+#include <net/if_dl.h>
+#endif
 /*
  * By including this, we get any system dependencies. In particular,
  * the pthreads for solaris requires the socket call to be mapped.
@@ -100,12 +105,219 @@ afs_int32 rxi_getaddr ()
 #undef socket
 #endif /* UKERNEL */
 
+#ifdef AFS_DARWIN_ENV
+#define ROUNDUP(a) \
+        ((a) > 0 ? (1 + (((a) - 1) | (sizeof(long) - 1))) : sizeof(long))
+#define ADVANCE(x, n) (x += ROUNDUP((n)->sa_len))
+
+static void
+rt_xaddrs(cp, cplim, rtinfo)
+        caddr_t cp, cplim;
+        struct rt_addrinfo *rtinfo;
+{
+        struct sockaddr *sa;
+        int i;
+
+        memset(rtinfo->rti_info, 0, sizeof(rtinfo->rti_info));
+        for (i = 0; (i < RTAX_MAX) && (cp < cplim); i++) {
+                if ((rtinfo->rti_addrs & (1 << i)) == 0)
+                        continue;
+                rtinfo->rti_info[i] = sa = (struct sockaddr *)cp;
+                ADVANCE(cp, sa);
+        }
+}
+#endif
+
+
 /* this function returns the total number of interface addresses 
 ** the buffer has to be passed in by the caller
 */
+#ifdef AFS_DARWIN_ENV
 int rx_getAllAddr (buffer,maxSize)
 afs_int32	buffer[];
 int 	maxSize;	/* sizeof of buffer in afs_int32 units */
+{
+     size_t needed;
+     int mib[6];
+     struct  if_msghdr *ifm, *nextifm;
+     struct  ifa_msghdr *ifam;
+     struct  sockaddr_dl *sdl;
+     struct  rt_addrinfo info;
+     char    *buf, *lim, *next;
+     int count=0,addrcount=0;
+     
+     mib[0] = CTL_NET;
+     mib[1] = PF_ROUTE;
+     mib[2] = 0;
+     mib[3] = AF_INET;     /* address family */
+     mib[4] = NET_RT_IFLIST;
+     mib[5] = 0;
+     if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0)
+          return 0;
+     if ((buf = malloc(needed)) == NULL)
+          return 0;
+     if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
+          free(buf);
+          return 0;
+     }
+     lim = buf + needed;
+     next = buf;
+     while (next < lim) {
+          ifm = (struct if_msghdr *)next;
+          if (ifm->ifm_type != RTM_IFINFO) {
+               printf("out of sync parsing NET_RT_IFLIST\n");
+               free(buf);
+               return 0;
+          }
+          sdl = (struct sockaddr_dl *)(ifm + 1);
+          next += ifm->ifm_msglen;
+          ifam = NULL;
+          addrcount = 0;
+          while (next < lim) {
+               nextifm = (struct if_msghdr *)next;
+               if (nextifm->ifm_type != RTM_NEWADDR)
+                    break;
+               if (ifam == NULL)
+                    ifam = (struct ifa_msghdr *)nextifm;
+               addrcount++;
+               next += nextifm->ifm_msglen;
+          }
+          if ((ifm->ifm_flags & IFF_UP) == 0)
+               continue; /* not up */
+          if (ifm->ifm_flags & IFF_LOOPBACK) {
+               continue;        /* skip aliased loopbacks as well. */
+          }
+          while (addrcount > 0) {
+               struct sockaddr_in *a;
+               
+               info.rti_addrs = ifam->ifam_addrs;
+               
+               /* Expand the compacted addresses */
+               rt_xaddrs((char *)(ifam + 1), ifam->ifam_msglen + (char *)ifam,
+                         &info);
+               if (info.rti_info[RTAX_IFA]->sa_family != AF_INET)
+                    continue;
+               a=info.rti_info[RTAX_IFA];
+               
+               if ( count >= maxSize )  /* no more space */
+                    printf("Too many interfaces..ignoring 0x%x\n",
+                           a->sin_addr.s_addr);
+               else
+                    buffer[count++] = a->sin_addr.s_addr;
+               addrcount--;
+               ifam = (struct ifa_msghdr *)((char *)ifam + ifam->ifam_msglen);
+          }
+     }
+     free(buf);
+     return count;
+}
+int rxi_getAllAddrMaskMtu (addrBuffer, maskBuffer, mtuBuffer, maxSize)
+   afs_int32   addrBuffer[];   /* the network addrs in net byte order */
+   afs_int32   maskBuffer[];   /* the subnet masks */
+   afs_int32   mtuBuffer[];    /* the MTU sizes */
+   int     maxSize;        /* sizeof of buffer in afs_int32 units */
+{
+    int     s;
+     
+     size_t needed;
+     int mib[6];
+     struct  if_msghdr *ifm, *nextifm;
+     struct  ifa_msghdr *ifam;
+     struct  sockaddr_dl *sdl;
+     struct  rt_addrinfo info;
+     char    *buf, *lim, *next;
+     int count=0,addrcount=0;
+
+     mib[0] = CTL_NET;
+     mib[1] = PF_ROUTE;
+     mib[2] = 0;
+     mib[3] = AF_INET;     /* address family */
+     mib[4] = NET_RT_IFLIST;
+     mib[5] = 0;
+     if (sysctl(mib, 6, NULL, &needed, NULL, 0) < 0)
+          return 0;
+     if ((buf = malloc(needed)) == NULL)
+          return 0;
+     if (sysctl(mib, 6, buf, &needed, NULL, 0) < 0) {
+          free(buf);
+          return 0;
+     }
+     s=socket(PF_INET, SOCK_DGRAM, 0);
+     if (s < 0)
+          return 0;
+     lim = buf + needed;
+     next = buf;
+     while (next < lim) {
+          ifm = (struct if_msghdr *)next;
+          if (ifm->ifm_type != RTM_IFINFO) {
+               printf("out of sync parsing NET_RT_IFLIST\n");
+               free(buf);
+               return 0;
+          }
+          sdl = (struct sockaddr_dl *)(ifm + 1);
+          next += ifm->ifm_msglen;
+          ifam = NULL;
+          addrcount = 0;
+          while (next < lim) {
+               nextifm = (struct if_msghdr *)next;
+               if (nextifm->ifm_type != RTM_NEWADDR)
+                    break;
+               if (ifam == NULL)
+                    ifam = (struct ifa_msghdr *)nextifm;
+               addrcount++;
+               next += nextifm->ifm_msglen;
+          }
+          if ((ifm->ifm_flags & IFF_UP) == 0)
+               continue; /* not up */
+          if (ifm->ifm_flags & IFF_LOOPBACK) {
+               continue;        /* skip aliased loopbacks as well. */
+          }
+          while (addrcount > 0) {
+               struct sockaddr_in *a;
+               
+               info.rti_addrs = ifam->ifam_addrs;
+               
+               /* Expand the compacted addresses */
+               rt_xaddrs((char *)(ifam + 1), ifam->ifam_msglen + (char *)ifam,
+                         &info);
+               if (info.rti_info[RTAX_IFA]->sa_family != AF_INET)
+                    continue;
+               a=info.rti_info[RTAX_IFA];
+               
+               if ( count >= maxSize ) {  /* no more space */
+                    printf("Too many interfaces..ignoring 0x%x\n",
+                           a->sin_addr.s_addr);
+               } else {
+                    struct ifreq ifr;
+                    
+                    addrBuffer[count] = a->sin_addr.s_addr;
+                    a=info.rti_info[RTAX_NETMASK];
+                    if (a)
+                         maskBuffer[count]=a->sin_addr.s_addr;
+                    else
+                         maskBuffer[count] = htonl(0xffffffff);
+                    memset(&ifr, sizeof(ifr), 0);
+                    ifr.ifr_addr.sa_family=AF_INET;
+                    strncpy(ifr.ifr_name, sdl->sdl_data, sdl->sdl_nlen);
+                    if (ioctl(s, SIOCGIFMTU, (caddr_t)&ifr) < 0)
+                         mtuBuffer[count]=1500;
+                    else
+                         mtuBuffer[count]=ifr.ifr_mtu;
+                    count++;
+               }
+               addrcount--;
+               ifam = (struct ifa_msghdr *)((char *)ifam + ifam->ifam_msglen);
+          }
+     }
+     free(buf);
+     return count;
+}
+
+     
+#else
+int rx_getAllAddr (buffer,maxSize)
+afs_int32      buffer[];
+int    maxSize;        /* sizeof of buffer in afs_int32 units */
 {
     int     s;
     int     i, len, count=0;
@@ -125,13 +337,18 @@ int 	maxSize;	/* sizeof of buffer in afs_int32 units */
     len = ifc.ifc_len / sizeof(struct ifreq);
     if (len > NIFS)
 	len = NIFS;
-#if	defined(AFS_AIX41_ENV)
+#if    defined(AFS_AIX41_ENV) || defined (AFS_DARWIN_ENV)
     if ( ifc.ifc_len > sizeof(ifs) ) 	/* safety check */
 	ifc.ifc_len = sizeof(ifs); 
     for ( cp = (char *)ifc.ifc_buf, 
 		cplim= ifc.ifc_buf+ifc.ifc_len;
 		cp < cplim;
-		cp += sizeof(ifr->ifr_name) + MAX(a->sin_len, sizeof(*a))){
+#ifdef AFS_DARWIN_ENV
+	        cp += _SIZEOF_ADDR_IFREQ(*ifr))
+#else
+                cp += sizeof(ifr->ifr_name) + MAX(a->sin_len, sizeof(*a)))
+#endif
+       {
 	ifr = (struct ifreq *)cp;
 #else
     for (i = 0; i < len; ++i) {
@@ -258,6 +475,7 @@ int rxi_getAllAddrMaskMtu (addrBuffer, maskBuffer, mtuBuffer, maxSize)
    return count;
 #endif /* AFS_USERSPACE_IP_ADDR */
 }
+#endif
 
 #endif /* ! AFS_NT40_ENV */
 #endif /* !KERNEL || UKERNEL */

@@ -287,7 +287,7 @@ tagain:
       (afs_Analyze(tc, code, &adp->fid, &treq,
 		   AFS_STATS_FS_RPCIDX_CREATEFILE, SHARED_LOCK, (struct cell *)0));
 
-#ifdef	AFS_OSF_ENV
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
     if (code == EEXIST && aexcl == NONEXCL) {
 	/* This lookup was handled in the common vn_open code in the
 	   vnode layer */

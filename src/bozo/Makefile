@@ -9,7 +9,6 @@ SHELL=/bin/sh
 COMPONENT=bozo
 include ../config/Makefile.${SYS_NAME}
 
-INSTALL=${SRCDIR}bin/install
 COMPILE_ET=$(SRCDIR)bin/compile_et
 CFLAGS=-g -I${SRCDIR}include ${XCFLAGS}
 RPCINCLS=${SRCDIR}include/lwp.h ${SRCDIR}include/rx/rx.h bosint.h

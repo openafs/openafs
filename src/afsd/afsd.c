@@ -93,7 +93,7 @@
 #endif
 #endif
 
-#if defined(AFS_OSF_ENV) || defined(AFS_DEC_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DEC_ENV) || defined(AFS_DARWIN_ENV)
 #include <sys/mount.h>
 #else
 #include <sys/vfs.h>
@@ -132,7 +132,7 @@ void set_staticaddrs(void);
 #if AFS_HAVE_STATVFS
 #include <sys/statvfs.h>
 #else
-#if !defined(AFS_OSF_ENV)
+#if !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV)
 #include <sys/statfs.h>
 #endif
 #endif

@@ -14,7 +14,6 @@ include ../config/Makefile.${SYS_NAME}
 
 RM     = /bin/rm
 UKERNELDIR=../libuafs/
-INSTALL=${SRCDIR}bin/install
 SRC    =.
 DESPAR =../../../DESLIB/dest/
 DESINC =${DESPAR}include/

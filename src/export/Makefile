@@ -13,7 +13,6 @@
 COMPONENT=export
 include ../config/Makefile.${SYS_NAME}
 
-  INSTALL = ${SRCDIR}bin/install
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
      DEFS =

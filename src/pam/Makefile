@@ -6,14 +6,12 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 SHELL=/bin/sh
-INSTALL = ${SRCDIR}bin/install
 KERNELDIR = ../libafs/
 
 COMPONENT=afs
 include ../config/Makefile.${SYS_NAME}
 
 LIBDIR = ${DESTDIR}lib/
-INSTALL=${SRCDIR}bin/install
   LIBSA = ${LIBDIR}afs/libprot.a ${LIBDIR}libubik.a
 AFSLIBS = ${DESTDIR}lib/librxkad.a 	    \
 	  ${LIBDIR}afs/libsys.a ${DESTDIR}lib/libdes.a 	    \

@@ -34,13 +34,13 @@ AR=ar
 AS=as
 CP=cp
 MT_CC=cc
-INSTALL=${SRCDIR}bin/install
 LD=ld   
 LEX=lex
 MV=mv
 RANLIB=/bin/true
 RM=rm
-WASHTOOL=${SRCDIR}bin/washtool
+WASHTOOL=${DESTDIR}bin/washtool
+INSTALL=${DESTDIR}bin/install
 #
 # This is for the vol package
 XFS_SIZE_CHECK = $(DESTDIR)root.server/usr/afs/bin/xfs_size_check

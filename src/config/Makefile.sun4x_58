@@ -33,7 +33,6 @@ AS=as
 CC=/opt/SUNWspro/bin/cc
 MT_CC=/opt/SUNWspro/bin/cc
 CP=/bin/cp
-INSTALL=${SRCDIR}bin/install
 LEX=lex
 LD= /usr/ccs/bin/ld
 LORDER = /usr/ccs/bin/lorder
@@ -41,7 +40,8 @@ MV=mv
 RANLIB=/bin/true
 RM=rm
 STRIP= /usr/ccs/bin/strip
-WASHTOOL=${SRCDIR}bin/washtool
+WASHTOOL=${DESTDIR}bin/washtool
+INSTALL=${DESTDIR}bin/install
 #
 # this is for the vol package
 FS_CONV_SOL26= $(DESTDIR)root.server/usr/afs/bin/fs_conv_sol26

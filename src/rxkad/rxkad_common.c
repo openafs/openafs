@@ -19,7 +19,6 @@
 #endif
 #include "../h/types.h"
 #include "../h/time.h"
-#include "../netinet/in.h"
 #ifndef AFS_LINUX22_ENV
 #include "../rpc/types.h"
 #include "../rpc/xdr.h"

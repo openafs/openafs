@@ -39,10 +39,14 @@
 #define	AFS_XLATOR_MAGIC	0x87654321
 #endif
 
+#ifdef AFS_DARWIN_ENV
+#define AFS_NFSXLATORREQ(cred) 0
+#else
 #ifdef	AFS_OSF_ENV
 #define	AFS_NFSXLATORREQ(cred)    ((cred)->cr_ruid == NFSXLATOR_CRED)
 #else
 #define	AFS_NFSXLATORREQ(cred)    ((cred)->cr_rgid == NFSXLATOR_CRED)
+#endif
 #endif
 
 struct	exporterops {

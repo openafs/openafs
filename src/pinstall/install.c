@@ -66,8 +66,13 @@ Generic install command.  Options are:
 #include <string.h>
 #include <elf.h>
 #else
+#ifdef AFS_DARWIN_ENV
+#include <fcntl.h>
+#include <string.h>
+#else
 #include <strings.h>
 #include <a.out.h>
+#endif
 #endif
 #ifdef	AFS_HPUX_ENV
 #include <utime.h>
@@ -77,10 +82,10 @@ struct stat istat, ostat;
 
 extern int errno;
 extern int sys_nerr;
-#ifndef AFS_LINUX20_ENV
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
 extern char *sys_errlist[];
 #endif
-#if	defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)
+#if	defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
 extern struct passwd *getpwnam();
 int stripcalled = 0;
 #endif
@@ -144,7 +149,7 @@ atoo(astr)
     return value;
     }
 
-#if	defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)
+#if	defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
 /*
  * Implementation lifted from that for AIX 3.1, since there didn't seem to be any
  * reason why it wouldn't work.
@@ -211,7 +216,7 @@ char *iname, *oname; {
 		strip[1] = oname;
 #ifdef	AFS_SUN5_ENV
 #define	STRIP_BIN	"/usr/ccs/bin/strip"
-#elif defined(AFS_LINUX20_ENV)
+#elif defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
 #define STRIP_BIN	"/usr/bin/strip"
 #else
 #define	STRIP_BIN	"/bin/strip"
@@ -671,7 +676,7 @@ main (argc, argv)
 		continue;
 	    }
 	}
-#if	defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)
+#if	defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
 	stripcalled = 0;
 	if (strip == 1 ||
 	    (strip == -1 && ((istat.st_mode & 0111) == 0111) && stripName(newNames[i])) && AIXobject(fnames[i]))

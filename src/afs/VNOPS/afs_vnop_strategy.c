@@ -25,7 +25,7 @@
 
 
 
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
 afs_ustrategy(abp, credp)
     struct AFS_UCRED *credp;
 #else
@@ -36,14 +36,14 @@ afs_ustrategy(abp)
     struct uio tuio;
     register struct vcache *tvc = (struct vcache *) abp->b_vp;
     register afs_int32 len = abp->b_bcount;
-#if	!defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV)
+#if	!defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV)
 #ifdef	AFS_AIX41_ENV
     struct ucred *credp;
 #else
     struct AFS_UCRED *credp = u.u_cred;
 #endif
 #endif
-#if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
+#if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV)
     int async = abp->b_flags & B_ASYNC;
 #endif
     struct iovec tiovec[1];
