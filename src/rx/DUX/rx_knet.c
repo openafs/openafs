@@ -22,11 +22,12 @@ static void rxk_input(struct mbuf *am, int iphlen);
 static void rxk_fasttimo(void);
 
 /* start intercepting basic calls */
+void
 rxk_init()
 {
     register struct protosw *tpro, *last;
     if (rxk_initDone)
-	return 0;
+	return;
 
     last = inetdomain.dom_protoswNPROTOSW;
     for (tpro = inetdomain.dom_protosw; tpro < last; tpro++)
@@ -42,7 +43,7 @@ rxk_init()
 	     * until we have something to do
 	     */
 	    rxk_initDone = 1;
-	    return 0;
+	    return;
 	}
     osi_Panic("inet:no udp");
 }
