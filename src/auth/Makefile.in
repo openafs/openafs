@@ -17,7 +17,7 @@ CFLAGS=-g -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 LIBS=libauth.a ${TOP_LIBDIR}/libsys.a \
       ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libdes.a \
       ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/libsys.a \
-      ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
+      ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a
 INCLS=cellconfig.h auth.h keys.h
 KSRCS=auth.h
 UKSRCS=${KSRCS} cellconfig.h acfg_errors.c keys.h cellconfig.c \
@@ -48,10 +48,10 @@ libauth.krb.a: $(KOBJS) AFS_component_version_number.o
 	$(RANLIB) $@
 
 copyauth: copyauth.o ${LIBS}
-	$(CC) $(CFLAGS) -o copyauth copyauth.o ${LIBS}
+	$(CC) $(CFLAGS) -o copyauth copyauth.o ${LIBS} ${XLIBS}
 
 setkey: setkey.o ${LIBS}
-	${CC} $(CFLAGS) -o setkey setkey.o ${LIBS}
+	${CC} $(CFLAGS) -o setkey setkey.o ${LIBS} ${XLIBS}
 
 acfg_errors.o: acfg_errors.c
 

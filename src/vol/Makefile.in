@@ -14,7 +14,7 @@ LDFLAGS = ${OPTMZ} ${PROF} ${LDIRS} ${XLDFLAGS}
 
 LIBS=${TOP_LIBDIR}/libcmd.a vlib.a ${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a ${TOP_LIBDIR}/libdir.a \
-	${TOP_LIBDIR}/liblwp.a  ${TOP_LIBDIR}/libacl.a ${XLIBS}
+	${TOP_LIBDIR}/liblwp.a  ${TOP_LIBDIR}/libacl.a
 
 CFLAGS = -D${SYS_NAME} ${OPTMZ} ${INCDIRS} ${XCFLAGS} ${DBG}
 
@@ -137,7 +137,7 @@ vlib.a:	${VLIBOBJS} AFS_component_version_number.o
 
 # new salvager:  remove references to /vice by linking with novice.o
 salvager: vol-salvage.o physio.o vlib.a
-	${CC} ${LDFLAGS} -o salvager vol-salvage.o physio.o ${LIBS}
+	${CC} ${LDFLAGS} -o salvager vol-salvage.o physio.o ${LIBS} ${XLIBS}
 
 vol-salvage: vol-salvage.o
 vol-info: vol-info.o physio.o ihandle.o
@@ -164,18 +164,18 @@ volinfo: vol-info.o physio.o ihandle.o ${LIBS}
 	case ${SYS_NAME} in \
 		*linux* | *fbsd*) \
 			${CC} ${CFLAGS} ${DBG} -o volinfo vol-info.o physio.o \
-				ihandle.o ${LIBS} ;; \
+				ihandle.o ${LIBS} ${XLIBS} ;; \
 		*) \
 			${CC} ${CFLAGS} ${DBG} -o volinfo vol-info.o physio.o \
-				 ihandle.o ${LIBS} ;; \
+				 ihandle.o ${LIBS} ${XLIBS} ;; \
 	esac
 
 
 fs_conv_dux40D: fs_conv_411.o
-	${CC} ${CFLAGS} ${TOP_LIBDIR}/libcmd.a -o fs_conv_dux40D fs_conv_411.o  ${LIBS} 
+	${CC} ${CFLAGS} ${TOP_LIBDIR}/libcmd.a -o fs_conv_dux40D fs_conv_411.o  ${LIBS} ${XLIBS}
 
 fs_conv_sol26: fs_conv_411.o vlib.a 
-	${CC} ${CFLAGS} ${TOP_LIBDIR}/libcmd.a -o fs_conv_sol26 fs_conv_411.o  ${LIBS} 
+	${CC} ${CFLAGS} ${TOP_LIBDIR}/libcmd.a -o fs_conv_sol26 fs_conv_411.o  ${LIBS} ${XLIBS}
 
 fs_conv_411.o: fs_conv_411.c AFS_component_version_number.c
 	${CC} ${CFLAGS} -c ${srcdir}/fs_conv_411.c

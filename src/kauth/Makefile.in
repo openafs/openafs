@@ -201,7 +201,7 @@ user.krb.o: user.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
 user.o: user.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
 	${CC} ${CFLAGS} -c ${srcdir}/user.c
 
-kdb: kdb.o ${INCLS} ${LIBS} ${XLIBS} libkauth.a
+kdb: kdb.o ${INCLS} ${LIBS} libkauth.a
 	${CC} ${LDFLAGS} -o kdb kdb.o libkauth.a ${LIBS} ${XLIBS}
 
 kdb.o: kdb.c AFS_component_version_number.o
