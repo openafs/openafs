@@ -69,7 +69,8 @@ extern "C" int lana_GetNameFromGuid(char *Guid, char **Name)
     int size;
     WCHAR *wGuid = NULL;
     WCHAR wName[MAX_PATH];
-    DWORD NameSize = (sizeof(wName) / sizeof(wName[0]));
+    DWORD NameSize = MAX_PATH;
+    char *name = NULL;
     HRESULT status;
         
     // Convert the Guid string to Unicode.  First we ask only for the size
@@ -83,51 +84,54 @@ extern "C" int lana_GetNameFromGuid(char *Guid, char **Name)
     // for the network connections folder before XP.
 
     /* XXX pbh 9/11/03 - revert to using the undocumented APIs on XP while
-     *   waiting tohear back from PSS about the slow reboot issue.
-     *   This is an ungly, misleading hack, but is minimally invasive
+     *   waiting to hear back from PSS about the slow reboot issue.
+     *   This is an ugly, misleading hack, but is minimally invasive
      *   and will be easy to rollback.
      */
 
     //status = getname_shellfolder(wGuid, wName, NameSize);
-      status = E_NOTIMPL;
+    status = E_NOTIMPL;
 
     /* XXX end of pbh 9/11/03 temporary hack*/	
 
     if (status == E_NOTIMPL) {
-	// The IShellFolder interface is not implemented on this platform.
-	// Try the (undocumented) HrLanConnectionNameFromGuidOrPath API
-	// from the netman DLL.
-	afsi_log("IShellFolder API not implemented, trying HrLanConnectionNameFromGuidOrPath");
+        // The IShellFolder interface is not implemented on this platform.
+        // Try the (undocumented) HrLanConnectionNameFromGuidOrPath API
+        // from the netman DLL.
+        afsi_log("IShellFolder API not implemented, trying HrLanConnectionNameFromGuidOrPath");
         hNetMan = LoadLibrary("netman.dll");
-	if (hNetMan == NULL) {
-	    free(wGuid);
+        if (hNetMan == NULL) {
+            free(wGuid);
             return -1;
-	}
-	HrLanProc =
-          (HrLanProcAddr) GetProcAddress(hNetMan,
-					 "HrLanConnectionNameFromGuidOrPath");
-	if (HrLanProc == NULL) {
+        }
+        HrLanProc = (HrLanProcAddr) GetProcAddress(hNetMan,
+                                                   "HrLanConnectionNameFromGuidOrPath");
+        if (HrLanProc == NULL) {
             FreeLibrary(hNetMan);
-	    free(wGuid);
+            free(wGuid);
             return -1;
-	}
-	status = HrLanProc(NULL, wGuid, wName, &NameSize);
-	FreeLibrary(hNetMan);
+        }
+        status = HrLanProc(NULL, wGuid, wName, &NameSize);
+        FreeLibrary(hNetMan);
     }
     free(wGuid);
     if (FAILED(status)) {
         afsi_log("lana_GetNameFromGuid: failed to get connection name (status %ld)",
 		 status);
-	return -1;
+        return -1;
     }
 
     // Get the required buffer size, and then convert the string.
     size = WideCharToMultiByte(CP_ACP, 0, wName, -1, NULL, 0, NULL, NULL);
-    *Name = (char *) malloc(size);
-    if (*Name == NULL)
+    name = (char *) malloc(size);
+    if (name == NULL)
         return -1;
-    WideCharToMultiByte(CP_ACP, 0, wName, -1, *Name, size, NULL, NULL);
-    afsi_log("Connection name for %s is '%s'", Guid, *Name);
+    WideCharToMultiByte(CP_ACP, 0, wName, -1, name, size, NULL, NULL);
+    afsi_log("Connection name for %s is '%s'", Guid, name);
+    if (*Name)
+        *Name = name;
+    else
+        free(name);
     return 0;
 }
 
@@ -231,7 +235,7 @@ extern "C" lana_number_t lana_FindLanaByName(const char *LanaName)
         *++p = '\0';                    // Ignore anything after the GUID.
         status = lana_GetNameFromGuid(guid, &name);
         free(guid);
-        if (status == 0) {
+        if (status == 0 && name != 0) {
             status = strcmp(name, LanaName);
             free(name);
             if (status == 0) {
