@@ -1,8 +1,8 @@
 Source: openafs
 Section: non-us/main
 Priority: optional
-Maintainer: Sam Hartman <hartmans@mit.edu>
-Build-Depends: debhelper (>= 2.0.0), libncurses5-dev, libpam0g-dev, bison
+Maintainer: Sam Hartman <hartmans@debian.org>
+Build-Depends: debhelper (>= 2.1.16), libncurses5-dev, libpam0g-dev, bison
 Standards-Version: 3.1.1
 
 Package: openafs-client

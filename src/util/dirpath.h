@@ -102,7 +102,7 @@ ConstructLocalLogPath(const char *cpath,
 
 /* afs installation dir names */
 #define AFSDIR_ETC_DIR   ""
-#define AFSDIR_BIN_DIR   "bin"
+#define AFSDIR_BIN_DIR   ""
 #define AFSDIR_CORES_DIR "cores"
 #define AFSDIR_DB_DIR    "db"
 #define AFSDIR_LOGS_DIR  "logs"
