@@ -1392,7 +1392,7 @@ restoreText(tapeInfo, rstTapeInfoPtr, nextHeader)
     sprintf(filename, "%s/bu_XXXXXX", gettmpdir());
 #if defined (AFS_LINUX20_ENV)
     fid = open(mkstemp(filename), O_RDWR|O_CREAT|O_EXCL, 0600);
-#elif defined (AFS_XBSD_ENV)
+#elif defined (HAVE_MKSTEMP)
     fid = mkstemp(filename);
 #else
     fid = open(mktemp(filename), O_RDWR|O_CREAT|O_EXCL, 0600);
