@@ -176,7 +176,11 @@ void osi_StopListener(void)
 
     if (rxk_ListenerPid) {
 	(void) (*sys_killp)(rxk_ListenerPid, 9);
+#ifdef AFS_LINUX24_ENV
+	afs_osi_Sleep(&rxk_ListenerPid);
+#else
 	rxk_ListenerPid = 0;
+#endif
     }
     sock_release(rx_socket);
     rx_socket = NULL;
