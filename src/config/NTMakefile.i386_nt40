@@ -144,7 +144,8 @@ afscdefs =\
 	-I$(DESTDIR)\include\afs \
 	-I$(DESTDIR)\include\rx \
 	-DWIN32_LEAN_AND_MEAN \
-	-DSTRICT
+	-DSTRICT \
+	-D_WIN32_IE=0x0400
 
 afscdefs = $(afscdefs) $(AFSDEV_AUXCDEFINES)
 

@@ -209,7 +209,7 @@ typedef enum {
    SERVICETYPE_SIMPLE,
    SERVICETYPE_FS,
    SERVICETYPE_CRON
-} SERVICETYPE;
+} AFSSERVICETYPE;
 cpp_quote ("#endif // AFSCLASS_H")
 
 cpp_quote ("#ifndef AFSCLASS_H")
@@ -222,7 +222,7 @@ typedef enum {
 cpp_quote ("#endif // AFSCLASS_H")
 
 typedef struct {
-   SERVICETYPE ServiceType;
+   AFSSERVICETYPE ServiceType;
    SERVICESTATE ServiceState;
    STRING szAuxStatus;
    STRING szParams;

@@ -4227,6 +4227,8 @@ LPFASTLIST GetFastList (HWND hList)
 {
    LPFASTLIST pfl;
    try {
+      if (!GetWindowLong (hList, 0))
+	  pfl = NULL; else
       if ((pfl = (LPFASTLIST)GetWindowLong (hList, 0))->dwSig != dwSigFASTLIST)
          pfl = NULL;
       else if (pfl->hList != hList)
