@@ -804,7 +804,8 @@ struct rx_stats {		/* General rx statistics */
     int ignorePacketDally;	/* packets dropped because call is in dally state */
     int receiveCbufPktAllocFailures;
     int sendCbufPktAllocFailures;
-    int spares[5];
+    int nBusies;
+    int spares[4];
 };
 
 /* structures for debug input and output packets */

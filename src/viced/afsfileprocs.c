@@ -483,11 +483,21 @@ CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 		    /* I'm not really worried about when we restarted, I'm   */
 		    /* just worried about when the first VBUSY was returned. */
 		    TM_GetTimeOfDay(&restartedat, 0);
+		    if (busyonrst) {
+			FS_LOCK;
+			afs_perfstats.fs_nBusies++;
+			FS_UNLOCK;
+		    }
 		    return (busyonrst ? VBUSY : VRESTARTING);
 		} else {
 		    struct timeval now;
 		    TM_GetTimeOfDay(&now, 0);
 		    if ((now.tv_sec - restartedat.tv_sec) < (11 * 60)) {
+			if (busyonrst) {
+			    FS_LOCK;
+			    afs_perfstats.fs_nBusies++;
+			    FS_UNLOCK;
+			}
 			return (busyonrst ? VBUSY : VRESTARTING);
 		    } else {
 			return (VRESTARTING);
@@ -5640,7 +5650,8 @@ FillPerfValues(struct afs_PerfStats *a_perfP)
     a_perfP->host_ClientBlocks = CEBlocks;
 
     a_perfP->sysname_ID = afs_perfstats.sysname_ID;
-
+    a_perfP->rx_nBusies = (afs_int32) rx_stats.nBusies;
+    a_perfP->fs_nBusies = afs_perfstats.fs_nBusies;
 }				/*FillPerfValues */
 
 
