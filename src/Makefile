@@ -513,8 +513,9 @@ libuafs_setup: config minproject export
 
 # "COMPILE_PART1=${COMPILE_PART1}" "COMPILE_PART2=${COMPILE_PART2}" SYS_NAME=${SYS_NAME} ;; 
 
+TARGET=finale
 install:
-	$(MAKE) finale "SYS_NAME=${SYS_NAME}" "WASHTOOL=${WASHTOOL}" \
+	$(MAKE) $(TARGET) "SYS_NAME=${SYS_NAME}" "WASHTOOL=${WASHTOOL}" \
 		"COMPILE_PART1=${COMPILE_PART1}" \
 		"COMPILE_PART2=${COMPILE_PART2}" \
 		 DESTDIR=`pwd`/${SYS_NAME}/dest/ \
