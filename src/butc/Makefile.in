@@ -28,7 +28,7 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS=-g -w ${INCDIRS} ${XCFLAGS}
+CFLAGS=-g -w ${INCDIRS} ${XCFLAGS} @XBSA_CFLAGS@
 
 INCDIRS=-I${TOP_SRCDIR}/config -I${TOP_INCDIR}/afs \
 	-I${TOP_INCDIR}/rx -I${TOP_INCDIR}
@@ -107,7 +107,7 @@ clean:
 
 install:  
 	@case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix4*|*linux*|hp_ux*) \
+	alpha_dux*|sgi_*|sun*|rs_aix4*|*linux*|hp_ux*) \
 		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
 	*) \
 		echo ${INSTALL} butc ${DESTDIR}${sbindir}/butc ; \
@@ -118,7 +118,7 @@ install:
 include ../config/Makefile.version
 dest:  
 	@case ${SYS_NAME} in \
-	alpha_dux*|sgi_*|sun4x_*|rs_aix4*|*linux*|hp_ux*) \
+	alpha_dux*|sgi_*|sun*|rs_aix4*|*linux*|hp_ux*) \
 		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
 	*) \
 		echo ${INSTALL} butc ${DEST}/etc/butc ; \

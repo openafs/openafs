@@ -12,4 +12,4 @@
 
 void AssertionFailed(char *file, int line);
 
-# define assert(ex) {if (!(ex)) AssertionFailed(__FILE__, __LINE__);}
+#define assert(ex) do{if (!(ex)) AssertionFailed(__FILE__, __LINE__);}while(0)

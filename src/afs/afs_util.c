@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_util.c,v 1.1.1.8 2002/12/11 02:36:03 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_util.c,v 1.1.1.9 2003/04/13 19:02:39 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -79,6 +79,35 @@ char *afs_strchr(char *s, int c)
       if (*p == c)
 	return p;
     return NULL;
+}
+
+int afs_strcasecmp(char *s1, char *s2)
+{
+    while (*s1 && *s2) {
+	char c1, c2;
+
+	c1 = *s1++;
+	c2 = *s2++;
+	if (c1 >= 'A' && c1 <= 'Z') c1 += 0x20;
+	if (c2 >= 'A' && c2 <= 'Z') c2 += 0x20;
+	if (c1 != c2)
+	    return c1-c2;
+    }
+
+    return *s1 - *s2;
+}
+
+char *afs_strdup(char *s)
+{
+    char *n;
+    int cc;
+
+    cc = strlen(s) + 1;
+    n = (char *) afs_osi_Alloc(cc);
+    if (n)
+	memcpy(n, s, cc);
+
+    return n;
 }
 
 void print_internet_address(char *preamble, struct srvAddr *sa,

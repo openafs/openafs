@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_callback.c,v 1.1.1.9 2002/06/10 11:39:52 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_callback.c,v 1.1.1.10 2003/04/13 19:02:34 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -1137,7 +1137,7 @@ int SRXAFSCB_GetCellServDB(
 #endif /* RX_ENABLE_LOCKS */
     AFS_STATCNT(SRXAFSCB_GetCellServDB);
 
-    tcell = afs_GetCellByIndex(a_index, READ_LOCK, 0);
+    tcell = afs_GetCellByIndex(a_index, READ_LOCK);
 
     if (!tcell) {
       i = 0;
@@ -1203,7 +1203,6 @@ int SRXAFSCB_GetLocalCell(
 {
     int plen;
     struct cell *tcell;
-    struct afs_q *cq, *tq;
     char *t_name, *p_name = NULL;
 
 #ifdef RX_ENABLE_LOCKS
@@ -1214,27 +1213,16 @@ int SRXAFSCB_GetLocalCell(
     /* Search the list for the primary cell. Cell number 1 is only
      * the primary cell is when no other cell is explicitly marked as
      * the primary cell.  */
-    ObtainReadLock(&afs_xcell);
-
-    for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
-        tq = QNext(cq);
-	tcell = QTOC(cq);
-	if (tcell->states & CPrimary) {
-	    p_name = tcell->cellName;
-	    break;
-	}
-        if (tcell->cell == 1) {
-	    p_name = tcell->cellName;
-	}
-    }
-
+    tcell = afs_GetPrimaryCell(READ_LOCK);
+    if (tcell)
+	p_name = tcell->cellName;
     if (p_name)
 	plen = strlen(p_name);
     else
 	plen = 0;
     t_name = (char *)afs_osi_Alloc(plen+1);
     if (t_name == NULL) {
-        ReleaseReadLock(&afs_xcell);
+	if (tcell) afs_PutCell(tcell, READ_LOCK);
 #ifdef RX_ENABLE_LOCKS
 	AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS */
@@ -1245,13 +1233,12 @@ int SRXAFSCB_GetLocalCell(
     if (p_name)
 	memcpy(t_name, p_name, plen);
 
-    ReleaseReadLock(&afs_xcell);
-
 #ifdef RX_ENABLE_LOCKS
     AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS */
 
     *a_name = t_name;
+    if (tcell) afs_PutCell(tcell, READ_LOCK);
     return 0;
 }
 
@@ -1369,3 +1356,69 @@ int SRXAFSCB_GetCacheConfig(
 
     return 0;
 }
+
+/*------------------------------------------------------------------------
+ * EXPORTED SRXAFSCB_GetCellByNum
+ *
+ * Description:
+ *	Routine to get information about a cell specified by its
+ *	cell number (returned by GetCE/GetCE64).
+ *
+ * Arguments:
+ *	a_call    : Ptr to Rx call on which this request came in.
+ *	a_cellnum : Input cell number
+ *	a_name    : Output cell name (one zero byte when no such cell).
+ *	a_hosts   : Output cell database servers in host byte order.
+ *
+ * Returns:
+ *	0 on success
+ *
+ * Environment:
+ *	Nothing interesting.
+ *
+ * Side Effects:
+ *	As advertised.
+ *------------------------------------------------------------------------*/
+
+int SRXAFSCB_GetCellByNum(struct rx_call *a_call, afs_int32 a_cellnum,
+    char **a_name, serverList *a_hosts)
+{
+    afs_int32 i, sn;
+    struct cell *tcell;
+
+#ifdef RX_ENABLE_LOCKS
+    AFS_GLOCK();
+#endif /* RX_ENABLE_LOCKS */
+    AFS_STATCNT(SRXAFSCB_GetCellByNum);
+
+    a_hosts->serverList_val = 0;
+    a_hosts->serverList_len = 0;
+
+    tcell = afs_GetCellStale(a_cellnum, READ_LOCK);
+    if (!tcell) {
+	*a_name = afs_strdup("");
+#ifdef RX_ENABLE_LOCKS
+	AFS_GUNLOCK();
+#endif /* RX_ENABLE_LOCKS */
+	return 0;
+    }
+
+    ObtainReadLock(&tcell->lock);
+    *a_name = afs_strdup(tcell->cellName);
+
+    for (sn = 0; sn < AFSMAXCELLHOSTS && tcell->cellHosts[sn]; sn++) 
+	;
+    a_hosts->serverList_len = sn;
+    a_hosts->serverList_val = (afs_int32 *) afs_osi_Alloc(sn*sizeof(afs_int32));
+
+    for (i = 0; i < sn; i++)
+	a_hosts->serverList_val[i] = ntohl(tcell->cellHosts[i]->addr->sa_ip);
+    ReleaseReadLock(&tcell->lock);
+    afs_PutCell(tcell, READ_LOCK);
+
+#ifdef RX_ENABLE_LOCKS
+    AFS_GUNLOCK();
+#endif /* RX_ENABLE_LOCKS */
+    return 0;
+}
+ 

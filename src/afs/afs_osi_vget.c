@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi_vget.c,v 1.1.1.6 2002/01/22 19:47:59 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi_vget.c,v 1.1.1.7 2003/04/13 19:02:37 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -22,8 +22,6 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi_vget.c,v 1.1.1.6 2002/01/22
 
 
 
-extern int afs_NFSRootOnly;
-int afs_rootCellIndex = 0;
 #if !defined(AFS_LINUX20_ENV)
 /* This is the common part of the vget VFS call. */
 int afs_osi_vget(struct vcache **avcpp, struct fid *afidp,
@@ -31,7 +29,6 @@ int afs_osi_vget(struct vcache **avcpp, struct fid *afidp,
 {
     struct VenusFid vfid;
     struct SmallFid Sfid;
-    extern struct cell *afs_GetCellByIndex();
     register struct cell *tcell;
     struct vrequest treq;
     register afs_int32 code = 0, cellindex;
@@ -41,31 +38,19 @@ int afs_osi_vget(struct vcache **avcpp, struct fid *afidp,
 #ifdef AFS_OSF_ENV
     Sfid.Vnode = afidp->fid_reserved;
 #endif
-    if (afs_NFSRootOnly &&
-	Sfid.Volume == afs_rootFid.Fid.Volume &&
-	Sfid.Vnode == afs_rootFid.Fid.Vnode &&
-	(Sfid.CellAndUnique & 0xffffff) ==
-	(afs_rootFid.Fid.Unique & 0xffffff) &&
-	((Sfid.CellAndUnique >> 24) & 0xff) == afs_rootCellIndex) {
-	vfid = afs_rootFid;
-    }
-    else {
-	/* Need to extract fid from SmallFid. Will need a wild card option for
-	 * finding the right vcache entry.
-	 */
-	struct cell *tcell;
-	cellindex = (Sfid.CellAndUnique >> 24) & 0xff;
-	tcell = afs_GetCellByIndex(cellindex, READ_LOCK, 0 /* don't refresh */);
-	if (!tcell) {
-	    return ENOENT;
-        }
-	vfid.Cell = tcell->cell;
-	afs_PutCell(tcell, WRITE_LOCK);
-	vfid.Fid.Volume = Sfid.Volume;
-	vfid.Fid.Vnode = Sfid.Vnode;
-	vfid.Fid.Unique = Sfid.CellAndUnique & 0xffffff;
-    }
 
+    /* Need to extract fid from SmallFid. Will need a wild card option for
+     * finding the right vcache entry.
+     */
+    cellindex = (Sfid.CellAndUnique >> 24) & 0xff;
+    tcell = afs_GetCellByIndex(cellindex, READ_LOCK);
+    if (!tcell)
+	return ENOENT;
+    vfid.Cell = tcell->cellNum;
+    afs_PutCell(tcell, WRITE_LOCK);
+    vfid.Fid.Volume = Sfid.Volume;
+    vfid.Fid.Vnode = Sfid.Vnode;
+    vfid.Fid.Unique = Sfid.CellAndUnique & 0xffffff;
 
     /* First attempt to find in cache using wildcard. If that fails,
      * try the usual route to try to get the vcache from the server.

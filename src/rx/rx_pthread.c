@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_pthread.c,v 1.1.1.9 2002/08/02 04:36:23 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_pthread.c,v 1.1.1.10 2003/04/13 19:07:25 hartmans Exp $");
 
 #include <sys/types.h>
 #include <errno.h>
@@ -33,8 +33,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_pthread.c,v 1.1.1.9 2002/08/02 04
 # include <sys/time.h>
 #endif
 #include <sys/stat.h>
-#include <rx.h>
-#include <rx_globals.h>
+#include <rx/rx.h>
+#include <rx/rx_globals.h>
 #include <assert.h>
 #include <rx/rx_pthread.h>
 
@@ -53,7 +53,7 @@ static long rx_pthread_n_event_wakeups;
  */
 static int rx_pthread_event_rescheduled = 0;
 
-static void rx_ListenerProc(void *);
+static void *rx_ListenerProc(void *);
 
 /*
  * We supply an event handling thread for Rx's event processing.
@@ -204,7 +204,7 @@ int sock;
 int *tnop;
 struct rx_call **newcallp;
 {
-    u_long host;
+    unsigned int host;
     u_short port;
     register struct rx_packet *p = (struct rx_packet *)0;
 
@@ -245,7 +245,7 @@ struct rx_call **newcallp;
 /* This is the listener process request loop. The listener process loop
  * becomes a server thread when rxi_ListenerProc returns, and stays
  * server thread until rxi_ServerProc returns. */
-static void rx_ListenerProc(void *argp)
+static void *rx_ListenerProc(void *argp)
 {
     int threadID;
     int sock = (int) argp;
@@ -279,7 +279,21 @@ void rx_ServerProc()
     rxi_dataQuota += rx_initSendWindow;	/* Reserve some pkts for hard times */
     /* threadID is used for making decisions in GetCall.  Get it by bumping
      * number of threads handling incoming calls */
-    threadID = rxi_availProcs++;
+	/* Unique thread ID: used for scheduling purposes *and* as index into
+		the host hold table (fileserver). 
+		The previously used rxi_availProcs is unsuitable as it
+		will already go up and down as packets arrive while the server
+		threads are still initialising! The recently introduced
+		rxi_pthread_hinum does not necessarily lead to a server
+		thread with id 0, which is not allowed to hop through the
+		incoming call queue.
+		So either introduce yet another counter or flag the FCFS
+		thread... chose the latter.
+	*/
+	threadID = ++rxi_pthread_hinum;
+	if (rxi_fcfs_thread_num==0 && rxi_fcfs_thread_num!=threadID)
+		rxi_fcfs_thread_num=threadID;
+	++rxi_availProcs;
     MUTEX_EXIT(&rx_stats_mutex);
 
     while(1) {
@@ -330,6 +344,9 @@ void rxi_StartListener() {
 	printf("Unable to create Rx event handling thread\n");
 	exit(1);
     }
+    MUTEX_ENTER(&rx_stats_mutex);
+    ++rxi_pthread_hinum;
+    MUTEX_EXIT(&rx_stats_mutex);
     AFS_SIGSET_RESTORE();
 
     assert(pthread_mutex_lock(&listener_mutex)==0);
@@ -371,6 +388,9 @@ rxi_Listen(sock)
 	printf("Unable to create socket listener thread\n");
 	exit(1);
     }
+    MUTEX_ENTER(&rx_stats_mutex);
+    ++rxi_pthread_hinum;
+    MUTEX_EXIT(&rx_stats_mutex);
     AFS_SIGSET_RESTORE();
     return 0;
 }

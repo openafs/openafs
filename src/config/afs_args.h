@@ -42,6 +42,9 @@
 #define	AFSOP_SET_DYNROOT	 31	/* enable/disable dynroot support */
 #define	AFSOP_ADDCELLALIAS	 32	/* create alias for existing cell */
 #define	AFSOP_SET_FAKESTAT	 33	/* enable/disable fakestat support */
+#define	AFSOP_CELLINFO		 34	/* set the cellinfo file name */
+#define	AFSOP_SET_THISCELL	 35	/* set the primary cell */
+#define AFSOP_BASIC_INIT	 36	/* used to be part of START_AFS */
 
 /* The range 20-30 is reserved for AFS system offsets in the afs_syscall */
 #define	AFSCALL_PIOCTL		20

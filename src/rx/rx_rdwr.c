@@ -14,7 +14,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_rdwr.c,v 1.1.1.10 2001/10/14 18:06:23 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_rdwr.c,v 1.1.1.11 2003/04/13 19:07:26 hartmans Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL

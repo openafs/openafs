@@ -61,7 +61,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/ticket5.c,v 1.2 2002/12/18 04:00:10 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/ticket5.c,v 1.1.1.2 2003/04/13 19:07:35 hartmans Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
@@ -172,6 +172,14 @@ static const struct krb_convert sconv_list[] = {
     R("mandarin-agent"),
     R("write"),
     R("palladium"),
+    R("imap"),
+    R("smtp"),
+    R("lmtp"),
+    R("ldap"),
+    R("acap"),
+    R("argus"),
+    R("mupdate"),
+    R("argus"),
     {0, 0, 0, 0},
 #undef R
 #undef RC
@@ -228,10 +236,13 @@ int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 	    goto cleanup;
     }
 
-    /* Find the real service key version number */
-    if (t5.enc_part.kvno == NULL)
-	goto bad_ticket;
-    v5_serv_kvno = *t5.enc_part.kvno;
+    /* If kvno is null, it's probably not included because it was kvno==0 
+       in the ticket */
+    if (t5.enc_part.kvno == NULL ) { 
+       v5_serv_kvno = 0;
+    } else { 
+       v5_serv_kvno = *t5.enc_part.kvno;
+    }
     
 
     code = (*get_key)(get_key_rock, v5_serv_kvno, &serv_key);

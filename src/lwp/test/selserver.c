@@ -42,7 +42,7 @@
 #include <sys/select.h>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <bstring.h>
+#include <string.h>
 #include <sys/time.h>
 #include <netinet/in.h>
 #include <netdb.h>
@@ -54,7 +54,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/test/selserver.c,v 1.1.1.4 2001/07/14 22:22:58 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/test/selserver.c,v 1.1.1.5 2003/04/13 19:07:04 hartmans Exp $");
 
 
 #include "../lwp.h"

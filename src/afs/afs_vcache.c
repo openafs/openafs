@@ -38,7 +38,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_vcache.c,v 1.1.1.15 2002/12/11 02:36:03 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_vcache.c,v 1.1.1.16 2003/04/13 19:02:39 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -374,7 +374,7 @@ afs_int32 afs_FlushVCBs (afs_int32 lockit)
 		    callBacks[0].CallBackType = CB_EXCLUSIVE;
 		    for (safety3 = 0; safety3 < MAXHOSTS*2; safety3++) {
 			tc = afs_ConnByHost(tsp, tsp->cell->fsport,
-					    tsp->cell->cell, &treq, 0,
+					    tsp->cell->cellNum, &treq, 0,
 					    SHARED_LOCK);
 			if (tc) {
 			  XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_GIVEUPCALLBACKS);
@@ -632,9 +632,7 @@ restart:
  *	entries locked.
  */
 
-afs_RemoveVCB(afid)
-    register struct VenusFid *afid;
-
+afs_RemoveVCB(struct VenusFid *afid)
 { /*afs_RemoveVCB*/
 
     register int i, j;
@@ -648,7 +646,7 @@ afs_RemoveVCB(afid)
     for(i=0;i<NSERVERS;i++) {
 	for(tsp=afs_servers[i]; tsp; tsp=tsp->next) {
 	    /* if cell is known, and is wrong, then skip this server */
-	    if (tsp->cell && tsp->cell->cell != afid->Cell) continue;
+	    if (tsp->cell && tsp->cell->cellNum != afid->Cell) continue;
 
 	    /*
 	     * Otherwise, iterate through file IDs we're sending to the
@@ -2530,7 +2528,7 @@ struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 lockit,
     if (flag & DO_STATS) {
       if (tvc) 	afs_stats_cmperf.vcacheHits++;
       else	afs_stats_cmperf.vcacheMisses++;
-      if (afid->Cell == LOCALCELL)
+      if (afs_IsPrimaryCellNum(afid->Cell))
         afs_stats_cmperf.vlocalAccesses++;
       else
         afs_stats_cmperf.vremoteAccesses++;
@@ -2672,7 +2670,7 @@ afs_int32 afs_NFSFindVCache(avcp, afid, lockit)
 
     if (tvc) 	afs_stats_cmperf.vcacheHits++;
     else	afs_stats_cmperf.vcacheMisses++;
-    if (afid->Cell == LOCALCELL)
+    if (afs_IsPrimaryCellNum(afid->Cell))
         afs_stats_cmperf.vlocalAccesses++;
     else
         afs_stats_cmperf.vremoteAccesses++;

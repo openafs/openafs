@@ -82,7 +82,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/callback.c,v 1.1.1.10 2002/12/11 02:46:08 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/callback.c,v 1.1.1.11 2003/04/13 19:08:13 hartmans Exp $");
 
 #include <stdio.h> 
 #include <stdlib.h>      /* for malloc() */
@@ -819,7 +819,7 @@ static void MultiBreakCallBack_r(cba, ncbas, afidp, xhost)
 	  	ViceLog(7, 
 		  ("BCB: Failed on file %u.%d.%d, host %x.%d is down\n",
 		   afidp->AFSCBFids_val->Volume, afidp->AFSCBFids_val->Vnode,
-		   afidp->AFSCBFids_val->Unique, hp->host, hp->port));
+		   afidp->AFSCBFids_val->Unique, hp->host, ntohs(hp->port)));
 		}
 
 		H_LOCK
@@ -872,7 +872,7 @@ BreakCallBack(xhost, fid, flag)
     int hostindex;
 
     ViceLog(7,("BCB: BreakCallBack(all but %x.%d, (%u,%d,%d))\n",
-	       xhost->host, xhost->port, fid->Volume, fid->Vnode, 
+	       xhost->host, ntohs(xhost->port), fid->Volume, fid->Vnode, 
 	       fid->Unique));
 
     H_LOCK
@@ -903,7 +903,7 @@ BreakCallBack(xhost, fid, flag)
 	  }
 	  else if (thishost->hostFlags & VENUSDOWN) {
 	    ViceLog(7,("BCB: %x.%d is down; delaying break call back\n",
-		       thishost->host, thishost->port));
+		       thishost->host, ntohs(thishost->port)));
 	    cb->status = CB_DELAYED;
 	  }
 	  else {
@@ -964,7 +964,7 @@ DeleteCallBack(host, fid)
     pcb = FindCBPtr(fe, host);
     if (!*pcb) {
 	ViceLog(8,("DCB: No call back for host %x.%d, (%u, %d, %d)\n",
-	    host->host, host->port, fid->Volume, fid->Vnode, fid->Unique));
+	    host->host, ntohs(host->port), fid->Volume, fid->Vnode, fid->Unique));
 	h_Unlock_r(host);
 	H_UNLOCK
 	return;
@@ -1094,7 +1094,7 @@ int BreakDelayedCallBacks_r(host)
 	    if (ShowProblems) {
 		ViceLog(0,
 	   ("CB: Call back connect back failed (in break delayed) for %x.%d\n",
-			host->host, host->port));
+			host->host, ntohs(host->port)));
 	      }
 	    host->hostFlags |= VENUSDOWN;
 	}
@@ -1139,13 +1139,13 @@ int BreakDelayedCallBacks_r(host)
 	    if (ShowProblems) {
 		ViceLog(0,
 	     ("CB: XCallBackBulk failed, host=%x.%d; callback list follows:\n",
-		    host->host, host->port));
+		    host->host, ntohs(host->port)));
 	    }
 	    for (i = 0; i<nfids; i++) {
 		if (ShowProblems) {
 		    ViceLog(0,
 		    ("CB: Host %x.%d, file %u.%u.%u (part of bulk callback)\n",
-		               host->host, host->port, 
+		               host->host, ntohs(host->port), 
 		               fids[i].Volume, fids[i].Vnode, fids[i].Unique));
 		}
 		/* used to do this:
@@ -1196,10 +1196,10 @@ static int MultiBreakVolumeCallBack_r (host, isheld, parms)
 	    return 0;      /* Release hold */
 	}
 	ViceLog(8,("BVCB: volume call back for host %x.%d failed\n",
-		 host->host,host->port));
+		 host->host,ntohs(host->port)));
 	if (ShowProblems) {
 	    ViceLog(0, ("CB: volume callback for host %x.%d failed\n",
-		    host->host, host->port));
+		    host->host, ntohs(host->port)));
 	}
 	DeleteAllCallBacks_r(host); /* Delete all callback state rather than
 				     attempting to selectively remember to
@@ -1689,7 +1689,7 @@ main(argc, argv)
     }
     if (err || argc != 1) {
 	fprintf(stderr,
-		"Usage: cbd [-host cbid] [-fid volume vnode] [-stats] callbackdumpfile\n");
+		"Usage: cbd [-host cbid] [-fid volume vnode] [-stats] [-all] callbackdumpfile\n");
 	fprintf(stderr, "[cbid is shown for each host in the hosts.dump file]\n");
 	exit(1);
     }
@@ -1812,7 +1812,9 @@ struct AFSCBFids*	afidp;
 
 	i = host->interface->numberOfInterfaces;
 	addr = malloc(i * sizeof(afs_int32));
+	if (!addr) return 1;
 	conns = malloc(i * sizeof(struct rx_connection *));
+	if (!conns) { free(addr); return 1; }
 
 	/* initialize alternate rx connections */
 	for ( i=0,j=0; i < host->interface->numberOfInterfaces; i++)
@@ -1897,7 +1899,9 @@ struct host*		host;
 
 	i = host->interface->numberOfInterfaces;
 	addr = malloc(i * sizeof(afs_int32));
+	if (!addr) return 1;
 	conns = malloc(i * sizeof(struct rx_connection *));
+	if (!conns) { free(addr); return 1; }
 
 	/* initialize alternate rx connections */
 	for ( i=0,j=0; i < host->interface->numberOfInterfaces; i++)

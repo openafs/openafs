@@ -63,7 +63,7 @@ install: ${DESTDIR}${sbindir}/inetd
 dest: ${DEST}/etc/inetd
 	set -x; \
 	case "${SYS_NAME}" in \
-	sun4* ) \
+	sun* ) \
 		${INSTALL} -m 644 -f inetd.conf.solaris ${DEST}/etc/inetd.conf ;; \
 	sgi_* ) \
 		${INSTALL} -m 644 -f inetd.conf.sgi ${DEST}/etc/inetd.conf ;; \

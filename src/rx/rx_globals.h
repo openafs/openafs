@@ -32,7 +32,6 @@ EXT struct rx_service *rx_services[RX_MAX_SERVICES+1];
 #ifdef RX_ENABLE_LOCKS
 /* Protects nRequestsRunning as well as pool allocation variables. */
 EXT afs_kmutex_t rx_serverPool_lock;
-EXT afs_kcondvar_t rx_serverPool_cv;
 #endif /* RX_ENABLE_LOCKS */
 
 /* Incoming calls wait on this queue when there are no available server processes */
@@ -374,7 +373,13 @@ EXT int rxi_callAbortDelay INIT(3000);
  */
 
 #if defined(AFS_PTHREAD_ENV)
+EXT int rxi_fcfs_thread_num INIT(0);
 EXT pthread_key_t rx_thread_id_key;
+/* keep track of pthread numbers - protected by rx_stats_mutex, 
+   except in rx_Init() before mutex exists! */
+EXT int rxi_pthread_hinum INIT(0);
+#else
+#define rxi_fcfs_thread_num (0)
 #endif
 
 #if defined(RX_ENABLE_LOCKS)

@@ -19,7 +19,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/viced.c,v 1.1.1.9 2002/09/26 19:09:16 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/viced.c,v 1.1.1.10 2003/04/13 19:08:14 hartmans Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -76,6 +76,11 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/viced/viced.c,v 1.1.1.9 2002/09/26 19:0
 #endif
 #include "viced.h"
 #include "host.h"
+#ifndef AFS_NT40_ENV
+#ifdef AFS_PTHREAD_ENV
+#include "softsig.h"
+#endif
+#endif
 #if defined(AFS_SGI_ENV)
 #include "sys/schedctl.h"
 #include "sys/lock.h"
@@ -128,6 +133,7 @@ struct afs_PerfStats afs_perfstats;
 extern	int     LogLevel;
 extern	int	Statistics;
 
+int     busyonrst = 1;
 int     timeout = 30;
 int 	SawSpare;
 int 	SawPctSpare;
@@ -219,21 +225,31 @@ int fs_rxstat_userok(call)
 
 static void ResetCheckSignal(void)
 {
-#ifdef	AFS_HPUX_ENV
-    signal(SIGPOLL, CheckSignal_Signal);
+    int signo;
+
+#if defined(AFS_HPUX_ENV)
+    signo = SIGPOLL;
+#elif defined(AFS_NT40_ENV)
+    signo = SIGUSR2;
 #else
-#ifdef AFS_NT40_ENV
-    signal(SIGUSR2, CheckSignal_Signal);
-#else
-    signal(SIGXCPU, CheckSignal_Signal);
+    signo = SIGXCPU;
 #endif
+
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+    softsig_signal(signo, CheckSignal_Signal);
+#else
+    signal(signo, CheckSignal_Signal);
 #endif
 }
 
 static void ResetCheckDescriptors(void)
 {
 #ifndef AFS_NT40_ENV
+#if defined(AFS_PTHREAD_ENV)
+    softsig_signal(SIGTERM, CheckDescriptors_Signal);
+#else
     signal(SIGTERM, CheckDescriptors_Signal);
+#endif
 #endif
 }
 
@@ -299,7 +315,6 @@ main(argc, argv)
 #ifdef AFS_PTHREAD_ENV
     pthread_t parentPid, serverPid;
     pthread_attr_t tattr;
-    AFS_SIGSET_DECL;
 #else /* AFS_PTHREAD_ENV */
     PROCESS parentPid, serverPid;
 #endif /* AFS_PTHREAD_ENV */
@@ -370,6 +385,11 @@ main(argc, argv)
     ViceLog(0, ("XFS/EFS File server starting\n"));
 #else
     ViceLog(0, ("File server starting\n"));
+#endif
+
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+    /* initialize the pthread soft signal handler thread */
+    softsig_init();
 #endif
 
     /* install signal handlers for controlling the fileserver process */
@@ -571,11 +591,9 @@ main(argc, argv)
 #ifdef AFS_PTHREAD_ENV
     assert(pthread_attr_init(&tattr) == 0);
     assert(pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED) == 0);
-    /* Block signals in the threads */
-    AFS_SIGSET_CLEAR();
+
     assert(pthread_create(&serverPid, &tattr, (void *)FiveMinuteCheckLWP, &fiveminutes) == 0);
     assert(pthread_create(&serverPid, &tattr, (void *)HostCheckLWP, &fiveminutes) == 0);
-    AFS_SIGSET_RESTORE();
 #else /* AFS_PTHREAD_ENV */
     assert(LWP_CreateProcess(FiveMinuteCheckLWP, stack*1024, LWP_MAX_PRIORITY - 2,
 	    &fiveminutes, "FiveMinuteChecks", &serverPid) == LWP_SUCCESS);
@@ -617,8 +635,14 @@ main(argc, argv)
 		   FS_HostName, hoststr, FS_HostAddr_NBO, FS_HostAddr_HBO));
     }
 
-    /* Install handler to catch the shutdown signal */
-    signal(SIGQUIT, ShutDown_Signal); /* bosserver assumes SIGQUIT shutdown */
+    /* Install handler to catch the shutdown signal;
+     * bosserver assumes SIGQUIT shutdown
+     */
+#if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
+    softsig_signal(SIGQUIT, ShutDown_Signal);
+#else
+    signal(SIGQUIT, ShutDown_Signal);
+#endif
 
     ViceLog(0,("File Server started %s",
 	       afs_ctime(&tp.tv_sec, tbuffer, sizeof(tbuffer))));
@@ -635,6 +659,18 @@ main(argc, argv)
 }
 
 
+static void setThreadId(char *s)
+{
+#ifdef AFS_PTHREAD_ENV
+    /* set our 'thread-id' so that the host hold table works */
+    MUTEX_ENTER(&rx_stats_mutex);   /* protects rxi_pthread_hinum */ 
+    ++rxi_pthread_hinum;
+    pthread_setspecific(rx_thread_id_key, (void *)rxi_pthread_hinum);
+    MUTEX_EXIT(&rx_stats_mutex);
+    ViceLog(0,("Set thread id %d for '%s'\n", pthread_getspecific(rx_thread_id_key), s));
+#endif
+}
+
 /* This LWP does things roughly every 5 minutes */
 static FiveMinuteCheckLWP()
 
@@ -643,6 +679,7 @@ static FiveMinuteCheckLWP()
     char tbuffer[32];
 
     ViceLog(1, ("Starting five minute check process\n"));
+    setThreadId("FiveMinuteCheckLWP");
     while (1) {
 #ifdef AFS_PTHREAD_ENV
 	sleep(fiveminutes);
@@ -681,6 +718,7 @@ static HostCheckLWP()
 
 {
     ViceLog(1, ("Starting Host check process\n"));
+    setThreadId("HostCheckLWP");
     while(1) {
 #ifdef AFS_PTHREAD_ENV
 	sleep(fiveminutes);
@@ -923,6 +961,7 @@ static FlagMsg()
     strcat(buffer, "[-implicit <admin mode bits: rlidwka>] ");
     strcat(buffer, "[-hr <number of hours between refreshing the host cps>] ");
     strcat(buffer, "[-busyat <redirect clients when queue > n>] ");
+    strcat(buffer, "[-nobusy <no VBUSY before a volume is attached>] ");
     strcat(buffer, "[-rxpck <number of rx extra packets>] ");
     strcat(buffer, "[-rxdbg (enable rx debugging)] ");
     strcat(buffer, "[-rxdbge (enable rxevent debugging)] ");
@@ -1152,7 +1191,10 @@ static ParseArgs(argc, argv)
 			   busy_threshold);
 		    Sawbusy = 0;
 		}
-	    }
+	      }
+	    else
+	      if (!strcmp(argv[i], "-nobusy")) 
+		busyonrst=0;
 #ifdef	AFS_AIX32_ENV
 	else
 	    if (!strcmp(argv[i], "-m")) {

@@ -96,3 +96,9 @@ proc GetCacheConfig(
   OUT cacheConfig *config
 ) = 218;
 
+proc GetCellByNum(
+  IN  afs_int32 cellNumber,
+  OUT string cellName<AFSNAMEMAX>,
+  OUT serverList *cellHosts
+) = 65537;
+

@@ -88,6 +88,7 @@
    they won't allocate sunx86 IDs at all. So leave a gap and pray. */
 #define SYS_NAME_ID_sunx86_57            950
 #define SYS_NAME_ID_sunx86_58            951
+#define SYS_NAME_ID_sunx86_59            952
 
 #define SYS_NAME_ID_vax_ul4		1003
 #define SYS_NAME_ID_vax_ul40		1004
@@ -110,6 +111,7 @@
 #define SYS_NAME_ID_alpha_osf32c	1204
 #define SYS_NAME_ID_alpha_dux40		1205
 #define SYS_NAME_ID_alpha_dux50		1206
+#define SYS_NAME_ID_alpha_dux51		1206
 
 #define SYS_NAME_ID_ncrx86_20		1300
 #define SYS_NAME_ID_ncrx86_30		1301

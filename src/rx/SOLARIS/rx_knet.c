@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/SOLARIS/rx_knet.c,v 1.1.1.9 2002/05/11 00:01:39 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/SOLARIS/rx_knet.c,v 1.1.1.10 2003/04/13 19:07:29 hartmans Exp $");
 
 #ifdef AFS_SUN5_ENV
 #include "../rx/rx_kcommon.h"
@@ -292,11 +292,21 @@ int osi_FreeSocket(asocket)
 {
     extern int rxk_ListenerPid;
     struct sonode *so = (struct sonode *)asocket;
-    vnode_t *vp = SOTOV(so);
+    struct sockaddr_in taddr;
+    struct iovec dvec;
+    char c;
 
     AFS_STATCNT(osi_FreeSocket);
+
+    taddr.sin_family = AF_INET;
+    taddr.sin_port = htons(rx_port);
+    taddr.sin_addr.s_addr = htonl(0x7f000001);
+
+    dvec.iov_base = &c;
+    dvec.iov_len = 1;
+
     while (rxk_ListenerPid) {
-	kill(rxk_ListenerPid, SIGUSR1);
+	osi_NetSend(rx_socket, &taddr, &dvec, 1, 1, 0);
 	afs_osi_Sleep(&rxk_ListenerPid);
     }
 

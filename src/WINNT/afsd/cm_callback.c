@@ -112,6 +112,7 @@ void cm_CallbackNotifyChange(cm_scache_t *scp)
 			smb_NotifyChange(0,
 			 FILE_NOTIFY_GENERIC_FILE_FILTER,
 			 dscp, NULL, NULL, TRUE);
+		if (dscp) cm_ReleaseSCache(dscp);
 	}
 }
 
@@ -855,4 +856,12 @@ void cm_CheckCBExpiration(void)
                 }
         }
         lock_ReleaseWrite(&cm_scacheLock);
+}
+
+/* debug interface: not implemented */
+int SRXAFSCB_GetCellByNum(struct rx_call *a_call, afs_int32 a_cellnum,
+			  char **a_name, serverList *a_hosts)
+{
+    /* XXXX */
+    return RXGEN_OPCODE;
 }

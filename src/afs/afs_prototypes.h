@@ -18,9 +18,32 @@ extern int afs_Analyze(struct conn *aconn, afs_int32 acode, struct VenusFid *afi
 			struct cell *cellp);
 
 /* afs_cell.c */
-extern struct cell *afs_GetRealCellByIndex(register afs_int32 cellindex,
-					   afs_int32 locktype,
-					   afs_int32 refresh);
+extern afs_rwlock_t afs_xcell;
+extern void afs_CellInit(void);
+extern void shutdown_cell(void);
+extern int afs_cellname_init(ino_t inode, int lookupcode);
+extern int afs_cellname_write();
+extern afs_int32 afs_NewCell(char *acellName, afs_int32 *acellHosts,
+			     int aflags, char *linkedcname, u_short fsport, 
+			     u_short vlport, int timeout);
+extern afs_int32 afs_SetPrimaryCell(char *acellName);
+extern struct cell *afs_GetCell(afs_int32 acell, afs_int32 locktype);
+extern struct cell *afs_GetCellStale(afs_int32 acell, afs_int32 locktype);
+extern struct cell *afs_GetCellByIndex(afs_int32 cellidx, afs_int32 locktype);
+extern struct cell *afs_GetCellByName(char *acellName, afs_int32 locktype);
+extern struct cell *afs_GetPrimaryCell(afs_int32 locktype);
+extern int afs_IsPrimaryCellNum(afs_int32 cellnum);
+extern int afs_IsPrimaryCell(struct cell *cell);
+extern void *afs_TraverseCells(void *(*cb)(struct cell *, void *), void *arg);
+extern int afs_CellOrAliasExists(char *aname);
+extern int afs_CellNumValid(afs_int32 cellnum);
+extern afs_int32 afs_NewCellAlias(char *alias, char *cell);
+extern struct cell_alias *afs_GetCellAlias(int index);
+extern int afs_AFSDBHandler(char *acellName, int acellNameLen,
+			    afs_int32 *kernelMsg);
+extern void afs_LookupAFSDB(char *acellName);
+extern void afs_StopAFSDB(void);
+extern void afs_RemoveCellEntry(struct server *srvp);
 
 /* afs_conn.c */
 extern struct conn *afs_ConnBySA(struct srvAddr *sap, unsigned short aport,
@@ -28,6 +51,7 @@ extern struct conn *afs_ConnBySA(struct srvAddr *sap, unsigned short aport,
 			  int force_if_down, afs_int32 create, afs_int32 locktype);
 
 /* afs_dcache.c */
+extern int cacheDiskType;
 extern void afs_dcacheInit(int afiles, int ablocks, int aDentries, int achunk,
 			   int aflags);
 
@@ -84,7 +108,9 @@ extern void afs_GCPAGs_perproc_func(AFS_PROC *pproc);
 
 /* afs_util.c */
 extern char *afs_cv2string(char *ttp, afs_uint32 aval);
+extern int afs_strcasecmp(char *s1, char *s2);
 extern char *afs_strchr(char *s, int c);
+extern char *afs_strdup(char *s);
 extern void print_internet_address(char *preamble, struct srvAddr *sa,
 			    char *postamble, int flag);
 extern afs_int32 afs_data_pointer_to_int32(const void *p);

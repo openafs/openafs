@@ -9,12 +9,12 @@
 
 /* Security related utilities for the Windows platform */
 
-#include <param.h>
+#include <afs/param.h>
 #include <afsconfig.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/secutil_nt.c,v 1.1.1.3 2001/07/11 03:11:48 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/util/secutil_nt.c,v 1.1.1.4 2003/04/13 19:08:06 hartmans Exp $");
 
-#include <stds.h>
+#include <afs/stds.h>
 
 #include <stddef.h>
 #include <stdlib.h>

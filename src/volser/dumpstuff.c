@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/volser/dumpstuff.c,v 1.1.1.8 2001/10/14 18:07:28 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/dumpstuff.c,v 1.1.1.9 2003/04/13 19:08:21 hartmans Exp $");
 
 #include <sys/types.h>
 #include <ctype.h>
@@ -75,7 +75,7 @@ static int DumpPartial(register struct iod *iodp, register Volume *vp,
 static int DumpVnodeIndex(register struct iod *iodp, Volume *vp,
 			  VnodeClass class, afs_int32 fromtime, int forcedump);
 static int DumpVnode(register struct iod *iodp, struct VnodeDiskObject *v,
-		     int vnodeNumber, int dumpEverything);
+		     int volid, int vnodeNumber, int dumpEverything);
 static int ReadDumpHeader(register struct iod *iodp, struct DumpHeader *hp);
 static int ReadVnodes(register struct iod *iodp, Volume *vp,
 		      int incremental, afs_int32 *Lbuf, afs_int32 s1,
@@ -649,8 +649,8 @@ static int DumpVnodeIndex(register struct iod *iodp, Volume *vp,
     assert(size != -1);
     nVnodes = (size / vcp->diskSize) - 1;
     if (nVnodes > 0) {
-	assert((nVnodes+1)*vcp->diskSize == size)
-	assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0)
+	assert((nVnodes+1)*vcp->diskSize == size);
+	assert(STREAM_SEEK(file, vcp->diskSize, 0) == 0);
     }
     else nVnodes = 0;
     for (vnodeIndex = 0; nVnodes && STREAM_READ(vnode, vcp->diskSize, 1, file) == 1 && !code;
@@ -659,7 +659,7 @@ static int DumpVnodeIndex(register struct iod *iodp, Volume *vp,
 	/* Note:  the >= test is very important since some old volumes may not have
   	   a serverModifyTime.  For an epoch dump, this results in 0>=0 test, which
 	   does dump the file! */
-	if (!code) code = DumpVnode(iodp, vnode, bitNumberToVnodeNumber(vnodeIndex, class), flag);
+	if (!code) code = DumpVnode(iodp, vnode, V_id(vp), bitNumberToVnodeNumber(vnodeIndex, class), flag);
 	if (!flag) IOMGR_Poll(); /* if we dont' xfr data, but scan instead, could lose conn */
     }
     STREAM_CLOSE(file);
@@ -686,7 +686,7 @@ static int DumpDumpHeader(register struct iod *iodp, register Volume *vp,
 }
 
 static int DumpVnode(register struct iod *iodp, struct VnodeDiskObject *v,
-		     int vnodeNumber, int dumpEverything)
+		     int volid, int vnodeNumber, int dumpEverything)
 {
     int code = 0;
     IHandle_t *ihP;
@@ -715,8 +715,8 @@ static int DumpVnode(register struct iod *iodp, struct VnodeDiskObject *v,
 	IH_INIT(ihP, iodp->device, iodp->parentId, VNDISK_GET_INO(v));
 	fdP = IH_OPEN(ihP);
 	if (fdP == NULL) {
-	    Log("1 Volser: DumpVnode: dump: Unable to open inode %d for vnode %d; not dumped, error %d\n",
-		VNDISK_GET_INO(v), vnodeNumber, errno);
+	    Log("1 Volser: DumpVnode: dump: Unable to open inode %d for vnode %d (volume %d); not dumped, error %d\n",
+		VNDISK_GET_INO(v), vnodeNumber, volid, errno);
 	    IH_RELEASE(ihP);
 	    return VOLSERREAD_DUMPERROR;
 	}
@@ -780,7 +780,7 @@ int ProcessIndex(Volume *vp, VnodeClass class, afs_int32 **Bufp, int *sizep,
 	OS_SYNC(afile->str_fd);
     } else {
 	size = OS_SIZE(fdP->fd_fd);
-	assert(size != -1)
+	assert(size != -1);
 	nVnodes = (size <= vcp->diskSize ? 0 :
 		   size-vcp->diskSize) >> vcp->logSize;
 	if (nVnodes > 0) {

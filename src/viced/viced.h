@@ -189,6 +189,8 @@ struct AFSStatistics
 	struct AFSDisk	Disks[AFS_MSTATDISKS];
 };
 
+extern int busyonrst;
+
 #define RESTART_ORDINARY 1
 #define RESTART_FAST 2
 #define RESTART_SAFE 3

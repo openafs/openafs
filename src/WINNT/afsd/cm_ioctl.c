@@ -30,7 +30,7 @@
 #include "smb.h"
 
 #ifndef DJGPP
-#include <rxkad.h>
+#include <rx/rxkad.h>
 #include "afsrpc.h"
 #else
 #include <rx/rxkad.h>
@@ -1735,7 +1735,9 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 			 * leading "/afs" when writing out the submount.
 			 */
 			WritePrivateProfileString("AFS Submounts",
-					submountreqp, &afspath[strlen("/afs")],
+					submountreqp, 
+					(strlen(&afspath[strlen("/afs")])) ?
+						  &afspath[strlen("/afs")]:"/",
 					"afsdsbmt.ini");
 
 			strcpy(ioctlp->outDatap, submountreqp);
@@ -1848,8 +1850,9 @@ long cm_IoctlMakeSubmount(smb_ioctl_t *ioctlp, cm_user_t *userp)
 	sprintf(ioctlp->outDatap, "auto%ld", nextAutoSubmount);
 
 	WritePrivateProfileString("AFS Submounts", ioctlp->outDatap,
-					&afspath[lstrlen("/afs")],
-					"afsdsbmt.ini");
+				  (strlen(&afspath[lstrlen("/afs")])) ? 
+				  &afspath[lstrlen("/afs")]:"/",
+				  "afsdsbmt.ini");
 
 	ioctlp->outDatap += strlen(ioctlp->outDatap) +1;
 	lock_ReleaseMutex(&cm_Afsdsbmt_Lock);

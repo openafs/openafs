@@ -27,9 +27,45 @@
 #else
 #define AFS_SET_SIGMASK pthread_sigmask
 #endif
+#ifdef SIGSEGV 
+#define _SETSEGV sigdelset(&i_tset, SIGSEGV); 
+#else
+#define _SETSEGV ;
+#endif 
+#ifdef SIGBUS 
+#define _SETBUS sigdelset(&i_tset, SIGBUS); 
+#else 
+#define _SETBUS ;
+#endif 
+#ifdef SIGILL 
+#define _SETILL sigdelset(&i_tset, SIGILL); 
+#else
+#define _SETILL ;
+#endif 
+#ifdef SIGTRAP 
+#define _SETTRAP sigdelset(&i_tset, SIGTRAP); 
+#else
+#define _SETTRAP ;
+#endif 
+#ifdef SIGABRT 
+#define _SETABRT sigdelset(&i_tset, SIGABRT); 
+#else
+#define _SETABRT ;
+#endif 
+#ifdef SIGFPE 
+#define _SETFPE sigdelset(&i_tset, SIGFPE); 
+#else
+#define _SETFPE ;
+#endif 
 #define AFS_SIGSET_CLEAR() \
 do { \
 	 sigfillset(&i_tset); \
+         _SETSEGV \
+         _SETBUS \
+         _SETILL \
+         _SETTRAP \
+         _SETABRT \
+         _SETFPE \
 	 assert(AFS_SET_SIGMASK(SIG_BLOCK, &i_tset, &i_oset) == 0); \
 } while (0)
 

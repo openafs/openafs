@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_sleep.c,v 1.1.1.9 2002/08/02 04:28:56 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_sleep.c,v 1.1.1.10 2003/04/13 19:02:46 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -192,18 +192,19 @@ void afs_osi_Sleep(char *event)
 	set_current_state(TASK_INTERRUPTIBLE);
 	AFS_ASSERT_GLOCK();
 	AFS_GUNLOCK();
-	spin_lock_irq(&current->sigmask_lock);
+
+	SIG_LOCK(current);
 	saved_set = current->blocked;
 	sigfillset(&current->blocked);
-	recalc_sigpending(current);
-	spin_unlock_irq(&current->sigmask_lock);
+	RECALC_SIGPENDING(current);
+	SIG_UNLOCK(current);
 
 	schedule();
 
-	spin_lock_irq(&current->sigmask_lock);
+	SIG_LOCK(current);
 	current->blocked = saved_set;
-	recalc_sigpending(current);
-	spin_unlock_irq(&current->sigmask_lock);
+	RECALC_SIGPENDING(current);
+	SIG_UNLOCK(current);
 	AFS_GLOCK();
     }
     remove_wait_queue(&evp->cond, &wait);

@@ -17,6 +17,7 @@
 #define RX_KMUTEX_H_
 
 #include "../rx/rx_kernel.h"	/* for osi_Panic() */
+#include "linux/sched.h"
 
 /* AFS_GLOBAL_RXLOCK_KERNEL is defined so that the busy tq code paths are
  * used. The thread can sleep when sending packets.
@@ -32,7 +33,6 @@
 struct coda_inode_info {};
 #endif
 #include "linux/wait.h"
-#include "linux/sched.h"
 
 typedef struct afs_kmutex {
     struct semaphore sem;
@@ -125,19 +125,19 @@ static inline int CV_WAIT(afs_kcondvar_t *cv, afs_kmutex_t *l)
     if (isAFSGlocked) AFS_GUNLOCK();
     MUTEX_EXIT(l);
 
-    spin_lock_irq(&current->sigmask_lock);
+    SIG_LOCK(current);
     saved_set = current->blocked;
     sigfillset(&current->blocked);
-    recalc_sigpending(current);
-    spin_unlock_irq(&current->sigmask_lock);
+    RECALC_SIGPENDING(current);
+    SIG_UNLOCK(current);
 
     schedule();
     remove_wait_queue(cv, &wait);
 
-    spin_lock_irq(&current->sigmask_lock);
+    SIG_LOCK(current);
     current->blocked = saved_set;
-    recalc_sigpending(current);
-    spin_unlock_irq(&current->sigmask_lock);
+    RECALC_SIGPENDING(current);
+    SIG_UNLOCK(current);
 
     if (isAFSGlocked) AFS_GLOCK();
     MUTEX_ENTER(l);
@@ -162,19 +162,19 @@ static inline int CV_TIMEDWAIT(afs_kcondvar_t *cv, afs_kmutex_t *l, int waittime
     if (isAFSGlocked) AFS_GUNLOCK();
     MUTEX_EXIT(l);
     
-    spin_lock_irq(&current->sigmask_lock);
+    SIG_LOCK(current);
     saved_set = current->blocked;
     sigfillset(&current->blocked);
-    recalc_sigpending(current);
-    spin_unlock_irq(&current->sigmask_lock);
+    RECALC_SIGPENDING(current);
+    SIG_UNLOCK(current);
 
     t = schedule_timeout(t);
     remove_wait_queue(cv, &wait);
     
-    spin_lock_irq(&current->sigmask_lock);
+    SIG_LOCK(current);
     current->blocked = saved_set;
-    recalc_sigpending(current);
-    spin_unlock_irq(&current->sigmask_lock);
+    RECALC_SIGPENDING(current);
+    SIG_UNLOCK(current);
 
     if (isAFSGlocked) AFS_GLOCK();
     MUTEX_ENTER(l);

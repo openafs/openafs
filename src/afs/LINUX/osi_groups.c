@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_groups.c,v 1.1.1.10 2002/12/11 02:36:15 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_groups.c,v 1.1.1.11 2003/04/13 19:02:45 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -33,14 +33,20 @@ static int afs_setgroups(cred_t **cr, int ngroups, gid_t *gidset, int change_par
  */
 int set_pag_in_parent(int pag, int g0, int g1)
 {
+#ifdef STRUCT_TASK_STRUCT_HAS_PARENT
+    gid_t *gp = current->parent->groups;
+#else
     gid_t *gp = current->p_pptr->groups;
+#endif
     int ngroups;
     int i;
 
     
+#ifdef STRUCT_TASK_STRUCT_HAS_PARENT
+    ngroups = current->parent->ngroups;
+#else
     ngroups = current->p_pptr->ngroups;
-    gp = current->p_pptr->groups;
-
+#endif
 
     if ((ngroups < 2) || (afs_get_pag_from_groups(gp[0], gp[1]) == NOPAG)) {
 	/* We will have to shift grouplist to make room for pag */
@@ -57,7 +63,11 @@ int set_pag_in_parent(int pag, int g0, int g1)
     if (ngroups < NGROUPS)
 	gp[ngroups] = NOGROUP;
 
+#ifdef STRUCT_TASK_STRUCT_HAS_PARENT
+    current->parent->ngroups = ngroups;
+#else
     current->p_pptr->ngroups = ngroups;
+#endif
     return 0;
 }
 

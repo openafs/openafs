@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include "asn1_err.h"
 #include <errno.h>
 /*

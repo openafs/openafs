@@ -14,6 +14,9 @@
 	des_key_sched;
 	des_random_key;
 	des_string_to_key;
+	des_cbc_cksum;
+	des_ecb_encrypt;
+	des_pcbc_encrypt;
 	ktohl;
 	life_to_time;
 	rx_DestroyConnection;

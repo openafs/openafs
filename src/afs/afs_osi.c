@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi.c,v 1.1.1.12 2002/09/26 18:57:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi.c,v 1.1.1.13 2003/04/13 19:02:36 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -289,9 +289,6 @@ void afs_osi_MaskSignals(){
     
 /* unmask signals in rxk listener */
 void afs_osi_UnmaskRxkSignals(){
-#ifdef AFS_LINUX22_ENV
-    osi_linux_unmask();
-#endif
 }
     
 /* register rxk listener proc info */
@@ -494,6 +491,10 @@ void afs_osi_Free(void *x, size_t asize)
 #endif
 }
 
+void afs_osi_FreeStr(char *x)
+{
+    afs_osi_Free(x, strlen(x) + 1);
+}
 
 /* ? is it moderately likely that there are dirty VM pages associated with 
  * this vnode?
@@ -807,11 +808,19 @@ void afs_osi_TraverseProcTable()
 #ifdef EXPORTED_TASKLIST_LOCK
     read_lock(&tasklist_lock);
 #endif
+#ifdef DEFINED_FOR_EACH_PROCESS
+    for_each_process(p) if (p->pid) {
+        if (p->state & TASK_ZOMBIE)
+            continue;
+	afs_GCPAGs_perproc_func(p);
+    }
+#else
     for_each_task(p) if (p->pid) {
         if (p->state & TASK_ZOMBIE)
             continue;
 	afs_GCPAGs_perproc_func(p);
     }
+#endif
 #ifdef EXPORTED_TASKLIST_LOCK
     read_unlock(&tasklist_lock);
 #endif

@@ -87,7 +87,10 @@ case $system in
 		 if test "x$with_linux_kernel_headers" != "x"; then
 		   LINUX_KERNEL_PATH="$with_linux_kernel_headers"
 		 else
-		   LINUX_KERNEL_PATH="/usr/src/linux"
+		   LINUX_KERNEL_PATH="/usr/src/linux-2.4"
+		   if test ! -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
+		     LINUX_KERNEL_PATH="/usr/src/linux"
+		   fi
 		 fi
 		 if test -f "$LINUX_KERNEL_PATH/include/linux/version.h"; then
 		  linux_kvers=`fgrep UTS_RELEASE $LINUX_KERNEL_PATH/include/linux/version.h |awk 'BEGIN { FS="\"" } { print $[]2 }'|tail -1`
@@ -140,24 +143,34 @@ case $system in
 	           [LINUX_BUILD_VNODE_FROM_INODE(config,afs)],
 	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,src/afs/LINUX)]
 	         )
+		 LINUX_COMPLETION_H_EXISTS
+		 LINUX_DEFINES_FOR_EACH_PROCESS
+		 LINUX_DEFINES_PREV_TASK
+		 LINUX_EXPORTS_TASKLIST_LOCK
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
 	         LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
 		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
 		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 		 LINUX_FS_STRUCT_INODE_HAS_I_DEVICES
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
-		 LINUX_COMPLETION_H_EXISTS
-		 LINUX_EXPORTS_TASKLIST_LOCK
 		 LINUX_NEED_RHCONFIG
+		 LINUX_RECALC_SIGPENDING_ARG_TYPE
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_REAL_PARENT
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIG
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGHAND
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
 		 LINUX_WHICH_MODULES
                  if test "x$ac_cv_linux_config_modversions" = "xno"; then
                    AC_MSG_WARN([Cannot determine sys_call_table status. assuming it's exported])
                    ac_cv_linux_exports_sys_call_table=yes
                  else
-                   LINUX_EXPORTS_SYS_CALL_TABLE
-                   LINUX_EXPORTS_KALLSYMS_SYMBOL
-                   LINUX_EXPORTS_KALLSYMS_ADDRESS
                    LINUX_EXPORTS_INIT_MM
+                   LINUX_EXPORTS_KALLSYMS_ADDRESS
+                   LINUX_EXPORTS_KALLSYMS_SYMBOL
+                   LINUX_EXPORTS_SYS_CALL_TABLE
+                   LINUX_EXPORTS_SYS_CHDIR
+                   LINUX_EXPORTS_SYS_CLOSE
                    if test "x$ac_cv_linux_exports_sys_call_table" = "xno"; then
                          linux_syscall_method=none
                          if test "x$ac_cv_linux_exports_init_mm" = "xyes"; then
@@ -172,6 +185,12 @@ case $system in
                          if test "x$linux_syscall_method" = "xnone"; then
                         AC_MSG_ERROR([no available sys_call_table access method])
                          fi
+			 if test "x$ac_cv_linux_exports_sys_chdir" = "xyes" ; then
+			  AC_DEFINE(EXPORTED_SYS_CHDIR, 1, [define if your linux kernel exports sys_chdir])
+			 fi
+			 if test "x$ac_cv_linux_exports_sys_close" = "xyes" ; then
+			  AC_DEFINE(EXPORTED_SYS_CLOSE, 1, [define if your linux kernel exports sys_close])
+			 fi
                    fi
                  fi
 		 if test "x$ac_cv_linux_exports_tasklist_lock" = "xyes" ; then
@@ -187,7 +206,13 @@ case $system in
                   AC_DEFINE(EXPORTED_KALLSYMS_ADDRESS)
                  fi
 		 if test "x$ac_cv_linux_completion_h_exists" = "xyes" ; then
-		  AC_DEFINE(COMPLETION_H_EXISTS, 1, [define if your h_exists exists])
+		  AC_DEFINE(COMPLETION_H_EXISTS, 1, [define if completion_h exists])
+		 fi
+		 if test "x$ac_cv_linux_defines_for_each_process" = "xyes" ; then
+		  AC_DEFINE(DEFINED_FOR_EACH_PROCESS, 1, [define if for_each_process defined])
+		 fi
+		 if test "x$ac_cv_linux_defines_prev_task" = "xyes" ; then
+		  AC_DEFINE(DEFINED_PREV_TASK, 1, [define if prev_task defined])
 		 fi
 		 if test "x$ac_cv_linux_func_inode_setattr_returns_int" = "xyes" ; then
 		  AC_DEFINE(INODE_SETATTR_NOT_VOID, 1, [define if your setattr return return non-void])
@@ -205,7 +230,25 @@ case $system in
 		  AC_DEFINE(STRUCT_INODE_HAS_I_DEVICES, 1, [define if you struct inode has i_devices])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers" = "xyes"; then 
-		  AC_DEFINE(STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS, 1, [define if you struct inode has data_buffers])
+		  AC_DEFINE(STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS, 1, [define if your struct inode has data_buffers])
+		 fi
+		 if test "x$ac_cv_linux_func_recalc_sigpending_takes_void" = "xyes"; then 
+		  AC_DEFINE(RECALC_SIGPENDING_TAKES_VOID, 1, [define if your recalc_sigpending takes void])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_parent" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_PARENT, 1, [define if your struct task_struct has parent])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_real_parent" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_REAL_PARENT, 1, [define if your struct task_struct has real_parent])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_sigmask_lock" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK, 1, [define if your struct task_struct has sigmask_lock])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_sighand" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIGHAND, 1, [define if your struct task_struct has sighand])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_sig" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIG, 1, [define if your struct task_struct has sig])
 		 fi
                 :
 		fi
@@ -215,6 +258,7 @@ case $system in
                 AC_MSG_RESULT(sun4)
 		SOLARIS_UFSVFS_HAS_DQRWLOCK
 		SOLARIS_PROC_HAS_P_COREFILE
+		SOLARIS_FS_HAS_FS_ROLLED
                 ;;
         *-sunos*)
 		MKAFS_OSTYPE=SUNOS
@@ -328,6 +372,15 @@ else
 		powerpc-apple-darwin6.2*)
 			AFS_SYSNAME="ppc_darwin_60"
 			;;
+		powerpc-apple-darwin6.3*)
+			AFS_SYSNAME="ppc_darwin_60"
+			;;
+		powerpc-apple-darwin6.4*)
+			AFS_SYSNAME="ppc_darwin_60"
+			;;
+		powerpc-apple-darwin6.5*)
+			AFS_SYSNAME="ppc_darwin_60"
+			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
 			;;
@@ -360,6 +413,9 @@ else
 			;;
 		alpha*-dec-osf5.0*)
 			AFS_SYSNAME="alpha_dux50"
+			;;
+		alpha*-dec-osf5.1*)
+			AFS_SYSNAME="alpha_dux51"
 			;;
 		mips-sgi-irix6.5)
 			AFS_SYSNAME="sgi_65"

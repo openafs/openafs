@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaprocs.c,v 1.1.1.10 2002/05/10 23:59:04 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaprocs.c,v 1.1.1.11 2003/04/13 19:06:44 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <errno.h>
@@ -1706,6 +1706,11 @@ static afs_int32 GetTicket (version, call, kvno, authDomain, aticket,
     celllen = strlen (cell);
     if (import && (celllen == 0)) {code = KABADTICKET; goto abort;}
     if (export && (celllen == 0)) strcpy (cell, lrealm);
+
+    if (!krb4_cross && celllen && strcmp(lrealm, cell) != 0) {
+      code = KABADUSER;
+      goto abort;
+    }
 
     des_ecb_encrypt (atimes->SeqBody, &times, schedule, DECRYPT);
     times.start = ntohl(times.start);

@@ -10,12 +10,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/venus/test/owntest.c,v 1.1.1.4 2001/07/14 22:24:39 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/venus/test/owntest.c,v 1.1.1.5 2003/04/13 19:08:10 hartmans Exp $");
 
 #include <sys/types.h>
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <errno.h>
 
 extern int errno;
 
@@ -35,11 +36,15 @@ char **argv; {
     pn = argv[1];
     printf("Starting tests on %s.\n", pn);
     code = chmod(pn, 0444);
-    if (code<0)
-	return perror("chmod to RO");
+    if (code<0) {
+        perror("chmod to RO");
+	return 1;
+    }
     code = chmod(pn, 0666);
-    if (code<0)
-	return perror("chmod back to RW");
+    if (code<0) {
+        perror("chmod back to RW");
+        return 1;
+    }
     gettimeofday(&tv[0], (char *) 0);
     gettimeofday(&tv[1], (char *) 0);
     tv[0].tv_sec -= 10000;
@@ -47,11 +52,15 @@ char **argv; {
     tv[1].tv_sec -= 20000;
     tv[1].tv_usec = 0;
     code = utimes(pn, tv);
-    if (code<0)
-	return perror("utimes");
+    if (code<0) {
+        perror("utimes");
+        return 1;
+    }
     code = stat(pn, &tstat);
-    if (code<0)
-	return perror("stat");
+    if (code<0) {
+        perror("stat");
+	return 1;
+    }
     if (tstat.st_mtime != tv[1].tv_sec) {
 	printf("modtime didn't stick\n");
 	exit(1);
