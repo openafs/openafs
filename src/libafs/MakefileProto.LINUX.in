@@ -18,7 +18,9 @@ AFS_OS_OBJS = \
 	osi_file.o \
 	osi_misc.o \
 	osi_module.o \
+	osi_probe.o \
 	osi_sleep.o \
+	osi_syscall.o \
 	osi_sysctl.o \
 	osi_vfsops.o \
 	osi_vm.o \
