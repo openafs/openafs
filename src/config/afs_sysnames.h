@@ -125,6 +125,10 @@
 #define SYS_NAME_ID_s390_linux22        1901
 #define SYS_NAME_ID_s390_linux24        1902
 
+#define SYS_NAME_ID_alpha_linux_2       2000
+#define SYS_NAME_ID_alpha_linux_22      2001
+#define SYS_NAME_ID_alpha_linux_24      2002
+
 
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 

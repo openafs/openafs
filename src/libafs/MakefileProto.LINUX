@@ -41,6 +41,9 @@ CCFLAGS =   -O2 -fomit-frame-pointer \
 	-fno-strength-reduce -pipe -m486 -malign-loops=2 -malign-jumps=2 \
 	-malign-functions=2
 DEFINES = -D__KERNEL__  -DCPU=586 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+<alpha_linux_22 alpha_linux_24>
+CCFLAGS = -O2 -fomit-frame-pointer -fno-strength-reduce -pipe -mno-fp-regs -ffixed-8
+DEFINES = -D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
 <s390_linux22 s390_linux24>
 CCFLAGS =   -O2 -fomit-frame-pointer -fno-strength-reduce \
 	-fno-strict-aliasing -fsigned-char 
@@ -108,6 +111,8 @@ ${COMPDIRS}:
 		rm -f asm-generic; \
 		ln -s ${LINUX_SRCDIR}$$v/include/asm-generic asm-generic; \
 		rm -f asm; \
+<alpha_linux_22 alpha_linux_24>
+		ln -s ${LINUX_SRCDIR}$$v/include/asm-alpha asm ; \
 <i386_linux22 i386_linux24>
 		ln -s ${LINUX_SRCDIR}$$v/include/asm-i386 asm ; \
 <ppc_linux22 ppc_linux24>

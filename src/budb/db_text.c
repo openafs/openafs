@@ -518,7 +518,11 @@ mkstemp(st)
 {
     int retval = -1;
 
+#ifdef AFS_LINUX20_ENV
+    retval = open(mkstemp(st), O_RDWR|O_CREAT|O_EXCL, 0600);
+#else
     retval = open(mktemp(st), O_RDWR|O_CREAT|O_EXCL, 0600);
+#endif
 
 error_exit:
     return(retval);

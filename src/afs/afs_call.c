@@ -816,14 +816,15 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
 	}
 #endif /* AFS_SUN57_64BIT_ENV */
 
-#if defined(AFS_LINUX_64BIT_KERNEL)
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV)
 	struct iparam32 dst32;
 
 #ifdef AFS_SPARC64_LINUX20_ENV
-	if (current->tss.flags & SPARC_FLAG_32BIT) {
+	if (current->tss.flags & SPARC_FLAG_32BIT) 
 #else
 #error Not done for this linux version
-#endif
+#endif /* AFS_SPARC64_LINUX20_ENV */
+	{
 		AFS_COPYIN(cmarg, (caddr_t) &dst32, sizeof dst32, code);
 		if (!code)
 			iparam32_to_iparam(&dst32, dst);

@@ -220,17 +220,23 @@ typedef	struct adaptive_mutex2	adaptive_mutex2_t;
 #ifdef AFS_SPARC_LINUX20_ENV
 #define _SPARC_STATFS_H
 #else
+#ifdef AFS_ALPHA_LINUX20_ENV
+#define _ALPHA_STATFS_H
+#else
 #define _I386_STATFS_H
+#endif /* AFS_ALPHA_LINUX20_ENV */
 #endif /* AFS_SPARC_LINUX20_ENV */
 #endif /* AFS_SPARC64_LINUX20_ENV */
 #endif /* AFS_S390_LINUX20_ENV */
 struct timezone {
     int a,b;
 };
+#ifndef AFS_ALPHA_LINUX20_ENV
 typedef struct timeval {
     int tv_sec;
     int tv_usec;
 } timeval_t; /* Needed here since KERNEL defined. */
+#endif /*AFS_ALPHA_LINUX20_ENV*/
 #if defined(AFSBIG_ENDIAN)
 #define _LINUX_BYTEORDER_BIG_ENDIAN_H
 #else

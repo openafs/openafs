@@ -62,7 +62,7 @@ struct ViceIoctl {
  * version of _IOW() to check the size of user space arguments -- except
  * on Digital Unix.
  */
-#if defined(KERNEL) && !defined(AFS_OSF_ENV)
+#if defined(KERNEL) && !defined(AFS_OSF_ENV) && !defined(AFS_ALPHA_LINUX20_ENV)
 #define _VICEIOCTL(id)  ((unsigned int ) _IOW('V', id, struct ViceIoctl32))
 #else
 #define _VICEIOCTL(id)  ((unsigned int ) _IOW('V', id, struct ViceIoctl))

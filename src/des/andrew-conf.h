@@ -31,7 +31,7 @@
 #if defined(sgi)
 #include "conf-sgi.h"
 #else
-#ifdef	__alpha
+#if defined(__alpha) && !defined(AFS_ALPHA_LINUX20_ENV)
 #include "conf-bsd-alpha.h"
 #else
 #if	defined(AFS_X86_ENV)
@@ -53,7 +53,11 @@
 #ifdef AFS_S390_LINUX20_ENV
 #include "conf-s390-linux.h"
 #else
+#ifdef AFS_ALPHA_LINUX20_ENV
+#include "conf-alpha-linux.h"
+#else
 #include "conf-i386-linux.h"
+#endif /* AFS_ALPHA_LINUX20_ENV */
 #endif /* AFS_S390_LINUX20_ENV */
 #endif /* AFS_SPARC64_LINUX20_ENV */
 #endif /* AFS_SPARC_LINUX20_ENV */

@@ -164,6 +164,10 @@ cmdebug: cmdebug.o ${CMLIBS}
 kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 	set -x; \
 	case ${SYS_NAME} in \
+		alpha_linux* ) \
+			for lv in ${LINUX_VERS}; do \
+				${CC} -g -I${LINUX_SRCDIR}$$lv/include -I${DESTDIR}include -I${SRCDIR}include ${XCFLAGS} -mno-fp-regs -ffixed-8 -o kdump-$$lv.o -c kdump.c ; \
+				done ;; \
 		*linux* ) \
 			for lv in ${LINUX_VERS}; do \
 				${CC} -g -I${LINUX_SRCDIR}$$lv/include -I${DESTDIR}include -I${SRCDIR}include ${XCFLAGS} -o kdump-$$lv.o -c kdump.c ; \
