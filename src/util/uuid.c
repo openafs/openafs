@@ -150,7 +150,7 @@ static afs_int32 time_cmp (uuid_time_p_t time1, uuid_time_p_t time2)
  *    Converts a string UUID to binary representation.
  */
 
-#ifndef KERNEL
+#if !defined(KERNEL) && !defined(UKERNEL)
 int
 afsUUID_from_string(const char *str, afsUUID *uuid)
 {
