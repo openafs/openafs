@@ -146,6 +146,30 @@ static BOOL IsWindowsNT (void)
 }
 
 
+BOOL IsWindows2000 (void)
+{
+   static BOOL fChecked = FALSE;
+   static BOOL fIsWin2K = FALSE;
+
+   if (!fChecked)
+      {
+      fChecked = TRUE;
+
+      OSVERSIONINFO Version;
+      memset (&Version, 0x00, sizeof(Version));
+      Version.dwOSVersionInfoSize = sizeof(Version);
+
+      if (GetVersionEx (&Version))
+         {
+         if (Version.dwPlatformId == VER_PLATFORM_WIN32_NT &&
+             Version.dwMajorVersion >= 5)
+             fIsWin2K = TRUE;
+         }
+      }
+
+   return fIsWin2K;
+}
+
 /*
  * GENERAL ____________________________________________________________________
  *
@@ -704,13 +728,31 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
       //
       //   \Device\LanmanRedirector\Q:\machine-afs\submount
       //
+      // on Windows NT. On Windows 2000, it will be:
+      //
+      //   \Device\LanmanRedirector\;Q:0\machine-afs\submount
+      //
+      // (This is presumably to support multiple drive mappings with
+      // Terminal Server).
+      //
       if (lstrncmpi (szMapping, cszLANMANDEVICE, lstrlen(cszLANMANDEVICE)))
          return FALSE;
       pszSubmount = &szMapping[ lstrlen(cszLANMANDEVICE) ];
-      if (toupper(*pszSubmount) != chDrive)
+
+      if (IsWindows2000())
+          if (*(pszSubmount) != TEXT(';'))
+             return FALSE;
+
+      if (toupper(*(++pszSubmount)) != chDrive)
          return FALSE;
+
       if (*(++pszSubmount) != TEXT(':'))
          return FALSE;
+
+      if (IsWindows2000())
+          if (*(++pszSubmount) != TEXT('0'))
+             return FALSE;
+
       if (*(++pszSubmount) != TEXT('\\'))
          return FALSE;
       for (++pszSubmount; *pszSubmount && (*pszSubmount != TEXT('\\')); ++pszSubmount)
