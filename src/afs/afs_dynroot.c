@@ -554,7 +554,7 @@ int afs_DynrootVOPRemove(struct vcache *avc, struct AFS_UCRED *acred, char *anam
     }
 
     /* Check if this is an actual cell? */
-    c = afs_GetCellByName2(aname, READ_LOCK, 0 /* no AFSDB */);
+    c = afs_FindCellByName(aname, READ_LOCK);
     if (c) {
 	afs_PutCell(c, READ_LOCK);
 	return EROFS;
@@ -576,7 +576,7 @@ int afs_DynrootVOPSymlink(struct vcache *avc, struct AFS_UCRED *acred,
 	return EPERM;
 
     /* Check if it's already a cell */
-    c = afs_GetCellByName2(aname, READ_LOCK, 0 /* no AFSDB */);
+    c = afs_FindCellByName(aname, READ_LOCK);
     if (c) {
 	afs_PutCell(c, READ_LOCK);
 	return EEXIST;

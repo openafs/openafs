@@ -217,8 +217,10 @@ void afs_RefreshCell(register struct cell *ac)
     struct cell *tc;
     int timeout;
 
-    /* Don't need to do anything if no timeout or it's not expired */
-    if (!ac->timeout || ac->timeout > osi_Time()) return;
+    if (ac->cellHosts[0])	/* If we already have some servers.. */
+	if (!ac->timeout || ac->timeout > osi_Time())
+				/* Don't refresh if not expired */
+	    return;
 
     if (afs_GetCellHostsFromDns(ac->cellName, cellHosts, &timeout, &realName))
 	/* In case of lookup failure, keep old data */
@@ -233,7 +235,7 @@ void afs_RefreshCell(register struct cell *ac)
 	 * Look up the entry we just updated, to compensate for
 	 * uppercase-vs-lowercase lossage with DNS.
 	 */
-	tc = afs_GetCellByName2(realName, READ_LOCK, 0 /* no AFSDB */);
+	tc = afs_FindCellByName(realName, READ_LOCK);
 
 	if (tc) {
 	    afs_NewCell(ac->cellName, 0, CAlias, (char *) 0, 0, 0,
@@ -267,7 +269,7 @@ struct cell *afs_GetCellByName_Dns(register char *acellName, afs_int32 locktype)
 	 * Look up the entry we just updated, to compensate for
 	 * uppercase-vs-lowercase lossage with DNS.
 	 */
-	tc = afs_GetCellByName2(realName, READ_LOCK, 0 /* no AFSDB */);
+	tc = afs_FindCellByName(realName, READ_LOCK);
 	if (!tc)
 	    goto bad;
 
@@ -282,7 +284,7 @@ struct cell *afs_GetCellByName_Dns(register char *acellName, afs_int32 locktype)
 
     if (realName)
 	afs_osi_Free(realName, strlen(realName) + 1);
-    return afs_GetCellByName2(acellName, locktype, 0);
+    return afs_FindCellByName(acellName, locktype);
 
 bad:
     if (realName)
@@ -291,8 +293,7 @@ bad:
 }
 
 
-struct cell *afs_GetCellByName2(register char *acellName, afs_int32 locktype, 
-	char trydns)
+struct cell *afs_FindCellByName(register char *acellName, afs_int32 locktype)
 {
     register struct cell *tc;
     register struct afs_q *cq, *tq;
@@ -317,16 +318,20 @@ retry:
 	    return tc;
 	}
     }
+
     ReleaseWriteLock(&afs_xcell);
-    return trydns ? afs_GetCellByName_Dns(acellName, locktype)
-		  : (struct cell *) 0;
-
+    return (struct cell *) 0;
 }
-
 
 struct cell *afs_GetCellByName(register char *acellName, afs_int32 locktype)
 {
-    return afs_GetCellByName2(acellName, locktype, 1);
+    struct cell *tc;
+
+    tc = afs_FindCellByName(acellName, locktype);
+    if (!tc)
+	tc = afs_GetCellByName_Dns(acellName, locktype);
+  
+    return tc;
 }
 
 static struct cell *afs_GetCellInternal(register afs_int32 acell, 
@@ -399,9 +404,6 @@ afs_int32 afs_NewCell(char *acellName, register afs_int32 *acellHosts, int aflag
     register struct afs_q *cq, *tq;
 
     AFS_STATCNT(afs_NewCell);
-    if (!(aflags & CAlias) && *acellHosts == 0)
-	/* need >= one host to gen cell # */
-	return EINVAL;
 
     ObtainWriteLock(&afs_xcell,103);
 
@@ -409,10 +411,13 @@ afs_int32 afs_NewCell(char *acellName, register afs_int32 *acellHosts, int aflag
     for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
 	tc = QTOC(cq); tq = QNext(cq);
 	if (afs_strcasecmp(tc->cellName, acellName) == 0) {
-	    /* if the cell we've found has the correct name but no timeout,
+	    /* If the cell we've found has the correct name but no timeout,
 	     * and we're called with a non-zero timeout, bail out:  never
-	     * override static configuration entries with AFSDB ones. */
-	    if (timeout && !tc->timeout) {
+	     * override static configuration entries with AFSDB ones.
+	     * One exception: if the original cell entry had no servers,
+	     * it must get servers from AFSDB.
+	     */
+	    if (timeout && !tc->timeout && tc->cellHosts[0]) {
 		ReleaseWriteLock(&afs_xcell);
 		return 0;
 	    }

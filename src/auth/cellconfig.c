@@ -854,7 +854,7 @@ int afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName,
 	    bestce = tce;
 	}
     }
-    if (!ambig && bestce) {
+    if (!ambig && bestce && bestce->cellInfo.numServers) {
 	*acellInfo = bestce->cellInfo;	/* structure assignment */
 	if (aservice) {
 	    tservice = afsconf_FindService(aservice);

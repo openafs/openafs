@@ -162,8 +162,7 @@ extern afs_int32 afs_NewCell(char *acellName, register afs_int32 *acellHosts, in
 extern struct cell *afs_GetCell(register afs_int32 acell, afs_int32 locktype);
 extern struct cell *afs_GetCellByIndex(register afs_int32 cellindex, 
         afs_int32 locktype, afs_int32 refresh);
-extern struct cell *afs_GetCellByName2(register char *acellName, afs_int32 locktype, 
-        char trydns);
+extern struct cell *afs_FindCellByName(register char *acellName, afs_int32 locktype);
 extern struct cell *afs_GetCellByName_Dns(register char *acellName, afs_int32 locktype);
 extern struct cell *afs_GetCellByName(register char *acellName, afs_int32 locktype);
 extern struct cell *afs_GetCellNoLock(register afs_int32 acell, afs_int32 locktype);
