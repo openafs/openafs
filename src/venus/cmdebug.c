@@ -38,6 +38,7 @@ static PrintCacheConfig(aconn)
     int code;
 
     c.cacheConfig_len = 0;
+    c.cacheConfig_val = NULL;
     code = RXAFSCB_GetCacheConfig(aconn, 1, &srv_ver, &conflen, &c);
     if (code) {
 	printf("cmdebug: error checking cache config: %s\n",
