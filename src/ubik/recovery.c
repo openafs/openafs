@@ -164,7 +164,7 @@ urecovery_CheckTid(register struct ubik_tid *atid)
 	    ubik_currentTrans = (struct ubik_trans *)0;
 	}
     }
-    return;
+    return 0;
 }
 
 /* log format is defined here, and implicitly in disk.c

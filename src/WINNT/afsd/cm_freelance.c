@@ -242,6 +242,7 @@ int cm_getLocalMountPointChange() {
 
 int cm_clearLocalMountPointChange() {
   cm_localMountPointChangeFlag = 0;
+  return 0;
 }
 
 /* called directly from ioctl */
