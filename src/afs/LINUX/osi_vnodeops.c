@@ -797,7 +797,7 @@ static int afs_linux_revalidate(struct dentry *dp)
 #ifdef AFS_LINUX24_ENV
 	unlock_kernel();
 #endif
-	if (rootvp) afs_PutVCache(rootvp);
+	if (rootvp) afs_PutVCache(rootvp, 0);
 	AFS_GUNLOCK();
 	return 0;
     }
