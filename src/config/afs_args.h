@@ -183,6 +183,7 @@ typedef struct cm_initparams_v1 {
 #define PROC_CELLSERVDB_NAME "CellServDB"
 #define VIOC_SYSCALL_TYPE 'C' 
 #define VIOC_SYSCALL _IOW(VIOC_SYSCALL_TYPE,1,void *)
+#define VIOC_SYSCALL32 _IOW(VIOC_SYSCALL_TYPE,1,int)
  
 struct afsprocdata {
   long param4;
