@@ -669,7 +669,7 @@ int afsd_InitCM(char **reasonP)
 	}
 
 #ifdef AFS_AFSDB_ENV
-#if !defined(_WIN32_WINNT) || _WIN32_WINNT < 0x500
+#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
 	if (cm_InitDNS(cm_dnsEnabled) == -1)
 	  cm_dnsEnabled = 0;  /* init failed, so deactivate */
 	afsi_log("cm_InitDNS %d", cm_dnsEnabled);

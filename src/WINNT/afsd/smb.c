@@ -2005,6 +2005,7 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
 	unsigned long NTStatus;
 
 	/* map CM_ERROR_* errors to NT 32-bit status codes */
+    /* NT Status codes are listed in ntstatus.h not winerror.h */
 	if (code == CM_ERROR_NOSUCHCELL) {
 		NTStatus = 0xC000000FL;	/* No such file */
 	}
@@ -2100,11 +2101,7 @@ void smb_MapNTError(long code, unsigned long *NTStatusp)
 		NTStatus = 0xC0000023L;	/* Buffer too small */
 	}
     else if (code == CM_ERROR_AMBIGUOUS_FILENAME) {
-#ifdef COMMENT
-		NTStatus = 0xC000049CL; /* Potential file found */
-#else
 		NTStatus = 0xC0000035L;	/* Object name collision */
-#endif
     }
 	else {
 		NTStatus = 0xC0982001L;	/* SMB non-specific error */
@@ -6693,7 +6690,8 @@ void smb_Listener(void *parmp)
          * we run out.
          */
 
-        osi_assert(i < Sessionmax && numNCBs < NCBmax - 1);
+        osi_assert(i < Sessionmax);
+        osi_assert(numNCBs < NCBmax);
 
 		LSNs[i] = ncbp->ncb_lsn;
 		lanas[i] = ncbp->ncb_lana_num;

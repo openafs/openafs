@@ -646,10 +646,10 @@ sleep:
 		osi_Log1(afsd_logp, "CM SyncOp sleeping scp %x", (long) scp);
 		scp->flags |= CM_SCACHEFLAG_WAITING;
 		if (bufLocked) lock_ReleaseMutex(&bufp->mx);
-                osi_SleepM((long) &scp->flags, &scp->mx);
-                osi_Log0(afsd_logp, "CM SyncOp woke!");
-		if (bufLocked) lock_ObtainMutex(&bufp->mx);
-                lock_ObtainMutex(&scp->mx);
+        osi_SleepM((long) &scp->flags, &scp->mx);
+        osi_Log0(afsd_logp, "CM SyncOp woke!");
+        if (bufLocked) lock_ObtainMutex(&bufp->mx);
+        lock_ObtainMutex(&scp->mx);
         } /* big while loop */
         
         /* now, update the recorded state for RPC-type calls */

@@ -10,6 +10,7 @@
 
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/cellconfig.h>
 #ifndef DJGPP
 #include <windows.h>
 #include <winsock2.h>
@@ -18,6 +19,10 @@
 #include "cm_dns.h"
 #include <lwp.h>
 #include <afs/afsint.h>
+#if defined(_WIN32_WINNT) && (_WIN32_WINNT >= 0x0500)
+#include <windns.h>
+#define DNSAPI_ENV
+#endif
 
 /*extern void afsi_log(char *pattern, ...);*/
 
@@ -40,6 +45,7 @@ void DNSlowerCase(char *str)
 
 int cm_InitDNS(int enabled)
 {
+#ifndef DNSAPI_ENV
   char configpath[100];
   int len;
   int code;
@@ -79,11 +85,12 @@ int cm_InitDNS(int enabled)
     }
     else fprintf(stderr, "Found DNS server %s\n", dns_addr);
   }
-
+#endif /* DNSAPI_ENV */
   cm_dnsEnabled = 1;
   return 0;
 }
 
+#ifndef DNSAPI_ENV
 SOCKADDR_IN setSockAddr(char *server, int port)
 {
   SOCKADDR_IN sockAddr;                     
@@ -481,7 +488,7 @@ void printReplyBuffer_AFSDB(PDNS_HDR replyBuff)
 
 };
 
-void processReplyBuffer_AFSDB(SOCKET commSock, PDNS_HDR replyBuff, int *cellHosts, int *numServers, int *ttl)
+void processReplyBuffer_AFSDB(SOCKET commSock, PDNS_HDR replyBuff, int *cellHostAddrs, char cellHostNames[][MAXHOSTCHARS], int *numServers, int *ttl)
   /*PAFS_SRV_LIST (srvList)*/
 {
   u_char *ptr = (u_char *) replyBuff;
@@ -531,7 +538,9 @@ void processReplyBuffer_AFSDB(SOCKET commSock, PDNS_HDR replyBuff, int *cellHost
 #ifdef DEBUG
       fprintf(stderr, "processRep_AFSDB: resolved name %s to addr %x\n", hostName, addr);
 #endif /* DEBUG */
-      memcpy(&cellHosts[srvCount], &addr.s_addr, sizeof(addr.s_addr));
+      memcpy(&cellHostAddrs[srvCount], &addr.s_addr, sizeof(addr.s_addr));
+	  strncpy(cellHostNames[srvCount], hostName, MAXCELLCHARS);
+	  cellHostNames[srvCount][MAXCELLCHARS-1] = '\0';
       srvCount++;
     }
     else {
@@ -582,9 +591,46 @@ u_char * processReplyBuffer_Addr(PDNS_HDR replyBuff)
 
 };
 
-int getAFSServer(char *cellName, int *cellHosts, int *numServers, int *ttl)
+int DNSgetAddr(SOCKET commSock, char *hostName, struct in_addr *iNet)
 {
-  /*static AFS_SRV_LIST srvList;  
+  /* Variables for DNS message parsing and creation */
+  PDNS_HDR  pDNShdr;
+
+  SOCKADDR_IN sockAddr;
+  char buffer[BUFSIZE];
+  u_char *addr;
+  u_long *aPtr;
+  int rc;
+
+  /**********************
+   * Get a DGRAM socket *
+   **********************/
+  
+  sockAddr = setSockAddr(dns_addr, DNS_PORT);
+  
+  rc = send_DNS_Addr_Query(hostName,commSock,sockAddr, buffer);
+  if (rc < 0) return rc;
+  pDNShdr = get_DNS_Response(commSock,sockAddr, buffer);
+  if (pDNShdr == NULL)
+    return -1;
+  
+  addr = processReplyBuffer_Addr(pDNShdr);
+  if (addr == 0)
+    return -1;
+
+  aPtr = (u_long *) addr;
+
+  iNet->s_addr = *aPtr;
+
+  return(0);
+}
+#endif /* DNSAPI_ENV */
+
+int getAFSServer(char *cellName, int *cellHostAddrs, char cellHostNames[][MAXHOSTCHARS], 
+                 int *numServers, int *ttl)
+{
+#ifndef DNSAPI_ENV
+   /*static AFS_SRV_LIST srvList;
     static int ans = 0;*/
   SOCKET commSock;
   SOCKADDR_IN sockAddr;
@@ -596,7 +642,7 @@ int getAFSServer(char *cellName, int *cellHosts, int *numServers, int *ttl)
   fprintf(stderr, "getAFSServer: cell %s, cm_dnsEnabled=%d\n", cellName, cm_dnsEnabled);
 #endif
 
-#if !defined(_WIN32_WINNT) || _WIN32_WINNT < 0x500
+#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
   if (cm_dnsEnabled == -1) { /* not yet initialized, eg when called by klog */
     cm_InitDNS(1);    /* assume enabled */
   }
@@ -637,7 +683,7 @@ int getAFSServer(char *cellName, int *cellHosts, int *numServers, int *ttl)
   
   /*printReplyBuffer_AFSDB(pDNShdr);*/
   if (pDNShdr)
-    processReplyBuffer_AFSDB(commSock, pDNShdr, cellHosts, numServers, ttl);
+    processReplyBuffer_AFSDB(commSock, pDNShdr, cellHostAddrs, cellHostNames, numServers, ttl);
   else
     *numServers = 0;
   
@@ -647,40 +693,83 @@ int getAFSServer(char *cellName, int *cellHosts, int *numServers, int *ttl)
 
   else
     return 0;
-}
+#else /* DNSAPI_ENV */
+	PDNS_RECORD pDnsCell, pDnsIter, pDnsVol,pDnsVolIter, pDnsCIter;
+	DWORD i;
+    struct sockaddr_in vlSockAddr;
 
-int DNSgetAddr(SOCKET commSock, char *hostName, struct in_addr *iNet)
-{
-  /* Variables for DNS message parsing and creation */
-  PDNS_HDR  pDNShdr;
+    /* query the AFSDB records of cell */
+	if (DnsQuery_A(cellName, DNS_TYPE_AFSDB, DNS_QUERY_STANDARD, NULL, &pDnsCell, NULL) == ERROR_SUCCESS) {
 
-  SOCKADDR_IN sockAddr;
-  char buffer[BUFSIZE];
-  u_char *addr;
-  u_long *aPtr;
-  int rc;
+		memset((void*) &vlSockAddr, 0, sizeof(vlSockAddr));
+		
+		*numServers = 0; 
+        *ttl = 0;
 
-  /**********************
-   * Get a DGRAM socket *
-   **********************/
-  
-  sockAddr = setSockAddr(dns_addr, DNS_PORT);
-  
-  rc = send_DNS_Addr_Query(hostName,commSock,sockAddr, buffer);
-  if (rc < 0) return rc;
-  pDNShdr = get_DNS_Response(commSock,sockAddr, buffer);
-  if (pDNShdr == NULL)
-    return -1;
-  
-  addr = processReplyBuffer_Addr(pDNShdr);
-  if (addr == 0)
-    return -1;
+		/* go through the returned records */
+		for (pDnsIter = pDnsCell;pDnsIter; pDnsIter = pDnsIter->pNext) {
+			/* if we find an AFSDB record with Preference set to 1, we found a volserver */
+			if (pDnsIter->wType == DNS_TYPE_AFSDB && pDnsIter->Data.Afsdb.wPreference == 1) {
+				strncpy(cellHostNames[*numServers], pDnsIter->Data.Afsdb.pNameExchange, MAXHOSTCHARS);
+                cellHostNames[*numServers][MAXHOSTCHARS-1]='\0';
+				(*numServers)++;
+                
+				if (!*ttl) 
+                    *ttl = pDnsIter->dwTtl;
+				if (*numServers == AFSMAXCELLHOSTS) 
+                    break;
+			}
+		}
 
-  aPtr = (u_long *) addr;
+		for (i=0;i<*numServers;i++) 
+            cellHostAddrs[i] = 0;
 
-  iNet->s_addr = *aPtr;
+		/* now check if there are any A records in the results */
+		for (pDnsIter = pDnsCell; pDnsIter; pDnsIter = pDnsIter->pNext) {
+			if(pDnsIter->wType == DNS_TYPE_A)
+				/* check if its for one of the volservers */
+				for (i=0;i<*numServers;i++)
+					if(stricmp(pDnsIter->pName, cellHostNames[i]) == 0)
+						cellHostAddrs[i] = pDnsIter->Data.A.IpAddress;
+		}
 
-  return(0);
+		for (i=0;i<*numServers;i++) {
+			/* if we don't have an IP yet, then we should try resolving the volserver hostname
+			   in a separate query. */
+			if (!cellHostAddrs[i]) {
+				if (DnsQuery_A(cellHostNames[i], DNS_TYPE_A, DNS_QUERY_STANDARD, NULL, &pDnsVol, NULL) == ERROR_SUCCESS) {
+					for (pDnsVolIter = pDnsVol; pDnsVolIter; pDnsVolIter=pDnsVolIter->pNext) {
+						/* if we get an A record, keep it */
+						if (pDnsVolIter->wType == DNS_TYPE_A && stricmp(cellHostNames[i], pDnsVolIter->pName)==0) {
+							cellHostAddrs[i] = pDnsVolIter->Data.A.IpAddress;
+							break;
+						}
+						/* if we get a CNAME, look for a corresponding A record */
+						if (pDnsVolIter->wType == DNS_TYPE_CNAME && stricmp(cellHostNames[i], pDnsVolIter->pName)==0) {
+							for (pDnsCIter=pDnsVolIter; pDnsCIter; pDnsCIter=pDnsCIter->pNext) {
+								if (pDnsCIter->wType == DNS_TYPE_A && stricmp(pDnsVolIter->Data.CNAME.pNameHost, pDnsCIter->pName)==0) {
+									cellHostAddrs[i] = pDnsCIter->Data.A.IpAddress;
+									break;
+								}
+							}
+							if (cellHostAddrs[i]) 
+                                break;
+							/* TODO: if the additional section is missing, then do another lookup for the CNAME */
+						}
+					}
+					/* we are done with the volserver lookup */
+					DnsRecordListFree(pDnsVol, DnsFreeRecordListDeep);
+				}
+			}
+		}
+		DnsRecordListFree(pDnsCell, DnsFreeRecordListDeep);
+	}
+
+    if ( *numServers > 0 )
+        return 0;
+    else
+        return -1;
+#endif /* DNSAPI_ENV */
 }
 
 #endif /* AFS_AFSDB_ENV */

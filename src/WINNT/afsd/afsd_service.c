@@ -307,6 +307,7 @@ afsd_ServiceControlHandlerEx(
  * Mount a drive into AFS if there global mapping
  */
 /* DEE Could check first if we are run as SYSTEM */
+#define MAX_RETRIES 30
 static void MountGlobalDrives()
 {
     char szAfsPath[_MAX_PATH];
@@ -314,7 +315,7 @@ static void MountGlobalDrives()
     DWORD dwResult;
     char szKeyName[256];
     HKEY hKey;
-    DWORD dwIndex = 0;
+    DWORD dwIndex = 0, dwRetry = 0;
     DWORD dwDriveSize;
     DWORD dwSubMountSize;
     char szSubMount[256];
@@ -326,7 +327,7 @@ static void MountGlobalDrives()
 	if (dwResult != ERROR_SUCCESS)
         return;
 
-    while (1) {
+    while (dwRetry < MAX_RETRIES) {
         dwDriveSize = sizeof(szDriveToMapTo);
         dwSubMountSize = sizeof(szSubMount);
         dwResult = RegEnumValue(hKey, dwIndex++, szDriveToMapTo, &dwDriveSize, 0, &dwType, szSubMount, &dwSubMountSize);
@@ -338,6 +339,7 @@ static void MountGlobalDrives()
             }
         }
 
+        for ( ; dwRetry < MAX_RETRIES; dwRetry++)
 		{
 		    NETRESOURCE nr;
 		    memset (&nr, 0x00, sizeof(NETRESOURCE));
@@ -352,8 +354,14 @@ static void MountGlobalDrives()
 		    nr.dwUsage = RESOURCEUSAGE_CONNECTABLE;
 
 		    dwResult = WNetAddConnection2(&nr,NULL,NULL,FALSE);
-		}
-        afsi_log("GlobalAutoMap of %s to %s %s", szDriveToMapTo, szSubMount, dwResult ? "succeeded" : "failed");
+            afsi_log("GlobalAutoMap of %s to %s %s (%d)", szDriveToMapTo, szSubMount, 
+                     (dwResult == NO_ERROR) ? "succeeded" : "failed", dwResult);
+            if (dwResult == NO_ERROR) {
+                break;
+            }
+            /* wait for smb server to come up */
+            Sleep((DWORD)1000 /* miliseconds */);		
+        }
     }        
 
     RegCloseKey(hKey);

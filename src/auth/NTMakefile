@@ -84,7 +84,7 @@ EXELIBS =\
 
 
 $(SETKEY_EXEFILE): $(SETKEY_EXEOBJS) $(EXELIBS)
-	$(EXECONLINK)
+	$(EXECONLINK) dnsapi.lib
 	$(EXEPREP) 
 
 # build copyauth

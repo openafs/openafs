@@ -164,7 +164,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	if (reqp->flags & CM_REQ_NORETRY)
 		goto out;
 
-	/* if timeout - check that is did not exceed the SMB timeout
+	/* if timeout - check that it did not exceed the SMB timeout
 	   and retry */
 	if (errorCode == CM_ERROR_TIMEDOUT)
     {
@@ -389,12 +389,16 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 			firstError = CM_ERROR_ALLBUSY;
 		else if (someOffline) 
 			firstError = CM_ERROR_ALLOFFLINE;
+#ifndef COMMENT
 		else if (!allDown && serversp) 
 			firstError = CM_ERROR_TIMEDOUT;
 		/* Only return CM_ERROR_NOSUCHVOLUME if there are no
 		   servers for this volume */
 		else 
 			firstError = CM_ERROR_NOSUCHVOLUME;
+#else
+        firstError = CM_ERROR_TIMEDOUT;
+#endif /* COMMENT */
 	}
 	osi_Log1(afsd_logp, "cm_ConnByMServers returning %x", firstError);
     return firstError;

@@ -53,7 +53,7 @@ EXELIBS =\
 	$(DESTDIR)\lib\cm_dns.obj
 
 $(EXEFILE): $(EXEOBJS) $(EXELIBS)
-	$(EXECONLINK)
+	$(EXECONLINK) dnsapi.lib
 	$(EXEPREP)
 
 ############################################################################
