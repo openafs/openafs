@@ -452,10 +452,10 @@ long cm_InitLocalMountPoints() {
 
 #if !defined(DJGPP)
     if (RegOpenKeyEx( HKEY_LOCAL_MACHINE, 
-                        "SOFTWARE\\OpenAFS\\Client\\Freelance",
-						0,
-                        KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
-                        &hkFreelance) == ERROR_SUCCESS) {
+                      "SOFTWARE\\OpenAFS\\Client\\Freelance",
+                      0,
+                      KEY_READ|KEY_WRITE|KEY_QUERY_VALUE,
+                      &hkFreelance) == ERROR_SUCCESS) {
 
         RegQueryInfoKey( hkFreelance,
                          NULL,  /* lpClass */
@@ -474,14 +474,13 @@ long cm_InitLocalMountPoints() {
         smb_UnixTimeFromLargeSearchTime(&FakeFreelanceModTime, &ftLastWriteTime);
 
         if ( dwMountPoints == 0 ) {
-            sprintf(line,"%s#%s:root.cell.\n",rootCellName,rootCellName);
-            dwType = REG_SZ;
-            dwSize = strlen(line) + 1;
-            RegSetValueEx( hkFreelance, "0", 0, dwType, line, dwSize);
-            sprintf(line,".%s%%%s:root.cell.\n",rootCellName,rootCellName);
-            dwSize = strlen(line) + 1;
-            RegSetValueEx( hkFreelance, "1", 0, dwType, line, dwSize);
-            dwMountPoints = 2;
+            rootCellName[0] = '.';
+            code = cm_GetRootCellName(&rootCellName[1]);
+            if (code == 0) {
+                cm_FreelanceAddMount(&rootCellName[1], &rootCellName[1], "root.cell", 0, NULL);
+                cm_FreelanceAddMount(rootCellName, &rootCellName[1], "root.cell", 1, NULL);
+                dwMountPoints = 2;
+            }
         }
 
         if (RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
