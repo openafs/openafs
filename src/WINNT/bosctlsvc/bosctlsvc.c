@@ -452,7 +452,7 @@ BosserverRun(DWORD argc,
     char **spawn_argv;
 
     /* Display bosserver startup (legal) message; first start only */
-    BosserverStartupMsgDisplay();
+    /* BosserverStartupMsgDisplay(); */
 
     /* Set env variable forcing process mgmt lib to spawn processes detached */
     (void)putenv(PMGT_SPAWN_DETACHED_ENV_NAME "=1");
