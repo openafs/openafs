@@ -132,7 +132,11 @@ afs_ustrategy(abp)
 	tuio.afsio_offset = (u_int) dbtob(abp->b_blkno);
 #ifdef	AFS_SUN5_ENV
 	tuio._uio_offset._p._u = 0;
+#ifdef	AFS_SUN59_ENV
+	tuio.uio_limit = curproc->p_fsz_ctl.rlim_cur;
+#else
 	tuio.uio_limit = u.u_rlimit[RLIMIT_FSIZE].rlim_cur;
+#endif
 #endif
 #else
 	tuio.afsio_offset = DEV_BSIZE * abp->b_blkno;

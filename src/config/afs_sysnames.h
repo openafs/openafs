@@ -80,6 +80,7 @@
 #define SYS_NAME_ID_sunx86_55          	 937
 #define SYS_NAME_ID_sun4x_57		 938
 #define SYS_NAME_ID_sun4x_58		 939
+#define SYS_NAME_ID_sun4x_59		 940
 
 /* Sigh. If I leave a gap here IBM will do this sequentially. If I don't
    they won't allocate sunx86 IDs at all. So leave a gap and pray. */

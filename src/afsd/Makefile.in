@@ -103,6 +103,8 @@ dest: ${DEST}/root.client/usr/vice/etc/afsd ${DEST}/etc/vsys
 			${INSTALL} -f afs.rc.solaris.2.7 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
 		sun4x_58 ) \
 			${INSTALL} -f afs.rc.solaris.2.8 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
+		sun4x_59 ) \
+			${INSTALL} -f afs.rc.solaris.2.9 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
                 sun4x_5? ) \
                         ${INSTALL} -f afs.rc.solaris.2_5 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
 		alpha_osf* ) \
