@@ -573,6 +573,10 @@ lang:
     nmake /nologo /f ntmakefile "NTMAKE = nmake /nologo /f ntmakefile lang" "NTMAKE_HEADERS = nmake /nologo /f ntmakefile lang" install
 
 mkdir:
+    -mkdir $(AFS_OBJDIR)
+    -mkdir $(DESTDIR)
+    -mkdir $(AFS_OBJDIR)\checked
+    -mkdir $(AFS_OBJDIR)\free
 	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\checked\ 
 	-xcopy /q /t /e $(SRC)\*.* $(AFS_OBJDIR)\free\ 
     -mkdir $(DESTDIR)\checked
