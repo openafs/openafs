@@ -84,8 +84,10 @@ VPurgeVolume_r(Error * ec, Volume * vp)
 void
 VPurgeVolume(Error * ec, Volume * vp)
 {
-    VOL_LOCK VPurgeVolume_r(ec, vp);
-VOL_UNLOCK}
+    VOL_LOCK;
+    VPurgeVolume_r(ec, vp);
+    VOL_UNLOCK;
+}
 
 #define MAXOBLITATONCE	200
 /* delete a portion of an index, adjusting offset appropriately.  Returns 0 if
@@ -162,8 +164,10 @@ ObliterateRegion(Volume * avp, VnodeClass aclass, StreamHandle_t * afile,
 void
 PurgeIndex(Volume * vp, VnodeClass class)
 {
-    VOL_LOCK PurgeIndex_r(vp, class);
-VOL_UNLOCK}
+    VOL_LOCK;
+    PurgeIndex_r(vp, class);
+    VOL_UNLOCK;
+}
 
 void
 PurgeIndex_r(Volume * vp, VnodeClass class)
@@ -198,8 +202,10 @@ PurgeIndex_r(Volume * vp, VnodeClass class)
 void
 PurgeHeader(Volume * vp)
 {
-    VOL_LOCK PurgeHeader_r(vp);
-VOL_UNLOCK}
+    VOL_LOCK;
+    PurgeHeader_r(vp);
+    VOL_UNLOCK;
+}
 
 void
 PurgeHeader_r(Volume * vp)

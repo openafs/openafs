@@ -144,12 +144,12 @@ nuke(char *aname, afs_int32 avolid)
     *lastDevComp = toupper(*lastDevComp);
 #else
     {
-    char *tfile = vol_DevName(tstat.st_dev, wpath);
-    if (!tfile) {
-	printf("volnuke: can't find %s's device.\n", aname);
-	return 1;
-    }
-    strcpy(devName, tfile);	/* save this from the static buffer */
+	char *tfile = vol_DevName(tstat.st_dev, wpath);
+	if (!tfile) {
+	    printf("volnuke: can't find %s's device.\n", aname);
+	    return 1;
+	}
+	strcpy(devName, tfile);	/* save this from the static buffer */
     }
     /* aim lastDevComp at the 'foo' of '/dev/foo' */
     lastDevComp = strrchr(devName, '/');
@@ -201,12 +201,12 @@ nuke(char *aname, afs_int32 avolid)
 		}
 #else /* AFS_NAMEI_ENV */
 		IH_INIT(fileH, (int)tstat.st_dev, avolid, ti->inode[i]);
-        {
-        int j;
-        for (j = 0; j < ti->count[i]; j++) {
-		   code = IH_DEC(fileH, ti->inode[i], avolid);
-        }
-        }
+		{
+		    int j;
+		    for (j = 0; j < ti->count[i]; j++) {
+			code = IH_DEC(fileH, ti->inode[i], avolid);
+		    }
+		}
 		IH_RELEASE(fileH);
 #endif /* AFS_NAMEI_ENV */
 	    }

@@ -297,7 +297,7 @@ ih_open(IHandle_t * ihP)
 	    DLL_DELETE(fdP, fdLruHead, fdLruTail, fd_next, fd_prev);
 	    ihP->ih_refcnt++;
 	    IH_UNLOCK;
-	    (void) FDH_SEEK(fdP, 0, SEEK_SET);
+	    (void)FDH_SEEK(fdP, 0, SEEK_SET);
 	    return fdP;
 	}
     }

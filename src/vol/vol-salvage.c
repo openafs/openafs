@@ -519,13 +519,13 @@ handleit(struct cmd_syndesc *as)
 
 #ifdef FAST_RESTART
     {
-    afs_int32 i;
-    for (i = 0; i < CMD_MAXPARMS; i++) {
-	if (as->parms[i].items) {
-	    seenany = 1;
-	    break;
+	afs_int32 i;
+	for (i = 0; i < CMD_MAXPARMS; i++) {
+	    if (as->parms[i].items) {
+		seenany = 1;
+		break;
+	    }
 	}
-    }
     }
     if (!seenany) {
 	char *msg =
@@ -1602,7 +1602,7 @@ GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 
 		GetVolumeSummary(singleVolumeNumber);
 
-		for (i = 0,vsp = volumeSummaryp; i < nVolumes; i++) {
+		for (i = 0, vsp = volumeSummaryp; i < nVolumes; i++) {
 		    if (vsp->fileName)
 			DeleteExtraVolumeHeaderFile(vsp);
 		}
@@ -3066,7 +3066,7 @@ JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 		    if (dirOrphaned) {
 			Log("dir vnode %u: %s/%s parent vnode is %u (vnode %u, unique %u) -- %sdeleted\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeEssence->parent, vnodeNumber, unique, (Testing ? "would have been " : ""));
 		    } else if (vnodeNumber == 1) {
-			Log("dir vnode %d: %s/%s is invalid (vnode %d, unique %d) -- %sdeleted\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeNumber, unique, (Testing?"would have been ":""));
+			Log("dir vnode %d: %s/%s is invalid (vnode %d, unique %d) -- %sdeleted\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeNumber, unique, (Testing ? "would have been " : ""));
 		    } else {
 			Log("dir vnode %u: %s/%s already claimed by directory vnode %u (vnode %u, unique %u) -- %sdeleted\n", dir->vnodeNumber, (dir->name ? dir->name : "??"), name, vnodeEssence->parent, vnodeNumber, unique, (Testing ? "would have been " : ""));
 		    }

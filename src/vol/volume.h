@@ -35,21 +35,21 @@ extern pthread_mutex_t vol_trans_mutex;
 extern pthread_cond_t vol_put_volume_cond;
 extern pthread_cond_t vol_sleep_cond;
 #define VATTACH_LOCK \
-    assert(pthread_mutex_lock(&vol_attach_mutex) == 0);
+    assert(pthread_mutex_lock(&vol_attach_mutex) == 0)
 #define VATTACH_UNLOCK \
-    assert(pthread_mutex_unlock(&vol_attach_mutex) == 0);
+    assert(pthread_mutex_unlock(&vol_attach_mutex) == 0)
 #define VOL_LOCK \
-    assert(pthread_mutex_lock(&vol_glock_mutex) == 0);
+    assert(pthread_mutex_lock(&vol_glock_mutex) == 0)
 #define VOL_UNLOCK \
-    assert(pthread_mutex_unlock(&vol_glock_mutex) == 0);
+    assert(pthread_mutex_unlock(&vol_glock_mutex) == 0)
 #define VFSYNC_LOCK \
-    assert(pthread_mutex_lock(&vol_fsync_mutex) == 0);
+    assert(pthread_mutex_lock(&vol_fsync_mutex) == 0)
 #define VFSYNC_UNLOCK \
-    assert(pthread_mutex_unlock(&vol_fsync_mutex) == 0);
+    assert(pthread_mutex_unlock(&vol_fsync_mutex) == 0)
 #define VTRANS_LOCK \
-    assert(pthread_mutex_lock(&vol_trans_mutex) == 0);
+    assert(pthread_mutex_lock(&vol_trans_mutex) == 0)
 #define VTRANS_UNLOCK \
-    assert(pthread_mutex_unlock(&vol_trans_mutex) == 0);
+    assert(pthread_mutex_unlock(&vol_trans_mutex) == 0)
 #else /* AFS_PTHREAD_ENV */
 #define VATTACH_LOCK
 #define VATTACH_UNLOCK
