@@ -25,7 +25,11 @@ all: \
 	${TOP_INCDIR}/afs/afs.exp \
 	${TOP_INCDIR}/afs/xfsattrs.h \
 	${TOP_LIBDIR}/afs.exp \
-	${TOP_LIBDIR}/libsys.a 
+	${TOP_LIBDIR}/libsys.a \
+	${KERNELDIR}/afs \
+	${KERNELDIR}/afs/xfsattrs.h \
+	${UKERNELDIR}/afs \
+	${UKERNELDIR}/afs/afsl.exp
 
 libsys.a: ${OBJECTS} ${RMTOBJS} afsl.exp AFS_component_version_number.o
 	-$(RM) -f $@

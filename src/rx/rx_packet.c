@@ -191,7 +191,6 @@ rx_SlowReadPacket(struct rx_packet * packet, unsigned int offset, int resid,
 	j = MIN(resid, packet->wirevec[i].iov_len - (offset - l));
 	memcpy(out, (char *)(packet->wirevec[i].iov_base) + (offset - l), j);
 	resid -= j;
-	offset = l;
         out += j;
   	l += packet->wirevec[i].iov_len;
 	offset = l;
