@@ -801,10 +801,13 @@ void afs_SortServers(struct server *aservers[], int count)
     for (i=0; i<count; i++) {
        if (!aservers[i]) break;
        for (low=i,j=i+1; j<=count; j++) {
-	  if (!aservers[j]) break;
-	  if (aservers[j]->addr->sa_iprank < aservers[low]->addr->sa_iprank) {
-	     low = j;
-	  }
+	   if ((!aservers[j]) || (!aservers[j]->addr)) 
+	       break;
+	   if ((!aservers[low]) || (!aservers[low]->addr))
+	       break;
+	   if (aservers[j]->addr->sa_iprank < aservers[low]->addr->sa_iprank) {
+	       low = j;
+	   }
        }
        if (low != i) {
 	  ts = aservers[i]; 
