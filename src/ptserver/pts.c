@@ -872,6 +872,8 @@ SetFields(as)
 
     mask = 0;
     nusers = 0;
+    ngroups = 0;
+
     if (as->parms[1].items) {	/* privacy bits */
 	char *access = as->parms[1].items->data;
 	int new;
