@@ -1,12 +1,14 @@
-/*
- * Copyright 2000, International Business Machines Corporation and others.
- * All Rights Reserved.
- * 
- * This software has been released under the terms of the IBM Public
- * License.  For details, see the LICENSE file in the top-level source
- * directory or online at http://www.openafs.org/dl/license10.html
- */
-
+//{{NO_DEPENDENCIES}}
+//
+// Copyright 2000, International Business Machines Corporation and others.
+// All Rights Reserved.
+// 
+// This software has been released under the terms of the IBM Public
+// License.  For details, see the LICENSE file in the top-level source
+// directory or online at http://www.openafs.org/dl/license10.html
+//
+// Used by afs_shl_ext.rc
+//
 #define IDM_AUTHENTICATION              1
 #define IDM_ACL_SET                     2
 #define IDM_VOLUME_PROPERTIES           3
@@ -19,12 +21,13 @@
 #define IDM_SHOW_SERVER                 10
 #define IDM_SHOWCELL                    11
 #define IDM_SERVER_STATUS               12
-#define IDM_SUBMOUNTS_CREATE            13
+#define IDM_REMOVE_SYMLINK              13
 #define IDM_SUBMOUNTS_EDIT              14
 #define IDM_SUBMOUNTS                   15
 #define IDM_ACL_CLEAN                   16
 #define ID_GET_TOKENS                   17
 #define ID_DISCARD_TOKENS               18
+#define IDM_SUBMOUNTS_CREATE            19
 #define IDD_KLOG_DIALOG                 102
 #define IDR_MENU_FILE                   129
 #define IDD_VOLUME_INFO                 130
@@ -190,6 +193,7 @@
 #define IDS_SET_QUOTA_ERROR             32825
 #define ID_SUBMOUNTS_CREATE             32826
 #define ID_SUBMOUNTS_EDIT               32827
+#define ID_REMOVE_SYMLINK               32828
 #define IDS_CHECK_SERVERS_ERROR         59146
 #define IDS_ALL_SERVERS_RUNNING         59147
 #define IDS_CHECK_VOLUMES_OK            59150
@@ -231,13 +235,15 @@
 #define IDS_SHOW_FS_COLUMN              59186
 #define IDS_REMOVE_MP                   59187
 #define IDS_REMOVE_MP_COLUMN            59188
+#define IDS_REMOVE_SYMLINK_ITEM         59189
+#define IDS_REALLY_REMOVE_SYMLINK       59190
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        155
-#define _APS_NEXT_COMMAND_VALUE         32826
+#define _APS_NEXT_COMMAND_VALUE         32829
 #define _APS_NEXT_CONTROL_VALUE         1087
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

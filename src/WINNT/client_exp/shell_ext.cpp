@@ -25,7 +25,7 @@ extern "C" {
 #include "server_status_dlg.h"
 #include "auth_dlg.h"
 #include "submounts_dlg.h"
-
+#include "gui2fs.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -36,7 +36,13 @@ static char THIS_FILE[] = __FILE__;
 
 ULONG nCMRefCount = 0;	// IContextMenu ref count
 ULONG nSERefCount = 0;	// IShellExtInit ref count
+ULONG nICRefCount=0;
+ULONG nTPRefCount=0;
+ULONG nXPRefCount=0;
 
+#define MAXSIZE 2048 /* most I'll get back from PIOCTL */
+#define PCCHAR(str)	((char *)(const char *)str)
+static char space[MAXSIZE];
 
 static BOOL IsADir(const CString& strName)
 {
@@ -57,10 +63,15 @@ CShellExt::CShellExt()
 {
 	EnableAutomation();
 	nCMRefCount++;
+	HRESULT hr;
+	hr = SHGetMalloc(&m_pAlloc);
+	if (FAILED(hr))
+		m_pAlloc = NULL;
 }
 
 CShellExt::~CShellExt()
 {
+	if(m_pAlloc) m_pAlloc->Release();
 	nCMRefCount--;
 }
 
@@ -100,9 +111,12 @@ BEGIN_INTERFACE_MAP(CShellExt, CCmdTarget)
 	INTERFACE_PART(CShellExt, IID_IShellExt, Dispatch)
     INTERFACE_PART(CShellExt, IID_IContextMenu, MenuExt)
     INTERFACE_PART(CShellExt, IID_IShellExtInit, ShellInit)
+	INTERFACE_PART(CShellExt, IID_IShellIconOverlayIdentifier, IconExt)
+	INTERFACE_PART(CShellExt, IID_IQueryInfo , ToolTipExt)
+	INTERFACE_PART(CShellExt, IID_IPersistFile , PersistFileExt)
 END_INTERFACE_MAP()
 
-IMPLEMENT_OLECREATE(CShellExt, "AfsClientContextMenu", 0xdc515c27, 0x6cac, 0x11d1, 0xba, 0xe7, 0x0, 0xc0, 0x4f, 0xd1, 0x40, 0xd2)
+IMPLEMENT_OLECREATE(CShellExt, STR_EXT_TITLE, 0xdc515c27, 0x6cac, 0x11d1, 0xba, 0xe7, 0x0, 0xc0, 0x4f, 0xd1, 0x40, 0xd2)
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -155,10 +169,17 @@ STDMETHODIMP CShellExt::XMenuExt::QueryContextMenu(HMENU hMenu,UINT indexMenu,
 			continue;
 		if (!lstrcmp (szItemText, pszAfsItemText)) {
 			DeleteMenu (hMenu, iItem, MF_BYPOSITION);
-			break;
+			continue;
+		}
+		if ((!lstrcmp(szItemText,"&Delete"))&&(pThis->m_bIsSymlink)) {	/*this is a symlink - don't present a delete menu!*/
+			DeleteMenu (hMenu, iItem, MF_BYPOSITION);
+			continue;
+		}
+		if ((!lstrcmp(szItemText,"Cu&t"))&&(pThis->m_bIsSymlink)) {		/*same for cut*/
+			DeleteMenu (hMenu, iItem, MF_BYPOSITION);
+			continue;
 		}
 	}
-
 	int indexShellMenu = 0;
 
 	// Create the AFS submenu using the allowed ID's.
@@ -196,6 +217,8 @@ STDMETHODIMP CShellExt::XMenuExt::QueryContextMenu(HMENU hMenu,UINT indexMenu,
 	::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SHOW_SERVER, GetMessageString(IDS_SHOW_FILE_SERVERS_ITEM));
 	::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SHOWCELL, GetMessageString(IDS_SHOW_CELL_ITEM));
 	::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_SERVER_STATUS, GetMessageString(IDS_SHOW_SERVER_STATUS_ITEM));
+	if (pThis->m_bIsSymlink)
+		::InsertMenu(hAfsMenu, indexAfsMenu++, MF_STRING | MF_BYPOSITION, idCmdFirst + IDM_REMOVE_SYMLINK, GetMessageString(IDS_REMOVE_SYMLINK_ITEM));
 	
 	// The Submounts menu has been removed because the AFS tray icon
 	// and control panel now support mapping drives directly to an AFS
@@ -307,7 +330,14 @@ STDMETHODIMP CShellExt::XMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 										dlg.DoModal();
 									}
 									break;
-
+		case IDM_REMOVE_SYMLINK:	{
+										if (files.GetCount()>1)
+											break;
+										int nChoice = ShowMessageBox(IDS_REALLY_REMOVE_SYMLINK, MB_ICONQUESTION | MB_YESNO, IDS_REALLY_REMOVE_SYMLINK);
+										if (nChoice == IDYES)
+											RemoveSymlink(files.GetAt(0));
+									}
+									break;
 		default:
 			ASSERT(FALSE);
 			Release();
@@ -371,6 +401,9 @@ STDMETHODIMP CShellExt::XMenuExt::GetCommandString(UINT idCmd, UINT uType,
 									break;
 		
 		case IDM_SUBMOUNTS_EDIT:	nCmdStrID = ID_SUBMOUNTS_EDIT;
+									break;
+
+		case IDM_REMOVE_SYMLINK:	nCmdStrID= ID_REMOVE_SYMLINK;
 									break;
 		
 		default:
@@ -454,6 +487,8 @@ STDMETHODIMP CShellExt::XShellInit::Initialize(LPCITEMIDLIST pidlFolder, IDataOb
 			if (!IsPathInAfs(strFileName)) {
 				pThis->m_astrFileNames.RemoveAll();
 				break;
+			} else {
+				pThis->m_bIsSymlink=IsSymlink(strFileName);
 			}
 
 			if (IsADir(strFileName))
@@ -474,3 +509,160 @@ STDMETHODIMP CShellExt::XShellInit::Initialize(LPCITEMIDLIST pidlFolder, IDataOb
     return hres;
 }
 
+STDMETHODIMP CShellExt::XIconExt::QueryInterface(REFIID riid, void** ppv)
+{
+    METHOD_PROLOGUE(CShellExt, IconExt);
+    return pThis->ExternalQueryInterface(&riid, ppv);
+}
+
+STDMETHODIMP_(ULONG) CShellExt::XIconExt::AddRef(void)
+{
+	return ++nICRefCount;
+}
+
+STDMETHODIMP_(ULONG) CShellExt::XIconExt::Release(void)
+{
+	if (nICRefCount > 0)
+		nICRefCount--;
+
+	return nICRefCount;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////
+// IIconHandler Functions
+/////////////////////////////////////////////////////////////////////////////
+
+STDMETHODIMP CShellExt::XIconExt::GetOverlayInfo(LPWSTR pwszIconFile
+	,int cchMax,int* pIndex,DWORD* pdwFlags)
+{
+	if(IsBadWritePtr(pIndex, sizeof(int)))
+		return E_INVALIDARG;
+	if(IsBadWritePtr(pdwFlags, sizeof(DWORD)))
+		return E_INVALIDARG;
+
+	HMODULE hModule=GetModuleHandle("shell32.dll");
+	TCHAR szModule[MAX_PATH];
+	DWORD z=GetModuleFileName(hModule,szModule,sizeof(szModule));
+	MultiByteToWideChar( CP_ACP,0,szModule,-1,pwszIconFile,cchMax); 
+	*pIndex = 30;
+	*pdwFlags = ISIOI_ICONFILE | ISIOI_ICONINDEX;
+	return S_OK;
+}
+
+STDMETHODIMP CShellExt::XIconExt::GetPriority(int* pPriority)
+{
+	if(IsBadWritePtr(pPriority, sizeof(int)))
+	   return E_INVALIDARG;
+	*pPriority = 0;
+	return S_OK;
+}
+
+STDMETHODIMP CShellExt::XIconExt::IsMemberOf(LPCWSTR pwszPath,DWORD dwAttrib)
+{
+	TCHAR szPath[MAX_PATH];
+	WideCharToMultiByte( CP_ACP,0,pwszPath,-1,szPath,MAX_PATH,NULL,NULL);
+	if (IsSymlink(szPath))
+		return S_OK;
+	return S_FALSE;
+}
+
+/*          TOOL TIP INFO IMPLIMENTION   */
+
+STDMETHODIMP CShellExt::XToolTipExt::QueryInterface(REFIID riid, void** ppv)
+{
+    METHOD_PROLOGUE(CShellExt, ToolTipExt);
+    return pThis->ExternalQueryInterface(&riid, ppv);
+}
+
+STDMETHODIMP_(ULONG) CShellExt::XToolTipExt::AddRef(void)
+{
+	return ++nTPRefCount;
+}
+
+STDMETHODIMP_(ULONG) CShellExt::XToolTipExt::Release(void)
+{
+	if (nTPRefCount> 0)
+		nTPRefCount--;
+
+	return nTPRefCount;
+}
+
+STDMETHODIMP CShellExt::XToolTipExt::GetInfoTip(DWORD dwFlags, LPWSTR *ppwszTip)
+{
+    METHOD_PROLOGUE(CShellExt, ToolTipExt);
+
+	if (!IsSymlink(pThis->m_szFile))
+	{
+		ppwszTip=NULL;
+		return S_OK;
+	}
+	USES_CONVERSION;
+	// dwFlags is currently unused.
+	*ppwszTip = (WCHAR*) (pThis->m_pAlloc)->Alloc((1+lstrlen(pThis->m_szFile))*sizeof(WCHAR));
+	if (*ppwszTip)
+	{
+		wcscpy(*ppwszTip, (WCHAR*)T2OLE(pThis->m_szFile));
+	}
+
+	return S_OK;
+}
+STDMETHODIMP CShellExt::XToolTipExt::GetInfoFlags(LPDWORD pdwFlags)
+{
+	return S_OK;
+}
+
+//////////                          IPersistFile
+///////                            PersistFileExt
+
+STDMETHODIMP CShellExt::XPersistFileExt::QueryInterface(REFIID riid, void** ppv)
+{
+    METHOD_PROLOGUE(CShellExt, PersistFileExt);
+    return pThis->ExternalQueryInterface(&riid, ppv);
+}
+
+STDMETHODIMP_(ULONG) CShellExt::XPersistFileExt::AddRef(void)
+{
+	return ++nXPRefCount;
+}
+
+STDMETHODIMP_(ULONG) CShellExt::XPersistFileExt::Release(void)
+{
+	if (nXPRefCount> 0)
+		nXPRefCount--;
+
+	return nXPRefCount;
+}
+
+STDMETHODIMP	CShellExt::XPersistFileExt::Load(LPCOLESTR wszFile, DWORD dwMode)
+{
+    METHOD_PROLOGUE(CShellExt, PersistFileExt);
+	USES_CONVERSION;
+	_tcscpy(pThis->m_szFile, OLE2T((WCHAR*)wszFile)); 
+	return S_OK;	
+}
+
+STDMETHODIMP CShellExt::XPersistFileExt::GetClassID(LPCLSID)
+{ 
+	return E_NOTIMPL;	
+}
+
+STDMETHODIMP CShellExt::XPersistFileExt::IsDirty(VOID)
+{ 
+	return E_NOTIMPL; 
+}
+
+STDMETHODIMP CShellExt::XPersistFileExt::Save(LPCOLESTR, BOOL)
+{ 
+	return E_NOTIMPL; 
+}
+
+STDMETHODIMP CShellExt::XPersistFileExt::SaveCompleted(LPCOLESTR)
+{ 
+	return E_NOTIMPL; 
+}
+
+STDMETHODIMP CShellExt::XPersistFileExt::GetCurFile(LPOLESTR FAR*)
+{ 
+	return E_NOTIMPL; 
+}

@@ -90,6 +90,7 @@ BEGIN
     MENUITEM "ファイル・サーバーの表示(&F)...", IDM_SHOW_SERVER
     MENUITEM "セルの表示(&C)...",           IDM_SHOWCELL
     MENUITEM "サーバー状況の表示...",       IDM_SERVER_STATUS
+    MENUITEM "Remove SymLink",              IDM_REMOVE_SYMLINK
 END
 
 

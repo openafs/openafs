@@ -80,7 +80,7 @@ STDAPI DllCanUnloadNow(void)
 {
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 
-	if (!nCMRefCount && !nSERefCount)
+	if (!nCMRefCount && !nSERefCount && !nICRefCount && !nTPRefCount && !nXPRefCount)
 		return S_OK;
 
 	return S_FALSE;
@@ -89,7 +89,76 @@ STDAPI DllCanUnloadNow(void)
 // by exporting DllRegisterServer, you can use regsvr.exe
 STDAPI DllRegisterServer(void)
 {
+	int      i;
+	HKEY     hKey;
+	LRESULT  lResult;
+	DWORD    dwDisp;
+	TCHAR    szSubKey[MAX_PATH];
+	TCHAR    szCLSID[MAX_PATH];
+	TCHAR    szModule[MAX_PATH];
+	LPWSTR   pwsz;
 	AFX_MANAGE_STATE(AfxGetStaticModuleState());
 	COleObjectFactory::UpdateRegistryAll();
+	wsprintf(szSubKey, TEXT("%s\\%s"), STR_REG_PATH, STR_EXT_TITLE);
+	lResult = RegCreateKeyEx(  HKEY_LOCAL_MACHINE,
+							szSubKey,
+							0,
+							NULL,
+							REG_OPTION_NON_VOLATILE,
+							KEY_WRITE,
+							NULL,
+							&hKey,
+							&dwDisp);
+
+	if(NOERROR == lResult)
+	{
+	//Create the value string.
+		lResult = RegSetValueEx(   hKey,
+								NULL,
+								0,
+								REG_SZ,
+								(LPBYTE)szCLSID,
+								(lstrlen(szCLSID) + 1) * sizeof(TCHAR));
+		RegCloseKey(hKey);
+	}
+	else
+		return SELFREG_E_CLASS;
+
+	//If running on NT, register the extension as approved.
+	OSVERSIONINFO  osvi;
+	osvi.dwOSVersionInfoSize = sizeof(osvi);
+	GetVersionEx(&osvi);
+	if(VER_PLATFORM_WIN32_NT == osvi.dwPlatformId)
+	{
+		lstrcpy( szSubKey, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved"));
+
+		lResult = RegCreateKeyEx(  HKEY_LOCAL_MACHINE,
+								szSubKey,
+								0,
+								NULL,
+								REG_OPTION_NON_VOLATILE,
+								KEY_WRITE,
+								NULL,
+								&hKey,
+								&dwDisp);
+
+		if(NOERROR == lResult)
+		{
+			TCHAR szData[MAX_PATH];
+
+		//Create the value string.
+			lstrcpy(szData, STR_EXT_TITLE);
+
+			lResult = RegSetValueEx(   hKey,
+									szCLSID,
+									0,
+									REG_SZ,
+									(LPBYTE)szData,
+									(lstrlen(szData) + 1) * sizeof(TCHAR));
+	      
+			RegCloseKey(hKey);
+		} else
+			return SELFREG_E_CLASS;
+	}
 	return S_OK;
 }

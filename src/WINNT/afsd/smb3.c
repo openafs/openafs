@@ -4069,7 +4069,7 @@ long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                         
                         osi_Log3(afsd_logp, "Cancelling change notification for fid %d wtree %d file %s", 
                                 fid, watchtree,
-                                osi_LogSaveString(afsd_logp, fidp->NTopen_wholepathp));
+								osi_LogSaveString(afsd_logp, (fidp)?fidp->NTopen_wholepathp:""));
 
 			scp = fidp->scp;
 			lock_ObtainMutex(&scp->mx);
