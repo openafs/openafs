@@ -29,6 +29,31 @@ RCSID("$Header$");
 extern struct rx_securityClass *rxnull_NewServerSecurityObject();
 extern struct hostent *hostutil_GetHostByName();
 
+static PrintInterfaces(aconn)
+    struct rx_connection *aconn;
+{
+    struct interfaceAddr addr;
+    int i, code;
+
+    code = RXAFSCB_WhoAreYou(aconn, &addr);
+    if (code) {
+	printf("cmdebug: error checking locks: %s\n", error_message(code));
+	return 0;
+    }
+
+    printf("Host interfaces:\n");
+    for (i=0; i<addr.numberOfInterfaces; i++) {
+	printf("%s", inet_ntoa(&addr.addr_in[i]));
+	if (addr.subnetmask[i])
+	    printf(", netmask %s", inet_ntoa(&addr.subnetmask[i]));
+	if (addr.mtu[i])
+	    printf(", MTU %d", addr.mtu[i]);
+	printf("\n");
+    }
+
+    return 0;
+}
+
 static IsLocked(alock)
 register struct AFSDBLockDesc *alock; {
     if (alock->waitStates || alock->exclLocked
@@ -172,6 +197,11 @@ struct cmd_syndesc *as; {
 	printf("cmdebug: failed to create connection for host %s\n", hostName);
 	exit(1);
     }
+    if (as->parms[3].items) {
+	/* -addrs */
+	PrintInterfaces(conn);
+	return 0;
+    }
     if (as->parms[2].items) int32p = 1;
     else int32p = 0;
     PrintLocks(conn, int32p);
@@ -206,6 +236,7 @@ char **argv; {
     cmd_AddParm(ts, "-servers", CMD_SINGLE, CMD_REQUIRED, "server machine");
     cmd_AddParm(ts, "-port", CMD_SINGLE, CMD_OPTIONAL, "IP port");
     cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "print all info");
+    cmd_AddParm(ts, "-addrs", CMD_FLAG, CMD_OPTIONAL, "print only host interfaces");
 
     cmd_Dispatch(argc, argv);
     exit(0);
