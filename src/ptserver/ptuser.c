@@ -102,9 +102,10 @@ pr_Initialize(secLevel, confDir, cell)
 #else /* defined(UKERNEL) */
 	tdir = afsconf_Open(confDir);
 	if (!tdir) {
-	    fprintf(stderr,
-		    "libprot: Could not open configuration directory: %s.\n",
-		    confDir);
+	    if (confDir && strcmp(confDir, ""))
+		fprintf(stderr,
+			"libprot: Could not open configuration directory: %s.\n",
+			confDir);
 	    return -1;
 	}
 
