@@ -1,0 +1,165 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL=/bin/sh
+KERNELDIR = ../libafs/
+UKERNELDIR = ../libuafs/
+
+include ../config/Makefile.${SYS_NAME}
+
+all: kinstall ukinstall ${TOP_INCDIR}/afs/afs.h ${TOP_INCDIR}/afs/osi_inode.h ${TOP_INCDIR}/afs/afs_stats.h ${TOP_INCDIR}/afs/exporter.h ${TOP_INCDIR}/afs/nfsclient.h
+	case ${SYS_NAME} in \
+		pmax_ul43 | pmax_ul43a) \
+			${INSTALL} longc_procs.h ${TOP_INCDIR}/afs ;; \
+	esac
+	case ${SYS_NAME} in \
+		*linux* ) \
+			${INSTALL} ${AFS_OSTYPE}/osi_vfs.h ${TOP_INCDIR}/afs ;;\
+		* ) \
+			echo No vfs headers to install for ${SYS_NAME};; \
+	esac
+
+# NOTE: linux case uses --new as well to work around bug in some versions of
+# gencat.
+kinstall: ${KERNELDIR}/afs AFS_component_version_number.c
+	-chmod 666 ${KERNELDIR}afs/*
+	${COMPILE_ET} -v 2 afs_trace.et
+	${INSTALL} *.[csh] ${KERNELDIR}afs
+	${INSTALL} VNOPS/*.[csh] ${KERNELDIR}afs
+	${INSTALL} ${AFS_OSTYPE}/*.[csh] ${KERNELDIR}afs
+	-$(RM) -f afszcm.cat
+	case ${SYS_NAME} in \
+		sgi_* ) \
+			gencat -m afszcm.cat afs_trace.msf ;; \
+		*_linux* ) \
+			gencat --new afszcm.cat afs_trace.msf ;; \
+		ppc_darwin* | i386_fbsd*) \
+			echo No gencat for ${SYS_NAME} ;; \
+		* ) \
+			gencat afszcm.cat afs_trace.msf ;; \
+	esac
+
+${KERNELDIR}/afs:
+	mkdir -p $@
+
+ukinstall: ${UKERNELDIR}/afs AFS_component_version_number.c
+	-chmod 666 ${UKERNELDIR}afs/*
+	${COMPILE_ET} -v 2 afs_trace.et
+	${INSTALL} *.[csh] ${UKERNELDIR}afs
+	${INSTALL} VNOPS/*.[csh] ${UKERNELDIR}afs
+	${INSTALL} UKERNEL/*.[csh] ${UKERNELDIR}afs
+
+${UKERNELDIR}/afs:
+	mkdir -p $@
+
+install:   ${DESTDIR}${includedir}/afs/afs.h  ${DESTDIR}${includedir}/afs/osi_inode.h ${DESTDIR}${includedir}/afs/afs_stats.h ${DESTDIR}${includedir}/afs/exporter.h ${DESTDIR}${includedir}/afs/nfsclient.h
+	case ${SYS_NAME} in \
+		pmax_ul43 | pmax_ul43a) \
+			${INSTALL} longc_procs.h ${DESTDIR}${includedir}/afs ;; \
+	esac
+	case ${SYS_NAME} in \
+		*linux* ) \
+			${INSTALL} ${AFS_OSTYPE}/osi_vfs.h ${DESTDIR}${includedir}/afs ;;\
+		* ) \
+			echo No vfs headers to install for ${SYS_NAME};; \
+	esac
+
+clean:
+	-$(RM) -f *.o core AFS_component_version_number.c afs_trace.h afs_trace.msf afszcm.cat
+
+include ../config/Makefile.version
+${DEST}/include/afs/afs.h: afs.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/afs.h: afs.h
+	${INSTALL} $? $@
+
+
+${TOP_INCDIR}/afs/afs.h: afs.h
+	${INSTALL} $? $@
+
+
+${DEST}/include/afs/osi_inode.h: ${AFS_OSTYPE}/osi_inode.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/osi_inode.h: ${AFS_OSTYPE}/osi_inode.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/osi_inode.h: ${AFS_OSTYPE}/osi_inode.h
+	${INSTALL} $? $@
+
+
+${DEST}/include/afs/afs_stats.h: afs_stats.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/afs_stats.h: afs_stats.h
+	${INSTALL} $? $@
+
+
+${TOP_INCDIR}/afs/afs_stats.h: afs_stats.h
+	${INSTALL} $? $@
+
+
+${DEST}/include/afs/exporter.h: exporter.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/exporter.h: exporter.h
+	${INSTALL} $? $@
+
+
+${TOP_INCDIR}/afs/exporter.h: exporter.h
+	${INSTALL} $? $@
+
+
+${DEST}/include/afs/nfsclient.h: nfsclient.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/nfsclient.h: nfsclient.h
+	${INSTALL} $? $@
+
+
+${TOP_INCDIR}/afs/nfsclient.h: nfsclient.h
+	${INSTALL} $? $@
+
+
+dest:   ${DEST}/include/afs/afs.h ${DEST}/include/afs/osi_inode.h ${DEST}/include/afs/afs_stats.h ${DEST}/include/afs/exporter.h ${DEST}/include/afs/nfsclient.h
+	case ${SYS_NAME} in \
+		pmax_ul43 | pmax_ul43a) \
+			${INSTALL} longc_procs.h ${DEST}/include/afs ;; \
+	esac
+	case ${SYS_NAME} in \
+		next_mach30 | vax_ul43 | ppc_darwin* | i386_fbsd* ) \
+			echo skipping afszcm.cat install for ${SYS_NAME} ;; \
+		* ) \
+			${INSTALL} afszcm.cat ${DEST}/root.client/usr/vice/etc/C ;; \
+	esac
+	case ${SYS_NAME} in \
+		*linux* ) \
+			${INSTALL} ${AFS_OSTYPE}/osi_vfs.h ${DEST}/include/afs ;;\
+		* ) \
+			echo No vfs headers to install for ${SYS_NAME};; \
+	esac
+
