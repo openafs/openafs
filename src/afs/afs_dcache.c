@@ -1199,7 +1199,7 @@ afs_FindDCache(register struct vcache *avc, afs_size_t abyte)
 {
     afs_int32 chunk;
     register afs_int32 i, index;
-    register struct dcache *tdc;
+    register struct dcache *tdc = NULL;
 
     AFS_STATCNT(afs_FindDCache);
     chunk = AFS_CHUNK(abyte);
@@ -1526,7 +1526,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
     register struct osi_file *file;
     register struct conn *tc;
     int downDCount = 0;
-    struct server *newCallback;
+    struct server *newCallback = NULL;
     char setNewCallback;
     char setVcacheStatus;
     char doVcacheUpdate;

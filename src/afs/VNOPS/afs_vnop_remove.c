@@ -459,7 +459,9 @@ afs_remunlink(register struct vcache *avc, register int doit)
     struct VenusFid dirFid;
     register struct dcache *tdc;
     afs_int32 code = 0;
+#ifdef AFS_DARWIN14_ENV
     int oldref;
+#endif
 
     if (NBObtainWriteLock(&avc->lock, 423))
 	return 0;

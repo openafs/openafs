@@ -426,28 +426,31 @@ extern void shutdown_mariner(void);
 
 /* afs_memcache.c */
 extern int afs_InitMemCache(int blkCount, int blkSize, int flags);
-extern int afs_MemCacheClose(char *file);
+extern int afs_MemCacheClose(struct osi_file *file);
+#if defined(AFS_SUN57_64BIT_ENV) || defined(AFS_SGI62_ENV)
 extern void *afs_MemCacheOpen(ino_t blkno);
-extern int afs_MemReadBlk(register struct memCacheEntry *mceP, int offset,
-			  char *dest, int size);
+#else
+extern void *afs_MemCacheOpen(afs_int32 blkno);
+#endif
+extern int afs_MemReadBlk(register struct osi_file *fP, int offset,
+			  void *dest, int size);
 extern int afs_MemReadvBlk(register struct memCacheEntry *mceP, int offset,
 			   struct iovec *iov, int nio, int size);
 extern int afs_MemReadUIO(ino_t blkno, struct uio *uioP);
-extern int afs_MemWriteBlk(register struct memCacheEntry *mceP, int offset,
-			   char *src, int size);
+extern int afs_MemWriteBlk(register struct osi_file *fP, int offset,
+			   void *src, int size);
 extern int afs_MemWritevBlk(register struct memCacheEntry *mceP, int offset,
 			    struct iovec *iov, int nio, int size);
 extern int afs_MemWriteUIO(ino_t blkno, struct uio *uioP);
-extern int afs_MemCacheTruncate(register struct memCacheEntry *mceP,
+extern int afs_MemCacheTruncate(register struct osi_file *fP,
 				int size);
 extern int afs_MemCacheStoreProc(register struct rx_call *acall,
-				 register struct memCacheEntry *mceP,
+				 register struct osi_file *fP,
 				 register afs_int32 alen, struct vcache *avc,
 				 int *shouldWake, afs_size_t * abytesToXferP,
-				 afs_size_t * abytesXferredP,
-				 afs_int32 length);
+				 afs_size_t * abytesXferredP);
 extern int afs_MemCacheFetchProc(register struct rx_call *acall,
-				 register struct memCacheEntry *mceP,
+				 register struct osi_file *fP,
 				 afs_size_t abase, struct dcache *adc,
 				 struct vcache *avc,
 				 afs_size_t * abytesToXferP,
@@ -547,7 +550,7 @@ extern int osi_InitCacheInfo(char *aname);
 extern int osi_rdwr(int rw, struct osi_file *file, caddr_t addrp,
 		    size_t asize, size_t * resid);
 extern int osi_file_uio_rdwr(struct osi_file *osifile, uio_t * uiop, int rw);
-extern void setup_uio(uio_t * uiop, struct iovec *iovecp, char *buf,
+extern void setup_uio(uio_t * uiop, struct iovec *iovecp, const char *buf,
 		      afs_offs_t pos, int count, uio_flag_t flag,
 		      uio_seg_t seg);
 extern int uiomove(char *dp, int length, uio_flag_t rw, uio_t * uiop);
@@ -661,6 +664,7 @@ extern struct vfs *afs_globalVFS;
 extern struct vcache *afs_globalVp;
 #ifdef AFS_LINUX20_ENV
 extern void vcache2inode(struct vcache *avc);
+extern void vcache2fakeinode(struct vcache *rootvp, struct vcache *mpvp);
 #endif
 
 /* afs_pioctl.c */
@@ -707,7 +711,7 @@ extern void afs_FlushServer(struct server *srvp);
 extern void afs_RemoveSrvAddr(struct srvAddr *sap);
 extern void afs_ActivateServer(struct srvAddr *sap);
 #ifdef AFS_USERSPACE_IP_ADDR
-extern int afsi_SetServerIPRank(struct srvAddr *sa, afs_int32 addr,
+extern void afsi_SetServerIPRank(struct srvAddr *sa, afs_int32 addr,
 				afs_uint32 subnetmask);
 #else
 #if (!defined(AFS_SUN5_ENV)) && defined(USEIFADDR)
@@ -715,6 +719,7 @@ void afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa);
 #endif
 #endif
 extern int afs_HaveCallBacksFrom(struct server *aserver);
+extern void shutdown_server(void);
 
 
 
@@ -954,7 +959,7 @@ extern int afs_TryEvalFakeStat(struct vcache **avcp,
 			       struct vrequest *areq);
 extern void afs_PutFakeStat(struct afs_fakestat_state *state);
 extern int afs_ENameOK(register char *aname);
-extern void Check_AtSys(register struct vcache *avc, char *aname,
+extern void Check_AtSys(register struct vcache *avc, const char *aname,
 			struct sysname_info *state, struct vrequest *areq);
 extern int Next_AtSys(register struct vcache *avc, struct vrequest *areq,
 		      struct sysname_info *state);
@@ -983,6 +988,8 @@ extern int afs_MemRead(register struct vcache *avc, struct uio *auio,
 extern int afs_UFSRead(register struct vcache *avc, struct uio *auio,
 		       struct AFS_UCRED *acred, daddr_t albn,
 		       struct buf **abpp, int noLock);
+extern void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
+			      struct AFS_UCRED *acred, struct vrequest *areq);
 
 
 /* VNOPS/afs_vnop_readdir.c */

@@ -555,6 +555,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 LINUX_FS_STRUCT_INODE_HAS_I_DEVICES
 		 LINUX_FS_STRUCT_INODE_HAS_I_SECURITY
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
+	  	 LINUX_WRITE_INODE_RETURN_TYPE
+	  	 LINUX_IOP_NAMEIDATA
+	  	 LINUX_AOP_WRITEBACK_CONTROL
 		 LINUX_KERNEL_LINUX_SYSCALL_H
 		 LINUX_KERNEL_SELINUX
 		 LINUX_KERNEL_SOCK_CREATE
@@ -641,6 +644,9 @@ case $AFS_SYSNAME in *_linux* | *_umlinux*)
 		 fi
 		 if test "x$ac_cv_linux_func_inode_setattr_returns_int" = "xyes" ; then
 		  AC_DEFINE(INODE_SETATTR_NOT_VOID, 1, [define if your setattr return return non-void])
+		 fi
+		 if test "x$ac_cv_linux_func_write_inode_returns_int" = "xyes" ; then
+		  AC_DEFINE(WRITE_INODE_NOT_VOID, 1, [define if your sops.write_inode returns non-void])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_address_space_has_page_lock" = "xyes"; then 
 		  AC_DEFINE(STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK, 1, [define if your struct address_space has page_lock])

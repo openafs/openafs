@@ -98,19 +98,6 @@ typedef struct vattr {
 #define VATTR_NULL(A) memset(A, 0, sizeof(struct vattr))
 
 
-/* va_masks - these should match their respective ATTR_xxx #defines in fs.h.
- * afs_notify_change has to use the attr bits in both the Linux and AFS
- * meanings. The glue layer code uses the ATTR_xxx style names.
- */
-#define AT_SIZE		ATTR_SIZE
-#define AT_MODE		ATTR_MODE
-#undef AT_UID
-#define AT_UID		ATTR_UID
-#undef AT_GID
-#define AT_GID		ATTR_GID
-#define AT_MTIME	ATTR_MTIME
-
-
 #define vnodeops inode_operations
 
 #endif /* OSI_VFS_H_ */

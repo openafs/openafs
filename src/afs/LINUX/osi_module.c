@@ -17,6 +17,7 @@
 RCSID
     ("$Header$");
 
+#include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "h/unistd.h"		/* For syscall numbers. */
@@ -26,7 +27,6 @@ RCSID
 #include "../asm/ia32_unistd.h"
 #endif
 
-#include <linux/module.h>
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
@@ -68,7 +68,9 @@ static void **sys_call_table;	/* safer for other linuces */
 
 extern struct file_system_type afs_fs_type;
 
+#if !defined(AFS_LINUX24_ENV)
 static long get_page_offset(void);
+#endif
 
 #if defined(AFS_LINUX24_ENV)
 DECLARE_MUTEX(afs_global_lock);
@@ -142,10 +144,9 @@ int
 csdbproc_read(char *buffer, char **start, off_t offset, int count,
 	      int *eof, void *data)
 {
-    int len, i, j;
+    int len, j;
     struct afs_q *cq, *tq;
     struct cell *tc;
-    void *ret = NULL;
     char tbuffer[16];
     afs_uint32 addr;
     
@@ -184,15 +185,12 @@ peerproc_read(char *buffer, char **start, off_t offset, int count,
 {
     int len, i, j;
     struct rx_peer *sep;
-    void *ret = NULL;
-    char tbuffer[16];
-    afs_uint32 addr;
     
     len = 0;
     for (i = 0, j = 0; i < 256; i++) {
         for (sep = rx_peerHashTable[i]; sep; sep = sep->next, j++) {
-	    len += sprintf(buffer + len, "%lx: next=0x%lx, host=0x%x, ", sep, sep->next,
-                   sep->host);
+	    len += sprintf(buffer + len, "%lx: next=0x%lx, host=0x%x, ", (unsigned long)sep,
+		   (unsigned long)sep->next, sep->host);
             len += sprintf(buffer + len, "ifMTU=%d, natMTU=%d, maxMTU=%d\n", sep->ifMTU,
                    sep->natMTU, sep->maxMTU);
             len += sprintf(buffer + len, "\trtt=%d:%d, timeout(%d:%d), nSent=%d, reSends=%d\n",
@@ -200,8 +198,8 @@ peerproc_read(char *buffer, char **start, off_t offset, int count,
                    sep->timeout.usec, sep->nSent, sep->reSends);
             len += sprintf(buffer + len, "\trefCount=%d, port=%d, idleWhen=0x%x\n",
                    sep->refCount, sep->port, sep->idleWhen);
-            len += sprintf(buffer + len, "\tCongestionQueue (0x%x:0x%x), inPacketSkew=0x%x, outPacketSkew=0x%x\n",
-                 sep->congestionQueue.prev, sep->congestionQueue.next,
+            len += sprintf(buffer + len, "\tCongestionQueue (0x%lx:0x%lx), inPacketSkew=0x%x, outPacketSkew=0x%x\n",
+                 (unsigned long)sep->congestionQueue.prev, (unsigned long)sep->congestionQueue.next,
                  sep->inPacketSkew, sep->outPacketSkew);
 #ifdef RX_ENABLE_LOCKS
             len += sprintf(buffer + len, "\tpeer_lock=%d\n", sep->peer_lock);
@@ -225,10 +223,7 @@ int
 rxstatsproc_read(char *buffer, char **start, off_t offset, int count,
 	      int *eof, void *data)
 {
-    int len, i, j;
-    void *ret = NULL;
-    char tbuffer[16];
-    afs_uint32 addr;
+    int len, i;
     
     len = 0;
     len += sprintf(buffer + len, "packetRequests = %d\n", rx_stats.packetRequests);
@@ -297,11 +292,7 @@ int
 rxproc_read(char *buffer, char **start, off_t offset, int count,
 	      int *eof, void *data)
 {
-    int len, i, j;
-    struct rx_peer *sep;
-    void *ret = NULL;
-    char tbuffer[16];
-    afs_uint32 addr;
+    int len, i;
     
     len = 0;
     len += sprintf(buffer + len, "rx_extraQuota = %d\n", rx_extraQuota);
@@ -314,7 +305,7 @@ rxproc_read(char *buffer, char **start, off_t offset, int count,
     len += sprintf(buffer + len, "rxi_nSendFrags = %d\n", rxi_nSendFrags);
     len += sprintf(buffer + len, "rx_nPackets = %d\n", rx_nPackets);
     len += sprintf(buffer + len, "rx_nFreePackets = %d\n", rx_nFreePackets);
-    len += sprintf(buffer + len, "rx_socket = 0x%x\n", rx_socket);
+    len += sprintf(buffer + len, "rx_socket = 0x%lx\n", (unsigned long)rx_socket);
     len += sprintf(buffer + len, "rx_Port = %d\n", rx_port);
     for (i = 0; i < RX_N_PACKET_CLASSES; i++)
 	len += sprintf(buffer + len, "\trx_packetQuota[%d] = %d\n", i, rx_packetQuota[i]);
@@ -348,33 +339,30 @@ connproc_read(char *buffer, char **start, off_t offset, int count,
 {
     int len, i, j;
     struct rx_connection *sep;
-    void *ret = NULL;
-    char tbuffer[16];
-    afs_uint32 addr;
     
     len = 0;
     for (i = 0, j = 0; i < 256; i++) {
         for (sep = rx_connHashTable[i]; sep; sep = sep->next, j++) {
 	    len += sprintf(buffer + len, "%lx: next=0x%lx, peer=0x%lx, epoch=0x%x, cid=0x%x, ackRate=%d\n",
-			   sep, sep->next, sep->peer, sep->epoch, sep->cid, 
-			   sep->ackRate);
-	    len += sprintf(buffer + len, "\tcall[%x=%d, %x=%d, %x=%d, %x=%d]\n", 
-			   sep->call[0], sep->callNumber[0], sep->call[1], 
-			   sep->callNumber[1], sep->call[2],
-			   sep->callNumber[2], sep->call[3], 
-			   sep->callNumber[3]);
+			   (unsigned long)sep, (unsigned long)sep->next, (unsigned long)sep->peer,
+			   sep->epoch, sep->cid, sep->ackRate);
+	    len += sprintf(buffer + len, "\tcall[%lx=%d, %lx=%d, %lx=%d, %lx=%d]\n", 
+			   (unsigned long)sep->call[0], sep->callNumber[0],
+			   (unsigned long)sep->call[1], sep->callNumber[1],
+			   (unsigned long)sep->call[2], sep->callNumber[2],
+			   (unsigned long)sep->call[3], sep->callNumber[3]);
             len += sprintf(buffer + len, "\ttimeout=%d, flags=0x%x, type=0x%x, serviceId=%d, service=0x%lx, refCount=%d\n",
 			   sep->timeout, sep->flags, sep->type, 
-			   sep->serviceId, sep->service, sep->refCount);
+			   sep->serviceId, (unsigned long)sep->service, sep->refCount);
             len += sprintf(buffer + len, "\tserial=%d, lastSerial=%d, secsUntilDead=%d, secsUntilPing=%d, secIndex=%d\n",
 			   sep->serial, sep->lastSerial, sep->secondsUntilDead,
 			   sep->secondsUntilPing, sep->securityIndex);
             len += sprintf(buffer + len, "\terror=%d, secObject=0x%lx, secData=0x%lx, secHeaderSize=%d, secmaxTrailerSize=%d\n",
-			   sep->error, sep->securityObject, sep->securityData,
-			   sep->securityHeaderSize, 
-			   sep->securityMaxTrailerSize);
+			   sep->error, (unsigned long)sep->securityObject,
+			   (unsigned long)sep->securityData,
+			   sep->securityHeaderSize, sep->securityMaxTrailerSize);
             len += sprintf(buffer + len, "\tchallEvent=0x%lx, lastSendTime=0x%x, maxSerial=%d, hardDeadTime=%d\n",
-			   sep->challengeEvent, sep->lastSendTime, 
+			   (unsigned long)sep->challengeEvent, sep->lastSendTime, 
 			   sep->maxSerial, sep->hardDeadTime);
             if (sep->flags & RX_CONN_MAKECALL_WAITING)
 		len += sprintf(buffer + len, "\t***** Conn in RX_CONN_MAKECALL_WAITING state *****\n");
@@ -404,18 +392,15 @@ servicesproc_read(char *buffer, char **start, off_t offset, int count,
 {
     int len, i, j;
     struct rx_service *sentry;
-    void *ret = NULL;
-    char tbuffer[16];
-    afs_uint32 addr;
     
     len = 0;
     for (i = 0, j = 0; i < RX_MAX_SERVICES; i++) {
-        if (sentry = rx_services[i]) {
+        if ((sentry = rx_services[i])) {
             j++;
 	    len += sprintf(buffer + len,
-			   "\t%lx: serviceId=%d, port=%d, serviceName=%s, socket=0x%x\n",
-			   sentry, sentry->serviceId, sentry->servicePort,
-			   sentry->serviceName, sentry->socket);
+			   "\t%lx: serviceId=%d, port=%d, serviceName=%s, socket=0x%lx\n",
+			   (unsigned long)sentry, sentry->serviceId, sentry->servicePort,
+			   sentry->serviceName, (unsigned long)sentry->socket);
 	    len += sprintf(buffer + len,
 			   "\t\tnSecObj=%d, nReqRunning=%d, maxProcs=%d, minProcs=%d, connDeadTime=%d, idleDeadTime=%d\n",
 			   sentry->nSecurityObjects, sentry->nRequestsRunning,
@@ -442,9 +427,6 @@ callproc_read(char *buffer, char **start, off_t offset, int count,
 {
     int len, i, j, k;
     struct rx_connection *sep;
-    void *ret = NULL;
-    char tbuffer[16];
-    afs_uint32 addr;
     
     len = 0;
     for (i = 0, j = 0; i < 256; i++) {
@@ -455,14 +437,16 @@ callproc_read(char *buffer, char **start, off_t offset, int count,
                     j++;
 		    len += sprintf(buffer + len,
 				   "%lx: conn=0x%lx, qiheader(0x%lx:0x%lx), tq(0x%lx:0x%lx), rq(0x%lx:0x%lx)\n",
-				   call, call->conn, call->queue_item_header.prev,
-				   call->queue_item_header.next, call->tq.prev,
-				   call->tq.next, call->rq.prev, call->rq.next);
+				   (unsigned long)call, (unsigned long)call->conn,
+				   (unsigned long)call->queue_item_header.prev,
+				   (unsigned long)call->queue_item_header.next,
+				   (unsigned long)call->tq.prev, (unsigned long)call->tq.next,
+				   (unsigned long)call->rq.prev, (unsigned long)call->rq.next);
                     len += sprintf(buffer + len, 
-				   "\t: curvec=%d, curpos=%d, nLeft=%d, nFree=%d, currPacket=0x%lx, callNumber=0x%x\n",
-				   call->curvec, call->curpos, call->nLeft,
-				   call->nFree, call->currentPacket,
-				   call->callNumber);
+				   "\t: curvec=%d, curpos=%lx, nLeft=%d, nFree=%d, currPacket=0x%lx, callNumber=0x%lx\n",
+				   call->curvec, (unsigned long)call->curpos, call->nLeft,
+				   call->nFree, (unsigned long)call->currentPacket,
+				   (unsigned long)call->callNumber);
 		    len += sprintf(buffer + len,
 				   "\t: channel=%d, state=0x%x, mode=0x%x, flags=0x%x, localStatus=0x%x, remStatus=0x%x\n",
 				   call->channel, call->state, call->mode,
@@ -475,13 +459,14 @@ callproc_read(char *buffer, char **start, off_t offset, int count,
 				   call->tnext);
                     len += sprintf(buffer + len,
 				   "\t: twind=%d, resendEvent=0x%lx, timeoutEvent=0x%lx, keepAliveEvent=0x%lx, delayedAckEvent=0x%lx\n",
-				   call->twind, call->resendEvent,
-				   call->timeoutEvent, call->keepAliveEvent,
-				   call->delayedAckEvent);
+				   call->twind, (unsigned long)call->resendEvent,
+				   (unsigned long)call->timeoutEvent,
+				   (unsigned long)call->keepAliveEvent,
+				   (unsigned long)call->delayedAckEvent);
 		    len += sprintf(buffer + len,
 				   "\t: lastSendTime=0x%x, lastReceiveTime=0x%x, lastAcked=0x%x, startTime=0x%x, startWait=0x%x\n",
 				   call->lastSendTime, call->lastReceiveTime,
-				   call->lastAcked, call->startTime,
+				   call->lastAcked, call->startTime.sec,
 				   call->startWait);
                     if (call->flags & RX_CALL_WAIT_PROC)
                         len += sprintf(buffer + len,
@@ -657,8 +642,11 @@ init_module(void)
     unsigned long *ptr;
     unsigned long offset=0;
     unsigned long datalen=0;
-    int ret;
+#if defined(EXPORTED_KALLSYMS_SYMBOL)
     unsigned long token=0;
+#endif
+#if defined(EXPORTED_KALLSYMS_SYMBOL) || defined(EXPORTED_KALLSYMS_ADDRESS)
+    int ret;
     char *mod_name;
     unsigned long mod_start=0;
     unsigned long mod_end=0;
@@ -668,6 +656,7 @@ init_module(void)
     char *sym_name;
     unsigned long sym_start=0;
     unsigned long sym_end=0;
+#endif
 #endif /* EXPORTED_SYS_CALL_TABLE */
 
     RWLOCK_INIT(&afs_xosi, "afs_xosi");
@@ -769,7 +758,7 @@ init_module(void)
     if (!sys_call_table) {
 	printf("Failed to find address of sys_call_table\n");
     } else {
-	printf("Found sys_call_table at %x\n", sys_call_table);
+	printf("Found sys_call_table at %lx\n", (unsigned long)sys_call_table);
 #if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_S390X_LINUX24_ENV)
 	error cant support this yet.;
 #endif /* AFS_SPARC64_LINUX20_ENV */
@@ -831,10 +820,10 @@ init_module(void)
 	if (!ia32_sys_call_table) {
 	    printf("Warning: Failed to find address of ia32_sys_call_table\n");
 	} else {
-	    printf("Found ia32_sys_call_table at %x\n", ia32_sys_call_table);
+	    printf("Found ia32_sys_call_table at %lx\n", (unsigned long)ia32_sys_call_table);
 	}
 #else
-	printf("Found ia32_sys_call_table at %x\n", ia32_sys_call_table);
+	printf("Found ia32_sys_call_table at %lx\n", (unsigned long)ia32_sys_call_table);
 #endif /* IA32_SYS_CALL_TABLE */
 #endif
 
@@ -939,8 +928,6 @@ void
 cleanup_module(void)
 #endif
 {
-    struct task_struct *t;
-
     osi_sysctl_clean();
     if (sys_call_table) {
 #if defined(AFS_IA64_LINUX20_ENV)

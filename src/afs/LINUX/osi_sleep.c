@@ -50,7 +50,6 @@ int
 afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
 {
     afs_int32 endTime;
-    struct timer_list *timer = NULL;
     int code;
 
     AFS_STATCNT(osi_Wait);

@@ -36,6 +36,9 @@ RCSID
 #if defined(AFS_LINUX24_ENV)
 #include "h/smp_lock.h"
 #endif
+#if defined(AFS_LINUX26_ENV)
+#include "h/writeback.h"
+#endif
 
 #ifdef pgoff2loff
 #define pageoff(pp) pgoff2loff((pp)->index)
@@ -84,7 +87,6 @@ afs_linux_read(struct file *fp, char *buf, size_t count, loff_t * offp)
 	if (*offp + count > afs_vmMappingEnd) {
 	    uio_t tuio;
 	    struct iovec iov;
-	    afs_size_t oldOffset = *offp;
 	    afs_int32 xfered = 0;
 
 	    if (*offp < afs_vmMappingEnd) {
@@ -145,7 +147,7 @@ static ssize_t
 afs_linux_write(struct file *fp, const char *buf, size_t count, loff_t * offp)
 {
     ssize_t code = 0;
-    int code2;
+    int code2 = 0;
     struct vcache *vcp = ITOAFS(fp->f_dentry->d_inode);
     struct vrequest treq;
     cred_t *credp = crref();
@@ -252,6 +254,8 @@ afs_linux_write(struct file *fp, const char *buf, size_t count, loff_t * offp)
     return code;
 }
 
+extern int BlobScan(struct dcache * afile, afs_int32 ablob);
+
 /* This is a complete rewrite of afs_readdir, since we can make use of
  * filldir instead of afs_readdir_move. Note that changes to vcache/dcache
  * handling and use of bulkstats will need to be reflected here as well.
@@ -346,8 +350,8 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
 	if (de->name)
 	    len = strlen(de->name);
 	else {
-	    printf("afs_linux_readdir: afs_dir_GetBlob failed, null name (inode %x, dirpos %d)\n", 
-		   &tdc->f.inode, dirpos);
+	    printf("afs_linux_readdir: afs_dir_GetBlob failed, null name (inode %lx, dirpos %d)\n", 
+		   (unsigned long)&tdc->f.inode, dirpos);
 	    DRelease((struct buffer *) de, 0);
 	    afs_PutDCache(tdc);
 	    ReleaseReadLock(&avc->lock);
@@ -486,7 +490,6 @@ afs_linux_vma_close(struct vm_area_struct *vmap)
 	    ReleaseWriteLock(&vcp->lock);
     }
 
-  unlock_exit:
     AFS_GUNLOCK();
 }
 
@@ -837,14 +840,19 @@ afs_linux_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *sta
  * later on, we shouldn't have to do it until later. Perhaps in the future..
  */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,10)
+#ifdef DOP_REVALIDATE_TAKES_NAMEIDATA
+static int
+afs_linux_dentry_revalidate(struct dentry *dp, struct nameidata *nd)
+#else
 static int
 afs_linux_dentry_revalidate(struct dentry *dp, int flags)
+#endif
 #else
 static int
 afs_linux_dentry_revalidate(struct dentry *dp)
 #endif
 {
-    char *name;
+    char *name = NULL;
     cred_t *credp = crref();
     struct vrequest treq;
     struct vcache *lookupvcp = NULL;
@@ -985,13 +993,18 @@ struct dentry_operations afs_dentry_operations = {
  *
  * name is in kernel space at this point.
  */
+#ifdef IOP_CREATE_TAKES_NAMEIDATA
+int
+afs_linux_create(struct inode *dip, struct dentry *dp, int mode,
+		 struct nameidata *nd)
+#else
 int
 afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
+#endif
 {
     int code;
     cred_t *credp = crref();
     struct vattr vattr;
-    enum vcexcl excl;
     const char *name = dp->d_name.name;
     struct inode *ip;
 
@@ -1003,7 +1016,7 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 #endif
     AFS_GLOCK();
     code =
-	afs_create(ITOAFS(dip), name, &vattr, NONEXCL, mode,
+	afs_create(ITOAFS(dip), (char *)name, &vattr, NONEXCL, mode,
 		   (struct vcache **)&ip, credp);
 
     if (!code) {
@@ -1045,8 +1058,14 @@ afs_linux_create(struct inode *dip, struct dentry *dp, int mode)
 
 /* afs_linux_lookup */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,10)
+#ifdef IOP_LOOKUP_TAKES_NAMEIDATA
+struct dentry *
+afs_linux_lookup(struct inode *dip, struct dentry *dp,
+		 struct nameidata *nd)
+#else
 struct dentry *
 afs_linux_lookup(struct inode *dip, struct dentry *dp)
+#endif
 #else
 int
 afs_linux_lookup(struct inode *dip, struct dentry *dp)
@@ -1471,8 +1490,13 @@ afs_linux_readpage(struct file *fp, struct page *pp)
 }
 
 #if defined(AFS_LINUX24_ENV)
+#ifdef AOP_WRITEPAGE_TAKES_WRITEBACK_CONTROL
+int
+afs_linux_writepage(struct page *pp, struct writeback_control *wbc)
+#else
 int
 afs_linux_writepage(struct page *pp)
+#endif
 {
     struct address_space *mapping = pp->mapping;
     struct inode *inode;
@@ -1480,7 +1504,11 @@ afs_linux_writepage(struct page *pp)
     unsigned offset = PAGE_CACHE_SIZE;
     long status;
 
-#ifdef PageLaunder
+#if defined(AFS_LINUX26_ENV)
+    if (PageReclaim(pp)) {
+	return WRITEPAGE_ACTIVATE;
+    }
+#else
     if (PageLaunder(pp)) {
 	return(fail_writepage(pp));
     }
@@ -1513,8 +1541,13 @@ afs_linux_writepage(struct page *pp)
 /* afs_linux_permission
  * Check access rights - returns error if can't check or permission denied.
  */
+#ifdef IOP_PERMISSION_TAKES_NAMEIDATA
+int
+afs_linux_permission(struct inode *ip, int mode, struct nameidata *nd)
+#else
 int
 afs_linux_permission(struct inode *ip, int mode)
+#endif
 {
     int code;
     cred_t *credp = crref();

@@ -181,7 +181,7 @@ afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
      * high-level write op.
      */
     if (avc->execsOrWriters <= 0) {
-	printf("WARNING: afs_ufswr vp=%x, exOrW=%d\n", avc,
+	printf("WARNING: afs_ufswr vp=%lx, exOrW=%d\n", (unsigned long)avc,
 	       avc->execsOrWriters);
     }
 #else
@@ -432,7 +432,7 @@ afs_UFSWrite(register struct vcache *avc, struct uio *auio, int aio,
      * high-level write op.
      */
     if (avc->execsOrWriters <= 0) {
-	printf("WARNING: afs_ufswr vcp=%x, exOrW=%d\n", avc,
+	printf("WARNING: afs_ufswr vcp=%lx, exOrW=%d\n", (unsigned long)avc,
 	       avc->execsOrWriters);
     }
 #else

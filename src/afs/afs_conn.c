@@ -220,7 +220,8 @@ afs_ConnBySA(struct srvAddr *sap, unsigned short aport, afs_int32 acell,
 	    }
 	    isec = 2;
 	    /* kerberos tickets on channel 2 */
-	    csec = rxkad_NewClientSecurityObject(level, tu->ct.HandShakeKey,
+	    csec = rxkad_NewClientSecurityObject(level,
+                                                 (struct ktc_encryptionKey *)tu->ct.HandShakeKey,
 						 /* kvno */
 						 tu->ct.AuthHandle, tu->stLen,
 						 tu->stp);

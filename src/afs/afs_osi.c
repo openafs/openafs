@@ -445,8 +445,10 @@ afs_osi_SetTime(osi_timeval_t * atv)
 void *
 afs_osi_Alloc(size_t x)
 {
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_FBSD_ENV)
     register struct osimem *tm = NULL;
     register int size;
+#endif
 
     AFS_STATCNT(osi_Alloc);
     /* 0-length allocs may return NULL ptr from AFS_KALLOC, so we special-case
