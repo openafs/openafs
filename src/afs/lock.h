@@ -175,7 +175,7 @@ extern int afs_trclock;
 	(lock)->src_indicator = src;\
    ENDMAC
 
-#define NBObtainWriteLock(lock, src) (((lock)->excl_locked || (lock)->readers_reading) ? EWOULDBLOCK : ((lock) -> excl_locked = WRITE_LOCK), ((lock)->pid_writer = MyPidxx), ((lock)->src_indicator = src), 0)
+#define NBObtainWriteLock(lock, src) (((lock)->excl_locked || (lock)->readers_reading) ? EWOULDBLOCK : (((lock) -> excl_locked = WRITE_LOCK), ((lock)->pid_writer = MyPidxx), ((lock)->src_indicator = src), 0))
 
 #define ObtainSharedLock(lock, src)\
   BEGINMAC  \
@@ -187,6 +187,8 @@ extern int afs_trclock;
 	(lock)->pid_writer = MyPidxx; \
 	(lock)->src_indicator = src;\
    ENDMAC
+
+#define NBObtainSharedLock(lock, src) (((lock)->excl_locked) ? EWOULDBLOCK : (((lock) -> excl_locked = SHARED_LOCK), ((lock)->pid_writer = MyPidxx), ((lock)->src_indicator = src), 0))
 
 #define UpgradeSToWLock(lock, src)\
   BEGINMAC  \
@@ -274,7 +276,7 @@ extern int afs_trclock;
 	    Afs_Lock_Obtain(lock, WRITE_LOCK); \
    ENDMAC
 
-#define NBObtainWriteLock(lock, src) (((lock)->excl_locked || (lock)->readers_reading) ? EWOULDBLOCK : ((lock) -> excl_locked = WRITE_LOCK),  0)
+#define NBObtainWriteLock(lock, src) (((lock)->excl_locked || (lock)->readers_reading) ? EWOULDBLOCK : (((lock) -> excl_locked = WRITE_LOCK),  0))
 
 #define ObtainSharedLock(lock, src)\
   BEGINMAC  \
@@ -285,6 +287,8 @@ extern int afs_trclock;
 	    Afs_Lock_Obtain(lock, SHARED_LOCK); \
    ENDMAC
 
+#define NBObtainSharedLock(lock, src) (((lock)->excl_locked) ? EWOULDBLOCK : (((lock) -> excl_locked = SHARED_LOCK), 0))
+   
 #define UpgradeSToWLock(lock, src)\
   BEGINMAC  \
 /*       if (afs_trclock) {icl_Trace2(cm_iclSetp, CM_TRACE_LOCKOBTAIN, ICL_TYPE_POINTER, (long)lock, ICL_TYPE_LONG, (long)BOOSTED_LOCK);} */ \
