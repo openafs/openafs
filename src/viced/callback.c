@@ -1345,7 +1345,6 @@ int BreakLaterCallBacks(void)
     struct CallBack *cb;
     struct FileEntry *fe = NULL;
     struct FileEntry *myfe = NULL;
-    struct FileEntry **fepp;
     struct host *host;
     struct VCBParams henumParms;
     unsigned short tthead = 0;  /* zero is illegal value */
@@ -1353,84 +1352,75 @@ int BreakLaterCallBacks(void)
     /* Unchain first */
     ViceLog(25, ("Looking for FileEntries to unchain\n"));
     H_LOCK
-restart:
-    tthead = 0;
+
+    /* Pick the first volume we see to clean up */
+    fid.Volume = fid.Vnode = fid.Unique = 0;
+
     for (hash=0; hash<VHASH; hash++) {
 	for (feip = &HashTable[hash]; fe = itofe(*feip); ) {
-	    if (fe && fe->status & FE_LATER) {
+	    if (fe && (fe->status & FE_LATER) && 
+		(fid.Volume == 0 || fid.Volume == fe->volid)) {
 		ViceLog(125, ("Unchaining for %d:%d:%d\n", fe->vnode, 
 			      fe->unique, fe->volid));
+		fid.Volume = fe->volid;
 		*feip = fe->fnext;
 		/* Works since volid is deeper than the largest pointer */
 		((struct object *)fe)->next = (struct object *)myfe;
 		myfe = fe;
-	    } else {
+	    } else 
 		feip = &fe->fnext;
-	    }
 	}
     }
     
     if (!myfe) {
-       H_UNLOCK
-       return 0;
+	H_UNLOCK
+	return 0;
     }
 
-    /* loop over myfe and free/break */
+    /* loop over FEs from myfe and free/break */
     FSYNC_UNLOCK
-    while (myfe) {
-	/* Clear for next pass */
-	fid.Volume = 0, fid.Vnode = fid.Unique = 0;
-	tthead = 0;
-	for (fepp = &myfe; fe = *fepp; ) {
-	    /* Pick up first volid we see and break callbacks for it */
-	    if (fid.Volume == 0 || fid.Volume == fe->volid) {
-		register struct CallBack *cbnext;
-		ViceLog(125, ("Caught volume %d for breaking\n", fe->volid));
-		fid.Volume = fe->volid;
-		for (cb = itocb(fe->firstcb); cb; cb = cbnext) {
-		    host = h_itoh(cb->hhead);
-		    h_Hold_r(host);
-		    cbnext = itocb(cb->cnext);
-		    if (!tthead || (TNorm(tthead) < TNorm(cb->thead))) {
-			tthead = cb->thead;
-		    }
-		    TDel(cb);
-		    HDel(cb);
-		    CDel(cb, 0); /* Don't let CDel clean up the fe */
-		    /* leave hold for MultiBreakVolumeCallBack to clear */
-		}
-		/* relink chain */
-		(struct object *) *fepp = ((struct object *)fe)->next;
-		FreeFE(fe);
-	    } else {
-		(struct object **) fepp = &(((struct object *)fe)->next);
+    tthead = 0;
+    for (fe = myfe; fe; ) {
+	register struct CallBack *cbnext;
+	for (cb = itocb(fe->firstcb); cb; cb = cbnext) {
+	    host = h_itoh(cb->hhead);
+	    h_Hold_r(host);
+	    cbnext = itocb(cb->cnext);
+	    if (!tthead || (TNorm(tthead) < TNorm(cb->thead))) {
+		tthead = cb->thead;
 	    }
+	    TDel(cb);
+	    HDel(cb);
+	    CDel(cb, 0); /* Don't let CDel clean up the fe */
+	    /* leave hold for MultiBreakVolumeCallBack to clear */
 	}
-
-	if (tthead) {
-	    ViceLog(125, ("Breaking volume %d\n", fid.Volume));
-	    henumParms.ncbas = 0;
-	    henumParms.fid = &fid;
-	    henumParms.thead = tthead;
-	    H_UNLOCK
-	    h_Enumerate(MultiBreakVolumeLaterCallBack, (char *) &henumParms);
-	    H_LOCK
-
-	    if (henumParms.ncbas) {    /* do left-overs */
-		struct AFSCBFids tf;
-		tf.AFSCBFids_len = 1;
-		tf.AFSCBFids_val = &fid;
-		
-		MultiBreakCallBack_r(henumParms.cba, henumParms.ncbas, &tf, 0 );
-		henumParms.ncbas = 0;
-	    }
-	}  
+	myfe = fe;
+	(struct object *)fe = ((struct object *)fe)->next;
+	FreeFE(myfe);
     }
-    FSYNC_LOCK
 
-    if (tthead) goto restart;
+    if (tthead) {
+	ViceLog(125, ("Breaking volume %d\n", fid.Volume));
+	henumParms.ncbas = 0;
+	henumParms.fid = &fid;
+	henumParms.thead = tthead;
+	H_UNLOCK
+	h_Enumerate(MultiBreakVolumeLaterCallBack, (char *) &henumParms);
+	H_LOCK
+	    
+	if (henumParms.ncbas) {    /* do left-overs */
+	    struct AFSCBFids tf;
+	    tf.AFSCBFids_len = 1;
+	    tf.AFSCBFids_val = &fid;
+	    
+	    MultiBreakCallBack_r(henumParms.cba, henumParms.ncbas, &tf, 0 );
+	    henumParms.ncbas = 0;
+	}
+    }  
+    FSYNC_LOCK
     H_UNLOCK
 
+    /* Arrange to be called again */
     return 1;
 }
 
