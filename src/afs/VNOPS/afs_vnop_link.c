@@ -32,9 +32,9 @@ extern afs_rwlock_t afs_xcbhash;
 
 #ifdef	AFS_OSF_ENV
 afs_link(avc, ndp)
-    register struct vcache *avc;
+    struct vcache *avc;
     struct nameidata *ndp; {
-    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
+    struct vcache *adp = VTOAFS(ndp->ni_dvp);
     char *aname = ndp->ni_dent.d_name;
     struct ucred *acred = ndp->ni_cred;
 #else	/* AFS_OSF_ENV */
@@ -44,7 +44,7 @@ afs_link(OSI_VC_ARG(adp), avc, aname, acred)
 afs_link(avc, OSI_VC_ARG(adp), aname, acred)
 #endif
     OSI_VC_DECL(adp);
-    register struct vcache *avc;
+    struct vcache *avc;
     char *aname;
     struct AFS_UCRED *acred;
 {
