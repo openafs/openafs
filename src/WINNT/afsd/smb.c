@@ -1841,7 +1841,8 @@ smb_packet_t *smb_CopyPacket(smb_packet_t *pkt)
     tbp = GetPacket();
     memcpy(tbp, pkt, sizeof(smb_packet_t));
     tbp->wctp = tbp->data + ((unsigned int)pkt->wctp - (unsigned int)pkt->data);
-    smb_HoldVC(tbp->vcp);
+	if (tbp->vcp)
+		smb_HoldVC(tbp->vcp);
     return tbp;
 }
 
@@ -8090,18 +8091,23 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
                 smb_lsaLogonOrigin.MaximumLength = smb_lsaLogonOrigin.Length + 1;
             } else {
                 afsi_log("Can't determine security package name for NTLM!! NTSTATUS=[%l]",nts);
+
+                /* something went wrong. We report the error and revert back to no authentication
+                because we can't perform any auth requests without a successful lsa handle
+                or sec package id. */
+                afsi_log("Reverting to NO SMB AUTH");
+                smb_authType = SMB_AUTH_NONE;
             }
         } else {
             afsi_log("Can't register logon process!! NTSTATUS=[%l]",nts);
-        }
 
-        if (nts != STATUS_SUCCESS) {
             /* something went wrong. We report the error and revert back to no authentication
             because we can't perform any auth requests without a successful lsa handle
             or sec package id. */
             afsi_log("Reverting to NO SMB AUTH");
             smb_authType = SMB_AUTH_NONE;
-        } 
+        }
+
 #ifdef COMMENT
         /* Don't fallback to SMB_AUTH_NTLM.  Apparently, allowing SPNEGO to be used each
          * time prevents the failure of authentication when logged into Windows with an
