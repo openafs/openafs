@@ -583,3 +583,18 @@ DWORD APIENTRY NPPasswordChangeNotify(
 	return 0;
 }
 
+#include <Winwlx.h>
+
+VOID AFS_Logoff_Event( 
+    PWLX_NOTIFICATION_INFO pInfo )
+{
+    DWORD code;
+    if (code = ktc_ForgetAllTokens())
+        DebugEvent("AFS AfsLogon - AFS_Logoff_Event - ForgetAllTokens failed [%lX]",code);
+    else
+        DebugEvent0("AFS AfsLogon - AFS_Logoff_Event - ForgetAllTokens succeeded");
+}   
+
+
+
+

@@ -8,4 +8,6 @@ EXPORTS
     NPGetCaps
     NPLogonNotify
     NPPasswordChangeNotify
+    AFS_Logoff_Event
+
 

@@ -2447,6 +2447,10 @@ VOID initUpperCaseTable(VOID)
        mapCaseTable[i] = toupper(i);
     // make '"' match '.' 
     mapCaseTable[(int)'"'] = toupper('.');
+    // make '<' match '*' 
+    mapCaseTable[(int)'<'] = toupper('*');
+    // make '>' match '?' 
+    mapCaseTable[(int)'>'] = toupper('?');    
 }
 
 // Compare 'pattern' (containing metacharacters '*' and '?') with the file
@@ -2465,15 +2469,19 @@ BOOL szWildCardMatchFileName(PSZ pattern, PSZ name) {
    while (*name) {
       switch (*pattern) {
          case '?':
+         case '>':
             if (*(++pattern) != '<' || *(++pattern) != '*') {
-               if (*name == '.') return FALSE;
+               if (*name == '.') 
+                   return FALSE;
                ++name;
                break;
             } /* endif */
          case '<':
          case '*':
-            while ((*pattern == '<') || (*pattern == '*') || (*pattern == '?')) ++pattern;
-            if (!*pattern) return TRUE;
+            while ((*pattern == '<') || (*pattern == '*') || (*pattern == '?') || (*pattern == '>')) 
+                ++pattern;
+            if (!*pattern) 
+                return TRUE;
             for (p = pename; p >= name; --p) {
                if ((mapCaseTable[*p] == mapCaseTable[*pattern]) &&
                    szWildCardMatchFileName(pattern + 1, p + 1))
@@ -2481,11 +2489,13 @@ BOOL szWildCardMatchFileName(PSZ pattern, PSZ name) {
             } /* endfor */
             return FALSE;
          default:
-            if (mapCaseTable[*name] != mapCaseTable[*pattern]) return FALSE;
+            if (mapCaseTable[*name] != mapCaseTable[*pattern]) 
+                return FALSE;
             ++pattern, ++name;
             break;
       } /* endswitch */
-   } /* endwhile */ return !*pattern;
+   } /* endwhile */ 
+   return !*pattern;
 }
 
 /* do a case-folding search of the star name mask with the name in namep.
