@@ -350,7 +350,7 @@ int rxevent_RaiseEvents(next)
 {
     register struct rxepoch *ep;
     register struct rxevent *ev;
-    struct clock now;
+    volatile struct clock now;
 
     MUTEX_ENTER(&rxevent_lock);
 
