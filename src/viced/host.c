@@ -748,6 +748,10 @@ h_TossStuff_r(host)
 	    FreeCE(client);
 	} else cp = &client->next;
     }
+
+    /* We've just cleaned out all the deleted clients; clear the flag */
+    host->hostFlags &= ~CLIENTDELETED;
+
     if (host->hostFlags & HOSTDELETED) {
 	register struct h_hashChain **hp, *th;
 	register struct rx_connection *rxconn;
