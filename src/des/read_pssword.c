@@ -17,7 +17,7 @@
 #include "conf.h"
 
 #include <stdio.h>
-#if defined(AFS_SUN5_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 #include <strings.h>
 #endif
 #include <string.h>
