@@ -5,6 +5,9 @@ RELDIR=WINNT\install\NSIS
 EXEDIR = $(DESTDIR)\WinInstall\Config
 NSISDIR = C:\Program Files\NSIS
 
+# Revise the rule for compiling sources to use static libraries
+C2OBJ   = $(cc) /Fo$@ /Fd$*.pdb $(cflags) $(cdebug) $(cvars) $(afscflags) $(afscdefs) /c
+
 $(OUT)\Service.obj: Service.cpp
 	   $(C2OBJ) Service.cpp
 
