@@ -736,6 +736,8 @@ distclean: clean
 pristine: distclean
 	/bin/rm -f src/config/afsconfig.h.in configure configure-libafs aclocal.m4
 
+maintainer-clean: pristine
+
 #
 # Below targets are all deprecated, insecure, or obsolte, 
 # see README.OBSOLETE and README.INSECURE for more info
