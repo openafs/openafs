@@ -163,7 +163,7 @@ struct CallBack {
     unsigned short  spare;              /* make it a multiple of 32 bits. */
 } *CB;	/* Don't use CB[0] */
 
-/* status bits for status field of CallBack structure */
+/* status values for status field of CallBack structure */
 #define CB_NORMAL   1	/* Normal call back */
 #define CB_DELAYED  2	/* Delayed call back due to rpc problems.
 		        The call back entry will be added back to the

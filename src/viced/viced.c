@@ -165,6 +165,7 @@ int     buffs = 90;		/* 70 */
 int	novbc = 0;		/* Enable Volume Break calls */
 int     busy_threshold = 600;
 int	udpBufSize = 0;		/* UDP buffer size for receive*/
+int	sendBufSize = 16384;	/* send buffer size */
 
 struct timeval  tp;
 
@@ -581,6 +582,7 @@ static void FlagMsg()
     strcat(buffer, "[-k <stack size>] ");
     strcat(buffer, "[-realm <Kerberos realm name>] ");
     strcat(buffer, "[-udpsize <size of socket buffer in bytes>] ");
+    strcat(buffer, "[-sendsize <size of send buffer in bytes>] ");
 /*   strcat(buffer, "[-enable_peer_stats] "); */
 /*   strcat(buffer, "[-enable_process_stats] "); */
     strcat(buffer, "[-help]\n");
@@ -832,6 +834,19 @@ static int ParseArgs(int argc, char *argv[])
 				bufSize, rx_GetMinUdpBufSize() );
 		else
 		    udpBufSize = bufSize;
+	    }
+	else
+	    if ( !strcmp(argv[i], "-sendsize")) {
+		if ( (i+1) >= argc ) {
+		    printf("You have to specify -sendsize <integer value>\n");
+		    return -1;
+		}
+		bufSize = atoi(argv[++i]);
+		if ( bufSize < 16384 )
+		    printf("Warning:sendsize %d is less than minimum %d; ignoring\n",
+				bufSize, 16384);
+		else
+		    sendBufSize = bufSize;
 	    }
 	else
 	    if (!strcmp(argv[i], "-enable_peer_stats")) {

@@ -1874,8 +1874,6 @@ afs_int32 SRXAFS_ResidencyCmd (struct rx_call *acall, struct AFSFid *Fid,
     return EINVAL;
 }
 
-#define	AFSV_BUFFERSIZE	16384 
-
 static struct afs_buffer {
     struct afs_buffer *next;
 } *freeBufferList = 0;
@@ -1901,7 +1899,7 @@ static char *AllocSendBuffer()
     afs_buffersAlloced++;
     if (!freeBufferList) {
 	FS_UNLOCK
-	return malloc(AFSV_BUFFERSIZE);
+	return malloc(sendBufSize);
     }
     tp = freeBufferList;
     freeBufferList = tp->next;
@@ -6521,7 +6519,7 @@ FetchData_RXStyle(Volume *volptr,
     ihP = targetptr->handle;
     fdP = IH_OPEN(ihP);
     if (fdP == NULL) return EIO;
-    optSize = AFSV_BUFFERSIZE;
+    optSize = sendBufSize;
     tlen = FDH_SIZE(fdP);
     if (tlen < 0) {
 	FDH_CLOSE(fdP);
@@ -6799,7 +6797,7 @@ StoreData_RXStyle(Volume *volptr,
 
     TM_GetTimeOfDay(&StartTime, 0);
 
-    optSize = AFSV_BUFFERSIZE;
+    optSize = sendBufSize;
 
     /* truncate the file iff it needs it (ftruncate is slow even when its a noop) */
     if (FileLength < DataLength) FDH_TRUNC(fdP, FileLength);
