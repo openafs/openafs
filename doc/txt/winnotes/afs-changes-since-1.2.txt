@@ -1,4 +1,7 @@
 Since 1.3.71:
+  * Fix the pattern matching algorithm to properly match patterns
+    ending with a '*'.
+
   * smb_ReceiveCoreRename() was factored to produce smb_Rename()
     which is used by both the original function and the new
     smb_ReceiveNTRename().  smb_ReceiveNTRename() supports the
