@@ -2141,7 +2141,7 @@ RetryLookup:
 	/*
 	 * Not a dynamic vnode:  do the real fetch.
 	 */
-	if (size) do {
+	do {
 	    /*
 	     * Locks held:
 	     * avc->lock(R) if setLocks && !slowPass
@@ -2548,7 +2548,7 @@ done:
     /* Check if we need to perform any last-minute fixes with a write-lock */
     if (!setLocks || doVcacheUpdate) {
 	if (setNewCallback) avc->callback = newCallback;
-	if (tsmall) afs_ProcessFS(avc, &tsmall->OutStatus, areq);
+	if (tsmall && setVcacheStatus) afs_ProcessFS(avc, &tsmall->OutStatus, areq);
 	if (setLocks) ReleaseWriteLock(&avc->lock);
     }
 
