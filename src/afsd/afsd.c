@@ -1329,6 +1329,10 @@ mainproc(as, arock)
 	/* -dynroot */
 	enable_dynroot = 1;
     }
+    if (as->parms[27].items) {
+	/* -fakestat */
+	enable_fakestat = 1;
+    }
 
     /*
      * Pull out all the configuration info for the workstation's AFS cache and
@@ -1566,6 +1570,14 @@ mainproc(as, arock)
 	code = call_syscall(AFSOP_SET_DYNROOT, 1);
 	if (code)
 	    printf("%s: Error enabling dynroot support.\n", rn);
+    }
+
+    if (enable_fakestat) {
+	if (afsd_verbose)
+	    printf("%s: Enabling fakestat support in kernel.\n", rn);
+	code = call_syscall(AFSOP_SET_FAKESTAT, 1);
+	if (code)
+	    printf("%s: Error enabling fakestat support.\n", rn);
     }
 
     /* Initialize AFS daemon threads. */
@@ -1921,6 +1933,7 @@ char **argv; {
 		), "Enable AFSDB support");
     cmd_AddParm(ts, "-files_per_subdir", CMD_SINGLE, CMD_OPTIONAL, "log(2) of the number of cache files per cache subdirectory");
     cmd_AddParm(ts, "-dynroot", CMD_FLAG, CMD_OPTIONAL, "Enable dynroot support");
+    cmd_AddParm(ts, "-fakestat", CMD_FLAG, CMD_OPTIONAL, "Enable fakestat support");
     return (cmd_Dispatch(argc, argv));
 }
 
