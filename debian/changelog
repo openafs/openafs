@@ -1,7 +1,6 @@
 openafs (1.2.3candidate3-1) unstable; urgency=low
 
-  * 
- New  upstream release candidate
+  *  New  upstream release candidate
   * Use different version number format; people who installed rc1 will
     need to upgrade manually.  Sorry, but rc1 was never uploaded to Debian.
   * Support sparc_linux24
