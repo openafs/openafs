@@ -557,148 +557,6 @@ afs_RemoveVCB(struct VenusFid *afid)
     MReleaseWriteLock(&afs_xvcb);
 }
 
-#if defined(AFS_LINUX22_ENV) && !defined(AFS_LINUX26_ENV)
-
-static void
-__shrink_dcache_parent(struct dentry *parent)
-{
-    struct dentry *this_parent = parent;
-    struct list_head *next;
-    int found = 0;
-    LIST_HEAD(afs_dentry_unused);
-
-  repeat:
-    next = this_parent->d_subdirs.next;
-  resume:
-    while (next != &this_parent->d_subdirs) {
-	struct list_head *tmp = next;
-	struct dentry *dentry = list_entry(tmp, struct dentry, d_child);
-	next = tmp->next;
-	if (!DCOUNT(dentry)) {
-	    list_del(&dentry->d_lru);
-	    list_add(&dentry->d_lru, afs_dentry_unused.prev);
-	    found++;
-	}
-	/*
-	 * Descend a level if the d_subdirs list is non-empty.
-	 */
-	if (!list_empty(&dentry->d_subdirs)) {
-	    this_parent = dentry;
-	    goto repeat;
-	}
-    }
-    /*
-     * All done at this level ... ascend and resume the search.
-     */
-    if (this_parent != parent) {
-	next = this_parent->d_child.next;
-	this_parent = this_parent->d_parent;
-	goto resume;
-    }
-
-    for (;;) {
-	struct dentry *dentry;
-	struct list_head *tmp;
-
-	tmp = afs_dentry_unused.prev;
-
-	if (tmp == &afs_dentry_unused)
-	    break;
-#ifdef AFS_LINUX24_ENV
-	list_del_init(tmp);
-#else
-	list_del(tmp);
-	INIT_LIST_HEAD(tmp);
-#endif /* AFS_LINUX24_ENV */
-	dentry = list_entry(tmp, struct dentry, d_lru);
-
-#ifdef AFS_LINUX24_ENV
-	/* Unused dentry with a count? */
-	if (DCOUNT(dentry))
-	    BUG();
-#endif
-	DGET(dentry);
-#ifdef AFS_LINUX24_ENV
-	list_del_init(&dentry->d_hash);	/* d_drop */
-#else
-	list_del(&dentry->d_hash);
-	INIT_LIST_HEAD(&dentry->d_hash);
-#endif /* AFS_LINUX24_ENV */
-	DUNLOCK();
-	dput(dentry);
-	DLOCK();
-	if (!--found)
-	    break;
-    }
-}
-
-/* afs_TryFlushDcacheChildren -- Shakes loose vcache references held by
- *                               children of the dentry
- *
- * LOCKS -- Called with afs_xvcache write locked. Drops and reaquires
- *          AFS_GLOCK, so it can call dput, which may call iput, but
- *          keeps afs_xvcache exclusively.
- *
- * Tree traversal algorithm from fs/dcache.c: select_parent()
- */
-static void
-afs_TryFlushDcacheChildren(struct vcache *tvc)
-{
-    struct inode *ip = AFSTOI(tvc);
-    struct dentry *this_parent;
-    struct list_head *next;
-    struct list_head *cur;
-    struct list_head *head = &ip->i_dentry;
-    struct dentry *dentry;
-
-    AFS_GUNLOCK();
-  restart:
-#ifndef old_vcache_scheme
-    DLOCK();
-    cur = head;
-    while ((cur = cur->next) != head) {
-	dentry = list_entry(cur, struct dentry, d_alias);
-
-	if (!list_empty(&dentry->d_hash) && !list_empty(&dentry->d_subdirs))
-	    __shrink_dcache_parent(dentry);
-
-	if (!DCOUNT(dentry)) {
-	    DGET(dentry);
-#ifdef AFS_LINUX24_ENV
-	    list_del_init(&dentry->d_hash);	/* d_drop */
-#else
-	    list_del(&dentry->d_hash);
-	    INIT_LIST_HEAD(&dentry->d_hash);
-#endif /* AFS_LINUX24_ENV */
-	    DUNLOCK();
-	    dput(dentry);
-	    goto restart;
-	}
-    }
-    DUNLOCK();
-    AFS_GLOCK();
-#else
-  restart:
-    DLOCK();
-    cur = head;
-    while ((cur = cur->next) != head) {
-	dentry = list_entry(cur, struct dentry, d_alias);
-
-	if (!DCOUNT(dentry)) {
-	    AFS_GUNLOCK();
-	    DGET(dentry);
-	    DUNLOCK();
-	    d_drop(dentry);
-	    dput(dentry);
-	    AFS_GLOCK();
-	    goto restart;
-	}
-    }
-    DUNLOCK();
-#endif
-}
-#endif /* AFS_LINUX22_ENV && !AFS_LINUX26_ENV */
-
 /*
  * afs_NewVCache
  *
@@ -834,14 +692,15 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 	    }
 #elif defined(AFS_LINUX22_ENV)
 	    if (tvc != afs_globalVp && VREFCOUNT(tvc) && tvc->opens == 0) {
-#if defined(AFS_LINUX26_ENV)
                 struct dentry *dentry;
                 struct list_head *cur, *head = &(AFSTOI(tvc))->i_dentry;
                 AFS_FAST_HOLD(tvc);
                 AFS_GUNLOCK();
 
 restart:
+#if defined(AFS_LINUX24_ENV)
                 spin_lock(&dcache_lock);
+#endif
                 cur = head;
                 while ((cur = cur->next) != head) {
                     dentry = list_entry(cur, struct dentry, d_alias);
@@ -851,37 +710,23 @@ restart:
 
 		    dget_locked(dentry);
 
-		    if (!list_empty(&dentry->d_subdirs)) {
-                        DUNLOCK();
-			shrink_dcache_parent(dentry);
-                        DLOCK();
-                    }
-
-		    spin_lock(&dentry->d_lock);
-		    if (atomic_read(&dentry->d_count) > 1) {
-			if (dentry->d_inode && S_ISDIR(dentry->d_inode->i_mode)) {
-			    spin_unlock(&dentry->d_lock);
-			    spin_unlock(&dcache_lock);
-			    dput(dentry);
-			    goto inuse;
-			}
-		    }
-
-		    __d_drop(dentry);
-		    spin_unlock(&dentry->d_lock);
+#if defined(AFS_LINUX24_ENV)
 		    spin_unlock(&dcache_lock);
+#endif
+		    if (d_invalidate(dentry) == -EBUSY) {
+			dput(dentry);
+			/* perhaps lock and try to continue? (use cur as head?) */
+			goto inuse;
+		    }
 		    dput(dentry);
 		    goto restart;
-
-                }
-                DUNLOCK();
-inuse:
-
-                AFS_GLOCK();
-                AFS_FAST_RELE(tvc);
-#else
-		afs_TryFlushDcacheChildren(tvc);
+		}		    
+#if defined(AFS_LINUX24_ENV)
+		spin_unlock(&dcache_lock);
 #endif
+	    inuse:
+		AFS_GLOCK();
+		AFS_FAST_RELE(tvc);
 	    }
 #endif
 
