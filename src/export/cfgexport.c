@@ -34,6 +34,7 @@ extern int	sysconfig(int cmd, void *arg, int len);
 
 int debug = 0 ;
 char *syms = "/unix";
+char *xstrings;
 
 #include "AFS_component_version_number.c"
 
@@ -185,14 +186,13 @@ get_syms(conf, syms)
 struct k_conf *conf; 
 char *syms;
 {
-	register sym_t *k_symtab, *ksp;
-	register struct syment *x_symtab, *xsp, *xsq;
-	register char *xstrings;
+	sym_t *k_symtab, *ksp;
+	struct syment *x_symtab, *xsp, *xsq;
 	char *kstrings;
 	struct xcoffhdr hdr;		/* XCOFF header from symbol file*/
 	sym_t k_sym;			/* export version of symbol	*/
 	struct syment xcoff_sym;	/* xcoff version of symbol	*/
-	register i, nsyms, nksyms, nxsyms;
+	int i, nsyms, nksyms, nxsyms = 0;
 	int xstr_size, kstr_size;
 	FILE *fp;
 	int xsym_compar();
@@ -214,6 +214,7 @@ char *syms;
 	    case U800WRMAGIC:
 	    case U800ROMAGIC:
 	    case U800TOCMAGIC:
+	    case U64_TOCMAGIC:
 		break;
 
 	    default:
@@ -267,6 +268,9 @@ char *syms;
 		if (fread(&xcoff_sym, SYMESZ, 1, fp) != 1)
 			error("%s: reading symbol entry", syms);
 
+#ifdef __XCOFF64__
+		p = xstrings + xcoff_sym.n_offset;
+#else
 		if (xcoff_sym.n_zeroes == 0) {
 			/*
 			 * Need to relocate string table offset
@@ -277,6 +281,7 @@ char *syms;
 			
 			p = name, p[8] = 0;
 		}
+#endif
 
 		if (debug > 2)
 			dump_xsym(&xcoff_sym);
@@ -331,9 +336,14 @@ char *syms;
 	memset(xsq = &xcoff_sym, 0, sizeof (*xsq));
 
 	for (i = 1; i < nxsyms; ++i, xsq = xsp++) {
+#ifdef __XCOFF64__
+		if (xsp->n_offset != xsq->n_offset
+		    || xsp->n_value  != xsq->n_value) {
+#else
 		if (xsp->n_zeroes != xsq->n_zeroes
 		    || xsp->n_offset != xsq->n_offset
 		    || xsp->n_value  != xsq->n_value) {
+#endif
 			xlate_xtok(xsp, ksp++, &kstrings, &kstr_size);
 			++nksyms;
 		}
@@ -384,6 +394,39 @@ uint *szp; {
 		*(uint *) export_strings = 0;	/* initial 4 bytes	*/
 	}
 			
+#ifdef __XCOFF64__
+	if (strcmp(prev, xstrings + xp->n_offset) == 0) {
+		/*
+		 * same name as previous entry: just use previous
+		 */
+		kp->n_offset = offset - strlen( *strp + xp->n_offset) - 1;
+	} else if (find_suffix(xstrings + xp->n_offset, *strp, offset, &kp->n_offset)) {
+		/*
+		 * found a string that we are a suffix of
+		 */
+		;
+	} else {
+		/*
+		 * need to add to our string table
+		 */
+		len = strlen(xstrings + xp->n_offset) + 1;
+		while (len >= left) {
+			export_strings = (char *)realloc(*strp, sz += 1024);
+			if (!export_strings)
+				error("no memory for EXPORT string table");
+			*strp = export_strings;
+			left += 1024;
+			prev  = "";	/* lazy	*/
+		}
+
+		strcpy(prev = *strp + offset, xstrings + xp->n_offset);
+
+		kp->n_offset = offset;
+		offset += len;
+		left   -= len;
+		*szp   += len;
+	}
+#else
 	if (kp->n_zeroes = xp->n_zeroes) {	/* sic	*/
 		kp->n_zeroes = xp->n_zeroes;
 		kp->n_offset = xp->n_offset;
@@ -418,6 +461,7 @@ uint *szp; {
 		left   -= len;
 		*szp   += len;
 	}
+#endif
 
 	kp->n_value  = xp->n_value;
 
@@ -487,12 +531,17 @@ register struct syment *xp, *xq; {
 	register char *p, *q;
 	register compar;
 
+#ifndef __XCOFF64__
 	p = (xp->n_zeroes ? xp->n_name : xp->n_nptr);
 	q = (xq->n_zeroes ? xq->n_name : xq->n_nptr);
 
 	if (xp->n_zeroes || xq->n_zeroes)
 		compar = strncmp(p, q, 8);
 	else
+#else 
+	p = xstrings + xp->n_offset;
+	q = xstrings + xq->n_offset;
+#endif
 		compar = strcmp(p, q);
 
 	if (compar == 0)
@@ -507,6 +556,7 @@ register struct syment *xp, *xq; {
 dump_xsym(xsp)
 struct syment *xsp; {
 
+#ifndef __XCOFF64__
 	if (xsp->n_zeroes)
 		printf(
 "nptr <%-8.8s  %8.8s> val %8.8x sc# %4.4x type %4.4x sclass %2.2x naux %2.2x\n"
@@ -519,9 +569,14 @@ struct syment *xsp; {
 		       , xsp->n_sclass
 		       , xsp->n_numaux);
 	else
+#endif
 		printf(
 "nptr <%-17.17s> val %8.8x sc# %4.4x type %4.4x sclass %2.2x naux %2.2x\n"
+#ifdef __XCOFF64__
+		       , xstrings + xsp->n_offset
+#else
 		       , xsp->n_nptr
+#endif
 		       , xsp->n_value
 		       , xsp->n_scnum & 0xffff
 		       , xsp->n_type
@@ -533,9 +588,11 @@ dump_ksym(ksp, strings)
 sym_t *ksp;
 char *strings; {
 
+#ifndef __XCOFF64__
 	if (ksp->n_zeroes)
 		printf("%8.8x %-8.8s\n", ksp->n_value, ksp->n_name);
 	else
+#endif
 		printf("%8.8x %s\n", ksp->n_value, ksp->n_offset + strings);
 }
 

@@ -118,7 +118,9 @@ register struct uio *uiop; {
 	 * into the string table.
 	 */
 	for (sym = toc_syms; sym < &toc_syms[toc_nsyms]; ++sym)
+#ifndef __XCOFF64__
 		if (sym->n_zeroes == 0)
+#endif
 			sym->n_nptr = sym->n_offset + toc_strs;
 
 	return 0;
@@ -152,19 +154,26 @@ export_cleanup() {
  *	exported from some other kernel extension (but referenced in
  *	the /unix symbol table) we are in trouble.
  */
+#ifdef __XCOFF64__
+	u_int64 *myg_toc;
+#else
+	u_int32 *myg_toc;
+#endif
+
 import_kfunc(struct k_func *kfp) {
 	register sym_t *sym;
-	register caddr_t *toc;
 	register i, pri;
-	static u_int *g_toc;
+#if 0
+	static caddr_t *g_toc;
+#endif
 
-	if (!g_toc) {
+	if (!myg_toc) {
 		sym = sym_lookup("g_toc", 0);
 		if (!sym) {
 			printf("\nimport: can't ascertain kernel's TOC\n");
 			return EINVAL;
 		}
-		g_toc = (u_int *) sym->n_value;
+		myg_toc = sym->n_value;
 	}
 
 	sym = sym_lookup(kfp->name, 0);
@@ -174,10 +183,14 @@ import_kfunc(struct k_func *kfp) {
 	}
 
 	kfp->fdesc[0] = sym->n_value;
-	kfp->fdesc[1] = *g_toc;
+	kfp->fdesc[1] = myg_toc;
 	kfp->fdesc[2] = 0;
 
+#ifdef __XCOFF64__
+	*(u_int64**) kfp->fpp = kfp->fdesc;
+#else
 	*(u_int **) kfp->fpp = kfp->fdesc;
+#endif
 
 	return 0;
 }
@@ -244,7 +257,11 @@ osetgroups(ngroups, gidset)
 #endif
 
 #ifdef AFS_AIX51_ENV
+#ifdef AFS_64BIT_KERNEL
 okioctl(fdes, cmd, arg, ext, arg2, arg3)
+#else /* AFS_64BIT_KERNEL */
+okioctl32(fdes, cmd, arg, ext, arg2, arg3)
+#endif /* AFS_64BIT_KERNEL */
     int fdes, cmd;
     caddr_t ext, arg, arg2, arg3;
 #else
@@ -256,7 +273,11 @@ okioctl(fdes, cmd, arg, ext)
     int error;
     
 #ifdef AFS_AIX51_ENV
+#ifdef AFS_64BIT_KERNEL
     error = kioctl(fdes, cmd, arg, ext, arg2, arg3);
+#else /* AFS_64BIT_KERNEL */
+    error = kioctl32(fdes, cmd, arg, ext, arg2, arg3);
+#endif /* AFS_64BIT_KERNEL */
 #else
     error = kioctl(fdes, cmd, arg, ext);
 #endif

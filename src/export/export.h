@@ -28,7 +28,11 @@ struct k_conf {
 struct k_func {
 	void	*(**fpp)();	/* ^ to ^ to function we import	*/
 	char	*name;		/* ^ to symbol name		*/
+#if defined(__XCOFF64__) || defined(AFS_64BIT_KERNEL)
+	u_int64 fdesc[3];	/* function descriptor storage  */
+#else
 	u_int	fdesc[3];	/* function descriptor storage	*/
+#endif
 };
 
 /*

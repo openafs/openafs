@@ -22,9 +22,13 @@ RCSID("$Header$");
  * using the toc_syment structure, that we fabricate:
  *	sym->n_offset is the string pointer
  */
+#ifdef __XCOFF64__
+#define sym_str(sym) ((char *) (sym)->n_nptr)
+#else
 #define	sym_off(sym)	((sym)->n_offset)
 #define	sym_str(sym)	\
 	((sym)->n_zeroes == 0 ? (char *) sym_off(sym) : (sym)->n_name)
+#endif
 
 sym_t *
 sym_lookup(name, value)
@@ -128,11 +132,13 @@ register sym_t *sym; {
 
 	strncpy(name, sym_str(sym), sizeof (name) - 1);
 
+#ifndef __XCOFF64__
 	if (sym->n_zeroes != 0)
 		name[8] = 0;	/* make sure that we truncate correctly	*/
+	symbol.n_zeroes = 0;
+#endif
 
 	symbol          = *sym;
-	symbol.n_zeroes = 0;
 	symbol.n_nptr   = name;
 
 	return &symbol;
