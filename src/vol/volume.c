@@ -551,11 +551,15 @@ VAttachVolumeByName_r(ec, partition, name, mode)
 	    if (vp->specialStatus == VBUSY)
 	        isbusy = 1;
 	    VDetachVolume_r(ec, vp);
+	    if ( *ec ) {
+		Log("VAttachVolume: Error detaching volume (%s)\n", name);
+	    }
 	}
     }
 
     if (!(partp = VGetPartition_r(partition, 0))) {
 	*ec = VNOVOL;
+	Log("VAttachVolume: Error getting partition (%s)\n", partition);
 	goto done;
     }
 
@@ -567,6 +571,7 @@ VAttachVolumeByName_r(ec, partition, name, mode)
     if ((fd = open(path, O_RDONLY)) == -1 || fstat(fd,&status) == -1) {
 	close(fd);
 	VOL_LOCK
+	Log("VAttachVolume: Error opening/statting volume header file (%s)\n", path);
 	*ec = VNOVOL;
 	goto done;
     }
@@ -630,6 +635,7 @@ VAttachVolumeByName_r(ec, partition, name, mode)
 #endif
 	VUpdateVolume_r(ec,vp);
 	if (*ec) {
+	    Log("VAttachVolume: Error updating volume\n");
 	    if (vp)
 		VPutVolume_r(vp);
 	    goto done;
@@ -646,6 +652,7 @@ VAttachVolumeByName_r(ec, partition, name, mode)
 	    V_dontSalvage(vp) = DONT_SALVAGE;
 	    VAddToVolumeUpdateList_r(ec,vp);
 	    if (*ec) {
+		Log("VAttachVolume: Error adding volume to update list\n");
 		if (vp)
 		    VPutVolume_r(vp);
 		goto done;
@@ -699,6 +706,10 @@ private Volume *attach2(ec, path, header, partp, isbusy)
 		      (char *)&V_disk(vp), sizeof(V_disk(vp)), 
 		      VOLUMEINFOMAGIC, VOLUMEINFOVERSION);
     VOL_LOCK
+    if (*ec) {
+      Log("VAttachVolume: Error reading diskDataHandle vol header %s; error=%d\n",
+        path, *ec);
+    }
     if (!*ec) {
 	struct IndexFileHeader iHead;
 
@@ -718,6 +729,10 @@ private Volume *attach2(ec, path, header, partp, isbusy)
 			  (char *)&iHead, sizeof(iHead), 
 			  SMALLINDEXMAGIC, SMALLINDEXVERSION);
 	VOL_LOCK
+    	if (*ec) {
+  	    Log("VAttachVolume: Error reading smallVnode vol header %s; error=%d\n",
+	        path, *ec);
+	}
     }
     if (!*ec) {
 	struct IndexFileHeader iHead;
@@ -726,6 +741,10 @@ private Volume *attach2(ec, path, header, partp, isbusy)
 			  (char *)&iHead, sizeof(iHead),
 			  LARGEINDEXMAGIC, LARGEINDEXVERSION);
 	VOL_LOCK
+    	if (*ec) {
+  	    Log("VAttachVolume: Error reading largeVnode vol header %s; error=%d\n",
+	        path, *ec);
+	}
     }
 #ifdef AFS_NAMEI_ENV
     if (!*ec) {
@@ -735,11 +754,15 @@ private Volume *attach2(ec, path, header, partp, isbusy)
 			  (char *)&stamp, sizeof(stamp),
 			  LINKTABLEMAGIC, LINKTABLEVERSION);
 	VOL_LOCK
+    	if (*ec) {
+  	    Log("VAttachVolume: Error reading namei vol header %s; error=%d\n",
+	        path, *ec);
+	}
     }
 #endif
     if (*ec) {
-	Log("VAttachVolume: Error attaching volume %s; volume needs salvage\n",
-	    path);
+	Log("VAttachVolume: Error attaching volume %s; volume needs salvage; error=%d\n",
+	    path, *ec);
 	FreeVolume(vp);
 	return NULL;
     }
@@ -782,6 +805,7 @@ private Volume *attach2(ec, path, header, partp, isbusy)
 	    VOL_LOCK
 	    if (*ec) {
 		FreeVolume(vp);
+		Log("VAttachVolume: error getting bitmap for volume (%s)\n", path);
 		return NULL;
 	    }
 	}

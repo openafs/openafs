@@ -1782,7 +1782,7 @@ volEntries *volumeInfo;
 		pntr->status = 0; /*things are messed up */
 		strcpy(pntr->name,volname);
 		pntr->volid = volid;
-		Log("1 Volser: ListVolumes: Could not attach volume %u\n",volid);
+		Log("1 Volser: ListVolumes: Could not attach volume %u (%s:%s), error=%d\n",volid,pname,volname,error);
 		goto drop;
 	    }
 	    if(tv->header->diskstuff.destroyMe == DESTROY_ME) {
@@ -1790,7 +1790,7 @@ volEntries *volumeInfo;
 		pntr->status = 0;
 		strcpy(pntr->name,volname);
 		pntr->volid = volid;
-		Log("1 Volser: ListVolumes: Volume %u will be destroyed on next salvage\n",volid);
+		Log("1 Volser: ListVolumes: Volume %u (%s) will be destroyed on next salvage\n",volid,volname);
 		goto drop;
 	    }
 
@@ -1799,7 +1799,7 @@ volEntries *volumeInfo;
 		pntr->status = 0;
 		strcpy(pntr->name,volname);
 		pntr->volid = volid;
-		Log("1 Volser: ListVolumes: Volume %u needs to be salvaged\n",volid);
+		Log("1 Volser: ListVolumes: Volume %u (%s) needs to be salvaged\n",volid,volname);
 		goto drop;
 	    }
 
@@ -2153,7 +2153,7 @@ volEntries *volumeInfo;
 		pntr->status = 0; /*things are messed up */
 		strcpy(pntr->name,volname);
 		pntr->volid = volid;
-		Log("1 Volser: ListVolumes: Could not attach volume %u\n",volid);
+		Log("1 Volser: ListVolumes: Could not attach volume %u (%s) error=%d\n",volid,volname,error);
 		goto drop;
 	    }
 	    if(tv->header->diskstuff.needsSalvaged){
@@ -2161,7 +2161,7 @@ volEntries *volumeInfo;
 		pntr->status = 0;
 		strcpy(pntr->name,volname);
 		pntr->volid = volid;
-		Log("1 Volser: ListVolumes: Volume %u needs to be salvaged\n",volid);
+		Log("1 Volser: ListVolumes: Volume %u (%s) needs to be salvaged\n",volid, volname);
 		goto drop;
 	    }
 
