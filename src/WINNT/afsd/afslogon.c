@@ -44,6 +44,7 @@ WSADATA WSAjunk;
 #define TRACE_OPTION_EVENT 1
 #define ISLOGONTRACE(v) ( ((v) & TRACE_OPTION_EVENT)==TRACE_OPTION_EVENT)
 
+#ifdef COMMENT
 /* Structure def copied from DDK (NTDEF.H) */
 typedef struct UNICODE_STRING {
 	USHORT Length;		/* number of bytes of Buffer actually used */
@@ -58,6 +59,7 @@ typedef struct _MSV1_0_INTERACTIVE_LOGON {
 	UNICODE_STRING	UserName;
 	UNICODE_STRING	Password;
 } MSV1_0_INTERACTIVE_LOGON;
+#endif
 
 /*
  * GetLogonScript
@@ -311,6 +313,31 @@ BOOL IsServiceRunning (void)
     return (Status.dwCurrentState == SERVICE_RUNNING);
 }   
 
+
+static BOOL
+WINAPI
+UnicodeStringToANSI(UNICODE_STRING uInputString, LPSTR lpszOutputString, int nOutStringLen)
+{
+    CPINFO CodePageInfo;
+
+    GetCPInfo(CP_ACP, &CodePageInfo);
+
+    if (CodePageInfo.MaxCharSize > 1)
+        // Only supporting non-Unicode strings
+        return FALSE;
+    
+    if (((LPBYTE) uInputString.Buffer)[1] == '\0')
+    {
+        // Looks like unicode, better translate it
+        // UNICODE_STRING specifies the length of the buffer string in Bytes not WCHARS
+        WideCharToMultiByte(CP_ACP, 0, (LPCWSTR) uInputString.Buffer, uInputString.Length/2,
+                            lpszOutputString, nOutStringLen-1, NULL, NULL);
+        lpszOutputString[max(uInputString.Length/2,nOutStringLen-1)] = '\0';
+        return TRUE;
+    }
+    return FALSE;
+}  // UnicodeStringToANSI
+
 DWORD APIENTRY NPLogonNotify(
 	PLUID lpLogonId,
 	LPCWSTR lpAuthentInfoType,
@@ -350,8 +377,8 @@ DWORD APIENTRY NPLogonNotify(
 	interactive = (wcscmp(lpStationName, L"WinSta0") == 0);
 
 	/* Convert from Unicode to ANSI */
-	wcstombs(uname, IL->UserName.Buffer, 256);
-	wcstombs(password, IL->Password.Buffer, 256);
+	UnicodeStringToANSI(IL->UserName, uname, 256);
+	UnicodeStringToANSI(IL->Password, password, 256);
 
 	/* Make sure AD-DOMANS sent from login that is sent to us is striped */
     ctemp = strchr(uname, '@');
