@@ -674,7 +674,7 @@ static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agoo
 	} else
 	    code = -1;
     } while
-      (afs_Analyze(tconn, code, (struct VenusFid *) 0, areq,
+      (afs_Analyze(tconn, code, (struct VenusFid *) 0, &treq,
 		   -1, /* no op code for this */
 		   SHARED_LOCK, tcell));
 
