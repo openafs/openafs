@@ -306,21 +306,16 @@ cleanup:
 /* Try to determine the user's AD home path.  *homePath is assumed to be at least MAXPATH bytes. 
    If successful, opt.flags is updated with LOGON_FLAG_AD_REALM to indicate that we are dealing with
    an AD realm. */
-DWORD GetAdHomePath(char * homePath, size_t homePathLen, PLUID lpLogonId, MSV1_0_INTERACTIVE_LOGON * IL, LogonOptions_t * opt) {
+DWORD GetAdHomePath(char * homePath, size_t homePathLen, PLUID lpLogonId, LogonOptions_t * opt) {
 	CtxtHandle ctx;
+	DWORD code = 0;
 	SECURITY_STATUS status;
+
+	homePath[0] = '\0';
 
 	if(LogonSSP(lpLogonId,&ctx))
 		return 1;
 	else {
-		SecPkgContext_Names name;
-		status = QueryContextAttributes(&ctx,SECPKG_ATTR_NAMES,&name);
-		if(status != SEC_E_OK) {
-			DebugEvent(NULL,"Can't query names from context [%lX]",status);
-			goto ghp_0;
-		}
-		DebugEvent(NULL,"Context name [%s]",name.sUserName);
-
 		status = ImpersonateSecurityContext(&ctx);
 		if(status == SEC_E_OK) {
 			if(!QueryAdHomePath(homePath,homePathLen,lpLogonId)) {
@@ -330,9 +325,10 @@ DWORD GetAdHomePath(char * homePath, size_t homePathLen, PLUID lpLogonId, MSV1_0
 			RevertSecurityContext(&ctx);
 		} else {
 			DebugEvent(NULL,"Can't impersonate context [%lX]",status);
+			code = 1;
 		}
 ghp_0:
 		DeleteSecurityContext(&ctx);
-		return 0;
+		return code;
 	}
 }

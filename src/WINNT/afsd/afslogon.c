@@ -56,7 +56,7 @@ void DebugEvent(char *a,char *b,...)
 		a = AFS_DAEMON_EVENT_NAME;
 	h = RegisterEventSource(NULL, a);
 	va_start(marker,b);
-	_vsnprintf(buf,MAXBUF_,b,marker);
+	StringCbVPrintf(buf, MAXBUF_+1,b,marker);
     buf[MAXBUF_] = '\0';
 	ptbuf[0] = buf;
 	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);\
@@ -331,7 +331,7 @@ void GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, Log
 		PSECURITY_LOGON_SESSION_DATA plsd;
 		char lsaUsername[MAX_USERNAME_LENGTH];
 		char lsaDomain[MAX_DOMAIN_LENGTH];
-		int len;
+		size_t len, tlen;
 
         LsaGetLogonSessionData(lpLogonId, &plsd);
         
@@ -339,19 +339,28 @@ void GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, Log
 		UnicodeStringToANSI(plsd->LogonDomain, lsaDomain, MAX_DOMAIN_LENGTH);
 
 		DebugEvent(NULL,"PLSD username[%s] domain[%s]",lsaUsername,lsaDomain);
-		DebugEvent(NULL,"PLSD Unicode username[%S] domain[%S]",plsd->UserName.Buffer,plsd->LogonDomain.Buffer);
-		DebugEvent(NULL,"PLSD lengths username[%d] domain[%d]",plsd->UserName.Length,plsd->LogonDomain.Length);
 
-        len = strlen(lsaUsername) + strlen(lsaDomain) + 2;
+		if(SUCCEEDED(StringCbLength(lsaUsername, MAX_USERNAME_LENGTH, &tlen)))
+			len = tlen;
+		else
+			goto bad_strings;
+
+		if(SUCCEEDED(StringCbLength(lsaDomain, MAX_DOMAIN_LENGTH, &tlen)))
+			len += tlen;
+		else
+			goto bad_strings;
+
+		len += 2;
 
 		opt->smbName = malloc(len);
 
-		strcpy(opt->smbName, lsaDomain);
-		strcat(opt->smbName, "\\");
-		strcat(opt->smbName, lsaUsername);
+		StringCbCopy(opt->smbName, len, lsaDomain);
+		StringCbCat(opt->smbName, len, "\\");
+		StringCbCat(opt->smbName, len, lsaUsername);
 
 		strlwr(opt->smbName);
 
+bad_strings:
 		LsaFreeReturnBuffer(plsd);
 	}
 
@@ -388,7 +397,10 @@ void GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, Log
 		WCHAR *wuname		= NULL;
 		HRESULT hr;
 
-		int len = strlen(opt->smbName) + 1;
+		size_t len;
+		
+		StringCbLength(opt->smbName, MAX_USERNAME_LENGTH, &len);
+		len ++;
 
 		wuname = malloc(len * sizeof(WCHAR));
 		MultiByteToWideChar(CP_ACP,0,opt->smbName,-1,wuname,len*sizeof(WCHAR));
@@ -406,13 +418,15 @@ void GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, Log
 		DebugEvent(NULL,"Found logon script [%S]", regscript);
 
 		if(dwType == REG_EXPAND_SZ) {
+			DWORD dwReq;
+
 	   		dwSize += MAX_PATH * sizeof(WCHAR);  /* make room for environment expansion. */
 			regexscript = malloc(dwSize);
-			rv = ExpandEnvironmentStringsW(regscript, regexscript, dwSize / sizeof(WCHAR));
+			dwReq = ExpandEnvironmentStringsW(regscript, regexscript, dwSize / sizeof(WCHAR));
 			free(regscript);
 			regscript = regexscript;
 			regexscript = NULL;
-			if(rv > (dwSize / sizeof(WCHAR))) {
+			if(dwReq > (dwSize / sizeof(WCHAR))) {
 				DebugEvent(NULL,"Overflow while expanding environment strings.");
 				goto doneLogonScript;
 			}
@@ -421,13 +435,12 @@ void GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, Log
 		DebugEvent(NULL,"After expanding env strings [%S]", regscript);
 
 		if(wcsstr(regscript, L"%s")) {
-	        dwSize += 256 * sizeof(WCHAR); /* make room for username expansion */
+	        dwSize += len * sizeof(WCHAR); /* make room for username expansion */
 			regexuscript = (WCHAR *) LocalAlloc(LMEM_FIXED, dwSize);
 			hr = StringCbPrintfW(regexuscript, dwSize, regscript, wuname);
 		} else {
 			regexuscript = (WCHAR *) LocalAlloc(LMEM_FIXED, dwSize);
-			wcscpy(regexuscript, regscript);
-			hr = S_OK;
+			hr = StringCbCopyW(regexuscript, dwSize, regscript);
 		}
 
 		DebugEvent(NULL,"After expanding username [%S]", regexuscript);
@@ -519,7 +532,6 @@ DWORD APIENTRY NPLogonNotify(
 	MSV1_0_INTERACTIVE_LOGON *IL;
 
 	DWORD code;
-	int len;
 
 	int pw_exp;
 	char *reason;
@@ -616,7 +628,7 @@ DWORD APIENTRY NPLogonNotify(
 		   cell right away because the client service may not have started yet. This call
 		   also sets the AD_REALM flag in opt.flags if applicable. */
 		if(ISREMOTE(opt.flags))
-			GetAdHomePath(homePath,MAX_PATH,lpLogonId,IL,&opt);
+			GetAdHomePath(homePath,MAX_PATH,lpLogonId,&opt);
     }
 
     /* loop until AFS is started. */
@@ -707,7 +719,8 @@ DWORD APIENTRY NPLogonNotify(
 
 	if (code) {
         char msg[128];
-        sprintf(msg, "Integrated login failed: %s", reason);
+
+		StringCbPrintf(msg, sizeof(msg), "Integrated login failed: %s", reason);
 
 		if (interactive && !opt.failSilently)
 			MessageBox(hwndOwner, msg, "AFS Logon", MB_OK);
@@ -761,7 +774,7 @@ VOID AFS_Logoff_Event(
 {
     DWORD code;
     if (code = ktc_ForgetAllTokens())
-        DebugEvent("AFS AfsLogon - AFS_Logoff_Event - ForgetAllTokens failed [%lX]",code);
+        DebugEvent(NULL,"AFS AfsLogon - AFS_Logoff_Event - ForgetAllTokens failed [%lX]",code);
     else
         DebugEvent0("AFS AfsLogon - AFS_Logoff_Event - ForgetAllTokens succeeded");
 }   
