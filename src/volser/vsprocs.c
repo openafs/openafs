@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/volser/vsprocs.c,v 1.1.1.9 2002/09/26 19:09:36 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/vsprocs.c,v 1.2 2002/10/20 19:01:31 hartmans Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -97,7 +97,7 @@ char *partName;
 yesprompt(str)
 char *str;
 {
-    char response, c;
+    int response, c;
     int code;
 
     fprintf(STDERR, "Do you want to %s? [yn](n): ", str);

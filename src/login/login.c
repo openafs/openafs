@@ -39,7 +39,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/login/login.c,v 1.1.1.5 2001/09/11 14:33:33 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/login/login.c,v 1.2 2002/10/20 19:01:30 hartmans Exp $");
 
 #include <unistd.h>
 #include <stdlib.h>
@@ -1439,7 +1439,7 @@ int prompt;
 				exit(0);
 			}
 			if (p < nbuf + UT_NAMESIZE)
-				*p++ = ch;
+				*p++ = (char) ch;
 		}
 		if (p > nbuf) {
 			if (nbuf[0] == '-')

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/volser/vos.c,v 1.1.1.11 2002/09/26 19:09:35 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/vos.c,v 1.2 2002/10/20 19:01:31 hartmans Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -2076,7 +2076,7 @@ register struct cmd_syndesc *as;
 	else {                    /* volume exists - do we do a full incremental or abort */
 	    int Oserver, Opart, Otype, vol_elsewhere = 0;
 	    struct nvldbentry Oentry;
-	    char   c, dc;
+	    int   c, dc;
 
 	    if(avolid == 0) {
 		avolid = entry.volumeId[voltype];
