@@ -109,11 +109,11 @@ int setpag(cred_t **cr, afs_uint32 pagvalue, afs_uint32 *newpag, int change_pare
 }
 
 
-/* Intercept the standard system call. */
+/* Intercept the standard system call. XXX take old_gid_t in new kernels */
 extern long (*sys_setgroupsp)(int gidsetsize, gid_t *grouplist);
 asmlinkage long afs_xsetgroups(int gidsetsize, gid_t *grouplist)
 {
-    int code;
+    long code;
     cred_t *cr = crref();
     afs_uint32 junk;
     int old_pag;
@@ -143,10 +143,10 @@ asmlinkage long afs_xsetgroups(int gidsetsize, gid_t *grouplist)
 
 #if defined(AFS_LINUX24_ENV)
 /* Intercept the standard uid32 system call. */
-extern int (*sys_setgroups32p)(int gidsetsize, gid_t *grouplist);
-asmlinkage int afs_xsetgroups32(int gidsetsize, gid_t *grouplist)
+extern long (*sys_setgroups32p)(int gidsetsize, gid_t *grouplist);
+asmlinkage long afs_xsetgroups32(int gidsetsize, gid_t *grouplist)
 {
-    int code;
+    long code;
     cred_t *cr = crref();
     afs_uint32 junk;
     int old_pag;
