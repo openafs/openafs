@@ -475,7 +475,7 @@ SRXAFS_FetchData64 (tcon, Fid, Pos, Len, OutStatus, CallBack, Sync)
 #endif /* AFS_64BIT_ENV */
 
     code = common_FetchData (tcon, Fid, tPos, tLen, OutStatus,
-                                                 CallBack, Sync, 0);
+                                                 CallBack, Sync, 1);
     return code;
 }
 
