@@ -1,3 +1,13 @@
+openafs (1.2.0-2) unstable; urgency=high
+
+  * Fix PPC makefile so that it finds install; this time actually
+    submitted upstream. 
+  * Have openafs-modules-source depend on libpam0g-dev because upstream
+    seems to need it.  Bug opened upstream asking if this is really necessary.
+  * Include German template, closes: #110087
+
+ -- Sam Hartman <hartmans@debian.org>  Thu, 13 Sep 2001 16:58:53 -0400
+
 openafs (1.2.0-1) unstable; urgency=high
 
   * Fix typo in  README.servers; thanks to mdz@debian.org, closes: #109199
