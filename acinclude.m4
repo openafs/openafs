@@ -342,6 +342,9 @@ else
 		alpha*-dec-osf5.0*)
 			AFS_SYSNAME="alpha_dux50"
 			;;
+		alpha*-dec-osf5.1*)
+			AFS_SYSNAME="alpha_dux51"
+			;;
 		mips-sgi-irix6.5)
 			AFS_SYSNAME="sgi_65"
 			;;

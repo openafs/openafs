@@ -112,6 +112,7 @@
 #define SYS_NAME_ID_alpha_osf32c	1204
 #define SYS_NAME_ID_alpha_dux40		1205
 #define SYS_NAME_ID_alpha_dux50		1206
+#define SYS_NAME_ID_alpha_dux51		1207
 
 #define SYS_NAME_ID_ncrx86_20		1300
 #define SYS_NAME_ID_ncrx86_30		1301
