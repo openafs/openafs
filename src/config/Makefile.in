@@ -1,0 +1,167 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+KERNELDIR=../libafs
+UKERNELDIR=../libuafs
+SHELL=/bin/sh
+
+include Makefile.${SYS_NAME}
+
+CFLAGS=-g -I${TOP_INCDIR} ${XCFLAGS}
+
+INST=$(RM) -f $@; $(CP) $? $@
+
+all: config mkvers ukinstall kinstall \
+	${TOP_INCDIR}/afs/param.h \
+	${TOP_INCDIR}/afs/stds.h \
+	${TOP_INCDIR}/afs/afs_sysnames.h \
+	${TOP_INCDIR}/afs/afs_args.h \
+	${TOP_INCDIR}/afs/icl.h \
+	${TOP_INCDIR}/afs/venus.h \
+	${TOP_INCDIR}/afs/debug.h
+
+Makefile.version: Makefile.version-CML Makefile.version-NOCML
+	$(RM) -f Makefile.version
+	if	[ -r SRC/../CML/state ] ; \
+	then	$(CP) Makefile.version-CML Makefile.version ; \
+	else	$(CP) Makefile.version-NOCML Makefile.version ; \
+	fi
+
+#
+# AFS component version string file generation targets
+#
+AFS_component_version_number.c: Makefile.version
+	$(MAKE) -f Makefile.version AFS_component_version_number.c
+
+${KERNELDIR}/afs/AFS_component_version_number.c: AFS_component_version_number.c
+	$(INST)
+
+${UKERNELDIR}/afs/AFS_component_version_number.c: AFS_component_version_number.c
+	$(INST)
+
+#
+# App build/install targets
+#
+config: config.o mc.o
+	$(CC) $(CFLAGS) -o config config.o mc.o
+
+mkvers: mkvers.c
+	$(CC) $(CFLAGS) -o mkvers mkvers.c
+
+mc.o: mc.c
+config.o: config.c AFS_component_version_number.c
+
+#
+# Include installation targets
+#
+KDIRS = ${KERNELDIR}/afs \
+	${KERNELDIR}/rx \
+	${KERNELDIR}/afsint \
+	${KERNELDIR}/config
+
+$(KDIRS): 
+	mkdir -p $@
+
+UKDIRS = ${UKERNELDIR}/afs \
+	${UKERNELDIR}/rx \
+	${UKERNELDIR}/afsint \
+	${UKERNELDIR}/config
+
+$(UKDIRS): 
+	mkdir -p $@
+
+${KERNELDIR}/afs/param.h ${DEST}/include/afs/param.h ${DESTDIR}${includedir}/afs/param.h ${TOP_INCDIR}/afs/param.h: param.${SYS_NAME}.h
+	-$(INST)
+
+${UKERNELDIR}/afs/afs_sysnames.h ${KERNELDIR}/afs/afs_sysnames.h ${DEST}/include/afs/afs_sysnames.h ${DESTDIR}${includedir}/afs/afs_sysnames.h ${TOP_INCDIR}/afs/afs_sysnames.h: afs_sysnames.h
+	$(INST)
+
+${UKERNELDIR}/afs/stds.h ${KERNELDIR}/afs/stds.h ${DEST}/include/afs/stds.h ${DESTDIR}${includedir}/afs/stds.h ${TOP_INCDIR}/afs/stds.h: stds.h
+	$(INST)
+
+${UKERNELDIR}/config/Makefile.${SYS_NAME} ${KERNELDIR}/config/Makefile.${SYS_NAME}: Makefile.${SYS_NAME}
+	$(INST)
+
+${UKERNELDIR}/afs/icl.h ${KERNELDIR}/afs/icl.h ${DEST}/include/afs/icl.h ${DESTDIR}${includedir}/afs/icl.h ${TOP_INCDIR}/afs/icl.h: icl.h 
+	$(INST)
+
+${UKERNELDIR}/afs/afs_args.h ${KERNELDIR}/afs/afs_args.h ${DEST}/include/afs/afs_args.h ${DESTDIR}${includedir}/afs/afs_args.h ${TOP_INCDIR}/afs/afs_args.h: afs_args.h 
+	$(INST)
+
+${UKERNELDIR}/afs/venus.h ${DEST}/include/afs/venus.h ${DESTDIR}${includedir}/afs/venus.h ${TOP_INCDIR}/afs/venus.h: venus.h 
+	$(INST)
+
+${DEST}/include/afs/debug.h ${DESTDIR}${includedir}/afs/debug.h ${TOP_INCDIR}/afs/debug.h: debug.h 
+	$(INST)
+
+${UKERNELDIR}/afs/param.h: param.${SYS_NAME}_usr.h
+	$(INST)
+
+# these are needed to compile the kernel.  Config is necessary to
+# convert the MakefileProto in libafs and the kernel links provide the
+# kernel include environment.  param.h is, well, param.h.  The afs_sysnames.h
+# file is needed by param.h to create unique identifiers for each SYS_TYPE.
+
+install: ${DESTDIR}${includedir}/afs/param.h \
+	${DESTDIR}${includedir}/afs/stds.h \
+	${DESTDIR}${includedir}/afs/afs_sysnames.h \
+	${DESTDIR}${includedir}/afs/afs_args.h \
+	${DESTDIR}${includedir}/afs/icl.h \
+	${DESTDIR}${includedir}/afs/venus.h \
+	${DESTDIR}${includedir}/afs/debug.h
+
+kinstall: \
+	$(KDIRS) \
+	${KERNELDIR}/afs/param.h \
+	${KERNELDIR}/afs/stds.h \
+	${KERNELDIR}/afs/afs_sysnames.h \
+	${KERNELDIR}/config/Makefile.${SYS_NAME} \
+	${KERNELDIR}/afs/afs_args.h \
+	${KERNELDIR}/afs/icl.h \
+	${KERNELDIR}/afs/AFS_component_version_number.c
+
+ukinstall: \
+	$(UKDIRS) \
+	${UKERNELDIR}/afs/param.h \
+	${UKERNELDIR}/afs/stds.h \
+	${UKERNELDIR}/afs/afs_sysnames.h \
+	${UKERNELDIR}/config/Makefile.${SYS_NAME} \
+	${UKERNELDIR}/afs/afs_args.h \
+	${UKERNELDIR}/afs/icl.h \
+	${UKERNELDIR}/afs/venus.h \
+	${UKERNELDIR}/afs/AFS_component_version_number.c
+
+clean:
+	$(RM) -f *.o config mkvers core xprt AFS_component_version_number.c
+
+dest: ${DEST}/include/afs/param.h \
+	${DEST}/include/afs/stds.h \
+	${DEST}/include/afs/afs_sysnames.h \
+	${DEST}/include/afs/afs_args.h \
+	${DEST}/include/afs/icl.h \
+	${DEST}/include/afs/venus.h \
+	${DEST}/include/afs/debug.h
+

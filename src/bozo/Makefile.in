@@ -1,0 +1,176 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL=/bin/sh
+
+include ../config/Makefile.${SYS_NAME}
+
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+CFLAGS=-g -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h bosint.h
+
+INCLS=bnode.h \
+	${RPCINCLS} \
+	${TOP_INCDIR}/afs/auth.h \
+	${TOP_INCDIR}/afs/keys.h \
+	${TOP_INCDIR}/afs/cellconfig.h \
+	${TOP_INCDIR}/afs/cmd.h \
+	${TOP_INCDIR}/afs/ktime.h
+
+# EH 12/18/90 - have to search librx.a twice on Ultrix 4.0
+LIBS=${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libkauth.a \
+	${TOP_LIBDIR}/libvolser.a \
+	${TOP_LIBDIR}/libvldb.a \
+	${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/librxstat.a \
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/libubik.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libprocmgmt.a
+
+OBJS=bosserver.o bnode.o ezbnodeops.o fsbnodeops.o bosint.ss.o bosint.xdr.o \
+bosoprocs.o cronbnodeops.o
+
+all: bosserver ${TOP_INCDIR}/afs/bosint.h bos ${TOP_LIBDIR}/libbos.a ${TOP_INCDIR}/afs/bnode.h
+
+$(OBJS) bosint.xdr.o bosint.cs.o boserr.o: $(INCLS)
+
+bosint.ss.o: bosint.ss.c ${RPCINCLS}
+bosint.xdr.o: bosint.xdr.c ${RPCINCLS}
+bosint.cs.o: bosint.cs.c ${RPCINCLS}
+
+bosint.xdr.c bosint.ss.c bosint.cs.c bosint.h: bosint.xg
+	${RXGEN} -x bosint.xg
+
+bnode.h boserr.c: bnode.p.h boserr.et
+	$(RM) -f boserr.c bnode.h; $(COMPILE_ET) boserr -h bnode
+
+bosserver.o: bosserver.c ${INCLS} AFS_component_version_number.o
+
+cronbnodeops.o: cronbnodeops.c ${INCLS}
+
+bnode.o: bnode.c ${INCLS}
+
+bosoprocs.o: bosoprocs.c ${INCLS}
+
+bos.o: bos.c ${INCLS} AFS_component_version_number.o
+
+bos: bos.o $(LIBS) libbos.a
+	${CC} ${CFLAGS} -o bos bos.o libbos.a $(LIBS)  ${XLIBS}
+
+ezbnodeops.o: ezbnodeops.c ${INCLS}
+
+fsbnodeops.o: fsbnodeops.c ${INCLS}
+
+libbos.a: bosint.xdr.o bosint.cs.o boserr.o AFS_component_version_number.o
+	-$(RM) -f $@
+	$(AR) crv $@ bosint.xdr.o bosint.cs.o boserr.o AFS_component_version_number.o
+	$(RANLIB) $@
+
+bosserver: $(OBJS) $(LIBS)
+	${CC} $(CFLAGS) -o bosserver $(OBJS) ${TOP_LIBDIR}/libaudit.a $(LIBS)  ${XLIBS} 
+
+#
+# Install targets
+#
+install: \
+	${DESTDIR}${afssrvsbindir}/bosserver \
+	${DESTDIR}${includedir}/afs/bosint.h \
+	${DESTDIR}${bindir}/bos \
+	${DESTDIR}${afssrvbindir}/bos \
+	${DESTDIR}${libdir}/afs/libbos.a \
+	${DESTDIR}${includedir}/afs/bnode.h
+
+${DEST}/root.server/usr/afs/bin/bosserver: bosserver
+	${INSTALL} $? $@
+
+${DEST}/include/afs/bosint.h: bosint.h
+	${INSTALL} $? $@
+
+${DEST}/bin/bos: bos
+	${INSTALL} $? $@
+
+${DEST}/root.server/usr/afs/bin/bos: bos
+	${INSTALL} $? $@
+
+${DEST}/lib/afs/libbos.a: libbos.a
+	${INSTALL} $? $@
+
+${DEST}/include/afs/bnode.h: bnode.h
+	${INSTALL} $? $@
+
+#
+# Misc. targets
+#
+clean:
+	$(RM) -f  *.a *.o bos bosserver testproc bosint.cs.c bosint.ss.c bosint.xdr.c \
+		bosint.h core boserr.c bnode.h AFS_component_version_number.c
+
+test: 
+	cd test; $(MAKE) 
+
+include ../config/Makefile.version
+${DESTDIR}${afssrvsbindir}/bosserver: bosserver
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/bosint.h: bosint.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/bosint.h: bosint.h
+	${INSTALL} $? $@
+
+${DESTDIR}${bindir}/bos: bos
+	${INSTALL} $? $@
+
+${DESTDIR}${afssrvbindir}/bos: bos
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/afs/libbos.a: libbos.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libbos.a: libbos.a
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/bnode.h: bnode.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/bnode.h: bnode.h
+	${INSTALL} $? $@
+
+dest: \
+	${DEST}/root.server/usr/afs/bin/bosserver \
+	${DEST}/include/afs/bosint.h \
+	${DEST}/bin/bos \
+	${DEST}/root.server/usr/afs/bin/bos \
+	${DEST}/lib/afs/libbos.a \
+	${DEST}/include/afs/bnode.h
+

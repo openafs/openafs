@@ -1,0 +1,115 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL = /bin/sh
+
+include ../config/Makefile.${SYS_NAME}
+
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+
+CFLAGS=${DBUG} -w -I${TOP_SRCDIR}/config \
+	-I${TOP_INCDIR} -I${TOP_INCDIR}/afs ${XCFLAGS}
+
+LIBS=${TOP_LIBDIR}/libbudb.a ${TOP_LIBDIR}/libbubasics.a \
+        ${TOP_LIBDIR}/libbutm.a ${TOP_LIBDIR}/libvolser.a \
+        ${TOP_LIBDIR}/libvldb.a  ${TOP_LIBDIR}/vlib.a \
+        ${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libubik.a \
+        ${TOP_LIBDIR}/libauth.a  ${TOP_LIBDIR}/librxkad.a \
+        ${TOP_LIBDIR}/libsys.a   ${TOP_LIBDIR}/libdes.a \
+        ${TOP_LIBDIR}/librx.a  ${TOP_LIBDIR}/libsys.a \
+        ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
+        ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
+
+all: ${TOP_LIBDIR}/libbxdb.a backup
+
+libbxdb.a: dsstub.o ubik_db_if.o status.o dlq.o bucoord_errs.o volstub.o AFS_component_version_number.o
+	-$(RM) -f $@
+	$(AR) crv $@ dsstub.o ubik_db_if.o status.o dlq.o bucoord_errs.o volstub.o AFS_component_version_number.o
+	$(RANLIB) $@
+
+ttest: ttest.o ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a libbxdb.a
+	${CC} ${CFLAGS} -o ttest ttest.o libbxdb.a \
+		${TOP_LIBDIR}/libbubasics.a \
+		${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a
+
+ttest.o: AFS_component_version_number.c
+
+btest: btest.o ${TOP_LIBDIR}/libbubasics.a ${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a
+	${CC} ${CFLAGS} -o btest btest.o ${TOP_LIBDIR}/libbubasics.a \
+		${TOP_LIBDIR}/librx.a ${TOP_LIBDIR}/liblwp.a
+
+btest.o: AFS_component_version_number.c
+
+BACKSRCS = main.c config.c dsstub.c volstub.c commands.c regex.c server.c \
+	dsvs.c dump.c restore.c ubik_db_if.c 				  \
+	dump_sched.c vol_sets.c tape_hosts.c				  \
+	bc_status.c status.c dlq.c
+
+BACKOBJS = main.o config.o dsstub.o volstub.o commands.o regex.o server.o \
+	dsvs.o dump.o restore.o ubik_db_if.o dump_sched.o vol_sets.o	\
+	tape_hosts.o bucoord_errs.o bc_status.o status.o dlq.o
+
+main.o: AFS_component_version_number.c
+
+$(BACKOBJS): bc.h ${TOP_INCDIR}/afs/butc.h
+
+backup:  $(BACKOBJS) ${LIBS}
+	${CC} ${CFLAGS} -o backup $(BACKOBJS) ${LIBS} ${XLIBS}
+
+bucoord_errs.c bc.h:	bucoord_errs.et bc.p.h
+	$(RM) -f bc.h bucoord_errs.c
+	${COMPILE_ET} bucoord_errs -h bc
+
+#
+# Install targets
+#
+
+install: ${DESTDIR}${libdir}/afs/libbxdb.a ${DESTDIR}${sbindir}/backup
+
+${DEST}/lib/afs/libbxdb.a: libbxdb.a
+	${INSTALL} $? $@
+
+${DEST}/etc/backup: backup
+	${INSTALL} $? $@
+
+#
+# Misc targets
+#
+
+clean:
+	$(RM) -f *.o backup convert *.ss.c *.cs.c *.xdr.c *.a core btest ttest AFS_component_version_number.c bc.h bucoord_errs.c
+
+include ../config/Makefile.version
+${DESTDIR}${libdir}/afs/libbxdb.a: libbxdb.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libbxdb.a: libbxdb.a
+	${INSTALL} $? $@
+
+${DESTDIR}${sbindir}/backup: backup
+	${INSTALL} $? $@
+
+dest: ${DEST}/lib/afs/libbxdb.a ${DEST}/etc/backup
+

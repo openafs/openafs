@@ -1,0 +1,55 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+include ../../config/Makefile.${SYS_NAME}
+
+
+
+OPTIMIZE=-O
+
+INCDIRS= -I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I..
+LDIRS= -L${TOP_LIBDIR} -L..
+LIBS= -lsys -lubik -lvldb -lauth -lrxkad -ldes -lcom_err -lcmd -lrx -llwp -lafsutil
+
+CFLAGS = ${OPTIMIZE} ${INCDIRS} ${XCFLAGS}
+
+all test:  fulltest owntest idtest getinitparams
+
+install:
+dest:
+
+fulltest: fulltest.o
+	$(CC) $(CFLAGS) -o $@ $@.o $(LDIRS) $(LIBS)
+owntest: owntest.o
+	$(CC) $(CFLAGS) -o $@ $@.o $(LDIRS) $(LIBS)
+idtest: idtest.o
+	$(CC) $(CFLAGS) -o $@ $@.o $(LDIRS) $(LIBS)
+getinitparams: getinitparams.o
+	$(CC) $(CFLAGS) -o $@ $@.o $(LDIRS) $(LIBS)
+
+clean:
+	$(RM) -f *.o fulltest owntest idtest getinitparams
+

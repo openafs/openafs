@@ -1,0 +1,128 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL = /bin/sh
+
+include ../config/Makefile.${SYS_NAME}
+
+CFLAGS=-g -w ${INCDIRS} ${XCFLAGS}
+
+INCDIRS=-I${TOP_SRCDIR}/config -I${TOP_INCDIR}/afs \
+	-I${TOP_INCDIR}/rx -I${TOP_INCDIR}
+
+INCLS=${TOP_INCDIR}/afs/partition.h ${TOP_INCDIR}/afs/volume.h \
+	${TOP_INCDIR}/afs/vlserver.h ${TOP_INCDIR}/rx/rx.h \
+	${TOP_INCDIR}/rx/xdr.h ${TOP_INCDIR}/afs/keys.h \
+	${TOP_INCDIR}/afs/cellconfig.h ${TOP_INCDIR}/ubik.h \
+	${TOP_INCDIR}/afs/cmd.h ${TOP_INCDIR}/afs/butc.h \
+	${TOP_INCDIR}/afs/tcdata.h ${TOP_INCDIR}/afs/bubasics.h \
+	${TOP_INCDIR}/afs/butm.h
+
+HACKS=${TOP_LIBDIR}/libdir.a
+
+LIBS=${TOP_LIBDIR}/libbudb.a \
+	$(TOP_LIBDIR)/libbxdb.a \
+	${TOP_LIBDIR}/libbubasics.a \
+        ${TOP_LIBDIR}/libbutm.a \
+	${TOP_LIBDIR}/libvolser.a \
+	${TOP_LIBDIR}/libvldb.a \
+        ${TOP_LIBDIR}/vlib.a \
+	${TOP_LIBDIR}/libacl.a \
+        ${TOP_LIBDIR}/libprot.a      \
+        ${TOP_LIBDIR}/libkauth.a \
+        ${TOP_LIBDIR}/libubik.a \
+        ${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/librxkad.a \
+        ${TOP_LIBDIR}/libsys.a  \
+        ${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/librx.a \
+        ${TOP_LIBDIR}/libsys.a  \
+	${TOP_LIBDIR}/liblwp.a \
+        ${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/util.a \
+	${TOP_LIBDIR}/libusd.a \
+	${TOP_LIBDIR}/libprocmgmt.a
+
+TESTOBJS=test.o
+
+SOBJS=dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o tcudbprocs.o \
+	dump.o tcstatus.o
+
+all: butc read_tape
+
+butc_test: ${TESTOBJS} ${LIBS} ${INCLS} ${HACKS}
+	${CC} ${CFLAGS} ${TESTOBJS} ${LIBS} ${XLIBS} -o butc_test
+
+tdump: tdump.c AFS_component_version_number.c
+	${CC} ${CFLAGS} tdump.c -o tdump
+
+butc: ${SOBJS} ${LIBS} ${INCLS} ${HACKS}
+	@case ${SYS_NAME} in \
+	  rs_aix4*) ${CC} ${CFLAGS} ${SOBJS} ${LIBS} ${XLIBS} /usr/lib/libc_r.a -o butc;; \
+	  *)        ${CC} ${CFLAGS} ${SOBJS} ${LIBS} ${XLIBS} -o butc;; \
+	esac
+
+tcmain.o: tcmain.c ${INCLS} AFS_component_version_number.c
+dbentries.o: dbentries.c ${INCLS}
+tcprocs.o: tcprocs.c ${INCLS}
+test.o: test.c ${INCLS} AFS_component_version_number.c
+lwps.o: lwps.c ${INCLS}
+list.o: list.c ${INCLS}
+recoverDb.o: recoverDb.c ${INCLS}
+tcudbprocs.o: tcudbprocs.c ${INCLS}
+dump.o: dump.c ${INCLS}
+tcstatus.o: tcstatus.c ${INCLS}
+
+read_tape: read_tape.c
+	${CC} ${CFLAGS} -o read_tape read_tape.c \
+		${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/util.a \
+		${TOP_LIBDIR}/libusd.a
+
+clean:
+	$(RM) -f butc *.o butc_test core tdump read_tape AFS_component_version_number.c
+
+install:  
+	@case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix4*|*linux*|hp_ux*) \
+		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
+	*) \
+		echo ${INSTALL} butc ${DESTDIR}${sbindir}/butc ; \
+		${INSTALL} butc ${DESTDIR}${sbindir}/butc ;; \
+	esac
+	${INSTALL} read_tape ${DESTDIR}${sbindir}/read_tape
+
+include ../config/Makefile.version
+dest:  
+	@case ${SYS_NAME} in \
+	alpha_dux*|sgi_*|sun4x_*|rs_aix4*|*linux*|hp_ux*) \
+		echo "Don't install butc for ${SYS_NAME} (will install from tbutc)" ;; \
+	*) \
+		echo ${INSTALL} butc ${DEST}/etc/butc ; \
+		${INSTALL} butc ${DEST}/etc/butc ;; \
+	esac
+	${INSTALL} read_tape ${DEST}/etc/read_tape
+

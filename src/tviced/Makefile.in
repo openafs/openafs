@@ -1,0 +1,213 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL=/bin/sh
+
+include ../config/Makefile.${SYS_NAME}
+
+CC=${MT_CC}
+INCLUDES=-I${TOP_SRCDIR}/config -I. -I.. -I${TOP_INCDIR} -I${TOP_INCDIR}/afs
+CFLAGS=${DBG} ${OPTMZ} -DNINTERFACE ${INCLUDES} ${MT_CFLAGS} -DRXDEBUG
+LDFLAGS=${DBG} ${XLDFLAGS}
+
+VICED=../viced
+VLSERVER=../vlserver
+LWP=../lwp
+LIBACL=../libacl
+UTIL=../util
+DIR=../dir
+VOL=../vol
+FSINT=../fsint
+
+VICEDOBJS=viced.o afsfileprocs.o host.o physio.o callback.o	
+
+VLSERVEROBJS=vldbint.cs.o vldbint.xdr.o
+
+LWPOBJS=lock.o fasttime.o threadname.o
+
+LIBACLOBJS=aclprocs.o netprocs.o
+
+UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o
+
+DIROBJS=buffer.o dir.o salvage.o
+
+VOLOBJS= vnode.o volume.o vutil.o partition.o fssync.o purge.o \
+	 clone.o devname.o common.o ihandle.o listinodes.o namei_ops.o
+
+FSINTOBJS= afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
+
+objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
+	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
+
+LIBS=${TOP_LIBDIR}/libafsauthent.a ${TOP_LIBDIR}/libafsrpc.a ${TOP_LIBDIR}/util.a
+
+all: fileserver
+
+COMPILE=${CC} ${CFLAGS} -c $?
+
+viced.o: ${VICED}/viced.c
+	${COMPILE}
+
+afsfileprocs.o: ${VICED}/afsfileprocs.c
+	${COMPILE}
+
+host.o: ${VICED}/host.c
+	${COMPILE}
+
+physio.o: ${VICED}/physio.c
+	${COMPILE}
+
+callback.o: ${VICED}/callback.c
+	${COMPILE}
+
+assert.o: ${UTIL}/assert.c
+	${COMPILE}
+
+uuid.o: ${UTIL}/uuid.c
+	${COMPILE}
+
+serverLog.o: ${UTIL}/serverLog.c
+	${COMPILE}
+
+fileutil.o: ${UTIL}/fileutil.c
+	${COMPILE}
+
+volparse.o: ${UTIL}/volparse.c
+	${COMPILE}
+
+flipbase64.o: ${UTIL}/flipbase64.c
+	${COMPILE}
+
+netutils.o: ${UTIL}/netutils.c
+	${COMPILE}
+
+dirpath.o: ${UTIL}/dirpath.c
+	${COMPILE}
+
+lock.o: ${LWP}/lock.c
+	${COMPILE}
+
+fasttime.o: ${LWP}/fasttime.c
+	${COMPILE}
+
+threadname.o: ${LWP}/threadname.c
+	${COMPILE}
+
+aclprocs.o: ${LIBACL}/aclprocs.c
+	${COMPILE}
+
+netprocs.o: ${LIBACL}/netprocs.c
+	${COMPILE}
+
+vldbint.cs.o: ${VLSERVER}/vldbint.cs.c
+	${COMPILE}
+
+vldbint.xdr.o: ${VLSERVER}/vldbint.xdr.c
+	${COMPILE}
+
+buffer.o: ${DIR}/buffer.c
+	${COMPILE}
+
+dir.o: ${DIR}/dir.c
+	${COMPILE}
+
+salvage.o: ${DIR}/salvage.c
+	${COMPILE}
+
+vnode.o: ${VOL}/vnode.c
+	${COMPILE}
+
+volume.o: ${VOL}/volume.c
+	${COMPILE}
+
+vutil.o: ${VOL}/vutil.c
+	${COMPILE}
+
+partition.o: ${VOL}/partition.c
+	${COMPILE}
+
+fssync.o: ${VOL}/fssync.c
+	${COMPILE}
+
+purge.o: ${VOL}/purge.c
+	${COMPILE}
+
+clone.o: ${VOL}/clone.c
+	${COMPILE}
+
+nuke.o: ${VOL}/nuke.c
+	${COMPILE}
+
+devname.o: ${VOL}/devname.c
+	${COMPILE}
+
+common.o: ${VOL}/common.c
+	${COMPILE}
+
+listinodes.o: ${VOL}/listinodes.c
+	${COMPILE}
+
+ihandle.o: ${VOL}/ihandle.c
+	${COMPILE}
+
+namei_ops.o: ${VOL}/namei_ops.c
+	${COMPILE}
+
+afsaux.o: ${FSINT}/afsaux.c
+	${COMPILE}
+
+afscbint.cs.o: ${FSINT}/afscbint.cs.c
+	${COMPILE}
+
+afscbint.ss.o: ${FSINT}/afscbint.ss.c
+	${COMPILE}
+
+afsint.cs.o: ${FSINT}/afsint.cs.c
+	${COMPILE}
+
+afsint.ss.o: ${FSINT}/afsint.ss.c
+	${COMPILE}
+
+afsint.xdr.o: ${FSINT}/afsint.xdr.c
+	${COMPILE}
+
+fileserver: ${objects} ${LIBS}
+	${CC} ${LDFLAGS} -o fileserver ${objects} ${LIBS} ${MTLIBS} ${XLIBS}
+
+${DEST}/root.server/usr/afs/bin/fileserver: fileserver
+	${INSTALL} -ns $? $@
+
+install: ${DESTDIR}${afssrvlibexecdir}/fileserver
+
+clean:
+	$(RM) -f *.o fileserver core AFS_component_version_number.c
+
+include ../config/Makefile.version
+${DESTDIR}${afssrvlibexecdir}/fileserver: fileserver
+	${INSTALL} -ns $? $@
+
+dest: ${DEST}/root.server/usr/afs/bin/fileserver
+

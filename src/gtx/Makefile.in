@@ -1,0 +1,189 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# Makefile for gtx, a display-independent, object-oriented window toolkit.
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL=/bin/sh
+
+include ../config/Makefile.${SYS_NAME}
+
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+CFLAGS=${DBUG} -I. -I${TOP_SRCDIR}/config \
+	-I${TOP_INCDIR} -I${TOP_INCDIR}/afs ${XCFLAGS}
+LDFLAGS = ${XLDFLAGS}
+#RPCINCLS=${SRCDIR}/include/lwp.h ${SRCDIR}/include/rx/rx.h bosint.h
+RPCINCLS=
+INCLS=gtxobjects.h \
+	gtxwindows.h \
+	gtxcurseswin.h \
+	gtxinput.h \
+	gtxdumbwin.h \
+	gtxX11win.h \
+	gtxobjects.h \
+	gtxkeymap.h \
+	gtxlightobj.h \
+	gtxtextobj.h \
+	gtxframe.h \
+	gtxobjdict.h \
+	${RPCINCLS} \
+	${TOP_INCDIR}/afs/keys.h \
+	${TOP_INCDIR}/afs/cellconfig.h \
+	${TOP_INCDIR}/afs/cmd.h
+
+LIBS=\
+	${TOP_LIBDIR}/librx.a \
+	${TOP_LIBDIR}/liblwp.a \
+	${TOP_LIBDIR}/libsys.a \
+	${TOP_LIBDIR}/libcmd.a \
+	${TOP_LIBDIR}/libkauth.a \
+	${TOP_LIBDIR}/libauth.a \
+	${TOP_LIBDIR}/librxkad.a \
+	${TOP_LIBDIR}/libdes.a \
+	${TOP_LIBDIR}/libcom_err.a \
+	${TOP_LIBDIR}/util.a
+
+EXTRA_LIBS=${TXLIBS} ${TOP_LIBDIR}/libtermlib.a  ${XLIBS}
+
+KEYMAP_SRCS=keymap.c input.c frame.c
+
+KEYMAP_OBJS=keymap.o input.o frame.o
+
+WINDOW_SRCS=curseswindows.c \
+	dumbwindows.c \
+	X11windows.c \
+	windows.c
+
+WINDOW_OBJS=curseswindows.o \
+	dumbwindows.o \
+	X11windows.o \
+	windows.o
+
+OBJECT_SRCS=objects.c \
+	lightobject.c \
+	textobject.c
+
+OBJECT_OBJS=objects.o \
+	lightobject.o \
+	textobject.o
+
+DICT_SRCS=objdict.c
+DICT_OBJS=objdict.o
+
+CB_SRCS=textcb.c
+CB_OBJS=textcb.o
+
+#ERROBJS=err.o
+ERRSRCS=
+ERROJBS=
+
+include ../config/Makefile.version
+
+noversion: install
+
+all: libgtx.a gtxtest
+	${INSTALL} gtx*.h ${TOP_INCDIR}/afs
+	${INSTALL} libgtx.a ${TOP_LIBDIR}
+
+tests: object_test screen_test curses_test cb_test gtxtest
+
+# All objects in the library
+LIBSRCS = ${KEYMAP_SRCS} ${WINDOW_SRCS} ${OBJECT_SRCS} ${DICT_SRCS} \
+	${ERRSRCS} ${CB_SRCS}
+LIBOBJS = $(KEYMAP_OBJS) ${WINDOW_OBJS} ${OBJECT_OBJS} ${DICT_OBJS} \
+	${ERROBJS} ${CB_OBJS}
+
+${LIBSRCS}: ${INCLS}
+$(LIBOBJS): ${INCLS}
+
+err.c: err.et
+	$(RM) -f err.h err.c; $(COMPILE_ET) err -h err
+
+keymap.o: keymap.c ${INCLS}
+
+frame.o: frame.c $(INCLS)
+
+input.o: input.c ${INCLS}
+
+curseswindows.o: curseswindows.c ${INCLS}
+
+dumbwindows.o: dumbwindows.c ${INCLS}
+
+X11windows.o: X11windows.c ${INCLS}
+
+windows.o: windows.c ${INCLS}
+
+lightobject.o: lightobject.c ${INCLS}
+
+textobject.o: textobject.c ${INCLS}
+
+textcb.o: textcb.c ${INCLS}
+
+#
+# Test programs.
+#
+curses_test.o: curses_test.c ${INCLS} AFS_component_version_number.o
+
+curses_test: curses_test.o $(LIBS)
+	${CC} ${CFLAGS} -o curses_test curses_test.o $(LIBS) ${EXTRA_LIBS}
+
+screen_test.o: screen_test.c ${INCLS} AFS_component_version_number.o
+
+screen_test: screen_test.o ${WINDOW_OBJS} ${LIBS}
+	${CC} ${CFLAGS} -o screen_test screen_test.o ${WINDOW_OBJS} ${LIBS} ${EXTRA_LIBS}
+
+cb_test.o: cb_test.c ${INCLS} AFS_component_version_number.o
+
+cb_test: cb_test.o ${CB_OBJS} ${LIBS}
+	${CC} ${CFLAGS} -o cb_test cb_test.o ${CB_OBJS} ${LIBS} ${EXTRA_LIBS}
+
+gtxtest.o: gtxtest.c ${INCLS} AFS_component_version_number.o
+
+gtxtest: gtxtest.o libgtx.a ${LIBS}
+	${CC} ${LDFLAGS} -o gtxtest gtxtest.o libgtx.a ${LIBS} ${EXTRA_LIBS}
+
+object_test.o: object_test.c ${INCLS} AFS_component_version_number.o
+
+object_test: object_test.o ${WINDOW_OBJS} ${DICT_OBJS} ${OBJECT_OBJS} ${CB_OBJS} ${LIBS}
+	${CC} ${CFLAGS} -o object_test object_test.o ${WINDOW_OBJS} ${DICT_OBJS} ${OBJECT_OBJS} ${CB_OBJS} ${LIBS} ${EXTRA_LIBS}
+
+#
+# Misc others
+#
+libgtx.a: ${LIBOBJS} AFS_component_version_number.o
+	-$(RM) -f $@
+	$(AR) crv $@ ${LIBOBJS} AFS_component_version_number.o
+	${RANLIB} $@
+
+install: libgtx.a
+	${INSTALL} gtx*.h ${DESTDIR}${includedir}/afs
+	${INSTALL} libgtx.a ${DESTDIR}${libdir}/afs
+
+clean:
+	$(RM) -f  *.o *.a *.ln object_test screen_test curses_test err.c core cb_test gtxtest AFS_component_version_number.c
+
+dest: libgtx.a
+	${INSTALL} gtx*.h ${DEST}/include/afs
+	${INSTALL} libgtx.a ${DEST}/lib/afs
+

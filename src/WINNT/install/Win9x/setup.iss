@@ -1,0 +1,22 @@
+[InstallShield Silent]
+Version=v6.00.000
+File=Response File
+
+[File Transfer]
+OverwrittenReadOnly=NoToAll
+
+[{EA711160-C786-11D3-A374-00105A6BCA4C}-DlgOrder]
+Dlg0={EA711160-C786-11D3-A374-00105A6BCA4C}-SdWelcome-0
+Count=3
+Dlg1={EA711160-C786-11D3-A374-00105A6BCA4C}-SdAskDestPath-0
+Dlg2={EA711160-C786-11D3-A374-00105A6BCA4C}-SprintfBox-0
+
+[{EA711160-C786-11D3-A374-00105A6BCA4C}-SdWelcome-0]
+Result=1
+
+[{EA711160-C786-11D3-A374-00105A6BCA4C}-SdAskDestPath-0]
+szDir=C:\afs cli
+Result=1
+
+[{EA711160-C786-11D3-A374-00105A6BCA4C}-SprintfBox-0]
+Result=6

@@ -1,0 +1,95 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL=/bin/sh
+#
+# This must be built after inetd has built ta-rauth.o and after rsh
+# XXX want these to end up in /usr/afsws ...
+# Note that if afskauthlib.so gets installed on a client
+# machine then that will be used ..
+#
+include ../config/Makefile.${SYS_NAME}
+OPTIMIZE=-g
+CFLAGS=${OPTIMIZE} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+LDFLAGS = ${OPTIMIZE} ${XLDFLAGS}
+LIBDIR=${TOP_LIBDIR}/
+AFSLIBS=${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libprot.a ${LIBDIR}/libubik.a \
+	  ${TOP_LIBDIR}/libauth.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
+	  ${TOP_LIBDIR}/libdes.a ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a \
+          ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
+KAFSLIBS=${TOP_LIBDIR}/libkauth.krb.a ${TOP_LIBDIR}/libprot.a ${LIBDIR}/libubik.a \
+	  ${TOP_LIBDIR}/libauth.krb.a ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
+	  ${TOP_LIBDIR}/libdes.a ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a \
+          ${TOP_LIBDIR}/libcmd.a ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
+AUTHFILES=../inetd/ta-rauth.o ../rsh/rcmd.o ../rsh/herror.o
+AUTHLIBS=afsauthlib.so afskauthlib.so
+TARGETS=$(AUTHLIBS) 
+
+all: ${TOP_LIBDIR}/afsauthlib.so ${TOP_LIBDIR}/afskauthlib.so
+
+install install.noversion: ${DESTDIR}${libdir}/afsauthlib.so ${DESTDIR}${libdir}/afskauthlib.so
+
+clean:
+	$(RM) -f $(AUTHLIBS) $(AUTHFILES) 
+
+afsauthlib.so: sgi_auth.o ${AFSLIBS} ${AUTHFILES}
+	$(LD) ${LDFLAGS} -shared -all -o afsauthlib.so sgi_auth.o $(AFSLIBS) ${AUTHFILES}
+
+afskauthlib.so: sgi_auth.o ${KAFSLIBS} ${AUTHFILES}
+	$(LD) ${LDFLAGS} -shared -all -o afskauthlib.so sgi_auth.o $(KAFSLIBS) ${AUTHFILES}
+
+../inetd/ta-rauth.o: ../inetd/ta-rauth.c
+	(cd ../inetd ; $(MAKE) ta-rauth.o )
+
+../rsh/rcmd.o: ../rsh/rcmd.c
+	(cd ../rsh ; $(MAKE) rcmd.o )
+
+../rsh/herror.o: ../rsh/herror.c
+	(cd ../rsh ; $(MAKE) herror.o )
+
+sgi_auth.o: sgi_auth.c
+	${CC} ${CFLAGS} -c sgi_auth.c
+
+${TOP_LIBDIR}/afsauthlib.so: afsauthlib.so
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/afskauthlib.so: afskauthlib.so
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/afsauthlib.so: afsauthlib.so
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/afskauthlib.so: afskauthlib.so
+	${INSTALL} $? $@
+
+${DEST}/root.client/usr/vice/etc/afsauthlib.so: afsauthlib.so
+	${INSTALL} $? $@
+
+${DEST}/root.client/usr/vice/etc/afskauthlib.so: afskauthlib.so
+	${INSTALL} $? $@
+
+dest: ${DEST}/root.client/usr/vice/etc/afsauthlib.so ${DEST}/root.client/usr/vice/etc/afskauthlib.so
+

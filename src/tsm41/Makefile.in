@@ -1,0 +1,73 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+include ../config/Makefile.${SYS_NAME}
+OPTIMIZE=-g
+CFLAGS=${OPTIMIZE} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}
+AFSLIBS =  ${TOP_LIBDIR}/libkauth.a ${TOP_LIBDIR}/libprot.a \
+	   ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/libauth.a \
+	   ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
+	   ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/librx.a \
+	   ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
+	   ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a \
+	   ${TOP_LIBDIR}/libaudit.a
+KAFSLIBS = ${TOP_LIBDIR}/libkauth.krb.a ${TOP_LIBDIR}/libprot.a \
+	   ${TOP_LIBDIR}/libubik.a ${TOP_LIBDIR}/libauth.krb.a \
+	   ${TOP_LIBDIR}/librxkad.a ${TOP_LIBDIR}/libsys.a \
+	   ${TOP_LIBDIR}/libdes.a ${TOP_LIBDIR}/librx.a \
+	   ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
+	   ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a \
+	   ${TOP_LIBDIR}/libaudit.a
+AUTHLIBS=afs_dynamic_auth afs_dynamic_kerbauth
+IMPORTS = -bI:/lib/aio.exp -bI:/lib/netinet.exp -bI:/lib/sockets.exp -bI:/lib/statcmd.exp 
+LDFLAGS = -eafs_initialize ${IMPORTS} -lsys -lcsys -lc
+
+all: $(AUTHLIBS)
+
+install install.noversion:   
+
+clean:
+	$(RM) -f $(AUTHLIBS) $(AUTHFILES) so_locations
+
+afs_dynamic_auth: aix41_auth.o ${AFSLIBS} ${AUTHFILES} 
+	$(LD) -o afs_dynamic_auth aix41_auth.o $(AFSLIBS) ${AUTHFILES} ${XLIBS} ${LDFLAGS}
+
+afs_dynamic_kerbauth: aix41_auth_krb.o ${KAFSLIBS} ${AUTHFILES}
+	$(LD) -o afs_dynamic_kerbauth aix41_auth_krb.o $(KAFSLIBS) ${AUTHFILES} ${XLIBS} ${LDFLAGS}
+
+aix41_auth.o: aix41_auth.c
+	${CC} ${CFLAGS} -c aix41_auth.c
+
+aix41_auth_krb.o: aix41_auth.c
+	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c aix41_auth.c -o aix41_auth_krb.o
+${DEST}/root.client/usr/vice/etc/afs_dynamic_auth: afs_dynamic_auth
+	${INSTALL} $? $@
+
+${DEST}/root.client/usr/vice/etc/afs_dynamic_kerbauth: afs_dynamic_kerbauth
+	${INSTALL} $? $@
+
+dest:  ${DEST}/root.client/usr/vice/etc/afs_dynamic_auth ${DEST}/root.client/usr/vice/etc/afs_dynamic_kerbauth
+

@@ -1,0 +1,69 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL = /bin/sh
+include ../../config/Makefile.${SYS_NAME}
+
+CC = ${MT_CC}
+CFLAGS=${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${MT_CFLAGS}
+
+ADMINOBJS = afs_clientAdmin.o
+
+LIBOBJS = ${ADMINOBJS}
+
+all: ${TOP_INCDIR}/afs/afs_clientAdmin.h ${TOP_LIBDIR}/libclientadmin.a
+
+install: ${DESTDIR}${includedir}/afs/afs_clientAdmin.h ${DESTDIR}${libdir}/afs/libclientadmin.a
+
+dest: ${DEST}/include/afs/afs_clientAdmin.h ${DEST}/lib/afs/libclientadmin.a
+
+${TOP_INCDIR}/afs/afs_clientAdmin.h: afs_clientAdmin.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/afs/afs_clientAdmin.h: afs_clientAdmin.h
+	${INSTALL} $? $@
+
+${DEST}/include/afs/afs_clientAdmin.h: afs_clientAdmin.h
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libclientadmin.a: libclientadmin.a
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/afs/libclientadmin.a: libclientadmin.a
+	${INSTALL} $? $@
+
+${DEST}/lib/afs/libclientadmin.a: libclientadmin.a
+	${INSTALL} $? $@
+
+libclientadmin.a: ${LIBOBJS}
+	-$(RM) -f $@
+	$(AR) crv $@ ${LIBOBJS}
+	${RANLIB} $@
+
+afs_clientAdmin.o: afs_clientAdmin.h
+
+clean:
+	$(RM) -f *.o libclientadmin*

@@ -1,0 +1,251 @@
+#
+# Copyright 1987 by the Massachusetts Institute of Technology.
+#
+# For copying and distribution information,
+# please see the file <mit-cpyright.h>.
+#
+# Makefile for BSD DES library
+#
+# First define machine type, compiler, and object file suffix
+# Could be for VAX or PC-DOS
+#
+# Some of these files are cross compiled on the vax for the pc8086,
+# using the MIT LCS cross-compilation environment
+# Others are always executed on the vax(host).
+#
+# A machine, e.g. Vax, pc8086, IBM experimental workstation, is 
+# described in terms of defines for its word length
+# (BITS32 or BITS16), byte ordering (LSBFIRST or MSBFIRST) and 
+# operating system (BSDUNIX or CROSSMSDOS).
+#
+# Make sure these are properly defined for any new machine types.
+# target machine for run-time code (may cross-compile),
+# override as needed 
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL = /bin/sh
+include ../config/Makefile.${SYS_NAME}
+
+UKERNELDIR=../libuafs/
+
+LDFLAGS = ${XLDFLAGS}
+
+OBJS = \
+	des.o \
+	cbc_encrypt.o \
+	pcbc_encrypt.o \
+	cksum.o \
+	new_rnd_key.o \
+	key_sched.o \
+	debug_decl.o \
+	quad_cksum.o \
+	key_parity.o \
+	weak_key.o \
+	read_pssword.o \
+	strng_to_key.o \
+	misc.o \
+	crypt.o \
+	util.o
+
+all: ukinstall ${TOP_LIBDIR}/libdes.a ${TOP_INCDIR}/des.h ${TOP_INCDIR}/des_conf.h ${TOP_INCDIR}/mit-cpyright.h ${TOP_INCDIR}/des_odd.h
+
+#
+# Build rules
+#
+.c.o:
+	${CC} -c -I. -I${TOP_INCDIR} -I${TOP_SRCDIR}/config ${XCFLAGS} $<
+
+libdes.a: ${OBJS} AFS_component_version_number.o
+	$(RM) -f libdes.a
+	ar r libdes.a ${OBJS} AFS_component_version_number.o
+	$(RANLIB) libdes.a
+
+make_ip: make_ip.o misc.o main.o
+	${CC} make_ip.o misc.o main.o ${LDFLAGS} -o make_ip
+
+make_fp: make_fp.o misc.o main.o
+	${CC} make_fp.o misc.o main.o ${LDFLAGS} -o make_fp
+
+make_odd: make_odd.o misc.o main.o
+	${CC} make_odd.o misc.o main.o ${LDFLAGS} -o make_odd
+
+make_s_table: make_s_table.o misc.o main.o 
+	${CC} make_s_table.o misc.o main.o ${LDFLAGS} -o make_s_table
+
+make_p_table: make_p_table.o misc.o main.o 
+	${CC} make_p_table.o misc.o main.o ${LDFLAGS} -o make_p_table
+
+make_keyperm: make_keyperm.o misc.o main.o 
+	${CC} make_keyperm.o misc.o main.o ${LDFLAGS} -o make_keyperm
+
+make_e:	make_e.o misc.o main.o 
+	${CC} make_e.o misc.o main.o ${LDFLAGS} -o make_e
+
+make_p:	make_p.o misc.o main.o 
+	${CC} make_p.o misc.o main.o ${LDFLAGS} -o make_p
+
+make_s:	make_s.o misc.o main.o 
+	${CC} make_s.o misc.o main.o ${LDFLAGS} -o make_s
+
+#
+# Table/code generation targets
+#
+odd.h: make_odd
+	./make_odd odd.h
+
+s_table.h: make_s_table
+	./make_s_table s_table.h
+
+p_table.h: make_p_table
+	./make_p_table p_table.h
+
+key_perm.h: make_keyperm
+	./make_keyperm key_perm.h
+
+ip.c: make_ip
+	./make_ip ip.c
+
+p.c: make_p
+	./make_p p.c
+
+s.c: make_s
+	./make_s s.c
+
+fp.c: make_fp
+	./make_fp fp.c
+
+#
+# Dependency rules
+#
+INCLS=des.h mit-cpyright.h des_conf.h des_internal.h conf.h
+
+make_keyperm.o: make_keyperm.c ${INCLS}
+make_ip.o: make_ip.c tables.h ${INCLS}
+make_fp.o: make_fp.c tables.h ${INCLS}
+make_p.o: make_p.c tables.h ${INCLS}
+make_s.o: make_s.c s_table.h ${INCLS}
+make_s_table.o: make_s_table.c tables.h ${INCLS}
+make_p_table.o: make_p_table.c tables.h ${INCLS}
+make_odd.o: make_odd.c ${INCLS}
+misc.o: misc.c AFS_component_version_number.c ${INCLS}
+main.o: main.c AFS_component_version_number.c ${INCLS}
+key_sched.o: key_sched.c key_perm.h odd.h ${INCLS}
+key_test.o: key_test.c ${INCLS}
+testit.o: testit.c ${INCLS}
+des.o: s_table.h p_table.h ip.c p.c fp.c ${INCLS}
+cbc_encrypt.o: cbc_encrypt.c ${INCLS}
+verify.o: verify.c ${INCLS}
+read_pssword.o: read_pssword.c ${INCLS}
+pcbc_encrypt.o: pcbc_encrypt.c ${INCLS}
+cksum.o: cksum.c ${INCLS}
+quad_cksum.o: quad_cksum.c ${INCLS}
+key_parity.o: key_parity.c odd.h ${INCLS}
+weak_key.o: weak_key.c ${INCLS}
+new_rnd_key.o: new_rnd_key.c ${INCLS}
+util.o: util.c ${INCLS}
+strng_to_key.o: strng_to_key.c ${INCLS}
+debug_decl.o: debug_decl.c ${INCLS}
+make_e.o: make_e.c ${INCLS}
+
+#
+# Install targets
+#
+install:  ${DESTDIR}${libdir}/libdes.a ${DESTDIR}${includedir}/des.h ${DESTDIR}${includedir}/des_conf.h ${DESTDIR}${includedir}/mit-cpyright.h ${DESTDIR}${includedir}/des_odd.h
+
+${DEST}/lib/libdes.a: libdes.a
+	${INSTALL} $? $@
+
+${DEST}/include/des.h: des.h
+	${INSTALL} $? $@
+
+${DEST}/include/des_conf.h: des_conf.h
+	${INSTALL} $? $@
+
+${DEST}/include/mit-cpyright.h: mit-cpyright.h
+	${INSTALL} $? $@
+
+${DEST}/include/des_odd.h: odd.h
+	${INSTALL} $? $@
+
+ukinstall: \
+	${UKERNELDIR}/des/libdes.a \
+	${UKERNELDIR}/des/des.h \
+	${UKERNELDIR}/des/mit-cpyright.h 
+	
+${UKERNELDIR}/des:
+	mkdir -p $?
+
+${UKERNELDIR}/des/libdes.a: libdes.a
+	${INSTALL} $? $@
+
+${UKERNELDIR}/des/des.h: des.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/des/mit-cpyright.h: mit-cpyright.h
+	${INSTALL} $? $@
+
+#
+# Misc. targets
+#
+test: libdes.a
+	cd test; $(MAKE)
+
+clean:
+	$(RM) -f *.a *.s *.o *.b core *~ *.com *.ld
+	$(RM) -f make_fp make_ip make_keyperm make_odd make_p \
+		make_p_table make_s_table key_perm.h p_table.h \
+		s_table.h odd.h p.c s.c fp.c ip.c AFS_component_version_number.c
+	cd test; $(MAKE) clean
+
+include ../config/Makefile.version
+
+${DESTDIR}${libdir}/libdes.a: libdes.a
+	${INSTALL} $? $@
+
+${TOP_LIBDIR}/libdes.a: libdes.a
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/des.h: des.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/des.h: des.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/des_conf.h: des_conf.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/des_conf.h: des_conf.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/mit-cpyright.h: mit-cpyright.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/mit-cpyright.h: mit-cpyright.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/des_odd.h: odd.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/des_odd.h: odd.h
+	${INSTALL} $? $@
+
+dest:  ${DEST}/lib/libdes.a ${DEST}/include/des.h ${DEST}/include/des_conf.h ${DEST}/include/mit-cpyright.h ${DEST}/include/des_odd.h
+

@@ -1,0 +1,243 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+# 
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
+
+# System calls.
+
+DEST=@DEST@
+TOP_INCDIR=@TOP_INCDIR@
+TOP_LIBDIR=@TOP_LIBDIR@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+bindir=@bindir@
+sbindir=@sbindir@
+libexecdir=@libexecdir@
+libdir=@libdir@
+includedir=@includedir@
+mandir=@mandir@
+afssrvbindir=@afssrvbindir@
+afssrvsbindir=@afssrvsbindir@
+afssrvlibexecdir=@afssrvlibexecdir@
+COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
+RXGEN=${TOP_SRCDIR}/rxgen/rxgen
+TOP_SRCDIR=@TOP_SRCDIR@
+SYS_NAME=@AFS_SYSNAME@
+
+SHELL = /bin/sh
+
+include ../config/Makefile.${SYS_NAME}
+
+UKERNELDIR=../libuafs/
+CFLAGS=${DBUG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR}  ${XCFLAGS}
+SFLAGS=-P -I${TOP_INCDIR}
+LIBS=libsys.a ${TOP_LIBDIR}/librx.a libsys.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
+UKSRCS=afsl.exp
+
+OBJECTS= afssyscalls.o syscall.o
+RMTOBJS=rmtsysnet.o rmtsysc.o rmtsys.cs.o rmtsys.xdr.o rmtsys.ss.o rmtsyss.o 
+
+include ../config/Makefile.version
+
+all: ${TOP_LIBDIR}/libsys.a rmtsysd ${TOP_INCDIR}/afs/afssyscalls.h pagsh pagsh.krb kinstall ukinstall
+	case "${SYS_NAME}" in \
+	rs_aix*)			\
+		${INSTALL} afs.exp ${TOP_LIBDIR};;	\
+	sgi_6? ) \
+		${INSTALL} xfsattrs.h ${TOP_INCDIR}/afs;; \
+	esac
+
+install: ${DESTDIR}${libdir}/afs/libsys.a ${DESTDIR}${sbindir}/rmtsysd ${DESTDIR}${includedir}/afs/afssyscalls.h ${DESTDIR}${bindir}/pagsh ${DESTDIR}${bindir}/pagsh.krb  
+	case "${SYS_NAME}" in \
+	rs_aix*)			\
+		${INSTALL} afs.exp ${DESTDIR}${includedir}/afs;;	\
+	sgi_6? ) \
+		${INSTALL} xfsattrs.h ${DESTDIR}${includedir}/afs;; \
+	esac
+
+${DEST}/etc/rmtsysd: rmtsysd
+	${INSTALL} -s $? $@
+
+${DEST}/bin/pagsh: pagsh
+	${INSTALL} -s $? $@
+
+${DEST}/bin/pagsh.krb: pagsh.krb
+	${INSTALL} -s $? $@
+
+${DEST}/include/afs/afssyscalls.h: afssyscalls.h
+	${INSTALL} $? $@
+
+libsys.a: ${OBJECTS} ${RMTOBJS} AFS_component_version_number.o
+	-$(RM) -f $@
+	$(AR) crv $@ ${OBJECTS} ${RMTOBJS} AFS_component_version_number.o
+	$(RANLIB) $@
+	case "${SYS_NAME}" in				\
+	    rs_aix*)		\
+		$(AR) crv $@ afsl.exp;;		\
+	esac
+
+kinstall:
+	case "${SYS_NAME}" in				\
+	    rs_aix*)			\
+		${INSTALL} afs.exp ${TOP_LIBDIR}/afs;;	\
+	    sgi_6? ) \
+		${INSTALL} xfsattrs.h ../libafs/afs;; \
+	    *)						\
+		echo No $@ source here;;		\
+	esac
+
+ukinstall webinstall: ${UKERNELDIR}/afs ${UKSRCS}
+	${INSTALL} ${UKSRCS} ${UKERNELDIR}/afs
+
+${UKERNELDIR}/afs:
+	mkdir -p $@
+
+tests:	pagsh pagsh.krb fixit iinc idec icreate iopen istat rmtsysd
+
+syscall.o: syscall.s
+	case "$(SYS_NAME)" in \
+	 sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53  | sun4_53 | sun4_52 | sun4_54 | sun4c_54 | sun4m_54 | sun4x_5? | sunx86_54) \
+		/usr/ccs/lib/cpp  ${SFLAGS} syscall.s syscall.ss; \
+		as -o syscall.o syscall.ss;		\
+		$(RM) syscall.ss;;				\
+	 sgi_* |ppc_darwin* ) \
+                ${CC} ${CFLAGS} -c syscall.s;;          \
+	 alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux?? ) \
+		${AS} -P ${CFLAGS} -D_NO_PROTO -DMACH -DOSF -nostdinc -traditional -DASSEMBLER syscall.s; \
+		${AS} -o syscall.o syscall.i; \
+		$(RM) -f syscall.ss syscall.i;; \
+	 hp_ux11? ) \
+		touch syscall.o;; \
+	i386_fbsd* ) \
+		touch syscall.o;; \
+	 *) \
+		/lib/cpp  ${SFLAGS} syscall.s syscall.ss; \
+		as -o syscall.o syscall.ss;		\
+		$(RM) syscall.ss;;				\
+	esac
+
+
+afssyscalls.o: afssyscalls.c afssyscalls.h
+	${CC} ${CFLAGS} -c afssyscalls.c
+
+rmtsysnet.o rmtsysc.o rmtsyss.o rmtsysd.o: rmtsys.h
+rmtsysd: AFS_component_version_number.o
+
+rmtsys.cs.c rmtsys.ss.c rmtsys.xdr.c rmtsys.h: rmtsys.xg
+	${RXGEN} rmtsys.xg
+
+rmtsysd: rmtsysd.o libsys.a
+	${CC} ${CFLAGS} -o rmtsysd rmtsysd.o ${LIBS}
+
+
+pagsh:	libsys.a AFS_component_version_number.o
+	${CC} ${CFLAGS} -c pagsh.c
+	${CC} ${CFLAGS} -o pagsh pagsh.o ${LIBS}
+
+pagsh.krb: libsys.a
+	${CC} ${CFLAGS} -c pagsh.c -DAFS_KERBEROS_ENV 
+	${CC} ${CFLAGS} -o pagsh.krb pagsh.o ${LIBS}
+
+# Test programs.
+
+iinc:	iinc.c 
+	case "${SYS_NAME}" in				\
+	    sgi_6*) \
+		$(CC) -o iinc ${CFLAGS} iinc.c libsys.a;; \
+	    *)						\
+		$(CC) -o iinc -I${TOP_INCDIR} iinc.c ${LIBS} ${XLIBS};; \
+	esac
+idec:	idec.c  AFS_component_version_number.c
+	case "${SYS_NAME}" in				\
+	    sgi_6* ) \
+		$(CC) -o idec ${CFLAGS} idec.c libsys.a;; \
+	    *)						\
+		$(CC) -o idec -I${TOP_INCDIR} idec.c ${LIBS} ${XLIBS};; \
+	esac
+icreate:icreate.c  AFS_component_version_number.c
+	case "${SYS_NAME}" in				\
+	    sgi_6* ) \
+		$(CC) -o icreate ${CFLAGS} icreate.c libsys.a;; \
+	    *)						\
+		$(CC) -o icreate -I${TOP_INCDIR} icreate.c ${XLIBS};; \
+	esac
+iopen:	iopen.c  AFS_component_version_number.c
+	case "${SYS_NAME}" in				\
+	    sgi_6* ) \
+		$(CC) -o iopen ${CFLAGS} iopen.c libsys.a;; \
+	    *)						\
+		$(CC) -o iopen -I${TOP_INCDIR} iopen.c ${XLIBS};; \
+	esac
+iread:	iread.c  AFS_component_version_number.c
+	case "${SYS_NAME}" in				\
+	    sgi_6* ) \
+		${CC} -o iread ${CFLAGS} iread.c libsys.a;; \
+	    *)						\
+		${CC} -o iread -I${TOP_INCDIR} iread.c ${XLIBS};; \
+	esac
+iwrite:	iwrite.c  AFS_component_version_number.c
+	case "${SYS_NAME}" in				\
+	    sgi_6* ) \
+		${CC} -o iwrite ${CFLAGS} iwrite.c libsys.a;; \
+	    *)						\
+		${CC} -o iwrite -I${TOP_INCDIR} iwrite.c ${XLIBS};; \
+	esac
+istat:	istat.c  AFS_component_version_number.c
+	case "${SYS_NAME}" in				\
+		sgi_6* ) \
+		$(CC) -o istat ${CFLAGS} istat.c libsys.a;; \
+	    *)						\
+		$(CC) -o istat -I${TOP_INCDIR} istat.c ${XLIBS};; \
+	esac
+fixit:	fixit.c AFS_component_version_number.c
+	$(CC) -o fixit -IDEST/include fixit.c libsys.a 
+
+
+xfsinode: xfsinode.c  AFS_component_version_number.c
+	case "${SYS_NAME}" in \
+		sgi_62 | sgi_64 ) \
+		$(CC) -o xfsinode ${CFLAGS} xfsinode.c libsys.a;; \
+	esac
+
+
+
+clean:
+	$(RM) -f *.o libsys.a xfsinode iinc idec icreate iopen istat core \
+	rmtsysc rmtsyss *.o rmtsys.ss.c rmtsys.cs.c rmtsys.xdr.c rmtsys.h \
+	rmtsysd AFS_component_version_number.c pagsh pagsh.krb
+${DEST}/lib/afs/libsys.a: libsys.a
+	${INSTALL} $? $@
+
+${DESTDIR}${libdir}/afs/libsys.a: libsys.a
+	${INSTALL} $? $@
+
+
+${TOP_LIBDIR}/libsys.a: libsys.a
+	${INSTALL} $? $@
+
+
+${DESTDIR}${sbindir}/rmtsysd: rmtsysd
+	${INSTALL} -s $? $@
+
+${DESTDIR}${includedir}/afs/afssyscalls.h: afssyscalls.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/afs/afssyscalls.h: afssyscalls.h
+	${INSTALL} $? $@
+
+${DESTDIR}${bindir}/pagsh: pagsh
+	${INSTALL} -s $? $@
+
+${DESTDIR}${bindir}/pagsh.krb: pagsh.krb
+	${INSTALL} -s $? $@
+
+dest: ${DEST}/lib/afs/libsys.a ${DEST}/etc/rmtsysd ${DEST}/include/afs/afssyscalls.h ${DEST}/bin/pagsh ${DEST}/bin/pagsh.krb  
+	case "${SYS_NAME}" in \
+	rs_aix*)			\
+		${INSTALL} afs.exp ${DEST}/include/afs;;	\
+	sgi_6? ) \
+		${INSTALL} xfsattrs.h ${DEST}/include/afs;; \
+	esac
+
