@@ -19,7 +19,9 @@
 #define _RX_KCOMMON_H_
 
 #ifdef AFS_LINUX22_ENV
+#ifndef _LINUX_CODA_FS_I
 #define _LINUX_CODA_FS_I 1
+#endif
 #define _CODA_HEADER_ 1
 struct coda_inode_info {
 };
