@@ -84,9 +84,7 @@ static afs_int32 *xstat_cm_collIDP;			/*Ptr to collection IDs desired*/
  *------------------------------------------------------------------------*/
 
 static int xstat_cm_CleanupInit()
-
-{ /*xstat_cm_CleanupInit*/
-
+{
     xstat_cm_ConnInfo = (struct xstat_cm_ConnectionInfo *)0;
     xstat_cm_Results.probeNum = 0;
     xstat_cm_Results.probeTime = 0;
@@ -97,8 +95,7 @@ static int xstat_cm_CleanupInit()
     xstat_cm_Results.probeOK = 0;
 
     return(0);
-
-} /*xstat_cm_CleanupInit*/
+}
 
 
 /*------------------------------------------------------------------------
@@ -124,11 +121,8 @@ static int xstat_cm_CleanupInit()
  *	(if so directed).
  *------------------------------------------------------------------------*/
 
-int xstat_cm_Cleanup(a_releaseMem)
-    int a_releaseMem;
-
-{ /*xstat_cm_Cleanup*/
-
+int xstat_cm_Cleanup(int a_releaseMem)
+{
     static char rn[] = "xstat_cm_Cleanup";	/*Routine name*/
     int code;					/*Return code*/
     int conn_idx;				/*Current connection index*/
@@ -183,8 +177,7 @@ int xstat_cm_Cleanup(a_releaseMem)
      * Return the news, whatever it is.
      */
     return(code);
-
-} /*xstat_cm_Cleanup*/
+}
 
 
 /*------------------------------------------------------------------------
@@ -209,11 +202,8 @@ int xstat_cm_Cleanup(a_releaseMem)
  * Side Effects:
  *	As advertised.
  *------------------------------------------------------------------------*/
-
 static void xstat_cm_LWP()
-
-{ /*xstat_cm_LWP*/
-
+{
     static char rn[] = "xstat_cm_LWP";		/*Routine name*/
     register afs_int32 code;				/*Results of calls*/
     int oneShotCode;				/*Result of one-shot signal*/
@@ -367,8 +357,7 @@ static void xstat_cm_LWP()
 			rn, code);
 	} /*Continuous execution*/
     } /*Service loop*/
-
-} /*xstat_cm_LWP*/
+}
 
 
 /*------------------------------------------------------------------------
@@ -402,17 +391,10 @@ static void xstat_cm_LWP()
  *	Sets up just about everything.
  *------------------------------------------------------------------------*/
 
-int xstat_cm_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs,
-		  a_ProbeHandler, a_flags, a_numCollections, a_collIDP)
-    int a_numServers;
-    struct sockaddr_in *a_socketArray;
-    int a_ProbeFreqInSecs;
-    int (*a_ProbeHandler)();
-    int a_flags;
-    int a_numCollections;
-    afs_int32 *a_collIDP;
-
-{ /*xstat_cm_Init*/
+int xstat_cm_Init(int a_numServers, struct sockaddr_in *a_socketArray,
+		  int a_ProbeFreqInSecs, int (*a_ProbeHandler)(), int a_flags,
+		  int a_numCollections, afs_int32 *a_collIDP)
+{
 
     static char rn[] = "xstat_cm_Init";		/*Routine name*/
     register afs_int32 code;				/*Return value*/
@@ -634,8 +616,7 @@ int xstat_cm_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs,
 	return(-2);
     else
 	return(0);
-
-} /*xstat_cm_Init*/
+}
 
 
 /*------------------------------------------------------------------------
@@ -659,9 +640,7 @@ int xstat_cm_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs,
  *------------------------------------------------------------------------*/
 
 int xstat_cm_ForceProbeNow()
-
-{ /*xstat_cm_ForceProbeNow*/
-
+{
     static char rn[] = "xstat_cm_ForceProbeNow";	/*Routine name*/
 
     /*
@@ -681,5 +660,4 @@ int xstat_cm_ForceProbeNow()
      * We did it, so report the happy news.
      */
     return(0);
-
-} /*xstat_cm_ForceProbeNow*/
+}

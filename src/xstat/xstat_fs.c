@@ -102,9 +102,7 @@ static afs_int32 *xstat_fs_collIDP;			/*Ptr to collection IDs desired*/
  *------------------------------------------------------------------------*/
 
 static int xstat_fs_CleanupInit()
-
-{ /*xstat_fs_CleanupInit*/
-
+{
     afs_int32 code;			/*Return code from callback stubs*/
     struct rx_call *rxcall;	/*Bogus param*/
     AFSCBFids *Fids_Array;	/*Bogus param*/
@@ -135,8 +133,7 @@ static int xstat_fs_CleanupInit()
 	return(code);
     code = SRXAFSCB_Probe(rxcall);
     return(code);
-
-} /*xstat_fs_CleanupInit*/
+}
 
 
 /*------------------------------------------------------------------------
@@ -162,11 +159,8 @@ static int xstat_fs_CleanupInit()
  *	(if so directed).
  *------------------------------------------------------------------------*/
 
-int xstat_fs_Cleanup(a_releaseMem)
-    int a_releaseMem;
-
-{ /*xstat_fs_Cleanup*/
-
+int xstat_fs_Cleanup(int a_releaseMem)
+{
     static char rn[] = "xstat_fs_Cleanup";	/*Routine name*/
     int code;					/*Return code*/
     int conn_idx;				/*Current connection index*/
@@ -221,8 +215,7 @@ int xstat_fs_Cleanup(a_releaseMem)
      * Return the news, whatever it is.
      */
     return(code);
-
-} /*xstat_fs_Cleanup*/
+}
 
 
 /*------------------------------------------------------------------------
@@ -249,9 +242,7 @@ int xstat_fs_Cleanup(a_releaseMem)
  *------------------------------------------------------------------------*/
 
 static void xstat_fs_LWP()
-
-{ /*xstat_fs_LWP*/
-
+{
     static char rn[] = "xstat_fs_LWP";		/*Routine name*/
     register afs_int32 code;				/*Results of calls*/
     int oneShotCode;				/*Result of one-shot signal*/
@@ -402,9 +393,7 @@ static void xstat_fs_LWP()
 			rn, code);
 	} /*Continuous execution*/
     } /*Service loop*/
-
-} /*xstat_fs_LWP*/
-
+}
 
 /*------------------------------------------------------------------------
  * [exported] xstat_fs_Init
@@ -439,18 +428,10 @@ static void xstat_fs_LWP()
  *	Sets up just about everything.
  *------------------------------------------------------------------------*/
 
-int xstat_fs_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler,
-		  a_flags, a_numCollections, a_collIDP)
-    int a_numServers;
-    struct sockaddr_in *a_socketArray;
-    int a_ProbeFreqInSecs;
-    int (*a_ProbeHandler)();
-    int a_flags;
-    int a_numCollections;
-    afs_int32 *a_collIDP;
-
-{ /*xstat_fs_Init*/
-
+int xstat_fs_Init(int a_numServers, struct sockaddr_in *a_socketArray,
+		  int a_ProbeFreqInSecs, int (*a_ProbeHandler)(), int a_flags,
+		  int a_numCollections, afs_int32 *a_collIDP)
+{
     static char rn[] = "xstat_fs_Init";		/*Routine name*/
     register afs_int32 code;				/*Return value*/
     static struct rx_securityClass *CBsecobj;	/*Callback security object*/
@@ -730,8 +711,7 @@ int xstat_fs_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler
 	return(-2);
     else
 	return(0);
-
-} /*xstat_fs_Init*/
+}
 
 
 /*------------------------------------------------------------------------
@@ -755,9 +735,7 @@ int xstat_fs_Init(a_numServers, a_socketArray, a_ProbeFreqInSecs, a_ProbeHandler
  *------------------------------------------------------------------------*/
 
 int xstat_fs_ForceProbeNow()
-
-{ /*xstat_fs_ForceProbeNow*/
-
+{
     static char rn[] = "xstat_fs_ForceProbeNow";	/*Routine name*/
 
     /*
@@ -777,5 +755,4 @@ int xstat_fs_ForceProbeNow()
      * We did it, so report the happy news.
      */
     return(0);
-
-} /*xstat_fs_ForceProbeNow*/
+}

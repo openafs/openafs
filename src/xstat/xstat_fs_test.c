@@ -112,7 +112,6 @@ static char *xferOpNames[] = {
  *------------------------------------------------------------------------*/
 
 void PrintCallInfo()
-
 { /*PrintCallInfo*/
 
     static char rn[] = "PrintCallInfo";	/*Routine name*/
@@ -165,11 +164,8 @@ void PrintCallInfo()
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-void PrintOverallPerfInfo(a_ovP)
-    struct afs_PerfStats *a_ovP;
-
-{ /*PrintOverallPerfInfo*/
-
+void PrintOverallPerfInfo(struct afs_PerfStats *a_ovP)
+{
     printf("\t%10d numPerfCalls\n\n", a_ovP->numPerfCalls);
 
     /*
@@ -256,8 +252,7 @@ void PrintOverallPerfInfo(a_ovP)
     printf("\t%10d host_ClientBlocks\n\n",	a_ovP->host_ClientBlocks);
 
     printf("\t%10d sysname_ID\n",               a_ovP->sysname_ID);
-
-} /*PrintOverallPerfInfo*/
+}
 
 
 /*------------------------------------------------------------------------
@@ -280,12 +275,8 @@ void PrintOverallPerfInfo(a_ovP)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-void PrintOpTiming(a_opIdx, a_opTimeP)
-    int a_opIdx;
-    struct fs_stats_opTimingData *a_opTimeP;
-
-{ /*PrintOpTiming*/
-
+void PrintOpTiming(int a_opIdx, struct fs_stats_opTimingData *a_opTimeP)
+{
     double fSumTime, avg;
 
     fSumTime = ((double)(a_opTimeP->sumTime.tv_sec)) +
@@ -300,8 +291,7 @@ void PrintOpTiming(a_opIdx, a_opTimeP)
            a_opTimeP->sqrTime.tv_sec, a_opTimeP->sqrTime.tv_usec,
 	   a_opTimeP->minTime.tv_sec, a_opTimeP->minTime.tv_usec,
 	   a_opTimeP->maxTime.tv_sec, a_opTimeP->maxTime.tv_usec);
-
-} /*PrintOpTiming*/
+}
 
 
 /*------------------------------------------------------------------------
@@ -324,12 +314,8 @@ void PrintOpTiming(a_opIdx, a_opTimeP)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-void PrintXferTiming(a_opIdx, a_xferP)
-    int a_opIdx;
-    struct fs_stats_xferData *a_xferP;
-
-{ /*PrintXferTiming*/
-
+void PrintXferTiming(int a_opIdx, struct fs_stats_xferData *a_xferP)
+{
     double fSumTime, avg;
 
     fSumTime = ((double)(a_xferP->sumTime.tv_sec)) +
@@ -356,9 +342,7 @@ void PrintXferTiming(a_opIdx, a_xferP)
            a_xferP->count[6],
            a_xferP->count[7],
            a_xferP->count[8]);
-           
-
-} /*PrintXferTiming*/
+}
 
 
 /*------------------------------------------------------------------------
@@ -380,11 +364,8 @@ void PrintXferTiming(a_opIdx, a_xferP)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-void PrintDetailedPerfInfo(a_detP)
-    struct fs_stats_DetailedStats *a_detP;
-
-{ /*PrintDetailedPerfInfo*/
-
+void PrintDetailedPerfInfo(struct fs_stats_DetailedStats *a_detP)
+{
     int currIdx;	/*Loop variable*/
 
     printf("\t%10d epoch\n", a_detP->epoch);
@@ -394,8 +375,7 @@ void PrintDetailedPerfInfo(a_detP)
 
     for (currIdx = 0; currIdx < FS_STATS_NUM_XFER_OPS; currIdx++)
 	PrintXferTiming(currIdx, &(a_detP->xferOpTimes[currIdx]));
-
-} /*PrintDetailedPerfInfo*/
+}
 
 
 /*------------------------------------------------------------------------
@@ -419,8 +399,7 @@ void PrintDetailedPerfInfo(a_detP)
  *------------------------------------------------------------------------*/
 
 void PrintFullPerfInfo()
-
-{ /*PrintFullPerfInfo*/
+{
 
     static char rn[] = "PrintFullPerfInfo";		/*Routine name*/
     static afs_int32 fullPerfInt32s =
@@ -450,8 +429,7 @@ void PrintFullPerfInfo()
 
     PrintOverallPerfInfo(&(fullPerfP->overall));
     PrintDetailedPerfInfo(&(fullPerfP->det));
-
-} /*PrintFullPerfInfo*/
+}
 
 
 /*------------------------------------------------------------------------
@@ -475,9 +453,7 @@ void PrintFullPerfInfo()
  *------------------------------------------------------------------------*/
 
 void PrintPerfInfo()
-
-{ /*PrintPerfInfo*/
-
+{
     static char rn[] = "PrintPerfInfo";	/*Routine name*/
     static afs_int32 perfInt32s =
 	(sizeof(struct afs_PerfStats) >> 2); /*Correct # int32s to rcv*/
@@ -504,8 +480,7 @@ void PrintPerfInfo()
 	   printableTime);
 
     PrintOverallPerfInfo(perfP);
-
-} /*PrintPerfInfo*/
+}
 
 
 /*------------------------------------------------------------------------
@@ -533,9 +508,7 @@ void PrintPerfInfo()
  *------------------------------------------------------------------------*/
 
 int FS_Handler()
-
-{ /*FS_Handler*/
-
+{
     static char rn[] = "FS_Handler";	/*Routine name*/
 
     printf("\n------------------------------------------------------------\n");
@@ -573,8 +546,7 @@ int FS_Handler()
      * Return the happy news.
      */
     return(0);
-
-} /*FS_Handler*/
+}
 
 
 /*------------------------------------------------------------------------
@@ -597,10 +569,8 @@ int FS_Handler()
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static int CountListItems(a_firstItem)
-    struct cmd_item *a_firstItem;
-
-{ /*CountListItems*/
+static int CountListItems(struct cmd_item *a_firstItem)
+{
 
     int list_len;		/*List length*/
     struct cmd_item *curr_item;	/*Ptr to current item*/
@@ -620,8 +590,7 @@ static int CountListItems(a_firstItem)
      * Return our tally.
      */
     return(list_len);
-
-} /*CountListItems*/
+}
 
 
 /*------------------------------------------------------------------------
@@ -647,11 +616,8 @@ static int CountListItems(a_firstItem)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int RunTheTest(a_s)
-    struct cmd_syndesc *a_s;
-
-{ /*RunTheTest*/
-
+int RunTheTest(struct cmd_syndesc *a_s)
+{
     static char	rn[] = "RunTheTest";	/*Routine name*/
     int code;				/*Return code*/
     int numFSs;				/*# File Servers to monitor*/
@@ -826,18 +792,13 @@ int RunTheTest(a_s)
     code = xstat_fs_Cleanup(1);	/*Get rid of malloc'ed data*/
     rx_Finalize();
     return(0);
-
-} /*RunTheTest*/
+}
 
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-    int argc;
-    char **argv;
-
-{ /*Main routine*/
-
+int main(int argc, char **argv)
+{
     static char rn[] = "xstat_fs_test";	/*Routine name*/
     register afs_int32 code;			/*Return code*/
     struct cmd_syndesc *ts;		/*Ptr to cmd line syntax desc*/
@@ -872,6 +833,5 @@ main(argc, argv)
     }
 
     exit(code);
-
-} /*Main routine*/
+}
 
