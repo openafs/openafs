@@ -39,9 +39,7 @@ RCSID
 #include <smb.h>
 #include <pioctl_nt.h>
 
-/* Are we using the canonical Netbios name (AFS)? */
-BOOL smb_TruncateNetbios = FALSE;             /* what the registry says */
-BOOL smb_TruncateNetbiosReal = FALSE; /* what we actually grant */
+#include <lanahelper.h>
 
 static char AFSConfigKeyName[] =
     "SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters";
@@ -104,16 +102,9 @@ static long
 GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 {
     char *drivep;
-    char hostName[256];
+    char netbiosName[MAX_NB_NAME_LENGTH];
     char tbuffer[100];
-    char buf[200];
-    char explicitNetbiosName[32];
-    DWORD isGateway = 0;
-    char *ctemp;
     HANDLE fh;
-    HKEY parmKey;
-    DWORD dummyLen;
-    long code;
 
     if (fileNamep) {
         drivep = strchr(fileNamep, ':');
@@ -125,80 +116,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             strcpy(tbuffer, SMB_IOCTL_FILENAME);
     } else {
         /* No file name specified, use UNC name */
-        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName, 0,
-                            KEY_QUERY_VALUE, &parmKey);
-        if (code != ERROR_SUCCESS)
-            goto nogateway;
-
-        dummyLen = sizeof(buf);
-        code = RegQueryValueEx(parmKey, "TruncateNetbios", NULL, NULL,
-                                (BYTE *) buf, &dummyLen);
-        if (code == ERROR_SUCCESS)
-        {
-            if (!stricmp( (const char *) buf, "on"))
-            {
-                smb_TruncateNetbios = TRUE;
-                smb_TruncateNetbiosReal = TRUE;
-            }
-        }
-
-        dummyLen = sizeof(isGateway);
-        code = RegQueryValueEx(parmKey, "IsGateway", NULL, NULL,
-                                (BYTE *) &isGateway, &dummyLen);
-
-        /* Is there an explicit name we should use? */
-        dummyLen = sizeof(explicitNetbiosName);
-        code = RegQueryValueEx(parmKey, "NetbiosName", NULL, NULL,
-                                (BYTE *) &explicitNetbiosName, &dummyLen);
-        if (!code == ERROR_SUCCESS) 
-        {
-            explicitNetbiosName[0] = 0;
-        }
-
-        /* Look for gateway host in Registry */
-        dummyLen = sizeof(hostName);
-        code = RegQueryValueEx(parmKey, "Gateway", NULL, NULL, hostName,
-                               &dummyLen);
-        RegCloseKey(parmKey);
-        if (code == ERROR_SUCCESS)
-            goto havehost;
-
-      nogateway:
-        /* No gateway name in registry; use ourself */
-#ifndef AFS_WIN95_ENV
-        gethostname(hostName, sizeof(hostName));
-#else
-        {
-            int hostsize;
-            /* DJGPP version of gethostname gets the NetBIOS
-             * name of the machine, so that is what we are using for
-             * the AFS server name instead of the DNS name. */
-            hostsize = sizeof(hostName);
-            GetComputerName(hostName, &hostsize);
-        }
-#endif /* AFS_WIN95_ENV */
-
-      havehost:
-        ctemp = strchr(hostName, '.');	/* turn ntafs.* into ntafs */
-        if (ctemp)
-            *ctemp = 0;
-        hostName[11] = 0;
-
-        if (explicitNetbiosName[0])
-        {
-            _strupr(explicitNetbiosName);
-            sprintf(tbuffer, "\\\\%s\\all%s",
-                     explicitNetbiosName, SMB_IOCTL_FILENAME);
-        }
-        else if (smb_TruncateNetbiosReal) {
-            sprintf(tbuffer, "\\\\AFS\\all%s", SMB_IOCTL_FILENAME);
-        } 
-        else
-        {
-            _strupr(hostName);
-            sprintf(tbuffer, "\\\\%s-AFS\\all%s",
-                     hostName, SMB_IOCTL_FILENAME);
-        }
+        lana_GetNetbiosName(netbiosName,LANA_NETBIOS_NAME_FULL);
+        sprintf(tbuffer,"\\\\%s\\all%s",netbiosName,SMB_IOCTL_FILENAME);
     }
 
     fflush(stdout);

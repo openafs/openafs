@@ -67,6 +67,8 @@ int logReady = 0;
 char cm_HostName[200];
 long cm_HostAddr;
 
+char cm_NetbiosName[MAX_NB_NAME_LENGTH];
+
 char cm_CachePath[200];
 DWORD cm_CachePathLen;
 
@@ -199,6 +201,7 @@ int afsd_InitCM(char **reasonP)
 	long code;
 	/*int freelanceEnabled;*/
 	WSADATA WSAjunk;
+    lana_number_t lanaNum;
 
 	WSAStartup(0x0101, &WSAjunk);
 
@@ -233,19 +236,6 @@ int afsd_InitCM(char **reasonP)
 			msgBuf);
 		osi_panic(buf, __FILE__, __LINE__);
 	}
-
-	dummyLen = sizeof(LANadapter);
-	code = RegQueryValueEx(parmKey, "LANadapter", NULL, NULL,
-				(BYTE *) &LANadapter, &dummyLen);
-	if (code == ERROR_SUCCESS) {
-		afsi_log("LAN adapter number %d", LANadapter);
-        if (LANadapter < 0 || LANadapter > MAX_LANA)
-            LANadapter = -1;
-	} else {
-		LANadapter = -1;
-    }
-    if ( LANadapter == -1 )
-		afsi_log("Default LAN adapter number");
 
 	dummyLen = sizeof(cacheSize);
 	code = RegQueryValueEx(parmKey, "CacheSize", NULL, NULL,
@@ -374,17 +364,6 @@ int afsd_InitCM(char **reasonP)
 		/* Don't log */
 	}
 
-	dummyLen = sizeof(isGateway);
-	code = RegQueryValueEx(parmKey, "IsGateway", NULL, NULL,
-				(BYTE *) &isGateway, &dummyLen);
-	if (code == ERROR_SUCCESS)
-		afsi_log("Set for %s service",
-			 isGateway ? "gateway" : "stand-alone");
-	else {
-		isGateway = 0;
-		/* Don't log */
-	}
-
 	dummyLen = sizeof(reportSessionStartups);
 	code = RegQueryValueEx(parmKey, "ReportSessionStartups", NULL, NULL,
 				(BYTE *) &reportSessionStartups, &dummyLen);
@@ -509,6 +488,25 @@ int afsd_InitCM(char **reasonP)
         afsi_log("RX maximum MTU is %d", rx_mtu);
 
 	RegCloseKey (parmKey);
+
+    /* Call lanahelper to get Netbios name, lan adapter number and gateway flag */
+    if(SUCCEEDED(code = lana_GetUncServerNameEx(cm_NetbiosName, &lanaNum, &isGateway, LANA_NETBIOS_NAME_FULL))) {
+        LANadapter = (lanaNum == LANA_INVALID)? -1: lanaNum;
+
+        if(LANadapter != -1)
+            afsi_log("LAN adapter number %d", LANadapter);
+        else
+            afsi_log("LAN adapter number not determined");
+
+        if(isGateway)
+            afsi_log("Set for gateway service");
+
+        afsi_log("Using >%s< as SMB server name", cm_NetbiosName);
+    } else {
+        /* something went horribly wrong.  We can't proceed without a netbios name */
+        sprintf(buf,"Netbios name could not be determined: %li", code);
+        osi_panic(buf, __FILE__, __LINE__);
+    }
 
 	/* setup early variables */
 	/* These both used to be configurable. */
@@ -706,67 +704,11 @@ int afsd_InitDaemons(char **reasonP)
 
 int afsd_InitSMB(char **reasonP, void *aMBfunc)
 {
-	char hostName[200];
-	char *ctemp;
-    lana_number_t lana = LANA_INVALID;
-
 	/* Do this last so that we don't handle requests before init is done.
      * Here we initialize the SMB listener.
      */
-    if (LANadapter == -1) {
-        DWORD noFindByName = 0;
-        HKEY parmKey;
-        DWORD dummyLen;
-        long code;
-
-        /* Find the default LAN adapter to use.  First look for
-         * the adapter named AFS; otherwise, unless we are doing
-         * gateway service, look for any valid loopback adapter.
-         */
-        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
-                             0, KEY_QUERY_VALUE, &parmKey);
-        if (code == ERROR_SUCCESS) {
-            dummyLen = sizeof(LANadapter);
-            code = RegQueryValueEx(parmKey, "NoFindLanaByName", NULL, NULL,
-                                    (BYTE *) &noFindByName, &dummyLen);
-            RegCloseKey(parmKey);
-        }
-
-        if ( !noFindByName )
-            lana = lana_FindLanaByName("AFS");
-        if (lana == LANA_INVALID && !isGateway)
-            lana = lana_FindLoopback();
-        if (lana != LANA_INVALID)
-            LANadapter = lana;
-    }
-    afsi_log("Lana %d", (int) lana);
-    /* If we are using a loopback adapter, we can use the preferred
-     * (but non-unique) server name; otherwise, we must fall back to
-     * the <machine>-AFS name.
-     */
-    if (LANadapter >= 0 && lana_IsLoopback((lana_number_t) LANadapter)) {
-        if ( cm_NetBiosName[0] )
-            strcpy(hostName, cm_NetBiosName);
-        else
-            strcpy(hostName, "AFS");
-    } else {
-        if (!cm_NetBiosName[0])
-        {
-            strcpy(hostName, cm_HostName);
-            ctemp = strchr(hostName, '.');	/* turn ntdfs.* into ntdfs */
-            if (ctemp) *ctemp = 0;
-            hostName[11] = 0; /* ensure that even after adding the -A, we
-                               * leave one byte free for the netbios server
-                               * type.
-                               */
-            strcat(hostName, "-AFS");
-        } else {
-            strcpy(hostName, cm_NetBiosName);
-        }
-        _strupr(hostName);
-    }
-    smb_Init(afsd_logp, hostName, smb_UseV3, LANadapter, numSvThreads, aMBfunc);
-	afsi_log("smb_Init");
+    smb_Init(afsd_logp, cm_NetbiosName, smb_UseV3, LANadapter, numSvThreads, aMBfunc);
+    afsi_log("smb_Init");
 
 	return 0;
 }

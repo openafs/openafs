@@ -13,8 +13,7 @@ extern "C" {
 }
 #include <stdio.h>
 #include "afs_config.h"
-#include "getlana.h"
-
+#include <lanahelper.h>
 
 /*
  * DEFINITIONS ________________________________________________________________
@@ -106,7 +105,7 @@ BOOL CALLBACK Binding_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                       nLanAdapter = GetAdapterNumber(selected);
                   }
 			            
-                  GetAfsName(nLanAdapter, isGateway, name);
+                  lana_GetAfsNameString(nLanAdapter, isGateway, name);
                   SetDlgItemText (hDlg, IDC_BINDING_MESSAGE, name);
 				          EnableWindow(GetDlgItem(hDlg,IDC_NICSELECTION),(nLanAdapter!=-1));
                   break;
@@ -130,7 +129,7 @@ BOOL CALLBACK Binding_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                   nLanAdapter = GetAdapterNumber(selected);
         
 			          
-                GetAfsName(nLanAdapter, isGateway, name);
+                lana_GetAfsNameString(nLanAdapter, isGateway, name);
                 SetDlgItemText (hDlg, IDC_BINDING_MESSAGE, name);
                 break;
               }
@@ -149,48 +148,46 @@ BOOL CALLBACK Binding_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
 void Binding_OnInitDialog (HWND hDlg)
 {
-   
-  TCHAR msg[MAX_PATH];
-  TCHAR name[MAX_PATH];
-  memset(msg, 0, sizeof(msg));
-  memset(name, 0, sizeof(name));
+    TCHAR name[MAX_PATH];
+    memset(name, 0, sizeof(name));
       
-  if (fFirstTime) {
-    Config_GetLanAdapter(&g.Configuration.nLanAdapter);
-    nLanAdapter = g.Configuration.nLanAdapter;
-    isGateway = g.Configuration.fBeGateway;
-    fFirstTime = FALSE;
-  }
-
-  lanainfo = GetLana(msg, NULL);
-
-  if (!lanainfo && _tcslen(msg) > 0)
-    MessageBox(hDlg, msg, "LANA ERROR", MB_ICONERROR);
-  else
-  {
-    HWND hwndCombo = GetDlgItem(hDlg, IDC_NICSELECTION);
-    int index = 0;
-    TCHAR tmp[MAX_PATH];
-    while (_tcslen(lanainfo[index].lana_name) > 0)
-    {
-      _stprintf(tmp, "%s (lana number = %d)", lanainfo[index].lana_name, 
-            lanainfo[index].lana_number);
-      SendMessage(hwndCombo, CB_ADDSTRING, 
-            0, (LPARAM) tmp);
-      if (nLanAdapter == lanainfo[index].lana_number)
-        SendMessage(hwndCombo, CB_SELECTSTRING, (WPARAM)-1, 
-              (LPARAM)tmp);
-      index++;
+    if (fFirstTime) {
+        Config_GetLanAdapter(&g.Configuration.nLanAdapter);
+        nLanAdapter = g.Configuration.nLanAdapter;
+        isGateway = g.Configuration.fBeGateway;
+        fFirstTime = FALSE;
     }
-  }
 
+    lanainfo = lana_FindLanaByName(NULL);
 
-  GetAfsName(nLanAdapter, isGateway, name);
-  SetDlgItemText (hDlg, IDC_BINDING_MESSAGE, name);
+    // TODO: Show more useful error message.
+    if (!lanainfo) {
+        MessageBox(hDlg, "Unable to obtain LANA list", "LANA ERROR", MB_ICONERROR);
+    } 
+    else
+    { 
+        HWND hwndCombo = GetDlgItem(hDlg, IDC_NICSELECTION);
+        int index = 0;
+        TCHAR tmp[MAX_PATH];
+        while (_tcslen(lanainfo[index].lana_name) > 0)
+        {
+            _stprintf(tmp, "%s (lana number = %d)", lanainfo[index].lana_name, 
+                       lanainfo[index].lana_number);
+            SendMessage(hwndCombo, CB_ADDSTRING, 
+                         0, (LPARAM) tmp);
+            if (nLanAdapter == lanainfo[index].lana_number)
+                SendMessage(hwndCombo, CB_SELECTSTRING, (WPARAM)-1, 
+                             (LPARAM)tmp);
+            index++;
+        }
+    }
 
-  CheckDlgButton (hDlg, IDC_DEFAULTNIC, (nLanAdapter==-1));
+    lana_GetAfsNameString(nLanAdapter, isGateway, name);
+    SetDlgItemText (hDlg, IDC_BINDING_MESSAGE, name);
 
-  EnableWindow(GetDlgItem(hDlg,IDC_NICSELECTION),(nLanAdapter!=-1));
+    CheckDlgButton (hDlg, IDC_DEFAULTNIC, (nLanAdapter==-1));
+
+    EnableWindow(GetDlgItem(hDlg,IDC_NICSELECTION),(nLanAdapter!=-1));
 }
 
 void Binding_OnOK (HWND hDlg)

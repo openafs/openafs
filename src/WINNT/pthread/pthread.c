@@ -710,22 +710,14 @@ static cond_waiters_t *get_waiter() {
  
     if (queue_IsEmpty(&waiter_cache)) {
         new = (cond_waiters_t *) malloc(sizeof(cond_waiters_t));
-        if (new != NULL) {
-#if 1
-            CHAR eventName[MAX_PATH];
-            static eventCount = 0;
-            sprintf(eventName, "cond_waiters_t %d::%d", _getpid(), eventCount++);
-            new->event = CreateEvent((LPSECURITY_ATTRIBUTES) 0, FALSE,
-                                      FALSE, (LPCTSTR) eventName);
-#else
-            new->event = CreateEvent((LPSECURITY_ATTRIBUTES) 0, FALSE,
-                                      FALSE, (LPCTSTR) 0);
-            if (new->event == NULL) {
-                free(new);
-                new = NULL;
-            }
-#endif
-        }
+	if (new != NULL) {
+	    new->event = CreateEvent((LPSECURITY_ATTRIBUTES) 0, FALSE,
+				     FALSE, (LPCTSTR) 0);
+	    if (new->event == NULL) {
+		free(new);
+		new = NULL;
+	    }
+	}
     } else {
         new = queue_First(&waiter_cache, cond_waiter);
         queue_Remove(new);
@@ -733,6 +725,7 @@ static cond_waiters_t *get_waiter() {
  
     LeaveCriticalSection(&waiter_cache_cs);
     return new;
+ 
 }
  
 static void put_waiter(cond_waiters_t *old) {

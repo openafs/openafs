@@ -38,8 +38,7 @@ EXEOBJS = \
 	$(OUT)\isadmin.obj \
 	$(OUT)\dlg_automap.obj \
     $(OUT)\dlg_binding.obj \
-    $(OUT)\RegistrySupport.obj \
-    $(OUT)\getlana.obj
+    $(OUT)\RegistrySupport.obj
 
 EXEOBJSc = \
 	$(OUT)\cellservdb.obj
@@ -63,7 +62,8 @@ EXELIBS = \
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\libosi.lib \
-	$(DESTDIR)\lib\libafsconf.lib
+	$(DESTDIR)\lib\libafsconf.lib \
+    $(DESTDIR)\lib\lanahelper.lib
 
 ############################################################################
 #

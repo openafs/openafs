@@ -15,6 +15,7 @@ extern "C" {
 
 #include "afs_config.h"
 #include <stdio.h>
+#include <lanahelper.h>
 
 /*
  * DEFINITIONS ________________________________________________________________
@@ -33,8 +34,6 @@ enum DDDACTION  { DDD_ADD, DDD_REMOVE };
  * PROTOTYPES _________________________________________________________________
  *
  */
-extern void GetNetbiosName(LPTSTR pszName, int type);
-
 void AutoMap_OnInitDialog (HWND hDlg);
 void AutoMap_OnAdd (HWND hDlg);
 void AutoMap_OnSelect (HWND hDlg);
@@ -455,7 +454,7 @@ void AutoMapEdit_OnInitDialog (HWND hDlg)
 #else
     memset(szMapping, '\0', sizeof(szMapping));
     szMapping[0] = '\\';
-    GetNetbiosName(&szMapping[1], 0);
+    lana_GetNetbiosName(&szMapping[1], LANA_NETBIOS_NAME_FULL);
 #endif
    SetDlgItemText (hDlg, IDC_PATH, szMapping);
    SetDlgItemText (hDlg, IDC_DESC, pMap->szSubmount);
@@ -495,7 +494,7 @@ void AutoMapEdit_OnOK (HWND hDlg)
    TCHAR szName[MAX_PATH];
    memset(szName, '\0', sizeof(szName));
    szName[0] = '\\';
-   GetNetbiosName(&szName[1], 0);
+   lana_GetNetbiosName(&szName[1], LANA_NETBIOS_NAME_FULL);
 
    if ( lstrncmpi (pMap->szMapping, szName, lstrlen(szName) ))
       {

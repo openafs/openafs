@@ -23,8 +23,8 @@ LIBFILE = $(DESTDIR)\lib\afs\afspioctl.lib
 LIBOBJS =\
 	$(OUT)\pioctl_nt.obj
 
-$(LIBFILE): $(LIBOBJS)
-	$(LIBARCH)
+$(LIBFILE): $(LIBOBJS) $(DESTDIR)\lib\lanahelper.lib
+	$(LIBARCH) $(DESTDIR)\lib\lanahelper.lib
 
 ############################################################################
 # Install target; primary makefile target

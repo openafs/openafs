@@ -23,15 +23,11 @@ extern "C" {
 #include <adssts.h>
 #define DEBUG_VERBOSE
 #include <osilog.h>
+#include <lanahelper.h>
 
 extern void Config_GetLanAdapter (ULONG *pnLanAdapter);
-void GetNetbiosName(LPTSTR pszName, int type);
 extern BOOL Config_ReadNum (LPCTSTR pszLHS, DWORD *pdwRHS);
 extern BOOL Config_ReadString (LPCTSTR pszLHS, LPTSTR pszRHS, size_t cchMax);
-extern void GetUncServerName(int lanaNumber, BOOL isGateway, TCHAR* name, int type);
-
-#define NETBIOS_NAME_FULL 0
-#define NETBIOS_NAME_SUFFIX 1
 
 /*
  * REGISTRY ___________________________________________________________________
@@ -161,7 +157,8 @@ static BOOL IsWindowsNT (void)
    return fIsWinNT;
 }
 
-
+/* Check if the OS is Windows 2000 or higher.
+*/
 BOOL IsWindows2000 (void)
 {
    static BOOL fChecked = FALSE;
@@ -194,7 +191,7 @@ BOOL IsWindows2000 (void)
 void GetClientNetbiosName (LPTSTR pszName)
 {
     *pszName = TEXT('\0');
-    GetNetbiosName(pszName, NETBIOS_NAME_FULL);
+    lana_GetNetbiosName(pszName, LANA_NETBIOS_NAME_FULL);
 }
 
 
@@ -711,38 +708,45 @@ void AdjustAfsPath (LPTSTR pszTarget, LPCTSTR pszSource, BOOL fWantAFS, BOOL fWa
       }
 }
 
-
 BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
 {
     TCHAR szDrive[] = TEXT("*:");
     szDrive[0] = chDrive;
 
-    TCHAR szMapping[ MAX_PATH ] = TEXT("");
+    TCHAR szMapping[ _MAX_PATH ] = TEXT("");
     LPTSTR pszSubmount = szMapping;
     TCHAR szNetBiosName[32];
 
     memset(szNetBiosName, '\0', sizeof(szNetBiosName));
-    GetNetbiosName(szNetBiosName, NETBIOS_NAME_SUFFIX);
+    lana_GetNetbiosName(szNetBiosName, LANA_NETBIOS_NAME_SUFFIX);
     _tcscat(szNetBiosName, TEXT("\\"));
 
    if (IsWindowsNT())
-      {
-      QueryDosDevice (szDrive, szMapping, MAX_PATH);
+   {
+       if (!QueryDosDevice (szDrive, szMapping, MAX_PATH))
+           return FALSE;
 
       // Now if this is an AFS network drive mapping, {szMapping} will be:
       //
-      //   \Device\LanmanRedirector\Q:\machine-afs\submount
+      //   \Device\LanmanRedirector\<Drive>:\<netbiosname>\submount
       //
       // on Windows NT. On Windows 2000, it will be:
       //
-      //   \Device\LanmanRedirector\;Q:0\machine-afs\submount
+      //   \Device\LanmanRedirector\;<Drive>:0\<netbiosname>\submount
       //
       // (This is presumably to support multiple drive mappings with
       // Terminal Server).
       //
-      if (lstrncmpi (szMapping, cszLANMANDEVICE, lstrlen(cszLANMANDEVICE)))
+      // on Windows XP and 2003, it will be :
+      //   \Device\LanmanRedirector\;<Drive>:<AuthID>\<netbiosname>\submount
+      //
+      //   where : <Drive> : DOS drive letter
+      //           <AuthID>: Authentication ID, 16 char hex.
+      //           <netbiosname>: Netbios name of server
+      //
+      if (_tcsnicmp(szMapping, cszLANMANDEVICE, _tcslen(cszLANMANDEVICE)))
          return FALSE;
-      pszSubmount = &szMapping[ lstrlen(cszLANMANDEVICE) ];
+      pszSubmount = &szMapping[ _tcslen(cszLANMANDEVICE) ];
 
       if (IsWindows2000())
 	  {
@@ -757,9 +761,12 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
       if (*(++pszSubmount) != TEXT(':'))
          return FALSE;
 
+#ifdef COMMENT
+       // No longer a safe assumption on XP
       if (IsWindows2000())
           if (*(++pszSubmount) != TEXT('0'))
              return FALSE;
+#endif
 
       // scan for next "\"
       while (*(++pszSubmount) != TEXT('\\'))
@@ -767,12 +774,19 @@ BOOL GetDriveSubmount (TCHAR chDrive, LPTSTR pszSubmountNow)
 	  if (*pszSubmount==0)
               return FALSE;
       }
+      ++pszSubmount;
+       if(!*pszSubmount || _tcsncicmp(pszSubmount, szNetBiosName, _tcslen(szNetBiosName)))
+           return FALSE;
+
+#ifdef COMMENT
+       // note that szNetBiosName has a '\\' tagged in the end earlier
       for (++pszSubmount; *pszSubmount && (*pszSubmount != TEXT('\\')); ++pszSubmount)
          if (!lstrncmpi (pszSubmount, szNetBiosName, lstrlen(szNetBiosName)))
             break;
       if ((!*pszSubmount) || (*pszSubmount == TEXT('\\')))
          return FALSE;
-      pszSubmount += lstrlen(szNetBiosName);
+#endif
+      pszSubmount += _tcslen(szNetBiosName);
       }
    else // (!IsWindowsNT())
       {
@@ -921,7 +935,7 @@ void DoUnMapShare(BOOL drivemap)	//disconnect drivemap
 	CHAR *pSubmount="";
 
     memset(szMachine, '\0', sizeof(szMachine));
-    GetNetbiosName(szMachine, NETBIOS_NAME_FULL);
+    lana_GetNetbiosName(szMachine, LANA_NETBIOS_NAME_FULL);
 
    // Initialize the data structure
 	if ((res=WNetOpenEnum(RESOURCE_CONNECTED,RESOURCETYPE_DISK,RESOURCEUSAGE_CONNECTABLE,lpnr,&hEnum))!=NO_ERROR)
@@ -964,7 +978,7 @@ BOOL DoMapShareChange()
     DWORD cbBuffer=16384;
 
     memset(szMachine, '\0', sizeof(szMachine));
-    GetNetbiosName(szMachine, NETBIOS_NAME_FULL);
+    lana_GetNetbiosName(szMachine, LANA_NETBIOS_NAME_FULL);
 
     // Initialize the data structure
 	if (!IsServiceActive())
@@ -1052,7 +1066,7 @@ BOOL DoMapShare()
 
 	TCHAR szMachine[ MAX_PATH],szPath[MAX_PATH];
     memset(szMachine, '\0', sizeof(szMachine));
-    GetNetbiosName(szMachine, NETBIOS_NAME_FULL);
+    lana_GetNetbiosName(szMachine, LANA_NETBIOS_NAME_FULL);
     sprintf(szPath,"\\\\%s\\all",szMachine);
 
     // Lets connect all submounts that weren't connectd
@@ -1201,38 +1215,3 @@ DWORD DisMountDOSDrive(const char chDrive,BOOL bForce)
     sprintf(szPath,"%c:",chDrive);
     return DisMountDOSDriveFull(szPath,bForce);
 }
-
-void GetNetbiosName(LPTSTR pszName, int type)
-{
-    DWORD LanAdapter;
-    DWORD dwIsGateWay = 0;
-    TCHAR name[MAX_PATH];
-    TCHAR *Ptr;
-
-    memset(name, '\0', sizeof(name));
-    if (!IsWindowsNT())
-    {
-        if (type == NETBIOS_NAME_SUFFIX)
-        {
-            _tcscpy(pszName, TEXT("-afs"));
-            return;
-        }
-        Config_ReadString (TEXT("Gateway"), pszName, MAX_PATH);
-        if (strlen(pszName) == 0)
-        {
-            strcpy(pszName, TEXT("unknown"));
-            return;
-        }
-        _tcscat(pszName, TEXT("-afs"));
-        return;
-    }
-    if (!Config_ReadNum (TEXT("IsGateway"), &dwIsGateWay))
-        dwIsGateWay = 0;
-    memset(name, 0, sizeof(name));
-    if (!Config_ReadNum (TEXT("LANadapter"), &LanAdapter))
-        LanAdapter = -1;
-    GetUncServerName(LanAdapter, dwIsGateWay, name, type);
-    _tcscpy(pszName, name);
-    return;
-}
-

@@ -195,21 +195,21 @@ cm_headers: libacl_headers
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..\..
 
-sys: cm_headers
-     echo ***** $@
-	$(DOCD) $(SRC)\$@
-	$(CD) $(SRC)\$@
-	$(NTMAKE)
-	$(CD) ..\..
-
-afsdobjs: sys
+afsdobjs: cm_headers
      echo ***** $@
 	$(DOCD) $(SRC)\WINNT\afsd
 	$(CD) $(SRC)\WINNT\afsd
 	$(NTMAKE_OBJS)
 	$(CD) ..\..\..
 
-auth: afsdobjs
+sys: afsdobjs
+     echo ***** $@
+	$(DOCD) $(SRC)\$@
+	$(CD) $(SRC)\$@
+	$(NTMAKE)
+	$(CD) ..\..
+
+auth: sys
      echo ***** $@
 	$(DOCD) $(SRC)\$@
 	$(CD) $(SRC)\$@

@@ -50,8 +50,7 @@ AFSAPPLIBOBJS= \
 
 CLIENTOBJS = \
 	$(OUT)\drivemap.obj \
-    $(OUT)\RegistrySupport.obj \
-    $(OUT)\getlana.obj
+    $(OUT)\RegistrySupport.obj 
 
 VCLIBS =\
     iphlpapi.lib \
@@ -65,7 +64,8 @@ VCLIBS =\
 EXELIBS = \
 	$(DESTDIR)\lib\afs\afspioctl.lib \
 	$(DESTDIR)\lib\libosi.lib \
-	$(DESTDIR)\lib\afs\TaLocale.lib
+	$(DESTDIR)\lib\afs\TaLocale.lib \
+    $(DESTDIR)\lib\lanahelper.lib
 
 ############################################################################
 #

@@ -85,7 +85,6 @@ $(RXOBJS): $(RX)\$$(@B).c
 $(IDLFILES):afsrpc.idl
 	midl $(MIDL_FLAGS) /no_robust $(AFSDEV_AUXMIDLFLAGS) /app_config $?
 
-
 AFSDOBJS=\
 	$(OUT)\afsd_init.obj \
 	$(OUT)\cm_cell.obj \
@@ -115,7 +114,6 @@ AFSDOBJS=\
 	$(OUT)\afsdcrash.obj \
 !ENDIF
     $(OUT)\cm_freelance.obj \
-    $(OUT)\lanahelper.obj  \
     $(OUT)\afsd_eventlog.obj \
     $(OUT)\afsd_flushvol.obj
 
@@ -218,9 +216,22 @@ $(LOG95_DLLFILE): $(LOG95_DLLOBJS)
 	$(DEL) $*.lib $*.exp
 
 ############################################################################
+# lanahelper.lib
+
+LANAHELPERLIB = $(DESTDIR)\lib\lanahelper.lib
+
+LANAHELPERLIB_OBJS =\
+      $(OUT)\lanahelper.obj
+
+$(LANAHELPERLIB_OBJS):
+
+$(LANAHELPERLIB): $(LANAHELPERLIB_OBJS)
+      $(LIBARCH) netapi32.lib
+
+############################################################################
 # Install target; primary makefile target
 
-install_objs: $(OUT)\cm_dns.obj $(OUT)\cm_config.obj
+install_objs: $(OUT)\cm_dns.obj $(OUT)\cm_config.obj $(LANAHELPERLIB)
      $(COPY) $(OUT)\cm_dns.obj $(DESTDIR)\lib
      $(COPY) $(OUT)\cm_config.obj $(DESTDIR)\lib
 
@@ -308,6 +319,7 @@ AFSD_EXELIBS =\
 	$(DESTDIR)\lib\afs\mtafsint.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
+    $(LANAHELPERLIB) \
 	rpcrt4.lib \
 	user32.lib \
     Dbghelp.lib
