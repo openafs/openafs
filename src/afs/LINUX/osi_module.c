@@ -89,53 +89,74 @@ __asm__ __volatile__ ("
 #endif
 
 #ifdef AFS_IA64_LINUX20_ENV
-unsigned char ia64_syscall_stub[] =
+
+asmlinkage long
+afs_syscall_stub(int r0, int r1, long r2, long r3, long r4, long gp)
 {
-  0x00, 0x50, 0x45, 0x16, 0x80, 0x05,   //  [MII]  alloc r42=ar.pfs,8,3,6,0
-  0x90, 0x02, 0x00, 0x62, 0x00, 0x60,   //         mov r41=b0
-  0x05, 0x00, 0x01, 0x84,               //         mov r43=r32
-  0x00, 0x60, 0x01, 0x42, 0x00, 0x21,   //  [MII]  mov r44=r33
-  0xd0, 0x02, 0x88, 0x00, 0x42, 0xc0,   //         mov r45=r34
-  0x05, 0x18, 0x01, 0x84,               //         mov r46=r35
-  0x0d, 0x78, 0x01, 0x48, 0x00, 0x21,   //  [MFI]  mov r47=r36
-  0x00, 0x00, 0x00, 0x02, 0x00, 0x00,   //         nop.f 0x0
-  0x06, 0x08, 0x00, 0x84,               //         mov r48=gp;;
-  0x05, 0x00, 0x00, 0x00, 0x01, 0x00,   //  [MLX]  nop.m 0x0
-  0x00, 0x00, 0x00, 0x00, 0x00, 0xe0,   //         movl r15=0x0;;
-  0x01, 0x00, 0x00, 0x60,               //
-  0x0a, 0x80, 0x20, 0x1e, 0x18, 0x14,   //  [MMI]  ld8 r16=[r15],8;;
-  0x10, 0x00, 0x3c, 0x30, 0x20, 0xc0,   //         ld8 gp=[r15]
-  0x00, 0x09, 0x00, 0x07,               //         mov b6=r16
-  0x1d, 0x00, 0x00, 0x00, 0x01, 0x00,   //  [MFB]  nop.m 0x0
-  0x00, 0x00, 0x00, 0x02, 0x00, 0x00,   //         nop.f 0x0
-  0x68, 0x00, 0x00, 0x10,               //         br.call.sptk.many b0=b6;;
-  0x00, 0x00, 0x00, 0x00, 0x01, 0x00,   //  [MII]  nop.m 0x0
-  0x00, 0x50, 0x01, 0x55, 0x00, 0x00,   //         mov.i ar.pfs=r42
-  0x90, 0x0a, 0x00, 0x07,               //         mov b0=r41
-  0x1d, 0x08, 0x00, 0x60, 0x00, 0x21,   //  [MFB]  mov gp=r48
-  0x00, 0x00, 0x00, 0x02, 0x00, 0x80,   //         nop.f 0x0
-  0x08, 0x00, 0x84, 0x00                //         br.ret.sptk.many b0;;
-};
-
-void ia64_imm64_fixup(unsigned long v, void *code)
-{
-        unsigned long *bundle = (unsigned long *) code;
-
-        unsigned long insn;
-        unsigned long slot1;
-
-        insn = ((v & 0x8000000000000000) >> 27) | ((v & 0x0000000000200000)) |
-           ((v & 0x00000000001f0000) <<  6) | ((v & 0x000000000000ff80) << 20) |
-           ((v & 0x000000000000007f) << 13);
-
-        slot1 = (v & 0x7fffffffffc00000) >> 22;
-
-        *bundle |= slot1 << 46;
-        *(bundle+1) |= insn << 23;
-        *(bundle+1) |= slot1 >> 18;
+__asm__ __volatile__ ("
+        alloc r42 = ar.pfs, 8, 3, 6, 0
+        mov r41 = b0    		/* save rp */
+        mov out0 = in0
+        mov out1 = in1
+        mov out2 = in2
+        mov out3 = in3
+        mov out4 = in4
+        mov out5 = gp			/* save gp */
+        ;;
+.L1:    mov r3 = ip
+        ;;
+        addl r15=.fptr_afs_syscall-.L1,r3
+        ;;
+        ld8 r15=[r15]
+        ;;
+        ld8 r16=[r15],8
+        ;;
+        ld8 gp=[r15]
+        mov b6=r16
+        br.call.sptk.many b0 = b6
+        ;;
+        mov ar.pfs = r42
+        mov b0 = r41
+        mov gp = r48			/* restore gp */
+        br.ret.sptk.many b0
+.fptr_afs_syscall:
+        data8 @fptr(afs_syscall)
+");
 }
 
-unsigned char *afs_syscall_stub, *afs_xsetgroups_stub;
+asmlinkage long
+afs_xsetgroups_stub(int r0, int r1, long r2, long r3, long r4, long gp)
+{
+__asm__ __volatile__ ("
+        alloc r42 = ar.pfs, 8, 3, 6, 0
+        mov r41 = b0    		/* save rp */
+        mov out0 = in0
+        mov out1 = in1
+        mov out2 = in2
+        mov out3 = in3
+        mov out4 = in4
+        mov out5 = gp			/* save gp */
+        ;;
+.L2:    mov r3 = ip
+        ;;
+        addl r15=.fptr_afs_xsetgroups - .L2,r3
+        ;;
+        ld8 r15=[r15]
+        ;;
+        ld8 r16=[r15],8
+        ;;
+        ld8 gp=[r15]
+        mov b6=r16
+        br.call.sptk.many b0 = b6
+        ;;
+        mov ar.pfs = r42
+        mov b0 = r41
+        mov gp = r48			/* restore gp */
+        br.ret.sptk.many b0
+.fptr_afs_xsetgroups:
+        data8 @fptr(afs_xsetgroups)
+");
+}
 
 struct fptr
 {
@@ -229,11 +250,7 @@ int init_module(void)
 
 #if defined(AFS_IA64_LINUX20_ENV)
     afs_ni_syscall = sys_call_table[__NR_afs_syscall - 1024];
-
-    afs_syscall_stub = (void *) kmalloc(sizeof(ia64_syscall_stub), GFP_KERNEL);
-    memcpy(afs_syscall_stub, ia64_syscall_stub, sizeof(ia64_syscall_stub));
-    ia64_imm64_fixup((unsigned long)afs_syscall, afs_syscall_stub+0x30);
-    sys_call_table[__NR_afs_syscall - 1024] = POINTER2SYSCALL afs_syscall_stub;
+    sys_call_table[__NR_afs_syscall - 1024] = POINTER2SYSCALL ((struct fptr *)afs_syscall_stub)->ip;
 #else /* AFS_IA64_LINUX20_ENV */
     afs_ni_syscall = sys_call_table[__NR_afs_syscall];
     sys_call_table[__NR_afs_syscall] = POINTER2SYSCALL afs_syscall;
@@ -250,15 +267,11 @@ int init_module(void)
 #if defined(AFS_IA64_LINUX20_ENV)
     sys_setgroupsp = (void *) &sys_setgroups;
 
-    afs_xsetgroups_stub = (void *) kmalloc(sizeof(ia64_syscall_stub), GFP_KERNEL);
-    memcpy(afs_xsetgroups_stub, ia64_syscall_stub, sizeof(ia64_syscall_stub));
-    ia64_imm64_fixup((unsigned long)afs_xsetgroups, afs_xsetgroups_stub+0x30);
-
     ((struct fptr *)sys_setgroupsp)->ip =
 		SYSCALL2POINTER sys_call_table[__NR_setgroups - 1024];
     ((struct fptr *)sys_setgroupsp)->gp = kernel_gp;
 
-    sys_call_table[__NR_setgroups - 1024] = POINTER2SYSCALL afs_xsetgroups_stub;
+    sys_call_table[__NR_setgroups - 1024] = POINTER2SYSCALL ((struct fptr *)afs_xsetgroups_stub)->ip;
 #else /* AFS_IA64_LINUX20_ENV */
     sys_setgroupsp = SYSCALL2POINTER sys_call_table[__NR_setgroups];
     sys_call_table[__NR_setgroups] = POINTER2SYSCALL afs_xsetgroups;
