@@ -131,6 +131,6 @@ error_table 2 ZCM
 	ec      CM_TRACE_RESIDCMD, "ResidencyCmd tvc 0x%x command %d fid (%d:%d.%d.%d)"
 	ec 	CM_TRACE_DENTRYDELETE, "d_delete inode 0x%x d_name %s/%s"
 	ec	CM_TRACE_DENTRYIPUT, "d_iput inode 0x%x d_name %s/%s"
-	ec	CM_TRACE_TRYFLUSHDCACHECHILDREN, "TryFlushDcacheChildren ip 0x%x"
+	ec	CM_TRACE_TRYFLUSHDCACHECHILDREN, "TryFlushDcacheChildren ip 0x%x name %s parent %s"
 end
 
