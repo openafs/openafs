@@ -70,8 +70,19 @@ int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
     return code;
 }
 
+void afs_osi_Sleep(void *event)
+{
+    tsleep(event, PVFS, "afs", 0);
+}
+
 int afs_osi_SleepSig(void *event)
 {
-    afs_osi_Sleep(event);
+    tsleep(event, PVFS, "afs", 0);
     return 0;
+}
+
+int afs_osi_Wakeup(void *event)
+{
+    wakeup(event);
+    return 1;
 }

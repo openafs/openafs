@@ -825,50 +825,40 @@ struct osi_socket *rxk_NewSocket(short aport)
 	if (code)
 	    osi_Panic("osi_NewSocket: last attempt to reserve 32K failed!\n");
     }
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #if defined(AFS_FBSD_ENV)
     code = sobind(newSocket, (struct sockaddr *) &myaddr, curproc);
-#elif defined(AFS_OBSD_ENV)
-    code = sockargs(&nam, (caddr_t) &myaddr, sizeof(myaddr), MT_SONAME);
-    if (code == 0) {
-	code = sobind(newSocket, nam);
-	m_freem(nam);
-    }
 #else
     code = sobind(newSocket, (struct sockaddr *) &myaddr);
 #endif
     if (code) {
-        printf("sobind fails\n");
+        printf("sobind fails (%d)\n", (int) code);
         soclose(newSocket);
         goto bad;
     }
-#else
+#else /* defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) */
 #ifdef  AFS_OSF_ENV
     nam = m_getclr(M_WAIT, MT_SONAME);
 #else   /* AFS_OSF_ENV */
     nam = m_get(M_WAIT, MT_SONAME);
 #endif
     if (nam == NULL) {
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_SGI64_ENV) && !defined(AFS_XBSD_ENV)
+#if defined(KERNEL_HAVE_UERROR)
  	setuerror(ENOBUFS);
 #endif
 	goto bad;
     }
     nam->m_len = sizeof(myaddr);
-#ifdef  AFS_OSF_ENV
-    myaddr.sin_len = nam->m_len;
-#endif  /* AFS_OSF_ENV */
     memcpy(mtod(nam, caddr_t), &myaddr, sizeof(myaddr));
 #ifdef AFS_SGI65_ENV
     BHV_PDATA(&bhv) = (void*)newSocket;
     code = sobind(&bhv, nam);
     m_freem(nam);
-#elif defined(AFS_XBSD_ENV)
-    code = sobind(newSocket, nam, curproc);
 #else
     code = sobind(newSocket, nam);
 #endif
     if (code) {
+        printf("sobind fails (%d)\n", (int) code);
 	soclose(newSocket);
 #ifndef AFS_SGI65_ENV
 	m_freem(nam);

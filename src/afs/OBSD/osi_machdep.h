@@ -16,6 +16,8 @@
  * afs_osi.h.
  */
 
+/* Id: $ */
+
 #ifndef _OSI_MACHDEP_H_
 #define _OSI_MACHDEP_H_
 
@@ -78,9 +80,6 @@ typedef void (*osi_timeout_t)(void *);
 #define	vType(vc)		(vc)->v->v_type
 #define vSetType(vc, type)	AFSTOV(vc)->v_type = (type)
 #define	vSetVfsp(vc, vfsp)	AFSTOV(vc)->v_mount = (vfsp)
-#define osi_sleep(chan, pri)	tsleep((chan), pri, "afs", 0)
-#define afs_osi_Sleep(chan)	tsleep((chan), PVFS, "afs", 0)
-#define afs_osi_Wakeup(chan)	(wakeup(chan), 1)
 #define FTRUNC O_TRUNC
 #define FEXLOCK O_EXLOCK
 #define FSHLOCK O_SHLOCK

@@ -226,7 +226,11 @@ char cacheMountDir[1024];		/*Mount directory for AFS*/
 char rootVolume[64] = "root.afs";	/*AFS root volume name*/
 afs_int32 cacheSetTime = 1;			/*Keep checking time to avoid drift?*/
 afs_int32 isHomeCell;			/*Is current cell info for the home cell?*/
+#ifdef AFS_XBSD_ENV
+int createAndTrunc = O_RDWR | O_CREAT | O_TRUNC; /*Create & truncate on open*/
+#else
 int createAndTrunc = O_CREAT | O_TRUNC; /*Create & truncate on open*/
+#endif
 int ownerRWmode	= 0600;			/*Read/write OK by owner*/
 static int filesSet = 0;		/*True if number of files explicitly set*/
 static int nFilesPerDir = 2048;		/* # files per cache dir */
