@@ -107,7 +107,7 @@ int afs_osi_Wait(afs_int32 ams, struct afs_osi_WaitHandle *ahandle, int aintok)
     return code;
 }
 
-int afs_osi_SleepSig(char *event)
+int afs_osi_SleepSig(int *event)
 {
     afs_osi_Sleep(event);
     return 0;

@@ -301,14 +301,10 @@ HandleFlock(avc, acom, areq, clid, onlymine)
  		tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
  		if (tc) {
  		   XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RELEASELOCK);
-#ifdef RX_ENABLE_LOCKS
-		   AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		   RX_AFS_GUNLOCK();
  		   code = RXAFS_ReleaseLock(tc->id, (struct AFSFid *)
  					    &avc->fid.Fid, &tsync);
-#ifdef RX_ENABLE_LOCKS
-		   AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		   RX_AFS_GLOCK();
 		   XSTATS_END_TIME;
 		}
 		else code = -1;
@@ -359,15 +355,11 @@ HandleFlock(avc, acom, areq, clid, onlymine)
 			tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
 			if (tc) {
 			  XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RELEASELOCK);
-#ifdef RX_ENABLE_LOCKS
-			  AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			  RX_AFS_GUNLOCK();
 			  code = RXAFS_ReleaseLock(tc->id,
 						   (struct AFSFid *) &avc->fid.Fid,
 						   &tsync);
-#ifdef RX_ENABLE_LOCKS
-			  AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			  RX_AFS_GLOCK();
 			  XSTATS_END_TIME;
 			}
 			else code = -1;
@@ -394,14 +386,10 @@ HandleFlock(avc, acom, areq, clid, onlymine)
 			tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
 			if (tc) {
 			  XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SETLOCK);
-#ifdef RX_ENABLE_LOCKS
-			  AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			  RX_AFS_GUNLOCK();
 			  code = RXAFS_SetLock(tc->id, (struct AFSFid *)
 					      &avc->fid.Fid, lockType, &tsync);
-#ifdef RX_ENABLE_LOCKS
-			  AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+			  RX_AFS_GLOCK();
 			  XSTATS_END_TIME;
 			}
 			else code = -1;
@@ -811,14 +799,10 @@ static int GetFlockCount(struct vcache *avc, struct vrequest *areq)
 	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK); 
 	if (tc){
           XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHSTATUS);
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	  RX_AFS_GUNLOCK();
 	  code = RXAFS_FetchStatus(tc->id, (struct AFSFid *) &avc->fid.Fid,
 				     &OutStatus, &CallBack, &tsync);
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	  RX_AFS_GLOCK();
           XSTATS_END_TIME;
 	} else code = -1;
     } while

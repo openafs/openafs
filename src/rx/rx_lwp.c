@@ -329,7 +329,7 @@ static void rx_ListenerProc(void *dummy)
 /* This is the server process request loop. The server process loop
  * becomes a listener thread when rxi_ServerProc returns, and stays
  * listener thread until rxi_ListenerProc returns. */
-void rx_ServerProc()
+void rx_ServerProc(void)
 {
     int sock;
     int threadID;

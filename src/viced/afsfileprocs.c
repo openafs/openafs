@@ -153,8 +153,7 @@ extern struct afsconf_dir *confDir;
 extern afs_int32 dataVersionHigh;
 
 extern	int	    SystemId;
-extern	struct AFSCallStatistics AFSCallStats;
-struct AFSCallStatistics AFSCallStats;
+static struct AFSCallStatistics AFSCallStats;
 #if FS_STATS_DETAILED
 struct fs_stats_FullPerfStats afs_FullPerfStats;
 extern int AnonymousID;

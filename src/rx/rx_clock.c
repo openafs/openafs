@@ -57,7 +57,8 @@ int clock_nUpdates;		/* The actual number of clock updates */
 static int clockInitialized = 0;
 
 /* Initialize the clock */
-void clock_Init(void) {
+void clock_Init(void)
+{
     struct itimerval itimer, otimer;
 
     if (!clockInitialized) {
@@ -78,15 +79,12 @@ void clock_Init(void) {
     clock_UpdateTime();
 }
 
-#ifndef KERNEL
 /* Make clock uninitialized. */
-int
-clock_UnInit()
+int clock_UnInit(void)
 {
     clockInitialized = 0;
     return 0;
 } 
-#endif 
 
 /* Compute the current time.  The timer gets the current total elapsed time since startup, expressed in seconds and microseconds.  This call is almost 200 usec on an APC RT */
 void clock_UpdateTime()

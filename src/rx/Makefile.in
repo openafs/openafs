@@ -44,7 +44,7 @@ LIBS=librx.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
 KSRCS = rx.c rx.h rx_clock.c rx_clock.h rx_event.c rx_event.h \
 	rx_globals.c rx_globals.h rx_kernel.h rx_misc.h \
 	rx_null.c rx_null.h rx_queue.h rx_getaddr.c rx_packet.c rx_packet.h \
-	rx_multi.h rx_kcommon.h rx_kcommon.c \
+	rx_multi.h rx_kcommon.h rx_kcommon.c rx_prototypes.h \
 	xdr.c xdr.h xdr_array.c xdr_arrayn.c xdr_rx.c rx_misc.c rx_rdwr.c \
 	xdr_afsuuid.c rx_trace.h xdr_int64.c
 UKSRCS = $(KSRCS) rx_conncache.c
@@ -110,6 +110,7 @@ librx-djgpp.a: ${LIBOBJS_djgpp} RX_component_version_number.o
 
 includes: \
 	${TOP_INCDIR}/rx/rx_packet.h \
+	${TOP_INCDIR}/rx/rx_prototypes.h \
 	${TOP_INCDIR}/rx/rx.h \
 	${TOP_INCDIR}/rx/rx_user.h \
 	${TOP_INCDIR}/rx/rx_event.h \
@@ -131,6 +132,9 @@ ${TOP_LIBDIR}/librx-djgpp.a: librx-djgpp.a
 	${INSTALL} $? ${TOP_LIBDIR}/librx.a
 
 ${TOP_INCDIR}/rx/rx_packet.h: rx_packet.h
+	${INSTALL} $? $@
+
+${TOP_INCDIR}/rx/rx_prototypes.h: rx_prototypes.h
 	${INSTALL} $? $@
 
 ${TOP_INCDIR}/rx/rx.h: rx.h
@@ -196,6 +200,7 @@ kinstall: \
 	${KERNELDIR}/rx/rx_null.h \
 	${KERNELDIR}/rx/rx_packet.c \
 	${KERNELDIR}/rx/rx_packet.h \
+	${KERNELDIR}/rx/rx_prototypes.h \
 	${KERNELDIR}/rx/rx_queue.h \
 	${KERNELDIR}/rx/rx_rdwr.c \
 	${KERNELDIR}/rx/rx_trace.h \
@@ -232,6 +237,7 @@ ukinstall: \
 	${UKERNELDIR}/rx/rx_null.h \
 	${UKERNELDIR}/rx/rx_packet.c \
 	${UKERNELDIR}/rx/rx_packet.h \
+	${UKERNELDIR}/rx/rx_prototypes.h \
 	${UKERNELDIR}/rx/rx_queue.h \
 	${UKERNELDIR}/rx/rx_rdwr.c \
 	${UKERNELDIR}/rx/rx_trace.h \
@@ -314,6 +320,9 @@ ${KERNELDIR}/rx/rx_packet.c: rx_packet.c
 	${INSTALL} $? $@
 
 ${KERNELDIR}/rx/rx_packet.h: rx_packet.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_prototypes.h: rx_prototypes.h
 	${INSTALL} $? $@
 
 ${KERNELDIR}/rx/rx_queue.h: rx_queue.h
@@ -415,6 +424,9 @@ ${UKERNELDIR}/rx/rx_packet.c: rx_packet.c
 ${UKERNELDIR}/rx/rx_packet.h: rx_packet.h
 	${INSTALL} $? $@
 
+${UKERNELDIR}/rx/rx_prototypes.h: rx_prototypes.h
+	${INSTALL} $? $@
+
 ${UKERNELDIR}/rx/rx_queue.h: rx_queue.h
 	${INSTALL} $? $@
 
@@ -448,6 +460,7 @@ ${UKERNELDIR}/rx/xdr_rx.c: xdr_rx.c
 install: \
 	${DESTDIR}${libdir}/librx.a \
 	${DESTDIR}${includedir}/rx/rx_packet.h \
+	${DESTDIR}${includedir}/rx/rx_prototypes.h \
 	${DESTDIR}${includedir}/rx/rx.h \
 	${DESTDIR}${includedir}/rx/rx_user.h \
 	${DESTDIR}${includedir}/rx/rx_event.h \
@@ -465,6 +478,9 @@ ${DESTDIR}${libdir}/librx.a: librx.a
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/rx/rx_packet.h: rx_packet.h
+	${INSTALL} $? $@
+
+${DESTDIR}${includedir}/rx/rx_prototypes.h: rx_prototypes.h
 	${INSTALL} $? $@
 
 ${DESTDIR}${includedir}/rx/rx.h: rx.h
@@ -506,6 +522,7 @@ ${DESTDIR}${includedir}/rx/xdr.h: xdr.h
 
 dest: ${DEST}/lib/librx.a \
 	${DEST}/include/rx/rx_packet.h \
+	${DEST}/include/rx/rx_prototypes.h \
 	${DEST}/include/rx/rx.h \
 	${DEST}/include/rx/rx_user.h \
 	${DEST}/include/rx/rx_event.h \
@@ -523,6 +540,9 @@ ${DEST}/lib/librx.a: librx.a
 	${INSTALL} $? $@
 
 ${DEST}/include/rx/rx_packet.h: rx_packet.h
+	${INSTALL} $? $@
+
+${DEST}/include/rx/rx_prototypes.h: rx_prototypes.h
 	${INSTALL} $? $@
 
 ${DEST}/include/rx/rx.h: rx.h

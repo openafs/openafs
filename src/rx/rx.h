@@ -74,73 +74,13 @@
 
 #define ADDRSPERSITE 16
 
-/* Exported interfaces XXXX clean this up:  not all of these are exported*/
-int rx_Init();
-struct rx_service *rx_NewService();
-struct rx_connection *rx_NewConnection();
-struct rx_call *rx_NewCall();
-struct rx_call *rx_GetCall();  /* Not normally used, but not obsolete */
-afs_int32 rx_EndCall();
-int rx_AllocPackets();
-void rx_FreePackets();
-int rx_WriteProc();
-int rx_WritevProc();
-int rx_WriteProc32();
-int rx_WritevAlloc();
-int rx_ReadProc();
-int rx_ReadvProc();
-int rx_ReadProc32();
-void rx_FlushWrite();
-void rxi_DeleteCachedConnections();
-void rxi_DestroyConnection();
-void rxi_CleanupConnection();
-int rxi_Listen();
-int rxi_WriteProc();
-int rxi_WritevProc();
-int rxi_WritevAlloc();
-int rxi_ReadProc();
-int rxi_ReadvProc();
-int rxi_FillReadVec();
-void rxi_FlushWrite();
-int rxi_getAllAddrMaskMtu();
-int rx_getAllAddr();
-void rxi_FreePacket();
-void rxi_FreePacketNoLock();
-int rxi_AllocDataBuf();
-void rxi_RestoreDataBufs();
-void rxi_Sleep();
-void rxi_InitializeThreadSupport();
-int rxi_Recvmsg();
-int rxi_Sendmsg();
-int rxi_IsConnInteresting();
-afs_int32 rx_SlowReadPacket();
-afs_int32 rx_SlowWritePacket();
-afs_int32 rx_SlowGetInt32();
-void rxi_StopListener();
-void rxi_InitPeerParams();
-void rxi_FreeAllPackets();
-void rxi_SendPacketList();
-void rxi_SendPacket();
-void rxi_MorePackets();
-void rxi_MorePacketsNoLock();
-void rxi_PacketsUnWait();
-void rx_CheckPackets();
-void rxi_Wakeup();
-void rx_PrintStats();
-void rx_PrintPeerStats();
-void rx_SetArrivalProc();
-void rx_Finalize();
-void rx_GetIFInfo();
-void shutdown_rxevent();
-int clock_UnInit();
-void rxi_Delay(int);
 #ifndef KERNEL
 typedef void (*rx_destructor_t)(void *);
 int rx_KeyCreate(rx_destructor_t);
-void *rx_GetSpecific(struct rx_connection *conn, int key);
-void rx_SetSpecific(struct rx_connection *conn, int key, void *ptr);
 osi_socket rxi_GetUDPSocket(u_short port);
 #endif /* KERNEL */
+
+
 int ntoh_syserr_conv(int error);
 
 #define	RX_WAIT	    1
@@ -206,9 +146,6 @@ int ntoh_syserr_conv(int error);
 
 /* Enable or disable asymmetric client checking for a service */
 #define rx_SetCheckReach(service, x) ((service)->checkReach = (x))
-
-/* Set connection dead time, for a specific client or server connection */
-extern void rx_SetConnDeadTime();
 
 /* Set connection hard timeout for a connection */
 #define rx_SetConnHardDeadTime(conn, seconds) ((conn)->hardDeadTime = (seconds))
@@ -989,18 +926,6 @@ extern int rx_callHoldType;
 
 #endif /* _CALL_REF_DEFINED_ */
 
-struct rx_connection *rx_GetCachedConnection(
-  unsigned int remoteAddr,
-  unsigned short port,
-  unsigned short service,
-  struct rx_securityClass *securityObject,
-  int securityIndex
-);
-
-void rx_ReleaseCachedConnection(
-  struct rx_connection *conn
-);
-
 #define RX_SERVER_DEBUG_SEC_STATS		0x1
 #define RX_SERVER_DEBUG_ALL_CONN		0x2
 #define RX_SERVER_DEBUG_RX_STATS		0x4
@@ -1009,51 +934,6 @@ void rx_ReleaseCachedConnection(
 #define RX_SERVER_DEBUG_OLD_CONN		0x20
 #define RX_SERVER_DEBUG_NEW_PACKETS		0x40
 #define RX_SERVER_DEBUG_ALL_PEER		0x80
-
-afs_int32 rx_GetServerDebug(
-  int socket,
-  afs_uint32 remoteAddr,
-  afs_uint16 remotePort,
-  struct rx_debugStats *stat,
-  afs_uint32 *supportedValues
-);
-
-afs_int32 rx_GetServerStats(
-  int socket,
-  afs_uint32 remoteAddr,
-  afs_uint16 remotePort,
-  struct rx_stats *stat,
-  afs_uint32 *supportedValues
-);
-
-afs_int32 rx_GetServerVersion(
-  int socket,
-  afs_uint32 remoteAddr,
-  afs_uint16 remotePort,
-  size_t version_length,
-  char *version
-);
-
-afs_int32 rx_GetServerConnections(
-  int socket,
-  afs_uint32 remoteAddr,
-  afs_uint16 remotePort,
-  afs_int32 *nextConnection,
-  int allConnections,
-  afs_uint32 debugSupportedValues,
-  struct rx_debugConn *conn,
-  afs_uint32 *supportedValues
-);
-
-afs_int32 rx_GetServerPeers(
-  int socket,
-  afs_uint32 remoteAddr,
-  afs_uint16 remotePort,
-  afs_int32 *nextPeer,
-  afs_uint32 debugSupportedValues,
-  struct rx_debugPeer *peer,
-  afs_uint32 *supportedValues
-);
 
 #define AFS_RX_STATS_CLEAR_ALL			0xffffffff
 #define AFS_RX_STATS_CLEAR_INVOCATIONS		0x1
@@ -1106,74 +986,14 @@ typedef struct rx_interface_stat {
   rx_function_entry_v1_t stats[1]; /* make sure this is aligned correctly */
 } rx_interface_stat_t, *rx_interface_stat_p;
 
-void rx_IncrementTimeAndCount(
-  struct rx_peer *peer,
-  afs_uint32 rxInterface,
-  afs_uint32 currentFunc,
-  afs_uint32 totalFunc,
-  struct clock *queueTime,
-  struct clock *execTime,
-  afs_hyper_t *bytesSent,
-  afs_hyper_t *bytesRcvd,
-  int isServer
-);
-
-int rx_RetrieveProcessRPCStats(
-  afs_uint32 callerVersion,
-  afs_uint32 *myVersion,
-  afs_uint32 *clock_sec,
-  afs_uint32 *clock_usec,
-  size_t *allocSize,
-  afs_uint32 *statCount,
-  afs_uint32 **stats
-);
-
-int rx_RetrievePeerRPCStats(
-  afs_uint32 callerVersion,
-  afs_uint32 *myVersion,
-  afs_uint32 *clock_sec,
-  afs_uint32 *clock_usec,
-  size_t *allocSize,
-  afs_uint32 *statCount,
-  afs_uint32 **stats
-);
-
-void rx_FreeRPCStats(
-  afs_uint32 *stats,
-  size_t allocSize
-);
-
-int rx_queryProcessRPCStats();
-
-int rx_queryPeerRPCStats();
-
-void rx_enableProcessRPCStats();
-
-void rx_enablePeerRPCStats();
-
-void rx_disableProcessRPCStats();
-
-void rx_disablePeerRPCStats();
-
-void rx_clearProcessRPCStats(
-  afs_uint32 clearFlag
-);
-
-void rx_clearPeerRPCStats(
-  afs_uint32 clearFlag
-);
-
-void rx_SetRxStatUserOk(
-  int (*proc)(struct rx_call *call)
-);
-
-int rx_RxStatUserOk(
-  struct rx_call *call
-);
-
-
 #define RX_STATS_SERVICE_ID 409
 
 #endif /* _RX_	 End of rx.h */
+
+#ifdef	KERNEL
+#include "../rx/rx_prototypes.h"
+#else
+#include "rx_prototypes.h"
+#endif
 
 #endif /* !KDUMP_RX_LOCK */

@@ -242,7 +242,7 @@ osi_AssertFailK(const char *expr, const char *file, int line)
 #ifndef UKERNEL
 /* This is the server process request loop. Kernel server
  * processes never become listener threads */
-void rx_ServerProc()
+void rx_ServerProc(void)
 {
     int threadID;
 
@@ -1048,7 +1048,7 @@ void rxk_Listener(void)
 	}
 	if (!(code = rxk_ReadPacket(rx_socket, rxp, &host, &port))) {
 	    AFS_RXGLOCK();
-	    rxp = rxi_ReceivePacket(rxp, rx_socket, host, port);
+	    rxp = rxi_ReceivePacket(rxp, rx_socket, host, port, 0, 0);
 	    AFS_RXGUNLOCK();
 	}
     }

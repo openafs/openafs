@@ -59,7 +59,8 @@ int dnlct;
 
 #define dnlcHash(ts, hval) for (hval=0; *ts; ts++) { hval *= 173;  hval  += *ts;   }
 
-static struct nc * GetMeAnEntry() {
+static struct nc *GetMeAnEntry(void)
+{
   static unsigned int nameptr = 0; /* next bucket to pull something from */
   struct nc *tnc;
   int j;
@@ -95,8 +96,7 @@ static struct nc * GetMeAnEntry() {
   return (tnc);
 }
 
-static void InsertEntry(tnc)
-  struct nc *tnc;
+static void InsertEntry(struct nc *tnc)
 {
   unsigned int key; 
   key = tnc->key & (NHSIZE -1);
@@ -116,11 +116,7 @@ static void InsertEntry(tnc)
 }
 
 
-int osi_dnlc_enter ( adp, aname, avc, avno )
-  struct vcache *adp;
-  char          *aname;
-  struct vcache *avc;
-  afs_hyper_t   *avno;
+int osi_dnlc_enter (struct vcache *adp, char *aname, struct vcache *avc, afs_hyper_t *avno)
 {
   struct nc *tnc;
   unsigned int key, skey;
@@ -187,11 +183,7 @@ return 0;
 }
 
 
-struct vcache *
-osi_dnlc_lookup ( adp, aname, locktype )
-  struct vcache *adp;
-  char          *aname;
-  int           locktype;
+struct vcache *osi_dnlc_lookup (struct vcache *adp, char *aname, int locktype )
 {
   struct vcache * tvc;
   int LRUme;
@@ -289,10 +281,7 @@ return tvc;
 }
 
 
-static void
-RemoveEntry (tnc, key)
-  struct nc    *tnc;
-  unsigned int key;
+static void RemoveEntry (struct nc *tnc, unsigned int key)
 {
   if (!tnc->prev) /* things on freelist always have null prev ptrs */
     osi_Panic("bogus free list");
@@ -313,11 +302,7 @@ RemoveEntry (tnc, key)
 }
 
 
-int 
-osi_dnlc_remove ( adp, aname, avc )
-  struct vcache *adp;
-  char          *aname;
-  struct vcache *avc;
+int osi_dnlc_remove (struct vcache *adp, char *aname, struct vcache *avc )
 {
   unsigned int key, skey;
   char *ts = aname;
@@ -370,9 +355,7 @@ return 0;
  * things without the lock, since I am just looking through the array,
  * but to move things off the lists or into the freelist, I need the
  * write lock */
-int 
-osi_dnlc_purgedp (adp)
-  struct vcache *adp;
+int osi_dnlc_purgedp (struct vcache *adp)
 {
   int i;
   int writelocked;
@@ -401,9 +384,7 @@ return 0;
 }
 
 /* remove anything pertaining to this file */
-int 
-osi_dnlc_purgevp ( avc )
-  struct vcache *avc;
+int osi_dnlc_purgevp (struct vcache *avc)
 {
   int i;
   int writelocked;
@@ -434,7 +415,7 @@ return 0;
 }
 
 /* remove everything */
-int osi_dnlc_purge()
+int osi_dnlc_purge(void)
 {
   int i;
 
@@ -459,9 +440,7 @@ return 0;
 }
 
 /* remove everything referencing a specific volume */
-int
-osi_dnlc_purgevol( fidp )
-  struct VenusFid *fidp;
+int osi_dnlc_purgevol(struct VenusFid *fidp)
 {
 
   dnlcstats.purgevols++;
@@ -470,7 +449,7 @@ osi_dnlc_purgevol( fidp )
 return 0;
 }
 
-int osi_dnlc_init()
+int osi_dnlc_init(void)
 {
 int i;
 
@@ -491,10 +470,9 @@ int i;
 return 0;
 }
 
-int osi_dnlc_shutdown()
+int osi_dnlc_shutdown(void)
 {
-
-return 0;
+  return 0;
 }
 
 

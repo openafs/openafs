@@ -169,15 +169,11 @@ tagain:
 	tc = afs_Conn(&aodp->fid, &treq, SHARED_LOCK);
 	if (tc) {
           XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RENAME);
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	  RX_AFS_GUNLOCK();
 	  code = RXAFS_Rename(tc->id, (struct AFSFid *) &aodp->fid.Fid, aname1,
 				(struct AFSFid *) &andp->fid.Fid, aname2,
 				&OutOldDirStatus, &OutNewDirStatus, &tsync);
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	  RX_AFS_GLOCK();
           XSTATS_END_TIME;
 	} else code = -1;
 

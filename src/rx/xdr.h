@@ -62,7 +62,6 @@
 #endif
 
 #ifdef	KERNEL
-void *afs_osi_Alloc();
 #define	osi_alloc		afs_osi_Alloc
 #define	osi_free		afs_osi_Free
 #endif

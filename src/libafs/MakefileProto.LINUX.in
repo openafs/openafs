@@ -35,9 +35,6 @@ AFS_OS_NONFSOBJS =
 
 
 # System specific build commands and flags
-CC = gcc
-LD = ld
-# -Wall
 <i386_linux22 i386_linux24>
 CCFLAGS =  $(KDEBUG) -O2 $(FOMIT) \
 	-fno-strength-reduce -pipe -march=i486 -malign-loops=2 -malign-jumps=2 \

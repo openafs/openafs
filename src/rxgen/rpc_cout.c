@@ -115,14 +115,13 @@ print_header(def)
 {
 	space();
 	f_print(fout, "bool_t\n");
-	f_print(fout, "xdr_%s(xdrs, objp)\n", def->def_name);
-	f_print(fout, "\tXDR *xdrs;\n");
-	f_print(fout, "\t%s ", def->def_name);
+	f_print(fout, "xdr_%s(XDR *xdrs, ", def->def_name);
+	f_print(fout, "%s ", def->def_name);
 	if (def->def_kind != DEF_TYPEDEF ||
 	    !isvectordef(def->def.ty.old_type, def->def.ty.rel)) {
 		f_print(fout, "*");
 	}
-	f_print(fout, "objp;\n");
+	f_print(fout, "objp)\n");
 	f_print(fout, "{\n");
 }
 

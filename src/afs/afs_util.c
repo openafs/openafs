@@ -48,8 +48,6 @@ RCSID("$Header$");
 #include <sys/fp_io.h>
 #endif
 
-extern struct volume *afs_volumes[NVOLS];
-
 char *afs_cv2string(char *ttp, afs_uint32 aval)
 {
     register char *tp = ttp;
@@ -105,11 +103,14 @@ void print_internet_address(char *preamble, struct srvAddr *sa,
  * this code badly needs to be cleaned up...  too many ugly ifdefs.
  * XXX
  */
-extern afs_int32 afs_showflags;
-
+#if 0
+void afs_warn(char *a, long b, long c, long d, long e, long f, 
+	long g, long h, long i, long j)
+#else
 afs_warn(a,b,c,d,e,f,g,h,i,j)
 char *a;
 long b,c,d,e,f,g,h,i,j;
+#endif
 {
     AFS_STATCNT(afs_warn);
     
@@ -136,9 +137,14 @@ long b,c,d,e,f,g,h,i,j;
     }
 }
 
+#if 0
+void afs_warnuser(char *a, long b, long c, long d, long e, long f, 
+	long g, long h, long i, long j)
+#else
 afs_warnuser(a,b,c,d,e,f,g,h,i,j)
 char *a;
 long b,c,d,e,f,g,h,i,j;
+#endif
 {
     AFS_STATCNT(afs_warnuser);
     if (afs_showflags & GAGUSER)
@@ -161,13 +167,7 @@ long b,c,d,e,f,g,h,i,j;
 
 /* run everywhere, checking locks */
 void afs_CheckLocks()
-
 {
-    extern afs_rwlock_t afs_xconn, afs_xvolume, afs_xuser, afs_xcell;
-    extern afs_rwlock_t afs_xserver;
-    extern struct server *afs_servers[NSERVERS];
-    extern struct unixuser *afs_users[NUSERS];
-    extern unsigned char *afs_indexFlags;
     register int i;
 
     afs_warn("Looking for locked data structures.\n");
@@ -252,10 +252,11 @@ int afs_noop() {
 #endif
 }
 
-int afs_badop() {
+int afs_badop(void)
+{
     AFS_STATCNT(afs_badop);
     osi_Panic("afs bad vnode op");
-    return 0;			/* make SGI C compiler happy */
+    return 0;
 }
 
 /*
@@ -266,8 +267,7 @@ int afs_badop() {
  * larger than an afs_int32.
  */
 
-afs_int32
-afs_data_pointer_to_int32(const void *p)
+afs_int32 afs_data_pointer_to_int32(const void *p)
 {
 	union {
 		afs_int32  i32[sizeof(void *)/sizeof(afs_int32)];

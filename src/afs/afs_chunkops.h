@@ -26,13 +26,6 @@
 
 #else /* AFS_NOCHUNKING */
 
-extern afs_int32 afs_OtherCSize, afs_LogChunk, afs_FirstCSize;
-#ifdef AFS_64BIT_CLIENT
-#ifdef AFS_VM_RDWR_ENV
-extern afs_size_t afs_vmMappingEnd;
-#endif /* AFS_VM_RDWR_ENV */
-#endif /* AFS_64BIT_CLIENT */
-
 #define AFS_OTHERCSIZE  (afs_OtherCSize)
 #define AFS_LOGCHUNK    (afs_LogChunk)
 #define AFS_FIRSTCSIZE  (afs_FirstCSize)
@@ -44,19 +37,6 @@ extern afs_size_t afs_vmMappingEnd;
 
 #define AFS_MINCHUNK 13  /* 8k is minimum */
 #define AFS_MAXCHUNK 18  /* 256K is maximum */
-
-#ifdef notdef
-extern int afs_ChunkOffset(), afs_Chunk(), afs_ChunkBase(), afs_ChunkSize(), 
-    afs_ChunkToBase(), afs_ChunkToSize();
-
-/* macros */
-#define	AFS_CHUNKOFFSET(x) afs_ChunkOffset(x)
-#define	AFS_CHUNK(x) afs_Chunk(x)
-#define	AFS_CHUNKBASE(x) afs_ChunkBase(x)
-#define	AFS_CHUNKSIZE(x) afs_ChunkSize(x)
-#define	AFS_CHUNKTOBASE(x) afs_ChunkToBase(x)
-#define	AFS_CHUNKTOSIZE(x) afs_ChunkToSize(x)
-#endif
 
 #define AFS_CHUNKOFFSET(offset) ((offset < afs_FirstCSize) ? offset : \
 			 ((offset - afs_FirstCSize) & (afs_OtherCSize - 1)))
@@ -79,14 +59,9 @@ extern int afs_ChunkOffset(), afs_Chunk(), afs_ChunkBase(), afs_ChunkSize(),
 #define AFS_SETCHUNKSIZE(chunk) { afs_LogChunk = chunk; \
 		      afs_FirstCSize = afs_OtherCSize = (1 << chunk);  }
 
-
-extern void afs_CacheTruncateDaemon();
-
 /*
  * Functions exported by a cache type 
  */
-
-extern struct afs_cacheOps *afs_cacheType;
 
 struct afs_cacheOps {
     void *(*open)();

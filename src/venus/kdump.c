@@ -521,31 +521,6 @@ extern struct cmd_syndesc *cmd_CreateSyntax();
 extern int errno;
 int opencore();
 
-/* Note: this should agree with the definition in afs_buffer.c */
-#if	defined(AFS_OSF_ENV)
-#define	AFS_USEBUFFERS	1
-#endif
-
-struct buffer {
-#ifdef AFS_SGI62_ENV
-    ino64_t fid[1];
-#else
-    afs_int32 fid[1];
-#endif
-    afs_int32 page;
-    afs_int32 accesstime;
-    struct buffer *hashNext;
-    char *data;
-    char lockers;
-    char b_dirty;
-    char hashIndex;
-#if AFS_USEBUFFERS
-    struct buf *bufp;
-#endif
-    afs_rwlock_t lock;		/* the lock for this structure */
-};
-
-
 #if	defined(AFS_HPUX_ENV) && defined(__LP64__)
 #define afs_nlist nlist64
 #define AFSNLIST(N, C) nlist64((N), (C))
@@ -1631,11 +1606,11 @@ int pnt;
 #ifdef AFS_SGI62_ENV
 	if (pnt) printf("Buffer #%d:\tfid=%llu page=%d, accTime=%d,\n\tHash=%x, data=%x, lockers=%x, dirty=%d, hashI=%d\n",
 		 i, bp->fid[0], bp->page, bp->accesstime,
-		 bp->hashNext, bp->data, bp->lockers, bp->b_dirty, bp->hashIndex);
+		 bp->hashNext, bp->data, bp->lockers, bp->dirty, bp->hashIndex);
 #else
 	if (pnt) printf("Buffer #%d:\tfid=%lu page=%d, accTime=%d,\n\tHash=%x, data=%x, lockers=%x, dirty=%d, hashI=%d\n",
 		 i, bp->fid[0], bp->page, bp->accesstime,
-		 bp->hashNext, bp->data, bp->lockers, bp->b_dirty, bp->hashIndex);
+		 bp->hashNext, bp->data, bp->lockers, bp->dirty, bp->hashIndex);
 #endif
 	j++;
     }

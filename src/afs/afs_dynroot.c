@@ -354,7 +354,7 @@ afs_RefreshDynroot()
 	if (tvc) {
 	    tvc->states &= ~(CStatd | CUnique);
 	    osi_dnlc_purgedp(tvc);
-	    afs_PutVCache(tvc);
+	    afs_PutVCache(tvc, 0);
 	}
     }
 }

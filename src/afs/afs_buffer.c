@@ -33,6 +33,10 @@ RCSID("$Header$");
 #include "../h/buf.h"
 #endif /* !defined(UKERNEL) */
 
+#if !defined(UKERNEL) && !defined(AFS_SUN5_ENV)
+#include "../afs/osi_vfs.h"
+#endif
+
 #include "../afs/stds.h"
 #include "../afs/volerrors.h"
 #include "../afs/exporter.h"
@@ -42,6 +46,8 @@ RCSID("$Header$");
 
 #include "../afs/afs_stats.h"
 #include "../afs/longc_procs.h"
+#include "../afs/afs.h"
+#include "../afs/afs_prototypes.h"
 
 #ifndef	BUF_TIME_MAX
 #define	BUF_TIME_MAX	0x7fffffff
@@ -63,33 +69,12 @@ RCSID("$Header$");
 #define pHash(fid,page) ((((afs_int32)((fid)[0])) & PHFIDMASK) \
 			 | (page & PHPAGEMASK))
 
-/* Note: this should agree with the definition in kdump.c */
-#if	defined(AFS_OSF_ENV)
-#if	!defined(UKERNEL)
-#define	AFS_USEBUFFERS	1
-#endif
-#endif
-
 #ifdef	dirty
 #undef dirty	/* XXX */
 #endif
 
-struct buffer {
-    ino_t fid[1];	/* Unique cache key + i/o addressing */
-    afs_int32 page;
-    afs_int32 accesstime;
-    struct buffer *hashNext;
-    char *data;
-    char lockers;
-    char dirty;
-    char hashIndex;
-#if AFS_USEBUFFERS
-    struct buf *bufp;
-#endif
-    afs_rwlock_t lock;		/* the lock for this structure */
-} *Buffers = 0;
-
-char *BufferData;
+static struct buffer *Buffers = 0;
+static char *BufferData;
 
 #ifdef	AFS_AIX_ENV
 extern struct buf *geteblk();
@@ -102,14 +87,15 @@ extern struct buf *geteblk();
  */
 static afs_lock_t afs_bufferLock;
 static struct buffer *phTable[PHSIZE];	/* page hash table */
-int nbuffers;
-afs_int32 timecounter;
+static int nbuffers;
+static afs_int32 timecounter;
 
-static struct buffer *afs_newslot();
+/* Prototypes for static routines */
+static struct buffer *afs_newslot (ino_t *afid, afs_int32 apage,register struct buffer *lp);
 
 static int dinit_flag = 0;
-void DInit (abuffers)
-    int abuffers; {
+void DInit (int abuffers)
+{
     /* Initialize the venus buffer system. */
     register int i;
     register struct buffer *tb;
@@ -161,9 +147,8 @@ void DInit (abuffers)
     return;
 }
 
-char *DRead(fid,page)
-    register ino_t *fid;
-    register int page; {
+char *DRead(register ino_t *fid, register int page)
+{
     /* Read a page from the disk. */
     register struct buffer *tb, *tb2;
     void *tfile;
@@ -262,8 +247,8 @@ char *DRead(fid,page)
     return tb->data;
 }
 
-static void FixupBucket(ap)
-    register struct buffer *ap; {
+static void FixupBucket(register struct buffer *ap)
+{
     register struct buffer **lp, *tp;
     register int i;
     /* first try to get it out of its current hash bucket, in which it
@@ -285,10 +270,8 @@ static void FixupBucket(ap)
     phTable[i] = ap;            /* at the front, since it's LRU */
 }
 
-static struct buffer *afs_newslot (afid,apage,lp)
-     ino_t *afid;
-     afs_int32 apage; 
-     register struct buffer *lp;   /* pointer to a fairly-old buffer */
+/* lp is pointer to a fairly-old buffer */
+static struct buffer *afs_newslot (ino_t *afid, afs_int32 apage,register struct buffer *lp)
 {
     /* Find a usable buffer slot */
     register afs_int32 i;
@@ -374,9 +357,8 @@ static struct buffer *afs_newslot (afid,apage,lp)
     return lp;
 }
 
-void DRelease (bp,flag)
-    register struct buffer *bp;
-    int flag; {
+void DRelease (register struct buffer *bp, int flag)
+{
     /* Release a buffer, specifying whether or not the buffer has been
      * modified by the locker. */
     register int index;
@@ -407,8 +389,8 @@ void DRelease (bp,flag)
     MReleaseWriteLock(&bp->lock);
 }
 
-DVOffset (ap)
-    register void *ap; {
+int DVOffset (register void *ap)
+{
     /* Return the byte within a file represented by a buffer pointer. */
     register struct buffer *bp;
     register int index;
@@ -441,8 +423,7 @@ DVOffset (ap)
  * of the hash function.  Oh well.  This should use the list traversal 
  * method of DRead...
  */
-void DZap (fid)
-    ino_t *fid;
+void DZap (ino_t *fid)
 {
     register int i;
     /* Destroy all buffers pertaining to a particular fid. */
@@ -462,7 +443,8 @@ void DZap (fid)
     MReleaseReadLock(&afs_bufferLock);
 }
 
-void DFlush () {
+void DFlush (void)
+{
     /* Flush all the modified buffers. */
     register int i, code;
     register struct buffer *tb;
@@ -491,9 +473,7 @@ void DFlush () {
     MReleaseReadLock(&afs_bufferLock);
 }
 
-char *DNew (fid,page)
-    register int page;
-    register ino_t *fid;
+char *DNew (register ino_t *fid, register int page)
 {
     /* Same as read, only do *not* even try to read the page, since it probably doesn't exist. */
     register struct buffer *tb;
@@ -510,7 +490,8 @@ char *DNew (fid,page)
     return tb->data;
 }
 
-void shutdown_bufferpackage() {
+void shutdown_bufferpackage(void)
+{
 #if AFS_USEBUFFERS
     register struct buffer *tp;
 #endif

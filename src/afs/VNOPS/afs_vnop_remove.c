@@ -111,14 +111,10 @@ afsremove(adp, tdc, tvc, aname, acred, treqp)
 	tc = afs_Conn(&adp->fid, treqp, SHARED_LOCK);
 	if (tc) {
           XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_REMOVEFILE);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GUNLOCK();
 	    code = RXAFS_RemoveFile(tc->id, (struct AFSFid *) &adp->fid.Fid,
 				    aname, &OutDirStatus, &tsync);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GLOCK();
           XSTATS_END_TIME;
       }
 	else code = -1;

@@ -37,10 +37,8 @@ afs_int32 afs_stats_XferSumBytes[AFS_STATS_NUM_FS_XFER_OPS];
  * Environment:
  *	This routine should only be called once, at initialization time.
  */
-void afs_InitStats()
-
-{ /*afs_InitStats*/
-
+void afs_InitStats(void)
+{
     struct afs_stats_opTimingData *opTimeP;	/*Ptr to curr timing struct*/
     struct afs_stats_xferData *xferP;		/*Ptr to curr xfer struct*/
     int currIdx;				/*Current index*/
@@ -70,25 +68,18 @@ void afs_InitStats()
 	xferP->minTime.tv_sec = 999999;
 	xferP->minBytes = 999999999;
     }
-    
-} /*afs_InitStats*/
+}
 
-
-
-afs_GetCMStat(ptr, size)
-     char **ptr; /* memory area */
-     unsigned *size; /* # of bytes */
-  {
+int afs_GetCMStat(char **ptr, unsigned *size)
+{
 #ifndef AFS_NOSTATS
       AFS_STATCNT(afs_GetCMStat);
       *ptr = (char *)&afs_cmstats;
       *size = sizeof(afs_cmstats);
 #endif /* AFS_NOSTATS */
-  }
+}
 
-afs_AddToMean(oldMean, newValue)
-     struct afs_MeanStats *oldMean;
-     afs_int32 newValue;
-  {
-      AFS_STATCNT(afs_AddToMean);
-  }
+int afs_AddToMean(struct afs_MeanStats *oldMean, afs_int32 newValue)
+{
+  AFS_STATCNT(afs_AddToMean);
+}

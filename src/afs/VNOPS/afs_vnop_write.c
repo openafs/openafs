@@ -88,11 +88,8 @@ register struct vrequest *treq;
 
 
 
-afs_MemWrite(avc, auio, aio, acred, noLock)
-    register struct vcache *avc;
-    struct uio *auio;
-    int aio, noLock;
-    struct AFS_UCRED *acred; 
+int afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio, 
+	struct AFS_UCRED *acred, int noLock)
 {
     afs_size_t totalLength;
     afs_size_t transferLength;

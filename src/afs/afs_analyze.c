@@ -61,15 +61,11 @@ RCSID("$Header$");
 
 int afs_BusyWaitPeriod = 15; /* poll every 15 seconds */
 
-
 afs_int32 hm_retry_RO=0;    /* don't wait */
 afs_int32 hm_retry_RW=0;    /* don't wait */
 afs_int32 hm_retry_int=0;   /* don't wait */
 
-void afs_CopyError(afrom, ato)
-    register struct vrequest *afrom;
-    register struct vrequest *ato;
-
+void afs_CopyError(register struct vrequest *afrom, register struct vrequest *ato)
 {
     AFS_STATCNT(afs_CopyError);
     if (!afrom->initd)
@@ -84,12 +80,9 @@ void afs_CopyError(afrom, ato)
     if (afrom->permWriteError)
 	ato->permWriteError = 1;
 
-} /*afs_CopyError*/
+}
 
-
-void afs_FinalizeReq(areq)
-    register struct vrequest *areq;
-
+void afs_FinalizeReq(register struct vrequest *areq)
 {
     AFS_STATCNT(afs_FinalizeReq);
     if (areq->initd)
@@ -101,14 +94,9 @@ void afs_FinalizeReq(areq)
     areq->permWriteError = 0;
     areq->initd = 1;
 
-} /*afs_FinalizeReq*/
+}
 
-
-afs_CheckCode(acode, areq, where)
-    afs_int32 acode;
-    struct vrequest *areq;
-    int where;
-
+int afs_CheckCode(afs_int32 acode, struct vrequest *areq, int where)
 {
     AFS_STATCNT(afs_CheckCode);
     if (acode) { 
@@ -152,9 +140,7 @@ int lastcode;
 #define DIFFERENT 0
 #define SAME 1
 #define DUNNO 2
-static int VLDB_Same (afid, areq)
-    struct VenusFid *afid;
-    struct vrequest *areq;
+static int VLDB_Same (struct VenusFid *afid, struct vrequest *areq)
 {
     struct vrequest treq;
     struct conn *tconn;
@@ -304,16 +290,10 @@ static int VLDB_Same (afid, areq)
  *	The retry return value is used by afs_StoreAllSegments to determine
  *	if this is a temporary or permanent error.
  *------------------------------------------------------------------------*/
-int afs_Analyze(aconn, acode, afid, areq, op, locktype, cellp)
-    register struct conn *aconn;
-    afs_int32 acode;
-    register struct vrequest *areq;
-    struct VenusFid *afid;
-    int op;
-    afs_int32 locktype;
-    struct cell *cellp;
-{ /*afs_Analyze*/
-
+int afs_Analyze(register struct conn *aconn, afs_int32 acode, 
+	struct VenusFid *afid, register struct vrequest *areq, int op,
+	afs_int32 locktype, struct cell *cellp)
+{
    afs_int32 i, code;
    struct srvAddr *sa;
    struct server *tsp;

@@ -49,38 +49,12 @@ RCSID("$Header$");
 #ifdef AFS_OSF_ENV
 afs_int32 afs_maxvcount = 0;		/* max number of vcache entries */
 afs_int32 afs_vcount = 0;			/* number of vcache in use now */
-#if	defined(AFS_OSF30_ENV)
-extern int max_vnodes;     		/* number of total system vnodes */
-#else
-extern int nvnode;			/* number of total system vnodes */
-#endif 
-#ifndef	AFS_OSF30_ENV
-extern int numvnodes;			/* number vnodes in use now */ 
-#endif
 #endif /* AFS_OSF_ENV */
+
 #ifdef AFS_SGI_ENV
 int afsvnumbers = 0;
 #endif
 
-/* Imported variables */
-extern struct server *afs_servers[NSERVERS];
-extern afs_rwlock_t afs_xserver;
-extern afs_rwlock_t afs_xcbhash;
-extern struct vcache *afs_globalVp;
-#ifdef AFS_OSF_ENV
-extern struct mount *afs_globalVFS;
-extern struct vnodeops Afs_vnodeops;
-#elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-extern struct mount *afs_globalVFS;
-#else
-extern struct vfs *afs_globalVFS;
-#endif /* AFS_OSF_ENV */
-#if	defined(AFS_DUX40_ENV)
-extern struct vfs_ubcops afs_ubcops;
-#endif
-#ifdef AFS_SGI62_ENV
-extern struct vnodeops Afs_vnodeops;
-#endif
 #ifdef AFS_SGI64_ENV
 char *makesname();
 #endif /* AFS_SGI64_ENV */
@@ -246,8 +220,6 @@ bad:
  */
 void afs_InactiveVCache(struct vcache *avc, struct AFS_UCRED *acred)
 {
-    extern afs_rwlock_t afs_xdcache, afs_xvcache;
-    
     AFS_STATCNT(afs_inactive);
     if (avc->states & CDirty) {
       /* we can't keep trying to push back dirty data forever.  Give up. */
@@ -312,8 +284,8 @@ struct afs_cbr *afs_AllocCBR() {
  *
  * Environment: the xvcb lock is held over these calls.
  */
-afs_FreeCBR(asp)
-register struct afs_cbr *asp; {
+int afs_FreeCBR(register struct afs_cbr *asp)
+{
     asp->next = afs_cbrSpace;
     afs_cbrSpace = asp;
     return 0;
@@ -343,7 +315,6 @@ afs_int32 afs_FlushVCBs (afs_int32 lockit)
     struct vrequest treq;
     struct conn *tc;
     int safety1, safety2, safety3;
-    extern int afs_totalServers;
     XSTATS_DECLS
 
     if (code = afs_InitReq(&treq, &afs_osi_cred)) return code;
@@ -479,11 +450,8 @@ static afs_int32 afs_QueueVCB(struct vcache *avc)
  *	entries locked.
  */
 
-afs_RemoveVCB(afid)
-    register struct VenusFid *afid;
-
-{ /*afs_RemoveVCB*/
-
+int afs_RemoveVCB(register struct VenusFid *afid)
+{
     register int i, j;
     register struct server *tsp;
     register struct afs_cbr *tcbrp;
@@ -517,8 +485,7 @@ afs_RemoveVCB(afid)
     ReleaseReadLock(&afs_xserver);
     MReleaseWriteLock(&afs_xvcb);
     return 0;
-
-} /*afs_RemoveVCB*/
+}
 
 
 /*
@@ -1356,12 +1323,9 @@ afs_SimpleVStat(avc, astat, areq)
  *	Must be called with a shared lock held on the vnode.
  */
 
-afs_WriteVCache(avc, astatus, areq)
-    register struct vcache *avc;
-    register struct AFSStoreStatus *astatus;
-    struct vrequest *areq;
-
-{ /*afs_WriteVCache*/
+int afs_WriteVCache(register struct vcache *avc, 
+	register struct AFSStoreStatus *astatus, struct vrequest *areq)
+{
   afs_int32 code;
   struct conn *tc;
     struct AFSFetchStatus OutStatus;
@@ -1522,15 +1486,9 @@ afs_ProcessFS(avc, astat, areq)
 } /*afs_ProcessFS*/
 
 
-afs_RemoteLookup(afid, areq, name, nfid, OutStatusp, CallBackp, serverp, tsyncp)
-    register struct VenusFid *afid;
-    struct vrequest *areq;
-    char *name;
-    struct VenusFid *nfid;
-    struct AFSFetchStatus *OutStatusp;
-    struct AFSCallBack *CallBackp;
-    struct server **serverp;
-    struct AFSVolSync *tsyncp;
+int afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq, 
+	char *name, struct VenusFid *nfid, struct AFSFetchStatus *OutStatusp, 
+	struct AFSCallBack *CallBackp, struct server **serverp, struct AFSVolSync *tsyncp)
 {
     afs_int32 code, i;
     register struct vcache *tvc;
@@ -1596,14 +1554,12 @@ afs_RemoteLookup(afid, areq, name, nfid, OutStatusp, CallBackp, serverp, tsyncp)
  *	locking directories in a constant order.
  * NB.  NewVCache -> FlushVCache presently (4/10/95) drops the xvcache lock.
  */
-struct vcache *afs_GetVCache(afid, areq, cached, avc, locktype)
-    register struct VenusFid *afid;
-    struct vrequest *areq;
-    afs_int32 *cached;
-    afs_int32 locktype;
-    struct vcache *avc; /* might have a vcache structure already, which must
+   /* might have a vcache structure already, which must
 			 * already be held by the caller */
-{ /*afs_GetVCache*/
+
+struct vcache *afs_GetVCache(register struct VenusFid *afid, struct vrequest *areq, 
+	afs_int32 *cached, struct vcache *avc, afs_int32 locktype)
+{
 
     afs_int32 code, i, newvcache=0;
     register struct vcache *tvc;
@@ -2334,12 +2290,8 @@ afs_StuffVcache(afid, OutStatus, CallBack, tc, areq)
  * Environment:
  *	Nothing interesting.
  */
-void
-afs_PutVCache(avc, locktype)
-    register struct vcache *avc;
-    afs_int32 locktype;
-{ /*afs_PutVCache*/
-
+void afs_PutVCache(register struct vcache *avc, afs_int32 locktype)
+{
     AFS_STATCNT(afs_PutVCache);
     /*
      * Can we use a read lock here?

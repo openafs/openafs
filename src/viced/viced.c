@@ -1537,7 +1537,8 @@ Do_VLRegisterRPC() {
     return 0;
 }
 
-AddrsEqual(cnt, addr1, addr2) 
+#if 0
+static int AddrsEqual(cnt, addr1, addr2) 
     int cnt;
     afs_int32 *addr1, *addr2; 
 {
@@ -1551,6 +1552,7 @@ AddrsEqual(cnt, addr1, addr2)
     }
     return 1;
 }
+#endif
 
 InitVL() {
     int (*old)();

@@ -17,61 +17,80 @@ RCSID("$Header$");
 #include "../afs/afs_stats.h"   /* afs statistics */
 #include "../afs/vice.h"
 #include "../rx/rx_globals.h"
+#include "../afs/afs_prototypes.h" /* Prototypes */
 
-extern void afs_ComputePAGStats();
-extern struct vcache *afs_LookupVCache();
 struct VenusFid afs_rootFid;
 afs_int32 afs_waitForever=0;
 short afs_waitForeverCount = 0;
 afs_int32 afs_showflags = GAGUSER | GAGCONSOLE;   /* show all messages */
-extern afs_int32 PROBE_INTERVAL;
 
-extern int cacheDiskType;
-extern afs_int32 afs_cacheBlocks;
-extern struct afs_q CellLRU;
-extern char *afs_indexFlags; /* only one: is there data there? */
-extern afs_int32 afs_blocksUsed;
-extern struct unixuser *afs_users[NUSERS];
-extern struct server *afs_servers[NSERVERS];
-extern struct interfaceAddr afs_cb_interface; /* client interface addresses */
-extern afs_rwlock_t afs_xserver;
-extern afs_rwlock_t afs_xinterface;
-extern afs_rwlock_t afs_xcell;
-extern afs_rwlock_t afs_xuser;
-#ifndef	AFS_FINEG_SUNLOCK
-extern afs_rwlock_t afs_xconn;
-#endif
-extern afs_rwlock_t afs_xvolume;
-extern afs_lock_t afs_xdcache;		    /* lock: alloc new disk cache entries */
-extern afs_rwlock_t afs_xvcache;  
-extern afs_rwlock_t afs_xcbhash;  
-extern afs_int32 afs_mariner, afs_marinerHost;
-extern struct srvAddr *afs_srvAddrs[NSERVERS];
-extern int afs_resourceinit_flag;
-extern afs_int32 cryptall;
+#define DECL_PIOCTL(x) static int x(struct vcache *avc, int afun, struct vrequest *areq, \
+	char *ain, char *aout, afs_int32 ainSize, afs_int32 *aoutSize, \
+	struct AFS_UCRED *acred)
 
-static int PBogus(), PSetAcl(), PGetAcl(), PSetTokens(), PGetVolumeStatus();
-static int PSetVolumeStatus(), PFlush(), PNewStatMount(), PGetTokens(), PUnlog();
-static int PCheckServers(), PCheckVolNames(), PCheckAuth(), PFindVolume();
-static int PViceAccess(), PSetCacheSize(), Prefetch();
-static int PRemoveCallBack(), PNewCell(), PListCells(), PRemoveMount();
-static int PMariner(), PGetUserCell(), PGetWSCell(), PGetFileCell();
-static int PVenusLogging(), PNoop(), PSetCellStatus(), PGetCellStatus();
-static int PFlushVolumeData(), PGetCacheSize();
-static int PSetSysName(),PGetFID();
-static int PGetVnodeXStatus();
-static int PSetSPrefs(), PGetSPrefs(), PGag(), PTwiddleRx();
-static int PSetSPrefs33(), PStoreBehind(), PGCPAGs();
-static int PGetCPrefs(), PSetCPrefs(); /* client network addresses */
-static int PGetInitParams(), PFlushMount(), PRxStatProc(), PRxStatPeer();
-static int PGetRxkcrypt(), PSetRxkcrypt();
-static int PPrefetchFromTape(), PResidencyCmd();
-static int PNewAlias(), PListAliases();
-int PExportAfs();
+/* Prototypes for pioctl routines */
+DECL_PIOCTL(PGetFID);
+DECL_PIOCTL(PSetAcl);
+DECL_PIOCTL(PStoreBehind);
+DECL_PIOCTL(PGCPAGs);
+DECL_PIOCTL(PGetAcl);
+DECL_PIOCTL(PNoop);
+DECL_PIOCTL(PBogus);
+DECL_PIOCTL(PGetFileCell);
+DECL_PIOCTL(PGetWSCell);
+DECL_PIOCTL(PGetUserCell);
+DECL_PIOCTL(PSetTokens);
+DECL_PIOCTL(PGetVolumeStatus);
+DECL_PIOCTL(PSetVolumeStatus);
+DECL_PIOCTL(PFlush);
+DECL_PIOCTL(PNewStatMount);
+DECL_PIOCTL(PGetTokens);
+DECL_PIOCTL(PUnlog);
+DECL_PIOCTL(PMariner);
+DECL_PIOCTL(PCheckServers);
+DECL_PIOCTL(PCheckVolNames);
+DECL_PIOCTL(PCheckAuth);
+DECL_PIOCTL(PFindVolume);
+DECL_PIOCTL(PViceAccess);
+DECL_PIOCTL(PSetCacheSize);
+DECL_PIOCTL(PGetCacheSize);
+DECL_PIOCTL(PRemoveCallBack);
+DECL_PIOCTL(PNewCell);
+DECL_PIOCTL(PNewAlias);
+DECL_PIOCTL(PListCells);
+DECL_PIOCTL(PListAliases);
+DECL_PIOCTL(PRemoveMount);
+DECL_PIOCTL(PVenusLogging);
+DECL_PIOCTL(PGetCellStatus);
+DECL_PIOCTL(PSetCellStatus);
+DECL_PIOCTL(PFlushVolumeData);
+DECL_PIOCTL(PGetVnodeXStatus);
+DECL_PIOCTL(PSetSysName);
+DECL_PIOCTL(PSetSPrefs);
+DECL_PIOCTL(PSetSPrefs33);
+DECL_PIOCTL(PGetSPrefs);
+DECL_PIOCTL(PExportAfs);
+DECL_PIOCTL(PGag);
+DECL_PIOCTL(PTwiddleRx);
+DECL_PIOCTL(PGetInitParams);
+DECL_PIOCTL(PGetRxkcrypt);
+DECL_PIOCTL(PSetRxkcrypt);
+DECL_PIOCTL(PGetCPrefs);
+DECL_PIOCTL(PSetCPrefs);
+DECL_PIOCTL(PFlushMount);
+DECL_PIOCTL(PRxStatProc);
+DECL_PIOCTL(PRxStatPeer);
+DECL_PIOCTL(PPrefetchFromTape);
+DECL_PIOCTL(PResidencyCmd);
 
-static int HandleClientContext(struct afs_ioctl *ablob, int *com, struct AFS_UCRED **acred, struct AFS_UCRED *credp);
+/* Prototypes for private routines */
+static int HandleClientContext(struct afs_ioctl *ablob, int *com, 
+	struct AFS_UCRED **acred, struct AFS_UCRED *credp);
+int HandleIoctl(register struct vcache *avc, register afs_int32 acom, struct afs_ioctl *adata);
+int afs_HandlePioctl(register struct vcache *avc, afs_int32 acom, 
+	register struct afs_ioctl *ablob, int afollow, struct AFS_UCRED **acred);
+static int Prefetch(char *apath, struct afs_ioctl *adata, int afollow, struct AFS_UCRED *acred);
 
-extern struct cm_initparams cm_initParams;
 
 static int (*(VpioctlSw[]))() = {
   PBogus,			/* 0 */
@@ -230,10 +249,8 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 	return code;
 }
 
-HandleIoctl(avc, acom, adata)
-     register struct vcache *avc;
-     register afs_int32 acom;
-     struct afs_ioctl *adata; {
+int HandleIoctl(register struct vcache *avc, register afs_int32 acom, struct afs_ioctl *adata)
+{
        register afs_int32 code;
        
        code = 0;
@@ -296,10 +313,7 @@ HandleIoctl(avc, acom, adata)
  * thing directly in the vnode layer call, VNOP_IOCTL; thus afs_ioctl
  * is now called from afs_gn_ioctl.
  */
-afs_ioctl(tvc, cmd, arg)
-     struct	vcache *tvc;
-     int	cmd;
-     int	arg;
+int afs_ioctl(struct	vcache *tvc, int	cmd, int	arg)
 {
   struct afs_ioctl data;
   int error = 0;
@@ -417,7 +431,7 @@ asmlinkage int afs_xioctl(struct inode *ip, struct file *fp,
 {
     struct afs_ioctl_sys ua, *uap = &ua;
 #else
-afs_xioctl () 
+int afs_xioctl (void) 
     {
       register struct a {
 	int fd;
@@ -698,7 +712,6 @@ afs_pioctl(p, args, retval)
     return (afs_syscall_pioctl(uap->path, uap->cmd, uap->cmarg, uap->follow));
 }
 
-extern struct mount *afs_globalVFS;
 #else	/* AFS_OSF_ENV */
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 afs_pioctl(p, args, retval)
@@ -717,9 +730,7 @@ afs_pioctl(p, args, retval)
     return (afs_syscall_pioctl(uap->path, uap->cmd, uap->cmarg, uap->follow, p->p_cred->pc_ucred));
 }   
 
-extern struct mount *afs_globalVFS;
 #else   /* AFS_OSF_ENV */
-extern struct vfs *afs_globalVFS;
 #endif
 #endif
 
@@ -1035,12 +1046,8 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 }
   
   
-afs_HandlePioctl(avc, acom, ablob, afollow, acred)
-     register struct vcache *avc;
-     afs_int32 acom;
-     struct AFS_UCRED **acred;
-     register struct afs_ioctl *ablob;
-     int afollow;
+int afs_HandlePioctl(register struct vcache *avc, afs_int32 acom, 
+	register struct afs_ioctl *ablob, int afollow, struct AFS_UCRED **acred)
 {
     struct vrequest treq;
     register afs_int32 code;
@@ -1099,13 +1106,8 @@ afs_HandlePioctl(avc, acom, ablob, afollow, acred)
     return afs_CheckCode(code, &treq, 41);
   }
   
-static PGetFID(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-  int afun;
-  struct vrequest *areq;
-  char *ain, *aout;
-  afs_int32 ainSize;
-  afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PGetFID)
+{
     register afs_int32 code;
     
     AFS_STATCNT(PGetFID);
@@ -1115,13 +1117,8 @@ static PGetFID(avc, afun, areq, ain, aout, ainSize, aoutSize)
     return 0;
   }
   
-static PSetAcl(avc, afun, areq, ain, aout, ainSize, aoutSize)
-  struct vcache *avc;
-  int afun;
-  struct vrequest *areq;
-  char *ain, *aout;
-  afs_int32 ainSize;
-  afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PSetAcl)
+{
     register afs_int32 code;
     struct conn *tconn;
     struct AFSOpaque acl;
@@ -1164,14 +1161,7 @@ static PSetAcl(avc, afun, areq, ain, aout, ainSize, aoutSize)
 
 int afs_defaultAsynchrony = 0;
 
-static PStoreBehind(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-     struct vcache *avc;
-     int afun;
-     struct vrequest *areq;
-     char *ain, *aout;
-     afs_int32 ainSize;
-     afs_int32 *aoutSize;	/* set this */
-     struct AFS_UCRED *acred;
+DECL_PIOCTL(PStoreBehind)
 {
   afs_int32 code = 0;
   struct sbstruct *sbr;
@@ -1200,14 +1190,7 @@ static PStoreBehind(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
   return code;
 }
 
-static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-     struct vcache *avc;
-     int afun;
-     struct vrequest *areq;
-     char *ain, *aout;
-     afs_int32 ainSize;
-     afs_int32 *aoutSize;	/* set this */
-     struct AFS_UCRED *acred;
+DECL_PIOCTL(PGCPAGs)
 {
   if (!afs_osi_suser(acred)) {
     return EACCES;
@@ -1216,13 +1199,8 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
   return 0;
 }
   
-  static PGetAcl(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-  int afun;
-  struct vrequest *areq;
-  char *ain, *aout;
-  afs_int32 ainSize;
-  afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PGetAcl)
+{
     struct AFSOpaque acl;
     struct AFSVolSync tsync;
     struct AFSFetchStatus OutStatus;
@@ -1270,26 +1248,22 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
       *aoutSize = (acl.AFSOpaque_len == 0 ? 1 : acl.AFSOpaque_len);
     }
     return code;
-  }
+}
   
-  static PNoop() {
+DECL_PIOCTL(PNoop)
+{
     AFS_STATCNT(PNoop);
     return 0;
-  }
+}
   
-  static PBogus() {
+DECL_PIOCTL(PBogus)
+{
     AFS_STATCNT(PBogus);
     return EINVAL;
-  }
+}
   
-  static PGetFileCell(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-  int afun;
-  struct vrequest *areq;
-  register char *ain;
-  char *aout;
-  afs_int32 ainSize;
-  afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PGetFileCell)
+{
     register struct cell *tcell;
     
     AFS_STATCNT(PGetFileCell);
@@ -1302,14 +1276,8 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     return 0;
   }
   
-  static PGetWSCell(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-  int afun;
-  struct vrequest *areq;
-  register char *ain;
-  char *aout;
-  afs_int32 ainSize;
-  afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PGetWSCell)
+{
     register struct cell *tcell=0, *cellOne=0;
     register struct afs_q *cq, *tq;
     
@@ -1336,14 +1304,8 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     return 0;
   }
   
-  static PGetUserCell(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-  int afun;
-  struct vrequest *areq;
-  register char *ain;
-  char *aout;
-  afs_int32 ainSize;
-  afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PGetUserCell)
+{
     register afs_int32 i;
     register struct unixuser *tu;
     register struct cell *tcell;
@@ -1380,15 +1342,7 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     return 0;
   }
   
-  static PSetTokens(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-    struct vcache *avc;
-  int afun;
-  struct vrequest *areq;
-  register char *ain;
-  char *aout;
-  afs_int32 ainSize;
-  afs_int32 *aoutSize;	/* set this */ 
-  struct AFS_UCRED **acred;
+DECL_PIOCTL(PSetTokens)
 {
     afs_int32 i;
     register struct unixuser *tu;
@@ -1498,13 +1452,8 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
   }
 }  
 
-static PGetVolumeStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-  int afun;
-  struct vrequest *areq;
-  char *ain, *aout;
-  afs_int32 ainSize;
-  afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PGetVolumeStatus)
+{
     char volName[32];
     char offLineMsg[256];
     char motd[256];
@@ -1551,13 +1500,8 @@ static PGetVolumeStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
     return 0;
 }
 
-static PSetVolumeStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PSetVolumeStatus)
+{
     char volName[32];
     char offLineMsg[256];
     char motd[256];
@@ -1637,16 +1581,8 @@ static PSetVolumeStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
     return 0;
 }
 
-static PFlush(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-    register struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */ 
-    struct AFS_UCRED *acred;
+DECL_PIOCTL(PFlush)
 {
-
     AFS_STATCNT(PFlush);
     if (!avc) return EINVAL;
 #if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
@@ -1672,13 +1608,8 @@ static PFlush(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     return 0;
 }
 
-static PNewStatMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PNewStatMount)
+{
     register afs_int32 code;
     register struct vcache *tvc;
     register struct dcache *tdc;
@@ -1745,13 +1676,8 @@ out:
     return code;
 }
 
-static PGetTokens(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PGetTokens)
+{
     register struct cell *tcell;
     register afs_int32 i;
     register struct unixuser *tu;
@@ -1834,13 +1760,8 @@ static PGetTokens(avc, afun, areq, ain, aout, ainSize, aoutSize)
     return 0;
 }
 
-static PUnlog(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PUnlog)
+{
     register afs_int32 i;
     register struct unixuser *tu;
 
@@ -1882,13 +1803,8 @@ static PUnlog(avc, afun, areq, ain, aout, ainSize, aoutSize)
     return 0;
 }
 
-static PMariner(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PMariner)
+{
     afs_int32 newHostAddr;
     afs_int32 oldHostAddr;
     
@@ -1912,14 +1828,7 @@ static PMariner(avc, afun, areq, ain, aout, ainSize, aoutSize)
     return 0;
 }
 
-static PCheckServers(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */ 
-    struct AFS_UCRED *acred;
+DECL_PIOCTL(PCheckServers)
 {
     register char *cp = 0;
     register int i;
@@ -1993,13 +1902,8 @@ static PCheckServers(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     return 0;
 }
 
-static PCheckVolNames(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PCheckVolNames)
+{
     AFS_STATCNT(PCheckVolNames);
     if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
@@ -2012,19 +1916,13 @@ static PCheckVolNames(avc, afun, areq, ain, aout, ainSize, aoutSize)
     return 0;
 }
 
-static PCheckAuth(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PCheckAuth)
+{
        int i;
        struct srvAddr *sa;
        struct conn *tc;
        struct unixuser *tu;
        afs_int32 retValue;
-       extern afs_rwlock_t afs_xsrvAddr;	
 
     AFS_STATCNT(PCheckAuth);
     if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
@@ -2058,11 +1956,7 @@ static PCheckAuth(avc, afun, areq, ain, aout, ainSize, aoutSize)
     return 0;
 }
 
-static Prefetch(apath, adata, afollow, acred)
-char *apath;
-struct afs_ioctl *adata;
-int afollow;
-struct AFS_UCRED *acred; 
+static int Prefetch(char *apath, struct afs_ioctl *adata, int afollow, struct AFS_UCRED *acred)
 {
     register char *tp;
     register afs_int32 code;
@@ -2089,13 +1983,8 @@ struct AFS_UCRED *acred;
     return 0;
 }
 
-static PFindVolume(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PFindVolume)
+{
     register struct volume *tvp;
     register struct server *ts;
     register afs_int32 i;
@@ -2125,13 +2014,8 @@ static PFindVolume(avc, afun, areq, ain, aout, ainSize, aoutSize)
     return ENODEV;
 }
 
-static PViceAccess(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PViceAccess)
+{
     register afs_int32 code;
     afs_int32 temp;
     
@@ -2145,15 +2029,8 @@ static PViceAccess(avc, afun, areq, ain, aout, ainSize, aoutSize)
     else return EACCES;
 }
 
-static PSetCacheSize(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */ 
-    struct AFS_UCRED *acred;
-{
+DECL_PIOCTL(PSetCacheSize)
+{ 
     afs_int32 newValue;
     int waitcnt = 0;
     
@@ -2165,7 +2042,6 @@ static PSetCacheSize(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     memcpy((char *)&newValue, ain, sizeof(afs_int32));
     if (newValue == 0) afs_cacheBlocks = afs_stats_cmperf.cacheBlocksOrig;
     else {
-	extern u_int afs_min_cache;
 	if (newValue < afs_min_cache)
 	    afs_cacheBlocks = afs_min_cache;
 	else
@@ -2182,13 +2058,8 @@ static PSetCacheSize(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
 }
 
 #define MAXGCSTATS	16
-static PGetCacheSize(avc, afun, areq, ain, aout, ainSize, aoutSize)
-struct vcache *avc;
-int afun;
-struct vrequest *areq;
-char *ain, *aout;
-afs_int32 ainSize;
-afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PGetCacheSize)
+{
     afs_int32 results[MAXGCSTATS];
 
     AFS_STATCNT(PGetCacheSize);
@@ -2200,13 +2071,8 @@ afs_int32 *aoutSize;	/* set this */ {
     return 0;
 }
 
-static PRemoveCallBack(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PRemoveCallBack)
+{
     register struct conn *tc;
     register afs_int32 code;
     struct AFSCallBack CallBacks_Array[1];
@@ -2251,15 +2117,8 @@ static PRemoveCallBack(avc, afun, areq, ain, aout, ainSize, aoutSize)
     return 0;
 }
 
-static PNewCell(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    register char *ain;
-    char *aout;
-    afs_int32 ainSize;
-    struct AFS_UCRED *acred;
-    afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PNewCell)
+{
     /* create a new cell */
     afs_int32 cellHosts[MAXCELLHOSTS], *lp, magic=0;
     register struct cell *tcell;
@@ -2309,15 +2168,7 @@ static PNewCell(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     return code;
 }
 
-static PNewAlias(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    register char *ain;
-    char *aout;
-    afs_int32 ainSize;
-    struct AFS_UCRED *acred;
-    afs_int32 *aoutSize;	/* set this */
+DECL_PIOCTL(PNewAlias)
 {
     /* create a new cell alias */
     register struct cell *tcell;
@@ -2356,13 +2207,8 @@ static PNewAlias(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     return code;
 }
 
-static PListCells(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PListCells)
+{
     afs_int32 whichCell;
     register struct cell *tcell=0;
     register afs_int32 i;
@@ -2404,13 +2250,7 @@ static PListCells(avc, afun, areq, ain, aout, ainSize, aoutSize)
     else return EDOM;
 }
 
-static PListAliases(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */
+DECL_PIOCTL(PListAliases)
 {
     afs_int32 whichAlias;
     register struct cell *tcell=0;
@@ -2449,14 +2289,8 @@ static PListAliases(avc, afun, areq, ain, aout, ainSize, aoutSize)
     else return EDOM;
 }
 
-static PRemoveMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    register char *ain;
-    char *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PRemoveMount)
+{
     register afs_int32 code;
     char *bufp;
     struct sysname_info sysState;
@@ -2571,25 +2405,13 @@ out:
     return code;    
 }
 
-static PVenusLogging(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    register char *ain;
-    char *aout;
-    afs_int32 ainSize;
-    struct AFS_UCRED *acred;
-    afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PVenusLogging)
+{
     return EINVAL;		/* OBSOLETE */
 }
 
-static PGetCellStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PGetCellStatus)
+{
     register struct cell *tcell;
     afs_int32 temp;
 
@@ -2606,14 +2428,8 @@ static PGetCellStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
     return 0;
 }
 
-static PSetCellStatus(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    struct AFS_UCRED *acred;
-    afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PSetCellStatus)
+{
     register struct cell *tcell;
     afs_int32 temp;
     
@@ -2633,16 +2449,8 @@ static PSetCellStatus(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     return 0;
 }
 
-static PFlushVolumeData(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-struct vcache *avc;
-int afun;
-struct vrequest *areq;
-char *ain, *aout;
-afs_int32 ainSize;
-afs_int32 *aoutSize;	/* set this */ 
-struct AFS_UCRED *acred;
+DECL_PIOCTL(PFlushVolumeData)
 {
-    extern struct volume *afs_volumes[NVOLS];
     register afs_int32 i;
     register struct dcache *tdc;
     register struct vcache *tvc;
@@ -2745,13 +2553,8 @@ struct AFS_UCRED *acred;
 
 
 
-static PGetVnodeXStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;	/* set this */ {
+DECL_PIOCTL(PGetVnodeXStatus)
+{
     register afs_int32 code;
     struct vcxstat stat;
     afs_int32 mode, i;
@@ -2800,22 +2603,11 @@ static PGetVnodeXStatus(avc, afun, areq, ain, aout, ainSize, aoutSize)
 /* (since we don't really believe remote uids anyway) */
  /* outname[] shouldn't really be needed- this is left as an excercise */
  /* for the reader.  */
-static PSetSysName(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-struct vcache *avc;
-int afun;
-struct vrequest *areq;
-char *ain, *aout;
-afs_int32 ainSize;
-afs_int32 *aoutSize;	/* set this */
-register struct AFS_UCRED *acred;
+DECL_PIOCTL(PSetSysName)
 {
     char *cp, inname[MAXSYSNAME], outname[MAXSYSNAME];
     int setsysname, foundname=0;
     register struct afs_exporter *exporter;
-    extern struct unixuser *afs_FindUser();
-    extern char *afs_sysname;
-    extern char *afs_sysnamelist[];
-    extern int afs_sysnamecount;
     register struct unixuser *au;
     register afs_int32 pag, error;
     int t, count;
@@ -2932,14 +2724,13 @@ register struct AFS_UCRED *acred;
  * long-term solution here. For small n, though, it should be just
  * fine.  Should consider special-casing the local cell for large n.
  * Likewise for PSetSPrefs.
+ *
+ * s - number of ids in array l[] -- NOT index of last id
+ * l - array of cell ids which have volumes that need to be sorted
+ * vlonly - sort vl servers or file servers?
  */
-static void ReSortCells(s,l, vlonly)  
-  int s;     /* number of ids in array l[] -- NOT index of last id */
-  afs_int32 l[];  /* array of cell ids which have volumes that need to be sorted */
-  int vlonly; /* sort vl servers or file servers?*/
+static void ReSortCells(int s, afs_int32 l[], int vlonly)  
 {
-  extern struct volume *afs_volumes[NVOLS];   /* volume hash table */
-
   int i;
   struct volume *j;
   register int  k;
@@ -2972,8 +2763,8 @@ static void ReSortCells(s,l, vlonly)
   ReleaseReadLock(&afs_xvolume);
 }
 
-int debugsetsp = 0;
 
+static int debugsetsp = 0;
 static int afs_setsprefs(sp, num, vlonly)
    struct spref *sp;
    unsigned int num;
@@ -3047,15 +2838,7 @@ static int afs_setsprefs(sp, num, vlonly)
 
  /* Note that this may only be performed by the local root user.
  */
-static int 
-PSetSPrefs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-     struct vcache *avc;
-     int afun;
-     struct vrequest *areq;
-     char *ain, *aout;
-     afs_int32 ainSize;
-     struct AFS_UCRED *acred;
-     afs_int32 *aoutSize;
+DECL_PIOCTL(PSetSPrefs)
 {
   struct setspref *ssp;
   AFS_STATCNT(PSetSPrefs);
@@ -3078,15 +2861,7 @@ PSetSPrefs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
   return 0;
 }
 
-static int 
-PSetSPrefs33(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    struct AFS_UCRED *acred;
-    afs_int32 *aoutSize;
+DECL_PIOCTL(PSetSPrefs33)
 {
   struct spref *sp;
   AFS_STATCNT(PSetSPrefs);
@@ -3109,14 +2884,7 @@ PSetSPrefs33(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
  * immediately previous slot in the hash table and some supporting information
  * Only reports file servers now.
  */
-static int 
-     PGetSPrefs(avc, afun, areq, ain, aout, ainSize, aoutSize)
-struct vcache *avc;
-int afun;
-struct vrequest *areq;
-char *ain, *aout;
-afs_int32 ainSize;
-afs_int32 *aoutSize;
+DECL_PIOCTL(PGetSPrefs)
 {
    struct sprefrequest *spin; /* input */
    struct sprefinfo *spout;   /* output */
@@ -3191,17 +2959,9 @@ afs_int32 *aoutSize;
 
 /* Enable/Disable the specified exporter. Must be root to disable an exporter */
 int  afs_NFSRootOnly = 1;
-/*static*/ PExportAfs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-struct vcache *avc;
-int afun;
-struct vrequest *areq;
-char *ain, *aout;
-afs_int32 ainSize;
-afs_int32 *aoutSize;	/* set this */
-struct AFS_UCRED *acred;
+DECL_PIOCTL(PExportAfs)
 {
     afs_int32 export, newint=0, type, changestate, handleValue, convmode, pwsync, smounts;
-    extern struct afs_exporter *exporter_find();
     register struct afs_exporter *exporter;
 
     AFS_STATCNT(PExportAfs);
@@ -3293,15 +3053,7 @@ struct AFS_UCRED *acred;
     return 0;
 }
 
-static int
-PGag(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-struct vcache *avc;
-int afun;
-struct vrequest *areq;
-char *ain, *aout;
-afs_int32 ainSize;
-struct AFS_UCRED *acred;
-afs_int32 *aoutSize;	/* set this */
+DECL_PIOCTL(PGag)
 {
 struct gaginfo *gagflags;
 
@@ -3315,15 +3067,7 @@ struct gaginfo *gagflags;
 }
 
 
-static int
-PTwiddleRx(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-struct vcache *avc;
-int afun;
-struct vrequest *areq;
-char *ain, *aout;
-afs_int32 ainSize;
-struct AFS_UCRED *acred;
-afs_int32 *aoutSize;	
+DECL_PIOCTL(PTwiddleRx)
 {
   struct rxparams *rxp;
 
@@ -3357,14 +3101,7 @@ afs_int32 *aoutSize;
   return 0;
 }
 
-static int PGetInitParams(avc, afun, areq, ain, aout, ainSize, aoutSize)
-     struct vcache *avc;
-     int afun;
-     struct vrequest *areq;
-     register char *ain;
-     char *aout;
-     afs_int32 ainSize;
-     afs_int32 *aoutSize;	/* set this */
+DECL_PIOCTL(PGetInitParams)
 {
     if (sizeof(struct cm_initparams) > PIGGYSIZE)
 	return E2BIG;
@@ -3388,30 +3125,14 @@ static cred_t *crget(void)
 }
 #endif
 
-static int
-PGetRxkcrypt(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-struct vcache *avc;
-int afun;
-struct vrequest *areq;
-char *ain, *aout;
-afs_int32 ainSize;
-afs_int32 *aoutSize;
-struct AFS_UCRED *acred;
+DECL_PIOCTL(PGetRxkcrypt)
 {
     memcpy(aout, (char *)&cryptall, sizeof(afs_int32));
     *aoutSize=sizeof(afs_int32);
     return 0;
 }
 
-static int
-PSetRxkcrypt(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-struct vcache *avc;
-int afun;
-struct vrequest *areq;
-char *ain, *aout;
-afs_int32 ainSize;
-afs_int32 *aoutSize;
-struct AFS_UCRED *acred;
+DECL_PIOCTL(PSetRxkcrypt)
 {
     afs_int32 tmpval;
 
@@ -3440,7 +3161,6 @@ static int HandleClientContext(struct afs_ioctl *ablob, int *com, struct AFS_UCR
     char *ain, *inData;
     afs_uint32 hostaddr;
     afs_int32 uid, g0, g1, i, code, pag, exporter_type;
-    extern struct afs_exporter *exporter_find();
     struct afs_exporter *exporter, *outexporter;
     struct AFS_UCRED *newcred;
     struct unixuser *au;
@@ -3570,14 +3290,7 @@ static int HandleClientContext(struct afs_ioctl *ablob, int *com, struct AFS_UCR
 
 /* get all interface addresses of this client */
 
-static int
-PGetCPrefs(avc, afun, areq, ain, aout, ainSize, aoutSize)
-struct vcache *avc;
-int afun;
-struct vrequest *areq;
-char *ain, *aout;
-afs_int32 ainSize;
-afs_int32 *aoutSize;
+DECL_PIOCTL(PGetCPrefs)
 {
 	struct sprefrequest *spin; /* input */
 	struct sprefinfo *spout;   /* output */
@@ -3619,14 +3332,7 @@ afs_int32 *aoutSize;
 	return 0;
 }
 
-static int
-PSetCPrefs(avc, afun, areq, ain, aout, ainSize, aoutSize)
-struct vcache *avc;
-int afun;
-struct vrequest *areq;
-char *ain, *aout;
-afs_int32 ainSize;
-afs_int32 *aoutSize;
+DECL_PIOCTL(PSetCPrefs)
 {
 	struct setspref *sin;
 	int i;
@@ -3655,14 +3361,8 @@ afs_int32 *aoutSize;
 	return 0;
 }
 
-static PFlushMount(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;
-    struct AFS_UCRED *acred; {
+DECL_PIOCTL(PFlushMount)
+{
     register afs_int32 code;
     register struct vcache *tvc;
     register struct dcache *tdc;
@@ -3734,14 +3434,7 @@ out:
     return code;
 }
 
-static PRxStatProc(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;
-    struct AFS_UCRED *acred;
+DECL_PIOCTL(PRxStatProc)
 {
     int code = 0;
     afs_int32 flags;
@@ -3774,14 +3467,7 @@ out:
 }
 
 
-static PRxStatPeer(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
-    struct vcache *avc;
-    int afun;
-    struct vrequest *areq;
-    char *ain, *aout;
-    afs_int32 ainSize;
-    afs_int32 *aoutSize;
-    struct AFS_UCRED *acred;
+DECL_PIOCTL(PRxStatPeer)
 {
     int code = 0;
     afs_int32 flags;
@@ -3813,13 +3499,7 @@ out:
     return code;
 }
 
-static PPrefetchFromTape(avc, afun, areq, ain, aout, ainSize, aoutSize)
-  struct vcache *avc;
-  int afun;
-  struct vrequest *areq;
-  char *ain, *aout;
-  afs_int32 ainSize;
-  afs_int32 *aoutSize;  /* set this */
+DECL_PIOCTL(PPrefetchFromTape)
 {
     register afs_int32 code, code1;
     afs_int32 bytes;
@@ -3890,13 +3570,7 @@ static PPrefetchFromTape(avc, afun, areq, ain, aout, ainSize, aoutSize)
     return code;
 }
 
-static PResidencyCmd(avc, afun, areq, ain, aout, ainSize, aoutSize)
-struct vcache *avc;
-int afun;
-struct vrequest *areq;
-char *ain, *aout;
-afs_int32 ainSize;
-afs_int32 *aoutSize;        /* set this */
+DECL_PIOCTL(PResidencyCmd)
 {
     register afs_int32 code;
     struct conn *tc;

@@ -22,9 +22,6 @@ RCSID("$Header$");
 static int osi_TimedSleep(char *event, afs_int32 ams, int aintok);
 #endif
 
-void afs_osi_Wakeup(char *event);
-void afs_osi_Sleep(char *event);
-
 static char waitV, dummyV;
 
 #if ! defined(AFS_GLOBAL_SUNLOCK)
@@ -208,7 +205,7 @@ static void afs_addevent(char *event)
  * Waits for an event to be notified, returning early if a signal
  * is received.  Returns EINTR if signaled, and 0 otherwise.
  */
-int afs_osi_SleepSig(char *event)
+int afs_osi_SleepSig(int *event)
 {
     struct afs_event *evp;
     int seq, retval;
@@ -241,7 +238,7 @@ int afs_osi_SleepSig(char *event)
 }
 
 /* afs_osi_Sleep -- waits for an event to be notified, ignoring signals. */
-void afs_osi_Sleep(char *event)
+void afs_osi_Sleep(int *event)
 {
     sigset_t saved_set;
 
@@ -297,7 +294,7 @@ static int osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 }
 
 
-void afs_osi_Wakeup(char *event)
+void afs_osi_Wakeup(int *event)
 {
     struct afs_event *evp;
 

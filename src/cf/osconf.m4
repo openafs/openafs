@@ -185,6 +185,8 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_linux22)
+		CC="gcc -pipe"
+		MT_CC="gcc -pipe"
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
@@ -196,6 +198,8 @@ case $AFS_SYSNAME in
 		;;
 
 	i386_linux24)
+		CC="gcc -pipe"
+		MT_CC="gcc -pipe"
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"

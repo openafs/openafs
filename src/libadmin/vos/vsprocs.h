@@ -45,33 +45,6 @@
 
 #define	CLOCKSKEW   2			/* not really skew, but resolution */
 
-extern afs_int32 AFSVolPartitionInfo();
-extern afs_int32 AFSVolTransCreate();
-extern afs_int32 AFSVolEndTrans();
-extern afs_int32 AFSVolSetInfo();
-extern afs_int32 AFSVolDeleteVolume();
-extern afs_int32 AFSVolNukeVolume();
-extern afs_int32 AFSVolCreateVolume();
-extern afs_int32 AFSVolSetFlags();
-extern afs_int32 AFSVolReClone();
-extern afs_int32 AFSVolClone();
-extern afs_int32 AFSVolGetStatus();
-extern afs_int32 AFSVolSetIdsTypes();
-extern afs_int32 AFSVolSetDate();
-extern afs_int32 AFSVolXListPartitions();
-extern afs_int32 AFSVolListPartitions();
-extern afs_int32 AFSVolListVolumes();
-extern afs_int32 AFSVolMonitor();
-extern afs_int32 AFSVolGetName();
-extern afs_int32 AFSVolForward();
-extern afs_int32 AFSVolSetForwarding();
-extern afs_int32 AFSVolXListVolumes();
-extern afs_int32 AFSVolXListOneVolume();
-extern afs_int32 AFSVolForwardMultiple();
-extern afs_int32 AFSVolListOneVolume();
-extern afs_int32 StartAFSVolDump();
-extern afs_int32 StartAFSVolRestore();
- 
 extern int ubik_Call();
 extern int ubik_Call_New();
 

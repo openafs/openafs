@@ -42,28 +42,15 @@ RCSID("$Header$");
 #include <inet/ip.h>
 #endif
 
-/* Imported variables */
-/* these are for storing alternate interface addresses - from afs_callback.c */
-extern struct interfaceAddr afs_cb_interface;
-
-
-/* Imported functions. */
-struct rx_securityClass *rxnull_NewClientSecurityObject();
-struct rx_securityClass *rxkad_NewClientSecurityObject();
-
 /* Exported variables */
 afs_rwlock_t afs_xconn;			/* allocation lock for new things */
 afs_rwlock_t afs_xinterface;		/* for multiple client address */
-
-/* Local variables */
-afs_int32 cryptall = 0;
+afs_int32 cryptall = 0;			/* encrypt all communications */
 
 
 unsigned int VNOSERVERS = 0;
-struct conn *afs_Conn(afid, areq, locktype)
-    register struct VenusFid *afid;
-    register struct vrequest *areq;
-    afs_int32 locktype;
+struct conn *afs_Conn(register struct VenusFid *afid, 
+	register struct vrequest *areq, afs_int32 locktype)
 {
    u_short fsport=AFS_FSPORT;
    struct volume *tv;
@@ -262,15 +249,9 @@ struct conn *afs_ConnBySA(struct srvAddr *sap, unsigned short aport,
  * Having force... true and UTokensBad true simultaneously means that the tokens
  * went bad and we're supposed to create a new, unauthenticated, connection.
  */
-struct conn *afs_ConnByHost(aserver, aport, acell, areq, aforce, locktype)
-    struct server *aserver;
-    afs_int32 acell;
-    unsigned short aport;
-    struct vrequest *areq;
-    int aforce;
-    afs_int32 locktype;
-{ /*afs_ConnByHost*/
-
+struct conn *afs_ConnByHost(struct server *aserver, unsigned short aport, 
+	afs_int32 acell, struct vrequest *areq, int aforce, afs_int32 locktype)
+{
     struct unixuser *tu;
     struct conn *tc=0;
     struct srvAddr *sa=0;
@@ -308,12 +289,8 @@ struct conn *afs_ConnByHost(aserver, aport, acell, areq, aforce, locktype)
 } /*afs_ConnByHost*/
 
 
-struct conn *afs_ConnByMHosts(ahosts, aport, acell, areq, locktype)
-    struct server *ahosts[];
-    afs_int32 acell;
-    unsigned short aport;
-    register struct vrequest *areq;
-    afs_int32 locktype;
+struct conn *afs_ConnByMHosts(struct server *ahosts[], unsigned short aport, 	
+	afs_int32 acell, register struct vrequest *areq, afs_int32 locktype)
 {
     register afs_int32 i;
     register struct conn *tconn;
@@ -334,9 +311,7 @@ struct conn *afs_ConnByMHosts(ahosts, aport, acell, areq, locktype)
 } /*afs_ConnByMHosts*/
 
 
-void afs_PutConn(ac, locktype)
-    register struct conn *ac;
-    afs_int32 locktype;
+void afs_PutConn(register struct conn *ac, afs_int32 locktype)
 {
     AFS_STATCNT(afs_PutConn);
     ac->refCount--;
@@ -347,8 +322,7 @@ void afs_PutConn(ac, locktype)
 client network interface going down. We need to reopen new 
 connections in this case
 */
-ForceNewConnections(sap)
-struct srvAddr *sap;
+int ForceNewConnections(struct srvAddr *sap)
 {
 	struct conn *tc=0;
 

@@ -62,10 +62,6 @@ RCSID("$Header$");
 #endif
 #endif
 
-#ifndef osi_alloc
-char *osi_alloc();
-#endif
-
 #define LASTUNSIGNED	((u_int)0-1)
 
 
@@ -110,7 +106,7 @@ bool_t xdr_arrayN(xdrs, addrp, sizep, maxsize, elsize, elproc)
 		case XDR_DECODE:
 			if (c == 0)
 				return (TRUE);
-			*addrp = target = osi_alloc(nodesize);
+			*addrp = target = (caddr_t) osi_alloc(nodesize);
 			if (target == NULL) {
 				return (FALSE);
 			}

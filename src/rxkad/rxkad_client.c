@@ -299,7 +299,7 @@ rxs_return_t rxkad_GetResponse (aobj, aconn, apacket)
 }
 
 
-rxkad_ResetState()
+void rxkad_ResetState(void)
 {
     LOCK_CUID
     Cuid[0] = 0;

@@ -95,7 +95,6 @@ struct afs_lock afs_xcbhash;
 extern afs_int32 afs_cacheStats;
 extern struct volume * afs_FindVolume();
 extern unsigned int afs_paniconwarn;
-void afs_FlushCBs();
 
 /* afs_QueueCallback
  * Takes a write-locked vcache pointer and a callback expiration time
@@ -112,10 +111,7 @@ void afs_FlushCBs();
  * NOTE: The caller must hold a write lock on afs_xcbhash
  */
 
-void afs_QueueCallback(avc, atime, avp)
-struct vcache *avc;
-unsigned int atime; 
-struct volume *avp;
+void afs_QueueCallback(struct vcache *avc, unsigned int atime, struct volume *avp)
 {
 struct vcache *list;
 
@@ -141,8 +137,7 @@ return ;
  *
  * NOTE: The caller must hold a write lock on afs_xcbhash
  */
-void afs_DequeueCallback(avc)
-struct vcache *avc;
+void afs_DequeueCallback(struct vcache *avc)
 {
 
   debugvc=avc;
@@ -197,8 +192,7 @@ extern afs_int32 afs_maxvcount;
 #define CBQ_LIMIT (afs_cacheStats + afs_stats_cmperf.vcacheXAllocs + 10)
 #endif
 
-void afs_CheckCallbacks(secs)
-unsigned int secs;
+void afs_CheckCallbacks(unsigned int secs)
 {
   struct vcache *tvc;
   register struct afs_q *tq;
@@ -306,7 +300,7 @@ return;
  * the floor, without giving them back to the server.  It's ok, the server can 
  * deal with it, but it is a little bit rude.
  */
-void afs_FlushCBs()
+void afs_FlushCBs(void)
 {
   register int i;
   register struct vcache *tvc;
@@ -334,8 +328,7 @@ void afs_FlushCBs()
  * the floor for a specific server, without giving them back to the server.
  * It's ok, the server can deal with it, but it is a little bit rude.
  */
-void afs_FlushServerCBs(srvp)
-struct server *srvp;
+void afs_FlushServerCBs(struct server *srvp)
 {
   register int i;
   register struct vcache *tvc;
@@ -364,8 +357,7 @@ struct server *srvp;
  *  called to initialize static and global variables associated with
  *  the Callback expiration management mechanism.
  */
-void afs_InitCBQueue(doLockInit)
-int doLockInit;
+void afs_InitCBQueue(int doLockInit)
 {
 register int i;
 
@@ -402,7 +394,7 @@ if (doLockInit)
  * but weren't (say, if the server was down), they will be examined at every
  * opportunity thereafter.
  */
-int afs_BumpBase()
+int afs_BumpBase(void)
 {
 afs_uint32 now;
 int didbump;
@@ -426,17 +418,3 @@ ReleaseWriteLock(&afs_xcbhash);
 
 return didbump;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -620,7 +620,7 @@ AddCallBack1(host, fid, thead, type, locked)
     return retVal;
 }
 
-int
+static int
 AddCallBack1_r(host, fid, thead, type, locked)
     struct host *host;
     AFSFid *fid;

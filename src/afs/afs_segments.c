@@ -21,19 +21,6 @@ RCSID("$Header$");
 #include "../afs/afs_cbqueue.h"
 #include "../afs/afs_osidnlc.h"
 
-
-
-/* Imported variables */
-extern afs_rwlock_t afs_xserver;
-extern afs_rwlock_t afs_xdcache;
-extern afs_rwlock_t afs_xcbhash;
-extern afs_lock_t afs_ftf;
-extern struct server *afs_servers[NSERVERS];
-extern afs_int32 afs_dhashsize;
-extern afs_int32 *afs_dvhashTbl;
-extern unsigned char *afs_indexFlags;	/*(only one) Is there data there?*/
-extern int cacheDiskType;
-
 afs_uint32 afs_stampValue=0;
 
 /*
@@ -49,11 +36,8 @@ afs_uint32 afs_stampValue=0;
  *	We're write-locked upon entry.
  */
 
-int afs_StoreMini(avc, areq)
-    register struct vcache *avc;
-    struct vrequest *areq;
-
-{ /*afs_StoreMini*/
+int afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
+{
     register struct conn *tc;
     struct AFSStoreStatus InStatus;
     struct AFSFetchStatus OutStatus;
@@ -168,12 +152,9 @@ int NCHUNKSATONCE = 64 ;
 int afs_dvhack=0;
 
 
-afs_StoreAllSegments(avc, areq, sync)
-    register struct vcache *avc;
-    struct vrequest *areq;
-    int sync;
-
-{ /*afs_StoreAllSegments*/
+int afs_StoreAllSegments(register struct vcache *avc, struct vrequest *areq, 
+	int sync)
+{
     register struct dcache *tdc;
     register afs_int32 code=0;
     register afs_int32 index;
@@ -319,7 +300,6 @@ afs_StoreAllSegments(avc, areq, sync)
 	struct conn * tc;
 	struct osi_file * tfile;
 	struct rx_call * tcall;
-	extern int afs_defaultAsynchrony;
 	XSTATS_DECLS
 
 	for (bytes = 0, j = 0; !code && j<=high; j++) {
@@ -370,7 +350,7 @@ afs_StoreAllSegments(avc, areq, sync)
 
 	    do {
 		stored = 0;
-		tc = afs_Conn(&avc->fid, areq);
+		tc = afs_Conn(&avc->fid, areq, 0);
 		if (tc) {
 restart:
 		    RX_AFS_GUNLOCK();
@@ -790,11 +770,8 @@ restart:
  *	with avc write-locked, and afs_xdcache unheld.
  */
    
-afs_InvalidateAllSegments(avc)
-    struct vcache *avc;
-
-{ /*afs_InvalidateAllSegments*/
-
+int afs_InvalidateAllSegments(struct vcache *avc)
+{
     struct dcache *tdc;
     afs_int32 hash;
     afs_int32 index;
@@ -877,8 +854,7 @@ afs_InvalidateAllSegments(avc)
     osi_Free(dcList, dcListMax * sizeof(struct dcache *));
 
     return 0;
-
-} /*afs_InvalidateAllSegments*/
+}
 
 
 /*
@@ -896,13 +872,9 @@ afs_InvalidateAllSegments(avc)
  *	Called with avc write-locked; in VFS40 systems, pvnLock is also
  *	held.
  */
-afs_TruncateAllSegments(avc, alen, areq, acred)
-    afs_size_t alen;
-    register struct vcache *avc;
-    struct vrequest *areq;
-    struct AFS_UCRED *acred;
-{ /*afs_TruncateAllSegments*/
-
+int afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen, 
+	struct vrequest *areq, struct AFS_UCRED *acred)
+{
     register struct dcache *tdc;
     register afs_int32 code;
     register afs_int32 index;
@@ -1032,7 +1004,4 @@ afs_TruncateAllSegments(avc, alen, areq, acred)
     ReleaseWriteLock(&avc->vlock);
 #endif
     return 0;
-
-} /*afs_TruncateAllSegments*/
-
-
+}

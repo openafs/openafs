@@ -352,7 +352,8 @@ extern int BlobScan(afs_int32 *afile, afs_int32 ablob);
  * ensure that vcaches created for failed RPC's to older servers have the
  * CForeign bit set.
  */
-struct vcache * BStvc = (struct vcache *) 0;
+static struct vcache *BStvc = (struct vcache *) 0;
+
 int afs_DoBulkStat(adp, dirCookie, areqp)
   struct vcache *adp;
   long dirCookie;
@@ -614,9 +615,7 @@ tagain:
 	if (tcp) {
 	    hostp = tcp->srvr->server;
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_BULKSTATUS);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GUNLOCK();
 
 	    if (!(tcp->srvr->server->flags & SNO_INLINEBULK)) {
 		code = RXAFS_InlineBulkStatus(tcp->id, &fidParm, &statParm,
@@ -633,9 +632,7 @@ tagain:
 		code = RXAFS_BulkStatus(tcp->id, &fidParm, &statParm, &cbParm,
 					&volSync);
 	    }
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	}
 	else code = -1;
@@ -889,7 +886,7 @@ tagain:
 }
 
 /* was: (AFS_DEC_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_NCR_ENV) */
-int AFSDOBULK = 1;
+static int AFSDOBULK = 1;
 
 #ifdef	AFS_OSF_ENV
 afs_lookup(adp, ndp)

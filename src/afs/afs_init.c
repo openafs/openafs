@@ -23,82 +23,6 @@ RCSID("$Header$");
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
 #include "../afs/afs_stats.h"   /* afs statistics */
 
-
-/* Imported variables */
-extern afs_int32 afs_waitForever;
-extern short afs_waitForeverCount;
-extern afs_int32 afs_FVIndex;
-extern struct server *afs_setTimeHost;
-extern struct server *afs_servers[NSERVERS];
-extern struct unixuser *afs_users[NUSERS];
-extern struct volume *afs_freeVolList;
-extern struct volume *afs_volumes[NVOLS];
-extern afs_int32 afs_volCounter;
-
-extern afs_rwlock_t afs_xaxs;
-extern afs_rwlock_t afs_xvolume;
-extern afs_rwlock_t afs_xuser;
-extern afs_rwlock_t afs_xserver;
-#ifndef AFS_AIX41_ENV
-extern afs_lock_t osi_fsplock;
-#endif
-extern afs_lock_t osi_flplock;
-extern afs_int32 fvTable[NFENTRIES];
-
-/* afs_cell.c */
-extern afs_rwlock_t afs_xcell;
-extern struct afs_q CellLRU;
-extern afs_int32 afs_cellindex;
-extern afs_int32 afs_nextCellNum;
-
-/* afs_conn.c */
-extern afs_rwlock_t afs_xconn;
-extern afs_rwlock_t afs_xinterface;
-
-/* afs_mariner.c */
-extern struct rx_service *afs_server;
-
-
-/* afs_mariner.c */
-extern afs_int32 afs_mariner;
-extern afs_int32 afs_marinerHost;
-
-/* afs_volume.c */
-extern ino_t volumeInode;
-
-/* afs_osi_pag.c */
-extern afs_uint32 pag_epoch;
-
-/* afs_dcache.c */
-extern afs_rwlock_t afs_xdcache;
-extern int cacheDiskType;
-extern afs_int32 afs_fsfragsize;
-extern ino_t cacheInode;
-extern struct osi_file *afs_cacheInodep;
-extern afs_int32 afs_freeDCList;		/*Free list for disk cache entries*/
-
-
-/* afs_vcache.c */
-extern afs_rwlock_t afs_xvcache;
-extern afs_rwlock_t afs_xvcb;
-
-/* VNOPS/afs_vnop_read.c */
-extern afs_int32 maxIHint;
-extern afs_int32 nihints;                   /* # of above actually in-use */
-extern afs_int32 usedihint;
-
-/* afs_server.c */
-extern afs_int32 afs_setTime;
-
-/* Imported functions. */
-extern struct rx_securityClass *rxnull_NewServerSecurityObject();
-extern int RXAFSCB_ExecuteRequest();
-extern int RXSTATS_ExecuteRequest();
-
-
-/* afs_osi.c */
-extern afs_lock_t afs_ftf;
-
 /* Exported variables */
 struct osi_dev cacheDev;           /*Cache device*/
 afs_int32 cacheInfoModTime;			/*Last time cache info modified*/
@@ -117,8 +41,8 @@ int afs_sysnamecount = 0;
 struct volume *Initialafs_freeVolList;
 int afs_memvolumes = 0;
 
-/* Local variables */
-
+extern int RXAFSCB_ExecuteRequest();
+extern int RXSTATS_ExecuteRequest();
 
 /*
  * Initialization order is important.  Must first call afs_CacheInit,
@@ -161,7 +85,6 @@ afs_CacheInit(astatSize, afiles, ablocks, aDentries, aVolumes, achunk, aflags,
     afs_int32 achunk, aflags, ninodes, nusers;
     afs_int32 aDentries;
 { /*afs_CacheInit*/
-    extern int afs_memvolumes;
     register afs_int32 i, preallocs;
     register struct volume *tv;
     long code;
@@ -315,11 +238,8 @@ afs_ComputeCacheParms()
  *	WARNING: Data will be written to this file over time by AFS.
  */
 
-afs_InitVolumeInfo(afile)
-    register char *afile;
-
-{ /*afs_InitVolumeInfo*/
-
+int afs_InitVolumeInfo(register char *afile)
+{
     afs_int32 code;
     struct osi_file *tfile;
     struct vnode *filevp;
@@ -348,8 +268,7 @@ afs_InitVolumeInfo(afile)
     afs_CFileTruncate(tfile, 0);
     afs_CFileClose(tfile);
     return 0;
-
-} /*afs_InitVolumeInfo*/
+}
 
 /*
  * afs_InitCacheInfo
@@ -374,11 +293,8 @@ afs_InitVolumeInfo(afile)
  * code.
  *
  */
-afs_InitCacheInfo(afile)
-    register char *afile;
-
-{ /*afs_InitCacheInfo*/
-
+int afs_InitCacheInfo(register char *afile)
+{
     register afs_int32 code;
     struct osi_stat tstat;
     register struct osi_file *tfile;
@@ -511,12 +427,10 @@ afs_InitCacheInfo(afile)
      */
     afs_cacheInodep = (struct osi_file *)tfile;
     return 0;
-
-} /*afs_InitCacheInfo*/
+}
 
 int afs_resourceinit_flag = 0;
-afs_ResourceInit(preallocs)
-  int preallocs;
+int afs_ResourceInit(int preallocs)
 {
     register afs_int32 i;
     static struct rx_securityClass *secobj;
@@ -547,7 +461,7 @@ afs_ResourceInit(preallocs)
 	afs_sysnamecount = 1;
 	QInit(&CellLRU);	
 #if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-    {  extern afs_int32 afs_preallocs;
+    {  
 
        if ((preallocs > 256) && (preallocs < 3600))
 	   afs_preallocs = preallocs;
@@ -683,8 +597,6 @@ shutdown_cache()
 
 { /*shutdown_cache*/
     register struct afs_cbr *tsp, *nsp;
-    extern int afs_cold_shutdown;
-    extern int pagCounter;
     int i;
 
   AFS_STATCNT(shutdown_cache);
@@ -713,13 +625,6 @@ shutdown_cache()
 
 void shutdown_vnodeops()
 {
-    extern int afs_cold_shutdown;
-#ifndef AFS_LINUX20_ENV
-    extern int afs_rd_stash_i;
-#endif
-#ifndef AFS_SUN5_ENV
-    extern int lastWarnTime;
-#endif
 #if !defined(AFS_SGI_ENV) && !defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
     struct buf *afs_bread_freebp = 0;
 #endif
@@ -746,7 +651,6 @@ void shutdown_AFS()
 {
     int i;
     register struct srvAddr *sa;
-    extern int afs_cold_shutdown;
 
     AFS_STATCNT(shutdown_AFS);
     if (afs_cold_shutdown) {

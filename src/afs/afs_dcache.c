@@ -27,13 +27,6 @@ static void afs_FreeDiscardedDCache(void);
 static void afs_DiscardDCache(struct dcache *);
 static void afs_FreeDCache(struct dcache *);
 
-/* Imported variables */
-extern afs_rwlock_t afs_xvcache;
-extern afs_rwlock_t afs_xcbhash;
-extern afs_int32 afs_mariner;
-extern afs_int32 cacheInfoModTime;			/*Last time cache info modified*/
-
-
 /*
  * --------------------- Exported definitions ---------------------
  */
@@ -95,8 +88,8 @@ extern struct dcache *afs_UFSGetDSlot();
 extern struct volume *afs_UFSGetVolSlot();
 extern int osi_UFSTruncate(), afs_osi_Read(), afs_osi_Write(), osi_UFSClose();
 extern int afs_UFSRead(), afs_UFSWrite();
-static int afs_UFSCacheFetchProc(), afs_UFSCacheStoreProc();
 extern int afs_UFSHandleLink();
+static int afs_UFSCacheFetchProc(), afs_UFSCacheStoreProc();
 struct afs_cacheOps afs_UfsCacheOps = {
     osi_UFSOpen,
     osi_UFSTruncate,
@@ -112,12 +105,6 @@ struct afs_cacheOps afs_UfsCacheOps = {
     afs_UFSHandleLink,
 };
 
-extern void *afs_MemCacheOpen();
-extern struct dcache *afs_MemGetDSlot();
-extern struct volume *afs_MemGetVolSlot();
-extern int afs_MemCacheTruncate(), afs_MemReadBlk(), afs_MemWriteBlk(), afs_MemCacheClose();
-extern int afs_MemRead(), afs_MemWrite(), afs_MemCacheFetchProc(), afs_MemCacheStoreProc();
-extern int afs_MemHandleLink();
 struct afs_cacheOps afs_MemCacheOps = {
     afs_MemCacheOpen,
     afs_MemCacheTruncate,
@@ -233,7 +220,7 @@ void afs_MaybeWakeupTruncateDaemon() {
 /* Keep statistics on run time for afs_CacheTruncateDaemon. This is a
  * struct so we need only export one symbol for AIX.
  */
-struct CTD_stats {
+static struct CTD_stats {
     osi_timeval_t CTD_beforeSleep;
     osi_timeval_t CTD_afterSleep;
     osi_timeval_t CTD_sleepTime;
@@ -242,7 +229,8 @@ struct CTD_stats {
 } CTD_stats;
 
 u_int afs_min_cache = 0;
-void afs_CacheTruncateDaemon() {
+void afs_CacheTruncateDaemon(void)
+{
     osi_timeval_t CTD_tmpTime;
     u_int counter;
     u_int cb_lowat;
@@ -691,11 +679,8 @@ endmultipage:
  *
  * Locks: Must have the afs_xdcache lock write-locked to call this function.
  */
-afs_HashOutDCache(adc)
-    struct dcache *adc;
-
-{ /*afs_HashOutDCache*/
-
+int afs_HashOutDCache(struct dcache *adc)
+{
     int i, us;
 
 #ifndef	AFS_DEC_ENV
@@ -774,11 +759,8 @@ afs_HashOutDCache(adc)
  *	(in write mode)
  */
 
-void
-afs_FlushDCache(adc)
-register struct dcache *adc;
-{ /*afs_FlushDCache*/
-
+void afs_FlushDCache(register struct dcache *adc)
+{
     AFS_STATCNT(afs_FlushDCache);
     /*
      * Bump the number of cache files flushed.
@@ -963,7 +945,7 @@ afs_FreeDiscardedDCache()
  * Parameters:
  *      None
  */
-afs_MaybeFreeDiscardedDCache()
+int afs_MaybeFreeDiscardedDCache(void)
 {
 
     AFS_STATCNT(afs_MaybeFreeDiscardedDCache);
@@ -987,13 +969,6 @@ afs_MaybeFreeDiscardedDCache()
  * Environment:
  *	Must be called with afs_xdcache write-locked.
  */
-#if defined(AFS_SGI_ENV) && defined(AFS_SGI_SHORTSTACK)
-extern SV_TYPE afs_sgibksync;
-extern SV_TYPE afs_sgibkwait;
-extern lock_t afs_sgibklock;
-extern struct dcache *afs_sgibklist;
-#endif
-
 static void
 afs_GetDownDSlot(anumber)
     int anumber;
@@ -1091,8 +1066,7 @@ afs_GetDownDSlot(anumber)
  * Environment:
  *	Nothing interesting.
  */
-afs_RefDCache(adc)
-    struct dcache *adc;
+int afs_RefDCache(struct dcache *adc)
 {
     ObtainWriteLock(&adc->tlock, 627);
     if (adc->refCount < 0)
@@ -1115,10 +1089,8 @@ afs_RefDCache(adc)
  * Environment:
  *	Nothing interesting.
  */
-afs_PutDCache(adc)
-    register struct dcache *adc;
-
-{ /*afs_PutDCache*/
+int afs_PutDCache(register struct dcache *adc)
+{
     AFS_STATCNT(afs_PutDCache);
     ObtainWriteLock(&adc->tlock, 276);
     if (adc->refCount <= 0)
@@ -1126,8 +1098,7 @@ afs_PutDCache(adc)
     --adc->refCount;
     ReleaseWriteLock(&adc->tlock);
     return 0;
-
-} /*afs_PutDCache*/
+}
 
 
 /*
@@ -1143,13 +1114,9 @@ afs_PutDCache(adc)
  * Environment:
  *	Both pvnLock and lock are write held.
  */
-void
-afs_TryToSmush(avc, acred, sync)
-    register struct vcache *avc;
-    struct AFS_UCRED *acred;
-    int sync;
-{ /*afs_TryToSmush*/
-
+void afs_TryToSmush(register struct vcache *avc, struct AFS_UCRED *acred, 
+	int sync)
+{
     register struct dcache *tdc;
     register int index;
     register int i;
@@ -1206,7 +1173,7 @@ afs_TryToSmush(avc, acred, sync)
      * trytoSmush occured during the lookup call
      */
     afs_allCBs++;
-} /*afs_TryToSmush*/
+}
 
 /*
  * afs_FindDCache
@@ -1228,12 +1195,8 @@ afs_TryToSmush(avc, acred, sync)
  *	The vcache entry is held upon entry.
  */
 
-struct dcache *afs_FindDCache(avc, abyte)
-    register struct vcache *avc;
-    afs_size_t abyte;
-
-{ /*afs_FindDCache*/
-
+struct dcache *afs_FindDCache(register struct vcache *avc, afs_size_t abyte)
+{
     afs_int32 chunk;
     register afs_int32 i, index;
     register struct dcache *tdc;
@@ -1537,15 +1500,11 @@ void updateV2DC(int lockVc, struct vcache *v, struct dcache *d, int src) {
     }
 }
 
-struct dcache *afs_GetDCache(avc, abyte, areq, aoffset, alen, aflags)
-    register struct vcache *avc;    /* Write-locked unless aflags & 1 */
-    afs_size_t abyte;
-    afs_size_t *aoffset, *alen;
-    int	aflags;
-    register struct vrequest *areq;
-
-{ /*afs_GetDCache*/
-
+/* avc - Write-locked unless aflags & 1 */
+struct dcache *afs_GetDCache(register struct vcache *avc, afs_size_t abyte, 
+	register struct vrequest *areq, afs_size_t *aoffset, afs_size_t *alen, 
+	int aflags)
+{
     register afs_int32 i, code, code1, shortcut , adjustsize=0;
     int setLocks;
     afs_int32 index;
@@ -2668,10 +2627,7 @@ afs_WriteThroughDSlots()
  *	Must be called with afs_xdcache write-locked.
  */
 
-struct dcache *afs_MemGetDSlot(aslot, tmpdc)
-     register afs_int32 aslot;
-     register struct dcache *tmpdc;
-
+struct dcache *afs_MemGetDSlot(register afs_int32 aslot, register struct dcache *tmpdc)
 { /*afs_MemGetDSlot*/
 
     register afs_int32 code;
@@ -2873,12 +2829,8 @@ struct dcache *afs_UFSGetDSlot(aslot, tmpdc)
  *	The reference count is not changed.
  */
 
-afs_WriteDCache(adc, atime)
-    int atime;
-    register struct dcache *adc;
-
-{ /*afs_WriteDCache*/
-
+int afs_WriteDCache(register struct dcache *adc, int atime)
+{
     register struct osi_file *tfile;
     register afs_int32 code;
 
@@ -2893,8 +2845,7 @@ afs_WriteDCache(adc, atime)
 		     (char *)(&adc->f), sizeof(struct fcache));
     if (code != sizeof(struct fcache)) return EIO;
     return 0;
-
-} /*afs_WriteDCache*/
+}
 
 
 
@@ -2912,11 +2863,8 @@ afs_WriteDCache(adc, atime)
  *	Nothing interesting.
  */
 
-afs_wakeup(avc)
-    register struct vcache *avc;
-
-{ /*afs_wakeup*/
-
+int afs_wakeup(register struct vcache *avc)
+{
     register int i;
     register struct brequest *tb;
     tb = afs_brs;
@@ -2946,8 +2894,7 @@ afs_wakeup(avc)
 	}
     }
     return 0;
-
-} /*afs_wakeup*/
+}
 
 
 /*
@@ -2966,12 +2913,8 @@ afs_wakeup(avc)
  *	This function is called only during initialization.
  */
 
-int afs_InitCacheFile(afile, ainode)
-    ino_t ainode;
-    char *afile;
-
-{ /*afs_InitCacheFile*/
-
+int afs_InitCacheFile(char *afile, ino_t ainode)
+{
     register afs_int32 code;
 #if defined(AFS_LINUX22_ENV)
     struct dentry *filevp;
@@ -3100,8 +3043,7 @@ int afs_InitCacheFile(afile, ainode)
     afs_PutDCache(tdc);
     afs_stats_cmperf.cacheNumEntries++;
     return 0;
-
-} /*afs_InitCacheFile*/
+}
 
 
 /*Max # of struct dcache's resident at any time*/

@@ -1372,8 +1372,8 @@ definition *defp;
     }
 
     if (!cflag) {
-	f_print(fout, "afs_int32 _%s%s%s(z_call, z_xdrs)\n", prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
-	f_print(fout, "\tstruct rx_call *z_call;\n\tXDR *z_xdrs;\n{\n");
+	f_print(fout, "static afs_int32 _%s%s%s(", prefix, PackagePrefix[PackageIndex], defp->pc.proc_name);
+	f_print(fout, "struct rx_call *z_call, XDR *z_xdrs)\n{\n");
 	f_print(fout, "\t" "afs_int32 z_result;\n");
 	if (xflag) {
 	    f_print(fout, "\tstruct clock __QUEUE, __EXEC;\n");
@@ -1755,7 +1755,7 @@ er_ProcDeclExterns_setup()
 	if (defp->pc.proc_serverstub) {
 	    f_print(fout, "afs_int32 %s();\n", defp->pc.proc_serverstub);
 	} else {
-	    f_print(fout, "afs_int32 _%s%s%s();\n", prefix, defp->pc.proc_prefix, defp->pc.proc_name);
+	    f_print(fout, "afs_int32 _%s%s%s(struct rx_call *z_call, XDR *z_xdrs);\n", prefix, defp->pc.proc_prefix, defp->pc.proc_name);
 	}
     }
 }
@@ -1772,7 +1772,7 @@ er_ProcProcsArray_setup()
 	if (defp->pc.proc_serverstub){
 	    f_print(fout, "\nstatic afs_int32 (*StubProcsArray%d[])() = {%s", PackageIndex, defp->pc.proc_serverstub);
 	} else {
-	    f_print(fout, "\nstatic afs_int32 (*StubProcsArray%d[])() = {_%s%s%s", PackageIndex, prefix, defp->pc.proc_prefix, (defp = (definition *)listp->val)->pc.proc_name);
+	    f_print(fout, "\nstatic afs_int32 (*StubProcsArray%d[])(struct rx_call *z_call, XDR *z_xdrs) = {_%s%s%s", PackageIndex, prefix, defp->pc.proc_prefix, (defp = (definition *)listp->val)->pc.proc_name);
 	}
 	listp = listp->next;
     }
@@ -1791,8 +1791,7 @@ er_ProcProcsArray_setup()
 static
 er_ProcMainBody_setup()
 {
-    f_print(fout, "int %s%sExecuteRequest(z_call)\n", prefix,  PackagePrefix[PackageIndex]);
-    f_print(fout, "\tregister struct rx_call *z_call;\n");
+    f_print(fout, "int %s%sExecuteRequest(register struct rx_call *z_call)\n", prefix,  PackagePrefix[PackageIndex]);
     f_print(fout, "{\n\tint op;\n");
     f_print(fout, "\tXDR z_xdrs;\n");
     f_print(fout, "\t" "afs_int32 z_result;\n\n");

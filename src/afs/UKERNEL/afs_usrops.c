@@ -441,8 +441,7 @@ struct usr_user *get_user_struct()
 /*
  * Sleep on an event
  */
-int afs_osi_Sleep(x)
-caddr_t x;
+void afs_osi_Sleep(int *x)
 {
     int index;
     osi_wait_t *waitp;
@@ -487,15 +486,12 @@ caddr_t x;
     }
 }
 
-int afs_osi_SleepSig(x)
-    caddr_t x;
+void afs_osi_SleepSig(int *x)
 {
     afs_osi_Sleep(x);
-    return 0;
 }
 
-int afs_osi_Wakeup(x)
-caddr_t x;
+void afs_osi_Wakeup(int *x)
 {
     int index;
     osi_wait_t *waitp;
@@ -513,10 +509,7 @@ caddr_t x;
     usr_mutex_unlock(&osi_waitq_lock);
 }
 
-int afs_osi_Wait(msec, handle, intok)
-afs_int32 msec;
-struct afs_osi_WaitHandle *handle;
-int intok;
+int afs_osi_Wait(afs_int32 msec, struct afs_osi_WaitHandle *handle, int intok)
 {
     int index;
     osi_wait_t *waitp;
@@ -589,17 +582,16 @@ int intok;
     return ret;
 }
 
-void afs_osi_CancelWait(handle)
-struct afs_osi_WaitHandle *handle;
+void afs_osi_CancelWait(struct afs_osi_WaitHandle *handle)
 {
-    afs_osi_Wakeup((caddr_t)handle);
+    afs_osi_Wakeup((int *)handle);
 }
 
 /*
  * Netscape NSAPI doesn't have a cond_timed_wait, so we need
  * to explicitly signal cond_timed_waits when their timers expire
  */
-int afs_osi_CheckTimedWaits()
+int afs_osi_CheckTimedWaits(void)
 {
     time_t curTime;
     osi_wait_t *waitp;
@@ -636,12 +628,8 @@ int max_osi_files = 0;
  * Allocate a slot in the file table if there is not one there already,
  * copy in the file name and kludge up the vnode and inode structures
  */
-int lookupname(fnamep, segflg, followlink, dirvpp, compvpp)
-char *fnamep;
-int segflg;
-int followlink;
-struct usr_vnode **dirvpp;
-struct usr_vnode **compvpp;
+int lookupname(char *fnamep, int segflg, int followlink, 
+	struct usr_vnode **dirvpp, struct usr_vnode **compvpp)
 {
     int i;
     int code;
@@ -695,8 +683,7 @@ struct usr_vnode **compvpp;
 /*
  * open a file given its i-node number
  */
-void *osi_UFSOpen(ino)
-int ino;
+void *osi_UFSOpen(int ino)
 {
     int rc;
     struct osi_file *fp;
@@ -735,8 +722,7 @@ int ino;
     return fp;
 }
 
-int osi_UFSClose(fp)
-struct osi_file *fp;
+int osi_UFSClose(struct osi_file *fp)
 {
     int rc;
 
@@ -755,9 +741,7 @@ struct osi_file *fp;
     return 0;
 }
 
-int osi_UFSTruncate(fp, len)
-struct osi_file *fp;
-int len;
+int osi_UFSTruncate(struct osi_file *fp, int len)
 {
     int rc;
 
@@ -775,11 +759,7 @@ int len;
     return 0;
 }
 
-int afs_osi_Read(fp, offset, buf, len)
-struct osi_file *fp;
-int offset;
-char *buf;
-int len;
+int afs_osi_Read(struct osi_file *fp, int offset, char *buf, int len)
 {
     int rc, ret;
     int code;
@@ -817,11 +797,7 @@ int len;
     return ret;
 }
 
-int afs_osi_Write(fp, offset, buf, len)
-struct osi_file *fp;
-int offset;
-char *buf;
-int len;
+int afs_osi_Write(struct osi_file *fp, int offset, char *buf, int len)
 {
     int rc, ret;
     int code;
@@ -859,9 +835,7 @@ int len;
     return ret;
 }
 
-int afs_osi_Stat(fp, stp)
-struct osi_file *fp;
-struct osi_stat *stp;
+int afs_osi_Stat(struct osi_file *fp, struct osi_stat *stp)
 {
     int rc;
     struct stat st;
@@ -963,37 +937,37 @@ void osi_FreeSmallSpace(void *ptr)
     afs_osi_Free(ptr, 0);
 }
 
-void shutdown_osi()
+void shutdown_osi(void)
 {
     AFS_STATCNT(shutdown_osi);
     return;
 }
 
-void shutdown_osinet()
+void shutdown_osinet(void)
 {
     AFS_STATCNT(shutdown_osinet);
     return;
 }
 
-void shutdown_osifile()
+void shutdown_osifile(void)
 {
     AFS_STATCNT(shutdown_osifile);
     return;
 }
 
-int afs_nfsclient_init()
+int afs_nfsclient_init(void)
 {
     return 0;
 }
 
-void shutdown_nfsclnt()
+void shutdown_nfsclnt(void)
 {
     return;
 }
 
-int afs_osi_Invisible()
+void afs_osi_Invisible(void)
 {
-    return 0;
+    return;
 }
 
 int osi_GetTime(tv)
@@ -1913,7 +1887,7 @@ void uafs_Init(
     return;
 }
 
-void uafs_Shutdown()
+void uafs_Shutdown(void)
 {
     int rc;
 

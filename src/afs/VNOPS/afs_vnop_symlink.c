@@ -129,25 +129,17 @@ afs_symlink
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SYMLINK);
 	    if (adp->states & CForeign) {
 		now = osi_Time();
-#ifdef RX_ENABLE_LOCKS
-		AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GUNLOCK();
 		code = RXAFS_DFSSymlink(tc->id, (struct AFSFid *) &adp->fid.Fid, aname,
 				     atargetName, &InStatus, (struct AFSFid *) &newFid.Fid,
 				     &OutFidStatus, &OutDirStatus, &CallBack, &tsync);
-#ifdef RX_ENABLE_LOCKS
-		AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GLOCK();
 	    } else {
-#ifdef RX_ENABLE_LOCKS
-		AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GUNLOCK();
 		code = RXAFS_Symlink(tc->id, (struct AFSFid *) &adp->fid.Fid, aname,
 				     atargetName, &InStatus, (struct AFSFid *) &newFid.Fid,
 				     &OutFidStatus, &OutDirStatus, &tsync);
-#ifdef RX_ENABLE_LOCKS
-		AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+		RX_AFS_GLOCK();
 	    }
           XSTATS_END_TIME;
 	}
@@ -233,10 +225,8 @@ done2:
     return code;
 }
 
-afs_MemHandleLink(avc, areq)
-     register struct vcache *avc;
-     struct vrequest *areq;
-  {
+int afs_MemHandleLink(register struct vcache *avc, struct vrequest *areq)
+{
       register struct dcache *tdc;
       register char *tp, *rbuf;
       afs_size_t offset, len;

@@ -77,9 +77,6 @@ char afs_AfsdbHandler_ReqPending = 0;
 /* Handler sets Completed to 1 when it completes the client request */
 char afs_AfsdbHandler_Completed = 0;
 
-
-struct cell *afs_GetCellByName2();
-
 int afs_strcasecmp(s1, s2)
     register char *s1, *s2;
 {
@@ -259,9 +256,7 @@ done:
 }
 
 
-struct cell *afs_GetCellByName_Dns(acellName, locktype)
-    register char *acellName;
-    afs_int32 locktype;
+struct cell *afs_GetCellByName_Dns(register char *acellName, afs_int32 locktype)
 {
     afs_int32 cellHosts[MAXCELLHOSTS];
     char *realName = NULL;
@@ -304,10 +299,8 @@ bad:
 }
 
 
-struct cell *afs_GetCellByName2(acellName, locktype, trydns)
-    register char *acellName;
-    afs_int32 locktype;
-    char trydns;
+struct cell *afs_GetCellByName2(register char *acellName, afs_int32 locktype, 
+	char trydns)
 {
     register struct cell *tc;
     register struct afs_q *cq, *tq;
@@ -336,21 +329,16 @@ retry:
     return trydns ? afs_GetCellByName_Dns(acellName, locktype)
 		  : (struct cell *) 0;
 
-} /*afs_GetCellByName2*/
+}
 
 
-struct cell *afs_GetCellByName(acellName, locktype)
-    register char *acellName;
-    afs_int32 locktype;
+struct cell *afs_GetCellByName(register char *acellName, afs_int32 locktype)
 {
     return afs_GetCellByName2(acellName, locktype, 1);
+}
 
-} /*afs_GetCellByName*/
-
-static struct cell *afs_GetCellInternal(acell, locktype, holdxcell)
-    register afs_int32 acell;
-    afs_int32 locktype;
-    int holdxcell;
+static struct cell *afs_GetCellInternal(register afs_int32 acell, 
+	afs_int32 locktype, int holdxcell)
 {
     register struct cell *tc;
     register struct afs_q *cq, *tq;
@@ -376,25 +364,19 @@ static struct cell *afs_GetCellInternal(acell, locktype, holdxcell)
 
 } /*afs_GetCell*/
 
-struct cell *afs_GetCell(acell, locktype)
-    register afs_int32 acell;
-    afs_int32 locktype;
+struct cell *afs_GetCell(register afs_int32 acell, afs_int32 locktype)
 {
     return afs_GetCellInternal(acell, locktype, 1);
 }
 
 /* This is only to be called if the caller is already holding afs_xcell */
-struct cell *afs_GetCellNoLock(acell, locktype)
-    register afs_int32 acell;
-    afs_int32 locktype;
+struct cell *afs_GetCellNoLock(register afs_int32 acell, afs_int32 locktype)
 {
     return afs_GetCellInternal(acell, locktype, 0);
 }
 
-struct cell *afs_GetCellByIndex(cellindex, locktype, refresh)
-    register afs_int32 cellindex;
-    afs_int32 locktype;
-    afs_int32 refresh;
+struct cell *afs_GetCellByIndex(register afs_int32 cellindex, 
+	afs_int32 locktype, afs_int32 refresh)
 {
     register struct cell *tc;
     register struct afs_q *cq, *tq;
@@ -417,14 +399,8 @@ struct cell *afs_GetCellByIndex(cellindex, locktype, refresh)
 } /*afs_GetCellByIndex*/
 
 
-afs_int32 afs_NewCell(acellName, acellHosts, aflags, linkedcname, fsport, vlport, timeout, aliasFor)
-    int aflags;
-    char *acellName;
-    register afs_int32 *acellHosts;
-    char *linkedcname;
-    u_short fsport, vlport;
-    int timeout;
-    char *aliasFor;
+afs_int32 afs_NewCell(char *acellName, register afs_int32 *acellHosts, int aflags, 
+	char *linkedcname, u_short fsport, u_short vlport, int timeout, char *aliasFor)
 {
     register struct cell *tc, *tcl=0;
     register afs_int32 i, newc=0, code=0;
@@ -552,7 +528,7 @@ bad:
 
 } /*afs_NewCell*/
 
-afs_RemoveCellEntry(struct server *srvp)
+int afs_RemoveCellEntry(struct server *srvp)
 {
   struct cell *tc;
   afs_int32 j, k;

@@ -47,13 +47,8 @@ extern afs_hyper_t afs_indexCounter;         /* Fake time for marking index */
 void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 			      struct AFS_UCRED *acred, struct vrequest *areq);
 
-afs_MemRead(avc, auio, acred, albn, abpp, noLock)
-    register struct vcache *avc;
-    struct uio *auio;
-    struct AFS_UCRED *acred;
-    daddr_t albn;
-    int noLock;
-    struct buf **abpp; 
+int afs_MemRead(register struct vcache *avc, struct uio *auio, struct AFS_UCRED *acred, 
+	daddr_t albn, struct buf **abpp, int noLock)
 {
     afs_size_t totalLength;
     afs_size_t transferLength;

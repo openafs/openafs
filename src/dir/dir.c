@@ -105,6 +105,9 @@ RCSID("$Header$");
 #define	IsEmpty		afs_dir_IsEmpty
 #else /* KERNEL */
 
+# ifdef HAVE_UNISTD_H
+#  include <unistd.h>
+# endif
 # include <sys/types.h>	
 # include <errno.h>
 # include "dir.h"

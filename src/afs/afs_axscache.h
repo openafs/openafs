@@ -31,10 +31,6 @@ struct axscache {
   struct axscache * next;
 };
 
-extern struct axscache *axs_Alloc(), *afs_SlowFindAxs();
-extern void afs_RemoveAxs(), afs_FreeAllAxs();
-extern afs_rwlock_t afs_xaxs;
-
 /* DON'T use this with a NULL pointer! 
  * the quick check should cover 99.9% of the cases 
  */

@@ -70,7 +70,8 @@ afs_uint32 pagCounter = 0;
  * secure (although of course not absolutely secure).
 */
 #if !defined(UKERNEL) || !defined(AFS_WEB_ENHANCEMENTS)
-afs_uint32 genpag(void) {
+afs_uint32 genpag(void)
+{
     AFS_STATCNT(genpag);
 #ifdef AFS_LINUX20_ENV
     /* Ensure unique PAG's (mod 200 days) when reloading the client. */
@@ -80,7 +81,8 @@ afs_uint32 genpag(void) {
 #endif /* AFS_LINUX20_ENV */
 }
 
-afs_uint32 getpag(void) {
+afs_uint32 getpag(void)
+{
     AFS_STATCNT(getpag);
 #ifdef AFS_LINUX20_ENV
     /* Ensure unique PAG's (mod 200 days) when reloading the client. */
@@ -95,7 +97,8 @@ afs_uint32 getpag(void) {
 /* Web enhancement: we don't need to restrict pags to 41XXXXXX since
  * we are not sharing the space with anyone.  So we use the full 32 bits. */
 
-afs_uint32 genpag(void) {
+afs_uint32 genpag(void)
+{
     AFS_STATCNT(genpag);
 #ifdef AFS_LINUX20_ENV
     return (pag_epoch + pagCounter++);
@@ -104,7 +107,8 @@ afs_uint32 genpag(void) {
 #endif /* AFS_LINUX20_ENV */
 }
 
-afs_uint32 getpag(void) {
+afs_uint32 getpag(void)
+{
     AFS_STATCNT(getpag);
 #ifdef AFS_LINUX20_ENV
     /* Ensure unique PAG's (mod 200 days) when reloading the client. */
@@ -324,6 +328,7 @@ int afs_getpag_val()
 #endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
 
 
+/* Note - needs to be available on AIX, others can be static - rework this */
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 int AddPag(struct proc *p, afs_int32 aval, struct AFS_UCRED **credpp)
 #else	/* AFS_OSF_ENV || AFS_FBSD_ENV */
@@ -346,10 +351,8 @@ int AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
 }
 
 
-afs_InitReq(av, acred)
-    register struct vrequest *av;
-    struct AFS_UCRED *acred; {
-
+int afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
+{
     AFS_STATCNT(afs_InitReq);
     if (afs_shuttingdown) return EIO;
     av->uid = PagInCred(acred);

@@ -144,6 +144,16 @@ extern unsigned long afs_linux_page_offset;
 
 #define afs_linux_page_address(page) (afs_linux_page_offset + PAGE_SIZE * (page - mem_map))
 
+#if defined(__KERNEL__)
+extern int nneul_kernel_is_defined;
+#endif
+#if defined(CONFIG_SMP)
+extern int nneul_config_smp_is_defined;
+#endif
+#if defined(AFS_SMP)
+extern int nneul_afs_smp_is_defined;
+#endif
+
 #if defined(__KERNEL__) && defined(CONFIG_SMP)
 #include "linux/wait.h"
 
@@ -164,13 +174,16 @@ do { \
 #define AFS_GUNLOCK() \
 do { \
     if (!ISAFS_GLOCK()) \
-	osi_Panic("afs global lock not held"); \
+	osi_Panic("afs global lock not held at %s:%d", __FILE__, __LINE__); \
     afs_global_owner = 0; \
     up(&afs_global_lock); \
 } while (0)
 
 
 #else
+
+extern int nneul_shouldnt_see_this;
+
 #define AFS_GLOCK()
 #define AFS_GUNLOCK()
 #define ISAFS_GLOCK() 1

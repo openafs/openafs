@@ -47,14 +47,6 @@ RCSID("$Header$");
 #include <inet/ip.h>
 #endif
 
-/* Imported variables */
-extern afs_rwlock_t afs_xserver;
-extern afs_rwlock_t afs_xsrvAddr; 
-extern afs_rwlock_t afs_xvcache;
-extern afs_rwlock_t afs_xcbhash;
-extern struct srvAddr *afs_srvAddrs[NSERVERS];  /* Hashed by server's ip */
-extern int afs_totalSrvAddrs;
-
 /* In case we don't have the vl error table yet. */
 #ifndef ERROR_TABLE_BASE_VL
 #define ERROR_TABLE_BASE_VL     (363520L)
@@ -77,9 +69,7 @@ static inVolList();
 
 
 /* Convert a volume name to a #; return 0 if can't parse as a number */
-static int afs_vtoi(aname)
-    register char *aname;
-
+static int afs_vtoi(register char *aname)
 {
     register afs_int32 temp;
     register int tc;
@@ -108,8 +98,7 @@ afs_int32 afs_FVIndex = -1;
 
 /* UFS specific version of afs_GetVolSlot */
 
-struct volume *afs_UFSGetVolSlot()
-
+struct volume *afs_UFSGetVolSlot(void)
 {
     register struct volume *tv, **lv;
     register char *tfile;
@@ -188,8 +177,7 @@ struct volume *afs_UFSGetVolSlot()
 } /*afs_UFSGetVolSlot*/
 
 
-struct volume *afs_MemGetVolSlot()
-
+struct volume *afs_MemGetVolSlot(void)
 {
     register struct volume *tv, **lv;
     register afs_int32 i;
@@ -240,7 +228,6 @@ void afs_CheckVolumeNames(flags)
     int flags;
 {
     afs_int32 i,j;
-    extern int osi_dnlc_purge();
     struct volume *tv;
     unsigned int now;
     struct vcache *tvc;
@@ -341,9 +328,7 @@ void afs_CheckVolumeNames(flags)
 } /*afs_CheckVolumeNames*/
 
 
-static inVolList(fid, nvols, vID, cID)
-    struct VenusFid *fid;
-    afs_int32  nvols, *vID, *cID;
+static int inVolList(struct VenusFid *fid, afs_int32 nvols, afs_int32 *vID, afs_int32 *cID)
 {
     afs_int32 i;
 
@@ -394,10 +379,8 @@ struct volume *afs_FindVolume(struct VenusFid *afid, afs_int32 locktype)
  * Note that areq may be null, in which case we don't bother to set any
  * request status information.
  */
-struct volume *afs_GetVolume(afid, areq, locktype)
-    struct vrequest *areq;
-    struct VenusFid *afid;
-    afs_int32 locktype;
+struct volume *afs_GetVolume(struct VenusFid *afid, struct vrequest *areq, 
+	afs_int32 locktype)
 {
     struct volume *tv;
     char *bp, tbuf[CVBS];
@@ -527,12 +510,8 @@ static struct volume *afs_SetupVolume(volid, aname, ve, tcell, agood, type, areq
 }
 
 
-struct volume *afs_GetVolumeByName(aname, acell, agood, areq, locktype)
-    struct vrequest *areq;
-    afs_int32 acell;
-    int agood;
-    register char *aname;
-    afs_int32 locktype;
+struct volume *afs_GetVolumeByName(register char *aname, afs_int32 acell, 
+	int agood, struct vrequest *areq, afs_int32 locktype)
 {
   afs_int32 i;
   struct volume *tv;

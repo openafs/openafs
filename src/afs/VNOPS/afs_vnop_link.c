@@ -91,15 +91,11 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
 	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
 	if (tc) {
           XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_LINK);
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	  RX_AFS_GUNLOCK();
 	    code = RXAFS_Link(tc->id, (struct AFSFid *) &adp->fid.Fid, aname,
 			      (struct AFSFid *) &avc->fid.Fid, &OutFidStatus,
 			      &OutDirStatus, &tsync);
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	  RX_AFS_GLOCK();
           XSTATS_END_TIME;
 
 	}

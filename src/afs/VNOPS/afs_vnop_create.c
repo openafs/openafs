@@ -287,16 +287,12 @@ tagain:
  	    hostp = tc->srvr->server;	    /* remember for callback processing */
 	    now = osi_Time();
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_CREATEFILE);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GUNLOCK();
 	    code = RXAFS_CreateFile(tc->id, (struct AFSFid *) &adp->fid.Fid,
 				    aname, &InStatus, (struct AFSFid *)
 				    &newFid.Fid, &OutFidStatus,
 				    &OutDirStatus, &CallBack, &tsync);
-#ifdef RX_ENABLE_LOCKS
-	    AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
+	    RX_AFS_GLOCK();
 	    XSTATS_END_TIME;
 	    CallBack.ExpirationTime += now;
 	}

@@ -21,12 +21,6 @@
 /* 7 is LOG2(slotlen) */
 #define CBHash(t) (t>>7)
 
-extern int afs_BumpBase();
-extern void afs_InitCBQueue();
-extern void afs_CheckCallbacks();
-extern void afs_DequeueCallback();
-extern void afs_QueueCallback();
-
 #define	CBQTOV(e)	    ((struct vcache *)(((char *) (e)) - (((char *)(&(((struct vcache *)(e))->callsort))) - ((char *)(e)))))
 
 

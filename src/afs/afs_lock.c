@@ -31,22 +31,14 @@ RCSID("$Header$");
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
 #include "../afs/afs_stats.h" /* afs statistics */
 
-
-#ifndef FALSE
-#define FALSE	0
-#endif
-#ifndef TRUE
-#define TRUE	1
-#endif
-
+/* probably needed if lock_trace is enabled - should ifdef */
 int afs_trclock=0;
 
 void Lock_Obtain();
 void Lock_ReleaseR();
 void Lock_ReleaseW();
 
-void Lock_Init(lock)
-    register struct afs_lock *lock;
+void Lock_Init(register struct afs_lock *lock)
 {
 
     AFS_STATCNT(Lock_Init);
@@ -63,10 +55,8 @@ void Lock_Init(lock)
     lock->time_waiting.tv_usec = 0;
 }
 
-void ObtainLock(lock, how, src_indicator)
-    register struct afs_lock *lock;
-    int how;
-    unsigned int src_indicator;
+void ObtainLock(register struct afs_lock *lock, int how, 
+	unsigned int src_indicator)
 {
     switch (how) {
       case READ_LOCK:		
@@ -101,9 +91,7 @@ void ObtainLock(lock, how, src_indicator)
     }	
 }
 
-void ReleaseLock(lock, how)
-    register struct afs_lock *lock;
-    int how;
+void ReleaseLock(register struct afs_lock *lock, int how)
 {
     if (how == READ_LOCK) {
 	if (!--lock->readers_reading && lock->wait_states)
@@ -129,9 +117,7 @@ void ReleaseLock(lock, how)
     }
 }
 
-Afs_Lock_Obtain(lock, how)
-    register struct afs_lock *lock;
-    int how;
+void Afs_Lock_Obtain(register struct afs_lock *lock, int how)
 {
     osi_timeval_t tt1, tt2, et;
 
@@ -192,8 +178,7 @@ Afs_Lock_Obtain(lock, how)
 }
 
 /* release a lock, giving preference to new readers */
-Afs_Lock_ReleaseR(lock)
-    register struct afs_lock *lock;
+void Afs_Lock_ReleaseR(register struct afs_lock *lock)
 {
     AFS_STATCNT(Lock_ReleaseR);
     AFS_ASSERT_GLOCK();
@@ -208,8 +193,7 @@ Afs_Lock_ReleaseR(lock)
 }
 
 /* release a lock, giving preference to new writers */
-Afs_Lock_ReleaseW(lock)
-    register struct afs_lock *lock;
+void Afs_Lock_ReleaseW(register struct afs_lock *lock)
 {
     AFS_STATCNT(Lock_ReleaseW);
     AFS_ASSERT_GLOCK();
@@ -225,8 +209,8 @@ Afs_Lock_ReleaseW(lock)
 
 /*
 Wait for some change in the lock status.
-Lock_Wait(lock)
-    register struct afs_lock *lock; {
+void Lock_Wait(register struct afs_lock *lock)
+{
     AFS_STATCNT(Lock_Wait);
     if (lock->readers_reading || lock->excl_locked) return 1;
     lock->wait_states |= READ_LOCK;
@@ -240,27 +224,24 @@ Lock_Wait(lock)
  */
 
 /* release a write lock and sleep on an address, atomically */
-afs_osi_SleepR(addr, alock)
-register char *addr;
-register struct afs_lock *alock; {
+void afs_osi_SleepR(register char *addr, register struct afs_lock *alock)
+{
     AFS_STATCNT(osi_SleepR);
     ReleaseReadLock(alock);
     afs_osi_Sleep(addr);
 }
 
 /* release a write lock and sleep on an address, atomically */
-afs_osi_SleepW(addr, alock)
-register char *addr;
-register struct afs_lock *alock; {
+void afs_osi_SleepW(register char *addr, register struct afs_lock *alock)
+{
     AFS_STATCNT(osi_SleepW);
     ReleaseWriteLock(alock);
     afs_osi_Sleep(addr);
 }
 
 /* release a write lock and sleep on an address, atomically */
-afs_osi_SleepS(addr, alock)
-register char *addr;
-register struct afs_lock *alock; {
+void afs_osi_SleepS(register char *addr, register struct afs_lock *alock)
+{
     AFS_STATCNT(osi_SleepS);
     ReleaseSharedLock(alock);
     afs_osi_Sleep(addr);
@@ -271,9 +252,8 @@ register struct afs_lock *alock; {
 /* operations on locks that don't mind if we lock the same thing twice.  I'd like to dedicate
     this function to Sun Microsystems' Version 4.0 virtual memory system, without
     which this wouldn't have been necessary */
-void afs_BozonLock(alock, avc)
-struct vcache *avc;
-struct afs_bozoLock *alock; {
+void afs_BozonLock(struct afs_bozoLock *alock, struct vcache *avc)
+{
     AFS_STATCNT(afs_BozonLock);
     while (1) {
 	if (alock->count == 0) {
@@ -313,9 +293,8 @@ struct afs_bozoLock *alock; {
 }
 
 /* releasing the same type of lock as defined above */
-void afs_BozonUnlock(alock, avc)
-struct vcache *avc;
-struct afs_bozoLock *alock; {
+void afs_BozonUnlock(struct afs_bozoLock *alock, struct vcache *avc)
+{
     AFS_STATCNT(afs_BozonUnlock);
     if (alock->count <= 0)
 	osi_Panic("BozoUnlock");
@@ -327,25 +306,24 @@ struct afs_bozoLock *alock; {
     }
 }
 
-void afs_BozonInit(alock, avc)
-struct vcache *avc;
-struct afs_bozoLock *alock; {
+void afs_BozonInit(struct afs_bozoLock *alock, struct vcache *avc)
+{
     AFS_STATCNT(afs_BozonInit);
     alock->count = 0;
     alock->flags = 0;
     alock->proc = (char *) 0;
 }
 
-afs_CheckBozonLock(alock)
-struct afs_bozoLock *alock; {
+int afs_CheckBozonLock(struct afs_bozoLock *alock)
+{
     AFS_STATCNT(afs_CheckBozonLock);
     if (alock->count || (alock->flags & AFS_BOZONWAITING))
 	return 1;
     return 0;
 }
 
-afs_CheckBozonLockBlocking(alock)
-struct afs_bozoLock *alock; {
+int afs_CheckBozonLockBlocking(struct afs_bozoLock *alock)
+{
     AFS_STATCNT(afs_CheckBozonLockBlocking);
     if (alock->count || (alock->flags & AFS_BOZONWAITING))
 #ifdef AFS_SUN5_ENV
@@ -363,12 +341,8 @@ struct afs_bozoLock *alock; {
 }
 #endif
 
-Afs_Lock_Trace(op, alock, type, file, line)
-   int op;
-    struct afs_lock *alock;
-    int type;
-    char *file;
-    int line;
+/* Not static - used conditionally if lock tracing is enabled */
+int Afs_Lock_Trace(int op, struct afs_lock *alock, int type, char *file, int line)
 {
     int traceok;
     struct afs_icl_log *tlp;

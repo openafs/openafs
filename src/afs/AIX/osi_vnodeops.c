@@ -48,6 +48,7 @@ RCSID("$Header$");
 #include "../afs/icl.h"
 #include "../afs/prs_fs.h"
 #include "../h/flock.h"
+#include "../afs/afsincludes.h"
 
 
 /*

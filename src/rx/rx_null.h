@@ -18,7 +18,7 @@
 
 /* The null security object.  No authentication, no nothing. */
 
-extern struct rx_securityClass *rxnull_NewServerSecurityObject();
-extern struct rx_securityClass *rxnull_NewClientSecurityObject();
+extern struct rx_securityClass *rxnull_NewServerSecurityObject(void);
+extern struct rx_securityClass *rxnull_NewClientSecurityObject(void);
 
 #endif /* RX_NULL_HEADER */

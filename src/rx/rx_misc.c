@@ -117,8 +117,7 @@ pthread_mutex_t osi_malloc_mutex;
 #endif /* AFS_PTHREAD_ENV */
 long osi_alloccnt=0, osi_allocsize=0;
 static const char memZero;
-char * osi_alloc(x)
-    afs_int32 x; 
+char *osi_alloc(afs_int32 x)
 {
     /* 
      * 0-length allocs may return NULL ptr from osi_kalloc, so we special-case
@@ -132,9 +131,7 @@ char * osi_alloc(x)
 }
 
 int
-osi_free(x, size)
-    char *x;
-    afs_int32 size; 
+osi_free(char *x, afs_int32 size)
 {
     if ((x == &memZero) || !x) return 0;
     LOCK_MALLOC_STATS
