@@ -24,6 +24,7 @@
 #else
 #include <unistd.h>
 #include <netinet/in.h>
+#include <syslog.h>
 #endif /* AFS_NT40_ENV */
 #include <afs/cellconfig.h>
 #include <rx/rx.h>
@@ -55,6 +56,10 @@ FILE *bozo_logFile;
 extern int rx_stackSize;    /* for rx_SetStackSize macro */
 
 int DoLogging = 0;
+int DoSyslog = 0;
+#ifndef AFS_NT40_ENV
+int DoSyslogFacility = LOG_DAEMON;
+#endif
 static afs_int32 nextRestart;
 static afs_int32 nextDay;
 
@@ -116,6 +121,20 @@ bozo_ReBozo() {
 	argv[i] = "-log";
 	i++;
     }
+
+#ifndef AFS_NT40_ENV
+    /* if syslog logging is on, pass "-syslog" to new bosserver */
+    if (DoSyslog) {
+	char *arg=(char *)malloc(40); /* enough for -syslog=# */
+	if ( DoSyslogFacility != LOG_DAEMON ) {
+	    snprintf(arg, 40, "-syslog=%d", DoSyslogFacility);
+	} else {
+	    strcpy(arg, "-syslog");
+	}
+	argv[i] = arg;
+	i++;
+    }
+#endif
 
     /* null-terminate argument list */
     argv[i] = NULL;
@@ -714,6 +733,16 @@ char **envp;
 	    /* set extra logging flag */
 	    DoLogging = 1;
 	}
+#ifndef AFS_NT40_ENV
+	else if (strcmp(argv[code], "-syslog")==0) {
+	    /* set syslog logging flag */
+	    DoSyslog = 1;
+	} 
+	else if (strncmp(argv[code], "-syslog=",8)==0) {
+	    DoSyslog = 1;
+	    DoSyslogFacility = atoi(argv[code]+8);
+	}
+#endif
 	else if (strcmp(argv[code], "-enable_peer_stats")==0) {
 	    rx_enablePeerRPCStats();
 	}
@@ -730,6 +759,9 @@ char **envp;
 	    /* hack to support help flag */
 
 	    printf("Usage: bosserver [-noauth] [-log] "
+#ifndef AFS_NT40_ENV
+		   "[-syslog[=FACILITY]] "
+#endif
 		   /* "[-enable_peer_stats] [-enable_process_stats] " */
 		   "[-help]\n");
 	    fflush(stdout);
@@ -772,20 +804,23 @@ char **envp;
     background();
 #endif /* ! AFS_NT40_ENV */
 
-    /* switch to logging information to the BosLog file */
-    strcpy(namebuf, AFSDIR_BOZLOG_FILE);
-    strcat(namebuf, ".old");
-    renamefile(AFSDIR_BOZLOG_FILE, namebuf);	/* try rename first */
-    bozo_logFile = fopen(AFSDIR_BOZLOG_FILE, "a");
-    if (!bozo_logFile) {
-	printf("bosserver: can't initialize log file (%s).\n",
-	       AFSDIR_SERVER_BOZLOG_FILEPATH);
-	exit(1);
+    if (!DoSyslog) {
+	strcpy(namebuf, AFSDIR_BOZLOG_FILE);
+	strcat(namebuf, ".old");
+	renamefile(AFSDIR_BOZLOG_FILE, namebuf);    /* try rename first */
+	bozo_logFile = fopen(AFSDIR_BOZLOG_FILE, "a");
+	if (!bozo_logFile) {
+	    printf("bosserver: can't initialize log file (%s).\n",
+		   AFSDIR_SERVER_BOZLOG_FILEPATH);
+	    exit(1);
+	}
+        /* keep log closed normally, so can be removed */
+        fclose(bozo_logFile);
+    } else {
+#ifndef AFS_NT40_ENV
+	openlog("bosserver", LOG_PID, DoSyslogFacility);
+#endif
     }
-
-    /* keep log closed normally, so can be removed */
-
-    fclose(bozo_logFile);
 
     /* Write current state of directory permissions to log file */
     DirAccessOK ();
@@ -881,30 +916,33 @@ char *a, *b, *c, *d, *e, *f; {
     char tdate[26];
     time_t myTime;
 
-    myTime = time(0);
-    strcpy(tdate, ctime(&myTime));	/* copy out of static area asap */
-    tdate[24] = ':';
+    if (DoSyslog) {
+#ifndef AFS_NT40_ENV
+	syslog(LOG_INFO, a, b, c, d, e, f);
+#endif
+    } else {
+	myTime = time(0);
+	strcpy(tdate, ctime(&myTime));	/* copy out of static area asap */
+	tdate[24] = ':';
 
-    /* log normally closed, so can be removed */
+	/* log normally closed, so can be removed */
 
-    bozo_logFile=fopen(AFSDIR_SERVER_BOZLOG_FILEPATH, "a");
-    if(bozo_logFile == NULL)
-    {
-	printf("bosserver: WARNING: problem with %s", AFSDIR_SERVER_BOZLOG_FILEPATH);
-	fflush(stdout);
+	bozo_logFile=fopen(AFSDIR_SERVER_BOZLOG_FILEPATH, "a");
+	if(bozo_logFile == NULL) {
+	    printf("bosserver: WARNING: problem with %s", AFSDIR_SERVER_BOZLOG_FILEPATH);
+	    fflush(stdout);
+	}
+
+	if (bozo_logFile) {
+	    fprintf(bozo_logFile, "%s ", tdate);
+	    fprintf(bozo_logFile, a, b, c, d, e, f);
+	    fflush(bozo_logFile);
+	} else {
+	    printf("%s ", tdate);
+	    printf(a, b, c, d, e, f);
+	}
+	
+	/* close so rm BosLog works */
+	fclose(bozo_logFile);
     }
-
-    if (bozo_logFile) {
-	fprintf(bozo_logFile, "%s ", tdate);
-	fprintf(bozo_logFile, a, b, c, d, e, f);
-	fflush(bozo_logFile);
-    }
-    else {
-	printf("%s ", tdate);
-	printf(a, b, c, d, e, f);
-    }
-
-    /* close so rm BosLog works */
-
-    fclose(bozo_logFile);
 }
