@@ -16,7 +16,7 @@
 		/* no ticket good for longer than 30 days */
 #define MAXKTCTICKETLIFETIME (30*24*3600)
 #define MINKTCTICKETLEN	      32
-#define	MAXKTCTICKETLEN	      344
+#define	MAXKTCTICKETLEN	      4096  /* was 344 */
 #define	MAXKTCNAMELEN	      64	/* name & inst should be 256 */
 #define MAXKTCREALMLEN	      64	/* should be 256 */
 #define KTC_TIME_UNCERTAINTY (15*60)	/* max skew bet. machines' clocks */
@@ -38,7 +38,7 @@
 #define RXKAD_TKT_TYPE_KERBEROS_V5		256
 #define RXKAD_TKT_TYPE_KERBEROS_V5_ENCPART_ONLY	213
 
-#define MAXKRB5TICKETLEN			1024
+#define MAXKRB5TICKETLEN			4096
 
 /*
  * The AFS/DFS translator may also make use of additional ticket types in
