@@ -1,0 +1,17 @@
+                  OpenAFS Release Notes - Version 1.2.11
+     _________________________________________________________________
+All systems: Major bugfixes.
+     _________________________________________________________________
+
+* Bugfixes:
+
+All systems:
+
+- A bug where ubik quorum stopped at 2^30 seconds from 1970 was fixed.
+
+- A bug where replicating volumes on systems with namei fileservers could
+  result in an empty volume was fixed.
+
+Linux:
+
+- We no longer assume ext2 when doing a device check in the vol package.
