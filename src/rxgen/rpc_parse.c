@@ -715,6 +715,9 @@ static void check_proc(definition *defp, token *tokp, int noname)
     int proc_split = 0;
     int proc_multi = 0;
 
+    if (PackageIndex < 0)
+	error("Procedure must be in a package!\n");
+
     tokp->kind = TOK_PROC;
     defp->def_kind = DEF_PROC;
     if (noname)
