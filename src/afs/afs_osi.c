@@ -793,13 +793,17 @@ void afs_osi_TraverseProcTable()
 {   
     struct task_struct *p;
 
+#ifdef EXPORTED_TASKLIST_LOCK
     read_lock(&tasklist_lock);
+#endif
     for_each_task(p) if (p->pid) {
         if (p->state & TASK_ZOMBIE)
             continue;
 	afs_GCPAGs_perproc_func(p);
     }
+#ifdef EXPORTED_TASKLIST_LOCK
     read_unlock(&tasklist_lock);
+#endif
 }   
 #endif
 
