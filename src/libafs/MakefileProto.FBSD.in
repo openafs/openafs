@@ -71,6 +71,8 @@ setup:
 	-touch $(KOBJ)/sec_net.h
 
 
+depsrcs:	vnode_if.h
+
 # Below this line are targets when in the COMMON directory:
 LIBAFS = libafsnfs.ko
 LIBAFSNONFS = libafs.ko
@@ -138,3 +140,5 @@ setdef0.o: setdef0.c
 	$(CRULE_NOOPT)
 setdef1.o: setdef1.c
 	$(CRULE_NOOPT)
+vnode_if.h:	${KSRC}/kern/vnode_if.src
+	awk -f ${KSRC}/tools/vnode_if.awk ${KSRC}/kern/vnode_if.src -h
