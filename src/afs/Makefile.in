@@ -55,7 +55,7 @@ install:   ${DESTDIR}${includedir}/afs/afs.h  ${DESTDIR}${includedir}/afs/osi_in
 
 clean:
 	-$(RM) -f *.o core AFS_component_version_number.c afs_trace.h afs_trace.msf afszcm.cat
-
+	-$(RM) -f unified_afs.c unified_afs.h
 include ../config/Makefile.version
 ${DEST}/include/afs/afs.h: afs.h
 	${INSTALL} $? $@

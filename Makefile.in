@@ -664,6 +664,7 @@ clean2:
 	-${COMPILE_PART1} rcp ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libuafs ${COMPILE_CLEAN}
+	-${COMPILE_PART1} tests ${COMPILE_CLEAN}
 	-(cd src/libafs; /bin/rm -rf afs afsint config rx)
 	-(cd src/libuafs; /bin/rm -rf afs afsint config rx des)
 	-/bin/rm -rf ${TOP_INCDIR} ${TOP_LIBDIR} ${TOP_JLIBDIR}
@@ -772,8 +773,10 @@ distclean: clean
 	src/sia/Makefile \
 	src/sys/Makefile \
 	src/tbutc/Makefile \
+	src/tests/Makefile \
 	src/tsm41/Makefile \
 	src/tviced/Makefile \
+	src/tvolser/Makefile \
 	src/ubik/Makefile \
 	src/update/Makefile \
 	src/usd/test/Makefile \
@@ -790,7 +793,8 @@ distclean: clean
 	src/vol/test/Makefile \
 	src/volser/Makefile \
 	src/wsadmin.src/Makefile \
-	src/xstat/Makefile 
+	src/xstat/Makefile  \
+	src/helper-splint.sh
 
 pristine: distclean
 	/bin/rm -f src/config/afsconfig.h.in configure configure-libafs aclocal.m4

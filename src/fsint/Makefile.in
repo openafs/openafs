@@ -119,7 +119,8 @@ ${DEST}/include/afs/afsint.h: afsint.h
 
 clean:
 	$(RM) -f *.o *.cs.c *.ss.c *.er.c *.a *.xdr.c core \
-		afsint.h afscbint.h AFS_component_version_number.c 
+		afsint.h afscbint.h AFS_component_version_number.c   \
+	Kvice.h Kcallback.h
 
 include ../config/Makefile.version
 
