@@ -7,6 +7,14 @@ OpenAFS News -- history of user-visible changes. October 19, 2001
    This is enabled by passing -fakestat to afsd, but might not be stable
    on all platforms.
 
+* Changes incorporated in OpenAFS 1.2.5
+
+** A remote denial of service attack in the AIX and IRIX clients has
+   been fixed.  Users of those platforms are strongly encouraged to
+   upgrade.
+
+** Fixed race conditions in fileserver that could result in crash.
+
 * Changes incorporated in OpenAFS 1.2.4
 
 ** Server logfiles now more consistant about format in which hosts are
