@@ -29,6 +29,10 @@ is imposing significant delays in the movement of data from between the SMB
 and RX protocol operations. There was also an issue with large numbers of 
 page faults which have since been fixed.
 
+Things are not quite this bad anymore.  We are 10% slower than OpenAFS on
+Linux but we could still be doing quite a bit faster if we were using an
+IFS.
+
 (7) File termination differences between Win9x and nt/w2k/xp (Jim Peterson)
 
 (8) How to silence "Explorer" when the mapped drive is not available?
