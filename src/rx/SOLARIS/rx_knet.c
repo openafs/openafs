@@ -341,14 +341,11 @@ osi_FreeSocket(register struct osi_socket *asocket)
 	afs_osi_Sleep(&rxk_ListenerPid);
     }
 
-#ifdef AFS_SUN510_ENV
+    /* Was sockfs_sounbind(so, 0); sockfs_sockfree(so); That's wrong */
     vp = SOTOV(so);
     VOP_CLOSE(vp, FREAD|FWRITE, 1, (offset_t)0, CRED());
     VN_RELE(vp);
-#else
-    sockfs_sounbind(so, 0);
-    sockfs_sockfree(so);
-#endif
+
     return 0;
 }
 
