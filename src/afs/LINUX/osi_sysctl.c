@@ -34,6 +34,9 @@ static ctl_table afs_sysctl_table[] = {
         {3, "hm_retry_int",
          &hm_retry_int, sizeof(afs_int32), 0644, NULL,
          &proc_dointvec},
+        {4, "GCPAGs",
+         &afs_gcpags, sizeof(afs_int32), 0644, NULL,
+         &proc_dointvec},
 	{0}
 };
 
