@@ -55,7 +55,7 @@ RCSID("$Header$");
 #include <unistd.h>
 #endif /* AFS_NT40_ENV */
 #include <sys/stat.h>
-
+#include <stdarg.h>
 
 struct VnodeClassInfo VnodeClassInfo[nVNODECLASSES];
 

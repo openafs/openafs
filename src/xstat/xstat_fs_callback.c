@@ -652,6 +652,16 @@ int SRXAFSCB_GetCellServDB(
 }
 
 
+afs_int32 SRXAFSCB_GetCellByNum(
+    struct rx_call *a_call,
+    afs_int32 a_cellnum,
+    char **a_name,
+    serverList *a_hosts)
+{
+    return RXGEN_OPCODE;
+}
+
+
 /*------------------------------------------------------------------------
  * EXPORTED SRXAFSCB_GetLocalCell
  *

@@ -89,12 +89,55 @@ register struct rx_connection *aconn; {
     return 0;
 }
 
-static PrintCacheEntries(aconn, aint32)
-int aint32;
-register struct rx_connection *aconn; {
+struct cell_cache {
+    afs_int32 cellnum;
+    char *cellname;
+    struct cell_cache *next;
+};
+
+static char *GetCellName(struct rx_connection *aconn, afs_int32 cellnum)
+{
+    static int no_getcellbynum;
+    static struct cell_cache *cache;
+    struct cell_cache *tcp;
+    int code;
+    char *cellname;
+    serverList sl;
+
+    if (no_getcellbynum)
+	return NULL;
+
+    for (tcp = cache; tcp; tcp = tcp->next)
+	if (tcp->cellnum == cellnum)
+	    return tcp->cellname;
+
+    cellname = NULL;
+    sl.serverList_len = 0;
+    sl.serverList_val = NULL;
+    code = RXAFSCB_GetCellByNum(aconn, cellnum, &cellname, &sl);
+    if (code) {
+	if (code == RXGEN_OPCODE)
+	    no_getcellbynum = 1;
+	return NULL;
+    }
+
+    if (sl.serverList_val)
+	free (sl.serverList_val);
+    tcp = malloc(sizeof(struct cell_cache));
+    tcp->next = cache;
+    tcp->cellnum = cellnum;
+    tcp->cellname = cellname;
+    cache = tcp;
+
+    return cellname;
+}
+
+static PrintCacheEntries(struct rx_connection *aconn, int aint32)
+{
     register int i;
     register afs_int32 code;
     struct AFSDBCacheEntry centry;
+    char *cellname;
 
     for(i=0;i<10000;i++) {
 	code = RXAFSCB_GetCE(aconn, i, &centry);
@@ -115,8 +158,16 @@ register struct rx_connection *aconn; {
 	if (!aint32 && !IsLocked(&centry.lock)) continue;
 
 	/* otherwise print this entry */
-	printf("** Cache entry @ 0x%08x for %d.%d.%d.%d\n", centry.addr, centry.cell,
-	       centry.netFid.Volume, centry.netFid.Vnode, centry.netFid.Unique);
+	printf("** Cache entry @ 0x%08x for %d.%d.%d.%d", centry.addr,
+	       centry.cell, centry.netFid.Volume, centry.netFid.Vnode,
+	       centry.netFid.Unique);
+
+	cellname = GetCellName(aconn, centry.cell);
+	if (cellname)
+	    printf(" [%s]\n", cellname);
+	else
+	    printf("\n");
+
 	if (IsLocked(&centry.lock)) {
 	    printf("    locks: ");
 	    PrintLock(&centry.lock);

@@ -179,7 +179,7 @@ static int VLDB_Same (afid, areq)
     do {
         VSleep(2);	/* Better safe than sorry. */
 	tconn = afs_ConnByMHosts(tcell->cellHosts, tcell->vlport,
-				 tcell->cell, &treq, SHARED_LOCK);
+				 tcell->cellNum, &treq, SHARED_LOCK);
 	if (tconn) {
 	    if (tconn->srvr->server->flags & SNO_LHOSTS) {
 		type = 0;
@@ -392,8 +392,8 @@ int afs_Analyze(aconn, acode, afid, areq, op, locktype, cellp)
 	    if (aerrP)
 		(aerrP->err_Network)++;
 	    if (hm_retry_int && !(areq->flags & O_NONBLOCK) &&  /* "hard" mount */
-		((afid && afid->Cell == LOCALCELL) || 
-		 (cellp && cellp->cell == LOCALCELL))) { 
+		((afid && afs_IsPrimaryCellNum(afid->Cell)) || 
+		 (cellp && afs_IsPrimaryCell(cellp)))) { 
 		if (!afid) {
 		    afs_warnuser("afs: hard-mount waiting for a vlserver to return to service\n");
 		    VSleep(hm_retry_int);
@@ -492,7 +492,7 @@ int afs_Analyze(aconn, acode, afid, areq, op, locktype, cellp)
 	if (aerrP)
 	    (aerrP->err_Protection)++;
 
-	tu = afs_FindUser(areq->uid, tsp->cell->cell, READ_LOCK);
+	tu = afs_FindUser(areq->uid, tsp->cell->cellNum, READ_LOCK);
 	if (tu) {
 	    if ((acode == VICETOKENDEAD) || (acode == RXKADEXPIRED))
 		afs_warnuser("afs: Tokens for user of AFS id %d for cell %s have expired\n", 

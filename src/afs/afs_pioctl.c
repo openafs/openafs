@@ -1327,39 +1327,29 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     return 0;
   }
   
-  static PGetWSCell(avc, afun, areq, ain, aout, ainSize, aoutSize)
-    struct vcache *avc;
-  int afun;
-  struct vrequest *areq;
-  register char *ain;
-  char *aout;
-  afs_int32 ainSize;
-  afs_int32 *aoutSize;	/* set this */ {
-    register struct cell *tcell=0, *cellOne=0;
-    register struct afs_q *cq, *tq;
+static PGetWSCell(avc, afun, areq, ain, aout, ainSize, aoutSize)
+     struct vcache *avc;
+     int afun;
+     struct vrequest *areq;
+     register char *ain;
+     char *aout;
+     afs_int32 ainSize;
+     afs_int32 *aoutSize;	/* set this */ 
+{
+    struct cell *tcell = NULL;
     
     AFS_STATCNT(PGetWSCell);
     if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
 
-    ObtainReadLock(&afs_xcell);
-    cellOne = (struct cell *) 0;
-
-    for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
-	tcell = QTOC(cq); tq = QNext(cq);
-	if (tcell->states & CPrimary) break;
-	if (tcell->cell == 1) cellOne = tcell;
-	tcell = 0;
-    }
-    ReleaseReadLock(&afs_xcell);
-    if (!tcell)	{	    /* no primary cell, use cell #1 */
-      if (!cellOne) return ESRCH;
-      tcell = cellOne;
-    }
+    tcell = afs_GetPrimaryCell(READ_LOCK);
+    if (!tcell)               /* no primary cell? */
+	return ESRCH;
     strcpy(aout, tcell->cellName);
     *aoutSize = strlen(aout) + 1;
+    afs_PutCell(tcell, READ_LOCK);
     return 0;
-  }
+}
   
   static PGetUserCell(avc, afun, areq, ain, aout, ainSize, aoutSize)
     struct vcache *avc;
@@ -1454,20 +1444,15 @@ static PGCPAGs(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
 	  set_parent_pag = 1;
       }
       tcell = afs_GetCellByName(ain, READ_LOCK);
-      if (tcell) {
-	i = tcell->cell;
-      }
-      else {
-	goto nocell;
-      }
-    }
-    else {
-      /* default to cell 1, primary id */
-      flag = 1;		/* primary id */
-      i = 1;		/* cell number */
-      tcell = afs_GetCell(1, READ_LOCK);
       if (!tcell) goto nocell;
     }
+    else {
+      /* default to primary cell, primary id */
+      flag = 1;		/* primary id */
+      tcell = afs_GetPrimaryCell(READ_LOCK);
+      if (!tcell) goto nocell;
+    }
+    i = tcell->cellNum;
     afs_PutCell(tcell, READ_LOCK);
     if (set_parent_pag) {
 	int pag;
@@ -1818,7 +1803,7 @@ static PGetTokens(avc, afun, areq, ain, aout, ainSize, aoutSize)
 	    }
 	}
 	else {
-	    if (tu->uid == areq->uid && tu->cell == 1) break;
+	    if (tu->uid == areq->uid && afs_IsPrimaryCellNum(tu->cell)) break;
 	}
     }
     if (tu) {
@@ -2003,7 +1988,7 @@ static PCheckServers(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     else cellp = (struct cell *) 0;
     if (!cellp && (temp & 2)) {
 	/* use local cell */
-	cellp = afs_GetCell(1, READ_LOCK);
+	cellp = afs_GetPrimaryCell(READ_LOCK);
     }
     if (!(temp & 1)) {	/* if not fast, call server checker routine */
 	afs_CheckServers(1, cellp);	/* check down servers */
@@ -2342,7 +2327,7 @@ static PNewCell(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     }
 
     linkedstate |= CNoSUID; /* setuid is disabled by default for fs newcell */
-    code = afs_NewCell(newcell, cellHosts, linkedstate, linkedcell, fsport, vlport, (int)0, (char *) 0);
+    code = afs_NewCell(newcell, cellHosts, linkedstate, linkedcell, fsport, vlport, (int)0);
     return code;
 }
 
@@ -2357,11 +2342,9 @@ static PNewAlias(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     afs_int32 *aoutSize;	/* set this */
 {
     /* create a new cell alias */
-    register struct cell *tcell;
     char *tp = ain;
     register afs_int32 code;
     char *realName, *aliasName;
-    register struct afs_q *cq, *tq;
     
     if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
@@ -2373,22 +2356,7 @@ static PNewAlias(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     tp += strlen(aliasName) + 1;
     realName = tp;
 
-    /*
-     * Prevent user from shooting themselves in the foot -- don't allow
-     * creation of aliases when a real cell already exists with that name.
-     */
-    ObtainReadLock(&afs_xcell);
-    for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
-	tcell = QTOC(cq); tq = QNext(cq);
-	if ((afs_strcasecmp(tcell->cellName, aliasName) == 0) &&
-	    !(tcell->states & CAlias)) {
-	    ReleaseReadLock(&afs_xcell);
-	    return EEXIST;
-	}
-    }
-    ReleaseReadLock(&afs_xcell);
-
-    code = afs_NewCell(aliasName, 0, CAlias, 0, 0, 0, 0, realName);
+    code = afs_NewCellAlias(aliasName, realName);
     *aoutSize = 0;
     return code;
 }
@@ -2404,7 +2372,6 @@ static PListCells(avc, afun, areq, ain, aout, ainSize, aoutSize)
     register struct cell *tcell=0;
     register afs_int32 i;
     register char *cp, *tp = ain;
-    register struct afs_q *cq, *tq;
 
     AFS_STATCNT(PListCells);
     if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
@@ -2412,7 +2379,7 @@ static PListCells(avc, afun, areq, ain, aout, ainSize, aoutSize)
 
     memcpy((char *)&whichCell, tp, sizeof(afs_int32));
     tp += sizeof(afs_int32);
-    tcell = afs_GetRealCellByIndex(whichCell, READ_LOCK, 0);
+    tcell = afs_GetCellByIndex(whichCell, READ_LOCK);
     if (tcell) {
 	cp = aout;
 	memset(cp, 0, MAXCELLHOSTS * sizeof(afs_int32));
@@ -2425,6 +2392,7 @@ static PListCells(avc, afun, areq, ain, aout, ainSize, aoutSize)
 	strcpy(cp, tcell->cellName);
 	cp += strlen(tcell->cellName)+1;
 	*aoutSize = cp - aout;
+	afs_PutCell(tcell, READ_LOCK);
     }
     if (tcell) return 0;
     else return EDOM;
@@ -2439,9 +2407,8 @@ static PListAliases(avc, afun, areq, ain, aout, ainSize, aoutSize)
     afs_int32 *aoutSize;	/* set this */
 {
     afs_int32 whichAlias;
-    register struct cell *tcell=0;
+    register struct cell_alias *tcalias=0;
     register char *cp, *tp = ain;
-    register struct afs_q *cq, *tq;
 
     if ( !afs_resourceinit_flag ) 	/* afs deamons havn't started yet */
 	return EIO;          /* Inappropriate ioctl for device */
@@ -2451,27 +2418,17 @@ static PListAliases(avc, afun, areq, ain, aout, ainSize, aoutSize)
     memcpy((char *)&whichAlias, tp, sizeof(afs_int32));
     tp += sizeof(afs_int32);
 
-    ObtainReadLock(&afs_xcell);
-    for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
-	tcell = QTOC(cq); tq = QNext(cq);
-	if (!(tcell->states & CAlias)) {
-	    tcell = 0;
-	    continue;
-	}
-	if (whichAlias == 0) break;
-	tcell = 0;
-	whichAlias--;
-    }
-    if (tcell) {	
+    tcalias = afs_GetCellAlias(whichAlias);
+    if (tcalias) {	
 	cp = aout;
-	strcpy(cp, tcell->cellName);
-	cp += strlen(tcell->cellName)+1;
-	strcpy(cp, tcell->realName);
-	cp += strlen(tcell->realName)+1;
+	strcpy(cp, tcalias->alias);
+	cp += strlen(tcalias->alias)+1;
+	strcpy(cp, tcalias->cell);
+	cp += strlen(tcalias->cell)+1;
 	*aoutSize = cp - aout;
+	afs_PutCellAlias(tcalias);
     }
-    ReleaseReadLock(&afs_xcell);
-    if (tcell) return 0;
+    if (tcalias) return 0;
     else return EDOM;
 }
 
@@ -2956,10 +2913,22 @@ register struct AFS_UCRED *acred;
  * fine.  Should consider special-casing the local cell for large n.
  * Likewise for PSetSPrefs.
  */
-static void ReSortCells(s,l, vlonly)  
-  int s;     /* number of ids in array l[] -- NOT index of last id */
-  afs_int32 l[];  /* array of cell ids which have volumes that need to be sorted */
-  int vlonly; /* sort vl servers or file servers?*/
+static void *ReSortCells_cb(struct cell *cell, void *arg)
+{
+    afs_int32 *p = (afs_int32 *) arg;
+    afs_int32 *l = p + 1;
+    int i, s = p[0];
+ 
+    for (i=0; i<s; i++) {
+	if (l[i] == cell->cellNum) {
+	    ObtainWriteLock(&cell->lock, 690);
+	    afs_SortServers(cell->cellHosts, MAXCELLHOSTS);
+	    ReleaseWriteLock(&cell->lock);
+	}
+    }
+}
+
+static void ReSortCells(int s, afs_int32 *l, int vlonly)  
 {
   extern struct volume *afs_volumes[NVOLS];   /* volume hash table */
 
@@ -2968,15 +2937,12 @@ static void ReSortCells(s,l, vlonly)
   register int  k;
 
   if (vlonly) {
-      struct cell *tcell;
-      ObtainWriteLock(&afs_xcell,300);
-      for(k=0;k<s;k++) {
-	  tcell = afs_GetCellNoLock(l[k], WRITE_LOCK);
-	  if (!tcell) continue;
-	  afs_SortServers(tcell->cellHosts, MAXCELLHOSTS);
-	  afs_PutCell(tcell, WRITE_LOCK);
-      }
-      ReleaseWriteLock(&afs_xcell);
+      afs_int32 *p;
+      p = (afs_int32 *) afs_osi_Alloc(sizeof(afs_int32) * (s+1));
+      p[0] = s;
+      memcpy(p+1, l, s * sizeof(afs_int32));
+      afs_TraverseCells(&ReSortCells_cb, p);
+      afs_osi_Free(p, sizeof(afs_int32) * (s+1));
       return;
   }
 
@@ -3038,10 +3004,10 @@ static int afs_setsprefs(sp, num, vlonly)
 	 
 	 if (srvr->cell) {
 	   /* if we don't know yet what cell it's in, this is moot */
-	   for (j=touchedSize-1; j>=0 && touched[j] != srvr->cell->cell; j--)
+	   for (j=touchedSize-1; j>=0 && touched[j] != srvr->cell->cellNum; j--)
 		 /* is it in our list of touched cells ?  */ ;
 	   if (j < 0) {                   /* no, it's not */
-	     touched[touchedSize++] = srvr->cell->cell;
+	     touched[touchedSize++] = srvr->cell->cellNum;
 	     if (touchedSize >= 32) {                /* watch for ovrflow */
 	       ReleaseReadLock(&afs_xserver);
 	       ReSortCells(touchedSize, touched, vlonly);

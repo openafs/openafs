@@ -1053,6 +1053,8 @@ kdump()
 
     if (Dcells || Dall) {
 	print_cells(1);	/* Handle the afs_cells structures */
+	print_cellaliases(1);
+	print_cellnames(1);
     }
 
     if (Dusers || Dall) {
@@ -1170,6 +1172,7 @@ kdump()
 #if !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 int Sum_cellnames=0, Sum_userstp=0, Sum_volnames=0, Sum_exps=0, Sum_nfssysnames=0;
 int Sum_vcachemvids=0, Sum_vcachelinkData=0, Sum_vcacheacc=0, Sum_vcachelocks=0;
+int Sum_cellaliases=0, Sum_cellname_names=0;
 
 int print_cells(pnt)
 int pnt;
@@ -1193,6 +1196,64 @@ int pnt;
 	j++;
     }
     if (pnt) printf("... found %d 'afs_cells' entries\n", j);
+
+    return j;
+}
+
+int print_cellaliases(int pnt)
+{
+    off_t symoff;
+    struct cell_alias *ca, cae;
+    long j = 0;
+
+    if (pnt) printf("\n\nPrinting cell_alias list...\n");
+    findsym( "afs_cellalias_head", &symoff);
+    kread(kmem, symoff, (char *) &ca, sizeof ca);
+    while (ca) {
+	char alias[100], cell[100];
+
+	kread(kmem, (off_t) ca, (char *) &cae, sizeof cae);
+	kread(kmem, (off_t) cae.alias, alias, (KDUMP_SIZE_T)40);
+	alias[40] = '\0';
+	Sum_cellaliases += strlen(alias) + 1;
+	kread(kmem, (off_t) cae.cell, cell, (KDUMP_SIZE_T)40);
+	cell[40] = '\0';
+	Sum_cellaliases += strlen(cell) + 1;
+	if (pnt)
+	    printf("%x: alias=%s cell=%s index=%d\n",
+		   ca, alias, cell, cae.index);
+	ca = cae.next;
+	j++;
+    }
+    if (pnt) printf("... found %d 'cell_alias' entries\n", j);
+
+    return j;
+}
+
+int print_cellnames(int pnt)
+{
+    off_t symoff;
+    struct cell_name *cn, cne;
+    long j = 0;
+
+    if (pnt) printf("\n\nPrinting cell_name list...\n");
+    findsym( "afs_cellname_head", &symoff);
+    kread(kmem, symoff, (char *) &cn, sizeof cn);
+    while (cn) {
+	char cellname[100];
+
+	kread(kmem, (off_t) cn, (char *) &cne, sizeof cne);
+	kread(kmem, (off_t) cne.cellname, cellname, (KDUMP_SIZE_T)40);
+	cellname[40] = '\0';
+	Sum_cellname_names += strlen(cellname) + 1;
+	if (pnt)
+	    printf("%x: cellnum=%d cellname=%s used=%d\n",
+		   cn, cne.cellnum, cellname, cne.used);
+	cn = cne.next;
+	j++;
+    }
+    if (pnt) printf("... found %d 'cell_name' entries\n", j);
+
     return j;
 }
 
@@ -1761,6 +1822,18 @@ int pnt;
     T += j;
     printf("%20s:\t%8d bytes\t[%d cells/%d bytes each + %d bytes for cell names]\n", "Cell package", j, i, sizeof(struct cell), Sum_cellnames);
 
+    Sum_cellaliases=0;
+    i = print_cellaliases(0);
+    j = (i * sizeof(struct cell_alias)) + Sum_cellaliases;
+    T += j;
+    printf("%20s:\t%8d bytes\t[%d cell_aliases/%d bytes each + %d bytes for cell names]\n", "Cell package", j, i, sizeof(struct cell_alias), Sum_cellaliases);
+
+    Sum_cellname_names=0;
+    i = print_cellnames(0);
+    j = (i * sizeof(struct cell_name)) + Sum_cellname_names;
+    T += j;
+    printf("%20s:\t%8d bytes\t[%d cell_names/%d bytes each + %d bytes for cell name strings]\n", "Cell package", j, i, sizeof(struct cell_name), Sum_cellname_names);
+
     Sum_userstp=0;
     i = print_users(0);
     j = (i * sizeof(struct unixuser)) + Sum_userstp;
@@ -2268,9 +2341,10 @@ void print_cell(kmem, clep, ptr, pnt)
     cellName[40] = 0;
     Sum_cellnames += strlen(cellName)+1;
     if (pnt) {
-	printf("%lx: cell=%s, cellname=%s, states=%x, cindex=%d fsport=%d vlport=%d\n", ptr,
-	       PrintIPAddr(clep->cell), cellName, clep->states, clep->cellIndex,
-	       clep->fsport, clep->vlport);
+	printf("%lx: cellname=%s, states=%x, cnum=%d, cindex=%d fsport=%d vlport=%d timeout=%d cnamep=%x\n", ptr,
+	       cellName, clep->states, clep->cellNum, clep->cellIndex,
+	       clep->fsport, clep->vlport, clep->timeout, clep->cnamep);
+
 #ifdef	AFS33
 	if (clep->lcellp)
 	    printf("\tlinked cellp %lx\n", clep->lcellp);

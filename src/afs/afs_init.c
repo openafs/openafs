@@ -312,36 +312,50 @@ afs_ComputeCacheParms()
  *	WARNING: Data will be written to this file over time by AFS.
  */
 
-afs_InitVolumeInfo(afile)
-    register char *afile;
-
-{ /*afs_InitVolumeInfo*/
-
+static int LookupInodeByPath(char *filename, ino_t *inode)
+{
     afs_int32 code;
-    struct osi_file *tfile;
-    struct vnode *filevp;
-    struct fcache fce;
-
-    AFS_STATCNT(afs_InitVolumeInfo);
+  
 #ifdef AFS_LINUX22_ENV
-    {
-	struct dentry *dp;
-	code = gop_lookupname(afile, AFS_UIOSYS, 0, (struct vnode **) 0, &dp);
-	if (code) return ENOENT;
-	fce.inode = volumeInode = dp->d_inode->i_ino;
-	dput(dp);
-    }
+    struct dentry *dp;
+    code = gop_lookupname(filename, AFS_UIOSYS, 0, NULL, &dp);
+    if (code) return code;
+    *inode = dp->d_inode->i_ino;
+    dput(dp);
 #else
-    code = gop_lookupname(afile, AFS_UIOSYS, 0, (struct vnode **) 0, &filevp);
-    if (code) return ENOENT;
-    fce.inode = volumeInode = afs_vnodeToInumber(filevp);
+    struct vnode *filevp;
+    code = gop_lookupname(filename, AFS_UIOSYS, 0, NULL, &filevp);
+    if (code) return code;
+    *inode = afs_vnodeToInumber(filevp);
 #ifdef AFS_DEC_ENV
     grele(filevp);
 #else
     AFS_RELE((struct vnode *)filevp);
 #endif
 #endif /* AFS_LINUX22_ENV */
-    tfile = afs_CFileOpen(fce.inode);
+ 
+    return 0;
+ }
+ 
+int afs_InitCellInfo(char *afile)
+{
+    ino_t inode;
+    int code;
+    
+    code = LookupInodeByPath(afile, &inode);
+    return afs_cellname_init(inode, code);
+}
+ 
+int afs_InitVolumeInfo(char *afile)
+{
+    int code;
+    struct osi_file *tfile;
+    struct vnode *filevp;
+    
+    AFS_STATCNT(afs_InitVolumeInfo);
+    code = LookupInodeByPath(afile, &volumeInode);
+    if (code) return code;
+    tfile = afs_CFileOpen(volumeInode);
     afs_CFileTruncate(tfile, 0);
     afs_CFileClose(tfile);
     return 0;
@@ -521,7 +535,6 @@ afs_ResourceInit(preallocs)
     AFS_STATCNT(afs_ResourceInit);
     RWLOCK_INIT(&afs_xuser, "afs_xuser");
     RWLOCK_INIT(&afs_xvolume, "afs_xvolume");
-    RWLOCK_INIT(&afs_xcell, "afs_xcell");
     RWLOCK_INIT(&afs_xserver, "afs_xserver");
     RWLOCK_INIT(&afs_xsrvAddr, "afs_xsrvAddr");
     RWLOCK_INIT(&afs_icl_lock, "afs_icl_lock");
@@ -533,6 +546,7 @@ afs_ResourceInit(preallocs)
     LOCK_INIT(&osi_flplock, "osi_flplock");
     RWLOCK_INIT(&afs_xconn, "afs_xconn");
 
+    afs_CellInit();
     afs_InitCBQueue(1);  /* initialize callback queues */
 
     if (afs_resourceinit_flag == 0) {
@@ -544,7 +558,6 @@ afs_ResourceInit(preallocs)
 	afs_sysname = afs_sysnamelist[0];
 	strcpy(afs_sysname, SYS_NAME);
 	afs_sysnamecount = 1;
-	QInit(&CellLRU);	
 #if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
     {  extern afs_int32 afs_preallocs;
 
@@ -751,19 +764,6 @@ void shutdown_AFS()
     if (afs_cold_shutdown) {
       afs_resourceinit_flag = 0; 
       /* 
-       * Free Cells table allocations 
-       */
-      { 
-	struct cell *tc;
-	register struct afs_q *cq, *tq;
-	for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
-	    tc = QTOC(cq); tq = QNext(cq);
-	    if (tc->cellName)
-		afs_osi_Free(tc->cellName, strlen(tc->cellName)+1);
-	    afs_osi_Free(tc, sizeof(struct cell));
-	}
-      }
-      /* 
        * Free Volumes table allocations 
        */
       { 
@@ -859,19 +859,16 @@ void shutdown_AFS()
       afs_sysname = 0;
       afs_sysnamecount = 0;
       afs_marinerHost = 0;
-      QInit(&CellLRU);      
       afs_setTimeHost = (struct server *)0;
       afs_volCounter = 1;
       afs_waitForever = afs_waitForeverCount = 0;
-      afs_cellindex = 0;
-      afs_nextCellNum = 0x100;
       afs_FVIndex = -1;
       afs_server = (struct rx_service *)0;
       RWLOCK_INIT(&afs_xconn, "afs_xconn");
       memset((char *)&afs_rootFid, 0, sizeof(struct VenusFid));
       RWLOCK_INIT(&afs_xuser, "afs_xuser");
       RWLOCK_INIT(&afs_xvolume, "afs_xvolume"), RWLOCK_INIT(&afs_xcell, "afs_xcell");
-      RWLOCK_INIT(&afs_xserver, "afs_xserver"), LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
+      shutdown_cell();
     }
     
 } /*shutdown_AFS*/
