@@ -129,6 +129,8 @@ libafs: $(DEST_LIBAFS) $(DEST_LIBAFSIAUTH)
 # Common objects
 xdr.o: $(RX)/xdr.c
 	$(CRULE1);
+xdr_int64.o: $(RX)/xdr_int64.c
+	$(CRULE1);
 
 xdr_array.o: $(RX)/xdr_array.c
 	$(CRULE1);

@@ -19,6 +19,9 @@
 #include <sys/file.h>
 #include <sys/time.h>
 #endif
+#ifdef BOZO_SAVE_CORES
+#include <time.h>
+#endif
 #include <sys/stat.h>
 #include <afs/procmgmt.h>  /* signal(), kill(), wait(), etc. */
 #include <lwp.h>
@@ -85,11 +88,25 @@ register struct bnode *abnode; {
     char tbuffer[256];
     struct stat tstat;
     register afs_int32 code;
+#ifdef BOZO_SAVE_CORES
+    struct timeval  Start;
+    struct tm *TimeFields;
+    char FileName[256];
+#endif
 
     code = stat(AFSDIR_SERVER_CORELOG_FILEPATH, &tstat);
     if (code) return;
     
     bnode_CoreName(abnode, aproc->coreName, tbuffer);
+#ifdef BOZO_SAVE_CORES
+    TM_GetTimeOfDay(&Start, 0);
+    TimeFields = localtime(&Start.tv_sec);
+    sprintf(FileName,"%s.%d%02d%02d%02d%02d%02d", tbuffer,
+            TimeFields->tm_year, TimeFields->tm_mon + 1,
+            TimeFields->tm_mday, TimeFields->tm_hour, TimeFields->tm_min,
+            TimeFields->tm_sec);
+    strcpy(tbuffer,FileName);
+#endif
     code = renamefile(AFSDIR_SERVER_CORELOG_FILEPATH, tbuffer);
 }
 

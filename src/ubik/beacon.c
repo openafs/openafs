@@ -24,6 +24,7 @@
 #include <rx/xdr.h>
 #include <rx/rx.h>
 #include <rx/rx_multi.h>
+#include <afs/cellconfig.h>
 #ifndef AFS_NT40_ENV
 #include <afs/afsutil.h>
 #include <afs/netutils.h>
@@ -38,6 +39,8 @@ static afs_int32 syncSiteUntil = 0;	    /* valid only if amSyncSite */
 int ubik_amSyncSite = 0;	    /* flag telling if I'm sync site */
 static nServers;		    /* total number of servers */
 static char amIMagic=0;		    /* is this host the magic host */
+char amIClone=0;                    /* is this a clone which doesn't vote */
+static char ubik_singleServer = 0;
 extern struct rx_securityClass *rxnull_NewClientSecurityObject();
 int (*ubik_CRXSecurityProc)();
 char *ubik_CRXSecurityRock;
@@ -91,11 +94,11 @@ ubeacon_AmSyncSite() {
     register afs_int32 rcode;
     
     /* special case for fast startup */
-    if (nServers == 1) {
+    if (nServers == 1 && !amIClone) {
 	return 1;	/* one guy is always the sync site */
     }
 
-    if (ubik_amSyncSite == 0) rcode = 0;  /* if I don't think I'm the sync site, say so */
+    if (ubik_amSyncSite == 0 || amIClone) rcode = 0;  /* if I don't think I'm the sync site, say so */
     else {
 	now = FT_ApproxTime();
 	if (syncSiteUntil <= now) {	    /* if my votes have expired, say so */
@@ -127,17 +130,43 @@ ubeacon_AmSyncSite() {
  * is sync site.  Without the magic host hack, if anyone crashed in a 2
  * site system, we'd be out of business.
  */
+ubeacon_InitServerListByInfo(ame, info, clones)
+    afs_int32 ame;
+    struct afsconf_cell *info;
+    char clones[];
+{
+    afs_int32 code;
+
+    code = ubeacon_InitServerListCommon(ame, info, clones, 0);
+    return code;
+}
+
 ubeacon_InitServerList(ame, aservers)
     afs_int32 ame;
-    register afs_int32 aservers[]; {
+    register afs_int32 aservers[];
+{
+    afs_int32 code;
+
+    code = ubeacon_InitServerListCommon(ame, (struct afsconf_cell *)0, 0,
+							aservers);
+    return code;
+}
+
+ubeacon_InitServerListCommon(ame, info, clones, aservers)
+    afs_int32 ame;
+    struct afsconf_cell *info;
+    char clones[];
+    register afs_int32 aservers[];
+{
     register struct ubik_server *ts;
+    afs_int32 me = -1;
     register afs_int32 servAddr;
     register afs_int32 i, code;
     afs_int32 magicHost;
     struct ubik_server *magicServer;
 
     /* verify that the addresses passed in are correct */
-    if ( code = verifyInterfaceAddress(&ame, aservers ))
+    if (code = verifyInterfaceAddress(&ame, info, aservers))
 	return code;
 
     /* get the security index to use, if we can */
@@ -150,28 +179,79 @@ ubeacon_InitServerList(ame, aservers)
 	ubikSecIndex = 0;
 	ubikSecClass = rxnull_NewClientSecurityObject();
     }
-    i = 0;
     magicHost =	ntohl(ame);	/* do comparisons in host order */
     magicServer = (struct ubik_server *) 0;
-    while (servAddr = *aservers++) {
-	if (i >= MAXSERVERS) return UNHOSTS;	    /* too many hosts */
-	ts = (struct ubik_server *) malloc(sizeof(struct ubik_server));
-	bzero(ts, sizeof(struct ubik_server));
-	ts->next = ubik_servers;
-	ubik_servers = ts;
-	ts->addr[0] = servAddr;	/* primary address in  net byte order */
-	ts->vote_rxcid = rx_NewConnection(servAddr, ubik_callPortal, VOTE_SERVICE_ID, ubikSecClass, ubikSecIndex);	/* for vote reqs */
-	ts->disk_rxcid = rx_NewConnection(servAddr, ubik_callPortal, DISK_SERVICE_ID, ubikSecClass, ubikSecIndex);	/* for disk reqs */
-	ts->up = 1;
-	if (ntohl((afs_uint32) servAddr) < (afs_uint32) magicHost) {
-	    magicHost = ntohl(servAddr);
-	    magicServer = ts;
+
+    if (info) {
+        for (i = 0; i < info->numServers; i++) {
+            if (ntohl((afs_uint32) info->hostAddr[i].sin_addr.s_addr) ==
+                                                ntohl((afs_uint32) ame)) {
+                me = i;
+                if (clones[i]) {
+                    amIClone = 1;
+                    magicHost = 0;
+                }
+            }
+        }
+        nServers = 0;
+        for (i = 0; i < info->numServers; i++) {
+            if (i == me) continue;
+	    ts = (struct ubik_server *) malloc(sizeof(struct ubik_server));
+	    bzero(ts, sizeof(struct ubik_server));
+	    ts->next = ubik_servers;
+	    ubik_servers = ts;
+            ts->addr[0] = info->hostAddr[i].sin_addr.s_addr;
+            if (clones[i]) {
+                ts->isClone = 1;
+            } else {
+                if (!magicHost || 
+		ntohl((afs_uint32) ts->addr[0]) < (afs_uint32) magicHost) {
+                    magicHost = ntohl(ts->addr[0]);
+                    magicServer = ts;
+                }
+                ++nServers;
+            }
+	    ts->vote_rxcid = rx_NewConnection(servAddr, ubik_callPortal, 
+		VOTE_SERVICE_ID, 
+		ubikSecClass, ubikSecIndex);		/* for vote reqs */
+	    ts->disk_rxcid = rx_NewConnection(servAddr, ubik_callPortal, 
+		DISK_SERVICE_ID, ubikSecClass, 
+		ubikSecIndex);				/* for disk reqs */
+	    ts->up = 1;
 	}
-	i++;
+    } else {
+        i = 0;
+        while (servAddr = *aservers++) {
+	    if (i >= MAXSERVERS) return UNHOSTS;	    /* too many hosts */
+	    ts = (struct ubik_server *) malloc(sizeof(struct ubik_server));
+	    bzero(ts, sizeof(struct ubik_server));
+	    ts->next = ubik_servers;
+	    ubik_servers = ts;
+	    ts->addr[0] = servAddr;	/* primary address in  net byte order */
+	    ts->vote_rxcid = rx_NewConnection(servAddr, ubik_callPortal, 
+		VOTE_SERVICE_ID, 
+		ubikSecClass, ubikSecIndex);		/* for vote reqs */
+	    ts->disk_rxcid = rx_NewConnection(servAddr, ubik_callPortal, 
+		DISK_SERVICE_ID, ubikSecClass, 
+		ubikSecIndex);				/* for disk reqs */
+	    ts->isClone = 0;			/* don't know about clones */
+	    ts->up = 1;
+	    if (ntohl((afs_uint32) servAddr) < (afs_uint32) magicHost) {
+	        magicHost = ntohl(servAddr);
+	        magicServer = ts;
+	    }
+	    i++;
+	}
     }
     if (magicServer) magicServer->magic	= 1;	/* remember for when counting votes */
-    else amIMagic = 1;
-    nServers = i+1;	/* count this server as well as the remotes */
+
+    if (!amIClone && !magicServer) amIMagic = 1;
+    if (info) {
+        if (!amIClone) 
+            ++nServers;     	/* count this server as well as the remotes */
+    } else
+        nServers = i+1;		/* count this server as well as the remotes */
+
     ubik_quorum	= (nServers>>1)+1;	/* compute the majority figure */
 					/* send addrs to all other servers */
     code = updateUbikNetworkAddress(ubik_host);
@@ -182,7 +262,19 @@ ubeacon_InitServerList(ame, aservers)
     r_retryInterval = 2;	
     r_nRetries = (RPCTIMEOUT/r_retryInterval);
 */
-    if (nServers == 1) {    /* special case 1 server */
+    if (info) {
+	if (!ubik_servers)              /* special case 1 server */
+	    ubik_singleServer = 1;
+	if (nServers == 1 && !amIClone) {
+	    ubik_amSyncSite = 1;	/* let's start as sync site */
+	    syncSiteUntil = 0x7fffffff; /* and be it quite a while */
+	}
+    } else {
+       if (nServers == 1)     		/* special case 1 server */
+	    ubik_singleServer = 1;
+    }
+
+    if (ubik_singleServer) {	
         if (!ubik_amSyncSite) ubik_dprint("Ubik: I am the sync site - 1 server\n");
 	ubik_amSyncSite = 1;
 	syncSiteUntil =	0x7fffffff; /* quite a while */
@@ -222,7 +314,7 @@ ubeacon_Interact() {
 
 	lastWakeupTime = FT_ApproxTime();   /* started a new collection phase */
 
-	if (nServers ==	1) continue;	/* special-case 1 server for speedy startup */
+        if (ubik_singleServer) continue;    /* special-case 1 server for speedy startup */
 
 	if (!uvote_ShouldIRun()) continue;  /* if voter has heard from a better candidate than us, don't bother running */
 
@@ -233,7 +325,7 @@ ubeacon_Interact() {
 	    prepare to send them an r multi-call containing the beacon message */
 	i = 0;	    /* collect connections */
 	for(ts = ubik_servers; ts; ts=ts->next) {
-	    if (ts->up && ts->addr[0] != ubik_host[0]) {
+            if (ts->up && ts->addr[0] != ubik_host[0]) {
 		servers[i] = ts;
 		connections[i++] = ts->vote_rxcid;
 	    }
@@ -279,7 +371,8 @@ ubeacon_Interact() {
 		    ts->lastVoteTime = code;
 		    if (code < oldestYesVote) oldestYesVote = code;
 		    ts->lastVote = 1;
-		    yesVotes += 2;
+                    if (!ts->isClone)
+		        yesVotes += 2;
 		    if (ts->magic) yesVotes++;  /* the extra epsilon */
 		    ts->up = 1; /* server is up (not really necessary: recovery does this for real) */
 		    ts->beaconSinceDown = 1;
@@ -340,16 +433,20 @@ ubeacon_Interact() {
 *
 * Return Values : 0 on success, non-zero on failure
 */
-verifyInterfaceAddress(ame, aservers)
-afs_uint32 *ame;		/* one of my interface addr in net byte order */
-afs_uint32 aservers[]; 	/* list of all possible server addresses */
+static verifyInterfaceAddress(ame, info, aservers)
+    struct afsconf_cell *info;
+    afs_uint32 aservers[]; 	/* list of all possible server addresses */
+    afs_uint32 *ame;		/* one of my interface addr in net byte order */
 {
-    afs_uint32	myAddr[UBIK_MAX_INTERFACE_ADDR], *servList;
+    afs_uint32	myAddr[UBIK_MAX_INTERFACE_ADDR], *servList, tmpAddr;
     int 	count, index, found, i, j, totalServers, start, end;
 
-    /* count the number of servers */
-    for ( totalServers=0, servList = aservers; *servList; servList++)
-	totalServers++;
+    if (info)
+        totalServers = info->numServers;
+    else { 				/* count the number of servers */
+        for ( totalServers=0, servList = aservers; *servList; servList++)
+	    totalServers++;
+    }
 
 #ifdef AFS_NT40_ENV 
     /* for now use getaddr(). use getAllAddr when implemented */
@@ -407,34 +504,41 @@ afs_uint32 aservers[]; 	/* list of all possible server addresses */
     */
     for ( j=0, found = 0; j < count; j++)
     {
-	for ( i=0; i < totalServers; i++)
-	    if ( myAddr[j] == aservers[i] ) 	
-	    {
-		*ame = aservers[i];
-		aservers[i]  = 0 ; 
+	for ( i=0; i < totalServers; i++) {
+            if (info)
+		tmpAddr = ntohl((afs_uint32) info->hostAddr[i].sin_addr.s_addr);
+	    else 
+		tmpAddr = aservers[i];
+            if ( myAddr[j] == tmpAddr) {
+                *ame = tmpAddr;
+		if (!info)
+		    aservers[i]  = 0 ; 
 		found = 1;
 	    }
+	}
     }
     if ( found )
 	ubik_print("Using %s as my primary address\n", afs_inet_ntoa(*ame) );
 
-    /* get rid of servers which were purged because all 
-    ** those interface addresses are myself 
-    */
-    for ( start=0, end=totalServers-1; (start<end) ; start++, end--)
-    {
-	/* find the first zero entry from the beginning */
-	for ( ; (start < end) && ( aservers[start] ); start++);
+    if (!info) {
+        /* get rid of servers which were purged because all 
+        ** those interface addresses are myself 
+        */
+        for ( start=0, end=totalServers-1; (start<end) ; start++, end--)
+        {
+	    /* find the first zero entry from the beginning */
+	    for ( ; (start < end) && ( aservers[start] ); start++);
+    
+	    /* find the last non-zero entry from the end */
+	    for ( ; (end >= 0) && ( !aservers[end] ); end-- );
+    
+	    /* if there is nothing more to purge, exit from loop */
+	    if ( start >= end ) break;
 
-	/* find the last non-zero entry from the end */
-	for ( ; (end >= 0) && ( !aservers[end] ); end-- );
-
-	/* if there is nothing more to purge, exit from loop */
-	if ( start >= end ) break;
-
-	/* move the entry */
-	aservers[start] = aservers[end];
-	aservers[end]   = 0;		/* this entry was moved */
+	    /* move the entry */
+	    aservers[start] = aservers[end];
+	    aservers[end]   = 0;		/* this entry was moved */
+        }
     }
 	
     /* update all my addresses in ubik_host in such a way 

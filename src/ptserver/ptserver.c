@@ -64,7 +64,6 @@ void main (argc, argv)
   char **argv;
 {
     register afs_int32 code;
-    afs_int32 serverList[MAXSERVERS];
     afs_int32 myHost;
     register struct hostent *th;
     char hostname[64];
@@ -81,6 +80,7 @@ void main (argc, argv)
     int kerberosKeys;			/* set if found some keys */
     afs_int32 i,j;
     int lwps = 3;
+    char clones[MAXHOSTSPERCELL];
 
     const char *pr_dbaseName;
     char *whoami = "ptserver";
@@ -189,18 +189,14 @@ void main (argc, argv)
     bcopy(th->h_addr,&myHost,sizeof(afs_int32));
         
     /* get list of servers */
-    code = afsconf_GetCellInfo(prdir,(char *)0,"afsprot",&info);
+    code = afsconf_GetExtendedCellInfo(prdir,(char *)0,"afsprot",
+                       &info, &clones);
     if (code) {
 	com_err (whoami, code, "Couldn't get server list");
 	PT_EXIT(2);
     }
     pr_realmName = info.name;
     pr_realmNameLen = strlen (pr_realmName);
-
-    for (i=0,j=0;i<info.numServers;i++)
-	if (info.hostAddr[i].sin_addr.s_addr != myHost) /* ubik already tacks myHost onto list */
-	    serverList[j++] = info.hostAddr[i].sin_addr.s_addr;
-    serverList[j] = 0;
 
 #if 0
     /* get keys */
@@ -234,8 +230,8 @@ void main (argc, argv)
      * and the header are in separate Ubik buffers then 120 buffers may be
      * required. */
     ubik_nBuffers = 120 + /*fudge*/40;
-    code = ubik_ServerInit(myHost, htons(AFSCONF_PROTPORT), serverList,
-			   pr_dbaseName, &dbase);
+    code = ubik_ServerInitByInfo(myHost, htons(AFSCONF_PROTPORT), &info,
+                           &clones, pr_dbaseName, &dbase);
     if (code) {
 	com_err (whoami, code, "Ubik init failed");
 	PT_EXIT(2);

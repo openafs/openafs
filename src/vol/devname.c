@@ -54,8 +54,10 @@
 #if defined(AFS_SGI_ENV)
 #include <fcntl.h>
 #include <mntent.h>
-#include "../sgiefs/efs.h"
+#ifdef AFS_SGI_EFS_IOPS_ENV
 #define ROOTINO EFS_ROOTINO
+#include "../sgiefs/efs.h"
+#endif
 #else
 #ifdef AFS_LINUX22_ENV
 #include <mntent.h>

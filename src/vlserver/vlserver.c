@@ -106,7 +106,6 @@ int	argc;
 char	**argv;
 {
     register afs_int32   code;
-    afs_int32	    serverList[MAXSERVERS];
     afs_int32		    myHost;
     struct rx_service	    *tservice;
     struct rx_securityClass *sc[3];
@@ -121,7 +120,8 @@ char	**argv;
     int noAuth = 0, index, i;
     extern int rx_extraPackets;
     char commandLine[150];
-
+    char clones[MAXHOSTSPERCELL];
+ 
 #ifdef	AFS_AIX32_ENV
     /*
      * The following signal action for AIX is necessary so that in case of a 
@@ -214,15 +214,12 @@ char	**argv;
     signal(SIGXCPU, CheckSignal_Signal);
 #endif
     /* get list of servers */
-    code = afsconf_GetCellInfo(tdir,(char *)0, AFSCONF_VLDBSERVICE,&info);
+    code = afsconf_GetExtendedCellInfo(tdir,(char *)0, AFSCONF_VLDBSERVICE,
+                                       &info, &clones);
     if (code) {
 	printf("vlserver: Couldn't get cell server list for 'afsvldb'.\n");
 	exit(2);
     }
-    for (index=0,i = 0;index<info.numServers;index++)
-	if (info.hostAddr[index].sin_addr.s_addr != myHost) /* ubik already tacks myHost onto list */
-	    serverList[i++] = info.hostAddr[index].sin_addr.s_addr;
-     serverList[i] = 0;
 
     vldb_confdir = tdir;		/* Preserve our configuration dir */
     /* rxvab no longer supported */
@@ -237,7 +234,8 @@ char	**argv;
     ubik_SRXSecurityRock = (char *) tdir;
     ubik_CheckRXSecurityProc = afsconf_CheckAuth;
     ubik_CheckRXSecurityRock = (char *) tdir;
-    code = ubik_ServerInit(myHost, htons(AFSCONF_VLDBPORT), serverList, vl_dbaseName, &VL_dbase);
+    code = ubik_ServerInitByInfo(myHost, htons(AFSCONF_VLDBPORT), &info,
+				 &clones, vl_dbaseName, &VL_dbase);
     if (code) {
 	printf("vlserver: Ubik init failed with code %d\n",code);
 	exit(2);

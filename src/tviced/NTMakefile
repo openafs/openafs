@@ -32,7 +32,7 @@ VICEDOBJS = viced.obj afsfileprocs.obj host.obj physio.obj callback.obj	\
 
 VLSERVEROBJS = vldbint.cs.obj vldbint.xdr.obj
 
-LWPOBJS = lock.obj fasttime.obj
+LWPOBJS = lock.obj fasttime.obj threadname.obj
 
 LIBACLOBJS = aclprocs.obj netprocs.obj
 
@@ -92,6 +92,9 @@ lock.obj: $(LWP)/lock.c
 	$(C2OBJ) $**
 
 fasttime.obj: $(LWP)/fasttime.c
+	$(C2OBJ) $**
+
+threadname.obj: $(LWP)/threadname.c
 	$(C2OBJ) $**
 
 ############################################################################

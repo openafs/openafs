@@ -304,6 +304,8 @@ extern bool_t	xdr_double();
 extern bool_t	xdr_reference();
 extern bool_t	xdr_wrapstring();
 extern bool_t	xdr_vector();
+extern bool_t   xdr_int64();
+extern bool_t   xdr_uint64();
 
 /*
  * These are the public routines for the various implementations of

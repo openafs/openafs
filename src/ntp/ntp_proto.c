@@ -184,7 +184,10 @@ extern struct servent *servp;
 extern char *malloc(), *ntoa();
 extern double drift_comp, compliance;	/* logical clock variables */
 extern double s_fixed_to_double(), ul_fixed_to_double();
-extern void make_new_peer(), double_to_s_fixed(), tstamp(), demobilize();
+extern void make_new_peer(), double_to_s_fixed(), demobilize();
+#ifndef AFS_SUN58_ENV
+extern void tstamp();
+#endif
 	
 
 #ifdef	REFCLOCK

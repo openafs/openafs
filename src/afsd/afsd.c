@@ -1026,8 +1026,10 @@ mainproc(as, arock)
     sprintf(fullpn_VFile,       "%s/V",  cacheBaseDir);
     vFileNumber = fullpn_VFile + strlen(fullpn_VFile);
 
+#if 0
     fputs(AFS_GOVERNMENT_MESSAGE, stdout); 
     fflush(stdout);
+#endif
 
     /*
      * Set up all the kernel processes needed for AFS.

@@ -42,6 +42,8 @@ pam_sm_authenticate(
     int use_first_pass = 0;
     int try_first_pass = 0;
     int ignore_root = 0;
+    int trust_root = 0;
+    int catch_su = 0;
     int set_expires = 0;  /* This option is only used in pam_set_cred() */
     int got_authtok = 0;	/* got PAM_AUTHTOK upon entry */
     int nouser = 0;
@@ -80,6 +82,10 @@ pam_sm_authenticate(
 	    try_first_pass = 1;
 	} else if (strcasecmp(argv[i], "ignore_root"   ) == 0) {
 	    ignore_root = 1;
+	} else if (strcasecmp(argv[i], "trust_root"   ) == 0) {
+	    trust_root = 1;
+	} else if (strcasecmp(argv[i], "catch_su"   ) == 0) {
+	    catch_su = 1;
 	} else if (strcasecmp(argv[i], "setenv_password_expires") == 0) {
             set_expires = 1;
 	} else {
@@ -107,6 +113,11 @@ pam_sm_authenticate(
 	RET(PAM_USER_UNKNOWN);
     }
 
+    if ((!strncmp ("root", user, 4)) && trust_root) {
+	pam_afs_syslog(LOG_INFO, PAMAFS_TRUSTROOT, user);
+	RET(PAM_SUCCESS);
+    }
+
     pam_afs_syslog(LOG_DEBUG, PAMAFS_USERNAMEDEBUG, user);
 
     /*
@@ -132,9 +143,14 @@ pam_sm_authenticate(
 #else
     upwd = getpwnam_r(user, &unix_pwd, upwd_buf, sizeof(upwd_buf));
 #endif
-    if (ignore_root && upwd != NULL && upwd->pw_uid == 0) {
-	pam_afs_syslog(LOG_INFO, PAMAFS_IGNORINGROOT, user);
-	RET(PAM_AUTH_ERR);
+    if (upwd != NULL && upwd->pw_uid == 0) {
+	if (ignore_root) { 
+		pam_afs_syslog(LOG_INFO, PAMAFS_IGNORINGROOT, user);
+		RET(PAM_AUTH_ERR);
+	} else if (trust_root && !catch_su) {
+		pam_afs_syslog(LOG_INFO, PAMAFS_TRUSTROOT, user);
+		RET(PAM_SUCCESS);
+	}
     }
 #endif
     errcode = pam_get_item(pamh, PAM_AUTHTOK, (void **) &password);

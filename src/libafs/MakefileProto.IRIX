@@ -218,7 +218,7 @@ setup:
 	-ln -s /usr/include/sys h
 	-ln -s /usr/include/net /usr/include/netinet .
 	-ln -s /usr/include/rpc /usr/include/sys .
-	-ln -s ../../obj/sgiefs sgiefs
+	-ln -s /usr/include/sys/fs .
 	-mkdir ${DESTDIR}root.client/bin
 	-mkdir ${DESTDIR}root.client/usr/vice/etc/sgiload
 <all -sgi_65>
@@ -342,14 +342,13 @@ ${COMPDIRS}:
 		export CPU_KDEFS ;\
 		export LDFLAGS ;\
 		cd $$dir ; \
-		$(MAKE) IPNO=$$p DESTDIR=../${DESTDIR} $$t.libafs || exit $$?; \
+		$(MAKE) IPNO=$$p DESTDIR=${DESTDIR} $$t.libafs || exit $$?; \
 		cd ../ ; \
 	  done; \
 	done
 <all>
 
 
-LIBAFSA = libafs.a
 LIBAFSNONFSA = libafs.nonfs.a
 COPYFILES = copyfiles
 LINKFILES = linkfiles
@@ -358,46 +357,30 @@ STATICCLIENTDIR = ${DESTDIR}root.client/bin
 MODLOADCLIENTDIR = ${DESTDIR}root.client/usr/vice/etc/sgiload
 
 # Make the NFS and no-NFS clients for this directory.
-# STATIC.libafs: ${LIBAFSA} ${LIBAFSNONFSA} ${COPYFILES} ${LINKFILES}
+# STATIC.libafs: ${LIBAFSNONFSA} ${COPYFILES} ${LINKFILES}
 STATIC.libafs: ${LIBAFSNONFSA} ${COPYFILES} ${LINKFILES}
 <all -sgi_65>
-	${CP} ${LIBAFSA} \
-		${STATICCLIENTDIR}/libafs.${MPSP}.${CPUARCH}.a
 	${CP} ${LIBAFSNONFSA} \
 		${STATICCLIENTDIR}/libafs.${MPSP}.${CPUARCH}.nonfs.a
 <sgi_65>
-	${CP} ${LIBAFSA} \
-		${STATICCLIENTDIR}/libafs.${IPNO}.a
 	${CP} ${LIBAFSNONFSA} \
 		${STATICCLIENTDIR}/libafs.${IPNO}.nonfs.a
 <all>
 
-${LIBAFSA}: $(AFSAOBJS) $(AFSNFSOBJS)
-	$(AR) cru  $@ $?
-
 ${LIBAFSNONFSA}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(AR) cru  $@ $?
 
-LIBAFSO = libafs.o
 LIBAFSNONFSO = libaf.nonfs.o
 
-# MODLOAD.libafs: ${LIBAFSO} ${LIBAFSNONFSO} ${COPYFILES} ${LINKFILES}
+# MODLOAD.libafs: ${LIBAFSNONFSO} ${COPYFILES} ${LINKFILES}
 MODLOAD.libafs: ${LIBAFSNONFSO} ${COPYFILES} ${LINKFILES}
 <all -sgi_65>
-	${CP} ${LIBAFSO} \
-		${MODLOADCLIENTDIR}/libafs.${MPSP}.${CPUARCH}.o
 	${CP} ${LIBAFSNONFSO} \
 		${MODLOADCLIENTDIR}/libafs.${MPSP}.${CPUARCH}.nonfs.o
 <sgi_65>
-	${CP} ${LIBAFSO} \
-		${MODLOADCLIENTDIR}/libafs.${IPNO}.o
 	${CP} ${LIBAFSNONFSO} \
 		${MODLOADCLIENTDIR}/libafs.${IPNO}.nonfs.o
 <all>
-
-${LIBAFSO}: $(AFSAOBJS) $(AFSNFSOBJS)
-	$(LD) ${LDFLAGS} -elf -r -d -G 0 -o ${LIBAFSO} $(AFSAOBJS) $(AFSNFSOBJS)
-	
 
 ${LIBAFSNONFSO}: $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(LD) ${LDFLAGS} -elf -r -d -G 0 -o ${LIBAFSNONFSO} \

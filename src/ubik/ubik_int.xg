@@ -167,6 +167,8 @@ statindex 11
 #define	VOTE_GETSYNCSITE	10003
 #define VOTE_DEBUG		10004
 #define VOTE_SDEBUG		10005
+#define VOTE_XDEBUG             10006
+#define VOTE_XSDEBUG            10007
 
 /* Vote package interface calls */
 Beacon		(IN afs_int32 state,
@@ -185,6 +187,13 @@ Debug		(OUT ubik_debug *db) = VOTE_DEBUG;
 
 SDebug		(IN afs_int32 which, 
 		OUT ubik_sdebug *db) = VOTE_SDEBUG;
+
+XDebug          (OUT ubik_debug *db,
+                 OUT afs_int32 *isClone) = VOTE_XDEBUG;
+
+XSDebug         (IN afs_int32 which,
+                 OUT ubik_sdebug *db,
+                 OUT afs_int32 *isClone) = VOTE_XSDEBUG;
 
 /* This package handles calls used to pass writes, begins and ends to other servers */
 package DISK_

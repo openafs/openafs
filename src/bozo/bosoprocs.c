@@ -43,6 +43,9 @@ extern struct afsconf_dir *bozo_confdir;
 extern struct rx_securityClass *bozo_rxsc[2];
 extern int bozo_newKTs;
 extern int DoLogging;
+#ifdef BOS_RESTRICTED_MODE
+extern int bozo_isrestricted;
+#endif
 
 BOZO_GetRestartTime(acall, atype, aktime)
 struct rx_call *acall;
@@ -119,6 +122,12 @@ char *acmd; {
       code = BZACCESS;
       goto fail;
     }
+#ifdef BOS_RESTRICTED_MODE
+    if (bozo_isrestricted) {
+      code = BZACCESS;
+      goto fail;
+    }
+#endif
     if (DoLogging) bozo_Log("%s is executing the shell command '%s'\n", caller, acmd);
 
     /* should copy output to acall, but don't yet cause its hard */
@@ -180,6 +189,13 @@ register char *aname; {
 	osi_auditU (acall, BOS_UnInstallEvent, code, AUD_STR, aname, AUD_END);
 	return code;
     }
+#ifdef BOS_RESTRICTED_MODE
+    if (bozo_isrestricted) {
+	code = BZACCESS;
+	osi_auditU (acall, BOS_UnInstallEvent, code, AUD_STR, aname, AUD_END);
+	return code;
+    }
+#endif
 
     /* construct local path from canonical (wire-format) path */
     if (ConstructLocalBinPath(aname, &filepath)) {
@@ -267,6 +283,9 @@ afs_int32 mode; {
     char caller[MAXKTCNAMELEN];
 
     if (!afsconf_SuperUser(bozo_confdir, acall, caller)) return BZACCESS;
+#ifdef BOS_RESTRICTED_MODE
+    if (bozo_isrestricted) return BZACCESS;
+#endif
 
     /* construct local path from canonical (wire-format) path */
     if (ConstructLocalBinPath(aname, &fpp)) {
@@ -715,6 +734,17 @@ char *notifier; {
       code = BZACCESS;
       goto fail;
     }
+#ifdef BOS_RESTRICTED_MODE
+    if (bozo_isrestricted) {
+         if (strcmp(atype, "cron") || strcmp(ainstance, "salvage-tmp") ||
+             strcmp(ap2, "now") ||
+             strncmp(ap1, AFSDIR_CANONICAL_SERVER_SALVAGER_FILEPATH, 
+                     strlen(AFSDIR_CANONICAL_SERVER_SALVAGER_FILEPATH))) {
+              code = BZACCESS;
+              goto fail;
+         }
+    }
+#endif
 
     code = bnode_Create(atype, ainstance, &tb, ap1, ap2, ap3, ap4, ap5, notifier,BSTAT_NORMAL);
     if (!code)
@@ -754,6 +784,12 @@ char *ainstance; {
       code = BZACCESS;
       goto fail;
     }
+#ifdef BOS_RESTRICTED_MODE
+    if (bozo_isrestricted) {
+      code = BZACCESS;
+      goto fail;
+    }
+#endif
     if (DoLogging) bozo_Log("%s is executing DeleteBnode '%s'\n", caller, ainstance);
 
     code = bnode_DeleteName(ainstance);
@@ -1061,6 +1097,12 @@ afs_int32 aflags; {
       code = BZACCESS;
       goto fail; 
     }
+#ifdef BOS_RESTRICTED_MODE
+    if (bozo_isrestricted) {
+         code = BZACCESS;
+         goto fail; 
+    }
+#endif
     if (DoLogging) bozo_Log("%s is executing Prune (flags=%d)\n", caller, aflags);
 
     /* first scan AFS binary directory */
@@ -1299,6 +1341,13 @@ char *aname; {
       code = BZACCESS; 
       goto fail; 
     }
+#ifdef BOS_RESTRICTED_MODE
+    if (bozo_isrestricted && strchr(aname, '/') && 
+        strcmp(aname, AFSDIR_CANONICAL_SERVER_SLVGLOG_FILEPATH)) { 
+      code = BZACCESS; 
+      goto fail; 
+    }
+#endif
 
     /* construct local path from canonical (wire-format) path */
     if (ConstructLocalLogPath(aname, &logpath)) {
@@ -1369,6 +1418,51 @@ char **as1, **as2, **as3, **as4; {
     return BZNOENT;
 }
 
+#ifdef BOS_RESTRICTED_MODE
+BOZO_GetRestrictedMode(acall, arestmode) 
+struct rx_call *acall;
+afs_int32 *arestmode; 
+{
+     *arestmode=bozo_isrestricted;
+     return 0;
+}
+
+BOZO_SetRestrictedMode(acall, arestmode) 
+struct rx_call *acall;
+afs_int32 arestmode; 
+{
+     afs_int32 code;
+     char caller[MAXKTCNAMELEN];
+     
+     if (!afsconf_SuperUser(bozo_confdir, acall, caller)) { 
+          return BZACCESS; 
+     }     
+     if (bozo_isrestricted) {
+          return BZACCESS; 
+     }     
+     if (arestmode !=0 && arestmode !=1) {
+          return BZDOM;
+     }
+     bozo_isrestricted=arestmode;
+     code = WriteBozoFile(0);
+ fail:
+     return code;
+}
+#else
+BOZO_GetRestrictedMode(acall, arestmode) 
+struct rx_call *acall;
+afs_int32 *arestmode; 
+{
+     return RXGEN_OPCODE;
+}
+
+BOZO_SetRestrictedMode(acall, arestmode) 
+struct rx_call *acall;
+afs_int32 arestmode; 
+{
+     return RXGEN_OPCODE;
+}
+#endif
 
 void bozo_ShutdownAndExit(int asignal)
 {

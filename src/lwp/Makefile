@@ -21,8 +21,8 @@ CFLAGS=${OPTIMIZE} -I${SRCDIR}include ${XCFLAGS}
 include ../config/Makefile.version
 
 LIBOBJS=lwp.o process.o lock.o iomgr.o timer.o fasttime.o preempt.o \
-	waitkey.o AFS_component_version_number.o
-LIBTOBJS=tlwp.o process.o lock.o tiomgr.o timer.o fasttime.o preempt.o AFS_component_version_number.o pthread.o
+	waitkey.o threadname.o AFS_component_version_number.o
+LIBTOBJS=tlwp.o process.o lock.o tiomgr.o timer.o fasttime.o preempt.o AFS_component_version_number.o pthread.o threadname.o
 
 noversion: install
 
@@ -66,6 +66,10 @@ process.o	: process.s process.c
 					$(CC) -c -I${SRCDIR}include -KPIC -G0  process.s;; \
 				sgi_61 | sgi_62 | sgi_63 ) \
 					$(CC) -c ${XCFLAGS} -I${SRCDIR}include -KPIC -G0  process.s;; \
+				s390*) \
+					/lib/cpp -P -I${SRCDIR}include process.s >process.ss; \
+					${AS} -ahlns process.ss -o process.o >process.lst; \
+					rm process.ss ;; \
 				hp* | *_linux* | sgi_64 | sgi_65) \
 					${CC} ${CFLAGS} -c process.c;; \
 				ncrx86_*) \
@@ -97,6 +101,7 @@ lwp.o		: lwp.c lwp.h
 lock.o		: lock.c lock.h lwp.h
 timer.o		: timer.c
 fasttime.o	: fasttime.c
+threadname.o    : threadname.c
 
 exc_handling.o	: exc_handling.c
 

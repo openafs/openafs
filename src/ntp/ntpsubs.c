@@ -233,7 +233,8 @@ double_to_s_fixed(t, value)
 	results in the value 2^31.  Neither 4.2bsd nor VMS have this
 	problem.  Reported it to Bob O'Brien of SMI
 */
-#ifdef	SUN_FLT_BUG
+#ifndef AFS_SUN58_ENV
+#ifdef SUN_FLT_BUG 
 tstamp(stampp, tvp)
 	struct l_fixedpt *stampp;
 	struct timeval *tvp;
@@ -255,6 +256,7 @@ tstamp(stampp, tvp)
 	stampp->fraction = ntohl((afs_uint32) ((float) tvp->tv_usec * 4294.967295));
 }
 #endif
+#endif /* AFS_SUN58_ENV */
 
 /*
  * ntoa is similar to inet_ntoa, but cycles through a set of 8 buffers

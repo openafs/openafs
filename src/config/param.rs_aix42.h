@@ -23,6 +23,7 @@
 
 /* File system entry (used if vmount.h doesn't define MNT_AFS */
 #define AFS_MOUNT_AFS	4
+#define AFS_SYSCALL    31
 
 /* Machine / Operating system information */
 #define SYS_NAME	"rs_aix42"

@@ -41,6 +41,7 @@ COMERROBJS =\
 XDROBJS =\
 	xdr_arrayn.o \
 	xdr_rx.o \
+	xdr_int64.o \
 	xdr_afsuuid.o \
 	AFS_component_version_number.o
 
@@ -192,6 +193,9 @@ AFS_component_version_number.o: ${RX}/AFS_component_version_number.c
 xdr.o: ${RX}/xdr.c
 	${CCRULE};
 
+xdr_int64.o: ${RX}/xdr_int64.c
+	${CCRULE};
+
 xdr_array.o: ${RX}/xdr_array.c
 	${CCRULE};
 
@@ -238,7 +242,7 @@ xdr_afsuuid.o: ${RX}/xdr_afsuuid.c
 #
 #   $ what /opt/langtools/bin/pxdb32
 #   /opt/langtools/bin/pxdb32:
-#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.1.1.3 $
+#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.1.1.4 $
 #
 # The problem occurs when -g and -O are both used when compiling des.c.
 # The simplest way to work around the problem is to leave out either -g or -O.

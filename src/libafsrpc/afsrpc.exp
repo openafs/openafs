@@ -77,6 +77,7 @@ xdrrec_eof
 xdrrec_skiprecord
 xdrrx_create
 xdr_afsuuid
+xdr_int64
 hton_syserr_conv
 rxkad_stats
 _et_list

@@ -222,3 +222,12 @@ GetInstanceStrings(
   OUT string spare2<BOZO_BSSIZE>,
   OUT string spare3<BOZO_BSSIZE>
 ) = 114;
+
+GetRestrictedMode(
+  OUT afs_int32 *restmode
+) = 115;
+
+SetRestrictedMode(
+  IN afs_int32 restmode
+) = 116;
+/* RPC #117 will be Salvage, if I get around to it */

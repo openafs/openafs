@@ -74,7 +74,20 @@ register struct afsconf_cell *aci; {
 afsconf_SetCellInfo(adir, apath, acellInfo)
 struct afsconf_dir *adir;
 char *apath;
-struct afsconf_cell *acellInfo; {
+struct afsconf_cell *acellInfo; 
+{
+    afs_int32 code;
+
+    code = afsconf_SetExtendedCellInfo(adir, apath, acellInfo, (char *)0);
+    return code;
+}
+   
+afsconf_SetExtendedCellInfo(adir, apath, acellInfo, clones)
+    struct afsconf_dir *adir;
+    char *apath;
+    struct afsconf_cell *acellInfo; 
+    char clones[];
+{
     register afs_int32 code;
     register int fd;
     char tbuffer[1024];
@@ -121,7 +134,10 @@ struct afsconf_cell *acellInfo; {
 	code = acellInfo->hostAddr[i].sin_addr.s_addr;	/* net order */
 	if (code == 0) continue;    /* delete request */
 	code = ntohl(code);	/* convert to host order */
-	fprintf(tf, "%d.%d.%d.%d    #%s\n", (code>>24) & 0xff, (code>>16)&0xff, (code>>8)&0xff, code&0xff, acellInfo->hostName[i]);
+        if (clones && clones[i])
+            fprintf(tf, "[%d.%d.%d.%d]  #%s\n", (code>>24) & 0xff, (code>>16)&0xff, (code>>8)&0xff, code&0xff, acellInfo->hostName[i]);
+        else
+           fprintf(tf, "%d.%d.%d.%d    #%s\n", (code>>24) & 0xff, (code>>16)&0xff, (code>>8)&0xff, code&0xff, acellInfo->hostName[i]);
     }
     if (ferror(tf)) {
 	fclose(tf);

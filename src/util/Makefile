@@ -16,7 +16,7 @@ INSTALL = ${SRCDIR}bin/install
 objects = assert.o base64.o casestrcpy.o ktime.o volparse.o hostparse.o \
 	 hputil.o kreltime.o isathing.o get_krbrlm.o uuid.o serverLog.o \
 	 dirpath.o fileutil.o netutils.o flipbase64.o \
-	 afs_atomlist.o afs_lhash.o
+	 afs_atomlist.o afs_lhash.o snprintf.o
 
 headers = assert.h potpourri.h itc.h errors.h afsutil.h pthread_glock.h \
 	  dirpath.h afs_atomlist.h afs_lhash.h
@@ -75,6 +75,9 @@ util.a: ${objects} AFS_component_version_number.o
 
 volparse.o: volparse.c
 	${CC} ${CFLAGS} -c volparse.c
+
+snprintf.o: snprintf.c
+	${CC} ${CFLAGS} -c snprintf.c
 
 base64.o: base64.c
 	${CC} ${CFLAGS} -c base64.c

@@ -24,7 +24,8 @@ CFLAGS = ${OPTMZ} -I${SRCDIR}include -DRXDEBUG ${XCFLAGS}
 XDROBJS = xdr_arrayn.o xdr_rx.o xdr_afsuuid.o
 
 RXOBJS = rx_clock.o rx_event.o rx_user.o rx_lwp.o rx.o rx_null.o rx_globals.o \
-	rx_getaddr.o rx_misc.o rx_packet.o rx_rdwr.o  rx_trace.o rx_conncache.o
+	rx_getaddr.o rx_misc.o rx_packet.o rx_rdwr.o  rx_trace.o rx_conncache.o \
+	xdr_int64.o
 
 MULTIOBJS = rx_multi.o
 
@@ -43,7 +44,7 @@ KSRCS = rx.c rx.h rx_clock.c rx_clock.h rx_event.c rx_event.h \
 	rx_null.c rx_null.h rx_queue.h rx_getaddr.c rx_packet.c rx_packet.h \
 	rx_multi.h rx_kcommon.h rx_kcommon.c \
 	xdr.c xdr.h xdr_array.c xdr_arrayn.c xdr_rx.c rx_misc.c rx_rdwr.c \
-	xdr_afsuuid.c rx_trace.h
+	xdr_afsuuid.c rx_trace.h xdr_int64.c
 UKSRCS = $(KSRCS) rx_conncache.c
 
 include ../config/Makefile.version
@@ -119,8 +120,8 @@ includes: rx.h rx_user.h rx_event.h rx_queue.h rx_clock.h xdr.h rx_null.h rx_glo
 kinstall: includes
 	set $(KERNELDIR)rx; $(MKDIR_IF_NEEDED)
 	$(INSTALL) $(KSRCS) $(KERNELDIR)rx
-	@case ${SYS_NAME} in \
-	alpha_dux4* ) \
+	case ${SYS_NAME} in \
+	alpha_dux* ) \
 		$(INSTALL) DUX/*.[ch] $(KERNELDIR)rx;; \
 	hp_ux* ) \
 		$(INSTALL) HPUX/*.[ch] $(KERNELDIR)rx;; \
@@ -139,7 +140,7 @@ kinstall: includes
 ukinstall webinstall: includes
 	set $(UKERNELDIR)rx; $(MKDIR_IF_NEEDED)
 	$(INSTALL) $(UKSRCS) $(UKERNELDIR)rx
-	$(INSTALL) UKERNEL/*.[ch] $(UKERNELDIR)rx
+	-$(INSTALL) UKERNEL/*.[ch] $(UKERNELDIR)rx
 
 clean:
 	rm -f *.o *.a core *_component_version_number.c

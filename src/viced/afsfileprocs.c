@@ -6896,3 +6896,11 @@ SRXAFS_DFSSymlink (tcon, DirFid, Name, LinkContents, InStatus, OutFid, OutFidSta
     return EINVAL;
 }
 
+SRXAFS_ResidencyCmd (tcon, Fid, Inputs, Outputs)
+    struct rx_connection *tcon;
+    struct AFSFid *Fid;
+    struct ResidencyCmdInputs *Inputs;
+    struct ResidencyCmdOutputs *Outputs;
+{
+    return EINVAL;
+}

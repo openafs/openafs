@@ -156,6 +156,8 @@ main (argc, argv)
     int	  servers;
     int	  initFlags;
     int   level;			/* security level for Ubik */
+    afs_int32 i;
+    char  clones[MAXHOSTSPERCELL];
 
     struct rx_service *tservice;
     struct rx_securityClass *sca[1];
@@ -282,15 +284,21 @@ main (argc, argv)
     OpenLog(AFSDIR_SERVER_KALOG_FILEPATH); 
     SetupLogSignals();
 #endif
+    code = afsconf_GetExtendedCellInfo (KA_conf, cell, AFSCONF_KAUTHSERVICE,
+                                    &cellinfo, &clones);
     if (servers) {
 	if (code = ubik_ParseServerList(argc, argv, &myHost, serverList)) {
 	    com_err(whoami, code, "Couldn't parse server list");
 	    exit(1);
 	}
+        cellinfo.hostAddr[0].sin_addr.s_addr = myHost;
+        for (i=1; i<MAXSERVERS; i++) {
+            if (!serverList[i]) break;
+            cellinfo.hostAddr[i].sin_addr.s_addr = serverList[i];
+        }
+        cellinfo.numServers = i;
     }
     else {
-	code = afsconf_GetCellInfo (KA_conf, cell, AFSCONF_KAUTHSERVICE,
-				    &cellinfo);
 	code = convert_cell_to_ubik (&cellinfo, &myHost, serverList);
 	if (code) goto abort;
 	ViceLog (0, ("Using server list from %s cell database.\n", cell));
@@ -313,8 +321,13 @@ main (argc, argv)
     ubik_CheckRXSecurityRock = (char *)KA_conf;
 
     ubik_nBuffers = 80;
-    code = ubik_ServerInit (myHost, htons(AFSCONF_KAUTHPORT), serverList,
-			    dbpath, &KA_dbase);
+    if (servers)
+        code = ubik_ServerInit (myHost, htons(AFSCONF_KAUTHPORT), serverList,
+                            dbpath, &KA_dbase);
+    else
+        code = ubik_ServerInitByInfo (myHost, htons(AFSCONF_KAUTHPORT), 
+                           &cellinfo, &clones, dbpath, &KA_dbase);
+
     if (code) {
 	com_err(whoami, code, "Ubik init failed");
 	exit(2);
