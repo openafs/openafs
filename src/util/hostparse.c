@@ -232,15 +232,11 @@ char* afs_inet_ntoa(afs_uint32 addr)
 }
 
 /* same as above, but to a non-static buffer, must be freed by called */
-char* afs_inet_ntoa_r(afs_uint32 addr)
+char* afs_inet_ntoa_r(afs_uint32 addr, char *buf)
 {
-    char *buf;
     int temp;
 
     temp = ntohl(addr);
-    buf = (char *) malloc(16); /* length of xxx.xxx.xxx.xxx\0 */
-    buf[15] = 0;
-
     sprintf(buf, "%d.%d.%d.%d", 
 	    (temp >> 24 ) & 0xff,
 	    (temp >> 16 ) & 0xff, 
