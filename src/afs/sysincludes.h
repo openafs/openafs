@@ -23,7 +23,6 @@
 #include <sys/resourcevar.h>
 #include <sys/kernel.h>
 #include <sys/proc.h>
-#include <sys/systm.h>
 #include <sys/time.h>
 #include <sys/filedesc.h>
 #include <sys/file.h>

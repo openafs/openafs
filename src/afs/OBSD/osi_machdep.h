@@ -82,6 +82,9 @@ extern struct timeval time;
 
 /* other */
 #define afs_bufferpages bufpages
+#ifndef iodone
+#define iodone biodone
+#endif
 #define PAGESIZE	8192
 #define printk		printf	/* for RX version of xdr_* */
 #define setgroups	sys_setgroups
