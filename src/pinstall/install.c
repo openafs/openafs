@@ -91,15 +91,20 @@ RCSID
 static struct stat istat, ostat;
 static int stripcalled = 0;
 
-#if !defined(AFS_DARWIN60_ENV) && !defined(AFS_FBSD50_ENV)
+/* How many systems don't have strerror now? */
+#ifndef HAVE_STRERROR
+#if !defined(AFS_DARWIN60_ENV) && !defined(AFS_FBSD50_ENV) 
 extern int sys_nerr;
 #endif
 #if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 extern char *sys_errlist[];
 #endif
+char *ErrorString(int aerrno);
+#else
+#define ErrorString strerror
+#endif
 
 /* static prototypes */
-char *ErrorString(int aerrno);
 int stripName(char *aname);
 int atoo(register char *astr);
 
@@ -132,6 +137,7 @@ strrpbrk(char *s, char *set)
     return 0;
 }
 
+#ifndef HAVE_STRERROR
 char *
 ErrorString(int aerrno)
 {
@@ -143,6 +149,7 @@ ErrorString(int aerrno)
     }
     return tbuffer;
 }
+#endif
 
 int
 stripName(char *aname)

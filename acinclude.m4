@@ -798,7 +798,7 @@ fi
 AC_SUBST(HAVE_PAM)
 
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf strlcat strlcpy re_comp re_exec)
-AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf)
+AC_CHECK_FUNCS(setprogname getprogname sigaction mkstemp vsnprintf strerror)
 AC_CHECK_TYPE(ssize_t, int)
 AC_SIZEOF_TYPE(long)
 
