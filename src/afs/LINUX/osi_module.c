@@ -25,9 +25,9 @@ RCSID("$Header$");
 #include <linux/slab.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 #include <linux/init.h>
+#include <linux/sched.h>
 #endif
 #ifndef EXPORTED_SYS_CALL_TABLE
-#include <linux/sched.h>
 #include <linux/syscall.h>
 #endif
 
@@ -446,14 +446,26 @@ static long get_page_offset(void)
     struct task_struct *p, *q;
 
     /* search backward thru the circular list */
-#ifdef DEFINED_PREV_TASK
-    for(q = current; p = q; q = prev_task(p))
-#else
-    for(p = current; p; p = p->prev_task)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+    read_lock(&tasklist_lock);
 #endif
-	if (p->pid == 1)
-	    return p->addr_limit.seg;
-
-    return 0;
+    /* search backward thru the circular list */
+#ifdef DEFINED_PREV_TASK
+    for(q = current; p = q; q = prev_task(p)) {
+#else
+    for(p = current; p; p = p->prev_task) {
+#endif
+	    if (p->pid == 1) {
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+		    read_unlock(&tasklist_lock);
+#endif
+		    return p->addr_limit.seg;
+	    }
+    }
+  
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+    read_unlock(&tasklist_lock);
+#endif
+  return 0;
 #endif
 }
