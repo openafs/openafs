@@ -12,7 +12,7 @@
 
 typedef struct smb_tran2Packet {
 	osi_queue_t q;			/* queue of all packets */
-		int com;			/* Trans or Trans2 (0x25 or 0x32) */
+        int com;			/* Trans or Trans2 (0x25 or 0x32) */
         int totalData;			/* total # of expected data bytes */
         int totalParms;			/* total # of expected parm bytes */
 	int oldTotalParms;		/* initial estimate of parm bytes */

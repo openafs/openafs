@@ -219,7 +219,7 @@ int RXAFS_Lookup (struct rx_connection *,
 #define CM_ERROR_EXISTS			(CM_ERROR_BASE+11)
 #define CM_ERROR_CROSSDEVLINK		(CM_ERROR_BASE+12)
 #define CM_ERROR_BADOP			(CM_ERROR_BASE+13)
-#define CM_ERROR_BADPASSWORD    (CM_ERROR_BASE+14)
+#define CM_ERROR_BADPASSWORD            (CM_ERROR_BASE+14)
 #define CM_ERROR_NOTDIR			(CM_ERROR_BASE+15)
 #define CM_ERROR_ISDIR			(CM_ERROR_BASE+16)
 #define CM_ERROR_READONLY		(CM_ERROR_BASE+17)
@@ -250,4 +250,5 @@ int RXAFS_Lookup (struct rx_connection *,
 #define CM_ERROR_GSSCONTINUE            (CM_ERROR_BASE+43)
 #define CM_ERROR_TIDIPC                 (CM_ERROR_BASE+44)
 #define CM_ERROR_TOO_MANY_SYMLINKS      (CM_ERROR_BASE+45)
+#define CM_ERROR_PATH_NOT_COVERED       (CM_ERROR_BASE+46)
 #endif /*  __CM_H_ENV__ */

@@ -1,0 +1,64 @@
+argos.mit.edu with 1.3.73 client
+171,194,368 byte file.  "fs flush" before each command
+
+200mb cache; No MaxMTU
+       write/crypt 2.793 MB/sec
+       read/crypt  2.897 MB/sec
+
+       write/clear 7.123 MB/sec
+       read/clear  5.991 MB/sec
+
+1.2.10(skyrope)
+        write/crypt:  1.836 MB/sec
+        read/crypt:   1.497 MB/sec
+
+        write/clear:  2.927 MB/sec
+        read/clear:   2.065 MB/sec
+
+
+                 1.2.10          1.3.73       improvement
+              ------------    ------------    -----------
+write/crypt   1.836 MB/sec    2.793 MB/sec       52.1%
+read/crypt    1.497 MB/sec    2.897 MB/sec       93.5%
+                              
+write/clear   2.927 MB/sec    7.123 MB/sec      143.4%
+read/clear    2.065 MB/sec    5.991 MB/sec      190.1%
+
+
+
+mitz@ANDREW.CMU.EDU tested the 1.3.73 client on his machine
+against his cell copying a 367181824 byte file.  "fs flush"
+was run prior to each command.
+
+
+Default MaxMTU; Default cache
+       write/crypt:  4.158 MB/sec
+       read/crypt:   5.730 MB/sec
+
+       write/clear:  4.537 MB/sec
+       read/clear:  16.762 MB/sec
+
+Changing the cache size made no difference
+
+No MaxMTU; 400MB cache
+       write/crypt:  4.863 MB/sec
+       read/crypt:   6.083 MB/sec
+
+       write/clear: 14.286 MB/sec
+       read/clear:  16.257 MB/sec
+
+From Andrew Linux with 1.2.10 on the same machine:
+       write/crypt:  5.358 MB/sec
+       read/crypt:  12.855 MB/sec
+
+       write/crypt  18.040 MB/sec (unique file names)
+       read/crypt   23.160 MB/sec (unique file names)
+
+       write/clear: 16.401 MB/sec
+       read/clear:  25.192 MB/sec
+
+
+        
+
+
+

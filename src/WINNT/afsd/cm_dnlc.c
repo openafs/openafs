@@ -27,7 +27,7 @@
 #include <osi.h>
 #include "afsd.h"
 
-static osi_rwlock_t cm_dnlcLock;
+osi_rwlock_t cm_dnlcLock;
 
 static cm_dnlcstats_t dnlcstats;	/* dnlc statistics */
 static int cm_useDnlc = 1; 	/* yes, start using the dnlc */
@@ -38,10 +38,6 @@ static int cm_debugDnlc = 0;	/* debug dnlc */
  *     1.  If nameHash[i] is NULL, list is empty
  *     2.  A single element in a hash bucket has itself as prev and next.
  */
-static struct nc *ncfreelist = (struct nc *)0;
-static struct nc nameCache[NCSIZE];
-static struct nc *nameHash[NHSIZE];
-
 #ifndef DJGPP
 #define dnlcNotify(x,debug){                    \
                         HANDLE  hh;             \
@@ -58,17 +54,17 @@ static struct nc *nameHash[NHSIZE];
 #define dnlcNotify(x,debug)
 #endif /* !DJGPP */
 
-static struct nc * 
+static cm_nc_t * 
 GetMeAnEntry() 
 {
     static unsigned int nameptr = 0; /* next bucket to pull something from */
-    struct nc *tnc;
+    cm_nc_t *tnc;
     int j;
   
-    if (ncfreelist) 
+    if (cm_data.ncfreelist) 
     {
-	tnc = ncfreelist;
-	ncfreelist = tnc->next;
+	tnc = cm_data.ncfreelist;
+	cm_data.ncfreelist = tnc->next;
 	return tnc;
     }
 
@@ -76,11 +72,11 @@ GetMeAnEntry()
     {
 	if (nameptr >= NHSIZE) 
 	    nameptr =0;
-	if (nameHash[nameptr])
+	if (cm_data.nameHash[nameptr])
 	    break;
     }
 
-    tnc = nameHash[nameptr];
+    tnc = cm_data.nameHash[nameptr];
     if (!tnc)   
     {
 	dnlcNotify("null tnc in GetMeAnEntry",1);
@@ -90,7 +86,7 @@ GetMeAnEntry()
 
     if (tnc->prev == tnc) 
     { 			/* only thing in list, don't screw around */
-	nameHash[nameptr] = (struct nc *) 0;
+	cm_data.nameHash[nameptr] = (cm_nc_t *) 0;
 	return (tnc);
     }
 
@@ -103,34 +99,33 @@ GetMeAnEntry()
 
 static void 
 InsertEntry(tnc)
-    struct nc *tnc;
+    cm_nc_t *tnc;
 {
     unsigned int key; 
     key = tnc->key & (NHSIZE -1);
 
-    if(!nameHash[key]) 
+    if (!cm_data.nameHash[key]) 
     {
-	nameHash[key] = tnc;
+	cm_data.nameHash[key] = tnc;
 	tnc->next = tnc->prev = tnc;
     }
     else 
     {
-	tnc->next = nameHash[key];
+	tnc->next = cm_data.nameHash[key];
 	tnc->prev = tnc->next->prev;
 	tnc->next->prev = tnc;
 	tnc->prev->next = tnc;
-	nameHash[key] = tnc;
+	cm_data.nameHash[key] = tnc;
     }
 }
 
 
 void 
-cm_dnlcEnter ( adp, aname, avc )
-    cm_scache_t *adp;
-    char        *aname;
-    cm_scache_t *avc;
+cm_dnlcEnter ( cm_scache_t *adp,
+               char        *aname,
+               cm_scache_t *avc )
 {
-    struct nc *tnc;
+    cm_nc_t *tnc;
     unsigned int key, skey, new=0;
     char *ts = aname;
     int safety;
@@ -150,15 +145,15 @@ cm_dnlcEnter ( adp, aname, avc )
     lock_ObtainWrite(&cm_dnlcLock);
     dnlcstats.enters++;
   
-    for (tnc = nameHash[skey], safety=0; tnc; tnc = tnc->next, safety++ )
+    for (tnc = cm_data.nameHash[skey], safety=0; tnc; tnc = tnc->next, safety++ )
 	if ((tnc->dirp == adp) && (!strcmp(tnc->name, aname)))
 	    break;				/* preexisting entry */
-	else if ( tnc->next == nameHash[skey])	/* end of list */
+	else if ( tnc->next == cm_data.nameHash[skey])	/* end of list */
 	{
 	    tnc = NULL;
 	    break;
 	}
-	else if ( safety >NCSIZE) 
+	else if (safety > NCSIZE) 
 	{
 	    dnlcstats.cycles++;
 	    lock_ReleaseWrite(&cm_dnlcLock);
@@ -196,15 +191,13 @@ cm_dnlcEnter ( adp, aname, avc )
 * if the scache entry is found, return it held
 */
 cm_scache_t *
-cm_dnlcLookup ( adp, sp)
-  cm_scache_t *adp;
-  cm_lookupSearch_t*      sp;
+cm_dnlcLookup (cm_scache_t *adp, cm_lookupSearch_t* sp)
 {
     cm_scache_t * tvc;
     unsigned int key, skey;
     char* aname = sp->searchNamep;
     char *ts = aname;
-    struct nc * tnc, * tnc_begin;
+    cm_nc_t * tnc, * tnc_begin;
     int safety, match;
   
     if (!cm_useDnlc)
@@ -223,9 +216,9 @@ cm_dnlcLookup ( adp, sp)
     dnlcstats.lookups++;	     /* Is a dnlcread lock sufficient? */
 
     ts = 0;
-    tnc_begin = nameHash[skey];
+    tnc_begin = cm_data.nameHash[skey];
     for ( tvc = (cm_scache_t *) 0, tnc = tnc_begin, safety=0; 
-       tnc; tnc = tnc->next, safety++ ) 
+          tnc; tnc = tnc->next, safety++ ) 
     {
 	if (tnc->dirp == adp) 
 	{
@@ -273,11 +266,11 @@ cm_dnlcLookup ( adp, sp)
             }
 	    }
 	}
-	if (tnc->next == nameHash[skey]) 
+	if (tnc->next == cm_data.nameHash[skey]) 
     { 			/* end of list */
 	    break;
 	}
-	else if (tnc->next == tnc_begin || safety >NCSIZE) 
+	else if (tnc->next == tnc_begin || safety > NCSIZE) 
 	{
 	    dnlcstats.cycles++;
 	    lock_ReleaseRead(&cm_dnlcLock);
@@ -307,11 +300,8 @@ cm_dnlcLookup ( adp, sp)
     }
     lock_ReleaseRead(&cm_dnlcLock);
 
-    if (tvc) {
-        lock_ObtainWrite(&cm_scacheLock);
-        tvc->refCount++;	/* scache entry held */
-        lock_ReleaseWrite(&cm_scacheLock);
-    }
+    if (tvc)
+        cm_HoldSCache(tvc);
 
     if ( cm_debugDnlc && tvc ) 
         osi_Log1(afsd_logp, "cm_dnlcLookup found %x", tvc);
@@ -322,7 +312,7 @@ cm_dnlcLookup ( adp, sp)
 
 static int
 RemoveEntry (tnc, key)
-    struct nc    *tnc;
+    cm_nc_t    *tnc;
     unsigned int key;
 {
     if (!tnc->prev) /* things on freelist always have null prev ptrs */
@@ -333,16 +323,16 @@ RemoveEntry (tnc, key)
     }
 
     if (tnc == tnc->next)  /* only one in list */
-	nameHash[key] = (struct nc *) 0;
+	cm_data.nameHash[key] = (cm_nc_t *) 0;
     else 
     {
-	if (tnc == nameHash[key])
-	    nameHash[key]  = tnc->next;
+	if (tnc == cm_data.nameHash[key])
+	    cm_data.nameHash[key]  = tnc->next;
 	tnc->prev->next = tnc->next;
 	tnc->next->prev = tnc->prev;
     }
 
-    tnc->prev = (struct nc *) 0; /* everything not in hash table has 0 prev */
+    tnc->prev = (cm_nc_t *) 0; /* everything not in hash table has 0 prev */
     tnc->key = 0; /* just for safety's sake */
     return 0;	  /* success */
 }
@@ -356,7 +346,7 @@ cm_dnlcRemove ( adp, aname)
     unsigned int key, skey, error=0;
     int found= 0, safety;
     char *ts = aname;
-    struct nc *tnc, *tmp;
+    cm_nc_t *tnc, *tmp;
   
     if (!cm_useDnlc)
 	return ;
@@ -373,7 +363,7 @@ cm_dnlcRemove ( adp, aname)
     lock_ObtainWrite(&cm_dnlcLock);
     dnlcstats.removes++;
 
-    for (tnc = nameHash[skey], safety=0; tnc; safety++) 
+    for (tnc = cm_data.nameHash[skey], safety=0; tnc; safety++) 
     {
 	if ( (tnc->dirp == adp) && (tnc->key == key) 
 			&& !strcmp(tnc->name,aname) )
@@ -384,13 +374,13 @@ cm_dnlcRemove ( adp, aname)
 	    if ( error )
 		break;
 
-	    tnc->next = ncfreelist; /* insert entry into freelist */
-	    ncfreelist = tnc;
+	    tnc->next = cm_data.ncfreelist; /* insert entry into freelist */
+	    cm_data.ncfreelist = tnc;
 	    found = 1;		/* found atleast one entry */
 
 	    tnc = tmp;		/* continue down the linked list */
 	}
-	else if (tnc->next == nameHash[skey]) /* end of list */
+	else if (tnc->next == cm_data.nameHash[skey]) /* end of list */
 	    break;
 	else
 	    tnc = tnc->next;
@@ -434,14 +424,14 @@ cm_dnlcPurgedp (adp)
 
     for (i=0; i<NCSIZE && !err; i++) 
     {
-	if (nameCache[i].dirp == adp ) 
+	if (cm_data.nameCache[i].dirp == adp ) 
 	{
-	    nameCache[i].dirp = nameCache[i].vp = (cm_scache_t *) 0;
-	    if (nameCache[i].prev && !err) 
+	    cm_data.nameCache[i].dirp = cm_data.nameCache[i].vp = (cm_scache_t *) 0;
+	    if (cm_data.nameCache[i].prev && !err) 
 	    {
-		err = RemoveEntry(&nameCache[i], nameCache[i].key & (NHSIZE-1));
-		nameCache[i].next = ncfreelist;
-		ncfreelist = &nameCache[i];
+		err = RemoveEntry(&cm_data.nameCache[i], cm_data.nameCache[i].key & (NHSIZE-1));
+		cm_data.nameCache[i].next = cm_data.ncfreelist;
+		cm_data.ncfreelist = &cm_data.nameCache[i];
 	    }
 	}
     }
@@ -469,16 +459,16 @@ cm_dnlcPurgevp ( avc )
 
     for (i=0; i<NCSIZE && !err ; i++) 
     {
-   	if (nameCache[i].vp == avc) 
+   	if (cm_data.nameCache[i].vp == avc) 
 	{
-	    nameCache[i].dirp = nameCache[i].vp = (cm_scache_t *) 0;
+	    cm_data.nameCache[i].dirp = cm_data.nameCache[i].vp = (cm_scache_t *) 0;
 	    /* can't simply break; because of hard links -- might be two */
 	    /* different entries with same vnode */ 
-	    if (!err && nameCache[i].prev) 
+	    if (!err && cm_data.nameCache[i].prev) 
 	    {
-		err=RemoveEntry(&nameCache[i], nameCache[i].key & (NHSIZE-1));
-		nameCache[i].next = ncfreelist;
-		ncfreelist = &nameCache[i];
+		err=RemoveEntry(&cm_data.nameCache[i], cm_data.nameCache[i].key & (NHSIZE-1));
+		cm_data.nameCache[i].next = cm_data.ncfreelist;
+		cm_data.ncfreelist = &cm_data.nameCache[i];
 	    }
 	}
     }
@@ -501,13 +491,13 @@ void cm_dnlcPurge(void)
     lock_ObtainWrite(&cm_dnlcLock);
     dnlcstats.purges++;
     
-    ncfreelist = (struct nc *) 0;
-    memset (nameCache, 0, sizeof(struct nc) * NCSIZE);
-    memset (nameHash, 0, sizeof(struct nc *) * NHSIZE);
+    cm_data.ncfreelist = (cm_nc_t *) 0;
+    memset (cm_data.nameCache, 0, sizeof(cm_nc_t) * NCSIZE);
+    memset (cm_data.nameHash, 0, sizeof(cm_nc_t *) * NHSIZE);
     for (i=0; i<NCSIZE; i++) 
     {
-	nameCache[i].next = ncfreelist;
-	ncfreelist = &nameCache[i];
+	cm_data.nameCache[i].next = cm_data.ncfreelist;
+	cm_data.ncfreelist = &cm_data.nameCache[i];
     }
     lock_ReleaseWrite(&cm_dnlcLock);
    
@@ -526,33 +516,140 @@ cm_dnlcPurgeVol( fidp )
     cm_dnlcPurge();
 }
 
+long
+cm_dnlcValidate(void)
+{
+    int i;
+    cm_nc_t * ncp;
+    
+    // are all nameCache entries marked with the magic bit?
+    for (i=0; i<NCSIZE; i++)
+    {
+        if (cm_data.nameCache[i].magic != CM_DNLC_MAGIC) {
+            afsi_log("cm_dnlcValidate failure: cm_data.nameCache[%d].magic != CM_DNLC_MAGIC", i);
+            fprintf(stderr, "cm_dnlcValidate failure: cm_data.nameCache[%d].magic != CM_DNLC_MAGIC\n", i);
+            return -1;
+        }
+        if (cm_data.nameCache[i].next &&
+            cm_data.nameCache[i].next->magic != CM_DNLC_MAGIC) {
+            afsi_log("cm_dnlcValidate failure: cm_data.nameCache[%d].next->magic != CM_DNLC_MAGIC", i);
+            fprintf(stderr, "cm_dnlcValidate failure: cm_data.nameCache[%d].next->magic != CM_DNLC_MAGIC\n", i);
+            return -2;
+        }
+        if (cm_data.nameCache[i].prev &&
+            cm_data.nameCache[i].prev->magic != CM_DNLC_MAGIC) {
+            afsi_log("cm_dnlcValidate failure: cm_data.nameCache[%d].prev->magic != CM_DNLC_MAGIC", i);
+            fprintf(stderr, "cm_dnlcValidate failure: cm_data.nameCache[%d].prev->magic != CM_DNLC_MAGIC\n", i);
+            return -3;
+        }
+        if (cm_data.nameCache[i].dirp &&
+            cm_data.nameCache[i].dirp->magic != CM_SCACHE_MAGIC) {
+            afsi_log("cm_dnlcValidate failure: cm_data.nameCache[%d].dirp->magic != CM_SCACHE_MAGIC", i);
+            fprintf(stderr, "cm_dnlcValidate failure: cm_data.nameCache[%d].dirp->magic != CM_SCACHE_MAGIC\n", i);
+            return -4;
+        }
+        if (cm_data.nameCache[i].vp &&
+            cm_data.nameCache[i].vp->magic != CM_SCACHE_MAGIC) {
+            afsi_log("cm_dnlcValidate failure: cm_data.nameCache[%d].vp->magic != CM_SCACHE_MAGIC", i);
+            fprintf(stderr, "cm_dnlcValidate failure: cm_data.nameCache[%d].vp->magic != CM_SCACHE_MAGIC\n", i);
+            return -5;
+        }
+    }
+
+    // are the contents of the hash table intact?
+    for (i=0; i<NHSIZE;i++) {
+        for (ncp = cm_data.nameHash[i]; ncp ; 
+             ncp = ncp->next != cm_data.nameHash[i] ? ncp->next : NULL) {
+            if (ncp->magic != CM_DNLC_MAGIC) {
+                afsi_log("cm_dnlcValidate failure: ncp->magic != CM_DNLC_MAGIC");
+                fprintf(stderr, "cm_dnlcValidate failure: ncp->magic != CM_DNLC_MAGIC\n");
+                return -6;
+            }
+            if (ncp->prev && ncp->prev->magic != CM_DNLC_MAGIC) {
+                afsi_log("cm_dnlcValidate failure: ncp->prev->magic != CM_DNLC_MAGIC");
+                fprintf(stderr, "cm_dnlcValidate failure: ncp->prev->magic != CM_DNLC_MAGIC\n");
+                return -7;
+            }
+            if (ncp->dirp && ncp->dirp->magic != CM_SCACHE_MAGIC) {
+                afsi_log("cm_dnlcValidate failure: ncp->dirp->magic != CM_DNLC_MAGIC");
+                fprintf(stderr, "cm_dnlcValidate failure: ncp->dirp->magic != CM_DNLC_MAGIC\n");
+                return -8;
+            }
+            if (ncp->vp && ncp->vp->magic != CM_SCACHE_MAGIC) {
+                afsi_log("cm_dnlcValidate failure: ncp->vp->magic != CM_DNLC_MAGIC");
+                fprintf(stderr, "cm_dnlcValidate failure: ncp->vp->magic != CM_DNLC_MAGIC\n");
+                return -9;
+            }
+        }
+    }
+
+    // is the freelist stable?
+    if ( cm_data.ncfreelist ) {
+        for (ncp = cm_data.ncfreelist; ncp; 
+             ncp = ncp->next != cm_data.ncfreelist ? ncp->next : NULL) {
+            if (ncp->magic != CM_DNLC_MAGIC) {
+                afsi_log("cm_dnlcValidate failure: ncp->magic != CM_DNLC_MAGIC");
+                fprintf(stderr, "cm_dnlcValidate failure: ncp->magic != CM_DNLC_MAGIC\n");
+                return -10;
+            }
+            if (ncp->prev && ncp->prev->magic != CM_DNLC_MAGIC) {
+                afsi_log("cm_dnlcValidate failure: ncp->prev->magic != CM_DNLC_MAGIC");
+                fprintf(stderr, "cm_dnlcValidate failure: ncp->prev->magic != CM_DNLC_MAGIC\n");
+                return -11;
+            }
+            if (ncp->dirp && ncp->dirp->magic != CM_SCACHE_MAGIC) {
+                afsi_log("cm_dnlcValidate failure: ncp->dirp->magic != CM_DNLC_MAGIC");
+                fprintf(stderr, "cm_dnlcValidate failure: ncp->dirp->magic != CM_DNLC_MAGIC\n");
+               return -12;
+            }
+            if (ncp->vp && ncp->vp->magic != CM_SCACHE_MAGIC) {
+                afsi_log("cm_dnlcValidate failure: ncp->vp->magic != CM_DNLC_MAGIC");
+                fprintf(stderr, "cm_dnlcValidate failure: ncp->vp->magic != CM_DNLC_MAGIC\n");
+                return -13;
+            }
+        }
+    }
+
+    return 0;
+}
+
 void 
-cm_dnlcInit(void)
+cm_dnlcInit(int newFile)
 {
     int i;
 
     if (!cm_useDnlc)
         return ;
+
     if ( cm_debugDnlc )
 	osi_Log0(afsd_logp,"cm_dnlcInit");
 
-    lock_InitializeRWLock(&cm_dnlcLock, "cm_dnlcLock");
     memset (&dnlcstats, 0, sizeof(dnlcstats));
-    lock_ObtainWrite(&cm_dnlcLock);
-    ncfreelist = (struct nc *) 0;
-    memset (nameCache, 0, sizeof(struct nc) * NCSIZE);
-    memset (nameHash, 0, sizeof(struct nc *) * NHSIZE);
-    for (i=0; i<NCSIZE; i++) 
-    {
-	nameCache[i].next = ncfreelist;
-	ncfreelist = &nameCache[i];
+
+    lock_InitializeRWLock(&cm_dnlcLock, "cm_dnlcLock");
+    if ( newFile ) {
+        lock_ObtainWrite(&cm_dnlcLock);
+        cm_data.ncfreelist = (cm_nc_t *) 0;
+        cm_data.nameCache = cm_data.dnlcBaseAddress;
+        memset (cm_data.nameCache, 0, sizeof(cm_nc_t) * NCSIZE);
+        cm_data.nameHash = (cm_nc_t **) (cm_data.nameCache + NCSIZE);
+        memset (cm_data.nameHash, 0, sizeof(cm_nc_t *) * NHSIZE);
+    
+        for (i=0; i<NCSIZE; i++)
+        {
+            cm_data.nameCache[i].magic = CM_DNLC_MAGIC;
+            cm_data.nameCache[i].next = cm_data.ncfreelist;
+            cm_data.ncfreelist = &cm_data.nameCache[i];
+        }
+        lock_ReleaseWrite(&cm_dnlcLock);
     }
-    lock_ReleaseWrite(&cm_dnlcLock);
 }
 
-void 
+long 
 cm_dnlcShutdown(void)
 {
     if ( cm_debugDnlc )
 	osi_Log0(afsd_logp,"cm_dnlcShutdown");
+
+    return 0;
 }

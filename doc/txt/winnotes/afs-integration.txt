@@ -1,0 +1,200 @@
+How to determine if OpenAFS is installed?
+
+When the OpenAFS Client Service is installed there will be several 
+registry keys created:
+
+  HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon
+     "ImagePath" = "path to afsd_service.exe"
+
+  HKLM\SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion
+     "PathName" = "the path to the client installation directory"
+     "MajorVersion" 
+     "MinorVersion"
+     "VersionString"
+
+BOOL IsAFSServerInstalled (void)
+{
+   BOOL fInstalled = FALSE;
+   TCHAR szKey[] = TEXT("HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon");
+   LPCTSTR pch = lstrchr (szKey, TEXT('\\'));
+   HKEY hk;
+   
+   if (RegOpenKey (HKEY_LOCAL_MACHINE, &pch[1], &hk) == 0)
+   {
+      fInstalled = TRUE;
+      RegCloseKey (hk);
+   }
+
+   return fInstalled;
+}
+
+How to determine if OpenAFS is active?
+
+The AFS Client Service is normally started automatically at system boot.
+The state of the service may be queried by asking the Windows Service 
+Manager.
+
+BOOL IsAFSServiceRunning (void)
+{
+    SERVICE_STATUS Status;
+    memset (&Status, 0x00, sizeof(Status));
+    Status.dwCurrentState = SERVICE_STOPPED;
+
+    SC_HANDLE hManager;
+    if ((hManager = OpenSCManager (NULL, NULL, GENERIC_READ)) != NULL)
+    {
+        SC_HANDLE hService;
+        if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), GENERIC_READ)) != NULL)
+        {
+            QueryServiceStatus (hService, &Status);
+            CloseServiceHandle (hService);
+        }
+        CloseServiceHandle (hManager);
+    }
+    return (Status.dwCurrentState == SERVICE_RUNNING);
+}
+
+How to determine the AFS UNC Service Name?
+
+The local UNC service name registered by the OpenAFS Client Service SMB/CIFS 
+Server depends on whether or not a Microsoft Loopback Adapter has been 
+installed and the contents of a registry value.  The loopback adapter is 
+important because if the service cannot bind itself to a loopback adapter 
+then the registered SMB/CIFS service name must be unique to the WINS name
+space.  When the loopback adapter is installed, a globally common name such
+as "AFS" can be used.
+
+If the loopback adapter is installed the UNC server name will be the value at:
+
+  HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters
+    REG_SZ/REG_EXPAND_SZ  "NetbiosName"
+
+If this value is not present, the default is "AFS".
+
+When the loopback adapter is not installed the UNC name will be:
+
+  %COMPUTERNAME%-%NetbiosName%
+
+if the Computer Name is "MYHOST" and the Netbios Name is "AFS" then
+the UNC server name will be: 
+
+  MYHOST-AFS
+
+At the moment there is no readily available code exported by a library to 
+determine if the loopback adapter is installed or not.  What I will do if
+someone requests it is add a new AFS pioctl operation which will return
+the in use UNC Server Name.
+
+
+How to determine the AFS unix mount point path?
+
+On Unix systems the local mount point of the AFS file system is usually "/afs".
+Some organizations have their own custom local mount point locations.  To 
+determine what the locally configured unix mount point is for interpretting
+Unix style paths there is a registry value:
+
+  HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters
+    REG_SZ "MountRoot"
+
+If this value does not exist the default value is "/afs".
+
+What are AFS pioctl() operations and how do I call them?
+
+AFS pioctl() operations are IPCs which can be used to communicate with the
+AFS Client Service for the purposes of querying or changing the state of
+the service.
+
+The pioctl() function has a prototype of:
+
+struct ViceIoctl {
+    long in_size;
+    long out_size;
+    void *in;
+    void *out;
+};
+
+long pioctl(char *pathp, long opcode, struct ViceIoctl *blobp, int follow);
+
+and can be loaded from the library "afsauthent.dll" at runtime.  The default
+calling convention is used.
+
+
+How to test to see if a PATH is within AFS?
+
+Given an arbitrary file path, you can test to see if the path is in the AFS
+file system with the following function.  It asks the AFS Client Service to 
+return the name of the cell in which the path exists.  If the cell name cannot
+be found, the path is not in the AFS file space.
+
+BOOL IsPathInAFS(const CHAR *strPath)
+{
+    struct ViceIoctl blob;
+    char cellname[256];
+    int code;
+
+    blob.in_size = 0;
+    blob.out_size = sizeof(cellname);
+    blob.out = cellname;
+
+    code = pioctl((LPTSTR)((LPCTSTR)strPath), VIOC_FILE_CELL_NAME, &blob, 1);
+    if (code)
+        return FALSE;
+    return TRUE;
+}
+
+
+What are AFS cells, volumes and mount points?
+
+The AFS file system consists of a series of administrative domains called 
+"cells" each of which contain two or more volumes.  A volume is a file system
+unit which contains files, directories, mount points, symlinks and hard
+links.
+
+Each cell has a minimum of two volumes.  When an AFS client connects to a 
+cell it mounts the cell's "root.afs" volume at the local afs mount point path.
+Each "root.afs" volume contains one or more mount points which allow the 
+AFS client to other volumes in both in the current cell as well as other 
+cells.  There are two types of mount points: read-only and read-write.  
+By following a read-only mount point the client can obtain data from any
+of the equivalent read-only volume replicas.  By following a read-write mount
+point the client is restricted to the one and only read-write copy of the
+volume.  Periodically replicated volumes have their read-write copy "released"
+which results in a synchronization with the read-only copies.
+
+By convention the first volume of every cell to contain real data is called 
+"root.cell".  The name of the read-only mount point which joins the "root.afs"
+volume to the "root.cell" volume is the name of the cell.  The name of the 
+read-write mount point is the name of the cell prefaced by a dot.  For 
+example, the "athena.mit.edu" cell's "root.afs" volume will contain mount points
+such as
+
+        "athena.mit.edu"  -> "#athena.mit.edu:root.cell" 
+        ".athena.mit.edu" -> "%athena.mit.edu:root.cell" 
+
+The '#' indicates a read-only mount point and the '%' indicates a read-write 
+mount point.  The mount points are not limited to the local cell so additional 
+mount points might be included such as:
+
+        "andrew.cmu.edu" -> "#andrew.cmu.edu:root.cell" 
+        "sipb.mit.edu"   -> "#sipb.mit.edu:root.cell"
+
+The mount points appear as directory entries to the operating system.
+
+Volumes can also store files, hard links to files, and symlinks to files.  
+
+On Windows, hardlinks can be created and destroyed using the CreateHardLink() 
+and DeleteFile() Win32 APIs.  
+
+Creating, Listing and Destroying symlinks and mount points is performed by
+the user via the OpenAFS provided command line tools: fs.exe and symlink.exe.
+ 
+  symlink make <name> <to>
+  symlink list <name>
+  symlink rm <name>
+
+  fs mkmount <dir> <vol> [<cell>] [-rw]
+  fs lsmount <dir>+
+  fs rmmount <dir>+
+
+These operations are performed via pioctl calls. 
+

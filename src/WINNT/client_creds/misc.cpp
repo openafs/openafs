@@ -57,7 +57,7 @@ void LoadRemind (size_t iCreds)
    g.aCreds[ iCreds ].fRemind = TRUE;
 
    HKEY hk;
-   if (RegOpenKey (HKEY_CURRENT_USER, REGSTR_PATH_OPENAFS_CLIENT_REMIND, &hk) == 0)
+   if (RegOpenKey (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY "\\Reminders", &hk) == 0)
       {
       DWORD dwValue = 1;
       DWORD dwSize = sizeof(dwValue);
@@ -72,7 +72,7 @@ void LoadRemind (size_t iCreds)
 void SaveRemind (size_t iCreds)
 {
    HKEY hk;
-   if (RegCreateKey (HKEY_CURRENT_USER, REGSTR_PATH_OPENAFS_CLIENT_REMIND, &hk) == 0)
+   if (RegCreateKey (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY "\\Reminders", &hk) == 0)
       {
       DWORD dwValue = g.aCreds[ iCreds ].fRemind;
       RegSetValueEx (hk, g.aCreds[ iCreds ].szCell, NULL, REG_DWORD, (PBYTE)&dwValue, sizeof(DWORD));

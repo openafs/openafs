@@ -18,7 +18,7 @@ extern "C" {
 }
 
 #include "afscreds.h"
-#include "..\afsreg\afsreg.h" // So we can see if the server's installed
+#include <WINNT\afsreg.h> // So we can see if the server's installed
 #include "drivemap.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -178,7 +178,7 @@ BOOL InitApp (LPSTR pszCmdLineA)
    if (fInstall)
       {
       HKEY hk;
-      if (RegCreateKey (HKEY_CURRENT_USER, REGSTR_PATH_OPENAFS_CLIENT, &hk) == 0)
+      if (RegCreateKey (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY, &hk) == 0)
          {
          DWORD dwSize = sizeof(g.fStartup);
          DWORD dwType = REG_DWORD;
@@ -213,14 +213,14 @@ BOOL InitApp (LPSTR pszCmdLineA)
       return FALSE;
 
    HKEY hk;
-    if (RegOpenKey (HKEY_CURRENT_USER, REGSTR_PATH_OPENAFS_CLIENT, &hk) == 0)
+    if (RegOpenKey (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY, &hk) == 0)
     {
         DWORD dwSize = sizeof(g.fStartup);
         DWORD dwType = REG_DWORD;
         RegQueryValueEx (hk, TEXT("ShowTrayIcon"), NULL, &dwType, (PBYTE)&g.fStartup, &dwSize);
         RegCloseKey (hk);
     }
-    else if (RegOpenKey (HKEY_LOCAL_MACHINE, REGSTR_PATH_OPENAFS_CLIENT, &hk) == 0)
+    else if (RegOpenKey (HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY, &hk) == 0)
       {
       DWORD dwSize = sizeof(g.fStartup);
       DWORD dwType = REG_DWORD;
@@ -397,12 +397,9 @@ void Quit (void)
 BOOL IsServerInstalled (void)
 {
    BOOL fInstalled = FALSE;
-
-   TCHAR szKey[] = AFSREG_SVR_SVC_KEY;
-   LPCTSTR pch = lstrchr (szKey, TEXT('\\'));
-
    HKEY hk;
-   if (RegOpenKey (HKEY_LOCAL_MACHINE, &pch[1], &hk) == 0)
+
+   if (RegOpenKey (HKEY_LOCAL_MACHINE, AFSREG_SVR_SVC_SUBKEY, &hk) == 0)
       {
       fInstalled = TRUE;
       RegCloseKey (hk);

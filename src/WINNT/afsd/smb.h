@@ -35,6 +35,16 @@ typedef struct smb {
     unsigned char vdata[1];
 } smb_t;
 
+
+/* reb values */
+#define SMB_FLAGS_SUPPORT_LOCKREAD         0x01
+#define SMB_FLAGS_CLIENT_BUF_AVAIL         0x02
+#define SMB_FLAGS_CASELESS_PATHNAMES       0x08
+#define SMB_FLAGS_CANONICAL_PATHNAMES      0x10
+#define SMB_FLAGS_REQUEST_OPLOCK           0x20
+#define SMB_FLAGS_REQUEST_BATCH_OPLOCK     0x40
+#define SMB_FLAGS_SERVER_TO_CLIENT         0x80           
+
 /* flg2 values */
 
 #define SMB_FLAGS2_KNOWS_LONG_NAMES        0x0001
@@ -43,10 +53,13 @@ typedef struct smb {
 #define SMB_FLAGS2_RESERVED1               0x0008
 #define SMB_FLAGS2_IS_LONG_NAME            0x0040
 #define SMB_FLAGS2_EXT_SEC                 0x0800
-#define SMB_FLAGS2_DFS                     0x1000
+#define SMB_FLAGS2_DFS_PATHNAMES           0x1000
 #define SMB_FLAGS2_PAGING_IO               0x2000
-#define SMB_FLAGS2_ERR_STATUS              0x4000
+#define SMB_FLAGS2_32BIT_STATUS            0x4000
 #define SMB_FLAGS2_UNICODE                 0x8000
+
+#define KNOWS_LONG_NAMES(inp) ((((smb_t *)inp)->flg2 & SMB_FLAGS2_KNOWS_LONG_NAMES)?1:0)
+#define WANTS_DFS_PATHNAMES(inp) ((((smb_t *)inp)->flg2 & SMB_FLAGS2_DFS_PATHNAMES)?1:0)
 
 /* Information Levels */
 #define SMB_INFO_STANDARD               1
@@ -106,6 +119,9 @@ typedef struct smb {
 #define NTNEGOTIATE_CAPABILITY_NTFIND			0x00000200L
 #define NTNEGOTIATE_CAPABILITY_DFS			0x00001000L
 #define NTNEGOTIATE_CAPABILITY_NT_INFO_PASSTHRU		0x00002000L
+#define NTNEGOTIATE_CAPABILITY_LARGE_READX		0x00004000L
+#define NTNEGOTIATE_CAPABILITY_LARGE_WRITEX		0x00008000L
+#define NTNEGOTIATE_CAPABILITY_UNIX     		0x00800000L
 #define NTNEGOTIATE_CAPABILITY_BULK_TRANSFER		0x20000000L
 #define NTNEGOTIATE_CAPABILITY_COMPRESSED		0x40000000L
 #define NTNEGOTIATE_CAPABILITY_EXTENDED_SECURITY	0x80000000L
@@ -342,7 +358,7 @@ typedef struct smb_fid {
 #define SMB_ATTR_DEVICE         0x0040
 #define SMB_ATTR_NORMAL         0x0080 /* normal file. Only valid if used alone */
 #define SMB_ATTR_TEMPORARY      0x0100
-#define SMB_ATTR_SPARSE_FILE    0x0200
+#define SMB_ATTR_SPARSE_FILE    0x0200 /* used with dfs links */
 #define SMB_ATTR_REPARSE_POINT  0x0400
 #define SMB_ATTR_COMPRESSED     0x0800 /* file or dir is compressed */
 #define SMB_ATTR_OFFLINE        0x1000
@@ -356,7 +372,7 @@ typedef struct smb_dirSearch {
     unsigned long refCount;		/* reference count */
     long cookie;			/* value returned to the caller */
     struct cm_scache *scp;		/* vnode of the dir we're searching */
-    time_t lastTime;		        /* last time we used this */
+    unsigned long lastTime;		/* last time we used this (osi_Time) */
     long flags;			        /* flags (see below);
 					 * locked by smb_globalLock */
     unsigned short attribute;	        /* search attribute

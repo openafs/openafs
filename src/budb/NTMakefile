@@ -81,7 +81,7 @@ EXELIBS =\
 
 
 $(EXEFILE): $(EXEOBJS)  $(EXELIBS)
-	$(EXECONLINK) dnsapi.lib
+	$(EXECONLINK) dnsapi.lib iphlpapi.lib
 	$(EXEPREP) 
 
 ############################################################################

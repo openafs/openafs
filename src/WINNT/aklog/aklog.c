@@ -183,7 +183,6 @@ void ViceIDToUsername(char *username, char *realm_of_user, char *realm_of_cell,
 {
     static char lastcell[MAXCELLCHARS+1] = { 0 };
     static char confname[512] = { 0 };
-    char username_copy[BUFSIZ];
     long viceId;			/* AFS uid of user */
 #ifdef ALLOW_REGISTER
     afs_int32 id;

@@ -11,6 +11,8 @@ The 1.3.x series of releases not only fixes a large number of bugs in the 1.2
 series but also attempts to enhance the functionality of the product to better 
 fit the usage model of today's users.  Several items standout.  
 
+0. The default AFSCache file is approximately 100MB.  This space is required 
+in addition to the space allocated to OpenAFS binaries.
 
 1. The Kerberos 4 infrastructure on which the 1.2 series is reliant is no 
 longer secure.  Cross-realm Kerberos is very important in the AFS context and 

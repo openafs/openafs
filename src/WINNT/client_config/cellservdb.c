@@ -22,8 +22,7 @@
 #else
 #include <sys/socket.h>
 #endif
-
-char AFSLocalMachineKeyName[] = "SOFTWARE\\OpenAFS\\Client";
+#include <WINNT\afsreg.h>
 
 /*
  * PROTOTYPES _________________________________________________________________
@@ -74,7 +73,7 @@ void CSDB_GetFileName (char *pszFilename)
 	HKEY parmKey;
     int tlen;
 
-	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSLocalMachineKeyName,
+	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY,
 				0, KEY_QUERY_VALUE, &parmKey);
 	if (code != ERROR_SUCCESS)
         goto dirpath;

@@ -89,7 +89,7 @@ VLSERVER_EXECLIBS = \
 
 	
 $(VLSERVER): $(VLSERVER_EXEOBJS) $(LIBFILE) $(VLSERVER_EXECLIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
 	$(EXEPREP) 
 
 ############################################################################
@@ -135,7 +135,7 @@ VLCLIENT_LIBS = \
 	$(DESTDIR)\lib\afs\afspioctl.lib
 
 $(OUT)\vlclient.exe: $(OUT)\vlclient.obj  $(LIBFILE) $(VLSERVER_EXECLIBS) $(VLCLIENT_LIBS)
-	$(EXECONLINK) dnsapi.lib mpr.lib
+	$(EXECONLINK) dnsapi.lib mpr.lib iphlpapi.lib
 
 
 ############################################################################
@@ -147,6 +147,8 @@ install: $(INCFILES) $(LIBFILE) $(VLSERVER) $(OUT)\vldb_check.exe $(OUT)\vlclien
 install9x: install
 
 install_libutils: $(INCFILES) $(LIBFILE)
+
+install_headers: $(INCFILES)
 
 ############################################################################
 # clean up

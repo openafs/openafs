@@ -40,11 +40,10 @@ RCSID
 
 #include <smb.h>
 #include <pioctl_nt.h>
-
+#include <WINNT/afsreg.h>
 #include <lanahelper.h>
 
-static char AFSConfigKeyName[] =
-    "SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters";
+static char AFSConfigKeyName[] = AFSREG_CLT_SVC_PARAM_SUBKEY;
 
 #define FS_IOCTLREQUEST_MAXSIZE	8192
 /* big structure for representing and storing an IOCTL request */

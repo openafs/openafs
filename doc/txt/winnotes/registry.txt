@@ -29,14 +29,14 @@ Variable: LANadapter
 
 Value   : CacheSize
 Type    : DWORD
-Default : 20480 (CM_CONFIGDEFAULT_CACHESIZE)
+Default : 98304 (CM_CONFIGDEFAULT_CACHESIZE)
 Variable: cm_initParams.cacheSize
 
   Size of the AFS cache in 1k blocks.
 
 Value   : ChunkSize
 Type    : DWORD
-Default : 15 (CM_CONFIGDEFAULT_CHUNKSIZE)
+Default : 17 (CM_CONFIGDEFAULT_CHUNKSIZE)
 Variable: cm_logChunkSize (cm_chunkSize = 1 << cm_logChunkSize)
 
   Size of chunk for reading and writing. Actual chunk size is 2^cm_logChunkSize.
@@ -51,7 +51,7 @@ Variable: numBkgD
 
 Value	: ServerThreads
 Type	: DWORD
-Default	: 4 (CM_CONFIGDEFAULT_SVTHREADS)
+Default	: 25 (CM_CONFIGDEFAULT_SVTHREADS)
 Variable: numSvThreads
 
   Number of SMB server threads (number of threads of smb_Server). (see
@@ -59,7 +59,7 @@ Variable: numSvThreads
 
 Value	: Stats
 Type	: DWORD
-Default : 1000 (CM_CONFIGDEFAULT_STATS)
+Default : 10000 (CM_CONFIGDEFAULT_STATS)
 Variable: cm_initParams.nStatCaches
 
   Cache configuration.
@@ -103,13 +103,15 @@ Variable: cm_mountRoot
   be relative and suffixed to the reference directory (i.e. directory
   where the symlink exists)
  
+
 Value	: CachePath
 Type	: REG_SZ or REG_EXPAND_SZ
-Default : "%SYSTEMDRIVE%\AFSCache"
+Default : "%TEMP%\AFSCache"
 Variable: cm_CachePath
 
-  Location of on-disk cache file.  The default implies the root 
-  directory of the boot disk
+  Location of on-disk cache file.  The default is the SYSTEM account's
+  TEMP directory.  The attributes assigned to the file are HIDDEN and
+  SYSTEM.
 
 
 Value   : NonPersistentCaching
@@ -122,6 +124,18 @@ Variable: buf_CacheType
   file.  This prevents the use of persistent caching (when available)
   as well as the ability to alter the size of the cache at runtime
   using the "fs setcachesize" command.
+
+
+Value   : ValidateCache
+Type    : DWORD [0..2]
+Default : 1
+Variable: buf_CacheType
+
+  This value determines if and when persistent cache validation is 
+  performed.
+    0 - Validation is disabled
+    1 - Validation is performed at startup
+    2 - Validation is performed at shutdown
 
 
 Value	: TrapOnPanic
@@ -353,9 +367,154 @@ Type    : SZ
     to the provided drive letter.
 
 
+Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client]
+
+Value   : CellServDBDir
+Type	: REG_SZ
+Default : <not defined>
+
+  Specifies the directory containing the CellServDB file.
+  When this value is not specified, the AFS Client install
+  directory is used.
+
+
+Value   : VerifyServiceSignature
+Type	: REG_DWORD
+Default : 0x1
+
+  This value can be used to disable the runtime verification of 
+  the digital signatures applied to afsd_service.exe and the 
+  OpenAFS DLLs it loads.  This test is performed to verify that 
+  the DLLs which are loaded by afsd_service.exe are from the 
+  same distribution as afsd_service.exe.  This is to prevent
+  random errors caused when DLLs from one distribution of AFS
+  are loaded by another one.  This is not a security test.  The
+  reason for disabling this test is to free up additional memory
+  which can be used for a large cache size.
+
+
+Value   : IoctlDebug
+Type	: REG_DWORD
+Default : 0x0
+
+  This value can be used to debug the cause of pioctl() failures.
+  Set a non-zero value and the pioctl() library will output status
+  information to stdout.  Executing command line tools such as
+  tokens.exe, fs.exe, etc can then be used to determine why the
+  pioctl() call is failing. 
+
+
+Value   : StoreAnsiFilenames
+Type    : REG_DWORD
+Default : 0x0
+
+  This value can be used to force the AFS Client Service to
+  store filenames using the Windows system's ANSI character set
+  instead of the OEM Code Page character set which has traditionally
+  been used by SMB file systems.  
+
+  Note: The use of ANSI characters will render access to files
+  with 8-bit OEM file names unaccessible from Windows.  This option
+  is of use primarily when you wish to allow file names produced
+  on Windows to be accessible from Latin-1 Unix systems and vice
+  versa.
+
 
 Regkey:
-[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider]
+[HKLM\SOFTWARE\OpenAFS\Client\CSCPolicy]
+
+Value   : "smb/cifs share name"
+Type    : REG_SZ
+Default : <none>
+
+    This key is used to map SMB/CIFS shares to Client Side Caching 
+    (off-line access) policies. For each share one of the following
+    policies may be used: "manual", "programs", "documents", "disable"
+
+    These values used to be stored in afsdsbmt.ini
+
+Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client\Freelance]
+
+Value   : "numeric value"
+Type    : REG_SZ
+Default : <none>
+
+    This key is used to store dot terminated mount point strings 
+    for use in constructing the fake root.afs volume when Freelance
+    (dynamic roots) mode is activated.
+
+        "athena.mit.edu#athena.mit.edu:root.cell."
+        ".athena.mit.edu%athena.mit.edu:root.cell."
+
+    These values used to be stored in afs_freelance.ini
+
+
+Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks]
+
+Value   : "numeric value"
+Type    : REG_SZ
+Default : <none>
+
+    This key is used to store a dot terminated symlink strings 
+    for use in constructing the fake root.afs volume when Freelance
+    (dynamic roots) mode is activated.
+
+        "linkname:destination-path."
+        "athena:athena.mit.edu."
+        "home:athena.mit.edu\user\j\a\jaltman."
+        "filename:path\file."
+
+
+Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client\Submounts]
+
+Value   : "submount name"
+Type    : REG_EXPAND_SZ
+Default : <none>
+
+    This key is used to store mappings of unix style AFS paths
+    to submount names which can be referenced as UNC paths.
+    For example the submount string "/athena.mit.edu/user/j/a/jaltman"
+    can be associated with the submount name "jaltman.home".
+    This can then be referenced as the UNC path \\AFS\jaltman.home.
+
+    These values used to be stored in afsdsbmt.ini
+
+    NOTE: Submounts should no longer be used with OpenAFS.
+    Use the Windows Explorer to create drive mappings to AFS UNC
+    paths instead of using the AFS Submount mechanism.
+
+
+Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client\Server Preferences\VLDB]
+
+Value   : "hostname or ip address"
+Type    : REG_DWORD
+Default : <none>
+
+    This key is used to specify a default set of VLDB server preferences.
+    For each entry the value name will be either the IP address of a server
+    or a fully qualified domain name.  The value will be the ranking.  The
+    ranking will be adjusted by a random value between 0 and 256 prior to
+    the preference being set.
+
+
+Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client\Server Preferences\File]
+
+Value   : "hostname or ip address"
+Type    : REG_DWORD
+Default : <none>
+
+    This key is used to specify a default set of File server preferences.
+    For each entry the value name will be either the IP address of a server
+    or a fully qualified domain name.  The value will be the ranking.  The
+    ranking will be adjusted by a random value between 0 and 256 prior to
+    the preference being set.
+
 
 
 2. Network provider parameters
@@ -420,61 +579,6 @@ Type    : REG_SZ
 NSIS    : %WINDIR%\SYSTEM32\afslogon.dll
 
   Specifies the DLL to use for the network provider
-
-
-Regkey:
-[HKLM\SOFTWARE\OpenAFS\Client]
-
-Value   : CellServDBDir
-Type	: REG_SZ
-Default : <not defined>
-
-  Specifies the directory containing the CellServDB file.
-  When this value is not specified, the AFS Client install
-  directory is used.
-
-
-Value   : VerifyServiceSignature
-Type	: REG_DWORD
-Default : 0x1
-
-  This value can be used to disable the runtime verification of 
-  the digital signatures applied to afsd_service.exe and the 
-  OpenAFS DLLs it loads.  This test is performed to verify that 
-  the DLLs which are loaded by afsd_service.exe are from the 
-  same distribution as afsd_service.exe.  This is to prevent
-  random errors caused when DLLs from one distribution of AFS
-  are loaded by another one.  This is not a security test.  The
-  reason for disabling this test is to free up additional memory
-  which can be used for a large cache size.
-
-
-Value   : IoctlDebug
-Type	: REG_DWORD
-Default : 0x0
-
-  This value can be used to debug the cause of pioctl() failures.
-  Set a non-zero value and the pioctl() library will output status
-  information to stdout.  Executing command line tools such as
-  tokens.exe, fs.exe, etc can then be used to determine why the
-  pioctl() call is failing. 
-
-
-Value   : StoreAnsiFilenames
-Type    : REG_DWORD
-Default : 0x0
-
-  This value can be used to force the AFS Client Service to
-  store filenames using the Windows system's ANSI character set
-  instead of the OEM Code Page character set which has traditionally
-  been used by SMB file systems.  
-
-  Note: The use of ANSI characters will render access to files
-  with 8-bit OEM file names unaccessible from Windows.  This option
-  is of use primarily when you wish to allow file names produced
-  on Windows to be accessible from Latin-1 Unix systems and vice
-  versa.
-
 
 
 2.1 Domain specific configuration keys for the Network Provider
@@ -573,6 +677,14 @@ in 2.1.1.  The effective values are chosen as described in 2.1.2.
   NSIS/WiX: (not set)
 
      See description of LoginRetryInterval.
+
+  Value   : TheseCells
+  Type    : REG_MULTI_SZ
+  NSIS    : <not set>
+
+    When Kerberos 5 is being used, TheseCells provides a list of additional
+    cells for which tokens should be obtained with the default Kerberos 5 
+    principal.
 
 
 2.1.2  Selection of effective values for domain specific configuration
@@ -753,69 +865,6 @@ Default : <none>
   to which the drive letter is to be mapped.
 
   These values used to be stored in the afsdsbmt.ini file.
-
-
-Regkey:
-[HKLM\SOFTWARE\OpenAFS\Client\CSCPolicy]
-
-Value   : "smb/cifs share name"
-Type    : REG_SZ
-Default : <none>
-
-    This key is used to map SMB/CIFS shares to Client Side Caching 
-    (off-line access) policies. For each share one of the following
-    policies may be used: "manual", "programs", "documents", "disable"
-
-    These values used to be stored in afsdsbmt.ini
-
-Regkey:
-[HKLM\SOFTWARE\OpenAFS\Client\Freelance]
-
-Value   : "numeric value"
-Type    : REG_SZ
-Default : <none>
-
-    This key is used to store dot terminated mount point strings 
-    for use in constructing the fake root.afs volume when Freelance
-    (dynamic roots) mode is activated.
-
-        "athena.mit.edu#athena.mit.edu:root.cell."
-        ".athena.mit.edu%athena.mit.edu:root.cell."
-
-    These values used to be stored in afs_freelance.ini
-
-
-Regkey:
-[HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks]
-
-Value   : "numeric value"
-Type    : REG_SZ
-Default : <none>
-
-    This key is used to store a dot terminated symlink strings 
-    for use in constructing the fake root.afs volume when Freelance
-    (dynamic roots) mode is activated.
-
-        "linkname:destination-path."
-        "athena:athena.mit.edu."
-        "home:athena.mit.edu\user\j\a\jaltman."
-        "filename:path\file."
-
-
-Regkey:
-[HKLM\SOFTWARE\OpenAFS\Client\Submounts]
-
-Value   : "submount name"
-Type    : REG_EXPAND_SZ
-Default : <none>
-
-    This key is used to store mappings of unix style AFS paths
-    to submount names which can be referenced as UNC paths.
-    For example the submount string "/athena.mit.edu/user/j/a/jaltman"
-    can be associated with the submount name "jaltman.home".
-    This can then be referenced as the UNC path \\AFS\jaltman.home.
-
-    These values used to be stored in afsdsbmt.ini
 
 
 ENVIRONMENT VARIABLES:
