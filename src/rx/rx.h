@@ -452,6 +452,7 @@ struct rx_peer {
     afs_hyper_t bytesSent;      /* Number of bytes sent to this peer */
     afs_hyper_t bytesReceived;  /* Number of bytes received from this peer */
     struct rx_queue rpcStats;	/* rpc statistic list */
+    int lastReachTime;		/* Last time we verified reachability */
 };
 
 /* A connection is an authenticated communication path, allowing 
@@ -486,6 +487,7 @@ struct rx_connection {
          /* peer process could be restarted on us. Includes RX Header.       */
     struct rxevent *challengeEvent; /* Scheduled when the server is challenging a     */
     struct rxevent *delayedAbortEvent; /* Scheduled to throttle looping client */
+    struct rxevent *checkReachEvent; /* Scheduled when checking reachability */
     int		abortCount;	    /* count of abort messages sent */
                                     /* client-- to retransmit the challenge */
     struct rx_service *service;	    /* used by servers only */
@@ -519,6 +521,7 @@ struct rx_connection {
 #define RX_CONN_KNOW_WINDOW         8   /* window size negotiation works */
 #define RX_CONN_RESET		   16   /* connection is reset, remove */
 #define RX_CONN_BUSY               32   /* connection is busy; don't delete */
+#define RX_CONN_ATTACHWAIT	   64	/* attach waiting for peer->lastReach */
 
 /* Type of connection, client or server */
 #define	RX_CLIENT_CONNECTION	0
@@ -740,6 +743,8 @@ struct rx_ackPacket {
 
 #define	RX_CHALLENGE_TIMEOUT	2   /* Number of seconds before another authentication request packet is generated */
 #define RX_CHALLENGE_MAXTRIES	50  /* Max # of times we resend challenge */
+#define	RX_CHECKREACH_TIMEOUT	2   /* Number of seconds before another ping is generated */
+#define	RX_CHECKREACH_TTL	60  /* Re-check reachability this often */
 
 /* RX error codes.  RX uses error codes from -1 to -64.  Rxgen may use other error codes < -64; user programs are expected to return positive error codes */
 
