@@ -568,6 +568,10 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 	 int vmax = 2 * afs_cacheStats;
 	 int vn = VCACHE_FREE;
 
+         AFS_GUNLOCK();
+	 shrink_dcache_sb(afs_globalVFS);
+	 AFS_GLOCK();
+
 	 i = 0;
 	 for(tq = VLRU.prev; tq != &VLRU && vn > 0; tq = uq) {
 	    tvc = QTOV(tq);
