@@ -13,7 +13,6 @@ extern "C" {
 }
 
 #include <objbase.h>
-#include <initguid.h>
 #include <windows.h>
 #include <windowsx.h>
 #undef INITGUID
