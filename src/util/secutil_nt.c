@@ -12,7 +12,8 @@
 #include <afs/param.h>
 #include <afsconfig.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/secutil_nt.c,v 1.1.1.4 2003/04/13 19:08:06 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/util/secutil_nt.c,v 1.5 2003/07/15 23:17:16 shadow Exp $");
 
 #include <afs/stds.h>
 
@@ -29,18 +30,14 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/util/secutil_nt.c,v 1.1.1.4 2003/04/13 
 
 /* local declarations */
 
-static BOOL
-WorldGroupSidAllocate(PSID *sidPP);
+static BOOL WorldGroupSidAllocate(PSID * sidPP);
 
-static BOOL
-LocalAdminsGroupSidAllocate(PSID *sidPP);
+static BOOL LocalAdminsGroupSidAllocate(PSID * sidPP);
 
 static void
-BuildExplicitAccessWithSid(PEXPLICIT_ACCESS explicitAccessP,
-			   PSID trusteeSidP,
-			   DWORD accessPerm,
-			   ACCESS_MODE accessMode,
-			   DWORD inheritance);
+  BuildExplicitAccessWithSid(PEXPLICIT_ACCESS explicitAccessP,
+			     PSID trusteeSidP, DWORD accessPerm,
+			     ACCESS_MODE accessMode, DWORD inheritance);
 
 
 
@@ -58,12 +55,9 @@ BuildExplicitAccessWithSid(PEXPLICIT_ACCESS explicitAccessP,
  * RETURN CODES: Win32 status code (ERROR_SUCCESS if succeeds)
  */
 DWORD
-ObjectDaclEntryAdd(HANDLE objectHandle,
-		   SE_OBJECT_TYPE objectType,
-		   WELLKNOWN_TRUSTEE_ID trustee,
-		   DWORD accessPerm,
-		   ACCESS_MODE accessMode,
-		   DWORD inheritance)
+ObjectDaclEntryAdd(HANDLE objectHandle, SE_OBJECT_TYPE objectType,
+		   WELLKNOWN_TRUSTEE_ID trustee, DWORD accessPerm,
+		   ACCESS_MODE accessMode, DWORD inheritance)
 {
     DWORD status = ERROR_SUCCESS;
     PSID trusteeSidP;
@@ -89,16 +83,15 @@ ObjectDaclEntryAdd(HANDLE objectHandle,
 
 	/* initialize access information for trustee */
 
-	BuildExplicitAccessWithSid(&accessEntry,
-				   trusteeSidP,
-				   accessPerm, accessMode, inheritance);
+	BuildExplicitAccessWithSid(&accessEntry, trusteeSidP, accessPerm,
+				   accessMode, inheritance);
 
 	/* get object's current DACL */
 
-	status = GetSecurityInfo(objectHandle,
-				 objectType,
-				 DACL_SECURITY_INFORMATION,
-				 NULL, NULL, &curDaclP, NULL, &secP);
+	status =
+	    GetSecurityInfo(objectHandle, objectType,
+			    DACL_SECURITY_INFORMATION, NULL, NULL, &curDaclP,
+			    NULL, &secP);
 
 	if (status == ERROR_SUCCESS) {
 	    /* merge access information into current DACL to form new DACL */
@@ -114,25 +107,24 @@ ObjectDaclEntryAdd(HANDLE objectHandle,
 		 */
 
 		if (objectType != SE_KERNEL_OBJECT) {
-		    status = SetSecurityInfo(objectHandle,
-					     objectType,
-					     DACL_SECURITY_INFORMATION,
-					     NULL, NULL, newDaclP, NULL);
+		    status =
+			SetSecurityInfo(objectHandle, objectType,
+					DACL_SECURITY_INFORMATION, NULL, NULL,
+					newDaclP, NULL);
 		} else {
-		    if (!SetSecurityDescriptorDacl(secP,
-						   TRUE, newDaclP, FALSE) ||
-
-			!SetKernelObjectSecurity(objectHandle,
-						 DACL_SECURITY_INFORMATION,
-						 secP)) {
+		    if (!SetSecurityDescriptorDacl
+			(secP, TRUE, newDaclP, FALSE)
+			|| !SetKernelObjectSecurity(objectHandle,
+						    DACL_SECURITY_INFORMATION,
+						    secP)) {
 			status = GetLastError();
 		    }
 		}
 
-		(void)LocalFree((HLOCAL)newDaclP);
+		(void)LocalFree((HLOCAL) newDaclP);
 	    }
 
-	    (void)LocalFree((HLOCAL)secP);
+	    (void)LocalFree((HLOCAL) secP);
 	}
 
 	FreeSid(trusteeSidP);
@@ -155,15 +147,12 @@ ObjectDaclEntryAdd(HANDLE objectHandle,
  * RETURN CODES: TRUE success, FALSE failure  (GetLastError() indicates why)
  */
 static BOOL
-WorldGroupSidAllocate(PSID *sidPP)
+WorldGroupSidAllocate(PSID * sidPP)
 {
     SID_IDENTIFIER_AUTHORITY sidAuth = SECURITY_WORLD_SID_AUTHORITY;
 
-    return AllocateAndInitializeSid(&sidAuth,
-				    1,
-				    SECURITY_WORLD_RID,
-				    0, 0, 0, 0, 0, 0, 0,
-				    sidPP);
+    return AllocateAndInitializeSid(&sidAuth, 1, SECURITY_WORLD_RID, 0, 0, 0,
+				    0, 0, 0, 0, sidPP);
 }
 
 
@@ -176,15 +165,12 @@ WorldGroupSidAllocate(PSID *sidPP)
  * RETURN CODES: TRUE success, FALSE failure  (GetLastError() indicates why)
  */
 static BOOL
-LocalAdminsGroupSidAllocate(PSID *sidPP)
+LocalAdminsGroupSidAllocate(PSID * sidPP)
 {
     SID_IDENTIFIER_AUTHORITY sidAuth = SECURITY_NT_AUTHORITY;
 
-    return AllocateAndInitializeSid(&sidAuth,
-				    2,
-				    SECURITY_BUILTIN_DOMAIN_RID,
-				    DOMAIN_ALIAS_RID_ADMINS,
-				    0, 0, 0, 0, 0, 0,
+    return AllocateAndInitializeSid(&sidAuth, 2, SECURITY_BUILTIN_DOMAIN_RID,
+				    DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0,
 				    sidPP);
 }
 
@@ -194,10 +180,8 @@ LocalAdminsGroupSidAllocate(PSID *sidPP)
  *     BuildExplicitAccessWithName() (surprisingly, MS doesn't provide this).
  */
 static void
-BuildExplicitAccessWithSid(PEXPLICIT_ACCESS explicitAccessP,
-			   PSID trusteeSidP,
-			   DWORD accessPerm,
-			   ACCESS_MODE accessMode,
+BuildExplicitAccessWithSid(PEXPLICIT_ACCESS explicitAccessP, PSID trusteeSidP,
+			   DWORD accessPerm, ACCESS_MODE accessMode,
 			   DWORD inheritance)
 {
     if (explicitAccessP != NULL) {

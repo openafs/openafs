@@ -44,7 +44,7 @@
 #define CV_SIGNAL(_cv)		e_wakeup_one(_cv)
 #define CV_BROADCAST(_cv)	e_wakeup(_cv)
 typedef simple_lock_data afs_kmutex_t;
-typedef int afs_kcondvar_t;
+typedef tid_t afs_kcondvar_t;
 #define	osi_rxWakeup(cv)	e_wakeup(cv)
 
 
@@ -72,13 +72,13 @@ typedef int afs_kcondvar_t;
 #define RXObtainWriteLock(a)    simple_lock((void *)(a)), \
 				rxdb_grablock((void *)(a), thread_self(),rxdb_fileID,\
 					      __LINE__)
-	
+
 #define RXReleaseWriteLock(a)	rxdb_droplock((void *)(a), thread_self(), rxdb_fileID,\
 					      __LINE__), \
 				simple_unlock((void *)(a))
 
 #define CV_WAIT(_cv, _lck) \
-    do {
+    do { \
 	int haveGlock = ISAFS_GLOCK(); \
 	if (haveGlock) \
 	    AFS_GUNLOCK(); \
@@ -93,7 +93,7 @@ typedef int afs_kcondvar_t;
     } while(0)
 
 #define CV_TIMEDWAIT(_cv, _lck, _t) \
-    do {
+    do { \
 	int haveGlock = ISAFS_GLOCK(); \
 	if (haveGlock) \
 	    AFS_GUNLOCK(); \
@@ -149,9 +149,8 @@ typedef int afs_kcondvar_t;
 #define MUTEX_ISMINE(a)	(lock_mine((void *)(a)))
 
 #undef osirx_AssertMine
-extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
+extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 
 #endif /* AFS_AIX41_ENV */
 
 #endif /* _RX_KMUTEX_H_ */
-

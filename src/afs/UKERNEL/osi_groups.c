@@ -12,24 +12,24 @@
  * setpag (aliased to use_setpag in sysincludes.h)
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/UKERNEL/osi_groups.c,v 1.1.1.4 2001/07/14 22:19:52 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/UKERNEL/osi_groups.c,v 1.7 2003/07/15 23:14:28 shadow Exp $");
 
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../afs/afs_stats.h"  /* statistics */
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "afs/afs_stats.h"	/* statistics */
 
 
-int afs_xsetgroups()
+int
+afs_xsetgroups()
 {
     usr_assert(0);
 }
 
 static int
-afs_getgroups(
-    struct AFS_UCRED *cred,
-    gid_t *gidset)
+afs_getgroups(struct AFS_UCRED *cred, gid_t * gidset)
 {
     int ngrps, savengrps;
     gid_t *gp;
@@ -40,18 +40,15 @@ afs_getgroups(
     savengrps = ngrps = cred->cr_ngroups;
     gp = cred->cr_groups;
     while (ngrps--)
-	*gidset++ = *gp++;   
+	*gidset++ = *gp++;
     return savengrps;
 }
 
 
 
 static int
-afs_setgroups(
-    struct AFS_UCRED **cred,
-    int ngroups,
-    gid_t *gidset,
-    int change_parent)
+afs_setgroups(struct AFS_UCRED **cred, int ngroups, gid_t * gidset,
+	      int change_parent)
 {
     int ngrps;
     int i;
@@ -70,11 +67,9 @@ afs_setgroups(
     return (0);
 }
 
-int usr_setpag(
-    struct usr_ucred **cred,
-    afs_uint32 pagvalue,
-    afs_uint32 *newpag,
-    int change_parent)
+int
+usr_setpag(struct usr_ucred **cred, afs_uint32 pagvalue, afs_uint32 * newpag,
+	   int change_parent)
 {
     gid_t *gidset;
     int ngroups, code;
@@ -87,18 +82,18 @@ int usr_setpag(
 
     if (afs_get_pag_from_groups(gidset[0], gidset[1]) == NOPAG) {
 	/* We will have to shift grouplist to make room for pag */
-	if ((sizeof gidset[0])*(ngroups + 2) > AFS_SMALLOCSIZ) {
+	if ((sizeof gidset[0]) * (ngroups + 2) > AFS_SMALLOCSIZ) {
 	    osi_FreeSmallSpace((char *)gidset);
 	    return (E2BIG);
 	}
-	for (j = ngroups -1; j >= 0; j--) {
- 	    gidset[j+2] = gidset[j];
- 	}
+	for (j = ngroups - 1; j >= 0; j--) {
+	    gidset[j + 2] = gidset[j];
+	}
 	ngroups += 2;
     }
-    *newpag = (pagvalue == -1 ? genpag(): pagvalue);
+    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
     afs_get_groups_from_pag(*newpag, &gidset[0], &gidset[1]);
-    if (code = afs_setgroups(cred, ngroups, gidset, change_parent)) {
+    if ((code = afs_setgroups(cred, ngroups, gidset, change_parent))) {
 	osi_FreeSmallSpace((char *)gidset);
 	return (code);
     }

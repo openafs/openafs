@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/debug_decl.c,v 1.1.1.3 2001/07/14 22:21:31 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/des/debug_decl.c,v 1.4 2003/07/15 23:14:59 shadow Exp $");
 
 #include <mit-cpyright.h>
-int	des_debug	= 0;
+int des_debug = 0;

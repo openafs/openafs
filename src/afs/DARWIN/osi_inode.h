@@ -25,13 +25,13 @@
 #define i_vicep1        i_din.di_gen
 #define i_vicep2        i_din.di_uid
 #define i_vicep3        i_din.di_gid
-#define i_vicep4        i_din.di_spare[0]       /* not used */
+#define i_vicep4        i_din.di_spare[0]	/* not used */
 
 #define di_vicemagic    di_flags
 #define di_vicep1       di_gen
 #define di_vicep2       di_uid
 #define di_vicep3       di_gid
-#define di_vicep4       di_spare[0]             /* not used */
+#define di_vicep4       di_spare[0]	/* not used */
 
 #define  IS_VICEMAGIC(ip)        ((ip)->i_vicemagic == VICEMAGIC)
 #define  IS_DVICEMAGIC(dp)       ((dp)->di_vicemagic == VICEMAGIC)

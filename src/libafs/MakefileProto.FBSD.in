@@ -1,25 +1,13 @@
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
 #
-# MakefileProto for FreeBSD systems
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
 #
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-TOP_SRCDIR=@TOP_SRCDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-afskerneldir=@afskerneldir@
-SYS_NAME=@AFS_SYSNAME@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-include config/Makefile.${SYS_NAME}
 
 # OS specific object files:
 AFS_OS_OBJS = \
@@ -32,29 +20,36 @@ AFS_OS_OBJS = \
 	osi_vnodeops.o \
 	osi_module.o 
 
-AFS_OS_NFSOBJS = \
-	osi_vfsops_nfs.o
+#AFS_OS_NFSOBJS = \
+#	osi_vfsops_nfs.o
 
 AFS_OS_NONFSOBJS = \
 	osi_vfsops.o
 
 
 # System specific build commands and flags
-# KDEFS=-DLANGUAGE_C  -I/usr/sys/include -I../include \
-# 	 -I/usr/src/sys/${HEADER_RT} -I/usr/src/sys/sys \
-# 	-DSWAPTYPE=1 -DUERF -DOSF -DCOMPAT_43 -DUFS \
-#	-DRT -DKERNEL -D_KERNEL
-KDEFS=-Wall -fformat-extensions -ansi -nostdinc -I/usr/include -D_KERNEL \
-	-DKLD_MODULE -elf -mpreferred-stack-boundary=2 -I.. -I../afs
+KSRC = @BSD_KERNEL_PATH@
+KBLD = @BSD_KERNEL_BUILD@
+KDEFS=-Wall -ansi -nostdinc -I/usr/include -D_KERNEL -DKLD_MODULE \
+	-elf -mpreferred-stack-boundary=2 \
+<i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
+	-fformat-extensions \
+	-include ${KBLD}/opt_global.h
+<all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
+	-mno-align-long-strings -fformat-extensions -fno-common -ffreestanding \
+	-I${KBLD} -include opt_global.h -fno-strict-aliasing
+<all>
+
 DBUG = -O2
+#DBUG = -O -g
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT
 OPTF=${OPT} 
 OPTF2=${OPT2} 
-CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 
 
 # Name of directory to hold object files and libraries.
-KOBJ = STATIC
+KOBJ = MODLOAD
 
 # This tells Makefile.common to use it's single directory build target.
 COMPDIRS = single_compdir
@@ -65,26 +60,27 @@ include Makefile.common
 
 setup:
 	-mkdir $(KOBJ)
-	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
-	ln -s ../Makefile $(KOBJ)/Makefile
-	ln -s ../Makefile.common $(KOBJ)/Makefile.common
-	ln -s ../config $(KOBJ)/config
+	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common
+	ln -fs ../Makefile $(KOBJ)/Makefile
+	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
 	-$(RM) -f  h net netinet rpc ufs nfs  machine sys vm
-	-ln -s /usr/src/sys/net net
-	-ln -s /usr/src/sys/i386/include machine
-	-ln -s /usr/src/sys/netinet netinet
-	-ln -s /usr/src/sys/nfs nfs
-	-ln -s /usr/include/rpc rpc
-	-ln -s /usr/src/sys/sys sys
-	-ln -s /usr/src/sys/ufs/ufs ufs
-	-ln -s /usr/src/sys/sys h
-	-ln -s /usr/src/sys/vm vm
+	-ln -fs ${KSRC}/net net
+	-ln -fs ${KSRC}/i386/include machine
+	-ln -fs ${KSRC}/netinet netinet
+	-ln -fs ${KSRC}/nfs nfs
+	-ln -fs /usr/include/rpc rpc
+	-ln -fs ${KSRC}/sys sys
+	-ln -fs ${KSRC}/ufs/ufs ufs
+	-ln -fs ${KSRC}/sys h
+	-ln -fs ${KSRC}/vm vm
 	-touch $(KOBJ)/sec_net.h
 
 
+depsrcs:	vnode_if.h
+
 # Below this line are targets when in the COMMON directory:
-LIBAFS = libafs.ko
-LIBAFSNONFS = libafs.nonfs.ko
+LIBAFS = libafsnfs.ko
+LIBAFSNONFS = libafs.ko
 
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/${LIBAFS}
 INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
@@ -92,7 +88,8 @@ INST_LIBAFSNONFS = ${DESTDIR}${afskerneldir}/${LIBAFSNONFS}
 DEST_LIBAFS = ${DEST}/root.client/bin/${LIBAFS}
 DEST_LIBAFSNONFS = ${DEST}/root.client/bin/${LIBAFSNONFS}
 
-# Without this line, gmake tries to build libafs.o
+
+# Without this line, gmake tries to build libafs
 .PHONY: libafs
 
 # libafs:	$(LIBAFS) $(LIBAFSNONFS)
@@ -101,6 +98,14 @@ libafs:	$(LIBAFSNONFS)
 install_libafs:	$(INST_LIBAFSNONFS)
 # dest_libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
 dest_libafs:	$(DEST_LIBAFSNONFS)
+#libafs:
+#	echo WARNING: No kernel module for ${SYS_NAME}
+
+#install_libafs:
+#	echo WARNING: No kernel module for ${SYS_NAME}
+
+#dest_libafs:
+#	echo WARNING: No kernel module for ${SYS_NAME}
 
 
 $(INST_LIBAFS): $(LIBAFS)
@@ -122,34 +127,30 @@ ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 	$(LD) -Bshareable -o ${LIBAFS} setdef0.o ${LIBAFS}.kld setdef1.o
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
-	$(LD) -r -o ${LIBAFSNONFS}.kld ${AFSAOBJS} ${AFSNONFSOBJS}
-	gensetdefs ${LIBAFSNONFS}.kld
+<i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
+	$(LD) -r -o libafs.kld ${AFSAOBJS} ${AFSNONFSOBJS}
+	gensetdefs libafs.kld
 	$(MAKE) setdef0.o setdef1.o
-	$(LD) -Bshareable -o ${LIBAFSNONFS} setdef0.o ${LIBAFSNONFS}.kld setdef1.o
+	$(LD) -Bshareable -o ${LIBAFSNONFS} setdef0.o libafs.kld setdef1.o
+<all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
+	$(LD) -r -d -warn-common -o libafs.kld ${AFSAOBJS} ${AFSNONFSOBJS}
+	touch export_syms
+	awk -f ${KSRC}/conf/kmod_syms.awk libafs.kld export_syms | xargs -J% objcopy % libafs.kld
+	$(LD) -Bshareable -d -warn-common -o ${LIBAFSNONFS} libafs.kld
+<all>
 
 
 # Object build rules:
-osi_groups.o: $(AFS)/osi_groups.c
-	$(CRULE1)
-osi_file.o: $(AFS)/osi_file.c
-	$(CRULE1)
-osi_inode.o: $(AFS)/osi_inode.c
-	$(CRULE1)
-osi_misc.o: $(AFS)/osi_misc.c
-	$(CRULE1)
-osi_sleep.o: $(AFS)/osi_sleep.c
-	$(CRULE1)
-osi_vfsops_nfs.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -o osi_vfsops_nfs.o
-osi_vfsops.o: $(AFS)/osi_vfsops.c
-	$(CRULE1) -DAFS_NONFSTRANS
-osi_vm.o: $(AFS)/osi_vm.c
-	$(CRULE1)
-osi_vnodeops.o: $(AFS)/osi_vnodeops.c
-	$(CRULE1)
-osi_module.o: $(AFS)/osi_module.c
-	$(CRULE1)   
 setdef0.o: setdef0.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
 setdef1.o: setdef1.c
-	$(CRULE1)
+	$(CRULE_NOOPT)
+
+# vnode_if.h build rules:
+<i386_fbsd_42 i386_fbsd_43 i386_fbsd_44 i386_fbsd_45 i386_fbsd_46 i386_fbsd_47>
+vnode_if.h:	${KSRC}/kern/vnode_if.src
+	perl5 ${KSRC}/kern/vnode_if.pl -h ${KSRC}/kern/vnode_if.src
+<all -i386_fbsd_42 -i386_fbsd_43 -i386_fbsd_44 -i386_fbsd_45 -i386_fbsd_46 -i386_fbsd_47>
+vnode_if.h:	${KSRC}/kern/vnode_if.src
+	awk -f ${KSRC}/tools/vnode_if.awk ${KSRC}/kern/vnode_if.src -h
+<all>

@@ -22,8 +22,6 @@
 #include <osi.h>
 #include <afsint.h>
 
-typedef long afs_int32;
-
 #include "fs_utils.h"
 #include "cmd.h"
 
@@ -243,6 +241,11 @@ register struct cmd_syndesc *as; {
     /* create symlink with a special pioctl for Windows NT, since it doesn't
      * have a symlink system call.
      */
+
+    /* TODO: Code needs to go here to prevent the creation of symlinks
+     * in \\AFS\all when not in the "AFS Client Admins" group.
+     */
+
     blob.out_size = 0;
     blob.in_size = 1 + strlen(space);
     blob.in = space;

@@ -10,21 +10,27 @@
 #ifndef _AFS_OSI_
 #define _AFS_OSI_
 
-#include "../h/types.h"
-#include "../h/param.h"
+#include "h/types.h"
+#include "h/param.h"
+
+#ifdef AFS_FBSD50_ENV
+#include <sys/condvar.h>
+#endif
 
 #ifdef AFS_LINUX20_ENV
 #ifndef _LINUX_CODA_FS_I
 #define _LINUX_CODA_FS_I
 #define _CODA_HEADER_
-struct coda_inode_info {};
+struct coda_inode_info {
+};
 #endif
 #ifndef _LINUX_XFS_FS_I
 #define _LINUX_XFS_FS_I
-struct xfs_inode_info {};
+struct xfs_inode_info {
+};
 #endif
-#include "../h/fs.h"
-#include "../h/mm.h"
+#include "h/fs.h"
+#include "h/mm.h"
 #endif
 
 
@@ -34,39 +40,55 @@ struct osi_socket {
 };
 
 struct osi_stat {
-    afs_int32 size;	    /* file size in bytes */
-    afs_int32 blksize;   /* optimal transfer size in bytes */
-    afs_int32 mtime;	    /* modification date */
-    afs_int32 atime;	    /* access time */
+    afs_int32 size;		/* file size in bytes */
+    afs_int32 blksize;		/* optimal transfer size in bytes */
+    afs_int32 mtime;		/* modification date */
+    afs_int32 atime;		/* access time */
 };
 
 struct osi_file {
-    afs_int32 size;	    	/* file size in bytes XXX Must be first field XXX */
+    afs_int32 size;		/* file size in bytes XXX Must be first field XXX */
 #ifdef AFS_LINUX22_ENV
-    struct dentry dentry; /* merely to hold the pointer to the inode. */
-    struct file file; /* May need this if we really open the file. */
+    struct dentry dentry;	/* merely to hold the pointer to the inode. */
+    struct file file;		/* May need this if we really open the file. */
 #else
     struct vnode *vnode;
 #endif
 #if	defined(AFS_HPUX102_ENV)
     k_off_t offset;
 #else
+#if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)
+    afs_offs_t offset;
+#else
     afs_int32 offset;
 #endif
-    int	(*proc)();	/* proc, which, if not null, is called on writes */
-    char *rock;		/* rock passed to proc */
-    ino_t inum;         /* guarantee validity of hint */
+#endif
+    int (*proc) (struct osi_file * afile, afs_int32 code);	/* proc, which, if not null, is called on writes */
+    char *rock;			/* rock passed to proc */
+    ino_t inum;			/* guarantee validity of hint */
 #if defined(UKERNEL)
-    int fd;		/* file descriptor for user space files */
-#endif /* defined(UKERNEL) */
+    int fd;			/* file descriptor for user space files */
+#endif				/* defined(UKERNEL) */
 };
 
 struct osi_dev {
+#if defined(AFS_XBSD_ENV)
+    struct mount *mp;
+    struct vnode *held_vnode;
+#elif defined(AFS_AIX42_ENV)
+    dev_t dev;
+#else
     afs_int32 dev;
+#endif
 };
 
 struct afs_osi_WaitHandle {
-    caddr_t proc;	/* process waiting */
+#ifdef AFS_FBSD50_ENV
+    struct cv wh_condvar;
+    int wh_inited;		/* XXX */
+#else
+    caddr_t proc;		/* process waiting */
+#endif
 };
 
 #define	osi_SetFileProc(x,p)	((x)->proc=(p))
@@ -82,34 +104,24 @@ struct afs_osi_WaitHandle {
 #endif
 
 
-#define AFSOP_STOP_RXEVENT   214 /* stop rx event deamon */
-#define AFSOP_STOP_COMPLETE  215 /* afs has been shutdown */
-#define AFSOP_STOP_RXK_LISTENER   217 /* stop rx listener daemon */
+#define AFSOP_STOP_RXEVENT   214	/* stop rx event deamon */
+#define AFSOP_STOP_COMPLETE  215	/* afs has been shutdown */
+#define AFSOP_STOP_RXK_LISTENER   217	/* stop rx listener daemon */
 
 
-#define	osi_NPACKETS	20		/* number of cluster pkts to alloc */
-extern struct osi_socket *osi_NewSocket();
-
+#define	osi_NPACKETS	20	/* number of cluster pkts to alloc */
 
 /*
  * Alloc declarations.
  */
-extern void *afs_osi_Alloc(size_t size);
-extern void  afs_osi_Free(void *x, size_t size);
 #define afs_osi_Alloc_NoSleep afs_osi_Alloc
-
-extern void *osi_AllocSmallSpace(size_t size);
-extern void  osi_FreeSmallSpace(void *x);
-extern void *osi_AllocMediumSpace(size_t size);
-extern void  osi_FreeMediumSpace(void *x);
-extern void *osi_AllocLargeSpace(size_t size);
-extern void  osi_FreeLargeSpace(void *x);
 
 /*
  * Vnode related macros
  */
+#ifndef AFS_OBSD_ENV
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-extern int (**afs_vnodeop_p)();
+extern int (**afs_vnodeop_p) ();
 #define IsAfsVnode(vc)      ((vc)->v_op == afs_vnodeop_p)
 #define SetAfsVnode(vc)     (vc)->v_op = afs_vnodeop_p
 #else
@@ -120,14 +132,17 @@ extern struct vnodeops *afs_ops;
 #define	vType(vc)	    (vc)->v.v_type
 #define	vSetType(vc,type)   (vc)->v.v_type = (type)
 #define	vSetVfsp(vc,vfsp)   (vc)->v.v_vfsp = (vfsp)
+#endif
 
 #ifdef AFS_SGI65_ENV
-#define	gop_lookupname(fnamep,segflg,followlink,dirvpp,compvpp) \
-             lookupname((fnamep),(segflg),(followlink),(dirvpp),(compvpp),\
+#define	gop_lookupname(fnamep,segflg,followlink,compvpp) \
+             lookupname((fnamep),(segflg),(followlink),NULL,(compvpp),\
 			NULL)
 #else
-#define	gop_lookupname(fnamep,segflg,followlink,dirvpp,compvpp) \
-             lookupname((fnamep),(segflg),(followlink),(dirvpp),(compvpp))
+#ifndef AFS_OBSD_ENV
+#define	gop_lookupname(fnamep,segflg,followlink,compvpp) \
+             lookupname((fnamep),(segflg),(followlink),NULL,(compvpp))
+#endif
 #endif
 
 /*
@@ -141,7 +156,7 @@ extern struct vnodeops *afs_ops;
  */
 #if !defined(AFS_SGI65_ENV)
 #ifndef	DEBUG
-#define	DEBUG	1	/* Default is to enable debugging/logging */
+#define	DEBUG	1		/* Default is to enable debugging/logging */
 #endif
 #endif
 
@@ -159,7 +174,7 @@ extern struct vnodeops *afs_ops;
   */
 
 
-#if defined(AFS_HPUX_ENV) || defined(AFS_SUN57_ENV) || defined(AFS_LINUX_64BIT_KERNEL) || (defined(AFS_SGI61_ENV) && defined(KERNEL) && defined(_K64U64))
+#if defined(AFS_HPUX_ENV) || (defined(AFS_SUN57_ENV) && !defined(AFS_SUN510_ENV)) || defined(AFS_LINUX_64BIT_KERNEL) || (defined(AFS_SGI61_ENV) && defined(KERNEL) && defined(_K64U64))
 typedef struct {
     afs_int32 tv_sec;
     afs_int32 tv_usec;
@@ -169,30 +184,34 @@ typedef struct timeval osi_timeval_t;
 #endif /* AFS_SGI61_ENV */
 
 /*
- * The following three routines provide the fid routines used by the buffer
- * and directory packages.
- */
-#define dirp_Zap(afid)    (*(afid) = -1)
-#define dirp_Eq(afid, bfid) (*(afid) == *(bfid))
-#define dirp_Cpy(dfid,sfid) (*(dfid) = *(sfid))
-
-
-/*
  * osi_ThreadUnique() should yield a value that can be found in ps
  * output in order to draw correspondences between ICL traces and what
  * is going on in the system.  So if ps cannot show thread IDs it is
  * likely to be the process ID instead.
  */
+#ifdef AFS_FBSD50_ENV
+/* should use curthread, but 'ps' can't display it */
+#define osi_ThreadUnique()	curproc
+#else
 #define osi_ThreadUnique()	getpid()
+#endif
 
 
 
 #ifdef AFS_GLOBAL_SUNLOCK
 #define AFS_ASSERT_GLOCK() \
-    (ISAFS_GLOCK() || (osi_Panic("afs global lock not held"), 0))
+    (ISAFS_GLOCK() || (osi_Panic("afs global lock not held at %s:%d\n", __FILE__, __LINE__), 0))
 #define AFS_ASSERT_RXGLOCK() \
-    (ISAFS_RXGLOCK() || (osi_Panic("rx global lock not held"), 0))
+    (ISAFS_RXGLOCK() || (osi_Panic("rx global lock not held at %s:%d\n", __FILE__, __LINE__), 0))
 #endif /* AFS_GLOBAL_SUNLOCK */
+
+#ifdef RX_ENABLE_LOCKS
+#define RX_AFS_GLOCK()		AFS_GLOCK()
+#define RX_AFS_GUNLOCK()	AFS_GUNLOCK()
+#else
+#define RX_AFS_GLOCK()
+#define RX_AFS_GUNLOCK()
+#endif
 
 
 
@@ -227,6 +246,7 @@ typedef struct timeval osi_timeval_t;
 #else /* defined(UKERNEL) */
 #define AFS_RELE(vp) do { AFS_GUNLOCK(); VN_RELE(vp); AFS_GLOCK(); } while (0)
 #endif /* defined(UKERNEL) */
+
 /*
  * For some reason we do bare refcount manipulation in some places, for some
  * platforms.  The assumption is apparently that either we wouldn't call
@@ -235,14 +255,14 @@ typedef struct timeval osi_timeval_t;
  * (Also, of course, the vnode is assumed to be one of ours.  Can't use this
  * macro for V-file vnodes.)
  */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 /* Bare refcount manipulation would probably work on this platform, but just
    calling VREF does not */
 #define AFS_FAST_HOLD(vp) osi_vnhold((vp),0)
 #else
 #define AFS_FAST_HOLD(vp) VN_HOLD(&(vp)->v)
 #endif
-#define AFS_FAST_RELE(vp) AFS_RELE(&(vp)->v)
+#define AFS_FAST_RELE(vp) AFS_RELE(AFSTOV(vp))
 
 /*
  * MP safe versions of routines to copy memory between user space
@@ -281,7 +301,7 @@ typedef struct timeval osi_timeval_t;
 		AFS_GLOCK();					\
 	} while(0)
 
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    int haveGlock = ISAFS_GLOCK();			\
@@ -292,7 +312,7 @@ typedef struct timeval osi_timeval_t;
 	    if (haveGlock)					\
 		AFS_GLOCK();					\
 	} while(0)
-#else /* AFS_OSF_ENV || AFS_FBSD_ENV */
+#else
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    int haveGlock = ISAFS_GLOCK();			\
@@ -302,7 +322,7 @@ typedef struct timeval osi_timeval_t;
 	    if (haveGlock)					\
 		AFS_GLOCK();					\
 	} while(0)
-#endif /* AFS_OSF_ENV || AFS_FBSD_ENV */
+#endif
 
 #else /* AFS_GLOBAL_SUNLOCK */
 
@@ -321,7 +341,7 @@ typedef struct timeval osi_timeval_t;
 	    CODE = copyout((SRC),(DST),(LEN));			\
 	} while(0)
 
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define AFS_UIOMOVE(SRC,LEN,RW,UIO,CODE)			\
 	do {							\
 	    (UIO)->uio_rw = (RW);				\
@@ -364,34 +384,18 @@ typedef struct timeval osi_timeval_t;
 #define AfsLargeFileUio(uio)       0
 #define AfsLargeFileSize(pos, off) 0
 
-
-/* VM function prototypes.
- */
-#if defined(AFS_SUN5_ENV)
-extern int osi_VM_GetDownD();
-extern void osi_VM_PreTruncate();
-#endif
-#if defined(AFS_SGI_ENV)
-extern void osi_VM_FSyncInval();
-#endif
-extern int osi_VM_FlushVCache();
-extern void osi_VM_StoreAllSegments();
-extern void osi_VM_TryToSmush();
-extern void osi_VM_FlushPages();
-extern void osi_VM_Truncate();
-
-extern void osi_ReleaseVM();
-
 /* Now include system specific OSI header file. It will redefine macros
  * defined here as required by the OS.
  */
-#include "../afs/osi_machdep.h"
+#include "osi_machdep.h"
 
 /* Declare any structures which use these macros after the OSI implementation
  * has had the opportunity to redefine them.
  */
-extern struct AFS_UCRED afs_osi_cred;
+extern struct AFS_UCRED afs_osi_cred, *afs_osi_credp;
+
+#ifndef osi_curcred
+#define osi_curcred() (u.u_cred)
+#endif
 
 #endif /* _AFS_OSI_ */
-
-

@@ -1,0 +1,27 @@
+#! /bin/sh
+
+# Invoke "splint" with common options.
+#
+# This uses a common splint.cfg file.  It will also look for a
+# splint.cfg file in the current directory, using that instead, or a
+# splint-append.cfg file, using that in addition to the common
+# configuration.
+
+
+TOP_SRCDIR=@TOP_SRCDIR@
+HELPER_SPLINTCFG=@HELPER_SPLINTCFG@
+
+cfargs="-f ${HELPER_SPLINTCFG}"
+#
+if [ -r splint-append.cfg ]; then
+    echo "Appending contents of splint-append.cfg to common splint options."
+    cfargs="$cfargs -f splint-append.cfg"
+elif [ -r splint.cfg ]; then
+    echo "Overriding common splint options with splint.cfg"
+    cfargs="-f splint.cfg"
+else
+    echo "No splint-append.cfg or splint.cfg, so using only common options."
+fi
+#
+# Now run splint.
+exec splint $cfargs -bad-flag "$@"

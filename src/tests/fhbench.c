@@ -54,7 +54,7 @@
 #include <atypes.h>
 #include <kafs.h>
 
-RCSID("$Id: fhbench.c,v 1.1 2002/01/22 19:54:41 hartmans Exp $");
+RCSID("$Id: fhbench.c,v 1.2 2003/07/15 23:17:00 shadow Exp $");
 
 struct fhb_handle {
     char data[512];
@@ -66,54 +66,54 @@ static int write_file = 0;
 static int num_runs = 3;
 
 static struct agetargs args[] = {
-    {"num",	'n',	aarg_integer,	&num_files,	"number of files"},
-    {"write",	'w',	aarg_integer,	&write_file,	"write num kb"},
-    {"runs",	'r',	aarg_integer,	&num_runs,	"number of runs"},
-    {"help",	0,	aarg_flag,	&help_flag,	NULL,		NULL},
-    {NULL,	0,	aarg_end,	NULL,		NULL,		NULL}
+    {"num", 'n', aarg_integer, &num_files, "number of files"},
+    {"write", 'w', aarg_integer, &write_file, "write num kb"},
+    {"runs", 'r', aarg_integer, &num_runs, "number of runs"},
+    {"help", 0, aarg_flag, &help_flag, NULL, NULL},
+    {NULL, 0, aarg_end, NULL, NULL, NULL}
 };
 
 
 static void
-fhb_fhget (char *filename, struct fhb_handle *handle)
+fhb_fhget(char *filename, struct fhb_handle *handle)
 {
     int ret = 0;
 #if defined(HAVE_GETFH) && defined(HAVE_FHOPEN)
     {
 	fhandle_t fh;
 
-	ret = getfh (filename, &fh);
+	ret = getfh(filename, &fh);
 	if (ret)
-	    err (1, "getfh");
-	memcpy (handle, &fh, sizeof(fh));
+	    err(1, "getfh");
+	memcpy(handle, &fh, sizeof(fh));
     }
 #endif
     {
 	struct ViceIoctl vice_ioctl;
-	
-	vice_ioctl.in      = NULL;
+
+	vice_ioctl.in = NULL;
 	vice_ioctl.in_size = 0;
-	
-	vice_ioctl.out      = (caddr_t)handle;
+
+	vice_ioctl.out = (caddr_t) handle;
 	vice_ioctl.out_size = sizeof(*handle);
-	
-	ret = pioctl (filename, VIOC_FHGET, &vice_ioctl, 0);
+
+	ret = pioctl(filename, VIOC_FHGET, &vice_ioctl, 0);
 	if (ret)
-	    errx (1, "k_pioctl");
+	    errx(1, "k_pioctl");
     }
 }
 
 
 static int
-fhb_fhopen (struct fhb_handle *handle, int flags)
+fhb_fhopen(struct fhb_handle *handle, int flags)
 {
     int ret;
 #if defined(HAVE_GETFH) && defined(HAVE_FHOPEN)
     {
 	fhandle_t fh;
 
-	memcpy (&fh, handle, sizeof(fh));
-	ret = fhopen (&fh, flags);
+	memcpy(&fh, handle, sizeof(fh));
+	ret = fhopen(&fh, flags);
 	if (ret >= 0)
 	    return ret;
     }
@@ -122,45 +122,45 @@ fhb_fhopen (struct fhb_handle *handle, int flags)
 #ifdef KERBEROS			/* really KAFS */
     {
 	struct ViceIoctl vice_ioctl;
-	
-	vice_ioctl.in      = (caddr_t)handle;
+
+	vice_ioctl.in = (caddr_t) handle;
 	vice_ioctl.in_size = sizeof(*handle);
-	
-	vice_ioctl.out      = NULL;
+
+	vice_ioctl.out = NULL;
 	vice_ioctl.out_size = 0;
-	
-	ret = k_pioctl (NULL, VIOC_FHOPEN, &vice_ioctl, flags);
+
+	ret = k_pioctl(NULL, VIOC_FHOPEN, &vice_ioctl, flags);
 	if (ret >= 0)
 	    return ret;
     }
 #endif
-    errx (1, "fhopen/k_pioctl");
+    errx(1, "fhopen/k_pioctl");
 }
 
 static void
-nop_call (void)
+nop_call(void)
 {
 #ifdef KERBEROS			/* really KAFS */
     {
 	struct ViceIoctl vice_ioctl;
 	char c[8];
 	int ret;
-	
-	vice_ioctl.in      = (caddr_t)&c;
+
+	vice_ioctl.in = (caddr_t) & c;
 	vice_ioctl.in_size = sizeof(c);
-	
-	vice_ioctl.out      = NULL;
+
+	vice_ioctl.out = NULL;
 	vice_ioctl.out_size = 0;
-	
-	ret = k_pioctl (NULL, VIOC_XFSDEBUG, &vice_ioctl, 0);
+
+	ret = k_pioctl(NULL, VIOC_XFSDEBUG, &vice_ioctl, 0);
 	if (ret < 0)
-	    err (1, "k_pioctl");
+	    err(1, "k_pioctl");
     }
 #else
     {
 	static first = 1;
 	if (first) {
-	    warnx ("can't test this");
+	    warnx("can't test this");
 	    first = 0;
 	}
     }
@@ -168,44 +168,44 @@ nop_call (void)
 }
 
 static void
-create_file (int num, struct fhb_handle *handle)
+create_file(int num, struct fhb_handle *handle)
 {
     int fd;
     char filename[1024];
 
-    snprintf (filename, sizeof(filename), "file-%d", num);
+    snprintf(filename, sizeof(filename), "file-%d", num);
 
-    fd = open (filename, O_CREAT|O_EXCL|O_RDWR, 0666);
+    fd = open(filename, O_CREAT | O_EXCL | O_RDWR, 0666);
     if (fd < 0)
-	err (1, "open");
+	err(1, "open");
 
-    close (fd);
-    
+    close(fd);
+
     fhb_fhget(filename, handle);
 }
 
 char databuf[1024];
 
 static void
-write_to_file (int fd, int num)
+write_to_file(int fd, int num)
 {
     int ret;
     while (num > 0) {
-	ret = write (fd, databuf, sizeof(databuf));
+	ret = write(fd, databuf, sizeof(databuf));
 	if (ret != sizeof(databuf))
-	    err (1, "write");
+	    err(1, "write");
 	num--;
     }
 }
 
 static void
-fhopen_file (int num, struct fhb_handle *handle)
+fhopen_file(int num, struct fhb_handle *handle)
 {
     int fd;
 
     fd = fhb_fhopen(handle, O_RDWR);
     if (fd < 0)
-	err (1, "open");
+	err(1, "open");
 
     if (write_file)
 	write_to_file(fd, write_file);
@@ -213,34 +213,34 @@ fhopen_file (int num, struct fhb_handle *handle)
 }
 
 static void
-open_file (int num)
+open_file(int num)
 {
     int fd;
     char filename[1024];
 
-    snprintf (filename, sizeof(filename), "file-%d", num);
+    snprintf(filename, sizeof(filename), "file-%d", num);
 
-    fd = open (filename, O_RDWR, 0666);
+    fd = open(filename, O_RDWR, 0666);
     if (fd < 0)
-	err (1, "open");
+	err(1, "open");
 
     if (write_file)
 	write_to_file(fd, write_file);
 
-    close (fd);
+    close(fd);
 }
 
 static void
-unlink_file (int num)
+unlink_file(int num)
 {
     int ret;
     char filename[1024];
 
-    snprintf (filename, sizeof(filename), "file-%d", num);
+    snprintf(filename, sizeof(filename), "file-%d", num);
 
     ret = unlink(filename);
     if (ret < 0)
-	err (1, "unlink");
+	err(1, "unlink");
 }
 
 struct timeval time1, time2;
@@ -249,9 +249,9 @@ static void
 starttesting(char *msg)
 {
     printf("testing %s...\n", msg);
-    fflush (stdout);
+    fflush(stdout);
     gettimeofday(&time1, NULL);
-}    
+}
 
 static void
 endtesting(void)
@@ -262,76 +262,74 @@ endtesting(void)
 }
 
 static void
-usage (int exit_val)
+usage(int exit_val)
 {
-    aarg_printusage (args, NULL, "number of files", AARG_GNUSTYLE);
-    exit (exit_val);
+    aarg_printusage(args, NULL, "number of files", AARG_GNUSTYLE);
+    exit(exit_val);
 }
 
 static void
-open_bench (int i, struct fhb_handle *handles)
+open_bench(int i, struct fhb_handle *handles)
 {
-    printf ("====== test run %d\n"
-	    "==================\n",
-	    i);
+    printf("====== test run %d\n" "==================\n", i);
 
-    starttesting ("fhopening files");
+    starttesting("fhopening files");
     for (i = 0; i < num_files; i++)
-	fhopen_file (i, &handles[i]);
-    endtesting ();
-   
-    starttesting ("opening files");
+	fhopen_file(i, &handles[i]);
+    endtesting();
+
+    starttesting("opening files");
     for (i = 0; i < num_files; i++)
-	open_file (i);
-    endtesting ();
+	open_file(i);
+    endtesting();
 }
 
 int
-main (int argc, char **argv)
+main(int argc, char **argv)
 {
     int optind = 0;
     int i;
     struct fhb_handle *handles;
 
 
-    if (agetarg (args, argc, argv, &optind, AARG_GNUSTYLE))
-	usage (1);
+    if (agetarg(args, argc, argv, &optind, AARG_GNUSTYLE))
+	usage(1);
 
     if (help_flag)
-	usage (0);
+	usage(0);
 
     if (num_files <= 0)
-	usage (1);
+	usage(1);
 
     if (write_file < 0)
-	usage (1);
+	usage(1);
 
 #ifdef KERBEROS
     if (!k_hasafs())
 #endif
-	errx (1, "no afs kernel module");
+	errx(1, "no afs kernel module");
 
-    handles = emalloc (num_files * sizeof(*handles));
+    handles = emalloc(num_files * sizeof(*handles));
 
-    starttesting ("creating files");
+    starttesting("creating files");
     for (i = 0; i < num_files; i++)
-	create_file (i, &handles[i]);
-    endtesting ();
+	create_file(i, &handles[i]);
+    endtesting();
 
-    for (i = 0 ; i < num_runs; i++)
-	open_bench (i, handles);
-   
-    printf ( "==================\n");
-    starttesting ("unlink files");
-    for (i = 0; i < num_files; i++)
-	unlink_file (i);
-    endtesting ();
+    for (i = 0; i < num_runs; i++)
+	open_bench(i, handles);
 
-    printf ( "==================\n");
-    starttesting ("nop call");
+    printf("==================\n");
+    starttesting("unlink files");
     for (i = 0; i < num_files; i++)
-	nop_call ();
-    endtesting ();
+	unlink_file(i);
+    endtesting();
+
+    printf("==================\n");
+    starttesting("nop call");
+    for (i = 0; i < num_files; i++)
+	nop_call();
+    endtesting();
 
     return 0;
 }

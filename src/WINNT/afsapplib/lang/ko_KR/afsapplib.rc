@@ -357,10 +357,6 @@ BEGIN
     IDS_BADCREDS_DESC3_ADM  "관리자로 로그인하시겠습니까?"
     IDS_BADCREDS_DESC_DESTROYED 
                             "%1 셀의 토큰은 더 이상 유효하지 않습니다.\n\n%2\n\n%3"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_ERROR_BAD_CREDENTIALS 
                             "입력한 AFS ID를 인식할 수 없거나 지정한 암호가 틀렸습니다."
     IDS_BROWSE_WAITING      "조회 중입니다. 잠시 기다리십시오..."

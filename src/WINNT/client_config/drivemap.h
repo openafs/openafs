@@ -96,6 +96,10 @@ DWORD MountDOSDrive(char chDrive,const char *szSubmount,BOOL bPresistant=TRUE,co
 DWORD DisMountDOSDrive(const char *szSubmount,BOOL bForce=TRUE);
 DWORD DisMountDOSDrive(char chDrive,BOOL bForce=TRUE);
 DWORD DisMountDOSDriveFull(const char *pPath,BOOL bForce=TRUE);
+
+void  WriteActiveMap(TCHAR chDrive, BOOL bOn);
+BOOL  ForceMapActive(TCHAR chDrive);
+
 #ifndef DRIVEMAP_DEF_H
 extern void TestAndDoUnMapShare();
 extern TCHAR pUserName[];

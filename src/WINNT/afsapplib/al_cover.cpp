@@ -21,10 +21,10 @@ extern "C" {
  */
 
 rwWindowData awdCover[] = {
-    { IDC_COVER_BORDER, raSizeX | raSizeY },
-    { IDC_COVER_DESC,   raSizeX | raSizeY | raRepaint },
-    { IDC_COVER_BUTTON, raMoveX | raMoveY | raRepaint },
-    { idENDLIST,        0 }
+    { IDC_COVER_BORDER, raSizeX | raSizeY,		0,	0 },
+    { IDC_COVER_DESC,   raSizeX | raSizeY | raRepaint,	0,	0 },
+    { IDC_COVER_BUTTON, raMoveX | raMoveY | raRepaint,	0,	0 },
+    { idENDLIST,        0,				0,	0 }
  };
 
 #define WS_EX_HIDDENBYCOVER       0x10000000L

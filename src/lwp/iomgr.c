@@ -21,10 +21,22 @@
 	IO Manager routines & server process for VICE server.
 */
 
+/* This controls the size of an fd_set; it must be defined early before
+ * the system headers define that type and the macros that operate on it.
+ * Its value should be as large as the maximum file descriptor limit we
+ * are likely to run into on any platform.  Right now, that is 65536
+ * which is the default hard fd limit on Solaris 9 */
+/* We don't do this on Windows because on that platform there is code
+ * which allocates fd_set's on the stack (IOMGR_Sleep on Win9x, and
+ * FDSetAnd on WinNT) */
+#ifndef _WIN32
+#define FD_SETSIZE 65536
+#endif
+
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/iomgr.c,v 1.1.1.6 2001/09/11 14:33:35 hartmans Exp $");
+RCSID("$Header: /cvs/openafs/src/lwp/iomgr.c,v 1.13.2.1 2005/02/21 01:13:50 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -88,7 +100,7 @@ typedef unsigned char bool;
 #define TRUE	1
 
 #ifndef MIN
-#define MIN(a,b) ((a)>(b)) ? b : a
+#define MIN(a,b) (((a)>(b)) ? (b) : (a))
 #endif
 
 #ifndef NSIG
@@ -177,7 +189,7 @@ static _go32_dpmi_seginfo callback_info;
 
 /* fd_set pool managment. 
  * Use the pool instead of creating fd_set's on the stack. fd_set's can be
- * 2K in size, so making three could put 6K in the limited space of an LWP
+ * 8K in size, so making three could put 24K in the limited space of an LWP
  * stack.
  */
 struct IOMGR_fd_set {
@@ -307,8 +319,7 @@ static void FDSetSet(int nfds, fd_set *fd_set1, fd_set *fd_set2)
     if (nfds == 0)
 	return;
 
-    n = INTS_PER_FDS(nfds);
-    for (i=0; i<n; i++) {
+    for (i = 0, n = INTS_PER_FDS(nfds); i < n; i++) {
 	fd_set1->FDS_BITS[i] |= fd_set2->FDS_BITS[i];
     }
 #endif
@@ -525,10 +536,11 @@ static int IOMGR(void *dummy)
 		iomgr_timeout.tv_sec = 100000000;
 		iomgr_timeout.tv_usec = 0;
 	    }
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_LINUX24_ENV)
 	    /* On NT, signals don't interrupt a select call. So this can potentially
 	     * lead to long wait times before a signal is honored. To avoid this we
 	     * dont do select() for longer than IOMGR_MAXWAITTIME (5 secs) */
+	    /* Whereas Linux seems to sometimes "lose" signals */
 	    if (iomgr_timeout.tv_sec > (IOMGR_MAXWAITTIME - 1)) {
 	      iomgr_timeout.tv_sec = IOMGR_MAXWAITTIME;
 	      iomgr_timeout.tv_usec = 0;
@@ -629,11 +641,12 @@ static int IOMGR(void *dummy)
 		/* Real timeout only if signal handler hasn't set
 		   iomgr_timeout to zero. */
 
-#ifdef AFS_NT40_ENV
+#if defined(AFS_NT40_ENV) || defined(AFS_LINUX24_ENV)
 		/* On NT, real timeout only if above and if iomgr_timeout
 		 * interval is equal to timeout interval (i.e., not adjusted
 		 * to check for pseudo-signals).
 		 */
+		/* And also for Linux as above */
 		if (iomgr_timeout.tv_sec  != timeout.tv_sec ||
 		    iomgr_timeout.tv_usec != timeout.tv_usec) {
 		    /* signal check interval timed out; not real timeout */
@@ -722,7 +735,7 @@ static void SigHandler (signo)
 
 /* Alright, this is the signal signalling routine.  It delivers LWP signals
    to LWPs waiting on Unix signals. NOW ALSO CAN YIELD!! */
-static int SignalSignals ()
+static int SignalSignals (void)
 {
     bool gotone = FALSE;
     register int i;
@@ -736,8 +749,8 @@ static int SignalSignals ()
     for (i=0; i < NSOFTSIG; i++) {
 	PROCESS pid;
 	if (p=sigProc[i]) /* This yields!!! */
-	    LWP_CreateProcess2(p, stackSize, LWP_NORMAL_PRIORITY, sigRock[i],
-		"SignalHandler", &pid);
+	    LWP_CreateProcess2(p, stackSize, LWP_NORMAL_PRIORITY, 
+			       (void *) sigRock[i], "SignalHandler", &pid);
 	sigProc[i] = 0;
     }
 
@@ -807,8 +820,8 @@ int IOMGR_Initialize(void)
     install_ncb_handler();
 #endif /* AFS_DJGPP_ENV */
 
-    return LWP_CreateProcess(IOMGR, AFS_LWP_MINSTACKSIZE, 0, 0, "IO MANAGER",
-			     &IOMGR_Id);
+    return LWP_CreateProcess(IOMGR, AFS_LWP_MINSTACKSIZE, 0, (void *) 0, 
+			     "IO MANAGER", &IOMGR_Id);
 }
 
 int IOMGR_Finalize()
@@ -1023,9 +1036,7 @@ int IOMGR_Cancel(PROCESS pid)
 #ifndef AFS_NT40_ENV
 /* Cause delivery of signal signo to result in a LWP_SignalProcess of
    event. */
-IOMGR_Signal (signo, event)
-    int signo;
-    char *event;
+int IOMGR_Signal (int signo, char *event)
 {
     struct sigaction sa;
 
@@ -1045,12 +1056,11 @@ IOMGR_Signal (signo, event)
 }
 
 /* Stop handling occurrences of signo. */
-IOMGR_CancelSignal (signo)
-    int signo;
+int IOMGR_CancelSignal (int signo)
 {
     if (badsig(signo) || (sigsHandled & mysigmask(signo)) == 0)
 	return LWP_EBADSIG;
-    sigaction (signo, &oldActions[signo], (struct sigaction *)0);
+    sigaction (signo, &oldActions[signo], NULL);
     sigsHandled &= ~mysigmask(signo);
     return LWP_SUCCESS;
 }
@@ -1086,10 +1096,7 @@ void IOMGR_Sleep (int seconds)
 
 /* Netbios code for djgpp port */
 
-int IOMGR_NCBSelect(ncbp, dos_ncb, timeout)
-  NCB *ncbp;
-  dos_ptr dos_ncb;
-  struct timeval *timeout;
+int IOMGR_NCBSelect(NCB *ncbp, dos_ptr dos_ncb, struct timeval *timeout)
 {
   struct IoRequest *request;
   int result;
@@ -1170,7 +1177,7 @@ int IOMGR_NCBSelect(ncbp, dos_ncb, timeout)
   }
 }
       
-int IOMGR_CheckNCB()
+int IOMGR_CheckNCB(void)
 {
   int woke_someone = FALSE;
   EVENT_HANDLE ev;
@@ -1213,7 +1220,7 @@ int ncb_handler(__dpmi_regs *r)
   return;
 }
 
-int install_ncb_handler()
+int install_ncb_handler(void)
 {
   callback_info.pm_offset = (long) ncb_handler;
   if (_go32_dpmi_allocate_real_mode_callback_retf(&callback_info,

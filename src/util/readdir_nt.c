@@ -19,7 +19,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/readdir_nt.c,v 1.1.1.5 2002/09/26 19:08:59 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/util/readdir_nt.c,v 1.6 2003/07/15 23:17:16 shadow Exp $");
 
 #include <errno.h>
 #include <afs/errmap_nt.h>
@@ -30,7 +31,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/util/readdir_nt.c,v 1.1.1.5 2002/09/26 
 #include <sys/stat.h>
 
 /* opendir() - The case insensitive version of opendir */
-DIR *opendir(const char *path)
+DIR *
+opendir(const char *path)
 {
     DIR *tDir;
     HANDLE tH;
@@ -38,8 +40,8 @@ DIR *opendir(const char *path)
     WIN32_FIND_DATA tData;
     int ntErr;
 
-    (void) strcpy(tPath, path);
-    (void) strcat(tPath, "\\*");
+    (void)strcpy(tPath, path);
+    (void)strcat(tPath, "\\*");
     tH = FindFirstFile(tPath, &tData);
 
     if (tH == INVALID_HANDLE_VALUE) {
@@ -47,7 +49,7 @@ DIR *opendir(const char *path)
 	switch (ntErr) {
 	case ERROR_DIRECTORY:
 	    errno = ENOTDIR;
-	    return (DIR*)0;
+	    return (DIR *) 0;
 	case ERROR_BAD_PATHNAME:
 	    /* AFS NT client returns ERROR_BAD_PATHNAME where it should return
 	     * ERROR_DIRECTORY.
@@ -59,38 +61,38 @@ DIR *opendir(const char *path)
 		struct stat status;
 		int len = strlen(tPath) - 1;
 		tPath[len] = '\0';
-		if (len >= 2 && tPath[len-2] != ':') {
-		    tPath[len-1] = '\0';
+		if (len >= 2 && tPath[len - 2] != ':') {
+		    tPath[len - 1] = '\0';
 		}
-		if (stat(tPath, &status)<0) {
+		if (stat(tPath, &status) < 0) {
 		    errno = nterr_nt2unix(GetLastError(), ENOENT);
-		    return (DIR*)0;
+		    return (DIR *) 0;
 		}
 		if (!(status.st_mode & _S_IFDIR)) {
 		    errno = ENOTDIR;
-		    return (DIR*)0;
+		    return (DIR *) 0;
 		}
 	    }
 	    break;
 	default:
 	    errno = nterr_nt2unix(GetLastError(), ENOENT);
-	    return (DIR*)0;
+	    return (DIR *) 0;
 	}
     }
 
-    tDir = (DIR*)malloc(sizeof(DIR));
+    tDir = (DIR *) malloc(sizeof(DIR));
     if (!tDir) {
 	errno = ENOMEM;
-    }
-    else {
-	memset((void*)tDir, 0, sizeof(*tDir));
+    } else {
+	memset((void *)tDir, 0, sizeof(*tDir));
 	tDir->h = tH;
 	tDir->data = tData;
     }
     return tDir;
 }
 
-int closedir(DIR *dir)
+int
+closedir(DIR * dir)
 {
     if (!dir || !dir->h) {
 	errno = EINVAL;
@@ -99,46 +101,45 @@ int closedir(DIR *dir)
 
     if (dir->h != INVALID_HANDLE_VALUE)
 	FindClose(dir->h);
-    free((void*)dir);
+    free((void *)dir);
     return 0;
 }
 
-struct dirent *readdir(DIR *dir)
+struct dirent *
+readdir(DIR * dir)
 {
     int rc;
 
     if (!dir) {
 	errno = EBADF;
-	return (struct dirent*)0;
+	return (struct dirent *)0;
     }
 
     errno = 0;
     if (dir->h == INVALID_HANDLE_VALUE)
-	return (struct dirent*)0;
+	return (struct dirent *)0;
 
     if (dir->first) {
 	dir->first = 0;
-    }
-    else {
-      while(rc = FindNextFile(dir->h, &dir->data)) {
-	if ((strcmp(dir->data.cFileName, ".") == 0) ||
-	    (strcmp(dir->data.cFileName, "..") == 0)) {
-	  
-	  continue;	/* skip "." and ".." */
+    } else {
+	while (rc = FindNextFile(dir->h, &dir->data)) {
+	    if ((strcmp(dir->data.cFileName, ".") == 0)
+		|| (strcmp(dir->data.cFileName, "..") == 0)) {
+
+		continue;	/* skip "." and ".." */
+	    }
+	    break;		/* found a non '.' or '..' entry. */
 	}
-	break;  /* found a non '.' or '..' entry. */
-      }
-      if (rc == 0) { /* FindNextFile() failed */
-	if (GetLastError() == ERROR_NO_MORE_FILES)
-	  return (struct dirent*)0;
-	else {
-	  errno = nterr_nt2unix(GetLastError(), EBADF);
-		return (struct dirent*)0;
+	if (rc == 0) {		/* FindNextFile() failed */
+	    if (GetLastError() == ERROR_NO_MORE_FILES)
+		return (struct dirent *)0;
+	    else {
+		errno = nterr_nt2unix(GetLastError(), EBADF);
+		return (struct dirent *)0;
+	    }
 	}
-      }
     }
 
     dir->cdirent.d_name = dir->data.cFileName;
     return &dir->cdirent;
 }
-

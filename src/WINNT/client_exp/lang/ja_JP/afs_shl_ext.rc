@@ -601,11 +601,6 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    AFX_IDS_APP_TITLE       "AFS クライアント"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_MP_REMOVE_ITEM      "削除(&R)..."
     IDS_MP_MAKE_ITEM        "作成(&M)..."
     IDS_FLUSH_FILE_DIR_ITEM "ファイル/ディレクトリーのフラッシュ(&F)"
@@ -631,6 +626,11 @@ BEGIN
     IDS_SHOW_FS_COLUMN      "ファイル・サーバー"
     IDS_REMOVE_MP           "マウント・ポイントを削除"
     IDS_REMOVE_MP_COLUMN    "結果"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "AFS クライアント"
 END
 
 #endif    // Japanese resources

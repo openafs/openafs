@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/hputil.c,v 1.1.1.4 2001/07/14 22:24:21 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/util/hputil.c,v 1.6 2003/07/15 23:17:16 shadow Exp $");
 
 #ifdef AFS_HPUX_ENV
 #include <stdio.h>
@@ -21,44 +22,44 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/util/hputil.c,v 1.1.1.4 2001/07/14 22:2
 /* insque/remque moved to timer.c where they are used. */
 
 #ifndef AFS_HPUX102_ENV
-utimes(file,tvp)
-char *file;
-struct timeval tvp[2];
+int
+utimes(char *file, struct timeval tvp[2])
 {
-	struct utimbuf times;
-	
-	times.actime = tvp[0].tv_sec;
-	times.modtime = tvp[1].tv_sec;
-	return (utime(file,&times));
+    struct utimbuf times;
+
+    times.actime = tvp[0].tv_sec;
+    times.modtime = tvp[1].tv_sec;
+    return (utime(file, &times));
 }
 #endif
 
-random()
+int
+random(void)
 {
-	return rand();
+    return rand();
 }
 
-srandom(seed)
+void
+srandom(int seed)
 {
-	srand(seed);
-}
-	       
-getdtablesize()
-{
-	return (20);
+    srand(seed);
 }
 
-setlinebuf(file)
-FILE *file;
+int
+getdtablesize(void)
 {
-	setbuf(file,NULL);
+    return (20);
 }
 
-psignal(sig,s)
-unsigned sig;
-char *s;
+void
+setlinebuf(FILE * file)
 {
-	fprintf (stderr,"%s: signal %d\n",s,sig);
+    setbuf(file, NULL);
+}
+
+void
+psignal(unsigned int sig, char *s)
+{
+    fprintf(stderr, "%s: signal %d\n", s, sig);
 }
 #endif /* AFS_HPUX_ENV */
-

@@ -12,7 +12,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/profile.c,v 1.1.1.5 2001/09/11 14:35:36 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/viced/profile.c,v 1.7 2003/07/15 23:17:32 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/file.h>
@@ -25,7 +26,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/viced/profile.c,v 1.1.1.5 2001/09/11 14
 #define PROFSTART	2
 #endif
 #ifdef	mips
-#define	PROFSTART	2   /* Verify This! */
+#define	PROFSTART	2	/* Verify This! */
 #endif
 #ifdef	NeXT
 #define	PROFSTART	0x2000
@@ -53,16 +54,17 @@ static struct {
     afs_int32 count;
 } profileHeader;
 
-void StartProfiling()
+void
+StartProfiling()
 {
 #if !defined (AFS_AIX_ENV) && !defined (AFS_HPUX_ENV)
 /* Soon should handle aix profiling */
     AllocProfBuf();
     memset(profBuf, 0, profBufSize);
-  /* the following code is to replace the monitor call below  */
-  /*  monitor (PROFSTART, &etext, profBuf, profBufSize, 0); */
+    /* the following code is to replace the monitor call below  */
+    /*  monitor (PROFSTART, &etext, profBuf, profBufSize, 0); */
     profileHeader.startpc = PROFSTART;
-    profileHeader.endpc = (afs_int32)&etext;
+    profileHeader.endpc = (afs_int32) & etext;
     profileHeader.count = 0;
     profil(profBuf, profBufSize, PROFSTART, SCALE_1_TO_1);
     profiling = 1;
@@ -70,7 +72,7 @@ void StartProfiling()
 #endif
 }
 
-EndProfiling ()
+EndProfiling()
 {
 #if !defined (AFS_AIX_ENV) && !defined (AFS_HPUX_ENV)
 /* Soon should handle aix profiling */
@@ -79,7 +81,7 @@ EndProfiling ()
     /* monitor(0); */
     profil(0, 0, 0, 0);
     profiling = 0;
-    f = open("mon.out", O_CREAT|O_TRUNC|O_WRONLY, 0666);
+    f = open("mon.out", O_CREAT | O_TRUNC | O_WRONLY, 0666);
     if (f <= 0)
 	return;
     write(f, &profileHeader, sizeof(profileHeader));
@@ -89,16 +91,17 @@ EndProfiling ()
 }
 
 /* Allocate the profiling buffer */
-void AllocProfBuf()
+void
+AllocProfBuf()
 {
 #if !defined (AFS_AIX_ENV) && !defined (AFS_HPUX_ENV)
 /* Soon should handle aix profiling */
     if (profBuf != NULL)
 	return;
-    profBufSize = (int) &etext - PROFSTART;
-    profBuf = (char *)malloc (profBufSize);
+    profBufSize = (int)&etext - PROFSTART;
+    profBuf = (char *)malloc(profBufSize);
     if (profBuf == NULL) {
-	fprintf (stderr, "Couldn't get profiling buffer.\n");
+	fprintf(stderr, "Couldn't get profiling buffer.\n");
 	return;
     }
 #endif
@@ -106,8 +109,8 @@ void AllocProfBuf()
 int ProfileToggle();
 
 /* Arrange to start and stop profiling when signo is sent. */
-ProfileSig(signo)
-    int signo;
+void
+ProfileSig(int signo)
 {
 #if !defined (AFS_AIX_ENV) && !defined (AFS_HPUX_ENV)
 /* Soon should handle aix profiling */
@@ -115,8 +118,7 @@ ProfileSig(signo)
     if (signo >= 0) {
 	AllocProfBuf();
 	signal(signo, ProfileToggle);
-    }
-    else
+    } else
 	signal(profSig, SIG_DFL);
 #endif
 }
@@ -132,8 +134,7 @@ ProfileToggle()
     if (profiling) {
 	EndProfiling();
 	write(fileno(stdout), offMsg, strlen(offMsg));
-    }
-    else {
+    } else {
 	StartProfiling();
 	write(fileno(stdout), onMsg, strlen(onMsg));
     }

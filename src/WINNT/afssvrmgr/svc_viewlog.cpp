@@ -30,13 +30,13 @@ extern "C" {
  */
 
 rwWindowData awdShowLog[] = {
-    { IDC_SVC_VIEWLOG_DESC,     raSizeX | raRepaint },
-    { IDC_SVC_VIEWLOG_FILENAME, raSizeX | raRepaint },
-    { IDC_VIEWLOG_TEXT,         raSizeX | raSizeY | raRepaint, MAKELONG(cxMIN_VIEWLOG,cyMIN_VIEWLOG) },
-    { IDC_SVC_VIEWLOG_CONTENTS, raSizeX },
-    { IDOK,                     raMoveX | raMoveY },
-    { IDC_VIEWLOG_SAVEAS,       raMoveX | raMoveY },
-    { idENDLIST, 0 }
+    { IDC_SVC_VIEWLOG_DESC,     raSizeX | raRepaint,		0,	0 },
+    { IDC_SVC_VIEWLOG_FILENAME, raSizeX | raRepaint,		0,	0 },
+    { IDC_VIEWLOG_TEXT,         raSizeX | raSizeY | raRepaint, 	MAKELONG(cxMIN_VIEWLOG,cyMIN_VIEWLOG),	0 },
+    { IDC_SVC_VIEWLOG_CONTENTS, raSizeX,			0,	0 },
+    { IDOK,                     raMoveX | raMoveY,		0,	0 },
+    { IDC_VIEWLOG_SAVEAS,       raMoveX | raMoveY,		0,	0 },
+    { idENDLIST, 0,						0,	0 }
  };
 
 

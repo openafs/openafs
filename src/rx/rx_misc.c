@@ -10,11 +10,12 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_misc.c,v 1.1.1.6 2001/09/11 14:34:18 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rx/rx_misc.c,v 1.12.2.1 2004/08/25 07:09:41 shadow Exp $");
 
 #ifdef	KERNEL
 #include <afs/sysincludes.h>
-#include <afs/afsincludes.h>
+#include <afsincludes.h>
 #else
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -52,8 +53,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_misc.c,v 1.1.1.6 2001/09/11 14:34
  * (network) system error code.
  */
 int
-hton_syserr_conv(code)
-    register afs_int32 code;
+hton_syserr_conv(register afs_int32 code)
 {
     register afs_int32 err;
 
@@ -106,40 +106,42 @@ ntoh_syserr_conv(int code)
  * osi_alloccnt
  * osi_allocsize
  */
-     
+
 #include <assert.h>
 pthread_mutex_t osi_malloc_mutex;
-#define LOCK_MALLOC_STATS assert(pthread_mutex_lock(&osi_malloc_mutex)==0);
-#define UNLOCK_MALLOC_STATS assert(pthread_mutex_unlock(&osi_malloc_mutex)==0);
+#define LOCK_MALLOC_STATS assert(pthread_mutex_lock(&osi_malloc_mutex)==0)
+#define UNLOCK_MALLOC_STATS assert(pthread_mutex_unlock(&osi_malloc_mutex)==0)
 #else
 #define LOCK_MALLOC_STATS
 #define UNLOCK_MALLOC_STATS
 #endif /* AFS_PTHREAD_ENV */
-long osi_alloccnt=0, osi_allocsize=0;
+long osi_alloccnt = 0, osi_allocsize = 0;
 static const char memZero;
-char * osi_alloc(x)
-    afs_int32 x; 
+char *
+osi_alloc(afs_int32 x)
 {
     /* 
      * 0-length allocs may return NULL ptr from osi_kalloc, so we special-case
      * things so that NULL returned iff an error occurred 
      */
-    if (x == 0) return (char *)&memZero;
-    LOCK_MALLOC_STATS
-    osi_alloccnt++; osi_allocsize += x;
-    UNLOCK_MALLOC_STATS
+    if (x == 0)
+	return (char *)&memZero;
+    LOCK_MALLOC_STATS;
+    osi_alloccnt++;
+    osi_allocsize += x;
+    UNLOCK_MALLOC_STATS;
     return (char *)(mem_alloc(x));
 }
 
 int
-osi_free(x, size)
-    char *x;
-    afs_int32 size; 
+osi_free(char *x, afs_int32 size)
 {
-    if ((x == &memZero) || !x) return 0;
-    LOCK_MALLOC_STATS
-    osi_alloccnt--; osi_allocsize -= size;
-    UNLOCK_MALLOC_STATS
+    if ((x == &memZero) || !x)
+	return 0;
+    LOCK_MALLOC_STATS;
+    osi_alloccnt--;
+    osi_allocsize -= size;
+    UNLOCK_MALLOC_STATS;
     mem_free(x, size);
     return 0;
 }
@@ -179,11 +181,11 @@ int RXDB_LockPos = 0;
 
 #define RXDB_NLOCKS 32
 struct rxdb_lock_t {
-    afs_int32 id;	/* id of lock holder. */
-    void * a;	/* address of lock. */
-    u_short fileId; /* fileID# of RX file. */
+    afs_int32 id;		/* id of lock holder. */
+    void *a;			/* address of lock. */
+    u_short fileId;		/* fileID# of RX file. */
     u_short line;
-    u_short next; 
+    u_short next;
     u_short prev;
 };
 
@@ -196,9 +198,9 @@ short rxdb_idHash[RXDB_HASHSIZE];
 
 /* Record locations of all locks we enter/exit. */
 struct rxdb_lockloc_t {
-    u_short fileId; /* fileID# of RX file. */
+    u_short fileId;		/* fileID# of RX file. */
     u_short line;
-    u_short next; 
+    u_short next;
     u_short prev;
 };
 #ifdef RX_LOCKS_COVERAGE
@@ -226,24 +228,24 @@ rxdb_init(void)
     RXDB_LOCK_INIT();
     RXDB_LOCK_ENTER();
 
-    for (i=1; i<RXDB_NLOCKS-1; i++) {
+    for (i = 1; i < RXDB_NLOCKS - 1; i++) {
 	rxdb_lockList[i].next = i + 1;
 	rxdb_lockList[i].prev = i - 1;
     }
     rxdb_lockList[0].next = 1;
     rxdb_lockList[0].prev = 0;
-    rxdb_lockList[RXDB_NLOCKS-1].next = 0;
-    rxdb_lockList[RXDB_NLOCKS-1].prev = RXDB_NLOCKS - 2;
+    rxdb_lockList[RXDB_NLOCKS - 1].next = 0;
+    rxdb_lockList[RXDB_NLOCKS - 1].prev = RXDB_NLOCKS - 2;
 
 #ifdef RX_LOCKS_COVERAGE
-    for (i=1; i<RXDB_NlockLocs-1; i++) {
+    for (i = 1; i < RXDB_NlockLocs - 1; i++) {
 	rxdb_lockLocs[i].next = i + 1;
 	rxdb_lockLocs[i].prev = i - 1;
     }
     rxdb_lockLocs[0].next = 1;
     rxdb_lockLocs[0].prev = 0;
-    rxdb_lockLocs[RXDB_NlockLocs-1].next = 0;
-    rxdb_lockLocs[RXDB_NlockLocs-1].prev = RXDB_NlockLocs - 2;
+    rxdb_lockLocs[RXDB_NlockLocs - 1].next = 0;
+    rxdb_lockLocs[RXDB_NlockLocs - 1].prev = RXDB_NlockLocs - 2;
 #endif /* RX_LOCKS_COVERAGE */
 
     RXDB_LOCK_EXIT();
@@ -252,22 +254,22 @@ rxdb_init(void)
 #ifdef RX_LOCKS_COVERAGE
 void
 rxdb_RecordLockLocation(fileId, line)
-afs_int32 fileId, line;
+     afs_int32 fileId, line;
 {
     u_short i, j;
 
     i = RXDB_LOCHASH(line);
 
     /* Only enter lock location into list once. */
-    for (j=rxdb_lockLocHash[i]; j; j = rxdb_lockLocs[j].next) {
+    for (j = rxdb_lockLocHash[i]; j; j = rxdb_lockLocs[j].next) {
 	if ((rxdb_lockLocs[j].line == line)
 	    && (rxdb_lockLocs[j].fileId == fileId))
 	    return;
     }
-	
+
     /* Add lock to list. */
     j = rxdb_lockLocs[0].next;
-    if (j==0) {
+    if (j == 0) {
 	osi_Panic("rxdb_initLock: used up all the lock locations.\n");
     }
 
@@ -293,10 +295,10 @@ afs_int32 fileId, line;
 /* Set lock as possessed by me. */
 void
 rxdb_grablock(a, id, fileId, line)
-void * a;
-afs_int32 id;
-afs_int32 fileId;
-afs_int32 line;
+     void *a;
+     afs_int32 id;
+     afs_int32 fileId;
+     afs_int32 line;
 {
     int i, j, k;
 
@@ -305,8 +307,8 @@ afs_int32 line;
     rxdb_RecordLockLocation(fileId, line);
 #endif /* RX_LOCKS_COVERAGE */
     /* Is lock already held by anyone? */
-    for (i=0; i<RXDB_HASHSIZE; i++) {
-	for (j=rxdb_idHash[i]; j; j = rxdb_lockList[j].next) {
+    for (i = 0; i < RXDB_HASHSIZE; i++) {
+	for (j = rxdb_idHash[i]; j; j = rxdb_lockList[j].next) {
 	    if (rxdb_lockList[j].a == a) {
 		RXDB_LockPos = j;
 		osi_Panic("rxdb_grablock: lock already held.");
@@ -316,7 +318,7 @@ afs_int32 line;
 
     i = RXDB_IDHASH(id);
     j = rxdb_lockList[0].next;
-    if (j==0) {
+    if (j == 0) {
 	osi_Panic("rxdb_grablock: rxdb_lockList is full.");
     }
     rxdb_lockList[0].next = rxdb_lockList[j].next;
@@ -340,10 +342,10 @@ afs_int32 line;
 
 /* unlock */
 rxdb_droplock(a, id, fileId, line)
-void * a;
-afs_int32 id;
-int fileId;
-int line;
+     void *a;
+     afs_int32 id;
+     int fileId;
+     int line;
 {
     int i, j;
     int found;
@@ -356,7 +358,7 @@ int line;
 
     /* Do I have the lock? */
     i = rxdb_idHash[RXDB_IDHASH(id)];
-    for(j=i;  j; j = rxdb_lockList[j].next) {
+    for (j = i; j; j = rxdb_lockList[j].next) {
 	if (rxdb_lockList[j].a == a) {
 	    found = 1;
 	    break;
@@ -368,13 +370,12 @@ int line;
     }
 
     /* delete lock from queue. */
-    if (i==j) {
+    if (i == j) {
 	/* head of list. */
 	i = RXDB_IDHASH(id);
 	rxdb_idHash[i] = rxdb_lockList[j].next;
 	rxdb_lockList[rxdb_lockList[j].next].prev = 0;
-    }
-    else {
+    } else {
 	if (rxdb_lockList[j].next)
 	    rxdb_lockList[rxdb_lockList[j].next].prev = rxdb_lockList[j].prev;
 	rxdb_lockList[rxdb_lockList[j].prev].next = rxdb_lockList[j].next;
@@ -385,8 +386,8 @@ int line;
     rxdb_lockList[0].next = j;
 
     RXDB_LOCK_EXIT();
-}    
-    
+}
+
 #endif /* (AIX41 || SGI53) && KERNEL */
 
 #endif /* RX_LOCKS_DB */

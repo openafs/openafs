@@ -38,7 +38,7 @@ Web server:		 Apache 1.2.6 or Apache 1.3.1
 AFS (client):		 AFS Client 3.4a 
 Disk Space:		 650 KB 
 
-Note: Due to security considerations, Transarc strongly recommends that the
+Note: Due to security considerations, OpenAFS strongly recommends that the
 AFS Web Security Pack be used only on a server enabled with Secure Sockets 
 Layer (SSL).
 

@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/test/bos.c,v 1.1.1.5 2001/09/11 14:33:18 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/libadmin/test/bos.c,v 1.10 2003/11/29 22:08:13 jaltman Exp $");
 
 #include "bos.h"
 
@@ -29,13 +30,14 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/test/bos.c,v 1.1.1.5 2001/09/1
  */
 
 static int
-GetIntFromString(const char *int_str, const char *error_msg) {
+GetIntFromString(const char *int_str, const char *error_msg)
+{
     int i;
     char *bad_char = NULL;
 
     i = strtoul(int_str, &bad_char, 10);
     if ((bad_char == NULL) || (*bad_char == 0)) {
-        return i;
+	return i;
     }
 
     ERR_EXT(error_msg);
@@ -61,28 +63,29 @@ static char *day[] = {
     "sat"
 };
 
-static LocalFreeTokens(
-  struct token *alist)
+static
+LocalFreeTokens(struct token *alist)
 {
     register struct token *nlist;
-    for(; alist; alist = nlist) {
-        nlist = alist->next;
-        free(alist->key);
-        free(alist);
+    for (; alist; alist = nlist) {
+	nlist = alist->next;
+	free(alist->key);
+	free(alist);
     }
     return 0;
 }
 
-static space(
-  int x)
+static
+space(int x)
 {
-    if (x == 0 || x == ' ' || x == '\t' || x== '\n') return 1;
-    else return 0;
+    if (x == 0 || x == ' ' || x == '\t' || x == '\n')
+	return 1;
+    else
+	return 0;
 }
 
-static LocalParseLine(
-  char *aline,
-  struct token **alist)
+static
+LocalParseLine(char *aline, struct token **alist)
 {
     char tbuffer[256];
     register char *tptr;
@@ -91,42 +94,44 @@ static LocalParseLine(
     register struct token *ttok;
     register int tc;
 
-    inToken = 0;        /* not copying token chars at start */
-    first = (struct token *) 0;
-    last = (struct token *) 0;
+    inToken = 0;		/* not copying token chars at start */
+    first = NULL;
+    last = NULL;
     while (1) {
-        tc = *aline++;
-        if (tc == 0 || space(tc)) {
-            if (inToken) {
-                inToken = 0;    /* end of this token */
-                *tptr++ = 0;
-                ttok = (struct token *) malloc(sizeof(struct token));
-                ttok->next = (struct token *) 0;
-                ttok->key = (char *) malloc(strlen(tbuffer)+1);
-                strcpy(ttok->key, tbuffer);
-                if (last) {
-                    last->next = ttok;
-                    last = ttok;
-                }
-                else last = ttok;
-                if (!first) first = ttok;
-            }
-        }
-        else {
-            /* an alpha character */
-            if (!inToken) {
-                tptr = tbuffer;
-                inToken = 1;
-            }
-            if (tptr - tbuffer >= sizeof(tbuffer)) return -1;
-            *tptr++ = tc;
-        }
-        if (tc == 0) {
-            /* last token flushed 'cause space(0) --> true */
-            if (last) last->next = (struct token *) 0;
-            *alist = first;
-            return 0;
-        }
+	tc = *aline++;
+	if (tc == 0 || space(tc)) {
+	    if (inToken) {
+		inToken = 0;	/* end of this token */
+		*tptr++ = 0;
+		ttok = (struct token *)malloc(sizeof(struct token));
+		ttok->next = NULL;
+		ttok->key = (char *)malloc(strlen(tbuffer) + 1);
+		strcpy(ttok->key, tbuffer);
+		if (last) {
+		    last->next = ttok;
+		    last = ttok;
+		} else
+		    last = ttok;
+		if (!first)
+		    first = ttok;
+	    }
+	} else {
+	    /* an alpha character */
+	    if (!inToken) {
+		tptr = tbuffer;
+		inToken = 1;
+	    }
+	    if (tptr - tbuffer >= sizeof(tbuffer))
+		return -1;
+	    *tptr++ = tc;
+	}
+	if (tc == 0) {
+	    /* last token flushed 'cause space(0) --> true */
+	    if (last)
+		last->next = NULL;
+	    *alist = first;
+	    return 0;
+	}
     }
 }
 
@@ -134,70 +139,57 @@ static LocalParseLine(
 static struct ptemp {
     char *key;
     afs_int32 value;
-} ptkeys [] = {
-    "sun", 0x10000,
-    "mon", 0x10001,
-    "tue", 0x10002,
-    "wed", 0x10003,
-    "thu", 0x10004,
-    "fri", 0x10005,
-    "sat", 0x10006,
-    "sunday", 0x10000,
-    "monday", 0x10001,
-    "tuesday", 0x10002,
-    "wednesday", 0x10003,
-    "thursday", 0x10004,
-    "thur", 0x10004,
-    "friday", 0x10005,
-    "saturday", 0x10006,
-    "am", 0x20000,
-    "pm", 0x20001,
-    "a.m.", 0x20000,
-    "p.m.", 0x20001,
-    0, 0,
-};
+} ptkeys[] = {
+"sun", 0x10000, "mon", 0x10001, "tue", 0x10002, "wed", 0x10003, "thu",
+	0x10004, "fri", 0x10005, "sat", 0x10006, "sunday", 0x10000,
+	"monday", 0x10001, "tuesday", 0x10002, "wednesday", 0x10003,
+	"thursday", 0x10004, "thur", 0x10004, "friday", 0x10005,
+	"saturday", 0x10006, "am", 0x20000, "pm", 0x20001, "a.m.",
+	0x20000, "p.m.", 0x20001, 0, 0,};
 
-static ParseTime(
-  bos_RestartTime_p ak,
-  char *astr)
+static
+ParseTime(bos_RestartTime_p ak, char *astr)
 {
     int field;
     short temp;
     register char *tp;
     register int tc;
 
-    field = 0;  /* 0=hour, 1=min, 2=sec */
+    field = 0;			/* 0=hour, 1=min, 2=sec */
     temp = 0;
 
-    ak->mask |= (BOS_RESTART_TIME_HOUR | BOS_RESTART_TIME_MINUTE | BOS_RESTART_TIME_SECOND);
-    for(tp=astr;;) {
-        tc = *tp++;
-        if (tc == 0 || tc == ':') {
-            if (field == 0)
-                ak->hour = temp;
-            else if (field == 1)
-                ak->min = temp;
-            else if (field == 2)
-                ak->sec = temp;
-            temp = 0;
-            field++;
-            if (tc == 0) break;
-            continue;
-        }
-        else if (!isdigit(tc)) return -1;   /* syntax error */
-        else {
-            /* digit */
-            temp *= 10;
-            temp += tc - '0';
-        }
+    ak->mask |=
+	(BOS_RESTART_TIME_HOUR | BOS_RESTART_TIME_MINUTE |
+	 BOS_RESTART_TIME_SECOND);
+    for (tp = astr;;) {
+	tc = *tp++;
+	if (tc == 0 || tc == ':') {
+	    if (field == 0)
+		ak->hour = temp;
+	    else if (field == 1)
+		ak->min = temp;
+	    else if (field == 2)
+		ak->sec = temp;
+	    temp = 0;
+	    field++;
+	    if (tc == 0)
+		break;
+	    continue;
+	} else if (!isdigit(tc))
+	    return -1;		/* syntax error */
+	else {
+	    /* digit */
+	    temp *= 10;
+	    temp += tc - '0';
+	}
     }
-    if (ak->hour >= 24 || ak->min >= 60 || ak->sec >= 60) return -1;
+    if (ak->hour >= 24 || ak->min >= 60 || ak->sec >= 60)
+	return -1;
     return 0;
 }
 
-int ktime_ParsePeriodic(
-  char *adate,
-  bos_RestartTime_p ak)
+int
+ktime_ParsePeriodic(char *adate, bos_RestartTime_p ak)
 {
     struct token *tt;
     register afs_int32 code;
@@ -205,65 +197,71 @@ int ktime_ParsePeriodic(
 
     memset(ak, 0, sizeof(*ak));
     code = LocalParseLine(adate, &tt);
-    if (code) return -1;
-    for(;tt;tt=tt->next) {
-        /* look at each token */
-        if (strcmp(tt->key, "now") == 0) {
-            ak->mask |= BOS_RESTART_TIME_NOW;
+    if (code)
+	return -1;
+    for (; tt; tt = tt->next) {
+	/* look at each token */
+	if (strcmp(tt->key, "now") == 0) {
+	    ak->mask |= BOS_RESTART_TIME_NOW;
 	    LocalFreeTokens(tt);
-            return 0;
-        }
-        if (strcmp(tt->key, "never") == 0) {
-            ak->mask |= BOS_RESTART_TIME_NEVER;
+	    return 0;
+	}
+	if (strcmp(tt->key, "never") == 0) {
+	    ak->mask |= BOS_RESTART_TIME_NEVER;
 	    LocalFreeTokens(tt);
-            return 0;
-        }
-        if (strcmp(tt->key, "at") == 0) continue;
-        if (strcmp(tt->key, "every") == 0) continue;
-        if (isdigit(tt->key[0])) {
-            /* parse a time */
-            code = ParseTime(ak, tt->key);
-            if (code) {
+	    return 0;
+	}
+	if (strcmp(tt->key, "at") == 0)
+	    continue;
+	if (strcmp(tt->key, "every") == 0)
+	    continue;
+	if (isdigit(tt->key[0])) {
+	    /* parse a time */
+	    code = ParseTime(ak, tt->key);
+	    if (code) {
 		LocalFreeTokens(tt);
 		return -1;
 	    }
-            continue;
-        }
-        /* otherwise use keyword table */
-        for(tp = ptkeys;; tp++) {
-            if (tp->key == (char *) 0) {
+	    continue;
+	}
+	/* otherwise use keyword table */
+	for (tp = ptkeys;; tp++) {
+	    if (tp->key == NULL) {
 		LocalFreeTokens(tt);
-                return -1;
-            }
-            if (strcmp(tp->key, tt->key) == 0) break;
-        }
-        /* now look at tp->value to see what we've got */
-        if ((tp->value>>16) == 1) {
-            /* a day */
-            ak->mask |= BOS_RESTART_TIME_DAY;
-            ak->day = tp->value & 0xff;
-        }
-        if ((tp->value >> 16) == 2) {
-            /* am or pm token */
-            if ((tp->value & 0xff) == 1) {
-                /* pm */
-                if (!(ak->mask & BOS_RESTART_TIME_HOUR)) return -1;
-                if (ak->hour < 12) ak->hour += 12;
-                /* 12 is 12 PM */
-                else if (ak->hour != 12) {
+		return -1;
+	    }
+	    if (strcmp(tp->key, tt->key) == 0)
+		break;
+	}
+	/* now look at tp->value to see what we've got */
+	if ((tp->value >> 16) == 1) {
+	    /* a day */
+	    ak->mask |= BOS_RESTART_TIME_DAY;
+	    ak->day = tp->value & 0xff;
+	}
+	if ((tp->value >> 16) == 2) {
+	    /* am or pm token */
+	    if ((tp->value & 0xff) == 1) {
+		/* pm */
+		if (!(ak->mask & BOS_RESTART_TIME_HOUR))
+		    return -1;
+		if (ak->hour < 12)
+		    ak->hour += 12;
+		/* 12 is 12 PM */
+		else if (ak->hour != 12) {
 		    LocalFreeTokens(tt);
 		    return -1;
 		}
-            }
-            else {
-                /* am is almost a noop, except that we map 12:01 am to 0:01 */
-                if (ak->hour > 12) {
+	    } else {
+		/* am is almost a noop, except that we map 12:01 am to 0:01 */
+		if (ak->hour > 12) {
 		    LocalFreeTokens(tt);
 		    return -1;
 		}
-                if (ak->hour == 12) ak->hour = 0;
-            }
-        }
+		if (ak->hour == 12)
+		    ak->hour = 0;
+	    }
+	}
     }
     LocalFreeTokens(tt);
     return 0;
@@ -272,8 +270,9 @@ int ktime_ParsePeriodic(
 int
 DoBosProcessCreate(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, PROCESS, BINARY, CRON, CRONTIME, NOTIFIER}
-      DoBosProcessCreate_parm_t;
+    typedef enum { SERVER, PROCESS, BINARY, CRON, CRONTIME,
+	NOTIFIER
+    } DoBosProcessCreate_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
@@ -285,10 +284,8 @@ DoBosProcessCreate(struct cmd_syndesc *as, char *arock)
     const char *notifier = NULL;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -325,13 +322,9 @@ DoBosProcessCreate(struct cmd_syndesc *as, char *arock)
 	notifier = as->parms[NOTIFIER].items->data;
     }
 
-    if (!bos_ProcessCreate(bos_server,
-			   process,
-			   process_type,
-			   binary,
-			   cron_time,
-			   notifier,
-			   &st)) {
+    if (!bos_ProcessCreate
+	(bos_server, process, process_type, binary, cron_time, notifier,
+	 &st)) {
 	ERR_ST_EXT("bos_ProcessCreate", st);
     }
 
@@ -343,21 +336,20 @@ DoBosProcessCreate(struct cmd_syndesc *as, char *arock)
 int
 DoBosFSProcessCreate(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, PROCESS, FILESERVER, VOLSERVER, SALVAGER, NOTIFIER}
-      DoBosFSProcessCreate_parm_t;
+    typedef enum { SERVER, PROCESS, FILESERVER, VOLSERVER, SALVAGER,
+	NOTIFIER
+    } DoBosFSProcessCreate_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
     const char *fileserver = NULL;
     const char *volserver = NULL;
-    const char *salvager= NULL;
+    const char *salvager = NULL;
     const char *notifier = NULL;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -382,13 +374,9 @@ DoBosFSProcessCreate(struct cmd_syndesc *as, char *arock)
 	notifier = as->parms[NOTIFIER].items->data;
     }
 
-    if (!bos_FSProcessCreate(bos_server,
-			     process,
-			     fileserver,
-			     volserver,
-			     salvager,
-			     notifier,
-			     &st)) {
+    if (!bos_FSProcessCreate
+	(bos_server, process, fileserver, volserver, salvager, notifier,
+	 &st)) {
 	ERR_ST_EXT("bos_FSProcessCreate", st);
     }
 
@@ -400,17 +388,14 @@ DoBosFSProcessCreate(struct cmd_syndesc *as, char *arock)
 int
 DoBosProcessDelete(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, PROCESS}
-      DoBosProcessDelete_parm_t;
+    typedef enum { SERVER, PROCESS } DoBosProcessDelete_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -419,9 +404,7 @@ DoBosProcessDelete(struct cmd_syndesc *as, char *arock)
 	process = as->parms[PROCESS].items->data;
     }
 
-    if (!bos_ProcessDelete(bos_server,
-			   process,
-			   &st)) {
+    if (!bos_ProcessDelete(bos_server, process, &st)) {
 	ERR_ST_EXT("bos_ProcessDelete", st);
     }
 
@@ -431,12 +414,11 @@ DoBosProcessDelete(struct cmd_syndesc *as, char *arock)
 }
 
 static void
-Print_bos_ProcessExecutionState_p(
-  bos_ProcessExecutionState_p state,
-  const char *prefix)
+Print_bos_ProcessExecutionState_p(bos_ProcessExecutionState_p state,
+				  const char *prefix)
 {
     printf("%sThe process executation state is: ", prefix);
-    switch(*state) {
+    switch (*state) {
     case BOS_PROCESS_STOPPED:
 	printf("stopped\n");
 	break;
@@ -455,8 +437,7 @@ Print_bos_ProcessExecutionState_p(
 int
 DoBosProcessExecutionStateGet(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, PROCESS}
-      DoBosProcessExecutionStateGet_parm_t;
+    typedef enum { SERVER, PROCESS } DoBosProcessExecutionStateGet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
@@ -464,10 +445,8 @@ DoBosProcessExecutionStateGet(struct cmd_syndesc *as, char *arock)
     char aux_status[BOS_MAX_NAME_LEN];
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -476,11 +455,8 @@ DoBosProcessExecutionStateGet(struct cmd_syndesc *as, char *arock)
 	process = as->parms[PROCESS].items->data;
     }
 
-    if (!bos_ProcessExecutionStateGet(bos_server,
-				      process,
-				      &state,
-				      aux_status,
-				      &st)) {
+    if (!bos_ProcessExecutionStateGet
+	(bos_server, process, &state, aux_status, &st)) {
 	ERR_ST_EXT("bos_ProcessExecutionStateGet", st);
     }
 
@@ -497,8 +473,9 @@ DoBosProcessExecutionStateGet(struct cmd_syndesc *as, char *arock)
 int
 DoBosProcessExecutionStateSet(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, PROCESS, STOPPED, RUNNING}
-      DoBosProcessExecutionStateSet_parm_t;
+    typedef enum { SERVER, PROCESS, STOPPED,
+	RUNNING
+    } DoBosProcessExecutionStateSet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
@@ -507,10 +484,8 @@ DoBosProcessExecutionStateSet(struct cmd_syndesc *as, char *arock)
     bos_ProcessExecutionState_t state;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -537,10 +512,7 @@ DoBosProcessExecutionStateSet(struct cmd_syndesc *as, char *arock)
 	ERR_EXT("you must specify either running or stopped");
     }
 
-    if (!bos_ProcessExecutionStateSet(bos_server,
-				      process,
-				      state,
-				      &st)) {
+    if (!bos_ProcessExecutionStateSet(bos_server, process, state, &st)) {
 	ERR_ST_EXT("bos_ProcessExecutionStateSet", st);
     }
 
@@ -552,8 +524,9 @@ DoBosProcessExecutionStateSet(struct cmd_syndesc *as, char *arock)
 int
 DoBosProcessExecutionStateSetTemporary(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, PROCESS, STOPPED, RUNNING}
-      DoBosProcessExecutionStateSetTemporary_parm_t;
+    typedef enum { SERVER, PROCESS, STOPPED,
+	RUNNING
+    } DoBosProcessExecutionStateSetTemporary_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
@@ -562,10 +535,8 @@ DoBosProcessExecutionStateSetTemporary(struct cmd_syndesc *as, char *arock)
     bos_ProcessExecutionState_t state;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -592,10 +563,8 @@ DoBosProcessExecutionStateSetTemporary(struct cmd_syndesc *as, char *arock)
 	ERR_EXT("you must specify either running or stopped");
     }
 
-    if (!bos_ProcessExecutionStateSetTemporary(bos_server,
-				               process,
-					       state,
-					       &st)) {
+    if (!bos_ProcessExecutionStateSetTemporary
+	(bos_server, process, state, &st)) {
 	ERR_ST_EXT("bos_ProcessExecutionStateSetTemporary", st);
     }
 
@@ -607,18 +576,15 @@ DoBosProcessExecutionStateSetTemporary(struct cmd_syndesc *as, char *arock)
 int
 DoBosProcessNameList(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER}
-      DoBosProcessNameList_parm_t;
+    typedef enum { SERVER } DoBosProcessNameList_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     void *iter = NULL;
     char process[BOS_MAX_NAME_LEN];
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -627,7 +593,8 @@ DoBosProcessNameList(struct cmd_syndesc *as, char *arock)
 	ERR_ST_EXT("bos_ProcessNameGetBegin", st);
     }
 
-    printf("Listing processes at server %s:\n", as->parms[SERVER].items->data);
+    printf("Listing processes at server %s:\n",
+	   as->parms[SERVER].items->data);
 
     while (bos_ProcessNameGetNext(iter, process, &st)) {
 	printf("\t%s\n", process);
@@ -645,12 +612,10 @@ DoBosProcessNameList(struct cmd_syndesc *as, char *arock)
 }
 
 static void
-Print_bos_ProcessType_p(
-  bos_ProcessType_p type,
-  const char *prefix)
+Print_bos_ProcessType_p(bos_ProcessType_p type, const char *prefix)
 {
     printf("%sProcess type: \n", prefix);
-    switch(*type) {
+    switch (*type) {
     case BOS_PROCESS_SIMPLE:
 	printf("simple\n");
 	break;
@@ -664,11 +629,10 @@ Print_bos_ProcessType_p(
 }
 
 static void
-Print_bos_ProcessState_p(
-  bos_ProcessState_p state,
-  const char *prefix)
+Print_bos_ProcessState_p(bos_ProcessState_p state, const char *prefix)
 {
     printf("%sProcess state:\n", prefix);
+    /* FIXME: BOS_PROCESS_OK is 0, so this test is not right */
     if (*state & BOS_PROCESS_OK) {
 	printf("%s\tBOS_PROCESS_OK:\n", prefix);
     }
@@ -684,18 +648,14 @@ Print_bos_ProcessState_p(
 }
 
 static void
-Print_bos_ProcessInfo_p(
-  bos_ProcessInfo_p info,
-  const char *prefix)
+Print_bos_ProcessInfo_p(bos_ProcessInfo_p info, const char *prefix)
 {
     Print_bos_ProcessExecutionState_p(&info->processGoal, prefix);
     printf("%sStart time %lu\n", prefix, info->processStartTime);
-    printf("%sNumber of process starts %lu \n",
-	   prefix,
+    printf("%sNumber of process starts %lu \n", prefix,
 	   info->numberProcessStarts);
     printf("%sProcess exit time %lu\n", prefix, info->processExitTime);
-    printf("%sProcess exit error time %lu\n",
-	   prefix,
+    printf("%sProcess exit error time %lu\n", prefix,
 	   info->processExitErrorTime);
     printf("%sProcess error code %lu\n", prefix, info->processErrorCode);
     printf("%sProcess error signal %lu\n", prefix, info->processErrorSignal);
@@ -705,8 +665,7 @@ Print_bos_ProcessInfo_p(
 int
 DoBosProcessInfoGet(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, PROCESS}
-      DoBosProcessInfoGet_parm_t;
+    typedef enum { SERVER, PROCESS } DoBosProcessInfoGet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
@@ -714,10 +673,8 @@ DoBosProcessInfoGet(struct cmd_syndesc *as, char *arock)
     bos_ProcessInfo_t info;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -726,11 +683,7 @@ DoBosProcessInfoGet(struct cmd_syndesc *as, char *arock)
 	process = as->parms[PROCESS].items->data;
     }
 
-    if (!bos_ProcessInfoGet(bos_server,
-			    process,
-			    &type,
-			    &info,
-			    &st)) {
+    if (!bos_ProcessInfoGet(bos_server, process, &type, &info, &st)) {
 	ERR_ST_EXT("bos_ProcessInfoGet", st);
     }
 
@@ -743,8 +696,7 @@ DoBosProcessInfoGet(struct cmd_syndesc *as, char *arock)
 int
 DoBosProcessParameterList(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, PROCESS}
-      DoBosProcessParameterList_parm_t;
+    typedef enum { SERVER, PROCESS } DoBosProcessParameterList_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     char *process = NULL;
@@ -752,10 +704,8 @@ DoBosProcessParameterList(struct cmd_syndesc *as, char *arock)
     char parameter[BOS_MAX_NAME_LEN];
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -764,16 +714,13 @@ DoBosProcessParameterList(struct cmd_syndesc *as, char *arock)
 	process = as->parms[PROCESS].items->data;
     }
 
-    if (!bos_ProcessParameterGetBegin(bos_server,
-				      process,
-				      &iter,
-				      &st)) {
+    if (!bos_ProcessParameterGetBegin(bos_server, process, &iter, &st)) {
 	ERR_ST_EXT("bos_ProcessParameterGetBegin", st);
     }
 
     printf("Getting parameters for %s\n", process);
 
-    while(bos_ProcessParameterGetNext(iter, parameter, &st)) {
+    while (bos_ProcessParameterGetNext(iter, parameter, &st)) {
 	printf("\t%s\n", parameter);
     }
 
@@ -793,18 +740,15 @@ DoBosProcessParameterList(struct cmd_syndesc *as, char *arock)
 int
 DoBosProcessNotifierGet(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, PROCESS}
-      DoBosProcessNotifierGet_parm_t;
+    typedef enum { SERVER, PROCESS } DoBosProcessNotifierGet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
     char notifier[BOS_MAX_NAME_LEN];
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -813,10 +757,7 @@ DoBosProcessNotifierGet(struct cmd_syndesc *as, char *arock)
 	process = as->parms[PROCESS].items->data;
     }
 
-    if (!bos_ProcessNotifierGet(bos_server,
-				process,
-				notifier,
-				&st)) {
+    if (!bos_ProcessNotifierGet(bos_server, process, notifier, &st)) {
 	ERR_ST_EXT("bos_ProcessNotifierGet", st);
     }
 
@@ -834,17 +775,14 @@ DoBosProcessNotifierGet(struct cmd_syndesc *as, char *arock)
 int
 DoBosProcessRestart(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, PROCESS}
-      DoBosProcessRestart_parm_t;
+    typedef enum { SERVER, PROCESS } DoBosProcessRestart_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *process = NULL;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -853,9 +791,7 @@ DoBosProcessRestart(struct cmd_syndesc *as, char *arock)
 	process = as->parms[PROCESS].items->data;
     }
 
-    if (!bos_ProcessRestart(bos_server,
-			    process,
-			    &st)) {
+    if (!bos_ProcessRestart(bos_server, process, &st)) {
 	ERR_ST_EXT("bos_ProcessRestart", st);
     }
 
@@ -867,22 +803,18 @@ DoBosProcessRestart(struct cmd_syndesc *as, char *arock)
 int
 DoBosProcessAllStop(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER}
-      DoBosProcessAllStop_parm_t;
+    typedef enum { SERVER } DoBosProcessAllStop_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
 
-    if (!bos_ProcessAllStop(bos_server,
-			    &st)) {
+    if (!bos_ProcessAllStop(bos_server, &st)) {
 	ERR_ST_EXT("bos_ProcessAllStop", st);
     }
 
@@ -894,22 +826,18 @@ DoBosProcessAllStop(struct cmd_syndesc *as, char *arock)
 int
 DoBosProcessAllStart(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER}
-      DoBosProcessAllStart_parm_t;
+    typedef enum { SERVER } DoBosProcessAllStart_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
 
-    if (!bos_ProcessAllStart(bos_server,
-			     &st)) {
+    if (!bos_ProcessAllStart(bos_server, &st)) {
 	ERR_ST_EXT("bos_ProcessAllStart", st);
     }
 
@@ -921,22 +849,18 @@ DoBosProcessAllStart(struct cmd_syndesc *as, char *arock)
 int
 DoBosProcessAllWaitStop(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER}
-      DoBosProcessAllWaitStop_parm_t;
+    typedef enum { SERVER } DoBosProcessAllWaitStop_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
 
-    if (!bos_ProcessAllWaitStop(bos_server,
-			        &st)) {
+    if (!bos_ProcessAllWaitStop(bos_server, &st)) {
 	ERR_ST_EXT("bos_ProcessAllWaitStop", st);
     }
 
@@ -948,22 +872,18 @@ DoBosProcessAllWaitStop(struct cmd_syndesc *as, char *arock)
 int
 DoBosProcessAllWaitTransition(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER}
-      DoBosProcessAllWaitTransition_parm_t;
+    typedef enum { SERVER } DoBosProcessAllWaitTransition_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
 
-    if (!bos_ProcessAllWaitTransition(bos_server,
-			              &st)) {
+    if (!bos_ProcessAllWaitTransition(bos_server, &st)) {
 	ERR_ST_EXT("bos_ProcessAllWaitTransition", st);
     }
 
@@ -975,17 +895,14 @@ DoBosProcessAllWaitTransition(struct cmd_syndesc *as, char *arock)
 int
 DoBosProcessAllStopAndRestart(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, INCLUDEBOS}
-      DoBosProcessAllStopAndRestart_parm_t;
+    typedef enum { SERVER, INCLUDEBOS } DoBosProcessAllStopAndRestart_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     bos_RestartBosServer_t restart = BOS_DONT_RESTART_BOS_SERVER;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -994,9 +911,7 @@ DoBosProcessAllStopAndRestart(struct cmd_syndesc *as, char *arock)
 	restart = BOS_RESTART_BOS_SERVER;
     }
 
-    if (!bos_ProcessAllStopAndRestart(bos_server,
-				      restart,
-			              &st)) {
+    if (!bos_ProcessAllStopAndRestart(bos_server, restart, &st)) {
 	ERR_ST_EXT("bos_ProcessAllStopAndRestart", st);
     }
 
@@ -1008,17 +923,14 @@ DoBosProcessAllStopAndRestart(struct cmd_syndesc *as, char *arock)
 int
 DoBosAdminCreate(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, ADMIN}
-      DoBosAdminCreate_parm_t;
+    typedef enum { SERVER, ADMIN } DoBosAdminCreate_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *admin;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -1027,9 +939,7 @@ DoBosAdminCreate(struct cmd_syndesc *as, char *arock)
 	admin = as->parms[ADMIN].items->data;
     }
 
-    if (!bos_AdminCreate(bos_server,
-			 admin,
-			 &st)) {
+    if (!bos_AdminCreate(bos_server, admin, &st)) {
 	ERR_ST_EXT("bos_AdminCreate", st);
     }
 
@@ -1041,17 +951,14 @@ DoBosAdminCreate(struct cmd_syndesc *as, char *arock)
 int
 DoBosAdminDelete(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, ADMIN}
-      DoBosAdminDelete_parm_t;
+    typedef enum { SERVER, ADMIN } DoBosAdminDelete_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *admin;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -1060,9 +967,7 @@ DoBosAdminDelete(struct cmd_syndesc *as, char *arock)
 	admin = as->parms[ADMIN].items->data;
     }
 
-    if (!bos_AdminDelete(bos_server,
-			 admin,
-			 &st)) {
+    if (!bos_AdminDelete(bos_server, admin, &st)) {
 	ERR_ST_EXT("bos_AdminDelete", st);
     }
 
@@ -1074,31 +979,26 @@ DoBosAdminDelete(struct cmd_syndesc *as, char *arock)
 int
 DoBosAdminList(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER}
-      DoBosAdminList_parm_t;
+    typedef enum { SERVER } DoBosAdminList_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     void *iter = NULL;
     char admin[BOS_MAX_NAME_LEN];
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
 
-    if (!bos_AdminGetBegin(bos_server,
-			   &iter,
-			   &st)) {
+    if (!bos_AdminGetBegin(bos_server, &iter, &st)) {
 	ERR_ST_EXT("bos_AdminGetBegin", st);
     }
 
     printf("Administrators at %s\n", as->parms[SERVER].items->data);
 
-    while(bos_AdminGetNext(iter, admin, &st)) {
+    while (bos_AdminGetNext(iter, admin, &st)) {
 	printf("%s\n", admin);
     }
 
@@ -1109,7 +1009,7 @@ DoBosAdminList(struct cmd_syndesc *as, char *arock)
     if (!bos_AdminGetDone(iter, &st)) {
 	ERR_ST_EXT("bos_AdminGetDone", st);
     }
-	
+
     bos_ServerClose(bos_server, 0);
 
     return 0;
@@ -1118,26 +1018,24 @@ DoBosAdminList(struct cmd_syndesc *as, char *arock)
 int
 DoBosKeyCreate(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, VERSIONNUMBER, KEY}
-      DoBosKeyCreate_parm_t;
+    typedef enum { SERVER, VERSIONNUMBER, KEY } DoBosKeyCreate_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     int version_number;
-    kas_encryptionKey_t key = {{0,0,0,0,0,0,0,0}};
+    kas_encryptionKey_t key = { {0, 0, 0, 0, 0, 0, 0, 0} };
     const char *cell;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
 
     if (as->parms[VERSIONNUMBER].items) {
-	version_number = GetIntFromString(as->parms[VERSIONNUMBER].items->data,
-                                          "invalid version number");
+	version_number =
+	    GetIntFromString(as->parms[VERSIONNUMBER].items->data,
+			     "invalid version number");
     }
 
     if (as->parms[KEY].items) {
@@ -1162,24 +1060,22 @@ DoBosKeyCreate(struct cmd_syndesc *as, char *arock)
 int
 DoBosKeyDelete(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, VERSIONNUMBER}
-      DoBosKeyDelete_parm_t;
+    typedef enum { SERVER, VERSIONNUMBER } DoBosKeyDelete_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     int version_number;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
 
     if (as->parms[VERSIONNUMBER].items) {
-	version_number = GetIntFromString(as->parms[VERSIONNUMBER].items->data,
-                                          "invalid version number");
+	version_number =
+	    GetIntFromString(as->parms[VERSIONNUMBER].items->data,
+			     "invalid version number");
     }
 
     if (!bos_KeyDelete(bos_server, version_number, &st)) {
@@ -1192,23 +1088,19 @@ DoBosKeyDelete(struct cmd_syndesc *as, char *arock)
 }
 
 static void
-Print_bos_KeyInfo_p(
-  bos_KeyInfo_p key,
-  const char *prefix)
+Print_bos_KeyInfo_p(bos_KeyInfo_p key, const char *prefix)
 {
     int i;
     printf("%sVersion number: %d\n", prefix, key->keyVersionNumber);
-    printf("%sLast modification date %d\n",
-	   prefix,
+    printf("%sLast modification date %d\n", prefix,
 	   key->keyStatus.lastModificationDate);
-    printf("%sLast modification micro seconds %d\n",
-	   key->keyStatus.lastModificationMicroSeconds,
-	   prefix);
+    printf("%sLast modification micro seconds %d\n", prefix,
+	   key->keyStatus.lastModificationMicroSeconds);
     printf("%sChecksum %u\n", prefix, key->keyStatus.checkSum);
 
     printf("%sKey: \n", prefix);
-    for(i=0;i<KAS_ENCRYPTION_KEY_LEN;i++) {
-	printf("%s\t%d ", key->key.key[i]);
+    for (i = 0; i < KAS_ENCRYPTION_KEY_LEN; i++) {
+	printf("%s\t%d ", prefix, key->key.key[i]);
     }
     printf("\n");
 }
@@ -1216,18 +1108,15 @@ Print_bos_KeyInfo_p(
 int
 DoBosKeyList(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER}
-      DoBosKeyList_parm_t;
+    typedef enum { SERVER } DoBosKeyList_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     void *iter = NULL;
     bos_KeyInfo_t key;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -1258,17 +1147,14 @@ DoBosKeyList(struct cmd_syndesc *as, char *arock)
 int
 DoBosCellSet(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, CELL}
-      DoBosCellSet_parm_t;
+    typedef enum { SERVER, CELL } DoBosCellSet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *cell;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -1289,23 +1175,20 @@ DoBosCellSet(struct cmd_syndesc *as, char *arock)
 int
 DoBosCellGet(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER}
-      DoBosCellGet_parm_t;
+    typedef enum { SERVER } DoBosCellGet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     char cell[BOS_MAX_NAME_LEN];
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
 
     if (!bos_CellGet(bos_server, cell, &st)) {
-       ERR_ST_EXT("bos_CellGet", st);
+	ERR_ST_EXT("bos_CellGet", st);
     }
 
     printf("The cell name is %s\n", cell);
@@ -1318,17 +1201,14 @@ DoBosCellGet(struct cmd_syndesc *as, char *arock)
 int
 DoBosHostCreate(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, HOST}
-      DoBosHostCreate_parm_t;
+    typedef enum { SERVER, HOST } DoBosHostCreate_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *host;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -1349,17 +1229,14 @@ DoBosHostCreate(struct cmd_syndesc *as, char *arock)
 int
 DoBosHostDelete(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, HOST}
-      DoBosHostDelete_parm_t;
+    typedef enum { SERVER, HOST } DoBosHostDelete_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *host;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -1380,18 +1257,15 @@ DoBosHostDelete(struct cmd_syndesc *as, char *arock)
 int
 DoBosHostList(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER}
-      DoBosHostList_parm_t;
+    typedef enum { SERVER } DoBosHostList_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     void *iter = NULL;
     char host[BOS_MAX_NAME_LEN];
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -1402,7 +1276,7 @@ DoBosHostList(struct cmd_syndesc *as, char *arock)
 
     printf("Listing hosts at server %s\n", as->parms[SERVER].items->data);
 
-    while(bos_HostGetNext(iter, host, &st)) {
+    while (bos_HostGetNext(iter, host, &st)) {
 	printf("\t%s\n", host);
     }
 
@@ -1422,18 +1296,15 @@ DoBosHostList(struct cmd_syndesc *as, char *arock)
 int
 DoBosExecutableCreate(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, BINARY, DEST}
-      DoBosExecutableCreate_parm_t;
+    typedef enum { SERVER, BINARY, DEST } DoBosExecutableCreate_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *binary = NULL;
     const char *dest = NULL;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -1458,17 +1329,14 @@ DoBosExecutableCreate(struct cmd_syndesc *as, char *arock)
 int
 DoBosExecutableRevert(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, EXECUTABLE}
-      DoBosExecutableRevert_parm_t;
+    typedef enum { SERVER, EXECUTABLE } DoBosExecutableRevert_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *executable = NULL;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -1489,8 +1357,7 @@ DoBosExecutableRevert(struct cmd_syndesc *as, char *arock)
 int
 DoBosExecutableTimestampGet(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, EXECUTABLE}
-      DoBosExecutableTimestampGet_parm_t;
+    typedef enum { SERVER, EXECUTABLE } DoBosExecutableTimestampGet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *executable = NULL;
@@ -1499,10 +1366,8 @@ DoBosExecutableTimestampGet(struct cmd_syndesc *as, char *arock)
     unsigned long bak_time = 0;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -1511,12 +1376,8 @@ DoBosExecutableTimestampGet(struct cmd_syndesc *as, char *arock)
 	executable = as->parms[EXECUTABLE].items->data;
     }
 
-    if (!bos_ExecutableTimestampGet(bos_server,
-				    executable,
-				    &new_time,
-				    &old_time,
-				    &bak_time,
-				    &st)) {
+    if (!bos_ExecutableTimestampGet
+	(bos_server, executable, &new_time, &old_time, &bak_time, &st)) {
 	ERR_ST_EXT("bos_ExecutableTimestampGet", st);
     }
 
@@ -1528,8 +1389,9 @@ DoBosExecutableTimestampGet(struct cmd_syndesc *as, char *arock)
 int
 DoBosExecutablePrune(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, OLDFILES, BAKFILES, COREFILES}
-      DoBosExecutablePrune_parm_t;
+    typedef enum { SERVER, OLDFILES, BAKFILES,
+	COREFILES
+    } DoBosExecutablePrune_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     bos_Prune_t old_files = BOS_DONT_PRUNE;
@@ -1537,10 +1399,8 @@ DoBosExecutablePrune(struct cmd_syndesc *as, char *arock)
     bos_Prune_t core_files = BOS_DONT_PRUNE;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -1557,11 +1417,8 @@ DoBosExecutablePrune(struct cmd_syndesc *as, char *arock)
 	core_files = BOS_PRUNE;
     }
 
-    if (!bos_ExecutablePrune(bos_server,
-                             old_files,
-                             bak_files,
-                             core_files,
-                             &st)) {
+    if (!bos_ExecutablePrune
+	(bos_server, old_files, bak_files, core_files, &st)) {
 	ERR_ST_EXT("bos_ExecutablePrune", st);
     }
 
@@ -1573,8 +1430,9 @@ DoBosExecutablePrune(struct cmd_syndesc *as, char *arock)
 int
 DoBosExecutableRestartTimeSet(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, DAILY, WEEKLY, TIME}
-      DoBosExecutableRestartTimeSet_parm_t;
+    typedef enum { SERVER, DAILY, WEEKLY,
+	TIME
+    } DoBosExecutableRestartTimeSet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     bos_Restart_t type;
@@ -1583,10 +1441,8 @@ DoBosExecutableRestartTimeSet(struct cmd_syndesc *as, char *arock)
     bos_RestartTime_t time;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -1625,9 +1481,7 @@ DoBosExecutableRestartTimeSet(struct cmd_syndesc *as, char *arock)
 }
 
 static void
-Print_bos_RestartTime_p(
-  bos_RestartTime_p restart,
-  const char *prefix)
+Print_bos_RestartTime_p(bos_RestartTime_p restart, const char *prefix)
 {
     char tempString[50];
     char astring[50];
@@ -1636,40 +1490,38 @@ Print_bos_RestartTime_p(
     tempString[0] = 0;
 
     if (restart->mask & BOS_RESTART_TIME_NEVER) {
-        printf("%snever\n", prefix);
-    }
-    else if (restart->mask & BOS_RESTART_TIME_NOW) {
-        printf("%snow\n", prefix);
-    }
-    else {
-        strcpy(astring, "at");
-        if (restart->mask & BOS_RESTART_TIME_DAY) {
-            strcat(astring, " ");
-            strcat(astring, day[restart->day]);
-        }
-        if (restart->mask & BOS_RESTART_TIME_HOUR) {
-            if (restart->hour > 12)
-                sprintf(tempString, " %d", restart->hour-12);
-            else if (restart->hour == 0)
-                strcpy(tempString, " 12");
-            else
-                sprintf(tempString, " %d", restart->hour);
-            strcat(astring, tempString);
-        }
-        if (restart->mask & BOS_RESTART_TIME_MINUTE) {
-            sprintf(tempString, ":%02d", restart->min);
-            strcat(astring, tempString);
-        }
-        if ((restart->mask & BOS_RESTART_TIME_SECOND) && restart->sec != 0) {
-            sprintf(tempString, ":%02d", restart->sec);
-            strcat(astring, tempString);
-        }
-        if (restart->mask & BOS_RESTART_TIME_HOUR) {
-            if (restart->hour >= 12)
-                strcat(astring, " pm");
-            else
-                strcat(astring, " am");
-        }
+	printf("%snever\n", prefix);
+    } else if (restart->mask & BOS_RESTART_TIME_NOW) {
+	printf("%snow\n", prefix);
+    } else {
+	strcpy(astring, "at");
+	if (restart->mask & BOS_RESTART_TIME_DAY) {
+	    strcat(astring, " ");
+	    strcat(astring, day[restart->day]);
+	}
+	if (restart->mask & BOS_RESTART_TIME_HOUR) {
+	    if (restart->hour > 12)
+		sprintf(tempString, " %d", restart->hour - 12);
+	    else if (restart->hour == 0)
+		strcpy(tempString, " 12");
+	    else
+		sprintf(tempString, " %d", restart->hour);
+	    strcat(astring, tempString);
+	}
+	if (restart->mask & BOS_RESTART_TIME_MINUTE) {
+	    sprintf(tempString, ":%02d", restart->min);
+	    strcat(astring, tempString);
+	}
+	if ((restart->mask & BOS_RESTART_TIME_SECOND) && restart->sec != 0) {
+	    sprintf(tempString, ":%02d", restart->sec);
+	    strcat(astring, tempString);
+	}
+	if (restart->mask & BOS_RESTART_TIME_HOUR) {
+	    if (restart->hour >= 12)
+		strcat(astring, " pm");
+	    else
+		strcat(astring, " am");
+	}
 	printf("%s%s\n", prefix, astring);
     }
 }
@@ -1677,8 +1529,9 @@ Print_bos_RestartTime_p(
 int
 DoBosExecutableRestartTimeGet(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, DAILY, WEEKLY}
-      DoBosExecutableRestartTimeGet_parm_t;
+    typedef enum { SERVER, DAILY,
+	WEEKLY
+    } DoBosExecutableRestartTimeGet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     bos_Restart_t type;
@@ -1687,10 +1540,8 @@ DoBosExecutableRestartTimeGet(struct cmd_syndesc *as, char *arock)
     bos_RestartTime_t restart_time;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
@@ -1713,10 +1564,7 @@ DoBosExecutableRestartTimeGet(struct cmd_syndesc *as, char *arock)
 	ERR_EXT("must specify either daily or weekly, not both");
     }
 
-    if (!bos_ExecutableRestartTimeGet(bos_server,
-                                      type,
-                                      &restart_time,
-                                      &st)) {
+    if (!bos_ExecutableRestartTimeGet(bos_server, type, &restart_time, &st)) {
 	ERR_ST_EXT("bos_ExecutableRestartTimeGet", st);
     }
 
@@ -1732,8 +1580,7 @@ DoBosExecutableRestartTimeGet(struct cmd_syndesc *as, char *arock)
 int
 DoBosLogGet(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, LOGFILE}
-      DoBosLogGet_parm_t;
+    typedef enum { SERVER, LOGFILE } DoBosLogGet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *log_file;
@@ -1741,16 +1588,14 @@ DoBosLogGet(struct cmd_syndesc *as, char *arock)
     char *buf = NULL;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
 
     if (as->parms[LOGFILE].items) {
-        log_file = as->parms[LOGFILE].items->data;
+	log_file = as->parms[LOGFILE].items->data;
     }
 
     st = ADMMOREDATA;
@@ -1761,7 +1606,7 @@ DoBosLogGet(struct cmd_syndesc *as, char *arock)
 	}
 	bos_LogGet(bos_server, log_file, &buf_size, buf, &st);
 	if (st == ADMMOREDATA) {
-	    buf_size = buf_size + (unsigned long) (0.2 * buf_size);
+	    buf_size = buf_size + (unsigned long)(0.2 * buf_size);
 	}
     }
 
@@ -1783,8 +1628,7 @@ DoBosLogGet(struct cmd_syndesc *as, char *arock)
 int
 DoBosAuthSet(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, REQUIREAUTH, DISABLEAUTH}
-      DoBosAuthSet_parm_t;
+    typedef enum { SERVER, REQUIREAUTH, DISABLEAUTH } DoBosAuthSet_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     bos_Auth_t auth;
@@ -1792,34 +1636,32 @@ DoBosAuthSet(struct cmd_syndesc *as, char *arock)
     int have_dis = 0;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
 
     if (as->parms[REQUIREAUTH].items) {
-        auth = BOS_AUTH_REQUIRED;
-        have_req = 1;
+	auth = BOS_AUTH_REQUIRED;
+	have_req = 1;
     }
 
     if (as->parms[DISABLEAUTH].items) {
-        auth = BOS_NO_AUTH;
-        have_dis = 1;
+	auth = BOS_NO_AUTH;
+	have_dis = 1;
     }
 
     if ((have_req == 0) && (have_dis == 0)) {
-        ERR_EXT("must specify either requireauth or disableauth");
+	ERR_EXT("must specify either requireauth or disableauth");
     }
 
     if ((have_req == 1) && (have_dis == 1)) {
-        ERR_EXT("must specify either requireauth or disableauth, not both");
+	ERR_EXT("must specify either requireauth or disableauth, not both");
     }
 
     if (!bos_AuthSet(bos_server, auth, &st)) {
-        ERR_ST_EXT("bos_AuthSet", st);
+	ERR_ST_EXT("bos_AuthSet", st);
     }
 
     bos_ServerClose(bos_server, 0);
@@ -1830,27 +1672,24 @@ DoBosAuthSet(struct cmd_syndesc *as, char *arock)
 int
 DoBosCommandExecute(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, COMMAND}
-      DoBosCommandExecute_parm_t;
+    typedef enum { SERVER, COMMAND } DoBosCommandExecute_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *command;
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
 
     if (as->parms[COMMAND].items) {
-        command = as->parms[COMMAND].items->data;
+	command = as->parms[COMMAND].items->data;
     }
 
     if (!bos_CommandExecute(bos_server, command, &st)) {
-        ERR_ST_EXT("bos_CommandExecute", st);
+	ERR_ST_EXT("bos_CommandExecute", st);
     }
 
     bos_ServerClose(bos_server, 0);
@@ -1861,9 +1700,9 @@ DoBosCommandExecute(struct cmd_syndesc *as, char *arock)
 int
 DoBosSalvage(struct cmd_syndesc *as, char *arock)
 {
-    typedef enum {SERVER, PARTITION, VOLUME, NUMSALVAGERS, TMPDIR, LOGFILE,
-      FORCE, NOWRITE, INODES, ROOTINODES, SALVAGEDIRS, BLOCKREADS}
-      DoBosSalvage_parm_t;
+    typedef enum { SERVER, PARTITION, VOLUME, NUMSALVAGERS, TMPDIR, LOGFILE,
+	FORCE, NOWRITE, INODES, ROOTINODES, SALVAGEDIRS, BLOCKREADS
+    } DoBosSalvage_parm_t;
     afs_status_t st = 0;
     void *bos_server = NULL;
     const char *partition = NULL;
@@ -1877,76 +1716,65 @@ DoBosSalvage(struct cmd_syndesc *as, char *arock)
     bos_WriteRootInodes_t root_inodes = BOS_SALVAGE_WRITE_ROOT_INODES;
     bos_ForceDirectory_t salvage_dirs = BOS_SALVAGE_DONT_FORCE_DIRECTORIES;
     bos_ForceBlockRead_t block_reads = BOS_SALVAGE_DONT_FORCE_BLOCK_READS;
-    
+
 
     if (as->parms[SERVER].items) {
-	if (!bos_ServerOpen(cellHandle,
-			    as->parms[SERVER].items->data,
-			    &bos_server,
-			    &st)) {
+	if (!bos_ServerOpen
+	    (cellHandle, as->parms[SERVER].items->data, &bos_server, &st)) {
 	    ERR_ST_EXT("bos_ServerOpen", st);
 	}
     }
 
     if (as->parms[PARTITION].items) {
-        partition = as->parms[PARTITION].items->data;
+	partition = as->parms[PARTITION].items->data;
     }
 
     if (as->parms[VOLUME].items) {
-        volume = as->parms[VOLUME].items->data;
+	volume = as->parms[VOLUME].items->data;
     }
 
     if (as->parms[NUMSALVAGERS].items) {
-        num_salvagers = GetIntFromString(as->parms[NUMSALVAGERS].items->data,
-					 "invalid number of salvagers");
+	num_salvagers =
+	    GetIntFromString(as->parms[NUMSALVAGERS].items->data,
+			     "invalid number of salvagers");
     }
 
     if (as->parms[TMPDIR].items) {
-        tmp_dir = as->parms[TMPDIR].items->data;
+	tmp_dir = as->parms[TMPDIR].items->data;
     }
 
     if (as->parms[LOGFILE].items) {
-        log_file = as->parms[LOGFILE].items->data;
+	log_file = as->parms[LOGFILE].items->data;
     }
 
     if (as->parms[FORCE].items) {
-        force = VOS_FORCE;
+	force = VOS_FORCE;
     }
 
     if (as->parms[NOWRITE].items) {
-        no_write = BOS_DONT_SALVAGE_DAMAGED_VOLUMES;
+	no_write = BOS_DONT_SALVAGE_DAMAGED_VOLUMES;
     }
 
     if (as->parms[INODES].items) {
-        inodes = BOS_SALVAGE_DONT_WRITE_INODES;
+	inodes = BOS_SALVAGE_DONT_WRITE_INODES;
     }
 
     if (as->parms[ROOTINODES].items) {
-        root_inodes = BOS_SALVAGE_DONT_WRITE_ROOT_INODES;
+	root_inodes = BOS_SALVAGE_DONT_WRITE_ROOT_INODES;
     }
 
     if (as->parms[SALVAGEDIRS].items) {
-        salvage_dirs = BOS_SALVAGE_FORCE_DIRECTORIES;
+	salvage_dirs = BOS_SALVAGE_FORCE_DIRECTORIES;
     }
 
     if (as->parms[BLOCKREADS].items) {
-        block_reads = BOS_SALVAGE_FORCE_BLOCK_READS;
+	block_reads = BOS_SALVAGE_FORCE_BLOCK_READS;
     }
 
-    if (!bos_Salvage(cellHandle,
-                     bos_server,
-                     partition,
-                     volume,
-                     num_salvagers,
-                     tmp_dir,
-                     log_file,
-                     force,
-                     no_write,
-                     inodes,
-                     root_inodes,
-                     salvage_dirs,
-                     block_reads,
-                     &st)) {
+    if (!bos_Salvage
+	(cellHandle, bos_server, partition, volume, num_salvagers, tmp_dir,
+	 log_file, force, no_write, inodes, root_inodes, salvage_dirs,
+	 block_reads, &st)) {
 	ERR_ST_EXT("bos_Salvage", st);
     }
 
@@ -1956,12 +1784,10 @@ DoBosSalvage(struct cmd_syndesc *as, char *arock)
 }
 
 static void
-Print_afs_RPCStatsState_p(
-  afs_RPCStatsState_p state,
-  const char *prefix)
+Print_afs_RPCStatsState_p(afs_RPCStatsState_p state, const char *prefix)
 {
     printf("%sThe rpc stats state is: ", prefix);
-    switch(*state) {
+    switch (*state) {
     case AFS_RPC_STATS_DISABLED:
 	printf("disabled\n");
 	break;
@@ -1974,694 +1800,327 @@ Print_afs_RPCStatsState_p(
 void
 SetupBosAdminCmd(void)
 {
-    struct cmd_syndesc	*ts;
+    struct cmd_syndesc *ts;
 
-    ts = cmd_CreateSyntax("BosProcessCreate",
-			  DoBosProcessCreate, 0,
+    ts = cmd_CreateSyntax("BosProcessCreate", DoBosProcessCreate, 0,
 			  "create a new bos process");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process will be created");
-    cmd_AddParm(ts,
-		"-name",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_REQUIRED,
 		"the name of the process");
-    cmd_AddParm(ts,
-		"-binary",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-binary", CMD_SINGLE, CMD_REQUIRED,
 		"path to the process binary");
-    cmd_AddParm(ts,
-		"-cron",
-		CMD_FLAG,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-cron", CMD_FLAG, CMD_OPTIONAL,
 		"this is a cron process");
-    cmd_AddParm(ts,
-		"-crontime",
-		CMD_SINGLE,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-crontime", CMD_SINGLE, CMD_OPTIONAL,
 		"the time when the process will be run");
-    cmd_AddParm(ts,
-		"-notifier",
-		CMD_SINGLE,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-notifier", CMD_SINGLE, CMD_OPTIONAL,
 		"path to notifier binary that is run when process terminates");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosFSProcessCreate",
-			  DoBosFSProcessCreate,
-			  0,
+    ts = cmd_CreateSyntax("BosFSProcessCreate", DoBosFSProcessCreate, 0,
 			  "create a fs bos process");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process will be created");
-    cmd_AddParm(ts,
-		"-name",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_REQUIRED,
 		"the name of the process");
-    cmd_AddParm(ts,
-		"-fileserver",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-fileserver", CMD_SINGLE, CMD_REQUIRED,
 		"path to the fileserver binary");
-    cmd_AddParm(ts,
-		"-volserver",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-volserver", CMD_SINGLE, CMD_REQUIRED,
 		"path to the volserver binary");
-    cmd_AddParm(ts,
-		"-salvager",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-salvager", CMD_SINGLE, CMD_REQUIRED,
 		"path to the salvager binary");
-    cmd_AddParm(ts,
-		"-notifier",
-		CMD_SINGLE,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-notifier", CMD_SINGLE, CMD_OPTIONAL,
 		"path to notifier binary that is run when process terminates");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessDelete",
-			  DoBosProcessDelete,
-			  0,
+    ts = cmd_CreateSyntax("BosProcessDelete", DoBosProcessDelete, 0,
 			  "delete a bos process");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process will be deleted");
-    cmd_AddParm(ts,
-		"-name",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_REQUIRED,
 		"the name of the process");
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessExecutionStateGet",
-                          DoBosProcessExecutionStateGet,
-			  0,
+			  DoBosProcessExecutionStateGet, 0,
 			  "get the process execution state of a process");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
-    cmd_AddParm(ts,
-		"-name",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_REQUIRED,
 		"the name of the process");
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessExecutionStateSet",
-                          DoBosProcessExecutionStateSet,
-			  0,
+			  DoBosProcessExecutionStateSet, 0,
 			  "set the process execution state of a process");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
-    cmd_AddParm(ts,
-		"-name",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_REQUIRED,
 		"the name of the process");
-    cmd_AddParm(ts,
-		"-stopped",
-		CMD_FLAG,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-stopped", CMD_FLAG, CMD_OPTIONAL,
 		"set the process state to stopped");
-    cmd_AddParm(ts,
-		"-running",
-		CMD_FLAG,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-running", CMD_FLAG, CMD_OPTIONAL,
 		"set the process state to running");
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessExecutionStateSetTemporary",
-                          DoBosProcessExecutionStateSetTemporary,
-			  0,
+			  DoBosProcessExecutionStateSetTemporary, 0,
 			  "set the process execution state "
 			  "of a process temporarily");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
-    cmd_AddParm(ts,
-		"-name",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_REQUIRED,
 		"the name of the process");
-    cmd_AddParm(ts,
-		"-stopped",
-		CMD_FLAG,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-stopped", CMD_FLAG, CMD_OPTIONAL,
 		"set the process state to stopped");
-    cmd_AddParm(ts,
-		"-running",
-		CMD_FLAG,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-running", CMD_FLAG, CMD_OPTIONAL,
 		"set the process state to running");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessNameList",
-                          DoBosProcessNameList,
-			  0,
+    ts = cmd_CreateSyntax("BosProcessNameList", DoBosProcessNameList, 0,
 			  "list the names of all processes at a bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"server to query");
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessInfoGet",
-                          DoBosProcessInfoGet,
-			  0,
+    ts = cmd_CreateSyntax("BosProcessInfoGet", DoBosProcessInfoGet, 0,
 			  "get information about a process");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
-    cmd_AddParm(ts,
-		"-name",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_REQUIRED,
 		"the name of the process");
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessParameterList",
-                          DoBosProcessParameterList,
-			  0,
+			  DoBosProcessParameterList, 0,
 			  "list the parameters of a process");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
-    cmd_AddParm(ts,
-		"-name",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_REQUIRED,
 		"the name of the process");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessNotifierGet",
-                          DoBosProcessNotifierGet,
-			  0,
+    ts = cmd_CreateSyntax("BosProcessNotifierGet", DoBosProcessNotifierGet, 0,
 			  "get the notifier for a process");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
-    cmd_AddParm(ts,
-		"-name",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_REQUIRED,
 		"the name of the process");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessRestart",
-                          DoBosProcessRestart,
-			  0,
+    ts = cmd_CreateSyntax("BosProcessRestart", DoBosProcessRestart, 0,
 			  "restart a process");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where process exists");
-    cmd_AddParm(ts,
-		"-name",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-name", CMD_SINGLE, CMD_REQUIRED,
 		"the name of the process");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessAllStop",
-                          DoBosProcessAllStop,
-			  0,
+    ts = cmd_CreateSyntax("BosProcessAllStop", DoBosProcessAllStop, 0,
 			  "stop all processes at a bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where processes exists");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosProcessAllWaitStop",
-                          DoBosProcessAllWaitStop,
-			  0,
+    ts = cmd_CreateSyntax("BosProcessAllWaitStop", DoBosProcessAllWaitStop, 0,
 			  "stop all processes at a bos server and block "
 			  "until they all exit");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where processes exists");
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessAllWaitTransition",
-                          DoBosProcessAllWaitTransition,
-			  0,
+			  DoBosProcessAllWaitTransition, 0,
 			  "wait until all processes have transitioned to "
 			  "their desired state");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where processes exists");
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosProcessAllStopAndRestart",
-                          DoBosProcessAllStopAndRestart,
-			  0,
+			  DoBosProcessAllStopAndRestart, 0,
 			  "stop all processes at a bos server and "
 			  "then restart them");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where processes exists");
-    cmd_AddParm(ts,
-		"-includebos",
-		CMD_FLAG,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-includebos", CMD_FLAG, CMD_OPTIONAL,
 		"include the bos server in the processes to be restarted");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosAdminCreate",
-                          DoBosAdminCreate,
-			  0,
+    ts = cmd_CreateSyntax("BosAdminCreate", DoBosAdminCreate, 0,
 			  "create an admin user at a bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where admin will be created");
-    cmd_AddParm(ts,
-		"-admin",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-admin", CMD_SINGLE, CMD_REQUIRED,
 		"the name of the administrator to add");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosAdminDelete",
-                          DoBosAdminDelete,
-			  0,
+    ts = cmd_CreateSyntax("BosAdminDelete", DoBosAdminDelete, 0,
 			  "delete an admin user at a bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where admin will be deleted");
-    cmd_AddParm(ts,
-		"-admin",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-admin", CMD_SINGLE, CMD_REQUIRED,
 		"the name of the administrator to delete");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosAdminList",
-                          DoBosAdminList,
-			  0,
+    ts = cmd_CreateSyntax("BosAdminList", DoBosAdminList, 0,
 			  "list all admin users at a bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where admins will be listed");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosKeyCreate",
-                          DoBosKeyCreate,
-			  0,
+    ts = cmd_CreateSyntax("BosKeyCreate", DoBosKeyCreate, 0,
 			  "create a key at a bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where key will be created");
-    cmd_AddParm(ts,
-		"-versionnumber",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-versionnumber", CMD_SINGLE, CMD_REQUIRED,
 		"version number of new key");
-    cmd_AddParm(ts,
-		"-key",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"new encryption key");
+    cmd_AddParm(ts, "-key", CMD_SINGLE, CMD_REQUIRED, "new encryption key");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosKeyDelete",
-                          DoBosKeyDelete,
-			  0,
+    ts = cmd_CreateSyntax("BosKeyDelete", DoBosKeyDelete, 0,
 			  "delete a key at a bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where key will be deleted");
-    cmd_AddParm(ts,
-		"-versionnumber",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-versionnumber", CMD_SINGLE, CMD_REQUIRED,
 		"version number of the key");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosKeyList",
-                          DoBosKeyList,
-			  0,
+    ts = cmd_CreateSyntax("BosKeyList", DoBosKeyList, 0,
 			  "list keys at a bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where keys exist");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosCellSet",
-                          DoBosCellSet,
-			  0,
+    ts = cmd_CreateSyntax("BosCellSet", DoBosCellSet, 0,
 			  "set the cell at a bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"server to modify");
-    cmd_AddParm(ts,
-		"-cell",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"new cell");
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
+    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_REQUIRED, "new cell");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosCellGet",
-                          DoBosCellGet,
-			  0,
+    ts = cmd_CreateSyntax("BosCellGet", DoBosCellGet, 0,
 			  "get the cell at a bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"server to query");
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosHostCreate",
-                          DoBosHostCreate,
-			  0,
+    ts = cmd_CreateSyntax("BosHostCreate", DoBosHostCreate, 0,
 			  "add a host entry to the server CellServDB");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"server to modify");
-    cmd_AddParm(ts,
-		"-host",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"host to add");
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
+    cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_REQUIRED, "host to add");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosHostDelete",
-                          DoBosHostDelete,
-			  0,
+    ts = cmd_CreateSyntax("BosHostDelete", DoBosHostDelete, 0,
 			  "delete a host entry from the server CellServDB");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"server to modify");
-    cmd_AddParm(ts,
-		"-host",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"host to delete");
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
+    cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_REQUIRED, "host to delete");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosHostList",
-                          DoBosHostList,
-			  0,
+    ts = cmd_CreateSyntax("BosHostList", DoBosHostList, 0,
 			  "list all host entries from the server CellServDB");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"server to query");
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosExecutableCreate",
-                          DoBosExecutableCreate,
-			  0,
+    ts = cmd_CreateSyntax("BosExecutableCreate", DoBosExecutableCreate, 0,
 			  "create a new binary at a bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"server to modify");
-    cmd_AddParm(ts,
-		"-binary",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
+    cmd_AddParm(ts, "-binary", CMD_SINGLE, CMD_REQUIRED,
 		"path to the binary to create");
-    cmd_AddParm(ts,
-		"-dest",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-dest", CMD_SINGLE, CMD_REQUIRED,
 		"path where the binary will be stored");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosExecutableRevert",
-                          DoBosExecutableRevert,
-			  0,
+    ts = cmd_CreateSyntax("BosExecutableRevert", DoBosExecutableRevert, 0,
 			  "revert a binary at a bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"server to modify");
-    cmd_AddParm(ts,
-		"-executable",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
+    cmd_AddParm(ts, "-executable", CMD_SINGLE, CMD_REQUIRED,
 		"path to the binary to revert");
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosExecutableTimestampGet",
-                          DoBosExecutableTimestampGet,
-			  0,
+			  DoBosExecutableTimestampGet, 0,
 			  "get the timestamps for a binary at bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"server to query");
-    cmd_AddParm(ts,
-		"-executable",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
+    cmd_AddParm(ts, "-executable", CMD_SINGLE, CMD_REQUIRED,
 		"path to the binary to revert");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosExecutablePrune",
-                          DoBosExecutablePrune,
-			  0,
+    ts = cmd_CreateSyntax("BosExecutablePrune", DoBosExecutablePrune, 0,
 			  "prune various files at bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"server to modify");
-    cmd_AddParm(ts,
-		"-oldfiles",
-		CMD_FLAG,
-		CMD_OPTIONAL,
-		"prune .old files");
-    cmd_AddParm(ts,
-		"-bakfiles",
-		CMD_FLAG,
-		CMD_OPTIONAL,
-		"prune .bak files");
-    cmd_AddParm(ts,
-		"-corefiles",
-		CMD_FLAG,
-		CMD_OPTIONAL,
-		"prune core files");
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
+    cmd_AddParm(ts, "-oldfiles", CMD_FLAG, CMD_OPTIONAL, "prune .old files");
+    cmd_AddParm(ts, "-bakfiles", CMD_FLAG, CMD_OPTIONAL, "prune .bak files");
+    cmd_AddParm(ts, "-corefiles", CMD_FLAG, CMD_OPTIONAL, "prune core files");
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosExecutableRestartTimeSet",
-                          DoBosExecutableRestartTimeSet,
-			  0,
+			  DoBosExecutableRestartTimeSet, 0,
 			  "set the restart times at a bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"server to modify");
-    cmd_AddParm(ts,
-		"-daily",
-		CMD_FLAG,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
+    cmd_AddParm(ts, "-daily", CMD_FLAG, CMD_OPTIONAL,
 		"set daily restart time");
-    cmd_AddParm(ts,
-		"-weekly",
-		CMD_FLAG,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-weekly", CMD_FLAG, CMD_OPTIONAL,
 		"set weekly restart time");
-    cmd_AddParm(ts,
-		"-time",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-time", CMD_SINGLE, CMD_REQUIRED,
 		"the new restart time");
     SetupCommonCmdArgs(ts);
 
     ts = cmd_CreateSyntax("BosExecutableRestartTimeGet",
-                          DoBosExecutableRestartTimeGet,
-			  0,
+			  DoBosExecutableRestartTimeGet, 0,
 			  "get the restart times at a bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"server to query");
-    cmd_AddParm(ts,
-		"-daily",
-		CMD_FLAG,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
+    cmd_AddParm(ts, "-daily", CMD_FLAG, CMD_OPTIONAL,
 		"get daily restart time");
-    cmd_AddParm(ts,
-		"-weekly",
-		CMD_FLAG,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-weekly", CMD_FLAG, CMD_OPTIONAL,
 		"get weekly restart time");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosLogGet",
-                          DoBosLogGet,
-			  0,
+    ts = cmd_CreateSyntax("BosLogGet", DoBosLogGet, 0,
 			  "get a log file from the bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"server to query");
-    cmd_AddParm(ts,
-		"-logfile",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to query");
+    cmd_AddParm(ts, "-logfile", CMD_SINGLE, CMD_REQUIRED,
 		"path to the log file to retrieve");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosAuthSet",
-                          DoBosAuthSet,
-			  0,
+    ts = cmd_CreateSyntax("BosAuthSet", DoBosAuthSet, 0,
 			  "set the authorization level at a bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
-		"server to modify");
-    cmd_AddParm(ts,
-		"-requireauth",
-		CMD_FLAG,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED, "server to modify");
+    cmd_AddParm(ts, "-requireauth", CMD_FLAG, CMD_OPTIONAL,
 		"require authorization");
-    cmd_AddParm(ts,
-		"-disableauth",
-		CMD_FLAG,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-disableauth", CMD_FLAG, CMD_OPTIONAL,
 		"don't require authorization");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosCommandExecute",
-                          DoBosCommandExecute,
-			  0,
+    ts = cmd_CreateSyntax("BosCommandExecute", DoBosCommandExecute, 0,
 			  "execute a command at a bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where command will execute");
-    cmd_AddParm(ts,
-		"-command",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-command", CMD_SINGLE, CMD_REQUIRED,
 		"command to execute");
     SetupCommonCmdArgs(ts);
 
-    ts = cmd_CreateSyntax("BosSalvage",
-                          DoBosSalvage,
-			  0,
+    ts = cmd_CreateSyntax("BosSalvage", DoBosSalvage, 0,
 			  "execute a salvage command at a bos server");
-    cmd_AddParm(ts,
-		"-server",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-server", CMD_SINGLE, CMD_REQUIRED,
 		"server where salvager will execute");
-    cmd_AddParm(ts,
-		"-partition",
-		CMD_SINGLE,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-partition", CMD_SINGLE, CMD_OPTIONAL,
 		"partition to salvage");
-    cmd_AddParm(ts,
-		"-volume",
-		CMD_SINGLE,
-		CMD_OPTIONAL,
-		"volume to salvage");
-    cmd_AddParm(ts,
-		"-numsalvagers",
-		CMD_SINGLE,
-		CMD_REQUIRED,
+    cmd_AddParm(ts, "-volume", CMD_SINGLE, CMD_OPTIONAL, "volume to salvage");
+    cmd_AddParm(ts, "-numsalvagers", CMD_SINGLE, CMD_REQUIRED,
 		"number of salvagers to run in parallel");
-    cmd_AddParm(ts,
-		"-tmpdir",
-		CMD_SINGLE,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-tmpdir", CMD_SINGLE, CMD_OPTIONAL,
 		"directory to place temporary files");
-    cmd_AddParm(ts,
-		"-logfile",
-		CMD_SINGLE,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-logfile", CMD_SINGLE, CMD_OPTIONAL,
 		"file where salvager log will be written");
-    cmd_AddParm(ts,
-		"-force",
-		CMD_FLAG,
-		CMD_OPTIONAL,
-		"run salvager -force");
-    cmd_AddParm(ts,
-		"-nowrite",
-		CMD_FLAG,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-force", CMD_FLAG, CMD_OPTIONAL, "run salvager -force");
+    cmd_AddParm(ts, "-nowrite", CMD_FLAG, CMD_OPTIONAL,
 		"run salvager -nowrite");
-    cmd_AddParm(ts,
-		"-inodes",
-		CMD_FLAG,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-inodes", CMD_FLAG, CMD_OPTIONAL,
 		"run salvager -inodes");
-    cmd_AddParm(ts,
-		"-rootinodes",
-		CMD_FLAG,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-rootinodes", CMD_FLAG, CMD_OPTIONAL,
 		"run salvager -rootinodes");
-    cmd_AddParm(ts,
-		"-salvagedirs",
-		CMD_FLAG,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-salvagedirs", CMD_FLAG, CMD_OPTIONAL,
 		"run salvager -salvagedirs");
-    cmd_AddParm(ts,
-		"-blockreads",
-		CMD_FLAG,
-		CMD_OPTIONAL,
+    cmd_AddParm(ts, "-blockreads", CMD_FLAG, CMD_OPTIONAL,
 		"run salvager -blockreads");
     SetupCommonCmdArgs(ts);
 }

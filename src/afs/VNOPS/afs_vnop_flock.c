@@ -13,38 +13,36 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.1.1.11 2002/09/26 18:58:22 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.24.2.2 2004/12/07 06:12:13 shadow Exp $");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h" /* statistics */
-#include "../afs/afs_cbqueue.h"
-#include "../afs/nfsclient.h"
-#include "../afs/afs_osidnlc.h"
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"	/* statistics */
+#include "afs/afs_cbqueue.h"
+#include "afs/nfsclient.h"
+#include "afs/afs_osidnlc.h"
 
-#if	defined(AFS_HPUX102_ENV)
-#define AFS_FLOCK	k_flock
-#else
-#if	defined(AFS_SUN56_ENV) || defined(AFS_LINUX24_ENV)
-#define AFS_FLOCK       flock64
-#else
-#define AFS_FLOCK	flock
-#endif /* AFS_SUN65_ENV */
-#endif /* AFS_HPUX102_ENV */
-
+/* Static prototypes */
+static int HandleGetLock(register struct vcache *avc,
+			 register struct AFS_FLOCK *af,
+			 register struct vrequest *areq, int clid);
 static int GetFlockCount(struct vcache *avc, struct vrequest *areq);
+static int lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
+		      register struct SimpleLocks *alp, int onlymine,
+		      int clid);
+static void DoLockWarning(void);
 
-void lockIdSet(flock, slp, clid)
-   int clid;  /* non-zero on SGI, OSF, SunOS, Darwin, xBSD *//* XXX ptr type */
-    struct SimpleLocks *slp;
-    struct AFS_FLOCK *flock;
+/* int clid;  * non-zero on SGI, OSF, SunOS, Darwin, xBSD ** XXX ptr type */
+void
+lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 {
 #if	defined(AFS_SUN5_ENV)
-    register proc_t *procp = ttoproc(curthread);    
+    register proc_t *procp = ttoproc(curthread);
 #else
-#if !defined(AFS_AIX41_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_SGI65_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_AIX41_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_SGI65_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #ifdef AFS_SGI_ENV
     struct proc *procp = OSI_GET_CURRENT_PROCP();
 #else
@@ -80,17 +78,17 @@ void lockIdSet(flock, slp, clid)
 #ifdef AFS_SGI65_ENV
 	slp->sysid = flid.fl_sysid;
 #else
-        slp->sysid = OSI_GET_CURRENT_SYSID();
+	slp->sysid = OSI_GET_CURRENT_SYSID();
 #endif
-        slp->pid = clid;
+	slp->pid = clid;
 #else
-#if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	slp->pid = clid;
 #else
 #if defined(AFS_LINUX20_ENV) || defined(AFS_HPUX_ENV)
 	slp->pid = getpid();
 #else
-	slp->pid  = u.u_procp->p_pid;
+	slp->pid = u.u_procp->p_pid;
 #endif
 #endif
 #endif /* AFS_AIX_ENV */
@@ -119,11 +117,11 @@ void lockIdSet(flock, slp, clid)
 #ifdef AFS_SGI65_ENV
 	flock->l_sysid = flid.fl_sysid;
 #else
-        flock->l_sysid = OSI_GET_CURRENT_SYSID();
+	flock->l_sysid = OSI_GET_CURRENT_SYSID();
 #endif
-        flock->l_pid = clid;
+	flock->l_pid = clid;
 #else
-#if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	flock->l_pid = clid;
 #else
 #if defined(AFS_LINUX20_ENV) || defined(AFS_HPUX_ENV)
@@ -135,8 +133,8 @@ void lockIdSet(flock, slp, clid)
 #endif
 #endif /* AFS_AIX_ENV */
 #endif /* AFS_AIX32_ENV */
-    }	
-}	
+    }
+}
 
 /* return 1 (true) if specified flock does not match alp (if 
  * specified), or any of the slp structs (if alp == 0) 
@@ -146,19 +144,18 @@ void lockIdSet(flock, slp, clid)
  * to p_ppid?  Especially in the context of the lower loop, where
  * the repeated comparison doesn't make much sense...
  */
-static int lockIdcmp2(flock1, vp, alp, onlymine, clid)
-    struct AFS_FLOCK *flock1;
-    struct vcache *vp;
-    register struct SimpleLocks *alp;
-    int onlymine;  /* don't match any locks which are held by my */
-		   /* parent */
-     int clid; /* Only Irix 6.5 for now. */
+/* onlymine - don't match any locks which are held by my parent */
+/* clid - only irix 6.5 */
+
+static int
+lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
+	   register struct SimpleLocks *alp, int onlymine, int clid)
 {
     register struct SimpleLocks *slp;
 #if	defined(AFS_SUN5_ENV)
-    register proc_t *procp = ttoproc(curthread);    
+    register proc_t *procp = ttoproc(curthread);
 #else
-#if !defined(AFS_AIX41_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_SGI65_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_AIX41_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_SGI65_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #ifdef AFS_SGI64_ENV
     struct proc *procp = curprocp;
 #else /* AFS_SGI64_ENV */
@@ -166,42 +163,41 @@ static int lockIdcmp2(flock1, vp, alp, onlymine, clid)
 #endif /* AFS_SGI64_ENV */
 #endif
 #endif
-    int code = 0;
 
     if (alp) {
 #if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-      if (flock1->l_sysid != alp->sysid) {
-	return 1;
-      }
+	if (flock1->l_sysid != alp->sysid) {
+	    return 1;
+	}
 #endif
-      if ((flock1->l_pid == alp->pid) || 
+	if ((flock1->l_pid == alp->pid) ||
 #if defined(AFS_AIX41_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_HPUX_ENV)
-	  (!onlymine && (flock1->l_pid == getppid()))
+	    (!onlymine && (flock1->l_pid == getppid()))
 #else
-#if defined(AFS_SGI65_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV) 
-          /* XXX check this. used to be *only* irix for some reason. */ 
-	  (!onlymine && (flock1->l_pid == clid))
+#if defined(AFS_SGI65_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+	    /* XXX check this. used to be *only* irix for some reason. */
+	    (!onlymine && (flock1->l_pid == clid))
 #else
-	  (!onlymine && (flock1->l_pid == procp->p_ppid))
+	    (!onlymine && (flock1->l_pid == procp->p_ppid))
 #endif
 #endif
-	  ) {
-	return 0;
-      }
-      return 1;
+	    ) {
+	    return 0;
+	}
+	return 1;
     }
 
     for (slp = vp->slocks; slp; slp = slp->next) {
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 	if (flock1->l_sysid != slp->sysid) {
-	  continue;
+	    continue;
 	}
 #endif
 	if (flock1->l_pid == slp->pid) {
 	    return 0;
-	  }
+	}
     }
-    return (1); 	/* failure */
+    return (1);			/* failure */
 }
 
 
@@ -219,115 +215,106 @@ static int lockIdcmp2(flock1, vp, alp, onlymine, clid)
     file, I guess we'll permit it.  however, we don't want simple,
     innocent closes by children to unlock files in the parent process.
 */
-HandleFlock(avc, acom, areq, clid, onlymine)
-    pid_t clid;        /* non-zero on SGI, SunOS, OSF1 only */
-    register struct vcache *avc;
-    struct vrequest *areq;
-    int onlymine; 
-    int acom; {
+/* clid - nonzero on sgi sunos osf1 only */
+int
+HandleFlock(register struct vcache *avc, int acom, struct vrequest *areq,
+	    pid_t clid, int onlymine)
+{
     struct conn *tc;
     struct SimpleLocks *slp, *tlp, **slpp;
     afs_int32 code;
     struct AFSVolSync tsync;
     afs_int32 lockType;
     struct AFS_FLOCK flock;
-    XSTATS_DECLS
-
+    XSTATS_DECLS;
     AFS_STATCNT(HandleFlock);
-    code = 0;		/* default when we don't make any network calls */
-    lockIdSet(&flock, (struct SimpleLocks *)0, clid);
+    code = 0;			/* default when we don't make any network calls */
+    lockIdSet(&flock, NULL, clid);
 
 #if defined(AFS_SGI_ENV)
     osi_Assert(valusema(&avc->vc_rwlock) <= 0);
     osi_Assert(OSI_GET_LOCKID() == avc->vc_rwlockid);
 #endif
-    ObtainWriteLock(&avc->lock,118);
+    ObtainWriteLock(&avc->lock, 118);
     if (acom & LOCK_UN) {
 
 /* defect 3083 */
 
 #ifdef AFS_AIX_ENV
 	/* If the lock is held exclusive, then only the owning process
-         * or a child can unlock it. Use pid and ppid because they are
-         * unique identifiers.
+	 * or a child can unlock it. Use pid and ppid because they are
+	 * unique identifiers.
 	 */
 	if ((avc->flockCount < 0) && (getpid() != avc->ownslock)) {
 #ifdef	AFS_AIX41_ENV
-	  if (onlymine || (getppid() != avc->ownslock)) {
+	    if (onlymine || (getppid() != avc->ownslock)) {
 #else
-	  if (onlymine || (u.u_procp->p_ppid != avc->ownslock)) {
+	    if (onlymine || (u.u_procp->p_ppid != avc->ownslock)) {
 #endif
+		ReleaseWriteLock(&avc->lock);
+		return 0;
+	    }
+	}
+#endif
+	if (lockIdcmp2(&flock, avc, NULL, onlymine, clid)) {
 	    ReleaseWriteLock(&avc->lock);
 	    return 0;
-	  }
 	}
-#endif
-	if (lockIdcmp2(&flock, avc, (struct SimpleLocks *)0, onlymine, clid)) {
-	  ReleaseWriteLock(&avc->lock); 	    
-	  return 0;
- 	} 
 #ifdef AFS_AIX_ENV
-	avc->ownslock = 0; 
+	avc->ownslock = 0;
 #endif
- 	if (avc->flockCount == 0) { 	    
-	  ReleaseWriteLock(&avc->lock);
-	  return 0		/*ENOTTY*/;
-	  /* no lock held */
- 	} 	
-	/* unlock the lock */ 
-	if (avc->flockCount > 0) {
-	  slpp = &avc->slocks; 
-	  for (slp = *slpp; slp;) {
-	    if (!lockIdcmp2(&flock, avc, slp, onlymine, clid)) {
-	      avc->flockCount--;
-	      tlp = *slpp = slp->next;
-	      osi_FreeSmallSpace(slp);
-	      slp = tlp;
-	    } else {
-	      slpp = &slp->next;
-	      slp = *slpp;
-	    }
-	  }
- 	}
-	else if (avc->flockCount == -1) {
-	  afs_StoreAllSegments(avc, areq, AFS_ASYNC); /* fsync file early */
-	  avc->flockCount = 0; 
-	  /* And remove the (only) exclusive lock entry from the list... */
-	  osi_FreeSmallSpace(avc->slocks);
-	  avc->slocks = 0;
- 	}
- 	if (avc->flockCount == 0) {
- 	    do {
- 		tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
- 		if (tc) {
- 		   XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RELEASELOCK);
-#ifdef RX_ENABLE_LOCKS
-		   AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
- 		   code = RXAFS_ReleaseLock(tc->id, (struct AFSFid *)
- 					    &avc->fid.Fid, &tsync);
-#ifdef RX_ENABLE_LOCKS
-		   AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
-		   XSTATS_END_TIME;
-		}
-		else code = -1;
-	    } while
-	      (afs_Analyze(tc, code, &avc->fid, areq, 
-			   AFS_STATS_FS_RPCIDX_RELEASELOCK,
-                           SHARED_LOCK, (struct cell *)0));
+	if (avc->flockCount == 0) {
+	    ReleaseWriteLock(&avc->lock);
+	    return 0 /*ENOTTY*/;
+	    /* no lock held */
 	}
-    }
-    else {
-	while (1) {	    /* set a new lock */
+	/* unlock the lock */
+	if (avc->flockCount > 0) {
+	    slpp = &avc->slocks;
+	    for (slp = *slpp; slp;) {
+		if (!lockIdcmp2(&flock, avc, slp, onlymine, clid)) {
+		    avc->flockCount--;
+		    tlp = *slpp = slp->next;
+		    osi_FreeSmallSpace(slp);
+		    slp = tlp;
+		} else {
+		    slpp = &slp->next;
+		    slp = *slpp;
+		}
+	    }
+	} else if (avc->flockCount == -1) {
+	    afs_StoreAllSegments(avc, areq, AFS_ASYNC);	/* fsync file early */
+	    avc->flockCount = 0;
+	    /* And remove the (only) exclusive lock entry from the list... */
+	    osi_FreeSmallSpace(avc->slocks);
+	    avc->slocks = 0;
+	}
+	if (avc->flockCount == 0) {
+	    do {
+		tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+		if (tc) {
+		    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RELEASELOCK);
+		    RX_AFS_GUNLOCK();
+		    code = RXAFS_ReleaseLock(tc->id, (struct AFSFid *)
+					     &avc->fid.Fid, &tsync);
+		    RX_AFS_GLOCK();
+		    XSTATS_END_TIME;
+		} else
+		    code = -1;
+	    } while (afs_Analyze
+		     (tc, code, &avc->fid, areq,
+		      AFS_STATS_FS_RPCIDX_RELEASELOCK, SHARED_LOCK, NULL));
+	}
+    } else {
+	while (1) {		/* set a new lock */
 	    /*
 	     * Upgrading from shared locks to Exclusive and vice versa
-             * is a bit tricky and we don't really support it yet. But
-             * we try to support the common used one which is upgrade
-             * a shared lock to an exclusive for the same process...
-             */
-	    if ((avc->flockCount > 0 && (acom & LOCK_EX)) || 
-		(avc->flockCount == -1 && (acom & LOCK_SH))) {
+	     * is a bit tricky and we don't really support it yet. But
+	     * we try to support the common used one which is upgrade
+	     * a shared lock to an exclusive for the same process...
+	     */
+	    if ((avc->flockCount > 0 && (acom & LOCK_EX))
+		|| (avc->flockCount == -1 && (acom & LOCK_SH))) {
 		/*
 		 * Upgrading from shared locks to an exclusive one:
 		 * For now if all the shared locks belong to the
@@ -340,7 +327,8 @@ HandleFlock(avc, acom, areq, clid, onlymine)
 		 */
 		slpp = &avc->slocks;
 		for (slp = *slpp; slp;) {
-		    if (!lockIdcmp2(&flock, avc, slp, 1/*!onlymine*/, clid)) {
+		    if (!lockIdcmp2
+			(&flock, avc, slp, 1 /*!onlymine */ , clid)) {
 			if (acom & LOCK_EX)
 			    avc->flockCount--;
 			else
@@ -354,77 +342,73 @@ HandleFlock(avc, acom, areq, clid, onlymine)
 			slp = *slpp;
 		    }
 		}
-	       if (!code && avc->flockCount == 0) {
+		if (!code && avc->flockCount == 0) {
 		    do {
 			tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
 			if (tc) {
-			  XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RELEASELOCK);
-#ifdef RX_ENABLE_LOCKS
-			  AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
-			  code = RXAFS_ReleaseLock(tc->id,
-						   (struct AFSFid *) &avc->fid.Fid,
-						   &tsync);
-#ifdef RX_ENABLE_LOCKS
-			  AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
-			  XSTATS_END_TIME;
-			}
-			else code = -1;
-		    } while
-		      (afs_Analyze(tc, code, &avc->fid, areq,
-				   AFS_STATS_FS_RPCIDX_RELEASELOCK,
-				   SHARED_LOCK, (struct cell *)0));
+			    XSTATS_START_TIME
+				(AFS_STATS_FS_RPCIDX_RELEASELOCK);
+			    RX_AFS_GUNLOCK();
+			    code =
+				RXAFS_ReleaseLock(tc->id,
+						  (struct AFSFid *)&avc->fid.
+						  Fid, &tsync);
+			    RX_AFS_GLOCK();
+			    XSTATS_END_TIME;
+			} else
+			    code = -1;
+		    } while (afs_Analyze
+			     (tc, code, &avc->fid, areq,
+			      AFS_STATS_FS_RPCIDX_RELEASELOCK, SHARED_LOCK,
+			      NULL));
 		}
 	    } else if (avc->flockCount == -1 && (acom & LOCK_EX)) {
-		if (lockIdcmp2(&flock, avc, (struct SimpleLocks *)0, 1, clid)) {
+		if (lockIdcmp2(&flock, avc, NULL, 1, clid)) {
 		    code = EWOULDBLOCK;
 		} else
 		    code = 0;
 	    }
 	    if (code == 0) {
 		/* compatible here, decide if needs to go to file server.  If
-		   we've already got the file locked (and thus read-locked, since
-		   we've already checked for compatibility), we shouldn't send
-		   the call through to the server again */
+		 * we've already got the file locked (and thus read-locked, since
+		 * we've already checked for compatibility), we shouldn't send
+		 * the call through to the server again */
 		if (avc->flockCount == 0) {
 		    /* we're the first on our block, send the call through */
-		    lockType = ((acom & LOCK_EX)? LockWrite : LockRead);
+		    lockType = ((acom & LOCK_EX) ? LockWrite : LockRead);
 		    do {
 			tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
 			if (tc) {
-			  XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SETLOCK);
-#ifdef RX_ENABLE_LOCKS
-			  AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
-			  code = RXAFS_SetLock(tc->id, (struct AFSFid *)
-					      &avc->fid.Fid, lockType, &tsync);
-#ifdef RX_ENABLE_LOCKS
-			  AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
-			  XSTATS_END_TIME;
-			}
-			else code = -1;
-		    } while
-			(afs_Analyze(tc, code, &avc->fid, areq,
-				     AFS_STATS_FS_RPCIDX_SETLOCK,
-				     SHARED_LOCK, (struct cell *)0));
-		}
-		else code = 0;	/* otherwise, pretend things worked */
+			    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_SETLOCK);
+			    RX_AFS_GUNLOCK();
+			    code = RXAFS_SetLock(tc->id, (struct AFSFid *)
+						 &avc->fid.Fid, lockType,
+						 &tsync);
+			    RX_AFS_GLOCK();
+			    XSTATS_END_TIME;
+			} else
+			    code = -1;
+		    } while (afs_Analyze
+			     (tc, code, &avc->fid, areq,
+			      AFS_STATS_FS_RPCIDX_SETLOCK, SHARED_LOCK,
+			      NULL));
+		} else
+		    code = 0;	/* otherwise, pretend things worked */
 	    }
 	    if (code == 0) {
-		slp = (struct SimpleLocks *) osi_AllocSmallSpace(sizeof(struct SimpleLocks));
+		slp = (struct SimpleLocks *)
+		    osi_AllocSmallSpace(sizeof(struct SimpleLocks));
 		if (acom & LOCK_EX) {
 
 /* defect 3083 */
 
 #ifdef AFS_AIX_ENV
-		  /* Record unique id of process owning exclusive lock. */
-		  avc->ownslock = getpid();
+		    /* Record unique id of process owning exclusive lock. */
+		    avc->ownslock = getpid();
 #endif
 
 		    slp->type = LockWrite;
-		    slp->next = (struct SimpleLocks *)0;		    
+		    slp->next = NULL;
 		    avc->slocks = slp;
 		    avc->flockCount = -1;
 		} else {
@@ -438,66 +422,64 @@ HandleFlock(avc, acom, areq, clid, onlymine)
 		break;
 	    }
 	    /* now, if we got EWOULDBLOCK, and we're supposed to wait, we do */
-	    if(((code == EWOULDBLOCK)||(code == EAGAIN)) && !(acom & LOCK_NB)) {
+	    if (((code == EWOULDBLOCK) || (code == EAGAIN))
+		&& !(acom & LOCK_NB)) {
 		/* sleep for a second, allowing interrupts */
 		ReleaseWriteLock(&avc->lock);
 #if defined(AFS_SGI_ENV)
-		AFS_RWUNLOCK((vnode_t *)avc, VRWLOCK_WRITE);
+		AFS_RWUNLOCK((vnode_t *) avc, VRWLOCK_WRITE);
 #endif
-		code = afs_osi_Wait(1000, (struct afs_osi_WaitHandle *) 0, 1);
+		code = afs_osi_Wait(1000, NULL, 1);
 #if defined(AFS_SGI_ENV)
-		AFS_RWLOCK((vnode_t *)avc, VRWLOCK_WRITE);
+		AFS_RWLOCK((vnode_t *) avc, VRWLOCK_WRITE);
 #endif
-		ObtainWriteLock(&avc->lock,120);
+		ObtainWriteLock(&avc->lock, 120);
 		if (code) {
 		    code = EINTR;	/* return this if ^C typed */
 		    break;
 		}
-	    }
-	    else break;
-	}	/* while loop */
+	    } else
+		break;
+	}			/* while loop */
     }
     ReleaseWriteLock(&avc->lock);
-    code = afs_CheckCode(code, areq, 1); /* defeat a buggy AIX optimization */
+    code = afs_CheckCode(code, areq, 1);	/* defeat a buggy AIX optimization */
     return code;
 }
 
 
 /* warn a user that a lock has been ignored */
-afs_int32 lastWarnTime = 0;
-static void DoLockWarning() {
+afs_int32 lastWarnTime = 0;	/* this is used elsewhere */
+static void
+DoLockWarning(void)
+{
     register afs_int32 now;
     now = osi_Time();
 
     AFS_STATCNT(DoLockWarning);
     /* check if we've already warned someone recently */
-    if (now < lastWarnTime + 120) return;
+    if (now < lastWarnTime + 120)
+	return;
 
     /* otherwise, it is time to nag the user */
     lastWarnTime = now;
-    afs_warn("afs: byte-range lock/unlock ignored; make sure no one else is running this program.\n");
+    afs_warn
+	("afs: byte-range lock/unlock ignored; make sure no one else is running this program.\n");
 }
 
 
 #ifdef	AFS_OSF_ENV
-afs_lockctl(avc, af, flag, acred, clid, offset)
-struct eflock *af;
-int flag;
-pid_t clid;
-off_t offset;
+int afs_lockctl(struct vcache * avc, struct eflock * af, int flag,
+		struct AFS_UCRED * acred, pid_t clid, off_t offset)
+#elif defined(AFS_SGI_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
+		struct AFS_UCRED * acred, pid_t clid)
 #else
-#if defined(AFS_SGI_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-afs_lockctl(avc, af, acmd, acred, clid)
-pid_t clid;
-#else
-u_int clid=0;
-afs_lockctl(avc, af, acmd, acred)
+u_int clid = 0;
+int afs_lockctl(struct vcache * avc, struct AFS_FLOCK * af, int acmd,
+		struct AFS_UCRED * acred)
 #endif
-struct AFS_FLOCK *af;
-int acmd;
-#endif
-struct vcache *avc;
-struct AFS_UCRED *acred; {
+{
     struct vrequest treq;
     afs_int32 code;
 #ifdef	AFS_OSF_ENV
@@ -506,7 +488,8 @@ struct AFS_UCRED *acred; {
     struct afs_fakestat_state fakestate;
 
     AFS_STATCNT(afs_lockctl);
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if ((code = afs_InitReq(&treq, acred)))
+	return code;
     afs_InitFakeStat(&fakestate);
     code = afs_EvalFakeStat(&avc, &fakestate, &treq);
     if (code) {
@@ -514,7 +497,7 @@ struct AFS_UCRED *acred; {
 	return code;
     }
 #ifdef	AFS_OSF_ENV
-    if (flag & VNOFLCK)	{
+    if (flag & VNOFLCK) {
 	afs_PutFakeStat(&fakestate);
 	return 0;
     }
@@ -535,69 +518,69 @@ struct AFS_UCRED *acred; {
 	    afs_PutFakeStat(&fakestate);
 	    return 0;
 	}
-#ifndef	AFS_OSF_ENV	/* getlock is a no-op for osf (for now) */
+#ifndef	AFS_OSF_ENV		/* getlock is a no-op for osf (for now) */
 	code = HandleGetLock(avc, af, &treq, clid);
 #endif
-	code = afs_CheckCode(code, &treq, 2); /* defeat buggy AIX optimz */
+	code = afs_CheckCode(code, &treq, 2);	/* defeat buggy AIX optimz */
 	afs_PutFakeStat(&fakestate);
 	return code;
-    }
-    else if ((acmd == F_SETLK) || (acmd == F_SETLKW) 
+    } else if ((acmd == F_SETLK) || (acmd == F_SETLKW)
 #if (defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)) && !defined(AFS_SUN58_ENV)
-	     || (acmd == F_RSETLK)|| (acmd == F_RSETLKW)) {
+	       || (acmd == F_RSETLK) || (acmd == F_RSETLKW)) {
 #else
 	) {
 #endif
-	/* this next check is safer when left out, but more applications work
-	   with it in.  However, they fail in race conditions.  The question is
-	   what to do for people who don't have source to their application;
-	   this way at least, they can get work done */
+    /* this next check is safer when left out, but more applications work
+     * with it in.  However, they fail in race conditions.  The question is
+     * what to do for people who don't have source to their application;
+     * this way at least, they can get work done */
 #ifdef AFS_LINUX24_ENV
-       if (af->l_len == OFFSET_MAX)
-	   af->l_len = 0;      /* since some systems indicate it as EOF */
+    if (af->l_len == OFFSET_MAX)
+	af->l_len = 0;		/* since some systems indicate it as EOF */
 #else
-	if (af->l_len == 0x7fffffff)
-	    af->l_len = 0;	/* since some systems indicate it as EOF */
+    if (af->l_len == 0x7fffffff)
+	af->l_len = 0;		/* since some systems indicate it as EOF */
 #ifdef AFS_LINUX_64BIT_KERNEL
-	if (af->l_len == LONG_MAX)
-	    af->l_len = 0;      /* since some systems indicate it as EOF */
+    if (af->l_len == LONG_MAX)
+	af->l_len = 0;		/* since some systems indicate it as EOF */
 #endif
 #endif
-	/* next line makes byte range locks always succeed,
-	   even when they should block */
-	if (af->l_whence != 0 || af->l_start != 0 || af->l_len != 0) {
-	    DoLockWarning();
-	    afs_PutFakeStat(&fakestate);
-	    return 0;
-	}
-	/* otherwise we can turn this into a whole-file flock */
-	if (af->l_type == F_RDLCK) code = LOCK_SH;
-	else if (af->l_type == F_WRLCK) code = LOCK_EX;
-	else if (af->l_type == F_UNLCK) code = LOCK_UN;
-	else {
-	    afs_PutFakeStat(&fakestate);
-	    return EINVAL; /* unknown lock type */
-	}
-	if (((acmd == F_SETLK) 
+    /* next line makes byte range locks always succeed,
+     * even when they should block */
+    if (af->l_whence != 0 || af->l_start != 0 || af->l_len != 0) {
+	DoLockWarning();
+	afs_PutFakeStat(&fakestate);
+	return 0;
+    }
+    /* otherwise we can turn this into a whole-file flock */
+    if (af->l_type == F_RDLCK)
+	code = LOCK_SH;
+    else if (af->l_type == F_WRLCK)
+	code = LOCK_EX;
+    else if (af->l_type == F_UNLCK)
+	code = LOCK_UN;
+    else {
+	afs_PutFakeStat(&fakestate);
+	return EINVAL;		/* unknown lock type */
+    }
+    if (((acmd == F_SETLK)
 #if 	(defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV)) && !defined(AFS_SUN58_ENV)
-	|| (acmd == F_RSETLK) 
+	 || (acmd == F_RSETLK)
 #endif
 	) && code != LOCK_UN)
-	    code |= LOCK_NB;	/* non-blocking, s.v.p. */
-#if	defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) 
-	code = HandleFlock(avc, code, &treq, clid, 0/*!onlymine*/);
+	code |= LOCK_NB;	/* non-blocking, s.v.p. */
+#if	(defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_OSF_ENV)
+    code = HandleFlock(avc, code, &treq, clid, 0 /*!onlymine */ );
+#elif defined(AFS_SGI_ENV)
+    AFS_RWLOCK((vnode_t *) avc, VRWLOCK_WRITE);
+    code = HandleFlock(avc, code, &treq, clid, 0 /*!onlymine */ );
+    AFS_RWUNLOCK((vnode_t *) avc, VRWLOCK_WRITE);
 #else
-#if defined(AFS_SGI_ENV)
-	AFS_RWLOCK((vnode_t *)avc, VRWLOCK_WRITE);
-	code = HandleFlock(avc, code, &treq, clid, 0/*!onlymine*/);
-	AFS_RWUNLOCK((vnode_t *)avc, VRWLOCK_WRITE);
-#else
-	code = HandleFlock(avc, code, &treq, 0, 0/*!onlymine*/);
+    code = HandleFlock(avc, code, &treq, 0, 0 /*!onlymine */ );
 #endif
-#endif
-	code = afs_CheckCode(code, &treq, 3); /* defeat AIX -O bug */
-	afs_PutFakeStat(&fakestate);
-	return code;
+    code = afs_CheckCode(code, &treq, 3);	/* defeat AIX -O bug */
+    afs_PutFakeStat(&fakestate);
+    return code;
     }
     afs_PutFakeStat(&fakestate);
     return EINVAL;
@@ -615,22 +598,22 @@ struct AFS_UCRED *acred; {
  *    2. Asking for write lock, and only the current
  *       PID has the file read locked.
  */
-#ifndef	AFS_OSF_ENV	/* getlock is a no-op for osf (for now) */
-HandleGetLock(avc, af, areq, clid)
-    int clid;           /* not used by some OSes */
-    register struct vcache *avc;
-    register struct vrequest *areq;
-    register struct AFS_FLOCK *af; 
+#ifndef	AFS_OSF_ENV		/* getlock is a no-op for osf (for now) */
+static int
+HandleGetLock(register struct vcache *avc, register struct AFS_FLOCK *af,
+	      register struct vrequest *areq, int clid)
 {
     register afs_int32 code;
     struct AFS_FLOCK flock;
 
-    lockIdSet(&flock, (struct SimpleLocks *)0, clid);
+    lockIdSet(&flock, NULL, clid);
 
-    ObtainWriteLock(&avc->lock,122);
+    ObtainWriteLock(&avc->lock, 122);
     if (avc->flockCount == 0) {
-	/* We don't know ourselves, so ask the server. Unfortunately, we don't know the pid.
-	 * Not even the server knows the pid.  Besides, the process with the lock is on another machine
+	/*
+	 * We don't know ourselves, so ask the server. Unfortunately, we
+	 * don't know the pid.  Not even the server knows the pid.  Besides,
+	 * the process with the lock is on another machine
 	 */
 	code = GetFlockCount(avc, areq);
 	if (code == 0 || (af->l_type == F_RDLCK && code > 0)) {
@@ -643,7 +626,7 @@ HandleGetLock(avc, af, areq, clid)
 	    af->l_type = F_WRLCK;
 
 	af->l_pid = 0;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 	af->l_sysid = 0;
 #endif
 	goto done;
@@ -655,22 +638,22 @@ HandleGetLock(avc, af, areq, clid)
 	 * read locks, or we are the one with the
 	 * write lock, say it is unlocked.
 	 */
-	if (avc->flockCount > 0 ||      /* only read locks */
-	    !lockIdcmp2(&flock, avc, (struct SimpleLocks *)0, 1, clid)) {
+	if (avc->flockCount > 0 ||	/* only read locks */
+	    !lockIdcmp2(&flock, avc, NULL, 1, clid)) {
 	    af->l_type = F_UNLCK;
 	    goto unlck_leave;
 	}
 
 	/* one write lock, but who? */
-	af->l_type = F_WRLCK;           /* not us, so lock would block */
-	if (avc->slocks) {              /* we know who, so tell */
+	af->l_type = F_WRLCK;	/* not us, so lock would block */
+	if (avc->slocks) {	/* we know who, so tell */
 	    af->l_pid = avc->slocks->pid;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 	    af->l_sysid = avc->slocks->sysid;
 #endif
 	} else {
-	    af->l_pid = 0;      /* XXX can't happen?? */
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+	    af->l_pid = 0;	/* XXX can't happen?? */
+#if defined(AFS_HAVE_FLOCK_SYSID)
 	    af->l_sysid = 0;
 #endif
 	}
@@ -682,22 +665,22 @@ HandleGetLock(avc, af, areq, clid)
      * already, and it is not this process, we fail.
      */
     if (avc->flockCount < 0) {
-	if (lockIdcmp2(&flock, avc, (struct SimpleLocks *)0, 1, clid)) {
+	if (lockIdcmp2(&flock, avc, NULL, 1, clid)) {
 	    af->l_type = F_WRLCK;
 	    if (avc->slocks) {
 		af->l_pid = avc->slocks->pid;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 		af->l_sysid = avc->slocks->sysid;
 #endif
 	    } else {
-		af->l_pid = 0;  /* XXX can't happen?? */
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+		af->l_pid = 0;	/* XXX can't happen?? */
+#if defined(AFS_HAVE_FLOCK_SYSID)
 		af->l_sysid = 0;
 #endif
 	    }
 	    goto done;
 	}
-       /* we are the one with the write lock */
+	/* we are the one with the write lock */
 	af->l_type = F_UNLCK;
 	goto unlck_leave;
     }
@@ -707,104 +690,104 @@ HandleGetLock(avc, af, areq, clid)
      * If there is more than one, or it isn't us, we cannot lock.
      */
     if ((avc->flockCount > 1)
-	|| lockIdcmp2(&flock, avc, (struct SimpleLocks *)0, 1, clid)) {
+	|| lockIdcmp2(&flock, avc, NULL, 1, clid)) {
 	struct SimpleLocks *slp;
-	
+
 	af->l_type = F_RDLCK;
 	af->l_pid = 0;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 	af->l_sysid = 0;
 #endif
 	/* find a pid that isn't our own */
 	for (slp = avc->slocks; slp; slp = slp->next) {
-           if (lockIdcmp2(&flock, (struct vcache *)0, slp, 1, clid)) {
-               af->l_pid = slp->pid;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-               af->l_sysid = avc->slocks->sysid;
+	    if (lockIdcmp2(&flock, NULL, slp, 1, clid)) {
+		af->l_pid = slp->pid;
+#if defined(AFS_HAVE_FLOCK_SYSID)
+		af->l_sysid = avc->slocks->sysid;
 #endif
 		break;
-	   } 
-       }
+	    }
+	}
 	goto done;
     }
 
-       /*
-	* Ok, we want a write lock.  If there is a write lock
-	* already, and it is not this process, we fail.
-	*/
-	if (avc->flockCount < 0) {
-	    if (lockIdcmp2(&flock, avc, (struct SimpleLocks *)0, 1, clid)) {
-		af->l_type = F_WRLCK;
-		if (avc->slocks) {
-		    af->l_pid = avc->slocks->pid;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-		    af->l_sysid = avc->slocks->sysid;
+    /*
+     * Ok, we want a write lock.  If there is a write lock
+     * already, and it is not this process, we fail.
+     */
+    if (avc->flockCount < 0) {
+	if (lockIdcmp2(&flock, avc, NULL, 1, clid)) {
+	    af->l_type = F_WRLCK;
+	    if (avc->slocks) {
+		af->l_pid = avc->slocks->pid;
+#if defined(AFS_HAVE_FLOCK_SYSID)
+		af->l_sysid = avc->slocks->sysid;
 #endif
-		} else {
-		    af->l_pid = 0;  /* XXX can't happen?? */
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-		    af->l_sysid = 0;
+	    } else {
+		af->l_pid = 0;	/* XXX can't happen?? */
+#if defined(AFS_HAVE_FLOCK_SYSID)
+		af->l_sysid = 0;
 #endif
-		}
-		goto done;
-	    }
-	    /* we are the one with the write lock */
-	    af->l_type = F_UNLCK;
-	    goto unlck_leave;
-	}
-
-	/*
-	 * Want a write lock, and we know there are read locks.
-	 * If there is more than one, or it isn't us, we cannot lock.
-	 */
-	if ((avc->flockCount > 1)
-	    || lockIdcmp2(&flock, avc, (struct SimpleLocks *)0, 1, clid)) {
-	    struct SimpleLocks *slp;
-	    af->l_type = F_RDLCK;
-	    af->l_pid = 0;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-	    af->l_sysid = 0;
-#endif
-	    /* find a pid that isn't our own */
-	    for (slp = avc->slocks; slp; slp = slp->next) {
-		if (lockIdcmp2(&flock, (struct vcache *)0, slp, 1, clid)) {
-		    af->l_pid = slp->pid;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
-		    af->l_sysid = avc->slocks->sysid;
-#endif
-		    break;
-		}
 	    }
 	    goto done;
 	}
-	
-	/*
-	 * Want a write lock, and there is just one read lock, and it
-	 * is this process with a read lock.  Ask the server if there
-	 * are any more processes with the file locked.
-	 */
-	code = GetFlockCount(avc, areq);
-	if (code == 0 || code == 1) {
-	    af->l_type = F_UNLCK;
-	    goto unlck_leave;
-	}
-	if (code > 0)
-	    af->l_type = F_RDLCK;
-	else
-	    af->l_type = F_WRLCK;
+	/* we are the one with the write lock */
+	af->l_type = F_UNLCK;
+	goto unlck_leave;
+    }
+
+    /*
+     * Want a write lock, and we know there are read locks.
+     * If there is more than one, or it isn't us, we cannot lock.
+     */
+    if ((avc->flockCount > 1)
+	|| lockIdcmp2(&flock, avc, NULL, 1, clid)) {
+	struct SimpleLocks *slp;
+	af->l_type = F_RDLCK;
 	af->l_pid = 0;
-#if	defined(AFS_AIX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_HAVE_FLOCK_SYSID)
 	af->l_sysid = 0;
 #endif
+	/* find a pid that isn't our own */
+	for (slp = avc->slocks; slp; slp = slp->next) {
+	    if (lockIdcmp2(&flock, NULL, slp, 1, clid)) {
+		af->l_pid = slp->pid;
+#if defined(AFS_HAVE_FLOCK_SYSID)
+		af->l_sysid = avc->slocks->sysid;
+#endif
+		break;
+	    }
+	}
+	goto done;
+    }
 
-done:
-	af->l_whence = 0;
-	af->l_start = 0;
-	af->l_len = 0;    /* to end of file */
+    /*
+     * Want a write lock, and there is just one read lock, and it
+     * is this process with a read lock.  Ask the server if there
+     * are any more processes with the file locked.
+     */
+    code = GetFlockCount(avc, areq);
+    if (code == 0 || code == 1) {
+	af->l_type = F_UNLCK;
+	goto unlck_leave;
+    }
+    if (code > 0)
+	af->l_type = F_RDLCK;
+    else
+	af->l_type = F_WRLCK;
+    af->l_pid = 0;
+#if defined(AFS_HAVE_FLOCK_SYSID)
+    af->l_sysid = 0;
+#endif
 
-unlck_leave:
-	ReleaseWriteLock(&avc->lock);
-	return 0;
+  done:
+    af->l_whence = 0;
+    af->l_start = 0;
+    af->l_len = 0;		/* to end of file */
+
+  unlck_leave:
+    ReleaseWriteLock(&avc->lock);
+    return 0;
 }
 
 /* Get the 'flock' count from the server.  This comes back in a 'spare'
@@ -813,7 +796,8 @@ unlck_leave:
  * the spare field will be a zero, saying the file is unlocked.  This is
  * OK, as a further 'lock' request will do the right thing.
  */
-static int GetFlockCount(struct vcache *avc, struct vrequest *areq)
+static int
+GetFlockCount(struct vcache *avc, struct vrequest *areq)
 {
     register struct conn *tc;
     register afs_int32 code;
@@ -821,54 +805,50 @@ static int GetFlockCount(struct vcache *avc, struct vrequest *areq)
     struct AFSCallBack CallBack;
     struct AFSVolSync tsync;
     int temp;
-    XSTATS_DECLS
-
+    XSTATS_DECLS;
     temp = areq->flags & O_NONBLOCK;
     areq->flags |= O_NONBLOCK;
 
     do {
-	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK); 
-	if (tc){
-          XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHSTATUS);
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
-	  code = RXAFS_FetchStatus(tc->id, (struct AFSFid *) &avc->fid.Fid,
-				     &OutStatus, &CallBack, &tsync);
-#ifdef RX_ENABLE_LOCKS
-	  AFS_GLOCK();
-#endif /* RX_ENABLE_LOCKS */
-          XSTATS_END_TIME;
-	} else code = -1;
-    } while
-      (afs_Analyze(tc, code, &avc->fid, areq,
-		   AFS_STATS_FS_RPCIDX_FETCHSTATUS,
-		   SHARED_LOCK, (struct cell *)0));
+	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
+	if (tc) {
+	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_FETCHSTATUS);
+	    RX_AFS_GUNLOCK();
+	    code =
+		RXAFS_FetchStatus(tc->id, (struct AFSFid *)&avc->fid.Fid,
+				  &OutStatus, &CallBack, &tsync);
+	    RX_AFS_GLOCK();
+	    XSTATS_END_TIME;
+	} else
+	    code = -1;
+    } while (afs_Analyze
+	     (tc, code, &avc->fid, areq, AFS_STATS_FS_RPCIDX_FETCHSTATUS,
+	      SHARED_LOCK, NULL));
 
     if (temp)
 	areq->flags &= ~O_NONBLOCK;
 
     if (code) {
-	return(0);              /* failed, say it is 'unlocked' */
+	return (0);		/* failed, say it is 'unlocked' */
     } else {
-	return((int)OutStatus.lockCount);
+	return ((int)OutStatus.lockCount);
     }
 }
 #endif
 
 
-#if	!defined(AFS_AIX_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_SGI_ENV) && !defined(UKERNEL) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if	!defined(AFS_AIX_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_SGI_ENV) && !defined(UKERNEL) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 /* Flock not support on System V systems */
 #ifdef AFS_OSF_ENV
 extern struct fileops afs_fileops;
-afs_xflock (p, args, retval) 
-	struct proc *p;
-	void *args;
-	int *retval;
-{
+
+int
+afs_xflock(struct proc *p, void *args, int *retval)
 #else /* AFS_OSF_ENV */
-afs_xflock () {
+int
+afs_xflock(void)
 #endif
+{
     int code = 0;
     struct a {
 	int fd;
@@ -909,7 +889,7 @@ afs_xflock () {
 	    /* find real vcache entry; shouldn't be null if gnode ref count
 	     * is greater than 0.
 	     */
-	    tvc = VTOAFS(afs_gntovn)(tvc);
+	    tvc = VTOAFS(afs_gntovn) (tvc);
 	    if (!tvc) {
 		u.u_error = ENOENT;
 		afs_PutFakeStat(&fakestate);
@@ -924,19 +904,21 @@ afs_xflock () {
 	    if ((fd->f_flag & (FEXLOCK | FSHLOCK)) && !(uap->com & LOCK_UN)) {
 		/* First, if fd already has lock, release it for relock path */
 #if defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV))
-		HandleFlock(tvc, LOCK_UN, &treq, u.u_procp->p_pid, 0/*!onlymine*/);
+		HandleFlock(tvc, LOCK_UN, &treq, u.u_procp->p_pid,
+			    0 /*!onlymine */ );
 #else
-		HandleFlock(tvc, LOCK_UN, &treq, 0, 0/*!onlymine*/);
+		HandleFlock(tvc, LOCK_UN, &treq, 0, 0 /*!onlymine */ );
 #endif
 		fd->f_flag &= ~(FEXLOCK | FSHLOCK);
 	    }
 	    /* now try the requested operation */
 
 #if defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV))
-	    code = HandleFlock(tvc, uap->com, &treq,
-			       u.u_procp->p_pid, 0/*!onlymine*/);
+	    code =
+		HandleFlock(tvc, uap->com, &treq, u.u_procp->p_pid,
+			    0 /*!onlymine */ );
 #else
-	    code = HandleFlock(tvc, uap->com, &treq, 0, 0/*!onlymine*/);
+	    code = HandleFlock(tvc, uap->com, &treq, 0, 0 /*!onlymine */ );
 #endif
 #ifndef AFS_OSF_ENV
 	    u.u_error = code;
@@ -945,15 +927,16 @@ afs_xflock () {
 	    if (uap->com & LOCK_UN) {
 		/* gave up lock */
 		fd->f_flag &= ~(FEXLOCK | FSHLOCK);
-	    }
-	    else {
+	    } else {
 #ifdef AFS_OSF_ENV
 		if (!code) {
 #else /* AFS_OSF_ENV */
 		if (!u.u_error) {
 #endif
-		    if (uap->com & LOCK_SH) fd->f_flag |= FSHLOCK;
-		    else if (uap->com & LOCK_EX) fd->f_flag |= FEXLOCK;
+		    if (uap->com & LOCK_SH)
+			fd->f_flag |= FSHLOCK;
+		    else if (uap->com & LOCK_EX)
+			fd->f_flag |= FEXLOCK;
 		}
 	    }
 	    flockDone = 1;
@@ -970,16 +953,15 @@ afs_xflock () {
 #endif
     afs_PutFakeStat(&fakestate);
     return code;
-#else	/* AFS_OSF_ENV */
+#else /* AFS_OSF_ENV */
     if (!flockDone)
 #ifdef DYNEL
-	(*afs_longcall_procs.LC_flock)();
+	(*afs_longcall_procs.LC_flock) ();
 #else
-    	flock();
+	flock();
 #endif
     afs_PutFakeStat(&fakestate);
     return;
 #endif
 }
 #endif /* !defined(AFS_AIX_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(UKERNEL)  && !defined(AFS_LINUX20_ENV) */
-

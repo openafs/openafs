@@ -68,11 +68,11 @@
 #define WEBLOG_MAX_PATH		1024	/* Maximum path length */
 #define WEBLOG_USERNAME_MAX	64	/* Maximum username length */
 #define WEBLOG_CELLNAME_MAX	64	/* Maximum password length */
-#define WEBLOG_PASSWORD_MAX     64 
+#define WEBLOG_PASSWORD_MAX     64
 #define WEBLOG_LOGIN_HASH_SIZE	1024	/* MUST be power of two */
-#define TEN_MINUTES		600     /* 10 minutes = 600 seconds */
+#define TEN_MINUTES		600	/* 10 minutes = 600 seconds */
 
-#define MAXBUFF                 1024    /* CHECK THIS - size of token */
+#define MAXBUFF                 1024	/* CHECK THIS - size of token */
 /*
  * Structure user to store entries in AFS login cache
  */
@@ -90,9 +90,13 @@ struct weblog_login {
 
 
 extern int weblog_login_hash(char *name, char *cell);
-extern void weblog_login_checksum(char *user,char *cell,char *passwd,char *cksum);
-extern int weblog_login_lookup(char *user,char *cell,char *cksum,char *token);
-extern int weblog_login_store(char *user,char *cell,char *cksum,char *token,int tokenLen, afs_uint32 expiration);
+extern void weblog_login_checksum(char *user, char *cell, char *passwd,
+				  char *cksum);
+extern int weblog_login_lookup(char *user, char *cell, char *cksum,
+			       char *token);
+extern int weblog_login_store(char *user, char *cell, char *cksum,
+			      char *token, int tokenLen,
+			      afs_uint32 expiration);
 extern int getTokenLen(char *token);
 
 #endif /* _APACHE_AFS_CACHE_H_INCLUDED_ */

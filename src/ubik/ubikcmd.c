@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/ubikcmd.c,v 1.1.1.6 2001/10/14 18:06:47 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/ubik/ubikcmd.c,v 1.7 2003/07/15 23:17:05 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -41,41 +42,44 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/ubikcmd.c,v 1.1.1.6 2001/10/14 18:
  */
 
 ubik_ParseServerList(argc, argv, ahost, aothers)
-    int argc;
-    char **argv;
-    afs_int32 *ahost;
-    afs_int32 *aothers; {
+     int argc;
+     char **argv;
+     afs_int32 *ahost;
+     afs_int32 *aothers;
+{
     register afs_int32 i;
     register char *tp;
     register struct hostent *th;
     char hostname[64];
     afs_int32 myHost, temp, counter;
     int inServer, sawServer;
-    
+
     gethostname(hostname, sizeof(hostname));
     th = gethostbyname(hostname);
-    if (!th) return UBADHOST;
+    if (!th)
+	return UBADHOST;
     memcpy(&myHost, th->h_addr, sizeof(afs_int32));
     *ahost = myHost;
 
-    inServer = 0;	/* haven't seen -servers yet */
+    inServer = 0;		/* haven't seen -servers yet */
     sawServer = 0;
     counter = 0;
-    for(i=1; i<argc; i++) {
+    for (i = 1; i < argc; i++) {
 	/* look for -servers argument */
 	tp = argv[i];
-	
+
 	if (inServer) {
 	    if (*tp == '-') {
 		inServer = 0;
-	    }
-	    else {
+	    } else {
 		/* otherwise this is a new host name */
 		th = gethostbyname(tp);
-		if (!th) return UBADHOST;
+		if (!th)
+		    return UBADHOST;
 		memcpy(&temp, th->h_addr, sizeof(afs_int32));
 		if (temp != myHost) {
-		    if (counter++ >= MAXSERVERS) return UNHOSTS;
+		    if (counter++ >= MAXSERVERS)
+			return UNHOSTS;
 		    *aothers++ = temp;
 		}
 	    }
@@ -84,8 +88,7 @@ ubik_ParseServerList(argc, argv, ahost, aothers)
 	if (!strcmp(tp, "-servers")) {
 	    inServer = 1;
 	    sawServer = 1;
-	}
-	else if (!strcmp(tp, "-dubik")) {
+	} else if (!strcmp(tp, "-dubik")) {
 	    ubik_debugFlag = 1;
 	}
     }
@@ -93,6 +96,7 @@ ubik_ParseServerList(argc, argv, ahost, aothers)
 	/* never saw a -server */
 	return UNOENT;
     }
-    if (counter	< MAXSERVERS) *aothers++ = 0;	/* null terminate if there's room */
+    if (counter < MAXSERVERS)
+	*aothers++ = 0;		/* null terminate if there's room */
     return 0;
 }

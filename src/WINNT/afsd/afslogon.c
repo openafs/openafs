@@ -7,307 +7,632 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#include <afs/param.h>
-#include <afs/stds.h>
-
-#include <windows.h>
-#include <npapi.h>
-#include <winsock2.h>
-#include "afsd.h"
-#include <afs/pioctl_nt.h>
-#include <afs/kautils.h>
-#include "cm_config.h"
-#include "krb.h"
+#include "afslogon.h"
 
 #include <io.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
 
-DWORD LogonOption,TraceOption;
+#include <winsock2.h>
+#include <lm.h>
+
+#include <afs/param.h>
+#include <afs/stds.h>
+#include <afs/pioctl_nt.h>
+#include <afs/kautils.h>
+
+#include "afsd.h"
+#include "cm_config.h"
+#include "krb.h"
+#include "afskfw.h"
+
+#include <WINNT\afsreg.h>
+
+DWORD TraceOption = 0;
 
 HANDLE hDLL;
 
 WSADATA WSAjunk;
-
-#define REG_CLIENT_PARMS_KEY            "SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"
-#define REG_CLIENT_PROVIDER_KEY			"SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\NetworkProvider"
-#define REG_CLIENT_RETRY_INTERVAL_PARM  "LoginRetryInterval"
-#define REG_CLIENT_FAIL_SILENTLY_PARM   "FailLoginsSilently"
-#define DEFAULT_RETRY_INTERVAL          30                        /* seconds*/
-#define DEFAULT_FAIL_SILENTLY           FALSE
-#define DEFAULT_SLEEP_INTERVAL          5                         /* seconds*/
-
-#define ISLOGONINTEGRATED(v) ( ((v) & LOGON_OPTION_INTEGRATED)==LOGON_OPTION_INTEGRATED)
-#define ISHIGHSECURITY(v) ( ((v) & LOGON_OPTION_HIGHSECURITY)==LOGON_OPTION_HIGHSECURITY)
-
-#define TRACE_OPTION_EVENT 1
-#define ISLOGONTRACE(v) ( ((v) & TRACE_OPTION_EVENT)==TRACE_OPTION_EVENT)
-
-/* Structure def copied from DDK (NTDEF.H) */
-typedef struct UNICODE_STRING {
-	USHORT Length;		/* number of bytes of Buffer actually used */
-	USHORT MaximumLength;	/* sizeof buffer in bytes */
-	WCHAR *Buffer;		/* 16 bit characters */
-} UNICODE_STRING;
-
-/* Structure def copied from NP API documentation */
-typedef struct _MSV1_0_INTERACTIVE_LOGON {
-	DWORD		MessageType;	/* Actually this is an enum; ignored */
-	UNICODE_STRING	LogonDomainName;
-	UNICODE_STRING	UserName;
-	UNICODE_STRING	Password;
-} MSV1_0_INTERACTIVE_LOGON;
-
-/*
- * GetLogonScript
- *
- * We get a logon script pathname from the HKEY_LOCAL_MACHINE registry.
- * I don't know what good this does; I just copied it from DFS.
- *
- * Returns NULL on failure.
- */
-
+#define AFS_LOGON_EVENT_NAME TEXT("AFS Logon")
 
 void DebugEvent0(char *a) 
 {
-	HANDLE h; char *ptbuf[1];
-	if (!ISLOGONTRACE(TraceOption))
-		return;
-	h = RegisterEventSource(NULL, a);
-	ptbuf[0] = a;
-	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);
-	DeregisterEventSource(h);
+    HANDLE h; char *ptbuf[1];
+    if (!ISLOGONTRACE(TraceOption))
+        return;
+    h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
+    ptbuf[0] = a;
+    ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);
+    DeregisterEventSource(h);
 }
 
-#define MAXBUF_ 131
-void DebugEvent(char *a,char *b,...) 
+#define MAXBUF_ 512
+void DebugEvent(char *b,...) 
 {
-	HANDLE h; char *ptbuf[1],buf[MAXBUF_+1];
-	va_list marker;
-	if (!ISLOGONTRACE(TraceOption))
-		return;
-	h = RegisterEventSource(NULL, a);
-	va_start(marker,b);
-	_vsnprintf(buf,MAXBUF_,b,marker);
-	ptbuf[0] = buf;
-	ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);\
-	DeregisterEventSource(h);
-	va_end(marker);
+    HANDLE h; char *ptbuf[1],buf[MAXBUF_+1];
+    va_list marker;
+
+    if (!ISLOGONTRACE(TraceOption))
+        return;
+
+    h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
+    va_start(marker,b);
+    StringCbVPrintf(buf, MAXBUF_+1,b,marker);
+    buf[MAXBUF_] = '\0';
+    ptbuf[0] = buf;
+    ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, (const char **)ptbuf, NULL);
+    DeregisterEventSource(h);
+    va_end(marker);
+}
+
+static HANDLE hInitMutex = NULL;
+static BOOL bInit = FALSE;
+
+BOOLEAN APIENTRY DllEntryPoint(HANDLE dll, DWORD reason, PVOID reserved)
+{
+    hDLL = dll;
+    switch (reason) {
+    case DLL_PROCESS_ATTACH:
+        /* Initialization Mutex */
+        hInitMutex = CreateMutex(NULL, FALSE, NULL);
+        break;
+
+    case DLL_PROCESS_DETACH:
+        CloseHandle(hInitMutex);
+        break;
+
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+    default:
+        /* Everything else succeeds but does nothing. */
+        break;
+    }
+
+    return TRUE;
+}
+
+void AfsLogonInit(void)
+{
+    if ( bInit == FALSE ) {
+        if ( WaitForSingleObject( hInitMutex, INFINITE ) == WAIT_OBJECT_0 ) {
+            if ( bInit == FALSE ) {
+                rx_Init(0);
+                initAFSDirPath();
+                ka_Init(0);
+                bInit = TRUE;
+            }
+            ReleaseMutex(hInitMutex);
+        }
+    }
 }
 
 CHAR *GenRandomName(CHAR *pbuf)
 {
-	int i;
-	srand( (unsigned)time( NULL ) );
-	for (i=0;i<MAXRANDOMNAMELEN-1;i++)
-		pbuf[i]='a'+(rand() % 26);
-	pbuf[MAXRANDOMNAMELEN-1]=0;
-	return pbuf;
-}
-
-WCHAR *GetLogonScript(CHAR *pname)
-{
-	WCHAR *script,*buf;
-	DWORD code;
-	DWORD LSPtype, LSPsize;
-	HKEY NPKey;
-	WCHAR randomName[MAXRANDOMNAMELEN];
-
-	/*
-	 * Get Network Provider key.
-	 * Assume this works or we wouldn't be here.
-	 */
-	(void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_CLIENT_PROVIDER_KEY,
-			    0, KEY_QUERY_VALUE, &NPKey);
-
-	/*
-	 * Get Logon Script pathname length
-	 */
-
-	code = RegQueryValueExW(NPKey, L"LogonScript", NULL,
-				&LSPtype, NULL, &LSPsize);
-
-	if (code) {
-		RegCloseKey (NPKey);
-		return NULL;
-	}
-
-	if (LSPtype != REG_SZ) {	/* Maybe handle REG_EXPAND_SZ? */
-		RegCloseKey (NPKey);
-		return NULL;
-	}
-
-	buf=(WCHAR *)LocalAlloc(LMEM_FIXED, LSPsize);
-	script=(WCHAR *)LocalAlloc(LMEM_FIXED,LSPsize+(MAXRANDOMNAMELEN)*sizeof(WCHAR));
-	/*
-	 * Explicitly call UNICODE version
-	 * Assume it will succeed since it did before
-	 */
-	(void) RegQueryValueExW(NPKey, L"LogonScript", NULL,
-				&LSPtype, (LPBYTE)buf, &LSPsize);
-	MultiByteToWideChar(CP_ACP,0,pname,strlen(pname)+1,randomName,(strlen(pname)+1)*sizeof(WCHAR));
-	swprintf(script,buf,randomName);
-	free(buf);
-
-#ifdef DEBUG_VERBOSE
-		{
-        HANDLE h; char *ptbuf[1],buf[132],tbuf[255];
-		WideCharToMultiByte(CP_ACP,0,script,LSPsize,tbuf,255,NULL,NULL);
-        h = RegisterEventSource(NULL, "AFS AfsLogon - GetLogonScript");
-        sprintf(buf, "Script[%s,%d] Return Code[%x]",tbuf,LSPsize,code);
-        ptbuf[0] = buf;
-        ReportEvent(h, EVENTLOG_INFORMATION_TYPE, 0, 0, NULL, 1, 0, ptbuf, NULL);
-        DeregisterEventSource(h);
-		}
-#endif
-
-	RegCloseKey (NPKey);
-	return script;
+    int i;
+    srand( (unsigned)time( NULL ) );
+    for (i=0;i<MAXRANDOMNAMELEN-1;i++)
+        pbuf[i]='a'+(rand() % 26);
+    pbuf[MAXRANDOMNAMELEN-1]=0;
+    return pbuf;
 }
 
 BOOLEAN AFSWillAutoStart(void)
 {
-	SC_HANDLE scm;
-	SC_HANDLE svc;
-	BOOLEAN flag;
-	BOOLEAN result = FALSE;
-	LPQUERY_SERVICE_CONFIG pConfig = NULL;
-	DWORD BufSize;
-	LONG status;
+    SC_HANDLE scm;
+    SC_HANDLE svc;
+    BOOLEAN flag;
+    BOOLEAN result = FALSE;
+    LPQUERY_SERVICE_CONFIG pConfig = NULL;
+    DWORD BufSize;
+    LONG status;
 
-	/* Open services manager */
-	scm = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-	if (!scm) return FALSE;
+    /* Open services manager */
+    scm = OpenSCManager(NULL, NULL, GENERIC_READ);
+    if (!scm) return FALSE;
 
-	/* Open AFSD service */
-	svc = OpenService(scm, "TransarcAFSDaemon", SERVICE_QUERY_CONFIG);
-	if (!svc)
-		goto close_scm;
+    /* Open AFSD service */
+    svc = OpenService(scm, "TransarcAFSDaemon", SERVICE_QUERY_CONFIG);
+    if (!svc)
+        goto close_scm;
 
-	/* Query AFSD service config, first just to get buffer size */
-	/* Expected to fail, so don't test return value */
-	(void) QueryServiceConfig(svc, NULL, 0, &BufSize);
-	status = GetLastError();
-	if (status != ERROR_INSUFFICIENT_BUFFER)
-		goto close_svc;
+    /* Query AFSD service config, first just to get buffer size */
+    /* Expected to fail, so don't test return value */
+    (void) QueryServiceConfig(svc, NULL, 0, &BufSize);
+    status = GetLastError();
+    if (status != ERROR_INSUFFICIENT_BUFFER)
+        goto close_svc;
 
-	/* Allocate buffer */
-	pConfig = (LPQUERY_SERVICE_CONFIG)GlobalAlloc(GMEM_FIXED, BufSize);
-	if (!pConfig)
-		goto close_svc;
+    /* Allocate buffer */
+    pConfig = (LPQUERY_SERVICE_CONFIG)GlobalAlloc(GMEM_FIXED,BufSize);
+    if (!pConfig)
+        goto close_svc;
 
-	/* Query AFSD service config, this time for real */
-	flag = QueryServiceConfig(svc, pConfig, BufSize, &BufSize);
-	if (!flag)
-		goto free_pConfig;
+    /* Query AFSD service config, this time for real */
+    flag = QueryServiceConfig(svc, pConfig, BufSize, &BufSize);
+    if (!flag)
+        goto free_pConfig;
 
-	/* Is it autostart? */
-	if (pConfig->dwStartType < SERVICE_DEMAND_START)
-		result = TRUE;
+    /* Is it autostart? */
+    if (pConfig->dwStartType < SERVICE_DEMAND_START)
+        result = TRUE;
 
-free_pConfig:
-	GlobalFree(pConfig);
-close_svc:
-	CloseServiceHandle(svc);
-close_scm:
-	CloseServiceHandle(scm);
+  free_pConfig:
+    GlobalFree(pConfig);
+  close_svc:
+    CloseServiceHandle(svc);
+  close_scm:
+    CloseServiceHandle(scm);
 
-	return result;
+    return result;
 }
 
 DWORD MapAuthError(DWORD code)
 {
-	switch (code) {
-	case KTC_NOCM:
-	case KTC_NOCMRPC:
-		return WN_NO_NETWORK;
-/*	case INTK_BADPW: return WN_BAD_PASSWORD;*/
-/*	case KERB_ERR_PRINCIPAL_UNKNOWN: return WN_BAD_USER;*/
-	default: return WN_SUCCESS;
-	}
-}
-
-BOOLEAN APIENTRY DllEntryPoint(HANDLE dll, DWORD reason, PVOID reserved)
-{
-	hDLL = dll;
-	switch (reason) {
-		case DLL_PROCESS_ATTACH:
-			/* Initialize AFS libraries */
-			rx_Init(0);
-			ka_Init(0);
-			break;
-
-		/* Everything else succeeds but does nothing. */
-		case DLL_PROCESS_DETACH:
-		case DLL_THREAD_ATTACH:
-		case DLL_THREAD_DETACH:
-		default:
-			break;
-	}
-
-	return TRUE;
+    switch (code) {
+        /* Unfortunately, returning WN_NO_NETWORK results in the MPR abandoning
+         * logon scripts for all credential managers, although they will still
+         * receive logon notifications.  Since we don't want this, we return
+         * WN_SUCCESS.  This is highly undesirable, but we also don't want to
+         * break other network providers.
+         */
+ /* case KTC_NOCM:
+    case KTC_NOCMRPC:
+    return WN_NO_NETWORK; */
+    default: return WN_SUCCESS;
+  }
 }
 
 DWORD APIENTRY NPGetCaps(DWORD index)
 {
-	switch (index) {
-		case WNNC_NET_TYPE:
-			/* Don't have our own type; use somebody else's. */
-			return WNNC_NET_SUN_PC_NFS;
-		default:
-			return 0;
-	}
-}
+    switch (index) {
+    case WNNC_NET_TYPE:
+        /* Don't have our own type; use somebody else's. */
+        return WNNC_NET_SUN_PC_NFS;
 
-static void GetLoginBehavior(int *pRetryInterval, BOOLEAN *pFailSilently)
+    case WNNC_START:
+        /* Say we are already started, even though we might wait after we receive NPLogonNotify */
+        return 1;
+
+    default:
+        return 0;
+    }
+}       
+
+NET_API_STATUS 
+NetUserGetProfilePath( LPCWSTR Domain, LPCWSTR UserName, char * profilePath, 
+                       DWORD profilePathLen )
 {
-        long result;
-        HKEY hKey;
-        DWORD dummyLen;
-                
-	result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_CLIENT_PARMS_KEY, 0, KEY_QUERY_VALUE, &hKey);
-        if (result != ERROR_SUCCESS) {
-                *pRetryInterval = DEFAULT_RETRY_INTERVAL;
-                *pFailSilently = DEFAULT_FAIL_SILENTLY;
-                return;
-        }
-        
-       	result = RegQueryValueEx(hKey, REG_CLIENT_RETRY_INTERVAL_PARM, 0, 0, (BYTE *)pRetryInterval, &dummyLen);
-       	if (result != ERROR_SUCCESS)
-       	        *pRetryInterval = DEFAULT_RETRY_INTERVAL;
-       	        
-       	result = RegQueryValueEx(hKey, REG_CLIENT_FAIL_SILENTLY_PARM, 0, 0, (BYTE *)pFailSilently, &dummyLen);
-       	if (result != ERROR_SUCCESS)
-       	        *pFailSilently = DEFAULT_FAIL_SILENTLY;
+    NET_API_STATUS code;
+    LPWSTR ServerName = NULL;
+    LPUSER_INFO_3 p3 = NULL;
 
-        /* Make sure this is really a bool value in the strict sense*/
-        *pFailSilently = !!*pFailSilently;
-       	        
-        RegCloseKey(hKey);
+    NetGetAnyDCName(NULL, Domain, (LPBYTE *)&ServerName);
+    /* if NetGetAnyDCName fails, ServerName == NULL
+     * NetUserGetInfo will obtain local user information 
+     */
+    code = NetUserGetInfo(ServerName, UserName, 3, (LPBYTE *)&p3);
+    if (code == NERR_Success)
+    {
+        code = NERR_UserNotFound;
+        if (p3) {
+            if (p3->usri3_profile) {
+                DWORD len = lstrlenW(p3->usri3_profile);
+                if (len > 0) {
+                    /* Convert From Unicode to ANSI (UTF-8 for future) */
+                    len = len < profilePathLen ? len : profilePathLen - 1;
+                    WideCharToMultiByte(CP_UTF8, 0, p3->usri3_profile, len, profilePath, len, NULL, NULL);
+                    profilePath[len] = '\0';
+                    code = NERR_Success;
+                }
+            }
+            NetApiBufferFree(p3);
+        }
+    }
+    if (ServerName) 
+        NetApiBufferFree(ServerName);
+    return code;
 }
 
 BOOL IsServiceRunning (void)
 {
-      SERVICE_STATUS Status;
-      SC_HANDLE hManager;
-      memset (&Status, 0x00, sizeof(Status));
-      Status.dwCurrentState = SERVICE_STOPPED;
+    SERVICE_STATUS Status;
+    SC_HANDLE hManager;
+    memset (&Status, 0x00, sizeof(Status));
+    Status.dwCurrentState = SERVICE_STOPPED;
 
-      if ((hManager = OpenSCManager (NULL, NULL, GENERIC_READ)) != NULL)
-         {
-         SC_HANDLE hService;
-         if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), GENERIC_READ)) != NULL)
-            {
+    if ((hManager = OpenSCManager (NULL, NULL, GENERIC_READ)) != NULL)
+    {
+        SC_HANDLE hService;
+        if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), GENERIC_READ)) != NULL)
+        {
             QueryServiceStatus (hService, &Status);
             CloseServiceHandle (hService);
-            }
+        }
 
-         CloseServiceHandle (hManager);
-         }
-		 DebugEvent("AFS AfsLogon - Test Service Running","Return Code[%x] ?Running[%d]",Status.dwCurrentState,(Status.dwCurrentState == SERVICE_RUNNING));
-		return (Status.dwCurrentState == SERVICE_RUNNING);
-}
+        CloseServiceHandle (hManager);
+    }
+    DebugEvent("AFS AfsLogon - Test Service Running","Return Code[%x] ?Running[%d]",Status.dwCurrentState,(Status.dwCurrentState == SERVICE_RUNNING));
+    return (Status.dwCurrentState == SERVICE_RUNNING);
+}   
+
+BOOL IsServiceStartPending (void)
+{
+    SERVICE_STATUS Status;
+    SC_HANDLE hManager;
+    memset (&Status, 0x00, sizeof(Status));
+    Status.dwCurrentState = SERVICE_STOPPED;
+
+    if ((hManager = OpenSCManager (NULL, NULL, GENERIC_READ)) != NULL)
+    {
+        SC_HANDLE hService;
+        if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), GENERIC_READ)) != NULL)
+        {
+            QueryServiceStatus (hService, &Status);
+            CloseServiceHandle (hService);
+        }
+
+        CloseServiceHandle (hManager);
+    }
+    DebugEvent("AFS AfsLogon - Test Service Start Pending","Return Code[%x] ?Start Pending[%d]",Status.dwCurrentState,(Status.dwCurrentState == SERVICE_START_PENDING));
+    return (Status.dwCurrentState == SERVICE_RUNNING);
+}   
+
+/* LOOKUPKEYCHAIN: macro to look up the value in the list of keys in order until it's found
+   v:variable to receive value (reference type)
+   t:type
+   d:default, in case the value isn't on any of the keys
+   n:name of value */
+#define LOOKUPKEYCHAIN(v,t,d,n) \
+	do { \
+		rv = ~ERROR_SUCCESS; \
+		dwType = t; \
+		if(hkDom) { \
+			dwSize = sizeof(v); \
+			rv = RegQueryValueEx(hkDom, n, 0, &dwType, (LPBYTE) &(v), &dwSize); \
+			if(rv == ERROR_SUCCESS) DebugEvent(#v " found in hkDom with type [%d]", dwType); \
+		} \
+		if(hkDoms && (rv != ERROR_SUCCESS || dwType != t)) { \
+			dwSize = sizeof(v); \
+			rv = RegQueryValueEx(hkDoms, n, 0, &dwType, (LPBYTE) &(v), &dwSize); \
+			if(rv == ERROR_SUCCESS) DebugEvent(#v " found in hkDoms with type [%d]", dwType); \
+		} \
+		if(hkNp && (rv != ERROR_SUCCESS || dwType != t)) { \
+			dwSize = sizeof(v); \
+			rv = RegQueryValueEx(hkNp, n, 0, &dwType, (LPBYTE) &(v), &dwSize); \
+			if(rv == ERROR_SUCCESS) DebugEvent(#v " found in hkNp with type [%d]", dwType); \
+		} \
+		if(rv != ERROR_SUCCESS || dwType != t) { \
+			v = d; \
+			DebugEvent(#v " being set to default"); \
+		} \
+	} while(0)
+
+/* Get domain specific configuration info.  We are returning void because if anything goes wrong
+   we just return defaults.
+ */
+void 
+GetDomainLogonOptions( PLUID lpLogonId, char * username, char * domain, LogonOptions_t *opt ) {
+    HKEY hkParm = NULL; /* Service parameter */
+    HKEY hkNp = NULL;   /* network provider key */
+    HKEY hkDoms = NULL; /* domains key */
+    HKEY hkDom = NULL;  /* DOMAINS/domain key */
+    HKEY hkTemp = NULL;
+    LONG rv;
+    DWORD dwSize;
+    DWORD dwType;
+    DWORD dwDummy;
+    char computerName[MAX_COMPUTERNAME_LENGTH + 1];
+    char *effDomain;
+
+    DebugEvent("In GetDomainLogonOptions for user [%s] in domain [%s]", username, domain);
+    /* If the domain is the same as the Netbios computer name, we use the LOCALHOST domain name*/
+    opt->flags = LOGON_FLAG_REMOTE;
+    if(domain) {
+        dwSize = MAX_COMPUTERNAME_LENGTH;
+        if(GetComputerName(computerName, &dwSize)) {
+            if(!stricmp(computerName, domain)) {
+                effDomain = "LOCALHOST";
+                opt->flags = LOGON_FLAG_LOCAL;
+            }
+            else
+                effDomain = domain;
+        }
+    } else
+        effDomain = NULL;
+
+    rv = RegOpenKeyEx( HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY, 0, KEY_READ, &hkParm );
+    if(rv != ERROR_SUCCESS) {
+        hkParm = NULL;
+        DebugEvent("GetDomainLogonOption: Can't open parms key [%d]", rv);
+    }
+
+    rv = RegOpenKeyEx( HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PROVIDER_SUBKEY, 0, KEY_READ, &hkNp );
+    if(rv != ERROR_SUCCESS) {
+        hkNp = NULL;
+        DebugEvent("GetDomainLogonOptions: Can't open NP key [%d]", rv);
+    }
+
+    if(hkNp) {
+        rv = RegOpenKeyEx( hkNp, REG_CLIENT_DOMAINS_SUBKEY, 0, KEY_READ, &hkDoms );
+        if( rv != ERROR_SUCCESS ) {
+            hkDoms = NULL;
+            DebugEvent("GetDomainLogonOptions: Can't open Domains key [%d]", rv);
+        }
+    }
+
+    if(hkDoms && effDomain) {
+        rv = RegOpenKeyEx( hkDoms, effDomain, 0, KEY_READ, &hkDom );
+        if( rv != ERROR_SUCCESS ) {
+            hkDom = NULL;
+            DebugEvent("GetDomainLogonOptions: Can't open domain key for [%s] [%d]", effDomain, rv);
+            /* If none of the domains match, we shouldn't use the domain key either */
+            RegCloseKey(hkDoms);
+            hkDoms = NULL;
+        }
+    } else
+        DebugEvent("Not opening domain key for [%s]", effDomain);
+
+    /* Each individual can either be specified on the domain key, the domains key or in the
+       net provider key.  They fail over in that order.  If none is found, we just use the 
+       defaults. */
+
+    /* LogonOption */
+    LOOKUPKEYCHAIN(opt->LogonOption, REG_DWORD, DEFAULT_LOGON_OPTION, REG_CLIENT_LOGON_OPTION_PARM);
+
+    /* FailLoginsSilently */
+    dwSize = sizeof(dwDummy);
+    rv = RegQueryValueEx(hkParm, REG_CLIENT_FAIL_SILENTLY_PARM, 0, &dwType, (LPBYTE) &dwDummy, &dwSize);
+    if (rv != ERROR_SUCCESS)
+        LOOKUPKEYCHAIN(dwDummy, REG_DWORD, DEFAULT_FAIL_SILENTLY, REG_CLIENT_FAIL_SILENTLY_PARM);
+    opt->failSilently = !!dwDummy;
+
+    /* Retry interval */
+    LOOKUPKEYCHAIN(opt->retryInterval, REG_DWORD, DEFAULT_RETRY_INTERVAL, REG_CLIENT_RETRY_INTERVAL_PARM);
+
+    /* Sleep interval */
+    LOOKUPKEYCHAIN(opt->sleepInterval, REG_DWORD, DEFAULT_SLEEP_INTERVAL, REG_CLIENT_SLEEP_INTERVAL_PARM);
+
+    opt->logonScript = NULL;
+    opt->smbName = NULL;
+
+    if(!ISLOGONINTEGRATED(opt->LogonOption)) {
+        goto cleanup; /* no need to lookup the logon script */
+    }
+
+    /* come up with SMB username */
+    if(ISHIGHSECURITY(opt->LogonOption)) {
+        opt->smbName = malloc( MAXRANDOMNAMELEN );
+        GenRandomName(opt->smbName);
+    } else {
+        /* username and domain for logon session is not necessarily the same as
+           username and domain passed into network provider. */
+        PSECURITY_LOGON_SESSION_DATA plsd;
+        char lsaUsername[MAX_USERNAME_LENGTH];
+        char lsaDomain[MAX_DOMAIN_LENGTH];
+        size_t len, tlen;
+
+        LsaGetLogonSessionData(lpLogonId, &plsd);
+        
+        UnicodeStringToANSI(plsd->UserName, lsaUsername, MAX_USERNAME_LENGTH);
+        UnicodeStringToANSI(plsd->LogonDomain, lsaDomain, MAX_DOMAIN_LENGTH);
+
+        DebugEvent("PLSD username[%s] domain[%s]",lsaUsername,lsaDomain);
+
+        if(SUCCEEDED(StringCbLength(lsaUsername, MAX_USERNAME_LENGTH, &tlen)))
+            len = tlen;
+        else
+            goto bad_strings;
+
+        if(SUCCEEDED(StringCbLength(lsaDomain, MAX_DOMAIN_LENGTH, &tlen)))
+            len += tlen;
+        else
+            goto bad_strings;
+
+        len += 2;
+
+        opt->smbName = malloc(len);
+
+        StringCbCopy(opt->smbName, len, lsaDomain);
+        StringCbCat(opt->smbName, len, "\\");
+        StringCbCat(opt->smbName, len, lsaUsername);
+
+        strlwr(opt->smbName);
+
+      bad_strings:
+        LsaFreeReturnBuffer(plsd);
+    }
+
+    DebugEvent("Looking up logon script");
+    /* Logon script */
+    /* First find out where the key is */
+    hkTemp = NULL;
+    rv = ~ERROR_SUCCESS;
+    dwType = 0;
+    if(hkDom)
+        rv = RegQueryValueExW(hkDom, REG_CLIENT_LOGON_SCRIPT_PARMW, 0, &dwType, NULL, &dwSize);
+    if(rv == ERROR_SUCCESS && (dwType == REG_SZ || dwType == REG_EXPAND_SZ)) {
+        hkTemp = hkDom;
+        DebugEvent("Located logon script in hkDom");
+    }
+    else if(hkDoms)
+        rv = RegQueryValueExW(hkDoms, REG_CLIENT_LOGON_SCRIPT_PARMW, 0, &dwType, NULL, &dwSize);
+    if(rv == ERROR_SUCCESS && !hkTemp && (dwType == REG_SZ || dwType == REG_EXPAND_SZ)) {
+        hkTemp = hkDoms;
+        DebugEvent("Located logon script in hkDoms");
+    }
+    /* Note that the LogonScript in the NP key is only used if we are doing high security. */
+    else if(hkNp && ISHIGHSECURITY(opt->LogonOption))
+        rv = RegQueryValueExW(hkNp, REG_CLIENT_LOGON_SCRIPT_PARMW, 0, &dwType, NULL, &dwSize);
+    if(rv == ERROR_SUCCESS && !hkTemp && (dwType == REG_SZ || dwType == REG_EXPAND_SZ)) {
+        hkTemp = hkNp;
+        DebugEvent("Located logon script in hkNp");
+    }
+
+    if(hkTemp) {
+        WCHAR *regscript	= NULL;
+        WCHAR *regexscript	= NULL;
+        WCHAR *regexuscript	= NULL;
+        WCHAR *wuname		= NULL;
+        HRESULT hr;
+
+        size_t len;
+
+        StringCbLength(opt->smbName, MAX_USERNAME_LENGTH, &len);
+        len ++;
+
+        wuname = malloc(len * sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP,0,opt->smbName,-1,wuname,len*sizeof(WCHAR));
+
+        DebugEvent("Username is set for [%S]", wuname);
+
+        /* dwSize still has the size of the required buffer in bytes. */
+        regscript = malloc(dwSize);
+        rv = RegQueryValueExW(hkTemp, REG_CLIENT_LOGON_SCRIPT_PARMW, 0, &dwType, (LPBYTE) regscript, &dwSize);
+        if(rv != ERROR_SUCCESS) {/* what the ..? */
+            DebugEvent("Can't look up logon script [%d]",rv);
+            goto doneLogonScript;
+        }
+
+        DebugEvent("Found logon script [%S]", regscript);
+
+        if(dwType == REG_EXPAND_SZ) {
+            DWORD dwReq;
+
+            dwSize += MAX_PATH * sizeof(WCHAR);  /* make room for environment expansion. */
+            regexscript = malloc(dwSize);
+            dwReq = ExpandEnvironmentStringsW(regscript, regexscript, dwSize / sizeof(WCHAR));
+            free(regscript);
+            regscript = regexscript;
+            regexscript = NULL;
+            if(dwReq > (dwSize / sizeof(WCHAR))) {
+                DebugEvent("Overflow while expanding environment strings.");
+                goto doneLogonScript;
+            }
+        }
+
+        DebugEvent("After expanding env strings [%S]", regscript);
+
+        if(wcsstr(regscript, L"%s")) {
+            dwSize += len * sizeof(WCHAR); /* make room for username expansion */
+            regexuscript = (WCHAR *) LocalAlloc(LMEM_FIXED, dwSize);
+            hr = StringCbPrintfW(regexuscript, dwSize, regscript, wuname);
+        } else {
+            regexuscript = (WCHAR *) LocalAlloc(LMEM_FIXED, dwSize);
+            hr = StringCbCopyW(regexuscript, dwSize, regscript);
+        }
+
+        DebugEvent("After expanding username [%S]", regexuscript);
+
+        if(hr == S_OK)
+            opt->logonScript = regexuscript;
+        else
+            LocalFree(regexuscript);
+
+      doneLogonScript:
+        if(wuname) free(wuname);
+        if(regscript) free(regscript);
+        if(regexscript) free(regexscript);
+    }
+
+    DebugEvent("Looking up TheseCells");
+    /* Logon script */
+    /* First find out where the key is */
+    hkTemp = NULL;
+    rv = ~ERROR_SUCCESS;
+    dwType = 0;
+    if (hkDom)
+        rv = RegQueryValueEx(hkDom, REG_CLIENT_THESE_CELLS_PARM, 0, &dwType, NULL, &dwSize);
+    if (rv == ERROR_SUCCESS && dwType == REG_MULTI_SZ) {
+        hkTemp = hkDom;
+        DebugEvent("Located TheseCells in hkDom");
+    } else if (hkDoms)
+        rv = RegQueryValueEx(hkDoms, REG_CLIENT_THESE_CELLS_PARM, 0, &dwType, NULL, &dwSize);
+    if (rv == ERROR_SUCCESS && !hkTemp && dwType == REG_MULTI_SZ) {
+        hkTemp = hkDoms;
+        DebugEvent("Located TheseCells in hkDoms");
+    } else if (hkNp)
+        rv = RegQueryValueEx(hkNp, REG_CLIENT_THESE_CELLS_PARM, 0, &dwType, NULL, &dwSize);
+    if (rv == ERROR_SUCCESS && !hkTemp && dwType == REG_MULTI_SZ) {
+        hkTemp = hkNp;
+        DebugEvent("Located TheseCells in hkNp");
+    }
+
+    if (hkTemp) {
+        HRESULT hr;
+        size_t len;
+        CHAR * thesecells;
+
+        /* dwSize still has the size of the required buffer in bytes. */
+        thesecells = malloc(dwSize);
+        rv = RegQueryValueEx(hkTemp, REG_CLIENT_THESE_CELLS_PARM, 0, &dwType, (LPBYTE) thesecells, &dwSize);
+        if(rv != ERROR_SUCCESS) {/* what the ..? */
+            DebugEvent("Can't look up TheseCells [%d]",rv);
+            goto doneTheseCells;
+        }
+
+        DebugEvent("Found TheseCells [%s]", thesecells);
+        opt->theseCells = thesecells;
+
+      doneTheseCells:;
+    }
+
+  cleanup:
+    if(hkNp) RegCloseKey(hkNp);
+    if(hkDom) RegCloseKey(hkDom);
+    if(hkDoms) RegCloseKey(hkDoms);
+    if(hkParm) RegCloseKey(hkParm);
+}       
+
+#undef LOOKUPKEYCHAIN
+
+/* Try to find out which cell the given path is in.  We must retain
+   the contents of *cell in case of failure. *cell is assumed to be
+   at least cellLen chars */
+DWORD GetFileCellName(char * path, char * cell, size_t cellLen) {
+    struct ViceIoctl blob;
+    char tcell[MAX_PATH];
+    DWORD code;
+
+    blob.in_size = 0;
+    blob.out_size = MAX_PATH;
+    blob.out = tcell;
+
+    code = pioctl(path, VIOC_FILE_CELL_NAME, &blob, 1);
+
+    if(!code) {
+        strncpy(cell, tcell, cellLen);
+        cell[cellLen - 1] = '\0';
+    }
+    return code;
+}       
+
+
+static BOOL
+WINAPI
+UnicodeStringToANSI(UNICODE_STRING uInputString, LPSTR lpszOutputString, int nOutStringLen)
+{
+    CPINFO CodePageInfo;
+
+    GetCPInfo(CP_ACP, &CodePageInfo);
+
+    if (CodePageInfo.MaxCharSize > 1)
+        // Only supporting non-Unicode strings
+        return FALSE;
+    
+    if (uInputString.Buffer && ((LPBYTE) uInputString.Buffer)[1] == '\0')
+    {
+        // Looks like unicode, better translate it
+        // UNICODE_STRING specifies the length of the buffer string in Bytes not WCHARS
+        WideCharToMultiByte(CP_ACP, 0, (LPCWSTR) uInputString.Buffer, uInputString.Length/2,
+                            lpszOutputString, nOutStringLen-1, NULL, NULL);
+        lpszOutputString[min(uInputString.Length/2,nOutStringLen-1)] = '\0';
+        return TRUE;
+    }
+    else
+        lpszOutputString[0] = '\0';
+    return FALSE;
+}  // UnicodeStringToANSI
 
 DWORD APIENTRY NPLogonNotify(
 	PLUID lpLogonId,
@@ -319,180 +644,272 @@ DWORD APIENTRY NPLogonNotify(
 	LPVOID StationHandle,
 	LPWSTR *lpLogonScript)
 {
-	char uname[256];
-	char *ctemp;
-	char password[256];
-	char cell[256];
-	MSV1_0_INTERACTIVE_LOGON *IL;
-	DWORD code;
-	int pw_exp;
-	char *reason;
-	BOOLEAN interactive;
-	BOOLEAN flag;
-	DWORD LSPtype, LSPsize;
-	HKEY NPKey;
-	HWND hwndOwner = (HWND)StationHandle;
-    BOOLEAN failSilently;
-    int retryInterval;
-    int sleepInterval = DEFAULT_SLEEP_INTERVAL;        /* seconds        */
+    char uname[MAX_USERNAME_LENGTH]="";
+    char password[MAX_PASSWORD_LENGTH]="";
+    char logonDomain[MAX_DOMAIN_LENGTH]="";
+    char cell[256]="<non-integrated logon>";
+    char homePath[MAX_PATH]="";
+
+    MSV1_0_INTERACTIVE_LOGON *IL;
+
+    DWORD code;
+
+    int pw_exp;
+    char *reason;
+    char *ctemp;
+
+    BOOLEAN interactive;
+    BOOLEAN flag;
+    DWORD LSPtype, LSPsize;
+    HKEY NPKey;
+
+    HWND hwndOwner = (HWND)StationHandle;
+
     BOOLEAN afsWillAutoStart;
-	CHAR RandomName[MAXRANDOMNAMELEN];
-	*lpLogonScript=NULL;
-        
-	IL = (MSV1_0_INTERACTIVE_LOGON *) lpAuthentInfo;
 
-	/* Are we interactive? */
-	interactive = (wcscmp(lpStationName, L"WinSta0") == 0);
+    BOOLEAN lowercased_name = TRUE;
 
-	/* Convert from Unicode to ANSI */
-	wcstombs(uname, IL->UserName.Buffer, 256);
-	wcstombs(password, IL->Password.Buffer, 256);
+    LogonOptions_t opt; /* domain specific logon options */
+    int retryInterval;
+    int sleepInterval;
 
-	/* Make sure AD-DOMANS sent from login that is sent to us is striped */
-        ctemp = strchr(uname, '@');
-        if (ctemp) *ctemp = 0;
+    /* Make sure the AFS Libraries are initialized */
+    AfsLogonInit();
 
-	(void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_CLIENT_PARMS_KEY,
-		    0, KEY_QUERY_VALUE, &NPKey);
-	LSPsize=sizeof(TraceOption);
-	RegQueryValueEx(NPKey, "TraceOption", NULL,
-				&LSPtype, (LPBYTE)&TraceOption, &LSPsize);
-	 RegCloseKey (NPKey);
-	
-	/*
-	 * Get Logon OPTIONS
-	 */
+    /* Initialize Logon Script to none */
+    *lpLogonScript=NULL;
+    
+    /* TODO: We should check the value of lpAuthentInfoType before assuming that it is
+       MSV1_0_INTERACTIVE_LOGON though for our purposes KERB_INTERACTIVE_LOGON is
+       co-incidentally equivalent. */
+    IL = (MSV1_0_INTERACTIVE_LOGON *) lpAuthentInfo;
 
-	(void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_CLIENT_PROVIDER_KEY,
-		    0, KEY_QUERY_VALUE, &NPKey);
+    /* Are we interactive? */
+    interactive = (wcscmp(lpStationName, L"WinSta0") == 0);
 
-	LSPsize=sizeof(LogonOption);
-	code = RegQueryValueEx(NPKey, "LogonOptions", NULL,
-				&LSPtype, (LPBYTE)&LogonOption, &LSPsize);
+    /* Convert from Unicode to ANSI */
 
-	RegCloseKey (NPKey);
-	if ((code!=0) || (LSPtype!=REG_DWORD))
-		LogonOption=LOGON_OPTION_INTEGRATED;	/*default to integrated logon only*/
-	DebugEvent("AFS AfsLogon - NPLogonNotify","LogonOption[%x], Service AutoStart[%d]",LogonOption,AFSWillAutoStart());
-	/* Check for zero length password if integrated logon*/
-	if ( ISLOGONINTEGRATED(LogonOption) && (password[0] == 0) )  {
-		code = GT_PW_NULL;
-		reason = "zero length password is illegal";
-		code=0;
-	}
+    /*TODO: Use SecureZeroMemory to erase passwords */
+    UnicodeStringToANSI(IL->UserName, uname, MAX_USERNAME_LENGTH);
+    UnicodeStringToANSI(IL->Password, password, MAX_PASSWORD_LENGTH);
+    UnicodeStringToANSI(IL->LogonDomainName, logonDomain, MAX_DOMAIN_LENGTH);
 
-	/* Get cell name if doing integrated logon */
-	if (ISLOGONINTEGRATED(LogonOption))
-	{
-		code = cm_GetRootCellName(cell);
-		if (code < 0) { 
-			code = KTC_NOCELL;
-			reason = "unknown cell";
-			code=0;
-		}
-	}
+    /* Make sure AD-DOMANS sent from login that is sent to us is striped */
+    ctemp = strchr(uname, '@');
+    if (ctemp) *ctemp = 0;
 
-    /* Get user specified login behavior (or defaults) */
-    GetLoginBehavior(&retryInterval, &failSilently);
-        
+    /* is the name all lowercase? */
+    for ( ctemp = uname; *ctemp ; ctemp++) {
+        if ( !islower(*ctemp) ) {
+            lowercased_name = FALSE;
+            break;
+        }
+    }
+
+    (void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                         0, KEY_QUERY_VALUE, &NPKey);
+    LSPsize=sizeof(TraceOption);
+    RegQueryValueEx(NPKey, REG_CLIENT_TRACE_OPTION_PARM, NULL,
+                     &LSPtype, (LPBYTE)&TraceOption, &LSPsize);
+
+    RegCloseKey (NPKey);
+
+    /*
+     * Get Logon options
+     */
+
+    GetDomainLogonOptions( lpLogonId, uname, logonDomain, &opt );
+    retryInterval = opt.retryInterval;
+    sleepInterval = opt.sleepInterval;
+    *lpLogonScript = opt.logonScript;
+
+    if (retryInterval < sleepInterval)
+        sleepInterval = retryInterval;
+
+    DebugEvent("Got logon script: %S",opt.logonScript);
+
     afsWillAutoStart = AFSWillAutoStart();
-        
-    *lpLogonScript = GetLogonScript(GenRandomName(RandomName));	/*only do if high security option is on*/
 
+    DebugEvent("LogonOption[%x], Service AutoStart[%d]",
+                opt.LogonOption,afsWillAutoStart);
+    
+    /* Check for zero length password if integrated logon*/
+    if ( ISLOGONINTEGRATED(opt.LogonOption) )  {
+        if ( password[0] == 0 ) {
+            DebugEvent("Password is the empty string");
+            code = GT_PW_NULL;
+            reason = "zero length password is illegal";
+            code=0;
+        }       
+
+        /* Get cell name if doing integrated logon.  
+           We might overwrite this if we are logging into an AD realm and we find out that
+           the user's home dir is in some other cell. */
+        DebugEvent("About to call cm_GetRootCellName(%s)",cell);
+        code = cm_GetRootCellName(cell);
+        if (code < 0) { 
+            DebugEvent("Unable to obtain Root Cell");
+            code = KTC_NOCELL;
+            reason = "unknown cell";
+            code=0;
+        } else {
+            DebugEvent("Cell is %s",cell);
+        }       
+
+        /* We get the user's home directory path, if applicable, though we can't lookup the
+           cell right away because the client service may not have started yet. This call
+           also sets the AD_REALM flag in opt.flags if applicable. */
+        if (ISREMOTE(opt.flags)) {
+            DebugEvent("Is Remote");
+            GetAdHomePath(homePath,MAX_PATH,lpLogonId,&opt);
+        }       
+    }
 
     /* loop until AFS is started. */
     while (TRUE) {
-	code=0;
-		
-	/* is service started yet?*/
-	if (ISLOGONINTEGRATED(LogonOption) && !ISHIGHSECURITY(LogonOption))	/* if Integrated Logon only */
-		{			
-			DebugEvent("AFS AfsLogon - ka_UserAuthenticateGeneral2","Code[%x],uame[%s] Cell[%s]",code,uname,cell);
-			code = ka_UserAuthenticateGeneral2(
-				KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
-				uname, "", cell, password,uname, 0, &pw_exp, 0,
-				&reason);
-			DebugEvent("AFS AfsLogon - (INTEGERTED only)ka_UserAuthenticateGeneral2","Code[%x]",code);
-		} else if (ISLOGONINTEGRATED(LogonOption) && ISHIGHSECURITY(LogonOption))	/* if Integrated Logon and High Security pass random generated name*/
-		{
-			code = ka_UserAuthenticateGeneral2(
-				KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
-				uname, "", cell, password,RandomName, 0, &pw_exp, 0,
-				&reason);
-			DebugEvent("AFS AfsLogon - (Both)ka_UserAuthenticateGeneral2","Code[%x],RandomName[%s]",code,RandomName);
-		} else {  /*JUST check to see if its running*/
-		    if (IsServiceRunning())
-			break;
-		    code = KTC_NOCM;
-		    if (!afsWillAutoStart)
-			break;
-		}
-			
-		/* If we've failed because the client isn't running yet and the
-		 * client is set to autostart (and therefore it makes sense for
-		 * us to wait for it to start) then sleep a while and try again. 
-		 * If the error was something else, then give up. */
-		if (code != KTC_NOCM && code != KTC_NOCMRPC || !afsWillAutoStart)
-			break;
-		
-                /* If the retry interval has expired and we still aren't
-                 * logged in, then just give up if we are not in interactive
-                 * mode or the failSilently flag is set, otherwise let the
-                 * user know we failed and give them a chance to try again. */
-        if (retryInterval <= 0) {
-	     reason = "AFS not running";
-             if (!interactive || failSilently)
-                 break;
-			flag = MessageBox(hwndOwner,
-				"AFS is still starting.  Retry?",
-				"AFS Logon",
-				MB_ICONQUESTION | MB_RETRYCANCEL);
-			if (flag == IDCANCEL)
-					break;
-                        
-                        /* Wait just a little while and try again */
-                 retryInterval = sleepInterval = DEFAULT_SLEEP_INTERVAL;
-        }
-                                        
-        if (retryInterval < sleepInterval)
-			sleepInterval = retryInterval;
-                        
-		Sleep(sleepInterval * 1000);
+        DebugEvent("while(TRUE) LogonOption[%x], Service AutoStart[%d]",
+                    opt.LogonOption,afsWillAutoStart);
 
-        retryInterval -= sleepInterval;
-     }
+        if (ISADREALM(opt.flags)) {
+            code = GetFileCellName(homePath,cell,256);
+            if (!code) {
+                DebugEvent("profile path [%s] is in cell [%s]",homePath,cell);
+            }
+            /* Don't bail out if GetFileCellName failed.
+             * The home dir may not be in AFS after all. 
+             */
+        } else
+            code=0;
+		
+        /* if Integrated Logon  */
+        if (ISLOGONINTEGRATED(opt.LogonOption))
+        {			
+            if ( KFW_is_available() ) {
+                code = KFW_AFS_get_cred(uname, cell, password, 0, opt.smbName, &reason);
+                DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",uname,opt.smbName,cell,code);
+                if (code == 0 && opt.theseCells) { 
+                    char * principal, *p;
 
-	if (code) {
-                char msg[128];
-        sprintf(msg, "Integrated login failed: %s", reason);
-                
-		if (interactive && !failSilently)
-			MessageBox(hwndOwner, msg, "AFS Logon", MB_OK);
-		else {
-                	HANDLE h;
-                	char *ptbuf[1];
-                
-                	h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
-                	ptbuf[0] = msg;
-                	ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1008, NULL,
-                		    1, 0, ptbuf, NULL);
-                	DeregisterEventSource(h);
+                    principal = (char *)malloc(strlen(uname) + strlen(cell) + 2);
+                    if ( principal ) {
+                        strcpy(principal, uname);
+                        p = principal + strlen(uname);
+                        *p++ = '@';
+                        strcpy(p, cell);
+                        for ( ;*p; p++) {
+                            *p = toupper(*p);
+                        }
+
+                        p = opt.theseCells;
+                        while ( *p ) {
+                            code = KFW_AFS_get_cred(principal, p, 0, 0, opt.smbName, &reason);
+                            DebugEvent("KFW_AFS_get_cred  uname=[%s] smbname=[%s] cell=[%s] code=[%d]",
+                                        principal,opt.smbName,p,code);
+                            p += strlen(p) + 1;
+                        }
+                        
+                        free(principal);
+                    }
                 }
-	    code = MapAuthError(code);
-		SetLastError(code);
-		if (ISHIGHSECURITY(LogonOption) && (code!=0))
-		{
-			if (*lpLogonScript)
-				LocalFree(*lpLogonScript);
-			*lpLogonScript = NULL;
-			if (!(afsWillAutoStart || ISLOGONINTEGRATED(LogonOption)))	// its not running, so if not autostart or integrated logon then just skip
-				return 0;
+            } else {
+                code = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON,
+                                                    uname, "", cell, password, opt.smbName, 0, &pw_exp, 0,
+                                                    &reason);
+                DebugEvent("AFS AfsLogon - (INTEGRATED only)ka_UserAuthenticateGeneral2","Code[%x] uname[%s] Cell[%s]",
+                            code,uname,cell);
+            }       
+            if ( code && code != KTC_NOCM && code != KTC_NOCMRPC && !lowercased_name ) {
+                for ( ctemp = uname; *ctemp ; ctemp++) {
+                    *ctemp = tolower(*ctemp);
+                }
+                lowercased_name = TRUE;
+                goto sleeping;
+            }
 
-		}
-	}
-	DebugEvent("AFS AfsLogon - Exit","Return Code[%x]",code);
-	return code;
-}
+            /* is service started yet?*/
+
+            /* If we've failed because the client isn't running yet and the
+            * client is set to autostart (and therefore it makes sense for
+            * us to wait for it to start) then sleep a while and try again. 
+            * If the error was something else, then give up. */
+            if (code != KTC_NOCM && code != KTC_NOCMRPC || !afsWillAutoStart)
+                break;
+        }
+        else {  
+            /*JUST check to see if its running*/
+            if (IsServiceRunning())
+                break;
+            if (afsWillAutoStart && !IsServiceStartPending()) {
+                code = KTC_NOCMRPC;
+                reason = "AFS Service start failed";
+                break;
+            }
+        }
+
+        /* If the retry interval has expired and we still aren't
+         * logged in, then just give up if we are not in interactive
+         * mode or the failSilently flag is set, otherwise let the
+         * user know we failed and give them a chance to try again. */
+        if (retryInterval <= 0) {
+            reason = "AFS not running";
+            if (!interactive || opt.failSilently)
+                break;
+            flag = MessageBox(hwndOwner,
+                               "AFS is still starting.  Retry?",
+                               "AFS Logon",
+                               MB_ICONQUESTION | MB_RETRYCANCEL);
+            if (flag == IDCANCEL)
+                break;
+
+            /* Wait just a little while and try again */
+            retryInterval = opt.retryInterval;
+        }
+
+      sleeping:
+        Sleep(sleepInterval * 1000);
+        retryInterval -= sleepInterval;
+    }
+
+    DebugEvent("while loop exited");
+    /* remove any kerberos 5 tickets currently held by the SYSTEM account */
+    if ( KFW_is_available() )
+        KFW_AFS_destroy_tickets_for_cell(cell);
+
+    if (code) {
+        char msg[128];
+        HANDLE h;
+        char *ptbuf[1];
+
+        StringCbPrintf(msg, sizeof(msg), "Integrated login failed: %s", reason);
+
+        if (ISLOGONINTEGRATED(opt.LogonOption) && interactive && !opt.failSilently)
+            MessageBox(hwndOwner, msg, "AFS Logon", MB_OK);
+
+        h = RegisterEventSource(NULL, AFS_LOGON_EVENT_NAME);
+        ptbuf[0] = msg;
+        ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1008, NULL,
+                     1, 0, ptbuf, NULL);
+        DeregisterEventSource(h);
+	    
+        code = MapAuthError(code);
+        SetLastError(code);
+
+        if (ISLOGONINTEGRATED(opt.LogonOption) && (code!=0))
+        {
+            if (*lpLogonScript)
+                LocalFree(*lpLogonScript);
+            *lpLogonScript = NULL;
+            if (!afsWillAutoStart)	// its not running, so if not autostart or integrated logon then just skip
+                code = 0;
+        }
+    }
+
+    if (opt.theseCells) free(opt.theseCells);
+    if (opt.smbName) free(opt.smbName);
+
+    DebugEvent("AFS AfsLogon - Exit","Return Code[%x]",code);
+    return code;
+}       
 
 DWORD APIENTRY NPPasswordChangeNotify(
 	LPCWSTR lpAuthentInfoType,
@@ -503,7 +920,118 @@ DWORD APIENTRY NPPasswordChangeNotify(
 	LPVOID StationHandle,
 	DWORD dwChangeInfo)
 {
-	DebugEvent0("AFS AfsLogon - NPPasswordChangeNotify");
-	return 0;
+    /* Make sure the AFS Libraries are initialized */
+    AfsLogonInit();
+
+    DebugEvent0("AFS AfsLogon - NPPasswordChangeNotify");
+    return 0;
 }
+
+#include <userenv.h>
+#include <Winwlx.h>
+#include <afs/vice.h>
+#include <afs/fs_utils.h>
+
+BOOL IsPathInAfs(const CHAR *strPath)
+{
+    char space[2048];
+    struct ViceIoctl blob;
+    int code;
+
+    blob.in_size = 0;
+    blob.out_size = 2048;
+    blob.out = space;
+
+    code = pioctl((LPTSTR)((LPCTSTR)strPath), VIOC_FILE_CELL_NAME, &blob, 1);
+    if (code)
+        return FALSE;
+    return TRUE;
+}
+
+#ifdef COMMENT
+typedef struct _WLX_NOTIFICATION_INFO {  
+    ULONG Size;  
+    ULONG Flags;  
+    PWSTR UserName;  
+    PWSTR Domain;  
+    PWSTR WindowStation;  
+    HANDLE hToken;  
+    HDESK hDesktop;  
+    PFNMSGECALLBACK pStatusCallback;
+} WLX_NOTIFICATION_INFO, *PWLX_NOTIFICATION_INFO;
+#endif
+
+VOID AFS_Startup_Event( PWLX_NOTIFICATION_INFO pInfo )
+{
+    DWORD LSPtype, LSPsize;
+    HKEY NPKey;
+
+    /* Make sure the AFS Libraries are initialized */
+    AfsLogonInit();
+
+    (void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSREG_CLT_SVC_PARAM_SUBKEY,
+                        0, KEY_QUERY_VALUE, &NPKey);
+    LSPsize=sizeof(TraceOption);
+    RegQueryValueEx(NPKey, REG_CLIENT_TRACE_OPTION_PARM, NULL,
+                     &LSPtype, (LPBYTE)&TraceOption, &LSPsize);
+
+    RegCloseKey (NPKey);
+    DebugEvent0("AFS_Startup_Event");
+}
+
+VOID AFS_Logoff_Event( PWLX_NOTIFICATION_INFO pInfo )
+{
+    DWORD code;
+    TCHAR profileDir[1024] = TEXT("");
+    DWORD  len = 1024;
+    PTOKEN_USER  tokenUser = NULL;
+    DWORD  retLen;
+    HANDLE hToken;
+
+    /* Make sure the AFS Libraries are initialized */
+    AfsLogonInit();
+
+    DebugEvent0("AFS_Logoff_Event - Starting");
+
+    if (!GetTokenInformation(pInfo->hToken, TokenUser, NULL, 0, &retLen))
+    {
+        if ( GetLastError() == ERROR_INSUFFICIENT_BUFFER ) {
+            tokenUser = (PTOKEN_USER) LocalAlloc(LPTR, retLen);
+
+            if (!GetTokenInformation(pInfo->hToken, TokenUser, tokenUser, retLen, &retLen))
+            {
+                DebugEvent("GetTokenInformation failed: GLE = %lX", GetLastError());
+            }
+        }
+    }
+
+    /* We can't use pInfo->Domain for the domain since in the cross realm case 
+     * this is source domain and not the destination domain.
+     */
+    if (QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid, pInfo->Domain)) {
+        WCHAR Domain[64]=L"";
+        GetLocalShortDomain(Domain, sizeof(Domain));
+        if (QueryAdHomePathFromSid( profileDir, sizeof(profileDir), tokenUser->User.Sid, Domain)) {
+            if (NetUserGetProfilePath(pInfo->Domain, pInfo->UserName, profileDir, len))
+                GetUserProfileDirectory(pInfo->hToken, profileDir, &len);
+        }
+    }
+    
+    if (strlen(profileDir)) {
+        DebugEvent("Profile Directory: %s", profileDir);
+        if (!IsPathInAfs(profileDir)) {
+            if (code = ktc_ForgetAllTokens())
+                DebugEvent("AFS_Logoff_Event - ForgetAllTokens failed [%lX]",code);
+            else
+                DebugEvent0("AFS_Logoff_Event - ForgetAllTokens succeeded");
+        } else {
+            DebugEvent0("AFS_Logoff_Event - Tokens left in place; profile in AFS");
+        }
+    } else {
+        DebugEvent0("AFS_Logoff_Event - Unable to load profile");
+    }
+
+    if ( tokenUser )
+        LocalFree(tokenUser);
+}   
 

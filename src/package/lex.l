@@ -1,9 +1,12 @@
 %{
 
 /*
- * Copyright (C) 1990 Transarc Corporation
- * Licensed Materials - Property of Transarc
- * All Rights Reserved
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
  *
  * lex.l:
  *	Lexical definitions recognized by package, the AFS
@@ -13,7 +16,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/package/lex.l,v 1.1.1.3 2001/07/14 22:23:09 hartmans Exp $");
+RCSID("$Header: /cvs/openafs/src/package/lex.l,v 1.4 2003/03/10 01:59:40 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>

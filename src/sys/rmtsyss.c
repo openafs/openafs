@@ -15,7 +15,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/sys/rmtsyss.c,v 1.1.1.7 2003/04/13 19:07:40 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/sys/rmtsyss.c,v 1.10 2003/07/15 23:16:54 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/ioctl.h>
@@ -56,7 +57,8 @@ extern RMTSYS_ExecuteRequest();
 /* Main routine of the remote AFS system call server. The calling process will
  * never return; this is currently called from afsd (when "-rmtsys" is passed
  * as a parameter) */
-rmtsysd() {
+rmtsysd()
+{
 /*  void catchsig(int); */
     struct rx_securityClass *(securityObjects[N_SECURITY_OBJECTS]);
     struct rx_service *service;
@@ -68,30 +70,32 @@ rmtsysd() {
     signal(SIGHUP, SIG_IGN);
 
     /* Initialize the rx-based RMTSYS server */
-    if (rx_Init(htons(AFSCONF_RMTSYSPORT)) < 0) 
+    if (rx_Init(htons(AFSCONF_RMTSYSPORT)) < 0)
 	rmt_Quit("rx_init");
     securityObjects[0] = rxnull_NewServerSecurityObject();
-    if (securityObjects[0] == (struct rx_securityClass *) 0)
+    if (securityObjects[0] == (struct rx_securityClass *)0)
 	rmt_Quit("rxnull_NewServerSecurityObject");
-    service = rx_NewService(0, RMTSYS_SERVICEID, AFSCONF_RMTSYSSERVICE,
-			    securityObjects, N_SECURITY_OBJECTS,
-			    RMTSYS_ExecuteRequest);
-    if (service == (struct rx_service *) 0) 
+    service =
+	rx_NewService(0, RMTSYS_SERVICEID, AFSCONF_RMTSYSSERVICE,
+		      securityObjects, N_SECURITY_OBJECTS,
+		      RMTSYS_ExecuteRequest);
+    if (service == (struct rx_service *)0)
 	rmt_Quit("rx_NewService");
     /* One may wish to tune some default RX params for better performance
      * at some point... */
     rx_SetMaxProcs(service, 2);
-    rx_StartServer(1); /* Donate this process to the server process pool */
+    rx_StartServer(1);		/* Donate this process to the server process pool */
 }
 
 
 /* Implements the remote setpag(2) call. Note that unlike the standard call,
  * here we also get back the new pag value; we need this so that the caller
  * can add it to its group list via setgroups() */
-int SRMTSYS_SetPag(call, creds, newpag, errornumber)
-struct rx_call *call;
-clientcred *creds;
-afs_int32 *newpag, *errornumber;
+afs_int32
+SRMTSYS_SetPag(call, creds, newpag, errornumber)
+     struct rx_call *call;
+     clientcred *creds;
+     afs_int32 *newpag, *errornumber;
 {
     afs_uint32 blob[PIOCTL_HEADER];
     struct ViceIoctl data;
@@ -101,28 +105,29 @@ afs_int32 *newpag, *errornumber;
     SETCLIENTCONTEXT(blob, rx_HostOf(call->conn->peer), creds->uid,
 		     creds->group0, creds->group1, PSETPAG, NFS_EXPORTER);
     data.in = (caddr_t) blob;
-    data.in_size = sizeof (blob);
+    data.in_size = sizeof(blob);
     data.out = (caddr_t) blob;
-    data.out_size = sizeof (blob);
+    data.out_size = sizeof(blob);
     /* force local pioctl call */
     error = lpioctl(0, _VICEIOCTL(PSetClientContext), &data, 1);
     if (error) {
-      if (errno == PSETPAG) {
-	*newpag = blob[0];	/* new pag value */
-      } else 
-	*errornumber = errno;
+	if (errno == PSETPAG) {
+	    *newpag = blob[0];	/* new pag value */
+	} else
+	    *errornumber = errno;
     }
     return 0;
 }
 
 
 /* Implements the remote pioctl(2) call */
-int SRMTSYS_Pioctl(call, creds, path, cmd, follow, InData, OutData, errornumber)
-struct rx_call *call;
-clientcred *creds;
-afs_int32 cmd, follow, *errornumber;
-char *path;
-rmtbulk *InData, *OutData;
+afs_int32
+SRMTSYS_Pioctl(call, creds, path, cmd, follow, InData, OutData, errornumber)
+     struct rx_call *call;
+     clientcred *creds;
+     afs_int32 cmd, follow, *errornumber;
+     char *path;
+     rmtbulk *InData, *OutData;
 {
     register afs_int32 error;
     struct ViceIoctl data;
@@ -130,15 +135,19 @@ rmtbulk *InData, *OutData;
     afs_uint32 blob[PIOCTL_HEADER];
 
     *errornumber = 0;
-    SETCLIENTCONTEXT(blob,  rx_HostOf(call->conn->peer), creds->uid,
+    SETCLIENTCONTEXT(blob, rx_HostOf(call->conn->peer), creds->uid,
 		     creds->group0, creds->group1, cmd, NFS_EXPORTER);
-    data.in = (char *)malloc(InData->rmtbulk_len + PIOCTL_HEADER*sizeof(afs_int32));
-    if (!data.in) return (-1); /* helpless here */
-    if (!strcmp(path, NIL_PATHP)) pathp	= (char	*)0;	/* It meant to be NIL */
+    data.in =
+	(char *)malloc(InData->rmtbulk_len +
+		       PIOCTL_HEADER * sizeof(afs_int32));
+    if (!data.in)
+	return (-1);		/* helpless here */
+    if (!strcmp(path, NIL_PATHP))
+	pathp = (char *)0;	/* It meant to be NIL */
     memcpy(data.in, blob, sizeof(blob));
     inparam_conversion(cmd, InData->rmtbulk_val, 1);
-    memcpy(data.in+sizeof(blob), InData->rmtbulk_val, InData->rmtbulk_len);
-    data.in_size = InData->rmtbulk_len + PIOCTL_HEADER*sizeof(afs_int32);
+    memcpy(data.in + sizeof(blob), InData->rmtbulk_val, InData->rmtbulk_len);
+    data.in_size = InData->rmtbulk_len + PIOCTL_HEADER * sizeof(afs_int32);
     data.out = OutData->rmtbulk_val;
     data.out_size = OutData->rmtbulk_len;
     /* force local pioctl call */
@@ -158,9 +167,8 @@ rmtbulk *InData, *OutData;
 }
 
 rmt_Quit(msg, a, b)
-    char *msg;
+     char *msg;
 {
     fprintf(stderr, msg, a, b);
     exit(1);
 }
-

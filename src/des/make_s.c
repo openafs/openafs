@@ -8,28 +8,29 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/make_s.c,v 1.1.1.3 2001/07/14 22:21:35 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/des/make_s.c,v 1.4 2003/07/15 23:15:00 shadow Exp $");
 
 #include <mit-cpyright.h>
 #include <stdio.h>
 #include "des_internal.h"
 #include "s_table.h"
 
-void gen(stream)
-    FILE *stream;
+void
+gen(stream)
+     FILE *stream;
 {
     /* clear the output */
-    fprintf(stream,"\n\tL2 = 0; R2 = 0;");
+    fprintf(stream, "\n\tL2 = 0; R2 = 0;");
 
 #ifdef notdef
     /* P permutes 32 bit input R1 into 32 bit output R2 */
 
-    fprintf(stream,"\n/* P operations */\n/* first left to left */\n");
+    fprintf(stream, "\n/* P operations */\n/* first left to left */\n");
     /* first list mapping from left to left */
-    for (i = 0; i <=31; i++)
+    for (i = 0; i <= 31; i++)
 	if (S[i] < 32)
-	    fprintf(stream,
-		    "\n\tif (R1 & (1<<%d)) R2 |= 1<<%d;",S[i],i);
+	    fprintf(stream, "\n\tif (R1 & (1<<%d)) R2 |= 1<<%d;", S[i], i);
 #endif
-    fprintf(stream,"\n");
+    fprintf(stream, "\n");
 }

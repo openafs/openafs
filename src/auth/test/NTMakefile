@@ -5,14 +5,15 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=auth\test
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\..\config\NTMakefile.version
 
 ############################################################################
-CELL_EXEFILE = testcellconf.exe
+CELL_EXEFILE = $(OUT)\testcellconf.exe
 
 CELL_EXEOBJS =\
-	testcellconf.obj
+	$(OUT)\testcellconf.obj
 
 CELL_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsauth.lib \
@@ -26,10 +27,10 @@ $(CELL_EXEFILE): $(CELL_EXEOBJS)  $(CELL_EXELIBS)
 	$(EXEPREP) 
 
 ############################################################################
-KTC_EXEFILE = ktctest.exe
+KTC_EXEFILE = $(OUT)\ktctest.exe
 
 KTC_EXEOBJS =\
-	ktctest.obj
+	$(OUT)\ktctest.obj
 
 KTC_EXELIBS =\
 	$(DESTDIR)\lib\afs\afsutil.lib \
@@ -44,3 +45,6 @@ $(KTC_EXEFILE): $(KTC_EXEOBJS)  $(KTC_EXELIBS)
 test tests: $(CELL_EXEFILE) $(KTC_EXEFILE)
 
 clean::
+
+mkdir: 
+	

@@ -47,7 +47,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/krb_tf.c,v 1.1.1.5 2001/10/14 18:05:10 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/kauth/krb_tf.c,v 1.6 2003/07/15 23:15:17 shadow Exp $");
 
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
@@ -71,34 +72,39 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/krb_tf.c,v 1.1.1.5 2001/10/14 18:
 #include "kauth.h"
 #include "kautils.h"
 
-afs_int32 krb_write_ticket_file (realm)
-  char *realm;
-{   char  ticket_file[AFSDIR_PATH_MAX];
-    int   fd;
-    int   count;
-    afs_int32  code;
-    int   lifetime, kvno;
+afs_int32
+krb_write_ticket_file(realm)
+     char *realm;
+{
+    char ticket_file[AFSDIR_PATH_MAX];
+    int fd;
+    int count;
+    afs_int32 code;
+    int lifetime, kvno;
     char *tf_name;
     struct ktc_principal client, server;
     struct ktc_token token;
 
-    if ((strlen(realm) >= sizeof(client.cell))) return KABADNAME;
-    strcpy (server.name, KA_TGS_NAME);
-    strcpy (server.instance, realm);
-    lcstring (server.cell, realm, sizeof(server.cell));
+    if ((strlen(realm) >= sizeof(client.cell)))
+	return KABADNAME;
+    strcpy(server.name, KA_TGS_NAME);
+    strcpy(server.instance, realm);
+    lcstring(server.cell, realm, sizeof(server.cell));
 
-    code = ktc_GetToken (&server, &token, sizeof(struct ktc_token), &client);
-    if (code) return code;
+    code = ktc_GetToken(&server, &token, sizeof(struct ktc_token), &client);
+    if (code)
+	return code;
 
     /* Use the KRBTKFILE environment variable if it exists, otherwise fall
      * back upon /tmp/tkt(uid}. 
      */
-    if (tf_name = (char *) getenv("KRBTKFILE"))
-	(void) sprintf(ticket_file, "%s", tf_name);
+    if (tf_name = (char *)getenv("KRBTKFILE"))
+	(void)sprintf(ticket_file, "%s", tf_name);
     else
-	(void) sprintf(ticket_file, "%s/tkt%d", gettmpdir(), getuid());
-    fd = open (ticket_file, O_WRONLY+O_CREAT+O_TRUNC, 0700);
-    if (fd <= 0) return errno;
+	(void)sprintf(ticket_file, "%s/tkt%d", gettmpdir(), getuid());
+    fd = open(ticket_file, O_WRONLY + O_CREAT + O_TRUNC, 0700);
+    if (fd <= 0)
+	return errno;
 
     /* write client name as file header */
 
@@ -120,37 +126,36 @@ afs_int32 krb_write_ticket_file (realm)
     if (write(fd, server.instance, count) != count)
 	goto bad;
     /* Realm */
-    ucstring (server.cell, server.cell, sizeof(server.cell));
+    ucstring(server.cell, server.cell, sizeof(server.cell));
     count = strlen(server.cell) + 1;
     if (write(fd, server.cell, count) != count)
 	goto bad;
     /* Session key */
-    if (write(fd, (char *) &token.sessionKey, 8) != 8)
+    if (write(fd, (char *)&token.sessionKey, 8) != 8)
 	goto bad;
     /* Lifetime */
-    lifetime = time_to_life (token.startTime, token.endTime);
-    if (write(fd, (char *) &lifetime, sizeof(int)) != sizeof(int))
+    lifetime = time_to_life(token.startTime, token.endTime);
+    if (write(fd, (char *)&lifetime, sizeof(int)) != sizeof(int))
 	goto bad;
     /* Key vno */
     kvno = token.kvno;
-    if (write(fd, (char *) &kvno, sizeof(int)) != sizeof(int))
+    if (write(fd, (char *)&kvno, sizeof(int)) != sizeof(int))
 	goto bad;
     /* Tkt length */
-    if (write(fd, (char *) &(token.ticketLen), sizeof(int)) !=
-	sizeof(int))
+    if (write(fd, (char *)&(token.ticketLen), sizeof(int)) != sizeof(int))
 	goto bad;
     /* Ticket */
     count = token.ticketLen;
-    if (write(fd, (char *) (token.ticket), count) != count)
+    if (write(fd, (char *)(token.ticket), count) != count)
 	goto bad;
     /* Issue date */
-    if (write(fd, (char *) &token.startTime, sizeof(afs_int32))
+    if (write(fd, (char *)&token.startTime, sizeof(afs_int32))
 	!= sizeof(afs_int32))
 	goto bad;
-    close (fd);
+    close(fd);
     return 0;
 
   bad:
-    close (fd);
+    close(fd);
     return -1;
 }

@@ -17,7 +17,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_xmit_nt.c,v 1.1.1.5 2001/07/14 22:23:35 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rx/rx_xmit_nt.c,v 1.7.2.1 2004/08/25 07:09:42 shadow Exp $");
 
 #if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
 
@@ -43,7 +44,8 @@ typedef int SOCKET;
 #endif
 #include <errno.h>
 
-int recvmsg(int socket, struct msghdr *msgP, int flags)
+int
+recvmsg(int socket, struct msghdr *msgP, int flags)
 {
     char rbuf[RX_MAX_PACKET_SIZE];
     int size;
@@ -53,19 +55,18 @@ int recvmsg(int socket, struct msghdr *msgP, int flags)
 
 
     size = rx_maxJumboRecvSize;
-    code = recvfrom((SOCKET)socket, rbuf, size, flags,
-		    (struct sockaddr*)(msgP->msg_name),
-		    &(msgP->msg_namelen));
+    code =
+	recvfrom((SOCKET) socket, rbuf, size, flags,
+		 (struct sockaddr *)(msgP->msg_name), &(msgP->msg_namelen));
 
-    if (code>0) {
+    if (code > 0) {
 	size = code;
-	
-	for (off = i = 0; size > 0 && i<msgP->msg_iovlen; i++) {
+
+	for (off = i = 0; size > 0 && i < msgP->msg_iovlen; i++) {
 	    if (msgP->msg_iov[i].iov_len) {
 		if (msgP->msg_iov[i].iov_len < size) {
 		    n = msgP->msg_iov[i].iov_len;
-		}
-		else {
+		} else {
 		    n = size;
 		}
 		memcpy(msgP->msg_iov[i].iov_base, &rbuf[off], n);
@@ -76,34 +77,41 @@ int recvmsg(int socket, struct msghdr *msgP, int flags)
 
 	/* Accounts for any we didn't copy in to iovecs. */
 	code -= size;
-    }
-    else {
-        code = -1;
+    } else {
+#ifdef AFS_NT40_ENV
+	if (code == SOCKET_ERROR)
+	    code = WSAGetLastError();
+	if (code == WSAEWOULDBLOCK)
+	    errno = WSAEWOULDBLOCK;
+	else
+	    errno = EIO;
+#endif /* AFS_NT40_ENV */
+	code = -1;
     }
 
     return code;
 }
 
-int sendmsg(int socket, struct msghdr *msgP, int flags)
+int
+sendmsg(int socket, struct msghdr *msgP, int flags)
 {
     char buf[RX_MAX_PACKET_SIZE];
-    char *sbuf=buf;
+    char *sbuf = buf;
     int size, tmp;
     int code;
     int off, i, n;
     int allocd = 0;
 
-    for (size = i = 0; i<msgP->msg_iovlen; i++)
+    for (size = i = 0; i < msgP->msg_iovlen; i++)
 	size += msgP->msg_iov[i].iov_len;
-	 
+
     if (msgP->msg_iovlen <= 2) {
 	sbuf = msgP->msg_iov[0].iov_base;
-    }
-    else {
+    } else {
 	/* Pack data into array from iovecs */
 	tmp = size;
-	for (off = i = 0; tmp > 0 && i<msgP->msg_iovlen; i++) {
-	    if (msgP->msg_iov[i].iov_len > 0 ) {
+	for (off = i = 0; tmp > 0 && i < msgP->msg_iovlen; i++) {
+	    if (msgP->msg_iov[i].iov_len > 0) {
 		if (tmp > msgP->msg_iov[i].iov_len)
 		    n = msgP->msg_iov[i].iov_len;
 		else
@@ -115,8 +123,9 @@ int sendmsg(int socket, struct msghdr *msgP, int flags)
 	}
     }
 
-    code = sendto((SOCKET)socket, sbuf, size, flags,
-		  (struct sockaddr*)(msgP->msg_name), msgP->msg_namelen);
+    code =
+	sendto((SOCKET) socket, sbuf, size, flags,
+	       (struct sockaddr *)(msgP->msg_name), msgP->msg_namelen);
 
 #ifdef AFS_NT40_ENV
     if (code == SOCKET_ERROR) {
@@ -124,9 +133,11 @@ int sendmsg(int socket, struct msghdr *msgP, int flags)
 	switch (code) {
 	case WSAEINPROGRESS:
 	case WSAENETRESET:
-	case WSAEWOULDBLOCK:
 	case WSAENOBUFS:
 	    errno = 0;
+	    break;
+	case WSAEWOULDBLOCK:
+	    errno = WSAEWOULDBLOCK;
 	    break;
 	default:
 	    errno = EIO;
@@ -144,8 +155,4 @@ int sendmsg(int socket, struct msghdr *msgP, int flags)
     return code;
 
 }
-
-
-
-
 #endif /* AFS_NT40_ENV || AFS_DJGPP_ENV */

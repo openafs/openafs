@@ -53,84 +53,86 @@
  *  */
 
 #ifndef KADBVERSION
-#define KADBVERSION	5		/* the database version */
+#define KADBVERSION	5	/* the database version */
 #endif /* KADBVERSION */
 
-#define HASHSIZE	8191		/* pick a prime for the length */
+#define HASHSIZE	8191	/* pick a prime for the length */
 
 #define NULLO		0
 
 /* all fields are stored in network (sun or rt) byte order */
 struct kaheader {
-    afs_int32	   version;		/* database version number */
-    afs_int32	   headerSize;		/* bytes in header, for skipping in bad times */
-    afs_int32	   freePtr;		/* first (if any) free entry in freelist */
-    afs_int32	   eofPtr;		/* first free byte in file */
-    afs_int32	   kvnoPtr;		/* first special name old keys entry */
-    struct kasstats stats;		/* track interesting statistics */
-    afs_int32	   admin_accounts;	/* total number of users w/ admin flag set */
-    afs_int32	   specialKeysVersion;	/* inc if special name gets new key */
-    afs_int32	   hashsize;		/* allocated size of nameHash */
+    afs_int32 version;		/* database version number */
+    afs_int32 headerSize;	/* bytes in header, for skipping in bad times */
+    afs_int32 freePtr;		/* first (if any) free entry in freelist */
+    afs_int32 eofPtr;		/* first free byte in file */
+    afs_int32 kvnoPtr;		/* first special name old keys entry */
+    struct kasstats stats;	/* track interesting statistics */
+    afs_int32 admin_accounts;	/* total number of users w/ admin flag set */
+    afs_int32 specialKeysVersion;	/* inc if special name gets new key */
+    afs_int32 hashsize;		/* allocated size of nameHash */
 #if (KADBVERSION > 5)
-    afs_int32	   spare[10];		/* allocate some spares next time */
+    afs_int32 spare[10];	/* allocate some spares next time */
 #endif
-    afs_int32	   nameHash[HASHSIZE];	/* hash table for names */
-    afs_int32	   checkVersion;	/* database version number, same as first field */
+    afs_int32 nameHash[HASHSIZE];	/* hash table for names */
+    afs_int32 checkVersion;	/* database version number, same as first field */
 };
 
 #define ENTRYSIZE		200
-#define KA_NPWSUMS		(ENTRYSIZE - sizeof(kaident) - sizeof(struct ktc_encryptionKey)  - 11*4)      
+#define KA_NPWSUMS		(ENTRYSIZE - sizeof(kaident) - sizeof(struct ktc_encryptionKey)  - 11*4)
 
 /* all fields are stored in network byte order */
 struct kaentry {
-    afs_int32	   flags;		/* random flags */
-    afs_int32	   next;		/* next block same entry (or freelist) */
-    Date	   user_expiration;	/* user registration good till then */
-    Date	   modification_time;	/* time of last update */
-    afs_int32	   modification_id;	/* identity of user doing update */
-    Date	   change_password_time;/* time user last changed own password */
-    afs_int32	   max_ticket_lifetime;	/* maximum lifetime for tickets */
-    afs_int32	   key_version;		/* verson number of this key */
-    union { /* overload several miscellaneous fields */
-        struct {
-	    afs_int32   nOldKeys;		/* number of outstanding old keys */
-	    afs_int32   oldKeys;		/* block containing old keys */
-	} asServer; /* for principals that are part of the AuthServer itself */
+    afs_int32 flags;		/* random flags */
+    afs_int32 next;		/* next block same entry (or freelist) */
+    Date user_expiration;	/* user registration good till then */
+    Date modification_time;	/* time of last update */
+    afs_int32 modification_id;	/* identity of user doing update */
+    Date change_password_time;	/* time user last changed own password */
+    afs_int32 max_ticket_lifetime;	/* maximum lifetime for tickets */
+    afs_int32 key_version;	/* verson number of this key */
+    union {			/* overload several miscellaneous fields */
 	struct {
-	    afs_int32   maxAssociates;	/* associates this user can create */
-	    afs_int32   nInstances;		/* number of instances user's created */
-	} assocRoot; /* for principals at root of associate tree */
+	    afs_int32 nOldKeys;	/* number of outstanding old keys */
+	    afs_int32 oldKeys;	/* block containing old keys */
+	} asServer;		/* for principals that are part of the AuthServer itself */
 	struct {
-	    afs_int32   root;		/* identity of this instance's root */
-	    afs_int32   spare;
-	} associate; /* associate instance */
+	    afs_int32 maxAssociates;	/* associates this user can create */
+	    afs_int32 nInstances;	/* number of instances user's created */
+	} assocRoot;		/* for principals at root of associate tree */
+	struct {
+	    afs_int32 root;	/* identity of this instance's root */
+	    afs_int32 spare;
+	} associate;		/* associate instance */
     } misc;
     /* put the strings last to simplify alignment calculations */
-    struct kaident userID;		/* user and instance names */
+    struct kaident userID;	/* user and instance names */
     struct ktc_encryptionKey key;	/* the key to use */
-    unsigned char           misc_auth_bytes[4];  /* expires, spare, attempts, locktime*/
-    unsigned char  pwsums[KA_NPWSUMS];	/* pad to 200 bytes */
+    unsigned char misc_auth_bytes[4];	/* expires, spare, attempts, locktime */
+    unsigned char pwsums[KA_NPWSUMS];	/* pad to 200 bytes */
 };
 typedef struct kaentry kaentry;
 
 #define EXPIRES 0
-#define REUSEFLAGS 1 
+#define REUSEFLAGS 1
 #define ATTEMPTS 2
 #define LOCKTIME 3
 
-struct kaOldKey {			/* each old key still remembered */
-    Date superseded;			/* time this key replaced, or zero */
-    afs_int32 version;			/* key's version */
+struct kaOldKey {		/* each old key still remembered */
+    Date superseded;		/* time this key replaced, or zero */
+    afs_int32 version;		/* key's version */
     struct ktc_encryptionKey key;
 };
 #define NOLDKEYS ((ENTRYSIZE-3*sizeof(afs_int32))/sizeof(struct kaOldKey))
 
 struct kaOldKeys {
-    afs_int32 flags;				/* random flags */
-    afs_int32 next;				/* next block of old keys for all entries (or freelist) */
-    afs_int32 entry;				/* corresponding user entry */
+    afs_int32 flags;		/* random flags */
+    afs_int32 next;		/* next block of old keys for all entries (or freelist) */
+    afs_int32 entry;		/* corresponding user entry */
     struct kaOldKey keys[NOLDKEYS];	/* each old key */
-    char padding[ENTRYSIZE - ((NOLDKEYS*sizeof(struct kaOldKey))+3*sizeof(afs_int32))];
+    char padding[ENTRYSIZE -
+		 ((NOLDKEYS * sizeof(struct kaOldKey)) +
+		  3 * sizeof(afs_int32))];
 };
 
 #define COUNT_REQ(op) int *this_op = &dynamic_statistics.op.aborts; dynamic_statistics.op.requests++; lastOperation = # op
@@ -148,38 +150,21 @@ extern struct kaheader cheader;
 extern struct kadstats dynamic_statistics;
 extern afs_int32 myHost;
 
-extern int kaux_opendb(
-  char *path
-);
+extern int kaux_opendb(char *path);
 
-extern void kaux_closedb(
-  void
-);
+extern void kaux_closedb(void
+    );
 
-extern int kaux_read(
-  afs_int32 to,
-  unsigned int *nfailures,
-  afs_uint32 *lasttime
-);
+extern int kaux_read(afs_int32 to, unsigned int *nfailures,
+		     afs_uint32 * lasttime);
 
-extern int kaux_write(
-  afs_int32 to,
-  unsigned int nfailures,
-  afs_uint32 lasttime
-);
+extern int kaux_write(afs_int32 to, unsigned int nfailures,
+		      afs_uint32 lasttime);
 
-extern void kaux_inc(
-    afs_int32 to,
-    afs_uint32 locktime
-);
+extern void kaux_inc(afs_int32 to, afs_uint32 locktime);
 
-extern int kaux_islocked(
-  afs_int32 to,
-  u_int   attempts,
-  u_int   locktime
-);
+extern int kaux_islocked(afs_int32 to, u_int attempts, u_int locktime);
 
 extern afs_int32 krb4_cross;
 
 #define LOCKPW
-

@@ -20,7 +20,10 @@ extern int
 afssw_GetServerInstallDir(char **bufPP);
 
 extern int
-afssw_GetClientInstallDir(char **bufPP);
+afssw_GetClientCellServDBDir(char **bufPP);
+
+extern int
+afssw_GetClientCellDir(char **bufPP);
 
 extern int
 afssw_GetClientCellName(char **bufPP);

@@ -5,31 +5,14 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-# MakefileProto for AIX systems
-#
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-DEST=@DEST@
-TOP_SRCDIR=@TOP_SRCDIR@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-SYS_NAME=@AFS_SYSNAME@
 
-include ../config/Makefile.${SYS_NAME}
 
 # System specific build commands and flags
-DEFINES= -DAFSDEBUG -DKERNEL -DUKERNEL -DAFS -DVICE
-CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBUG}
+DEFINES= -DKERNEL -DUKERNEL
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBG}
 AR = /usr/bin/ar
 ARFLAGS = -r
 RANLIB = /bin/ranlib
@@ -43,60 +26,26 @@ TEST_LDFLAGS=
 TEST_LIBS=-lm -lpthreads
 
 LIBUAFS = libuafs.a
+LIBJUAFS = libjuafs.a
 LIBAFSWEB = nsafs.a
 LIBAFSWEBKRB = nsafs.krb.a
 
-OPTF=-O
+# To get __file__ (afs_osi_pag.c) you need to specify language level 
+# C99 to xlc_r like this:
+OPTF=-O -qlanglvl=stdc99
 WEBOPTS = -I../nsapi -qarch=com -DNETSCAPE_NSAPI -DAIX -DNET_SSL -DXP_UNIX -DMCC_HTTPD
 
 include Makefile.common
-
-setup_common:
-	-$(RM) -f  h net netinet rpc ufs nfs  machine sys inet nsapi
-	-ln -s /usr/include/sys h
-	-ln -s /usr/include/net net
-	-ln -s /usr/include/netinet netinet
-	-ln -s /usr/include/rpc rpc
-	-ln -s /usr/include/sys sys
-	-ln -s /usr/include/nfs nfs
-	-ln -s /usr/include/inet inet
-	-ln -s /usr/include/ufs ufs
-	-ln -s $(NS_INCL) nsapi
-
-setup_uafs: UAFS setup_common
-	-$(RM) -f UAFS/Makefile UAFS/Makefile.common
-	ln -s ../Makefile UAFS/Makefile
-	ln -s ../Makefile.common UAFS/Makefile.common
-
-UAFS:
-	mkdir -p $@
-
-setup_nsafs: AFSWEB setup_common
-	-$(RM) -f AFSWEB/Makefile AFSWEB/Makefile.common
-	ln -s ../Makefile AFSWEB/Makefile
-	ln -s ../Makefile.common AFSWEB/Makefile.common
-
-AFSWEB:
-	mkdir -p $@
-
-UAFS/$(LIBUAFS): setup_uafs
-	cd UAFS; \
-	$(MAKE) $(LIBUAFS)
-
-AFSWEB/$(LIBAFSWEB): setup_nsafs
-	cd AFSWEB; \
-	$(MAKE) $(LIBAFSWEB)
-
-AFSWEB/$(LIBAFSWEBKRB): setup_nsafs
-	cd AFSWEB; \
-	$(MAKE) $(LIBAFSWEBKRB)
-
-# Below this line are targets when in the COMMON directory:
 
 $(LIBUAFS): $(UAFSOBJ)
 	-$(RM) -f $(LIBUAFS)
 	$(AR) $(ARFLAGS) $(LIBUAFS) $(UAFSOBJ) $(AFS)/afsl.exp
 	$(RANLIB) libuafs.a
+
+$(LIBJUAFS): $(JUAFSOBJ)
+	-$(RM) -f $(LIBJUAFS)
+	$(AR) $(ARFLAGS) $(LIBJUAFS) $(JUAFSOBJ) $(AFS)/afsl.exp
+	$(RANLIB) libjuafs.a
 
 $(LIBAFSWEB): $(AFSWEBOBJ) ${DES}/libdes.a ${DESTDIR}/lib/afs/libsys.a
 	-$(RM) -f $(LIBAFSWEB)

@@ -368,7 +368,7 @@ int foldcmp (register char *a, register char *b)
     }
 }
 
-void ZapList(struct AclEntry *alist)
+extern "C" void ZapList(struct AclEntry *alist)
 {
     register struct AclEntry *tp, *np;
 
@@ -378,14 +378,14 @@ void ZapList(struct AclEntry *alist)
     }
 }
 
-void ZapAcl (struct Acl *acl)
+extern "C" void ZapAcl (struct Acl *acl)
 {
     ZapList(acl->pluslist);
     ZapList(acl->minuslist);
     free(acl);
 }
 
-int PruneList (struct AclEntry **ae, int dfs)
+extern "C" int PruneList (struct AclEntry **ae, int dfs)
 {
     struct AclEntry **lp = ae;
     struct AclEntry *te, *ne;
@@ -554,7 +554,7 @@ struct Acl *ParseAcl(char *astr)
 
 /* clean up an access control list of its bad entries; return 1 if we made
    any changes to the list, and 0 otherwise */
-int CleanAcl(struct Acl *aa)
+extern "C" int CleanAcl(struct Acl *aa)
 {
     register struct AclEntry *te, **le, *ne;
     int changes;
@@ -1006,24 +1006,21 @@ BOOL ListMount(CStringArray& files)
 	return !error;
 }
 
-static BOOL InAFS(register char *apath)
+BOOL IsPathInAfs(const CHAR *strPath)
 {
     struct ViceIoctl blob;
-    register LONG code;
+    int code;
 
-	HOURGLASS hourglass;
+    HOURGLASS hourglass;
 
     blob.in_size = 0;
     blob.out_size = MAXSIZE;
     blob.out = space;
 
-    code = pioctl(apath, VIOC_FILE_CELL_NAME, &blob, 1);
-    if (code) {
-		if ((errno == EINVAL) || (errno == ENOENT))
-			return FALSE;
-    }
-    
-	return TRUE;
+    code = pioctl((LPTSTR)((LPCTSTR)strPath), VIOC_FILE_CELL_NAME, &blob, 1);
+    if (code)
+        return FALSE;
+    return TRUE;
 }
 
 /* return a static pointer to a buffer */
@@ -1070,7 +1067,7 @@ defect #3069
     else
 		cellName = (char *) 0;
 
-    if (!InAFS(Parent(PCCHAR(strDir)))) {
+    if (!IsPathInAfs(Parent(PCCHAR(strDir)))) {
 		ShowMessageBox(IDS_MAKE_MP_NOT_AFS_ERROR, MB_ICONEXCLAMATION, IDS_MAKE_MP_NOT_AFS_ERROR);
 		return FALSE;
     }
@@ -1157,6 +1154,8 @@ BOOL RemoveSymlink(const char * linkName)
 	char tpbuffer[1024];
     char *tp;
     
+	HOURGLASS hourglass;
+
 	tp = (char *) strrchr(linkName, '\\');
 	if (!tp)
 	    tp = (char *) strrchr(linkName, '/');
@@ -1191,6 +1190,9 @@ BOOL IsSymlink(const char * true_name)
     struct ViceIoctl blob;
 	char *last_component;
     int code;
+
+    HOURGLASS hourglass;
+
 	last_component = (char *) strrchr(true_name, '\\');
 	if (!last_component)
 	    last_component = (char *) strrchr(true_name, '/');
@@ -1475,8 +1477,8 @@ BOOL GetTokenInfo(CStringArray& tokenInfo)
 {
 	int cellNum;
 	int rc;
-	int current_time;
-	long tokenExpireTime;
+	time_t current_time;
+	time_t tokenExpireTime;
 	char *expireString;
 	char userName[100];
 //	char s[100];
@@ -1570,19 +1572,75 @@ BOOL GetTokenInfo(CStringArray& tokenInfo)
 	return TRUE;
 }
 
-BOOL IsPathInAfs(const CHAR *strPath)
+UINT MakeSymbolicLink(const char *strName ,const char *strDir)
 {
     struct ViceIoctl blob;
-    int code;
+	char space[MAXSIZE];
+	UINT code;
 
-    blob.in_size = 0;
-    blob.out_size = MAXSIZE;
-    blob.out = space;
+    HOURGLASS hourglass;
 
-    code = pioctl(PCCHAR(strPath), VIOC_FILE_CELL_NAME, &blob, 1);
-    if (code) {
-	if ((errno == EINVAL) || (errno == ENOENT)) return FALSE;
-    }
-    return TRUE;
+    /*lets confirm its a good symlink*/
+	if (!IsPathInAfs(strDir))
+		return 1;
+	LPTSTR lpsz = new TCHAR[strlen(strDir)+1];
+	_tcscpy(lpsz, strName);
+    strcpy(space, strDir);
+    blob.out_size = 0;
+    blob.in_size = 1 + strlen(space);
+    blob.in = space;
+    blob.out = NULL;
+    if ((code=pioctl(lpsz, VIOC_SYMLINK, &blob, 0))!=0)
+		return code;
+	return 0;
 }
 
+void ListSymbolicLinkPath(const char *strName,char *strPath,UINT nlenPath)
+{
+	ASSERT(nlenPath<MAX_PATH);
+    struct ViceIoctl blob;
+    char orig_name[MAX_PATH+1];		/*Original name, may be modified*/
+    char true_name[MAX_PATH+1];		/*``True'' dirname (e.g., symlink target)*/
+    char parent_dir[MAX_PATH+1];		/*Parent directory of true name*/
+    char *last_component;	/*Last component of true name*/
+	UINT code;    
+
+	HOURGLASS hourglass;
+
+    strcpy(orig_name, strName);
+	strcpy(true_name, orig_name);
+	/*
+	 * Find rightmost slash, if any.
+	 */
+	last_component = (char *) strrchr(true_name, '\\');
+	if (!last_component)
+	    last_component = (char *) strrchr(true_name, '/');
+	if (last_component) {
+	    /*
+	     * Found it.  Designate everything before it as the parent directory,
+	     * everything after it as the final component.
+	     */
+	    strncpy(parent_dir, true_name, last_component - true_name + 1);
+	    parent_dir[last_component - true_name + 1] = 0;
+	    last_component++;   /*Skip the slash*/
+	}
+	else {
+	    /*
+	     * No slash appears in the given file name.  Set parent_dir to the current
+	     * directory, and the last component as the given name.
+	     */
+	    fs_ExtractDriveLetter(true_name, parent_dir);
+	    strcat(parent_dir, ".");
+	    last_component = true_name;
+            fs_StripDriveLetter(true_name, true_name, sizeof(true_name));
+	}
+	blob.in = last_component;
+	blob.in_size = strlen(last_component)+1;
+	blob.out_size = MAXSIZE;
+	blob.out = space;
+	memset(space, 0, MAXSIZE);
+	if ((code = pioctl(parent_dir, VIOC_LISTSYMLINK, &blob, 1)))
+		strcpy(space,"???");
+	ASSERT(strlen(space)<MAX_PATH);
+	strncpy(strPath,space,nlenPath);
+}

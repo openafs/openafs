@@ -599,11 +599,6 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    AFX_IDS_APP_TITLE       "AFS 클라이언트"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_MP_REMOVE_ITEM      "제거(&R)..."
     IDS_MP_MAKE_ITEM        "작성(&M)..."
     IDS_FLUSH_FILE_DIR_ITEM "파일/디렉토리 플러쉬(&F)"
@@ -630,6 +625,11 @@ BEGIN
     IDS_SHOW_FS_COLUMN      "파일 서버"
     IDS_REMOVE_MP           "마운트 포인트 제거"
     IDS_REMOVE_MP_COLUMN    "결과"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    AFX_IDS_APP_TITLE       "AFS 클라이언트"
 END
 
 #endif    // Korean resources

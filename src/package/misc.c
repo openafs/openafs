@@ -16,18 +16,17 @@ yyerror()
 
 yywrap()
 {
-return 1;
+    return 1;
 }
 
-sprint(s)
-char *s;
+void 
+sprint(char *s)
 {
     printf("sprint - %s", s);
 }
 
-allprint(i)
-int i;
+void 
+allprint(int i)
 {
-    printf("allprint - %d\n",i);
+    printf("allprint - %d\n", i);
 }
-

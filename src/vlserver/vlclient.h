@@ -24,4 +24,3 @@ extern int VL_LinkedListN();
 extern int VL_GetStats();
 extern int VL_GetAddrs();
 extern int VL_ChangeAddr();
-

@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/cfg/cfgclient.c,v 1.1.1.4 2001/07/14 22:22:27 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/libadmin/cfg/cfgclient.c,v 1.6 2003/07/15 23:15:25 shadow Exp $");
 
 #include <afs/stds.h>
 
@@ -22,6 +23,14 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/cfg/cfgclient.c,v 1.1.1.4 2001
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 
 #include <pthread.h>
 
@@ -45,23 +54,18 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/cfg/cfgclient.c,v 1.1.1.4 2001
 
 /* Local declarations and definitions */
 
-#define CSDB_OP_ADD  0   /* add a client CellServDB entry */
-#define CSDB_OP_REM  1   /* remove a client CellServDB entry */
+#define CSDB_OP_ADD  0		/* add a client CellServDB entry */
+#define CSDB_OP_REM  1		/* remove a client CellServDB entry */
 
 static int
-ClientCellServDbUpdate(int updateOp,
-		       void *hostHandle,
-		       const char *cellName,
-		       const char *dbentry,
-		       afs_status_p st);
+  ClientCellServDbUpdate(int updateOp, void *hostHandle, const char *cellName,
+			 const char *dbentry, afs_status_p st);
 
 static int
-CacheManagerStart(unsigned timeout,
-		  afs_status_p st);
+  CacheManagerStart(unsigned timeout, afs_status_p st);
 
 static int
-CacheManagerStop(unsigned timeout,
-		 afs_status_p st);
+  CacheManagerStop(unsigned timeout, afs_status_p st);
 
 
 
@@ -88,13 +92,13 @@ CacheManagerStop(unsigned timeout,
  *           client (cache-manager); for example, the AFS Server Manager.
  */
 int ADMINAPI
-cfg_ClientQueryStatus(const char *hostName,    /* name of host */
-		      short *isInstalledP,     /* client software installed */
-		      unsigned *versionP,      /* client software version */
-		      afs_status_p configStP,  /* client config status */
-		      char **cellNameP,        /* client's cell */
-		      afs_status_p st)         /* completion status */
-{
+cfg_ClientQueryStatus(const char *hostName,	/* name of host */
+		      short *isInstalledP,	/* client software installed */
+		      unsigned *versionP,	/* client software version */
+		      afs_status_p configStP,	/* client config status */
+		      char **cellNameP,	/* client's cell */
+		      afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
     afs_status_t clientSt = 0;
@@ -137,9 +141,8 @@ cfg_ClientQueryStatus(const char *hostName,    /* name of host */
     if (tst == 0) {
 	DWORD svcState;
 
-	if (!cfgutil_WindowsServiceQuery(AFSREG_CLT_SVC_NAME,
-					 &svcState,
-					 &tst2)) {
+	if (!cfgutil_WindowsServiceQuery
+	    (AFSREG_CLT_SVC_NAME, &svcState, &tst2)) {
 	    /* CM not installed, or insufficient privilege to check */
 	    if (tst2 == ADMNOPRIV) {
 		tst = tst2;
@@ -189,11 +192,10 @@ cfg_ClientQueryStatus(const char *hostName,    /* name of host */
 		/* no cell set for client */
 		clientSt = ADMCFGCLIENTNOTINCELL;
 	    } else {
-		for (cellentry = confdir->entries;
-		     cellentry != NULL;
+		for (cellentry = confdir->entries; cellentry != NULL;
 		     cellentry = cellentry->next) {
-		    if (!strcasecmp(confdir->cellName,
-				    cellentry->cellInfo.name)) {
+		    if (!strcasecmp
+			(confdir->cellName, cellentry->cellInfo.name)) {
 			break;
 		    }
 		}
@@ -208,7 +210,7 @@ cfg_ClientQueryStatus(const char *hostName,    /* name of host */
 	    if (tst == 0 && clientSt == 0) {
 		/* everything looks good; malloc cell name buffer to return */
 		clientCellName =
-		    (char *) malloc(strlen(cellentry->cellInfo.name) + 1);
+		    (char *)malloc(strlen(cellentry->cellInfo.name) + 1);
 		if (clientCellName == NULL) {
 		    tst = ADMNOMEM;
 		} else {
@@ -261,14 +263,14 @@ cfg_ClientQueryStatus(const char *hostName,    /* name of host */
  *     Warning: client (cache-manager) should be stopped prior to setting cell.
  */
 int ADMINAPI
-cfg_ClientSetCell(void *hostHandle,        /* host config handle */
-		  const char *cellName,    /* cell name */
-		  const char *cellDbHosts, /* cell database hosts */
-		  afs_status_p st)         /* completion status */
-{
+cfg_ClientSetCell(void *hostHandle,	/* host config handle */
+		  const char *cellName,	/* cell name */
+		  const char *cellDbHosts,	/* cell database hosts */
+		  afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters */
 
@@ -331,14 +333,14 @@ cfg_ClientSetCell(void *hostHandle,        /* host config handle */
 			tst = ADMCFGHOSTNAMETOOLONG;
 		    } else if (dbHostCount >= MAXHOSTSPERCELL) {
 			tst = ADMCFGCELLDBHOSTCOUNTTOOLARGE;
-		    } else if (!cfgutil_HostNameGetAddressString(dbHost,
-								 &dbHostAddrStr,
-								 &tst2)) {
+		    } else
+			if (!cfgutil_HostNameGetAddressString
+			    (dbHost, &dbHostAddrStr, &tst2)) {
 			tst = tst2;
-		    } else if (CSDB_AddCellServer(&clientDb,
-						  cellLinep,
-						  dbHostAddrStr,
-						  dbHost) == NULL) {
+		    } else
+			if (CSDB_AddCellServer
+			    (&clientDb, cellLinep, dbHostAddrStr,
+			     dbHost) == NULL) {
 			tst = ADMNOMEM;
 		    } else {
 			dbHostCount++;
@@ -410,15 +412,12 @@ cfg_ClientSetCell(void *hostHandle,        /* host config handle */
  * cfg_ClientCellServDbAdd() -- Add entry to client CellServDB on host.
  */
 int ADMINAPI
-cfg_ClientCellServDbAdd(void *hostHandle,        /* host config handle */
-			const char *cellName,    /* cell name */
-			const char *dbentry,     /* cell database entry */
-			afs_status_p st)         /* completion status */
-{
-    return ClientCellServDbUpdate(CSDB_OP_ADD,
-				  hostHandle,
-				  cellName,
-				  dbentry,
+cfg_ClientCellServDbAdd(void *hostHandle,	/* host config handle */
+			const char *cellName,	/* cell name */
+			const char *dbentry,	/* cell database entry */
+			afs_status_p st)
+{				/* completion status */
+    return ClientCellServDbUpdate(CSDB_OP_ADD, hostHandle, cellName, dbentry,
 				  st);
 }
 
@@ -428,15 +427,12 @@ cfg_ClientCellServDbAdd(void *hostHandle,        /* host config handle */
  *     on host.
  */
 int ADMINAPI
-cfg_ClientCellServDbRemove(void *hostHandle,      /* host config handle */
-			   const char *cellName,  /* cell name */
-			   const char *dbentry,   /* cell database entry */
-			   afs_status_p st)       /* completion status */
-{
-    return ClientCellServDbUpdate(CSDB_OP_REM,
-				  hostHandle,
-				  cellName,
-				  dbentry,
+cfg_ClientCellServDbRemove(void *hostHandle,	/* host config handle */
+			   const char *cellName,	/* cell name */
+			   const char *dbentry,	/* cell database entry */
+			   afs_status_p st)
+{				/* completion status */
+    return ClientCellServDbUpdate(CSDB_OP_REM, hostHandle, cellName, dbentry,
 				  st);
 }
 
@@ -447,13 +443,13 @@ cfg_ClientCellServDbRemove(void *hostHandle,      /* host config handle */
  *     Timeout is the maximum time (in seconds) to wait for client to stop.
  */
 int ADMINAPI
-cfg_ClientStop(void *hostHandle,      /* host config handle */
-	       unsigned int timeout,  /* timeout in seconds */
-	       afs_status_p st)       /* completion status */
-{
+cfg_ClientStop(void *hostHandle,	/* host config handle */
+	       unsigned int timeout,	/* timeout in seconds */
+	       afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters */
 
@@ -494,13 +490,13 @@ cfg_ClientStop(void *hostHandle,      /* host config handle */
  *     Timeout is the maximum time (in seconds) to wait for client to start.
  */
 int ADMINAPI
-cfg_ClientStart(void *hostHandle,      /* host config handle */
-		unsigned int timeout,  /* timeout in seconds */
-		afs_status_p st)       /* completion status */
-{
+cfg_ClientStart(void *hostHandle,	/* host config handle */
+		unsigned int timeout,	/* timeout in seconds */
+		afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
 
     /* validate parameters */
 
@@ -545,15 +541,12 @@ cfg_ClientStart(void *hostHandle,      /* host config handle */
  *     Common function implementing cfg_ClientCellServDb{Add/Remove}().
  */
 static int
-ClientCellServDbUpdate(int updateOp,
-		       void *hostHandle,
-		       const char *cellName,
-		       const char *dbentry,
-		       afs_status_p st)
+ClientCellServDbUpdate(int updateOp, void *hostHandle, const char *cellName,
+		       const char *dbentry, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
     char dbentryFull[MAXHOSTCHARS];
 
     /* validate parameters and resolve dbentry to fully qualified name */
@@ -597,8 +590,7 @@ ClientCellServDbUpdate(int updateOp,
 		/* found cellName, now find server to add/remove */
 		CELLDBLINE *workingLinep;
 
-		for (workingLinep = cellLinep->pNext;
-		     workingLinep != NULL;
+		for (workingLinep = cellLinep->pNext; workingLinep != NULL;
 		     workingLinep = workingLinep->pNext) {
 		    CELLDBLINEINFO lineInfo;
 
@@ -615,10 +607,8 @@ ClientCellServDbUpdate(int updateOp,
 
 			serverLineCount++;
 
-			if (!cfgutil_HostAddressIsValid(dbentryFull,
-							dbentryAddr,
-							&isValid,
-							&tst2)) {
+			if (!cfgutil_HostAddressIsValid
+			    (dbentryFull, dbentryAddr, &isValid, &tst2)) {
 			    tst = tst2;
 			    break;
 			} else if (isValid) {
@@ -633,8 +623,8 @@ ClientCellServDbUpdate(int updateOp,
 	    if (tst == 0) {
 		if (updateOp == CSDB_OP_ADD && serverLinep == NULL) {
 		    if (cellLinep == NULL) {
-			cellLinep = CSDB_AddCell(&clientDb,
-						 cellName, NULL, NULL);
+			cellLinep =
+			    CSDB_AddCell(&clientDb, cellName, NULL, NULL);
 		    }
 
 		    if (cellLinep == NULL) {
@@ -644,15 +634,14 @@ ClientCellServDbUpdate(int updateOp,
 		    } else {
 			const char *dbentryAddrStr;
 
-			if (!cfgutil_HostNameGetAddressString(dbentryFull,
-							      &dbentryAddrStr,
-							      &tst2)) {
+			if (!cfgutil_HostNameGetAddressString
+			    (dbentryFull, &dbentryAddrStr, &tst2)) {
 			    tst = tst2;
 			} else {
-			    serverLinep = CSDB_AddCellServer(&clientDb,
-							     cellLinep,
-							     dbentryAddrStr,
-							     dbentryFull);
+			    serverLinep =
+				CSDB_AddCellServer(&clientDb, cellLinep,
+						   dbentryAddrStr,
+						   dbentryFull);
 			    if (serverLinep == NULL) {
 				tst = ADMNOMEM;
 			    }
@@ -698,8 +687,7 @@ ClientCellServDbUpdate(int updateOp,
  * RETURN CODES: 1 success, 0 failure (st indicates why)
  */
 static int
-CacheManagerStart(unsigned timeout,
-		  afs_status_p st)
+CacheManagerStart(unsigned timeout, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst2, tst = 0;
@@ -708,11 +696,8 @@ CacheManagerStart(unsigned timeout,
     /* Windows - cache manager is a service */
     short wasRunning;
 
-    if (!cfgutil_WindowsServiceStart(AFSREG_CLT_SVC_NAME,
-				     0, NULL,
-				     timeout,
-				     &wasRunning,
-				     &tst2)) {
+    if (!cfgutil_WindowsServiceStart
+	(AFSREG_CLT_SVC_NAME, 0, NULL, timeout, &wasRunning, &tst2)) {
 	tst = tst2;
     }
 #else
@@ -739,8 +724,7 @@ CacheManagerStart(unsigned timeout,
  * RETURN CODES: 1 success, 0 failure (st indicates why)
  */
 static int
-CacheManagerStop(unsigned timeout,
-		 afs_status_p st)
+CacheManagerStop(unsigned timeout, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst2, tst = 0;
@@ -749,10 +733,8 @@ CacheManagerStop(unsigned timeout,
     /* Windows - cache manager is a service */
     short wasStopped;
 
-    if (!cfgutil_WindowsServiceStop(AFSREG_CLT_SVC_NAME,
-				    timeout,
-				    &wasStopped,
-				    &tst2)) {
+    if (!cfgutil_WindowsServiceStop
+	(AFSREG_CLT_SVC_NAME, timeout, &wasStopped, &tst2)) {
 	tst = tst2;
     }
 #else

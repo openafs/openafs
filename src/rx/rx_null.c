@@ -7,22 +7,23 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afsconfig.h>
 #ifdef	KERNEL
 #include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
-#include <afsconfig.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_null.c,v 1.1.1.3 2001/07/11 03:10:52 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rx/rx_null.c,v 1.7 2004/05/15 04:53:30 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef	UKERNEL
-#include "../h/types.h"
+#include "h/types.h"
 #else /* !UKERNEL */
 #include "afs/sysincludes.h"
 #endif /* !UKERNEL */
-#include "../rx/rx.h"
+#include "rx/rx.h"
 #else /* KERNEL */
 #include "rx.h"
 #endif /* KERNEL */
@@ -30,14 +31,16 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_null.c,v 1.1.1.3 2001/07/11 03:10
 /* The null security object.  No authentication, no nothing. */
 
 static struct rx_securityOps null_ops;
-static struct rx_securityClass null_object = {&null_ops, 0, 0};
+static struct rx_securityClass null_object = { &null_ops, 0, 0 };
 
-struct rx_securityClass *rxnull_NewServerSecurityObject()
+struct rx_securityClass *
+rxnull_NewServerSecurityObject(void)
 {
     return &null_object;
 }
 
-struct rx_securityClass *rxnull_NewClientSecurityObject()
+struct rx_securityClass *
+rxnull_NewClientSecurityObject(void)
 {
     return &null_object;
 }

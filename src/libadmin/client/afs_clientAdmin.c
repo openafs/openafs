@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/client/afs_clientAdmin.c,v 1.1.1.7 2001/09/11 14:33:12 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/libadmin/client/afs_clientAdmin.c,v 1.9.2.1 2004/08/25 07:09:39 shadow Exp $");
 
 #include <afs/stds.h>
 #include "afs_clientAdmin.h"
@@ -56,7 +57,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/client/afs_clientAdmin.c,v 1.1
  *
  */
 
-static const unsigned long ADMIN_TICKET_LIFETIME = 24*3600;
+static const unsigned long ADMIN_TICKET_LIFETIME = 24 * 3600;
 
 /*
  * We need a way to track whether or not the client library has been 
@@ -68,7 +69,9 @@ static const unsigned long ADMIN_TICKET_LIFETIME = 24*3600;
 static int client_init;
 static pthread_once_t client_init_once = PTHREAD_ONCE_INIT;
 
-static void client_once(void) {
+static void
+client_once(void)
+{
     client_init = 1;
 }
 
@@ -92,13 +95,12 @@ static void client_once(void) {
  * Returns != 0 upon successful completion.
  */
 
-static int IsTokenValid(
-  const afs_token_handle_p token,
-  afs_status_p st)
+static int
+IsTokenValid(const afs_token_handle_p token, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
- 
+
     if (token == NULL) {
 	tst = ADMCLIENTTOKENHANDLENULL;
 	goto fail_IsTokenValid;
@@ -109,21 +111,21 @@ static int IsTokenValid(
 	goto fail_IsTokenValid;
     }
 
-    if ((token->begin_magic != BEGIN_MAGIC) ||
-	(token->end_magic != END_MAGIC)) {
+    if ((token->begin_magic != BEGIN_MAGIC)
+	|| (token->end_magic != END_MAGIC)) {
 	tst = ADMCLIENTTOKENHANDLEBADMAGIC;
 	goto fail_IsTokenValid;
     }
     rc = 1;
 
-fail_IsTokenValid:
+  fail_IsTokenValid:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
- 
+
 /*
  * afsclient_TokenGetExisting - get tokens that already exist and
  * are held by the cache manager.
@@ -149,16 +151,16 @@ fail_IsTokenValid:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_TokenGetExisting(
-  const char *cellName,
-  void **tokenHandle,
-  afs_status_p st)
+int ADMINAPI
+afsclient_TokenGetExisting(const char *cellName, void **tokenHandle,
+			   afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     struct ktc_principal afs_server;
-    afs_token_handle_p t_handle = (afs_token_handle_p) calloc(1, sizeof(afs_token_handle_t));
- 
+    afs_token_handle_p t_handle =
+	(afs_token_handle_p) calloc(1, sizeof(afs_token_handle_t));
+
     if (client_init == 0) {
 	tst = ADMCLIENTNOINIT;
 	goto fail_afsclient_TokenGetExisting;
@@ -183,9 +185,10 @@ int ADMINAPI afsclient_TokenGetExisting(
     afs_server.instance[0] = 0;
     strcpy(afs_server.cell, cellName);
 
-    if (!(tst = ktc_GetToken(&afs_server, &t_handle->afs_token, 
-			     sizeof(t_handle->afs_token),
-			     &t_handle->client))) {
+    if (!
+	(tst =
+	 ktc_GetToken(&afs_server, &t_handle->afs_token,
+		      sizeof(t_handle->afs_token), &t_handle->client))) {
 	/*
 	 * The token has been retrieved successfully, initialize
 	 * the rest of the token handle structure
@@ -195,44 +198,44 @@ int ADMINAPI afsclient_TokenGetExisting(
 	t_handle->from_kernel = 1;
 	t_handle->kas_token_set = 0;
 	t_handle->sc_index = 2;
-	t_handle->afs_sc[t_handle->sc_index] = 
+	t_handle->afs_sc[t_handle->sc_index] =
 	    rxkad_NewClientSecurityObject(rxkad_clear,
 					  &t_handle->afs_token.sessionKey,
 					  t_handle->afs_token.kvno,
 					  t_handle->afs_token.ticketLen,
 					  t_handle->afs_token.ticket);
-	t_handle->afs_encrypt_sc[t_handle->sc_index] = 
+	t_handle->afs_encrypt_sc[t_handle->sc_index] =
 	    rxkad_NewClientSecurityObject(rxkad_crypt,
 					  &t_handle->afs_token.sessionKey,
 					  t_handle->afs_token.kvno,
 					  t_handle->afs_token.ticketLen,
 					  t_handle->afs_token.ticket);
-	if ((t_handle->afs_sc[t_handle->sc_index] == NULL) ||
-	    (t_handle->afs_sc[t_handle->sc_index] == NULL)) {
+	if ((t_handle->afs_sc[t_handle->sc_index] == NULL)
+	    || (t_handle->afs_sc[t_handle->sc_index] == NULL)) {
 	    tst = ADMCLIENTTOKENHANDLENOSECURITY;
 	    goto fail_afsclient_TokenGetExisting;
 	} else {
 	    t_handle->begin_magic = BEGIN_MAGIC;
 	    t_handle->is_valid = 1;
 	    t_handle->end_magic = END_MAGIC;
-	    *tokenHandle = (void *) t_handle;
+	    *tokenHandle = (void *)t_handle;
 	}
     } else {
 	goto fail_afsclient_TokenGetExisting;
     }
     rc = 1;
 
-fail_afsclient_TokenGetExisting:
+  fail_afsclient_TokenGetExisting:
 
     if ((rc == 0) && (t_handle != NULL)) {
 	free(t_handle);
     }
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
- 
+
 /*
  * afsclient_TokenSet - set the tokens represented by tokenHandle to be
  * active in the kernel (aka ka_SetToken).
@@ -258,15 +261,14 @@ fail_afsclient_TokenGetExisting:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_TokenSet(
-  const void *tokenHandle,
-  afs_status_p st)
+int ADMINAPI
+afsclient_TokenSet(const void *tokenHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     struct ktc_principal afs_server;
     afs_token_handle_p t_handle = (afs_token_handle_p) tokenHandle;
- 
+
     if (!IsTokenValid(t_handle, &tst)) {
 	goto fail_afsclient_TokenSet;
     }
@@ -275,20 +277,21 @@ int ADMINAPI afsclient_TokenSet(
     afs_server.instance[0] = 0;
     strcpy(afs_server.cell, t_handle->cell);
 
-    tst = ktc_SetToken(&afs_server, &t_handle->afs_token, &t_handle->client, 0);
+    tst =
+	ktc_SetToken(&afs_server, &t_handle->afs_token, &t_handle->client, 0);
 
     if (!tst) {
 	rc = 1;
     }
 
-fail_afsclient_TokenSet:
+  fail_afsclient_TokenSet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
- 
+
 /*
  * GetKASToken - get a KAS token and store it in the tokenHandle.
  *
@@ -316,12 +319,9 @@ fail_afsclient_TokenSet:
  * Returns != 0 upon successful completion.
  */
 
-static int GetKASToken(
-  const char *cellName,
-  const char *principal,
-  const char *password,
-  afs_token_handle_p tokenHandle,
-  afs_status_p st)
+static int
+GetKASToken(const char *cellName, const char *principal, const char *password,
+	    afs_token_handle_p tokenHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -333,7 +333,7 @@ static int GetKASToken(
     char name[MAXKTCNAMELEN];
     char inst[MAXKTCNAMELEN];
     int have_server_conn = 0;
- 
+
     token = &tokenHandle->kas_token;
 
     ka_StringToKey((char *)password, (char *)cellName, &key);
@@ -342,39 +342,41 @@ static int GetKASToken(
      * Get an unauthenticated connection in the right cell to use for
      * retrieving the token.
      */
-     
-    tst = ka_AuthServerConn((char *)cellName, KA_AUTHENTICATION_SERVICE, 0,
-			    &unauth_conn);
+
+    tst =
+	ka_AuthServerConn((char *)cellName, KA_AUTHENTICATION_SERVICE, 0,
+			  &unauth_conn);
     if (tst != 0) {
 	goto fail_GetKASToken;
     }
     have_server_conn = 1;
 
-    tst = ka_ParseLoginName((char *)principal, name, inst, (char *) 0);
+    tst = ka_ParseLoginName((char *)principal, name, inst, NULL);
     if (tst != 0) {
 	goto fail_GetKASToken;
     }
 
-    tst = ka_Authenticate(name, inst, (char *)cellName, unauth_conn,
-			  KA_MAINTENANCE_SERVICE, &key, now,
-			  now+ADMIN_TICKET_LIFETIME, token, &expire);
+    tst =
+	ka_Authenticate(name, inst, (char *)cellName, unauth_conn,
+			KA_MAINTENANCE_SERVICE, &key, now,
+			now + ADMIN_TICKET_LIFETIME, token, &expire);
     if (tst != 0) {
 	goto fail_GetKASToken;
     }
     rc = 1;
 
-fail_GetKASToken:
+  fail_GetKASToken:
 
     if (have_server_conn) {
 	ubik_ClientDestroy(unauth_conn);
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
- 
+
 /*
  * GetAFSToken - get a AFS token and store it in the tokenHandle.
  *
@@ -402,12 +404,9 @@ fail_GetKASToken:
  * Returns != 0 upon successful completion.
  */
 
-static int GetAFSToken(
-  const char *cellName,
-  const char *principal,
-  const char *password,
-  afs_token_handle_p tokenHandle,
-  afs_status_p st)
+static int
+GetAFSToken(const char *cellName, const char *principal, const char *password,
+	    afs_token_handle_p tokenHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -417,7 +416,7 @@ static int GetAFSToken(
     struct ktc_token auth_token;
     struct ktc_token *token;
     unsigned long now = time(0);
- 
+
     token = &tokenHandle->afs_token;
 
     ka_StringToKey((char *)password, (char *)cellName, &key);
@@ -426,52 +425,54 @@ static int GetAFSToken(
      * Get an unauthenticated connection in the right cell to use for
      * retrieving the token.
      */
-     
-    tst = ka_AuthServerConn((char *)cellName, KA_AUTHENTICATION_SERVICE, 0,
-			    &unauth_conn);
+
+    tst =
+	ka_AuthServerConn((char *)cellName, KA_AUTHENTICATION_SERVICE, 0,
+			  &unauth_conn);
     if (tst) {
 	goto fail_GetAFSToken;
     }
 
-    tst = ka_ParseLoginName((char *)principal, tokenHandle->client.name,
-			    tokenHandle->client.instance, (char *) 0);
+    tst =
+	ka_ParseLoginName((char *)principal, tokenHandle->client.name,
+			  tokenHandle->client.instance, NULL);
     if (tst) {
 	goto fail_GetAFSToken;
     }
 
-    tst = ka_Authenticate(tokenHandle->client.name,
-			  tokenHandle->client.instance, (char *)cellName,
-			  unauth_conn, KA_TICKET_GRANTING_SERVICE,
-			  &key, now, now+ADMIN_TICKET_LIFETIME, 
-			  &auth_token, &expire);
+    tst =
+	ka_Authenticate(tokenHandle->client.name,
+			tokenHandle->client.instance, (char *)cellName,
+			unauth_conn, KA_TICKET_GRANTING_SERVICE, &key, now,
+			now + ADMIN_TICKET_LIFETIME, &auth_token, &expire);
     if (tst) {
 	goto fail_GetAFSToken;
     }
 
-    tst = ka_AuthServerConn((char *)cellName, KA_TICKET_GRANTING_SERVICE,
-			    0, &auth_conn);
+    tst =
+	ka_AuthServerConn((char *)cellName, KA_TICKET_GRANTING_SERVICE, 0,
+			  &auth_conn);
     if (tst) {
 	goto fail_GetAFSToken;
     }
 
-    tst = ka_CellToRealm((char *)cellName, tokenHandle->client.cell, (int *) 0);
+    tst =
+	ka_CellToRealm((char *)cellName, tokenHandle->client.cell, (int *)0);
     if (tst) {
 	goto fail_GetAFSToken;
     }
 
-    tst = ka_GetToken("afs", "", (char *)cellName,
-		      tokenHandle->client.name,
-		      tokenHandle->client.instance,
-		      auth_conn, now,
-		      now+ADMIN_TICKET_LIFETIME,
-		      &auth_token, tokenHandle->client.cell,
-		      token);
+    tst =
+	ka_GetToken("afs", "", (char *)cellName, tokenHandle->client.name,
+		    tokenHandle->client.instance, auth_conn, now,
+		    now + ADMIN_TICKET_LIFETIME, &auth_token,
+		    tokenHandle->client.cell, token);
     if (tst) {
 	goto fail_GetAFSToken;
     }
     rc = 1;
 
-fail_GetAFSToken:
+  fail_GetAFSToken:
 
     if (auth_conn) {
 	ubik_ClientDestroy(auth_conn);
@@ -482,11 +483,11 @@ fail_GetAFSToken:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
- 
+
 
 /*
  * afsclient_TokenGetNew - get new tokens for a user and store them
@@ -516,49 +517,48 @@ fail_GetAFSToken:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_TokenGetNew(
-  const char *cellName,
-  const char *principal,
-  const char *password,
-  void **tokenHandle,
-  afs_status_p st)
+int ADMINAPI
+afsclient_TokenGetNew(const char *cellName, const char *principal,
+		      const char *password, void **tokenHandle,
+		      afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
-    afs_token_handle_p t_handle = (afs_token_handle_p) calloc(1, sizeof(afs_token_handle_t));
- 
+    afs_token_handle_p t_handle =
+	(afs_token_handle_p) calloc(1, sizeof(afs_token_handle_t));
+
     if (client_init == 0) {
 	tst = ADMCLIENTNOINIT;
 	goto fail_afsclient_TokenGetNew;
     }
- 
+
     if (t_handle == NULL) {
 	tst = ADMNOMEM;
 	goto fail_afsclient_TokenGetNew;
     }
- 
+
     /*
      * Check to see if the principal or password is missing.  If it is,
      * get unauthenticated tokens for the cell
      */
 
-    if ((principal == NULL) || (*principal == 0) ||
-	(password == NULL) || (*password == 0)) {
+    if ((principal == NULL) || (*principal == 0) || (password == NULL)
+	|| (*password == 0)) {
 	t_handle->from_kernel = 0;
 	t_handle->afs_token_set = 1;
 	t_handle->kas_token_set = 1;
 	t_handle->sc_index = 0;
-	t_handle->afs_sc[t_handle->sc_index] = 
+	t_handle->afs_sc[t_handle->sc_index] =
 	    rxnull_NewClientSecurityObject();
-	t_handle->afs_encrypt_sc[t_handle->sc_index] = 
+	t_handle->afs_encrypt_sc[t_handle->sc_index] =
 	    rxnull_NewClientSecurityObject();
-	t_handle->kas_sc[t_handle->sc_index] = 
+	t_handle->kas_sc[t_handle->sc_index] =
 	    rxnull_NewClientSecurityObject();
 	t_handle->begin_magic = BEGIN_MAGIC;
 	t_handle->is_valid = 1;
 	t_handle->afs_token.endTime = 0;
 	t_handle->end_magic = END_MAGIC;
-	*tokenHandle = (void *) t_handle;
+	*tokenHandle = (void *)t_handle;
 
     } else {
 
@@ -566,38 +566,38 @@ int ADMINAPI afsclient_TokenGetNew(
 	 * create an authenticated token
 	 */
 
-	if ((GetAFSToken(cellName, principal, password, t_handle, &tst)) &&
-	    (GetKASToken(cellName, principal, password, t_handle, &tst))) {
+	if ((GetAFSToken(cellName, principal, password, t_handle, &tst))
+	    && (GetKASToken(cellName, principal, password, t_handle, &tst))) {
 	    strcpy(t_handle->cell, cellName);
 	    t_handle->from_kernel = 0;
 	    t_handle->afs_token_set = 1;
 	    t_handle->kas_token_set = 1;
 	    t_handle->sc_index = 2;
-	    t_handle->afs_sc[t_handle->sc_index] = 
+	    t_handle->afs_sc[t_handle->sc_index] =
 		rxkad_NewClientSecurityObject(rxkad_clear,
 					      &t_handle->afs_token.sessionKey,
 					      t_handle->afs_token.kvno,
 					      t_handle->afs_token.ticketLen,
 					      t_handle->afs_token.ticket);
-	    t_handle->afs_encrypt_sc[t_handle->sc_index] = 
+	    t_handle->afs_encrypt_sc[t_handle->sc_index] =
 		rxkad_NewClientSecurityObject(rxkad_crypt,
 					      &t_handle->afs_token.sessionKey,
 					      t_handle->afs_token.kvno,
 					      t_handle->afs_token.ticketLen,
 					      t_handle->afs_token.ticket);
-	    t_handle->kas_sc[t_handle->sc_index] = 
+	    t_handle->kas_sc[t_handle->sc_index] =
 		rxkad_NewClientSecurityObject(rxkad_crypt,
 					      &t_handle->kas_token.sessionKey,
 					      t_handle->kas_token.kvno,
 					      t_handle->kas_token.ticketLen,
 					      t_handle->kas_token.ticket);
-	    if ((t_handle->afs_sc[t_handle->sc_index] != NULL) && 
-		(t_handle->afs_encrypt_sc[t_handle->sc_index] != NULL) &&
-		(t_handle->kas_sc[t_handle->sc_index] != NULL)) {
+	    if ((t_handle->afs_sc[t_handle->sc_index] != NULL)
+		&& (t_handle->afs_encrypt_sc[t_handle->sc_index] != NULL)
+		&& (t_handle->kas_sc[t_handle->sc_index] != NULL)) {
 		t_handle->begin_magic = BEGIN_MAGIC;
 		t_handle->is_valid = 1;
 		t_handle->end_magic = END_MAGIC;
-		*tokenHandle = (void *) t_handle;
+		*tokenHandle = (void *)t_handle;
 	    } else {
 		tst = ADMCLIENTTOKENHANDLENOSECURITY;
 		goto fail_afsclient_TokenGetNew;
@@ -607,19 +607,19 @@ int ADMINAPI afsclient_TokenGetNew(
 	}
     }
     rc = 1;
- 
- fail_afsclient_TokenGetNew:
+
+  fail_afsclient_TokenGetNew:
 
     if ((rc == 0) && (t_handle != NULL)) {
 	free(t_handle);
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
- 
+
 /*
  * afsclient_TokenQuery - get the expiration time of the tokens.
  *
@@ -653,25 +653,21 @@ int ADMINAPI afsclient_TokenGetNew(
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_TokenQuery(
-  void *tokenHandle,
-  unsigned long *expirationDateP,
-  char *principal,
-  char *instance,
-  char *cell,
-  int *hasKasTokens,
-  afs_status_p st)
+int ADMINAPI
+afsclient_TokenQuery(void *tokenHandle, unsigned long *expirationDateP,
+		     char *principal, char *instance, char *cell,
+		     int *hasKasTokens, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_token_handle_p t_handle = (afs_token_handle_p) tokenHandle;
- 
+
     if (client_init == 0) {
 	tst = ADMCLIENTNOINIT;
 	rc = 0;
 	goto fail_afsclient_TokenQuery;
     }
- 
+
     if (IsTokenValid(t_handle, &tst)) {
 	if (principal != NULL) {
 	    strcpy(principal, t_handle->client.name);
@@ -691,14 +687,14 @@ int ADMINAPI afsclient_TokenQuery(
 	rc = 1;
     }
 
-fail_afsclient_TokenQuery:
+  fail_afsclient_TokenQuery:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
- 
+
 /*
  * afsclient_TokenClose - close an existing token.
  *
@@ -719,51 +715,51 @@ fail_afsclient_TokenQuery:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_TokenClose(
-  const void *tokenHandle,
-  afs_status_p st)
+int ADMINAPI
+afsclient_TokenClose(const void *tokenHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_token_handle_p t_handle = (afs_token_handle_p) tokenHandle;
- 
+
     if (client_init == 0) {
 	tst = ADMCLIENTNOINIT;
 	goto fail_afsclient_TokenClose;
     }
- 
+
     if (IsTokenValid(t_handle, &tst)) {
 	t_handle->is_valid = 0;
 	free(t_handle);
 	rc = 1;
     }
 
-fail_afsclient_TokenClose:
+  fail_afsclient_TokenClose:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
- 
+
 #define NUM_SERVER_TYPES 3
- 
+
 /* must match NUM_SERVER_TYPES */
-typedef enum {KAS, PTS, VOS} afs_server_list_t;
- 
+typedef enum { KAS, PTS, VOS } afs_server_list_t;
+
 typedef struct afs_server {
     char *serv;
     int serviceId;
     struct ubik_client **ubik;
     struct rx_securityClass *sc;
     int *valid;
-} afs_server_t, *afs_server_p;   
- 
-static afs_server_t servers[NUM_SERVER_TYPES] 
- = { {AFSCONF_KAUTHSERVICE, KA_MAINTENANCE_SERVICE, 0, 0, 0}, 
-     {AFSCONF_PROTSERVICE, PRSRV, 0, 0, 0},
-     {AFSCONF_VLDBSERVICE, USER_SERVICE_ID, 0, 0, 0}};
- 
+} afs_server_t, *afs_server_p;
+
+static afs_server_t servers[NUM_SERVER_TYPES]
+= { {AFSCONF_KAUTHSERVICE, KA_MAINTENANCE_SERVICE, 0, 0, 0},
+{AFSCONF_PROTSERVICE, PRSRV, 0, 0, 0},
+{AFSCONF_VLDBSERVICE, USER_SERVICE_ID, 0, 0, 0}
+};
+
 /*
  * afsclient_CellOpen - Open a particular cell for work as a particular
  * user.
@@ -790,17 +786,15 @@ static afs_server_t servers[NUM_SERVER_TYPES]
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_CellOpen(
-  const char *cellName,
-  const void *tokenHandle,
-  void **cellHandleP,
-  afs_status_p st)
+int ADMINAPI
+afsclient_CellOpen(const char *cellName, const void *tokenHandle,
+		   void **cellHandleP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_token_handle_p t_handle = (afs_token_handle_p) tokenHandle;
-    afs_cell_handle_p c_handle = (afs_cell_handle_p) 
-				   calloc(1, sizeof(afs_cell_handle_t));
+    afs_cell_handle_p c_handle = (afs_cell_handle_p)
+	calloc(1, sizeof(afs_cell_handle_t));
     struct afsconf_dir *tdir = NULL;
     struct afsconf_cell info;
     struct rx_connection *serverconns[MAXSERVERS];
@@ -808,32 +802,32 @@ int ADMINAPI afsclient_CellOpen(
     struct rx_securityClass *sc[3];
     int scIndex;
     char copyCell[MAXCELLCHARS];
- 
+
     if (client_init == 0) {
 	tst = ADMCLIENTNOINIT;
 	goto fail_afsclient_CellOpen;
     }
- 
+
     if (c_handle == NULL) {
 	tst = ADMNOMEM;
 	goto fail_afsclient_CellOpen;
     }
- 
+
     if (t_handle == NULL) {
 	tst = ADMCLIENTTOKENHANDLENULL;
 	goto fail_afsclient_CellOpen;
     }
- 
+
     if ((cellName == NULL) || (*cellName == 0)) {
 	tst = ADMCLIENTCELLNAMENULL;
 	goto fail_afsclient_CellOpen;
     }
- 
+
     if (cellHandleP == NULL) {
 	tst = ADMCLIENTCELLHANDLEPNULL;
 	goto fail_afsclient_CellOpen;
     }
- 
+
     /*
      * Check that the token handle contains valid data and the calloc 
      * succeeded
@@ -885,33 +879,33 @@ int ADMINAPI afsclient_CellOpen(
      * actually writes over the cell name it is passed.
      */
     strncpy(copyCell, cellName, MAXCELLCHARS - 1);
-    for(i=0;(i<NUM_SERVER_TYPES);i++) {
+    for (i = 0; (i < NUM_SERVER_TYPES); i++) {
 	if (i == KAS) {
-	    tst = ka_AuthServerConn((char *)cellName,servers[i].serviceId,
-				    ((t_handle->sc_index == 0) ||
-				     (!t_handle->kas_token_set)) ?
-				    0 : &t_handle->kas_token,
-				    servers[i].ubik);
+	    tst =
+		ka_AuthServerConn((char *)cellName, servers[i].serviceId,
+				  ((t_handle->sc_index == 0)
+				   || (!t_handle->
+				       kas_token_set)) ? 0 : &t_handle->
+				  kas_token, servers[i].ubik);
 	    if (tst) {
 		goto fail_afsclient_CellOpen;
 	    }
 	} else {
-	    tst = afsconf_GetCellInfo(tdir, copyCell,
-				      servers[i].serv, &info);
+	    tst = afsconf_GetCellInfo(tdir, copyCell, servers[i].serv, &info);
 	    if (!tst) {
 		/* create ubik client handles for each server */
 		scIndex = t_handle->sc_index;
 		sc[scIndex] = servers[i].sc;
-		for(j=0;(j<info.numServers);j++) {
-		    serverconns[j] = 
-			rx_GetCachedConnection(
-			    info.hostAddr[j].sin_addr.s_addr,
-			    info.hostAddr[j].sin_port,
-			    servers[i].serviceId,
-			    sc[scIndex], scIndex);
+		for (j = 0; (j < info.numServers); j++) {
+		    serverconns[j] =
+			rx_GetCachedConnection(info.hostAddr[j].sin_addr.
+					       s_addr,
+					       info.hostAddr[j].sin_port,
+					       servers[i].serviceId,
+					       sc[scIndex], scIndex);
 		}
 		serverconns[j] = 0;
-		tst = ubik_ClientInit(serverconns,servers[i].ubik);
+		tst = ubik_ClientInit(serverconns, servers[i].ubik);
 		if (tst) {
 		    goto fail_afsclient_CellOpen;
 		}
@@ -925,7 +919,7 @@ int ADMINAPI afsclient_CellOpen(
     c_handle->tokens = t_handle;
     rc = 1;
 
-fail_afsclient_CellOpen:
+  fail_afsclient_CellOpen:
 
     if (tdir) {
 	afsconf_Close(tdir);
@@ -936,9 +930,12 @@ fail_afsclient_CellOpen:
      */
     if (rc == 0) {
 	if (c_handle != NULL) {
-	    if (c_handle->kas_valid) ubik_ClientDestroy(c_handle->kas);
-	    if (c_handle->pts_valid) ubik_ClientDestroy(c_handle->pts);
-	    if (c_handle->vos_valid) ubik_ClientDestroy(c_handle->vos);
+	    if (c_handle->kas_valid)
+		ubik_ClientDestroy(c_handle->kas);
+	    if (c_handle->pts_valid)
+		ubik_ClientDestroy(c_handle->pts);
+	    if (c_handle->vos_valid)
+		ubik_ClientDestroy(c_handle->vos);
 	    free(c_handle);
 	}
     } else {
@@ -946,15 +943,15 @@ fail_afsclient_CellOpen:
 	c_handle->is_valid = 1;
 	c_handle->is_null = 0;
 	c_handle->end_magic = END_MAGIC;
-	*cellHandleP = (void *) c_handle;
+	*cellHandleP = (void *)c_handle;
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
- 
+
 /*
  * afsclient_NullCellOpen - open a null cell handle for access.
  *
@@ -976,16 +973,15 @@ fail_afsclient_CellOpen:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_NullCellOpen(
-  void **cellHandleP,
-  afs_status_p st)
+int ADMINAPI
+afsclient_NullCellOpen(void **cellHandleP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
-    afs_cell_handle_p c_handle = (afs_cell_handle_p) 
-				   calloc(1, sizeof(afs_cell_handle_t));
+    afs_cell_handle_p c_handle = (afs_cell_handle_p)
+	calloc(1, sizeof(afs_cell_handle_t));
 
- 
+
     /*
      * Validate parameters
      */
@@ -999,17 +995,17 @@ int ADMINAPI afsclient_NullCellOpen(
 	tst = ADMCLIENTNOINIT;
 	goto fail_afsclient_NullCellOpen;
     }
- 
+
     if (c_handle == NULL) {
 	tst = ADMNOMEM;
 	goto fail_afsclient_NullCellOpen;
     }
- 
+
     /*
      * Get unauthenticated tokens for any cell
      */
 
-    if (!afsclient_TokenGetNew(0, 0, 0, (void *) &c_handle->tokens, &tst)) {
+    if (!afsclient_TokenGetNew(0, 0, 0, (void *)&c_handle->tokens, &tst)) {
 	goto fail_afsclient_NullCellOpen;
     }
 
@@ -1023,13 +1019,13 @@ int ADMINAPI afsclient_NullCellOpen(
     c_handle->kas = 0;
     c_handle->pts = 0;
     c_handle->vos = 0;
-    *cellHandleP = (void *) c_handle;
+    *cellHandleP = (void *)c_handle;
     rc = 1;
-	
-fail_afsclient_NullCellOpen:
+
+  fail_afsclient_NullCellOpen:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1054,28 +1050,31 @@ fail_afsclient_NullCellOpen:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_CellClose(
-  const void *cellHandle,
-  afs_status_p st)
+int ADMINAPI
+afsclient_CellClose(const void *cellHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
- 
+
     if (client_init == 0) {
 	tst = ADMCLIENTNOINIT;
 	goto fail_afsclient_CellClose;
     }
- 
+
     if (c_handle == NULL) {
 	tst = ADMCLIENTCELLHANDLENULL;
 	goto fail_afsclient_CellClose;
     }
 
-    if (c_handle->kas_valid) ubik_ClientDestroy(c_handle->kas);
-    if (c_handle->pts_valid) ubik_ClientDestroy(c_handle->pts);
-    if (c_handle->vos_valid) ubik_ClientDestroy(c_handle->vos);
-    if (c_handle->is_null) afsclient_TokenClose(c_handle->tokens, 0);
+    if (c_handle->kas_valid)
+	ubik_ClientDestroy(c_handle->kas);
+    if (c_handle->pts_valid)
+	ubik_ClientDestroy(c_handle->pts);
+    if (c_handle->vos_valid)
+	ubik_ClientDestroy(c_handle->vos);
+    if (c_handle->is_null)
+	afsclient_TokenClose(c_handle->tokens, 0);
     c_handle->kas_valid = 0;
     c_handle->pts_valid = 0;
     c_handle->vos_valid = 0;
@@ -1083,10 +1082,10 @@ int ADMINAPI afsclient_CellClose(
     free(c_handle);
     rc = 1;
 
-fail_afsclient_CellClose:
+  fail_afsclient_CellClose:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1113,10 +1112,9 @@ fail_afsclient_CellClose:
  *
  * Returns != 0 upon successful completion.
  */
-int ADMINAPI afsclient_CellNameGet(
-  const void *cellHandle,
-  const char **cellNameP,
-  afs_status_p st)
+int ADMINAPI
+afsclient_CellNameGet(const void *cellHandle, const char **cellNameP,
+		      afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1129,10 +1127,10 @@ int ADMINAPI afsclient_CellNameGet(
     *cellNameP = c_handle->working_cell;
     rc = 1;
 
-fail_afsclient_CellNameGet:
+  fail_afsclient_CellNameGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1160,55 +1158,54 @@ fail_afsclient_CellNameGet:
  *
  * Returns != 0 upon successful completion.
  */
- 
-int ADMINAPI afsclient_LocalCellGet(
-  char *cellName,
-  afs_status_p st)
+
+int ADMINAPI
+afsclient_LocalCellGet(char *cellName, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     struct afsconf_dir *tdir = NULL;
- 
+
     if (client_init == 0) {
 	tst = ADMCLIENTNOINIT;
 	goto fail_afsclient_LocalCellGet;
     }
- 
+
     if (cellName == NULL) {
-        tst = ADMCLIENTCELLNAMENULL;
-        goto fail_afsclient_LocalCellGet;
+	tst = ADMCLIENTCELLNAMENULL;
+	goto fail_afsclient_LocalCellGet;
     }
 
     tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
 
     if (!tdir) {
 	tst = ADMCLIENTBADCLIENTCONFIG;
-        goto fail_afsclient_LocalCellGet;
+	goto fail_afsclient_LocalCellGet;
     }
 
     if ((tst = afsconf_GetLocalCell(tdir, cellName, MAXCELLCHARS))) {
-        goto fail_afsclient_LocalCellGet;
+	goto fail_afsclient_LocalCellGet;
     }
 
     rc = 1;
- 
-fail_afsclient_LocalCellGet:
- 
+
+  fail_afsclient_LocalCellGet:
+
     if (tdir != NULL) {
 	afsconf_Close(tdir);
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
- 
+
 #ifdef AFS_NT40_ENV
- 
-static int client_ExtractDriveLetter(
-  char *path)
+
+static int
+client_ExtractDriveLetter(char *path)
 {
     int rc = 0;
 
@@ -1224,9 +1221,8 @@ static int client_ExtractDriveLetter(
  * Determine the parent directory of a give directory
  */
 
-static int Parent(
-  char *directory,
-  char *parentDirectory)
+static int
+Parent(char *directory, char *parentDirectory)
 {
     register char *tp;
     int rc = 0;
@@ -1235,11 +1231,10 @@ static int Parent(
     tp = strrchr(parentDirectory, '\\');
     if (tp) {
 	/* lv trailing slash so Parent("k:\foo") is "k:\" not "k :" */
-        *(tp+1) = 0;
+	*(tp + 1) = 0;
 	rc = 1;
-    }
-    else {
-        if (client_ExtractDriveLetter(parentDirectory)) {
+    } else {
+	if (client_ExtractDriveLetter(parentDirectory)) {
 	    strcat(parentDirectory, ".");
 	    rc = 1;
 	}
@@ -1252,9 +1247,8 @@ static int Parent(
 /*
  * Determine the parent directory of a give directory
  */
-static int Parent(
-  const char *directory,
-  char *parentDirectory)
+static int
+Parent(const char *directory, char *parentDirectory)
 {
     char *tp;
     int rc = 0;
@@ -1262,10 +1256,9 @@ static int Parent(
     strcpy(parentDirectory, directory);
     tp = strrchr(parentDirectory, '/');
     if (tp) {
-        *tp = 0;
+	*tp = 0;
 	rc = 1;
-    }
-    else {
+    } else {
 	strcpy(parentDirectory, ".");
 	rc = 1;
     }
@@ -1301,13 +1294,10 @@ static int Parent(
 
 #define TMP_DATA_SIZE 2048
 
-int ADMINAPI afsclient_MountPointCreate(
-  const void *cellHandle,
-  const char *directory,
-  const char *volumeName,
-  vol_type_t volType,
-  vol_check_t volCheck,
-  afs_status_p st)
+int ADMINAPI
+afsclient_MountPointCreate(const void *cellHandle, const char *directory,
+			   const char *volumeName, vol_type_t volType,
+			   vol_check_t volCheck, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1318,7 +1308,7 @@ int ADMINAPI afsclient_MountPointCreate(
     struct ViceIoctl idata;
     int i;
     vos_vldbEntry_t vldbEntry;
- 
+
     /*
      * Validate arguments
      */
@@ -1329,13 +1319,13 @@ int ADMINAPI afsclient_MountPointCreate(
     }
 
     if ((directory == NULL) || (*directory == 0)) {
-       tst = ADMCLIENTDIRECTORYNULL;
-       goto fail_afsclient_MountPointCreate;
+	tst = ADMCLIENTDIRECTORYNULL;
+	goto fail_afsclient_MountPointCreate;
     }
 
     if ((volumeName == NULL) || (*volumeName == 0)) {
-       tst = ADMCLIENTVOLUMENAME;
-       goto fail_afsclient_MountPointCreate;
+	tst = ADMCLIENTVOLUMENAME;
+	goto fail_afsclient_MountPointCreate;
     }
 
     /*
@@ -1344,7 +1334,7 @@ int ADMINAPI afsclient_MountPointCreate(
 
     if (!Parent(directory, parent_dir)) {
 	tst = ADMCLIENTBADDIRECTORY;
-       goto fail_afsclient_MountPointCreate;
+	goto fail_afsclient_MountPointCreate;
     }
 
     idata.in_size = 0;
@@ -1354,7 +1344,7 @@ int ADMINAPI afsclient_MountPointCreate(
     if (i) {
 	if ((errno == EINVAL) || (errno == ENOENT)) {
 	    tst = ADMCLIENTNOAFSDIRECTORY;
-	   goto fail_afsclient_MountPointCreate;
+	    goto fail_afsclient_MountPointCreate;
 	}
     }
     strcpy(directoryCell, space);
@@ -1407,11 +1397,11 @@ int ADMINAPI afsclient_MountPointCreate(
 #endif
 
     rc = 1;
- 
-fail_afsclient_MountPointCreate:
+
+  fail_afsclient_MountPointCreate:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1423,11 +1413,9 @@ typedef struct Acl {
     int nminus;
 } Acl_t, *Acl_p;
 
-int ADMINAPI afsclient_ACLEntryAdd(
-  const char *directory,
-  const char *user,
-  const acl_p acl,
-  afs_status_p st)
+int ADMINAPI
+afsclient_ACLEntryAdd(const char *directory, const char *user,
+		      const acl_p acl, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1440,9 +1428,9 @@ int ADMINAPI afsclient_ACLEntryAdd(
     char cur_user[64];
     int cur_user_acl = 0;
     int i;
-    char tmp[64+35];
+    char tmp[64 + 35];
     int is_dfs;
- 
+
     if (client_init == 0) {
 	tst = ADMCLIENTNOINIT;
 	goto fail_afsclient_ACLEntryAdd;
@@ -1539,7 +1527,9 @@ int ADMINAPI afsclient_ACLEntryAdd(
      * file.
      */
 
-    is_dfs = sscanf(old_acl_string, "%d dfs:%d %s", &cur_acl.nplus, &cur_acl.dfs, cur_acl.cell);
+    is_dfs =
+	sscanf(old_acl_string, "%d dfs:%d %s", &cur_acl.nplus, &cur_acl.dfs,
+	       cur_acl.cell);
     ptr = strchr(old_acl_string, '\n');
     ptr++;
     sscanf(ptr, "%d", &cur_acl.nminus);
@@ -1562,7 +1552,7 @@ int ADMINAPI afsclient_ACLEntryAdd(
      * adding a space in the new acl.
      */
 
-    for(i=0;i<(cur_acl.nplus + cur_acl.nminus);i++) {
+    for (i = 0; i < (cur_acl.nplus + cur_acl.nminus); i++) {
 	sscanf(ptr, "%s%d\n", cur_user, &cur_user_acl);
 	/*
 	 * Skip the entry for the user we are replacing/adding
@@ -1592,10 +1582,10 @@ int ADMINAPI afsclient_ACLEntryAdd(
     }
     rc = 1;
 
-fail_afsclient_ACLEntryAdd:
+  fail_afsclient_ACLEntryAdd:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1618,13 +1608,13 @@ fail_afsclient_ACLEntryAdd:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_Init(
-  afs_status_p st)
+int ADMINAPI
+afsclient_Init(afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
- 
-    if ( !client_init )
+
+    if (!client_init)
 	pthread_once(&client_init_once, client_once);
 
 #ifdef AFS_NT40_ENV
@@ -1650,10 +1640,10 @@ int ADMINAPI afsclient_Init(
 
     rc = 1;
 
-fail_afsclient_Init:
+  fail_afsclient_Init:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1684,17 +1674,15 @@ fail_afsclient_Init:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_AFSServerGet(
-  const void *cellHandle,
-  const char *serverName,
-  afs_serverEntry_p serverEntryP,
-  afs_status_p st)
+int ADMINAPI
+afsclient_AFSServerGet(const void *cellHandle, const char *serverName,
+		       afs_serverEntry_p serverEntryP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     void *iter;
     int found_match = 0;
- 
+
     if ((serverName == NULL) || (*serverName == 0)) {
 	tst = ADMUTILSERVERNAMENULL;
 	goto fail_afsclient_AFSServerGet;
@@ -1713,7 +1701,7 @@ int ADMINAPI afsclient_AFSServerGet(
 	goto fail_afsclient_AFSServerGet;
     }
 
-    while(afsclient_AFSServerGetNext(iter, serverEntryP, &tst)) {
+    while (afsclient_AFSServerGetNext(iter, serverEntryP, &tst)) {
 	if (!strcmp(serverName, serverEntryP->serverName)) {
 	    found_match = 1;
 	    break;
@@ -1740,10 +1728,10 @@ int ADMINAPI afsclient_AFSServerGet(
     }
     rc = 1;
 
-fail_afsclient_AFSServerGet:
+  fail_afsclient_AFSServerGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1759,48 +1747,42 @@ typedef struct server_get {
     afs_serverEntry_t cache[CACHED_ITEMS];
 } server_get_t, *server_get_p;
 
-static int GetServerRPC(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+GetServerRPC(void *rpc_specific, int slot, int *last_item,
+	     int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     server_get_p serv = (server_get_p) rpc_specific;
- 
+
     memcpy(&serv->cache[slot], &serv->server[serv->index],
 	   sizeof(afs_serverEntry_t));
-    
+
     serv->index++;
     if (serv->index == serv->total) {
-        *last_item = 1;
-        *last_item_contains_data = 1;
+	*last_item = 1;
+	*last_item_contains_data = 1;
     }
     rc = 1;
- 
+
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
-static int GetServerFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+GetServerFromCache(void *rpc_specific, int slot, void *dest, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     server_get_p serv = (server_get_p) rpc_specific;
- 
-    memcpy(dest, (const void *) &serv->cache[slot], sizeof(afs_serverEntry_t));
+
+    memcpy(dest, (const void *)&serv->cache[slot], sizeof(afs_serverEntry_t));
     rc = 1;
- 
+
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1828,25 +1810,25 @@ static int GetServerFromCache(
  *
  * Returns != 0 upon successful completion.
  */
- 
-int ADMINAPI afsclient_AFSServerGetBegin(
-  const void *cellHandle,
-  void **iterationIdP,
-  afs_status_p st)
+
+int ADMINAPI
+afsclient_AFSServerGetBegin(const void *cellHandle, void **iterationIdP,
+			    afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    afs_admin_iterator_p iter =
+	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
     server_get_p serv = (server_get_p) calloc(1, sizeof(server_get_t));
     const char *cellName;
     void *database_iter;
     util_databaseServerEntry_t database_entry;
     void *fileserver_iter;
     vos_fileServerEntry_t fileserver_entry;
-    int iserv,iservaddr,ientryaddr, is_dup;
+    int iserv, iservaddr, ientryaddr, is_dup;
     struct hostent *host;
- 
+
     if (!CellHandleIsValid(c_handle, &tst)) {
 	goto fail_afsclient_AFSServerGetBegin;
     }
@@ -1873,8 +1855,9 @@ int ADMINAPI afsclient_AFSServerGetBegin(
 	goto fail_afsclient_AFSServerGetBegin;
     }
 
-    while(util_DatabaseServerGetNext(database_iter, &database_entry, &tst)) {
-	serv->server[serv->total].serverAddress[0] = database_entry.serverAddress;
+    while (util_DatabaseServerGetNext(database_iter, &database_entry, &tst)) {
+	serv->server[serv->total].serverAddress[0] =
+	    database_entry.serverAddress;
 	serv->server[serv->total].serverType = DATABASE_SERVER;
 	serv->total++;
     }
@@ -1896,16 +1879,18 @@ int ADMINAPI afsclient_AFSServerGetBegin(
 	goto fail_afsclient_AFSServerGetBegin;
     }
 
-    while(vos_FileServerGetNext(fileserver_iter, &fileserver_entry, &tst)) {
+    while (vos_FileServerGetNext(fileserver_iter, &fileserver_entry, &tst)) {
 	/*
 	 * See if any of the addresses returned in this fileserver_entry
 	 * structure already exist in the list of servers we're building.
 	 * If not, create a new record for this server.
 	 */
 	is_dup = 0;
-	for(iserv=0;iserv<serv->total;iserv++) {
-	    for(ientryaddr=0; ientryaddr<fileserver_entry.count; ientryaddr++) {
-		for(iservaddr=0;iservaddr<AFS_MAX_SERVER_ADDRESS;iservaddr++) {
+	for (iserv = 0; iserv < serv->total; iserv++) {
+	    for (ientryaddr = 0; ientryaddr < fileserver_entry.count;
+		 ientryaddr++) {
+		for (iservaddr = 0; iservaddr < AFS_MAX_SERVER_ADDRESS;
+		     iservaddr++) {
 		    if (serv->server[iserv].serverAddress[iservaddr] ==
 			fileserver_entry.serverAddress[ientryaddr]) {
 			is_dup = 1;
@@ -1936,18 +1921,21 @@ int ADMINAPI afsclient_AFSServerGetBegin(
 	 * duplicate entries.
 	 */
 
-	for(ientryaddr=0;ientryaddr<fileserver_entry.count;ientryaddr++) {
-	    for(iservaddr=0;iservaddr<AFS_MAX_SERVER_ADDRESS;iservaddr++) {
+	for (ientryaddr = 0; ientryaddr < fileserver_entry.count;
+	     ientryaddr++) {
+	    for (iservaddr = 0; iservaddr < AFS_MAX_SERVER_ADDRESS;
+		 iservaddr++) {
 		if (serv->server[iserv].serverAddress[iservaddr] ==
 		    fileserver_entry.serverAddress[ientryaddr]) {
 		    break;
 		}
 	    }
 	    if (iservaddr == AFS_MAX_SERVER_ADDRESS) {
-		for(iservaddr=0;iservaddr<AFS_MAX_SERVER_ADDRESS;iservaddr++) {
+		for (iservaddr = 0; iservaddr < AFS_MAX_SERVER_ADDRESS;
+		     iservaddr++) {
 		    if (!serv->server[iserv].serverAddress[iservaddr]) {
-			serv->server[iserv].serverAddress[iservaddr] = 
-			fileserver_entry.serverAddress[ientryaddr];
+			serv->server[iserv].serverAddress[iservaddr] =
+			    fileserver_entry.serverAddress[ientryaddr];
 			break;
 		    }
 		}
@@ -1968,24 +1956,24 @@ int ADMINAPI afsclient_AFSServerGetBegin(
      * Iterate over the list and fill in the hostname of each of the servers
      */
 
-    LOCK_GLOBAL_MUTEX
-    for(iserv=0;iserv<serv->total;iserv++) {
+    LOCK_GLOBAL_MUTEX;
+    for (iserv = 0; iserv < serv->total; iserv++) {
 	int addr = htonl(serv->server[iserv].serverAddress[0]);
-	host = gethostbyaddr((const char *) &addr, sizeof(int), AF_INET);
+	host = gethostbyaddr((const char *)&addr, sizeof(int), AF_INET);
 	if (host != NULL) {
 	    strncpy(serv->server[iserv].serverName, host->h_name,
 		    AFS_MAX_SERVER_NAME_LEN);
 	}
     }
-    UNLOCK_GLOBAL_MUTEX
-
-    if (IteratorInit(iter, (void *) serv, GetServerRPC, GetServerFromCache,
-		     NULL, NULL, &tst)) {
-	*iterationIdP = (void *) iter;
+    UNLOCK_GLOBAL_MUTEX;
+    if (IteratorInit
+	    (iter, (void *)serv, GetServerRPC, GetServerFromCache, NULL, NULL,
+	     &tst)) {
+	*iterationIdP = (void *)iter;
 	rc = 1;
     }
 
-fail_afsclient_AFSServerGetBegin:
+  fail_afsclient_AFSServerGetBegin:
 
     if (rc == 0) {
 	if (iter != NULL) {
@@ -1997,7 +1985,7 @@ fail_afsclient_AFSServerGetBegin:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2024,11 +2012,10 @@ fail_afsclient_AFSServerGetBegin:
  *
  * Returns != 0 upon successful completion.
  */
- 
-int ADMINAPI afsclient_AFSServerGetNext(
-  void *iterationId,
-  afs_serverEntry_p serverEntryP,
-  afs_status_p st)
+
+int ADMINAPI
+afsclient_AFSServerGetNext(void *iterationId, afs_serverEntry_p serverEntryP,
+			   afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2044,12 +2031,12 @@ int ADMINAPI afsclient_AFSServerGetNext(
 	goto fail_afsclient_AFSServerGetNext;
     }
 
-    rc = IteratorNext(iter, (void *) serverEntryP, &tst);
+    rc = IteratorNext(iter, (void *)serverEntryP, &tst);
 
-fail_afsclient_AFSServerGetNext:
+  fail_afsclient_AFSServerGetNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2074,15 +2061,14 @@ fail_afsclient_AFSServerGetNext:
  *
  * Returns != 0 upon successful completion.
  */
- 
-int ADMINAPI afsclient_AFSServerGetDone(
-  void *iterationId,
-  afs_status_p st)
+
+int ADMINAPI
+afsclient_AFSServerGetDone(void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     if (iterationId == NULL) {
 	tst = ADMITERATORNULL;
 	goto fail_afsclient_AFSServerGetDone;
@@ -2090,10 +2076,10 @@ int ADMINAPI afsclient_AFSServerGetDone(
 
     rc = IteratorDone(iter, &tst);
 
-fail_afsclient_AFSServerGetDone:
+  fail_afsclient_AFSServerGetDone:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2125,12 +2111,10 @@ fail_afsclient_AFSServerGetDone:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_RPCStatOpen(
-  const void *cellHandle,
-  const char *serverName,
-  afs_stat_source_t type,
-  struct rx_connection **rpcStatHandleP,
-  afs_status_p st)
+int ADMINAPI
+afsclient_RPCStatOpen(const void *cellHandle, const char *serverName,
+		      afs_stat_source_t type,
+		      struct rx_connection **rpcStatHandleP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2152,37 +2136,37 @@ int ADMINAPI afsclient_RPCStatOpen(
 	goto fail_afsclient_RPCStatOpen;
     }
 
-    switch(type) {
+    switch (type) {
 
-	case AFS_BOSSERVER:
+    case AFS_BOSSERVER:
 	servPort = AFSCONF_NANNYPORT;
 	break;
 
-	case AFS_FILESERVER:
+    case AFS_FILESERVER:
 	servPort = AFSCONF_FILEPORT;
 	break;
 
-	case AFS_KASERVER:
+    case AFS_KASERVER:
 	servPort = AFSCONF_KAUTHPORT;
 	break;
 
-	case AFS_PTSERVER:
+    case AFS_PTSERVER:
 	servPort = AFSCONF_PROTPORT;
 	break;
 
-	case AFS_VOLSERVER:
+    case AFS_VOLSERVER:
 	servPort = AFSCONF_VOLUMEPORT;
 	break;
 
-	case AFS_VLSERVER:
+    case AFS_VLSERVER:
 	servPort = AFSCONF_VLDBPORT;
 	break;
 
-	case AFS_CLIENT:
+    case AFS_CLIENT:
 	servPort = AFSCONF_CALLBACKPORT;
 	break;
 
-	default:
+    default:
 	tst = ADMTYPEINVALID;
 	goto fail_afsclient_RPCStatOpen;
     }
@@ -2201,11 +2185,10 @@ int ADMINAPI afsclient_RPCStatOpen(
 	sc = c_handle->tokens->afs_sc[c_handle->tokens->sc_index];
     }
 
-    *rpcStatHandleP = rx_GetCachedConnection(htonl(servAddr),
-					     htons(servPort),
-					     RX_STATS_SERVICE_ID,
-					     sc,
-					     c_handle->tokens->sc_index);
+    *rpcStatHandleP =
+	rx_GetCachedConnection(htonl(servAddr), htons(servPort),
+			       RX_STATS_SERVICE_ID, sc,
+			       c_handle->tokens->sc_index);
 
     if (*rpcStatHandleP == NULL) {
 	tst = ADMCLIENTRPCSTATNOCONNECTION;
@@ -2213,10 +2196,10 @@ int ADMINAPI afsclient_RPCStatOpen(
     }
     rc = 1;
 
-fail_afsclient_RPCStatOpen:
+  fail_afsclient_RPCStatOpen:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2248,12 +2231,11 @@ fail_afsclient_RPCStatOpen:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_RPCStatOpenPort(
-  const void *cellHandle,
-  const char *serverName,
-  const int serverPort,
-  struct rx_connection **rpcStatHandleP,
-  afs_status_p st)
+int ADMINAPI
+afsclient_RPCStatOpenPort(const void *cellHandle, const char *serverName,
+			  const int serverPort,
+			  struct rx_connection **rpcStatHandleP,
+			  afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2288,11 +2270,10 @@ int ADMINAPI afsclient_RPCStatOpenPort(
 	sc = c_handle->tokens->afs_sc[c_handle->tokens->sc_index];
     }
 
-    *rpcStatHandleP = rx_GetCachedConnection(htonl(servAddr),
-					     htons(serverPort),
-					     RX_STATS_SERVICE_ID,
-					     sc,
-					     c_handle->tokens->sc_index);
+    *rpcStatHandleP =
+	rx_GetCachedConnection(htonl(servAddr), htons(serverPort),
+			       RX_STATS_SERVICE_ID, sc,
+			       c_handle->tokens->sc_index);
 
     if (*rpcStatHandleP == NULL) {
 	tst = ADMCLIENTRPCSTATNOCONNECTION;
@@ -2300,10 +2281,10 @@ int ADMINAPI afsclient_RPCStatOpenPort(
     }
     rc = 1;
 
-fail_afsclient_RPCStatOpenPort:
+  fail_afsclient_RPCStatOpenPort:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2328,9 +2309,8 @@ fail_afsclient_RPCStatOpenPort:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_RPCStatClose(
-  struct rx_connection *rpcStatHandle,
-  afs_status_p st)
+int ADMINAPI
+afsclient_RPCStatClose(struct rx_connection *rpcStatHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2342,10 +2322,10 @@ int ADMINAPI afsclient_RPCStatClose(
 
     rx_ReleaseCachedConnection(rpcStatHandle);
     rc = 1;
-fail_afsclient_RPCStatClose:
+  fail_afsclient_RPCStatClose:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2375,11 +2355,9 @@ fail_afsclient_RPCStatClose:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_CMStatOpen(
-  const void *cellHandle,
-  const char *serverName,
-  struct rx_connection **cmStatHandleP,
-  afs_status_p st)
+int ADMINAPI
+afsclient_CMStatOpen(const void *cellHandle, const char *serverName,
+		     struct rx_connection **cmStatHandleP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2402,11 +2380,9 @@ int ADMINAPI afsclient_CMStatOpen(
 
     sc = c_handle->tokens->afs_sc[c_handle->tokens->sc_index];
 
-    *cmStatHandleP = rx_GetCachedConnection(htonl(servAddr),
-					     htons(AFSCONF_CALLBACKPORT),
-					     1,
-					     sc,
-					     c_handle->tokens->sc_index);
+    *cmStatHandleP =
+	rx_GetCachedConnection(htonl(servAddr), htons(AFSCONF_CALLBACKPORT),
+			       1, sc, c_handle->tokens->sc_index);
 
     if (*cmStatHandleP == NULL) {
 	tst = ADMCLIENTCMSTATNOCONNECTION;
@@ -2414,10 +2390,10 @@ int ADMINAPI afsclient_CMStatOpen(
     }
     rc = 1;
 
-fail_afsclient_CMStatOpen:
+  fail_afsclient_CMStatOpen:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2449,12 +2425,11 @@ fail_afsclient_CMStatOpen:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_CMStatOpenPort(
-  const void *cellHandle,
-  const char *serverName,
-  const int serverPort,
-  struct rx_connection **cmStatHandleP,
-  afs_status_p st)
+int ADMINAPI
+afsclient_CMStatOpenPort(const void *cellHandle, const char *serverName,
+			 const int serverPort,
+			 struct rx_connection **cmStatHandleP,
+			 afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2477,11 +2452,9 @@ int ADMINAPI afsclient_CMStatOpenPort(
 
     sc = c_handle->tokens->afs_sc[c_handle->tokens->sc_index];
 
-    *cmStatHandleP = rx_GetCachedConnection(htonl(servAddr),
-					     htons(serverPort),
-					     1,
-					     sc,
-					     c_handle->tokens->sc_index);
+    *cmStatHandleP =
+	rx_GetCachedConnection(htonl(servAddr), htons(serverPort), 1, sc,
+			       c_handle->tokens->sc_index);
 
     if (*cmStatHandleP == NULL) {
 	tst = ADMCLIENTCMSTATNOCONNECTION;
@@ -2489,10 +2462,10 @@ int ADMINAPI afsclient_CMStatOpenPort(
     }
     rc = 1;
 
-fail_afsclient_CMStatOpenPort:
+  fail_afsclient_CMStatOpenPort:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2517,9 +2490,8 @@ fail_afsclient_CMStatOpenPort:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_CMStatClose(
-  struct rx_connection *cmStatHandle,
-  afs_status_p st)
+int ADMINAPI
+afsclient_CMStatClose(struct rx_connection *cmStatHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2531,10 +2503,10 @@ int ADMINAPI afsclient_CMStatClose(
 
     rx_ReleaseCachedConnection(cmStatHandle);
     rc = 1;
-fail_afsclient_CMStatClose:
+  fail_afsclient_CMStatClose:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2563,11 +2535,9 @@ fail_afsclient_CMStatClose:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_RXDebugOpen(
-  const char *serverName,
-  afs_stat_source_t type,
-  rxdebugHandle_p *rxdebugHandleP,
-  afs_status_p st)
+int ADMINAPI
+afsclient_RXDebugOpen(const char *serverName, afs_stat_source_t type,
+		      rxdebugHandle_p * rxdebugHandleP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2583,46 +2553,46 @@ int ADMINAPI afsclient_RXDebugOpen(
 	goto fail_afsclient_RXDebugOpen;
     }
 
-    switch(type) {
+    switch (type) {
 
-	case AFS_BOSSERVER:
+    case AFS_BOSSERVER:
 	serverPort = AFSCONF_NANNYPORT;
 	break;
 
-	case AFS_FILESERVER:
+    case AFS_FILESERVER:
 	serverPort = AFSCONF_FILEPORT;
 	break;
 
-	case AFS_KASERVER:
+    case AFS_KASERVER:
 	serverPort = AFSCONF_KAUTHPORT;
 	break;
 
-	case AFS_PTSERVER:
+    case AFS_PTSERVER:
 	serverPort = AFSCONF_PROTPORT;
 	break;
 
-	case AFS_VOLSERVER:
+    case AFS_VOLSERVER:
 	serverPort = AFSCONF_VOLUMEPORT;
 	break;
 
-	case AFS_VLSERVER:
+    case AFS_VLSERVER:
 	serverPort = AFSCONF_VLDBPORT;
 	break;
 
-	case AFS_CLIENT:
+    case AFS_CLIENT:
 	serverPort = AFSCONF_CALLBACKPORT;
 	break;
 
-	default:
+    default:
 	tst = ADMTYPEINVALID;
 	goto fail_afsclient_RXDebugOpen;
     }
 
     if (!util_AdminServerAddressGetFromName(serverName, &serverAddr, &tst)) {
-        goto fail_afsclient_RXDebugOpen;
+	goto fail_afsclient_RXDebugOpen;
     }
 
-    sock = (rxdebugSocket_t)socket(AF_INET, SOCK_DGRAM, 0);
+    sock = (rxdebugSocket_t) socket(AF_INET, SOCK_DGRAM, 0);
     if (sock == INVALID_RXDEBUG_SOCKET) {
 	tst = ADMSOCKFAIL;
 	goto fail_afsclient_RXDebugOpen;
@@ -2639,7 +2609,7 @@ int ADMINAPI afsclient_RXDebugOpen(
 	goto fail_afsclient_RXDebugOpen;
     }
 
-    handle = (rxdebugHandle_p)malloc(sizeof(rxdebugHandle_t));
+    handle = (rxdebugHandle_p) malloc(sizeof(rxdebugHandle_t));
     if (!handle) {
 	close(sock);
 	tst = ADMNOMEM;
@@ -2654,10 +2624,10 @@ int ADMINAPI afsclient_RXDebugOpen(
     *rxdebugHandleP = handle;
     rc = 1;
 
-fail_afsclient_RXDebugOpen:
+  fail_afsclient_RXDebugOpen:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2686,11 +2656,9 @@ fail_afsclient_RXDebugOpen:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_RXDebugOpenPort(
-  const char *serverName,
-  int serverPort,
-  rxdebugHandle_p *rxdebugHandleP,
-  afs_status_p st)
+int ADMINAPI
+afsclient_RXDebugOpenPort(const char *serverName, int serverPort,
+			  rxdebugHandle_p * rxdebugHandleP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2706,10 +2674,10 @@ int ADMINAPI afsclient_RXDebugOpenPort(
     }
 
     if (!util_AdminServerAddressGetFromName(serverName, &serverAddr, &tst)) {
-        goto fail_afsclient_RXDebugOpenPort;
+	goto fail_afsclient_RXDebugOpenPort;
     }
 
-    sock = (rxdebugSocket_t)socket(AF_INET, SOCK_DGRAM, 0);
+    sock = (rxdebugSocket_t) socket(AF_INET, SOCK_DGRAM, 0);
     if (sock == INVALID_RXDEBUG_SOCKET) {
 	tst = ADMSOCKFAIL;
 	goto fail_afsclient_RXDebugOpenPort;
@@ -2726,7 +2694,7 @@ int ADMINAPI afsclient_RXDebugOpenPort(
 	goto fail_afsclient_RXDebugOpenPort;
     }
 
-    handle = (rxdebugHandle_p)malloc(sizeof(rxdebugHandle_t));
+    handle = (rxdebugHandle_p) malloc(sizeof(rxdebugHandle_t));
     if (!handle) {
 	close(sock);
 	tst = ADMNOMEM;
@@ -2741,10 +2709,10 @@ int ADMINAPI afsclient_RXDebugOpenPort(
     *rxdebugHandleP = handle;
     rc = 1;
 
-fail_afsclient_RXDebugOpenPort:
+  fail_afsclient_RXDebugOpenPort:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2769,9 +2737,8 @@ fail_afsclient_RXDebugOpenPort:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI afsclient_RXDebugClose(
-  rxdebugHandle_p rxdebugHandle,
-  afs_status_p st)
+int ADMINAPI
+afsclient_RXDebugClose(rxdebugHandle_p rxdebugHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2784,10 +2751,10 @@ int ADMINAPI afsclient_RXDebugClose(
     close(rxdebugHandle->sock);
     free(rxdebugHandle);
     rc = 1;
-fail_afsclient_RXDebugClose:
+  fail_afsclient_RXDebugClose:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }

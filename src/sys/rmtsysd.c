@@ -16,7 +16,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/sys/rmtsysd.c,v 1.1.1.5 2003/04/13 19:07:40 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/sys/rmtsysd.c,v 1.7 2003/07/15 23:16:54 shadow Exp $");
 
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
@@ -40,7 +41,9 @@ extern RMTSYS_ExecuteRequest();
 
 #include "AFS_component_version_number.c"
 
-main() {
+int
+main(int argc, char *argv[])
+{
     struct rx_securityClass *(securityObjects[N_SECURITY_OBJECTS]);
     struct rx_service *service;
 
@@ -52,7 +55,7 @@ main() {
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
@@ -60,18 +63,19 @@ main() {
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
     /* Initialize the rx-based RMTSYS server */
-    if (rx_Init(htons(AFSCONF_RMTSYSPORT)) < 0) 
+    if (rx_Init(htons(AFSCONF_RMTSYSPORT)) < 0)
 	rmt_Quit("rx_init");
     securityObjects[0] = rxnull_NewServerSecurityObject();
-    if (securityObjects[0] == (struct rx_securityClass *) 0)
+    if (securityObjects[0] == (struct rx_securityClass *)0)
 	rmt_Quit("rxnull_NewServerSecurityObject");
-    service = rx_NewService(0, RMTSYS_SERVICEID, AFSCONF_RMTSYSSERVICE,
-			    securityObjects, N_SECURITY_OBJECTS,
-			    RMTSYS_ExecuteRequest);
-    if (service == (struct rx_service *) 0) 
+    service =
+	rx_NewService(0, RMTSYS_SERVICEID, AFSCONF_RMTSYSSERVICE,
+		      securityObjects, N_SECURITY_OBJECTS,
+		      RMTSYS_ExecuteRequest);
+    if (service == (struct rx_service *)0)
 	rmt_Quit("rx_NewService");
     /* One may wish to tune some default RX params for better performance
      * at some point... */
     rx_SetMaxProcs(service, 2);
-    rx_StartServer(1); /* Donate this process to the server process pool */
+    rx_StartServer(1);		/* Donate this process to the server process pool */
 }

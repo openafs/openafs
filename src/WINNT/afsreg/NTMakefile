@@ -5,6 +5,7 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=WINNT\afsreg
 !INCLUDE ..\..\config\NTMakefile.$(SYS_NAME)
 
 INCFILES = \
@@ -13,16 +14,20 @@ INCFILES = \
 	$(DESTDIR)\include\WINNT\afssw.h \
 	$(DESTDIR)\include\WINNT\vptab.h
 
+
 LIBFILE = $(DESTDIR)\lib\afs\afsreg.lib
 
 LIBOBJS = \
-	afsreg.obj \
-	syscfg.obj \
-	afssw.obj \
-	vptab.obj
+	$(OUT)\afsreg.obj \
+	$(OUT)\syscfg.obj \
+	$(OUT)\afssw.obj \
+	$(OUT)\vptab.obj
+
+$(LIBOBJS): $$(@B).c
+    $(C2OBJ) $**
 
 $(LIBFILE): $(LIBOBJS)
-	$(LIBARCH)
+	$(LIBARCH) Iphlpapi.lib
 
 install_headers: $(INCFILES)
 

@@ -15,7 +15,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/sys/rmtsysc.c,v 1.1.1.8 2003/07/30 17:13:02 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/sys/rmtsysc.c,v 1.11 2003/07/15 23:16:54 shadow Exp $");
 
 #include <errno.h>
 #include <limits.h>
@@ -40,10 +41,10 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/sys/rmtsysc.c,v 1.1.1.8 2003/07/30 17:1
 #include "rmtsys.h"
 
 
-#define	NOPAG	    0xffffffff /* Also defined in afs/afs.h */
+#define	NOPAG	    0xffffffff	/* Also defined in afs/afs.h */
 static afs_int32 hostAddr = 0;
-static int   hostAddrLookup = 0;
-char *afs_server=0, server_name[128];
+static int hostAddrLookup = 0;
+char *afs_server = 0, server_name[128];
 afs_int32 host;
 static afs_int32 SetClientCreds();
 
@@ -54,14 +55,14 @@ static afs_int32 SetClientCreds();
  * $HOME/.AFSSERVER file is checked, otherwise the "/.AFSSERVER" is
  * used.
  */
-afs_int32 GetAfsServerAddr(syscall)
-char *syscall;
+afs_int32
+GetAfsServerAddr(char *syscall)
 {
     register struct hostent *th;
     char *getenv();
 
     if (hostAddrLookup) {
-        /* Take advantage of caching and assume that the remote host
+	/* Take advantage of caching and assume that the remote host
 	 * address won't change during a single program's invocation.
 	 */
 	return hostAddr;
@@ -72,7 +73,7 @@ char *syscall;
 	char *home_dir;
 	FILE *fp;
 	int len;
-	
+
 	if (!(home_dir = getenv("HOME"))) {
 	    /* Our last chance is the "/.AFSSERVER" file */
 	    fp = fopen("/.AFSSERVER", "r");
@@ -100,8 +101,8 @@ char *syscall;
 	if (len == 0) {
 	    return 0;
 	}
-	if (server_name[len-1] == '\n') {
-	    server_name[len-1] = 0;
+	if (server_name[len - 1] == '\n') {
+	    server_name[len - 1] = 0;
 	}
 	afs_server = server_name;
     }
@@ -116,9 +117,8 @@ char *syscall;
 
 
 /* Does the actual RX connection to the afs server */
-struct rx_connection *rx_connection(errorcode, syscall)
-afs_int32 *errorcode;
-char *syscall;
+struct rx_connection *
+rx_connection(afs_int32 * errorcode, char *syscall)
 {
     struct rx_connection *conn;
     struct rx_securityClass *null_securityObject;
@@ -126,14 +126,16 @@ char *syscall;
     if (!(host = GetAfsServerAddr(syscall))) {
 	*errorcode = -1;
 	return (struct rx_connection *)0;
-    }	
+    }
     *errorcode = rx_Init(0);
-    if(*errorcode) {
+    if (*errorcode) {
 	printf("Rx initialize failed \n");
 	return (struct rx_connection *)0;
     }
     null_securityObject = rxnull_NewClientSecurityObject();
-    conn = rx_NewConnection(host, htons(AFSCONF_RMTSYSPORT), RMTSYS_SERVICEID, null_securityObject, 0);
+    conn =
+	rx_NewConnection(host, htons(AFSCONF_RMTSYSPORT), RMTSYS_SERVICEID,
+			 null_securityObject, 0);
     if (!conn) {
 	printf("Unable to make a new connection\n");
 	*errorcode = -1;
@@ -147,9 +149,11 @@ char *syscall;
  * do a setgroups(2) call with the new pag.... */
 #ifdef AFS_DUX40_ENV
 #pragma weak setpag = afs_setpag
-int afs_setpag()
+int
+afs_setpag(void)
 #else
-int setpag()
+int
+setpag(void)
 #endif
 {
     struct rx_connection *conn;
@@ -168,7 +172,7 @@ int setpag()
 	errno = errornumber;
 	errorcode = -1;
 	printf("Warning: Remote setpag to %s has failed (err=%d)...\n",
-		afs_server, errno);
+	       afs_server, errno);
     }
     if (errorcode) {
 	return errorcode;
@@ -177,8 +181,8 @@ int setpag()
 	/* we will have to shift grouplist to make room for pag */
 	if (ngroups + 2 > NGROUPS_MAX) {
 	    /* this is what the real setpag returns */
-	   errno = E2BIG;
-	   return -1;
+	    errno = E2BIG;
+	    return -1;
 	}
 	for (j = ngroups - 1; j >= 0; j--) {
 	    groups[j + 2] = groups[j];
@@ -201,21 +205,21 @@ int setpag()
 /* Remote pioctl(2) client routine */
 #ifdef AFS_DUX40_ENV
 #pragma weak pioctl = afs_pioctl
-int afs_pioctl(path, cmd, data, follow) 
+int
+afs_pioctl(char *path, afs_int32 cmd, struct ViceIoctl *data,
+	   afs_int32 follow)
 #else
-int pioctl(path, cmd, data, follow) 
+int
+pioctl(char *path, afs_int32 cmd, struct ViceIoctl *data, afs_int32 follow)
 #endif
-char *path;
-afs_int32 cmd, follow;
-struct ViceIoctl *data;
 {
     struct rx_connection *conn;
     clientcred creds;
-    afs_int32 errorcode, errornumber, ins= data->in_size;
+    afs_int32 errorcode, errornumber, ins = data->in_size;
     afs_uint32 groups[NGROUPS_MAX];
     rmtbulk InData, OutData;
     char pathname[256], *pathp = pathname, *inbuffer;
-#if 0/*ndef HAVE_GETCWD*/ /* XXX enable when autoconf happens */
+#if 0/*ndef HAVE_GETCWD*/	/* XXX enable when autoconf happens */
     extern char *getwd();
 #define getcwd(x,y) getwd(x)
 #endif
@@ -225,12 +229,13 @@ struct ViceIoctl *data;
 	errorcode = lpioctl(path, cmd, data, follow);
 	return errorcode;
     }
-    (void) SetClientCreds(&creds, groups);
+    (void)SetClientCreds(&creds, groups);
 #ifdef	AFS_OSF_ENV
-    if (!ins) ins = 1;
-#endif    
+    if (!ins)
+	ins = 1;
+#endif
     if (!(inbuffer = (char *)malloc(ins)))
-	 return	(-1);	    /* helpless here */
+	return (-1);		/* helpless here */
     if (data->in_size)
 	memcpy(inbuffer, data->in, data->in_size);
     InData.rmtbulk_len = data->in_size;
@@ -248,8 +253,8 @@ struct ViceIoctl *data;
 		free(inbuffer);
 		printf("getwd failed; exiting\n");
 		exit(1);
-	    } 
-	    strcpy(pathname+strlen(pathname), "/");
+	    }
+	    strcpy(pathname + strlen(pathname), "/");
 	    strcat(pathname, path);
 	} else {
 	    strcpy(pathname, path);
@@ -260,15 +265,16 @@ struct ViceIoctl *data;
 	 * be to change the interface declartion. */
 	strcpy(pathname, NIL_PATHP);
     }
-    errorcode = RMTSYS_Pioctl(conn, &creds, pathp, cmd,  follow, &InData,
-			      &OutData, &errornumber);
+    errorcode =
+	RMTSYS_Pioctl(conn, &creds, pathp, cmd, follow, &InData, &OutData,
+		      &errornumber);
     if (errornumber) {
 	errno = errornumber;
 	errorcode = -1;		/* Necessary since errorcode is 0 on
 				 * standard remote pioctl errors */
 	if (errno != EDOM && errno != EACCES)
 	    printf("Warning: Remote pioctl to %s has failed (err=%d)...\n",
-		    afs_server, errno);
+		   afs_server, errno);
     }
     if (!errorcode) {
 	/* Do the conversions back to the host order; store the results back
@@ -279,48 +285,45 @@ struct ViceIoctl *data;
     return errorcode;
 }
 
-    
-int afs_get_pag_from_groups(g0, g1)
-afs_uint32 g0, g1;
-{
-	afs_uint32 h, l, result;
 
-	g0 -= 0x3f00;
-	g1 -= 0x3f00;
-	if (g0 < 0xc000 && g1 < 0xc000) {
-		l = ((g0 & 0x3fff) << 14) | (g1 & 0x3fff);
-		h = (g0 >> 14);
-		h = (g1 >> 14) + h + h + h;
-		result =  ((h << 28) | l);
-		/* Additional testing */	
-		if (((result >> 24) & 0xff) == 'A')
-			return result;
-		else
-			return NOPAG;
-	}
-	return NOPAG;
+int
+afs_get_pag_from_groups(afs_uint32 g0, afs_uint32 g1)
+{
+    afs_uint32 h, l, result;
+
+    g0 -= 0x3f00;
+    g1 -= 0x3f00;
+    if (g0 < 0xc000 && g1 < 0xc000) {
+	l = ((g0 & 0x3fff) << 14) | (g1 & 0x3fff);
+	h = (g0 >> 14);
+	h = (g1 >> 14) + h + h + h;
+	result = ((h << 28) | l);
+	/* Additional testing */
+	if (((result >> 24) & 0xff) == 'A')
+	    return result;
+	else
+	    return NOPAG;
+    }
+    return NOPAG;
 }
 
 
-afs_get_groups_from_pag(pag, g0p, g1p)
-afs_uint32 pag;
-afs_uint32 *g0p, *g1p;
+afs_get_groups_from_pag(afs_uint32 pag, afs_uint32 * g0p, afs_uint32 * g1p)
 {
-	unsigned short g0, g1;
+    unsigned short g0, g1;
 
-	pag &= 0x7fffffff;
-	g0 = 0x3fff & (pag >> 14);
-	g1 = 0x3fff & pag;
-	g0 |= ((pag >> 28) / 3) << 14;
-	g1 |= ((pag >> 28) % 3) << 14;
-	*g0p = g0 + 0x3f00;
-	*g1p = g1 + 0x3f00;
+    pag &= 0x7fffffff;
+    g0 = 0x3fff & (pag >> 14);
+    g1 = 0x3fff & pag;
+    g0 |= ((pag >> 28) / 3) << 14;
+    g1 |= ((pag >> 28) % 3) << 14;
+    *g0p = g0 + 0x3f00;
+    *g1p = g1 + 0x3f00;
 }
 
 
-static afs_int32 SetClientCreds(creds, groups)
-struct clientcred *creds;
-afs_int32 *groups;
+static afs_int32
+SetClientCreds(struct clientcred *creds, afs_int32 * groups)
 {
     afs_int32 ngroups;
 
@@ -330,4 +333,4 @@ afs_int32 *groups;
     creds->group0 = groups[0];
     creds->group1 = groups[1];
     return ngroups;
-}   
+}

@@ -7,12 +7,13 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#define IDS_CPL_NAME_NT                 1
-#define IDS_CPL_DESC_NT                 2
-#define IDS_CPL_NAME_95                 3
-#define IDS_CPL_DESC_95                 4
-#define IDS_CPL_NAME_CCENTER            5
-#define IDS_CPL_DESC_CCENTER            6
+#define IDS_CPL_NAME_NT                 0
+#define IDS_CPL_DESC_NT                 1
+#define IDS_CPL_NAME_95                 2
+#define IDS_CPL_DESC_95                 3
+#define IDS_CPL_NAME_CCENTER            4
+#define IDS_CPL_DESC_CCENTER            5
+
 #define IDI_AFSD                        103
 #define IDI_CCENTER                     104
 

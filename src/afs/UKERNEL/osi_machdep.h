@@ -18,12 +18,12 @@
 #ifndef _OSI_MACHDEP_H_
 #define _OSI_MACHDEP_H_
 
-#include "../afs/sysincludes.h"
+#include "afs/sysincludes.h"
 
 #define MAX_OSI_PATH            1024
 #define MAX_OSI_FILES           1024
 #define MAX_OSI_LINKS           25
-#define OSI_WAITHASH_SIZE       128     /* must be power of two */
+#define OSI_WAITHASH_SIZE       128	/* must be power of two */
 #define MAX_HOSTADDR            32
 
 #define AFS_UCRED usr_ucred
@@ -37,7 +37,7 @@
 #define osi_Time() (time(NULL))
 
 #define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
-#define	afs_suser	    suser
+#define	afs_suser(x)	    suser(x)
 
 /*
  * Global lock support.
@@ -65,4 +65,3 @@ extern usr_mutex_t afs_global_lock;
 extern int afs_bufferpages;
 
 #endif /* _OSI_MACHDEP_H_ */
-

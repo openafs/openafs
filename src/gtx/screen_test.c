@@ -14,13 +14,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/screen_test.c,v 1.1.1.5 2003/04/13 19:06:42 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/gtx/screen_test.c,v 1.7 2003/07/15 23:15:13 shadow Exp $");
 
-#include "gtxwindows.h"	    /*Generalized window interface*/
-#include "gtxcurseswin.h"    /*Curses window interface*/
-#include "gtxdumbwin.h"	    /*Dumb terminal window interface*/
-#include "gtxX11win.h"	    /*X11 window interface*/
-#include <cmd.h>		    /*Command interpretation library*/
+#include "gtxwindows.h"		/*Generalized window interface */
+#include "gtxcurseswin.h"	/*Curses window interface */
+#include "gtxdumbwin.h"		/*Dumb terminal window interface */
+#include "gtxX11win.h"		/*X11 window interface */
+#include <cmd.h>		/*Command interpretation library */
 #include <errno.h>
 
 
@@ -30,8 +31,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/gtx/screen_test.c,v 1.1.1.5 2003/04/13 
 #define	P_PACKAGE   0
 #define	P_DEBUG	    1
 
-static char pn[] = "screen_test";   /*Program name*/
-static int screen_debug = 0;	    /*Is debugging turned on?*/
+static char pn[] = "screen_test";	/*Program name */
+static int screen_debug = 0;	/*Is debugging turned on? */
 
 /*--------------------------------------------------------------------------------
  * test_this_package
@@ -54,62 +55,66 @@ static int screen_debug = 0;	    /*Is debugging turned on?*/
  *	As advertised.
  *--------------------------------------------------------------------------------*/
 
-static int test_this_package(pkg)
-    int pkg;
+static int
+test_this_package(pkg)
+     int pkg;
 
-{ /*test_this_package*/
+{				/*test_this_package */
 
-    static char	rn[] = "test_this_package";	/*Routine name*/
-    register int code;				/*Return code*/
-    struct gwin_initparams init_params;		/*Window initialization params*/
-    struct gator_cursesgwin_params c_crparams;	/*Curses window creation params*/
-    struct gator_dumbgwin_params d_crparams;	/*Dumb terminal window creation params*/
-    struct gator_X11gwin_params x_crparams;	/*X11 window creation params*/
-    struct gwin	*newwin;			/*New (sub)window*/
-    struct gwin_strparams strparams;		/*String-drawing params*/
-    struct gwin_charparams charparams;		/*Char-drawing params*/
-    char s[128];				/*Test string*/
-    int	currx, curry;				/*Sliding values of x & y*/
-    int	currhighlight;				/*Highlight this time around?*/
+    static char rn[] = "test_this_package";	/*Routine name */
+    register int code;		/*Return code */
+    struct gwin_initparams init_params;	/*Window initialization params */
+    struct gator_cursesgwin_params c_crparams;	/*Curses window creation params */
+    struct gator_dumbgwin_params d_crparams;	/*Dumb terminal window creation params */
+    struct gator_X11gwin_params x_crparams;	/*X11 window creation params */
+    struct gwin *newwin;	/*New (sub)window */
+    struct gwin_strparams strparams;	/*String-drawing params */
+    struct gwin_charparams charparams;	/*Char-drawing params */
+    char s[128];		/*Test string */
+    int currx, curry;		/*Sliding values of x & y */
+    int currhighlight;		/*Highlight this time around? */
 
     /*
      * Initialize the gator window package to drive the desired subsystem.
      */
-    init_params.i_type	 = pkg;
-    init_params.i_x	 =   0;
-    init_params.i_y	 =   0;
-    init_params.i_width  =  80;
+    init_params.i_type = pkg;
+    init_params.i_x = 0;
+    init_params.i_y = 0;
+    init_params.i_width = 80;
     init_params.i_height = 200;
-    init_params.i_debug	 = screen_debug;
+    init_params.i_debug = screen_debug;
 
     code = gw_init(&init_params);
     if (code) {
-	fprintf(stderr, "[%s:%s] Can't initialize gator windows for package %d; error is: %d\n", pn, rn, pkg, code);
-	return(code);
+	fprintf(stderr,
+		"[%s:%s] Can't initialize gator windows for package %d; error is: %d\n",
+		pn, rn, pkg, code);
+	return (code);
     }
 
     sprintf(s, "Screen has %d lines", LINES);
-    strparams.x		= 5;
-    strparams.y		= LINES / 2;
-    strparams.s		= s;
-    strparams.highlight	= 0;
+    strparams.x = 5;
+    strparams.y = LINES / 2;
+    strparams.s = s;
+    strparams.highlight = 0;
     WOP_DRAWSTRING(&gator_basegwin, &strparams);
 
     sprintf(s, "and %d columns", COLS);
-    strparams.x		= 5;
-    strparams.y		= strparams.y + 1;
-    strparams.s		= s;
-    strparams.highlight	= 1;
+    strparams.x = 5;
+    strparams.y = strparams.y + 1;
+    strparams.s = s;
+    strparams.highlight = 1;
     WOP_DRAWSTRING(&gator_basegwin, &strparams);
 
     /*
      * Draw a set of chars down a diagonal, pausing inbetween.
      */
     currhighlight = 1;
-    for (currx = curry = 0; (currx < COLS) && (curry < LINES); currx++, curry++) {
-	charparams.x	    = currx;
-	charparams.y	    = curry;
-	charparams.c	    = 'x';
+    for (currx = curry = 0; (currx < COLS) && (curry < LINES);
+	 currx++, curry++) {
+	charparams.x = currx;
+	charparams.y = curry;
+	charparams.c = 'x';
 	charparams.highlight = currhighlight;
 	currhighlight = (currhighlight ? 0 : 1);
 	WOP_DRAWCHAR(&gator_basegwin, &charparams);
@@ -120,50 +125,49 @@ static int test_this_package(pkg)
     /*
      * Fill in the new window creation parameters and go for it.
      */
-    c_crparams.gwin_params.cr_type      = pkg;
-    c_crparams.gwin_params.cr_x	        = 40;
-    c_crparams.gwin_params.cr_y         =  5;
-    c_crparams.gwin_params.cr_width     = 20;
-    c_crparams.gwin_params.cr_height    = 10;
+    c_crparams.gwin_params.cr_type = pkg;
+    c_crparams.gwin_params.cr_x = 40;
+    c_crparams.gwin_params.cr_y = 5;
+    c_crparams.gwin_params.cr_width = 20;
+    c_crparams.gwin_params.cr_height = 10;
     c_crparams.gwin_params.cr_parentwin = (struct gwin *)(&gator_basegwin);
-    c_crparams.charwidth     =  8;
-    c_crparams.charheight    = 13;
-    c_crparams.box_vertchar  = '|';
+    c_crparams.charwidth = 8;
+    c_crparams.charheight = 13;
+    c_crparams.box_vertchar = '|';
     c_crparams.box_horizchar = '-';
     newwin = WOP_CREATE(&c_crparams);
-    if (newwin == (struct gwin *)0) {
+    if (newwin == NULL) {
 	fprintf(stderr, "[%s:%s] Can't create a new window\n", pn, rn);
-    }
-    else
-	if (screen_debug)
-	    fprintf(stderr, "[%s:%s] New window created at 0x%x\n", pn, rn, newwin);
+    } else if (screen_debug)
+	fprintf(stderr, "[%s:%s] New window created at 0x%x\n", pn, rn,
+		newwin);
 
     /*
      * Draw something to the new window; first, a highlighted banner.
      */
     sprintf(s, "%s", "Sub-window        ");
-    strparams.x		= 1;
-    strparams.y		= 1;
-    strparams.s		= s;
-    strparams.highlight	= 1;
+    strparams.x = 1;
+    strparams.y = 1;
+    strparams.s = s;
+    strparams.highlight = 1;
     WOP_DRAWSTRING(newwin, &strparams);
 
     /*
      * Next, draw an `x' at each corner.
      */
-    charparams.c	 = 'x';
+    charparams.c = 'x';
     charparams.highlight = 1;
-    charparams.x	 = 1;
-    charparams.y	 = 2;
+    charparams.x = 1;
+    charparams.y = 2;
     WOP_DRAWCHAR(newwin, &charparams);
-    charparams.x	 = 18;
-    charparams.y	 = 2;
+    charparams.x = 18;
+    charparams.y = 2;
     WOP_DRAWCHAR(newwin, &charparams);
-    charparams.x	 = 1;
-    charparams.y	 = 8;
+    charparams.x = 1;
+    charparams.y = 8;
     WOP_DRAWCHAR(newwin, &charparams);
-    charparams.x	 = 18;
-    charparams.y	 = 8;
+    charparams.x = 18;
+    charparams.y = 8;
     WOP_DRAWCHAR(newwin, &charparams);
 
     /*
@@ -172,20 +176,20 @@ static int test_this_package(pkg)
     WOP_BOX(newwin);
 
     /*
-      * Draw a few other things in the original window.
-      */
+     * Draw a few other things in the original window.
+     */
     sprintf(s, "Screen has %d lines", LINES);
-    strparams.x		= 5;
-    strparams.y		= LINES / 2;
-    strparams.s		= s;
-    strparams.highlight	= 0;
+    strparams.x = 5;
+    strparams.y = LINES / 2;
+    strparams.s = s;
+    strparams.highlight = 0;
     WOP_DRAWSTRING(&gator_basegwin, &strparams);
 
     sprintf(s, "and %d columns", COLS);
-    strparams.x		= 5;
-    strparams.y		= strparams.y + 1;
-    strparams.s		= s;
-    strparams.highlight	= 1;
+    strparams.x = 5;
+    strparams.y = strparams.y + 1;
+    strparams.s = s;
+    strparams.highlight = 1;
     WOP_DRAWSTRING(&gator_basegwin, &strparams);
 
     /*
@@ -196,7 +200,7 @@ static int test_this_package(pkg)
     WOP_DISPLAY(&gator_basegwin);
     WOP_CLEANUP(&gator_basegwin);
 
-} /*test_this_package*/
+}				/*test_this_package */
 
 /*--------------------------------------------------------------------------------
  * screen_testInit
@@ -219,32 +223,34 @@ static int test_this_package(pkg)
  *	Initializes this program.
  *--------------------------------------------------------------------------------*/
 
-static int screen_testInit(as, arock)
-    struct cmd_syndesc *as;
-    char *arock;
+static int
+screen_testInit(as, arock)
+     struct cmd_syndesc *as;
+     char *arock;
 
-{ /*screen_testInit*/
+{				/*screen_testInit */
 
-    static char	rn[] = "screen_testInit";   /*Routine name*/
-    int	pkg_to_test;			    /*Which package to test*/
+    static char rn[] = "screen_testInit";	/*Routine name */
+    int pkg_to_test;		/*Which package to test */
 
     if (as->parms[P_DEBUG].items != 0)
 	screen_debug = 1;
     pkg_to_test = atoi(as->parms[P_PACKAGE].items->data);
-    fprintf(stderr, "[%s:%s] Testing graphics package %d: ", pn, rn, pkg_to_test);
+    fprintf(stderr, "[%s:%s] Testing graphics package %d: ", pn, rn,
+	    pkg_to_test);
     switch (pkg_to_test) {
-	case GATOR_WIN_CURSES:
-	    fprintf(stderr, "curses\n");
-	    break;
-	case GATOR_WIN_DUMB:
-	    fprintf(stderr, "dumb terminal\n");
-	    break;
-	case GATOR_WIN_X11:
-	    fprintf(stderr, "X11\n");
-	    break;
-	default:
-	    fprintf(stderr, "Illegal graphics package: %d\n", pkg_to_test);
-    } /*end switch (pkg_to_test)*/
+    case GATOR_WIN_CURSES:
+	fprintf(stderr, "curses\n");
+	break;
+    case GATOR_WIN_DUMB:
+	fprintf(stderr, "dumb terminal\n");
+	break;
+    case GATOR_WIN_X11:
+	fprintf(stderr, "X11\n");
+	break;
+    default:
+	fprintf(stderr, "Illegal graphics package: %d\n", pkg_to_test);
+    }				/*end switch (pkg_to_test) */
 
     /*
      * Now, drive the sucker.
@@ -254,37 +260,40 @@ static int screen_testInit(as, arock)
     /*
      * We initialized (and ran) correctly, so return the good news.
      */
-    return(0);
+    return (0);
 
-} /*screen_testInit*/
+}				/*screen_testInit */
 
 #include "AFS_component_version_number.c"
 
 main(argc, argv)
-    int argc;
-    char **argv;
+     int argc;
+     char **argv;
 
-{ /*main*/
+{				/*main */
 
-    static char	rn[] = "main";		/*Routine name*/
-    register afs_int32 code;			/*Return code*/
-    register struct cmd_syndesc	*ts;	/*Ptr to cmd line syntax descriptor*/
+    static char rn[] = "main";	/*Routine name */
+    register afs_int32 code;	/*Return code */
+    register struct cmd_syndesc *ts;	/*Ptr to cmd line syntax descriptor */
 
     /*
      * There really aren't any opcodes here, but we do want to interpret switches
      * from the command line.  So, all we need do is set up the initcmd ``opcode''.
      */
-    ts = cmd_CreateSyntax("initcmd", screen_testInit, 0, "Initialize, interpret command line");
-    cmd_AddParm(ts, "-package", CMD_SINGLE, CMD_REQUIRED, "Graphics package to use");
-    cmd_AddParm(ts, "-debug",   CMD_FLAG,   CMD_OPTIONAL, "Turn debugging on");
+    ts = cmd_CreateSyntax("initcmd", screen_testInit, 0,
+			  "Initialize, interpret command line");
+    cmd_AddParm(ts, "-package", CMD_SINGLE, CMD_REQUIRED,
+		"Graphics package to use");
+    cmd_AddParm(ts, "-debug", CMD_FLAG, CMD_OPTIONAL, "Turn debugging on");
 
     /*
      * Parse command-line switches & execute the test, then get the heck out of here.
      */
     code = cmd_Dispatch(argc, argv);
     if (code) {
-	fprintf(stderr, "[%s:%s] Call to cmd_Dispatch() failed; code is %d\n", pn, rn, code);
+	fprintf(stderr, "[%s:%s] Call to cmd_Dispatch() failed; code is %d\n",
+		pn, rn, code);
 	exit(1);
     }
 
-} /*main*/
+}				/*main */

@@ -20,10 +20,13 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/des/cksum.c,v 1.1.1.6 2001/09/11 14:32:26 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/des/cksum.c,v 1.11 2003/07/15 23:14:59 shadow Exp $");
 
 #include <mit-cpyright.h>
+#ifndef KERNEL
 #include <stdio.h>
+#endif
 #ifdef HAVE_STRING_H
 #include <string.h>
 #else
@@ -34,12 +37,9 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/des/cksum.c,v 1.1.1.6 2001/09/11 14:32:
 
 #include <des.h>
 #include "des_internal.h"
+#include "des_prototypes.h"
 
 #define XPRT_CKSUM
-
-extern int des_debug;
-extern int des_debug_print();
-extern int des_ecb_encrypt();
 
 /*
  * This routine performs DES cipher-block-chaining checksum operation,
@@ -55,30 +55,32 @@ extern int des_ecb_encrypt();
  * The input is null padded, at the end (highest addr), to an integral
  * multiple of eight bytes.
  */
+/*
+    des_cblock *in;		* >= length bytes of inputtext *
+    des_cblock *out;		* >= length bytes of outputtext *
+    register afs_int32 length;	* in bytes *
+    des_key_schedule key;       * precomputed key schedule *
+    des_cblock *iv;		* 8 bytes of ivec *
+*/
 
 afs_uint32
-des_cbc_cksum(in,out,length,key,iv)
-    des_cblock *in;		/* >= length bytes of inputtext */
-    des_cblock *out;		/* >= length bytes of outputtext */
-    register afs_int32 length;	/* in bytes */
-    des_key_schedule key;		/* precomputed key schedule */
-    des_cblock *iv;		/* 8 bytes of ivec */
+des_cbc_cksum(des_cblock * in, des_cblock * out, register afs_int32 length,
+	      des_key_schedule key, des_cblock * iv)
 {
     register afs_uint32 *input = (afs_uint32 *) in;
     register afs_uint32 *output = (afs_uint32 *) out;
     afs_uint32 *ivec = (afs_uint32 *) iv;
 
-    afs_uint32 i,j;
+    afs_uint32 i, j;
     afs_uint32 t_input[2];
     afs_uint32 t_output[8];
-    unsigned char *t_in_p = (unsigned char *) t_input;
+    unsigned char *t_in_p = (unsigned char *)t_input;
 
 #ifdef MUSTALIGN
     if ((afs_int32) ivec & 3) {
 	memcpy((char *)&t_output[0], (char *)ivec++, sizeof(t_output[0]));
 	memcpy((char *)&t_output[1], (char *)ivec, sizeof(t_output[1]));
-    }
-    else
+    } else
 #endif
     {
 	t_output[0] = *ivec++;
@@ -91,8 +93,7 @@ des_cbc_cksum(in,out,length,key,iv)
 	if ((afs_int32) input & 3) {
 	    memcpy((char *)&t_input[0], (char *)input++, sizeof(t_input[0]));
 	    memcpy((char *)&t_input[1], (char *)input++, sizeof(t_input[1]));
-	}
-	else
+	} else
 #endif
 	{
 	    t_input[0] = *input++;
@@ -102,21 +103,21 @@ des_cbc_cksum(in,out,length,key,iv)
 	/* zero pad */
 	if (length < 8)
 	    for (j = length; j <= 7; j++)
-		*(t_in_p+j)= 0;
+		*(t_in_p + j) = 0;
 
 #ifdef DEBUG
 	if (des_debug)
-	    des_debug_print("clear",length,t_input[0],t_input[1]);
+	    des_debug_print("clear", length, t_input[0], t_input[1]);
 #endif
 	/* do the xor for cbc into the temp */
-	t_input[0] ^= t_output[0] ;
-	t_input[1] ^= t_output[1] ;
+	t_input[0] ^= t_output[0];
+	t_input[1] ^= t_output[1];
 	/* encrypt */
-	(void) des_ecb_encrypt(t_input,t_output,key,1);
+	(void)des_ecb_encrypt(t_input, t_output, key, 1);
 #ifdef DEBUG
 	if (des_debug) {
-	    des_debug_print("xor'ed",i,t_input[0],t_input[1]);
-	    des_debug_print("cipher",i,t_output[0],t_output[1]);
+	    des_debug_print("xor'ed", i, t_input[0], t_input[1]);
+	    des_debug_print("cipher", i, t_output[0], t_output[1]);
 	}
 #else
 #ifdef lint
@@ -129,8 +130,7 @@ des_cbc_cksum(in,out,length,key,iv)
     if ((afs_int32) output & 3) {
 	memcpy((char *)output++, (char *)&t_output[0], sizeof(t_output[0]));
 	memcpy((char *)output, (char *)&t_output[1], sizeof(t_output[1]));
-    }
-    else
+    } else
 #endif
     {
 	*output++ = t_output[0];

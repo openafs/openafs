@@ -364,10 +364,6 @@ BEGIN
     IDS_BADCREDS_DESC3_ADM  "¿En su lugar, desea iniciar la sesión como administrador?"
     IDS_BADCREDS_DESC_DESTROYED 
                             "Las señales de la célula %1 ya no son válidas.\n\n%2\n\n%3"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_ERROR_BAD_CREDENTIALS 
                             "La identidad de AFS que ha entrado no está reconocida, o bien la contraseña que ha especificado es incorrecta."
     IDS_BROWSE_WAITING      "consultando el servidor--espere por favor..."

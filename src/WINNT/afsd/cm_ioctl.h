@@ -41,6 +41,12 @@ typedef struct cm_SSetPref {
 } cm_SSetPref_t;
 
 
+#define MAXNUMSYSNAMES    16      /* max that current constants allow */
+#define   MAXSYSNAME      128     /* max sysname (i.e. @sys) size */
+extern char *         cm_sysName;
+extern unsigned int   cm_sysNameCount;
+extern char *         cm_sysNameList[MAXNUMSYSNAMES];
+
 #ifndef __CM_IOCTL_INTERFACES_ONLY__
 
 void cm_InitIoctl(void);
@@ -113,6 +119,8 @@ extern long cm_IoctlDelAllToken(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern long cm_IoctlSymlink(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
+extern long cm_IoctlIslink(smb_ioctl_t *ioctlp, cm_user_t *userp);
+
 extern long cm_IoctlListlink(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern long cm_IoctlDeletelink(smb_ioctl_t *ioctlp, cm_user_t *userp);
@@ -129,6 +137,7 @@ extern long cm_IoctlFreemountAddCell(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
 extern long cm_IoctlFreemountRemoveCell(smb_ioctl_t *ioctlp, cm_user_t *userp);
 
+extern long cm_IoctlMemoryDump(smb_ioctl_t *ioctlp, cm_user_t *userp);
 #endif /* __CM_IOCTL_INTERFACES_ONLY__ */
 
 #endif /*  __CM_IOCTL_H_ENV__ */

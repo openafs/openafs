@@ -12,6 +12,7 @@
 
 /* magic file name for ioctl opens */
 #define SMB_IOCTL_FILENAME	"\\_._AFS_IOCTL_._"	/* double backslashes for C compiler */
+#define SMB_IOCTL_FILENAME_NOSLASH "_._AFS_IOCTL_._"
 
 /* max parms for ioctl, in either direction */
 #define SMB_IOCTL_MAXDATA	8192

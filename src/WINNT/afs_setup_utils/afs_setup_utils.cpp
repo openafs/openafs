@@ -234,11 +234,11 @@ struct APPINFO appClient = {
     TARGETDIR"\\Common\\*.gid\0"
     TARGETDIR"\\Common\\*.fts\0"
     WINDIR"\\..\\AFSCache\0"
-    WINDIR"\\afsd.log\0"
-    WINDIR"\\afsd.ini\0"
-    WINDIR"\\afsdsbmt.ini\0"
-    WINDIR"\\afsdcell.ini\0"
-    WINDIR"\\afsd_init.log\0",
+    WINDIR"\\TEMP\\afsd.log\0"
+    TARGETDIR"\\Client\\afsd.ini\0"
+    TARGETDIR"\\Client\\afsdsbmt.ini\0"
+    TARGETDIR"\\Client\\afsdcell.ini\0"
+    WINDIR"\\TEMP\\afsd_init.log\0",
     
     clientRegValues,
     clientWinNTRegValues,

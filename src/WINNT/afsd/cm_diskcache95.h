@@ -51,7 +51,7 @@ typedef struct cm_diskcache {
   int openfd;      /* open file descriptor */
   struct cm_diskcache *hash_next;
   struct cm_diskcache *hash_prev;
-  int refCount;
+  unsigned long refCount;
   osi_mutex_t mx;
 } cm_diskcache_t;
 

@@ -90,131 +90,130 @@
 #define	ESIZE	512
 #define	NBRA	9
 
-static	char	expbuf[ESIZE], *braslist[NBRA], *braelist[NBRA];
-static	char	circf;
+static char expbuf[ESIZE], *braslist[NBRA], *braelist[NBRA];
+static char circf;
 
 /*
  * compile the regular expression argument into a dfa
  */
 char *
 re_comp(sp)
-	register char	*sp;
+     register char *sp;
 {
-	register int	c;
-	register char	*ep = expbuf;
-	int	cclcnt, numbra = 0;
-	char	*lastep = 0;
-	char	bracket[NBRA];
-	char	*bracketp = &bracket[0];
-	static	char	*retoolong = "Regular expression too long";
+    register int c;
+    register char *ep = expbuf;
+    int cclcnt, numbra = 0;
+    char *lastep = 0;
+    char bracket[NBRA];
+    char *bracketp = &bracket[0];
+    static char *retoolong = "Regular expression too long";
 
 #define	comerr(msg) {expbuf[0] = 0; numbra = 0; return(msg); }
 
-	if (sp == 0 || *sp == '\0') {
-		if (*ep == 0)
-			return("No previous regular expression");
-		return(0);
+    if (sp == 0 || *sp == '\0') {
+	if (*ep == 0)
+	    return ("No previous regular expression");
+	return (0);
+    }
+    if (*sp == '^') {
+	circf = 1;
+	sp++;
+    } else
+	circf = 0;
+    for (;;) {
+	if (ep >= &expbuf[ESIZE])
+	    comerr(retoolong);
+	if ((c = *sp++) == '\0') {
+	    if (bracketp != bracket)
+		comerr("unmatched \\(");
+	    *ep++ = CEOF;
+	    *ep++ = 0;
+	    return (0);
 	}
-	if (*sp == '^') {
-		circf = 1;
-		sp++;
-	}
-	else
-		circf = 0;
-	for (;;) {
+	if (c != '*')
+	    lastep = ep;
+	switch (c) {
+
+	case '.':
+	    *ep++ = CDOT;
+	    continue;
+
+	case '*':
+	    if (lastep == 0 || *lastep == CBRA || *lastep == CKET)
+		goto defchar;
+	    *lastep |= CSTAR;
+	    continue;
+
+	case '$':
+	    if (*sp != '\0')
+		goto defchar;
+	    *ep++ = CDOL;
+	    continue;
+
+	case '[':
+	    *ep++ = CCL;
+	    *ep++ = 0;
+	    cclcnt = 1;
+	    if ((c = *sp++) == '^') {
+		c = *sp++;
+		ep[-2] = NCCL;
+	    }
+	    do {
+		if (c == '\0')
+		    comerr("missing ]");
+		if (c == '-' && ep[-1] != 0) {
+		    if ((c = *sp++) == ']') {
+			*ep++ = '-';
+			cclcnt++;
+			break;
+		    }
+		    while (ep[-1] < c) {
+			*ep = ep[-1] + 1;
+			ep++;
+			cclcnt++;
+			if (ep >= &expbuf[ESIZE])
+			    comerr(retoolong);
+		    }
+		}
+		*ep++ = c;
+		cclcnt++;
 		if (ep >= &expbuf[ESIZE])
-			comerr(retoolong);
-		if ((c = *sp++) == '\0') {
-			if (bracketp != bracket)
-				comerr("unmatched \\(");
-			*ep++ = CEOF;
-			*ep++ = 0;
-			return(0);
-		}
-		if (c != '*')
-			lastep = ep;
-		switch (c) {
+		    comerr(retoolong);
+	    } while ((c = *sp++) != ']');
+	    lastep[1] = cclcnt;
+	    continue;
 
-		case '.':
-			*ep++ = CDOT;
-			continue;
+	case '\\':
+	    if ((c = *sp++) == '(') {
+		if (numbra >= NBRA)
+		    comerr("too many \\(\\) pairs");
+		*bracketp++ = numbra;
+		*ep++ = CBRA;
+		*ep++ = numbra++;
+		continue;
+	    }
+	    if (c == ')') {
+		if (bracketp <= bracket)
+		    comerr("unmatched \\)");
+		*ep++ = CKET;
+		*ep++ = *--bracketp;
+		continue;
+	    }
+	    if (c >= '1' && c < ('1' + NBRA)) {
+		*ep++ = CBACK;
+		*ep++ = c - '1';
+		continue;
+	    }
+	    *ep++ = CCHR;
+	    *ep++ = c;
+	    continue;
 
-		case '*':
-			if (lastep == 0 || *lastep == CBRA || *lastep == CKET)
-				goto defchar;
-			*lastep |= CSTAR;
-			continue;
-
-		case '$':
-			if (*sp != '\0')
-				goto defchar;
-			*ep++ = CDOL;
-			continue;
-
-		case '[':
-			*ep++ = CCL;
-			*ep++ = 0;
-			cclcnt = 1;
-			if ((c = *sp++) == '^') {
-				c = *sp++;
-				ep[-2] = NCCL;
-			}
-			do {
-				if (c == '\0')
-					comerr("missing ]");
-				if (c == '-' && ep [-1] != 0) {
-					if ((c = *sp++) == ']') {
-						*ep++ = '-';
-						cclcnt++;
-						break;
-					}
-					while (ep[-1] < c) {
-						*ep = ep[-1] + 1;
-						ep++;
-						cclcnt++;
-						if (ep >= &expbuf[ESIZE])
-							comerr(retoolong);
-					}
-				}
-				*ep++ = c;
-				cclcnt++;
-				if (ep >= &expbuf[ESIZE])
-					comerr(retoolong);
-			} while ((c = *sp++) != ']');
-			lastep[1] = cclcnt;
-			continue;
-
-		case '\\':
-			if ((c = *sp++) == '(') {
-				if (numbra >= NBRA)
-					comerr("too many \\(\\) pairs");
-				*bracketp++ = numbra;
-				*ep++ = CBRA;
-				*ep++ = numbra++;
-				continue;
-			}
-			if (c == ')') {
-				if (bracketp <= bracket)
-					comerr("unmatched \\)");
-				*ep++ = CKET;
-				*ep++ = *--bracketp;
-				continue;
-			}
-			if (c >= '1' && c < ('1' + NBRA)) {
-				*ep++ = CBACK;
-				*ep++ = c - '1';
-				continue;
-			}
-			*ep++ = CCHR;
-			*ep++ = c;
-			continue;
-
-		defchar:
-		default:
-			*ep++ = CCHR;
-			*ep++ = c;
-		}
+	  defchar:
+	default:
+	    *ep++ = CCHR;
+	    *ep++ = c;
 	}
+    }
 }
 
 /* 
@@ -222,178 +221,175 @@ re_comp(sp)
  */
 int
 re_exec(p1)
-	register char	*p1;
+     register char *p1;
 {
-	register char	*p2 = expbuf;
-	register int	c;
-	int	rv;
+    register char *p2 = expbuf;
+    register int c;
+    int rv;
 
-	for (c = 0; c < NBRA; c++) {
-		braslist[c] = 0;
-		braelist[c] = 0;
-	}
-	if (circf)
-		return((advance(p1, p2)));
-	/*
-	 * fast check for first character
-	 */
-	if (*p2 == CCHR) {
-		c = p2[1];
-		do {
-			if (*p1 != c)
-				continue;
-			if (rv = advance(p1, p2))
-				return(rv);
-		} while (*p1++);
-		return(0);
-	}
-	/*
-	 * regular algorithm
-	 */
-	do
-		if (rv = advance(p1, p2))
-			return(rv);
-	while (*p1++);
-	return(0);
+    for (c = 0; c < NBRA; c++) {
+	braslist[c] = 0;
+	braelist[c] = 0;
+    }
+    if (circf)
+	return ((advance(p1, p2)));
+    /*
+     * fast check for first character
+     */
+    if (*p2 == CCHR) {
+	c = p2[1];
+	do {
+	    if (*p1 != c)
+		continue;
+	    if (rv = advance(p1, p2))
+		return (rv);
+	} while (*p1++);
+	return (0);
+    }
+    /*
+     * regular algorithm
+     */
+    do
+	if (rv = advance(p1, p2))
+	    return (rv);
+    while (*p1++);
+    return (0);
 }
 
 /* 
  * try to match the next thing in the dfa
  */
-static	int
+static int
 advance(lp, ep)
-	register char	*lp, *ep;
+     register char *lp, *ep;
 {
-	register char	*curlp;
-	int	ct, i;
-	int	rv;
+    register char *curlp;
+    int ct, i;
+    int rv;
 
-	for (;;)
-		switch (*ep++) {
+    for (;;)
+	switch (*ep++) {
 
-		case CCHR:
-			if (*ep++ == *lp++)
-				continue;
-			return(0);
+	case CCHR:
+	    if (*ep++ == *lp++)
+		continue;
+	    return (0);
 
-		case CDOT:
-			if (*lp++)
-				continue;
-			return(0);
+	case CDOT:
+	    if (*lp++)
+		continue;
+	    return (0);
 
-		case CDOL:
-			if (*lp == '\0')
-				continue;
-			return(0);
+	case CDOL:
+	    if (*lp == '\0')
+		continue;
+	    return (0);
 
-		case CEOF:
-			return(1);
+	case CEOF:
+	    return (1);
 
-		case CCL:
-			if (cclass(ep, *lp++, 1)) {
-				ep += *ep;
-				continue;
-			}
-			return(0);
+	case CCL:
+	    if (cclass(ep, *lp++, 1)) {
+		ep += *ep;
+		continue;
+	    }
+	    return (0);
 
-		case NCCL:
-			if (cclass(ep, *lp++, 0)) {
-				ep += *ep;
-				continue;
-			}
-			return(0);
+	case NCCL:
+	    if (cclass(ep, *lp++, 0)) {
+		ep += *ep;
+		continue;
+	    }
+	    return (0);
 
-		case CBRA:
-			braslist[*ep++] = lp;
-			continue;
+	case CBRA:
+	    braslist[*ep++] = lp;
+	    continue;
 
-		case CKET:
-			braelist[*ep++] = lp;
-			continue;
+	case CKET:
+	    braelist[*ep++] = lp;
+	    continue;
 
-		case CBACK:
-			if (braelist[i = *ep++] == 0)
-				return(-1);
-			if (backref(i, lp)) {
-				lp += braelist[i] - braslist[i];
-				continue;
-			}
-			return(0);
+	case CBACK:
+	    if (braelist[i = *ep++] == 0)
+		return (-1);
+	    if (backref(i, lp)) {
+		lp += braelist[i] - braslist[i];
+		continue;
+	    }
+	    return (0);
 
-		case CBACK|CSTAR:
-			if (braelist[i = *ep++] == 0)
-				return(-1);
-			curlp = lp;
-			ct = braelist[i] - braslist[i];
-			while (backref(i, lp))
-				lp += ct;
-			while (lp >= curlp) {
-				if (rv = advance(lp, ep))
-					return(rv);
-				lp -= ct;
-			}
-			continue;
+	case CBACK | CSTAR:
+	    if (braelist[i = *ep++] == 0)
+		return (-1);
+	    curlp = lp;
+	    ct = braelist[i] - braslist[i];
+	    while (backref(i, lp))
+		lp += ct;
+	    while (lp >= curlp) {
+		if (rv = advance(lp, ep))
+		    return (rv);
+		lp -= ct;
+	    }
+	    continue;
 
-		case CDOT|CSTAR:
-			curlp = lp;
-			while (*lp++)
-				;
-			goto star;
+	case CDOT | CSTAR:
+	    curlp = lp;
+	    while (*lp++);
+	    goto star;
 
-		case CCHR|CSTAR:
-			curlp = lp;
-			while (*lp++ == *ep)
-				;
-			ep++;
-			goto star;
+	case CCHR | CSTAR:
+	    curlp = lp;
+	    while (*lp++ == *ep);
+	    ep++;
+	    goto star;
 
-		case CCL|CSTAR:
-		case NCCL|CSTAR:
-			curlp = lp;
-			while (cclass(ep, *lp++, ep[-1] == (CCL|CSTAR)))
-				;
-			ep += *ep;
-			goto star;
+	case CCL | CSTAR:
+	case NCCL | CSTAR:
+	    curlp = lp;
+	    while (cclass(ep, *lp++, ep[-1] == (CCL | CSTAR)));
+	    ep += *ep;
+	    goto star;
 
-		star:
-			do {
-				lp--;
-				if (rv = advance(lp, ep))
-					return(rv);
-			} while (lp > curlp);
-			return(0);
+	  star:
+	    do {
+		lp--;
+		if (rv = advance(lp, ep))
+		    return (rv);
+	    } while (lp > curlp);
+	    return (0);
 
-		default:
-			return(-1);
-		}
+	default:
+	    return (-1);
+	}
 }
 
 static
 backref(i, lp)
-	register int	i;
-	register char	*lp;
+     register int i;
+     register char *lp;
 {
-	register char	*bp;
+    register char *bp;
 
-	bp = braslist[i];
-	while (*bp++ == *lp++)
-		if (bp >= braelist[i])
-			return(1);
-	return(0);
+    bp = braslist[i];
+    while (*bp++ == *lp++)
+	if (bp >= braelist[i])
+	    return (1);
+    return (0);
 }
 
 static int
 cclass(set, c, af)
-	register char	*set, c;
-	int	af;
+     register char *set, c;
+     int af;
 {
-	register int	n;
+    register int n;
 
-	if (c == 0)
-		return(0);
-	n = *set++;
-	while (--n)
-		if (*set++ == c)
-			return(af);
-	return(! af);
+    if (c == 0)
+	return (0);
+    n = *set++;
+    while (--n)
+	if (*set++ == c)
+	    return (af);
+    return (!af);
 }

@@ -5,27 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
-
-SHELL = /bin/sh
-
-include ../config/Makefile.${SYS_NAME}
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 LIBS=${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
@@ -35,10 +16,6 @@ LIBS=${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/libcom_err.a \
 	${TOP_LIBDIR}/util.a \
 	${TOP_LIBDIR}/libsys.a
-
-CFLAGS=-I${TOP_INCDIR} -I${TOP_SRCDIR}/config ${XCFLAGS}
-
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 
 all: upserver upclient
 
@@ -55,8 +32,21 @@ utils.o: utils.c update.h global.h
 
 client.o server.o: update.h global.h AFS_component_version_number.c
 
-update.cs.c update.ss.c update.er.c update.h: update.xg
-	${RXGEN} update.xg
+update.cs.c: update.xg
+	${RXGEN} -C -o $@ ${srcdir}/update.xg
+
+update.ss.c: update.xg
+	${RXGEN} -S -o $@ ${srcdir}/update.xg
+
+update.xdr.c: update.xg
+	${RXGEN} -c -o $@ ${srcdir}/update.xg
+
+update.h: update.xg
+	${RXGEN} -h -o $@ ${srcdir}/update.xg
+
+update.cs.c: update.h
+upcate.ss.c: update.h
+update.er.c: update.h
 
 #
 # Installation targets

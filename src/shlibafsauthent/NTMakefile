@@ -7,9 +7,9 @@
 
 # This is a pthread safe library containing ubikclient, auth, kauth.
 
-
 AFSDEV_AUXCDEFINES = -DAFS_PTHREAD_ENV
 
+RELDIR=shlibafsauthent
 !include ..\config\NTMakefile.$(SYS_NAME)
 !include ..\config\NTMakefile.version
 
@@ -25,60 +25,60 @@ WINNTAFSD = ..\WINNT\afsd
 
 LIBFILE = $(DESTDIR)\lib\afsauthent.dll
 
-AUDITOBJS = audit.obj
+AUDITOBJS = $(OUT)\audit.obj
 
 AUTHOBJS = \
-	cellconfig.obj \
-	userok.obj \
-	writeconfig.obj \
-	authcon.obj \
-	ktc_errors.obj \
-	ktc_nt.obj \
-	acfg_errors.obj
+	$(OUT)\cellconfig.obj \
+	$(OUT)\userok.obj \
+	$(OUT)\writeconfig.obj \
+	$(OUT)\authcon.obj \
+	$(OUT)\ktc_errors.obj \
+	$(OUT)\ktc_nt.obj \
+	$(OUT)\acfg_errors.obj
 
 KAUTHOBJS = \
-	kauth.xdr.obj \
-	kauth.cs.obj \
-	kaaux.obj \
-	client.obj \
-	authclient.obj \
-	token.obj \
-	kautils.obj \
-	kalocalcell.obj \
-	kaerrors.obj \
-	user_nt.obj
+	$(OUT)\kauth.xdr.obj \
+	$(OUT)\kauth.cs.obj \
+	$(OUT)\kaaux.obj \
+	$(OUT)\client.obj \
+	$(OUT)\authclient.obj \
+	$(OUT)\token.obj \
+	$(OUT)\kautils.obj \
+	$(OUT)\kalocalcell.obj \
+	$(OUT)\kaerrors.obj \
+	$(OUT)\user_nt.obj
 
 UBIKOBJS = \
-	ubikclient.obj \
-	uerrors.obj \
-	ubik_int.cs.obj \
-	ubik_int.xdr.obj
+	$(OUT)\ubikclient.obj \
+	$(OUT)\uerrors.obj \
+	$(OUT)\ubik_int.cs.obj \
+	$(OUT)\ubik_int.xdr.obj
 
 UTILOBJS = \
-	pthread_glock.obj \
-	get_krbrlm.obj \
-	casestrcpy.obj \
-	fileutil.obj \
-	dirpath.obj \
-	readdir_nt.obj
+	$(OUT)\pthread_glock.obj \
+	$(OUT)\get_krbrlm.obj \
+	$(OUT)\casestrcpy.obj \
+	$(OUT)\fileutil.obj \
+	$(OUT)\dirpath.obj \
+	$(OUT)\readdir_nt.obj
 
 RXKADOBJS = \
-	rxkad_errs.obj
+	$(OUT)\rxkad_errs.obj
 
 PTSERVEROBJS = \
-	ptclient.obj \
-	ptint.cs.obj \
-	ptint.xdr.obj \
-	ptuser.obj \
-	display.obj \
-	pterror.obj
+	$(OUT)\ptclient.obj \
+	$(OUT)\ptint.cs.obj \
+	$(OUT)\ptint.xdr.obj \
+	$(OUT)\ptuser.obj \
+	$(OUT)\display.obj \
+	$(OUT)\pterror.obj
 
 SYSOBJS = \
-	pioctl_nt.obj
+	$(OUT)\pioctl_nt.obj
 
 WINNTAFSDOBJS =\
-	cm_config.obj \
-	afsrpc_c.obj
+	$(OUT)\cm_config.obj \
+	$(OUT)\afsrpc_c.obj
 
 DLLOBJS =\
 	$(AUTHOBJS) \

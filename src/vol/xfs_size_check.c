@@ -11,7 +11,7 @@
  * attribute for AFS inode parameters. Check all the mounted /vicep partitions.
 #include <afsconfig.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/xfs_size_check.c,v 1.1.1.4 2001/07/11 03:12:27 hartmans Exp $");
+RCSID("$Header: /cvs/openafs/src/vol/xfs_size_check.c,v 1.6 2003/07/15 23:17:42 shadow Exp $");
 
  */
 #include <afs/param.h>
@@ -24,7 +24,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/xfs_size_check.c,v 1.1.1.4 2001/07/
 #include <mntent.h>
 #include "partition.h"
 #ifdef AFS_SGI_EFS_IOPS_ENV
-#include "../sgiefs/efs.h"
+#include "sgiefs/efs.h"
 #endif
 #include <afs/xfsattrs.h>
 
@@ -38,7 +38,8 @@ char *prog = "xfs_size_check";
 #define VERIFY_ERROR   -1
 #define VERIFY_OK	0
 #define VERIFY_FIX	1
-static int VerifyXFSInodeSize(char *part)
+static int
+VerifyXFSInodeSize(char *part)
 {
     afs_xfs_attr_t junk;
     int length = SIZEOF_XFS_ATTR_T;
@@ -46,7 +47,7 @@ static int VerifyXFSInodeSize(char *part)
     int code = VERIFY_ERROR;
     struct fsxattr fsx;
 
-    if (attr_set(part, AFS_XFS_ATTR, &junk, length, ATTR_ROOT)<0) {
+    if (attr_set(part, AFS_XFS_ATTR, &junk, length, ATTR_ROOT) < 0) {
 	if (errno == EPERM) {
 	    printf("Must be root to run %s\n", prog);
 	    exit(1);
@@ -54,21 +55,21 @@ static int VerifyXFSInodeSize(char *part)
 	return VERIFY_ERROR;
     }
 
-    if ((fd=open(part, O_RDONLY, 0))<0)
+    if ((fd = open(part, O_RDONLY, 0)) < 0)
 	goto done;
 
-    if (fcntl(fd, F_FSGETXATTRA, &fsx)<0)
+    if (fcntl(fd, F_FSGETXATTRA, &fsx) < 0)
 	goto done;
-	
+
     if (fsx.fsx_nextents == 0)
 	code = VERIFY_OK;
     else
 	code = VERIFY_FIX;
 
- done:
-    if (fd>=0)
+  done:
+    if (fd >= 0)
 	close(fd);
-    (void) attr_remove(part, AFS_XFS_ATTR, ATTR_ROOT);
+    (void)attr_remove(part, AFS_XFS_ATTR, ATTR_ROOT);
 
     return code;
 }
@@ -83,8 +84,9 @@ partInfo *partList = NULL;
 int nParts = 0;
 int nAvail = 0;
 
-int CheckPartitions()
-    {
+int
+CheckPartitions()
+{
     int i;
     struct mntent *mntent;
     FILE *mfd;
@@ -101,11 +103,12 @@ int CheckPartitions()
     while (mntent = getmntent(mfd)) {
 	char *part = mntent->mnt_dir;
 
-	if (!hasmntopt(mntent, MNTOPT_RW)) continue;
+	if (!hasmntopt(mntent, MNTOPT_RW))
+	    continue;
 
-    	if (strncmp(part, VICE_PARTITION_PREFIX, VICE_PREFIX_SIZE)) {
+	if (strncmp(part, VICE_PARTITION_PREFIX, VICE_PREFIX_SIZE)) {
 	    continue;		/* Non /vicepx; ignore */
-        }
+	}
 	if (stat(part, &status) == -1) {
 	    printf("Couldn't find file system %s; ignored\n", part);
 	    continue;
@@ -116,26 +119,30 @@ int CheckPartitions()
 	    case VERIFY_OK:
 		break;
 	    case VERIFY_ERROR:
-		printf("%s: Can't check XFS inode size: %s\n", strerror(errno));
+		printf("%s: Can't check XFS inode size: %s\n",
+		       strerror(errno));
 		break;
 	    case VERIFY_FIX:
 		if (nAvail <= nParts) {
-		    nAvail += ALLOC_STEP; 
+		    nAvail += ALLOC_STEP;
 		    if (nAvail == ALLOC_STEP)
-			partList = (partInfo*)malloc(nAvail*sizeof(partInfo));
+			partList =
+			    (partInfo *) malloc(nAvail * sizeof(partInfo));
 		    else
-			partList = (partInfo*)realloc((char*)partList,
-						      nAvail*sizeof(partInfo));
+			partList =
+			    (partInfo *) realloc((char *)partList,
+						 nAvail * sizeof(partInfo));
 		    if (!partList) {
-			printf("Failed to %salloc %d bytes for partition list.\n",
-			       (nAvail == ALLOC_STEP) ? "m" : "re",
-			       nAvail*sizeof(partInfo));
+			printf
+			    ("Failed to %salloc %d bytes for partition list.\n",
+			     (nAvail == ALLOC_STEP) ? "m" : "re",
+			     nAvail * sizeof(partInfo));
 			exit(1);
 		    }
 		}
-		(void) strcpy(partList[nParts].partName, part);
-		(void) strcpy(partList[nParts].devName, mntent->mnt_fsname);
-		nParts ++;
+		(void)strcpy(partList[nParts].partName, part);
+		(void)strcpy(partList[nParts].devName, mntent->mnt_fsname);
+		nParts++;
 		break;
 	    default:
 		printf("Unknown return code %d from VerifyXFSInodeSize.\n",
@@ -161,15 +168,19 @@ main(int ac, char **av)
     code = CheckPartitions();
     if (code) {
 	printf("Need to remake the following partitions:\n");
-	for (i=0; i<nParts; i++) {
+	for (i = 0; i < nParts; i++) {
 	    printf("%s: mkfs -t xfs -i size=512 -l size=4000b %s\n",
 		   partList[i].partName, partList[i].devName);
 	}
     }
-    exit (code ? 1 : 0);
+    exit(code ? 1 : 0);
 }
-    
+
 
 #else /* AFS_SGI_XFS_IOPS_ENV */
-main() {printf("%s only runs on XFS platforms.\n, prog"); exit(1); }
+main()
+{
+    printf("%s only runs on XFS platforms.\n, prog");
+    exit(1);
+}
 #endif /* AFS_SGI_XFS_IOPS_ENV */

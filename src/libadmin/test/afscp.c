@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/libadmin/test/afscp.c,v 1.1.1.5 2004/01/10 20:56:48 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/libadmin/test/afscp.c,v 1.7 2003/10/24 06:26:10 shadow Exp $");
 
 #include <afs/stds.h>
 
@@ -58,9 +59,7 @@ pthread_mutex_t rxkad_random_mutex = PTHREAD_MUTEX_INITIALIZER;
  */
 
 static int
-MyBeforeProc(
-  struct cmd_syndesc *as,
-  char *arock)
+MyBeforeProc(struct cmd_syndesc *as, char *arock)
 {
     afs_status_t st = 0;
     int no_auth = 0;
@@ -98,7 +97,8 @@ MyBeforeProc(
 
     if (as->parms[USER_PARAM].items) {
 	if (!as->parms[PASSWORD_PARAM].items) {
-	    ERR_EXT("you must specify -authpassword if you specify -authuser");
+	    ERR_EXT
+		("you must specify -authpassword if you specify -authuser");
 	}
 	if (as->parms[AUTHCELL_PARAM].items) {
 	    strcpy(auth_cell, as->parms[AUTHCELL_PARAM].items->data);
@@ -127,19 +127,16 @@ MyBeforeProc(
      */
 
     if (no_auth) {
-	if (!afsclient_TokenGetNew(auth_cell,
-				   (const char *) 0,
-				   (const char *) 0,
-				   &tokenHandle,
-				   &st)) {
+	if (!afsclient_TokenGetNew
+	    (auth_cell, (const char *)0, (const char *)0, &tokenHandle,
+	     &st)) {
 	    ERR_ST_EXT("can't get noauth tokens", st);
 	}
     } else {
-	if (!afsclient_TokenGetNew(auth_cell,
-				   (const char *) as->parms[USER_PARAM].items->data,
-				   (const char *) as->parms[PASSWORD_PARAM].items->data,
-				   &tokenHandle,
-				   &st)) {
+	if (!afsclient_TokenGetNew
+	    (auth_cell, (const char *)as->parms[USER_PARAM].items->data,
+	     (const char *)as->parms[PASSWORD_PARAM].items->data,
+	     &tokenHandle, &st)) {
 	    ERR_ST_EXT("can't get tokens", st);
 	}
     }
@@ -151,8 +148,8 @@ MyBeforeProc(
     return 0;
 }
 
-static int MyAfterProc(
-    struct cmd_syndesc *as)
+static int
+MyAfterProc(struct cmd_syndesc *as)
 {
 
     afsclient_CellClose(cellHandle, (afs_status_p) 0);
@@ -167,18 +164,19 @@ SetupCommonCmdArgs(struct cmd_syndesc *as)
 {
     cmd_Seek(as, USER_PARAM);
     cmd_AddParm(as, "-authuser", CMD_SINGLE, CMD_OPTIONAL,
-		 "user name to use for authentication");
+		"user name to use for authentication");
     cmd_AddParm(as, "-authpassword", CMD_SINGLE, CMD_OPTIONAL,
-		 "password to use for authentication");
+		"password to use for authentication");
     cmd_AddParm(as, "-authcell", CMD_SINGLE, CMD_OPTIONAL,
-		 "cell to use for authentication");
+		"cell to use for authentication");
     cmd_AddParm(as, "-execcell", CMD_SINGLE, CMD_OPTIONAL,
-		 "cell where command will execute");
+		"cell where command will execute");
     cmd_AddParm(as, "-noauth", CMD_FLAG, CMD_OPTIONAL,
-		 "run this command unauthenticated");
+		"run this command unauthenticated");
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     int code;
     afs_status_t st;
@@ -192,8 +190,8 @@ int main(int argc, char *argv[])
 
     /* initialize command syntax and globals */
 
-    cmd_SetBeforeProc(MyBeforeProc, (char *) 0);
-    cmd_SetAfterProc(MyAfterProc, (char *) 0);
+    cmd_SetBeforeProc(MyBeforeProc, NULL);
+    cmd_SetAfterProc(MyAfterProc, NULL);
     SetupBosAdminCmd();
     SetupClientAdminCmd();
     SetupKasAdminCmd();

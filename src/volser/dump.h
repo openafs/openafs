@@ -38,7 +38,7 @@ struct DumpHeader {
     char volumeName[VNAMESIZE];
     int nDumpTimes;		/* Number of pairs */
     struct {
-    	afs_int32 from, to;		
+	afs_int32 from, to;
     } dumpTimes[MAXDUMPTIMES];
 };
 

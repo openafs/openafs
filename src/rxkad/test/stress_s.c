@@ -12,7 +12,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/test/stress_s.c,v 1.1.1.6 2002/12/11 02:44:49 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rxkad/test/stress_s.c,v 1.7 2003/07/15 23:16:47 shadow Exp $");
 
 #include <afs/stds.h>
 #include <stdio.h>
@@ -37,13 +38,14 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/test/stress_s.c,v 1.1.1.6 2002/12
 extern RXKST_ExecuteRequest();
 
 struct ktc_encryptionKey serviceKey =
-    {0x45, 0xe3, 0x3d, 0x16, 0x29, 0x64, 0x8a, 0x8f};
+    { 0x45, 0xe3, 0x3d, 0x16, 0x29, 0x64, 0x8a, 0x8f };
 long serviceKeyVersion = 7;
 
-static long GetKey (rock, kvno, key)
-  IN char *rock;
-  IN long  kvno;
-  OUT struct ktc_encryptionKey *key;
+static long
+GetKey(rock, kvno, key)
+     IN char *rock;
+     IN long kvno;
+     OUT struct ktc_encryptionKey *key;
 {
     struct serverParms *parms = (struct serverParms *)rock;
     struct afsconf_keys tstr;
@@ -52,28 +54,28 @@ static long GetKey (rock, kvno, key)
 
     fprintf(stderr, "GetKey called for kvno %d\n", kvno);
     if (!parms->keyfile) {
-        memcpy(key, &serviceKey, sizeof(*key));
-        return 0;
+	memcpy(key, &serviceKey, sizeof(*key));
+	return 0;
     }
 
     /* the rest of this function borrows heavily from auth/cellconfig.c */
     fd = open(parms->keyfile, O_RDONLY);
     if (fd < 0) {
-        return AFSCONF_FAILURE;
+	return AFSCONF_FAILURE;
     }
     code = read(fd, &tstr, sizeof(struct afsconf_keys));
     close(fd);
     if (code < sizeof(afs_int32)) {
-        return AFSCONF_FAILURE;
+	return AFSCONF_FAILURE;
     }
 
     /* convert key structure to host order */
     tstr.nkeys = ntohl(tstr.nkeys);
-    for(fd = 0; fd < tstr.nkeys; fd++) {
-        if (kvno == ntohl(tstr.key[fd].kvno)) {
-            memcpy(key, tstr.key[fd].key, sizeof(*key));
-            return 0;
-        }
+    for (fd = 0; fd < tstr.nkeys; fd++) {
+	if (kvno == ntohl(tstr.key[fd].kvno)) {
+	    memcpy(key, tstr.key[fd].key, sizeof(*key));
+	    return 0;
+	}
     }
 
     return AFSCONF_NOTFOUND;
@@ -81,8 +83,9 @@ static long GetKey (rock, kvno, key)
 
 static int minAuth;
 
-long rxkst_StartServer (parms)
-  INOUT struct serverParms *parms;
+long
+rxkst_StartServer(parms)
+     INOUT struct serverParms *parms;
 {
     extern int rx_stackSize;
     struct rx_service *tservice;
@@ -90,23 +93,26 @@ long rxkst_StartServer (parms)
     rxkad_level minLevel;
 
     minAuth = parms->authentication;
-    if (minAuth == -1) minLevel = rxkad_clear;
-    else minLevel = minAuth;
+    if (minAuth == -1)
+	minLevel = rxkad_clear;
+    else
+	minLevel = minAuth;
 
     sc[0] = rxnull_NewServerSecurityObject();
-    sc[1] = 0;				/* no rxvab anymore */
-    sc[2] = rxkad_NewServerSecurityObject (minLevel, (void *)parms, GetKey, 0);
-    tservice = rx_NewService(htons(RXKST_SERVICEPORT), RXKST_SERVICEID,
-			     "stress test", sc, 3, RXKST_ExecuteRequest);
+    sc[1] = 0;			/* no rxvab anymore */
+    sc[2] = rxkad_NewServerSecurityObject(minLevel, (void *)parms, GetKey, 0);
+    tservice =
+	rx_NewService(htons(RXKST_SERVICEPORT), RXKST_SERVICEID,
+		      "stress test", sc, 3, RXKST_ExecuteRequest);
     if (tservice == (struct rx_service *)0) {
-	fprintf (stderr, "Could not create stress test rx service\n");
+	fprintf(stderr, "Could not create stress test rx service\n");
 	exit(3);
     }
     rx_SetMinProcs(tservice, parms->threads);
     rx_SetMaxProcs(tservice, parms->threads);
     rx_SetStackSize(tservice, 10000);
 
-    rx_StartServer(/*donate me*/1);	/* start handling req. of all types */
+    rx_StartServer( /*donate me */ 1);	/* start handling req. of all types */
     /* never reached */
     return 0;
 }
@@ -115,8 +121,9 @@ static char test_client_name[MAXKTCNAMELEN];
 static char test_client_inst[MAXKTCNAMELEN];
 static char test_client_cell[MAXKTCREALMLEN];
 static int got_client_id = 0;
-static long CheckAuth (call)
-  IN struct rx_call *call;
+static long
+CheckAuth(call)
+     IN struct rx_call *call;
 {
     long code;
     int si;
@@ -125,80 +132,93 @@ static long CheckAuth (call)
     char inst[MAXKTCNAMELEN];
     char cell[MAXKTCREALMLEN];
     long kvno;
-    u_long expiration;			/* checked by Security Module */
+    u_long expiration;		/* checked by Security Module */
 
     si = rx_SecurityClassOf(rx_ConnectionOf(call));
     if (si == 1) {
-	printf ("No support for VAB security module.\n");
+	printf("No support for VAB security module.\n");
 	return -1;
     } else if (si == 0) {
-	if (minAuth > -1) return RXKST_UNAUTH;
-	else return 0;
+	if (minAuth > -1)
+	    return RXKST_UNAUTH;
+	else
+	    return 0;
     } else if (si != 2) {
-	fprintf (stderr, "Unknown security index %d\n", si);
+	fprintf(stderr, "Unknown security index %d\n", si);
 	return -1;
     }
 
-    code = rxkad_GetServerInfo (rx_ConnectionOf(call), &level, &expiration,
-				name, inst, cell, &kvno);
-    if (code) return code;
-    if (minAuth > level) return -1;
+    code =
+	rxkad_GetServerInfo(rx_ConnectionOf(call), &level, &expiration, name,
+			    inst, cell, &kvno);
+    if (code)
+	return code;
+    if (minAuth > level)
+	return -1;
     fprintf(stderr, "Test client is %s.%s@%s\n", name, inst, cell);
     if (got_client_id) {
-        if (strcmp(name, test_client_name)) return RXKST_BADCLIENT;
-        if (strcmp(inst, test_client_inst)) return RXKST_BADCLIENT;
-        if (strcmp(cell, test_client_cell)) return RXKST_BADCLIENT;
+	if (strcmp(name, test_client_name))
+	    return RXKST_BADCLIENT;
+	if (strcmp(inst, test_client_inst))
+	    return RXKST_BADCLIENT;
+	if (strcmp(cell, test_client_cell))
+	    return RXKST_BADCLIENT;
     } else {
-        strcpy(test_client_name, name);
-        strcpy(test_client_inst, inst);
-        strcpy(test_client_cell, cell);
-        got_client_id = 1;
+	strcpy(test_client_name, name);
+	strcpy(test_client_inst, inst);
+	strcpy(test_client_cell, cell);
+	got_client_id = 1;
     }
     return 0;
 }
 
 /* Stop the server.  There isn't a graceful way to do this so just exit. */
 
-afs_int32 SRXKST_Kill (call)
-  IN struct rx_call *call;
+afs_int32
+SRXKST_Kill(call)
+     IN struct rx_call *call;
 {
     long code;
-    code = CheckAuth (call);
-    if (code) return code;
+    code = CheckAuth(call);
+    if (code)
+	return code;
 
     /* This is tricky, but since we're never going to return, we end the call
      * here, then rx_Finalize should push out the response/ack. */
     rx_EndCall(call, 0);
     rx_Finalize();
 
-    printf ("Server halted by RPC request.\n");
-    exit (0);
-    return 0;    
-}
-
-afs_int32 SRXKST_Fast (call, n, inc_nP)
-  IN struct rx_call *call;
-  IN u_long n;
-  OUT u_long *inc_nP;
-{
-    *inc_nP = n+1;
+    printf("Server halted by RPC request.\n");
+    exit(0);
     return 0;
 }
 
-afs_int32 SRXKST_Slow (call, tag, nowP)
-  IN struct rx_call *call;
-  IN u_long tag;
-  OUT u_long *nowP;
+afs_int32
+SRXKST_Fast(call, n, inc_nP)
+     IN struct rx_call *call;
+     IN u_long n;
+     OUT u_long *inc_nP;
+{
+    *inc_nP = n + 1;
+    return 0;
+}
+
+afs_int32
+SRXKST_Slow(call, tag, nowP)
+     IN struct rx_call *call;
+     IN u_long tag;
+     OUT u_long *nowP;
 {
     long code;
-    code = CheckAuth (call);
-    if (code) return code;
+    code = CheckAuth(call);
+    if (code)
+	return code;
 #ifdef AFS_PTHREAD_ENV
     sleep(1);
 #else
-    IOMGR_Sleep (1);
+    IOMGR_Sleep(1);
 #endif
-    time (nowP);
+    time(nowP);
     return 0;
 }
 
@@ -208,33 +228,36 @@ static struct buflist {
 } *buflist = 0;
 static int bufAllocs = 0;
 
-static u_char *GetBuffer()
+static u_char *
+GetBuffer()
 {
     u_char *ret;
     if (buflist) {
-	ret = (u_char *)buflist;
+	ret = (u_char *) buflist;
 	buflist = buflist->next;
     } else {
-	ret = (u_char *) osi_Alloc (COPBUFSIZE);
+	ret = (u_char *) osi_Alloc(COPBUFSIZE);
 	bufAllocs++;
     }
     return ret;
 }
 
-static void PutBuffer(b)
-  IN u_char *b;
+static void
+PutBuffer(b)
+     IN u_char *b;
 {
     struct buflist *bl = (struct buflist *)b;
     bl->next = buflist;
     buflist = bl;
 }
 
-afs_int32 SRXKST_Copious (call, inlen, insum, outlen, outsum)
-  IN struct rx_call *call;
-  IN u_long inlen;
-  IN u_long insum;
-  IN u_long outlen;
-  OUT u_long *outsum;
+afs_int32
+SRXKST_Copious(call, inlen, insum, outlen, outsum)
+     IN struct rx_call *call;
+     IN u_long inlen;
+     IN u_long insum;
+     IN u_long outlen;
+     OUT u_long *outsum;
 {
     long code;
     long mysum;
@@ -244,57 +267,67 @@ afs_int32 SRXKST_Copious (call, inlen, insum, outlen, outsum)
     long bytesTransfered;
     long n;
 
-    code = CheckAuth (call);
-    if (code) return code;
+    code = CheckAuth(call);
+    if (code)
+	return code;
     buf = GetBuffer();
     mysum = 0;
     bytesTransfered = 0;
     while (bytesTransfered < inlen) {
-	u_long tlen;			/* how much more to do */
+	u_long tlen;		/* how much more to do */
 	tlen = inlen - bytesTransfered;
-	if (tlen > COPBUFSIZE) tlen = COPBUFSIZE;
+	if (tlen > COPBUFSIZE)
+	    tlen = COPBUFSIZE;
 	n = rx_Read(call, buf, tlen);
 	if (n != tlen) {
-	    if (n < 0) code = n;
-	    else code = RXKST_READSHORT;
+	    if (n < 0)
+		code = n;
+	    else
+		code = RXKST_READSHORT;
 	    break;
 	}
-	for (i=0; i<tlen; i++) mysum += buf[i];
+	for (i = 0; i < tlen; i++)
+	    mysum += buf[i];
 	bytesTransfered += tlen;
     }
-    if (code) goto done;
+    if (code)
+	goto done;
     if (mysum != insum) {
 	code = RXKST_BADINPUTSUM;
 	goto done;
     }
-
-#define BIG_PRIME 1257056893		/* 0x4AED2A7d */
+#define BIG_PRIME 1257056893	/* 0x4AED2A7d */
 #if 0
 #define NextByte() ((b>24 ? ((seed = seed*BIG_PRIME + BIG_PRIME),b=0) : 0), \
 		    (b +=8), ((seed >> (b-8))&0xff))
 #else
 #define NextByte() (b+=3)
 #endif
-    b=32;
+    b = 32;
 
     mysum = 0;
     bytesTransfered = 0;
     while (bytesTransfered < outlen) {
-	u_long tlen;			/* how much more to do */
+	u_long tlen;		/* how much more to do */
 	tlen = outlen - bytesTransfered;
-	if (tlen > COPBUFSIZE) tlen = COPBUFSIZE;
-	for (i=0; i<tlen; i++) mysum += (buf[i] = NextByte());
+	if (tlen > COPBUFSIZE)
+	    tlen = COPBUFSIZE;
+	for (i = 0; i < tlen; i++)
+	    mysum += (buf[i] = NextByte());
 	n = rx_Write(call, buf, tlen);
 	if (n != tlen) {
-	    if (n < 0) code = n;
-	    else code = RXKST_WRITESHORT;
+	    if (n < 0)
+		code = n;
+	    else
+		code = RXKST_WRITESHORT;
 	    break;
 	}
 	bytesTransfered += tlen;
     }
   done:
-    PutBuffer (buf);
-    if (code) return code;
+    PutBuffer(buf);
+    if (code)
+	return code;
     *outsum = mysum;
     return 0;
 }

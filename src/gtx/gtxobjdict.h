@@ -16,7 +16,7 @@
  * Definitions for the gator object dictionary.
  *--------------------------------------------------------------------------------*/
 
-#include "gtxobjects.h"		/*Standard gator object defns*/
+#include "gtxobjects.h"		/*Standard gator object defns */
 
 extern int gator_objdict_init();
     /*
@@ -24,11 +24,11 @@ extern int gator_objdict_init();
      *    Initialize the gator object dictionary package.
      *
      * Args:
-     *	  int adebug: Is debugging output turned on?
+     *    int adebug: Is debugging output turned on?
      *
      * Returns:
-     *	  0 on success,
-     *	  Error value otherwise.
+     *    0 on success,
+     *    Error value otherwise.
      */
 
 extern int gator_objdict_add();
@@ -37,11 +37,11 @@ extern int gator_objdict_add();
      *    Add an entry to the gator object dictionary.
      *
      * Args:
-     *	  struct onode *objtoadd: Ptr to object to add.
+     *    struct onode *objtoadd: Ptr to object to add.
      *
      * Returns:
-     *	  0 on success,
-     *	  Error value otherwise.
+     *    0 on success,
+     *    Error value otherwise.
      */
 
 extern int gator_objdict_delete();
@@ -50,11 +50,11 @@ extern int gator_objdict_delete();
      *    Delete an entry from the gator object dictionary.
      *
      * Args:
-     *	  struct onode *objtodelete: Ptr to object to delete.
+     *    struct onode *objtodelete: Ptr to object to delete.
      *
      * Returns:
-     *	  0 on success,
-     *	  Error value otherwise.
+     *    0 on success,
+     *    Error value otherwise.
      */
 
 extern struct onode *gator_objdict_lookup();
@@ -63,11 +63,11 @@ extern struct onode *gator_objdict_lookup();
      *    Look up a gator object by name.
      *
      * Args:
-     *	  char *nametofind: String name of desired onode.
+     *    char *nametofind: String name of desired onode.
      *
      * Returns:
-     *	  Ptr to desired onode if successful,
-     *	  Null pointer otherwise.
+     *    Ptr to desired onode if successful,
+     *    Null pointer otherwise.
      */
 
 #endif /* __gator_objdict_h */

@@ -12,7 +12,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/util/flipbase64.c,v 1.1.1.7 2004/01/10 20:57:55 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/util/flipbase64.c,v 1.10 2003/10/24 06:26:17 shadow Exp $");
 
 
 #if defined(AFS_NAMEI_ENV)
@@ -51,7 +52,7 @@ static char c_reverse[] = {
 };
 #else /* AFS_DARWIN_ENV */
 static char c_xlate[80] =
-	"+=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    "+=0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 static char c_reverse[] = {
     99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
     99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
@@ -78,9 +79,11 @@ static char c_reverse[] = {
  * lb64_string in stds.h provides a typedef to get the length.
  */
 #ifdef AFS_64BIT_ENV
-char *int64_to_flipbase64(lb64_string_t s, afs_int64 a)
+char *
+int64_to_flipbase64(lb64_string_t s, afs_int64 a)
 #else
-char *int64_to_flipbase64(lb64_string_t s, u_int64_t a)
+char *
+int64_to_flipbase64(lb64_string_t s, u_int64_t a)
 #endif
 {
     int i;
@@ -91,10 +94,10 @@ char *int64_to_flipbase64(lb64_string_t s, u_int64_t a)
 #endif
 
     i = 0;
-    if (a==0)
+    if (a == 0)
 	s[i++] = c_xlate[0];
     else {
-	for (n = a & 0x3f; a; n = ((a>>=6) & 0x3f)) {
+	for (n = a & 0x3f; a; n = ((a >>= 6) & 0x3f)) {
 	    s[i++] = c_xlate[n];
 	}
     }
@@ -104,9 +107,11 @@ char *int64_to_flipbase64(lb64_string_t s, u_int64_t a)
 
 
 #ifdef AFS_64BIT_ENV
-afs_int64 flipbase64_to_int64(char *s)
+afs_int64
+flipbase64_to_int64(char *s)
 #else
-int64_t flipbase64_to_int64(char *s)
+int64_t
+flipbase64_to_int64(char *s)
 #endif
 {
 #ifdef AFS_64BIT_ENV
@@ -119,12 +124,12 @@ int64_t flipbase64_to_int64(char *s)
     int shift;
 
     for (shift = 0; *s; s++) {
-	n = c_reverse[*(unsigned char *)s];
-	if (n >= 64)	/* should never happen */
-	    continue;
-	n <<= shift;
-	result |= n ;
-	shift += 6;
+        n = c_reverse[*(unsigned char *)s];
+        if (n >= 64)    /* should never happen */
+            continue;
+        n <<= shift;
+        result |= n ;
+        shift += 6;
     }
     return result;
 }

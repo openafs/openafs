@@ -167,93 +167,6 @@ PRE_Block.S:
 	.extern	PRE_Block[ua]
 
 #endif	/* RIOS	*/
-#if defined(AFS_S390_LINUX20_ENV)
-      /* Linux for S/390 (31 bit)
-       *
-       * Written by Neale Ferguson <Neale.Ferguson@SoftwareAG-usa.com>
-       *
-       *  additional munging by Adam Thornton <adam@sinenomine.net>
-       */
-              .file   "process.s"
-
-              .globl savecontext
-              .type  savecontext,%function
-      /*
-       * savecontext(f, area1, newsp)
-       *      int (*f)();    struct savearea *area1; char *newsp;
-       * f     - r2
-       * area1 - r3
-       * newsp - r4
-       */
-
-       /*
-        * struct savearea {
-        *      char    *topstack;
-        * }
-        */
-
-P_PRE:	                  .long   PRE_Block
-P_ABORT:	              .long   abort
-
-savecontext:
-              stm     %r6,%r15,24(%r15)       /* Save our registers */
-              lr      %r1,%r15
-              ahi     %r15,-96                /* Move out of harm's way */
-              st      %r1,0(%r15)
-              bras    %r5,.L0                 /* Get A(A(PRE_Block)) */
-              .long   PRE_Block
-      .L0:
-              l       %r5,0(%r5)              /* Get A(PRE_Block) */
-              mvi     3(%r5),1                /* Set it */
-              lr      %r6,%r3                 /* Get base of savearea */
-              st      %r15,0(%r3)             /* Save stack pointer */
-              ltr     %r4,%r4                 /* If new sp is 0 */
-              jz      .L1                     /* ... don't change sp */
-              lr      %r15,%r4                /* Set new stack pointer */
-      .L1:
-              br      %r2                     /* Call the routine */
-              /* Can't get here....*/
-
-              bras    %r5,.L2
-              .long   abort
-      .L2:
-              l      %r5,0(%r5)
-              balr    %r14,%r5
-
-      .savecontext_end:
-              .size   savecontext,.savecontext_end-savecontext
-
-      /*
-       * returnto(area2)
-       *      struct savearea *area2;
-       *
-       * area2 - r2
-       */
-        .globl  returnto
-        .type   returnto,%function
-returnto:
-        l       %r15,0(%r2)             /* New frame, to get correct pointer*/
-        bras    %r5,.L3                         /* Get A(A(PRE_Block))
-      */
-                 .long          PRE_Block
-      .L3:
-              l       %r5,0(%r5)              /* Get A(PRE_Block) */
-              /*xc      0(4,%r5),0(%r5)         /* Clear it */
-	      mvi     3(%r5),0                /* Clear it */ 
-	      l       %r15,0(%r15)
-              lm      %r6,%r15,24(%r15)       /* Restore registers */
-              br      %r14                    /* Return */
-
-	      /* Can't happen */
-              la      %r2,1234
-              bras    %r5,.L4
-                .long          abort
-      .L4:
-              l       %r5,0(%r5)
-              basr    %r14,%r5
-      .returnto_end:
-              .size   returnto,.returnto_end-returnto
-#endif /* AFS_S390_LINUX20_ENV */
 	
 #ifdef mc68000
 /*
@@ -1074,7 +987,9 @@ returnto:
 #define	fs5	$f7
 #define	fs6	$f8
 #define	fs7	$f9
-#else	/* OSF */
+#elif defined(AFS_XBSD_ENV)
+#include <machine/asm.h>
+#else	/* !OSF && !XBSD */
 #include <mach/alpha/asm.h>
 #endif	/* OSF */
 
@@ -1084,7 +999,9 @@ returnto:
 #define returnaddr (FRAMESIZE-8)
 #define topstack 0
 
+#ifdef AFS_OSF_ENV
 IMPORT(PRE_Block,4)
+#endif
 .align	4
 #ifdef	AFS_OSF_ENV
 NESTED(savecontext,FRAMESIZE,ra)
@@ -1161,112 +1078,6 @@ LEAF(returnto,1)
 	END(returnto)
 #endif
 
-#if defined(AFS_NCR_ENV) || defined(AFS_X86_ENV) || defined(AFS_DJGPP_ENV) || defined(AFS_XBSD_ENV)
-/* Sun 386i... I hope this does the right thing!!!
- * 
- * Written by Derek Atkins <warlord@MIT.EDU>
- * (debugging help by Chris Provenzano <proven@mit.edu>)
- * 11/1991
- *
- * "ojala que es correcto!"
- */
-	.file "process.s"
-
-	.data
-
-	.text
-
-/*
- * struct savearea {
- * 	char	*topstack;
- * }
- */
-
-	.set 	topstack,0
-
-/*
- * savecontext(f, area1, newsp)
- *	int (*f)(); struct savearea *area1; char *newsp;
- */
-
-/* offsets, to make my life easier! */
-	.set	f,8
-	.set	area1,12
-	.set	newsp,16
-
-
-#if defined(AFS_DJGPP_ENV) || defined(AFS_XBSD_ENV)
-.globl	_PRE_Block
-.globl	_savecontext
-_savecontext:
-#else
-.globl	PRE_Block
-.globl	savecontext
-savecontext:
-#endif /* AFS_DJGPP_ENV */
-	pushl	%ebp			/* New Frame! */
-	movl	%esp,%ebp
-	pusha				/* Push all registers */
-#if defined(AFS_DJGPP_ENV) || defined(AFS_XBSD_ENV)
-	movl	$1,_PRE_Block		/* Pre-emption code */
-#else
-	movl	$1,PRE_Block		/* Pre-emption code */
-#endif /* AFS_DJGPP_ENV */
-	movl	area1(%ebp),%eax	/* eax = base of savearea */
-	movl	%esp,(%eax)		/* area->topstack = esp */
-	movl	newsp(%ebp),%eax	/* get new sp into eax */
-	cmpl	$0,%eax
-	je	L1			/* if new sp is 0 then dont change esp */
-	movl	%eax,%esp		/* go ahead.  make my day! */
-L1:
-	jmp	*f(%ebp)			/* ebx = &f */
-
-/* Shouldnt be here....*/
-
-#if defined(AFS_DJGPP_ENV) || defined(AFS_XBSD_ENV)
-	call	_abort
-#else
-	call	abort
-#endif /* AFS_DJGPP_ENV */
-
-/*
- * returnto(area2)
- *	struct savearea *area2;
- */
-
-/* stack offset */
-	.set	area2,8
-
-#if defined(AFS_DJGPP_ENV) || defined(AFS_XBSD_ENV)
-.globl	_returnto
-_returnto:
-#else
-.globl	returnto
-returnto:
-#endif /* AFS_DJGPP_ENV */
-	pushl	%ebp
-	movl	%esp, %ebp		/* New frame, to get correct pointer */
-	movl	area2(%ebp),%eax	/* eax = area2 */
-	movl	(%eax),%esp		/* restore esp */
-	popa 
-#if defined(AFS_DJGPP_ENV) || defined(AFS_XBSD_ENV)
-	movl	$0,_PRE_Block		/* clear it up... */
-#else
-	movl	$0,PRE_Block		/* clear it up... */
-#endif /* AFS_DJGPP_ENV */
-	popl	%ebp
-	ret
-
-/* I see, said the blind man, as he picked up his hammer and saw! */
-	pushl	$1234
-#if defined(AFS_DJGPP_ENV) || defined(AFS_XBSD_ENV)
-	call	_abort
-#else
-	call	abort
-#endif /* AFS_DJGPP_ENV */
-
-
-#endif /* AFS_NCR_ENV */
 #ifdef AFS_PPC_ENV
 /* Comments:
  *    1. Registers R10..R31 and CR0..CR7 are saved

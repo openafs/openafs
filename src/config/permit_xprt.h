@@ -9,4 +9,4 @@
 
 #define xprt_CoerceLevel
 #define xprt_CryptOK(x) 1
-#define AFS_HIDE 
+#define AFS_HIDE

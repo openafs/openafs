@@ -32,7 +32,8 @@ to the free list when the files are removed from lost+found
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/sys/fixit.c,v 1.1.1.4 2001/07/14 22:24:01 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/sys/fixit.c,v 1.5 2003/07/15 23:16:54 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/file.h>
@@ -48,48 +49,49 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/sys/fixit.c,v 1.1.1.4 2001/07/14 22:24:
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv) 
-int argc;
-char **argv;
+main(argc, argv)
+     int argc;
+     char **argv;
 {
-	DIR *tdir;
-	struct stat ts;
-	afs_int32 dev, code;
-	struct dirent *tde;
+    DIR *tdir;
+    struct stat ts;
+    afs_int32 dev, code;
+    struct dirent *tde;
 
-	int volid;
+    int volid;
 
-	if (geteuid() != 0) {
-	    printf("must be run as root; sorry\n");
-	    exit(1);
-	}
-	code = stat(argv[1], &ts);
-	if (code) {
-		printf("can't stat %s\n", argv[1]);
-		exit(1);
-	}
-	dev = ts.st_dev;
-	tdir = opendir(argv[1]);
-	if (!tdir) {
-		printf("cant open %s\n", argv[1]);
-		exit(1);
-	}
-	volid = atoi(argv[2]);
-	for(tde=readdir(tdir); tde; tde=readdir(tdir)) {
-		if (tde->d_name[0] == '#') {
-			printf("Inode %d\n", tde->d_ino);
-			code = IINC(dev, tde->d_ino, volid);
-			if (code == -1) {
-				perror("iinc");
-				printf("errno = %d\n", errno);
+    if (geteuid() != 0) {
+	printf("must be run as root; sorry\n");
+	exit(1);
+    }
+    code = stat(argv[1], &ts);
+    if (code) {
+	printf("can't stat %s\n", argv[1]);
+	exit(1);
+    }
+    dev = ts.st_dev;
+    tdir = opendir(argv[1]);
+    if (!tdir) {
+	printf("cant open %s\n", argv[1]);
+	exit(1);
+    }
+    volid = atoi(argv[2]);
+    for (tde = readdir(tdir); tde; tde = readdir(tdir)) {
+	if (tde->d_name[0] == '#') {
+	    printf("Inode %d\n", tde->d_ino);
+	    code = IINC(dev, tde->d_ino, volid);
+	    if (code == -1) {
+		perror("iinc");
+		printf("errno = %d\n", errno);
 /* Remove this -- we don't want to exit, because we have to look
 *  at each inode -- an error here means only that the iinc failed for
 *  the current volume
 *				exit(1);
 */
-			} else
-			    printf("inode %d restored for volume %d\n", tde->d_ino, volid);
-		}
+	    } else
+		printf("inode %d restored for volume %d\n", tde->d_ino,
+		       volid);
 	}
-	exit(0);
+    }
+    exit(0);
 }

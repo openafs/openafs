@@ -13,7 +13,15 @@ i386_umlinux22
 i386_umlinux24
 include
 lib
+parisc_linux24
 sgi_65
 sun4x_56
 sun4x_57
 autom4te.cache
+ID
+TAGS
+dest
+obj
+NTLang.bat
+NTMakefile
+golast.bat

@@ -94,7 +94,12 @@ proc GetCacheConfig(
   OUT afs_uint32 *serverVersion,
   OUT afs_uint32 *configCount,
   OUT cacheConfig *config
-) = 218;
+) = 218;  
+
+proc GetCE64(
+  IN  afs_int32 index,
+  OUT AFSDBCacheEntry64 *ce
+) = 65536;
 
 proc GetCellByNum(
   IN  afs_int32 cellNumber,
@@ -102,3 +107,7 @@ proc GetCellByNum(
   OUT serverList *cellHosts
 ) = 65537;
 
+proc TellMeAboutYourself(
+  OUT struct interfaceAddr *addr,
+  OUT Capabilities *capabilities
+) = 65538;

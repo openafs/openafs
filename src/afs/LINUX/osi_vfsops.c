@@ -13,26 +13,30 @@
  * super_block operations should return negated errno to Linux.
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vfsops.c,v 1.1.1.14 2003/07/30 17:08:10 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vfsops.c,v 1.29.2.3 2005/03/11 04:37:18 shadow Exp $");
 
-#include "../afs/sysincludes.h"
-#include "../afs/afsincludes.h"
-#include "../afs/afs_stats.h"
-#include "../h/locks.h"
-#if defined(AFS_LINUX24_ENV)
-#include "../h/smp_lock.h"
+#define __NO_VERSION__		/* don't define kernel_version in module.h */
+#include <linux/module.h> /* early to avoid printf->printk mapping */
+#include "afs/sysincludes.h"
+#include "afsincludes.h"
+#include "afs/afs_stats.h"
+#if !defined(AFS_LINUX26_ENV)
+#include "h/locks.h"
 #endif
-
-#define __NO_VERSION__ /* don't define kernel_verion in module.h */
-#include <linux/module.h>
+#if defined(AFS_LINUX24_ENV)
+#include "h/smp_lock.h"
+#endif
 
 
 struct vcache *afs_globalVp = 0;
 struct vfs *afs_globalVFS = 0;
-struct nameidata afs_cacheNd;
-int afs_was_mounted = 0; /* Used to force reload if mount/unmount/mount */
+#if defined(AFS_LINUX24_ENV)
+struct vfsmount *afs_cacheMnt;
+#endif
+int afs_was_mounted = 0;	/* Used to force reload if mount/unmount/mount */
 
 extern struct super_operations afs_sops;
 extern afs_rwlock_t afs_xvcache;
@@ -44,9 +48,9 @@ extern struct dentry_operations afs_dentry_operations;
 static void iattr2vattr(struct vattr *vattrp, struct iattr *iattrp);
 static void update_inode_cache(struct inode *ip, struct vattr *vp);
 static int afs_root(struct super_block *afsp);
-struct super_block *afs_read_super(struct super_block *sb, void *data,
-				   int silent);
-void put_inode_on_dummy_list(struct inode *ip);
+struct super_block *afs_read_super(struct super_block *sb, void *data, int silent);
+int afs_fill_super(struct super_block *sb, void *data, int silent);
+static struct super_block *afs_get_sb(struct file_system_type *fs_type, int flags, const char *dev_name, void *data);
 
 /* afs_file_system
  * VFS entry for Linux - installed in init_module
@@ -55,15 +59,28 @@ void put_inode_on_dummy_list(struct inode *ip);
  * 2) Mount call comes to us via do_mount -> read_super -> afs_read_super.
  *    We are expected to setup the super_block. See afs_read_super.
  */
-#if defined(AFS_LINUX24_ENV)
-DECLARE_FSTYPE(afs_file_system, "afs", afs_read_super, 0);
+#if defined(AFS_LINUX26_ENV)
+struct backing_dev_info afs_backing_dev_info = {
+	.ra_pages	= (VM_MAX_READAHEAD * 1024) / PAGE_CACHE_SIZE,
+	.state		= 0,
+};
+
+struct file_system_type afs_fs_type = {
+    .owner = THIS_MODULE,
+    .name = "afs",
+    .get_sb = afs_get_sb,
+    .kill_sb = kill_anon_super,
+    .fs_flags = FS_BINARY_MOUNTDATA,
+};
+#elif defined(AFS_LINUX24_ENV)
+DECLARE_FSTYPE(afs_fs_type, "afs", afs_read_super, 0);
 #else
-struct file_system_type afs_file_system = {
-    "afs",	/* name - used by mount operation. */
-    0,		/* requires_dev - no for network filesystems. mount() will 
-		 * pass us an "unnamed" device. */
-    afs_read_super, /* wrapper to afs_mount */
-    NULL	/* pointer to next file_system_type once registered. */
+struct file_system_type afs_fs_type = {
+    "afs",			/* name - used by mount operation. */
+    0,				/* requires_dev - no for network filesystems. mount() will 
+				 * pass us an "unnamed" device. */
+    afs_read_super,		/* wrapper to afs_mount */
+    NULL			/* pointer to next file_system_type once registered. */
 };
 #endif
 
@@ -71,16 +88,32 @@ struct file_system_type afs_file_system = {
  * read the "super block" for AFS - roughly eguivalent to struct vfs.
  * dev, covered, s_rd_only, s_dirt, and s_type will be set by read_super.
  */
-struct super_block *afs_read_super(struct super_block *sb, void *data,
-				   int silent)
+#if defined(AFS_LINUX26_ENV)
+static struct super_block *
+afs_get_sb(struct file_system_type *fs_type, int flags, const char *dev_name, void *data)
+{
+    return get_sb_nodev(fs_type, flags, data, afs_fill_super);
+}
+
+int
+afs_fill_super(struct super_block *sb, void *data, int silent)
+#else
+struct super_block *
+afs_read_super(struct super_block *sb, void *data, int silent)
+#endif
 {
     int code = 0;
 
     AFS_GLOCK();
     if (afs_was_mounted) {
-	printf("You must reload the AFS kernel extensions before remounting AFS.\n");
+	printf
+	    ("You must reload the AFS kernel extensions before remounting AFS.\n");
 	AFS_GUNLOCK();
+#if defined(AFS_LINUX26_ENV)
+	return -EINVAL;
+#else
 	return NULL;
+#endif
     }
     afs_was_mounted = 1;
 
@@ -88,7 +121,11 @@ struct super_block *afs_read_super(struct super_block *sb, void *data,
 #if !defined(AFS_LINUX24_ENV)
     lock_super(sb);
 #endif
+#if defined(AFS_LINUX26_ENV)
+   __module_get(THIS_MODULE);
+#else
     MOD_INC_USE_COUNT;
+#endif
 
     afs_globalVFS = sb;
     sb->s_blocksize = 1024;
@@ -99,41 +136,55 @@ struct super_block *afs_read_super(struct super_block *sb, void *data,
     sb->s_maxbytes = MAX_NON_LFS;
 #endif
     code = afs_root(sb);
-    if (code)
-	MOD_DEC_USE_COUNT;
+    if (code) {
+	afs_globalVFS = NULL;
+#if defined(AFS_LINUX26_ENV)
+        module_put(THIS_MODULE);
+#else
+        MOD_DEC_USE_COUNT;
+#endif
+    }
 
 #if !defined(AFS_LINUX24_ENV)
     unlock_super(sb);
 #endif
 
     AFS_GUNLOCK();
+#if defined(AFS_LINUX26_ENV)
+    return code ? -EINVAL : 0;
+#else
     return code ? NULL : sb;
+#endif
 }
 
 
 /* afs_root - stat the root of the file system. AFS global held on entry. */
-static int afs_root(struct super_block *afsp)
+static int
+afs_root(struct super_block *afsp)
 {
     register afs_int32 code = 0;
     struct vrequest treq;
-    register struct vcache *tvp=0;
+    register struct vcache *tvp = 0;
 
     AFS_STATCNT(afs_root);
     if (afs_globalVp && (afs_globalVp->states & CStatd)) {
 	tvp = afs_globalVp;
     } else {
 	cred_t *credp = crref();
-	afs_globalVp = 0;
-	if (!(code = afs_InitReq(&treq, credp)) &&
-	    !(code = afs_CheckInit())) {
-	    tvp = afs_GetVCache(&afs_rootFid, &treq, (afs_int32 *)0,
-				(struct vcache*)0, WRITE_LOCK);
+
+	if (afs_globalVp) {
+	    afs_PutVCache(afs_globalVp);
+	    afs_globalVp = NULL;
+	}
+
+	if (!(code = afs_InitReq(&treq, credp)) && !(code = afs_CheckInit())) {
+	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	    if (tvp) {
 		extern struct inode_operations afs_dir_iops;
 #if defined(AFS_LINUX24_ENV)
 		extern struct file_operations afs_dir_fops;
 #endif
-		
+
 		/* "/afs" is a directory, reset inode ops accordingly. */
 		AFSTOV(tvp)->v_op = &afs_dir_iops;
 #if defined(AFS_LINUX24_ENV)
@@ -161,24 +212,12 @@ static int afs_root(struct super_block *afsp)
 
 /* super_operations */
 
-/* afs_read_inode
- * called via iget to read in the inode. The passed in inode has i_ino, i_dev
- * and i_sb setup on input. Linux file systems use this to get super block
- * inode information, so we don't really care what happens here.
- * For Linux 2.2, we'll be called if we participate in the inode pool.
- */
-void afs_read_inode(struct inode *ip)
-{
-    /* I don't think we ever get called with this. So print if we do. */
-    printf("afs_read_inode: Called for inode %d\n", ip->i_ino);
-}
-
-
 /* afs_notify_change
  * Linux version of setattr call. What to change is in the iattr struct.
  * We need to set bits in both the Linux inode as well as the vcache.
  */
-int afs_notify_change(struct dentry *dp, struct iattr* iattrp)
+int
+afs_notify_change(struct dentry *dp, struct iattr *iattrp)
 {
     struct vattr vattr;
     int code;
@@ -186,8 +225,11 @@ int afs_notify_change(struct dentry *dp, struct iattr* iattrp)
     struct inode *ip = dp->d_inode;
 
     AFS_GLOCK();
+#if defined(AFS_LINUX26_ENV)
+    lock_kernel();
+#endif
     VATTR_NULL(&vattr);
-    iattr2vattr(&vattr, iattrp); /* Convert for AFS vnodeops call. */
+    iattr2vattr(&vattr, iattrp);	/* Convert for AFS vnodeops call. */
     update_inode_cache(ip, &vattr);
     code = afs_setattr(ITOAFS(ip), &vattr, credp);
     afs_CopyOutAttrs(ITOAFS(ip), &vattr);
@@ -195,6 +237,9 @@ int afs_notify_change(struct dentry *dp, struct iattr* iattrp)
      * least we've got the newest version of what was supposed to be set.
      */
 
+#if defined(AFS_LINUX26_ENV)
+    unlock_kernel();
+#endif
     AFS_GUNLOCK();
     crfree(credp);
     return -code;
@@ -220,17 +265,33 @@ static LIST_HEAD(dummy_inode_list);
  * has synced some pages of a file to disk.
  */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-void afs_write_inode(struct inode *ip, int unused) 
+#ifdef WRITE_INODE_NOT_VOID
+static int
 #else
-void afs_write_inode(struct inode *ip) 
+static void
+#endif
+afs_write_inode(struct inode *ip, int unused)
+#else
+static void
+afs_write_inode(struct inode *ip)
 #endif
 {
-    /* and put it back on our dummy list. */
     list_del(&ip->i_list);
-    list_add(&ip->i_list, &dummy_inode_list);
+    /* and put it back on our dummy list. */
+    put_inode_on_dummy_list(ip);
 
     /* for now we don't actually update the metadata during msync. This
      * is just to keep linux happy.  */
+#ifdef WRITE_INODE_NOT_VOID
+    return 0;
+#endif
+}
+
+
+static void
+afs_destroy_inode(struct inode *ip)
+{
+    ip->i_state = 0;
 }
 
 
@@ -241,9 +302,12 @@ void afs_write_inode(struct inode *ip)
  * That will trigger the call to delete routine.
  */
 
-void afs_delete_inode(struct inode *ip)
+static void
+afs_delete_inode(struct inode *ip)
 {
-    struct vcache *vc = ITOAFS(ip);
+#ifdef AFS_LINUX26_ENV
+    put_inode_on_dummy_list(ip);
+#endif
 
     AFS_GLOCK();
     osi_clear_inode(ip);
@@ -253,125 +317,113 @@ void afs_delete_inode(struct inode *ip)
 
 /* afs_put_super
  * Called from unmount to release super_block. */
-void afs_put_super(struct super_block *sbp)
+static void
+afs_put_super(struct super_block *sbp)
 {
-    extern int afs_afs_cold_shutdown;
     int code = 0;
-    int fv_slept;
 
     AFS_GLOCK();
     AFS_STATCNT(afs_unmount);
 
+#if !defined(AFS_LINUX26_ENV)
     if (!suser()) {
 	AFS_GUNLOCK();
 	return;
     }
+#endif
 
     afs_globalVFS = 0;
     afs_globalVp = 0;
     afs_shutdown();
-    path_release(&afs_cacheNd);
+#if defined(AFS_LINUX24_ENV)
+    mntput(afs_cacheMnt);
+#endif
 
     osi_linux_verify_alloced_memory();
- done:
     AFS_GUNLOCK();
 
     if (!code) {
 	sbp->s_dev = 0;
+#if defined(AFS_LINUX26_ENV)
+	module_put(THIS_MODULE);
+#else
 	MOD_DEC_USE_COUNT;
+#endif
     }
 }
 
-#ifdef NOTUSED
-/* afs_write_super
- * Not required since we don't write out a super block. */
-void afs_write_super(struct super_block *sbp)
-{
-}
-
-/* afs_remount_fs
- * Used to remount filesystems with different flags. Not relevant for AFS.
- */
-int afs_remount_fs(struct super_block *sbp, int *, char *)
-{
-    return -EINVAL;
-}
-#endif
 
 /* afs_statfs
  * statp is in user space, so we need to cobble together a statfs, then
  * copy it.
  */
-#if defined(AFS_LINUX24_ENV)
-int afs_statfs(struct super_block *sbp, struct statfs *statp)
+#if defined(AFS_LINUX26_ENV)
+int
+afs_statfs(struct super_block *sbp, struct kstatfs *statp)
+#elif defined(AFS_LINUX24_ENV)
+int
+afs_statfs(struct super_block *sbp, struct statfs *statp)
 #else
-int afs_statfs(struct super_block *sbp, struct statfs *statp, int size)
+int
+afs_statfs(struct super_block *sbp, struct statfs *__statp, int size)
 #endif
 {
-    struct statfs stat;
+#if !defined(AFS_LINUX24_ENV)
+    struct statfs stat, *statp;
+
+    if (size < sizeof(struct statfs))
+	return;
+
+    memset(&stat, 0, size);
+    statp = &stat;
+#else
+    memset(statp, 0, sizeof(*statp));
+#endif
 
     AFS_STATCNT(afs_statfs);
 
-#if !defined(AFS_LINUX24_ENV)
-    if (size < sizeof(struct statfs))
-	return;
-	
-    memset(&stat, 0, size);
-#endif
-    stat.f_type = 0; /* Can we get a real type sometime? */
-    stat.f_bsize = sbp->s_blocksize;
-    stat.f_blocks =  stat.f_bfree =  stat.f_bavail =  stat.f_files =
-	stat.f_ffree = 9000000;
-    stat.f_fsid.val[0] = AFS_VFSMAGIC;
-    stat.f_fsid.val[1] = AFS_VFSFSID;
-    stat.f_namelen = 256;
+    statp->f_type = 0;		/* Can we get a real type sometime? */
+    statp->f_bsize = sbp->s_blocksize;
+    statp->f_blocks = statp->f_bfree = statp->f_bavail = statp->f_files =
+	statp->f_ffree = 9000000;
+    statp->f_fsid.val[0] = AFS_VFSMAGIC;
+    statp->f_fsid.val[1] = AFS_VFSFSID;
+    statp->f_namelen = 256;
 
-#if defined(AFS_LINUX24_ENV)
-    *statp = stat;
-#else
-    memcpy_tofs(statp, &stat, size);
+#if !defined(AFS_LINUX24_ENV)
+    memcpy_tofs(__statp, &stat, size);
 #endif
     return 0;
 }
 
-
-void 
+void
 afs_umount_begin(struct super_block *sbp)
 {
-    afs_shuttingdown=1;
+    afs_shuttingdown = 1;
 }
 
-#if defined(AFS_LINUX24_ENV)
 struct super_operations afs_sops = {
-    read_inode:        afs_read_inode,
-    write_inode:       afs_write_inode,
-    delete_inode:      afs_delete_inode,
-    put_super:         afs_put_super,
-    statfs:            afs_statfs,
-    umount_begin:      afs_umount_begin
-};
-#else
-struct super_operations afs_sops = {
-    afs_read_inode,
-    afs_write_inode,		/* afs_write_inode - see doc above. */
-    NULL,		/* afs_put_inode */
-    afs_delete_inode,
-    afs_notify_change,
-    afs_put_super,
-    NULL,		/* afs_write_super - see doc above */
-    afs_statfs,
-    NULL,		/* afs_remount_fs - see doc above */
-    NULL,		/* afs_clear_inode */
-    afs_umount_begin
-};
+#if defined(AFS_LINUX26_ENV)
+  .drop_inode =		generic_delete_inode,
+  .destroy_inode =	afs_destroy_inode,
 #endif
+  .delete_inode =	afs_delete_inode,
+  .write_inode =	afs_write_inode,
+  .put_super =		afs_put_super,
+  .statfs =		afs_statfs,
+  .umount_begin =	afs_umount_begin
+#if !defined(AFS_LINUX24_ENV)
+  .notify_change =	afs_notify_change,
+#endif
+};
 
 /************** Support routines ************************/
 
 /* vattr_setattr
  * Set iattr data into vattr. Assume vattr cleared before call.
  */
-static void iattr2vattr(struct vattr *vattrp, struct iattr *iattrp)
+static void
+iattr2vattr(struct vattr *vattrp, struct iattr *iattrp)
 {
     vattrp->va_mask = iattrp->ia_valid;
     if (iattrp->ia_valid & ATTR_MODE)
@@ -383,15 +435,27 @@ static void iattr2vattr(struct vattr *vattrp, struct iattr *iattrp)
     if (iattrp->ia_valid & ATTR_SIZE)
 	vattrp->va_size = iattrp->ia_size;
     if (iattrp->ia_valid & ATTR_ATIME) {
+#if defined(AFS_LINUX26_ENV)
+	vattrp->va_atime.tv_sec = iattrp->ia_atime.tv_sec;
+#else
 	vattrp->va_atime.tv_sec = iattrp->ia_atime;
+#endif
 	vattrp->va_atime.tv_usec = 0;
     }
     if (iattrp->ia_valid & ATTR_MTIME) {
+#if defined(AFS_LINUX26_ENV)
+	vattrp->va_mtime.tv_sec = iattrp->ia_mtime.tv_sec;
+#else
 	vattrp->va_mtime.tv_sec = iattrp->ia_mtime;
+#endif
 	vattrp->va_mtime.tv_usec = 0;
     }
     if (iattrp->ia_valid & ATTR_CTIME) {
+#if defined(AFS_LINUX26_ENV)
+	vattrp->va_ctime.tv_sec = iattrp->ia_ctime.tv_sec;
+#else
 	vattrp->va_ctime.tv_sec = iattrp->ia_ctime;
+#endif
 	vattrp->va_ctime.tv_usec = 0;
     }
 }
@@ -400,7 +464,8 @@ static void iattr2vattr(struct vattr *vattrp, struct iattr *iattrp)
  * Update inode with info from vattr struct. Use va_mask to determine what
  * to update.
  */
-static void update_inode_cache(struct inode *ip, struct vattr *vp)
+static void
+update_inode_cache(struct inode *ip, struct vattr *vp)
 {
     if (vp->va_mask & ATTR_MODE)
 	ip->i_mode = vp->va_mode;
@@ -411,17 +476,30 @@ static void update_inode_cache(struct inode *ip, struct vattr *vp)
     if (vp->va_mask & ATTR_SIZE)
 	ip->i_size = vp->va_size;
     if (vp->va_mask & ATTR_ATIME)
+#if defined(AFS_LINUX26_ENV)
+	ip->i_atime.tv_sec = vp->va_atime.tv_sec;
+#else
 	ip->i_atime = vp->va_atime.tv_sec;
+#endif
     if (vp->va_mask & ATTR_MTIME)
+#if defined(AFS_LINUX26_ENV)
+	ip->i_mtime.tv_sec = vp->va_mtime.tv_sec;
+#else
 	ip->i_mtime = vp->va_mtime.tv_sec;
+#endif
     if (vp->va_mask & ATTR_CTIME)
+#if defined(AFS_LINUX26_ENV)
+	ip->i_ctime.tv_sec = vp->va_ctime.tv_sec;
+#else
 	ip->i_ctime = vp->va_ctime.tv_sec;
+#endif
 }
 
 /* vattr2inode
  * Rewrite the inode cache from the attr. Assumes all vattr fields are valid.
  */
-void vattr2inode(struct inode *ip, struct vattr *vp)
+void
+vattr2inode(struct inode *ip, struct vattr *vp)
 {
     ip->i_ino = vp->va_nodeid;
     ip->i_nlink = vp->va_nlink;
@@ -432,44 +510,45 @@ void vattr2inode(struct inode *ip, struct vattr *vp)
     ip->i_uid = vp->va_uid;
     ip->i_gid = vp->va_gid;
     ip->i_size = vp->va_size;
+#if defined(AFS_LINUX26_ENV)
+    ip->i_atime.tv_sec = vp->va_atime.tv_sec;
+    ip->i_mtime.tv_sec = vp->va_mtime.tv_sec;
+    ip->i_ctime.tv_sec = vp->va_ctime.tv_sec;
+#else
     ip->i_atime = vp->va_atime.tv_sec;
     ip->i_mtime = vp->va_mtime.tv_sec;
     ip->i_ctime = vp->va_ctime.tv_sec;
-
-    /* we should put our inodes on a dummy inode list to keep linux happy.*/
-    if (!ip->i_list.prev && !ip->i_list.next) { 
-	/* this might be bad as we are reaching under the covers of the 
-	 * list structure but we want to avoid putting the inode 
-	 * on the list more than once.	 */
-	put_inode_on_dummy_list(ip);
-    }
+#endif
 }
 
 /* Put this afs inode on our own dummy list. Linux expects to see inodes
  * nicely strung up in lists. Linux inode syncing code chokes on our inodes if
  * they're not on any lists.
  */
-void put_inode_on_dummy_list(struct inode *ip)
+void
+put_inode_on_dummy_list(struct inode *ip)
 {
     /* Initialize list. See explanation above. */
     list_add(&ip->i_list, &dummy_inode_list);
 }
 
 /* And yet another routine to update the inode cache - called from ProcessFS */
-void vcache2inode(struct vcache *avc)
+void
+vcache2inode(struct vcache *avc)
 {
     struct vattr vattr;
 
     VATTR_NULL(&vattr);
-    afs_CopyOutAttrs(avc, &vattr); /* calls vattr2inode */
+    afs_CopyOutAttrs(avc, &vattr);	/* calls vattr2inode */
 }
 
 /* Yet another one for fakestat'ed mountpoints */
-void vcache2fakeinode(struct vcache *rootvp, struct vcache *mpvp)
+void
+vcache2fakeinode(struct vcache *rootvp, struct vcache *mpvp)
 {
     struct vattr vattr;
 
     VATTR_NULL(&vattr);
     afs_CopyOutAttrs(rootvp, &vattr);
-    vattr2inode(AFSTOV(mpvp), &vattr);
+    vattr2inode(AFSTOI(mpvp), &vattr);
 }

@@ -10,6 +10,7 @@
 #include <windows.h>
 #include <cpl.h>
 #include <WINNT/TaLocale.h>
+#include <WINNT/afsreg.h>
 #include "cpl_interface.h"
 #include "resource.h"
 
@@ -50,12 +51,13 @@ static BOOL IsClientInstalled (void)
    if (!fChecked)
       {
       HKEY hk;
-      if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Software\\TransarcCorporation\\AFS Client\\CurrentVersion"), &hk) == 0)
+      if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT(AFSREG_CLT_SW_VERSION_SUBKEY), &hk) == 0)
          {
          TCHAR szPath[ MAX_PATH ];
          DWORD dwSize = sizeof(szPath);
          DWORD dwType = REG_SZ;
-         if (RegQueryValueEx (hk, TEXT("PathName"), NULL, &dwType, (PBYTE)szPath, &dwSize) == 0)
+         if (RegQueryValueEx (hk, TEXT(AFSREG_CLT_SW_VERSION_DIR_VALUE), 
+                              NULL, &dwType, (PBYTE)szPath, &dwSize) == 0)
             fIsInstalled = TRUE;
          RegCloseKey (hk);
          }
@@ -69,6 +71,7 @@ static BOOL IsClientInstalled (void)
 extern "C" LONG APIENTRY CPlApplet(HWND hwndCPl, UINT uMsg, LONG lParam1, LONG lParam2)
 {
     LPNEWCPLINFO lpNewCPlInfo;
+    LPCPLINFO lpCPlInfo;
 
     switch (uMsg) {
         case CPL_INIT:      /* first message, sent once  */
@@ -79,6 +82,14 @@ extern "C" LONG APIENTRY CPlApplet(HWND hwndCPl, UINT uMsg, LONG lParam1, LONG l
         case CPL_GETCOUNT:  /* second message, sent once */
             return 1;
             break;
+
+        case CPL_INQUIRE:  /* in case we receive this we should indicate that we like NEWINQUIRE better. */
+			lpCPlInfo = (CPLINFO *) lParam2;
+			lpCPlInfo->idIcon = ((IsClientInstalled() || !IsWindowsNT())? IDI_AFSD : IDI_CCENTER);
+			lpCPlInfo->idName = CPL_DYNAMIC_RES;
+			lpCPlInfo->idInfo = CPL_DYNAMIC_RES;
+			lpCPlInfo->lData = 0;
+			break;
 
         case CPL_NEWINQUIRE: /* third message, sent once per app */
             lpNewCPlInfo = (LPNEWCPLINFO) lParam2;

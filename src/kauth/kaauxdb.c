@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kaauxdb.c,v 1.1.1.6 2001/10/14 18:05:05 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/kauth/kaauxdb.c,v 1.9 2003/11/23 04:53:35 jaltman Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <io.h>
@@ -43,18 +44,20 @@ static int fd = 0;
  * counters, and the times at which the last failures occurred.
  * Nothing fancy.
  */
-int kaux_opendb(char *path)
+int
+kaux_opendb(char *path)
 {
     char dbpathname[1024];
     static char dbname[] = "auxdb";
 
-    if (strlen(path) < 1024 - strlen(dbname)) {  /* bullet-proofing */
+    if (strlen(path) < 1024 - strlen(dbname)) {	/* bullet-proofing */
 
 	strcpy(dbpathname, path);
 	strcat(dbpathname, dbname);
 
-	fd = open (dbpathname, O_CREAT | O_RDWR, 0600);
-	if (fd <0) perror(dbpathname);
+	fd = open(dbpathname, O_CREAT | O_RDWR, 0600);
+	if (fd < 0)
+	    perror(dbpathname);
     }
 
     return fd;
@@ -62,10 +65,12 @@ int kaux_opendb(char *path)
 
 /* close that auxiliary database.  Unneccessary, but here for symmetry.
  */
-void kaux_closedb(void)
+void
+kaux_closedb(void)
 {
 
-    if (fd > 0) close(fd);
+    if (fd > 0)
+	close(fd);
     return;
 }
 
@@ -77,51 +82,56 @@ void kaux_closedb(void)
  * makes the main code a little simpler, though it obscures a small
  * detail.
  */
-int kaux_read(
-  afs_int32 to,  /* this is the offset of the user id in the main database. 
-             * we do the conversion here - probably a bad idea. */
-  unsigned int *nfailures,
-  afs_uint32 *lasttime)
+int
+kaux_read(afs_int32 to,		/* this is the offset of the user id in the main database. 
+				 * we do the conversion here - probably a bad idea. */
+	  unsigned int *nfailures, afs_uint32 * lasttime)
 {
     unsigned int offset;
 
     *nfailures = *lasttime = 0;
 
-    if (fd <= 0 || !to) return 0;
+    if (fd <= 0 || !to)
+	return 0;
 
-    offset = ((to - sizeof(struct kaheader))/ENTRYSIZE)*(sizeof(int)+sizeof(afs_int32));
+    offset =
+	((to - sizeof(struct kaheader)) / ENTRYSIZE) * (sizeof(int) +
+							sizeof(afs_int32));
     /* can't get there from here */
-    if (offset > lseek(fd, offset, SEEK_SET)) return 0;
+    if (offset > lseek(fd, offset, SEEK_SET))
+	return 0;
 
     /* we should just end up with 0 for nfailures and lasttime if EOF is 
-    * encountered here, I hope */
-    if ((0 > read(fd, nfailures, sizeof(int))) || 
-    (0 > read(fd, lasttime, sizeof(afs_int32)))) {
+     * encountered here, I hope */
+    if ((0 > read(fd, nfailures, sizeof(int)))
+	|| (0 > read(fd, lasttime, sizeof(afs_int32)))) {
 	*nfailures = *lasttime = 0;
 	perror("kaux_read()");
     }
 
     return 0;
-}          
+}
 
-int kaux_write(
-  afs_int32 to,
-  unsigned int nfailures,
-  afs_uint32 lasttime)
+int
+kaux_write(afs_int32 to, unsigned int nfailures, afs_uint32 lasttime)
 {
     unsigned int offset;
 
-    if (fd <= 0 || !to) return 0;
+    if (fd <= 0 || !to)
+	return 0;
 
-    offset = ((to - sizeof(struct kaheader))/ENTRYSIZE)*(sizeof(int)+sizeof(afs_int32));
+    offset =
+	((to - sizeof(struct kaheader)) / ENTRYSIZE) * (sizeof(int) +
+							sizeof(afs_int32));
     /* can't get there from here */
-    if (offset > lseek(fd, offset, SEEK_SET)) return 0;
+    if (offset > lseek(fd, offset, SEEK_SET))
+	return 0;
 
-    if ((write (fd, &nfailures, sizeof(int)) != sizeof(int)) || 
-    (write (fd, &lasttime, sizeof(afs_int32)) != sizeof(afs_int32))) 
+    if ((write(fd, &nfailures, sizeof(int)) != sizeof(int))
+	|| (write(fd, &lasttime, sizeof(afs_int32)) != sizeof(afs_int32)))
 	perror("kaux_write()");
-
-}          
+    return 0;
+}
 
 
 /* adjust this user's records to reflect a failure.
@@ -134,25 +144,24 @@ int kaux_write(
  * forgiven.
  * locktime == 0 signifies that the ID should be locked indefinitely
  */
-void kaux_inc(
-    afs_int32 to,
-    afs_uint32 locktime)
+void
+kaux_inc(afs_int32 to, afs_uint32 locktime)
 {
     int nfailures;
-    afs_uint32 lasttime, now;          
+    afs_uint32 lasttime, now;
 
     now = time(0);
 
     kaux_read(to, &nfailures, &lasttime);
 
-    if (locktime && lasttime + locktime < now) 
+    if (locktime && lasttime + locktime < now)
 	nfailures = 1;
     else
 	nfailures++;
 
     kaux_write(to, nfailures, now);
 
-}          
+}
 
 /* 
  * report on whether a particular id is locked or not...
@@ -164,10 +173,8 @@ void kaux_inc(
  * to users/admins.
  * RETURNS: time when the ID will be unlocked, or 0 if it's not locked. 
  */
-int kaux_islocked(
-  afs_int32 to,
-  u_int   attempts,
-  u_int   locktime)
+int
+kaux_islocked(afs_int32 to, u_int attempts, u_int locktime)
 {
     extern int ubeacon_Debug(), ubeacon_AmSyncSite();
     unsigned int nfailures, myshare;
@@ -175,9 +182,10 @@ int kaux_islocked(
     struct ubik_debug beaconinfo;
 
     /* if attempts is 0, that means there's no limit, so the id
-    * can't ever be locked...
-    */
-    if (!attempts) return 0;  
+     * can't ever be locked...
+     */
+    if (!attempts)
+	return 0;
 
     kaux_read(to, &nfailures, &lasttime);
 
@@ -186,18 +194,16 @@ int kaux_islocked(
 
     myshare = attempts / beaconinfo.nServers;
     if (ubeacon_AmSyncSite())
-     myshare += attempts % beaconinfo.nServers;
+	myshare += attempts % beaconinfo.nServers;
 
     if (!myshare) {
 	return -1;
-    }
-    else if ((nfailures <  myshare) || (locktime && lasttime + locktime < time(0))) {
+    } else if ((nfailures < myshare)
+	       || (locktime && lasttime + locktime < time(0))) {
 	return 0;
-    }
-    else if (locktime == 0) { /* infinite */
+    } else if (locktime == 0) {	/* infinite */
 	return -1;
-    }
-    else {
+    } else {
 	return (lasttime + locktime);
     }
 }

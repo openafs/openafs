@@ -29,7 +29,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_stdio.c,v 1.1.1.3 2001/07/14 22:23:38 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rx/xdr_stdio.c,v 1.4 2003/07/15 23:16:13 shadow Exp $");
 
 #ifndef	NeXT
 
@@ -46,27 +47,27 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_stdio.c,v 1.1.1.3 2001/07/14 22:
 #include <stdio.h>
 #include "xdr.h"
 
-static bool_t	xdrstdio_getint32();
-static bool_t	xdrstdio_putint32();
-static bool_t	xdrstdio_getbytes();
-static bool_t	xdrstdio_putbytes();
-static u_int	xdrstdio_getpos();
-static bool_t	xdrstdio_setpos();
-static afs_int32 *	xdrstdio_inline();
-static void	xdrstdio_destroy();
+static bool_t xdrstdio_getint32();
+static bool_t xdrstdio_putint32();
+static bool_t xdrstdio_getbytes();
+static bool_t xdrstdio_putbytes();
+static u_int xdrstdio_getpos();
+static bool_t xdrstdio_setpos();
+static afs_int32 *xdrstdio_inline();
+static void xdrstdio_destroy();
 
 /*
  * Ops vector for stdio type XDR
  */
-static struct xdr_ops	xdrstdio_ops = {
-	xdrstdio_getint32,	/* deserialize an afs_int32 */
-	xdrstdio_putint32,	/* serialize an afs_int32 */
-	xdrstdio_getbytes,	/* deserialize counted bytes */
-	xdrstdio_putbytes,	/* serialize counted bytes */
-	xdrstdio_getpos,	/* get offset in the stream */
-	xdrstdio_setpos,	/* set offset in the stream */
-	xdrstdio_inline,	/* prime stream for inline macros */
-	xdrstdio_destroy	/* destroy stream */
+static struct xdr_ops xdrstdio_ops = {
+    xdrstdio_getint32,		/* deserialize an afs_int32 */
+    xdrstdio_putint32,		/* serialize an afs_int32 */
+    xdrstdio_getbytes,		/* deserialize counted bytes */
+    xdrstdio_putbytes,		/* serialize counted bytes */
+    xdrstdio_getpos,		/* get offset in the stream */
+    xdrstdio_setpos,		/* set offset in the stream */
+    xdrstdio_inline,		/* prime stream for inline macros */
+    xdrstdio_destroy		/* destroy stream */
 };
 
 /*
@@ -76,16 +77,16 @@ static struct xdr_ops	xdrstdio_ops = {
  */
 void
 xdrstdio_create(xdrs, file, op)
-	register XDR *xdrs;
-	FILE *file;
-	enum xdr_op op;
+     register XDR *xdrs;
+     FILE *file;
+     enum xdr_op op;
 {
 
-	xdrs->x_op = op;
-	xdrs->x_ops = &xdrstdio_ops;
-	xdrs->x_private = (caddr_t)file;
-	xdrs->x_handy = 0;
-	xdrs->x_base = 0;
+    xdrs->x_op = op;
+    xdrs->x_ops = &xdrstdio_ops;
+    xdrs->x_private = (caddr_t) file;
+    xdrs->x_handy = 0;
+    xdrs->x_base = 0;
 }
 
 /*
@@ -94,98 +95,102 @@ xdrstdio_create(xdrs, file, op)
  */
 static void
 xdrstdio_destroy(xdrs)
-	register XDR *xdrs;
+     register XDR *xdrs;
 {
-	(void)fflush((FILE *)xdrs->x_private);
-	/* xx should we close the file ?? */
+    (void)fflush((FILE *) xdrs->x_private);
+    /* xx should we close the file ?? */
 };
 
 static bool_t
 xdrstdio_getint32(xdrs, lp)
-	XDR *xdrs;
-	register afs_int32 *lp;
+     XDR *xdrs;
+     register afs_int32 *lp;
 {
 
-	if (fread((caddr_t)lp, sizeof(afs_int32), 1, (FILE *)xdrs->x_private) != 1)
-		return (FALSE);
+    if (fread((caddr_t) lp, sizeof(afs_int32), 1, (FILE *) xdrs->x_private) !=
+	1)
+	return (FALSE);
 #ifndef mc68000
-	*lp = ntohl(*lp);
+    *lp = ntohl(*lp);
 #endif
-	return (TRUE);
+    return (TRUE);
 }
 
 static bool_t
 xdrstdio_putint32(xdrs, lp)
-	XDR *xdrs;
-	afs_int32 *lp;
+     XDR *xdrs;
+     afs_int32 *lp;
 {
 
 #ifndef mc68000
-	afs_int32 mycopy = htonl(*lp);
-	lp = &mycopy;
+    afs_int32 mycopy = htonl(*lp);
+    lp = &mycopy;
 #endif
-	if (fwrite((caddr_t)lp, sizeof(afs_int32), 1, (FILE *)xdrs->x_private) != 1)
-		return (FALSE);
-	return (TRUE);
+    if (fwrite((caddr_t) lp, sizeof(afs_int32), 1, (FILE *) xdrs->x_private)
+	!= 1)
+	return (FALSE);
+    return (TRUE);
 }
 
 static bool_t
 xdrstdio_getbytes(xdrs, addr, len)
-	XDR *xdrs;
-	caddr_t addr;
-	u_int len;
+     XDR *xdrs;
+     caddr_t addr;
+     u_int len;
 {
 
-	if ((len != 0) && (fread(addr, (int)len, 1, (FILE *)xdrs->x_private) != 1))
-		return (FALSE);
-	return (TRUE);
+    if ((len != 0)
+	&& (fread(addr, (int)len, 1, (FILE *) xdrs->x_private) != 1))
+	return (FALSE);
+    return (TRUE);
 }
 
 static bool_t
 xdrstdio_putbytes(xdrs, addr, len)
-	XDR *xdrs;
-	caddr_t addr;
-	u_int len;
+     XDR *xdrs;
+     caddr_t addr;
+     u_int len;
 {
 
-	if ((len != 0) && (fwrite(addr, (int)len, 1, (FILE *)xdrs->x_private) != 1))
-		return (FALSE);
-	return (TRUE);
+    if ((len != 0)
+	&& (fwrite(addr, (int)len, 1, (FILE *) xdrs->x_private) != 1))
+	return (FALSE);
+    return (TRUE);
 }
 
 static u_int
 xdrstdio_getpos(xdrs)
-	XDR *xdrs;
+     XDR *xdrs;
 {
 
-	return ((u_int) ftell((FILE *)xdrs->x_private));
+    return ((u_int) ftell((FILE *) xdrs->x_private));
 }
 
 static bool_t
-xdrstdio_setpos(xdrs, pos) 
-	XDR *xdrs;
-	u_int pos;
-{ 
+xdrstdio_setpos(xdrs, pos)
+     XDR *xdrs;
+     u_int pos;
+{
 
-	return ((fseek((FILE *)xdrs->x_private, (afs_int32)pos, 0) < 0) ?
-		FALSE : TRUE);
+    return ((fseek((FILE *) xdrs->x_private, (afs_int32) pos, 0) <
+	     0) ? FALSE : TRUE);
 }
 
 static afs_int32 *
 xdrstdio_inline(xdrs, len)
-	XDR *xdrs;
-	u_int len;
+     XDR *xdrs;
+     u_int len;
 {
 
-	/*
-	 * Must do some work to implement this: must insure
-	 * enough data in the underlying stdio buffer,
-	 * that the buffer is aligned so that we can indirect through a
-	 * afs_int32 *, and stuff this pointer in xdrs->x_buf.  Doing
-	 * a fread or fwrite to a scratch buffer would defeat
-	 * most of the gains to be had here and require storage
-	 * management on this buffer, so we don't do this.
-	 */
-	return (NULL);
+    /*
+     * Must do some work to implement this: must insure
+     * enough data in the underlying stdio buffer,
+     * that the buffer is aligned so that we can indirect through a
+     * afs_int32 *, and stuff this pointer in xdrs->x_buf.  Doing
+     * a fread or fwrite to a scratch buffer would defeat
+     * most of the gains to be had here and require storage
+     * management on this buffer, so we don't do this.
+     */
+    return (NULL);
 }
 #endif /* NeXT */

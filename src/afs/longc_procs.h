@@ -35,12 +35,12 @@ struct afs_longcall_procs {
     int (*LC_strncpy) ();
     int (*LC_flock) ();
     int (*LC_setgroups) ();
-    struct ucred * (*LC_crcopy) ();
-    struct ucred * (*LC_crget) ();
+    struct ucred *(*LC_crcopy) ();
+    struct ucred *(*LC_crget) ();
     int (*LC_crhold) ();
     int (*LC_ip_stripoptions) ();
     int (*LC_in_cksum) ();
-    struct mbuf * (*LC_m_pullup) ();
+    struct mbuf *(*LC_m_pullup) ();
     int (*LC_resettodr) ();
     int (*LC_untimeout) ();
     int (*LC_timeout) ();
@@ -52,13 +52,13 @@ struct afs_longcall_procs {
     int (*LC_m_freem) ();
     int (*LC_soclose) ();
     int (*LC_sobind) ();
-    struct mbuf * (*LC_m_get) ();
+    struct mbuf *(*LC_m_get) ();
     int (*LC_socreate) ();
     int (*LC_soreserve) ();
 #if	defined(AFS_DECOSF_ENV)
     int (*LC_getf) ();
-#else	/* AFS_DECOSF_ENV */
-    struct file * (*LC_getf) ();
+#else				/* AFS_DECOSF_ENV */
+    struct file *(*LC_getf) ();
 #endif
     int (*LC_splx) ();
     int (*LC_microtime) ();
@@ -72,7 +72,7 @@ struct afs_longcall_procs {
     int (*LC_gfs_unlock) ();
     int (*LC_gfs_lock) ();
     int (*LC_gput) ();
-    struct inode * (*LC_ufs_galloc) ();
+    struct inode *(*LC_ufs_galloc) ();
     int (*LC_gno_close) ();
     int (*LC_km_alloc) ();
     int (*LC_km_free) ();
@@ -80,14 +80,14 @@ struct afs_longcall_procs {
     int (*LC_nuxi_l) ();
     int (*LC_nuxi_s) ();
 
-    struct inode * (*LC_gfs_gget) ();
+    struct inode *(*LC_gfs_gget) ();
     int (*LC_binval) ();
     int (*LC_splclock) ();
     int (*LC_xumount) ();
     int (*LC_bflush) ();
     int (*LC_blkclr) ();
     int (*LC_vmaccess) ();
-    struct gnode * (*LC_gfs_namei) ();
+    struct gnode *(*LC_gfs_namei) ();
     int (*LC_getpdev) ();
     int (*LC_check_mountp) ();
     int (*LC_access) ();
@@ -96,7 +96,7 @@ struct afs_longcall_procs {
     int (*LC_imin) ();
     int (*LC_setjmp) ();
 
-    struct gnode * (*LC_gget) ();
+    struct gnode *(*LC_gget) ();
     void (*LC_grele) ();
     void (*LC_gref) ();
     int (*LC_xdr_char) ();
@@ -107,13 +107,13 @@ struct afs_longcall_procs {
     int (*LC_smp_owner) ();
     int (*LC_xinval) ();
     int (*LC_cacheinvalall) ();
-    int (*LC_psignal)();
-    int (*LC_ufs_rwgp_lock)();
+    int (*LC_psignal) ();
+    int (*LC_ufs_rwgp_lock) ();
 #else
     int (*LC_iunlock) ();
     int (*LC_ilock) ();
     int (*LC_iput) ();
-    struct inode * (*LC_ialloc) ();
+    struct inode *(*LC_ialloc) ();
     int (*LC_vno_close) ();
     int (*LC_kmem_alloc) ();
     int (*LC_kmem_free) ();
@@ -125,22 +125,22 @@ struct afs_longcall_procs {
     int (*LC_vn_rele) ();
     int (*LC_vn_rdwr) ();
     int (*LC_mapout) ();
-    struct mount * (*LC_getmp) ();
-    struct inode * (*LC_iget) ();
-    struct mbuf * (*LC_m_more) ();
+    struct mount *(*LC_getmp) ();
+    struct inode *(*LC_iget) ();
+    struct mbuf *(*LC_m_more) ();
     int (*LC__spl1) ();
 #endif
     int (*LC_rdwri) ();
-    struct file * (*LC_falloc) ();
+    struct file *(*LC_falloc) ();
     int (*LC_rmfree) ();
     int (*LC_mapin) ();
     long (*LC_rmalloc) ();
-    struct pte * (*LC_vtopte) ();
+    struct pte *(*LC_vtopte) ();
     int (*LC_vattr_null) ();
     int (*LC_strlen) ();
     int (*LC_bcopy) ();
     int (*LC_brelse) ();
-    struct buf * (*LC_geteblk) ();
+    struct buf *(*LC_geteblk) ();
     int (*LC_panic) ();
     int (*LC_strcpy) ();
     int (*LC_printf) ();
@@ -159,16 +159,16 @@ struct afs_longcall_procs {
     int (*LC_closef) ();
     int (*LC_fake_inode_init) ();
     int (*LC_getnewvnode) ();
-    struct mount * (*LC_getvfs) ();
+    struct mount *(*LC_getvfs) ();
     int (*LC_idrop) ();
     int (*LC_insmntque) ();
     int (*LC_ioctl_base) ();
-    caddr_t (*LC_kalloc) ();
+      caddr_t(*LC_kalloc) ();
     void (*LC_kfree) ();
     void (*LC_lock_done) ();
-    struct mbuf * (*LC_m_getclr) ();
-    struct mbuf * (*LC_m_retry) ();
-    struct mbuf * (*LC_m_retryhdr) ();
+    struct mbuf *(*LC_m_getclr) ();
+    struct mbuf *(*LC_m_retry) ();
+    struct mbuf *(*LC_m_retryhdr) ();
     int (*LC_mpsleep) ();
     int (*LC_namei) ();
     unsigned int (*LC_nuxi_32) ();
@@ -197,7 +197,7 @@ struct afs_longcall_procs {
 */
     void (*LC_vrele) ();
     int (*LC_xdr_char) ();
-#endif	/* AFS_DECOSF_ENV */
+#endif				/* AFS_DECOSF_ENV */
 };
 extern struct afs_longcall_procs afs_longcall_procs;
 
@@ -206,7 +206,7 @@ extern struct afs_longcall_procs afs_longcall_procs;
 #if	defined(AFS_DECOSF_ENV)
 #undef	kmem_alloc
 #undef	kmem_free
-#endif	/* AFS_DECOSF_ENV */
+#endif /* AFS_DECOSF_ENV */
 
 #define crfree (*afs_longcall_procs.LC_crfree)
 #define suser (*afs_longcall_procs.LC_suser)
@@ -398,7 +398,7 @@ extern struct afs_longcall_procs afs_longcall_procs;
 */
 #define vrele (*afs_longcall_procs.LC_vrele)
 #define xdr_char (*afs_longcall_procs.LC_xdr_char)
-#endif	/* AFS_DECOSF_ENV */
+#endif /* AFS_DECOSF_ENV */
 
 #endif /* LONGCALL_NO_MACROS */
 

@@ -1,59 +1,16 @@
-# (C) Copyright Transarc Corporation 1989
-# Licensed Materials - Property of Transarc
-# All Rights Reserved
+# Copyright 2000, International Business Machines Corporation and others.
+# All Rights Reserved.
+#
+# This software has been released under the terms of the IBM Public
+# License.  For details, see the LICENSE file in the top-level source
+# directory or online at http://www.openafs.org/dl/license10.html
 #
 # Makefile for package, the AFS workstation configuration tool.
 #
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-SHELL    = /bin/sh
-
-include ../config/Makefile.${SYS_NAME}
-
-INCLUDES=-I${TOP_SRCDIR}/config -I${TOP_INCDIR}
-DBGFLAG  = -UDEBUG
-CFLAGS   = ${DBUG} -DKFLAG -DANDREW -DVICE $(DBGFLAG) $(INCLUDES) $(XCFLAGS)
-YFLAGS   = -vd
-#LFLAGS  = -ll
-
-HFILES = package.h \
-	 validupdates.h \
-	 systype.h \
-	 globals.h
-
-SRCS = package.c \
-	conftree.c \
-	check.c \
-	update.c \
-	fileops.c \
-	messages.c \
-	misc.c \
-	globfuncs.c
-
-TEST_SRCS = test.c \
-	conftree.c \
-	messages.c \
-	misc.c \
-	globfuncs.c
-
-OTHERSRCS = gram.y
+CFLAGS   = ${COMMON_CFLAGS} -DKFLAG -DANDREW -DVICE -UDEBUG
 
 OBJS =  package.o \
 	gram.o \

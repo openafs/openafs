@@ -135,10 +135,10 @@ const char *dlerror(void);
 #endif
 
 #define     ap_os_dso_handle_t  void *
-void        ap_os_dso_init(void);
-void *      ap_os_dso_load(const char *);
-void        ap_os_dso_unload(void *);
-void *      ap_os_dso_sym(void *, const char *);
+void ap_os_dso_init(void);
+void *ap_os_dso_load(const char *);
+void ap_os_dso_unload(void *);
+void *ap_os_dso_sym(void *, const char *);
 const char *ap_os_dso_error(void);
 
-#endif	/* !APACHE_OS_H */
+#endif /* !APACHE_OS_H */

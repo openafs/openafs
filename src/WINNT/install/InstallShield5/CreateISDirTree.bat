@@ -19,6 +19,10 @@ if not exist "Registry Entries" mkdir "Registry Entries"
 if not exist "Script Files" mkdir "Script Files"
 if not exist "Setup Files" mkdir "Setup Files"
 
+if not exist "Registry Entries" mkdir "Registry Entries"
+if not exist "Script Files" mkdir "Script Files"
+if not exist "Setup Files" mkdir "Setup Files"
+
 set sub1=Uncompressed Files
 call :gencomp
 set sub1=Compressed Files

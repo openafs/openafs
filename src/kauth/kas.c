@@ -11,7 +11,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kas.c,v 1.1.1.6 2001/10/14 18:05:06 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/kauth/kas.c,v 1.7 2003/07/15 23:15:16 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -42,13 +43,12 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/kas.c,v 1.1.1.6 2001/10/14 18:05:
 #include "kautils.h"
 
 
-int main (
-  int   argc,
-  char *argv[])
+int
+main(int argc, char *argv[])
 {
     afs_int32 code;
     char *ap[25];
-    int   i;
+    int i;
     char *whoami = argv[0];
 
 #ifdef	AFS_AIX32_ENV
@@ -59,7 +59,7 @@ int main (
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
@@ -74,36 +74,39 @@ int main (
 
 #ifdef AFS_NT40_ENV
     /* initialize winsock */
-    if (afs_winsockInit()<0) {
-      fprintf(stderr, "%s: Couldn't initialize winsock.\n", whoami);
-      exit(1);
+    if (afs_winsockInit() < 0) {
+	fprintf(stderr, "%s: Couldn't initialize winsock.\n", whoami);
+	exit(1);
     }
 #endif
 
     code = ka_Init(0);
     if (code) {
-	com_err (whoami, code, "Can't get cell info");
-	exit (1);
+	com_err(whoami, code, "Can't get cell info");
+	exit(1);
     }
 
     /* if there are no arguments or if the first argument is "-cell" or if the
-       first argument is clearly a username (it contains a '.' or '@') assume
-       the interactive command and splice it into the arglist. */
+     * first argument is clearly a username (it contains a '.' or '@') assume
+     * the interactive command and splice it into the arglist. */
 
     ap[0] = argv[0];
     ap[1] = "interactive";
-    if (argc == 1) code = ka_AdminInteractive (2, ap);
-    else if ((strncmp (argv[1], "-admin_username", strlen(argv[1])) == 0) ||
-	     (strncmp (argv[1], "-password_for_admin", strlen(argv[1])) == 0) ||
-	     (strncmp (argv[1], "-cell", strlen(argv[1])) == 0) ||
-	     (strncmp (argv[1], "-servers", strlen(argv[1])) == 0) ||
-	     (strncmp (argv[1], "-noauth", strlen(argv[1])) == 0) ||
-	     (strpbrk (argv[1], "@.") != 0)) {
-	for (i=1; i<argc; i++) ap[i+1] = argv[i];
-	code = ka_AdminInteractive (argc+1, ap);
-    }
-    else code = ka_AdminInteractive (argc, argv);
+    if (argc == 1)
+	code = ka_AdminInteractive(2, ap);
+    else if ((strncmp(argv[1], "-admin_username", strlen(argv[1])) == 0)
+	     || (strncmp(argv[1], "-password_for_admin", strlen(argv[1])) ==
+		 0)
+	     || (strncmp(argv[1], "-cell", strlen(argv[1])) == 0)
+	     || (strncmp(argv[1], "-servers", strlen(argv[1])) == 0)
+	     || (strncmp(argv[1], "-noauth", strlen(argv[1])) == 0)
+	     || (strpbrk(argv[1], "@.") != 0)) {
+	for (i = 1; i < argc; i++)
+	    ap[i + 1] = argv[i];
+	code = ka_AdminInteractive(argc + 1, ap);
+    } else
+	code = ka_AdminInteractive(argc, argv);
 
     rx_Finalize();
-    exit (code != 0);
+    exit(code != 0);
 }

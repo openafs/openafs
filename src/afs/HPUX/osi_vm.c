@@ -8,13 +8,14 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/HPUX/osi_vm.c,v 1.1.1.5 2002/05/10 23:43:52 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/HPUX/osi_vm.c,v 1.8 2003/07/15 23:14:22 shadow Exp $");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"  /* statistics */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"	/* statistics */
 
 /* Try to discard pages, in order to recycle a vcache entry.
  *
@@ -31,9 +32,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/HPUX/osi_vm.c,v 1.1.1.5 2002/05/10 
  * therefore obsolescent.
  */
 int
-osi_VM_FlushVCache(avc, slept)
-    struct vcache *avc;
-    int *slept;
+osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
     if (avc->vrefCount > 1)
 	return EBUSY;
@@ -50,10 +49,9 @@ osi_VM_FlushVCache(avc, slept)
  * re-obtained.
  */
 void
-osi_VM_StoreAllSegments(avc)
-    struct vcache *avc;
+osi_VM_StoreAllSegments(struct vcache *avc)
 {
-    ;	/* Nothing here yet */
+    ;				/* Nothing here yet */
 }
 
 /* Try to invalidate pages, for "fs flush" or "fs flushv"; or
@@ -63,10 +61,7 @@ osi_VM_StoreAllSegments(avc)
  * re-obtained.
  */
 void
-osi_VM_TryToSmush(avc, acred, sync)
-    struct vcache *avc;
-    struct AFS_UCRED *acred;
-    int sync;
+osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 {
     struct vnode *vp = AFSTOV(avc);
 
@@ -74,7 +69,7 @@ osi_VM_TryToSmush(avc, acred, sync)
      * from the buffer cache
      */
     if ((vp->v_flag & VTEXT) == 0) {
-        mpurge(vp);
+	mpurge(vp);
     }
     /* Mark the cached blocks on the free list as invalid; it invalidates blocks
      * associated with vp which are on the freelist.
@@ -88,11 +83,9 @@ osi_VM_TryToSmush(avc, acred, sync)
  * Locking:  No lock is held, not even the global lock.
  */
 void
-osi_VM_FlushPages(avc, credp)
-    struct vcache *avc;
-    struct AFS_UCRED *credp;
+osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
-    ;	/* Nothing here yet */
+    ;				/* Nothing here yet */
 }
 
 /* Purge pages beyond end-of-file, when truncating a file.
@@ -102,10 +95,7 @@ osi_VM_FlushPages(avc, credp)
  * it only works on Solaris.
  */
 void
-osi_VM_Truncate(avc, alen, acred)
-    struct vcache *avc;
-    int alen;
-    struct AFS_UCRED *acred;
+osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
-    ;	/* Nothing here yet */
+    ;				/* Nothing here yet */
 }

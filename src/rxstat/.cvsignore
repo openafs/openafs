@@ -1,4 +1,5 @@
 AFS_component_version_number.c
+Krxstat.cs.c
 Krxstat.ss.c
 Krxstat.xdr.c
 Makefile

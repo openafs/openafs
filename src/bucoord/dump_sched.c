@@ -16,7 +16,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/bucoord/dump_sched.c,v 1.1.1.5 2001/09/11 14:31:36 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/bucoord/dump_sched.c,v 1.7.2.1 2004/10/18 07:11:50 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -49,7 +50,7 @@ extern char *whoami;
  * command level routines
  * ------------------------------------
  */
- 
+
 /* bc_AddDumpCmd
  *	add a dump schedule
  * params:
@@ -57,30 +58,27 @@ extern char *whoami;
  *	parm 1: expiration date (list)
  */
 
-afs_int32 bc_AddDumpCmd(as, arock)
-struct cmd_syndesc *as;
-char *arock; {
-    register char *dname;			/* dump schedule name */
-    char *dateString;				/* expiration date */
+afs_int32
+bc_AddDumpCmd(as, arock)
+     struct cmd_syndesc *as;
+     char *arock;
+{
+    register char *dname;	/* dump schedule name */
     register afs_int32 code;
     afs_int32 expType, expDate;
-    register struct cmd_item *ti, *expItem;
+    register struct cmd_item *ti;
     udbClientTextP ctPtr;
 
     afs_int32 bc_ParseExpiration();
 
     /* if an expiration date has been specified */
-    if (as->parms[1].items)
-    {
+    if (as->parms[1].items) {
 	code = bc_ParseExpiration(&as->parms[1], &expType, &expDate);
-	if (code)
-	{
+	if (code) {
 	    printf("Invalid expiration date syntax\n");
-	    return(1);
+	    return (1);
 	}
-    }
-    else
-    {
+    } else {
 	/* no expiration date specified */
 	expDate = 0;
 	expType = BC_NO_EXPDATE;
@@ -90,60 +88,59 @@ char *arock; {
     ctPtr = &bc_globalConfig->configText[TB_DUMPSCHEDULE];
 
     code = bc_LockText(ctPtr);
-    if (code) ERROR(code);
+    if (code)
+	ERROR(code);
 
     code = bc_UpdateDumpSchedule();
     if (code) {
-       com_err(whoami, code, "; Can't retrieve dump schedule");
-       return(code);
+	com_err(whoami, code, "; Can't retrieve dump schedule");
+	return (code);
     }
 
     /* process each dump name using the expiration date computed above */
-    for( ti=as->parms[0].items; ti != 0; ti = ti->next )
-    {
+    for (ti = as->parms[0].items; ti != 0; ti = ti->next) {
 	/* get next dump name to process */
 	dname = ti->data;
-	
+
 	/* validate the name dump name length */
-	if ( strlen(dname) >= BU_MAX_DUMP_PATH )
-	{
-	    com_err(whoami, 0, "Dump names must be < %d characters", BU_MAX_DUMP_PATH);
+	if (strlen(dname) >= BU_MAX_DUMP_PATH) {
+	    com_err(whoami, 0, "Dump names must be < %d characters",
+		    BU_MAX_DUMP_PATH);
 	    com_err(whoami, 0, "Dump %s not added", dname);
 	    code = -1;
 	    continue;
 	}
 
-	code = bc_CreateDumpSchedule(bc_globalConfig, dname, expDate, expType);
-	if (code)
-	{
+	code =
+	    bc_CreateDumpSchedule(bc_globalConfig, dname, expDate, expType);
+	if (code) {
 	    if (code == -1)
-		com_err(whoami,0,"Dump already exists");
+		com_err(whoami, 0, "Dump already exists");
+	    else if (code == -2)
+		com_err(whoami, 0, "Invalid path name '%s'", dname);
+	    else if (code == -3)
+		com_err(whoami, 0, "Name specification error");
 	    else
-	    if (code == -2)
-		com_err(whoami,0,"Invalid path name '%s'", dname);
-	    else
-	    if ( code == -3 )
-	    	com_err(whoami, 0, "Name specification error");
-	    else 
-	    	com_err(whoami,code,"; Failed to create dump schedule");
+		com_err(whoami, code, "; Failed to create dump schedule");
 	    continue;
 	}
-	
+
 	/* save the new schedule item */
 	code = bc_SaveDumpSchedule();
-	if (code)
-	{
+	if (code) {
 	    com_err(whoami, code, "Cannot save dump schedule");
-	    com_err(whoami,0,"Changes are temporary - for this session only");
+	    com_err(whoami, 0,
+		    "Changes are temporary - for this session only");
 	    break;
 	}
 
-	com_err(whoami,0,"Created new dump schedule %s", dname);
+	com_err(whoami, 0, "Created new dump schedule %s", dname);
     }
 
-error_exit:
-    if (ctPtr->lockHandle) bc_UnlockText(ctPtr);
-    return(code);
+  error_exit:
+    if (ctPtr->lockHandle)
+	bc_UnlockText(ctPtr);
+    return (code);
 }
 
 
@@ -151,52 +148,52 @@ error_exit:
  *	delete a dump schedule
  */
 
-afs_int32 bc_DeleteDumpCmd(as, arock)
-struct cmd_syndesc *as;
-char *arock; {
+afs_int32
+bc_DeleteDumpCmd(as, arock)
+     struct cmd_syndesc *as;
+     char *arock;
+{
     /* parm 0 is vol set name
      * parm 1 is dump schedule name
      */
-    register char  *dname;
-    register afs_int32  code;
+    register char *dname;
+    register afs_int32 code;
     udbClientTextP ctPtr;
 
     /* lock schedules and check validity */
     ctPtr = &bc_globalConfig->configText[TB_DUMPSCHEDULE];
 
     code = bc_LockText(ctPtr);
-    if ( code )
-    	ERROR(code);
+    if (code)
+	ERROR(code);
 
     code = bc_UpdateDumpSchedule();
     if (code) {
-       com_err(whoami, code, "; Can't retrieve dump schedule");
-       return(code);
+	com_err(whoami, code, "; Can't retrieve dump schedule");
+	return (code);
     }
 
     dname = as->parms[0].items->data;
 
     code = bc_DeleteDumpSchedule(bc_globalConfig, dname);
-    if (code)
-    {
+    if (code) {
 	if (code == -1)
-		com_err(whoami,0,"No such dump as %s", dname);
+	    com_err(whoami, 0, "No such dump as %s", dname);
 	else
-		com_err(whoami,code,"; Failed to delete dump schedule");
+	    com_err(whoami, code, "; Failed to delete dump schedule");
 	goto error_exit;
     }
-    
+
     code = bc_SaveDumpSchedule();
     if (code == 0)
-    	printf("backup: deleted dump schedule %s\n", dname);
-    else
-    {
+	printf("backup: deleted dump schedule %s\n", dname);
+    else {
 	com_err(whoami, code, "Cannot save dump schedule file");
-	com_err(whoami,0,"Deletion is temporary - for this session only");
+	com_err(whoami, 0, "Deletion is temporary - for this session only");
     }
 
-error_exit:
-    if ( ctPtr->lockHandle != 0 )
+  error_exit:
+    if (ctPtr->lockHandle != 0)
 	bc_UnlockText(ctPtr);
     return code;
 }
@@ -209,9 +206,10 @@ error_exit:
  *      ignored
  */
 
-afs_int32 bc_ListDumpScheduleCmd(as, arock)
-struct cmd_syndesc *as;
-char *arock;
+afs_int32
+bc_ListDumpScheduleCmd(as, arock)
+     struct cmd_syndesc *as;
+     char *arock;
 {
     /* no parms */
     afs_int32 code;
@@ -220,18 +218,17 @@ char *arock;
     /* first check to see if schedules must be updated */
     code = bc_UpdateDumpSchedule();
     if (code) {
-       com_err(whoami, code, "; Can't retrieve dump schedule");
-       return(code);
+	com_err(whoami, code, "; Can't retrieve dump schedule");
+	return (code);
     }
 
     /* go through entire list, displaying trees for root-level dump
      * schedules
      */
-    for(tdump = bc_globalConfig->dsched; tdump; tdump=tdump->next)
-    {
-        /* if this is a root-level dump, show it and its kids */
-        if (!tdump->parent)
-            ListDumpSchedule(tdump, 0);
+    for (tdump = bc_globalConfig->dsched; tdump; tdump = tdump->next) {
+	/* if this is a root-level dump, show it and its kids */
+	if (!tdump->parent)
+	    ListDumpSchedule(tdump, 0);
     }
     return 0;
 }
@@ -244,11 +241,12 @@ char *arock;
  *	parm 1: expiration date (list)
  */
 
-afs_int32 bc_SetExpCmd(as, arock)
+afs_int32
+bc_SetExpCmd(as, arock)
      struct cmd_syndesc *as;
      char *arock;
 {
-    register char *dname;			/* dump schedule name */
+    register char *dname;	/* dump schedule name */
     register struct cmd_item *ti;
     struct bc_dumpSchedule *node, *parent;
     afs_int32 expType, expDate;
@@ -258,17 +256,13 @@ afs_int32 bc_SetExpCmd(as, arock)
     afs_int32 bc_ParseExpiration();
 
     /* if an expiration date has been specified */
-    if (as->parms[1].items)
-    {
+    if (as->parms[1].items) {
 	code = bc_ParseExpiration(&as->parms[1], &expType, &expDate);
-	if (code)
-	{
+	if (code) {
 	    printf("Invalid expiration date syntax\n");
-	    return(1);
+	    return (1);
 	}
-    } 
-    else
-    {
+    } else {
 	/* no expiration date specified */
 	expDate = 0;
 	expType = BC_NO_EXPDATE;
@@ -278,32 +272,31 @@ afs_int32 bc_SetExpCmd(as, arock)
     ctPtr = &bc_globalConfig->configText[TB_DUMPSCHEDULE];
 
     code = bc_LockText(ctPtr);
-    if (code) ERROR(code);
+    if (code)
+	ERROR(code);
 
     code = bc_UpdateDumpSchedule();
     if (code) {
-       com_err(whoami, code, "; Can't retrieve dump schedule");
-       return(code);
+	com_err(whoami, code, "; Can't retrieve dump schedule");
+	return (code);
     }
 
     /* process each dump name using the expiration date computed above */
-    for( ti = as->parms[0].items; ti != 0; ti = ti->next)
-    {
+    for (ti = as->parms[0].items; ti != 0; ti = ti->next) {
 	/* get next dump name to process */
 	dname = ti->data;
-	
+
 	/* validate the name dump name length */
-	if ( strlen(dname) >= BU_MAX_DUMP_PATH )
-	{
+	if (strlen(dname) >= BU_MAX_DUMP_PATH) {
 	    code = -1;
-	    com_err(whoami, 0, "Dump names must be < %d characters", BU_MAX_DUMP_PATH);
+	    com_err(whoami, 0, "Dump names must be < %d characters",
+		    BU_MAX_DUMP_PATH);
 	    com_err(whoami, 0, "Dump %s not added", dname);
 	    continue;
 	}
 
 	code = FindDump(bc_globalConfig, dname, &parent, &node);
-	if (code)
-	{
+	if (code) {
 	    com_err(whoami, 0, "Dump level %s not found", dname);
 	    continue;
 	}
@@ -311,17 +304,18 @@ afs_int32 bc_SetExpCmd(as, arock)
 	node->expDate = expDate;
 	node->expType = expType;
     }
-    
+
     code = bc_SaveDumpSchedule();
-    if ( code )
-    {
+    if (code) {
 	com_err(whoami, code, "Cannot save dump schedule");
-	com_err(whoami,0,"Expiration changes effective for this session only");
+	com_err(whoami, 0,
+		"Expiration changes effective for this session only");
     }
 
-error_exit:
-    if (ctPtr->lockHandle) bc_UnlockText(ctPtr);
-    return(code);
+  error_exit:
+    if (ctPtr->lockHandle)
+	bc_UnlockText(ctPtr);
+    return (code);
 }
 
 
@@ -334,13 +328,13 @@ error_exit:
 bc_ParseDumpSchedule()
 {
     char tbuffer[1024];
-    char dsname[256],  period[64];
+    char dsname[256], period[64];
     char *tp;
     afs_int32 code;
     udbClientTextP ctPtr;
     register struct bc_dumpSchedule *tds;
     struct bc_dumpSchedule **ppds, *pds;
-    afs_int32  expDate, expType;
+    afs_int32 expDate, expType;
 
     register FILE *stream;
 
@@ -348,56 +342,55 @@ bc_ParseDumpSchedule()
     ctPtr = &bc_globalConfig->configText[TB_DUMPSCHEDULE];
     stream = ctPtr->textStream;
 
-    if ( ctPtr->textSize == 0 )			/* nothing defined yet */
-	return(0);
+    if (ctPtr->textSize == 0)	/* nothing defined yet */
+	return (0);
 
-    if ( stream == NULL )
-    	return(BC_INTERNALERROR);
+    if (stream == NULL)
+	return (BC_INTERNALERROR);
 
     rewind(stream);
 
     /* check the magic number and version */
     tp = fgets(tbuffer, sizeof(tbuffer), stream);
-    if ( tp == 0 )
+    if (tp == 0)
 	/* can't read first line - error */
-	return(BC_INTERNALERROR);
-    else
-    {
+	return (BC_INTERNALERROR);
+    else {
 	afs_int32 dsmagic, dsversion;
-	
+
 	/* read the first line, and then check magic # and version */
-	
+
 	code = sscanf(tbuffer, "%d %d", &dsmagic, &dsversion);
-	if ( (code != 2)
-	||   (dsmagic != BC_SCHEDULE_MAGIC)
-	||   (dsversion != BC_SCHEDULE_VERSION)
-	   )
-	{
+	if ((code != 2)
+	    || (dsmagic != BC_SCHEDULE_MAGIC)
+	    || (dsversion != BC_SCHEDULE_VERSION)
+	    ) {
 	    /* invalid or unexpected header - error */
 	    com_err(whoami, 0, "Unable to understand dump schedule file");
-	    return(BC_INTERNALERROR);
+	    return (BC_INTERNALERROR);
 	}
     }
 
-    while(1)
-    {
+    while (1) {
 	/* read all of the lines out */
 	tp = fgets(tbuffer, sizeof(tbuffer), stream);
-	if ( tp == 0 )
-		break;	/* hit eof? */
-	code = sscanf(tbuffer, "%s %s %d %d", dsname, period,
-		      &expDate, &expType);
-	if (code != 4)
-	{
-	    com_err(whoami,0,"Syntax error in dump schedule file, line is: %s",
+	if (tp == 0)
+	    break;		/* hit eof? */
+	code =
+	    sscanf(tbuffer, "%s %s %d %d", dsname, period, &expDate,
+		   &expType);
+	if (code != 4) {
+	    com_err(whoami, 0,
+		    "Syntax error in dump schedule file, line is: %s",
 		    tbuffer);
 	    return (BC_INTERNALERROR);
 	}
-	tds = (struct bc_dumpSchedule *)malloc(sizeof(struct bc_dumpSchedule));
+	tds =
+	    (struct bc_dumpSchedule *)malloc(sizeof(struct bc_dumpSchedule));
 	memset(tds, 0, sizeof(*tds));
 
-	tds->next = (struct bc_dumpSchedule *) 0;
-	tds->name = (char *) malloc(strlen(dsname)+1);
+	tds->next = (struct bc_dumpSchedule *)0;
+	tds->name = (char *)malloc(strlen(dsname) + 1);
 	strcpy(tds->name, dsname);
 
 	tds->expDate = expDate;
@@ -406,14 +399,13 @@ bc_ParseDumpSchedule()
 	/* find the end of the schedule list, and append the new item to it */
 	ppds = &bc_globalConfig->dsched;
 	pds = *ppds;
-	while ( pds != 0 )
-	{
+	while (pds != 0) {
 	    ppds = &pds->next;
 	    pds = *ppds;
 	}
 	*ppds = tds;
     }
-    return 0;	
+    return 0;
 }
 
 
@@ -428,45 +420,44 @@ bc_SaveDumpSchedule()
 
     /* setup the right ptr */
     ctPtr = &bc_globalConfig->configText[TB_DUMPSCHEDULE];
-    
+
     /* must be locked */
-    if ( ctPtr->lockHandle == 0 )
-    	return(BC_INTERNALERROR);
+    if (ctPtr->lockHandle == 0)
+	return (BC_INTERNALERROR);
 
     /* truncate the file */
     code = ftruncate(fileno(ctPtr->textStream), 0);
-    if ( code )
-    	ERROR(errno);
+    if (code)
+	ERROR(errno);
 
     rewind(ctPtr->textStream);
 
     /* write the new information */
-    fprintf(ctPtr->textStream, "%d %d\n",
-	    BC_SCHEDULE_MAGIC, BC_SCHEDULE_VERSION);
+    fprintf(ctPtr->textStream, "%d %d\n", BC_SCHEDULE_MAGIC,
+	    BC_SCHEDULE_VERSION);
 
-    for(tdump = bc_globalConfig->dsched; tdump; tdump = tdump->next)
-    {
-        fprintf(ctPtr->textStream, "%s %s %d %d\n",tdump->name, "any",
-                tdump->expDate, tdump->expType);
+    for (tdump = bc_globalConfig->dsched; tdump; tdump = tdump->next) {
+	fprintf(ctPtr->textStream, "%s %s %d %d\n", tdump->name, "any",
+		tdump->expDate, tdump->expType);
     }
 
     if (ferror(ctPtr->textStream))
-    	return(BC_INTERNALERROR);
+	return (BC_INTERNALERROR);
 
-    fflush(ctPtr->textStream);			/* debug */
+    fflush(ctPtr->textStream);	/* debug */
 
     /* send to server */
     code = bcdb_SaveTextFile(ctPtr);
-    if ( code )
-    	ERROR(code);
+    if (code)
+	ERROR(code);
 
     /* increment local version number */
     ctPtr->textVersion++;
 
     /* update locally stored file size */
     ctPtr->textSize = filesize(ctPtr->textStream);
-error_exit:
-    return(code);
+  error_exit:
+    return (code);
 }
 
 
@@ -475,7 +466,8 @@ error_exit:
  * ------------------------------------
  */
 
-afs_int32 bc_UpdateDumpSchedule()
+afs_int32
+bc_UpdateDumpSchedule()
 {
     struct bc_dumpSchedule *dumpPtr, *nextDumpPtr;
     struct udbHandleS *uhptr = &udbHandle;
@@ -487,29 +479,25 @@ afs_int32 bc_UpdateDumpSchedule()
     ctPtr = &bc_globalConfig->configText[TB_DUMPSCHEDULE];
 
     code = bc_CheckTextVersion(ctPtr);
-    if ( code != BC_VERSIONMISMATCH )
-    {
-	ERROR(code);	/* Version matches or some other error */
+    if (code != BC_VERSIONMISMATCH) {
+	ERROR(code);		/* Version matches or some other error */
     }
 
     /* Must update the dump schedules */
     /* If we are not already locked, then lock it now */
-    if ( !ctPtr->lockHandle ) 
-    {
-        code = bc_LockText(ctPtr);
-        if ( code )
-            ERROR(code);
+    if (!ctPtr->lockHandle) {
+	code = bc_LockText(ctPtr);
+	if (code)
+	    ERROR(code);
 	lock = 1;
     }
 
-    if (ctPtr->textVersion != -1)
-    {
-        printf("backup: obsolete dump schedule - updating\n");
-    
+    if (ctPtr->textVersion != -1) {
+	printf("backup: obsolete dump schedule - updating\n");
+
 	/* clear all old schedule information */
 	dumpPtr = bc_globalConfig->dsched;
-	while ( dumpPtr )
-	{
+	while (dumpPtr) {
 	    nextDumpPtr = dumpPtr->next;
 	    free(dumpPtr);
 	    dumpPtr = nextDumpPtr;
@@ -519,34 +507,38 @@ afs_int32 bc_UpdateDumpSchedule()
 
     /* open a temp file to store the config text received from buserver *
      * The open file stream is stored in ctPtr->textStream */
-    code = bc_openTextFile(ctPtr, &bc_globalConfig->tmpTextFileNames[TB_DUMPSCHEDULE][0]);
-    if ( code )
-      ERROR(code);
+    code =
+	bc_openTextFile(ctPtr,
+			&bc_globalConfig->
+			tmpTextFileNames[TB_DUMPSCHEDULE][0]);
+    if (code)
+	ERROR(code);
     /* now get a fresh set of information from the database */
     code = bcdb_GetTextFile(ctPtr);
-    if ( code )
-        ERROR(code);
+    if (code)
+	ERROR(code);
 
-     /* fetch the version number */
-    code = ubik_Call(BUDB_GetTextVersion,  uhptr->uh_client, 0,
-                     ctPtr->textType, &ctPtr->textVersion);
-    if ( code )
+    /* fetch the version number */
+    code =
+	ubik_Call(BUDB_GetTextVersion, uhptr->uh_client, 0, ctPtr->textType,
+		  &ctPtr->textVersion);
+    if (code)
 	ERROR(code);
 
     /* parse the file */
     code = bc_ParseDumpSchedule();
-    if ( code )
-    	ERROR(code);
+    if (code)
+	ERROR(code);
 
     /* rebuild the tree */
     code = bc_ProcessDumpSchedule(bc_globalConfig);
-    if ( code )
-    	ERROR(code);
+    if (code)
+	ERROR(code);
 
-error_exit:
-    if ( lock && ctPtr->lockHandle )
+  error_exit:
+    if (lock && ctPtr->lockHandle)
 	bc_UnlockText(ctPtr);
-    return(code);
+    return (code);
 }
 
 /* ListDumpSchedule
@@ -557,9 +549,11 @@ error_exit:
  *	alevel - 0
  */
 
-static ListDumpSchedule(adump, alevel)
-int alevel;
-register struct bc_dumpSchedule *adump; {
+static
+ListDumpSchedule(adump, alevel)
+     int alevel;
+     register struct bc_dumpSchedule *adump;
+{
     register int i;
     register struct bc_dumpSchedule *child;
 
@@ -572,7 +566,7 @@ register struct bc_dumpSchedule *adump; {
     }
 
     /* move to appropriate indentation level */
-    for(i=0; i<alevel; i++)
+    for (i = 0; i < alevel; i++)
 	printf("    ");
 
     /* name is a pathname style name, determine trailing name and only print
@@ -583,17 +577,16 @@ register struct bc_dumpSchedule *adump; {
 
 
     /* list expiration time */
-    switch ( adump->expType )
-    {
-      case BC_ABS_EXPDATE:
+    switch (adump->expType) {
+    case BC_ABS_EXPDATE:
 	/* absolute expiration date. Never expires if date is 0 */
-	if ( adump->expDate )
-	{
-	    printf("expires at %.24s", cTIME(&adump->expDate));
+	if (adump->expDate) {
+            time_t t = adump->expDate;
+	    printf("expires at %.24s", cTIME(&t));
 	}
 	break;
 
-      case BC_REL_EXPDATE:
+    case BC_REL_EXPDATE:
 	{
 	    struct ktime_date kt;
 
@@ -603,12 +596,12 @@ register struct bc_dumpSchedule *adump; {
 	}
 	break;
 
-      default:
+    default:
 	break;
     }
     printf("\n");
-    for(child = adump->firstChild; child; child = child->nextSibling)
-	ListDumpSchedule(child, alevel+1);
+    for (child = adump->firstChild; child; child = child->nextSibling)
+	ListDumpSchedule(child, alevel + 1);
 
     return 0;
 }

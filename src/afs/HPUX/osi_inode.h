@@ -47,6 +47,7 @@
 #define  CLEAR_VICEMAGIC(ip)     (ip)->i_vicemagic = 0
 #define  CLEAR_DVICEMAGIC(dp)    (dp)->di_vicemagic = 0
 
-struct inode *igetinode(struct vfs *vfsp, dev_t dev, ino_t inode, int *perror);
+struct inode *igetinode(struct vfs *vfsp, dev_t dev, ino_t inode,
+			int *perror);
 
 #endif /* _OSI_INODE_H_ */

@@ -14,20 +14,21 @@
  * Implements:
  */
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_mariner.c,v 1.1.1.5 2002/09/26 18:57:52 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/afs_mariner.c,v 1.8 2003/07/15 23:14:12 shadow Exp $");
 
-#include "../afs/sysincludes.h" /*Standard vendor system headers*/
-#include "../afs/afsincludes.h" /*AFS-based standard headers*/
-#include "../afs/afs_stats.h"  /* statistics */
+#include "afs/sysincludes.h"	/*Standard vendor system headers */
+#include "afsincludes.h"	/*AFS-based standard headers */
+#include "afs/afs_stats.h"	/* statistics */
 
 /* Exported variables */
 struct rx_service *afs_server;
 
 
-#define	SMAR	    20			/* size of a mariner name */
-#define	NMAR	    10			/* number of mariner names */
+#define	SMAR	    20		/* size of a mariner name */
+#define	NMAR	    10		/* number of mariner names */
 static char marinerNames[NMAR][SMAR];
 static struct vcache *marinerVCs[NMAR];
 static int marinerPtr = 0;	/* pointer to next mariner slot to use */
@@ -36,9 +37,9 @@ static int marinerPtr = 0;	/* pointer to next mariner slot to use */
 afs_int32 afs_mariner = 0;
 afs_int32 afs_marinerHost = 0;
 
-afs_AddMarinerName(aname, avc)
-    register char *aname;
-    register struct vcache *avc; {
+int
+afs_AddMarinerName(register char *aname, register struct vcache *avc)
+{
     register int i;
     register char *tp;
 
@@ -50,16 +51,17 @@ afs_AddMarinerName(aname, avc)
     }
     tp = marinerNames[i];
     strncpy(tp, aname, SMAR);
-    tp[SMAR-1] = 0;
+    tp[SMAR - 1] = 0;
     marinerVCs[i] = avc;
     return 0;
 }
 
-char *afs_GetMariner(avc)
-    register struct vcache *avc; {
+char *
+afs_GetMariner(register struct vcache *avc)
+{
     register int i;
     AFS_STATCNT(afs_GetMariner);
-    for(i=0; i<NMAR; i++) {
+    for (i = 0; i < NMAR; i++) {
 	if (marinerVCs[i] == avc) {
 	    return marinerNames[i];
 	}
@@ -67,9 +69,9 @@ char *afs_GetMariner(avc)
     return "a file";
 }
 
-void afs_MarinerLogFetch(avc, off, bytes, idx)
-    register struct vcache *avc;
-    register afs_int32 off, bytes, idx;
+void
+afs_MarinerLogFetch(register struct vcache *avc, register afs_int32 off,
+		    register afs_int32 bytes, register afs_int32 idx)
 {
     struct sockaddr_in taddr;
     register char *tp, *tp1, *tp2;
@@ -83,10 +85,10 @@ void afs_MarinerLogFetch(avc, off, bytes, idx)
     taddr.sin_port = htons(2106);
 #ifdef  STRUCT_SOCKADDR_HAS_SA_LEN
     taddr.sin_len = sizeof(taddr);
-#endif /* STRUCT_SOCKADDR_HAS_SA_LEN */
-    tp = tp1 = (char *) osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+#endif /* AFS_OSF_ENV */
+    tp = tp1 = (char *)osi_AllocSmallSpace(AFS_SMALLOCSIZ);
     strcpy(tp, "fetch$Fetching ");
-    tp += 15; /* change it if string changes */
+    tp += 15;			/* change it if string changes */
     tp2 = afs_GetMariner(avc);
     strcpy(tp, tp2);
     tp += strlen(tp2);
@@ -97,14 +99,13 @@ void afs_MarinerLogFetch(avc, off, bytes, idx)
     dvec.iov_base = tp1;
     dvec.iov_len = len;
     AFS_GUNLOCK();
-    (void) osi_NetSend(afs_server->socket, &taddr, &dvec, 1, len, 0);
+    (void)osi_NetSend(afs_server->socket, &taddr, &dvec, 1, len, 0);
     AFS_GLOCK();
     osi_FreeSmallSpace(tp1);
-} /*afs_MarinerLogFetch*/
+}				/*afs_MarinerLogFetch */
 
-void afs_MarinerLog(astring, avc)
-    register struct vcache *avc;
-    register char *astring;
+void
+afs_MarinerLog(register char *astring, register struct vcache *avc)
 {
     struct sockaddr_in taddr;
     register char *tp, *tp1, *buf;
@@ -116,8 +117,8 @@ void afs_MarinerLog(astring, avc)
     taddr.sin_port = htons(2106);
 #ifdef  STRUCT_SOCKADDR_HAS_SA_LEN
     taddr.sin_len = sizeof(taddr);
-#endif /* STRUCT_SOCKADDR_HAS_SA_LEN */
-    tp = buf = (char *) osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+#endif /* AFS_OSF_ENV */
+    tp = buf = (char *)osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 
     strcpy(tp, astring);
     tp += strlen(astring);
@@ -129,46 +130,21 @@ void afs_MarinerLog(astring, avc)
     /* note, console doesn't want a terminating null */
     /* I don't care if mariner packets fail to be sent */
     dvec.iov_base = buf;
-    dvec.iov_len = tp-buf;
+    dvec.iov_len = tp - buf;
     AFS_GUNLOCK();
-    (void) osi_NetSend(afs_server->socket, &taddr, &dvec, 1, tp-buf, 0);
+    (void)osi_NetSend(afs_server->socket, &taddr, &dvec, 1, tp - buf, 0);
     AFS_GLOCK();
     osi_FreeSmallSpace(buf);
-} /*afs_MarinerLog*/
+}				/*afs_MarinerLog */
 
-void shutdown_mariner(void)
+void
+shutdown_mariner(void)
 {
     int i;
 
     marinerPtr = 0;
     afs_mariner = 0;
 
-    for (i=0; i<NMAR; i++)
+    for (i = 0; i < NMAR; i++)
 	marinerVCs[i] = 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

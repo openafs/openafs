@@ -33,13 +33,13 @@ typedef struct {
     unsigned b3:6;
     unsigned b4:6;
     unsigned b5:2;
-}       sbox_in_a;
+} sbox_in_a;
 
 typedef struct {
     unsigned b5:4;
     unsigned b6:6;
     unsigned b7:6;
-}       sbox_in_b;
+} sbox_in_b;
 
 typedef struct {
     unsigned b0:4;
@@ -50,7 +50,7 @@ typedef struct {
     unsigned b5:4;
     unsigned b6:4;
     unsigned b7:4;
-}       sbox_out;
+} sbox_out;
 
 #else /* BITS32 */
 /* for sixteen bit machines */
@@ -59,20 +59,20 @@ typedef struct {
     unsigned b0:6;
     unsigned b1:6;
     unsigned b2:4;
-}       sbox_in_16_a;
+} sbox_in_16_a;
 
 typedef struct {
     unsigned b2:2;
     unsigned b3:6;
     unsigned b4:6;
     unsigned b5:2;
-}       sbox_in_16_b;
+} sbox_in_16_b;
 
 typedef struct {
     unsigned b5:4;
     unsigned b6:6;
     unsigned b7:6;
-}       sbox_in_16_c;
+} sbox_in_16_c;
 
 typedef struct {
     unsigned b0:4;
@@ -83,7 +83,7 @@ typedef struct {
     unsigned b5:4;
     unsigned b6:4;
     unsigned b7:4;
-}       sbox_out;
+} sbox_out;
 #endif /* BITS32 */
 
 

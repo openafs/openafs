@@ -14,6 +14,8 @@
 #include "largeint95.h"
 #endif /* DJGPP */
 
+#define MOUNTPOINTLEN   1024
+
 typedef struct cm_fid {
 	unsigned long cell;
         unsigned long volume;
@@ -21,11 +23,13 @@ typedef struct cm_fid {
         unsigned long unique;
 } cm_fid_t;
 
+#if 0
 typedef struct cm_accessCache {
 	osi_queue_t q;			/* queue header */
         struct cm_user *userp;		/* user having access rights */
-        long rights;			/* rights */
+        unsigned long rights;		/* rights */
 } cm_accessCache_t;
+#endif
 
 typedef struct cm_file_lock {
 	osi_queue_t q;			/* list of all locks */
@@ -46,11 +50,15 @@ typedef struct cm_prefetch {		/* last region scanned for prefetching */
         osi_hyper_t end;		/* first char past region */
 } cm_prefetch_t;
 
+
+#define CM_SCACHE_MAGIC ('S' | 'C'<<8 | 'A'<<16 | 'C'<<24)
+
 typedef struct cm_scache {
 	osi_queue_t q;			/* lru queue; cm_scacheLock */
-	struct cm_scache *nextp;	/* next in hash; cm_scacheLock */
+        afs_uint32      magic;
+        struct cm_scache *nextp;	/* next in hash; cm_scacheLock */
 	cm_fid_t fid;
-        long flags;			/* flags; locked by mx */
+        afs_uint32 flags;		/* flags; locked by mx */
 
 	/* synchronization stuff */
         osi_mutex_t mx;			/* mutex for this structure */
@@ -58,30 +66,30 @@ typedef struct cm_scache {
         				 * write-locked to prevent buffers from
                                          * being created during a truncate op, etc.
                                          */
-        int refCount;			/* reference count; cm_scacheLock */
+        afs_uint32 refCount;		/* reference count; cm_scacheLock */
         osi_queueData_t *bufReadsp;	/* queue of buffers being read */
         osi_queueData_t *bufWritesp;	/* queue of buffers being written */
 
 	/* parent info for ACLs */
-        long parentVnode;		/* parent vnode for ACL callbacks */
-        long parentUnique;		/* for ACL callbacks */
+        afs_uint32 parentVnode;		/* parent vnode for ACL callbacks */
+        afs_uint32 parentUnique;	/* for ACL callbacks */
 
 	/* local modification stat */
-        long mask;			/* for clientModTime, length and
+        afs_uint32 mask;		/* for clientModTime, length and
 					 * truncPos */
 
 	/* file status */
-	int fileType;			/* file type */
-	unsigned long clientModTime;	/* mtime */
-        unsigned long serverModTime;	/* at server, for concurrent call
+	afs_uint32 fileType;		/* file type */
+	time_t clientModTime;	        /* mtime */
+        time_t serverModTime;	        /* at server, for concurrent call
 					 * comparisons */
         osi_hyper_t length;		/* file length */
 	cm_prefetch_t prefetch;		/* prefetch info structure */
-        int unixModeBits;		/* unix protection mode bits */
-        int linkCount;			/* link count */
-        long dataVersion;		/* data version */
-        long owner;			/* file owner */
-        long group;			/* file owning group */
+        afs_uint32 unixModeBits;	/* unix protection mode bits */
+        afs_uint32 linkCount;		/* link count */
+        afs_uint32 dataVersion;		/* data version */
+        afs_uint32 owner; 		/* file owner */
+        afs_uint32 group;		/* file owning group */
 
 	/* pseudo file status */
 	osi_hyper_t serverLength;	/* length known to server */
@@ -91,18 +99,18 @@ typedef struct cm_scache {
 					 * storing data */
 
 	/* symlink and mount point info */
-        char *mountPointStringp;	/* the string stored in a mount point;
+        char mountPointStringp[MOUNTPOINTLEN];	/* the string stored in a mount point;
         				 * first char is type, then vol name.
                                          * If this is a normal symlink, we store
 					 * the link contents here.
                                          */
-	cm_fid_t *mountRootFidp;	/* mounted on root */
-	unsigned int mountRootGen;	/* time to update mountRootFidp? */
-	cm_fid_t *dotdotFidp;		/* parent of volume root */
+	cm_fid_t  mountRootFid;	        /* mounted on root */
+	time_t    mountRootGen;	        /* time to update mountRootFidp? */
+	cm_fid_t  dotdotFid;		/* parent of volume root */
 
 	/* callback info */
         struct cm_server *cbServerp;	/* server granting callback */
-        long cbExpires;			/* time callback expires */
+        time_t cbExpires;		/* time callback expires */
 
 	/* access cache */
         long anyAccess;			/* anonymous user's access */
@@ -118,10 +126,10 @@ typedef struct cm_scache {
         osi_hyper_t bulkStatProgress;	/* track bulk stats of large dirs */
 
         /* open state */
-        short openReads;		/* opens for reading */
-        short openWrites;		/* open for writing */
-        short openShares;		/* open for read excl */
-        short openExcls;		/* open for exclusives */
+        afs_uint16 openReads;		/* open for reading */
+        afs_uint16 openWrites;		/* open for writing */
+        afs_uint16 openShares;		/* open for read excl */
+        afs_uint16 openExcls;		/* open for exclusives */
 } cm_scache_t;
 
 /* mask field - tell what has been modified */
@@ -134,12 +142,14 @@ typedef struct cm_scache {
 #define CM_SCACHETYPE_DIRECTORY		2	/* a dir */
 #define CM_SCACHETYPE_SYMLINK		3	/* a symbolic link */
 #define CM_SCACHETYPE_MOUNTPOINT	4	/* a mount point */
+#define CM_SCACHETYPE_DFSLINK           5       /* a Microsoft Dfs link */
+#define CM_SCACHETYPE_INVALID           99      /* an invalid link */
 
 /* flag bits */
-#define CM_SCACHEFLAG_STATD		1	/* status info is valid */
-#define CM_SCACHEFLAG_DELETED		2	/* file has been deleted */
-#define CM_SCACHEFLAG_CALLBACK		4	/* have a valid callback */
-#define CM_SCACHEFLAG_STORING		8	/* status being stored back */
+#define CM_SCACHEFLAG_STATD             0x01    /* status info is valid */
+#define CM_SCACHEFLAG_DELETED           0x02    /* file has been deleted */
+#define CM_SCACHEFLAG_CALLBACK          0x04    /* have a valid callback */
+#define CM_SCACHEFLAG_STORING           0x08    /* status being stored back */
 #define CM_SCACHEFLAG_FETCHING		0x10	/* status being fetched */
 #define CM_SCACHEFLAG_SIZESTORING	0x20	/* status being stored that
 						 * changes the data; typically,
@@ -171,10 +181,10 @@ typedef struct cm_scache {
  * These flags correspond to individual RPCs that we may be making, and at most
  * one can be set in any one call to SyncOp.
  */
-#define CM_SCACHESYNC_FETCHSTATUS	1	/* fetching status info */
-#define CM_SCACHESYNC_STORESTATUS	2	/* storing status info */
-#define CM_SCACHESYNC_FETCHDATA		4	/* fetch data */
-#define CM_SCACHESYNC_STOREDATA		8	/* store data */
+#define CM_SCACHESYNC_FETCHSTATUS           0x01        /* fetching status info */
+#define CM_SCACHESYNC_STORESTATUS           0x02        /* storing status info */
+#define CM_SCACHESYNC_FETCHDATA             0x04        /* fetch data */
+#define CM_SCACHESYNC_STOREDATA             0x08        /* store data */
 #define CM_SCACHESYNC_STORESIZE		0x10	/* store new file size */
 #define CM_SCACHESYNC_GETCALLBACK	0x20	/* fetching a callback */
 #define CM_SCACHESYNC_STOREDATA_EXCL	0x40	/* store data */
@@ -212,14 +222,12 @@ typedef struct cm_scache {
 				   ((fidp)->volume +	\
 				    (fidp)->vnode +	\
 				    (fidp)->unique))	\
-					% cm_hashTableSize)
+					% cm_data.hashTableSize)
 
 #include "cm_conn.h"
 #include "cm_buf.h"
 
-extern cm_scache_t cm_fakeSCache;
-
-extern void cm_InitSCache(long);
+extern void cm_InitSCache(int, long);
 
 extern long cm_GetSCache(cm_fid_t *, cm_scache_t **, struct cm_user *,
 	struct cm_req *);
@@ -240,20 +248,26 @@ extern void cm_MergeStatus(cm_scache_t *, struct AFSFetchStatus *, struct AFSVol
 
 extern void cm_AFSFidFromFid(struct AFSFid *, cm_fid_t *);
 
+extern void cm_HoldSCacheNoLock(cm_scache_t *);
+
 extern void cm_HoldSCache(cm_scache_t *);
+
+extern void cm_ReleaseSCacheNoLock(cm_scache_t *);
 
 extern void cm_ReleaseSCache(cm_scache_t *);
 
 extern cm_scache_t *cm_FindSCache(cm_fid_t *fidp);
 
-extern long cm_hashTableSize;
-
 extern osi_rwlock_t cm_scacheLock;
 
 extern osi_queue_t *cm_allFileLocks;
 
-extern cm_scache_t **cm_hashTablep;
-
 extern void cm_DiscardSCache(cm_scache_t *scp);
+
+extern int cm_FindFileType(cm_fid_t *fidp);
+
+extern long cm_ValidateSCache(void);
+
+extern long cm_ShutdownSCache(void);
 
 #endif /*  __CM_SCACHE_H_ENV__ */

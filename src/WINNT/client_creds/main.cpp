@@ -10,15 +10,18 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <osilog.h>
+#include <afs/fs_utils.h>
+#include <rxkad.h>
+#include <afs/afskfw.h>
+#include "ipaddrchg.h"
 }
 
 #include "afscreds.h"
-#include "..\afsreg\afsreg.h" // So we can see if the server's installed
+#include <WINNT\afsreg.h> // So we can see if the server's installed
 #include "drivemap.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <osilog.h>
-#include "rxkad.h"
 
 /*
  * DEFINITIONS ________________________________________________________________
@@ -53,10 +56,14 @@ BOOL IsServerInstalled (void);
  *
  */
 
-int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pCmdLine, int nCmdShow)
+extern "C" int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR pCmdLine, int nCmdShow)
 {
    Shortcut_Init();
    TaLocale_LoadCorrespondingModule (hInst);
+
+   osi_InitTraceOption();
+   osi_LogEvent0("AFSCreds Main command line",pCmdLine);
+   fs_utils_InitMountRoot();
 
    if (InitApp (pCmdLine))
       {
@@ -83,6 +90,14 @@ BOOL InitApp (LPSTR pszCmdLineA)
    BOOL fExit = FALSE;
    BOOL fInstall = FALSE;
    BOOL fUninstall = FALSE;
+   BOOL fAutoInit = FALSE;
+   BOOL fNetDetect = FALSE;
+   BOOL fRenewMaps = FALSE;
+
+   // Initialize our global variables and window classes
+   //
+   memset (&g, 0x00, sizeof(g));
+   g.fStartup = TRUE;
 
    // Parse the command-line
    //
@@ -93,6 +108,21 @@ BOOL InitApp (LPSTR pszCmdLineA)
 
       switch (*(++pszCmdLineA))
          {
+         case 'a':
+         case 'A':
+            fAutoInit = TRUE;
+            break;
+
+         case 'm':
+         case 'M':
+            fRenewMaps = TRUE;
+            break;
+
+         case 'n':
+         case 'N':
+            fNetDetect = TRUE;
+            break;
+
          case 's':
          case 'S':
             fShow = TRUE;
@@ -117,24 +147,22 @@ BOOL InitApp (LPSTR pszCmdLineA)
          case 'U':
             fUninstall = TRUE;
             break;
+
 		 case ':':
+             CopyAnsiToString(g.SmbName,pszCmdLineA);
 			 MapShareName(pszCmdLineA);
 			 break;
+
+         case 'z':
+         case 'Z':
+             DoUnMapShare(TRUE);
+             return(0);
+
          case 'x':
          case 'X':
-	     DWORD LogonOption;
-	     DWORD LSPtype, LSPsize;
-	     HKEY NPKey;
-	     LSPsize=sizeof(LogonOption);
-	     (void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_CLIENT_PROVIDER_KEY,
-				 0, KEY_QUERY_VALUE, &NPKey);
-	     RegQueryValueEx(NPKey, "LogonOptions", NULL,
-                             &LSPtype, (LPBYTE)&LogonOption, &LSPsize);
-	     RegCloseKey (NPKey);
-	     if (ISHIGHSECURITY(LogonOption))
-		 DoMapShare();
-	     GlobalMountDrive();
-	     return 0;
+             TestAndDoMapShare(SERVICE_START_PENDING);
+             TestAndDoMapShare(SERVICE_RUNNING);
+             return 0;
          }
 
       while (*pszCmdLineA && (*pszCmdLineA != ' '))
@@ -150,7 +178,7 @@ BOOL InitApp (LPSTR pszCmdLineA)
    if (fInstall)
       {
       HKEY hk;
-      if (RegCreateKey (HKEY_LOCAL_MACHINE, TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"), &hk) == 0)
+      if (RegCreateKey (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY, &hk) == 0)
          {
          DWORD dwSize = sizeof(g.fStartup);
          DWORD dwType = REG_DWORD;
@@ -184,13 +212,15 @@ BOOL InitApp (LPSTR pszCmdLineA)
    if (fExit || fUninstall || fInstall)
       return FALSE;
 
-   // Initialize our global variables and window classes
-   //
-   memset (&g, 0x00, sizeof(g));
-   g.fStartup = TRUE;
-
    HKEY hk;
-   if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("System\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters"), &hk) == 0)
+    if (RegOpenKey (HKEY_CURRENT_USER, AFSREG_USER_OPENAFS_SUBKEY, &hk) == 0)
+    {
+        DWORD dwSize = sizeof(g.fStartup);
+        DWORD dwType = REG_DWORD;
+        RegQueryValueEx (hk, TEXT("ShowTrayIcon"), NULL, &dwType, (PBYTE)&g.fStartup, &dwSize);
+        RegCloseKey (hk);
+    }
+    else if (RegOpenKey (HKEY_LOCAL_MACHINE, AFSREG_CLT_OPENAFS_SUBKEY, &hk) == 0)
       {
       DWORD dwSize = sizeof(g.fStartup);
       DWORD dwType = REG_DWORD;
@@ -220,6 +250,57 @@ BOOL InitApp (LPSTR pszCmdLineA)
 
    InitCommonControls();
    RegisterCheckListClass();
+   osi_Init();
+   lock_InitializeMutex(&g.expirationCheckLock, "expiration check lock");
+   lock_InitializeMutex(&g.credsLock, "global creds lock");
+
+   KFW_AFS_wait_for_service_start();
+
+   if ( IsDebuggerPresent() ) {
+       if ( !g.fIsWinNT )
+           OutputDebugString("No Service Present on non-NT systems\n");
+       else {
+           if ( IsServiceRunning() )
+               OutputDebugString("AFSD Service started\n");
+           else {
+               OutputDebugString("AFSD Service stopped\n");
+               if ( !IsServiceConfigured() )
+                   OutputDebugString("AFSD Service not configured\n");
+               else if ( fAutoInit )
+                   OutputDebugString("AFSD Service will be started\n");
+           }   
+       }
+   }
+
+    // If the service isn't started yet, and autoInit start the service
+    if ( g.fIsWinNT && !IsServiceRunning() && IsServiceConfigured() && fAutoInit ) {
+        SC_HANDLE hManager;
+
+        if ((hManager = OpenSCManager( NULL, NULL, 
+                                       SC_MANAGER_CONNECT |
+                                       SC_MANAGER_ENUMERATE_SERVICE |
+                                       SC_MANAGER_QUERY_LOCK_STATUS)) != NULL )
+        {
+            SC_HANDLE hService;
+            if ((hService = OpenService( hManager, TEXT("TransarcAFSDaemon"), 
+                                         SERVICE_QUERY_STATUS | SERVICE_START) ) != NULL)
+            {
+                if (StartService(hService, 0, 0)) {
+                    if ( IsDebuggerPresent() )
+                        OutputDebugString("AFSD Service start successful\n");
+                    fRenewMaps = TRUE;
+                } else if ( IsDebuggerPresent() )
+                    OutputDebugString("AFSD Service start failed\n");
+
+                CloseServiceHandle (hService);
+            }
+
+            CloseServiceHandle (hManager);
+        }
+        KFW_AFS_wait_for_service_start();
+    }
+
+    KFW_initialize();
 
    // Create a main window. All further initialization will be done during
    // processing of WM_INITDIALOG.
@@ -248,17 +329,43 @@ BOOL InitApp (LPSTR pszCmdLineA)
       else if (!IsServerInstalled())
          Message (MB_ICONHAND, IDS_UNCONFIG_TITLE, IDS_UNCONFIG_DESC);
       }
-   if (IsServiceRunning() && fShow)
+   if (IsServiceRunning()) { 
+      if ( fRenewMaps )
       {
+          if ( IsDebuggerPresent() )
+              OutputDebugString("Renewing Drive Maps\n");
+          DoMapShare();
+      }
+      if (fShow)
+      {
+      if ( IsDebuggerPresent() )
+          OutputDebugString("Displaying Main window\n");
       Main_Show (TRUE);
       }
+      // If the root cell is reachable and we have no tokens
+      // display the Obtain Tokens dialog to the user
+      if ( fAutoInit ) {
+          if ( IsDebuggerPresent() )
+              OutputDebugString("Obtaining Tokens (if needed)\n");
+          ObtainTokensFromUserIfNeeded(g.hMain);
+      }
+   } else if ( IsDebuggerPresent() )
+       OutputDebugString("AFSD Service Stopped\n");
 
-   return TRUE;
+    if ( fNetDetect ) {
+        // Start IP Address Change Monitor
+        if ( IsDebuggerPresent() )
+            OutputDebugString("Activating Network Change Monitor\n");
+        IpAddrChangeMonitorInit(g.hMain);
+    }
+    Main_EnableRemindTimer(TRUE);
+    return TRUE;
 }
 
 
 void ExitApp (void)
 {
+   KFW_cleanup();
    g.hMain = NULL;
 }
 
@@ -290,12 +397,9 @@ void Quit (void)
 BOOL IsServerInstalled (void)
 {
    BOOL fInstalled = FALSE;
-
-   TCHAR szKey[] = AFSREG_SVR_SVC_KEY;
-   LPCTSTR pch = lstrchr (szKey, TEXT('\\'));
-
    HKEY hk;
-   if (RegOpenKey (HKEY_LOCAL_MACHINE, &pch[1], &hk) == 0)
+
+   if (RegOpenKey (HKEY_LOCAL_MACHINE, AFSREG_SVR_SVC_SUBKEY, &hk) == 0)
       {
       fInstalled = TRUE;
       RegCloseKey (hk);

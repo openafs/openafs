@@ -13,7 +13,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/export/cfgafs.c,v 1.1.1.5 2003/04/13 19:06:37 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/export/cfgafs.c,v 1.6 2003/07/15 23:15:06 shadow Exp $");
 
 #include <errno.h>
 #include <stdio.h>
@@ -26,14 +27,15 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/export/cfgafs.c,v 1.1.1.5 2003/04/13 19
 #include <setjmp.h>
 #include <signal.h>
 
-extern char    *malloc(), *optarg;
+extern char *malloc(), *optarg;
 
-extern int	sysconfig(int cmd, void *arg, int len);
+extern int sysconfig(int cmd, void *arg, int len);
 
 #include "AFS_component_version_number.c"
 
 main(argc, argv)
-char **argv; {
+     char **argv;
+{
     register add, del;
     register c;
     int res;
@@ -42,7 +44,7 @@ char **argv; {
     struct cfg_load cload;
     struct cfg_kmod cmod;
     FILE *fp;
-    
+
 #ifdef	AFS_AIX32_ENV
     /*
      * The following signal action for AIX is necessary so that in case of a 
@@ -51,39 +53,39 @@ char **argv; {
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
     add = del = 0;
-    
+
     while ((c = getopt(argc, argv, "a:d:")) != EOF) {
 	switch (c) {
-	  case 'a':
-	    add  = 1;
+	case 'a':
+	    add = 1;
 	    file = optarg;
 	    if (!file)
 		usage();
 	    break;
-	    
-	  case 'd':
+
+	case 'd':
 	    del = 1;
 	    file = optarg;
 	    if (!file)
 		usage();
 	    break;
-	    
-	  default:
+
+	default:
 	    usage();
 	    break;
 	}
     }
-    
+
     if (!add && !del)
 	usage();
-    
+
     if (add) {
 	char *buf[1024];
 	char PidFile[256];
@@ -98,12 +100,12 @@ char **argv; {
 	    execvp("/etc/execerror", buf);
 	    exit(1);
 	}
-	
-	cmod.kmid   = cload.kmid;
-	cmod.cmd    = CFG_INIT;
+
+	cmod.kmid = cload.kmid;
+	cmod.cmd = CFG_INIT;
 	cmod.mdiptr = 0;
 	cmod.mdilen = 0;
-	
+
 	res = sysconfig(SYS_CFGKMOD, &cmod, sizeof(cmod));
 	if (res != 0) {
 	    perror("SYS_CFGKMOD");
@@ -118,10 +120,11 @@ char **argv; {
 	strcat(PidFile, ".kmid");
 	fp = fopen(PidFile, "w");
 	if (fp) {
-	    (void) fprintf(fp, "%d\n", cload.kmid);
-	    (void) fclose(fp);
+	    (void)fprintf(fp, "%d\n", cload.kmid);
+	    (void)fclose(fp);
 	} else {
-	    printf("Can't open for write file %s (error=%d); ignored\n", PidFile, errno);
+	    printf("Can't open for write file %s (error=%d); ignored\n",
+		   PidFile, errno);
 	}
 	exit(0);
     } else if (del) {
@@ -131,22 +134,23 @@ char **argv; {
 	strcat(PidFile, ".kmid");
 	fp = fopen(PidFile, "r");
 	if (!fp) {
-	    printf("Can't read %s file (error=%d); aborting\n", PidFile, errno);
+	    printf("Can't read %s file (error=%d); aborting\n", PidFile,
+		   errno);
 	    exit(1);
 	}
-	(void) fscanf(fp, "%d\n", &kmid);
-	(void) fclose(fp);
+	(void)fscanf(fp, "%d\n", &kmid);
+	(void)fclose(fp);
 	unlink(PidFile);
-	cmod.kmid   = kmid;
-	cmod.cmd    = CFG_TERM;
+	cmod.kmid = kmid;
+	cmod.cmd = CFG_TERM;
 	cmod.mdiptr = NULL;
 	cmod.mdilen = 0;
-	
+
 	if (sysconfig(SYS_CFGKMOD, &cmod, sizeof(cmod)) == -1) {
 	    perror("SYS_CFGKMOD");
 	    exit(1);
 	}
-	
+
 	cload.kmid = kmid;
 	if (sysconfig(SYS_KULOAD, &cload, sizeof(cload)) == -1) {
 	    perror("SYS_KULOAD");
@@ -156,8 +160,9 @@ char **argv; {
     }
 }
 
-usage() {
-    
+usage()
+{
+
     fprintf(stderr, "usage: cfgafs [-a mod_file] [-d mod_file]\n");
     exit(1);
 }

@@ -59,9 +59,9 @@ static struct
    } l;
 
 rwWindowData awdActions[] = {
-    { IDC_ACTION_DESC, raSizeX | raRepaint },
-    { IDC_ACTION_LIST, raSizeX | raSizeY, MAKELONG(cxMIN_ACTION,cyMIN_ACTION) },
-    { idENDLIST, 0 }
+    { IDC_ACTION_DESC, raSizeX | raRepaint,					0,	0 },
+    { IDC_ACTION_LIST, raSizeX | raSizeY, MAKELONG(cxMIN_ACTION,cyMIN_ACTION),	0 },
+    { idENDLIST, 0,								0,	0 }
  };
 
 

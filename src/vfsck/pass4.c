@@ -18,7 +18,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/pass4.c,v 1.1.1.4 2001/09/11 14:35:30 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/vfsck/pass4.c,v 1.5 2003/07/15 23:17:27 shadow Exp $");
 
 #define VICE
 #include <sys/param.h>
@@ -34,7 +35,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/pass4.c,v 1.1.1.4 2001/09/11 14:3
 #undef	_KERNEL
 #undef	_BSD
 #include <stdio.h>
-#else	/* AFS_OSF_ENV */
+#else /* AFS_OSF_ENV */
 #ifdef AFS_VFSINCL_ENV
 #include <sys/vnode.h>
 #ifdef	  AFS_SUN5_ENV
@@ -60,138 +61,138 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vfsck/pass4.c,v 1.1.1.4 2001/09/11 14:3
 #endif
 #include <sys/fs.h>
 #endif /* AFS_VFSINCL_ENV */
-#endif	/* AFS_OSF_ENV */
+#endif /* AFS_OSF_ENV */
 #include <afs/osi_inode.h>
 
 #include "fsck.h"
 
-int	pass4check();
+int pass4check();
 
 pass4()
 {
-	register ino_t inumber;
-	register struct zlncnt *zlnp;
-	struct inodesc idesc;
-	int n;
+    register ino_t inumber;
+    register struct zlncnt *zlnp;
+    struct inodesc idesc;
+    int n;
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-	register struct dinode *dp;
+    register struct dinode *dp;
 #endif /* ACLS */
 
 
-	memset((char *)&idesc, 0, sizeof(struct inodesc));
-	idesc.id_type = ADDR;
-	idesc.id_func = pass4check;
-	for (inumber = ROOTINO; inumber <= lastino; inumber++) {
-		idesc.id_number = inumber;
+    memset((char *)&idesc, 0, sizeof(struct inodesc));
+    idesc.id_type = ADDR;
+    idesc.id_func = pass4check;
+    for (inumber = ROOTINO; inumber <= lastino; inumber++) {
+	idesc.id_number = inumber;
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-		switch (statemap[inumber] & STATE) {
+	switch (statemap[inumber] & STATE) {
 #else /* no ACLS */
-		switch (statemap[inumber]) {
+	switch (statemap[inumber]) {
 #endif /* ACLS */
 
-		case FSTATE:
-		case DFOUND:
-			n = lncntp[inumber];
-			if (n)
-				adjust(&idesc, (short)n);
-			else {
-				for (zlnp = zlnhead; zlnp; zlnp = zlnp->next)
-					if (zlnp->zlncnt == inumber) {
-						zlnp->zlncnt = zlnhead->zlncnt;
-						zlnp = zlnhead;
-						zlnhead = zlnhead->next;
-						free((char *)zlnp);
-						clri(&idesc, "UNREF", 1);
-						break;
-					}
-			}
-			break;
-
-#ifdef VICE
-		case VSTATE:
-			nViceFiles++;
-			break;
-#endif /* VICE */
-
-		case DSTATE:
+	case FSTATE:
+	case DFOUND:
+	    n = lncntp[inumber];
+	    if (n)
+		adjust(&idesc, (short)n);
+	    else {
+		for (zlnp = zlnhead; zlnp; zlnp = zlnp->next)
+		    if (zlnp->zlncnt == inumber) {
+			zlnp->zlncnt = zlnhead->zlncnt;
+			zlnp = zlnhead;
+			zlnhead = zlnhead->next;
+			free((char *)zlnp);
 			clri(&idesc, "UNREF", 1);
 			break;
+		    }
+	    }
+	    break;
 
-		case DCLEAR:
-		case FCLEAR:
-			clri(&idesc, "BAD/DUP", 1);
-			break;
+#ifdef VICE
+	case VSTATE:
+	    nViceFiles++;
+	    break;
+#endif /* VICE */
 
-		case USTATE:
-			break;
+	case DSTATE:
+	    clri(&idesc, "UNREF", 1);
+	    break;
+
+	case DCLEAR:
+	case FCLEAR:
+	    clri(&idesc, "BAD/DUP", 1);
+	    break;
+
+	case USTATE:
+	    break;
 
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
-		/* 
-		 * UNreferenced continuation inode 
-		 */
-		case CSTATE:
-			clri(&idesc, "UNREF", 2);
-			break;
+	    /* 
+	     * UNreferenced continuation inode 
+	     */
+	case CSTATE:
+	    clri(&idesc, "UNREF", 2);
+	    break;
 
-		/* 
-		 * referenced continuation inode 
-		 */
-		case CRSTATE:
-			if ((dp = ginode(inumber)) == NULL)
-			    break;
-			if (dp->di_nlink != 1)
-			    if (!qflag) {
-			    	pwarn("BAD LINK COUNT IN CONTINUATION INODE ");
-				pwarn("I=%u (%ld should be %ld)",
-					    inumber, dp->di_nlink, 1);
-				if (preen)
+	    /* 
+	     * referenced continuation inode 
+	     */
+	case CRSTATE:
+	    if ((dp = ginode(inumber)) == NULL)
+		break;
+	    if (dp->di_nlink != 1)
+		if (!qflag) {
+		    pwarn("BAD LINK COUNT IN CONTINUATION INODE ");
+		    pwarn("I=%u (%ld should be %ld)", inumber, dp->di_nlink,
+			  1);
+		    if (preen)
 #ifdef VICE
-					vprintf(" (CORRECTED)\n");
+			vprintf(" (CORRECTED)\n");
 #else
-					printf(" (CORRECTED)\n");
+			printf(" (CORRECTED)\n");
 #endif /* VICE */
-				else {
-					if (reply("CORRECT") == 0)
-					continue;
-				}
-			    	dp->di_nlink = 1;
-				inodirty();
-			    }
-			break;
+		    else {
+			if (reply("CORRECT") == 0)
+			    continue;
+		    }
+		    dp->di_nlink = 1;
+		    inodirty();
+		}
+	    break;
 #endif /* ACLS */
 
-		default:
-			errexit("BAD STATE %d FOR INODE I=%d",
-			    statemap[inumber], inumber);
-		}
+	default:
+	    errexit("BAD STATE %d FOR INODE I=%d", statemap[inumber],
+		    inumber);
 	}
+    }
 }
 
 pass4check(idesc)
-	register struct inodesc *idesc;
+     register struct inodesc *idesc;
 {
-	register struct dups *dlp;
-	int nfrags, res = KEEPON;
-	daddr_t blkno = idesc->id_blkno;
+    register struct dups *dlp;
+    int nfrags, res = KEEPON;
+    daddr_t blkno = idesc->id_blkno;
 
-	for (nfrags = idesc->id_numfrags; nfrags > 0; blkno++, nfrags--) {
-		if (chkrange(blkno, 1)) {
-			res = SKIP;
-		} else if (testbmap(blkno)) {
-			for (dlp = duplist; dlp; dlp = dlp->next) {
-				if (dlp->dup != blkno)
-					continue;
-				dlp->dup = duplist->dup;
-				dlp = duplist;
-				duplist = duplist->next;
-				free((char *)dlp);
-				break;
-			}
-			if (dlp == 0) {
-				clrbmap(blkno);
-				n_blks--;
-			}
-		}
+    for (nfrags = idesc->id_numfrags; nfrags > 0; blkno++, nfrags--) {
+	if (chkrange(blkno, 1)) {
+	    res = SKIP;
+	} else if (testbmap(blkno)) {
+	    for (dlp = duplist; dlp; dlp = dlp->next) {
+		if (dlp->dup != blkno)
+		    continue;
+		dlp->dup = duplist->dup;
+		dlp = duplist;
+		duplist = duplist->next;
+		free((char *)dlp);
+		break;
+	    }
+	    if (dlp == 0) {
+		clrbmap(blkno);
+		n_blks--;
+	    }
 	}
-	return (res);
+    }
+    return (res);
 }

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/sys/iinc.c,v 1.1.1.4 2001/07/14 22:24:02 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/sys/iinc.c,v 1.5 2003/07/15 23:16:54 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -21,14 +22,14 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/sys/iinc.c,v 1.1.1.4 2001/07/14 22:24:0
 #include <sys/mknod.h>
 #endif
 
-main(argc,argv)
-char **argv;
+main(argc, argv)
+     char **argv;
 {
-    
+
     int fd;
     struct stat status;
 
-    if ( argc < 3 ) {
+    if (argc < 3) {
 	printf(" Usage is %s <partition> <inode>\n", argv[0]);
 	exit(0);
     }
@@ -37,8 +38,8 @@ char **argv;
 	perror("stat");
 	exit(1);
     }
-    printf("About to iinc(dev=(%d), inode=%d)\n",
-    	status.st_dev, atoi(argv[2]));
+    printf("About to iinc(dev=(%d), inode=%d)\n", status.st_dev,
+	   atoi(argv[2]));
     fflush(stdout);
     fd = IINC(status.st_dev, atoi(argv[2]), 17);
     if (fd == -1) {

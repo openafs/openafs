@@ -18,7 +18,7 @@
 /*
  * --------------------- Required definitions ---------------------
  */
-#include "uss_common.h"		/*Commons uss definitions*/
+#include "uss_common.h"		/*Commons uss definitions */
 
 
 /*
@@ -30,13 +30,13 @@ extern afs_int32 uss_ptserver_AddUser();
      *    Register the given user with the Protection Server.
      *
      * Args:
-     *	  char *a_user : Name of the user to register.
-     *	  char *a_uid  : Points to the uid registered for the named user.
+     *    char *a_user : Name of the user to register.
+     *    char *a_uid  : Points to the uid registered for the named user.
      *
      * Returns:
-     *	  0	    if everything went well,
-     *	  PRIDEXIST if the chosen uid already exists, or
-     *	  Code returned from a lower-level call.
+     *    0         if everything went well,
+     *    PRIDEXIST if the chosen uid already exists, or
+     *    Code returned from a lower-level call.
      */
 
 extern afs_int32 uss_ptserver_DelUser();
@@ -45,26 +45,26 @@ extern afs_int32 uss_ptserver_DelUser();
      *    Delete the given user from the Protection Server.
      *
      * Args:
-     *	  char *a_name : User name to delete.
+     *    char *a_name : User name to delete.
      *
      * Returns:
-     *	  0	    if everything went well, or
-     *	  Code returned from a lower-level call.
+     *    0         if everything went well, or
+     *    Code returned from a lower-level call.
      */
 
 extern afs_int32 uss_ptserver_XlateUser();
     /*
      * Summary:
      *    Ask the Protection Server to translate the given user
-     *	  name to its corresponding AFS uid.
+     *    name to its corresponding AFS uid.
      *
      * Args:
-     *	  char *a_user  : Name of the user to translate.
-     *	  afs_int32 *a_uidP  : Points to the uid registered for the named user.
+     *    char *a_user  : Name of the user to translate.
+     *    afs_int32 *a_uidP  : Points to the uid registered for the named user.
      *
      * Returns:
-     *	  0	    if everything went well,
-     *	  Code returned from a lower-level call.
+     *    0         if everything went well,
+     *    Code returned from a lower-level call.
      */
 
 #endif /* _USS_PTSERVER_H_ */

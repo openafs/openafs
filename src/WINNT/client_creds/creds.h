@@ -10,6 +10,9 @@
 #ifndef CREDS_H
 #define CREDS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * PROTOTYPES _________________________________________________________________
@@ -24,7 +27,7 @@ int GetCurrentCredentials (void);
 
 int DestroyCurrentCredentials (LPCTSTR pszCell);
 
-int ObtainNewCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword);
+int ObtainNewCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword, BOOL Silent);
 
 int GetDefaultCell (LPTSTR pszCell);
 
@@ -33,6 +36,8 @@ void GetGatewayName (LPTSTR pszGateway);
 BOOL Creds_OpenLibraries (void);
 void Creds_CloseLibraries (void);
 
-
+#ifdef __cplusplus
+}
+#endif
 #endif
 

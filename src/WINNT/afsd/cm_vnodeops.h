@@ -15,7 +15,7 @@ extern unsigned int cm_mountRootGen;
 /* parms for attribute setting call */
 typedef struct cm_attr {
 	int mask;
-	unsigned long clientModTime;
+	time_t clientModTime;
         osi_hyper_t length;
 	int unixModeBits;
         long owner;
@@ -33,7 +33,7 @@ typedef struct cm_lookupSearch {
         cm_fid_t fid;
         char *searchNamep;
         int found;
-        int LCfound, UCfound, NCfound;
+        int LCfound, UCfound, NCfound, ExactFound;
         int caseFold;
         int hasTilde;
 } cm_lookupSearch_t;
@@ -70,6 +70,10 @@ extern long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
 extern long cm_Lookup(cm_scache_t *dscp, char *namep, long flags,
 	cm_user_t *userp, cm_req_t *reqp, cm_scache_t **outpScpp);
 
+extern long cm_LookupInternal(cm_scache_t *dscp, char *namep, long flags,
+                              cm_user_t *userp, cm_req_t *reqp, 
+                              cm_scache_t **outpScpp);
+
 extern void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp,
 	cm_user_t *userp, cm_req_t *reqp);
 
@@ -104,12 +108,18 @@ extern long cm_Rename(cm_scache_t *oldDscp, char *oldLastNamep,
 extern long cm_HandleLink(cm_scache_t *linkScp, struct cm_user *userp,
 	cm_req_t *reqp);
 
+extern long cm_Link(cm_scache_t *dscp, char *namep, cm_scache_t *sscp,
+    long flags, cm_user_t *userp, cm_req_t *reqp);
+
 extern long cm_SymLink(cm_scache_t *dscp, char *namep, char *contentsp,
 	long flags, cm_attr_t *attrp, cm_user_t *userp, cm_req_t *reqp);
 
-extern char cm_sysName[100];
+extern long cm_AssembleLink(cm_scache_t *linkScp, char *pathSuffixp,
+                            cm_scache_t **newRootScpp, cm_space_t **newSpaceBufferp,
+                            cm_user_t *userp, cm_req_t *reqp);
 
-extern int cm_ExpandSysName(char *inp, char *outp, long outSize);
+extern int cm_ExpandSysName(char *inp, char *outp, long outSize,
+                            unsigned int sysNameIndex);
 
 extern long cm_Open(cm_scache_t *scp, int type, cm_user_t *userp);
 
@@ -148,4 +158,5 @@ extern void cm_CheckLocks();
 
 extern long cm_RetryLock(cm_file_lock_t *oldFileLock, int vcp_is_dead);
 
+#define MAX_SYMLINK_COUNT 16
 #endif /*  __CM_VNODEOPS_H_ENV__ */

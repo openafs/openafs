@@ -5,9 +5,9 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
+RELDIR=update
 !INCLUDE ..\config\NTMakefile.$(SYS_NAME)
 !INCLUDE ..\config\NTMakefile.version
-
 
 LIBS = \
 	$(DESTDIR)\lib\afs\afsauth.lib \
@@ -35,14 +35,14 @@ update.cs.c update.ss.c update.er.c update.h: update.xg
 UPSERVER = $(DESTDIR)\root.server\usr\afs\bin\upserver.exe
 
 USVR_OBJS = \
-	AFS_component_version_number.obj \
-	server.obj \
-	utils.obj \
-	update.ss.obj \
-	upserver.res
+	$(OUT)\AFS_component_version_number.obj \
+	$(OUT)\server.obj \
+	$(OUT)\utils.obj \
+	$(OUT)\update.ss.obj \
+	$(OUT)\upserver.res
 
 $(UPSERVER):  $(USVR_OBJS) $(LIBS)
-	$(EXECONLINK)
+	$(EXECONLINK) dnsapi.lib iphlpapi.lib
 	$(EXEPREP) 
 
 ############################################################################
@@ -50,23 +50,22 @@ $(UPSERVER):  $(USVR_OBJS) $(LIBS)
 UPCLIENT = $(DESTDIR)\root.server\usr\afs\bin\upclient.exe
 
 UCLNT_OBJS = \
-	AFS_component_version_number.obj \
-	client.obj \
-	utils.obj \
-	update.cs.obj \
-	upclient.res
+	$(OUT)\AFS_component_version_number.obj \
+	$(OUT)\client.obj \
+	$(OUT)\utils.obj \
+	$(OUT)\update.cs.obj \
+	$(OUT)\upclient.res
 
 $(UPCLIENT):  $(UCLNT_OBJS)  $(LIBS)
-	$(EXECONLINK)
+	$(EXECONLINK) dnsapi.lib iphlpapi.lib
 	$(EXEPREP) 
 
 ############################################################################
 # generate versioninfo resources
 
-upserver.res: upserver.rc AFS_component_version_number.h
-	$(RC) $*.rc
-upclient.res: upclient.rc AFS_component_version_number.h
-	$(RC) $*.rc
+$(OUT)\upserver.res: AFS_component_version_number.h
+
+$(OUT)\upclient.res: AFS_component_version_number.h
 
 ############################################################################
 # Install update executables.
@@ -79,3 +78,7 @@ install: update.h $(UPCLIENT) $(UPSERVER)
 
 clean::
 	$(DEL) update.cs.c update.ss.c update.xdr.c update.h
+
+mkdir:
+	 copy home $(OUT)\.
+	

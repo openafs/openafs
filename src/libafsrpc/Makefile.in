@@ -9,47 +9,30 @@
 
 # This is a pthread safe library containing rx, rxkad and des.
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-SHELL = /bin/sh
-
-include ../config/Makefile.${SYS_NAME}
 
 CC=${MT_CC}
-INCLUDES=-I${TOP_INCDIR} -I.. -I../rx -I../rxkad
-CFLAGS = ${OPTMZ} ${DBG} ${INCLUDES} -DRXDEBUG ${MT_CFLAGS} -I${TOP_SRCDIR}/config
+CFLAGS = ${COMMON_CFLAGS} -I${srcdir}/../des -I../des -I../rxkad -I${srcdir}/../rxkad \
+	-I../fsint -DRXDEBUG ${MT_CFLAGS}
+
 SFLAGS=-P -I${TOP_INCDIR}
-RX = ../rx
-CCRULE = ${CC} ${CFLAGS} -c $?
-RXKAD = ../rxkad
-RXSTAT = ../rxstat
-FSINT = ../fsint
-DES = ../des
-COMERR = ../comerr
-UTIL = ../util
-SYS = ../sys
+RX = ${srcdir}/../rx
+CCRULE = ${CC} ${CFLAGS} -c 
+RXKAD = ${srcdir}/../rxkad
+RXSTAT = ${srcdir}/../rxstat
+FSINT = ${srcdir}/../fsint
+DES = ${srcdir}/../des
+COMERR = ${srcdir}/../comerr
+UTIL = ${srcdir}/../util
+SYS = ${srcdir}/../sys
 
 SYSOBJS =\
 	syscall.o
 
 UTILOBJS =\
+	assert.o \
 	casestrcpy.o \
 	base64.o
 
@@ -63,6 +46,7 @@ XDROBJS =\
 	xdr_array.o \
 	xdr_arrayn.o \
 	xdr_rx.o \
+	xdr_int32.o \
 	xdr_int64.o \
 	xdr_afsuuid.o \
 	xdr_update.o \
@@ -104,6 +88,8 @@ RXKADOBJS =\
 	ticket.o \
 	ticket5.o \
 	crc.o \
+	md4.o \
+	md5.o \
 	fcrypt.o \
 	crypt_conn.o
 
@@ -153,103 +139,114 @@ libafsrpc.a: ${LIBOBJS}
         esac
 
 rx_event.o: ${RX}/rx_event.c
-	${CCRULE}
+	${CCRULE} ${RX}/rx_event.c
 
 rx_user.o: ${RX}/rx_user.c
-	${CCRULE}
+	${CCRULE} ${RX}/rx_user.c
 
 rx_pthread.o: ${RX}/rx_pthread.c
-	${CCRULE}
+	${CCRULE} ${RX}/rx_pthread.c
 
 rx.o: ${RX}/rx.c
-	${CCRULE}
+	${CCRULE} ${RX}/rx.c
 
 rx_conncache.o: ${RX}/rx_conncache.c
-	${CCRULE}
+	${CCRULE} ${RX}/rx_conncache.c
 
 rx_null.o: ${RX}/rx_null.c
-	${CCRULE}
+	${CCRULE} ${RX}/rx_null.c
 
-rx_globals.o: ${RX}/rx_globals.c
-	${CCRULE}
+rx_globals.o: ${RX}/rx_globals.c 
+	${CCRULE} ${RX}/rx_globals.c
 
 rx_getaddr.o: ${RX}/rx_getaddr.c
-	${CCRULE}
+	${CCRULE} ${RX}/rx_getaddr.c
 
 rx_misc.o: ${RX}/rx_misc.c
-	${CCRULE}
+	${CCRULE} ${RX}/rx_misc.c
 
 rx_packet.o: ${RX}/rx_packet.c
-	${CCRULE}
+	${CCRULE} ${RX}/rx_packet.c
 
 rx_rdwr.o: ${RX}/rx_rdwr.c
-	${CCRULE}
+	${CCRULE} ${RX}/rx_rdwr.c
 
 rx_trace.o: ${RX}/rx_trace.c
-	${CCRULE}
+	${CCRULE} ${RX}/rx_trace.c
 
 rx_multi.o: ${RX}/rx_multi.c
-	${CCRULE}
+	${CCRULE} ${RX}/rx_multi.c
+
+${RXOBJS}: ${RX}/rx.h ${RX}/rx_user.h ${RX}/rx_globals.h ${RX}/rx_clock.h ${RX}/rx_queue.h ${RX}/rx_event.h
 
 rxkad_client.o: ${RXKAD}/rxkad_client.c
-	${CCRULE}
+	${CCRULE} ${RXKAD}/rxkad_client.c
 
 rxkad_server.o: ${RXKAD}/rxkad_server.c
-	${CCRULE}
+	${CCRULE} ${RXKAD}/rxkad_server.c
 
 rxkad_common.o: ${RXKAD}/rxkad_common.c
-	${CCRULE}
+	${CCRULE} ${RXKAD}/rxkad_common.c
 
 ticket.o: ${RXKAD}/ticket.c
-	${CCRULE}
+	${CCRULE} ${RXKAD}/ticket.c
 
 ticket5.o: ${RXKAD}/ticket5.c
-	${CCRULE}
+	${CCRULE} ${RXKAD}/ticket5.c
 
 crc.o: ${RXKAD}/crc.c
-	${CCRULE}
+	${CCRULE} ${RXKAD}/crc.c
 
-fcrypt.o: ${RXKAD}/fcrypt.c
-	${CCRULE}
+md4.o: ${RXKAD}/md4.c
+	${CCRULE} ${RXKAD}/md4.c
 
-crypt_conn.o: ${RXKAD}/crypt_conn.c
-	${CCRULE}
+md5.o: ${RXKAD}/md5.c
+	${CCRULE} ${RXKAD}/md5.c
 
-AFS_component_version_number.o: ${RX}/AFS_component_version_number.c
-	${CCRULE}
+fcrypt.o: ${RXKAD}/domestic/fcrypt.c
+	${CCRULE} ${RXKAD}/domestic/fcrypt.c
+
+crypt_conn.o: ${RXKAD}/domestic/crypt_conn.c
+	${CCRULE} ${RXKAD}/domestic/crypt_conn.c
+
+AFS_component_version_number.o: ${TOP_OBJDIR}/src/rx/AFS_component_version_number.c
+	${CCRULE} ${TOP_OBJDIR}/src/rx/AFS_component_version_number.c
 
 xdr.o: ${RX}/xdr.c
-	${CCRULE}
+	${CCRULE} ${RX}/xdr.c
+
+xdr_int32.o: ${RX}/xdr_int32.c
+	${CCRULE} ${RX}/xdr_int32.c
 
 xdr_int64.o: ${RX}/xdr_int64.c
-	${CCRULE}
+	${CCRULE} ${RX}/xdr_int64.c
 
 xdr_array.o: ${RX}/xdr_array.c
-	${CCRULE}
+	${CCRULE} ${RX}/xdr_array.c
 
 xdr_arrayn.o: ${RX}/xdr_arrayn.c
-	${CCRULE}
+	${CCRULE} ${RX}/xdr_arrayn.c
 
 xdr_float.o: ${RX}/xdr_float.c
-	${CCRULE}
+	${CCRULE} ${RX}/xdr_float.c
 
 xdr_mem.o: ${RX}/xdr_mem.c
-	${CCRULE}
+	${CCRULE} ${RX}/xdr_mem.c
 
 xdr_rec.o: ${RX}/xdr_rec.c
-	${CCRULE}
+	${CCRULE} ${RX}/xdr_rec.c
 
 xdr_refernce.o: ${RX}/xdr_refernce.c
-	${CCRULE}
+	${CCRULE} ${RX}/xdr_refernce.c
 
 xdr_rx.o: ${RX}/xdr_rx.c
-	${CCRULE}
+	${CCRULE} ${RX}/xdr_rx.c
 
 xdr_update.o: ${RX}/xdr_update.c
-	${CCRULE}
+	${CCRULE} ${RX}/xdr_update.c
 
 xdr_afsuuid.o: ${RX}/xdr_afsuuid.c
-	${CCRULE}
+	${CCRULE} ${RX}/xdr_afsuuid.c
 
 # Note that the special case statement for compiling des.c is present
 # simply to work around a compiler bug on HP-UX 11.0.  The symptom of
@@ -270,7 +267,7 @@ xdr_afsuuid.o: ${RX}/xdr_afsuuid.c
 #
 #   $ what /opt/langtools/bin/pxdb32
 #   /opt/langtools/bin/pxdb32:
-#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.1.1.5 $
+#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.29.2.5 $
 #
 # The problem occurs when -g and -O are both used when compiling des.c.
 # The simplest way to work around the problem is to leave out either -g or -O.
@@ -281,71 +278,74 @@ des.o: ${DES}/des.c
 	set -x; \
 	case ${SYS_NAME} in \
 	hp_ux11*) \
-		set X `echo ${CCRULE} | sed s/-g//`; shift; \
+		set X `echo ${CCRULE} ${DES}/des.c | sed s/-g//`; shift; \
 		"$$@" \
 		;; \
 	*) \
-		${CCRULE} \
+		${CCRULE} ${DES}/des.c \
 		;; \
 	esac
 
 crypt.o: ${DES}/crypt.c
-	${CCRULE}
+	${CCRULE} ${DES}/crypt.c
 
 cbc_encrypt.o: ${DES}/cbc_encrypt.c
-	${CCRULE}
+	${CCRULE} ${DES}/cbc_encrypt.c
 
 pcbc_encrypt.o: ${DES}/pcbc_encrypt.c
-	${CCRULE}
+	${CCRULE} ${DES}/pcbc_encrypt.c
 
 cksum.o: ${DES}/cksum.c
-	${CCRULE}
+	${CCRULE} ${DES}/cksum.c
 
 new_rnd_key.o: ${DES}/new_rnd_key.c
-	${CCRULE}
+	${CCRULE} ${DES}/new_rnd_key.c
 
 key_sched.o: ${DES}/key_sched.c
-	${CCRULE}
+	${CCRULE} ${DES}/key_sched.c
 
 debug_decl.o: ${DES}/debug_decl.c
-	${CCRULE}
+	${CCRULE} ${DES}/debug_decl.c
 
 quad_cksum.o: ${DES}/quad_cksum.c
-	${CCRULE}
+	${CCRULE} ${DES}/quad_cksum.c
 
 key_parity.o: ${DES}/key_parity.c
-	${CCRULE}
+	${CCRULE} ${DES}/key_parity.c
 
 weak_key.o: ${DES}/weak_key.c
-	${CCRULE}
+	${CCRULE} ${DES}/weak_key.c
 
 strng_to_key.o: ${DES}/strng_to_key.c
-	${CCRULE}
+	${CCRULE} ${DES}/strng_to_key.c
 
 misc.o: ${DES}/misc.c
-	${CCRULE}
+	${CCRULE} ${DES}/misc.c
 
 util.o: ${DES}/util.c
-	${CCRULE}
+	${CCRULE} ${DES}/util.c
 
 error_msg.o: ${COMERR}/error_msg.c
-	${CCRULE}
+	${CCRULE} ${COMERR}/error_msg.c
 
 et_name.o: ${COMERR}/et_name.c
-	${CCRULE}
+	${CCRULE} ${COMERR}/et_name.c
 
 com_err.o: ${COMERR}/com_err.c
-	${CCRULE}
+	${CCRULE} ${COMERR}/com_err.c
 
 casestrcpy.o: ${UTIL}/casestrcpy.c
-	${CCRULE}
+	${CCRULE} ${UTIL}/casestrcpy.c
+
+assert.o: ${UTIL}/assert.c
+	${CCRULE} ${UTIL}/assert.c
 
 base64.o: ${UTIL}/base64.c
-	${CCRULE}
+	${CCRULE} ${UTIL}/base64.c
 
 syscall.o: ${SYS}/syscall.s
 	case "$(SYS_NAME)" in \
-	     sun4x_5*|sunx86_5*) \
+	     sun4x_5* | sunx86_5*) \
 		/usr/ccs/lib/cpp  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\
 		$(RM) syscall.ss;;				\
@@ -355,7 +355,7 @@ syscall.o: ${SYS}/syscall.s
 		${AS} -P ${CFLAGS} -D_NO_PROTO -DMACH -DOSF -nostdinc -traditional -DASSEMBLER ${SYS}/syscall.s; \
 		${AS} -o syscall.o syscall.i; \
 		$(RM) -f syscall.ss syscall.i;; \
-	 *fbsd* ) \
+	 *fbsd* | *nbsd* ) \
 		touch syscall.o ;; \
 	 *) \
 		/lib/cpp  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
@@ -364,34 +364,35 @@ syscall.o: ${SYS}/syscall.s
 	esac
 
 rxstat.o: ${RXSTAT}/rxstat.c
-	${CCRULE}
+	${CCRULE} ${RXSTAT}/rxstat.c
 
-rxstat.cs.o: ${RXSTAT}/rxstat.cs.c
-	${CCRULE}
+rxstat.cs.o: ${TOP_OBJDIR}/src/rxstat/rxstat.cs.c
+	${CCRULE} ${TOP_OBJDIR}/src/rxstat/rxstat.cs.c
 
-rxstat.ss.o: ${RXSTAT}/rxstat.ss.c
-	${CCRULE}
+rxstat.ss.o: ${TOP_OBJDIR}/src/rxstat/rxstat.ss.c
+	${CCRULE} ${TOP_OBJDIR}/src/rxstat/rxstat.ss.c
 
-rxstat.xdr.o: ${RXSTAT}/rxstat.xdr.c
-	${CCRULE}
+rxstat.xdr.o: ${TOP_OBJDIR}/src/rxstat//rxstat.xdr.c
+	${CCRULE} ${TOP_OBJDIR}/src/rxstat//rxstat.xdr.c
 
-afsint.cs.o: ${FSINT}/afsint.cs.c
-	${CCRULE}
+afsint.cs.o: ${TOP_OBJDIR}/src/fsint/afsint.cs.c
+	${CCRULE} ${TOP_OBJDIR}/src/fsint/afsint.cs.c
 
-afsint.xdr.o: ${FSINT}/afsint.xdr.c
-	${CCRULE}
+afsint.xdr.o: ${TOP_OBJDIR}/src/fsint/afsint.xdr.c
+	${CCRULE} ${TOP_OBJDIR}/src/fsint/afsint.xdr.c
 
-afscbint.cs.o: ${FSINT}/afscbint.cs.c
-	${CCRULE}
+afscbint.cs.o: ${TOP_OBJDIR}/src/fsint/afscbint.cs.c
+	${CCRULE} ${TOP_OBJDIR}/src/fsint/afscbint.cs.c
 
-afscbint.xdr.o: ${FSINT}/afscbint.xdr.c
-	${CCRULE}
+afscbint.xdr.o: ${TOP_OBJDIR}/src/fsint/afscbint.xdr.c
+	${CCRULE} ${TOP_OBJDIR}/src/fsint/afscbint.xdr.c
 
 afsaux.o: ${FSINT}/afsaux.c
-	${CCRULE}
+	${CCRULE} ${FSINT}/afsaux.c
 
 clean:
 	$(RM) -f *.o libafsrpc*
+
 ${DESTDIR}${libdir}/libafsrpc.a: libafsrpc.a
 	${INSTALL} $? $@
 

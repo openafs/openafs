@@ -11,8 +11,11 @@
 #define __CM_CONN_H_ENV__ 1
 
 #define	CM_CONN_DEFAULTRDRTIMEOUT	45
-#define CM_CONN_CONNDEADTIME		20
-#define CM_CONN_HARDDEADTIME            40
+#define CM_CONN_CONNDEADTIME		60
+#define CM_CONN_HARDDEADTIME        120
+
+extern long ConnDeadtimeout;
+extern long HardDeadtimeout;
 
 typedef struct cm_conn {
 	struct cm_conn *nextp;		/* locked by cm_connLock */
@@ -20,7 +23,7 @@ typedef struct cm_conn {
         struct rx_connection *callp;	/* locked by mx */
         struct cm_user *userp;		/* locked by mx; a held reference */
         osi_mutex_t mx;			/* mutex for some of these fields */
-        int refCount;			/* locked by cm_connLock */
+        unsigned long refCount;			/* locked by cm_connLock */
 	int ucgen;			/* ucellp's generation number */
         long flags;			/* locked by mx */
 	int cryptlevel;			/* encrytion status */
@@ -80,6 +83,7 @@ typedef struct cm_req {
 				   cache managers treat it as "server is down"*/
 
 #include "cm_server.h"
+#include "rx.h"
 
 extern void cm_InitConn(void);
 
@@ -88,6 +92,7 @@ extern void cm_InitReq(cm_req_t *reqp);
 extern int cm_Analyze(cm_conn_t *connp, struct cm_user *up, struct cm_req *reqp,
 	struct cm_fid *fidp,
 	struct AFSVolSync *volInfop,
+        cm_serverRef_t * serversp,
 	struct cm_callbackRequest *cbrp, long code);
 
 extern long cm_ConnByMServers(struct cm_serverRef *, struct cm_user *,
@@ -101,5 +106,7 @@ extern long cm_Conn(struct cm_fid *, struct cm_user *, struct cm_req *,
 extern void cm_PutConn(cm_conn_t *connp);
 
 extern void cm_GCConnections(cm_server_t *serverp);
+
+extern struct rx_connection * cm_GetRxConn(cm_conn_t *connp);
 
 #endif /*  __CM_CONN_H_ENV__ */

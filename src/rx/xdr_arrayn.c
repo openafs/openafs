@@ -29,7 +29,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_arrayn.c,v 1.1.1.5 2002/08/02 04:36:26 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rx/xdr_arrayn.c,v 1.8.2.1 2004/12/07 06:10:06 shadow Exp $");
 
 #if !defined(NeXT)
 
@@ -45,7 +46,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_arrayn.c,v 1.1.1.5 2002/08/02 04
 #if defined(KERNEL) && !defined(UKERNEL)
 #include <sys/param.h>
 #ifdef AFS_LINUX20_ENV
-#include "../h/string.h"
+#include "h/string.h"
 #if 0
 #define bzero(A,C) memset((A), 0, (C))
 #endif
@@ -62,10 +63,6 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_arrayn.c,v 1.1.1.5 2002/08/02 04
 #endif
 #endif
 
-#ifndef osi_alloc
-char *osi_alloc();
-#endif
-
 #define LASTUNSIGNED	((u_int)0-1)
 
 
@@ -76,70 +73,77 @@ char *osi_alloc();
  * elsize is the size (in bytes) of each element, and elproc is the
  * xdr procedure to call to handle each element of the array.
  */
+/*
+	caddr_t *addrp;		* array pointer *
+	u_int *sizep;		* number of elements *
+	u_int maxsize;		* max numberof elements *
+	u_int elsize;		* size in bytes of each element *
+	xdrproc_t elproc;	* xdr routine to handle each element *
+*/
 #ifdef	KERNEL
-bool_t xdr_arrayN(xdrs, addrp, sizep, maxsize, elsize, elproc)
-	register XDR *xdrs;
-	caddr_t *addrp;		/* array pointer */
-	u_int *sizep;		/* number of elements */
-	u_int maxsize;		/* max numberof elements */
-	u_int elsize;		/* size in bytes of each element */
-	xdrproc_t elproc;	/* xdr routine to handle each element */
+bool_t
+xdr_arrayN(register XDR * xdrs, caddr_t * addrp, u_int * sizep, u_int maxsize,
+	   u_int elsize, xdrproc_t elproc)
 {
-	register u_int i;
-	register caddr_t target = *addrp;
-	register u_int c;  /* the actual element count */
-	register bool_t stat = TRUE;
-	register u_int nodesize;
+    register u_int i;
+    register caddr_t target = *addrp;
+    register u_int c;		/* the actual element count */
+    register bool_t stat = TRUE;
+    register u_int nodesize;
 
-        i = ((~0) >> 1) / elsize;
-        if (maxsize > i) maxsize = i;
+    i = ((~0) >> 1) / elsize;
+    if (maxsize > i)
+	maxsize = i;
 
-	/* like strings, arrays are really counted arrays */
-	if (! xdr_u_int(xdrs, sizep)) {
+    /* like strings, arrays are really counted arrays */
+    if (!xdr_u_int(xdrs, sizep)) {
+	return (FALSE);
+    }
+    c = *sizep;
+    if ((c > maxsize) && (xdrs->x_op != XDR_FREE)) {
+	return (FALSE);
+    }
+    nodesize = c * elsize;
+
+    /*
+     * if we are deserializing, we may need to allocate an array.
+     * We also save time by checking for a null array if we are freeing.
+     */
+    if (target == NULL)
+	switch (xdrs->x_op) {
+	case XDR_DECODE:
+	    if (c == 0)
+		return (TRUE);
+	    *addrp = target = (caddr_t) osi_alloc(nodesize);
+	    if (target == NULL) {
 		return (FALSE);
-	}
-	c = *sizep;
-	if ((c > maxsize) && (xdrs->x_op != XDR_FREE)) {
-		return (FALSE);
-	}
-	nodesize = c * elsize;
+	    }
+	    memset(target, 0, (u_int) nodesize);
+	    break;
 
-	/*
-	 * if we are deserializing, we may need to allocate an array.
-	 * We also save time by checking for a null array if we are freeing.
-	 */
-	if (target == NULL)
-		switch (xdrs->x_op) {
-		case XDR_DECODE:
-			if (c == 0)
-				return (TRUE);
-			*addrp = target = osi_alloc(nodesize);
-			if (target == NULL) {
-				return (FALSE);
-			}
-			memset(target, 0, (u_int)nodesize);
-			break;
+	case XDR_FREE:
+	    return (TRUE);
 
-		case XDR_FREE:
-			return (TRUE);
-	}
-	
-	/*
-	 * now we xdr each element of array
-	 */
-	for (i = 0; (i < c) && stat; i++) {
-		stat = (*elproc)(xdrs, target, LASTUNSIGNED);
-		target += elsize;
+	case XDR_ENCODE:
+	    break;
 	}
 
-	/*
-	 * the array may need freeing
-	 */
-	if (xdrs->x_op == XDR_FREE) {
-		osi_free(*addrp, nodesize);
-		*addrp = NULL;
-	}
-	return (stat);
+    /*
+     * now we xdr each element of array
+     */
+    for (i = 0; (i < c) && stat; i++) {
+	stat = (*elproc) (xdrs, target, LASTUNSIGNED);
+	target += elsize;
+    }
+
+    /*
+     * the array may need freeing
+     */
+    if (xdrs->x_op == XDR_FREE) {
+	osi_free(*addrp, nodesize);
+	*addrp = NULL;
+    }
+    return (stat);
 }
 #endif
 #endif /* NeXT */

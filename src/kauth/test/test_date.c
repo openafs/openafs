@@ -16,7 +16,8 @@
 #include <sys/param.h>
 #include <afsconfig.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/test/test_date.c,v 1.1.1.3 2001/07/11 03:09:32 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/kauth/test/test_date.c,v 1.4 2003/07/15 23:15:18 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/time.h>
@@ -24,27 +25,27 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/kauth/test/test_date.c,v 1.1.1.3 2001/0
 #include <errno.h>
 #include "kautils.h"
 
-static	char *usage = "usage: %s [-n] [-u] [yymmddhhmm[.ss]]\n";
+static char *usage = "usage: %s [-n] [-u] [yymmddhhmm[.ss]]\n";
 main(argc, argv)
-	int argc;
-	char *argv[];
+     int argc;
+     char *argv[];
 {
-	char *progname = argv[0];
-	long time;
-	char bob[30];
+    char *progname = argv[0];
+    long time;
+    char bob[30];
 
-	if (argc > 2) {
-		fprintf(stderr, usage, progname);
-		exit(1);
-	}
+    if (argc > 2) {
+	fprintf(stderr, usage, progname);
+	exit(1);
+    }
 
-	if (ktime_DateToLong(argv[1], &time)) {
-		fprintf(stderr, usage, progname);
-		exit (1);
-	} else {
-	    ka_timestr(time,bob,KA_TIMESTR_LEN);
-	    printf ("time is %s\n", bob);
-	}
+    if (ktime_DateToLong(argv[1], &time)) {
+	fprintf(stderr, usage, progname);
+	exit(1);
+    } else {
+	ka_timestr(time, bob, KA_TIMESTR_LEN);
+	printf("time is %s\n", bob);
+    }
 
-	exit(0);
+    exit(0);
 }

@@ -5,31 +5,10 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
-
-SHELL=/bin/sh
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 
-include ../config/Makefile.${SYS_NAME}
-
-UKERNELDIR=../libuafs
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
 
 UKSRCS=nsafs.h nsafs.c securehash.c
 
@@ -135,22 +114,9 @@ netscape_afs_web_secure:
 	chmod a+x ${DEST}/root.afsweb/install/${NETSCAPE_INSTALL_SCRIPT}
 	chmod a+w ${DEST}/root.afsweb/install/${NETSCAPE_INSTALL_SCRIPT}
 
-all: kinstall ukinstall
+all: 
 
 install:  
-
-kinstall:
-	@echo No $@ source here.
-
-
-webinstall: ${UKERNELDIR}/afs ${UKSRCS}
-	${INSTALL} ${UKSRCS} ${UKERNELDIR}/afs
-
-${UKERNELDIR}/afs:
-	mkdir -p $@
-
-ukinstall:
-	@echo No $@ source here.
 
 ##
 ## For Apache Afs Web Secure libraries and binaries
@@ -202,7 +168,7 @@ LIBOBJS=$(LIBCOMMON_OBJS) $(LIBAPACHE_OBJS)
 OBJS=$(LIBOBJS) apache_afs_weblog.o weblog.o
 
 .c.o:
-	$(CC) -c $(CFLAGS) $(AFS_INCL) $(AUX_CFLAGS) $<
+	$(CCOBJ) -c $(CFLAGS) $(AFS_INCL) $(AUX_CFLAGS) $<
 
 
 weblog: weblog.o $(APACHE_AFS_COMMON_LIB) $(DCE_ADK_LIB)

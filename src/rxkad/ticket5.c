@@ -61,7 +61,8 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/ticket5.c,v 1.1.1.2 2003/04/13 19:07:35 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/rxkad/ticket5.c,v 1.8.2.1 2004/08/25 07:09:42 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
@@ -100,6 +101,8 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/ticket5.c,v 1.1.1.2 2003/04/13 19
 #include "v5gen.h"
 #include "v5der.c"
 #include "v5gen.c"
+#include "md4.h"
+#include "md5.h"
 
 /*
  * Principal conversion Taken from src/lib/krb5/krb/conv_princ from MIT Kerberos.  If you
@@ -108,10 +111,10 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/ticket5.c,v 1.1.1.2 2003/04/13 19
  */
 
 struct krb_convert {
-    char		*v4_str;
-    char		*v5_str;
-  unsigned int	flags;
-  unsigned int	len;
+    char *v4_str;
+    char *v5_str;
+    unsigned int flags;
+    unsigned int len;
 };
 
 #define DO_REALM_CONVERSION 0x00000001
@@ -187,27 +190,22 @@ static const struct krb_convert sconv_list[] = {
 };
 
 static int
-krb5_des_decrypt(struct ktc_encryptionKey *, 
-		 int, void *, size_t, void *, size_t *);
+  krb5_des_decrypt(struct ktc_encryptionKey *, int, void *, size_t, void *,
+		   size_t *);
 
 
 
 
-int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len, 
-		      int (*get_key)(char *, int, struct ktc_encryptionKey *),
-		      char *get_key_rock,
-		      int serv_kvno,
-		      char *name, 
-		      char *inst, 
-		      char *cell, 
-		      char *session_key, 
-		      afs_int32 *host, 
-		      afs_int32 *start, 
-		      afs_int32 *end)
+int
+tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
+		  int (*get_key) (char *, int, struct ktc_encryptionKey *),
+		  char *get_key_rock, int serv_kvno, char *name, char *inst,
+		  char *cell, char *session_key, afs_int32 * host,
+		  afs_int32 * start, afs_int32 * end)
 {
     char plain[MAXKRB5TICKETLEN];
     struct ktc_encryptionKey serv_key;
-    Ticket t5;	/* Must free */
+    Ticket t5;			/* Must free */
     EncTicketPart decr_part;	/* Must free */
     int code;
     size_t siz, plainsiz;
@@ -221,7 +219,7 @@ int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
     *host = 0;
 
     if (ticket_len == 0)
-	return RXKADBADTICKET; /* no ticket */
+	return RXKADBADTICKET;	/* no ticket */
 
     if (serv_kvno == RXKAD_TKT_TYPE_KERBEROS_V5) {
 	code = decode_Ticket(ticket, ticket_len, &t5, &siz);
@@ -237,15 +235,15 @@ int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
     }
 
     /* If kvno is null, it's probably not included because it was kvno==0 
-       in the ticket */
-    if (t5.enc_part.kvno == NULL ) { 
-       v5_serv_kvno = 0;
-    } else { 
-       v5_serv_kvno = *t5.enc_part.kvno;
+     * in the ticket */
+    if (t5.enc_part.kvno == NULL) {
+	v5_serv_kvno = 0;
+    } else {
+	v5_serv_kvno = *t5.enc_part.kvno;
     }
-    
 
-    code = (*get_key)(get_key_rock, v5_serv_kvno, &serv_key);
+
+    code = (*get_key) (get_key_rock, v5_serv_kvno, &serv_key);
     if (code)
 	goto unknown_key;
 
@@ -260,17 +258,15 @@ int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
     }
 
     /* check ticket */
-    if (t5.enc_part.cipher.length > sizeof(plain) ||
-	t5.enc_part.cipher.length % 8 != 0)
+    if (t5.enc_part.cipher.length > sizeof(plain)
+	|| t5.enc_part.cipher.length % 8 != 0)
 	goto bad_ticket;
 
     /* Decrypt data here, save in plain, assume it will shrink */
-    code = krb5_des_decrypt(&serv_key,
-			    t5.enc_part.etype,
-			    t5.enc_part.cipher.data,
-			    t5.enc_part.cipher.length,
-			    plain,
-			    &plainsiz);
+    code =
+	krb5_des_decrypt(&serv_key, t5.enc_part.etype,
+			 t5.enc_part.cipher.data, t5.enc_part.cipher.length,
+			 plain, &plainsiz);
     if (code != 0)
 	goto bad_ticket;
 
@@ -278,58 +274,58 @@ int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
     code = decode_EncTicketPart(plain, plainsiz, &decr_part, &siz);
     if (code != 0)
 	goto bad_ticket;
-    
-    /* Extract realm and principal */  
+
+    /* Extract realm and principal */
     strncpy(cell, decr_part.crealm, MAXKTCNAMELEN);
     cell[MAXKTCNAMELEN - 1] = '\0';
     inst[0] = '\0';
     switch (decr_part.cname.name_string.len) {
     case 2:
-      v5_comp0 = decr_part.cname.name_string.val[0];
-      v5_comp1 = decr_part.cname.name_string.val[1];
-      p = sconv_list;
-      while (p->v4_str) {
-	if (strncmp(p->v5_str, v5_comp0, p->len) == 0) {
-	  /*
-	   * It is, so set the new name now, and chop off
-	   * instance's domain name if requested.
-	   */
-	  strncpy(name,p->v4_str, MAXKTCNAMELEN);
-	  name[MAXKTCNAMELEN - 1] = '\0';
-	  if (p->flags & DO_REALM_CONVERSION) {
-	    c = strchr(v5_comp1, '.');
-	    if (!c || (c - v5_comp1) >= MAXKTCNAMELEN - 1)
-	      goto bad_ticket;
-	    strncpy(inst, v5_comp1, c - v5_comp1);
-	    inst[c - v5_comp1] = '\0';
-	  }
-	  break;
+	v5_comp0 = decr_part.cname.name_string.val[0];
+	v5_comp1 = decr_part.cname.name_string.val[1];
+	p = sconv_list;
+	while (p->v4_str) {
+	    if (strncmp(p->v5_str, v5_comp0, p->len) == 0) {
+		/*
+		 * It is, so set the new name now, and chop off
+		 * instance's domain name if requested.
+		 */
+		strncpy(name, p->v4_str, MAXKTCNAMELEN);
+		name[MAXKTCNAMELEN - 1] = '\0';
+		if (p->flags & DO_REALM_CONVERSION) {
+		    c = strchr(v5_comp1, '.');
+		    if (!c || (c - v5_comp1) >= MAXKTCNAMELEN - 1)
+			goto bad_ticket;
+		    strncpy(inst, v5_comp1, c - v5_comp1);
+		    inst[c - v5_comp1] = '\0';
+		}
+		break;
+	    }
+	    p++;
 	}
-	p++;
-      }
 
 	if (!p->v4_str) {
-	  strncpy(inst, decr_part.cname.name_string.val[1], MAXKTCNAMELEN);
-	  inst[MAXKTCNAMELEN - 1] = '\0';
-	strncpy(name, decr_part.cname.name_string.val[0], MAXKTCNAMELEN);
-	name[MAXKTCNAMELEN - 1] = '\0';
+	    strncpy(inst, decr_part.cname.name_string.val[1], MAXKTCNAMELEN);
+	    inst[MAXKTCNAMELEN - 1] = '\0';
+	    strncpy(name, decr_part.cname.name_string.val[0], MAXKTCNAMELEN);
+	    name[MAXKTCNAMELEN - 1] = '\0';
 	}
 	break;
-	      case 1:
+    case 1:
 	strncpy(name, decr_part.cname.name_string.val[0], MAXKTCNAMELEN);
 	name[MAXKTCNAMELEN - 1] = '\0';
 	break;
     default:
 	goto bad_ticket;
     }
-    
+
     /* 
      * If the first part of the name_string contains a dot, punt since
      * then we can't see the diffrence between the kerberos 5
      * principals foo.root and foo/root later in the fileserver.
      */
-     if (strchr(decr_part.cname.name_string.val[0], '.') != NULL) 
-	 goto bad_ticket;
+    if (strchr(decr_part.cname.name_string.val[0], '.') != NULL)
+	goto bad_ticket;
 
     /* Verify that decr_part.key is of right type */
     switch (decr_part.key.keytype) {
@@ -346,7 +342,7 @@ int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 
     /* Extract session key */
     memcpy(session_key, decr_part.key.keyvalue.data, 8);
-    
+
     /* Check lifetimes and host addresses, flags etc */
     {
 	time_t now = time(0);	/* Use fast time package instead??? */
@@ -365,7 +361,7 @@ int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 	*end = decr_part.endtime;
     }
 
- cleanup:
+  cleanup:
     if (serv_kvno == RXKAD_TKT_TYPE_KERBEROS_V5)
 	free_Ticket(&t5);
     else
@@ -374,36 +370,69 @@ int tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
     memset(&serv_key, 0, sizeof(serv_key));
     return code;
 
- unknown_key:
+  unknown_key:
     code = RXKADUNKNOWNKEY;
     goto cleanup;
- no_auth:
+  no_auth:
     code = RXKADNOAUTH;
     goto cleanup;
- tkt_expired:
+  tkt_expired:
     code = RXKADEXPIRED;
     goto cleanup;
- bad_ticket:
+  bad_ticket:
     code = RXKADBADTICKET;
     goto cleanup;
 
 }
 
 static int
-verify_checksum_crc(void *data, size_t len,
-		    void *cksum, size_t cksumsz, 
+verify_checksum_md4(void *data, size_t len,
+		    void *cksum, size_t cksumsz,
+		    struct ktc_encryptionKey *key)
+{
+    MD4_CTX md4;
+    unsigned char tmp[16];
+
+    MD4_Init(&md4);
+    MD4_Update(&md4, data, len);
+    MD4_Final(tmp, &md4);
+
+    if (memcmp(tmp, cksum, cksumsz) != 0)
+	return 1;
+    return 0;
+}
+
+static int
+verify_checksum_md5(void *data, size_t len,
+		    void *cksum, size_t cksumsz,
+		    struct ktc_encryptionKey *key)
+{
+    MD5_CTX md5;
+    unsigned char tmp[16];
+
+    MD5_Init(&md5);
+    MD5_Update(&md5, data, len);
+    MD5_Final(tmp, &md5);
+
+    if (memcmp(tmp, cksum, cksumsz) != 0)
+	return 1;
+    return 0;
+}
+
+static int
+verify_checksum_crc(void *data, size_t len, void *cksum, size_t cksumsz,
 		    struct ktc_encryptionKey *key)
 {
     afs_uint32 crc;
     char r[4];
 
-    _rxkad_crc_init_table ();
-    crc = _rxkad_crc_update (data, len, 0);
+    _rxkad_crc_init_table();
+    crc = _rxkad_crc_update(data, len, 0);
     r[0] = crc & 0xff;
-    r[1] = (crc >> 8)  & 0xff;
+    r[1] = (crc >> 8) & 0xff;
     r[2] = (crc >> 16) & 0xff;
     r[3] = (crc >> 24) & 0xff;
-    
+
     if (memcmp(cksum, r, 4) != 0)
 	return 1;
     return 0;
@@ -411,17 +440,16 @@ verify_checksum_crc(void *data, size_t len,
 
 
 static int
-krb5_des_decrypt(struct ktc_encryptionKey *key,
-		 int etype,
-		 void *in, size_t insz,
-		 void *out, size_t *outsz)
+krb5_des_decrypt(struct ktc_encryptionKey *key, int etype, void *in,
+		 size_t insz, void *out, size_t * outsz)
 {
-    int (*cksum_func)(void *,size_t,void *,size_t,struct ktc_encryptionKey *);
+    int (*cksum_func) (void *, size_t, void *, size_t,
+		       struct ktc_encryptionKey *);
     des_cblock ivec;
     des_key_schedule s;
     char cksum[24];
     size_t cksumsz;
-    int ret;
+    int ret = 1;		/* failure */
 
     cksum_func = NULL;
 
@@ -438,12 +466,12 @@ krb5_des_decrypt(struct ktc_encryptionKey *key,
     case ETYPE_DES_CBC_MD4:
 	memset(&ivec, 0, sizeof(ivec));
 	cksumsz = 16;
-	/* FIXME: cksum_func = verify_checksum_md4 */;
+	cksum_func = verify_checksum_md4;
 	break;
     case ETYPE_DES_CBC_MD5:
 	memset(&ivec, 0, sizeof(ivec));
 	cksumsz = 16;
-	/* FIXME: cksum_func = verify_checksum_md5 */;
+	cksum_func = verify_checksum_md5;
 	break;
     default:
 	abort();
@@ -455,7 +483,7 @@ krb5_des_decrypt(struct ktc_encryptionKey *key,
     memset((char *)out + CONFOUNDERSZ, 0, cksumsz);
 
     if (cksum_func)
-	ret = (*cksum_func)(out, insz, cksum, cksumsz, key);
+	ret = (*cksum_func) (out, insz, cksum, cksumsz, key);
 
     *outsz = insz - CONFOUNDERSZ - cksumsz;
     memmove(out, (char *)out + CONFOUNDERSZ + cksumsz, *outsz);

@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/inetd/ta-rauth.c,v 1.1.1.5 2001/09/11 14:32:51 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/inetd/ta-rauth.c,v 1.7 2003/07/15 23:15:14 shadow Exp $");
 
 #include <sys/types.h>
 #include <sys/param.h>
@@ -63,11 +64,12 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/inetd/ta-rauth.c,v 1.1.1.5 2001/09/11 1
 
 int ta_debug = 0;
 
-int ta_rauth(s, svc_name, raddr)
-   int s;
-   char *svc_name;
-   struct in_addr raddr;
-  {
+int
+ta_rauth(s, svc_name, raddr)
+     int s;
+     char *svc_name;
+     struct in_addr raddr;
+{
     char localName[64];
     int code;
     struct afsconf_dir *tdir;
@@ -78,70 +80,72 @@ int ta_rauth(s, svc_name, raddr)
     /* extract the token */
 
     tdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
-    if(!tdir) {
-	if(ta_debug) {
+    if (!tdir) {
+	if (ta_debug) {
 	    syslog(LOG_ERR, "ta_rauth: afsconf_Open failed\n");
-	  }
+	}
 	return (-2);
-      }
+    }
     code = afsconf_GetLocalCell(tdir, localName, sizeof(localName));
-    if(code) {
-	if(ta_debug) {
+    if (code) {
+	if (ta_debug) {
 	    syslog(LOG_ERR, "ta_rauth: afsconf_GetLocalCell failed\n");
-	  }
+	}
 	return (-2);
-      }
+    }
     afsconf_Close(tdir);
 
     strcpy(tserver.cell, localName);
     strcpy(tserver.name, "afs");
 
-    code = ktc_GetToken(&tserver, &token, sizeof(token), (char *)0);
-    if(code) {
+    code = ktc_GetToken(&tserver, &token, sizeof(token), NULL);
+    if (code) {
 	syslog(LOG_WARNING, "ta_rauth: no tokens available");
-	return 0; /* try port without authentication */
+	return 0;		/* try port without authentication */
     }
 
     name.sin_family = AF_INET;
     name.sin_port = htons(RAUTH_PORT);
     name.sin_addr = raddr;
-    if(connect(s, (struct sockaddr *) &name, sizeof(name)) == -1) {
+    if (connect(s, (struct sockaddr *)&name, sizeof(name)) == -1) {
 	extern int errno;
-	
-	if(ta_debug) {
-	    syslog(LOG_ERR, "ta_rauth(%s): connect call to (%d:%d) failed=%d\n",svc_name,raddr.s_addr, htons(RAUTH_PORT), errno);
+
+	if (ta_debug) {
+	    syslog(LOG_ERR,
+		   "ta_rauth(%s): connect call to (%d:%d) failed=%d\n",
+		   svc_name, raddr.s_addr, htons(RAUTH_PORT), errno);
 	    perror("socket");
-	  }
-	switch(errno) {
+	}
+	switch (errno) {
 #ifdef AFS_AIX_ENV
 	    /* On conn failure aix doesn't return any error! */
-	  case 0:
+	case 0:
 #endif
-	  case ECONNREFUSED:
+	case ECONNREFUSED:
 	    return 0;
-	  case ETIMEDOUT:
-	  case ENETUNREACH:
+	case ETIMEDOUT:
+	case ENETUNREACH:
 	    return -3;
-	  default:
+	default:
 	    return -2;
 	}
-      }
+    }
 
-    if(outtoken(s, &token, svc_name, localName) == 0) {
+    if (outtoken(s, &token, svc_name, localName) == 0) {
 	char result;
 
-	if(read(s, &result, 1) != 1) {
+	if (read(s, &result, 1) != 1) {
 	    syslog(LOG_ERR, "Invalid return from remote authenticator\n");
 	    exit(1);
 	}
-	if(result == '0') /* remote authentication denied */
+	if (result == '0')	/* remote authentication denied */
 	    return -1;
-	else /* remote authentication allowed */
+	else			/* remote authentication allowed */
 	    return 1;
     }
 
-    return(-2);
-  }
+    return (-2);
+}
 
 /*
  * outtoken:
@@ -162,17 +166,17 @@ int ta_rauth(s, svc_name, raddr)
  *  All fields are comma separated except (4) and (5) because (4) is fixed
  *  length; since field (7) is variable length, it is presumed to
  *  begin after the ',' and to be ticketLen afs_int32.
- */  
-outtoken(s,token,svc,localName)
-   int s;
-   struct ktc_token *token;
-   char *svc, *localName;
-  {
+ */
+outtoken(s, token, svc, localName)
+     int s;
+     struct ktc_token *token;
+     char *svc, *localName;
+{
     char buf[1024], *bp;
     int count;
 
     /* (0) - (3) */
-    sprintf(buf,"%s,%d,%s,%ld,%ld,",svc,2,localName,token->startTime,
+    sprintf(buf, "%s,%d,%s,%ld,%ld,", svc, 2, localName, token->startTime,
 	    token->endTime);
 
     /* (4) sessionKey */
@@ -181,19 +185,19 @@ outtoken(s,token,svc,localName)
     bp += 8;
 
     /* (5) - (6) */
-    sprintf(bp, "%u,%u,",token->kvno, token->ticketLen);
+    sprintf(bp, "%u,%u,", token->kvno, token->ticketLen);
 
     /* (7) ticket */
     bp += strlen(bp);
     memcpy(bp, token->ticket, token->ticketLen);
     bp += token->ticketLen;
 
-    if((count = write(s, buf, (int)(bp - buf))) == -1) {
+    if ((count = write(s, buf, (int)(bp - buf))) == -1) {
 	perror("outtoken write");
 	exit(1);
-      }
-    if(ta_debug) {
-	fprintf(stderr,"sent buffer %s\n",buf);
+    }
+    if (ta_debug) {
+	fprintf(stderr, "sent buffer %s\n", buf);
     }
     return 0;
-  }
+}

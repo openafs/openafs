@@ -5,30 +5,8 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-# Makefile for the null library.
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
-
-SHELL=/bin/sh
-
-include ../config/Makefile.${SYS_NAME}
-CFLAGS = ${XCFLAGS}
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
 all: ${TOP_LIBDIR}/libnull.a
 
@@ -37,9 +15,9 @@ install: ${DESTDIR}${libdir}/afs/libnull.a
 ${DEST}/lib/afs/libnull.a: libnull.a
 	${INSTALL} $? $@
 
-null.o: null.c AFS_component_version_number.o
+null.o: null.c AFS_component_version_number.c
 
-libnull.a: null.o
+libnull.a: null.o 
 	-$(RM) -f $@
 	$(AR) crv $@ null.o
 	$(RANLIB) $@
@@ -48,6 +26,7 @@ clean:
 	$(RM) -f *.o *.a AFS_component_version_number.c
 
 include ../config/Makefile.version
+
 ${DESTDIR}${libdir}/afs/libnull.a: libnull.a
 	${INSTALL} $? $@
 

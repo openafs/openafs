@@ -32,7 +32,7 @@ typedef afs_uint32 bit32;	/* Unsigned, 32 bits */
 typedef unsigned short bit16;	/* Unsigned, 16 bits */
 typedef unsigned char byte;	/* Unsigned, 8 bits */
 
-typedef bit32	Device;		/* Unix device number */
+typedef bit32 Device;		/* Unix device number */
 #ifndef	Error
 #define	Error	bit32
 #endif

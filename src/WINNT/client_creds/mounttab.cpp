@@ -10,6 +10,7 @@
 extern "C" {
 #include <afs/param.h>
 #include <afs/stds.h>
+#include <afs/fs_utils.h>
 }
 
 #include "afscreds.h"
@@ -114,6 +115,7 @@ void Mount_OnInitDialog (HWND hDlg)
 void Mount_OnUpdate (HWND hDlg, BOOL fOnInitDialog)
 {
    DRIVEMAPLIST List;
+   memset(&List, 0, sizeof(DRIVEMAPLIST));
    QueryDriveMapList (&List);
 
    HWND hList = GetDlgItem (hDlg, IDC_LIST);
@@ -193,6 +195,7 @@ void Mount_OnCheck (HWND hDlg)
             Message (MB_OK | MB_ICONHAND, IDS_ERROR_UNMAP, IDS_ERROR_UNMAP_DESC, TEXT("%08lX"), dwStatus);
          Mount_OnUpdate (hDlg);
          }
+      WriteActiveMap(List.aDriveMap[ iDriveSel ].chDrive, fChecked && List.aDriveMap[ iDriveSel ].fPersistent );
       }
 
    FreeDriveMapList (&List);
@@ -226,7 +229,7 @@ void Mount_OnRemove (HWND hDlg)
 
          Mount_OnUpdate (hDlg);
          }
-
+	  WriteActiveMap(List.aDriveMap[ iDriveSel ].chDrive, FALSE );
       FreeDriveMapList (&List);
       }
 }
@@ -419,7 +422,13 @@ void Mapping_OnInitDialog (HWND hDlg)
    SendMessage (hCombo, CB_SETCURSEL, iItemSel, 0);
 
    TCHAR szMapping[ MAX_PATH ];
-   AdjustAfsPath (szMapping, ((pMap->szMapping[0]) ? pMap->szMapping : TEXT("/afs")), TRUE, FALSE);
+    AdjustAfsPath (szMapping, ((pMap->szMapping[0]) ? pMap->szMapping : cm_slash_mount_root), TRUE, FALSE);
+    CHAR msg[256], msgf[256];
+    if (GetDlgItemText(hDlg,IDC_STATICSUBMOUNT,(LPSTR)msg,sizeof(msg)-1)>0)
+    {
+		wsprintf(msgf,msg,cm_back_slash_mount_root,cm_back_slash_mount_root);
+		SetDlgItemText (hDlg, IDC_STATICSUBMOUNT, msgf);
+   }
    SetDlgItemText (hDlg, IDC_MAP_PATH, szMapping);
    SetDlgItemText (hDlg, IDC_MAP_DESC, pMap->szSubmount);
 
@@ -448,13 +457,14 @@ void Mapping_OnOK (HWND hDlg)
       return;
       }
 
-   if ( (lstrncmpi (pMap->szMapping, TEXT("/afs"), lstrlen(TEXT("/afs")))) &&
-        (lstrncmpi (pMap->szMapping, TEXT("\\afs"), lstrlen(TEXT("\\afs")))) )
-      {
-      Message (MB_ICONHAND, IDS_BADMAP_TITLE, IDS_BADMAP_DESC);
-      return;
-      }
+   if ( (lstrncmpi (pMap->szMapping, cm_slash_mount_root, lstrlen(cm_slash_mount_root))) &&	/*TEXT("/afs")*/
+        (lstrncmpi (pMap->szMapping, cm_back_slash_mount_root, lstrlen(cm_back_slash_mount_root))) ) /*TEXT("\\afs")*/
+   {
+     Message (MB_ICONHAND, IDS_BADMAP_TITLE, IDS_BADMAP_DESC);
+     return;
+   }
 
+   WriteActiveMap(pMap->chDrive, pMap->fPersistent);
    EndDialog (hDlg, IDOK);
 }
 

@@ -8,13 +8,14 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/AIX/osi_vm.c,v 1.1.1.5 2002/05/10 23:43:33 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/AIX/osi_vm.c,v 1.9 2003/07/15 23:14:17 shadow Exp $");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"  /* statistics */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"	/* statistics */
 
 /* Try to discard pages, in order to recycle a vcache entry.
  *
@@ -31,9 +32,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/AIX/osi_vm.c,v 1.1.1.5 2002/05/10 2
  * therefore obsolescent.
  */
 int
-osi_VM_FlushVCache(avc, slept)
-    struct vcache *avc;
-    int *slept;
+osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
     if (avc->vrefCount != 0)
 	return EBUSY;
@@ -70,46 +69,45 @@ osi_VM_FlushVCache(avc, slept)
  * re-obtained.
  */
 void
-osi_VM_StoreAllSegments(avc)
-    struct vcache *avc;
+osi_VM_StoreAllSegments(struct vcache *avc)
 {
-    if (avc->vmh) {
+    if (avc->segid) {
 	/*
 	 * The execsOrWriters test is done so that we don't thrash on
 	 * the vm_writep call below. We only initiate a pageout of the
 	 * dirty vm pages on the last store...
 	 * this is strictly a pragmatic decision, and _does_ break the 
-         * advertised AFS consistency semantics.  Without this hack,
-         * AIX systems panic under heavy load.  I consider the current
-         * behavior a bug introduced to hack around a worse bug. XXX
+	 * advertised AFS consistency semantics.  Without this hack,
+	 * AIX systems panic under heavy load.  I consider the current
+	 * behavior a bug introduced to hack around a worse bug. XXX
 	 *
 	 * Removed do_writep governing sync'ing behavior.
-         */
-	ReleaseWriteLock(&avc->lock);		/* XXX */
+	 */
+	ReleaseWriteLock(&avc->lock);	/* XXX */
 	AFS_GUNLOCK();
-	vm_writep(avc->vmh, 0, MAXFSIZE/PAGESIZE -1 );
-	vms_iowait(avc->vmh);
+	vm_writep(avc->segid, 0, MAXFSIZE / PAGESIZE - 1);
+	vms_iowait(avc->segid);
 	AFS_GLOCK();
-	ObtainWriteLock(&avc->lock,93);		/* XXX */
+	ObtainWriteLock(&avc->lock, 93);	/* XXX */
 	/*
 	 * The following is necessary because of the following
 	 * asynchronicity: We open a file, write to it and 
-         * close the file
+	 * close the file
 	 * if CCore flag is set, we clear it and do the extra
-         * decrement ourselves now.
-         * If we're called by the CCore clearer, the CCore flag
-         * will already be clear, so we don't have to worry about
-         * clearing it twice.
+	 * decrement ourselves now.
+	 * If we're called by the CCore clearer, the CCore flag
+	 * will already be clear, so we don't have to worry about
+	 * clearing it twice.
 	 * avc was "VN_HELD" and "crheld" when CCore was set in
 	 * afs_FakeClose
-         */
+	 */
 	if (avc->states & CCore) {
 	    avc->states &= ~CCore;
 	    avc->opens--;
 	    avc->execsOrWriters--;
-	    AFS_RELE(AFSTOV(avc));	
-	    crfree((struct ucred *)avc->linkData);	
-	    avc->linkData = (char *)0;
+	    AFS_RELE(AFSTOV(avc));
+	    crfree((struct ucred *)avc->linkData);
+	    avc->linkData = NULL;
 	}
     }
 }
@@ -124,18 +122,15 @@ osi_VM_StoreAllSegments(avc)
  * be some pages around when we return, newly created by concurrent activity.
  */
 void
-osi_VM_TryToSmush(avc, acred, sync)
-    struct vcache *avc;
-    struct AFS_UCRED *acred;
-    int sync;
+osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 {
     if (avc->segid) {
 	ReleaseWriteLock(&avc->lock);
 	AFS_GUNLOCK();
-	vm_flushp(avc->segid, 0, MAXFSIZE/PAGESIZE - 1);
-	vms_iowait(avc->vmh);		/* XXX Wait?? XXX */
+	vm_flushp(avc->segid, 0, MAXFSIZE / PAGESIZE - 1);
+	vms_iowait(avc->segid);	/* XXX Wait?? XXX */
 	AFS_GLOCK();
-	ObtainWriteLock(&avc->lock,60);
+	ObtainWriteLock(&avc->lock, 60);
     }
 }
 
@@ -144,16 +139,14 @@ osi_VM_TryToSmush(avc, acred, sync)
  * Locking:  No lock is held, not even the global lock.
  */
 void
-osi_VM_FlushPages(avc, credp)
-    struct vcache *avc;
-    struct AFS_UCRED *credp;
+osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
     if (avc->segid) {
-        vm_flushp(avc->segid, 0, MAXFSIZE/PAGESIZE - 1);
-        /*
-         * XXX We probably don't need to wait but better be safe XXX
-         */
-        vms_iowait(avc->vmh);
+	vm_flushp(avc->segid, 0, MAXFSIZE / PAGESIZE - 1);
+	/*
+	 * XXX We probably don't need to wait but better be safe XXX
+	 */
+	vms_iowait(avc->segid);
     }
 }
 
@@ -164,14 +157,11 @@ osi_VM_FlushPages(avc, credp)
  * it only works on Solaris.
  */
 void
-osi_VM_Truncate(avc, alen, acred)
-    struct vcache *avc;
-    int alen;
-    struct AFS_UCRED *acred;
+osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
     if (avc->segid) {
-        int firstpage = (alen + PAGESIZE-1)/PAGESIZE;
-        vm_releasep(avc->segid, firstpage, MAXFSIZE/PAGESIZE - firstpage);
-        vms_iowait(avc->vmh);	/* Do we need this? */
+	int firstpage = (alen + PAGESIZE - 1) / PAGESIZE;
+	vm_releasep(avc->segid, firstpage, MAXFSIZE / PAGESIZE - firstpage);
+	vms_iowait(avc->segid);	/* Do we need this? */
     }
 }

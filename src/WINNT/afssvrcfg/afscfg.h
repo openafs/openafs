@@ -30,7 +30,7 @@ extern "C" {
 #define	LOG_FILE_NAME	"afs_server_config_log.txt"
 
 
-// Enum for the steps in the wizard.  Used to index into the array of steps.
+/* Enum for the steps in the wizard.  Used to index into the array of steps. */
 enum StateID {
    sidSTEP_ONE,
    sidSTEP_TWO,

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/ubik/phys.c,v 1.1.1.5 2001/10/14 18:06:45 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/ubik/phys.c,v 1.8 2003/07/15 23:17:05 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -52,9 +53,9 @@ static struct fdcache {
 static char pbuffer[1024];
 
 /* beware, when using this function, of the header in front of most files */
-static int uphys_open(adbase, afid)
-    register struct ubik_dbase *adbase;
-    afs_int32 afid; {
+static int
+uphys_open(register struct ubik_dbase *adbase, afs_int32 afid)
+{
     char temp[20];
     register int fd;
     static int initd;
@@ -64,19 +65,19 @@ static int uphys_open(adbase, afid)
 
     /* initialize package */
     if (!initd) {
-	initd=1;
-	tfd=fdcache;
-	for(i=0;i<MAXFDCACHE;tfd++,i++) {
-	    tfd->fd = -1;	    /* invalid value */
-	    tfd->fileID	= -10000;   /* invalid value */
+	initd = 1;
+	tfd = fdcache;
+	for (i = 0; i < MAXFDCACHE; tfd++, i++) {
+	    tfd->fd = -1;	/* invalid value */
+	    tfd->fileID = -10000;	/* invalid value */
 	    tfd->refCount = 0;
 	}
     }
 
     /* scan file descr cache */
-    for(tfd=fdcache,i=0; i<MAXFDCACHE; i++,tfd++) {
-	if (afid == tfd->fileID	&& tfd->refCount == 0) {    /* don't use open fd */
-	    lseek(tfd->fd, 0, 0);   /* reset ptr just like open would have */
+    for (tfd = fdcache, i = 0; i < MAXFDCACHE; i++, tfd++) {
+	if (afid == tfd->fileID && tfd->refCount == 0) {	/* don't use open fd */
+	    lseek(tfd->fd, 0, 0);	/* reset ptr just like open would have */
 	    tfd->refCount++;
 	    return tfd->fd;
 	}
@@ -88,38 +89,40 @@ static int uphys_open(adbase, afid)
     if (afid < 0) {
 	i = -afid;
 	strcat(pbuffer, "SYS");
-    }
-    else i = afid;
+    } else
+	i = afid;
     sprintf(temp, "%d", i);
     strcat(pbuffer, temp);
     fd = open(pbuffer, O_CREAT | O_RDWR, 0600);
     if (fd < 0) {
 	/* try opening read-only */
 	fd = open(pbuffer, O_RDONLY, 0);
-	if (fd < 0) return fd;
+	if (fd < 0)
+	    return fd;
     }
-    
+
     /* enter it in the cache */
     tfd = fdcache;
-    bestfd = (struct fdcache *) 0;
-    for(i=0;i<MAXFDCACHE;i++,tfd++) {	/* look for empty slot */
+    bestfd = NULL;
+    for (i = 0; i < MAXFDCACHE; i++, tfd++) {	/* look for empty slot */
 	if (tfd->fd == -1) {
 	    bestfd = tfd;
 	    break;
 	}
     }
-    if (!bestfd) {			/* look for reclaimable slot */
+    if (!bestfd) {		/* look for reclaimable slot */
 	tfd = fdcache;
-	for(i=0;i<MAXFDCACHE;i++,tfd++) {
+	for (i = 0; i < MAXFDCACHE; i++, tfd++) {
 	    if (tfd->refCount == 0) {
 		bestfd = tfd;
 		break;
 	    }
 	}
     }
-    if (bestfd)	{	    /* found a usable slot */
+    if (bestfd) {		/* found a usable slot */
 	tfd = bestfd;
-	if (tfd->fd >= 0) close(tfd->fd);
+	if (tfd->fd >= 0)
+	    close(tfd->fd);
 	tfd->fd = fd;
 	tfd->refCount = 1;	/* us */
 	tfd->fileID = afid;
@@ -130,14 +133,16 @@ static int uphys_open(adbase, afid)
 }
 
 /* close the file, maintaining ref count in cache structure */
-uphys_close (afd)
-register int afd; {
+int
+uphys_close(register int afd)
+{
     register int i;
     register struct fdcache *tfd;
 
-    if (afd < 0) return EBADF;
+    if (afd < 0)
+	return EBADF;
     tfd = fdcache;
-    for(i=0;i<MAXFDCACHE;i++,tfd++) {
+    for (i = 0; i < MAXFDCACHE; i++, tfd++) {
 	if (tfd->fd == afd) {
 	    tfd->refCount--;
 	    return 0;
@@ -146,40 +151,41 @@ register int afd; {
     return close(afd);
 }
 
-uphys_stat(adbase, afid, astat)
-    struct ubik_stat *astat;
-    afs_int32 afid;
-    struct ubik_dbase *adbase; {
+int
+uphys_stat(struct ubik_dbase *adbase, afs_int32 afid, struct ubik_stat *astat)
+{
     register int fd;
     struct stat tstat;
     register afs_int32 code;
-    
+
     fd = uphys_open(adbase, afid);
-    if (fd < 0) return fd;
+    if (fd < 0)
+	return fd;
     code = fstat(fd, &tstat);
     uphys_close(fd);
     if (code < 0) {
 	return code;
     }
     astat->mtime = tstat.st_mtime;
-    code = tstat.st_size-HDRSIZE;
-    if (code < 0) astat->size = 0;
-    else astat->size = code;
+    code = tstat.st_size - HDRSIZE;
+    if (code < 0)
+	astat->size = 0;
+    else
+	astat->size = code;
     return 0;
 }
 
-uphys_read(adbase, afile, abuffer, apos, alength)
-    register struct ubik_dbase *adbase;
-    register char *abuffer;
-    afs_int32 apos;
-    afs_int32 afile;
-    afs_int32 alength; {
+int
+uphys_read(register struct ubik_dbase *adbase, afs_int32 afile,
+	   register char *abuffer, afs_int32 apos, afs_int32 alength)
+{
     register int fd;
     register afs_int32 code;
 
     fd = uphys_open(adbase, afile);
-    if (fd < 0) return -1;
-    code = lseek(fd, apos+HDRSIZE, 0);
+    if (fd < 0)
+	return -1;
+    code = lseek(fd, apos + HDRSIZE, 0);
     if (code < 0) {
 	uphys_close(fd);
 	return -1;
@@ -189,84 +195,90 @@ uphys_read(adbase, afile, abuffer, apos, alength)
     return code;
 }
 
-uphys_write(adbase, afile, abuffer, apos, alength)
-    register struct ubik_dbase *adbase;
-    register char *abuffer;
-    afs_int32 apos;
-    afs_int32 afile;
-    afs_int32 alength; {
+int
+uphys_write(register struct ubik_dbase *adbase, afs_int32 afile,
+	    register char *abuffer, afs_int32 apos, afs_int32 alength)
+{
     register int fd;
     register afs_int32 code;
     afs_int32 length;
 
     fd = uphys_open(adbase, afile);
-    if (fd < 0) return -1;
-    code = lseek(fd, apos+HDRSIZE, 0);
+    if (fd < 0)
+	return -1;
+    code = lseek(fd, apos + HDRSIZE, 0);
     if (code < 0) {
 	uphys_close(fd);
 	return -1;
     }
     length = write(fd, abuffer, alength);
     code = uphys_close(fd);
-    if (code) return -1;
-    else return length;
+    if (code)
+	return -1;
+    else
+	return length;
 }
 
-uphys_truncate(adbase, afile, asize)
-    afs_int32 asize;
-    register struct ubik_dbase *adbase;
-    afs_int32 afile; {
+int
+uphys_truncate(register struct ubik_dbase *adbase, afs_int32 afile,
+	       afs_int32 asize)
+{
     register afs_int32 code, fd;
     fd = uphys_open(adbase, afile);
-    if (fd < 0) return UNOENT;
-    code = ftruncate(fd, asize+HDRSIZE);
+    if (fd < 0)
+	return UNOENT;
+    code = ftruncate(fd, asize + HDRSIZE);
     uphys_close(fd);
     return code;
 }
 
 /* get number of dbase files */
-uphys_getnfiles(adbase) {
+int
+uphys_getnfiles(register struct ubik_dbase *adbase)
+{
     /* really should scan dir for data */
     return 1;
 }
 
 /* get database label, with aversion in host order */
-uphys_getlabel(adbase, afile, aversion)
-    register struct ubik_dbase *adbase;
-    afs_int32 afile;
-    struct ubik_version *aversion; {
+int
+uphys_getlabel(register struct ubik_dbase *adbase, afs_int32 afile,
+	       struct ubik_version *aversion)
+{
     struct ubik_hdr thdr;
     register afs_int32 code, fd;
 
     fd = uphys_open(adbase, afile);
-    if (fd < 0) return UNOENT;
+    if (fd < 0)
+	return UNOENT;
     code = read(fd, &thdr, sizeof(thdr));
     if (code != sizeof(thdr)) {
 	uphys_close(fd);
 	return EIO;
     }
     aversion->epoch = ntohl(thdr.version.epoch);
-    aversion->counter=ntohl(thdr.version.counter);
+    aversion->counter = ntohl(thdr.version.counter);
     uphys_close(fd);
     return 0;
 }
 
 /* label database, with aversion in host order */
-uphys_setlabel(adbase, afile, aversion)
-    register struct ubik_dbase *adbase;
-    afs_int32 afile;
-    struct ubik_version *aversion; {
+int
+uphys_setlabel(register struct ubik_dbase *adbase, afs_int32 afile,
+	       struct ubik_version *aversion)
+{
     struct ubik_hdr thdr;
     register afs_int32 code, fd;
 
     fd = uphys_open(adbase, afile);
-    if (fd < 0) return UNOENT;
+    if (fd < 0)
+	return UNOENT;
     thdr.version.epoch = htonl(aversion->epoch);
     thdr.version.counter = htonl(aversion->counter);
     thdr.magic = htonl(UBIK_MAGIC);
     thdr.size = htonl(HDRSIZE);
     code = write(fd, &thdr, sizeof(thdr));
-    fsync(fd);	    /* preserve over crash */
+    fsync(fd);			/* preserve over crash */
     uphys_close(fd);
     if (code != sizeof(thdr)) {
 	return EIO;
@@ -274,9 +286,9 @@ uphys_setlabel(adbase, afile, aversion)
     return 0;
 }
 
-uphys_sync(adbase, afile)
-    register struct ubik_dbase *adbase;
-    afs_int32 afile; {
+int
+uphys_sync(register struct ubik_dbase *adbase, afs_int32 afile)
+{
     register afs_int32 code, fd;
     fd = uphys_open(adbase, afile);
     code = fsync(fd);

@@ -1,4 +1,4 @@
 #!/bin/sh
-# $Id: many-symlinks,v 1.1 2002/01/22 19:54:41 hartmans Exp $
+# $Id: many-symlinks,v 1.1 2002/01/14 07:49:17 shadow Exp $
 
 $objdir/create-symlinks 1000

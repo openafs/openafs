@@ -1,2 +1,4 @@
 Makefile
 login.krb
+login
+AFS_component_version_number.c

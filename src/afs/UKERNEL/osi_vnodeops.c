@@ -8,13 +8,14 @@
  */
 
 #include <afsconfig.h>
-#include "../afs/param.h"
+#include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/UKERNEL/osi_vnodeops.c,v 1.1.1.5 2002/05/10 23:44:19 hartmans Exp $");
+RCSID
+    ("$Header: /cvs/openafs/src/afs/UKERNEL/osi_vnodeops.c,v 1.7 2003/07/15 23:14:29 shadow Exp $");
 
-#include "../afs/sysincludes.h"	/* Standard vendor system headers */
-#include "../afs/afsincludes.h"	/* Afs-based standard headers */
-#include "../afs/afs_stats.h"  /* statistics */
+#include "afs/sysincludes.h"	/* Standard vendor system headers */
+#include "afsincludes.h"	/* Afs-based standard headers */
+#include "afs/afs_stats.h"	/* statistics */
 
 extern int afs_noop();
 extern int afs_badop();
@@ -38,12 +39,9 @@ extern int afs_fsync();
 extern int afs_lockctl();
 extern int afs_fid();
 
-int afs_vrdwr(
-    struct usr_vnode *avc,
-    struct usr_uio *uio,
-    int rw,
-    int io,
-    struct usr_ucred* cred)
+int
+afs_vrdwr(struct usr_vnode *avc, struct usr_uio *uio, int rw, int io,
+	  struct usr_ucred *cred)
 {
     int rc;
 
@@ -56,42 +54,44 @@ int afs_vrdwr(
     return rc;
 }
 
-int afs_inactive(struct vcache *avc, struct AFS_UCRED *acred)
+int
+afs_inactive(struct vcache *avc, struct AFS_UCRED *acred)
 {
     struct vnode *vp = AFSTOV(avc);
-    if (afs_shuttingdown) return ;
+    if (afs_shuttingdown)
+	return;
 
     usr_assert(avc->vrefCount == 0);
     afs_InactiveVCache(avc, acred);
 }
 
 struct usr_vnodeops Afs_vnodeops = {
-	afs_open,
-	afs_close,
-	afs_vrdwr,
-	afs_badop, /* ioctl */
-	afs_noop, /* select */
-	afs_getattr,
-	afs_setattr,
-	afs_access,
-	afs_lookup,
-	afs_create,
-	afs_remove,
-	afs_link,
-	afs_rename,
-	afs_mkdir,
-	afs_rmdir,
-	afs_readdir,
-	afs_symlink,
-	afs_readlink,
-	afs_fsync,
-	afs_inactive,
-	afs_badop, /* bmap */
-	afs_badop, /* strategy */
-	afs_badop, /* bread */
-	afs_badop, /* brelse */
-	afs_lockctl,
-	afs_fid
+    afs_open,
+    afs_close,
+    afs_vrdwr,
+    afs_badop,			/* ioctl */
+    afs_noop,			/* select */
+    afs_getattr,
+    afs_setattr,
+    afs_access,
+    afs_lookup,
+    afs_create,
+    afs_remove,
+    afs_link,
+    afs_rename,
+    afs_mkdir,
+    afs_rmdir,
+    afs_readdir,
+    afs_symlink,
+    afs_readlink,
+    afs_fsync,
+    afs_inactive,
+    afs_badop,			/* bmap */
+    afs_badop,			/* strategy */
+    afs_badop,			/* bread */
+    afs_badop,			/* brelse */
+    afs_lockctl,
+    afs_fid
 };
 
 struct usr_vnodeops *afs_ops = &Afs_vnodeops;

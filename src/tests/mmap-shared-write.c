@@ -51,51 +51,51 @@
 #endif
 
 #ifdef RCSID
-RCSID("$Id: mmap-shared-write.c,v 1.1 2002/01/22 19:54:42 hartmans Exp $");
+RCSID("$Id: mmap-shared-write.c,v 1.2 2003/07/15 23:17:01 shadow Exp $");
 #endif
 
 static int
-doit (const char *filename)
+doit(const char *filename)
 {
     int fd;
-    size_t sz = getpagesize ();
+    size_t sz = getpagesize();
     void *v;
 
-    fd = open (filename, O_RDWR | O_CREAT, 0600);
+    fd = open(filename, O_RDWR | O_CREAT, 0600);
     if (fd < 0)
-	err (1, "open %s", filename);
-    if (ftruncate (fd, sz) < 0)
-	err (1, "ftruncate %s", filename);
-    v = mmap (NULL, sz, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	err(1, "open %s", filename);
+    if (ftruncate(fd, sz) < 0)
+	err(1, "ftruncate %s", filename);
+    v = mmap(NULL, sz, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (v == (void *)MAP_FAILED)
-	err (1, "mmap %s", filename);
+	err(1, "mmap %s", filename);
 
-    memset (v, 'z', sz);
+    memset(v, 'z', sz);
 
-    msync (v, sz, MS_SYNC);
+    msync(v, sz, MS_SYNC);
 
-    if (close (fd) < 0)
-	err (1, "close %s", filename);
+    if (close(fd) < 0)
+	err(1, "close %s", filename);
     return 0;
 }
 
 static void
 usage(void)
 {
-    errx (1, "usage: [filename]");
+    errx(1, "usage: [filename]");
 }
 
 int
-main (int argc, char **argv)
+main(int argc, char **argv)
 {
     const char *filename = "foo";
 
 
     if (argc != 1 && argc != 2)
-	usage ();
+	usage();
 
     if (argc == 2)
 	filename = argv[1];
 
-    return doit (filename);
+    return doit(filename);
 }

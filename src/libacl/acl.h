@@ -20,8 +20,8 @@
 #define ACL_VERSION "Version 1"
 
 struct acl_accessEntry {
-    int id;         /*internally-used ID of user or group*/
-    int rights;     /*mask*/
+    int id;			/*internally-used ID of user or group */
+    int rights;			/*mask */
 };
 
 /*
@@ -29,15 +29,15 @@ The above access list entry format is used in VICE
 */
 
 
-#define ACL_ACLVERSION  1 /*Identifies current format of access lists*/
+#define ACL_ACLVERSION  1	/*Identifies current format of access lists */
 
 struct acl_accessList {
-    int size;     /*size of this access list in bytes, including MySize itself*/
-    int version;	/*to deal with upward compatibility ; <= ACL_ACLVERSION*/
+    int size;			/*size of this access list in bytes, including MySize itself */
+    int version;		/*to deal with upward compatibility ; <= ACL_ACLVERSION */
     int total;
-    int	positive;	    /* number of positive entries */
-    int	negative;	    /* number of minus entries */
-    struct acl_accessEntry entries[1]; /* negative entries are stored backwards from end */
+    int positive;		/* number of positive entries */
+    int negative;		/* number of minus entries */
+    struct acl_accessEntry entries[1];	/* negative entries are stored backwards from end */
 };
 
 /*

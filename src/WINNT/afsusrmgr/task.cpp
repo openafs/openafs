@@ -33,10 +33,6 @@ extern "C" {
  *
  */
 
-DWORD WINAPI Task_ThreadProc (PVOID lp);
-
-void Task_Perform (LPTASKPACKET ptp);
-
 void Task_OpenCell (LPTASKPACKET ptp);
 void Task_UpdCreds (LPTASKPACKET ptp);
 void Task_UpdUsers (LPTASKPACKET ptp);

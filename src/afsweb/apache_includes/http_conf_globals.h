@@ -83,4 +83,3 @@ extern char *server_argv0;
 
 extern char server_root[MAX_STRING_LEN];
 extern char server_confname[MAX_STRING_LEN];
-

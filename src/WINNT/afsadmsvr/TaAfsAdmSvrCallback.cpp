@@ -54,7 +54,7 @@ void AfsAdmSvr_CallbackManager (void)
    AfsAdmSvr_Enter();
    if ((++l.cManagers) == 1)
       {
-      l.heCallback = CreateEvent (NULL, TRUE, FALSE, NULL);
+      l.heCallback = CreateEvent (NULL, TRUE, FALSE, TEXT("AfsAdmSvr_CallbackManager Event"));
       l.pListCallbacks = New (HASHLIST);
       }
    AfsAdmSvr_Leave();

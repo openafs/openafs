@@ -58,17 +58,14 @@ typedef void *pointer;
 #ifndef MSBFIRST
 #ifndef LSBFIRST
 /* #error byte order not defined */
-Error: byte order not defined.
+Error:byte order not defined.
 #endif
 #endif
-
 /* machine size */
 #ifndef BITS16
 #ifndef BITS32
-Error: how big is this machine anyways?
+Error:how big is this machine anyways ?
 #endif
 #endif
-
 /* end of checks */
-
 #endif /* _CONF_H_ */

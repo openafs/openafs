@@ -5,36 +5,14 @@
 # License.  For details, see the LICENSE file in the top-level source
 # directory or online at http://www.openafs.org/dl/license10.html
 
-DEST=@DEST@
-TOP_INCDIR=@TOP_INCDIR@
-TOP_LIBDIR=@TOP_LIBDIR@
-prefix=@prefix@
-exec_prefix=@exec_prefix@
-bindir=@bindir@
-sbindir=@sbindir@
-libexecdir=@libexecdir@
-libdir=@libdir@
-includedir=@includedir@
-mandir=@mandir@
-afssrvbindir=@afssrvbindir@
-afssrvsbindir=@afssrvsbindir@
-afssrvlibexecdir=@afssrvlibexecdir@
-COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
-RXGEN=${TOP_SRCDIR}/rxgen/rxgen
-TOP_SRCDIR=@TOP_SRCDIR@
-SYS_NAME=@AFS_SYSNAME@
+srcdir=@srcdir@
+include @TOP_OBJDIR@/src/config/Makefile.config
 
-KERNELDIR=../libafs
-UKERNELDIR=../libuafs
-SHELL=/bin/sh
-
-include Makefile.${SYS_NAME}
-
-CFLAGS=${DBG} -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=${DBG} ${OPTMZ} -I${TOP_INCDIR} -I. ${XCFLAGS}
 
 INST=$(RM) -f $@; $(CP) $? $@
 
-all: config mkvers ukinstall kinstall \
+all: config mkvers \
 	${TOP_INCDIR}/afs/param.h \
 	${TOP_INCDIR}/afs/stds.h \
 	${TOP_INCDIR}/afs/afs_sysnames.h \
@@ -43,10 +21,10 @@ all: config mkvers ukinstall kinstall \
 	${TOP_INCDIR}/afs/venus.h \
 	${TOP_INCDIR}/afs/debug.h
 
-Makefile.version: Makefile.version-CML Makefile.version-NOCML
+Makefile.version: ${srcdir}/Makefile.version-CML Makefile.version-NOCML
 	$(RM) -f Makefile.version
 	if	[ -r SRC/../CML/state ] ; \
-	then	$(CP) Makefile.version-CML Makefile.version ; \
+	then	$(CP) ${srcdir}/Makefile.version-CML Makefile.version ; \
 	else	$(CP) Makefile.version-NOCML Makefile.version ; \
 	fi
 
@@ -56,68 +34,57 @@ Makefile.version: Makefile.version-CML Makefile.version-NOCML
 AFS_component_version_number.c: Makefile.version
 	$(MAKE) -f Makefile.version AFS_component_version_number.c
 
-${KERNELDIR}/afs/AFS_component_version_number.c: AFS_component_version_number.c
-	$(INST)
-
-${UKERNELDIR}/afs/AFS_component_version_number.c: AFS_component_version_number.c
-	$(INST)
-
 #
 # App build/install targets
 #
 config: config.o mc.o
 	$(CC) $(CFLAGS) -o config config.o mc.o
 
-mkvers: mkvers.c
-	$(CC) $(CFLAGS) -o mkvers mkvers.c
+mkvers: ${srcdir}/mkvers.c
+	$(CC) $(CFLAGS) -o mkvers ${srcdir}/mkvers.c
 
-mc.o: mc.c
-config.o: config.c AFS_component_version_number.c
+mc.o: ${srcdir}/mc.c
+	$(CC) $(CFLAGS) -c ${srcdir}/mc.c
+
+config.o: ${srcdir}/config.c AFS_component_version_number.c
+	$(CC) $(CFLAGS) -I. -c ${srcdir}/config.c
 
 #
 # Include installation targets
 #
-KDIRS = ${KERNELDIR}/afs \
-	${KERNELDIR}/rx \
-	${KERNELDIR}/afsint \
-	${KERNELDIR}/config
 
-$(KDIRS): 
+${TOP_INCDIR}/afs: ${TOP_INCDIR}
 	mkdir -p $@
 
-UKDIRS = ${UKERNELDIR}/afs \
-	${UKERNELDIR}/rx \
-	${UKERNELDIR}/afsint \
-	${UKERNELDIR}/config
-
-$(UKDIRS): 
+${TOP_INCDIR}:
 	mkdir -p $@
 
-${KERNELDIR}/afs/param.h ${DEST}/include/afs/param.h ${DESTDIR}${includedir}/afs/param.h ${TOP_INCDIR}/afs/param.h: param.${SYS_NAME}.h
-	-$(INST)
+# XXX inlined INST
+${DEST}/include/afs/param.h ${DESTDIR}${includedir}/afs/param.h ${TOP_INCDIR}/afs/param.h: ${TOP_INCDIR}/afs ${srcdir}/param.${SYS_NAME}.h ${AFS_PARAM_COMMON}
+	if [ "X${AFS_PARAM_COMMON}" != "X" ] ; then \
+		cat ${srcdir}/${AFS_PARAM_COMMON} ${srcdir}/param.${SYS_NAME}.h > param.h.new ; \
+		$(RM) -f $@; \
+		 $(CP) param.h.new $@ ; \
+	else \
+		$(RM) -f $@; $(CP) ${srcdir}/param.${SYS_NAME}.h $@ ; \
+	fi
 
-${UKERNELDIR}/afs/afs_sysnames.h ${KERNELDIR}/afs/afs_sysnames.h ${DEST}/include/afs/afs_sysnames.h ${DESTDIR}${includedir}/afs/afs_sysnames.h ${TOP_INCDIR}/afs/afs_sysnames.h: afs_sysnames.h
+${DEST}/include/afs/afs_sysnames.h ${DESTDIR}${includedir}/afs/afs_sysnames.h ${TOP_INCDIR}/afs/afs_sysnames.h: ${srcdir}/afs_sysnames.h
 	$(INST)
 
-${UKERNELDIR}/afs/stds.h ${KERNELDIR}/afs/stds.h ${DEST}/include/afs/stds.h ${DESTDIR}${includedir}/afs/stds.h ${TOP_INCDIR}/afs/stds.h: stds.h
+${DEST}/include/afs/stds.h ${DESTDIR}${includedir}/afs/stds.h ${TOP_INCDIR}/afs/stds.h: ${srcdir}/stds.h
 	$(INST)
 
-${UKERNELDIR}/config/Makefile.${SYS_NAME} ${KERNELDIR}/config/Makefile.${SYS_NAME}: Makefile.${SYS_NAME}
+${DEST}/include/afs/icl.h ${DESTDIR}${includedir}/afs/icl.h ${TOP_INCDIR}/afs/icl.h: ${srcdir}/icl.h 
 	$(INST)
 
-${UKERNELDIR}/afs/icl.h ${KERNELDIR}/afs/icl.h ${DEST}/include/afs/icl.h ${DESTDIR}${includedir}/afs/icl.h ${TOP_INCDIR}/afs/icl.h: icl.h 
+${DEST}/include/afs/afs_args.h ${DESTDIR}${includedir}/afs/afs_args.h ${TOP_INCDIR}/afs/afs_args.h: ${srcdir}/afs_args.h 
 	$(INST)
 
-${UKERNELDIR}/afs/afs_args.h ${KERNELDIR}/afs/afs_args.h ${DEST}/include/afs/afs_args.h ${DESTDIR}${includedir}/afs/afs_args.h ${TOP_INCDIR}/afs/afs_args.h: afs_args.h 
+${DEST}/include/afs/venus.h ${DESTDIR}${includedir}/afs/venus.h ${TOP_INCDIR}/afs/venus.h: ${srcdir}/venus.h 
 	$(INST)
 
-${UKERNELDIR}/afs/venus.h ${DEST}/include/afs/venus.h ${DESTDIR}${includedir}/afs/venus.h ${TOP_INCDIR}/afs/venus.h: venus.h 
-	$(INST)
-
-${DEST}/include/afs/debug.h ${DESTDIR}${includedir}/afs/debug.h ${TOP_INCDIR}/afs/debug.h: debug.h 
-	$(INST)
-
-${UKERNELDIR}/afs/param.h: param.${SYS_NAME}_usr.h
+${DEST}/include/afs/debug.h ${DESTDIR}${includedir}/afs/debug.h ${TOP_INCDIR}/afs/debug.h: ${srcdir}/debug.h 
 	$(INST)
 
 # these are needed to compile the kernel.  Config is necessary to
@@ -133,29 +100,8 @@ install: ${DESTDIR}${includedir}/afs/param.h \
 	${DESTDIR}${includedir}/afs/venus.h \
 	${DESTDIR}${includedir}/afs/debug.h
 
-kinstall: \
-	$(KDIRS) \
-	${KERNELDIR}/afs/param.h \
-	${KERNELDIR}/afs/stds.h \
-	${KERNELDIR}/afs/afs_sysnames.h \
-	${KERNELDIR}/config/Makefile.${SYS_NAME} \
-	${KERNELDIR}/afs/afs_args.h \
-	${KERNELDIR}/afs/icl.h \
-	${KERNELDIR}/afs/AFS_component_version_number.c
-
-ukinstall: \
-	$(UKDIRS) \
-	${UKERNELDIR}/afs/param.h \
-	${UKERNELDIR}/afs/stds.h \
-	${UKERNELDIR}/afs/afs_sysnames.h \
-	${UKERNELDIR}/config/Makefile.${SYS_NAME} \
-	${UKERNELDIR}/afs/afs_args.h \
-	${UKERNELDIR}/afs/icl.h \
-	${UKERNELDIR}/afs/venus.h \
-	${UKERNELDIR}/afs/AFS_component_version_number.c
-
 clean:
-	$(RM) -f *.o config mkvers core xprt AFS_component_version_number.c
+	$(RM) -f *.o config mkvers core xprt AFS_component_version_number.c param.h.new
 
 dest: ${DEST}/include/afs/param.h \
 	${DEST}/include/afs/stds.h \

@@ -355,10 +355,6 @@ BEGIN
     IDS_BADCREDS_DESC3      "您希望现在获得新的 AFS 令牌吗?"
     IDS_BADCREDS_DESC3_ADM  "您希望以管理员身份登录吗?"
     IDS_BADCREDS_DESC_DESTROYED "您在 %1 单元内的令牌已失效。\n\n%2\n\n%3"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
     IDS_ERROR_BAD_CREDENTIALS "无法识别您输入的 AFS 身份，或您的口令不正确。"
     IDS_BROWSE_WAITING      "正在查询服务器--请等待..."
     IDS_BROWSE_BADCELL_TITLE "无法识别的单元"
