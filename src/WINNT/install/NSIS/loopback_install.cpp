@@ -24,6 +24,8 @@
 
 // Win2k
 #define _WIN32_DCOM
+#define UNICODE
+#define _UNICODE
 
 #include <windows.h>
 #include <shellapi.h>
@@ -135,9 +137,9 @@ void EasyErrorBox (int hr, WCHAR *format, ...)
 }
 
 // RSM4: Converted this to stdcall so NSIS System::Call can call it (It defaults to stdcall)
-_stdcall bool loopback_isInstalled()
+bool _stdcall loopback_isInstalled()
 {
-    char *hwid = "*MSLOOP";
+    TCHAR * hwid = _T("*MSLOOP");
     HDEVINFO DeviceInfoSet;
     SP_DEVINFO_DATA DeviceInfoData;
     DWORD i,err;
@@ -161,7 +163,7 @@ _stdcall bool loopback_isInstalled()
     for (i=0; SetupDiEnumDeviceInfo(DeviceInfoSet,i,&DeviceInfoData); i++)
     {
         DWORD DataT;
-        LPTSTR p,buffer = NULL;
+        TCHAR  *p, *buffer = NULL;
         DWORD buffersize = 0;
         
         //
@@ -182,7 +184,7 @@ _stdcall bool loopback_isInstalled()
                 // We need to change the buffer size.
                 if (buffer) 
                     LocalFree(buffer);
-                buffer = (char *)LocalAlloc(LPTR,buffersize);
+                buffer = (TCHAR *)LocalAlloc(LPTR,buffersize);
             }
             else
             {
@@ -196,9 +198,9 @@ _stdcall bool loopback_isInstalled()
             continue;
         
         // Compare each entry in the buffer multi-sz list with our hwid.
-        for (p=buffer; *p && (p < &buffer[buffersize]); p += lstrlen(p)+1)
+        for (p=buffer; *p && (p < &buffer[buffersize]); p += _tcslen(p)+1)
         {
-            if (!strcmp(hwid,p))
+            if (!_tcsicmp(hwid,p))
             {
                 found = TRUE;
                 break;
@@ -222,7 +224,7 @@ cleanup_DeviceInfo:
 // RSM4: Added 
 bool disable_loopback()
 {
-    char *hwid = "*MSLOOP";
+    TCHAR * hwid = _T("*MSLOOP");
     HDEVINFO DeviceInfoSet;
     SP_DEVINFO_DATA DeviceInfoData;
     SP_PROPCHANGE_PARAMS PropChangeParams = {sizeof(SP_CLASSINSTALL_HEADER)};
@@ -247,7 +249,7 @@ bool disable_loopback()
     for (i=0; SetupDiEnumDeviceInfo(DeviceInfoSet,i,&DeviceInfoData); i++)
     {
         DWORD DataT;
-        LPTSTR p,buffer = NULL;
+        TCHAR * p, *buffer = NULL;
         DWORD buffersize = 0;
         
         //
@@ -268,7 +270,7 @@ bool disable_loopback()
                 // We need to change the buffer size.
                 if (buffer) 
                     LocalFree(buffer);
-                buffer = (char *)LocalAlloc(LPTR,buffersize);
+                buffer = (TCHAR *)LocalAlloc(LPTR,buffersize);
             }
             else
             {
@@ -282,9 +284,9 @@ bool disable_loopback()
             continue;
         
         // Compare each entry in the buffer multi-sz list with our hwid.
-        for (p=buffer; *p && (p < &buffer[buffersize]); p += lstrlen(p)+1)
+        for (p=buffer; *p && (p < &buffer[buffersize]); p += _tcslen(p)+1)
         {
-            if (!strcmp(hwid,p))
+            if (!_tcsicmp(hwid,p))
             {
                 found = TRUE;
                 break;
@@ -345,13 +347,13 @@ bool loopback_install(int *rebootNeeded)
     TCHAR hwIdList[LINE_LEN+4];
     TCHAR InfPath[MAX_PATH];
     bool success = false;
-    LPCTSTR hwid = "*MSLOOP";
-    LPCTSTR inf = "INF\\NETLOOP.INF";
+    TCHAR * hwid = _T("*MSLOOP");
+    TCHAR * inf = _T("INF\\NETLOOP.INF");
     DWORD flags = 0;
     HMODULE newdevMod = NULL;
     UpdateDriverForPlugAndPlayDevicesProto UpdateFn;
     
-    CHAR *systemRoot = getenv("SYSTEMROOT");
+    TCHAR *systemRoot = _tgetenv(_T("SYSTEMROOT"));
     SetCurrentDirectory(systemRoot);
 
     // Inf must be a full pathname

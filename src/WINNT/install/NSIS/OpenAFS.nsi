@@ -1766,11 +1766,10 @@ StartRemove:
 !ENDIF
 !ENDIF
   
-   IfSilent SkipAsk
+   IfSilent SkipDel
 ;  IfFileExists "$WINDIR\afsdcell.ini" CellExists SkipDelAsk
 ;  CellExists:
   MessageBox MB_YESNO "Would you like to keep your configuration files?" IDYES SkipDel
-  SkipAsk:
   Delete "$WINDIR\afsdcell.ini"
 
   Delete "$WINDIR\afsdsbmt.ini"
@@ -1994,7 +1993,9 @@ FunctionEnd
 
 Function un.onUninstSuccess
 
-   MessageBox MB_OK "Please reboot your machine to complete uninstallation of the software"
+  IfSilent SkipAsk
+  MessageBox MB_OK "Please reboot your machine to complete uninstallation of the software"
+  SkipAsk:
 
 FunctionEnd
 

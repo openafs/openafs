@@ -5,3 +5,6 @@ DESCRIPTION "Microsoft Loopback Adapter Installer for OpenAFS"
 EXPORTS
     doLoopBackEntryW
     disableLoopBackEntryW
+    loopback_isInstalled
+
+    

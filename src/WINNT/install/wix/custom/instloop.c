@@ -247,7 +247,7 @@ cleanup:
 
 BOOL IsLoopbackInstalled()
 {
-    char *hwid = "*MSLOOP";
+    TCHAR * hwid = _T("*MSLOOP");
     HDEVINFO DeviceInfoSet;
     SP_DEVINFO_DATA DeviceInfoData;
     DWORD i,err;
@@ -270,7 +270,7 @@ BOOL IsLoopbackInstalled()
     for (i=0; SetupDiEnumDeviceInfo(DeviceInfoSet,i,&DeviceInfoData); i++)
     {
         DWORD DataT;
-        LPTSTR p,buffer = NULL;
+        TCHAR *p, *buffer = NULL;
         DWORD buffersize = 0;
         
         //
@@ -291,7 +291,7 @@ BOOL IsLoopbackInstalled()
                 // We need to change the buffer size.
                 if (buffer) 
                     LocalFree(buffer);
-                buffer = (char *)LocalAlloc(LPTR,buffersize);
+                buffer = (TCHAR *)LocalAlloc(LPTR,buffersize);
             }
             else
             {
@@ -303,9 +303,9 @@ BOOL IsLoopbackInstalled()
             continue;
         
         // Compare each entry in the buffer multi-sz list with our hwid.
-        for (p=buffer; *p && (p < &buffer[buffersize]); p += lstrlen(p)+1)
+        for (p=buffer; *p && (p < &buffer[buffersize]); p += _tcslen(p)+1)
         {
-            if (!strcmp(hwid,p))
+            if (!_tcsicmp(hwid,p))
             {
                 found = TRUE;
                 break;
