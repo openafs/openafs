@@ -6004,11 +6004,10 @@ SRXAFS_FlushCPS(struct rx_call * acall, struct ViceIds * vids,
     for (i = 0; i < nids; i++, vd++) {
 	if (!*vd)
 	    continue;
-	client = h_ID2Client(*vd);	/* returns client locked, or NULL */
+	client = h_ID2Client(*vd);	/* returns client write locked, or NULL */
 	if (!client)
 	    continue;
 
-	BoostSharedLock(&client->lock);
 	client->prfail = 2;	/* Means re-eval client's cps */
 #ifdef	notdef
 	if (client->tcon) {
