@@ -1673,7 +1673,7 @@ static PNewStatMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
     struct VenusFid tfid;
     char *bufp;
     struct sysname_info sysState;
-    afs_int32 offset, len;
+    afs_size_t offset, len;
 
     AFS_STATCNT(PNewStatMount);
     if (!avc) return EINVAL;
@@ -1682,7 +1682,7 @@ static PNewStatMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
     if (vType(avc) != VDIR) {
 	return ENOTDIR;
     }
-    tdc = afs_GetDCache(avc, 0, areq, &offset, &len, 1);
+    tdc = afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 1);
     if (!tdc) return ENOENT;
     Check_AtSys(avc, ain, &sysState, areq);
     do {
@@ -2354,7 +2354,7 @@ static PRemoveMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
     register afs_int32 code;
     char *bufp;
     struct sysname_info sysState;
-    afs_int32 offset, len;
+    afs_size_t offset, len;
     register struct conn *tc;
     register struct dcache *tdc;
     register struct vcache *tvc;
@@ -2372,7 +2372,7 @@ static PRemoveMount(avc, afun, areq, ain, aout, ainSize, aoutSize)
     if (code) return code;
     if (vType(avc) != VDIR) return ENOTDIR;
 
-    tdc	= afs_GetDCache(avc, 0,	areq, &offset,	&len, 1);	/* test for error below */
+    tdc	= afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 1);	/* test for error below */
     if (!tdc) return ENOENT;
     Check_AtSys(avc, ain, &sysState, areq);
     do {
@@ -3558,7 +3558,7 @@ static PFlushMount(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     struct VenusFid tfid;
     char *bufp;
     struct sysname_info sysState;
-    afs_int32 offset, len;
+    afs_size_t offset, len;
 
     AFS_STATCNT(PFlushMount);
     if (!avc) return EINVAL;
@@ -3567,7 +3567,7 @@ static PFlushMount(avc, afun, areq, ain, aout, ainSize, aoutSize, acred)
     if (vType(avc) != VDIR) {
 	return ENOTDIR;
     }
-    tdc = afs_GetDCache(avc, 0, areq, &offset, &len, 1);
+    tdc = afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 1);
     if (!tdc) return ENOENT;
     Check_AtSys(avc, ain, &sysState, areq);
     do {

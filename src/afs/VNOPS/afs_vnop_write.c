@@ -92,17 +92,20 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
     register struct vcache *avc;
     struct uio *auio;
     int aio, noLock;
-    struct AFS_UCRED *acred; {
-    afs_int32 totalLength;
-    afs_int32 transferLength;
-    afs_int32 filePos;
+    struct AFS_UCRED *acred; 
+{
+    afs_size_t totalLength;
+    afs_size_t transferLength;
+    afs_size_t filePos;
+    afs_size_t offset, len;
+    afs_int32 tlen, trimlen;
     afs_int32 startDate;
     afs_int32 max;
     register struct dcache *tdc;
 #ifdef _HIGHC_
     volatile
 #endif
-    afs_int32 offset, len, error;
+    afs_int32 error;
     struct uio tuio;
     struct iovec *tvec;  /* again, should have define */
     char *tfile;
@@ -121,8 +124,9 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
     error = 0;
     transferLength = 0;
     afs_Trace4(afs_iclSetp, CM_TRACE_WRITE, ICL_TYPE_POINTER, avc, 
-	       ICL_TYPE_INT32, filePos, ICL_TYPE_INT32, totalLength,
-	       ICL_TYPE_INT32, avc->m.Length);
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos),
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(totalLength),
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
     if (!noLock) {
 	afs_MaybeWakeupTruncateDaemon();
 	ObtainWriteLock(&avc->lock,126);
@@ -193,10 +197,6 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 	 */
 	if (noLock) {
 	    tdc = afs_FindDCache(avc, filePos);
-	    if (tdc) {
-		offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
-		len = tdc->f.chunkBytes - offset;
-	    }
 	} else if (afs_blocksUsed > (CM_WAITFORDRAINPCT*afs_cacheBlocks)/100) {
 	    tdc = afs_FindDCache(avc, filePos);
 	    if (tdc) {
@@ -204,9 +204,6 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 		    (tdc->flags & DFFetching)) {
 		    afs_PutDCache(tdc);
 		    tdc = NULL;
-		} else {
-		    offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
-		    len = tdc->f.chunkBytes - offset;
 		}
 	    }
 	    if (!tdc) {
@@ -243,6 +240,7 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 	    tdc->flags |= DFEntryMod;
 	}
 	len = totalLength;	/* write this amount by default */
+	offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 	max = AFS_CHUNKTOSIZE(tdc->f.chunk);	/* max size of this chunk */
 	if (max	<= len + offset)	{   /*if we'd go past the end of this chunk */
 	    /* it won't all fit in this chunk, so write as much
@@ -251,7 +249,8 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 	}
 	/* mung uio structure to be right for this transfer */
 	afsio_copy(auio, &tuio, tvec);
-	afsio_trim(&tuio, len);
+	trimlen = len;
+	afsio_trim(&tuio, trimlen);
 	tuio.afsio_offset = offset;
 
 	code = afs_MemWriteUIO(tdc->f.inode, &tuio);
@@ -266,10 +265,13 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 	}
 	/* otherwise we've written some, fixup length, etc and continue with next seg */
 	len = len - tuio.afsio_resid; /* compute amount really transferred */
-	afsio_skip(auio, len);	    /* advance auio over data written */
+	tlen = len;
+	afsio_skip(auio, tlen);	    /* advance auio over data written */
 	/* compute new file size */
-	if (offset + len > tdc->f.chunkBytes)
-	    afs_AdjustSize(tdc, offset+len);
+	if (offset + len > tdc->f.chunkBytes) {
+	    afs_int32 toffset = offset+len;
+	    afs_AdjustSize(tdc, toffset);
+	}
 	totalLength -= len;
 	transferLength += len;
 	filePos += len;
@@ -319,17 +321,21 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
     register struct vcache *avc;
     struct uio *auio;
     int aio, noLock;
-    struct AFS_UCRED *acred; {
-    afs_int32 totalLength;
-    afs_int32 transferLength;
-    afs_int32 filePos;
+    struct AFS_UCRED *acred; 
+{
+    afs_size_t totalLength;
+    afs_size_t transferLength;
+    afs_size_t filePos;
+    afs_size_t offset, len;
+    afs_int32  tlen;
+    afs_int32  trimlen;
     afs_int32 startDate;
     afs_int32 max;
     register struct dcache *tdc;
 #ifdef _HIGHC_
     volatile
 #endif
-    afs_int32 offset, len, error;
+    afs_int32 error;
     struct uio tuio;
     struct iovec *tvec;  /* again, should have define */
     struct osi_file *tfile;
@@ -349,8 +355,9 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
     error = 0;
     transferLength = 0;
     afs_Trace4(afs_iclSetp, CM_TRACE_WRITE, ICL_TYPE_POINTER, avc, 
-	       ICL_TYPE_INT32, filePos, ICL_TYPE_INT32, totalLength,
-	       ICL_TYPE_INT32, avc->m.Length);
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos),
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(totalLength),
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
     if (!noLock) {
 	afs_MaybeWakeupTruncateDaemon();
 	ObtainWriteLock(&avc->lock,556);
@@ -416,10 +423,6 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
 	/* read the cached info */
 	if (noLock) {
 	    tdc = afs_FindDCache(avc, filePos);
-	    if (tdc) {
-		offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
-		len = tdc->f.chunkBytes - offset;
-	    }
 	} else if (afs_blocksUsed > (CM_WAITFORDRAINPCT*afs_cacheBlocks)/100) {
 	    tdc = afs_FindDCache(avc, filePos);
 	    if (tdc) {
@@ -427,9 +430,6 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
 		    (tdc->flags & DFFetching)) {
 		    afs_PutDCache(tdc);
 		    tdc = NULL;
-		} else {
-		    offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
-		    len = tdc->f.chunkBytes - offset;
 		}
 	    }
 	    if (!tdc) {
@@ -467,6 +467,7 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
 	}
 	tfile = (struct osi_file *)osi_UFSOpen(tdc->f.inode);
 	len = totalLength;	/* write this amount by default */
+	offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 	max = AFS_CHUNKTOSIZE(tdc->f.chunk);	/* max size of this chunk */
 	if (max	<= len + offset)	{   /*if we'd go past the end of this chunk */
 	    /* it won't all fit in this chunk, so write as much
@@ -475,7 +476,8 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
 	}
 	/* mung uio structure to be right for this transfer */
 	afsio_copy(auio, &tuio, tvec);
-	afsio_trim(&tuio, len);
+	trimlen = len;
+	afsio_trim(&tuio, trimlen);
 	tuio.afsio_offset = offset;
 #ifdef	AFS_AIX_ENV
 #ifdef	AFS_AIX41_ENV
@@ -561,10 +563,13 @@ afs_UFSWrite(avc, auio, aio, acred, noLock)
 	}
 	/* otherwise we've written some, fixup length, etc and continue with next seg */
 	len = len - tuio.afsio_resid; /* compute amount really transferred */
-	afsio_skip(auio, len);	    /* advance auio over data written */
+	tlen = len;
+	afsio_skip(auio, tlen);	    /* advance auio over data written */
 	/* compute new file size */
-	if (offset + len > tdc->f.chunkBytes)
-	    afs_AdjustSize(tdc, offset+len);
+	if (offset + len > tdc->f.chunkBytes) {
+	    afs_int32 toffset = offset+len;
+	    afs_AdjustSize(tdc, toffset);
+	}
 	totalLength -= len;
 	transferLength += len;
 	filePos += len;
@@ -643,7 +648,7 @@ struct vrequest *areq; {
 	return 0;	/* nothing to do */
     /* otherwise, call afs_StoreDCache (later try to do this async, if possible) */
     afs_Trace2(afs_iclSetp, CM_TRACE_PARTIALWRITE, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_INT32, avc->m.Length);
+		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
 #if	defined(AFS_SUN5_ENV)
     code = afs_StoreAllSegments(avc, areq, AFS_ASYNC | AFS_VMSYNC_INVAL);
 #else
@@ -837,8 +842,9 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 #endif
 	    /* at least one daemon is idle, so ask it to do the store.
 		Also, note that  we don't lock it any more... */
-	    tb = afs_BQueue(BOP_STORE, avc, 0, 1, acred, (long)acred->cr_uid,
-			    0L, 0L, 0L);
+            tb = afs_BQueue(BOP_STORE, avc, 0, 1, acred,
+                                (afs_size_t) acred->cr_uid, (afs_size_t) 0,
+                                (afs_size_t) 0, (afs_size_t) 0);
 	    /* sleep waiting for the store to start, then retrieve error code */
 	    while ((tb->flags & BUVALID) == 0) {
 		tb->flags |= BUWAIT;

@@ -35,6 +35,7 @@ RCSID("$Header$");
 #define _LINUX_CODA_FS_I
 #define _LINUX_NTFS_FS_SB_H
 #define _LINUX_NTFS_FS_I_H
+#define _NCP_FS_SB
 struct sysv_sb_info {};
 struct affs_sb_info {};
 struct ufs_sb_info {};
@@ -46,6 +47,7 @@ struct affs_inode_info {};
 struct nfs_lock_info {};
 struct ntfs_sb_info{};
 struct ntfs_inode_info{};
+struct ncp_sb_info{};
 #include <linux/types.h>
 #define u32 unsigned int
 #define s32 int
@@ -196,11 +198,11 @@ typedef	struct adaptive_mutex2	adaptive_mutex2_t;
 #include <arpa/inet.h>		/* inet_ntoa() */
 
 #if defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)
-#ifdef	AFS_SGI_ENV
+#ifdef       AFS_SGI_ENV
 #include <sys/vnode.h>
 #endif /* AFS_SGI_ENV */
 #else
-#ifdef	AFS_MACH_ENV
+#ifdef       AFS_MACH_ENV
 #include <vfs/vfs.h>
 #include <vfs/vnode.h>
 #include <sys/inode.h>
@@ -249,12 +251,10 @@ struct timezone {
     int a,b;
 };
 #ifndef AFS_ALPHA_LINUX20_ENV
-#ifndef AFS_LINUX24_ENV
 typedef struct timeval {
     int tv_sec;
     int tv_usec;
 } timeval_t; /* Needed here since KERNEL defined. */
-#endif
 #endif /*AFS_ALPHA_LINUX20_ENV*/
 #if defined(AFSBIG_ENDIAN)
 #define _LINUX_BYTEORDER_BIG_ENDIAN_H
@@ -266,17 +266,17 @@ typedef struct timeval {
 #include <osi_vfs.h>
 #else /* AFS_LINUX20_ENV */
 #ifdef AFS_HPUX110_ENV
-#define	KERNEL
-#define	_KERNEL	1
+#define  KERNEL
+#define  _KERNEL 1
 /* Declare following so sys/vnode.h will compile with KERNEL defined */
 #define FILE FILe
 typedef enum _spustate {        /* FROM /etc/conf/h/_types.h */
-        SPUSTATE_NONE = 0,      /* must be 0 for proper initialization */
-        SPUSTATE_IDLE,          /* spu is idle */
-        SPUSTATE_USER,          /* spu is in user mode */
-        SPUSTATE_SYSTEM,        /* spu is in system mode */
-        SPUSTATE_UNKNOWN,       /* utility code for NEW_INTERVAL() */
-        SPUSTATE_NOCHANGE       /* utility code for NEW_INTERVAL() */
+    SPUSTATE_NONE = 0,      /* must be 0 for proper initialization */
+    SPUSTATE_IDLE,          /* spu is idle */
+    SPUSTATE_USER,          /* spu is in user mode */
+    SPUSTATE_SYSTEM,        /* spu is in system mode */
+    SPUSTATE_UNKNOWN,       /* utility code for NEW_INTERVAL() */
+    SPUSTATE_NOCHANGE       /* utility code for NEW_INTERVAL() */
 } spustate_t;
 #define k_off_t off_t
 #include "sys/vnode.h"
@@ -2471,14 +2471,14 @@ void print_vnode(kmem, vep, ptr, pnt)
     printf("\ti_ino=%d, i_mode=%x, i_nlink=%d, i_uid=%d, i_gid=%d, i_size=%d\n",
 	   vep->i_ino, vep->i_mode, vep->i_nlink, vep->i_uid, vep->i_gid,
 	   vep->i_size);
-#ifndef AFS_LINUX24_ENV
+#ifdef AFS_LINUX24_ENV
+    printf("\ti_atime=%u, i_mtime=%u, i_ctime=%u, i_version=%u, i_nrpages=%u\n",
+	   vep->i_atime, vep->i_mtime, vep->i_ctime, vep->i_version,
+	   vep->i_data.nrpages);
+#else
     printf("\ti_atime=%u, i_mtime=%u, i_ctime=%u, i_version=%u, i_nrpages=%u\n",
 	   vep->i_atime, vep->i_mtime, vep->i_ctime, vep->i_version,
 	   vep->i_nrpages);
-#else
-    printf("\ti_atime=%u, i_mtime=%u, i_ctime=%u, i_version=%u\n",
-	   vep->i_atime, vep->i_mtime, vep->i_ctime, vep->i_version
-	   );
 #endif
     printf("\ti_op=0x%x, i_dev=0x%x, i_rdev=0x%x, i_sb=0x%x\n",
 	   vep->i_op, vep->i_dev, vep->i_rdev, vep->i_sb);
@@ -2522,9 +2522,16 @@ void print_vcache(kmem, vep, ptr, pnt)
 	       ptr, vep->vrefCount, vep->parentVnode, vep->parentUnique, 
 	       vep->flushDV.high, vep->flushDV.low, 
 	       vep->mapDV.high, vep->mapDV.low);
+#ifdef AFS_64BIT_CLIENT
+	printf("truncPos=(0x%x, 0x%x),\n\tcallb=x%lx, cbE=%d, opens=%d, XoW=%d, ",
+	       (int) vep->truncPos >> 32, (int) vep->truncPos & 0xffffffff, 
+		vep->callback, vep->cbExpires, vep->opens, 
+	       vep->execsOrWriters);
+#else /* AFS_64BIT_CLIENT */
 	printf("truncPos=%d,\n\tcallb=x%lx, cbE=%d, opens=%d, XoW=%d, ",
 	       vep->truncPos, vep->callback, vep->cbExpires, vep->opens, 
 	       vep->execsOrWriters);
+#endif /* AFS_64BIT_CLIENT */
 	printf("flcnt=%d, mvstat=%d\n",
 	       vep->flockCount, vep->mvstat);
 	printf("\tstates=x%x, ", vep->states);
@@ -2532,6 +2539,17 @@ void print_vcache(kmem, vep, ptr, pnt)
 	printf("vstates=x%x, ", vep->vstates);
 #endif	/* AFS_SUN5_ENV */
 	printf("dchint=%x, anyA=0x%x\n", vep->h1.dchint, vep->anyAccess);
+#ifdef AFS_64BIT_CLIENT
+	printf("\tquick[dc=%x, stamp=%x, f=%x, min=%d, len=(0x%x, 0x%x)]\n",
+	       vep->quick.dc, vep->quick.stamp, vep->quick.f,
+	       vep->quick.minLoc, 
+		(int)vep->quick.len >> 32, (int)vep->quick.len & 0xffffffff);
+	printf("\tmstat[len=(0x%x, 0x%x), DV=%d.%d, Date=%d, Owner=%d, Group=%d, Mode=0%o, linkc=%d]\n",
+	       (int) vep->m.Length >> 32, (int) vep->m.Length & 0xffffffff, 
+		vep->m.DataVersion.high, 
+	       vep->m.DataVersion.low, vep->m.Date, vep->m.Owner,
+	       vep->m.Group, vep->m.Mode, vep->m.LinkCount);
+#else /* AFS_64BIT_CLIENT */
 	printf("\tquick[dc=%x, stamp=%x, f=%x, min=%d, len=%d]\n",
 	       vep->quick.dc, vep->quick.stamp, vep->quick.f,
 	       vep->quick.minLoc, vep->quick.len);
@@ -2539,6 +2557,7 @@ void print_vcache(kmem, vep, ptr, pnt)
 	       vep->m.Length, vep->m.DataVersion.high, 
 	       vep->m.DataVersion.low, vep->m.Date, vep->m.Owner,
 	       vep->m.Group, vep->m.Mode, vep->m.LinkCount);
+#endif /* AFS_64BIT_CLIENT */
 #else /* AFS33 */
 	printf("%x: refC=%d, pv=%d, pu=%d, flushDv=%d, mapDV=%d, truncPos=%d\n",
 	       ptr, vep->vrefCount, vep->parentVnode, vep->parentUnique, vep->flushDV,

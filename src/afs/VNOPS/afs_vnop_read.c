@@ -53,12 +53,15 @@ afs_MemRead(avc, auio, acred, albn, abpp, noLock)
     struct AFS_UCRED *acred;
     daddr_t albn;
     int noLock;
-    struct buf **abpp; {
-    afs_int32 totalLength;
-    afs_int32 transferLength;
-    afs_int32 filePos;
+    struct buf **abpp; 
+{
+    afs_size_t totalLength;
+    afs_size_t transferLength;
+    afs_size_t filePos;
+    afs_size_t offset, len, tlen;
+    afs_int32 trimlen;
     struct dcache *tdc=0;
-    afs_int32 offset, len, error, trybusy=1;
+    afs_int32 error, trybusy=1;
     struct uio tuio;
     struct iovec *tvec;
     char *tfile;
@@ -92,8 +95,9 @@ afs_MemRead(avc, auio, acred, albn, abpp, noLock)
     totalLength = auio->afsio_resid;
     filePos = auio->afsio_offset;
     afs_Trace4(afs_iclSetp, CM_TRACE_READ, ICL_TYPE_POINTER, avc, 
-	       ICL_TYPE_INT32, filePos, ICL_TYPE_INT32, totalLength,
-	       ICL_TYPE_INT32, avc->m.Length);
+		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos),
+		ICL_TYPE_INT32, totalLength,
+		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
     error = 0;
     transferLength = 0;
     if (!noLock)
@@ -161,7 +165,8 @@ tagain:
 			/* start the daemon (may already be running, however) */
 			tdc->flags |= DFFetchReq;
 			bp = afs_BQueue(BOP_FETCH, avc, B_DONTWAIT, 0, acred,
-					(long)filePos, (long) tdc, 0L, 0L);
+					(afs_size_t)filePos, (afs_size_t) tdc,
+					(afs_size_t) 0, (afs_size_t) 0);
 			if (!bp) {
 			    tdc->flags &= ~DFFetchReq;
 			    trybusy = 0;	/* Avoid bkg daemon since they're too busy */
@@ -222,12 +227,13 @@ tagain:
 		also not at eof, so may have to supply fake zeros */
 	    len	= AFS_CHUNKTOSIZE(tdc->f.chunk) - offset; /* bytes left in chunk addr space */
 	    if (len > totalLength) len = totalLength;	/* and still within xfr request */
-	    code = avc->m.Length - offset; /* and still within file */
-	    if (len > code) len = code;
+	    tlen = avc->m.Length - offset; /* and still within file */ 
+	    if (len > tlen) len = tlen;
 	    if (len > AFS_ZEROS) len = sizeof(afs_zeros);   /* and in 0 buffer */
 	    afsio_copy(auio, &tuio, tvec);
-	    afsio_trim(&tuio, len);
-	    AFS_UIOMOVE(afs_zeros, len, UIO_READ, &tuio, code);
+	    trimlen = len;
+	    afsio_trim(&tuio, trimlen);
+	    AFS_UIOMOVE(afs_zeros, trimlen, UIO_READ, &tuio, code);
 	    if (code) {
 		error = code;
 		break;
@@ -238,7 +244,8 @@ tagain:
 
 	    /* mung uio structure to be right for this transfer */
 	    afsio_copy(auio, &tuio, tvec);
-	    afsio_trim(&tuio, len);
+	    trimlen = len;
+	    afsio_trim(&tuio, trimlen);
 	    tuio.afsio_offset = offset;
 
 	    code = afs_MemReadUIO(tdc->f.inode, &tuio);
@@ -250,7 +257,8 @@ tagain:
 	}
 	/* otherwise we've read some, fixup length, etc and continue with next seg */
 	len = len - tuio.afsio_resid; /* compute amount really transferred */
-	afsio_skip(auio, len);	    /* update input uio structure */
+	trimlen = len;
+	afsio_skip(auio, trimlen);	    /* update input uio structure */
 	totalLength -= len;
 	transferLength += len;
 	filePos += len;
@@ -291,8 +299,8 @@ void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 			      struct AFS_UCRED *acred, struct vrequest *areq)
 {
     register struct dcache *tdc;
-    register afs_int32 offset;
-    afs_int32 j1, j2;	/* junk vbls for GetDCache to trash */
+    afs_size_t offset;
+    afs_size_t j1, j2;	/* junk vbls for GetDCache to trash */
 
     offset = adc->f.chunk+1;		/* next chunk we'll need */
     offset = AFS_CHUNKTOBASE(offset);   /* base of next chunk */
@@ -309,8 +317,9 @@ void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
 #ifdef	AFS_SUN5_ENVX
 	    mutex_exit(&tdc->lock);
 #endif
-	    bp = afs_BQueue(BOP_FETCH, avc, B_DONTWAIT, 0, acred, (long)offset,
-			    (long) tdc, 1L, 0L, 0L);
+	     bp = afs_BQueue(BOP_FETCH, avc, B_DONTWAIT, 0, acred,
+				(afs_size_t) offset, (afs_size_t) tdc,
+				(afs_size_t) 1, (afs_size_t) 0);
 	    if (!bp) {
 		/* Bkg table full; just abort non-important prefetching to avoid deadlocks */
 		tdc->flags &= ~(DFNextStarted | DFFetchReq);
@@ -353,7 +362,8 @@ afs_UFSReadFast(avc, auio, acred, albn, abpp, noLock)
     struct AFS_UCRED *acred;
     int noLock;
     daddr_t albn;
-    struct buf **abpp; {
+    struct buf **abpp; 
+{
     struct vrequest treq;
     int offDiff;
     struct dcache *tdc;
@@ -378,6 +388,11 @@ afs_UFSReadFast(avc, auio, acred, albn, abpp, noLock)
 	    && !(tdc->flags & DFFetching)) { /* fits in chunk */
 
 	    auio->afsio_offset -= avc->quick.minLoc;
+
+	    afs_Trace4(afs_iclSetp, CM_TRACE_READFAST, ICL_TYPE_POINTER, avc,
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(auio->afsio_offset),
+			ICL_TYPE_INT32, auio->afsio_resid,
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
 
 	    tfile = (struct osi_file *)osi_UFSOpen(tdc->f.inode);
 
@@ -475,12 +490,15 @@ afs_UFSRead(avc, auio, acred, albn, abpp, noLock)
     struct AFS_UCRED *acred;
     daddr_t albn;
     int noLock;
-    struct buf **abpp; {
-    afs_int32 totalLength;
-    afs_int32 transferLength;
-    afs_int32 filePos;
+    struct buf **abpp; 
+{
+    afs_size_t totalLength;
+    afs_size_t transferLength;
+    afs_size_t filePos;
+    afs_size_t offset, len, tlen;
+    afs_int32 trimlen;
     struct dcache *tdc=0;
-    afs_int32 offset, len, error;
+    afs_int32 error;
     struct uio tuio;
     struct iovec *tvec;
     struct osi_file *tfile;
@@ -520,8 +538,9 @@ afs_UFSRead(avc, auio, acred, albn, abpp, noLock)
     totalLength = auio->afsio_resid;
     filePos = auio->afsio_offset;
     afs_Trace4(afs_iclSetp, CM_TRACE_READ, ICL_TYPE_POINTER, avc, 
-	       ICL_TYPE_INT32, filePos, ICL_TYPE_INT32, totalLength,
-	       ICL_TYPE_INT32, avc->m.Length);
+		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos),
+		ICL_TYPE_INT32, totalLength,
+		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
     error = 0;
     transferLength = 0;
     if (!noLock)
@@ -595,7 +614,8 @@ tagain:
 			munlocked = 1;
 #endif
 			bp = afs_BQueue(BOP_FETCH, avc, B_DONTWAIT, 0, acred,
-					(long)filePos, (long) tdc, 0L, 0L);
+					(afs_size_t)filePos, (afs_size_t) tdc,
+					(afs_size_t) 0, (afs_size_t) 0);
 			if (!bp) {
 			    /* Bkg table full; retry deadlocks */
 			    tdc->flags &= ~DFFetchReq;
@@ -656,12 +676,13 @@ tagain:
 		also not at eof, so may have to supply fake zeros */
 	    len	= AFS_CHUNKTOSIZE(tdc->f.chunk) - offset; /* bytes left in chunk addr space */
 	    if (len > totalLength) len = totalLength;	/* and still within xfr request */
-	    code = avc->m.Length - offset; /* and still within file */
-	    if (len > code) len = code;
+	    tlen = avc->m.Length - offset; /* and still within file */
+	    if (len > tlen) len = tlen;
 	    if (len > AFS_ZEROS) len = sizeof(afs_zeros);   /* and in 0 buffer */
 	    afsio_copy(auio, &tuio, tvec);
-	    afsio_trim(&tuio, len);
-	    AFS_UIOMOVE(afs_zeros, len, UIO_READ, &tuio, code);
+	    trimlen = len;
+	    afsio_trim(&tuio, trimlen);
+	    AFS_UIOMOVE(afs_zeros, trimlen, UIO_READ, &tuio, code);
 	    if (code) {
 		error = code;
 		break;
@@ -688,7 +709,8 @@ tagain:
 	    tfile = (struct osi_file *)osi_UFSOpen(tdc->f.inode);
 	    /* mung uio structure to be right for this transfer */
 	    afsio_copy(auio, &tuio, tvec);
-	    afsio_trim(&tuio, len);
+	    trimlen = len;
+	    afsio_trim(&tuio, trimlen);
 	    tuio.afsio_offset = offset;
 #ifdef	AFS_AIX_ENV
 #ifdef	AFS_AIX41_ENV
@@ -795,7 +817,8 @@ tagain:
 	}
 	/* otherwise we've read some, fixup length, etc and continue with next seg */
 	len = len - tuio.afsio_resid; /* compute amount really transferred */
-	afsio_skip(auio, len);	    /* update input uio structure */
+	trimlen = len;
+	afsio_skip(auio, trimlen);	    /* update input uio structure */
 	totalLength -= len;
 	transferLength += len;
 	filePos += len;

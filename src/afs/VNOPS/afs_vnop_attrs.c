@@ -190,7 +190,7 @@ afs_getattr(OSI_VC_ARG(avc), attrs, acred)
 
     AFS_STATCNT(afs_getattr);
     afs_Trace2(afs_iclSetp, CM_TRACE_GETATTR, ICL_TYPE_POINTER, avc, 
-	       ICL_TYPE_INT32, avc->m.Length);
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
 
 #if defined(AFS_SUN5_ENV)
     if (flags & ATTR_HINT) {
@@ -396,7 +396,7 @@ afs_setattr(avc, attrs, acred)
 
     AFS_STATCNT(afs_setattr);
     afs_Trace2(afs_iclSetp, CM_TRACE_SETATTR, ICL_TYPE_POINTER, avc, 
-	       ICL_TYPE_INT32, avc->m.Length);
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
     if (code = afs_InitReq(&treq, acred)) return code;
     if (avc->states & CRO) {
 	code=EROFS;
@@ -462,9 +462,10 @@ afs_setattr(avc, attrs, acred)
     if (attrs->va_size != -1) {
 #endif
 #endif
+	afs_size_t tsize = attrs->va_size;
 	ObtainWriteLock(&avc->lock,128);
 	avc->states |= CDirty;
-	code = afs_TruncateAllSegments(avc, (afs_int32)attrs->va_size, &treq, acred);
+	code = afs_TruncateAllSegments(avc, tsize, &treq, acred);
 	/* if date not explicitly set by this call, set it ourselves, since we
 	 * changed the data */
 	if (!(astat.Mask & AFS_SETMODTIME)) {

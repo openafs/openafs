@@ -94,5 +94,25 @@ proc GetCacheConfig(
   OUT afs_uint32 *serverVersion,
   OUT afs_uint32 *configCount,
   OUT cacheConfig *config
-) = 218;
+) = 218;  
+
+#ifdef RESIDENCY
+/* Used in MR-AFS for third party move of data between remioserver and "fs" */
+proc FetchData(IN  struct AFSFid *Fid,
+                   afs_int32  Filesdescriptor,
+                   afs_int64  Position,
+                   afs_int64  Length,
+               OUT afs_int64  *TotalLength) split = 65536;
+
+proc StoreData(IN  struct AFSFid *Fid,
+                   afs_int32  Filesdescriptor,
+                   afs_int64  Position,
+                   afs_int64  Length,
+               OUT afs_int64  *TotalLength) split = 65537;
+#endif /* RESIDENCY */
+
+proc GetCE64(
+  IN  afs_int32 index,
+  OUT AFSDBCacheEntry64 *ce
+) = 65538;
 

@@ -223,6 +223,11 @@ afs_CacheInit(astatSize, afiles, ablocks, aDentries, aVolumes, achunk, aflags,
     afs_cacheStats = astatSize;
     afs_vcacheInit(astatSize);
     afs_dcacheInit(afiles, ablocks, aDentries, achunk, aflags);
+#ifdef AFS_64BIT_CLIENT
+#ifdef AFS_VM_RDWR_ENV
+    afs_vmMappingEnd = AFS_CHUNKBASE(0x7fffffff);
+#endif /* AFS_VM_RDWR_ENV */
+#endif /* AFS_64BIT_CLIENT */
 
 #if defined(AFS_AIX_ENV)
     {

@@ -79,7 +79,7 @@ enum vcexcl { EXCL, NONEXCL } ;
 
 typedef struct vattr {
     int		va_type;	/* One of v_types above. */
-    size_t	va_size;
+    afs_size_t	va_size;
     unsigned long va_blocks;
     unsigned long va_blocksize;
     int		va_mask;	/* AT_xxx operation to perform. */

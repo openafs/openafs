@@ -9,8 +9,8 @@
 
 /*
  *  common.xg:
- *	Common values and structures used in the AFS File Server
- *	and Cache Manager interfaces.
+ *      Common values and structures used in the AFS File Server
+ *      and Cache Manager interfaces.
  */
 
 %#ifndef FSINT_COMMON_XG
@@ -43,6 +43,22 @@ struct AFSDBCacheEntry {
     afs_int32 cell;				/*Cell part of the fid*/
     AFSFid netFid;			/*Network part of the fid*/
     afs_int32 Length;
+    afs_int32 DataVersion;
+    struct AFSDBLockDesc lock;
+    afs_int32 callback;
+    afs_int32 cbExpires;
+    short refCount;
+    short opens;
+    short writers;
+    char mvstat;
+    char states;
+};
+
+struct AFSDBCacheEntry64 {
+    afs_int32 addr;
+    afs_int32 cell;				/*Cell part of the fid*/
+    AFSFid netFid;			/*Network part of the fid*/
+    afs_int64 Length;
     afs_int32 DataVersion;
     struct AFSDBLockDesc lock;
     afs_int32 callback;

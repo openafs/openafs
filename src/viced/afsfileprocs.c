@@ -444,6 +444,51 @@ SRXAFS_FetchData (tcon, Fid, Pos, Len, OutStatus, CallBack, Sync)
     struct AFSVolSync *Sync;		/* synchronization info */
 
 {
+    int code;
+
+    code = common_FetchData (tcon, Fid, Pos, Len, OutStatus,
+                                                 CallBack, Sync, 0);
+    return code;
+}
+
+SRXAFS_FetchData64 (tcon, Fid, Pos, Len, OutStatus, CallBack, Sync)
+    struct rx_connection *tcon;         /* Rx connection handle */
+    struct AFSFid *Fid;                 /* Fid of file to fetch */
+    afs_int64 Pos, Len;                 /* Not implemented yet */
+    struct AFSFetchStatus *OutStatus;   /* Returned status for Fid */
+    struct AFSCallBack *CallBack;       /* If r/w return CB for Fid */
+    struct AFSVolSync *Sync;            /* synchronization info */
+{
+    int code;
+    afs_int32 tPos, tLen;
+
+#ifdef AFS_64BIT_ENV
+    if (Pos + Len > 0x7fffffff)
+        return E2BIG;
+    tPos = Pos;
+    tLen = Len;
+#else /* AFS_64BIT_ENV */
+    if (Pos.high || Len.high)
+        return E2BIG;
+    tPos = Pos.low;
+    tLen = Len.low;
+#endif /* AFS_64BIT_ENV */
+
+    code = common_FetchData (tcon, Fid, tPos, tLen, OutStatus,
+                                                 CallBack, Sync, 0);
+    return code;
+}
+
+common_FetchData (tcon, Fid, Pos, Len, OutStatus, CallBack, Sync, type)
+    struct rx_connection *tcon;         /* Rx connection handle */
+    struct AFSFid *Fid;                 /* Fid of file to fetch */
+    afs_int32 Pos, Len;                 /* Not implemented yet */
+    struct AFSFetchStatus *OutStatus;   /* Returned status for Fid */
+    struct AFSCallBack *CallBack;       /* If r/w return CB for Fid */
+    struct AFSVolSync *Sync;            /* synchronization info */
+    int type;                           /* 32 bit or 64 bit call */
+
+{ 
     Vnode * targetptr =	0;		    /* pointer to vnode to fetch */
     Vnode * parentwhentargetnotdir = 0;	    /* parent vnode if vptr is a file */
     Vnode   tparentwhentargetnotdir;	    /* parent vnode for GetStatus */
@@ -549,10 +594,10 @@ SRXAFS_FetchData (tcon, Fid, Pos, Len, OutStatus, CallBack, Sync)
 
     /* actually do the data transfer */
 #if FS_STATS_DETAILED
-    errorCode = FetchData_RXStyle(volptr, targetptr, tcall, Pos, Len,
+    errorCode = FetchData_RXStyle(volptr, targetptr, tcall, Pos, Len, type
 				  &bytesToXfer, &bytesXferred);
 #else
-    if (errorCode = FetchData_RXStyle(volptr, targetptr, tcall, Pos, Len))
+    if (errorCode = FetchData_RXStyle(volptr, targetptr, tcall, Pos, Len, type))
 	goto Bad_FetchData;
 #endif /* FS_STATS_DETAILED */
 
@@ -1437,6 +1482,38 @@ Bad_StoreData:
 
 } /*SRXAFS_StoreData*/
 
+SRXAFS_StoreData64 (tcon, Fid, InStatus, Pos, Length, FileLength, OutStatus, Sync)
+    struct AFSVolSync *Sync;
+    struct rx_connection *tcon;         /* Rx connection Handle */
+    struct AFSFid *Fid;                 /* Fid of taret file */
+    struct AFSStoreStatus *InStatus;    /* Input Status for Fid */
+    afs_int64 Pos;                              /* Not implemented yet */           afs_int64 Length;                   /* Length of data to store */
+    afs_int64 FileLength;                       /* Length of file after store */
+    struct AFSFetchStatus *OutStatus;   /* Returned status for target fid */
+{
+    int code;
+    afs_int32 tPos;
+    afs_int32 tLength;
+    afs_int32 tFileLength;
+
+#ifdef AFS_64BIT_ENV
+    if (FileLength > 0x7fffffff)
+        return E2BIG;
+    tPos = Pos;
+    tLength = Length;
+    tFileLength = FileLength;
+#else /* AFS_64BIT_ENV */
+    if (FileLength.high)
+        return E2BIG;
+    tPos = Pos.low;
+    tLength = Length.low;
+    tFileLength = FileLength.low;
+#endif /* AFS_64BIT_ENV */
+
+    code = SRXAFS_StoreData (tcon, Fid, InStatus, tPos, tLength, tFileLength,
+                                OutStatus, Sync);
+    return code;
+}
 
 SRXAFS_StoreACL (tcon, Fid, AccessList, OutStatus, Sync)
     struct AFSVolSync *Sync;
@@ -4964,15 +5041,16 @@ PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr, volptr)
  #			  the File Server.
  */
 
-FetchData_RXStyle(volptr, targetptr, Call, Pos, Len, a_bytesToFetchP, a_bytesFetchedP)
+FetchData_RXStyle(volptr, targetptr, Call, Pos, Len, Int64Mode, a_bytesToFetchP, a_bytesFetchedP)
 #else
-FetchData_RXStyle(volptr, targetptr, Call, Pos, Len)
+FetchData_RXStyle(volptr, targetptr, Call, Pos, Len, Int64Mode)
 #endif /* FS_STATS_DETAILED */
 Volume			* volptr;
 Vnode			* targetptr;
 register struct rx_call		* Call;
 afs_int32			Pos;
 afs_int32			Len;
+afs_int32			Int64Mode;
 #if FS_STATS_DETAILED
 afs_int32 *a_bytesToFetchP;
 afs_int32 *a_bytesFetchedP;
@@ -5010,6 +5088,8 @@ afs_int32 *a_bytesFetchedP;
 	 * back to make the cache manager happy...
 	 */
 	tlen = htonl(0);
+        if (Int64Mode)
+            rx_Write(Call, &tlen, sizeof(afs_int32));   /* send 0-length  */
 	rx_Write(Call, &tlen, sizeof(afs_int32));	/* send 0-length  */
 	return (0);
     }
@@ -5027,6 +5107,10 @@ afs_int32 *a_bytesFetchedP;
     if (Pos + Len > tlen) Len =	tlen - Pos;	/* get length we should send */
     FDH_SEEK(fdP, Pos, 0);
     tlen = htonl(Len);
+    if (Int64Mode) {
+        afs_int32 zero = 0;
+        rx_Write(Call, &zero, sizeof(afs_int32)); /* High order bits */
+    }
     rx_Write(Call, &tlen, sizeof(afs_int32));	/* send length on fetch */
 #if FS_STATS_DETAILED
     (*a_bytesToFetchP) = Len;
@@ -6373,7 +6457,8 @@ void GetStatus(targetptr, status, rights, anyrights, parentptr)
     /* initialize return status from a vnode  */
     status->InterfaceVersion = 1;
     status->SyncCounter = status->dataVersionHigh = status->lockCount =
-    status->spare3 = status->errorCode = 0;
+    status->errorCode = 0;
+    status->ResidencyMask = 1; /* means for MR-AFS: file in /vicepr-partition */
     if (targetptr->disk.type == vFile)
 	status->FileType = File;
     else if (targetptr->disk.type == vDirectory)
@@ -6393,7 +6478,6 @@ void GetStatus(targetptr, status, rights, anyrights, parentptr)
     status->ClientModTime = targetptr->disk.unixModifyTime;	/* This might need rework */
     status->ParentVnode = (status->FileType == Directory ? targetptr->vnodeNumber : parentptr->vnodeNumber);
     status->ParentUnique = (status->FileType == Directory ? targetptr->disk.uniquifier : parentptr->disk.uniquifier);
-    status->SegSize = 0;
     status->ServerModTime = targetptr->disk.serverModifyTime;			
     status->Group = targetptr->disk.group;
     status->lockCount = targetptr->disk.lock.lockCount;

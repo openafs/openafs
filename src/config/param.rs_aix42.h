@@ -15,6 +15,9 @@
 #define	AFS_AIX41_ENV		1
 #define AFS_AIX42_ENV		1
 
+#define AFS_64BIT_ENV		1
+#define AFS_64BIT_CLIENT	1
+
 #include <afs/afs_sysnames.h>
 
 /* Global lock in AFS part of client. */

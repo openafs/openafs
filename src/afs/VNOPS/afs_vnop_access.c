@@ -192,7 +192,8 @@ afs_access(OSI_VC_ARG(avc), amode, acred)
 
     AFS_STATCNT(afs_access);
     afs_Trace3(afs_iclSetp, CM_TRACE_ACCESS, ICL_TYPE_POINTER, avc, 
-	       ICL_TYPE_INT32, amode, ICL_TYPE_INT32, avc->m.Length);
+		ICL_TYPE_INT32, amode,
+		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
     if (code = afs_InitReq(&treq, acred)) return code;
 
     code = afs_VerifyVCache(avc, &treq);

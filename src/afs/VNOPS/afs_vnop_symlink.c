@@ -63,7 +63,8 @@ afs_symlink
     struct conn *tc;
     struct VenusFid newFid;
     struct dcache *tdc;
-    afs_int32 offset, len, alen;
+    afs_size_t offset, len;
+    afs_int32 alen;
     struct server *hostp=0;
     struct vcache *tvc;
     struct AFSStoreStatus InStatus;
@@ -104,7 +105,7 @@ afs_symlink
 	InStatus.UnixModeBits = 0755;
 	alen++;	    /* add in the null */
     }
-    tdc = afs_GetDCache(adp, 0, &treq, &offset, &len, 1);
+    tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);
     volp = afs_FindVolume(&adp->fid, READ_LOCK); /*parent is also in same vol*/
     ObtainWriteLock(&adp->lock,156);
     ObtainSharedLock(&afs_xvcache,17);  /* prevent others from creating this entry */
@@ -221,7 +222,8 @@ afs_MemHandleLink(avc, areq)
   {
       register struct dcache *tdc;
       register char *tp;
-      afs_int32 offset, len, alen;
+      afs_size_t offset, len;
+      afs_int32 tlen, alen;
       register afs_int32 code;
 
       AFS_STATCNT(afs_MemHandleLink);
@@ -230,7 +232,7 @@ afs_MemHandleLink(avc, areq)
 	 protected 755,	we add a null to the end of */
       if (!avc->linkData) {
 	  void *addr;
-	  tdc = afs_GetDCache(avc, 0, areq, &offset, &len, 0);
+	  tdc = afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 0);
 	  if (!tdc) {
 	      return EIO;
 	  }
@@ -243,7 +245,8 @@ afs_MemHandleLink(avc, areq)
 	  else alen = len;			/* mt point */
           tp = afs_osi_Alloc(alen); /* make room for terminating null */
           addr = afs_MemCacheOpen(tdc->f.inode);
-          code = afs_MemReadBlk(addr, 0, tp, len);
+	  tlen = len;
+          code = afs_MemReadBlk(addr, 0, tp, tlen);
 	  tp[alen-1] = 0;
 	  afs_PutDCache(tdc);
 	  if (code != len) {
@@ -257,11 +260,13 @@ afs_MemHandleLink(avc, areq)
 
 afs_UFSHandleLink(avc, areq)
     register struct vcache *avc;
-    struct vrequest *areq; {
+    struct vrequest *areq; 
+{
     register struct dcache *tdc;
     register char *tp;
     char *tfile;
-    afs_int32 offset, len, alen;
+    afs_size_t offset, len;
+    afs_int32 tlen, alen;
     register afs_int32 code;
 
     /* two different formats, one for links protected 644, have a "." at the end
@@ -269,7 +274,10 @@ afs_UFSHandleLink(avc, areq)
 	we add a null to the end of */
    AFS_STATCNT(afs_UFSHandleLink);
     if (!avc->linkData) {
-	tdc = afs_GetDCache(avc, 0, areq, &offset, &len, 0);
+	tdc = afs_GetDCache(avc, (afs_size_t) 0, areq, &offset, &len, 0);
+	afs_Trace3(afs_iclSetp, CM_TRACE_UFSLINK, ICL_TYPE_POINTER, avc,
+			ICL_TYPE_POINTER, tdc,
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
 	if (!tdc) {
 	    return EIO;
 	}
@@ -281,12 +289,13 @@ afs_UFSHandleLink(avc, areq)
 	tfile = osi_UFSOpen (tdc->f.inode);
 	if (avc->m.Mode	& 0111)	alen = len+1;	/* regular link */
 	else alen = len;			/* mt point */
-	tp = afs_osi_Alloc(alen);			/* make room for terminating null */
-	code = afs_osi_Read(tfile, -1, tp, len);
+	tp = afs_osi_Alloc(alen);		/* make room for terminating null */
+	tlen = len;
+	code = afs_osi_Read(tfile, -1, tp, tlen);
 	tp[alen-1] = 0;
 	osi_UFSClose(tfile);
 	afs_PutDCache(tdc);
-	if (code != len) {
+	if (code != tlen) {
 	    afs_osi_Free(tp, alen);
 	    return EIO;
 	}
@@ -298,7 +307,8 @@ afs_UFSHandleLink(avc, areq)
 afs_readlink(OSI_VC_ARG(avc), auio, acred)
     OSI_VC_DECL(avc);
     struct uio *auio;
-    struct AFS_UCRED *acred; {
+    struct AFS_UCRED *acred; 
+{
     register afs_int32 code;
     struct vrequest treq;
     register char *tp;

@@ -27,6 +27,11 @@
 #else /* AFS_NOCHUNKING */
 
 extern afs_int32 afs_OtherCSize, afs_LogChunk, afs_FirstCSize;
+#ifdef AFS_64BIT_CLIENT
+#ifdef AFS_VM_RDWR_ENV
+extern afs_size_t afs_vmMappingEnd;
+#endif /* AFS_VM_RDWR_ENV */
+#endif /* AFS_64BIT_CLIENT */
 
 #define AFS_OTHERCSIZE  (afs_OtherCSize)
 #define AFS_LOGCHUNK    (afs_LogChunk)
@@ -66,7 +71,7 @@ extern int afs_ChunkOffset(), afs_Chunk(), afs_ChunkBase(), afs_ChunkSize(),
 			       afs_OtherCSize)
 
 #define AFS_CHUNKTOBASE(chunk) ((chunk == 0) ? 0 :               \
-	(afs_FirstCSize + ((chunk - 1) << afs_LogChunk)))
+	((afs_size_t) afs_FirstCSize + ((afs_size_t) (chunk - 1) << afs_LogChunk)))
 
 #define AFS_CHUNKTOSIZE(chunk) ((chunk == 0) ? afs_FirstCSize :	afs_OtherCSize)
 
@@ -108,8 +113,8 @@ struct afs_cacheOps {
 #define	afs_GetVolSlot()		(*(afs_cacheType->GetVolSlot))()
 #define	afs_HandleLink(avc, areq)	(*(afs_cacheType->HandleLink))(avc, areq)
 
-#define	afs_CacheFetchProc(call, file, base, adc, avc, toxfer, xfered) \
-          (*(afs_cacheType->FetchProc))(call, file, base, adc, avc, toxfer, xfered)
+#define	afs_CacheFetchProc(call, file, base, adc, avc, toxfer, xfered, length) \
+          (*(afs_cacheType->FetchProc))(call, file, (afs_size_t)base, adc, avc, (afs_size_t *)toxfer, (afs_size_t *)xfered, length)
 #define	afs_CacheStoreProc(call, file, bytes, avc, wake, toxfer, xfered) \
           (*(afs_cacheType->StoreProc))(call, file, bytes, avc, wake, toxfer, xfered)
 

@@ -802,7 +802,9 @@ struct ucred	*cred;
     va.va_size = length;
     error = afs_setattr(vp, &va, cred);
     afs_Trace4(afs_iclSetp, CM_TRACE_GFTRUNC, ICL_TYPE_POINTER, (afs_int32)vp,
-	       ICL_TYPE_LONG, flags, ICL_TYPE_LONG, length, ICL_TYPE_LONG, error);
+	       	ICL_TYPE_LONG, flags, 
+		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(length), 
+		ICL_TYPE_LONG, error);
     return(error);
 }
 
@@ -827,9 +829,12 @@ struct ucred	*cred;
     AFS_STATCNT(afs_gn_rdwr);
 
     if (vcp->vc_error) {
-	if (op == UIO_WRITE)
+	if (op == UIO_WRITE) {
+            afs_Trace2(afs_iclSetp, CM_TRACE_GRDWR1, 
+	    ICL_TYPE_POINTER, (afs_int32)vp,
+	    ICL_TYPE_LONG, vcp->vc_error);
 	    return vcp->vc_error;
-	else
+	} else
  	    return EIO;
     }
 
@@ -891,18 +896,30 @@ struct ucred	*cred;
      * We do a similar thing on the afs_read/write interface.
      */
     if (op == UIO_WRITE) {
+#ifdef AFS_64BIT_CLIENT
+      if (ubuf->afsio_offset < afs_vmMappingEnd) {
+#endif /* AFS_64BIT_ENV */
 	ObtainWriteLock(&vcp->lock,240);
 	vcp->states |= CDirty;		/* Set the dirty bit */
 	afs_FakeOpen(vcp);
 	ReleaseWriteLock(&vcp->lock);
+#ifdef AFS_64BIT_CLIENT
+      } 
+#endif /* AFS_64BIT_ENV */
     }
 
     error = afs_vm_rdwr(vp, ubuf, op, flags, cred);
 
     if (op == UIO_WRITE) {
+#ifdef AFS_64BIT_CLIENT
+      if (ubuf->afsio_offset < afs_vmMappingEnd) {
+#endif /* AFS_64BIT_ENV */
 	ObtainWriteLock(&vcp->lock,241);
 	afs_FakeClose(vcp, cred);	/* XXXX For nfs trans and cores XXXX */
 	ReleaseWriteLock(&vcp->lock);
+#ifdef AFS_64BIT_CLIENT
+      } 
+#endif /* AFS_64BIT_ENV */
     }
     if (vattrp != NULL && error == 0)
 	afs_gn_getattr(vp, vattrp, cred);
@@ -915,7 +932,6 @@ struct ucred	*cred;
     return(error);
 }
 
-
 #define AFS_MAX_VM_CHUNKS 10
 afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
     register struct vnode *vp;
@@ -926,14 +942,20 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 {
     register afs_int32 code = 0;
     register int i;
-    afs_int32 blockSize, fileSize;
-    afs_int32 xfrSize, xfrOffset;
+    afs_int32 blockSize;
+    afs_size_t fileSize, xfrOffset, offset, old_offset;
+    afs_int32 xfrSize;
+#ifdef AFS_64BIT_CLIENT
+    afs_size_t finalOffset;
+    afs_int32 toffset;
+    int mixed = 0;
+#endif /* AFS_64BIT_CLIENT */
     register struct vcache *vcp = (struct vcache *)vp;
     struct dcache *tdc;
-    register afs_int32 start_offset;
-    int save_resid = uiop->afsio_resid;
-    int old_offset, first_page;
-    int offset, count, len;
+    afs_size_t start_offset;
+    afs_int32 save_resid = uiop->afsio_resid;
+    int first_page, last_page, pages;
+    int count, len;
     int counter = 0;
     struct vrequest treq;
 
@@ -954,11 +976,48 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	goto fail;
     }
 
+#ifndef AFS_64BIT_CLIENT
     /* check for "file too big" error, which should really be done above us */
     if (rw == UIO_WRITE && xfrSize + fileSize > get_ulimit()) {
 	code = EFBIG;
 	goto fail;
     }
+#endif /* AFS_64BIT_CLIENT */
+
+#ifdef AFS_64BIT_CLIENT
+    if (xfrOffset + xfrSize > afs_vmMappingEnd) {
+	if (xfrOffset < afs_vmMappingEnd) {
+	    /* special case of a buffer crossing the VM mapping line */
+	    struct uio tuio;
+	    struct iovec tvec[16]; /* Should have access to #define */
+	    afs_int32 tsize; 
+
+	    mixed = 1;
+	    finalOffset = xfrOffset + xfrSize;
+	    tsize = (afs_size_t) (xfrOffset + xfrSize - afs_vmMappingEnd); 
+	    afsio_copy(uiop, &tuio, tvec);
+	    afsio_skip(&tuio, xfrSize - tsize);
+	    afsio_trim(&tuio, tsize);
+	    tuio.afsio_offset = afs_vmMappingEnd;
+	    ReleaseReadLock(&vcp->lock);
+	    ObtainWriteLock(&vcp->lock,243);
+	    afs_FakeClose(vcp, credp);	/* XXXX For nfs trans and cores XXXX */
+	    ReleaseWriteLock(&vcp->lock);
+	    code = afs_direct_rdwr(vp, &tuio, rw, ioflag, credp);
+	    ObtainWriteLock(&vcp->lock,244);
+	    afs_FakeOpen(vcp);	 	/* XXXX For nfs trans and cores XXXX */
+	    ReleaseWriteLock(&vcp->lock);
+	    ObtainReadLock(&vcp->lock);
+	    if (code) goto fail; 
+	    xfrSize = (afs_size_t) (afs_vmMappingEnd - xfrOffset); 
+	    afsio_trim(uiop, xfrSize);
+	} else {
+	    ReleaseReadLock(&vcp->lock);
+            code = afs_direct_rdwr(vp, uiop, rw, ioflag, credp);
+	    return code;
+	}
+    }
+#endif /* AFS_64BIT_CLIENT */
 
     if (!vcp->vmh) {
 	/* Consider  V_INTRSEG too for interrupts */
@@ -974,8 +1033,19 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	    xfrSize = fileSize - xfrOffset;
 	if (xfrSize <= 0) goto fail;	    
 	ReleaseReadLock(&vcp->lock);
+#ifdef AFS_64BIT_CLIENT
+	toffset = xfrOffset;
+	uiop->afsio_offset = xfrOffset;
+        afs_Trace3(afs_iclSetp, CM_TRACE_VMWRITE, 
+			ICL_TYPE_POINTER, vcp,  
+	       		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(xfrOffset),
+	       		ICL_TYPE_INT32, xfrSize);
+	AFS_GUNLOCK();
+	code = vm_move(vcp->segid, toffset, xfrSize, rw, uiop);
+#else /* AFS_64BIT_CLIENT */
 	AFS_GUNLOCK();
 	code = vm_move(vcp->segid, xfrOffset, xfrSize, rw, uiop);
+#endif /* AFS_64BIT_CLIENT */
 	AFS_GLOCK();
 	/*
 	 * If at a chunk boundary and staying within chunk,
@@ -992,16 +1062,27 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
             }
 	    ReleaseWriteLock(&vcp->lock);
 	}
+#ifdef AFS_64BIT_CLIENT
+	if (mixed) {
+	    uiop->afsio_offset = finalOffset;
+	}
+#endif /* AFS_64BIT_CLIENT */
 	return code;
     }
 
     /* UIO_WRITE */
+    start_offset = uiop->afsio_offset;
+    afs_Trace3(afs_iclSetp, CM_TRACE_VMWRITE, 
+			ICL_TYPE_POINTER, vcp,  
+	       		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(start_offset),
+	       		ICL_TYPE_INT32, xfrSize);
     ReleaseReadLock(&vcp->lock);
     ObtainWriteLock(&vcp->lock,400);
     vcp->m.Date = osi_Time();	/* Set file date (for ranlib) */
     /* extend file */
     /* un-protect last page. */
-    vm_protectp(vcp->vmh, vcp->m.Length/PAGESIZE, 1, FILEKEY);
+    last_page = vcp->m.Length/PAGESIZE;
+    vm_protectp(vcp->vmh, last_page, 1, FILEKEY);
     if (xfrSize + xfrOffset > fileSize) {
 	vcp->m.Length = xfrSize+xfrOffset;
     }	    
@@ -1015,7 +1096,6 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
      * at once. Otherwise, we'll write one chunk at a time, flushing
      * some of it to disk.
      */
-    start_offset = uiop->afsio_offset;
     count = 0;
 
     /* Only create a page to avoid excess VM access if we're writing a
@@ -1039,7 +1119,13 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	    /* All data goes to this one chunk. */
 	    AFS_GUNLOCK();
 	    old_offset = uiop->afsio_offset;
+#ifdef AFS_64BIT_CLIENT
+	    uiop->afsio_offset = xfrOffset;
+	    toffset = xfrOffset;
+	    code = vm_move(vcp->segid, toffset, xfrSize, rw, uiop);
+#else /* AFS_64BIT_CLIENT */
 	    code = vm_move(vcp->segid, xfrOffset, xfrSize, rw, uiop);
+#endif /* AFS_64BIT_CLIENT */
 	    AFS_GLOCK();
 	    xfrOffset += len;
 	    xfrSize = 0;
@@ -1067,7 +1153,12 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	    
 	    AFS_GUNLOCK();
 	    old_offset = uiop->afsio_offset;
+#ifdef AFS_64BIT_CLIENT
+	    toffset = xfrOffset;
+	    code = vm_move(vcp->segid, toffset, len, rw, &tuio);
+#else /* AFS_64BIT_CLIENT */
 	    code = vm_move(vcp->segid, xfrOffset, len, rw, &tuio);
+#endif /* AFS_64BIT_CLIENT */
 	    AFS_GLOCK();
 	    len -= tuio.afsio_resid;
 	    afsio_skip(uiop, len);
@@ -1076,9 +1167,13 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	}
 	
 	first_page = old_offset >> PGSHIFT;
+	pages = 1 + ((old_offset + (len - 1)) >> PGSHIFT) - first_page;
+        afs_Trace3(afs_iclSetp, CM_TRACE_VMWRITE2, 
+		ICL_TYPE_POINTER, (afs_int32) vcp,
+		ICL_TYPE_INT32, first_page,
+		ICL_TYPE_INT32, pages);
 	AFS_GUNLOCK();
-	code = vm_writep(vcp->segid, first_page,
-		  1 + ((old_offset + (len - 1)) >> PGSHIFT) - first_page);
+	code = vm_writep(vcp->segid, first_page, pages);
 	if (++count > AFS_MAX_VM_CHUNKS) {
 	    count = 0;
 	    vms_iowait(vcp->segid);
@@ -1097,7 +1192,7 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
     if (code == 0 && (vcp->states & CDirty)) {
 	code = afs_DoPartialWrite(vcp, &treq);
     }
-    vm_protectp(vcp->vmh, vcp->m.Length/PAGESIZE, 1, RDONLY);
+    vm_protectp(vcp->vmh, last_page, 1, RDONLY);
     ReleaseWriteLock(&vcp->lock);
     
     /* If requested, fsync the file after every write */
@@ -1116,12 +1211,99 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	if (code == EDQUOT || code == ENOSPC)
 	    uiop->afsio_resid = save_resid; 
     }
+#ifdef AFS_64BIT_CLIENT
+    if (mixed) {
+	uiop->afsio_offset = finalOffset;
+    }
+#endif /* AFS_64BIT_CLIENT */
 
   fail:
     ReleaseReadLock(&vcp->lock);
+    afs_Trace2(afs_iclSetp, CM_TRACE_VMWRITE3, 
+			ICL_TYPE_POINTER, vcp,  
+	       		ICL_TYPE_INT32, code);
     return code;
 }
 
+
+afs_direct_rdwr(vp, uiop, rw, ioflag, credp)
+    register struct vnode *vp;
+    struct uio *uiop;
+    enum uio_rw rw;
+    int ioflag;
+    struct ucred *credp;
+{ 
+    register afs_int32 code = 0;
+    afs_int32 xfrSize;
+    afs_size_t fileSize, xfrOffset, offset, old_offset;
+    struct vcache *vcp = (struct vcache *)vp;
+    afs_int32 save_resid = uiop->afsio_resid;
+    struct vrequest treq;
+
+    if (code = afs_InitReq(&treq, credp)) return code;
+
+    /* special case easy transfer; apparently a lot are done */
+    if ((xfrSize=uiop->afsio_resid) == 0) return 0;
+
+    ObtainReadLock(&vcp->lock);
+    fileSize = vcp->m.Length;
+    if (rw == UIO_WRITE && (ioflag & IO_APPEND)) { /* handle IO_APPEND mode */
+	uiop->afsio_offset = fileSize;
+    }
+    /* compute xfrOffset now, and do some checks */
+    xfrOffset = uiop->afsio_offset;
+    if (xfrOffset < 0 || xfrOffset + xfrSize < 0) {
+	code = EINVAL;
+        ReleaseReadLock(&vcp->lock);
+	goto fail;
+    }
+
+    /* check for "file too big" error, which should really be done above us */
+#ifdef notdef
+    if (rw == UIO_WRITE && xfrSize + fileSize > get_ulimit()) {
+	code = EFBIG;
+        ReleaseReadLock(&vcp->lock);
+	goto fail;
+    }
+#endif
+    ReleaseReadLock(&vcp->lock);
+    if (rw == UIO_WRITE) {
+        ObtainWriteLock(&vcp->lock,400);
+        vcp->m.Date = osi_Time();	/* Set file date (for ranlib) */
+        /* extend file */
+        if (xfrSize + xfrOffset > fileSize) {
+	    vcp->m.Length = xfrSize+xfrOffset;
+        }	    
+        ReleaseWriteLock(&vcp->lock);
+    }	    
+    afs_Trace3(afs_iclSetp, CM_TRACE_DIRECTRDWR, 
+			ICL_TYPE_POINTER, (afs_int32)vp,
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(uiop->afsio_offset),
+	       		ICL_TYPE_LONG, uiop->afsio_resid);
+    code = afs_rdwr(vp, uiop, rw, ioflag, credp);
+    if (code != 0) {
+	uiop->afsio_resid = save_resid;
+    } else {
+	uiop->afsio_offset = xfrOffset + xfrSize;
+        if (uiop->afsio_resid > 0) {
+	    /* should zero here the remaining buffer */
+	    uiop->afsio_resid = 0;
+	}
+	/* Purge dirty chunks of file if there are too many dirty chunks.
+	 * Inside the write loop, we only do this at a chunk boundary.
+	 * Clean up partial chunk if necessary at end of loop.
+	 */
+	if (AFS_CHUNKBASE(uiop->afsio_offset) != AFS_CHUNKBASE(xfrOffset)) {
+	    ObtainWriteLock(&vcp->lock,402);
+	    code = afs_DoPartialWrite(vcp, &treq);
+	    vcp->states |= CDirty;
+	    ReleaseWriteLock(&vcp->lock);
+	}
+    }
+
+  fail:
+    return code;
+}
 
 
 static int lock_normalize(vp, lckdat, offset, cred)

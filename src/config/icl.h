@@ -154,7 +154,7 @@ extern int afs_icl_sizeofLong;
     MACRO_BEGIN \
 	if ((t1) == ICL_TYPE_STRING) { \
 	    tsize = (int)((unsigned)(strlen((char *)(p1)) + 4) >> 2); \
-	} else if ((t1) == ICL_TYPE_HYPER) \
+	} else if ((t1) == ICL_TYPE_HYPER  || (t1) == ICL_TYPE_INT64) \
 	    tsize = 2; \
 	else if ((t1) == ICL_TYPE_FID) \
 	    tsize = 4; \
@@ -199,6 +199,15 @@ extern int afs_icl_sizeofLong;
 #define ICL_TYPE_STRING		4
 #define ICL_TYPE_FID		5
 #define	ICL_TYPE_UNIXDATE	6
+#define ICL_TYPE_INT64		8
+
+#ifdef AFS_64BIT_CLIENT
+#define ICL_TYPE_OFFSET         ICL_TYPE_INT64
+#define ICL_HANDLE_OFFSET(x)    (&x)
+#else /* AFS_64BIT_CLIENT */
+#define ICL_TYPE_OFFSET         ICL_TYPE_INT64
+#define ICL_HANDLE_OFFSET(x)    (x)
+#endif /* AFS_64BIT_CLIENT */
 
 /* max # of words put in the printf buffer per parameter */
 #define ICL_MAXEXPANSION	4

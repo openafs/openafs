@@ -10,6 +10,9 @@
 #ifndef	AFS_PARAM_H
 #define	AFS_PARAM_H
 
+#define AFS_64BIT_ENV           1
+#define AFS_64BIT_CLIENT        1
+
 #define AFS_VFS_ENV	1
 /* Used only in vfsck code; is it needed any more???? */
 #define RXK_LISTENER_ENV	1

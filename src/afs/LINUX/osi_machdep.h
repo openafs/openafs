@@ -116,7 +116,7 @@ typedef enum { UIO_READ, UIO_WRITE } uio_flag_t;
 typedef struct uio {
     struct  	iovec *uio_iov;
     int     	uio_iovcnt;
-    int     	uio_offset;
+    afs_offs_t 	uio_offset;
     uio_seg_t   uio_seg;
     int     	uio_resid;
     uio_flag_t 	uio_flag;

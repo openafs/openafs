@@ -116,9 +116,7 @@ struct sysname_info {
 struct brequest {
     struct vcache *vnode;	    /* vnode to use, with vrefcount bumped */
     struct AFS_UCRED *cred;	    /* credentials to use for operation */
-    long parm[BPARMS];		    /* random parameters - long's work for
-				     * both 32 and 64 bit platforms.
-				     */
+    afs_size_t parm[BPARMS];	    /* random parameters */
     afs_int32 code;			    /* return code */
     short refCount;		    /* use counter for this structure */
     char opcode;		    /* what to do (store, fetch, etc) */
@@ -330,6 +328,10 @@ struct srvAddr {
 #define	SRVR_MULTIHOMED			0x40
 #define	SRVR_ISGONE			0x80
 #define	SNO_INLINEBULK			0x100
+#define SNO_64BIT                       0x200 
+
+#define afs_serverSetNo64Bit(s) ((s)->srvr->server->flags |= SNO_64BIT)
+#define afs_serverHasNo64Bit(s) ((s)->srvr->server->flags & SNO_64BIT)
 
 struct server {
     union {
@@ -538,7 +540,11 @@ struct SimpleLocks {
 #endif
 
 #define	AFS_MAXDV   0x7fffffff	    /* largest dataversion number */
+#ifdef AFS_64BIT_CLIENT
+#define AFS_NOTRUNC 0x7fffffffffffffffLL  /* largest positive int64 number */
+#else /* AFS_64BIT_CLIENT */
 #define	AFS_NOTRUNC 0x7fffffff	    /* largest dataversion number */
+#endif /* AFS_64BIT_CLIENT */
 
 extern afs_int32 vmPageHog; /* counter for # of vnodes which are page hogs. */
 
@@ -550,8 +556,8 @@ struct	vtodc
 	struct dcache * dc;
 	afs_uint32		stamp;
 	struct osi_file * f;
-	afs_uint32		minLoc;	/* smallest offset into dc. */
-	afs_uint32		len;	/* largest offset into dc. */
+	afs_offs_t		minLoc;	/* smallest offset into dc. */
+	afs_offs_t		len;	/* largest offset into dc. */
 	};
 
 extern afs_uint32 afs_stampValue;		/* stamp for pair's usage */
@@ -568,7 +574,7 @@ struct vcache {
     struct vcache *hnext;		/* Hash next */
     struct VenusFid fid;
     struct mstat {
-        afs_uint32 Length;
+        afs_size_t Length;
         afs_hyper_t DataVersion;
         afs_uint32 Date;
         afs_uint32 Owner;
@@ -608,7 +614,7 @@ struct vcache {
     char *linkData;			/* Link data if a symlink. */
     afs_hyper_t flushDV;			/* data version last flushed from text */
     afs_hyper_t mapDV;			/* data version last flushed from map */
-    afs_uint32 truncPos;			/* truncate file to this position at next store */
+    afs_size_t truncPos;			/* truncate file to this position at next store */
     struct server *callback;		/* The callback host, if any */
     afs_uint32 cbExpires;			/* time the callback expires */
     struct afs_q callsort;              /* queue in expiry order, sort of */
@@ -859,10 +865,10 @@ struct fcache {
 struct dcache {
     struct afs_q lruq;		/* Free queue for in-memory images */
     afs_rwlock_t lock;		/* XXX */
-    short refCount;		/* Associated reference count. */
+    afs_size_t validPos;	/* number of valid bytes during fetch */
     afs_int32 index;			/* The index in the CacheInfo file*/
+    short refCount;		/* Associated reference count. */
     short flags;		/* more flags bits */
-    afs_int32 validPos;		/* number of valid bytes during fetch */
     struct fcache f;		/* disk image */
     afs_int32 stamp; 		/* used with vtodc struct for hints */
 };

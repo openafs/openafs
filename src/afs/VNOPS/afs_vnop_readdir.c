@@ -245,7 +245,7 @@ ssize_t			rlen;
 #else
 int			rlen;
 #endif
-int			off;
+afs_size_t		off;
 {
     int	code = 0;
 #if	defined(AFS_SUN56_ENV)
@@ -435,10 +435,12 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 #endif
     OSI_VC_DECL(avc);
     struct uio *auio;
-    struct AFS_UCRED *acred; {
+    struct AFS_UCRED *acred; 
+{
     struct vrequest treq;
     register struct dcache *tdc;
-    afs_int32 origOffset, len, dirsiz;
+    afs_size_t origOffset, tlen;
+    afs_int32 len, dirsiz;
     int code = 0;
     struct DirEntry *ode = 0, *nde = 0;
     int o_slen = 0, n_slen = 0;
@@ -499,7 +501,8 @@ tagain:
     code = afs_VerifyVCache(avc, &treq);
     if (code) goto done;
     /* get a reference to the entire directory */
-    tdc = afs_GetDCache(avc, 0, &treq, &origOffset, &len, 1);
+    tdc = afs_GetDCache(avc, (afs_size_t) 0, &treq, &origOffset, &tlen, 1);
+    len = tlen;
     if (!tdc) {
 	code = ENOENT;
 	goto done;
@@ -745,7 +748,7 @@ afs1_readdir(avc, auio, acred)
     struct AFS_UCRED *acred; {
     struct vrequest treq;
     register struct dcache *tdc;
-    afs_int32 origOffset, len;
+    afs_size_t origOffset, len;
     int code = 0;
     struct DirEntry *ode = 0, *nde = 0;
     int o_slen = 0, n_slen = 0;
@@ -775,7 +778,7 @@ tagain:
     code = afs_VerifyVCache(avc, &treq);
     if (code) goto done;
     /* get a reference to the entire directory */
-    tdc = afs_GetDCache(avc, 0, &treq, &origOffset, &len, 1);
+    tdc = afs_GetDCache(avc, (afs_size_t) 0, &treq, &origOffset, &len, 1);
     if (!tdc) {
 	code = ENOENT;
 	goto done;

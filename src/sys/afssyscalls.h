@@ -13,30 +13,24 @@
 #ifndef AFS_NT40_ENV
 
 /* Declare Inode type. */
-#ifdef AFS_64BIT_IOPS_ENV
-#ifdef AFS_SGI62_ENV
-typedef uint64_t Inode;
-#else
+#include <afs/param.h>
 #ifdef AFS_NAMEI_ENV
-#include <sys/types.h>
-#ifdef AFS_NEC_SX92_ENV
-typedef unsigned long Inode;
-#else /* AFS_NEC_SX92_ENV */
-#ifdef AFS_64BIT_ENV
-typedef afs_uint64 Inode;
-#else
-typedef u_int64_t Inode;
-#endif
-#endif /* AFS_NEC_SX92_ENV */
-#else
-error Need 64 bit Inode defined.
-#endif /* AFS_NAMEI_ENV */
-#endif /* AFS_SGI62_ENV */
-#else /* AFS_64BIT_IOPS_ENV */
-typedef unsigned int Inode;
-#endif
-
-#ifndef AFS_NAMEI_ENV
+ #include <sys/types.h>
+ #if AFS_64BIT_ENV
+   typedef afs_uint64 Inode;
+ #else
+   typedef u_int64_t Inode;
+ #endif
+#else /* AFS_NAMEI_ENV */
+ #ifdef AFS_64BIT_IOPS_ENV
+  #ifdef AFS_SGI62_ENV
+   typedef uint64_t Inode;
+  #else
+   error Need 64 bit Inode defined.
+  #endif /* AFS_SGI62_ENV */
+ #else /* AFS_64BIT_IOPS_ENV */
+  typedef unsigned int Inode;
+ #endif
 
 #ifdef AFS_DEBUG_IOPS
 extern FILE *inode_debug_log;

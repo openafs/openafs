@@ -44,8 +44,8 @@ typedef afs_int32 ViceDataType;
 %#define Directory 2 
 %#define SymbolicLink 3 
 
-%#ifdef	KERNEL
-%#define	xdr_array(a,b,c,d,e,f)	xdr_arrayN(a,b,c,d,e,f)
+%#ifdef       KERNEL
+%#define      xdr_array(a,b,c,d,e,f)  xdr_arrayN(a,b,c,d,e,f)
 %#endif
 
 struct BD {
@@ -95,14 +95,14 @@ struct AFSFetchStatus {
     afs_uint32 UnixModeBits;
     afs_uint32 ParentVnode;
     afs_uint32 ParentUnique;
-    afs_uint32 SegSize;
+    afs_uint32 ResidencyMask;
     afs_uint32 ClientModTime;
     afs_uint32 ServerModTime;
     afs_uint32 Group;
     afs_uint32 SyncCounter;
     afs_uint32 dataVersionHigh; /* For AFS/DFS translator, hi bits of dvn */
     afs_uint32 lockCount;
-    afs_uint32 spare3;
+    afs_uint32 Length_hi;
     afs_uint32 errorCode;
 };
 
@@ -294,13 +294,104 @@ typedef afs_int32 ViceOfflineType;
 %#include "../afs/longc_procs.h"
 %#endif
 
-const FLUSHMAX = 10;
-typedef afs_int32 ViceIds<FLUSHMAX>;
-typedef	afs_int32 IPAddrs<FLUSHMAX>;
+%#define MAXCMDINT64S   			3
+%#define MAXCMDINT32S   			200
+%#define MAXCMDCHARS    			256
+%#define CMD_GETRESIDENCIES			1
+%#define CMD_CHANGERESIDENCIES			2
+%#define CMD_IMPORTRESIDENCIES			3
+%#define CMD_GETEXTVOLATTR     		 	4
+%#define CMD_SETEXTVOLATTR     		 	5
+%#define CMD_GETACCESSHISTORY  		 	6
+%#define CMD_MIGRATEFILE  		 	7
+%#define CMD_CHECKHSMMETADATA  		 	8
+%#define CMD_FETCHSTATUS  		 	9
 
-%#define MAXCMDINT64S                           3
-%#define MAXCMDINT32S                           200
-%#define MAXCMDCHARS                            256
+%#define VOLATTR_DESIREDRESIDENCYMASK		1
+%#define VOLATTR_UNDESIREDRESIDENCYMASK		2
+%#define VOLATTR_SETSPECIALACCESSFLAG 		4
+struct ExtendedVolAttrInputs {
+    afs_uint32 Mask;
+    afs_uint32 Volume;
+    afs_uint32 DesiredResidencyMask;
+    afs_uint32 Spare1[10];
+    afs_uint32 UnDesiredResidencyMask;
+    afs_uint32 Spare2[9];
+    afs_uint32 SpecialAccessFlag;
+};
+
+struct ExtendedVolAttrOutputs {
+    afs_uint32 DesiredResidencyMask;
+    afs_uint32 Spare1[10];
+    afs_uint32 UnDesiredResidencyMask;
+    afs_uint32 Spare2[9];
+    afs_uint32 SpecialAccessFlag;
+};
+
+struct TagsArray {
+    afs_uint32 TagsArray_len;
+    afs_uint32 TagsArray_val[184];
+};
+
+struct AccessHistory {
+    afs_uint64 Size;
+    afs_uint32 ModTime;
+    afs_uint32 NonSpoolingFetches;
+    afs_uint32 UserSpoolingFetches;
+    afs_uint32 MigratorSpoolingFetches;
+    afs_uint32 LastUserMigrationEvent;
+    afs_uint32 MigrateMe;
+    afs_uint32 Time0;
+    afs_uint32 Type0;
+    afs_uint32 LocalAccess0;
+    afs_uint32 Residency0;
+    afs_uint32 Time1;
+    afs_uint32 Type1;
+    afs_uint32 LocalAccess1;
+    afs_uint32 Residency1;
+    afs_uint32 Time2;
+    afs_uint32 Type2;
+    afs_uint32 LocalAccess2;
+    afs_uint32 Residency2;
+    afs_uint32 Time3;
+    afs_uint32 Type3;
+    afs_uint32 LocalAccess3;
+    afs_uint32 Residency3;
+    afs_uint32 Time4;
+    afs_uint32 Type4;
+    afs_uint32 LocalAccess4;
+    afs_uint32 Residency4;
+};
+
+struct AccessHistoryOld {
+    afs_uint32 Size;
+    afs_uint32 ModTime;
+    afs_uint32 NonSpoolingFetches;
+    afs_uint32 UserSpoolingFetches;
+    afs_uint32 MigratorSpoolingFetches;
+    afs_uint32 LastUserMigrationEvent;
+    afs_uint32 MigrateMe;
+    afs_uint32 Time0;
+    afs_uint32 Type0;
+    afs_uint32 LocalAccess0;
+    afs_uint32 Residency0;
+    afs_uint32 Time1;
+    afs_uint32 Type1;
+    afs_uint32 LocalAccess1;
+    afs_uint32 Residency1;
+    afs_uint32 Time2;
+    afs_uint32 Type2;
+    afs_uint32 LocalAccess2;
+    afs_uint32 Residency2;
+    afs_uint32 Time3;
+    afs_uint32 Type3;
+    afs_uint32 LocalAccess3;
+    afs_uint32 Residency3;
+    afs_uint32 Time4;
+    afs_uint32 Type4;
+    afs_uint32 LocalAccess4;
+    afs_uint32 Residency4;
+};
 
 struct ResidencyCmdInputs {
     afs_int32  command;
@@ -316,137 +407,141 @@ struct ResidencyCmdOutputs {
     afs_int64  int64s[MAXCMDINT64S];
     afs_uint32 int32s[MAXCMDINT32S];
     char       chars[MAXCMDCHARS];
-}; 
+};
+
+const FLUSHMAX = 10;
+typedef afs_int32 ViceIds<FLUSHMAX>;
+typedef	afs_int32 IPAddrs<FLUSHMAX>;
 
 package RXAFS_
 prefix S
 statindex 7
 
 FetchData(
-  IN  AFSFid *Fid, 
-  afs_int32 Pos, 
-  afs_int32 Length, 
-  OUT AFSFetchStatus *OutStatus, 
-  AFSCallBack *CallBack, 
+  IN  AFSFid *Fid,
+  afs_int32 Pos,
+  afs_int32 Length,
+  OUT AFSFetchStatus *OutStatus,
+  AFSCallBack *CallBack,
   AFSVolSync *Sync
 ) split = 130;
 
 FetchACL(
-  IN  AFSFid *Fid, 
-  OUT AFSOpaque *AccessList, 
-  AFSFetchStatus *OutStatus, 
+  IN  AFSFid *Fid,
+  OUT AFSOpaque *AccessList,
+  AFSFetchStatus *OutStatus,
   AFSVolSync *Sync
 ) = 131;
 
 FetchStatus(
-  IN  AFSFid *Fid, 
-  OUT AFSFetchStatus *OutStatus, 
-  AFSCallBack *CallBack, 
+  IN  AFSFid *Fid,
+  OUT AFSFetchStatus *OutStatus,
+  AFSCallBack *CallBack,
   AFSVolSync *Sync
 ) = 132;
 
 StoreData(
-  IN  AFSFid *Fid, 
-  AFSStoreStatus *InStatus, 
-  afs_int32 Pos, 
-  afs_int32 Length, 
-  afs_int32 FileLength, 
-  OUT AFSFetchStatus *OutStatus, 
+  IN  AFSFid *Fid,
+  AFSStoreStatus *InStatus,
+  afs_int32 Pos,
+  afs_int32 Length,
+  afs_int32 FileLength,
+  OUT AFSFetchStatus *OutStatus,
   AFSVolSync *Sync
 ) split = 133;
 
 StoreACL(
-  IN  AFSFid *Fid, 
-  AFSOpaque *AccessList,  
-  OUT AFSFetchStatus *OutStatus, 
+  IN  AFSFid *Fid,
+  AFSOpaque *AccessList,
+  OUT AFSFetchStatus *OutStatus,
   AFSVolSync *Sync
 ) = 134;
 
 StoreStatus(
-  IN  AFSFid *Fid, 
-  AFSStoreStatus *InStatus, 
-  OUT AFSFetchStatus *OutStatus, 
+  IN  AFSFid *Fid,
+  AFSStoreStatus *InStatus,
+  OUT AFSFetchStatus *OutStatus,
   AFSVolSync *Sync
 ) = 135;
 
 RemoveFile(
-  IN  AFSFid *DirFid, 
-  string Name<AFSNAMEMAX>, 
-  OUT AFSFetchStatus *OutStatus, 
+  IN  AFSFid *DirFid,
+  string Name<AFSNAMEMAX>,
+  OUT AFSFetchStatus *OutStatus,
   AFSVolSync *Sync
 ) = 136;
 
 CreateFile(
-  IN  AFSFid *DirFid, 
-  string Name<AFSNAMEMAX>,  
-  AFSStoreStatus *InStatus, 
-  OUT AFSFid *OutFid, 
-  AFSFetchStatus *OutFidStatus, 
-  AFSFetchStatus *OutDirStatus, 
-  AFSCallBack *CallBack, 
+  IN  AFSFid *DirFid,
+  string Name<AFSNAMEMAX>,
+  AFSStoreStatus *InStatus,
+  OUT AFSFid *OutFid,
+  AFSFetchStatus *OutFidStatus,
+  AFSFetchStatus *OutDirStatus,
+  AFSCallBack *CallBack,
   AFSVolSync *Sync) = 137;
 
 Rename(
-  IN  AFSFid *OldDirFid, 
-  string OldName<AFSNAMEMAX>, 
-  AFSFid *NewDirFid, 
-  string NewName<AFSNAMEMAX>, 
-  OUT AFSFetchStatus *OutOldDirStatus, 
-  AFSFetchStatus *OutNewDirStatus, 
+  IN  AFSFid *OldDirFid,
+  string OldName<AFSNAMEMAX>,
+  AFSFid *NewDirFid,
+  string NewName<AFSNAMEMAX>,
+  OUT AFSFetchStatus *OutOldDirStatus,
+  AFSFetchStatus *OutNewDirStatus,
   AFSVolSync *Sync
 ) = 138;
 
 Symlink(
-  IN  AFSFid *DirFid, 
-  string Name<AFSNAMEMAX>, 
-  string LinkContents<AFSPATHMAX>, 
-  AFSStoreStatus *InStatus, 
-  OUT AFSFid *OutFid, 
-  AFSFetchStatus *OutFidStatus, 
-  AFSFetchStatus *OutDirStatus, 
+  IN  AFSFid *DirFid,
+  string Name<AFSNAMEMAX>,
+  string LinkContents<AFSPATHMAX>,
+  AFSStoreStatus *InStatus,
+  OUT AFSFid *OutFid,
+  AFSFetchStatus *OutFidStatus,
+  AFSFetchStatus *OutDirStatus,
   AFSVolSync *Sync
 ) = 139;
 
 Link(
-  IN  AFSFid *DirFid, 
-  string Name<AFSNAMEMAX>, 
-  AFSFid *ExistingFid, 
-  OUT AFSFetchStatus *OutFidStatus, 
-  AFSFetchStatus *OutDirStatus, 
+  IN  AFSFid *DirFid,
+  string Name<AFSNAMEMAX>,
+  AFSFid *ExistingFid,
+  OUT AFSFetchStatus *OutFidStatus,
+  AFSFetchStatus *OutDirStatus,
   AFSVolSync *Sync
 ) = 140;
 
 MakeDir(
-  IN  AFSFid *DirFid, 
-  string Name<AFSNAMEMAX>, 
-  AFSStoreStatus *InStatus, 
-  OUT AFSFid *OutFid, 
-  AFSFetchStatus *OutFidStatus, 
-  AFSFetchStatus *OutDirStatus, 
-  AFSCallBack *CallBack, 
+  IN  AFSFid *DirFid,
+  string Name<AFSNAMEMAX>,
+  AFSStoreStatus *InStatus,
+  OUT AFSFid *OutFid,
+  AFSFetchStatus *OutFidStatus,
+  AFSFetchStatus *OutDirStatus,
+  AFSCallBack *CallBack,
   AFSVolSync *Sync
 ) = 141;
 
 RemoveDir(
-  IN  AFSFid *DirFid, 
-  string Name<AFSNAMEMAX>, 
-  OUT AFSFetchStatus *OutDirStatus, 
+  IN  AFSFid *DirFid,
+  string Name<AFSNAMEMAX>,
+  OUT AFSFetchStatus *OutDirStatus,
   AFSVolSync *Sync
 ) = 142;
 
 OldSetLock(
-  IN  AFSFid *Fid, 
-  ViceLockType Type, 
+  IN  AFSFid *Fid,
+  ViceLockType Type,
   AFSVolSync *Sync
 ) = 143;
 
 OldExtendLock(
-  IN  AFSFid *Fid, 
+  IN  AFSFid *Fid,
   AFSVolSync *Sync
 ) = 144;
 
 OldReleaseLock(
-  IN  AFSFid *Fid, 
+  IN  AFSFid *Fid,
   AFSVolSync *Sync
 ) = 145;
 
@@ -460,20 +555,20 @@ GiveUpCallBacks(
 ) = 147;
 
 GetVolumeInfo(
-  IN  string VolumeName<AFSNAMEMAX>, 
+  IN  string VolumeName<AFSNAMEMAX>,
   OUT VolumeInfo *Volumeinfo
 ) = 148;
 
 GetVolumeStatus(
-  IN  afs_int32 Volumeid, 
-  OUT AFSFetchVolumeStatus *Volumestatus, 
+  IN  afs_int32 Volumeid,
+  OUT AFSFetchVolumeStatus *Volumestatus,
   string Name<AFSNAMEMAX>,
-  string OfflineMsg<AFSOPAQUEMAX>, 
+  string OfflineMsg<AFSOPAQUEMAX>,
   string Motd<AFSOPAQUEMAX>
 ) = 149;
 
 SetVolumeStatus(
-  IN  afs_int32 Volumeid, 
+  IN  afs_int32 Volumeid,
   AFSStoreVolumeStatus *Volumestatus,
   string Name<AFSNAMEMAX>,
   string OfflineMsg<AFSOPAQUEMAX>,
@@ -485,12 +580,12 @@ GetRootVolume(
 ) = 151;
 
 CheckToken(
-  IN  afs_int32 ViceId,  
+  IN  afs_int32 ViceId, 
   AFSOpaque *token
 ) = 152;
 
 GetTime(
-  OUT afs_uint32 *Seconds, 
+  OUT afs_uint32 *Seconds,
   afs_uint32 *USeconds
 ) = 153;
 
@@ -507,18 +602,18 @@ BulkStatus(
 ) = 155;
 
 SetLock(
-  IN  AFSFid *Fid, 
-  ViceLockType Type, 
+  IN  AFSFid *Fid,
+  ViceLockType Type,
   OUT AFSVolSync *Sync
 ) = 156;
 
 ExtendLock(
-  IN  AFSFid *Fid, 
+  IN  AFSFid *Fid,
   OUT AFSVolSync *Sync
 ) = 157;
 
 ReleaseLock(
-  IN  AFSFid *Fid, 
+  IN  AFSFid *Fid,
   OUT AFSVolSync *Sync
 ) = 158;
 
@@ -554,13 +649,13 @@ FlushCPS(
 ) = 162;
 
 DFSSymlink(
-  IN  AFSFid *DirFid, 
-  string Name<AFSNAMEMAX>, 
-  string LinkContents<AFSPATHMAX>, 
-  AFSStoreStatus *InStatus, 
-  OUT AFSFid *OutFid, 
-  AFSFetchStatus *OutFidStatus, 
-  AFSFetchStatus *OutDirStatus, 
+  IN  AFSFid *DirFid,
+  string Name<AFSNAMEMAX>,
+  string LinkContents<AFSPATHMAX>,
+  AFSStoreStatus *InStatus,
+  OUT AFSFid *OutFid,
+  AFSFetchStatus *OutFidStatus,
+  AFSFetchStatus *OutDirStatus,
   AFSCallBack *CallBack,
   AFSVolSync *Sync
 ) = 163;
@@ -569,7 +664,26 @@ ResidencyCmd(
   IN AFSFid *Fid,
   IN struct ResidencyCmdInputs *Inputs,
   OUT struct ResidencyCmdOutputs *Outputs
-) = 220; 
+) = 220;
+
+FetchData64(
+  IN  AFSFid *Fid, 
+  afs_int64 Pos, 
+  afs_int64 Length, 
+  OUT AFSFetchStatus *OutStatus, 
+  AFSCallBack *CallBack, 
+  AFSVolSync *Sync
+) split = 231;
+
+StoreData64(
+  IN  AFSFid *Fid, 
+  AFSStoreStatus *InStatus, 
+  afs_int64 Pos, 
+  afs_int64 Length, 
+  afs_int64 FileLength, 
+  OUT AFSFetchStatus *OutStatus, 
+  AFSVolSync *Sync
+) split = 233;
 
 InlineBulkStatus(
   IN  AFSCBFids *FidsArray,

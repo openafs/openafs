@@ -58,6 +58,9 @@ static int afs_mount(afsp, path, data)
 
     afs_globalVFS = afsp;
     afsp->vfs_bsize = 8192;
+#ifdef AFS_64BIT_CLIENT
+    afsp->vfs_flag |= VFS_DEVMOUNT;
+#endif /* AFS_64BIT_CLIENT */
 
     afsp->vfs_fsid.val[0] = AFS_VFSMAGIC; /* magic */
     afsp->vfs_fsid.val[1] = AFS_VFSFSID; 

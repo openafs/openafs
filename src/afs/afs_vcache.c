@@ -1251,6 +1251,7 @@ afs_SimpleVStat(avc, astat, areq)
     struct vrequest *areq;
 { /*afs_SimpleVStat*/
 
+    afs_size_t length;
     AFS_STATCNT(afs_SimpleVStat);
 
 #ifdef AFS_SGI_ENV
@@ -1261,16 +1262,21 @@ afs_SimpleVStat(avc, astat, areq)
 #endif
 
 	{
+#ifdef AFS_64BIT_ClIENT
+	    FillInt64(length, astat->Length_hi, astat->Length);
+#else /* AFS_64BIT_CLIENT */
+	    length = astat->Length;
+#endif /* AFS_64BIT_CLIENT */
 #if defined(AFS_SGI_ENV)
 	    osi_Assert((valusema(&avc->vc_rwlock) <= 0) &&
 		   (OSI_GET_LOCKID() == avc->vc_rwlockid));
-	    if (astat->Length < avc->m.Length) {
+	    if (length < avc->m.Length) {
 		vnode_t *vp = (vnode_t *)avc;
 		
 		osi_Assert(WriteLocked(&avc->lock));
 		ReleaseWriteLock(&avc->lock);
 		AFS_GUNLOCK();
-		PTOSSVP(vp, (off_t)astat->Length, (off_t)MAXLONG);
+		PTOSSVP(vp, (off_t)length, (off_t)MAXLONG);
 		AFS_GLOCK();
 		ObtainWriteLock(&avc->lock,67);
 	    }
@@ -1278,9 +1284,9 @@ afs_SimpleVStat(avc, astat, areq)
 	    /* if writing the file, don't fetch over this value */
 	    afs_Trace3(afs_iclSetp, CM_TRACE_SIMPLEVSTAT,
 		       ICL_TYPE_POINTER, avc,
-		       ICL_TYPE_INT32, avc->m.Length,
-		       ICL_TYPE_INT32, astat->Length);
-	    avc->m.Length = astat->Length;
+		       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length),
+		       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(length));
+	    avc->m.Length = length;
 	    avc->m.Date = astat->ClientModTime;
 	}
     avc->m.Owner = astat->Owner;
@@ -1359,7 +1365,7 @@ afs_WriteVCache(avc, astatus, areq)
 
     AFS_STATCNT(afs_WriteVCache);
     afs_Trace2(afs_iclSetp, CM_TRACE_WVCACHE, ICL_TYPE_POINTER, avc,
-	       ICL_TYPE_INT32, avc->m.Length);
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
 
     do {
 	tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
@@ -1434,8 +1440,14 @@ afs_ProcessFS(avc, astat, areq)
 { /*afs_ProcessFS*/
 
     register int i;
+    afs_size_t length;
     AFS_STATCNT(afs_ProcessFS);
 
+#ifdef AFS_64BIT_CLIENT
+    FillInt64(length, astat->Length_hi, astat->Length);
+#else /* AFS_64BIT_CLIENT */
+    length = astat->Length;
+#endif /* AFS_64BIT_CLIENT */
     /* WARNING: afs_DoBulkStat uses the Length field to store a sequence
      * number for each bulk status request. Under no circumstances
      * should afs_DoBulkStat store a sequence number if the new
@@ -1453,9 +1465,9 @@ afs_ProcessFS(avc, astat, areq)
 	     *  values.
 	     */
 	    afs_Trace3(afs_iclSetp, CM_TRACE_PROCESSFS, ICL_TYPE_POINTER, avc,
-		       ICL_TYPE_INT32, avc->m.Length,
-		       ICL_TYPE_INT32, astat->Length);
-	    avc->m.Length = astat->Length;
+		       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length),
+		       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(length));
+	    avc->m.Length = length;
 	    avc->m.Date = astat->ClientModTime;
 	}
     hset64(avc->m.DataVersion, astat->dataVersionHigh, astat->DataVersion);

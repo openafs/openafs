@@ -68,7 +68,7 @@ afs_create(OSI_VC_ARG(adp), aname, attrs, aexcl, amode, avcp, acred)
     struct AFSCallBack CallBack;
     afs_int32 now;
     struct dcache *tdc;
-    afs_int32 offset, len;
+    afs_size_t offset, len;
     struct server *hostp=0;
     struct vcache *tvc;
     struct volume*	volp = 0;
@@ -117,7 +117,7 @@ tagain:
 	goto done;
     }
 
-    tdc = afs_GetDCache(adp, 0, &treq, &offset, &len, 1);
+    tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);
     ObtainWriteLock(&adp->lock,135);
 
     /*
@@ -487,7 +487,11 @@ afs_LocalHero(avc, adc, astat, aincr)
     /* Don't update the vcache entry unless the stats are current. */
     if (avc->states & CStatd) {
 	hset(avc->m.DataVersion, avers);
+#ifdef AFS_64BIT_CLIENT
+	FillInt64(avc->m.Length, astat->Length_hi, astat->Length);
+#else /* AFS_64BIT_ENV */
 	avc->m.Length = astat->Length;
+#endif /* AFS_64BIT_ENV */
 	avc->m.Date = astat->ClientModTime;
     }
     if (ok) {

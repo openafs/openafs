@@ -364,7 +364,7 @@ int afs_DoBulkStat(adp, dirCookie, areqp)
     struct dcache *dcp;		/* chunk containing the dir block */
     char *statMemp;		/* status memory block */
     char *cbfMemp;		/* callback and fid memory block */
-    long temp;			/* temp for holding chunk length, &c. */
+    afs_size_t temp;		/* temp for holding chunk length, &c. */
     struct AFSFid *fidsp;	/* file IDs were collecting */
     struct AFSCallBack *cbsp;	/* call back pointers */
     struct AFSCallBack *tcbp;	/* temp callback ptr */
@@ -385,7 +385,7 @@ int afs_DoBulkStat(adp, dirCookie, areqp)
     long startTime;		/* time we started the call,
 				 * for callback expiration base
 				 */
-    int statSeqNo;		/* Valued of file size to detect races */
+    afs_size_t statSeqNo;	/* Valued of file size to detect races */
     int code;			/* error code */
     long newIndex;		/* new index in the dir */
     struct DirEntry *dirEntryp;	/* dir entry we are examining */
@@ -437,7 +437,7 @@ tagain:
     code = afs_VerifyVCache(adp, areqp);
     if (code) goto done;
 
-    dcp = afs_GetDCache(adp, 0, areqp, &temp, &temp, 1);
+    dcp = afs_GetDCache(adp, (afs_size_t) 0, areqp, &temp, &temp, 1);
     if (!dcp) {
 	code = ENOENT;
 	goto done;
@@ -1061,12 +1061,12 @@ afs_lookup(adp, aname, avcp, acred)
 
     {
     register struct dcache *tdc;
-    afs_int32 dirOffset, dirLen;
+    afs_size_t dirOffset, dirLen;
     ino_t theDir;
     struct VenusFid tfid;
 
     /* now we have to lookup the next fid */
-    tdc = afs_GetDCache(adp, 0, &treq, &dirOffset, &dirLen, 1);
+    tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &dirOffset, &dirLen, 1);
     if (!tdc) {
       *avcp = (struct vcache *)0;  /* redundant, but harmless */
       code = EIO;

@@ -153,7 +153,11 @@ int SRXAFSCB_GetCE(a_call, a_index, a_result)
     a_result->lock.pid_writer = 0;
     a_result->lock.src_indicator = 0;
 #endif /* AFS_OSF20_ENV */
+#ifdef AFS_64BIT_CLIENT
+    a_result->Length = (afs_int32) tvc->m.Length & 0xffffffff;
+#else /* AFS_64BIT_CLIENT */
     a_result->Length = tvc->m.Length;
+#endif /* AFS_64BIT_CLIENT */
     a_result->DataVersion = hgetlo(tvc->m.DataVersion);
     a_result->callback = afs_data_pointer_to_int32(tvc->callback);		/* XXXX Now a pointer; change it XXXX */
     a_result->cbExpires = tvc->cbExpires;
@@ -177,6 +181,96 @@ fcnDone:
     return(code);
 
 } /*SRXAFSCB_GetCE*/
+
+int SRXAFSCB_GetCE64(a_call, a_index, a_result)
+    struct rx_call *a_call;
+    afs_int32 a_index;
+    struct AFSDBCacheEntry64 *a_result;
+
+{ /*SRXAFSCB_GetCE64*/
+
+    register int i;			/*Loop variable*/
+    register struct vcache *tvc;	/*Ptr to current cache entry*/
+    int code;				/*Return code*/
+    XSTATS_DECLS;
+
+#ifdef RX_ENABLE_LOCKS
+    AFS_GLOCK();
+#endif /* RX_ENABLE_LOCKS */
+
+    XSTATS_START_CMTIME(AFS_STATS_CM_RPCIDX_GETCE);
+
+    AFS_STATCNT(SRXAFSCB_GetCE64);
+    for (i = 0; i < VCSIZE; i++) {
+	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+	    if (a_index == 0)
+		goto searchDone;
+	    a_index--;
+	} /*Zip through current hash chain*/
+    } /*Zip through hash chains*/
+
+  searchDone:
+    if (tvc == (struct vcache *) 0) {
+	/*Past EOF*/
+	code = 1;
+	goto fcnDone;
+    }
+
+    /*
+     * Copy out the located entry.
+     */
+    a_result->addr = afs_data_pointer_to_int32(tvc);
+    a_result->cell = tvc->fid.Cell;
+    a_result->netFid.Volume = tvc->fid.Fid.Volume;
+    a_result->netFid.Vnode = tvc->fid.Fid.Vnode;
+    a_result->netFid.Unique = tvc->fid.Fid.Unique;
+    a_result->lock.waitStates = tvc->lock.wait_states;
+    a_result->lock.exclLocked = tvc->lock.excl_locked;
+    a_result->lock.readersReading = tvc->lock.readers_reading;
+    a_result->lock.numWaiting = tvc->lock.num_waiting;
+#if defined(INSTRUMENT_LOCKS)
+    a_result->lock.pid_last_reader = tvc->lock.pid_last_reader;
+    a_result->lock.pid_writer = tvc->lock.pid_writer;
+    a_result->lock.src_indicator = tvc->lock.src_indicator;
+#else
+    /* On osf20 , the vcache does not maintain these three fields */
+    a_result->lock.pid_last_reader = 0;
+    a_result->lock.pid_writer = 0;
+    a_result->lock.src_indicator = 0;
+#endif /* AFS_OSF20_ENV */
+#ifdef AFS_64BIT_ENV
+    a_result->Length = tvc->m.Length;
+#else /* AFS_64BIT_ENV */
+#ifdef AFS_64BIT_CLIENT
+    a_result->Length = tvc->m.Length;
+#else /* AFS_64BIT_CLIENT */
+    a_result->Length.high = 0;
+    a_result->Length.low = tvc->m.Length;
+#endif /* AFS_64BIT_CLIENT */
+#endif /* AFS_64BIT_ENV */
+    a_result->DataVersion = hgetlo(tvc->m.DataVersion);
+    a_result->callback = afs_data_pointer_to_int32(tvc->callback);		/* XXXX Now a pointer; change it XXXX */
+    a_result->cbExpires = tvc->cbExpires;
+    a_result->refCount = VREFCOUNT(tvc);
+    a_result->opens = tvc->opens;
+    a_result->writers = tvc->execsOrWriters;
+    a_result->mvstat = tvc->mvstat;
+    a_result->states = tvc->states;
+    code = 0;
+
+    /*
+     * Return our results.
+     */
+fcnDone:
+    XSTATS_END_TIME;
+
+#ifdef RX_ENABLE_LOCKS
+    AFS_GUNLOCK();
+#endif /* RX_ENABLE_LOCKS */
+
+    return(code);
+
+} /*SRXAFSCB_GetCE64*/
 
 
 /*------------------------------------------------------------------------
@@ -1362,4 +1456,75 @@ int SRXAFSCB_GetCacheConfig(
 #endif /* RX_ENABLE_LOCKS */
 
     return 0;
+}
+
+/*------------------------------------------------------------------------
+ * EXPORTED SRXAFSCB_FetchData
+ *
+ * Description:
+ *      Routine to do third party move from a remioserver to the original
+ *      issuer of an ArchiveData request. Presently supported only by the
+ *      "fs" command, not by the AFS client.
+ *
+ * Arguments:
+ *      rxcall:        Ptr to Rx call on which this request came in.
+ *      Fid:           pointer to AFSFid structure.
+ *      Fd:            File descriptor inside fs command.
+ *      Position:      Offset in the file.
+ *      Length:        Data length to transfer.
+ *      TotalLength:   Pointer to total file length field
+ *
+ * Returns:
+ *      0 on success
+ *
+ * Environment:
+ *      Nothing interesting.
+ *
+ * Side Effects:
+ *------------------------------------------------------------------------*/
+SRXAFSCB_FetchData(rxcall, Fid, Fd, Position, Length, TotalLength)
+    struct rx_call *rxcall;
+    struct AFSFid *Fid;
+    afs_int32 Fd;
+    afs_int64 Position;
+    afs_int64 Length;
+    afs_int64 *TotalLength;
+{
+    return ENOSYS;
+}
+
+/*------------------------------------------------------------------------
+ * EXPORTED SRXAFSCB_StoreData
+ *
+ * Description:
+ *      Routine to do third party move from a remioserver to the original
+ *      issuer of a RetrieveData request. Presently supported only by the
+ *      "fs" command, not by the AFS client.
+ *
+ * Arguments:
+ *      rxcall:        Ptr to Rx call on which this request came in.
+ *      Fid:           pointer to AFSFid structure.
+ *      Fd:            File descriptor inside fs command.
+ *      Position:      Offset in the file.
+ *      Length:        Data length to transfer.
+ *      TotalLength:   Pointer to total file length field
+ *
+ * Returns:
+ *      0 on success
+ *
+ * Environment:
+ *      Nothing interesting.
+ *
+ * Side Effects:
+ *      As advertised.
+ *------------------------------------------------------------------------*/
+SRXAFSCB_StoreData(rxcall, Fid, Fd, Position, Length, TotalLength)
+    struct rx_call *rxcall;
+    struct AFSFid *Fid;
+    afs_int32 Fd;
+    afs_int64 Position;
+    afs_int64 Length;
+    afs_int64 *TotalLength;
+{
+    return ENOSYS;
 }

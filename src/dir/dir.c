@@ -80,6 +80,7 @@ RCSID("$Header$");
 #include "../h/mbuf.h"
 #endif
 #else /* !defined(UKERNEL) */
+#include "../afs/stds.h"
 #include "../afs/sysincludes.h"
 #endif /* !defined(UKERNEL) */
 #include "../afs/afs_osi.h"

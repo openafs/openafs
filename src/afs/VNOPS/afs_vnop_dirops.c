@@ -55,7 +55,7 @@ afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
     register struct conn *tc;
     struct VenusFid newFid;
     register struct dcache *tdc;
-    afs_int32 offset, len;
+    afs_size_t offset, len;
     register struct vcache *tvc;
     struct AFSStoreStatus InStatus;
     struct AFSFetchStatus OutFidStatus, OutDirStatus;
@@ -90,7 +90,7 @@ afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
     InStatus.ClientModTime = osi_Time();
     InStatus.UnixModeBits = attrs->va_mode & 0xffff;   /* only care about protection bits */
     InStatus.Group = (afs_int32)acred->cr_gid;
-    tdc = afs_GetDCache(adp, 0, &treq, &offset, &len, 1);
+    tdc = afs_GetDCache(adp, (afs_size_t) 0, &treq, &offset, &len, 1);
     ObtainWriteLock(&adp->lock,153);
     do {
 	tc = afs_Conn(&adp->fid, &treq, SHARED_LOCK);
@@ -182,7 +182,7 @@ afs_rmdir(adp, aname, acred)
     register struct vcache *tvc = (struct vcache *)0;
     register afs_int32 code;
     register struct conn *tc;
-    afs_int32 offset, len;
+    afs_size_t offset, len;
     struct AFSFetchStatus OutDirStatus;
     struct AFSVolSync tsync;
     XSTATS_DECLS
@@ -205,7 +205,7 @@ afs_rmdir(adp, aname, acred)
         goto done;
     }
 
-    tdc	= afs_GetDCache(adp, 0,	&treq, &offset,	&len, 1);	/* test for error below */
+    tdc	= afs_GetDCache(adp, (afs_size_t) 0,	&treq, &offset,	&len, 1);	/* test for error below */
     ObtainWriteLock(&adp->lock,154);
     if (tdc && (adp->states & CForeign)) {
 	struct VenusFid unlinkFid;

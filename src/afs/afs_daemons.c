@@ -355,7 +355,7 @@ void BPath(ab)
 #ifdef AFS_LINUX22_ENV
     struct dentry *dp = NULL;
 #endif
-    afs_int32 offset, len;
+    afs_size_t offset, len;
     struct vrequest treq;
     afs_int32 code;
 
@@ -394,7 +394,7 @@ void BPath(ab)
     tvc = (struct vcache *) tvn;
 #endif
     /* here we know its an afs vnode, so we can get the data for the chunk */
-    tdc = afs_GetDCache(tvc, ab->parm[1], &treq, &offset, &len, 1);
+    tdc = afs_GetDCache(tvc, (afs_size_t) ab->parm[1], &treq, &offset, &len, 1);
     if (tdc) {
 	afs_PutDCache(tdc);
     }
@@ -416,13 +416,13 @@ void BPrefetch(ab)
     register struct brequest *ab; {
     register struct dcache *tdc;
     register struct vcache *tvc;
-    afs_int32 offset, len;
+    afs_size_t offset, len;
     struct vrequest treq;
 
     AFS_STATCNT(BPrefetch);
     if (len = afs_InitReq(&treq, ab->cred)) return;
     tvc = ab->vnode;
-    tdc = afs_GetDCache(tvc, (afs_int32)ab->parm[0], &treq, &offset, &len, 1);
+    tdc = afs_GetDCache(tvc, (afs_size_t)ab->parm[0], &treq, &offset, &len, 1);
     if (tdc) {
 	afs_PutDCache(tdc);
     }
@@ -433,7 +433,7 @@ void BPrefetch(ab)
     tdc = (struct dcache *) (ab->parm[1]);
     tdc->flags &= ~DFFetchReq;
     afs_osi_Wakeup(&tdc->validPos);
-    if (ab->parm[2]) {
+    if ((afs_size_t)ab->parm[2]) {
 #ifdef	AFS_SUN5_ENVX
 	mutex_enter(&tdc->lock);
 	tdc->refCount--;
@@ -518,7 +518,7 @@ struct brequest *afs_BQueue(aopcode, avc, dontwait, ause, acred, aparm0, aparm1,
     register struct vcache *avc;
     struct AFS_UCRED *acred;
     /* On 64 bit platforms, "long" does the right thing. */
-    long aparm0, aparm1, aparm2, aparm3;
+    afs_size_t aparm0, aparm1, aparm2, aparm3;
 {
     register int i;
     register struct brequest *tb;
