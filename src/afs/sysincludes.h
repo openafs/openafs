@@ -72,7 +72,9 @@
 /* Avoid conflicts with coda overloading AFS type namespace. Must precede
  * inclusion of uaccess.h.
  */
+#ifndef _LINUX_CODA_FS_I
 #define _LINUX_CODA_FS_I
+#endif
 #define _CFS_HEADER_
 struct coda_inode_info {
 };

@@ -411,7 +411,7 @@ afs_GetVolume(struct VenusFid *afid, struct vrequest *areq,
 
 
 static struct volume *
-afs_SetupVolume(afs_int32 volid, char *aname, char *ve, struct cell *tcell,
+afs_SetupVolume(afs_int32 volid, char *aname, void *ve, struct cell *tcell,
 		afs_int32 agood, afs_int32 type, struct vrequest *areq)
 {
     struct volume *tv;

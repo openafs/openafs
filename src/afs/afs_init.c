@@ -351,7 +351,9 @@ afs_InitCacheInfo(register char *afile)
     struct osi_stat tstat;
     register struct osi_file *tfile;
     struct afs_fheader theader;
+#ifndef AFS_LINUX22_ENV
     struct vnode *filevp;
+#endif
     int goodFile;
 
     AFS_STATCNT(afs_InitCacheInfo);

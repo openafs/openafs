@@ -17,6 +17,7 @@
 RCSID
     ("$Header$");
 
+#include <linux/module.h> /* early to avoid printf->printk mapping */
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "h/unistd.h"		/* For syscall numbers. */
@@ -26,7 +27,6 @@ RCSID
 #include "../asm/ia32_unistd.h"
 #endif
 
-#include <linux/module.h>
 #include <linux/proc_fs.h>
 #include <linux/slab.h>
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
@@ -68,7 +68,9 @@ static void **sys_call_table;	/* safer for other linuces */
 
 extern struct file_system_type afs_fs_type;
 
+#if !defined(AFS_LINUX24_ENV)
 static long get_page_offset(void);
+#endif
 
 #if defined(AFS_LINUX24_ENV)
 DECLARE_MUTEX(afs_global_lock);
@@ -142,10 +144,9 @@ int
 csdbproc_read(char *buffer, char **start, off_t offset, int count,
 	      int *eof, void *data)
 {
-    int len, i, j;
+    int len, j;
     struct afs_q *cq, *tq;
     struct cell *tc;
-    void *ret = NULL;
     char tbuffer[16];
     afs_uint32 addr;
     
@@ -298,8 +299,11 @@ init_module(void)
     unsigned long *ptr;
     unsigned long offset=0;
     unsigned long datalen=0;
-    int ret;
+#if defined(EXPORTED_KALLSYMS_SYMBOL)
     unsigned long token=0;
+#endif
+#if defined(EXPORTED_KALLSYMS_SYMBOL) || defined(EXPORTED_KALLSYMS_ADDRESS)
+    int ret;
     char *mod_name;
     unsigned long mod_start=0;
     unsigned long mod_end=0;
@@ -309,6 +313,7 @@ init_module(void)
     char *sym_name;
     unsigned long sym_start=0;
     unsigned long sym_end=0;
+#endif
 #endif /* EXPORTED_SYS_CALL_TABLE */
 
     RWLOCK_INIT(&afs_xosi, "afs_xosi");
@@ -410,7 +415,7 @@ init_module(void)
     if (!sys_call_table) {
 	printf("Failed to find address of sys_call_table\n");
     } else {
-	printf("Found sys_call_table at %x\n", sys_call_table);
+	printf("Found sys_call_table at %lx\n", (unsigned long)sys_call_table);
 #if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_S390X_LINUX24_ENV)
 	error cant support this yet.;
 #endif /* AFS_SPARC64_LINUX20_ENV */
@@ -472,10 +477,10 @@ init_module(void)
 	if (!ia32_sys_call_table) {
 	    printf("Warning: Failed to find address of ia32_sys_call_table\n");
 	} else {
-	    printf("Found ia32_sys_call_table at %x\n", ia32_sys_call_table);
+	    printf("Found ia32_sys_call_table at %lx\n", (unsigned long)ia32_sys_call_table);
 	}
 #else
-	printf("Found ia32_sys_call_table at %x\n", ia32_sys_call_table);
+	printf("Found ia32_sys_call_table at %lx\n", (unsigned long)ia32_sys_call_table);
 #endif /* IA32_SYS_CALL_TABLE */
 #endif
 
@@ -580,8 +585,6 @@ void
 cleanup_module(void)
 #endif
 {
-    struct task_struct *t;
-
     osi_sysctl_clean();
     if (sys_call_table) {
 #if defined(AFS_IA64_LINUX20_ENV)
