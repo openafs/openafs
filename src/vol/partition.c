@@ -291,7 +291,7 @@ int VCheckPartition(part, devname)
 	Log("This program is compiled without AFS_NAMEI_ENV, but partition %s seems to contain volumes which use the namei-interface; aborting\n", part);
 	return -1;
     }
-#endif /* AFS_NAMEI_ENV */f
+#endif /* AFS_NAMEI_ENV */
 #endif
 
 #ifdef AFS_SGI_XFS_IOPS_ENV
