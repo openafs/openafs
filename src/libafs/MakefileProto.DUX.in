@@ -12,7 +12,7 @@ SRCDIR=@SRCDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
-include ../config/Makefile.${SYS_NAME}
+include config/Makefile.${SYS_NAME}
 
 
 # OS specific object files:
@@ -51,14 +51,16 @@ KOBJ = STATIC
 
 # This tells Makefile.common to use it's single directory build target.
 COMPDIRS = single_compdir
+INSTDIRS = single_instdir
 
 include Makefile.common
 
 setup:
 	-mkdir $(KOBJ)
-	-rm $(KOBJ)/Makefile $(KOBJ)/Makefile.common
+	-rm $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
 	ln -s ../Makefile $(KOBJ)/Makefile
 	ln -s ../Makefile.common $(KOBJ)/Makefile.common
+	ln -s ../config $(KOBJ)/config
 	-rm -f  h net netinet rpc ufs nfs  machine sys vm
 	-ln -s /usr/sys/include/net net
 	-ln -s /usr/sys/include/machine machine
@@ -84,8 +86,9 @@ DEST_AFSMOD = ${DESTDIR}/root.client/bin/${AFSMOD}
 
 # libafs:	${DEST_LIBAFS} ${DEST_LIBAFSNONFS} ${DEST_AFSMOD}
 
-.PHONY: libafs
-libafs:	${DEST_LIBAFSNONFS} ${DEST_AFSMOD}
+.PHONY: libafs install_libafs
+libafs:	${LIBAFSNONFS} ${AFSMOD}
+install_libafs:	${DEST_LIBAFSNONFS} ${DEST_AFSMOD}
 
 
 ${DEST_LIBAFS}: ${LIBAFS}

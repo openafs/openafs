@@ -12,7 +12,7 @@ SRCDIR=@SRCDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
-include ../config/Makefile.${SYS_NAME}
+include config/Makefile.${SYS_NAME}
 
 # OS specific object files:
 AFS_OS_OBJS = \
@@ -199,6 +199,7 @@ CFLAGS=-I. -I.. -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) -G 0 $(KDEFS) $(
 #COMPDIRS = single_compdir
 # This is the irix multiple directory target.
 COMPDIRS = irix_compdirs
+INSTDIRS = irix_instdirs
 
 include Makefile.common
 
@@ -236,9 +237,10 @@ setup:
 		dir=$$t.$$n.$$p ; \
 		echo Making directory: $$dir; \
 		mkdir -p $$dir; \
-		rm -f $$dir/Makefile.common $$dir/Makefile; \
+		rm -f $$dir/Makefile.common $$dir/Makefile $$dir/config; \
 		ln -s ../Makefile.common $$dir/Makefile.common; \
 		ln -s ../Makefile $$dir/Makefile; \
+		ln -s ../config $$dir/config; \
 	    done; \
 	  done; \
 	done
@@ -252,9 +254,10 @@ setup:
 		dir=$$t.$$p ; \
 		echo Making directory: $$dir; \
 		mkdir -p $$dir; \
-		rm -f $$dir/Makefile.common $$dir/Makefile; \
+		rm -f $$dir/Makefile.common $$dir/Makefile $$dir/config; \
 		ln -s ../Makefile.common $$dir/Makefile.common; \
 		ln -s ../Makefile $$dir/Makefile; \
+		ln -s ../config $$dir/config; \
 	    done; \
 	done
 <all>
@@ -263,7 +266,7 @@ setup:
 
 # Compile static and modload versions of the clients.
 <all -sgi_65>
-${COMPDIRS}:
+${COMPDIRS} ${INSTDIRS}:
 	BUILDPROCS="${PROCESSORS}" ; \
 	if [ "${CPUARCH}" != "" ] ; then \
 		BUILDPROCS=${CPUARCH}; \
@@ -307,13 +310,13 @@ ${COMPDIRS}:
 			export CPU_KDEFS ;\
 			export LDFLAGS; \
 		cd $$dir ; \
-		$(MAKE) CPUARCH=$$p MPSP=$$n $$t.libafs || exit $$?;\
+		$(MAKE) CPUARCH=$$p MPSP=$$n $@_$$t.libafs || exit $$?;\
 		cd ../ ; \
 	    done; \
 	  done; \
 	done
 <sgi_65>
-${COMPDIRS}:
+${COMPDIRS} ${INSTDIRS}:
 	BUILDPROCS="${PROCESSORS}" ; \
 	if [ "${IPNO}" != "" ] ; then \
 		BUILDPROCS="${IPNO}"; \
@@ -344,23 +347,31 @@ ${COMPDIRS}:
 		export CPU_KDEFS ;\
 		export LDFLAGS ;\
 		cd $$dir ; \
-		$(MAKE) IPNO=$$p $$t.libafs || exit $$?; \
+		$(MAKE) IPNO=$$p $@_$$t.libafs || exit $$?; \
 		cd ../ ; \
 	  done; \
 	done
 <all>
+
+irix_compdirs_STATIC.libafs: STATIC.libafs
+irix_compdirs_MODLOAD.libafs: MODLOAD.libafs
+irix_instdirs_STATIC.libafs: install_STATIC.libafs
+irix_instdirs_MODLOAD.libafs: install_MODLOAD.libafs
 
 
 LIBAFSNONFSA = libafs.nonfs.a
 COPYFILES = copyfiles
 LINKFILES = linkfiles
 
+${INSTDIRS}: ${COPYFILES} ${LINKFILES}
+
 STATICCLIENTDIR = ${DESTDIR}root.client/bin
 MODLOADCLIENTDIR = ${DESTDIR}root.client/usr/vice/etc/sgiload
 
 # Make the NFS and no-NFS clients for this directory.
 # STATIC.libafs: ${LIBAFSNONFSA} ${COPYFILES} ${LINKFILES}
-STATIC.libafs: ${LIBAFSNONFSA} ${COPYFILES} ${LINKFILES}
+STATIC.libafs: ${LIBAFSNONFSA}
+install_STATIC.libafs: ${LIBAFSNONFSA}
 <all -sgi_65>
 	${CP} ${LIBAFSNONFSA} \
 		${STATICCLIENTDIR}/libafs.${MPSP}.${CPUARCH}.nonfs.a
@@ -375,7 +386,8 @@ ${LIBAFSNONFSA}: $(AFSAOBJS) $(AFSNONFSOBJS)
 LIBAFSNONFSO = libaf.nonfs.o
 
 # MODLOAD.libafs: ${LIBAFSNONFSO} ${COPYFILES} ${LINKFILES}
-MODLOAD.libafs: ${LIBAFSNONFSO} ${COPYFILES} ${LINKFILES}
+MODLOAD.libafs: ${LIBAFSNONFSO}
+install_MODLOAD.libafs: ${LIBAFSNONFSO}
 <all -sgi_65>
 	${CP} ${LIBAFSNONFSO} \
 		${MODLOADCLIENTDIR}/libafs.${MPSP}.${CPUARCH}.nonfs.o

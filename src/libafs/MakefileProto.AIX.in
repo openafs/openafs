@@ -12,7 +12,7 @@ SRCDIR=@SRCDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
-include ../config/Makefile.${SYS_NAME}
+include config/Makefile.${SYS_NAME}
 
 # OS specific object files:
 AFS_OS_OBJS = \
@@ -70,14 +70,16 @@ KOBJ = MODLOAD
 
 # This tells Makefile.common to use it's single directory build target.
 COMPDIRS = single_compdir
+INSTDIRS = single_instdir
 
 include Makefile.common
 
 setup:
 	-mkdir $(KOBJ)
-	-rm $(KOBJ)/Makefile $(KOBJ)/Makefile.common
+	-rm $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
 	ln -s ../Makefile $(KOBJ)/Makefile
 	ln -s ../Makefile.common $(KOBJ)/Makefile.common
+	ln -s ../config $(KOBJ)/config
 	-rm -f  h net netinet rpc ufs nfs  machine sys
 	ln -s /usr/include/sys h
 	ln -s /usr/include/net net
@@ -126,7 +128,8 @@ $(LIBAFS): $(AFSAOBJS) $(AFSNOIAUTHOBJS)
 	 -bmap:afs.ext.map -o afs.ext \
 	${AFSAOBJS} $(AFSNOIAUTHOBJS) ${LIBS} ${LDFLAGS}
 
-libafs: $(DEST_LIBAFS) $(DEST_LIBAFSIAUTH)
+libafs: $(LIBAFS) $(LIBAFSIAUTH)
+install_libafs: $(DEST_LIBAFS) $(DEST_LIBAFSIAUTH)
 
 
 # Object build rules:

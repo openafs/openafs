@@ -12,7 +12,7 @@ SRCDIR=@SRCDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
-include ../config/Makefile.${SYS_NAME}
+include config/Makefile.${SYS_NAME}
 
 # OS specific object files:
 AFS_OS_OBJS = \
@@ -56,9 +56,11 @@ KOBJ = MODLOAD32 MODLOAD64
 # This tells Makefile.common to use it's single directory build target.
 <all -sun4x_57 -sun4x_58>
 COMPDIRS = single_compdir
+INSTDIRS = single_instdir
 
 <sun4x_57 sun4x_58>
 COMPDIRS = solaris_compdirs
+INSTDIRS = solaris_instdirs
 
 <all>
 include Makefile.common
@@ -77,9 +79,10 @@ setup:
 	for t in ${KOBJ} ; do \
 		echo Making directory: $$t; \
 		mkdir -p $$t; \
-		rm -f $$t/Makefile.common $$t/Makefile ; \
+		rm -f $$t/Makefile.common $$t/Makefile $$t/config ; \
 		ln -s ../Makefile.common $$t/Makefile.common ; \
 		ln -s ../Makefile $$t/Makefile ;\
+		ln -s ../config $$t/config ;\
 	done
 
 
@@ -87,7 +90,7 @@ setup:
 ## the 64 bit libafs in MODLOAD32 and MODLOAD64 directories respectively
 
 <sun4x_57 sun4x_58>
-${COMPDIRS}:
+${COMPDIRS} ${INSTDIRS}:
 	for t in ${KOBJ} ; do \
 		echo Building directory: $$t ; \
 		case $$t in \
@@ -101,9 +104,12 @@ ${COMPDIRS}:
 		export ARCH_DEFS ; \
 		export BITS ; \
 		cd $$t  ; \
-		$(MAKE) libafs ; \
+		$(MAKE) $@_libafs ; \
 		cd ../ ;\
 	done
+
+solaris_compdirs_libafs: libafs
+solaris_instdirs_libafs: install_libafs
 
 <all>
 
@@ -119,7 +125,8 @@ DEST_LIBAFSNONFS = ${DESTDIR}/root.client/usr/vice/etc/modload/${LIBAFSNONFS}
 .PHONY: libafs
 
 # libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
-libafs:	$(DEST_LIBAFSNONFS)
+libafs:	$(LIBAFSNONFS)
+install_libafs:	$(DEST_LIBAFSNONFS)
 
 
 $(DEST_LIBAFS): $(LIBAFS)
@@ -141,6 +148,7 @@ ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 MODLOADDIR = ${DESTDIR}root.client/usr/vice/etc/modload
 
 libafs: ${LIBAFSNONFS}
+install_libafs: ${LIBAFSNONFS}
 	${INSTALL} -f ${LIBAFSNONFS} ${MODLOADDIR}/libafs${BITS}.nonfs.o
 
 <all>

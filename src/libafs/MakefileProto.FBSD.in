@@ -7,7 +7,7 @@ SRCDIR=@SRCDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
-# include ../config/Makefile.${SYS_NAME}
+# include config/Makefile.${SYS_NAME}
 
 # OS specific object files:
 AFS_OS_OBJS = \
@@ -46,14 +46,16 @@ KOBJ = STATIC
 
 # This tells Makefile.common to use it's single directory build target.
 COMPDIRS = single_compdir
+INSTDIRS = single_instdir
 
 include Makefile.common
 
 setup:
 	-mkdir $(KOBJ)
-	-rm $(KOBJ)/Makefile $(KOBJ)/Makefile.common
+	-rm $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
 	ln -s ../Makefile $(KOBJ)/Makefile
 	ln -s ../Makefile.common $(KOBJ)/Makefile.common
+	ln -s ../config $(KOBJ)/config
 	-rm -f  h net netinet rpc ufs nfs  machine sys vm
 	-ln -s /usr/src/sys/net net
 	-ln -s /usr/src/sys/i386/include machine
@@ -75,9 +77,14 @@ DEST_LIBAFS = ${DESTDIR}/root.client/bin/${LIBAFS}
 DEST_LIBAFSNONFS = ${DESTDIR}/root.client/bin/${LIBAFSNONFS}
 
 
-# libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
-# libafs:	$(DEST_LIBAFSNONFS)
+# libafs:	$(LIBAFS) $(LIBAFSNONFS)
+# libafs:	$(LIBAFSNONFS)
+# install_libafs:	$(DEST_LIBAFS) $(DEST_LIBAFSNONFS)
+# install_libafs:	$(DEST_LIBAFSNONFS)
 libafs:
+	echo WARNING: No kernel module for ${SYS_NAME}
+
+install_libafs:
 	echo WARNING: No kernel module for ${SYS_NAME}
 
 

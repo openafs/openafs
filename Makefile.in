@@ -44,14 +44,17 @@ COMPILE_CLEAN=; $(MAKE) clean
 all: force ${SYS_NAME}/dest
 	$(MAKE) install
 
-${SYS_NAME}/dest:
-	mkdir -p ${SYS_NAME}/dest
-
 all_nolibafs: ${SYS_NAME}/dest
 	$(MAKE) install TARGET=finale_nolibafs
 
 only_libafs: ${SYS_NAME}/dest
 	$(MAKE) install TARGET=libafs
+
+only_libafs_tree: ${SYS_NAME}/dest
+	$(MAKE) install TARGET=libafs_tree
+
+${SYS_NAME}/dest:
+	mkdir -p ${SYS_NAME}/dest
 
 project: cmd comerr 
 
@@ -289,6 +292,22 @@ UKERNELDIR= \
 libafs: libafs_setup ${KERNELDIR}
 	${COMPILE_PART1} libafs ${COMPILE_PART2}
 
+libafs_tree: libafs_setup ${KERNELDIR}
+	-/bin/rm -rf libafs_tree
+	for d in afs afsint rx config; do \
+		[ -d libafs_tree/$$d ] || mkdir -p libafs_tree/$$d; \
+	done
+	for f in `cd src/libafs; find . -name '*.[ch]'` \
+		Makefile.common Makefile.extradefs \
+		afs.shutdown afs.startup redhat.sh sgi_master sgi_system \
+		; do \
+		${INSTALL} -c -f src/libafs/$$f libafs_tree/$$f; \
+	done
+	src/config/config src/libafs/MakefileProto.${MKAFS_OSTYPE}.in libafs_tree/Makefile.in ${SYS_NAME}
+	${INSTALL} -c src/config/Makefile.${SYS_NAME}.in libafs_tree/config
+	${INSTALL} -c src/config/afsconfig.h.in libafs_tree/config
+	${INSTALL} -c -f -ns configure-libafs libafs_tree/configure
+
 libuafs: libuafs_setup ${UKERNELDIR}
 	set -x; \
 	case ${SYS_NAME} in \
@@ -503,6 +522,9 @@ clean2:
 	-${COMPILE_PART1} rcp ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libafs ${COMPILE_CLEAN}
 	-${COMPILE_PART1} libuafs ${COMPILE_CLEAN}
+	-(cd src/libafs; /bin/rm -rf afs afsint config rx)
+	-(cd src/libuafs; /bin/rm -rf afs afsint config rx des)
+	-/bin/rm -rf libafs_tree ${SYS_NAME}
 
  
 distclean: clean
@@ -621,7 +643,7 @@ distclean: clean
 	src/xstat/Makefile 
 
 pristine: distclean
-	/bin/rm -f src/config/afsconfig.h.in configure aclocal.m4
+	/bin/rm -f src/config/afsconfig.h.in configure configure-libafs aclocal.m4
 
 #
 # Below targets are all deprecated, insecure, or obsolte, 

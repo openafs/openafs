@@ -34,17 +34,20 @@ CRULE2=	$(CC) $(OPTF) $(CFLAGS) -c $?
 CRULE3=	$(CC) $(OPTF2) $(CFLAGS) -c $?
 CRULE4=	$(CC) $(DBG) $(CFLAGS) -c $?
 
-system:	install
+system:	all
 
 kinstall:	install
-install:	all 
+install:	all $(INSTDIRS)
 
 all:	setup $(COMPDIRS)
 
-single_compdir:
+single_compdir single_instdir:
 	cd $(KOBJ) ; \
-	echo $(MAKE) DESTDIR=${DESTDIR} libafs; \
-	$(MAKE) DESTDIR=${DESTDIR}  libafs;
+	echo $(MAKE) DESTDIR=${DESTDIR} $@_libafs; \
+	$(MAKE) DESTDIR=${DESTDIR}  $@_libafs;
+
+single_compdir_libafs: libafs
+single_instdir_libafs: install_libafs
 
 AFSAOBJS = \
 	afs_atomlist.o \
