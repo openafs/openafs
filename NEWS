@@ -1,0 +1,131 @@
+Openafs News -- history of user Visible changes. 11 July 2001
+
+* Changes since Openafs 1.0
+
+** AFS now builds with configure. The README for building has been
+   updated and includes full details.
+
+** A client system can now have multiple sysname values for @sys.
+   They will be searched in order when looking up files in AFS.  The
+   -newsysname argument to fs sysname can be repeated to set multiple
+   sysnames.
+
+** A new system group is created for new cells (system:ptsviewers
+   with id -203).  If this group exists, members of this group can
+   examine and read the entire protection database.  They can examine
+   all users and groups and can get the membership of any group.
+
+** A new program, pt_util has been added to the distribution.  This
+   program allows users to print the contents of the protection
+   database or to edit the protection database without running a
+   ptserver.  It can be used to set up a new cell without ever running
+   in noauth mode.  Run pt_util -h for help.
+
+** The fs setcrypt and fs getcrypt commands have been added.  These
+   commands allow the system administrator to require that the client
+   encrypt all authenticated traffic between the client workstation
+   and AFS.  The encryption used is weak, but is likely better than
+   sending unencrypted traffic in most environments.  Some functions,
+   such as looking for a volume may not be encrypted, but data
+   transfer certainly is.  By default data is not encrypted.  At this
+   time no significant experimentation with server performance has
+   been conducted.
+
+** By default AFS is compiled with AFS_AFSDB_ENV, enabling the -afsdb 
+   option to be given to afsd on startup.  If this option is used, then new
+   cells will be looked up using AFSDB records stored in DNS if they
+   are not found in CellServDB.  This means that users can create
+   cross-cell mountpoints in directories they control to access cells
+   not in root.afs, and that cells in root.afs need not be in the
+   client's CellServDB.
+
+** AFS database servers can be marked as read-only clones.  Surround
+   the hostname in square brackets on the bos addhost command and the
+   database server will never be elected sync site.  This is useful
+   for cells distributed over a wide region.
+
+** The AFS servers now support the -syslog flag.  This flag causes
+   them to log to syslog rather than to files.  This flag is not
+   supported on NT.  For all servers besides the salvager, the flag can
+   also be specified as -syslog=facility, where facility is an integer
+   facility code from syslog.h.  A -syslogfacility option is provided for
+   the salvager to accomplish the same goal.
+
+** If the --enable-fast-restart flag is given when configuring AFS,
+   then the salvager supports the -dontsalvage flag which causes it to 
+   exit without salvaging any volumes.  If this is configured into the 
+   third command of a fs process, then the fileserver will start without 
+   salvaging.  It will fail to attach volumes that need salvaging and they
+   can be salvaged manually.  This provides significantly better server 
+   startup performance at the cost of administrative complexity.
+
+** If the --enable-bitmap-later flag is given when configuring AFS,
+   then the fileserver creates bitmaps for free vnodes on demand, allowing 
+   faster starts.
+
+** If bosserver finds a BosConfig.new file at startup, it reads this
+   file and renames it to BosConfig.  This allows bosserver to be
+   reconfigured at next restart.
+
+** The bosserver can be placed in a restricted mode in
+   which AFS superusers are only granted limited access to the server
+   host. The following functionality is disabled when restricted mode is in
+   use:
+
+    bos exec
+    bos getlog (except for files with no '/'s in their name)*
+    bos create *
+    bos delete
+    bos install
+    bos uninstall
+
+   specific exceptions are made for functionality that "bos salvage"
+   uses:
+
+    a cron bnode who's name is "salvage-tmp", time is now, and command
+    begins with "/usr/afs/bin/salvager" may be created. This bnode 
+    deletes itself when complete, so no special "delete" support is needed. 
+    This functionality may be removed in the future if a "Salvage" RPC is 
+    implimented.
+
+    The file with the exact path /usr/afs/logs/SalvageLog may be fetched,
+    since that is how bos salvage [...] -showlog is implimented.
+
+    Restricted mode is enabled using a new bos command (bos setrestricted)
+    or bossever command line switch (bosserver -restricted). Restricted
+    mode can be disabled by a) sending the bosserver process a SIGFPE (which
+    will then allow restricted operations until the next restart or
+    setrestricted command) or b) editing /usr/afs/local/BosConfig 
+    (or BosConfig.new), and restarting the bosserver.
+
+** The bos UserList of trusted administrators can now contain
+   cross-realm Kerberos principals.
+
+** udebug now takes --server not --servers.
+
+** Several error messages have been improved to include volume
+   numbers.
+
+** Several new ports have been included for UNIX platforms: Darwin
+   (ppc_darwin_12 and ppc_darwin_13), Linux 2.4 (i386_linux24), Linux on
+   the Powerpc (ppc_linux22 and ppc_linux24), Linux on the Sparc
+   (sparc_linux22, sparc64_linux22 and sparc64_linux24) .
+
+** Incomplete FreeBSD and Alpha Linux ports are included.  The
+   FreeBSD port has a working server and the Alpha Linux port has a
+   partially working client.
+
+** A native client for Windows 95/98/ME has been added to the distribution.
+   With this program, a gateway machine is no longer required for Windows 9x
+   to access AFS files.  One drive letter will be created on your machine by
+   default - Z:.  The Z: drive will be the root of the AFS tree, allowing you
+   to browse all sites that have AFS servers available.  Additional drive
+   letters can be defined for other AFS directories.  A Windows Explorer
+   shell extension is included that allows you to right click on items
+   within an AFS tree to bring up an "AFS" menu item and perform various
+   operations on a file or directory.  The most useful item is "Access
+   Control Lists", which allows you to view and edit the permissions of a
+   particular directory.  Command line tools are also available in the
+   install directory.  These commands include klog, unlog, tokens, kpasswd,
+   symlink, fs and pts.  The installable includes a readme file that contains
+   more information on how to use the client program and known issues.
