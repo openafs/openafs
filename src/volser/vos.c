@@ -3936,7 +3936,7 @@ BackSys(as)
 		regex_t re;
 		char errbuf[256];
 
-		code = regcomp(&re, ti->data, REG_BASIC | REG_NOSUB);
+		code = regcomp(&re, ti->data, REG_NOSUB);
 		if (code != 0) {
 		    regerror(code, &re, errbuf, sizeof errbuf);
 		    fprintf(STDERR,
@@ -3964,7 +3964,7 @@ BackSys(as)
 		regex_t re;
 		char errbuf[256];
 
-		code = regcomp(&re, ti->data, REG_BASIC | REG_NOSUB);
+		code = regcomp(&re, ti->data, REG_NOSUB);
 		if (code != 0) {
 		    regerror(code, &re, errbuf, sizeof errbuf);
 		    fprintf(STDERR,
@@ -4051,7 +4051,7 @@ BackSys(as)
 		    char errbuf[256];
 
 		    /* XXX -- should just do the compile once! */
-		    code = regcomp(&re, ti->data, REG_BASIC | REG_NOSUB);
+		    code = regcomp(&re, ti->data, REG_NOSUB);
 		    if (code != 0) {
 			regerror(code, &re, errbuf, sizeof errbuf);
 			fprintf(STDERR,
@@ -4096,7 +4096,7 @@ BackSys(as)
 		    char errbuf[256];
 
 		    /* XXX -- should just do the compile once! */
-		    code = regcomp(&re, ti->data, REG_BASIC | REG_NOSUB);
+		    code = regcomp(&re, ti->data, REG_NOSUB);
 		    if (code != 0) {
 			regerror(code, &re, errbuf, sizeof errbuf);
 			fprintf(STDERR,
