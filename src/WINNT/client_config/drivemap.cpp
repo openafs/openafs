@@ -622,16 +622,6 @@ BOOL ActivateDriveMap (TCHAR chDrive, LPTSTR pszMapping, LPTSTR pszSubmountReq, 
       }
 
    // We now have a submount name and drive letter--map the network drive.
-   //
-   TCHAR szClient[ MAX_PATH ];
-   GetClientNetbiosName (szClient);
-
-   TCHAR szLocal[ MAX_PATH ] = TEXT("*:");
-   szLocal[0] = chDrive;
-
-   TCHAR szRemote[ MAX_PATH ];
-   wsprintf (szRemote, TEXT("\\\\%s\\%s"), szClient, szSubmount);
-
    DWORD rc=MountDOSDrive(chDrive,szSubmount,fPersistent);
    if (rc == NO_ERROR)
       return TRUE;

@@ -107,7 +107,7 @@ BOOL CALLBACK Binding_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 			            
                   lana_GetAfsNameString(nLanAdapter, isGateway, name);
                   SetDlgItemText (hDlg, IDC_BINDING_MESSAGE, name);
-				          EnableWindow(GetDlgItem(hDlg,IDC_NICSELECTION),(nLanAdapter!=-1));
+                  EnableWindow(GetDlgItem(hDlg,IDC_NICSELECTION),(nLanAdapter!=-1));
                   break;
                 }
             case IDC_NICSELECTION:
