@@ -3758,7 +3758,6 @@ DECL_PIOCTL(PCallBackAddr)
     afs_int32 i, j;
     struct unixuser *tu;
     struct srvAddr **addrs;
-    extern int afs_HaveCallBacksFrom(struct server *aserver);
 
     /*AFS_STATCNT(PCallBackAddr);*/
     if ( !afs_resourceinit_flag )      /* afs deamons havn't started yet */
