@@ -127,9 +127,10 @@ run( "$openafsdirpath->{'afssrvbindir'}/bos create $server fs fs ".
      "-cmd $openafsdirpath->{'afssrvlibexecdir'}/salvager -localauth");
 unwind( "$openafsdirpath->{'afssrvbindir'}/bos delete $server fs -localauth ");
 unwind( "$openafsdirpath->{'afssrvbindir'}/bos stop $server fs -localauth -wait");
+run("$openafsdirpath->{'afssrvbindir'}/bos restart $server -all -bosserver -localauth");
 
 print "Waiting for database elections: ";
-sleep(60);
+sleep(90);
 print "done.\n";
 # Past this point we want to control when bos shutdown happens
 $shutdown_needed = 0;
