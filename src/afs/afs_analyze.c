@@ -469,10 +469,10 @@ int afs_Analyze(register struct conn *aconn, afs_int32 acode,
 
 	 for (i=0; i < MAXHOSTS; i++) {
 	    if (tvp->status[i] != not_busy && tvp->status[i] != offline) {
-	       tvp->status[i] = not_busy; 
+		tvp->status[i] = not_busy; 
 	    }
-	    if (tvp->status[i] == not_busy)
-		 shouldRetry = 1;
+	    if (tvp->status[i] == not_busy) 
+		shouldRetry = 1;
 	 }
 	 afs_PutVolume(tvp, READ_LOCK);
       } else {
@@ -488,6 +488,9 @@ int afs_Analyze(register struct conn *aconn, afs_int32 acode,
       } else {
 	VSleep(afs_BusyWaitPeriod);	    /* poll periodically */
       }
+      if (shouldRetry != 0)
+	  areq->busyCount++;
+
       return shouldRetry; /* should retry */
     }
 	  
