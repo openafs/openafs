@@ -1,3 +1,243 @@
+2002-06-08 20:46  shadow
+
+	* src/rx/rx_kcommon.c: DELTA
+	STABLE12-revert-dont-spawn-kernel-thread-for-rxk-listener-20020426
+	AUTHOR shadow@dementia.org
+	
+	in some cases this causes shutdowns to hang forever. notably
+	shutdown -i0 -g6 -y works while reboot does not
+
+2002-06-08 16:29  shadow
+
+	* src/afs/afs_call.c: DELTA
+	STABLE12-warn-of-but-allow-bogus-shutdown-20020608 AUTHOR
+	shadow@dementia.org
+	
+	despite the danger of it, allow shutdown without umount, to prevent
+	hanging
+
+2002-06-08 07:34  zacheiss
+
+	* doc/txt/RELNOTES-1.2.5: 
+	DELTA STABLE12-add-1_2_5-release-notes-20020608 AUTHOR
+	zacheiss@mit.edu
+	
+	Add OpenAFS 1.2.5 Release Notes.
+
+2002-06-08 07:34  zacheiss
+
+	* doc/txt/RELNOTES-1.2.5: file RELNOTES-1.2.5 was initially added
+	on branch openafs-stable-1_2_x.
+
+2002-06-08 07:00  shadow
+
+	* src/: afs/afs_callback.c, vlserver/vldbint.xg: DELTA
+	STABLE12-getcellservdb-cleanup-20020608 AUTHOR shadow@dementia.org
+	
+	based on comments and suggestion from Srikanth Vishwanathan
+	<vsrikanth@in.ibm.com> avoid deadlock. send back variable length
+	list. allocate what we need to, and be care to clean up after
+	ourselves if there's an error. whether this should be variable
+	length is arguable but it's pretty clear no one was using this
+	before.
+
+2002-06-08 06:23  shadow
+
+	* src/: afs/afs_callback.c, fsint/common.xg: DELTA
+	STABLE12-getcellservdb-cleanup-20020608 AUTHOR shadow@dementia.org
+	
+	based on comments and suggestion from Srikanth Vishwanathan
+	<vsrikanth@in.ibm.com> avoid deadlock. send back variable length
+	list. allocate what we need to, and be care to clean up after
+	ourselves if there's an error. whether this should be variable
+	length is arguable but it's pretty clear no one was using this
+	before.
+
+2002-06-08 03:45  shadow
+
+	* src/fsint/afsint.xg: DELTA
+	
+	allocating memory from a pool and then having it be freed out from
+	under you is unwise
+	STABLE12-use-private-xdr-in-kernel-to-avoid-conflicts-over-memory-o
+	wnership-20020608 AUTHOR shadow@dementia.org
+
+2002-06-08 00:56  zacheiss
+
+	* NEWS: 
+	DELTA STABLE12-update-news-file-20020608 AUTHOR zacheiss@mit.edu
+	
+	Update NEWS file with important changes in 1.2.5 release.
+
+2002-06-08 00:50  shadow
+
+	* configure-libafs.in, configure.in: DELTA
+	STABLE12-create-openafs-1_2_5-20020608 AUTHOR shadow@dementia.org
+	
+	new release cycle
+
+2002-06-08 00:47  shadow
+
+	* src/: afs/afs_callback.c, afs/sysincludes.h, fsint/afsaux.c,
+	libafs/Makefile.common, libafs/MakefileProto.AIX.in,
+	libafs/MakefileProto.DARWIN.in, libafs/MakefileProto.FBSD.in,
+	libafs/MakefileProto.HPUX.in, libafs/MakefileProto.IRIX.in,
+	libafs/MakefileProto.LINUX.in, libafs/MakefileProto.OBSD.in,
+	libafs/MakefileProto.SOLARIS.in, rx/rx_kcommon.h, rx/xdr.c,
+	rx/xdr.h, rx/xdr_rx.c, rxgen/rpc_main.c, rxkad/rxkad_client.c,
+	rxkad/rxkad_common.c: DELTA
+	
+	allocating memory from a pool and then having it be freed out from
+	under you is unwise
+	STABLE12-use-private-xdr-in-kernel-to-avoid-conflicts-over-memory-o
+	wnership-20020608 AUTHOR shadow@dementia.org
+
+2002-06-07 21:34  zacheiss
+
+	* src/: afs/afs_call.c, afsd/afsd.c: 
+	DELTA STABLE12-afs-dont-allow-shutdown-before-umount-20020523
+	AUTHOR shadow@dementia.org
+	
+	fix afs to enforce that /afs must be unmounted, and afsd to report
+	it
+
+2002-06-07 21:31  zacheiss
+
+	* acinclude.m4: 
+	DELTA STABLE12-darwin-map-more-versions-20020607 AUTHOR
+	zacheiss@mit.edu
+	
+	Recognize MacOS X 10.1.5 as ppc_darwin_14.  It's compatible.
+
+2002-06-07 20:31  shadow
+
+	* src/afs/afs_segments.c: DELTA
+	STABLE12-avoid-deadlock-while-upgrading-vcache-lock-20020605 AUTHOR
+	kolya@mit.edu
+	
+	Delay calling afs_ProcessFS() and upgrading the shared vcache lock
+	until after the dcache locks have been released, to obey lock
+	ordering and avoid deadlock.
+
+2002-06-07 20:23  shadow
+
+	* src/des/crypt.c: DELTA
+	STABLE12-des-fix-linux-64bit-problems-more-usefully-20020607 AUTHOR
+	chas@cmf.nrl.navy.mil
+	
+	with a minor fix from shadow@dementia.org
+	
+	long isn't 32bit on ia64 or alpha
+
+2002-06-07 20:20  shadow
+
+	* src/util/: NTMakefile, dirpath_nt.h: DELTA
+	STABLE12-NT-dirpath-copy-in-useful-file-20020516 AUTHOR
+	shadow@dementia.org
+	
+	basically until NT port has been properly set up to deal with
+	dirpath, make it work as before
+
+2002-06-07 20:19  shadow
+
+	* src/afs/VNOPS/afs_vnop_attrs.c: DELTA
+	
+	cheap hack to avoid negative date problem which occasionally
+	plagues solaris
+	STABLE12-afs-attrs-cast-date-to-int-to-avoid-negative-dates-2002051
+	6 AUTHOR shadow@dementia.org
+
+2002-06-07 20:18  shadow
+
+	* src/afs/afs_pioctl.c: DELTA
+	
+	some versions of gcc compile the if used to decide whether to
+	allocate a pag badly. make life easier.
+	STABLE12-pioctl-avoid-inadvertantly-setting-new-pags-due-to-gcc-200
+	20516 AUTHOR nneul@umr.edu
+
+2002-06-07 20:17  shadow
+
+	* src/viced/host.c: DELTA
+	
+	based on report from lha@stacken.kth.se "identP = (struct Identity
+	*)malloc(1);
+	
+	This can't be right, there should not be an assumption how the
+	c-compiler will lay out code. I find it acceptable to do something
+	like this
+	
+		   /* sizeof valid + offset of valid. */
+		   i.. = malloc(sizeof(identP->valid) + (int)&(((struct
+	Identity *)0)->valid));
+	
+	But then, why not just allocate a whole identP and be happy. A
+	afsUUID is not that bloted (16 bytes) so I can't see why way this
+	is chosen. 20 bytes will probably be allocated on 32 bit platforms
+	for the whole struct Identity."
+	STABLE12-viced-malloc-dont-make-assumptions-about-the-compiler-2002
+	0524 AUTHOR shadow@dementia.org
+
+2002-06-07 20:16  shadow
+
+	* src/dir/buffer.c: DELTA
+	
+	liberal debugging code and hammering produced a failure where
+	newslot was actually walking on another call to newslot because the
+	bufferlock was being dropped before newslot incremented lockers on
+	the buffer it was allocating, allowing someone else to come along
+	and also think they could allocate it.
+	
+	by holding the bufferlock just a little longer we avoid this
+	STABLE12-dir-hold-afs-bufferlock-across-increment-of-buffer-lockers
+	-to-prevent-newslot-from-walking-on-stuff-20020514 AUTHOR
+	shadow@dementia.org
+
+2002-06-07 20:16  shadow
+
+	* src/viced/afsfileprocs.c: DELTA
+	
+	doesn't fix any problem that i can find, but results in ihandles
+	not having thousands of bogus references (and may fix problems if
+	refcnt were to wrap)
+	STABLE12-viced-cleanup-dirhandle-references-after-ourselves-2002050
+	9 AUTHOR shadow@dementia.org
+
+2002-06-07 20:15  shadow
+
+	* src/vol/ihandle.c: DELTA STABLE12-vol-ihandle-cleanup-20020429
+	AUTHOR vsrikanth@in.ibm.com
+	
+	this does fix some potential problems, even if none of them are the
+	CopyOnWrite problem. basically, ih_reallyclose() could reinsert a
+	now-unref'd fd handle into the wrong list when cleaning up, and
+	this cleans up the code considerably.
+
+2002-06-07 20:15  shadow
+
+	* src/viced/host.c: DELTA
+	STABLE12-fix-pointer-argument-type-in-hLookup-20020422 AUTHOR
+	kolya@mit.edu
+	
+	The heldp argument to h_Lookup should be an int* rather than int,
+	as pointed out by amu@alum.mit.edu.
+
+2002-06-07 20:14  shadow
+
+	* src/viced/host.c: DELTA
+	STABLE12-prevent-host-deletion-race-20020415 AUTHOR kolya@mit.edu
+	
+	Make h_Lookup_r return the host held, and ensure that it's not
+	deleted at that point; otherwise, the host may be deleted by
+	another thread between a call to h_Lookup_r and the time when we
+	actually get around to h_Hold'ing it.
+
+2002-06-07 20:13  shadow
+
+	* src/afs/VNOPS/afs_vnop_remove.c: DELTA
+	STABLE12-fix-__afs-file-creation-20020411 AUTHOR kolya@mit.edu
+	
+	Pass &treq to afsrename() when preserving a currently-open file.
 2002-05-15 16:07  zacheiss
 
         * src/: afs/LINUX/osi_misc.c, rx/LINUX/rx_knet.c: 
