@@ -102,7 +102,7 @@ extern kmutex_t afs_rxglobal_lock;
 #undef AfsLargeFileUio
 #define AfsLargeFileUio(uio)       ( (uio)->_uio_offset._p._u ? 1 : 0 )
 #undef AfsLargeFileSize
-#define AfsLargeFileSize(pos, off) ( ((offset_t)(pos)+(offset_t)(off) > (offset_t)MAXOFF_T)?1:0)
+#define AfsLargeFileSize(pos, off) ( ((offset_t)(pos)+(offset_t)(off) > (offset_t)0x7fffffff)?1:0)
 #endif
 
 #endif /* _OSI_MACHDEP_H_ */
