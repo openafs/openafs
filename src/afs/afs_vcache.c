@@ -2902,12 +2902,6 @@ shutdown_vcache(void)
      * free vcache entries and all the vcache entries are active ones then we allocate
      * an additional one - admittedly we almost never had that occur.
      */
-#if	!defined(AFS_OSF_ENV)
-    afs_osi_Free(Initial_freeVCList, afs_cacheStats * sizeof(struct vcache));
-#endif
-#ifdef  KERNEL_HAVE_PIN
-    unpin(Initial_freeVCList, afs_cacheStats * sizeof(struct vcache));
-#endif
 
     {
 	register struct afs_q *tq, *uq;
@@ -2979,6 +2973,12 @@ shutdown_vcache(void)
     }
     afs_cbrSpace = 0;
 
+#if	!defined(AFS_OSF_ENV)
+    afs_osi_Free(Initial_freeVCList, afs_cacheStats * sizeof(struct vcache));
+#endif
+#ifdef  KERNEL_HAVE_PIN
+    unpin(Initial_freeVCList, afs_cacheStats * sizeof(struct vcache));
+#endif
 #if	!defined(AFS_OSF_ENV)
     freeVCList = Initial_freeVCList = 0;
 #endif
