@@ -405,7 +405,7 @@ void GetUncServerName(int lanaNumber, BOOL isGateway, TCHAR* name, int type)
             strcpy(mountRoot, "afs"); 
         RegCloseKey(parmKey);
         mountRoot[len]=0;       /*safety see ms-help://MS.MSDNQTR.2002OCT.1033/sysinfo/base/regqueryvalueex.htm*/
-        if ((*pmount=='/') || (*pmount='\\'))
+        if ((*pmount=='/') || (*pmount=='\\'))
             pmount++;
 
         _tcscpy(name, pmount);
