@@ -1275,7 +1275,7 @@ $(JUAFS)/Krxstat.xdr.o: $(AFSINT)/Krxstat.xdr.c
 
 
 clean:
-	-$(RM) -rf UAFS* AFSWEB* nsapi des afs afsint config rx
+	-$(RM) -rf UAFS* JUAFS* AFSWEB* nsapi des afs afsint config rx
 	-$(RM) -f  h net netinet rpc ufs machine inet nfs sys des linktest
 
 
