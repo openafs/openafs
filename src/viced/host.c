@@ -545,7 +545,10 @@ struct host *h_Alloc_r(register struct rx_connection *r_con)
     host = GetHT();
 
     h_hashChain = (struct h_hashChain*) malloc(sizeof(struct h_hashChain));
-    assert(h_hashChain);
+    if (!h_hashChain) {
+        ViceLog(0, ("Failed malloc in h_Alloc_r\n"));
+        assert(0);
+    }
     h_hashChain->hostPtr = host;
     h_hashChain->addr = rxr_HostOf(r_con);
     h_hashChain->next = hostHashTable[index];
@@ -831,9 +834,15 @@ void h_Enumerate(int (*proc)(), char *param)
 	return;
     }
     list = (struct host **)malloc(hostCount * sizeof(struct host *));
-    assert(list != NULL);
+    if (!list) {
+        ViceLog(0, ("Failed malloc in h_Enumerate\n"));
+	assert(0);
+    }
     held = (int *)malloc(hostCount * sizeof(int));
-    assert(held != NULL);
+    if (!held) {
+        ViceLog(0, ("Failed malloc in h_Enumerate\n"));
+	assert(0);
+    }
     for (count = 0, host = hostList ; host ; host = host->next, count++) {
 	list[count] = host;
 	if (!(held[count] = h_Held_r(host)))
@@ -888,6 +897,10 @@ void hashInsertUuid_r(struct afsUUID *uuid, struct host* host)
 
         /* insert into beginning of list for this bucket */
 	chain = (struct h_hashChain *)malloc(sizeof(struct h_hashChain));
+	if (!chain) {
+	    ViceLog(0, ("Failed malloc in hashInsertUuid_r\n"));
+	    assert(0);
+	}
 	assert(chain);
 	chain->hostPtr = host;
 	chain->next = hostUuidHashTable[index];
@@ -936,6 +949,10 @@ retry:
 	H_LOCK
 	if ( code == RXGEN_OPCODE ) {
 		identP = (struct Identity *)malloc(sizeof(struct Identity));
+		if (!identP) {
+		    ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
+		    assert(0);
+		}
 		identP->valid = 0;
 		rx_SetSpecific(tcon, rxcon_ident_key, identP);
 		/* The host on this connection was unable to respond to 
@@ -955,6 +972,10 @@ retry:
 	} else if (code == 0) {
 		interfValid = 1;
 		identP = (struct Identity *)malloc(sizeof(struct Identity));
+		if (!identP) {
+		    ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
+		    assert(0);
+		}
 		identP->valid = 1;
 		identP->uuid = interf.uuid;
 		rx_SetSpecific(tcon, rxcon_ident_key, identP);
@@ -1028,7 +1049,11 @@ retry:
 		code = RXAFSCB_WhoAreYou(host->callback_rxcon, &interf);
 		H_LOCK
 		if ( code == RXGEN_OPCODE ) {
-		  identP = (struct Identity *)malloc(sizeof(struct Identity));
+		    identP = (struct Identity *)malloc(sizeof(struct Identity));
+		    if (!identP) {
+			ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
+			assert(0);
+		    }
 		    identP->valid = 0;
 		    rx_SetSpecific(tcon, rxcon_ident_key, identP);
 		    ViceLog(25,
@@ -1038,6 +1063,10 @@ retry:
 		} else if (code == 0) {
 		    interfValid = 1;
 		    identP = (struct Identity *)malloc(sizeof(struct Identity));
+		    if (!identP) {
+			ViceLog(0, ("Failed malloc in h_GetHost_r\n"));
+			assert(0);
+		    }
 		    identP->valid = 1;
 		    identP->uuid = interf.uuid;
 		    rx_SetSpecific(tcon, rxcon_ident_key, identP);
@@ -1150,6 +1179,10 @@ static int MapName_r(char *aname, char *acell, afs_int32 *aval)
 	    }		    
 	    foreign = 1;  /* attempt cross-cell authentication */
 	    tname = (char *) malloc(anamelen+cnamelen+2);
+	    if (!tname) {
+		ViceLog(0, ("Failed malloc in MapName_r\n"));
+		assert(0);
+	    }
 	    strcpy(tname, aname);
 	    tname[anamelen] = '@';
 	    strcpy(tname+anamelen+1, acell);
@@ -1461,6 +1494,10 @@ char *h_UserName(struct client *client)
 
     lids.idlist_len = 1;
     lids.idlist_val = (afs_int32 *)malloc(1*sizeof(afs_int32));
+    if (!lids.idlist_val) {
+	ViceLog(0, ("Failed malloc in h_UserName\n"));
+	assert(0);
+    }
     lnames.namelist_len = 0;
     lnames.namelist_val = (prname *)0;
     lids.idlist_val[0] = client->ViceId;
@@ -2027,7 +2064,10 @@ initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 	    interface = (struct Interface *)
 			malloc(sizeof(struct Interface) +
 			       (sizeof(afs_int32) * (count-1)));
-	    assert(interface);
+	    if (!interface) {
+		ViceLog(0, ("Failed malloc in initInterfaceAddr_r\n"));
+		assert(0);
+	    }
 	    interface->numberOfInterfaces = count;
 	} else {
 	    interface = (struct Interface *)
@@ -2063,7 +2103,10 @@ void hashInsert_r(afs_int32 addr, struct host* host)
 
         /* insert into beginning of list for this bucket */
 	chain = (struct h_hashChain *)malloc(sizeof(struct h_hashChain));
-	assert(chain);
+	if (!chain) {
+	    ViceLog(0, ("Failed malloc in hashInsert_r\n"));
+	    assert(0);
+	}
 	chain->hostPtr = host;
 	chain->next = hostHashTable[index];
 	chain->addr = addr;
@@ -2107,6 +2150,10 @@ addInterfaceAddr_r(struct host *host, afs_int32 addr)
 	    interface = (struct Interface *)
 			malloc(sizeof(struct Interface) +
 			       (sizeof(afs_int32) * number));
+	    if (!interface) {
+		ViceLog(0, ("Failed malloc in addInterfaceAddr_r\n"));
+		assert(0);
+	    }
 	    interface->numberOfInterfaces = number + 1;
 	    interface->uuid = host->interface->uuid;
 	    for (i = 0 ; i < number ; i++)

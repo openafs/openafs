@@ -1842,16 +1842,32 @@ RXGetVolumeStatus(AFSFetchVolumeStatus *status, char **name, char **offMsg,
     /* now allocate and copy these things; they're freed by the RXGEN stub */
     temp = strlen(V_name(volptr)) + 1;
     *name = malloc(temp);
+    if (!*name) {
+	ViceLog(0, ("Failed malloc in RXGetVolumeStatus\n"));
+	assert(0);
+    }
     strcpy(*name, V_name(volptr));
     temp = strlen(V_offlineMessage(volptr)) + 1;
     *offMsg = malloc(temp);
+    if (!*offMsg) {
+	ViceLog(0, ("Failed malloc in RXGetVolumeStatus\n"));
+	assert(0);
+    }
     strcpy(*offMsg, V_offlineMessage(volptr));
 #if TRANSARC_VOL_STATS
     *motd = malloc(1);
+    if (!*motd) {
+	ViceLog(0, ("Failed malloc in RXGetVolumeStatus\n"));
+	assert(0);
+    }
     strcpy(*motd, nullString);
 #else
     temp = strlen(V_motd(volptr)) + 1;
     *motd = malloc(temp);
+    if (!*motd) {
+	ViceLog(0, ("Failed malloc in RXGetVolumeStatus\n"));
+	assert(0);
+    }
     strcpy(*motd, V_motd(volptr));
 #endif /* FS_STATS_DETAILED */
 
@@ -1940,8 +1956,15 @@ static char *AllocSendBuffer()
     FS_LOCK
     afs_buffersAlloced++;
     if (!freeBufferList) {
+	char *tmp;
 	FS_UNLOCK
-	return malloc(sendBufSize);
+
+	tmp = malloc(sendBufSize);
+	if (!tmp) {
+	    ViceLog(0, ("Failed malloc in AllocSendBuffer\n"));
+	    assert(0);
+	}
+	return tmp;
     }
     tp = freeBufferList;
     freeBufferList = tp->next;
@@ -2330,6 +2353,10 @@ afs_int32 SRXAFS_FetchACL (struct rx_call *acall,
 
     AccessList->AFSOpaque_len = 0;
     AccessList->AFSOpaque_val = malloc(AFSOPAQUEMAX);
+    if (!AccessList->AFSOpaque_val) {
+	ViceLog(0, ("Failed malloc in SRXAFS_FetchACL\n"));
+	assert(0);
+    }
 
     /*
      * Get volume/vnode for the fetched file; caller's access rights to it
@@ -2507,9 +2534,17 @@ afs_int32 SRXAFS_BulkStatus(struct rx_call *acall,
     /* allocate space for return output parameters */
     OutStats->AFSBulkStats_val = (struct AFSFetchStatus *)
 	malloc(nfiles * sizeof(struct AFSFetchStatus));
+    if (!OutStats->AFSBulkStats_val) {
+	ViceLog(0, ("Failed malloc in SRXAFS_BulkStatus\n"));
+	assert(0);
+    }
     OutStats->AFSBulkStats_len = nfiles;
     CallBacks->AFSCBs_val = (struct AFSCallBack *)
 	malloc(nfiles * sizeof(struct AFSCallBack));
+    if (!CallBacks->AFSCBs_val) {
+	ViceLog(0, ("Failed malloc in SRXAFS_BulkStatus\n"));
+	assert(0);
+    }
     CallBacks->AFSCBs_len = nfiles;
 
     if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
@@ -2643,9 +2678,17 @@ afs_int32 SRXAFS_InlineBulkStatus(struct rx_call *acall,
     /* allocate space for return output parameters */
     OutStats->AFSBulkStats_val = (struct AFSFetchStatus *)
 	malloc(nfiles * sizeof(struct AFSFetchStatus));
+    if (!OutStats->AFSBulkStats_val) {
+	ViceLog(0, ("Failed malloc in SRXAFS_FetchStatus\n"));
+	assert(0);
+    }
     OutStats->AFSBulkStats_len = nfiles;
     CallBacks->AFSCBs_val = (struct AFSCallBack *)
 	malloc(nfiles * sizeof(struct AFSCallBack));
+    if (!CallBacks->AFSCBs_val) {
+	ViceLog(0, ("Failed malloc in SRXAFS_FetchStatus\n"));
+	assert(0);
+    }
     CallBacks->AFSCBs_len = nfiles;
 
     if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon))) {

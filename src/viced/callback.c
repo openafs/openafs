@@ -518,10 +518,18 @@ int InitCallBack(int nblks)
     /* N.B. The "-1", below, is because
       FE[0] and CB[0] are not used--and not allocated */
     FE = ((struct FileEntry *)(malloc(sizeof(struct FileEntry)*nblks)))-1;
+    if (!FE) {
+	ViceLog(0, ("Failed malloc in InitCallBack\n"));
+	assert(0);
+    }
     cbstuff.nFEs = nblks;
     while (cbstuff.nFEs)
 	FreeFE(&FE[cbstuff.nFEs]); /* This is correct */
     CB = ((struct CallBack *)(malloc(sizeof(struct CallBack)*nblks)))-1;
+    if (!CB) {
+	ViceLog(0, ("Failed malloc in InitCallBack\n"));
+	assert(0);
+    }
     cbstuff.nCBs = nblks;
     while (cbstuff.nCBs)
 	FreeCB(&CB[cbstuff.nCBs]); /* This is correct */
@@ -1886,9 +1894,11 @@ int MultiBreakCallBackAlternateAddress_r(struct host *host, struct AFSCBFids *af
 
 	i = host->interface->numberOfInterfaces;
 	addr = malloc(i * sizeof(afs_int32));
-	if (!addr) return 1;
 	conns = malloc(i * sizeof(struct rx_connection *));
-	if (!conns) { free(addr); return 1; }
+	if (!addr || !conns) {
+	    ViceLog(0, ("Failed malloc in MultiBreakCallBackAlternateAddress_r\n"));
+	    assert(0);
+	}
 
 	/* initialize alternate rx connections */
 	for ( i=0,j=0; i < host->interface->numberOfInterfaces; i++)
@@ -1971,10 +1981,12 @@ int MultiProbeAlternateAddress_r(struct host *host)
 	    sc = rxnull_NewClientSecurityObject();
 
 	i = host->interface->numberOfInterfaces;
-	addr = malloc(i * sizeof(afs_int32));
-	if (!addr) return 1;
+	addr = malloc(i * sizeof(afs_int32));	
 	conns = malloc(i * sizeof(struct rx_connection *));
-	if (!conns) { free(addr); return 1; }
+	if (!addr || !conns) {
+	    ViceLog(0, ("Failed malloc in MultiProbeAlternateAddress_r\n"));
+	    assert(0);
+	}
 
 	/* initialize alternate rx connections */
 	for ( i=0,j=0; i < host->interface->numberOfInterfaces; i++)
