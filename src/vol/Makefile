@@ -76,14 +76,7 @@ vlib.a:	${VLIBOBJS} AFS_component_version_number.o
 
 # new salvager:  remove references to /vice by linking with novice.o
 salvager: vol-salvage.o physio.o vlib.a
-	case ${SYS_NAME} in \
-                *linux* ) \
-                        ${CC} ${LDFLAGS} -o salvager vol-salvage.o physio.o \
-				${LIBS}  ;; \
-                *) \
-                        ${CC} ${LDFLAGS} -o salvager vol-salvage.o physio.o \
-				${LIBS};; \
-        esac
+	${CC} ${LDFLAGS} -o salvager vol-salvage.o physio.o ${LIBS}
 
 vol-salvage: vol-salvage.o
 vol-info: vol-info.o physio.o ihandle.o
