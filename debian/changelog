@@ -1,3 +1,14 @@
+openafs (1.2.8-3) unstable; urgency=medium
+
+  * Patch from Eduard Bloch <blade@debian.org> to build the PAM module for
+    kaserver users; the main thing this patch does in create a bunch of
+    PIC object files so it is a policy-conformant shared library, Closes:
+    #174668 
+  * Do not include -I/usr/include and especially -I/usr/include/sys in the
+    PAM Makefile so gcc 3.2 works; already fixed upstream, Closes: #176538
+
+ -- Sam Hartman <hartmans@debian.org>  Sun, 19 Jan 2003 17:44:53 -0500
+
 openafs (1.2.8-2) unstable; urgency=low
 
   * Convert v5 principal names to v4 style names in rxkad 2b.  Especially
