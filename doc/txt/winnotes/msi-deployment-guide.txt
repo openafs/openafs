@@ -13,6 +13,7 @@ OpenAFS for Windows
      2.2   Existing registry values
      2.3   Replacing Configuration Files
      2.4   Adding Domain Specific Registry Keys
+     2.5   Adding Site Specific Freelance Registry Keys
 
      3.	 Additional resources
 
@@ -564,6 +565,89 @@ OpenAFS for Windows
     integrated logon) and 'LOCALHOST' (disable integrated logon and
     fail logins silently).
 
+2.5 Adding Site Specific Freelance Registry Keys
+
+    Following is an example for adding site specific Freelance registry keys
+    to pre-populate the Mountpoints and Symlinks in the fake root.afs volume.
+
+    Columns that are unspecified should be left empty.
+
+    We create a new feature and component to hold the new registry keys.
+
+    'Feature' table:
+
+    (new row)
+	Feature		: 'feaFreelanceKeys'
+	Feature Parent	: 'feaClient'
+	Display		: 0
+	Level		: 30
+	Attributes	: 10
+
+    'Component' table:
+
+	(new row)
+    Component	: 'rcm_FreelanceKeys'
+	ComponentId	: '{4E3B3CBF4-9AE7-40C3-7B09-C48CF842C583}'
+	Directory	: 'TARGETDIR'
+	Attributes	: 4
+	KeyPath		: 'reg_freekey0'
+
+    'FeatureComponents' table:
+
+    (new row)
+	Feature		: 'feaFreelanceKeys'
+	Component	: 'rcm_FreelanceKeys'
+
+    'Registry' table:
+
+	(new row)
+	Registry	: 'reg_freekey0'
+	Root		: 2
+	Key		: 'SOFTWARE\OpenAFS\Client\Freelance'
+	Component	: 'rcm_FreelanceKeys'
+
+	(new row)
+	Registry	: 'reg_freekey1'
+	Root		: 2
+	Key		: 'SOFTWARE\OpenAFS\Client\Freelance'
+	Name		: '0'
+        Value           : 'athena.mit.edu#athena.mit.edu:root.cell.'
+	Component	: 'rcm_FreelanceKeys'
+
+	(new row)
+	Registry	: 'reg_freekey2'
+	Root		: 2
+	Key		: 'SOFTWARE\OpenAFS\Client\Freelance'
+	Name		: '1'
+        Value           : '.athena.mit.edu%athena.mit.edu:root.cell.'
+	Component	: 'rcm_FreelanceKeys'
+
+	(new row)
+	Registry	: 'reg_freekey3'
+	Root		: 2
+	Key		: 'SOFTWARE\OpenAFS\Client\Freelance\Symlinks'
+	Component	: 'rcm_FreelanceKeys'
+
+	(new row)
+	Registry	: 'reg_freekey4'
+	Root		: 2
+	Key		: 'SOFTWARE\OpenAFS\Client\Freelance\Symlinks'
+	Name		: '0'
+        Value           : 'athena:athena.mit.edu.'
+	Component	: 'rcm_FreelanceKeys'
+
+	(new row)
+	Registry	: 'reg_freekey5'
+	Root		: 2
+	Key		: 'SOFTWARE\OpenAFS\Client\Freelance\Symlinks'
+	Name		: '0'
+        Value           : '.athena:.athena.mit.edu.'
+	Component	: 'rcm_FreelanceKeys'
+
+    The example adds a read-only mountpoint to the athena.mit.edu
+    cell's root.afs volume as well as a read-write mountpoint.  Aliases
+    are also provided using symlinks.
+
 ----------------------------------------------------------------------
 
 3   Additional Resources
@@ -641,6 +725,9 @@ OpenAFS for Windows
     If you have used a different MSI package to install OpenAFS and
     wish to upgrade it you can author rows into the 'Upgrade' table as
     described in the Platform SDK.
+
+    When performing an upgrade with msiexec.exe execute the MSI with
+    the repair options "vomus".
 
 ----------------------------------------------------------------------
 
