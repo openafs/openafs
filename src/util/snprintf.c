@@ -16,7 +16,7 @@ RCSID
 #else
 #include <winsock2.h>
 #endif
-#if defined(AFS_AIX32_ENV) || defined(AFS_SUN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_AIX32_ENV) || defined(AFS_SUN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_HPUX_ENV)
 #include <sys/socket.h>
 #endif
 #ifdef HAVE_STRING_H
