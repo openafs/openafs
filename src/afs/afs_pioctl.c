@@ -1845,6 +1845,13 @@ static PUnlog(avc, afun, areq, ain, aout, ainSize, aoutSize)
 	    afs_ResetUserConns(tu);
 	    tu->refCount--;
 	    ObtainWriteLock(&afs_xuser,228);
+#ifdef UKERNEL
+            /* set the expire times to 0, causes
+             * afs_GCUserData to remove this entry
+             */
+            tu->ct.EndTimestamp = 0;
+            tu->tokenTime = 0;
+#endif  /* UKERNEL */
 	}
     }
     ReleaseWriteLock(&afs_xuser);
