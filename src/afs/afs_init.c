@@ -40,6 +40,9 @@ char *afs_sysnamelist[MAXNUMSYSNAMES];	/* For support of a list of sysname */
 int afs_sysnamecount = 0;
 struct volume *Initialafs_freeVolList;
 int afs_memvolumes = 0;
+#ifdef AFS_OBSD_ENV
+static struct vnode *volumeVnode;
+#endif
 
 /*
  * Initialization order is important.  Must first call afs_CacheInit,
@@ -216,6 +219,51 @@ void afs_ComputeCacheParms(void)
 
 
 /*
+ * LookupInodeByPath
+ *
+ * Look up inode given a file name.
+ * Optionally return the vnode too.
+ * If the vnode is not returned, we rele it.
+ */
+static int LookupInodeByPath(char *filename, ino_t *inode, struct vnode **fvpp)
+{
+    afs_int32 code;
+
+#ifdef AFS_LINUX22_ENV
+    struct dentry *dp;
+    code = gop_lookupname(filename, AFS_UIOSYS, 0, NULL, &dp);
+    if (code) return code;
+    *inode = dp->d_inode->i_ino;
+    dput(dp);
+#else
+    struct vnode *filevp;
+    code = gop_lookupname(filename, AFS_UIOSYS, 0, NULL, &filevp);
+    if (code) return code;
+    *inode = afs_vnodeToInumber(filevp);
+    if (fvpp)
+	*fvpp = filevp;
+    else {
+#if defined(AFS_DEC_ENV)
+	grele(filevp);
+#else
+	AFS_RELE(filevp);
+#endif
+    }
+#endif /* AFS_LINUX22_ENV */
+
+    return 0;
+}
+
+int afs_InitCellInfo(char *afile)
+{
+    ino_t inode;
+    int code;
+
+    code = LookupInodeByPath(afile, &inode, NULL);
+    return afs_cellname_init(inode, code);
+}
+
+/*
  * afs_InitVolumeInfo
  *
  * Description:
@@ -231,48 +279,32 @@ void afs_ComputeCacheParms(void)
  *	WARNING: Data will be written to this file over time by AFS.
  */
 
-static int LookupInodeByPath(char *filename, ino_t *inode)
-{
-    afs_int32 code;
-
-#ifdef AFS_LINUX22_ENV
-    struct dentry *dp;
-    code = gop_lookupname(filename, AFS_UIOSYS, 0, NULL, &dp);
-    if (code) return code;
-    *inode = dp->d_inode->i_ino;
-    dput(dp);
-#else
-    struct vnode *filevp;
-    code = gop_lookupname(filename, AFS_UIOSYS, 0, NULL, &filevp);
-    if (code) return code;
-    *inode = afs_vnodeToInumber(filevp);
-#ifdef AFS_DEC_ENV
-    grele(filevp);
-#else
-    AFS_RELE((struct vnode *)filevp);
-#endif
-#endif /* AFS_LINUX22_ENV */
-
-    return 0;
-}
-
-int afs_InitCellInfo(char *afile)
-{
-    ino_t inode;
-    int code;
-
-    code = LookupInodeByPath(afile, &inode);
-    return afs_cellname_init(inode, code);
-}
-
 int afs_InitVolumeInfo(char *afile)
 {
     int code;
     struct osi_file *tfile;
 
     AFS_STATCNT(afs_InitVolumeInfo);
-    code = LookupInodeByPath(afile, &volumeInode);
-    if (code) return code;
+#if defined(AFS_OBSD_ENV)
+    /*
+     * On Open/NetBSD, we can get into big trouble if we don't hold the volume file
+     * vnode.  SetupVolume holds afs_xvolume lock exclusive.
+     * SetupVolume->GetVolSlot->UFSGetVolSlot->{GetVolCache or WriteVolCache}
+     * ->osi_UFSOpen->VFS_VGET()->ffs_vget->getnewvnode->vgone on some vnode.
+     * If it's AFS, then ->vclean->afs_nbsd_reclaim->FlushVCache->QueueVCB->
+     * GetVolume->FindVolume-> waits on afs_xvolume lock !
+     *
+     * In general, anything that's called with afs_xvolume locked must not
+     * end up calling getnewvnode().  The only cases I've found so far
+     * are things which try to get the volumeInode, and since we keep
+     * it in the cache...
+     */
+    code = LookupInodeByPath(afile, &volumeInode, &volumeVnode);
+#else
+    code = LookupInodeByPath(afile, &volumeInode, NULL);
+#endif
+    if (code)
+	return code;
     tfile = afs_CFileOpen(volumeInode);
     afs_CFileTruncate(tfile, 0);
     afs_CFileClose(tfile);
@@ -633,8 +665,15 @@ void shutdown_cache(void)
     afs_cacheFiles = afs_cacheBlocks = 0;
     pag_epoch = maxIHint = nihints = usedihint = 0;
     pagCounter = 0;
+#ifdef AFS_OBSD_ENV
+    AFS_RELE(volumeVnode);		/* let it go, finally. */
+    volumeVnode = NULL;
+    if (cacheDev.held_vnode) {
+	AFS_RELE(cacheDev.held_vnode);
+	cacheDev.held_vnode = NULL;
+    }
+#endif
     cacheInode = volumeInode = (ino_t)0;
-
 
     cacheInfoModTime = 0;
 

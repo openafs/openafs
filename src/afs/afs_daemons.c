@@ -162,6 +162,9 @@ void afs_Daemon(void)
 	    DFlush();			/* write out dir buffers */
 	    afs_WriteThroughDSlots();	/* write through cacheinfo entries */
 	    afs_FlushActiveVcaches(1);/* keep flocks held & flush nfs writes */
+#ifdef AFS_DISCON_ENV
+	    afs_StoreDirtyVcaches();
+#endif
 	    afs_CheckRXEpoch();
 	    last1MinCheck = now;
 	}

@@ -102,31 +102,27 @@ int afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
      * anyway, so the difference between 512K and 1000000 shouldn't matter
      * much, and "&" is a lot faster than "%".
      */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     /* nfs on these systems puts an 0 in nsec and stores the nfs usec (aka 
        dataversion) in va_gen */
 
     attrs->va_atime.tv_nsec = attrs->va_mtime.tv_nsec =
-	attrs->va_ctime.tv_nsec =0;
-    attrs->va_blocksize = PAGESIZE;		/* XXX Was 8192 XXX */
+	attrs->va_ctime.tv_nsec = 0;
     attrs->va_gen = hgetlo(avc->m.DataVersion);
-    attrs->va_flags = 0;
-#else
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) 
+#elif defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_OBSD_ENV)
     attrs->va_atime.tv_nsec = attrs->va_mtime.tv_nsec =
-	attrs->va_ctime.tv_nsec =
-	    (hgetlo(avc->m.DataVersion) & 0x7ffff) * 1000;
-#if defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-    attrs->va_blocksize = PAGESIZE;		/* XXX Was 8192 XXX */
-#else
-    attrs->va_blksize = PAGESIZE;		/* XXX Was 8192 XXX */
-#endif
+	attrs->va_ctime.tv_nsec = (hgetlo(avc->m.DataVersion) & 0x7ffff) * 1000;
 #else
     attrs->va_atime.tv_usec = attrs->va_mtime.tv_usec =
-	attrs->va_ctime.tv_usec =
-	    (hgetlo(avc->m.DataVersion) & 0x7ffff);
-    attrs->va_blocksize = PAGESIZE;		/* XXX Was 8192 XXX */
+	attrs->va_ctime.tv_usec = (hgetlo(avc->m.DataVersion) & 0x7ffff);
 #endif
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV) || defined(AFS_OSF_ENV)
+    attrs->va_flags = 0;
+#endif
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV)
+    attrs->va_blksize = PAGESIZE;		/* XXX Was 8192 XXX */
+#else
+    attrs->va_blocksize = PAGESIZE;		/* XXX Was 8192 XXX */
 #endif
 #ifdef AFS_DEC_ENV
     /* Have to use real device #s in Ultrix, since that's how FS type is
@@ -140,42 +136,32 @@ int afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
 #else 
     attrs->va_rdev = 1;
 #endif
+
     /*
      * Below return 0 (and not 1) blocks if the file is zero length. This conforms
      * better with the other filesystems that do return 0.	
      */
-#if   defined(AFS_OSF_ENV)
-#ifdef	va_size_rsv
-    attrs->va_size_rsv = 0;
-#endif
-/* XXX do this */
-/*    attrs->va_gen = avc->m.DataVersion;*/
-    attrs->va_flags = 0;
-#endif	/* AFS_OSF_ENV || AFS_DARWIN_ENV */
-
 #if !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #if !defined(AFS_HPUX_ENV)
 #ifdef	AFS_SUN5_ENV
     attrs->va_nblocks = (attrs->va_size? ((attrs->va_size + 1023)>>10) << 1 : 0);
-#else
-#if defined(AFS_SGI_ENV)
+#elif defined(AFS_SGI_ENV)
     attrs->va_blocks = BTOBB(attrs->va_size);
 #else
     attrs->va_blocks = (attrs->va_size? ((attrs->va_size + 1023)>>10) << 1 : 0);
 #endif
-#endif
 #else /* !defined(AFS_HPUX_ENV) */
     attrs->va_blocks = (attrs->va_size? ((attrs->va_size + 1023)>>10) : 0);
 #endif /* !defined(AFS_HPUX_ENV) */
-#else	/* ! AFS_OSF_ENV && !AFS_XBSD_ENV */
+#else	/* ! AFS_OSF_ENV && !AFS_DARWIN_ENV && !AFS_XBSD_ENV */
     attrs->va_bytes = (attrs->va_size? (attrs->va_size + 1023) : 1024);
 #ifdef	va_bytes_rsv
     attrs->va_bytes_rsv = -1;
 #endif
-#endif	/* ! AFS_OSF_ENV */
+#endif	/* ! AFS_OSF_ENV && !AFS_DARWIN_ENV && !AFS_XBSD_ENV */
 
 #ifdef AFS_LINUX22_ENV
-    /* And linux has it's own stash as well. */
+    /* And linux has its own stash as well. */
     vattr2inode(AFSTOV(avc), attrs);
 #endif
 #ifdef notdef

@@ -242,65 +242,65 @@ int HandleFlock(register struct vcache *avc, int acom,
 	 */
 	if ((avc->flockCount < 0) && (getpid() != avc->ownslock)) {
 #ifdef	AFS_AIX41_ENV
-	  if (onlymine || (getppid() != avc->ownslock)) {
+	    if (onlymine || (getppid() != avc->ownslock)) {
 #else
-	  if (onlymine || (u.u_procp->p_ppid != avc->ownslock)) {
+	    if (onlymine || (u.u_procp->p_ppid != avc->ownslock)) {
 #endif
-	    ReleaseWriteLock(&avc->lock);
-	    return 0;
-	  }
+		ReleaseWriteLock(&avc->lock);
+		return 0;
+	    }
 	}
 #endif
 	if (lockIdcmp2(&flock, avc, NULL, onlymine, clid)) {
-	  ReleaseWriteLock(&avc->lock); 	    
-	  return 0;
+	    ReleaseWriteLock(&avc->lock); 	    
+	    return 0;
  	} 
 #ifdef AFS_AIX_ENV
 	avc->ownslock = 0; 
 #endif
  	if (avc->flockCount == 0) { 	    
-	  ReleaseWriteLock(&avc->lock);
-	  return 0		/*ENOTTY*/;
-	  /* no lock held */
+	    ReleaseWriteLock(&avc->lock);
+	    return 0		/*ENOTTY*/;
+	    /* no lock held */
  	} 	
 	/* unlock the lock */ 
 	if (avc->flockCount > 0) {
-	  slpp = &avc->slocks; 
-	  for (slp = *slpp; slp;) {
-	    if (!lockIdcmp2(&flock, avc, slp, onlymine, clid)) {
-	      avc->flockCount--;
-	      tlp = *slpp = slp->next;
-	      osi_FreeSmallSpace(slp);
-	      slp = tlp;
-	    } else {
-	      slpp = &slp->next;
-	      slp = *slpp;
+	    slpp = &avc->slocks; 
+	    for (slp = *slpp; slp;) {
+		if (!lockIdcmp2(&flock, avc, slp, onlymine, clid)) {
+		    avc->flockCount--;
+		    tlp = *slpp = slp->next;
+		    osi_FreeSmallSpace(slp);
+		    slp = tlp;
+		} else {
+		    slpp = &slp->next;
+		    slp = *slpp;
+		}
 	    }
-	  }
  	}
 	else if (avc->flockCount == -1) {
-	  afs_StoreAllSegments(avc, areq, AFS_ASYNC); /* fsync file early */
-	  avc->flockCount = 0; 
-	  /* And remove the (only) exclusive lock entry from the list... */
-	  osi_FreeSmallSpace(avc->slocks);
-	  avc->slocks = 0;
+	    afs_StoreAllSegments(avc, areq, AFS_ASYNC); /* fsync file early */
+	    avc->flockCount = 0; 
+	    /* And remove the (only) exclusive lock entry from the list... */
+	    osi_FreeSmallSpace(avc->slocks);
+	    avc->slocks = 0;
  	}
  	if (avc->flockCount == 0) {
  	    do {
  		tc = afs_Conn(&avc->fid, areq, SHARED_LOCK);
  		if (tc) {
- 		   XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RELEASELOCK);
-		   RX_AFS_GUNLOCK();
- 		   code = RXAFS_ReleaseLock(tc->id, (struct AFSFid *)
- 					    &avc->fid.Fid, &tsync);
-		   RX_AFS_GLOCK();
-		   XSTATS_END_TIME;
+		    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_RELEASELOCK);
+		    RX_AFS_GUNLOCK();
+		    code = RXAFS_ReleaseLock(tc->id, (struct AFSFid *)
+					     &avc->fid.Fid, &tsync);
+		    RX_AFS_GLOCK();
+		    XSTATS_END_TIME;
 		}
 		else code = -1;
 	    } while
-	      (afs_Analyze(tc, code, &avc->fid, areq, 
-			   AFS_STATS_FS_RPCIDX_RELEASELOCK,
-                           SHARED_LOCK, NULL));
+		(afs_Analyze(tc, code, &avc->fid, areq, 
+			     AFS_STATS_FS_RPCIDX_RELEASELOCK,
+			     SHARED_LOCK, NULL));
 	}
     }
     else {

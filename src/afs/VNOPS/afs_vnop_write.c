@@ -766,6 +766,7 @@ int afs_closex(register struct file *afd)
 
 
 /* handle any closing cleanup stuff */
+int
 #ifdef	AFS_SGI_ENV
 afs_close(OSI_VC_ARG(avc), aflags, lastclose,
 #if !defined(AFS_SGI65_ENV)
@@ -792,6 +793,9 @@ afs_close(OSI_VC_ARG(avc), aflags, count, offset, acred)
 afs_close(OSI_VC_ARG(avc), aflags, count, acred)
 #endif
 int count;
+#elif defined(AFS_OBSD_ENV)
+afs_close(OSI_VC_ARG(avc), aflags, acred, aproc)
+    struct proc *aproc;
 #else
 afs_close(OSI_VC_ARG(avc), aflags, acred)
 #endif
@@ -861,6 +865,8 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
     if (avc->flockCount) {		/* Release Lock */
 #if	defined(AFS_OSF_ENV) || defined(AFS_SUN_ENV)
 	HandleFlock(avc, LOCK_UN, &treq, u.u_procp->p_pid, 1/*onlymine*/);
+#elif defined(AFS_OBSD_ENV)
+	HandleFlock(avc, LOCK_UN, &treq, aproc->p_pid, 1/*onlymine*/);
 #else
 	HandleFlock(avc, LOCK_UN, &treq, 0, 1/*onlymine*/);
 #endif
@@ -966,7 +972,7 @@ afs_close(OSI_VC_ARG(avc), aflags, acred)
 }
 
 
-
+int
 #ifdef	AFS_OSF_ENV
 afs_fsync(avc, fflags, acred, waitfor)
 int fflags;

@@ -392,7 +392,7 @@ afs_nbsd_close(ap)
     int code;
 
     AFS_GLOCK();
-    code = afs_close(VTOAFS(ap->a_vp), ap->a_fflag, ap->a_cred);
+    code = afs_close(VTOAFS(ap->a_vp), ap->a_fflag, ap->a_cred, ap->a_p);
     AFS_GUNLOCK();
     return code;
 }

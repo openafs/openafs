@@ -1737,6 +1737,11 @@ loop:
 	  return tvc;
       }
 #endif /* AFS_OSF_ENV */
+#ifdef AFS_OBSD_ENV
+    VOP_LOCK(AFSTOV(tvc), LK_EXCLUSIVE | LK_RETRY, curproc);
+    uvm_vnp_uncache(AFSTOV(tvc));
+    VOP_UNLOCK(AFSTOV(tvc), 0, curproc);
+#endif
 
     ObtainWriteLock(&afs_xcbhash, 464);
     tvc->states &= ~CUnique;
