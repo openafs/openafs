@@ -69,12 +69,40 @@ struct afs_q VLRU;		/*vcache LRU */
 afs_int32 vcachegen = 0;
 unsigned int afs_paniconwarn = 0;
 struct vcache *afs_vhashT[VCSIZE];
+static struct afs_cbr *afs_cbrHashT[CBRSIZE];
 afs_int32 afs_bulkStatsLost;
 int afs_norefpanic = 0;
 
 /* Forward declarations */
 static afs_int32 afs_QueueVCB(struct vcache *avc);
 
+/*
+ * afs_HashCBRFid
+ *
+ * Generate an index into the hash table for a given Fid.
+ */
+static int
+afs_HashCBRFid(struct AFSFid *fid) {
+    return (fid->Volume + fid->Vnode + fid->Unique) % CBRSIZE;
+}
+
+/*
+ * afs_InsertHashCBR
+ *
+ * Insert a CBR entry into the hash table.
+ * Must be called with afs_xvcb held.
+ */
+static void
+afs_InsertHashCBR(struct afs_cbr *cbr) {
+    int slot = afs_HashCBRFid(&cbr->fid);
+
+    cbr->hash_next = afs_cbrHashT[slot];
+    if (afs_cbrHashT[slot])
+	afs_cbrHashT[slot]->hash_pprev = &cbr->hash_next;
+
+    cbr->hash_pprev = &afs_cbrHashT[slot];
+    afs_cbrHashT[slot] = cbr;
+}
 
 /*
  * afs_FlushVCache
@@ -295,7 +323,7 @@ afs_AllocCBR(void)
 /*
  * afs_FreeCBR
  *
- * Description: free a callback return structure.
+ * Description: free a callback return structure, removing it from all lists.
  *
  * Parameters:
  *	asp -- the address of the structure to free.
@@ -305,6 +333,14 @@ afs_AllocCBR(void)
 int
 afs_FreeCBR(register struct afs_cbr *asp)
 {
+    *(asp->pprev) = asp->next;
+    if (asp->next)
+	asp->next->pprev = asp->pprev;
+
+    *(asp->hash_pprev) = asp->hash_next;
+    if (asp->hash_next)
+	asp->hash_next->hash_pprev = asp->hash_pprev;
+
     asp->next = afs_cbrSpace;
     afs_cbrSpace = asp;
     return 0;
@@ -406,7 +442,8 @@ afs_FlushVCBs(afs_int32 lockit)
 		 */
 		tcbrp = tsp->cbrs;
 		tfids[tcount++] = tcbrp->fid;
-		tsp->cbrs = tcbrp->next;
+
+		/* Freeing the CBR will unlink it from the server's CBR list */
 		afs_FreeCBR(tcbrp);
 	    }			/* while loop for this one server */
 	    if (safety2 > afs_cacheStats) {
@@ -447,8 +484,8 @@ afs_FlushVCBs(afs_int32 lockit)
 static afs_int32
 afs_QueueVCB(struct vcache *avc)
 {
-    register struct server *tsp;
-    register struct afs_cbr *tcbp;
+    struct server *tsp;
+    struct afs_cbr *tcbp;
 
     AFS_STATCNT(afs_QueueVCB);
     /* The callback is really just a struct server ptr. */
@@ -460,8 +497,15 @@ afs_QueueVCB(struct vcache *avc)
     MObtainWriteLock(&afs_xvcb, 274);
     tcbp = afs_AllocCBR();
     tcbp->fid = avc->fid.Fid;
+
     tcbp->next = tsp->cbrs;
+    if (tsp->cbrs)
+	tsp->cbrs->pprev = &tcbp->next;
+
     tsp->cbrs = tcbp;
+    tcbp->pprev = &tsp->cbrs;
+
+    afs_InsertHashCBR(tcbp);
 
     /* now release locks and return */
     MReleaseWriteLock(&afs_xvcb);
@@ -473,8 +517,7 @@ afs_QueueVCB(struct vcache *avc)
  * afs_RemoveVCB
  *
  * Description:
- *	Remove a queued callback by looking through all the servers
- *	to see if any have this callback queued.
+ *	Remove a queued callback for a given Fid.
  *
  * Parameters:
  *	afid: The fid we want cleansed of queued callbacks.
@@ -485,44 +528,30 @@ afs_QueueVCB(struct vcache *avc)
  *	entries locked.
  */
 
-int
+void
 afs_RemoveVCB(struct VenusFid *afid)
 {
-    register int i;
-    register struct server *tsp;
-    register struct afs_cbr *tcbrp;
-    struct afs_cbr **lcbrpp;
+    int slot;
+    struct afs_cbr *cbr, *ncbr;
 
     AFS_STATCNT(afs_RemoveVCB);
     MObtainWriteLock(&afs_xvcb, 275);
-    ObtainReadLock(&afs_xserver);
-    for (i = 0; i < NSERVERS; i++) {
-	for (tsp = afs_servers[i]; tsp; tsp = tsp->next) {
-	    /* if cell is known, and is wrong, then skip this server */
-	    if (tsp->cell && tsp->cell->cellNum != afid->Cell)
-		continue;
 
-	    /*
-	     * Otherwise, iterate through file IDs we're sending to the
-	     * server.
-	     */
-	    lcbrpp = &tsp->cbrs;	/* first queued return callback */
-	    for (tcbrp = *lcbrpp; tcbrp;
-		 lcbrpp = &tcbrp->next, tcbrp = *lcbrpp) {
-		if (afid->Fid.Volume == tcbrp->fid.Volume
-		    && afid->Fid.Unique == tcbrp->fid.Unique
-		    && afid->Fid.Vnode == tcbrp->fid.Vnode) {
-		    *lcbrpp = tcbrp->next;	/* unthread from list */
-		    afs_FreeCBR(tcbrp);
-		    goto done;
-		}
-	    }
+    slot = afs_HashCBRFid(&afid->Fid);
+    ncbr = afs_cbrHashT[slot];
+
+    while (ncbr) {
+	cbr = ncbr;
+	ncbr = cbr->hash_next;
+
+	if (afid->Fid.Volume == cbr->fid.Volume &&
+	    afid->Fid.Vnode  == cbr->fid.Vnode  &&
+	    afid->Fid.Unique == cbr->fid.Unique) {
+	    afs_FreeCBR(cbr);
 	}
     }
-  done:
-    ReleaseReadLock(&afs_xserver);
+
     MReleaseWriteLock(&afs_xvcb);
-    return 0;
 }
 
 #if defined(AFS_LINUX22_ENV) && !defined(AFS_LINUX26_ENV)

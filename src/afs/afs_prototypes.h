@@ -464,7 +464,7 @@ extern void afs_osi_Invisible(void);
 extern void afs_osi_RxkRegister(void);
 extern void afs_osi_MaskSignals(void);
 extern void afs_osi_UnmaskRxkSignals(void);
-extern void *afs_osi_Alloc(size_t x);
+extern void *afs_osi_Alloc_debug(size_t x, char *func, int line);
 #ifndef afs_osi_Alloc_NoSleep
 extern void *afs_osi_Alloc_NoSleep(size_t x);
 #endif
@@ -855,7 +855,7 @@ extern void afs_ProcessFS(register struct vcache *avc,
 			  struct vrequest *areq);
 extern struct afs_cbr *afs_AllocCBR(void);
 extern int afs_FreeCBR(register struct afs_cbr *asp);
-extern int afs_RemoveVCB(register struct VenusFid *afid);
+extern void afs_RemoveVCB(register struct VenusFid *afid);
 extern void afs_FlushActiveVcaches(register afs_int32 doflocks);
 extern int afs_WriteVCache(register struct vcache *avc,
 			   register struct AFSStoreStatus *astatus,

@@ -71,6 +71,7 @@ extern int afs_shuttingdown;
 #define	NFENTRIES	256	/* hash table size for disk volume table */
 #define	VCSIZE	       1024	/* stat cache hash table size */
 #define	DCSIZE		512	/* disk cache hash table size */
+#define CBRSIZE		512	/* call back returns hash table size */
 #define	PIGGYSIZE	1350	/* max piggyback size */
 #define	MAXVOLS		128	/* max vols we can store */
 #define	MAXSYSNAME	128	/* max sysname (i.e. @sys) size */
@@ -191,7 +192,12 @@ struct vrequest {
  * callbacks.  Sent asynchronously when we run a little low on free dudes.
  */
 struct afs_cbr {
+    struct afs_cbr **pprev;
     struct afs_cbr *next;
+
+    struct afs_cbr **hash_pprev;
+    struct afs_cbr *hash_next;
+
     struct AFSFid fid;
 };
 
