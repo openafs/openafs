@@ -10,6 +10,7 @@
 #ifndef lint
 #endif
 /*
+
 	System:		VICE-TWO
 	Module:		partition.c
 	Institution:	The Information Technology Center, Carnegie-Mellon University
@@ -29,7 +30,7 @@
 #if AFS_HAVE_STATVFS
 #include <sys/statvfs.h>
 #endif /* AFS_HAVE_STATVFS */
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #include <sys/mount.h>
 #endif
 
@@ -43,7 +44,7 @@
 #ifdef	AFS_SUN5_ENV
 #include <sys/fs/ufs_fs.h>
 #else
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #include <ufs/ufs/dinode.h>
 #include <ufs/ffs/fs.h>
 #else
@@ -51,7 +52,7 @@
 #endif
 #endif
 #else /* AFS_VFSINCL_ENV */
-#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 #include <sys/fs.h>
 #endif
 #endif /* AFS_VFSINCL_ENV */
@@ -453,7 +454,7 @@ int VAttachPartitions(void)
 
 }
 #endif
-#if defined(AFS_DUX40_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_DUX40_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 int VAttachPartitions(void)
 {
     int errors = 0;

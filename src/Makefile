@@ -202,7 +202,7 @@ null: project
 
 gtx: project null auth # kauth rxkad ?
 	case ${SYS_NAME} in \
-	  rs_aix* | sun4x_5? | sgi_6? | *linux* | ppc_darwin*) \
+	  rs_aix* | sun4x_5? | sgi_6? | *linux* | ppc_darwin* | *fbsd*) \
 		rm -f ${DESTDIR}lib/afs/libtermlib.a; \
 		ln -s libnull.a ${DESTDIR}lib/afs/libtermlib.a; \
 		${COMPILE_PART1} gtx ${COMPILE_PART2};; \
@@ -234,7 +234,7 @@ ntp: project volser
 	case ${SYS_NAME} in \
 	  sun4x_58 ) echo skipping ntp for ${SYS_NAME} ;; \
 	  *linux* ) echo skipping ntp for ${SYS_NAME} ;; \
-	  ppc_darwin* ) echo skipping ntp for ${SYS_NAME} ;; \
+	  ppc_darwin* | *fbsd* ) echo skipping ntp for ${SYS_NAME} ;; \
 	  * ) ${COMPILE_PART1} ntp ${COMPILE_PART2} ;; \
 	esac
 
@@ -253,7 +253,7 @@ bozo: project ntp audit
 vfsck:	minproject vol
 	set -x; \
 	case ${SYS_NAME} in \
-	sgi_* | *linux* | rs_aix42 | ppc_darwin* | hp_ux* ) \
+	sgi_* | *linux* | rs_aix42 | ppc_darwin* | hp_ux* | *fbsd* ) \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
 		${COMPILE_PART1} vfsck ${COMPILE_PART2} ;; \
@@ -271,7 +271,7 @@ login: project kauth rxkad
 		${COMPILE_PART1} sia ${COMPILE_PART2} ;; \
 	sun4x_55 ) \
 		 ${COMPILE_PART1} login ${COMPILE_PART2} ;; \
-	sun4x_* | hp_ux11* | *linux* ) \
+	sun4x_* | hp_ux11* | *linux* | *fbsd* ) \
 		${COMPILE_PART1} pam ${COMPILE_PART2} ;; \
 	ppc_darwin* ) \
 		echo Skipping login for ${SYS_NAME} ;; \
@@ -479,6 +479,8 @@ libafs_setup: config minproject export
 		MKAFS_OSTYPE=HPUX;; \
 	*linux*) \
 		MKAFS_OSTYPE=LINUX;; \
+	*fbsd*) \
+		MKAFS_OSTYPE=FBSD;; \
 	rs_aix* ) \
 		MKAFS_OSTYPE=AIX;; \
 	sgi_* ) \
@@ -502,6 +504,8 @@ libuafs_setup: config minproject export
 		MKAFS_OSTYPE=HPUX;; \
 	*linux*) \
 		MKAFS_OSTYPE=LINUX;; \
+	*fbsd*) \
+		MKAFS_OSTYPE=FBSD;; \
 	rs_aix* ) \
 		MKAFS_OSTYPE=AIX;; \
 	sun4x_5* ) \

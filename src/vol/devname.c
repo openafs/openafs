@@ -21,7 +21,7 @@
 #ifdef	AFS_SUN5_ENV
 #include <sys/fs/ufs_fs.h>
 #else
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #include <ufs/ufs/dinode.h>
 #include <ufs/ffs/fs.h>
 #else
@@ -29,7 +29,7 @@
 #endif
 #endif
 #else /* AFS_VFSINCL_ENV */
-#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX22_ENV)
+#if !defined(AFS_AIX_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_FBSD_ENV)
 #include <sys/fs.h>
 #endif
 #endif /* AFS_VFSINCL_ENV */

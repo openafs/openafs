@@ -10,7 +10,7 @@
 #ifdef	KERNEL
 #include "../afs/param.h"
 #ifndef UKERNEL
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #include "../afs/sysincludes.h"
 #else
 #include "../h/types.h"

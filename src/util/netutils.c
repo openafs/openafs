@@ -19,6 +19,9 @@
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
 #else
+#ifdef __FreeBSD__
+#include <sys/types.h>
+#endif
 #include <netinet/in.h>
 #include <errno.h>
 #include <sys/errno.h>

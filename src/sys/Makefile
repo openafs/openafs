@@ -87,6 +87,8 @@ syscall.o: syscall.s
 		rm -f syscall.ss syscall.i;; \
 	 hp_ux11? ) \
 		touch syscall.o;; \
+	i386_fbsd* ) \
+		touch syscall.o;; \
 	 *) \
 		/lib/cpp  ${SFLAGS} syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\

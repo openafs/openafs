@@ -52,6 +52,8 @@ pam_afs.so.1: $(SHOBJS) afs_setcred.o
 			$(SHOBJS) $(LIBS) ;; \
 	*linux*) \
 		$(CC) $(LDFLAGS) -o $@ afs_setcred.o $(SHOBJS) $(LIBS) ;;\
+	*fbsd*) \
+		$(CC) $(LDFLAGS) -o $@ afs_setcred.o $(SHOBJS) $(LIBS) ;;\
 	* ) \
 		echo No link line for system $(SYS_NAME). ;; \
 	esac
@@ -67,6 +69,8 @@ pam_afs.krb.so.1: $(SHOBJS) afs_setcred_krb.o
 			afs_setcred_krb.o $(SHOBJS) $(LDFLAGS) $(KLIBS) ;; \
 	*linux*) \
 		$(CC) $(LDFLAGS) -o $@ afs_setcred_krb.o $(SHOBJS) $(KLIBS) ;;\
+	*fbsd*) \
+		$(CC) $(LDFLAGS) -o $@ afs_setcred_krb.o $(SHOBJS) $(KLIBS) ;;\
 	* ) \
 		echo No link line for system $(SYS_NAME). ;; \
 	esac
@@ -80,6 +84,8 @@ test_pam: test_pam.o
 		$(CC) $(CFLAGS) -o $@ test_pam.o ${PAMLIBS};; \
 	*linux*) \
 		$(CC) $(CFLAGS) -rdynamic -o $@ test_pam.o -lpam -ldl;; \
+	*fbsd*) \
+		$(CC) $(CFLAGS) -rdynamic -o $@ test_pam.o -lpam ;; \
 	*) \
 		echo No link line for system $(SYS_NAME). ;; \
 	esac

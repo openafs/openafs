@@ -122,6 +122,8 @@ kinstall: includes
 	case ${SYS_NAME} in \
 	alpha_dux* ) \
 		$(INSTALL) DUX/*.[ch] $(KERNELDIR)rx;; \
+	i386_fbsd* ) \
+		$(INSTALL) FBSD/*.[ch] $(KERNELDIR)rx;; \
 	*_linux* ) \
 		$(INSTALL) LINUX/*.[ch] $(KERNELDIR)rx;; \
 	rs_aix* ) \

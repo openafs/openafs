@@ -74,7 +74,7 @@
 #include <rx/rx.h>
 #include <rx/rx_globals.h>
 #include <sys/stat.h>
-#if ! defined(AFS_SGI_ENV) && ! defined(AFS_AIX32_ENV) && ! defined(AFS_NT40_ENV) && ! defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
+#if ! defined(AFS_SGI_ENV) && ! defined(AFS_AIX32_ENV) && ! defined(AFS_NT40_ENV) && ! defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 #include <sys/map.h>
 #endif
 #if !defined(AFS_NT40_ENV)
@@ -85,7 +85,7 @@
 #include <sys/statfs.h>
 #include <sys/lockf.h>
 #else
-#if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 #include <sys/dk.h>
 #endif
 #endif

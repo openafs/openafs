@@ -195,7 +195,7 @@ typedef	struct adaptive_mutex2	adaptive_mutex2_t;
 #include <vfs/vnode.h>
 #include <sys/inode.h>
 #else /* AFS_MACH_ENV */
-#ifdef  AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #include <sys/vnode.h>
 #include <sys/mount.h>
 #include <ufs/ufs/quota.h> 
@@ -938,7 +938,7 @@ int cnt, size;
 #endif /*AFS_KDUMP_LIB */
 #endif
 
-#ifndef AFS_DARWIN_ENV
+#if !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 int
 findsym( char *sname, off_t *offset )
 {
@@ -1010,7 +1010,7 @@ findsym( char *sname, off_t *offset )
 kdump()
 {
     int cell, cnt, cnt1;
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
    printf("Kdump not supported\n");
 #else
 #ifndef AFS_KDUMP_LIB
@@ -1146,7 +1146,7 @@ kdump()
     return 0;
 }
 
-#ifndef AFS_DARWIN_ENV
+#if !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 int Sum_cellnames=0, Sum_userstp=0, Sum_volnames=0, Sum_exps=0, Sum_nfssysnames=0;
 int Sum_vcachemvids=0, Sum_vcachelinkData=0, Sum_vcacheacc=0, Sum_vcachelocks=0;
 

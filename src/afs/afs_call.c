@@ -42,7 +42,7 @@ char afs_rootVolumeName[64]="";
 struct afs_icl_set *afs_iclSetp = (struct afs_icl_set*)0;
 struct afs_icl_set *afs_iclLongTermSetp = (struct afs_icl_set*)0;
 
-#if	defined(AFS_GLOBAL_SUNLOCK) && !defined(AFS_HPUX_ENV) && !defined(AFS_AIX41_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV)
+#if	defined(AFS_GLOBAL_SUNLOCK) && !defined(AFS_HPUX_ENV) && !defined(AFS_AIX41_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 
 kmutex_t afs_global_lock;
 kmutex_t afs_rxglobal_lock;
@@ -57,7 +57,7 @@ simple_lock_data_t afs_global_lock;
 #elif defined(AFS_DARWIN_ENV)
 struct lock__bsd__ afs_global_lock;
 #endif
-#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 thread_t afs_global_owner;
 #endif /* AFS_OSF_ENV */
 

@@ -17,7 +17,7 @@
 \*******************************************************************/
 #include <afs/param.h>
 
-#if defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 int PRE_Block = 0;
 #else
 #include <sys/time.h>

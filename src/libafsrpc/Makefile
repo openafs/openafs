@@ -326,6 +326,8 @@ syscall.o: ${SYS}/syscall.s
 		${AS} -P ${CFLAGS} -D_NO_PROTO -DMACH -DOSF -nostdinc -traditional -DASSEMBLER ${SYS}/syscall.s; \
 		${AS} -o syscall.o syscall.i; \
 		rm -f syscall.ss syscall.i;; \
+	 *fbsd* ) \
+		touch syscall.o ;; \
 	 *) \
 		/lib/cpp  ${SFLAGS} ${SYS}/syscall.s syscall.ss; \
 		as -o syscall.o syscall.ss;		\

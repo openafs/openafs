@@ -97,11 +97,11 @@ afs_CopyOutAttrs(avc, attrs)
      * anyway, so the difference between 512K and 1000000 shouldn't matter
      * much, and "&" is a lot faster than "%".
      */
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     attrs->va_atime.tv_nsec = attrs->va_mtime.tv_nsec =
 	attrs->va_ctime.tv_nsec =
 	    (hgetlo(avc->m.DataVersion) & 0x7ffff) * 1000;
-#if defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     attrs->va_blocksize = PAGESIZE;		/* XXX Was 8192 XXX */
 #else
     attrs->va_blksize = PAGESIZE;		/* XXX Was 8192 XXX */
@@ -137,7 +137,7 @@ afs_CopyOutAttrs(avc, attrs)
     attrs->va_flags = 0;
 #endif	/* AFS_OSF_ENV */
 
-#if !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 #if !defined(AFS_HPUX_ENV)
 #ifdef	AFS_SUN5_ENV
     attrs->va_nblocks = (attrs->va_size? ((attrs->va_size + 1023)>>10) << 1 : 0);
@@ -151,7 +151,7 @@ afs_CopyOutAttrs(avc, attrs)
 #else /* !defined(AFS_HPUX_ENV) */
     attrs->va_blocks = (attrs->va_size? ((attrs->va_size + 1023)>>10) : 0);
 #endif /* !defined(AFS_HPUX_ENV) */
-#else	/* ! AFS_OSF_ENV */
+#else	/* ! AFS_OSF_ENV && !AFS_FBSD_ENV */
     attrs->va_bytes = (attrs->va_size? (attrs->va_size + 1023) : 1024);
 #ifdef	va_bytes_rsv
     attrs->va_bytes_rsv = -1;
@@ -232,7 +232,7 @@ afs_getattr(OSI_VC_ARG(avc), attrs, acred)
 		  return EACCES;
 	      }
 	      if (avc->mvstat == 2) {
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 		  attrs->va_mtime.tv_nsec += ((++avc->xlatordv) * 1000); 
 #else
 		  attrs->va_mtime.tv_usec += ++avc->xlatordv; 
@@ -359,7 +359,7 @@ register struct AFSStoreStatus *as; {
 #endif
 	mask |= AFS_SETMODTIME;
 #ifndef	AFS_SGI_ENV
-#if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 	if (av->va_mtime.tv_nsec == -1)
 #else
 	if (av->va_mtime.tv_usec == -1)

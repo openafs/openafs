@@ -29,7 +29,7 @@ static char sccsid[] = "@(#)login.c	5.15 (Berkeley) 4/12/86";
  * login -h hostname (for telnetd, etc.)
  */
 #include <afs/param.h>
-#if !defined(AFS_SUN_ENV) && !defined(AFS_AIX_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_SUN_ENV) && !defined(AFS_AIX_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) &&!defined(AFS_FBSD_ENV)
 #include <sys/param.h>
 
 #define quota(a,b,c,d) 0

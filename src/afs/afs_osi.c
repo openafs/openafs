@@ -50,7 +50,7 @@ void osi_Init()
 #elif defined(AFS_OSF_ENV)
     usimple_lock_init(&afs_global_lock);
     afs_global_owner = (thread_t)0;
-#elif defined(AFS_DARWIN_ENV)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     lockinit(&afs_global_lock, PLOCK, "afs global lock", 0, 0);
     afs_global_owner = (thread_t)0;
 #elif defined(AFS_AIX41_ENV)
@@ -80,7 +80,7 @@ void osi_Init()
 osi_Active(avc)
 register struct vcache *avc; {
     AFS_STATCNT(osi_Active);
-#if defined(AFS_SUN_ENV) || defined(AFS_AIX_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || (AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
+#if defined(AFS_SUN_ENV) || defined(AFS_AIX_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || (AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     if ((avc->opens > 0) || (avc->states & CMAPPED))	return 1;   /* XXX: Warning, verify this XXX  */
 #else
 #if	defined(AFS_MACH_ENV)
@@ -295,7 +295,7 @@ void afs_osi_Invisible() {
 #if	defined(AFS_HPUX101_ENV)
     set_system_proc(u.u_procp);
 #else
-#if defined(AFS_DARWIN_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     current_proc()->p_flag |= P_SYSTEM;
 #else
 #if !defined(AFS_SGI64_ENV) && !defined(AFS_LINUX20_ENV)
@@ -351,7 +351,7 @@ afs_osi_SetTime(atv)
     stime(&sta);
     AFS_GLOCK();
 #else
-#ifdef AFS_DARWIN_ENV
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
     AFS_GUNLOCK();
     setthetime(atv);
     AFS_GLOCK();
@@ -379,7 +379,7 @@ afs_osi_SetTime(atv)
 #ifdef	AFS_AUX_ENV
     logtchg(atv->tv_sec);
 #endif
-#endif  /* AFS_DARWIN_ENV */
+#endif  /* AFS_DARWIN_ENV || AFS_FBSD_ENV */
 #endif	/* AFS_SGI_ENV */
 #endif /* AFS_SUN55_ENV */
 #endif /* AFS_SUN5_ENV */
@@ -742,7 +742,7 @@ extern int npid;
 }
 #endif
 
-#if defined(AFS_DARWIN_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 void afs_osi_TraverseProcTable()
 {   
     struct proc *p;
@@ -914,7 +914,7 @@ const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
 
     return rv;
 }
-#elif defined(AFS_DARWIN_ENV)
+#elif defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 const struct AFS_UCRED *afs_osi_proc2cred(AFS_PROC *pr)
 {   
     struct AFS_UCRED *rv=NULL;

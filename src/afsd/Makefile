@@ -106,6 +106,9 @@ install: all
 			${INSTALL} -f afs.ppc_darwin.plist ${DESTDIR}root.client/usr/vice/etc/afs.kext/Contents/Info.plist ; \
 			${INSTALLex} -f afs.rc.darwin ${DESTDIR}root.client/usr/vice/etc/afs.rc ; \
 			${INSTALL} -f afs.rc.darwin.plist ${DESTDIR}root.client/usr/vice/etc/StartupParameters.plist ;; \
+		*fbsd*) \
+			mkdir -p ${DESTDIR}root.client/usr/vice/etc/afs.rc; \
+			${INSTALL} -f afs.rc.fbsd ${DESTDIR}root.client/usr/vice/etc/afs.rc.fbsd ;; \
 		* )  \
 			echo No rc scripts installed for ${SYS_NAME} ;; \
 	esac
