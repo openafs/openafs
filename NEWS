@@ -6,6 +6,11 @@ Openafs News -- history of user Visible changes. September 17, 2001
    of partitions and will attach and display accordingly. Creating the file
    "AlwaysAttach" in the /vicepX directory is used as the trigger to attach it.
 
+** Linux builds no longer require source changes every time the kernel
+   inode structure changes; the OpenAFS sources will now configure
+   itself to the actual inode structure as defined in the kernel
+   sources.
+
 * Changes incorporated in OpenAFS 1.2.1
 
 ** vfsck on Digital UNIX and Solaris will now refuse to fsck mounted

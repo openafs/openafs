@@ -368,6 +368,11 @@ libafs_tree: libafs_setup ${KERNELDIR}
 	${INSTALL} -c src/config/Makefile.${SYS_NAME}.in libafs_tree/config
 	${INSTALL} -c src/config/afsconfig.h.in libafs_tree/config
 	${INSTALL} -c -f -ns configure-libafs libafs_tree/configure
+	case ${SYS_NAME} in \
+	*linux*) \
+		${INSTALL} -c src/config/make_vnode.pl libafs_tree/config ; \
+		${INSTALL} -c src/afs/LINUX/osi_vfs.hin libafs_tree/afs ;; \
+	esac
 
 libuafs: libuafs_setup ${UKERNELDIR}
 	set -x; \

@@ -1,0 +1,110 @@
+/*
+ * Copyright 2000, International Business Machines Corporation and others.
+ * All Rights Reserved.
+ * 
+ * This software has been released under the terms of the IBM Public
+ * License.  For details, see the LICENSE file in the top-level source
+ * directory or online at http://www.openafs.org/dl/license10.html
+ */
+
+/*
+ * Linux interpretations of vnode and vfs structs.
+ *
+ * The Linux "inode" has been abstracted to the fs independent part to avoid
+ * wasting 100+bytes per vnode.
+ */
+
+#ifndef OSI_VFS_H_
+#define OSI_VFS_H_
+
+/* The vnode should match the current implementation of the fs independent
+ * part of the Linux inode.
+ */
+/* The first cut is to continue to use a separate vnode pool. */
+/* LINUX VNODE INCLUDED BELOW -- DO NOT MODIFY */
+
+typedef struct vnode vnode_t;
+
+/* Map vnode fields to inode fields. */
+#define i_number	i_ino
+#define v_count		i_count
+#define v_op		i_op
+#if defined(AFS_LINUX24_ENV)
+#define v_fop           i_fop
+#endif
+#define v_type		i_mode
+#define v_vfsp		i_sb
+#define vfs_vnodecovered s_covered
+
+/* v_type bits map to mode bits: */
+#define VNON 0
+#define VREG S_IFREG
+#define VDIR S_IFDIR
+#define VBLK S_IFBLK
+#define VCHR S_IFCHR
+#define VLNK S_IFLNK
+#define VSOCK S_IFSOCK
+
+/* vcexcl - used only by afs_create */
+enum vcexcl { EXCL, NONEXCL } ;
+
+/* afs_open and afs_close needs to distinguish these cases */
+#define FWRITE	O_WRONLY|O_RDWR|O_APPEND
+#define FTRUNC	O_TRUNC
+
+
+#define IO_APPEND O_APPEND
+#define FSYNC O_SYNC
+
+#define VTOI(V)  ((struct inode*)V)
+#define VN_HOLD(V) ((vnode_t*)V)->i_count++;
+#define VN_RELE(V) osi_iput((struct inode *)V);
+#define VFS_STATFS(V, S) ((V)->s_op->statfs)((V), (S), sizeof(*(S)))
+
+
+
+/* Various mode bits */
+#define VWRITE	S_IWUSR
+#define VREAD	S_IRUSR
+#define VEXEC	S_IXUSR
+#define VSUID	S_ISUID
+#define VSGID	S_ISGID
+
+
+#define vfs super_block
+
+typedef struct vattr {
+    int		va_type;	/* One of v_types above. */
+    size_t	va_size;
+    unsigned long va_blocks;
+    unsigned long va_blocksize;
+    int		va_mask;	/* AT_xxx operation to perform. */
+    umode_t	va_mode;	/* mode bits. */
+    uid_t	va_uid;
+    gid_t	va_gid;
+    int		va_fsid;	/* Not used? */
+    dev_t	va_rdev;
+    ino_t	va_nodeid;	/* Inode number */
+    nlink_t	va_nlink;	/* link count for file. */
+    struct timeval va_atime;
+    struct timeval va_mtime;
+    struct timeval va_ctime;
+} vattr_t;
+
+#define VATTR_NULL(A) memset(A, 0, sizeof(struct vattr))
+
+
+/* va_masks - these should match their respective ATTR_xxx #defines in fs.h.
+ * afs_notify_change has to use the attr bits in both the Linux and AFS
+ * meanings. The glue layer code uses the ATTR_xxx style names.
+ */
+#define AT_SIZE		ATTR_SIZE
+#define AT_MODE		ATTR_MODE
+#define AT_UID		ATTR_UID
+#define AT_GID		ATTR_GID
+#define AT_MTIME	ATTR_MTIME
+
+
+#define vnodeops inode_operations
+
+#endif /* OSI_VFS_H_ */
