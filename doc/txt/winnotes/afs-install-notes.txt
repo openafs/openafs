@@ -1,4 +1,4 @@
-OpenAFS for Windows 1.3.65 Installation Notes
+OpenAFS for Windows 1.3.66 Installation Notes
 ---------------------------------------------
 
 The OpenAFS for Windows product was very poorly maintained throughout the 
@@ -220,6 +220,23 @@ a non-MS KDC for authentication, then your KDC administrator will have to
 add these service principals to the list of principals to be maintained
 for each host.
 
+19. As of 1.3.66, the use of INI files for the storage of AFS configuration
+data is no more.  No longer are there any AFS related files stored in the
+%WINDIR% directory.  The CellServDB file is no longer called "afsdsbmt.ini"
+and it is stored in the OpenAFS\Client directory.  The afs_freelance.ini
+and afsdsbmt.ini file data has been moved to the registry.  
+
+IMPORTANT: while the CellServDB file location and freelance mountpoint
+data will be automatically migrated; there is no mechanism for automatic
+migration of Submounts, Drive Mappings, Active Maps, and CSCPolicy data.
+
+20. As of 1.3.66, the OpenAFS Client is compatible with Windows XP SP2.
+The Internet Connection Firewall will be automatically adjusted to allow
+the receipt of incoming callback messages from the AFS file server.  In 
+addition, the appropriate Back Connection entries are added to the registry
+to allow SMB authentication to be performed across the loopback connection.
+
+21. 
 
 ------------------------------------------------------------------------
 

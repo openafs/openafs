@@ -5,12 +5,6 @@ which can be found in the RT database or on the mailing list.
 
 (1) File/Directory access is not integrated with windows security 
 
-(2) tokens are assigned to the service on a system global basis.  Therefore, 
-all users and processes on the machine are able to access files with the 
-list of available tokens.  This is dangerous if anonymous logins are enabled;
-or if multiple users are on the machine (ie, Terminal Server or XP user 
-switching)
-
 (3) SMB LANA list is static.  
 
 (3a) IP address changes cause the service to terminate due to an assertion 
@@ -110,11 +104,6 @@ directories.
      and per-machine settings.  All of the new registry items need to 
      be added to the UI
 
-(29) Windows XP SP2 and Windows 2003 SP1 are going to lockdown the 
-     machine.  We need to add code to programatically open the 
-     Internet Connection Firewall to the ports needed by the various
-     AFS services.
-
 (30) There appears to be a thread safety issue in the Rx library when
      running on Intel processors which support hyper-threading
 
@@ -132,28 +121,32 @@ directories.
 -------------------------------------------------------------------------
 List sent to SLAC:
 
-   1. Convert from use of .INI files to appropriate places in the registry
-   2. No longer use AFS Client Service "cell" as the default cell for individual users
-   3. Re-write afsd_service.exe to perform synchronized thread startup and shutdown.  Currently there is no synchronization of thread creation which results in timing conflicts; and there is no attempt to cleanly shutdown the service which causes problems when restarting and prevents the implementation of a persistent cache
-   4. Implement a persistent cache
-   5. Prevent panic situation when the root.afs volume is not reachable
-   6. Prevent panic situation when the IP address to which the SMB server is bound is removed from the local machine's network configuration
-   7. Only use Local RPC mechanism unless Gateway mode is on
-   8. Identify and fix the problems with running the RX library on Hyperthreaded systems
-   9. Add support for Named Pipes within the afs filesystem
-  10. Add support for Windows XP2 - dynamically open/close ports in the firewall
-  11. Add support for r/w mounts in the Freelance fake root.afs volume.
-  12. Re-write afscreds.exe to support:
+   1. No longer use AFS Client Service "cell" as the default cell for individual users
+   2. Re-write afsd_service.exe to perform synchronized thread startup and shutdown.  
+      Currently there is no synchronization of thread creation which results in timing 
+      conflicts; and there is no attempt to cleanly shutdown the service which causes 
+      problems when restarting and prevents the implementation of a persistent cache
+   3. Implement a persistent cache
+   4. Prevent panic situation when the root.afs volume is not reachable
+   5. Prevent panic situation when the IP address to which the SMB server is bound is removed 
+      from the local machine's network configuration
+   6. Identify and fix the problems with running the RX library on Hyperthreaded systems
+   7. Add support for Named Pipes within the afs filesystem
+      (This is not currently a supported feature of AFS; it will require 
+      changes to the servers as well as the clients.)
+   8. Re-write afscreds.exe to support:
          1. choosing between Kerberos 5 and Kerberos 4 on a per principal basis
          2. providing users with the ability to map multiple cells to a single principal
          3. providing change password functionality on a per principal basis
          4. no longer include drive mapping
          5. configuration of afscreds startup options in shortcut
-  13. Re-write afs_config.exe to be only "per user" functionality which does not require admin privileges
+   9. Re-write afs_config.exe to be only "per user" functionality which does not require admin 
+      privileges
          1. default cell and principal for the user
          2. drive mappings
          3. visibility of afs creds and setting of afs creds startup options
-  14. Create new afs_admin.exe tool to be installed in the administrator folder (or use MMS) which contains
+  10. Create new afs_admin.exe tool to be installed in the administrator folder (or use MMS) 
+      which contains
          1. afs client service cell name
          2. integrated logon configuration
          3. Gateway configuration
@@ -167,11 +160,12 @@ List sent to SLAC:
         11. network configuration
         12. miscellaneous
         13. need to add support for all of the new registry values since 1.2.8
-  15. Identify why 16-bit DOS applications executed out of AFS fail
-  16. Create new Windows Security Group to which users can be added for them to become AFS Client Administrators
-  17. Add support for configurable Icon file representing AFS folders within the Explorer Shell
-  18. Documentation Documentation Documentation
-  19. Large File support (> 2GB)
-  20. Integrate KFW installation into the NSIS installer
-  21. Fix High Security mode (prevents SMB shares from being shared by more than one session)
+  11. Identify why 16-bit DOS applications executed out of AFS fail
+  12. Create new Windows Security Group to which users can be added for them to become AFS 
+      Client Administrators
+  13. Add support for configurable Icon file representing AFS folders within the Explorer Shell
+  14. Documentation Documentation Documentation
+  15. Large File support (> 2GB)
+  16. Integrate KFW installation into the NSIS installer
+  17. Add support for record locking to AFS (requires changes to the servers)
 

@@ -1,3 +1,126 @@
+Since 1.3.65:
+   * Added a new registry value [HKCU\SOFTWARE\OpenAFS\Client] 
+     "Authentication Cell" which may be used to specify a default 
+     authentication cell for afscreds.exe which is different from
+     the default cell for the AFS Client Service daemon.
+
+   * Added a Logoff WinLogon Event Notification function to afslogon.dll.
+     afslogon.dll moved to %WINDIR%\System32\.
+     New registry entries added to register the dll for Winlogon events.
+
+     The logoff event will now force a call to ktc_ForgetAllTokens()
+     using the context of the user being logged off.
+
+     Need to double check that this code does not prevent profile data
+     from being written back to an afs volume
+
+   * Windows XP SP2 Internet Connection Firewall interoperability
+     has been added.
+
+   * The %WINDIR%\afsdsbmt.ini contains four sections:
+        Submounts, Drive Mappings, Active Maps and CSC Policies.
+     The Submounts and CSC policies are now stored in the registry under
+        [HKLM\SOFTWARE\OpenAFS\Client\Submounts]
+        [HKLM\SOFTWARE\OpenAFS\Client\CSCPolicy]
+     The Drive Mappings and Active Maps are stored in the registry under
+        [HKCU\SOFTWARE\OpenAFS\Client\Mappings]
+        [HKCU\SOFTWARE\OpenAFS\Client\Active Maps]
+
+     There is no automatic migration of this data as it would be impossible
+     to consistently migrate data to user profiles which may not be active
+     when the machine is updated.
+
+   * The %WINDIR%\afs_freelance.ini contains lists of mountpoints for the
+     fake root.afs volume.  For the same reasons as for the cellservdb file,
+     this information should not be in %WINDIR%.  This information is now
+     kept under the registry key
+        [HKLM\SOFTWARE\OpenAFS\Client\Freelance]
+
+     The data from the afs_freelance.ini file will be automatically 
+     migrated to the registry on first execution of afsd_service.exe
+
+   * Keeping the CellServDB file in the location %WINDIR%\afsdcell.ini is 
+     troublesome for several reasons.  One, it is confusing for those who
+     expect the file to be named "CellServDB" instead of "afsdcell.ini".
+     Two, this file is not a Windows Profile formatted file.  Three, 
+     applications should not be reading or writing to %WINDIR%.  It causes
+     problems for Windows Terminal Server.
+
+     The new location of CellServDB will be the OpenAFS Client install 
+     directory which is by default C:\Program Files\OpenAFS\Client and can
+     be determined by querying the registry for 
+     [HKLM\SOFTWARE\TransarcCorporation\AFS Client\CurrentVersion]PathName
+
+     The existing afsdcell.ini will be migrated by the NSIS installer. 
+     The Wix installer must still be updated to do the same.
+
+   * Change NSIS installer to use DNS by default; to remove Integrated Logon
+     High Security mode; and to add Terminal Services compatibility registry
+     entries to allow the OpenAFS tools to find the afsdcell.ini and other
+     configuration files in %WINDIR%.
+  
+   * Add support for authenticated SMB connections.   This will remove
+     the need for high security mode in most situations.  Both NTLM
+     and Extended Security (GSS SPNEGO) modes are supported.  Effectively,
+     only NTLM can be used even though Kerberos is now supported.  The
+     reason is that it is not possible to construct a service principal
+     which is unique to each individual machine.
+
+     SMB Extended Auth does not work on XP SP2 unless one of two registry
+     modifications are made:
+
+     (1) To disable the check for matching host names on loopback connections
+        set this key.  This does not require a reboot:
+
+        [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa]
+            "DisableLoopbackCheck"=dword:00000001
+
+     (2) To add the AFS SMB/CIFS service name to an approved list.  This
+        does require a reboot:
+
+        [HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0]
+            "BackConnectionHostNames"=multi-sz "AFS" "MACHINE-AFS"
+
+     afsd_service.exe will automatically add the current Netbios Name
+     to the BackConnectionHostNames list and then temporarily disable
+     the loopback check for one cycle of startup/shutdown of the service.
+     We assume most folks do not start/stop without a reboot so this 
+     will be adequate in most cases.
+
+   * Fix security hole in afslogon.dll which allowed passwords to be
+     sent in clear text to the KDC in a misformed principal name.
+
+   * Fix cm_GetCell() to properly handle expired dns entries
+     without crashing
+
+   * If Freelance mode is active and the afs_freelance.ini
+     file does not exist, do not create an empty file.
+     Instead create a file containing ro and rw mountpoints
+     to the default cell using the standard conventions.
+
+   * Modify the Freelance support to handle the ability
+     to create rw mount points in the fake root.afs volume.
+
+   * Changed the RPC mechanism used for token setting from 
+     named pipes to local.  Use of named pipes can be restored
+     by setting the environment variable AFS_RPC_PROTSEQ to
+     "ncacn_np". 
+
+     Named pipes were required when a Windows 9x system was
+     using a NT system in gateway mode which is incompatible
+     with our use of local loopback adapters.
+
+   * In afscreds.exe, if a username of the form user@REALM is
+     specified and no password is specified, do not perform a 
+     kinit operation.  Only perform the aklog functionality.
+
+   * Add a new registry value which allows the number of processors
+     on which afsd_service.exe executes to be restricted.  Valid
+     values are 1..numOfProcessors
+
+       HKLM\SYSTEM\CurrentControlSet\Services\TransarcAfsDaemon\Parameters
+          (DWORD) MaxCPUs 
+
 Since 1.3.64:
    * A second MSI based installer option is now available.
 
