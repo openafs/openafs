@@ -1389,10 +1389,20 @@ static BOOL CreateRootAfsDriveMapping()
     char chDriveLetter;
 
 try_again:
+    NETRESOURCE nr;
+    memset (&nr, 0x00, sizeof(NETRESOURCE));
+
     for (chDriveLetter = 'D'; (chDriveLetter <= 'Z') && !m_bRootAfsDriveMappingCreated; chDriveLetter++) {
         m_szDriveToMapTo[0] = chDriveLetter;
         g_LogFile.Write("Attempting to map %s to %s: ", m_szDriveToMapTo, szAfsRootDir);
-        m_bRootAfsDriveMappingCreated = (WNetAddConnection(A2S(szAfsRootDir), TEXT(""), A2S(m_szDriveToMapTo)) == NO_ERROR);
+
+        nr.dwType=RESOURCETYPE_DISK;
+        nr.lpLocalName=m_szDriveToMapTo;
+        nr.lpRemoteName=szAfsRootDir;
+        nr.dwDisplayType = RESOURCEDISPLAYTYPE_SHARE;
+        DWORD res=WNetAddConnection2(&nr,TEXT(""),NULL,0);
+        m_bRootAfsDriveMappingCreated = (res == NO_ERROR);
+        // m_bRootAfsDriveMappingCreated = (WNetAddConnection(A2S(szAfsRootDir), TEXT(""), A2S(m_szDriveToMapTo)) == NO_ERROR);
         g_LogFile.Write(m_bRootAfsDriveMappingCreated ? "succeeded.\r\n" : "failed.\r\n");
     }        
 
