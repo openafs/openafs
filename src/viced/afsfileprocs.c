@@ -58,9 +58,6 @@ RCSID("$Header$");
 #include <net/if.h>
 #include <netinet/if_ether.h>
 #endif
-#ifdef notdef
-#include <nlist.h>
-#endif
 #endif
 #ifdef AFS_HPUX_ENV
 /* included early because of name conflict on IOPEN */
@@ -180,10 +177,7 @@ struct afs_FSStats {
 struct afs_FSStats afs_fsstats;
 
 void	ResetDebug(), SetDebug(), Terminate();
-int	CopyOnWrite();		/* returns 0 on success */
 
-
-void SetSystemStats(), SetAFSStats(), SetVolumeStats();
 int	LogLevel = 0;
 int	supported = 1;
 int	Console = 0;
@@ -191,10 +185,6 @@ afs_int32 BlocksSpare = 1024;	/* allow 1 MB overruns */
 afs_int32 PctSpare;
 extern afs_int32 implicitAdminRights;
 extern afs_int32 readonlyServer;
-
-static TryLocalVLServer();
-
-void GetStatus(Vnode *targetptr, AFSFetchStatus *status, afs_int32 rights, afs_int32 anyrights, Vnode *parentptr);
 
 /*
  * Externals used by the xstat code.
@@ -375,7 +365,6 @@ static struct afs_buffer {
 } *freeBufferList = 0;
 static int afs_buffersAlloced = 0;
 
-
 static FreeSendBuffer(register struct afs_buffer *adata)
 {
     FS_LOCK
@@ -386,7 +375,6 @@ static FreeSendBuffer(register struct afs_buffer *adata)
     return 0;
 
 } /*FreeSendBuffer*/
-
 
 /* allocate space for sender */
 static char *AllocSendBuffer()
@@ -406,7 +394,6 @@ static char *AllocSendBuffer()
 
 } /*AllocSendBuffer*/
 
-
 static int VolumeOwner (register struct client *client, 
 			register Vnode *targetptr)
 {
@@ -424,7 +411,6 @@ static int VolumeOwner (register struct client *client,
 
 } /*VolumeOwner*/
 
-
 static int VolumeRootVnode (Vnode *targetptr)
 {
     return ((targetptr->vnodeNumber == ROOTVNODE) &&
@@ -432,6 +418,49 @@ static int VolumeRootVnode (Vnode *targetptr)
 
 } /*VolumeRootVnode*/
 
+/*
+ * This routine returns the status info associated with the targetptr vnode
+ * in the AFSFetchStatus structure.  Some of the newer fields, such as
+ * SegSize and Group are not yet implemented
+ */
+static 
+void GetStatus(Vnode *targetptr,
+	       AFSFetchStatus *status,
+	       afs_int32 rights,
+	       afs_int32 anyrights,
+	       Vnode *parentptr)
+{
+    /* initialize return status from a vnode  */
+    status->InterfaceVersion = 1;
+    status->SyncCounter = status->dataVersionHigh = status->lockCount =
+    status->errorCode = 0;
+    status->ResidencyMask = 1; /* means for MR-AFS: file in /vicepr-partition */
+    if (targetptr->disk.type == vFile)
+	status->FileType = File;
+    else if (targetptr->disk.type == vDirectory)
+	status->FileType = Directory;
+    else if (targetptr->disk.type == vSymlink)
+	status->FileType = SymbolicLink;
+    else
+	status->FileType = Invalid;			/*invalid type field */
+    status->LinkCount = targetptr->disk.linkCount;
+    status->Length_hi = 0;
+    status->Length = targetptr->disk.length;
+    status->DataVersion = targetptr->disk.dataVersion;
+    status->Author = targetptr->disk.author;
+    status->Owner = targetptr->disk.owner;
+    status->CallerAccess = rights;
+    status->AnonymousAccess = anyrights;
+    status->UnixModeBits = targetptr->disk.modeBits;
+    status->ClientModTime = targetptr->disk.unixModifyTime;	/* This might need rework */
+    status->ParentVnode = (status->FileType == Directory ? targetptr->vnodeNumber : parentptr->vnodeNumber);
+    status->ParentUnique = (status->FileType == Directory ? targetptr->disk.uniquifier : parentptr->disk.uniquifier);
+    status->ServerModTime = targetptr->disk.serverModifyTime;			
+    status->Group = targetptr->disk.group;
+    status->lockCount = targetptr->disk.lock.lockCount;
+    status->errorCode = 0;
+
+} /*GetStatus*/
 
 afs_int32 SRXAFS_FetchData (struct rx_call *acall,   
 			    struct AFSFid *Fid,      
@@ -894,7 +923,7 @@ Bad_FetchStatus:
 } /*SAFSS_FetchStatus*/
 
 
-afs_int32 SRXAFS_BulkStatus(struct rx_call *acall;
+afs_int32 SRXAFS_BulkStatus(struct rx_call *acall,
 			    struct AFSCBFids *Fids,
 			    struct AFSBulkStats *OutStats,
 			    struct AFSCBs *CallBacks,
@@ -3682,26 +3711,70 @@ Bad_ReleaseLock:
 } /*SRXAFS_ReleaseLock*/
 
 
-/*
- * This routine is called exclusively by SRXAFS_GetStatistics(), and should be
- * merged into it when possible.
- */
-static afs_int32 GetStatistics (struct rx_call *acall,
-				struct AFSStatistics *Statistics)
+void SetSystemStats(struct AFSStatistics *stats)
 {
-    ViceLog(1, ("SAFS_GetStatistics Received\n"));
+  /* Fix this sometime soon.. */
+  /* Because hey, it's not like we have a network monitoring protocol... */
+    struct	timeval	time;
+
+    /* this works on all system types */
+    TM_GetTimeOfDay(&time, 0);
+    stats->CurrentTime = time.tv_sec;
+} /*SetSystemStats*/
+
+void SetAFSStats(struct AFSStatistics *stats)
+{
+    extern afs_int32 StartTime, CurrentConnections;
+    int	seconds;
+
     FS_LOCK
-    AFSCallStats.GetStatistics++, AFSCallStats.TotalCalls++;
+    stats->CurrentMsgNumber = 0;
+    stats->OldestMsgNumber = 0;
+    stats->StartTime = StartTime;
+    stats->CurrentConnections = CurrentConnections;
+    stats->TotalAFSCalls = AFSCallStats.TotalCalls;
+    stats->TotalFetchs = AFSCallStats.FetchData+AFSCallStats.FetchACL+AFSCallStats.FetchStatus;
+    stats->FetchDatas = AFSCallStats.FetchData;
+    stats->FetchedBytes = AFSCallStats.TotalFetchedBytes;
+    seconds = AFSCallStats.AccumFetchTime/1000;
+    if (seconds <= 0) seconds = 1;
+    stats->FetchDataRate = AFSCallStats.TotalFetchedBytes/seconds;
+    stats->TotalStores = AFSCallStats.StoreData+AFSCallStats.StoreACL+AFSCallStats.StoreStatus;
+    stats->StoreDatas = AFSCallStats.StoreData;
+    stats->StoredBytes = AFSCallStats.TotalStoredBytes;
+    seconds = AFSCallStats.AccumStoreTime/1000;
+    if (seconds <= 0) seconds = 1;
+    stats->StoreDataRate = AFSCallStats.TotalStoredBytes/seconds;
+#ifdef AFS_NT40_ENV
+    stats->ProcessSize = -1; /* TODO: */
+#else
+    stats->ProcessSize = (afs_int32)((long) sbrk(0) >> 10);
+#endif
     FS_UNLOCK
-    memset(Statistics, 0, sizeof(*Statistics));
-    SetAFSStats(Statistics);
-    SetVolumeStats(Statistics);
-    SetSystemStats(Statistics);
+    h_GetWorkStats((int *)&(stats->WorkStations),(int *)&(stats->ActiveWorkStations),
+	    (int *)0, (afs_int32)(FT_ApproxTime())-(15*60));
 
-    return(0);
+} /*SetAFSStats*/
 
-} /*GetStatistics*/
+/* Get disk related information from all AFS partitions. */
 
+void SetVolumeStats(struct AFSStatistics *stats)
+{
+    struct DiskPartition * part;
+    int i = 0;
+
+    for (part = DiskPartitionList; part && i < AFS_MSTATDISKS; part = part->next) {
+	stats->Disks[i].TotalBlocks = part->totalUsable;
+	stats->Disks[i].BlocksAvailable = part->free;
+	memset(stats->Disks[i].Name, 0, AFS_DISKNAMESIZE);
+	strncpy(stats->Disks[i].Name, part->name, AFS_DISKNAMESIZE);
+	i++;
+    }
+    while (i < AFS_MSTATDISKS) {
+	stats->Disks[i].TotalBlocks = -1;
+	i++;
+    }
+} /*SetVolumeStats*/
 
 afs_int32 SRXAFS_GetStatistics (struct rx_call *acall,
 				struct ViceStatistics *Statistics)
@@ -3728,7 +3801,14 @@ afs_int32 SRXAFS_GetStatistics (struct rx_call *acall,
     if ((code = CallPreamble(acall, NOTACTIVECALL, &tcon)))
 	goto Bad_GetStatistics;
 
-    code = GetStatistics (tcon, Statistics);
+    ViceLog(1, ("SAFS_GetStatistics Received\n"));
+    FS_LOCK
+    AFSCallStats.GetStatistics++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK
+    memset(Statistics, 0, sizeof(*Statistics));
+    SetAFSStats(Statistics);
+    SetVolumeStats(Statistics);
+    SetSystemStats(Statistics);
     
 Bad_GetStatistics:
     CallPostamble(tcon);
@@ -3777,7 +3857,6 @@ Bad_GetStatistics:
  *------------------------------------------------------------------------*/
 
 afs_int32 SRXAFS_XStatsVersion(struct rx_call *a_call, afs_int32 *a_versionP)
-
 { /*SRXAFS_XStatsVersion*/
 
 #if FS_STATS_DETAILED
@@ -4317,28 +4396,6 @@ Bad_FlushCPS:
     return errorCode;
 } /*SRXAFS_FlushCPS */
 
-
-
-static afs_int32
-GetVolumeInfo (struct rx_call *acall,
-	       char *avolid,
-	       struct VolumeInfo *avolinfo)
-{
-    int errorCode = 0;			/* error code */
-
-    FS_LOCK
-    AFSCallStats.GetVolumeInfo++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-
-    errorCode = TryLocalVLServer(avolid, avolinfo);
-    ViceLog(1, ("SAFS_GetVolumeInfo returns %d, Volume %u, type %x, servers %x %x %x %x...\n",
-	    errorCode, avolinfo->Vid, avolinfo->Type,
-	    avolinfo->Server0, avolinfo->Server1, avolinfo->Server2,
-	    avolinfo->Server3));
-    return(errorCode);
-}
-
-
 /* worthless hack to let CS keep running ancient software */
 static int afs_vtoi(register char *aname)
 {
@@ -4414,7 +4471,6 @@ static afs_int32 CopyVolumeEntry(char *aname,register struct vldbentry *ave,
     return 0;
 }
 
-
 static afs_int32 TryLocalVLServer(char *avolid, struct VolumeInfo *avolinfo)
 {
     static struct rx_connection *vlConn = 0;
@@ -4447,6 +4503,28 @@ static afs_int32 TryLocalVLServer(char *avolid, struct VolumeInfo *avolinfo)
     code = CopyVolumeEntry(avolid, &tve, avolinfo);
     return code;
 }
+
+static afs_int32
+GetVolumeInfo (struct rx_call *acall,
+	       char *avolid,
+	       struct VolumeInfo *avolinfo)
+{
+    int errorCode = 0;			/* error code */
+
+    FS_LOCK
+    AFSCallStats.GetVolumeInfo++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK
+
+    errorCode = TryLocalVLServer(avolid, avolinfo);
+    ViceLog(1, ("SAFS_GetVolumeInfo returns %d, Volume %u, type %x, servers %x %x %x %x...\n",
+	    errorCode, avolinfo->Vid, avolinfo->Type,
+	    avolinfo->Server0, avolinfo->Server1, avolinfo->Server2,
+	    avolinfo->Server3));
+    return(errorCode);
+}
+
+
+
 
 
 afs_int32 SRXAFS_GetVolumeInfo (struct rx_call *acall,
@@ -4593,14 +4671,12 @@ Bad_GetVolumeStatus:
 } /*SRXAFS_GetVolumeStatus*/
 
 
-afs_int32 SRXAFS_SetVolumeStatus (acall, avolid, StoreVolStatus, Name, OfflineMsg, Motd)
-    struct rx_call *acall;		  /* Rx call */
-    afs_int32 avolid;			  /* Volume's id */
-    AFSStoreVolumeStatus *StoreVolStatus; /* Adjusted output volume's status */
-    char *Name;				  /* Set new volume's name, if applicable */
-    char *OfflineMsg;			  /* Set new offline msg, if applicable */
-    char *Motd;				  /* Set new motd msg, if applicable */
-
+afs_int32 SRXAFS_SetVolumeStatus (struct rx_call *acall,
+				  afs_int32 avolid,
+				  AFSStoreVolumeStatus *StoreVolStatus,
+				  char *Name,
+				  char *OfflineMsg,
+				  char *Motd)
 {
     Vnode * targetptr =	0;		/* vnode of the new file */
     Vnode * parentwhentargetnotdir = 0;	/* vnode of parent */
@@ -4689,7 +4765,6 @@ afs_int32 SRXAFS_SetVolumeStatus (acall, avolid, StoreVolStatus, Name, OfflineMs
 
 #define	DEFAULTVOLUME	"root.afs"
 
-
 afs_int32 SRXAFS_GetRootVolume (struct rx_call *acall, char **VolumeName)
 {
     int fd;
@@ -4773,11 +4848,9 @@ Bad_GetRootVolume:
 
 
 /* still works because a struct CBS is the same as a struct AFSOpaque */
-afs_int32 SRXAFS_CheckToken (acall, AfsId, Token)
-    struct rx_call *acall; /* Rx call */
-    afs_int32 AfsId;	    		/* AFS id whose token we verify */
-    struct AFSOpaque *Token;		/* Token value for used Afsid */
-
+afs_int32 SRXAFS_CheckToken (struct rx_call *acall,
+			     afs_int32 AfsId,
+			     struct AFSOpaque *Token)
 {
     afs_int32 code;
     struct rx_connection *tcon;
@@ -4829,36 +4902,13 @@ Bad_CheckToken:
 
 } /*SRXAFS_CheckToken*/
 
-
-static GetTime (acall, Seconds, USeconds)
-    struct rx_call *acall;	    /* Rx call */
-    afs_uint32 *Seconds;	    /* Returned time in seconds */
-    afs_uint32 *USeconds;	    /* Returned leftovers in useconds */
-
-{
-    struct timeval tpl;
-
-    FS_LOCK
-    AFSCallStats.GetTime++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-
-    TM_GetTimeOfDay(&tpl, 0);
-    *Seconds = tpl.tv_sec;
-    *USeconds = tpl.tv_usec;
-
-    ViceLog(2, ("SAFS_GetTime returns %d, %d\n", *Seconds, *USeconds));
-    return(0);
-
-} /*GetTime*/
-
-
-afs_int32 SRXAFS_GetTime (acall, Seconds, USeconds)
-    struct rx_call *acall;	    /* Rx call */
-    afs_uint32 *Seconds;	    /* Returned time in seconds */
-    afs_uint32 *USeconds;	    /* Returned leftovers in useconds */
+afs_int32 SRXAFS_GetTime (struct rx_call *acall,
+			  afs_uint32 *Seconds,
+			  afs_uint32 *USeconds)
 {
     afs_int32 code;
     struct rx_connection *tcon;
+    struct timeval tpl;
 #if FS_STATS_DETAILED
     struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
     struct timeval opStartTime,
@@ -4879,7 +4929,15 @@ afs_int32 SRXAFS_GetTime (acall, Seconds, USeconds)
     if ((code = CallPreamble(acall, NOTACTIVECALL, &tcon)))
 	goto Bad_GetTime;
 
-    code = GetTime (tcon, Seconds, USeconds);
+    FS_LOCK
+    AFSCallStats.GetTime++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK
+
+    TM_GetTimeOfDay(&tpl, 0);
+    *Seconds = tpl.tv_sec;
+    *USeconds = tpl.tv_usec;
+
+    ViceLog(2, ("SAFS_GetTime returns %d, %d\n", *Seconds, *USeconds));
     
 Bad_GetTime:
     CallPostamble(tcon);
@@ -4908,29 +4966,22 @@ Bad_GetTime:
 } /*SRXAFS_GetTime*/
 
 
-/*=============================================================================*/
-/*									       */
-/* AUXILIARY functions that are used by the main AFS interface procedure calls */
-/*									       */
-/*=============================================================================*/
-
-
 /*
  * This unusual afs_int32-parameter routine encapsulates all volume package related
  * operations together in a single function; it's called by almost all AFS
  * interface calls.
  */
-GetVolumePackage(tcon, Fid, volptr, targetptr, chkforDir, parent, client, locktype, rights, anyrights)
-    struct rx_connection *tcon; /* Rx connection */
-    AFSFid *Fid;		/* Fid that we are dealing with */
-    Volume **volptr;		/* Returns pointer to volume associated with Fid */
-    Vnode **targetptr;		/* Returns pointer to vnode associated with Fid */
-    int chkforDir;	   	 /* Flag testing whether Fid is/or not a dir */
-    Vnode **parent;	    	/* If Fid not a dir, this points to the parent dir */
-    struct client **client;	/* Returns the client associated with the conn */
-    int locktype;	        /* locktype (READ or WRITE) for the Fid vnode */
-    afs_int32 *rights, *anyrights;   /* Returns user's & any acl rights */
-
+static afs_int32
+GetVolumePackage(struct rx_connection *tcon,
+		 AFSFid *Fid,
+		 Volume **volptr,
+		 Vnode **targetptr,
+		 int chkforDir,
+		 Vnode **parent,
+		 struct client **client,
+		 int locktype,
+		 afs_int32 *rights, 
+		 afs_int32 *anyrights)
 {
     struct acl_accessList * aCL;    /* Internal access List */
     int	aCLSize;	    /* size of the access list */
@@ -4973,10 +5024,11 @@ GetVolumePackage(tcon, Fid, volptr, targetptr, chkforDir, parent, client, lockty
  * This is the opposite of GetVolumePackage(), and is always used at the end of
  * AFS calls to put back all used vnodes and the volume in the proper order!
  */
-PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr, volptr)
-    Vnode *parentwhentargetnotdir, *targetptr, *parentptr;
-    Volume *volptr;
-
+static afs_int32
+PutVolumePackage(Vnode *parentwhentargetnotdir, 
+		 Vnode *targetptr,
+		 Vnode *parentptr,
+		 Volume *volptr)
 {
     int	fileCode = 0;	/* Error code returned by the volume package */
 
@@ -4998,7 +5050,6 @@ PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr, volptr)
 } /*PutVolumePackage*/
 
 
-#if FS_STATS_DETAILED
 /*
  * FetchData_RXStyle
  *
@@ -5011,26 +5062,26 @@ PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr, volptr)
  *	Call		: Ptr to the Rx call involved.
  *	Pos		: Offset within the file.
  *	Len		: Length in bytes to read; this value is bogus!
+ * if FS_STATS_DETAILED
  *	a_bytesToFetchP	: Set to the number of bytes to be fetched from
  *			  the File Server.
  *	a_bytesFetchedP	: Set to the actual number of bytes fetched from
- #			  the File Server.
+ *			  the File Server.
+ * endif
  */
 
-FetchData_RXStyle(volptr, targetptr, Call, Pos, Len, Int64Mode, a_bytesToFetchP, a_bytesFetchedP)
-#else
-FetchData_RXStyle(volptr, targetptr, Call, Pos, Len, Int64Mode)
-#endif /* FS_STATS_DETAILED */
-Volume			* volptr;
-Vnode			* targetptr;
-register struct rx_call		* Call;
-afs_int32			Pos;
-afs_int32			Len;
-afs_int32			Int64Mode;
+afs_int32
+FetchData_RXStyle(Volume *volptr, 
+		  Vnode *targetptr, 
+		  register struct rx_call *Call,
+		  afs_int32 Pos,
+		  afs_int32 Len,
+		  afs_int32 Int64Mode,
 #if FS_STATS_DETAILED
-afs_int32 *a_bytesToFetchP;
-afs_int32 *a_bytesFetchedP;
+		  afs_int32 *a_bytesToFetchP,
+		  afs_int32 *a_bytesFetchedP
 #endif /* FS_STATS_DETAILED */
+		  )
 {
     struct timeval StartTime, StopTime; /* used to calculate file  transfer rates */
     int	errorCode = 0;			/* Returned error code to caller */
@@ -5192,7 +5243,6 @@ static int GetLinkCountAndSize(Volume *vp, FdHandle_t *fdP, int *lc, int *size)
 #endif   
 }
 
-#if FS_STATS_DETAILED
 /*
  * StoreData_RXStyle
  *
@@ -5205,33 +5255,28 @@ static int GetLinkCountAndSize(Volume *vp, FdHandle_t *fdP, int *lc, int *size)
  *	Call		: Ptr to the Rx call involved.
  *	Pos		: Offset within the file.
  *	Len		: Length in bytes to store; this value is bogus!
+ * if FS_STATS_DETAILED
  *	a_bytesToStoreP	: Set to the number of bytes to be stored to
  *			  the File Server.
  *	a_bytesStoredP	: Set to the actual number of bytes stored to
- #			  the File Server.
+ *			  the File Server.
+ * endif
  */
-
-StoreData_RXStyle(volptr, targetptr, Fid, client, Call, Pos, Length,
-		  FileLength, sync, a_bytesToStoreP, a_bytesStoredP)
-#else
-StoreData_RXStyle(volptr, targetptr, Fid, client, Call, Pos, Length,
-		  FileLength, sync)
-#endif /* FS_STATS_DETAILED */
-
-    Volume *volptr;
-    Vnode *targetptr;
-    struct AFSFid *Fid;
-    struct client *client;
-    register struct rx_call *Call;
-    afs_uint32 Pos;
-    afs_uint32 Length;
-    afs_uint32 FileLength;
-    int sync;
+afs_int32
+StoreData_RXStyle(Volume *volptr,
+		  Vnode *targetptr,
+		  struct AFSFid *Fid,
+		  struct client *client,
+		  register struct rx_call *Call,
+		  afs_uint32 Pos,
+		  afs_uint32 Length,
+		  afs_uint32 FileLength,
+		  int sync,
 #if FS_STATS_DETAILED
-    afs_int32 *a_bytesToStoreP;
-    afs_int32 *a_bytesStoredP;
+		  afs_int32 *a_bytesToStoreP,
+		  afs_int32 *a_bytesStoredP
 #endif /* FS_STATS_DETAILED */
-
+		  )
 {
     int	    bytesTransfered;		/* number of bytes actually transfered */
     struct timeval StartTime, StopTime;	/* Used to measure how long the store takes */
@@ -5474,13 +5519,12 @@ StoreData_RXStyle(volptr, targetptr, Fid, client, Call, Pos, Length,
  * thus only generating the event if all the checks succeed, but only because
  * of the privilege       XXX
  */
-Check_PermissionRights(targetptr, client, rights, CallingRoutine, InStatus)
-    Vnode *targetptr;
-    struct client *client;
-    afs_int32 rights;
-    int CallingRoutine;
-    AFSStoreStatus *InStatus;
-
+static afs_int32
+Check_PermissionRights(Vnode *targetptr,
+		       struct client *client,
+		       afs_int32 rights,
+		       int CallingRoutine,
+		       AFSStoreStatus *InStatus)
 {
     int errorCode = 0;
 #define OWNSp(client, target) ((client)->ViceId == (target)->disk.owner)
@@ -5652,10 +5696,10 @@ Check_PermissionRights(targetptr, client, rights, CallingRoutine, InStatus)
  * external form and returned back to the caller, via the AccessList
  * structure
  */
-RXFetch_AccessList(targetptr, parentwhentargetnotdir, AccessList)
-Vnode			* targetptr;
-Vnode			* parentwhentargetnotdir;
-struct AFSOpaque	* AccessList;
+static afs_int32
+RXFetch_AccessList(Vnode *targetptr,
+		   Vnode *parentwhentargetnotdir,
+		   struct AFSOpaque *AccessList)
 {
     char * eACL;	/* External access list placeholder */
 
@@ -5682,10 +5726,8 @@ struct AFSOpaque	* AccessList;
  * input AccessList structure to the internal representation and copied into
  * the target dir's vnode storage.
  */
-RXStore_AccessList(targetptr, AccessList)
-    Vnode *targetptr;
-    struct AFSOpaque *AccessList;
-
+static afs_int32
+RXStore_AccessList(Vnode *targetptr, struct AFSOpaque *AccessList)
 {
     struct acl_accessList * newACL;	/* PlaceHolder for new access list */
 
@@ -5700,11 +5742,9 @@ RXStore_AccessList(targetptr, AccessList)
 } /*RXStore_AccessList*/
 
 
-Fetch_AccessList(targetptr, parentwhentargetnotdir, AccessList)
-    Vnode *targetptr;
-    Vnode *parentwhentargetnotdir;
-    struct AFSAccessList *AccessList;
-
+static afs_int32
+Fetch_AccessList(Vnode *targetptr, Vnode *parentwhentargetnotdir,
+		 struct AFSAccessList *AccessList)
 {
     char * eACL;	/* External access list placeholder */
 
@@ -5723,16 +5763,13 @@ Fetch_AccessList(targetptr, parentwhentargetnotdir, AccessList)
 
 } /*Fetch_AccessList*/
 
-
 /*
  * The Access List information is converted from its external form in the
  * input AccessList structure to the internal representation and copied into
  * the target dir's vnode storage.
  */
-Store_AccessList(targetptr, AccessList)
-    Vnode *targetptr;
-    struct AFSAccessList *AccessList;
-
+static afs_int32
+Store_AccessList(Vnode *targetptr, struct AFSAccessList *AccessList)
 {
     struct acl_accessList * newACL;	/* PlaceHolder for new access list */
 
@@ -5753,14 +5790,14 @@ Store_AccessList(targetptr, AccessList)
  * given directory, parentptr.
  */
 int DT1=0, DT0=0;
-DeleteTarget(parentptr, volptr, targetptr, dir, fileFid, Name, ChkForDir)
-    Vnode *parentptr;
-    Volume *volptr;
-    Vnode **targetptr;
-    DirHandle *dir;
-    AFSFid *fileFid;
-    char *Name;
-    int ChkForDir;
+static afs_int32
+DeleteTarget(Vnode *parentptr,
+	     Volume *volptr,
+	     Vnode **targetptr,
+	     DirHandle *dir,
+	     AFSFid *fileFid,
+	     char *Name,
+	     int ChkForDir)
 {
     DirHandle childdir;	    /* Handle for dir package I/O */
     int errorCode = 0;
@@ -5874,20 +5911,16 @@ DeleteTarget(parentptr, volptr, targetptr, dir, fileFid, Name, ChkForDir)
  * SymLink(), Link(), MakeDir(), RemoveDir()) on one of its children has
  * been performed.
  */
+static void
+Update_ParentVnodeStatus(Vnode *parentptr,
+			 Volume *volptr,
+			 DirHandle *dir,
+			 int author,
+			 int linkcount,
 #if FS_STATS_DETAILED
-Update_ParentVnodeStatus(parentptr, volptr, dir, author, linkcount, a_inSameNetwork)
-#else
-Update_ParentVnodeStatus(parentptr, volptr, dir, author, linkcount)
+			 char a_inSameNetwork;
 #endif /* FS_STATS_DETAILED */
-    Vnode *parentptr;
-    Volume *volptr;
-    DirHandle *dir;
-    int author;
-    int linkcount;
-#if FS_STATS_DETAILED
-    char a_inSameNetwork;	/*Client in the same net as File Server?*/
-#endif /* FS_STATS_DETAILED */
-
+			 )
 {
     afs_uint32 newlength;	/* Holds new directory length */
     int errorCode;
@@ -5960,18 +5993,15 @@ Update_ParentVnodeStatus(parentptr, volptr, dir, author, linkcount)
  * the individual module.
  */
 
-/* INCOMPLETE - More attention is needed here! */
-
-Update_TargetVnodeStatus(targetptr, Caller, client, InStatus, parentptr, volptr,
-			 length)
-    Vnode *targetptr;
-    afs_uint32 Caller;
-    struct client *client;
-    AFSStoreStatus *InStatus;
-    Vnode *parentptr;
-    Volume *volptr;
-    afs_int32 length;
-
+/* XXX INCOMPLETE - More attention is needed here! */
+static void
+Update_TargetVnodeStatus(Vnode *targetptr,
+			 afs_uint32 Caller,
+			 struct client *client,
+			 AFSStoreStatus *InStatus,
+			 Vnode *parentptr,
+			 Volume *volptr,
+			 afs_int32 length)
 {
 #if FS_STATS_DETAILED
     Date currDate;		/*Current date*/
@@ -6103,10 +6133,8 @@ Update_TargetVnodeStatus(targetptr, Caller, client, InStatus, parentptr, volptr,
  * Fills the CallBack structure with the expiration time and type of callback
  * structure. Warning: this function is currently incomplete.
  */
-SetCallBackStruct(CallBackTime, CallBack)
-    afs_uint32 CallBackTime;
-    struct AFSCallBack *CallBack;
-
+static void
+SetCallBackStruct(afs_uint32 CallBackTime, struct AFSCallBack *CallBack)
 {
     /* CallBackTime could not be 0 */
     if (CallBackTime == 0) {
@@ -6125,12 +6153,8 @@ SetCallBackStruct(CallBackTime, CallBack)
  * type on the vnode is set to lock. Note that both volume/vnode's ref counts
  * are incremented and they must be eventualy released.
  */
-CheckVnode(fid, volptr, vptr, lock)
-    AFSFid *fid;
-    Volume **volptr;
-    Vnode **vptr;
-    int lock;
-
+static afs_int32
+CheckVnode(AFSFid *fid, Volume **volptr, Vnode **vptr, int lock)
 {
     int fileCode = 0;
     int errorCode = -1;
@@ -6234,7 +6258,6 @@ CheckVnode(fid, volptr, vptr, lock)
 	return(VNOVNODE);   /* return the right error code, at least */
     }
     return(0);
-
 } /*CheckVnode*/
 
 
@@ -6244,15 +6267,14 @@ CheckVnode(fid, volptr, vptr, lock)
  * thru the parent; in such case the parent's vnode is returned in
  * READ_LOCK mode.
  */
-SetAccessList(targetptr, volume, ACL, ACLSize, parent, Fid, Lock)
-    Vnode **targetptr;		 /*Target vnode pointer; returned locked*/
-    Volume **volume;		 /*Volume ptr associated with targetptr*/
-    struct acl_accessList **ACL; /*The returned ACL for the vnode*/
-    int * ACLSize;		 /*Returned ACL's size*/
-    Vnode **parent;		 /*If target not Dir, it's its locked parent*/
-    AFSFid *Fid;		 /*Fid associated with targetptr*/
-    int Lock;			 /*Lock type to be applied to targetptr*/
-
+static afs_int32
+SetAccessList(Vnode **targetptr,
+	      Volume **volume,
+	      struct acl_accessList **ACL,
+	      int * ACLSize,
+	      Vnode **parent,
+	      AFSFid *Fid,
+	      int Lock)
 {
     if ((*targetptr)->disk.type == vDirectory) {
 	*parent = 0;
@@ -6292,16 +6314,15 @@ SetAccessList(targetptr, volume, ACL, ACLSize, parent, Fid, Lock)
  * Common code that handles the creation of a new file (SAFS_CreateFile and
  * SAFS_Symlink) or a new dir (SAFS_MakeDir)
  */
-Alloc_NewVnode(parentptr, dir, volptr, targetptr, Name, OutFid, FileType, BlocksPreallocatedForVnode)
-    Vnode *parentptr;
-    DirHandle *dir;
-    Volume *volptr;
-    Vnode **targetptr;
-    char *Name;
-    struct AFSFid *OutFid;
-    int FileType;
-    int BlocksPreallocatedForVnode;
-
+static afs_int32
+Alloc_NewVnode(Vnode *parentptr,
+	       DirHandle *dir,
+	       Volume *volptr,
+	       Vnode **targetptr,
+	       char *Name,
+	       struct AFSFid *OutFid,
+	       int FileType,
+	       int BlocksPreallocatedForVnode)
 {
     int	errorCode = 0;		/* Error code returned back */
     int temp;
@@ -6393,11 +6414,8 @@ Alloc_NewVnode(parentptr, dir, volptr, targetptr, Name, OutFid, FileType, Blocks
  * Handle all the lock-related code (SAFS_SetLock, SAFS_ExtendLock and
  * SAFS_ReleaseLock)
  */
-HandleLocking(targetptr, rights, LockingType)
-    Vnode *targetptr;
-    afs_int32 rights;
-    ViceLockType LockingType;
-
+static afs_int32
+HandleLocking(Vnode *targetptr, afs_int32 rights, ViceLockType LockingType)
 {
     int	Time;		/* Used for time */
     int writeVnode = targetptr->changed_oldTime; /* save original status */
@@ -6440,67 +6458,18 @@ HandleLocking(targetptr, rights, LockingType)
 	    ViceLog(0, ("Illegal Locking type %d\n", LockingType));
     }
     return(0);
-
 } /*HandleLocking*/
-
-
-/*
- * This routine returns the status info associated with the targetptr vnode
- * in the AFSFetchStatus structure.  Some of the newer fields, such as
- * SegSize and Group are not yet implemented
- */
-void GetStatus(targetptr, status, rights, anyrights, parentptr)
-    Vnode *targetptr;		/*vnode of desired Fid*/
-    AFSFetchStatus *status;	/*the status info is returned here*/
-    afs_int32 rights;		/*Sets the 'CallerAccess' status field*/
-    afs_int32 anyrights;		/*Sets the 'AnonymousAccess' status field*/
-    Vnode *parentptr;		/*target's parent vnode*/
-
-{
-    /* initialize return status from a vnode  */
-    status->InterfaceVersion = 1;
-    status->SyncCounter = status->dataVersionHigh = status->lockCount =
-    status->errorCode = 0;
-    status->ResidencyMask = 1; /* means for MR-AFS: file in /vicepr-partition */
-    if (targetptr->disk.type == vFile)
-	status->FileType = File;
-    else if (targetptr->disk.type == vDirectory)
-	status->FileType = Directory;
-    else if (targetptr->disk.type == vSymlink)
-	status->FileType = SymbolicLink;
-    else
-	status->FileType = Invalid;			/*invalid type field */
-    status->LinkCount = targetptr->disk.linkCount;
-    status->Length_hi = 0;
-    status->Length = targetptr->disk.length;
-    status->DataVersion = targetptr->disk.dataVersion;
-    status->Author = targetptr->disk.author;
-    status->Owner = targetptr->disk.owner;
-    status->CallerAccess = rights;
-    status->AnonymousAccess = anyrights;
-    status->UnixModeBits = targetptr->disk.modeBits;
-    status->ClientModTime = targetptr->disk.unixModifyTime;	/* This might need rework */
-    status->ParentVnode = (status->FileType == Directory ? targetptr->vnodeNumber : parentptr->vnodeNumber);
-    status->ParentUnique = (status->FileType == Directory ? targetptr->disk.uniquifier : parentptr->disk.uniquifier);
-    status->ServerModTime = targetptr->disk.serverModifyTime;			
-    status->Group = targetptr->disk.group;
-    status->lockCount = targetptr->disk.lock.lockCount;
-    status->errorCode = 0;
-
-} /*GetStatus*/
-
 
 /*
  * Compare the directory's ACL with the user's access rights in the client
  * connection and return the user's and everybody else's access permissions
  * in rights and anyrights, respectively
  */
-GetRights (client, ACL, rights, anyrights)
-    struct client *client;	/* Client struct */
-    struct acl_accessList *ACL;	/* Access List for the current directory */
-    afs_int32 *rights;		/* Returns access rights for caller */
-    afs_int32 *anyrights;		/* Returns access rights for 'anyuser' */
-
+static afs_int32
+GetRights (struct client *client,
+	   struct acl_accessList *ACL,
+	   afs_int32 *rights,
+	   afs_int32 *anyrights)
 {
     extern prlist SystemAnyUserCPS;
     afs_int32 hrights = 0;
@@ -6545,10 +6514,8 @@ GetRights (client, ACL, rights, anyrights)
 
 /* Checks if caller has the proper AFS and Unix (WRITE) access permission to the target directory; Prfs_Mode refers to the AFS Mode operation while rights contains the caller's access permissions to the directory. */
 
-CheckWriteMode(targetptr, rights, Prfs_Mode)
-Vnode	    * targetptr;
-afs_int32	    rights;
-int	    Prfs_Mode;
+static afs_int32
+CheckWriteMode(Vnode *targetptr, afs_int32 rights, int Prfs_Mode)
 {
     if (readonlyServer)
 	return(VREADONLY);
@@ -6558,7 +6525,6 @@ int	    Prfs_Mode;
 	return(EACCES);
     return(0);
 }
-	
 
 /* In our current implementation, each successive data store (new file
  * data version) creates a new inode. This function creates the new
@@ -6568,10 +6534,7 @@ int	    Prfs_Mode;
  * disk.inodeNumber and cloned)
  */
 #define	COPYBUFFSIZE	8192
-int CopyOnWrite(targetptr, volptr)
-    Vnode *targetptr;
-    Volume *volptr;
-
+static int CopyOnWrite(Vnode *targetptr, Volume *volptr)
 {
     Inode	ino, nearInode;
     int		rdlen;
@@ -6707,9 +6670,8 @@ int CopyOnWrite(targetptr, volptr)
  * VanillaUser returns 1 (true) if the user is a vanilla user (i.e., not
  * a System:Administrator)
  */
-VanillaUser(client)
-    struct client *client;
-
+static afs_int32
+VanillaUser(struct client *client)
 {
     if (acl_IsAMember(SystemId, &client->CPS))
 	return(0);  /* not a system administrator, then you're "vanilla" */
@@ -6725,11 +6687,8 @@ VanillaUser(client)
  * We usually pre-adjust the volume space to make sure that there's
  * enough space before consuming some.
  */
-AdjustDiskUsage(volptr, length, checkLength)
-    Volume	* volptr;
-    afs_int32	checkLength;
-    afs_int32	length;
-
+static afs_int32
+AdjustDiskUsage(Volume *volptr, afs_int32 length, afs_int32 checkLength)
 {
     int rc;
     int nc;
@@ -6754,19 +6713,14 @@ AdjustDiskUsage(volptr, length, checkLength)
 
 } /*AdjustDiskUsage*/
 
-
 /*
  * If some flags (i.e. min or max quota) are set, the volume's in disk
  * label is updated; Name, OfflineMsg, and Motd are also reflected in the
  * update, if applicable.
  */
-RXUpdate_VolumeStatus(volptr, StoreVolStatus, Name, OfflineMsg, Motd)
-    Volume *volptr;
-    AFSStoreVolumeStatus* StoreVolStatus;
-    char *Name;
-    char *OfflineMsg;
-    char *Motd;
-
+static afs_int32
+RXUpdate_VolumeStatus(Volume *volptr, AFSStoreVolumeStatus* StoreVolStatus,
+		      char *Name, char *OfflineMsg, char *Motd)
 {
     Error errorCode = 0;
 
@@ -6797,13 +6751,10 @@ RXUpdate_VolumeStatus(volptr, StoreVolStatus, Name, OfflineMsg, Motd)
 
 
 /* old interface */
-Update_VolumeStatus(volptr, StoreVolStatus, Name, OfflineMsg, Motd)
-    Volume *volptr;
-    VolumeStatus *StoreVolStatus;
-    struct BBS *Name;
-    struct BBS *OfflineMsg;
-    struct BBS *Motd;
-
+static afs_int32
+Update_VolumeStatus(Volume *volptr, VolumeStatus *StoreVolStatus,
+		    struct BBS *Name, struct BBS *OfflineMsg,
+		    struct BBS *Motd)
 {
     Error errorCode = 0;
 
@@ -6836,13 +6787,9 @@ Update_VolumeStatus(volptr, StoreVolStatus, Name, OfflineMsg, Motd)
  * used by both SAFS_GetVolumeStatus and SAFS_SetVolumeStatus to return
  * the volume status to the caller.
  */
-GetVolumeStatus(status, name, offMsg, motd, volptr)
-VolumeStatus	* status;
-struct BBS		* name;
-struct BBS		* offMsg;
-struct BBS		* motd;
-Volume			* volptr;
-
+static afs_int32
+GetVolumeStatus(VolumeStatus *status, struct BBS *name, struct BBS *offMsg,
+		struct BBS *motd, Volume *volptr)
 {
     status->Vid = V_id(volptr);
     status->ParentId = V_parentId(volptr);
@@ -6876,14 +6823,9 @@ Volume			* volptr;
 
 } /*GetVolumeStatus*/
 
-
-RXGetVolumeStatus(status, name, offMsg, motd, volptr)
-    AFSFetchVolumeStatus *status;
-    char **name;
-    char **offMsg;
-    char **motd;
-    Volume *volptr;
-
+static afs_int32
+RXGetVolumeStatus(AFSFetchVolumeStatus *status, char **name, char **offMsg,
+		  char **motd, Volume *volptr)
 {
     int temp;
 
@@ -6922,200 +6864,8 @@ RXGetVolumeStatus(status, name, offMsg, motd, volptr)
 } /*RXGetVolumeStatus*/
 
 
-/* Set AFS Data Fetch/Store related statistics. */
-
-void SetAFSStats(stats)
-    struct AFSStatistics *stats;
-
-{
-    extern afs_int32 StartTime, CurrentConnections;
-    int	seconds;
-
-    FS_LOCK
-    stats->CurrentMsgNumber = 0;
-    stats->OldestMsgNumber = 0;
-    stats->StartTime = StartTime;
-    stats->CurrentConnections = CurrentConnections;
-    stats->TotalAFSCalls = AFSCallStats.TotalCalls;
-    stats->TotalFetchs = AFSCallStats.FetchData+AFSCallStats.FetchACL+AFSCallStats.FetchStatus;
-    stats->FetchDatas = AFSCallStats.FetchData;
-    stats->FetchedBytes = AFSCallStats.TotalFetchedBytes;
-    seconds = AFSCallStats.AccumFetchTime/1000;
-    if (seconds <= 0) seconds = 1;
-    stats->FetchDataRate = AFSCallStats.TotalFetchedBytes/seconds;
-    stats->TotalStores = AFSCallStats.StoreData+AFSCallStats.StoreACL+AFSCallStats.StoreStatus;
-    stats->StoreDatas = AFSCallStats.StoreData;
-    stats->StoredBytes = AFSCallStats.TotalStoredBytes;
-    seconds = AFSCallStats.AccumStoreTime/1000;
-    if (seconds <= 0) seconds = 1;
-    stats->StoreDataRate = AFSCallStats.TotalStoredBytes/seconds;
-#ifdef AFS_NT40_ENV
-    stats->ProcessSize = -1; /* TODO: */
-#else
-    stats->ProcessSize = (afs_int32)((long) sbrk(0) >> 10);
-#endif
-    FS_UNLOCK
-    h_GetWorkStats((int *)&(stats->WorkStations),(int *)&(stats->ActiveWorkStations),
-	    (int *)0, (afs_int32)(FT_ApproxTime())-(15*60));
-
-} /*SetAFSStats*/
-
-
-/* Get disk related information from all AFS partitions. */
-
-void SetVolumeStats(stats)
-    struct AFSStatistics *stats;
-
-{
-    struct DiskPartition * part;
-    int i = 0;
-
-    for (part = DiskPartitionList; part && i < AFS_MSTATDISKS; part = part->next) {
-	stats->Disks[i].TotalBlocks = part->totalUsable;
-	stats->Disks[i].BlocksAvailable = part->free;
-	memset(stats->Disks[i].Name, 0, AFS_DISKNAMESIZE);
-	strncpy(stats->Disks[i].Name, part->name, AFS_DISKNAMESIZE);
-	i++;
-    }
-    while (i < AFS_MSTATDISKS) {
-	stats->Disks[i].TotalBlocks = -1;
-	i++;
-    }
-} /*SetVolumeStats*/
-
-
-#ifdef notdef
-struct nlist RawStats[] = {
-#define CPTIME 0
-    {	"_cp_time"    },
-#define BOOT 1
-    {	"_boottime"    },
-#define DISK 2
-    {	"_dk_xfer"    },
-#ifndef	AFS_SUN_ENV
-#define SWAPMAP 3
-    {	"_swapmap"    },
-#define NSWAPMAP 4
-    {	"_nswapmap"    },
-#define NSWAPBLKS 5
-    {	"_nswap"    },
-#define DMMAX 6
-    {	"_dmmax"    },
-#else /* AFS_SUN_ENV */
-#define SANON 3
-    {	"_anoninfo" },
-#endif
-    {	""   },
-
-};
-#endif
-
-/* Get some kernel specific related statistics */
-
-void SetSystemStats(stats)
-    struct AFSStatistics * stats;
-
-{
-/* Fix this sometime soon.. */
-#ifdef notdef
-    static	int	kmem = 0;
-    static	struct	mapent	*swapMap = 0;
-    static	int	swapMapAddr = 0;
-    static	int	swapMapSize = 0;
-    static	int	numSwapBlks = 0;
-    int		numSwapEntries,
-		dmmax;
-    register	int	i;
-    struct	mapent	* sp;
-    afs_int32	busy[CPUSTATES];
-    afs_int32	xfer[DK_NDRIVE];
-    struct	timeval	bootTime;
-#endif
-    struct	timeval	time;
-
-    /* this works on all system types */
-    TM_GetTimeOfDay(&time, 0);
-    stats->CurrentTime = time.tv_sec;
-
-#ifdef notdef
-    stats->UserCPU =stats->SystemCPU =stats->NiceCPU =stats->IdleCPU =stats->BootTime =0;
-    stats->TotalIO =stats->ActiveVM =stats->TotalVM = 0;
-    for (i=0; i < AFS_MSTATSPARES; i++) stats->Spares[i] = 0;
-
-    if (kmem ==	-1) return;
-    if (kmem == 0) {
-	nlist("/vmunix", RawStats);
-	if (RawStats[0].n_type == 0) {
-	    ViceLog(0, ("Could not get a namelist from VMUNIX\n"));
-	    kmem = -1;
-	    return;
-	}
-	kmem = open("/dev/kmem",O_RDONLY,0);
-	if (kmem <= 0) {
-	    ViceLog(0, ("Could not open /dev/kmem\n"));
-	    kmem = -1;
-	    return;
-	}
-    }
-    lseek(kmem, (afs_int32) RawStats[CPTIME].n_value,0);
-    read(kmem, (char *)busy, sizeof(busy));
-    stats->SystemCPU = busy[CP_SYS];
-    stats->UserCPU = busy[CP_USER];
-    stats->NiceCPU = busy[CP_NICE];
-    stats->IdleCPU = busy[CP_IDLE];
-    lseek(kmem, (afs_int32) RawStats[BOOT].n_value,0);
-    read(kmem, (char *)&bootTime, sizeof(bootTime));
-    stats->BootTime = bootTime.tv_sec;
-    lseek(kmem, (afs_int32) RawStats[DISK].n_value,0);
-    read(kmem, (char *)xfer, sizeof(xfer));
-    stats->TotalIO = 0;
-    for(i = 0; i < DK_NDRIVE; i++) {
-	stats->TotalIO += xfer[i];
-    }
-#ifdef	AFS_SUN_ENV
-    {
-#include <vm/anon.h>
-	struct anoninfo ai;
-#define	ctok(x)	    ((ctob(x)) >> 10)
-
-	lseek(kmem, (afs_int32)RawStats[SANON].n_value,0);
-	read(kmem, (char *)&ai, sizeof (struct anoninfo));
-	stats->TotalVM = ctok(ai.ani_max - ai.ani_resv);    /* available */
-	stats->ActiveVM	= ctok(ai.ani_resv);	/*  used */
-    }
-#else
-    if (!swapMap) {
-	lseek(kmem, (afs_int32)RawStats[SWAPMAP].n_value,0);
-	read(kmem, (char *)&swapMapAddr, sizeof(swapMapAddr));
-	swapMapAddr += sizeof(struct map);
-	lseek(kmem, (afs_int32)RawStats[NSWAPMAP].n_value,0);
-	read(kmem, (char *)&numSwapEntries, sizeof(numSwapEntries));
-	swapMapSize = (--numSwapEntries)*sizeof(struct mapent);
-	lseek(kmem, (afs_int32)RawStats[NSWAPBLKS].n_value,0);
-	read(kmem, (char *)&numSwapBlks, sizeof(numSwapBlks));
-	lseek(kmem, (afs_int32)RawStats[DMMAX].n_value,0);
-	read(kmem, (char *)&dmmax, sizeof(dmmax));
-	numSwapBlks -= dmmax/2;
-	swapMap = (struct mapent *)malloc(swapMapSize);
-    }
-    sp = (struct mapent *)swapMap;
-    lseek(kmem, (afs_int32)swapMapAddr, 0);
-    read(kmem, (char *)sp, swapMapSize);
-    for(stats->TotalVM = stats->ActiveVM = numSwapBlks; sp->m_size; sp++) {
-	stats->ActiveVM -= sp->m_size;
-    }
-#endif /* AFS_SUN_ENV */
-#endif
-
-} /*SetSystemStats*/
-
-
-/* Validate target file */
-
-
-FileNameOK(aname)
-    register char *aname;
-
+static afs_int32
+FileNameOK(register char *aname)
 {
     register afs_int32 i, tc;
     i = strlen(aname);
@@ -7132,10 +6882,8 @@ FileNameOK(aname)
 
 
 /* Debugging tool to print Volume Statu's contents */
-
-PrintVolumeStatus(status)
-    VolumeStatus *status;
-
+static void
+PrintVolumeStatus(VolumeStatus *status)
 {
     ViceLog(5,("Volume header contains:\n"));
     ViceLog(5,("Vid = %u, Parent = %u, Online = %d, InService = %d, Blessed = %d, NeedsSalvage = %d\n",
@@ -7153,26 +6901,23 @@ PrintVolumeStatus(status)
  * and is not supported by the AFS fileserver. We just return EINVAL.
  * The cache manager should not generate this call to an AFS cache manager.
  */
-afs_int32 SRXAFS_DFSSymlink (acall, DirFid, Name, LinkContents, InStatus, OutFid, OutFidStatus, OutDirStatus, CallBack, Sync)
-    struct rx_call *acall;		 /* Rx call */
-    struct AFSFid *DirFid;		 /* Parent dir's fid */
-    char *Name;				 /* File name to create */
-    char *LinkContents;			 /* Contents of the new created file */
-    struct AFSStoreStatus *InStatus;	 /* Input status for the new symbolic link */
-    struct AFSFid *OutFid;		 /* Fid for newly created symbolic link */
-    struct AFSFetchStatus *OutFidStatus; /* Output status for new symbolic link */
-    struct AFSFetchStatus *OutDirStatus; /* Output status for parent dir */
-    struct AFSCallBack *CallBack;	 /* Callback on link */
-    struct AFSVolSync *Sync;
+afs_int32 SRXAFS_DFSSymlink (struct rx_call *acall,
+			     struct AFSFid *DirFid,
+			     char *Name,
+			     char *LinkContents,
+			     struct AFSStoreStatus *InStatus,
+			     struct AFSFid *OutFid,
+			     struct AFSFetchStatus *OutFidStatus,
+			     struct AFSFetchStatus *OutDirStatus,
+			     struct AFSCallBack *CallBack,
+			     struct AFSVolSync *Sync)
 {
     return EINVAL;
 }
 
-afs_int32 SRXAFS_ResidencyCmd (acall, Fid, Inputs, Outputs)
-    struct rx_call *acall;
-    struct AFSFid *Fid;
-    struct ResidencyCmdInputs *Inputs;
-    struct ResidencyCmdOutputs *Outputs;
+afs_int32 SRXAFS_ResidencyCmd (struct rx_call *acall, struct AFSFid *Fid,
+			       struct ResidencyCmdInputs *Inputs,
+			       struct ResidencyCmdOutputs *Outputs)
 {
     return EINVAL;
 }
