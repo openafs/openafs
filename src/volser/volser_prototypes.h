@@ -17,6 +17,7 @@ struct nvldbentry;
 extern void MapPartIdIntoName(afs_int32 partId, char *partName);
 extern int yesprompt(char *str);
 extern int PrintError(char *msg, afs_int32 errcode);
+extern void init_volintInfo(struct volintInfo *vinfo);
 extern int UV_SetSecurity(register struct rx_securityClass *as,
 			  afs_int32 aindex);
 extern struct rx_connection *UV_Bind(afs_int32 aserver, afs_int32 port);
