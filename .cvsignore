@@ -1,6 +1,7 @@
 Makefile
 aclocal.m4
 config.log
+config.cache
 config.status
 configure
 configure-libafs
