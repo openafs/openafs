@@ -72,7 +72,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   
   ;Remember the installer language
   !define MUI_LANGDLL_REGISTRY_ROOT "HKCU" 
-  !define MUI_LANGDLL_REGISTRY_KEY $(AFS_REGKEY_ROOT}
+  !define MUI_LANGDLL_REGISTRY_KEY ${AFS_REGKEY_ROOT}
   !define MUI_LANGDLL_REGISTRY_VALUENAME "Installer Language"
   
   ;Where are the files?
@@ -1398,7 +1398,7 @@ FunctionEnd
   !insertmacro MUI_DESCRIPTION_TEXT ${secClient} $(DESC_secClient)
   !insertmacro MUI_DESCRIPTION_TEXT ${secControl} $(DESC_secControl)
   !insertmacro MUI_DESCRIPTION_TEXT ${secDocs} $(DESC_secDocs)
-!ifndef v2.0b4
+!ifdef v2.0b3
   !insertmacro MUI_FUNCTIONS_DESCRIPTION_END
 !else
   !insertmacro MUI_FUNCTION_DESCRIPTION_END
