@@ -1,6 +1,8 @@
-OpenAFS News -- history of user-visible changes.  June 5, 2003.
+OpenAFS News -- history of user-visible changes.  July 29, 2003.
 
 * Changes incorporated in OpenAFS 1.2.10
+
+** dumps to and restores from large files now supported by butc.
 
 ** Linux on AMD Opteron (sysname amd64_linux24), HP-UX 11i on PA-RISC 
    (sysname hp_ux11i), HP-UX 11.22 on Intel Itanium (sysname ia64_hpux1122),
