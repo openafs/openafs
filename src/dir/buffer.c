@@ -132,8 +132,8 @@ char *DRead(fid,page)
     if ( tb = phTable[pHash(fid)] ) {  /* ASSMT HERE */
 	if (bufmatch(tb)) {
 	    ObtainWriteLock(&tb->lock);
-	    ReleaseWriteLock(&afs_bufferLock);
 	    tb->lockers++;
+	    ReleaseWriteLock(&afs_bufferLock);
 	    tb->accesstime = ++timecounter;
 	    ReleaseWriteLock(&tb->lock);
 	    return tb->data;
@@ -144,8 +144,8 @@ char *DRead(fid,page)
 	    if (bufmatch(tb2)) {
 	      buf_Front(bufhead,tb,tb2);
 	      ObtainWriteLock(&tb2->lock);
-	      ReleaseWriteLock(&afs_bufferLock);
 	      tb2->lockers++;
+	      ReleaseWriteLock(&afs_bufferLock);
 	      tb2->accesstime = ++timecounter;
 	      ReleaseWriteLock(&tb2->lock);
 	      return tb2->data;
@@ -154,8 +154,8 @@ char *DRead(fid,page)
 	      if (bufmatch(tb)) {
 		buf_Front(bufhead,tb2,tb);
 		ObtainWriteLock(&tb->lock);
-		ReleaseWriteLock(&afs_bufferLock);
 		tb->lockers++;
+		ReleaseWriteLock(&afs_bufferLock);
 		tb->accesstime = ++timecounter;
 		ReleaseWriteLock(&tb->lock);
 		return tb->data;
@@ -175,8 +175,8 @@ char *DRead(fid,page)
     tb = newslot(fid, page, (tb ? tb : tb2));
     ios++;
     ObtainWriteLock(&tb->lock);
-    ReleaseWriteLock(&afs_bufferLock);
     tb->lockers++;
+    ReleaseWriteLock(&afs_bufferLock);
     if (ReallyRead(tb->fid,tb->page,tb->data)) {
 	tb->lockers--;
         FidZap(tb->fid);	/* disaster */
@@ -396,8 +396,8 @@ char *DNew (fid,page)
     ObtainWriteLock(&afs_bufferLock);
     tb = newslot(fid,page,0);
     ObtainWriteLock(&tb->lock);
-    ReleaseWriteLock(&afs_bufferLock);
     tb->lockers++;
+    ReleaseWriteLock(&afs_bufferLock);
     ReleaseWriteLock(&tb->lock);
     return tb->data;
 }
