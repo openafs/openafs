@@ -60,7 +60,7 @@ struct buffer {
     struct Lock lock;
 } **Buffers;
 
-void *BufferData;
+char *BufferData;
 
 static struct buffer *phTable[PHSIZE];	/* page hash table */
 static struct buffer *LastBuffer;
@@ -70,51 +70,55 @@ static int calls=0, ios=0;
 
 struct buffer *newslot();
 
-int DStat (abuffers, acalls, aios)
+int
+DStat (abuffers, acalls, aios)
     int *abuffers, *acalls, *aios;
 {
     *abuffers = nbuffers;
     *acalls = calls;
     *aios = ios;
     return 0;
- }
+}
 
-int DInit (abuffers)
+int
+DInit (abuffers)
     int abuffers;
 {
     /* Initialize the venus buffer system. */
     register int i, tsize;
     register struct buffer *tb;
-    register void *tp;
+    register char *tp;
 
     Lock_Init(&afs_bufferLock);
     /* Align each element of Buffers on a doubleword boundary */
     tsize = (sizeof(struct buffer) + 7) & ~7;
-    tp = (void *) malloc(abuffers * tsize);
+    tp = (char *) malloc(abuffers * tsize);
     Buffers = (struct buffer **) malloc(abuffers * sizeof(struct buffer *));
-    BufferData = (void *) malloc(abuffers * BUFFER_PAGE_SIZE);
+    BufferData = (char *) malloc(abuffers * BUFFER_PAGE_SIZE);
     timecounter = 0;
     LastBuffer = (struct buffer *)tp;
     nbuffers = abuffers;
-    for(i=0;i<PHSIZE;i++) phTable[i] = 0;
-    for (i=0;i<abuffers;i++)
-        {/* Fill in each buffer with an empty indication. */
+    for (i=0;i<PHSIZE;i++)
+	phTable[i] = 0;
+    for (i=0;i<abuffers;i++) {
+	/* Fill in each buffer with an empty indication. */
 	tb = (struct buffer *)tp;
 	Buffers[i] = tb;
 	tp += tsize;
         FidZero(tb->fid);
         tb->accesstime = tb->lockers = 0;
-        tb->data = &BufferData[BUFFER_PAGE_SIZE*i];
+        tb->data = &BufferData[BUFFER_PAGE_SIZE * i];
 	tb->hashIndex = 0;
         tb->dirty = 0;
 	Lock_Init(&tb->lock);
-        }
-    return 0;
     }
+    return 0;
+}
 
-void *DRead(fid,page)
-  register afs_int32 *fid;
-  register int page;
+void *
+DRead(fid, page)
+    register afs_int32 *fid;
+    register int page;
 {
     /* Read a page from the disk. */
     register struct buffer *tb, *tb2, **bufhead;
@@ -193,29 +197,32 @@ void *DRead(fid,page)
     return tb->data;
 }
 
-static FixupBucket(ap)
+static int
+FixupBucket(ap)
     register struct buffer *ap;
 {
     register struct buffer **lp, *tp;
     register int i;
+
     /* first try to get it out of its current hash bucket, in which it might not be */
     i = ap->hashIndex;
     lp = &phTable[i];
-    for(tp = *lp; tp; tp=tp->hashNext)
-	{if (tp == ap)
-	    {*lp = tp->hashNext;
+    for (tp = *lp; tp; tp = tp->hashNext) {
+	if (tp == ap) {
+	    *lp = tp->hashNext;
 	    break;
-	    }
-	lp = &tp->hashNext;
 	}
+	lp = &tp->hashNext;
+    }
     /* now figure the new hash bucket */
     i = pHash(ap->fid);
     ap->hashIndex = i;		/* remember where we are for deletion */
     ap->hashNext = phTable[i];	/* add us to the list */
     phTable[i] = ap;            /* at the front, since it's LRU */
-    }
+}
 
-struct buffer *newslot (afid, apage, lp)
+struct buffer *
+newslot (afid, apage, lp)
     afs_int32 *afid, apage;
     register struct buffer *lp;   /* pointer to a fairly-old buffer */
 {
@@ -270,7 +277,7 @@ struct buffer *newslot (afid, apage, lp)
 }
 
 void
-DRelease (bp,flag)
+DRelease (bp, flag)
     register struct buffer *bp;
     int flag;
 {
@@ -278,7 +285,7 @@ DRelease (bp,flag)
     register int index;
 
     if (!bp) return;
-    index = (((void *)bp)-((void *)BufferData))>>LOGPS;
+    index = ((char *) bp - BufferData) >> LOGPS;
     bp = Buffers[index];
     ObtainWriteLock(&bp->lock);
     bp->lockers--;
@@ -286,26 +293,29 @@ DRelease (bp,flag)
     ReleaseWriteLock(&bp->lock);
 }
 
+int
 DVOffset (ap)
     register void *ap;
 {
     /* Return the byte within a file represented by a buffer pointer. */
-    register struct buffer *bp;
+    register struct buffer *bp = ap;
     register int index;
-    bp=ap;
-    index = (((void *)bp) - ((void *)BufferData)) >> LOGPS;
-    if (index<0 || index >= nbuffers) return -1;
+
+    index = ((char *) bp - BufferData) >> LOGPS;
+    if (index < 0 || index >= nbuffers)
+	return -1;
     bp = Buffers[index];
-    return BUFFER_PAGE_SIZE*bp->page+((void *)ap)-bp->data;
+    return BUFFER_PAGE_SIZE * bp->page + (char *) ap - (char *) bp->data;
 }
 
+void
 DZap (fid)
     register afs_int32 *fid;
 {
     /* Destroy all buffers pertaining to a particular fid. */
     register struct buffer *tb;
     ObtainReadLock(&afs_bufferLock);
-    for(tb=phTable[pHash(fid)]; tb; tb=tb->hashNext)
+    for (tb = phTable[pHash(fid)]; tb; tb = tb->hashNext)
         if (FidEq(tb->fid,fid)) {
 	    ObtainWriteLock(&tb->lock);
 	    FidZap(tb->fid);
@@ -322,7 +332,7 @@ DFlushVolume (vid)
     register struct buffer *tb;
     register int code, rcode = 0;
     ObtainReadLock(&afs_bufferLock);
-    for(tb=phTable[vHash(vid)]; tb; tb=tb->hashNext)
+    for (tb = phTable[vHash(vid)]; tb; tb = tb->hashNext)
         if (FidVolEq(tb->fid,vid)) {
 	    ObtainWriteLock(&tb->lock);
 	    if (tb->dirty) {
@@ -338,6 +348,7 @@ DFlushVolume (vid)
     return rcode;
 }
 
+int
 DFlushEntry (fid)
     register afs_int32 *fid;
 {
@@ -346,7 +357,7 @@ DFlushEntry (fid)
     int code;
 
     ObtainReadLock(&afs_bufferLock);
-    for(tb = phTable[pHash(fid)]; tb; tb=tb->hashNext)
+    for (tb = phTable[pHash(fid)]; tb; tb = tb->hashNext)
         if (FidEq(tb->fid, fid) && tb->dirty) {
 	    ObtainWriteLock(&tb->lock);
 	    if (tb->dirty) {
@@ -364,6 +375,7 @@ DFlushEntry (fid)
     return 0;
 }
 
+int
 DFlush ()
 {
     /* Flush all the modified buffers. */
@@ -374,7 +386,7 @@ DFlush ()
     rcode = 0;
     tbp = Buffers;
     ObtainReadLock(&afs_bufferLock);
-    for(i=0;i<nbuffers;i++,tbp++) {
+    for (i = 0; i < nbuffers; i++, tbp++) {
         if ((*tbp)->dirty) {
 	    ObtainWriteLock(&(*tbp)->lock);
 	    (*tbp)->lockers++;
@@ -396,7 +408,8 @@ DFlush ()
     return rcode;
 }
 
-void *DNew (fid,page)
+void *
+DNew(fid, page)
     register int page;
     register afs_int32 *fid;
 {
