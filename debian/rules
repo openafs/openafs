@@ -99,8 +99,6 @@ install: build
 	# No, includes should not have the x bit set
 	find debian/libopenafs-dev/usr/include -type f -print | \
 		xargs chmod a-x
-	# And drop the pam modules
-	rm debian/libopenafs-dev/usr/lib/*pam*
 
 # Build architecture-independent files here.
 # Pass -i to all debhelper commands in this target to reduce clutter.

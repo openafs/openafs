@@ -11,5 +11,5 @@ openafs-dbserver/usr/sbin root.server/usr/afs/bin/pt_util
 openafs-dbserver/usr/lib/openafs root.server/usr/afs/bin/buserver
 openafs-dbserver/usr/lib/openafs	root.server/usr/afs/bin/vlserver 
 openafs-dbserver/usr/lib/openafs root.server/usr/afs/bin/ptserver
-libopenafs-dev/usr	lib
+libopenafs-dev/usr/lib	lib/*.a lib/afs
 libopenafs-dev/usr include
