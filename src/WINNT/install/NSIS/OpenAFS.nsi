@@ -530,7 +530,7 @@ Section "AFS Client" secClient
   File "${AFS_CLIENT_BUILDDIR}\afscreds.exe"
   !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.dll" "$INSTDIR\Client\Program\afs_shl_ext.dll" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\afsd_service.exe"
-  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afslogon.dll" "$INSTDIR\Client\Program\afslogon.dll" "$INSTDIR"
+  !insertmacro ReplaceDLL "${AFS_CLIENT_BUILDDIR}\afslogon.dll" "$SYSDIR\afslogon.dll" "$INSTDIR"
   File "${AFS_CLIENT_BUILDDIR}\symlink.exe"
   File "${AFS_DESTDIR}\bin\kpasswd.exe"
   File "${AFS_SERVER_BUILDDIR}\pts.exe"
@@ -665,9 +665,9 @@ skipremove:
 
   ; Daemon entries
   WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon" "" ""
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "ProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "AuthentProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
-  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "AuthentProviderPath" "$INSTDIR\Client\Program\afslogon.dll"
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "ProviderPath" "$SYSDIR\afslogon.dll"
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "AuthentProviderPath" "$SYSDIR\afslogon.dll"
+  WriteRegStr HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "AuthentProviderPath" "$SYSDIR\afslogon.dll"
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "Class" 2
   WriteRegDWORD HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\NetworkProvider" "VerboseLogging" 10
 
@@ -733,6 +733,12 @@ skipremove:
   WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\translate_et.exe" "Flags" 0x408
   WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\rxdebug.exe" "Flags" 0x408
   WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\backup.exe" "Flags" 0x408
+
+  ; WinLogon Event Notification
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Asynchronous" 0
+  WriteRegDWORD HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Impersonate"  1
+  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "DLLName" "afslogon.dll"
+  WriteRegStr HKLM "Software\Microsoft\Windows NT\CurrentVersion\WinLogon\Notify\AfsLogon" "Logoff" "AFS_Logoff_Event"
 
   SetRebootFlag true
   
@@ -1202,7 +1208,6 @@ Section "Debug symbols" secDebug
   File "${AFS_CLIENT_BUILDDIR}\afscreds.pdb"
   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.pdb"
   File "${AFS_CLIENT_BUILDDIR}\afsd_service.pdb"
-  File "${AFS_CLIENT_BUILDDIR}\afslogon.pdb"
   File "${AFS_CLIENT_BUILDDIR}\symlink.pdb"
   File "${AFS_DESTDIR}\bin\kpasswd.pdb"
   File "${AFS_DESTDIR}\bin\pts.pdb"
@@ -1215,6 +1220,7 @@ Section "Debug symbols" secDebug
   File "${AFS_DESTDIR}\etc\backup.pdb"
 
   SetOutPath "$SYSDIR"
+  File "${AFS_CLIENT_BUILDDIR}\afslogon.pdb"
   File "${AFS_CLIENT_BUILDDIR}\afs_cpa.pdb"
   
 DoServer:
@@ -1994,6 +2000,9 @@ StartRemove:
   DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\translate_et.exe"
   DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\rxdebug.exe"
   DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Terminal Server\Compatibility\Applications\backup.exe"
+
+  ; WinLogon Event Notification
+  DeleteRegKey HKLM "Software\Microsoft\Windows NT\CurrentVersion\Winlogon\Notify\AfsLogon"
 
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion"
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client"
