@@ -1197,23 +1197,25 @@ KFW_AFS_get_cred( char * username,
     if ( lifetime == 0 )
         lifetime = pLeash_get_default_lifetime();
 
-    code = KFW_kinit(ctx, cc, HWND_DESKTOP, 
-                      pname, 
-                      password,
-                      lifetime,
-                      pLeash_get_default_forwardable(),
-                      pLeash_get_default_proxiable(),
-                      pLeash_get_default_renewable() ? pLeash_get_default_renew_till() : 0,
-                      pLeash_get_default_noaddresses(),
-                      pLeash_get_default_publicip());
-    if ( IsDebuggerPresent() ) {
-        char message[256];
-        sprintf(message,"KFW_kinit() returns: %d\n",code);
-        OutputDebugString(message);
+    if ( password && password[0] ) {
+        code = KFW_kinit( ctx, cc, HWND_DESKTOP, 
+                          pname, 
+                          password,
+                          lifetime,
+                          pLeash_get_default_forwardable(),
+                          pLeash_get_default_proxiable(),
+                          pLeash_get_default_renewable() ? pLeash_get_default_renew_till() : 0,
+                          pLeash_get_default_noaddresses(),
+                          pLeash_get_default_publicip());
+        if ( IsDebuggerPresent() ) {
+            char message[256];
+            sprintf(message,"KFW_kinit() returns: %d\n",code);
+            OutputDebugString(message);
+        }
+        if ( code ) goto cleanup;
+
+        KFW_AFS_update_princ_ccache_data(ctx, cc, FALSE);
     }
-    if ( code ) goto cleanup;
-                   
-    KFW_AFS_update_princ_ccache_data(ctx, cc, FALSE);
 
     code = KFW_AFS_klog(ctx, cc, "afs", cell, realm, lifetime,smbname);
     if ( IsDebuggerPresent() ) {
