@@ -444,18 +444,18 @@ void check_bad_parent(struct dentry *dp)
 struct task_struct *rxk_ListenerTask;
 
 void osi_linux_mask() {
-    spin_lock_irq(&current->sigmask_lock);
+    SIG_LOCK(current);
     sigfillset(&current->blocked);
-    recalc_sigpending(current);
-    spin_unlock_irq(&current->sigmask_lock);
+    RECALC_SIGPENDING(current);
+    SIG_UNLOCK(current);
 }
 
 void osi_linux_unmask() {
-    spin_lock_irq(&rxk_ListenerTask->sigmask_lock);
+    SIG_LOCK(rxk_ListenerTask);
     sigemptyset(&rxk_ListenerTask->blocked);
     flush_signals(rxk_ListenerTask);
-    recalc_sigpending(rxk_ListenerTask);
-    spin_unlock_irq(&rxk_ListenerTask->sigmask_lock);
+    RECALC_SIGPENDING(rxk_ListenerTask);
+    SIG_UNLOCK(rxk_ListenerTask);
 }
 
 void osi_linux_rxkreg() {

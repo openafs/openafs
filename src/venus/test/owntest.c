@@ -16,6 +16,7 @@ RCSID("$Header$");
 #include <sys/file.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <errno.h>
 
 extern int errno;
 

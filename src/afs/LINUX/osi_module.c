@@ -284,11 +284,19 @@ int init_module(void)
 	    break;
 	}
 #else
+#if defined(EXPORTED_SYS_CHDIR) && defined(EXPORTED_SYS_CLOSE)
+        if (ptr[0] == (unsigned long)&sys_close &&
+	    ptr[__NR_chdir - __NR_close] == (unsigned long)&sys_chdir) {
+	    sys_call_table=ptr - __NR_close;
+	    break;
+	}
+#else
         if (ptr[0] == (unsigned long)&sys_exit &&
 	    ptr[__NR_open - __NR_exit] == (unsigned long)&sys_open) {
 	    sys_call_table=ptr - __NR_exit;
 	    break;
 	}
+#endif
 #endif
     }
 #ifdef EXPORTED_KALLSYMS_ADDRESS
@@ -303,6 +311,7 @@ int init_module(void)
          printf("Failed to find address of sys_call_table\n");
 	 return -EIO;
     }
+    printf("Found sys_call_table at %x\n", sys_call_table);
 # ifdef AFS_SPARC64_LINUX20_ENV
 error cant support this yet.
 #endif
@@ -434,10 +443,14 @@ static long get_page_offset(void)
 #if defined(AFS_PPC_LINUX22_ENV) || defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_SPARC_LINUX20_ENV) || defined(AFS_ALPHA_LINUX20_ENV) || defined(AFS_S390_LINUX22_ENV) || defined(AFS_IA64_LINUX20_ENV) || defined(AFS_PARISC_LINUX24_ENV)
     return PAGE_OFFSET;
 #else
-    struct task_struct *p;
+    struct task_struct *p, *q;
 
     /* search backward thru the circular list */
+#ifdef DEFINED_PREV_TASK
+    for(q = current; p = q; q = prev_task(p))
+#else
     for(p = current; p; p = p->prev_task)
+#endif
 	if (p->pid == 1)
 	    return p->addr_limit.seg;
 
