@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/ubikclient.c,v 1.8 2003/07/15 23:17:05 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/ubikclient.c,v 1.8.2.1 2004/08/25 07:09:43 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -72,14 +72,17 @@ ubik_ParseClientList(int argc, char **argv, afs_int32 * aothers)
 	    if (*tp == '-')
 		break;		/* done */
 	    /* otherwise this is a new host name */
-	    LOCK_GLOBAL_MUTEX th = gethostbyname(tp);
+	    LOCK_GLOBAL_MUTEX;
+	    th = gethostbyname(tp);
 	    if (!th) {
-		UNLOCK_GLOBAL_MUTEX return UBADHOST;
+		UNLOCK_GLOBAL_MUTEX;
+		return UBADHOST;
 	    }
 	    memmove((void *)&temp, (const void *)th->h_addr,
 		    sizeof(afs_int32));
-	    UNLOCK_GLOBAL_MUTEX if (counter++ >= MAXSERVERS)
-		  return UNHOSTS;
+	    UNLOCK_GLOBAL_MUTEX;
+	    if (counter++ >= MAXSERVERS)
+		return UNHOSTS;
 	    *aothers++ = temp;
 	} else {
 	    /* haven't seen a -server yet */
@@ -205,11 +208,11 @@ ubik_ClientInit(register struct rx_connection **serverconns,
     initialize_U_error_table();
 
     if (*aclient) {		/* the application is doing a re-initialization */
-	LOCK_UBIK_CLIENT((*aclient))
-	    /* this is an important defensive check */
-	    if (!((*aclient)->initializationState)) {
-	    UNLOCK_UBIK_CLIENT((*aclient))
-		return UREINITIALIZE;
+	LOCK_UBIK_CLIENT((*aclient));
+	/* this is an important defensive check */
+	if (!((*aclient)->initializationState)) {
+	    UNLOCK_UBIK_CLIENT((*aclient));
+	    return UREINITIALIZE;
 	}
 
 	/* release all existing connections */
@@ -223,9 +226,9 @@ ubik_ClientInit(register struct rx_connection **serverconns,
 	    rx_DestroyConnection(rxConn);
 #endif
 	}
-	UNLOCK_UBIK_CLIENT((*aclient))
+	UNLOCK_UBIK_CLIENT((*aclient));
 #ifdef AFS_PTHREAD_ENV
-	    if (pthread_mutex_destroy(&((*aclient)->cm)))
+	if (pthread_mutex_destroy(&((*aclient)->cm)))
 	    return UMUTEXDESTROY;
 #endif
     } else {
@@ -335,8 +338,8 @@ pthread_once_t ubik_client_once = PTHREAD_ONCE_INIT;
 pthread_mutex_t ubik_client_mutex;
 #define LOCK_UCLNT_CACHE \
     assert(pthread_once(&ubik_client_once, ubik_client_init_mutex) == 0 && \
-	   pthread_mutex_lock(&ubik_client_mutex)==0);
-#define UNLOCK_UCLNT_CACHE assert(pthread_mutex_unlock(&ubik_client_mutex)==0);
+	   pthread_mutex_lock(&ubik_client_mutex)==0)
+#define UNLOCK_UCLNT_CACHE assert(pthread_mutex_unlock(&ubik_client_mutex)==0)
 
 void
 ubik_client_init_mutex()
@@ -397,18 +400,19 @@ ubik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
     rcode = UNOSERVERS;
     chaseCount = inlist = needsync = 0;
 
-    LOCK_UCLNT_CACHE for (j = 0; ((j < SYNCCOUNT) && calls_needsync[j]); j++) {
+    LOCK_UCLNT_CACHE;
+    for (j = 0; ((j < SYNCCOUNT) && calls_needsync[j]); j++) {
 	if (calls_needsync[j] == (int *)aproc) {
 	    inlist = needsync = 1;
 	    break;
 	}
     }
-    UNLOCK_UCLNT_CACHE
-	/* 
-	 * First  pass, we try all servers that are up.
-	 * Second pass, we try all servers.
-	 */
-	for (pass = 0; pass < 2; pass++) {	/*p */
+    UNLOCK_UCLNT_CACHE;
+    /* 
+     * First  pass, we try all servers that are up.
+     * Second pass, we try all servers.
+     */
+    for (pass = 0; pass < 2; pass++) {	/*p */
 	/* For each entry in our servers list */
 	for (count = 0;; count++) {	/*s */
 
@@ -494,10 +498,11 @@ ubik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
   done:
     if (needsync) {
 	if (!inlist) {		/* Remember proc call that needs sync site */
-	    LOCK_UCLNT_CACHE calls_needsync[synccount % SYNCCOUNT] =
-		(int *)aproc;
+	    LOCK_UCLNT_CACHE;
+	    calls_needsync[synccount % SYNCCOUNT] = (int *)aproc;
 	    synccount++;
-	    UNLOCK_UCLNT_CACHE inlist = 1;
+	    UNLOCK_UCLNT_CACHE;
+	    inlist = 1;
 	}
 	if (!rcode) {		/* Remember the sync site - cmd successful */
 	    rxp = rx_PeerOf(aclient->conns[count]);
@@ -605,7 +610,7 @@ CallIter(aproc, aclient, aflags, apos, p1, p2, p3, p4, p5, p6, p7, p8, p9,
     short origLevel;
 
     if (needlock) {
-	LOCK_UBIK_CLIENT(aclient)
+	LOCK_UBIK_CLIENT(aclient);
     }
     origLevel = aclient->initializationState;
 
@@ -616,7 +621,7 @@ CallIter(aproc, aclient, aflags, apos, p1, p2, p3, p4, p5, p6, p7, p8, p9,
 	tc = aclient->conns[*apos];
 	if (!tc) {
 	    if (needlock) {
-		UNLOCK_UBIK_CLIENT(aclient)
+		UNLOCK_UBIK_CLIENT(aclient);
 	    }
 	    return UNOSERVERS;
 	}
@@ -634,7 +639,7 @@ CallIter(aproc, aclient, aflags, apos, p1, p2, p3, p4, p5, p6, p7, p8, p9,
     }
     if (*apos >= MAXSERVERS) {
 	if (needlock) {
-	    UNLOCK_UBIK_CLIENT(aclient)
+	    UNLOCK_UBIK_CLIENT(aclient);
 	}
 	return UNOSERVERS;
     }
@@ -644,7 +649,7 @@ CallIter(aproc, aclient, aflags, apos, p1, p2, p3, p4, p5, p6, p7, p8, p9,
 		  p14, p15, p16);
     if (aclient->initializationState != origLevel) {
 	if (needlock) {
-	    UNLOCK_UBIK_CLIENT(aclient)
+	    UNLOCK_UBIK_CLIENT(aclient);
 	}
 	return code;		/* somebody did a ubik_ClientInit */
     }
@@ -659,7 +664,7 @@ CallIter(aproc, aclient, aflags, apos, p1, p2, p3, p4, p5, p6, p7, p8, p9,
 
     (*apos)++;
     if (needlock) {
-	UNLOCK_UBIK_CLIENT(aclient)
+	UNLOCK_UBIK_CLIENT(aclient);
     }
     return code;
 }
@@ -698,7 +703,7 @@ ubik_Call_New(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
     int stepBack;
     short origLevel;
 
-    LOCK_UBIK_CLIENT(aclient)
+    LOCK_UBIK_CLIENT(aclient);
   restart:
     rcode = UNOSERVERS;
     origLevel = aclient->initializationState;
@@ -732,13 +737,13 @@ ubik_Call_New(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
 		    }
 		}
 	    } else if ((code >= 0) && (code != UNOQUORUM)) {
-		UNLOCK_UBIK_CLIENT(aclient)
-		    return code;	/* success or global error condition */
+		UNLOCK_UBIK_CLIENT(aclient);
+		return code;	/* success or global error condition */
 	    }
 	}
     }
-    UNLOCK_UBIK_CLIENT(aclient)
-	return rcode;
+    UNLOCK_UBIK_CLIENT(aclient);
+    return rcode;
 }
 
 /* 

@@ -550,6 +550,10 @@ Section "AFS Client" secClient
   ; Get AFS CellServDB file
   Call afs.GetCellServDB
 
+  GetTempFileName $R0
+  File /oname=$R0 "${AFS_WININSTALL_DIR}\AdminGroup.exe"
+  nsExec::Exec '$R0 -create'
+
 !ifdef INSTALL_KFW
   ; Include Kerberos for Windows files in the installer...
   SetOutPath "$INSTDIR\kfw\bin\"
@@ -625,7 +629,7 @@ Section "AFS Client" secClient
   ReadINIStr $R1 $2 "Field 13" "State"
   StrCmp $R1 "1" +1 +2
   StrCpy $R2 "$R2-S"
-  
+ 
   WriteRegStr HKLM "SOFTWARE\OpenAFS\Client" "AfscredsShortcutParams" "$R2"
   
   CreateShortCut "$SMPROGRAMS\OpenAFS\Client\Authentication.lnk" "$INSTDIR\Client\Program\afscreds.exe" "$R2"
@@ -1699,6 +1703,10 @@ StartRemove:
 !ENDIF
   Delete "$INSTDIR\Client\afsdns.ini"
   
+  GetTempFileName $R0
+  File /oname=$R0 "${AFS_WININSTALL_DIR}\AdminGroup.exe"
+  nsExec::Exec '$R0 -remove'
+
   SkipDel:
   Delete "$WINDIR\afsd_init.log"
   Delete "$INSTDIR\Uninstall.exe"

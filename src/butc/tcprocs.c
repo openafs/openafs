@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/tcprocs.c,v 1.12 2004/07/13 05:52:46 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/tcprocs.c,v 1.12.2.1 2004/08/25 07:12:37 shadow Exp $");
 
 #include <sys/types.h>
 #include <errno.h>
@@ -50,20 +50,6 @@ callPermitted(call)
     /* simple rx connection that, below, returns a value of 0 from rx_SecurityClassOf */
     return 1;
 }
-
-/* XBSA Global Parameters */
-afs_int32 xbsaType;
-#ifdef xbsa
-struct butx_transactionInfo butxInfo;
-
-#define rpc_c_protect_level_default 0
-afs_uint32 dumpRestAuthnLevel = rpc_c_protect_level_default;
-char *xbsaObjectOwner;
-char *appObjectOwner;
-char *adsmServerName;
-char *xbsaSecToken;
-char *xbsalGName;
-#endif
 
 /* -------------------------
  * butc - interface routines - alphabetic order

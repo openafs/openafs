@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_readdir.c,v 1.24 2004/08/09 00:54:05 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_readdir.c,v 1.24.2.1 2004/08/25 07:09:35 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -72,8 +72,8 @@ BlobScan(ino64_t * afile, afs_int32 ablob)
 #else
 #if defined(AFS_HPUX1123_ENV)
 /*DEE should use afs_inode_t for all */
-int 
-BlobScan(ino_t *afile, afs_int32 ablob)
+int
+BlobScan(ino_t * afile, afs_int32 ablob)
 #else
 #ifdef AFS_LINUX_64BIT_KERNEL
 int
@@ -509,7 +509,7 @@ afs_readdir2(OSI_VC_ARG(avc), auio, acred)
 afs_readdir(OSI_VC_ARG(avc), auio, acred)
 #endif
 #endif
-    OSI_VC_DECL(avc);
+     OSI_VC_DECL(avc);
      struct uio *auio;
      struct AFS_UCRED *acred;
 {
@@ -525,13 +525,13 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 #if defined(AFS_SGI53_ENV)
     afs_int32 use64BitDirent, dirsiz;
 #endif /* defined(AFS_SGI53_ENV) */
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
 #ifdef	AFS_HPUX_ENV
-	/*
-	 * XXX All the hacks for alloced sdirEntry and inlining of afs_readdir_move instead of calling
-	 * it is necessary for hpux due to stack problems that seem to occur when coming thru the nfs
-	 * translator side XXX
-	 */
+    /*
+     * XXX All the hacks for alloced sdirEntry and inlining of afs_readdir_move instead of calling
+     * it is necessary for hpux due to stack problems that seem to occur when coming thru the nfs
+     * translator side XXX
+     */
     struct min_direct *sdirEntry =
 	(struct min_direct *)osi_AllocSmallSpace(sizeof(struct min_direct));
     afs_int32 rlen;

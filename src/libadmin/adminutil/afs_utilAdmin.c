@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/libadmin/adminutil/afs_utilAdmin.c,v 1.7 2003/07/15 23:15:23 shadow Exp $");
+    ("$Header: /cvs/openafs/src/libadmin/adminutil/afs_utilAdmin.c,v 1.7.2.1 2004/08/25 07:09:38 shadow Exp $");
 
 #include <afs/stds.h>
 #include <afs/afs_Admin.h>
@@ -446,7 +446,8 @@ util_AdminServerAddressGetFromName(const char *serverName, int *serverAddress,
     if (num_converted == 4) {
 	*serverAddress = (part1 << 24) | (part2 << 16) | (part3 << 8) | part4;
     } else {
-	LOCK_GLOBAL_MUTEX server = gethostbyname(serverName);
+	LOCK_GLOBAL_MUTEX;
+	server = gethostbyname(serverName);
 	if (server != NULL) {
 	    memcpy((void *)serverAddress, (const void *)server->h_addr,
 		   sizeof(serverAddress));
@@ -456,7 +457,8 @@ util_AdminServerAddressGetFromName(const char *serverName, int *serverAddress,
 	    UNLOCK_GLOBAL_MUTEX;
 	    goto fail_util_AdminServerAddressGetFromName;
 	}
-    UNLOCK_GLOBAL_MUTEX}
+	UNLOCK_GLOBAL_MUTEX;
+    }
     rc = 1;
 
   fail_util_AdminServerAddressGetFromName:

@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/des/new_rnd_key.c,v 1.13 2003/12/07 22:49:24 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/des/new_rnd_key.c,v 1.13.2.1 2004/08/25 07:09:37 shadow Exp $");
 
 #ifndef KERNEL
 #include <stdio.h>
@@ -54,8 +54,8 @@ static int is_inited = 0;
 
 #include <assert.h>
 pthread_mutex_t des_init_mutex;
-#define LOCK_INIT assert(pthread_mutex_lock(&des_init_mutex)==0);
-#define UNLOCK_INIT assert(pthread_mutex_unlock(&des_init_mutex)==0);
+#define LOCK_INIT assert(pthread_mutex_lock(&des_init_mutex)==0)
+#define UNLOCK_INIT assert(pthread_mutex_unlock(&des_init_mutex)==0)
 #else
 #define LOCK_INIT
 #define UNLOCK_INIT
@@ -75,10 +75,11 @@ pthread_mutex_t des_init_mutex;
 int
 des_random_key(des_cblock key)
 {
-    LOCK_INIT if (!is_inited) {
+    LOCK_INIT;
+    if (!is_inited) {
 	des_init_random_number_generator(key);
     }
-    UNLOCK_INIT
+    UNLOCK_INIT;
     do {
 	des_generate_random_block(key);
 	des_fixup_key_parity(key);
@@ -192,8 +193,8 @@ static unsigned char sequence_number[8];
 
 #include <assert.h>
 pthread_mutex_t des_random_mutex;
-#define LOCK_RANDOM assert(pthread_mutex_lock(&des_random_mutex)==0);
-#define UNLOCK_RANDOM assert(pthread_mutex_unlock(&des_random_mutex)==0);
+#define LOCK_RANDOM assert(pthread_mutex_lock(&des_random_mutex)==0)
+#define UNLOCK_RANDOM assert(pthread_mutex_unlock(&des_random_mutex)==0)
 #else
 #define LOCK_RANDOM
 #define UNLOCK_RANDOM
@@ -216,12 +217,14 @@ des_set_random_generator_seed(des_cblock key)
     register int i;
 
     /* select the new stream: (note errors are not possible here...) */
-    LOCK_RANDOM des_key_sched(key, random_sequence_key.d);
+    LOCK_RANDOM;
+    des_key_sched(key, random_sequence_key.d);
 
     /* "seek" to the start of the stream: */
     for (i = 0; i < 8; i++)
 	sequence_number[i] = 0;
-UNLOCK_RANDOM}
+    UNLOCK_RANDOM;
+}
 
 /*
  * des_set_sequence_number: this routine is used to set the sequence number
@@ -234,9 +237,11 @@ UNLOCK_RANDOM}
 static afs_int32
 des_set_sequence_number(des_cblock new_sequence_number)
 {
-    LOCK_RANDOM memcpy((char *)sequence_number, (char *)new_sequence_number,
-		       sizeof(sequence_number));
-    UNLOCK_RANDOM return 0;
+    LOCK_RANDOM;
+    memcpy((char *)sequence_number, (char *)new_sequence_number,
+	   sizeof(sequence_number));
+    UNLOCK_RANDOM;
+    return 0;
 }
 
 /*
@@ -252,13 +257,14 @@ des_generate_random_block(des_cblock block)
 {
     int i;
 
-    LOCK_RXKAD_STATS rxkad_stats.des_randoms++;
-    UNLOCK_RXKAD_STATS
-	/*
-	 * Encrypt the sequence number to get the new random block:
-	 */
-	LOCK_RANDOM des_ecb_encrypt(sequence_number, block,
-				    random_sequence_key.d, 1);
+    LOCK_RXKAD_STATS;
+    rxkad_stats.des_randoms++;
+    UNLOCK_RXKAD_STATS;
+    /*
+     * Encrypt the sequence number to get the new random block:
+     */
+    LOCK_RANDOM;
+    des_ecb_encrypt(sequence_number, block, random_sequence_key.d, 1);
 
     /*
      * Increment the sequence number as an 8 byte unsigned number with wrap:
@@ -269,5 +275,6 @@ des_generate_random_block(des_cblock block)
 	if (sequence_number[i])
 	    break;
     }
-    UNLOCK_RANDOM return 0;
+    UNLOCK_RANDOM;
+    return 0;
 }

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/remote.c,v 1.12 2003/09/27 06:23:30 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/remote.c,v 1.12.2.1 2004/08/25 07:09:43 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -537,7 +537,7 @@ SDISK_SendFile(rxcall, file, length, avers)
     (*dbase->truncate) (dbase, file, 0);	/* truncate first */
     tversion.epoch = 0;		/* start off by labelling in-transit db as invalid */
     tversion.counter = 0;
-    (*dbase->setlabel) (dbase, file, &tversion);/* setlabel does sync */
+    (*dbase->setlabel) (dbase, file, &tversion);	/* setlabel does sync */
     memcpy(&ubik_dbase->version, &tversion, sizeof(struct ubik_version));
     while (length > 0) {
 	tlen = (length > sizeof(tbuffer) ? sizeof(tbuffer) : length);

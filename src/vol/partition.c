@@ -21,7 +21,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/partition.c,v 1.30 2004/08/08 23:59:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/partition.c,v 1.30.2.1 2004/08/25 07:14:19 shadow Exp $");
 
 #include <ctype.h>
 #ifdef AFS_NT40_ENV
@@ -273,8 +273,10 @@ VInitPartition_r(char *path, char *devname, Device dev)
 static void
 VInitPartition(char *path, char *devname, Device dev)
 {
-    VOL_LOCK VInitPartition_r(path, devname, dev);
-VOL_UNLOCK}
+    VOL_LOCK;
+    VInitPartition_r(path, devname, dev);
+    VOL_UNLOCK;
+}
 
 #ifndef AFS_NT40_ENV
 /* VAttachPartitions() finds the vice partitions on this server. Calls
@@ -836,8 +838,10 @@ struct DiskPartition *
 VGetPartition(char *name, int abortp)
 {
     struct DiskPartition *retVal;
-    VOL_LOCK retVal = VGetPartition_r(name, abortp);
-    VOL_UNLOCK return retVal;
+    VOL_LOCK;
+    retVal = VGetPartition_r(name, abortp);
+    VOL_UNLOCK;
+    return retVal;
 }
 
 #ifdef AFS_NT40_ENV
@@ -933,8 +937,10 @@ VSetPartitionDiskUsage_r(register struct DiskPartition *dp)
 void
 VSetPartitionDiskUsage(register struct DiskPartition *dp)
 {
-    VOL_LOCK VSetPartitionDiskUsage_r(dp);
-VOL_UNLOCK}
+    VOL_LOCK;
+    VSetPartitionDiskUsage_r(dp);
+    VOL_UNLOCK;
+}
 
 void
 VResetDiskUsage_r(void)
@@ -951,8 +957,10 @@ VResetDiskUsage_r(void)
 void
 VResetDiskUsage(void)
 {
-    VOL_LOCK VResetDiskUsage_r();
-VOL_UNLOCK}
+    VOL_LOCK;
+    VResetDiskUsage_r();
+    VOL_UNLOCK;
+}
 
 void
 VAdjustDiskUsage_r(Error * ec, Volume * vp, afs_sfsize_t blocks,
@@ -988,8 +996,10 @@ void
 VAdjustDiskUsage(Error * ec, Volume * vp, afs_sfsize_t blocks,
 		 afs_sfsize_t checkBlocks)
 {
-    VOL_LOCK VAdjustDiskUsage_r(ec, vp, blocks, checkBlocks);
-VOL_UNLOCK}
+    VOL_LOCK;
+    VAdjustDiskUsage_r(ec, vp, blocks, checkBlocks);
+    VOL_UNLOCK;
+}
 
 int
 VDiskUsage_r(Volume * vp, afs_sfsize_t blocks)
@@ -1015,8 +1025,10 @@ int
 VDiskUsage(Volume * vp, afs_sfsize_t blocks)
 {
     int retVal;
-    VOL_LOCK retVal = VDiskUsage_r(vp, blocks);
-    VOL_UNLOCK return retVal;
+    VOL_LOCK;
+    retVal = VDiskUsage_r(vp, blocks);
+    VOL_UNLOCK;
+    return retVal;
 }
 
 void
@@ -1036,8 +1048,10 @@ VPrintDiskStats_r(void)
 void
 VPrintDiskStats(void)
 {
-    VOL_LOCK VPrintDiskStats_r();
-VOL_UNLOCK}
+    VOL_LOCK;
+    VPrintDiskStats_r();
+    VOL_UNLOCK;
+}
 
 #ifdef AFS_NT40_ENV
 /* Need a separate lock file on NT, since NT only has mandatory file locks. */
@@ -1208,11 +1222,15 @@ VUnlockPartition_r(char *name)
 void
 VLockPartition(char *name)
 {
-    VOL_LOCK VLockPartition_r(name);
-VOL_UNLOCK}
+    VOL_LOCK;
+    VLockPartition_r(name);
+    VOL_UNLOCK;
+}
 
 void
 VUnlockPartition(char *name)
 {
-    VOL_LOCK VUnlockPartition_r(name);
-VOL_UNLOCK}
+    VOL_LOCK;
+    VUnlockPartition_r(name);
+    VOL_UNLOCK;
+}

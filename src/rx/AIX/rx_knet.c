@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/AIX/rx_knet.c,v 1.11 2003/07/15 23:16:14 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/AIX/rx_knet.c,v 1.11.2.1 2004/08/25 07:16:16 shadow Exp $");
 
 #ifdef AFS_AIX41_ENV
 #include "rx/rx_kcommon.h"
@@ -322,6 +322,7 @@ shutdown_rxkernel(void)
 		rxk_portRocks[i] = NULL;
 	    }
 	}
+	del_input_type(0xdead);
     }
 }
 

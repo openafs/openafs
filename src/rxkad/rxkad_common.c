@@ -23,7 +23,7 @@
 #define INCLUDE_RXKAD_PRIVATE_DECLS
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/rxkad_common.c,v 1.20 2004/06/23 14:27:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/rxkad_common.c,v 1.20.2.1 2004/08/25 07:09:42 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -83,7 +83,7 @@ RCSID
 #endif
 /* variable initialization for the benefit of darwin compiler; if it causes
    problems elsewhere, conditionalize for darwin or fc_test compile breaks */
-struct rxkad_stats rxkad_stats = {0};
+struct rxkad_stats rxkad_stats = { 0 };
 
 /* static prototypes */
 static afs_int32 ComputeSum(struct rx_packet *apacket,
@@ -207,8 +207,10 @@ FreeObject(struct rx_securityClass *aobj)
     } else {
 	return RXKADINCONSISTENCY;
     }				/* unknown type */
-    LOCK_RXKAD_STATS rxkad_stats.destroyObject++;
-    UNLOCK_RXKAD_STATS return 0;
+    LOCK_RXKAD_STATS;
+    rxkad_stats.destroyObject++;
+    UNLOCK_RXKAD_STATS;
+    return 0;
 }
 
 /* rxkad_Close - called by rx with the security class object as a parameter
@@ -249,9 +251,10 @@ rxkad_NewConnection(struct rx_securityClass *aobj,
 	rxkad_SetLevel(aconn, tcp->level);	/* set header and trailer sizes */
 	rxkad_AllocCID(aobj, aconn);	/* CHANGES cid AND epoch!!!! */
 	rxkad_DeriveXORInfo(aconn, tcp->keysched, tcp->ivec, tccp->preSeq);
-	LOCK_RXKAD_STATS rxkad_stats.
-	    connections[rxkad_LevelIndex(tcp->level)]++;
-    UNLOCK_RXKAD_STATS}
+	LOCK_RXKAD_STATS;
+	rxkad_stats.connections[rxkad_LevelIndex(tcp->level)]++;
+	UNLOCK_RXKAD_STATS;
+    }
 
     aobj->refCount++;		/* attached connection */
     return 0;
@@ -269,17 +272,21 @@ rxkad_DestroyConnection(struct rx_securityClass *aobj,
 	sconn = (struct rxkad_sconn *)aconn->securityData;
 	if (sconn) {
 	    aconn->securityData = 0;
-	    LOCK_RXKAD_STATS if (sconn->authenticated)
-		  rxkad_stats.destroyConn[rxkad_LevelIndex(sconn->level)]++;
+	    LOCK_RXKAD_STATS;
+	    if (sconn->authenticated)
+		rxkad_stats.destroyConn[rxkad_LevelIndex(sconn->level)]++;
 	    else
 		rxkad_stats.destroyUnauth++;
-	    UNLOCK_RXKAD_STATS rock = sconn->rock;
+	    UNLOCK_RXKAD_STATS;
+	    rock = sconn->rock;
 	    if (rock)
 		rxi_Free(rock, sizeof(struct rxkad_serverinfo));
 	    rxi_Free(sconn, sizeof(struct rxkad_sconn));
 	} else {
-	    LOCK_RXKAD_STATS rxkad_stats.destroyUnused++;
-	UNLOCK_RXKAD_STATS}
+	    LOCK_RXKAD_STATS;
+	    rxkad_stats.destroyUnused++;
+	    UNLOCK_RXKAD_STATS;
+	}
     } else {			/* client */
 	struct rxkad_cconn *cconn;
 	struct rxkad_cprivate *tcp;
@@ -291,8 +298,10 @@ rxkad_DestroyConnection(struct rx_securityClass *aobj,
 	    aconn->securityData = 0;
 	    rxi_Free(cconn, sizeof(struct rxkad_cconn));
 	}
-	LOCK_RXKAD_STATS rxkad_stats.destroyClient++;
-    UNLOCK_RXKAD_STATS}
+	LOCK_RXKAD_STATS;
+	rxkad_stats.destroyClient++;
+	UNLOCK_RXKAD_STATS;
+    }
     aobj->refCount--;		/* decrement connection counter */
     if (aobj->refCount <= 0) {
 	afs_int32 code;
@@ -332,15 +341,18 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
 	if (sconn && sconn->authenticated
 	    && (osi_Time() < sconn->expirationTime)) {
 	    level = sconn->level;
-	    LOCK_RXKAD_STATS rxkad_stats.
-		checkPackets[rxkad_StatIndex(rxkad_server, level)]++;
-	    UNLOCK_RXKAD_STATS sconn->stats.packetsReceived++;
+	    LOCK_RXKAD_STATS;
+	    rxkad_stats.checkPackets[rxkad_StatIndex(rxkad_server, level)]++;
+	    UNLOCK_RXKAD_STATS;
+	    sconn->stats.packetsReceived++;
 	    sconn->stats.bytesReceived += len;
 	    schedule = (fc_KeySchedule *) sconn->keysched;
 	    ivec = (fc_InitializationVector *) sconn->ivec;
 	} else {
-	    LOCK_RXKAD_STATS rxkad_stats.expired++;
-	    UNLOCK_RXKAD_STATS return RXKADEXPIRED;
+	    LOCK_RXKAD_STATS;
+	    rxkad_stats.expired++;
+	    UNLOCK_RXKAD_STATS;
+	    return RXKADEXPIRED;
 	}
 	preSeq = sconn->preSeq;
     } else {			/* client connection */
@@ -354,9 +366,10 @@ rxkad_CheckPacket(struct rx_securityClass *aobj, struct rx_call *acall,
 	if (!(tcp->type & rxkad_client))
 	    return RXKADINCONSISTENCY;
 	level = tcp->level;
-	LOCK_RXKAD_STATS rxkad_stats.
-	    checkPackets[rxkad_StatIndex(rxkad_client, level)]++;
-	UNLOCK_RXKAD_STATS cconn->stats.packetsReceived++;
+	LOCK_RXKAD_STATS;
+	rxkad_stats.checkPackets[rxkad_StatIndex(rxkad_client, level)]++;
+	UNLOCK_RXKAD_STATS;
+	cconn->stats.packetsReceived++;
 	cconn->stats.bytesReceived += len;
 	preSeq = cconn->preSeq;
 	schedule = (fc_KeySchedule *) tcp->keysched;
@@ -421,15 +434,19 @@ rxkad_PreparePacket(struct rx_securityClass *aobj, struct rx_call *acall,
 	if (sconn && sconn->authenticated
 	    && (osi_Time() < sconn->expirationTime)) {
 	    level = sconn->level;
-	    LOCK_RXKAD_STATS rxkad_stats.
+	    LOCK_RXKAD_STATS;
+	    rxkad_stats.
 		preparePackets[rxkad_StatIndex(rxkad_server, level)]++;
-	    UNLOCK_RXKAD_STATS sconn->stats.packetsSent++;
+	    UNLOCK_RXKAD_STATS;
+	    sconn->stats.packetsSent++;
 	    sconn->stats.bytesSent += len;
 	    schedule = (fc_KeySchedule *) sconn->keysched;
 	    ivec = (fc_InitializationVector *) sconn->ivec;
 	} else {
-	    LOCK_RXKAD_STATS rxkad_stats.expired++;	/* this is a pretty unlikely path... */
-	    UNLOCK_RXKAD_STATS return RXKADEXPIRED;
+	    LOCK_RXKAD_STATS;
+	    rxkad_stats.expired++;	/* this is a pretty unlikely path... */
+	    UNLOCK_RXKAD_STATS;
+	    return RXKADEXPIRED;
 	}
 	preSeq = sconn->preSeq;
     } else {			/* client connection */
@@ -440,9 +457,10 @@ rxkad_PreparePacket(struct rx_securityClass *aobj, struct rx_call *acall,
 	if (!(tcp->type & rxkad_client))
 	    return RXKADINCONSISTENCY;
 	level = tcp->level;
-	LOCK_RXKAD_STATS rxkad_stats.
-	    preparePackets[rxkad_StatIndex(rxkad_client, level)]++;
-	UNLOCK_RXKAD_STATS cconn->stats.packetsSent++;
+	LOCK_RXKAD_STATS;
+	rxkad_stats.preparePackets[rxkad_StatIndex(rxkad_client, level)]++;
+	UNLOCK_RXKAD_STATS;
+	cconn->stats.packetsSent++;
 	cconn->stats.bytesSent += len;
 	preSeq = cconn->preSeq;
 	schedule = (fc_KeySchedule *) tcp->keysched;
@@ -530,23 +548,23 @@ rxkad_GetStats(struct rx_securityClass *aobj, struct rx_connection *aconn,
 rxkad_level
 rxkad_StringToLevel(char *name)
 {
-  if (strcmp(name, "clear") == 0)
-    return rxkad_clear;
-  if (strcmp(name, "auth") == 0)
-    return rxkad_auth;
-  if (strcmp(name, "crypt") == 0)
-    return rxkad_crypt;
-  return -1;
+    if (strcmp(name, "clear") == 0)
+	return rxkad_clear;
+    if (strcmp(name, "auth") == 0)
+	return rxkad_auth;
+    if (strcmp(name, "crypt") == 0)
+	return rxkad_crypt;
+    return -1;
 }
 
 char *
 rxkad_LevelToString(rxkad_level level)
 {
-  if (level == rxkad_clear) 
-      return "clear";
-  if (level == rxkad_auth) 
-      return "auth";
-  if (level == rxkad_crypt) 
-      return "crypt";
-  return "unknown";
+    if (level == rxkad_clear)
+	return "clear";
+    if (level == rxkad_auth)
+	return "auth";
+    if (level == rxkad_crypt)
+	return "crypt";
+    return "unknown";
 }

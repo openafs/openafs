@@ -19,7 +19,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_conncache.c,v 1.9 2004/05/15 04:53:30 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_conncache.c,v 1.9.2.1 2004/08/25 07:09:41 shadow Exp $");
 
 #ifdef UKERNEL
 #include "afs/sysincludes.h"
@@ -48,8 +48,8 @@ static struct rx_queue rxi_connectionCache = { &rxi_connectionCache,
  */
 
 pthread_mutex_t rxi_connCacheMutex;
-#define LOCK_CONN_CACHE assert(pthread_mutex_lock(&rxi_connCacheMutex)==0);
-#define UNLOCK_CONN_CACHE assert(pthread_mutex_unlock(&rxi_connCacheMutex)==0);
+#define LOCK_CONN_CACHE assert(pthread_mutex_lock(&rxi_connCacheMutex)==0)
+#define UNLOCK_CONN_CACHE assert(pthread_mutex_unlock(&rxi_connCacheMutex)==0)
 #else
 #define LOCK_CONN_CACHE
 #define UNLOCK_CONN_CACHE
@@ -183,7 +183,8 @@ rxi_GetCachedConnection(rx_connParts_p parts, struct rx_connection **conn)
      * increase the frequency of cache hits.
      */
 
-    LOCK_CONN_CACHE if (!rxi_FindCachedConnection(parts, conn)) {
+    LOCK_CONN_CACHE;
+    if (!rxi_FindCachedConnection(parts, conn)) {
 	/*
 	 * Create a new connection and enter it in the cache
 	 */
@@ -195,7 +196,8 @@ rxi_GetCachedConnection(rx_connParts_p parts, struct rx_connection **conn)
 	    error = 1;
 	}
     }
-    UNLOCK_CONN_CACHE return error;
+    UNLOCK_CONN_CACHE;
+    return error;
 }
 
 /*
@@ -208,16 +210,16 @@ rxi_DeleteCachedConnections(void)
 {
     cache_entry_p cacheConn, nCacheConn;
 
-    LOCK_CONN_CACHE
-	for (queue_Scan
-	     (&rxi_connectionCache, cacheConn, nCacheConn, cache_entry)) {
+    LOCK_CONN_CACHE;
+    for (queue_Scan(&rxi_connectionCache, cacheConn, nCacheConn, cache_entry)) {
 	if (!cacheConn)
 	    break;
 	queue_Remove(cacheConn);
 	rxi_DestroyConnection(cacheConn->conn);
 	free(cacheConn);
     }
-UNLOCK_CONN_CACHE}
+    UNLOCK_CONN_CACHE;
+}
 
 /*
  * External functions
@@ -262,9 +264,8 @@ rx_ReleaseCachedConnection(struct rx_connection *conn)
 {
     cache_entry_p cacheConn, nCacheConn;
 
-    LOCK_CONN_CACHE
-	for (queue_Scan
-	     (&rxi_connectionCache, cacheConn, nCacheConn, cache_entry)) {
+    LOCK_CONN_CACHE;
+    for (queue_Scan(&rxi_connectionCache, cacheConn, nCacheConn, cache_entry)) {
 	if (conn == cacheConn->conn) {
 	    cacheConn->inUse--;
 	    /*
@@ -284,4 +285,5 @@ rx_ReleaseCachedConnection(struct rx_connection *conn)
 	    break;
 	}
     }
-UNLOCK_CONN_CACHE}
+    UNLOCK_CONN_CACHE;
+}

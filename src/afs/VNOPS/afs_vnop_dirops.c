@@ -21,7 +21,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_dirops.c,v 1.14 2003/08/29 22:00:04 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_dirops.c,v 1.14.2.1 2004/08/25 07:09:35 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -47,7 +47,7 @@ afs_mkdir(ndp, attrs)
     struct ucred *acred = ndp->ni_cred;
 #else /* AFS_OSF_ENV */
 afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
-    OSI_VC_DECL(adp);
+     OSI_VC_DECL(adp);
      register struct vcache **avcp;
      char *aname;
      struct vattr *attrs;
@@ -67,9 +67,10 @@ afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
     struct AFSVolSync tsync;
     afs_int32 now;
     struct afs_fakestat_state fakestate;
-    XSTATS_DECLS OSI_VC_CONVERT(adp)
+    XSTATS_DECLS;
+    OSI_VC_CONVERT(adp);
 
-      AFS_STATCNT(afs_mkdir);
+    AFS_STATCNT(afs_mkdir);
     afs_Trace2(afs_iclSetp, CM_TRACE_MKDIR, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname);
 
@@ -194,7 +195,7 @@ afs_rmdir(OSI_VC_ARG(adp), aname, cdirp, acred)
 #else
 afs_rmdir(adp, aname, acred)
 #endif
-    OSI_VC_DECL(adp);
+     OSI_VC_DECL(adp);
      char *aname;
      struct AFS_UCRED *acred;
 {
@@ -208,9 +209,10 @@ afs_rmdir(adp, aname, acred)
     struct AFSFetchStatus OutDirStatus;
     struct AFSVolSync tsync;
     struct afs_fakestat_state fakestate;
-    XSTATS_DECLS OSI_VC_CONVERT(adp)
+    XSTATS_DECLS;
+    OSI_VC_CONVERT(adp);
 
-      AFS_STATCNT(afs_rmdir);
+    AFS_STATCNT(afs_rmdir);
 
     afs_Trace2(afs_iclSetp, CM_TRACE_RMDIR, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname);

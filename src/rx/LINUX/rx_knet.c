@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/LINUX/rx_knet.c,v 1.23 2004/07/29 02:46:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/LINUX/rx_knet.c,v 1.23.2.1 2004/08/25 07:41:00 shadow Exp $");
 
 #include <linux/version.h>
 #ifdef AFS_LINUX22_ENV
@@ -37,7 +37,10 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     int code;
 
 
-#ifdef LINUX_KERNEL_IS_SELINUX
+    /* We need a better test for this. if you need it back, tell us
+     * how to detect it. 
+     */
+#if 0/*def LINUX_KERNEL_IS_SELINUX*/
     code = sock_create(AF_INET, SOCK_DGRAM, IPPROTO_UDP, &sockp, 0);
 #else
     code = sock_create(AF_INET, SOCK_DGRAM, IPPROTO_UDP, &sockp);

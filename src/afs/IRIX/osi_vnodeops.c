@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/IRIX/osi_vnodeops.c,v 1.14 2003/07/15 23:14:23 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/IRIX/osi_vnodeops.c,v 1.14.2.1 2004/08/25 07:09:34 shadow Exp $");
 
 #ifdef	AFS_SGI62_ENV
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -158,7 +158,7 @@ afs_frlock(OSI_VN_DECL(vp), int cmd, struct flock *lfp, int flag,
 	   cred_t * cr)
 {
     int error;
-    OSI_VN_CONVERT(vp)
+    OSI_VN_CONVERT(vp);
 #ifdef AFS_SGI65_ENV
     struct flid flid;
     int pid;
@@ -276,9 +276,9 @@ OSI_VC_DECL(avc);
      struct cred *cr;
 {
     int code;
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
 
-	osi_Assert(avc->v.v_count > 0);
+    osi_Assert(avc->v.v_count > 0);
     if (avc->v.v_type != VREG)
 	return EISDIR;
 
@@ -313,9 +313,9 @@ OSI_VC_DECL(avc);
      struct cred *cr;
 {
     int code;
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
 
-	osi_Assert(avc->v.v_count > 0);
+    osi_Assert(avc->v.v_count > 0);
     if (avc->v.v_type != VREG)
 	return EISDIR;
 
@@ -712,9 +712,9 @@ OSI_VC_DECL(avc);
     int bsize;			/* server's block size in bytes */
     off_t off;
     size_t rem, cnt;
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
 
-	bsize = AFSBSIZE;
+    bsize = AFSBSIZE;
     off = offset % bsize;	/* offset into block */
     bmv->bn = BTOBBT(offset - off);
     bmv->offset = bmv->bn;
@@ -765,7 +765,7 @@ OSI_VC_DECL(avc);
     iovec_t aiovec;
     int error;
     struct cred *cr;
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
     vnode_t *vp = (vnode_t *) avc;
 
     /*
@@ -892,7 +892,7 @@ OSI_VC_DECL(avc);
      u_int flags;
      struct cred *cr;
 {
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
     struct vnode *vp = AFSTOV(avc);
 
     if (vp->v_flag & VNOMAP)
@@ -923,7 +923,7 @@ OSI_VC_DECL(avc);
      u_int flags;
      struct cred *acred;
 {
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
     struct vnode *vp = AFSTOV(avc);
     register struct brequest *tb;
     struct vrequest treq;
@@ -1019,7 +1019,7 @@ OSI_VC_DECL(avc);
      struct cred *cr;
 #endif
 {
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
     struct vnode *vp = AFSTOV(avc);
     struct vrequest treq;
     int error;
@@ -1077,7 +1077,7 @@ OSI_VC_DECL(avc);
      struct ucred *acred;
 {
     int s;
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
     vnode_t *vp = (vnode_t *) avc;
     int mapcnt = avc->mapcnt;	/* We just clear off this many. */
 
@@ -1217,7 +1217,7 @@ afs_reclaim(OSI_VC_DECL(avc), int flag)
 void
 afs_rwlock(OSI_VN_DECL(vp), AFS_RWLOCK_T flag)
 {
-    OSI_VN_CONVERT(vp)
+    OSI_VN_CONVERT(vp);
     struct vcache *avc = VTOAFS(vp);
 
     if (OSI_GET_LOCKID() == avc->vc_rwlockid) {
@@ -1233,7 +1233,7 @@ afs_rwlock(OSI_VN_DECL(vp), AFS_RWLOCK_T flag)
 void
 afs_rwunlock(OSI_VN_DECL(vp), AFS_RWLOCK_T flag)
 {
-    OSI_VN_CONVERT(vp)
+    OSI_VN_CONVERT(vp);
     struct vcache *avc = VTOAFS(vp);
 
     AFS_ASSERT_GLOCK();
@@ -1275,9 +1275,9 @@ afs_fid2(OSI_VC_DECL(avc), struct fid *fidp)
 {
     struct cell *tcell;
     afs_fid2_t *afid = (afs_fid2_t *) fidp;
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
 
-	osi_Assert(sizeof(fid_t) >= sizeof(afs_fid2_t));
+    osi_Assert(sizeof(fid_t) >= sizeof(afs_fid2_t));
     afid->af_len = sizeof(afs_fid2_t) - sizeof(afid->af_len);
 
     tcell = afs_GetCell(avc->fid.Cell, READ_LOCK);

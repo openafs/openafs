@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/ktc_nt.c,v 1.17 2004/07/08 13:24:00 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/auth/ktc_nt.c,v 1.17.2.1 2004/08/25 07:09:36 shadow Exp $");
 
 #include <afs/stds.h>
 #include <stdio.h>
@@ -49,7 +49,7 @@ static char AFSConfigKeyName[] =
     "SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters";
 
 static char AFSGlobalKTCMutexName[] = "Global\\AFS_KTC_Mutex";
-static char AFSKTCMutexName[]       = "AFS_KTC_Mutex";
+static char AFSKTCMutexName[] = "AFS_KTC_Mutex";
 
 /*
  * Support for RPC's to send and receive session keys
@@ -351,35 +351,32 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
 
 #ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
-    if ( ktcMutex == NULL )
-        return KTC_PIOCTLFAIL;
-    if ( GetLastError() == ERROR_ALREADY_EXISTS ) {
-        if ( WaitForSingleObject( ktcMutex, INFINITE) != WAIT_OBJECT_0 ) {
-            CloseHandle(ktcMutex);
-            return KTC_PIOCTLFAIL;
-        }
+    if (ktcMutex == NULL)
+	return KTC_PIOCTLFAIL;
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+	if (WaitForSingleObject(ktcMutex, INFINITE) != WAIT_OBJECT_0) {
+	    CloseHandle(ktcMutex);
+	    return KTC_PIOCTLFAIL;
+	}
     }
 
     /* RPC to send session key */
     status = send_key(uuid, token->sessionKey.data);
     if (status != RPC_S_OK) {
-        if (status == 1)
-            strcpy(rpcErr, "RPC failure in AFS gateway");
-        else
-            DceErrorInqText(status, rpcErr);
-        if (status == RPC_S_SERVER_UNAVAILABLE ||
-            status == EPT_S_NOT_REGISTERED) 
-        {
-            ReleaseMutex(ktcMutex);
-            CloseHandle(ktcMutex);
-            return KTC_NOCMRPC;
-        }
-        else 
-        {
-            ReleaseMutex(ktcMutex);
-            CloseHandle(ktcMutex);
-            return KTC_RPC;
-        }
+	if (status == 1)
+	    strcpy(rpcErr, "RPC failure in AFS gateway");
+	else
+	    DceErrorInqText(status, rpcErr);
+	if (status == RPC_S_SERVER_UNAVAILABLE ||
+	    status == EPT_S_NOT_REGISTERED) {
+	    ReleaseMutex(ktcMutex);
+	    CloseHandle(ktcMutex);
+	    return KTC_NOCMRPC;
+	} else {
+	    ReleaseMutex(ktcMutex);
+	    CloseHandle(ktcMutex);
+	    return KTC_RPC;
+	}
     }
 #endif /* AFS_WIN95_ENV */
 
@@ -397,17 +394,17 @@ ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
 #endif /* AFS_WIN95_ENV */
 
     if (code) {
-        if (code == -1) {
-            if (errno == ESRCH)
-                return KTC_NOCELL;
-            else if (errno == ENODEV)
-                return KTC_NOCM;
-            else if (errno == EINVAL)
-                return KTC_INVAL;
-            else
-                return KTC_PIOCTLFAIL;
-        } else
-            return KTC_PIOCTLFAIL;
+	if (code == -1) {
+	    if (errno == ESRCH)
+		return KTC_NOCELL;
+	    else if (errno == ENODEV)
+		return KTC_NOCM;
+	    else if (errno == EINVAL)
+		return KTC_INVAL;
+	    else
+		return KTC_PIOCTLFAIL;
+	} else
+	    return KTC_PIOCTLFAIL;
     }
 
     return 0;
@@ -454,40 +451,39 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
     iob.out = tbuffer;
     iob.out_size = sizeof(tbuffer);
 
-#ifndef AFS_WIN95_ENV		
+#ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
-    if ( ktcMutex == NULL )
-        return KTC_PIOCTLFAIL;
-    if ( GetLastError() == ERROR_ALREADY_EXISTS ) {
-        if ( WaitForSingleObject( ktcMutex, INFINITE) != WAIT_OBJECT_0 ) {
-            CloseHandle(ktcMutex);
-            return KTC_PIOCTLFAIL;
-        }
+    if (ktcMutex == NULL)
+	return KTC_PIOCTLFAIL;
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+	if (WaitForSingleObject(ktcMutex, INFINITE) != WAIT_OBJECT_0) {
+	    CloseHandle(ktcMutex);
+	    return KTC_PIOCTLFAIL;
+	}
     }
 #endif /* AFS_WIN95_ENV */
 
     code = pioctl(0, VIOCNEWGETTOK, &iob, 0);
     if (code) {
 #ifndef AFS_WIN95_ENV
-        ReleaseMutex(ktcMutex);
-        CloseHandle(ktcMutex);
+	ReleaseMutex(ktcMutex);
+	CloseHandle(ktcMutex);
 #endif /* AFS_WIN95_ENV */
-        if (code == -1) {
-            if (errno == ESRCH)
-                return KTC_NOCELL;
-            else if (errno == ENODEV)
-                return KTC_NOCM;
-            else if (errno == EINVAL)
-                return KTC_INVAL;
-            else if (errno == EDOM)
-                return KTC_NOENT;
-            else
-                return KTC_PIOCTLFAIL;
-        } else
-            return KTC_PIOCTLFAIL;
-    }                                                             
-
-#ifndef AFS_WIN95_ENV		
+	if (code == -1) {
+	    if (errno == ESRCH)
+		return KTC_NOCELL;
+	    else if (errno == ENODEV)
+		return KTC_NOCM;
+	    else if (errno == EINVAL)
+		return KTC_INVAL;
+	    else if (errno == EDOM)
+		return KTC_NOENT;
+	    else
+		return KTC_PIOCTLFAIL;
+	} else
+	    return KTC_PIOCTLFAIL;
+    }
+#ifndef AFS_WIN95_ENV
     /* get rid of RPC for win95 build */
     /* RPC to receive session key */
     status = receive_key(uuid, token->sessionKey.data);
@@ -496,15 +492,15 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
     CloseHandle(ktcMutex);
 
     if (status != RPC_S_OK) {
-        if (status == 1)
-            strcpy(rpcErr, "RPC failure in AFS gateway");
-        else
-            DceErrorInqText(status, rpcErr);
-        if (status == RPC_S_SERVER_UNAVAILABLE
-             || status == EPT_S_NOT_REGISTERED)
-            return KTC_NOCMRPC;
-        else 
-            return KTC_RPC;
+	if (status == 1)
+	    strcpy(rpcErr, "RPC failure in AFS gateway");
+	else
+	    DceErrorInqText(status, rpcErr);
+	if (status == RPC_S_SERVER_UNAVAILABLE
+	    || status == EPT_S_NOT_REGISTERED)
+	    return KTC_NOCMRPC;
+	else
+	    return KTC_RPC;
     }
 #endif /* AFS_WIN95_ENV */
 
@@ -539,12 +535,12 @@ ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
     /* user name is here */
 
     /* check that ticket will fit 
-	 * this compares the size of the ktc_token allocated by the app
-	 * which might be smaller than the current definition of MAXKTCTICKETLEN
-	 */
-	maxLen = tokenLen - sizeof(struct ktc_token) + MAXKTCTICKETLEN;
-	if (maxLen < ticketLen)
-		return KTC_TOOBIG;
+     * this compares the size of the ktc_token allocated by the app
+     * which might be smaller than the current definition of MAXKTCTICKETLEN
+     */
+    maxLen = tokenLen - sizeof(struct ktc_token) + MAXKTCTICKETLEN;
+    if (maxLen < ticketLen)
+	return KTC_TOOBIG;
 
     /* set return values */
     memcpy(token->ticket, ticketP, ticketLen);
@@ -580,15 +576,15 @@ ktc_ListTokens(int cellNum, int *cellNumP, struct ktc_principal *server)
     int code;
     HANDLE ktcMutex = NULL;
 
-#ifndef AFS_WIN95_ENV		
+#ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
-    if ( ktcMutex == NULL )
-        return KTC_PIOCTLFAIL;
-    if ( GetLastError() == ERROR_ALREADY_EXISTS ) {
-        if ( WaitForSingleObject( ktcMutex, INFINITE) != WAIT_OBJECT_0 ) {
-            CloseHandle(ktcMutex);
-            return KTC_PIOCTLFAIL;
-        }
+    if (ktcMutex == NULL)
+	return KTC_PIOCTLFAIL;
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+	if (WaitForSingleObject(ktcMutex, INFINITE) != WAIT_OBJECT_0) {
+	    CloseHandle(ktcMutex);
+	    return KTC_PIOCTLFAIL;
+	}
     }
 #endif /* AFS_WIN95_ENV */
 
@@ -607,8 +603,8 @@ ktc_ListTokens(int cellNum, int *cellNumP, struct ktc_principal *server)
     code = pioctl(0, VIOCGETTOK, &iob, 0);
 
 #ifndef AFS_WIN95_ENV
-        ReleaseMutex(ktcMutex);
-        CloseHandle(ktcMutex);
+    ReleaseMutex(ktcMutex);
+    CloseHandle(ktcMutex);
 #endif /* AFS_WIN95_ENV */
 
     if (code) {
@@ -675,16 +671,15 @@ ktc_ForgetToken(struct ktc_principal *server)
     if (strcmp(server->name, "afs")) {
 	return ForgetOneLocalToken(server);
     }
-
-#ifndef AFS_WIN95_ENV		
+#ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
-    if ( ktcMutex == NULL )
-        return KTC_PIOCTLFAIL;
-    if ( GetLastError() == ERROR_ALREADY_EXISTS ) {
-        if ( WaitForSingleObject( ktcMutex, INFINITE) != WAIT_OBJECT_0 ) {
-            CloseHandle(ktcMutex);
-            return KTC_PIOCTLFAIL;
-        }
+    if (ktcMutex == NULL)
+	return KTC_PIOCTLFAIL;
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+	if (WaitForSingleObject(ktcMutex, INFINITE) != WAIT_OBJECT_0) {
+	    CloseHandle(ktcMutex);
+	    return KTC_PIOCTLFAIL;
+	}
     }
 #endif /* AFS_WIN95_ENV */
 
@@ -731,15 +726,15 @@ ktc_ForgetAllTokens()
 
     (void)ForgetLocalTokens();
 
-#ifndef AFS_WIN95_ENV		
+#ifndef AFS_WIN95_ENV
     ktcMutex = CreateMutex(NULL, TRUE, AFSGlobalKTCMutexName);
-    if ( ktcMutex == NULL )
-        return KTC_PIOCTLFAIL;
-    if ( GetLastError() == ERROR_ALREADY_EXISTS ) {
-        if ( WaitForSingleObject( ktcMutex, INFINITE) != WAIT_OBJECT_0 ) {
-            CloseHandle(ktcMutex);
-            return KTC_PIOCTLFAIL;
-        }
+    if (ktcMutex == NULL)
+	return KTC_PIOCTLFAIL;
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+	if (WaitForSingleObject(ktcMutex, INFINITE) != WAIT_OBJECT_0) {
+	    CloseHandle(ktcMutex);
+	    return KTC_PIOCTLFAIL;
+	}
     }
 #endif /* AFS_WIN95_ENV */
 
@@ -790,7 +785,8 @@ SetLocalToken(struct ktc_principal *aserver, struct ktc_token *atoken,
     int found = -1;
     int i;
 
-    LOCK_GLOBAL_MUTEX for (i = 0; i < MAXLOCALTOKENS; i++)
+    LOCK_GLOBAL_MUTEX;
+    for (i = 0; i < MAXLOCALTOKENS; i++)
 	if (local_tokens[i].valid) {
 	    if ((strcmp(local_tokens[i].server.name, aserver->name) == 0)
 		&& (strcmp(local_tokens[i].server.instance, aserver->instance)
@@ -802,7 +798,8 @@ SetLocalToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 	} else if (found == -1)
 	    found = i;		/* remember empty slot but keep looking for a match */
     if (found == -1) {
-	UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
+	UNLOCK_GLOBAL_MUTEX;
+	return KTC_NOENT;
     }
     memcpy(&local_tokens[found].token, atoken, sizeof(struct ktc_token));
     memcpy(&local_tokens[found].server, aserver,
@@ -810,7 +807,8 @@ SetLocalToken(struct ktc_principal *aserver, struct ktc_token *atoken,
     memcpy(&local_tokens[found].client, aclient,
 	   sizeof(struct ktc_principal));
     local_tokens[found].valid = 1;
-    UNLOCK_GLOBAL_MUTEX return 0;
+    UNLOCK_GLOBAL_MUTEX;
+    return 0;
 }
 
 
@@ -820,7 +818,8 @@ GetLocalToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 {
     int i;
 
-    LOCK_GLOBAL_MUTEX for (i = 0; i < MAXLOCALTOKENS; i++)
+    LOCK_GLOBAL_MUTEX;
+    for (i = 0; i < MAXLOCALTOKENS; i++)
 	if (local_tokens[i].valid
 	    && (strcmp(local_tokens[i].server.name, aserver->name) == 0)
 	    && (strcmp(local_tokens[i].server.instance, aserver->instance) ==
@@ -830,9 +829,11 @@ GetLocalToken(struct ktc_principal *aserver, struct ktc_token *atoken,
 		   min(atokenLen, sizeof(struct ktc_token)));
 	    memcpy(aclient, &local_tokens[i].client,
 		   sizeof(struct ktc_principal));
-	    UNLOCK_GLOBAL_MUTEX return 0;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return 0;
 	}
-    UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
+    UNLOCK_GLOBAL_MUTEX;
+    return KTC_NOENT;
 }
 
 
@@ -841,12 +842,14 @@ ForgetLocalTokens()
 {
     int i;
 
-    LOCK_GLOBAL_MUTEX for (i = 0; i < MAXLOCALTOKENS; i++) {
+    LOCK_GLOBAL_MUTEX;
+    for (i = 0; i < MAXLOCALTOKENS; i++) {
 	local_tokens[i].valid = 0;
 	memset(&local_tokens[i].token.sessionKey, 0,
 	       sizeof(struct ktc_encryptionKey));
     }
-    UNLOCK_GLOBAL_MUTEX return 0;
+    UNLOCK_GLOBAL_MUTEX;
+    return 0;
 }
 
 
@@ -855,7 +858,8 @@ ForgetOneLocalToken(struct ktc_principal *aserver)
 {
     int i;
 
-    LOCK_GLOBAL_MUTEX for (i = 0; i < MAXLOCALTOKENS; i++) {
+    LOCK_GLOBAL_MUTEX;
+    for (i = 0; i < MAXLOCALTOKENS; i++) {
 	if (local_tokens[i].valid
 	    && (strcmp(local_tokens[i].server.name, aserver->name) == 0)
 	    && (strcmp(local_tokens[i].server.instance, aserver->instance) ==
@@ -864,8 +868,10 @@ ForgetOneLocalToken(struct ktc_principal *aserver)
 	    local_tokens[i].valid = 0;
 	    memset(&local_tokens[i].token.sessionKey, 0,
 		   sizeof(struct ktc_encryptionKey));
-	    UNLOCK_GLOBAL_MUTEX return 0;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return 0;
 	}
     }
-    UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
+    UNLOCK_GLOBAL_MUTEX;
+    return KTC_NOENT;
 }

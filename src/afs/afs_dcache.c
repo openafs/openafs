@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42 2004/05/08 04:33:07 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_dcache.c,v 1.42.2.1 2004/08/25 07:09:32 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -1535,7 +1535,7 @@ afs_GetDCache(register struct vcache *avc, afs_size_t abyte,
     int doReallyAdjustSize = 0;
     int overWriteWholeChunk = 0;
 
-    XSTATS_DECLS
+    XSTATS_DECLS;
 #ifndef AFS_NOSTATS
     struct afs_stats_xferData *xferP;	/* Ptr to this op's xfer struct */
     osi_timeval_t xferStartTime,	/*FS xfer start time */
@@ -2618,7 +2618,7 @@ afs_WriteThroughDSlots(void)
 #define DQTODC(q)	((struct dcache *)(((char *) (q)) - sizeof(struct afs_q)))
 
     for (tq = DirtyQ.prev; tq != &DirtyQ; tq = QPrev(tq)) {
-        tdc = DQTODC(tq);
+	tdc = DQTODC(tq);
 	if (tdc->dflags & DFEntryMod) {
 	    int wrLock;
 

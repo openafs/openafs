@@ -19,7 +19,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_event.c,v 1.14 2003/07/15 23:16:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_event.c,v 1.14.2.1 2004/08/25 07:09:41 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -109,8 +109,8 @@ afs_kmutex_t rxevent_lock;
 
 #include <assert.h>
 pthread_mutex_t rx_event_mutex;
-#define LOCK_EV_INIT assert(pthread_mutex_lock(&rx_event_mutex)==0);
-#define UNLOCK_EV_INIT assert(pthread_mutex_unlock(&rx_event_mutex)==0);
+#define LOCK_EV_INIT assert(pthread_mutex_lock(&rx_event_mutex)==0)
+#define UNLOCK_EV_INIT assert(pthread_mutex_unlock(&rx_event_mutex)==0)
 #else
 #define LOCK_EV_INIT
 #define UNLOCK_EV_INIT
@@ -122,8 +122,10 @@ int rxevent_initialized = 0;
 void
 rxevent_Init(int nEvents, void (*scheduler) (void))
 {
-    LOCK_EV_INIT if (rxevent_initialized) {
-	UNLOCK_EV_INIT return;
+    LOCK_EV_INIT;
+    if (rxevent_initialized) {
+	UNLOCK_EV_INIT;
+	return;
     }
     MUTEX_INIT(&rxevent_lock, "rxevent_lock", MUTEX_DEFAULT, 0);
     clock_Init();
@@ -138,7 +140,8 @@ rxevent_Init(int nEvents, void (*scheduler) (void))
     rxevent_initialized = 1;
     clock_Zero(&rxevent_nextRaiseEvents);
     rxevent_raiseScheduled = 0;
-UNLOCK_EV_INIT}
+    UNLOCK_EV_INIT;
+}
 
 /* Create and initialize new epoch structure */
 struct rxepoch *
@@ -413,11 +416,14 @@ shutdown_rxevent(void)
 {
     struct xfreelist *xp, *nxp;
 
-    LOCK_EV_INIT if (!rxevent_initialized) {
-	UNLOCK_EV_INIT return;
+    LOCK_EV_INIT;
+    if (!rxevent_initialized) {
+	UNLOCK_EV_INIT;
+	return;
     }
     rxevent_initialized = 0;
-    UNLOCK_EV_INIT MUTEX_DESTROY(&rxevent_lock);
+    UNLOCK_EV_INIT;
+    MUTEX_DESTROY(&rxevent_lock);
 #if	defined(AFS_AIX32_ENV) && defined(KERNEL)
     /* Everything is freed in afs_osinet.c */
 #else

@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50 2004/03/17 06:43:36 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50.2.1 2004/08/25 07:09:35 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -402,7 +402,7 @@ afs_ENameOK(register char *aname)
 
 static int
 afs_getsysname(register struct vrequest *areq, register struct vcache *adp,
-               register char *bufp, int *num, char **sysnamelist[])
+	       register char *bufp, int *num, char **sysnamelist[])
 {
     register struct unixuser *au;
     register afs_int32 error;
@@ -411,29 +411,29 @@ afs_getsysname(register struct vrequest *areq, register struct vcache *adp,
 
     *sysnamelist = afs_sysnamelist;
 
-    if (!afs_nfsexporter) 
-       strcpy(bufp, (*sysnamelist)[0]);
+    if (!afs_nfsexporter)
+	strcpy(bufp, (*sysnamelist)[0]);
     else {
-       au = afs_GetUser(areq->uid, adp->fid.Cell, 0);
-       if (au->exporter) {
-           error = EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, num);
-           if (error) {
-               strcpy(bufp, "@sys");
-               afs_PutUser(au, 0);   
-               return -1;
-           } else {
-               strcpy(bufp, (*sysnamelist)[0]);
-           }
-       } else 
-           strcpy(bufp, afs_sysname);
-       afs_PutUser(au, 0);       
+	au = afs_GetUser(areq->uid, adp->fid.Cell, 0);
+	if (au->exporter) {
+	    error = EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, num);
+	    if (error) {
+		strcpy(bufp, "@sys");
+		afs_PutUser(au, 0);
+		return -1;
+	    } else {
+		strcpy(bufp, (*sysnamelist)[0]);
+	    }
+	} else
+	    strcpy(bufp, afs_sysname);
+	afs_PutUser(au, 0);
     }
     return 0;
 }
 
 void
-Check_AtSys(register struct vcache *avc, char *aname, 
-            struct sysname_info *state, struct vrequest *areq)
+Check_AtSys(register struct vcache *avc, char *aname,
+	    struct sysname_info *state, struct vrequest *areq)
 {
     int num = 0;
     char **sysnamelist[MAXSYSNAME];
@@ -442,7 +442,8 @@ Check_AtSys(register struct vcache *avc, char *aname,
 	state->offset = 0;
 	state->name = (char *)osi_AllocLargeSpace(AFS_SMALLOCSIZ);
 	state->allocked = 1;
-	state->index = afs_getsysname(areq, avc, state->name, &num, sysnamelist);
+	state->index =
+	    afs_getsysname(areq, avc, state->name, &num, sysnamelist);
     } else {
 	state->offset = -1;
 	state->allocked = 0;
@@ -453,54 +454,56 @@ Check_AtSys(register struct vcache *avc, char *aname,
 
 int
 Next_AtSys(register struct vcache *avc, struct vrequest *areq,
-           struct sysname_info *state)
+	   struct sysname_info *state)
 {
     int num = afs_sysnamecount;
     char **sysnamelist[MAXSYSNAME];
 
     if (state->index == -1)
-       return 0;       /* No list */
+	return 0;		/* No list */
 
-    /* Check for the initial state of aname != "@sys" in Check_AtSys*/
+    /* Check for the initial state of aname != "@sys" in Check_AtSys */
     if (state->offset == -1 && state->allocked == 0) {
-       register char *tname;
+	register char *tname;
 
-       /* Check for .*@sys */
-       for (tname=state->name; *tname; tname++)
-           /*Move to the end of the string*/;
+	/* Check for .*@sys */
+	for (tname = state->name; *tname; tname++)
+	    /*Move to the end of the string */ ;
 
-       if ((tname > state->name + 4) && (AFS_EQ_ATSYS(tname-4))) {
-           state->offset = (tname - 4) - state->name;
-           tname = (char *) osi_AllocLargeSpace(AFS_LRALLOCSIZ);
-           strncpy(tname, state->name, state->offset);
-           state->name = tname;
-           state->allocked = 1;
-            num = 0;
-            state->index = afs_getsysname(areq, avc, state->name+state->offset,
-                                          &num, sysnamelist);
-           return 1;
-       } else
-           return 0; /* .*@sys doesn't match either */
+	if ((tname > state->name + 4) && (AFS_EQ_ATSYS(tname - 4))) {
+	    state->offset = (tname - 4) - state->name;
+	    tname = (char *)osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+	    strncpy(tname, state->name, state->offset);
+	    state->name = tname;
+	    state->allocked = 1;
+	    num = 0;
+	    state->index =
+		afs_getsysname(areq, avc, state->name + state->offset, &num,
+			       sysnamelist);
+	    return 1;
+	} else
+	    return 0;		/* .*@sys doesn't match either */
     } else {
-       register struct unixuser *au;
-       register afs_int32 error;
-      
-       *sysnamelist = afs_sysnamelist;
+	register struct unixuser *au;
+	register afs_int32 error;
 
-       if (afs_nfsexporter) {
-           au = afs_GetUser(areq->uid, avc->fid.Cell, 0);
-           if (au->exporter) {
-               error = EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, num);
-               if (error) {
-                   return 0;
-               }
-           } 
-           afs_PutUser(au, 0); 
-       }
-       if (++(state->index) >= num || !(*sysnamelist)[state->index])
-           return 0;   /* end of list */
+	*sysnamelist = afs_sysnamelist;
+
+	if (afs_nfsexporter) {
+	    au = afs_GetUser(areq->uid, avc->fid.Cell, 0);
+	    if (au->exporter) {
+		error =
+		    EXP_SYSNAME(au->exporter, (char *)0, sysnamelist, num);
+		if (error) {
+		    return 0;
+		}
+	    }
+	    afs_PutUser(au, 0);
+	}
+	if (++(state->index) >= num || !(*sysnamelist)[state->index])
+	    return 0;		/* end of list */
     }
-    strcpy(state->name+state->offset, (*sysnamelist)[state->index]);
+    strcpy(state->name + state->offset, (*sysnamelist)[state->index]);
     return 1;
 }
 
@@ -509,7 +512,7 @@ extern int BlobScan(ino64_t * afile, afs_int32 ablob);
 #else
 #if defined(AFS_HPUX1123_ENV)
 /* DEE should use the new afs_inode_t  for all */
-extern int BlobScan(ino_t *afile, afs_int32 ablob);
+extern int BlobScan(ino_t * afile, afs_int32 ablob);
 #else
 #if defined AFS_LINUX_64BIT_KERNEL
 extern int BlobScan(long *afile, afs_int32 ablob);
@@ -577,13 +580,13 @@ afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     struct VenusFid dotdot;
     int flagIndex;		/* First file with bulk fetch flag set */
     int inlinebulk = 0;		/* Did we use InlineBulk RPC or not? */
-    XSTATS_DECLS
-	/* first compute some basic parameters.  We dont want to prefetch more
-	 * than a fraction of the cache in any given call, and we want to preserve
-	 * a portion of the LRU queue in any event, so as to avoid thrashing
-	 * the entire stat cache (we will at least leave some of it alone).
-	 * presently dont stat more than 1/8 the cache in any one call.      */
-	nentries = afs_cacheStats / 8;
+    XSTATS_DECLS;
+    /* first compute some basic parameters.  We dont want to prefetch more
+     * than a fraction of the cache in any given call, and we want to preserve
+     * a portion of the LRU queue in any event, so as to avoid thrashing
+     * the entire stat cache (we will at least leave some of it alone).
+     * presently dont stat more than 1/8 the cache in any one call.      */
+    nentries = afs_cacheStats / 8;
 
     /* dont bother prefetching more than one calls worth of info */
     if (nentries > AFSCBMAX)
@@ -1111,7 +1114,7 @@ afs_lookup(adp, aname, avcp, acred, flags)
 afs_lookup(adp, aname, avcp, acred)
 #endif				/* UKERNEL */
 #endif				/* SUN5 || SGI */
-OSI_VC_DECL(adp);
+     OSI_VC_DECL(adp);
      struct vcache **avcp;
      char *aname;
      struct AFS_UCRED *acred;
@@ -1125,7 +1128,7 @@ OSI_VC_DECL(adp);
     int pass = 0, hit = 0;
     long dirCookie;
     extern afs_int32 afs_mariner;	/*Writing activity to log? */
-    OSI_VC_CONVERT(adp)
+    OSI_VC_CONVERT(adp);
     afs_hyper_t versionNo;
     int no_read_access = 0;
     struct sysname_info sysState;	/* used only for @sys checking */

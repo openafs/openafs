@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/UKERNEL/osi_vfsops.c,v 1.10 2003/07/15 23:14:29 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/UKERNEL/osi_vfsops.c,v 1.10.2.1 2004/08/25 07:09:34 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -75,9 +75,9 @@ afs_root(OSI_VFS_ARG(afsp), avpp)
     register afs_int32 code = 0;
     struct vrequest treq;
     register struct vcache *tvp = 0;
-    OSI_VFS_CONVERT(afsp)
+    OSI_VFS_CONVERT(afsp);
 
-	AFS_STATCNT(afs_root);
+    AFS_STATCNT(afs_root);
     if (afs_globalVp && (afs_globalVp->states & CStatd)) {
 	tvp = afs_globalVp;
     } else {

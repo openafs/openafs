@@ -15,7 +15,9 @@
 #include <winsock2.h>
 #include <nb30.h>
 #endif /* !DJGPP */
+#ifdef COMMENT
 #include <malloc.h>
+#endif
 #include <string.h>
 #include <stdlib.h>
 #include <osi.h>
@@ -407,8 +409,7 @@ long cm_CheckFetchRange(cm_scache_t *scp, osi_hyper_t *startBasep, long length,
     while(length > 0) {
 		/* get callback so we can do a meaningful dataVersion comparison */
         code = cm_SyncOp(scp, NULL, up, reqp, 0,
-                         CM_SCACHESYNC_NEEDCALLBACK
-                         | CM_SCACHESYNC_GETSTATUS);
+                         CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 		if (code) {
 			scp->flags &= ~CM_SCACHEFLAG_PREFETCHING;
 			lock_ReleaseMutex(&scp->mx);
@@ -836,8 +837,8 @@ long cm_SetupFetchBIOD(cm_scache_t *scp, osi_hyper_t *offsetp,
 	biop->reserved = 0;
 
 	/* first lookup the file's length, so we know when to stop */
-    code = cm_SyncOp(scp, NULL, up, reqp, 0, CM_SCACHESYNC_NEEDCALLBACK
-                     | CM_SCACHESYNC_GETSTATUS);
+    code = cm_SyncOp(scp, NULL, up, reqp, 0, 
+                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
     if (code) 
         return code;
         
@@ -1073,8 +1074,7 @@ void cm_ReleaseBIOD(cm_bulkIO_t *biop, int isStore)
             if (bufp->flags & CM_BUF_WAITING) {
 				osi_Wakeup((long) bufp);
             }
-			bufp->flags &= ~(CM_BUF_WAITING | CM_BUF_WRITING
-                             | CM_BUF_DIRTY);
+            bufp->flags &= ~(CM_BUF_WAITING | CM_BUF_WRITING | CM_BUF_DIRTY);
         }
 
         lock_ReleaseMutex(&bufp->mx);

@@ -31,7 +31,7 @@
  * SUCH DAMAGE.
  */
 
-/* $Id: md4.h,v 1.1 2004/04/09 05:54:22 jaltman Exp $ */
+/* $Id: md4.h,v 1.1.2.1 2004/08/25 07:09:42 shadow Exp $ */
 
 #include <stdlib.h>
 #ifdef HAVE_SYS_TYPES_H
@@ -42,13 +42,13 @@
 #endif
 
 struct md4 {
-  unsigned int sz[2];
-  afs_uint32 counter[4];
-  unsigned char save[64];
+    unsigned int sz[2];
+    afs_uint32 counter[4];
+    unsigned char save[64];
 };
 
 typedef struct md4 MD4_CTX;
 
-void MD4_Init (struct md4 *m);
-void MD4_Update (struct md4 *m, const void *p, size_t len);
-void MD4_Final (void *res, struct md4 *m);
+void MD4_Init(struct md4 *m);
+void MD4_Update(struct md4 *m, const void *p, size_t len);
+void MD4_Final(void *res, struct md4 *m);

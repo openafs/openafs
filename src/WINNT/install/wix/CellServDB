@@ -1,4 +1,4 @@
->grand.central.org      #GCO Public CellServDB 29 Jun 2004
+>grand.central.org      #GCO Public CellServDB 17 Aug 2004
 18.7.14.88                      #grand-opening.mit.edu
 128.2.191.224                   #penn.central.org
 >wu-wien.ac.at          #University of Economics, Vienna, Austria
@@ -116,6 +116,8 @@
 >physik.uni-wuppertal.de #Physics department of Bergische Universität Wuppertal
 132.195.104.3                   #afs1.physik.uni-wuppertal.de
 132.195.104.230                 #afs2.physik.uni-wuppertal.de
+>s-et.aau.dk            #Aalborg Univ., The Student Society, Denmark
+130.225.196.22                  #afs.s-et.aau.dk
 >ies.auc.dk             #Aalborg Univ., Inst. of Electronic Systems, Denmark
 130.225.51.73                   #afsdb1.kom.auc.dk
 130.225.51.74                   #afsdb2.kom.auc.dk
@@ -152,6 +154,9 @@
 >qatar.cmu.edu          #Carnegie Mellon University - Qatar Campus Cell
 204.194.25.7                    #afs1.qatar.cmu.edu
 204.194.25.8                    #afs2.qatar.cmu.edu
+>sbp.ri.cmu.edu         #Carnegie Mellon University - Sensor Based Planning Lab
+128.2.105.174                   #voronoi.sbp.ri.cmu.edu
+128.2.105.175                   #nihao.sbp.ri.cmu.edu
 >msc.cornell.edu        #Cornell University Materials Science Center
 128.84.231.242                  #miranda.ccmr.cornell.edu
 128.84.241.35                   #co.ccmr.cornell.edu
@@ -250,12 +255,12 @@
 130.85.24.101                   #db1.afs.umbc.edu
 >glue.umd.edu           #University of Maryland - Project Glue
 128.8.70.11                     #olmec.umd.edu
-128.8.73.3                      #babylon.umd.edu
-129.2.128.53                    #egypt.umd.edu
+128.8.236.4                     #egypt.umd.edu
+128.8.236.230                   #babylon.umd.edu
 >wam.umd.edu            #University of Maryland Network WAM Project
 128.8.70.9                      #csc-srv.wam.umd.edu
-128.8.73.9                      #pg2-srv.wam.umd.edu
-129.2.128.54                    #avw-srv.wam.umd.edu
+128.8.236.5                     #avw-srv.wam.umd.edu
+128.8.236.231                   #ptx-srv.wam.umd.edu
 >umich.edu              #University of Michigan - Campus
 141.211.1.32                    #fear.ifs.umich.edu
 141.211.1.33                    #surprise.ifs.umich.edu

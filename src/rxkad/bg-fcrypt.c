@@ -38,7 +38,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/bg-fcrypt.c,v 1.5 2003/07/15 23:16:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/bg-fcrypt.c,v 1.5.2.1 2004/08/25 07:09:42 shadow Exp $");
 
 #define DEBUG 0
 #ifdef KERNEL
@@ -507,9 +507,11 @@ afs_int32
 fc_ecb_encrypt(afs_uint32 * in, afs_uint32 * out, fc_KeySchedule sched,
 	       int encrypt)
 {
-    LOCK_RXKAD_STATS rxkad_stats.fc_encrypts[encrypt]++;
-    UNLOCK_RXKAD_STATS if (encrypt)
-	  fc_ecb_enc(in[0], in[1], out, sched);
+    LOCK_RXKAD_STATS;
+    rxkad_stats.fc_encrypts[encrypt]++;
+    UNLOCK_RXKAD_STATS;
+    if (encrypt)
+	fc_ecb_enc(in[0], in[1], out, sched);
     else
 	fc_ecb_dec(in[0], in[1], out, sched);
     return 0;
@@ -667,8 +669,10 @@ fc_keysched(void *key_, fc_KeySchedule sched)
     ROT56R(hi, lo, 11);
     *sched++ = EFF_NTOHL(lo);
 #endif
-    LOCK_RXKAD_STATS rxkad_stats.fc_key_scheds++;
-    UNLOCK_RXKAD_STATS return 0;
+    LOCK_RXKAD_STATS;
+    rxkad_stats.fc_key_scheds++;
+    UNLOCK_RXKAD_STATS;
+    return 0;
 }
 
 /*
@@ -688,9 +692,10 @@ rxkad_EncryptPacket(const struct rx_connection * rx_connection_not_used,
 
     obj = rx_SecurityObjectOf(rx_connection_not_used);
     tp = (struct rxkad_cprivate *)obj->privateData;
-    LOCK_RXKAD_STATS rxkad_stats.bytesEncrypted[rxkad_TypeIndex(tp->type)] +=
-	len;
-    UNLOCK_RXKAD_STATS {
+    LOCK_RXKAD_STATS;
+    rxkad_stats.bytesEncrypted[rxkad_TypeIndex(tp->type)] += len;
+    UNLOCK_RXKAD_STATS;
+    {
 	/* What is this good for?
 	 * It turns out that the security header for auth_enc is of
 	 * size 8 bytes and the last 4 bytes are defined to be 0!
@@ -725,9 +730,10 @@ rxkad_DecryptPacket(const struct rx_connection * rx_connection_not_used,
 
     obj = rx_SecurityObjectOf(rx_connection_not_used);
     tp = (struct rxkad_cprivate *)obj->privateData;
-    LOCK_RXKAD_STATS rxkad_stats.bytesDecrypted[rxkad_TypeIndex(tp->type)] +=
-	len;
-    UNLOCK_RXKAD_STATS memcpy(ivec, iv, sizeof(ivec));	/* Must use copy of iv */
+    LOCK_RXKAD_STATS;
+    rxkad_stats.bytesDecrypted[rxkad_TypeIndex(tp->type)] += len;
+    UNLOCK_RXKAD_STATS;
+    memcpy(ivec, iv, sizeof(ivec));	/* Must use copy of iv */
     for (frag = &packet->wirevec[1]; len > 0; frag++) {
 	int iov_len = frag->iov_len;
 	afs_uint32 *iov_bas = (afs_uint32 *) frag->iov_base;

@@ -95,15 +95,15 @@ void cm_QueueBKGRequest(cm_scache_t *scp, cm_bkgProc_t *procp, long p1, long p2,
 /* periodic check daemon */
 void cm_Daemon(long parm)
 {
-    long now;
-	long lastLockCheck;
-    long lastVolCheck;
-    long lastCBExpirationCheck;
-	long lastDownServerCheck;
-	long lastUpServerCheck;
-	long lastTokenCacheCheck;
+    unsigned long now;
+	unsigned long lastLockCheck;
+    unsigned long lastVolCheck;
+    unsigned long lastCBExpirationCheck;
+	unsigned long lastDownServerCheck;
+	unsigned long lastUpServerCheck;
+	unsigned long lastTokenCacheCheck;
 	char thostName[200];
-	long code;
+	unsigned long code;
 	struct hostent *thp;
 
 	/* ping all file servers, up or down, with unauthenticated connection,

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kadatabase.c,v 1.10 2003/12/07 22:49:26 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kadatabase.c,v 1.10.2.1 2004/08/25 07:09:38 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -689,11 +689,12 @@ ka_debugKeyCache(info)
 		    (keyCache[i].superseded == NEVERDATE);
 		info->kcInfo[j].keycksum = 0;
 #if DEBUG_KEY_CACHE
-        {
-        int k;
-		for (k = 0; k < sizeof(struct ktc_encryptionKey); k++)
-		    info->kcInfo[j].keycksum += ((char *)&keyCache[i].key)[k];
-        }
+		{
+		    int k;
+		    for (k = 0; k < sizeof(struct ktc_encryptionKey); k++)
+			info->kcInfo[j].keycksum +=
+			    ((char *)&keyCache[i].key)[k];
+		}
 #endif
 		strcpy(principal, keyCache[i].name);
 		strcat(principal, ".");

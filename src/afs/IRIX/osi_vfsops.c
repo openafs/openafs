@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/IRIX/osi_vfsops.c,v 1.13 2003/07/15 23:14:23 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/IRIX/osi_vfsops.c,v 1.13.2.1 2004/08/25 07:09:34 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -213,9 +213,9 @@ afs_unmount(OSI_VFS_ARG(afsp), flags, cr)
     register struct afs_q *tq;
     struct afs_q *uq;
     int error, fv_slept;
-    OSI_VFS_CONVERT(afsp)
+    OSI_VFS_CONVERT(afsp);
 
-	AFS_STATCNT(afs_unmount);
+    AFS_STATCNT(afs_unmount);
 
     if (!suser())
 	return EPERM;
@@ -272,9 +272,9 @@ afs_root(OSI_VFS_ARG(afsp), avpp)
     register afs_int32 code = 0;
     struct vrequest treq;
     register struct vcache *tvp = 0;
-    OSI_VFS_CONVERT(afsp)
+    OSI_VFS_CONVERT(afsp);
 
-	AFS_STATCNT(afs_root);
+    AFS_STATCNT(afs_root);
     if (afs_globalVp && (afs_globalVp->states & CStatd)) {
 	tvp = afs_globalVp;
     } else {
@@ -314,9 +314,9 @@ afs_statfs(OSI_VFS_ARG(afsp), abp, avp)
      struct statvfs *abp;
      struct vnode *avp;		/* unused */
 {
-    OSI_VFS_CONVERT(afsp)
+    OSI_VFS_CONVERT(afsp);
 
-	AFS_STATCNT(afs_statfs);
+    AFS_STATCNT(afs_statfs);
     abp->f_bsize = afsp->vfs_bsize;
     abp->f_frsize = afsp->vfs_bsize;
     /* Fake a high number below to satisfy programs that use the statfs
@@ -379,9 +379,9 @@ afs_sync(OSI_VFS_DECL(afsp),
     register struct afs_q *tq;
     struct afs_q *uq;
     int s;
-    OSI_VFS_CONVERT(afsp)
+    OSI_VFS_CONVERT(afsp);
 
-	error = lasterr = 0;
+    error = lasterr = 0;
     /*
      * if not interested in vnodes, skip all this
      */
@@ -528,9 +528,9 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t ** avcp, struct fid * fidp)
     afs_fid2_t *afid2;
 #endif
 
-    OSI_VFS_CONVERT(afsp)
+    OSI_VFS_CONVERT(afsp);
 
-	AFS_STATCNT(afs_vget);
+    AFS_STATCNT(afs_vget);
 
     *avcp = NULL;
 

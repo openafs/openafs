@@ -72,8 +72,8 @@ typedef struct cm_scache {
 
 	/* file status */
 	int fileType;			/* file type */
-	unsigned long clientModTime;	/* mtime */
-        unsigned long serverModTime;	/* at server, for concurrent call
+	time_t clientModTime;	/* mtime */
+        time_t serverModTime;	/* at server, for concurrent call
 					 * comparisons */
         osi_hyper_t length;		/* file length */
 	cm_prefetch_t prefetch;		/* prefetch info structure */
@@ -97,12 +97,12 @@ typedef struct cm_scache {
 					 * the link contents here.
                                          */
 	cm_fid_t *mountRootFidp;	/* mounted on root */
-	unsigned int mountRootGen;	/* time to update mountRootFidp? */
+	time_t    mountRootGen;	        /* time to update mountRootFidp? */
 	cm_fid_t *dotdotFidp;		/* parent of volume root */
 
 	/* callback info */
         struct cm_server *cbServerp;	/* server granting callback */
-        long cbExpires;			/* time callback expires */
+        time_t cbExpires;		/* time callback expires */
 
 	/* access cache */
         long anyAccess;			/* anonymous user's access */

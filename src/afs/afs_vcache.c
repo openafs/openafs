@@ -39,7 +39,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_vcache.c,v 1.65 2004/07/14 04:21:54 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_vcache.c,v 1.65.2.3 2004/08/25 07:16:11 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -82,7 +82,8 @@ static afs_int32 afs_QueueVCB(struct vcache *avc);
  * Generate an index into the hash table for a given Fid.
  */
 static int
-afs_HashCBRFid(struct AFSFid *fid) {
+afs_HashCBRFid(struct AFSFid *fid)
+{
     return (fid->Volume + fid->Vnode + fid->Unique) % CBRSIZE;
 }
 
@@ -93,7 +94,8 @@ afs_HashCBRFid(struct AFSFid *fid) {
  * Must be called with afs_xvcb held.
  */
 static void
-afs_InsertHashCBR(struct afs_cbr *cbr) {
+afs_InsertHashCBR(struct afs_cbr *cbr)
+{
     int slot = afs_HashCBRFid(&cbr->fid);
 
     cbr->hash_next = afs_cbrHashT[slot];
@@ -371,7 +373,8 @@ afs_FlushVCBs(afs_int32 lockit)
     struct vrequest treq;
     struct conn *tc;
     int safety1, safety2, safety3;
-    XSTATS_DECLS if ((code = afs_InitReq(&treq, afs_osi_credp)))
+    XSTATS_DECLS;
+    if ((code = afs_InitReq(&treq, afs_osi_credp)))
 	return code;
     treq.flags |= O_NONBLOCK;
     tfids = afs_osi_Alloc(sizeof(struct AFSFid) * AFS_MAXCBRSCALL);
@@ -545,7 +548,7 @@ afs_RemoveVCB(struct VenusFid *afid)
 	ncbr = cbr->hash_next;
 
 	if (afid->Fid.Volume == cbr->fid.Volume &&
-	    afid->Fid.Vnode  == cbr->fid.Vnode  &&
+	    afid->Fid.Vnode == cbr->fid.Vnode &&
 	    afid->Fid.Unique == cbr->fid.Unique) {
 	    afs_FreeCBR(cbr);
 	}
@@ -655,15 +658,6 @@ afs_TryFlushDcacheChildren(struct vcache *tvc)
     cur = head;
     while ((cur = cur->next) != head) {
 	dentry = list_entry(cur, struct dentry, d_alias);
-
-	if (ICL_SETACTIVE(afs_iclSetp)) {
-	    AFS_GLOCK();
-	    afs_Trace3(afs_iclSetp, CM_TRACE_TRYFLUSHDCACHECHILDREN,
-		   ICL_TYPE_POINTER, ip, ICL_TYPE_STRING,
-		   dentry->d_parent->d_name.name, ICL_TYPE_STRING,
-		   dentry->d_name.name);
-	    AFS_GUNLOCK();
-	}
 
 	if (!list_empty(&dentry->d_hash) && !list_empty(&dentry->d_subdirs))
 	    __shrink_dcache_parent(dentry);
@@ -826,14 +820,15 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 		refpanic("VLRU inconsistent");
 	    }
 #ifdef AFS_DARWIN_ENV
-	    if ((VREFCOUNT(tvc) < DARWIN_REFBASE) || 
-		(VREFCOUNT(tvc) < 1+DARWIN_REFBASE && 
+	    if ((VREFCOUNT(tvc) < DARWIN_REFBASE) ||
+		(VREFCOUNT(tvc) < 1 + DARWIN_REFBASE &&
 		 UBCINFOEXISTS(&tvc->v))) {
-              VREFCOUNT_SET(tvc, 
-                            DARWIN_REFBASE + (UBCINFOEXISTS(&tvc->v) ? 1 : 0));
+		VREFCOUNT_SET(tvc,
+			      DARWIN_REFBASE +
+			      (UBCINFOEXISTS(&tvc->v) ? 1 : 0));
 	    }
 	    if (tvc->opens == 0 && ((tvc->states & CUnlinkedDel) == 0)
-		&& VREFCOUNT(tvc) == DARWIN_REFBASE+1 
+		&& VREFCOUNT(tvc) == DARWIN_REFBASE + 1
 		&& UBCINFOEXISTS(&tvc->v)) {
 		osi_VM_TryReclaim(tvc, &fv_slept);
 		if (fv_slept) {
@@ -854,14 +849,13 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 	    }
 #endif
 
-	    if (VREFCOUNT(tvc) == 
+	    if (VREFCOUNT(tvc) ==
 #ifdef AFS_DARWIN_ENV
 		DARWIN_REFBASE
 #else
-		0 
+		0
 #endif
-		&& tvc->opens == 0
-		&& (tvc->states & CUnlinkedDel) == 0) {
+		&& tvc->opens == 0 && (tvc->states & CUnlinkedDel) == 0) {
 #if defined(AFS_XBSD_ENV)
 		/*
 		 * vgone() reclaims the vnode, which calls afs_FlushVCache(),
@@ -972,14 +966,14 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 	AFS_GLOCK();
 	if (tvc->v != NULL) {
 	    /* I'd like to know if this ever happens...
-	       We don't drop global for the rest of this function,
-	       so if we do lose the race, the other thread should
-	       have found the same vnode and finished initializing
-	       the vcache entry.  Is it conceivable that this vcache
-	       entry could be recycled during this interval?  If so,
-	       then there probably needs to be some sort of additional
-	       mutual exclusion (an Embryonic flag would suffice).
-		-GAW */
+	     * We don't drop global for the rest of this function,
+	     * so if we do lose the race, the other thread should
+	     * have found the same vnode and finished initializing
+	     * the vcache entry.  Is it conceivable that this vcache
+	     * entry could be recycled during this interval?  If so,
+	     * then there probably needs to be some sort of additional
+	     * mutual exclusion (an Embryonic flag would suffice).
+	     * -GAW */
 	    printf("afs_NewVCache: lost the race\n");
 	    return (tvc);
 	}
@@ -1009,75 +1003,75 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     tvc->truncPos = AFS_NOTRUNC;	/* don't truncate until we need to */
     hzero(tvc->m.DataVersion);	/* in case we copy it into flushDV */
 #if defined(AFS_LINUX22_ENV)
-{
-    struct inode *ip = AFSTOI(tvc);
-    struct address_space *mapping = &ip->i_data;
+    {
+	struct inode *ip = AFSTOI(tvc);
+	struct address_space *mapping = &ip->i_data;
 
 #if defined(AFS_LINUX26_ENV)
-    inode_init_once(ip);
+	inode_init_once(ip);
 #else
-    sema_init(&ip->i_sem, 1);
-    INIT_LIST_HEAD(&ip->i_hash);
-    INIT_LIST_HEAD(&ip->i_dentry);
+	sema_init(&ip->i_sem, 1);
+	INIT_LIST_HEAD(&ip->i_hash);
+	INIT_LIST_HEAD(&ip->i_dentry);
 #if defined(AFS_LINUX24_ENV)
-    sema_init(&ip->i_zombie, 1);
-    init_waitqueue_head(&ip->i_wait);
-    spin_lock_init(&ip->i_data.i_shared_lock);
+	sema_init(&ip->i_zombie, 1);
+	init_waitqueue_head(&ip->i_wait);
+	spin_lock_init(&ip->i_data.i_shared_lock);
 #ifdef STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK
-    spin_lock_init(&ip->i_data.page_lock);
+	spin_lock_init(&ip->i_data.page_lock);
 #endif
-    INIT_LIST_HEAD(&ip->i_data.clean_pages);
-    INIT_LIST_HEAD(&ip->i_data.dirty_pages);
-    INIT_LIST_HEAD(&ip->i_data.locked_pages);
-    INIT_LIST_HEAD(&ip->i_dirty_buffers);
+	INIT_LIST_HEAD(&ip->i_data.clean_pages);
+	INIT_LIST_HEAD(&ip->i_data.dirty_pages);
+	INIT_LIST_HEAD(&ip->i_data.locked_pages);
+	INIT_LIST_HEAD(&ip->i_dirty_buffers);
 #ifdef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
-    INIT_LIST_HEAD(&ip->i_dirty_data_buffers);
+	INIT_LIST_HEAD(&ip->i_dirty_data_buffers);
 #endif
 #ifdef STRUCT_INODE_HAS_I_DEVICES
-    INIT_LIST_HEAD(&ip->i_devices);
+	INIT_LIST_HEAD(&ip->i_devices);
 #endif
 #ifdef STRUCT_INODE_HAS_I_TRUNCATE_SEM
-    init_rwsem(&ip->i_truncate_sem);
+	init_rwsem(&ip->i_truncate_sem);
 #endif
 #ifdef STRUCT_INODE_HAS_I_ALLOC_SEM
-    init_rwsem(&ip->i_alloc_sem);
-#endif 
+	init_rwsem(&ip->i_alloc_sem);
+#endif
 
 #else /* AFS_LINUX22_ENV */
-    sema_init(&ip->i_atomic_write, 1);
-    init_waitqueue(&ip->i_wait);
+	sema_init(&ip->i_atomic_write, 1);
+	init_waitqueue(&ip->i_wait);
 #endif
 #endif
 
 #if defined(AFS_LINUX24_ENV)
-    mapping->host = ip;
-    ip->i_mapping = mapping;
+	mapping->host = ip;
+	ip->i_mapping = mapping;
 #ifdef STRUCT_ADDRESS_SPACE_HAS_GFP_MASK
-    ip->i_data.gfp_mask = GFP_HIGHUSER;
+	ip->i_data.gfp_mask = GFP_HIGHUSER;
 #endif
 #if defined(AFS_LINUX26_ENV)
-    mapping_set_gfp_mask(mapping, GFP_HIGHUSER);
-{
-    extern struct backing_dev_info afs_backing_dev_info;
+	mapping_set_gfp_mask(mapping, GFP_HIGHUSER);
+	{
+	    extern struct backing_dev_info afs_backing_dev_info;
 
-    mapping->backing_dev_info = &afs_backing_dev_info;
-}
+	    mapping->backing_dev_info = &afs_backing_dev_info;
+	}
 #endif
 #endif
 
 #if !defined(AFS_LINUX26_ENV)
-    if (afs_globalVFS)
-	ip->i_dev = afs_globalVFS->s_dev;
+	if (afs_globalVFS)
+	    ip->i_dev = afs_globalVFS->s_dev;
 #else
 #ifdef STRUCT_INODE_HAS_I_SECURITY
-    ip->i_security = NULL;
-    if (security_inode_alloc(ip))
-        panic("Cannot allocate inode security");
+	ip->i_security = NULL;
+	if (security_inode_alloc(ip))
+	    panic("Cannot allocate inode security");
 #endif
 #endif
-    ip->i_sb = afs_globalVFS;
-    put_inode_on_dummy_list(ip);
-}
+	ip->i_sb = afs_globalVFS;
+	put_inode_on_dummy_list(ip);
+    }
 #endif
 
 #ifdef	AFS_OSF_ENV
@@ -1165,7 +1159,7 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     /* VLISTNONE(&tvc->v); */
     tvc->v.v_freelist.tqe_next = 0;
     tvc->v.v_freelist.tqe_prev = (struct vnode **)0xdeadb;
-    tvc->vrefCount+=DARWIN_REFBASE;
+    tvc->vrefCount += DARWIN_REFBASE;
 #endif
     /*
      * The proper value for mvstat (for root fids) is setup by the caller.
@@ -1266,7 +1260,8 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
     struct vrequest treq, ureq;
     struct AFSVolSync tsync;
     int didCore;
-    XSTATS_DECLS AFS_STATCNT(afs_FlushActiveVcaches);
+    XSTATS_DECLS;
+    AFS_STATCNT(afs_FlushActiveVcaches);
     ObtainReadLock(&afs_xvcache);
     for (i = 0; i < VCSIZE; i++) {
 	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
@@ -1378,7 +1373,7 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 		}
 	    }
 #ifdef AFS_DARWIN_ENV
-	    if (VREFCOUNT(tvc) == 1+DARWIN_REFBASE 
+	    if (VREFCOUNT(tvc) == 1 + DARWIN_REFBASE
 		&& UBCINFOEXISTS(&tvc->v)) {
 		if (tvc->opens)
 		    panic("flushactive open, hasubc, but refcnt 1");
@@ -1579,7 +1574,8 @@ afs_WriteVCache(register struct vcache *avc,
     struct conn *tc;
     struct AFSFetchStatus OutStatus;
     struct AFSVolSync tsync;
-    XSTATS_DECLS AFS_STATCNT(afs_WriteVCache);
+    XSTATS_DECLS;
+    AFS_STATCNT(afs_WriteVCache);
     afs_Trace2(afs_iclSetp, CM_TRACE_WVCACHE, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
 
@@ -1743,8 +1739,9 @@ afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
     afs_uint32 start;
     register struct conn *tc;
     struct AFSFetchStatus OutDirStatus;
-    XSTATS_DECLS if (!name)
-	  name = "";		/* XXX */
+    XSTATS_DECLS;
+    if (!name)
+	name = "";		/* XXX */
     do {
 	tc = afs_Conn(afid, areq, SHARED_LOCK);
 	if (tc) {
@@ -2198,16 +2195,16 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 #endif /* AFS_OSF_ENV */
 #ifdef AFS_DARWIN14_ENV
 	    /* It'd really suck if we allowed duplicate vcaches for the 
-	       same fid to happen. Wonder if this will work? */
+	     * same fid to happen. Wonder if this will work? */
 	    struct vnode *vp = AFSTOV(tvc);
-	    if (vp->v_flag & (VXLOCK|VORECLAIM|VTERMINATE)) {
-	        printf("precluded FindVCache on %x (%d:%d:%d)\n", 
+	    if (vp->v_flag & (VXLOCK | VORECLAIM | VTERMINATE)) {
+		printf("precluded FindVCache on %x (%d:%d:%d)\n",
 		       vp, tvc->fid.Fid.Volume, tvc->fid.Fid.Vnode,
 		       tvc->fid.Fid.Unique);
 		simple_lock(&vp->v_interlock);
 		SET(vp->v_flag, VTERMWANT);
 		simple_unlock(&vp->v_interlock);
-		(void)tsleep((caddr_t)&vp->v_ubcinfo, PINOD, "vget1", 0);
+		(void)tsleep((caddr_t) & vp->v_ubcinfo, PINOD, "vget1", 0);
 		printf("VTERMWANT ended on %x\n", vp);
 		continue;
 	    }
@@ -2378,7 +2375,7 @@ afs_FetchStatus(struct vcache * avc, struct VenusFid * afid,
     struct AFSCallBack CallBack;
     struct AFSVolSync tsync;
     struct volume *volp;
-    XSTATS_DECLS
+    XSTATS_DECLS;
     do {
 	tc = afs_Conn(afid, areq, SHARED_LOCK);
 	avc->quick.stamp = 0;
@@ -3013,11 +3010,11 @@ shutdown_vcache(void)
     }
     afs_cbrSpace = 0;
 
-#if	!defined(AFS_OSF_ENV)
-    afs_osi_Free(Initial_freeVCList, afs_cacheStats * sizeof(struct vcache));
-#endif
 #ifdef  KERNEL_HAVE_PIN
     unpin(Initial_freeVCList, afs_cacheStats * sizeof(struct vcache));
+#endif
+#if	!defined(AFS_OSF_ENV)
+    afs_osi_Free(Initial_freeVCList, afs_cacheStats * sizeof(struct vcache));
 #endif
 #if	!defined(AFS_OSF_ENV)
     freeVCList = Initial_freeVCList = 0;

@@ -900,7 +900,7 @@ struct afs_fheader {
  */
 #define afs_inode_t ino64_t
 #else
-#if defined(AFS_LINUX_64BIT_KERNEL)
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_S390X_LINUX24_ENV)
 #define afs_inode_t long
 #else
 #if defined(AFS_AIX51_ENV) || defined(AFS_HPUX1123_ENV)

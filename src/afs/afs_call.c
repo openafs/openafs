@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74 2004/07/29 03:32:56 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_call.c,v 1.74.2.2 2004/08/25 07:16:11 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -1148,6 +1148,8 @@ copyin_iparam(caddr_t cmarg, struct iparam *dst)
     if (current->thread.flags & THREAD_IA32)
 #elif defined(AFS_PPC64_LINUX20_ENV)
     if (current->thread.flags & PPC_FLAG_32BIT) 
+#elif defined(AFS_S390X_LINUX20_ENV)
+    if (current->thread.flags & S390_FLAG_31BIT) 
 #else
 #error Not done for this linux version
 #endif
@@ -1526,6 +1528,9 @@ afs_shutdown(void)
 
     afs_termState = AFSOP_STOP_RXCALLBACK;
     rx_WakeupServerProcs();
+#ifdef AFS_AIX51_ENV
+    shutdown_rxkernel();
+#endif
     /* shutdown_rxkernel(); */
     while (afs_termState == AFSOP_STOP_RXCALLBACK)
 	afs_osi_Sleep(&afs_termState);
@@ -1596,7 +1601,11 @@ afs_shutdown(void)
     shutdown_rx();
     afs_shutdown_BKG();
     shutdown_bufferpackage();
+#endif
+#ifdef AFS_AIX51_ENV
     shutdown_daemons();
+#endif
+#ifdef notdef
     shutdown_cache();
     shutdown_osi();
     shutdown_osinet();

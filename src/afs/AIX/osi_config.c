@@ -37,7 +37,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/AIX/osi_config.c,v 1.8 2003/07/15 23:14:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/AIX/osi_config.c,v 1.8.2.1 2004/08/25 07:16:15 shadow Exp $");
 
 #include "sys/limits.h"
 #include "sys/types.h"
@@ -147,7 +147,14 @@ afs_config(cmd, uiop)
 	 */
 	if (err == ENOENT)
 	    err = 0;
-	else if (!err) {
+#ifndef AFS_AIX51_ENV
+	else
+#endif
+	if (!err) {
+#ifdef AFS_AIX51_ENV
+	    if (err = unpin(&afs_callout_lock))
+		err = 0;
+#endif
 	    if (err = unpincode(afs_config))
 		err = 0;
 

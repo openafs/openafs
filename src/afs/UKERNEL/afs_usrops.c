@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/UKERNEL/afs_usrops.c,v 1.27 2004/05/20 19:15:04 kolya Exp $");
+    ("$Header: /cvs/openafs/src/afs/UKERNEL/afs_usrops.c,v 1.27.2.1 2004/08/25 07:15:34 shadow Exp $");
 
 
 #ifdef	UKERNEL
@@ -1702,7 +1702,7 @@ uafs_Init(char *rn, char *mountDirParam, char *confDirParam,
     {
 	/* parse multihomed address files */
 	char reason[1024];
-	st = parseNetFiles(buffer, maskbuffer, mtubuffer, MAXIPADDRS, reason,
+	st = parseNetFiles((afs_uint32*)buffer,(afs_uint32*) maskbuffer, (afs_uint32*)mtubuffer, MAXIPADDRS, reason,
 			   AFSDIR_CLIENT_NETINFO_FILEPATH,
 			   AFSDIR_CLIENT_NETRESTRICT_FILEPATH);
 	if (st > 0)
@@ -2265,7 +2265,7 @@ uafs_LookupName(char *path, struct usr_vnode *parentVp,
 	    /*
 	     * We need execute permission to search a directory
 	     */
-	    code = afs_access(vp, VEXEC, u.u_cred);
+	    code = afs_access(VTOAFS(vp), VEXEC, u.u_cred);
 	    if (code != 0) {
 		VN_RELE(vp);
 		afs_osi_Free(tmpPath, strlen(path) + 1);
@@ -2638,6 +2638,8 @@ uafs_open_r(char *path, int flags, int mode)
     struct usr_vattr attrs;
     char *nameP;
 
+    struct vcache* vc;
+
     if (uafs_IsRoot(path)) {
 	fileP = afs_RootVnode;
 	VN_HOLD(fileP);
@@ -2680,10 +2682,11 @@ uafs_open_r(char *path, int flags, int mode)
 		attrs.va_size = 0;
 	    }
 	    fileP = NULL;
+	    vc=VTOAFS(fileP);
 	    code =
-		afs_create(dirP, nameP, &attrs,
+		afs_create(VTOAFS(dirP), nameP, &attrs,
 			   (flags & O_EXCL) ? usr_EXCL : usr_NONEXCL, mode,
-			   &fileP, u.u_cred);
+			   &vc, u.u_cred);
 	    VN_RELE(dirP);
 	    if (code != 0) {
 		errno = code;
@@ -2710,7 +2713,7 @@ uafs_open_r(char *path, int flags, int mode)
 	    }
 	    if (!fileMode)
 		fileMode = VREAD;	/* since O_RDONLY is 0 */
-	    code = afs_access(fileP, fileMode, u.u_cred);
+	    code = afs_access(VTOAFS(fileP), fileMode, u.u_cred);
 	    if (code != 0) {
 		VN_RELE(fileP);
 		errno = code;
@@ -2720,7 +2723,7 @@ uafs_open_r(char *path, int flags, int mode)
 	    /*
 	     * Get the file attributes, all we need is the size
 	     */
-	    code = afs_getattr(fileP, &attrs, u.u_cred);
+	    code = afs_getattr(VTOAFS(fileP), &attrs, u.u_cred);
 	    if (code != 0) {
 		VN_RELE(fileP);
 		errno = code;
@@ -2762,7 +2765,7 @@ uafs_open_r(char *path, int flags, int mode)
     if ((flags & O_TRUNC) && (attrs.va_size != 0)) {
 	usr_vattr_null(&attrs);
 	attrs.va_size = 0;
-	code = afs_setattr(fileP, &attrs, u.u_cred);
+	code = afs_setattr(VTOAFS(fileP), &attrs, u.u_cred);
 	if (code != 0) {
 	    VN_RELE(fileP);
 	    errno = code;
@@ -2770,10 +2773,11 @@ uafs_open_r(char *path, int flags, int mode)
 	}
     }
 
+    vc=VTOAFS(fileP);	
     /*
      * do the open
      */
-    code = afs_open(&fileP, openFlags, u.u_cred);
+    code = afs_open(&vc, openFlags, u.u_cred);
     if (code != 0) {
 	VN_RELE(fileP);
 	errno = code;
@@ -2869,7 +2873,7 @@ uafs_write_r(int fd, char *buf, int len)
      * do the write
      */
 
-    code = afs_write(fileP, &uio, afs_FileFlags[fd], u.u_cred, 0);
+    code = afs_write(VTOAFS(fileP), &uio, afs_FileFlags[fd], u.u_cred, 0);
     if (code) {
 	errno = code;
 	return -1;
@@ -2925,7 +2929,7 @@ uafs_read_r(int fd, char *buf, int len)
     /*
      * do the read
      */
-    code = afs_read(fileP, &uio, u.u_cred, 0, &bufP, 0);
+    code = afs_read(VTOAFS(fileP), &uio, u.u_cred, 0, &bufP, 0);
     if (code) {
 	errno = code;
 	return -1;
@@ -2951,7 +2955,7 @@ uafs_GetAttr(struct usr_vnode *vp, struct stat *stats)
     /*
      * Get the attributes
      */
-    code = afs_getattr(vp, &attrs, u.u_cred);
+    code = afs_getattr(VTOAFS(vp), &attrs, u.u_cred);
     if (code != 0) {
 	return code;
     }
@@ -3102,7 +3106,7 @@ uafs_chmod_r(char *path, int mode)
     }
     usr_vattr_null(&attrs);
     attrs.va_mode = mode;
-    code = afs_setattr(vp, &attrs, u.u_cred);
+    code = afs_setattr(VTOAFS(vp), &attrs, u.u_cred);
     VN_RELE(vp);
     if (code != 0) {
 	errno = code;
@@ -3138,7 +3142,7 @@ uafs_fchmod_r(int fd, int mode)
     }
     usr_vattr_null(&attrs);
     attrs.va_mode = mode;
-    code = afs_setattr(vp, &attrs, u.u_cred);
+    code = afs_setattr(VTOAFS(vp), &attrs, u.u_cred);
     if (code != 0) {
 	errno = code;
 	return -1;
@@ -3173,7 +3177,7 @@ uafs_truncate_r(char *path, int length)
     }
     usr_vattr_null(&attrs);
     attrs.va_size = length;
-    code = afs_setattr(vp, &attrs, u.u_cred);
+    code = afs_setattr(VTOAFS(vp), &attrs, u.u_cred);
     VN_RELE(vp);
     if (code != 0) {
 	errno = code;
@@ -3209,7 +3213,7 @@ uafs_ftruncate_r(int fd, int length)
     }
     usr_vattr_null(&attrs);
     attrs.va_size = length;
-    code = afs_setattr(vp, &attrs, u.u_cred);
+    code = afs_setattr(VTOAFS(vp), &attrs, u.u_cred);
     if (code != 0) {
 	errno = code;
 	return -1;
@@ -3251,7 +3255,7 @@ uafs_lseek_r(int fd, int offset, int whence)
 	newpos = offset;
 	break;
     case SEEK_END:
-	code = afs_getattr(vp, &attrs, u.u_cred);
+	code = afs_getattr(VTOAFS(vp), &attrs, u.u_cred);
 	if (code != 0) {
 	    errno = code;
 	    return -1;

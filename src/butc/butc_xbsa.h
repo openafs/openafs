@@ -123,4 +123,26 @@ extern afs_int32 xbsa_DeleteObject(struct butx_transactionInfo *info,
 				   char *objectSpaceName, char *pathName);
 
 #endif /*xbsa */
+
+
+/* XBSA Global Parameters */
+
+#ifdef XBSA_TCMAIN
+#define XBSA_EXT
+#else
+#define XBSA_EXT extern
+#endif
+
+XBSA_EXT afs_int32 xbsaType;
+#ifdef xbsa
+XBSA_EXT struct butx_transactionInfo butxInfo;
+
+#define rpc_c_protect_level_default 0
+XBSA_EXT afs_uint32 dumpRestAuthnLevel;
+XBSA_EXT char *xbsaObjectOwner;
+XBSA_EXT char *appObjectOwner;
+XBSA_EXT char *adsmServerName;
+XBSA_EXT char *xbsaSecToken;
+XBSA_EXT char *xbsalGName;
+#endif /*xbsa*/
 #endif /* OPENAFS_BUTC_XBSA_H */

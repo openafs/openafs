@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/vos.c,v 1.40 2004/07/29 18:51:20 shadow Exp $");
+    ("$Header: /cvs/openafs/src/volser/vos.c,v 1.40.2.1 2004/08/17 04:28:45 jaltman Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -3356,7 +3356,7 @@ static
 SyncVldb(as)
      register struct cmd_syndesc *as;
 {
-    afs_int32 pnum, code;	/* part name */
+    afs_int32 pnum = 0, code;	/* part name */
     char part[10];
     int flags = 0;
     char *volname = 0;

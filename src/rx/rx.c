@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58 2004/08/04 19:41:53 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.2 2004/08/25 07:13:09 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"
@@ -221,7 +221,7 @@ rxi_InitPthread(void)
 
 pthread_once_t rx_once_init = PTHREAD_ONCE_INIT;
 #define INIT_PTHREAD_LOCKS \
-assert(pthread_once(&rx_once_init, rxi_InitPthread)==0);
+assert(pthread_once(&rx_once_init, rxi_InitPthread)==0)
 /*
  * The rx_stats_mutex mutex protects the following global variables:
  * rxi_dataQuota
@@ -337,8 +337,8 @@ struct rx_serverQueueEntry *rx_waitingForPacket = 0;
  * rx_epoch
  */
 
-#define LOCK_EPOCH assert(pthread_mutex_lock(&epoch_mutex)==0);
-#define UNLOCK_EPOCH assert(pthread_mutex_unlock(&epoch_mutex)==0);
+#define LOCK_EPOCH assert(pthread_mutex_lock(&epoch_mutex)==0)
+#define UNLOCK_EPOCH assert(pthread_mutex_unlock(&epoch_mutex)==0)
 #else
 #define LOCK_EPOCH
 #define UNLOCK_EPOCH
@@ -347,8 +347,10 @@ struct rx_serverQueueEntry *rx_waitingForPacket = 0;
 void
 rx_SetEpoch(afs_uint32 epoch)
 {
-    LOCK_EPOCH rx_epoch = epoch;
-UNLOCK_EPOCH}
+    LOCK_EPOCH;
+    rx_epoch = epoch;
+    UNLOCK_EPOCH;
+}
 
 /* Initialize rx.  A port number may be mentioned, in which case this
  * becomes the default port number for any service installed later.
@@ -363,14 +365,14 @@ static int rxinit_status = 1;
  * rxinit_status
  */
 
-#define LOCK_RX_INIT assert(pthread_mutex_lock(&rx_init_mutex)==0);
-#define UNLOCK_RX_INIT assert(pthread_mutex_unlock(&rx_init_mutex)==0);
+#define LOCK_RX_INIT assert(pthread_mutex_lock(&rx_init_mutex)==0)
+#define UNLOCK_RX_INIT assert(pthread_mutex_unlock(&rx_init_mutex)==0)
 #else
 #define LOCK_RX_INIT
 #define UNLOCK_RX_INIT
 #endif
 
-int 
+int
 rx_InitHost(u_int host, u_int port)
 {
 #ifdef KERNEL
@@ -387,9 +389,12 @@ rx_InitHost(u_int host, u_int port)
 
     SPLVAR;
 
-    INIT_PTHREAD_LOCKS LOCK_RX_INIT if (rxinit_status == 0) {
+    INIT_PTHREAD_LOCKS;
+    LOCK_RX_INIT;
+    if (rxinit_status == 0) {
 	tmp_status = rxinit_status;
-	UNLOCK_RX_INIT return tmp_status;	/* Already started; return previous error code. */
+	UNLOCK_RX_INIT;
+	return tmp_status;	/* Already started; return previous error code. */
     }
 #ifdef AFS_NT40_ENV
     if (afs_winsockInit() < 0)
@@ -409,7 +414,8 @@ rx_InitHost(u_int host, u_int port)
 
     rx_socket = rxi_GetHostUDPSocket(host, (u_short) port);
     if (rx_socket == OSI_NULLSOCKET) {
-	UNLOCK_RX_INIT return RX_ADDRINUSE;
+	UNLOCK_RX_INIT;
+	return RX_ADDRINUSE;
     }
 #ifdef	RX_ENABLE_LOCKS
 #ifdef RX_LOCKS_DB
@@ -531,10 +537,12 @@ rx_InitHost(u_int host, u_int port)
     AFS_RXGUNLOCK();
     USERPRI;
     tmp_status = rxinit_status = 0;
-    UNLOCK_RX_INIT return tmp_status;
+    UNLOCK_RX_INIT;
+    return tmp_status;
 }
 
-int rx_Init(u_int port) 
+int
+rx_Init(u_int port)
 {
     return rx_InitHost(htonl(INADDR_ANY), port);
 }
@@ -1924,8 +1932,11 @@ rx_Finalize(void)
 {
     register struct rx_connection **conn_ptr, **conn_end;
 
-    INIT_PTHREAD_LOCKS LOCK_RX_INIT if (rxinit_status == 1) {
-	UNLOCK_RX_INIT return;	/* Already shutdown. */
+    INIT_PTHREAD_LOCKS;
+    LOCK_RX_INIT;
+    if (rxinit_status == 1) {
+	UNLOCK_RX_INIT;
+	return;			/* Already shutdown. */
     }
     rxi_DeleteCachedConnections();
     if (rx_connHashTable) {
@@ -1963,7 +1974,8 @@ rx_Finalize(void)
     rxi_flushtrace();
 
     rxinit_status = 1;
-UNLOCK_RX_INIT}
+    UNLOCK_RX_INIT;
+}
 #endif
 
 /* if we wakeup packet waiter too often, can get in loop with two
@@ -2310,7 +2322,8 @@ rxi_FindConnection(osi_socket socket, register afs_int32 host,
 	    if (type == RX_CLIENT_CONNECTION && pp->port == port)
 		break;
 	    /* So what happens when it's a callback connection? */
-	    if (/*type == RX_CLIENT_CONNECTION &&*/ (conn->epoch & 0x80000000))
+	    if (		/*type == RX_CLIENT_CONNECTION && */
+		   (conn->epoch & 0x80000000))
 		break;
 	}
 	if (!flag) {
@@ -3996,11 +4009,12 @@ rxi_AttachServerProc(register struct rx_call *call,
 	if (call->flags & RX_CALL_WAIT_PROC) {
 	    /* Conservative:  I don't think this should happen */
 	    call->flags &= ~RX_CALL_WAIT_PROC;
-	    MUTEX_ENTER(&rx_stats_mutex);
-	    rx_nWaiting--;
-	    MUTEX_EXIT(&rx_stats_mutex);
-	    if (queue_IsOnQueue(call))
-	        queue_Remove(call);
+	    if (queue_IsOnQueue(call)) {
+		queue_Remove(call);
+		MUTEX_ENTER(&rx_stats_mutex);
+		rx_nWaiting--;
+		MUTEX_EXIT(&rx_stats_mutex);
+	    }
 	}
 	call->state = RX_STATE_ACTIVE;
 	call->mode = RX_MODE_RECEIVING;
@@ -6079,8 +6093,8 @@ rx_PrintPeerStats(FILE * file, struct rx_peer *peer)
  * counter
  */
 
-#define LOCK_RX_DEBUG assert(pthread_mutex_lock(&rx_debug_mutex)==0);
-#define UNLOCK_RX_DEBUG assert(pthread_mutex_unlock(&rx_debug_mutex)==0);
+#define LOCK_RX_DEBUG assert(pthread_mutex_lock(&rx_debug_mutex)==0)
+#define UNLOCK_RX_DEBUG assert(pthread_mutex_unlock(&rx_debug_mutex)==0)
 #else
 #define LOCK_RX_DEBUG
 #define UNLOCK_RX_DEBUG
@@ -6103,8 +6117,10 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
     register char *tp;
 
     endTime = time(0) + 20;	/* try for 20 seconds */
-    LOCK_RX_DEBUG counter++;
-    UNLOCK_RX_DEBUG tp = &tbuffer[sizeof(struct rx_header)];
+    LOCK_RX_DEBUG;
+    counter++;
+    UNLOCK_RX_DEBUG;
+    tp = &tbuffer[sizeof(struct rx_header)];
     taddr.sin_family = AF_INET;
     taddr.sin_port = remotePort;
     taddr.sin_addr.s_addr = remoteAddr;
@@ -6134,18 +6150,18 @@ MakeDebugCall(osi_socket socket, afs_uint32 remoteAddr, afs_uint16 remotePort,
 	tv.tv_sec = 1;
 	tv.tv_usec = 0;
 	code = select(socket + 1, &imask, 0, 0, &tv);
-	if (code == 1 && FD_ISSET(socket,&imask)) {
+	if (code == 1 && FD_ISSET(socket, &imask)) {
 	    /* now receive a packet */
 	    faddrLen = sizeof(struct sockaddr_in);
 	    code =
 		recvfrom(socket, tbuffer, sizeof(tbuffer), 0,
 			 (struct sockaddr *)&faddr, &faddrLen);
 
-        if (code > 0) {
-            memcpy(&theader, tbuffer, sizeof(struct rx_header));
-            if (counter == ntohl(theader.callNumber))
-                break;
-        }
+	    if (code > 0) {
+		memcpy(&theader, tbuffer, sizeof(struct rx_header));
+		if (counter == ntohl(theader.callNumber))
+		    break;
+	    }
 	}
 
 	/* see if we've timed out */
@@ -6418,8 +6434,10 @@ shutdown_rx(void)
     register struct rx_serverQueueEntry *sq;
 #endif /* KERNEL */
 
-    LOCK_RX_INIT if (rxinit_status == 1) {
-	UNLOCK_RX_INIT return;	/* Already shutdown. */
+    LOCK_RX_INIT;
+    if (rxinit_status == 1) {
+	UNLOCK_RX_INIT;
+	return;			/* Already shutdown. */
     }
 #ifndef KERNEL
     rx_port = 0;
@@ -6536,7 +6554,8 @@ shutdown_rx(void)
     MUTEX_EXIT(&rx_stats_mutex);
 
     rxinit_status = 1;
-UNLOCK_RX_INIT}
+    UNLOCK_RX_INIT;
+}
 
 #ifdef RX_ENABLE_LOCKS
 void

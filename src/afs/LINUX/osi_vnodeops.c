@@ -22,13 +22,16 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81 2004/07/21 22:23:38 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.81.2.2 2004/08/25 07:10:39 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "afs/afs_stats.h"
 #include "afs/afs_osidnlc.h"
 #include "h/mm.h"
+#ifdef HAVE_MM_INLINE_H
+#include "h/mm_inline.h"
+#endif
 #include "h/pagemap.h"
 #if defined(AFS_LINUX24_ENV)
 #include "h/smp_lock.h"
@@ -1085,6 +1088,12 @@ afs_linux_lookup(struct inode *dip, struct dentry *dp)
 	    printk
 		("afs_linux_lookup: ip->i_mode 0x%x  dp->d_name.name %s  code %d\n",
 		 ip->i_mode, dp->d_name.name, code);
+#ifdef STRUCT_INODE_HAS_I_SECURITY
+       if (ip->i_security == NULL) {
+           if (security_inode_alloc(ip))
+               panic("afs_linux_lookup: Cannot allocate inode security");
+       }
+#endif
 #else
 	if (S_ISDIR(ip->i_mode))
 	    ip->i_op = &afs_dir_iops;

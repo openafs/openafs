@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/authcon.c,v 1.13 2003/07/15 23:14:41 shadow Exp $");
+    ("$Header: /cvs/openafs/src/auth/authcon.c,v 1.13.2.1 2004/08/25 07:09:36 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -72,14 +72,17 @@ afsconf_ServerAuth(adir, astr, aindex)
 {
     register struct rx_securityClass *tclass;
 
-    LOCK_GLOBAL_MUTEX tclass = (struct rx_securityClass *)
+    LOCK_GLOBAL_MUTEX;
+    tclass = (struct rx_securityClass *)
 	rxkad_NewServerSecurityObject(0, adir, afsconf_GetKey, NULL);
     if (tclass) {
 	*astr = tclass;
 	*aindex = 2;		/* kerberos security index */
-	UNLOCK_GLOBAL_MUTEX return 0;
+	UNLOCK_GLOBAL_MUTEX;
+	return 0;
     } else {
-	UNLOCK_GLOBAL_MUTEX return 2;
+	UNLOCK_GLOBAL_MUTEX;
+	return 2;
     }
 }
 #endif /* !defined(UKERNEL) */
@@ -145,8 +148,10 @@ afsconf_ClientAuth(struct afsconf_dir * adir, struct rx_securityClass ** astr,
 {
     afs_int32 rc;
 
-    LOCK_GLOBAL_MUTEX rc = GenericAuth(adir, astr, aindex, rxkad_clear);
-    UNLOCK_GLOBAL_MUTEX return rc;
+    LOCK_GLOBAL_MUTEX;
+    rc = GenericAuth(adir, astr, aindex, rxkad_clear);
+    UNLOCK_GLOBAL_MUTEX;
+    return rc;
 }
 
 /* build a fake ticket for 'afs' using keys from adir, returning an
@@ -161,6 +166,8 @@ afsconf_ClientAuthSecure(adir, astr, aindex)
 {
     afs_int32 rc;
 
-    LOCK_GLOBAL_MUTEX rc = GenericAuth(adir, astr, aindex, rxkad_crypt);
-    UNLOCK_GLOBAL_MUTEX return rc;
+    LOCK_GLOBAL_MUTEX;
+    rc = GenericAuth(adir, astr, aindex, rxkad_crypt);
+    UNLOCK_GLOBAL_MUTEX;
+    return rc;
 }

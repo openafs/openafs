@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/client.c,v 1.12 2003/07/15 23:15:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/client.c,v 1.12.2.1 2004/08/25 07:09:38 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -141,7 +141,8 @@ ka_StringToKey(char *str, char *cell,	/* cell for password */
     char realm[MAXKTCREALMLEN];
     afs_int32 code;
 
-    LOCK_GLOBAL_MUTEX code = ka_CellToRealm(cell, realm, 0 /*local */ );
+    LOCK_GLOBAL_MUTEX;
+    code = ka_CellToRealm(cell, realm, 0 /*local */ );
     if (code)			/* just take his word for it */
 	strncpy(realm, cell, sizeof(realm));
     else			/* for backward compatibility */
@@ -150,7 +151,8 @@ ka_StringToKey(char *str, char *cell,	/* cell for password */
 	StringToKey(str, realm, key);
     else
 	Andrew_StringToKey(str, realm, key);
-UNLOCK_GLOBAL_MUTEX}
+    UNLOCK_GLOBAL_MUTEX;
+}
 
 /* This prints out a prompt and reads a string from the terminal, turning off
    echoing.  If verify is requested it requests that the string be entered
@@ -168,16 +170,20 @@ ka_ReadPassword(char *prompt, int verify, char *cell,
     char password[BUFSIZ];
     afs_int32 code;
 
-    LOCK_GLOBAL_MUTEX memset(key, 0, sizeof(struct ktc_encryptionKey));
+    LOCK_GLOBAL_MUTEX;
+    memset(key, 0, sizeof(struct ktc_encryptionKey));
     code = read_pw_string(password, sizeof(password), prompt, verify);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX return KAREADPW;
+	UNLOCK_GLOBAL_MUTEX;
+	return KAREADPW;
     }
     if (strlen(password) == 0) {
-	UNLOCK_GLOBAL_MUTEX return KANULLPASSWORD;
+	UNLOCK_GLOBAL_MUTEX;
+	return KANULLPASSWORD;
     }
     ka_StringToKey(password, cell, key);
-    UNLOCK_GLOBAL_MUTEX return 0;
+    UNLOCK_GLOBAL_MUTEX;
+    return 0;
 }
 
 /* This performs the backslash quoting defined by AC_ParseLoginName. */
@@ -310,8 +316,10 @@ ka_Init(int flags)
     afs_int32 code;
     static int inited = 0;
 
-    LOCK_GLOBAL_MUTEX if (inited) {
-	UNLOCK_GLOBAL_MUTEX return 0;
+    LOCK_GLOBAL_MUTEX;
+    if (inited) {
+	UNLOCK_GLOBAL_MUTEX;
+	return 0;
     }
     inited++;
     initialize_U_error_table();
@@ -320,8 +328,9 @@ ka_Init(int flags)
     initialize_KTC_error_table();
     initialize_ACFG_error_table();
     code = ka_CellConfig(AFSDIR_CLIENT_ETC_DIRPATH);
-    UNLOCK_GLOBAL_MUTEX if (code)
-	  return code;
+    UNLOCK_GLOBAL_MUTEX;
+    if (code)
+	return code;
     return 0;
 }
 

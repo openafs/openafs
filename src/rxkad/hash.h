@@ -30,7 +30,7 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
-/* $Id: hash.h,v 1.2 2004/05/10 03:52:18 shadow Exp $ */
+/* $Id: hash.h,v 1.2.2.1 2004/08/25 07:09:42 shadow Exp $ */
 
 /* stuff in common between md4, md5, and sha1 */
 
@@ -62,7 +62,7 @@
 #endif
 
 static inline afs_uint32
-cshift (afs_uint32 x, unsigned int n)
+cshift(afs_uint32 x, unsigned int n)
 {
     x = CRAYFIX(x);
     return CRAYFIX((x << n) | (x >> (32 - n)));

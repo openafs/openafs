@@ -56,7 +56,8 @@ void cm_AdjustLRU(cm_scache_t *scp)
 		cm_scacheLRULastp = (cm_scache_t *) osi_QPrev(&scp->q);
 	osi_QRemove((osi_queue_t **) &cm_scacheLRUFirstp, &scp->q);
 	osi_QAdd((osi_queue_t **) &cm_scacheLRUFirstp, &scp->q);
-	if (!cm_scacheLRULastp) cm_scacheLRULastp = scp;
+    if (!cm_scacheLRULastp) 
+        cm_scacheLRULastp = scp;
 }
 
 /* called with cm_scacheLock write-locked; find a vnode to recycle.
@@ -73,7 +74,8 @@ cm_scache_t *cm_GetNewSCache(void)
      	        for (scp = cm_scacheLRULastp;
      		     scp;
      		     scp = (cm_scache_t *) osi_QPrev(&scp->q)) {
-		  if (scp->refCount == 0) break;
+            if (scp->refCount == 0) 
+                break;
 	        }
                 
                 if (scp) {
@@ -85,7 +87,8 @@ cm_scache_t *cm_GetNewSCache(void)
 				for (tscp = *lscpp;
      				     tscp;
      				     lscpp = &tscp->nextp, tscp = *lscpp) {
-				  if (tscp == scp) break;
+                    if (tscp == scp) 
+                        break;
                                 }
                                 osi_assertx(tscp, "afsd: scache hash screwup");
                                 *lscpp = scp->nextp;
@@ -108,7 +111,10 @@ cm_scache_t *cm_GetNewSCache(void)
 			scp->bulkStatProgress = hzero;
 
                         /* discard callback */
+            if (scp->cbServerp) {
+                cm_PutServer(scp->cbServerp);
                         scp->cbServerp = NULL;
+            }
                         scp->cbExpires = 0;
 
 			/* remove from dnlc */
@@ -164,7 +170,8 @@ cm_scache_t *cm_GetNewSCache(void)
 	
         /* and put it in the LRU queue */
         osi_QAdd((osi_queue_t **) &cm_scacheLRUFirstp, &scp->q);
-        if (!cm_scacheLRULastp) cm_scacheLRULastp = scp;
+    if (!cm_scacheLRULastp) 
+        cm_scacheLRULastp = scp;
         cm_currentSCaches++;
 	cm_dnlcPurgedp(scp); /* make doubly sure that this is not in dnlc */
 	cm_dnlcPurgevp(scp); 
@@ -174,10 +181,14 @@ cm_scache_t *cm_GetNewSCache(void)
 /* like strcmp, only for fids */
 int cm_FidCmp(cm_fid_t *ap, cm_fid_t *bp)
 {
-        if (ap->vnode != bp->vnode) return 1;
-	if (ap->volume != bp->volume) return 1;
-        if (ap->unique != bp->unique) return 1;
-        if (ap->cell != bp->cell) return 1;
+    if (ap->vnode != bp->vnode) 
+        return 1;
+    if (ap->volume != bp->volume) 
+        return 1;
+    if (ap->unique != bp->unique) 
+        return 1;
+    if (ap->cell != bp->cell) 
+        return 1;
         return 0;
 }
 
@@ -240,15 +251,23 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 	long hash;
     cm_scache_t *scp;
     long code;
-    cm_volume_t *volp;
+    cm_volume_t *volp = 0;
     cm_cell_t *cellp;
-	char* mp;
+    char* mp = 0;
 	int special; // yj: boolean variable to test if file is on root.afs
 	int isRoot;
+    extern cm_fid_t cm_rootFid;
         
     hash = CM_SCACHE_HASH(fidp);
         
 	osi_assert(fidp->cell != 0);
+
+    if (fidp->cell== cm_rootFid.cell && 
+         fidp->volume==cm_rootFid.volume &&
+         fidp->vnode==0x0 && fidp->unique==0x0)
+    {
+        osi_Log0(afsd_logp,"cm_getSCache called with root cell/volume and vnode=0 and unique=0");
+    }
 
 	// yj: check if we have the scp, if so, we don't need
 	// to do anything else
@@ -281,16 +300,20 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 	if (cm_freelanceEnabled && isRoot) {
 		osi_Log0(afsd_logp,"cm_getSCache Freelance and isRoot");
           /* freelance: if we are trying to get the root scp for the first
-             time, we will just put in a place holder entry. */
+         * time, we will just put in a place holder entry. 
+         */
 		volp = NULL;
 	}
 	  
 	if (cm_freelanceEnabled && special) {
 		osi_Log0(afsd_logp,"cm_getSCache Freelance and special");
+        if (fidp->vnode > 1) {
 	    lock_ObtainMutex(&cm_Freelance_Lock);
 		mp =(cm_localMountPoints+fidp->vnode-2)->mountPointStringp;
 		lock_ReleaseMutex(&cm_Freelance_Lock);
-		
+        } else {
+            mp = "";
+        }
 		scp = cm_GetNewSCache();
 		
 		scp->fid = *fidp;
@@ -326,7 +349,6 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 		lock_ReleaseWrite(&cm_scacheLock);
 		/*afsi_log("   getscache done");*/
 		return 0;
-
 	}
 	// end of yj code
 #endif /* AFS_FREELANCE_CLIENT */
@@ -352,6 +374,7 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 			scp->refCount++;
             cm_AdjustLRU(scp);
             lock_ReleaseWrite(&cm_scacheLock);
+            if (volp)
             cm_PutVolume(volp);
             *outScpp = scp;
 			return 0;
@@ -384,6 +407,13 @@ long cm_GetSCache(cm_fid_t *fidp, cm_scache_t **outScpp, cm_user_t *userp,
 	cm_hashTablep[hash] = scp;
     scp->flags |= CM_SCACHEFLAG_INHASH;
 	scp->refCount = 1;
+
+	/* XXX - The following fields in the cm_scache are 
+	 * uninitialized:
+	 *   fileType
+	 *   parentVnode
+	 *   parentUnique
+	 */
     lock_ReleaseWrite(&cm_scacheLock);
         
     /* now we have a held scache entry; just return it */
@@ -590,12 +620,14 @@ long cm_SyncOp(cm_scache_t *scp, cm_buf_t *bufp, cm_user_t *up, cm_req_t *reqp,
 
 		// yj: modified this so that callback only checked if we're
 		// not checking something on /afs
+        /* fix the conditional to match the one in cm_HaveCallback */
 		if (  (flags & CM_SCACHESYNC_NEEDCALLBACK)
 #ifdef AFS_FREELANCE_CLIENT
-			&& (!cm_freelanceEnabled || !(!(scp->fid.vnode==0x1 &&
-				                         scp->fid.unique==0x1) &&
-				                         scp->fid.cell==AFS_FAKE_ROOT_CELL_ID &&
-				                         scp->fid.volume==AFS_FAKE_ROOT_VOL_ID))
+             && (!cm_freelanceEnabled || 
+                  !(scp->fid.vnode==0x1 && scp->fid.unique==0x1) ||
+                  scp->fid.cell!=AFS_FAKE_ROOT_CELL_ID ||
+                  scp->fid.volume!=AFS_FAKE_ROOT_VOL_ID ||
+				  cm_fakeDirCallback < 2)
 #endif /* AFS_FREELANCE_CLIENT */
 		    ) {
 			if (!cm_HaveCallback(scp)) {
@@ -656,7 +688,8 @@ sleep:
 		if (bufLocked) lock_ReleaseMutex(&bufp->mx);
         osi_SleepM((long) &scp->flags, &scp->mx);
         osi_Log0(afsd_logp, "CM SyncOp woke!");
-        if (bufLocked) lock_ObtainMutex(&bufp->mx);
+        if (bufLocked) 
+            lock_ObtainMutex(&bufp->mx);
         lock_ObtainMutex(&scp->mx);
         } /* big while loop */
         
@@ -807,7 +840,7 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
 	if (cm_freelanceEnabled && scp == cm_rootSCachep) {
 		osi_Log0(afsd_logp,"cm_MergeStatus Freelance cm_rootSCachep");
 		statusp->InterfaceVersion = 0x1;
-		statusp->FileType = 0x2;
+        statusp->FileType = CM_SCACHETYPE_DIRECTORY;
 		statusp->LinkCount = scp->linkCount;
 		statusp->Length = cm_fakeDirSize;
 		statusp->DataVersion = cm_fakeDirVersion;
@@ -900,8 +933,10 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
 		else
                 	scp->fileType = CM_SCACHETYPE_SYMLINK;
         }
-        else scp->fileType = 0;	/* invalid */
-
+    else {
+        osi_Log1(afsd_logp, "Merge, Invalid File Type, scp %x", scp);
+        scp->fileType = 0;	/* invalid */
+    }
         /* and other stuff */
         scp->parentVnode = statusp->ParentVnode;
         scp->parentUnique = statusp->ParentUnique;
@@ -927,7 +962,10 @@ void cm_MergeStatus(cm_scache_t *scp, AFSFetchStatus *statusp, AFSVolSync *volp,
 void cm_DiscardSCache(cm_scache_t *scp)
 {
 	lock_AssertMutex(&scp->mx);
+    if (scp->cbServerp) {
+        cm_PutServer(scp->cbServerp);
 	scp->cbServerp = NULL;
+    }
         scp->cbExpires = 0;
 	cm_dnlcPurgedp(scp);
         cm_FreeAllACLEnts(scp);

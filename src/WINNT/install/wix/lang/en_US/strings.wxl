@@ -35,12 +35,15 @@
     <String Id="StrCfgWzdDesc">Server Configuration Wizard</String>
 
     <String Id="StrLaunchCond">OpenAFS for Windows is currently only packaged for Windows 2000,XP and 2003</String>
+    <String Id="AdminRequired">Installation of OpenAFS for Windows requires administrative privileges</String>
 
 	<String Id="ErrNPIFailed">Installation of Network Provider failed.  System error [2]</String>
 	<String Id="ErrSCCFailed">Configuration of client service failed.  System error [2]</String>
 	<String Id="ErrSCSFailed">Configuration of server service failed.  System error [2]</String>
 	<String Id="ErrAbort">Installation aborted : [2]</String>
 	<String Id="ErrNsisFailed">Uninstallation of the NSIS installation of OpenAFS failed with code [2]</String>
+	<String Id="ErrCantCreateGroup">Can't create AFS Client Admin group.  NET_API_Error [2]</String>
+	<String Id="ErrCantAddMembers">Can't add members to AFS Client Admin group. NET_API_Error [2]</String>
 	
 	<String Id="ActInstallLoopback">Installing loopback adapter</String>
 	<String Id="ActRemoveLoopback">Removing existing loopback adapter</String>

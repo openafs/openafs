@@ -31,7 +31,7 @@ SOFTWARE.
 *         are noted in the comments section of each of the
 *         functions.
 *
-* rcsid: $Id: afscustom.cpp,v 1.2 2004/06/23 03:55:13 jaltman Exp $
+* rcsid: $Id: afscustom.cpp,v 1.2.2.1 2004/08/23 15:55:09 jaltman Exp $
 **************************************************************/
 
 // Only works for Win2k and above
@@ -376,3 +376,71 @@ _cleanup:
 	}
 	return rv;
 }
+
+/* Create or remove the 'AFS Client Admins' group.  Initially
+   it will hold members of the Administrator group. */
+
+MSIDLLEXPORT CreateAFSClientAdminGroup( MSIHANDLE hInstall ) {
+    UINT rv;
+    rv = createAfsAdminGroup();
+    if(rv) {
+        if(rv == ERROR_ALIAS_EXISTS) {
+            /* The group already exists, probably from a previous
+               installation.  We let things be. */
+            return ERROR_SUCCESS;
+        }
+
+        ShowMsiError( hInstall, ERR_GROUP_CREATE_FAILED, rv );
+        return rv;
+    }
+
+    rv = initializeAfsAdminGroup();
+    if(rv)
+        ShowMsiError( hInstall, ERR_GROUP_MEMBER_FAILED, rv );
+    return rv;
+}
+
+MSIDLLEXPORT RemoveAFSClientAdminGroup( MSIHANDLE hInstall ) {
+    removeAfsAdminGroup();
+    return ERROR_SUCCESS;
+}
+
+#define AFSCLIENT_ADMIN_GROUPNAMEW L"AFS Client Admins"
+#define AFSCLIENT_ADMIN_COMMENTW L"AFS Client Administrators"
+
+UINT createAfsAdminGroup(void) {
+    LOCALGROUP_INFO_1 gInfo;
+    DWORD dwError;
+    NET_API_STATUS status;
+
+    gInfo.lgrpi1_name = AFSCLIENT_ADMIN_GROUPNAMEW;
+    gInfo.lgrpi1_comment = AFSCLIENT_ADMIN_COMMENTW;
+    status = NetLocalGroupAdd(NULL, 1, (LPBYTE) &gInfo, &dwError);
+
+    return status;
+}
+
+UINT initializeAfsAdminGroup(void) {
+    PSID psidAdmin = NULL;
+    SID_IDENTIFIER_AUTHORITY auth = SECURITY_NT_AUTHORITY;
+    NET_API_STATUS status;
+    LOCALGROUP_MEMBERS_INFO_0 *gmAdmins = NULL;
+    DWORD dwNEntries, dwTEntries;
+
+    status = NetLocalGroupGetMembers(NULL, L"Administrators", 0, (LPBYTE *) &gmAdmins, MAX_PREFERRED_LENGTH, &dwNEntries, &dwTEntries, NULL);
+    if(status)
+        return status;
+
+    status = NetLocalGroupAddMembers(NULL, AFSCLIENT_ADMIN_GROUPNAMEW, 0, (LPBYTE) gmAdmins, dwNEntries);
+
+    NetApiBufferFree( gmAdmins );
+
+    return status;
+}
+
+UINT removeAfsAdminGroup(void) {
+    NET_API_STATUS status;
+    status = NetLocalGroupDel(NULL, AFSCLIENT_ADMIN_GROUPNAMEW);
+    return status;
+}
+

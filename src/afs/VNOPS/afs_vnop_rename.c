@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_rename.c,v 1.16 2003/08/29 22:00:04 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_rename.c,v 1.16.2.1 2004/08/25 07:09:35 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -46,7 +46,8 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
     struct dcache *tdc1, *tdc2;
     struct AFSFetchStatus OutOldDirStatus, OutNewDirStatus;
     struct AFSVolSync tsync;
-    XSTATS_DECLS AFS_STATCNT(afs_rename);
+    XSTATS_DECLS;
+    AFS_STATCNT(afs_rename);
     afs_Trace4(afs_iclSetp, CM_TRACE_RENAME, ICL_TYPE_POINTER, aodp,
 	       ICL_TYPE_STRING, aname1, ICL_TYPE_POINTER, andp,
 	       ICL_TYPE_STRING, aname2);
@@ -370,11 +371,11 @@ afs_rename(fndp, tndp)
 #else /* AFS_OSF_ENV */
 #if defined(AFS_SGI_ENV)
 afs_rename(OSI_VC_ARG(aodp), aname1, andp, aname2, npnp, acred)
-     struct pathname *npnp;
+    struct pathname *npnp;
 #else
 afs_rename(OSI_VC_ARG(aodp), aname1, andp, aname2, acred)
 #endif
-    OSI_VC_DECL(aodp);
+     OSI_VC_DECL(aodp);
      struct vcache *andp;
      char *aname1, *aname2;
      struct AFS_UCRED *acred;
@@ -384,9 +385,9 @@ afs_rename(OSI_VC_ARG(aodp), aname1, andp, aname2, acred)
     struct afs_fakestat_state ofakestate;
     struct afs_fakestat_state nfakestate;
     struct vrequest treq;
-    OSI_VC_CONVERT(aodp)
+    OSI_VC_CONVERT(aodp);
 
-	code = afs_InitReq(&treq, acred);
+    code = afs_InitReq(&treq, acred);
     if (code)
 	return code;
     afs_InitFakeStat(&ofakestate);

@@ -1380,7 +1380,8 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                         psp = tempsp;
                         tp = psp->data;
                         cm_ReleaseSCache(tscp);
-                        tscp = linkScp;	/* already held
+                    tscp = linkScp;	
+                    /* already held
                                          * by AssembleLink */
                         /* now, if linkScp is null, that's
                          * AssembleLink's way of telling us that
@@ -1679,7 +1680,7 @@ void cm_TryBulkStat(cm_scache_t *dscp, osi_hyper_t *offsetp, cm_user_t *userp,
                 } /* all files in the response */
 		/* now tell it to drop the count,
 		 * after doing the vnode processing above */
-                cm_EndCallbackGrantingCall(NULL, NULL, NULL, 0);
+        cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, 0);
                 
                 filex += filesThisCall;
         }	/* while there are still more files to process */
@@ -1959,7 +1960,7 @@ long cm_Create(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
 	
         /* make sure we end things properly */
         if (!didEnd)
-        	cm_EndCallbackGrantingCall(NULL, NULL, NULL, 0);
+        	cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, 0);
 
         return code;
 }
@@ -2075,7 +2076,7 @@ long cm_MakeDir(cm_scache_t *dscp, char *namep, long flags, cm_attr_t *attrp,
 	
         /* make sure we end things properly */
         if (!didEnd)
-        	cm_EndCallbackGrantingCall(NULL, NULL, NULL, 0);
+        	cm_EndCallbackGrantingCall(NULL, &cbReq, NULL, 0);
 	
         /* and return error code */
         return code;

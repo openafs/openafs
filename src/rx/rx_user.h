@@ -28,8 +28,8 @@ error - foo error - foo error - foo
 #define AFS_RXGUNLOCK()
 #ifndef UKERNEL
 /* Defined in rx/UKERNEL/rx_kmutex.h */
-#define ISAFS_GLOCK() 
-#define ISAFS_RXGLOCK() 
+#define ISAFS_GLOCK()
+#define ISAFS_RXGLOCK()
 #endif
 #define AFS_ASSERT_RXGLOCK()
 /* Some "operating-system independent" stuff, for the user mode implementation */

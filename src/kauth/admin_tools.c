@@ -16,7 +16,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/admin_tools.c,v 1.16 2003/12/07 22:49:26 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/kauth/admin_tools.c,v 1.16.2.1 2004/08/25 07:03:39 shadow Exp $");
 
 #include <afs/stds.h>
 #include <afs/debug.h>
@@ -818,7 +818,7 @@ SetPassword(struct cmd_syndesc *as, char *arock)
     if (as->parms[3].items)
 	sscanf(as->parms[3].items->data, "%d", &kvno);
 
-#ifdef AFS_S390_LINUX20_ENV
+#if defined(AFS_S390_LINUX20_ENV) && !defined(AFS_S390X_LINUX20_ENV)
     code = ubik_Call(KAM_SetPassword, conn, 0, name, instance, kvno, 0, key);
 #else
     code = ubik_Call(KAM_SetPassword, conn, 0, name, instance, kvno, key);

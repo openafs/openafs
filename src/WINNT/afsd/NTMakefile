@@ -221,7 +221,9 @@ LOGON_DLLLIBS =\
     $(AFSKFWLIB)
 
 LOGON_DLLSDKLIBS =\
-	dnsapi.lib mpr.lib \
+        dnsapi.lib \
+        netapi32.lib \
+        mpr.lib \
 	advapi32.lib \
 	secur32.lib \
 	strsafe.lib \

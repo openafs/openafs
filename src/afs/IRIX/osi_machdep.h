@@ -374,19 +374,19 @@ extern long afs_global_owner;
 #undef OSI_VN_DECL
 #define OSI_VN_DECL(V)  bhv_desc_t *bhv_##V
 #undef OSI_VN_CONVERT
-#define OSI_VN_CONVERT(V) struct vnode * V = (struct vnode*)BHV_TO_VNODE(bhv_##V);
+#define OSI_VN_CONVERT(V) struct vnode * V = (struct vnode*)BHV_TO_VNODE(bhv_##V)
 #undef OSI_VC_ARG
 #define OSI_VC_ARG(V) bhv_##V
 #undef OSI_VC_DECL
 #define OSI_VC_DECL(V)  bhv_desc_t *bhv_##V
 #undef OSI_VC_CONVERT
-#define OSI_VC_CONVERT(V) struct vcache * V = VTOAFS(BHV_TO_VNODE(bhv_##V));
+#define OSI_VC_CONVERT(V) struct vcache * V = VTOAFS(BHV_TO_VNODE(bhv_##V))
 #undef OSI_VFS_ARG
 #define OSI_VFS_ARG(V) bhv_##V
 #undef OSI_VFS_DECL
 #define OSI_VFS_DECL(V)  bhv_desc_t *bhv_##V
 #undef OSI_VFS_CONVERT
-#define OSI_VFS_CONVERT(V) struct vfs * V = (struct vfs*)bhvtovfs(bhv_##V);
+#define OSI_VFS_CONVERT(V) struct vfs * V = (struct vfs*)bhvtovfs(bhv_##V)
 #endif /* AFS_SGI64_ENV */
 
 

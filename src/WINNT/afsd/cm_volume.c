@@ -175,7 +175,8 @@ long cm_GetVolumeByID(cm_cell_t *cellp, long volumeID, cm_user_t *userp,
         }
 
 	/* hold the volume if we found it */
-        if (volp) volp->refCount++;
+    if (volp) 
+        volp->refCount++;
         lock_ReleaseWrite(&cm_volumeLock);
         
 	/* return it held */
@@ -316,7 +317,8 @@ cm_serverRef_t **cm_GetVolServers(cm_volume_t *volp, unsigned long volume)
         serverspp = &volp->roServersp;
 	else if (volume == volp->bkID)
         serverspp = &volp->bkServersp;
-	else osi_panic("bad volume ID in cm_GetVolServers", __FILE__, __LINE__);
+    else 
+        osi_panic("bad volume ID in cm_GetVolServers", __FILE__, __LINE__);
         
     for (current = *serverspp; current; current = current->next)
         current->refCount++;
@@ -370,7 +372,6 @@ void cm_CheckVolumes(void)
         lock_ReleaseWrite(&cm_volumeLock);
 
 	/* We should also refresh cached mount points */
-
 }
 
 /*
