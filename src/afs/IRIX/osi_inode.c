@@ -280,15 +280,19 @@ struct icreateargs {
 };
 
 /* EFS only fs suite uses this entry point - icreate in afssyscalls.c. */
-#ifdef AFS_SGI_EFS_IOPS_ENV
 int
 icreate(struct icreateargs *uap, rval_t *rvp)
 {
+#ifdef AFS_SGI_EFS_IOPS_ENV
     AFS_STATCNT(icreate);
     return(afs_syscall_icreate(uap->dev, uap->near_inode, uap->param1,
 			       uap->param2, uap->param3, uap->param4, rvp));
+#else
+    return ENOSYS;
+#endif
 }
 
+#ifdef AFS_SGI_EFS_IOPS_ENV
 int
 afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, rvp)
 afs_uint32 dev, near_inode, param1, param2, param3, param4;
