@@ -154,15 +154,18 @@ struct ubik_dbase {
     afs_int32 tidCounter;                /* last RW or RO trans tid counter */
     afs_int32 writeTidCounter;           /* last write trans tid counter */
     afs_int32 flags;			    /* flags */
-    int	(*read)();		    /* physio procedures */
-    int (*write)();
-    int (*truncate)();
-    int (*sync)();
-    int (*stat)();
-    int (*open)();
-    int	(*setlabel)();		    /* set the version label */
-    int	(*getlabel)();		    /* retrieve the version label */
-    int	(*getnfiles)();		    /* find out number of files */
+    /* physio procedures */
+    int	(*read)(struct ubik_dbase *adbase, afs_int32 afile, char *abuffer, 
+	afs_int32 apos, afs_int32 alength);
+    int (*write)(struct ubik_dbase *adbase, afs_int32 afile, char *abuffer, 
+	afs_int32 apos, afs_int32 alength);
+    int (*truncate)(struct ubik_dbase *adbase, afs_int32 afile, afs_int32 asize);
+    int (*sync)(struct ubik_dbase *adbase, afs_int32 afile);
+    int (*stat)(struct ubik_dbase *adbase, afs_int32 afid, struct ubik_stat *astat);
+    int (*open)(struct ubik_dbase *adbase, afs_int32 afid);
+    int	(*setlabel)(struct ubik_dbase *adbase, afs_int32 afile, struct ubik_version *aversion);		    /* set the version label */
+    int	(*getlabel)(struct ubik_dbase *adbase, afs_int32 afile, struct ubik_version *aversion);		    /* retrieve the version label */
+    int	(*getnfiles)(struct ubik_dbase *adbase);    /* find out number of files */
     short readers;		    /* number of current read transactions */
     struct ubik_version	cachedVersion; /* version of caller's cached data */
 };
@@ -280,20 +283,32 @@ extern int ubikPrimaryAddrOnly;			/* use only primary address */
 
 /* this extern gives the sync site's db version, with epoch of 0 if none yet */
 
-extern int uphys_read();
-extern int uphys_write();
-extern int uphys_truncate();
-extern int uphys_sync();
-/*
- * This is static.
-extern int uphys_open();
- */
-extern int uphys_stat();
-extern int uphys_getlabel();
-extern int uphys_setlabel();
-extern int uphys_getnfiles();
+/* phys.c */
+extern int uphys_close (register int afd);
+extern int uphys_stat(struct ubik_dbase *adbase, afs_int32 afid, struct ubik_stat *astat);
+extern int uphys_read(register struct ubik_dbase *adbase, afs_int32 afile, register char *abuffer,
+        afs_int32 apos, afs_int32 alength);
+extern int uphys_write(register struct ubik_dbase *adbase, afs_int32 afile, register char *abuffer,
+        afs_int32 apos, afs_int32 alength);
+extern int uphys_truncate(register struct ubik_dbase *adbase, afs_int32 afile, afs_int32 asize);
+extern int uphys_getnfiles(register struct ubik_dbase *adbase);
+extern int uphys_getlabel(register struct ubik_dbase *adbase, afs_int32 afile, struct ubik_version *aversion);
+extern int uphys_setlabel(register struct ubik_dbase *adbase, afs_int32 afile, struct ubik_version *aversion);
+extern int uphys_sync(register struct ubik_dbase *adbase, afs_int32 afile);
+
+
+/* recovery.c */
+extern int urecovery_ResetState(void);
+extern int urecovery_LostServer(void);
+extern int urecovery_AllBetter(register struct ubik_dbase *adbase, int areadAny);
+extern int urecovery_AbortAll(struct ubik_dbase *adbase);
+extern int urecovery_CheckTid(register struct ubik_tid *atid);
+extern int urecovery_Initialize(register struct ubik_dbase *adbase);
+extern int urecovery_Interact(void);
+extern int DoProbe(struct ubik_server *server);
+
+
 extern int ubeacon_Interact();
-extern int urecovery_Interact();
 extern int sdisk_Interact();
 extern int uvote_Interact();
 extern int DISK_Abort();

@@ -31,11 +31,8 @@ extern afs_rwlock_t afs_xcbhash;
 /* Note that we don't set CDirty here, this is OK because the rename
  * RPC is called synchronously. */
 
-afsrename(aodp, aname1, andp, aname2, acred, areq)
-    struct vcache *aodp, *andp;
-    char *aname1, *aname2;
-    struct AFS_UCRED *acred;
-    struct vrequest *areq;
+int afsrename(struct vcache *aodp, char *aname1, struct vcache *andp, 
+	char *aname2, struct AFS_UCRED *acred, struct vrequest *areq)
 {
     register struct conn *tc;
     register afs_int32 code;

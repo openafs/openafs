@@ -2584,8 +2584,7 @@ icl_LogReleNL(logp)
 }
 
 /* zero out the log */
-icl_ZeroLog(logp)
-  register struct afs_icl_log *logp;
+int icl_ZeroLog(register struct afs_icl_log *logp)
 {
     logp->firstUsed = logp->firstFree = 0;
     logp->logElements = 0;
@@ -2593,8 +2592,7 @@ icl_ZeroLog(logp)
 }
 
 /* free a log entry, and drop its reference count */
-icl_LogFree(logp)
-  register struct afs_icl_log *logp;
+int icl_LogFree(register struct afs_icl_log *logp)
 {
     logp->states |= ICL_LOGF_DELETED;
     icl_LogRele(logp);
@@ -2602,9 +2600,7 @@ icl_LogFree(logp)
 }
 
 
-icl_EnumerateLogs(aproc, arock)
-  int (*aproc)();
-  char *arock;
+int icl_EnumerateLogs(int (*aproc)(char *name,char *arock,struct afs_icl_log *tp), char *arock)
 {
     register struct afs_icl_log *tp;
     register afs_int32 code;

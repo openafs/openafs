@@ -61,7 +61,7 @@ extern int afs_icl_LogReleNL(register struct afs_icl_log *logp);
 extern int afs_icl_ZeroLog(register struct afs_icl_log *logp);
 extern int afs_icl_LogFree(register struct afs_icl_log *logp);
 extern struct afs_icl_log *afs_icl_FindLog(char *name);
-extern int afs_icl_EnumerateLogs(int (*aproc)(), char *arock);
+extern int afs_icl_EnumerateLogs(int (*aproc)(char *name,char *arock,struct afs_icl_log *tp), char *arock);
 extern int afs_icl_CreateSet(char *name, struct afs_icl_log *baseLogp, 
         struct afs_icl_log *fatalLogp, struct afs_icl_set **outSetpp);
 extern int afs_icl_CreateSetWithFlags(char *name, struct afs_icl_log *baseLogp, 
@@ -70,7 +70,7 @@ extern int afs_icl_SetEnable(struct afs_icl_set *setp, afs_int32 eventID, int se
 extern int afs_icl_GetEnable(struct afs_icl_set *setp, afs_int32 eventID, 
         int *getValuep);
 extern int afs_icl_ZeroSet(struct afs_icl_set *setp);
-extern int afs_icl_EnumerateSets(int (*aproc)(), char *arock);
+extern int afs_icl_EnumerateSets(int (*aproc)(char *name,char *arock,struct afs_icl_log *tp), char *arock);
 extern int afs_icl_AddLogToSet(struct afs_icl_set *setp, struct afs_icl_log *newlogp);
 extern int afs_icl_SetSetStat(struct afs_icl_set *setp, int op);
 extern int afs_icl_SetHold(register struct afs_icl_set *setp);
@@ -156,7 +156,7 @@ extern afs_rwlock_t afs_xcell;
 extern void afs_CellInit(void);
 extern void shutdown_cell(void);
 extern int afs_cellname_init(ino_t inode, int lookupcode);
-extern int afs_cellname_write();
+extern int afs_cellname_write(void);
 extern afs_int32 afs_NewCell(char *acellName, afs_int32 *acellHosts,
 	int aflags, char *linkedcname, u_short fsport, u_short vlport,
 	int timeout);
@@ -507,7 +507,7 @@ extern int osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize);
 extern void osi_DisableAtimes(struct vnode *avp);
 extern int afs_osi_Read(register struct osi_file *afile, int offset, void *aptr, afs_int32 asize);
 extern int afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr, afs_int32 asize);
-extern int afs_osi_MapStrategy(int (*aproc)(), register struct buf *bp);
+extern int afs_osi_MapStrategy(int (*aproc)(struct buf *bp), register struct buf *bp);
 extern void shutdown_osifile(void);
 
 
@@ -841,7 +841,8 @@ extern int afs_remunlink(register struct vcache *avc, register int doit);
 
 
 /* VNOPS/afs_vnop_rename.c */
-extern int afsrename();
+extern int afsrename(struct vcache *aodp, char *aname1, struct vcache *andp, 
+        char *aname2, struct AFS_UCRED *acred, struct vrequest *areq);
 
 
 /* VNOPS/afs_vnop_symlink.c */

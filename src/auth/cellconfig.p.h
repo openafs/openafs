@@ -99,8 +99,10 @@ struct afsconf_servPair {
 };
 
 extern struct afsconf_dir *afsconf_Open(register const char *adir);
-extern int afsconf_CellApply(struct afsconf_dir *adir, int (*aproc)(), char *arock);
-extern int afsconf_CellAliasApply(struct afsconf_dir *adir, int (*aproc)(), char *arock);
+extern int afsconf_CellApply(struct afsconf_dir *adir, int (*aproc)(struct afsconf_cell *cell, 
+	char *arock, struct afsconf_dir *dir), char *arock);
+extern int afsconf_CellAliasApply(struct afsconf_dir *adir, int (*aproc)(
+	struct afsconf_cellalias *alias, char *arock, struct afsconf_dir *dir), char *arock);
 extern int afsconf_GetExtendedCellInfo(struct afsconf_dir *adir, 
         char *acellName, char *aservice, struct afsconf_cell *acellInfo, 
         char clones[]);

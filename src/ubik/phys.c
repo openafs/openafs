@@ -52,9 +52,8 @@ static struct fdcache {
 static char pbuffer[1024];
 
 /* beware, when using this function, of the header in front of most files */
-static int uphys_open(adbase, afid)
-    register struct ubik_dbase *adbase;
-    afs_int32 afid; {
+static int uphys_open(register struct ubik_dbase *adbase, afs_int32 afid)
+{
     char temp[20];
     register int fd;
     static int initd;
@@ -130,8 +129,8 @@ static int uphys_open(adbase, afid)
 }
 
 /* close the file, maintaining ref count in cache structure */
-uphys_close (afd)
-register int afd; {
+int uphys_close (register int afd)
+{
     register int i;
     register struct fdcache *tfd;
 
@@ -146,10 +145,8 @@ register int afd; {
     return close(afd);
 }
 
-uphys_stat(adbase, afid, astat)
-    struct ubik_stat *astat;
-    afs_int32 afid;
-    struct ubik_dbase *adbase; {
+int uphys_stat(struct ubik_dbase *adbase, afs_int32 afid, struct ubik_stat *astat)
+{
     register int fd;
     struct stat tstat;
     register afs_int32 code;
@@ -168,12 +165,9 @@ uphys_stat(adbase, afid, astat)
     return 0;
 }
 
-uphys_read(adbase, afile, abuffer, apos, alength)
-    register struct ubik_dbase *adbase;
-    register char *abuffer;
-    afs_int32 apos;
-    afs_int32 afile;
-    afs_int32 alength; {
+int uphys_read(register struct ubik_dbase *adbase, afs_int32 afile, register char *abuffer, 
+	afs_int32 apos, afs_int32 alength)
+{
     register int fd;
     register afs_int32 code;
 
@@ -189,12 +183,9 @@ uphys_read(adbase, afile, abuffer, apos, alength)
     return code;
 }
 
-uphys_write(adbase, afile, abuffer, apos, alength)
-    register struct ubik_dbase *adbase;
-    register char *abuffer;
-    afs_int32 apos;
-    afs_int32 afile;
-    afs_int32 alength; {
+int uphys_write(register struct ubik_dbase *adbase, afs_int32 afile, register char *abuffer, 
+	afs_int32 apos, afs_int32 alength)
+{
     register int fd;
     register afs_int32 code;
     afs_int32 length;
@@ -212,10 +203,8 @@ uphys_write(adbase, afile, abuffer, apos, alength)
     else return length;
 }
 
-uphys_truncate(adbase, afile, asize)
-    afs_int32 asize;
-    register struct ubik_dbase *adbase;
-    afs_int32 afile; {
+int uphys_truncate(register struct ubik_dbase *adbase, afs_int32 afile, afs_int32 asize)
+{
     register afs_int32 code, fd;
     fd = uphys_open(adbase, afile);
     if (fd < 0) return UNOENT;
@@ -225,16 +214,15 @@ uphys_truncate(adbase, afile, asize)
 }
 
 /* get number of dbase files */
-uphys_getnfiles(adbase) {
+int uphys_getnfiles(register struct ubik_dbase *adbase)
+{
     /* really should scan dir for data */
     return 1;
 }
 
 /* get database label, with aversion in host order */
-uphys_getlabel(adbase, afile, aversion)
-    register struct ubik_dbase *adbase;
-    afs_int32 afile;
-    struct ubik_version *aversion; {
+int uphys_getlabel(register struct ubik_dbase *adbase, afs_int32 afile, struct ubik_version *aversion)
+{
     struct ubik_hdr thdr;
     register afs_int32 code, fd;
 
@@ -252,10 +240,8 @@ uphys_getlabel(adbase, afile, aversion)
 }
 
 /* label database, with aversion in host order */
-uphys_setlabel(adbase, afile, aversion)
-    register struct ubik_dbase *adbase;
-    afs_int32 afile;
-    struct ubik_version *aversion; {
+int uphys_setlabel(register struct ubik_dbase *adbase, afs_int32 afile, struct ubik_version *aversion)
+{
     struct ubik_hdr thdr;
     register afs_int32 code, fd;
 
@@ -274,9 +260,8 @@ uphys_setlabel(adbase, afile, aversion)
     return 0;
 }
 
-uphys_sync(adbase, afile)
-    register struct ubik_dbase *adbase;
-    afs_int32 afile; {
+int uphys_sync(register struct ubik_dbase *adbase, afs_int32 afile)
+{
     register afs_int32 code, fd;
     fd = uphys_open(adbase, afile);
     code = fsync(fd);

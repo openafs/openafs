@@ -72,7 +72,8 @@ RCSID("$Header$");
 */
 int ubikPrimaryAddrOnly;
 
-urecovery_ResetState() {
+int urecovery_ResetState(void)
+{
     urecovery_state = 0;
     LWP_NoYieldSignal(&urecovery_state);
     return 0;
@@ -82,7 +83,8 @@ urecovery_ResetState() {
  * process to send missing server the new db when it comes back up.
  * This routine should not do anything with variables used by non-sync site servers. 
  */
-urecovery_LostServer() {
+int urecovery_LostServer(void)
+{
     LWP_NoYieldSignal(&urecovery_state);
     return 0;
 }
@@ -95,9 +97,8 @@ urecovery_LostServer() {
  * site, then we must have a dbase labelled with the right version,
  * and we must have a currently-good sync site.
  */
-urecovery_AllBetter(adbase, areadAny)
-    int areadAny;
-    register struct ubik_dbase *adbase; {
+int urecovery_AllBetter(register struct ubik_dbase *adbase, int areadAny)
+{
     register afs_int32 rcode;
 
     ubik_dprint("allbetter checking\n");
@@ -129,8 +130,8 @@ urecovery_AllBetter(adbase, areadAny)
 }
 
 /* abort all transactions on this database */
-urecovery_AbortAll(adbase)
-struct ubik_dbase *adbase; {
+int urecovery_AbortAll(struct ubik_dbase *adbase)
+{
     register struct ubik_trans *tt;
     for(tt = adbase->activeTrans; tt; tt=tt->next) {
 	udisk_abort(tt);
@@ -139,8 +140,8 @@ struct ubik_dbase *adbase; {
 }
 
 /* this routine aborts the current remote transaction, if any, if the tid is wrong */
-urecovery_CheckTid(atid)
-    register struct ubik_tid *atid; {
+int urecovery_CheckTid(register struct ubik_tid *atid)
+{
     if (ubik_currentTrans) {
 	/* there is remote write trans, see if we match, see if this
          * is a new transaction */
@@ -182,8 +183,8 @@ urecovery_CheckTid(atid)
  */
 
 /* replay logs */
-static ReplayLog(adbase)
-    register struct ubik_dbase *adbase; {
+static int ReplayLog(register struct ubik_dbase *adbase)
+{
     afs_int32 opcode;
     register afs_int32 code, tpos;
     int logIsGood;
@@ -311,8 +312,8 @@ static ReplayLog(adbase)
 /* Called at initialization to figure out version of the dbase we really have.
  * This routine is called after replaying the log; it reads the restored labels.
  */
-static InitializeDB(adbase)
-    register struct ubik_dbase *adbase; {
+static int InitializeDB(register struct ubik_dbase *adbase)
+{
     register afs_int32 code;
     
     code = (*adbase->getlabel)(adbase, 0, &adbase->version);
@@ -335,8 +336,8 @@ static InitializeDB(adbase)
 /* initialize the local dbase
  * We replay the logs and then read the resulting file to figure out what version we've really got.
  */
-urecovery_Initialize(adbase)
-    register struct ubik_dbase *adbase; {
+int urecovery_Initialize(register struct ubik_dbase *adbase)
+{
     register afs_int32 code;
 
     code = ReplayLog(adbase);
@@ -374,7 +375,8 @@ urecovery_Initialize(adbase)
  * requests.  However, the recovery module still has one more task:
  * propagating the dbase out to everyone who is up in the network.
  */
-urecovery_Interact() {
+int urecovery_Interact(void)
+{
     afs_int32 code, tcode;
     struct ubik_server *bestServer = NULL;
     struct ubik_server *ts;
@@ -715,8 +717,7 @@ StoreEndCall:
 ** send a Probe to all the network address of this server 
 ** Return 0  if success, else return 1
 */
-DoProbe(server)
-struct ubik_server *server;
+int DoProbe(struct ubik_server *server)
 {
     struct rx_connection *conns[UBIK_MAX_INTERFACE_ADDR];
     struct rx_connection *connSuccess = 0;

@@ -174,13 +174,8 @@ afs_int32 ContactQuorum(aproc, atrans, aflags, aparm0, aparm1, aparm2, aparm3, a
     Note that the host named by myHost should not also be listed in serverList.
 */
 
-int ubik_ServerInitByInfo(myHost, myPort, info, clones, pathName, dbase)
-    struct afsconf_cell *info;  /* in */
-    char clones[];
-    afs_int32 myHost;
-    short myPort;
-    char *pathName;	/* in */
-    struct ubik_dbase **dbase; /* out */ 
+int ubik_ServerInitByInfo(afs_int32 myHost, short myPort, struct afsconf_cell *info, 
+	char clones[], char *pathName, struct ubik_dbase **dbase)
 {
      afs_int32 code;
     
@@ -188,12 +183,8 @@ int ubik_ServerInitByInfo(myHost, myPort, info, clones, pathName, dbase)
      return code;
 }
 
-int ubik_ServerInit(myHost, myPort, serverList, pathName, dbase)
-    afs_int32 serverList[];    /* in */
-    afs_int32 myHost;
-    short myPort;
-    char *pathName;	/* in */
-    struct ubik_dbase **dbase; /* out */ 
+int ubik_ServerInit(afs_int32 myHost, short myPort, afs_int32 serverList[], char *pathName, 
+	struct ubik_dbase **dbase)
 {
      afs_int32 code;
     
@@ -202,14 +193,8 @@ int ubik_ServerInit(myHost, myPort, serverList, pathName, dbase)
      return code;
 }
 
-int ubik_ServerInitCommon(myHost, myPort, info, clones, serverList, pathName, dbase)
-    afs_int32 myHost;
-    short myPort;
-    struct afsconf_cell *info;  /* in */
-    char clones[];
-    afs_int32 serverList[];    /* in */
-    char *pathName;	/* in */
-    struct ubik_dbase **dbase; /* out */ 
+int ubik_ServerInitCommon(afs_int32 myHost, short myPort, struct afsconf_cell *info, 
+	char clones[], afs_int32 serverList[], char *pathName, struct ubik_dbase **dbase)
 {
     register struct ubik_dbase *tdb;
     register afs_int32 code;
@@ -314,11 +299,9 @@ int ubik_ServerInitCommon(myHost, myPort, info, clones, serverList, pathName, db
     We can only begin transaction when we have an up-to-date database.
 */
 
-static int BeginTrans(dbase, transMode, transPtr, readAny)
-    register struct ubik_dbase *dbase;	/* in */
-    int readAny;
-    afs_int32 transMode; /* in */
-    struct ubik_trans **transPtr;	/* out */ {
+static int BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode, 
+	struct ubik_trans **transPtr, int readAny)
+{
     struct ubik_trans *jt;
     register struct ubik_trans *tt;
     register afs_int32 code;
@@ -412,23 +395,21 @@ static int BeginTrans(dbase, transMode, transPtr, readAny)
     return 0;
 }
 
-int ubik_BeginTrans(dbase, transMode, transPtr)
-    register struct ubik_dbase *dbase;	/* in */
-    afs_int32 transMode; /* in */
-    struct ubik_trans **transPtr;	/* out */ {
+int ubik_BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode, 
+	struct ubik_trans **transPtr)
+{
 	return BeginTrans(dbase, transMode, transPtr, 0);
 }
 
-int ubik_BeginTransReadAny(dbase, transMode, transPtr)
-    register struct ubik_dbase *dbase;	/* in */
-    afs_int32 transMode; /* in */
-    struct ubik_trans **transPtr;	/* out */ {
+int ubik_BeginTransReadAny(register struct ubik_dbase *dbase, afs_int32 transMode, 
+	struct ubik_trans **transPtr)
+{
 	return BeginTrans(dbase, transMode, transPtr, 1);
 } 
  
 /* this routine ends a read or write transaction by aborting it */
-int ubik_AbortTrans(transPtr)
-    register struct ubik_trans *transPtr; /* in */ {
+int ubik_AbortTrans(register struct ubik_trans *transPtr)
+{
     register afs_int32 code;
     afs_int32 code2;
     register struct ubik_dbase *dbase;
@@ -468,8 +449,8 @@ int ubik_AbortTrans(transPtr)
 }
 
 /* This routine ends a read or write transaction on the open transaction identified by transPtr.  It returns an error code. */
-int ubik_EndTrans(transPtr)
-    register struct ubik_trans *transPtr; /* in */ {
+int ubik_EndTrans(register struct ubik_trans *transPtr)
+{
     register afs_int32 code;
     struct timeval tv;
     afs_int32 realStart;
@@ -574,10 +555,8 @@ int ubik_EndTrans(transPtr)
 
 /* This routine reads length bytes into buffer from the current position in the database.  The file pointer is updated appropriately (by adding the number of bytes actually transferred), and the length actually transferred is stored in the long integer pointed to by length.  Note that *length is an INOUT parameter: at the start it represents the size of the buffer, and when done, it contains the number of bytes actually transferred.  A short read returns zero for an error code. */
 
-int ubik_Read(transPtr, buffer, length)
-    register struct ubik_trans *transPtr;	/* in */
-    char *buffer;   /* in */
-    afs_int32 length;   /* in */ {
+int ubik_Read(register struct ubik_trans *transPtr, char *buffer, afs_int32 length)
+{
     register afs_int32 code;
 
     /* reads are easy to do: handle locally */
@@ -599,8 +578,7 @@ int ubik_Read(transPtr, buffer, length)
  * flushes to the local disk and then uses ContactQuorum to write it to 
  * the other servers.
  */
-int ubik_Flush(transPtr)
-    struct ubik_trans *transPtr;
+int ubik_Flush(struct ubik_trans *transPtr)
 {
     afs_int32 code, error=0;
 
@@ -635,10 +613,7 @@ int ubik_Flush(transPtr)
     return error;
 }
 
-int ubik_Write(transPtr, buffer, length)
-    register struct ubik_trans *transPtr;	/* in */
-    char *buffer;	/* in */
-    afs_int32 length;	/* in */
+int ubik_Write(register struct ubik_trans *transPtr, char *buffer, afs_int32 length)
 {
     struct ubik_iovec *iovec;
     afs_int32 code, error=0;
@@ -716,10 +691,8 @@ int ubik_Write(transPtr, buffer, length)
 
 /* This sets the file pointer associated with the current transaction to the appropriate file and byte position.  Unlike Unix files, a transaction is labelled by both a file number (fileid) and a byte position relative to the specified file (position). */
 
-int ubik_Seek(transPtr, fileid, position)
-    register struct ubik_trans *transPtr;	/* IN */
-    afs_int32 fileid;    /* IN */
-    afs_int32 position;  /* IN */ {
+int ubik_Seek(register struct ubik_trans *transPtr, afs_int32 fileid, afs_int32 position)
+{
     register afs_int32 code;
 
     DBHOLD(transPtr->dbase);
@@ -736,10 +709,8 @@ int ubik_Seek(transPtr, fileid, position)
 
 /* This call returns the file pointer associated with the specified transaction in fileid and position. */
 
-int ubik_Tell(transPtr, fileid, position)
-    register struct ubik_trans *transPtr;	/* IN */
-    afs_int32 *fileid;   /* OUT */
-    afs_int32 *position; /* OUT */ {
+int ubik_Tell(register struct ubik_trans *transPtr, afs_int32 *fileid, afs_int32 *position)
+{
     DBHOLD(transPtr->dbase);
     *fileid = transPtr->seekFile;
     *position = transPtr->seekPos;
@@ -749,9 +720,8 @@ int ubik_Tell(transPtr, fileid, position)
 
 /* This sets the file size for the currently-selected file to length bytes, if length is less than the file's current size. */
 
-int ubik_Truncate(transPtr, length)
-    register struct ubik_trans *transPtr;	/* in */
-    afs_int32 length;    /* in */ {
+int ubik_Truncate(register struct ubik_trans *transPtr, afs_int32 length)
+{
     afs_int32 code, error=0;
 
     /* Will also catch if not UBIK_WRITETRANS */
@@ -783,10 +753,8 @@ int ubik_Truncate(transPtr, length)
 }
 
 /* set a lock; all locks are released on transaction end (commit/abort) */
-ubik_SetLock(atrans, apos, alen, atype)
-    struct ubik_trans *atrans;
-    afs_int32 apos, alen;                  /* apos and alen are not used */
-    int atype; {
+int ubik_SetLock(struct ubik_trans *atrans, afs_int32 apos, afs_int32 alen, int atype)
+{
     afs_int32 code=0, error=0;
     
     if (atype == LOCKWRITE) {
@@ -827,9 +795,8 @@ ubik_SetLock(atrans, apos, alen, atype)
 }
 
 /* utility to wait for a version # to change */
-int ubik_WaitVersion(adatabase, aversion)
-register struct ubik_version *aversion;
-register struct ubik_dbase *adatabase; {
+int ubik_WaitVersion(register struct ubik_dbase *adatabase, register struct ubik_version *aversion)
+{
     while (1) {
 	/* wait until version # changes, and then return */
 	if (vcmp(*aversion, adatabase->version) != 0)
@@ -839,9 +806,8 @@ register struct ubik_dbase *adatabase; {
 }
 
 /* utility to get the version of the dbase a transaction is dealing with */
-int ubik_GetVersion(atrans, avers)
-register struct ubik_trans *atrans;
-register struct ubik_version *avers; {
+int ubik_GetVersion(register struct ubik_trans *atrans, register struct ubik_version *avers)
+{
     *avers = atrans->dbase->version;
     return 0;
 }
@@ -851,15 +817,13 @@ register struct ubik_version *avers; {
    caller is a server caching part of the Ubik database, it should invalidate
    that cache.  A return value of -1 means bad (NULL) argument. */
 
-int ubik_CacheUpdate (atrans)
-  register struct ubik_trans *atrans;
+int ubik_CacheUpdate (register struct ubik_trans *atrans)
 {
     if (!(atrans && atrans->dbase)) return -1;
     return vcmp(atrans->dbase->cachedVersion, atrans->dbase->version) != 0;
 }
 
-int panic(a, b, c, d)
-    char *a, *b, *c, *d;
+int panic(char *a, char *b, char *c, char *d)
 {
     ubik_print("Ubik PANIC: ");
     ubik_print(a, b, c, d);
@@ -872,9 +836,7 @@ int panic(a, b, c, d)
 ** This functions takes an IP addresses as its parameter. It returns the
 ** the primary IP address that is on the host passed in.
 */
-afs_uint32
-ubikGetPrimaryInterfaceAddr(addr)
-afs_uint32  addr;			/* network byte order */
+afs_uint32 ubikGetPrimaryInterfaceAddr(afs_uint32  addr)
 {
         struct ubik_server *ts;
         int j;

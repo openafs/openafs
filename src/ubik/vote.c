@@ -128,7 +128,8 @@ struct ubik_tid	ubik_dbTid;		/* sync site's tid, or 0 if none */
  *
  * This function returns true if we should run, and false otherwise.
  */
-int uvote_ShouldIRun() {
+int uvote_ShouldIRun(void)
+{
     register afs_int32 now;
     
     now = FT_ApproxTime();
@@ -153,7 +154,8 @@ int uvote_ShouldIRun() {
  * This function returns 0 or currently valid sync site.  It can return our own
  * address, if we're the sync site.
  */
-afs_int32 uvote_GetSyncSite() {
+afs_int32 uvote_GetSyncSite(void)
+{
     register afs_int32 now;
     register afs_int32 code;
 
@@ -171,12 +173,8 @@ afs_int32 uvote_GetSyncSite() {
  * not voting for this sync site, or the time we actually voted yes, if
  * non-zero.
  */
-afs_int32 SVOTE_Beacon(rxcall, astate, astart, avers, atid)
-    register struct rx_call *rxcall;
-    afs_int32 astate;
-    struct ubik_version *avers;
-    struct ubik_tid *atid;
-    afs_int32 astart; 
+afs_int32 SVOTE_Beacon(register struct rx_call *rxcall, afs_int32 astate, 
+	afs_int32 astart, struct ubik_version *avers, struct ubik_tid *atid)
 {
     register afs_int32 otherHost;
     register afs_int32 now;
@@ -324,21 +322,16 @@ afs_int32 SVOTE_Beacon(rxcall, astate, astart, avers, atid)
 
 /* handle per-server debug command, where 0 is the first server.  Basic network
    debugging hooks. */
-afs_int32 SVOTE_SDebug(rxcall, awhich, aparm)
-    struct rx_call *rxcall;
-    afs_int32 awhich;
-    register struct ubik_sdebug *aparm;
+afs_int32 SVOTE_SDebug(struct rx_call *rxcall, afs_int32 awhich,
+	register struct ubik_sdebug *aparm)
 {
     afs_int32 code, isClone;
     code = SVOTE_XSDebug(rxcall, awhich, aparm, &isClone);
     return code;
 }
 
-afs_int32 SVOTE_XSDebug(rxcall, awhich, aparm, isclone)
-    afs_int32 *isclone;
-    struct rx_call *rxcall;
-    afs_int32 awhich;
-    register struct ubik_sdebug *aparm; 
+afs_int32 SVOTE_XSDebug(struct rx_call *rxcall, afs_int32 awhich, 
+	register struct ubik_sdebug *aparm, afs_int32 *isclone)
 {
     register struct ubik_server *ts;
     register int i;
@@ -362,10 +355,8 @@ afs_int32 SVOTE_XSDebug(rxcall, awhich, aparm, isclone)
     return 2;
 }
 
-afs_int32 SVOTE_XDebug(rxcall, aparm, isclone)
-    struct rx_call *rxcall;
-    register struct ubik_debug *aparm;
-    afs_int32 *isclone;
+afs_int32 SVOTE_XDebug(struct rx_call *rxcall, register struct ubik_debug *aparm, 
+	afs_int32 *isclone)
 {
     afs_int32 code;
 
@@ -375,9 +366,8 @@ afs_int32 SVOTE_XDebug(rxcall, aparm, isclone)
 }
 
 /* handle basic network debug command.  This is the global state dumper */
-afs_int32 SVOTE_Debug(rxcall, aparm)
-    struct rx_call *rxcall;
-    register struct ubik_debug *aparm; {
+afs_int32 SVOTE_Debug(struct rx_call *rxcall, register struct ubik_debug *aparm)
+{
     int  i;
     /* fill in the basic debug structure.  Note the the RPC protocol transfers,
      * integers in host order. */
@@ -432,10 +422,8 @@ afs_int32 SVOTE_Debug(rxcall, aparm)
     return 0;
 }
 
-afs_int32 SVOTE_SDebugOld(rxcall, awhich, aparm)
-    struct rx_call *rxcall;
-    afs_int32 awhich;
-    register struct ubik_sdebug_old *aparm; {
+afs_int32 SVOTE_SDebugOld(struct rx_call *rxcall, afs_int32 awhich, register struct ubik_sdebug_old *aparm)
+{
     register struct ubik_server *ts;
 
     for(ts=ubik_servers; ts; ts=ts->next) {
@@ -457,9 +445,8 @@ afs_int32 SVOTE_SDebugOld(rxcall, awhich, aparm)
 
 
 /* handle basic network debug command.  This is the global state dumper */
-afs_int32 SVOTE_DebugOld(rxcall, aparm)
-    struct rx_call *rxcall;
-    register struct ubik_debug_old *aparm; {
+afs_int32 SVOTE_DebugOld(struct rx_call *rxcall, register struct ubik_debug_old *aparm)
+{
 
     /* fill in the basic debug structure.  Note the the RPC protocol transfers,
      * integers in host order. */
@@ -512,9 +499,8 @@ afs_int32 SVOTE_DebugOld(rxcall, aparm)
 
 
 /* get the sync site; called by remote servers to find where they should go */
-afs_int32 SVOTE_GetSyncSite(rxcall, ahost)
-    register struct rx_call *rxcall;
-    register afs_int32 *ahost; {
+afs_int32 SVOTE_GetSyncSite(register struct rx_call *rxcall, register afs_int32 *ahost)
+{
     register afs_int32 temp;
 
     temp = uvote_GetSyncSite();
@@ -522,19 +508,19 @@ afs_int32 SVOTE_GetSyncSite(rxcall, ahost)
     return 0;
 }
 
-ubik_dprint(a,b,c,d,e,f,g,h)
-    char *a, *b, *c, *d, *e, *f, *g, *h; {
+int ubik_dprint(char *a, char *b, char *c, char *d, char *e, char *f, char *g, char *h)
+{
     ViceLog(5, (a,b,c,d,e,f,g,h));
 }
 
-ubik_print(a,b,c,d,e,f,g,h)
-  char *a, *b, *c, *d, *e, *f, *g, *h;
+int ubik_print(char *a, char *b, char *c, char *d, char *e, char *f, char *g, char *h)
 {
   ViceLog(0, (a,b,c,d,e,f,g,h));
 }
 
 /* called once/run to init the vote module */
-uvote_Init() {
+int uvote_Init(void)
+{
     /* pretend we just voted for someone else, since we just restarted */
     ubik_lastYesTime = FT_ApproxTime();
     return 0;

@@ -316,7 +316,7 @@ int afs_cellname_init(ino_t inode, int lookupcode)
     return 0;
 }
 
-int afs_cellname_write()
+int afs_cellname_write(void)
 {
     struct osi_file *tfile;
     struct cell_name *cn;

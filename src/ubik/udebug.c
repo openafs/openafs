@@ -46,8 +46,8 @@ RCSID("$Header$");
 
 extern struct hostent *hostutil_GetHostByName();
 
-static short PortNumber(aport)
-register char *aport; {
+static short PortNumber(register char *aport)
+{
     register int tc;
     register afs_int32 total;
 
@@ -60,8 +60,7 @@ register char *aport; {
     return(total);
 }
 
-static short PortName(aname)
-    char *aname;
+static short PortName(char *aname)
 {
     struct servent *ts;
     int len;
@@ -84,9 +83,8 @@ static short PortName(aname)
     return(-1);
 }
 
-static CommandProc(as, arock)
-char *arock;
-struct cmd_syndesc *as; {
+static int CommandProc(struct cmd_syndesc *as, char *arock)
+{
     char *hostName, *portName, *times;
     afs_int32 hostAddr;
     struct in_addr inhostAddr;
@@ -313,10 +311,8 @@ struct cmd_syndesc *as; {
 
 #include "AFS_component_version_number.c"
 
-int
-main(argc, argv)
-    int argc;
-    char **argv; {
+int main(int argc, char **argv)
+{
     struct cmd_syndesc *ts;
 
 #ifdef	AFS_AIX32_ENV

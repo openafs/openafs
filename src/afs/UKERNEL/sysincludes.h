@@ -1093,10 +1093,10 @@ struct	usr_inode {
 extern struct usr_inode *iget();
 
 struct usr_fileops {
-	int			(*vno_rw)();
-	int			(*vno_ioctl)();
-	int			(*vno_select)();
-	int			(*vno_closex)();
+	int			(*vno_rw)(void);
+	int			(*vno_ioctl)(void);
+	int			(*vno_select)(void);
+	int			(*vno_closex)(void);
 };
 
 struct usr_file {
@@ -1132,7 +1132,7 @@ struct usr_flock {
 	pid_t   		l_pid;
 };
 
-extern struct usr_ucred *usr_crget();
+extern struct usr_ucred *usr_crget(void);
 extern struct usr_ucred *usr_crcopy(struct usr_ucred *);
 extern int usr_crhold(struct usr_ucred *);
 extern int usr_crfree(struct usr_ucred *);
@@ -1199,11 +1199,11 @@ struct usr_socket {
 ((sizeof (struct usr_dirent)+4 - (MAXNAMLEN+1)) + (((len)+1 + 3) &~ 3))
 
 struct usr_vnodeops {
-	int			(*vn_open)();
-	int			(*vn_close)();
+	int			(*vn_open)(char *path, int flags, int mode);
+	int			(*vn_close)(int fd);
 	int			(*vn_rdwr)();
-	int			(*vn_ioctl)();
-	int			(*vn_select)();
+	int			(*vn_ioctl)(void);
+	int			(*vn_select)(void);
 	int			(*vn_getattr)();
 	int			(*vn_setattr)();
 	int			(*vn_access)();

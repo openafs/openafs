@@ -2539,7 +2539,7 @@ struct afs_icl_log *afs_icl_FindLog(char *name)
     return tp;
 }
 
-int afs_icl_EnumerateLogs(int (*aproc)(), char *arock)
+int afs_icl_EnumerateLogs(int (*aproc)(char *name,char *arock,struct afs_icl_log *tp), char *arock)
 {
     register struct afs_icl_log *tp;
     register afs_int32 code;
@@ -2790,7 +2790,7 @@ int afs_icl_ZeroSet(struct afs_icl_set *setp)
     return code;
 }
 
-int afs_icl_EnumerateSets(int (*aproc)(), char *arock)
+int afs_icl_EnumerateSets(int (*aproc)(char *name,char *arock,struct afs_icl_log *tp), char *arock)
 {
     register struct afs_icl_set *tp, *np;
     register afs_int32 code;
