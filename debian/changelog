@@ -1,3 +1,10 @@
+openafs (1.2.3final2-1) unstable; urgency=low
+
+  * Upstream released a new version that they call 1.2.3 after things were
+    tagged  in the Debian repository.
+
+ -- Sam Hartman <hartmans@debian.org>  Wed, 30 Jan 2002 16:59:04 -0500
+
 openafs (1.2.3final-1) unstable; urgency=low
 
   * New upstream release
