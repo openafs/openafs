@@ -1332,7 +1332,7 @@ ${DEST}/root.perf/lib/libdes.a: des/libdes.a
 ${DEST}/root.perf/lib/$(LIBUAFS): UAFS/$(LIBUAFS)
 	${INSTALL} $? $@
 
-${DEST}/root.perf/lib/$(LIBJUAFS): UAFS/$(LIBJUAFS)
+${DEST}/root.perf/lib/$(LIBJUAFS): JUAFS/$(LIBJUAFS)
 	${INSTALL} $? $@
 
 
