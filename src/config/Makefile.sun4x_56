@@ -22,7 +22,7 @@ DBG=-g
 #
 # libraries
 XLIBS=-lsocket -lnsl -lintl -ldl
-TXLIBS=-lcurses
+TXLIBS=-L/usr/ccs/lib -lcurses
 MTLIBS=-lpthread -lsocket
 XLIBELFA=-lelf
 XLIBKVM=-lkvm
