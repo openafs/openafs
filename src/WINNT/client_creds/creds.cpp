@@ -46,6 +46,7 @@ extern "C" {
    typedef int (*ktc_ForgetToken_t)(struct ktc_principal *server);
    typedef int (*ka_UserAuthenticateGeneral_t)(int flags, char *name, char *instance, char *realm, char *password, int lifetime, int *password_expiresP, int spare, char **reasonP);
    typedef long (*cm_GetRootCellName_t)(char *namep);
+   typedef int (*ka_ParseLoginName_t)(char *login, char *name, char *inst, char *cell); 
 }
 
 static struct l
@@ -60,6 +61,7 @@ static struct l
    ktc_ListTokens_t ktc_ListTokensP;
    ktc_ForgetToken_t ktc_ForgetTokenP;
    ka_UserAuthenticateGeneral_t ka_UserAuthenticateGeneralP;
+   ka_ParseLoginName_t ka_ParseLoginNameP; 
    cm_GetRootCellName_t cm_GetRootCellNameP;
    } l;
 
@@ -85,6 +87,7 @@ BOOL Creds_OpenLibraries (void)
          l.ktc_GetTokenP = (ktc_GetToken_t)GetProcAddress (l.hInstLibTokens, "ktc_GetToken");
          l.ktc_ListTokensP = (ktc_ListTokens_t)GetProcAddress (l.hInstLibTokens, "ktc_ListTokens");
          l.ktc_ForgetTokenP = (ktc_ForgetToken_t)GetProcAddress (l.hInstLibTokens, "ktc_ForgetToken");
+         l.ka_ParseLoginNameP = (ka_ParseLoginName_t)GetProcAddress (l.hInstLibTokens, "ka_ParseLoginName");
          l.ka_UserAuthenticateGeneralP = (ka_UserAuthenticateGeneral_t)GetProcAddress (l.hInstLibTokens, "ka_UserAuthenticateGeneral");
 
          if (!l.initAFSDirPathP ||
@@ -93,6 +96,7 @@ BOOL Creds_OpenLibraries (void)
              !l.ktc_GetTokenP ||
              !l.ktc_ListTokensP ||
              !l.ktc_ForgetTokenP ||
+             !l.ka_ParseLoginNameP ||
              !l.ka_UserAuthenticateGeneralP)
             {
             FreeLibrary (l.hInstLibTokens);
@@ -397,13 +401,22 @@ int ObtainNewCredentials (LPCTSTR pszCell, LPCTSTR pszUser, LPCTSTR pszPassword,
 
       int Expiration = 0;
 
+      char  name[sizeof(szNameA)];
+      char  instance[sizeof(szNameA)];
+      char  cell[sizeof(szNameA)];
+      
+      name[0] = '\0';
+      instance[0] = '\0';
+      cell[0] = '\0';
+      ka_ParseLoginName(szNameA, name, instance, cell); 
+
       if ( KFW_is_available() )
-          rc = KFW_AFS_get_cred(szNameA, NULL, szCellA, szPasswordA, 0, szSmbNameA[0] ? szSmbNameA : NULL, &Result);
+          rc = KFW_AFS_get_cred(name, instance, szCellA, szPasswordA, 0, szSmbNameA[0] ? szSmbNameA : NULL, &Result);
       else if ( szSmbNameA[0] )
           rc = ka_UserAuthenticateGeneral2(KA_USERAUTH_VERSION+KA_USERAUTH_AUTHENT_LOGON, 
-                                           szNameA, "", szCellA, szPasswordA, szSmbNameA, 0, &Expiration, 0, &Result);
+                                           name, instance, szCellA, szPasswordA, szSmbNameA, 0, &Expiration, 0, &Result);
       else 
-          rc = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, szNameA, "", szCellA, szPasswordA, 0, &Expiration, 0, &Result);
+          rc = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION, name, instance, szCellA, szPasswordA, 0, &Expiration, 0, &Result);
       }
 
    if (!Silent && rc != 0)

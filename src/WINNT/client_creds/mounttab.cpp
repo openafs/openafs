@@ -229,7 +229,7 @@ void Mount_OnRemove (HWND hDlg)
 
          Mount_OnUpdate (hDlg);
          }
-
+	  WriteActiveMap(List.aDriveMap[ iDriveSel ].chDrive, FALSE );
       FreeDriveMapList (&List);
       }
 }
