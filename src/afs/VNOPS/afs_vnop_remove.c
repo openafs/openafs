@@ -237,6 +237,10 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     afs_Trace2(afs_iclSetp, CM_TRACE_REMOVE, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname);
 
+#ifdef	AFS_OSF_ENV
+    tvc = (struct vcache *)ndp->ni_vp;  /* should never be null */
+#endif
+
     /* Check if this is dynroot */
     if (afs_IsDynroot(adp)) {
 #ifdef  AFS_OSF_ENV
