@@ -187,10 +187,7 @@ else
 		i?86-*-freebsd4.2*)
 			AFS_SYSNAME="i386_fbsd_42"
 			;;
-		hppa2.0w-hp-hpux11*)
-			AFS_SYSNAME="hp_ux110"
-			;;
-		hppa-hp-hpux11*)
+		hppa*-hp-hpux11*)
 			AFS_SYSNAME="hp_ux110"
 			;;
 		hppa-hp-hpux10*)
