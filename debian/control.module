@@ -5,8 +5,8 @@ Maintainer: Sam Hartman <hartmans@debian.org>
 Standards-Version: 3.1.1
 
 Package: openafs-modules-=KVERS
-Conflicts: openafs-client (<< 1.2.2-0)
-Provides: openafs-modules1
+Conflicts: openafs-client (<< 1.2.9)
+Provides: openafs-modules2
 Architecture: any
 Description: The AFS distributed filesystem- Kernel Module
  AFS is a distributed filesystem allowing cross-platform sharing of

@@ -1,7 +1,8 @@
 openafs (1.2.9-1) unstable; urgency=low
 
   * Literal newline fixes, Closes: #175627
-  * New upstream version
+	  * Require new kernel modules per upstream change.
+	* New upstream version
   * Fix section of libopenafs-dev to libdevel
   * openafs-client stop should shut down afsd if it is running even if afs
     not mounted, Closes: #188000
