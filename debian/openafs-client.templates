@@ -72,3 +72,14 @@ Description: Dynamically generate the contents of /afs?
  If you generate /afs dynamically, you may need to create 
  /etc/openafs/CellAliases to include aliases for common cells.
  DO NOT SELECT THIS OPTION IF YOU ARE CREATING A NEW CELL.
+
+Template: openafs-client/fakestat
+type: boolean
+default: true
+Description: Use fakestat to avoid hangs when listing /afs?
+ Because AFS is a global file space, operations on the /afs directory
+ can generate significant network traffic.  If some AFS cells are
+ unavailable then looking at /afs using ls or a graphical file browser
+ may hang your machine for minutes.  AFS has an option to simulate
+ answers to these operations locally to avoid these hangs.  You want
+ this option under most circumstances.

@@ -41,13 +41,17 @@ if [ "x$AFS_DYNROOT" = "xtrue" ] ; then
     DYNROOT="-dynroot"
     else DYNROOT=""
     fi
+if ["x$AFS_FAKESTAT" = "xtrue" ] ; then
+    FAKESTAT="-fakestat"
+    else FAKESTAT=""
+    fi
 
 # Set to "-verbose" for a lot of debugging information from afsd. Only
 # useful for debugging as it prints _a lot_ of information.
 VERBOSE=
 
 # OPTIONS are the options passed to afsd.
-OPTIONS="$OPTIONS $VERBOSE $DYNROOT $AFSDB"
+OPTIONS="$OPTIONS $VERBOSE $DYNROOT $FAKESTAT $AFSDB"
 
 
 # Sample server preferences function. Set server preferences using this.
