@@ -129,21 +129,22 @@ des_ecb_encrypt(void * clear, void * cipher,
 	abort();
     }
 #endif
-    if ((afs_int32) clear & 3) {
-	clear=((char*)clear)+1;
+    if ((afs_uint32) clear & 3) {
 	memcpy((char *)(&L_save), (char *)clear, sizeof(L_save));
+	clear=((afs_uint32*)clear)+1;
 	memcpy((char *)(&R_save), (char *)clear, sizeof(R_save));
 	L1 = L_save;
 	R1 = R_save;
     } else
 #endif
     {
-	if (clear)
-	    L1 = (*((afs_int32 *)clear))++;
-	else
+	if (clear) {
+	    L1 = *((afs_uint32 *)clear);
+            clear=((afs_uint32*)clear)+1;
+	} else
 	    L1 = 0;
 	if (clear)
-	    R1 = *((afs_int32 *)clear);
+	    R1 = *((afs_uint32 *)clear);
 	else
 	    R1 = 0;
     }
@@ -443,15 +444,15 @@ des_ecb_encrypt(void * clear, void * cipher,
     if ((afs_int32) cipher & 3) {
 	L_save = L2;		/* cant bcopy a reg */
 	R_save = R2;
-	cipher=((char*)cipher)+1;
+	cipher=((afs_uint32*)cipher)+1;
 	memcpy((char *)cipher, (char *)&L_save, sizeof(L_save));
 	memcpy((char *)cipher, (char *)&R_save, sizeof(R_save));
     } else
 #endif
     {
-	(*((afs_int32 *)cipher))++;
-        *((afs_int32*)cipher)= L2;	
-	*((afs_int32 *)cipher) = R2;
+        *((afs_uint32*)cipher)= L2;	
+	cipher = ((afs_int32 *)cipher)+1;
+	*((afs_uint32 *)cipher) = R2;
     }
 
 #ifdef DEBUG
