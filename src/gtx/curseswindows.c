@@ -761,6 +761,9 @@ int gator_cursesgwin_getdimensions(gwp, aparms)
 #ifdef AFS_DARWIN_ENV
     aparms->maxx = cwp->wp->maxx;
     aparms->maxy = cwp->wp->maxy;
+#elif defined(AFS_NBSD_ENV)
+    aparms->maxx = getmaxx(cwp->wp);
+    aparms->maxy = getmaxy(cwp->wp);
 #else
     aparms->maxx = cwp->wp->_maxx;
     aparms->maxy = cwp->wp->_maxy;

@@ -50,7 +50,7 @@ process.o	: process.s process.c
 		$(RM) process.ss ;; \
 	ppc_darwin* ) \
 		$(CC) -c ${XCFLAGS} -I${TOP_INCDIR} ${srcdir}/process.s;; \
-	i386_fbsd* ) \
+	i386_fbsd*|i386_nbsd* ) \
 		/usr/bin/cpp -P ${srcdir}/process.fbsd.s > process.ss; \
 		${AS} -o process.o process.ss; \
 		$(RM) process.ss ;; \

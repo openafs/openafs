@@ -8,6 +8,7 @@ afsdbdir=@afsdbdir@
 afslocaldir=@afslocaldir@
 afslogsdir=@afslogsdir@
 afssrvbindir=@afssrvbindir@
+afskerneldir=@afskerneldir@
 afssrvlibexecdir=@afssrvlibexecdir@
 afssrvsbindir=@afssrvsbindir@
 bindir=@bindir@

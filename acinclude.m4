@@ -185,6 +185,10 @@ case $system in
 		MKAFS_OSTYPE=FBSD
 		AC_MSG_RESULT(i386_fbsd)
 		;;
+	*-netbsd*)
+		MKAFS_OSTYPE=NBSD
+		AC_MSG_RESULT(i386_nbsd)
+		;;
 	*-openbsd*)
 		MKAFS_OSTYPE=OBSD
 		AC_MSG_RESULT(i386_obsd)
@@ -201,6 +205,9 @@ else
 	case $host in
 		i?86-*-freebsd4.2*)
 			AFS_SYSNAME="i386_fbsd_42"
+			;;
+		i?86-*-netbsd*1.5*)
+			AFS_SYSNAME="i386_nbsd15"
 			;;
 		hppa*-hp-hpux11*)
 			AFS_SYSNAME="hp_ux110"

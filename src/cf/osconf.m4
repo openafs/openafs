@@ -128,6 +128,18 @@ case $AFS_SYSNAME in
 		YACC="bison -y"
 		;;
 
+	i386_nbsd15)
+		LEX="flex -l"
+		MT_CFLAGS='${XCFLAGS}'
+		MT_LIBS=""
+		PAM_CFLAGS="-O2 -pipe -fPIC"
+		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		TXLIBS="/usr/lib/libcurses.so"
+		XCFLAGS="-O2 -pipe"
+		XLIBS="${LIB_AFSDB} -lcompat"
+		YACC="bison -y"
+		;;
+
 	i386_linux22)
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
