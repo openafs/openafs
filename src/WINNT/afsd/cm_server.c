@@ -139,27 +139,23 @@ void cm_GetServer(cm_server_t *serverp)
 {
     lock_ObtainWrite(&cm_serverLock);
     serverp->refCount++;
-    afsi_log("cm_GetServer       serverp=%x count=%d", serverp, serverp->refCount);
     lock_ReleaseWrite(&cm_serverLock);
 }
 
 void cm_GetServerNoLock(cm_server_t *serverp)
 {
     serverp->refCount++;
-    afsi_log("cm_GetServerNoLock serverp=%x count=%d", serverp, serverp->refCount);
 }
 
 void cm_PutServer(cm_server_t *serverp)
 {
 	lock_ObtainWrite(&cm_serverLock);
-    afsi_log("cm_PutServer       serverp=%x count=%d", serverp, serverp->refCount-1);
 	osi_assert(serverp->refCount-- > 0);
 	lock_ReleaseWrite(&cm_serverLock);
 }
 
 void cm_PutServerNoLock(cm_server_t *serverp)
 {
-    afsi_log("cm_PutServerNoLock serverp=%x count=%d", serverp, serverp->refCount-1);
 	osi_assert(serverp->refCount-- > 0);
 }
 

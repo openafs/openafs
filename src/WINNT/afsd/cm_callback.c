@@ -894,29 +894,30 @@ long cm_GetCallback(cm_scache_t *scp, struct cm_user *userp,
 /* called periodically by cm_daemon to shut down use of expired callbacks */
 void cm_CheckCBExpiration(void)
 {
-	int i;
-        cm_scache_t *scp;
-        long now;
+    int i;
+    cm_scache_t *scp;
+    long now;
         
     osi_Log0(afsd_logp, "CheckCBExpiration");
 
-	now = osi_Time();
-	lock_ObtainWrite(&cm_scacheLock);
-        for(i=0; i<cm_hashTableSize; i++) {
-		for(scp = cm_hashTablep[i]; scp; scp=scp->nextp) {
-			scp->refCount++;
-			lock_ReleaseWrite(&cm_scacheLock);
-			lock_ObtainMutex(&scp->mx);
+    now = osi_Time();
+    lock_ObtainWrite(&cm_scacheLock);
+    for(i=0; i<cm_hashTableSize; i++) {
+        for(scp = cm_hashTablep[i]; scp; scp=scp->nextp) {
+            scp->refCount++;
+            lock_ReleaseWrite(&cm_scacheLock);
+            lock_ObtainMutex(&scp->mx);
             if (scp->cbExpires > 0 && (scp->cbServerp == NULL || now > scp->cbExpires)) {
                 osi_Log1(afsd_logp, "Callback Expiration Discarding SCache scp %x", scp);
-				cm_DiscardSCache(scp);
-                        }
-			lock_ReleaseMutex(&scp->mx);
-			lock_ObtainWrite(&cm_scacheLock);
-                        osi_assert(scp->refCount-- > 0);
-                }
+                cm_CallbackNotifyChange(scp);
+                cm_DiscardSCache(scp);
+            }
+            lock_ReleaseMutex(&scp->mx);
+            lock_ObtainWrite(&cm_scacheLock);
+            osi_assert(scp->refCount-- > 0);
         }
-        lock_ReleaseWrite(&cm_scacheLock);
+    }
+    lock_ReleaseWrite(&cm_scacheLock);
 }
 
 /* debug interface: not implemented */
