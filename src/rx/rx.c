@@ -5292,15 +5292,40 @@ void rxi_SendDelayedCallAbort(event, call, dummy)
  * seconds) to ask the client to authenticate itself.  The routine
  * issues a challenge to the client, which is obtained from the
  * security object associated with the connection */
-void rxi_ChallengeEvent(event, conn, dummy)
+void rxi_ChallengeEvent(event, conn, atries)
     struct rxevent *event;
     register struct rx_connection *conn;
-    char *dummy;
+    void *atries;
 {
+    int tries = (int) atries;
     conn->challengeEvent = (struct rxevent *) 0;
     if (RXS_CheckAuthentication(conn->securityObject, conn) != 0) {
 	register struct rx_packet *packet;
 	struct clock when;
+
+	if (tries <= 0) {
+	    /* We've failed to authenticate for too long.
+	     * Reset any calls waiting for authentication;
+	     * they are all in RX_STATE_PRECALL.
+	     */
+	    int i;
+
+	    MUTEX_ENTER(&conn->conn_call_lock);
+	    for (i=0; i<RX_MAXCALLS; i++) {
+		struct rx_call *call = conn->call[i];
+		if (call) {
+		    MUTEX_ENTER(&call->lock);
+		    if (call->state == RX_STATE_PRECALL) {
+			rxi_CallError(call, RX_CALL_DEAD);
+			rxi_SendCallAbort(call, NULL, 0, 0);
+		    }
+		    MUTEX_EXIT(&call->lock);
+		}
+	    }
+	    MUTEX_EXIT(&conn->conn_call_lock);
+	    return;
+	}
+
 	packet = rxi_AllocPacket(RX_PACKET_CLASS_SPECIAL);
 	if (packet) {
 	    /* If there's no packet available, do this later. */
@@ -5311,7 +5336,8 @@ void rxi_ChallengeEvent(event, conn, dummy)
 	}
 	clock_GetTime(&when);
 	when.sec += RX_CHALLENGE_TIMEOUT;
-	conn->challengeEvent = rxevent_Post(&when, rxi_ChallengeEvent, conn, 0);
+	conn->challengeEvent =
+	    rxevent_Post(&when, rxi_ChallengeEvent, conn, (void *) (tries-1));
     }
 }
 
@@ -5326,7 +5352,7 @@ void rxi_ChallengeOn(conn)
 {
     if (!conn->challengeEvent) {
 	RXS_CreateChallenge(conn->securityObject, conn);
-	rxi_ChallengeEvent((struct rxevent *)0, conn, NULL);
+	rxi_ChallengeEvent(NULL, conn, (void *) RX_CHALLENGE_MAXTRIES);
     };
 }
 
