@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi.c,v 1.1.1.13 2003/04/13 19:02:36 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi.c,v 1.1.1.14 2003/07/30 17:08:00 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -399,12 +399,18 @@ afs_osi_SetTime(atv)
 #endif
 #ifdef AFS_HPUX_ENV
     {
+#if !defined(AFS_HPUX1122_ENV)
+ /* drop the setting of the clock for now. spl7 is not
+ * known on hpux11.22
+ */
+
     register ulong_t s;
     struct timeval t;
     t.tv_sec = atv->tv_sec;
     t.tv_usec = atv->tv_usec;
     s = spl7(); time = t; (void) splx(s);
     resettodr(atv);
+#endif
     }
 #else
     {

@@ -26,7 +26,21 @@
 #ifdef _WIN32
 LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
 #endif //_WIN32
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
 
+#define  AFS_VERINFO_FILE_DESCRIPTION "AFS Control Panel Applet"
+#define AFS_VERINFO_NAME "afs_cpa"
+#define AFS_VERINFO_FILENAME "afs_cpa.exe"
+#define AFS_VERINFO_LANG_CODE 0x412
+#define AFS_VERINFO_CHARSET 949
+#include "AFS_component_version_number.h"
+#include "..\..\config\NTVersioninfo.rc"
+
+#endif    // !_MAC
 /////////////////////////////////////////////////////////////////////////////
 //
 // Icon

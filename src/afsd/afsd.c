@@ -55,7 +55,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afsd/afsd.c,v 1.1.1.17 2003/04/13 19:05:54 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afsd/afsd.c,v 1.1.1.18 2003/07/30 17:11:08 hartmans Exp $");
 
 #define VFS 1
 
@@ -146,6 +146,27 @@ void set_staticaddrs(void);
 #ifdef AFS_LINUX20_ENV
 #include <sys/resource.h>
 #endif
+#ifdef AFS_DARWIN_ENV
+#include <mach/mach.h>
+/* Relevant definitions from DiskArbitration.h (not included with Mac OS X) */
+#ifndef __DISKARBITRATION_H
+typedef char    DiskArbDiskIdentifier[1024];
+typedef char    DiskArbMountpoint[1024];
+kern_return_t   DiskArbStart(mach_port_t * portPtr);
+kern_return_t   DiskArbDiskAppearedWithMountpointPing_auto(
+    DiskArbDiskIdentifier diskIdentifier,
+    unsigned flags,
+    DiskArbMountpoint mountpoint);
+kern_return_t   DiskArbDiskDisappearedPing_auto(
+    DiskArbDiskIdentifier diskIdentifier,
+    unsigned flags);
+enum {
+    kDiskArbDiskAppearedNoFlags = 0x00000000,
+    kDiskArbDiskAppearedEjectableMask = 1 << 1,
+    kDiskArbDiskAppearedNetworkDiskMask = 1 << 3
+};
+#endif /* __DISKARBITRATION_H */
+#endif /* AFS_DARWIN_ENV */
 
 #ifndef MOUNT_AFS
 #define	MOUNT_AFS AFS_MOUNT_AFS
@@ -246,6 +267,7 @@ static int enable_afsdb = 0;		/* enable AFSDB support */
 #endif
 static int enable_dynroot = 0;		/* enable dynroot support */
 static int enable_fakestat = 0;		/* enable fakestat support */
+static int enable_nomount = 0;		/* do not mount */
 #ifdef notdef
 static int inodes = 60;		        /* VERY conservative, but has to be */
 #endif
@@ -1343,6 +1365,10 @@ mainproc(as, arock)
 	/* -fakestat-all */
 	enable_fakestat = 1;
     }
+    if (as->parms[29].items) {
+	/* -nomount */
+	enable_nomount = 1;
+    }
 
     /*
      * Pull out all the configuration info for the workstation's AFS cache and
@@ -1811,6 +1837,8 @@ mainproc(as, arock)
 	exit(1);
     }
 
+    if (!enable_nomount) {
+
     mountFlags = 0;	/* Read/write file system, can do setuid() */
 #if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV)
 #ifdef	AFS_SUN5_ENV
@@ -1893,6 +1921,8 @@ mainproc(as, arock)
 
     HandleMTab();
 
+    }
+
     if (afsd_rmtsys) {
 	if (afsd_verbose)
 	    printf("%s: Forking 'rmtsys' daemon.\n", rn);
@@ -1956,6 +1986,7 @@ char **argv; {
     cmd_AddParm(ts, "-dynroot", CMD_FLAG, CMD_OPTIONAL, "Enable dynroot support");
     cmd_AddParm(ts, "-fakestat", CMD_FLAG, CMD_OPTIONAL, "Enable fakestat support for cross-cell mounts");
     cmd_AddParm(ts, "-fakestat-all", CMD_FLAG, CMD_OPTIONAL, "Enable fakestat support for all mounts");
+    cmd_AddParm(ts, "-nomount", CMD_FLAG, CMD_OPTIONAL, "Do not mount AFS");
     return (cmd_Dispatch(argc, argv));
 }
 
@@ -2029,6 +2060,18 @@ static int HandleMTab() {
 #endif	/* AFS_SGI_ENV */
 #endif	/* AFS_SUN5_ENV */
 #endif	/* unreasonable systems */
+#ifdef AFS_DARWIN_ENV
+    mach_port_t diskarb_port;
+    kern_return_t status;
+
+    status = DiskArbStart(&diskarb_port);
+    if (status == KERN_SUCCESS) {
+	status = DiskArbDiskAppearedWithMountpointPing_auto("AFS",
+	             kDiskArbDiskAppearedNetworkDiskMask, cacheMountDir);
+    }
+
+    return status;
+#endif /* AFS_DARWIN_ENV */
     return 0;
 }
 
@@ -2045,7 +2088,7 @@ long param1, param2, param3, param4, param5, param6, param7;
     eparm[2] = param6;
     eparm[3] = param7;
 
-    param4 = eparm;
+    param4 = (long) eparm;
 #endif
 
     error = syscall(AFS_SYSCALL, AFSCALL_CALL, param1, param2, param3, param4, param5, param6, param7);

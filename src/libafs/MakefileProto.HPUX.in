@@ -66,6 +66,7 @@ AFS_OS_NONFSOBJS = \
 # seems to hang).  When the compiler sees the +ES1.Xindirect_calls
 # option, however, it issues a warning and turns off +Z.
 #
+<hp_ux110 hp_ux102 hp_ux11i>
 KDEFS= +ES1.Xindirect_calls +XixdU +Hx0 +ESlit +ESsfc +ESssf -Wp,-H300000 -D_KERNEL -D_KERNEL_BUILD -D_UNSUPPORTED \
 	-DMP +R500 -Wl,+k $(CPU_KDEFS)
 KDEFS_32 = +DA1.0 +DS1.0
@@ -73,10 +74,20 @@ KDEFS_32 = +DA1.0 +DS1.0
 # warning 478: "+Z" and "+ES1.Xindirect_calls" are mutually exclusive. "+Z" ignored.
 # warning 530: LP64 migration: Casting from loose to strict alignment: Resulting pointer may be misaligned.
 KDEFS_64 = +DA2.0W +DS2.0 +M2 +W 478,530
+
+<ia64_hpux1122>
+KDEFS= +kernel -Wp,-H300000 -D_KERNEL -D_KERNEL_BUILD -D_UNSUPPORTED \
+  -DFINE_GRAINED_PROTO_FILES \
+  -DMP -Wl,+k $(CPU_KDEFS)
+KDEFS_32 =
+KDEFS_64 = +DD64
+
+<all>
+
 DEFINES= -DAFSDEBUG -DKERNEL -DAFS -DVICE -DNFS -DUFS -DINET -DQUOTA -DGETMOUNT -DHPONCPLUS
 OPTF=${OPT} 
 OPTF2=${OPT2} 
-CFLAGS=-I. -I.. -I../h -I../nfs -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
+CFLAGS=-I. -I.. -I../h -I../nfs -I../conf -I${TOP_SRCDIR}/config ${FSINCLUDES} $(DEFINES) $(KDEFS) $(KOPTS) ${DBUG}
 
 # Name of directory to hold object files and libraries.
 KOBJ=STATIC
@@ -90,11 +101,20 @@ DESTDIRS = hpux_destdirs
 
 include Makefile.common
 
+<hp_ux11i hp_ux110 hp_ux102>
 BITS = 64 32
+<ia64_hpux1122>
+BITS = 64
+<all>
 
 setup:
-	-$(RM) -f  h net dux machine netinet nfs rpc s200 ufs sys
+	-$(RM) -f  h net dux machine netinet nfs rpc s200 ufs sys conf
+<hp_ux102>
 	ln -s /usr/include/sys h
+<hp_ux110 hp_ux11i ia64_hpux1122>
+	ln -s /etc/conf/h h
+<all>
+	ln -s /etc/conf conf
 	ln -s /etc/conf/net net
 	ln -s /etc/conf/dux dux
 	ln -s /etc/conf/machine machine
@@ -102,7 +122,11 @@ setup:
 	ln -s /etc/conf/nfs nfs
 	ln -s /usr/include/rpc rpc
 	ln -s /etc/conf/machine s200
+<hp_ux11i hp_ux110 hp_ux102>
 	ln -s /etc/conf/ufs ufs
+<ia64_hpux1122>
+	ln -s /etc/conf/sys ufs
+<all>
 	ln -s /usr/include/sys sys
 	for b in $(BITS); do \
 	    for t in $(KOBJ); do \

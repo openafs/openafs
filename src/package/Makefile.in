@@ -27,7 +27,7 @@ SHELL    = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-INCLUDES=-I/usr/include -I${TOP_SRCDIR}/config -I${TOP_INCDIR}
+INCLUDES=-I${TOP_SRCDIR}/config -I${TOP_INCDIR}
 DBGFLAG  = -UDEBUG
 CFLAGS   = ${DBUG} -DKFLAG -DANDREW -DVICE $(DBGFLAG) $(INCLUDES) $(XCFLAGS)
 YFLAGS   = -vd

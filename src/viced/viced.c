@@ -19,7 +19,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/viced.c,v 1.1.1.10 2003/04/13 19:08:14 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/viced.c,v 1.1.1.11 2003/07/30 17:13:36 hartmans Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -229,10 +229,12 @@ static void ResetCheckSignal(void)
 
 #if defined(AFS_HPUX_ENV)
     signo = SIGPOLL;
-#elif defined(AFS_NT40_ENV)
+#else
+#if defined(AFS_NT40_ENV)
     signo = SIGUSR2;
 #else
     signo = SIGXCPU;
+#endif
 #endif
 
 #if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
@@ -898,7 +900,7 @@ int dopanic;
     }
 #endif
     DFlush();
-    PrintCounters();
+    if (!dopanic) PrintCounters();
 
     /* do not allows new reqests to be served from now on, all new requests
        are returned with an error code of RX_RESTARTING ( transient failure ) */

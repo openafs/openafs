@@ -134,6 +134,15 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	if (reqp->flags & CM_REQ_NORETRY)
 		goto out;
 
+	/* if all servers are offline, mark them non-busy and start over */
+	if (errorCode == CM_ERROR_ALLOFFLINE) {
+	    osi_Log0(afsd_logp, "cm_Analyze passed CM_ERROR_ALLOFFLINE.");
+	    thrd_Sleep(5000);
+	    /* cm_ForceUpdateVolume marks all servers as non_busy */
+	    cm_ForceUpdateVolume(fidp, userp, reqp);
+	    retry = 1;
+	}
+
 	/* if all servers are busy, mark them non-busy and start over */
 	if (errorCode == CM_ERROR_ALLBUSY) {
 		cm_GetServerList(fidp, userp, reqp, &serversp);
@@ -164,23 +173,37 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 		long oldSum, newSum;
 		int same;
 
-		/* Back off to allow move to complete */
-		thrd_Sleep(2000);
+		/* Log server being offline for this volume */
+		osi_Log4(afsd_logp, "cm_Analyze found server %d.%d.%d.%d
+marked offline for a volume",
+			 ((serverp->addr.sin_addr.s_addr & 0xff)),
+			 ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+			 ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+			 ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24));
+		/* Create Event Log message */ 
+		{
+		    HANDLE h;
+		    char *ptbuf[1];
+		    char s[100];
+		    h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
+		    sprintf(s, "cm_Analyze: Server %d.%d.%d.%d reported volume %d as missing.",
+			    ((serverp->addr.sin_addr.s_addr & 0xff)),
+			    ((serverp->addr.sin_addr.s_addr & 0xff00)>> 8),
+			    ((serverp->addr.sin_addr.s_addr & 0xff0000)>> 16),
+			    ((serverp->addr.sin_addr.s_addr & 0xff000000)>> 24),
+			    fidp->volume);
+		    ptbuf[0] = s;
+		    ReportEvent(h, EVENTLOG_WARNING_TYPE, 0, 1009, NULL,
+				1, 0, ptbuf, NULL);
+		    DeregisterEventSource(h);
+		}
 
-		/* Update the volume location and see if it changed */
+		/* Mark server offline for this volume */
 		cm_GetServerList(fidp, userp, reqp, &serversp);
-		oldSum = cm_ChecksumServerList(serversp);
-		cm_ForceUpdateVolume(fidp, userp, reqp);
-		cm_GetServerList(fidp, userp, reqp, &serversp);
-		newSum = cm_ChecksumServerList(serversp);
-		same = (oldSum == newSum);
 
-		/* mark servers as appropriate */
 		for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
 			if (tsrp->server == serverp)
 				tsrp->status = offline;
-			else if (!same)
-				tsrp->status = not_busy;
 		}
 		retry = 1;
 	}
@@ -312,8 +335,11 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 	lock_ReleaseWrite(&cm_serverLock);
 	if (firstError == 0) {
 		if (someBusy) firstError = CM_ERROR_ALLBUSY;
-		else if (someOffline) firstError = CM_ERROR_NOSUCHVOLUME;
-		else firstError = CM_ERROR_TIMEDOUT;
+		else if (someOffline) firstError = CM_ERROR_ALLOFFLINE;
+		else if (serversp) firstError = CM_ERROR_TIMEDOUT;
+		/* Only return CM_ERROR_NOSUCHVOLUME if there are no
+		   servers for this volume */
+		else firstError = CM_ERROR_NOSUCHVOLUME;
 	}
 	osi_Log1(afsd_logp, "cm_ConnByMServers returning %x", firstError);
         return firstError;

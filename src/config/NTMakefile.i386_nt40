@@ -37,7 +37,8 @@ APPVER = 4.0
 !ENDIF
 
 #define used in WinNT/2000 installation and program version display
-AFSPRODUCT_VERSION=1.2.8
+AFSPRODUCT_VERSION=1.2.10
+AFSPRODUCT_FILE_VERSION=1,2,1000,0
 CELLNAME_DEFAULT=openafs.org
 CELLSERVDB_INSTALL=CellServDB.GrandCentral
 CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
@@ -103,24 +104,6 @@ AFSVER_CL=60
 !ENDIF
 !ENDIF
 
-#CHECK which VERSION of the complier we are using
-#v6.0 doesn't work using msvcrtd.lib unless AFSDEV_CRTDEBUG is defined, v7.0 requires it
-!IF ("$(AFSVER)"=="")
-!IF EXISTS("$(DESTDIR)\bin\util_cr.exe")
-!IF EXISTS("$(AFSDEV_BIN)\CL.exe")
-!IF	(([$(DESTDIR)\bin\util_cr.exe __ $(AFSDEV_BIN)\CL.exe 7])==1) 
-AFSVER_CL=70
-!ELSE
-AFSVER_CL=60
-!ENDIF
-!ELSE
-!MESSAGE WARNING-Complier version not available
-!ENDIF
-!ELSE
-!MESSAGE WARNING-Complier version not available
-!ENDIF
-!ENDIF
-
 # Command macros.
 COPY = copy
 DEL = -del
@@ -139,7 +122,7 @@ MIDL  = midl
 # Common clean target.
 # Double colon (::) syntax allows supplemental clean target to be specified.
 clean::
-	$(DEL) /q *.obj *.lib *.dll *.exe
+	$(DEL) /q *.obj *.lib *.dll *.exe *.res *.pdb
 	$(DEL) /q *_component_version_number.*
 
 # Common lang target.
@@ -186,16 +169,18 @@ afscflags =\
 
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
 #    Apply full optimization; generate full debug info in obj.
-afscflags = $(afscflags) /Ox /Z7
+afscflags = $(afscflags) /Ox
 ldebug = $(ldebug)
-cdebug = $(cdebug:-Od=)  # avoid annoying override warning (D4025)
+cdebug = $(cdebug:-Od=)  
 cvarsdll = $(cvarsdll:-MDd=-MD)
 
 !ELSEIF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
 #    Disable optimization; generate full debug info in obj.
-afscflags = $(afscflags) /Od /Z7
+afscflags = $(afscflags) /Od
+!IF ("$(AFSVER_CL)"=="60")
 ldebug = $(ldebug) -debugtype:both
-cdebug = $(cdebug:-Z7=-Z7)  # avoid annoying override warning (D4025)
+!ENDIF
+cdebug =  
 !ENDIF
 
 # Set compiler warning level
@@ -322,8 +307,8 @@ DLLPREP = rebase -i $(DESTDIR)\NTDllmap.txt -q $@
 !ENDIF
 
 # C/C++ compilation macros
-C2OBJ = $(cc) $(cflags) $(cdebug) $(cvarsdll) $(afscflags) $(afscdefs) /c
-CPP2OBJ = $(cc) $(cflags) $(cdebug) $(cvarsdll) $(afscflags) $(afscdefs) /c
+C2OBJ = $(cc) $(cflags:-GS=) $(cdebug) $(cvarsdll) $(afscflags) $(afscdefs) /c
+CPP2OBJ = $(cc) $(cflags:-GS=) $(cdebug) $(cvarsdll) $(afscflags) $(afscdefs) /c
 
 # Resource compiler macro
 RC = $(rc) $(rcvars) $(rcflags) $(AFSDEV_AUXRCFLAGS) /d "AFSPRODUCT_VERSION=\"$(AFSPRODUCT_VERSION)\""

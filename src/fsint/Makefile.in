@@ -27,8 +27,8 @@ SYS_NAME=@AFS_SYSNAME@
 
 include ../config/Makefile.${SYS_NAME}
 SHELL = /bin/sh
-KERNELDIR = ../libafs/
-UKERNELDIR = ../libuafs/
+KERNELDIR = ../libafs
+UKERNELDIR = ../libuafs
 
 OBJS=afsaux.o afscbint.cs.o afscbint.ss.o afscbint.xdr.o afsint.cs.o afsint.ss.o afsint.xdr.o
 CFLAGS=${DBUG} -I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XCFLAGS}

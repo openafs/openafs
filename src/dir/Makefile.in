@@ -28,8 +28,8 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-KERNELDIR = ../libafs/
-UKERNELDIR = ../libuafs/
+KERNELDIR = ../libafs
+UKERNELDIR = ../libuafs
 
 INCDIRS=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} ${XINCLS}
 CFLAGS = ${OPTMZ} ${INCDIRS} ${XCFLAGS}

@@ -27,13 +27,11 @@ SHELL = /bin/sh
 
 include ../../config/Makefile.${SYS_NAME}
 
-KERNELDIR = ../libafs/
-UKERNELDIR = ../libuafs/
+KERNELDIR = ../libafs
+UKERNELDIR = ../libuafs
 COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
 
-OPTIMIZE=-g
-
-CFLAGS=-g -I. -I${TOP_SRCDIR} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
+CFLAGS=${DBG} -I. -I${TOP_SRCDIR} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
 
 HEADERS = ../rxkad.h stress.h stress_internal.h stress_errs.h
 

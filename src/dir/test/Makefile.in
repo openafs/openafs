@@ -14,7 +14,7 @@ SHELL = /bin/sh
 
 include ../../config/Makefile.${SYS_NAME}
 
-KERNELDIR = ../libafs/
+KERNELDIR = ../libafs
 INSTALL = ${SRCDIR}/bin/install
 
 INCDIRS= -I${DESTDIR}/include ${XINCLS}

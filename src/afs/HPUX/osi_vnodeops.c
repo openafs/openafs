@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/HPUX/osi_vnodeops.c,v 1.1.1.7 2002/12/11 02:36:12 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/HPUX/osi_vnodeops.c,v 1.1.1.8 2003/07/30 17:08:08 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -49,7 +49,20 @@ extern int afs_close();
 
 #define vtoblksz(vp)	((vp)->v_vfsp->vfs_bsize)
 
+#if defined(AFS_HPUX110_ENV)
+/* We no longer need to lock on the VM Empire,
+ * or at least that is what is claimed. 
+ * so we will noopt the vmemp_ routines
+ * This needs to be looked at closer.
+ */
+#define vmemp_lockx()
+#undef  vmemp_returnx
+#define vmemp_returnx(a) return(a)
+#define vmemp_unlockx()
+#endif
 
+
+#if !defined(AFS_HPUX110_ENV)
 /*
  * Copy an mbuf to the contiguous area pointed to by cp.
  * Skip <off> bytes and copy <len> bytes.
@@ -92,6 +105,7 @@ m_cpytoc(m, off, len, cp)
 
 	return (len);
 }
+#endif
 
 /* 
  *  Note that the standard Sun vnode interface doesn't haven't an vop_lockf(), so this code is
@@ -160,7 +174,11 @@ afs_lockf( vp, flag, len, cred, fp, LB, UB )
 }
 
 
-#include "../machine/vmparam.h"	/* For KERNELSPACE */
+#if defined(AFS_HPUX1122_ENV)
+#include "../machine/vm/vmparam.h"
+#else
+#include "../machine/vmparam.h"       /* For KERNELSPACE */
+#endif
 #include "../h/debug.h"
 #include "../h/types.h"
 #include "../h/param.h"
@@ -1262,7 +1280,11 @@ retry:
     if (change_to_fstore)
        afspgin_update_dbd(vm_info, bsize);
     
+#if defined(AFS_HPUX110_ENV)
+	getppdp()->cnt.v_exfod += count;
+#else
     mpproc_info[getprocindex()].cnt.v_exfod += count;
+#endif
     vmemp_unlockx();      /* free up VM empire */
     *ret_startindex = startindex;
     
@@ -1630,12 +1652,21 @@ afs_pageout(vp,prp, start, end, flags)
 	 */
 	if (steal) {
 	    if (flags & PF_DEACT) {
+#if defined(AFS_HPUX110_ENV)
+		getppdp()->cnt.v_pswpout += npages;
+#else
 		mpproc_info[getprocindex()].cnt.v_pswpout += npages;
+#endif
 /*		sar_bswapout += ptod(npages);*/
 	    }
 	    else if (vhand) {
+#if defined(AFS_HPUX110_ENV)
+		getppdp()->cnt.v_pgout++;
+		getppdp()->cnt.v_pgpgout += npages;
+#else
 		mpproc_info[getprocindex()].cnt.v_pgout++;
 		mpproc_info[getprocindex()].cnt.v_pgpgout += npages;
+#endif
 	    }
 	}
 
@@ -1889,7 +1920,11 @@ afs_swapfs_len(bp)
 afs_mmap(vp, off, size_bytes, access)
      struct vnode *vp;
      u_int off;
+#if defined(AFS_HPUX1111_ENV)
+	  u_long size_bytes;
+#else
      u_int size_bytes;
+#endif
      int access;
 {
         long bsize = vtoblksz(vp);
@@ -1923,7 +1958,11 @@ int
 afs_unmap(vp,off, size_bytes,access)
      struct vnode *vp;
      u_int off;
+#if defined(AFS_HPUX1111_ENV)
+	 u_long size_bytes;
+#else
      u_int size_bytes;
+#endif
      int access;
 {
 	return 0;
@@ -1945,6 +1984,7 @@ afs_read_ahead(vp, prp, wrt, space, vaddr, rhead_cnt)
 int
 afs_prealloc(vp, size, ignore_minfree, reserved)
       struct vnode    *vp;
+	  /* DEE on 11.22 following is off_t */
       size_t          size;
       int             ignore_minfree;
       int             reserved;
@@ -1984,9 +2024,19 @@ afs_ioctl(vp, com, data, flag, cred)
 	return(ENOTTY);
 }
 
+#if defined(AFS_HPUX1111_ENV)
+/* looks like even if appl is 32 bit, we need to round to 8 bytes */
+/* This had no effect, it must not be being used */
+
+#define roundtoint(x)   (((x) + (sizeof(long) - 1)) & ~(sizeof(long) - 1))
+#define reclen(dp)      roundtoint(((dp)->d_namlen + 1 + (sizeof(u_long)) +\
+                                sizeof(u_int) + 2 * sizeof(u_short)))
+#else
+
 #define roundtoint(x)   (((x) + (sizeof(int) - 1)) & ~(sizeof(int) - 1))
 #define reclen(dp)      roundtoint(((dp)->d_namlen + 1 + (sizeof(u_long)) +\
                                 2 * sizeof(u_short)))
+#endif
 
 int
 afs_readdir(vp, uiop, cred)

@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_analyze.c,v 1.1.1.10 2003/04/13 19:02:33 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_analyze.c,v 1.1.1.11 2003/07/30 17:07:57 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -129,6 +129,17 @@ afs_CheckCode(acode, areq, where)
 	return EWOULDBLOCK;
     if (acode == VNOVNODE)
 	return ENOENT;
+    if (acode == VDISKFULL)
+	return ENOSPC;
+    if (acode == VOVERQUOTA)
+	return
+#ifdef EDQUOT
+	    EDQUOT
+#else
+	    ENOSPC
+#endif
+	    ;
+
     return acode;
 
 } /*afs_CheckCode*/
@@ -384,6 +395,9 @@ int afs_Analyze(aconn, acode, afid, areq, op, locktype, cellp)
       } else {
 	VSleep(afs_BusyWaitPeriod);	    /* poll periodically */
       }
+      if (shouldRetry != 0)
+	areq->busyCount++;
+
       return shouldRetry; /* should retry */
     }
 	  

@@ -26,8 +26,8 @@ SYS_NAME=@AFS_SYSNAME@
 SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
-KERNELDIR = ../libafs/
-UKERNELDIR = ../libuafs/
+KERNELDIR = ../libafs
+UKERNELDIR = ../libuafs
 RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 
 KSRCS=rxstat.c rxstat.h Krxstat.ss.c Krxstat.xdr.c

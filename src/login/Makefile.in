@@ -53,8 +53,8 @@ KAFSLIBS = ${TOP_LIBDIR}/libkauth.krb.a ${TOP_LIBDIR}/libprot.a \
 	   ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
 	   ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
 
-INCLUDES=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I/usr/include -I/usr/include/sys
-CFLAGS=	-g ${XCFLAGS} ${INCLUDES}
+INCLUDES=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} 
+CFLAGS=	${DBG} ${XCFLAGS} ${INCLUDES}
 LIBC=	/lib/libc.a
 SRCS=	login.c 
 OBJS=   login.o setenv.o getenv.o libutil.a
@@ -71,14 +71,14 @@ all: login login.krb
 
 login:	${OBJS} ${LIBS}
 	case ${SYS_NAME} in \
-	sun4x_5? | sunx86_5? ) ${CC} -g -o $@ ${CFLAGS} ${OBJS} -lc ${LIBS} ${XLIBS} -lcmd;;\
-	*) ${CC} -g -o $@ ${CFLAGS} ${OBJS} ${LIBS} ${XLIBS} ;;\
+	sun4x_5? | sunx86_5? ) ${CC} -o $@ ${CFLAGS} ${OBJS} -lc ${LIBS} ${XLIBS} -lcmd;;\
+	*) ${CC} -o $@ ${CFLAGS} ${OBJS} ${LIBS} ${XLIBS} ;;\
 	esac 
 
 login.krb: ${KOBJS} ${KLIBS}
 	case ${SYS_NAME} in \
-	sun4x_5? | sunx86_5? ) ${CC} -g -o $@ ${CFLAGS} ${KOBJS} -lc ${KLIBS} ${XLIBS} -lcmd;;\
-	*) ${CC} -g -o $@ ${CFLAGS} ${KOBJS} ${KLIBS} ${XLIBS} ;;\
+	sun4x_5? | sunx86_5? ) ${CC} -o $@ ${CFLAGS} ${KOBJS} -lc ${KLIBS} ${XLIBS} -lcmd;;\
+	*) ${CC} -o $@ ${CFLAGS} ${KOBJS} ${KLIBS} ${XLIBS} ;;\
 	esac 
 
 libutil.a : ${UTILOBJS}

@@ -5902,6 +5902,7 @@ void smb_Listener(void *parmp)
 
 	while (1) {
 		memset(ncbp, 0, sizeof(NCB));
+		flags = 0;
 #ifdef DJGPP
              /* terminate if shutdown flag is set */
              if (smbShutdownFlag == 1)

@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/auth/cellconfig.c,v 1.1.1.13 2002/09/26 19:04:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/auth/cellconfig.c,v 1.1.1.14 2003/07/30 17:11:21 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
@@ -512,6 +512,7 @@ char clones[];
 	adir->alias_entries = curAlias;
     }
 
+    if (tf != NULL) fclose(tf);
     /* now read the fs keys, if possible */
     adir->keystr = (struct afsconf_keys *) 0;
     afsconf_IntGetKeys(adir);
@@ -785,7 +786,7 @@ int afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
     if (aservice) {
         LOCK_GLOBAL_MUTEX
         tservice = afsconf_FindService(aservice);
-     UNLOCK_GLOBAL_MUTEX
+	UNLOCK_GLOBAL_MUTEX
         if (tservice < 0) {
             return AFSCONF_NOTFOUND;  /* service not found */
      }
@@ -1023,8 +1024,10 @@ struct afsconf_keys *astr;
 
     LOCK_GLOBAL_MUTEX
     code = afsconf_Check(adir);
-    if (code)
+    if (code) {
+        UNLOCK_GLOBAL_MUTEX
 	return AFSCONF_FAILURE;
+    }
     memcpy(astr, adir->keystr, sizeof(struct afsconf_keys));
     UNLOCK_GLOBAL_MUTEX
     return 0;
@@ -1045,8 +1048,10 @@ afs_int32 afsconf_GetLatestKey(adir, avno, akey)
     
     LOCK_GLOBAL_MUTEX
     code = afsconf_Check(adir);
-    if (code)
+    if (code) {
+        UNLOCK_GLOBAL_MUTEX
 	return AFSCONF_FAILURE;
+    }
     maxa = adir->keystr->nkeys;
 
     best = -1;	    /* highest kvno we've seen yet */
@@ -1080,8 +1085,10 @@ char *akey;
 
     LOCK_GLOBAL_MUTEX
     code = afsconf_Check(adir);
-    if (code)
+    if (code) {
+        UNLOCK_GLOBAL_MUTEX
 	return AFSCONF_FAILURE;
+    }
     maxa = adir->keystr->nkeys;
 
     for(tk = adir->keystr->key,i=0;i<maxa;i++,tk++) {

@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cell.c,v 1.1.1.12 2003/04/13 19:02:34 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_cell.c,v 1.1.1.13 2003/07/30 17:07:58 hartmans Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -160,7 +160,7 @@ void afs_LookupAFSDB(char *acellName)
     code = afs_GetCellHostsAFSDB(acellName, cellHosts, &timeout, &realName);
     if (code) goto done;
     code = afs_NewCell(realName, cellHosts, CNoSUID, NULL, 0, 0, timeout);
-    if (code) goto done;
+    if (code && code != EEXIST) goto done;
 
     /* If we found an alias, create it */
     if (afs_strcasecmp(acellName, realName))
@@ -657,7 +657,7 @@ afs_int32 afs_NewCell(char *acellName, afs_int32 *acellHosts, int aflags,
      * it must get servers from AFSDB.
      */
     if (timeout && !tc->timeout && tc->cellHosts[0]) {
-	code = EINVAL;
+	code = EEXIST;	/* This code is checked for in afs_LookupAFSDB */
 	goto bad;
     }
 

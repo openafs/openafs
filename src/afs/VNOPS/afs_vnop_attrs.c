@@ -21,7 +21,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.1.1.11 2002/09/26 18:58:21 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.1.1.12 2003/07/30 17:08:13 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -33,6 +33,9 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.1.1.11 2
 extern afs_rwlock_t afs_xcbhash;
 struct afs_exporter *afs_nfsexporter;
 extern struct vcache *afs_globalVp;
+#if defined(AFS_HPUX110_ENV)
+extern struct vfs *afs_globalVFS;
+#endif
 
 /* copy out attributes from cache entry */
 afs_CopyOutAttrs(avc, attrs)
@@ -64,6 +67,23 @@ afs_CopyOutAttrs(avc, attrs)
 	if (tcell && (tcell->states & CNoSUID))
 	    attrs->va_mode &= ~(VSUID|VSGID);
     }
+#if defined(AFS_DARWIN_ENV)
+    /* Mac OS X uses the mode bits to determine whether a file or directory
+     * is accessible, and believes them, even though under AFS they're almost
+     * assuredly wrong, especially if the local uid does not match the AFS
+     * ID.  So we set the mode bits conservatively.
+     */
+    if (S_ISDIR(attrs->va_mode)) {
+      /* all access bits need to be set for directories, since even
+       * a mode 0 directory can still be used normally.
+       */
+      attrs->va_mode |= ACCESSPERMS;
+    } else {
+      /* for other files, replicate the user bits to group and other */
+      mode_t ubits = (attrs->va_mode & S_IRWXU) >> 6;
+      attrs->va_mode |= ubits | (ubits << 3);
+    }
+#endif /* AFS_DARWIN_ENV */
     attrs->va_uid = fakedir ? 0 : avc->m.Owner;
     attrs->va_gid = fakedir ? 0 : avc->m.Group;   /* yeah! */
 #if	defined(AFS_SUN56_ENV)
@@ -143,6 +163,11 @@ afs_CopyOutAttrs(avc, attrs)
 #else 
     attrs->va_rdev = 1;
 #endif
+
+#if defined(AFS_HPUX110_ENV)
+	if (afs_globalVFS) attrs->va_fstype = afs_globalVFS->vfs_mtype;
+#endif
+
     /*
      * Below return 0 (and not 1) blocks if the file is zero length. This conforms
      * better with the other filesystems that do return 0.	

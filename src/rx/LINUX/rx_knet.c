@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/LINUX/rx_knet.c,v 1.1.1.10 2003/04/13 19:07:29 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/LINUX/rx_knet.c,v 1.1.1.11 2003/07/30 17:12:50 hartmans Exp $");
 
 #include <linux/version.h>
 #ifdef AFS_LINUX22_ENV
@@ -184,9 +184,12 @@ void osi_StopListener(void)
 #endif
     listener =  find_task_by_pid(rxk_ListenerPid);
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-                    read_unlock(&tasklist_lock);
+    read_unlock(&tasklist_lock);
 #endif
     while (rxk_ListenerPid) {
+	struct task_struct *p;
+
+	flush_signals(listener);
 	force_sig(SIGKILL, listener);
 	afs_osi_Sleep(&rxk_ListenerPid); 
     }

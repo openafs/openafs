@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/venus/test/owntest.c,v 1.1.1.5 2003/04/13 19:08:10 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/venus/test/owntest.c,v 1.1.1.6 2003/07/30 17:13:33 hartmans Exp $");
 
 #include <sys/types.h>
 #include <sys/file.h>
@@ -45,8 +45,8 @@ char **argv; {
         perror("chmod back to RW");
         return 1;
     }
-    gettimeofday(&tv[0], (char *) 0);
-    gettimeofday(&tv[1], (char *) 0);
+    gettimeofday(&tv[0], (void *) 0);
+    gettimeofday(&tv[1], (void *) 0);
     tv[0].tv_sec -= 10000;
     tv[0].tv_usec = 0;
     tv[1].tv_sec -= 20000;

@@ -7,6 +7,10 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#define SYS_NAME_ID_i386_umlinux2	2700
+#define SYS_NAME_ID_i386_umlinux22	2701
+#define SYS_NAME_ID_i386_umlinux24	2702
+
 /*
  * File: afs_sysnames.h
  *
@@ -43,6 +47,9 @@
 #define SYS_NAME_ID_hp800_ux101	 	 413
 #define SYS_NAME_ID_hp_ux102	 	 414
 #define SYS_NAME_ID_hp_ux110	 	 415
+#define SYS_NAME_ID_hp_ux11i		 416
+#define SYS_NAME_ID_ia64_hpux1122	 417
+
 
 #define SYS_NAME_ID_mac2_51		 500	
 #define SYS_NAME_ID_mac_aux10		 501
@@ -159,6 +166,9 @@
 #define SYS_NAME_ID_parisc_linux22      2401
 #define SYS_NAME_ID_parisc_linux24      2402
 
+#define SYS_NAME_ID_amd64_linux2        2700
+#define SYS_NAME_ID_amd64_linux22       2701
+#define SYS_NAME_ID_amd64_linux24       2702
 /*
  * Placeholder to keep system-wide standard flags since this file is included by all 
  * files (i.e in afs/param.h)

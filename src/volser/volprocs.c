@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/volser/volprocs.c,v 1.1.1.8 2001/10/14 18:07:30 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/volser/volprocs.c,v 1.1.1.9 2003/07/30 17:13:44 hartmans Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -198,7 +198,7 @@ Volume	* vp;
 			    V_parentId(vp), 1, 1, 0);
     assert(VALID_INO(inodeNumber));
 
-    SetSalvageDirHandle(&dir, V_id(vp), vp->device, inodeNumber);
+    SetSalvageDirHandle(&dir, V_parentId(vp), vp->device, inodeNumber);
     did.Volume = V_id(vp);
     did.Vnode = (VnodeId)1;
     did.Unique = 1;

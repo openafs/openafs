@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_kcommon.c,v 1.1.1.15 2003/04/13 19:07:24 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_kcommon.c,v 1.1.1.16 2003/07/30 17:12:46 hartmans Exp $");
 
 #include "../rx/rx_kcommon.h"
 
@@ -750,7 +750,9 @@ struct osi_socket *rxk_NewSocket(short aport)
 {
     register afs_int32 code;
     struct socket *newSocket;
+#if !defined(AFS_HPUX110_ENV)
     register struct mbuf *nam;
+#endif
     struct sockaddr_in myaddr;
     int wow;
 #ifdef AFS_HPUX110_ENV
@@ -804,7 +806,9 @@ struct osi_socket *rxk_NewSocket(short aport)
     code = sobind(newSocket, bindnam, addrsize);
     if (code) {
        soclose(newSocket);
+#if !defined(AFS_HPUX110_ENV)
        m_freem(nam);
+#endif
        goto bad;
     }
 

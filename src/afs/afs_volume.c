@@ -18,13 +18,15 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_volume.c,v 1.1.1.12 2003/04/13 19:02:39 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_volume.c,v 1.1.1.13 2003/07/30 17:08:02 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 
 #if !defined(UKERNEL)
+#if !defined(AFS_LINUX20_ENV)
 #include <net/if.h>
+#endif
 #include <netinet/in.h>
 
 #ifdef AFS_SGI62_ENV

@@ -245,5 +245,6 @@ int RXAFS_Lookup (struct rx_connection *,
 #define CM_ERROR_BADNTFILENAME		(CM_ERROR_BASE+37)
 #define CM_ERROR_BUFFERTOOSMALL		(CM_ERROR_BASE+38)
 #define CM_ERROR_RENAME_IDENTICAL	(CM_ERROR_BASE+39)
+#define CM_ERROR_ALLOFFLINE             (CM_ERROR_BASE+40)
 
 #endif /*  __CM_H_ENV__ */

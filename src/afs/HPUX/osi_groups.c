@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/HPUX/osi_groups.c,v 1.1.1.4 2001/07/14 22:19:38 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/HPUX/osi_groups.c,v 1.1.1.5 2003/07/30 17:08:07 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -133,6 +133,9 @@ afs_setgroups(
     int *gp;
     struct ucred *newcr;
     ulong_t s;
+#if defined(AFS_HPUX110_ENV)
+    register ulong_t context;
+#endif
 
     AFS_STATCNT(afs_setgroups);
     
@@ -147,8 +150,14 @@ afs_setgroups(
 	    /* somebody else might have a pointer to this structure.
 	     ** make sure we do not have a race condition */
 	    newcr = *cred;
+#if defined(AFS_HPUX110_ENV)
+		/* all of the uniprocessor spinlocks are not defined. */
+		/* I assume the UP and MP are now handled together */
+		MP_SPINLOCK_USAV(cred_lock, context);
+#else
 	    s = UP_SPL6();
 	    SPINLOCK(cred_lock);
+#endif
 	}
     
     /* copy the group info */
@@ -168,8 +177,12 @@ afs_setgroups(
 	}
     else
 	{
+#if defined(AFS_HPUX110_ENV)
+		MP_SPINUNLOCK_USAV(cred_lock, context);
+#else
 	    (void) UP_SPLX(s);
 	    SPINUNLOCK(cred_lock);
+#endif
 	}
     return (setuerror(0), 0);
 }

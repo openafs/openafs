@@ -30,8 +30,8 @@ include ../config/Makefile.${SYS_NAME}
 
 INCDIRS=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I.. \
 	-I${BACKDIR}/include -I${TOP_INCDIR}/afs
-KERNELDIR = ../libafs/
-UKERNELDIR = ../libuafs/
+KERNELDIR = ../libafs
+UKERNELDIR = ../libuafs
 
 CFLAGS = ${OPTMZ} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS}
 

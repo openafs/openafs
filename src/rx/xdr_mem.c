@@ -29,7 +29,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_mem.c,v 1.1.1.5 2003/04/13 19:07:27 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_mem.c,v 1.1.1.6 2003/07/30 17:12:49 hartmans Exp $");
 
 #ifndef	NeXT
 
@@ -45,7 +45,9 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_mem.c,v 1.1.1.5 2003/04/13 19:07
  */
 
 #include "xdr.h"
-#ifndef AFS_NT40_ENV
+#ifdef AFS_NT40_ENV
+#include <limits.h>
+#else
 #include <netinet/in.h>
 #endif
 
@@ -114,7 +116,7 @@ xdrmem_putint32(xdrs, lp)
 	afs_int32 *lp;
 {
     if (xdrs->x_handy -= sizeof(afs_int32))
-	eturn (FALSE);
+	return (FALSE);
     else
 	xdrs->x_handy -= sizeof(afs_int32);
     

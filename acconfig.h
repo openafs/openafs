@@ -26,6 +26,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 
 #undef BITMAP_LATER
 #undef BOS_RESTRICTED_MODE
+#undef BOS_NEW_CONFIG
 #undef FAST_RESTART
 #undef FULL_LISTVOL_SWITCH
 
@@ -35,6 +36,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef EXPORTED_KALLSYMS_ADDRESS
 #undef EXPORTED_KALLSYMS_SYMBOL
 #undef EXPORTED_SYS_CALL_TABLE
+#undef EXPORTED_IA32_SYS_CALL_TABLE
 #undef EXPORTED_TASKLIST_LOCK
 #undef INODE_SETATTR_NOT_VOID
 #undef RECALC_SIGPENDING_TAKES_VOID
@@ -43,6 +45,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef STRUCT_FS_HAS_FS_ROLLED
 #undef STRUCT_INODE_HAS_I_DEVICES
 #undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
+#undef STRUCT_INODE_HAS_I_ALLOC_SEM
 #undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
 #undef STRUCT_TASK_STRUCT_HAS_PARENT
 #undef STRUCT_TASK_STRUCT_HAS_REAL_PARENT

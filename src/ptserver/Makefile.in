@@ -25,7 +25,7 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-UKERNELDIR=../libuafs/
+UKERNELDIR=../libuafs
 RXGEN=${TOP_SRCDIR}/rxgen/rxgen
 COMPILE_ET=${TOP_SRCDIR}/comerr/compile_et
 

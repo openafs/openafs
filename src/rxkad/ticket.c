@@ -14,7 +14,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/ticket.c,v 1.1.1.8 2003/04/13 19:07:35 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/ticket.c,v 1.1.1.9 2003/07/30 17:12:56 hartmans Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
@@ -101,6 +101,7 @@ int tkt_DecodeTicket (asecret, ticketLen, key,
 
     if (ticketLen == 0) return RXKADBADTICKET; /* no ticket */
     if ((ticketLen < MINKTCTICKETLEN) || /* minimum legal ticket size */
+	(ticketLen > MAXKTCTICKETLEN) || /* maximum legal ticket size */
 	((ticketLen) % 8 != 0))		/* enc. part must be (0 mod 8) bytes */
 	return RXKADBADTICKET;
 
