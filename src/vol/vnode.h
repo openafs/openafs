@@ -206,8 +206,8 @@ typedef struct Vnode {
 
 #define VN_GET_LEN(N, V)  (N) = (V)->disk.length;
 #define VNDISK_GET_LEN(N, V)  (N) = (V)->length;
-#define VN_SET_LEN(V, N)  (V)->disk.length = Int64ToInt32(N);
-#define VNDISK_SET_LEN(V, N) (V)->length = Int64ToInt32(N);
+#define VN_SET_LEN(V, N)  (V)->disk.length = (N);
+#define VNDISK_SET_LEN(V, N) (V)->length = (N);
 
 #define SET_STATUS_LEN(S, V) (((S)->Length_hi = 0), \
                               ((S)->Length = (afs_uint32)(V)->disk.length))

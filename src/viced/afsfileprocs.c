@@ -6636,7 +6636,7 @@ FetchData_RXStyle(Volume *volptr,
     FDH_SEEK(fdP, Pos, 0);
     {
 	afs_int32	high, low;
-	SplitInt64(Len, high, low);
+	SplitOffsetOrSize(Len, high, low);
 	assert(Int64Mode || high==0);
 	if (Int64Mode) {
 	    high = htonl(high);

@@ -973,7 +973,7 @@ static int ParseArgs(int argc, char *argv[])
 static void NewParms(int initializing)
 {
     static struct stat sbuf;
-    register afs_int64 i;
+    register afs_offs_t i;
     register int fd;
     char *parms;
     char *argv[MAXPARMS];
