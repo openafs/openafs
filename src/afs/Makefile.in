@@ -43,9 +43,11 @@ all: kinstall ukinstall ${TOP_INCDIR}/afs/afs.h ${TOP_INCDIR}/afs/osi_inode.h ${
 # gencat.
 kinstall: ${KERNELDIR}/afs AFS_component_version_number.c afszcm.cat
 	-chmod 666 ${KERNELDIR}/afs/*
-	${INSTALL} ${srcdir}/*.[csh] *.[csh] ${KERNELDIR}/afs
+	${INSTALL} ${srcdir}/*.[csh] ${KERNELDIR}/afs
+	-${INSTALL} *.[csh] ${KERNELDIR}/afs
 	${INSTALL} ${srcdir}/VNOPS/*.[csh] ${KERNELDIR}/afs
-	${INSTALL} ${srcdir}/${AFS_OSTYPE}/*.[csh] ${AFS_OSTYPE}/*.[csh] ${KERNELDIR}/afs
+	${INSTALL} ${srcdir}/${AFS_OSTYPE}/*.[csh] ${KERNELDIR}/afs
+	-${INSTALL} ${AFS_OSTYPE}/*.[csh] ${KERNELDIR}/afs
 
 afs_trace.h afs_trace.msf:
 	${COMPILE_ET} -v 2 -p ${srcdir} afs_trace.et
@@ -68,7 +70,8 @@ ${KERNELDIR}/afs:
 
 ukinstall: ${UKERNELDIR}/afs afs_trace.msf AFS_component_version_number.c
 	-chmod 666 ${UKERNELDIR}/afs/*
-	${INSTALL} ${srcdir}/*.[csh] *.[csh] ${UKERNELDIR}/afs
+	${INSTALL} *.[csh] ${UKERNELDIR}/afs
+	${INSTALL} ${srcdir}/*.[csh] ${UKERNELDIR}/afs
 	${INSTALL} ${srcdir}/VNOPS/*.[csh] ${UKERNELDIR}/afs
 	${INSTALL} ${srcdir}/UKERNEL/*.[csh] ${UKERNELDIR}/afs
 
