@@ -138,7 +138,7 @@ typedef struct Vnode {
     struct Volume
     		*volumePtr;	/* Pointer to the volume containing this file*/
     byte	nUsers;		/* Number of lwp's who have done a VGetVnode */
-    bit16	cacheCheck;	/* Must equal the value in the volume Header
+    bit32	cacheCheck;	/* Must equal the value in the volume Header
     				   for the cache entry to be valid */
     struct	Lock lock;	/* Internal lock */
 #ifdef AFS_PTHREAD_ENV

@@ -310,7 +310,7 @@ typedef struct Volume {
 				   Added to vnode number for hash table index */
     byte	shuttingDown;	/* This volume is going to be detached */
     byte	goingOffline;	/* This volume is going offline */
-    bit16	cacheCheck;	/* Online sequence number to be used to invalidate vnode cache entries
+    bit32	cacheCheck;	/* Online sequence number to be used to invalidate vnode cache entries
     				   that stayed around while a volume was offline */
     short	nUsers;		/* Number of users of this volume header */
     byte	needsPutBack;	/* For a volume utility, this flag is set if we need
