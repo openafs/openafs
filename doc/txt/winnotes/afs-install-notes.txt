@@ -1,0 +1,226 @@
+OpenAFS for Windows 1.3.65 Installation Notes
+---------------------------------------------
+
+The OpenAFS for Windows product was very poorly maintained throughout the 
+1.2.x release cycle.  While the Unix version was being enhanced and its 
+quality was improving the Windows version stagnated.  The IBM AFS 3.6 product 
+was not designed for the Windows 2000/XP/2003 operating system nor was it 
+constructed with highly disconnected environments in mind.
+
+The 1.3.x series of releases not only fixes a large number of bugs in the 1.2 
+series but also attempts to enhance the functionality of the product to better 
+fit the usage model of today's users.  Several items standout.  
+
+1. The Kerberos 4 infrastructure on which the 1.2 series is reliant is no 
+longer secure.  Cross-realm Kerberos is very important in the AFS context and 
+most sites have or are migrating to Kerberos 5 environments.  The 1.3 series 
+integrates with the MIT Kerberos for Windows 2.6.x product to provide Kerberos 
+5 functionality including the ability to auto-renew credentials and obtain 
+single sign-on capabilities with the Microsoft Windows Kerberos Logon Service.
+
+The 1.3.65 OpenAFS client will directly use Kerberos 5 tickets as tokens if 
+KFW is installed.  It requires that all of the AFS Servers which it 
+communicates support Kerberos 5 tickets. For OpenAFS this is any release 1.2.8 
+or higher.
+
+When using a Microsoft Windows Active Directory as your KDC for the AFS cell 
+extremely large tickets may be issued.  If this is your situation you either 
+must modify your 1.2.x servers to support tokens larger than a few hundred 
+bytes; or install the 1.3.64 or higher release on your servers.
+
+2. The AFS Client Service does not provide robust behavior in an environment 
+with a plug-n-play network environment.  Changes to the number of network 
+adapters or the assigned IP addresses will cause the client to panic.  The 
+recommended work around for this problem is to install on the machine the 
+Microsoft Loopback Adapter.  When the MLA is installed with a static IP 
+address the AFS Client Service will bind only to the loopback and not be 
+affected by changes to state of other network adapters installed on the 
+system.  
+
+Starting in the 1.3.65 release the installers provided by OpenAFS.org will 
+install the Microsoft Loopback Adapter for you with a name of "AFS" and a 
+pre-assigned IP address in the 10.x.x.x range.
+
+One of the benefits of using the MLA is that the NETBIOS names used for the 
+AFS Client's SMB server do not have to be published on any adapter other than 
+the MLA.  This means that the names no longer need to be unique.  When the MLA 
+is in use, the NETBIOS name associated with the AFS Client Service is simply 
+"AFS".  When the MLA is not in use the NETBIOS name is "MACHINE-AFS".
+
+With the MLA installed, UNC paths of the form \\AFS\cellname\path may be used.
+
+3. When the AFS Client Service starts it must be able to contact the root.afs 
+volume of the default cell.  If the root.afs volume is not accessible when the 
+client service is started, the service will panic.  Since many users now use 
+laptops or otherwise operate in disconnected environments in which a VPN may 
+be needed to access the cell's servers, it is often the case that the root.afs 
+volume for the default cell will not be reachable and the client service 
+cannot successfully start. 
+ 
+In the 1.3.65 release there is support for a fake root.afs volume which is 
+dynamically constructed when the afs client service starts. This is called 
+Freelance mode.  Freelance mode is turned on by default in the OpenAFS.org 
+installers.  
+
+A couple of notes about Freelance mode.  First, since the fake root.afs volume 
+is constructed on the fly, when it is first used there will be no entries in 
+the volume.  Do not be concerned. Any attempt to access a valid cell name will 
+automatically result in a new read-only mount point being created in the fake 
+root.afs volume.  These mount points are preserved between service starts in 
+the %WINDIR%\afs_freelance.ini file.  
+
+Unfortunately, at the current time it is not possible to create read-write 
+mount points in the fake root.afs cell.  This is a limitation which will be 
+addressed in a future release.
+
+4. The OpenAFS for Windows client will make use of AFSDB DNS records to 
+discover cell information when it is not located in the local CellServDB file 
+(%WINDIR%\afsdcell.ini).
+
+5. OpenAFS for Windows 1.3.65 only supports Windows 2000, Windows XP, and 
+Windows 2003.  Windows NT 4.0 and the entire Windows 9x/Me line are not 
+supported.  If OpenAFS for Windows runs on those platforms it is by sheer 
+luck.
+
+6. OpenAFS for Windows installs a Network Provider for use in supporting an 
+Integrated Logon (Single Sign-on) functionality. Integrated Logon can be used 
+when the Windows username and password match the username and password 
+associated with the default cell's Kerberos realm.  For example, if the 
+windows username is "jaltman" and the default cell is "athena.mit.edu", then 
+Integrated Logon can be successfully used if the windows password matches the 
+password used for the Kerberos principal "jaltman@ATHENA.MIT.EDU".
+
+Integrated Logon is required if you desire the ability to store roaming user 
+profiles within the AFS file system.  OpenAFS does not provide tools for 
+synchronizing the Windows and Kerberos user accounts and passwords.
+
+If KFW is installed, the Integrated Logon will use Kerberos 5 to obtain 
+tokens.  Otherwise, Kerberos 4 is used.
+
+There is a High Security mode for use with Integrated Logon when multiple 
+users will share a single machine.  There are known problems with this mode.  
+In particular, if you are using this mode it is crucial that new AFS tokens 
+not be obtained after the logon session starts except via the AFS Systray tool 
+as started by the AFS Network Provider.  If the AFS Systray tool is stopped 
+you must log off to obtain new tokens.  Do not use external tools such as 
+"aklog.exe" if High Security mode is turned on.
+
+7. The AFS Systray tool (afscreds.exe) supports several new command line 
+options: 
+
+    -A = autoinit 
+    -M = renew drive maps 
+    -N = ip address change detection 
+    -Z = unmap drives
+
+autoinit will result in automated attempts to acquire AFS tokens when 
+afscreds.exe is started.  When used in combination with ip address change 
+detection, afscreds.exe will attempt to acquire AFS tokens whenever a new IP 
+address is added to the system.
+
+The renew drive maps option is used to ensure that the user drive maps 
+constructs via the AFS tools (not NET USE) are re-constructed at afscreds.exe 
+start time.
+
+By default afscreds.exe is configured by the OpenAFS.org installers to use -A 
+-N -M as startup options.  Currently, there is no UI to change this selection 
+after install time although these options may be set via the registry either 
+per machine or per user.
+
+8. Some attempts in the 1.3.65 release have been made to restrict the behavior 
+of users with regards to their ability to alter the state of the AFS Client 
+Service.  For example, the following fs.exe commands are now restricted to 
+Administrator:
+
+    - checkservers with a non-zero timer value
+    - setcachesize
+    - newcell
+    - sysname with a new sysname list
+    - exportafs
+    - setcell
+    - setserverprefs
+    - storebehind
+    - setcrypt
+    - cscpolicy
+    - trace
+
+setting the default sysname for a machine should be done via the registry and 
+not via "fs sysname".
+
+Some of the AFS Client Configuration Control Panel options are also restricted 
+to use by the "Administrator" account.
+
+9. As of 1.3.65, the AFS Client should support UNC paths everywhere.
+
+10. The AFS Client ships with its own version of aklog.exe which should be 
+used in preference to those obtained by third party sources.
+
+Usage: aklog [-d] [[-cell | -c] cell [-k krb_realm]]
+             [[-p | -path] pathname]
+             [-noprdb] [-force]
+             [-5 | -4]
+
+   -d gives debugging information.
+   krb_realm is the kerberos realm of a cell.
+   pathname is the name of a directory to which you wish to authenticate.
+   -noprdb means don't try to determine AFS ID.
+   -5 or -4 selects whether to use Kerberos V or Kerberos IV.
+      (default is Kerberos V)
+   No commandline arguments means authenticate to the local cell.
+
+11. The AFS Server functionality provided with OpenAFS 1.3.65 does work but 
+should be considered experimental.  It has not been thoroughly tested.
+
+12. The OpenAFS for Windows installers now include Symbol information which 
+should be installed if you are experiencing problems and need to send crash 
+reports.
+
+13. OpenAFS for Windows does not support files larger than 2GB.
+
+14. There are documented problems running the AFS Client on Hyperthreaded 
+Pentium 4 machines.  At the current time it is recommended that hyper- 
+threading be disabled in the machine configuration.
+
+15. OpenAFS for Windows currently requires the use of TCP based RPC. If the 
+machine is restricted to Local RPC only, you will be unable to store tokens.
+
+16. OpenAFS for Windows does not automatically open ports in the Windows 
+Internet Connection Firewall.  You must manually open port 7001 to allow for 
+incoming callback messages to be received by AFS file servers.
+
+17. The OpenAFS for Windows installer by default activates a weak form of 
+encrypted data transfer between the AFS client and the AFS servers.  This
+is often referred to as "crypt" mode.
+
+------------------------------------------------------------------------
+
+Reporting Bugs:
+
+Bug reports should be sent to openafs-bugs@openafs.org.  Please include as 
+much information as possible about the issue.  If you are reporting a crash, 
+please install the debugging symbols by re-running the installer.  If a dump 
+file is available for the problem include it along with the AFS Client Trace 
+file  %WINDIR%\TEMP\afsd.log.  The AFS Client startup log is 
+%WINDIR%\TEMP\afsd_init.log.  Send the last continuous block of log 
+information from this file.
+
+------------------------------------------------------------------------
+
+How to Contribute to the Development of OpenAFS for Windows:
+
+Contributions to the development of OpenAFS for Windows are needed. 
+Contributions may take many forms including cash donations, support contracts, 
+donated developer time, and even donated tech writer time.
+
+If you wish to be involved in OpenAFS for Windows development please join the 
+openafs-win32-devel@openafs.org mailing list.
+
+  https://lists.openafs.org/mailman/listinfo/openafs-win32-devel
+
+User questions should be sent to the openafs-info@openafs.org mailing list.  
+
+  https://lists.openafs.org/mailman/listinfo/openafs-info
+
+You must join mailing lists if you wish to post to the list without incurring 
+a moderation delay.
+
