@@ -78,6 +78,7 @@ struct super_block *afs_read_super(struct super_block *sb, void *data,
     AFS_GLOCK();
     if (afs_was_mounted) {
 	printf("You must reload the AFS kernel extensions before remounting AFS.\n");
+	AFS_GUNLOCK();
 	return NULL;
     }
     afs_was_mounted = 1;
