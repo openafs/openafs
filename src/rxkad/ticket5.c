@@ -413,7 +413,7 @@ krb5_des_decrypt(struct ktc_encryptionKey *key, int etype, void *in,
     des_key_schedule s;
     char cksum[24];
     size_t cksumsz;
-    int ret;
+    int ret = 1;	/* failure */
 
     cksum_func = NULL;
 
