@@ -1,4 +1,4 @@
->grand.central.org      #GCO Public CellServDB 10 Apr 2002
+>grand.central.org      #GCO Public CellServDB 30 Jul 2002
 18.7.14.88                      #grand-opening.mit.edu
 128.2.191.224                   #penn.central.org
 >wu-wien.ac.at          #University of Economics, Vienna, Austria
@@ -17,10 +17,12 @@
 129.132.115.38                  #nethzafs-006.ethz.ch
 >extundo.com            #Simon Josefsson's cell
 195.42.214.241                  #slipsten.extundo.com
->mekinok.com            #Mekinok, Inc.
-4.17.166.66                     #loggerhead.mekinok.com
 >sodre.cx               #Sodre.cx
 128.8.140.165                   #greed.sodre.cx
+>desy.de                #DESY - Deutsches Elektronen-Synchrotron
+131.169.30.50                   #rikki.desy.de
+131.169.40.62                   #vayu.desy.de
+131.169.244.60                  #solar00.desy.de
 >ipp-garching.mpg.de    #Institut fuer Plasmaphysik
 130.183.9.5                     #afs-db1.rzg.mpg.de
 130.183.100.10                  #afs-db2.aug.ipp-garching.mpg.de
@@ -82,8 +84,8 @@
 18.7.15.89                      #rattle.mit.edu.
 18.7.15.93                      #hum.mit.edu.
 >net.mit.edu            #MIT/Network Group cell
-18.72.0.26                      #cetus.mit.edu.
-18.72.1.38                      #gracie.mit.edu.
+18.7.7.73                       #gracie.mit.edu
+18.7.21.95                      #george.mit.edu
 >sipb.mit.edu           #MIT/SIPB cell
 18.181.0.19                     #reynelda.mit.edu.
 18.181.0.22                     #rosebud.mit.edu.
@@ -169,6 +171,8 @@
 128.105.132.16                  #zazu.cs.wisc.edu
 >hep.wisc.edu           #University of Wisconsin -- High Energy Physics
 128.104.28.219                  #anise.physics.wisc.edu
+>ifca.unican.es         #Instituto de Fisica de Cantabria (IFCA), Santander, Spain
+193.144.209.20                  #gridwall.ifca.unican.es
 >biocenter.helsinki.fi  #University of Helsinki, Institute of Biotechnology
 128.214.58.174                  #afsdb1.biocenter.helsinki.fi
 128.214.88.114                  #afsdb2.biocenter.helsinki.fi
@@ -188,9 +192,54 @@
 131.225.68.1                    #fsus01.fnal.gov
 131.225.68.4                    #fsus03.fnal.gov
 131.225.68.14                   #fsus04.fnal.gov
+>nersc.gov              #National Energy Research Supercomputer Center
+128.55.128.250                  #mars.nersc.gov
+128.55.128.252                  #alfred.nersc.gov
+128.55.128.254                  #lurch.nersc.gov
+>caspur.it              #CASPUR Inter-University Computing Consortium, Rome
+193.204.5.45                    #pomodoro.caspur.it
+193.204.5.46                    #banana.caspur.it
+193.204.5.50                    #maslo.caspur.it
+>fusione.it             #Assoz. FUSIONE/Euratom, ENEA, Frascati-Italy
+192.107.90.2                    #fusafs1.frascati.enea.it
+192.107.90.3                    #fusafs2.frascati.enea.it
+192.107.90.4                    #fusafs3.frascati.enea.it
+>infn.it                #Istituto Nazionale di Fisica Nucleare (INFN), Italia
+131.154.1.7                     #afscnaf.infn.it
+141.108.3.252                   #afsrm1.roma1.infn.it
+192.84.134.75                   #afsna.na.infn.it
+>kloe.infn.it           #INFN, KLOE experiment at Laboratori di Frascati
+192.135.25.111                  #kloeafs1.lnf.infn.it
+192.135.25.112                  #kloeafs2.lnf.infn.it
+>le.infn.it             #INFN, Sezione di Lecce
+192.84.152.40                   #afs01.le.infn.it
+192.84.152.148                  #afs02.le.infn.it
+>lnf.infn.it            #INFN, Laboratori Nazionali di Frascati
+193.206.84.121                  #afs1.lnf.infn.it
+193.206.84.123                  #afs3.lnf.infn.it
+>lngs.infn.it           #INFN, Laboratori Nazionali di Gran Sasso
+192.84.135.21                   #rsgs05.lngs.infn.it
+>pi.infn.it             #INFN, Sezione di Pisa
+192.84.133.7                    #aix.pi.infn.it
+192.84.133.50                   #aix1.pi.infn.it
+>psm.it                 #Progetto San Marco, Universita' di Roma-1
+151.100.1.65                    #atlante.psm.uniroma1.it
 >ictp.trieste.it        #The Abdus Salam International Centre for Theoretical Physics (IC
 140.105.16.8                    #fs1.ictp.trieste.it
 140.105.16.9                    #fs2.ictp.trieste.it
+>dis.uniroma1.it        #Universita' La Sapienza, Dept. of Inf. and Sys.
+151.100.5.21                    #peano.dis.uniroma1.it
+>dsi.uniroma1.it        #Universita' La Sapienza, Dept. of Computer Science
+151.100.17.2                    #afscinfo.dsi.uniroma1.it
+>ing.uniroma1.it        #Universita' La Sapienza, Fac. Ingeneria
+151.100.39.30                   #delta.ing.uniroma1.it
+151.100.85.209                  #beta.ing.uniroma1.it
+>vn.uniroma3.it         #University of Rome 3, Area Vasca Navale
+193.204.161.136                 #alfa.dia.uniroma3.it
+193.204.161.137                 #beta.dia.uniroma3.it
+193.204.161.138                 #gamma.dia.uniroma3.it
+>italia                 #Italian Public AFS Cell
+193.204.5.9                     #afs.caspur.it
 >cmf.nrl.navy.mil       #Naval Research Lab - CCS
 134.207.10.68                   #picard.cmf.nrl.navy.mil
 134.207.10.69                   #riker.cmf.nrl.navy.mil
@@ -203,6 +252,8 @@
 198.128.3.21                    #fs1.es.net
 198.128.3.22                    #fs2.es.net
 198.128.3.23                    #fs3.es.net
+>slackers.net           #The Slackers' Network
+63.201.48.27                    #alexandria.slackers.net
 >zepa.net               #Kolya/zepa.net cell
 205.245.53.21                   #perseus.zepa.net.
 205.245.53.48                   #neptune.zepa.net.
@@ -229,6 +280,12 @@
 130.237.202.12                  #afsdb2.isk.kth.se
 130.237.206.13                  #afsdb1.isk.kth.se
 130.237.209.141                 #afsdb3.isk.kth.se
+>md.kth.se              #Royal Institute of Technology, MMK
+130.237.57.68                   #trinity.md.kth.se
+130.237.57.72                   #morpheus.md.kth.se
+130.237.67.230                  #neo.speech.kth.se
+>sanchin.se             #Sanchin Consulting AB, Sweden
+192.195.148.10                  #sesan.sanchin.se
 >phy.bris.ac.uk         #Bristol University - phyics
 137.222.58.9                    #afs1.phy.bris.ac.uk
 >hep.man.ac.uk          #Manchester HEP
