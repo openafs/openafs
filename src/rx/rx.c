@@ -666,7 +666,7 @@ void rx_StartServer(donateMe)
         char name[32];
 #ifdef AFS_PTHREAD_ENV
         pid_t pid;
-        pid = pthread_self();
+        pid = (pid_t) pthread_self();
 #else /* AFS_PTHREAD_ENV */
         PROCESS pid;
         code = LWP_CurrentProcess(&pid);
