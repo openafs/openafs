@@ -44,6 +44,7 @@ typedef struct vnode vnode_t;
 #define VCHR S_IFCHR
 #define VLNK S_IFLNK
 #define VSOCK S_IFSOCK
+#define VFIFO S_IFIFO
 
 /* vcexcl - used only by afs_create */
 enum vcexcl { EXCL, NONEXCL } ;

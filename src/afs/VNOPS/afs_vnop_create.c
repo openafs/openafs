@@ -99,14 +99,18 @@ int afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs, enum vcexcl a
 	code = EINVAL;
 	goto done;
     }
-#if	defined(AFS_SUN5_ENV)
-    if ((attrs->va_type == VBLK) || (attrs->va_type == VCHR)) {
-#else
-    if ((attrs->va_type == VBLK) || (attrs->va_type == VCHR) || (attrs->va_type == VSOCK)) {
+    switch (attrs->va_type) {
+    case VBLK:
+    case VCHR:
+#if	!defined(AFS_SUN5_ENV)
+    case VSOCK:
 #endif
-	/* We don't support special devices */
+    case VFIFO:
+	/* We don't support special devices or FIFOs */
 	code = EINVAL;		
 	goto done;
+    default:
+	;
     }
     code = afs_EvalFakeStat(&adp, &fakestate, &treq);
     if (code) goto done;
