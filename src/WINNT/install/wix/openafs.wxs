@@ -153,6 +153,24 @@
 		 BinaryKey="BIN_afsCustom"
 		 DllEntry="UninstallNsisInstallation"
 		 Execute="immediate" />
+ 		<CustomAction
+		 Id="CreateAFSAdminGroup"
+		 BinaryKey="BIN_afsCustom"
+		 DllEntry="CreateAFSClientAdminGroup"
+		 Impersonate="no"
+		 Execute="deferred" />
+		<CustomAction
+		 Id="RemoveAFSAdminGroup"
+		 BinaryKey="BIN_afsCustom"
+		 DllEntry="RemoveAFSClientAdminGroup"
+		 Impersonate="no"
+		 Execute="deferred" />
+		<CustomAction
+		 Id="RollbackAFSAdminGroup"
+		 BinaryKey="BIN_afsCustom"
+		 DllEntry="RemoveAFSClientAdminGroup"
+		 Impersonate="no"
+		 Execute="rollback" />
 		<CustomAction
 		 Id="AbortInstallationA"
 		 BinaryKey="BIN_afsCustom"
@@ -187,6 +205,9 @@
 			<Custom Action="RemoveNetProvider" After="InstallNetProvider">&amp;feaClient=2</Custom>
 			<Custom Action="ConfigureClient" After="InstallServices">&amp;feaClient=3</Custom>
 			<Custom Action="ConfigureServer" After="ConfigureClient">&amp;feaServer=3</Custom>
+			<!-- <Custom Action="RemoveAFSAdminGroup" Before="">&amp;feaClient=2</Custom> -->
+			<Custom Action="RollbackAFSAdminGroup" Before="CreateAFSAdminGroup">&amp;feaClient=3</Custom>
+			<Custom Action="CreateAFSAdminGroup" Before="CreateFolders">&amp;feaClient=3</Custom>
             <ScheduleReboot After="PublishProduct">&amp;feaClient=3 OR &amp;feaServer=3 OR &amp;feaClient=2 OR &amp;feaServer=2</ScheduleReboot>
         </InstallExecuteSequence>
 

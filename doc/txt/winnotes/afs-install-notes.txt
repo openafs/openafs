@@ -1,4 +1,4 @@
-OpenAFS for Windows 1.3.70 Installation Notes
+OpenAFS for Windows 1.3.71 Installation Notes
 ---------------------------------------------
 
 The OpenAFS for Windows product was very poorly maintained throughout the 
@@ -97,7 +97,7 @@ discover cell information when it is not located in the local CellServDB file
 (\Program Files\OpenAFS\Client\CellServDB).
 
 
-5. OpenAFS for Windows 1.3.70 only supports Windows 2000, Windows XP, and 
+5. OpenAFS for Windows 1.3.71 only supports Windows 2000, Windows XP, and 
 Windows 2003.  Windows NT 4.0 and the entire Windows 9x/Me line are no
 longer supported.  Older releases of OpenAFS are available for download
 if those operating systems must be supported.  The last version with support
@@ -216,9 +216,9 @@ Usage: aklog [-d] [[-cell | -c] cell [-k krb_realm]]
    No commandline arguments means authenticate to the local cell.
 
 
-11. The AFS Server functionality provided with OpenAFS 1.3.70 might work but 
+11. The AFS Server functionality provided with OpenAFS 1.3.71 might work but 
 should be considered highly experimental.  It has not been thoroughly tested.
-Any data which would cause pain if lost should be stored in an OpenAFS 
+Any data which would cause pain if lost should not be stored in an OpenAFS 
 Server on Windows.
 
 A few notes on the usage of the AFS Client Service if it is going to be 
@@ -265,7 +265,7 @@ encrypted data transfer between the AFS client and the AFS servers.  This
 is often referred to as "fcrypt" mode.
 
 
-18. OpenAFS 1.3.70 adds support for authenticated SMB connections using 
+18. OpenAFS 1.3.71 adds support for authenticated SMB connections using 
 either NTLM or GSS SPNEGO (NTLM, Kerberos 5, ...).  In previous versions
 of OpenAFS the SMB connections were unauthenticated which left open the
 door for several security holes which could be used to obtain access to
@@ -337,10 +337,20 @@ When installing under Terminal Server, you must execute the NSIS installer
 will result in AFS not running properly.  The AFS Server should not 
 be installed on a machine with Terminal Server installed.
 
+
 24. AFS is a Unix native file system.  As such the OpenAFS client attempts
 to treat the files stored in AFS as they would be on Unix.  File and directory
 names beginning with a "." are automatically given the Hidden attribute so
 they will not normally be displayed.
+
+
+25. As of 1.3.71, the OpenAFS for Windows client supports a local Windows
+authorization group called "AFS Client Admins".  This group is used in
+place of the "Administrators" group to determine which users are allowed
+to modify the AFS Client Service configuration via either afs_config.exe
+or fs.exe.  During installation this group is created and the current
+contents of the Administrators group is copied.
+
 
 ------------------------------------------------------------------------
 
