@@ -80,7 +80,7 @@ static int rxepoch_allocUnit = 10;   /* Allocation unit (number of epoch records
 int rxevent_nFree;		   /* Number of free event records */
 int rxevent_nPosted;	   /* Current number of posted events */
 int rxepoch_nFree;		   /* Number of free epoch records */
-static int (*rxevent_ScheduledEarlierEvent)(void); /* Proc to call when an event is scheduled that is earlier than all other events */
+static void (*rxevent_ScheduledEarlierEvent)(void); /* Proc to call when an event is scheduled that is earlier than all other events */
 struct xfreelist { 
     void *mem;
     int size;
