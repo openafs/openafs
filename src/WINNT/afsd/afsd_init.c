@@ -89,7 +89,7 @@ cm_initparams_v1 cm_initParams;
 HANDLE afsi_file;
 
 #ifdef AFS_AFSDB_ENV
-extern int cm_dnsEnabled;
+int cm_dnsEnabled = 1;
 #endif
 
 char cm_NetBiosName[32];
