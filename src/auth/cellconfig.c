@@ -39,8 +39,19 @@ RCSID("$Header$");
 #include <ctype.h>
 #include <time.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 #endif /* UKERNEL */
 #include <afs/afsutil.h>
 #include "cellconfig.h"
@@ -53,19 +64,19 @@ static afsconf_CloseInternal();
 static afsconf_Reopen();
 
 static struct afsconf_servPair serviceTable [] = {
-    "afs",	7000,
-    "afscb",	7001,
-    "afsprot",	7002,
-    "afsvldb",	7003,
-    "afskauth",	7004,
-    "afsvol",	7005,
-    "afserror",	7006,
-    "afsnanny",	7007,
-    "afsupdate",7008,
-    "afsrmtsys",7009,
-    "afsres",   7010,   /* residency database for MR-AFS */
-    "afsremio", 7011,   /* remote I/O interface for MR-AFS */
-    0, 0		/* insert new services before this spot */
+    { "afs",       7000, },
+    { "afscb",     7001, },
+    { "afsprot",   7002, },
+    { "afsvldb",   7003, },
+    { "afskauth",  7004, },
+    { "afsvol",    7005, },
+    { "afserror",  7006, },
+    { "afsnanny",  7007, },
+    { "afsupdate", 7008, },
+    { "afsrmtsys", 7009, },
+    { "afsres",    7010, },  /* residency database for MR-AFS */
+    { "afsremio",  7011, },  /* remote I/O interface for MR-AFS */
+    { 0, 0 }		     /* insert new services before this spot */
 };
 
 /*
@@ -106,7 +117,7 @@ char *abuffer; {
     register int tc;
 
     tp = abuffer;
-    while (tc = *tp) {
+    while ((tc = *tp)) {
 	if (!isspace(tc)) break;
 	tp++;
     }
