@@ -40,7 +40,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-D_NO_PROTO -DOSF"
 		;;
 
-	alpha_linux22)
+	alpha_linux_22)
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
@@ -51,7 +51,7 @@ case $AFS_SYSNAME in
 		YACC="bison -y"
 		;;
 
-	alpha_linux24)
+	alpha_linux_24)
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
 		MT_LIBS="-lpthread"
