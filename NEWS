@@ -1,6 +1,13 @@
-OpenAFS News -- history of user-visible changes. October 9, 2001
+OpenAFS News -- history of user-visible changes. October 13, 2001
 
 * Changes incorporated in OpenAFS 1.2.2
+
+** Solaris 9 and Linux PA-RISC are now supported
+
+** fileserver will not erroneously delay legitimate errors for 3 seconds
+   after 10 errors are returned (e.g. stat() on a directory you can't read)
+
+** Rx MTU calculation now works for Irix, Solaris and Linux
 
 ** If afsd is started with the -dynroot flag, /afs will be locally
    generated from the CellServDB.  AFSDB cells will be mounted
