@@ -179,6 +179,9 @@ else
 		i?86-*-freebsd4.2*)
 			AFS_SYSNAME="i386_fbsd_42"
 			;;
+		hppa2.0w-hp-hpux11*)
+			AFS_SYSNAME="hp_ux110"
+			;;
 		hppa-hp-hpux11*)
 			AFS_SYSNAME="hp_ux110"
 			;;
@@ -217,6 +220,9 @@ else
 			;;
 		alpha*-linux*)
 			AFS_SYSNAME="alpha_linux_XX"
+			;;
+		s390-*-linux*)
+			AFS_SYSNAME="s390_linuxXX"
 			;;
 		sparc-*-linux*)
 			AFS_SYSNAME="sparc_linuxXX"
