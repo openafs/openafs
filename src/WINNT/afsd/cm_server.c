@@ -98,7 +98,7 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
 	                                code = RXAFS_GetTime(connp->callp, &secs, &usecs);
 	                        }
 				if (wasDown)
-					rx_SetConnDeadTime(connp->callp, CM_CONN_CONNDEADTIME);
+					rx_SetConnDeadTime(connp->callp, ConnDeadtimeout);
 	                        cm_PutConn(connp);
 			}	/* got an unauthenticated connection to this server */
 

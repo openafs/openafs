@@ -28,6 +28,8 @@
 osi_rwlock_t cm_connLock;
 
 long RDRtimeout = CM_CONN_DEFAULTRDRTIMEOUT;
+long ConnDeadtimeout = CM_CONN_CONNDEADTIME;
+long HardDeadtimeout = CM_CONN_HARDDEADTIME;
 
 #define LANMAN_WKS_PARAM_KEY "SYSTEM\\CurrentControlSet\\Services\\lanmanworkstation\\parameters"
 #define LANMAN_WKS_SESSION_TIMEOUT "SessTimeout"
@@ -52,8 +54,11 @@ void cm_InitConn(void)
 		lock_InitializeRWLock(&cm_connLock, "connection global lock");
 
         /* keisa - read timeout value for lanmanworkstation  service.
-         * It is used as hardtimeout for connections. 
-         * Default value is 45 
+         * jaltman - as per 
+         *   http://support.microsoft.com:80/support/kb/articles/Q102/0/67.asp&NoWebContent=1
+         * the SessTimeout is a minimum timeout not a maximum timeout.  Therefore, 
+         * I believe that the default should not be short.  Instead, we should wait until
+         * RX times out before reporting a timeout to the SMB client.
          */
 		code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, LANMAN_WKS_PARAM_KEY,
                             0, KEY_QUERY_VALUE, &parmKey);
@@ -66,13 +71,17 @@ void cm_InitConn(void)
             {
                 afsi_log("lanmanworkstation : SessTimeout %d", sessTimeout);
                 RDRtimeout = sessTimeout;
-            }
-		    else
-            {
-                RDRtimeout = CM_CONN_DEFAULTRDRTIMEOUT;
+                if ( ConnDeadtimeout < RDRtimeout + 15 ) {
+                    ConnDeadtimeout = RDRtimeout + 15;
+                    afsi_log("ConnDeadTimeout increased to %d", ConnDeadtimeout);
+                }
+                if ( HardDeadtimeout < 2 * ConnDeadtimeout ) {
+                    HardDeadtimeout = 2 * ConnDeadtimeout;
+                    afsi_log("HardDeadTimeout increased to %d", HardDeadtimeout);
+                }
             }
         }
-		
+
         osi_EndOnce(&once);
     }
 }
@@ -335,13 +344,8 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 #endif
         
 	/* leave 5 seconds margin of safety */
-	timeLeft = RDRtimeout - timeUsed - 5;
-	hardTimeLeft = timeLeft;
-
-	/* Time enough to do an RPC? */
-	if (timeLeft < 1) {
-		return CM_ERROR_TIMEDOUT;
-	}
+	timeLeft =  ConnDeadtimeout - timeUsed - 5;
+	hardTimeLeft = HardDeadtimeout - timeUsed - 5;
 
 	lock_ObtainWrite(&cm_serverLock);
 
@@ -360,11 +364,11 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
                 if (code == 0) {
                     cm_PutServer(tsp);
                     /* Set RPC timeout */
-                    if (timeLeft > CM_CONN_CONNDEADTIME)
-                        timeLeft = CM_CONN_CONNDEADTIME;
+                    if (timeLeft > ConnDeadtimeout)
+                        timeLeft = ConnDeadtimeout;
 
-                    if (hardTimeLeft > CM_CONN_HARDDEADTIME) 
-                        hardTimeLeft = CM_CONN_HARDDEADTIME;
+                    if (hardTimeLeft > HardDeadtimeout) 
+                        hardTimeLeft = HardDeadtimeout;
 
                     lock_ObtainMutex(&(*connpp)->mx);
                     rx_SetConnDeadTime((*connpp)->callp,
@@ -389,16 +393,12 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 			firstError = CM_ERROR_ALLBUSY;
 		else if (someOffline) 
 			firstError = CM_ERROR_ALLOFFLINE;
-#ifndef COMMENT
 		else if (!allDown && serversp) 
 			firstError = CM_ERROR_TIMEDOUT;
 		/* Only return CM_ERROR_NOSUCHVOLUME if there are no
 		   servers for this volume */
 		else 
 			firstError = CM_ERROR_NOSUCHVOLUME;
-#else
-        firstError = CM_ERROR_TIMEDOUT;
-#endif /* COMMENT */
 	}
 	osi_Log1(afsd_logp, "cm_ConnByMServers returning %x", firstError);
     return firstError;
@@ -472,8 +472,8 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
                                   serviceID,
                                   secObjp,
                                   secIndex);
-	rx_SetConnDeadTime(tcp->callp, CM_CONN_CONNDEADTIME);
-	rx_SetConnHardDeadTime(tcp->callp, CM_CONN_HARDDEADTIME);
+	rx_SetConnDeadTime(tcp->callp, ConnDeadtimeout);
+	rx_SetConnHardDeadTime(tcp->callp, HardDeadtimeout);
 	tcp->ucgen = ucellp->gen;
     if (secObjp)
         rxs_Release(secObjp);   /* Decrement the initial refCount */

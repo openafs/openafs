@@ -11,8 +11,11 @@
 #define __CM_CONN_H_ENV__ 1
 
 #define	CM_CONN_DEFAULTRDRTIMEOUT	45
-#define CM_CONN_CONNDEADTIME		50
+#define CM_CONN_CONNDEADTIME		60
 #define CM_CONN_HARDDEADTIME        120
+
+extern long ConnDeadtimeout;
+extern long HardDeadtimeout;
 
 typedef struct cm_conn {
 	struct cm_conn *nextp;		/* locked by cm_connLock */

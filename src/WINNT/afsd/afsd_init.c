@@ -518,6 +518,16 @@ int afsd_InitCM(char **reasonP)
     if(rx_mtu != -1)
         afsi_log("RX maximum MTU is %d", rx_mtu);
 
+    dummyLen = sizeof(ConnDeadtimeout);
+    code = RegQueryValueEx(parmKey, "ConnDeadTimeout", NULL, NULL,
+                           (BYTE *) &ConnDeadtimeout, &dummyLen);
+    afsi_log("ConnDeadTimeout is %d", ConnDeadtimeout);
+
+    dummyLen = sizeof(HardDeadtimeout);
+    code = RegQueryValueEx(parmKey, "HardDeadTimeout", NULL, NULL,
+                           (BYTE *) &HardDeadtimeout, &dummyLen);
+    afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
+
 	RegCloseKey (parmKey);
 
     /* Call lanahelper to get Netbios name, lan adapter number and gateway flag */
