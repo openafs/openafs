@@ -548,13 +548,13 @@ jafs: libjafs
 jafsadm: libjafsadm
 
 finale: project cmd comerr afsd allrcmds butc tbutc @ENABLE_KERNEL_MODULE@ libuafs audit kauth log package \
-	ptserver scout bu_utils ubik uss bozo vfsck volser \
+	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin
 	${COMPILE_PART1} finale ${COMPILE_PART2}
 
 finale_nolibafs: project cmd comerr afsd allrcmds butc tbutc libuafs audit kauth log package \
-	ptserver scout bu_utils ubik uss bozo vfsck volser \
+	ptserver scout bu_utils ubik uss bozo vfsck volser tvolser \
 	venus update xstat afsmonitor dauth rxdebug libafsrpc \
 	libafsauthent shlibafsrpc shlibafsauthent libadmin
 	${COMPILE_PART1} finale ${COMPILE_PART2}
@@ -609,9 +609,9 @@ clean2:
 	-${COMPILE_PART1} vol ${COMPILE_CLEAN}
 	-${COMPILE_PART1} vlserver ${COMPILE_CLEAN}
 	-${COMPILE_PART1} viced ${COMPILE_CLEAN}
-	-${COMPILE_PART1} viced ${COMPILE_CLEAN}
 	-${COMPILE_PART1} tviced ${COMPILE_CLEAN}
 	-${COMPILE_PART1} volser ${COMPILE_CLEAN}
+	-${COMPILE_PART1} tvolser ${COMPILE_CLEAN}
 	-${COMPILE_PART1} venus ${COMPILE_CLEAN}
 	-${COMPILE_PART1} venus/test ${COMPILE_CLEAN}
 	-${COMPILE_PART1} afsd ${COMPILE_CLEAN}
@@ -782,6 +782,7 @@ distclean: clean
 	src/tests/OpenAFS/Dirpath.pm \
 	src/tsm41/Makefile \
 	src/tviced/Makefile \
+	src/tvolser/Makefile \
 	src/ubik/Makefile \
 	src/update/Makefile \
 	src/usd/test/Makefile \
