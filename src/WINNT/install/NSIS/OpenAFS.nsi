@@ -1757,10 +1757,12 @@ StartRemove:
   
   Delete /REBOOTOK "$SYSDIR\afsserver.cpl"
   Delete /REBOOTOK "$SYSDIR\afs_cpa.cpl"
+  Delete /REBOOTOK "$SYSDIR\afslogon.dll"
 
   Delete /REBOOTOK "$SYSDIR\afsserver.pdb"
   Delete /REBOOTOK "$SYSDIR\afs_cpa.pdb"
-  
+  Delete /REBOOTOK "$SYSDIR\afslogon.pdb"
+
   RMDir /r "$INSTDIR\Documentation\html\CmdRef"
   RMDir /r "$INSTDIR\Documentation\html\InstallGd"
   RMDir /r "$INSTDIR\Documentation\html\ReleaseNotes"

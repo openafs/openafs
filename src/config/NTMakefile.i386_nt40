@@ -234,11 +234,19 @@ afscflags =\
 	/GF \
 	/Gd \
 	/Gy \
-	/GX \
 	/Os
 
+!IF ("$(AFSVER_CL)"=="1400")
+afscflags = $(afscflags) /EHsc /wd4996
+!ELSE
+afscflags = $(afscflags) /GX
+!ENDIF
+
 !IF ("$(AFSVER_CL)"!="1200")
-afscdefs = $(afscdefs) /G7 /GT /GS
+afscdefs = $(afscdefs) /GT /GS
+!IF ("$(AFSVER_CL)"!="1400")
+afscdefs = $(afscdefs) /G7
+!ENDIF
 !ENDIF
 
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
