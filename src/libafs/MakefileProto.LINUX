@@ -108,17 +108,15 @@ ${COMPDIRS}:
 		ln -s $${IDIR} netinet; \
 		rm -f sys; \
 		ln -s $${IDIR} sys; \
-		rm -f asm-generic; \
-		ln -s ${LINUX_SRCDIR}$$v/include/asm-generic asm-generic; \
 		rm -f asm; \
 <i386_linux22 i386_linux24>
 		ln -s ${LINUX_SRCDIR}/include/asm-i386 asm ; \
 <ppc_linux22 ppc_linux24>
 		ln -s ${LINUX_SRCDIR}/include/asm-ppc asm ; \
 <sparc_linux22 sparc_linux24>
-		ln -s ${LINUX_SRCDIR}$$v/include/asm-sparc asm ; \
+		ln -s ${LINUX_SRCDIR}/include/asm-sparc asm ; \
 <sparc64_linux22 sparc64_linux24>
-		ln -s ${LINUX_SRCDIR}$$v/include/asm-sparc64 asm ; \
+		ln -s ${LINUX_SRCDIR}/include/asm-sparc64 asm ; \
 <all>
 		for m in ${MPS} ; do \
 			KDIR=${KOBJ}-$$m ; \
