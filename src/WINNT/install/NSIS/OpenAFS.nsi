@@ -2239,18 +2239,49 @@ Function AFSPageGetCellName
   StrCmp $R0 "0" good
   
 startOver:
+   ; We want to read in the existing parameters and make them the defaults
+   
+   ;AFS Crypt security
+   ReadRegDWORD $R1 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "SecurityLevel"
+   StrCmp $R1 "" +3
+   WriteINIStr $1 "Field 3" "State" $R1
+   goto +2
+   WriteINIStr $1 "Field 3" "State" "1"
+   
+   ;Use DNS
+   ReadRegDWORD $R1 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "UseDNS"
+   StrCmp $R1 "" +3
+   WriteINIStr $1 "Field 9" "State" $R1
+   goto +2
+   WriteINIStr $1 "Field 9" "State" "1"
+   
+   ; Use integrated logon
+   ReadRegDWORD $R1 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "LogonOptions"
+   StrCmp $R1 "" +3
+   WriteINIStr $1 "Field 7" "State" $R1
+   goto +2
+   WriteINIStr $1 "Field 7" "State" "0"
+   
    ; If this is a server install, we do NOT want to recommend the Freelance client
    ; And we do not need to ask for the cell name.
    SectionGetFlags ${secServer} $R1
    IntOp $R1 $R1 & ${SF_SELECTED}
    StrCmp $R1 "1" +1 NotServer
    WriteINIStr $1 "Field 6" "Text" "Enable AFS Freelance client (Not Recommended for servers)"
+   ReadRegDWORD $R1 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "FreelanceClient"
+   StrCmp $R1 "" +3
+   WriteINIStr $1 "Field 5" "State" $R1
+   goto +2
    WriteINIStr $1 "Field 5" "State" "0"
    WriteINIStr $1 "Field 1" "Flags" "DISABLED"
    WriteINIStr $1 "Field 2" "Flags" "DISABLED"
    goto SkipServerTest
 NotServer:
    WriteINIStr $1 "Field 6" "Text" "Enable AFS Freelance client (Recommended)"
+   ReadRegDWORD $R1 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "FreelanceClient"
+   StrCmp $R1 "" +3
+   WriteINIStr $1 "Field 5" "State" $R1
+   goto +2
    WriteINIStr $1 "Field 5" "State" "1"
    WriteINIStr $1 "Field 1" "Flags" ""
    WriteINIStr $1 "Field 2" "Flags" ""
