@@ -6,7 +6,7 @@ Openafs News -- history of user Visible changes. 11 July 2001
    configure.  By default AFS builds assuming it will be installed in
    /usr/local.  In order to get traditional AFS directory paths (/usr/afs
    and /usr/vice/etc) use the --enable-transarc-paths option to
-configure.  More details on the new directory layout are found in README.
+   configure.  More details on the new directory layout are found in README.
    
 * Changes since Openafs 1.0
 

@@ -5,6 +5,18 @@ This software has been released under the terms of the IBM Public
 License.  For details, see the LICENSE file in the top-level source
 directory or online at http://www.openafs.org/dl/license10.html
 
+Short instructions for sites upgrading from a previous version of AFS:
+% ./configure --enable-transarc-paths
+% make
+% make dest
+
+will create a Transarc-style dest tree in ${SYS_NAME}/dest where
+${SYS_NAME} is the AFS sysname of the system you built for.
+This assumes if you're building for Linux that your kernel source is
+in /usr/src/linux.
+
+Otherwise, please read on.
+
 Building OpenAFS on UNIX and LINUX
 ----------------------------------
 
@@ -84,9 +96,14 @@ B  Building
 
       % make
 
-      When the build completes, you will have a complete binary tree
-      in the dest directory under the directory named for the sys_name you
-      built for, e.g. sun4x_57/dest or i386_linux22/dest 
+   2. Install your build using either "make install" to install 
+      into the current system (you will need to be root, and files
+      will be placed as appropriate for Transarc or standard paths),
+      "make install DESTDIR=/some/path" to install into an alternate 
+      directory tree, or if you configured with --enable-transarc-paths
+      make dest to create a complete binary tree in the dest directory      
+      under the directory named for the sys_name you built for,
+      e.g. sun4x_57/dest or i386_linux22/dest 
 
    2. As appropriate you can clean up or, if you're using Linux, build for
       another kernel version:
