@@ -72,19 +72,19 @@ only_libafs_tree: force ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}
 install: all install_dirs
 	$(MAKE) build COMPILE_PART2B=install
 
-install_nolibafs: all install_dirs
+install_nolibafs: all_nolibafs install_dirs
 	$(MAKE) build TARGET=finale_nolibafs COMPILE_PART2B=install
 
-install_only_libafs: all install_dirs
+install_only_libafs: only_libafs install_dirs
 	$(MAKE) build TARGET=libafs COMPILE_PART2B=install
 
 dest: all dest_dirs
 	$(MAKE) build COMPILE_PART2B=dest
 
-dest_nolibafs: all dest_dirs
+dest_nolibafs: all_nolibafs dest_dirs
 	$(MAKE) build TARGET=finale_nolibafs COMPILE_PART2B=dest
 
-dest_only_libafs: all dest_dirs
+dest_only_libafs: only_libafs dest_dirs
 	$(MAKE) build TARGET=libafs COMPILE_PART2B=dest
 
 ${TOP_INCDIR} ${TOP_INCDIR}/afs ${TOP_LIBDIR}:
