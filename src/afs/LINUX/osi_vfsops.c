@@ -374,6 +374,8 @@ afs_statfs(struct super_block *sbp, struct statfs *__statp, int size)
 
     memset(&stat, 0, size);
     statp = &stat;
+#else
+    memset(statp, 0, sizeof(*statp));
 #endif
 
     AFS_STATCNT(afs_statfs);
