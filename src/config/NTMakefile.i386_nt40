@@ -375,8 +375,8 @@ DLLMFCLINK=$(DLLMFCLINK:/NODEFAULTLIB:msvcrtd.lib=)
 !ENDIF
 
 !ELSE
-mfclflags = $(mfclflags) /NODEFAULTLIB:msvcrt.lib
-mfcdlllflags = $(mfcdlllflags) /NODEFAULTLIB:msvcrt.lib
+mfclflags = $(mfclflags) /NODEFAULTLIB:msvcrdt.lib
+mfcdlllflags = $(mfcdlllflags) /NODEFAULTLIB:msvcrtd.lib
 conlibsdll = $(conlibsdll:msvcrt.lib=msvcrtd.lib)
 guilibsdll = $(guilibsdll:msvcrt.lib=msvcrtd.lib)
 !ENDIF
