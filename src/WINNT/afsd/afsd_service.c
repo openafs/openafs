@@ -32,7 +32,7 @@
 // The following is defined if you want to receive Power notifications,
 // including Hibernation, and also subsequent flushing of AFS volumes
 //
-// #define REGISTER_POWER_NOTIFICATIONS
+#define REGISTER_POWER_NOTIFICATIONS
 //
 // Check
 */
