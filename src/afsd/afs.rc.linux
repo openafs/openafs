@@ -14,8 +14,8 @@
 
 
 # Gather up options and post startup script name, if present
-if [ -f /etc/default/afs ]; then
-	. /etc/default/afs
+if [ -f /etc/openafs/afs.conf ]; then
+	. /etc/openafs/afs.conf
 fi
 
 # is_on returns 1 if value of arg is "on"
@@ -101,7 +101,7 @@ set_prefix()
 }
 
 
-MODLOADDIR=/usr/vice/etc/modload
+MODLOADDIR=/lib/modules/openafs/modload
 # load_client loads the AFS client module if it's not already loaded. 
 load_client() {
 	# If LIBAFS is set, use it.
@@ -138,19 +138,11 @@ case "$1" in
 	fi
 
 	# Start AFS client
-	if  is_on $AFS_CLIENT && test -x /usr/vice/etc/afsd  ; then
+	if  is_on $AFS_CLIENT && test -x /usr/sbin/afsd  ; then
 		start-stop-daemon --start --quiet --exec /usr/vice/etc/afsd \
 		    -- ${OPTIONS}
 		echo -n " afsd"
 
-		# Start AFS version of inetd.conf if present.
-		if  test -f /usr/afsws/etc/inetd.conf -a -x /usr/afsws/etc/inetd.afs ; then
-			start-stop-daemon --start --quiet \
-			    --pidfile /var/run/inetd.afs.pid \
-			    --exec /usr/afsws/etc/inetd.afs -- \
-			    /usr/afsws/etc/inetd.conf
-			echo -n " inetd"
-		fi
 		echo "."
 		$AFS_POST_INIT
 	fi
@@ -162,8 +154,6 @@ case "$1" in
 	echo -n "Stopping AFS services: "
 
 	if  is_on $AFS_CLIENT  ; then
-		start-stop-daemon --stop --quiet \
-		    --pidfile /var/run/inetd.afs.pid && echo -n " inetd"
 		umount /afs
 		echo -n " afsd"
 	fi
