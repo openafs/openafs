@@ -107,6 +107,7 @@ RCSID("$Header$");
 #include <signal.h>
 #include <afs/partition.h>
 #include "viced.h"
+#include "viced_prototypes.h"
 #include "host.h"
 #include <afs/audit.h>
 #include <afs/afsutil.h>

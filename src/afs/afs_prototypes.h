@@ -897,7 +897,7 @@ extern afs_int32 RXSTATS_ExecuteRequest(struct rx_call *acall);
 
 
 
-#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_AIX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #include "osi_prototypes.h"
 #endif
 
