@@ -1,0 +1,22 @@
+                  OpenAFS Release Notes - Version 1.2.5
+     _________________________________________________________________
+All systems:  Major bugfixes.
+     _________________________________________________________________
+
+IMPORTANT:  This release of OpenAFS fixes a remotely exploitable denial
+	    of service attack on all platforms.  Users are strongly
+	    encouraged to upgrade as soon as possible.
+
+All systems:
+
+- Use private xdr, not kernel provided one, to avoid memory ownership 
+  conflicts that can lead to system crashes.
+- Rework GetCellServDB RPC to avoid a deadlock and return useful information.
+- Fix multiple race conditions in fileserver to avoid crashes.
+- Do not allow AFS to be shutdown before it is unmounted.
+
+Solaris:
+- Cast times to int to avoid overflow and negative dates.
+
+Darwin/Mac OS X:
+- Recognize MacOS X 10.1.5 as a ppc_darwin_14 system at build time.
