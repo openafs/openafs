@@ -649,16 +649,6 @@ static int afs_linux_revalidate(struct dentry *dp)
     lock_kernel();
 #endif
 
-    /* Drop the dentry if the callback is broken */
-    if (!(vcp->states & CStatd)) {
-        d_drop(dp);
-#ifdef AFS_LINUX24_ENV
-        unlock_kernel();
-#endif
-	AFS_GUNLOCK();
-        return 0;
-    }
-
     /* Make this a fast path (no crref), since it's called so often. */
     if (vcp->states & CStatd) {
         if (*dp->d_name.name != '/' && vcp->mvstat == 2) /* root vnode */
@@ -704,18 +694,39 @@ static int afs_linux_dentry_revalidate(struct dentry *dp)
     struct vcache *vcp = (struct vcache*)dp->d_inode;
 
     /* If it's a negative dentry, then there's nothing to do. */
-    if (!vcp)
+    if (!vcp) {
 	goto out_valid;
+    }
 
-    if (afs_linux_revalidate(dp) == 0)
-	goto out_valid;
+    AFS_GLOCK();
+#ifdef AFS_LINUX24_ENV
+    lock_kernel();
+#endif
 
-out_bad:
-    return 0;
+    /* Drop the dentry if the callback is broken */
+    if (!(vcp->states & CStatd)) {
+        d_drop(dp);
+#ifdef AFS_LINUX24_ENV
+        unlock_kernel();
+#endif
+	AFS_GUNLOCK();
+        return 0;
+    }
+
+    /* Make this a fast path (no crref), since it's called so often. */
+    if (*dp->d_name.name != '/' && vcp->mvstat == 2) /* root vnode */
+	check_bad_parent(dp); /* check and correct mvid */
+    vcache2inode(vcp);
+#ifdef AFS_LINUX24_ENV
+    unlock_kernel();
+#endif
+    AFS_GUNLOCK();
 
 out_valid:
     return 1;
 
+out_bad:
+    return 0;
 }
 
 /* afs_dentry_iput */
