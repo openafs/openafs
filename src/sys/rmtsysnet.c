@@ -282,48 +282,14 @@ inparam_conversion(afs_int32 cmd, char *buffer, afs_int32 ntoh_conv)
 	RFetchVolumeStatus_conversion(buffer, ntoh_conv);
 	break;
     case VIOCGETTOK & 0xffff:
-	lptr = (afs_int32 *) buffer;
-	if (ntoh_conv)
-	    *lptr = ntohl(*lptr);
-	else
-	    *lptr = htonl(*lptr);
-	break;
     case VIOCCKSERV & 0xffff:
-	lptr = (afs_int32 *) buffer;
-	if (ntoh_conv)
-	    *lptr = ntohl(*lptr);
-	else
-	    *lptr = htonl(*lptr);
-	break;
     case VIOCACCESS & 0xffff:
-	lptr = (afs_int32 *) buffer;
-	if (ntoh_conv)
-	    *lptr = ntohl(*lptr);
-	else
-	    *lptr = htonl(*lptr);
-	break;
     case VIOCSETCACHESIZE & 0xffff:
-	lptr = (afs_int32 *) buffer;
-	if (ntoh_conv)
-	    *lptr = ntohl(*lptr);
-	else
-	    *lptr = htonl(*lptr);
-	break;
     case VIOCGETCELL & 0xffff:
-	lptr = (afs_int32 *) buffer;
-	if (ntoh_conv)
-	    *lptr = ntohl(*lptr);
-	else
-	    *lptr = htonl(*lptr);
-	break;
     case VIOC_AFS_MARINER_HOST & 0xffff:
-	lptr = (afs_int32 *) buffer;
-	if (ntoh_conv)
-	    *lptr = ntohl(*lptr);
-	else
-	    *lptr = htonl(*lptr);
-	break;
     case VIOC_VENUSLOG & 0xffff:
+    case VIOC_AFS_SYSNAME & 0xffff:
+    case VIOC_EXPORTAFS & 0xffff:
 	lptr = (afs_int32 *) buffer;
 	if (ntoh_conv)
 	    *lptr = ntohl(*lptr);
@@ -337,20 +303,6 @@ inparam_conversion(afs_int32 cmd, char *buffer, afs_int32 ntoh_conv)
 	else
 	    *lptr = htonl(*lptr);
 	lptr++;
-	if (ntoh_conv)
-	    *lptr = ntohl(*lptr);
-	else
-	    *lptr = htonl(*lptr);
-	break;
-    case VIOC_AFS_SYSNAME & 0xffff:
-	lptr = (afs_int32 *) buffer;
-	if (ntoh_conv)
-	    *lptr = ntohl(*lptr);
-	else
-	    *lptr = htonl(*lptr);
-	break;
-    case VIOC_EXPORTAFS & 0xffff:
-	lptr = (afs_int32 *) buffer;
 	if (ntoh_conv)
 	    *lptr = ntohl(*lptr);
 	else
@@ -444,39 +396,10 @@ outparam_conversion(afs_int32 cmd, char *buffer, afs_int32 ntoh_conv)
 	lptr++;			/* primary flag */
 	break;
     case VIOCCKCONN & 0xffff:
-	if (ntoh_conv)
-	    *lptr = ntohl(*lptr);
-	else
-	    *lptr = htonl(*lptr);
-	break;
     case VIOC_AFS_MARINER_HOST & 0xffff:
-	lptr = (afs_int32 *) buffer;
-	if (ntoh_conv)
-	    *lptr = ntohl(*lptr);
-	else
-	    *lptr = htonl(*lptr);
-	break;
     case VIOC_VENUSLOG & 0xffff:
-	lptr = (afs_int32 *) buffer;
-	if (ntoh_conv)
-	    *lptr = ntohl(*lptr);
-	else
-	    *lptr = htonl(*lptr);
-	break;
     case VIOC_GETCELLSTATUS & 0xffff:
-	lptr = (afs_int32 *) buffer;
-	if (ntoh_conv)
-	    *lptr = ntohl(*lptr);
-	else
-	    *lptr = htonl(*lptr);
-	break;
     case VIOC_AFS_SYSNAME & 0xffff:
-	lptr = (afs_int32 *) buffer;
-	if (ntoh_conv)
-	    *lptr = ntohl(*lptr);
-	else
-	    *lptr = htonl(*lptr);
-	break;
     case VIOC_EXPORTAFS & 0xffff:
 	lptr = (afs_int32 *) buffer;
 	if (ntoh_conv)
