@@ -57,7 +57,7 @@ $(WIXOBJ): openafs.wxs $(WIXINCLUDES)
 		-dCellDbFile=CellServDB \
 		-v0 \
 		-w0 \
-		openafs.wxs
+        $(AFSDEV_AUXWIXDEFINES)	openafs.wxs
 
 # Cleanup
 clean::
