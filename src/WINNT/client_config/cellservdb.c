@@ -67,13 +67,17 @@ static void strzcpy (char *pszTarget, const char *pszSource, size_t cch)
 void CSDB_GetFileName (char *pszFilename)
 {
 #ifdef AFS_NT40_ENV
-   /* Find the appropriate AFSDCELL.INI */
-   GetWindowsDirectory (pszFilename, MAX_CSDB_PATH);
-
-   if (pszFilename[ strlen(pszFilename)-1 ] != '\\')
+   /* Find the appropriate CellServDB */
+    char * clientdir = 0;
+   	afssw_GetClientInstallDir(&clientdir);
+	if (clientdir) {
+		strncpy(pszFilename, clientdir, MAX_CSDB_PATH);
+		pszFilename[MAX_CSDB_PATH - 1] = '\0';
+	}
+    if (pszFilename[ strlen(pszFilename)-1 ] != '\\')
       strcat (pszFilename, "\\");
 
-   strcat (pszFilename, "AFSDCELL.INI");
+   strcat (pszFilename, "CellServDB");
 #else
    strcpy (pszFilename, "/usr/vice/etc/CellServDB");
 #endif

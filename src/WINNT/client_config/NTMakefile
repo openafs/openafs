@@ -63,7 +63,8 @@ EXELIBS = \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\libosi.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
-    $(DESTDIR)\lib\lanahelper.lib
+    $(DESTDIR)\lib\lanahelper.lib \
+    $(DESTDIR)\lib\afs\afsreg.lib
 
 ############################################################################
 #
