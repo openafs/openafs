@@ -113,6 +113,10 @@ RCSID("$Header$");
 #include <sys/vfs.h>
 #endif
 
+#ifdef HAVE_SYS_FSTYP_H
+#include <sys/fstyp.h>
+#endif
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -993,6 +997,95 @@ static int doSweepAFSCache(vFilesFound,directory,dirNum,maxDir)
     return(0);
 }
 
+char *CheckCacheBaseDir(char *dir)
+{
+	struct stat statbuf;
+
+	if ( !dir ) { return "cache base dir not specified"; }
+	if ( stat(dir, &statbuf) != 0 ) {
+		return "unable to stat cache base directory";
+	}
+
+	/* might want to check here for anything else goofy, like cache pointed at a non-dedicated directory, etc */
+
+#ifdef AFS_LINUX24_ENV
+	{
+		int res;
+		struct statfs statfsbuf;
+
+		res = statfs(dir, &statfsbuf);
+		if ( res != 0 ) {
+			return "unable to statfs cache base directory";
+		}
+		if ( statfsbuf.f_type == 0x52654973 ) /* REISERFS_SUPER_MAGIC */
+		{
+			return "cannot use reiserfs as cache partition";
+		}
+	}
+#endif
+
+#ifdef AFS_HPUX_ENV
+	{
+		int res;
+		struct statfs statfsbuf;
+		char name[FSTYPSZ];
+
+		res = statfs(dir, &statfsbuf);
+		if ( res != 0 )
+		{
+			return "unable to statfs cache base directory";
+		}
+
+		if (sysfs(GETFSTYP, statfsbuf.f_fsid, name) != 0 )
+		{
+			return "unable to determine filesystem type for cache base dir";
+		}
+
+		if ( strcmp(name, "hfs") )
+		{
+			return "can only use hfs filesystem for cache partition on hpux";
+		}
+	}
+#endif
+
+#ifdef AFS_SUN5_ENV
+	{
+		FILE *vfstab;
+		struct mnttab mnt;
+		struct stat statmnt, statci;
+
+		if ((stat(dir, &statci) == 0) &&
+			((vfstab = fopen(MNTTAB, "r")) != NULL))
+		{
+			while (getmntent(vfstab, &mnt) == 0) {
+			if (strcmp(dir, mnt.mnt_mountp) != 0)
+			{
+				char *cp;
+				int rdev = 0;
+
+				if (cp = hasmntopt(&mnt, "dev="))
+					rdev=(int)strtol(cp+strlen("dev="), (char **)NULL, 16);
+
+				if ((rdev == 0) && (stat(mnt.mnt_mountp, &statmnt) == 0))
+					rdev=statmnt.st_dev;
+
+				if ((rdev == statci.st_dev) &&
+					(hasmntopt (&mnt, "logging") != NULL)) {
+
+					fclose(vfstab);
+					return "mounting a multi-use partition which contains the AFS cache with the\n\"logging\" option may deadlock your system.\n\n";
+				}
+			}
+			}
+
+		fclose(vfstab);
+		}
+	}
+#endif
+
+	return NULL;
+}
+
 int SweepAFSCache(vFilesFound)
     int *vFilesFound;
 {
@@ -1176,6 +1269,7 @@ mainproc(as, arock)
     int	vFilesFound;		    /*How many data cache files were found in sweep*/
     struct afsconf_dir *cdir;	    /* config dir */
     FILE *logfd;
+    char *fsTypeMsg = NULL;
 #ifdef	AFS_SUN5_ENV
     struct stat st;
 #endif
@@ -1497,36 +1591,9 @@ mainproc(as, arock)
     sprintf(fullpn_VFile,       "%s/",  cacheBaseDir);
     vFilePtr = fullpn_VFile + strlen(fullpn_VFile);
 
-#ifdef AFS_SUN5_ENV
-    {
-	FILE *vfstab;
-	struct mnttab mnt;
-	struct stat statmnt, statci;
-
-	if ((stat(cacheBaseDir, &statci) == 0) &&
-	    ((vfstab = fopen(MNTTAB, "r")) != NULL)) {
-	    while (getmntent(vfstab, &mnt) == 0) {
-		if (strcmp(cacheBaseDir, mnt.mnt_mountp) != 0) {
-		    char *cp;
-		    int rdev = 0;
-
-		    if (cp = hasmntopt(&mnt, "dev="))
-			rdev=(int)strtol(cp+strlen("dev="), (char **)NULL, 16);
-
-		    if ((rdev == 0) && (stat(mnt.mnt_mountp, &statmnt) == 0))
-			rdev=statmnt.st_dev;
-
-		    if ((rdev == statci.st_dev) &&
-			(hasmntopt (&mnt, "logging") != NULL)) {
-			printf("WARNING: Mounting a multi-use partition which contains the AFS cache with the\n\"logging\" option may deadlock your system.\n\n");
-			fflush(stdout);
-		    }
-		}
-	    }
-	    fclose(vfstab);
-	}
+    if ((fsTypeMsg = CheckCacheBaseDir(cacheBaseDir))) {
+        printf("%s: WARNING: Cache dir check failed (%s)\n", rn, fsTypeMsg);
     }
-#endif
 
 #if 0
     fputs(AFS_GOVERNMENT_MESSAGE, stdout); 
