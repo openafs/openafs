@@ -608,12 +608,12 @@ NSIS:
    $(NTMAKE)
    $(CD) ..\..\..\..
 
-#msi:
-#   echo ***** Making MSI Installer
-#   $(DOCD) $(SRC)\WINNT\install\$@
-#   $(CD) $(SRC)\WINNT\install\$@
-#   $(NTMAKE)
-#   $(CD) ..\..\..\..
+wix:
+   echo ***** Making Wix MSI Installer
+   $(DOCD) $(SRC)\WINNT\install\$@
+   $(CD) $(SRC)\WINNT\install\$@
+   $(NTMAKE)
+   $(CD) ..\..\..\..
 
 InstallShield5:
 	echo ***** afs_setup_utils
@@ -631,7 +631,7 @@ media: install InstallShield5 NSIS
 
 install-nsis: install NSIS
 
-install-msi: install msi
+install-wix: install wix
 
 install-is5: install InstallShield5
 
