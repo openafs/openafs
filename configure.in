@@ -118,6 +118,7 @@ case $system in
 		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
 		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 		 LINUX_FS_STRUCT_INODE_HAS_I_MAPPING_OVERLOAD
+		 LINUX_FS_STRUCT_INODE_HAS_I_MMAP_SHARED
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 		 LINUX_NEED_RHCONFIG
 		 LINUX_WHICH_MODULES
@@ -126,6 +127,9 @@ case $system in
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS)
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_mmap_shared" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_MMAP_SHARED)
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_mapping_overload" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_MAPPING_OVERLOAD)
