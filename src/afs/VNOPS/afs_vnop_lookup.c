@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50.2.6 2005/01/31 03:49:15 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.50.2.7 2005/03/26 07:11:37 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -1241,7 +1241,7 @@ afs_lookup(OSI_VC_DECL(adp), char *aname, struct vcache **avcp, struct AFS_UCRED
 	}
 #ifdef AFS_LINUX22_ENV
 	if (tvc->mvstat == 2) {	/* we don't trust the dnlc for root vcaches */
-	    AFS_RELE(tvc);
+	    AFS_RELE(AFSTOV(tvc));
 	    *avcp = 0;
 	} else {
 	    code = 0;

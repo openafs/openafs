@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/vos.c,v 1.40.2.7 2005/03/21 02:56:40 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/volser/vos.c,v 1.40.2.8 2005/04/03 20:23:00 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -4945,6 +4945,34 @@ UnlockVLDB(as)
     return 0;
 }
 
+static char *
+PrintInt64Size(afs_uint64 in)
+{
+    register afs_uint32 hi, lo;
+    register char * units;
+    static char output[16];
+
+    SplitInt64(in,hi,lo);
+
+    if (hi == 0) {
+        units = "KB";
+    } else if (!(hi & 0xFFFFFC00)) {
+        units = "MB";
+        lo = (hi << 22) | (lo >> 10);
+    } else if (!(hi & 0xFFF00000)) {
+        units = "GB";
+        lo = (hi << 12) | (lo >> 20);
+    } else if (!(hi & 0xC0000000)) {
+        units = "TB";
+        lo = (hi << 2) | (lo >> 30);
+    } else {
+        units = "PB";
+        lo = (hi >> 8);
+    }
+    sprintf(output,"%u %s", lo, units);
+    return output;
+}
+
 static
 PartitionInfo(as)
      register struct cmd_syndesc *as;
@@ -4956,8 +4984,10 @@ PartitionInfo(as)
     struct partList dummyPartList;
     int i, cnt;
     int printSummary=0, sumPartitions=0;
-    long long sumFree=0, sumStorage=0;
+    afs_uint64 sumFree, sumStorage, tmp;
 
+    ZeroInt64(sumFree);
+    ZeroInt64(sumStorage);
     apart = -1;
     aserver = GetServer(as->parms[0].items->data);
     if (aserver == 0) {
@@ -5010,14 +5040,20 @@ PartitionInfo(as)
 		    "Free space on partition %s: %d K blocks out of total %d\n",
 		    pname, partition.free, partition.minFree);
 	    sumPartitions++;
-	    sumFree += partition.free;
-	    sumStorage += partition.minFree;
+            FillInt64(tmp,0,partition.free);
+            AddUInt64(sumFree,tmp,&sumFree);
+            FillInt64(tmp,0,partition.minFree);
+            AddUInt64(sumStorage,tmp,&sumStorage);
 	}
     }
     if (printSummary) {
         fprintf(STDOUT,
-		"Summary: %lld K blocks free out of %lld K blocks on %d partitions\n",
-		sumFree, sumStorage, sumPartitions);
+		"Summary: %s free out of ",
+		PrintInt64Size(sumFree));
+        fprintf(STDOUT,
+                "%s on %d partitions\n",
+                PrintInt64Size(sumStorage), 
+                sumPartitions);
     }
     return 0;
 }

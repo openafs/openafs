@@ -29,7 +29,7 @@ extern int afs_shuttingdown;
  * Macros to uniquely identify the AFS vfs struct
  */
 #define	AFS_VFSMAGIC		0x1234
-#if    defined(AFS_SUN_ENV) || defined(AFS_HPUX90_ENV) || defined(AFS_LINUX20_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_HPUX90_ENV) || defined(AFS_LINUX20_ENV)
 #define	AFS_VFSFSID		99
 #else
 #if defined(AFS_SGI_ENV)
@@ -43,7 +43,7 @@ extern int afs_shuttingdown;
 #if     defined(AFS_HPUX102_ENV)
 #define AFS_FLOCK       k_flock
 #else
-#if     defined(AFS_SUN56_ENV) || (defined(AFS_LINUX24_ENV) && !defined(AFS_PPC64_LINUX26_ENV) && !defined(AFS_AMD64_LINUX26_ENV) && !defined(AFS_IA64_LINUX26_ENV) && !defined(AFS_S390X_LINUX26_ENV))
+#if     defined(AFS_SUN56_ENV) || (defined(AFS_LINUX24_ENV) && !defined(AFS_PPC64_LINUX26_ENV) && !defined(AFS_AMD64_LINUX26_ENV) && !defined(AFS_IA64_LINUX26_ENV) && !defined(AFS_S390X_LINUX26_ENV) && !defined(AFS_ALPHA_LINUX26_ENV))
 #define AFS_FLOCK       flock64
 #else
 #define AFS_FLOCK       flock
@@ -551,7 +551,7 @@ struct SimpleLocks {
 #define VPageCleaning 0x2	/* Solaris - Cache Trunc Daemon sez keep out */
 
 #define	CPSIZE	    2
-#if defined(AFS_XBSD_ENV)
+#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
 #define vrefCount   v->v_usecount
 #else
 #define vrefCount   v.v_count
@@ -594,7 +594,7 @@ struct vtodc {
 extern afs_uint32 afs_stampValue;	/* stamp for pair's usage */
 #define	MakeStamp()	(++afs_stampValue)
 
-#if defined(AFS_XBSD_ENV)
+#if defined(AFS_XBSD_ENV) || defined(AFS_DARWIN_ENV)
 #define VTOAFS(v) ((struct vcache *)(v)->v_data)
 #define AFSTOV(vc) ((vc)->v)
 #else
@@ -612,7 +612,7 @@ extern afs_uint32 afs_stampValue;	/* stamp for pair's usage */
  * !(avc->nextfree) && !avc->vlruq.next => (FreeVCList == avc->nextfree)
  */
 struct vcache {
-#if defined(AFS_XBSD_ENV)
+#if defined(AFS_XBSD_ENV)||defined(AFS_DARWIN_ENV)
     struct vnode *v;
 #else
     struct vnode v;		/* Has reference count in v.v_count */
@@ -641,7 +641,7 @@ struct vcache {
     krwlock_t rwlock;
     struct cred *credp;
 #endif
-#if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#ifdef AFS_BOZONLOCK_ENV
     afs_bozoLock_t pvnLock;	/* see locks.x */
 #endif
 #ifdef	AFS_AIX32_ENV
@@ -904,6 +904,23 @@ struct afs_fheader {
 #endif
 #endif
 
+struct buffer {
+  afs_int32 fid;              /* is adc->index, the cache file number */
+  afs_inode_t inode;          /* is adc->f.inode, the inode number of the cac\
+				 he file */
+  afs_int32 page;
+  afs_int32 accesstime;
+  struct buffer *hashNext;
+  char *data;
+  char lockers;
+  char dirty;
+  char hashIndex;
+#if AFS_USEBUFFERS
+  struct buf *bufp;
+#endif
+  afs_rwlock_t lock;          /* the lock for this structure */
+};
+
 /* kept on disk and in dcache entries */
 struct fcache {
     struct VenusFid fid;	/* Fid for this file */
@@ -970,6 +987,14 @@ struct dcache {
 };
 /* this is obsolete and should be removed */
 #define ihint stamp
+
+/* afs_memcache.c */
+struct memCacheEntry {
+  int size;                   /* # of valid bytes in this entry */
+  int dataSize;               /* size of allocated data area */
+  afs_lock_t afs_memLock;
+  char *data;                 /* bytes */
+};
 
 /* macro to mark a dcache entry as bad */
 #define ZapDCE(x) \
@@ -1186,30 +1211,6 @@ struct afs_fakestat_state {
 };
 
 extern int afs_fakestat_enable;
-
-struct buffer {
-    afs_int32 fid;		/* is adc->index, the cache file number */
-    afs_inode_t inode;		/* is adc->f.inode, the inode number of the cache file */
-    afs_int32 page;
-    afs_int32 accesstime;
-    struct buffer *hashNext;
-    char *data;
-    char lockers;
-    char dirty;
-    char hashIndex;
-#if AFS_USEBUFFERS
-    struct buf *bufp;
-#endif
-    afs_rwlock_t lock;		/* the lock for this structure */
-};
-
-/* afs_memcache.c */
-struct memCacheEntry {
-    int size;			/* # of valid bytes in this entry */
-    int dataSize;		/* size of allocated data area */
-    afs_lock_t afs_memLock;
-    char *data;			/* bytes */
-};
 
 /* First 32 bits of capabilities */
 #define CAPABILITY_ERRORTRANS (1<<0)

@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/NBSD/osi_vnodeops.c,v 1.5 2003/07/15 23:14:25 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/NBSD/osi_vnodeops.c,v 1.5.2.1 2005/04/03 18:15:38 shadow Exp $");
 
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -454,7 +454,6 @@ mp_afs_ubcrdwr(avc, uio, ioflag, cred)
 	AFS_GUNLOCK();
 	return EISDIR;		/* can't read or write other things */
     }
-    afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc);	/* hold bozon lock, but not basic vnode lock */
     ObtainWriteLock(&avc->lock, 162);
     /* adjust parameters when appending files */
@@ -649,7 +648,6 @@ mp_afs_ubcrdwr(avc, uio, ioflag, cred)
 	code = afs_DoPartialWrite(avc, &treq);
     }
     ReleaseWriteLock(&avc->lock);
-    afs_BozonUnlock(&avc->pvnLock, avc);
     if (DO_FLUSH || (!newpage && (cnt < 10))) {
 	AFS_GUNLOCK();
 	ubc_flush_dirty(((struct vnode *)avc)->v_object, flags);
@@ -721,9 +719,7 @@ mp_afs_mmap(avc, offset, map, addrp, len, prot, maxprot, flags, cred)
 	AFS_GUNLOCK();
 	return code;
     }
-    afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc);	/* ensure old pages are gone */
-    afs_BozonUnlock(&avc->pvnLock, avc);
     ObtainWriteLock(&avc->lock, 166);
     avc->states |= CMAPPED;
     ReleaseWriteLock(&avc->lock);
@@ -780,7 +776,6 @@ mp_afs_getpage(vop, offset, len, protp, pl, plsz, mape, addr, rw, cred)
     ubc_flush_dirty(vop, 0);
     AFS_GLOCK();
 
-    afs_BozonLock(&avc->pvnLock, avc);
     ObtainWriteLock(&avc->lock, 167);
     afs_Trace4(afs_iclSetp, CM_TRACE_PAGEIN, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_LONG, offset, ICL_TYPE_LONG, len, ICL_TYPE_INT32,
@@ -846,7 +841,6 @@ mp_afs_getpage(vop, offset, len, protp, pl, plsz, mape, addr, rw, cred)
   out:
     pl[i] = VM_PAGE_NULL;
     ReleaseWriteLock(&avc->lock);
-    afs_BozonUnlock(&avc->pvnLock, avc);
     afs_Trace3(afs_iclSetp, CM_TRACE_PAGEINDONE, ICL_TYPE_INT32, code,
 	       ICL_TYPE_POINTER, *pagep, ICL_TYPE_INT32, flags);
     code = afs_CheckCode(code, &treq, 40);
@@ -889,7 +883,6 @@ mp_afs_putpage(vop, pl, pcnt, flags, cred)
     }
 
     /* first, obtain the proper lock for the VM system */
-    afs_BozonLock(&avc->pvnLock, avc);
     ObtainWriteLock(&avc->lock, 170);
     for (i = 0; i < pcnt; i++) {
 	vm_page_t page = pl[i];
@@ -916,7 +909,6 @@ mp_afs_putpage(vop, pl, pcnt, flags, cred)
     }
   done:
     ReleaseWriteLock(&avc->lock);
-    afs_BozonUnlock(&avc->pvnLock, avc);
     afs_Trace2(afs_iclSetp, CM_TRACE_PAGEOUTDONE, ICL_TYPE_INT32, code,
 	       ICL_TYPE_INT32, avc->m.Length);
     AFS_GUNLOCK();

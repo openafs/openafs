@@ -204,7 +204,14 @@ auth_headers: cm_headers
 	$(NTMAKE_HEADERS)
 	$(CD) ..\..
 
-afsdobjs: auth_headers
+vlserver_headers: auth_headers
+     echo ***** $@
+	$(DOCD) $(SRC)\vlserver
+	$(CD) $(SRC)\vlserver
+	$(NTMAKE_HEADERS)
+	$(CD) ..\..
+
+afsdobjs: vlserver_headers
      echo ***** $@
 	$(DOCD) $(SRC)\WINNT\afsd
 	$(CD) $(SRC)\WINNT\afsd

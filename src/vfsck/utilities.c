@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vfsck/utilities.c,v 1.5.2.1 2004/11/09 17:18:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vfsck/utilities.c,v 1.5.2.2 2005/04/03 18:15:54 shadow Exp $");
 
 #include <sys/param.h>
 #define VICE			/* allow us to put our changes in at will */
@@ -89,7 +89,7 @@ long diskreads, totalreads;	/* Disk cache statistics */
 long lseek();
 #endif
 char *malloc();
-#if	defined(AFS_SUN_ENV) || defined(AFS_DEC_ENV)
+#if	defined(AFS_SUN_ENV)
 extern int iscorrupt;
 #endif
 #ifdef	AFS_SUN_ENV
@@ -149,7 +149,7 @@ reply(question)
     printf("\n");
     if (!persevere && (nflag || fswritefd < 0)) {
 	printf("%s? no\n\n", question);
-#if	defined(AFS_SUN_ENV) || defined(AFS_DEC_ENV)
+#if	defined(AFS_SUN_ENV) 
 	iscorrupt = 1;		/* known to be corrupt */
 #endif
 	return (0);
@@ -172,7 +172,7 @@ reply(question)
 #ifdef	AFS_HPUX_ENV
     fixed = 0;
 #endif
-#if	defined(AFS_SUN_ENV) || defined(AFS_DEC_ENV)
+#if	defined(AFS_SUN_ENV)
     iscorrupt = 1;		/* known to be corrupt */
 #endif
     return (0);
@@ -282,9 +282,6 @@ flush(fd, bp)
 	pfatal("WRITING %sZERO'ED BLOCK %d TO DISK\n",
 	       (bp->b_errs == bp->b_size / dev_bsize) ? "" : "PARTIALLY ",
 	       bp->b_bno);
-#ifdef	AFS_DEC_ENV
-	iscorrupt = 1;
-#endif
     }
     bp->b_dirty = 0;
     bp->b_errs = 0;

@@ -29,7 +29,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.4 2005/02/28 20:19:10 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/afsfileprocs.c,v 1.81.2.6 2005/04/03 20:19:22 shadow Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -1255,11 +1255,7 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 			("DT: inode=%s, name=%s, errno=%d\n",
 			 PrintInode(NULL, VN_GET_INO(*targetptr)), Name,
 			 errno));
-#ifdef	AFS_DEC_ENV
-		if ((errno != ENOENT) && (errno != EIO) && (errno != ENXIO))
-#else
 		if (errno != ENOENT)
-#endif
 		{
 		    ViceLog(0,
 			    ("Volume %u now offline, must be salvaged.\n",
@@ -6008,11 +6004,10 @@ SRXAFS_FlushCPS(struct rx_call * acall, struct ViceIds * vids,
     for (i = 0; i < nids; i++, vd++) {
 	if (!*vd)
 	    continue;
-	client = h_ID2Client(*vd);	/* returns client locked, or NULL */
+	client = h_ID2Client(*vd);	/* returns client write locked, or NULL */
 	if (!client)
 	    continue;
 
-	BoostSharedLock(&client->lock);
 	client->prfail = 2;	/* Means re-eval client's cps */
 #ifdef	notdef
 	if (client->tcon) {

@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/dsvs.c,v 1.9 2003/12/07 22:49:19 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/dsvs.c,v 1.9.2.1 2005/04/03 18:48:29 shadow Exp $");
 
 #include <sys/types.h>
 #include <afs/cmd.h>
@@ -199,10 +199,9 @@ bc_ParseHost(aname, asockaddr)
 
 
 /* create an empty volume set, new items are added via bc_AddVolumeItem */
-bc_CreateVolumeSet(aconfig, avolName, aflags)
-     struct bc_config *aconfig;
-     char *avolName;
-     afs_int32 aflags;
+int
+bc_CreateVolumeSet(struct bc_config *aconfig, char *avolName,
+		   afs_int32 aflags)
 {
     register struct bc_volumeSet **tlast, *tset, *nset;
 
@@ -228,20 +227,18 @@ bc_CreateVolumeSet(aconfig, avolName, aflags)
     return 0;
 }
 
-
-
-void
-FreeVolumeSet(avset)
-     struct bc_volumeSet *avset;
+static int
+FreeVolumeEntry(register struct bc_volumeEntry *aentry)
 {
-    FreeVolumeEntryList(avset->ventries);
-    free(avset->name);
-    free(avset);
+    free(aentry->name);
+    free(aentry->serverName);
+    free(aentry->partname);
+    free(aentry);
+    return 0;
 }
 
-static
-FreeVolumeEntryList(aentry)
-     register struct bc_volumeEntry *aentry;
+static int
+FreeVolumeEntryList(register struct bc_volumeEntry *aentry)
 {
     register struct bc_volumeEntry *tnext;
 
@@ -253,21 +250,19 @@ FreeVolumeEntryList(aentry)
     return 0;
 }
 
-static
-FreeVolumeEntry(aentry)
-     register struct bc_volumeEntry *aentry;
+
+
+void
+FreeVolumeSet(struct bc_volumeSet *avset)
 {
-    free(aentry->name);
-    free(aentry->serverName);
-    free(aentry->partname);
-    free(aentry);
-    return 0;
+    FreeVolumeEntryList(avset->ventries);
+    free(avset->name);
+    free(avset);
 }
 
-bc_DeleteVolumeSet(aconfig, avolName, flags)
-     struct bc_config *aconfig;
-     char *avolName;
-     afs_int32 *flags;
+int
+bc_DeleteVolumeSet(struct bc_config *aconfig, char *avolName,
+		   afs_int32 *flags)
 {
     register struct bc_volumeSet **tlast, *tset;
 
@@ -286,10 +281,9 @@ bc_DeleteVolumeSet(aconfig, avolName, flags)
     return -1;
 }
 
-bc_DeleteVolumeItem(aconfig, avolName, anumber)
-     struct bc_config *aconfig;
-     char *avolName;
-     afs_int32 anumber;
+int
+bc_DeleteVolumeItem(struct bc_config *aconfig, char *avolName,
+		    afs_int32 anumber)
 {
     register afs_int32 i;
     register struct bc_volumeSet *tset;

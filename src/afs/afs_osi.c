@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48.2.3 2005/01/31 04:25:32 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi.c,v 1.48.2.4 2005/04/03 18:15:36 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -98,13 +98,9 @@ int
 osi_Active(register struct vcache *avc)
 {
     AFS_STATCNT(osi_Active);
-#if defined(AFS_SUN_ENV) || defined(AFS_AIX_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || (AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
+#if defined(AFS_AIX_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || (AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if ((avc->opens > 0) || (avc->states & CMAPPED))
 	return 1;		/* XXX: Warning, verify this XXX  */
-#elif	defined(AFS_MACH_ENV)
-    if (avc->opens > 0
-	|| ((avc->v.v_flag & VTEXT) && !inode_uncache_try(avc)))
-	return 1;
 #elif defined(AFS_SGI_ENV)
     if ((avc->opens > 0) || AFS_VN_MAPPED(AFSTOV(avc)))
 	return 1;
@@ -189,14 +185,6 @@ osi_FlushText_really(register struct vcache *vp)
     if (hcmp(vp->m.DataVersion, vp->flushDV) <= 0)
 	return;
 
-#ifdef AFS_DEC_ENV
-    {
-	void afs_gfs_FlushText();
-	afs_gfs_FlushText(vp);
-	return;
-    }
-#else
-
     MObtainWriteLock(&afs_ftf, 317);
     hset(fdv, vp->m.DataVersion);
 
@@ -239,60 +227,7 @@ osi_FlushText_really(register struct vcache *vp)
     hset(vp->flushDV, fdv);
     MReleaseWriteLock(&afs_ftf);
 
-#endif /* AFS_DEC_ENV */
 }
-
-#ifdef AFS_DEC_ENV
-/* I don't really like using xinval() here, because it kills processes
- * a bit aggressively.  Previous incarnations of this functionality
- * used to use xrele() instead of xinval, and didn't invoke
- * cacheinval().  But they would panic.  So it might be worth looking
- * into some middle ground...
- */
-static void
-afs_gfs_FlushText(register struct vcache *vp)
-{
-    afs_hyper_t fdv;		/* version before which we'll flush */
-    register struct text *xp;
-    struct gnode *gp;
-
-    MObtainWriteLock(&afs_ftf, 318);
-    hset(fdv, vp->m.DataVersion);
-    gp = afs_vntogn(vp);
-
-    if (!gp) {
-	/* this happens frequently after cores are created. */
-	MReleaseWriteLock(&afs_ftf);
-	return;
-    }
-
-    if (gp->g_flag & GTEXT) {
-	if (gp->g_textp) {
-	    xp = (struct text *)gp->g_textp;
-	    /* if text object is locked, give up */
-	    if (xp && (xp->x_flag & XLOCK)) {
-		MReleaseWriteLock(&afs_ftf);
-		return;
-	    }
-	} else
-	    xp = NULL;
-
-	if (gp->g_flag & GTEXT) {	/* still has a text object? */
-	    xinval(gp);
-	}
-    }
-
-    /* next do the stuff that need not check for deadlock problems */
-    /*    maybe xinval(gp); here instead of above */
-    binval(NODEV, gp);
-    cacheinval(gp);
-    /* finally, record that we've done it */
-    hset(vp->flushDV, fdv);
-
-    MReleaseWriteLock(&afs_ftf);
-}
-#endif /* AFS_DEC_ENV */
-
 #endif /* AFS_TEXT_ENV */
 
 /* mask signals in afsds */
@@ -345,8 +280,6 @@ afs_osi_Invisible(void)
 {
 #ifdef AFS_LINUX22_ENV
     afs_osi_MaskSignals();
-#elif defined(AFS_DEC_ENV)
-    u.u_procp->p_type |= SSYS;
 #elif defined(AFS_SUN5_ENV)
     curproc->p_flag |= SSYS;
 #elif defined(AFS_HPUX101_ENV) && !defined(AFS_HPUX1123_ENV)
@@ -465,7 +398,7 @@ afs_osi_Alloc(size_t x)
 #else
     size = x;
     tm = (struct osimem *)AFS_KALLOC(size);
-#ifdef	AFS_SUN_ENV
+#ifdef	AFS_SUN5_ENV
     if (!tm)
 	osi_Panic("osi_Alloc: Couldn't allocate %d bytes; out of memory!\n",
 		  size);
@@ -474,7 +407,7 @@ afs_osi_Alloc(size_t x)
 #endif
 }
 
-#if	defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
 
 void *
 afs_osi_Alloc_NoSleep(size_t x)
@@ -577,7 +510,7 @@ osi_VMDirty_p(struct vcache *avc)
 #endif
 #endif /* AFS_AIX32_ENV */
 
-#if defined (AFS_SUN_ENV)
+#if defined (AFS_SUN5_ENV)
     if (avc->states & CMAPPED) {
 	struct page *pg;
 	for (pg = avc->v.v_s.v_Pages; pg; pg = pg->p_vpnext) {

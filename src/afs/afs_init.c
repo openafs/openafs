@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_init.c,v 1.28.2.2 2005/03/11 06:50:31 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_init.c,v 1.28.2.4 2005/04/03 18:18:54 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -27,7 +27,7 @@ RCSID
 /* Exported variables */
 struct osi_dev cacheDev;	/*Cache device */
 afs_int32 cacheInfoModTime;	/*Last time cache info modified */
-#if defined(AFS_OSF_ENV) || defined(AFS_DEC_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 struct mount *afs_cacheVfsp = 0;
 #elif defined(AFS_LINUX20_ENV)
 struct super_block *afs_cacheSBp = 0;
@@ -111,26 +111,6 @@ afs_CacheInit(afs_int32 astatSize, afs_int32 afiles, afs_int32 ablocks,
     RWLOCK_INIT(&afs_xaxs, "afs_xaxs");
     osi_dnlc_init();
 
-
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-    {
-	afs_int32 preallocs;
-
-	/*
-	 * We want to also reserve space for the gnode struct which is associated
-	 * with each vnode (vcache) one; we want to use the pinned pool for them   
-	 * since they're referenced at interrupt level.
-	 */
-	if (afs_stats_cmperf.SmallBlocksAlloced + astatSize < 3600)
-	    preallocs = astatSize;
-	else {
-	    preallocs = 3600 - afs_stats_cmperf.SmallBlocksAlloced;
-	    if (preallocs <= 0)
-		preallocs = 10;
-	}
-	osi_AllocMoreSSpace(preallocs);
-    }
-#endif
     /* 
      * create volume list structure 
      */
@@ -251,11 +231,7 @@ LookupInodeByPath(char *filename, ino_t * inode, struct vnode **fvpp)
     if (fvpp)
 	*fvpp = filevp;
     else {
-#if defined(AFS_DEC_ENV)
-	grele(filevp);
-#else
 	AFS_RELE(filevp);
-#endif
     }
 #endif /* AFS_LINUX22_ENV */
 
@@ -492,9 +468,7 @@ afs_ResourceInit(int preallocs)
     RWLOCK_INIT(&afs_xinterface, "afs_xinterface");
     LOCK_INIT(&afs_puttofileLock, "afs_puttofileLock");
 #ifndef AFS_FBSD_ENV
-#ifndef	AFS_AIX32_ENV
     LOCK_INIT(&osi_fsplock, "osi_fsplock");
-#endif
     LOCK_INIT(&osi_flplock, "osi_flplock");
 #endif
     RWLOCK_INIT(&afs_xconn, "afs_xconn");
@@ -511,15 +485,6 @@ afs_ResourceInit(int preallocs)
 	afs_sysname = afs_sysnamelist[0];
 	strcpy(afs_sysname, SYS_NAME);
 	afs_sysnamecount = 1;
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-	{
-
-	    if ((preallocs > 256) && (preallocs < 3600))
-		afs_preallocs = preallocs;
-	    osi_AllocMoreSSpace(afs_preallocs);
-	    osi_AllocMoreMSpace(100);
-	}
-#endif
     }
 
     secobj = rxnull_NewServerSecurityObject();
@@ -691,7 +656,7 @@ shutdown_cache(void)
 void
 shutdown_vnodeops(void)
 {
-#if !defined(AFS_SGI_ENV) && !defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
+#if !defined(AFS_SGI_ENV) && !defined(AFS_SUN5_ENV)
     struct buf *afs_bread_freebp = 0;
 #endif
 
@@ -704,7 +669,7 @@ shutdown_vnodeops(void)
 #ifndef AFS_LINUX20_ENV
 	afs_rd_stash_i = 0;
 #endif
-#if !defined(AFS_SGI_ENV) && !defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
+#if !defined(AFS_SGI_ENV) && !defined(AFS_SUN5_ENV)
 	afs_bread_freebp = 0;
 #endif
 	shutdown_mariner();

@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_syscall.c,v 1.1.2.4 2005/03/11 06:49:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_syscall.c,v 1.1.2.5 2005/04/03 19:32:39 shadow Exp $");
 
 #ifdef AFS_LINUX24_ENV
 #include <linux/module.h> /* early to avoid printf->printk mapping */
@@ -36,6 +36,9 @@ RCSID
 #include <linux/sched.h>
 #endif
 
+#ifndef NR_syscalls
+#define NR_syscalls 222
+#endif
 
 /* On SPARC64 and S390X, sys_call_table contains 32-bit entries
  * even though pointers are 64 bit quantities.
@@ -96,12 +99,30 @@ asmlinkage long (*sys32_setgroups32p) (int gidsetsize, gid_t * grouplist);
 
 
 /***** PPC64 *****/
-#ifdef AFS_PPC64_LINUX20_ENV
-extern SYSCALLTYPE *afs_sys_call_table32;
+#ifdef AFS_PPC64_LINUX26_ENV
+static SYSCALLTYPE *afs_sys_call_table32;
 static SYSCALLTYPE afs_ni_syscall32 = 0;
+static SYSCALLTYPE old_sys_setgroupsp = 0;
+static SYSCALLTYPE old_sys32_setgroupsp = 0;
 
 extern int afs32_xsetgroups();
 asmlinkage long (*sys32_setgroupsp)(int gidsetsize, gid_t *grouplist);
+
+asmlinkage long sys_close(unsigned int fd);
+static void sys_setgroups_stub() 
+	__attribute__ ((pure,const,no_instrument_function));
+static void sys_setgroups_stub() 
+{ 
+	printf("*** error! sys_setgroups_stub called\n");
+}
+
+static void sys32_setgroups_stub() 
+	__attribute__ ((pure,const,no_instrument_function));
+static void sys32_setgroups_stub() 
+{ 
+	printf("*** error! sys32_setgroups_stub called\n");
+}
+
 #endif /* AFS_AMD64_LINUX20_ENV */
 
 
@@ -213,6 +234,127 @@ struct fptr {
 
 #endif /* AFS_IA64_LINUX20_ENV */
 
+/***** PPC64 ***** 
+ * Spring 2005
+ * sys_call_table hook for PPC64 
+ * by Soewono Effendi <Soewono.Effendi@sysgo.de>
+ * for IBM Deutschland
+ * Thanks go to SYSGO's team for their support:
+ * Horst Birthelmer <Horst.Birthelmer@sysgo.de>
+ * Marius Groeger <Marius.Groeger@sysgo.de>
+ */
+#if defined(AFS_PPC64_LINUX26_ENV)
+extern void flush_cache(void *, unsigned long);
+#define PPC_LO(v) ((v) & 0xffff)
+#define PPC_HI(v) (((v) >> 16) & 0xffff)
+#define PPC_HA(v) PPC_HI ((v) + 0x8000)
+#define PPC_HLO(v) ((short)(((v) >> 32) & 0xffff))
+#define PPC_HHI(v) ((short)(((v) >> 48) & 0xffff))
+
+struct ppc64_opd
+{
+	unsigned long funcaddr;
+	unsigned long r2;
+};
+
+struct ppc64_stub
+{
+	unsigned char jump[136];
+	unsigned long r2;
+	unsigned long lr;
+	struct ppc64_opd opd;
+} __attribute__ ((packed));
+
+/* a stub to fix up r2 (TOC ptr) and to jump to our sys_call hook
+   function.  We patch the new r2 value and function pointer into 
+   the stub. */
+#define PPC64_STUB(stub) \
+static struct ppc64_stub stub = \
+{ .jump = { \
+        0xf8, 0x41, 0x00, 0x28, /*     std     r2,40(r1) */ \
+        0xfb, 0xc1, 0xff, 0xf0, /*     std     r30,-16(r1) */ \
+        0xfb, 0xa1, 0xff, 0xe8, /*     std     r29,-24(r1) */ \
+        0x7c, 0x5d, 0x13, 0x78, /*     mr      r29,r2 */ \
+        0x3c, 0x40, 0x12, 0x34, /*16:  lis     r2,4660 */ \
+        0x60, 0x42, 0x56, 0x78, /*20:  ori     r2,r2,22136 */ \
+        0x78, 0x42, 0x07, 0xc6, /*     rldicr  r2,r2,32,31 */ \
+        0x64, 0x42, 0x90, 0xab, /*28:  oris    r2,r2,37035 */ \
+        0x60, 0x42, 0xcd, 0xef, /*32:  ori     r2,r2,52719 */ \
+        0x3f, 0xc2, 0x00, 0x00, /*36:  addis   r30,r2,0 */ \
+        0x3b, 0xde, 0x00, 0x00, /*40:  addi    r30,r30,0 */ \
+        0xfb, 0xbe, 0x00, 0x88, /*     std     r29,136(r30) */ \
+        0x7f, 0xa8, 0x02, 0xa6, /*     mflr    r29 */ \
+        0xfb, 0xbe, 0x00, 0x90, /*     std     r29,144(r30) */ \
+        0xeb, 0xde, 0x00, 0x98, /*     ld      r30,152(r30) */ \
+        0x7f, 0xc8, 0x03, 0xa6, /*     mtlr    r30 */ \
+        0xeb, 0xa1, 0xff, 0xe8, /*     ld      r29,-24(r1) */ \
+        0xeb, 0xc1, 0xff, 0xf0, /*     ld      r30,-16(r1) */ \
+        0x4e, 0x80, 0x00, 0x21, /*     blrl */ \
+        0x3c, 0x40, 0x12, 0x34, /*76:  lis     r2,4660 */ \
+        0x60, 0x42, 0x56, 0x78, /*80:  ori     r2,r2,22136 */ \
+        0x78, 0x42, 0x07, 0xc6, /*     rldicr  r2,r2,32,31 */ \
+        0x64, 0x42, 0x90, 0xab, /*88:  oris    r2,r2,37035 */ \
+        0x60, 0x42, 0xcd, 0xef, /*92:  ori     r2,r2,52719 */ \
+        0xfb, 0xc1, 0xff, 0xf0, /*     std     r30,-16(r1) */ \
+        0xfb, 0xa1, 0xff, 0xe8, /*     std     r29,-24(r1) */ \
+        0x3f, 0xc2, 0xab, 0xcd, /*104: addis   r30,r2,-21555 */ \
+        0x3b, 0xde, 0x78, 0x90, /*108: addi    r30,r30,30864 */ \
+        0xeb, 0xbe, 0x00, 0x90, /*     ld      r29,144(r30) */ \
+        0x7f, 0xa8, 0x03, 0xa6, /*     mtlr    r29 */ \
+        0xe8, 0x5e, 0x00, 0x88, /*     ld      r2,136(r30) */ \
+        0xeb, 0xa1, 0xff, 0xe8, /*     ld      r29,-24(r1) */ \
+        0xeb, 0xc1, 0xff, 0xf0, /*     ld      r30,-16(r1) */ \
+        0x4e, 0x80, 0x00, 0x20  /*     blr */ \
+}} 
+
+static void * create_stub(struct ppc64_stub *stub,
+                          struct ppc64_opd *opd)
+{
+	unsigned short *p1, *p2, *p3, *p4;
+	unsigned long addr;
+
+	stub->opd.funcaddr = opd->funcaddr;
+	stub->opd.r2 = opd->r2;
+	addr = (unsigned long) opd->r2;
+	p1 = (unsigned short*) &stub->jump[18];
+	p2 = (unsigned short*) &stub->jump[22];
+	p3 = (unsigned short*) &stub->jump[30];
+	p4 = (unsigned short*) &stub->jump[34];
+
+	*p1 = PPC_HHI(addr);
+	*p2 = PPC_HLO(addr);
+	*p3 = PPC_HI(addr);
+	*p4 = PPC_LO(addr);
+
+	addr = (unsigned long) stub - opd->r2;
+	p1 = (unsigned short*) &stub->jump[38];
+	p2 = (unsigned short*) &stub->jump[42];
+	*p1 = PPC_HA(addr);
+	*p2 = PPC_LO(addr);
+	p1 = (unsigned short*) &stub->jump[106];
+	p2 = (unsigned short*) &stub->jump[110];
+	*p1 = PPC_HA(addr);
+	*p2 = PPC_LO(addr);
+
+	addr = (unsigned long) opd->r2;
+	p1 = (unsigned short*) &stub->jump[78];
+	p2 = (unsigned short*) &stub->jump[82];
+	p3 = (unsigned short*) &stub->jump[90];
+	p4 = (unsigned short*) &stub->jump[94];
+
+	*p1 = PPC_HHI(addr);
+	*p2 = PPC_HLO(addr);
+	*p3 = PPC_HI(addr);
+	*p4 = PPC_LO(addr);
+
+        flush_cache((void *)stub, sizeof(*stub));
+        return ((void*)(stub));
+}
+
+PPC64_STUB(afs_sys_call_stub);
+PPC64_STUB(afs_xsetgroups_stub);
+PPC64_STUB(afs_xsetgroups32_stub);
+#endif /* AFS_PPC64_LINUX26_ENV */
 
 
 /**********************************************************************/
@@ -264,7 +406,51 @@ int osi_syscall_init(void)
     /* XXX no 32-bit syscalls on IA64? */
 
 
-/***** COMMON (except IA64) *****/
+#elif defined(AFS_PPC64_LINUX26_ENV)
+
+    afs_sys_call_table = osi_find_syscall_table(0);
+    if (afs_sys_call_table) {
+    	SYSCALLTYPE p;
+    	struct ppc64_opd* opd = (struct ppc64_opd*) sys_close;
+	unsigned long r2 = opd->r2;
+    	opd = (struct ppc64_opd*) afs_syscall;
+    	afs_sys_call_table32 = (unsigned long)afs_sys_call_table - 
+		NR_syscalls * sizeof(SYSCALLTYPE);
+	/* check we aren't already loaded */
+	p = SYSCALL2POINTER afs_sys_call_table[_S(__NR_afs_syscall)];
+	if ((unsigned long)p == opd->funcaddr) {
+	    printf("AFS syscall entry point already in use!\n");
+	    return -EBUSY;
+	}
+	/* setup AFS entry point */
+	p = create_stub(&afs_sys_call_stub, opd);
+	afs_ni_syscall = afs_sys_call_table[_S(__NR_afs_syscall)];
+	afs_sys_call_table[_S(__NR_afs_syscall)] = POINTER2SYSCALL p;
+
+	/* setup setgroups */
+    	opd = (struct ppc64_opd*) afs_xsetgroups;
+	p = create_stub(&afs_xsetgroups_stub, opd);
+	old_sys_setgroupsp = SYSCALL2POINTER afs_sys_call_table[_S(__NR_setgroups)];
+	afs_sys_call_table[_S(__NR_setgroups)] = POINTER2SYSCALL p;
+    	opd = (struct ppc64_opd*) sys_setgroups_stub;
+	opd->funcaddr = old_sys_setgroupsp;
+	opd->r2 = r2;
+
+	/* setup setgroups32 */
+    	opd = (struct ppc64_opd*) afs32_xsetgroups;
+	p = create_stub(&afs_xsetgroups32_stub, opd);
+	old_sys32_setgroupsp = SYSCALL2POINTER afs_sys_call_table32[_S(__NR_setgroups)];
+	afs_sys_call_table32[_S(__NR_setgroups)] = POINTER2SYSCALL p;
+    	opd = (struct ppc64_opd*) sys32_setgroups_stub;
+	opd->funcaddr = old_sys32_setgroupsp;
+	opd->r2 = r2;
+
+        flush_cache((void *)afs_sys_call_table, 2*NR_syscalls*sizeof(void*));
+
+	sys_setgroupsp = sys_setgroups_stub;
+	sys32_setgroupsp = sys32_setgroups_stub;
+    }
+/***** COMMON (except IA64 or PPC64) *****/
 #else /* !AFS_IA64_LINUX20_ENV */
 
     afs_sys_call_table = osi_find_syscall_table(0);
@@ -324,12 +510,6 @@ int osi_syscall_init(void)
 #endif /* AFS_AMD64_LINUX20_ENV */
 
 
-/***** PPC64 *****/
-#ifdef AFS_PPC64_LINUX20_ENV
-    /* XXX no 32-bit syscalls on PPC64? */
-#endif
-
-
 /***** SPARC64 *****/
 #ifdef AFS_SPARC64_LINUX20_ENV
     afs_sys_call_table32 = osi_find_syscall_table(1);
@@ -371,6 +551,12 @@ void osi_syscall_clean(void)
 #if defined(AFS_IA64_LINUX20_ENV)
 	afs_sys_call_table[_S(__NR_setgroups)] =
 	    POINTER2SYSCALL((struct fptr *)sys_setgroupsp)->ip;
+#elif defined(AFS_PPC64_LINUX26_ENV)
+	afs_sys_call_table[_S(__NR_setgroups)] =
+	    POINTER2SYSCALL old_sys_setgroupsp;
+	/* put back setgroups32 for PPC64 */
+	afs_sys_call_table32[__NR_setgroups] =
+	    POINTER2SYSCALL old_sys32_setgroupsp;
 #else /* AFS_IA64_LINUX20_ENV */
 	afs_sys_call_table[_S(__NR_setgroups)] =
 	    POINTER2SYSCALL sys_setgroupsp;
@@ -406,12 +592,6 @@ void osi_syscall_clean(void)
 	    POINTER2SYSCALL sys32_setgroups32p;
 #endif
     }
-#endif
-
-
-/***** PPC64 *****/
-#ifdef AFS_PPC64_LINUX20_ENV
-    /* XXX no 32-bit syscalls on PPC64? */
 #endif
 
 

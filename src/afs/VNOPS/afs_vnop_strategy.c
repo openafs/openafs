@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_strategy.c,v 1.18 2003/08/29 22:00:04 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_strategy.c,v 1.18.2.1 2005/04/03 18:15:40 shadow Exp $");
 
 #if !defined(AFS_HPUX_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV)
 
@@ -78,7 +78,7 @@ afs_ustrategy(abp)
 	 */
 	tuio.afsio_iov = tiovec;
 	tuio.afsio_iovcnt = 1;
-#if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_XBSD_ENV)
+#if	defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_XBSD_ENV)
 #ifdef AFS_64BIT_CLIENT
 	tuio.afsio_offset = (afs_offs_t) dbtob(abp->b_blkno);
 #else /* AFS_64BIT_CLIENT */
@@ -136,7 +136,7 @@ afs_ustrategy(abp)
     } else {
 	tuio.afsio_iov = tiovec;
 	tuio.afsio_iovcnt = 1;
-#if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#if	defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV)
 #ifdef AFS_64BIT_CLIENT
 	tuio.afsio_offset = (afs_offs_t) dbtob(abp->b_blkno);
 #else /* AFS_64BIT_CLIENT */
@@ -166,11 +166,11 @@ afs_ustrategy(abp)
 	 */
 	len = MIN(len, tvc->m.Length - dbtob(abp->b_blkno));
 #endif
-#ifdef AFS_ALPHA_ENV
+#ifdef AFS_OSF_ENV
 	len =
 	    MIN(abp->b_bcount,
 		(VTOAFS(abp->b_vp))->m.Length - dbtob(abp->b_blkno));
-#endif /* AFS_ALPHA_ENV */
+#endif /* AFS_OSF_ENV */
 	tuio.afsio_resid = len;
 #if defined(AFS_XBSD_ENV)
 	tiovec[0].iov_base = abp->b_saveaddr;

@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vfsck/pass5.c,v 1.5 2003/07/15 23:17:27 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vfsck/pass5.c,v 1.5.2.1 2005/04/03 18:15:54 shadow Exp $");
 
 #define VICE
 #include <sys/param.h>
@@ -372,18 +372,6 @@ pass5()
 	sbfine(fs);
 	sbdirty();
     }
-#if defined(AFS_DEC_ENV)
-    if (sbfine(fs)) {
-	int oldmod;
-	/* don't change fsmodified here, or fsck will think that modified
-	 * mounted file system requires reboot, when it is really fine
-	 * (since it is mounted, and thus clean flag doesn't matter) */
-	oldmod = fsmodified;
-	sbdirty();
-	flush(fswritefd, &sblk);
-	fsmodified = oldmod;
-    }
-#endif
 }
 
 /* returns true if sbdirty should be called */
@@ -392,24 +380,9 @@ sbfine(fs)
 {
     int rcode;
     rcode = 0;
-#if defined(AFS_DEC_ENV)
-    if (fs->fs_fmod != 0 || fs->fs_clean != FS_CLEAN) {
-	fs->fs_fmod = 0;
-	fs->fs_clean = FS_CLEAN;
-	rcode = 1;
-    }
-    if (fs->fs_deftimer) {
-	fs->fs_cleantimer = fs->fs_deftimer = (fs->fs_deftimer > 0
-					       && fs->fs_deftimer <
-					       255) ? fs->
-	    fs_deftimer : FSCLEAN_TIMEOUTFACTOR;
-	rcode = 1;
-    }
-#else
     if (fs->fs_fmod != 0) {
 	fs->fs_fmod = 0;
 	rcode = 1;
     }
-#endif /* AFS_DEC_ENV */
     return rcode;
 }

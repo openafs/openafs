@@ -21,7 +21,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/listinodes.c,v 1.13.2.1 2004/10/18 07:12:27 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/listinodes.c,v 1.13.2.2 2005/04/03 18:15:55 shadow Exp $");
 
 #ifndef AFS_NAMEI_ENV
 #if defined(AFS_LINUX20_ENV) || defined(AFS_SUN4_ENV)
@@ -80,9 +80,6 @@ ListViceInodes(char *devname, char *mountedOn, char *resultFile,
 #endif
 #endif
 #else /* AFS_VFSINCL_ENV */
-#ifdef AFS_DEC_ENV
-#include <sys/time.h>
-#endif /* AFS_DEC_ENV */
 #ifdef	AFS_OSF_ENV
 #include <ufs/inode.h>
 #else /* AFS_OSF_ENV */

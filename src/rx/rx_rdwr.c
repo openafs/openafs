@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_rdwr.c,v 1.21.2.2 2004/12/07 06:10:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_rdwr.c,v 1.21.2.3 2005/04/03 18:15:51 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -59,13 +59,13 @@ RCSID
 #include "rx/rx_globals.h"
 #include "afs/lock.h"
 #include "afsint.h"
-#ifdef  AFS_ALPHA_ENV
+#ifdef  AFS_OSF_ENV
 #undef kmem_alloc
 #undef kmem_free
 #undef mem_alloc
 #undef mem_free
 #undef register
-#endif /* AFS_ALPHA_ENV */
+#endif /* AFS_OSF_ENV */
 #else /* KERNEL */
 # include <sys/types.h>
 #ifndef AFS_NT40_ENV

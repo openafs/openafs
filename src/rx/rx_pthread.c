@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_pthread.c,v 1.17.2.1 2004/08/25 07:09:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_pthread.c,v 1.17.2.3 2005/04/04 04:27:02 shadow Exp $");
 
 #include <sys/types.h>
 #include <errno.h>

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/budb/db_text.c,v 1.10 2003/11/23 04:53:31 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/budb/db_text.c,v 1.10.2.1 2005/04/03 18:15:44 shadow Exp $");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -519,7 +519,7 @@ saveTextToFile(ut, tbPtr)
 }
 
 
-#if (defined(AFS_DEC_ENV) || defined(AFS_HPUX_ENV)) || defined(AFS_NT40_ENV)
+#if (defined(AFS_HPUX_ENV)) || defined(AFS_NT40_ENV)
 
 /* mkstemp
  * entry:

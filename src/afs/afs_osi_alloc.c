@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_osi_alloc.c,v 1.10 2004/03/10 23:01:51 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_osi_alloc.c,v 1.10.2.1 2005/04/03 18:18:54 shadow Exp $");
 
 
 
@@ -20,15 +20,16 @@ RCSID
 #include "afs/afs_stats.h"	/* afs statistics */
 
 #ifndef AFS_FBSD_ENV
+
 #ifdef AFS_AIX41_ENV
 #include "sys/lockl.h"
 #include "sys/sleep.h"
 #include "sys/syspest.h"
 #include "sys/lock_def.h"
 /*lock_t osi_fsplock = LOCK_AVAIL;*/
-#else
-afs_lock_t osi_fsplock;
 #endif
+
+afs_lock_t osi_fsplock;
 
 
 
@@ -36,29 +37,6 @@ static struct osi_packet {
     struct osi_packet *next;
 } *freePacketList = NULL, *freeSmallList;
 afs_lock_t osi_flplock;
-
-
-afs_int32 afs_preallocs = 512;	/* Reserve space for all small allocs! */
-void
-osi_AllocMoreSSpace(register afs_int32 preallocs)
-{
-    register int i;
-    char *p;
-
-    p = (char *)afs_osi_Alloc(AFS_SMALLOCSIZ * preallocs);
-#ifdef  KERNEL_HAVE_PIN
-    pin(p, AFS_SMALLOCSIZ * preallocs);	/* XXXX */
-#endif
-    for (i = 0; i < preallocs; i++, p += AFS_SMALLOCSIZ) {
-#ifdef AFS_AIX32_ENV
-	*p = '\0';		/* page fault it in. */
-#endif
-	osi_FreeSmallSpace((char *)p);
-    }
-    afs_stats_cmperf.SmallBlocksAlloced += preallocs;
-    afs_stats_cmperf.SmallBlocksActive += preallocs;
-}
-
 
 
 /* free space allocated by AllocLargeSpace.  Also called by mclput when freeing
@@ -82,97 +60,15 @@ void
 osi_FreeSmallSpace(void *adata)
 {
 
-#if	defined(AFS_AIX32_ENV)
-    int x;
-#endif
-#if	defined(AFS_HPUX_ENV)
-    ulong_t x;
-#endif
-
     AFS_ASSERT_GLOCK();
 
     AFS_STATCNT(osi_FreeSmallSpace);
     afs_stats_cmperf.SmallBlocksActive--;
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-    x = splnet();		/*lockl(&osi_fsplock, LOCK_SHORT); */
-#else
     MObtainWriteLock(&osi_fsplock, 323);
-#endif
     ((struct osi_packet *)adata)->next = freeSmallList;
     freeSmallList = adata;
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-    splx(x);			/*unlockl(&osi_fsplock); */
-#else
     MReleaseWriteLock(&osi_fsplock);
-#endif
 }
-
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-static struct osi_packet *freeMediumList;
-
-osi_AllocMoreMSpace(register afs_int32 preallocs)
-{
-    register int i;
-    char *p;
-
-    p = (char *)afs_osi_Alloc(AFS_MDALLOCSIZ * preallocs);
-#ifdef  KERNEL_HAVE_PIN
-    pin(p, AFS_MDALLOCSIZ * preallocs);	/* XXXX */
-#endif
-    for (i = 0; i < preallocs; i++, p += AFS_MDALLOCSIZ) {
-#ifdef AFS_AIX32_ENV
-	*p = '\0';		/* page fault it in. */
-#endif
-	osi_FreeMediumSpace((char *)p);
-    }
-    afs_stats_cmperf.MediumBlocksAlloced += preallocs;
-    afs_stats_cmperf.MediumBlocksActive += preallocs;
-}
-
-
-void *
-osi_AllocMediumSpace(size_t size)
-{
-    register struct osi_packet *tp;
-#if	defined(AFS_AIX32_ENV)
-    int x;
-#endif
-#if	defined(AFS_HPUX_ENV)
-    ulong_t x;
-#endif
-
-    afs_stats_cmperf.MediumBlocksActive++;
-  retry:
-    x = splnet();
-    tp = freeMediumList;
-    if (tp)
-	freeMediumList = tp->next;
-    splx(x);
-    if (!tp) {
-	osi_AllocMoreMSpace(AFS_MALLOC_LOW_WATER);
-	goto retry;
-    }
-    return tp;
-}
-
-void
-osi_FreeMediumSpace(void *adata)
-{
-
-#if	defined(AFS_AIX32_ENV)
-    int x;
-#endif
-#if	defined(AFS_HPUX_ENV)
-    ulong_t x;
-#endif
-
-    afs_stats_cmperf.MediumBlocksActive--;
-    x = splnet();
-    ((struct osi_packet *)adata)->next = freeMediumList;
-    freeMediumList = adata;
-    splx(x);
-}
-#endif /* defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV) */
 
 
 /* allocate space for sender */
@@ -210,129 +106,28 @@ osi_AllocLargeSpace(size_t size)
     return (char *)tp;
 }
 
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-/*
- * XXX We could have used a macro around osi_AllocSmallSpace but it's
- * probably better like this so that we can remove this at some point.
- */
-/* morespace 1 - means we called at splnet level */
-char *
-osi_AllocSmall(register afs_int32 size, register afs_int32 morespace)
-{
-    register struct osi_packet *tp;
-#if	defined(AFS_AIX32_ENV)
-    int x;
-#endif
-#if	defined(AFS_HPUX_ENV)
-    ulong_t x;
-#endif
-
-    AFS_ASSERT_GLOCK();
-
-    AFS_STATCNT(osi_AllocSmallSpace);
-    if (size > AFS_SMALLOCSIZ)
-	osi_Panic("osi_AllocSmall, size=%d", size);
-    if ((!morespace
-	 &&
-	 ((afs_stats_cmperf.SmallBlocksAlloced -
-	   afs_stats_cmperf.SmallBlocksActive)
-	  <= AFS_SALLOC_LOW_WATER))
-	|| !freeSmallList) {
-	osi_AllocMoreSSpace(AFS_SALLOC_LOW_WATER * 2);
-    }
-    afs_stats_cmperf.SmallBlocksActive++;
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-    x = splnet();		/*lockl(&osi_fsplock, LOCK_SHORT); */
-#else
-    MObtainWriteLock(&osi_fsplock, 325);
-#endif
-    tp = freeSmallList;
-    if (tp)
-	freeSmallList = tp->next;
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-    splx(x);			/*unlockl(&osi_fsplock); */
-#else
-    MReleaseWriteLock(&osi_fsplock);
-#endif
-
-    return (char *)tp;
-}
-
-int
-osi_FreeSmall(register struct osi_packet *adata)
-{
-#if	defined(AFS_AIX32_ENV)
-    int x;
-#endif
-#if	defined(AFS_HPUX_ENV)
-    ulong_t x;
-#endif
-
-    AFS_STATCNT(osi_FreeSmallSpace);
-    afs_stats_cmperf.SmallBlocksActive--;
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-    x = splnet();		/*lockl(&osi_fsplock, LOCK_SHORT); */
-#else
-    MObtainWriteLock(&osi_fsplock, 326);
-#endif
-    adata->next = freeSmallList;
-    freeSmallList = adata;
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-    splx(x);			/*unlockl(&osi_fsplock); */
-#else
-    MReleaseWriteLock(&osi_fsplock);
-#endif
-    return 0;
-}
-#endif /* AFS_AIX32_ENV || AFS_HPUX_ENV */
 
 /* allocate space for sender */
 void *
 osi_AllocSmallSpace(size_t size)
 {
     register struct osi_packet *tp;
-#if	defined(AFS_AIX32_ENV)
-    int x;
-#endif
-#if	defined(AFS_HPUX_ENV)
-    ulong_t x;
-#endif
 
     AFS_STATCNT(osi_AllocSmallSpace);
     if (size > AFS_SMALLOCSIZ)
 	osi_Panic("osi_AllocSmallS: size=%d\n", size);
 
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-    /* 
-     * We're running out of free blocks (< 50); get some more ourselves so that
-     * when we don't run out of them when called under splnet() (from rx);
-     */
-    if (((afs_stats_cmperf.SmallBlocksAlloced -
-	  afs_stats_cmperf.SmallBlocksActive)
-	 <= AFS_SALLOC_LOW_WATER) || !freeSmallList) {
-	osi_AllocMoreSSpace(AFS_SALLOC_LOW_WATER * 2);
-    }
-#else
     if (!freeSmallList) {
 	afs_stats_cmperf.SmallBlocksAlloced++;
 	afs_stats_cmperf.SmallBlocksActive++;
 	return afs_osi_Alloc(AFS_SMALLOCSIZ);
     }
-#endif
     afs_stats_cmperf.SmallBlocksActive++;
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-    x = splnet();		/*lockl(&osi_fsplock, LOCK_SHORT); */
-#else
     MObtainWriteLock(&osi_fsplock, 327);
-#endif
     tp = freeSmallList;
     if (tp)
 	freeSmallList = tp->next;
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-    splx(x);			/*unlockl(&osi_fsplock); */
-#else
     MReleaseWriteLock(&osi_fsplock);
-#endif
     return (char *)tp;
 }
 
@@ -362,10 +157,7 @@ shutdown_osinet(void)
 	    unpin(tp, AFS_SMALLOCSIZ);
 #endif
 	}
-	afs_preallocs = 512;
-#ifndef	AFS_AIX32_ENV
 	LOCK_INIT(&osi_fsplock, "osi_fsplock");
-#endif
 	LOCK_INIT(&osi_flplock, "osi_flplock");
     }
 }

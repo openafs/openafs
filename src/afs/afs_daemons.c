@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_daemons.c,v 1.28.2.3 2005/03/11 06:50:31 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_daemons.c,v 1.28.2.5 2005/04/03 18:18:54 shadow Exp $");
 
 #ifdef AFS_AIX51_ENV
 #define __FULL_PROTO
@@ -145,22 +145,6 @@ afs_Daemon(void)
 	afs_FlushVCBs(1);	/* flush queued callbacks */
 	afs_MaybeWakeupTruncateDaemon();	/* free cache space if have too */
 	rx_CheckPackets();	/* Does RX need more packets? */
-#if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
-	/* 
-	 * Hack: We always want to make sure there are plenty free
-	 * entries in the small free pool so that we don't have to
-	 * worry about rx (with disabled interrupts) to have to call
-	 * malloc). So we do the dummy call below...
-	 */
-	if (((afs_stats_cmperf.SmallBlocksAlloced -
-	      afs_stats_cmperf.SmallBlocksActive)
-	     <= AFS_SALLOC_LOW_WATER))
-	    osi_FreeSmallSpace(osi_AllocSmallSpace(AFS_SMALLOCSIZ));
-	if (((afs_stats_cmperf.MediumBlocksAlloced -
-	      afs_stats_cmperf.MediumBlocksActive)
-	     <= AFS_MALLOC_LOW_WATER + 50))
-	    osi_AllocMoreMSpace(AFS_MALLOC_LOW_WATER * 2);
-#endif
 
 	now = osi_Time();
 	if (lastCBSlotBump + CBHTSLOTLEN < now) {	/* pretty time-dependant */
@@ -338,29 +322,6 @@ afs_CheckRootVolume(void)
 	afs_osi_Wakeup(&afs_initState);
 	afs_PutVolume(tvp, READ_LOCK);
     }
-#ifdef AFS_DEC_ENV
-/* This is to make sure that we update the root gnode */
-/* every time root volume gets released */
-    {
-	struct gnode *rootgp;
-	struct mount *mp;
-	int code;
-
-	/* Only do this if afs_globalVFS is properly set due to race conditions
-	 * this routine could be called before the gfs_mount is performed!
-	 * Furthermore, afs_root (called below) *waits* until
-	 * initState >= 200, so we don't try this until we've gotten
-	 * at least that far */
-	if (afs_globalVFS && afs_initState >= 200) {
-	    if (code = afs_root(afs_globalVFS, &rootgp))
-		return code;
-	    mp = (struct mount *)afs_globalVFS->vfs_data;
-	    mp->m_rootgp = gget(mp, 0, 0, (char *)rootgp);
-	    afs_unlock(mp->m_rootgp);	/* unlock basic gnode */
-	    afs_vrele(VTOAFS(rootgp));	/* zap afs_root's vnode hold */
-	}
-    }
-#endif
     if (afs_rootFid.Fid.Volume)
 	return 0;
     else
@@ -400,36 +361,24 @@ BPath(register struct brequest *ab)
     if (!tvn || !IsAfsVnode(tvn)) {
 	/* release it and give up */
 	if (tvn) {
-#ifdef AFS_DEC_ENV
-	    grele(tvn);
-#else
 #ifdef AFS_LINUX22_ENV
 	    dput(dp);
 #else
 	    AFS_RELE(tvn);
 #endif
-#endif
 	}
 	return;
     }
-#ifdef AFS_DEC_ENV
-    tvc = VTOAFS(afs_gntovn(tvn));
-#else
     tvc = VTOAFS(tvn);
-#endif
     /* here we know its an afs vnode, so we can get the data for the chunk */
     tdc = afs_GetDCache(tvc, ab->size_parm[0], &treq, &offset, &len, 1);
     if (tdc) {
 	afs_PutDCache(tdc);
     }
-#ifdef AFS_DEC_ENV
-    grele(tvn);
-#else
 #ifdef AFS_LINUX22_ENV
     dput(dp);
 #else
     AFS_RELE(tvn);
-#endif
 #endif
 }
 
@@ -570,11 +519,7 @@ afs_BQueue(register short aopcode, register struct vcache *avc,
 	    tb->cred = acred;
 	    crhold(tb->cred);
 	    if (avc) {
-#ifdef	AFS_DEC_ENV
-		avc->vrefCount++;
-#else
 		VN_HOLD(AFSTOV(avc));
-#endif
 	    }
 	    tb->refCount = ause + 1;
 	    tb->size_parm[0] = asparm0;
@@ -1295,11 +1240,7 @@ afs_BackgroundDaemon(void)
 	    else
 		panic("background bop");
 	    if (tb->vc) {
-#ifdef	AFS_DEC_ENV
-		tb->vc->vrefCount--;	/* fix up reference count */
-#else
 		AFS_RELE(AFSTOV(tb->vc));	/* MUST call vnode layer or could lose vnodes */
-#endif
 		tb->vc = NULL;
 	    }
 	    if (tb->cred) {

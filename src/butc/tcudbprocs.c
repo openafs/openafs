@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/tcudbprocs.c,v 1.14 2003/12/08 01:45:29 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/butc/tcudbprocs.c,v 1.14.2.1 2005/04/03 18:48:29 shadow Exp $");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -47,6 +47,8 @@ RCSID
 #include "error_macros.h"
 
 /* GLOBAL CONFIGURATION PARAMETERS */
+#define BIGCHUNK 102400
+
 extern int dump_namecheck;
 extern int autoQuery;
 
@@ -365,6 +367,255 @@ addTapesToDb(taskId)
     return (code);
 }
 
+/* writeDbDump
+ * notes:
+ *	this code assumes that the blocksize on reads is smaller than
+ *	the blocksize on writes
+ */
+
+static
+writeDbDump(tapeInfoPtr, taskId, expires, dumpid)
+     struct butm_tapeInfo *tapeInfoPtr;
+     afs_uint32 taskId;
+     Date expires;
+     afs_uint32 dumpid;
+{
+    afs_int32 blockSize;
+    afs_int32 writeBufNbytes = 0;
+    char *writeBlock = 0;
+    char *writeBuffer = 0;
+    char *writeBufPtr;
+    afs_int32 transferSize;
+
+    char *readBufPtr;
+    afs_int32 maxReadSize;
+
+    charListT charList;
+    afs_int32 done;
+    afs_int32 code;
+    afs_int32 chunksize = 0;
+    afs_int32 tc_EndMargin, tc_KEndMargin, kRemaining;
+    int sequence;
+    int wroteLabel;
+    int firstcall;
+#ifdef AFS_PTHREAD_ENV
+    pthread_t alivePid;
+    pthread_attr_t tattr;
+    AFS_SIGSET_DECL;
+#else
+    PROCESS alivePid;
+#endif
+
+    extern struct tapeConfig globalTapeConfig;
+    extern struct udbHandleS udbHandle;
+
+    extern int KeepAlive();
+
+    blockSize = BUTM_BLKSIZE;
+    writeBlock = (char *)malloc(BUTM_BLOCKSIZE);
+    if (!writeBlock)
+	ERROR_EXIT(TC_NOMEMORY);
+
+    writeBuffer = writeBlock + sizeof(struct blockMark);
+    memset(writeBuffer, 0, BUTM_BLKSIZE);
+    maxReadSize = 1024;
+
+    /* 
+     * The margin of space to check for end of tape is set to the 
+     * amount of space used to write an end-of-tape multiplied by 2. 
+     * The amount of space is size of a 16K EODump marker, its EOF
+     * marker, and up to two EOF markers done on close (1 16K blocks +
+     * 3 EOF * markers). 
+     */
+    tc_EndMargin = (16384 + 3 * globalTapeConfig.fileMarkSize) * 2;
+    tc_KEndMargin = tc_EndMargin / 1024;
+
+    /* have to write enclose the dump in file marks */
+    code = butm_WriteFileBegin(tapeInfoPtr);
+    if (code) {
+	ErrorLog(0, taskId, code, tapeInfoPtr->error,
+		 "Can't write FileBegin on tape\n");
+	ERROR_EXIT(code);
+    }
+
+    writeBufPtr = &writeBuffer[0];
+    firstcall = 1;
+    sequence = 1;
+    charList.charListT_val = 0;
+    charList.charListT_len = 0;
+
+    while (1) {			/*w */
+	/* When no data in buffer, read data from the budb_server */
+	if (charList.charListT_len == 0) {
+	    /* get more data. let rx allocate space */
+	    if (charList.charListT_val) {
+		free(charList.charListT_val);
+		charList.charListT_val = 0;
+	    }
+
+	    /* get the data */
+	    code =
+		ubik_Call_SingleServer(BUDB_DumpDB, udbHandle.uh_client,
+				       UF_SINGLESERVER, firstcall,
+				       maxReadSize, &charList, &done);
+	    if (code) {
+		ErrorLog(0, taskId, code, 0, "Can't read database\n");
+		ERROR_EXIT(code);
+	    }
+
+	    /* If this if the first call to the budb server, create a thread
+	     * that will keep the connection alive (during tape changes).
+	     */
+	    if (firstcall) {
+#ifdef AFS_PTHREAD_ENV
+		code = pthread_attr_init(&tattr);
+		if (code) {
+		    ErrorLog(0, taskId, code, 0,
+			     "Can't pthread_attr_init Keep-alive process\n");
+		    ERROR_EXIT(code);
+		}
+
+		code =
+		    pthread_attr_setdetachstate(&tattr,
+						PTHREAD_CREATE_DETACHED);
+		if (code) {
+		    ErrorLog(0, taskId, code, 0,
+			     "Can't pthread_attr_setdetachstate Keep-alive process\n");
+		    ERROR_EXIT(code);
+		}
+
+		AFS_SIGSET_CLEAR();
+		code = pthread_create(&alivePid, &tattr, KeepAlive, 0);
+		AFS_SIGSET_RESTORE();
+#else
+		code =
+		    LWP_CreateProcess(KeepAlive, 16384, 1, (void *)NULL,
+				      "Keep-alive process", &alivePid);
+#endif
+		/* XXX should we check code here ??? XXX */
+	    }
+	    firstcall = 0;
+
+	    readBufPtr = charList.charListT_val;
+	}
+
+	if ((charList.charListT_len == 0) && done)
+	    break;
+
+	/* compute how many bytes and transfer to the write Buffer */
+	transferSize =
+	    (charList.charListT_len <
+	     (blockSize -
+	      writeBufNbytes)) ? charList.charListT_len : (blockSize -
+							   writeBufNbytes);
+
+	memcpy(writeBufPtr, readBufPtr, transferSize);
+	charList.charListT_len -= transferSize;
+	writeBufPtr += transferSize;
+	readBufPtr += transferSize;
+	writeBufNbytes += transferSize;
+
+	/* If filled the write buffer, then write it to tape */
+	if (writeBufNbytes == blockSize) {
+	    code = butm_WriteFileData(tapeInfoPtr, writeBuffer, 1, blockSize);
+	    if (code) {
+		ErrorLog(0, taskId, code, tapeInfoPtr->error,
+			 "Can't write data on tape\n");
+		ERROR_EXIT(code);
+	    }
+
+	    memset(writeBuffer, 0, blockSize);
+	    writeBufPtr = &writeBuffer[0];
+	    writeBufNbytes = 0;
+
+	    /* Every BIGCHUNK bytes check if aborted */
+	    chunksize += blockSize;
+	    if (chunksize > BIGCHUNK) {
+		chunksize = 0;
+		if (checkAbortByTaskId(taskId))
+		    ERROR_EXIT(TC_ABORTEDBYREQUEST);
+	    }
+
+	    /*
+	     * check if tape is full - since we filled a blockSize worth of data
+	     * assume that there is more data.
+	     */
+	    kRemaining = butm_remainingKSpace(tapeInfoPtr);
+	    if (kRemaining < tc_KEndMargin) {
+		code = butm_WriteFileEnd(tapeInfoPtr);
+		if (code) {
+		    ErrorLog(0, taskId, code, tapeInfoPtr->error,
+			     "Can't write FileEnd on tape\n");
+		    ERROR_EXIT(code);
+		}
+
+		code = butm_WriteEOT(tapeInfoPtr);
+		if (code) {
+		    ErrorLog(0, taskId, code, tapeInfoPtr->error,
+			     "Can't write end-of-dump on tape\n");
+		    ERROR_EXIT(code);
+		}
+
+		/* Mark tape as having been written */
+		tapeEntryPtr->useKBytes =
+		    tapeInfoPtr->kBytes + (tapeInfoPtr->nBytes ? 1 : 0);
+		tapeEntryPtr->flags = BUDB_TAPE_WRITTEN;
+
+		unmountTape(taskId, tapeInfoPtr);
+
+		/* Get next tape and writes its label */
+		sequence++;
+		code =
+		    GetDBTape(taskId, expires, tapeInfoPtr, dumpid, sequence,
+			      1, &wroteLabel);
+		if (code)
+		    ERROR_EXIT(code);
+
+		code = butm_WriteFileBegin(tapeInfoPtr);
+		if (code) {
+		    ErrorLog(0, taskId, code, tapeInfoPtr->error,
+			     "Can't write FileBegin on tape\n");
+		    ERROR_EXIT(code);
+		}
+	    }
+	}
+    }				/*w */
+
+    /* no more data to be read - if necessary, flush out the last buffer */
+    if (writeBufNbytes > 0) {
+	code = butm_WriteFileData(tapeInfoPtr, writeBuffer, 1, blockSize);
+	if (code) {
+	    ErrorLog(1, taskId, code, tapeInfoPtr->error,
+		     "Can't write data on tape\n");
+	    ERROR_EXIT(code);
+	}
+    }
+
+    code = butm_WriteFileEnd(tapeInfoPtr);
+    if (code) {
+	ErrorLog(0, taskId, code, tapeInfoPtr->error,
+		 "Can't write FileEnd on tape\n");
+	ERROR_EXIT(code);
+    }
+
+    /* Mark tape as having been written */
+    tapeEntryPtr->useKBytes =
+	tapeInfoPtr->kBytes + (tapeInfoPtr->nBytes ? 1 : 0);
+    tapeEntryPtr->flags = BUDB_TAPE_WRITTEN;
+
+  error_exit:
+    /* Let the KeepAlive process stop on its own */
+    code =
+	ubik_Call_SingleServer(BUDB_DumpDB, udbHandle.uh_client,
+			       UF_END_SINGLESERVER, 0);
+
+    if (writeBlock)
+	free(writeBlock);
+    if (charList.charListT_val)
+	free(charList.charListT_val);
+    return (code);
+}
+
 /* saveDbToTape
  *	dump backup database to tape
  */
@@ -653,6 +904,112 @@ readDbTape(tapeInfoPtr, rstTapeInfoPtr, query)
     return (code);
 }
 
+static afs_int32 nbytes = 0;	/* # bytes left in buffer */
+static
+initTapeBuffering()
+{
+    nbytes = 0;
+}
+
+
+/* restoreDbEntries
+ *	restore all the items on the tape
+ * entry:
+ *	tape positioned after tape label
+ */
+
+static
+restoreDbEntries(tapeInfoPtr, rstTapeInfoPtr)
+     struct butm_tapeInfo *tapeInfoPtr;
+     struct rstTapeInfo *rstTapeInfoPtr;
+{
+    struct structDumpHeader netItemHeader, hostItemHeader;
+    afs_int32 more = 1;
+    afs_int32 taskId, code = 0;
+    int count = 0;
+
+    taskId = rstTapeInfoPtr->taskId;
+
+    /* clear state for the buffer routine(s) */
+    initTapeBuffering();
+
+    code = butm_ReadFileBegin(tapeInfoPtr);
+    if (code) {
+	ErrorLog(0, taskId, code, tapeInfoPtr->error,
+		 "Can't read FileBegin on tape\n");
+	ERROR_EXIT(code);
+    }
+
+    /* get the first item-header */
+    memset(&netItemHeader, 0, sizeof(netItemHeader));
+    code =
+	getTapeData(tapeInfoPtr, rstTapeInfoPtr, &netItemHeader,
+		    sizeof(netItemHeader));
+    if (code)
+	ERROR_EXIT(code);
+    structDumpHeader_ntoh(&netItemHeader, &hostItemHeader);
+
+    while (more) {
+	switch (hostItemHeader.type) {
+	case SD_DBHEADER:
+	    code =
+		restoreDbHeader(tapeInfoPtr, rstTapeInfoPtr, &hostItemHeader);
+	    if (code)
+		ERROR_EXIT(code);
+	    break;
+
+	case SD_DUMP:
+	    if (++count > 25) {	/*every 25 dumps, wait */
+		waitDbWatcher();
+		count = 0;
+	    }
+	    code =
+		restoreDbDump(tapeInfoPtr, rstTapeInfoPtr, &hostItemHeader);
+	    if (code)
+		ERROR_EXIT(code);
+	    break;
+
+	case SD_TAPE:
+	case SD_VOLUME:
+	    ERROR_EXIT(-1);
+	    break;
+
+	case SD_TEXT_DUMPSCHEDULE:
+	case SD_TEXT_VOLUMESET:
+	case SD_TEXT_TAPEHOSTS:
+	    code = restoreText(tapeInfoPtr, rstTapeInfoPtr, &hostItemHeader);
+	    if (code)
+		ERROR_EXIT(code);
+	    break;
+
+	case SD_END:
+	    more = 0;
+	    break;
+
+	default:
+	    TLog(taskId, "Unknown database header type %d\n",
+		 hostItemHeader.type);
+	    ERROR_EXIT(-1);
+	    break;
+	}
+    }
+
+    code = butm_ReadFileEnd(tapeInfoPtr);
+    if (code) {
+	ErrorLog(0, taskId, code, tapeInfoPtr->error,
+		 "Can't read EOF on tape\n");
+	ERROR_EXIT(code);
+    }
+
+    /* Mark tape as having been written */
+    tapeEntryPtr->useKBytes =
+	tapeInfoPtr->kBytes + (tapeInfoPtr->nBytes ? 1 : 0);
+    tapeEntryPtr->flags = BUDB_TAPE_WRITTEN;
+
+  error_exit:
+    return (code);
+}
+
 /* restoreDbFromTape
  *	restore the backup database from tape.
  */
@@ -784,355 +1141,6 @@ KeepAlive()
     return 0;
 }
 
-#define BIGCHUNK 102400
-
-/* writeDbDump
- * notes:
- *	this code assumes that the blocksize on reads is smaller than
- *	the blocksize on writes
- */
-
-static
-writeDbDump(tapeInfoPtr, taskId, expires, dumpid)
-     struct butm_tapeInfo *tapeInfoPtr;
-     afs_uint32 taskId;
-     Date expires;
-     afs_uint32 dumpid;
-{
-    afs_int32 blockSize;
-    afs_int32 writeBufNbytes = 0;
-    char *writeBlock = 0;
-    char *writeBuffer = 0;
-    char *writeBufPtr;
-    afs_int32 transferSize;
-
-    char *readBufPtr;
-    afs_int32 maxReadSize;
-
-    charListT charList;
-    afs_int32 done;
-    afs_int32 code;
-    afs_int32 chunksize = 0;
-    afs_int32 tc_EndMargin, tc_KEndMargin, kRemaining;
-    int sequence;
-    int wroteLabel;
-    int firstcall;
-#ifdef AFS_PTHREAD_ENV
-    pthread_t alivePid;
-    pthread_attr_t tattr;
-    AFS_SIGSET_DECL;
-#else
-    PROCESS alivePid;
-#endif
-
-    extern struct tapeConfig globalTapeConfig;
-    extern struct udbHandleS udbHandle;
-
-    extern int KeepAlive();
-
-    blockSize = BUTM_BLKSIZE;
-    writeBlock = (char *)malloc(BUTM_BLOCKSIZE);
-    if (!writeBlock)
-	ERROR_EXIT(TC_NOMEMORY);
-
-    writeBuffer = writeBlock + sizeof(struct blockMark);
-    memset(writeBuffer, 0, BUTM_BLKSIZE);
-    maxReadSize = 1024;
-
-    /* 
-     * The margin of space to check for end of tape is set to the 
-     * amount of space used to write an end-of-tape multiplied by 2. 
-     * The amount of space is size of a 16K EODump marker, its EOF
-     * marker, and up to two EOF markers done on close (1 16K blocks +
-     * 3 EOF * markers). 
-     */
-    tc_EndMargin = (16384 + 3 * globalTapeConfig.fileMarkSize) * 2;
-    tc_KEndMargin = tc_EndMargin / 1024;
-
-    /* have to write enclose the dump in file marks */
-    code = butm_WriteFileBegin(tapeInfoPtr);
-    if (code) {
-	ErrorLog(0, taskId, code, tapeInfoPtr->error,
-		 "Can't write FileBegin on tape\n");
-	ERROR_EXIT(code);
-    }
-
-    writeBufPtr = &writeBuffer[0];
-    firstcall = 1;
-    sequence = 1;
-    charList.charListT_val = 0;
-    charList.charListT_len = 0;
-
-    while (1) {			/*w */
-	/* When no data in buffer, read data from the budb_server */
-	if (charList.charListT_len == 0) {
-	    /* get more data. let rx allocate space */
-	    if (charList.charListT_val) {
-		free(charList.charListT_val);
-		charList.charListT_val = 0;
-	    }
-
-	    /* get the data */
-	    code =
-		ubik_Call_SingleServer(BUDB_DumpDB, udbHandle.uh_client,
-				       UF_SINGLESERVER, firstcall,
-				       maxReadSize, &charList, &done);
-	    if (code) {
-		ErrorLog(0, taskId, code, 0, "Can't read database\n");
-		ERROR_EXIT(code);
-	    }
-
-	    /* If this if the first call to the budb server, create a thread
-	     * that will keep the connection alive (during tape changes).
-	     */
-	    if (firstcall) {
-#ifdef AFS_PTHREAD_ENV
-		code = pthread_attr_init(&tattr);
-		if (code) {
-		    ErrorLog(0, taskId, code, 0,
-			     "Can't pthread_attr_init Keep-alive process\n");
-		    ERROR_EXIT(code);
-		}
-
-		code =
-		    pthread_attr_setdetachstate(&tattr,
-						PTHREAD_CREATE_DETACHED);
-		if (code) {
-		    ErrorLog(0, taskId, code, 0,
-			     "Can't pthread_attr_setdetachstate Keep-alive process\n");
-		    ERROR_EXIT(code);
-		}
-
-		AFS_SIGSET_CLEAR();
-		code = pthread_create(&alivePid, &tattr, KeepAlive, 0);
-		AFS_SIGSET_RESTORE();
-#else
-		code =
-		    LWP_CreateProcess(KeepAlive, 16384, 1, (void *)NULL,
-				      "Keep-alive process", &alivePid);
-#endif
-		/* XXX should we check code here ??? XXX */
-	    }
-	    firstcall = 0;
-
-	    readBufPtr = charList.charListT_val;
-	}
-
-	if ((charList.charListT_len == 0) && done)
-	    break;
-
-	/* compute how many bytes and transfer to the write Buffer */
-	transferSize =
-	    (charList.charListT_len <
-	     (blockSize -
-	      writeBufNbytes)) ? charList.charListT_len : (blockSize -
-							   writeBufNbytes);
-
-	memcpy(writeBufPtr, readBufPtr, transferSize);
-	charList.charListT_len -= transferSize;
-	writeBufPtr += transferSize;
-	readBufPtr += transferSize;
-	writeBufNbytes += transferSize;
-
-	/* If filled the write buffer, then write it to tape */
-	if (writeBufNbytes == blockSize) {
-	    code = butm_WriteFileData(tapeInfoPtr, writeBuffer, 1, blockSize);
-	    if (code) {
-		ErrorLog(0, taskId, code, tapeInfoPtr->error,
-			 "Can't write data on tape\n");
-		ERROR_EXIT(code);
-	    }
-
-	    memset(writeBuffer, 0, blockSize);
-	    writeBufPtr = &writeBuffer[0];
-	    writeBufNbytes = 0;
-
-	    /* Every BIGCHUNK bytes check if aborted */
-	    chunksize += blockSize;
-	    if (chunksize > BIGCHUNK) {
-		chunksize = 0;
-		if (checkAbortByTaskId(taskId))
-		    ERROR_EXIT(TC_ABORTEDBYREQUEST);
-	    }
-
-	    /*
-	     * check if tape is full - since we filled a blockSize worth of data
-	     * assume that there is more data.
-	     */
-	    kRemaining = butm_remainingKSpace(tapeInfoPtr);
-	    if (kRemaining < tc_KEndMargin) {
-		code = butm_WriteFileEnd(tapeInfoPtr);
-		if (code) {
-		    ErrorLog(0, taskId, code, tapeInfoPtr->error,
-			     "Can't write FileEnd on tape\n");
-		    ERROR_EXIT(code);
-		}
-
-		code = butm_WriteEOT(tapeInfoPtr);
-		if (code) {
-		    ErrorLog(0, taskId, code, tapeInfoPtr->error,
-			     "Can't write end-of-dump on tape\n");
-		    ERROR_EXIT(code);
-		}
-
-		/* Mark tape as having been written */
-		tapeEntryPtr->useKBytes =
-		    tapeInfoPtr->kBytes + (tapeInfoPtr->nBytes ? 1 : 0);
-		tapeEntryPtr->flags = BUDB_TAPE_WRITTEN;
-
-		unmountTape(taskId, tapeInfoPtr);
-
-		/* Get next tape and writes its label */
-		sequence++;
-		code =
-		    GetDBTape(taskId, expires, tapeInfoPtr, dumpid, sequence,
-			      1, &wroteLabel);
-		if (code)
-		    ERROR_EXIT(code);
-
-		code = butm_WriteFileBegin(tapeInfoPtr);
-		if (code) {
-		    ErrorLog(0, taskId, code, tapeInfoPtr->error,
-			     "Can't write FileBegin on tape\n");
-		    ERROR_EXIT(code);
-		}
-	    }
-	}
-    }				/*w */
-
-    /* no more data to be read - if necessary, flush out the last buffer */
-    if (writeBufNbytes > 0) {
-	code = butm_WriteFileData(tapeInfoPtr, writeBuffer, 1, blockSize);
-	if (code) {
-	    ErrorLog(1, taskId, code, tapeInfoPtr->error,
-		     "Can't write data on tape\n");
-	    ERROR_EXIT(code);
-	}
-    }
-
-    code = butm_WriteFileEnd(tapeInfoPtr);
-    if (code) {
-	ErrorLog(0, taskId, code, tapeInfoPtr->error,
-		 "Can't write FileEnd on tape\n");
-	ERROR_EXIT(code);
-    }
-
-    /* Mark tape as having been written */
-    tapeEntryPtr->useKBytes =
-	tapeInfoPtr->kBytes + (tapeInfoPtr->nBytes ? 1 : 0);
-    tapeEntryPtr->flags = BUDB_TAPE_WRITTEN;
-
-  error_exit:
-    /* Let the KeepAlive process stop on its own */
-    code =
-	ubik_Call_SingleServer(BUDB_DumpDB, udbHandle.uh_client,
-			       UF_END_SINGLESERVER, 0);
-
-    if (writeBlock)
-	free(writeBlock);
-    if (charList.charListT_val)
-	free(charList.charListT_val);
-    return (code);
-}
-
-
-/* restoreDbEntries
- *	restore all the items on the tape
- * entry:
- *	tape positioned after tape label
- */
-
-static
-restoreDbEntries(tapeInfoPtr, rstTapeInfoPtr)
-     struct butm_tapeInfo *tapeInfoPtr;
-     struct rstTapeInfo *rstTapeInfoPtr;
-{
-    struct structDumpHeader netItemHeader, hostItemHeader;
-    afs_int32 more = 1;
-    afs_int32 taskId, code = 0;
-    int count = 0;
-
-    taskId = rstTapeInfoPtr->taskId;
-
-    /* clear state for the buffer routine(s) */
-    initTapeBuffering();
-
-    code = butm_ReadFileBegin(tapeInfoPtr);
-    if (code) {
-	ErrorLog(0, taskId, code, tapeInfoPtr->error,
-		 "Can't read FileBegin on tape\n");
-	ERROR_EXIT(code);
-    }
-
-    /* get the first item-header */
-    memset(&netItemHeader, 0, sizeof(netItemHeader));
-    code =
-	getTapeData(tapeInfoPtr, rstTapeInfoPtr, &netItemHeader,
-		    sizeof(netItemHeader));
-    if (code)
-	ERROR_EXIT(code);
-    structDumpHeader_ntoh(&netItemHeader, &hostItemHeader);
-
-    while (more) {
-	switch (hostItemHeader.type) {
-	case SD_DBHEADER:
-	    code =
-		restoreDbHeader(tapeInfoPtr, rstTapeInfoPtr, &hostItemHeader);
-	    if (code)
-		ERROR_EXIT(code);
-	    break;
-
-	case SD_DUMP:
-	    if (++count > 25) {	/*every 25 dumps, wait */
-		waitDbWatcher();
-		count = 0;
-	    }
-	    code =
-		restoreDbDump(tapeInfoPtr, rstTapeInfoPtr, &hostItemHeader);
-	    if (code)
-		ERROR_EXIT(code);
-	    break;
-
-	case SD_TAPE:
-	case SD_VOLUME:
-	    ERROR_EXIT(-1);
-	    break;
-
-	case SD_TEXT_DUMPSCHEDULE:
-	case SD_TEXT_VOLUMESET:
-	case SD_TEXT_TAPEHOSTS:
-	    code = restoreText(tapeInfoPtr, rstTapeInfoPtr, &hostItemHeader);
-	    if (code)
-		ERROR_EXIT(code);
-	    break;
-
-	case SD_END:
-	    more = 0;
-	    break;
-
-	default:
-	    TLog(taskId, "Unknown database header type %d\n",
-		 hostItemHeader.type);
-	    ERROR_EXIT(-1);
-	    break;
-	}
-    }
-
-    code = butm_ReadFileEnd(tapeInfoPtr);
-    if (code) {
-	ErrorLog(0, taskId, code, tapeInfoPtr->error,
-		 "Can't read EOF on tape\n");
-	ERROR_EXIT(code);
-    }
-
-    /* Mark tape as having been written */
-    tapeEntryPtr->useKBytes =
-	tapeInfoPtr->kBytes + (tapeInfoPtr->nBytes ? 1 : 0);
-    tapeEntryPtr->flags = BUDB_TAPE_WRITTEN;
-
-  error_exit:
-    return (code);
-}
 
 /* restoreDbHeader
  *	restore special items in the header
@@ -1514,13 +1522,6 @@ restoreText(tapeInfo, rstTapeInfoPtr, nextHeader)
 
 static char *tapeReadBuffer = 0;	/* input buffer */
 static char *tapeReadBufferPtr = 0;	/* position in buffer */
-static afs_int32 nbytes = 0;	/* # bytes left in buffer */
-
-static
-initTapeBuffering()
-{
-    nbytes = 0;
-}
 
 /* getTapeData
  *	Read information from tape, and place the requested number of bytes

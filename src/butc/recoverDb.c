@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/recoverDb.c,v 1.10.2.1 2004/10/18 07:11:51 shadow Exp $");
+    ("$Header: /cvs/openafs/src/butc/recoverDb.c,v 1.10.2.2 2005/04/03 18:48:29 shadow Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -132,205 +132,6 @@ Ask(st)
 	    return (0);
 	printf("please answer y/n\n");
     }
-}
-
-/* Will read a dump, then see if there is a dump following it and
- * try to read that dump too.
- * The first tape label is the first dumpLabel.
- */
-readDumps(taskId, tapeInfoPtr, scanInfoPtr)
-     afs_uint32 taskId;
-     struct butm_tapeInfo *tapeInfoPtr;
-     struct tapeScanInfo *scanInfoPtr;
-{
-    afs_int32 code, c;
-
-    memcpy(&scanInfoPtr->dumpLabel, &scanInfoPtr->tapeLabel,
-	   sizeof(struct butm_tapeLabel));
-
-    while (1) {
-	code = readDump(taskId, tapeInfoPtr, scanInfoPtr);
-	if (code)
-	    ERROR_EXIT(code);
-
-	if (scanInfoPtr->tapeLabel.structVersion < TAPE_VERSION_4)
-	    break;
-
-	/* Remember the initial dump and see if appended dump exists */
-
-	if (!scanInfoPtr->initialDumpId)
-	    scanInfoPtr->initialDumpId = scanInfoPtr->dumpEntry.id;
-
-	c = butm_ReadLabel(tapeInfoPtr, &scanInfoPtr->dumpLabel, 0);	/* no rewind */
-	tapepos = tapeInfoPtr->position - 1;
-	if (c)
-	    break;
-    }
-
-  error_exit:
-    return (code);
-}
-
-afs_int32
-getScanTape(taskId, tapeInfoPtr, tname, tapeId, prompt, tapeLabelPtr)
-     afs_int32 taskId;
-     struct butm_tapeInfo *tapeInfoPtr;
-     char *tname;
-     afs_int32 tapeId;
-     int prompt;
-     struct butm_tapeLabel *tapeLabelPtr;
-{
-    afs_int32 code = 0;
-    int tapecount = 1;
-    afs_int32 curseq;
-    char tapename[BU_MAXTAPELEN + 32];
-    char gotname[BU_MAXTAPELEN + 32];
-
-    while (1) {
-	/* prompt for a tape */
-	if (prompt) {
-	    code =
-		PromptForTape(SCANOPCODE, tname, tapeId, taskId, tapecount);
-	    if (code)
-		ERROR_EXIT(code);
-	}
-	prompt = 1;
-	tapecount++;
-
-	code = butm_Mount(tapeInfoPtr, "");	/* open the tape device */
-	if (code) {
-	    TapeLog(0, taskId, code, tapeInfoPtr->error, "Can't open tape\n");
-	    goto newtape;
-	}
-
-	/* read the label on the tape */
-	code = butm_ReadLabel(tapeInfoPtr, tapeLabelPtr, 1);	/* rewind tape */
-	if (code) {
-	    ErrorLog(0, taskId, code, tapeInfoPtr->error,
-		     "Can't read tape label\n");
-	    goto newtape;
-	}
-	tapepos = tapeInfoPtr->position - 1;
-
-	/* Now check that the tape is good */
-	TAPENAME(tapename, tname, tapeId);
-	TAPENAME(gotname, tapeLabelPtr->AFSName, tapeLabelPtr->dumpid);
-
-	curseq = extractTapeSeq(tapeLabelPtr->AFSName);
-
-	/* Label can't be null or a bad name */
-	if (!strcmp(tapeLabelPtr->AFSName, "") || (curseq <= 0)) {
-	    TLog(taskId, "Expected tape with dump, label seen %s\n", gotname);
-	    goto newtape;
-	}
-
-	/* Label can't be a database tape */
-	if (databaseTape(tapeLabelPtr->AFSName)) {
-	    TLog(taskId,
-		 "Expected tape with dump. Can't scan database tape %s\n",
-		 gotname);
-	    goto newtape;
-	}
-
-	/* If no name, accept any tape */
-	if (strcmp(tname, "") == 0) {
-	    break;		/* Start scan on any tape */
-#ifdef notdef
-	    if (curseq == 1)
-		break;		/* The first tape */
-	    else {
-		TLog(taskId, "Expected first tape of dump, label seen %s\n",
-		     gotname);
-		goto newtape;
-	    }
-#endif
-	}
-
-	if (strcmp(tname, tapeLabelPtr->AFSName)
-	    || ((tapeLabelPtr->structVersion >= TAPE_VERSION_3)
-		&& (tapeLabelPtr->dumpid != tapeId))) {
-	    TLog(taskId, "Tape label expected %s, label seen %s\n", tapename,
-		 gotname);
-	    goto newtape;
-	}
-
-	/* We have the correct tape */
-	break;
-
-      newtape:
-	unmountTape(taskId, tapeInfoPtr);
-    }
-
-  error_exit:
-    return (code);
-}
-
-/* ScanDumps
- *	This set of code fragments read a tape, and add the information to
- * 	the database. Builds a literal structure.
- *	
- */
-
-ScanDumps(ptr)
-     struct scanTapeIf *ptr;
-{
-    struct butm_tapeInfo curTapeInfo;
-    struct tapeScanInfo tapeScanInfo;
-    afs_uint32 taskId;
-    afs_int32 code = 0;
-
-    taskId = ptr->taskId;
-    setStatus(taskId, DRIVE_WAIT);
-    EnterDeviceQueue(deviceLatch);
-    clearStatus(taskId, DRIVE_WAIT);
-
-    printf("\n\n");
-    if (ptr->addDbFlag)
-	TLog(taskId, "ScanTape and add to the database\n");
-    else
-	TLog(taskId, "Scantape\n");
-
-    memset(&tapeScanInfo, 0, sizeof(tapeScanInfo));
-    tapeScanInfo.addDbFlag = ptr->addDbFlag;
-
-    memset(&curTapeInfo, 0, sizeof(curTapeInfo));
-    curTapeInfo.structVersion = BUTM_MAJORVERSION;
-    code = butm_file_Instantiate(&curTapeInfo, &globalTapeConfig);
-    if (code) {
-	ErrorLog(0, taskId, code, curTapeInfo.error,
-		 "Can't initialize tape module\n");
-	ERROR_EXIT(code);
-    }
-
-    code =
-	getScanTape(taskId, &curTapeInfo, "", 0, autoQuery,
-		    &tapeScanInfo.tapeLabel);
-    if (code)
-	ERROR_EXIT(code);
-
-    code = readDumps(taskId, &curTapeInfo, &tapeScanInfo);
-    if (code)
-	ERROR_EXIT(code);
-
-  error_exit:
-    unmountTape(taskId, &curTapeInfo);
-    waitDbWatcher();
-
-    if (code == TC_ABORTEDBYREQUEST) {
-	ErrorLog(0, taskId, 0, 0, "Scantape: Aborted by request\n");
-	clearStatus(taskId, ABORT_REQUEST);
-	setStatus(taskId, ABORT_DONE);
-    } else if (code) {
-	ErrorLog(0, taskId, code, 0, "Scantape: Finished with errors\n");
-	setStatus(taskId, TASK_ERROR);
-    } else {
-	TLog(taskId, "Scantape: Finished\n");
-    }
-
-    free(ptr);
-    setStatus(taskId, TASK_DONE);
-    LeaveDeviceQueue(deviceLatch);
-    return (code);
 }
 
 /* scanVolData
@@ -771,6 +572,206 @@ readDump(taskId, tapeInfoPtr, scanInfoPtr)
   error_exit:
     return (code);
 }
+
+/* Will read a dump, then see if there is a dump following it and
+ * try to read that dump too.
+ * The first tape label is the first dumpLabel.
+ */
+readDumps(taskId, tapeInfoPtr, scanInfoPtr)
+     afs_uint32 taskId;
+     struct butm_tapeInfo *tapeInfoPtr;
+     struct tapeScanInfo *scanInfoPtr;
+{
+    afs_int32 code, c;
+
+    memcpy(&scanInfoPtr->dumpLabel, &scanInfoPtr->tapeLabel,
+	   sizeof(struct butm_tapeLabel));
+
+    while (1) {
+	code = readDump(taskId, tapeInfoPtr, scanInfoPtr);
+	if (code)
+	    ERROR_EXIT(code);
+
+	if (scanInfoPtr->tapeLabel.structVersion < TAPE_VERSION_4)
+	    break;
+
+	/* Remember the initial dump and see if appended dump exists */
+
+	if (!scanInfoPtr->initialDumpId)
+	    scanInfoPtr->initialDumpId = scanInfoPtr->dumpEntry.id;
+
+	c = butm_ReadLabel(tapeInfoPtr, &scanInfoPtr->dumpLabel, 0);	/* no rewind */
+	tapepos = tapeInfoPtr->position - 1;
+	if (c)
+	    break;
+    }
+
+  error_exit:
+    return (code);
+}
+
+afs_int32
+getScanTape(taskId, tapeInfoPtr, tname, tapeId, prompt, tapeLabelPtr)
+     afs_int32 taskId;
+     struct butm_tapeInfo *tapeInfoPtr;
+     char *tname;
+     afs_int32 tapeId;
+     int prompt;
+     struct butm_tapeLabel *tapeLabelPtr;
+{
+    afs_int32 code = 0;
+    int tapecount = 1;
+    afs_int32 curseq;
+    char tapename[BU_MAXTAPELEN + 32];
+    char gotname[BU_MAXTAPELEN + 32];
+
+    while (1) {
+	/* prompt for a tape */
+	if (prompt) {
+	    code =
+		PromptForTape(SCANOPCODE, tname, tapeId, taskId, tapecount);
+	    if (code)
+		ERROR_EXIT(code);
+	}
+	prompt = 1;
+	tapecount++;
+
+	code = butm_Mount(tapeInfoPtr, "");	/* open the tape device */
+	if (code) {
+	    TapeLog(0, taskId, code, tapeInfoPtr->error, "Can't open tape\n");
+	    goto newtape;
+	}
+
+	/* read the label on the tape */
+	code = butm_ReadLabel(tapeInfoPtr, tapeLabelPtr, 1);	/* rewind tape */
+	if (code) {
+	    ErrorLog(0, taskId, code, tapeInfoPtr->error,
+		     "Can't read tape label\n");
+	    goto newtape;
+	}
+	tapepos = tapeInfoPtr->position - 1;
+
+	/* Now check that the tape is good */
+	TAPENAME(tapename, tname, tapeId);
+	TAPENAME(gotname, tapeLabelPtr->AFSName, tapeLabelPtr->dumpid);
+
+	curseq = extractTapeSeq(tapeLabelPtr->AFSName);
+
+	/* Label can't be null or a bad name */
+	if (!strcmp(tapeLabelPtr->AFSName, "") || (curseq <= 0)) {
+	    TLog(taskId, "Expected tape with dump, label seen %s\n", gotname);
+	    goto newtape;
+	}
+
+	/* Label can't be a database tape */
+	if (databaseTape(tapeLabelPtr->AFSName)) {
+	    TLog(taskId,
+		 "Expected tape with dump. Can't scan database tape %s\n",
+		 gotname);
+	    goto newtape;
+	}
+
+	/* If no name, accept any tape */
+	if (strcmp(tname, "") == 0) {
+	    break;		/* Start scan on any tape */
+#ifdef notdef
+	    if (curseq == 1)
+		break;		/* The first tape */
+	    else {
+		TLog(taskId, "Expected first tape of dump, label seen %s\n",
+		     gotname);
+		goto newtape;
+	    }
+#endif
+	}
+
+	if (strcmp(tname, tapeLabelPtr->AFSName)
+	    || ((tapeLabelPtr->structVersion >= TAPE_VERSION_3)
+		&& (tapeLabelPtr->dumpid != tapeId))) {
+	    TLog(taskId, "Tape label expected %s, label seen %s\n", tapename,
+		 gotname);
+	    goto newtape;
+	}
+
+	/* We have the correct tape */
+	break;
+
+      newtape:
+	unmountTape(taskId, tapeInfoPtr);
+    }
+
+  error_exit:
+    return (code);
+}
+
+/* ScanDumps
+ *	This set of code fragments read a tape, and add the information to
+ * 	the database. Builds a literal structure.
+ *	
+ */
+
+ScanDumps(ptr)
+     struct scanTapeIf *ptr;
+{
+    struct butm_tapeInfo curTapeInfo;
+    struct tapeScanInfo tapeScanInfo;
+    afs_uint32 taskId;
+    afs_int32 code = 0;
+
+    taskId = ptr->taskId;
+    setStatus(taskId, DRIVE_WAIT);
+    EnterDeviceQueue(deviceLatch);
+    clearStatus(taskId, DRIVE_WAIT);
+
+    printf("\n\n");
+    if (ptr->addDbFlag)
+	TLog(taskId, "ScanTape and add to the database\n");
+    else
+	TLog(taskId, "Scantape\n");
+
+    memset(&tapeScanInfo, 0, sizeof(tapeScanInfo));
+    tapeScanInfo.addDbFlag = ptr->addDbFlag;
+
+    memset(&curTapeInfo, 0, sizeof(curTapeInfo));
+    curTapeInfo.structVersion = BUTM_MAJORVERSION;
+    code = butm_file_Instantiate(&curTapeInfo, &globalTapeConfig);
+    if (code) {
+	ErrorLog(0, taskId, code, curTapeInfo.error,
+		 "Can't initialize tape module\n");
+	ERROR_EXIT(code);
+    }
+
+    code =
+	getScanTape(taskId, &curTapeInfo, "", 0, autoQuery,
+		    &tapeScanInfo.tapeLabel);
+    if (code)
+	ERROR_EXIT(code);
+
+    code = readDumps(taskId, &curTapeInfo, &tapeScanInfo);
+    if (code)
+	ERROR_EXIT(code);
+
+  error_exit:
+    unmountTape(taskId, &curTapeInfo);
+    waitDbWatcher();
+
+    if (code == TC_ABORTEDBYREQUEST) {
+	ErrorLog(0, taskId, 0, 0, "Scantape: Aborted by request\n");
+	clearStatus(taskId, ABORT_REQUEST);
+	setStatus(taskId, ABORT_DONE);
+    } else if (code) {
+	ErrorLog(0, taskId, code, 0, "Scantape: Finished with errors\n");
+	setStatus(taskId, TASK_ERROR);
+    } else {
+	TLog(taskId, "Scantape: Finished\n");
+    }
+
+    free(ptr);
+    setStatus(taskId, TASK_DONE);
+    LeaveDeviceQueue(deviceLatch);
+    return (code);
+}
+
 
 /* validatePath
  * exit:

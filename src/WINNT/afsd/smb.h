@@ -440,13 +440,15 @@ extern void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTim
 
 extern void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep);
 
-extern void smb_SearchTimeFromUnixTime(time_t *dosTimep, time_t unixTime);
+extern void smb_SearchTimeFromUnixTime(afs_uint32 *searchTimep, time_t unixTime);
 
-extern void smb_UnixTimeFromSearchTime(time_t *unixTimep, time_t searchTime);
+extern void smb_UnixTimeFromSearchTime(time_t *unixTimep, afs_uint32 searchTime);
 
-extern void smb_DosUTimeFromUnixTime(time_t *dosUTimep, time_t unixTime);
+extern void smb_DosUTimeFromUnixTime(afs_uint32 *dosUTimep, time_t unixTime);
 
-extern void smb_UnixTimeFromDosUTime(time_t *unixTimep, time_t dosUTime);
+extern void smb_UnixTimeFromDosUTime(time_t *unixTimep, afs_uint32 dosUTime);
+
+extern void CompensateForSmbClientLastWriteTimeBugs(afs_uint32 *dosTimep);
 
 extern smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana);
 

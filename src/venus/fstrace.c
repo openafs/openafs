@@ -14,11 +14,11 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/fstrace.c,v 1.16.2.1 2005/01/31 04:14:08 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/fstrace.c,v 1.16.2.3 2005/04/03 18:15:53 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
-#if !defined(AFS_SUN3_ENV) && !defined(sys_vax_ul43) && !defined(AFS_DARWIN_ENV)
+#if !defined(AFS_SUN3_ENV) && !defined(sys_vax_ul43) 
 #include <time.h>
 /*#ifdef	AFS_AIX_ENV*/
 #include <sys/time.h>
@@ -41,7 +41,7 @@ RCSID
 #include <afs/icl.h>
 #include <afs/afsutil.h>
 
-#if defined(AFS_ALPHA_ENV) || defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
+#if defined(AFS_OSF_ENV) || defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 /* For SGI 6.2, this is changed to 1 if it's a 32 bit kernel. */
 int afs_icl_sizeofLong = 2;
 #else
@@ -312,14 +312,12 @@ DisplayRecord(outFilep, alp, rsize)
 		printfParms[pfpix] <<= 32;
 		printfParms[pfpix] |= alp[pix + 1];
 	    }
-#else /* AFS_SGI61_ENV */
-#ifdef AFS_ALPHA_ENV
+#elif defined(AFS_OSF_ENV)
 	    printfParms[pfpix] = alp[pix + 1];
 	    printfParms[pfpix] |= (alp[pix] <<= 32);
-#else /* AFS_ALPHA_ENV */
+#else /* !AFS_OSF_ENV && !AFS_SGI61_ENV */
 	    printfParms[pfpix] = alp[pix];
-#endif /* AFS_ALPHA_ENV */
-#endif /* AFS_SGI61_ENV */
+#endif
 	    pfpix++;
 	    break;
 	case ICL_TYPE_INT32:

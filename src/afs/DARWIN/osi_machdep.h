@@ -54,9 +54,10 @@ extern struct timeval time;
 
 #define AFS_PROC        struct proc
 
-#define osi_vnhold(avc,r)  do { \
-       if ((avc)->vrefCount) { VN_HOLD(&((avc)->v)); } \
-       else (avc)->vrefCount = 1;  } while(0)
+#define osi_vnhold(avc,r)       VN_HOLD(AFSTOV(avc))
+#define VN_HOLD(vp) darwin_vn_hold(vp)
+#define VN_RELE(vp) vrele(vp);
+
 
 #define gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(aresid),current_proc())
@@ -105,6 +106,11 @@ extern struct lock__bsd__ afs_global_lock;
 
 extern ino_t VnodeToIno(vnode_t * vp);
 extern dev_t VnodeToDev(vnode_t * vp);
+
+#define osi_curproc() current_proc()
+
+/* FIXME */
+#define osi_curcred() &afs_osi_cred 
 
 #endif /* KERNEL */
 

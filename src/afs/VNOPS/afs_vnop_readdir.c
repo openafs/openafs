@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_readdir.c,v 1.24.2.4 2004/11/09 17:19:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_readdir.c,v 1.24.2.5 2005/04/03 18:15:39 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -148,22 +148,19 @@ struct min_direct {		/* miniature direct structure */
     u_short d_reclen;
     u_char d_type;
     u_char d_namlen;
-#else
-#ifdef	AFS_SUN5_ENV
+#elif defined(AFS_SUN5_ENV)
     afs_uint32 d_fileno;
     afs_int32 d_off;
     u_short d_reclen;
 #else
-#if defined(AFS_SUN_ENV) || defined(AFS_AIX32_ENV)
+#if defined(AFS_AIX32_ENV)
     afs_int32 d_off;
-#endif
-#if     defined(AFS_HPUX100_ENV)
+#elif defined(AFS_HPUX100_ENV)
     unsigned long long d_off;
 #endif
     afs_uint32 d_fileno;
     u_short d_reclen;
     u_short d_namlen;
-#endif
 #endif
 };
 #endif /* AFS_SGI_ENV */
@@ -478,7 +475,7 @@ afs_readdir_move(de, vc, auio, slen, rlen, off)
 #if !defined(AFS_SGI_ENV)
     sdirEntry.d_namlen = slen;
 #endif
-#if defined(AFS_SUN_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_SGI_ENV)
+#if defined(AFS_AIX32_ENV) || defined(AFS_SGI_ENV)
     sdirEntry.d_off = off;
 #endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
@@ -726,7 +723,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 		FIXUPSTUPIDINODE(sdirEntry->d_fileno);
 		sdirEntry->d_reclen = rlen = auio->afsio_resid;
 		sdirEntry->d_namlen = o_slen;
-#if defined(AFS_SUN_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_HPUX100_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_HPUX100_ENV)
 		sdirEntry->d_off = origOffset;
 #endif
 		AFS_UIOMOVE((char *)sdirEntry, sizeof(*sdirEntry), UIO_READ,
@@ -795,7 +792,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 		FIXUPSTUPIDINODE(sdirEntry->d_fileno);
 		sdirEntry->d_reclen = rlen = auio->afsio_resid;
 		sdirEntry->d_namlen = o_slen;
-#if defined(AFS_SUN_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_HPUX100_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_HPUX100_ENV)
 		sdirEntry->d_off = origOffset;
 #endif
 		AFS_UIOMOVE((char *)sdirEntry, sizeof(*sdirEntry), UIO_READ,
@@ -850,7 +847,7 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 	    FIXUPSTUPIDINODE(sdirEntry->d_fileno);
 	    sdirEntry->d_reclen = rlen = len;
 	    sdirEntry->d_namlen = o_slen;
-#if defined(AFS_SUN_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_HPUX100_ENV)
+#if defined(AFS_SUN5_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_HPUX100_ENV)
 	    sdirEntry->d_off = origOffset;
 #endif
 	    AFS_UIOMOVE((char *)sdirEntry, sizeof(*sdirEntry), UIO_READ, auio,

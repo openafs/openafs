@@ -57,7 +57,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.4 2005/03/20 14:54:12 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afsd/afsd.c,v 1.43.2.5 2005/04/03 18:15:41 shadow Exp $");
 
 #define VFS 1
 
@@ -2034,69 +2034,24 @@ mainproc(as, arock)
 	if (afsd_verbose)
 	    printf("%s: Mounting the AFS root on '%s', flags: %d.\n", rn,
 		   cacheMountDir, mountFlags);
-#ifdef AFS_DEC_ENV
-	if ((mount("AFS", cacheMountDir, mountFlags, GT_AFS, (caddr_t) 0)) <
-	    0) {
-#else
 #ifdef AFS_FBSD_ENV
 	if ((mount("AFS", cacheMountDir, mountFlags, (caddr_t) 0)) < 0) {
-#else
-#ifdef	AFS_AUX_ENV
-	if ((fsmount(MOUNT_AFS, cacheMountDir, mountFlags, (caddr_t) 0)) < 0) {
-#else
-#ifdef	AFS_AIX_ENV
+#elif defined(AFS_AIX_ENV)
 	if (aix_vmount()) {
-#else
-#if defined(AFS_HPUX100_ENV)
+#elif defined(AFS_HPUX100_ENV)
 	if ((mount("", cacheMountDir, mountFlags, "afs", NULL, 0)) < 0) {
-#else
-#ifdef	AFS_HPUX_ENV
-#if	defined(AFS_HPUX90_ENV)
-	{
-	    char buffer[80];
-	    int code;
-
-	    strcpy(buffer, "afs");
-	    code = vfsmount(-1, cacheMountDir, mountFlags, (caddr_t) buffer);
-	    sscanf(buffer, "%d", &vfs1_type);
-	    if (code < 0) {
-		printf
-		    ("Can't find 'afs' type in the registered filesystem table!\n");
-		exit(1);
-	    }
-	    sscanf(buffer, "%d", &vfs1_type);
-	    if (afsd_verbose)
-		printf("AFS vfs slot number is %d\n", vfs1_type);
-	}
-	if ((vfsmount(vfs1_type, cacheMountDir, mountFlags, (caddr_t) 0)) < 0) {
-#else
-	if (call_syscall
-	    (AFSOP_AFS_VFSMOUNT, MOUNT_AFS, cacheMountDir, mountFlags,
-	     (caddr_t) NULL) < 0) {
-#endif
-#else
-#ifdef	AFS_SUN5_ENV
+#elif defined(AFS_SUN5_ENV)
 	if ((mount("AFS", cacheMountDir, mountFlags, "afs", NULL, 0)) < 0) {
-#else
-#if defined(AFS_SGI_ENV)
+#elif defined(AFS_SGI_ENV)
 	mountFlags = MS_FSS;
 	if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, (caddr_t) MOUNT_AFS))
 	    < 0) {
-#else
-#ifdef AFS_LINUX20_ENV
+#elif defined(AFS_LINUX20_ENV)
 	if ((mount("AFS", cacheMountDir, MOUNT_AFS, 0, NULL)) < 0) {
 #else
 /* This is the standard mount used by the suns and rts */
 	if ((mount(MOUNT_AFS, cacheMountDir, mountFlags, (caddr_t) 0)) < 0) {
-#endif /* AFS_LINUX20_ENV */
-#endif /* AFS_SGI_ENV */
-#endif /* AFS_SUN5_ENV */
-#endif /* AFS_HPUX100_ENV */
-#endif /* AFS_HPUX_ENV */
-#endif /* AFS_AIX_ENV */
-#endif /* AFS_AUX_ENV */
-#endif /* AFS_FBSD_ENV */
-#endif /* AFS_DEC_ENV */
+#endif
 	    printf("%s: Can't mount AFS on %s(%d)\n", rn, cacheMountDir,
 		   errno);
 	    exit(1);

@@ -48,7 +48,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/FBSD/osi_vnodeops.c,v 1.18 2004/03/19 15:37:10 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/FBSD/osi_vnodeops.c,v 1.18.2.1 2005/04/03 18:15:37 shadow Exp $");
 
 #include <afs/sysincludes.h>	/* Standard vendor system headers */
 #include <afsincludes.h>	/* Afs-based standard headers */
@@ -435,9 +435,7 @@ afs_vop_open(ap)
     if (AFSTOV(vc) != ap->a_vp)
 	panic("AFS open changed vnode!");
 #endif
-    afs_BozonLock(&vc->pvnLock, vc);
     osi_FlushPages(vc, ap->a_cred);
-    afs_BozonUnlock(&vc->pvnLock, vc);
     AFS_GUNLOCK();
     return error;
 }
@@ -458,9 +456,7 @@ afs_vop_close(ap)
 	code = afs_close(avc, ap->a_fflag, ap->a_cred);
     else
 	code = afs_close(avc, ap->a_fflag, afs_osi_credp);
-    afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
-    afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
     return code;
 }
@@ -526,10 +522,8 @@ afs_vop_read(ap)
     int code;
     struct vcache *avc = VTOAFS(ap->a_vp);
     AFS_GLOCK();
-    afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
     code = afs_read(avc, ap->a_uio, ap->a_cred, 0, 0, 0);
-    afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
     return code;
 }
@@ -620,10 +614,8 @@ afs_vop_getpages(struct vop_getpages_args *ap)
 #endif
 
     AFS_GLOCK();
-    afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc, osi_curcred());	/* hold bozon lock, but not basic vnode lock */
     code = afs_read(avc, &uio, osi_curcred(), 0, 0, 0);
-    afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
     pmap_qremove(kva, npages);
 
@@ -716,11 +708,9 @@ afs_vop_write(ap)
     int code;
     struct vcache *avc = VTOAFS(ap->a_vp);
     AFS_GLOCK();
-    afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
     code =
 	afs_write(VTOAFS(ap->a_vp), ap->a_uio, ap->a_ioflag, ap->a_cred, 0);
-    afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
     return code;
 }
@@ -798,9 +788,7 @@ afs_vop_putpages(struct vop_putpages_args *ap)
      * sync |= IO_INVAL; */
 
     AFS_GLOCK();
-    afs_BozonLock(&avc->pvnLock, avc);
     code = afs_write(avc, &uio, sync, osi_curcred(), 0);
-    afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
 
     pmap_qremove(kva, npages);

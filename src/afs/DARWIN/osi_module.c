@@ -2,7 +2,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_module.c,v 1.10 2003/07/15 23:14:18 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_module.c,v 1.10.2.1 2005/04/04 04:01:19 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -40,7 +40,9 @@ afs_modload(struct kmod_info *ki, void *data)
 	return KERN_FAILURE;
     }
     sysent[SYS_setgroups].sy_call = Afs_xsetgroups;
+#if 0
     sysent[SYS_ioctl].sy_call = afs_xioctl;
+#endif
     sysent[AFS_SYSCALL].sy_call = afs3_syscall;
     sysent[AFS_SYSCALL].sy_narg = 5;
     sysent[AFS_SYSCALL].sy_parallel = 0;
@@ -58,7 +60,9 @@ afs_modunload(struct kmod_info * ki, void *data)
     if (vfsconf_del("afs"))
 	return KERN_FAILURE;
     /* give up syscall entries for ioctl & setgroups, which we've stolen */
+#if 0
     sysent[SYS_ioctl].sy_call = ioctl;
+#endif
     sysent[SYS_setgroups].sy_call = setgroups;
     /* give up the stolen syscall entry */
     sysent[AFS_SYSCALL].sy_narg = 0;

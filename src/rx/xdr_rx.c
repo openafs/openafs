@@ -19,7 +19,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_rx.c,v 1.10.2.1 2004/12/07 06:10:07 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr_rx.c,v 1.10.2.2 2005/04/03 18:15:51 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -33,13 +33,13 @@ RCSID
 #else
 #include "rpc/types.h"
 #endif
-#ifdef  AFS_ALPHA_ENV
+#ifdef  AFS_OSF_ENV
 #undef kmem_alloc
 #undef kmem_free
 #undef mem_alloc
 #undef mem_free
 #undef register
-#endif /* AFS_ALPHA_ENV */
+#endif /* AFS_OSF_ENV */
 #ifdef AFS_LINUX22_ENV
 #ifndef quad_t
 #define quad_t __quad_t

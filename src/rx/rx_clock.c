@@ -22,7 +22,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_clock.c,v 1.13.2.1 2005/03/20 19:40:32 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_clock.c,v 1.13.2.3 2005/04/03 20:01:46 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -37,6 +37,9 @@ RCSID
 #endif /* !UKERNEL */
 #else /* KERNEL */
 #include <sys/time.h>
+#ifdef HAVE_SIGNAL_H
+#include <signal.h>
+#endif
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -49,12 +52,9 @@ RCSID
 
 #ifndef KERNEL
 
-#if defined(AFS_GFS_ENV)
-#define STARTVALUE 8000000	/* Ultrix bounds smaller, too small for general use */
-#else
-#define	STARTVALUE 100000000	/* Max number of seconds setitimer allows, for some reason */
-#endif
-static int startvalue = STARTVALUE;
+#define STARTVALUE 3600
+static struct clock startvalue;
+static struct clock relclock_epoch;   /* The elapsed time of the last itimer reset */
 
 struct clock clock_now;		/* The last elapsed time ready by clock_GetTimer */
 
@@ -64,28 +64,52 @@ int clock_haveCurrentTime;
 int clock_nUpdates;		/* The actual number of clock updates */
 static int clockInitialized = 0;
 
+static void
+clock_Sync(void)
+{
+    struct itimerval itimer, otimer;
+    itimer.it_value.tv_sec = STARTVALUE;
+    itimer.it_value.tv_usec = 0;
+    itimer.it_interval.tv_sec = 0;
+    itimer.it_interval.tv_usec = 0;
+
+    signal(SIGALRM, SIG_IGN);
+    if (setitimer(ITIMER_REAL, &itimer, &otimer) != 0) {
+	fprintf(stderr, "clock:  could not set interval timer; \
+				aborted(errno=%d)\n", errno);
+	fflush(stderr);
+	exit(1);
+    }
+    if (relclock_epoch.usec + startvalue.usec >= otimer.it_value.tv_usec) {
+	relclock_epoch.sec = relclock_epoch.sec +
+	    startvalue.sec - otimer.it_value.tv_sec;
+	relclock_epoch.usec = relclock_epoch.usec +
+	    startvalue.usec - otimer.it_value.tv_usec;
+    } else {
+	relclock_epoch.sec = relclock_epoch.sec +
+	    startvalue.sec - 1 - otimer.it_value.tv_sec;
+	relclock_epoch.usec = relclock_epoch.usec +
+	    startvalue.usec + 1000000 - otimer.it_value.tv_usec;
+    }
+    if (relclock_epoch.usec >= 1000000)
+	relclock_epoch.usec -= 1000000, relclock_epoch.sec++;
+    /* the initial value of the interval timer may not be exactly the same
+     * as the arg passed to setitimer. POSIX allows the implementation to
+     * round it up slightly, and some nonconformant implementations truncate
+     * it */
+    getitimer(ITIMER_REAL, &itimer);
+    startvalue.sec = itimer.it_value.tv_sec;
+    startvalue.usec = itimer.it_value.tv_usec;
+}
+
 /* Initialize the clock */
 void
 clock_Init(void)
 {
-    struct itimerval itimer, otimer;
-
     if (!clockInitialized) {
-	itimer.it_value.tv_sec = STARTVALUE;
-	itimer.it_value.tv_usec = 0;
-	itimer.it_interval.tv_sec = 0;
-	itimer.it_interval.tv_usec = 0;
-
-	if (setitimer(ITIMER_REAL, &itimer, &otimer) != 0) {
-	    fprintf(stderr, "clock:  could not set interval timer; \
-				aborted(errno=%d)\n", errno);
-	    fflush(stderr);
-	    exit(1);
-	}
-        getitimer(ITIMER_REAL, &itimer);
-        startvalue = itimer.it_value.tv_sec;
-        if (itimer.it_value.tv_usec > 0)
-          startvalue++;
+	relclock_epoch.sec = relclock_epoch.usec = 0;
+	startvalue.sec = startvalue.usec = 0;
+	clock_Sync();
 	clockInitialized = 1;
     }
 
@@ -105,11 +129,27 @@ void
 clock_UpdateTime(void)
 {
     struct itimerval itimer;
+    struct clock offset;
+    struct clock new;
+
     getitimer(ITIMER_REAL, &itimer);
-    clock_now.sec = startvalue - 1 - itimer.it_value.tv_sec;	/* The "-1" makes up for adding 1000000 usec, on the next line */
-    clock_now.usec = 1000000 - itimer.it_value.tv_usec;
-    if (clock_now.usec == 1000000)
-	clock_now.usec = 0, clock_now.sec++;
+
+    if (startvalue.usec >= itimer.it_value.tv_usec) {
+	offset.sec = startvalue.sec - itimer.it_value.tv_sec;
+	offset.usec = startvalue.usec - itimer.it_value.tv_usec;
+    } else {
+	/* The "-1" makes up for adding 1000000 usec, on the next line */
+	offset.sec = startvalue.sec - 1 - itimer.it_value.tv_sec;
+	offset.usec = startvalue.usec + 1000000 - itimer.it_value.tv_usec;
+    }
+    new.sec = relclock_epoch.sec + offset.sec;
+    new.usec = relclock_epoch.usec + offset.usec;
+    if (new.usec >= 1000000)
+	new.usec -= 1000000, new.sec++;
+    clock_now.sec = new.sec;
+    clock_now.usec = new.usec;
+    if (itimer.it_value.tv_sec < startvalue.sec / 2)
+	clock_Sync();
     clock_haveCurrentTime = 1;
     clock_nUpdates++;
 }

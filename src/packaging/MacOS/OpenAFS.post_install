@@ -32,6 +32,14 @@ if [ `grep /Network/afs cacheinfo` ]; then
     mv cacheinfo.new cacheinfo
 fi
 
+if [ ! -f ThisCell -a -f ThisCell.sample ]; then
+   cp ThisCell.sample ThisCell
+fi
+
+if [ ! -f config/afsd.options -a -f config/afsd.options.sample ]; then
+   cp config/afsd.options.sample config/afsd.options
+fi
+
 # testing case -- upgrading from pre 1.2.7, but .last file exists.
 # merge the .save and .last....
 if [ ! -f CellServDB -a -f CellServDB.save -a -f CellServDB.master.last ]; then

@@ -19,7 +19,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vfsck/setup.c,v 1.10.2.2 2005/01/31 04:12:57 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vfsck/setup.c,v 1.10.2.3 2005/04/03 18:15:54 shadow Exp $");
 
 #include <stdio.h>
 #define VICE
@@ -129,9 +129,6 @@ setup(dev)
     mlk_pbp = 0;
     pbp = 0;
     mlk_startinum = 0;
-#ifdef	AFS_DEC_ENV
-    iscorrupt = 0;
-#endif
 #if defined(ACLS) && defined(AFS_HPUX_ENV)
     n_cont = 0;
 #endif
@@ -359,17 +356,6 @@ setup(dev)
 	    sbdirty();
 	}
     }
-#ifdef	AFS_DEC_ENV
-    /*
-     * If '-p' is used and the partition was cleanly unmounted last time then skip the
-     * fscking process
-     */
-    if (only_when_needed && (sblock.fs_clean == FS_CLEAN)
-	&& clean_byte_valid(sblock.fs_lastfsck)) {
-	msgprintf("%s: umounted cleanly\n", dev);
-	return (FS_CLEAN);
-    }
-#endif
 #ifdef	AFS_HPUX_ENV
     /*
      * Do we need to continue ?
@@ -731,13 +717,6 @@ readsb(listerr)
     memcpy((char *)altsblock.fs_sparecon, (char *)sblock.fs_sparecon,
 	   sizeof sblock.fs_sparecon);
 #endif
-#if defined(AFS_DEC_ENV)
-    memcpy((char *)altsblock.fs_extra, (char *)sblock.fs_extra,
-	   sizeof sblock.fs_extra);
-    altsblock.fs_deftimer = sblock.fs_deftimer;
-    altsblock.fs_lastfsck = sblock.fs_lastfsck;
-    altsblock.fs_gennum = sblock.fs_gennum;
-#endif
     /*
      * The following should not have to be copied.
      */
@@ -800,27 +779,6 @@ calcsb(dev, devfd, fs)
 {
     return 0;
 }
-
-#ifdef	AFS_DEC_ENV
-clean_byte_valid(lastfsck)
-     time_t lastfsck;
-{
-    time_t now;
-    int delta;
-
-    time(&now);
-    if ((!sblock.fs_deftimer) || (!sblock.fs_lastfsck) || (lastfsck > now)) {
-	sblock.fs_deftimer = 0;
-	return (0);
-    }
-    if (!sblock.fs_cleantimer)
-	return (0);
-    delta = (now - lastfsck) / 86400;
-    if (delta > 60)
-	return (0);
-    return (1);
-}
-#endif
 
 #include <sys/ustat.h>
 #ifdef	AFS_HPUX_ENV

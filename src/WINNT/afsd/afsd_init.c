@@ -59,7 +59,7 @@ int LANadapter;
 
 int numBkgD;
 int numSvThreads;
-
+long rx_mtu = -1;
 int traceOnPanic = 0;
 
 int logReady = 0;
@@ -538,7 +538,7 @@ int afsd_InitCM(char **reasonP)
     long traceBufSize;
     long maxcpus;
     long ltt, ltto;
-    long rx_mtu, rx_nojumbo;
+    long rx_nojumbo;
     long virtualCache = 0;
     char rootCellName[256];
     struct rx_service *serverp;

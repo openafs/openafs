@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_cred.c,v 1.10.2.1 2005/03/20 20:19:20 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_cred.c,v 1.10.2.2 2005/04/03 19:49:21 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -63,9 +63,6 @@ crget(void)
     CRED_UNLOCK();
 
     memset(tmp, 0, sizeof(cred_t));
-#if defined(AFS_LINUX26_ENV)
-    tmp->cr_group_info = groups_alloc(0);
-#endif
     tmp->cr_ref = 1;
     return tmp;
 }
@@ -98,15 +95,10 @@ crdup(cred_t * cr)
     tmp->cr_uid = cr->cr_uid;
     tmp->cr_ruid = cr->cr_ruid;
     tmp->cr_gid = cr->cr_gid;
-#if defined(AFS_LINUX26_ENV)
-{
-    struct group_info *old_info;
 
-    old_info = tmp->cr_group_info;
+#if defined(AFS_LINUX26_ENV)
     get_group_info(cr->cr_group_info);
     tmp->cr_group_info = cr->cr_group_info;
-    put_group_info(old_info);
-}
 #else
     memcpy(tmp->cr_groups, cr->cr_groups, NGROUPS * sizeof(gid_t));
     tmp->cr_ngroups = cr->cr_ngroups;
@@ -125,15 +117,12 @@ crref(void)
     cr->cr_ruid = current->uid;
     cr->cr_gid = current->fsgid;
     cr->cr_rgid = current->gid;
-#if defined(AFS_LINUX26_ENV)
-{
-    struct group_info *old_info;
 
-    old_info = cr->cr_group_info;
+#if defined(AFS_LINUX26_ENV)
+    task_lock(current);
     get_group_info(current->group_info);
     cr->cr_group_info = current->group_info;
-    put_group_info(old_info);
-}
+    task_unlock(current);
 #else
     memcpy(cr->cr_groups, current->groups, NGROUPS * sizeof(gid_t));
     cr->cr_ngroups = current->ngroups;
@@ -155,9 +144,13 @@ crset(cred_t * cr)
     struct group_info *old_info;
 
     /* using set_current_groups() will sort the groups */
-    old_info = current->group_info;
     get_group_info(cr->cr_group_info);
+
+    task_lock(current);
+    old_info = current->group_info;
     current->group_info = cr->cr_group_info;
+    task_unlock(current);
+
     put_group_info(old_info);
 }
 #else
