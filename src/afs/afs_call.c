@@ -492,21 +492,22 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	/* add a cell.  Parameter 2 is 8 hosts (in net order),  parm 3 is the null-terminated
 	 name.  Parameter 4 is the length of the name, including the null.  Parm 5 is the
 	 home cell flag (0x1 bit) and the nosuid flag (0x2 bit) */
-	struct afsop_cell tcell;
+	struct afsop_cell *tcell = afs_osi_Alloc(sizeof(struct afsop_cell));
 
-	AFS_COPYIN((char *)parm2, (char *)tcell.hosts, sizeof(tcell.hosts), code);
+	AFS_COPYIN((char *)parm2, (char *)tcell->hosts, sizeof(tcell->hosts), code);
 	if (!code) {
-	    if (parm4 > sizeof(tcell.cellName)) 
+	    if (parm4 > sizeof(tcell->cellName))
 		code = EFAULT;
 	    else {
-		AFS_COPYIN((char *)parm3, tcell.cellName, parm4, code);
+		AFS_COPYIN((char *)parm3, tcell->cellName, parm4, code);
 		if (!code) 
-		    afs_NewCell(tcell.cellName, tcell.hosts, parm5,
+		    afs_NewCell(tcell->cellName, tcell->hosts, parm5,
 				NULL, 0, 0, 0);
 	    }
 	}
+	afs_osi_Free(tcell, sizeof(struct afsop_cell));
     } else if (parm == AFSOP_ADDCELL2) {
-	struct afsop_cell tcell;
+	struct afsop_cell *tcell = afs_osi_Alloc(sizeof(struct afsop_cell));
 	char *tbuffer = osi_AllocSmallSpace(AFS_SMALLOCSIZ), *lcnamep = 0;
 	char *tbuffer1 = osi_AllocSmallSpace(AFS_SMALLOCSIZ);
 	int cflags = parm4;
@@ -516,7 +517,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	while (afs_initState < AFSOP_START_BKG) afs_osi_Sleep(&afs_initState);
 #endif
 
-	AFS_COPYIN((char *)parm2, (char *)tcell.hosts, sizeof(tcell.hosts), code);
+	AFS_COPYIN((char *)parm2, (char *)tcell->hosts, sizeof(tcell->hosts), code);
 	if (!code) {
 	    AFS_COPYINSTR((char *)parm3, tbuffer1, AFS_SMALLOCSIZ, &bufferSize, code);
 	    if (!code) {
@@ -528,10 +529,11 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 		    }
 		}
 		if (!code)
-		    code = afs_NewCell(tbuffer1, tcell.hosts, cflags,
+		    code = afs_NewCell(tbuffer1, tcell->hosts, cflags,
 				       lcnamep, 0, 0, 0);
 	    }
 	}
+	afs_osi_Free(tcell, sizeof(struct afsop_cell));
 	osi_FreeSmallSpace(tbuffer);
 	osi_FreeSmallSpace(tbuffer1);
     }
@@ -668,9 +670,9 @@ long parm, parm2, parm3, parm4, parm5, parm6;
     else if (parm == AFSOP_ADVISEADDR) {
 	/* pass in the host address to the rx package */
 	afs_int32  	count        = parm2;
-	afs_int32 	buffer[AFS_MAX_INTERFACE_ADDR];
-	afs_int32 	maskbuffer[AFS_MAX_INTERFACE_ADDR];
-	afs_int32 	mtubuffer[AFS_MAX_INTERFACE_ADDR];
+	afs_int32 	*buffer = afs_osi_Alloc(sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
+	afs_int32 	*maskbuffer = afs_osi_Alloc(sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
+	afs_int32 	*mtubuffer = afs_osi_Alloc(sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
 	int 	i;
 	int	code;
 
@@ -704,6 +706,9 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	}
 	afs_uuid_create(&afs_cb_interface.uuid);
 	rxi_setaddr(buffer[0]);
+	afs_osi_Free(buffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
+	afs_osi_Free(maskbuffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
+	afs_osi_Free(mtubuffer, sizeof(afs_int32) * AFS_MAX_INTERFACE_ADDR);
     }
 
 #ifdef	AFS_SGI53_ENV

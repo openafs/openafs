@@ -533,23 +533,25 @@ static struct volume *afs_NewDynrootVolume(struct VenusFid *fid)
 {
     struct cell *tcell;
     struct volume *tv;
-    struct vldbentry tve;
+    struct vldbentry *tve;
     char *bp, tbuf[CVBS];
 
     tcell = afs_GetCell(fid->Cell, READ_LOCK);
     if (!tcell)
 	return NULL;
+    tve = afs_osi_Alloc(sizeof(*tve));
     if (!(tcell->states & CHasVolRef))
 	tcell->states |= CHasVolRef;
 
     bp = afs_cv2string(&tbuf[CVBS], fid->Fid.Volume);
-    memset(&tve, 0, sizeof(tve));
-    strcpy(tve.name, "local-dynroot");
-    tve.volumeId[ROVOL] = fid->Fid.Volume;
-    tve.flags = VLF_ROEXISTS;
+    memset(tve, 0, sizeof(*tve));
+    strcpy(tve->name, "local-dynroot");
+    tve->volumeId[ROVOL] = fid->Fid.Volume;
+    tve->flags = VLF_ROEXISTS;
 
-    tv = afs_SetupVolume(0, bp, (char *) &tve, tcell, 0, 0, 0);
+    tv = afs_SetupVolume(0, bp, tve, tcell, 0, 0, 0);
     afs_PutCell(tcell, READ_LOCK);
+    afs_osi_Free(tve, sizeof(*tve));
     return tv;
 }
 

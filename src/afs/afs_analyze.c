@@ -294,7 +294,7 @@ static int VLDB_Same (struct VenusFid *afid, struct vrequest *areq)
       struct vldbentry tve;
       struct nvldbentry ntve;
       struct uvldbentry utve;
-    } v;
+    } *v;
     struct volume *tvp;
     struct cell *tcell;
     char *bp, tbuf[CVBS]; /* biggest volume id is 2^32, ~ 4*10^9 */
@@ -305,6 +305,7 @@ static int VLDB_Same (struct VenusFid *afid, struct vrequest *areq)
     afs_FinalizeReq(areq);
 
     if ((i = afs_InitReq(&treq, &afs_osi_cred))) return DUNNO;
+    v = afs_osi_Alloc(sizeof(*v));
     tcell = afs_GetCell(afid->Cell, READ_LOCK);
     bp = afs_cv2string(&tbuf[CVBS], afid->Fid.Volume);
     do {
@@ -315,29 +316,29 @@ static int VLDB_Same (struct VenusFid *afid, struct vrequest *areq)
 	    if (tconn->srvr->server->flags & SNO_LHOSTS) {
 		type = 0;
 		RX_AFS_GUNLOCK();
-		i = VL_GetEntryByNameO(tconn->id, bp, &v.tve);
+		i = VL_GetEntryByNameO(tconn->id, bp, &v->tve);
 		RX_AFS_GLOCK();
 	    } else if (tconn->srvr->server->flags & SYES_LHOSTS) {
 		type = 1;
 		RX_AFS_GUNLOCK();
-		i = VL_GetEntryByNameN(tconn->id, bp, &v.ntve);
+		i = VL_GetEntryByNameN(tconn->id, bp, &v->ntve);
 		RX_AFS_GLOCK();
 	    } else {
 		type = 2;
 		RX_AFS_GUNLOCK();
-		i = VL_GetEntryByNameU(tconn->id, bp, &v.utve);
+		i = VL_GetEntryByNameU(tconn->id, bp, &v->utve);
 		RX_AFS_GLOCK();
 		if (!(tconn->srvr->server->flags & SVLSRV_UUID)) {
 		    if (i == RXGEN_OPCODE) {
 			type = 1;
 			RX_AFS_GUNLOCK();
-                        i = VL_GetEntryByNameN(tconn->id, bp, &v.ntve);
+                        i = VL_GetEntryByNameN(tconn->id, bp, &v->ntve);
 			RX_AFS_GLOCK();
 			if (i == RXGEN_OPCODE) {
 			    type = 0;
 			    tconn->srvr->server->flags |= SNO_LHOSTS;
 			    RX_AFS_GUNLOCK();
-			    i = VL_GetEntryByNameO(tconn->id, bp, &v.tve);
+			    i = VL_GetEntryByNameO(tconn->id, bp, &v->tve);
 			    RX_AFS_GLOCK();
 			} else if (!i)
 			    tconn->srvr->server->flags |= SYES_LHOSTS;
@@ -357,6 +358,7 @@ static int VLDB_Same (struct VenusFid *afid, struct vrequest *areq)
 	       ICL_TYPE_INT32, i);
 
     if (i) {
+	afs_osi_Free(v, sizeof(*v));
 	return DUNNO;
     }
     /* have info, copy into serverHost array */
@@ -369,13 +371,13 @@ static int VLDB_Same (struct VenusFid *afid, struct vrequest *areq)
        }
 
        if (type == 2) {
-	  InstallUVolumeEntry(tvp, &v.utve, afid->Cell, tcell, &treq);
+	  InstallUVolumeEntry(tvp, &v->utve, afid->Cell, tcell, &treq);
        }
        else if (type == 1) {
-	  InstallNVolumeEntry(tvp, &v.ntve, afid->Cell);
+	  InstallNVolumeEntry(tvp, &v->ntve, afid->Cell);
        }
        else {
-	  InstallVolumeEntry(tvp, &v.tve, afid->Cell);
+	  InstallVolumeEntry(tvp, &v->tve, afid->Cell);
        }
 
        if (i < NMAXNSERVERS && tvp->serverHost[i]) {
@@ -394,11 +396,16 @@ static int VLDB_Same (struct VenusFid *afid, struct vrequest *areq)
       tvp = afs_GetVolume(afid, &treq, WRITE_LOCK);
       if (tvp) {
 	afs_PutVolume(tvp, WRITE_LOCK);
+	afs_osi_Free(v, sizeof(*v));
 	return DIFFERENT;
       }
-      else return DUNNO;
+      else {
+        afs_osi_Free(v, sizeof(*v));
+        return DUNNO;
+      }
     }
 
+    afs_osi_Free(v, sizeof(*v));
     return (changed ? DIFFERENT : SAME);
 } /*VLDB_Same */
 

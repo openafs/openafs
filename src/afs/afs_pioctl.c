@@ -1434,17 +1434,20 @@ DECL_PIOCTL(PSetTokens)
 DECL_PIOCTL(PGetVolumeStatus)
 {
     char volName[32];
-    char offLineMsg[256];
-    char motd[256];
+    char *offLineMsg = afs_osi_Alloc(256);
+    char *motd = afs_osi_Alloc(256);
     register struct conn *tc;
-    register afs_int32 code;
+    register afs_int32 code = 0;
     struct VolumeStatus volstat;
     register char *cp;
     char *Name, *OfflineMsg, *MOTD;
     XSTATS_DECLS;
 
     AFS_STATCNT(PGetVolumeStatus);
-    if (!avc) return EINVAL;
+    if (!avc) {
+        code = EINVAL;
+        goto out;
+    }
     Name = volName;
     OfflineMsg = offLineMsg;
     MOTD = motd;
@@ -1464,7 +1467,7 @@ DECL_PIOCTL(PGetVolumeStatus)
 		   AFS_STATS_FS_RPCIDX_GETVOLUMESTATUS,
 		   SHARED_LOCK, NULL));
 
-    if (code) return code;
+    if (code) goto out;
     /* Copy all this junk into msg->im_data, keeping track of the lengths. */
     cp = aout;
     memcpy(cp, (char *)&volstat, sizeof(VolumeStatus));
@@ -1476,16 +1479,19 @@ DECL_PIOCTL(PGetVolumeStatus)
     strcpy(cp, motd);
     cp += strlen(motd)+1;
     *aoutSize = (cp - aout);
-    return 0;
+out:
+    afs_osi_Free(offLineMsg, 256);
+    afs_osi_Free(motd, 256);
+    return code;
 }
 
 DECL_PIOCTL(PSetVolumeStatus)
 {
     char volName[32];
-    char offLineMsg[256];
-    char motd[256];
+    char *offLineMsg = afs_osi_Alloc(256);
+    char *motd = afs_osi_Alloc(256);
     register struct conn *tc;
-    register afs_int32 code;
+    register afs_int32 code = 0;
     struct AFSFetchVolumeStatus volstat;
     struct AFSStoreVolumeStatus storeStat;
     register struct volume *tvp;
@@ -1544,7 +1550,7 @@ DECL_PIOCTL(PSetVolumeStatus)
 		   AFS_STATS_FS_RPCIDX_SETVOLUMESTATUS,
 		   SHARED_LOCK, NULL));
 
-    if (code) return code;
+    if (code) goto out;
     /* we are sending parms back to make compat. with prev system.  should
       change interface later to not ask for current status, just set new status */
     cp = aout;
@@ -1557,7 +1563,10 @@ DECL_PIOCTL(PSetVolumeStatus)
     strcpy(cp, motd);
     cp += strlen(motd)+1;
     *aoutSize = cp - aout;
-    return 0;
+out:
+    afs_osi_Free(offLineMsg, 256);
+    afs_osi_Free(motd, 256);
+    return code;
 }
 
 DECL_PIOCTL(PFlush)

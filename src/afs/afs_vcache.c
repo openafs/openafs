@@ -312,7 +312,7 @@ int afs_FreeCBR(register struct afs_cbr *asp)
  */
 afs_int32 afs_FlushVCBs (afs_int32 lockit)
 {
-    struct AFSFid tfids[AFS_MAXCBRSCALL];
+    struct AFSFid *tfids;
     struct AFSCallBack callBacks[1];
     struct AFSCBFids fidArray;
     struct AFSCBs cbArray;
@@ -328,6 +328,7 @@ afs_int32 afs_FlushVCBs (afs_int32 lockit)
 
     if ((code = afs_InitReq(&treq, &afs_osi_cred))) return code;
     treq.flags |= O_NONBLOCK;
+    tfids = afs_osi_Alloc(sizeof(struct AFSFid) * AFS_MAXCBRSCALL);
 
     if (lockit) MObtainWriteLock(&afs_xvcb,273);
     ObtainReadLock(&afs_xserver);
@@ -402,6 +403,7 @@ afs_int32 afs_FlushVCBs (afs_int32 lockit)
 
     ReleaseReadLock(&afs_xserver);
     if (lockit) MReleaseWriteLock(&afs_xvcb);
+    afs_osi_Free(tfids, sizeof(struct AFSFid) * AFS_MAXCBRSCALL);
     return 0;
 }
 
