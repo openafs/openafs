@@ -28,7 +28,8 @@ AFS_OS_OBJS = \
 	osi_vm.o \
 	osi_vnodeops.o \
 	xdr.o \
-	xdr_array.o
+	xdr_array.o \
+	xdr_int64.o
 
 AFS_OS_NFSOBJS =
 
