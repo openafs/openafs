@@ -1124,22 +1124,13 @@ int SRXAFSCB_GetCellServDB(
     afs_int32 i, j;
     struct cell *tcell;
     struct afs_q *cq, *tq;
-    char *t_name;
+    char *t_name, *p_name = NULL;
 
 #ifdef RX_ENABLE_LOCKS
     AFS_GLOCK();
 #endif /* RX_ENABLE_LOCKS */
     AFS_STATCNT(SRXAFSCB_GetCellServDB);
 
-    t_name = (char *)rxi_Alloc(AFSNAMEMAX);
-    if (t_name == NULL) {
-#ifdef RX_ENABLE_LOCKS
-	AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
-	return ENOMEM;
-    }
-
-    t_name[0] = '\0';
     memset(a_hosts, 0, AFSMAXCELLHOSTS * sizeof(afs_int32));
 
     /* search the list for the cell with this index */
@@ -1148,12 +1139,29 @@ int SRXAFSCB_GetCellServDB(
         tq = QNext(cq);
 	if (i == a_index) {
 	    tcell = QTOC(cq);
-	    strcpy(t_name, tcell->cellName);
+	    p_name = tcell->cellName;
 	    for (j = 0 ; j < AFSMAXCELLHOSTS && tcell->cellHosts[j] ; j++) {
 		a_hosts[j] = ntohl(tcell->cellHosts[j]->addr->sa_ip);
 	    }
 	}
     }
+
+    if (p_name)
+	i = strlen(p_name);
+    else
+	i = 0;
+    t_name = (char *)rxi_Alloc(i+1);
+    if (t_name == NULL) {
+#ifdef RX_ENABLE_LOCKS
+	AFS_GUNLOCK();
+#endif /* RX_ENABLE_LOCKS */
+	return ENOMEM;
+    }
+
+    t_name[i] = '\0';
+    if (p_name)
+	bcopy(p_name, t_name, i);
+
     ReleaseReadLock(&afs_xcell);
 
 #ifdef RX_ENABLE_LOCKS
@@ -1189,24 +1197,15 @@ int SRXAFSCB_GetLocalCell(
     struct rx_call *a_call,
     char **a_name)
 {
+    int plen;
     struct cell *tcell;
     struct afs_q *cq, *tq;
-    char *t_name;
+    char *t_name, *p_name = NULL;
 
 #ifdef RX_ENABLE_LOCKS
     AFS_GLOCK();
 #endif /* RX_ENABLE_LOCKS */
     AFS_STATCNT(SRXAFSCB_GetLocalCell);
-
-    t_name = (char *)rxi_Alloc(AFSNAMEMAX);
-    if (t_name == NULL) {
-#ifdef RX_ENABLE_LOCKS
-	AFS_GUNLOCK();
-#endif /* RX_ENABLE_LOCKS */
-	return ENOMEM;
-    }
-
-    t_name[0] = '\0';
 
     /* Search the list for the primary cell. Cell number 1 is only
      * the primary cell is when no other cell is explicitly marked as
@@ -1216,13 +1215,30 @@ int SRXAFSCB_GetLocalCell(
         tq = QNext(cq);
 	tcell = QTOC(cq);
 	if (tcell->states & CPrimary) {
-	    strcpy(t_name, tcell->cellName);
+	    p_name = tcell->cellName;
 	    break;
 	}
         if (tcell->cell == 1) {
-	    strcpy(t_name, tcell->cellName);
+	    p_name = tcell->cellName;
 	}
     }
+
+    if (p_name)
+	plen = strlen(p_name);
+    else
+	plen = 0;
+    t_name = (char *)rxi_Alloc(plen+1);
+    if (t_name == NULL) {
+#ifdef RX_ENABLE_LOCKS
+	AFS_GUNLOCK();
+#endif /* RX_ENABLE_LOCKS */
+	return ENOMEM;
+    }
+
+    t_name[plen] = '\0';
+    if (p_name)
+	bcopy(p_name, t_name, plen);
+
     ReleaseReadLock(&afs_xcell);
 
 #ifdef RX_ENABLE_LOCKS
