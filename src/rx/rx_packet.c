@@ -1449,6 +1449,7 @@ void rxi_SendPacket(struct rx_connection * conn, struct rx_packet *p,
     char deliveryType = 'S';
 #endif
     /* The address we're sending the packet to */
+    memset(&addr, 0, sizeof (addr));
     addr.sin_family = AF_INET;
     addr.sin_port = peer->port;
     addr.sin_addr.s_addr = peer->host;

@@ -501,6 +501,8 @@ afs_int32 vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc
         }
     }
 
+    afsconf_Close(tdir);
+
     if (secproc)     /* tell UV module about default authentication */
         (*secproc) (sc, scIndex);
     if (info.numServers > VLDB_MAXSERVERS) {

@@ -330,7 +330,7 @@ int LWP_CreateProcess(int (*ep)(), int stacksize, int priority,
 	}
 	stackptr -= stacksize;
 #else
-	if ((stackptr = (char *) malloc(stacksize)) == NULL) {
+	if ((stackptr = (char *) malloc(stacksize + 7)) == NULL) {
 	    Set_LWP_RC();
 	    return LWP_ENOMEM;
 	}

@@ -928,6 +928,7 @@ int afsconf_Close(struct afsconf_dir *adir)
 static int afsconf_CloseInternal(register struct afsconf_dir *adir)
 {
     register struct afsconf_entry *td, *nd;
+    struct afsconf_aliasentry *ta, *na;
     register char *tname;
 
     tname = adir->name;	/* remember name, since that's all we preserve */
@@ -939,6 +940,10 @@ static int afsconf_CloseInternal(register struct afsconf_dir *adir)
 	if (td->cellInfo.linkedCell)
 	    free(td->cellInfo.linkedCell);
 	free(td);
+    }
+    for (ta = adir->alias_entries; ta; ta = na) {
+	na = ta->next;
+	free (ta);
     }
     if (adir->keystr) free(adir->keystr);
 
