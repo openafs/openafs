@@ -4,9 +4,9 @@ use Term::ReadLine;
 use strict;
 use Debian::OpenAFS::ConfigUtils;
 use vars qw($admin $server
-	   $requirements_met );
+	   $requirements_met  $shutdown_needed);
 my $rl = new Term::ReadLine('afs-newcell');
-
+$shutdown_needed = 1;
 # main script
 
 unless ($requirements_met) {
@@ -62,14 +62,13 @@ exit(1);
 close MOUNT;
 
 unless ( -f "/etc/openafs/server/KeyFile") {
-  print "You do not have an AFS keyfile.  Please create this using asetkey from openafs-krby or 
+  print "You do not have an AFS keyfile.  Please create this using asetkey from openafs-krb5 or 
 the bos addkey command";
   exit(1);
 }
 
+print "If the fileserver is not running, this may hang for 30 seconds.\n";
 run("/etc/init.d/openafs-fileserver stop");
-
-
 $server = `hostname`;
 chomp $server;
 $admin = $rl->readline("What administrative principal should be used?");
@@ -90,7 +89,7 @@ run("bos adduser $server $admin -localauth");
 unwind("bos removeuser $server $admin -localauth");
 if ( -f "/var/lib/openafs/db/prdb.DB0" ) {
   die "Protection database already exists; cell already partially created\n";
-  }
+ }
 open(PRDB, "|pt_util -p /var/lib/openafs/db/prdb.DB0 -w ")
 or die "Unable to start pt_util: $!\n";
 print PRDB "$admin 128/20 1 -204 -204\n";
@@ -98,7 +97,6 @@ print PRDB "system:administrators 130/20 -204 -204 -204\n";
 print PRDB" $admin 1\n";
 close PRDB;
 unwind( "rm /var/lib/openafs/db/prdb* ");
-
 # Start up ptserver and vlserver
 run("bos create $server ptserver simple /usr/lib/openafs/ptserver -localauth");
 unwind("bos delete $server ptserver -localauth");
@@ -112,8 +110,13 @@ run( "bos create $server fs fs ".
      "-cmd /usr/lib/openafs/salvager -localauth");
 unwind( "bos delete $server fs -localauth ");
 
+print "Waiting for database elections: ";
+sleep(30);
+print "done.\n";
+# Past this point we want to control when bos shutdown happens
+$shutdown_needed = 0;
+unwind( "bos shutdown $server -localauth ");
 run("vos create $server a root.afs -localauth");
-
 # bring up client
 run("echo $cell >/etc/openafs/ThisCell");
 run("/etc/init.d/openafs-client force-start");
@@ -128,8 +131,8 @@ eomsg
 
 @unwinds = ();
 END {
-# We need to do a bos shutdown first; it may fail
-# if didn't get far enough in
-#    system("bos shutdown $server -localauth");
+# If we fail before all the instances are created, we need to perform 
+# our own bos shutdown
+    system("bos shutdown $server -localauth") if $shutdown_needed;
   run(pop @unwinds) while @unwinds;
   }
