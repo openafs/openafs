@@ -594,7 +594,7 @@ common_FetchData (tcon, Fid, Pos, Len, OutStatus, CallBack, Sync, type)
 
     /* actually do the data transfer */
 #if FS_STATS_DETAILED
-    errorCode = FetchData_RXStyle(volptr, targetptr, tcall, Pos, Len, type
+    errorCode = FetchData_RXStyle(volptr, targetptr, tcall, Pos, Len, type,
 				  &bytesToXfer, &bytesXferred);
 #else
     if (errorCode = FetchData_RXStyle(volptr, targetptr, tcall, Pos, Len, type))
