@@ -671,51 +671,67 @@ BOOL Config_SetNumDaemons (ULONG cDaemons, ULONG *pStatus)
 
 void Config_GetSysName (LPTSTR pszName)
 {
-   if (!Config_ReadGlobalString (TEXT("SysName"), pszName, MAX_PATH))
-      lstrcpy (pszName, TEXT("i386_nt40"));
+    if (!Config_ReadGlobalString (TEXT("SysName"), pszName, MAX_PATH))
+        lstrcpy (pszName, TEXT("i386_nt40"));
 }
 
 
 BOOL Config_SetSysName (LPCTSTR pszName, ULONG *pStatus)
 {
-   BOOL rc = TRUE;
-   ULONG status = 0;
+    BOOL rc = TRUE;
+    ULONG status = 0;
 
-   if (Config_GetServiceState() == SERVICE_RUNNING)
-      {
-      struct {
-         ULONG cbData;
-         TCHAR szData[ PIOCTL_MAXSIZE ];
-      } InData;
-      memset (&InData, 0x00, sizeof(InData));
-      InData.cbData = lstrlen(pszName);
-      lstrcpy (InData.szData, pszName);
+    if (Config_GetServiceState() == SERVICE_RUNNING)
+    {
+        struct {
+            ULONG cbData;
+            TCHAR szData[ PIOCTL_MAXSIZE ];
+        } InData;
+        memset (&InData, 0x00, sizeof(InData));
+        USHORT i=0, j=0, len=lstrlen(pszName);
+        
+        if ( len == 0 ) {
+            Message (MB_ICONHAND, GetErrorTitle(), IDS_FAILCONFIG_SYSNAME, TEXT("A sysname must be specified"));
+            return(-1);
+        }
 
-      BYTE OutData[ PIOCTL_MAXSIZE ];
-      memset (OutData, 0x00, sizeof(OutData));
+        while ( pszName[i] ) {
+            if ( !isspace(pszName[i]) ) {
+                InData.szData[j++] = pszName[i];
+            } else if (InData.szData[j-1] != '\0') {
+                InData.szData[j++] = '\0';
+                InData.cbData++;
+            }
+            i++;
+        }
+        InData.szData[j++] = '\0';
+        InData.cbData++;      /* one word */
 
-      struct ViceIoctl IOInfo;
-      IOInfo.in_size = sizeof(ULONG) +lstrlen(pszName) +1;
-      IOInfo.in = (char *)&InData;
-      IOInfo.out = (char *)OutData;
-      IOInfo.out_size = PIOCTL_MAXSIZE;
+        BYTE OutData[ PIOCTL_MAXSIZE ];
+        memset (OutData, 0x00, sizeof(OutData));
 
-      if ((status = pioctl (0, VIOC_AFS_SYSNAME, &IOInfo, 1)) != 0)
-         {
-         rc = FALSE;
-         }
-      }
+        struct ViceIoctl IOInfo;
+        IOInfo.in_size = sizeof(ULONG) + j;
+        IOInfo.in = (char *)&InData;
+        IOInfo.out = (char *)OutData;
+        IOInfo.out_size = PIOCTL_MAXSIZE;
 
-   if (rc)
-      {
-      Config_WriteGlobalString (TEXT("SysName"), pszName);
-      }
+        if ((status = pioctl (0, VIOC_AFS_SYSNAME, &IOInfo, 1)) != 0)
+        {
+            rc = FALSE;
+        }
+    }
 
-   if (pStatus && !rc)
-      *pStatus = status;
-   if (!rc)
-      Message (MB_ICONHAND, GetErrorTitle(), IDS_FAILCONFIG_SYSNAME, TEXT("%ld"), status);
-   return rc;
+    if (rc)
+    {
+        Config_WriteGlobalString (TEXT("SysName"), pszName);
+    }
+
+    if (pStatus && !rc)
+        *pStatus = status;
+    if (!rc)
+        Message (MB_ICONHAND, GetErrorTitle(), IDS_FAILCONFIG_SYSNAME, TEXT("%ld"), status);
+    return rc;
 }
 
 

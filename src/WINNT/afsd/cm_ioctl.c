@@ -1213,6 +1213,7 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
          * do lookups of @sys entries and thinks it can trust them */
         /* privs ok, store the entry, ... */
         strcpy(cm_sysName, inname);
+		strcpy(cm_sysNameList[0], inname);
         if (setSysName > 1) {       /* ... or list */
             cp = ioctlp->inDatap;
             for (count = 1; count < setSysName; ++count) {
@@ -1220,7 +1221,7 @@ long cm_IoctlSysName(struct smb_ioctl *ioctlp, struct cm_user *userp)
                     osi_panic("cm_IoctlSysName: no cm_sysNameList entry to write\n",
                                __FILE__, __LINE__);
                 t = strlen(cp);
-                memcpy(cm_sysNameList[count], cp, t + 1);  /* include null */
+                strcpy(cm_sysNameList[count], cp);
                 cp += t + 1;
             }
         }
