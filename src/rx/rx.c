@@ -2895,6 +2895,7 @@ static void rxi_CheckReachEvent(event, conn, acall)
     if (waiting) {
 	if (!call) {
 	    MUTEX_ENTER(&conn->conn_call_lock);
+	    MUTEX_ENTER(&conn->conn_data_lock);
 	    for (i=0; i<RX_MAXCALLS; i++) {
 		struct rx_call *tc = conn->call[i];
 		if (tc && tc->state == RX_STATE_PRECALL) {
@@ -2902,6 +2903,14 @@ static void rxi_CheckReachEvent(event, conn, acall)
 		    break;
 		}
 	    }
+	    if (!call)
+		/* Indicate that rxi_CheckReachEvent is no longer running by
+		 * clearing the flag.  Must be atomic under conn_data_lock to
+		 * avoid a new call slipping by: rxi_CheckConnReach holds
+		 * conn_data_lock while checking RX_CONN_ATTACHWAIT.
+		 */
+		conn->flags &= ~RX_CONN_ATTACHWAIT;
+	    MUTEX_EXIT(&conn->conn_data_lock);
 	    MUTEX_EXIT(&conn->conn_call_lock);
 	}
 
