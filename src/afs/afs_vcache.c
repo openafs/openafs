@@ -98,7 +98,7 @@ int afs_FlushVCache(struct vcache *avc, int *slept)
 { /*afs_FlushVCache*/
 
     register afs_int32 i, code;
-    register struct vcache **uvc, *wvc, *tvc;
+    register struct vcache **uvc, *wvc;
 
     *slept = 0;
     AFS_STATCNT(afs_FlushVCache);
@@ -453,7 +453,7 @@ static afs_int32 afs_QueueVCB(struct vcache *avc)
 
 int afs_RemoveVCB(register struct VenusFid *afid)
 {
-    register int i, j;
+    register int i;
     register struct server *tsp;
     register struct afs_cbr *tcbrp;
     struct afs_cbr **lcbrpp;
@@ -1027,7 +1027,7 @@ void afs_FlushActiveVcaches(register afs_int32 doflocks)
     register int i;
     register struct conn *tc;
     register afs_int32 code;
-    register struct AFS_UCRED *cred;
+    register struct AFS_UCRED *cred = NULL;
     struct vrequest treq, ureq;
     struct AFSVolSync tsync;
     int didCore;
@@ -1417,7 +1417,6 @@ int afs_WriteVCache(register struct vcache *avc,
 void afs_ProcessFS(register struct vcache *avc, register struct AFSFetchStatus *astat, 
 	struct vrequest *areq)
 {
-    register int i;
     afs_size_t length;
     AFS_STATCNT(afs_ProcessFS);
 
@@ -1510,9 +1509,7 @@ int afs_RemoteLookup(register struct VenusFid *afid, struct vrequest *areq,
 	char *name, struct VenusFid *nfid, struct AFSFetchStatus *OutStatusp, 
 	struct AFSCallBack *CallBackp, struct server **serverp, struct AFSVolSync *tsyncp)
 {
-    afs_int32 code, i;
-    register struct vcache *tvc;
-    struct volume *tvp;
+    afs_int32 code;
     afs_uint32 start;
     register struct conn *tc;
     struct AFSFetchStatus OutDirStatus;
@@ -1581,7 +1578,7 @@ struct vcache *afs_GetVCache(register struct VenusFid *afid, struct vrequest *ar
 	afs_int32 *cached, struct vcache *avc, afs_int32 locktype)
 {
 
-    afs_int32 code, i, newvcache=0;
+    afs_int32 code, newvcache=0;
     register struct vcache *tvc;
     struct volume *tvp;
     afs_int32 retry;
@@ -1590,7 +1587,10 @@ struct vcache *afs_GetVCache(register struct VenusFid *afid, struct vrequest *ar
 
     if (cached) *cached = 0;		/* Init just in case */
 
+#if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
 loop:
+#endif
+
     ObtainSharedLock(&afs_xvcache,5); 
 
     tvc = afs_FindVCache(afid, 0, 0, &retry, DO_STATS | DO_VLRU );
@@ -1709,7 +1709,7 @@ struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
 				afs_int32 *cached, afs_int32 locktype,
 				struct vcache *adp, char *aname)
 {
-    afs_int32 code, now, newvcache=0, hash;
+    afs_int32 code, now, newvcache=0;
     struct VenusFid nfid;
     register struct vcache *tvc;
     struct volume *tvp;
@@ -1723,7 +1723,10 @@ struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     AFS_STATCNT(afs_GetVCache);
     if (cached) *cached = 0;		/* Init just in case */
 
+#if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
   loop1:
+#endif
+
     ObtainReadLock(&afs_xvcache);
     tvc = afs_FindVCache(afid, 0, 0, &retry, DO_STATS /* no vlru */);
 
@@ -1760,7 +1763,10 @@ struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     code = afs_RemoteLookup(&adp->fid, areq, aname, &nfid, &OutStatus, &CallBack,
 			    &serverp, &tsync);	
 
+#if	defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
   loop2:
+#endif
+
     ObtainSharedLock(&afs_xvcache,6);
     tvc = afs_FindVCache(&nfid, 0, 0, &retry, DO_VLRU /* no xstats now*/);
     if (tvc && retry) {
@@ -1865,7 +1871,7 @@ struct vcache *afs_GetRootVCache(struct VenusFid *afid,
 				 struct vrequest *areq, afs_int32 *cached,
 				 struct volume *tvolp, afs_int32 locktype)
 {
-    afs_int32 code, i, newvcache = 0, haveStatus = 0;
+    afs_int32 code = 0, i, newvcache = 0, haveStatus = 0;
     afs_int32 getNewFid = 0;
     afs_uint32 start;
     struct VenusFid nfid;
@@ -1874,7 +1880,7 @@ struct vcache *afs_GetRootVCache(struct VenusFid *afid,
     struct AFSFetchStatus OutStatus;
     struct AFSCallBack CallBack;
     struct AFSVolSync tsync;
-    int origCBs;
+    int origCBs = 0;
 
     start = osi_Time();
 
@@ -2073,7 +2079,7 @@ afs_int32 afs_FetchStatus(struct vcache *avc, struct VenusFid *afid,
 		      struct vrequest *areq, struct AFSFetchStatus *Outsp)
 {
   int code;
-  afs_uint32 start;
+  afs_uint32 start = 0;
   register struct conn *tc;
   struct AFSCallBack CallBack;
   struct AFSVolSync tsync;
@@ -2448,13 +2454,14 @@ afs_int32 afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid,
 {
     register struct vcache *tvc;
     afs_int32 i;
-    afs_int32 retry = 0;
     afs_int32 count = 0;
     struct vcache *found_tvc = NULL;
 
     AFS_STATCNT(afs_FindVCache);
 
+#if defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
  loop:
+#endif
 
     ObtainSharedLock(&afs_xvcache,331); 
 
@@ -2496,6 +2503,7 @@ afs_int32 afs_NFSFindVCache(struct vcache **avcp, struct VenusFid *afid,
     /* should I have a read lock on the vnode here? */
     if (tvc) {
 #if defined(AFS_SGI_ENV) && !defined(AFS_SGI53_ENV)
+        afs_int32 retry = 0;
         osi_vnhold(tvc, &retry); 
 	if (retry) {
 	    count = 0;

@@ -91,7 +91,7 @@ extern void FreeBlobs(char *dir, register int firstblob, int nblobs);
 extern int MakeDir (char *dir, afs_int32 *me, afs_int32 *parent);
 extern int Lookup (char *dir, char *entry, register afs_int32 *fid);
 extern int LookupOffset (char *dir, char *entry, register afs_int32 *fid, long *offsetp);
-extern int EnumerateDir (char *dir, int (*hookproc)(), void *hook);
+extern int EnumerateDir (char *dir, int (*hookproc)(void *dir, char *name, afs_int32 vnode, afs_int32 unique), void *hook);
 extern int IsEmpty (char *dir);
 extern struct DirEntry *GetBlob (char *dir, afs_int32 blobno);
 extern int DirHash (register char *string);
@@ -104,7 +104,7 @@ extern int afs_dir_Delete (char *dir, char *entry);
 extern int afs_dir_MakeDir (char *dir, afs_int32 *me, afs_int32 *parent);
 extern int afs_dir_Lookup (char *dir, char *entry, register afs_int32 *fid);
 extern int afs_dir_LookupOffset (char *dir, char *entry, register afs_int32 *fid, long *offsetp);
-extern int afs_dir_EnumerateDir (char *dir, int (*hookproc)(), void *hook);
+extern int afs_dir_EnumerateDir (char *dir, int (*hookproc)(void *dir, char *name, afs_int32 vnode, afs_int32 unique), void *hook);
 extern int afs_dir_IsEmpty (char *dir);
 extern struct DirEntry *afs_dir_GetBlob (char *dir, afs_int32 blobno);
 #endif

@@ -138,7 +138,12 @@ enum xdr_op {
  * allocate dynamic storage of the appropriate size and return it.
  * bool_t	(*xdrproc_t)(XDR *, caddr_t *);
  */
+#if 0
 typedef	bool_t (*xdrproc_t)();
+#else
+typedef bool_t (*xdrproc_t) (void *, ...);
+#endif
+
 
 /*
  * The XDR handle.

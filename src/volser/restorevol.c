@@ -64,6 +64,15 @@ RCSID("$Header$");
 #include <fcntl.h>
 #include <dirent.h>
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
+
 char rootdir[MAXPATHLEN];
 char mntroot[MAXPATHLEN];
 #define ADIR  "AFSDir-"

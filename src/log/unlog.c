@@ -36,11 +36,15 @@ RCSID("$Header$");
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
-#ifdef	AFS_SUN5_ENV
+
+#ifdef HAVE_STRING_H
 #include <string.h>
 #else
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
+#endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>

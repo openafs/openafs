@@ -24,6 +24,16 @@ RCSID("$Header$");
 #include "gtxobjdict.h"		/*Object dictionary module*/
 #include <stdio.h>		/*Standard I/O stuff*/
 #include <errno.h>
+
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 /*
  * Number of known gator object types.
  */

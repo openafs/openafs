@@ -31,6 +31,15 @@ RCSID("$Header$");
 #ifdef	AFS_SUN5_ENV
 #include <fcntl.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/kautils.h>	/*MAXKTCREALMLEN*/
 
 extern int errno;

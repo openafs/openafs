@@ -8,3 +8,4 @@
 #include <stdio.h>	/* perror() */
 
 extern void yyerror(const char *s);
+extern char *xmalloc(unsigned int size);

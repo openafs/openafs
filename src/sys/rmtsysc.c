@@ -51,8 +51,7 @@ static afs_int32 SetClientCreds();
  * $HOME/.AFSSERVER file is checked, otherwise the "/.AFSSERVER" is
  * used.
  */
-afs_int32 GetAfsServerAddr(syscall)
-char *syscall;
+afs_int32 GetAfsServerAddr(char *syscall)
 {
     register struct hostent *th;
     char *getenv();
@@ -113,9 +112,7 @@ char *syscall;
 
 
 /* Does the actual RX connection to the afs server */
-struct rx_connection *rx_connection(errorcode, syscall)
-afs_int32 *errorcode;
-char *syscall;
+struct rx_connection *rx_connection(afs_int32 *errorcode, char *syscall)
 {
     struct rx_connection *conn;
     struct rx_securityClass *null_securityObject;
@@ -144,9 +141,9 @@ char *syscall;
  * do a setgroups(2) call with the new pag.... */
 #ifdef AFS_DUX40_ENV
 #pragma weak setpag = afs_setpag
-int afs_setpag()
+int afs_setpag(void)
 #else
-int setpag()
+int setpag(void)
 #endif
 {
     struct rx_connection *conn;
@@ -198,13 +195,10 @@ int setpag()
 /* Remote pioctl(2) client routine */
 #ifdef AFS_DUX40_ENV
 #pragma weak pioctl = afs_pioctl
-int afs_pioctl(path, cmd, data, follow) 
+int afs_pioctl(char *path, afs_int32 cmd, struct ViceIoctl *data, afs_int32 follow) 
 #else
-int pioctl(path, cmd, data, follow) 
+int pioctl(char *path, afs_int32 cmd, struct ViceIoctl *data, afs_int32 follow) 
 #endif
-char *path;
-afs_int32 cmd, follow;
-struct ViceIoctl *data;
 {
     struct rx_connection *conn;
     clientcred creds;
@@ -277,8 +271,7 @@ struct ViceIoctl *data;
 }
 
     
-int afs_get_pag_from_groups(g0, g1)
-afs_uint32 g0, g1;
+int afs_get_pag_from_groups(afs_uint32 g0, afs_uint32 g1)
 {
 	afs_uint32 h, l, result;
 
@@ -299,9 +292,7 @@ afs_uint32 g0, g1;
 }
 
 
-afs_get_groups_from_pag(pag, g0p, g1p)
-afs_uint32 pag;
-afs_uint32 *g0p, *g1p;
+afs_get_groups_from_pag(afs_uint32 pag, afs_uint32 *g0p, afs_uint32 *g1p)
 {
 	unsigned short g0, g1;
 
@@ -315,9 +306,7 @@ afs_uint32 *g0p, *g1p;
 }
 
 
-static afs_int32 SetClientCreds(creds, groups)
-struct clientcred *creds;
-afs_int32 *groups;
+static afs_int32 SetClientCreds(struct clientcred *creds, afs_int32 *groups)
 {
     afs_int32 ngroups;
 

@@ -34,9 +34,7 @@ RCSID("$Header$");
 
 extern afs_int32 setpag();
 
-int main(argc, argv)
-int argc;
-char **argv;
+int main(int argc, char *argv[])
 {
 	struct passwd *pwe;
 	int uid, gid;
@@ -83,7 +81,7 @@ char **argv;
 #ifdef AFS_KERBEROS_ENV
 /* stolen from auth/ktc.c */
 
-static afs_uint32 curpag()
+static afs_uint32 curpag(void)
 {
     afs_uint32 groups[NGROUPS_MAX];
     afs_uint32 g0, g1;
@@ -109,7 +107,7 @@ static afs_uint32 curpag()
     return -1;
 }
 
-ktc_newpag()
+int ktc_newpag(void)
 {
     extern char **environ;
 

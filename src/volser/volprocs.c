@@ -23,6 +23,15 @@ RCSID("$Header$");
 #include <netinet/in.h>
 #include <unistd.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <dirent.h>
 #include <sys/stat.h>
 #include <rx/xdr.h>

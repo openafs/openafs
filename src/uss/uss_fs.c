@@ -29,6 +29,15 @@ RCSID("$Header$");
 #include <sys/ioccom.h>
 #endif
 #include <netinet/in.h>
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/venus.h>
 #include "uss_common.h"
 extern int errno;

@@ -91,6 +91,16 @@ RCSID("$Header$");
 #define ROOTINO EXT2_ROOT_INO /* Assuming we do this on ext2, of course. */
 #endif
 
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
+
 /* ensure that we don't have a "/" instead of a "/dev/rxd0a" type of device.
  * returns pointer to static storage; copy it out quickly!
  */

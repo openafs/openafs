@@ -21,6 +21,15 @@ RCSID("$Header$");
 #ifdef AFS_NT40_ENV
 #include <io.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/ktime.h>
 #include <afs/afsutil.h>
 #include <afs/procmgmt.h>  /* signal(), kill(), wait(), etc. */

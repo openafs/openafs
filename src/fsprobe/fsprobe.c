@@ -18,6 +18,15 @@
 
 RCSID("$Header$");
 
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <fsprobe.h>			/*Interface for this module*/
 #include <lwp.h>			/*Lightweight process package*/
 #include <afs/cellconfig.h>

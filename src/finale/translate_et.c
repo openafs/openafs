@@ -32,10 +32,7 @@ RCSID("$Header$");
 
 #include "AFS_component_version_number.c"
 
-int
-main (argc, argv)
-  int   argc;
-  char *argv[];
+int main (int argc, char *argv[])
 {
     int  i;
     afs_int32 code;

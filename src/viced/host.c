@@ -22,6 +22,15 @@ RCSID("$Header$");
 #include <netdb.h>
 #include <netinet/in.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/stds.h>
 #include <rx/xdr.h>
 #include <afs/assert.h>
@@ -619,8 +628,10 @@ struct host *h_Alloc_r(r_con)
     host->hcps.prlist_len = 0;
     host->hcps.prlist_val = (afs_int32 *)0;
     host->interface = 0;
-    /*host->hcpsfailed = 0; 	/* save cycles */
-    /* h_gethostcps(host);      do this under host lock */
+#ifdef undef
+    host->hcpsfailed = 0; 	/* save cycles */
+    h_gethostcps(host);      /* do this under host lock */
+#endif
     host->FirstClient = 0;      
     h_InsertList_r(host);	/* update global host List */
 #if FS_STATS_DETAILED
@@ -638,9 +649,8 @@ struct host *h_Alloc_r(r_con)
 
 
 /* Lookup a host given an IP address and UDP port number. */
-struct host *h_Lookup(hostaddr, hport, heldp)
-    afs_uint32 hostaddr, hport;     /* network byte order */
-    int *heldp;
+/* hostaddr and hport are in network order */
+struct host *h_Lookup(afs_uint32 hostaddr, afs_uint32 hport, int *heldp)
 {
     struct host *retVal;
     H_LOCK
@@ -650,9 +660,8 @@ struct host *h_Lookup(hostaddr, hport, heldp)
 }
 
 /* Note: host should be released by caller if 0 == *heldp and non-null */
-struct host *h_Lookup_r(hostaddr, hport, heldp)
-    afs_uint32 hostaddr, hport;     /* network byte order */
-    int *heldp;
+/* hostaddr and hport are in network order */
+struct host *h_Lookup_r(afs_uint32 hostaddr, afs_uint32 hport, int *heldp)
 {
     register afs_int32 now;
     register struct host *host=0;
@@ -696,8 +705,7 @@ restart:
 } /*h_Lookup*/
 
 /* Lookup a host given its UUID. */
-struct host *h_LookupUuid_r(uuidp)
-    afsUUID *uuidp;
+struct host *h_LookupUuid_r(afsUUID *uuidp)
 {
     register struct host *host=0;
     register struct h_hashChain* chain;
@@ -725,8 +733,7 @@ struct host *h_LookupUuid_r(uuidp)
  * NOTE: h_Hold_r is a macro defined in host.h.
  */
 
-int h_Hold(host)
-    register struct host *host;
+int h_Hold(register struct host *host)
 {
     H_LOCK
     h_Hold_r(host);
@@ -740,9 +747,7 @@ int h_Hold(host)
  * To be called, there must be no holds, and either host->deleted
  * or host->clientDeleted must be set.
  */
-h_TossStuff_r(host)
-    register struct host *host;
-
+int h_TossStuff_r(register struct host *host)
 {
     register struct client **cp, *client;
     int		i;

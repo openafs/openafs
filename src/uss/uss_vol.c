@@ -28,6 +28,15 @@ RCSID("$Header$");
 #include <pwd.h>
 #include <netdb.h>
 #include <sys/errno.h>
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/vlserver.h>
 #include <afs/auth.h>
 #include <afs/cellconfig.h>

@@ -26,6 +26,15 @@ RCSID("$Header$");
 #ifdef AFS_AIX_ENV
 #include <sys/statfs.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <errno.h>
 #include <lock.h>
 #include <rx/xdr.h>

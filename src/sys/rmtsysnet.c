@@ -127,10 +127,8 @@ struct Acl *RParseAcl(astr)
 }
 
 
-RAclToString(acl, mydata, ntoh_conv)
-struct Acl *acl;
-char *mydata;
-int ntoh_conv; {
+int RAclToString(struct Acl *acl, char *mydata, int ntoh_conv)
+{
     char tstring[MAXSIZE];
     struct AclEntry *tp;
 
@@ -148,8 +146,8 @@ int ntoh_conv; {
 
 
 /* Free all malloced stuff */
-RCleanAcl(aa)
-struct Acl *aa; {
+int RCleanAcl(struct Acl *aa)
+{
     register struct AclEntry *te, *ne;
 
     for(te = aa->pluslist; te; te=ne) {
@@ -164,9 +162,7 @@ struct Acl *aa; {
 }
 
 
-RFetchVolumeStatus_conversion(data, ntoh_conv)
-char *data;
-int ntoh_conv;
+int RFetchVolumeStatus_conversion(char *data, int ntoh_conv)
 {
     struct AFSFetchVolumeStatus *status = (AFSFetchVolumeStatus *)data;
 
@@ -205,9 +201,7 @@ int ntoh_conv;
     }
 }
 
-RClearToken_convert(ptr, ntoh_conv)
-char *ptr;
-int ntoh_conv;
+int RClearToken_convert(char *ptr, int ntoh_conv)
 {
     struct ClearToken *ticket = (struct ClearToken *)ptr;
 
@@ -224,9 +218,7 @@ int ntoh_conv;
     }	
 }
 
-inparam_conversion(cmd, buffer, ntoh_conv)
-afs_int32 cmd, ntoh_conv;
-char *buffer;
+int inparam_conversion(afs_int32 cmd, char *buffer, afs_int32 ntoh_conv)
 {
     struct Acl *acl;
     afs_int32 *lptr, i;
@@ -384,9 +376,7 @@ char *buffer;
 }
     
 
-outparam_conversion(cmd, buffer, ntoh_conv)
-afs_int32 cmd, ntoh_conv;
-char *buffer;
+int outparam_conversion(afs_int32 cmd, char *buffer, afs_int32 ntoh_conv)
 {
     struct Acl *acl;
     afs_int32 *lptr, i;

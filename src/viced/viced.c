@@ -38,6 +38,15 @@ RCSID("$Header$");
 #include <netdb.h>
 #include <sys/resource.h>
 #include <unistd.h>	/* sysconf() */
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #ifndef ITIMER_REAL
 #include <sys/time.h>
 #endif /* ITIMER_REAL */

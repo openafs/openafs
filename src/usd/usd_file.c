@@ -29,6 +29,15 @@ RCSID("$Header$");
 #if defined(AFS_DUX40_ENV) || defined(AFS_OBSD_ENV) || defined(AFS_NBSD_ENV)
 #include <sys/ioctl.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #include <afs/debug.h>
 #include "usd.h"
 

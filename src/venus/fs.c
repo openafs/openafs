@@ -27,6 +27,15 @@ RCSID("$Header$");
 #ifdef	AFS_AIX32_ENV
 #include <signal.h>
 #endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #undef VIRTUE
 #undef VICE
 #include "afs/prs_fs.h"

@@ -22,6 +22,15 @@ RCSID("$Header$");
 #include <stdio.h>                      /*Standard I/O stuff*/
 #include <errno.h>
 
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
+
 /*Externally-advertised array of light onode operations*/
 struct onodeops gator_light_ops = {
     gator_light_destroy,

@@ -46,6 +46,8 @@ RCSID("$Header$");
 
 #include "internal.h"
 
+int char_to_num(char c);
+char *gensym(const char *x);
 char *current_token = (char *)NULL;
 extern char *table_name;
 

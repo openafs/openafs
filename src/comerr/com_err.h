@@ -12,12 +12,13 @@
 
 #include <stdarg.h>
 
-void com_err (const char *, afs_int32, const char *, ...);
-char const *error_table_name(afs_int32);
-char const *error_message (afs_int32);
-void (*set_com_err_hook (void (*) (const char *, afs_int32, const char *, va_list)))
+extern void com_err (const char *, afs_int32, const char *, ...);
+extern void com_err_va (const char *whoami, afs_int32 code, const char *fmt, va_list args);
+extern const char *error_table_name(afs_int32);
+extern const char *error_message (afs_int32);
+extern void (*set_com_err_hook (void (*) (const char *, afs_int32, const char *, va_list)))
     (const char *, afs_int32, const char *, va_list);
-void (*reset_com_err_hook ()) (const char *, afs_int32, const char *, va_list);
+extern void (*reset_com_err_hook (void)) (const char *, afs_int32, const char *, va_list);
 
 #define __COM_ERR_H
 #endif /* ! defined(__COM_ERR_H) */

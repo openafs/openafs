@@ -26,8 +26,16 @@ RCSID("$Header$");
 #include <sys/param.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#endif
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
 #include <strings.h>
 #endif
+#endif
+
 #include <sys/types.h>
 #include <afs/stds.h>
 #include <afs/bubasics.h>

@@ -189,8 +189,7 @@ error:
     return OSI_NULLSOCKET;
 }
 
-void osi_Panic(msg, a1, a2, a3)
-    char *msg;
+void osi_Panic(char *msg, int a1, int a2, int a3)
 {
     (osi_Msg "Fatal Rx error: ");
     (osi_Msg msg, a1, a2, a3);
@@ -205,7 +204,7 @@ void osi_Panic(msg, a1, a2, a3)
 
 void osi_AssertFailU(const char *expr, const char *file, int line)
 {
-    osi_Panic("assertion failed: %s, file: %s, line: %d\n", expr, file, line);
+    osi_Panic("assertion failed: %s, file: %s, line: %d\n", (int) expr, (int) file, line);
 }
 
 #ifdef	AFS_AIX32_ENV

@@ -144,7 +144,7 @@ bool_t xdr_vector(register XDR *xdrs, register char *basep,
 #endif /* KERNEL */
 
 #ifndef KERNEL
-xdr_CBS(XDR *x, struct CBS *abbs)
+bool_t xdr_CBS(XDR *x, struct CBS *abbs)
 {
     afs_int32 len;
     if (x->x_op == XDR_FREE) {

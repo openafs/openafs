@@ -3075,7 +3075,7 @@ struct rx_packet *rxi_ReceiveDataPacket(register struct rx_call *call,
 	     * (e.g. multi rx) */
 	    if (call->arrivalProc) {
 		(*call->arrivalProc)(call, call->arrivalProcHandle,
-				     call->arrivalProcArg);
+				     (int) call->arrivalProcArg);
 		call->arrivalProc = (VOID (*)()) 0;
 	    }
 
@@ -4259,7 +4259,7 @@ void rxi_ResetCall(register struct rx_call *call, register int newcall)
 
     /* Notify anyone who is waiting for asynchronous packet arrival */
     if (call->arrivalProc) {
-	(*call->arrivalProc)(call, call->arrivalProcHandle, call->arrivalProcArg);
+	(*call->arrivalProc)(call, call->arrivalProcHandle, (int) call->arrivalProcArg);
 	call->arrivalProc = (VOID (*)()) 0;
     }
 
@@ -5814,9 +5814,8 @@ return;
 #ifdef RXDEBUG
 /* Don't call this debugging routine directly; use dpf */
 void 
-rxi_DebugPrint(format, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, 
-	       a11, a12, a13, a14, a15)
-    char *format;
+rxi_DebugPrint(char *format, int a1, int a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9, int a10, 
+	       int a11, int a12, int a13, int a14, int a15)
 {
     struct clock now;
     clock_GetTime(&now);
