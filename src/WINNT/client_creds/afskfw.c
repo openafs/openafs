@@ -1184,7 +1184,13 @@ KFW_AFS_get_cred(char * username,
     code = get_cellconfig( cell, (void*)&cellconfig, local_cell);
     if ( code ) goto cleanup;
 
-    realm = afs_realm_of_cell(&cellconfig);  // do not free
+    realm = strchr(username,'@');
+    if (realm) {
+        *realm = '\0';
+        realm++;
+    }
+    if ( !realm[0] )
+        realm = afs_realm_of_cell(&cellconfig);  // do not free
 
     if ( IsDebuggerPresent() ) {
         OutputDebugString("Realm: ");
@@ -2640,7 +2646,8 @@ KFW_AFS_klog(
 
         code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
         if (code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
-             code == KRB5KRB_ERR_GENERIC /* heimdal */) {
+             code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
+			 code == KRB5KRB_AP_ERR_MSG_TYPE) {
             /* Or service@REALM */
             pkrb5_free_principal(ctx,increds.server);
             increds.server = 0;
@@ -2667,6 +2674,72 @@ KFW_AFS_klog(
 
             if (!code)
                 code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
+        }
+
+        if ((code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
+              code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
+			  code == KRB5KRB_AP_ERR_MSG_TYPE) &&
+             strcmp(RealmName, realm_of_cell)) {
+            /* Or service/cell@REALM_OF_CELL */
+            strcpy(RealmName, realm_of_cell);
+            pkrb5_free_principal(ctx,increds.server);
+            increds.server = 0;
+            code = pkrb5_build_principal(ctx, &increds.server,
+                                         strlen(RealmName),
+                                         RealmName,
+                                         ServiceName,
+                                         CellName,
+                                         0);
+
+            if ( IsDebuggerPresent() ) {
+                char * cname, *sname;
+                pkrb5_unparse_name(ctx, increds.client, &cname);
+                pkrb5_unparse_name(ctx, increds.server, &sname);
+                OutputDebugString("krb5_get_credentials() returned Service Principal Unknown\n");
+                OutputDebugString("Trying again: getting tickets for \"");
+                OutputDebugString(cname);
+                OutputDebugString("\" and service \"");
+                OutputDebugString(sname);
+                OutputDebugString("\"\n");
+                pkrb5_free_unparsed_name(ctx,cname);
+                pkrb5_free_unparsed_name(ctx,sname);
+                cname = sname = 0;
+            }
+
+            if (!code)
+                code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
+
+        
+            if (code == KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN ||
+                 code == KRB5KRB_ERR_GENERIC /* heimdal */ ||
+				 code == KRB5KRB_AP_ERR_MSG_TYPE) {
+                /* Or service@REALM_OF_CELL */
+                pkrb5_free_principal(ctx,increds.server);
+                increds.server = 0;
+                code = pkrb5_build_principal(ctx, &increds.server,
+                                              strlen(RealmName),
+                                              RealmName,
+                                              ServiceName,
+                                              0);
+
+                if ( IsDebuggerPresent() ) {
+                    char * cname, *sname;
+                    pkrb5_unparse_name(ctx, increds.client, &cname);
+                    pkrb5_unparse_name(ctx, increds.server, &sname);
+                    OutputDebugString("krb5_get_credentials() returned Service Principal Unknown\n");
+                    OutputDebugString("Trying again: getting tickets for \"");
+                    OutputDebugString(cname);
+                    OutputDebugString("\" and service \"");
+                    OutputDebugString(sname);
+                    OutputDebugString("\"\n");
+                    pkrb5_free_unparsed_name(ctx,cname);
+                    pkrb5_free_unparsed_name(ctx,sname);
+                    cname = sname = 0;
+                }
+
+                if (!code)
+                    code = pkrb5_get_credentials(ctx, 0, cc, &increds, &k5creds);
+            }
         }
 
         if (code) {
