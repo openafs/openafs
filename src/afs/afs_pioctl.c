@@ -2690,7 +2690,7 @@ DECL_PIOCTL(PSetSysName)
  * l - array of cell ids which have volumes that need to be sorted
  * vlonly - sort vl servers or file servers?
  */
-static void ReSortCells_cb(struct cell *cell, void *arg)
+static void *ReSortCells_cb(struct cell *cell, void *arg)
 {
     afs_int32 *p = (afs_int32 *) arg;
     afs_int32 *l = p + 1;
@@ -2703,6 +2703,8 @@ static void ReSortCells_cb(struct cell *cell, void *arg)
 	    ReleaseWriteLock(&cell->lock);
 	}
     }
+
+    return NULL;
 }
 
 static void ReSortCells(int s, afs_int32 *l, int vlonly)  
