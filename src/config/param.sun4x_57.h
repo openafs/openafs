@@ -102,11 +102,11 @@
 #define AFS_KALLOC_NOSLEEP(n)   kmem_alloc(n, KM_NOSLEEP)
 #define	AFS_KFREE	kmem_free
 #define	VATTR_NULL	vattr_null
-#endif KERNEL
+#endif /* KERNEL */
 #define	AFS_DIRENT	
 #ifndef CMSERVERPREF
 #define CMSERVERPREF
 #endif
 #define	ROOTINO		UFSROOTINO
 
-#endif	_PARAM_SUN4X_57_H_
+#endif /* _PARAM_SUN4X_57_H_ */

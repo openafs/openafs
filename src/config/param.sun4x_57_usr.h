@@ -63,4 +63,4 @@
 #endif
 #define	ROOTINO		UFSROOTINO
 
-#endif	_PARAM_SUN4C_51_H_
+#endif /* _PARAM_SUN4C_51_H_ */
