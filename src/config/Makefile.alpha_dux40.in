@@ -24,6 +24,7 @@ CSTATIC=-non_shared
 RANLIB=/bin/true
 INSTALL=${TOP_SRCDIR}/pinstall/pinstall
 CP=cp
+RM=rm
 
 #this is for the vol package
 FS_CONV_OSF40D         = fs_conv_dux40D
