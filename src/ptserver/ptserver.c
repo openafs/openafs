@@ -69,7 +69,7 @@ int pr_rxstat_userok(call)
     return afsconf_SuperUser(prdir, call, (char *)0);
 }
 
-void main (argc, argv)
+int main (argc, argv)
   int argc;
   char **argv;
 {
@@ -292,4 +292,5 @@ void main (argc, argv)
 
     rx_StartServer(1);
     osi_audit (PTS_FinishEvent, -1, AUD_END);
+    return 0;
 }
