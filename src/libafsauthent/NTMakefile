@@ -142,7 +142,7 @@ DLLLIBS =\
     $(DESTDIR)\lib\lanahelper.lib
 
 $(LIBFILE): $(DLLOBJS) $(DLLLIBS) $(RXOBJS)
-	$(DLLCONLINK) /DEF:afsauthent.def rpcrt4.lib dnsapi.lib mpr.lib
+	$(DLLCONLINK) /DEF:afsauthent.def rpcrt4.lib dnsapi.lib mpr.lib secur32.lib
 	$(DLLPREP)
 
 # Definitions for generating versioninfo resources

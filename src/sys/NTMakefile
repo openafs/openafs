@@ -24,7 +24,7 @@ LIBOBJS =\
 	$(OUT)\pioctl_nt.obj
 
 $(LIBFILE): $(LIBOBJS) $(DESTDIR)\lib\lanahelper.lib
-	$(LIBARCH) $(DESTDIR)\lib\lanahelper.lib
+	$(LIBARCH) $(DESTDIR)\lib\lanahelper.lib secur32.lib
 
 ############################################################################
 # Install target; primary makefile target
