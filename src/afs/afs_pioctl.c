@@ -1103,7 +1103,7 @@ afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
     inSize = ablob->in_size;
 
     /* Do all range checking before continuing */
-    if (inSize >= MAXPIOCTLTOKENLEN || inSize < 0 || ablob->out_size < 0)
+    if (inSize > MAXPIOCTLTOKENLEN || inSize < 0 || ablob->out_size < 0)
 	return E2BIG;
 
     if (inSize > AFS_LRALLOCSIZE) {
