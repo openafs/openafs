@@ -47,8 +47,17 @@ process.o	: process.s process.c
 		$(RM) process.ss ;; \
 	ppc_darwin* ) \
 		$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} -I${TOP_INCDIR} ${srcdir}/process.s;; \
-	i386_fbsd*|i386_nbsd* ) \
-		/usr/bin/cpp -P ${srcdir}/process.fbsd.s > process.ss; \
+	i386_obsd30 | i386_obsd31 | i386_obsd32 | i386_obsd33 ) \
+		cp ${srcdir}/process.i386.s process.S ; \
+		${CC} -E -I${TOP_INCDIR} process.S >process.ss ; \
+		${AS} process.ss -o process.o ;  \
+		$(RM) -f process.S ;;\
+	i386_*bsd* ) \
+		/usr/bin/cpp -P ${srcdir}/process.i386.s > process.ss; \
+		${AS} -o process.o process.ss; \
+		$(RM) process.ss ;; \
+	ncrx86_*) \
+		/usr/ccs/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.i386.s process.ss; \
 		${AS} -o process.o process.ss; \
 		$(RM) process.ss ;; \
 	alpha_nbsd* ) \
@@ -57,20 +66,15 @@ process.o	: process.s process.c
 		$(RM) process.ss ;; \
 	hp* | *_linux* | *_umlinux* | sgi_64 | sgi_65 ) \
 		${CC} ${CFLAGS} -c ${srcdir}/process.c;; \
-	ncrx86_*) \
-		/usr/ccs/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s process.ss; \
-		${AS} -o process.o process.ss; \
-		$(RM) process.ss ;; \
 	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux?? ) \
 		${AS} -v  -P -DOSF -I${TOP_INCDIR} -DASSEMBLER ${srcdir}/process.s; \
 		${AS} -v process.i -o process.o;; \
-	*_obsd* ) \
-		cp ${srcdir}/process.s process.S ; \
-		${CC} -E -I${TOP_INCDIR} process.S >process.ss ; \
-		${AS} process.ss -o process.o ;  \
-		$(RM) -f process.S ;;\
 	ia64_hpux11* | hp_ux11* ) \
 		${CC} ${CFLAGS} -c ${srcdir}/process.c;; \
+	i386_*) \
+		/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.i386.s process.ss; \
+		${AS} process.ss -o process.o; \
+		$(RM) process.ss ;; \
 	*) \
 		/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s process.ss; \
 		${AS} process.ss -o process.o; \
