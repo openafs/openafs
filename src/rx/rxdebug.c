@@ -113,6 +113,7 @@ MainCommand(as, arock)
     int withPeers;
     struct rx_debugStats tstats;
     char *portName, *hostName;
+    char hoststr[20];
     struct rx_debugConn tconn;
     short noConns;
     short showPeers;
@@ -213,7 +214,8 @@ MainCommand(as, arock)
     dallyCounter = 0;
 
     hostAddr.s_addr = host;
-    printf("Trying %s (port %d):\n", inet_ntoa(hostAddr), ntohs(port));
+    afs_inet_ntoa_r(hostAddr.s_addr, hoststr);
+    printf("Trying %s (port %d):\n", hoststr, ntohs(port));
     s = socket(AF_INET, SOCK_DGRAM, 0);
     taddr.sin_family = AF_INET;
     taddr.sin_port = 0;
@@ -322,8 +324,9 @@ MainCommand(as, arock)
 	}
 	if (onlyHost != -1) {
 	    hostAddr.s_addr = onlyHost;
+	    afs_inet_ntoa_r(hostAddr.s_addr, hoststr);
 	    printf("Showing only connections from host %s\n",
-		   inet_ntoa(hostAddr));
+		   hoststr);
 	}
 	if (onlyPort != -1)
 	    printf("Showing only connections on port %u\n", ntohs(onlyPort));
@@ -382,7 +385,8 @@ MainCommand(as, arock)
 
 	    /* now display the connection */
 	    hostAddr.s_addr = tconn.host;
-	    printf("Connection from host %s, port %hu, ", inet_ntoa(hostAddr),
+	    afs_inet_ntoa_r(hostAddr.s_addr, hoststr);
+	    printf("Connection from host %s, port %hu, ", hoststr,
 		   ntohs(tconn.port));
 	    if (tconn.epoch)
 		printf("Cuid %x/%x", tconn.epoch, tconn.cid);
@@ -544,7 +548,8 @@ MainCommand(as, arock)
 
 	    /* now display the peer */
 	    hostAddr.s_addr = tpeer.host;
-	    printf("Peer at host %s, port %hu\n", inet_ntoa(hostAddr),
+	    afs_inet_ntoa_r(hostAddr.s_addr, hoststr);
+	    printf("Peer at host %s, port %hu\n", hoststr, 
 		   ntohs(tpeer.port));
 	    printf("\tifMTU %hu\tnatMTU %hu\tmaxMTU %hu\n", tpeer.ifMTU,
 		   tpeer.natMTU, tpeer.maxMTU);
