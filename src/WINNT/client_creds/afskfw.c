@@ -457,7 +457,7 @@ KFW_cleanup(void)
         FreeLibrary(hCCAPI);
 }
 
-char OpenAFSConfigKeyName[] = "SOFTWARE\\OpenAFS\\Client";
+static char OpenAFSConfigKeyName[] = "SOFTWARE\\OpenAFS\\Client";
 
 int 
 KFW_is_available(void)

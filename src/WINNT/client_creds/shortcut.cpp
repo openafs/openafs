@@ -41,6 +41,7 @@ void Shortcut_Exit (void)
    CoUninitialize();
 }
 
+static char OpenAFSConfigKeyName[] = "SOFTWARE\\OpenAFS\\Client";
 
 BOOL Shortcut_Create (LPTSTR pszTarget, LPCTSTR pszSource, LPTSTR pszDesc, LPTSTR pszArgs)
 {
@@ -110,12 +111,27 @@ void Shortcut_FixStartup (LPCTSTR pszLinkName, BOOL fAutoStart)
    GetModuleFileName (GetModuleHandle(NULL), szSource, MAX_PATH);
 
    if (fAutoStart)
-      {
-      Shortcut_Create (szShortcut, szSource, "Autostart Authentication Agent", AFSCREDS_SHORTCUT_OPTIONS);
-      }
+   {
+       DWORD code, len, type; 
+       TCHAR szParams[ 64 ] = TEXT(AFSCREDS_SHORTCUT_OPTIONS);
+
+       code = RegOpenKeyEx(HKEY_CURRENT_USER, OpenAFSConfigKeyName,
+                            0, KEY_QUERY_VALUE, &hk);
+       if (code != ERROR_SUCCESS)
+           code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
+                                0, KEY_QUERY_VALUE, &hk);
+       if (code == ERROR_SUCCESS) {
+           len = sizeof(szParams);
+           type = REG_SZ;
+           code = RegQueryValueEx(hk, "AfscredsShortcutParams", NULL, &type,
+                                   (BYTE *) &szParams, &len);
+           RegCloseKey (hk);
+       }
+       Shortcut_Create (szShortcut, szSource, "Autostart Authentication Agent", szParams);
+   }
    else // (!g.fAutoStart)
-      {
+   {
       DeleteFile (szShortcut);
-      }
+   }
 }
 
