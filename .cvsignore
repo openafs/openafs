@@ -1,6 +1,7 @@
 Makefile
 aclocal.m4
 config.log
+config.cache
 config.status
 configure
 configure-libafs
@@ -13,3 +14,4 @@ lib
 sgi_65
 sun4x_56
 sun4x_57
+autom4te.cache

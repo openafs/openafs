@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/HPUX/osi_vnodeops.c,v 1.1.1.5 2001/09/11 14:25:01 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/HPUX/osi_vnodeops.c,v 1.1.1.6 2002/05/10 23:43:53 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -222,7 +222,7 @@ afs_bread(vp, lbn, bpp)
 	uio.uio_fpflags = 0;
 	*bpp = 0;
 
-	error = afs_read((struct vcache *)vp, &uio, p_cred(u.u_procp),
+	error = afs_read(VTOAFS(vp), &uio, p_cred(u.u_procp),
 			 lbn, bpp, 0);
 	if (error) {
 		afs_bread_freebp = bp;
@@ -270,7 +270,7 @@ afs_inactive(avc, acred)
     register struct vcache *avc;
     struct AFS_UCRED *acred;
 {
-    struct vnode *vp = (struct vnode *)avc;
+    struct vnode *vp = AFSTOV(avc);
     ulong_t context;
     lock_t *sv_lock;
     if (afs_shuttingdown) return ;
@@ -1982,7 +1982,7 @@ afs_ioctl(vp, com, data, flag, cred)
 	   afsioctl.out      = ai->out;
 	   afsioctl.in_size  = ai->in_size;
 	   afsioctl.out_size = ai->out_size;
-	   error = HandleIoctl((struct vcache *)vp, com, &afsioctl);
+	   error = HandleIoctl(VTOAFS(vp), com, &afsioctl);
 	   return(error);
 	}
 	return(ENOTTY);
@@ -2479,7 +2479,7 @@ afs_hp_strategy(bp)
 	       we can't read, and finally call iodone(bp).  File is
 	       in bp->b_vp. Credentials are from u area??
             */
-	   code = afs_rdwr((struct vcache *)bp->b_vp,&tuio,UIO_READ,0,kt_cred(t));
+	   code = afs_rdwr(VTOAFS(bp->b_vp),&tuio,UIO_READ,0,kt_cred(t));
 	   if (code == 0) 
 	      if (tuio.afsio_resid > 0) 
 	      {
@@ -2489,7 +2489,7 @@ afs_hp_strategy(bp)
 
 	      }
 	} else 
-	   code = afs_rdwr((struct vcache *)bp->b_vp,&tuio,UIO_WRITE,0,kt_cred(t));
+	   code = afs_rdwr(VTOAFS(bp->b_vp),&tuio,UIO_WRITE,0,kt_cred(t));
 
     /* Remap back to the user's space */
     hdl_remap_bp(bp);

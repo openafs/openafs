@@ -21,7 +21,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/FBSD/osi_vm.c,v 1.1.1.3 2001/07/14 22:20:05 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/FBSD/osi_vm.c,v 1.1.1.4 2002/05/10 23:43:47 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -173,8 +173,8 @@ osi_VM_TryToSmush(avc, acred, sync)
 #ifdef SECRETLY_OSF1
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
-    osi_ubc_flush_dirty_and_wait((struct vnode *)avc, 0);
-    ubc_invalidate(((struct vnode *)avc)->v_object, 0, 0, B_INVAL);
+    osi_ubc_flush_dirty_and_wait(AFSTOV(avc), 0);
+    ubc_invalidate((AFSTOV(avc))->v_object, 0, 0, B_INVAL);
     AFS_GLOCK();
     ObtainWriteLock(&avc->lock,59);
 #endif /* SECRETLY_OSF1 */
@@ -190,8 +190,8 @@ osi_VM_FlushPages(avc, credp)
     struct AFS_UCRED *credp;
 {
 #ifdef SECRETLY_OSF1
-    ubc_flush_dirty(((struct vnode *)avc)->v_object, 0);
-    ubc_invalidate(((struct vnode *)avc)->v_object, 0, 0, B_INVAL);
+    ubc_flush_dirty((AFSTOV(avc))->v_object, 0);
+    ubc_invalidate((AFSTOV(avc))->v_object, 0, 0, B_INVAL);
 #endif /* SECRETLY_OSF1 */
 }
 
@@ -208,7 +208,7 @@ osi_VM_Truncate(avc, alen, acred)
     struct AFS_UCRED *acred;
 {
 #ifdef SECRETLY_OSF1
-    ubc_invalidate(((struct vnode *)avc)->v_object, alen,
+    ubc_invalidate((AFSTOV(avc))->v_object, alen,
                         MAXINT - alen, B_INVAL);
 #endif /* SECRETLY_OSF1 */
 }

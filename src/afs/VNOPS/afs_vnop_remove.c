@@ -22,7 +22,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.1.1.6 2002/01/22 19:48:17 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.1.1.7 2002/05/10 23:44:24 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -209,7 +209,7 @@ char *Tnam1;
 #ifdef	AFS_OSF_ENV
 afs_remove(ndp)
     struct nameidata *ndp; {
-    register struct vcache *adp = (struct vcache *)ndp->ni_dvp;
+    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
     char *aname = ndp->ni_dent.d_name;
     struct ucred *acred = ndp->ni_cred;
 #else	/* AFS_OSF_ENV */
@@ -233,16 +233,37 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     afs_Trace2(afs_iclSetp, CM_TRACE_REMOVE, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname);
 
-    /* Check if this is dynroot */
-    if (afs_IsDynroot(adp))
-	return afs_DynrootVOPRemove(adp, acred, aname);
+#ifdef	AFS_OSF_ENV
+    tvc = (struct vcache *)ndp->ni_vp;  /* should never be null */
+#endif
 
-    if (code = afs_InitReq(&treq, acred))
+    /* Check if this is dynroot */
+    if (afs_IsDynroot(adp)) {
+#ifdef  AFS_OSF_ENV
+        afs_PutVCache(adp, 0);
+        afs_PutVCache(tvc, 0);
+#endif
+	return afs_DynrootVOPRemove(adp, acred, aname);
+    }
+
+    if (code = afs_InitReq(&treq, acred)) {
+#ifdef  AFS_OSF_ENV
+        afs_PutVCache(adp, 0);
+        afs_PutVCache(tvc, 0);
+#endif
       return code;
+    }
+    if (strlen(aname) > AFSNAMEMAX) {
+#ifdef  AFS_OSF_ENV
+	afs_PutVCache(adp, 0);
+	afs_PutVCache(tvc, 0);
+#endif
+	return ENAMETOOLONG;
+    }
 tagain:
     code = afs_VerifyVCache(adp, &treq);
 #ifdef	AFS_OSF_ENV
-    tvc = (struct vcache *)ndp->ni_vp;  /* should never be null */
+    tvc = VTOAFS(ndp->ni_vp);  /* should never be null */
     if (code) {
 	afs_PutVCache(adp, 0);
 	afs_PutVCache(tvc, 0);
@@ -260,6 +281,10 @@ tagain:
       * fileserver
       */
     if ( adp->states & CRO ) {
+#ifdef  AFS_OSF_ENV
+        afs_PutVCache(adp, 0);
+        afs_PutVCache(tvc, 0);
+#endif
         code = EROFS;
 	return code;
     }
@@ -390,6 +415,17 @@ afs_remunlink(avc, doit)
 	    cred = avc->uncred;
 	    avc->uncred = NULL;
 
+#ifdef AFS_DARWIN_ENV
+           /* this is called by vrele (via VOP_INACTIVE) when the refcount
+              is 0. we can't just call VN_HOLD since vref will panic.
+              we can't just call osi_vnhold because a later AFS_RELE will call
+              vrele again, which will try to call VOP_INACTIVE again after
+              vn_locking the vnode. which would be fine except that our vrele
+              caller also locked the vnode... So instead, we just gimmick the
+              refcounts and hope nobody else can touch the file now */
+	    osi_Assert(VREFCOUNT(avc) == 0);
+	    VREFCOUNT_SET(avc, 1);
+#endif
 	    VN_HOLD(&avc->v);
 
 	    /* We'll only try this once. If it fails, just release the vnode.
@@ -419,6 +455,10 @@ afs_remunlink(avc, doit)
 	    }
 	    osi_FreeSmallSpace(unlname);
 	    crfree(cred);
+#ifdef AFS_DARWIN_ENV
+	    osi_Assert(VREFCOUNT(avc) == 1);
+	    VREFCOUNT_SET(avc, 0);
+#endif
         }
     }
     else {

@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_link.c,v 1.1.1.4 2001/07/14 22:19:55 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_link.c,v 1.1.1.5 2002/05/10 23:44:21 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -34,7 +34,7 @@ extern afs_rwlock_t afs_xcbhash;
 afs_link(avc, ndp)
     register struct vcache *avc;
     struct nameidata *ndp; {
-    register struct vcache *adp = (struct vcache *)ndp->ni_dvp;
+    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
     char *aname = ndp->ni_dent.d_name;
     struct ucred *acred = ndp->ni_cred;
 #else	/* AFS_OSF_ENV */
@@ -63,9 +63,15 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     afs_Trace3(afs_iclSetp, CM_TRACE_LINK, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_POINTER, avc, ICL_TYPE_STRING, aname);
     /* create a hard link; new entry is aname in dir adp */
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if (code = afs_InitReq(&treq, acred)) 
+	goto done2;
+
     if (avc->fid.Cell != adp->fid.Cell || avc->fid.Fid.Volume != adp->fid.Fid.Volume) {
 	code = EXDEV;
+	goto done;
+    }
+    if (strlen(aname) > AFSNAMEMAX) {
+	code = ENAMETOOLONG;
 	goto done;
     }
     code = afs_VerifyVCache(adp, &treq);
@@ -144,9 +150,11 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     ReleaseWriteLock(&avc->lock);
     code = 0;
 done:
+    code = afs_CheckCode(code, &treq, 24);
+done2:
 #ifdef	AFS_OSF_ENV
     afs_PutVCache(adp, WRITE_LOCK);
 #endif	/* AFS_OSF_ENV */
-    return afs_CheckCode(code, &treq);
+    return code;
 }
 

@@ -21,7 +21,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_symlink.c,v 1.1.1.5 2002/01/22 19:48:17 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_symlink.c,v 1.1.1.6 2002/05/10 23:44:25 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -46,7 +46,7 @@ afs_symlink
     struct nameidata *ndp;
     struct vattr *attrs;
     register char *atargetName; {
-    register struct vcache *adp = (struct vcache *)ndp->ni_dvp;
+    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
     char *aname = ndp->ni_dent.d_name;
     struct ucred *acred = ndp->ni_cred;
 #else	/* AFS_OSF_ENV */
@@ -78,16 +78,23 @@ afs_symlink
     afs_Trace2(afs_iclSetp, CM_TRACE_SYMLINK, ICL_TYPE_POINTER, adp,
                 ICL_TYPE_STRING, aname);
 
-    if (afs_IsDynroot(adp))
-	return afs_DynrootVOPSymlink(adp, acred, aname, atargetName);
+    if (strlen(aname) > AFSNAMEMAX || strlen(atargetName) > AFSPATHMAX) {
+	code = ENAMETOOLONG;
+	goto done2;
+    }
+
+    if (afs_IsDynroot(adp)) {
+	code = afs_DynrootVOPSymlink(adp, acred, aname, atargetName);
+	goto done2;
+    }
 
     if (code = afs_InitReq(&treq, acred))
-       return code;
+	goto done2;
 
     code = afs_VerifyVCache(adp, &treq);
     if (code) { 
       code = afs_CheckCode(code, &treq, 30);
-      return code;
+      goto done2;
     }
 
     /** If the volume is read-only, return error without making an RPC to the
@@ -95,7 +102,7 @@ afs_symlink
       */
     if ( adp->states & CRO ) {
         code = EROFS;
-	return code;
+	goto done2;
     }
 
     InStatus.Mask = AFS_SETMODTIME | AFS_SETMODE;
@@ -210,12 +217,13 @@ afs_symlink
     afs_PutVCache(tvc, WRITE_LOCK);
     code = 0;
 done:
-#ifdef  AFS_OSF_ENV
-    AFS_RELE(ndp->ni_dvp);
-#endif  /* AFS_OSF_ENV */
     if ( volp ) 
 	afs_PutVolume(volp, READ_LOCK);
     code = afs_CheckCode(code, &treq, 31);
+done2:
+#ifdef  AFS_OSF_ENV
+    AFS_RELE(ndp->ni_dvp);
+#endif  /* AFS_OSF_ENV */
     return code;
 }
 
@@ -224,7 +232,7 @@ afs_MemHandleLink(avc, areq)
      struct vrequest *areq;
   {
       register struct dcache *tdc;
-      register char *tp;
+      register char *tp, *rbuf;
       afs_int32 offset, len, alen;
       register afs_int32 code;
 
@@ -245,10 +253,14 @@ afs_MemHandleLink(avc, areq)
 	  }
 	  if (avc->m.Mode	& 0111)	alen = len+1;	/* regular link */
 	  else alen = len;			/* mt point */
-          tp = afs_osi_Alloc(alen); /* make room for terminating null */
+	  rbuf = (char *) osi_AllocLargeSpace(AFS_LRALLOCSIZ);
           addr = afs_MemCacheOpen(tdc->f.inode);
-          code = afs_MemReadBlk(addr, 0, tp, len);
-	  tp[alen-1] = 0;
+          code = afs_MemReadBlk(addr, 0, rbuf, len);
+	  rbuf[alen-1] = '\0';
+	  alen = strlen(rbuf) + 1;
+          tp = afs_osi_Alloc(alen); /* make room for terminating null */
+	  memcpy(tp, rbuf, alen);
+	  osi_FreeLargeSpace(rbuf);
 	  afs_PutDCache(tdc);
 	  if (code != len) {
 	      afs_osi_Free(tp, alen);
@@ -263,7 +275,7 @@ afs_UFSHandleLink(avc, areq)
     register struct vcache *avc;
     struct vrequest *areq; {
     register struct dcache *tdc;
-    register char *tp;
+    register char *tp, *rbuf;
     char *tfile;
     afs_int32 offset, len, alen;
     register afs_int32 code;
@@ -285,11 +297,15 @@ afs_UFSHandleLink(avc, areq)
 	tfile = osi_UFSOpen (tdc->f.inode);
 	if (avc->m.Mode	& 0111)	alen = len+1;	/* regular link */
 	else alen = len;			/* mt point */
-	tp = afs_osi_Alloc(alen);			/* make room for terminating null */
-	code = afs_osi_Read(tfile, -1, tp, len);
-	tp[alen-1] = 0;
+	rbuf = (char *) osi_AllocLargeSpace(AFS_LRALLOCSIZ);
+	code = afs_osi_Read(tfile, -1, rbuf, len);
+	rbuf[alen-1] = '\0';
 	osi_UFSClose(tfile);
 	afs_PutDCache(tdc);
+	alen = strlen(rbuf) + 1;
+	tp = afs_osi_Alloc(alen);	/* make room for terminating null */
+	memcpy(tp, rbuf, alen);
+	osi_FreeLargeSpace(rbuf);
 	if (code != len) {
 	    afs_osi_Free(tp, alen);
 	    return EIO;

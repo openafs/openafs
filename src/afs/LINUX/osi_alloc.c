@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_alloc.c,v 1.1.1.9 2002/01/22 19:48:11 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_alloc.c,v 1.1.1.10 2002/05/10 23:44:02 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -187,9 +187,15 @@ hash_verify(size_t index, unsigned key, void *data)
     int memtype;
 
     memtype = MEMTYPE(lmp->chunk);
+#ifdef AFS_SPARC64_LINUX24_ENV
+    if ((memtype == KM_TYPE) && (!VALID_PAGE(virt_to_page(lmp->chunk)))) {
+	printf("osi_linux_verify_alloced_memory: address 0x%x outside range, index=%d, key=%d\n", lmp->chunk, index, key);
+    }
+#else
     if ((memtype == KM_TYPE) && (AFS_LINUX_MAP_NR(lmp->chunk) > max_mapnr)) {
 	printf("osi_linux_verify_alloced_memory: address 0x%x outside range, index=%d, key=%d\n", lmp->chunk, index, key);
     }
+#endif
     
     if (memtype != KM_TYPE && memtype != VM_TYPE) {
 	printf("osi_linux_verify_alloced_memory: unknown type %d at 0x%x, index=%d\n",    memtype, lmp->chunk, index);
@@ -290,7 +296,9 @@ void *osi_linux_alloc(unsigned int asize)
 	allocator_init = 1; /* initialization complete */
     }
 
+    up(&afs_linux_alloc_sem);
     new = linux_alloc(asize); /* get a chunk of memory of size asize */
+    down(&afs_linux_alloc_sem);
     if (!new) {
 	printf("afs_osi_Alloc: Can't vmalloc %d bytes.\n", asize);
 	goto error;
@@ -320,8 +328,11 @@ void *osi_linux_alloc(unsigned int asize)
     return MEMADDR(new);
 
   free_error:
-    if (new)
-        linux_free(new);
+    if (new) {
+	up(&afs_linux_alloc_sem);
+	linux_free(new);
+	down(&afs_linux_alloc_sem);
+    }
     new = NULL;
     goto error;
 

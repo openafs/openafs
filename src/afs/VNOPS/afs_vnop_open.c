@@ -17,7 +17,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_open.c,v 1.1.1.4 2001/07/14 22:19:56 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_open.c,v 1.1.1.5 2002/05/10 23:44:23 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -51,7 +51,7 @@ afs_open(avcp, aflags, acred)
     if (code = afs_InitReq(&treq, acred)) return code;
 #ifdef AFS_SGI64_ENV
     /* avcpp can be, but is not necesarily, bhp's vnode. */
-    tvc = (struct vcache *)BHV_TO_VNODE(bhv);
+    tvc = VTOAFS(BHV_TO_VNODE(bhv));
 #else
     tvc = *avcp;
 #endif

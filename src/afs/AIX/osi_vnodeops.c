@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/AIX/osi_vnodeops.c,v 1.1.1.5 2001/09/11 14:24:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/AIX/osi_vnodeops.c,v 1.1.1.6 2002/05/10 23:43:34 hartmans Exp $");
 
 #include "../h/systm.h"
 #include "../h/types.h"
@@ -355,7 +355,7 @@ struct ucred	*cred;
 {
     int		error;
     struct vattr	va;
-    struct vcache *tvp = (struct vcache *)vp;
+    struct vcache *tvp = VTOAFS(vp);
     afs_int32 modes;
 
     AFS_STATCNT(afs_gn_open);
@@ -443,10 +443,10 @@ struct ucred	*cred;
      * we'd never flush the files out to the server! Gross but the simplest
      * solution we came out with */
     if (cred->cr_luid != RMTUSER_REQ) {
-	while ((flags & FNSHARE) && ((struct vcache *)*vpp)->opens) {
+	while ((flags & FNSHARE) && VTOAFS(*vpp)->opens) {
 	    if (!(flags & FDELAY))
 		return ETXTBSY;
-	    afs_osi_Sleep(&((struct vcache *)*vpp)->opens);
+	    afs_osi_Sleep(&VTOAFS(*vpp)->opens);
 	}
 	/* Since in the standard copen() for bsd vnode kernels they do an
 	 * vop_open after the vop_create, we must do the open here since there
@@ -477,7 +477,7 @@ int
 afs_gn_rele(vp)
 struct	vnode	*vp;
 {
-   struct vcache *vcp = (struct vcache *)vp;
+   struct vcache *vcp = VTOAFS(vp);
    int		error = 0;
 
     AFS_STATCNT(afs_gn_rele);
@@ -502,7 +502,7 @@ caddr_t		vinfo;		/* Ignored in AFS */
 struct ucred	*cred;
 {
     int		error;
-    struct vcache *tvp = (struct vcache *)vp;
+    struct vcache *tvp = VTOAFS(vp);
 
     AFS_STATCNT(afs_gn_close);
 
@@ -525,7 +525,7 @@ caddr_t		addr;
 u_int 		len, off, flag;
 struct ucred	*cred;
 {
-    struct vcache *vcp = (struct vcache *)vp;
+    struct vcache *vcp = VTOAFS(vp);
     struct vrequest treq;
     afs_int32 error;
     AFS_STATCNT(afs_gn_map);
@@ -583,7 +583,7 @@ struct	vnode	*vp;
 int 		flag;
 struct ucred	*cred;
 {
-    struct vcache *vcp = (struct vcache *)vp;
+    struct vcache *vcp = VTOAFS(vp);
     AFS_STATCNT(afs_gn_unmap);
     ObtainWriteLock(&vcp->lock, 402);
     if (flag & SHM_RDONLY) {
@@ -731,7 +731,7 @@ struct ucred	*cred;
     struct iovec iov;
     struct uio uio;
     static int fclear_init =0; 
-    register struct vcache *avc = (struct vcache *)vp;
+    register struct vcache *avc = VTOAFS(vp);
 
    AFS_STATCNT(afs_gn_fclear);
     if (!fclear_init) {
@@ -819,7 +819,7 @@ caddr_t		vinfo;	    /* Ignored in AFS */
 struct	vattr	*vattrp;
 struct ucred	*cred;
 {
-    register struct vcache *vcp = (struct vcache *)vp;   
+    register struct vcache *vcp = VTOAFS(vp);   
     struct vrequest treq;
     int error=0;
     int free_cred = 0;
@@ -928,7 +928,7 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
     register int i;
     afs_int32 blockSize, fileSize;
     afs_int32 xfrSize, xfrOffset;
-    register struct vcache *vcp = (struct vcache *)vp;
+    register struct vcache *vcp = VTOAFS(vp);
     struct dcache *tdc;
     register afs_int32 start_offset;
     int save_resid = uiop->afsio_resid;

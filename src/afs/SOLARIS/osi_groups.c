@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/SOLARIS/osi_groups.c,v 1.1.1.4 2001/07/14 22:19:48 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/SOLARIS/osi_groups.c,v 1.1.1.5 2002/05/10 23:44:11 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -91,6 +91,8 @@ setpag(cred, pagvalue, newpag, change_parent)
     AFS_STATCNT(setpag);
 
     gidset = (gid_t *) osi_AllocSmallSpace(AFS_SMALLOCSIZ);
+
+    mutex_enter(&curproc->p_crlock);
     ngroups = afs_getgroups(*cred, gidset);
 
     if (afs_get_pag_from_groups(gidset[0], gidset[1]) == NOPAG) {
@@ -106,6 +108,7 @@ setpag(cred, pagvalue, newpag, change_parent)
     }
     *newpag = (pagvalue == -1 ? genpag(): pagvalue);
     afs_get_groups_from_pag(*newpag, &gidset[0], &gidset[1]);
+    /* afs_setgroups will release curproc->p_crlock */
     if (code = afs_setgroups(cred, ngroups, gidset, change_parent)) {
 	osi_FreeSmallSpace((char *)gidset);
 	return (code);
@@ -148,17 +151,18 @@ afs_setgroups(
 
     AFS_STATCNT(afs_setgroups);
 
-    if (ngroups > ngroups_max)
+    if (ngroups > ngroups_max) {
+	mutex_exit(&curproc->p_crlock);
 	return EINVAL;
+    }
     if (!change_parent)
 	*cred = (struct cred *)crcopy(*cred);
     (*cred)->cr_ngroups = ngroups;
     gp = (*cred)->cr_groups;
     while (ngroups--)
 	*gp++ = *gidset++;
-    if (!change_parent) {
-	struct proc *proc = ttoproc(curthread);
-	crset(proc, *cred); /* broadcast to all threads */
-    }
+    mutex_exit(&curproc->p_crlock);
+    if (!change_parent)
+	crset(curproc, *cred); /* broadcast to all threads */
     return (0);
 }

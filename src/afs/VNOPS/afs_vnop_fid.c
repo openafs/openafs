@@ -17,7 +17,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_fid.c,v 1.1.1.6 2001/09/11 14:25:12 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_fid.c,v 1.1.1.7 2002/05/10 23:44:21 hartmans Exp $");
 
 #if !defined(AFS_DUX40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV)
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -117,7 +117,7 @@ struct fid **fidpp;
 	addr[0] = (long)avc;
 #ifndef AFS_AIX41_ENV
 	/* No post processing, so don't hold ref count. */
-	VN_HOLD((struct vnode *)avc);
+	VN_HOLD(AFSTOV(avc));
 #endif
     }
 #if	defined(AFS_AIX_ENV) || defined(AFS_SUN54_ENV)

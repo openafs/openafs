@@ -20,7 +20,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_dirops.c,v 1.1.1.4 2001/07/14 22:19:55 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_dirops.c,v 1.1.1.5 2002/05/10 23:44:20 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -38,7 +38,7 @@ extern afs_rwlock_t afs_xcbhash;
 afs_mkdir(ndp, attrs)
     struct nameidata *ndp;
     struct vattr *attrs; {
-    register struct vcache *adp = (struct vcache *)ndp->ni_dvp;
+    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
     char *aname = ndp->ni_dent.d_name;
     register struct vcache **avcp = (struct vcache **)&(ndp->ni_vp);
     struct ucred *acred = ndp->ni_cred;
@@ -69,7 +69,13 @@ afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
     afs_Trace2(afs_iclSetp, CM_TRACE_MKDIR, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname);
 
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if (code = afs_InitReq(&treq, acred)) 
+	goto done2;
+
+    if (strlen(aname) > AFSNAMEMAX) {
+	code = ENAMETOOLONG;
+	goto done;
+    }
 
     if (!afs_ENameOK(aname)) {
 	code = EINVAL;
@@ -151,10 +157,11 @@ afs_mkdir(OSI_VC_ARG(adp), aname, attrs, avcp, acred)
     }
     else code = ENOENT;
 done:
+    code = afs_CheckCode(code, &treq, 26);
+done2:
 #ifdef	AFS_OSF_ENV
     AFS_RELE(ndp->ni_dvp);
 #endif	/* AFS_OSF_ENV */
-    code = afs_CheckCode(code, &treq, 26);
     return code;
 }
 
@@ -162,7 +169,7 @@ done:
 #ifdef	AFS_OSF_ENV
 afs_rmdir(ndp)
     struct nameidata *ndp; {
-    register struct vcache *adp = (struct vcache *)ndp->ni_dvp;
+    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
     char *aname = ndp->ni_dent.d_name;
     struct ucred *acred = ndp->ni_cred;
 #else	/* AFS_OSF_ENV */
@@ -193,7 +200,14 @@ afs_rmdir(adp, aname, acred)
     afs_Trace2(afs_iclSetp, CM_TRACE_RMDIR, ICL_TYPE_POINTER, adp, 
 	       ICL_TYPE_STRING, aname);
 
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if (code = afs_InitReq(&treq, acred)) 
+	goto done2;
+
+    if (strlen(aname) > AFSNAMEMAX) {
+	code = ENAMETOOLONG;
+	goto done;
+    }
+
     code = afs_VerifyVCache(adp, &treq);
     if (code) goto done;
 
@@ -292,10 +306,11 @@ afs_rmdir(adp, aname, acred)
     code = 0;
 
 done:
+    code = afs_CheckCode(code, &treq, 27); 
+done2:
 #ifdef	AFS_OSF_ENV
     afs_PutVCache(adp, 0);
     afs_PutVCache(ndp->ni_vp, 0);
 #endif	/* AFS_OSF_ENV */
-    code = afs_CheckCode(code, &treq, 27); 
     return code;
 }

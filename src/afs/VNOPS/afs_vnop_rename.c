@@ -17,7 +17,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_rename.c,v 1.1.1.4 2001/07/14 22:19:57 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_rename.c,v 1.1.1.5 2002/05/10 23:44:25 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -54,6 +54,11 @@ afsrename(aodp, aname1, andp, aname2, acred)
 	       ICL_TYPE_STRING, aname2);
 
     if (code = afs_InitReq(&treq, acred)) return code;
+
+    if (strlen(aname1) > AFSNAMEMAX || strlen(aname2) > AFSNAMEMAX) {
+	code = ENAMETOOLONG;
+	goto done;
+    }
 
     /* verify the latest versions of the stat cache entries */
 tagain:
@@ -329,9 +334,9 @@ done:
 #ifdef	AFS_OSF_ENV
 afs_rename(fndp, tndp)
     struct nameidata *fndp, *tndp; {
-    register struct vcache *aodp = (struct vcache *)fndp->ni_dvp;
+    register struct vcache *aodp = VTOAFS(fndp->ni_dvp);
     char *aname1 = fndp->ni_dent.d_name;
-    register struct vcache *andp = (struct vcache *)tndp->ni_dvp;
+    register struct vcache *andp = VTOAFS(tndp->ni_dvp);
     char *aname2 = tndp->ni_dent.d_name;
     struct ucred *acred = tndp->ni_cred;
 #else	/* AFS_OSF_ENV */

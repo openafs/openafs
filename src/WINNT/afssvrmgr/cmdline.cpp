@@ -12,6 +12,8 @@ extern "C" {
 #include <afs/stds.h>
 }
 
+#include "../afsapplib/afsapplib.h"
+
 #include "svrmgr.h"
 #include "cmdline.h"
 #include "action.h"
@@ -32,6 +34,7 @@ typedef enum {
    swUSER,
    swPASSWORD,
    swLOOKUP,
+   swUSEEXISTING
 } SWITCH;
 
 static struct {
@@ -40,14 +43,15 @@ static struct {
    BOOL fPresent;
    TCHAR szValue[ cchRESOURCE ];
 } aSWITCHES[] = {
-   { TEXT("cell"),      TRUE  },
-   { TEXT("subset"),    TRUE  },
-   { TEXT("server"),    TRUE  },
-   { TEXT("reset"),     FALSE },
-   { TEXT("confirm"),   FALSE },
-   { TEXT("user"),      TRUE  },
-   { TEXT("password"),  TRUE  },
-   { TEXT("lookup"),    FALSE }
+   { TEXT("cell"),        TRUE  },
+   { TEXT("subset"),      TRUE  },
+   { TEXT("server"),      TRUE  },
+   { TEXT("reset"),       FALSE },
+   { TEXT("confirm"),     FALSE },
+   { TEXT("user"),        TRUE  },
+   { TEXT("password"),    TRUE  },
+   { TEXT("lookup"),      FALSE },
+   { TEXT("useexisting"), FALSE }
 };
 
 #define nSWITCHES (sizeof(aSWITCHES) / sizeof(aSWITCHES[0]))
@@ -250,6 +254,36 @@ CMDLINEOP ParseCommandLine (LPTSTR pszCmdLine)
       {
       return opLOOKUPERRORCODE;
       }
+
+   if (aSWITCHES[ swUSEEXISTING ].fPresent)
+     {
+       ULONG ulStatus;
+       TCHAR szDefCell[ cchNAME ];
+       
+       if (aSWITCHES[ swCELL ].fPresent)
+	 {
+	   lstrcpy(szDefCell,aSWITCHES[ swCELL ].szValue);
+	 }
+       else
+	 {
+	   AfsAppLib_GetLocalCell(szDefCell);
+	 }
+       g.hCreds = AfsAppLib_GetCredentials(szDefCell,&ulStatus);
+       if (g.hCreds != NULL)
+	 {
+	   LPOPENCELL_PACKET lpocp = New (OPENCELL_PACKET);
+
+	   memset(lpocp,0x00,sizeof(OPENCELL_PACKET));
+	   lstrcpy(lpocp->szCell,szDefCell);
+	   lpocp->fCloseAppOnFail = TRUE;
+	   lpocp->hCreds = g.hCreds;
+	   lpocp->sub = NULL;
+	   StartTask(taskOPENCELL,NULL,lpocp);
+	   return opNOCELLDIALOG;
+	 }
+       else
+	 return opCLOSEAPP;
+     }
 
    if (aSWITCHES[ swCELL ].fPresent)
       {

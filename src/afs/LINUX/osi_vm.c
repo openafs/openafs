@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vm.c,v 1.1.1.8 2002/01/30 14:01:29 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vm.c,v 1.1.1.9 2002/05/10 23:44:09 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -41,7 +41,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vm.c,v 1.1.1.8 2002/01/30
  */
 int osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
-    struct inode *ip = (struct inode*)avc;
+    struct inode *ip = AFSTOI(avc);
 
     if (VREFCOUNT(avc) != 0)
 	return EBUSY;
@@ -70,7 +70,7 @@ int osi_VM_FlushVCache(struct vcache *avc, int *slept)
  */
 void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 {
-    invalidate_inode_pages((struct inode *)avc);
+    invalidate_inode_pages(AFSTOI(avc));
 }
 
 /* Flush and invalidate pages, for fsync() with INVAL flag
@@ -89,7 +89,7 @@ void osi_VM_FSyncInval(struct vcache *avc)
  */
 void osi_VM_StoreAllSegments(struct vcache *avc)
 {
-    struct inode *ip = (struct inode *) avc;
+    struct inode *ip = AFSTOI(avc);
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,5)
     /* filemap_fdatasync() only exported in 2.4.5 and above */
@@ -109,15 +109,15 @@ void osi_VM_StoreAllSegments(struct vcache *avc)
 void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-    struct inode *ip = (struct inode*)avc;
+    struct inode *ip = AFSTOI(avc);
 
     truncate_inode_pages(&ip->i_data, 0);
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,15)
-    struct inode *ip = (struct inode*)avc;
+    struct inode *ip = AFSTOI(avc);
 
     truncate_inode_pages(ip, 0);
 #else
-    invalidate_inode_pages((struct inode*)avc);
+    invalidate_inode_pages(AFSTOI(avc));
 #endif
 }
 
@@ -130,14 +130,14 @@ void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 void osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
-    struct inode *ip = (struct inode*)avc;
+    struct inode *ip = AFSTOI(avc);
 
     truncate_inode_pages(&ip->i_data, alen);
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(2,2,15)
-    struct inode *ip = (struct inode*)avc;
+    struct inode *ip = AFSTOI(avc);
 
     truncate_inode_pages(ip, alen);
 #else
-    invalidate_inode_pages((struct inode*)avc);
+    invalidate_inode_pages(AFSTOI(avc));
 #endif
 }

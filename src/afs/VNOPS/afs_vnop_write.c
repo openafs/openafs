@@ -20,7 +20,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.1.1.9 2001/10/14 17:59:14 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_write.c,v 1.1.1.10 2002/05/10 23:44:26 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -59,7 +59,7 @@ register struct vrequest *treq;
 	 * top level code.  */
 	avc->opens--;
 	avc->execsOrWriters--;
-	AFS_RELE((struct vnode *)avc); /* VN_HOLD at set CCore(afs_FakeClose)*/
+	AFS_RELE(AFSTOV(avc)); /* VN_HOLD at set CCore(afs_FakeClose)*/
 	crfree((struct AFS_UCRED *)avc->linkData);	/* "crheld" in afs_FakeClose */
 	avc->linkData =	(char *)0;
     }
@@ -256,9 +256,12 @@ afs_MemWrite(avc, auio, aio, acred, noLock)
 
 	code = afs_MemWriteUIO(tdc->f.inode, &tuio);
 	if (code) {
+	    void *mep; /* XXX in prototype world is struct memCacheEntry * */
 	    error = code;
 	    ZapDCE(tdc);		/* bad data */
-	    afs_MemCacheTruncate(tdc->f.inode, 0);
+	    mep = afs_MemCacheOpen(tdc->f.inode);
+	    afs_MemCacheTruncate(mep, 0);
+	    afs_MemCacheClose(mep);
 	    afs_stats_cmperf.cacheCurrDirtyChunks--;
 	    afs_indexFlags[tdc->index] &= ~IFDataMod;    /* so it does disappear */
 	    afs_PutDCache(tdc);
@@ -678,7 +681,7 @@ struct vrequest *areq; {
 afs_closex(afd)
     register struct file *afd; {
     struct vrequest treq;
-    register struct vcache *tvc;
+    struct vcache *tvc;
     afs_int32 flags;
     int closeDone;
     afs_int32 code = 0;
@@ -692,9 +695,9 @@ afs_closex(afd)
      * close the file and release the lock when done.  Otherwise, just
      * let the regular close code work.      */
     if (afd->f_type == DTYPE_VNODE) {
-	tvc = (struct vcache *) afd->f_data;
-	if (IsAfsVnode((struct vnode *)tvc)) {
-	    VN_HOLD((struct vnode *) tvc);
+	tvc = VTOAFS(afd->f_data);
+	if (IsAfsVnode(AFSTOV(tvc))) {
+	    VN_HOLD(AFSTOV(tvc));
 	    flags = afd->f_flag & (FSHLOCK | FEXLOCK);
 	    afd->f_flag &= ~(FSHLOCK | FEXLOCK);
 	    code = vno_close(afd);
@@ -708,7 +711,7 @@ afs_closex(afd)
 #ifdef	AFS_DEC_ENV
 	    grele((struct gnode *) tvc);
 #else
-	    AFS_RELE((struct vnode *) tvc);
+	    AFS_RELE(AFSTOV(tvc));
 #endif
 	    closeDone = 1;
 	}

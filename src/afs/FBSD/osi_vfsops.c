@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/FBSD/osi_vfsops.c,v 1.1.1.4 2001/09/11 14:24:58 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/FBSD/osi_vfsops.c,v 1.1.1.5 2002/05/10 23:43:46 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -150,13 +150,13 @@ int mp_afs_root (struct mount *afsp, struct vnode **avpp)
     if (tvp) {
 	AFS_GUNLOCK();
 	VN_HOLD((struct vnode *)tvp);
-	VN_LOCK((struct vnode *)tvp);
+	VN_LOCK(AFSTOV(tvp));
 	tvp->v.v_flag |= VROOT;	    /* No-op on Ultrix 2.2 */
 	VN_UNLOCK((struct vnode *)tvp);
 	AFS_GLOCK();
 
 	afs_globalVFS = afsp;
-	*avpp = (struct vnode *) tvp;
+	*avpp = AFSTOV(tvp);
     }
 
     afs_Trace2(afs_iclSetp, CM_TRACE_VFSROOT, ICL_TYPE_POINTER, *avpp,

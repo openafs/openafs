@@ -21,7 +21,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.1.1.7 2001/07/14 22:19:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.1.1.8 2002/05/10 23:44:19 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -164,7 +164,7 @@ afs_CopyOutAttrs(avc, attrs)
 
 #ifdef AFS_LINUX22_ENV
     /* And linux has it's own stash as well. */
-    vattr2inode((struct inode*)avc, attrs);
+    vattr2inode(AFSTOV(avc), attrs);
 #endif
     return 0;
 }
@@ -268,8 +268,8 @@ afs_getattr(OSI_VC_ARG(avc), attrs, acred)
 		    attrs->va_nodeid = ip->i_ino;
 		}
 #else
-		if (avc->v.v_flag & VROOT) {
-		    struct vnode *vp = (struct vnode *)avc;
+		if (AFSTOV(avc)->v_flag & VROOT) {
+		    struct vnode *vp = AFSTOV(avc);
 
 		    vp = vp->v_vfsp->vfs_vnodecovered;
 		    if (vp) {	/* Ignore weird failures */

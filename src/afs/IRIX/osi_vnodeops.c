@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/IRIX/osi_vnodeops.c,v 1.1.1.8 2002/01/22 19:48:10 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/IRIX/osi_vnodeops.c,v 1.1.1.9 2002/05/10 23:44:01 hartmans Exp $");
 
 #ifdef	AFS_SGI62_ENV
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -349,7 +349,7 @@ static int afsrwvp(register struct vcache *avc,
 		   struct cred *cr)
 #endif
 {
-    register struct vnode *vp = (struct vnode *)avc;
+    register struct vnode *vp = AFSTOV(avc);
     struct buf *bp;
     daddr_t bn;
     size_t acnt, cnt;
@@ -887,7 +887,7 @@ static int afs_addmap(OSI_VC_ARG(avc), off, prp, addr, len, prot, maxprot,
         struct cred *cr;
 {
     OSI_VC_CONVERT(avc)
-    struct vnode *vp = (struct vnode*)avc;
+    struct vnode *vp = AFSTOV(avc);
 
     if (vp->v_flag & VNOMAP)
 	return ENOSYS;
@@ -919,7 +919,7 @@ static int afs_delmap(OSI_VC_ARG(avc), off, prp, addr, len, prot, maxprot,
         struct cred *acred;
 {
     OSI_VC_CONVERT(avc)
-    struct vnode *vp = (struct vnode*)avc;
+    struct vnode *vp = AFSTOV(avc);
     register struct brequest *tb;
     struct vrequest treq;
     afs_int32 code;
@@ -1013,7 +1013,7 @@ static int afs_map(OSI_VC_ARG(avc), off, prp, addrp, len, prot, maxprot,
 #endif
 {
     OSI_VC_CONVERT(avc)
-    struct vnode *vp = (struct vnode*)avc;
+    struct vnode *vp = AFSTOV(avc);
     struct vrequest treq;
     int error;
 
@@ -1209,7 +1209,7 @@ afs_reclaim(OSI_VC_DECL(avc), int flag)
 void afs_rwlock(OSI_VN_DECL(vp), AFS_RWLOCK_T flag)
 {
     OSI_VN_CONVERT(vp)
-    struct vcache *avc = (struct vcache *)vp;
+    struct vcache *avc = VTOAFS(vp);
 
     if (OSI_GET_LOCKID() == avc->vc_rwlockid) {
 	avc->vc_locktrips++;
@@ -1224,7 +1224,7 @@ void afs_rwlock(OSI_VN_DECL(vp), AFS_RWLOCK_T flag)
 void afs_rwunlock(OSI_VN_DECL(vp), AFS_RWLOCK_T flag)
 {
     OSI_VN_CONVERT(vp)
-    struct vcache *avc = (struct vcache *)vp;
+    struct vcache *avc = VTOAFS(vp);
 
     AFS_ASSERT_GLOCK();
     osi_Assert(OSI_GET_LOCKID() == avc->vc_rwlockid);
@@ -1244,7 +1244,7 @@ void afs_rwunlock(OSI_VN_DECL(vp), AFS_RWLOCK_T flag)
  */
 int afs_rwlock_nowait(vnode_t *vp, AFS_RWLOCK_T flag)
 {
-    struct vcache *avc = (struct vcache *)vp;
+    struct vcache *avc = VTOAFS(vp);
 
     AFS_ASSERT_GLOCK();
     if (OSI_GET_LOCKID() == avc->vc_rwlockid) {

@@ -18,7 +18,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_volume.c,v 1.1.1.9 2002/01/22 19:48:02 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_volume.c,v 1.1.1.10 2002/05/10 23:43:27 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -673,7 +673,7 @@ static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agoo
 	} else
 	    code = -1;
     } while
-      (afs_Analyze(tconn, code, (struct VenusFid *) 0, areq,
+      (afs_Analyze(tconn, code, (struct VenusFid *) 0, &treq,
 		   -1, /* no op code for this */
 		   SHARED_LOCK, tcell));
 

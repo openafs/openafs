@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.1.1.8 2001/10/14 17:59:12 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_flock.c,v 1.1.1.9 2002/05/10 23:44:21 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -878,14 +878,14 @@ afs_xflock () {
     /* first determine whether this is any sort of vnode */
     if (fd->f_type == DTYPE_VNODE) {
 	/* good, this is a vnode; next see if it is an AFS vnode */
-	tvc = (struct vcache *) fd->f_data;	/* valid, given a vnode */
-	if (IsAfsVnode((struct vnode *)tvc)) {
+	tvc = VTOAFS(fd->f_data);	/* valid, given a vnode */
+	if (IsAfsVnode(AFSTOV(tvc))) {
 	    /* This is an AFS vnode, so do the work */
 #ifdef AFS_DEC_ENV
 	    /* find real vcache entry; shouldn't be null if gnode ref count
 	     * is greater than 0.
 	     */
-	    tvc = (struct vcache *) afs_gntovn(tvc);
+	    tvc = VTOAFS(afs_gntovn)(tvc);
 	    if (!tvc) {
 		u.u_error = ENOENT;
 		return;

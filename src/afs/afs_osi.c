@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi.c,v 1.1.1.9 2002/01/28 00:24:06 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_osi.c,v 1.1.1.10 2002/05/10 23:43:17 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -91,10 +91,10 @@ register struct vcache *avc; {
     if (avc->opens > 0 || ((avc->v.v_flag & VTEXT) && !inode_uncache_try(avc))) return 1;
 #else
 #if defined(AFS_SGI_ENV)
-    if ((avc->opens > 0) || AFS_VN_MAPPED((struct vnode *)avc))
+    if ((avc->opens > 0) || AFS_VN_MAPPED(AFSTOV(avc)))
         return 1;
 #else
-    if (avc->opens > 0 || (avc->v.v_flag & VTEXT)) return(1);
+    if (avc->opens > 0 || (AFSTOV(avc)->v_flag & VTEXT)) return(1);
 #endif
 #endif /* AFS_MACH_ENV */
 #endif

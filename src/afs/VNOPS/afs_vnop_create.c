@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_create.c,v 1.1.1.6 2001/07/14 22:19:54 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_create.c,v 1.1.1.7 2002/05/10 23:44:20 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -36,7 +36,7 @@ extern afs_rwlock_t afs_xcbhash;
 afs_create(ndp, attrs)
     struct nameidata *ndp;
     struct vattr *attrs; {
-    register struct vcache *adp = (struct vcache *)ndp->ni_dvp;
+    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
     char *aname = ndp->ni_dent.d_name;
     enum vcexcl aexcl = NONEXCL; /* XXX - create called properly */
     int amode = 0; /* XXX - checked in higher level */
@@ -77,7 +77,9 @@ afs_create(OSI_VC_ARG(adp), aname, attrs, aexcl, amode, avcp, acred)
 
 
     AFS_STATCNT(afs_create);
-    if (code = afs_InitReq(&treq, acred)) return code;
+    if (code = afs_InitReq(&treq, acred)) 
+	goto done2;
+
     afs_Trace3(afs_iclSetp, CM_TRACE_CREATE, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname, ICL_TYPE_INT32, amode);
 
@@ -87,10 +89,15 @@ afs_create(OSI_VC_ARG(adp), aname, attrs, aexcl, amode, avcp, acred)
      * the reference count on it.
      */
     if (*avcp) {
-	AFS_RELE((struct vnode*)(*avcp));
+	AFS_RELE(AFSTOV(*avcp));
 	*avcp = NULL;
     }
 #endif
+
+    if (strlen(aname) > AFSNAMEMAX) {
+	code = ENAMETOOLONG;
+	goto done;
+    }
 
     if (!afs_ENameOK(aname)) {
 	code = EINVAL;
@@ -445,10 +452,15 @@ done:
 #ifdef	AFS_OSF_ENV
     if (!code && !strcmp(aname, "core"))
 	tvc->states |= CCore1;
+#endif
+
+    code = afs_CheckCode(code, &treq, 20);
+
+done2:
+#ifdef	AFS_OSF_ENV
     afs_PutVCache(adp, 0);
 #endif	/* AFS_OSF_ENV */
 
-    code = afs_CheckCode(code, &treq, 20);
     return code;
 }
 

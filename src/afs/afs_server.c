@@ -32,7 +32,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_server.c,v 1.1.1.11 2002/01/22 19:48:01 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_server.c,v 1.1.1.12 2002/05/10 23:43:22 hartmans Exp $");
 
 #include "../afs/stds.h"
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
@@ -304,7 +304,7 @@ static void CheckVLServer(sa, areq)
 #ifdef RX_ENABLE_LOCKS
     AFS_GLOCK();
 #endif /* RX_ENABLE_LOCKS */
-    rx_SetConnDeadTime(tc->id, 50);
+    rx_SetConnDeadTime(tc->id, AFS_RXDEADTIME);
     afs_PutConn(tc, SHARED_LOCK);
     /*
      * If probe worked, or probe call not yet defined (for compatibility
@@ -565,7 +565,7 @@ void afs_CheckServers(adown, acellp)
 	    continue;  /* have just been added by setsprefs */ 
 
 	/* get a connection, even if host is down; bumps conn ref count */
-	tu = afs_GetUser(treq.uid, ts->cell, SHARED_LOCK);
+	tu = afs_GetUser(treq.uid, ts->cell->cell, SHARED_LOCK);
 	tc = afs_ConnBySA(sa, ts->cell->fsport, ts->cell->cell, tu,
 			  1/*force*/, 1/*create*/, SHARED_LOCK);
 	afs_PutUser(tu, SHARED_LOCK);
@@ -639,7 +639,7 @@ void afs_CheckServers(adown, acellp)
 		afs_setTimeHost = tc->srvr->server;
 	    }
 	    if (setTimer)
-		rx_SetConnDeadTime(tc->id, 50);
+		rx_SetConnDeadTime(tc->id, AFS_RXDEADTIME);
 	    if (code >= 0 && (sa->sa_flags & SRVADDR_ISDOWN) && (tc->srvr == sa)) {
 		/* server back up */
 		print_internet_address("afs: file server ", sa, " is back up", 2);

@@ -13,7 +13,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_dcache.c,v 1.1.1.7 2001/10/14 17:58:55 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_dcache.c,v 1.1.1.8 2002/05/10 23:43:12 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -1895,7 +1895,7 @@ struct dcache *afs_GetDCache(avc, abyte, areq, aoffset, alen, aflags)
 	    if (size > dynrootLen)
 		size = dynrootLen;
 	    if (size < 0) size = 0;
-	    code = afs_osi_Write(file, -1, dynrootDir, size);
+	    code = afs_CFileWrite(file, 0, dynrootDir, size);
 	    afs_PutDynroot();
 
 	    if (code == size)

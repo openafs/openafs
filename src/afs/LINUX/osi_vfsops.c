@@ -15,7 +15,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vfsops.c,v 1.1.1.11 2002/01/30 14:01:28 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_vfsops.c,v 1.1.1.12 2002/05/10 23:44:09 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -134,17 +134,17 @@ static int afs_root(struct super_block *afsp)
 #endif
 		
 		/* "/afs" is a directory, reset inode ops accordingly. */
-		tvp->v.v_op = &afs_dir_iops;
+		AFSTOV(tvp)->v_op = &afs_dir_iops;
 #if defined(AFS_LINUX24_ENV)
-		tvp->v.v_fop = &afs_dir_fops;
+		AFSTOV(tvp)->v_fop = &afs_dir_fops;
 #endif
 
 		/* setup super_block and mount point inode. */
 		afs_globalVp = tvp;
 #if defined(AFS_LINUX24_ENV)
-		afsp->s_root = d_alloc_root((struct inode*)&tvp->v);
+		afsp->s_root = d_alloc_root(AFSTOI(tvp));
 #else
-		afsp->s_root = d_alloc_root((struct inode*)tvp, NULL);
+		afsp->s_root = d_alloc_root(AFSTOI(tvp), NULL);
 #endif
 		afsp->s_root->d_op = &afs_dentry_operations;
 	    } else
@@ -188,8 +188,8 @@ int afs_notify_change(struct dentry *dp, struct iattr* iattrp)
     VATTR_NULL(&vattr);
     iattr2vattr(&vattr, iattrp); /* Convert for AFS vnodeops call. */
     update_inode_cache(ip, &vattr);
-    code = afs_setattr((struct vcache*)ip, &vattr, credp);
-    afs_CopyOutAttrs((struct vcache*)ip, &vattr);
+    code = afs_setattr(ITOAFS(ip), &vattr, credp);
+    afs_CopyOutAttrs(ITOAFS(ip), &vattr);
     /* Note that the inode may still not have all the correct info. But at
      * least we've got the newest version of what was supposed to be set.
      */
@@ -242,7 +242,7 @@ void afs_write_inode(struct inode *ip)
 
 void afs_delete_inode(struct inode *ip)
 {
-    struct vcache *vc = (struct vcache*)ip;
+    struct vcache *vc = ITOAFS(ip);
 
     AFS_GLOCK();
     osi_clear_inode(ip);

@@ -38,7 +38,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_vcache.c,v 1.1.1.11 2002/01/28 00:24:08 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_vcache.c,v 1.1.1.12 2002/05/10 23:43:26 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -132,7 +132,7 @@ int afs_FlushVCache(struct vcache *avc, int *slept)
 	       ICL_TYPE_INT32, avc->states);
 #ifdef  AFS_OSF_ENV
     AFS_GUNLOCK();
-    VN_LOCK((struct vnode *)avc);
+    VN_LOCK(AFSTOV(avc));
     AFS_GLOCK();
 #endif
 
@@ -214,15 +214,15 @@ int afs_FlushVCache(struct vcache *avc, int *slept)
     afs_vcount--;
     vSetType(avc, VREG);
     if (VREFCOUNT(avc) > 0) {
-        VN_UNLOCK((struct vnode *)avc);
-        AFS_RELE((struct vnode *)avc);
+        VN_UNLOCK(AFSTOV(avc));
+        AFS_RELE(AFSTOV(avc));
     } else {
        if (afs_norefpanic) {
 	  printf ("flush vc refcnt < 1");
 	  afs_norefpanic++;
 	  (void) vgone(avc, VX_NOSLEEP, (struct vnodeops *) 0);
 	  AFS_GLOCK();
-	  VN_UNLOCK((struct vnode *)avc);
+	  VN_UNLOCK(AFSTOV(avc));
        }
        else osi_Panic ("flush vc refcnt < 1");
     }
@@ -232,7 +232,7 @@ int afs_FlushVCache(struct vcache *avc, int *slept)
 
 bad:
 #ifdef	AFS_OSF_ENV
-    VN_UNLOCK((struct vnode *)avc);
+    VN_UNLOCK(AFSTOV(avc));
 #endif
     return code;
 
@@ -466,6 +466,83 @@ static afs_int32 afs_QueueVCB(struct vcache *avc)
     return 0;
 }
 
+#ifdef AFS_LINUX22_ENV
+/* afs_TryFlushDcacheChildren -- Shakes loose vcache references held by
+ *                               children of the dentry
+ *
+ * LOCKS -- Called with afs_xvcache write locked. Drops and reaquires
+ *          AFS_GLOCK, so it can call dput, which may call iput, but
+ *          keeps afs_xvcache exclusively.
+ *
+ * Tree traversal algorithm from fs/dcache.c: select_parent()
+ */
+static void afs_TryFlushDcacheChildren(struct vcache *tvc)
+{
+    struct inode *ip = AFSTOI(tvc);
+    struct dentry *this_parent;
+    struct list_head *next;
+    struct list_head *cur;
+    struct list_head *head = &ip->i_dentry;
+    struct dentry *dentry;
+    
+restart:
+    DLOCK();
+    cur = head;
+    while ((cur = cur->next) != head) {
+	dentry = list_entry(cur, struct dentry, d_alias);
+	if (DCOUNT(dentry)) {
+	    this_parent = dentry;
+	repeat:
+	    next = this_parent->d_subdirs.next;
+	resume:
+	    while (next != &this_parent->d_subdirs) {
+		struct list_head *tmp = next;
+		struct dentry *dchld = list_entry(tmp, struct dentry, d_child);
+		
+		next = tmp->next;
+		if (!DCOUNT(dchld) && !dchld->d_inode) {
+		    DGET(dchld);
+		    AFS_GUNLOCK();
+		    DUNLOCK();
+		    d_drop(dchld);
+		    dput(dchld);
+		    AFS_GLOCK();
+		    DLOCK();
+		    goto repeat;
+		}
+		/*
+		 * Descend a level if the d_subdirs list is non-empty.
+		 */
+		if (!list_empty(&dchld->d_subdirs)) {
+		    this_parent = dchld;
+		    goto repeat;
+		}
+	    }
+	    
+	    /*
+	     * All done at this level ... ascend and resume the search.
+	     */
+	    if (this_parent != dentry) {
+		next = this_parent->d_child.next;
+		this_parent = this_parent->d_parent;
+		goto resume;
+	    }
+	}
+
+	if (!DCOUNT(dentry)) {
+	    AFS_GUNLOCK();
+	    DGET(dentry);
+	    DUNLOCK();
+	    d_drop(dentry);
+	    dput(dentry);
+	    AFS_GLOCK();
+	    goto restart;
+	}
+    }
+    DUNLOCK();
+
+}
+#endif /* AFS_LINUX22_ENV */
 
 /*
  * afs_RemoveVCB
@@ -559,63 +636,6 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
     int code, fv_slept;
 
     AFS_STATCNT(afs_NewVCache);
-#ifdef AFS_LINUX22_ENV
-    if (!freeVCList) {
-	/* Free some if possible. */
-        struct afs_q *tq, *uq;
-        int i; char *panicstr;
-        int vmax = 2 * afs_cacheStats;
-        int vn = VCACHE_FREE;
-	
-        i = 0;
-        for(tq = VLRU.prev; tq != &VLRU && vn > 0; tq = uq) {
-	    tvc = QTOV(tq);
-	    uq = QPrev(tq);
-	    if (tvc->states & CVFlushed) 
-                refpanic ("CVFlushed on VLRU");
-	    else if (i++ > vmax)
-                refpanic ("Exceeded pool of AFS vnodes(VLRU cycle?)");
-	    else if (QNext(uq) != tq)
-                refpanic ("VLRU inconsistent");
-	    
-	    if (tvc == afs_globalVp)
-		continue;
-	    
-	    if ( VREFCOUNT(tvc) && tvc->opens == 0 ) {
-		struct inode *ip = (struct inode*)tvc;
-		if (list_empty(&ip->i_dentry)) {
-		    vn --;
-		}
-		else {
-		    struct list_head *cur;
-		    struct list_head *head = &ip->i_dentry;
-		    int all = 1;
-		restart:
-		    DLOCK();
-		    cur = head;
-		    while ((cur = cur->next) != head) {
-			struct dentry *dentry = list_entry(cur, struct dentry, d_alias);
-			if (!DCOUNT(dentry)) {
-			    AFS_GUNLOCK();
-			    DGET(dentry);
-			    DUNLOCK();
-			    d_drop(dentry);
-			    dput(dentry);
-			    AFS_GLOCK();
-			    goto restart;
-			}
-			else {
-			    all = 0;
-			}
-		    }
-		    DUNLOCK();
-		    if (all) vn --;
-		}
-	    }
-	    if (tq == uq) break;
-        }
-    }
-#endif /* AFS_LINUX22_ENV */
 #ifdef	AFS_OSF_ENV
 #ifdef	AFS_OSF30_ENV
     if (afs_vcount >= afs_maxvcount) 
@@ -707,6 +727,11 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
                }
             }
 #endif
+#if defined(AFS_LINUX22_ENV)
+	    if (tvc != afs_globalVp && VREFCOUNT(tvc) && tvc->opens == 0)
+		afs_TryFlushDcacheChildren(tvc);
+#endif
+
 	   if (VREFCOUNT(tvc) == 0 && tvc->opens == 0
 	       && (tvc->states & CUnlinkedDel) == 0) {
 		code = afs_FlushVCache(tvc, &fv_slept);
@@ -800,7 +825,7 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
     hzero(tvc->m.DataVersion);		/* in case we copy it into flushDV */
 #ifdef	AFS_OSF_ENV
     /* Hold it for the LRU (should make count 2) */
-    VN_HOLD((struct vnode *)tvc);
+    VN_HOLD(AFSTOV(tvc));
 #else	/* AFS_OSF_ENV */
     VREFCOUNT_SET(tvc, 1);	/* us */
 #endif	/* AFS_OSF_ENV */
@@ -869,12 +894,12 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
     AFS_VN_INIT_BUF_LOCK(&(tvc->v));
 #endif
 #else
-    SetAfsVnode((struct vnode *)tvc);
+    SetAfsVnode(AFSTOV(tvc));
 #endif /* AFS_SGI64_ENV */
 #ifdef AFS_DARWIN_ENV
     tvc->v.v_ubcinfo = UBC_INFO_NULL;
     lockinit(&tvc->rwlock, PINOD, "vcache rwlock", 0, 0);
-    cache_purge((struct vnode *)tvc); 
+    cache_purge(AFSTOV(tvc)); 
     tvc->v.v_data=tvc;
     tvc->v.v_tag=VT_AFS;
     /* VLISTNONE(&tvc->v); */
@@ -932,7 +957,7 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 #endif /* AFS_SGI_ENV */
 #if defined(AFS_LINUX22_ENV)
     {
-	struct inode *ip = (struct inode*)tvc;
+	struct inode *ip = AFSTOI(tvc);
 	sema_init(&ip->i_sem, 1);
 #if defined(AFS_LINUX24_ENV)
 	sema_init(&ip->i_zombie, 1);
@@ -1134,7 +1159,7 @@ afs_FlushActiveVcaches(doflocks)
 #ifdef	AFS_GFS_ENV
 		    VREFCOUNT_DEC(tvc);
 #else
-		    AFS_RELE((struct vnode *)tvc);
+		    AFS_RELE(AFSTOV(tvc));
 #endif
 		    /* Matches write code setting CCore flag */
 		    crfree(cred);
@@ -1917,7 +1942,7 @@ struct vcache *afs_GetRootVCache(struct VenusFid *afid,
 	     * can be safely implemented */
 	    int vg;
 	    AFS_GUNLOCK();
-            vg = vget((struct vnode *)tvc);   /* this bumps ref count */
+            vg = vget(AFSTOV(tvc));   /* this bumps ref count */
 	    AFS_GLOCK();
 	    if (vg)
                 continue;
@@ -2368,7 +2393,7 @@ struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 lockit,
             /* Grab this vnode, possibly reactivating from the free list */
 	    int vg;
 	    AFS_GUNLOCK();
-            vg = vget((struct vnode *)tvc);
+            vg = vget(AFSTOV(tvc));
 	    AFS_GLOCK();
 	    if (vg)
                 continue;
@@ -2490,7 +2515,7 @@ afs_int32 afs_NFSFindVCache(avcp, afid, lockit)
             /* Grab this vnode, possibly reactivating from the free list */
 	    int vg;
 	    AFS_GUNLOCK();
-            vg = vget((struct vnode *)tvc);
+            vg = vget(AFSTOV(tvc));
 	    AFS_GLOCK();
 	    if (vg) {
 		/* This vnode no longer exists. */
@@ -2502,8 +2527,8 @@ afs_int32 afs_NFSFindVCache(avcp, afid, lockit)
 		/* Duplicates */
 #ifdef AFS_OSF_ENV
 		/* Drop our reference counts. */
-		vrele((struct vnode *)tvc);
-		vrele((struct vnode *)found_tvc);
+		vrele(AFSTOV(tvc));
+		vrele(AFSTOV(found_tvc));
 #endif
 		afs_duplicate_nfs_fids++;
 		ReleaseSharedLock(&afs_xvcache);
@@ -2672,7 +2697,7 @@ void shutdown_vcache(void)
 		tvc->mvid = (struct VenusFid*)0;
 	    }
 #ifdef	AFS_AIX_ENV
-	    aix_gnode_rele((struct vnode *)tvc);
+	    aix_gnode_rele(AFSTOV(tvc));
 #endif
 	    if (tvc->linkData) {
 		afs_osi_Free(tvc->linkData, strlen(tvc->linkData)+1);

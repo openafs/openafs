@@ -47,6 +47,9 @@ AC_ARG_ENABLE(transarc-paths,
 AC_ARG_ENABLE(tivoli-tsm,
 [  --enable-tivoli-tsm              	Enable use of the Tivoli TSM API libraries for butc support],, enable_tivoli_tsm="no"
 )
+AC_ARG_ENABLE(debug-kernel,
+[  --enable-debug-kernel		enable compilation of the kernel module with debugging information (defaults to disabled)],, enable_debug_kernel="no"
+)
 
 dnl weird ass systems
 AC_AIX
@@ -69,6 +72,11 @@ AC_PROG_YACC
 AM_PROG_LEX
 
 OPENAFS_CHECK_BIGENDIAN
+
+KERN_DEBUG_OPT=
+if test "x$enable_debug_kernel" = "xyes"; then
+  KERN_DEBUG_OPT=-g
+fi
 
 AC_MSG_CHECKING(your OS)
 system=$host
@@ -120,6 +128,11 @@ case $system in
 		fi
 		AC_MSG_RESULT(linux)
 		if test "x$enable_kernel_module" = "xyes"; then
+		 OMIT_FRAME_POINTER=
+		 if test "x$enable_debug_kernel" = "xno"; then
+			OMIT_FRAME_POINTER=-fomit-frame-pointer
+		 fi
+		 AC_SUBST(OMIT_FRAME_POINTER)
 	         ifdef([OPENAFS_CONFIGURE_LIBAFS],
 	           [LINUX_BUILD_VNODE_FROM_INODE(config,afs)],
 	           [LINUX_BUILD_VNODE_FROM_INODE(src/config,src/afs/LINUX)]
@@ -153,6 +166,7 @@ case $system in
 		MKAFS_OSTYPE=SOLARIS
                 AC_MSG_RESULT(sun4)
 		SOLARIS_UFSVFS_HAS_DQRWLOCK
+		SOLARIS_PROC_HAS_P_COREFILE
                 ;;
         *-hpux*)
 		MKAFS_OSTYPE=HPUX
@@ -200,6 +214,7 @@ case $system in
                 AC_MSG_RESULT($system)
                 ;;
 esac
+AC_SUBST(KERN_DEBUG_OPT)
 
 if test "x$with_afs_sysname" != "x"; then
         AFS_SYSNAME="$with_afs_sysname"
@@ -228,6 +243,12 @@ else
 			AFS_SYSNAME="ppc_darwin_14"
 			;;
 		powerpc-apple-darwin5.2*)
+			AFS_SYSNAME="ppc_darwin_14"
+			;;
+		powerpc-apple-darwin5.3*)
+			AFS_SYSNAME="ppc_darwin_14"
+			;;
+		powerpc-apple-darwin5.4*)
 			AFS_SYSNAME="ppc_darwin_14"
 			;;
 		sparc-sun-solaris2.5*)
@@ -442,6 +463,7 @@ AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h)
 AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h)
 
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf re_comp re_exec)
+AC_CHECK_FUNCS(setprogname getprogname)
 
 dnl Directory PATH handling
 if test "x$enable_transarc_paths" = "xyes"  ; then 

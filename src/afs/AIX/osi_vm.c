@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/AIX/osi_vm.c,v 1.1.1.4 2001/07/14 22:19:35 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/AIX/osi_vm.c,v 1.1.1.5 2002/05/10 23:43:33 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -59,7 +59,7 @@ osi_VM_FlushVCache(avc, slept)
     }
 
     /* Free the alloced gnode that was accompanying the vcache's vnode */
-    aix_gnode_rele((struct vnode *)avc);
+    aix_gnode_rele(AFSTOV(avc));
 
     return 0;
 }
@@ -107,7 +107,7 @@ osi_VM_StoreAllSegments(avc)
 	    avc->states &= ~CCore;
 	    avc->opens--;
 	    avc->execsOrWriters--;
-	    AFS_RELE((struct vnode *)avc);	
+	    AFS_RELE(AFSTOV(avc));	
 	    crfree((struct ucred *)avc->linkData);	
 	    avc->linkData = (char *)0;
 	}

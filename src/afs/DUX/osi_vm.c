@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DUX/osi_vm.c,v 1.1.1.4 2001/07/14 22:19:38 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/DUX/osi_vm.c,v 1.1.1.5 2002/05/10 23:43:40 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -50,7 +50,7 @@ osi_VM_FlushVCache(avc, slept)
 	return EBUSY;
 
     AFS_GUNLOCK();
-    ubc_invalidate(((struct vnode *)avc)->v_object, 0, 0, B_INVAL);
+    ubc_invalidate(AFSTOV(avc)->v_object, 0, 0, B_INVAL);
     AFS_GLOCK();
 
     return 0;
@@ -132,7 +132,7 @@ osi_VM_StoreAllSegments(avc)
 {
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
-    osi_ubc_flush_dirty_and_wait((struct vnode *)avc, 0);
+    osi_ubc_flush_dirty_and_wait(AFSTOV(avc), 0);
     AFS_GLOCK();
     ObtainWriteLock(&avc->lock,94);
 }
@@ -154,8 +154,8 @@ osi_VM_TryToSmush(avc, acred, sync)
 {
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
-    osi_ubc_flush_dirty_and_wait((struct vnode *)avc, 0);
-    ubc_invalidate(((struct vnode *)avc)->v_object, 0, 0, B_INVAL);
+    osi_ubc_flush_dirty_and_wait(AFSTOV(avc), 0);
+    ubc_invalidate(AFSTOV(avc)->v_object, 0, 0, B_INVAL);
     AFS_GLOCK();
     ObtainWriteLock(&avc->lock,59);
 }
@@ -169,8 +169,8 @@ osi_VM_FlushPages(avc, credp)
     struct vcache *avc;
     struct AFS_UCRED *credp;
 {
-    ubc_flush_dirty(((struct vnode *)avc)->v_object, 0);
-    ubc_invalidate(((struct vnode *)avc)->v_object, 0, 0, B_INVAL);
+    ubc_flush_dirty(AFSTOV(avc)->v_object, 0);
+    ubc_invalidate(AFSTOV(avc)->v_object, 0, 0, B_INVAL);
 }
 
 /* Purge pages beyond end-of-file, when truncating a file.
@@ -185,6 +185,6 @@ osi_VM_Truncate(avc, alen, acred)
     int alen;
     struct AFS_UCRED *acred;
 {
-    ubc_invalidate(((struct vnode *)avc)->v_object, alen,
+    ubc_invalidate(AFSTOV(avc)->v_object, alen,
                         MAXINT - alen, B_INVAL);
 }
