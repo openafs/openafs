@@ -34,7 +34,7 @@ i[3456]86)
     ppc)
 	case $KVERS in
 	    2.2*)
-		echo error_not_supported
+		echo ppc_linux22
 		;;
 	    2.4*)
 		echo ppc_linux24
