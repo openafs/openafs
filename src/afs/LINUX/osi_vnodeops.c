@@ -1075,7 +1075,13 @@ int afs_linux_readpage(struct file *fp, struct page *pp)
 {
     int code;
     cred_t *credp = crref();
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+    char *address;
+    loff_t offset = pp->index << PAGE_CACHE_SHIFT;
+#else
     ulong address = afs_linux_page_address(pp);
+    loff_t offset = pageoff(pp);
+#endif
     uio_t tuio;
     struct iovec iovec;
     struct inode *ip = FILE_INODE(fp);
@@ -1087,26 +1093,22 @@ int afs_linux_readpage(struct file *fp, struct page *pp)
 	       ICL_TYPE_POINTER, pp,
 	       ICL_TYPE_INT32, cnt,
 	       ICL_TYPE_INT32, 99999); /* not a possible code value */
-    atomic_add(1, &pp->count);
-#if defined(AFS_LINUX24_ENV)
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+    address = kmap(pp);
     ClearPageError(pp);
+
+    lock_kernel();
 #else
+    atomic_add(1, &pp->count);
     set_bit(PG_locked, &pp->flags); /* other bits? See mm.h */
     clear_bit(PG_error, &pp->flags);
 #endif
 
-#if defined(AFS_LINUX24_ENV)
-    setup_uio(&tuio, &iovec, (char*)address, pp->index << PAGE_CACHE_SHIFT,
-	      PAGESIZE, UIO_READ, AFS_UIOSYS);
-#else
-    setup_uio(&tuio, &iovec, (char*)address, pageoff(pp), PAGESIZE,
+    setup_uio(&tuio, &iovec, (char*)address, offset, PAGESIZE,
 	      UIO_READ, AFS_UIOSYS);
-#endif
-#if defined(AFS_LINUX24_ENV)
-    lock_kernel();
-#endif
     code = afs_rdwr((struct vcache*)ip, &tuio, UIO_READ, 0, credp);
-#if defined(AFS_LINUX24_ENV)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     unlock_kernel();
 #endif
 
@@ -1114,23 +1116,22 @@ int afs_linux_readpage(struct file *fp, struct page *pp)
 	if (tuio.uio_resid) /* zero remainder of page */
 	    memset((void*)(address+(PAGESIZE-tuio.uio_resid)), 0,
 		   tuio.uio_resid);
-#if defined(AFS_LINUX24_ENV)
-#ifndef __powerpc__
-        flush_dcache_page(pp);
-#endif
-        SetPageUptodate(pp);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+	flush_dcache_page(pp);
+	SetPageUptodate(pp);
 #else
 	set_bit(PG_uptodate, &pp->flags);
 #endif
     }
 
-#if defined(AFS_LINUX24_ENV)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+    kunmap(pp);
     UnlockPage(pp);
 #else
     clear_bit(PG_locked, &pp->flags);
     wake_up(&pp->wait);
-#endif
     free_page(address);
+#endif
 
     crfree(credp);
     afs_Trace4(afs_iclSetp, CM_TRACE_READPAGE,
@@ -1168,7 +1169,6 @@ do_it:
     AFS_GUNLOCK();
     SetPageUptodate(pp);
     UnlockPage(pp);
-    /* kunmap(pp); */
     if (status == offset)
 	return 0;
     else
@@ -1221,21 +1221,23 @@ int afs_linux_writepage_sync(struct inode *ip, struct page *pp,
                         unsigned int count)
 {
     struct vcache *vcp = (struct vcache *) ip;
-    u8 *page_addr = (u8*) afs_linux_page_address(pp);
+    char *buffer;
+    loff_t base;
     int code = 0;
     cred_t *credp;
     uio_t tuio;
     struct iovec iovec;
     int f_flags = 0;
 
+    buffer = kmap(pp) + offset;
+    base = (pp->index << PAGE_CACHE_SHIFT) + offset;
+
     credp = crref();
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
               ICL_TYPE_POINTER, pp,
               ICL_TYPE_INT32, atomic_read(&pp->count),
               ICL_TYPE_INT32, 99999);
-    setup_uio(&tuio, &iovec, page_addr + offset,
-             (pp->index << PAGE_CACHE_SHIFT) + offset, count,
-             UIO_WRITE, AFS_UIOSYS);
+    setup_uio(&tuio, &iovec, buffer, base, count, UIO_WRITE, AFS_UIOSYS);
 
     code = afs_write(vcp, &tuio, f_flags, credp, 0);
 
@@ -1248,6 +1250,7 @@ int afs_linux_writepage_sync(struct inode *ip, struct page *pp,
               ICL_TYPE_INT32, code);
 
     crfree(credp);
+    kunmap(pp);
 
     return code;
 }
@@ -1285,7 +1288,7 @@ int afs_linux_updatepage(struct file *fp, struct page *pp,
 	       ICL_TYPE_POINTER, pp,
 	       ICL_TYPE_INT32, atomic_read(&pp->count),
 	       ICL_TYPE_INT32, 99999);
-    setup_uio(&tuio, &iovec, page_addr + offset, pageoff(pp) + offset, count,
+    setup_uio(&tuio, &iovec, page_addr + offset, pp->offset + offset, count,
 	      UIO_WRITE, AFS_UIOSYS);
 
     code = afs_write(vcp, &tuio, fp->f_flags, credp, 0);
@@ -1309,16 +1312,16 @@ int afs_linux_updatepage(struct file *fp, struct page *pp,
 #if defined(AFS_LINUX24_ENV)
 static int afs_linux_commit_write(struct file *file, struct page *page, unsigned offset, unsigned to)
 {
-    long status;
+    int code;
 
     AFS_GLOCK();
     lock_kernel();
-    status = afs_linux_updatepage(file, page, offset, to-offset);
+    code = afs_linux_updatepage(file, page, offset, to-offset);
     unlock_kernel();
     AFS_GUNLOCK();
     kunmap(page);
 
-    return status;
+    return code;
 }
 
 static int afs_linux_prepare_write(struct file *file, struct page *page,
@@ -1427,18 +1430,22 @@ static int afs_symlink_filler(struct file *file, struct page *page)
     AFS_GLOCK();
     lock_kernel();
     code = afs_linux_ireadlink(ip, p, PAGE_SIZE, AFS_UIOSYS);
-    unlock_kernel();
-    AFS_GUNLOCK();
 
     if (code<0)
            goto fail;
     p[code] = '\0';            /* null terminate? */
+    unlock_kernel();
+    AFS_GUNLOCK();
+
     SetPageUptodate(page);
     kunmap(page);
     UnlockPage(page);
     return 0;
 
 fail:
+    unlock_kernel();
+    AFS_GUNLOCK();
+
     SetPageError(page);
     kunmap(page);
     UnlockPage(page);
