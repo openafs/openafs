@@ -40,7 +40,7 @@ LIBS=${TOP_LIBDIR}/librx.a \
 OBJS=bosserver.o bnode.o ezbnodeops.o fsbnodeops.o bosint.ss.o bosint.xdr.o \
 bosoprocs.o cronbnodeops.o
 
-all: bosserver ${TOP_INCDIR}/afs/bosint.h bos ${TOP_LIBDIR}/libbos.a ${TOP_INCDIR}/afs/bnode.h
+all: bosserver ${TOP_INCDIR}/afs/bosint.h bos ${TOP_LIBDIR}/libbos.a ${TOP_INCDIR}/afs/bnode.h bos_util
 
 $(OBJS) bosint.xdr.o bosint.cs.o boserr.o: $(INCLS)
 
@@ -81,6 +81,11 @@ bos.o: bos.c ${INCLS} AFS_component_version_number.o
 bos: bos.o $(LIBS) libbos.a
 	${CC} ${CFLAGS} -o bos bos.o libbos.a $(LIBS)  ${XLIBS}
 
+bos_util.o: bos_util.c ${INCLS} AFS_component_version_number.o
+
+bos_util: bos_util.o $(LIBS) 
+	${CC} ${CFLAGS} -o bos_util bos_util.o $(LIBS)  ${XLIBS}
+
 ezbnodeops.o: ezbnodeops.c ${INCLS}
 
 fsbnodeops.o: fsbnodeops.c ${INCLS}
@@ -101,6 +106,7 @@ install: \
 	${DESTDIR}${includedir}/afs/bosint.h \
 	${DESTDIR}${bindir}/bos \
 	${DESTDIR}${afssrvbindir}/bos \
+	${DESTDIR}${afssrvsbindir}/bos_util \
 	${DESTDIR}${libdir}/afs/libbos.a \
 	${DESTDIR}${includedir}/afs/bnode.h
 
@@ -114,6 +120,9 @@ ${DEST}/bin/bos: bos
 	${INSTALL} $? $@
 
 ${DEST}/root.server/usr/afs/bin/bos: bos
+	${INSTALL} $? $@
+
+${DEST}/root.server/usr/afs/bin/bos_util: bos_util
 	${INSTALL} $? $@
 
 ${DEST}/lib/afs/libbos.a: libbos.a
@@ -148,6 +157,9 @@ ${DESTDIR}${bindir}/bos: bos
 ${DESTDIR}${afssrvbindir}/bos: bos
 	${INSTALL} $? $@
 
+${DESTDIR}${afssrvbindir}/bos_util: bos_util
+	${INSTALL} $? $@
+
 ${DESTDIR}${libdir}/afs/libbos.a: libbos.a
 	${INSTALL} $? $@
 
@@ -165,6 +177,6 @@ dest: \
 	${DEST}/include/afs/bosint.h \
 	${DEST}/bin/bos \
 	${DEST}/root.server/usr/afs/bin/bos \
+	${DEST}/root.server/usr/afs/bin/bos_util \
 	${DEST}/lib/afs/libbos.a \
 	${DEST}/include/afs/bnode.h
-
