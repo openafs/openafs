@@ -17,6 +17,7 @@
  */
 
 #include <WINNT/TaLocale.h>
+#undef REALLOC /* RT ticket 2120; So we can redefine it later */
 #include <windows.h>
 #include <commctrl.h>
 #include <regstr.h>
