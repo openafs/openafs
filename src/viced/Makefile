@@ -10,7 +10,8 @@ COMPONENT=viced
 include ../config/Makefile.${SYS_NAME}
 
 DBUG = -g
-CFLAGS =  -DNINTERFACE ${DBUG} -I. -I${SRCDIR}include -I${SRCDIR}include/afs \
+CFLAGS =  -DNINTERFACE ${DBUG} \
+	-I${TOP_SRCDIR}/config -I. -I${SRCDIR}include -I${SRCDIR}include/afs \
 	 ${XCFLAGS} ${DBG_DEFS} -DRXDEBUG
 LDFLAGS = ${DBUG} ${XLDFLAGS}
 

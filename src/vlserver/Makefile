@@ -14,7 +14,7 @@ KERNELDIR=../libafs/
 UKERNELDIR=../libuafs/
 COMPILE_ET = ${SRCDIR}bin/compile_et
 
-CFLAGS = ${DBUG} -I. -I.. -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = ${DBUG} -I. -I.. -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 INCLS=${SRCDIR}include/ubik.h \
              ${SRCDIR}include/lwp.h \
              ${SRCDIR}include/lock.h  \

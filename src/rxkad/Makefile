@@ -17,7 +17,7 @@ UKERNELDIR = ../libuafs/
 COMPILE_ET = ${SRCDIR}bin/compile_et
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
-CFLAGS = ${OPTMZ} -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 INCLS= ${SRCDIR}include/rx/rx.h \
        ${SRCDIR}include/rx/xdr.h \
        rxkad.h

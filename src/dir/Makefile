@@ -13,7 +13,7 @@ KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
-INCDIRS= -I${DESTDIR}include ${XINCLS}
+INCDIRS= -I${TOP_SRCDIR}/config -I${DESTDIR}include ${XINCLS}
 CFLAGS = ${OPTMZ} ${INCDIRS} ${XCFLAGS}
 
 OBJS=buffer.o dir.o salvage.o

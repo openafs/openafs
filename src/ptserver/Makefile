@@ -14,7 +14,7 @@ RXGEN=${SRCDIR}bin/rxgen
 COMPILE_ET = ${SRCDIR}bin/compile_et
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
-CFLAGS = $(DBUG) -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = $(DBUG) -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 INCLS=${SRCDIR}include/ubik.h \
 	${SRCDIR}include/lock.h  \
 	${SRCDIR}include/lwp.h \

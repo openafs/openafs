@@ -13,7 +13,7 @@ COMPILE_ET=${SRCDIR}bin/compile_et
 CFLAGS=${DBG} ${OPTMZ} -I${SRCDIR}include ${XCFLAGS} ${DBG_DEFS}
 LDFLAGS=${DBG} ${OPTMZ} ${XLDFLAGS}
 
-INCDIRS= -I${SRCDIR}include/afs -I${SRCDIR}include
+INCDIRS= -I${TOP_SRCDIR}/config -I${SRCDIR}include/afs -I${SRCDIR}include
 INCLIBS=-L${SRCDIR}lib/afs -L${SRCDIR}lib
 
 VINCLS=${SRCDIR}include/afs/partition.h ${SRCDIR}include/afs/volume.h \

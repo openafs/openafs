@@ -10,7 +10,7 @@ COMPONENT=vol
 include ../config/Makefile.${SYS_NAME}
 include ../config/Makefile.version
 
-INCDIRS= -I. -I${DESTDIR}include ${FSINCLUDES}
+INCDIRS= -I${TOP_SRCDIR}/config -I. -I${DESTDIR}include ${FSINCLUDES}
 LDFLAGS = ${OPTMZ} ${PROF} ${LDIRS} ${XLDFLAGS}
 
 LIBS= ${DESTDIR}lib/afs/libcmd.a vlib.a ${SRCDIR}lib/afs/util.a \

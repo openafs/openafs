@@ -14,7 +14,7 @@ UKERNELDIR = ../libuafs/
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 #CC=pcc
-CFLAGS = ${OPTMZ} -I${SRCDIR}include -DRXDEBUG ${XCFLAGS}
+CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}include -DRXDEBUG ${XCFLAGS}
 
 #
 # Generic xdr objects (or, at least, xdr stuff that's not newly defined for rx).
