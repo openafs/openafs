@@ -155,6 +155,9 @@ afsproc_exit()
     remove_proc_entry(PROC_FSDIRNAME, proc_root_fs);
 }
 
+extern asmlinkage long
+afs_syscall(long syscall, long parm1, long parm2, long parm3, long parm4);
+
 static int
 afs_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
 	  unsigned long arg)
@@ -231,7 +234,6 @@ init_module(void)
     unsigned long kernel_gp = 0;
     static struct fptr sys_setgroups;
 #endif /* defined(AFS_IA64_LINUX20_ENV) */
-    extern int afs_syscall();
     extern long afs_xsetgroups();
 #if defined(__NR_setgroups32)
     extern int afs_xsetgroups32();
