@@ -24,11 +24,7 @@ RCSID("$Header$");
 #endif
 #include "afsint.h"
 
-#ifdef AFS_DARWIN60_ENV
-struct ifnet *rxi_FindIfnet(afs_uint32 addr, struct ifaddr **pifad);
-#else
-struct ifnet *rxi_FindIfnet(afs_uint32 addr, struct in_ifaddr **pifad);
-#endif
+struct ifnet *rxi_FindIfnet(afs_uint32 addr);
 
 #ifndef RXK_LISTENER_ENV
 int (*rxk_PacketArrivalProc)(register struct rx_packet *ahandle,
@@ -43,6 +39,13 @@ rxk_ports_t rxk_ports;
 rxk_portRocks_t rxk_portRocks;
 
 int rxk_initDone=0;
+
+#if !defined(AFS_SUN5_ENV) && !defined(AFS_SGI62_ENV)
+#define ADDRSPERSITE 16
+static afs_uint32 myNetAddrs[ADDRSPERSITE];
+static int myNetMTUs[ADDRSPERSITE];
+static int numMyNetAddrs = 0;
+#endif
 
 /* add a port to the monitored list, port # is in network order */
 static int rxk_AddPort(u_short aport, char * arock)
@@ -340,20 +343,20 @@ void rxi_StartListener(void)
 void rxi_InitPeerParams(register struct rx_peer *pp)
 {
 #ifdef	ADAPT_MTU
+#ifndef AFS_SUN5_ENV
+#ifdef AFS_USERSPACE_IP_ADDR	
     u_short rxmtu;
     afs_int32 i, mtu;
 
-#ifndef AFS_SUN5_ENV
-#ifdef AFS_USERSPACE_IP_ADDR	
     i = rxi_Findcbi(pp->host);
     if (i == -1) {
-       pp->timeout.sec = 3;
-       /* pp->timeout.usec = 0; */
-       pp->ifMTU = RX_REMOTE_PACKET_SIZE;
+	pp->timeout.sec = 3;
+	/* pp->timeout.usec = 0; */
+	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
     } else {
-       pp->timeout.sec = 2;
-       /* pp->timeout.usec = 0; */
-       pp->ifMTU = MIN(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
+	pp->timeout.sec = 2;
+	/* pp->timeout.usec = 0; */
+	pp->ifMTU = MIN(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
     }
     if (i != -1) {
         mtu = ntohl(afs_cb_interface.mtu[i]);
@@ -365,30 +368,22 @@ void rxi_InitPeerParams(register struct rx_peer *pp)
 	}
     }
     else {   /* couldn't find the interface, so assume the worst */
-      pp->ifMTU = RX_REMOTE_PACKET_SIZE;
+	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
     }
 #else /* AFS_USERSPACE_IP_ADDR */
-#ifdef AFS_DARWIN60_ENV
-    struct ifaddr *ifad = (struct ifaddr *) 0;
-#else
-    struct in_ifaddr *ifad = (struct in_ifaddr *) 0;
-#endif
+    u_short rxmtu;
     struct ifnet *ifn;
 
-    /* At some time we need to iterate through rxi_FindIfnet() to find the
-     * global maximum.
-     */
-    ifn = rxi_FindIfnet(pp->host, &ifad);
-    if (ifn == NULL) {	/* not local */
-	pp->timeout.sec = 3;
-	/* pp->timeout.usec = 0; */
-	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
-    } else {
+#if !defined(AFS_SGI62_ENV)
+    if (numMyNetAddrs == 0)
+	(void) rxi_GetIFInfo();
+#endif
+
+    ifn = rxi_FindIfnet(pp->host);
+    if (ifn) {
 	pp->timeout.sec = 2;
 	/* pp->timeout.usec = 0; */
 	pp->ifMTU = MIN(RX_MAX_PACKET_SIZE, rx_MyMaxSendSize);
-    }
-    if (ifn) {
 #ifdef IFF_POINTOPOINT
 	if (ifn->if_flags & IFF_POINTOPOINT) {
 	    /* wish we knew the bit rate and the chunk size, sigh. */
@@ -400,11 +395,13 @@ void rxi_InitPeerParams(register struct rx_peer *pp)
          * the interface. */
 	if (ifn->if_mtu > (RX_IPUDP_SIZE + RX_HEADER_SIZE)) {
 	    rxmtu = ifn->if_mtu - RX_IPUDP_SIZE;
-	    if (rxmtu < pp->ifMTU) pp->ifMTU = rxmtu;
+	    if (rxmtu < pp->ifMTU)
+		pp->ifMTU = rxmtu;
 	}
-    }
-    else {   /* couldn't find the interface, so assume the worst */
-      pp->ifMTU = RX_REMOTE_PACKET_SIZE;
+    } else {			/* couldn't find the interface, so assume the worst */
+	pp->timeout.sec = 3;
+	/* pp->timeout.usec = 0; */
+	pp->ifMTU = RX_REMOTE_PACKET_SIZE;
     }
 #endif/* else AFS_USERSPACE_IP_ADDR */
 #else /* AFS_SUN5_ENV */
@@ -481,11 +478,6 @@ void shutdown_rxkernel(void)
 
 #if !defined(AFS_SUN5_ENV) && !defined(AFS_SGI62_ENV)
 /* Determine what the network interfaces are for this machine. */
-
-#define ADDRSPERSITE 16
-static afs_uint32 myNetAddrs[ADDRSPERSITE];
-static int myNetMTUs[ADDRSPERSITE];
-static int numMyNetAddrs = 0;
 
 #ifdef AFS_USERSPACE_IP_ADDR	
 int rxi_GetcbiInfo(void)
@@ -651,89 +643,53 @@ int rxi_GetIFInfo(void)
     }
     return different;
 }
-#ifdef AFS_DARWIN60_ENV
+
+#if defined(AFS_DARWIN60_ENV) || defined(AFS_XBSD_ENV)
 /* Returns ifnet which best matches address */
 struct ifnet *
-rxi_FindIfnet(addr, pifad) 
-     afs_uint32 addr;
-     struct ifaddr **pifad;
+rxi_FindIfnet(afs_uint32 addr) 
 {
-  struct sockaddr_in s;
+    struct sockaddr_in s;
+    struct ifaddr *ifad;
 
-  if (numMyNetAddrs == 0)
-    (void) rxi_GetIFInfo();
+    s.sin_family = AF_INET;
+    s.sin_addr.s_addr = addr;
+    ifad = ifa_ifwithnet((struct sockaddr *) &s);
 
-  s.sin_family=AF_INET;
-  s.sin_addr.s_addr=addr;
-  *pifad=ifa_ifwithnet((struct sockaddr *)&s);
- done:
-  return (*pifad ?  (*pifad)->ifa_ifp : NULL );
+    return (ifad ? ifad->ifa_ifp : NULL);
 }
-#else
+
+#else /* DARWIN60 || XBSD */
+
 /* Returns ifnet which best matches address */
-struct ifnet *rxi_FindIfnet(afs_uint32 addr, struct in_ifaddr **pifad) 
+struct ifnet *
+rxi_FindIfnet(afs_uint32 addr)
 {
-    afs_uint32 ppaddr;
     int match_value = 0;
-#ifndef AFS_OBSD_ENV
     extern struct in_ifaddr *in_ifaddr;
-#endif
-    struct in_ifaddr *ifa;
-    struct sockaddr_in *sin;
-  
-    if (numMyNetAddrs == 0)
-	(void) rxi_GetIFInfo();
+    struct in_ifaddr *ifa, *ifad = NULL;
 
-#ifdef AFS_OBSD_ENV
-    ppaddr = addr;
-#else
-    ppaddr = ntohl(addr);
-#endif
+    addr = ntohl(addr);
 
-    /* if we're given an address, skip everything until we find it */
-    if (!*pifad)
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-	*pifad = TAILQ_FIRST(&in_ifaddrhead);
-#elif defined(AFS_OBSD_ENV)
-	*pifad = in_ifaddr.tqh_first;
+#if defined(AFS_DARWIN_ENV)
+    for (ifa = TAILQ_FIRST(&in_ifaddrhead); ifa; ifa = TAILQ_NEXT(ifa, ia_link) ) {
 #else
-	*pifad = in_ifaddr;
+    for (ifa = in_ifaddr; ifa; ifa = ifa->ia_next ) {
 #endif
-    else {
-	if (((ppaddr & (*pifad)->ia_subnetmask) == (*pifad)->ia_subnet))
-	    match_value = 2;	/* don't find matching nets, just subnets */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-	*pifad = TAILQ_NEXT(*pifad, ia_link);
-#elif defined(AFS_OBSD_ENV)
-	*pifad = (*pifad)->ia_list.tqe_next;
-#else   
-	*pifad = (*pifad)->ia_next;
-#endif
-    }
-    
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-    for (ifa = *pifad; ifa; ifa = TAILQ_NEXT(ifa, ia_link) ) {
-#elif defined(AFS_OBSD_ENV)
-    for (ifa = *pifad; ifa; ifa = ifa->ia_list.tqe_next) {
-#else   
-    for (ifa = *pifad; ifa; ifa = ifa->ia_next ) {
-#endif
-	if ((ppaddr & ifa->ia_netmask) == ifa->ia_net) {
-	    if ((ppaddr & ifa->ia_subnetmask) == ifa->ia_subnet) {
-		sin=IA_SIN(ifa);
-		if ( sin->sin_addr.s_addr == ppaddr) { /* ie, ME!!!  */
+	if ((addr & ifa->ia_netmask) == ifa->ia_net) {
+	    if ((addr & ifa->ia_subnetmask) == ifa->ia_subnet) {
+		if (IA_SIN(ifa)->sin_addr.s_addr == addr) { /* ie, ME!!!  */
 		    match_value = 4;
-		    *pifad = ifa;
+		    ifad = ifa;
 		    goto done;
 		}
 		if (match_value < 3) {
-		    *pifad = ifa;
+		    ifad = ifa;
 		    match_value = 3;
 		}
-	    }
-	    else {
+	    } else {
 		if (match_value < 2) {
-		    *pifad = ifa;
+		    ifad = ifa;
 		    match_value = 2;
 		}
 	    }
@@ -741,9 +697,9 @@ struct ifnet *rxi_FindIfnet(afs_uint32 addr, struct in_ifaddr **pifad)
     } /* for all in_ifaddrs */
 
  done:
-    return (*pifad ?  (*pifad)->ia_ifp : NULL );
+    return (ifad ? ifad->ia_ifp : NULL);
 }
-#endif
+#endif /* else DARWIN60 || XBSD */
 #endif /* else AFS_USERSPACE_IP_ADDR */
 #endif /* !SUN5 && !SGI62 */
 
