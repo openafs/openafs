@@ -1811,7 +1811,7 @@ FunctionEnd
 
 
 Function AFSPageGetCellName
-!ifndef v2.0b4
+!ifdef v2.0b3
    Call IsSilent
    Pop $R1
    StrCmp $R1 "/S" exit
