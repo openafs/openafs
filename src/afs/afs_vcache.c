@@ -787,8 +787,15 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 		refpanic("VLRU inconsistent");
 
 #ifdef AFS_DARWIN_ENV
-	   if (tvc->opens == 0 && ((tvc->states & CUnlinkedDel) == 0) &&
-                VREFCOUNT(tvc) == 1 && UBCINFOEXISTS(&tvc->v)) {
+           if ((VREFCOUNT(tvc) < DARWIN_REFBASE) || 
+               (VREFCOUNT(tvc) < 1+DARWIN_REFBASE && 
+                UBCINFOEXISTS(&tvc->v))) {
+               VREFCOUNT_SET(tvc, 
+                             DARWIN_REFBASE + (UBCINFOEXISTS(&tvc->v) ? 1 : 0));
+           }
+	   if (tvc->opens == 0 && ((tvc->states & CUnlinkedDel) == 0)
+               && VREFCOUNT(tvc) == DARWIN_REFBASE+1 
+               && UBCINFOEXISTS(&tvc->v)) {
                osi_VM_TryReclaim(tvc, &fv_slept);
                if (fv_slept) {
                   uq = VLRU.prev;
@@ -802,8 +809,14 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 		afs_TryFlushDcacheChildren(tvc);
 #endif
 
-	   if (VREFCOUNT(tvc) == 0 && tvc->opens == 0
-	       && (tvc->states & CUnlinkedDel) == 0) {
+	    if (VREFCOUNT(tvc) == 
+#ifdef AFS_DARWIN_ENV
+		DARWIN_REFBASE
+#else
+		0 
+#endif
+		&& tvc->opens == 0
+		&& (tvc->states & CUnlinkedDel) == 0) {
 		code = afs_FlushVCache(tvc, &fv_slept);
 		if (code == 0) {
 		  anumber--;
@@ -975,7 +988,7 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
     /* VLISTNONE(&tvc->v); */
     tvc->v.v_freelist.tqe_next=0;
     tvc->v.v_freelist.tqe_prev=(struct vnode **)0xdeadb;
-    /*tvc->vrefCount++;*/
+    tvc->vrefCount+=DARWIN_REFBASE;
 #endif 
 #ifdef AFS_FBSD_ENV
     lockinit(&tvc->rwlock, PINOD, "vcache rwlock", 0, 0);
@@ -1250,7 +1263,8 @@ afs_FlushActiveVcaches(doflocks)
 		}
 	    }	       
 #ifdef AFS_DARWIN_ENV
-            if (VREFCOUNT(tvc) == 1 && UBCINFOEXISTS(&tvc->v)) {
+	    if (VREFCOUNT(tvc) == 1+DARWIN_REFBASE 
+		&& UBCINFOEXISTS(&tvc->v)) {
 		if (tvc->opens) panic("flushactive open, hasubc, but refcnt 1");
 		osi_VM_TryReclaim(tvc,0);
 	    }
@@ -2035,6 +2049,22 @@ struct vcache *afs_GetRootVCache(struct VenusFid *afid,
 	    if (vg)
                 continue;
 #endif	/* AFS_OSF_ENV */
+#ifdef AFS_DARWIN14_ENV
+	    /* It'd really suck if we allowed duplicate vcaches for the 
+	       same fid to happen. Wonder if this will work? */
+	    struct vnode *vp = AFSTOV(tvc);
+	    if (vp->v_flag & (VXLOCK|VORECLAIM|VTERMINATE)) {
+		printf("precluded FindVCache on %x (%d:%d:%d)\n", 
+		       vp, tvc->fid.Fid.Volume, tvc->fid.Fid.Vnode,
+		       tvc->fid.Fid.Unique);
+		simple_lock(&vp->v_interlock);
+		SET(vp->v_flag, VTERMWANT);
+		simple_unlock(&vp->v_interlock);
+		(void)tsleep((caddr_t)&vp->v_ubcinfo, PINOD, "vget1", 0);
+		printf("VTERMWANT ended on %x\n", vp);
+		continue;
+	    }
+#endif
 	    break;
 	}
     }

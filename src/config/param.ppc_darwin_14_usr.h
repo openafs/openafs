@@ -13,6 +13,7 @@
 #define AFS_USR_DARWIN14_ENV
 #define AFS_NONFSTRANS 
 #define AFS_SYSCALL             230
+#define DARWIN_REFBASE 0
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS    "afs"
