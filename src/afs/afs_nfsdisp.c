@@ -99,7 +99,7 @@ nfs2_to_afs_call(int which, caddr_t *args, fhandle_t **fhpp, fhandle_t **fh2pp)
     case RFS_LOOKUP:
     {
 	struct nfsdiropargs *sargs = (struct nfsdiropargs *)args;
-	fhp1 = (fhandle_t *)&sargs->da_fhandle;
+	fhp1 = sargs->da_fhandle;
 	break;
     }
     case RFS_READ:
@@ -117,45 +117,45 @@ nfs2_to_afs_call(int which, caddr_t *args, fhandle_t **fhpp, fhandle_t **fh2pp)
     case RFS_CREATE:
     {
 	struct nfscreatargs *sargs = (struct nfscreatargs *)args;
-	fhp1 = (fhandle_t *)&sargs->ca_da.da_fhandle;
+	fhp1 = sargs->ca_da.da_fhandle;
 	break;
     }
     case RFS_REMOVE:
     {
 	struct nfsdiropargs *sargs = (struct nfsdiropargs *)args;
-	fhp1 = (fhandle_t *)&sargs->da_fhandle;
+	fhp1 = sargs->da_fhandle;
 	break;
     }
     case RFS_RENAME:
     {
 	struct nfsrnmargs *sargs = (struct nfsrnmargs *)args;
-	fhp1 = (fhandle_t *)&sargs->rna_from.da_fhandle;
-	fhp2 = (fhandle_t *)&sargs->rna_to.da_fhandle;
+	fhp1 = sargs->rna_from.da_fhandle;
+	fhp2 = sargs->rna_to.da_fhandle;
 	break;
     }
     case RFS_LINK:
     {
 	struct nfslinkargs *sargs = (struct nfslinkargs *)args;
-	fhp1 = (fhandle_t *)&sargs->la_from;
-	fhp2 = (fhandle_t *)&sargs->la_to.da_fhandle;
+	fhp1 = sargs->la_from;
+	fhp2 = sargs->la_to.da_fhandle;
 	break;
     }
     case RFS_SYMLINK:
     {
 	struct nfsslargs *sargs = (struct nfsslargs *)args;
-	fhp1 = (fhandle_t *)&sargs->sla_from.da_fhandle;
+	fhp1 = sargs->sla_from.da_fhandle;
 	break;
     }
     case RFS_MKDIR:
     {
 	struct nfscreatargs *sargs = (struct nfscreatargs *)args;
-	fhp1 = (fhandle_t *)&sargs->ca_da.da_fhandle;
+	fhp1 = sargs->ca_da.da_fhandle;
 	break;
     }
     case RFS_RMDIR:
     {
 	struct nfsdiropargs *sargs = (struct nfsdiropargs *)args;
-	fhp1 = (fhandle_t *)&sargs->da_fhandle;
+	fhp1 = sargs->da_fhandle;
 	break;
     }
     case RFS_READDIR:
