@@ -1,7 +1,17 @@
 MODLOAD-2.4.7-ac3-MP
 MODLOAD-2.4.7-ac3-SP
+MODLOAD32
+MODLOAD64
 Makefile
+MakefileProto.AIX
+MakefileProto.DARWIN
+MakefileProto.DUX
+MakefileProto.FBSD
+MakefileProto.HPUX
+MakefileProto.IRIX
 MakefileProto.LINUX
+MakefileProto.OBSD
+MakefileProto.SOLARIS
 afs
 afsint
 config

@@ -3,5 +3,7 @@ Makefile
 cmdebug
 fs
 fstrace
-kdump-2.4.7-ac3
+kdump-2.4.*
 up
+kdump
+kdump64

@@ -1,6 +1,6 @@
 AFS_component_version_number.c
 Makefile
-Makefile.i386_linux24
+Makefile.*_*[0123456789]
 Makefile.version
 Makefile.version-NOCML
 afsconfig.h
