@@ -54,7 +54,7 @@ extern struct inode_operations afs_symlink_iops, afs_dir_iops;
 
 afs_int32 afs_bulkStatsDone;
 static int bulkStatCounter = 0;	/* counter for bulk stat seq. numbers */
-int afs_fakestat_enable = 0;
+int afs_fakestat_enable = 0;	/* 1: fakestat-all, 2: fakestat-crosscell */
 
 
 /* this would be faster if it did comparison as int32word, but would be 
@@ -260,9 +260,11 @@ void afs_InitFakeStat(struct afs_fakestat_state *state)
  *
  * The actual implementation of afs_EvalFakeStat and afs_TryEvalFakeStat,
  * which is called by those wrapper functions.
+ *
+ * Only issues RPCs if canblock is non-zero.
  */
-static int afs_EvalFakeStat_int(struct vcache **avcp,
-	struct afs_fakestat_state *state, struct vrequest *areq, int canblock)
+int afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
+	struct vrequest *areq, int canblock)
 {
     struct vcache *tvc, *root_vp;
     struct volume *tvolp = NULL;
@@ -279,29 +281,10 @@ static int afs_EvalFakeStat_int(struct vcache **avcp,
     if (tvc->mvstat != 1)
 	return 0;
 
+    /* Is the call to VerifyVCache really necessary? */
     code = afs_VerifyVCache(tvc, areq);
     if (code)
 	goto done;
-
-    if (afs_fakestat_enable == 2 && !canblock) {
-	ObtainSharedLock(&tvc->lock, 680);
-	if (!tvc->linkData) {
-	    UpgradeSToWLock(&tvc->lock, 681);
-	    code = afs_HandleLink(tvc, areq);
-	    if (code) {
-		ReleaseWriteLock(&tvc->lock);
-		goto done;
-	    }
-	    ConvertWToRLock(&tvc->lock);
-	} else {
-	    ConvertSToRLock(&tvc->lock);
-	}
-
-	if (!afs_strchr(tvc->linkData, ':'))
-	    canblock = 1;
-	ReleaseReadLock(&tvc->lock);
-    }
-
     if (canblock) {
 	ObtainWriteLock(&tvc->lock, 599);
 	code = EvalMountPoint(tvc, NULL, &tvolp, areq);
@@ -1399,17 +1382,34 @@ afs_lookup(adp, aname, avcp, acred)
     } /* sub-block just to reduce stack usage */
 
     if (tvc) {
-       if (adp->states & CForeign)
+	int force_eval = afs_fakestat_enable ? 0 : 1;
+
+	if (adp->states & CForeign)
 	   tvc->states |= CForeign;
 	tvc->parentVnode = adp->fid.Fid.Vnode;
 	tvc->parentUnique = adp->fid.Fid.Unique;
 	tvc->states &= ~CBulkStat;
 
+	if (afs_fakestat_enable == 2 && tvc->mvstat == 1) {
+	    ObtainSharedLock(&tvc->lock, 680);
+	    if (!tvc->linkData) {
+		UpgradeSToWLock(&tvc->lock, 681);
+		code = afs_HandleLink(tvc, &treq);
+		ConvertWToRLock(&tvc->lock);
+	    } else {
+		ConvertSToRLock(&tvc->lock);
+		code = 0;
+	    }
+	    if (!code && !strchr(tvc->linkData, ':'))
+		force_eval = 1;
+	    ReleaseReadLock(&tvc->lock);
+	}
+
 #if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
         if (!(flags & AFS_LOOKUP_NOEVAL))
           /* don't eval mount points */
 #endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
-	if (!afs_fakestat_enable && tvc->mvstat == 1) {
+	if (tvc->mvstat == 1 && force_eval) {
 	    /* a mt point, possibly unevaluated */
 	    struct volume *tvolp;
 
