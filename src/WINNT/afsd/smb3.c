@@ -667,6 +667,8 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
             /* extended authentication */
             char *secBlobIn;
             int secBlobInLength;
+
+            OutputDebugF("NT Session Setup: Extended");
         
             if (!(vcp->flags & SMB_VCFLAG_SESSX_RCVD)) {
                 caps = smb_GetSMBParm(inp,10) | (((unsigned long) smb_GetSMBParm(inp,11)) << 16);
@@ -703,6 +705,11 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
             char *primaryDomain;
             int  datalen;
 
+            if (smb_authType == SMB_AUTH_NTLM)
+                OutputDebugF("NT Session Setup: NTLM");
+            else
+                OutputDebugF("NT Session Setup: None");
+
             /* TODO: parse for extended auth as well */
             ciPwdLength = smb_GetSMBParm(inp, 7); /* case insensitive password length */
             csPwdLength = smb_GetSMBParm(inp, 8); /* case sensitive password length */
@@ -719,6 +726,11 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
             accountName = smb_ParseString(tp, &tp);
             primaryDomain = smb_ParseString(tp, NULL);
 
+            OutputDebugF("Account Name: %s",accountName);
+            OutputDebugF("Primary Domain: %s", primaryDomain);
+            OutputDebugF("Case Sensitive Password: %s", csPwd && csPwd[0] ? "yes" : "no");
+            OutputDebugF("Case Insensitive Password: %s", ciPwd && ciPwd[0] ? "yes" : "no");
+
             if (smb_GetNormalizedUsername(usern, accountName, primaryDomain)) {
                 /* shouldn't happen */
                 code = CM_ERROR_BADSMB;
@@ -732,6 +744,10 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 
             if (smb_authType == SMB_AUTH_NTLM) {
                 code = smb_AuthenticateUserLM(vcp, accountName, primaryDomain, ciPwd, ciPwdLength, csPwd, csPwdLength);
+                if ( code )
+                    OutputDebugF("LM authentication failed [%d]", code);
+                else
+                    OutputDebugF("LM authentication succeeded");
             }
         }
     }  else { /* V3 */
@@ -740,6 +756,16 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         char *accountName;
         char *primaryDomain;
 
+        switch ( smb_authType ) {
+        case SMB_AUTH_EXTENDED:
+            OutputDebugF("V3 Session Setup: Extended");
+            break;
+        case SMB_AUTH_NTLM:
+            OutputDebugF("V3 Session Setup: NTLM");
+            break;
+        default:
+            OutputDebugF("V3 Session Setup: None");
+        }
         ciPwdLength = smb_GetSMBParm(inp, 7);
         tp = smb_GetSMBData(inp, NULL);
         ciPwd = tp;
@@ -747,6 +773,10 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 
         accountName = smb_ParseString(tp, &tp);
         primaryDomain = smb_ParseString(tp, NULL);
+
+        OutputDebugF("Account Name: %s",accountName);
+        OutputDebugF("Primary Domain: %s", primaryDomain);
+        OutputDebugF("Case Insensitive Password: %s", ciPwd && ciPwd[0] ? "yes" : "no");
 
         if ( smb_GetNormalizedUsername(usern, accountName, primaryDomain)) {
             /* shouldn't happen */
@@ -759,6 +789,10 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
          */
         if (smb_authType == SMB_AUTH_NTLM || smb_authType == SMB_AUTH_EXTENDED) {
             code = smb_AuthenticateUserLM(vcp,accountName,primaryDomain,ciPwd,ciPwdLength,"",0);
+            if ( code )
+                OutputDebugF("LM authentication failed [%d]", code);
+            else
+                OutputDebugF("LM authentication succeeded");
         }
     }
 
