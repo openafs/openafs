@@ -2171,13 +2171,13 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
 	smb_fid_t *fidp;
 	long code;
 	cm_user_t *userp = NULL;
-        NCB *ncbp;
-        int rc;
+    NCB *ncbp;
+    int rc;
 #ifndef DJGPP
-        char *rawBuf = NULL;
+    char *rawBuf = NULL;
 #else
-        dos_ptr rawBuf = NULL;
-        dos_ptr dos_ncb;
+    dos_ptr rawBuf = NULL;
+    dos_ptr dos_ncb;
 #endif /* DJGPP */
 
 	rawBuf = NULL;
@@ -2190,7 +2190,7 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
 	offset.LowPart = smb_GetSMBParm(inp, 1) | (smb_GetSMBParm(inp, 2) << 16);
 
 	osi_Log3(afsd_logp, "smb_ReceieveCoreReadRaw fd %d, off 0x%x, size 0x%x",
-		 fd, offset.LowPart, count);
+             fd, offset.LowPart, count);
 
 	fidp = smb_FindFID(vcp, fd, 0);
 	if (!fidp)
@@ -2203,21 +2203,21 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
 #ifndef DJGPP
 		smb_RawBufs = *(char **)smb_RawBufs;
 #else /* DJGPP */
-                smb_RawBufs = _farpeekl(_dos_ds, smb_RawBufs);
+        smb_RawBufs = _farpeekl(_dos_ds, smb_RawBufs);
 #endif /* !DJGPP */
 	}
 	lock_ReleaseMutex(&smb_RawBufLock);
 	if (!rawBuf)
 		goto send1a;
 
-        if (fidp->flags & SMB_FID_IOCTL)
-        {
+    if (fidp->flags & SMB_FID_IOCTL)
+    {
 #ifndef DJGPP
-          rc = smb_IoctlReadRaw(fidp, vcp, inp, outp);
+        rc = smb_IoctlReadRaw(fidp, vcp, inp, outp);
 #else
-          rc = smb_IoctlReadRaw(fidp, vcp, inp, outp, rawBuf);
+        rc = smb_IoctlReadRaw(fidp, vcp, inp, outp, rawBuf);
 #endif
-          if (rawBuf) {
+        if (rawBuf) {
             /* Give back raw buffer */
             lock_ObtainMutex(&smb_RawBufLock);
 #ifndef DJGPP
@@ -2228,32 +2228,35 @@ long smb_ReceiveCoreReadRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp
             
             smb_RawBufs = rawBuf;
             lock_ReleaseMutex(&smb_RawBufLock);
-          }
-          return rc;
         }
+
+        smb_ReleaseFID(fidp);
+        return rc;
+    }
         
-        userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUser(vcp, inp);
 
 #ifndef DJGPP
 	code = smb_ReadData(fidp, &offset, count, rawBuf, userp, &finalCount);
 #else /* DJGPP */
-        /* have to give ReadData flag so it will treat buffer as DOS mem. */
-        code = smb_ReadData(fidp, &offset, count, (unsigned char *)rawBuf,
-                            userp, &finalCount, TRUE /* rawFlag */);
+    /* have to give ReadData flag so it will treat buffer as DOS mem. */
+    code = smb_ReadData(fidp, &offset, count, (unsigned char *)rawBuf,
+                        userp, &finalCount, TRUE /* rawFlag */);
 #endif /* !DJGPP */
 
 	if (code != 0)
 		goto send;
 
-send:
-        cm_ReleaseUser(userp);
-send1a:
+  send:
+    cm_ReleaseUser(userp);
+
+  send1a:
 	smb_ReleaseFID(fidp);
 
-send1:
+  send1:
 	ncbp = outp->ncbp;
 #ifdef DJGPP
-        dos_ncb = ((smb_ncb_t *)ncbp)->dos_ncb;
+    dos_ncb = ((smb_ncb_t *)ncbp)->dos_ncb;
 #endif /* DJGPP */
 	memset((char *)ncbp, 0, sizeof(NCB));
 
@@ -2277,7 +2280,7 @@ send1:
 #ifndef DJGPP
 		*((char **) rawBuf) = smb_RawBufs;
 #else /* DJGPP */
-                _farpokel(_dos_ds, rawBuf, smb_RawBufs);
+        _farpokel(_dos_ds, rawBuf, smb_RawBufs);
 #endif /* !DJGPP */
 
 		smb_RawBufs = rawBuf;
@@ -3657,15 +3660,15 @@ long smb_ReceiveCoreTreeDisconnect(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_
 long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	smb_fid_t *fidp;
-        char *pathp;
+    char *pathp;
 	char *lastNamep;
-        int share;
-        int attribute;
+    int share;
+    int attribute;
 	long code;
-        cm_user_t *userp;
-        cm_scache_t *scp;
-        long dosTime;
-        int caseFold;
+    cm_user_t *userp;
+    cm_scache_t *scp;
+    long dosTime;
+    int caseFold;
 	cm_space_t *spacep;
 	char *tidPathp;
 	cm_req_t req;
@@ -3688,43 +3691,43 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 #endif
 
 	share = smb_GetSMBParm(inp, 0);
-        attribute = smb_GetSMBParm(inp, 1);
+    attribute = smb_GetSMBParm(inp, 1);
 
 	spacep = inp->spacep;
 	smb_StripLastComponent(spacep->data, &lastNamep, pathp);
 	if (lastNamep && strcmp(lastNamep, SMB_IOCTL_FILENAME) == 0) {
 		/* special case magic file name for receiving IOCTL requests
-                 * (since IOCTL calls themselves aren't getting through).
-                 */
-	        fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
+         * (since IOCTL calls themselves aren't getting through).
+         */
+        fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
 		smb_SetupIoctlFid(fidp, spacep);
 		smb_SetSMBParm(outp, 0, fidp->fid);
-	        smb_SetSMBParm(outp, 1, 0);	/* attrs */
-	        smb_SetSMBParm(outp, 2, 0);	/* next 2 are DOS time */
-	        smb_SetSMBParm(outp, 3, 0);
-	        smb_SetSMBParm(outp, 4, 0);	/* next 2 are length */
-	        smb_SetSMBParm(outp, 5, 0x7fff);
+        smb_SetSMBParm(outp, 1, 0);	/* attrs */
+        smb_SetSMBParm(outp, 2, 0);	/* next 2 are DOS time */
+        smb_SetSMBParm(outp, 3, 0);
+        smb_SetSMBParm(outp, 4, 0);	/* next 2 are length */
+        smb_SetSMBParm(outp, 5, 0x7fff);
 		/* pass the open mode back */
-	        smb_SetSMBParm(outp, 6, (share & 0xf));
-	        smb_SetSMBDataLength(outp, 0);
-                smb_ReleaseFID(fidp);
-                return 0;
-        }
+        smb_SetSMBParm(outp, 6, (share & 0xf));
+        smb_SetSMBDataLength(outp, 0);
+        smb_ReleaseFID(fidp);
+        return 0;
+    }
 
 	userp = smb_GetUser(vcp, inp);
 
 	caseFold = CM_FLAG_CASEFOLD;
 
 	tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
-        code = cm_NameI(cm_rootSCachep, pathp, caseFold | CM_FLAG_FOLLOW, userp,
-			tidPathp, &req, &scp);
+    code = cm_NameI(cm_rootSCachep, pathp, caseFold | CM_FLAG_FOLLOW, userp,
+                    tidPathp, &req, &scp);
         
-        if (code) {
-                cm_ReleaseUser(userp);
+    if (code) {
+        cm_ReleaseUser(userp);
 		return code;
 	}
         
-       	code = cm_CheckOpen(scp, share & 0x7, 0, userp, &req);
+    code = cm_CheckOpen(scp, share & 0x7, 0, userp, &req);
 	if (code) {
 		cm_ReleaseSCache(scp);
 		cm_ReleaseUser(userp);
@@ -3734,47 +3737,47 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	/* don't need callback to check file type, since file types never
 	 * change, and namei and cm_Lookup all stat the object at least once on
 	 * a successful return.
-         */
-        if (scp->fileType != CM_SCACHETYPE_FILE) {
+     */
+    if (scp->fileType != CM_SCACHETYPE_FILE) {
 		cm_ReleaseSCache(scp);
-                cm_ReleaseUser(userp);
-                return CM_ERROR_ISDIR;
-        }
+        cm_ReleaseUser(userp);
+        return CM_ERROR_ISDIR;
+    }
 
-        fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-        osi_assert(fidp);
+    fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
+    osi_assert(fidp);
 
 	/* save a pointer to the vnode */
-        fidp->scp = scp;
-        
-        if ((share & 0xf) == 0)
-        	fidp->flags |= SMB_FID_OPENREAD;
+    fidp->scp = scp;
+
+    if ((share & 0xf) == 0)
+        fidp->flags |= SMB_FID_OPENREAD;
 	else if ((share & 0xf) == 1)
-        	fidp->flags |= SMB_FID_OPENWRITE;
-	else fidp->flags |= (SMB_FID_OPENREAD | SMB_FID_OPENWRITE);
+        fidp->flags |= SMB_FID_OPENWRITE;
+	else 
+        fidp->flags |= (SMB_FID_OPENREAD | SMB_FID_OPENWRITE);
 
 	lock_ObtainMutex(&scp->mx);
 	smb_SetSMBParm(outp, 0, fidp->fid);
-        smb_SetSMBParm(outp, 1, smb_Attributes(scp));
+    smb_SetSMBParm(outp, 1, smb_Attributes(scp));
 	smb_DosUTimeFromUnixTime(&dosTime, scp->clientModTime);
-        smb_SetSMBParm(outp, 2, dosTime & 0xffff);
-        smb_SetSMBParm(outp, 3, (dosTime >> 16) & 0xffff);
-        smb_SetSMBParm(outp, 4, scp->length.LowPart & 0xffff);
-        smb_SetSMBParm(outp, 5, (scp->length.LowPart >> 16) & 0xffff);
+    smb_SetSMBParm(outp, 2, dosTime & 0xffff);
+    smb_SetSMBParm(outp, 3, (dosTime >> 16) & 0xffff);
+    smb_SetSMBParm(outp, 4, scp->length.LowPart & 0xffff);
+    smb_SetSMBParm(outp, 5, (scp->length.LowPart >> 16) & 0xffff);
 	/* pass the open mode back; XXXX add access checks */
-        smb_SetSMBParm(outp, 6, (share & 0xf));
-        smb_SetSMBDataLength(outp, 0);
+    smb_SetSMBParm(outp, 6, (share & 0xf));
+    smb_SetSMBDataLength(outp, 0);
 	lock_ReleaseMutex(&scp->mx);
         
 	/* notify open */
-        cm_Open(scp, 0, userp);
+    cm_Open(scp, 0, userp);
 
 	/* send and free packet */
-        smb_ReleaseFID(fidp);
-        cm_ReleaseUser(userp);
-        /* don't release scp, since we've squirreled away the pointer in the fid struct */
-
-        return 0;
+    smb_ReleaseFID(fidp);
+    cm_ReleaseUser(userp);
+    /* don't release scp, since we've squirreled away the pointer in the fid struct */
+    return 0;
 }
 
 typedef struct smb_unlinkRock {
@@ -4188,10 +4191,10 @@ long smb_ReceiveCoreRemoveDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 long smb_ReceiveCoreFlush(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	unsigned short fid;
-        smb_fid_t *fidp;
-        cm_user_t *userp;
-        long code;
-        cm_req_t req;
+    smb_fid_t *fidp;
+    cm_user_t *userp;
+    long code;
+    cm_req_t req;
 
 	cm_InitReq(&req);
 
@@ -4200,24 +4203,26 @@ long smb_ReceiveCoreFlush(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	osi_Log1(afsd_logp, "SMB flush fid %d", fid);
 
 	fid = smb_ChainFID(fid, inp);
-        fidp = smb_FindFID(vcp, fid, 0);
-        if (!fidp || (fidp->flags & SMB_FID_IOCTL)) {
-                return CM_ERROR_BADFD;
-        }
+    fidp = smb_FindFID(vcp, fid, 0);
+    if (!fidp || (fidp->flags & SMB_FID_IOCTL)) {
+        if (fidp)
+            smb_ReleaseFID(fidp);
+        return CM_ERROR_BADFD;
+    }
         
-        userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUser(vcp, inp);
 
-        lock_ObtainMutex(&fidp->mx);
-        if (fidp->flags & SMB_FID_OPENWRITE)
-        	code = cm_FSync(fidp->scp, userp, &req);
+    lock_ObtainMutex(&fidp->mx);
+    if (fidp->flags & SMB_FID_OPENWRITE)
+        code = cm_FSync(fidp->scp, userp, &req);
 	else code = 0;
-        lock_ReleaseMutex(&fidp->mx);
+    lock_ReleaseMutex(&fidp->mx);
         
-        smb_ReleaseFID(fidp);
+    smb_ReleaseFID(fidp);
         
-        cm_ReleaseUser(userp);
+    cm_ReleaseUser(userp);
         
-        return code;
+    return code;
 }
 
 struct smb_FullNameRock {
@@ -4271,10 +4276,10 @@ void smb_FullName(cm_scache_t *dscp, cm_scache_t *scp, char *pathp,
 long smb_ReceiveCoreClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	unsigned short fid;
-        smb_fid_t *fidp;
-        cm_user_t *userp;
+    smb_fid_t *fidp;
+    cm_user_t *userp;
 	long dosTime;
-        long code;
+    long code;
 	cm_req_t req;
 
 	cm_InitReq(&req);
@@ -4285,14 +4290,14 @@ long smb_ReceiveCoreClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	osi_Log1(afsd_logp, "SMB close fid %d", fid);
 
 	fid = smb_ChainFID(fid, inp);
-        fidp = smb_FindFID(vcp, fid, 0);
-        if (!fidp) {
-                return CM_ERROR_BADFD;
-        }
+    fidp = smb_FindFID(vcp, fid, 0);
+    if (!fidp) {
+        return CM_ERROR_BADFD;
+    }
         
 	userp = smb_GetUser(vcp, inp);
 
-        lock_ObtainMutex(&fidp->mx);
+    lock_ObtainMutex(&fidp->mx);
 
 	/* Don't jump the gun on an async raw write */
 	while (fidp->raw_writers) {
@@ -4304,19 +4309,19 @@ long smb_ReceiveCoreClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	fidp->flags |= SMB_FID_DELETE;
         
 	/* watch for ioctl closes, and read-only opens */
-        if (fidp->scp != NULL
-	    && (fidp->flags & (SMB_FID_OPENWRITE | SMB_FID_DELONCLOSE))
-		  == SMB_FID_OPENWRITE) {
+    if (fidp->scp != NULL
+        && (fidp->flags & (SMB_FID_OPENWRITE | SMB_FID_DELONCLOSE))
+         == SMB_FID_OPENWRITE) {
 		if (dosTime != 0 && dosTime != -1) {
 			fidp->scp->mask |= CM_SCACHEMASK_CLIENTMODTIME;
-                        /* This fixes defect 10958 */
-                        CompensateForSmbClientLastWriteTimeBugs(&dosTime);
-			smb_UnixTimeFromDosUTime(&fidp->scp->clientModTime,
-						 dosTime);
+            /* This fixes defect 10958 */
+            CompensateForSmbClientLastWriteTimeBugs(&dosTime);
+			smb_UnixTimeFromDosUTime(&fidp->scp->clientModTime, dosTime);
 		}
-        	code = cm_FSync(fidp->scp, userp, &req);
+        code = cm_FSync(fidp->scp, userp, &req);
 	}
-	else code = 0;
+	else 
+        code = 0;
 
 	if (fidp->flags & SMB_FID_DELONCLOSE) {
 		cm_scache_t *dscp = fidp->NTopen_dscp;
@@ -4328,31 +4333,31 @@ long smb_ReceiveCoreClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 			code = cm_RemoveDir(dscp, fullPathp, userp, &req);
 			if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
 				smb_NotifyChange(FILE_ACTION_REMOVED,
-						 FILE_NOTIFY_CHANGE_DIR_NAME,
-						 dscp, fullPathp, NULL, TRUE);
+                                 FILE_NOTIFY_CHANGE_DIR_NAME,
+                                 dscp, fullPathp, NULL, TRUE);
 		}
-		else {
+		else 
+        {
 			code = cm_Unlink(dscp, fullPathp, userp, &req);
 			if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
 				smb_NotifyChange(FILE_ACTION_REMOVED,
-						 FILE_NOTIFY_CHANGE_FILE_NAME,
-						 dscp, fullPathp, NULL, TRUE);
+                                 FILE_NOTIFY_CHANGE_FILE_NAME,
+                                 dscp, fullPathp, NULL, TRUE);
 		}
 		free(fullPathp);
 	}
-        lock_ReleaseMutex(&fidp->mx);
+    lock_ReleaseMutex(&fidp->mx);
 
-        if (fidp->flags & SMB_FID_NTOPEN) {
+    if (fidp->flags & SMB_FID_NTOPEN) {
 		cm_ReleaseSCache(fidp->NTopen_dscp);
 		free(fidp->NTopen_pathp);
 	}
 	if (fidp->NTopen_wholepathp)
 		free(fidp->NTopen_wholepathp);
-        smb_ReleaseFID(fidp);
-        
+    
+    smb_ReleaseFID(fidp);
 	cm_ReleaseUser(userp);
-        
-        return code;
+    return code;
 }
 
 /*
@@ -4745,54 +4750,54 @@ done:
 long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	osi_hyper_t offset;
-        long count, written = 0;
-        unsigned short fd;
-        smb_fid_t *fidp;
-        long code;
-        cm_user_t *userp;
-        cm_attr_t truncAttr;	/* attribute struct used for truncating file */
-        char *op;
-        int inDataBlockCount;
+    long count, written = 0;
+    unsigned short fd;
+    smb_fid_t *fidp;
+    long code;
+    cm_user_t *userp;
+    cm_attr_t truncAttr;	/* attribute struct used for truncating file */
+    char *op;
+    int inDataBlockCount;
 
-        fd = smb_GetSMBParm(inp, 0);
-        count = smb_GetSMBParm(inp, 1);
-        offset.HighPart = 0;	/* too bad */
-        offset.LowPart = smb_GetSMBParm(inp, 2) | (smb_GetSMBParm(inp, 3) << 16);
+    fd = smb_GetSMBParm(inp, 0);
+    count = smb_GetSMBParm(inp, 1);
+    offset.HighPart = 0;	/* too bad */
+    offset.LowPart = smb_GetSMBParm(inp, 2) | (smb_GetSMBParm(inp, 3) << 16);
 
-        op = smb_GetSMBData(inp, NULL);
+    op = smb_GetSMBData(inp, NULL);
 	op = smb_ParseDataBlock(op, NULL, &inDataBlockCount);
 
-        osi_Log3(afsd_logp, "smb_ReceiveCoreWrite fd %d, off 0x%x, size 0x%x",
-        	fd, offset.LowPart, count);
+    osi_Log3(afsd_logp, "smb_ReceiveCoreWrite fd %d, off 0x%x, size 0x%x",
+             fd, offset.LowPart, count);
         
 	fd = smb_ChainFID(fd, inp);
-        fidp = smb_FindFID(vcp, fd, 0);
-        if (!fidp) {
+    fidp = smb_FindFID(vcp, fd, 0);
+    if (!fidp) {
 		return CM_ERROR_BADFD;
-        }
+    }
         
-        if (fidp->flags & SMB_FID_IOCTL)
-        	return smb_IoctlWrite(fidp, vcp, inp, outp);
+    if (fidp->flags & SMB_FID_IOCTL)
+        return smb_IoctlWrite(fidp, vcp, inp, outp);
         
 	userp = smb_GetUser(vcp, inp);
 
 	/* special case: 0 bytes transferred means truncate to this position */
-        if (count == 0) {
+    if (count == 0) {
 		cm_req_t req;
 
 		cm_InitReq(&req);
 
 		truncAttr.mask = CM_ATTRMASK_LENGTH;
-                truncAttr.length.LowPart = offset.LowPart;
-                truncAttr.length.HighPart = 0;
+        truncAttr.length.LowPart = offset.LowPart;
+        truncAttr.length.HighPart = 0;
 		lock_ObtainMutex(&fidp->mx);
-                code = cm_SetAttr(fidp->scp, &truncAttr, userp, &req);
+        code = cm_SetAttr(fidp->scp, &truncAttr, userp, &req);
 		lock_ReleaseMutex(&fidp->mx);
 		smb_SetSMBParm(outp, 0, /* count */ 0);
-	        smb_SetSMBDataLength(outp, 0);
+        smb_SetSMBDataLength(outp, 0);
 		fidp->flags |= SMB_FID_LENGTHSETDONE;
-                goto done;
-        }
+        goto done;
+    }
 
 	/*
 	 * Work around bug in NT client
@@ -4818,14 +4823,14 @@ long smb_ReceiveCoreWrite(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 		code = CM_ERROR_PARTIALWRITE;
 
 	/* set the packet data length to 3 bytes for the data block header,
-         * plus the size of the data.
-         */
+     * plus the size of the data.
+     */
 	smb_SetSMBParm(outp, 0, written);
-        smb_SetSMBDataLength(outp, 0);
+    smb_SetSMBDataLength(outp, 0);
 
-done:
-        smb_ReleaseFID(fidp);
-        cm_ReleaseUser(userp);
+  done:
+    smb_ReleaseFID(fidp);
+    cm_ReleaseUser(userp);
 
 	return code;
 }
@@ -4859,8 +4864,8 @@ void smb_CompleteWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 #else /* DJGPP */
 	rawBuf = (dos_ptr) rwcp->buf;
 	code = smb_WriteData(fidp, &rwcp->offset, rwcp->count,
-                             (unsigned char *) rawBuf, userp,
-			     &written, TRUE);
+                         (unsigned char *) rawBuf, userp,
+                         &written, TRUE);
 #endif /* !DJGPP */
 
 	if (rwcp->writeMode & 0x1) {	/* synchronous */
@@ -4887,7 +4892,7 @@ void smb_CompleteWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 #ifndef DJGPP
 	*((char **)rawBuf) = smb_RawBufs;
 #else /* DJGPP */
-        _farpokel(_dos_ds, rawBuf, smb_RawBufs);
+    _farpokel(_dos_ds, rawBuf, smb_RawBufs);
 #endif /* !DJGPP */
 	smb_RawBufs = rawBuf;
 	lock_ReleaseMutex(&smb_RawBufLock);
@@ -4933,10 +4938,10 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
         	fd, offset.LowPart, count, writeMode);
         
 	fd = smb_ChainFID(fd, inp);
-        fidp = smb_FindFID(vcp, fd, 0);
-        if (!fidp) {
+    fidp = smb_FindFID(vcp, fd, 0);
+    if (!fidp) {
 		return CM_ERROR_BADFD;
-        }
+    }
         
 	userp = smb_GetUser(vcp, inp);
 
@@ -4973,12 +4978,13 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 #ifndef DJGPP
 			smb_RawBufs = *(char **)smb_RawBufs;
 #else /* DJGPP */
-                        smb_RawBufs = _farpeekl(_dos_ds, smb_RawBufs);
+            smb_RawBufs = _farpeekl(_dos_ds, smb_RawBufs);
 #endif /* !DJGPP */
 		}
 		else
 			code = CM_ERROR_USESTD;
-		lock_ReleaseMutex(&smb_RawBufLock);
+		
+        lock_ReleaseMutex(&smb_RawBufLock);
 	}
 
 	/* Don't allow a premature Close */
@@ -5009,10 +5015,10 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 	rwcp->alreadyWritten = written;
 
 	/* set the packet data length to 3 bytes for the data block header,
-         * plus the size of the data.
-         */
+     * plus the size of the data.
+     */
 	smb_SetSMBParm(outp, 0, 0xffff);
-        smb_SetSMBDataLength(outp, 0);
+    smb_SetSMBDataLength(outp, 0);
 
 	return 0;
 }
@@ -5020,69 +5026,69 @@ long smb_ReceiveCoreWriteRaw(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 long smb_ReceiveCoreRead(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	osi_hyper_t offset;
-        long count, finalCount;
-        unsigned short fd;
-        smb_fid_t *fidp;
-        long code;
-        cm_user_t *userp;
-        char *op;
+    long count, finalCount;
+    unsigned short fd;
+    smb_fid_t *fidp;
+    long code;
+    cm_user_t *userp;
+    char *op;
         
-        fd = smb_GetSMBParm(inp, 0);
-        count = smb_GetSMBParm(inp, 1);
-        offset.HighPart = 0;	/* too bad */
-        offset.LowPart = smb_GetSMBParm(inp, 2) | (smb_GetSMBParm(inp, 3) << 16);
+    fd = smb_GetSMBParm(inp, 0);
+    count = smb_GetSMBParm(inp, 1);
+    offset.HighPart = 0;	/* too bad */
+    offset.LowPart = smb_GetSMBParm(inp, 2) | (smb_GetSMBParm(inp, 3) << 16);
         
-        osi_Log3(afsd_logp, "smb_ReceiveCoreRead fd %d, off 0x%x, size 0x%x",
-        	fd, offset.LowPart, count);
+    osi_Log3(afsd_logp, "smb_ReceiveCoreRead fd %d, off 0x%x, size 0x%x",
+             fd, offset.LowPart, count);
         
 	fd = smb_ChainFID(fd, inp);
-        fidp = smb_FindFID(vcp, fd, 0);
-        if (!fidp) {
+    fidp = smb_FindFID(vcp, fd, 0);
+    if (!fidp) {
 		return CM_ERROR_BADFD;
-        }
+    }
         
-        if (fidp->flags & SMB_FID_IOCTL) {
+    if (fidp->flags & SMB_FID_IOCTL) {
 		return smb_IoctlRead(fidp, vcp, inp, outp);
-        }
+    }
         
 	userp = smb_GetUser(vcp, inp);
 
 	/* remember this for final results */
-        smb_SetSMBParm(outp, 0, count);
-        smb_SetSMBParm(outp, 1, 0);
-        smb_SetSMBParm(outp, 2, 0);
-        smb_SetSMBParm(outp, 3, 0);
-        smb_SetSMBParm(outp, 4, 0);
+    smb_SetSMBParm(outp, 0, count);
+    smb_SetSMBParm(outp, 1, 0);
+    smb_SetSMBParm(outp, 2, 0);
+    smb_SetSMBParm(outp, 3, 0);
+    smb_SetSMBParm(outp, 4, 0);
 
 	/* set the packet data length to 3 bytes for the data block header,
-         * plus the size of the data.
-         */
-        smb_SetSMBDataLength(outp, count+3);
+     * plus the size of the data.
+     */
+    smb_SetSMBDataLength(outp, count+3);
         
 	/* get op ptr after putting in the parms, since otherwise we don't
-         * know where the data really is.
-         */
-        op = smb_GetSMBData(outp, NULL);
+     * know where the data really is.
+     */
+    op = smb_GetSMBData(outp, NULL);
 
 	/* now emit the data block header: 1 byte of type and 2 bytes of length */
-        *op++ = 1;	/* data block marker */
-        *op++ = (unsigned char) (count & 0xff);
-        *op++ = (unsigned char) ((count >> 8) & 0xff);
+    *op++ = 1;	/* data block marker */
+    *op++ = (unsigned char) (count & 0xff);
+    *op++ = (unsigned char) ((count >> 8) & 0xff);
                 
 #ifndef DJGPP
 	code = smb_ReadData(fidp, &offset, count, op, userp, &finalCount);
 #else /* DJGPP */
-        code = smb_ReadData(fidp, &offset, count, op, userp, &finalCount, FALSE);
+    code = smb_ReadData(fidp, &offset, count, op, userp, &finalCount, FALSE);
 #endif /* !DJGPP */
 
 	/* fix some things up */
 	smb_SetSMBParm(outp, 0, finalCount);
 	smb_SetSMBDataLength(outp, finalCount+3);
 
-        smb_ReleaseFID(fidp);
+    smb_ReleaseFID(fidp);
 	
-        cm_ReleaseUser(userp);
-        return code;
+    cm_ReleaseUser(userp);
+    return code;
 }
 
 long smb_ReceiveCoreMakeDir(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
@@ -5189,60 +5195,60 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	char *pathp;
         long code;
 	cm_space_t *spacep;
-        char *tp;
-        int excl;
-        cm_user_t *userp;
-        cm_scache_t *dscp;			/* dir we're dealing with */
-        cm_scache_t *scp;			/* file we're creating */
-        cm_attr_t setAttr;
-        int initialModeBits;
-        smb_fid_t *fidp;
-        int attributes;
-        char *lastNamep;
-        int caseFold;
-        long dosTime;
+    char *tp;
+    int excl;
+    cm_user_t *userp;
+    cm_scache_t *dscp;			/* dir we're dealing with */
+    cm_scache_t *scp;			/* file we're creating */
+    cm_attr_t setAttr;
+    int initialModeBits;
+    smb_fid_t *fidp;
+    int attributes;
+    char *lastNamep;
+    int caseFold;
+    long dosTime;
 	char *tidPathp;
 	cm_req_t req;
 
 	cm_InitReq(&req);
 
-        scp = NULL;
-        excl = (inp->inCom == 0x03)? 0 : 1;
+    scp = NULL;
+    excl = (inp->inCom == 0x03)? 0 : 1;
         
-        attributes = smb_GetSMBParm(inp, 0);
-        dosTime = smb_GetSMBParm(inp, 1) | (smb_GetSMBParm(inp, 2) << 16);
+    attributes = smb_GetSMBParm(inp, 0);
+    dosTime = smb_GetSMBParm(inp, 1) | (smb_GetSMBParm(inp, 2) << 16);
         
 	/* compute initial mode bits based on read-only flag in attributes */
-        initialModeBits = 0666;
-        if (attributes & 1) initialModeBits &= ~0222;
+    initialModeBits = 0666;
+    if (attributes & 1) initialModeBits &= ~0222;
         
 	tp = smb_GetSMBData(inp, NULL);
-        pathp = smb_ParseASCIIBlock(tp, &tp);
+    pathp = smb_ParseASCIIBlock(tp, &tp);
 
 	spacep = inp->spacep;
-        smb_StripLastComponent(spacep->data, &lastNamep, pathp);
+    smb_StripLastComponent(spacep->data, &lastNamep, pathp);
 
 	userp = smb_GetUser(vcp, inp);
 
-       	caseFold = CM_FLAG_CASEFOLD;
+    caseFold = CM_FLAG_CASEFOLD;
 
 	tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
 	code = cm_NameI(cm_rootSCachep, spacep->data, caseFold | CM_FLAG_FOLLOW,
-		userp, tidPathp, &req, &dscp);
+                    userp, tidPathp, &req, &dscp);
 
-        if (code) {
-                cm_ReleaseUser(userp);
-                return code;
-        }
+    if (code) {
+        cm_ReleaseUser(userp);
+        return code;
+    }
         
-        /* otherwise, scp points to the parent directory.  Do a lookup, and
+    /* otherwise, scp points to the parent directory.  Do a lookup, and
 	 * truncate the file if we find it, otherwise we create the file.
-         */
-        if (!lastNamep) lastNamep = pathp;
-        else lastNamep++;
+     */
+    if (!lastNamep) lastNamep = pathp;
+    else lastNamep++;
 
-        if (!smb_IsLegalFilename(lastNamep))
-                return CM_ERROR_BADNTFILENAME;
+    if (!smb_IsLegalFilename(lastNamep))
+        return CM_ERROR_BADNTFILENAME;
 
     osi_Log1(afsd_logp, "SMB receive create [%s]", osi_LogSaveString( afsd_logp, pathp ));
 #ifdef DEBUG_VERBOSE
@@ -5254,80 +5260,80 @@ long smb_ReceiveCoreCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     }
 #endif    
 
-code = cm_Lookup(dscp, lastNamep, caseFold, userp, &req, &scp);
-        if (code && code != CM_ERROR_NOSUCHFILE) {
+    code = cm_Lookup(dscp, lastNamep, caseFold, userp, &req, &scp);
+    if (code && code != CM_ERROR_NOSUCHFILE) {
 		cm_ReleaseSCache(dscp);
-                cm_ReleaseUser(userp);
-                return code;
-        }
+        cm_ReleaseUser(userp);
+        return code;
+    }
         
-        /* if we get here, if code is 0, the file exists and is represented by
-         * scp.  Otherwise, we have to create it.
-         */
+    /* if we get here, if code is 0, the file exists and is represented by
+     * scp.  Otherwise, we have to create it.
+     */
 	if (code == 0) {
 		if (excl) {
 			/* oops, file shouldn't be there */
-                        cm_ReleaseSCache(dscp);
-                        cm_ReleaseSCache(scp);
-                        cm_ReleaseUser(userp);
-                        return CM_ERROR_EXISTS;
-                }
+            cm_ReleaseSCache(dscp);
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
+            return CM_ERROR_EXISTS;
+        }
 
 		setAttr.mask = CM_ATTRMASK_LENGTH;
-                setAttr.length.LowPart = 0;
-                setAttr.length.HighPart = 0;
+        setAttr.length.LowPart = 0;
+        setAttr.length.HighPart = 0;
 		code = cm_SetAttr(scp, &setAttr, userp, &req);
-        }
-        else {
+    }
+    else {
 		setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
 		smb_UnixTimeFromDosUTime(&setAttr.clientModTime, dosTime);
-                code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
-				 &req);
+        code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
+                         &req);
 		if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
 			smb_NotifyChange(FILE_ACTION_ADDED,
-					 FILE_NOTIFY_CHANGE_FILE_NAME,
-					 dscp, lastNamep, NULL, TRUE);
-                if (!excl && code == CM_ERROR_EXISTS) {
+                             FILE_NOTIFY_CHANGE_FILE_NAME,
+                             dscp, lastNamep, NULL, TRUE);
+        if (!excl && code == CM_ERROR_EXISTS) {
 			/* not an exclusive create, and someone else tried
 			 * creating it already, then we open it anyway.  We
 			 * don't bother retrying after this, since if this next
 			 * fails, that means that the file was deleted after
 			 * we started this call.
-                         */
-                        code = cm_Lookup(dscp, lastNamep, caseFold, userp,
-					 &req, &scp);
-                        if (code == 0) {
+             */
+            code = cm_Lookup(dscp, lastNamep, caseFold, userp,
+                             &req, &scp);
+            if (code == 0) {
 				setAttr.mask = CM_ATTRMASK_LENGTH;
-                                setAttr.length.LowPart = 0;
-                                setAttr.length.HighPart = 0;
-                                code = cm_SetAttr(scp, &setAttr, userp, &req);
-                        }
-                }
+                setAttr.length.LowPart = 0;
+                setAttr.length.HighPart = 0;
+                code = cm_SetAttr(scp, &setAttr, userp, &req);
+            }
         }
+    }
         
 	/* we don't need this any longer */
 	cm_ReleaseSCache(dscp);
 
-        if (code) {
+    if (code) {
 		/* something went wrong creating or truncating the file */
-                if (scp) cm_ReleaseSCache(scp);
-                cm_ReleaseUser(userp);
-                return code;
-        }
-        
+        if (scp) cm_ReleaseSCache(scp);
+        cm_ReleaseUser(userp);
+        return code;
+    }
+
 	/* make sure we only open files */
 	if (scp->fileType != CM_SCACHETYPE_FILE) {
 		cm_ReleaseSCache(scp);
-                cm_ReleaseUser(userp);
-                return CM_ERROR_ISDIR;
+        cm_ReleaseUser(userp);
+        return CM_ERROR_ISDIR;
 	}
 
-        /* now all we have to do is open the file itself */
-        fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-        osi_assert(fidp);
+    /* now all we have to do is open the file itself */
+    fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
+    osi_assert(fidp);
 	
 	/* save a pointer to the vnode */
-        fidp->scp = scp;
+    fidp->scp = scp;
         
 	/* always create it open for read/write */
 	fidp->flags |= (SMB_FID_OPENREAD | SMB_FID_OPENWRITE);
@@ -5335,65 +5341,65 @@ code = cm_Lookup(dscp, lastNamep, caseFold, userp, &req, &scp);
 	smb_ReleaseFID(fidp);
         
 	smb_SetSMBParm(outp, 0, fidp->fid);
-        smb_SetSMBDataLength(outp, 0);
+    smb_SetSMBDataLength(outp, 0);
 
 	cm_Open(scp, 0, userp);
 
-        cm_ReleaseUser(userp);
-        /* leave scp held since we put it in fidp->scp */
-        return 0;
+    cm_ReleaseUser(userp);
+    /* leave scp held since we put it in fidp->scp */
+    return 0;
 }
 
 long smb_ReceiveCoreSeek(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-        long code;
-        long offset;
-        int whence;
-        unsigned short fd;
-        smb_fid_t *fidp;
-        cm_scache_t *scp;
-        cm_user_t *userp;
+    long code;
+    long offset;
+    int whence;
+    unsigned short fd;
+    smb_fid_t *fidp;
+    cm_scache_t *scp;
+    cm_user_t *userp;
 	cm_req_t req;
 
 	cm_InitReq(&req);
         
-        fd = smb_GetSMBParm(inp, 0);
+    fd = smb_GetSMBParm(inp, 0);
 	whence = smb_GetSMBParm(inp, 1);
-        offset = smb_GetSMBParm(inp, 2) | (smb_GetSMBParm(inp, 3) << 16);
+    offset = smb_GetSMBParm(inp, 2) | (smb_GetSMBParm(inp, 3) << 16);
         
 	/* try to find the file descriptor */
 	fd = smb_ChainFID(fd, inp);
-        fidp = smb_FindFID(vcp, fd, 0);
-        if (!fidp || (fidp->flags & SMB_FID_IOCTL)) {
+    fidp = smb_FindFID(vcp, fd, 0);
+    if (!fidp || (fidp->flags & SMB_FID_IOCTL)) {
 		return CM_ERROR_BADFD;
-        }
+    }
 	
 	userp = smb_GetUser(vcp, inp);
 
-        lock_ObtainMutex(&fidp->mx);
-        scp = fidp->scp;
+    lock_ObtainMutex(&fidp->mx);
+    scp = fidp->scp;
 	lock_ObtainMutex(&scp->mx);
 	code = cm_SyncOp(scp, NULL, userp, &req, 0,
-        	CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 	if (code == 0) {
 		if (whence == 1) {
-                	/* offset from current offset */
-                	offset += fidp->offset;
+            /* offset from current offset */
+            offset += fidp->offset;
 		}
 		else if (whence == 2) {
-                	/* offset from current EOF */
-                        offset += scp->length.LowPart;
+            /* offset from current EOF */
+            offset += scp->length.LowPart;
 		}
-                fidp->offset = offset;
-                smb_SetSMBParm(outp, 0, offset & 0xffff);
-                smb_SetSMBParm(outp, 1, (offset>>16) & 0xffff);
-                smb_SetSMBDataLength(outp, 0);
-        }
+        fidp->offset = offset;
+        smb_SetSMBParm(outp, 0, offset & 0xffff);
+        smb_SetSMBParm(outp, 1, (offset>>16) & 0xffff);
+        smb_SetSMBDataLength(outp, 0);
+    }
 	lock_ReleaseMutex(&scp->mx);
-        lock_ReleaseMutex(&fidp->mx);
-        smb_ReleaseFID(fidp);
-        cm_ReleaseUser(userp);
-        return code;
+    lock_ReleaseMutex(&fidp->mx);
+    smb_ReleaseFID(fidp);
+    cm_ReleaseUser(userp);
+    return code;
 }
 
 /* dispatch all of the requests received in a packet.  Due to chaining, this may
@@ -5423,13 +5429,13 @@ void smb_DispatchPacket(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp,
 	smbp = (smb_t *) inp->data;
 
 	if (!(outp->flags & SMB_PACKETFLAG_SUSPENDED)) {
-	        /* setup the basic parms for the initial request in the packet */
+        /* setup the basic parms for the initial request in the packet */
 		inp->inCom = smbp->com;
-	        inp->wctp = &smbp->wct;
-	        inp->inCount = 0;
+        inp->wctp = &smbp->wct;
+        inp->inCount = 0;
 		inp->ncb_length = ncbp->ncb_length;
 	}
-        noSend = 0;
+    noSend = 0;
 
 	/* Sanity check */
 	if (ncbp->ncb_length < offsetof(struct smb, vdata)) {

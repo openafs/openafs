@@ -627,98 +627,98 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 {
 	char *pathp;
-        smb_tran2Packet_t *outp;
-        long code;
+    smb_tran2Packet_t *outp;
+    long code;
 	cm_space_t *spacep;
-        int excl;
-        cm_user_t *userp;
-        cm_scache_t *dscp;		/* dir we're dealing with */
-        cm_scache_t *scp;		/* file we're creating */
-        cm_attr_t setAttr;
-        int initialModeBits;
-        smb_fid_t *fidp;
-        int attributes;
-        char *lastNamep;
-        long dosTime;
-        int openFun;
-        int trunc;
-        int openMode;
-        int extraInfo;
-        int openAction;
-        int parmSlot;			/* which parm we're dealing with */
-        long returnEALength;
+    int excl;
+    cm_user_t *userp;
+    cm_scache_t *dscp;		/* dir we're dealing with */
+    cm_scache_t *scp;		/* file we're creating */
+    cm_attr_t setAttr;
+    int initialModeBits;
+    smb_fid_t *fidp;
+    int attributes;
+    char *lastNamep;
+    long dosTime;
+    int openFun;
+    int trunc;
+    int openMode;
+    int extraInfo;
+    int openAction;
+    int parmSlot;			/* which parm we're dealing with */
+    long returnEALength;
 	char *tidPathp;
 	cm_req_t req;
 
 	cm_InitReq(&req);
 
-        scp = NULL;
+    scp = NULL;
         
 	extraInfo = (p->parmsp[0] & 1);	/* return extra info */
-        returnEALength = (p->parmsp[0] & 8);	/* return extended attr length */
+    returnEALength = (p->parmsp[0] & 8);	/* return extended attr length */
 
 	openFun = p->parmsp[6];		/* open function */
-        excl = ((openFun & 3) == 0);
-        trunc = ((openFun & 3) == 2);	/* truncate it */
+    excl = ((openFun & 3) == 0);
+    trunc = ((openFun & 3) == 2);	/* truncate it */
 	openMode = (p->parmsp[1] & 0x7);
-        openAction = 0;			/* tracks what we did */
+    openAction = 0;			/* tracks what we did */
 
-        attributes = p->parmsp[3];
-        dosTime = p->parmsp[4] | (p->parmsp[5] << 16);
+    attributes = p->parmsp[3];
+    dosTime = p->parmsp[4] | (p->parmsp[5] << 16);
         
 	/* compute initial mode bits based on read-only flag in attributes */
-        initialModeBits = 0666;
-        if (attributes & 1) initialModeBits &= ~0222;
+    initialModeBits = 0666;
+    if (attributes & 1) initialModeBits &= ~0222;
         
-        pathp = (char *) (&p->parmsp[14]);
+    pathp = (char *) (&p->parmsp[14]);
         
-        outp = smb_GetTran2ResponsePacket(vcp, p, op, 40, 0);
+    outp = smb_GetTran2ResponsePacket(vcp, p, op, 40, 0);
 
 	spacep = cm_GetSpace();
-        smb_StripLastComponent(spacep->data, &lastNamep, pathp);
+    smb_StripLastComponent(spacep->data, &lastNamep, pathp);
 
 	if (lastNamep && strcmp(lastNamep, SMB_IOCTL_FILENAME) == 0) {
 		/* special case magic file name for receiving IOCTL requests
-                 * (since IOCTL calls themselves aren't getting through).
-                 */
-	        fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-                smb_SetupIoctlFid(fidp, spacep);
+         * (since IOCTL calls themselves aren't getting through).
+         */
+        fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
+        smb_SetupIoctlFid(fidp, spacep);
 
-	        /* copy out remainder of the parms */
+        /* copy out remainder of the parms */
 		parmSlot = 0;
 		outp->parmsp[parmSlot] = fidp->fid; parmSlot++;
 		if (extraInfo) {
-		        outp->parmsp[parmSlot] = /* attrs */ 0; parmSlot++;
-	                outp->parmsp[parmSlot] = 0; parmSlot++;	/* mod time */
-	                outp->parmsp[parmSlot] = 0; parmSlot++;
-	                outp->parmsp[parmSlot] = 0; parmSlot++;	/* len */
-	                outp->parmsp[parmSlot] = 0x7fff; parmSlot++;
-	                outp->parmsp[parmSlot] = openMode; parmSlot++;
-	                outp->parmsp[parmSlot] = 0; parmSlot++; /* file type 0 ==> normal file or dir */
-	                outp->parmsp[parmSlot] = 0; parmSlot++; /* IPC junk */
-		}
+            outp->parmsp[parmSlot] = /* attrs */ 0; parmSlot++;
+            outp->parmsp[parmSlot] = 0; parmSlot++;	/* mod time */
+            outp->parmsp[parmSlot] = 0; parmSlot++;
+            outp->parmsp[parmSlot] = 0; parmSlot++;	/* len */
+            outp->parmsp[parmSlot] = 0x7fff; parmSlot++;
+            outp->parmsp[parmSlot] = openMode; parmSlot++;
+            outp->parmsp[parmSlot] = 0; parmSlot++; /* file type 0 ==> normal file or dir */
+            outp->parmsp[parmSlot] = 0; parmSlot++; /* IPC junk */
+		}   
 		/* and the final "always present" stuff */
-	        outp->parmsp[parmSlot] = /* openAction found existing file */ 1; parmSlot++;
+        outp->parmsp[parmSlot] = /* openAction found existing file */ 1; parmSlot++;
 		/* next write out the "unique" ID */
 		outp->parmsp[parmSlot] = 0x1234; parmSlot++;
 		outp->parmsp[parmSlot] = 0x5678; parmSlot++;
-	        outp->parmsp[parmSlot] = 0; parmSlot++;
+        outp->parmsp[parmSlot] = 0; parmSlot++;
 		if (returnEALength) {
 			outp->parmsp[parmSlot] = 0; parmSlot++;
 			outp->parmsp[parmSlot] = 0; parmSlot++;
-                }
+        }
                 
-                outp->totalData = 0;
-                outp->totalParms = parmSlot * 2;
+        outp->totalData = 0;
+        outp->totalParms = parmSlot * 2;
                 
-                smb_SendTran2Packet(vcp, outp, op);
+        smb_SendTran2Packet(vcp, outp, op);
                 
-                smb_FreeTran2Packet(outp);
+        smb_FreeTran2Packet(outp);
 
 		/* and clean up fid reference */
-                smb_ReleaseFID(fidp);
-                return 0;
-        }
+        smb_ReleaseFID(fidp);
+        return 0;
+    }
 
 #ifdef DEBUG_VERBOSE
 	{
@@ -742,120 +742,120 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 
 	dscp = NULL;
 	code = cm_NameI(cm_rootSCachep, pathp,
-			CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-			userp, tidPathp, &req, &scp);
+                    CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                    userp, tidPathp, &req, &scp);
 	if (code != 0) {
 		code = cm_NameI(cm_rootSCachep, spacep->data,
-				CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-			userp, tidPathp, &req, &dscp);
+                        CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                        userp, tidPathp, &req, &dscp);
 		cm_FreeSpace(spacep);
 
-	        if (code) {
-	                cm_ReleaseUser(userp);
+        if (code) {
+            cm_ReleaseUser(userp);
 			smb_FreeTran2Packet(outp);
-	                return code;
-	        }
+            return code;
+        }
         
-	        /* otherwise, scp points to the parent directory.  Do a lookup,
+        /* otherwise, scp points to the parent directory.  Do a lookup,
 		 * and truncate the file if we find it, otherwise we create the
 		 * file.
-	         */
-	        if (!lastNamep) lastNamep = pathp;
-	        else lastNamep++;
-	        code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD, userp,
-				 &req, &scp);
-	        if (code && code != CM_ERROR_NOSUCHFILE) {
+         */
+        if (!lastNamep) lastNamep = pathp;
+        else lastNamep++;
+        code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD, userp,
+                         &req, &scp);
+        if (code && code != CM_ERROR_NOSUCHFILE) {
 			cm_ReleaseSCache(dscp);
-	                cm_ReleaseUser(userp);
+            cm_ReleaseUser(userp);
 			smb_FreeTran2Packet(outp);
-	                return code;
-	        }
+            return code;
+        }
 	}
-        else {
-        	cm_FreeSpace(spacep);
+    else {
+        cm_FreeSpace(spacep);
 	}
         
-        /* if we get here, if code is 0, the file exists and is represented by
-         * scp.  Otherwise, we have to create it.
-         */
+    /* if we get here, if code is 0, the file exists and is represented by
+     * scp.  Otherwise, we have to create it.
+     */
 	if (code == 0) {
-        	code = cm_CheckOpen(scp, openMode, trunc, userp, &req);
-                if (code) {
-                        if (dscp) cm_ReleaseSCache(dscp);
-                        cm_ReleaseSCache(scp);
-                        cm_ReleaseUser(userp);
+        code = cm_CheckOpen(scp, openMode, trunc, userp, &req);
+        if (code) {
+            if (dscp) cm_ReleaseSCache(dscp);
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
 			smb_FreeTran2Packet(outp);
-                        return code;
-                }
+            return code;
+        }
 
 		if (excl) {
 			/* oops, file shouldn't be there */
-                        if (dscp) cm_ReleaseSCache(dscp);
-                        cm_ReleaseSCache(scp);
-                        cm_ReleaseUser(userp);
+            if (dscp) cm_ReleaseSCache(dscp);
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
 			smb_FreeTran2Packet(outp);
-                        return CM_ERROR_EXISTS;
-                }
+            return CM_ERROR_EXISTS;
+        }
 
 		if (trunc) {
 			setAttr.mask = CM_ATTRMASK_LENGTH;
-	                setAttr.length.LowPart = 0;
-	                setAttr.length.HighPart = 0;
+            setAttr.length.LowPart = 0;
+            setAttr.length.HighPart = 0;
 			code = cm_SetAttr(scp, &setAttr, userp, &req);
-                        openAction = 3;	/* truncated existing file */
-		}
-                else openAction = 1;	/* found existing file */
-        }
+            openAction = 3;	/* truncated existing file */
+		}   
+        else openAction = 1;	/* found existing file */
+    }
 	else if (!(openFun & SMB_ATTR_DIRECTORY)) {
 		/* don't create if not found */
-                if (dscp) cm_ReleaseSCache(dscp);
-                osi_assert(scp == NULL);
-                cm_ReleaseUser(userp);
+        if (dscp) cm_ReleaseSCache(dscp);
+        osi_assert(scp == NULL);
+        cm_ReleaseUser(userp);
 		smb_FreeTran2Packet(outp);
-                return CM_ERROR_NOSUCHFILE;
-        }
-        else {
+        return CM_ERROR_NOSUCHFILE;
+    }
+    else {
 		osi_assert(dscp != NULL && scp == NULL);
 		openAction = 2;	/* created file */
 		setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
 		smb_UnixTimeFromSearchTime(&setAttr.clientModTime, dosTime);
-                code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
-				 &req);
+        code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
+                         &req);
 		if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
 			smb_NotifyChange(FILE_ACTION_ADDED,
-					 FILE_NOTIFY_CHANGE_FILE_NAME,
-					 dscp, lastNamep, NULL, TRUE);
-                if (!excl && code == CM_ERROR_EXISTS) {
+                             FILE_NOTIFY_CHANGE_FILE_NAME,  
+                             dscp, lastNamep, NULL, TRUE);
+        if (!excl && code == CM_ERROR_EXISTS) {
 			/* not an exclusive create, and someone else tried
 			 * creating it already, then we open it anyway.  We
 			 * don't bother retrying after this, since if this next
 			 * fails, that means that the file was deleted after we
 			 * started this call.
-                         */
-                        code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD,
-					 userp, &req, &scp);
-                        if (code == 0) {
-                        	if (trunc) {
+             */
+            code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD,
+                             userp, &req, &scp);
+            if (code == 0) {
+                if (trunc) {
 					setAttr.mask = CM_ATTRMASK_LENGTH;
-	                                setAttr.length.LowPart = 0;
-	                                setAttr.length.HighPart = 0;
-	                                code = cm_SetAttr(scp, &setAttr, userp,
-							  &req);
-	                        }
+                    setAttr.length.LowPart = 0;
+                    setAttr.length.HighPart = 0;
+                    code = cm_SetAttr(scp, &setAttr, userp,
+                                      &req);
+                }   
 			}	/* lookup succeeded */
-                }
         }
+    }
         
 	/* we don't need this any longer */
 	if (dscp) cm_ReleaseSCache(dscp);
 
-        if (code) {
+    if (code) {
 		/* something went wrong creating or truncating the file */
-                if (scp) cm_ReleaseSCache(scp);
-                cm_ReleaseUser(userp);
+        if (scp) cm_ReleaseSCache(scp);
+        cm_ReleaseUser(userp);
 		smb_FreeTran2Packet(outp);
-                return code;
-        }
+        return code;
+    }
         
 	/* make sure we're about to open a file */
 	if (scp->fileType != CM_SCACHETYPE_FILE) {
@@ -865,61 +865,61 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 		return CM_ERROR_ISDIR;
 	}
 
-        /* now all we have to do is open the file itself */
-        fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-        osi_assert(fidp);
+    /* now all we have to do is open the file itself */
+    fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
+    osi_assert(fidp);
 	
 	/* save a pointer to the vnode */
-        fidp->scp = scp;
+    fidp->scp = scp;
         
 	/* compute open mode */
-        if (openMode != 1) fidp->flags |= SMB_FID_OPENREAD;
-        if (openMode == 1 || openMode == 2)
-        	fidp->flags |= SMB_FID_OPENWRITE;
+    if (openMode != 1) fidp->flags |= SMB_FID_OPENREAD;
+    if (openMode == 1 || openMode == 2)
+        fidp->flags |= SMB_FID_OPENWRITE;
 
 	smb_ReleaseFID(fidp);
         
 	cm_Open(scp, 0, userp);
 
-        /* copy out remainder of the parms */
+    /* copy out remainder of the parms */
 	parmSlot = 0;
 	outp->parmsp[parmSlot] = fidp->fid; parmSlot++;
 	lock_ObtainMutex(&scp->mx);
 	if (extraInfo) {
-	        outp->parmsp[parmSlot] = smb_Attributes(scp); parmSlot++;
+        outp->parmsp[parmSlot] = smb_Attributes(scp); parmSlot++;
 		smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
-                outp->parmsp[parmSlot] = (unsigned short)(dosTime & 0xffff); parmSlot++;
-                outp->parmsp[parmSlot] = (unsigned short)((dosTime>>16) & 0xffff); parmSlot++;
-                outp->parmsp[parmSlot] = (unsigned short) (scp->length.LowPart & 0xffff);
-                	parmSlot++;
-                outp->parmsp[parmSlot] = (unsigned short) ((scp->length.LowPart >> 16) & 0xffff);
-                	parmSlot++;
-                outp->parmsp[parmSlot] = openMode; parmSlot++;
-                outp->parmsp[parmSlot] = 0; parmSlot++; /* file type 0 ==> normal file or dir */
-                outp->parmsp[parmSlot] = 0; parmSlot++; /* IPC junk */
-	}
+        outp->parmsp[parmSlot] = (unsigned short)(dosTime & 0xffff); parmSlot++;
+        outp->parmsp[parmSlot] = (unsigned short)((dosTime>>16) & 0xffff); parmSlot++;
+        outp->parmsp[parmSlot] = (unsigned short) (scp->length.LowPart & 0xffff);
+        parmSlot++;
+        outp->parmsp[parmSlot] = (unsigned short) ((scp->length.LowPart >> 16) & 0xffff);
+        parmSlot++;
+        outp->parmsp[parmSlot] = openMode; parmSlot++;
+        outp->parmsp[parmSlot] = 0; parmSlot++; /* file type 0 ==> normal file or dir */
+        outp->parmsp[parmSlot] = 0; parmSlot++; /* IPC junk */
+	}   
 	/* and the final "always present" stuff */
-        outp->parmsp[parmSlot] = openAction; parmSlot++;
+    outp->parmsp[parmSlot] = openAction; parmSlot++;
 	/* next write out the "unique" ID */
 	outp->parmsp[parmSlot] = (unsigned short) (scp->fid.vnode & 0xffff); parmSlot++;
 	outp->parmsp[parmSlot] = (unsigned short) (scp->fid.volume & 0xffff); parmSlot++;
-        outp->parmsp[parmSlot] = 0; parmSlot++;
-        if (returnEALength) {
+    outp->parmsp[parmSlot] = 0; parmSlot++;
+    if (returnEALength) {
 		outp->parmsp[parmSlot] = 0; parmSlot++;
 		outp->parmsp[parmSlot] = 0; parmSlot++;
-        }
+    }
 	lock_ReleaseMutex(&scp->mx);
 	outp->totalData = 0;		/* total # of data bytes */
-        outp->totalParms = parmSlot * 2;	/* shorts are two bytes */
+    outp->totalParms = parmSlot * 2;	/* shorts are two bytes */
 
 	smb_SendTran2Packet(vcp, outp, op);
         
-        smb_FreeTran2Packet(outp);
+    smb_FreeTran2Packet(outp);
 
-        cm_ReleaseUser(userp);
-        /* leave scp held since we put it in fidp->scp */
-        return 0;
-}
+    cm_ReleaseUser(userp);
+    /* leave scp held since we put it in fidp->scp */
+    return 0;
+}   
 
 long smb_ReceiveTran2FindFirst(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
@@ -1315,7 +1315,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	int nbytesRequired;
 	unsigned short fid;
 	cm_user_t *userp;
-        smb_fid_t *fidp;
+    smb_fid_t *fidp;
 	cm_scache_t *scp;
 	char *op;
 	long code;
@@ -1323,8 +1323,8 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
 	cm_InitReq(&req);
 
-        fid = p->parmsp[0];
-        fidp = smb_FindFID(vcp, fid, 0);
+    fid = p->parmsp[0];
+    fidp = smb_FindFID(vcp, fid, 0);
 
 	if (fidp == NULL) {
 		smb_SendTran2Error(vcp, p, opx, CM_ERROR_BADFD);
@@ -1338,8 +1338,9 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	else if (infoLevel == 0x104) nbytesRequired = 6;
 	else {
 		osi_Log2(afsd_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
-			 p->opcode, infoLevel);
+                 p->opcode, infoLevel);
 		smb_SendTran2Error(vcp, p, opx, CM_ERROR_INVAL);
+        smb_ReleaseFID(fidp);
 		return 0;
 	}
 	osi_Log2(afsd_logp, "T2 QFileInfo type 0x%x fid %d", infoLevel, fid);
@@ -1362,7 +1363,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	scp = fidp->scp;
 	lock_ObtainMutex(&scp->mx);
 	code = cm_SyncOp(scp, NULL, userp, &req, 0,
-			 CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 	if (code) goto done;
 
 	/* now we have the status in the cache entry, and everything is locked.
@@ -1430,7 +1431,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 
 	cm_InitReq(&req);
 
-        fid = p->parmsp[0];
+    fid = p->parmsp[0];
 	fidp = smb_FindFID(vcp, fid, 0);
 
 	if (fidp == NULL) {
@@ -1443,16 +1444,19 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 		osi_Log2(afsd_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
 			 p->opcode, infoLevel);
 		smb_SendTran2Error(vcp, p, op, CM_ERROR_INVAL);
+        smb_ReleaseFID(fidp);
 		return 0;
 	}
 
 	if (infoLevel == 0x102 && !(fidp->flags & SMB_FID_OPENDELETE)) {
 		smb_SendTran2Error(vcp, p, op, CM_ERROR_NOACCESS);
+        smb_ReleaseFID(fidp);
 		return 0;
 	}
 	if ((infoLevel == 0x103 || infoLevel == 0x104)
 	    && !(fidp->flags & SMB_FID_OPENWRITE)) {
 		smb_SendTran2Error(vcp, p, op, CM_ERROR_NOACCESS);
+        smb_ReleaseFID(fidp);
 		return 0;
 	}
 
@@ -1482,8 +1486,8 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 		 */
 		lock_ObtainMutex(&scp->mx);
 		code = cm_SyncOp(scp, NULL, userp, &req, 0,
-				 CM_SCACHESYNC_GETSTATUS
-				 | CM_SCACHESYNC_NEEDCALLBACK);
+                         CM_SCACHESYNC_GETSTATUS
+                         | CM_SCACHESYNC_NEEDCALLBACK);
 		if (code) {
 			lock_ReleaseMutex(&scp->mx);
 			goto done;
@@ -2447,88 +2451,88 @@ nextEntry:
         	smb_SendTran2Packet(vcp, outp, opx);
 	}
 	smb_FreeTran2Packet(outp);
-        smb_ReleaseDirSearch(dsp);
-        cm_ReleaseSCache(scp);
-        cm_ReleaseUser(userp);
-        return 0;
+    smb_ReleaseDirSearch(dsp);
+    cm_ReleaseSCache(scp);
+    cm_ReleaseUser(userp);
+    return 0;
 }
 
 long smb_ReceiveV3FindClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-        int dirHandle;
-        smb_dirSearch_t *dsp;
+    int dirHandle;
+    smb_dirSearch_t *dsp;
 
-        dirHandle = smb_GetSMBParm(inp, 0);
+    dirHandle = smb_GetSMBParm(inp, 0);
 	
-        osi_Log1(afsd_logp, "SMB3 find close handle %d", dirHandle);
+    osi_Log1(afsd_logp, "SMB3 find close handle %d", dirHandle);
 
-        dsp = smb_FindDirSearch(dirHandle);
+    dsp = smb_FindDirSearch(dirHandle);
         
-        if (!dsp)
+    if (!dsp)
 		return CM_ERROR_BADFD;
 	
-        /* otherwise, we have an FD to destroy */
-        smb_DeleteDirSearch(dsp);
-        smb_ReleaseDirSearch(dsp);
+    /* otherwise, we have an FD to destroy */
+    smb_DeleteDirSearch(dsp);
+    smb_ReleaseDirSearch(dsp);
         
 	/* and return results */
 	smb_SetSMBDataLength(outp, 0);
 
-        return 0;
+    return 0;
 }
 
 long smb_ReceiveV3FindNotifyClose(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	smb_SetSMBDataLength(outp, 0);
-        return 0;
+    return 0;
 }
 
 long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	char *pathp;
-        long code;
+    long code;
 	cm_space_t *spacep;
-        int excl;
-        cm_user_t *userp;
-        cm_scache_t *dscp;		/* dir we're dealing with */
-        cm_scache_t *scp;		/* file we're creating */
-        cm_attr_t setAttr;
-        int initialModeBits;
-        smb_fid_t *fidp;
-        int attributes;
-        char *lastNamep;
-        long dosTime;
-        int openFun;
-        int trunc;
-        int openMode;
-        int extraInfo;
-        int openAction;
-        int parmSlot;			/* which parm we're dealing with */
+    int excl;
+    cm_user_t *userp;
+    cm_scache_t *dscp;		/* dir we're dealing with */
+    cm_scache_t *scp;		/* file we're creating */
+    cm_attr_t setAttr;
+    int initialModeBits;
+    smb_fid_t *fidp;
+    int attributes;
+    char *lastNamep;
+    long dosTime;
+    int openFun;
+    int trunc;
+    int openMode;
+    int extraInfo;
+    int openAction;
+    int parmSlot;			/* which parm we're dealing with */
 	char *tidPathp;
 	cm_req_t req;
 
 	cm_InitReq(&req);
 
-        scp = NULL;
+    scp = NULL;
         
 	extraInfo = (smb_GetSMBParm(inp, 2) & 1);	/* return extra info */
 	openFun = smb_GetSMBParm(inp, 8);	/* open function */
-        excl = ((openFun & 3) == 0);
-        trunc = ((openFun & 3) == 2);		/* truncate it */
+    excl = ((openFun & 3) == 0);
+    trunc = ((openFun & 3) == 2);		/* truncate it */
 	openMode = (smb_GetSMBParm(inp, 3) & 0x7);
-        openAction = 0;			/* tracks what we did */
+    openAction = 0;			/* tracks what we did */
 
-        attributes = smb_GetSMBParm(inp, 5);
-        dosTime = smb_GetSMBParm(inp, 6) | (smb_GetSMBParm(inp, 7) << 16);
-        
+    attributes = smb_GetSMBParm(inp, 5);
+    dosTime = smb_GetSMBParm(inp, 6) | (smb_GetSMBParm(inp, 7) << 16);
+
 	/* compute initial mode bits based on read-only flag in attributes */
-        initialModeBits = 0666;
-        if (attributes & 1) initialModeBits &= ~0222;
+    initialModeBits = 0666;
+    if (attributes & 1) initialModeBits &= ~0222;
         
-        pathp = smb_GetSMBData(inp, NULL);
+    pathp = smb_GetSMBData(inp, NULL);
 
 	spacep = inp->spacep;
-        smb_StripLastComponent(spacep->data, &lastNamep, pathp);
+    smb_StripLastComponent(spacep->data, &lastNamep, pathp);
 
 	if (lastNamep && strcmp(lastNamep, SMB_IOCTL_FILENAME) == 0) {
 		/* special case magic file name for receiving IOCTL requests
@@ -2538,37 +2542,37 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         osi_Log0(afsd_logp, "IOCTL Open");
 #endif
 
-	        fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-                smb_SetupIoctlFid(fidp, spacep);
+        fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
+        smb_SetupIoctlFid(fidp, spacep);
 
 		/* set inp->fid so that later read calls in same msg can find fid */
-	        inp->fid = fidp->fid;
+        inp->fid = fidp->fid;
         
-	        /* copy out remainder of the parms */
+        /* copy out remainder of the parms */
 		parmSlot = 2;
 		smb_SetSMBParm(outp, parmSlot, fidp->fid); parmSlot++;
 		if (extraInfo) {
-		        smb_SetSMBParm(outp, parmSlot, /* attrs */ 0); parmSlot++;
-	                smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* mod time */
-	                smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;
-	                smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* len */
-	                smb_SetSMBParm(outp, parmSlot, 0x7fff); parmSlot++;
-	                smb_SetSMBParm(outp, parmSlot, openMode); parmSlot++;
-	                smb_SetSMBParm(outp, parmSlot, 0); parmSlot++; /* file type 0 ==> normal file or dir */
-	                smb_SetSMBParm(outp, parmSlot, 0); parmSlot++; /* IPC junk */
-		}
+            smb_SetSMBParm(outp, parmSlot, /* attrs */ 0); parmSlot++;
+            smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* mod time */
+            smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;
+            smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;	/* len */
+            smb_SetSMBParm(outp, parmSlot, 0x7fff); parmSlot++;
+            smb_SetSMBParm(outp, parmSlot, openMode); parmSlot++;
+            smb_SetSMBParm(outp, parmSlot, 0); parmSlot++; /* file type 0 ==> normal file or dir */
+            smb_SetSMBParm(outp, parmSlot, 0); parmSlot++; /* IPC junk */
+		}   
 		/* and the final "always present" stuff */
-	        smb_SetSMBParm(outp, parmSlot, /* openAction found existing file */ 1); parmSlot++;
+        smb_SetSMBParm(outp, parmSlot, /* openAction found existing file */ 1); parmSlot++;
 		/* next write out the "unique" ID */
 		smb_SetSMBParm(outp, parmSlot, 0x1234); parmSlot++;
 		smb_SetSMBParm(outp, parmSlot, 0x5678); parmSlot++;
-	        smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;
-	        smb_SetSMBDataLength(outp, 0);
+        smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;
+        smb_SetSMBDataLength(outp, 0);
 
 		/* and clean up fid reference */
-                smb_ReleaseFID(fidp);
-                return 0;
-        }
+        smb_ReleaseFID(fidp);
+        return 0;
+    }
 
 #ifdef DEBUG_VERBOSE
     {
@@ -2584,113 +2588,112 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	dscp = NULL;
 	tidPathp = smb_GetTIDPath(vcp, ((smb_t *)inp)->tid);
 	code = cm_NameI(cm_rootSCachep, pathp,
-		CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-		userp, tidPathp, &req, &scp);
+                    CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                    userp, tidPathp, &req, &scp);
 	if (code != 0) {
 		code = cm_NameI(cm_rootSCachep, spacep->data,
-				CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-				userp, tidPathp, &req, &dscp);
+                        CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                        userp, tidPathp, &req, &dscp);
 
-	        if (code) {
-	                cm_ReleaseUser(userp);
-	                return code;
-	        }
+        if (code) {
+            cm_ReleaseUser(userp);
+            return code;
+        }
         
-	        /* otherwise, scp points to the parent directory.  Do a lookup,
-		 * and truncate the file if we find it, otherwise we create the
-		 * file.
-	         */
-	        if (!lastNamep) lastNamep = pathp;
-	        else lastNamep++;
-	        code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD, userp,
-				 &req, &scp);
-	        if (code && code != CM_ERROR_NOSUCHFILE) {
+        /* otherwise, scp points to the parent directory.  Do a lookup,
+         * and truncate the file if we find it, otherwise we create the
+         * file.
+         */
+        if (!lastNamep) lastNamep = pathp;
+        else lastNamep++;
+        code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD, userp,
+                          &req, &scp);
+        if (code && code != CM_ERROR_NOSUCHFILE) {
 			cm_ReleaseSCache(dscp);
-	                cm_ReleaseUser(userp);
-	                return code;
-	        }
+            cm_ReleaseUser(userp);
+            return code;
+        }
 	}
         
-        /* if we get here, if code is 0, the file exists and is represented by
-         * scp.  Otherwise, we have to create it.  The dir may be represented
-         * by dscp, or we may have found the file directly.  If code is non-zero,
-         * scp is NULL.
-         */
+    /* if we get here, if code is 0, the file exists and is represented by
+     * scp.  Otherwise, we have to create it.  The dir may be represented
+     * by dscp, or we may have found the file directly.  If code is non-zero,
+     * scp is NULL.
+     */
 	if (code == 0) {
-        	code = cm_CheckOpen(scp, openMode, trunc, userp, &req);
-                if (code) {
-                        if (dscp) cm_ReleaseSCache(dscp);
-                        cm_ReleaseSCache(scp);
-                        cm_ReleaseUser(userp);
-                        return code;
-                }
+        code = cm_CheckOpen(scp, openMode, trunc, userp, &req);
+        if (code) {
+            if (dscp) cm_ReleaseSCache(dscp);
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
+            return code;
+        }
 
 		if (excl) {
 			/* oops, file shouldn't be there */
-                        if (dscp) cm_ReleaseSCache(dscp);
-                        cm_ReleaseSCache(scp);
-                        cm_ReleaseUser(userp);
-                        return CM_ERROR_EXISTS;
-                }
+            if (dscp) cm_ReleaseSCache(dscp);
+            cm_ReleaseSCache(scp);
+            cm_ReleaseUser(userp);
+            return CM_ERROR_EXISTS;
+        }
 
 		if (trunc) {
 			setAttr.mask = CM_ATTRMASK_LENGTH;
-	                setAttr.length.LowPart = 0;
-	                setAttr.length.HighPart = 0;
+            setAttr.length.LowPart = 0;
+            setAttr.length.HighPart = 0;
 			code = cm_SetAttr(scp, &setAttr, userp, &req);
-                        openAction = 3;	/* truncated existing file */
+            openAction = 3;	/* truncated existing file */
 		}
-                else openAction = 1;	/* found existing file */
-        }
+        else openAction = 1;	/* found existing file */
+    }
 	else if (!(openFun & 0x10)) {
 		/* don't create if not found */
-                if (dscp) cm_ReleaseSCache(dscp);
-                cm_ReleaseUser(userp);
-                return CM_ERROR_NOSUCHFILE;
-        }
-        else {
+        if (dscp) cm_ReleaseSCache(dscp);
+        cm_ReleaseUser(userp);
+        return CM_ERROR_NOSUCHFILE;
+    }
+    else {
 		osi_assert(dscp != NULL);
 		osi_Log1(afsd_logp, "smb_ReceiveV3OpenX creating file %s",
-				osi_LogSaveString(afsd_logp, lastNamep));
+                 osi_LogSaveString(afsd_logp, lastNamep));
 		openAction = 2;	/* created file */
 		setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
 		smb_UnixTimeFromDosUTime(&setAttr.clientModTime, dosTime);
-                code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
-				 &req);
+        code = cm_Create(dscp, lastNamep, 0, &setAttr, &scp, userp,
+                         &req);
 		if (code == 0 && (dscp->flags & CM_SCACHEFLAG_ANYWATCH))
 			smb_NotifyChange(FILE_ACTION_ADDED,
-					 FILE_NOTIFY_CHANGE_FILE_NAME,
-					 dscp, lastNamep, NULL, TRUE);
-                if (!excl && code == CM_ERROR_EXISTS) {
+                             FILE_NOTIFY_CHANGE_FILE_NAME,
+                             dscp, lastNamep, NULL, TRUE);
+        if (!excl && code == CM_ERROR_EXISTS) {
 			/* not an exclusive create, and someone else tried
 			 * creating it already, then we open it anyway.  We
 			 * don't bother retrying after this, since if this next
 			 * fails, that means that the file was deleted after we
 			 * started this call.
-                         */
-                        code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD,
-					 userp, &req, &scp);
-                        if (code == 0) {
-                        	if (trunc) {
+             */
+            code = cm_Lookup(dscp, lastNamep, CM_FLAG_CASEFOLD,
+                             userp, &req, &scp);
+            if (code == 0) {
+                if (trunc) {
 					setAttr.mask = CM_ATTRMASK_LENGTH;
-	                                setAttr.length.LowPart = 0;
-	                                setAttr.length.HighPart = 0;
-	                                code = cm_SetAttr(scp, &setAttr, userp,
-							  &req);
-	                        }
+                    setAttr.length.LowPart = 0;
+                    setAttr.length.HighPart = 0;
+                    code = cm_SetAttr(scp, &setAttr, userp, &req);
+                }   
 			}	/* lookup succeeded */
-                }
         }
+    }
         
 	/* we don't need this any longer */
 	if (dscp) cm_ReleaseSCache(dscp);
 
-        if (code) {
+    if (code) {
 		/* something went wrong creating or truncating the file */
-                if (scp) cm_ReleaseSCache(scp);
-                cm_ReleaseUser(userp);
-                return code;
-        }
+        if (scp) cm_ReleaseSCache(scp);
+        cm_ReleaseUser(userp);
+        return code;
+    }
         
 	/* make sure we're about to open a file */
 	if (scp->fileType != CM_SCACHETYPE_FILE) {
@@ -2699,55 +2702,55 @@ long smb_ReceiveV3OpenX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 		return CM_ERROR_ISDIR;
 	}
 
-        /* now all we have to do is open the file itself */
-        fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
-        osi_assert(fidp);
+    /* now all we have to do is open the file itself */
+    fidp = smb_FindFID(vcp, 0, SMB_FLAG_CREATE);
+    osi_assert(fidp);
 	
 	/* save a pointer to the vnode */
-        fidp->scp = scp;
+    fidp->scp = scp;
         
 	/* compute open mode */
-        if (openMode != 1) fidp->flags |= SMB_FID_OPENREAD;
-        if (openMode == 1 || openMode == 2)
-        	fidp->flags |= SMB_FID_OPENWRITE;
+    if (openMode != 1) fidp->flags |= SMB_FID_OPENREAD;
+    if (openMode == 1 || openMode == 2)
+        fidp->flags |= SMB_FID_OPENWRITE;
 
 	smb_ReleaseFID(fidp);
         
 	cm_Open(scp, 0, userp);
 
 	/* set inp->fid so that later read calls in same msg can find fid */
-        inp->fid = fidp->fid;
+    inp->fid = fidp->fid;
         
-        /* copy out remainder of the parms */
+    /* copy out remainder of the parms */
 	parmSlot = 2;
 	smb_SetSMBParm(outp, parmSlot, fidp->fid); parmSlot++;
 	lock_ObtainMutex(&scp->mx);
 	if (extraInfo) {
-	        smb_SetSMBParm(outp, parmSlot, smb_Attributes(scp)); parmSlot++;
+        smb_SetSMBParm(outp, parmSlot, smb_Attributes(scp)); parmSlot++;
 		smb_DosUTimeFromUnixTime(&dosTime, scp->clientModTime);
-                smb_SetSMBParm(outp, parmSlot, dosTime & 0xffff); parmSlot++;
-                smb_SetSMBParm(outp, parmSlot, (dosTime>>16) & 0xffff); parmSlot++;
-                smb_SetSMBParm(outp, parmSlot, scp->length.LowPart & 0xffff); parmSlot++;
-                smb_SetSMBParm(outp, parmSlot, (scp->length.LowPart >> 16) & 0xffff); parmSlot++;
-                smb_SetSMBParm(outp, parmSlot, openMode); parmSlot++;
-                smb_SetSMBParm(outp, parmSlot, 0); parmSlot++; /* file type 0 ==> normal file or dir */
-                smb_SetSMBParm(outp, parmSlot, 0); parmSlot++; /* IPC junk */
+        smb_SetSMBParm(outp, parmSlot, dosTime & 0xffff); parmSlot++;
+        smb_SetSMBParm(outp, parmSlot, (dosTime>>16) & 0xffff); parmSlot++;
+        smb_SetSMBParm(outp, parmSlot, scp->length.LowPart & 0xffff); parmSlot++;
+        smb_SetSMBParm(outp, parmSlot, (scp->length.LowPart >> 16) & 0xffff); parmSlot++;
+        smb_SetSMBParm(outp, parmSlot, openMode); parmSlot++;
+        smb_SetSMBParm(outp, parmSlot, 0); parmSlot++; /* file type 0 ==> normal file or dir */
+        smb_SetSMBParm(outp, parmSlot, 0); parmSlot++; /* IPC junk */
 	}
 	/* and the final "always present" stuff */
-        smb_SetSMBParm(outp, parmSlot, openAction); parmSlot++;
+    smb_SetSMBParm(outp, parmSlot, openAction); parmSlot++;
 	/* next write out the "unique" ID */
 	smb_SetSMBParm(outp, parmSlot, scp->fid.vnode & 0xffff); parmSlot++;
 	smb_SetSMBParm(outp, parmSlot, scp->fid.volume & 0xffff); parmSlot++;
-        smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;
+    smb_SetSMBParm(outp, parmSlot, 0); parmSlot++;
 	lock_ReleaseMutex(&scp->mx);
-        smb_SetSMBDataLength(outp, 0);
+    smb_SetSMBDataLength(outp, 0);
 
 	osi_Log1(afsd_logp, "SMB OpenX opening fid %d", fidp->fid);
 
-        cm_ReleaseUser(userp);
-        /* leave scp held since we put it in fidp->scp */
-        return 0;
-}
+    cm_ReleaseUser(userp);
+    /* leave scp held since we put it in fidp->scp */
+    return 0;
+}   
 
 long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
@@ -2776,7 +2779,7 @@ long smb_ReceiveV3LockingX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 		return CM_ERROR_BADFD;
 	}
 	/* set inp->fid so that later read calls in same msg can find fid */
-        inp->fid = fid;
+    inp->fid = fid;
 
 	userp = smb_GetUser(vcp, inp);
 
@@ -2882,57 +2885,57 @@ doneSync:
 long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	unsigned short fid;
-        smb_fid_t *fidp;
-        cm_scache_t *scp;
-        long code;
-        long searchTime;
-        cm_user_t *userp;
+    smb_fid_t *fidp;
+    cm_scache_t *scp;
+    long code;
+    long searchTime;
+    cm_user_t *userp;
 	cm_req_t req;
 
 	cm_InitReq(&req);
 
-        fid = smb_GetSMBParm(inp, 0);
-        fid = smb_ChainFID(fid, inp);
+    fid = smb_GetSMBParm(inp, 0);
+    fid = smb_ChainFID(fid, inp);
         
-        fidp = smb_FindFID(vcp, fid, 0);
-        if (!fidp || (fidp->flags & SMB_FID_IOCTL)) {
+    fidp = smb_FindFID(vcp, fid, 0);
+    if (!fidp || (fidp->flags & SMB_FID_IOCTL)) {
 		return CM_ERROR_BADFD;
-        }
+    }
         
-        userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUser(vcp, inp);
         
-        scp = fidp->scp;
+    scp = fidp->scp;
         
-        /* otherwise, stat the file */
+    /* otherwise, stat the file */
 	lock_ObtainMutex(&scp->mx);
-        code = cm_SyncOp(scp, NULL, userp, &req, 0,
-        	CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 	if (code) goto done;
 
 	/* decode times.  We need a search time, but the response to this
-         * call provides the date first, not the time, as returned in the
-         * searchTime variable.  So we take the high-order bits first.
-         */
+     * call provides the date first, not the time, as returned in the
+     * searchTime variable.  So we take the high-order bits first.
+     */
 	smb_SearchTimeFromUnixTime(&searchTime, scp->clientModTime);
-        smb_SetSMBParm(outp, 0, (searchTime >> 16) & 0xffff);	/* ctime */
-        smb_SetSMBParm(outp, 1, searchTime & 0xffff);
-        smb_SetSMBParm(outp, 2, (searchTime >> 16) & 0xffff);	/* atime */
-        smb_SetSMBParm(outp, 3, searchTime & 0xffff);
-        smb_SetSMBParm(outp, 4, (searchTime >> 16) & 0xffff);	/* mtime */
-        smb_SetSMBParm(outp, 5, searchTime & 0xffff);
-        
-        /* now handle file size and allocation size */
-        smb_SetSMBParm(outp, 6, scp->length.LowPart & 0xffff);		/* file size */
-        smb_SetSMBParm(outp, 7, (scp->length.LowPart >> 16) & 0xffff);
-        smb_SetSMBParm(outp, 8, scp->length.LowPart & 0xffff);		/* alloc size */
-        smb_SetSMBParm(outp, 9, (scp->length.LowPart >> 16) & 0xffff);
-        
+    smb_SetSMBParm(outp, 0, (searchTime >> 16) & 0xffff);	/* ctime */
+    smb_SetSMBParm(outp, 1, searchTime & 0xffff);
+    smb_SetSMBParm(outp, 2, (searchTime >> 16) & 0xffff);	/* atime */
+    smb_SetSMBParm(outp, 3, searchTime & 0xffff);
+    smb_SetSMBParm(outp, 4, (searchTime >> 16) & 0xffff);	/* mtime */
+    smb_SetSMBParm(outp, 5, searchTime & 0xffff);
+
+    /* now handle file size and allocation size */
+    smb_SetSMBParm(outp, 6, scp->length.LowPart & 0xffff);		/* file size */
+    smb_SetSMBParm(outp, 7, (scp->length.LowPart >> 16) & 0xffff);
+    smb_SetSMBParm(outp, 8, scp->length.LowPart & 0xffff);		/* alloc size */
+    smb_SetSMBParm(outp, 9, (scp->length.LowPart >> 16) & 0xffff);
+
 	/* file attribute */
-        smb_SetSMBParm(outp, 10, smb_Attributes(scp));
+    smb_SetSMBParm(outp, 10, smb_Attributes(scp));
         
-        /* and finalize stuff */
-        smb_SetSMBDataLength(outp, 0);
-        code = 0;
+    /* and finalize stuff */
+    smb_SetSMBDataLength(outp, 0);
+    code = 0;
 
 done:
 	lock_ReleaseMutex(&scp->mx);
@@ -2944,49 +2947,49 @@ done:
 long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	unsigned short fid;
-        smb_fid_t *fidp;
-        cm_scache_t *scp;
-        long code;
+    smb_fid_t *fidp;
+    cm_scache_t *scp;
+    long code;
 	long searchTime;
-        long unixTime;
-        cm_user_t *userp;
-        cm_attr_t attrs;
+    long unixTime;
+    cm_user_t *userp;
+    cm_attr_t attrs;
 	cm_req_t req;
 
 	cm_InitReq(&req);
 
-        fid = smb_GetSMBParm(inp, 0);
-        fid = smb_ChainFID(fid, inp);
+    fid = smb_GetSMBParm(inp, 0);
+    fid = smb_ChainFID(fid, inp);
         
-        fidp = smb_FindFID(vcp, fid, 0);
-        if (!fidp || (fidp->flags & SMB_FID_IOCTL)) {
+    fidp = smb_FindFID(vcp, fid, 0);
+    if (!fidp || (fidp->flags & SMB_FID_IOCTL)) {
 		return CM_ERROR_BADFD;
-        }
+    }
         
-        userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUser(vcp, inp);
         
-        scp = fidp->scp;
+    scp = fidp->scp;
         
 	/* now prepare to call cm_setattr.  This message only sets various times,
-         * and AFS only implements mtime, and we'll set the mtime if that's
-         * requested.  The others we'll ignore.
-         */
+     * and AFS only implements mtime, and we'll set the mtime if that's
+     * requested.  The others we'll ignore.
+     */
 	searchTime = smb_GetSMBParm(inp, 5) | (smb_GetSMBParm(inp, 6) << 16);
         
-        if (searchTime != 0) {
+    if (searchTime != 0) {
 		smb_UnixTimeFromSearchTime(&unixTime, searchTime);
 
-            if ( unixTime != -1 ) {
-                attrs.mask = CM_ATTRMASK_CLIENTMODTIME;
-                attrs.clientModTime = unixTime;
-                code = cm_SetAttr(scp, &attrs, userp, &req);
+        if ( unixTime != -1 ) {
+            attrs.mask = CM_ATTRMASK_CLIENTMODTIME;
+            attrs.clientModTime = unixTime;
+            code = cm_SetAttr(scp, &attrs, userp, &req);
 
-                osi_Log1(afsd_logp, "SMB receive V3SetAttributes [fid=%ld]", fid);
-            } else {
-                osi_Log1(afsd_logp, "**smb_UnixTimeFromSearchTime failed searchTime=%ld", searchTime);
-            }
+            osi_Log1(afsd_logp, "SMB receive V3SetAttributes [fid=%ld]", fid);
+        } else {
+            osi_Log1(afsd_logp, "**smb_UnixTimeFromSearchTime failed searchTime=%ld", searchTime);
         }
-        else code = 0;
+    }
+    else code = 0;
 
 	cm_ReleaseUser(userp);
 	smb_ReleaseFID(fidp);
@@ -2997,59 +3000,59 @@ long smb_ReceiveV3SetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
 long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
 	osi_hyper_t offset;
-        long count, finalCount;
-        unsigned short fd;
-        smb_fid_t *fidp;
-        long code;
-        cm_user_t *userp;
-        char *op;
+    long count, finalCount;
+    unsigned short fd;
+    smb_fid_t *fidp;
+    long code;
+    cm_user_t *userp;
+    char *op;
         
-        fd = smb_GetSMBParm(inp, 2);
-        count = smb_GetSMBParm(inp, 5);
-        offset.HighPart = 0;	/* too bad */
-        offset.LowPart = smb_GetSMBParm(inp, 3) | (smb_GetSMBParm(inp, 4) << 16);
-        
-        osi_Log3(afsd_logp, "smb_ReceiveV3Read fd %d, off 0x%x, size 0x%x",
-        	fd, offset.LowPart, count);
+    fd = smb_GetSMBParm(inp, 2);
+    count = smb_GetSMBParm(inp, 5);
+    offset.HighPart = 0;	/* too bad */
+    offset.LowPart = smb_GetSMBParm(inp, 3) | (smb_GetSMBParm(inp, 4) << 16);
+
+    osi_Log3(afsd_logp, "smb_ReceiveV3Read fd %d, off 0x%x, size 0x%x",
+             fd, offset.LowPart, count);
         
 	fd = smb_ChainFID(fd, inp);
-        fidp = smb_FindFID(vcp, fd, 0);
-        if (!fidp) {
+    fidp = smb_FindFID(vcp, fd, 0);
+    if (!fidp) {
 		return CM_ERROR_BADFD;
-        }
+    }
 	/* set inp->fid so that later read calls in same msg can find fid */
-        inp->fid = fd;
+    inp->fid = fd;
 
-        if (fidp->flags & SMB_FID_IOCTL) {
+    if (fidp->flags & SMB_FID_IOCTL) {
 		return smb_IoctlV3Read(fidp, vcp, inp, outp);
-        }
+    }
         
 	userp = smb_GetUser(vcp, inp);
 
 	/* 0 and 1 are reserved for request chaining, were setup by our caller,
-         * and will be further filled in after we return.
-         */
-        smb_SetSMBParm(outp, 2, 0);	/* remaining bytes, for pipes */
-        smb_SetSMBParm(outp, 3, 0);	/* resvd */
-        smb_SetSMBParm(outp, 4, 0);	/* resvd */
+     * and will be further filled in after we return.
+     */
+    smb_SetSMBParm(outp, 2, 0);	/* remaining bytes, for pipes */
+    smb_SetSMBParm(outp, 3, 0);	/* resvd */
+    smb_SetSMBParm(outp, 4, 0);	/* resvd */
 	smb_SetSMBParm(outp, 5, count);	/* # of bytes we're going to read */
-        /* fill in #6 when we have all the parameters' space reserved */
-        smb_SetSMBParm(outp, 7, 0);	/* resv'd */
-        smb_SetSMBParm(outp, 8, 0);	/* resv'd */
-        smb_SetSMBParm(outp, 9, 0);	/* resv'd */
-        smb_SetSMBParm(outp, 10, 0);	/* resv'd */
+    /* fill in #6 when we have all the parameters' space reserved */
+    smb_SetSMBParm(outp, 7, 0);	/* resv'd */
+    smb_SetSMBParm(outp, 8, 0);	/* resv'd */
+    smb_SetSMBParm(outp, 9, 0);	/* resv'd */
+    smb_SetSMBParm(outp, 10, 0);	/* resv'd */
 	smb_SetSMBParm(outp, 11, 0);	/* reserved */
 
 	/* get op ptr after putting in the parms, since otherwise we don't
-         * know where the data really is.
-         */
-        op = smb_GetSMBData(outp, NULL);
+     * know where the data really is.
+     */
+    op = smb_GetSMBData(outp, NULL);
         
-        /* now fill in offset from start of SMB header to first data byte (to op) */
-        smb_SetSMBParm(outp, 6, ((int) (op - outp->data)));
+    /* now fill in offset from start of SMB header to first data byte (to op) */
+    smb_SetSMBParm(outp, 6, ((int) (op - outp->data)));
 
 	/* set the packet data length the count of the # of bytes */
-        smb_SetSMBDataLength(outp, count);
+    smb_SetSMBDataLength(outp, count);
 
 #ifndef DJGPP
 	code = smb_ReadData(fidp, &offset, count, op, userp, &finalCount);
@@ -3061,11 +3064,11 @@ long smb_ReceiveV3ReadX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	smb_SetSMBParm(outp, 5, finalCount);
 	smb_SetSMBDataLength(outp, finalCount);
 
-        smb_ReleaseFID(fidp);
+    smb_ReleaseFID(fidp);
 
-        cm_ReleaseUser(userp);
-        return code;
-}
+    cm_ReleaseUser(userp);
+    return code;
+}   
         
 /*
  * Values for createDisp, copied from NTDDK.H
@@ -3271,7 +3274,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                              CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
                              userp, tidPathp, &req, &dscp);
 
-            if(code && 
+            if (code && 
                 (tp = strrchr(spacep->data,'\\')) &&
                 (createDisp == 2) &&
                 (realDirFlag == 1)) {
@@ -3279,7 +3282,7 @@ long smb_ReceiveNTCreateX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                 treeCreate = TRUE;
                 treeStartp = realPathp + (tp - spacep->data);
 
-                if(*tp && !smb_IsLegalFilename(tp)) {
+                if (*tp && !smb_IsLegalFilename(tp)) {
                     if(baseFid != 0) smb_ReleaseFID(baseFidp);
                     cm_ReleaseUser(userp);
                     free(realPathp);
@@ -3719,14 +3722,14 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 		tidPathp = NULL;
 	}
 
-        /* compute open mode */
-        fidflags = 0;
-        if (desiredAccess & DELETE)
-                fidflags |= SMB_FID_OPENDELETE;
-        if (desiredAccess & AFS_ACCESS_READ)
-                fidflags |= SMB_FID_OPENREAD;
-        if (desiredAccess & AFS_ACCESS_WRITE)
-                fidflags |= SMB_FID_OPENWRITE;
+    /* compute open mode */
+    fidflags = 0;
+    if (desiredAccess & DELETE)
+        fidflags |= SMB_FID_OPENDELETE;
+    if (desiredAccess & AFS_ACCESS_READ)
+        fidflags |= SMB_FID_OPENREAD;
+    if (desiredAccess & AFS_ACCESS_WRITE)
+        fidflags |= SMB_FID_OPENWRITE;
 
 	dscp = NULL;
 	code = 0;
@@ -3741,7 +3744,10 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 				userp, tidPathp, &req, &dscp);
 		cm_FreeSpace(spacep);
 
-		if (baseFid != 0) smb_ReleaseFID(baseFidp);
+		if (baseFid != 0) {
+           smb_ReleaseFID(baseFidp);
+           baseFidp = 0;
+        }
 
 		if (code) {
 			cm_ReleaseUser(userp);
@@ -3752,13 +3758,13 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 		if (!lastNamep) lastNamep = realPathp;
 		else lastNamep++;
 
-                if (!smb_IsLegalFilename(lastNamep))
-                        return CM_ERROR_BADNTFILENAME;
+        if (!smb_IsLegalFilename(lastNamep))
+            return CM_ERROR_BADNTFILENAME;
 
 		if (!foundscp) {
 			code = cm_Lookup(dscp, lastNamep,
-					 CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-					 userp, &req, &scp);
+                             CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                             userp, &req, &scp);
 			if (code && code != CM_ERROR_NOSUCHFILE) {
 				cm_ReleaseSCache(dscp);
 				cm_ReleaseUser(userp);
@@ -3768,7 +3774,10 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 		}
 	}
 	else {
-		if (baseFid != 0) smb_ReleaseFID(baseFidp);
+		if (baseFid != 0) {
+            smb_ReleaseFID(baseFidp);
+            baseFidp = 0;
+        }
 		cm_FreeSpace(spacep);
 	}
 
@@ -3817,7 +3826,7 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 	else if (realDirFlag == 0 || realDirFlag == -1) {
 		osi_assert(dscp != NULL);
 		osi_Log1(afsd_logp, "smb_ReceiveNTTranCreate creating file %s",
-				osi_LogSaveString(afsd_logp, lastNamep));
+                 osi_LogSaveString(afsd_logp, lastNamep));
 		openAction = 2;		/* created file */
 		setAttr.mask = CM_ATTRMASK_CLIENTMODTIME;
 		setAttr.clientModTime = time(NULL);
@@ -3905,13 +3914,13 @@ long smb_ReceiveNTTranCreate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *out
 
 	fidp->flags = fidflags;
 
-        /* save parent dir and pathname for deletion or change notification */
-        if (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE)) {
-                fidp->flags |= SMB_FID_NTOPEN;
-                fidp->NTopen_dscp = dscp;
-                cm_HoldSCache(dscp);
-                fidp->NTopen_pathp = strdup(lastNamep);
-        }
+    /* save parent dir and pathname for deletion or change notification */
+    if (fidflags & (SMB_FID_OPENDELETE | SMB_FID_OPENWRITE)) {
+        fidp->flags |= SMB_FID_NTOPEN;
+        fidp->NTopen_dscp = dscp;
+        cm_HoldSCache(dscp);
+        fidp->NTopen_pathp = strdup(lastNamep);
+    }
 	fidp->NTopen_wholepathp = realPathp;
 
 	/* we don't need this any longer */
@@ -4061,29 +4070,19 @@ long smb_ReceiveNTTranNotifyChange(smb_vc_t *vcp, smb_packet_t *inp,
 	smb_Directory_Watches = savedPacketp;
 	lock_ReleaseMutex(&smb_Dir_Watch_Lock);
 
-	fidp = smb_FindFID(vcp, fid, 0);
-                
-    if (fidp) {
-        osi_Log4(afsd_logp, "Request for NotifyChange filter 0x%x fid %d wtree %d file %s",
-                 filter, fid, watchtree, osi_LogSaveString(afsd_logp, fidp->NTopen_wholepathp));
+    osi_Log4(afsd_logp, "Request for NotifyChange filter 0x%x fid %d wtree %d file %s",
+             filter, fid, watchtree, osi_LogSaveString(afsd_logp, fidp->NTopen_wholepathp));
 
-        scp = fidp->scp;
-        lock_ObtainMutex(&scp->mx);
-        if (watchtree)
-            scp->flags |= CM_SCACHEFLAG_WATCHEDSUBTREE;
-        else
-            scp->flags |= CM_SCACHEFLAG_WATCHED;
-        lock_ReleaseMutex(&scp->mx);
-        smb_ReleaseFID(fidp);
-    }
-    else 
-    {
-        /* nothing - just a warning to main log file ... */
-        afsi_log("Warning: cannot find fidp vcp = 0x%X, fid = %d", vcp, fid);
-    }
+    scp = fidp->scp;
+    lock_ObtainMutex(&scp->mx);
+    if (watchtree)
+        scp->flags |= CM_SCACHEFLAG_WATCHEDSUBTREE;
+    else
+        scp->flags |= CM_SCACHEFLAG_WATCHED;
+    lock_ReleaseMutex(&scp->mx);
+    smb_ReleaseFID(fidp);
 
 	outp->flags |= SMB_PACKETFLAG_NOSEND;
-
 	return 0;
 }
 
