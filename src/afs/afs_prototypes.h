@@ -548,6 +548,7 @@ extern int afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
 /* afs_server.c */
 extern afs_rwlock_t afs_xsrvAddr;
 extern afs_rwlock_t afs_xserver;
+extern afs_rwlock_t afs_icl_lock;
 extern struct srvAddr *afs_srvAddrs[NSERVERS];
 extern struct server *afs_servers[NSERVERS];
 extern int afs_totalServers;
