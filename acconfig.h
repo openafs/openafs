@@ -47,6 +47,7 @@ static /**/const char *const rcsid[] = { (char *)rcsid, "\100(#)" msg }
 #undef STRUCT_INODE_HAS_I_TRUNCATE_SEM
 #undef STRUCT_TASK_STRUCT_HAS_PARENT
 #undef STRUCT_TASK_STRUCT_HAS_REAL_PARENT
+#undef STRUCT_TASK_STRUCT_HAS_SIG
 #undef STRUCT_TASK_STRUCT_HAS_SIGHAND
 #undef STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
 #undef ssize_t

@@ -169,6 +169,7 @@ case $system in
 		 LINUX_RECALC_SIGPENDING_ARG_TYPE
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_REAL_PARENT
+		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIG
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGHAND
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK
 		 LINUX_WHICH_MODULES
@@ -257,6 +258,9 @@ case $system in
 		 fi
 		 if test "x$ac_cv_linux_sched_struct_task_struct_has_sighand" = "xyes"; then 
 		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIGHAND, 1, [define if your struct task_struct has sighand])
+		 fi
+		 if test "x$ac_cv_linux_sched_struct_task_struct_has_sig" = "xyes"; then 
+		  AC_DEFINE(STRUCT_TASK_STRUCT_HAS_SIG, 1, [define if your struct task_struct has sig])
 		 fi
                 :
 		fi

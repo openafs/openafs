@@ -298,6 +298,21 @@ AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_real_parent)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
+AC_DEFUN(LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIG, [
+AC_MSG_CHECKING(for sig in struct task_struct)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_sched_struct_task_struct_has_sig,
+[
+AC_TRY_COMPILE(
+[#include <linux/sched.h>],
+[struct task_struct _tsk;
+printf("%d\n", _tsk.sig);],
+ac_cv_linux_sched_struct_task_struct_has_sig=yes,
+ac_cv_linux_sched_struct_task_struct_has_sig=no)])
+AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_sig)
+CPPFLAGS="$save_CPPFLAGS"])
+
 AC_DEFUN(LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK, [
 AC_MSG_CHECKING(for sigmask_lock in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
