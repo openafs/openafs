@@ -35,6 +35,28 @@
  */
 #define CV_INIT(cv,a,b,c)
 #define CV_DESTROY(cv)
+#ifdef AFS_DARWIN14_ENV
+#define CV_WAIT(cv, lck)    { \
+	                        int isGlockOwner = ISAFS_GLOCK(); \
+	                        if (isGlockOwner) AFS_GUNLOCK();  \
+	                        MUTEX_EXIT(lck);        \
+	                        sleep(cv, PVFS);                \
+	                        if (isGlockOwner) AFS_GLOCK();  \
+	                        MUTEX_ENTER(lck); \
+	                    }
+
+#define CV_TIMEDWAIT(cv,lck,t)  { \
+	                        int isGlockOwner = ISAFS_GLOCK(); \
+	                        if (isGlockOwner) AFS_GUNLOCK();  \
+	                        MUTEX_EXIT(lck);        \
+	                        tsleep(cv,PVFS, "afs_CV_TIMEDWAIT",t);  \
+	                        if (isGlockOwner) AFS_GLOCK();  \
+	                        MUTEX_ENTER(lck);       \
+                            }
+
+#define CV_SIGNAL(cv)           wakeup_one(cv)
+#define CV_BROADCAST(cv)        wakeup(cv)
+#else
 #define CV_WAIT(cv, lck)    { \
 	                        int isGlockOwner = ISAFS_GLOCK(); \
 	                        if (isGlockOwner) AFS_GUNLOCK();  \
@@ -58,6 +80,7 @@
 
 #define CV_SIGNAL(cv)           thread_wakeup_one((event_t)(cv))
 #define CV_BROADCAST(cv)        thread_wakeup((event_t)(cv))
+#endif
 
 typedef struct {
     struct lock__bsd__ lock;

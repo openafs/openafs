@@ -301,36 +301,38 @@ void osi_VM_NukePages(struct vnode *vp, off_t offset, off_t size)
 #endif
 }
 
-int osi_VM_Setup(struct vcache *avc)
-{
-   int error;
-   struct vnode *vp=AFSTOV(avc);
-
-   if (UBCISVALID(vp) && (avc->states & CStatd)) {
-      if (!UBCINFOEXISTS(vp) && !ISSET(vp->v_flag, VTERMINATE)) {
-         osi_vnhold(avc,0);  
-         AFS_GUNLOCK();
-         if ((error=ubc_info_init(&avc->v)))  {
-             AFS_GLOCK();
-             AFS_RELE(avc);
-             return error;
-         }
+int osi_VM_Setup(struct vcache *avc, int force) {
+    int error;
+    struct vnode *vp=AFSTOV(avc);
+  
+    if (UBCISVALID(vp) && ((avc->states & CStatd) || force)) {
+        if (!UBCINFOEXISTS(vp) && !ISSET(vp->v_flag, VTERMINATE)) {
+	    osi_vnhold(avc,0);  
+	    avc->states  |= CUBCinit;
+	    AFS_GUNLOCK();
+	    if ((error=ubc_info_init(&avc->v)))  {
+		AFS_GLOCK();
+		avc->states  &= ~CUBCinit;
+		AFS_RELE(avc);
+		return error;
+	    }
 #ifndef AFS_DARWIN14_ENV
-         simple_lock(&avc->v.v_interlock);
-         if (!ubc_issetflags(&avc->v, UI_HASOBJREF))
+	    simple_lock(&avc->v.v_interlock);
+	    if (!ubc_issetflags(&avc->v, UI_HASOBJREF))
 #ifdef AFS_DARWIN13_ENV
-            if (ubc_getobject(&avc->v, (UBC_NOREACTIVATE|UBC_HOLDOBJECT)))
-                   panic("VM_Setup: null object");
+		if (ubc_getobject(&avc->v, (UBC_NOREACTIVATE|UBC_HOLDOBJECT)))
+		    panic("VM_Setup: null object");
 #else
             (void)_ubc_getobject(&avc->v, 1); /* return value not used */
 #endif
-         simple_unlock(&avc->v.v_interlock);
+	    simple_unlock(&avc->v.v_interlock);
 #endif
-         AFS_GLOCK();
-         AFS_RELE(avc);
-      }
-      if (UBCINFOEXISTS(&avc->v))
-          ubc_setsize(&avc->v, avc->m.Length);
-   }
-   return 0;
+	    AFS_GLOCK();
+	    avc->states  &= ~CUBCinit;
+	    AFS_RELE(avc);
+	}
+	if (UBCINFOEXISTS(&avc->v))
+	    ubc_setsize(&avc->v, avc->m.Length);
+    }
+    return 0;
 }

@@ -364,7 +364,11 @@ void rxi_InitPeerParams(register struct rx_peer *pp)
       pp->ifMTU = RX_REMOTE_PACKET_SIZE;
     }
 #else /* AFS_USERSPACE_IP_ADDR */
+#ifdef AFS_DARWIN60_ENV
+    struct ifaddr *ifad = (struct ifaddr *) 0;
+#else
     struct in_ifaddr *ifad = (struct in_ifaddr *) 0;
+#endif
     struct ifnet *ifn;
 
     /* At some time we need to iterate through rxi_FindIfnet() to find the
@@ -638,7 +642,25 @@ int rxi_GetIFInfo(void)
     }
    return different;
 }
+#ifdef AFS_DARWIN60_ENV
+/* Returns ifnet which best matches address */
+struct ifnet *
+rxi_FindIfnet(addr, pifad) 
+     afs_uint32 addr;
+     struct ifaddr **pifad;
+{
+  struct sockaddr_in s;
 
+  if (numMyNetAddrs == 0)
+    (void) rxi_GetIFInfo();
+
+  s.sin_family=AF_INET;
+  s.sin_addr.s_addr=addr;
+  *pifad=ifa_ifwithnet((struct sockaddr *)&s);
+ done:
+  return (*pifad ?  (*pifad)->ifa_ifp : NULL );
+}
+#else
 /* Returns ifnet which best matches address */
 struct ifnet *rxi_FindIfnet(afs_uint32 addr, struct in_ifaddr **pifad) 
 {
@@ -700,6 +722,7 @@ struct ifnet *rxi_FindIfnet(afs_uint32 addr, struct in_ifaddr **pifad)
  done:
   return (*pifad ?  (*pifad)->ia_ifp : NULL );
 }
+#endif
 #endif /* else AFS_USERSPACE_IP_ADDR */
 #endif /* !SUN5 && !SGI62 */
 

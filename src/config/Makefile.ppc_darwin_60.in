@@ -1,0 +1,43 @@
+# Keep macros within each section in sorted order for clean diff displays.
+#
+# AFS_OSTYPE used to indicate suffixes and os specific subdirectories.
+AFS_OSTYPE = DARWIN
+#
+#
+# compilation and link editor flags
+XCFLAGS=-no-cpp-precomp
+#MT_CFLAGS=-D_REENTRANT -DAFS_PTHREAD_ENV ${XCFLAGS}
+#MT_CC=cc
+KROOT=
+KINCLUDES=-I$(KROOT)/System/Library/Frameworks/Kernel.framework/Headers
+#SHARE_LDFLAGS =
+LWP_OPTMZ=-O2
+OPTMZ=-O2
+DBG=-g
+REGEX_OBJ=regex.o
+
+
+#
+# libraries
+XLIBS=@LIB_AFSDB@
+TXLIBS=-lncurses
+#MTLIBS=
+#XLIBELFA=
+#XLIBKVM=
+#
+SHLIB_SUFFIX=
+SHLIB_CFLAGS=
+#
+# programs
+AR=ar
+AS=as
+CC=cc
+CP=cp
+INSTALL=${TOP_SRCDIR}/pinstall/pinstall
+LEX=lex -l
+LD= ld
+LORDER = lorder
+MV=mv
+RANLIB=ranlib
+RM=rm
+STRIP= strip

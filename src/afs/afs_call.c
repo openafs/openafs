@@ -21,7 +21,7 @@ RCSID("$Header$");
 #ifdef AFS_SGI62_ENV
 #include "../h/hashing.h"
 #endif
-#if !defined(AFS_HPUX110_ENV)
+#if !defined(AFS_HPUX110_ENV) && !defined(AFS_DARWIN60_ENV)
 #include "netinet/in_var.h"
 #endif
 #endif /* !defined(UKERNEL) */
@@ -622,11 +622,19 @@ long parm, parm2, parm3, parm4, parm5, parm6;
       }
 #else /* AFS_USERSPACE_IP_ADDR */
       struct ifnet *tifnp;
+#ifdef AFS_DARWIN60_ENV
+      struct ifaddr *tifadp = (struct ifaddr *) 0;
+#else
       struct in_ifaddr *tifadp = (struct in_ifaddr *) 0;
+#endif
       extern struct ifnet *rxi_FindIfnet();
       tifnp = rxi_FindIfnet(parm2, &tifadp);  /* make iterative */
       if (tifnp && tifadp) {
+#ifdef AFS_DARWIN60_ENV
+	 mask = ((struct sockaddr_in *)tifadp->ifa_netmask)->sin_addr.s_addr;
+#else
 	 mask = tifadp->ia_subnetmask;
+#endif
       } else {
 	 code = -1;
       }

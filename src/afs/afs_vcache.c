@@ -1559,6 +1559,9 @@ void afs_ProcessFS(register struct vcache *avc, register struct AFSFetchStatus *
 #ifdef AFS_LINUX22_ENV
     vcache2inode(avc);    /* Set the inode attr cache */
 #endif
+#ifdef AFS_DARWIN_ENV
+   osi_VM_Setup(avc,1);
+#endif
 
 } /*afs_ProcessFS*/
 
@@ -1689,7 +1692,7 @@ loop:
 #endif
 	ReleaseWriteLock(&tvc->lock);
 #ifdef AFS_DARWIN_ENV
-        osi_VM_Setup(tvc);
+        osi_VM_Setup(tvc,0);
 #endif
 	return tvc;
     }
@@ -1754,9 +1757,6 @@ loop:
     }
 
     ReleaseWriteLock(&tvc->lock);
-#ifdef AFS_DARWIN_ENV
-    osi_VM_Setup(avc);
-#endif
     return tvc;
 
 } /*afs_GetVCache*/
@@ -1917,9 +1917,6 @@ struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     afs_ProcessFS(tvc, &OutStatus, areq);
 
     ReleaseWriteLock(&tvc->lock);
-#ifdef AFS_DARWIN_ENV
-    osi_VM_Setup(tvc);
-#endif
     return tvc;
 
 }
@@ -2474,7 +2471,7 @@ struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 *retry, afs_int32
 #endif
 #ifdef AFS_DARWIN_ENV
     if (tvc)
-        osi_VM_Setup(tvc);
+        osi_VM_Setup(tvc, 0);
 #endif
     return tvc;
 } /*afs_FindVCache*/

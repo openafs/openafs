@@ -224,6 +224,12 @@ int afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
        return code;
     }
 #endif
+#if defined(AFS_DARWIN_ENV)
+    if (avc->states & CUBCinit) {
+       code = afs_CopyOutAttrs(avc, attrs);
+       return code;
+    }
+#endif
 
 #if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
     afs_BozonLock(&avc->pvnLock, avc);

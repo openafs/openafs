@@ -30,12 +30,20 @@ SMALL="-stat 300 -dcache 100 -daemons 2 -volumes 50"
 if [ -f $AFSDOPT ]; then
     OPTIONS=`cat $AFSDOPT`
 else
-    OPTIONS=$MEDIUM
+    OPTIONS="$MEDIUM -fakestat"
+fi
+
+if [ -x /usr/sbin/kmodstat ]; then
+   KMODSTAT=/usr/sbin/kmodstat
+else
+  if [ -x /usr/sbin/kextstat ]; then
+     KMODSTAT=/usr/sbin/kextstat
+fi
 fi
 
 # Need the commands ps, awk, kill, sleep
 PATH=${PATH}${PATH:+:}/sbin:/bin:/usr/bin
-if kmodstat | grep -q openafs ; then
+if $KMODSTAT | grep -q openafs ; then
 :
 else
 if [ -d $VICEETC/afs.kext ]; then
@@ -46,7 +54,7 @@ else
 	exit 1
 fi
 fi
-if kmodstat | grep -q openafs ; then
+if $KMODSTAT | grep -q openafs ; then
 :
 else
 	echo "AFS kernel extensions failed to initialize. Skipping AFS startup."

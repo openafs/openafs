@@ -101,10 +101,8 @@ afs_int32 tapeblocks;      /* Number of 16K tape datablocks in buffer (!CONF_XBS
    else \
      sprintf(dumpname, "%s (DumpId %u)", name, dbDumpId);
 
-#if defined(AFS_NT40_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_SUN4_ENV)
-localtime_r(t, tm)
-   time_t *t;
-   struct tm *tm;
+#if defined(AFS_NT40_ENV) || (defined(AFS_DARWIN_ENV) && !defined(AFS_DARWIN60_ENV)) || defined(AFS_SUN4_ENV)
+int localtime_r(time_t *t, struct tm *tm)
 {
    memcpy(tm, localtime(t), sizeof(struct tm));
 }
@@ -148,11 +146,8 @@ afs_int32 tc_KEndMargin;
 char  *bufferBlock;
 
 /* compute the absolute expiration date */
-afs_int32
-calcExpirationDate(expType, expDate, createTime)
-     afs_int32 expType;
-     afs_int32 expDate;
-     afs_int32 createTime;
+afs_int32 calcExpirationDate(afs_int32 expType, afs_int32 expDate, 
+			     afs_int32 createTime)
 {
     struct ktime_date kd;
     afs_int32  Add_RelDate_to_Time();
@@ -180,8 +175,7 @@ calcExpirationDate(expType, expDate, createTime)
 afs_int32                 curr_bserver = 0;
 struct rx_connection  *curr_fromconn = (struct rx_connection *)0;
 
-struct rx_connection *Bind(server)
-  afs_int32 server;
+struct rx_connection *Bind(afs_int32 server)
 {
   if (curr_fromconn) {
       if (curr_bserver == server)                             /* Keep connection if have it */
@@ -211,9 +205,7 @@ struct rx_connection *Bind(server)
 #define BIGCHUNK 102400
 
 afs_int32
-dumpVolume(curDump, dparamsPtr)
-    struct tc_dumpDesc *curDump;
-    struct dumpRock *dparamsPtr;
+dumpVolume(struct tc_dumpDesc *curDump, struct dumpRock *dparamsPtr)
 {
     struct butm_tapeInfo *tapeInfoPtr = dparamsPtr->tapeInfoPtr;
     struct dumpNode      *nodePtr     = dparamsPtr->node;
@@ -502,9 +494,7 @@ abort_exit:
 }
 
 afs_int32
-xbsaDumpVolume(curDump, dparamsPtr)
-    struct tc_dumpDesc *curDump;
-    struct dumpRock *dparamsPtr;
+xbsaDumpVolume(struct tc_dumpDesc *curDump, struct dumpRock *dparamsPtr)
 {
 #ifdef xbsa
     struct butm_tapeInfo *tapeInfoPtr = dparamsPtr->tapeInfoPtr;
@@ -801,10 +791,7 @@ abort_exit:
  *		be done for user aborts?
  */
 
-afs_int32
-dumpPass(dparamsPtr, passNumber)
-    struct dumpRock *dparamsPtr;
-    int passNumber;
+afs_int32 dumpPass(struct dumpRock *dparamsPtr, int passNumber)
 {
     struct dumpNode      *nodePtr     = dparamsPtr->node;
     struct butm_tapeInfo *tapeInfoPtr = dparamsPtr->tapeInfoPtr;
@@ -1090,8 +1077,7 @@ error_exit:
     return(code);
 }
 
-Dumper(nodePtr)
-    struct dumpNode *nodePtr;
+int Dumper(struct dumpNode *nodePtr)
 {
     struct dumpRock      dparams;
     struct butm_tapeInfo tapeInfo;
@@ -1354,11 +1340,7 @@ Dumper(nodePtr)
  *	character typed by user, one of r, o or a
  */
 
-char
-retryPrompt(volumeName, volumeId, taskId)
-     char *volumeName;
-     afs_int32 volumeId;
-     afs_uint32 taskId;
+char retryPrompt(char *volumeName, afs_int32 volumeId, afs_uint32 taskId)
 {
     afs_int32 start;
     char ch;
@@ -1416,8 +1398,7 @@ again:
 }
 
 /* For testing: it prints the tape label */
-printTapeLabel(tl)
-   struct butm_tapeLabel *tl;
+int printTapeLabel(struct butm_tapeLabel *tl)
 {
    printf("Tape Label\n");
    printf("   structVersion  = %d\n", tl->structVersion);
@@ -1437,8 +1418,7 @@ printTapeLabel(tl)
  *      Create a tape structure to be satisfy the backup database
  *      even though we don't really use a tape with XBSA.
  */
-getXBSATape(dparamsPtr)
-    struct dumpRock *dparamsPtr;
+int getXBSATape(struct dumpRock *dparamsPtr)
 {
     struct dumpNode       *nodePtr      =  dparamsPtr->node;
     struct butm_tapeInfo  *tapeInfoPtr  =  dparamsPtr->tapeInfoPtr;
@@ -1476,10 +1456,8 @@ getXBSATape(dparamsPtr)
  *		1 - prompt regardless
  */
 
-getDumpTape(dparamsPtr, interactiveFlag, append)
-     struct dumpRock *dparamsPtr;
-     int interactiveFlag;
-     afs_int32 append;
+int getDumpTape(struct dumpRock *dparamsPtr, int interactiveFlag,
+		afs_int32 append)
 {
     struct dumpNode       *nodePtr         =  dparamsPtr->node;
     struct butm_tapeInfo  *tapeInfoPtr     =  dparamsPtr->tapeInfoPtr;
@@ -1822,10 +1800,8 @@ error_exit:
     return(code);
 }
 
-makeVolumeHeader(vhptr, dparamsPtr, fragmentNumber)
-     struct volumeHeader *vhptr;
-     struct dumpRock *dparamsPtr;
-     int fragmentNumber;
+int makeVolumeHeader(struct volumeHeader *vhptr, struct dumpRock *dparamsPtr,
+		     int fragmentNumber)
 {
     struct dumpNode *nodePtr = dparamsPtr->node;
     struct tc_dumpDesc *curDump;
@@ -1855,8 +1831,8 @@ error_exit:
     return (code);
 }
 
-volumeHeader_hton(hostPtr, netPtr)
-     struct volumeHeader *hostPtr, *netPtr;
+int volumeHeader_hton(struct volumeHeader *hostPtr, 
+		      struct volumeHeader *netPtr)
 {
     struct volumeHeader volHdr;
 
@@ -1883,9 +1859,7 @@ volumeHeader_hton(hostPtr, netPtr)
 
 /* database related routines */
 
-afs_int32
-createDump(dparamsPtr)
-     struct dumpRock *dparamsPtr;
+afs_int32 createDump(struct dumpRock *dparamsPtr)
 {
     struct dumpNode *nodePtr = dparamsPtr->node;
     struct budb_dumpEntry *dumpPtr;
@@ -1946,7 +1920,8 @@ createDump(dparamsPtr)
  * server as the original server and go back to it each time we pass 0
  * as the server.
  */
-afs_int32 InitToServer(afs_int32 taskId, struct butx_transactionInfo *butxInfoP, char *server)
+afs_int32 InitToServer(afs_int32 taskId, 
+		       struct butx_transactionInfo *butxInfoP, char *server)
 {
    static char origserver[BSA_MAX_DESC];
    static int  init=0;
@@ -2000,8 +1975,7 @@ afs_int32 InitToServer(afs_int32 taskId, struct butx_transactionInfo *butxInfoP,
 /* DeleteDump
  *
  */
-DeleteDump(ptr) 
-   struct deleteDumpIf *ptr;
+int DeleteDump(struct deleteDumpIf *ptr)
 {
     afs_int32 taskId;
     afs_int32 rc, code=0;

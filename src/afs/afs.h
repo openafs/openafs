@@ -513,7 +513,11 @@ struct SimpleLocks {
 #ifdef	AFS_OSF_ENV
 #define CWired		0x00000800	/* OSF hack only */
 #else
+#ifdef AFS_DARWIN_ENV
+#define CUBCinit        0x00000800
+#else
 #define CWRITE_IGN	0x00000800	/* Next OS hack only */
+#endif
 #endif
 #define CUnique		0x00001000	/* vc's uniquifier - latest unifiquier for fid */
 #define CForeign	0x00002000	/* this is a non-afs vcache */
@@ -1036,7 +1040,7 @@ extern struct brequest afs_brs[NBRS];		/* request structures */
 #else
 #ifdef AFS_DARWIN_ENV
 #define afs_VerifyVCache(avc, areq)  \
-  (((avc)->states & CStatd) ? (osi_VM_Setup(avc), 0) : \
+  (((avc)->states & CStatd) ? (osi_VM_Setup(avc, 0), 0) : \
    afs_VerifyVCache2((avc),areq))
 #else
 #define afs_VerifyVCache(avc, areq)  \
