@@ -27,6 +27,8 @@ extern cred_t *crdup(cred_t *cr);
 extern cred_t *crref(void);
 extern void crset(cred_t *cr);
 
+/* osi_file.c */
+extern afs_rwlock_t afs_xosi;
 
 /* osi_misc.c */
 extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,

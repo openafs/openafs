@@ -200,7 +200,7 @@ int init_module(void)
 #endif
 #endif
 
-
+    RWLOCK_INIT(&afs_xosi, "afs_xosi");
 
     /* obtain PAGE_OFFSET value */
     afs_linux_page_offset = get_page_offset();
