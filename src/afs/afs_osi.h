@@ -187,9 +187,9 @@ typedef struct timeval osi_timeval_t;
  * The following three routines provide the fid routines used by the buffer
  * and directory packages.
  */
-#define dirp_Zap(afid)    (*(afid) = -1)
-#define dirp_Eq(afid, bfid) (*(afid) == *(bfid))
-#define dirp_Cpy(dfid,sfid) (*(dfid) = *(sfid))
+#define dirp_Zap(afid)    ((afid) = 0)
+#define dirp_Eq(afid, bfid) ((afid) == (bfid))
+#define dirp_Cpy(dfid,sfid) ((dfid) = (sfid))
 
 
 /*

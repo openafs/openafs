@@ -333,11 +333,11 @@ afs_linux_readdir(struct file *fp, void *dirbuf, filldir_t filldir)
     code = 0;
     offset = (int) fp->f_pos;
     while (1) {
-	dirpos = BlobScan(&tdc->f.inode, offset);
+	dirpos = BlobScan(&tdc->f, offset);
 	if (!dirpos)
 	    break;
 
-	de = afs_dir_GetBlob(&tdc->f.inode, dirpos);
+	de = afs_dir_GetBlob(&tdc->f, dirpos);
 	if (!de)
 	    break;
 

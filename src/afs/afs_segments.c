@@ -898,7 +898,7 @@ afs_InvalidateAllSegments(struct vcache *avc)
 	ObtainWriteLock(&tdc->lock, 679);
 	ZapDCE(tdc);
 	if (vType(avc) == VDIR)
-	    DZap(&tdc->f.inode);
+	    DZap(&tdc->f);
 	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
     }
