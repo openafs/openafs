@@ -1812,7 +1812,9 @@ struct AFSCBFids*	afidp;
 
 	i = host->interface->numberOfInterfaces;
 	addr = malloc(i * sizeof(afs_int32));
+	if (!addr) return 1;
 	conns = malloc(i * sizeof(struct rx_connection *));
+	if (!conns) { free(addr); return 1; }
 
 	/* initialize alternate rx connections */
 	for ( i=0,j=0; i < host->interface->numberOfInterfaces; i++)
@@ -1897,7 +1899,9 @@ struct host*		host;
 
 	i = host->interface->numberOfInterfaces;
 	addr = malloc(i * sizeof(afs_int32));
+	if (!addr) return 1;
 	conns = malloc(i * sizeof(struct rx_connection *));
+	if (!conns) { free(addr); return 1; }
 
 	/* initialize alternate rx connections */
 	for ( i=0,j=0; i < host->interface->numberOfInterfaces; i++)
