@@ -431,7 +431,9 @@ int rxi_Sendmsg(osi_socket socket, struct msghdr *msg_p, int flags)
 #elif defined(AFS_LINUX22_ENV)
 	  /* linux unfortunately returns ECONNREFUSED if the target port
 	   * is no longer in use */
-	if (errno != EWOULDBLOCK && errno != ENOBUFS && errno != ECONNREFUSED)
+	  /* and EAGAIN if a UDP checksum is incorrect */
+	if (errno != EWOULDBLOCK && errno != ENOBUFS &&
+	    errno != ECONNREFUSED && errno != EAGAIN)
 #else
 	if (errno != EWOULDBLOCK && errno != ENOBUFS)
 #endif
