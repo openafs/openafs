@@ -102,13 +102,11 @@ softsig_thread(void *arg)
     }
 }
 
-#if defined(AFS_DARWIN60_ENV)
 static void
 softsig_usr1(int signo)
 {
     signal (SIGUSR1, softsig_usr1);
 }
-#endif /* defined(AFS_DARWIN60_ENV) */
 
 void
 softsig_init()
@@ -119,9 +117,7 @@ softsig_init()
     rc = pthread_create(&softsig_tid, NULL, &softsig_thread, NULL);
     assert(0 == rc);
     AFS_SIGSET_RESTORE();
-#if defined(AFS_DARWIN60_ENV)
     signal (SIGUSR1, softsig_usr1);
-#endif /* defined(AFS_DARWIN60_ENV) */
 }
 
 static void
