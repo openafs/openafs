@@ -368,17 +368,20 @@ if test "x$with_afs_sysname" != "x"; then
 else
 	AC_MSG_CHECKING(your AFS sysname)
 	case $host in
-		i386-unknown-openbsd3.1)
+		i?86-*-openbsd3.1)
 			AFS_SYSNAME="i386_obsd31"
 			;;
-		i386-unknown-openbsd3.2)
+		i?86-*-openbsd3.2)
 			AFS_SYSNAME="i386_obsd32"
 			;;
-		i386-unknown-openbsd3.3)
+		i?86-*-openbsd3.3)
 			AFS_SYSNAME="i386_obsd33"
 			;;
-		i386-unknown-openbsd3.4)
+		i?86-*-openbsd3.4)
 			AFS_SYSNAME="i386_obsd34"
+			;;
+		i?86-*-openbsd3.5)
+			AFS_SYSNAME="i386_obsd35"
 			;;
 		i?86-*-freebsd4.2*)
 			AFS_SYSNAME="i386_fbsd_42"
