@@ -712,7 +712,7 @@ BOOL Alert_StartScout (ULONG *pStatus)
 {
    if (hScout == 0)  // create scout?
       {
-      heScoutWakeup = CreateEvent (NULL, FALSE, FALSE, NULL);
+      heScoutWakeup = CreateEvent (NULL, FALSE, FALSE, TEXT("AfsSvrMgr Alert Scout Wakeup"));
 
       DWORD dwThreadID;
       if ((hScout = CreateThread (NULL, 0,

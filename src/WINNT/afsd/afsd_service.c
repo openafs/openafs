@@ -327,7 +327,9 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
 
 	GlobalStatus = 0;
 
-	WaitToTerminate = CreateEvent(NULL, TRUE, FALSE, NULL);
+	WaitToTerminate = CreateEvent(NULL, TRUE, FALSE, TEXT("afsd_service_WaitToTerminate"));
+    if ( GetLastError() == ERROR_ALREADY_EXISTS )
+        afsi_log("Event Object Already Exists: %s", TEXT("afsd_service_WaitToTerminate"));
 
 #ifndef NOTSERVICE
 	StatusHandle = RegisterServiceCtrlHandlerEx(AFS_DAEMON_SERVICE_NAME,

@@ -399,24 +399,34 @@ PowerNotificationThreadCreate()
 {
 	BOOL	bSuccess = FALSE;
 	DWORD	dwThreadId = 0;
+    char    eventName[MAX_PATH];
 	
 	do 
 	{
 		// create power event notification event
 		// bManualReset=TRUE, bInitialState=FALSE
-		gThreadInfo.hEventPowerEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+		gThreadInfo.hEventPowerEvent = CreateEvent(NULL, TRUE, FALSE, 
+                                                   TEXT("afsd_flushvol_EventPowerEvent"));
+        if ( GetLastError() == ERROR_ALREADY_EXISTS )
+            afsi_log("Event Object Already Exists: %s", eventName);
 		if (gThreadInfo.hEventPowerEvent == NULL)
 			break;			
 
 		// create mainline resume event
 		// bManualReset=FALSE, bInitialState=FALSE
-		gThreadInfo.hEventResumeMain = CreateEvent(NULL, FALSE, FALSE, NULL);
+		gThreadInfo.hEventResumeMain = CreateEvent(NULL, FALSE, FALSE, 
+                                                   TEXT("afsd_flushvol_EventResumeMain"));
+        if ( GetLastError() == ERROR_ALREADY_EXISTS )
+            afsi_log("Event Object Already Exists: %s", eventName);
 		if (gThreadInfo.hEventResumeMain == NULL)
 			break;			
 
 		// create thread terminate event
 		// bManualReset=FALSE, bInitialState=FALSE
-		gThreadInfo.hEventTerminate = CreateEvent(NULL, FALSE, FALSE, NULL);
+		gThreadInfo.hEventTerminate = CreateEvent(NULL, FALSE, FALSE, 
+                                                  TEXT("afsd_flushvol_EventTerminate"));
+        if ( GetLastError() == ERROR_ALREADY_EXISTS )
+            afsi_log("Event Object Already Exists: %s", eventName);
 		if (gThreadInfo.hEventTerminate == NULL)
 			break;			
 

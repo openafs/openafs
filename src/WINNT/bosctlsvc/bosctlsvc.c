@@ -233,14 +233,14 @@ BosCtlMain(DWORD argc, LPTSTR *argv)
     if ((bosCtlEvent[BOS_STOP_EVENT] = CreateEvent(NULL,
 						   FALSE /* manual reset */,
 						   FALSE /* initial state */,
-						   NULL)) == NULL) {
+						   TEXT("BosCtlSvc Stop Event"))) == NULL) {
 	status = GetLastError();
     }
 
     if ((bosCtlEvent[BOS_EXIT_EVENT] = CreateEvent(NULL,
 						   FALSE /* manual reset */,
 						   FALSE /* initial state */,
-						   NULL)) == NULL) {
+						   TEXT("BosCtlSvc Exit Event"))) == NULL) {
 	status = GetLastError();
     }
 

@@ -985,30 +985,34 @@ retry:
 		if (fid == fidp->fid) {
 			if (newFid) {
 				fid++;
-                                if (fid == 0) fid = 1;
-                                goto retry;
-                        }
+                if (fid == 0) fid = 1;
+                goto retry;
+            }
 			fidp->refCount++;
-                	break;
+            break;
 		}
-        }
-        if (!fidp && (flags & SMB_FLAG_CREATE)) {
+    }
+    if (!fidp && (flags & SMB_FLAG_CREATE)) {
+        char eventName[MAX_PATH];
+        sprintf(eventName,"fid_t event fid=%d", fid);
 		fidp = malloc(sizeof(*fidp));
-                memset(fidp, 0, sizeof(*fidp));
+        memset(fidp, 0, sizeof(*fidp));
 		osi_QAdd((osi_queue_t **)&vcp->fidsp, &fidp->q);
-                fidp->refCount = 1;
-                fidp->vcp = vcp;
-                lock_InitializeMutex(&fidp->mx, "fid_t mutex");
-                fidp->fid = fid;
+        fidp->refCount = 1;
+        fidp->vcp = vcp;
+        lock_InitializeMutex(&fidp->mx, "fid_t mutex");
+        fidp->fid = fid;
 		fidp->curr_chunk = fidp->prev_chunk = -2;
-		fidp->raw_write_event = thrd_CreateEvent(NULL, FALSE, TRUE, NULL);
-                if (newFid) {
+		fidp->raw_write_event = thrd_CreateEvent(NULL, FALSE, TRUE, eventName);
+        if ( GetLastError() == ERROR_ALREADY_EXISTS )
+            afsi_log("Event Object Already Exists: %s", eventName);
+        if (newFid) {
 			vcp->fidCounter = fid+1;
-                        if (vcp->fidCounter == 0) vcp->fidCounter = 1;
-                }
+            if (vcp->fidCounter == 0) vcp->fidCounter = 1;
         }
-        lock_ReleaseWrite(&smb_rctLock);
-        return fidp;
+    }
+    lock_ReleaseWrite(&smb_rctLock);
+    return fidp;
 }
 
 void smb_ReleaseFID(smb_fid_t *fidp)
@@ -1624,7 +1628,7 @@ unsigned int smb_GetSMBParm(smb_packet_t *smbp, int parm)
 
 	if (parm >= parmCount) {
 #ifndef DJGPP
-	        HANDLE h;
+        HANDLE h;
 		char *ptbuf[1];
 		char s[100];
 		h = RegisterEventSource(NULL, AFS_DAEMON_EVENT_NAME);
@@ -6145,9 +6149,13 @@ void smb_Server(VOID *parmp)
 			/* Special handling for Write Raw */
 			raw_write_cont_t rwc;
 			EVENT_HANDLE rwevent;
-			smb_DispatchPacket(vcp, bufp, outbufp, ncbp, &rwc);
+            char eventName[MAX_PATH];
+            
+            smb_DispatchPacket(vcp, bufp, outbufp, ncbp, &rwc);
 			if (rwc.code == 0) {
-				rwevent = thrd_CreateEvent(NULL, FALSE, FALSE, NULL);
+				rwevent = thrd_CreateEvent(NULL, FALSE, FALSE, TEXT("smb_Server() rwevent"));
+                if ( GetLastError() == ERROR_ALREADY_EXISTS )
+                    afsi_log("Event Object Already Exists: %s", eventName);
 				ncbp->ncb_command = NCBRECV | ASYNCH;
 				ncbp->ncb_lsn = (unsigned char) vcp->lsn;
 				ncbp->ncb_lana_num = vcp->lana;
@@ -6159,14 +6167,12 @@ void smb_Server(VOID *parmp)
 #else
 				Netbios(ncbp, dos_ncb);
 #endif /* !DJGPP */
-				rcode = thrd_WaitForSingleObject_Event(rwevent,
-                                                                 RAWTIMEOUT);
+				rcode = thrd_WaitForSingleObject_Event(rwevent, RAWTIMEOUT);
 				thrd_CloseHandle(rwevent);
 			}
 			thrd_SetEvent(SessionEvents[idx_session]);
 			if (rwc.code == 0)
-				smb_CompleteWriteRaw(vcp, bufp, outbufp, ncbp,
-						     &rwc);
+				smb_CompleteWriteRaw(vcp, bufp, outbufp, ncbp, &rwc);
 		} else if (smbp->com == 0xa0) { 
                         /* 
 			 * Serialize the handling for NT Transact 
@@ -6231,15 +6237,25 @@ void InitNCBslot(int idx)
 	struct smb_packet *bufp;
 	EVENT_HANDLE retHandle;
 	int i;
+    char eventName[MAX_PATH];
 
     osi_assert( idx < (sizeof(NCBs) / sizeof(NCBs[0])) );
 
 	NCBs[idx] = GetNCB();
-	NCBavails[idx] = thrd_CreateEvent(NULL, FALSE, TRUE, NULL);
+    sprintf(eventName,"NCBavails[%d]", idx);
+	NCBavails[idx] = thrd_CreateEvent(NULL, FALSE, TRUE, eventName);
+    if ( GetLastError() == ERROR_ALREADY_EXISTS )
+        afsi_log("Event Object Already Exists: %s", eventName);
 #ifndef DJGPP
-	NCBevents[idx] = thrd_CreateEvent(NULL, TRUE, FALSE, NULL);
+    sprintf(eventName,"NCBevents[%d]", idx);
+	NCBevents[idx] = thrd_CreateEvent(NULL, TRUE, FALSE, eventName);
+    if ( GetLastError() == ERROR_ALREADY_EXISTS )
+        afsi_log("Event Object Already Exists: %s", eventName);
 #endif /* !DJGPP */
-	retHandle = thrd_CreateEvent(NULL, FALSE, FALSE, NULL);
+    sprintf(eventName,"NCBReturns[0<=i<smb_NumServerThreads][%d]", idx);
+	retHandle = thrd_CreateEvent(NULL, FALSE, FALSE, eventName);
+    if ( GetLastError() == ERROR_ALREADY_EXISTS )
+        afsi_log("Event Object Already Exists: %s", eventName);
 	for (i=0; i<smb_NumServerThreads; i++)
 		NCBreturns[i][idx] = retHandle;
 	bufp = GetPacket();
@@ -6414,6 +6430,7 @@ void smb_Listener(void *parmp)
 		
 		if (i == numSessions) {
 			/* Add new NCB for new session */
+            char eventName[MAX_PATH];
 
             osi_Log1(afsd_logp, "smb_Listener creating new session %d", i);
 
@@ -6424,7 +6441,10 @@ void smb_Listener(void *parmp)
 			for (j = 0; j < smb_NumServerThreads; j++)
 				thrd_SetEvent(NCBreturns[j][0]);
 			/* Also add new session event */
-			SessionEvents[i] = thrd_CreateEvent(NULL, FALSE, TRUE, NULL);
+            sprintf(eventName, "SessionEvents[%d]", i);
+            SessionEvents[i] = thrd_CreateEvent(NULL, FALSE, TRUE, eventName);
+            if ( GetLastError() == ERROR_ALREADY_EXISTS )
+                afsi_log("Event Object Already Exists: %s", eventName);
 			numSessions++;
             afsi_log("increasing numNCBs [ %d ] numSessions [ %d ]", numNCBs, numSessions);
 			thrd_SetEvent(SessionEvents[0]);
@@ -6688,6 +6708,8 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     int npar, seg, sel;
     dos_ptr rawBuf;
 #endif /* DJGPP */
+    EVENT_HANDLE retHandle;
+    char eventName[MAX_PATH];
 
 #ifndef DJGPP
 	smb_MBfunc = aMBfunc;
@@ -6796,15 +6818,28 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 
 	/* Initialize listener and server structures */
 	memset(dead_sessions, 0, sizeof(dead_sessions));
-	SessionEvents[0] = thrd_CreateEvent(NULL, FALSE, FALSE, NULL);
+    sprintf(eventName, "SessionEvents[0]");
+	SessionEvents[0] = thrd_CreateEvent(NULL, FALSE, FALSE, eventName);
+    if ( GetLastError() == ERROR_ALREADY_EXISTS )
+        afsi_log("Event Object Already Exists: %s", eventName);
 	numSessions = 1;
 	smb_NumServerThreads = nThreads;
-	NCBavails[0] = thrd_CreateEvent(NULL, FALSE, FALSE, NULL);
-	NCBevents[0] = thrd_CreateEvent(NULL, FALSE, FALSE, NULL);
+    sprintf(eventName, "NCBavails[0]");
+	NCBavails[0] = thrd_CreateEvent(NULL, FALSE, FALSE, eventName);
+    if ( GetLastError() == ERROR_ALREADY_EXISTS )
+        afsi_log("Event Object Already Exists: %s", eventName);
+    sprintf(eventName, "NCBevents[0]");
+	NCBevents[0] = thrd_CreateEvent(NULL, FALSE, FALSE, eventName);
+    if ( GetLastError() == ERROR_ALREADY_EXISTS )
+        afsi_log("Event Object Already Exists: %s", eventName);
 	NCBreturns = malloc(nThreads * sizeof(EVENT_HANDLE *));
-	for (i = 0; i < nThreads; i++) {
+    sprintf(eventName, "NCBreturns[0<=i<smb_NumServerThreads][0]");
+    retHandle = thrd_CreateEvent(NULL, FALSE, FALSE, eventName);
+    if ( GetLastError() == ERROR_ALREADY_EXISTS )
+        afsi_log("Event Object Already Exists: %s", eventName);
+	for (i = 0; i < smb_NumServerThreads; i++) {
 		NCBreturns[i] = malloc(NCBmax * sizeof(EVENT_HANDLE));
-		NCBreturns[i][0] = thrd_CreateEvent(NULL, FALSE, FALSE, NULL);
+		NCBreturns[i][0] = retHandle;
 	}
 	for (i = 1; i <= nThreads; i++)
 		InitNCBslot(i);

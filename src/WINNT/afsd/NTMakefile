@@ -308,7 +308,6 @@ AFSD_EXELIBS =\
 	$(DESTDIR)\lib\afs\mtafsint.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
-	$(DESTDIR)\lib\libosi.lib \
 	rpcrt4.lib \
 	user32.lib \
     Dbghelp.lib
