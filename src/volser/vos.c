@@ -764,6 +764,97 @@ static void XDisplayFormat(a_xInfoP, a_servID, a_partID, a_totalOKP,
 	} /*Default listing*/
 } /*XDisplayFormat*/
 
+#ifdef FULL_LISTVOL_SWITCH
+static void  DisplayFormat2(server, partition, pntr)
+    long    server, partition;
+    volintInfo *pntr;
+{
+  static long server_cache = -1, partition_cache = -1;
+  static char hostname[256],
+  address[32],
+  pname[16];
+
+  if (server != server_cache) {
+    struct in_addr s;
+    
+    s.s_addr = server;
+    strcpy(hostname, hostutil_GetNameByINet(server));
+    strcpy(address, inet_ntoa(s));
+    server_cache = server;
+  }
+  if (partition != partition_cache) {
+    MapPartIdIntoName(partition, pname);
+    partition_cache = partition;
+  }
+  fprintf(STDOUT, "name\t\t%s\n", pntr->name);
+  fprintf(STDOUT, "id\t\t%lu\n", pntr->volid);
+  fprintf(STDOUT, "serv\t\t%s\t%s\n", address, hostname);
+  fprintf(STDOUT, "part\t\t%s\n", pname);
+  switch (pntr->status) {
+  case VOK:
+    fprintf(STDOUT, "status\t\tOK\n");
+    break;
+  case VBUSY:
+    fprintf(STDOUT, "status\t\tBUSY\n");
+    return;
+  default:
+    fprintf(STDOUT, "status\t\tUNATTACHABLE\n");
+    return;
+  }
+  fprintf(STDOUT, "backupID\t%lu\n", pntr->backupID);
+  fprintf(STDOUT, "parentID\t%lu\n", pntr->parentID);
+  fprintf(STDOUT, "cloneID\t\t%lu\n", pntr->cloneID);
+  fprintf(STDOUT, "inUse\t\t%s\n", pntr->inUse ? "Y" : "N");
+  fprintf(STDOUT, "needsSalvaged\t%s\n", pntr->needsSalvaged ? "Y" : "N");
+  /* 0xD3 is from afs/volume.h since I had trouble including the file */
+  fprintf(STDOUT, "destroyMe\t%s\n", pntr->destroyMe == 0xD3 ? "Y" : "N");
+  switch (pntr->type) {
+  case 0:
+    fprintf(STDOUT, "type\t\tRW\n");
+    break;
+  case 1:
+    fprintf(STDOUT, "type\t\tRO\n");
+    break;
+  case 2:
+    fprintf(STDOUT, "type\t\tBK\n");
+    break;
+  default:
+    fprintf(STDOUT, "type\t\t?\n");
+    break;
+  }
+  fprintf(STDOUT, "creationDate\t%-9lu\t%s", pntr->creationDate, ctime(&pntr->creationDate));
+  fprintf(STDOUT, "accessDate\t%-9lu\t%s", pntr->accessDate, ctime(&pntr->accessDate));
+  fprintf(STDOUT, "updateDate\t%-9lu\t%s", pntr->updateDate, ctime(&pntr->updateDate));
+  fprintf(STDOUT, "backupDate\t%-9lu\t%s", pntr->backupDate, ctime(&pntr->backupDate));
+  fprintf(STDOUT, "copyDate\t%-9lu\t%s", pntr->copyDate, ctime(&pntr->copyDate));
+  fprintf(STDOUT, "flags\t\t%#lx\t(Optional)\n", pntr->flags);
+  fprintf(STDOUT, "diskused\t%u\n", pntr->size);
+  fprintf(STDOUT, "maxquota\t%u\n", pntr->maxquota);
+  fprintf(STDOUT, "minquota\t%lu\t(Optional)\n", pntr->spare0);
+  fprintf(STDOUT, "filecount\t%u\n", pntr->filecount);
+  fprintf(STDOUT, "dayUse\t\t%u\n", pntr->dayUse);
+  fprintf(STDOUT, "weekUse\t\t%lu\t(Optional)\n", pntr->spare1);
+  fprintf(STDOUT, "spare2\t\t%lu\t(Optional)\n", pntr->spare2);
+  fprintf(STDOUT, "spare3\t\t%lu\t(Optional)\n", pntr->spare3);
+  return;
+}
+
+static void DisplayVolumes2(server, partition, pntr, count)
+    volintInfo *pntr;
+    long    server, partition, count;
+{
+  long    i;
+  
+  for (i = 0; i < count; i++) {
+    fprintf(STDOUT, "BEGIN_OF_ENTRY\n");
+    DisplayFormat2(server, partition, pntr);
+    fprintf(STDOUT, "END_OF_ENTRY\n\n");
+    pntr++;
+  }
+  return;
+}
+#endif /* FULL_LISTVOL_SWITCH */
+
 static void DisplayVolumes(server,part,pntr,count,longlist,fast,quiet)
 afs_int32 server,part;
 volintInfo *pntr;
@@ -1155,6 +1246,12 @@ register struct cmd_syndesc *as;
 	  if (wantExtendedInfo)
 	     XVolumeStats(xInfoP, &entry, aserver, apart, voltype);
 	  else
+#ifdef FULL_LISTVOL_SWITCH
+            if (as->parms[2].items) {
+              DisplayFormat2(aserver, apart, pntr);
+              EnumerateEntry(&entry);
+            } else
+#endif /* FULL_LISTVOL_SWITCH */
 	     VolumeStats(pntr, &entry, aserver, apart, voltype);
 
 	  if ((voltype == BACKVOL) && !(entry.flags & BACK_EXISTS)) {
@@ -2355,6 +2452,12 @@ register struct cmd_syndesc *as;
 		xInfoP = (volintXInfo *)0;
 	    }
 	    else {
+#ifdef FULL_LISTVOL_SWITCH
+              if (as->parms[6].items)
+                DisplayVolumes2(aserver, dummyPartList.partId[i], oldpntr, 
+                                count);
+              else
+#endif /* FULL_LISTVOL_SWITCH */
 		DisplayVolumes(aserver,
 			       dummyPartList.partId[i],
 			       oldpntr,
@@ -3825,6 +3928,10 @@ char **argv; {
     cmd_AddParm(ts, "-quiet", CMD_FLAG, CMD_OPTIONAL, "generate minimal information");
     cmd_AddParm(ts, "-extended", CMD_FLAG, CMD_OPTIONAL,
 		"list extended volume fields");
+#ifdef FULL_LISTVOL_SWITCH
+    cmd_AddParm(ts, "-format", CMD_FLAG, CMD_OPTIONAL, 
+              "machine readable format");
+#endif /* FULL_LISTVOL_SWITCH */
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("syncvldb", SyncVldb, 0, "synchronize VLDB with server");
@@ -3842,6 +3949,10 @@ char **argv; {
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "volume name or ID");
     cmd_AddParm(ts, "-extended", CMD_FLAG, CMD_OPTIONAL,
 		"list extended volume fields");
+#ifdef FULL_LISTVOL_SWITCH
+    cmd_AddParm(ts, "-format", CMD_FLAG, CMD_OPTIONAL, 
+              "machine readable format");
+#endif /* FULL_LISTVOL_SWITCH */
     COMMONPARMS;
     cmd_CreateAlias (ts, "volinfo");
 
