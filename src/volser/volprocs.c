@@ -626,6 +626,10 @@ char *newName;
     ClearVolumeStats(&V_disk(newvp));
     V_destroyMe(newvp) = DESTROY_ME;
     V_inService(newvp) = 0;
+    if (newType == backupVolume) {
+	V_backupDate(originalvp) = V_copyDate(newvp);
+	V_backupDate(newvp) = V_copyDate(newvp);
+    }
     V_inUse(newvp) = 0;
     VUpdateVolume(&error, newvp);
     if (error) {
@@ -779,6 +783,10 @@ afs_int32 cloneId;
     ClearVolumeStats(&V_disk(clonevp));
     V_destroyMe(clonevp) = 0;
     V_inService(clonevp) = 0;
+    if (newType == backupVolume) {
+	V_backupDate(originalvp) = V_copyDate(clonevp);
+	V_backupDate(clonevp) = V_copyDate(clonevp);
+    }
     V_inUse(clonevp) = 0;
     VUpdateVolume(&error, clonevp);
     if (error) {
