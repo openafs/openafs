@@ -398,7 +398,7 @@ BOOL AfsClass_RestartService (LPIDENT lpiRestart, ULONG *pStatus)
       lpServer->Close();
       }
 
-   BOOL fRestartAll;
+   BOOL fRestartAll = FALSE;
    if (!lpiRestart->fIsService())
       fRestartAll = TRUE;
 
