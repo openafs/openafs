@@ -62,6 +62,8 @@ struct tqHead {
 };
 
 
+struct hostent *hostutil_GetHostByName(register char *ahost);
+
 #define COMMONPARMS     cmd_Seek(ts, 12);\
 cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");\
 cmd_AddParm(ts, "-noauth", CMD_FLAG, CMD_OPTIONAL, "don't authenticate");\
@@ -3793,33 +3795,26 @@ register struct cmd_syndesc *as;
     return 0;
 }
 
-static ListAddrs(as)
-register struct cmd_syndesc *as;
-
+static void
+print_addrs(const bulkaddrs *addrs, const afsUUID *m_uuid, int nentries, int print, int noresolve)
 {
   afs_int32 vcode;
   afs_int32 i, j;
   struct VLCallBack    unused;
-  afs_int32                nentries, *addrp;
-  bulkaddrs            addrs, m_addrs;
+  afs_int32            *addrp;
+  bulkaddrs            m_addrs;
   ListAddrByAttributes m_attrs;
-  afsUUID              m_uuid;
-  afs_int32                m_unique, m_nentries, *m_addrp;
-  afs_int32                base, index;
+  afs_int32            m_unique, m_nentries, *m_addrp;
+  afs_int32            base, index;
+  char buf[1024];
 
-  /* Get the list of non multihomed fileservers */
-  addrs.bulkaddrs_val = 0;
-  addrs.bulkaddrs_len = 0;
-  vcode = ubik_Call_New(VL_GetAddrs, cstruct, 0,
-			0, 0, &unused, &nentries, &addrs);
-  if (vcode) {
-     fprintf(STDERR,"vos: could not list the server addresses\n");
-     PrintError("",vcode);
-     return( vcode );
+  if (print) {
+      afsUUID_to_string(m_uuid, buf, sizeof(buf));
+      printf("UUID: %s\n", buf);
   }
 
   /* print out the list of all the server */
-  addrp = (afs_int32 *)addrs.bulkaddrs_val;
+  addrp = (afs_int32 *)addrs->bulkaddrs_val;
   for (i=0; i<nentries; i++, addrp++) {
      /* If it is a multihomed address, then we will need to 
       * get the addresses for this multihomed server from
@@ -3848,7 +3843,12 @@ register struct cmd_syndesc *as;
 	   m_addrp = (afs_int32 *)m_addrs.bulkaddrs_val;
 	   for (j=0; j<m_nentries; j++, m_addrp++) {
 	      *m_addrp = htonl(*m_addrp);	
-	      printf("%s ", hostutil_GetNameByINet(*m_addrp));
+	      if (noresolve) {
+		  char hoststr[16];
+		  printf("%s ", afs_inet_ntoa_r(*m_addrp,hoststr));
+	      } else {
+		  printf("%s ", hostutil_GetNameByINet(*m_addrp));
+	      }
 	   }
 	   if (j==0) {
 	      printf("<unknown>\n");
@@ -3863,12 +3863,92 @@ register struct cmd_syndesc *as;
      /* Otherwise, it is a non-multihomed entry and contains
       * the IP address of the server - print it.
       */
-     printf ("%s\n", hostutil_GetNameByINet(htonl(*addrp)));
+     *addrp = htonl(*addrp);	
+     if (noresolve) {
+	 char hoststr[16];
+	 printf("%s\n", afs_inet_ntoa_r(*addrp,hoststr));
+     } else {
+	 printf("%s\n", hostutil_GetNameByINet(*addrp));
+     }
   }
 
-  if (addrs.bulkaddrs_val) {
-     free (addrs.bulkaddrs_val);
+  if (print) {
+      printf("\n");
   }
+  return;
+}
+
+static ListAddrs(as)
+register struct cmd_syndesc *as;
+{
+  afs_int32 vcode;
+  afs_int32 i, j, noresolve=0, printuuid=0;
+  struct VLCallBack    unused;
+  afs_int32                nentries, *addrp;
+  bulkaddrs            addrs, m_addrs;
+  ListAddrByAttributes m_attrs;
+  afsUUID              m_uuid, askuuid;
+  afs_int32                m_unique, m_nentries, *m_addrp;
+  afs_int32                base, index;
+
+  memset(&m_attrs, 0, sizeof(struct ListAddrByAttributes));
+  m_attrs.Mask = VLADDR_INDEX;
+
+  memset(&m_addrs, 0, sizeof(bulkaddrs));
+  memset(&askuuid, 0, sizeof(afsUUID));
+  if (as->parms[0].items) {
+      /* -uuid */
+      afsUUID_from_string(as->parms[0].items->data, &askuuid);
+      m_attrs.Mask = VLADDR_UUID;
+      m_attrs.uuid = askuuid;
+  }
+  if (as->parms[1].items) {
+      /* -host */
+      struct hostent       *he; 
+      afs_int32 saddr;
+      he = hostutil_GetHostByName((char*)as->parms[1].items->data);
+      if (he == (struct hostent *)0) {
+	  fprintf(stderr,
+		  "Can't get host info for '%s'\n",
+		  as->parms[1].items->data);
+	  exit(-1);
+      }
+      memcpy(&saddr, he->h_addr, 4);
+      m_attrs.Mask = VLADDR_IPADDR;
+      m_attrs.ipaddr = ntohl(saddr);
+  }
+  if (as->parms[2].items) {
+      noresolve=1;
+  }
+  if (as->parms[3].items) {
+      printuuid=1;
+  }
+
+  m_nentries            = 0;
+  m_addrs.bulkaddrs_val = 0;
+  m_addrs.bulkaddrs_len = 0;
+  i=1;
+  while (1) {
+      m_attrs.index = i;
+
+      vcode = ubik_Call_New(VL_GetAddrsU, cstruct, 0, &m_attrs, &m_uuid, 
+			&m_unique, &m_nentries, &m_addrs);
+      if(vcode == VL_NOENT)
+	  break;
+
+      if (vcode) {
+	  fprintf(STDERR,"vos: could not list the server addresses\n");
+	  PrintError("",vcode);
+	  return( vcode );
+      }
+
+      print_addrs(&m_addrs, &m_uuid, m_nentries, printuuid, noresolve);
+      i++;
+
+      if ((as->parms[1].items)||(as->parms[0].items))
+	  break;
+  }
+    
   return 0;
 }
 
@@ -4179,6 +4259,10 @@ char **argv; {
     COMMONPARMS;
 
     ts = cmd_CreateSyntax("listaddrs", ListAddrs, 0, "list the IP address of all file servers registered in the VLDB");
+    cmd_AddParm(ts, "-uuid", CMD_SINGLE, CMD_OPTIONAL, "uuid of server");
+    cmd_AddParm(ts, "-host", CMD_SINGLE, CMD_OPTIONAL, "address of host");
+    cmd_AddParm(ts, "-noresolve", CMD_FLAG, CMD_OPTIONAL, "don't resolve addresses");
+    cmd_AddParm(ts, "-printuuid", CMD_FLAG, CMD_OPTIONAL, "print uuid of hosts");
     COMMONPARMS;
 
     code = cmd_Dispatch(argc, argv);
