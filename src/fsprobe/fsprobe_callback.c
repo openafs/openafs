@@ -641,7 +641,7 @@ int SRXAFSCB_GetCellServDB(
     struct rx_call *a_call,
     afs_int32 a_index,
     char **a_name,
-    afs_int32 *a_hosts)
+    serverList *a_hosts)
 {
     return RXGEN_OPCODE;
 }
