@@ -38,7 +38,7 @@ configure-stamp:
 	-ln -s @sys/dest dest
 	-ln -s $(SYS_NAME) @sys
 	sh configure --with-afs-sysname=$(SYS_NAME)
-	install -d dest/root.client/usr/vice/etc
+	install -d $(SYS_NAME)/dest/root.client/usr/vice/etc
 	install -d dest/root.server/usr/afs/bin
 
 	touch configure-stamp
@@ -58,10 +58,11 @@ clean:
 	dh_testdir
 	dh_testroot
 	rm -f build-stamp configure-stamp
-	-rm -rf obj dest $(SYS_NAME) @sys Makefile debian/openafs-client.init
 	# Add here commands to clean up after the build process.
-	$(MAKE) -ki clean
-	-rm -f config.*
+	-$(MAKE) -ki clean
+	-rm -rf obj dest $(SYS_NAME) @sys Makefile debian/openafs-client.init
+	-rm -f config.status config.cache
+
 
 
 	dh_clean
@@ -223,7 +224,7 @@ build-modules-stamp:
 	-ln -s @sys/dest dest
 	-ln -s $(SYS_NAME) @sys
 	sh configure --with-afs-sysname=$(SYS_NAME) --with-linux-kernel-headers=$(KSRC)
-	$(MAKE) libafs
+	$(MAKE) libafs "COMPILE_PART1=cd src; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=@TOP_SRCDIR@ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME}
 	touch build-modules-stamp
 
 binary-modules: build-modules

@@ -1,3 +1,11 @@
+openafs (1.0.90.20010704.snapshot-1) experimental; urgency=low
+
+  * New upstream snapshot.  Support AFSDB records and many other
+    features.  Not at all stable yet.  This is packaged so I and others
+    can try it out.
+
+ -- Sam Hartman <hartmans@debian.org>  Thu,  5 Jul 2001 04:04:20 -0400
+
 openafs (1.0.4-3) unstable; urgency=medium
 
   * Fix patch introduced in -2 to be consistent with what is sent upstream.
