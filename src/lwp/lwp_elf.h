@@ -39,7 +39,7 @@
  */
 
 #ifndef _C_LABEL
-#if defined(SYSV) || defined(__ELF__) || (defined(AFS_SUN5_ENV) && defined(__sun))
+#if defined(SYSV) || defined(__ELF__) || defined(__sun)
 #define _C_LABEL(name)  name
 #else /* SYSV || __ELF__ || __sun */
 #ifdef __STDC__
@@ -51,7 +51,7 @@
 #endif /* _C_LABEL */
 
 #ifndef ENTRY
-#if defined(SYSV) || defined(__ELF__) || (defined(AFS_SUN5_ENV) && defined(__sun))
+#if defined(SYSV) || defined(__ELF__) || defined(__sun)
 #define ENTRY(name)     name:
 #else
 #ifdef __STDC__
