@@ -2,10 +2,10 @@ Index: src/rx/rx_packet.c
 ===================================================================
 RCS file: /cvs/openafs/src/rx/rx_packet.c,v
 retrieving revision 1.9
-retrieving revision 1.10
-diff -u -r1.9 -r1.10
+retrieving revision 1.11
+diff -u -r1.9 -r1.11
 --- src/rx/rx_packet.c	2001/07/12 19:58:56	1.9
-+++ src/rx/rx_packet.c	2001/07/20 15:59:43	1.10
++++ src/rx/rx_packet.c	2001/07/21 07:07:51	1.11
 @@ -1112,6 +1112,17 @@
      afs_int32 tl;
      struct rx_serverQueueEntry *np, *nqe;
@@ -43,7 +43,7 @@ diff -u -r1.9 -r1.10
 +	ap->header.flags = ap->header.flags & ~RX_CLIENT_INITIATED;
 +	rxi_EncodePacketHeader(ap);
 +	bzero(buf, sizeof(buf));
-+	snprintf(buf, sizeof(buf), "%s", cml_version_number+4);
++	strncpy(buf, cml_version_number+4, sizeof(buf)-1);
 +	rx_packetwrite(ap, 0, 65, buf);
 +	tl = ap->length;
  	ap->length = 65;

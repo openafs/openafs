@@ -14,7 +14,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_packet.c,v 1.2 2001/07/21 12:51:39 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx_packet.c,v 1.3 2001/07/21 16:45:40 hartmans Exp $");
 
 #ifdef KERNEL
 #if defined(UKERNEL)
@@ -1407,7 +1407,7 @@ struct rx_packet *rxi_ReceiveVersionPacket(ap, asocket, ahost, aport, istack)
 	ap->header.flags = ap->header.flags & ~RX_CLIENT_INITIATED;
 	rxi_EncodePacketHeader(ap);
 	bzero(buf, sizeof(buf));
-	snprintf(buf, sizeof(buf), "%s", cml_version_number+4);
+	strncpy(buf, cml_version_number+4, sizeof(buf)-1);
 	rx_packetwrite(ap, 0, 65, buf);
 	tl = ap->length;
 	ap->length = 65;
