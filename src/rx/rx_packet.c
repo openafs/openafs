@@ -1854,18 +1854,29 @@ register struct rx_packet *p;
     register afs_uint32 *buf = (afs_uint32*)(p->wirevec[0].iov_base);      /* MTUXXX */
     afs_uint32 temp;
 
-    p->header.epoch = ntohl(*buf++);
-    p->header.cid = ntohl(*buf++);
-    p->header.callNumber = ntohl(*buf++);
-    p->header.seq = ntohl(*buf++);
-    p->header.serial = ntohl(*buf++);
-    temp = ntohl(*buf++);
+    p->header.epoch = ntohl(*buf);
+    buf++;
+    p->header.cid = ntohl(*buf);
+    buf++;
+    p->header.callNumber = ntohl(*buf);
+    buf++;
+    p->header.seq = ntohl(*buf);
+    buf++;
+    p->header.serial = ntohl(*buf);
+    buf++;
+
+    temp = ntohl(*buf);
+    buf++;
+
     /* C will truncate byte fields to bytes for me */
     p->header.type = temp>>24;
     p->header.flags = temp>>16;
     p->header.userStatus = temp>>8;
     p->header.securityIndex = temp>>0;
-    temp = ntohl(*buf++);
+
+    temp = ntohl(*buf);
+    buf++;
+
     p->header.serviceId = (temp&0xffff);
     p->header.spare = temp>>16;
     /* Note: top 16 bits of this last word are the security checksum */

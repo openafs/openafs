@@ -33,6 +33,7 @@ RCSID("$Header$");
 #include <sys/time.h>
 #include <stdio.h>
 #include <errno.h>
+#include <stdlib.h>
 #include "rx_clock.h"
 #endif
 
