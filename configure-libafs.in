@@ -1,7 +1,7 @@
 AC_INIT(Makefile.common)
 AM_INIT_AUTOMAKE(openafs-libafs,devel)
 AC_CANONICAL_HOST
-AC_CONFIG_HEADER(config/afsconfig.h)
+AC_CONFIG_HEADER(src/config/afsconfig.h)
 
 #BOZO_SAVE_CORES BOS_RESTRICTED_MODE BOS_NEW_CONFIG pam sia
 AC_ARG_WITH(afs-sysname,
@@ -34,6 +34,9 @@ AC_ARG_ENABLE(kernel-module,
 )
 AC_ARG_ENABLE(redhat-buildsys,
 [  --enable-redhat-buildsys		enable compilation of the redhat build system kernel (defaults to disabled)],, enable_redhat_buildsys="no"
+)
+AC_ARG_ENABLE(transarc-paths,
+[  --enable-transarc-paths              	Use Transarc style paths like /usr/afs and /usr/vice],, enable_transarc_paths="no"
 )
 
 AC_PROG_CC
@@ -203,9 +206,15 @@ else
 			;;
 		powerpc-apple-darwin1.2*)
 			AFS_SYSNAME="ppc_darwin_12"
+			DARWIN_PLIST=src/afsd/afs.${AFS_SYSNAME}.plist
 			;;
 		powerpc-apple-darwin1.3*)
 			AFS_SYSNAME="ppc_darwin_13"
+			DARWIN_PLIST=src/afsd/afs.${AFS_SYSNAME}.plist
+			;;
+		powerpc-apple-darwin1.4*)
+			AFS_SYSNAME="ppc_darwin_14"
+			DARWIN_PLIST=src/afsd/afs.${AFS_SYSNAME}.plist
 			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
@@ -375,9 +384,10 @@ if test "$enable_afsdb" = "yes"; then
 fi
 
 SRCDIR_PARENT=`pwd`
-TOP_SRCDIR="${SRCDIR_PARENT}"
-DESTDIR="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest/"
-SRCDIR="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest/"
+TOP_SRCDIR="${SRCDIR_PARENT}/src"
+TOP_INCDIR="${SRCDIR_PARENT}/include"
+TOP_LIBDIR="${SRCDIR_PARENT}/lib"
+DEST="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest"
 
 dnl checks for header files.
 AC_HEADER_STDC
@@ -392,6 +402,45 @@ AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h)
 
 AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf re_comp re_exec)
 
+dnl Directory PATH handling
+if test "x$enable_transarc_paths" = "xyes"  ; then 
+    afsconfdir=${afsconfdir=/usr/afs/etc}
+    viceetcdir=${viceetcdir=/usr/vice/etc}
+    afskerneldir=${afskerneldir=${viceetcdir}}
+    afssrvbindir=${afssrvbindir=/usr/afs/bin}
+    afssrvsbindir=${afssrvsbindir=/usr/afs/bin}
+    afssrvlibexecdir=${afssrvlibexecdir=/usr/afs/bin}
+    afsdbdir=${afsdbdir=/usr/afs/db}
+    afslogsdir=${afslogsdir=/usr/afs/logs}
+    afslocaldir=${afslocaldir=/usr/afs/local}
+    afsbackupdir=${afsbackupdir=/usr/afs/backup}
+    afsbosconfigdir=${afsbosconfigdir=/usr/afs/local}
+    else 
+    afsconfdir=${afsconfdir=$sysconfdir/openafs/server}
+    viceetcdir=${viceetcdir=$sysconfdir/openafs}
+    afskerneldir=${afskerneldir=$libdir/openafs}
+    afssrvbindir=${afssrvbindir=$bindir}
+    afssrvsbindir=${afssrvsbindir=$sbindir}
+    afssrvlibexecdir=${afssrvlibexecdir=$libexecdir/openafs}
+    afsdbdir=${afsdbdir=$localstatedir/openafs/db}
+    afslogsdir=${afslogsdir=$localstatedir/openafs/logs}
+    afslocaldir=${afslocaldir=$localstatedir/openafs}
+    afsbackupdir=${afsbackupdir=$localstatedir/openafs/backup}
+    afsbosconfigdir=${afsbosconfigdir=$sysconfdir/openafs}
+
+fi
+AC_SUBST(afsconfdir)
+AC_SUBST(viceetcdir)
+AC_SUBST(afskerneldir)
+AC_SUBST(afssrvbindir)
+AC_SUBST(afssrvsbindir)
+AC_SUBST(afssrvlibexecdir)
+AC_SUBST(afsdbdir)
+AC_SUBST(afslogsdir)
+AC_SUBST(afslocaldir)
+AC_SUBST(afsbackupdir)
+AC_SUBST(afsbosconfigdir)
+
 if test "x$enable_kernel_module" = "xyes"; then
 ENABLE_KERNEL_MODULE=libafs
 fi
@@ -403,8 +452,9 @@ AC_SUBST(LINUX_KERNEL_PATH)
 AC_SUBST(LINUX_VERSION)
 AC_SUBST(MKAFS_OSTYPE)
 AC_SUBST(TOP_SRCDIR)
-AC_SUBST(DESTDIR)
-AC_SUBST(SRCDIR)
+AC_SUBST(TOP_INCDIR)
+AC_SUBST(TOP_LIBDIR)
+AC_SUBST(DEST)
 AC_SUBST(WITH_OBSOLETE)
 AC_SUBST(WITH_INSECURE)
 
