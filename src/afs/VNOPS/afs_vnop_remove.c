@@ -222,10 +222,7 @@ afs_remove(OSI_VC_ARG(adp), aname, acred)
     register afs_int32 code;
     register struct vcache *tvc;
     afs_size_t offset, len;
-    struct AFSFetchStatus OutDirStatus;
-    struct AFSVolSync tsync;
     struct afs_fakestat_state fakestate;
-    XSTATS_DECLS
     OSI_VC_CONVERT(adp)
 
     AFS_STATCNT(afs_remove);

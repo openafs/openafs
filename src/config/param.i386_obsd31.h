@@ -52,7 +52,7 @@
 
 /* Extra kernel definitions (from kdefs file) */
 #ifdef _KERNEL
-#define AFS_GLOBAL_SUNLOCK        1
+/* #define AFS_GLOBAL_SUNLOCK        1 */
 #define	AFS_VFS34	1	/* What is VFS34??? */
 #define	AFS_SHORTGID	0	/* are group id's short? */
 #define	afsio_iov	uio_iov
@@ -64,8 +64,8 @@
 #define	AFS_UIOUSER	UIO_USERSPACE
 #define	AFS_CLBYTES	MB_CLBYTES
 #define	osi_GetTime(x)	microtime(x)
-#define	AFS_KALLOC(x)	kalloc(x)
-#define	AFS_KFREE(x,y)	kfree(x,y)
+#define	AFS_KALLOC(x)	osi_Alloc(x)
+#define	AFS_KFREE(x, y)	osi_Free((x), (y))
 #define	v_count		v_usecount
 #define v_vfsp		v_mount
 #define vfs_bsize	mnt_stat.f_bsize

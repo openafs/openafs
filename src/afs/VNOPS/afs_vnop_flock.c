@@ -38,7 +38,7 @@ void lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 #if	defined(AFS_SUN5_ENV)
     register proc_t *procp = ttoproc(curthread);    
 #else
-#if !defined(AFS_AIX41_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_SGI65_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_AIX41_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_SGI65_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #ifdef AFS_SGI_ENV
     struct proc *procp = OSI_GET_CURRENT_PROCP();
 #else
@@ -78,7 +78,7 @@ void lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 #endif
         slp->pid = clid;
 #else
-#if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	slp->pid = clid;
 #else
 #if defined(AFS_LINUX20_ENV) || defined(AFS_HPUX_ENV)
@@ -117,7 +117,7 @@ void lockIdSet(struct AFS_FLOCK *flock, struct SimpleLocks *slp, int clid)
 #endif
         flock->l_pid = clid;
 #else
-#if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	flock->l_pid = clid;
 #else
 #if defined(AFS_LINUX20_ENV) || defined(AFS_HPUX_ENV)
@@ -150,7 +150,7 @@ static int lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
 #if	defined(AFS_SUN5_ENV)
     register proc_t *procp = ttoproc(curthread);    
 #else
-#if !defined(AFS_AIX41_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_SGI65_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_AIX41_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_SGI65_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #ifdef AFS_SGI64_ENV
     struct proc *procp = curprocp;
 #else /* AFS_SGI64_ENV */
@@ -169,7 +169,7 @@ static int lockIdcmp2(struct AFS_FLOCK *flock1, struct vcache *vp,
 #if defined(AFS_AIX41_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_HPUX_ENV)
 	  (!onlymine && (flock1->l_pid == getppid()))
 #else
-#if defined(AFS_SGI65_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_SGI65_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
           /* XXX check this. used to be *only* irix for some reason. */
 	  (!onlymine && (flock1->l_pid == clid))
 #else
@@ -461,7 +461,7 @@ static void DoLockWarning(void)
 afs_lockctl(struct vcache *avc, struct eflock *af, int flag, 
 	struct AFS_UCRED *acred, pid_t clid, off_t offset)
 #else
-#if defined(AFS_SGI_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_SGI_ENV) || (defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_lockctl(struct vcache *avc, struct AFS_FLOCK *af, int acmd, struct AFS_UCRED *acred, pid_t clid)
 #else
 u_int clid=0;
@@ -821,7 +821,7 @@ static int GetFlockCount(struct vcache *avc, struct vrequest *areq)
 #endif
 
 
-#if	!defined(AFS_AIX_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_SGI_ENV) && !defined(UKERNEL) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if	!defined(AFS_AIX_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_SGI_ENV) && !defined(UKERNEL) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 /* Flock not support on System V systems */
 #ifdef AFS_OSF_ENV
 extern struct fileops afs_fileops;

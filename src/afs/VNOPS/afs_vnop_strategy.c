@@ -29,7 +29,7 @@ RCSID("$Header$");
 
 
 
-#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 afs_ustrategy(abp, credp)
     struct AFS_UCRED *credp;
 #else
@@ -40,14 +40,14 @@ afs_ustrategy(abp)
     struct uio tuio;
     register struct vcache *tvc = VTOAFS(abp->b_vp);
     register afs_int32 len = abp->b_bcount;
-#if	!defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if	!defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #ifdef	AFS_AIX41_ENV
     struct ucred *credp;
 #else
     struct AFS_UCRED *credp = u.u_cred;
 #endif
 #endif
-#if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_SUN_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     int async = abp->b_flags & B_ASYNC;
 #endif
     struct iovec tiovec[1];
@@ -75,7 +75,7 @@ afs_ustrategy(abp)
 	*/
 	tuio.afsio_iov = tiovec;
 	tuio.afsio_iovcnt = 1;
-#if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_XBSD_ENV)
 #ifdef AFS_64BIT_CLIENT
 	tuio.afsio_offset = (afs_offs_t) dbtob(abp->b_blkno);
 #else /* AFS_64BIT_CLIENT */
@@ -92,11 +92,11 @@ afs_ustrategy(abp)
 	tuio.afsio_fmode = 0;
 #endif
 	tuio.afsio_resid = abp->b_bcount;
-#if defined(AFS_FBSD_ENV)
+#if defined(AFS_XBSD_ENV)
 	tiovec[0].iov_base = abp->b_saveaddr;
 #else
 	tiovec[0].iov_base = abp->b_un.b_addr;
-#endif /* AFS_FBSD_ENV */
+#endif /* AFS_XBSD_ENV */
 	tiovec[0].iov_len = abp->b_bcount;
 	/* are user's credentials valid here?  probably, but this
 	     sure seems like the wrong things to do. */
@@ -107,11 +107,11 @@ afs_ustrategy(abp)
 #endif
 	if (code == 0) {
 	    if (tuio.afsio_resid > 0)
-#if defined(AFS_FBSD_ENV)
+#if defined(AFS_XBSD_ENV)
 		memset(abp->b_saveaddr + abp->b_bcount - tuio.afsio_resid, 0, tuio.afsio_resid);
 #else
 		memset(abp->b_un.b_addr + abp->b_bcount - tuio.afsio_resid, 0, tuio.afsio_resid);
-#endif /* AFS_FBSD_ENV */
+#endif /* AFS_XBSD_ENV */
 #ifdef	AFS_AIX32_ENV
 	    /*
 	     * If we read a block that is past EOF and the user was not storing
@@ -166,11 +166,11 @@ afs_ustrategy(abp)
 	len = MIN(abp->b_bcount, (VTOAFS(abp->b_vp))->m.Length - dbtob(abp->b_blkno));
 #endif	/* AFS_ALPHA_ENV */
 	tuio.afsio_resid = len;
-#if defined(AFS_FBSD_ENV)
+#if defined(AFS_XBSD_ENV)
 	tiovec[0].iov_base = abp->b_saveaddr;
 #else
 	tiovec[0].iov_base = abp->b_un.b_addr;
-#endif /* AFS_FBSD_ENV */
+#endif /* AFS_XBSD_ENV */
 	tiovec[0].iov_len = len;
 	/* are user's credentials valid here?  probably, but this
 	     sure seems like the wrong things to do. */
@@ -181,7 +181,7 @@ afs_ustrategy(abp)
 #endif
     }
 #if	!defined(AFS_AIX32_ENV) && !defined(AFS_SUN5_ENV)
-#if defined(AFS_DUX40_ENV) || defined (AFS_FBSD_ENV)
+#if defined(AFS_DUX40_ENV) || defined (AFS_XBSD_ENV)
     if (code) {
 	abp->b_error = code;
 	abp->b_flags |= B_ERROR;

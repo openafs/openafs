@@ -397,7 +397,6 @@ void afs_PutFakeStat(struct afs_fakestat_state *state)
     
 int afs_ENameOK(register char *aname)
 {
-    register char tc;
     register int tlen;
 
     AFS_STATCNT(ENameOK);
@@ -470,9 +469,9 @@ int Next_AtSys(register struct vcache *avc, struct vrequest *areq,
       } else
 	return 0; /* .*@sys doesn't match either */
   } else if (++(state->index) >= afs_sysnamecount
-	     || !afs_sysnamelist[state->index])
+	     || !afs_sysnamelist[(int)state->index])
     return 0;	/* end of list */
-  strcpy(state->name+state->offset, afs_sysnamelist[state->index]);
+  strcpy(state->name+state->offset, afs_sysnamelist[(int)state->index]);
   return 1;
 }
 
@@ -527,10 +526,6 @@ int afs_DoBulkStat(struct vcache *adp, long dirCookie, struct vrequest *areqp)
     struct conn *tcp;		/* conn for call */
     AFSCBs cbParm;		/* callback parm for bulk stat */
     struct server *hostp = 0;	/* host we got callback from */
-    long origEvenCBs;		/* original # of callbacks for even-fid files */
-    long origOddCBs;		/* original # of callbacks for odd-fid files */
-    long origEvenZaps;		/* original # of recycles for even-fid files */
-    long origOddZaps;		/* original # of recycles for odd-fid files */
     long startTime;		/* time we started the call,
 				 * for callback expiration base
 				 */

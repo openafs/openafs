@@ -103,7 +103,7 @@ int afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
      * anyway, so the difference between 512K and 1000000 shouldn't matter
      * much, and "&" is a lot faster than "%".
      */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     /* nfs on these systems puts an 0 in nsec and stores the nfs usec (aka 
        dataversion) in va_gen */
 
@@ -117,7 +117,7 @@ int afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
     attrs->va_atime.tv_nsec = attrs->va_mtime.tv_nsec =
 	attrs->va_ctime.tv_nsec =
 	    (hgetlo(avc->m.DataVersion) & 0x7ffff) * 1000;
-#if defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     attrs->va_blocksize = PAGESIZE;		/* XXX Was 8192 XXX */
 #else
     attrs->va_blksize = PAGESIZE;		/* XXX Was 8192 XXX */
@@ -154,7 +154,7 @@ int afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
     attrs->va_flags = 0;
 #endif	/* AFS_OSF_ENV || AFS_DARWIN_ENV */
 
-#if !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #if !defined(AFS_HPUX_ENV)
 #ifdef	AFS_SUN5_ENV
     attrs->va_nblocks = (attrs->va_size? ((attrs->va_size + 1023)>>10) << 1 : 0);
@@ -168,7 +168,7 @@ int afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
 #else /* !defined(AFS_HPUX_ENV) */
     attrs->va_blocks = (attrs->va_size? ((attrs->va_size + 1023)>>10) : 0);
 #endif /* !defined(AFS_HPUX_ENV) */
-#else	/* ! AFS_OSF_ENV && !AFS_FBSD_ENV */
+#else	/* ! AFS_OSF_ENV && !AFS_XBSD_ENV */
     attrs->va_bytes = (attrs->va_size? (attrs->va_size + 1023) : 1024);
 #ifdef	va_bytes_rsv
     attrs->va_bytes_rsv = -1;
@@ -286,7 +286,7 @@ int afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 		  return EACCES;
 	      }
 	      if (avc->mvstat == 2) {
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 		  attrs->va_mtime.tv_nsec += ((++avc->xlatordv) * 1000); 
 #else
 		  attrs->va_mtime.tv_usec += ++avc->xlatordv; 
@@ -412,7 +412,7 @@ int afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
 #endif
 	mask |= AFS_SETMODTIME;
 #ifndef	AFS_SGI_ENV
-#if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if	defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	if (av->va_mtime.tv_nsec == -1)
 #else
 	if (av->va_mtime.tv_usec == -1)

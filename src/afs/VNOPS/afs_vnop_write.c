@@ -561,7 +561,7 @@ int afs_UFSWrite(register struct vcache *avc, struct uio *auio,
         VOP_UNLOCK(tfile->vnode, 0, current_proc());
         AFS_GLOCK();
 #else
-#if defined(AFS_FBSD_ENV)
+#if defined(AFS_XBSD_ENV)
         AFS_GUNLOCK();
         VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curproc);
         code = VOP_WRITE(tfile->vnode, &tuio, 0, &afs_osi_cred);
@@ -569,7 +569,7 @@ int afs_UFSWrite(register struct vcache *avc, struct uio *auio,
         AFS_GLOCK();
 #else
 	code = VOP_RDWR(tfile->vnode, &tuio, UIO_WRITE, 0, &afs_osi_cred);
-#endif /* AFS_FBSD_ENV */
+#endif /* AFS_XBSD_ENV */
 #endif /* AFS_DARWIN_ENV */
 #endif /* AFS_LINUX20_ENV */
 #endif /* AFS_HPUX100_ENV */
@@ -651,7 +651,7 @@ int afs_UFSWrite(register struct vcache *avc, struct uio *auio,
      * If write is implemented via VM, afs_fsync() is called from the high-level
      * write op.
      */
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
      if (noLock && (aio & IO_SYNC)) {
 #else 
 #ifdef	AFS_HPUX_ENV
@@ -691,7 +691,7 @@ int afs_DoPartialWrite(register struct vcache *avc, struct vrequest *areq)
 
 
 
-#if !defined (AFS_AIX_ENV) && !defined (AFS_HPUX_ENV) && !defined (AFS_SUN5_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
+#if !defined (AFS_AIX_ENV) && !defined (AFS_HPUX_ENV) && !defined (AFS_SUN5_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_XBSD_ENV)
 #ifdef AFS_DUX50_ENV
 #define vno_close(X) vn_close((X), 0, NOCRED)
 #elif defined(AFS_DUX40_ENV)

@@ -39,7 +39,7 @@
 #define	AFS_XLATOR_MAGIC	0x87654321
 #endif
 
-#if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #define AFS_NFSXLATORREQ(cred) 0
 #else
 #ifdef	AFS_OSF_ENV
