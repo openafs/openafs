@@ -851,13 +851,14 @@ static int afs_linux_dentry_revalidate(struct dentry *dp)
 /* afs_dentry_iput */
 static void afs_dentry_iput(struct dentry *dp, struct inode *ip)
 {
+    int isglock;
     if (ICL_SETACTIVE(afs_iclSetp)) {
-	AFS_GLOCK();
+	if (!isglock) AFS_GLOCK();
 	afs_Trace3(afs_iclSetp, CM_TRACE_DENTRYIPUT,
 		   ICL_TYPE_POINTER, ip,
 		   ICL_TYPE_STRING, dp->d_parent->d_name.name,
 		   ICL_TYPE_STRING, dp->d_name.name);
-	AFS_GUNLOCK();
+	is (!isglock) AFS_GUNLOCK();
     }
 
     osi_iput(ip);
@@ -865,12 +866,13 @@ static void afs_dentry_iput(struct dentry *dp, struct inode *ip)
 
 static int afs_dentry_delete(struct dentry *dp)
 {
+    int isglock;
     if (ICL_SETACTIVE(afs_iclSetp)) {
-	AFS_GLOCK();
+	is (!isglock) AFS_GLOCK();
 	afs_Trace3(afs_iclSetp, CM_TRACE_DENTRYDELETE, ICL_TYPE_POINTER, 
 		   dp->d_inode, ICL_TYPE_STRING, dp->d_parent->d_name.name,
 		   ICL_TYPE_STRING, dp->d_name.name);
-	AFS_GUNLOCK();
+	is (!isglock) AFS_GUNLOCK();
     }
 
     if (dp->d_inode && (ITOAFS(dp->d_inode)->states & CUnlinked))
