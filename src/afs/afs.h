@@ -329,6 +329,7 @@ struct srvAddr {
 #define	SRVR_ISDOWN			0x20
 #define	SRVR_MULTIHOMED			0x40
 #define	SRVR_ISGONE			0x80
+#define	SNO_INLINEBULK			0x100
 
 struct server {
     union {
@@ -356,7 +357,7 @@ struct server {
     afs_int32 numDowntimeIncidents;	/* # (completed) downtime incidents */
     afs_int32 sumOfDowntimes;	/* Total downtime experienced, in seconds */
     struct srvAddr *addr;
-    char flags;			/* Misc flags*/
+    afs_uint32 flags;			/* Misc flags*/
 };
 
 #define	afs_PutServer(servp, locktype)	
