@@ -9,8 +9,8 @@
 
 /* AFS based headers */
 #include "../afs/stds.h"
-#include "../afs/afs_osi.h"
 #include "../rx/rx.h"
+#include "../afs/afs_osi.h"
 #include "../afs/lock.h"
 #include "../afs/volerrors.h"
 #include "../afs/voldefs.h"

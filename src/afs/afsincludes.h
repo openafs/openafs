@@ -26,8 +26,8 @@
 #if defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)
 #include "../afs/osi_vfs.h"
 #endif
-#include "../afs/afs_osi.h"
 #include "../rx/rx.h"
+#include "../afs/afs_osi.h"
 #include "../afs/lock.h"
 #include "../afs/volerrors.h"
 #include "../afs/voldefs.h"
