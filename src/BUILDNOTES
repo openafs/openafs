@@ -13,7 +13,9 @@ Redhat 7.0 (i386_linux22):
 	source tree with a switch in include/linux/version.h.
 
 HPUX 11.0 (hp_ux110):
-	Does not currently build. However, you will need to make sure 
-	the KernDevKit package from the CoreOS media is installed if
-	you wish to work on it.
+	Does not currently build libafs, which means no afs client support,
+	however, the client tools, and all of the server code does get built.
+	
+	For future kernel development, the KernDevKit package from the CoreOS
+	media is required.
 
