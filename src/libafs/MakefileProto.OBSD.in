@@ -13,7 +13,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 # System specific build commands and flags
 KSRC = /usr/src/sys
 KFLAGS= -Wall -nostdinc
-<all -i386_obsd31 -i386_obsd32>
+<i386_obsd33>
 KFLAGS+= -fno-stack-protector
 <all>
 KDEFS= \
