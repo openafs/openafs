@@ -11,6 +11,7 @@
 #define _AFS_PROTOTYPES_H_
 
 /* afs_analyze.c */
+extern void init_et_to_sys_error(void);
 extern void afs_FinalizeReq(struct vrequest *areq);
 extern int afs_Analyze(register struct conn *aconn, afs_int32 acode,
     struct VenusFid *afid, register struct vrequest *areq, int op,
