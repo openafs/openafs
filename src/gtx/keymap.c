@@ -20,6 +20,7 @@ RCSID("$Header$");
 #include <strings.h>
 #endif
 #endif
+#include <stdlib.h>
 
 #include "gtxkeymap.h"
 

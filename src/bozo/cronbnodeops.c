@@ -29,6 +29,7 @@ RCSID("$Header$");
 #include <strings.h>
 #endif
 #endif
+#include <stdlib.h>
 
 #include <afs/ktime.h>
 #include <afs/afsutil.h>

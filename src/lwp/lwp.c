@@ -38,6 +38,14 @@ RCSID("$Header$");
 extern char* getenv();
 #include <time.h>
 #endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+
 #if	!defined(USE_PTHREADS) && !defined(USE_SOLARIS_THREADS)
 
 #ifdef	AFS_OSF_ENV

@@ -33,6 +33,7 @@ RCSID("$Header$");
 #include <strings.h>
 #endif
 #endif
+#include <stdlib.h>
 
 /*
  * Number of known gator object types.

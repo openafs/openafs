@@ -21,6 +21,13 @@ RCSID("$Header$");
 #include "xstat_fs.h"		/*Interface for xstat_fs module*/
 #include <cmd.h>		/*Command line interpreter*/
 #include <time.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 
 /*
  * External routines that don't have explicit include file definitions.

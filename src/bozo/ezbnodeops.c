@@ -27,6 +27,7 @@ RCSID("$Header$");
 #include <strings.h>
 #endif
 #endif
+#include <stdlib.h>
 
 #include <afs/afsutil.h>
 #include <afs/procmgmt.h>  /* signal(), kill(), wait(), etc. */

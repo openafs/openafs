@@ -59,14 +59,12 @@ pam_sm_authenticate(
     int use_klog = 0;
     int set_expires = 0;  /* This option is only used in pam_set_cred() */
     int got_authtok = 0;	/* got PAM_AUTHTOK upon entry */
-    int nouser = 0;
     char *user = NULL, *password = NULL;
     long password_expires = -1;
     int torch_password = 1;
     int i;
     struct pam_conv *pam_convp = NULL;
     int auth_ok;
-    uid_t uid;
     struct passwd unix_pwd, *upwd = NULL;
     char upwd_buf[2048];	/* size is a guess. */
     char*	reason = NULL;

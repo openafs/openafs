@@ -37,6 +37,7 @@ RCSID("$Header$");
 #include <strings.h>
 #endif
 #endif
+#include <stdlib.h>
 
 #include <afs/debug.h>
 #include "usd.h"

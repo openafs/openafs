@@ -134,10 +134,9 @@ rxkad_level enclevel; {
 /* build a fake ticket for 'afs' using keys from adir, returning an
  * appropriate security class and index
  */
-afs_int32 afsconf_ClientAuth(adir, astr, aindex)
-struct afsconf_dir *adir;
-struct rx_securityClass **astr;
-afs_int32 *aindex; {
+afs_int32 afsconf_ClientAuth(struct afsconf_dir *adir, 
+	struct rx_securityClass **astr, afs_int32 *aindex)
+{
     afs_int32 rc;
 
     LOCK_GLOBAL_MUTEX

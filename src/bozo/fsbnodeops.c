@@ -32,6 +32,7 @@ RCSID("$Header$");
 #include <strings.h>
 #endif
 #endif
+#include <stdlib.h>
 
 #endif /* AFS_NT40_ENV */
 #include <sys/stat.h>

@@ -37,6 +37,13 @@ RCSID("$Header$");
 #include <sys/file.h>
 #include <sys/time.h>
 #endif
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <errno.h>
 #include <sys/stat.h>
 

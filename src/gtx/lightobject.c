@@ -29,6 +29,7 @@ RCSID("$Header$");
 #include <strings.h>
 #endif
 #endif
+#include <stdlib.h>
 
 
 /*Externally-advertised array of light onode operations*/

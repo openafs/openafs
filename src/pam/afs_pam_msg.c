@@ -13,6 +13,14 @@
 RCSID("$Header$");
 
 #include <stdio.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
+#include <stdlib.h>
 #include <security/pam_appl.h>
 #include "afs_pam_msg.h"
 #include "afs_message.h"

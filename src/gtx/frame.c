@@ -25,6 +25,7 @@ RCSID("$Header$");
 #include <strings.h>
 #endif
 #endif
+#include <stdlib.h>
 
 #include "gtxobjects.h"
 #include "gtxwindows.h"
