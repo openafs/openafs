@@ -1305,7 +1305,9 @@ long smb_ReceiveV3Trans(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
     asp->curParms += parmCount;
 
     /* finally, if we're done, remove the packet from the queue and dispatch it */
-    if (asp->totalData <= asp->curData && asp->totalParms <= asp->curParms) {
+    if (asp->curData > 0 && asp->curParms > 0 && 
+        asp->totalData <= asp->curData && 
+        asp->totalParms <= asp->curParms) {
 		/* we've received it all */
         lock_ObtainWrite(&smb_globalLock);
 		osi_QRemove((osi_queue_t **) &smb_tran2AssemblyQueuep, &asp->q);
