@@ -640,10 +640,14 @@ void Terminate_OnOK (HWND hDlg)
       if (IsDlgButtonChecked (hDlg, IDC_STOP))
          {
          SC_HANDLE hManager;
-         if ((hManager = OpenSCManager (NULL, NULL, SC_MANAGER_ALL_ACCESS)) != NULL)
+             if ((hManager = OpenSCManager (NULL, NULL, 
+                                            SC_MANAGER_CONNECT |
+                                            SC_MANAGER_ENUMERATE_SERVICE |
+                                            SC_MANAGER_QUERY_LOCK_STATUS)) != NULL)
             {
             SC_HANDLE hService;
-            if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), SERVICE_ALL_ACCESS)) != NULL)
+            if ((hService = OpenService (hManager, TEXT("TransarcAFSDaemon"), 
+                                         SERVICE_QUERY_STATUS | SERVICE_START)) != NULL)
                {
                SERVICE_STATUS Status;
                ControlService (hService, SERVICE_CONTROL_STOP, &Status);
