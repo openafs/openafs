@@ -433,10 +433,8 @@ void DriveEdit_OnInitDialog (HWND hDlg)
    SendMessage (hCombo, CB_SETCURSEL, iItemSel, 0);
 
    TCHAR szMapping[ MAX_PATH ];
-   memset(szMapping, '\0', sizeof(szMapping));
-   szMapping[0] = '\\';
-   lana_GetNetbiosName(&szMapping[1], LANA_NETBIOS_NAME_FULL);
-
+   AdjustAfsPath (szMapping, ((pMap->szMapping[0]) ? pMap->szMapping : cm_slash_mount_root), TRUE, FALSE);
+   
    CHAR msg[256], msgf[256];
    if (GetDlgItemText(hDlg,IDC_STATICSUBMOUNT,(LPSTR)msg,sizeof(msg)-1)>0)
    {
