@@ -987,6 +987,9 @@ asmlinkage int afs_syscall(long syscall, long parm1, long parm2, long parm3,
     long linux_ret=0;
     long *retval = &linux_ret;
     long eparm[4]; /* matches AFSCALL_ICL in fstrace.c */
+#ifdef AFS_SPARC64_LINUX24_ENV
+    afs_int32 eparm32[4];
+#endif
     /* eparm is also used by AFSCALL_CALL in afsd.c */
 #else
 #if defined(UKERNEL)
@@ -1049,6 +1052,25 @@ Afs_syscall ()
     uap->parm2 = parm2;
     uap->parm3 = parm3;
     if (syscall == AFSCALL_ICL || syscall == AFSCALL_CALL) {
+#ifdef AFS_SPARC64_LINUX24_ENV
+/* from arch/sparc64/kernel/sys_sparc32.c */
+#define AA(__x)                                \
+({     unsigned long __ret;            \
+       __asm__ ("srl   %0, 0, %0"      \
+                : "=r" (__ret)         \
+                : "0" (__x));          \
+       __ret;                          \
+})
+
+
+	if (current->thread.flags & SPARC_FLAG_32BIT) {
+	AFS_COPYIN((char*)parm4, (char*)eparm32, sizeof(eparm32), code);
+	eparm[0]=AA(eparm32[0]);
+	eparm[1]=AA(eparm32[1]);
+	eparm[2]=AA(eparm32[2]);
+#undef AA
+} else
+#endif
 	AFS_COPYIN((char*)parm4, (char*)eparm, sizeof(eparm), code);
 	uap->parm4 = eparm[0];
 	uap->parm5 = eparm[1];
