@@ -512,11 +512,7 @@ void WriteVolumeHeader_r(ec, vp)
    normally goes online at this time.  An offline volume
    must be reattached to make it go online */
 Volume *
-VAttachVolumeByName(ec, partition, name, mode)
-    Error *ec;
-    char *partition;
-    char *name;
-    int mode;
+VAttachVolumeByName(Error *ec, char *partition, char *name, int mode)
 {
     Volume *retVal;
     VATTACH_LOCK
@@ -528,11 +524,7 @@ VAttachVolumeByName(ec, partition, name, mode)
 }
 
 Volume *
-VAttachVolumeByName_r(ec, partition, name, mode)
-    Error *ec;
-    char *partition;
-    char *name;
-    int mode;
+VAttachVolumeByName_r(Error *ec, char *partition, char *name, int mode)
 {
     register Volume *vp;
     int fd,n;
@@ -685,12 +677,8 @@ done:
 	return vp;
 }
 
-private Volume *attach2(ec, path, header, partp, isbusy)
-    Error *ec;
-    char *path;
-    register struct VolumeHeader *header;
-    struct DiskPartition *partp;
-    int isbusy;
+private Volume *attach2(Error *ec, char *path, register struct VolumeHeader 
+			*header, struct DiskPartition *partp, int isbusy)
 {
     register Volume *vp;
 
@@ -729,7 +717,7 @@ private Volume *attach2(ec, path, header, partp, isbusy)
     if (!*ec) {
 	struct IndexFileHeader iHead;
 
-#if TRANSARC_VOL_STATS
+#if OPENAFS_VOL_STATS
 	/*
 	 * We just read in the diskstuff part of the header.  If the detailed
 	 * volume stats area has not yet been initialized, we should bzero the
@@ -739,7 +727,7 @@ private Volume *attach2(ec, path, header, partp, isbusy)
 	    memset((char *)(V_stat_area(vp)), 0, VOL_STATS_BYTES);
 	    V_stat_initialized(vp) = 1;
 	}
-#endif /* TRANSARC_VOL_STATS */
+#endif /* OPENAFS_VOL_STATS */
 	VOL_UNLOCK
     	(void) ReadHeader(ec, vp->vnodeIndex[vSmall].handle, 
 			  (char *)&iHead, sizeof(iHead), 
@@ -845,10 +833,7 @@ private Volume *attach2(ec, path, header, partp, isbusy)
  */
 
 Volume *
-VAttachVolume(ec,volumeId, mode)
-    Error *ec;
-    VolumeId volumeId;
-    int mode;
+VAttachVolume(Error *ec, VolumeId volumeId, int mode)
 {
     Volume *retVal;
     VATTACH_LOCK
@@ -860,10 +845,7 @@ VAttachVolume(ec,volumeId, mode)
 }
 
 Volume *
-VAttachVolume_r(ec,volumeId, mode)
-    Error *ec;
-    VolumeId volumeId;
-    int mode;
+VAttachVolume_r(Error *ec, VolumeId volumeId, int mode)
 {
     char *part, *name;
     GetVolumePath(ec,volumeId, &part, &name);
@@ -975,9 +957,7 @@ void VPutVolume(register Volume *vp)
 /* Get a pointer to an attached volume.  The pointer is returned regardless
    of whether or not the volume is in service or on/off line.  An error
    code, however, is returned with an indication of the volume's status */
-Volume *VGetVolume(ec,volumeId)
-    Error *ec;
-    VolId volumeId;
+Volume *VGetVolume(Error *ec, VolId volumeId)
 {
     Volume *retVal;
     VOL_LOCK
@@ -986,9 +966,7 @@ Volume *VGetVolume(ec,volumeId)
     return retVal;
 }
 
-Volume *VGetVolume_r(ec,volumeId)
-    Error *ec;
-    VolId volumeId;
+Volume *VGetVolume_r(Error *ec, VolId volumeId)
 {
     Volume *vp;
     unsigned short V0=0, V1=0, V2=0, V3=0, V4=0, V5=0, V6=0, V7=0, V8=0, V9=0;
@@ -1218,16 +1196,21 @@ void VDetachVolume_r(Error *ec, Volume *vp)
     /* Will be detached sometime in the future--this is OK since volume is offline */
 
     if (programType == volumeUtility && notifyServer) {
-	/* Note:  The server is not notified in the case of a bogus volume explicitly to
-	   make it possible to create a volume, do a partial restore, then abort the
-	   operation without ever putting the volume online.  This is essential in the
-   	   case of a volume move operation between two partitions on the same server.  In
-	   that case, there would be two instances of the same volume, one of them bogus,
-	   which the file server would attempt to put on line */
+	/* 
+	 * Note:  The server is not notified in the case of a bogus volume 
+	 * explicitly to make it possible to create a volume, do a partial 
+	 * restore, then abort the operation without ever putting the volume 
+	 * online.  This is essential in the case of a volume move operation 
+	 * between two partitions on the same server.  In that case, there 
+	 * would be two instances of the same volume, one of them bogus, 
+	 * which the file server would attempt to put on line 
+	 */
 	if (useDone)
-	    FSYNC_askfs(volume, tpartp->name, FSYNC_DONE, 0);	/* don't put online */
+	    /* don't put online */
+	    FSYNC_askfs(volume, tpartp->name, FSYNC_DONE, 0);	
 	else {
-	    FSYNC_askfs(volume, tpartp->name, FSYNC_ON, 0);	/* fs can use it again */
+            /* fs can use it again */
+	    FSYNC_askfs(volume, tpartp->name, FSYNC_ON, 0);	
 	    /* Dettaching it so break all callbacks on it*/
 	    if (V_BreakVolumeCallbacks) {
 		Log("volume %u detached; breaking all call backs\n", volume);
@@ -1245,10 +1228,8 @@ void VDetachVolume(Error *ec, Volume *vp)
 }
 
 
-int VAllocBitmapEntry_r(ec,vp,index)
-    Error *ec;
-    Volume *vp;
-    register struct vnodeIndex *index;
+int VAllocBitmapEntry_r(Error *ec, Volume *vp, register struct vnodeIndex
+			*index)
 {
     register byte *bp,*ep;
     *ec = 0;
@@ -1321,10 +1302,7 @@ int VAllocBitmapEntry_r(ec,vp,index)
     return index->bitmapOffset*8;
 }
 
-int VAllocBitmapEntry(ec,vp,index)
-    Error *ec;
-    Volume *vp;
-    register struct vnodeIndex *index;
+int VAllocBitmapEntry(Error *ec, Volume *vp, register struct vnodeIndex *index)
 {
     int retVal;
     VOL_LOCK
@@ -1402,8 +1380,7 @@ void VSyncVolume(Error *ec, Volume *vp)
     VOL_UNLOCK
 }
 
-static void FreeVolume(vp)
-    Volume *vp;
+static void FreeVolume(Volume *vp)
 {
     int i;
     if (!vp)
@@ -1547,27 +1524,25 @@ static void GetVolumePath(Error *ec, VolId volumeId, char **partitionp,
     }
 }	
 
-VolumeNumber(name)
-    char *name;
+int VolumeNumber(char *name)
 {
     if (*name == '/')
         name++;
     return atoi(name+1);
 }
 
-char *VolumeExternalName(volumeId)
-    VolumeId volumeId;
+char *VolumeExternalName(VolumeId volumeId)
 {
     static char name[15];
     sprintf(name,VFORMAT,volumeId);
     return name;
 }
 
-#if TRANSARC_VOL_STATS
+#if OPENAFS_VOL_STATS
 #define OneDay	(86400)			/* 24 hours' worth of seconds */
 #else
 #define OneDay	(24*60*60)		/* 24 hours */
-#endif /* TRANSARC_VOL_STATS */
+#endif /* OPENAFS_VOL_STATS */
 
 #define Midnight(date) ((date-TimeZoneCorrection)/OneDay*OneDay+TimeZoneCorrection)
 
@@ -1593,11 +1568,8 @@ char *VolumeExternalName(volumeId)
  *	As described.
  *------------------------------------------------------------------------*/
 
-VAdjustVolumeStatistics_r(vp)
-    register Volume *vp;
-
-{ /*VAdjustVolumeStatistics*/
-
+int VAdjustVolumeStatistics_r(register Volume *vp)
+{
     unsigned int now = FT_ApproxTime();
 
     if (now - V_dayUseDate(vp) > OneDay) {
@@ -1613,30 +1585,26 @@ VAdjustVolumeStatistics_r(vp)
 	V_dayUse(vp) = 0;
 	V_dayUseDate(vp) = Midnight(now);
 
-#if TRANSARC_VOL_STATS
+#if OPENAFS_VOL_STATS
 	/*
 	 * All we need to do is bzero the entire VOL_STATS_BYTES of
 	 * the detailed volume statistics area.
 	 */
 	memset((char *)(V_stat_area(vp)), 0, VOL_STATS_BYTES);
-#endif /* TRANSARC_VOL_STATS */
+#endif /* OPENAFS_VOL_STATS */
     } /*It's been more than a day of collection*/
 
-#if TRANSARC_VOL_STATS
     /*
      * Always return happily.
      */
     return(0);
-#endif /* TRANSARC_VOL_STATS */
-
 } /*VAdjustVolumeStatistics*/
 
-VAdjustVolumeStatistics(vp)
-    register Volume *vp;
+int VAdjustVolumeStatistics(register Volume *vp)
 {
     int retVal;
     VOL_LOCK
-    VAdjustVolumeStatistics_r(vp);
+    retVal = VAdjustVolumeStatistics_r(vp);
     VOL_UNLOCK
     return retVal;
 }
@@ -1754,8 +1722,7 @@ static void VScanUpdateList() {
 static struct volHeader *volumeLRU;
 
 /* Allocate a bunch of headers; string them together */
-static void InitLRU(howMany)
-int howMany;
+static void InitLRU(int howMany)
 {
     register struct volHeader *hp;
     if (programType != fileServer)
@@ -1767,8 +1734,7 @@ int howMany;
 
 /* Get a volume header from the LRU list; update the old one if necessary */
 /* Returns 1 if there was already a header, which is removed from the LRU list */
-static int GetVolumeHeader(vp)
-register Volume *vp;
+static int GetVolumeHeader(register Volume *vp)
 {
     Error error;
     register struct volHeader *hd;
@@ -1793,10 +1759,12 @@ register Volume *vp;
 	}
 	else {
 	    if (volumeLRU)
-		hd = volumeLRU->prev; /* not currently in use and least recently used */
+		/* not currently in use and least recently used */
+		hd = volumeLRU->prev; 
 	    else {
 		hd = (struct volHeader *) calloc(1, sizeof(*vp->header));
-		hd->prev = hd->next = hd;	/* make it look like single elt LRU */
+		/* make it look like single elt LRU */
+		hd->prev = hd->next = hd;	
 		if (!everLogged) {
 		    Log("****Allocated more volume headers, probably leak****\n");
 		    everLogged=1;
@@ -1825,8 +1793,7 @@ register Volume *vp;
 }
 
 /* Put it at the top of the LRU chain */
-static void ReleaseVolumeHeader(hd)
-    register struct volHeader *hd;
+static void ReleaseVolumeHeader(register struct volHeader *hd)
 {
     if (programType != fileServer)
 	return;
@@ -1842,8 +1809,7 @@ static void ReleaseVolumeHeader(hd)
     volumeLRU = hd;
 }
 
-static void FreeVolumeHeader(vp)
-register Volume *vp;
+static void FreeVolumeHeader(register Volume *vp)
 {
     register struct volHeader *hd = vp->header;
     if (!hd)
@@ -1863,8 +1829,7 @@ register Volume *vp;
 /* Routines to add volume to hash chain, delete it */
 /***************************************************/
 
-static void AddVolumeToHashTable(vp, hashid)
-register Volume *vp;
+static void AddVolumeToHashTable(register Volume *vp, int hashid)
 {
     int hash = VOLUME_HASH(hashid);
     vp->hashid = hashid;
@@ -1873,8 +1838,7 @@ register Volume *vp;
     vp->vnodeHashOffset = VolumeHashOffset_r();
 }    
 
-static void DeleteVolumeFromHashTable(vp)
-register Volume *vp;
+static void DeleteVolumeFromHashTable(register Volume *vp)
 {
     int hash = VOLUME_HASH(vp->hashid);
     if (VolumeHashTable[hash] == vp)

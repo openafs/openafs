@@ -450,8 +450,7 @@ int UseTheForceLuke(char *path);
 static int IsVnodeOrphaned(VnodeId vnode);
 
 /* Uniquifier stored in the Inode */
-static Unique IUnique(u)
-  Unique u;
+static Unique IUnique(Unique u)
 {
 #ifdef	AFS_3DISPARES
   return(u & 0x3fffff);
@@ -464,8 +463,8 @@ static Unique IUnique(u)
 #endif
 }
 
-static int BadError(aerror)
-register int aerror; {
+static int BadError(register int aerror)
+{
     if (aerror == EPERM || aerror == ENXIO || aerror == ENOENT)
 	return 1;
     return 0;	/* otherwise may be transient, e.g. EMFILE */
@@ -473,8 +472,7 @@ register int aerror; {
 
 
 char *tmpdir = 0;
-static handleit(as)
-    struct cmd_syndesc *as;
+static int handleit(struct cmd_syndesc *as)
 {
     register struct cmd_item *ti;
     char pname[100], *temp;
@@ -666,8 +664,7 @@ int n_save_args = 0;
 pthread_t main_thread;
 #endif
 
-main(argc,argv)
-char **argv;
+int main(int argc, char **argv)
 {
     struct cmd_syndesc *ts;
     int err = 0;
@@ -834,12 +831,12 @@ int IsPartitionMounted(char *part)
 #endif
 /* Check if the given inode is the root of the filesystem. */
 #ifndef AFS_SGI_XFS_IOPS_ENV
-int IsRootInode(status)
-struct stat *status;
+int IsRootInode(struct stat *status)
 {
-    /* The root inode is not a fixed value in XFS partitions. So we need to see if
-     * the partition is in the list of mounted partitions. This only affects the
-     * SalvageFileSys path, so we check there.
+    /*
+     * The root inode is not a fixed value in XFS partitions. So we need to
+     * see if the partition is in the list of mounted partitions. This only 
+     * affects the SalvageFileSys path, so we check there.
      */
     return (status->st_ino == ROOTINODE);
 }
@@ -850,9 +847,7 @@ struct stat *status;
 /* We don't want to salvage big files filesystems, since we can't put volumes on
  * them.
  */
-int CheckIfBigFilesFS(mountPoint, devName)
-    char *mountPoint;
-    char *devName;
+int CheckIfBigFilesFS(char *mountPoint, char *devName)
 {
     struct superblock fs;
     char name[128];
@@ -1114,8 +1109,7 @@ void SalvageFileSys(struct DiskPartition *partP, VolumeId singleVolumeNumber)
 	Wait("SalvageFileSys");
 }
 
-char *get_DevName(pbuffer, wpath)
-char *wpath, *pbuffer;
+char *get_DevName(char *pbuffer, char *wpath)
 {
     char pbuf[128], *ptr;
     strcpy(pbuf, pbuffer);
@@ -1305,8 +1299,7 @@ void DeleteExtraVolumeHeaderFile(register struct VolumeSummary *vsp)
     vsp->fileName = 0;
 }
 
-CompareInodes(_p1,_p2)
-    const void *_p1,*_p2;
+CompareInodes(const void *_p1, const void *_p2)
 {
     register const struct ViceInodeInfo *p1 = _p1;
     register const struct ViceInodeInfo *p2 = _p2;
@@ -1430,9 +1423,7 @@ void CountVolumeInodes(register struct ViceInodeInfo *ip, int maxInodes,
     summary->maxUniquifier = maxunique;
 }
 
-int OnlyOneVolume(inodeinfo, singleVolumeNumber)
-    struct ViceInodeInfo *inodeinfo;
-    VolumeId singleVolumeNumber;
+int OnlyOneVolume(struct ViceInodeInfo *inodeinfo, VolumeId singleVolumeNumber)
 {
     if (inodeinfo->u.vnode.vnodeNumber == INODESPECIAL)
 	return (inodeinfo->u.special.parentId == singleVolumeNumber);
@@ -1602,8 +1593,7 @@ int GetInodeSummary(char *path, VolumeId singleVolumeNumber)
 /* Comparison routine for volume sort.
    This is setup so that a read-write volume comes immediately before
    any read-only clones of that volume */
-CompareVolumes(_p1,_p2)
-    const void *_p1,*_p2;
+int CompareVolumes(const void *_p1, const void *_p2)
 {
     register const struct VolumeSummary *p1 = _p1;
     register const struct VolumeSummary *p2 = _p2;
@@ -2643,8 +2633,7 @@ zooks:
     return err;
 }
 
-struct VnodeEssence *CheckVnodeNumber(vnodeNumber)
-    VnodeId vnodeNumber;
+struct VnodeEssence *CheckVnodeNumber(VnodeId vnodeNumber)
 {
     VnodeClass class;
     struct VnodeInfo *vip;
@@ -2655,7 +2644,6 @@ struct VnodeEssence *CheckVnodeNumber(vnodeNumber)
     offset = vnodeIdToBitNumber(vnodeNumber);
     return (offset >= vip->nVnodes? NULL: &vip->vnodes[offset]);
 }
-
 
 void CopyOnWrite(register struct DirSummary *dir)
 {
@@ -2700,9 +2688,11 @@ void CopyOnWrite(register struct DirSummary *dir)
     dir->copied = 1;
 }
  
-/* This function should either successfully create a new dir, or give up and leave
- * things the way they were.  In particular, if it fails to write the new dir properly,
- * it should return w/o changing the reference to the old dir.
+/*
+ * This function should either successfully create a new dir, or give up 
+ * and leave things the way they were.  In particular, if it fails to write 
+ * the new dir properly, it should return w/o changing the reference to the 
+ * old dir.
  */
 void CopyAndSalvage(register struct DirSummary *dir)
 {
@@ -2931,8 +2921,11 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
     else {
 	if (ShowSuid && (vnodeEssence->modeBits & 06000))
 	    Log("FOUND suid/sgid file: %s/%s (%u.%u %05o) author %u (vnode %u dir %u)\n", dir->name?dir->name:"??", name,
-		vnodeEssence->owner, vnodeEssence->group, vnodeEssence->modeBits, vnodeEssence->author,vnodeNumber, dir->vnodeNumber);
-	if (ShowMounts && (vnodeEssence->type == vSymlink) && !(vnodeEssence->modeBits & 0111)) {
+		vnodeEssence->owner, vnodeEssence->group, 
+		vnodeEssence->modeBits, vnodeEssence->author,vnodeNumber, 
+		dir->vnodeNumber);
+	if (ShowMounts && (vnodeEssence->type == vSymlink) && 
+	    !(vnodeEssence->modeBits & 0111)) {
 	    int code, size;	    
 	    char buf[1024];
 	    IHandle_t *ihP;
@@ -2956,8 +2949,11 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	}
 	if (ShowRootFiles && vnodeEssence->owner==0 && vnodeNumber != 1)
 	    Log("FOUND root file: %s/%s (%u.%u %05o) author %u (vnode %u dir %u)\n", dir->name?dir->name:"??", name,
-		vnodeEssence->owner, vnodeEssence->group, vnodeEssence->modeBits, vnodeEssence->author, vnodeNumber, dir->vnodeNumber);
-	if (vnodeIdToClass(vnodeNumber) == vLarge && vnodeEssence->name == NULL) {
+		vnodeEssence->owner, vnodeEssence->group,
+		vnodeEssence->modeBits, vnodeEssence->author, vnodeNumber, 
+		dir->vnodeNumber);
+	if (vnodeIdToClass(vnodeNumber) == vLarge && 
+	    vnodeEssence->name == NULL) {
 	    char *n;
 	    if (n = (char*)malloc(strlen(name)+1))
 		strcpy(n, name);
@@ -3084,10 +3080,7 @@ void DistilVnodeEssence(VolumeId rwVId, VnodeClass class, Inode ino,
     FDH_CLOSE(fdP);
 }
 
-static char *GetDirName(vnode, vp, path)
-    VnodeId vnode;
-    struct VnodeEssence *vp;
-    char *path;
+static char *GetDirName(VnodeId vnode, struct VnodeEssence *vp, char *path)
 {
     struct VnodeEssence *parentvp;
     
@@ -3106,8 +3099,7 @@ static char *GetDirName(vnode, vp, path)
 /* To determine if a vnode is orhpaned or not, the vnode and all its parent
  * vnodes must be "claimed". The vep->claimed flag is set in JudgeEntry().
  */
-static int IsVnodeOrphaned(vnode)
-    VnodeId vnode;
+static int IsVnodeOrphaned(VnodeId vnode)
 {
     struct VnodeEssence *vep;
     
@@ -3496,8 +3488,7 @@ void ClearROInUseBit(struct VolumeSummary *summary)
  * deleteMe - Always do so, only a partial volume.
  */
 void MaybeZapVolume(register struct InodeSummary *isp, char *message,
-		    int deleteMe,
-		    int check)
+		    int deleteMe, int check)
 {
     if (readOnly(isp) || deleteMe) {
 	if (isp->volSummary && isp->volSummary->fileName) {
@@ -3766,7 +3757,7 @@ char *a, *b, *c, *d, *e, *f, *g, *h, *i, *j, *k;
     Exit(1);
 }
 
-char * ToString(char *s)
+char *ToString(char *s)
 {
     register char *p;
     p = (char *) malloc(strlen(s)+1);
