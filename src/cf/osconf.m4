@@ -217,7 +217,7 @@ case $AFS_SYSNAME in
 		YACC="bison -y"
 		;;
 
-	ia64_linux24)
+	ia64_linux24|ia64_linux26)
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'

@@ -42,8 +42,8 @@ extern void osi_linux_free_inode_pages(void);
 extern void check_bad_parent(struct dentry *dp);
 
 /* osi_sysctl.c */
-extern int osi_sysctl_init();
-extern void osi_sysctl_clean();
+extern int osi_sysctl_init(void);
+extern void osi_sysctl_clean(void);
 
 /* osi_vm.c */
 extern int osi_VM_FlushVCache(struct vcache *avc, int *slept);
