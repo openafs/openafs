@@ -124,6 +124,7 @@ case $system in
         *-solaris*)
 		MKAFS_OSTYPE=SOLARIS
                 AC_MSG_RESULT(sun4)
+		SOLARIS_UFSVFS_HAS_DQRWLOCK
                 ;;
         *-hpux*)
 		MKAFS_OSTYPE=HPUX
