@@ -1274,7 +1274,7 @@ afs_tf_save_cred(aserver, atoken, aclient)
     struct ktc_principal principal;
     struct ktc_token token;
     int     status;
-    off_t   start, lseek();
+    off_t   start;
     int     lifetime, kvno;
     int     count;		/* count for write */
 
