@@ -96,10 +96,23 @@ ulock_getLock(atrans, atype, await)
   }
 
   /* Create new lock record and add to spec'd transaction:
+#if defined(UBIK_PAUSE)
+   * locktype.  Before doing that, set TRSETLOCK,
+   * to tell udisk_end that another thread (us) is waiting.
+#else
    * locktype. This field also tells us if the thread is 
    * waiting for a lock: It will be equal to LOCKWAIT.
+#endif 
    */
+#if defined(UBIK_PAUSE)
+  if (atrans->flag & TRSETLOCK) {
+     printf ("Ubik: Internal Error: TRSETLOCK already set?\n");
+     return EBUSY;
+  }
+  atrans->flag |= TRSETLOCK;
+#else
   atrans->locktype = LOCKWAIT;
+#endif /* UBIK_PAUSE */
   DBRELE(dbase);
   if (atype == LOCKREAD) {
      ObtainReadLock(&rwlock);
@@ -108,6 +121,18 @@ ulock_getLock(atrans, atype, await)
   }
   DBHOLD(dbase);
   atrans->locktype = atype;
+#if defined(UBIK_PAUSE)
+  atrans->flag &= ~TRSETLOCK;
+#if 0
+  /* We don't do this here, because this can only happen in SDISK_Lock,
+   *  and there's already code there to catch this condition.
+   */
+  if (atrans->flag & TRSTALE) {
+     udisk_end(atrans);
+     return UINTERNAL;
+  }
+#endif
+#endif /* UBIK_PAUSE */
 
 /*
  *ubik_print("Ubik: DEBUG: Thread 0x%x took %s lock\n", lwp_cpptr,
@@ -149,4 +174,41 @@ ulock_Debug(aparm)
      aparm->anyWriteLocks = ((rwlock.excl_locked == WRITE_LOCK) ? 1 : 0);
   }
 }
+
+#if defined(UBIK_PAUSE)
+/* Find the TID of the current write lock (or the best approximation thereof) */
+ulock_FindWLock(struct ubik_dbase *dbase, struct ubik_tid *atid)
+{
+    register struct ubik_lock *tl;
+    register struct ubik_trans *tt, *best;
+
+    best = 0;
+    for(tt=dbase->activeTrans; tt; tt=tt->next) {
+	if (tt->type != UBIK_WRITETRANS) continue;
+	if (!best || best->tid.counter > tt->tid.counter) {
+	    best = tt;
+	}
+	for(tl=tt->activeLocks; tl; tl=tl->next) {
+	    if (tl->type == LOCKWRITE) {
+		*atid = tt->tid;
+#ifdef GRAND_PAUSE_DEBUGGING
+		ubik_print ("Found real write lock tid %d.%d\n",
+			    atid->epoch, atid->counter);
+#endif
+		return 0;
+	    }
+	}
+    }
+    /* if we get here, no locks pending, return the best guess */
+    if (best) {
+	*atid = best->tid;
+#ifdef GRAND_PAUSE_DEBUGGING
+	ubik_print ("Found possible write transaction tid %d.%d\n",
+		    atid->epoch, atid->counter);
+#endif
+	return 0;
+    }
+    return EINVAL;
+}
+#endif /* UBIK_PAUSE */
 

@@ -323,9 +323,35 @@ static int BeginTrans(dbase, transMode, transPtr, readAny)
     struct ubik_trans *jt;
     register struct ubik_trans *tt;
     register afs_int32 code;
+#if defined(UBIK_PAUSE)
+    int count;
+#endif /* UBIK_PAUSE */
 
     if ((transMode != UBIK_READTRANS) && readAny) return UBADTYPE;
     DBHOLD(dbase);
+#if defined(UBIK_PAUSE)
+    /* if we're polling the slave sites, wait until the returns
+     *  are all in.  Otherwise, the urecovery_CheckTid call may
+     *  glitch us. 
+     */
+    if (transMode == UBIK_WRITETRANS)
+	for (count = 75; dbase->flags & DBVOTING; --count) {
+	    DBRELE(dbase);
+#ifdef GRAND_PAUSE_DEBUGGING
+	    if (count==75)
+		fprintf (stderr,"%ld: myport=%d: BeginTrans is waiting 'cause of voting conflict\n", time(0), ntohs(ubik_callPortal)); 
+	    else
+#endif
+		if (count <= 0) {
+#if 1
+		    fprintf (stderr,"%ld: myport=%d: BeginTrans failed because of voting conflict\n", time(0), ntohs(ubik_callPortal));
+#endif
+		    return UNOQUORUM;   /* a white lie */
+		}
+	    IOMGR_Sleep(2);
+	    DBHOLD(dbase);
+	}
+#endif /* UBIK_PAUSE */
     if (urecovery_AllBetter(dbase, readAny)==0) {
 	DBRELE(dbase);
 	return UNOQUORUM;
@@ -364,7 +390,11 @@ static int BeginTrans(dbase, transMode, transPtr, readAny)
 
     if (transMode == UBIK_WRITETRANS) {
       /* for a write trans, we have to keep track of the write tid counter too */
+#if defined(UBIK_PAUSE)
+      dbase->writeTidCounter = tt->tid.counter;
+#else
       dbase->writeTidCounter += 2;
+#endif /* UBIK_PAUSE */
 
 	/* next try to start transaction on appropriate number of machines */
 	code = ContactQuorum(DISK_Begin, tt, 0);
