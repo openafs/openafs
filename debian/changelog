@@ -1,3 +1,14 @@
+openafs (1.2.7-2) unstable; urgency=low
+
+  * Fix uss to build with bison 1.50 and 1.75 so we can throw away the
+    resulting binaries, Closes: #164366
+  * Evaluate all limited range of comparison warnings; a warning in
+    rxkad_client.c remains but is harmless, other warnings pointed to
+    potential problems that were fixed, Closes: #162754
+  * Fix s390 modules to actually build, Closes: #162772
+
+ -- Sam Hartman <hartmans@debian.org>  Sun, 20 Oct 2002 15:20:19 -0400
+
 openafs (1.2.7-1) unstable; urgency=low
 
   * Fix typo in templates, Closes: #150356fg

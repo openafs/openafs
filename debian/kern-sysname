@@ -54,7 +54,10 @@ i[3456]86)
 		;;
 	    esac
 	    ;;
-	*)
+    s390)
+        echo s390_linux24
+	;;
+    *)
 	echo ERROr:  sysname not yet known
 	exit 1
 
