@@ -543,7 +543,7 @@ resume:
 
 		DGET(dentry);
 		list_del_init(&dentry->d_hash);		/* d_drop */
-		spin_unlock(&dcache_lock);
+		DUNLOCK();
 		dput(dentry);
 		DLOCK();
 		if (!--found)
