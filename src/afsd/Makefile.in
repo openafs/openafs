@@ -72,7 +72,7 @@ dest: ${DEST}/root.client/usr/vice/etc/afsd ${DEST}/etc/vsys
 			${INSTALL} -f ${srcdir}/afs.rc.solaris.2.7 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
 		sun*_58 ) \
 			${INSTALL} -f ${srcdir}/afs.rc.solaris.2.8 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
-		sun*_59 ) \
+		sun*_59 | sun*_510 ) \
 			${INSTALL} -f ${srcdir}/afs.rc.solaris.2.9 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
                 sun4x_5? ) \
                         ${INSTALL} -f ${srcdir}/afs.rc.solaris.2_5 ${DEST}/root.client/usr/vice/etc/modload/afs.rc ;;\
