@@ -227,6 +227,17 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
 !endif
   LangString DESC_secDocs ${LANG_PORTUGUESEBR} "Supplemental Documentation: Additional documentation for using OpenAFS."
   
+  LangString DESC_secSDK ${LANG_ENGLISH} "SDK: Header files and libraries for developing software with OpenAFS."
+  LangString DESC_secSDK ${LANG_GERMAN} "SDK: Header files and libraries for developing software with OpenAFS."
+  LangString DESC_secSDK ${LANG_SPANISH} "SDK: Header files and libraries for developing software with OpenAFS."
+  LangString DESC_secSDK ${LANG_SIMPCHINESE} "SDK: Header files and libraries for developing software with OpenAFS."
+  LangString DESC_secSDK ${LANG_TRADCHINESE} "SDK: Header files and libraries for developing software with OpenAFS."
+  LangString DESC_secSDK ${LANG_JAPANESE} "SDK: Header files and libraries for developing software with OpenAFS."
+!ifndef v2.0b3
+  LangString DESC_secSDK ${LANG_KOREAN} "SDK: Header files and libraries for developing software with OpenAFS."
+!endif
+  LangString DESC_secSDK ${LANG_PORTUGUESEBR} "SDK: Header files and libraries for developing software with OpenAFS."
+  
 ; Popup error messages
   LangString CellError ${LANG_ENGLISH} "You must specify a valid CellServDB file to copy during install"
   LangString CellError ${LANG_GERMAN} "You must specify a valid CellServDB file to copy during the install"
@@ -461,16 +472,12 @@ Section "AFS Client" secClient
    ; Do client components
   SetOutPath "$INSTDIR\Client\Program"
   File "${AFS_CLIENT_BUILDDIR}\afsshare.exe"
-  File "${AFS_BUILD_INCDIR}\afs\cm_config.h"
   File "${AFS_CLIENT_BUILDDIR}\libosi.dll"
-  File "${AFS_BUILD_INCDIR}\afs\kautils.h"
   File "${AFS_CLIENT_BUILDDIR}\libafsconf.dll"
   File "${AFS_CLIENT_BUILDDIR}\klog.exe"
   File "${AFS_CLIENT_BUILDDIR}\tokens.exe"
   File "${AFS_CLIENT_BUILDDIR}\unlog.exe"
   File "${AFS_CLIENT_BUILDDIR}\fs.exe"
-  File "${AFS_CLIENT_LIBDIR}\libafsconf.lib"
-  File "${AFS_CLIENT_LIBDIR}\afsauthent.lib"
   File "${AFS_CLIENT_BUILDDIR}\afscreds.exe"
   File "${AFS_CLIENT_BUILDDIR}\afs_shl_ext.dll"
   File "${AFS_BUILD_INCDIR}\afs\auth.h"
@@ -511,159 +518,7 @@ Section "AFS Client" secClient
   File "${AFS_DESTDIR}\etc\backup.pdb"
 !endif
 
-  ; Client_headers
-   SetOutPath "$INSTDIR\Client\Program\Include"
-   File "${AFS_BUILD_INCDIR}\lock.h"
-   File "${AFS_BUILD_INCDIR}\lwp.h"
-   File "${AFS_BUILD_INCDIR}\preempt.h"
-   File "${AFS_BUILD_INCDIR}\timer.h"
-   File "${AFS_BUILD_INCDIR}\des.h"
-   File "${AFS_BUILD_INCDIR}\des_conf.h"
-   File "${AFS_BUILD_INCDIR}\mit-cpyright.h"
-   ;File "${AFS_BUILD_INCDIR}\des-odd.h"
-   File "${AFS_BUILD_INCDIR}\crypt.h"
-   File "${AFS_BUILD_INCDIR}\pthread.h"
-   File "${AFS_BUILD_INCDIR}\dbrpc.h"
-   File "${AFS_BUILD_INCDIR}\basic.h"
-   File "${AFS_BUILD_INCDIR}\osidebug.h"
-   File "${AFS_BUILD_INCDIR}\osiltype.h"
-   File "${AFS_BUILD_INCDIR}\osistatl.h"
-   File "${AFS_BUILD_INCDIR}\trylock.h"
-   File "${AFS_BUILD_INCDIR}\main.h"
-   File "${AFS_BUILD_INCDIR}\osibasel.h"
-   File "${AFS_BUILD_INCDIR}\osifd.h"
-   File "${AFS_BUILD_INCDIR}\osiqueue.h"
-   File "${AFS_BUILD_INCDIR}\osiutils.h"
-   File "${AFS_BUILD_INCDIR}\osi.h"
-   File "${AFS_BUILD_INCDIR}\osidb.h"
-   File "${AFS_BUILD_INCDIR}\osilog.h"
-   File "${AFS_BUILD_INCDIR}\osisleep.h"
-   File "${AFS_BUILD_INCDIR}\perf.h"
-   File "${AFS_BUILD_INCDIR}\ubik.h"
-   File "${AFS_BUILD_INCDIR}\ubik_int.h"
-   
-   
-   
-   SetOutPath "$INSTDIR\Client\Program\Include\afs"
-   File "${AFS_BUILD_INCDIR}\afs\afs_args.h"
-   File "${AFS_BUILD_INCDIR}\afs\debug.h"
-   File "${AFS_BUILD_INCDIR}\afs\param.h"
-   File "${AFS_BUILD_INCDIR}\afs\afs_sysnames.h"
-   ;File "${AFS_BUILD_INCDIR}\afs\permit_xprt.h"
-   File "${AFS_BUILD_INCDIR}\afs\stds.h"
-   File "${AFS_BUILD_INCDIR}\afs\icl.h"
-   File "${AFS_BUILD_INCDIR}\afs\procmgmt.h"
-   File "${AFS_BUILD_INCDIR}\afs\afsutil.h"
-   File "${AFS_BUILD_INCDIR}\afs\assert.h"
-   File "${AFS_BUILD_INCDIR}\afs\dirent.h"
-   File "${AFS_BUILD_INCDIR}\afs\errors.h"
-   File "${AFS_BUILD_INCDIR}\afs\itc.h"
-   File "${AFS_BUILD_INCDIR}\afs\vice.h"
-   File "${AFS_BUILD_INCDIR}\afs\pthread_glock.h"
-   File "${AFS_BUILD_INCDIR}\afs\errmap_nt.h"
-   File "${AFS_BUILD_INCDIR}\afs\dirpath.h"
-   File "${AFS_BUILD_INCDIR}\afs\ktime.h"
-   File "${AFS_BUILD_INCDIR}\afs\fileutil.h"
-   File "${AFS_BUILD_INCDIR}\afs\secutil_nt.h"
-   File "${AFS_BUILD_INCDIR}\afs\com_err.h"
-   File "${AFS_BUILD_INCDIR}\afs\error_table.h"
-   ;File "${AFS_BUILD_INCDIR}\afs\mit_sipb-cr.h"
-   File "${AFS_BUILD_INCDIR}\afs\cmd.h"
-   File "${AFS_BUILD_INCDIR}\afs\rxgen_consts.h"
-   File "${AFS_BUILD_INCDIR}\afs\afsint.h"
-   File "${AFS_BUILD_INCDIR}\afs\afscbint.h"
-   File "${AFS_BUILD_INCDIR}\afs\audit.h"
-   File "${AFS_BUILD_INCDIR}\afs\acl.h"
-   File "${AFS_BUILD_INCDIR}\afs\prs_fs.h"
-   File "${AFS_BUILD_INCDIR}\afs\afsd.h"
-   File "${AFS_BUILD_INCDIR}\afs\cm.h"
-   File "${AFS_BUILD_INCDIR}\afs\cm_buf.h"
-   File "${AFS_BUILD_INCDIR}\afs\cm_cell.h"
-   File "${AFS_BUILD_INCDIR}\afs\cm_config.h"
-   File "${AFS_BUILD_INCDIR}\afs\cm_conn.h"
-   File "${AFS_BUILD_INCDIR}\afs\cm_ioctl.h"
-   File "${AFS_BUILD_INCDIR}\afs\cm_scache.h"
-   File "${AFS_BUILD_INCDIR}\afs\cm_server.h"
-   File "${AFS_BUILD_INCDIR}\afs\cm_user.h"
-   File "${AFS_BUILD_INCDIR}\afs\cm_utils.h"
-   File "${AFS_BUILD_INCDIR}\afs\fs_utils.h"
-   File "${AFS_BUILD_INCDIR}\afs\krb.h"
-   File "${AFS_BUILD_INCDIR}\afs\krb_prot.h"
-   File "${AFS_BUILD_INCDIR}\afs\smb.h"
-   File "${AFS_BUILD_INCDIR}\afs\smb3.h"
-   File "${AFS_BUILD_INCDIR}\afs\smb_iocons.h"
-   File "${AFS_BUILD_INCDIR}\afs\smb_ioctl.h"
-   File "${AFS_BUILD_INCDIR}\afs\afsrpc.h"
-   File "${AFS_BUILD_INCDIR}\afs\afssyscalls.h"
-   File "${AFS_BUILD_INCDIR}\afs\pioctl_nt.h"
-   File "${AFS_BUILD_INCDIR}\afs\auth.h"
-   File "${AFS_BUILD_INCDIR}\afs\cellconfig.h"
-   File "${AFS_BUILD_INCDIR}\afs\keys.h"
-   File "${AFS_BUILD_INCDIR}\afs\ptserver.h"
-   File "${AFS_BUILD_INCDIR}\afs\ptint.h"
-   File "${AFS_BUILD_INCDIR}\afs\pterror.h"
-   File "${AFS_BUILD_INCDIR}\afs\ptint.h"
-   File "${AFS_BUILD_INCDIR}\afs\pterror.h"
-   File "${AFS_BUILD_INCDIR}\afs\ptclient.h"
-   File "${AFS_BUILD_INCDIR}\afs\prserver.h"
-   File "${AFS_BUILD_INCDIR}\afs\print.h"
-   File "${AFS_BUILD_INCDIR}\afs\prerror.h"
-   File "${AFS_BUILD_INCDIR}\afs\prclient.h"
-   File "${AFS_BUILD_INCDIR}\afs\kautils.h"
-   File "${AFS_BUILD_INCDIR}\afs\kauth.h"
-   File "${AFS_BUILD_INCDIR}\afs\kaport.h"
-   File "${AFS_BUILD_INCDIR}\afs\vl_opcodes.h"
-   File "${AFS_BUILD_INCDIR}\afs\vlserver.h"
-   File "${AFS_BUILD_INCDIR}\afs\vldbint.h"
-   File "${AFS_BUILD_INCDIR}\afs\usd.h"
-   File "${AFS_BUILD_INCDIR}\afs\bubasics.h"
-   File "${AFS_BUILD_INCDIR}\afs\butc.h"
-   File "${AFS_BUILD_INCDIR}\afs\bumon.h"
-   File "${AFS_BUILD_INCDIR}\afs\butm.h"
-   File "${AFS_BUILD_INCDIR}\afs\tcdata.h"
-   File "${AFS_BUILD_INCDIR}\afs\budb.h"
-   ;File "${AFS_BUILD_INCDIR}\afs\budb_errors.h"
-   File "${AFS_BUILD_INCDIR}\afs\budb_client.h"
-   File "${AFS_BUILD_INCDIR}\afs\dir.h"
-   File "${AFS_BUILD_INCDIR}\afs\fssync.h"
-   File "${AFS_BUILD_INCDIR}\afs\ihandle.h"
-   File "${AFS_BUILD_INCDIR}\afs\nfs.h"
-   File "${AFS_BUILD_INCDIR}\afs\ntops.h"
-   File "${AFS_BUILD_INCDIR}\afs\partition.h"
-   File "${AFS_BUILD_INCDIR}\afs\viceinode.h"
-   File "${AFS_BUILD_INCDIR}\afs\vnode.h"
-   File "${AFS_BUILD_INCDIR}\afs\volume.h"
-   File "${AFS_BUILD_INCDIR}\afs\voldefs.h"
-   File "${AFS_BUILD_INCDIR}\afs\volser.h"
-   File "${AFS_BUILD_INCDIR}\afs\volint.h"
-   File "${AFS_BUILD_INCDIR}\afs\fs_stats.h"
-   File "${AFS_BUILD_INCDIR}\afs\bosint.h"
-   File "${AFS_BUILD_INCDIR}\afs\bnode.h"
-   
-   
-   SetOutPath "$INSTDIR\Client\Program\Include\rx"
-   File "${AFS_BUILD_INCDIR}\rx\rx.h"
-   File "${AFS_BUILD_INCDIR}\rx\rx_packet.h"
-   File "${AFS_BUILD_INCDIR}\rx\rx_user.h"
-   File "${AFS_BUILD_INCDIR}\rx\rx_event.h"
-   File "${AFS_BUILD_INCDIR}\rx\rx_queue.h"
-   File "${AFS_BUILD_INCDIR}\rx\rx_globals.h"
-   File "${AFS_BUILD_INCDIR}\rx\rx_clock.h"
-   File "${AFS_BUILD_INCDIR}\rx\rx_misc.h"
-   File "${AFS_BUILD_INCDIR}\rx\rx_multi.h"
-   File "${AFS_BUILD_INCDIR}\rx\rx_null.h"
-   File "${AFS_BUILD_INCDIR}\rx\rx_lwp.h"
-   File "${AFS_BUILD_INCDIR}\rx\rx_pthread.h"
-   File "${AFS_BUILD_INCDIR}\rx\rx_xmit_nt.h"
-   File "${AFS_BUILD_INCDIR}\rx\xdr.h"
-   File "${AFS_BUILD_INCDIR}\rx\rxkad.h"
-   
-   
 
-   ; Client Sample
-   SetOutPath "$INSTDIR\Client\Program\Sample"
-   File "..\..\afsd\sample\token.c"
-   
    Call AFSLangFiles
    
 
@@ -1157,8 +1012,190 @@ DoneLanguage:
   
   WriteUninstaller "$INSTDIR\Uninstall.exe"
   CreateShortCut "$SMPROGRAMS\OpenAFS\Uninstall OpenAFS.lnk" "$INSTDIR\Uninstall.exe"
+  Call AFSCommon.Install
 SectionEnd  
   
+
+Section "Software Development Kit (SDK)" secSDK
+
+  SetOutPath "$INSTDIR\Client\Program"
+
+  File "${AFS_BUILD_INCDIR}\afs\cm_config.h"
+  File "${AFS_BUILD_INCDIR}\afs\kautils.h"
+  File "${AFS_CLIENT_LIBDIR}\libafsconf.lib"
+  File "${AFS_CLIENT_LIBDIR}\afsauthent.lib"
+
+  ; Client_headers
+   SetOutPath "$INSTDIR\Client\Program\Include"
+   File "${AFS_BUILD_INCDIR}\lock.h"
+   File "${AFS_BUILD_INCDIR}\lwp.h"
+   File "${AFS_BUILD_INCDIR}\preempt.h"
+   File "${AFS_BUILD_INCDIR}\timer.h"
+   File "${AFS_BUILD_INCDIR}\des.h"
+   File "${AFS_BUILD_INCDIR}\des_conf.h"
+   File "${AFS_BUILD_INCDIR}\mit-cpyright.h"
+   ;File "${AFS_BUILD_INCDIR}\des-odd.h"
+   File "${AFS_BUILD_INCDIR}\crypt.h"
+   File "${AFS_BUILD_INCDIR}\pthread.h"
+   File "${AFS_BUILD_INCDIR}\dbrpc.h"
+   File "${AFS_BUILD_INCDIR}\basic.h"
+   File "${AFS_BUILD_INCDIR}\osidebug.h"
+   File "${AFS_BUILD_INCDIR}\osiltype.h"
+   File "${AFS_BUILD_INCDIR}\osistatl.h"
+   File "${AFS_BUILD_INCDIR}\trylock.h"
+   File "${AFS_BUILD_INCDIR}\main.h"
+   File "${AFS_BUILD_INCDIR}\osibasel.h"
+   File "${AFS_BUILD_INCDIR}\osifd.h"
+   File "${AFS_BUILD_INCDIR}\osiqueue.h"
+   File "${AFS_BUILD_INCDIR}\osiutils.h"
+   File "${AFS_BUILD_INCDIR}\osi.h"
+   File "${AFS_BUILD_INCDIR}\osidb.h"
+   File "${AFS_BUILD_INCDIR}\osilog.h"
+   File "${AFS_BUILD_INCDIR}\osisleep.h"
+   File "${AFS_BUILD_INCDIR}\perf.h"
+   File "${AFS_BUILD_INCDIR}\ubik.h"
+   File "${AFS_BUILD_INCDIR}\ubik_int.h"
+   
+   
+   
+   SetOutPath "$INSTDIR\Client\Program\Include\afs"
+   File "${AFS_BUILD_INCDIR}\afs\afs_args.h"
+   File "${AFS_BUILD_INCDIR}\afs\debug.h"
+   File "${AFS_BUILD_INCDIR}\afs\param.h"
+   File "${AFS_BUILD_INCDIR}\afs\afs_sysnames.h"
+   ;File "${AFS_BUILD_INCDIR}\afs\permit_xprt.h"
+   File "${AFS_BUILD_INCDIR}\afs\stds.h"
+   File "${AFS_BUILD_INCDIR}\afs\icl.h"
+   File "${AFS_BUILD_INCDIR}\afs\procmgmt.h"
+   File "${AFS_BUILD_INCDIR}\afs\afsutil.h"
+   File "${AFS_BUILD_INCDIR}\afs\assert.h"
+   File "${AFS_BUILD_INCDIR}\afs\dirent.h"
+   File "${AFS_BUILD_INCDIR}\afs\errors.h"
+   File "${AFS_BUILD_INCDIR}\afs\itc.h"
+   File "${AFS_BUILD_INCDIR}\afs\vice.h"
+   File "${AFS_BUILD_INCDIR}\afs\pthread_glock.h"
+   File "${AFS_BUILD_INCDIR}\afs\errmap_nt.h"
+   File "${AFS_BUILD_INCDIR}\afs\dirpath.h"
+   File "${AFS_BUILD_INCDIR}\afs\ktime.h"
+   File "${AFS_BUILD_INCDIR}\afs\fileutil.h"
+   File "${AFS_BUILD_INCDIR}\afs\secutil_nt.h"
+   File "${AFS_BUILD_INCDIR}\afs\com_err.h"
+   File "${AFS_BUILD_INCDIR}\afs\error_table.h"
+   ;File "${AFS_BUILD_INCDIR}\afs\mit_sipb-cr.h"
+   File "${AFS_BUILD_INCDIR}\afs\cmd.h"
+   File "${AFS_BUILD_INCDIR}\afs\rxgen_consts.h"
+   File "${AFS_BUILD_INCDIR}\afs\afsint.h"
+   File "${AFS_BUILD_INCDIR}\afs\afscbint.h"
+   File "${AFS_BUILD_INCDIR}\afs\audit.h"
+   File "${AFS_BUILD_INCDIR}\afs\acl.h"
+   File "${AFS_BUILD_INCDIR}\afs\prs_fs.h"
+   File "${AFS_BUILD_INCDIR}\afs\afsd.h"
+   File "${AFS_BUILD_INCDIR}\afs\cm.h"
+   File "${AFS_BUILD_INCDIR}\afs\cm_buf.h"
+   File "${AFS_BUILD_INCDIR}\afs\cm_cell.h"
+   File "${AFS_BUILD_INCDIR}\afs\cm_config.h"
+   File "${AFS_BUILD_INCDIR}\afs\cm_conn.h"
+   File "${AFS_BUILD_INCDIR}\afs\cm_ioctl.h"
+   File "${AFS_BUILD_INCDIR}\afs\cm_scache.h"
+   File "${AFS_BUILD_INCDIR}\afs\cm_server.h"
+   File "${AFS_BUILD_INCDIR}\afs\cm_user.h"
+   File "${AFS_BUILD_INCDIR}\afs\cm_utils.h"
+   File "${AFS_BUILD_INCDIR}\afs\fs_utils.h"
+   File "${AFS_BUILD_INCDIR}\afs\krb.h"
+   File "${AFS_BUILD_INCDIR}\afs\krb_prot.h"
+   File "${AFS_BUILD_INCDIR}\afs\smb.h"
+   File "${AFS_BUILD_INCDIR}\afs\smb3.h"
+   File "${AFS_BUILD_INCDIR}\afs\smb_iocons.h"
+   File "${AFS_BUILD_INCDIR}\afs\smb_ioctl.h"
+   File "${AFS_BUILD_INCDIR}\afs\afsrpc.h"
+   File "${AFS_BUILD_INCDIR}\afs\afssyscalls.h"
+   File "${AFS_BUILD_INCDIR}\afs\pioctl_nt.h"
+   File "${AFS_BUILD_INCDIR}\afs\auth.h"
+   File "${AFS_BUILD_INCDIR}\afs\cellconfig.h"
+   File "${AFS_BUILD_INCDIR}\afs\keys.h"
+   File "${AFS_BUILD_INCDIR}\afs\ptserver.h"
+   File "${AFS_BUILD_INCDIR}\afs\ptint.h"
+   File "${AFS_BUILD_INCDIR}\afs\pterror.h"
+   File "${AFS_BUILD_INCDIR}\afs\ptint.h"
+   File "${AFS_BUILD_INCDIR}\afs\pterror.h"
+   File "${AFS_BUILD_INCDIR}\afs\ptclient.h"
+   File "${AFS_BUILD_INCDIR}\afs\prserver.h"
+   File "${AFS_BUILD_INCDIR}\afs\print.h"
+   File "${AFS_BUILD_INCDIR}\afs\prerror.h"
+   File "${AFS_BUILD_INCDIR}\afs\prclient.h"
+   File "${AFS_BUILD_INCDIR}\afs\kautils.h"
+   File "${AFS_BUILD_INCDIR}\afs\kauth.h"
+   File "${AFS_BUILD_INCDIR}\afs\kaport.h"
+   File "${AFS_BUILD_INCDIR}\afs\vl_opcodes.h"
+   File "${AFS_BUILD_INCDIR}\afs\vlserver.h"
+   File "${AFS_BUILD_INCDIR}\afs\vldbint.h"
+   File "${AFS_BUILD_INCDIR}\afs\usd.h"
+   File "${AFS_BUILD_INCDIR}\afs\bubasics.h"
+   File "${AFS_BUILD_INCDIR}\afs\butc.h"
+   File "${AFS_BUILD_INCDIR}\afs\bumon.h"
+   File "${AFS_BUILD_INCDIR}\afs\butm.h"
+   File "${AFS_BUILD_INCDIR}\afs\tcdata.h"
+   File "${AFS_BUILD_INCDIR}\afs\budb.h"
+   ;File "${AFS_BUILD_INCDIR}\afs\budb_errors.h"
+   File "${AFS_BUILD_INCDIR}\afs\budb_client.h"
+   File "${AFS_BUILD_INCDIR}\afs\dir.h"
+   File "${AFS_BUILD_INCDIR}\afs\fssync.h"
+   File "${AFS_BUILD_INCDIR}\afs\ihandle.h"
+   File "${AFS_BUILD_INCDIR}\afs\nfs.h"
+   File "${AFS_BUILD_INCDIR}\afs\ntops.h"
+   File "${AFS_BUILD_INCDIR}\afs\partition.h"
+   File "${AFS_BUILD_INCDIR}\afs\viceinode.h"
+   File "${AFS_BUILD_INCDIR}\afs\vnode.h"
+   File "${AFS_BUILD_INCDIR}\afs\volume.h"
+   File "${AFS_BUILD_INCDIR}\afs\voldefs.h"
+   File "${AFS_BUILD_INCDIR}\afs\volser.h"
+   File "${AFS_BUILD_INCDIR}\afs\volint.h"
+   File "${AFS_BUILD_INCDIR}\afs\fs_stats.h"
+   File "${AFS_BUILD_INCDIR}\afs\bosint.h"
+   File "${AFS_BUILD_INCDIR}\afs\bnode.h"
+   
+   
+   SetOutPath "$INSTDIR\Client\Program\Include\rx"
+   File "${AFS_BUILD_INCDIR}\rx\rx.h"
+   File "${AFS_BUILD_INCDIR}\rx\rx_packet.h"
+   File "${AFS_BUILD_INCDIR}\rx\rx_user.h"
+   File "${AFS_BUILD_INCDIR}\rx\rx_event.h"
+   File "${AFS_BUILD_INCDIR}\rx\rx_queue.h"
+   File "${AFS_BUILD_INCDIR}\rx\rx_globals.h"
+   File "${AFS_BUILD_INCDIR}\rx\rx_clock.h"
+   File "${AFS_BUILD_INCDIR}\rx\rx_misc.h"
+   File "${AFS_BUILD_INCDIR}\rx\rx_multi.h"
+   File "${AFS_BUILD_INCDIR}\rx\rx_null.h"
+   File "${AFS_BUILD_INCDIR}\rx\rx_lwp.h"
+   File "${AFS_BUILD_INCDIR}\rx\rx_pthread.h"
+   File "${AFS_BUILD_INCDIR}\rx\rx_xmit_nt.h"
+   File "${AFS_BUILD_INCDIR}\rx\xdr.h"
+   File "${AFS_BUILD_INCDIR}\rx\rxkad.h"
+   
+   
+
+   ; Client Sample
+   SetOutPath "$INSTDIR\Client\Program\Sample"
+   File "..\..\afsd\sample\token.c"
+
+   ;Store install folder
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS SDK" "" $INSTDIR
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS SDK\CurrentVersion" "VersionString" ${AFS_VERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS SDK\CurrentVersion" "MajorVersion" ${AFS_MAJORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS SDK\CurrentVersion" "MinorVersion" ${AFS_MINORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS SDK\CurrentVersion" "PatchLevel" ${AFS_PATCHLEVEL}
+  WriteRegStr HKLM "${AFS_REGKEY_ROOT}\AFS SDK\${AFS_VERSION}" "VersionString" ${AFS_VERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS SDK\${AFS_VERSION}" "MajorVersion" ${AFS_MAJORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS SDK\${AFS_VERSION}" "MinorVersion" ${AFS_MINORVERSION}
+  WriteRegDWORD HKLM "${AFS_REGKEY_ROOT}\AFS SDK\${AFS_VERSION}" "PatchLevel" ${AFS_PATCHLEVEL}
+
+  WriteUninstaller "$INSTDIR\Uninstall.exe"
+  SetOutPath "$SMPROGRAMS\OpenAFS"
+  CreateShortCut "$SMPROGRAMS\OpenAFS\Uninstall OpenAFS.lnk" "$INSTDIR\Uninstall.exe"
+
+   Call AFSCommon.Install
+SectionEnd
+
 ;Display the Finish header
 ;Insert this macro after the sections if you are not using a finish page
 ;!insertmacro MUI_SECTIONS_FINISHHEADER
@@ -1196,7 +1233,7 @@ contInstall:
    StrCmp $R2 "0" NoClient
    StrCmp $R2 "1" ReinstallClient
    StrCmp $R2 "2" UpgradeClient
-   StrCmp $R3 "3" DowngradeClient
+   StrCmp $R2 "3" DowngradeClient
    
 	SectionGetFlags ${secClient} $0
 	IntOp $0 $0 | ${SF_SELECTED}
@@ -1305,6 +1342,22 @@ NoDocs:
 	SectionSetFlags ${secDocs} $0
    goto end
    
+; To check the SDK, we simply look to see if the files exist.  If they do,
+; the SDK is installed.  If not, we don't need to push it on the user.
+; If they are there, we want to make sure they match the installed version.
+CheckSDK:
+   IfFileExists "$INSTDIR\Client\Program\Include\main.h" +1 NoSDK
+   SectionGetFlags ${secSDK} $0
+   IntOp $0 $0 | ${SF_SELECTED}
+   SectionSetFlags ${secSDK} $0
+   goto end
+   
+NoSDK:
+   SectionGetFlags ${secSDK} $0
+   IntOp $0 $0 & ${SECTION_OFF}
+   SectionSetFlags ${secSDK} $0
+   goto end
+   
 DefaultOptions:
    ; Client Selected
 	SectionGetFlags ${secClient} $0
@@ -1327,6 +1380,13 @@ DefaultOptions:
 	IntOp $0 $0 | ${SF_SELECTED}
 	SectionSetFlags ${secDocs} $0
 	;# !insertmacro UnselectSection ${secDocs}
+   
+   ; SDK not selected
+   SectionGetFlags ${secSDK} $0
+   IntOp $0 $0 & ${SECTION_OFF}
+   SectionSetFlags ${secSDK} $0
+   ;# !insertmacro UnselectSection ${secSDK}
+   
    goto end
 
 end:
@@ -1398,6 +1458,7 @@ FunctionEnd
   !insertmacro MUI_DESCRIPTION_TEXT ${secClient} $(DESC_secClient)
   !insertmacro MUI_DESCRIPTION_TEXT ${secControl} $(DESC_secControl)
   !insertmacro MUI_DESCRIPTION_TEXT ${secDocs} $(DESC_secDocs)
+  !insertmacro MUI_DESCRIPTION_TEXT ${secSDK} $(DESC_secSDK)
 !ifdef v2.0b3
   !insertmacro MUI_FUNCTIONS_DESCRIPTION_END
 !else
