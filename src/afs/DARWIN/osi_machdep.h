@@ -106,6 +106,11 @@ extern struct lock__bsd__ afs_global_lock;
 extern ino_t VnodeToIno(vnode_t * vp);
 extern dev_t VnodeToDev(vnode_t * vp);
 
+#define osi_curproc() current_proc()
+
+/* FIXME */
+#define osi_curcred() &afs_osi_cred 
+
 #endif /* KERNEL */
 
 #endif /* _OSI_MACHDEP_H_ */

@@ -597,13 +597,6 @@ afs_xioctl(void)
 #endif
 #endif /* AFS_LINUX22_ENV */
 	if (tvc && IsAfsVnode(AFSTOV(tvc))) {
-#ifdef AFS_DEC_ENV
-	    tvc = VTOAFS(afs_gntovn((struct gnode *)tvc));
-	    if (!tvc) {		/* shouldn't happen with held gnodes */
-		u.u_error = ENOENT;
-		return;
-	    }
-#endif
 	    /* This is an AFS vnode */
 	    if (((uap->com >> 8) & 0xff) == 'V') {
 		register struct afs_ioctl *datap;
@@ -860,9 +853,6 @@ afs_syscall_pioctl(path, com, cmarg, follow)
     struct AFS_UCRED *foreigncreds = NULL;
     register afs_int32 code = 0;
     struct vnode *vp = NULL;
-#ifdef AFS_DEC_ENV
-    struct vnode *gp;
-#endif
 #ifdef	AFS_AIX41_ENV
     struct ucred *credp = crref();	/* don't free until done! */
 #endif
@@ -976,18 +966,7 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 
     /* now make the call if we were passed no file, or were passed an AFS file */
     if (!vp || IsAfsVnode(vp)) {
-#if defined(AFS_DEC_ENV)
-	/* Ultrix 4.0: can't get vcache entry unless we've got an AFS gnode.
-	 * So, we must test in this part of the code.  Also, must arrange to
-	 * GRELE the original gnode pointer when we're done, since in Ultrix 4.0,
-	 * we hold gnodes, whose references hold our vcache entries.
-	 */
-	if (vp) {
-	    gp = vp;		/* remember for "put" */
-	    vp = (struct vnode *)afs_gntovn(vp);	/* get vcache from gp */
-	} else
-	    gp = NULL;
-#elif defined(AFS_SUN5_ENV)
+#if defined(AFS_SUN5_ENV)
 	code = afs_HandlePioctl(vp, com, &data, follow, &credp);
 #elif defined(AFS_AIX41_ENV)
 	{
@@ -1025,12 +1004,6 @@ afs_syscall_pioctl(path, com, cmarg, follow)
 	setuerror(EINVAL);
 #else
 	code = EINVAL;		/* not in /afs */
-#endif
-#ifdef AFS_DEC_ENV
-	if (vp) {
-	    GRELE(vp);
-	    vp = NULL;
-	}
 #endif
     }
 
@@ -1682,7 +1655,7 @@ DECL_PIOCTL(PFlush)
     AFS_STATCNT(PFlush);
     if (!avc)
 	return EINVAL;
-#if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
     afs_BozonLock(&avc->pvnLock, avc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
 #endif
     ObtainWriteLock(&avc->lock, 225);
@@ -1699,7 +1672,7 @@ DECL_PIOCTL(PFlush)
 	avc->linkData = NULL;
     }
     ReleaseWriteLock(&avc->lock);
-#if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
     afs_BozonUnlock(&avc->pvnLock, avc);
 #endif
     return 0;
@@ -2570,17 +2543,17 @@ DECL_PIOCTL(PFlushVolumeData)
     for (i = 0; i < VCSIZE; i++) {
 	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 	    if (tvc->fid.Fid.Volume == volume && tvc->fid.Cell == cell) {
-#if	defined(AFS_SGI_ENV) || defined(AFS_ALPHA_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
+#if	defined(AFS_SGI_ENV) || defined(AFS_OSF_ENV)  || defined(AFS_SUN5_ENV)  || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
 		VN_HOLD(AFSTOV(tvc));
 #else
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 		osi_vnhold(tvc, 0);
 #else
-		VREFCOUNT_INC(tvc);
+		VREFCOUNT_INC(tvc); /* AIX, apparently */
 #endif
 #endif
 		ReleaseReadLock(&afs_xvcache);
-#if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
 		afs_BozonLock(&tvc->pvnLock, tvc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
 #endif
 		ObtainWriteLock(&tvc->lock, 232);
@@ -2593,7 +2566,7 @@ DECL_PIOCTL(PFlushVolumeData)
 		    osi_dnlc_purgedp(tvc);
 		afs_TryToSmush(tvc, *acred, 1);
 		ReleaseWriteLock(&tvc->lock);
-#if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
 		afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
 		ObtainReadLock(&afs_xvcache);
@@ -3374,7 +3347,7 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 	newcred->cr_groups[i] = NOGROUP;
 #endif
 #endif
-#if	!defined(AFS_OSF_ENV) && !defined(AFS_DEC_ENV)
+#if	!defined(AFS_OSF_ENV) 
     afs_nfsclient_init();	/* before looking for exporter, ensure one exists */
 #endif
     if (!(exporter = exporter_find(exporter_type))) {
@@ -3540,7 +3513,7 @@ DECL_PIOCTL(PFlushMount)
 	code = EINVAL;
 	goto out;
     }
-#if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
     afs_BozonLock(&tvc->pvnLock, tvc);	/* Since afs_TryToSmush will do a pvn_vptrunc */
 #endif
     ObtainWriteLock(&tvc->lock, 649);
@@ -3557,7 +3530,7 @@ DECL_PIOCTL(PFlushMount)
 	tvc->linkData = NULL;
     }
     ReleaseWriteLock(&tvc->lock);
-#if	defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
     afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
     afs_PutVCache(tvc);

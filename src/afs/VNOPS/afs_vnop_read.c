@@ -782,8 +782,6 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	    AFS_GUNLOCK();
 	    VOP_READ(tfile->vnode, &tuio, 0, afs_osi_credp, code);
 	    AFS_GLOCK();
-#elif defined(AFS_SUN_ENV)
-	    code = VOP_RDWR(tfile->vnode, &tuio, UIO_READ, 0, afs_osi_credp);
 #elif defined(AFS_HPUX100_ENV)
 	    AFS_GUNLOCK();
 	    code = VOP_RDWR(tfile->vnode, &tuio, UIO_READ, 0, afs_osi_credp);

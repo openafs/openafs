@@ -51,17 +51,12 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
     AFS_STATCNT(afs_CopyOutAttrs);
     if (afs_fakestat_enable && avc->mvstat == 1)
 	fakedir = 1;
-#if	defined(AFS_MACH_ENV )
-    attrs->va_mode =
-	fakedir ? VDIR | 0755 : vType(avc) | (avc->m.Mode & ~VFMT);
-#else /* AFS_MACH_ENV */
     attrs->va_type = fakedir ? VDIR : vType(avc);
 #if defined(AFS_SGI_ENV) || defined(AFS_AIX32_ENV) || defined(AFS_SUN5_ENV)
     attrs->va_mode = fakedir ? 0755 : (mode_t) (avc->m.Mode & 0xffff);
 #else
     attrs->va_mode = fakedir ? VDIR | 0755 : avc->m.Mode;
 #endif
-#endif /* AFS_MACH_ENV */
 
     if (avc->m.Mode & (VSUID | VSGID)) {
 	/* setuid or setgid, make sure we're allowed to run them from this cell */
@@ -94,24 +89,15 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
 #endif /* AFS_DARWIN_ENV */
     attrs->va_uid = fakedir ? 0 : avc->m.Owner;
     attrs->va_gid = fakedir ? 0 : avc->m.Group;	/* yeah! */
-#if	defined(AFS_SUN56_ENV)
+#if defined(AFS_SUN56_ENV)
     attrs->va_fsid = avc->v.v_vfsp->vfs_fsid.val[0];
-#else
-#ifdef	AFS_SUN5_ENV
-    /* XXX We try making this match the vfs's dev field  XXX */
-    attrs->va_fsid = 1;
-#else
-#ifdef AFS_OSF_ENV
+#elif defined(AFS_OSF_ENV)
     attrs->va_fsid = avc->v.v_mount->m_stat.f_fsid.val[0];
-#else
-#ifdef AFS_DARWIN70_ENV
+#elif defined(AFS_DARWIN70_ENV)
     attrs->va_fsid = avc->v.v_mount->mnt_stat.f_fsid.val[0];
-#else /* ! AFS_DARWIN70_ENV */
+#else 
     attrs->va_fsid = 1;
-#endif /* AFS_DARWIN70_ENV */
-#endif
-#endif
-#endif /* AFS_SUN56_ENV */
+#endif 
     if (avc->mvstat == 2) {
 	tvp = afs_GetVolume(&avc->fid, 0, READ_LOCK);
 	/* The mount point's vnode. */
@@ -160,18 +146,7 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
 #else
     attrs->va_blocksize = PAGESIZE;	/* XXX Was 8192 XXX */
 #endif
-#ifdef AFS_DEC_ENV
-    /* Have to use real device #s in Ultrix, since that's how FS type is
-     * encoded.  If rdev doesn't match Ultrix equivalent of statfs's rdev, then
-     * "df ." doesn't work.
-     */
-    if (afs_globalVFS && afs_globalVFS->vfs_data)
-	attrs->va_rdev = ((struct mount *)(afs_globalVFS->vfs_data))->m_dev;
-    else
-	attrs->va_rdev = 1;	/* better than nothing */
-#else
     attrs->va_rdev = 1;
-#endif
 #if defined(AFS_HPUX110_ENV)
     if (afs_globalVFS)
 	attrs->va_fstype = afs_globalVFS->vfs_mtype;
@@ -205,23 +180,6 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
 #ifdef AFS_LINUX22_ENV
     /* And linux has its own stash as well. */
     vattr2inode(AFSTOV(avc), attrs);
-#endif
-#ifdef notdef
-#ifdef AFS_AIX51_ENV
-    afs_Trace2(afs_iclSetp, CM_TRACE_STATACLX, ICL_TYPE_POINTER,
-	       attrs->va_acl, ICL_TYPE_INT32, attrs->va_aclsiz);
-    if (attrs->va_acl && attrs->va_aclsiz >= 12) {
-	struct acl *ap;
-
-	ap = (struct acl *)attrs->va_acl;
-	ap->acl_len = 8;
-	ap->acl_mode = ACL_MODE;
-	ap->acl_rsvd = 0;
-	ap->u_access = 7;
-    }
-    /* temporary fix ? */
-    attrs->va_aclsiz = 1;
-#endif
 #endif
     return 0;
 }
@@ -278,7 +236,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
     }
 #endif
 
-#if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
     afs_BozonLock(&avc->pvnLock, avc);
 #endif
 
@@ -293,7 +251,7 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
     } else
 	code = 0;
 
-#if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
     if (code == 0)
 	osi_FlushPages(avc, acred);
     afs_BozonUnlock(&avc->pvnLock, avc);
@@ -317,22 +275,6 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
 				     CMB_ALLOW_EXEC_AS_READ)) {
 		    return EACCES;
 		}
-#if 0
-/* The effect of the following is to force the NFS client to refetch the
- * volume root every time, since the mtime changes.  For Solaris 9 NFSv3
- * clients, this means looping forever, since for some reason (related
- * to caching?) it wants the mtime to be consistent two reads in a row.
- * Why are volume roots special???
- * --jhutz 2-May-2004
- */
-		if (avc->mvstat == 2) {
-#if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-		    attrs->va_mtime.tv_nsec += ((++avc->xlatordv) * 1000);
-#else
-		    attrs->va_mtime.tv_usec += ++avc->xlatordv;
-#endif
-		}
-#endif
 	    }
 	    if ((au = afs_FindUser(treq.uid, -1, READ_LOCK))) {
 		register struct afs_exporter *exporter = au->exporter;
@@ -419,7 +361,7 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
     if (av->va_mask & ATTR_GID) {
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_GID) {
-#elif (defined(AFS_HPUX_ENV) || defined(AFS_SUN_ENV))
+#elif defined(AFS_HPUX_ENV)
 #if	defined(AFS_HPUX102_ENV)
     if (av->va_gid != GID_NO_CHANGE) {
 #else
@@ -437,7 +379,7 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
     if (av->va_mask & ATTR_UID) {
 #elif defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_UID) {
-#elif (defined(AFS_HPUX_ENV) || defined(AFS_SUN_ENV))
+#elif defined(AFS_HPUX_ENV)
 #if	defined(AFS_HPUX102_ENV)
     if (av->va_uid != UID_NO_CHANGE) {
 #elif	defined(AFS_XBSD_ENV)
@@ -453,12 +395,10 @@ afs_VAttrToAS(register struct vcache *avc, register struct vattr *av,
     }
 #if	defined(AFS_LINUX22_ENV)
     if (av->va_mask & ATTR_MTIME) {
-#else
-#if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
+#elif	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
     if (av->va_mask & AT_MTIME) {
 #else
     if (av->va_mtime.tv_sec != -1) {
-#endif
 #endif
 	mask |= AFS_SETMODTIME;
 #ifndef	AFS_SGI_ENV
@@ -526,15 +466,9 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
     if (flags & ATTR_LAZY)
 	goto done;
 #endif
-#ifndef AFS_DEC_ENV
     /* if file size has changed, we need write access, otherwise (e.g.
      * chmod) give it a shot; if it fails, we'll discard the status
      * info.
-     *
-     * Note that Ultrix actually defines ftruncate of a file you have open to
-     * be O.K., and does the proper access checks itself in the truncate
-     * path (unlike BSD or SUNOS), so we skip this check for Ultrix.
-     *
      */
 #if	defined(AFS_LINUX22_ENV)
     if (attrs->va_mask & ATTR_SIZE) {
@@ -552,11 +486,10 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	    goto done;
 	}
     }
-#endif
 
     afs_VAttrToAS(avc, attrs, &astat);	/* interpret request */
     code = 0;
-#if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
     afs_BozonLock(&avc->pvnLock, avc);
 #endif
 #if	defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV)
@@ -600,10 +533,6 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	ReleaseWriteLock(&avc->lock);
 	hzero(avc->flushDV);
 	osi_FlushText(avc);	/* do this after releasing all locks */
-#ifdef AFS_DEC_ENV
-	/* in case we changed the size here, propagate it to gp->g_size */
-	afs_gfshack((struct gnode *)avc);
-#endif
     }
     if (code == 0) {
 	ObtainSharedLock(&avc->lock, 16);	/* lock entry */
@@ -624,7 +553,7 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
 	avc->execsOrWriters--;
     }
 #endif
-#if defined(AFS_SUN_ENV) || defined(AFS_OSF_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
     afs_BozonUnlock(&avc->pvnLock, avc);
 #endif
 #if defined(AFS_SGI_ENV)

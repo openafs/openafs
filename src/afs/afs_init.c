@@ -27,7 +27,7 @@ RCSID
 /* Exported variables */
 struct osi_dev cacheDev;	/*Cache device */
 afs_int32 cacheInfoModTime;	/*Last time cache info modified */
-#if defined(AFS_OSF_ENV) || defined(AFS_DEC_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 struct mount *afs_cacheVfsp = 0;
 #elif defined(AFS_LINUX20_ENV)
 struct super_block *afs_cacheSBp = 0;
@@ -251,11 +251,7 @@ LookupInodeByPath(char *filename, ino_t * inode, struct vnode **fvpp)
     if (fvpp)
 	*fvpp = filevp;
     else {
-#if defined(AFS_DEC_ENV)
-	grele(filevp);
-#else
 	AFS_RELE(filevp);
-#endif
     }
 #endif /* AFS_LINUX22_ENV */
 
@@ -691,7 +687,7 @@ shutdown_cache(void)
 void
 shutdown_vnodeops(void)
 {
-#if !defined(AFS_SGI_ENV) && !defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
+#if !defined(AFS_SGI_ENV) && !defined(AFS_SUN5_ENV)
     struct buf *afs_bread_freebp = 0;
 #endif
 
@@ -704,7 +700,7 @@ shutdown_vnodeops(void)
 #ifndef AFS_LINUX20_ENV
 	afs_rd_stash_i = 0;
 #endif
-#if !defined(AFS_SGI_ENV) && !defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
+#if !defined(AFS_SGI_ENV) && !defined(AFS_SUN5_ENV)
 	afs_bread_freebp = 0;
 #endif
 	shutdown_mariner();

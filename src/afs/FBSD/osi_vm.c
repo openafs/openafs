@@ -89,7 +89,7 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
 	return EBUSY;
 
     /* if a lock is held, give up */
-    if (CheckLock(&avc->lock) || afs_CheckBozonLock(&avc->pvnLock))
+    if (CheckLock(&avc->lock))
 	return EBUSY;
 
     AFS_GUNLOCK();

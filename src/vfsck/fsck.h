@@ -194,9 +194,6 @@ int qflag;			/* less verbose flag */
 int debug;			/* output debugging info */
 int cvtflag;			/* convert to old file system format */
 char preen;			/* just fix normal inconsistencies */
-#if	defined(AFS_DEC_ENV)
-char only_when_needed;		/* check filesystems only when needed */
-#endif
 
 char hotroot;			/* checking root device */
 char havesb;			/* superblock has been read */
@@ -236,7 +233,7 @@ int isconvert;			/* converting */
 
 #ifdef VICE
 int nViceFiles;			/* number of vice files seen */
-#if	defined(AFS_SUN_ENV) || defined(AFS_DEC_ENV)
+#if	defined(AFS_SUN_ENV) 
 int iscorrupt;			/* known to be corrupt/inconsistent */
 #endif
 #ifdef	AFS_SUN_ENV

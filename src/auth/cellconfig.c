@@ -122,7 +122,7 @@ afsconf_FindService(register const char *aname)
     struct servent *ts;
     register struct afsconf_servPair *tsp;
 
-#if     defined(AFS_OSF_ENV) || defined(AFS_DEC_ENV)
+#if     defined(AFS_OSF_ENV) 
     ts = getservbyname(aname, "");
 #else
     ts = getservbyname(aname, NULL);

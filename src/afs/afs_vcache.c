@@ -581,9 +581,6 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 #ifdef	AFS_AIX_ENV
     struct gnode *gnodepnt;
 #endif
-#ifdef	AFS_MACH_ENV
-    struct vm_info *vm_info_ptr;
-#endif /* AFS_MACH_ENV */
 #ifdef	AFS_OSF_ENV
     struct vcache *nvc;
 #endif /* AFS_OSF_ENV */
@@ -770,14 +767,6 @@ restart:
 #ifdef	KERNEL_HAVE_PIN
 	pin((char *)tvc, sizeof(struct vcache));	/* XXX */
 #endif
-#ifdef	AFS_MACH_ENV
-	/* In case it still comes here we need to fill this */
-	tvc->v.v_vm_info = VM_INFO_NULL;
-	vm_info_init(tvc->v.v_vm_info);
-	/* perhaps we should also do close_flush on non-NeXT mach systems;
-	 * who knows; we don't currently have the sources.
-	 */
-#endif /* AFS_MACH_ENV */
 #if defined(AFS_SGI_ENV)
 	{
 	    char name[METER_NAMSZ];
@@ -803,10 +792,6 @@ restart:
     }
 #endif /* AFS_OSF_ENV */
 
-#ifdef	AFS_MACH_ENV
-    vm_info_ptr = tvc->v.v_vm_info;
-#endif /* AFS_MACH_ENV */
-
 #if defined(AFS_XBSD_ENV)
     if (tvc->v)
 	panic("afs_NewVCache(): free vcache with vnode attached");
@@ -823,10 +808,6 @@ restart:
     RWLOCK_INIT(&tvc->vlock, "vcache vlock");
 #endif /* defined(AFS_SUN5_ENV) */
 
-#ifdef	AFS_MACH_ENV
-    tvc->v.v_vm_info = vm_info_ptr;
-    tvc->v.v_vm_info->pager = MEMORY_OBJECT_NULL;
-#endif /* AFS_MACH_ENV */
 #ifdef AFS_OBSD_ENV
     AFS_GUNLOCK();
     afs_nbsd_getnewvnode(tvc);	/* includes one refcount */
@@ -977,7 +958,7 @@ restart:
     tvc->vmh = tvc->segid = NULL;
     tvc->credp = NULL;
 #endif
-#if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV) || defined(AFS_SUN5_ENV)
+#ifdef AFS_BOZONLOCK_ENV
 #if	defined(AFS_SUN5_ENV)
     rw_init(&tvc->rwlock, "vcache rwlock", RW_DEFAULT, NULL);
 
@@ -1069,9 +1050,6 @@ restart:
 	tvc->v.v_vfsnext->v_vfsprev = &tvc->v;
     tvc->v.v_next = gnodepnt->gn_vnode;	/*Single vnode per gnode for us! */
     gnodepnt->gn_vnode = &tvc->v;
-#endif
-#ifdef	AFS_DEC_ENV
-    tvc->v.g_dev = ((struct mount *)afs_globalVFS->vfs_data)->m_dev;
 #endif
 #if	defined(AFS_DUX40_ENV)
     insmntque(tvc, afs_globalVFS, &afs_ubcops);
@@ -1193,7 +1171,7 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 		 */
 		osi_vnhold(tvc, 0);
 		ReleaseReadLock(&afs_xvcache);
-#if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV)
+#ifdef AFS_BOZONLOCK_ENV
 		afs_BozonLock(&tvc->pvnLock, tvc);
 #endif
 #if defined(AFS_SGI_ENV)
@@ -1215,7 +1193,7 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 			       tvc->execsOrWriters);
 		    code = afs_StoreOnLastReference(tvc, &ureq);
 		    ReleaseWriteLock(&tvc->lock);
-#if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV)
+#ifdef AFS_BOZONLOCK_ENV
 		    afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
 		    hzero(tvc->flushDV);
@@ -1230,7 +1208,7 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 		     * Ignore errors
 		     */
 		    ReleaseWriteLock(&tvc->lock);
-#if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV)
+#ifdef AFS_BOZONLOCK_ENV
 		    afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
 #if defined(AFS_SGI_ENV)
@@ -1243,7 +1221,7 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 		} else {
 		    /* lost (or won, perhaps) the race condition */
 		    ReleaseWriteLock(&tvc->lock);
-#if defined(AFS_SUN_ENV) || defined(AFS_ALPHA_ENV)
+#ifdef AFS_BOZONLOCK_ENV
 		    afs_BozonUnlock(&tvc->pvnLock, tvc);
 #endif
 		}
@@ -1253,11 +1231,7 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 		ObtainReadLock(&afs_xvcache);
 		AFS_FAST_RELE(tvc);
 		if (didCore) {
-#ifdef	AFS_GFS_ENV
-		    VREFCOUNT_DEC(tvc);
-#else
 		    AFS_RELE(AFSTOV(tvc));
-#endif
 		    /* Matches write code setting CCore flag */
 		    crfree(cred);
 		}

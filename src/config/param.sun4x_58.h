@@ -19,6 +19,7 @@
 #define	AFS_SUN56_ENV		1
 #define AFS_SUN57_ENV		1
 #define AFS_SUN58_ENV		1
+#define AFS_BOZONLOCK_ENV       1
 
 #define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
 /*

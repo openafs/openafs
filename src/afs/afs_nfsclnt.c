@@ -14,7 +14,6 @@ RCSID
     ("$Header$");
 
 #if !defined(AFS_NONFSTRANS) || defined(AFS_AIX_IAUTH_ENV)
-#ifndef	AFS_DEC_ENV
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"	/* statistics */
@@ -460,10 +459,6 @@ afs_iauth_unregister()
 
 shutdown_nfsclnt()
 {
-#if 0
-    extern int afs_allnfsreqs, afs_nfscalls;
-#endif
-
 #if defined(AFS_SGIMP_ENV)
     osi_Assert(ISAFS_GLOCK());
 #endif
@@ -473,10 +468,5 @@ shutdown_nfsclnt()
 #endif
     afs_nfsclient_GC(afs_nfsexporter, -1);
     init_nfsexporter = 0;
-#if 0
-    /* The following are for the nfs/afs server */
-    afs_allnfsreqs = afs_nfscalls = 0;
-#endif
 }
-#endif /* AFS_DEC_ENV */
 #endif /* AFS_NONFSTRANS */

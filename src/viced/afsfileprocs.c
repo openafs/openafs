@@ -1255,11 +1255,7 @@ DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
 			("DT: inode=%s, name=%s, errno=%d\n",
 			 PrintInode(NULL, VN_GET_INO(*targetptr)), Name,
 			 errno));
-#ifdef	AFS_DEC_ENV
-		if ((errno != ENOENT) && (errno != EIO) && (errno != ENXIO))
-#else
 		if (errno != ENOENT)
-#endif
 		{
 		    ViceLog(0,
 			    ("Volume %u now offline, must be salvaged.\n",

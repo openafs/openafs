@@ -60,11 +60,7 @@ extern statusP createStatusNode();
 char *loadFile;
 extern afs_int32 lastTaskCode;
 
-#ifdef AFS_DEC_ENV
-#define HOSTADDR(sockaddr) (sockaddr)->sin_addr.S_un.S_addr
-#else
 #define HOSTADDR(sockaddr) (sockaddr)->sin_addr.s_addr
-#endif
 
 int
 bc_EvalVolumeSet(aconfig, avs, avols, uclient)

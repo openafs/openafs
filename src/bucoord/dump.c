@@ -52,11 +52,7 @@ extern afs_int32 bc_jobNumber();
 
 extern afs_int32 lastTaskCode;
 
-#ifdef AFS_DEC_ENV
-#define HOSTADDR(sockaddr) (sockaddr)->sin_addr.S_un.S_addr
-#else
 #define HOSTADDR(sockaddr) (sockaddr)->sin_addr.s_addr
-#endif
 
 /* bc_Dumper
  *	called (indirectly) to make a dump

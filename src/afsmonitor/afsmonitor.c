@@ -30,17 +30,12 @@ RCSID
 #undef IN
 #include <sys/types.h>
 #include <netinet/in.h>
-#ifndef AFS_DEC_ENV
 #include <sys/socket.h>
 #include <netdb.h>
-#endif
 #include <ctype.h>
 
 #include <gtxwindows.h>		/*Generic window package */
 #include <gtxobjects.h>		/*Object definitions */
-#if 0
-#include <gtxtextobj.h>		/*Text object interface */
-#endif
 #include <gtxlightobj.h>	/*Light object interface */
 #include <gtxcurseswin.h>	/*Curses window package */
 #include <gtxdumbwin.h>		/*Dumb terminal window package */

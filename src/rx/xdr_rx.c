@@ -33,13 +33,13 @@ RCSID
 #else
 #include "rpc/types.h"
 #endif
-#ifdef  AFS_ALPHA_ENV
+#ifdef  AFS_OSF_ENV
 #undef kmem_alloc
 #undef kmem_free
 #undef mem_alloc
 #undef mem_free
 #undef register
-#endif /* AFS_ALPHA_ENV */
+#endif /* AFS_OSF_ENV */
 #ifdef AFS_LINUX22_ENV
 #ifndef quad_t
 #define quad_t __quad_t

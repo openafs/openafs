@@ -331,9 +331,7 @@ afs_vop_open(ap)
     if (AFSTOV(vc) != vp)
 	panic("AFS open changed vnode!");
 #endif
-    afs_BozonLock(&vc->pvnLock, vc);
     osi_FlushPages(vc, ap->a_cred);
-    afs_BozonUnlock(&vc->pvnLock, vc);
     AFS_GUNLOCK();
 #ifdef AFS_DARWIN14_ENV
     if (error && didhold)
@@ -359,9 +357,7 @@ afs_vop_close(ap)
 	code = afs_close(avc, ap->a_fflag, ap->a_cred, ap->a_p);
     else
 	code = afs_close(avc, ap->a_fflag, &afs_osi_cred, ap->a_p);
-    afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
-    afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
 #ifdef AFS_DARWIN14_ENV
     if (UBCINFOEXISTS(ap->a_vp) && ap->a_vp->v_ubcinfo->ui_refcount < 2) {
@@ -448,10 +444,8 @@ afs_vop_read(ap)
     int code;
     struct vcache *avc = VTOAFS(ap->a_vp);
     AFS_GLOCK();
-    afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
     code = afs_read(avc, ap->a_uio, ap->a_cred, 0, 0, 0);
-    afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
     return code;
 }
@@ -526,7 +520,6 @@ afs_vop_pagein(ap)
     auio.uio_resid = aiov.iov_len = size;
     aiov.iov_base = (caddr_t) ioaddr;
     AFS_GLOCK();
-    afs_BozonLock(&tvc->pvnLock, tvc);
     osi_FlushPages(tvc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
     code = afs_read(tvc, uio, cred, 0, 0, 0);
     if (code == 0) {
@@ -534,7 +527,6 @@ afs_vop_pagein(ap)
 	tvc->states |= CMAPPED;
 	ReleaseWriteLock(&tvc->lock);
     }
-    afs_BozonUnlock(&tvc->pvnLock, tvc);
     AFS_GUNLOCK();
 
     /* Zero out rest of last page if there wasn't enough data in the file */
@@ -569,7 +561,6 @@ afs_vop_write(ap)
     struct vcache *avc = VTOAFS(ap->a_vp);
     void *object;
     AFS_GLOCK();
-    afs_BozonLock(&avc->pvnLock, avc);
     osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
     if (UBCINFOEXISTS(ap->a_vp))
 	ubc_clean(ap->a_vp, 1);
@@ -578,7 +569,6 @@ afs_vop_write(ap)
 			 ap->a_uio->uio_resid);
     code =
 	afs_write(VTOAFS(ap->a_vp), ap->a_uio, ap->a_ioflag, ap->a_cred, 0);
-    afs_BozonUnlock(&avc->pvnLock, avc);
     AFS_GUNLOCK();
     return code;
 }
@@ -713,7 +703,6 @@ afs_vop_pageout(ap)
 #endif /* ] USV */
 
     AFS_GLOCK();
-    afs_BozonLock(&tvc->pvnLock, tvc);
     osi_FlushPages(tvc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
     ObtainWriteLock(&tvc->lock, 1);
     afs_FakeOpen(tvc);
@@ -724,7 +713,6 @@ afs_vop_pageout(ap)
     ObtainWriteLock(&tvc->lock, 1);
     afs_FakeClose(tvc, cred);
     ReleaseWriteLock(&tvc->lock);
-    afs_BozonUnlock(&tvc->pvnLock, tvc);
     AFS_GUNLOCK();
     kernel_upl_unmap(kernel_map, pl);
     if (!nocommit) {
