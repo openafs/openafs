@@ -17,7 +17,9 @@
 RCSID
     ("$Header$");
 
+#ifdef AFS_LINUX24_ENV
 #include <linux/module.h> /* early to avoid printf->printk mapping */
+#endif
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #include "h/unistd.h"		/* For syscall numbers. */

@@ -102,6 +102,7 @@ static struct proc_dir_entry *openafs_procfs;
 static int ioctl32_done;
 #endif
 
+#ifdef AFS_LINUX24_ENV
 static int
 afsproc_init(void)
 {
@@ -135,6 +136,7 @@ afsproc_exit(void)
 	    unregister_ioctl32_conversion(VIOC_SYSCALL32);
 #endif
 }
+#endif
 
 extern asmlinkage long
 afs_syscall(long syscall, long parm1, long parm2, long parm3, long parm4);
@@ -223,7 +225,9 @@ init_module(void)
     if (e) return e;
     register_filesystem(&afs_fs_type);
     osi_sysctl_init();
+#ifdef AFS_LINUX24_ENV
     afsproc_init();
+#endif
 
     return 0;
 }
@@ -243,7 +247,9 @@ cleanup_module(void)
     osi_linux_free_inode_pages();	/* Invalidate all pages using AFS inodes. */
     osi_linux_free_afs_memory();
 
+#ifdef AFS_LINUX24_ENV
     afsproc_exit();
+#endif
     return;
 }
 
