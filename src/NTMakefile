@@ -537,7 +537,14 @@ client_creds: client_exp
 	$(NTMAKE)
 	$(CD) ..\..\..
 
-extra: client_creds
+aklog: client_creds
+     echo ***** $@
+	$(DOCD) $(SRC)\WINNT\$@
+	$(CD) $(SRC)\WINNT\$@
+	$(NTMAKE)
+	$(CD) ..\..\..
+
+extra: aklog
 !	IF EXIST($(SRC)\WINNT\extra) && EXIST($(SRC)\WINNT\extra\NTMakefile)
      echo ***** $@
     $(DOCD) $(SRC)\WINNT\$@
