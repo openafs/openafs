@@ -2753,9 +2753,9 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
      * so its unique matches the vnode unique. Delete if the unique is zero
      * or if the directory is orphaned.
      */
-    if (!IUnique(vnodeEssence->unique) || 
-	(IUnique(vnodeEssence->unique) != IUnique(unique)) ) {
-        if ( !IUnique(vnodeEssence->unique) && 
+    if (!vnodeEssence->unique || 
+	(vnodeEssence->unique) != unique) {
+        if (!vnodeEssence->unique && 
 	     ((strcmp(name,"..")==0) || (strcmp(name,".")==0)) ) {
 	   /* This is an orphaned directory. Don't delete the . or ..
 	    * entry. Otherwise, it will get created in the next 
@@ -2785,7 +2785,7 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
     }
 
     if (strcmp(name,".") == 0) {
-	if (dir->vnodeNumber != vnodeNumber || (IUnique(dir->unique) != IUnique(unique))) {
+	if (dir->vnodeNumber != vnodeNumber || (dir->unique != unique)) {
 	    ViceFid fid;
 	    if (!Showmode) Log("directory vnode %d.%d: bad '.' entry (was %d.%d); fixed\n",
 	        dir->vnodeNumber, dir->unique, vnodeNumber, unique);
@@ -2816,9 +2816,9 @@ void JudgeEntry(struct DirSummary *dir, char *name, VnodeId vnodeNumber,
 	    pa.Vnode = dir->vnodeNumber;
 	    pa.Unique = dir->unique;
 	}
-	if ((pa.Vnode != vnodeNumber) || (IUnique(pa.Unique) != IUnique(unique))) {
+	if ((pa.Vnode != vnodeNumber) || (pa.Unique != unique)) {
 	    if (!Showmode) Log("directory vnode %d.%d: bad '..' entry (was %d.%d); fixed\n",
-	        dir->vnodeNumber, IUnique(dir->unique), vnodeNumber, IUnique(unique));
+	        dir->vnodeNumber, dir->unique, vnodeNumber, unique);
 	    if (!Testing) {
 		CopyOnWrite(dir);
 		assert(Delete(&dir->dirHandle, "..") == 0);
@@ -3177,7 +3177,7 @@ int SalvageVolume(register struct InodeSummary *rwIsp, IHandle_t *alinkH)
 	   */
 	  if (class == vLarge) {          /* directory vnode */
 	     pv = vnodeIdToBitNumber(vep->parent);
-	     if (IUnique(vnodeInfo[vLarge].vnodes[pv].unique) != 0)
+	     if (vnodeInfo[vLarge].vnodes[pv].unique != 0)
 	        vnodeInfo[vLarge].vnodes[pv].count++;
 	  }
 
