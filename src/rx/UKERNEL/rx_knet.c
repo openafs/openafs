@@ -228,7 +228,7 @@ rxk_InitializeSocket(void)
     optlen = sizeof(optval);
     rc = getsockopt(sock, SOL_SOCKET, SO_SNDBUF, (void *)&optval, &optlen);
     usr_assert(rc == 0);
-    usr_assert(optval == optval0);
+    /* usr_assert(optval == optval0); */
 #ifdef AFS_USR_LINUX22_ENV
     optval0 = 131070;
 #else
@@ -241,7 +241,7 @@ rxk_InitializeSocket(void)
     optlen = sizeof(optval);
     rc = getsockopt(sock, SOL_SOCKET, SO_RCVBUF, (void *)&optval, &optlen);
     usr_assert(rc == 0);
-    usr_assert(optval == optval0);
+    /* usr_assert(optval == optval0); */
 
 #ifdef AFS_USR_AIX_ENV
     optval = 1;

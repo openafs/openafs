@@ -12,7 +12,7 @@ include @TOP_OBJDIR@/src/config/Makefile.config
 
 # System specific build commands and flags
 DEFINES= -DKERNEL -DUKERNEL
-CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBUG}
+CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBG}
 AR = /usr/bin/ar
 ARFLAGS = -r
 RANLIB = /bin/ranlib
