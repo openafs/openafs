@@ -128,14 +128,14 @@ ${COMPDIRS}:
 			KDIR=${KOBJ}-$$v-$$m ; \
 			echo Building in directory: $${KDIR} ; \
 			if [ "$$m" = "MP" ] ; then \
-				SMP_DEF="-DAFS_SMP" ; \
+				SMP_DEF="-DAFS_SMP -D__BOOT_KERNEL_SMP=1 -D__BOOT_KERNEL_UP=0 -D__SMP__" ; \
 				TARG="libafs.mp" ; \
 			else  \
-				SMP_DEF="" ; \
+				SMP_DEF="-D__BOOT_KERNEL_SMP=0 -D__BOOT_KERNEL_UP=1 -U__SMP__" ; \
 				TARG=libafs ; \
 			fi ; \
 			cd $${KDIR} ; \
-			$(MAKE) DESTDIR=${DESTDIR} SMP_DEF=$${SMP_DEF} $${TARG} CLIENT=$$v || exit $$?; \
+			$(MAKE) DESTDIR=${DESTDIR} SMP_DEF="$${SMP_DEF}" $${TARG} CLIENT=$$v || exit $$?; \
 			cd ../ ; \
 		done \
 	done
