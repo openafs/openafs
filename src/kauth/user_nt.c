@@ -49,6 +49,8 @@ static char *ka_MapKerberosError(int code)
 			return "server and client clocks are badly skewed";
 		case SKDC_RETRY:
 			return "Authentication Server was unavailable";
+		case RD_AP_TIME:
+			return "server and client clocks are badly skewed";
 		default:
 			sprintf(bogusReason, "unknown authentication error %d",
 				code);
