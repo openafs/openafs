@@ -1,4 +1,3 @@
-#include <afx.h>
 #include <windows.h>
 #include <winreg.h>
 #include <nb30.h>
@@ -9,13 +8,13 @@
 #include <wtypes.h>
 #include <string.h>
 #include <malloc.h>
+#include <stdio.h>
 #include <lanahelper.h>
 
 #define NOLOGGING
 #ifndef NOLOGGING
 extern "C" {
-#include<stdio.h>
-#include<stdarg.h>
+#include <stdarg.h>
 
     void afsi_log(TCHAR *p, ...) {
         va_list marker;
