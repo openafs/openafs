@@ -138,6 +138,7 @@
 #define SYS_NAME_ID_ppc_linux2          1600
 #define SYS_NAME_ID_ppc_linux22         1601
 #define SYS_NAME_ID_ppc_linux24         1602
+#define SYS_NAME_ID_ppc_linux26         1603
 
 #define SYS_NAME_ID_sparc_linux2	1700
 #define SYS_NAME_ID_sparc_linux22	1701
