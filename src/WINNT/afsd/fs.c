@@ -2292,6 +2292,8 @@ struct afsconf_cell *info;
 					  info->hostAddr[i].sin_port, USER_SERVICE_ID,
 					  sc, scIndex);
 
+    if (sc)
+        rxs_Release(sc);    /* Decrement the initial refCount */
     code = ubik_ClientInit(serverconns, &uclient);
 
     if (code) {

@@ -471,6 +471,8 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
 	rx_SetConnDeadTime(tcp->callp, CM_CONN_CONNDEADTIME);
 	rx_SetConnHardDeadTime(tcp->callp, CM_CONN_HARDDEADTIME);
 	tcp->ucgen = ucellp->gen;
+    if (secObjp)
+        rxs_Release(secObjp);   /* Decrement the initial refCount */
 }
 
 long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
