@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/process.c,v 1.8 2001/09/11 15:48:27 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/lwp/process.c,v 1.9 2002/02/25 19:53:25 hartmans Exp $");
 
 #include <stdio.h>
 #include <assert.h>
@@ -92,7 +92,9 @@ struct lwp_context *savearea;
 #elif	defined(AFS_HPUX_ENV)
 #define	LWP_SP	1
 #elif	defined(AFS_LINUX20_ENV)
-#if defined(AFS_PPC_LINUX20_ENV)
+#if defined(AFS_PARISC_LINUX24_ENV )
+#define	LWP_SP	1
+#elif defined(AFS_PPC_LINUX20_ENV)
 #define LWP_SP 0
 #elif   defined(AFS_I386_LINUX20_ENV)
 #define LWP_SP 4
