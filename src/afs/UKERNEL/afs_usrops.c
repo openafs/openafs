@@ -745,7 +745,7 @@ int osi_UFSTruncate(struct osi_file *fp, afs_int32 len)
     return 0;
 }
 
-int afs_osi_Read(struct osi_file *fp, int offset, char *buf, afs_int32 len)
+int afs_osi_Read(struct osi_file *fp, int offset, void *buf, afs_int32 len)
 {
     int rc, ret;
     int code;
@@ -783,7 +783,7 @@ int afs_osi_Read(struct osi_file *fp, int offset, char *buf, afs_int32 len)
     return ret;
 }
 
-int afs_osi_Write(struct osi_file *fp, afs_int32 offset, char *buf, afs_int32 len)
+int afs_osi_Write(struct osi_file *fp, afs_int32 offset, void *buf, afs_int32 len)
 {
     int rc, ret;
     int code;
