@@ -140,7 +140,9 @@ start_client() {
 		start-stop-daemon --start --quiet --exec /usr/sbin/afsd \
 		    -- ${OPTIONS}
 		echo -n " afsd"
-
+		if [ x$AFS_CRYPT = xtrue ] ; then
+		    fs setcrypt on
+		    fi
 }
 
 
