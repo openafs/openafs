@@ -858,11 +858,15 @@ tagain:
 	afs_PutVolume(volp, READ_LOCK);
     
     /* If we did the InlineBulk RPC pull out the return code */
-    if (inlinebulk && (&statsp[0])->errorCode) {
-	afs_Analyze(tcp, (&statsp[0])->errorCode, &adp->fid, areqp, 
-		    AFS_STATS_FS_RPCIDX_BULKSTATUS, SHARED_LOCK, 
-		    (struct cell *)0);
-	code = (&statsp[0])->errorCode;
+    if (inlinebulk) {
+	if ((&statsp[0])->errorCode) {
+	    afs_Analyze(tcp, (&statsp[0])->errorCode, &adp->fid, areqp, 
+			AFS_STATS_FS_RPCIDX_BULKSTATUS, SHARED_LOCK, 
+			(struct cell *)0);
+	    code = (&statsp[0])->errorCode;
+	}
+    } else {
+	code = 0;
     }
     osi_FreeLargeSpace(statMemp);
     osi_FreeLargeSpace(cbfMemp);
