@@ -40,21 +40,21 @@ smb_tran2Packet_t *smb_tran2AssemblyQueuep;
 cm_user_t *smb_GetTran2User(smb_vc_t *vcp, smb_tran2Packet_t *inp)
 {
 	smb_user_t *uidp;
-        cm_user_t *up = NULL;
+    cm_user_t *up = NULL;
         
-        uidp = smb_FindUID(vcp, inp->uid, 0);
-        if (!uidp) return NULL;
+    uidp = smb_FindUID(vcp, inp->uid, 0);
+    if (!uidp) return NULL;
         
 	lock_ObtainMutex(&uidp->mx);
-        if (uidp->unp) {
-          up = uidp->unp->userp;
-          cm_HoldUser(up);
-        }
+    if (uidp->unp) {
+        up = uidp->unp->userp;
+        cm_HoldUser(up);
+    }
 	lock_ReleaseMutex(&uidp->mx);
 
-        smb_ReleaseUID(uidp);
-        
-        return up;
+    smb_ReleaseUID(uidp);
+
+    return up;
 }
 
 /*
@@ -89,21 +89,22 @@ unsigned long smb_ExtAttributes(cm_scache_t *scp)
 
 int smb_V3IsStarMask(char *maskp)
 {
-        char tc;
+    char tc;
 
 	while (tc = *maskp++)
-	  if (tc == '?' || tc == '*') return 1;
+        if (tc == '?' || tc == '*') 
+            return 1;
 	return 0;
 }
 
 unsigned char *smb_ParseString(unsigned char *inp, char **chainpp)
 {
-        if (chainpp) {
+    if (chainpp) {
 		/* skip over null-terminated string */
 		*chainpp = inp + strlen(inp) + 1;
-        }
-        return inp;
-}
+    }
+    return inp;
+}   
 
 long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
@@ -160,7 +161,7 @@ long smb_ReceiveV3SessionSetupX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
         /* Create a new UID and cm_user_t structure */
         userp = unp->userp;
         if (!userp)
-          userp = cm_NewUser();
+            userp = cm_NewUser();
         lock_ObtainMutex(&vcp->mx);
         if (!vcp->uidCounter)
             vcp->uidCounter++; /* handle unlikely wraparounds */
@@ -212,9 +213,9 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 		if (s1 == NULL) {s1 = s2; s2 = " ";}
 
 		osi_Log4(afsd_logp, "SMB3 user logoffX uid %d name %s%s%s",
-			 uidp->userID,
-			 osi_LogSaveString(afsd_logp,
-                 (uidp->unp) ? uidp->unp->name: " "), s1, s2);
+                  uidp->userID,
+                  osi_LogSaveString(afsd_logp,
+                                    (uidp->unp) ? uidp->unp->name: " "), s1, s2);
 
 		lock_ObtainMutex(&uidp->mx);
 		uidp->flags |= SMB_USERFLAG_DELETE;
@@ -222,49 +223,49 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
 		 * it doesn't get deleted right away
 		 * because the vcp points to it
 		 */
-                lock_ReleaseMutex(&uidp->mx);
-        }
-	else
+        lock_ReleaseMutex(&uidp->mx);
+    }
+	else    
 		osi_Log0(afsd_logp, "SMB3 user logoffX");
 
-        smb_SetSMBDataLength(outp, 0);
-        return 0;
+    smb_SetSMBDataLength(outp, 0);
+    return 0;
 }
 
 long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-        smb_tid_t *tidp;
-        unsigned short newTid;
-        char shareName[256];
+    smb_tid_t *tidp;
+    unsigned short newTid;
+    char shareName[256];
 	char *sharePath;
 	int shareFound;
-        char *tp;
-        char *pathp;
-        char *passwordp;
+    char *tp;
+    char *pathp;
+    char *passwordp;
 	char *servicep;
-        cm_user_t *userp;
+    cm_user_t *userp;
         
 	osi_Log0(afsd_logp, "SMB3 receive tree connect");
 
 	/* parse input parameters */
 	tp = smb_GetSMBData(inp, NULL);
-        passwordp = smb_ParseString(tp, &tp);
+    passwordp = smb_ParseString(tp, &tp);
 	pathp = smb_ParseString(tp, &tp);
 	servicep = smb_ParseString(tp, &tp);
 
 	tp = strrchr(pathp, '\\');
-        if (!tp) {
-                return CM_ERROR_BADSMB;
-        }
-        strcpy(shareName, tp+1);
+    if (!tp) {
+        return CM_ERROR_BADSMB;
+    }
+    strcpy(shareName, tp+1);
 
 	if (strcmp(servicep, "IPC") == 0 || strcmp(shareName, "IPC$") == 0)
 		return CM_ERROR_NOIPC;
 
-        userp = smb_GetUser(vcp, inp);
+    userp = smb_GetUser(vcp, inp);
 
 	lock_ObtainMutex(&vcp->mx);
-        newTid = vcp->tidCounter++;
+    newTid = vcp->tidCounter++;
 	lock_ReleaseMutex(&vcp->mx);
         
 	tidp = smb_FindTID(vcp, newTid, SMB_FLAG_CREATE);
@@ -273,11 +274,11 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
 		smb_ReleaseTID(tidp);
 		return CM_ERROR_BADSHARENAME;
 	}
-        lock_ObtainMutex(&tidp->mx);
-        tidp->userp = userp;
+    lock_ObtainMutex(&tidp->mx);
+    tidp->userp = userp;
 	tidp->pathname = sharePath;
-        lock_ReleaseMutex(&tidp->mx);
-        smb_ReleaseTID(tidp);
+    lock_ReleaseMutex(&tidp->mx);
+    smb_ReleaseTID(tidp);
 
 	if (vcp->flags & SMB_VCFLAG_USENT)
 		smb_SetSMBParm(outp, 2, 0);	/* OptionalSupport bits */
@@ -285,27 +286,27 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
 	((smb_t *)outp)->tid = newTid;
 	((smb_t *)inp)->tid = newTid;
 	tp = smb_GetSMBData(outp, NULL);
-        *tp++ = 'A';
-        *tp++ = ':';
-        *tp++ = 0;
-        smb_SetSMBDataLength(outp, 3);
-        
-        osi_Log1(afsd_logp, "SMB3 tree connect created ID %d", newTid);
-        return 0;
+    *tp++ = 'A';
+    *tp++ = ':';
+    *tp++ = 0;
+    smb_SetSMBDataLength(outp, 3);
+
+    osi_Log1(afsd_logp, "SMB3 tree connect created ID %d", newTid);
+    return 0;
 }
 
 /* must be called with global tran lock held */
 smb_tran2Packet_t *smb_FindTran2Packet(smb_vc_t *vcp, smb_packet_t *inp)
 {
 	smb_tran2Packet_t *tp;
-        smb_t *smbp;
+    smb_t *smbp;
         
-        smbp = (smb_t *) inp->data;
+    smbp = (smb_t *) inp->data;
 	for(tp = smb_tran2AssemblyQueuep; tp; tp = (smb_tran2Packet_t *) osi_QNext(&tp->q)) {
 		if (tp->vcp == vcp && tp->mid == smbp->mid && tp->tid == smbp->tid)
-                	return tp;
-        }
-        return NULL;
+            return tp;
+    }
+    return NULL;
 }
 
 smb_tran2Packet_t *smb_NewTran2Packet(smb_vc_t *vcp, smb_packet_t *inp,
@@ -347,18 +348,18 @@ smb_tran2Packet_t *smb_GetTran2ResponsePacket(smb_vc_t *vcp,
 	unsigned short dataAlign;
         
 	tp = malloc(sizeof(*tp));
-        memset(tp, 0, sizeof(*tp));
-        tp->vcp = NULL;
-        tp->curData = tp->curParms = 0;
-        tp->totalData = totalData;
-        tp->totalParms = totalParms;
+    memset(tp, 0, sizeof(*tp));
+    tp->vcp = NULL;
+    tp->curData = tp->curParms = 0;
+    tp->totalData = totalData;
+    tp->totalParms = totalParms;
 	tp->oldTotalParms = totalParms;
-        tp->tid = inp->tid;
-        tp->mid = inp->mid;
-        tp->uid = inp->uid;
-        tp->pid = inp->pid;
+    tp->tid = inp->tid;
+    tp->mid = inp->mid;
+    tp->uid = inp->uid;
+    tp->pid = inp->pid;
 	tp->res[0] = inp->res[0];
-        tp->opcode = inp->opcode;
+    tp->opcode = inp->opcode;
 
 	/*
 	 * We calculate where the parameters and data will start.
@@ -375,7 +376,7 @@ smb_tran2Packet_t *smb_GetTran2ResponsePacket(smb_vc_t *vcp,
 	dataOffset += dataAlign;
 	tp->datap = outp->data + dataOffset;
 
-        return tp;
+    return tp;
 }
 
 /* free a tran2 packet; must be called with smb_globalLock held */
@@ -397,29 +398,29 @@ void smb_FreeTran2Packet(smb_tran2Packet_t *t2p)
 void smb_SendTran2Error(smb_vc_t *vcp, smb_tran2Packet_t *t2p,
 	smb_packet_t *tp, long code)
 {
-        smb_t *smbp;
-        unsigned short errCode;
-        unsigned char errClass;
+    smb_t *smbp;
+    unsigned short errCode;
+    unsigned char errClass;
 	unsigned long NTStatus;
 
-        if (vcp->flags & SMB_VCFLAG_STATUS32)
+    if (vcp->flags & SMB_VCFLAG_STATUS32)
 		smb_MapNTError(code, &NTStatus);
 	else
 		smb_MapCoreError(code, vcp, &errCode, &errClass);
 
-        smb_FormatResponsePacket(vcp, NULL, tp);
-        smbp = (smb_t *) tp;
-        
+    smb_FormatResponsePacket(vcp, NULL, tp);
+    smbp = (smb_t *) tp;
+
 	/* We can handle long names */
 	if (vcp->flags & SMB_VCFLAG_USENT)
 		smbp->flg2 |= 0x40;	/* IS_LONG_NAME */
         
-        /* now copy important fields from the tran 2 packet */
-        smbp->com = 0x32;		/* tran 2 response */
-        smbp->tid = t2p->tid;
-        smbp->mid = t2p->mid;
-        smbp->pid = t2p->pid;
-        smbp->uid = t2p->uid;
+    /* now copy important fields from the tran 2 packet */
+    smbp->com = 0x32;		/* tran 2 response */
+    smbp->tid = t2p->tid;
+    smbp->mid = t2p->mid;
+    smbp->pid = t2p->pid;
+    smbp->uid = t2p->uid;
 	smbp->res[0] = t2p->res[0];
 	if (vcp->flags & SMB_VCFLAG_STATUS32) {
 		smbp->rcls = (unsigned char) (NTStatus & 0xff);
@@ -429,83 +430,83 @@ void smb_SendTran2Error(smb_vc_t *vcp, smb_tran2Packet_t *t2p,
 		smbp->flg2 |= 0x4000;
 	}
 	else {
-	        smbp->rcls = errClass;
+        smbp->rcls = errClass;
 		smbp->errLow = (unsigned char) (errCode & 0xff);
 		smbp->errHigh = (unsigned char) ((errCode >> 8) & 0xff);
 	}
         
-        /* send packet */
-        smb_SendPacket(vcp, tp);
+    /* send packet */
+    smb_SendPacket(vcp, tp);
 }        
 
 void smb_SendTran2Packet(smb_vc_t *vcp, smb_tran2Packet_t *t2p, smb_packet_t *tp)
 {
-        smb_t *smbp;
-        unsigned short parmOffset;
+    smb_t *smbp;
+    unsigned short parmOffset;
 	unsigned short dataOffset;
 	unsigned short totalLength;
 	unsigned short dataAlign;
-        char *datap;
+    char *datap;
         
-        smb_FormatResponsePacket(vcp, NULL, tp);
-        smbp = (smb_t *) tp;
+    smb_FormatResponsePacket(vcp, NULL, tp);
+    smbp = (smb_t *) tp;
 
 	/* We can handle long names */
 	if (vcp->flags & SMB_VCFLAG_USENT)
 		smbp->flg2 |= 0x40;	/* IS_LONG_NAME */
-        
-        /* now copy important fields from the tran 2 packet */
-        smbp->com = 0x32;		/* tran 2 response */
-        smbp->tid = t2p->tid;
-        smbp->mid = t2p->mid;
-        smbp->pid = t2p->pid;
-        smbp->uid = t2p->uid;
+
+    /* now copy important fields from the tran 2 packet */
+    smbp->com = 0x32;		/* tran 2 response */
+    smbp->tid = t2p->tid;
+    smbp->mid = t2p->mid;
+    smbp->pid = t2p->pid;
+    smbp->uid = t2p->uid;
 	smbp->res[0] = t2p->res[0];
 
-        totalLength = 1 + t2p->totalData + t2p->totalParms;
+    totalLength = 1 + t2p->totalData + t2p->totalParms;
 
-        /* now add the core parameters (tran2 info) to the packet */
-        smb_SetSMBParm(tp, 0, t2p->totalParms);	/* parm bytes */
-        smb_SetSMBParm(tp, 1, t2p->totalData);	/* data bytes */
-        smb_SetSMBParm(tp, 2, 0);		/* reserved */
-        smb_SetSMBParm(tp, 3, t2p->totalParms);	/* parm bytes in this packet */
+    /* now add the core parameters (tran2 info) to the packet */
+    smb_SetSMBParm(tp, 0, t2p->totalParms);	/* parm bytes */
+    smb_SetSMBParm(tp, 1, t2p->totalData);	/* data bytes */
+    smb_SetSMBParm(tp, 2, 0);		/* reserved */
+    smb_SetSMBParm(tp, 3, t2p->totalParms);	/* parm bytes in this packet */
 	parmOffset = 10*2 + 35;			/* parm offset in packet */
 	parmOffset++;				/* round to even */
-        smb_SetSMBParm(tp, 4, parmOffset);	/* 11 parm words plus *
-						 * hdr, bcc and wct */
-        smb_SetSMBParm(tp, 5, 0);		/* parm displacement */
-        smb_SetSMBParm(tp, 6, t2p->totalData);	/* data in this packet */
+    smb_SetSMBParm(tp, 4, parmOffset);	/* 11 parm words plus *
+    * hdr, bcc and wct */
+    smb_SetSMBParm(tp, 5, 0);		/* parm displacement */
+    smb_SetSMBParm(tp, 6, t2p->totalData);	/* data in this packet */
 	dataOffset = parmOffset + t2p->oldTotalParms;
 	dataAlign = dataOffset & 2;		/* quad-align */
 	dataOffset += dataAlign;
-        smb_SetSMBParm(tp, 7, dataOffset);	/* offset of data */
-        smb_SetSMBParm(tp, 8, 0);		/* data displacement */
-        smb_SetSMBParm(tp, 9, 0);		/* low: setup word count *
-						 * high: resvd */
-        
-        datap = smb_GetSMBData(tp, NULL);
+    smb_SetSMBParm(tp, 7, dataOffset);	/* offset of data */
+    smb_SetSMBParm(tp, 8, 0);		/* data displacement */
+    smb_SetSMBParm(tp, 9, 0);		/* low: setup word count *
+    * high: resvd */
+
+    datap = smb_GetSMBData(tp, NULL);
 	*datap++ = 0;				/* we rounded to even */
 
 	totalLength += dataAlign;
-        smb_SetSMBDataLength(tp, totalLength);
+    smb_SetSMBDataLength(tp, totalLength);
         
-        /* next, send the datagram */
-        smb_SendPacket(vcp, tp);
-}
+    /* next, send the datagram */
+    smb_SendPacket(vcp, tp);
+}   
 
 long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
-        smb_tran2Packet_t *asp;
-        int totalParms;
-        int totalData;
-        int parmDisp;
-        int dataDisp;
-        int parmOffset;
-        int dataOffset;
-        int parmCount;
-        int dataCount;
-        int firstPacket;
-        long code;
+    smb_tran2Packet_t *asp;
+    int totalParms;
+    int totalData;
+    int parmDisp;
+    int dataDisp;
+    int parmOffset;
+    int dataOffset;
+    int parmCount;
+    int dataCount;
+    int firstPacket;
+    long code;
 
 	/* We sometimes see 0 word count.  What to do? */
 	if (*inp->wctp == 0) {
@@ -524,48 +525,48 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 		osi_Log0(afsd_logp, "TRANSACTION2 word count = 0"); 
 #endif /* !DJGPP */
 
-                smb_SetSMBDataLength(outp, 0);
-                smb_SendPacket(vcp, outp);
+        smb_SetSMBDataLength(outp, 0);
+        smb_SendPacket(vcp, outp);
 		return 0;
 	}
 
-        totalParms = smb_GetSMBParm(inp, 0);
-        totalData = smb_GetSMBParm(inp, 1);
+    totalParms = smb_GetSMBParm(inp, 0);
+    totalData = smb_GetSMBParm(inp, 1);
         
-        firstPacket = (inp->inCom == 0x32);
+    firstPacket = (inp->inCom == 0x32);
         
 	/* find the packet we're reassembling */
 	lock_ObtainWrite(&smb_globalLock);
-        asp = smb_FindTran2Packet(vcp, inp);
-        if (!asp) {
-        	asp = smb_NewTran2Packet(vcp, inp, totalParms, totalData);
+    asp = smb_FindTran2Packet(vcp, inp);
+    if (!asp) {
+        asp = smb_NewTran2Packet(vcp, inp, totalParms, totalData);
 	}
-        lock_ReleaseWrite(&smb_globalLock);
+    lock_ReleaseWrite(&smb_globalLock);
         
-        /* now merge in this latest packet; start by looking up offsets */
+    /* now merge in this latest packet; start by looking up offsets */
 	if (firstPacket) {
 		parmDisp = dataDisp = 0;
-                parmOffset = smb_GetSMBParm(inp, 10);
-                dataOffset = smb_GetSMBParm(inp, 12);
-                parmCount = smb_GetSMBParm(inp, 9);
-                dataCount = smb_GetSMBParm(inp, 11);
+        parmOffset = smb_GetSMBParm(inp, 10);
+        dataOffset = smb_GetSMBParm(inp, 12);
+        parmCount = smb_GetSMBParm(inp, 9);
+        dataCount = smb_GetSMBParm(inp, 11);
 		asp->maxReturnParms = smb_GetSMBParm(inp, 2);
-                asp->maxReturnData = smb_GetSMBParm(inp, 3);
+        asp->maxReturnData = smb_GetSMBParm(inp, 3);
 
 		osi_Log3(afsd_logp, "SMB3 received T2 init packet total data %d, cur data %d, max return data %d",
-                	totalData, dataCount, asp->maxReturnData);
-        }
-        else {
-	        parmDisp = smb_GetSMBParm(inp, 4);
-	        parmOffset = smb_GetSMBParm(inp, 3);
-	        dataDisp = smb_GetSMBParm(inp, 7);
-	        dataOffset = smb_GetSMBParm(inp, 6);
-	        parmCount = smb_GetSMBParm(inp, 2);
-	        dataCount = smb_GetSMBParm(inp, 5);
-                
-                osi_Log2(afsd_logp, "SMB3 received T2 aux packet parms %d, data %d",
-                	parmCount, dataCount);
-	}
+                 totalData, dataCount, asp->maxReturnData);
+    }
+    else {
+        parmDisp = smb_GetSMBParm(inp, 4);
+        parmOffset = smb_GetSMBParm(inp, 3);
+        dataDisp = smb_GetSMBParm(inp, 7);
+        dataOffset = smb_GetSMBParm(inp, 6);
+        parmCount = smb_GetSMBParm(inp, 2);
+        dataCount = smb_GetSMBParm(inp, 5);
+
+        osi_Log2(afsd_logp, "SMB3 received T2 aux packet parms %d, data %d",
+                 parmCount, dataCount);
+    }   
 
     /* now copy the parms and data */
     if ( parmCount != 0 )
@@ -576,50 +577,50 @@ long smb_ReceiveV3Tran2A(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
         memcpy(asp->datap + dataDisp, inp->data + dataOffset, dataCount);
     }
 
-        /* account for new bytes */
-        asp->curData += dataCount;
-        asp->curParms += parmCount;
-        
-        /* finally, if we're done, remove the packet from the queue and dispatch it */
-        if (asp->totalData <= asp->curData && asp->totalParms <= asp->curParms) {
+    /* account for new bytes */
+    asp->curData += dataCount;
+    asp->curParms += parmCount;
+
+    /* finally, if we're done, remove the packet from the queue and dispatch it */
+    if (asp->totalData <= asp->curData && asp->totalParms <= asp->curParms) {
 		/* we've received it all */
-                lock_ObtainWrite(&smb_globalLock);
+        lock_ObtainWrite(&smb_globalLock);
 		osi_QRemove((osi_queue_t **) &smb_tran2AssemblyQueuep, &asp->q);
-                lock_ReleaseWrite(&smb_globalLock);
-                
-            /* now dispatch it */
-            if ( asp->opcode >= 0 && asp->opcode < 20 && smb_tran2DispatchTable[asp->opcode].procp) {
-                osi_LogEvent("AFS-Dispatch-2[%s]",myCrt_2Dispatch(asp->opcode),"vcp[%x] lana[%d] lsn[%d]",(int)vcp,vcp->lana,vcp->lsn);
-                osi_Log4(afsd_logp,"AFS Server - Dispatch-2 %s vcp[%x] lana[%d] lsn[%d]",myCrt_2Dispatch(asp->opcode),vcp,vcp->lana,vcp->lsn);
-                code = (*smb_tran2DispatchTable[asp->opcode].procp)(vcp, asp, outp);
-            }
-            else {
-                osi_LogEvent("AFS-Dispatch-2 [invalid]", NULL, "op[%x] vcp[%x] lana[%d] lsn[%d]", asp->opcode, vcp, vcp->lana, vcp->lsn);
-                osi_Log4(afsd_logp,"AFS Server - Dispatch-2 [INVALID] op[%x] vcp[%x] lana[%d] lsn[%d]", asp->opcode, vcp, vcp->lana, vcp->lsn);
-                code = CM_ERROR_BADOP;
-            }
+        lock_ReleaseWrite(&smb_globalLock);
+
+        /* now dispatch it */
+        if ( asp->opcode >= 0 && asp->opcode < 20 && smb_tran2DispatchTable[asp->opcode].procp) {
+            osi_LogEvent("AFS-Dispatch-2[%s]",myCrt_2Dispatch(asp->opcode),"vcp[%x] lana[%d] lsn[%d]",(int)vcp,vcp->lana,vcp->lsn);
+            osi_Log4(afsd_logp,"AFS Server - Dispatch-2 %s vcp[%x] lana[%d] lsn[%d]",myCrt_2Dispatch(asp->opcode),vcp,vcp->lana,vcp->lsn);
+            code = (*smb_tran2DispatchTable[asp->opcode].procp)(vcp, asp, outp);
+        }
+        else {
+            osi_LogEvent("AFS-Dispatch-2 [invalid]", NULL, "op[%x] vcp[%x] lana[%d] lsn[%d]", asp->opcode, vcp, vcp->lana, vcp->lsn);
+            osi_Log4(afsd_logp,"AFS Server - Dispatch-2 [INVALID] op[%x] vcp[%x] lana[%d] lsn[%d]", asp->opcode, vcp, vcp->lana, vcp->lsn);
+            code = CM_ERROR_BADOP;
+        }
 
 		/* if an error is returned, we're supposed to send an error packet,
-                 * otherwise the dispatched function already did the data sending.
-		 * We give dispatched proc the responsibility since it knows how much
-                 * space to allocate.
-                 */
-                if (code != 0) {
-                        smb_SendTran2Error(vcp, asp, outp, code);
-                }
+         * otherwise the dispatched function already did the data sending.
+         * We give dispatched proc the responsibility since it knows how much
+         * space to allocate.
+         */
+        if (code != 0) {
+            smb_SendTran2Error(vcp, asp, outp, code);
+        }
 
 		/* free the input tran 2 packet */
 		lock_ObtainWrite(&smb_globalLock);
-                smb_FreeTran2Packet(asp);
+        smb_FreeTran2Packet(asp);
 		lock_ReleaseWrite(&smb_globalLock);
-        }
-        else if (firstPacket) {
+    }
+    else if (firstPacket) {
 		/* the first packet in a multi-packet request, we need to send an
-                 * ack to get more data.
-                 */
-                smb_SetSMBDataLength(outp, 0);
-                smb_SendPacket(vcp, outp);
-        }
+         * ack to get more data.
+         */
+        smb_SetSMBDataLength(outp, 0);
+        smb_SendPacket(vcp, outp);
+    }
 
 	return 0;
 }
@@ -923,18 +924,18 @@ long smb_ReceiveTran2Open(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 
 long smb_ReceiveTran2FindFirst(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
-        return CM_ERROR_BADOP;
+    return CM_ERROR_BADOP;
 }
 
 long smb_ReceiveTran2FindNext(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
-        return CM_ERROR_BADOP;
+    return CM_ERROR_BADOP;
 }
 
 long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *op)
 {
 	smb_tran2Packet_t *outp;
-        smb_tran2QFSInfo_t qi;
+    smb_tran2QFSInfo_t qi;
 	int responseSize;
 	osi_hyper_t temp;
 	static char FSname[6] = {'A', 0, 'F', 0, 'S', 0};
@@ -951,18 +952,18 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
 	default: return CM_ERROR_INVAL;
 	}
 
-        outp = smb_GetTran2ResponsePacket(vcp, p, op, 0, responseSize);
+    outp = smb_GetTran2ResponsePacket(vcp, p, op, 0, responseSize);
 	switch (p->parmsp[0]) {
 	case 1:
 		/* alloc info */
-                qi.u.allocInfo.FSID = 0;
-                qi.u.allocInfo.sectorsPerAllocUnit = 1;
-                qi.u.allocInfo.totalAllocUnits = 0x7fffffff;
-                qi.u.allocInfo.availAllocUnits = 0x3fffffff;
-                qi.u.allocInfo.bytesPerSector = 1024;
+        qi.u.allocInfo.FSID = 0;
+        qi.u.allocInfo.sectorsPerAllocUnit = 1;
+        qi.u.allocInfo.totalAllocUnits = 0x7fffffff;
+        qi.u.allocInfo.availAllocUnits = 0x3fffffff;
+        qi.u.allocInfo.bytesPerSector = 1024;
 		break;
 
-        case 2:
+    case 2:
 		/* volume info */
         qi.u.volumeInfo.vsn = 1234;
         qi.u.volumeInfo.vnCount = 4;
@@ -1011,23 +1012,23 @@ long smb_ReceiveTran2QFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *
 		qi.u.FSattributeInfo.FSnameLength = 6;
 		memcpy(qi.u.FSattributeInfo.FSname, FSname, 6);
 		break;
-        }
+    }
         
 	/* copy out return data, and set corresponding sizes */
 	outp->totalParms = 0;
-        outp->totalData = responseSize;
-        memcpy(outp->datap, &qi, responseSize);
+    outp->totalData = responseSize;
+    memcpy(outp->datap, &qi, responseSize);
 
 	/* send and free the packets */
 	smb_SendTran2Packet(vcp, outp, op);
-        smb_FreeTran2Packet(outp);
+    smb_FreeTran2Packet(outp);
 
-        return 0;
+    return 0;
 }
 
 long smb_ReceiveTran2SetFSInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
-        return CM_ERROR_BADOP;
+    return CM_ERROR_BADOP;
 }
 
 struct smb_ShortNameRock {
@@ -1072,7 +1073,7 @@ long cm_GetShortName(char *pathp, cm_user_t *userp, cm_req_t *reqp,
 	smb_StripLastComponent(spacep->data, &lastNamep, pathp);
 
 	code = cm_NameI(cm_rootSCachep, spacep->data, caseFold, userp, tidPathp,
-			reqp, &dscp);
+                     reqp, &dscp);
 	cm_FreeSpace(spacep);
 	if (code) return code;
 
@@ -1084,7 +1085,7 @@ long cm_GetShortName(char *pathp, cm_user_t *userp, cm_req_t *reqp,
 	rock.vnode = vnode;
 	rock.maskp = lastNamep;
 	code = cm_ApplyDir(dscp, cm_GetShortNameProc, &rock, &thyper, userp,
-			   reqp, NULL);
+                        reqp, NULL);
 
 	cm_ReleaseSCache(dscp);
 
@@ -1100,19 +1101,19 @@ long cm_GetShortName(char *pathp, cm_user_t *userp, cm_req_t *reqp,
 long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
 {
 	smb_tran2Packet_t *outp;
-        unsigned long dosTime;
+    unsigned long dosTime;
 	FILETIME ft;
-        unsigned short infoLevel;
-        int nbytesRequired;
-        unsigned short attributes;
+    unsigned short infoLevel;
+    int nbytesRequired;
+    unsigned short attributes;
 	unsigned long extAttributes;
 	char shortName[13];
 	unsigned int len;
-        cm_user_t *userp;
+    cm_user_t *userp;
 	cm_space_t *spacep;
-        cm_scache_t *scp, *dscp;
-        long code;
-        char *op;
+    cm_scache_t *scp, *dscp;
+    long code;
+    char *op;
 	char *tidPathp;
 	char *lastComp;
 	cm_req_t req;
@@ -1120,23 +1121,23 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	cm_InitReq(&req);
 
 	infoLevel = p->parmsp[0];
-        if (infoLevel == 6) nbytesRequired = 0;
-        else if (infoLevel == 1) nbytesRequired = 22;
-        else if (infoLevel == 2) nbytesRequired = 26;
+    if (infoLevel == 6) nbytesRequired = 0;
+    else if (infoLevel == 1) nbytesRequired = 22;
+    else if (infoLevel == 2) nbytesRequired = 26;
 	else if (infoLevel == 0x101) nbytesRequired = 40;
 	else if (infoLevel == 0x102) nbytesRequired = 24;
 	else if (infoLevel == 0x103) nbytesRequired = 4;
 	else if (infoLevel == 0x108) nbytesRequired = 30;
-        else {
+    else {
 		osi_Log2(afsd_logp, "Bad Tran2 op 0x%x infolevel 0x%x",
-			 p->opcode, infoLevel);
+                  p->opcode, infoLevel);
 		smb_SendTran2Error(vcp, p, opx, CM_ERROR_INVAL);
-                return 0;
-        }
+        return 0;
+    }
 	osi_Log2(afsd_logp, "T2 QPathInfo type 0x%x path %s", infoLevel,
-		 osi_LogSaveString(afsd_logp, (char *)(&p->parmsp[3])));
+             osi_LogSaveString(afsd_logp, (char *)(&p->parmsp[3])));
 
-        outp = smb_GetTran2ResponsePacket(vcp, p, opx, 2, nbytesRequired);
+    outp = smb_GetTran2ResponsePacket(vcp, p, opx, 2, nbytesRequired);
 
 	if (infoLevel > 0x100)
 		outp->totalParms = 2;
@@ -1144,22 +1145,22 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 		outp->totalParms = 0;
         outp->totalData = nbytesRequired;
         
-        /* now, if we're at infoLevel 6, we're only being asked to check
-         * the syntax, so we just OK things now.  In particular, we're *not*
-         * being asked to verify anything about the state of any parent dirs.
-         */
+    /* now, if we're at infoLevel 6, we're only being asked to check
+     * the syntax, so we just OK things now.  In particular, we're *not*
+     * being asked to verify anything about the state of any parent dirs.
+     */
 	if (infoLevel == 6) {
 		smb_SendTran2Packet(vcp, outp, opx);
-                smb_FreeTran2Packet(outp);
+        smb_FreeTran2Packet(outp);
 		return 0;
-        }
+    }
         
-        userp = smb_GetTran2User(vcp, p);
-        if(!userp) {
-        	osi_Log1(afsd_logp, "ReceiveTran2QPathInfo unable to resolve user [%d]", p->uid);
-        	smb_FreeTran2Packet(outp);
-        	return CM_ERROR_BADSMB;
-        }
+    userp = smb_GetTran2User(vcp, p);
+    if(!userp) {
+        osi_Log1(afsd_logp, "ReceiveTran2QPathInfo unable to resolve user [%d]", p->uid);
+        smb_FreeTran2Packet(outp);
+        return CM_ERROR_BADSMB;
+    }
 
 	tidPathp = smb_GetTIDPath(vcp, p->tid);
 
@@ -1215,30 +1216,30 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	}
 
 	/* now do namei and stat, and copy out the info */
-        code = cm_NameI(cm_rootSCachep, (char *)(&p->parmsp[3]),
-        	CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, tidPathp, &req, &scp);
+    code = cm_NameI(cm_rootSCachep, (char *)(&p->parmsp[3]),
+                    CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD, userp, tidPathp, &req, &scp);
 
 	if (code) {
 		cm_ReleaseUser(userp);
-                smb_SendTran2Error(vcp, p, opx, code);
-                smb_FreeTran2Packet(outp);
-                return 0;
-        }
+        smb_SendTran2Error(vcp, p, opx, code);
+        smb_FreeTran2Packet(outp);
+        return 0;
+    }
 
-        lock_ObtainMutex(&scp->mx);
+    lock_ObtainMutex(&scp->mx);
         code = cm_SyncOp(scp, NULL, userp, &req, 0,
-        	CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+                         CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 	if (code) goto done;
         
-        /* now we have the status in the cache entry, and everything is locked.
+    /* now we have the status in the cache entry, and everything is locked.
 	 * Marshall the output data.
-         */
+     */
 	op = outp->datap;
 	/* for info level 108, figure out short name */
 	if (infoLevel == 0x108) {
 		code = cm_GetShortName((char *)(&p->parmsp[3]), userp, &req,
-					tidPathp, scp->fid.vnode, shortName,
-					(size_t *) &len);
+                                tidPathp, scp->fid.vnode, shortName,
+                                (size_t *) &len);
 		if (code) {
 			goto done;
 		}
@@ -1252,11 +1253,11 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	}
 	if (infoLevel == 1 || infoLevel == 2) {
 		smb_SearchTimeFromUnixTime(&dosTime, scp->clientModTime);
-	        *((u_long *)op) = dosTime; op += 4;	/* creation time */
-	        *((u_long *)op) = dosTime; op += 4;	/* access time */
-	        *((u_long *)op) = dosTime; op += 4;	/* write time */
-	        *((u_long *)op) = scp->length.LowPart; op += 4;	/* length */
-	        *((u_long *)op) = scp->length.LowPart; op += 4;	/* alloc size */
+        *((u_long *)op) = dosTime; op += 4;	/* creation time */
+        *((u_long *)op) = dosTime; op += 4;	/* access time */
+        *((u_long *)op) = dosTime; op += 4;	/* write time */
+        *((u_long *)op) = scp->length.LowPart; op += 4;	/* length */
+        *((u_long *)op) = scp->length.LowPart; op += 4;	/* alloc size */
 		attributes = smb_Attributes(scp);
 		*((u_short *)op) = attributes; op += 2;	/* attributes */
 	}
@@ -1290,20 +1291,22 @@ long smb_ReceiveTran2QPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
         
 
 	/* send and free the packets */
-done:
+  done:
 	lock_ReleaseMutex(&scp->mx);
-        cm_ReleaseSCache(scp);
-        cm_ReleaseUser(userp);
-	if (code == 0) smb_SendTran2Packet(vcp, outp, opx);
-        else smb_SendTran2Error(vcp, p, opx, code);
-        smb_FreeTran2Packet(outp);
+    cm_ReleaseSCache(scp);
+    cm_ReleaseUser(userp);
+	if (code == 0) 
+        smb_SendTran2Packet(vcp, outp, opx);
+    else 
+        smb_SendTran2Error(vcp, p, opx, code);
+    smb_FreeTran2Packet(outp);
 
-        return 0;
+    return 0;
 }
 
 long smb_ReceiveTran2SetPathInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
-        return CM_ERROR_BADOP;
+    return CM_ERROR_BADOP;
 }
 
 long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
@@ -1407,7 +1410,7 @@ long smb_ReceiveTran2QFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	}
 
 	/* send and free the packets */
-done:
+  done:
 	lock_ReleaseMutex(&scp->mx);
 	cm_ReleaseUser(userp);
 	smb_ReleaseFID(fidp);
@@ -1553,7 +1556,7 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 			fidp->flags &= ~SMB_FID_DELONCLOSE;
 		}
 	}
-done:
+  done:
 	cm_ReleaseUser(userp);
 	smb_ReleaseFID(fidp);
 	if (code == 0) smb_SendTran2Packet(vcp, outp, op);
@@ -1565,27 +1568,27 @@ done:
 
 long smb_ReceiveTran2FSCTL(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
-        return CM_ERROR_BADOP;
+    return CM_ERROR_BADOP;
 }
 
 long smb_ReceiveTran2IOCTL(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
-        return CM_ERROR_BADOP;
+    return CM_ERROR_BADOP;
 }
 
 long smb_ReceiveTran2FindNotifyFirst(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
-        return CM_ERROR_BADOP;
+    return CM_ERROR_BADOP;
 }
 
 long smb_ReceiveTran2FindNotifyNext(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
-        return CM_ERROR_BADOP;
+    return CM_ERROR_BADOP;
 }
 
 long smb_ReceiveTran2MKDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *outp)
 {
-        return CM_ERROR_BADOP;
+    return CM_ERROR_BADOP;
 }
 
 long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
@@ -1593,47 +1596,46 @@ long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
 	cm_req_t *reqp)
 {
 	long code;
-        cm_scache_t *scp;
-        cm_scache_t *targetScp;			/* target if scp is a symlink */
-        char *dptr;
-        long dosTime;
+    cm_scache_t *scp;
+    cm_scache_t *targetScp;			/* target if scp is a symlink */
+    char *dptr;
+    long dosTime;
 	FILETIME ft;
-        int shortTemp;
-        unsigned short attr;
+    int shortTemp;
+    unsigned short attr;
 	unsigned long lattr;
-        smb_dirListPatch_t *patchp;
-        smb_dirListPatch_t *npatchp;
+    smb_dirListPatch_t *patchp;
+    smb_dirListPatch_t *npatchp;
         
-        for(patchp = *dirPatchespp; patchp; patchp =
-        	(smb_dirListPatch_t *) osi_QNext(&patchp->q)) {
+    for(patchp = *dirPatchespp; patchp; patchp =
+         (smb_dirListPatch_t *) osi_QNext(&patchp->q)) {
 		code = cm_GetSCache(&patchp->fid, &scp, userp, reqp);
-                if (code) continue;
-                lock_ObtainMutex(&scp->mx);
-                code = cm_SyncOp(scp, NULL, userp, reqp, 0,
-                	CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
-		if (code) {
+        if (code) continue;
+        lock_ObtainMutex(&scp->mx);
+        code = cm_SyncOp(scp, NULL, userp, reqp, 0,
+                          CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+		if (code) { 
 			lock_ReleaseMutex(&scp->mx);
 			cm_ReleaseSCache(scp);
 			continue;
-                }
+        }
                 
-                /* now watch for a symlink */
-                if (scp->fileType == CM_SCACHETYPE_SYMLINK) {
+        /* now watch for a symlink */
+        if (scp->fileType == CM_SCACHETYPE_SYMLINK) {
 			lock_ReleaseMutex(&scp->mx);
-                        code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp,
-						  reqp);
-                        if (code == 0) {
+            code = cm_EvaluateSymLink(dscp, scp, &targetScp, userp, reqp);
+            if (code == 0) {
 				/* we have a more accurate file to use (the
 				 * target of the symbolic link).  Otherwise,
 				 * we'll just use the symlink anyway.
-                                 */
+                 */
 				osi_Log2(afsd_logp, "symlink vp %x to vp %x",
-					 scp, targetScp);
+                         scp, targetScp);
 				cm_ReleaseSCache(scp);
-                                scp = targetScp;
-                        }
-                        lock_ObtainMutex(&scp->mx);
-                }
+                scp = targetScp;
+            }
+            lock_ObtainMutex(&scp->mx);
+        }
 
 		dptr = patchp->dptr;
 
@@ -1722,20 +1724,20 @@ long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
 			*dptr++ = (attr >> 8) & 0xff;
 		}
 
-                lock_ReleaseMutex(&scp->mx);
-                cm_ReleaseSCache(scp);
+        lock_ReleaseMutex(&scp->mx);
+        cm_ReleaseSCache(scp);
 	}
         
-        /* now free the patches */
-        for(patchp = *dirPatchespp; patchp; patchp = npatchp) {
+    /* now free the patches */
+    for(patchp = *dirPatchespp; patchp; patchp = npatchp) {
 		npatchp = (smb_dirListPatch_t *) osi_QNext(&patchp->q);
-                free(patchp);
+        free(patchp);
 	}
         
-        /* and mark the list as empty */
-        *dirPatchespp = NULL;
+    /* and mark the list as empty */
+    *dirPatchespp = NULL;
 
-        return code;
+    return code;
 }
 
 /* do a case-folding search of the star name mask with the name in namep.
@@ -1744,7 +1746,7 @@ long smb_ApplyV3DirListPatches(cm_scache_t *dscp,
 int smb_V3MatchMask(char *namep, char *maskp, int flags)
 {
 	unsigned char tcp1, tcp2;	/* Pattern characters */
-        unsigned char tcn1;		/* Name characters */
+    unsigned char tcn1;		/* Name characters */
 	int sawDot = 0, sawStar = 0, req8dot3 = 0;
 	char *starNamep, *starMaskp;
 	static char nullCharp[] = {0};
@@ -1876,119 +1878,120 @@ int smb_V3MatchMask(char *namep, char *maskp, int flags)
 long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t *opx)
 {
 	int attribute;
-        long nextCookie;
-        char *tp;
-        long code;
-        char *pathp;
-        cm_dirEntry_t *dep;
-        int maxCount;
-        smb_dirListPatch_t *dirListPatchesp;
-        smb_dirListPatch_t *curPatchp;
-        cm_buf_t *bufferp;
-        long temp;
-        long orbytes;			/* # of bytes in this output record */
-        long ohbytes;			/* # of bytes, except file name */
-        long onbytes;			/* # of bytes in name, incl. term. null */
-        osi_hyper_t dirLength;
-        osi_hyper_t bufferOffset;
-        osi_hyper_t curOffset;
-        osi_hyper_t thyper;
-        smb_dirSearch_t *dsp;
-        cm_scache_t *scp;
-        long entryInDir;
-        long entryInBuffer;
+    long nextCookie;
+    char *tp;
+    long code;
+    char *pathp;
+    cm_dirEntry_t *dep;
+    int maxCount;
+    smb_dirListPatch_t *dirListPatchesp;
+    smb_dirListPatch_t *curPatchp;
+    cm_buf_t *bufferp;
+    long temp;
+    long orbytes;			/* # of bytes in this output record */
+    long ohbytes;			/* # of bytes, except file name */
+    long onbytes;			/* # of bytes in name, incl. term. null */
+    osi_hyper_t dirLength;
+    osi_hyper_t bufferOffset;
+    osi_hyper_t curOffset;
+    osi_hyper_t thyper;
+    smb_dirSearch_t *dsp;
+    cm_scache_t *scp;
+    long entryInDir;
+    long entryInBuffer;
 	cm_pageHeader_t *pageHeaderp;
-        cm_user_t *userp = NULL;
-        int slotInPage;
-        int returnedNames;
-        long nextEntryCookie;
-        int numDirChunks;		/* # of 32 byte dir chunks in this entry */
-        char *op;			/* output data ptr */
+    cm_user_t *userp = NULL;
+    int slotInPage;
+    int returnedNames;
+    long nextEntryCookie;
+    int numDirChunks;		/* # of 32 byte dir chunks in this entry */
+    char *op;			/* output data ptr */
 	char *origOp;			/* original value of op */
-        cm_space_t *spacep;		/* for pathname buffer */
-        long maxReturnData;		/* max # of return data */
-        long maxReturnParms;		/* max # of return parms */
-        long bytesInBuffer;		/* # data bytes in the output buffer */
-        int starPattern;
-        char *maskp;			/* mask part of path */
-        int infoLevel;
-        int searchFlags;
-        int eos;
-        smb_tran2Packet_t *outp;	/* response packet */
+    cm_space_t *spacep;		/* for pathname buffer */
+    long maxReturnData;		/* max # of return data */
+    long maxReturnParms;		/* max # of return parms */
+    long bytesInBuffer;		/* # data bytes in the output buffer */
+    int starPattern;
+    char *maskp;			/* mask part of path */
+    int infoLevel;
+    int searchFlags;
+    int eos;
+    smb_tran2Packet_t *outp;	/* response packet */
 	char *tidPathp;
 	int align;
 	char shortName[13];		/* 8.3 name if needed */
 	int NeedShortName;
 	char *shortNameEnd;
-        int fileType;
-        cm_fid_t fid;
-        
-        cm_req_t req;
+    int fileType;
+    cm_fid_t fid;
+
+    cm_req_t req;
 
 	cm_InitReq(&req);
 
 	eos = 0;
 	if (p->opcode == 1) {
 		/* find first; obtain basic parameters from request */
-                attribute = p->parmsp[0];
-                maxCount = p->parmsp[1];
-                infoLevel = p->parmsp[3];
-                searchFlags = p->parmsp[2];
-                dsp = smb_NewDirSearch(1);
-                dsp->attribute = attribute;
-                pathp = ((char *) p->parmsp) + 12;	/* points to path */
-                nextCookie = 0;
-                maskp = strrchr(pathp, '\\');
-                if (maskp == NULL) maskp = pathp;
+        attribute = p->parmsp[0];
+        maxCount = p->parmsp[1];
+        infoLevel = p->parmsp[3];
+        searchFlags = p->parmsp[2];
+        dsp = smb_NewDirSearch(1);
+        dsp->attribute = attribute;
+        pathp = ((char *) p->parmsp) + 12;	/* points to path */
+        nextCookie = 0;
+        maskp = strrchr(pathp, '\\');
+        if (maskp == NULL) maskp = pathp;
 		else maskp++;	/* skip over backslash */
-                strcpy(dsp->mask, maskp);	/* and save mask */
+        strcpy(dsp->mask, maskp);	/* and save mask */
    		/* track if this is likely to match a lot of entries */
-   	        starPattern = smb_V3IsStarMask(maskp);
+        starPattern = smb_V3IsStarMask(maskp);
         }
-        else {
+    else {
 		osi_assert(p->opcode == 2);
-                /* find next; obtain basic parameters from request or open dir file */
-                dsp = smb_FindDirSearch(p->parmsp[0]);
-                if (!dsp) return CM_ERROR_BADFD;
-                attribute = dsp->attribute;
-                maxCount = p->parmsp[1];
-                infoLevel = p->parmsp[2];
-                searchFlags = p->parmsp[5];
-                pathp = NULL;
-                nextCookie = p->parmsp[3] | (p->parmsp[4] << 16);
-                maskp = dsp->mask;
+        /* find next; obtain basic parameters from request or open dir file */
+        dsp = smb_FindDirSearch(p->parmsp[0]);
+        if (!dsp) return CM_ERROR_BADFD;
+        attribute = dsp->attribute;
+        maxCount = p->parmsp[1];
+        infoLevel = p->parmsp[2];
+        searchFlags = p->parmsp[5];
+        pathp = NULL;
+        nextCookie = p->parmsp[3] | (p->parmsp[4] << 16);
+        maskp = dsp->mask;
 		starPattern = 1;	/* assume, since required a Find Next */
-        }
+    }
 
 	osi_Log4(afsd_logp,
-		 "T2 search dir attr 0x%x, info level %d, max count %d, flags 0x%x",
-        	 attribute, infoLevel, maxCount, searchFlags);
+              "T2 search dir attr 0x%x, info level %d, max count %d, flags 0x%x",
+              attribute, infoLevel, maxCount, searchFlags);
 
 	osi_Log2(afsd_logp, "...T2 search op %d, nextCookie 0x%x",
-		 p->opcode, nextCookie);
+              p->opcode, nextCookie);
 
 	if (infoLevel >= 0x101)
 		searchFlags &= ~4;	/* no resume keys */
 
-        dirListPatchesp = NULL;
+    dirListPatchesp = NULL;
 
 	maxReturnData = p->maxReturnData;
-        if (p->opcode == 1)	/* find first */
-        	maxReturnParms = 10;	/* bytes */
-	else
-        	maxReturnParms = 8;	/* bytes */
+    if (p->opcode == 1)	/* find first */
+        maxReturnParms = 10;	/* bytes */
+	else    
+        maxReturnParms = 8;	/* bytes */
 
 #ifndef CM_CONFIG_MULTITRAN2RESPONSES
-        if (maxReturnData > 6000) maxReturnData = 6000;
+    if (maxReturnData > 6000) 
+        maxReturnData = 6000;
 #endif /* CM_CONFIG_MULTITRAN2RESPONSES */
 
 	outp = smb_GetTran2ResponsePacket(vcp, p, opx, maxReturnParms,
-					  maxReturnData);
+                                      maxReturnData);
 
-        osi_Log1(afsd_logp, "T2 receive search dir %s",
-			osi_LogSaveString(afsd_logp, pathp));
+    osi_Log1(afsd_logp, "T2 receive search dir %s",
+             osi_LogSaveString(afsd_logp, pathp));
         
-        /* bail out if request looks bad */
+    /* bail out if request looks bad */
     if (p->opcode == 1 && !pathp) {
         smb_ReleaseDirSearch(dsp);
         smb_FreeTran2Packet(outp);
@@ -1996,7 +1999,7 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
     }
         
 	osi_Log2(afsd_logp, "T2 dir search cookie 0x%x, connection %d",
-        	nextCookie, dsp->cookie);
+             nextCookie, dsp->cookie);
 
  	userp = smb_GetTran2User(vcp, p);
     if (!userp) {
@@ -2010,144 +2013,143 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 	lock_ObtainMutex(&dsp->mx);
 	if (dsp->scp) {
 		scp = dsp->scp;
-                cm_HoldSCache(scp);
-                code = 0;
-        }
-        else {
+        cm_HoldSCache(scp);
+        code = 0;
+    }
+    else {
 		spacep = cm_GetSpace();
-	        smb_StripLastComponent(spacep->data, NULL, pathp);
-                lock_ReleaseMutex(&dsp->mx);
+        smb_StripLastComponent(spacep->data, NULL, pathp);
+        lock_ReleaseMutex(&dsp->mx);
 
 		tidPathp = smb_GetTIDPath(vcp, p->tid);
-	        code = cm_NameI(cm_rootSCachep, spacep->data,
-				CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
-                		userp, tidPathp, &req, &scp);
-	        cm_FreeSpace(spacep);
+        code = cm_NameI(cm_rootSCachep, spacep->data,
+                        CM_FLAG_FOLLOW | CM_FLAG_CASEFOLD,
+                        userp, tidPathp, &req, &scp);
+        cm_FreeSpace(spacep);
 
-                lock_ObtainMutex(&dsp->mx);
+        lock_ObtainMutex(&dsp->mx);
 		if (code == 0) {
-		        if (dsp->scp != 0) cm_ReleaseSCache(dsp->scp);
+            if (dsp->scp != 0) cm_ReleaseSCache(dsp->scp);
 			dsp->scp = scp;
 			/* we need one hold for the entry we just stored into,
-                         * and one for our own processing.  When we're done
+             * and one for our own processing.  When we're done
 			 * with this function, we'll drop the one for our own
 			 * processing.  We held it once from the namei call,
 			 * and so we do another hold now.
-                         */
-                        cm_HoldSCache(scp);
+             */
+            cm_HoldSCache(scp);
    			lock_ObtainMutex(&scp->mx);
    			if ((scp->flags & CM_SCACHEFLAG_BULKSTATTING) == 0
    			    && LargeIntegerGreaterOrEqualToZero(scp->bulkStatProgress)) {
-			        scp->flags |= CM_SCACHEFLAG_BULKSTATTING;
+                scp->flags |= CM_SCACHEFLAG_BULKSTATTING;
 				dsp->flags |= SMB_DIRSEARCH_BULKST;
    			}
    			lock_ReleaseMutex(&scp->mx);
-                }
         }
+    }
 	lock_ReleaseMutex(&dsp->mx);
-        if (code) {
+    if (code) {
 		cm_ReleaseUser(userp);
-                smb_FreeTran2Packet(outp);
+        smb_FreeTran2Packet(outp);
 		smb_DeleteDirSearch(dsp);
 		smb_ReleaseDirSearch(dsp);
-                return code;
+        return code;
         }
 
-        /* get the directory size */
+    /* get the directory size */
 	lock_ObtainMutex(&scp->mx);
-        code = cm_SyncOp(scp, NULL, userp, &req, 0,
-        	CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
+    code = cm_SyncOp(scp, NULL, userp, &req, 0,
+                     CM_SCACHESYNC_NEEDCALLBACK | CM_SCACHESYNC_GETSTATUS);
 	if (code) {
 		lock_ReleaseMutex(&scp->mx);
-                cm_ReleaseSCache(scp);
-                cm_ReleaseUser(userp);
-                smb_FreeTran2Packet(outp);
+        cm_ReleaseSCache(scp);
+        cm_ReleaseUser(userp);
+        smb_FreeTran2Packet(outp);
 		smb_DeleteDirSearch(dsp);
 		smb_ReleaseDirSearch(dsp);
-                return code;
-        }
-        
-        dirLength = scp->length;
-        bufferp = NULL;
-        bufferOffset.LowPart = bufferOffset.HighPart = 0;
-        curOffset.HighPart = 0;
-        curOffset.LowPart = nextCookie;
+        return code;
+    }
+
+    dirLength = scp->length;
+    bufferp = NULL;
+    bufferOffset.LowPart = bufferOffset.HighPart = 0;
+    curOffset.HighPart = 0;
+    curOffset.LowPart = nextCookie;
 	origOp = outp->datap;
 
-        code = 0;
-        returnedNames = 0;
-        bytesInBuffer = 0;
-        while (1) {
+    code = 0;
+    returnedNames = 0;
+    bytesInBuffer = 0;
+    while (1) {
 		op = origOp;
 		if (searchFlags & 4)
 			/* skip over resume key */
 			op += 4;
 
 		/* make sure that curOffset.LowPart doesn't point to the first
-                 * 32 bytes in the 2nd through last dir page, and that it doesn't
-                 * point at the first 13 32-byte chunks in the first dir page,
-                 * since those are dir and page headers, and don't contain useful
-                 * information.
-                 */
+         * 32 bytes in the 2nd through last dir page, and that it doesn't
+         * point at the first 13 32-byte chunks in the first dir page,
+         * since those are dir and page headers, and don't contain useful
+         * information.
+         */
 		temp = curOffset.LowPart & (2048-1);
-                if (curOffset.HighPart == 0 && curOffset.LowPart < 2048) {
+        if (curOffset.HighPart == 0 && curOffset.LowPart < 2048) {
 			/* we're in the first page */
-                	if (temp < 13*32) temp = 13*32;
+            if (temp < 13*32) temp = 13*32;
 		}
 		else {
 			/* we're in a later dir page */
-                        if (temp < 32) temp = 32;
-                }
+            if (temp < 32) temp = 32;
+        }
 		
-                /* make sure the low order 5 bits are zero */
-                temp &= ~(32-1);
+        /* make sure the low order 5 bits are zero */
+        temp &= ~(32-1);
                 
-                /* now put temp bits back ito curOffset.LowPart */
-                curOffset.LowPart &= ~(2048-1);
-                curOffset.LowPart |= temp;
+        /* now put temp bits back ito curOffset.LowPart */
+        curOffset.LowPart &= ~(2048-1);
+        curOffset.LowPart |= temp;
 
-            /* check if we've passed the dir's EOF */
-            if (LargeIntegerGreaterThanOrEqualTo(curOffset, dirLength)) {
-                eos = 1;
-                break;
-            }
+        /* check if we've passed the dir's EOF */
+        if (LargeIntegerGreaterThanOrEqualTo(curOffset, dirLength)) {
+            eos = 1;
+            break;
+        }
 
-            /* check if we've returned all the names that will fit in the
-             * response packet; we check return count as well as the number
-             * of bytes requested.  We check the # of bytes after we find
-             * the dir entry, since we'll need to check its size.
-             */
-            if (returnedNames >= maxCount) {
-                break;
-            }
-                
-            /* see if we can use the bufferp we have now; compute in which
-             * page the current offset would be, and check whether that's
-             * the offset of the buffer we have.  If not, get the buffer.
-             */
-            thyper.HighPart = curOffset.HighPart;
-            thyper.LowPart = curOffset.LowPart & ~(buf_bufferSize-1);
-            if (!bufferp || !LargeIntegerEqualTo(thyper, bufferOffset)) {
+        /* check if we've returned all the names that will fit in the
+         * response packet; we check return count as well as the number
+         * of bytes requested.  We check the # of bytes after we find
+         * the dir entry, since we'll need to check its size.
+         */
+        if (returnedNames >= maxCount) {
+            break;
+        }
+
+        /* see if we can use the bufferp we have now; compute in which
+         * page the current offset would be, and check whether that's
+         * the offset of the buffer we have.  If not, get the buffer.
+         */
+        thyper.HighPart = curOffset.HighPart;
+        thyper.LowPart = curOffset.LowPart & ~(buf_bufferSize-1);
+        if (!bufferp || !LargeIntegerEqualTo(thyper, bufferOffset)) {
 			/* wrong buffer */
-                if (bufferp) {
-                    buf_Release(bufferp);
-                    bufferp = NULL;
-			}   
+            if (bufferp) {
+                buf_Release(bufferp);
+                bufferp = NULL;
+			}       
 			lock_ReleaseMutex(&scp->mx);
 			lock_ObtainRead(&scp->bufCreateLock);
-                        code = buf_Get(scp, &thyper, &bufferp);
+            code = buf_Get(scp, &thyper, &bufferp);
 			lock_ReleaseRead(&scp->bufCreateLock);
 
 			/* now, if we're doing a star match, do bulk fetching
 			 * of all of the status info for files in the dir.
-                         */
-                        if (starPattern) {
+             */
+            if (starPattern) {
 				smb_ApplyV3DirListPatches(scp, &dirListPatchesp,
-							  infoLevel, userp,
-							  &req);
+                                          infoLevel, userp,
+                                          &req);
    				if ((dsp->flags & SMB_DIRSEARCH_BULKST)
-   				    && LargeIntegerGreaterThanOrEqualTo(
-   						thyper, scp->bulkStatProgress)) {
+                    && LargeIntegerGreaterThanOrEqualTo(thyper, scp->bulkStatProgress)) {
    					/* Don't bulk stat if risking timeout */
    					int now = GetCurrentTime();
    					if (now - req.startTime > 5000) {
@@ -2155,79 +2157,77 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
    						scp->flags &= ~CM_SCACHEFLAG_BULKSTATTING;
    						dsp->flags &= ~SMB_DIRSEARCH_BULKST;
    					} else
-					        cm_TryBulkStat(scp, &thyper,
-							       userp, &req);
+                        cm_TryBulkStat(scp, &thyper, userp, &req);
    				}
 			}
 
-                        lock_ObtainMutex(&scp->mx);
-                        if (code) break;
-                        bufferOffset = thyper;
+            lock_ObtainMutex(&scp->mx);
+            if (code) break;
+            bufferOffset = thyper;
 
-                        /* now get the data in the cache */
-                        while (1) {
+            /* now get the data in the cache */
+            while (1) {
 				code = cm_SyncOp(scp, bufferp, userp, &req,
-					PRSFS_LOOKUP,
-                                	CM_SCACHESYNC_NEEDCALLBACK
-					| CM_SCACHESYNC_READ);
+                                 PRSFS_LOOKUP,
+                                 CM_SCACHESYNC_NEEDCALLBACK
+                                 | CM_SCACHESYNC_READ);
 				if (code) break;
                                 
-                                if (cm_HaveBuffer(scp, bufferp, 0)) break;
-                                
-                                /* otherwise, load the buffer and try again */
-                                code = cm_GetBuffer(scp, bufferp, NULL, userp,
-						    &req);
-                                if (code) break;
-                        }
-                        if (code) {
+                if (cm_HaveBuffer(scp, bufferp, 0)) break;
+
+                /* otherwise, load the buffer and try again */
+                code = cm_GetBuffer(scp, bufferp, NULL, userp,
+                                    &req);
+                if (code) break;
+            }
+            if (code) {
 				buf_Release(bufferp);
-                                bufferp = NULL;
-                        	break;
+                bufferp = NULL;
+                break;
 			}
-                }	/* if (wrong buffer) ... */
+        }	/* if (wrong buffer) ... */
                 
-                /* now we have the buffer containing the entry we're interested
-		 * in; copy it out if it represents a non-deleted entry.
-                 */
+        /* now we have the buffer containing the entry we're interested
+         * in; copy it out if it represents a non-deleted entry.
+         */
 		entryInDir = curOffset.LowPart & (2048-1);
-                entryInBuffer = curOffset.LowPart & (buf_bufferSize - 1);
+        entryInBuffer = curOffset.LowPart & (buf_bufferSize - 1);
 
 		/* page header will help tell us which entries are free.  Page
 		 * header can change more often than once per buffer, since
 		 * AFS 3 dir page size may be less than (but not more than)
 		 * a buffer package buffer.
-                 */
+         */
 		/* only look intra-buffer */
 		temp = curOffset.LowPart & (buf_bufferSize - 1);
-                temp &= ~(2048 - 1);	/* turn off intra-page bits */
+        temp &= ~(2048 - 1);	/* turn off intra-page bits */
 		pageHeaderp = (cm_pageHeader_t *) (bufferp->datap + temp);
 
 		/* now determine which entry we're looking at in the page.
 		 * If it is free (there's a free bitmap at the start of the
 		 * dir), we should skip these 32 bytes.
-                 */
-                slotInPage = (entryInDir & 0x7e0) >> 5;
-                if (!(pageHeaderp->freeBitmap[slotInPage>>3]
-			& (1 << (slotInPage & 0x7)))) {
+         */
+        slotInPage = (entryInDir & 0x7e0) >> 5;
+        if (!(pageHeaderp->freeBitmap[slotInPage>>3]
+               & (1 << (slotInPage & 0x7)))) {
 			/* this entry is free */
-                        numDirChunks = 1;	/* only skip this guy */
-                        goto nextEntry;
-                }
+            numDirChunks = 1;	/* only skip this guy */
+            goto nextEntry;
+        }
 
 		tp = bufferp->datap + entryInBuffer;
-                dep = (cm_dirEntry_t *) tp;	/* now points to AFS3 dir entry */
+        dep = (cm_dirEntry_t *) tp;	/* now points to AFS3 dir entry */
 
-                /* while we're here, compute the next entry's location, too,
+        /* while we're here, compute the next entry's location, too,
 		 * since we'll need it when writing out the cookie into the dir
 		 * listing stream.
-                 *
-                 * XXXX Probably should do more sanity checking.
-                 */
+         *
+         * XXXX Probably should do more sanity checking.
+         */
 		numDirChunks = cm_NameEntries(dep->name, &onbytes);
 		
-                /* compute offset of cookie representing next entry */
-                nextEntryCookie = curOffset.LowPart
-				    + (CM_DIR_CHUNKSIZE * numDirChunks);
+        /* compute offset of cookie representing next entry */
+        nextEntryCookie = curOffset.LowPart + (CM_DIR_CHUNKSIZE * numDirChunks);
 
 		/* Need 8.3 name? */
 		NeedShortName = 0;
@@ -2238,32 +2238,31 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 			NeedShortName = 1;
 		}
 
-                if (dep->fid.vnode != 0
-		    && (smb_V3MatchMask(dep->name, maskp, CM_FLAG_CASEFOLD)
-			|| (NeedShortName
-			    && smb_V3MatchMask(shortName, maskp,
-						CM_FLAG_CASEFOLD)))) {
+        if (dep->fid.vnode != 0
+             && (smb_V3MatchMask(dep->name, maskp, CM_FLAG_CASEFOLD)
+                 || (NeedShortName
+                      && smb_V3MatchMask(shortName, maskp,
+                                          CM_FLAG_CASEFOLD)))) {
 
-                        /* Eliminate entries that don't match requested
-                           attributes */
-                    if (smb_hideDotFiles && !(dsp->attribute & SMB_ATTR_HIDDEN) && 
-                        smb_IsDotFile(dep->name))
-                        goto nextEntry; /* no hidden files */
+            /* Eliminate entries that don't match requested attributes */
+            if (smb_hideDotFiles && !(dsp->attribute & SMB_ATTR_HIDDEN) && 
+                 smb_IsDotFile(dep->name))
+                goto nextEntry; /* no hidden files */
                     
-                    if (!(dsp->attribute & SMB_ATTR_DIRECTORY))  /* no directories */
-                    {
-                            /* We have already done the cm_TryBulkStat above */
-                            fid.cell = scp->fid.cell;
-                            fid.volume = scp->fid.volume;
-                            fid.vnode = ntohl(dep->fid.vnode);
-                            fid.unique = ntohl(dep->fid.unique);
-                            fileType = cm_FindFileType(&fid);
-                            /*osi_Log2(afsd_logp, "smb_ReceiveTran2SearchDir: file %s "
-                              "has filetype %d", dep->name,
-                              fileType);*/
-                            if (fileType == CM_SCACHETYPE_DIRECTORY)
-                              goto nextEntry;
-                        }
+            if (!(dsp->attribute & SMB_ATTR_DIRECTORY))  /* no directories */
+            {
+                /* We have already done the cm_TryBulkStat above */
+                fid.cell = scp->fid.cell;
+                fid.volume = scp->fid.volume;
+                fid.vnode = ntohl(dep->fid.vnode);
+                fid.unique = ntohl(dep->fid.unique);
+                fileType = cm_FindFileType(&fid);
+                /*osi_Log2(afsd_logp, "smb_ReceiveTran2SearchDir: file %s "
+                 "has filetype %d", dep->name,
+                 fileType);*/
+                if (fileType == CM_SCACHETYPE_DIRECTORY)
+                    goto nextEntry;
+            }
 
 			/* finally check if this name will fit */
 
@@ -2278,13 +2277,13 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 			if (infoLevel == 0x104)
 				ohbytes += 26;	/* Short name & length */
 
-	                if (searchFlags & 4) {
-                        	ohbytes += 4;	/* if resume key required */
-			}
+            if (searchFlags & 4) {
+                ohbytes += 4;	/* if resume key required */
+			}   
 
-                        if (infoLevel != 1
-			    && infoLevel != 0x101
-			    && infoLevel != 0x103)
+            if (infoLevel != 1
+                 && infoLevel != 0x101
+                 && infoLevel != 0x103)
 				ohbytes += 4;	/* EASIZE */
 
 			/* add header to name & term. null */
@@ -2295,39 +2294,39 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 			 * even the aligned version (so we don't have to worry
 			 * about an * overflow when we pad things out below).
 			 * That's the reason for the alignment arithmetic below.
-                         */
+             */
 			if (infoLevel >= 0x101)
 				align = (4 - (orbytes & 3)) & 3;
 			else
 				align = 0;
 			if (orbytes + bytesInBuffer + align > maxReturnData)
-                                break;
+                break;
 
 			/* this is one of the entries to use: it is not deleted
 			 * and it matches the star pattern we're looking for.
 			 * Put out the name, preceded by its length.
-                         */
+             */
 			/* First zero everything else */
 			memset(origOp, 0, ohbytes);
 
 			if (infoLevel <= 0x101)
-                        	*(origOp + ohbytes - 1) = (unsigned char) onbytes;
+                *(origOp + ohbytes - 1) = (unsigned char) onbytes;
 			else if (infoLevel == 0x103)
 				*((u_long *)(op + 8)) = onbytes;
 			else
 				*((u_long *)(op + 60)) = onbytes;
-                        strcpy(origOp+ohbytes, dep->name);
+            strcpy(origOp+ohbytes, dep->name);
 
 			/* Short name if requested and needed */
-                        if (infoLevel == 0x104) {
+            if (infoLevel == 0x104) {
 				if (NeedShortName) {
 					strcpy(op + 70, shortName);
 					*(op + 68) = shortNameEnd - shortName;
 				}
 			}
 
-	                /* now, adjust the # of entries copied */
-	                returnedNames++;
+            /* now, adjust the # of entries copied */
+            returnedNames++;
 
 			/* NextEntryOffset and FileIndex */
 			if (infoLevel >= 101) {
@@ -2336,23 +2335,23 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 				*((u_long *)(op+4)) = nextEntryCookie;
 			}
 
-                        /* now we emit the attribute.  This is tricky, since
-                         * we need to really stat the file to find out what
+            /* now we emit the attribute.  This is tricky, since
+             * we need to really stat the file to find out what
 			 * type of entry we've got.  Right now, we're copying
 			 * out data from * a buffer, while holding the scp
 			 * locked, so it isn't really convenient to stat
 			 * something now.  We'll put in a place holder
-                         * now, and make a second pass before returning this
+             * now, and make a second pass before returning this
 			 * to get the real attributes.  So, we just skip the
 			 * data for now, and adjust it later.  We allocate a
 			 * patch record to make it easy to find this point
 			 * later.  The replay will happen at a time when it is
 			 * safe to unlock the directory.
-                         */
+             */
 			if (infoLevel != 0x103) {
 				curPatchp = malloc(sizeof(*curPatchp));
-                        	osi_QAdd((osi_queue_t **) &dirListPatchesp,
-					 &curPatchp->q);
+                osi_QAdd((osi_queue_t **) &dirListPatchesp,
+                          &curPatchp->q);
 				curPatchp->dptr = op;
 				if (infoLevel >= 0x101)
 					curPatchp->dptr += 8;
@@ -2368,9 +2367,9 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 				curPatchp->fid.vnode = ntohl(dep->fid.vnode);
 				curPatchp->fid.unique = ntohl(dep->fid.unique);
 
-                                /* temp */
-                                curPatchp->dep = dep;
-			}
+                /* temp */
+                curPatchp->dep = dep;
+			}   
 
 			if (searchFlags & 4)
 				/* put out resume key */
@@ -2378,79 +2377,80 @@ long smb_ReceiveTran2SearchDir(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet_t
 
 			/* Adjust byte ptr and count */
 			origOp += orbytes;	/* skip entire record */
-                        bytesInBuffer += orbytes;
+            bytesInBuffer += orbytes;
 
 			/* and pad the record out */
-                        while (--align >= 0) {
+            while (--align >= 0) {
 				*origOp++ = 0;
-                                bytesInBuffer++;
-                        }
-                        
+                bytesInBuffer++;
+            }
+
 		}	/* if we're including this name */
                 
-nextEntry:
-                /* and adjust curOffset to be where the new cookie is */
+      nextEntry:
+        /* and adjust curOffset to be where the new cookie is */
 		thyper.HighPart = 0;
-                thyper.LowPart = CM_DIR_CHUNKSIZE * numDirChunks;
-                curOffset = LargeIntegerAdd(thyper, curOffset);
-        }		/* while copying data for dir listing */
+        thyper.LowPart = CM_DIR_CHUNKSIZE * numDirChunks;
+        curOffset = LargeIntegerAdd(thyper, curOffset);
+    }		/* while copying data for dir listing */
 
 	/* release the mutex */
 	lock_ReleaseMutex(&scp->mx);
-        if (bufferp) buf_Release(bufferp);
+    if (bufferp) buf_Release(bufferp);
 
 	/* apply and free last set of patches; if not doing a star match, this
 	 * will be empty, but better safe (and freeing everything) than sorry.
-         */
-        smb_ApplyV3DirListPatches(scp, &dirListPatchesp, infoLevel, userp,
-				  &req);
+     */
+    smb_ApplyV3DirListPatches(scp, &dirListPatchesp, infoLevel, userp,
+                              &req);
         
-        /* now put out the final parameters */
+    /* now put out the final parameters */
 	if (returnedNames == 0) eos = 1;
-        if (p->opcode == 1) {
+    if (p->opcode == 1) {
 		/* find first */
-                outp->parmsp[0] = (unsigned short) dsp->cookie;
-                outp->parmsp[1] = returnedNames;
-                outp->parmsp[2] = eos;
-                outp->parmsp[3] = 0;		/* nothing wrong with EAS */
-                outp->parmsp[4] = 0;	/* don't need last name to continue
-					 * search, cookie is enough.  Normally,
-					 * this is the offset of the file name
-					 * of the last entry returned.
-                                         */
-		outp->totalParms = 10;	/* in bytes */
-        }
-        else {
-		/* find next */
-                outp->parmsp[0] = returnedNames;
-                outp->parmsp[1] = eos;
-                outp->parmsp[2] = 0;	/* EAS error */
-                outp->parmsp[3] = 0;	/* last name, as above */
-                outp->totalParms = 8;	/* in bytes */
-        }
+        outp->parmsp[0] = (unsigned short) dsp->cookie;
+        outp->parmsp[1] = returnedNames;
+        outp->parmsp[2] = eos;
+        outp->parmsp[3] = 0;		/* nothing wrong with EAS */
+        outp->parmsp[4] = 0;	
+        /* don't need last name to continue
+         * search, cookie is enough.  Normally,
+         * this is the offset of the file name
+         * of the last entry returned.
+         */
+        outp->totalParms = 10;	/* in bytes */
+    }
+    else {
+        /* find next */
+        outp->parmsp[0] = returnedNames;
+        outp->parmsp[1] = eos;
+        outp->parmsp[2] = 0;	/* EAS error */
+        outp->parmsp[3] = 0;	/* last name, as above */
+        outp->totalParms = 8;	/* in bytes */
+    }   
 
 	/* return # of bytes in the buffer */
-        outp->totalData = bytesInBuffer;
+    outp->totalData = bytesInBuffer;
 
 	osi_Log2(afsd_logp, "T2 search dir done, %d names, code %d",
-        	returnedNames, code);
+              returnedNames, code);
 
 	/* Return error code if unsuccessful on first request */
 	if (code == 0 && p->opcode == 1 && returnedNames == 0)
 		code = CM_ERROR_NOSUCHFILE;
 
 	/* if we're supposed to close the search after this request, or if
-         * we're supposed to close the search if we're done, and we're done,
-         * or if something went wrong, close the search.
-         */
-        /* ((searchFlags & 1) || ((searchFlags & 2) && eos) */
-	if ((searchFlags & 1) || (returnedNames == 0) || ((searchFlags & 2) &&
-							  eos) || code != 0)
+     * we're supposed to close the search if we're done, and we're done,
+     * or if something went wrong, close the search.
+     */
+    /* ((searchFlags & 1) || ((searchFlags & 2) && eos) */
+	if ((searchFlags & 1) || (returnedNames == 0) || 
+         ((searchFlags & 2) && eos) || code != 0)
 	    smb_DeleteDirSearch(dsp);
 	if (code)
-        	smb_SendTran2Error(vcp, p, opx, code);
+        smb_SendTran2Error(vcp, p, opx, code);
 	else {
-        	smb_SendTran2Packet(vcp, outp, opx);
+        smb_SendTran2Packet(vcp, outp, opx);
 	}
 	smb_FreeTran2Packet(outp);
     smb_ReleaseDirSearch(dsp);
@@ -2939,7 +2939,7 @@ long smb_ReceiveV3GetAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *
     smb_SetSMBDataLength(outp, 0);
     code = 0;
 
-done:
+  done:
 	lock_ReleaseMutex(&scp->mx);
 	cm_ReleaseUser(userp);
 	smb_ReleaseFID(fidp);
