@@ -21,6 +21,11 @@ case "$1" in
 	if [ -f /etc/openafs/server/CellServDB ] ; then :
 	    else echo \>$RET >/etc/openafs/server/CellServDB
 	    fi
+	    if [ "x$2" != "x" ] ; then
+		if dpkg --compare-versions $2 lt 1.2.0-1 ; then
+		    mv /etc/openafs/server-local/BosConfig /etc/openafs/BosConfig ||true
+		    mv /etc/openafs/server-local/sysid /var/lib/openafs ||true
+		    fi
 
     ;;
 

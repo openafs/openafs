@@ -38,7 +38,9 @@ configure-stamp:
 	-ln -s @sys/dest dest
 	-ln -s $(SYS_NAME) @sys
 #	sh regen.sh
-	sh configure --with-afs-sysname=$(SYS_NAME) --disable-kernel-module
+	 afslogsdir=/var/log/openafs sh configure --with-afs-sysname=$(SYS_NAME) --disable-kernel-module \
+	--prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib \
+	--localstatedir=/var/lib 
 	install -d $(SYS_NAME)/dest/root.client/usr/vice/etc
 	install -d dest/root.server/usr/afs/bin
 
@@ -48,7 +50,7 @@ build: configure-stamp build-stamp
 build-stamp:
 	dh_testdir
 
-	$(MAKE)
+	$(MAKE) dest 
 	-rm $(SYS_NAME)/dest/include/crypt.h
 	touch build-stamp
 
@@ -228,7 +230,7 @@ build-modules-stamp:
 	-ln -s @sys/dest dest
 	-ln -s $(SYS_NAME) @sys
 	sh configure --with-afs-sysname=$(SYS_NAME) --with-linux-kernel-headers=$(KSRC)
-	$(MAKE) libafs "COMPILE_PART1=cd src; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=`pwd`/src SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=`pwd`/src SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_CLEAN=; $(MAKE) clean SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=`pwd`/src SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME}
+	make dest_only_libafs
 	touch build-modules-stamp
 
 binary-modules: build-modules
