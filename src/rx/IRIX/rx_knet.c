@@ -314,7 +314,7 @@ static int rxi_MatchIfnet(struct hashbucket *h, caddr_t key, caddr_t arg1,
 	}
     }
     *(int*)arg1 = match_value;
-    return 0;
+    return (match_value ? 1 : 0);
 }
 
     
