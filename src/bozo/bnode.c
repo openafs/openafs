@@ -34,6 +34,11 @@ RCSID("$Header$");
 #include <afs/fileutil.h>
 #include "bnode.h"
 
+#ifdef AFS_AIX_ENV
+/* All known versions of AIX lack WCOREDUMP but this works */
+#define WCOREDUMP(x) ((x) & 0x80)
+#endif
+
 #define BNODE_LWP_STACKSIZE	(16 * 1024)
 
 int bnode_waiting = 0;
