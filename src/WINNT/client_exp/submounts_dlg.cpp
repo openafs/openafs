@@ -162,8 +162,7 @@ BOOL CSubmountsDlg::FillSubmtList()
 	HOURGLASS hourglass;
 
     HKEY hkSubmounts;
-    DWORD dwType, dwSize;
-    DWORD status;
+    DWORD dwType;
     DWORD dwIndex;
     DWORD dwSubmounts;
 
