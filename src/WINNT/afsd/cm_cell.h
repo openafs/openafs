@@ -23,8 +23,10 @@ typedef struct cm_cell {
         long timeout;                   /* if dns, time at which the server addrs expire */
 } cm_cell_t;
 
-#define CM_CELLFLAG_SUID	1	/* setuid flag; not yet used */
-#define CM_CELLFLAG_DNS         2       /* cell servers are from DNS */
+/* These are bit flag values */
+#define CM_CELLFLAG_SUID	    1	/* setuid flag; not yet used */
+#define CM_CELLFLAG_DNS         2   /* cell servers are from DNS */
+#define CM_CELLFLAG_VLSERVER_INVALID 4  /* cell servers are invalid */
 
 extern void cm_InitCell(void);
 

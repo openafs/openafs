@@ -179,5 +179,6 @@ struct cm_initparams {
 /* Coordinated 'C' pioctl's */
 #define VIOC_NEWALIAS		_CVICEIOCTL(1)	/* create new cell alias */
 #define VIOC_GETALIAS		_CVICEIOCTL(2)	/* get alias info */
+#define VIOC_CBADDR		_CVICEIOCTL(3)	/* push callback addr */
 
 #endif /* AFS_VENUS_H */

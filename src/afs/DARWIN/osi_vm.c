@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vm.c,v 1.11 2003/07/15 23:14:18 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/DARWIN/osi_vm.c,v 1.14 2004/06/23 18:34:48 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -42,7 +42,7 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
     if (UBCINFOEXISTS(vp))
 	return EBUSY;
 #endif
-    if (avc->vrefCount)
+    if (avc->vrefCount > DARWIN_REFBASE)
 	return EBUSY;
 
     if (avc->opens)
@@ -60,6 +60,30 @@ osi_VM_FlushVCache(struct vcache *avc, int *slept)
 	ubc_uncache(vp);
 	ubc_release(vp);
 	ubc_info_free(vp);
+    }
+#else
+    /* This is literally clean_up_name_parent_ptrs() */
+    /* Critical to clean up any state attached to the vnode here since it's
+       being recycled, and we're not letting refcnt drop to 0 to trigger
+       normal recycling. */
+    if (VNAME(vp) || VPARENT(vp)) {
+	char *tmp1;
+	struct vnode *tmp2;
+
+	/* do it this way so we don't block before clearing 
+	   these fields. */
+	tmp1 = VNAME(vp);
+	tmp2 = VPARENT(vp);
+	VNAME(vp) = NULL;
+	VPARENT(vp) = NULL;
+            
+	if (tmp1) {
+	    remove_name(tmp1);
+	}
+            
+	if (tmp2) {
+	    vrele(tmp2);
+	}
     }
 #endif
 
@@ -165,6 +189,9 @@ osi_VM_TryReclaim(struct vcache *avc, int *slept)
     struct proc *p = current_proc();
     struct vnode *vp = AFSTOV(avc);
     void *obj;
+#ifdef AFS_DARWIN14_ENV
+    int didhold;
+#endif
 
     if (slept)
 	*slept = 0;
@@ -173,16 +200,27 @@ osi_VM_TryReclaim(struct vcache *avc, int *slept)
 	AFS_RELE(vp);
 	return;
     }
-    if (!UBCINFOEXISTS(vp) || vp->v_count != 2) {
+    if (!UBCINFOEXISTS(vp) || vp->v_usecount != 2+DARWIN_REFBASE) {
 	simple_unlock(&vp->v_interlock);
 	AFS_RELE(vp);
 	return;
+    }
+    if (ISSET(vp->v_flag, VUINACTIVE)) {
+	simple_unlock(&vp->v_interlock);
+        AFS_RELE(vp);
+        printf("vnode %x still inactive!", vp);
+        return;
     }
 #ifdef AFS_DARWIN14_ENV
     if (vp->v_ubcinfo->ui_refcount > 1 || vp->v_ubcinfo->ui_mapped) {
 	simple_unlock(&vp->v_interlock);
 	AFS_RELE(vp);
 	return;
+    }
+    if (ISSET(vp->v_flag, VORECLAIM)) {
+        simple_unlock(&vp->v_interlock);
+        AFS_RELE(vp);
+        return;
     }
 #else
     if (vp->v_ubcinfo->ui_holdcnt) {
@@ -198,7 +236,9 @@ osi_VM_TryReclaim(struct vcache *avc, int *slept)
 	return;
     }
 
+#ifndef AFS_DARWIN14_ENV
     vp->v_usecount--;		/* we want the usecount to be 1 */
+#endif
 
     if (slept) {
 	ReleaseWriteLock(&afs_xvcache);
@@ -216,47 +256,91 @@ osi_VM_TryReclaim(struct vcache *avc, int *slept)
 #endif
 	if (ubc_issetflags(vp, UI_HASOBJREF))
 	    printf("ubc_release didn't release the reference?!\n");
-    } else if (!vn_lock(vp, LK_EXCLUSIVE | LK_INTERLOCK, current_proc())) {
+    } else {
 #ifdef AFS_DARWIN14_ENV
-	obj = ubc_getobject(vp, UBC_HOLDOBJECT);
+        SET(vp->v_flag, VORECLAIM);
+#endif
+	if (!vn_lock(vp, LK_EXCLUSIVE|LK_INTERLOCK,current_proc())) {
+#ifdef AFS_DARWIN14_ENV
+	    obj = ubc_getobject(vp,UBC_HOLDOBJECT);
+	    if ((didhold = ubc_hold(vp)))
+		(void)ubc_clean(vp, 0);
 #else
 #ifdef AFS_DARWIN13_ENV
-	obj = ubc_getobject(vp, (UBC_NOREACTIVATE | UBC_HOLDOBJECT));
+	    obj = ubc_getobject(vp,(UBC_NOREACTIVATE|UBC_HOLDOBJECT));
 #else
-	obj = ubc_getobject(vp);
+	    obj = ubc_getobject(vp);
 #endif
+	    (void)ubc_clean(vp, 1);
 #endif
-	(void)ubc_clean(vp, 1);
-	vinvalbuf(vp, V_SAVE, &afs_osi_cred, p, 0, 0);
-	if (vp->v_usecount == 1)
-	    VOP_INACTIVE(vp, p);
-	else
-	    VOP_UNLOCK(vp, 0, p);
-	if (obj) {
-	    if (ISSET(vp->v_flag, VTERMINATE))
-		panic("afs_vnreclaim: already teminating");
-	    SET(vp->v_flag, VTERMINATE);
-	    memory_object_destroy(obj, 0);
-	    while (ISSET(vp->v_flag, VTERMINATE)) {
-		SET(vp->v_flag, VTERMWANT);
-		tsleep((caddr_t) & vp->v_ubcinfo, PINOD, "afs_vnreclaim", 0);
+	    vinvalbuf(vp, V_SAVE, &afs_osi_cred, p, 0, 0);
+	    if (vp->v_usecount ==
+#ifdef AFS_DARWIN14_ENV
+		2 + DARWIN_REFBASE
+#else
+		1
+#endif
+		)
+		VOP_INACTIVE(vp, p);
+	    else
+		VOP_UNLOCK(vp, 0, p);
+#ifdef AFS_DARWIN14_ENV
+	    if (didhold)
+		ubc_rele(vp);
+#endif
+	    if (obj) {
+		if (ISSET(vp->v_flag, VTERMINATE))
+		    panic("afs_vnreclaim: already teminating");
+		SET(vp->v_flag, VTERMINATE);
+		memory_object_destroy(obj, 0);
+		while (ISSET(vp->v_flag, VTERMINATE)) {
+		    SET(vp->v_flag, VTERMWANT);
+		    tsleep((caddr_t)&vp->v_ubcinfo, PINOD, "afs_vnreclaim", 0);
+		}
+	    }
+#ifdef AFS_DARWIN14_ENV
+	    simple_lock(&vp->v_interlock);
+	    CLR(vp->v_flag, VORECLAIM);
+	    if (ISSET((vp)->v_flag, VXWANT)) {
+		CLR((vp)->v_flag, VXWANT);
+                wakeup((caddr_t)(vp));
+	    }       
+	    vp->v_usecount--;
+	    simple_unlock(&vp->v_interlock);
+#endif
+	} else {
+#ifdef AFS_DARWIN14_ENV
+	    CLR(vp->v_flag, VORECLAIM);
+#endif
+	    if (simple_lock_try(&vp->v_interlock))
+		panic("afs_vnreclaim: slept, but did no work :(");
+	    if (UBCINFOEXISTS(vp) && vp->v_count == DARWIN_REFBASE +
+#ifdef AFS_DARWIN14_ENV
+		2
+#else
+		1
+#endif
+		) {
+#ifndef AFS_DARWIN14_ENV
+		/* We left the refcount high in 1.4 */
+		vp->v_usecount++;
+#endif
+		simple_unlock(&vp->v_interlock);
+		VN_RELE(vp);
+	    } else {
+#ifdef AFS_DARWIN14_ENV
+		/* We left the refcount high in 1.4 */
+		vp->v_usecount--;
+#endif
+		simple_unlock(&vp->v_interlock);
 	    }
 	}
-    } else {
-	if (simple_lock_try(&vp->v_interlock))
-	    panic("afs_vnreclaim: slept, but did no work :(");
-	if (UBCINFOEXISTS(vp) && vp->v_count == 1) {
-	    vp->v_usecount++;
-	    simple_unlock(&vp->v_interlock);
-	    VN_RELE(vp);
-	} else
-	    simple_unlock(&vp->v_interlock);
     }
     AFS_GLOCK();
     if (slept)
-	ObtainWriteLock(&afs_xvcache, 175);
+        ObtainWriteLock(&afs_xvcache,175);
     else
-	ObtainReadLock(&afs_xvcache);
+        ObtainReadLock(&afs_xvcache);
 }
 
 void

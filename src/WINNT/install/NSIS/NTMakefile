@@ -8,6 +8,8 @@ NSISDIR = C:\Program Files\NSIS
 # Revise the rule for compiling sources to use static libraries
 C2OBJ   = $(cc) /Fo$@ /Fd$*.pdb $(cflags) $(cdebug) $(cvars) $(afscflags) $(afscdefs) /c
 
+LOOPBACK_LIBS = wbemuuid.lib setupapi.lib msi.lib ole32.lib shell32.lib oleaut32.lib user32.lib
+
 $(OUT)\Service.obj: Service.cpp
 	   $(C2OBJ) Service.cpp
 

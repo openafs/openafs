@@ -10,19 +10,19 @@
 /* Elapsed time package */
 /* See rx_clock.h for calling conventions */
 
+#include <afsconfig.h>
 #ifdef	KERNEL
 #include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
-#include <afsconfig.h>
 
 #ifdef AFS_SUN59_ENV
 #include <sys/time_impl.h>
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_clock.c,v 1.12 2003/07/15 23:16:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_clock.c,v 1.13 2004/05/15 04:53:30 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL

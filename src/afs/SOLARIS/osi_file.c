@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_file.c,v 1.12 2003/07/15 23:14:26 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/SOLARIS/osi_file.c,v 1.13 2004/06/24 17:38:24 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -271,7 +271,15 @@ osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
      * The only time a flag is used (ATTR_UTIME) is when we're changing the time 
      */
     AFS_GUNLOCK();
+#ifdef AFS_SUN510_ENV
+    {
+	caller_context_t ct;
+
+	code = VOP_SETATTR(afile->vnode, &tvattr, 0, &afs_osi_cred, &ct);
+    }
+#else
     code = VOP_SETATTR(afile->vnode, &tvattr, 0, &afs_osi_cred);
+#endif
     AFS_GLOCK();
     MReleaseWriteLock(&afs_xosi);
     return code;

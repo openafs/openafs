@@ -23,7 +23,7 @@
 #define INCLUDE_RXKAD_PRIVATE_DECLS
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/rxkad_common.c,v 1.19 2004/03/10 07:46:34 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/rxkad_common.c,v 1.20 2004/06/23 14:27:44 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -525,4 +525,28 @@ rxkad_GetStats(struct rx_securityClass *aobj, struct rx_connection *aconn,
 	astats->packetsSent = cconn->stats.packetsSent;
     }
     return 0;
+}
+
+rxkad_level
+rxkad_StringToLevel(char *name)
+{
+  if (strcmp(name, "clear") == 0)
+    return rxkad_clear;
+  if (strcmp(name, "auth") == 0)
+    return rxkad_auth;
+  if (strcmp(name, "crypt") == 0)
+    return rxkad_crypt;
+  return -1;
+}
+
+char *
+rxkad_LevelToString(rxkad_level level)
+{
+  if (level == rxkad_clear) 
+      return "clear";
+  if (level == rxkad_auth) 
+      return "auth";
+  if (level == rxkad_crypt) 
+      return "crypt";
+  return "unknown";
 }

@@ -19,7 +19,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_read.c,v 1.25 2003/08/27 21:43:19 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_read.c,v 1.26 2004/06/24 17:38:25 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -27,6 +27,7 @@ RCSID
 #include "afs/afs_cbqueue.h"
 #include "afs/nfsclient.h"
 #include "afs/afs_osidnlc.h"
+#include "afs/afs_osi.h"
 
 
 extern char afs_zeros[AFS_ZEROS];
@@ -755,9 +756,19 @@ afs_UFSRead(register struct vcache *avc, struct uio *auio,
 			  &tuio, NULL, NULL, -1);
 #elif defined(AFS_SUN5_ENV)
 	    AFS_GUNLOCK();
+#ifdef AFS_SUN510_ENV
+	    {
+		caller_context_t ct;
+
+		VOP_RWLOCK(tfile->vnode, 0, &ct);
+		code = VOP_READ(tfile->vnode, &tuio, 0, afs_osi_credp, &ct);
+		VOP_RWUNLOCK(tfile->vnode, 0, &ct);
+	    }
+#else
 	    VOP_RWLOCK(tfile->vnode, 0);
 	    code = VOP_READ(tfile->vnode, &tuio, 0, afs_osi_credp);
 	    VOP_RWUNLOCK(tfile->vnode, 0);
+#endif
 	    AFS_GLOCK();
 #elif defined(AFS_SGI_ENV)
 	    AFS_GUNLOCK();

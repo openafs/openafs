@@ -7,15 +7,15 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afsconfig.h>
 #ifdef	KERNEL
 #include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
-#include <afsconfig.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_null.c,v 1.6 2003/07/15 23:16:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_null.c,v 1.7 2004/05/15 04:53:30 shadow Exp $");
 
 #ifdef KERNEL
 #ifndef	UKERNEL

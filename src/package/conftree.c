@@ -54,9 +54,7 @@ extern FILE *yyin;		/*Input file for the YACC parser */
  *------------------------------------------------------------------------*/
 
 static int
-namehash(name)
-     register char *name;
-
+namehash(register char *name)
 {				/*namehash */
 
     register int hash;
@@ -123,10 +121,7 @@ AllocConfigNode()
  *------------------------------------------------------------------------*/
 
 static int
-ValidUpdtSpec(ftype, uspec)
-     u_short ftype;
-     u_short uspec;
-
+ValidUpdtSpec(u_short ftype, u_short uspec)
 {				/*ValidUpdtSpec */
 
     register struct updatetype *u;
@@ -169,10 +164,7 @@ ValidUpdtSpec(ftype, uspec)
  *------------------------------------------------------------------------*/
 
 static int
-ValidateUserName(name, uidp)
-     register char *name;
-     register short *uidp;
-
+ValidateUserName(register char *name, register short *uidp)
 {				/*ValidateUserName */
 
     register afs_int32 uid;
@@ -242,10 +234,7 @@ ValidateUserName(name, uidp)
  *------------------------------------------------------------------------*/
 
 static int
-ValidateGroupName(name, gidp)
-     register char *name;
-     register short *gidp;
-
+ValidateGroupName(register char *name, register short *gidp)
 {				/*ValidateGroupName */
 
     register afs_int32 gid;
@@ -342,11 +331,7 @@ InitializeConfigTree()
  *------------------------------------------------------------------------*/
 
 CTREEPTR
-LocateChildNode(dp, name, lmode)
-     register CTREEPTR dp;
-     register char *name;
-     register int lmode;
-
+LocateChildNode(register CTREEPTR dp, register char *name, register int lmode)
 {				/*LocateChildNode */
 
     register int hash;		/*Hash value for given name */
@@ -442,13 +427,8 @@ LocateChildNode(dp, name, lmode)
  *------------------------------------------------------------------------*/
 
 CTREEPTR
-LocatePathNode(dp, path, lmode)
-     register CTREEPTR dp;
-     register char *path;
-     register int lmode;
-
+LocatePathNode(register CTREEPTR dp, register char *path, register int lmode)
 {				/*LocatePathNode */
-
     register char *name;	/*Points to start of new subdir/file in path */
     register char savech;	/*Saves chars being murdered during search */
 
@@ -497,7 +477,6 @@ LocatePathNode(dp, path, lmode)
      * just return it.
      */
     return (dp);
-
 }				/*LocatePathNode */
 
 /*------------------------------------------------------------------------
@@ -521,17 +500,13 @@ LocatePathNode(dp, path, lmode)
  *------------------------------------------------------------------------*/
 
 int
-BuildConfigTree(f)
-     FILE *f;
-
+BuildConfigTree(FILE *f)
 {				/*BuildConfigTree */
-
     int ret;
 
     yyin = f;
     ret = yyparse();
     return (ret);
-
 }				/*BuildConfigTree */
 
 /*------------------------------------------------------------------------
@@ -564,16 +539,8 @@ BuildConfigTree(f)
  *------------------------------------------------------------------------*/
 
 int
-AddEntry(filetype, updtspec, filename, prototype, ownershipinfo, mode)
-     u_short filetype;
-     u_short updtspec;
-     char *filename;
-     PROTOTYPE prototype;
-     OWNER ownershipinfo;
-     MODE mode;
-
+AddEntry(u_short filetype, u_short updtspec, char *filename, PROTOTYPE prototype, OWNER ownershipinfo, MODE mode)
 {				/*AddEntry */
-
     CTREEPTR np;		/*Ptr to config tree node holding info on filename */
     short uid, gid;		/*Uid, gid returned from validation functions */
 
@@ -723,9 +690,7 @@ AddEntry(filetype, updtspec, filename, prototype, ownershipinfo, mode)
  *------------------------------------------------------------------------*/
 
 void
-ApplyConfigTree(func)
-     int (*func) ();
-
+ApplyConfigTree(int (*func) ())
 {				/*ApplyConfigTree */
 
     char *path;			/*Path to pass on down */
@@ -764,13 +729,9 @@ ApplyConfigTree(func)
  *	Whatever func might do.
  *------------------------------------------------------------------------*/
 
-TraverseConfigTree(np, path, func)
-     register CTREEPTR np;
-     char *path;
-     int (*func) ();
-
+void
+TraverseConfigTree(register CTREEPTR np, char *path, int (*func) ())
 {				/*TraverseConfigTree */
-
     register char *endp;	/*Marks the end of a string */
     register ENTRYPTR ep;	/*Current entry pointer */
     register int len;		/*Length of the pathname */
@@ -820,5 +781,4 @@ TraverseConfigTree(np, path, func)
      * the path properly before returning.
      */
     *--endp = 0;
-
 }				/*TraverseConfigTree */

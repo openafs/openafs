@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.33 2003/11/29 21:46:30 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_packet.c,v 1.35 2004/06/02 14:50:23 jaltman Exp $");
 
 #ifdef KERNEL
 #if defined(UKERNEL)
@@ -64,6 +64,9 @@ RCSID
 #if defined(AFS_NT40_ENV) || defined(AFS_DJGPP_ENV)
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
+#ifndef EWOULDBLOCK
+#define EWOULDBLOCK WSAEWOULDBLOCK
+#endif
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -826,13 +829,11 @@ rxi_ReadPacket(int socket, register struct rx_packet *p, afs_uint32 * host,
     if ((nbytes > tlen) || (p->length & 0x8000)) {	/* Bogus packet */
 	if (nbytes > 0)
 	    rxi_MorePackets(rx_initSendWindow);
-#ifndef AFS_NT40_ENV
 	else if (nbytes < 0 && errno == EWOULDBLOCK) {
 	    MUTEX_ENTER(&rx_stats_mutex);
 	    rx_stats.noPacketOnRead++;
 	    MUTEX_EXIT(&rx_stats_mutex);
 	}
-#endif
 	else {
 	    MUTEX_ENTER(&rx_stats_mutex);
 	    rx_stats.bogusPacketOnRead++;
@@ -1154,6 +1155,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 #ifndef	RX_ENABLE_LOCKS
 	    tstat.waitingForPackets = rx_waitingForPackets;
 #endif
+	    MUTEX_ENTER(&rx_serverPool_lock);
 	    tstat.nFreePackets = htonl(rx_nFreePackets);
 	    tstat.callsExecuted = htonl(rxi_nCalls);
 	    tstat.packetReclaims = htonl(rx_packetReclaims);
@@ -1161,6 +1163,7 @@ rxi_ReceiveDebugPacket(register struct rx_packet *ap, osi_socket asocket,
 	    tstat.nWaiting = htonl(rx_nWaiting);
 	    queue_Count(&rx_idleServerQueue, np, nqe, rx_serverQueueEntry,
 			tstat.idleThreads);
+	    MUTEX_EXIT(&rx_serverPool_lock);
 	    tstat.idleThreads = htonl(tstat.idleThreads);
 	    tl = sizeof(struct rx_debugStats) - ap->length;
 	    if (tl > 0)

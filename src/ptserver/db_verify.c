@@ -12,7 +12,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/db_verify.c,v 1.15 2004/04/18 06:13:50 kolya Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/db_verify.c,v 1.16 2004/06/23 14:27:41 shadow Exp $");
 
 /*
  *                      (3) Define a structure, idused, instead of an
@@ -69,8 +69,7 @@ char *whoami = "db_verify";
 #define UBIK_HEADERSIZE 64
 
 afs_int32
-printheader(h)
-     struct prheader *h;
+printheader(struct prheader *h)
 {
     printf("Version           = %d\n", ntohl(h->version));
     printf("Header Size       = %d\n", ntohl(h->headerSize));
@@ -91,10 +90,7 @@ printheader(h)
 }
 
 static afs_int32
-pr_Read(pos, buff, len)
-     afs_int32 pos;
-     char *buff;
-     afs_int32 len;
+pr_Read(afs_int32 pos, char *buff, afs_int32 len)
 {
     afs_int32 code;
 
@@ -140,16 +136,14 @@ ReadHeader()
 }
 
 static afs_int32
-IDHash(x)
-     afs_int32 x;
+IDHash(afs_int32 x)
 {
     /* returns hash bucket for x */
     return ((abs(x)) % HASHSIZE);
 }
 
 static afs_int32
-NameHash(aname)
-     register unsigned char *aname;
+NameHash(register unsigned char *aname)
 {
     /* returns hash bucket for aname */
     register unsigned int hash = 0;
@@ -208,8 +202,7 @@ int idcount(struct idused **idmapp, int id);
 #endif
 
 int
-readUbikHeader(misc)
-     struct misc_data *misc;
+readUbikHeader(struct misc_data *misc)
 {
     int offset, r;
     struct ubik_hdr uheader;
@@ -252,9 +245,7 @@ readUbikHeader(misc)
 }
 
 afs_int32
-ConvertDiskAddress(ea, eiP)
-     afs_uint32 ea;
-     int *eiP;
+ConvertDiskAddress(afs_uint32 ea, int *eiP)
 {
     int i;
 
@@ -274,11 +265,7 @@ ConvertDiskAddress(ea, eiP)
 }
 
 int
-PrintEntryError(misc, ea, e, indent)
-     struct misc_data *misc;
-     afs_int32 ea;
-     struct prentry *e;
-     int indent;
+PrintEntryError(struct misc_data *misc, afs_int32 ea, struct prentry *e, int indent)
 {
 
     pr_PrintEntry(stderr, /*net order */ 0, ea, e, indent);
@@ -286,11 +273,10 @@ PrintEntryError(misc, ea, e, indent)
 }
 
 afs_int32
-WalkHashTable(hashtable, hashType, map, misc)
-     afs_int32 hashtable[];	/* hash table to walk */
-     int hashType;		/* hash function to use */
-     char map[];		/* one byte per db entry */
-     struct misc_data *misc;	/* stuff to keep track of */
+WalkHashTable(afs_int32 hashtable[],	/* hash table to walk */
+	      int hashType,		/* hash function to use */
+	      char map[],		/* one byte per db entry */
+	      struct misc_data *misc)	/* stuff to keep track of */
 {
     afs_int32 code;
     int hi;			/* index in hash table */
@@ -404,11 +390,9 @@ WalkHashTable(hashtable, hashType, map, misc)
 }
 
 afs_int32
-WalkNextChain(map, misc, ea, e)
-     char map[];		/* one byte per db entry */
-     struct misc_data *misc;	/* stuff to keep track of */
-     afs_int32 ea;
-     struct prentry *e;
+WalkNextChain(char map[],		/* one byte per db entry */
+	      struct misc_data *misc,	/* stuff to keep track of */
+	      afs_int32 ea, struct prentry *e)
 {
     afs_int32 head;
     int bit;
@@ -725,11 +709,9 @@ WalkNextChain(map, misc, ea, e)
 }
 
 afs_int32
-WalkOwnedChain(map, misc, ea, e)
-     char map[];		/* one byte per db entry */
-     struct misc_data *misc;	/* stuff to keep track of */
-     afs_int32 ea;
-     struct prentry *e;
+WalkOwnedChain(char map[],		/* one byte per db entry */
+	       struct misc_data *misc,	/* stuff to keep track of */
+	       afs_int32 ea, struct prentry *e)
 {
     afs_int32 head;
     afs_int32 code;
@@ -809,9 +791,8 @@ WalkOwnedChain(map, misc, ea, e)
 }
 
 afs_int32
-WalkChains(map, misc)
-     char map[];		/* one byte per db entry */
-     struct misc_data *misc;	/* stuff to keep track of */
+WalkChains(char map[],		/* one byte per db entry */
+	   struct misc_data *misc)	/* stuff to keep track of */
 {
     afs_int32 code;
     int ei;
@@ -924,9 +905,7 @@ WalkChains(map, misc)
 }
 
 afs_int32
-GC(map, misc)
-     char map[];
-     struct misc_data *misc;
+GC(char map[], struct misc_data *misc)
 {
     afs_int32 code;
     int ei;
@@ -958,13 +937,14 @@ GC(map, misc)
 	    id = ntohl(e.id);
 #if defined(SUPERGROUPS)
 	    if ((id != ANONYMOUSID)
-		&& ((refCount = idcount(&misc->idmap, id)) != ntohl(e.count))) {
+		&& ((refCount = idcount(&misc->idmap, id)) != ntohl(e.count))) 
 #else
 	    if ((id >= misc->minId) && (id <= misc->maxId)
 		&& (id != ANONYMOUSID)
 		&& ((refCount = misc->idmap[id - misc->minId]) !=
-		    ntohl(e.count))) {
+		    ntohl(e.count))) 
 #endif /* SUPERGROUPS */
+	      {
 		afs_int32 na;
 		fprintf(stderr,
 			"Entry membership count is inconsistent: %d entries refer to this one\n",
@@ -991,8 +971,7 @@ GC(map, misc)
 }
 
 char *
-QuoteName(s)
-     char *s;
+QuoteName(char *s)
 {
     char *qs;
     if (strpbrk(s, " \t")) {
@@ -1006,9 +985,7 @@ QuoteName(s)
 }
 
 afs_int32
-DumpRecreate(map, misc)
-     char map[];
-     struct misc_data *misc;
+DumpRecreate(char map[], struct misc_data *misc)
 {
     afs_int32 code;
     int ei;
@@ -1069,10 +1046,11 @@ DumpRecreate(map, misc)
 		/* check for duplicate id.  This may still lead to duplicate
 		 * names. */
 #if defined(SUPERGROUPS)
-		if (idcount(&idmap, id)) {
+		if (idcount(&idmap, id)) 
 #else
-		if (idmap[id - misc->minId]) {
+		if (idmap[id - misc->minId]) 
 #endif
+		  {
 		    fprintf(stderr, "Skipping entry with duplicate id %di\n",
 			    id);
 		    goto user_done;
@@ -1179,10 +1157,11 @@ DumpRecreate(map, misc)
 
 	    owner = ntohl(e.owner);
 #if defined(SUPERGROUPS)
-	    if (!idcount(&idmap, owner)) {
+	    if (!idcount(&idmap, owner)) 
 #else
-	    if (idmap[owner - misc->minId] == 0) {
+	    if (idmap[owner - misc->minId] == 0) 
 #endif
+	      {
 		fprintf(stderr,
 			"Skipping chown of '%s' to non-existant owner %di\n",
 			e.name, owner);
@@ -1310,8 +1289,7 @@ DumpRecreate(map, misc)
 }
 
 afs_int32
-CheckPrDatabase(misc)
-     struct misc_data *misc;	/* info & statistics */
+CheckPrDatabase(struct misc_data *misc)	/* info & statistics */
 {
     afs_int32 code;
     afs_int32 eof;
@@ -1450,12 +1428,11 @@ CheckPrDatabase(misc)
     free(map);
     return code;
 }
-
+    
 #include "AFS_component_version_number.c"
 
-WorkerBee(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
+int
+WorkerBee(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     char *recreateFile;
@@ -1508,9 +1485,8 @@ WorkerBee(as, arock)
     exit(0);
 }
 
-main(argc, argv)
-     int argc;
-     char *argv[];
+int
+main(int argc, char *argv[])
 {
     struct cmd_syndesc *ts;
 
@@ -1536,8 +1512,7 @@ main(argc, argv)
 /* new routines to deal with very large ID numbers */
 
 void
-zeromap(idmap)
-     struct idused *idmap;
+zeromap(struct idused *idmap)
 {
     while (idmap) {
 	bzero((char *)idmap->idcount, sizeof idmap->idcount);
@@ -1574,8 +1549,7 @@ inccount(struct idused **idmapp, int id)
 }
 
 int
-idcount(idmapp, id)
-     struct idused **idmapp;
+idcount(struct idused **idmapp, int id)
 {
     struct idused *idmap;
 
@@ -1591,5 +1565,4 @@ idcount(idmapp, id)
     }
     return 0;
 }
-
 #endif /* SUPERGROUPS */

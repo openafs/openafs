@@ -17,7 +17,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vnode.c,v 1.18 2003/11/29 21:38:05 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/vol/vnode.c,v 1.19 2004/06/23 14:27:48 shadow Exp $");
 
 #include <errno.h>
 #include <stdio.h>
@@ -103,6 +103,7 @@ void StickOnLruChain_r(register Vnode * vnp,
 #define	THELOGSIZE	5120
 static afs_int32 theLog[THELOGSIZE];
 static afs_int32 vnLogPtr = 0;
+void
 VNLog(aop, anparms, av1, av2, av3, av4)
      afs_int32 aop, anparms;
      afs_int32 av1, av2, av3, av4;

@@ -266,11 +266,17 @@
 /* define if you struct inode has i_devices */
 #undef STRUCT_INODE_HAS_I_DEVICES
 
+/* define if you struct inode has i_security */
+#undef STRUCT_INODE_HAS_I_SECURITY
+
 /* define if your struct inode has data_buffers */
 #undef STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 
 /* define if your recalc_sigpending takes void */
 #undef RECALC_SIGPENDING_TAKES_VOID
+
+/* define if your linux kernel uses SELinux features */
+#undef LINUX_KERNEL_IS_SELINUX
 
 /* define if your linux kernel has linux/syscall.h */
 #undef HAVE_KERNEL_LINUX_SYSCALL_H

@@ -16,7 +16,7 @@ dnl
 dnl NB: Because this code is a macro, references to positional shell
 dnl parameters must be done like $[]1 instead of $1
 
-AC_DEFUN(OPENAFS_CONFIGURE_COMMON,[
+AC_DEFUN([OPENAFS_CONFIGURE_COMMON],[
 
 AC_CANONICAL_HOST
 SRCDIR_PARENT=`pwd`
@@ -193,8 +193,10 @@ case $system in
 		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
 		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 		 LINUX_FS_STRUCT_INODE_HAS_I_DEVICES
+		 LINUX_FS_STRUCT_INODE_HAS_I_SECURITY
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 		 LINUX_KERNEL_LINUX_SYSCALL_H
+		 LINUX_KERNEL_SELINUX
 		 LINUX_NEED_RHCONFIG
 		 LINUX_RECALC_SIGPENDING_ARG_TYPE
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT
@@ -285,11 +287,17 @@ case $system in
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_devices" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_DEVICES, 1, [define if you struct inode has i_devices])
 		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_security" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_SECURITY, 1, [define if you struct inode has i_security])
+		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS, 1, [define if your struct inode has data_buffers])
 		 fi
 		 if test "x$ac_cv_linux_func_recalc_sigpending_takes_void" = "xyes"; then 
 		  AC_DEFINE(RECALC_SIGPENDING_TAKES_VOID, 1, [define if your recalc_sigpending takes void])
+		 fi
+		 if test "x$ac_cv_linux_kernel_is_selinux" = "xyes" ; then
+		  AC_DEFINE(LINUX_KERNEL_IS_SELINUX, 1, [define if your linux kernel uses SELinux features])
 		 fi
 		 if test "x$ac_linux_syscall" = "xyes" ; then
 		  AC_DEFINE(HAVE_KERNEL_LINUX_SYSCALL_H, 1, [define if your linux kernel has linux/syscall.h])
@@ -543,6 +551,9 @@ else
 		sparc-sun-solaris2.9)
 			AFS_SYSNAME="sun4x_59"
 			;;
+		sparc-sun-solaris2.10)
+			AFS_SYSNAME="sun4x_510"
+			;;
 		sparc-sun-sunos4*)
 			AFS_SYSNAME="sun4_413"
 			enable_login="yes"
@@ -555,6 +566,9 @@ else
 			;;
 		i386-pc-solaris2.9)
 			AFS_SYSNAME="sunx86_59"
+			;;
+		i386-pc-solaris2.10)
+			AFS_SYSNAME="sunx86_510"
 			;;
 		alpha*-dec-osf4.0*)
 			AFS_SYSNAME="alpha_dux40"
@@ -642,21 +656,6 @@ else
 	esac
         AC_MSG_RESULT($AFS_SYSNAME)
 fi
-
-# KDUMP64 defaults to KDUMP for systems without a separate kdump64
-KDUMP64='${KDUMP}'
-KDUMP=kdump
-case $AFS_SYSNAME in
-	sgi_6?)
-		KDUMP=kdump.IP20;;
-	sun4x_5[[789]] | hp_ux11*)
-		KDUMP=kdump32
-		KDUMP64=kdump64;;
-	*linux*)
-		KDUMP='kdump-${LINUX_VERSION}';;
-esac
-AC_SUBST(KDUMP)
-AC_SUBST(KDUMP64)
 
 case $AFS_SYSNAME in
 	*_darwin*)
@@ -1022,7 +1021,7 @@ AC_SUBST(HELPER_SPLINTCFG)
 
 ])
 
-AC_DEFUN(COMPILER_HAS_FUNCTION_MACRO, [
+AC_DEFUN([COMPILER_HAS_FUNCTION_MACRO], [
 AC_MSG_CHECKING(for __FUNCTION__ and __LINE__ macros)
 AC_CACHE_VAL(ac_cv_compiler_has_function_macro,
 [
@@ -1048,7 +1047,7 @@ AC_PROG_LEX
 AC_DECL_YYTEXT])
 
 dnl
-dnl $Id: bigendian.m4,v 1.2 2001/06/28 05:03:55 shadow Exp $
+dnl $Id: bigendian.m4,v 1.3 2004/06/03 05:13:29 shadow Exp $
 dnl
 
 dnl check if this computer is little or big-endian
@@ -1056,7 +1055,7 @@ dnl if we can figure it out at compile-time then don't define the cpp symbol
 dnl otherwise test for it and define it.  also allow options for overriding
 dnl it when cross-compiling
 
-AC_DEFUN(OPENAFS_CHECK_BIGENDIAN, [
+AC_DEFUN([OPENAFS_CHECK_BIGENDIAN], [
 AC_ARG_ENABLE(bigendian,
 [  --enable-bigendian	the target is big endian],
 openafs_cv_c_bigendian=yes)
@@ -1102,7 +1101,7 @@ fi
 ])
 
 
-AC_DEFUN(OPENAFS_GCC_SUPPORTS_MARCH, [
+AC_DEFUN([OPENAFS_GCC_SUPPORTS_MARCH], [
 AC_MSG_CHECKING(if $CC accepts -march=pentium)
 save_CFLAGS="$CFLAGS"
 CFLAGS="-MARCH=pentium"
@@ -1121,7 +1120,7 @@ fi
 CFLAGS="$save_CFLAGS"
 ])
 
-AC_DEFUN(OPENAFS_GCC_NEEDS_NO_STRICT_ALIASING, [
+AC_DEFUN([OPENAFS_GCC_NEEDS_NO_STRICT_ALIASING], [
 AC_MSG_CHECKING(if $CC needs -fno-strict-aliasing)
 save_CFLAGS="$CFLAGS"
 CFLAGS="-fno-strict-aliasing"
@@ -1138,7 +1137,7 @@ fi
 CFLAGS="$save_CFLAGS"
 ])
 
-AC_DEFUN(OPENAFS_GCC_NEEDS_NO_STRENGTH_REDUCE, [
+AC_DEFUN([OPENAFS_GCC_NEEDS_NO_STRENGTH_REDUCE], [
 AC_MSG_CHECKING(if $CC needs -fno-strength-reduce)
 save_CFLAGS="$CFLAGS"
 CFLAGS="-fno-strength-reduce"
@@ -1155,7 +1154,7 @@ fi
 CFLAGS="$save_CFLAGS"
 ])
 
-AC_DEFUN(OPENAFS_GCC_SUPPORTS_NO_COMMON, [
+AC_DEFUN([OPENAFS_GCC_SUPPORTS_NO_COMMON], [
 AC_MSG_CHECKING(if $CC supports -fno-common)
 save_CFLAGS="$CFLAGS"
 CFLAGS="-fno-common"
@@ -1172,7 +1171,7 @@ fi
 CFLAGS="$save_CFLAGS"
 ])
 
-AC_DEFUN(OPENAFS_GCC_SUPPORTS_PIPE, [
+AC_DEFUN([OPENAFS_GCC_SUPPORTS_PIPE], [
 AC_MSG_CHECKING(if $CC supports -pipe)
 save_CFLAGS="$CFLAGS"
 CFLAGS="-pipe"
@@ -1189,7 +1188,7 @@ fi
 CFLAGS="$save_CFLAGS"
 ])
 
-AC_DEFUN(LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK, [
+AC_DEFUN([LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_GFP_MASK], [
 AC_MSG_CHECKING(for gfp_mask in struct address_space)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1204,7 +1203,7 @@ ac_cv_linux_fs_struct_address_space_has_gfp_mask=no)])
 AC_MSG_RESULT($ac_cv_linux_fs_struct_address_space_has_gfp_mask)
 CPPFLAGS="$save_CPPFLAGS"])
 
-AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_BYTES, [
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_BYTES], [
 AC_MSG_CHECKING(for i_bytes in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1219,7 +1218,7 @@ ac_cv_linux_fs_struct_inode_has_i_bytes=no)])
 AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_bytes)
 CPPFLAGS="$save_CPPFLAGS"])
 
-AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_ALLOC_SEM, [
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_ALLOC_SEM], [
 AC_MSG_CHECKING(for i_alloc_sem in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1234,7 +1233,7 @@ ac_cv_linux_fs_struct_inode_has_i_alloc_sem=no)])
 AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_alloc_sem)
 CPPFLAGS="$save_CPPFLAGS"])
 
-AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM, [
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM], [
 AC_MSG_CHECKING(for i_truncate_sem in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1249,7 +1248,7 @@ ac_cv_linux_fs_struct_inode_has_i_truncate_sem=no)])
 AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_truncate_sem)
 CPPFLAGS="$save_CPPFLAGS"])
 
-AC_DEFUN(LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK, [
+AC_DEFUN([LINUX_FS_STRUCT_ADDRESS_SPACE_HAS_PAGE_LOCK], [
 AC_MSG_CHECKING(for page_lock in struct address_space)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1268,7 +1267,7 @@ CPPFLAGS="$save_CPPFLAGS"])
 dnl LINUX_BUILD_VNODE_FROM_INODE (configdir, outputdir, tmpldir)
 dnl		defaults: (src/config, src/afs/LINUX, src/afs/linux)
 
-AC_DEFUN(LINUX_BUILD_VNODE_FROM_INODE, [
+AC_DEFUN([LINUX_BUILD_VNODE_FROM_INODE], [
 AC_MSG_CHECKING(whether to build osi_vfs.h)
 configdir=ifelse([$1], ,[src/config],$1)
 outputdir=ifelse([$2], ,[src/afs/LINUX],$2)
@@ -1277,7 +1276,7 @@ chmod +x $configdir/make_vnode.pl
 $configdir/make_vnode.pl -i $LINUX_KERNEL_PATH -t ${tmpldir} -o $outputdir
 ])
 
-AC_DEFUN(LINUX_COMPLETION_H_EXISTS, [
+AC_DEFUN([LINUX_COMPLETION_H_EXISTS], [
 AC_MSG_CHECKING(for linux/completion.h existance)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1297,7 +1296,7 @@ AC_MSG_RESULT($ac_cv_linux_completion_h_exists)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_DEFINES_FOR_EACH_PROCESS, [
+AC_DEFUN([LINUX_DEFINES_FOR_EACH_PROCESS], [
 AC_MSG_CHECKING(for defined for_each_process)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1314,7 +1313,7 @@ AC_MSG_RESULT($ac_cv_linux_defines_for_each_process)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_DEFINES_PREV_TASK, [
+AC_DEFUN([LINUX_DEFINES_PREV_TASK], [
 AC_MSG_CHECKING(for defined prev_task)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1331,7 +1330,7 @@ AC_MSG_RESULT($ac_cv_linux_defines_prev_task)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_EXPORTS_INIT_MM, [
+AC_DEFUN([LINUX_EXPORTS_INIT_MM], [
 AC_MSG_CHECKING(for exported init_mm)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1348,7 +1347,7 @@ AC_MSG_RESULT($ac_cv_linux_exports_init_mm)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_EXPORTS_KALLSYMS_ADDRESS, [
+AC_DEFUN([LINUX_EXPORTS_KALLSYMS_ADDRESS], [
 AC_MSG_CHECKING(for exported kallsyms_address_to_symbol)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1365,7 +1364,7 @@ AC_MSG_RESULT($ac_cv_linux_exports_kallsyms_address)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_EXPORTS_KALLSYMS_SYMBOL, [
+AC_DEFUN([LINUX_EXPORTS_KALLSYMS_SYMBOL], [
 AC_MSG_CHECKING(for exported kallsyms_symbol_to_address)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1382,7 +1381,7 @@ AC_MSG_RESULT($ac_cv_linux_exports_kallsyms_symbol)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_EXPORTS_SYS_CALL_TABLE, [
+AC_DEFUN([LINUX_EXPORTS_SYS_CALL_TABLE], [
 AC_MSG_CHECKING(for exported sys_call_table)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1399,7 +1398,7 @@ AC_MSG_RESULT($ac_cv_linux_exports_sys_call_table)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_EXPORTS_IA32_SYS_CALL_TABLE, [
+AC_DEFUN([LINUX_EXPORTS_IA32_SYS_CALL_TABLE], [
 AC_MSG_CHECKING(for exported ia32_sys_call_table)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1416,7 +1415,7 @@ AC_MSG_RESULT($ac_cv_linux_exports_ia32_sys_call_table)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_EXPORTS_SYS_CHDIR, [
+AC_DEFUN([LINUX_EXPORTS_SYS_CHDIR], [
 AC_MSG_CHECKING(for exported sys_chdir)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1433,7 +1432,7 @@ AC_MSG_RESULT($ac_cv_linux_exports_sys_chdir)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_EXPORTS_SYS_CLOSE, [
+AC_DEFUN([LINUX_EXPORTS_SYS_CLOSE], [
 AC_MSG_CHECKING(for exported sys_close)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1450,7 +1449,7 @@ AC_MSG_RESULT($ac_cv_linux_exports_sys_close)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_EXPORTS_SYS_WAIT4, [
+AC_DEFUN([LINUX_EXPORTS_SYS_WAIT4], [
 AC_MSG_CHECKING(for exported sys_wait4)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1467,7 +1466,7 @@ AC_MSG_RESULT($ac_cv_linux_exports_sys_wait4)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_EXPORTS_TASKLIST_LOCK, [
+AC_DEFUN([LINUX_EXPORTS_TASKLIST_LOCK], [
 AC_MSG_CHECKING(for exported tasklist_lock)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1484,7 +1483,7 @@ AC_MSG_RESULT($ac_cv_linux_exports_tasklist_lock)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_CDEV, [
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_CDEV], [
 AC_MSG_CHECKING(for i_cdev in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1500,7 +1499,7 @@ AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_cdev)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_DEVICES, [
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_DEVICES], [
 AC_MSG_CHECKING(for i_devices in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1516,7 +1515,7 @@ AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_devices)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS, [
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS], [
 AC_MSG_CHECKING(for i_dirty_data_buffers in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1532,7 +1531,7 @@ AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_MAPPING_OVERLOAD, [
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_MAPPING_OVERLOAD], [
 AC_MSG_CHECKING(for i_mapping_overload in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1548,7 +1547,7 @@ AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_mapping_overload)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_FS_STRUCT_INODE_HAS_I_MMAP_SHARED, [
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_MMAP_SHARED], [
 AC_MSG_CHECKING(for i_mmap_shared in struct inode)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1564,7 +1563,23 @@ AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_mmap_shared)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_RECALC_SIGPENDING_ARG_TYPE,[
+AC_DEFUN([LINUX_FS_STRUCT_INODE_HAS_I_SECURITY], [
+AC_MSG_CHECKING(for i_security in struct inode)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_fs_struct_inode_has_i_security, 
+[
+AC_TRY_COMPILE(
+[#include <linux/fs.h>],
+[struct inode _inode;
+printf("%d\n", _inode.i_security);], 
+ac_cv_linux_fs_struct_inode_has_i_security=yes,
+ac_cv_linux_fs_struct_inode_has_i_security=no)])
+AC_MSG_RESULT($ac_cv_linux_fs_struct_inode_has_i_security)
+CPPFLAGS="$save_CPPFLAGS"])
+
+
+AC_DEFUN([LINUX_RECALC_SIGPENDING_ARG_TYPE],[
 AC_MSG_CHECKING(for recalc_sigpending arg type)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1579,7 +1594,7 @@ AC_MSG_RESULT($ac_cv_linux_func_recalc_sigpending_takes_void)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT, [
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT], [
 AC_MSG_CHECKING(for parent in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1595,7 +1610,7 @@ AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_parent)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_REAL_PARENT, [
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_REAL_PARENT], [
 AC_MSG_CHECKING(for real_parent in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1611,7 +1626,7 @@ AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_real_parent)
 CPPFLAGS="$save_CPPFLAGS"])
 
 
-AC_DEFUN(LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIG, [
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIG], [
 AC_MSG_CHECKING(for sig in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1626,7 +1641,7 @@ ac_cv_linux_sched_struct_task_struct_has_sig=no)])
 AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_sig)
 CPPFLAGS="$save_CPPFLAGS"])
 
-AC_DEFUN(LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK, [
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK], [
 AC_MSG_CHECKING(for sigmask_lock in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1641,7 +1656,7 @@ ac_cv_linux_sched_struct_task_struct_has_sigmask_lock=no)])
 AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_sigmask_lock)
 CPPFLAGS="$save_CPPFLAGS"])
 
-AC_DEFUN(LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGHAND, [
+AC_DEFUN([LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_SIGHAND], [
 AC_MSG_CHECKING(for sighand in struct task_struct)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1656,7 +1671,7 @@ ac_cv_linux_sched_struct_task_struct_has_sighand=no)])
 AC_MSG_RESULT($ac_cv_linux_sched_struct_task_struct_has_sighand)
 CPPFLAGS="$save_CPPFLAGS"])
 
-AC_DEFUN(LINUX_INODE_SETATTR_RETURN_TYPE,[
+AC_DEFUN([LINUX_INODE_SETATTR_RETURN_TYPE],[
 AC_MSG_CHECKING(for inode_setattr return type)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -I${LINUX_KERNEL_PATH}/include/asm/mach-${SUBARCH} -D__KERNEL__ $CPPFLAGS"
@@ -1673,7 +1688,7 @@ ac_cv_linux_func_inode_setattr_returns_int=no)])
 AC_MSG_RESULT($ac_cv_linux_func_inode_setattr_returns_int)
 CPPFLAGS="$save_CPPFLAGS"])
 
-AC_DEFUN(LINUX_KERNEL_LINUX_SYSCALL_H,[
+AC_DEFUN([LINUX_KERNEL_LINUX_SYSCALL_H],[
   AC_MSG_CHECKING(for linux/syscall.h in kernel)
   if test -f "${LINUX_KERNEL_PATH}/include/linux/syscall.h"; then
     ac_linux_syscall=yes
@@ -1684,7 +1699,7 @@ AC_DEFUN(LINUX_KERNEL_LINUX_SYSCALL_H,[
   fi
 ])
 
-AC_DEFUN(LINUX_NEED_RHCONFIG,[
+AC_DEFUN([LINUX_NEED_RHCONFIG],[
 RHCONFIG_SP=""
 RHCONFIG_MP=""
 if test "x$enable_redhat_buildsys" = "xyes"; then
@@ -1708,7 +1723,7 @@ AC_SUBST(RHCONFIG_SP)
 AC_SUBST(RHCONFIG_MP)
 ])
 
-AC_DEFUN(LINUX_WHICH_MODULES,[
+AC_DEFUN([LINUX_WHICH_MODULES],[
 if test "x$enable_redhat_buildsys" = "xyes"; then
   MPS=Default
 else
@@ -1754,8 +1769,23 @@ fi
 AC_SUBST(MPS)
 ])
 
+AC_DEFUN([LINUX_KERNEL_SELINUX],[
+AC_MSG_CHECKING(for SELinux kernel)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_kernel_is_selinux,
+[
+AC_TRY_COMPILE(
+  [#include <linux/autoconf.h>],
+  [#ifndef CONFIG_SECURITY_SELINUX
+   #error not SELINUX
+   #endif],
+  ac_cv_linux_kernel_is_selinux=yes,
+  ac_cv_linux_kernel_is_selinux=no)])
+AC_MSG_RESULT($ac_cv_linux_kernel_is_selinux)
+CPPFLAGS="$save_CPPFLAGS"])
 
-AC_DEFUN(SOLARIS_UFSVFS_HAS_DQRWLOCK, [
+AC_DEFUN([SOLARIS_UFSVFS_HAS_DQRWLOCK], [
 AC_MSG_CHECKING(for vfs_dqrwlock in struct ufsvfs)
 AC_CACHE_VAL(ac_cv_solaris_ufsvfs_has_dqrwlock,
 [
@@ -1773,7 +1803,7 @@ fi
 ])
 
 
-AC_DEFUN(SOLARIS_PROC_HAS_P_COREFILE, [
+AC_DEFUN([SOLARIS_PROC_HAS_P_COREFILE], [
 AC_MSG_CHECKING(for p_corefile in struct proc)
 AC_CACHE_VAL(ac_cv_solaris_proc_has_p_corefile,
 [
@@ -1791,7 +1821,7 @@ fi
 ])
 
 
-AC_DEFUN(SOLARIS_FS_HAS_FS_ROLLED, [
+AC_DEFUN([SOLARIS_FS_HAS_FS_ROLLED], [
 AC_MSG_CHECKING(for fs_rolled in struct proc)
 AC_CACHE_VAL(ac_cv_solaris_fs_has_fs_rolled,
 [
@@ -1808,7 +1838,7 @@ fi
 ])
 
 
-AC_DEFUN(AC_FUNC_RES_SEARCH, [
+AC_DEFUN([AC_FUNC_RES_SEARCH], [
   ac_cv_func_res_search=no
   AC_TRY_LINK([
 #include <sys/types.h>
@@ -1833,7 +1863,7 @@ return 0;
 ])
 
 
-AC_DEFUN(OPENAFS_OSCONF, [
+AC_DEFUN([OPENAFS_OSCONF], [
 
 dnl defaults, override in case below as needed
 XCFLAGS='${DBG} ${OPTMZ}'
@@ -2087,22 +2117,6 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
-	i386_linux22)
-		CC="gcc -pipe"
-		CCOBJ="gcc -pipe"
-		MT_CC="gcc -pipe"
-		KERN_OPTMZ=-O2
-		LEX="flex -l"
-		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
-		MT_LIBS="-lpthread"
-		PAM_CFLAGS="-O2 -Dlinux -DLINUX_PAM -fPIC"
-		SHLIB_LDFLAGS="-shared -Xlinker -x"
-		TXLIBS="-lncurses"
-		XCFLAGS="-O2 -D_LARGEFILE64_SOURCE"
-		YACC="bison -y"
-		SHLIB_LINKER="${MT_CC} -shared"
-		;;
-
 	i386_umlinux22)
 		CC="gcc -pipe"
 		CCOBJ="gcc -pipe"
@@ -2119,7 +2133,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;
 
-	i386_linux24)
+	i386_linux*)
 		CC="gcc -pipe"
 		CCOBJ="gcc -pipe"
 		MT_CC="gcc -pipe"
@@ -2535,7 +2549,7 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
 		;;
 
-	sunx86_57)
+	sun4x_510)
 		CC="/opt/SUNWspro/bin/cc"
 		CCOBJ="/opt/SUNWspro/bin/cc"
 		LEX="lex"
@@ -2556,6 +2570,26 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
 		;;
 
+	sunx86_57)
+		CC="/opt/SUNWspro/bin/cc"
+		CCOBJ="/opt/SUNWspro/bin/cc"
+		LEX="lex"
+		LD="/usr/ccs/bin/ld"
+		MT_CC="/opt/SUNWspro/bin/cc"
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_LIBS="-lpthread -lsocket"
+		PAM_CFLAGS="-KPIC"
+		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
+		SHLIB_CFLAGS="-KPIC"
+		SHLIB_LDFLAGS="-G -Bsymbolic"
+		TXLIBS="-lcurses"
+		XCFLAGS64='${XCFLAGS} -xarch=v9'
+		XCFLAGS="-dy -Bdynamic"
+		XLIBELFA="-lelf"
+		XLIBKVM="-lkvm"
+		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
+		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		;;
 
 	sunx86_58)
 		CC="/opt/SUNWspro/bin/cc"
@@ -2578,7 +2612,26 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
 		;;
 
-
+	sunx86_510)
+		CC="/opt/SUNWspro/bin/cc"
+		CCOBJ="/opt/SUNWspro/bin/cc"
+		LEX="lex"
+		LD="/usr/ccs/bin/ld"
+		MT_CC="/opt/SUNWspro/bin/cc"
+		MT_CFLAGS='-mt -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_LIBS="-lpthread -lsocket"
+		PAM_CFLAGS="-KPIC"
+		PAM_LIBS="-lc -lpam -lsocket -lnsl -lm"
+		SHLIB_CFLAGS="-KPIC"
+		SHLIB_LDFLAGS="-G -Bsymbolic"
+		TXLIBS="-lcurses"
+		XCFLAGS64='${XCFLAGS} -xarch=v9'
+		XCFLAGS="-dy -Bdynamic"
+		XLIBELFA="-lelf"
+		XLIBKVM="-lkvm"
+		XLIBS="${LIB_AFSDB} -lsocket -lnsl -lintl -ldl"
+		SHLIB_LINKER="${CC} -G -dy -Wl,-M\$(srcdir)/mapfile -Bsymbolic -z text"
+		;;
 esac
 
 #
@@ -2687,7 +2740,7 @@ AC_SUBST(YACC)
 
 ])
 
-AC_DEFUN(IRIX_SYS_SYSTM_H_HAS_MEM_FUNCS, [
+AC_DEFUN([IRIX_SYS_SYSTM_H_HAS_MEM_FUNCS], [
 AC_MSG_CHECKING(for mem* in sys/systm.h)
 save_CPPFLAGS="$CPPFLAGS"
 CPPFLAGS="$CPPFLAGS -D_KERNEL -D__STRING_H__"

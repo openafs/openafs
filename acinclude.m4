@@ -4,7 +4,7 @@ dnl
 dnl NB: Because this code is a macro, references to positional shell
 dnl parameters must be done like $[]1 instead of $1
 
-AC_DEFUN(OPENAFS_CONFIGURE_COMMON,[
+AC_DEFUN([OPENAFS_CONFIGURE_COMMON],[
 
 AC_CANONICAL_HOST
 SRCDIR_PARENT=`pwd`
@@ -181,8 +181,10 @@ case $system in
 		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
 		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 		 LINUX_FS_STRUCT_INODE_HAS_I_DEVICES
+		 LINUX_FS_STRUCT_INODE_HAS_I_SECURITY
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 		 LINUX_KERNEL_LINUX_SYSCALL_H
+		 LINUX_KERNEL_SELINUX
 		 LINUX_NEED_RHCONFIG
 		 LINUX_RECALC_SIGPENDING_ARG_TYPE
 		 LINUX_SCHED_STRUCT_TASK_STRUCT_HAS_PARENT
@@ -273,11 +275,17 @@ case $system in
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_devices" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_DEVICES, 1, [define if you struct inode has i_devices])
 		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_security" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_SECURITY, 1, [define if you struct inode has i_security])
+		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS, 1, [define if your struct inode has data_buffers])
 		 fi
 		 if test "x$ac_cv_linux_func_recalc_sigpending_takes_void" = "xyes"; then 
 		  AC_DEFINE(RECALC_SIGPENDING_TAKES_VOID, 1, [define if your recalc_sigpending takes void])
+		 fi
+		 if test "x$ac_cv_linux_kernel_is_selinux" = "xyes" ; then
+		  AC_DEFINE(LINUX_KERNEL_IS_SELINUX, 1, [define if your linux kernel uses SELinux features])
 		 fi
 		 if test "x$ac_linux_syscall" = "xyes" ; then
 		  AC_DEFINE(HAVE_KERNEL_LINUX_SYSCALL_H, 1, [define if your linux kernel has linux/syscall.h])
@@ -531,6 +539,9 @@ else
 		sparc-sun-solaris2.9)
 			AFS_SYSNAME="sun4x_59"
 			;;
+		sparc-sun-solaris2.10)
+			AFS_SYSNAME="sun4x_510"
+			;;
 		sparc-sun-sunos4*)
 			AFS_SYSNAME="sun4_413"
 			enable_login="yes"
@@ -543,6 +554,9 @@ else
 			;;
 		i386-pc-solaris2.9)
 			AFS_SYSNAME="sunx86_59"
+			;;
+		i386-pc-solaris2.10)
+			AFS_SYSNAME="sunx86_510"
 			;;
 		alpha*-dec-osf4.0*)
 			AFS_SYSNAME="alpha_dux40"
@@ -630,21 +644,6 @@ else
 	esac
         AC_MSG_RESULT($AFS_SYSNAME)
 fi
-
-# KDUMP64 defaults to KDUMP for systems without a separate kdump64
-KDUMP64='${KDUMP}'
-KDUMP=kdump
-case $AFS_SYSNAME in
-	sgi_6?)
-		KDUMP=kdump.IP20;;
-	sun4x_5[[789]] | hp_ux11*)
-		KDUMP=kdump32
-		KDUMP64=kdump64;;
-	*linux*)
-		KDUMP='kdump-${LINUX_VERSION}';;
-esac
-AC_SUBST(KDUMP)
-AC_SUBST(KDUMP64)
 
 case $AFS_SYSNAME in
 	*_darwin*)

@@ -42,7 +42,7 @@ USVR_OBJS = \
 	$(OUT)\upserver.res
 
 $(UPSERVER):  $(USVR_OBJS) $(LIBS)
-	$(EXECONLINK)
+	$(EXECONLINK) dnsapi.lib
 	$(EXEPREP) 
 
 ############################################################################
@@ -57,7 +57,7 @@ UCLNT_OBJS = \
 	$(OUT)\upclient.res
 
 $(UPCLIENT):  $(UCLNT_OBJS)  $(LIBS)
-	$(EXECONLINK)
+	$(EXECONLINK) dnsapi.lib
 	$(EXEPREP) 
 
 ############################################################################

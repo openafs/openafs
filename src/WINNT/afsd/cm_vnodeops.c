@@ -34,8 +34,6 @@ extern void afsi_log(char *pattern, ...);
 
 unsigned int cm_mountRootGen = 0;
 
-char cm_sysName[100];
-
 /*
  * Case-folding array.  This was constructed by inspecting of SMBtrace output.
  * I do not know anything more about it.
@@ -943,24 +941,24 @@ done:
 int cm_ExpandSysName(char *inp, char *outp, long outSize)
 {
 	char *tp;
-        int prefixCount;
-        
-        tp = strrchr(inp, '@');
-        if (tp == NULL) return 0;		/* no @sys */
-        
-        if (strcmp(tp, "@sys") != 0) return 0;	/* no @sys */
-        
+    int prefixCount;
+
+    tp = strrchr(inp, '@');
+    if (tp == NULL) return 0;		/* no @sys */
+
+    if (strcmp(tp, "@sys") != 0) return 0;	/* no @sys */
+
 	/* caller just wants to know if this is a valid @sys type of name */
 	if (outp == NULL) return 1;
 
 	/* otherwise generate the properly expanded @sys name */
-        prefixCount = tp - inp;
-        
-        strncpy(outp, inp, prefixCount);	/* copy out "a." from "a.@sys" */
-        outp[prefixCount] = 0;			/* null terminate the "a." */
-        strcat(outp, cm_sysName);		/* append i386_nt40 */
-        return 1;
-}
+    prefixCount = tp - inp;
+
+    strncpy(outp, inp, prefixCount);	/* copy out "a." from "a.@sys" */
+    outp[prefixCount] = 0;			/* null terminate the "a." */
+    strcat(outp, cm_sysName);		/* append i386_nt40 */
+    return 1;
+}   
 
 long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
 	cm_req_t *reqp, cm_scache_t **outpScpp)
@@ -1012,6 +1010,7 @@ long cm_Lookup(cm_scache_t *dscp, char *namep, long flags, cm_user_t *userp,
                 return CM_ERROR_NOSUCHFILE;
         }
         else {  /* nonexistent dir on freelance root, so add it */
+			osi_Log1(afsd_logp,"cm_Lookup adding mount for non-existent directory: %s", namep);
             code = cm_FreelanceAddMount(namep, namep, "root.cell.",
 					&rock.fid);
             if (code < 0) {   /* add mount point failed, so give up */
@@ -1550,12 +1549,10 @@ long cm_TryBulkProc(cm_scache_t *scp, cm_dirEntry_t *dep, void *rockp,
 	// to be bulkstat-ed, instead, we call getSCache directly and under
 	// getSCache, it is handled specially.
 	if 	(cm_freelanceEnabled &&
-           tfid.cell==0x1 && tfid.volume==0x20000001 &&
+           tfid.cell==0x1 && tfid.volume==AFS_FAKE_ROOT_VOL_ID &&
 			   !(tfid.vnode==0x1 && tfid.unique==0x1) )
 	{
-#ifdef DEBUG
-	        afsi_log("   cm_trybulkproc going to call getscache");
-#endif
+        osi_Log0(afsd_logp, "cm_TryBulkProc Freelance calls cm_SCache on root.afs mountpoint");
 		return cm_GetSCache(&tfid, &tscp, NULL, NULL);
 	}
 #endif /* AFS_FREELANCE_CLIENT */

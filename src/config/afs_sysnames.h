@@ -46,8 +46,8 @@
 #define SYS_NAME_ID_hp_ux102	 	 414
 #define SYS_NAME_ID_hp_ux110	 	 415
 #define SYS_NAME_ID_hp_ux11i             416
-#define SYS_NAME_ID_ia64_hpux1122		 417
-#define SYS_NAME_ID_ia64_hpux1123		 418
+#define SYS_NAME_ID_ia64_hpux1122	 417
+#define SYS_NAME_ID_ia64_hpux1123	 418
 
 #define SYS_NAME_ID_mac2_51		 500
 #define SYS_NAME_ID_mac_aux10		 501
@@ -92,12 +92,14 @@
 #define SYS_NAME_ID_sun4x_57		 938
 #define SYS_NAME_ID_sun4x_58		 939
 #define SYS_NAME_ID_sun4x_59		 940
+#define SYS_NAME_ID_sun4x_510		 941
 
 /* Sigh. If I leave a gap here IBM will do this sequentially. If I don't
    they won't allocate sunx86 IDs at all. So leave a gap and pray. */
-#define SYS_NAME_ID_sunx86_57            950
-#define SYS_NAME_ID_sunx86_58            951
-#define SYS_NAME_ID_sunx86_59            952
+#define SYS_NAME_ID_sunx86_57		 950
+#define SYS_NAME_ID_sunx86_58		 951
+#define SYS_NAME_ID_sunx86_59		 952
+#define SYS_NAME_ID_sunx86_510		 953
 
 #define SYS_NAME_ID_vax_ul4		1003
 #define SYS_NAME_ID_vax_ul40		1004

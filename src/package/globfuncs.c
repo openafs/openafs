@@ -40,9 +40,7 @@
  *------------------------------------------------------------------------*/
 
 char *
-emalloc(size)
-     unsigned size;
-
+emalloc(unsigned int size)
 {				/*emalloc */
 
     char *malloc();
@@ -55,7 +53,6 @@ emalloc(size)
 	exit(ERR_OUTOFMEMORY);
     } else
 	return (ptr);
-
 }				/*emalloc */
 
 /*------------------------------------------------------------------------
@@ -80,10 +77,7 @@ emalloc(size)
  *------------------------------------------------------------------------*/
 
 char *
-ecalloc(nelem, size)
-     unsigned nelem;
-     unsigned size;
-
+ecalloc(unsigned int nelem, unsigned int size)
 {				/*ecalloc */
 
     char *calloc();
@@ -120,10 +114,7 @@ ecalloc(nelem, size)
  *------------------------------------------------------------------------*/
 
 FILE *
-efopen(filename, type)
-     char *filename;
-     char *type;
-
+efopen(char *filename, char *type)
 {				/*efopen */
 
     FILE *f;

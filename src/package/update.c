@@ -55,10 +55,7 @@ static FixReg();
 /* $$important: these will have to be fixed with an error recovery mechanism */
 
 int
-update(np, path)
-     CTREEPTR np;
-     char *path;
-
+update(CTREEPTR np, char *path)
 {				/*update */
 
     switch (np->type) {
@@ -94,11 +91,8 @@ update(np, path)
 
 }				/*update */
 
-static
-UpdateSock(np, path)
-     CTREEPTR np;
-     char *path;
-
+static void
+UpdateSock(CTREEPTR np, char *path)
 {				/*UpdateSock */
 
     (void)dochtyp(np, path);
@@ -106,11 +100,8 @@ UpdateSock(np, path)
 }				/*UpdateSock */
 
 
-static
-UpdateDev(np, path)
-     CTREEPTR np;
-     char *path;
-
+static void
+UpdateDev(CTREEPTR np, char *path)
 {				/*UpdateDev */
 
     register int ret;
@@ -167,11 +158,8 @@ UpdateDev(np, path)
 
 }				/*UpdateDev */
 
-static
-UpdatePipe(np, path)
-     CTREEPTR np;
-     char *path;
-
+static void
+UpdatePipe(CTREEPTR np, char *path)
 {				/*UpdatePipe */
 
     register int ret;
@@ -214,11 +202,8 @@ UpdatePipe(np, path)
 
 }				/*UpdatePipe */
 
-static
-UpdateLnk(np, path)
-     CTREEPTR np;
-     char *path;
-
+static void
+UpdateLnk(CTREEPTR np, char *path)
 {				/*UpdateLnk */
 
     register int ret;
@@ -260,11 +245,8 @@ UpdateLnk(np, path)
 }				/*UpdateLnk */
 
 
-static
-UpdateDir(np, path)
-     CTREEPTR np;
-     char *path;
-
+static void
+UpdateDir(CTREEPTR np, char *path)
 {				/*UpdateDir */
 
     register int ret;
@@ -295,11 +277,8 @@ UpdateDir(np, path)
 }				/*UpdateDir */
 
 
-static
-UpdateReg(np, path)
-     CTREEPTR np;
-     char *path;
-
+static void
+UpdateReg(CTREEPTR np, char *path)
 {				/*UpdateReg */
 
     register int ret;
@@ -343,13 +322,9 @@ UpdateReg(np, path)
  * reboot scenario is true), we return 0.
  */
 
-static
-dochtyp(np, path)
-     CTREEPTR np;
-     char *path;
-
+static int
+dochtyp(CTREEPTR np, char *path)
 {				/*dochtyp */
-
     if (lstat(path, &stb) < 0)
 	return -1;
 #ifdef	KFLAG
@@ -367,16 +342,11 @@ dochtyp(np, path)
 	rm(path);
 	return -1;
     }
-
 }				/*dochtyp */
 
-static
-dochmod(np, path)
-     CTREEPTR np;
-     char *path;
-
+static void
+dochmod(CTREEPTR np, char *path)
 {				/*dochmod */
-
     if ((np->flag & F_MODE) == 0)
 	return;
     if ((np->mode & ~S_IFMT) == (stb.st_mode & ~S_IFMT))
@@ -384,16 +354,11 @@ dochmod(np, path)
     loudonly_message("chmod %s %o", path, np->mode & ~S_IFMT);
     if (!opt_lazy && chmod(path, (int)np->mode & ~S_IFMT) < 0)
 	message("chmod %s; %m", path);
-
 }				/*dochmod */
 
-static
-dochown(np, path)
-     CTREEPTR np;
-     char *path;
-
+static void
+dochown(CTREEPTR np, char *path)
 {				/*dochown */
-
     if ((np->flag & F_UID) == 0)
 	np->uid = stb.st_uid;
     if ((np->flag & F_GID) == 0)
@@ -403,16 +368,11 @@ dochown(np, path)
     loudonly_message("chown %s %d %d", path, np->uid, np->gid);
     if (!opt_lazy && chown(path, np->uid, np->gid) < 0)
 	message("chown %s; %m", path);
-
 }				/*dochown */
 
-static
-dochtim(np, path)
-     CTREEPTR np;
-     char *path;
-
+static void
+dochtim(CTREEPTR np, char *path)
 {				/*dochtim */
-
     struct timeval tm[2];
 
     if (np->mtime == stb.st_mtime
@@ -429,28 +389,19 @@ dochtim(np, path)
     }
     if (!opt_lazy && utimes(path, tm) < 0)
 	message("utimes %s; %m", path);
-
 }				/*dochtim */
 
 static int
-FixLostFoundDir(path)
-     char *path;
-
+FixLostFoundDir(char *path)
 {				/*FixLostFoundDir */
-
     if (stb.st_size >= 3584)
 	return 0;
     return mklostfound(path);
-
 }				/*FixLostFoundDir */
 
 static int
-FixDir(np, path)
-     CTREEPTR np;
-     char *path;
-
+FixDir(CTREEPTR np, char *path)
 {				/*FixDir */
-
     register DIR *dp;
     register struct dirent *de;
     register char *endp;
@@ -477,16 +428,11 @@ FixDir(np, path)
     *--endp = 0;
     (void)closedir(dp);
     return 0;
-
 }				/*FixDir */
 
-static
-FixReg(np, path)
-     CTREEPTR np;
-     char *path;
-
+static int
+FixReg(CTREEPTR np, char *path)
 {				/*FixReg */
-
     char new[MAXPATHLEN], old[MAXPATHLEN], temp[MAXPATHLEN];
 
     if (!opt_reboot && (np->updtspec & U_REBOOT)) {
@@ -511,5 +457,4 @@ FixReg(np, path)
     if (np->updtspec & U_REBOOT)
 	status = status_reboot;
     return 0;
-
 }				/*FixReg */

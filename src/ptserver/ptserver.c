@@ -112,7 +112,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptserver.c,v 1.19 2003/11/29 22:08:15 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptserver.c,v 1.21 2004/06/23 14:27:42 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -165,12 +165,37 @@ char *pr_realmName;
 
 static struct afsconf_cell info;
 
+extern int prp_group_default;
+extern int prp_user_default;
+
 #include "AFS_component_version_number.c"
+
+int
+prp_access_mask(s)
+    char *s;
+{
+    int r;
+    if (*s >= '0' && *s <= '9') {
+	return strtol(s, NULL, 0);
+    }
+    r = 0;
+    while (*s) switch(*s++)
+    {
+    case 'S':	r |= PRP_STATUS_ANY; break;
+    case 's':	r |= PRP_STATUS_MEM; break;
+    case 'O':	r |= PRP_OWNED_ANY; break;
+    case 'M':	r |= PRP_MEMBER_ANY; break;
+    case 'm':	r |= PRP_MEMBER_MEM; break;
+    case 'A':	r |= PRP_ADD_ANY; break;
+    case 'a':	r |= PRP_ADD_MEM; break;
+    case 'r':	r |= PRP_REMOVE_MEM; break;
+    }
+    return r;
+}
 
 /* check whether caller is authorized to manage RX statistics */
 int
-pr_rxstat_userok(call)
-     struct rx_call *call;
+pr_rxstat_userok(struct rx_call *call)
 {
     return afsconf_SuperUser(prdir, call, NULL);
 }
@@ -267,6 +292,10 @@ main(int argc, char **argv)
 	    depthsg = atoi(argv[++a]);	/* Max search depth for supergroups */
 	}
 #endif
+	else if (strncmp(arg, "-default_access", alen) == 0) {
+	    prp_user_default = prp_access_mask(argv[++a]);
+	    prp_group_default = prp_access_mask(argv[++a]);
+	}
 	else if (strncmp(arg, "-enable_peer_stats", alen) == 0) {
 	    rx_enablePeerRPCStats();
 	} else if (strncmp(arg, "-enable_process_stats", alen) == 0) {
@@ -291,10 +320,12 @@ main(int argc, char **argv)
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-groupdepth <depth>] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
+		   "[-default_access default_user_access default_group_access] "
 		   "[-help]\n");
 #else /* AFS_NT40_ENV */
 	    printf("Usage: ptserver [-database <db path>] "
 		   "[-p <number of processes>] [-rebuild] "
+		   "[-default_access default_user_access default_group_access] "
 		   "[-groupdepth <depth>] " "[-help]\n");
 #endif
 #else
@@ -303,9 +334,11 @@ main(int argc, char **argv)
 		   "[-syslog[=FACILITY]] "
 		   "[-p <number of processes>] [-rebuild] "
 		   "[-enable_peer_stats] [-enable_process_stats] "
+		   "[-default_access default_user_access default_group_access] "
 		   "[-help]\n");
 #else /* AFS_NT40_ENV */
 	    printf("Usage: ptserver [-database <db path>] "
+		   "[-default_access default_user_access default_group_access] "
 		   "[-p <number of processes>] [-rebuild] " "[-help]\n");
 #endif
 #endif

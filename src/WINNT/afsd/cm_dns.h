@@ -13,7 +13,7 @@
 
 /* this function will continue to return cell server
    names for the given cell, ending in null */
-int getAFSServer(char *cellname, int *cellHosts, int *numServers, int *ttl);
+int getAFSServer(char *cellname, int *cellHostAddrs, char cellHostNames[][MAXHOSTCHARS], int *numServers, int *ttl);
 
 /* a supplement for the DJGPP gethostbyname ... which 
    never bothers calling a DNS server ... so this function

@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptuser.c,v 1.15 2003/12/11 19:06:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptuser.c,v 1.16 2004/06/23 14:27:42 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -64,10 +64,7 @@ static afs_int32 lastLevel;	/* security level pruclient, if any */
 static char *whoami = "libprot";
 
 afs_int32
-pr_Initialize(secLevel, confDir, cell)
-     IN afs_int32 secLevel;
-     IN char *confDir;
-     IN char *cell;
+pr_Initialize(IN afs_int32 secLevel, IN char *confDir, IN char *cell)
 {
     afs_int32 code;
     struct rx_connection *serverconns[MAXSERVERS];
@@ -212,7 +209,7 @@ pr_Initialize(secLevel, confDir, cell)
     return code;
 }
 
-
+int
 pr_End()
 {
     int code = 0;
@@ -226,9 +223,8 @@ pr_End()
 
 
 
-pr_CreateUser(name, id)
-     char name[PR_MAXNAMELEN];
-     afs_int32 *id;
+int
+pr_CreateUser(char name[PR_MAXNAMELEN], afs_int32 *id)
 {
     register afs_int32 code;
 
@@ -243,10 +239,8 @@ pr_CreateUser(name, id)
 
 }
 
-pr_CreateGroup(name, owner, id)
-     char name[PR_MAXNAMELEN];
-     char owner[PR_MAXNAMELEN];
-     afs_int32 *id;
+int 
+pr_CreateGroup(char name[PR_MAXNAMELEN], char owner[PR_MAXNAMELEN], afs_int32 *id)
 {
     register afs_int32 code;
     afs_int32 oid = 0;
@@ -270,8 +264,8 @@ pr_CreateGroup(name, owner, id)
     }
 }
 
-pr_Delete(name)
-     char *name;
+int
+pr_Delete(char *name)
 {
     register afs_int32 code;
     afs_int32 id;
@@ -286,8 +280,8 @@ pr_Delete(name)
     return code;
 }
 
-pr_DeleteByID(id)
-     afs_int32 id;
+int
+pr_DeleteByID(afs_int32 id)
 {
     register afs_int32 code;
 
@@ -295,9 +289,8 @@ pr_DeleteByID(id)
     return code;
 }
 
-pr_AddToGroup(user, group)
-     char *user;
-     char *group;
+int
+pr_AddToGroup(char *user, char *group)
 {
     register afs_int32 code;
     namelist lnames;
@@ -329,9 +322,8 @@ pr_AddToGroup(user, group)
     return code;
 }
 
-pr_RemoveUserFromGroup(user, group)
-     char *user;
-     char *group;
+int
+pr_RemoveUserFromGroup(char *user, char *group)
 {
     register afs_int32 code;
     namelist lnames;
@@ -364,9 +356,8 @@ pr_RemoveUserFromGroup(user, group)
 
 }
 
-pr_NameToId(names, ids)
-     namelist *names;
-     idlist *ids;
+int
+pr_NameToId(namelist *names, idlist *ids)
 {
     register afs_int32 code;
     register afs_int32 i;
@@ -377,9 +368,8 @@ pr_NameToId(names, ids)
     return code;
 }
 
-pr_SNameToId(name, id)
-     char name[PR_MAXNAMELEN];
-     afs_int32 *id;
+int
+pr_SNameToId(char name[PR_MAXNAMELEN], afs_int32 *id)
 {
     namelist lnames;
     idlist lids;
@@ -401,11 +391,8 @@ pr_SNameToId(name, id)
     return code;
 }
 
-
-
-pr_IdToName(ids, names)
-     idlist *ids;
-     namelist *names;
+int
+pr_IdToName(idlist *ids, namelist *names)
 {
     register afs_int32 code;
 
@@ -413,9 +400,8 @@ pr_IdToName(ids, names)
     return code;
 }
 
-pr_SIdToName(id, name)
-     afs_int32 id;
-     char name[PR_MAXNAMELEN];
+int
+pr_SIdToName(afs_int32 id, char name[PR_MAXNAMELEN])
 {
     namelist lnames;
     idlist lids;
@@ -436,11 +422,8 @@ pr_SIdToName(id, name)
     return code;
 }
 
-
-
-pr_GetCPS(id, CPS)
-     afs_int32 id;
-     prlist *CPS;
+int
+pr_GetCPS(afs_int32 id, prlist *CPS)
 {
     register afs_int32 code;
     afs_int32 over;
@@ -458,11 +441,8 @@ pr_GetCPS(id, CPS)
     return 0;
 }
 
-
-pr_GetCPS2(id, host, CPS)
-     afs_int32 id;
-     afs_int32 host;
-     prlist *CPS;
+int
+pr_GetCPS2(afs_int32 id, afs_int32 host, prlist *CPS)
 {
     register afs_int32 code;
     afs_int32 over;
@@ -480,9 +460,8 @@ pr_GetCPS2(id, host, CPS)
     return 0;
 }
 
-pr_GetHostCPS(host, CPS)
-     afs_int32 host;
-     prlist *CPS;
+int
+pr_GetHostCPS(afs_int32 host, prlist *CPS)
 {
     register afs_int32 code;
     afs_int32 over;
@@ -501,10 +480,8 @@ pr_GetHostCPS(host, CPS)
     return 0;
 }
 
-
-pr_ListMembers(group, lnames)
-     char *group;
-     namelist *lnames;
+int
+pr_ListMembers(char *group, namelist *lnames)
 {
     register afs_int32 code;
     afs_int32 gid;
@@ -518,10 +495,8 @@ pr_ListMembers(group, lnames)
     return code;
 }
 
-pr_ListOwned(oid, lnames, moreP)
-     afs_int32 oid;
-     namelist *lnames;
-     afs_int32 *moreP;
+int
+pr_ListOwned(afs_int32 oid, namelist *lnames, afs_int32 *moreP)
 {
     register afs_int32 code;
     prlist alist;
@@ -547,9 +522,8 @@ pr_ListOwned(oid, lnames, moreP)
     return PRSUCCESS;
 }
 
-pr_IDListMembers(gid, lnames)
-     afs_int32 gid;
-     namelist *lnames;
+int
+pr_IDListMembers(afs_int32 gid, namelist *lnames)
 {
     register afs_int32 code;
     prlist alist;
@@ -574,10 +548,8 @@ pr_IDListMembers(gid, lnames)
     return PRSUCCESS;
 }
 
-
-pr_ListEntry(id, aentry)
-     afs_int32 id;
-     struct prcheckentry *aentry;
+int
+pr_ListEntry(afs_int32 id, struct prcheckentry *aentry)
 {
     register afs_int32 code;
 
@@ -586,11 +558,7 @@ pr_ListEntry(id, aentry)
 }
 
 afs_int32
-pr_ListEntries(flag, startindex, nentries, entries, nextstartindex)
-     afs_int32 startindex;
-     afs_int32 *nentries;
-     struct prlistentries **entries;
-     afs_int32 *nextstartindex;
+pr_ListEntries(int flag, afs_int32 startindex, afs_int32 *nentries, struct prlistentries **entries, afs_int32 *nextstartindex)
 {
     afs_int32 code;
     prentries bulkentries;
@@ -609,11 +577,8 @@ pr_ListEntries(flag, startindex, nentries, entries, nextstartindex)
     return code;
 }
 
-pr_CheckEntryByName(name, id, owner, creator)
-     char *name;
-     afs_int32 *id;
-     char *owner;
-     char *creator;
+int
+pr_CheckEntryByName(char *name, afs_int32 *id, char *owner, char *creator)
 {
     /* struct prcheckentry returns other things, which aren't useful to show at this time. */
     register afs_int32 code;
@@ -637,11 +602,8 @@ pr_CheckEntryByName(name, id, owner, creator)
     return PRSUCCESS;
 }
 
-pr_CheckEntryById(name, id, owner, creator)
-     char *name;
-     afs_int32 id;
-     char *owner;
-     char *creator;
+int
+pr_CheckEntryById(char *name, afs_int32 id, char *owner, char *creator)
 {
     /* struct prcheckentry returns other things, which aren't useful to show at this time. */
     register afs_int32 code;
@@ -665,11 +627,8 @@ pr_CheckEntryById(name, id, owner, creator)
     return PRSUCCESS;
 }
 
-pr_ChangeEntry(oldname, newname, newid, newowner)
-     char *oldname;
-     char *newname;
-     afs_int32 *newid;
-     char *newowner;
+int
+pr_ChangeEntry(char *oldname, char *newname, afs_int32 *newid, char *newowner)
 {
     register afs_int32 code;
     afs_int32 id;
@@ -691,10 +650,8 @@ pr_ChangeEntry(oldname, newname, newid, newowner)
     return code;
 }
 
-pr_IsAMemberOf(uname, gname, flag)
-     char *uname;
-     char *gname;
-     afs_int32 *flag;
+int
+pr_IsAMemberOf(char *uname, char *gname, afs_int32 *flag)
 {
     register afs_int32 code;
     namelist lnames;
@@ -726,9 +683,8 @@ pr_IsAMemberOf(uname, gname, flag)
     return code;
 }
 
-
-pr_ListMaxUserId(mid)
-     afs_int32 *mid;
+int
+pr_ListMaxUserId(afs_int32 *mid)
 {
     register afs_int32 code;
     afs_int32 gid;
@@ -736,8 +692,8 @@ pr_ListMaxUserId(mid)
     return code;
 }
 
-pr_SetMaxUserId(mid)
-     afs_int32 mid;
+int
+pr_SetMaxUserId(afs_int32 mid)
 {
     register afs_int32 code;
     afs_int32 flag = 0;
@@ -745,8 +701,8 @@ pr_SetMaxUserId(mid)
     return code;
 }
 
-pr_ListMaxGroupId(mid)
-     afs_int32 *mid;
+int
+pr_ListMaxGroupId(afs_int32 *mid)
 {
     register afs_int32 code;
     afs_int32 id;
@@ -754,8 +710,8 @@ pr_ListMaxGroupId(mid)
     return code;
 }
 
-pr_SetMaxGroupId(mid)
-     afs_int32 mid;
+int
+pr_SetMaxGroupId(afs_int32 mid)
 {
     register afs_int32 code;
     afs_int32 flag = 0;
@@ -766,10 +722,7 @@ pr_SetMaxGroupId(mid)
 }
 
 afs_int32
-pr_SetFieldsEntry(id, mask, flags, ngroups, nusers)
-     afs_int32 id;
-     afs_int32 mask;
-     afs_int32 flags, ngroups, nusers;
+pr_SetFieldsEntry(afs_int32 id, afs_int32 mask, afs_int32 flags, afs_int32 ngroups, afs_int32 nusers)
 {
     register afs_int32 code;
 
@@ -779,10 +732,8 @@ pr_SetFieldsEntry(id, mask, flags, ngroups, nusers)
     return code;
 }
 
-
 int
-stolower(s)
-     char *s;
+stolower(char *s)
 {
     while (*s) {
 	if (isupper(*s))

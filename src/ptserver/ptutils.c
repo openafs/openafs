@@ -24,7 +24,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/ptutils.c,v 1.15 2004/04/18 06:13:50 kolya Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/ptutils.c,v 1.18 2004/06/23 15:01:04 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -62,6 +62,9 @@ extern int IDCmp();
 extern afs_int32 AddToEntry();
 static char *whoami = "ptserver";
 
+int prp_user_default = PRP_USER_DEFAULT;
+int prp_group_default = PRP_GROUP_DEFAULT;
+
 #if defined(SUPERGROUPS)
 
 #include "map.h"
@@ -91,10 +94,7 @@ struct map *sg_found;
 int (*pt_save_dbase_write) ();
 
 int
-pt_mywrite(tdb, fno, bp, pos, count)
-     struct ubik_dbase *tdb;
-     afs_int32 fno, pos, count;
-     char *bp;
+pt_mywrite(struct ubik_dbase *tdb, afs_int32 fno, char *bp, afs_int32 pos, afs_int32 count)
 {
     afs_uint32 headersize = ntohl(cheader.headerSize);
 
@@ -188,6 +188,7 @@ pt_mywrite(tdb, fno, bp, pos, count)
  *  just after ubik_ServerInit.
  */
 
+void 
 pt_hook_write()
 {
     extern struct ubik_dbase *ubik_dbase;
@@ -208,8 +209,7 @@ pt_hook_write()
  *   return one if name is OK and zero if name is bogus. */
 
 static int
-CorrectUserName(name)
-     char *name;
+CorrectUserName(char *name)
 {
     extern int pr_realmNameLen;
 
@@ -227,12 +227,10 @@ CorrectUserName(name)
  * rename, which then compares the correct name with the requested new name. */
 
 static afs_int32
-CorrectGroupName(ut, aname, cid, oid, cname)
-     struct ubik_trans *ut;
-     char aname[PR_MAXNAMELEN];	/* name for group */
-     afs_int32 cid;		/* caller id */
-     afs_int32 oid;		/* owner of group */
-     char cname[PR_MAXNAMELEN];	/* correct name for group */
+CorrectGroupName(struct ubik_trans *ut, char aname[PR_MAXNAMELEN],	/* name for group */
+		 afs_int32 cid,		/* caller id */
+		 afs_int32 oid,		/* owner of group */
+		 char cname[PR_MAXNAMELEN])	/* correct name for group */
 {
     afs_int32 code;
     int admin;
@@ -308,12 +306,10 @@ CorrectGroupName(ut, aname, cid, oid, cname)
 }
 
 int
-AccessOK(ut, cid, tentry, mem, any)
-     struct ubik_trans *ut;
-     afs_int32 cid;		/* caller id */
-     struct prentry *tentry;	/* object being accessed */
-     int mem;			/* check membership in aid, if group */
-     int any;			/* if set return true */
+AccessOK(struct ubik_trans *ut, afs_int32 cid,		/* caller id */
+	 struct prentry *tentry,	/* object being accessed */
+	 int mem,			/* check membership in aid, if group */
+	 int any)			/* if set return true */
 {
     afs_int32 flags;
     afs_int32 oid;
@@ -332,9 +328,9 @@ AccessOK(ut, cid, tentry, mem, any)
     }
     if (!(flags & PRACCESS)) {	/* provide default access */
 	if (flags & PRGRP)
-	    flags |= PRP_GROUP_DEFAULT;
+	    flags |= prp_group_default;
 	else
-	    flags |= PRP_USER_DEFAULT;
+	    flags |= prp_user_default;
     }
 
     if (flags & any)
@@ -360,14 +356,7 @@ AccessOK(ut, cid, tentry, mem, any)
 }
 
 afs_int32
-CreateEntry(at, aname, aid, idflag, flag, oid, creator)
-     struct ubik_trans *at;
-     char aname[PR_MAXNAMELEN];
-     afs_int32 *aid;
-     afs_int32 idflag;
-     afs_int32 flag;
-     afs_int32 oid;
-     afs_int32 creator;
+CreateEntry(struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid, afs_int32 idflag, afs_int32 flag, afs_int32 oid, afs_int32 creator)
 {
     /* get and init a new entry */
     afs_int32 code;
@@ -633,10 +622,7 @@ CreateEntry(at, aname, aid, idflag, flag, oid, creator)
  * entry if appropriate */
 
 afs_int32
-RemoveFromEntry(at, aid, bid)
-     struct ubik_trans *at;
-     afs_int32 aid;
-     afs_int32 bid;
+RemoveFromEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 bid)
 {
     afs_int32 code;
     struct prentry tentry;
@@ -724,11 +710,7 @@ RemoveFromEntry(at, aid, bid)
  * entry if appropriate */
 
 afs_int32
-ChangeIDEntry(at, aid, newid, bid)
-     register struct ubik_trans *at;
-     register afs_int32 aid;
-     register afs_int32 bid;
-     afs_int32 newid;
+ChangeIDEntry(register struct ubik_trans *at, register afs_int32 aid, afs_int32 newid, register afs_int32 bid)
 {
     register afs_int32 code;
     struct prentry tentry;
@@ -796,10 +778,7 @@ ChangeIDEntry(at, aid, newid, bid)
  * continuation entry if appropriate */
 
 afs_int32
-RemoveFromSGEntry(at, aid, bid)
-     register struct ubik_trans *at;
-     register afs_int32 aid;
-     register afs_int32 bid;
+RemoveFromSGEntry(register struct ubik_trans *at, register afs_int32 aid, register afs_int32 bid)
 {
     register afs_int32 code;
     struct prentry tentry;
@@ -897,10 +876,7 @@ RemoveFromSGEntry(at, aid, bid)
  * groups, putting groups owned by it on orphan chain, and freeing the space */
 
 afs_int32
-DeleteEntry(at, tentry, loc)
-     struct ubik_trans *at;
-     struct prentry *tentry;
-     afs_int32 loc;
+DeleteEntry(struct ubik_trans *at, struct prentry *tentry, afs_int32 loc)
 {
     afs_int32 code;
     struct contentry centry;
@@ -1051,11 +1027,7 @@ DeleteEntry(at, tentry, loc)
  * Note the entry is written out by this routine. */
 
 afs_int32
-AddToEntry(tt, entry, loc, aid)
-     struct ubik_trans *tt;
-     struct prentry *entry;
-     afs_int32 loc;
-     afs_int32 aid;
+AddToEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int32 aid)
 {
     afs_int32 code;
     afs_int32 i;
@@ -1168,11 +1140,7 @@ AddToEntry(tt, entry, loc, aid)
  * Note the entry is written out by this routine. */
 
 afs_int32
-AddToSGEntry(tt, entry, loc, aid)
-     struct ubik_trans *tt;
-     struct prentry *entry;
-     afs_int32 loc;
-     afs_int32 aid;
+AddToSGEntry(struct ubik_trans *tt, struct prentry *entry, afs_int32 loc, afs_int32 aid)
 {
     register afs_int32 code;
     afs_int32 i;
@@ -1281,10 +1249,7 @@ AddToSGEntry(tt, entry, loc, aid)
 #endif /* SUPERGROUPS */
 
 afs_int32
-AddToPRList(alist, sizeP, id)
-     prlist *alist;
-     int *sizeP;
-     afs_int32 id;
+AddToPRList(prlist *alist, int *sizeP, afs_int32 id)
 {
     char *tmp;
     int count;
@@ -1307,11 +1272,7 @@ AddToPRList(alist, sizeP, id)
 }
 
 afs_int32
-GetList(at, tentry, alist, add)
-     struct ubik_trans *at;
-     struct prentry *tentry;
-     prlist *alist;
-     afs_int32 add;
+GetList(struct ubik_trans *at, struct prentry *tentry, prlist *alist, afs_int32 add)
 {
     afs_int32 code;
     afs_int32 i;
@@ -1386,12 +1347,7 @@ GetList(at, tentry, alist, add)
 
 
 afs_int32
-GetList2(at, tentry, tentry2, alist, add)
-     struct ubik_trans *at;
-     struct prentry *tentry;
-     struct prentry *tentry2;
-     prlist *alist;
-     afs_int32 add;
+GetList2(struct ubik_trans *at, struct prentry *tentry, struct prentry *tentry2, prlist *alist, afs_int32 add)
 {
     afs_int32 code = 0;
     afs_int32 i;
@@ -1499,12 +1455,7 @@ GetList2(at, tentry, tentry2, alist, add)
 #if defined(SUPERGROUPS)
 
 afs_int32
-GetListSG2(at, gid, alist, sizeP, depth)
-     struct ubik_trans *at;
-     afs_int32 gid;
-     prlist *alist;
-     afs_int32 depth;
-     afs_int32 *sizeP;
+GetListSG2(struct ubik_trans *at, afs_int32 gid, prlist *alist, afs_int32 *sizeP, afs_int32 depth)
 {
     register afs_int32 code;
     struct prentry tentry;
@@ -1620,10 +1571,7 @@ GetListSG2(at, gid, alist, sizeP, depth)
 }
 
 afs_int32
-GetSGList(at, tentry, alist)
-     struct ubik_trans *at;
-     struct prentry *tentry;
-     prlist *alist;
+GetSGList(struct ubik_trans *at, struct prentry *tentry, prlist *alist)
 {
     register afs_int32 code;
     afs_int32 i;
@@ -1677,10 +1625,7 @@ GetSGList(at, tentry, alist)
 #endif /* SUPERGROUPS */
 
 afs_int32
-GetOwnedChain(ut, next, alist)
-     struct ubik_trans *ut;
-     afs_int32 *next;
-     prlist *alist;
+GetOwnedChain(struct ubik_trans *ut, afs_int32 *next, prlist *alist)
 {
     afs_int32 code;
     struct prentry tentry;
@@ -1711,10 +1656,7 @@ GetOwnedChain(ut, next, alist)
 }
 
 afs_int32
-GetMax(at, uid, gid)
-     struct ubik_trans *at;
-     afs_int32 *uid;
-     afs_int32 *gid;
+GetMax(struct ubik_trans *at, afs_int32 *uid, afs_int32 *gid)
 {
     *uid = ntohl(cheader.maxID);
     *gid = ntohl(cheader.maxGroup);
@@ -1722,10 +1664,7 @@ GetMax(at, uid, gid)
 }
 
 afs_int32
-SetMax(at, id, flag)
-     struct ubik_trans *at;
-     afs_int32 id;
-     afs_int32 flag;
+SetMax(struct ubik_trans *at, afs_int32 id, afs_int32 flag)
 {
     afs_int32 code;
     if (flag & PRGRP) {
@@ -1747,8 +1686,7 @@ SetMax(at, id, flag)
 }
 
 afs_int32
-read_DbHeader(tt)
-     struct ubik_trans *tt;
+read_DbHeader(struct ubik_trans *tt)
 {
     afs_int32 code;
 
@@ -1904,13 +1842,7 @@ Initdb()
 }
 
 afs_int32
-ChangeEntry(at, aid, cid, name, oid, newid)
-     struct ubik_trans *at;
-     afs_int32 aid;
-     afs_int32 cid;
-     char *name;
-     afs_int32 oid;
-     afs_int32 newid;
+ChangeEntry(struct ubik_trans *at, afs_int32 aid, afs_int32 cid, char *name, afs_int32 oid, afs_int32 newid)
 {
     afs_int32 code;
     afs_int32 i, nptr, pos;
@@ -2243,10 +2175,8 @@ inRange(struct prentry *cellEntry, afs_int32 aid)
 
 }
 
-AddAuthGroup(tentry, alist, size)
-     struct prentry *tentry;
-     prlist *alist;
-     afs_int32 *size;
+int
+AddAuthGroup(struct prentry *tentry, prlist *alist, afs_int32 *size)
 {
     if (!(strchr(tentry->name, '@')))
 	return (AddToPRList(alist, size, AUTHUSERID));

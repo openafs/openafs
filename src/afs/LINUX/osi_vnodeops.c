@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.74 2004/04/21 02:20:23 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_vnodeops.c,v 1.78 2004/06/24 17:28:03 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -464,8 +464,9 @@ afs_linux_vma_close(struct vm_area_struct *vmap)
 		(void)afs_close(vcp, vmap->vm_file->f_flags, credp);
 		/* only decrement the execsOrWriters flag if this is not a
 		 * writable file. */
-		if (!(vmap->vm_file->f_flags & (FWRITE | FTRUNC)))
-		    vcp->execsOrWriters--;
+		if (!(vcp->states & CRO) )
+		    if (! (vmap->vm_file->f_flags & (FWRITE | FTRUNC)))
+			vcp->execsOrWriters--;
 		vcp->states &= ~CMAPPED;
 		crfree(credp);
 	    } else if ((vmap->vm_file->f_flags & (FWRITE | FTRUNC)))
@@ -546,7 +547,8 @@ afs_linux_mmap(struct file *fp, struct vm_area_struct *vmap)
 
 	/* Add an open reference on the first mapping. */
 	if (vcp->mapcnt == 0) {
-	    vcp->execsOrWriters++;
+	    if (!(vcp->states & CRO))
+		vcp->execsOrWriters++;
 	    vcp->opens++;
 	    vcp->states |= CMAPPED;
 	}
@@ -850,13 +852,15 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     struct vcache *lookupvcp = NULL;
     int code, bad_dentry = 1;
     struct sysname_info sysState;
-    struct vcache *vcp = ITOAFS(dp->d_inode);
-    struct vcache *parentvcp = ITOAFS(dp->d_parent->d_inode);
+    struct vcache *vcp, *parentvcp;
+
+    sysState.allocked = 0;
 
     AFS_GLOCK();
     lock_kernel();
 
-    sysState.allocked = 0;
+    vcp = ITOAFS(dp->d_inode);
+    parentvcp = ITOAFS(dp->d_parent->d_inode);
 
     /* If it's a negative dentry, then there's nothing to do. */
     if (!vcp || !parentvcp)
@@ -907,14 +911,14 @@ afs_linux_dentry_revalidate(struct dentry *dp)
     if (sysState.allocked)
 	osi_FreeLargeSpace(name);
 
-    AFS_GUNLOCK();
-    crfree(credp);
-
     if (bad_dentry) {
 	shrink_dcache_parent(dp);
 	d_drop(dp);
     }
+
     unlock_kernel();
+    AFS_GUNLOCK();
+    crfree(credp);
 
     return !bad_dentry;
 }
@@ -1138,7 +1142,7 @@ afs_linux_unlink(struct inode *dip, struct dentry *dp)
     if (!code)
 	d_drop(dp);
 #if defined(AFS_LINUX26_ENV)
-    lock_kernel();
+    unlock_kernel();
 #endif
     AFS_GUNLOCK();
     crfree(credp);
@@ -1380,7 +1384,7 @@ afs_linux_readpage(struct file *fp, struct page *pp)
     uio_t tuio;
     struct iovec iovec;
     struct inode *ip = FILE_INODE(fp);
-    int cnt = atomic_read(&pp->count);
+    int cnt = page_count(pp);
     struct vcache *avc = ITOAFS(ip);
 
     AFS_GLOCK();
@@ -1525,7 +1529,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
 
     credp = crref();
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
-	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, atomic_read(&pp->count),
+	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
 	       ICL_TYPE_INT32, 99999);
 
     setup_uio(&tuio, &iovec, buffer, base, count, UIO_WRITE, AFS_UIOSYS);
@@ -1547,7 +1551,7 @@ afs_linux_writepage_sync(struct inode *ip, struct page *pp,
     code = code ? -code : count - tuio.uio_resid;
 
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
-	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, atomic_read(&pp->count),
+	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
 	       ICL_TYPE_INT32, code);
 
     crfree(credp);
@@ -1586,7 +1590,7 @@ afs_linux_updatepage(struct file *fp, struct page *pp, unsigned long offset,
     credp = crref();
     AFS_GLOCK();
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
-	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, atomic_read(&pp->count),
+	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
 	       ICL_TYPE_INT32, 99999);
     setup_uio(&tuio, &iovec, page_addr + offset,
 	      (afs_offs_t) (pageoff(pp) + offset), count, UIO_WRITE,
@@ -1598,7 +1602,7 @@ afs_linux_updatepage(struct file *fp, struct page *pp, unsigned long offset,
 
     code = code ? -code : count - tuio.uio_resid;
     afs_Trace4(afs_iclSetp, CM_TRACE_UPDATEPAGE, ICL_TYPE_POINTER, vcp,
-	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, atomic_read(&pp->count),
+	       ICL_TYPE_POINTER, pp, ICL_TYPE_INT32, page_count(pp),
 	       ICL_TYPE_INT32, code);
 
     AFS_GUNLOCK();

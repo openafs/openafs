@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/UKERNEL/afs_usrops.c,v 1.26 2004/05/10 13:51:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/UKERNEL/afs_usrops.c,v 1.27 2004/05/20 19:15:04 kolya Exp $");
 
 
 #ifdef	UKERNEL
@@ -2751,6 +2751,10 @@ uafs_open_r(char *path, int flags, int mode)
     if (flags & (O_WRONLY | O_RDWR)) {
 	openFlags |= FWRITE;
     }
+    if ((openFlags & (FREAD | FWRITE)) == 0) {
+	/* O_RDONLY is 0, so ... */
+	openFlags |= FREAD;
+    }
 
     /*
      * Truncate if necessary
@@ -3064,7 +3068,6 @@ uafs_fstat_r(int fd, struct stat *buf)
 	return -1;
     }
     code = uafs_GetAttr(vp, buf);
-    VN_RELE(vp);
     if (code) {
 	errno = code;
 	return -1;

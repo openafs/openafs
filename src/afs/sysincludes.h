@@ -64,6 +64,10 @@
 #include <linux/backing-dev.h>
 #include <linux/pagemap.h>
 #include <linux/namei.h>
+#ifdef STRUCT_INODE_HAS_I_SECURITY
+#include <linux/security.h>
+#endif
+#include <linux/suspend.h>
 #endif
 /* Avoid conflicts with coda overloading AFS type namespace. Must precede
  * inclusion of uaccess.h.
@@ -180,6 +184,10 @@ typedef unsigned short etap_event_t;
 #include "h/vfs.h"		/* stops SUN56 socketvar.h warnings */
 #include "h/stropts.h"		/* stops SUN56 socketvar.h warnings */
 #include "h/stream.h"		/* stops SUN56 socketvar.h errors */
+#endif
+
+#ifdef AFS_SUN510_ENV
+#include <sys/cred_impl.h>
 #endif
 
 #include "h/socket.h"

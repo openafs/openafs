@@ -44,12 +44,9 @@ int opt_debug = 1;		/*Debugging output enabled? */
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
-
+int 
+main(int argc, char **argv)
 {				/*main */
-
     int code;			/*Return code */
 
     if (argc > 1)
@@ -62,7 +59,6 @@ main(argc, argv)
 	       test_linecounter);
     if (yyin != stdin)
 	fclose(yyin);
-
 }				/*main */
 
 /*------------------------------------------------------------------------
@@ -91,15 +87,9 @@ main(argc, argv)
  *------------------------------------------------------------------------*/
 
 int
-AddRegEntry(f, p, o, m, u)
-     char *f;
-     PROTOTYPE p;
-     OWNER o;
-     MODE m;
-     u_short u;
+AddRegEntry(char *f, PROTOTYPE p, OWNER o, MODE m, u_short u)
 
 {				/*AddRegEntry */
-
     printf("F");
     echo_updateoptions(u);
     printf("%s", f);
@@ -107,7 +97,6 @@ AddRegEntry(f, p, o, m, u)
     echo_ownerinfo(o);
     echo_modeinfo(m);
     return (0);
-
 }				/*AddRegEntry */
 
 /*------------------------------------------------------------------------
@@ -136,13 +125,7 @@ AddRegEntry(f, p, o, m, u)
  *------------------------------------------------------------------------*/
 
 int
-AddDirEntry(f, p, o, m, u)
-     char *f;
-     PROTOTYPE p;
-     OWNER o;
-     MODE m;
-     u_short u;
-
+AddDirEntry(char *f, PROTOTYPE p, OWNER o, MODE m, u_short u)
 {				/*AddDirEntry */
 
     printf("D");
@@ -181,15 +164,8 @@ AddDirEntry(f, p, o, m, u)
  *------------------------------------------------------------------------*/
 
 int
-AddLnkEntry(f, p, o, m, u)
-     char *f;
-     PROTOTYPE p;
-     OWNER o;
-     MODE m;
-     u_short u;
-
+AddLnkEntry(char *f, PROTOTYPE p, OWNER o, MODE m, u_short u)
 {				/*AddLnkEntry */
-
     printf("L");
     echo_updateoptions(u);
     printf("%s", f);
@@ -197,7 +173,6 @@ AddLnkEntry(f, p, o, m, u)
     echo_ownerinfo(o);
     echo_modeinfo(m);
     return (0);
-
 }				/*AddLnkEntry */
 
 /*------------------------------------------------------------------------
@@ -226,15 +201,8 @@ AddLnkEntry(f, p, o, m, u)
  *------------------------------------------------------------------------*/
 
 int
-AddBlkEntry(f, p, o, m, u)
-     char *f;
-     PROTOTYPE p;
-     OWNER o;
-     MODE m;
-     u_short u;
-
+AddBlkEntry(char *f, PROTOTYPE p, OWNER o, MODE m, u_short u)
 {				/*AddBlkEntry */
-
     printf("B");
     echo_updateoptions(u);
     printf("%s", f);
@@ -242,7 +210,6 @@ AddBlkEntry(f, p, o, m, u)
     echo_ownerinfo(o);
     echo_modeinfo(m);
     return (0);
-
 }				/*AddBlkEntry */
 
 /*------------------------------------------------------------------------
@@ -271,15 +238,8 @@ AddBlkEntry(f, p, o, m, u)
  *------------------------------------------------------------------------*/
 
 int
-AddChrEntry(f, p, o, m, u)
-     char *f;
-     PROTOTYPE p;
-     OWNER o;
-     MODE m;
-     u_short u;
-
+AddChrEntry(char *f, PROTOTYPE p, OWNER o, MODE m, u_short u)
 {				/*AddChrEntry */
-
     printf("C");
     echo_updateoptions(u);
     printf("%s", f);
@@ -287,7 +247,6 @@ AddChrEntry(f, p, o, m, u)
     echo_ownerinfo(o);
     echo_modeinfo(m);
     return (0);
-
 }				/*AddChrEntry */
 
 /*------------------------------------------------------------------------
@@ -312,9 +271,7 @@ AddChrEntry(f, p, o, m, u)
  *------------------------------------------------------------------------*/
 
 int
-AddSktEntry(f)
-     char *f;
-
+AddSktEntry(char *f)
 {				/*AddSktEntry */
 
     printf("S");
@@ -348,15 +305,8 @@ AddSktEntry(f)
  *------------------------------------------------------------------------*/
 
 int
-AddPipeEntry(f, p, o, m, u)
-     char *f;
-     PROTOTYPE p;
-     OWNER o;
-     MODE m;
-     u_short u;
-
+AddPipeEntry(char *f, PROTOTYPE p, OWNER o, MODE m, u_short u)
 {				/*AddPipeEntry */
-
     printf("P");
     echo_updateoptions(u);
     printf("\t%s\n", f);
@@ -364,7 +314,6 @@ AddPipeEntry(f, p, o, m, u)
     echo_ownerinfo(o);
     echo_modeinfo(m);
     return (0);
-
 }				/*AddPipeEntry */
 
 /*------------------------------------------------------------------------
@@ -388,11 +337,8 @@ AddPipeEntry(f, p, o, m, u)
  *------------------------------------------------------------------------*/
 
 int
-echo_updateoptions(u)
-     u_short u;
-
+echo_updateoptions(u_short u)
 {				/*echo_updateoptions */
-
     if (u & U_LOSTFOUND)
 	printf("X");
     if (u & U_RMEXTRA)
@@ -407,7 +353,6 @@ echo_updateoptions(u)
 	printf("Q");
     printf("\t");
     return (0);
-
 }				/*echo_updateoptions */
 
 /*------------------------------------------------------------------------
@@ -431,11 +376,8 @@ echo_updateoptions(u)
  *------------------------------------------------------------------------*/
 
 int
-echo_prototypeinfo(p)
-     PROTOTYPE p;
-
+echo_prototypeinfo(PROTOTYPE p)
 {				/*echo_prototypeinfo */
-
     switch (p.flag) {
     case P_FILE:
 	printf("\t%s", p.info.path);
@@ -454,7 +396,6 @@ echo_prototypeinfo(p)
 	printf("\t[Neither file nor device]");
 	break;
     }
-
 }				/*echo_prototypeinfo */
 
 /*------------------------------------------------------------------------
@@ -478,11 +419,8 @@ echo_prototypeinfo(p)
  *------------------------------------------------------------------------*/
 
 int
-echo_ownerinfo(o)
-     OWNER o;
-
+echo_ownerinfo(OWNER o)
 {				/*echo_ownerinfo */
-
     if (o.username != NULL)
 	printf("\t%s", o.username);
     else
@@ -491,7 +429,6 @@ echo_ownerinfo(o)
 	printf("\t%s", o.groupname);
     else
 	printf("\t[No group info]");
-
 }				/*echo_ownerinfo */
 
 /*------------------------------------------------------------------------
@@ -515,17 +452,13 @@ echo_ownerinfo(o)
  *------------------------------------------------------------------------*/
 
 int
-echo_modeinfo(m)
-     MODE m;
-
+echo_modeinfo(MODE m)
 {				/*echo_modeinfo */
-
     if (m.inherit_flag != TRUE)
 	printf("\t%o", m.modeval);
     else
 	printf("\t[Inherited mode]");
     printf("\n");
-
 }				/*echo_modeinfo */
 
 /*------------------------------------------------------------------------
@@ -558,16 +491,8 @@ echo_modeinfo(m)
  *------------------------------------------------------------------------*/
 
 int
-testAddEntry(a_ftype, a_updspecs, a_filename, a_proto, a_owner, a_mode)
-     u_short a_ftype;
-     u_short a_updspecs;
-     char *a_filename;
-     PROTOTYPE a_proto;
-     OWNER a_owner;
-     MODE a_mode;
-
+testAddEntry(u_short a_ftype, u_short a_updspecs, char *a_filename, PROTOTYPE a_proto, OWNER a_owner, MODE a_mode)
 {				/*testAddEntry */
-
     switch (a_ftype) {
     case S_IFREG:		/*Regular file */
 	AddRegEntry(a_filename, a_proto, a_owner, a_mode, a_updspecs);
@@ -606,5 +531,4 @@ testAddEntry(a_ftype, a_updspecs, a_filename, a_proto, a_owner, a_mode)
 	break;
 
     }				/*switch a_ftype */
-
 }				/*testAddEntry */

@@ -52,12 +52,9 @@ static char path3[MAXPATHLEN + 1];	/* $$get rid of this */
  *	May exit from package.
  *------------------------------------------------------------------------*/
 
-static
-CheckMount(path)
-     char *path;
-
+static void
+CheckMount(char *path)
 {				/*CheckMount */
-
     struct stat stb;		/*Parent's stat block */
     struct stat stb2;		/*Child's stat block */
     char dir[MAXPATHLEN];	/*Pathname of candidate mount point */
@@ -122,7 +119,6 @@ CheckMount(path)
      * verbose, tell everyone.
      */
     verbose_message("Found Unix mountpoint %s", dir);
-
 }				/*CheckMount */
 
 /*------------------------------------------------------------------------
@@ -149,10 +145,7 @@ CheckMount(path)
  *------------------------------------------------------------------------*/
 
 int
-check(np, path)
-     register CTREEPTR np;
-     char *path;
-
+check(register CTREEPTR np, char *path)
 {				/*check */
 
     register CTREEPTR np2;	/*Node ptr for np's child */
@@ -326,5 +319,4 @@ check(np, path)
      */
     (void)closedir(dp);
     return (retval);
-
 }				/*check */

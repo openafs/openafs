@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/utils.c,v 1.14 2003/11/23 04:53:37 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/utils.c,v 1.15 2004/06/23 14:27:42 shadow Exp $");
 
 #include <sys/types.h>
 #include <lock.h>
@@ -40,16 +40,14 @@ afs_int32 IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid, afs_int32 gid,
 #endif
 
 afs_int32
-IDHash(x)
-     afs_int32 x;
+IDHash(afs_int32 x)
 {
     /* returns hash bucket for x */
     return ((abs(x)) % HASHSIZE);
 }
 
 afs_int32
-NameHash(aname)
-     register unsigned char *aname;
+NameHash(register unsigned char *aname)
 {
     /* returns hash bucket for aname */
     register unsigned int hash = 0;
@@ -62,12 +60,7 @@ NameHash(aname)
 
 
 afs_int32
-pr_Write(tt, afd, pos, buff, len)
-     struct ubik_trans *tt;
-     afs_int32 afd;
-     afs_int32 pos;
-     char *buff;
-     afs_int32 len;
+pr_Write(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, char *buff, afs_int32 len)
 {
     /* package up seek and write into one procedure for ease of use */
     afs_int32 code;
@@ -84,12 +77,7 @@ pr_Write(tt, afd, pos, buff, len)
 }
 
 afs_int32
-pr_Read(tt, afd, pos, buff, len)
-     struct ubik_trans *tt;
-     afs_int32 afd;
-     afs_int32 pos;
-     char *buff;
-     afs_int32 len;
+pr_Read(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, char *buff, afs_int32 len)
 {
     /* same thing for read */
     afs_int32 code;
@@ -100,11 +88,8 @@ pr_Read(tt, afd, pos, buff, len)
     return code;
 }
 
-pr_WriteEntry(tt, afd, pos, tentry)
-     struct ubik_trans *tt;
-     afs_int32 afd;
-     afs_int32 pos;
-     struct prentry *tentry;
+int
+pr_WriteEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct prentry *tentry)
 {
     afs_int32 code;
     register afs_int32 i;
@@ -144,11 +129,8 @@ pr_WriteEntry(tt, afd, pos, tentry)
     return (code);
 }
 
-pr_ReadEntry(tt, afd, pos, tentry)
-     struct ubik_trans *tt;
-     afs_int32 afd;
-     afs_int32 pos;
-     struct prentry *tentry;
+int
+pr_ReadEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct prentry *tentry)
 {
     afs_int32 code;
     register afs_int32 i;
@@ -193,11 +175,8 @@ pr_ReadEntry(tt, afd, pos, tentry)
     return (code);
 }
 
-pr_WriteCoEntry(tt, afd, pos, tentry)
-     struct ubik_trans *tt;
-     afs_int32 afd;
-     afs_int32 pos;
-     struct contentry *tentry;
+int
+pr_WriteCoEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct contentry *tentry)
 {
     afs_int32 code;
     register afs_int32 i;
@@ -217,11 +196,8 @@ pr_WriteCoEntry(tt, afd, pos, tentry)
     return (code);
 }
 
-pr_ReadCoEntry(tt, afd, pos, tentry)
-     struct ubik_trans *tt;
-     afs_int32 afd;
-     afs_int32 pos;
-     struct contentry *tentry;
+int
+pr_ReadCoEntry(struct ubik_trans *tt, afs_int32 afd, afs_int32 pos, struct contentry *tentry)
 {
     afs_int32 code;
     register afs_int32 i;
@@ -250,8 +226,7 @@ pr_ReadCoEntry(tt, afd, pos, tentry)
  * new entry */
 
 afs_int32
-AllocBlock(at)
-     register struct ubik_trans *at;
+AllocBlock(register struct ubik_trans *at)
 {
     register afs_int32 code;
     afs_int32 temp;
@@ -284,9 +259,7 @@ AllocBlock(at)
 }
 
 afs_int32
-FreeBlock(at, pos)
-     register struct ubik_trans *at;
-     afs_int32 pos;
+FreeBlock(register struct ubik_trans *at, afs_int32 pos)
 {
     /* add a block of storage to the free list */
     register afs_int32 code;
@@ -307,9 +280,7 @@ FreeBlock(at, pos)
 }
 
 afs_int32
-FindByID(at, aid)
-     register struct ubik_trans *at;
-     afs_int32 aid;
+FindByID(register struct ubik_trans *at, afs_int32 aid)
 {
     /* returns address of entry if found, 0 otherwise */
     register afs_int32 code;
@@ -342,13 +313,8 @@ FindByID(at, aid)
     return 0;
 }
 
-
-
 afs_int32
-FindByName(at, aname, tentryp)
-     register struct ubik_trans *at;
-     char aname[PR_MAXNAMELEN];
-     struct prentry *tentryp;
+FindByName(register struct ubik_trans *at, char aname[PR_MAXNAMELEN], struct prentry *tentryp)
 {
     /* ditto */
     register afs_int32 code;
@@ -379,10 +345,7 @@ FindByName(at, aname, tentryp)
 }
 
 afs_int32
-AllocID(at, flag, aid)
-     register struct ubik_trans *at;
-     afs_int32 flag;
-     afs_int32 *aid;
+AllocID(register struct ubik_trans *at, afs_int32 flag, afs_int32 *aid)
 {
     /* allocs an id from the proper area of address space, based on flag */
     register afs_int32 code = 1;
@@ -441,10 +404,7 @@ AllocID(at, flag, aid)
 }
 
 afs_int32
-IDToName(at, aid, aname)
-     register struct ubik_trans *at;
-     afs_int32 aid;
-     char aname[PR_MAXNAMELEN];
+IDToName(register struct ubik_trans *at, afs_int32 aid, char aname[PR_MAXNAMELEN])
 {
     afs_int32 temp;
     struct prentry tentry;
@@ -461,10 +421,7 @@ IDToName(at, aid, aname)
 }
 
 afs_int32
-NameToID(at, aname, aid)
-     register struct ubik_trans *at;
-     char aname[PR_MAXNAMELEN];
-     afs_int32 *aid;
+NameToID(register struct ubik_trans *at, char aname[PR_MAXNAMELEN], afs_int32 *aid)
 {
     afs_int32 temp;
     struct prentry tentry;
@@ -477,9 +434,7 @@ NameToID(at, aname, aid)
 }
 
 int
-IDCmp(a, b)
-     afs_int32 *a;
-     afs_int32 *b;
+IDCmp(afs_int32 *a, afs_int32 *b)
 {
     /* used to sort CPS's so that comparison with acl's is easier */
     if (*a > *b) {
@@ -492,10 +447,7 @@ IDCmp(a, b)
 }
 
 afs_int32
-RemoveFromIDHash(tt, aid, loc)
-     struct ubik_trans *tt;
-     afs_int32 aid;
-     afs_int32 *loc;		/* ??? in case ID hashed twice ??? */
+RemoveFromIDHash(struct ubik_trans *tt, afs_int32 aid, afs_int32 *loc)		/* ??? in case ID hashed twice ??? */
 {
     /* remove entry designated by aid from id hash table */
     register afs_int32 code;
@@ -546,10 +498,7 @@ RemoveFromIDHash(tt, aid, loc)
 }
 
 afs_int32
-AddToIDHash(tt, aid, loc)
-     struct ubik_trans *tt;
-     afs_int32 aid;
-     afs_int32 loc;		/* ??? */
+AddToIDHash(struct ubik_trans *tt, afs_int32 aid, afs_int32 loc)
 {
     /* add entry at loc designated by aid to id hash table */
     register afs_int32 code;
@@ -577,10 +526,7 @@ AddToIDHash(tt, aid, loc)
 }
 
 afs_int32
-RemoveFromNameHash(tt, aname, loc)
-     struct ubik_trans *tt;
-     char *aname;
-     afs_int32 *loc;
+RemoveFromNameHash(struct ubik_trans *tt, char *aname, afs_int32 *loc)
 {
     /* remove from name hash */
     register afs_int32 code;
@@ -629,10 +575,7 @@ RemoveFromNameHash(tt, aname, loc)
 }
 
 afs_int32
-AddToNameHash(tt, aname, loc)
-     struct ubik_trans *tt;
-     char *aname;
-     afs_int32 loc;
+AddToNameHash(struct ubik_trans *tt, char *aname, afs_int32 loc)
 {
     /* add to name hash */
     register afs_int32 code;
@@ -658,10 +601,7 @@ AddToNameHash(tt, aname, loc)
 }
 
 afs_int32
-AddToOwnerChain(at, gid, oid)
-     struct ubik_trans *at;
-     afs_int32 gid;
-     afs_int32 oid;
+AddToOwnerChain(struct ubik_trans *at, afs_int32 gid, afs_int32 oid)
 {
     /* add entry designated by gid to owner chain of entry designated by oid */
     register afs_int32 code;
@@ -699,10 +639,7 @@ AddToOwnerChain(at, gid, oid)
 /* RemoveFromOwnerChain - remove gid from owner chain for oid */
 
 afs_int32
-RemoveFromOwnerChain(at, gid, oid)
-     struct ubik_trans *at;
-     afs_int32 gid;
-     afs_int32 oid;
+RemoveFromOwnerChain(struct ubik_trans *at, afs_int32 gid, afs_int32 oid)
 {
     register afs_int32 code;
     afs_int32 nptr;
@@ -761,9 +698,7 @@ RemoveFromOwnerChain(at, gid, oid)
 /* AddToOrphan - add gid to orphan list, as it's owner has died */
 
 afs_int32
-AddToOrphan(at, gid)
-     struct ubik_trans *at;
-     afs_int32 gid;
+AddToOrphan(struct ubik_trans *at, afs_int32 gid)
 {
     register afs_int32 code;
     afs_int32 loc;
@@ -787,9 +722,7 @@ AddToOrphan(at, gid)
 }
 
 afs_int32
-RemoveFromOrphan(at, gid)
-     struct ubik_trans *at;
-     afs_int32 gid;
+RemoveFromOrphan(struct ubik_trans *at, afs_int32 gid)
 {
     /* remove gid from the orphan list */
     register afs_int32 code;
@@ -844,10 +777,7 @@ RemoveFromOrphan(at, gid)
 }
 
 afs_int32
-IsOwnerOf(at, aid, gid)
-     struct ubik_trans *at;
-     afs_int32 aid;
-     afs_int32 gid;
+IsOwnerOf(struct ubik_trans *at, afs_int32 aid, afs_int32 gid)
 {
     /* returns 1 if aid is the owner of gid, 0 otherwise */
     register afs_int32 code;
@@ -866,9 +796,7 @@ IsOwnerOf(at, aid, gid)
 }
 
 afs_int32
-OwnerOf(at, gid)
-     struct ubik_trans *at;
-     afs_int32 gid;
+OwnerOf(struct ubik_trans *at, afs_int32 gid)
 {
     /* returns the owner of gid */
     register afs_int32 code;
@@ -886,10 +814,7 @@ OwnerOf(at, gid)
 
 
 afs_int32
-IsAMemberOf(at, aid, gid)
-     struct ubik_trans *at;
-     afs_int32 aid;
-     afs_int32 gid;
+IsAMemberOf(struct ubik_trans *at, afs_int32 aid, afs_int32 gid)
 {
     /* returns true if aid is a member of gid */
 #if !defined(SUPERGROUPS)
@@ -947,13 +872,8 @@ IsAMemberOf(at, aid, gid)
 
 
 #if defined(SUPERGROUPS)
-
 afs_int32
-IsAMemberOfSG(at, aid, gid, depth)
-     struct ubik_trans *at;
-     afs_int32 aid;
-     afs_int32 gid;
-     afs_int32 depth;
+IsAMemberOfSG(struct ubik_trans *at, afs_int32 aid, afs_int32 gid, afs_int32 depth) 
 {
     /* returns true if aid is a member of gid */
     struct prentry tentry;
@@ -1017,5 +937,4 @@ IsAMemberOfSG(at, aid, gid, depth)
     }
     return 0;			/* actually, should never get here */
 }
-
 #endif /* SUPERGROUPS */

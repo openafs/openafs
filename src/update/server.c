@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/update/server.c,v 1.12 2003/12/07 22:49:39 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/update/server.c,v 1.13 2004/06/23 14:27:46 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -50,11 +50,13 @@ RCSID
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include <afs/fileutil.h>
+#ifdef	AFS_AIX_ENV
+#include <sys/statfs.h>
+#endif
 #include "update.h"
 #include "global.h"
 
 extern int UPDATE_ExecuteRequest();
-extern rxkad_level StringToLevel(char *name);
 
 static int AddObject(char **expPath, char *dir);
 static int PathInDirectory(char *dir, char *path);
@@ -69,8 +71,7 @@ static int Quit();
 
 /* check whether caller is authorized to manage RX statistics */
 int
-update_rxstat_userok(call)
-     struct rx_call *call;
+update_rxstat_userok(struct rx_call *call)
 {
     return afsconf_SuperUser(cdir, call, NULL);
 }
@@ -131,11 +132,8 @@ PathInDirectory(char *dir, char *path)
     return inDir;
 }
 
-
 int
-AuthOkay(call, name)
-     struct rx_call *call;
-     char *name;
+AuthOkay(struct rx_call *call, char *name)
 {
     int i;
     rxkad_level level;
@@ -181,9 +179,7 @@ osi_audit()
 #endif
 
 int
-main(argc, argv)
-     int argc;
-     char *argv[];
+main(int argc, char *argv[])
 {
     struct rx_securityClass *securityObjects[3];
     struct rx_service *service;
@@ -240,7 +236,7 @@ main(argc, argv)
 	if (argv[a][0] == '-') {	/* parse options */
 	    char arg[256];
 	    lcstring(arg, argv[a], sizeof(arg));
-	    newLevel = StringToLevel(&argv[a][1]);
+	    newLevel = rxkad_StringToLevel(&argv[a][1]);
 	    if (newLevel != -1) {
 		level = newLevel;	/* set new level */
 		continue;
@@ -317,9 +313,7 @@ main(argc, argv)
 /* fetch the file name and send it to the remote requester specified by call */
 
 int
-UPDATE_FetchFile(call, name)
-     struct rx_call *call;
-     char *name;
+UPDATE_FetchFile(struct rx_call *call, char *name)
 {
     int fd = -1;
     int error = 0;
@@ -352,9 +346,7 @@ UPDATE_FetchFile(call, name)
 /* fetch dir info about directory name and send it to remote host associated
   with call. */
 int
-UPDATE_FetchInfo(call, name)
-     struct rx_call *call;
-     char *name;
+UPDATE_FetchInfo(struct rx_call *call, char *name)
 {
     int error = 0;
     struct stat status;
@@ -395,19 +387,12 @@ Quit(msg, a, b)
 }
 
 int
-update_SendFile(fd, call, status)
-     register int fd;
-     register struct rx_call *call;
-     register struct stat *status;
+update_SendFile(register int fd, register struct rx_call *call, register struct stat *status)
 {
     char *buffer = (char *)0;
     int blockSize;
     afs_int32 length, tlen;
-#ifdef notdef
-    XDR xdr;
-#endif
 #ifdef	AFS_AIX_ENV
-#include <sys/statfs.h>
     struct statfs tstatfs;
 #endif
 
@@ -427,14 +412,8 @@ update_SendFile(fd, call, status)
 	printf("malloc failed\n");
 	return UPDATE_ERROR;
     }
-#ifdef	notdef
-    xdrrx_create(&xdr, call, XDR_ENCODE);
-    if (!xdr_afs_int32(&xdr, &length))
-	error = UPDATE_ERROR;
-#else
     tlen = htonl(length);
     rx_Write(call, &tlen, sizeof(afs_int32));	/* send length on fetch */
-#endif
     while (!error && length) {
 	register int nbytes = (length > blockSize ? blockSize : length);
 	nbytes = read(fd, buffer, nbytes);
@@ -456,11 +435,10 @@ update_SendFile(fd, call, status)
 /* Enumerate dir (name) and write dir entry info into temp file. 
  */
 int
-update_SendDirInfo(name, call, status, origDir)
-     char *name;		/* Name of dir to enumerate */
-     register struct rx_call *call;	/* rx call */
-     register struct stat *status;	/* stat struct for dir */
-     char *origDir;		/* orig name of dir before being localized */
+update_SendDirInfo(char *name,		/* Name of dir to enumerate */
+     register struct rx_call *call,	/* rx call */
+     register struct stat *status,	/* stat struct for dir */
+     char *origDir)		/* orig name of dir before being localized */
 {
     DIR *dirp;
     struct dirent *dp;

@@ -11,15 +11,15 @@
  * Implement caching of rx connections.
  */
 
+#include <afsconfig.h>
 #ifdef UKERNEL
 #include "afs/param.h"
 #else
 #include <afs/param.h>
 #endif
-#include <afsconfig.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_conncache.c,v 1.8 2003/07/15 23:16:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_conncache.c,v 1.9 2004/05/15 04:53:30 shadow Exp $");
 
 #ifdef UKERNEL
 #include "afs/sysincludes.h"

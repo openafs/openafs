@@ -18,7 +18,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vol-info.c,v 1.16 2003/11/29 21:38:05 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/vol/vol-info.c,v 1.18 2004/06/23 14:27:48 shadow Exp $");
 
 #include <ctype.h>
 #include <errno.h>
@@ -78,6 +78,7 @@ int online = 0;
 int dheader = 0;
 int dsizeOnly = 0, totvolsize = 0, Vauxsize = 0, Vdiskused = 0, Vvnodesize =
     0;
+int Vvnodesize_k = 0, Vauxsize_k = 0;
 int Totvolsize = 0, TVauxsize = 0, TVdiskused = 0, TVvnodesize = 0;
 int Stotvolsize = 0, SVauxsize = 0, SVdiskused = 0, SVvnodesize = 0;
 int fixheader = 0, saveinodes = 0, orphaned = 0;
@@ -580,6 +581,7 @@ HandleVolume(struct DiskPartition *dp, char *name)
 	    }
 #endif
 	    Vauxsize = size;
+	    Vauxsize_k = size / 1024;
 	}
 	close(fd);
 	vp = AttachVolume(dp, name, &header);
@@ -602,19 +604,16 @@ HandleVolume(struct DiskPartition *dp, char *name)
 	PrintVnodes(vp, vSmall);
     }
     if (dsizeOnly) {
-	Vauxsize = Vauxsize / 1024;
-	Vvnodesize = Vvnodesize / 1024;
-	totvolsize = Vauxsize + Vvnodesize;
+	totvolsize = Vauxsize_k + Vvnodesize_k;
 	if (saveinodes)
 	    printf
 		("Volume-Id\t  Volsize  Auxsize Inodesize  AVolsize SizeDiff                (VolName)\n");
-
-	printf("%u\t%9d%9d%10d%10d%9d\t%24s\n", V_id(vp), Vdiskused, Vauxsize,
-	       Vvnodesize, totvolsize, totvolsize - Vdiskused, V_name(vp));
+	printf("%u\t%9d%9d%10d%10d%9d\t%24s\n", V_id(vp), Vdiskused, Vauxsize_k,
+	       Vvnodesize_k, totvolsize, totvolsize - Vdiskused, V_name(vp));
     }
 }
 
-
+int
 main(int argc, char **argv)
 {
     register struct cmd_syndesc *ts;
@@ -880,6 +879,7 @@ PrintVnode(int offset, VnodeDiskObject * vnode, VnodeId vnodeNumber,
 
     VNDISK_GET_LEN(fileLength, vnode);
     Vvnodesize += fileLength;
+    Vvnodesize_k += fileLength / 1024;
     if (dsizeOnly)
 	return;
     if (orphaned && (fileLength == 0 || vnode->parent || !offset))

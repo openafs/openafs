@@ -1,4 +1,4 @@
-AC_DEFUN(LINUX_KERNEL_LINUX_SYSCALL_H,[
+AC_DEFUN([LINUX_KERNEL_LINUX_SYSCALL_H],[
   AC_MSG_CHECKING(for linux/syscall.h in kernel)
   if test -f "${LINUX_KERNEL_PATH}/include/linux/syscall.h"; then
     ac_linux_syscall=yes
@@ -9,7 +9,7 @@ AC_DEFUN(LINUX_KERNEL_LINUX_SYSCALL_H,[
   fi
 ])
 
-AC_DEFUN(LINUX_NEED_RHCONFIG,[
+AC_DEFUN([LINUX_NEED_RHCONFIG],[
 RHCONFIG_SP=""
 RHCONFIG_MP=""
 if test "x$enable_redhat_buildsys" = "xyes"; then
@@ -33,7 +33,7 @@ AC_SUBST(RHCONFIG_SP)
 AC_SUBST(RHCONFIG_MP)
 ])
 
-AC_DEFUN(LINUX_WHICH_MODULES,[
+AC_DEFUN([LINUX_WHICH_MODULES],[
 if test "x$enable_redhat_buildsys" = "xyes"; then
   MPS=Default
 else
@@ -79,3 +79,18 @@ fi
 AC_SUBST(MPS)
 ])
 
+AC_DEFUN([LINUX_KERNEL_SELINUX],[
+AC_MSG_CHECKING(for SELinux kernel)
+save_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="-I${LINUX_KERNEL_PATH}/include $CPPFLAGS"
+AC_CACHE_VAL(ac_cv_linux_kernel_is_selinux,
+[
+AC_TRY_COMPILE(
+  [#include <linux/autoconf.h>],
+  [#ifndef CONFIG_SECURITY_SELINUX
+   #error not SELINUX
+   #endif],
+  ac_cv_linux_kernel_is_selinux=yes,
+  ac_cv_linux_kernel_is_selinux=no)])
+AC_MSG_RESULT($ac_cv_linux_kernel_is_selinux)
+CPPFLAGS="$save_CPPFLAGS"])

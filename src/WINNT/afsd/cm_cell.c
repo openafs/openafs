@@ -34,7 +34,7 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep)
 {
 	cm_server_t *tsp;
 	cm_serverRef_t *tsrp;
-        cm_cell_t *cellp;
+    cm_cell_t *cellp;
         
 	cellp = rockp;
 
@@ -69,7 +69,7 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
 	char fullname[200]="";
 
 	lock_ObtainWrite(&cm_cellLock);
-	for(cp = cm_allCellsp; cp; cp=cp->nextp) {
+	for (cp = cm_allCellsp; cp; cp=cp->nextp) {
 		if (strcmp(namep, cp->namep) == 0) {
             strcpy(fullname, cp->namep);
             break;
@@ -79,11 +79,22 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
 	if ((!cp && (flags & CM_FLAG_CREATE))
 #ifdef AFS_AFSDB_ENV
          /* if it's from DNS, see if it has expired */
-         || (cp && (cp->flags & CM_CELLFLAG_DNS) && (time(0) > cp->timeout))
+         || (cp && (cp->flags & CM_CELLFLAG_DNS) 
+         && ((cp->flags & CM_CELLFLAG_VLSERVER_INVALID) || (time(0) > cp->timeout)))
 #endif
 	  ) {
-		if (!cp) cp = malloc(sizeof(*cp));
-        memset(cp, 0, sizeof(*cp));
+        int dns_expired = 0;
+		if (!cp) {
+            cp = malloc(sizeof(*cp));
+            memset(cp, 0, sizeof(*cp));
+        } 
+        else {
+            dns_expired = 1;
+            /* must empty cp->vlServersp */
+            cm_FreeServerList(&cp->vlServersp);
+            cp->vlServersp = NULL;
+        }
+
         code = cm_SearchCellFile(namep, fullname, cm_AddCellProc, cp);
 		if (code) {
             afsi_log("in cm_GetCell_gen cm_SearchCellFile(%s) returns code= %d fullname= %s", 
@@ -92,26 +103,39 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
 #ifdef AFS_AFSDB_ENV
             if (cm_dnsEnabled /*&& cm_DomainValid(namep)*/) {
                 code = cm_SearchCellByDNS(namep, fullname, &ttl, cm_AddCellProc, cp);
-                if ( code )
+                if ( code ) {
                     afsi_log("in cm_GetCell_gen cm_SearchCellByDNS(%s) returns code= %d fullname= %s", 
                              namep, code, fullname);
+                    if (dns_expired) {
+                        cp->flags |= CM_CELLFLAG_VLSERVER_INVALID;
+                        cp = NULL;  /* set cp to NULL to indicate error */
+                    } 
+                }
+                else {   /* got cell from DNS */
+                    cp->flags |= CM_CELLFLAG_DNS;
+                    cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
+                    cp->timeout = time(0) + ttl;
+                }
             }
 #endif
-            if (code) {
+            if (cp && code) {     /* free newly allocated memory */
                 free(cp);
                 cp = NULL;
                 goto done;
             }
-#ifdef AFS_AFSDB_ENV
-            else {   /* got cell from DNS */
-                cp->flags |= CM_CELLFLAG_DNS;
-                cp->timeout = time(0) + ttl;
-            }
-#endif
 		}
 
 		/* randomise among those vlservers having the same rank*/ 
 		cm_RandomizeServer(&cp->vlServersp);
+
+#ifdef AFS_AFSDB_ENV
+        if (dns_expired) {
+            /* we want to preserve the full name and mutex.
+             * also, cp is already in the cm_allCellsp list
+             */
+            goto done;
+        }
+#endif /* AFS_AFSDB_ENV */
 
         /* otherwise we found the cell, and so we're nearly done */
         lock_InitializeMutex(&cp->mx, "cm_cell_t mutex");
@@ -130,54 +154,64 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
   done:
     /* fullname is not valid if cp == NULL */
 	if (cp && newnamep)
-	  strcpy(newnamep, fullname);
+        strcpy(newnamep, fullname);
 	lock_ReleaseWrite(&cm_cellLock);
-        return cp;
+    return cp;
 }
 
 cm_cell_t *cm_FindCellByID(long cellID)
 {
 	cm_cell_t *cp;
 	int ttl;
-     int code;
+    int code;
 
 	lock_ObtainWrite(&cm_cellLock);
 	for(cp = cm_allCellsp; cp; cp=cp->nextp) {
-		if (cellID == cp->cellID) break;
-        }
+		if (cellID == cp->cellID) 
+            break;
+    }
 
 #ifdef AFS_AFSDB_ENV
 	/* if it's from DNS, see if it has expired */
-	if (cp && cm_dnsEnabled && (cp->flags & CM_CELLFLAG_DNS) && (time(0) > cp->timeout)) {
-	  code = cm_SearchCellByDNS(cp->namep, NULL, &ttl, cm_AddCellProc, cp);
-	  if (code == 0) {   /* got cell from DNS */
-	    cp->flags |= CM_CELLFLAG_DNS;
+	if (cp && cm_dnsEnabled && (cp->flags & CM_CELLFLAG_DNS) && 
+        ((cp->flags & CM_CELLFLAG_VLSERVER_INVALID) || (time(0) > cp->timeout))) {
+        /* must empty cp->vlServersp */
+        cm_FreeServerList(&cp->vlServersp);
+        cp->vlServersp = NULL;
+
+        code = cm_SearchCellByDNS(cp->namep, NULL, &ttl, cm_AddCellProc, cp);
+        if (code == 0) {   /* got cell from DNS */
+            cp->flags |= CM_CELLFLAG_DNS;
+            cp->flags &= ~CM_CELLFLAG_VLSERVER_INVALID;
 #ifdef DEBUG
-	    fprintf(stderr, "cell %s: ttl=%d\n", cp->namep, ttl);
+            fprintf(stderr, "cell %s: ttl=%d\n", cp->namep, ttl);
 #endif
-	    cp->timeout = time(0) + ttl;
-	  }
-	  /* if we fail to find it this time, we'll just do nothing and leave the
-	     current entry alone */
+            cp->timeout = time(0) + ttl;
+        } else {
+            cp->flags |= CM_CELLFLAG_VLSERVER_INVALID;
+            cp = NULL;      /* return NULL to indicate failure */
+        }
+        /* if we fail to find it this time, we'll just do nothing and leave the
+         * current entry alone 
+         */
 	}
 #endif /* AFS_AFSDB_ENV */
 
 	lock_ReleaseWrite(&cm_cellLock);	
-	
-        return cp;
+    return cp;
 }
 
 void cm_InitCell(void)
 {
 	static osi_once_t once;
         
-        if (osi_Once(&once)) {
+    if (osi_Once(&once)) {
 		lock_InitializeRWLock(&cm_cellLock, "cell global lock");
-                cm_allCellsp = NULL;
+        cm_allCellsp = NULL;
 		osi_EndOnce(&once);
-        }
+    }
 }
-void cm_ChangeRankCellVLServer(cm_server_t       *tsp)
+void cm_ChangeRankCellVLServer(cm_server_t *tsp)
 {
 	cm_cell_t *cp;
 	int code;

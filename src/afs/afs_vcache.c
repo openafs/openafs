@@ -39,7 +39,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_vcache.c,v 1.62 2004/05/08 04:20:39 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_vcache.c,v 1.64 2004/06/23 18:34:45 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -822,8 +822,15 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 		refpanic("VLRU inconsistent");
 	    }
 #ifdef AFS_DARWIN_ENV
+	    if ((VREFCOUNT(tvc) < DARWIN_REFBASE) || 
+		(VREFCOUNT(tvc) < 1+DARWIN_REFBASE && 
+		 UBCINFOEXISTS(&tvc->v))) {
+              VREFCOUNT_SET(tvc, 
+                            DARWIN_REFBASE + (UBCINFOEXISTS(&tvc->v) ? 1 : 0));
+	    }
 	    if (tvc->opens == 0 && ((tvc->states & CUnlinkedDel) == 0)
-		&& VREFCOUNT(tvc) == 1 && UBCINFOEXISTS(&tvc->v)) {
+		&& VREFCOUNT(tvc) == DARWIN_REFBASE+1 
+		&& UBCINFOEXISTS(&tvc->v)) {
 		osi_VM_TryReclaim(tvc, &fv_slept);
 		if (fv_slept) {
 		    uq = VLRU.prev;
@@ -843,7 +850,13 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 	    }
 #endif
 
-	    if (VREFCOUNT(tvc) == 0 && tvc->opens == 0
+	    if (VREFCOUNT(tvc) == 
+#ifdef AFS_DARWIN_ENV
+		DARWIN_REFBASE
+#else
+		0 
+#endif
+		&& tvc->opens == 0
 		&& (tvc->states & CUnlinkedDel) == 0) {
 #if defined(AFS_XBSD_ENV)
 		/*
@@ -1051,6 +1064,12 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
 #if !defined(AFS_LINUX26_ENV)
     if (afs_globalVFS)
 	ip->i_dev = afs_globalVFS->s_dev;
+#else
+#ifdef STRUCT_INODE_HAS_I_SECURITY
+    ip->i_security = NULL;
+    if (security_inode_alloc(ip))
+        panic("Cannot allocate inode security");
+#endif
 #endif
     ip->i_sb = afs_globalVFS;
     put_inode_on_dummy_list(ip);
@@ -1142,7 +1161,7 @@ afs_NewVCache(struct VenusFid *afid, struct server *serverp)
     /* VLISTNONE(&tvc->v); */
     tvc->v.v_freelist.tqe_next = 0;
     tvc->v.v_freelist.tqe_prev = (struct vnode **)0xdeadb;
-    /*tvc->vrefCount++; */
+    tvc->vrefCount+=DARWIN_REFBASE;
 #endif
     /*
      * The proper value for mvstat (for root fids) is setup by the caller.
@@ -1355,7 +1374,8 @@ afs_FlushActiveVcaches(register afs_int32 doflocks)
 		}
 	    }
 #ifdef AFS_DARWIN_ENV
-	    if (VREFCOUNT(tvc) == 1 && UBCINFOEXISTS(&tvc->v)) {
+	    if (VREFCOUNT(tvc) == 1+DARWIN_REFBASE 
+		&& UBCINFOEXISTS(&tvc->v)) {
 		if (tvc->opens)
 		    panic("flushactive open, hasubc, but refcnt 1");
 		osi_VM_TryReclaim(tvc, 0);
@@ -2172,6 +2192,22 @@ afs_GetRootVCache(struct VenusFid *afid, struct vrequest *areq,
 	    if (vg)
 		continue;
 #endif /* AFS_OSF_ENV */
+#ifdef AFS_DARWIN14_ENV
+	    /* It'd really suck if we allowed duplicate vcaches for the 
+	       same fid to happen. Wonder if this will work? */
+	    struct vnode *vp = AFSTOV(tvc);
+	    if (vp->v_flag & (VXLOCK|VORECLAIM|VTERMINATE)) {
+	        printf("precluded FindVCache on %x (%d:%d:%d)\n", 
+		       vp, tvc->fid.Fid.Volume, tvc->fid.Fid.Vnode,
+		       tvc->fid.Fid.Unique);
+		simple_lock(&vp->v_interlock);
+		SET(vp->v_flag, VTERMWANT);
+		simple_unlock(&vp->v_interlock);
+		(void)tsleep((caddr_t)&vp->v_ubcinfo, PINOD, "vget1", 0);
+		printf("VTERMWANT ended on %x\n", vp);
+		continue;
+	    }
+#endif
 	    break;
 	}
     }

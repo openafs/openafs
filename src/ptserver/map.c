@@ -35,7 +35,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/map.c,v 1.2 2003/07/15 23:16:02 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/map.c,v 1.3 2004/06/23 14:27:41 shadow Exp $");
 
 #ifdef SUPERGROUPS
 #include <errno.h>
@@ -69,15 +69,8 @@ struct bitmap {
 #define Aflag	(debug_mask & (1L<<('Z'-'@')))
 extern int debug_mask;
 
-#if __STDC__
 int
 in_map(struct map *parm, long node)
-#else
-int
-in_map(parm, node)
-     struct map *parm;
-     long node;
-#endif
 {
     struct bitmap *map;
     long bit;
@@ -117,8 +110,7 @@ in_map(parm, node)
 }
 
 void
-free_map(parm)
-     struct map *parm;
+free_map(struct map *parm)
 {
     struct bitmap *map, *next;
 #ifdef MAP_DEBUG
@@ -137,9 +129,7 @@ free_map(parm)
 }
 
 struct map *
-add_map(parm, node)
-     struct map *parm;
-     long node;
+add_map(struct map *parm, long node)
 {
     struct bitmap *map;
     long bit;
@@ -198,8 +188,7 @@ add_map(parm, node)
 }
 
 struct bitmap *
-simplify_bitmap(map)
-     struct bitmap *map;
+simplify_bitmap(struct bitmap *map)
 {
     struct bitmap **mpp, *mp2;
     int i;
@@ -221,8 +210,7 @@ simplify_bitmap(map)
 }
 
 struct bitmap *
-or_bitmap(left, right)
-     struct bitmap *left, *right;
+or_bitmap(struct bitmap *left, struct bitmap *right)
 {
     struct bitmap **rightmp, *lmap, *rmap;
     int i;
@@ -242,8 +230,7 @@ or_bitmap(left, right)
 }
 
 struct bitmap *
-and_bitmap(left, right)
-     struct bitmap *left, *right;
+and_bitmap(struct bitmap *left, struct bitmap *right)
 {
     struct bitmap **rightmp, *lmap, *rmap, **leftmp;
     int i;
@@ -271,8 +258,7 @@ and_bitmap(left, right)
 
 /* bit set in left, but not in right */
 struct bitmap *
-bic_bitmap(left, right)
-     struct bitmap *left, *right;
+bic_bitmap(struct bitmap *left, struct bitmap *right)
 {
     struct bitmap **rightmp, *lmap, *rmap, **leftmp;
     int i;
@@ -310,8 +296,7 @@ bic_bitmap(left, right)
 }
 
 struct map *
-and_map(mp1, mp2)
-     struct map *mp1, *mp2;
+and_map(struct map *mp1, struct map *mp2)
 {
 #ifdef MAP_DEBUG
     if (Mflag) {
@@ -341,8 +326,7 @@ and_map(mp1, mp2)
 }
 
 struct map *
-or_map(mp1, mp2)
-     struct map *mp1, *mp2;
+or_map(struct map *mp1, struct map *mp2)
 {
 #ifdef MAP_DEBUG
     if (Mflag) {
@@ -372,8 +356,7 @@ or_map(mp1, mp2)
 }
 
 struct map *
-not_map(map)
-     struct map *map;
+not_map(struct map *map)
 {
 #ifdef MAP_DEBUG
     if (Mflag) {
@@ -386,8 +369,7 @@ not_map(map)
 }
 
 struct map *
-copy_map(parm)
-     struct map *parm;
+copy_map(struct map *parm)
 {
     struct bitmap *result, **mpp, *map;
 #ifdef MAP_DEBUG
@@ -419,8 +401,7 @@ copy_map(parm)
 }
 
 long
-count_map(parm)
-     struct map *parm;
+count_map(struct map *parm)
 {
     long nf;
     struct bitmap *map;
@@ -451,9 +432,7 @@ count_map(parm)
 }
 
 long
-next_map(parm, node)
-     struct map *parm;
-     long node;
+next_map(struct map *parm, long node)
 {
     struct bitmap *map, *lowest;
     long bit, mask;
@@ -525,16 +504,13 @@ next_map(parm, node)
 }
 
 long
-first_map(parm)
-     struct map *parm;
+first_map(struct map *parm)
 {
     return next_map(parm, -9999);
 }
 
 long
-prev_map(parm, node)
-     struct map *parm;
-     long node;
+prev_map(struct map *parm, long node)
 {
     struct bitmap *map, *lowest;
     long bit, mask;
@@ -609,22 +585,19 @@ prev_map(parm, node)
 }
 
 long
-last_map(parm)
-     struct map *parm;
+last_map(struct map *parm)
 {
     return prev_map(parm, 0x7fffffff);
 }
 
 struct map *
-negative_map(map)
-     struct map *map;
+negative_map(struct map *map)
 {
     return (struct map *)NEGMAP(map);
 }
 
 struct map *
-bic_map(mp1, mp2)
-     struct map *mp1, *mp2;
+bic_map(struct map *mp1, struct map *mp2)
 {
 #ifdef MAP_DEBUG
     if (Mflag) {
@@ -646,8 +619,8 @@ bic_map(mp1, mp2)
 }
 
 #ifdef PRINT_MAP_ERROR
-print_map(parm)
-     struct map *parm;
+void 
+print_map(struct map *parm)
 {
     struct bitmap *map;
     int i, j;
@@ -694,9 +667,7 @@ print_map(parm)
 
 #ifdef NEED_READ_WRITE
 struct map *
-read_map(f, arg)
-     int (*f) ();
-     char *arg;
+read_map(int (*f) (), char *arg)
 {
     struct bitmap *map, *result, **mp;
     int page;
@@ -752,10 +723,8 @@ read_map(f, arg)
     return (struct map *)result;
 }
 
-write_map(parm, f, arg)
-     struct map *parm;
-     int (*f) ();
-     char *arg;
+int 
+write_map(struct map *parm, int (*f) (), char *arg)
 {
     struct bitmap *map;
     int page;

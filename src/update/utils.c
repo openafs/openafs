@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/update/utils.c,v 1.9 2003/07/15 23:17:07 shadow Exp $");
+    ("$Header: /cvs/openafs/src/update/utils.c,v 1.10 2004/06/23 14:27:46 shadow Exp $");
 
 #include <afs/stds.h>
 #include <rx/rxkad.h>
@@ -35,9 +35,7 @@ RCSID
 #include <stdlib.h>
 
 int
-AddToList(ah, aname)
-     struct filestr **ah;
-     char *aname;
+AddToList(struct filestr **ah, char *aname)
 {
     register struct filestr *tf;
     tf = (struct filestr *)malloc(sizeof(struct filestr));
@@ -49,8 +47,7 @@ AddToList(ah, aname)
 }
 
 int
-ZapList(ah)
-     struct filestr **ah;
+ZapList(struct filestr **ah)
 {
     register struct filestr *tf, *nf;
     for (tf = *ah; tf; tf = nf) {
@@ -60,20 +57,4 @@ ZapList(ah)
     }
     *ah = NULL;
     return 0;
-}
-
-/* StringToLevel - converts the name of an rxkad security level to a integer
- * suitable for calling rxkad_New*SecurityObject. */
-
-rxkad_level
-StringToLevel(name)
-     char *name;
-{
-    if (strcmp(name, "clear") == 0)
-	return rxkad_clear;
-    if (strcmp(name, "auth") == 0)
-	return rxkad_auth;
-    if (strcmp(name, "crypt") == 0)
-	return rxkad_crypt;
-    return -1;
 }

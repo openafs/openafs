@@ -1,5 +1,5 @@
 dnl
-dnl $Id: bigendian.m4,v 1.2 2001/06/28 05:03:55 shadow Exp $
+dnl $Id: bigendian.m4,v 1.3 2004/06/03 05:13:29 shadow Exp $
 dnl
 
 dnl check if this computer is little or big-endian
@@ -7,7 +7,7 @@ dnl if we can figure it out at compile-time then don't define the cpp symbol
 dnl otherwise test for it and define it.  also allow options for overriding
 dnl it when cross-compiling
 
-AC_DEFUN(OPENAFS_CHECK_BIGENDIAN, [
+AC_DEFUN([OPENAFS_CHECK_BIGENDIAN], [
 AC_ARG_ENABLE(bigendian,
 [  --enable-bigendian	the target is big endian],
 openafs_cv_c_bigendian=yes)

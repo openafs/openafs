@@ -1,4 +1,4 @@
-AC_DEFUN(SOLARIS_FS_HAS_FS_ROLLED, [
+AC_DEFUN([SOLARIS_FS_HAS_FS_ROLLED], [
 AC_MSG_CHECKING(for fs_rolled in struct proc)
 AC_CACHE_VAL(ac_cv_solaris_fs_has_fs_rolled,
 [

@@ -347,8 +347,17 @@ idirs: doclink
 !	IF (!EXIST($(OJT)\WINNT\install\InstallShield5))
 		$(MKDIR) $(OJT)\WINNT\install\InstallShield5
 !	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\install\loopback))
+		$(MKDIR) $(OJT)\WINNT\install\loopback
+!	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\install\NSIS))
 		$(MKDIR) $(OJT)\WINNT\install\NSIS
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\install\wix))
+		$(MKDIR) $(OJT)\WINNT\install\wix
+!	ENDIF
+!	IF (!EXIST($(OJT)\WINNT\install\wix\custom))
+		$(MKDIR) $(OJT)\WINNT\install\wix\custom
 !	ENDIF
 !	IF (!EXIST($(OJT)\WINNT\install\Win9x))
 		$(MKDIR) $(OJT)\WINNT\install\Win9x

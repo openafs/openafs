@@ -17,6 +17,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <winsock2.h>
+#include <strsafe.h>
 
 #include <osi.h>
 #include "afsd.h"
@@ -78,6 +79,10 @@ BOOL reportSessionStartups = FALSE;
 
 cm_initparams_v1 cm_initParams;
 
+char *cm_sysName = 0;
+int   cm_sysNameCount = 0;
+char *cm_sysNameList[MAXNUMSYSNAMES];
+
 /*
  * AFSD Initialization Log
  *
@@ -111,21 +116,21 @@ afsi_start()
 	afsi_file = INVALID_HANDLE_VALUE;
     if (getenv("TEMP"))
     {
-        strcpy(wd, getenv("TEMP"));
+        StringCbCopyA(wd, sizeof(wd), getenv("TEMP"));
     }
     else
     {
         code = GetWindowsDirectory(wd, sizeof(wd));
         if (code == 0) return;
     }
-	strcat(wd, "\\afsd_init.log");
+	StringCbCatA(wd, sizeof(wd), "\\afsd_init.log");
 	GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
 	afsi_file = CreateFile(wd, GENERIC_WRITE, FILE_SHARE_READ, NULL,
                            OPEN_ALWAYS, FILE_FLAG_WRITE_THROUGH, NULL);
     SetFilePointer(afsi_file, 0, NULL, FILE_END);
 	GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, u, sizeof(u));
-	strcat(t, ": Create log file\n");
-	strcat(u, ": Created log file\n");
+	StringCbCatA(t, sizeof(t), ": Create log file\n");
+	StringCbCatA(u, sizeof(u), ": Created log file\n");
 	WriteFile(afsi_file, t, strlen(t), &zilch, NULL);
 	WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
     p = "PATH=";
@@ -140,16 +145,16 @@ static int afsi_log_useTimestamp = 1;
 void
 afsi_log(char *pattern, ...)
 {
-	char s[100], t[100], d[100], u[300];
+	char s[256], t[100], d[100], u[512];
 	int zilch;
 	va_list ap;
 	va_start(ap, pattern);
 
-	vsprintf(s, pattern, ap);
+	StringCbVPrintfA(s, sizeof(s), pattern, ap);
     if ( afsi_log_useTimestamp ) {
         GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
 		GetDateFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, d, sizeof(d));
-		sprintf(u, "%s %s: %s\n", d, t, s);
+		StringCbPrintfA(u, sizeof(u), "%s %s: %s\n", d, t, s);
         if (afsi_file != INVALID_HANDLE_VALUE)
             WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
 #ifdef NOTSERVICE
@@ -175,7 +180,7 @@ void afsd_ForceTrace(BOOL flush)
         return;
 
 	len = GetTempPath(sizeof(buf)-10, buf);
-	strcpy(&buf[len], "/afsd.log");
+	StringCbCopyA(&buf[len], sizeof(buf)-len, "/afsd.log");
 	handle = CreateFile(buf, GENERIC_WRITE, FILE_SHARE_READ,
 			    NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (handle == INVALID_HANDLE_VALUE) {
@@ -214,6 +219,7 @@ int afsd_InitCM(char **reasonP)
 	/*int freelanceEnabled;*/
 	WSADATA WSAjunk;
     lana_number_t lanaNum;
+    int i;
 
 	WSAStartup(0x0101, &WSAjunk);
 
@@ -246,7 +252,7 @@ int afsd_InitCM(char **reasonP)
 		FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM
 				| FORMAT_MESSAGE_ALLOCATE_BUFFER,
 			      NULL, code, 0, (LPTSTR)&msgBuf, 0, NULL);
-		sprintf(buf,
+		StringCbPrintfA(buf, sizeof(buf),
 			"Failure in configuration while opening Registry: %s",
 			msgBuf);
 		osi_panic(buf, __FILE__, __LINE__);
@@ -360,7 +366,7 @@ int afsd_InitCM(char **reasonP)
 	if (code == ERROR_SUCCESS)
 		afsi_log("Root volume %s", cm_rootVolumeName);
 	else {
-		strcpy(cm_rootVolumeName, "root.afs");
+		StringCbCopyA(cm_rootVolumeName, sizeof(cm_rootVolumeName), "root.afs");
 		afsi_log("Default root volume name root.afs");
 	}
 
@@ -371,7 +377,7 @@ int afsd_InitCM(char **reasonP)
 		afsi_log("Mount root %s", cm_mountRoot);
 		cm_mountRootLen = strlen(cm_mountRoot);
 	} else {
-		strcpy(cm_mountRoot, "/afs");
+		StringCbCopyA(cm_mountRoot, sizeof(cm_mountRoot), "/afs");
 		cm_mountRootLen = 4;
 		/* Don't log */
 	}
@@ -384,7 +390,7 @@ int afsd_InitCM(char **reasonP)
 	else {
 		GetWindowsDirectory(cm_CachePath, sizeof(cm_CachePath));
 		cm_CachePath[2] = 0;	/* get drive letter only */
-		strcat(cm_CachePath, "\\AFSCache");
+		StringCbCatA(cm_CachePath, sizeof(cm_CachePath), "\\AFSCache");
 		afsi_log("Default cache path %s", cm_CachePath);
 	}
 
@@ -410,15 +416,22 @@ int afsd_InitCM(char **reasonP)
 		/* Don't log */
 	}
 
-	dummyLen = sizeof(cm_sysName);
+    for ( i=0; i < MAXNUMSYSNAMES; i++ ) {
+        cm_sysNameList[i] = osi_Alloc(MAXSYSNAME);
+        cm_sysNameList[i][0] = '\0';
+    }
+    cm_sysName = cm_sysNameList[0];
+
+	dummyLen = MAXSYSNAME;
 	code = RegQueryValueEx(parmKey, "SysName", NULL, NULL,
 				cm_sysName, &dummyLen);
 	if (code == ERROR_SUCCESS)
 		afsi_log("Sys name %s", cm_sysName);
 	else {
-		strcat(cm_sysName, "i386_nt40");
+		StringCbCopyA(cm_sysName, MAXSYSNAME, "i386_nt40");
 		afsi_log("Default sys name %s", cm_sysName);
 	}
+    cm_sysNameCount = 1;
 
 	dummyLen = sizeof(cryptall);
 	code = RegQueryValueEx(parmKey, "SecurityLevel", NULL, NULL,
@@ -518,6 +531,16 @@ int afsd_InitCM(char **reasonP)
     if(rx_mtu != -1)
         afsi_log("RX maximum MTU is %d", rx_mtu);
 
+    dummyLen = sizeof(ConnDeadtimeout);
+    code = RegQueryValueEx(parmKey, "ConnDeadTimeout", NULL, NULL,
+                           (BYTE *) &ConnDeadtimeout, &dummyLen);
+    afsi_log("ConnDeadTimeout is %d", ConnDeadtimeout);
+
+    dummyLen = sizeof(HardDeadtimeout);
+    code = RegQueryValueEx(parmKey, "HardDeadTimeout", NULL, NULL,
+                           (BYTE *) &HardDeadtimeout, &dummyLen);
+    afsi_log("HardDeadTimeout is %d", HardDeadtimeout);
+
 	RegCloseKey (parmKey);
 
     /* Call lanahelper to get Netbios name, lan adapter number and gateway flag */
@@ -535,7 +558,7 @@ int afsd_InitCM(char **reasonP)
         afsi_log("Using >%s< as SMB server name", cm_NetbiosName);
     } else {
         /* something went horribly wrong.  We can't proceed without a netbios name */
-        sprintf(buf,"Netbios name could not be determined: %li", code);
+        StringCbPrintfA(buf,sizeof(buf),"Netbios name could not be determined: %li", code);
         osi_panic(buf, __FILE__, __LINE__);
     }
 
@@ -669,7 +692,7 @@ int afsd_InitCM(char **reasonP)
 	}
 
 #ifdef AFS_AFSDB_ENV
-#if !defined(_WIN32_WINNT) || _WIN32_WINNT < 0x500
+#if !defined(_WIN32_WINNT) || (_WIN32_WINNT < 0x0500)
 	if (cm_InitDNS(cm_dnsEnabled) == -1)
 	  cm_dnsEnabled = 0;  /* init failed, so deactivate */
 	afsi_log("cm_InitDNS %d", cm_dnsEnabled);
@@ -716,6 +739,7 @@ int afsd_InitDaemons(char **reasonP)
 	/* this should really be in an init daemon from here on down */
 
     if (!cm_freelanceEnabled) {
+		osi_Log0(afsd_logp, "Loading Root Volume from cell");
         code = cm_GetVolumeByName(cm_rootCellp, cm_rootVolumeName, cm_rootUserp,
                                   &req, CM_FLAG_CREATE, &cm_rootVolumep);
         afsi_log("cm_GetVolumeByName code %x root vol %x", code,
