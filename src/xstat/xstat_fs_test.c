@@ -246,8 +246,10 @@ PrintOverallPerfInfo(struct afs_PerfStats *a_ovP)
     printf("\t%10d rx_nClientConns\n", a_ovP->rx_nClientConns);
     printf("\t%10d rx_nPeerStructs\n", a_ovP->rx_nPeerStructs);
     printf("\t%10d rx_nCallStructs\n", a_ovP->rx_nCallStructs);
-    printf("\t%10d rx_nFreeCallStructs\n\n", a_ovP->rx_nFreeCallStructs);
+    printf("\t%10d rx_nFreeCallStructs\n", a_ovP->rx_nFreeCallStructs);
+    printf("\t%10d rx_nBusies\n\n", a_ovP->rx_nBusies);
 
+    printf("\t%10d fs_nBusies\n\n", a_ovP->fs_nBusies);
     /*
      * Host module fields.
      */
