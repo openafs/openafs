@@ -26,11 +26,12 @@
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
+#include <afsconfig.h>
 #include <afs/param.h>
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr_arrayn.c,v 1.1.1.4.2.1 2002/08/03 21:33:30 hartmans Exp $");
+
 #if !defined(NeXT)
-#ifndef lint
-static char sccsid[] = "@(#)xdr_array.c 1.1 86/02/03 Copyr 1984 Sun Micro";
-#endif
 
 /*
  * xdr_array.c, Generic XDR routines impelmentation.
@@ -45,7 +46,9 @@ static char sccsid[] = "@(#)xdr_array.c 1.1 86/02/03 Copyr 1984 Sun Micro";
 #include <sys/param.h>
 #ifdef AFS_LINUX20_ENV
 #include "../h/string.h"
+#if 0
 #define bzero(A,C) memset((A), 0, (C))
+#endif
 #else
 #include <sys/systm.h>
 #endif
@@ -86,7 +89,10 @@ bool_t xdr_arrayN(xdrs, addrp, sizep, maxsize, elsize, elproc)
 	register caddr_t target = *addrp;
 	register u_int c;  /* the actual element count */
 	register bool_t stat = TRUE;
-	register int nodesize;
+	register u_int nodesize;
+
+        i = ((~0) >> 1) / elsize;
+        if (maxsize > i) maxsize = i;
 
 	/* like strings, arrays are really counted arrays */
 	if (! xdr_u_int(xdrs, sizep)) {
@@ -111,7 +117,7 @@ bool_t xdr_arrayN(xdrs, addrp, sizep, maxsize, elsize, elproc)
 			if (target == NULL) {
 				return (FALSE);
 			}
-			bzero(target, (u_int)nodesize);
+			memset(target, 0, (u_int)nodesize);
 			break;
 
 		case XDR_FREE:

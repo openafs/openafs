@@ -26,10 +26,15 @@
  * 2550 Garcia Avenue
  * Mountain View, California  94043
  */
-#ifndef	NeXT
-#ifndef lint
-static char sccsid[] = "@(#)xdr.c 1.1 86/02/03 Copyr 1984 Sun Micro";
+
+#include <afsconfig.h>
+#ifdef KERNEL
+#include "../afs/param.h"
+#else
+#include <afs/param.h>
 #endif
+
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/xdr.c,v 1.1.1.3.2.1 2002/08/03 21:33:30 hartmans Exp $");
 
 /*
  * xdr.c, Generic XDR routines implementation.
@@ -41,8 +46,9 @@ static char sccsid[] = "@(#)xdr.c 1.1 86/02/03 Copyr 1984 Sun Micro";
  * xdr.
  */
 
+#ifndef	NeXT
+
 #ifdef	KERNEL
-#include "../afs/param.h"
 #include <sys/param.h>
 #ifndef AFS_LINUX20_ENV
 #include <sys/systm.h>
@@ -549,6 +555,8 @@ xdr_string(xdrs, cpp, maxsize)
 	register char *sp = *cpp;  /* sp is the actual string pointer */
 	u_int size;
 	u_int nodesize;
+
+        if (maxsize > ((~0) >> 1) - 1) maxsize = ((~0) >> 1) - 1;
 
 	/*
 	 * first deal with the length since xdr strings are counted-strings
