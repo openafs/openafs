@@ -710,6 +710,25 @@ Section "AFS Server" SecServer
   File "${AFS_SERVER_BUILDDIR}\vlserver.exe"
   File "${AFS_SERVER_BUILDDIR}\volinfo.exe"
   File "${AFS_SERVER_BUILDDIR}\volserver.exe"
+
+!ifdef DEBUG
+  File "${AFS_SERVER_BUILDDIR}\afskill.pdb"
+  File "${AFS_SERVER_BUILDDIR}\afssvrcfg.pdb"
+  File "${AFS_SERVER_BUILDDIR}\bosctlsvc.pdb"
+  File "${AFS_SERVER_BUILDDIR}\bosserver.pdb"
+  File "${AFS_SERVER_BUILDDIR}\buserver.pdb"
+  File "${AFS_ETC_BUILDDIR}\butc.pdb"
+  File "${AFS_SERVER_BUILDDIR}\fileserver.pdb"
+  File "${AFS_ETC_BUILDDIR}\fms.pdb"
+  File "${AFS_SERVER_BUILDDIR}\kaserver.pdb"
+  File "${AFS_SERVER_BUILDDIR}\ptserver.pdb"
+  File "${AFS_SERVER_BUILDDIR}\salvager.pdb"
+  File "${AFS_SERVER_BUILDDIR}\upclient.pdb"
+  File "${AFS_SERVER_BUILDDIR}\upserver.pdb"
+  File "${AFS_SERVER_BUILDDIR}\vlserver.pdb"
+  File "${AFS_SERVER_BUILDDIR}\volinfo.pdb"
+  File "${AFS_SERVER_BUILDDIR}\volserver.pdb"
+!endif
  
  ;AFS Server common files
  SetOutPath "$INSTDIR\Common"
@@ -718,11 +737,23 @@ Section "AFS Server" SecServer
  File "${AFS_SERVER_BUILDDIR}\afscfgadmin.dll"
  File "${AFS_SERVER_BUILDDIR}\afskasadmin.dll"
  File "${AFS_SERVER_BUILDDIR}\afsptsadmin.dll"
+
+!ifdef DEBUG
+ File "${AFS_SERVER_BUILDDIR}\afsvosadmin.pdb"
+ File "${AFS_SERVER_BUILDDIR}\afsbosadmin.pdb"
+ File "${AFS_SERVER_BUILDDIR}\afscfgadmin.pdb"
+ File "${AFS_SERVER_BUILDDIR}\afskasadmin.pdb"
+ File "${AFS_SERVER_BUILDDIR}\afsptsadmin.pdb"
+!endif
  SetOutPath "$INSTDIR\Common"
    Call AFSLangFiles
    
    SetOutPath "$WINDIR"
    File "${AFS_SERVER_BUILDDIR}\afsserver.cpl"
+
+!ifdef DEBUG
+   File "${AFS_SERVER_BUILDDIR}\afsserver.pdb"
+!endif
    
   ;Store install folder
   WriteRegStr HKCU "${AFS_REGKEY_ROOT}\AFS Server" "" $INSTDIR
@@ -748,6 +779,9 @@ Section "AFS Server" SecServer
   ; Install the service
   SetOutPath "$INSTDIR\Common"
   File "${AFS_WININSTALL_DIR}\Service.exe"
+!ifdef DEBUG
+  File "${AFS_WININSTALL_DIR}\Service.pdb"
+!endif
   nsExec::Exec "net stop TransarcAFSServer"
   nsExec::Exec '$INSTDIR\Common\service.exe u TransarcAFSServer'
   nsExec::Exec '$INSTDIR\Common\service.exe TransarcAFSServer "$INSTDIR\Server\usr\afs\bin\bosctlsvc.exe" "OpenAFS AFS Server"'
@@ -772,6 +806,12 @@ Section "AFS Control Center" SecControl
   File "${AFS_SERVER_BUILDDIR}\TaAfsAdmSvr.exe"
   File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager.exe"
    
+!ifdef DEBUG
+  File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager.pdb"
+  File "${AFS_SERVER_BUILDDIR}\TaAfsAdmSvr.pdb"
+  File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager.pdb"
+!endif
+
  ;AFS Server common files
  Call AFSCommon.Install
  Call AFSLangFiles
@@ -1154,7 +1194,24 @@ Section "Uninstall"
    Delete /REBOOTOK "$INSTDIR\Common\afscfgadmin.dll"
    Delete /REBOOTOK "$INSTDIR\Common\afskasadmin.dll"
    Delete /REBOOTOK "$INSTDIR\Common\afsptsadmin.dll"
+
 !IFDEF DEBUG
+   Delete /REBOOTOK "$INSTDIR\Common\afs_config.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\afs_shl_ext.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\afsadminutil.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\lib\afsauthent.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\lib\afspthread.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\lib\afsrpc.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\afsclientadmin.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\afsprocmgmt.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\afsvosadmin.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\TaAfsAppLib.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\afsvosadmin.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\afsbosadmin.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\afscfgadmin.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\afskasadmin.pdb"
+   Delete /REBOOTOK "$INSTDIR\Common\afsptsadmin.pdb"
+
 !IFDEF CL1310
    Delete /REBOOTOK "$INSTDIR\Common\msvcr71d.dll"
    Delete /REBOOTOK "$INSTDIR\Common\msvcr71d.pdb"
@@ -1206,6 +1263,27 @@ Section "Uninstall"
   Delete "$INSTDIR\Server\usr\afs\bin\vlserver.exe"
   Delete "$INSTDIR\Server\usr\afs\bin\volinfo.exe"
   Delete "$INSTDIR\Server\usr\afs\bin\volserver.exe"
+
+!ifdef DEBUG
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\afskill.pdb"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\afssvrcfg.pdb"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\bosctlsvc.pdb"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\bosserver.pdb"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\buserver.pdb"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\butc.pdb"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\fileserver.pdb"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\fms.pdb"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\kaserver.pdb"
+  Delete /REBOOTOK "$INSTDIR\Server\usr\afs\bin\ptserver.pdb"
+  Delete "$INSTDIR\Server\usr\afs\bin\salvager.pdb"
+  Delete "$INSTDIR\Server\usr\afs\bin\ServerUninst.pdb"
+  Delete "$INSTDIR\Server\usr\afs\bin\upclient.pdb"
+  Delete "$INSTDIR\Server\usr\afs\bin\upserver.pdb"
+  Delete "$INSTDIR\Server\usr\afs\bin\vlserver.pdb"
+  Delete "$INSTDIR\Server\usr\afs\bin\volinfo.pdb"
+  Delete "$INSTDIR\Server\usr\afs\bin\volserver.pdb"
+!endif
+
   RMDir /r "$INSTDIR\Server\usr\afs\bin"
   RmDir /r "$INSTDIR\Server\usr\afs\etc"
   RmDir /r "$INSTDIR\Server\usr\afs\local"
@@ -1213,6 +1291,11 @@ Section "Uninstall"
   
   Delete /REBOOTOK "$WINDIR\afsserver.cpl"
   Delete /REBOOTOK "$WINDIR\afs_cpa.cpl"
+
+!ifdef DEBUG
+  Delete /REBOOTOK "$WINDIR\afsserver.pdb"
+  Delete /REBOOTOK "$WINDIR\afs_cpa.pdb"
+!endif
   
   RMDir /r "$INSTDIR\Documentation\html\CmdRef"
   RMDir /r "$INSTDIR\Documentation\html\InstallGd"
@@ -1223,6 +1306,11 @@ Section "Uninstall"
   RMDir "$INSTDIR\Documentation"
   ; Delete DOC short cut
   Delete /REBOOTOK "$INSTDIR\Client\Program\afscreds.exe"
+
+!ifdef DEBUG
+  Delete /REBOOTOK "$INSTDIR\Client\Program\afscreds.pdb"
+!endif
+
   Delete /REBOOTOK "$INSTDIR\Client\Program\*"
   Delete /REBOOTOK "$INSTDIR\Client\Program\Include\*"
   Delete /REBOOTOK "$INSTDIR\Client\Program\Include\afs\*"
@@ -1267,6 +1355,11 @@ Section "Uninstall"
   Delete /REBOOTOK "$INSTDIR\Control Center\TaAfsAdmSvr.exe"
   Delete /REBOOTOK "$INSTDIR\Control Center\TaAfsServerManager.exe"
   Delete /REBOOTOK "$INSTDIR\Control Center\CCUninst.dll"
+!ifdef DEBUG
+  Delete /REBOOTOK "$INSTDIR\Control Center\TaAfsAccountManager.pdb"
+  Delete /REBOOTOK "$INSTDIR\Control Center\TaAfsAdmSvr.pdb"
+  Delete /REBOOTOK "$INSTDIR\Control Center\TaAfsServerManager.pdb"
+!endif
   RMDir  "$INSTDIR\Control Center"
   
   Delete "$SMPROGRAMS\OpenAFS\Uninstall OpenAFS.lnk"
