@@ -427,6 +427,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-K -D_NO_PROTO -D_NONSTD_TYPES -D_MBI=void"
 		XLIBS="${LIB_AFSDB} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
+		AIX64="#"
 		;;
 
 	rs_aix51)
@@ -441,6 +442,7 @@ case $AFS_SYSNAME in
 		XCFLAGS="-K -D_NO_PROTO -D_NONSTD_TYPES -D_MBI=void"
 		XLIBS="${LIB_AFSDB} -ldl"
 		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
+		AIX64=""
 		;;
 
 	s390_linux22)
@@ -790,6 +792,7 @@ fi
 AC_SUBST(CCXPG2)
 AC_SUBST(AFSD_LIBS)
 AC_SUBST(AFSD_LDFLAGS)
+AC_SUBST(AIX64)
 AC_SUBST(AR)
 AC_SUBST(AS)
 AC_SUBST(CP)

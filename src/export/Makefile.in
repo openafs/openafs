@@ -108,14 +108,14 @@ clean:
 ${DEST}/root.client/usr/vice/etc/dkload/export.ext: export.ext
 	${INSTALL} $? $@
 
-${DEST}/root.client/usr/vice/etc/dkload/export64.ext: export64.ext
-	${INSTALL} $? $@
+${DEST}/root.client/usr/vice/etc/dkload/export64.ext: @AIX64@export64.ext
+@AIX64@	${INSTALL} $? $@
 
 ${DEST}/root.client/usr/vice/etc/dkload/export.ext.nonfs: export.ext.nonfs
 	${INSTALL} $? $@
 
-${DEST}/root.client/usr/vice/etc/dkload/export64.ext.nonfs: export64.ext.nonfs
-	${INSTALL} $? $@
+${DEST}/root.client/usr/vice/etc/dkload/export64.ext.nonfs: @AIX64@export64.ext.nonfs
+@AIX64@	${INSTALL} $? $@
 
 ${DEST}/lib/afs/export.exp: export.exp
 	${INSTALL} $? $@
@@ -149,23 +149,23 @@ ${TOP_LIBDIR}/extras.exp: ${srcdir}/extras.exp
 ${DEST}/root.client/usr/vice/etc/dkload/cfgexport: cfgexport
 	${INSTALL} $? $@
 
-${DEST}/root.client/usr/vice/etc/dkload/cfgexport64: cfgexport64
-	${INSTALL} $? $@
+${DEST}/root.client/usr/vice/etc/dkload/cfgexport64: @AIX64@cfgexport64
+@AIX64@	${INSTALL} $? $@
 
-${DEST}/root.client/usr/vice/etc/dkload/cfgafs: cfgafs
-	${INSTALL} $? $@
+${DEST}/root.client/usr/vice/etc/dkload/cfgafs: @AIX64@cfgafs
+@AIX64@	${INSTALL} $? $@
 
-${DEST}/root.client/usr/vice/etc/dkload/cfgafs64: cfgafs64
-	${INSTALL} $? $@
+${DEST}/root.client/usr/vice/etc/dkload/cfgafs64: @AIX64@cfgafs64
+@AIX64@	${INSTALL} $? $@
 
 dest:    ${DEST}/root.client/usr/vice/etc/dkload/export.ext \
-	${DEST}/root.client/usr/vice/etc/dkload/export64.ext \
 	${DEST}/root.client/usr/vice/etc/dkload/export.ext.nonfs \
 	${DEST}/root.client/usr/vice/etc/dkload/export64.ext.nonfs \
 	${DEST}/lib/afs/export.exp \
 	${DEST}/lib/afs/export64.exp \
 	${DEST}/lib/afs/extras.exp \
 	${DEST}/root.client/usr/vice/etc/dkload/cfgexport \
-	${DEST}/root.client/usr/vice/etc/dkload/cfgexport64 \
 	${DEST}/root.client/usr/vice/etc/dkload/cfgafs \
-	${DEST}/root.client/usr/vice/etc/dkload/cfgafs64
+	${DEST}/root.client/usr/vice/etc/dkload/export64.ext \
+	${DEST}/root.client/usr/vice/etc/dkload/cfgexport64 \
+	${DEST}/root.client/usr/vice/etc/dkload/cfgafs64 
