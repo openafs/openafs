@@ -496,22 +496,20 @@ retry:
 	    buf->b_blkno = btodb(toffset);
 	    bp_mapin(buf);		/* map it in to our address space */
 
-	    /* afs_ustrategy will want to lock the dcache entry */
-	    ReleaseReadLock(&tdc->lock);
-#ifndef	AFS_SUN5_ENV    
-	    ReleaseReadLock(&avc->lock);
-#endif
 #if	defined(AFS_SUN5_ENV)
 	    AFS_GLOCK();
+	    /* afs_ustrategy will want to lock the dcache entry */
+	    ReleaseReadLock(&tdc->lock);
 	    code = afs_ustrategy(buf, acred);	/* do the I/O */
+	    ObtainReadLock(&tdc->lock);
 	    AFS_GUNLOCK();
 #else
+	    ReleaseReadLock(&tdc->lock);
+	    ReleaseReadLock(&avc->lock);
 	    code = afs_ustrategy(buf);	/* do the I/O */
-#endif
-#ifndef	AFS_SUN5_ENV    
 	    ObtainReadLock(&avc->lock);
-#endif
 	    ObtainReadLock(&tdc->lock);
+#endif
 
 #ifdef	AFS_SUN5_ENV
 	    /* Before freeing unmap the buffer */
