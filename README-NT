@@ -274,9 +274,9 @@ From the DOS command prompt window run:
 
 STEP I.  Install Wix MSI Installer
 
-Download the Wix 2.0.1727 installer from 
+Download the Wix 2.0.1927.1 installer from 
 
-    http://prdownloads.sourceforge.net/wix/sources-2.0.1727.0.zip
+    http://prdownloads.sourceforge.net/wix/sources-2.0.1927.1.zip
 
 Apply the following patches to the source tree and execute 
 
@@ -287,11 +287,11 @@ from the \src\wix directory.
 Index: src/wix/Compiler.cs
 ===================================================================
 RCS file: /cvsroot/wix/wix/src/wix/Compiler.cs,v
-retrieving revision 1.9
-diff -u -b -r1.9 Compiler.cs
---- src/wix/Compiler.cs	31 May 2004 01:07:39 -0000	1.9
-+++ src/wix/Compiler.cs	20 Jun 2004 14:06:54 -0000
-@@ -657,7 +657,7 @@
+retrieving revision 1.10
+diff -u -w -r1.10 Compiler.cs
+--- src/wix/Compiler.cs	28 Jul 2004 15:50:22 -0000	1.10
++++ src/wix/Compiler.cs	4 Aug 2004 16:28:16 -0000
+@@ -647,7 +647,7 @@
                  // add the core registry keys for each context in the class
                  for (int i = 0; i < contextCount; ++i)
                  {
@@ -300,9 +300,9 @@ diff -u -b -r1.9 Compiler.cs
                      if (null != icon) // ClassId default icon
                      {
                          if (null != iconIndex)
-@@ -5710,6 +5710,20 @@
-                                 break;
-                         }
+@@ -7385,6 +7385,20 @@
+                             break;
+                     }
                          break;
 +					case "Delete":
 +						switch (attrib.Value)
@@ -321,7 +321,7 @@ diff -u -b -r1.9 Compiler.cs
                      case "Wait":
                          wait = Common.IsYes(attrib.Value, sourceLineNumbers, node.Name, attrib.Name, id) ? "1" : "0";   // strings used since integer column is nullable
                          break;
-@@ -7034,6 +7048,7 @@
+@@ -8715,6 +8729,7 @@
                          }
                          bits ^= (bit * 65536);
                          break;
@@ -329,30 +329,14 @@ diff -u -b -r1.9 Compiler.cs
                      default:
                          bit = this.NameToBit(MsiInterop.CommonControlAttributes, attrib.Name, attrib.Value, node.Name, id);
                          if (-1 == bit)
-Index: src/wix/Decompiler.cs
-===================================================================
-RCS file: /cvsroot/wix/wix/src/wix/Decompiler.cs,v
-retrieving revision 1.6
-diff -u -b -r1.6 Decompiler.cs
---- src/wix/Decompiler.cs	21 May 2004 03:57:42 -0000	1.6
-+++ src/wix/Decompiler.cs	20 Jun 2004 14:06:54 -0000
-@@ -2562,7 +2562,7 @@
-                             this.writer.WriteAttributeString("Group", "yes");
-                             text = text.Substring(1);
-                         }
--                        this.writer.WriteString(text);
-+						this.writer.WriteAttributeString("Id", text);
-                         this.writer.WriteEndElement();
-                     }
-                 }
 Index: src/wix/Preprocessor.cs
 ===================================================================
 RCS file: /cvsroot/wix/wix/src/wix/Preprocessor.cs,v
-retrieving revision 1.4
-diff -u -b -r1.4 Preprocessor.cs
---- src/wix/Preprocessor.cs	31 May 2004 01:07:40 -0000	1.4
-+++ src/wix/Preprocessor.cs	20 Jun 2004 14:06:55 -0000
-@@ -269,12 +269,12 @@
+retrieving revision 1.5
+diff -u -w -r1.5 Preprocessor.cs
+--- src/wix/Preprocessor.cs	28 Jul 2004 15:50:22 -0000	1.5
++++ src/wix/Preprocessor.cs	4 Aug 2004 16:28:16 -0000
+@@ -267,12 +267,12 @@
                              break;
                          case "ifdef":
                              stack.Push(context);
@@ -367,7 +351,7 @@ diff -u -b -r1.4 Preprocessor.cs
                              ignore = true;
                              break;
                          case "elseif":
-@@ -356,6 +356,8 @@
+@@ -354,6 +354,8 @@
                              break;
                          case "endforeach": // endforeach is handled in PreprocessForeach, so seeing it here is an error
                              throw new WixPreprocessorException(this.GetCurrentSourceLineNumbers(), "Cannot have a <?endforeach?> processing instruction without a matching <?foreach?>.");
@@ -376,7 +360,7 @@ diff -u -b -r1.4 Preprocessor.cs
                          default:
                              // Console.WriteLine("processing instruction: {0}, {1}", reader.Name, reader.Value);
                              break;
-@@ -403,6 +405,22 @@
+@@ -401,6 +403,22 @@
          }
  
          /// <summary>
@@ -399,14 +383,41 @@ diff -u -b -r1.4 Preprocessor.cs
          /// Replaces parameters in the source text.
          /// </summary>
          /// <param name="value">Text that may contain parameters to replace.</param>
+Index: src/wix/wix.csproj
+===================================================================
+RCS file: /cvsroot/wix/wix/src/wix/wix.csproj,v
+retrieving revision 1.4
+diff -u -w -r1.4 wix.csproj
+--- src/wix/wix.csproj	31 May 2004 01:07:40 -0000	1.4
++++ src/wix/wix.csproj	4 Aug 2004 16:28:16 -0000
+@@ -659,9 +659,19 @@
+                     BuildAction = "EmbeddedResource"
+                 />
+                 <File
++                    RelPath = "Xsd\wix.xsx"
++                    DependentUpon = "wix.xsd"
++                    BuildAction = "None"
++                />
++                <File
+                     RelPath = "Xsd\wixloc.xsd"
+                     BuildAction = "Content"
+                 />
++                <File
++                    RelPath = "Xsd\wixloc.xsx"
++                    DependentUpon = "wixloc.xsd"
++                    BuildAction = "None"
++                />
+             </Include>
+         </Files>
+     </CSHARP>
 Index: src/wix/Xsd/wix.xsd
 ===================================================================
 RCS file: /cvsroot/wix/wix/src/wix/Xsd/wix.xsd,v
-retrieving revision 1.11
-diff -u -b -r1.11 wix.xsd
---- src/wix/Xsd/wix.xsd	31 May 2004 01:07:40 -0000	1.11
-+++ src/wix/Xsd/wix.xsd	20 Jun 2004 14:06:55 -0000
-@@ -1736,6 +1736,7 @@
+retrieving revision 1.12
+diff -u -w -r1.12 wix.xsd
+--- src/wix/Xsd/wix.xsd	28 Jul 2004 15:50:24 -0000	1.12
++++ src/wix/Xsd/wix.xsd	4 Aug 2004 16:28:17 -0000
+@@ -2733,6 +2733,7 @@
  					</xs:restriction>
  				</xs:simpleType>
  			</xs:attribute>
