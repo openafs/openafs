@@ -127,7 +127,7 @@ EvalMountPoint(avc, advc, avolpp, areq)
        volnamep = &avc->linkData[1];
        tcell = afs_GetCell(avc->fid.Cell, READ_LOCK);
     }
-    if (!tcell) return ENODEV;
+    if (!tcell) return ENOENT;
 
     mtptCell = tcell->cell;               /* The cell for the mountpoint */
     if (tcell->lcellp) {
@@ -182,7 +182,7 @@ EvalMountPoint(avc, advc, avolpp, areq)
        }
     }
   
-    if (!tvp) return ENOENT;       /* Couldn't find the volume */
+    if (!tvp) return ENODEV;       /* Couldn't find the volume */
 
     /* Don't cross mountpoint from a BK to a BK volume */
     if ((avc->states & CBackup) && (tvp->states & VBackup)) {
@@ -198,7 +198,7 @@ EvalMountPoint(avc, advc, avolpp, areq)
        tfid.Cell       = tvp->cell;
        afs_PutVolume(tvp, WRITE_LOCK);               /* release old volume */
        tvp = afs_GetVolume(&tfid, areq, WRITE_LOCK); /* get the new one */
-       if (!tvp) return ENOENT;                      /* oops, can't do it */
+       if (!tvp) return ENODEV;                      /* oops, can't do it */
     }
 
     if (avc->mvid == 0)
@@ -1162,6 +1162,12 @@ afs_lookup(adp, aname, avcp, acred)
 	    ObtainWriteLock(&tvc->lock,133);
 	    code = EvalMountPoint(tvc, adp, &tvolp, &treq);
 	    ReleaseWriteLock(&tvc->lock);
+
+	    if (code) {
+		if (tvolp) afs_PutVolume(tvolp, WRITE_LOCK);
+		goto done;
+	    }
+
 	    /* next, we want to continue using the target of the mt point */
 	    if (tvc->mvid && (tvc->states & CMValid)) {
 	      struct vcache *uvc;
