@@ -550,10 +550,6 @@ UnicodeStringToANSI(UNICODE_STRING uInputString, LPSTR lpszOutputString, int nOu
 
     GetCPInfo(CP_ACP, &CodePageInfo);
 
-    if (CodePageInfo.MaxCharSize > 1)
-        // Only supporting non-Unicode strings
-        return FALSE;
-    
     if (uInputString.Buffer && ((LPBYTE) uInputString.Buffer)[1] == '\0')
     {
         // Looks like unicode, better translate it
@@ -565,6 +561,7 @@ UnicodeStringToANSI(UNICODE_STRING uInputString, LPSTR lpszOutputString, int nOu
     }
     else
         lpszOutputString[0] = '\0';
+
     return FALSE;
 }  // UnicodeStringToANSI
 

@@ -16,6 +16,8 @@
 #include <nb30.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <locale.h>
+#include <mbctype.h>
 #include <winsock2.h>
 
 #include <osi.h>
@@ -37,6 +39,8 @@ extern afs_int32 cryptall;
 
 char AFSConfigKeyName[] =
 	"SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters";
+char OpenAFSConfigKeyName[] =
+	"SOFTWARE\\OpenAFS\\Client";
 
 osi_log_t *afsd_logp;
 
@@ -98,6 +102,33 @@ HANDLE afsi_file;
 #ifdef AFS_AFSDB_ENV
 int cm_dnsEnabled = 1;
 #endif
+
+
+static int afsi_log_useTimestamp = 1;
+
+void
+afsi_log(char *pattern, ...)
+{
+    char s[256], t[100], d[100], u[512];
+    DWORD zilch;
+    va_list ap;
+    va_start(ap, pattern);
+
+    StringCbVPrintfA(s, sizeof(s), pattern, ap);
+    if ( afsi_log_useTimestamp ) {
+        GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
+        GetDateFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, d, sizeof(d));
+        StringCbPrintfA(u, sizeof(u), "%s %s: %s\n", d, t, s);
+        if (afsi_file != INVALID_HANDLE_VALUE)
+            WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
+#ifdef NOTSERVICE
+        printf("%s", u);
+#endif 
+    } else {
+        if (afsi_file != INVALID_HANDLE_VALUE)
+            WriteFile(afsi_file, s, strlen(s), &zilch, NULL);
+    }
+}
 
 extern initUpperCaseTable();
 void afsd_initUpperCaseTable() 
@@ -162,32 +193,20 @@ afsi_start()
     WriteFile(afsi_file, p, strlen(p), &zilch, NULL);
     WriteFile(afsi_file, path, strlen(path), &zilch, NULL);
     WriteFile(afsi_file, "\n", 1, &zilch, NULL);
-}
 
-static int afsi_log_useTimestamp = 1;
-
-void
-afsi_log(char *pattern, ...)
-{
-    char s[256], t[100], d[100], u[512];
-    DWORD zilch;
-    va_list ap;
-    va_start(ap, pattern);
-
-    StringCbVPrintfA(s, sizeof(s), pattern, ap);
-    if ( afsi_log_useTimestamp ) {
-        GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
-        GetDateFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, d, sizeof(d));
-        StringCbPrintfA(u, sizeof(u), "%s %s: %s\n", d, t, s);
-        if (afsi_file != INVALID_HANDLE_VALUE)
-            WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
-#ifdef NOTSERVICE
-        printf("%s", u);
-#endif 
-    } else {
-        if (afsi_file != INVALID_HANDLE_VALUE)
-            WriteFile(afsi_file, s, strlen(s), &zilch, NULL);
-    }
+    /* Initialize C RTL Code Page conversion functions */
+    /* All of the path info obtained from the SMB client is in the OEM code page */
+    afsi_log("OEM Code Page = %d", GetOEMCP());
+    afsi_log("locale =  %s", setlocale(LC_ALL,NULL));
+#ifdef COMMENT
+    /* Two things to look into.  First, should mbstowcs() be performing 
+     * character set translations from OEM to Unicode in smb3.c; 
+     * Second, do we need to set this translation in each function 
+     * due to multi-threading. 
+     */
+    afsi_log("locale -> %s", setlocale(LC_ALL, ".OCP"));
+    afsi_log("_setmbcp = %d -> %d", _setmbcp(_MB_CP_OEM), _getmbcp());
+#endif /* COMMENT */
 }
 
 /*
@@ -1019,11 +1038,27 @@ int afsd_InitDaemons(char **reasonP)
 
 int afsd_InitSMB(char **reasonP, void *aMBfunc)
 {
+    HKEY parmKey;
+    DWORD dummyLen;
+    DWORD dwValue;
+    DWORD code;
+
+    code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
+                         0, KEY_QUERY_VALUE, &parmKey);
+    if (code == ERROR_SUCCESS) {
+        dummyLen = sizeof(DWORD);
+        code = RegQueryValueEx(parmKey, "StoreAnsiFilenames", NULL, NULL,
+                                (BYTE *) &dwValue, &dummyLen);
+        if (code == ERROR_SUCCESS)
+            smb_StoreAnsiFilenames = dwValue ? 1 : 0;
+        RegCloseKey (parmKey);
+    }
+
     /* Do this last so that we don't handle requests before init is done.
      * Here we initialize the SMB listener.
      */
     smb_Init(afsd_logp, cm_NetbiosName, smb_UseV3, LANadapter, numSvThreads, aMBfunc);
-    afsi_log("smb_Init");
+    afsi_log("smb_Init complete");
 
     return 0;
 }

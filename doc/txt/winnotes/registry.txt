@@ -450,7 +450,7 @@ Default : 0x1
 
 
 Value   : IoctlDebug
-Type	: REG_DEBUG
+Type	: REG_DWORD
 Default : 0x0
 
   This value can be used to debug the cause of pioctl() failures.
@@ -458,6 +458,22 @@ Default : 0x0
   information to stdout.  Executing command line tools such as
   tokens.exe, fs.exe, etc can then be used to determine why the
   pioctl() call is failing. 
+
+
+Value   : StoreAnsiFilenames
+Type    : REG_DWORD
+Default : 0x0
+
+  This value can be used to force the AFS Client Service to
+  store filenames using the Windows system's ANSI character set
+  instead of the OEM Code Page character set which has traditionally
+  been used by SMB file systems.  
+
+  Note: The use of ANSI characters will render access to files
+  with 8-bit OEM file names unaccessible from Windows.  This option
+  is of use primarily when you wish to allow file names produced
+  on Windows to be accessible from Latin-1 Unix systems and vice
+  versa.
 
 
 
