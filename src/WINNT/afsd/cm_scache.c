@@ -644,6 +644,8 @@ sleep:
 
 		/* wait here, then try again */
 		osi_Log1(afsd_logp, "CM SyncOp sleeping scp %x", (long) scp);
+        if ( scp->flags & CM_SCACHEFLAG_WAITING ) 
+            osi_Log1(afsd_logp, "CM SyncOp CM_SCACHEFLAG_WAITING already set for 0x%x", scp);
 		scp->flags |= CM_SCACHEFLAG_WAITING;
 		if (bufLocked) lock_ReleaseMutex(&bufp->mx);
         osi_SleepM((long) &scp->flags, &scp->mx);

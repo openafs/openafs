@@ -93,4 +93,8 @@ extern long cm_ChangeRankServer(cm_serverRef_t** list, cm_server_t* server);
 
 extern void cm_RandomizeServer(cm_serverRef_t** list); 
 
+extern void cm_FreeServer(cm_server_t* server);
+
+extern void cm_FreeServerList(cm_serverRef_t** list);
+
 #endif /*  __CM_SERVER_H_ENV__ */

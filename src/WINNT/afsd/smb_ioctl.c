@@ -276,6 +276,7 @@ long smb_IoctlV3Read(smb_fid_t *fidp, smb_vc_t *vcp, smb_packet_t *inp, smb_pack
         count = smb_GetSMBParm(inp, 5);
 	
 	userp = smb_GetUser(vcp, inp);
+	osi_assert(userp != 0);
 
 	{
 		smb_user_t *uidp;

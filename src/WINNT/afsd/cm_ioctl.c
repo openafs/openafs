@@ -28,6 +28,7 @@
 #include "afsd_init.h"
 
 #include "smb.h"
+#include "cm_server.h"
 
 #ifndef DJGPP
 #include <rx/rxkad.h>
@@ -938,18 +939,55 @@ long cm_IoctlNewCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
      * cell list will be cm_CellLock and cm_ServerLock will be held for write.
     */  
   
-    cm_cell_t *tcellp;
+    cm_cell_t *cp;
+    cm_cell_t *tcp;
   
     cm_SkipIoctlPath(ioctlp);
     lock_ObtainWrite(&cm_cellLock);
   
-    for(tcellp = cm_allCellsp; tcellp; tcellp=tcellp->nextp) 
+    for(cp = cm_allCellsp; cp; cp=cp->nextp) 
     {
+        long code;
+      top:
         /* delete all previous server lists - cm_FreeServerList will ask for write on cm_ServerLock*/
-        cm_FreeServerList(&tcellp->vlServersp);
-        tcellp->vlServersp = NULL;
-        cm_SearchCellFile(tcellp->namep, tcellp->namep, cm_AddCellProc, tcellp);
-        cm_RandomizeServer(&tcellp->vlServersp);
+        cm_FreeServerList(&cp->vlServersp);
+        cp->vlServersp = NULL;
+        code = cm_SearchCellFile(cp->namep, cp->namep, cm_AddCellProc, cp);
+		if (code) {
+#ifdef AFS_AFSDB_ENV
+            if (cm_dnsEnabled) {
+                int ttl;
+                code = cm_SearchCellByDNS(cp->namep, cp->namep, &ttl, cm_AddCellProc, cp);
+                if ( code ) {
+                    if ( cm_allCellsp == cp )
+                        cm_allCellsp = cp->nextp;
+                    else {
+                        for(tcp = cm_allCellsp; tcp->nextp; tcp=tcp->nextp) {
+                            if ( tcp->nextp == cp ) {
+                                tcp->nextp = cp->nextp;
+                                break;
+                            }
+                        }
+                    }   
+                    
+                    lock_FinalizeMutex(&cp->mx);
+                    free(cp->namep);
+                }
+                else {   /* got cell from DNS */
+                    cp->flags |= CM_CELLFLAG_DNS;
+                    cp->timeout = time(0) + ttl;
+                }
+            }
+#endif /* AFS_AFSDB_ENV */
+        }
+        if (code) {
+            tcp = cp;
+            cp = cp->nextp;
+            free(tcp);
+            goto top;
+        }
+        else
+            cm_RandomizeServer(&cp->vlServersp);
     }
     
     lock_ReleaseWrite(&cm_cellLock);

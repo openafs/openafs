@@ -34,7 +34,7 @@ long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep)
 {
 	cm_server_t *tsp;
 	cm_serverRef_t *tsrp;
-        cm_cell_t *cellp;
+    cm_cell_t *cellp;
         
 	cellp = rockp;
 
@@ -82,8 +82,18 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
          || (cp && (cp->flags & CM_CELLFLAG_DNS) && (time(0) > cp->timeout))
 #endif
 	  ) {
-		if (!cp) cp = malloc(sizeof(*cp));
-        memset(cp, 0, sizeof(*cp));
+        int dns_expired = 0;
+		if (!cp) {
+            cp = malloc(sizeof(*cp));
+            memset(cp, 0, sizeof(*cp));
+        } 
+        else {
+            dns_expired = 1;
+            /* must empty cp->vlServersp */
+            cm_FreeServerList(&cp->vlServersp);
+            cp->vlServersp = NULL;
+        }
+
         code = cm_SearchCellFile(namep, fullname, cm_AddCellProc, cp);
 		if (code) {
             afsi_log("in cm_GetCell_gen cm_SearchCellFile(%s) returns code= %d fullname= %s", 
@@ -92,9 +102,31 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
 #ifdef AFS_AFSDB_ENV
             if (cm_dnsEnabled /*&& cm_DomainValid(namep)*/) {
                 code = cm_SearchCellByDNS(namep, fullname, &ttl, cm_AddCellProc, cp);
-                if ( code )
+                if ( code ) {
                     afsi_log("in cm_GetCell_gen cm_SearchCellByDNS(%s) returns code= %d fullname= %s", 
                              namep, code, fullname);
+                    if (dns_expired) {
+                        if ( cm_allCellsp == cp )
+                            cm_allCellsp = cp->nextp;
+                        else {
+                            cm_cell_t *tcp;
+
+                            for(tcp = cm_allCellsp; tcp->nextp; tcp=tcp->nextp) {
+                                if ( tcp->nextp == cp ) {
+                                    tcp->nextp = cp->nextp;
+                                    break;
+                                }
+                            }
+                        }
+                    
+                        lock_FinalizeMutex(&cp->mx);
+                        free(cp->namep);
+                    }
+                }
+                else {   /* got cell from DNS */
+                    cp->flags |= CM_CELLFLAG_DNS;
+                    cp->timeout = time(0) + ttl;
+                }
             }
 #endif
             if (code) {
@@ -102,16 +134,19 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
                 cp = NULL;
                 goto done;
             }
-#ifdef AFS_AFSDB_ENV
-            else {   /* got cell from DNS */
-                cp->flags |= CM_CELLFLAG_DNS;
-                cp->timeout = time(0) + ttl;
-            }
-#endif
 		}
 
 		/* randomise among those vlservers having the same rank*/ 
 		cm_RandomizeServer(&cp->vlServersp);
+
+#ifdef AFS_AFSDB_ENV
+        if (dns_expired) {
+            /* we want to preserve the full name and mutex.
+             * also, cp is already in the cm_allCellsp list
+             */
+            goto done;
+        }
+#endif /* AFS_AFSDB_ENV */
 
         /* otherwise we found the cell, and so we're nearly done */
         lock_InitializeMutex(&cp->mx, "cm_cell_t mutex");
@@ -130,9 +165,9 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
   done:
     /* fullname is not valid if cp == NULL */
 	if (cp && newnamep)
-	  strcpy(newnamep, fullname);
+        strcpy(newnamep, fullname);
 	lock_ReleaseWrite(&cm_cellLock);
-        return cp;
+    return cp;
 }
 
 cm_cell_t *cm_FindCellByID(long cellID)
@@ -143,8 +178,9 @@ cm_cell_t *cm_FindCellByID(long cellID)
 
 	lock_ObtainWrite(&cm_cellLock);
 	for(cp = cm_allCellsp; cp; cp=cp->nextp) {
-		if (cellID == cp->cellID) break;
-        }
+		if (cellID == cp->cellID) 
+            break;
+    }
 
 #ifdef AFS_AFSDB_ENV
 	/* if it's from DNS, see if it has expired */
@@ -163,8 +199,7 @@ cm_cell_t *cm_FindCellByID(long cellID)
 #endif /* AFS_AFSDB_ENV */
 
 	lock_ReleaseWrite(&cm_cellLock);	
-	
-        return cp;
+    return cp;
 }
 
 void cm_InitCell(void)
@@ -177,7 +212,7 @@ void cm_InitCell(void)
 		osi_EndOnce(&once);
         }
 }
-void cm_ChangeRankCellVLServer(cm_server_t       *tsp)
+void cm_ChangeRankCellVLServer(cm_server_t *tsp)
 {
 	cm_cell_t *cp;
 	int code;

@@ -82,7 +82,7 @@ smb_ncb_t *smb_ncbFreeListp;
 
 int smb_NumServerThreads;
 
-int numNCBs, numSessions;
+int numNCBs, numSessions, numVCs;
 
 int smb_maxVCPerServer;
 int smb_maxMpxRequests;
@@ -728,6 +728,7 @@ smb_vc_t *smb_FindVC(unsigned short lsn, int flags, int lana)
 	if (!vcp && (flags & SMB_FLAG_CREATE)) {
 		vcp = malloc(sizeof(*vcp));
 		memset(vcp, 0, sizeof(*vcp));
+        vcp->vcID = numVCs++;
 		vcp->refCount = 1;
 		vcp->tidCounter = 1;
 		vcp->fidCounter = 1;
@@ -6690,8 +6691,8 @@ void smb_Listener(void *parmp)
          * we run out.
          */
 
-        osi_assert(i < Sessionmax);
-        osi_assert(numNCBs < NCBmax);
+        osi_assert(i < Sessionmax - 1);
+        osi_assert(numNCBs < NCBmax - 1);   /* if we pass this test we can allocate one more */
 
 		LSNs[i] = ncbp->ncb_lsn;
 		lanas[i] = ncbp->ncb_lana_num;
@@ -7028,6 +7029,7 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
     smb_NetbiosInit();
 
 	/* Initialize listener and server structures */
+    numVCs = 0;
 	memset(dead_sessions, 0, sizeof(dead_sessions));
     sprintf(eventName, "SessionEvents[0]");
 	SessionEvents[0] = thrd_CreateEvent(NULL, FALSE, FALSE, eventName);
