@@ -3521,8 +3521,7 @@ DeleteEntry(as)
 			itp->data);
 		fprintf(STDERR,
 			"You must specify a RW volume name or ID "
-			"(the entire VLDB entry will be deleted)\n",
-			itp->data);
+			"(the entire VLDB entry will be deleted)\n");
 		PrintError("", vcode);
 		totalFail++;
 		continue;
