@@ -27,7 +27,7 @@ ifndef KSRC
 KSRC=/usr/src/linux
 endif
 MODDIR=..
-
+LINTIAN_PACKAGES= openafs-client openafs-fileserver
 export KSRC 
 export KVERS
 
@@ -49,9 +49,6 @@ build-stamp:
 	dh_testdir
 
 	$(MAKE)
-	mkdir -p debian/openafs-dbserver/usr/share/man/man8
-		/usr/bin/docbook-to-man debian/pt_util.sgml  \
-		>debian/openafs-dbserver/usr/share/man/man8/pt_util.8
 	-rm $(SYS_NAME)/dest/include/crypt.h
 	touch build-stamp
 
@@ -74,7 +71,12 @@ install: build
 	dh_testroot
 	dh_clean -k
 	dh_installdirs
-
+	mkdir -p debian/openafs-dbserver/usr/share/man/man8
+		/usr/bin/docbook-to-man debian/pt_util.sgml >debian/openafs-dbserver/usr/share/man/man8/pt_util.8
+	for foo in $(LINTIAN_PACKAGES) ; do \
+		install -d debian/$$foo/usr/share/lintian/overrides; \
+		cp debian/$$foo.lintian debian/$$foo/usr/share/lintian/overrides/$$foo; \
+		done
 	for pkg in openafs-dbserver openafs-fileserver openafs-kpasswd; do \
 		ln -s openafs-client debian/$$pkg/usr/share/doc/$$pkg; \
 		done

@@ -1,3 +1,18 @@
+openafs (1.1.1-2) unstable; urgency=medium
+
+  * Swallow before vomiting, for it is the Debconf way, closes: #106030
+  * Fix setting of INSTALL macro on powerpc, closes: #106019
+  * Support AFSDB in debconf.  By default now (assuming you take the new
+    /etc/openafs/afs.conf), AFS will look up cells  it doesn't know
+    about in DNS.
+  * Include upstream patch to prevent potential DOS with two RX servers
+    looping rxdebug and version amongst each other.
+  * Install rxdebug (oops)
+  * Fix lintian overrides to get Lintian to stop complaining about
+    non-problems. 
+
+ -- Sam Hartman <hartmans@debian.org>  Sat, 21 Jul 2001 08:53:10 -0400
+
 openafs (1.1.1-1) unstable; urgency=low
 
   * New upstream release to fix readlink sometimes giving permission
