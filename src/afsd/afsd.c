@@ -213,6 +213,9 @@ static int nBiods = 5;			/* AIX3.1 only */
 static int preallocs = 400;		/* Def # of allocated memory blocks */
 static int enable_peer_stats = 0;	/* enable rx stats */
 static int enable_process_stats = 0;	/* enable rx stats */
+#ifdef AFS_AFSDB_ENV
+static int enable_afsdb = 0;		/* enable AFSDB support */
+#endif
 #ifdef notdef
 static int inodes = 60;		        /* VERY conservative, but has to be */
 #endif
@@ -709,6 +712,41 @@ struct afsconf_dir *adir; {
     return 0;
 }
 
+#ifdef AFS_AFSDB_ENV
+static AfsdbLookupHandler()
+{
+    afs_int32 kernelMsg[64];
+    char acellName[128];
+    afs_int32 code;
+    struct afsconf_cell acellInfo;
+    int i;
+
+    while (1) {
+	/* On some platforms you only get 4 args to an AFS call */
+	int sizeArg = ((sizeof acellName) << 16) | (sizeof kernelMsg);
+	code = call_syscall(AFSOP_AFSDB_HANDLER, acellName, kernelMsg, sizeArg);
+	if (code) {		/* Something is wrong? */
+	    sleep(1);
+	    continue;
+	}
+
+	code = afsconf_GetAfsdbInfo(acellName, 0, &acellInfo);
+	if (code) {
+	    kernelMsg[0] = 0;
+	    kernelMsg[1] = 0;
+	} else {
+	    kernelMsg[0] = acellInfo.numServers;
+	    if (acellInfo.timeout)
+		kernelMsg[1] = acellInfo.timeout - time(0);
+	    else
+		kernelMsg[1] = 0;
+	    for (i=0; i<acellInfo.numServers; i++)
+		kernelMsg[i+2] = acellInfo.hostAddr[i].sin_addr.s_addr;
+	}    
+    }
+}
+#endif
+
 #ifdef mac2
 #include <sys/ioctl.h>
 #endif /* mac2 */
@@ -895,6 +933,14 @@ mainproc(as, arock)
     if (as->parms[23].items) {
 	/* -mem_alloc_sleep */
 	cacheFlags |= AFSCALL_INIT_MEMCACHE_SLEEP;
+    }
+    if (as->parms[24].items) {
+	/* -afsdb */
+#ifdef AFS_AFSDB_ENV
+	enable_afsdb = 1;
+#else
+	printf("afsd: No AFSDB support; ignoring -afsdb");
+#endif
     }
 
     /*
@@ -1115,6 +1161,18 @@ mainproc(as, arock)
     }
 #endif
 
+#ifdef AFS_AFSDB_ENV
+    if (enable_afsdb) {
+	if (afsd_verbose)
+	    printf("%s: Forking AFSDB lookup handler.\n", rn);
+	code = fork();
+	if (code == 0) {
+	    AfsdbLookupHandler();
+	    exit(1);
+	}
+    }
+#endif
+
     /* Initialize AFS daemon threads. */
     if (afsd_verbose)
 	printf("%s: Forking AFS daemon.\n", rn);
@@ -1187,8 +1245,8 @@ mainproc(as, arock)
     }
 
     /*
-         * If the root volume has been explicitly set, tell the kernel.
-         */
+     * If the root volume has been explicitly set, tell the kernel.
+     */
     if (rootVolSet) {
 	if (afsd_verbose)
 	    printf("%s: Calling AFSOP_ROOTVOLUME with '%s'\n",
@@ -1460,6 +1518,11 @@ char **argv; {
     cmd_AddParm(ts, "-enable_peer_stats", CMD_FLAG, CMD_OPTIONAL|CMD_HIDE, "Collect rpc statistics by peer");
     cmd_AddParm(ts, "-enable_process_stats", CMD_FLAG, CMD_OPTIONAL|CMD_HIDE, "Collect rpc statistics for this process");
     cmd_AddParm(ts, "-mem_alloc_sleep", CMD_FLAG, (CMD_OPTIONAL | CMD_HIDE), "Allow sleeps when allocating memory cache");
+    cmd_AddParm(ts, "-afsdb", CMD_FLAG, (CMD_OPTIONAL
+#ifndef AFS_AFSDB_ENV
+		| CMD_HIDE
+#endif
+		), "Enable AFSDB support");
     return (cmd_Dispatch(argc, argv));
 }
 

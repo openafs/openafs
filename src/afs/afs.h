@@ -194,6 +194,7 @@ struct cell {
     u_short vlport;			    /* volume server port */
     short states;			    /* state flags */
     short cellIndex;			    /* relative index number per cell */
+    time_t timeout;			    /* data expire time, if non-zero */
 };
 
 #define	afs_PutCell(cellp, locktype)

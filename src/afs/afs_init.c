@@ -45,6 +45,7 @@ extern afs_int32 fvTable[NFENTRIES];
 extern afs_rwlock_t afs_xcell;
 extern struct afs_q CellLRU;
 extern afs_int32 afs_cellindex;
+extern afs_int32 afs_nextCellNum;
 
 /* afs_conn.c */
 extern afs_rwlock_t afs_xconn;
@@ -844,6 +845,7 @@ void shutdown_AFS()
       afs_volCounter = 1;
       afs_waitForever = afs_waitForeverCount = 0;
       afs_cellindex = 0;
+      afs_nextCellNum = 0x100;
       afs_FVIndex = -1;
       afs_server = (struct rx_service *)0;
       RWLOCK_INIT(&afs_xconn, "afs_xconn");

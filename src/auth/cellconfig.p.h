@@ -66,6 +66,7 @@ struct afsconf_cell {
     struct sockaddr_in hostAddr[MAXHOSTSPERCELL];	/*IP addresses for cell's servers*/
     char hostName[MAXHOSTSPERCELL][MAXHOSTCHARS];	/*Names for cell's servers*/
     char *linkedCell;				/* Linked cell name, if any */
+    int timeout;				/* Data timeout, if non-zero */
 };
 
 struct afsconf_entry {

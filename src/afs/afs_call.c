@@ -284,7 +284,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 		AFS_COPYIN((char *)parm3, tcell.cellName, parm4, code);
 		if (!code) 
 		    afs_NewCell(tcell.cellName, tcell.hosts, parm5,
-				(char *)0, (u_short)0, (u_short)0);
+				(char *)0, (u_short)0, (u_short)0, (int)0);
 	    }
 	}
     } else if (parm == AFSOP_ADDCELL2) {
@@ -314,7 +314,7 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 		}
 		if (!code)
 		    afs_NewCell(tbuffer1, tcell.hosts, cflags, 
-				lcnamep, (u_short)0, (u_short)0);
+				lcnamep, (u_short)0, (u_short)0, (int)0);
 	    }
 	}
 	osi_FreeSmallSpace(tbuffer);
@@ -595,7 +595,22 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 #endif /* !AFS_SUN5_ENV */
       if (!code) 
 	 AFS_COPYOUT ((caddr_t)&mask, (caddr_t)parm3, sizeof(afs_int32), code);
-  } else
+    }
+#ifdef AFS_AFSDB_ENV
+    else if (parm == AFSOP_AFSDB_HANDLER) {
+	int sizeArg = (int)parm4;
+	int kmsgLen = sizeArg & 0xffff;
+	int cellLen = (sizeArg & 0xffff0000) >> 16;
+	afs_int32 *kmsg = afs_osi_Alloc(kmsgLen);
+	char *cellname = afs_osi_Alloc(cellLen);
+	AFS_COPYIN((afs_int32 *)parm3, kmsg, kmsgLen, code);
+	if (!code) code = afs_AfsdbHandler(cellname, cellLen, kmsg);
+	if (!code) AFS_COPYOUT(cellname, (char *)parm2, cellLen, code);
+	afs_osi_Free(kmsg, kmsgLen);
+	afs_osi_Free(cellname, cellLen);
+    }
+#endif
+    else
       code = EINVAL;
 
 out:

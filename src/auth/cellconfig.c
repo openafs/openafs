@@ -26,7 +26,11 @@
 #include <netdb.h>
 #include <sys/file.h>
 #include <sys/time.h>
-#endif
+#ifdef AFS_AFSDB_ENV
+#include <arpa/nameser.h>
+#include <resolv.h>
+#endif /* AFS_AFSDB_ENV */
+#endif /* AFS_NT40_ENV */
 #include <errno.h>
 #include <ctype.h>
 #include <time.h>
@@ -542,6 +546,97 @@ afsconf_GetExtendedCellInfo(adir, acellName, aservice, acellInfo, clones)
     return code;
 }
 
+#ifdef AFS_AFSDB_ENV
+afsconf_GetAfsdbInfo(acellName, aservice, acellInfo)
+    char *acellName;
+    char *aservice;
+    struct afsconf_cell *acellInfo;
+{
+    afs_int32 code;
+    int tservice, len, i;
+    unsigned char answer[1024];
+    unsigned char *p;
+    char host[256];
+    int server_num = 0;
+    int minttl = 0;
+
+    /* The resolver isn't always MT-safe.. Perhaps this ought to be
+     * replaced with a more fine-grained lock just for the resolver
+     * operations.
+     */
+    LOCK_GLOBAL_MUTEX
+    len = res_search(acellName, C_IN, T_AFSDB, answer, sizeof(answer));
+    UNLOCK_GLOBAL_MUTEX
+
+    if (len < 0)
+	return AFSCONF_NOTFOUND;
+
+    p = answer + sizeof(HEADER);	/* Skip header */
+    code = dn_expand(answer, answer + len, p, host, sizeof(host));
+    if (code < 0)
+	return AFSCONF_NOTFOUND;
+    strncpy(acellInfo->name, host, sizeof(acellInfo->name));
+
+    p += code + QFIXEDSZ;	/* Skip name */
+
+    while (p < answer + len) {
+	int type, ttl, size;
+
+	code = dn_expand(answer, answer + len, p, host, sizeof(host));
+	if (code < 0)
+	    return AFSCONF_NOTFOUND;
+
+	p += code;	/* Skip the name */
+	type = (p[0] << 8) | p[1];
+	p += 4;		/* Skip type and class */
+	ttl = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
+	p += 4;		/* Skip the TTL */
+	size = (p[0] << 8) | p[1];
+	p += 2;		/* Skip the size */
+
+	if (type == T_AFSDB) {
+	    struct hostent *he;
+
+	    code = dn_expand(answer, answer+len, p+2, host, sizeof(host));
+	    if (code < 0)
+		return AFSCONF_NOTFOUND;
+
+	    /* Do we want to get TTL data for the A record as well? */
+	    he = gethostbyname(host);
+	    if (he && server_num < MAXHOSTSPERCELL) {
+		afs_int32 ipaddr;
+		memcpy(&ipaddr, he->h_addr, he->h_length);
+		acellInfo->hostAddr[server_num].sin_addr.s_addr = ipaddr;
+		strncpy(acellInfo->hostName[server_num], host,
+			sizeof(acellInfo->hostName[server_num]));
+		server_num++;
+
+		if (!minttl || ttl < minttl) minttl = ttl;
+	    }
+	}
+
+	p += size;
+    }
+
+    if (server_num == 0)		/* No AFSDB records */
+	return AFSCONF_NOTFOUND;
+    acellInfo->numServers = server_num;
+
+    if (aservice) {
+	tservice = afsconf_FindService(aservice);
+	if (tservice < 0)
+	    return AFSCONF_NOTFOUND;  /* service not found */
+	for (i=0; i<acellInfo->numServers; i++) {
+	    acellInfo->hostAddr[i].sin_port = tservice;
+	}
+    }
+
+    acellInfo->timeout = minttl ? (time(0) + minttl) : 0;
+
+    return 0;
+}
+#endif /* AFS_AFSDB_ENV */
+
 afsconf_GetCellInfo(adir, acellName, aservice, acellInfo)
 struct afsconf_dir *adir;
 char *aservice;
@@ -603,12 +698,17 @@ struct afsconf_cell *acellInfo; {
 		acellInfo->hostAddr[i].sin_port = tservice;
 	    }
 	}
+	acellInfo->timeout = 0;
 	UNLOCK_GLOBAL_MUTEX
 	return 0;
     }
     else {
 	UNLOCK_GLOBAL_MUTEX
+#ifdef AFS_AFSDB_ENV
+	return afsconf_GetAfsdbInfo(acellName, aservice, acellInfo);
+#else
 	return AFSCONF_NOTFOUND;
+#endif /* AFS_AFSDB_ENV */
     }
 }
 

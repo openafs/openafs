@@ -38,6 +38,7 @@
 #define	AFSOP_GETIFADDRS	 21	/* get machine's ethernet interfaces */
 
 #define	AFSOP_ADDCELL2		 29	/* 2nd add cell protocol interface */
+#define	AFSOP_AFSDB_HANDLER	 30	/* userspace AFSDB lookup handler */
 
 /* The range 20-30 is reserved for AFS system offsets in the afs_syscall */
 #define	AFSCALL_PIOCTL		20
