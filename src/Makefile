@@ -36,7 +36,7 @@ WITH_DEPRECATED=YES
 
 all:
 	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
-	$(MAKE) install "COMPILE_PART1=cd obj; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ SRCDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=`pwd`/${SYS_NAME}/obj" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ SRCDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=`pwd`/${SYS_NAME}/obj" SYS_NAME=${SYS_NAME} "WASHTOOL=echo No washtool: "
+	$(MAKE) install "COMPILE_PART1=cd obj; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ SRCDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=`pwd`/${SYS_NAME}/obj" "COMPILE_PART3=; $(MAKE) SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ SRCDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=`pwd`/${SYS_NAME}/obj" SYS_NAME=${SYS_NAME} "WASHTOOL=echo No washtool: "
 
 basics:
 	-if test -f "${WASHTOOL}"; \
@@ -63,6 +63,9 @@ procmgmt: basics config pinstall
 
 util: basics pinstall procmgmt
 	${COMPILE_PART1} util ${COMPILE_PART2}
+
+kernutil: basics pinstall
+	${COMPILE_PART1} util ${COMPILE_PART3} kinstall
 
 audit: basics pinstall rx rxkad fsint
 	${COMPILE_PART1} audit ${COMPILE_PART2}
@@ -95,27 +98,31 @@ rx: project lwp rxgen
 rxstat: rx
 	${COMPILE_PART1} rxstat ${COMPILE_PART2}
 
+krxstat:
+	${COMPILE_PART1} rxstat ${COMPILE_PART3} kinstall
+
 rxincls: rxobj
-	${COMPILE_PART1} rx ${COMPILE_PART2}
+	${COMPILE_PART1} rx ${COMPILE_PART3} kinstall
 
 rxtests: rxobj
-	${COMPILE_PART1} rx ${COMPILE_PART3}
+	${COMPILE_PART1} rx ${COMPILE_PART3} test
 
 fsint: project kfsint
-
-kfsint: rxgen rxincls lwp
 	${COMPILE_PART1} fsint ${COMPILE_PART2}
+
+kfsint: rxgen rxincls
+	${COMPILE_PART1} fsint ${COMPILE_PART3} kinstall
 
 export2: project fsint
 
-export: minproject fsint
+export: minproject kfsint
 	@case ${SYS_NAME} in \
 	rs_aix*)	\
 	    ${COMPILE_PART1} export ${COMPILE_PART2} ;; \
 	  * ) echo skipping export for ${SYS_NAME} ;; \
 	esac
 
-afs: minproject export
+afs: project export
 	${COMPILE_PART1} afs ${COMPILE_PART2}
 
 des: minproject config
@@ -132,6 +139,11 @@ rxkad: project des
 	${WASHTOOL} object rxkad
 	${WASHTOOL} object rxkad/domestic
 	${COMPILE_PART1} rxkad ${COMPILE_PART2}
+
+kernrxkad: minproject
+	${WASHTOOL} object rxkad
+	${WASHTOOL} object rxkad/domestic
+	${COMPILE_PART1} rxkad ${COMPILE_PART3} kinstall
 
 kernauth: 
 	${COMPILE_PART1} auth ${COMPILE_PART2}
@@ -155,13 +167,16 @@ kauth: project ubik cmd auth comerr ptserver audit libacl
 dauth: project ubik cmd auth comerr
 	${COMPILE_PART1} dauth ${COMPILE_PART2}
 
+kernacl:
+	${COMPILE_PART1} libacl ${COMPILE_PART3} kinstall
+
 libacl: project ptserver
 	${COMPILE_PART1} libacl ${COMPILE_PART2}
 
 kerndir: minproject 
-	${COMPILE_PART1} dir ${COMPILE_PART2}
+	${COMPILE_PART1} dir ${COMPILE_PART3} kinstall
 
-dir: project libacl
+dir: project
 	${COMPILE_PART1} dir ${COMPILE_PART2}
 
 # Removed from sgi_* case below:
@@ -179,6 +194,9 @@ vol: project dir afs sgiefs
 
 vlserver: project vol audit
 	${COMPILE_PART1} vlserver ${COMPILE_PART2}
+
+kvlserver: minproject
+	${COMPILE_PART1} vlserver ${COMPILE_PART3} kinstall
 
 viced: project vlserver audit
 	${COMPILE_PART1} viced  ${COMPILE_PART2}
@@ -265,16 +283,14 @@ login: project kauth rxkad
 
 KERNELDIR= \
   afs \
-  dir \
-  rx \
-  fsint \
-  auth \
-  rxkad \
-  util \
-  libacl \
-  vlserver \
+  kerndir \
+  kfsint \
+  kernrxkad \
+  kernutil \
+  kernacl \
+  kvlserver \
   sgiefs  \
-  rxstat
+  krxstat
 
 
 UKERNELDIR= \
