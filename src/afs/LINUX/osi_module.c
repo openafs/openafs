@@ -267,15 +267,32 @@ int init_module(void)
     ptr=(unsigned long *)sec_start;
     datalen=(sec_end-sec_start)/sizeof(unsigned long);
 #else
+#if defined(AFS_IA64_LINUX20_ENV)
+    ptr = (unsigned long *) (&sys_close - 0x180000);
+    datalen=0x180000/sizeof(ptr);
+#else
     ptr=(unsigned long *)&init_mm;
     datalen=16384;
 #endif
+#endif
     for (offset=0;offset <datalen;ptr++,offset++) {
+#if defined(AFS_IA64_LINUX20_ENV)
+	unsigned long close_ip=(unsigned long) ((struct fptr *)&sys_close)->ip;
+	unsigned long chdir_ip=(unsigned long) ((struct fptr *)&sys_chdir)->ip;
+	unsigned long write_ip=(unsigned long) ((struct fptr *)&sys_write)->ip;
+	if (ptr[0] == close_ip &&
+	    ptr[__NR_chdir - __NR_close] == chdir_ip &&
+	    ptr[__NR_write - __NR_close] == write_ip) {
+	    sys_call_table=(void *) &(ptr[ -1 * (__NR_close-1024)]);
+	    break;
+	}
+#else
       if (ptr[0] == (unsigned long)&sys_exit &&
 	  ptr[__NR_open - __NR_exit] == (unsigned long)&sys_open) {
 	sys_call_table=ptr - __NR_exit;
 	break;
       }
+#endif
     }
 #ifdef EXPORTED_KALLSYMS_ADDRESS
     ret=kallsyms_address_to_symbol((unsigned long)sys_call_table, &mod_name,
@@ -292,7 +309,7 @@ int init_module(void)
 # ifdef AFS_SPARC64_LINUX20_ENV
     error cant support this yet.
 #endif
-#endif /* SYS_CALL_TABLE */
+#endif /* EXPORTED_SYS_CALL_TABLE */
       
     /* Initialize pointers to kernel syscalls. */
 #if defined(AFS_IA64_LINUX20_ENV)
