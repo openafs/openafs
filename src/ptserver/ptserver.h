@@ -20,6 +20,7 @@
 
 #define	PRBADID		0x80000000
 
+#define SYSVIEWERID     -203
 #define	SYSADMINID	-204
 #define SYSBACKUPID     -205
 #define	ANYUSERID	-101
