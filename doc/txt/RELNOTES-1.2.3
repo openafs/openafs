@@ -1,0 +1,95 @@
+                  OpenAFS Release Notes - Version 1.2.3
+     _________________________________________________________________
+Linux clients: Major bugfixes
+All other systems: Minor updates
+     _________________________________________________________________
+
+All systems:
+- client now supports InlineBulk RPC to cut down round trips on
+  directories including unreadable files, and caches whether server
+  supports it.
+- vos "crypt" flag renamed to "encrypt" so -c again uniquely refers to cell.
+- bos addhost -clone now works correctly.
+- fileserver clears CLIENTDELETED flag in hosts when we take care of deleted
+  clients.
+- butc config file format again allows an extra column for comments as it did 
+  in AFS 3.4a
+- setting server preferences correctly holds the afs_xcell lock while modifying
+  cell server lists to avoid potential null pointer dereference.
+- include appropriate newlines in bos logging output.
+- zero server host address when doing ResetVolumes to avoid potential deadlock.
+- bos server no longer enforces world readability on directory containing
+  KeyFile, CellServDB and ThisCell file.
+- avoid potential quota leak due by no longer allowing negative offsets, 
+  positions and lengths in RPCs.
+- release server and server address locks in the client when not needed to
+  avoid blocking unnecessarily while timing out clients.
+- fix non-blocking write locks to work correctly instead of always returning 0.
+- avoid Rx resource starvation by yielding to waiting callers.
+- avoid acking all packets on an Rx connection we were waiting for 
+  retransmits on.
+- avoid race when creating new Rx calls.
+- avoid sending Rx challenges forever. Give up after 50 tries.
+- avoid deadlock when destroying a client connection with active calls.
+
+All UNIX systems:
+- dynamic root support fix reserves space for "." and ".." directory entries.
+- rx performance test client (rxperf) from Arla now included.
+- include functionality test suite which sets up and exercises a cell.
+- allow and support cell aliases in dynamic root.
+- add nofork support to bosserver.
+
+All systems with PAM support:
+- the setcred step no longer prompts for passwords.
+- the krb version of the module again correctly manages ticket files.
+- system maximum number of groups now used instead of hardcoded default.
+
+IRIX:
+- Workaround a bug in R5000 revision 1 chips affecting the cvt instruction.
+- IP35 client support
+- Fix so that memcache does not result in zero-filled files being written.
+
+AIX: 
+- remove inclusion of afsconfig in export due to conflicts from _KERNEL
+
+Solaris:
+- vfsck now behaves more like Solaris fsck (but is still not safe for logging UFS)
+- on shutdown, wait for Rx listener process to finish before freeing socket.
+
+Linux:
+- Previous "VLRU cache cycle" bug fix has been modified to be less 
+  invasive.
+- Negative dentries are no longer cached.
+- i_truncate_sem is now initialized if it exists.
+- additional debugging information for afsd -debug switch.
+- kdump fixes to build with newer 2.4 kernels
+- afsd ignores ext3 journals in root of cache partition.
+- rc script specifies LANG=C so ifconfig output is parsable.
+- fix Linux 2.2/sparc port by not prototyping lseek ourselves.
+- rc script quotes variable evaluation when looking for kernel module.
+- support Linux 2.4/sparc
+- include tools for cell setup, currently not distributed other than in source.
+- request memory under GFP_NOFS when doing kmalloc to avoid potential 
+  recursion.
+- avoid calling schedule() when vmalloc fails to avoid potential hang.
+- fix osi_sleep not to potentially lose events
+- avoid dentry cache inconsistency.
+- ignore signals in afsd workers.
+- properly flush changes from mmap()d writes to server.
+- properly release AFS global lock when retrying mount of AFS.
+- block signals of processes waiting for an AFS operation to complete, to
+  avoid 100% CPU utilization while process is blocked.
+
+Windows 95/98 and NT/2000:
+- Nothing new since 1.2.2b, which included:
+-- first time installations now create necessary directories for downloading
+   CellServDB
+-- global drive works under NT/2000.
+-- drive mapping via GUI works in XP.
+-- avoid name conflict by renaming our pthread.dll to afspthread.dll
+
+Darwin:
+- Support for 1.4 and later added.
+
+Documentation:
+- NEWS file updated
