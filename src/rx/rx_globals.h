@@ -32,7 +32,6 @@ EXT struct rx_service *rx_services[RX_MAX_SERVICES+1];
 #ifdef RX_ENABLE_LOCKS
 /* Protects nRequestsRunning as well as pool allocation variables. */
 EXT afs_kmutex_t rx_serverPool_lock;
-EXT afs_kcondvar_t rx_serverPool_cv;
 #endif /* RX_ENABLE_LOCKS */
 
 /* Incoming calls wait on this queue when there are no available server processes */
