@@ -19,6 +19,7 @@ AFS_OS_OBJS = \
 	osi_misc.o \
 	osi_module.o \
 	osi_sleep.o \
+	osi_sysctl.o \
 	osi_vfsops.o \
 	osi_vm.o \
 	osi_vnodeops.o \
@@ -252,6 +253,8 @@ osi_misc.o: $(AFS)/osi_misc.c
 osi_module.o: $(AFS)/osi_module.c
 	$(CRULE1)
 osi_sleep.o: $(AFS)/osi_sleep.c
+	$(CRULE1)
+osi_sysctl.o: $(AFS)/osi_sysctl.c
 	$(CRULE1)
 osi_vfsops.o: $(AFS)/osi_vfsops.c
 	$(CRULE1)
