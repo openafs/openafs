@@ -83,9 +83,7 @@ public:
 	UINT m_uEvent;
 	UINT m_uNotifyMessage;
 	WPARAM m_wParam;
-#if NOKNOK
-	BOOL m_bNokNok;
-#endif
+	BOOL m_bNoID;
 
 	//{{AFX_MSG(CWinAfsLoadApp)
 	//}}AFX_MSG

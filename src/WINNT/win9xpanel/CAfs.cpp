@@ -164,14 +164,27 @@ BOOL CAfs::Create(CString &msg,CString sCompName,PROCESS_INFORMATION &procInfo)
                      /*DETACHED_PROCESS |*/ CREATE_NEW_CONSOLE | HIGH_PRIORITY_CLASS /*NORMAL_PRIORITY_CLASS*/,
                      NULL, NULL, &m_startUpInfo, &procInfo);
 
-	LOG("AFSD Creation done - wait for notification");
 	if (!rc) {
-		msg.Format("Error creating AFS Client Console process, Status=0x%0x", GetLastError());
+		LPVOID lpMsgBuf;
+		FormatMessage( 
+			FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+			FORMAT_MESSAGE_FROM_SYSTEM | 
+			FORMAT_MESSAGE_IGNORE_INSERTS,
+			NULL,
+			GetLastError(),
+			MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+			(LPTSTR) &lpMsgBuf,
+			0,
+			NULL 
+		);
+		msg.Format("Error creating AFS Client Console process, Status=%s.",lpMsgBuf);
 		return FALSE;
 	}
+	LOG("AFSD Creation done - wait for notification");
 	WPARAM wp;
 	CWINAFSLOADAPP->WaitForEvent(logintime*1000,&wp,&msg);
 	switch (wp)
+
 	{
 	case AFS_EXITCODE_NORMAL:
 		// extract machine name for logon
@@ -360,6 +373,7 @@ BOOL CAfs::StartExployer(CString &msg,const char *udrive)
 	int code;
 	WIN32_FIND_DATA FileData;
 	CString dir;
+	if ((udrive==NULL) || (strlen(udrive)==0)) return TRUE;
 	dir.Format("%s\\*",udrive);
 	HANDLE hFile= FindFirstFile(
 		dir,               // file name

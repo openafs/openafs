@@ -1,14 +1,12 @@
-////////////////////////////////////////////////////////////////////////////////
+
 //
-// Copyright (C) 1998  OpenAFS
-// All rights reserved.
+//	Copyright 2000, International Business Machines Corporation and others.
+//	All Rights Reserved.
 //
+//	This software has been released under the terms of the IBM Public
+//	License.  For details, see the LICENSE file in the top-level source
+//	directory or online at http://www.openafs.org/dl/license10.html
 //
-//    File Name:  Setup.rul
-//
-//  Description:  InstallShield script
-//
-////////////////////////////////////////////////////////////////////////////////
 
 
 // Include header files
@@ -321,6 +319,746 @@ end;
 	BOOL 		bPreinstallReplace;
 
 
+////////////////////////////////////////////////////////////////////////////////
+//
+//   Function Name: Template
+//
+//     Description: This dialog will show a dialog template which can be
+//                  used for creating any user-defined dialog with the
+//                  Windows 95 look and feel.
+//        Comments:
+//
+////////////////////////////////////////////////////////////////////////////////
+
+number nvSection,nFileIsLocked;
+STRING szTemp;
+
+#define IDC_HOMEPATH                    301
+#define IDC_ROOTPATH                    302
+#define IDC_HOMEDRIVELIST               1007
+#define IDC_ROOTDRIVELIST               1008
+#define IDC_ENABLEROOT                  1010
+#define IDC_ENABLEHOME                  1011
+#define IDC_INSTALL              		1011
+#define IDC_WEB                         1016
+#define IDC_CHECK_INSTALL               1018
+#define IDC_CHECK_WEB                   1019
+#define IDC_CHECK_BROWSEFILE            1020
+#define IDC_CHECK_PREVIOUSFILE          1021
+#define IDC_PREVIOUSFILE                1024
+#define IDC_BROWSE                      1025
+#define IDC_BROWSEFILE                  1026
+#define DLG_TEMPLATE                    13029
+#define DLG_DRIVEPATH                   13030
+#define DLG_CELLSERVDB                  13031
+#define IDC_PATH                        13032
+
+prototype Logit(STRING);
+function Logit(szMsg)
+HWND handle;
+begin
+	return;
+	OpenFileMode(FILE_MODE_APPEND);
+ 	if (OpenFile (handle, "y:\\dest", "silent.log") < 0) then
+	    CreateFile(handle,"y:\\dest", "silent.log");
+     endif;
+ 	WriteLine(handle,szMsg);
+    CloseFile(handle);
+end;
+
+prototype Logitn(STRING,NUMBER);
+function Logitn(szMsg,i)
+HWND handle;
+STRING sz;
+begin
+    Sprintf(sz,szMsg,i);
+	Logit(sz);
+end;
+prototype INT GetWebDll.BrowseFile(NUMBER,BYREF STRING,BYREF STRING,NUMBER);
+prototype INT GetWebDll.GetWebPage(BYREF STRING,BYREF STRING,BYREF STRING);
+prototype INT GetWebDll.GetUserLogon(BYREF STRING);
+prototype SetCellServDB(STRING,BYREF NUMBER,BYREF STRING,BYREF STRING,BYREF STRING,BYREF STRING);
+prototype FormErrorMessage(NUMBER,BYREF STRING);
+prototype SetHomeRoot( STRING,BYREF STRING,BYREF STRING,BYREF STRING,BYREF STRING );
+prototype BOOL getWebCellSrvDB(STRING,STRING);
+
+prototype BOOL GetDefaultDrive(BYREF NUMBER);
+function GetDefaultDrive(listAv)
+	NUMBER listAc;
+	NUMBER I,nResult;
+	STRING item,iitem;
+begin
+   listAc = ListCreate (STRINGLIST);
+	Enable (STATUS);
+	SetStatusWindow (50, "Scaning for available Drives...");
+   	nResult=GetValidDrivesList (listAc, -1,-1);
+	SetStatusWindow (100, "Completed.");
+	Delay (2);
+	if (nResult<0) then
+	    SetStatusWindow(0, "");
+		MessageBox ("Scan Drive Error" , SEVERE);
+		abort;
+	endif;
+    SetStatusWindow(0, "");
+   listAv = ListCreate (STRINGLIST);
+   ListAddString(listAv,"None:",AFTER);
+   ListGetFirstString(listAc, iitem);
+	for I=67 to 90
+		Sprintf(item,"%c",I);
+		nResult=ListFindString(listAc,item);
+		if nResult==END_OF_LIST then
+			ListAddString(listAv,item+":",AFTER);
+		endif;
+		ListGetNextString(listAc,iitem);   	
+   endfor;
+    ListDestroy(listAc);
+	return TRUE;
+end;
+
+function FormErrorMessage(nResult,szResult)
+begin
+	switch(nResult)
+	case COPY_ERR_CREATEDIR:
+		szResult=TARGETDIR+ "could not be created. Make sure that you have access rights to the target drive.";
+	case COPY_ERR_MEMORY:
+		szResult="The function was unable to allocate the memory required to complete the copy file process. Terminate as many running applications as possible to free memory.";
+	case COPY_ERR_NODISKSPACE:
+		szResult="The function could not find enough disk space on "+TARGETDIR+" to copy the files. Free disk space on the target drive.";
+	case COPY_ERR_OPENINPUT:
+		szResult="The function was unable to open the input file in "+SRCDIR+". Make sure the source file is a valid filename and that both the source file and target directory exist.";
+	case COPY_ERR_OPENOUTPUT:
+		szResult="The function was unable to copy the requested file.";
+	case COPY_ERR_TARGETREADONLY:
+		szResult="The file in "+TARGETDIR+" is read-only. Remove the read-only attribute from the target file and try again.";
+	default:
+		szResult="Unknown error";
+	endswitch;
+end;
+
+function getWebCellSrvDB(szDefaultWeb,szDestFile)
+	NUMBER nResult;
+	STRING szFile,szErrMsg,szURL;
+begin
+	szErrMsg="                                                                 ";
+	Enable (STATUS);
+	SetStatusWindow (50, "Now Downloading CellServDB file...");
+	nResult=GetWebPage(szErrMsg,szDestFile,szDefaultWeb);
+	SetStatusWindow (100, "Downloading completed.");
+	Delay (2);
+	if (nResult!=0) then
+	    SetStatusWindow(0, "");
+		MessageBox (szErrMsg, INFORMATION);
+		return FALSE;
+	endif;
+    // setup default status
+    SetStatusWindow(0, "");
+   return TRUE;
+end;
+
+// Transfer file to CELLSERVDB
+prototype BOOL InstallCellServDB(NUMBER,STRING,STRING);
+function InstallCellServDB(DefaultItem,szDefaultWeb,szDefaultBrowse)
+STRING szFile,svErrorMessage;
+begin
+	switch (DefaultItem)
+	case IDC_CHECK_WEB:
+		nResult=getWebCellSrvDB(szDefaultWeb,TARGETDIR^@CELLSERVDB_CONFIGNAME);
+	case IDC_CHECK_BROWSEFILE:
+		// open file and copy to area
+		ParsePath(szFile,szDefaultBrowse,PATH);
+		SRCDIR=szFile;
+		ParsePath(szFile,szDefaultBrowse,FILENAME);
+		nResult=CopyFile ( szFile ,@CELLSERVDB_CONFIGNAME );
+		if nResult < 0 then
+		    if nResult = -1 then
+		        MessageBox ( "CopyFile failed with error code -1!", WARNING );
+		    else
+		        FormErrorMessage(nResult,svErrorMessage);
+		        SprintfBox ( WARNING, "",
+		            "CopyFile failed!\n\nError code: %ld\nMessage text: %s",
+		            nResult, svErrorMessage );
+		    endif;
+		    nResult=FALSE;
+		 else
+		 	nResult=TRUE;
+		 endif;
+	case IDC_CHECK_INSTALL:	//need to delete because install will never overwrite
+		SRCDIR=SUPPORTDIR;
+		nResult=CopyFile (@CELLSERVDB_CONFIGNAME,@CELLSERVDB_CONFIGNAME );
+		if nResult < 0 then
+		    if nResult = -1 then
+		        MessageBox ( "CopyFile failed with error code -1!", WARNING );
+		    else
+		        FormErrorMessage(nResult,svErrorMessage);
+		        SprintfBox ( WARNING, "",
+		            "CopyFile failed!\n\nError code: %ld\nMessage text: %s",
+			            nResult, svErrorMessage );
+			    endif;
+			nResult=FALSE;
+		else
+			nResult=TRUE;
+		endif;
+	case IDC_CHECK_PREVIOUSFILE:
+		nResult=TRUE;// work is done, it will use previous file
+	default:
+		nResult=TRUE;
+		;
+	endswitch;
+	return nResult;
+end;
+
+// Return TRUE if silent mode active
+prototype BOOL SilentSetCellServDB(STRING,NUMBER,NUMBER,NUMBER,BYREF STRING,BYREF STRING);
+function SilentSetCellServDB(szDlg,option,nResult,DefaultItem,szDefaultWeb,szDefaultBrowse)
+STRING svSection,szTemp;
+NUMBER nTemp;
+begin
+	switch (option)
+	case 0:		//READ function
+		if (MODE!=SILENTMODE) then
+			return FALSE;
+		endif;
+		SdMakeName( svSection, szDlg, "", nvSection );
+        SilentReadData( svSection, "Result", DATA_NUMBER,szTemp,nResult);
+        if (nResult!=NEXT) then
+        	return TRUE;
+        endif;
+   	    SilentReadData( svSection, "DefaultItem", DATA_NUMBER,szTemp,DefaultItem);
+       	SilentReadData( svSection, "szDefaultWeb", DATA_STRING, szDefaultWeb,nTemp);
+       	SilentReadData( svSection, "szDefaultBrowse", DATA_STRING,szDefaultBrowse,nTemp );
+       	if (InstallCellServDB(DefaultItem,szDefaultWeb,szDefaultBrowse)==FALSE) then
+	       	nResult=CANCEL;
+		else
+			nResult=NEXT;
+       	endif;
+		return TRUE;
+	default:	//write
+		SdMakeName( svSection, szDlg, "", nvSection );
+        SilentWriteData( svSection, "Result", DATA_NUMBER,szTemp, nResult );
+        SilentWriteData( svSection, "DefaultItem", DATA_NUMBER,szTemp, DefaultItem );
+        SilentWriteData( svSection, "szDefaultWeb", DATA_STRING, szDefaultWeb,nTemp );
+        SilentWriteData( svSection, "szDefaultBrowse", DATA_STRING, szDefaultBrowse,nTemp );
+		return TRUE;		
+    endswitch;
+end;
+
+function SetCellServDB( szTitle,DefaultItem,szPreviousInstall,szDefaultWeb,szDefaultBrowse,szDefaultInstall)
+STRING  szDlg, szTemp,szResult[256],svErrorMessage,szFile,svSection;
+NUMBER  bDone, nId, nMessage, nTemp,AvailableDrives,nResult;
+INT     hwndDlg,hwndItem;
+
+begin
+        szDlg = "DLG_CELLSERVDB";
+        // record data produced by this dialog
+		if SilentSetCellServDB(szDlg,0,nResult,DefaultItem,szDefaultWeb,szDefaultBrowse) then
+			return nResult;
+		endif;
+
+        // ensure general initialization is complete
+        if (!bSdInit) then
+           SdInit();
+        endif;
+
+        if (EzDefineDialog( szDlg, "", "",
+                            DLG_CELLSERVDB ) = DLG_ERR) then
+           return -1;
+        endif;
+
+        // Loop in dialog until the user selects a standard button
+       	Disable(LOGGING);
+		VarSave(SRCTARGETDIR);
+		TARGETDIR=WINDIR;
+		doagain:
+        bDone = FALSE;
+
+        while (!bDone)
+
+           nId = WaitOnDialog( szDlg );
+           hwndDlg = CmdGetHwndDlg( szDlg );
+
+           switch(nId)
+
+           case DLG_INIT:
+                // Initialize List Control
+                // set file
+                CtrlSetState (szDlg, DefaultItem,BUTTON_CHECKED);
+				if !Is(FILE_EXISTS,szPreviousInstall) then
+					hwndItem = GetDlgItem( hwndDlg, IDC_CHECK_PREVIOUSFILE );
+					EnableWindow( hwndItem, FALSE);
+				endif;
+				hwndItem = GetDlgItem( hwndDlg, IDC_PREVIOUSFILE );
+				EnableWindow( hwndItem, DefaultItem==IDC_CHECK_PREVIOUSFILE);
+				hwndItem = GetDlgItem( hwndDlg, IDC_BROWSEFILE );
+				EnableWindow( hwndItem, DefaultItem==IDC_CHECK_BROWSEFILE);
+				hwndItem = GetDlgItem( hwndDlg, IDC_BROWSE );
+				EnableWindow( hwndItem, DefaultItem==IDC_CHECK_BROWSEFILE);
+				hwndItem = GetDlgItem( hwndDlg, IDC_WEB );
+				EnableWindow( hwndItem, DefaultItem==IDC_CHECK_WEB);
+				hwndItem = GetDlgItem( hwndDlg, IDC_INSTALL );
+				EnableWindow( hwndItem, DefaultItem==IDC_CHECK_INSTALL);
+				CtrlSetText (szDlg, IDC_PREVIOUSFILE, szPreviousInstall);
+				CtrlSetText (szDlg, IDC_BROWSEFILE, szDefaultBrowse);
+				CtrlSetText (szDlg, IDC_WEB, szDefaultWeb);
+				CtrlSetText (szDlg, IDC_INSTALL, szDefaultInstall);
+
+                SdGeneralInit( szDlg, hwndDlg, STYLE_NORMAL, szSdProduct );
+			
+                //This function sets the caption for old style dialogs or
+                //sets the text in the top banner area of win2k style dialogs
+//                SdSetDlgTitle(szDlg, hwndDlg, szTitle); //Version 6.0 only
+
+           case OK:
+                nId    = NEXT;
+                bDone  = TRUE;
+
+           case BACK:
+                nId    = BACK;
+                bDone  = TRUE;
+
+           case DLG_ERR:
+                SdError( -1, "DLG_CELLSERVDB" );
+                nId    = -1;
+                bDone  = TRUE;
+
+           case DLG_CLOSE:
+                SdCloseDlg( hwndDlg, nId, bDone );
+
+		   case IDC_BROWSE:
+				szResult=szDefaultBrowse;
+				szTitle="Select file to be used for CellServDB";
+				nResult=BrowseFile(hwndDlg,szTitle,szResult,256);
+				CtrlSetText (szDlg, IDC_BROWSEFILE, szResult);
+				szDefaultBrowse=szResult;
+			
+		   case IDC_CHECK_BROWSEFILE:
+				hwndItem = GetDlgItem( hwndDlg, IDC_BROWSEFILE );
+				EnableWindow( hwndItem, TRUE);
+				hwndItem = GetDlgItem( hwndDlg, IDC_BROWSE );
+				EnableWindow( hwndItem, TRUE);
+                CtrlSetState (szDlg, DefaultItem,BUTTON_UNCHECKED);
+                CtrlSetState (szDlg, nId,BUTTON_CHECKED);
+				switch (DefaultItem)
+				case IDC_CHECK_WEB:
+					hwndItem = GetDlgItem( hwndDlg, IDC_WEB );
+					EnableWindow( hwndItem, FALSE);
+				case IDC_CHECK_PREVIOUSFILE:
+					hwndItem = GetDlgItem( hwndDlg, IDC_PREVIOUSFILE );
+					EnableWindow( hwndItem, FALSE);
+				case IDC_CHECK_INSTALL:
+					hwndItem = GetDlgItem( hwndDlg, IDC_INSTALL);
+					EnableWindow( hwndItem, FALSE);
+				default:
+					;
+				endswitch;
+				DefaultItem=nId;
+		   case IDC_CHECK_INSTALL:
+				hwndItem = GetDlgItem( hwndDlg, IDC_INSTALL );
+				EnableWindow( hwndItem, TRUE);
+                CtrlSetState (szDlg, DefaultItem,BUTTON_UNCHECKED);
+                CtrlSetState (szDlg, nId,BUTTON_CHECKED);
+				switch (DefaultItem)
+				case IDC_CHECK_BROWSEFILE:
+					hwndItem = GetDlgItem( hwndDlg, IDC_BROWSE );
+					EnableWindow( hwndItem, FALSE);
+					hwndItem = GetDlgItem( hwndDlg, IDC_BROWSEFILE );
+					EnableWindow( hwndItem, FALSE);
+				case IDC_CHECK_WEB:
+					hwndItem = GetDlgItem( hwndDlg, IDC_WEB );
+					EnableWindow( hwndItem, FALSE);
+				case IDC_CHECK_PREVIOUSFILE:
+					hwndItem = GetDlgItem( hwndDlg, IDC_PREVIOUSFILE );
+					EnableWindow( hwndItem, FALSE);
+				default:
+					;
+				endswitch;
+				DefaultItem=nId;
+		   case IDC_CHECK_WEB:
+				hwndItem = GetDlgItem( hwndDlg, IDC_WEB );
+				EnableWindow( hwndItem, TRUE);
+                CtrlSetState (szDlg, DefaultItem,BUTTON_UNCHECKED);
+                CtrlSetState (szDlg, nId,BUTTON_CHECKED);
+				switch (DefaultItem)
+				case IDC_CHECK_BROWSEFILE:
+					hwndItem = GetDlgItem( hwndDlg, IDC_BROWSE );
+					EnableWindow( hwndItem, FALSE);
+					hwndItem = GetDlgItem( hwndDlg, IDC_BROWSEFILE );
+					EnableWindow( hwndItem, FALSE);
+				case IDC_CHECK_INSTALL:
+					hwndItem = GetDlgItem( hwndDlg, IDC_INSTALL);
+					EnableWindow( hwndItem, FALSE);
+				case IDC_CHECK_PREVIOUSFILE:
+					hwndItem = GetDlgItem( hwndDlg, IDC_PREVIOUSFILE );
+					EnableWindow( hwndItem, FALSE);
+				default:
+					;
+				endswitch;
+				DefaultItem=nId;
+		   case IDC_CHECK_PREVIOUSFILE:
+				hwndItem = GetDlgItem( hwndDlg, IDC_PREVIOUSFILE );
+				EnableWindow( hwndItem, TRUE);
+                CtrlSetState (szDlg, DefaultItem,BUTTON_UNCHECKED);
+                CtrlSetState (szDlg, nId,BUTTON_CHECKED);
+				switch (DefaultItem)
+				case IDC_CHECK_BROWSEFILE:
+					hwndItem = GetDlgItem( hwndDlg, IDC_BROWSE );
+					EnableWindow( hwndItem, FALSE);
+					hwndItem = GetDlgItem( hwndDlg, IDC_BROWSEFILE );
+					EnableWindow( hwndItem, FALSE);
+				case IDC_CHECK_INSTALL:
+					hwndItem = GetDlgItem( hwndDlg, IDC_INSTALL);
+					EnableWindow( hwndItem, FALSE);
+				case IDC_CHECK_WEB:
+					hwndItem = GetDlgItem( hwndDlg, IDC_WEB );
+					EnableWindow( hwndItem, FALSE);
+				default:
+					;
+				endswitch;
+				DefaultItem=nId;
+           default:
+                // check standard handling
+                 if (SdIsStdButton( nId ) && SdDoStdButton( nId )) then
+                    bDone = TRUE;
+                endif;
+           endswitch;
+
+        endwhile;
+
+		CtrlGetText (szDlg, IDC_BROWSEFILE, szDefaultBrowse);
+		CtrlGetText (szDlg, IDC_WEB, szDefaultWeb);
+        if (nId != NEXT) then
+			return nId;
+		endif;
+       	if InstallCellServDB(DefaultItem,szDefaultWeb,szDefaultBrowse)==FALSE then
+       		goto doagain;
+ 		endif;
+        EndDialog( szDlg );
+        ReleaseDialog( szDlg );
+		VarRestore(SRCTARGETDIR);
+		Enable(LOGGING);
+        SdUnInit( );
+        // record data produced by this dialog
+		SilentSetCellServDB(szDlg,1,nId,DefaultItem,szDefaultWeb,szDefaultBrowse);
+        return nId;
+end;
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//   Function Name: Template
+//
+//     Description: This dialog will show a dialog template which can be
+//                  used for creating any user-defined dialog with the
+//                  Windows 95 look and feel.
+//        Comments:
+//
+////////////////////////////////////////////////////////////////////////////////
+
+prototype BOOL GetUser(BYREF STRING);
+
+function GetUser(sUser)
+	NUMBER nResult;
+begin
+	sUser="                                                                 ";
+	nResult=GetUserLogon(sUser);
+	if (nResult!=1) then
+		sUser="";
+	endif;
+	return (nResult==1);
+end;
+
+
+prototype BOOL SetDriveMaps(STRING,STRING,STRING,STRING,STRING);
+function SetDriveMaps(szPath,szRootDrive,szRootPath,szHomeDrive,szHomePath)
+HWND   handle;
+begin
+	VarSave(SRCTARGETDIR);
+	TARGETDIR=WINDIR;
+	DeleteFile("afsdsbmt.ini");
+	VarRestore(SRCTARGETDIR);
+    CreateFile(handle, szPath, "afsdsbmt.ini");
+    WriteLine(handle, "[AFS Submounts]");
+   	if (StrLength(szRootDrive)==2) then
+   		WriteLine(handle, "all="+szRootPath);
+   	endif;
+    if (StrLength(szHomeDrive)==2) then
+   		WriteLine(handle, "home=" + szHomePath);
+   	endif;
+   	WriteLine(handle, "[AFS Mappings]");
+   	if (StrLength(szRootDrive)>0) then
+   		WriteLine(handle, szRootDrive+"="+szRootPath);
+    endif;
+   	if (StrLength(szHomeDrive)>0) then
+   		WriteLine(handle, szHomeDrive+"="+szHomePath);
+    endif;
+   	CloseFile(handle);
+end;
+
+// Return TRUE if silent mode active
+prototype BOOL SilentSetHomeRoot(STRING,NUMBER,NUMBER,BYREF STRING,BYREF STRING,BYREF STRING,BYREF STRING);
+function SilentSetHomeRoot(szDlg,option,nResult,szRootDrive,szRootPath,szHomeDrive,szHomePath)
+STRING svSection,szTemp,szTPath,szTShare,szTDrive,szLogname;
+NUMBER nTemp,nCount,I;
+HWND   handle;
+begin
+	Logitn("SilentSetHomeRoot option=%i",option);
+	switch (option)
+	case 0:		//READ function
+		if (MODE!=SILENTMODE) then
+			return FALSE;
+		endif;			// this section is a little more complicated, allowing installation of n mappings
+		SdMakeName( svSection, szDlg, "", nvSection );
+		Logit("SdMakeName="+svSection);
+        SilentReadData( svSection, "Result", DATA_NUMBER,szTemp,nResult);
+       	Logitn("nResult=%i",nResult);
+        if (nResult!=NEXT) then
+        	return TRUE;
+        endif;
+        Logit("Do count");
+       	SilentReadData( svSection, "Count", DATA_NUMBER, szTemp,nCount);
+       	Logitn("nCount=%i",nCount);
+       	if nCount==0 then
+       		return TRUE;
+       	endif;
+		VarSave(SRCTARGETDIR);
+		TARGETDIR=WINDIR;
+		DeleteFile("afsdsbmt.ini");
+		VarRestore(SRCTARGETDIR);
+	    CreateFile(handle, WINDIR, "afsdsbmt.ini");
+    	WriteLine(handle, "[AFS Submounts]");
+       	for I=0 to nCount-1
+	       	Logitn("I=%i",I);       	
+       		Sprintf(szTemp,"Path_%i",I);
+       		Logit("Path="+szTemp);       		
+	       	SilentReadData( svSection, szTemp, DATA_STRING, szTPath,nTemp);
+       		Logit("TPath="+szTPath);       		
+	       	if (szTPath % "%LOGINNAME%") then
+	       		//Replace loginname with actual loging name
+				nTemp=StrFind(szTPath,"%LOGINNAME%");
+				StrSub(szTemp,szTPath,nTemp+11,StrLength(szTPath));
+				StrSub(szTPath,szTPath,0,nTemp);
+			    if (GetUser(szLogname)) then
+					szTPath=szTPath+szLogname+szTemp;
+				endif;
+	       	endif;
+       		Sprintf(szTemp,"Share_%i",I);
+	       	SilentReadData( svSection, szTemp, DATA_STRING, szTShare,nTemp);
+	   		WriteLine(handle, szTShare+"="+szTPath);
+       	endfor;
+	   	WriteLine(handle, "[AFS Mappings]");
+       	for I=0 to nCount-1
+       		Sprintf(szTemp,"Drive_%i",I);
+	       	SilentReadData( svSection, szTemp, DATA_STRING, szTDrive,nTemp);
+       		Sprintf(szTemp,"Path_%i",I);
+	       	SilentReadData( svSection, szTemp, DATA_STRING, szTPath,nTemp);
+	       	if (szTPath % "%LOGINNAME%") then
+	       		//Replace loginname with actual loging name
+				nTemp=StrFind(szTPath,"%LOGINNAME%");
+				StrSub(szTemp,szTPath,nTemp+11,StrLength(szTPath));
+				StrSub(szTPath,szTPath,0,nTemp);
+			    if (GetUser(szLogname)) then
+					szTPath=szTPath+szLogname+szTemp;
+				endif;
+	       	endif;
+	   		WriteLine(handle, szTDrive+"="+szTPath);
+       	endfor;
+	    CloseFile(handle);
+		nResult=NEXT;
+		return TRUE;
+	default:	//write
+		SdMakeName( svSection, szDlg, "", nvSection );
+		nCount=0;
+        SilentWriteData( svSection, "Result", DATA_NUMBER,szTemp, nResult );
+        if (StrLength(szRootDrive)==2) then
+       		Sprintf(szTemp,"Drive_%i",nCount);
+	        SilentWriteData( svSection,szTemp, DATA_STRING,szRootDrive, nTemp );//root drive
+       		Sprintf(szTemp,"Path_%i",nCount);
+	        SilentWriteData( svSection,szTemp, DATA_STRING,szRootPath, nTemp );//root drive
+       		Sprintf(szTemp,"Share_%i",nCount);
+	        SilentWriteData( svSection,szTemp, DATA_STRING,"all", nTemp );//root drive
+	        nCount++;
+	    endif;
+        if (StrLength(szHomeDrive)==2) then
+       		Sprintf(szTemp,"Drive_%i",nCount);
+	        SilentWriteData( svSection,szTemp, DATA_STRING,szHomeDrive, nTemp );//root drive
+       		Sprintf(szTemp,"Path_%i",nCount);
+	        SilentWriteData( svSection,szTemp, DATA_STRING,szHomePath, nTemp );//root drive
+       		Sprintf(szTemp,"Share_%i",nCount);
+	        SilentWriteData( svSection,szTemp, DATA_STRING,"home", nTemp );//root drive
+        	nCount++;
+        endif;
+        SilentWriteData( svSection, "Count", DATA_NUMBER,szTemp, nCount );	// only two can be defined through Dialog box
+		SetDriveMaps(WINDIR,szRootDrive,szRootPath,szHomeDrive,szHomePath);
+		return TRUE;		
+    endswitch;
+end;
+
+function SetHomeRoot( szTitle,szRootDrive,szRootPath,szHomeDrive,szHomePath )
+
+STRING  szDlg, szTemp,svSection;
+NUMBER  bDone, nId, nMessage, nTemp,AvailableDrives,nResult;
+INT     hwndDlg,hwndItem,hwndItem2;
+
+begin
+       szDlg = "DLG_DRIVEPATH";
+
+        // record data produced by this dialog
+		Logit("SetHomeRoot");
+		if SilentSetHomeRoot(szDlg,0,nResult,szRootDrive,szRootPath,szHomeDrive,szHomePath ) then
+			return nResult;
+		endif;
+
+		GetDefaultDrive(AvailableDrives);
+         // ensure general initialization is complete
+        if (!bSdInit) then
+           SdInit();
+        endif;
+
+        if (EzDefineDialog( szDlg, "", "",
+                            DLG_DRIVEPATH ) = DLG_ERR) then
+           return -1;
+        endif;
+
+        // Loop in dialog until the user selects a standard button
+        bDone = FALSE;
+
+        while (!bDone)
+
+           nId = WaitOnDialog( szDlg );
+
+           switch(nId)
+
+           case DLG_INIT:
+                hwndDlg = CmdGetHwndDlg( szDlg );
+                // Initialize List Control
+        		nResult=CtrlSetList( szDlg, IDC_HOMEDRIVELIST, AvailableDrives );
+	            if (nResult != 0) then
+	               // Handle error from CtrlSetList.
+	               MessageBox ("Unable to create folder name list.", SEVERE);
+	               bDone = TRUE;
+	            endif;
+				if (CtrlSetCurSel(szDlg,IDC_HOMEDRIVELIST,szHomeDrive)!=0) then
+					szHomeDrive="None:";
+					CtrlSetCurSel(szDlg,IDC_HOMEDRIVELIST,szHomeDrive);
+				endif;
+
+        		nResult=CtrlSetList( szDlg, IDC_ROOTDRIVELIST, AvailableDrives );
+	            if (nResult != 0) then
+	               // Handle error from CtrlSetList.
+	               MessageBox ("Unable to create folder name list.", SEVERE);
+	               bDone = TRUE;
+	            endif;
+				if (CtrlSetCurSel(szDlg,IDC_ROOTDRIVELIST,szRootDrive)!=0) then
+					szRootDrive="None:";
+					CtrlSetCurSel(szDlg,IDC_ROOTDRIVELIST,szRootDrive);
+				endif;
+
+        		nResult=CtrlSetText( szDlg, IDC_ROOTPATH,szRootPath );
+	            if (nResult != 0) then
+	               MessageBox ("Unable to create szRootPath.", SEVERE);
+	               bDone = TRUE;
+	            endif;
+        		nResult=CtrlSetText( szDlg, IDC_HOMEPATH,szHomePath );
+	            if (nResult != 0) then
+	               MessageBox ("Unable to create szHomePath.", SEVERE);
+	               bDone = TRUE;
+	            endif;
+
+                CtrlSetState (szDlg, IDC_ENABLEHOME,BUTTON_CHECKED);
+                CtrlSetState (szDlg, IDC_ENABLEROOT,BUTTON_CHECKED);
+                SdGeneralInit( szDlg, hwndDlg, STYLE_NORMAL, szSdProduct );
+			
+                //This function sets the caption for old style dialogs or
+                //sets the text in the top banner area of win2k style dialogs
+           case OK:
+           		if (szRootDrive!=szHomeDrive) then
+	                nId    = NEXT;
+	                bDone  = TRUE;
+	            else
+	            	MessageBox("Home and Root drives cannot be the same",WARNING);
+                endif;
+
+           case BACK:
+                nId    = BACK;
+                bDone  = TRUE;
+
+           case DLG_ERR:
+                SdError( -1, "DLG_DRIVEPATH" );
+                nId    = -1;
+                bDone  = TRUE;
+
+           case DLG_CLOSE:
+                SdCloseDlg( hwndDlg, nId, bDone );
+
+		   case IDC_ENABLEROOT:
+		   	
+				hwndItem = GetDlgItem( hwndDlg, IDC_ROOTDRIVELIST );//get handle of control in custom dialog box
+				hwndItem2 = GetDlgItem( hwndDlg, IDC_ROOTPATH );//get handle of control in custom dialog box
+				if (CtrlGetState (szDlg, nId)==BUTTON_CHECKED) then
+					EnableWindow( hwndItem2, TRUE);
+					EnableWindow( hwndItem, TRUE);
+				else
+					EnableWindow( hwndItem2, FALSE);
+					EnableWindow( hwndItem, FALSE);
+				endif;
+		   case IDC_ENABLEHOME:
+				hwndItem = GetDlgItem( hwndDlg, IDC_HOMEDRIVELIST );//get handle of control in custom dialog box
+				hwndItem2 = GetDlgItem( hwndDlg, IDC_HOMEPATH );//get handle of control in custom dialog box
+				if (CtrlGetState (szDlg, nId)==BUTTON_CHECKED) then
+					EnableWindow( hwndItem2, TRUE);
+					EnableWindow( hwndItem, TRUE);
+				else
+					EnableWindow( hwndItem2, FALSE);
+					EnableWindow( hwndItem, FALSE);
+				endif;
+
+           case IDC_HOMEDRIVELIST:
+				;
+           case IDC_ROOTDRIVELIST:
+				;
+           case IDC_HOMEPATH:
+        		CtrlGetText (szDlg, nId,szHomePath);
+
+           case IDC_ROOTPATH:
+        		CtrlGetText (szDlg, nId,szRootPath);
+
+           default:
+                // check standard handling
+                 if (SdIsStdButton( nId ) && SdDoStdButton( nId )) then
+                    bDone = TRUE;
+                endif;
+           endswitch;
+
+        endwhile;
+
+		CtrlGetCurSel (szDlg, nId, szRootDrive);
+		if (CtrlGetState (szDlg, IDC_ENABLEROOT)==BUTTON_UNCHECKED) then
+	        szRootDrive="None:";
+		endif;
+		CtrlGetCurSel (szDlg, nId, szHomeDrive);
+		if (CtrlGetState (szDlg, IDC_ENABLEHOME)==BUTTON_UNCHECKED) then
+	        szHomeDrive="None:";
+		endif;
+        EndDialog( szDlg );
+        ReleaseDialog( szDlg );
+
+        SdUnInit( );
+
+        // record data produced by this dialog
+        if (nId==NEXT) then
+			SilentSetHomeRoot(szDlg,1,nId,szRootDrive,szRootPath,szHomeDrive,szHomePath );
+		endif;
+        ListDestroy (AvailableDrives);
+        return nId;
+
+end;
+
+
+// ---- script function prototypes -----
+
+
+    // your script function prototypes
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //   MAIN PROGRAM
@@ -333,26 +1071,40 @@ end;
 //
 ///////////////////////////////////////////////////////////////////////////////
 program
+	Logit("Begin");
+	nvSection=0;
     Disable( BACKGROUND );
-
 	if (UseDLL(SUPPORTDIR ^ SETUP_UTILS_DLL_PATH) < 0) then
         ShowError(@SETUPUTILS_NOT_FOUND, SEVERE);
         bInstallAborted = TRUE;
         goto end_install;
     endif;
-
-    SetupInstall();
-
-    CheckRequirements();
-
-	ParseCommandLine();
+	Logit("UseDLL1");
+	ChangeDirectory (SUPPORTDIR);
+	if (UseDLL("GetWebDLL.dll") != 0) then
+		MessageBox ("DLL failed.\n\nCouldn't load"+SUPPORTDIR^"GetWebDLL.dll", INFORMATION);
+		abort;
+	endif;
+	Logit("UseDLL2");
+		
+	SetupInstall();
+	Logit("SetupInstall");
 	
+    CheckRequirements();
+	Logit("CheckRequirements");
+	
+	ParseCommandLine();
+	Logit("ParseCommandLine");
+		
 	SetupAppInfo();
-
+	Logit("SetupAppInfo");
+	
 	LocalizeComponents();
-
+	Logit("LocalizeComponents");
+	
 	DetectInstalledComponents();
-
+	Logit("DetectInstalledComponents");
+	
 	// Can't upgrade, downgrade, or reinstall the light client, so if it is
 	// already installed, we must abort.  This is because on Win9x, we can't
 	// move in-use files, and so we can't silently uninstall the light client,
@@ -395,6 +1147,14 @@ program
 
 	// Install the Client
 	if (bFullClientSel) then
+		RegDBSetDefaultRoot (HKEY_LOCAL_MACHINE);
+		Enable(LOGGING);
+		if RegDBSetKeyValueEx ("SYSTEM\\CurrentControlSet\\Services\\NetBT\\Parameters"	
+			,"SmbDeviceEnabled", REGDB_NUMBER, "0", 8) < 0 then
+			MessageBox ("RegDBCreateKeyEx failed.", SEVERE);
+		    abort;
+		endif;
+
 		pApp = &appFullClient;
 		if (InstallApp(pApp) < 0) goto end_install;
 	endif;
@@ -459,12 +1219,13 @@ program
 
 	CreateStartMenuEntries();
 
-	if (bFullClientSel || bLightClientSel || bCcSel) then
-		CheckCopyCellServDB();
-	endif;
+//	if (bFullClientSel || bLightClientSel || bCcSel) then
+//		CheckCopyCellServDB();
+//	endif;
 
 	end_install:
 
+	UnUseDLL(SUPPORTDIR^"GetWebDLL.dll");
 	UnUseDLL(SUPPORTDIR ^ SETUP_UTILS_DLL_PATH);
 
     CleanUpInstall();
@@ -486,37 +1247,80 @@ endprogram
 //
 ///////////////////////////////////////////////////////////////////////////////
 function ShowDialogs()
-    NUMBER  nResult;
+    NUMBER  nResult,handle;
     STRING	szTargetLicense;
     STRING	szSourceLicense;
+	STRING sRootDrive,sHomeDrive,userID,rootPath,homePath;
+	NUMBER 	DefaultItem;
+	STRING  szDefaultWeb,szDefaultBrowse,szDefaultInstall,szPreviousInstall;
+	STRING  szResult[256],svResult;
 begin
     Dlg_Start:
     // beginning of dialogs label
-
     Dlg_SdWelcome:
     nResult = DialogShowSdWelcome();
     if (nResult = BACK) goto Dlg_Start;
 
     Dlg_License:
-    szTargetLicense = DOCUMENTATION_LICENSE_PATH;
-    GetLicenseFilename (szSourceLicense);
-    Disable( DIALOGCACHE );
-    nResult = ShowLicense(szTargetLicense,szSourceLicense);
-    if (nResult = 0) then
-    	abort;
-    endif;
-    Enable( DIALOGCACHE );
-
+//    szTargetLicense = DOCUMENTATION_LICENSE_PATH;
+//    GetLicenseFilename (szSourceLicense);
+//	Logit("ShowLicense");
+//	Disable( DIALOGCACHE );
+//	if (MODE!=SILENTMODE) then
+//	    nResult = ShowLicense(szTargetLicense,szSourceLicense);
+//	    if (nResult = 0) then
+//	    	abort;
+//	    endif;
+//	    Enable( DIALOGCACHE );
+//	endif;
+    if (nResult = BACK) goto Dlg_Start;
 	Dlg_SdCompDlg:
 	nResult = DialogShowSdAskComponentDialog();
+	Logit("DialogShowSdAskComponentDialog");
 	if (nResult = BACK) goto Dlg_License;
 
     Dlg_SdSelectFolder:
     nResult = DialogShowSdSelectFolder();
-    if (nResult = BACK) goto Dlg_SdCompDlg;
-
-    return 0;
-
+	Logit("DialogShowSdSelectFolder");
+	if (nResult = BACK) goto Dlg_SdCompDlg;
+	if (bFullClientSel || bLightClientSel) then
+		szDefaultWeb=@CELLSERVDB_WEB;
+		szDefaultBrowse=TARGETDIR^"*";
+		szDefaultInstall=@CELLSERVDB_INSTALL;
+		szPreviousInstall=WINDIR^@CELLSERVDB_CONFIGNAME;
+	    if (Is(FILE_EXISTS,szPreviousInstall)) then
+			DefaultItem=IDC_CHECK_PREVIOUSFILE;
+		else
+			DefaultItem=IDC_CHECK_INSTALL;
+		endif;
+		Dlg_SdSelectCellServDB:
+			Logit("SetCellServDB-next");
+			nResult =SetCellServDB("Select AFS Cell Data base (afsdcell.ini)"
+			,DefaultItem
+			,szPreviousInstall
+			,szDefaultWeb
+			,szDefaultBrowse
+			,szDefaultInstall);
+		Logit("SetCellServDB");
+	    if (nResult=BACK) goto Dlg_SdSelectFolder;
+		if (Is(FILE_EXISTS, WINDIR^"afsdsbmt.ini")) then
+			Logit("AskYesNo next");
+			if (AskYesNo("Previous Drive Mapping Configuration already exist.\n\nPress Yes to keep previous configuration\nPress No to change previous configuration.",YES)=YES) then
+				return 0;
+			endif;
+		endif;
+		userID="                   ";
+	    GetUser(userID);
+		sRootDrive="Z:";
+		sHomeDrive="U:";
+	   	rootPath="/";
+	    homePath = "/afs/" + @CELLNAME_DEFAULT + "/u/" + userID;
+	    nResult=SetHomeRoot( "Home and Root Drive Assignment\nThese drives will be mapped each time AFS is connected!",sRootDrive,rootPath,sHomeDrive,homePath );
+		Logit("SetHomeRoot");
+		if (nResult = BACK) goto Dlg_SdSelectCellServDB;
+	endif;
+	Logit("ShowDialogs-done");
+	return 0;
 end;
 
 
@@ -1549,7 +2353,7 @@ function DialogShowSdWelcome()
 begin
 
     szTitle = "";
-    szMsg   = "";
+    szMsg   = @WELCOME_MESSAGE;
     nResult = SdWelcome( szTitle, szMsg );
 
     return nResult;
@@ -1799,12 +2603,15 @@ begin
 			ComponentSetData(MEDIA, SERVER_COMP_NAME, COMPONENT_FIELD_VISIBLE, FALSE, "");
 			ComponentSetData(MEDIA, CC_COMP_NAME, COMPONENT_FIELD_VISIBLE, FALSE, "");
 			ComponentSetData(MEDIA, DOCS_COMP_NAME, COMPONENT_FIELD_VISIBLE, FALSE, "");
-		
-			ComponentSelectItem(MEDIA, SERVER_COMP_NAME, FALSE);
-			ComponentSelectItem(MEDIA, CC_COMP_NAME, FALSE);
 			ComponentSelectItem(MEDIA, DOCS_COMP_NAME, FALSE);
+			endif;
+		ComponentSelectItem(MEDIA, SERVER_COMP_NAME, FALSE);
+		if (@CELLNAME_DEFAULT % ".") then
+			ComponentSelectItem(MEDIA, CC_COMP_NAME, FALSE);
+		else
+			ComponentSelectItem(MEDIA, CC_COMP_NAME, TRUE);
 		endif;
-	else
+else
 		ComponentSetData(MEDIA, CLIENT_COMP_NAME, COMPONENT_FIELD_VISIBLE, FALSE, "");
 		ComponentSetData(MEDIA, SERVER_COMP_NAME, COMPONENT_FIELD_VISIBLE, FALSE, "");
 		ComponentSetData(MEDIA, CC_COMP_NAME, COMPONENT_FIELD_VISIBLE, FALSE, "");
@@ -2652,6 +3459,31 @@ begin
 end;
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Function: CreateStartMenuEntries
@@ -2738,8 +3570,3 @@ end;
 
 // --- include script file section ---
 #include "sddialog.rul"
-
-
-
-
-

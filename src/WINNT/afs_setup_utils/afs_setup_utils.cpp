@@ -195,6 +195,8 @@ struct REGVALUE clientRegValues[] = {
 
 struct REGVALUE clientWinNTRegValues[] = {
     { "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\File Manager\\AddOns", "AFS Client FME" },
+    { "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\NetBT\\Paramet
+ers", "SMBDeviceEnabled" },
     { 0, 0 }
 };
 
@@ -236,6 +238,7 @@ struct APPINFO appClient = {
     WINDIR"\\afsd.log\0"
     WINDIR"\\afsd.ini\0"
     WINDIR"\\afsdsbmt.ini\0"
+    WINDIR"\\afsdcell.ini\0"
     WINDIR"\\afsd_init.log\0",
     
     clientRegValues,

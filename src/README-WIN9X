@@ -124,6 +124,34 @@ or 	nmake -f ntmake9x clean
       VC6RedistSetup_enu.exe
    This is located at:
       http://support.microsoft.com/support/kb/articles/Q259/4/03.ASP
+	Two Microsoft DLL's must be included at DEST\WinInstall\Config\.
+	   SHLWAPI.DLL
+	   WININET.DLL  
+	These DLL's will not be left on the target machine, there are only
+	used for installation and removed after installation is complete.
+
+6) Required changes to configuration file .\src\config\NTMakefile.i386_win95
+
+AFSPRODUCT_VERSION  - Product version
+CELLNAME_DEFAULT - The default AFS cell name
+CELLSERVDB_INSTALL - The default name for the CellServDB included in the install script
+CELLSERVDB_WEB  - The default web address to obtain CellServDB
+		  
+For Example:
+
+ .\src\config\NTMakefile.i386_win95  
+   AFSPRODUCT_VERSION=1.1.1a
+   CELLNAME_DEFAULT=openafs.org
+   CELLSERVDB_INSTALL=CellServDB.GrandCentral
+   CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
+
+Version level may be specified in different formats, for example the following
+forms all have the same version level; however will be displayed differently:
+
+AFSPRODUCT_VERSION=1.1.1a
+AFSPRODUCT_VERSION=1.1.1 a
+AFSPRODUCT_VERSION=1.1.1.1
+AFSPRODUCT_VERSION=1.1.101
 
 6) Installation
 
@@ -163,3 +191,5 @@ or 	nmake -f ntmake9x clean
    5. Reboot the target machine.
    6. You can now start the client by executing the program WinAfsLoad.exe
       from the install directory.
+
+

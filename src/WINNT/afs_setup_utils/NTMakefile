@@ -89,11 +89,19 @@ $(AFSRM_EXEFILE): $(AFSRM_EXEOBJS) $(AFSRM_EXELIBS)
 install : $(INSTALL_UTILS_DLLFILE) $(SERVER_UNINST_DLLFILE) $(CLIENT_UNINST_DLLFILE) \
           $(CC_UNINST_DLLFILE) $(LIGHT_CLIENT_UNINST_DLLFILE) $(DOCS_UNINST_DLLFILE) \
           $(AFSRM_EXEFILE) lang
+		  cd _isuser
+		  nmake -fntmakefile
+          $(CD) ..
+		  cd getwebdll
+		  nmake -fntmakefile
+          $(CD) ..
+		  echo 
 
 lang ::
 	$(CD) lang
 	for /f %l in ('dir /B ??_??') do @$(NTLANG) %l $(MAKECMD) /nologo /f NTMakefile install
 	$(CD) ..
+   echo done lang
 
 ############################################################################
 # How to build the shared source file for each uninstall dll
@@ -156,7 +164,13 @@ $(DOCS_UNINST_DLLFILE) : d_afs_setup_utils.obj $(DLLOBJS) $(DLLLIBS)
 ############################################################################
 
 clean::
-
+   $(CD) _isuser
+   nmake -fntmakefile clean
+   $(CD) ..
+   $(CD) getwebdll
+   nmake -fntmakefile clean
+   $(CD) ..
+   echo done clean
 
 ############################################################################
 #

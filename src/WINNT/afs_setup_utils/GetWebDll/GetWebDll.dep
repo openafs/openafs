@@ -1,0 +1,11 @@
+# Microsoft Developer Studio Generated Dependency File, included by GetWebDll.mak
+
+.\GetWebDll.cpp : \
+	".\GetWebDll.h"\
+	".\GetWebDllFun.h"\
+	
+
+.\StdAfx.cpp : \
+	".\StdAfx.h"\
+	"c:\program files\microsoft visual studio\vc98\include\basetsd.h"\
+	
