@@ -50,6 +50,9 @@
 /* Define if you have the gethostbyname function.  */
 #undef HAVE_GETHOSTBYNAME
 
+/* Define if you have the getprogname function.  */
+#undef HAVE_GETPROGNAME
+
 /* Define if you have the random function.  */
 #undef HAVE_RANDOM
 
@@ -61,6 +64,9 @@
 
 /* Define if you have the res_search function.  */
 #undef HAVE_RES_SEARCH
+
+/* Define if you have the setprogname function.  */
+#undef HAVE_SETPROGNAME
 
 /* Define if you have the snprintf function.  */
 #undef HAVE_SNPRINTF
@@ -181,6 +187,9 @@
 
 /* define if struct ufsvfs has vfs_dqrwlock */
 #undef HAVE_VFS_DQRWLOCK
+
+/* define if struct proc has p_corefile */
+#undef HAVE_P_COREFILE
 
 #undef PACKAGE
 #undef VERSION
