@@ -211,9 +211,9 @@ int afs_suser(void *credp)
  * These are no-ops in user space
  */
 
-int afs_osi_SetTime(osi_timeval_t *atv)
+void afs_osi_SetTime(osi_timeval_t *atv)
 {
-    return 0;
+    return;
 }
 
 /*
