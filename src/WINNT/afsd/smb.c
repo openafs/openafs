@@ -46,9 +46,7 @@ char *loggedOutName = NULL;
 smb_user_t *loggedOutUserp = NULL;
 unsigned long loggedOutTime;
 int loggedOut = 0;
-#ifdef DJGPP
 int smbShutdownFlag = 0;
-#endif /* DJGPP */
 
 int smb_LogoffTokenTransfer;
 unsigned long smb_LogoffTransferTimeout;
@@ -1024,7 +1022,7 @@ void smb_ReleaseFID(smb_fid_t *fidp)
     smb_ioctl_t *ioctlp;
 
     if (!fidp)
-        return NULL;
+        return;
 
 	scp = NULL;
 	lock_ObtainWrite(&smb_rctLock);
@@ -6348,11 +6346,6 @@ void smb_Listener(void *parmp)
 	while (1) {
 		memset(ncbp, 0, sizeof(NCB));
 		flags = 0;
-#ifdef DJGPP
-        /* terminate if shutdown flag is set */
-        if (smbShutdownFlag == 1)
-            thrd_Exit(1);
-#endif /* DJGPP */
 
 #ifndef NOEXPIRE
 		/* check for demo expiration */
@@ -6362,7 +6355,11 @@ void smb_Listener(void *parmp)
 				(*smb_MBfunc)(NULL, "AFS demo expiration",
                                "afsd listener",
                                MB_OK|MB_ICONSTOP|MB_SETFOREGROUND);
-				ExitThread(1);
+#ifndef DJGPP
+                ExitThread(1);
+#else
+                thrd_Exit(1);
+#endif
 			}
 		}
 #endif /* !NOEXPIRE */
@@ -6385,9 +6382,22 @@ void smb_Listener(void *parmp)
         code = Netbios(ncbp);
 #else /* DJGPP */
         code = Netbios(ncbp, dos_ncb);
+#endif
 
         if (code != 0)
         {
+		    /* terminate if shutdown flag is set */
+	        if (smbShutdownFlag == 1) {
+#ifndef DJGPP
+			    ExitThread(1);
+#else
+				thrd_Exit(1);
+#endif
+			}
+
+#ifndef DJGPP
+			osi_assert(0);
+#else
             fprintf(stderr, "NCBLISTEN lana=%d failed with code %d\n",
                      ncbp->ncb_lana_num, code);
             osi_Log2(0, "NCBLISTEN lana=%d failed with code %d",
@@ -6396,10 +6406,8 @@ void smb_Listener(void *parmp)
                      "(possibly due to power-saving mode)\n");
             fprintf(stderr, "Please restart client.\n");
             afs_exit(AFS_EXITCODE_NETWORK_FAILURE);
-        }
 #endif /* !DJGPP */
-
-		osi_assert(code == 0);
+        }
 
 		/* check for remote conns */
 		/* first get remote name and insert null terminator */
@@ -6507,7 +6515,7 @@ void smb_Listener(void *parmp)
 		/* unlock */
 		lock_ReleaseMutex(&smb_ListenerLock);
 
-        }	/* dispatch while loop */
+    }	/* dispatch while loop */
 }
 
 /* initialize Netbios */
@@ -6972,11 +6980,12 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
 	return;
 }
 
-#ifdef DJGPP
 void smb_Shutdown(void)
 {
     NCB *ncbp;
+#ifdef DJGPP
     dos_ptr dos_ncb;
+#endif
     long code;
     int i;
 
@@ -6984,37 +6993,49 @@ void smb_Shutdown(void)
         
     /* setup the NCB system */
     ncbp = GetNCB();
+#ifdef DJGPP
     dos_ncb = ((smb_ncb_t *)ncbp)->dos_ncb;
+#endif
 
     /* Block new sessions by setting shutdown flag */
-    /*smbShutdownFlag = 1;*/
+    smbShutdownFlag = 1;
 
     /* Hang up all sessions */
+    memset((char *)ncbp, 0, sizeof(NCB));
     for (i = 1; i < numSessions; i++)
     {
         if (dead_sessions[i])
             continue;
-          
+      
         /*fprintf(stderr, "NCBHANGUP session %d LSN %d\n", i, LSNs[i]);*/
         ncbp->ncb_command = NCBHANGUP;
         ncbp->ncb_lana_num = lanas[i];  /*smb_LANadapter;*/
         ncbp->ncb_lsn = LSNs[i];
-        code = Netbios(ncbp, dos_ncb);
+#ifndef DJGPP
+        code = Netbios(ncbp);
+#else
+		code = Netbios(ncbp, dos_ncb);
+#endif
         /*fprintf(stderr, "returned from NCBHANGUP session %d LSN %d\n", i, LSNs[i]);*/
         if (code == 0) code = ncbp->ncb_retcode;
         if (code != 0) {
+            osi_Log1(afsd_logp, "Netbios NCBHANGUP error code %d", code);
             fprintf(stderr, "Session %d Netbios NCBHANGUP error code %d", i, code);
         }
-        }
+    }
 
-#if 1
     /* Delete Netbios name */
+    memset((char *)ncbp, 0, sizeof(NCB));
 	for (i = 0; i < lana_list.length; i++) {
 		if (lana_list.lana[i] == 255) continue;
 		ncbp->ncb_command = NCBDELNAME;
 		ncbp->ncb_lana_num = lana_list.lana[i];
 		memcpy(ncbp->ncb_name,smb_sharename,NCBNAMSZ);
+#ifndef DJGPP
+        code = Netbios(ncbp);
+#else
 		code = Netbios(ncbp, dos_ncb);
+#endif
 		if (code == 0) code = ncbp->ncb_retcode;
 		if (code != 0) {
 			fprintf(stderr, "Netbios NCBDELNAME lana %d error code %d",
@@ -7022,9 +7043,7 @@ void smb_Shutdown(void)
 		}
 		fflush(stderr);
 	}
-#endif
 }
-#endif /* DJGPP */
 
 /* Get the UNC \\<servername>\<sharename> prefix. */
 char *smb_GetSharename()

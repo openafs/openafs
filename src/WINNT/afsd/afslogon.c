@@ -377,14 +377,14 @@ DWORD APIENTRY NPLogonNotify(
 	RegCloseKey (NPKey);
 	if ((code!=0) || (LSPtype!=REG_DWORD))
 		LogonOption=LOGON_OPTION_INTEGRATED;	/*default to integrated logon only*/
-	DebugEvent("AFS AfsLogon - NPLogonNotify","LogonOption[%x], Service AutoStart[%d]",
-                LogonOption,AFSWillAutoStart());
 
+	afsWillAutoStart = AFSWillAutoStart();
+        
+	DebugEvent("AFS AfsLogon - NPLogonNotify","LogonOption[%x], Service AutoStart[%d]",
+                LogonOption,afsWillAutoStart);
     
     /* Get local machine specified login behavior (or defaults) */
     GetLoginBehavior(&retryInterval, &failSilently);
-        
-    afsWillAutoStart = AFSWillAutoStart();
         
     /* Check for zero length password if integrated logon*/
 	if ( ISLOGONINTEGRATED(LogonOption) )  {

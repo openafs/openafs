@@ -248,51 +248,47 @@ afsd_ServiceControlHandlerEx(
 	return dwRet;   
 }
 
-#if 1
-/* This code was moved to Drivemap.cpp*/
-/* Mount a drive into AFS if the user wants us to */
+/* There is similar code in client_config\drivemap.cpp GlobalMountDrive()
+ * 
+ * Mount a drive into AFS if there global mapping
+ */
 /* DEE Could check first if we are run as SYSTEM */
-void CheckMountDrive()
+static void MountGlobalDrives()
 {
-        char szAfsPath[_MAX_PATH];
-        char szDriveToMapTo[5];
-        DWORD dwResult;
-        char szKeyName[256];
-        HKEY hKey;
-        DWORD dwIndex = 0;
-        DWORD dwDriveSize;
-        DWORD dwSubMountSize;
-        char szSubMount[256];
-        DWORD dwType;
+    char szAfsPath[_MAX_PATH];
+    char szDriveToMapTo[5];
+    DWORD dwResult;
+    char szKeyName[256];
+    HKEY hKey;
+    DWORD dwIndex = 0;
+    DWORD dwDriveSize;
+    DWORD dwSubMountSize;
+    char szSubMount[256];
+    DWORD dwType;
 
-        sprintf(szKeyName, "%s\\GlobalAutoMapper", AFSConfigKeyName);
+    sprintf(szKeyName, "%s\\GlobalAutoMapper", AFSConfigKeyName);
 
 	dwResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKeyName, 0, KEY_QUERY_VALUE, &hKey);
 	if (dwResult != ERROR_SUCCESS)
-                return;
+        return;
 
-        while (1) {
-                dwDriveSize = sizeof(szDriveToMapTo);
-                dwSubMountSize = sizeof(szSubMount);
-                dwResult = RegEnumValue(hKey, dwIndex++, szDriveToMapTo, &dwDriveSize, 0, &dwType, szSubMount, &dwSubMountSize);
-                if (dwResult != ERROR_MORE_DATA) {
-                        if (dwResult != ERROR_SUCCESS) {
-                                if (dwResult != ERROR_NO_MORE_ITEMS)
-                                        afsi_log("Failed to read GlobalAutoMapper values: %d\n", dwResult);
-                                break;
-                        }
-                }
-                
-#if 0
-                sprintf(szAfsPath, "\\Device\\LanmanRedirector\\%s\\%s-AFS\\%s", szDriveToMapTo, cm_HostName, szSubMount);
-        
-                dwResult = DefineDosDevice(DDD_RAW_TARGET_PATH, szDriveToMapTo, szAfsPath);
-#else
+    while (1) {
+        dwDriveSize = sizeof(szDriveToMapTo);
+        dwSubMountSize = sizeof(szSubMount);
+        dwResult = RegEnumValue(hKey, dwIndex++, szDriveToMapTo, &dwDriveSize, 0, &dwType, szSubMount, &dwSubMountSize);
+        if (dwResult != ERROR_MORE_DATA) {
+            if (dwResult != ERROR_SUCCESS) {
+                if (dwResult != ERROR_NO_MORE_ITEMS)
+                    afsi_log("Failed to read GlobalAutoMapper values: %d\n", dwResult);
+                break;
+            }
+        }
+
 		{
 		    NETRESOURCE nr;
 		    memset (&nr, 0x00, sizeof(NETRESOURCE));
  
-		    sprintf(szAfsPath,"\\\\%s-AFS\\%s",cm_HostName,szSubMount);
+		    sprintf(szAfsPath,"\\\\%s\\%s",cm_NetbiosName,szSubMount);
 		    
 		    nr.dwScope = RESOURCE_GLOBALNET;
 		    nr.dwType=RESOURCETYPE_DISK;
@@ -303,13 +299,52 @@ void CheckMountDrive()
 
 		    dwResult = WNetAddConnection2(&nr,NULL,NULL,FALSE);
 		}
-#endif
-                afsi_log("GlobalAutoMap of %s to %s %s", szDriveToMapTo, szSubMount, dwResult ? "succeeded" : "failed");
-        }        
+        afsi_log("GlobalAutoMap of %s to %s %s", szDriveToMapTo, szSubMount, dwResult ? "succeeded" : "failed");
+    }        
 
-        RegCloseKey(hKey);
+    RegCloseKey(hKey);
 }
-#endif
+
+static void DismountGlobalDrives()
+{
+    char szAfsPath[_MAX_PATH];
+    char szDriveToMapTo[5];
+    DWORD dwResult;
+    char szKeyName[256];
+    HKEY hKey;
+    DWORD dwIndex = 0;
+    DWORD dwDriveSize;
+    DWORD dwSubMountSize;
+    char szSubMount[256];
+    DWORD dwType;
+
+    sprintf(szKeyName, "%s\\GlobalAutoMapper", AFSConfigKeyName);
+
+	dwResult = RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKeyName, 0, KEY_QUERY_VALUE, &hKey);
+	if (dwResult != ERROR_SUCCESS)
+        return;
+
+    while (1) {
+        dwDriveSize = sizeof(szDriveToMapTo);
+        dwSubMountSize = sizeof(szSubMount);
+        dwResult = RegEnumValue(hKey, dwIndex++, szDriveToMapTo, &dwDriveSize, 0, &dwType, szSubMount, &dwSubMountSize);
+        if (dwResult != ERROR_MORE_DATA) {
+            if (dwResult != ERROR_SUCCESS) {
+                if (dwResult != ERROR_NO_MORE_ITEMS)
+                    afsi_log("Failed to read GlobalAutoMapper values: %d\n", dwResult);
+                break;
+            }
+        }
+
+        sprintf(szAfsPath,"\\\\%s\\%s",cm_NetbiosName,szSubMount);
+		    
+        dwResult = WNetCancelConnection(szAfsPath, TRUE);
+        
+        afsi_log("Disconnect from GlobalAutoMap of %s to %s %s", szDriveToMapTo, szSubMount, dwResult ? "succeeded" : "failed");
+    }        
+
+    RegCloseKey(hKey);
+}
 
 typedef BOOL ( APIENTRY * AfsdInitHook )(void);
 #define AFSD_INIT_HOOK "AfsdInitHook"
@@ -330,7 +365,7 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
                    _CRTDBG_CHECK_CRT_DF /* | _CRTDBG_DELAY_FREE_MEM_DF */ );
 #endif 
 
-	osi_InitPanic(afsd_notifier);
+    osi_InitPanic(afsd_notifier);
 	osi_InitTraceOption();
 
 	GlobalStatus = 0;
@@ -342,7 +377,7 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
         afsi_log("Event Object Already Exists: %s", TEXT("afsd_service_WaitToTerminate"));
 
 #ifndef NOTSERVICE
-	StatusHandle = RegisterServiceCtrlHandlerEx(AFS_DAEMON_SERVICE_NAME,
+	StatusHandle = RegisterServiceCtrlHandlerEx(argv[0] /* AFS_DAEMON_SERVICE_NAME */,
 			(LPHANDLER_FUNCTION_EX) afsd_ServiceControlHandlerEx,
                                                  NULL /* user context */
                                                  );
@@ -445,6 +480,8 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
 			osi_panic(reason, __FILE__, __LINE__);
         }
 
+        MountGlobalDrives();
+
 #ifndef NOTSERVICE
 		ServiceStatus.dwCurrentState = SERVICE_RUNNING;
 		ServiceStatus.dwWin32ExitCode = NO_ERROR;
@@ -464,9 +501,6 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
         }
 	}
 
-    /* Check if we should mount a drive into AFS */
-    CheckMountDrive();
-
 	WaitForSingleObject(WaitToTerminate, INFINITE);
 
     {   
@@ -477,6 +511,10 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
                 0, 0, NULL, 1, 0, ptbuf, NULL);
     DeregisterEventSource(h);
     }
+
+    DismountGlobalDrives();
+    smb_Shutdown();
+    rx_Finalize();
 
 #ifdef	REGISTER_POWER_NOTIFICATIONS
 	/* terminate thread used to flush cache */
@@ -489,18 +527,21 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
     if ( hInitHookDll )
         FreeLibrary(hInitHookDll);
 
+    Sleep(5000);
+
     ServiceStatus.dwCurrentState = SERVICE_STOPPED;
 	ServiceStatus.dwWin32ExitCode = GlobalStatus ? ERROR_EXCEPTION_IN_SERVICE : NO_ERROR;
 	ServiceStatus.dwCheckPoint = 0;
 	ServiceStatus.dwWaitHint = 0;
 	ServiceStatus.dwControlsAccepted = 0;
 	SetServiceStatus(StatusHandle, &ServiceStatus);
+
 }
 
 DWORD __stdcall afsdMain_thread(void* notUsed)
 {
 	afsd_Main(0, (LPTSTR*)NULL);
-    exit(0);
+    return(0);
 }
 
 int
@@ -520,7 +561,7 @@ main(void)
             hAFSDMainThread = CreateThread(NULL, 0, afsdMain_thread, 0, 0, &tid);
 		
             printf("Hit <Enter> to terminate OpenAFS Client Service\n");
-            getchar();              
+            getchar();  
             SetEvent(WaitToTerminate);
         }
     }

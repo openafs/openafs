@@ -577,14 +577,14 @@ int afsd_InitCM(char **reasonP)
         DWORD dwDisp;
         TCHAR value = TEXT("7001:UDP:*:Enabled:AFS Cache Manager Callback");
         if (RegCreateKeyEx (HKEY_LOCAL_MACHINE, 
-                            "SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\DomainProfile\GloballyOpenP", 
+                            "SYSTEM\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy\\DomainProfile\\GloballyOpenP", 
                             0, TEXT("container"), 0, KEY_SET_VALUE, NULL, &hk, &dwDisp) == ERROR_SUCCESS)
         {
             RegSetValueEx (hk, TEXT("7001:UDP"), NULL, REG_SZ, (PBYTE)value, sizeof(TCHAR) * (1+lstrlen(value)));
             RegCloseKey (hk);
         }
         if (RegCreateKeyEx (HKEY_LOCAL_MACHINE, 
-                            "SYSTEM\CurrentControlSet\Services\SharedAccess\Parameters\FirewallPolicy\StandardProfile\GloballyOpenP", 
+                            "SYSTEM\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy\\StandardProfile\\GloballyOpenP", 
                             0, TEXT("container"), 0, KEY_SET_VALUE, NULL, &hk, &dwDisp) == ERROR_SUCCESS)
         {
             RegSetValueEx (hk, TEXT("7001:UDP"), NULL, REG_SZ, (PBYTE)value, sizeof(TCHAR) * (1+lstrlen(value)));
