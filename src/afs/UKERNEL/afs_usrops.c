@@ -2678,6 +2678,7 @@ int uafs_open_r(
 	    if (flags & (O_WRONLY|O_RDWR)) {
 		fileMode |= VWRITE;
 	    }
+	    if (!fileMode) fileMode = VREAD;  /* since O_RDONLY is 0 */
 	    code = afs_access(fileP, fileMode, u.u_cred);
 	    if (code != 0) {
 		VN_RELE(fileP);
