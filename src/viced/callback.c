@@ -1417,6 +1417,7 @@ static int GetSomeSpace_r(hostp, locked)
 	    cbstuff.GSS4++;
 	    if ( ! ClearHostCallbacks_r(hp, 0 /* not locked or held */) )
 		return;
+	    hp1 = hp;
 	} else {
 	    hp1 = hostp;
 	    cbstuff.GSS1++;
