@@ -323,8 +323,6 @@ login: project kauth rxkad
 		${COMPILE_PART1} sia ${COMPILE_PART2} ;; \
 	sun4x_55 ) \
 		${COMPILE_PART1} login ${COMPILE_PART2} ;; \
-	parisc_linux24) \
-		echo Skipping pam/login for parisc_linux24 ;; \
 	amd64_linux24) \
 		echo Skipping pam/login for amd64_linux24 ;; \
 	sun*_* | hp_ux11* | ia64_hpux* | *linux* | *fbsd* ) \
@@ -472,8 +470,8 @@ shlibafsrpc: rx rxkad des
 	case ${SYS_NAME} in \
 	amd64_linux24) \
 		echo Skipping shlibafsprc for amd64_linux24 ;; \
-	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
-	${COMPILE_PART1} shlibafsrpc ${COMPILE_PART2} ;; \
+#	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
+#	${COMPILE_PART1} shlibafsrpc ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
 	esac
@@ -482,8 +480,8 @@ shlibafsauthent: ubik auth kauth shlibafsrpc
 	case ${SYS_NAME} in \
 	amd64_linux24) \
 		echo Skipping shlibafsauthent for amd64_linux24 ;; \
-	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
-	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \
+#	alpha_dux*|sgi_*|sun*_*|rs_aix*|*linux*|hp_ux11*|ia64_hpux*) \
+#	${COMPILE_PART1} shlibafsauthent ${COMPILE_PART2} ;; \
 	*) \
 		echo Not building shared libafsrpc for ${SYS_NAME} ;; \
 	esac
