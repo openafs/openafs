@@ -255,12 +255,6 @@ vfsck:	minproject vol
 		echo skip vfsck for ${SYS_NAME} ;; \
 	rs_aix42)	\
 		echo skip vfsck for ${SYS_NAME} ;; \
-	sun4x_55 )  \
-		echo skip vfsck for ${SYS_NAME} ;; \
-	sun4x_56 )  \
-		echo skip vfsck for ${SYS_NAME} ;; \
-	sun4x_57 )  \
-		echo skip vfsck for ${SYS_NAME} ;; \
 	sun4x_58 )  \
 		echo skip vfsck for ${SYS_NAME} ;; \
 	 * ) \
