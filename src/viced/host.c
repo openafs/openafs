@@ -417,19 +417,14 @@ static char h_AddrInSameNetwork(afs_uint32 a_targetAddr, afs_uint32 a_candAddr)
 #endif /* FS_STATS_DETAILED */
 
 
-
+/* Assumptions: called with held host */
 void
 h_gethostcps_r(register struct host *host, register afs_int32 now)
 {
     register int code;
-    int  slept=0, held;
+    int  slept=0;
 
-    /* at this point, the host might not be locked, nor held */
-    /* make sure that we do not disappear behind the RPC     */
-    if ( !(held = h_Held_r(host)) )
-		h_Hold_r(host);
-
-    	/* wait if somebody else is already doing the getCPS call */
+    /* wait if somebody else is already doing the getCPS call */
     while ( host->hostFlags & HCPS_INPROGRESS ) 
     {
 	slept = 1;		/* I did sleep */
@@ -498,10 +493,6 @@ h_gethostcps_r(register struct host *host, register afs_int32 now)
 		ViceLog(0, ("LWP_NoYieldSignal returns %d\n", code));
 #endif /* AFS_PTHREAD_ENV */
     }
-
-    /* if we had held the  host, release it now */
-    if ( !held ) 
-	h_Release_r(host);
 }
 
 void h_flushhostcps(hostaddr, hport)
@@ -585,7 +576,7 @@ struct host *h_Alloc_r(register struct rx_connection *r_con)
     host->interface = 0;
 #ifdef undef
     host->hcpsfailed = 0; 	/* save cycles */
-    h_gethostcps(host);      /* do this under host lock */
+    h_gethostcps(host);      /* do this under host hold/lock */
 #endif
     host->FirstClient = 0;      
     h_Hold_r(host);
@@ -641,8 +632,10 @@ restart:
 		 * membership list for the host.  Note this could be the
 		 * first time that the host is added to a group.  Also
 		 * here we also retry on previous legitimate hcps failures.
+		 *
+		 * If we get here we still have a host hold.
 		 */
-		h_gethostcps_r(host,now);
+		h_gethostcps_r(host,now); 
 	    }
 	    break;
 	}
