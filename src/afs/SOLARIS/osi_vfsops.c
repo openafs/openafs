@@ -231,10 +231,10 @@ struct vfsops Afs_vfsops = {
 /*
  * afsinit - intialize VFS
  */
-void (*ufs_iputp)();
 int (*ufs_iallocp)();
 void (*ufs_iupdatp)();
 int (*ufs_igetp)();
+void (*ufs_itimes_nolockp)();
 
 struct streamtab *udp_infop = 0;
 struct ill_s *ill_g_headp = 0;
@@ -302,14 +302,14 @@ afsinit(struct vfssw *vfsswp, int fstype)
     nfs_checkauth = (int (*)()) modlookup("nfssrv", "checkauth");
     if ( !nfs_checkauth ) afs_warn("nfs_checkauth not initialised");
 #endif
-    ufs_iputp = (int (*)()) modlookup("ufs", "ufs_iput");    
     ufs_iallocp = (int (*)()) modlookup("ufs", "ufs_ialloc");    
     ufs_iupdatp = (int (*)()) modlookup("ufs", "ufs_iupdat");
     ufs_igetp = (int (*)()) modlookup("ufs", "ufs_iget");    
+    ufs_itimes_nolockp = (void (*)()) modlookup("ufs", "ufs_itimes_nolock");
     udp_infop = (struct streamtab *) modlookup("udp", "udpinfo");    
     ill_g_headp = (struct ill_s *) modlookup("ip", "ill_g_head");    
 
-    if ( !ufs_iputp || !ufs_iallocp || !ufs_iupdatp ||
+    if ( !ufs_iallocp || !ufs_iupdatp || !ufs_itimes_nolockp ||
 	 !ufs_igetp || !udp_infop || !ill_g_headp )
 	afs_warn("AFS to UFS mapping cannot be fully initialised\n");
 

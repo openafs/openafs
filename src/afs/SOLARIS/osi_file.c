@@ -263,7 +263,11 @@ struct vnode *avp;
 {
    if (afs_CacheFSType == AFS_SUN_UFS_CACHE) {
        struct inode *ip = VTOI(avp);
+       rw_enter(&ip->i_contents, RW_READER);
+       mutex_enter(&ip->i_tlock);
        ip->i_flag &= ~IACC;
+       mutex_exit(&ip->i_tlock);
+       rw_exit(&ip->i_contents);
    }
 }
 
