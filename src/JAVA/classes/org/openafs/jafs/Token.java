@@ -250,7 +250,6 @@ System.out.println(username + ", " + cellName);
   public void login() throws AFSException
   {
     this.tokenHandle = this.getToken(cellName, username, password);
-System.out.println("Token handle -> " + tokenHandle);
   }
 
   /**

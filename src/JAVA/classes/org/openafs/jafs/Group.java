@@ -1174,7 +1174,7 @@ public class Group implements PTSEntry, Serializable, Comparable
    * <code>null</code> if there are no more members.
    *
    * @param iterationId   the iteration ID of this iteration
-   * @see getGroupMembersBegin
+   * @see #getGroupMembersBegin
    * @return the name of the next member
    * @exception AFSException   If an error occurs in the native code
    */
@@ -1188,7 +1188,7 @@ public class Group implements PTSEntry, Serializable, Comparable
    * @param cellHandle    the handle of the cell to which the users belong
    * @see Cell#getCellHandle
    * @param iterationId   the iteration ID of this iteration
-   * @see getGroupMembersBegin
+   * @see #getGroupMembersBegin
    * @param theUser   a User object to be populated with the values of the 
    *                  next user
    * @return 0 if there are no more users, != 0 otherwise
@@ -1203,7 +1203,7 @@ public class Group implements PTSEntry, Serializable, Comparable
    * Signals that the iteration is complete and will not be accessed anymore.
    *
    * @param iterationId   the iteration ID of this iteration
-   * @see getGroupMembersBegin
+   * @see #getGroupMembersBegin
    * @exception AFSException   If an error occurs in the native code
    */
   protected static native void getGroupMembersDone( int iterationId )

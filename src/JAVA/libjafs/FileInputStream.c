@@ -33,7 +33,7 @@ extern int errno;
 /**
  * Be carefull with the memory management:
  *
- * - For every GetStringUTFChars call the corresponding ReleaseStringUTFChars.
+ * - For every getNativeString call the corresponding free().
  * - For every Get<type>ArrayElements call the corresponding
  *   Release<type>ArrayElements
  * - For every malloc call the corresponding free.
@@ -91,13 +91,13 @@ JNIEXPORT jint JNICALL Java_org_openafs_jafs_FileInputStream_read
   jfieldID fid;
 
   /* If we have to read 0 bytes just return */
-  if(length == 0) return 0;
+  if (length == 0) return 0;
 
   thisClass = (*env)->GetObjectClass(env, obj);
   fid = (*env)->GetFieldID(env, thisClass, "fileDescriptor", "I");
   fd = (*env)->GetIntField(env, obj, fid);
 
-  if(fd < 0) {
+  if (fd < 0) {
     fprintf(stderr, "FileInputStream::read(): invalid file state\n");
     throwAFSFileException(env, 0, "Invalid file state");
     return -1;
@@ -136,7 +136,7 @@ JNIEXPORT void JNICALL Java_org_openafs_jafs_FileInputStream_close
   fid = (*env)->GetFieldID(env, thisClass, "fileDescriptor", "I");
   fd = (*env)->GetIntField(env, obj, fid);
 
-  if(fd < 0) {
+  if (fd < 0) {
     fprintf(stderr, "FileInputStream::close(): invalid file state\n");
     throwAFSFileException(env, 0, "Invalid file state");
     return;
@@ -148,6 +148,3 @@ JNIEXPORT void JNICALL Java_org_openafs_jafs_FileInputStream_close
     throwAFSFileException(env, errno, NULL);
   }
 }
-
-
-

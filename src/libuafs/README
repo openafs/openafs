@@ -5,7 +5,7 @@ This software has been released under the terms of the IBM Public
 License.  For details, see the LICENSE file in the top-level source
 directory or online at http://www.openafs.org/dl/license10.html.
 
-README file for libuafs and libjuafs, Version 1.0 05/13/2002.
+README file for libuafs and libjuafs, Version 1.2 06/04/2003.
 
 
 ### INTRODUCTION ###
@@ -77,7 +77,5 @@ contains output files respective to libjuafs.a.
 
 ### CONSIDERATIONS ###
 
-The libjuafs.a library has only been tested using RedHat Linux 7.1 and 
-OpenAFS 1.2.3 and OpenAFS 1.2.4.
-
-
+The libjuafs.a library has only been tested using RedHat Linux 7.3 and 
+OpenAFS 1.2.6, OpenAFS 1.2.7, OpenAFS 1.2.8, and OpenAFS 1.2.9.

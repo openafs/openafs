@@ -1443,12 +1443,12 @@ public class Server implements Serializable, Comparable
    * methods as a means of identification.
    *
    * @param cellHandle    a cell handle previously returned by 
-   *                      a call to {@link #getCellHandle}
+   *                      a call to {@link Cell#getCellHandle}
    * @param serverName    the name of the server for which to retrieve 
    *                      a vos handle
    * @return a vos handle to the server
    * @exception AFSException  If an error occurs in the native code
-   * @see #getCellHandle
+   * @see Cell#getCellHandle
    */
   protected static native int getVosServerHandle( int cellHandle, 
 						  String serverName )
@@ -1469,12 +1469,12 @@ public class Server implements Serializable, Comparable
    * as a means of identification.
    *
    * @param cellHandle    a cell handle previously returned by a call 
-   *                      to {@link #getCellHandle}
+   *                      to {@link Cell#getCellHandle}
    * @param serverName    the name of the server for which to retrieve 
    *                      a bos handle
    * @return a bos handle to the server
    * @exception AFSException  If an error occurs in the native code
-   * @see #getCellHandle
+   * @see Cell#getCellHandle
    */
   protected static native int getBosServerHandle( int cellHandle, 
 						  String serverName )
@@ -1735,7 +1735,7 @@ public class Server implements Serializable, Comparable
    * are no more admins, != 0 otherwise.
    *
    * @param cellHandle    the handle of the cell to which these admins belong
-   * @see #getCellHandle
+   * @see Cell#getCellHandle
    * @param iterationId   the iteration ID of this iteration
    * @see #getBosAdminsBegin
    * @param theUser   the user object in which to fill the values of this admin
@@ -1787,7 +1787,7 @@ public class Server implements Serializable, Comparable
    * Salvages (restores consistency to) a volume, partition, or server
    *
    * @param cellHandle    the handle of the cell to which the volume belongs
-   * @see #getCellHandle
+   * @see Cell#getCellHandle
    * @param serverHandle  the bos handle of the server on which the 
    *                      volume resides
    * @see #getBosServerHandle
@@ -1831,7 +1831,7 @@ public class Server implements Serializable, Comparable
    *  Synchronizes a particular server with the volume location database.
    *
    * @param cellHandle    the handle of the cell to which the server belongs
-   * @see #getCellHandle
+   * @see Cell#getCellHandle
    * @param serverHandle  the vos handle of the server     
    * @see #getVosServerHandle
    * @param partition   the id of the partition to sync, can be -1 to ignore
@@ -1846,7 +1846,7 @@ public class Server implements Serializable, Comparable
    *  Synchronizes the volume location database with a particular server.
    *
    * @param cellHandle    the handle of the cell to which the server belongs
-   * @see #getCellHandle
+   * @see Cell#getCellHandle
    * @param serverHandle  the vos handle of the server     
    * @see #getVosServerHandle
    * @param partition   the id of the partition to sync, can be -1 to ignore

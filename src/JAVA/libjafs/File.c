@@ -19,6 +19,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#if 0
+#include <afs/param.h>
+#include <errno.h>
+#endif
+
 #include "Internal.h"
 #include "org_openafs_jafs_File.h"
 
@@ -76,28 +81,34 @@ char* getAbsolutePath(JNIEnv *env, jobject *obj, char *dirName)
     jclass thisClass;
     jstring jDirName;
     jmethodID getAbsolutePathID;
-    const char *auxDirName;
+    char *auxDirName;
     jfieldID fid;
 
     thisClass = (*env)->GetObjectClass(env, *obj);
-    if(thisClass == NULL) {
+    if( thisClass == NULL ) {
       fprintf(stderr, "File::getAbsolutePath(): GetObjectClass failed\n");
       return NULL;
     }
+
     fid = (*env)->GetFieldID(env, thisClass, "path", "Ljava/lang/String;");
-    if (fid == 0) {
+    if ( fid == NULL ) {
       fprintf(stderr, "File::getAbsolutePath(): GetFieldID (path) failed\n");
       return NULL;
     }
-    jDirName = (*env)->GetObjectField(env, *obj, fid);
 
-    if(jDirName == NULL) {
+    jDirName = (*env)->GetObjectField(env, *obj, fid);
+    if( jDirName == NULL ) {
       fprintf(stderr, "File::getAbsolutePath(): failed to get file name\n");
       return NULL;
     }
-    auxDirName = (*env) -> GetStringUTFChars(env, jDirName, 0);
+
+    auxDirName = getNativeString(env, jDirName);
+    if ( auxDirName == NULL ) {
+      fprintf(stderr, "File::getAbsolutePath(): failed to get translated file name\n");
+      return NULL;
+    }
     strcpy(dirName, auxDirName);
-    (*env) -> ReleaseStringUTFChars(env, jDirName, auxDirName);
+    free( auxDirName );
 }
 
 /**
@@ -464,8 +475,9 @@ JNIEXPORT jboolean JNICALL Java_org_openafs_jafs_File_closeDir
   if (rc < 0) {
     setError(env, &obj, errno);
     return JNI_FALSE;
+  } else {
+    return JNI_TRUE;
   }
-  else return JNI_TRUE;
 }
 
 
@@ -636,8 +648,7 @@ void setFileNotExistsAttributes
     fid = (*env)->GetFieldID(env, thisClass, "isDirectory", "Z");
     if (fid == 0) {
       fprintf(stderr, 
-            "File::setFileNotExistsAttributes(): GetFieldID (isDirectory) 
-             failed\n");
+            "File::setFileNotExistsAttributes(): GetFieldID (isDirectory) failed\n");
       return;
     }
     (*env)->SetBooleanField(env, *obj, fid, JNI_FALSE);
@@ -645,8 +656,7 @@ void setFileNotExistsAttributes
     fid = (*env)->GetFieldID(env, thisClass, "isFile", "Z");
     if (fid == 0) {
       fprintf(stderr, 
-            "File::setFileNotExistsAttributes(): GetFieldID (isDirectory) 
-             failed\n");
+            "File::setFileNotExistsAttributes(): GetFieldID (isDirectory) failed\n");
       return;
     }
     (*env)->SetBooleanField(env, *obj, fid, JNI_FALSE);
@@ -670,5 +680,3 @@ void setFileNotExistsAttributes
 
     return;
 }
-
-

@@ -488,7 +488,15 @@ static void *afs_TraverseCells_nl(void *(*cb)(struct cell *, void *), void *arg)
     void *ret = NULL;
 
     for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
-	tc = QTOC(cq); tq = QNext(cq);
+       tc = QTOC(cq);
+
+      /* This is assuming that a NULL return is acceptable. */
+      if (cq) {
+        tq = QNext(cq);
+      } else {
+        return NULL;
+      }
+
 	ret = cb(tc, arg);
 	if (ret) break;
     }
@@ -509,7 +517,12 @@ void *afs_TraverseCells(void *(*cb)(struct cell *, void *), void *arg)
 
 static void *afs_choose_cell_by_name(struct cell *cell, void *arg)
 {
-    return strcmp(cell->cellName, (char *) arg) ? NULL : cell;
+    if ( !arg ) {
+      /* Safety net */
+      return cell;
+    } else {
+      return strcmp(cell->cellName, (char *) arg) ? NULL : cell;
+    }
 }
 
 static void *afs_choose_cell_by_num(struct cell *cell, void *arg)
@@ -597,7 +610,18 @@ struct cell *afs_GetPrimaryCell(afs_int32 locktype)
 
 int afs_IsPrimaryCell(struct cell *cell)
 {
-    return strcmp(cell->cellName, afs_thiscell) ? 0 : 1;
+    /* Simple safe checking */
+    if (!cell) {
+      return 0;
+    } else if ( !afs_thiscell ) {
+      /* This is simply a safety net to avoid seg faults especially when
+       * using a user-space library.  afs_SetPrimaryCell() should be set
+       * prior to this call. */
+      afs_SetPrimaryCell( cell->cellName );
+      return 1;
+    } else {
+      return strcmp(cell->cellName, afs_thiscell) ? 0 : 1;
+    }
 }
 
 int afs_IsPrimaryCellNum(afs_int32 cellnum)

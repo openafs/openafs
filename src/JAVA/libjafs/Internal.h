@@ -4,15 +4,32 @@
 #include <jni.h>
 #include "Exceptions.h"
 
-#ifndef LIBJUAFS
-#include <afs_Admin.h>
-#include <afs_kasAdmin.h>
-
-// error codes
-#define JAFSADMNOMEM 1050             // Memory problems
+/** 
+ * ERROR CODES
+ *
+ * Please add any internal error codes to the ErrorMessages.properties
+ * file located in src/JAVA/classes/
+ */
+#define JAFSADMNOMEM          1050    // Memory problems
 #define JAFSADMCLASSNOTFOUND  1051    // Trouble finding a Java class
 #define JAFSADMMETHODNOTFOUND 1052    // Trouble finding a Java method
 #define JAFSADMFIELDNOTFOUND  1053    // Trouble finding a Java field
+#define JAFSNULLARG           1054    // Null argument (general)
+#define JAFSNULLUSER          1055    // User argument null
+#define JAFSNULLPASS          1056    // Password argument null
+#define JAFSNULLGROUP         1057    // Group name argument null
+#define JAFSNULLOWNER         1058    // Group owner name argument null
+#define JAFSNULLVOLUME        1059    // Volume name argument null
+#define JAFSNULLPART          1060    // Partition name argument null
+#define JAFSNULLPROCESS       1061    // Process name argument null
+#define JAFSNULLSERVER        1062    // Server name argument null
+#define JAFSNULLCELL          1063    // Cell name argument null
+#define JAFSNULLPATH          1064    // Path argument null
+#define JAFSNULLACL           1065    // ACL string argument null
+
+#ifndef LIBJUAFS
+#include <afs_Admin.h>
+#include <afs_kasAdmin.h>
 
 // make an identity out of a full name (possibly including an instance ) 
 void internal_makeKasIdentity( const char *fullName, kas_identity_p who );
@@ -54,8 +71,9 @@ void throwException( JNIEnv *env, jclass *excCls, char *excClsName, jmethodID *i
 // reclaim global memory used by exceptions 
 void reclaimExceptionMemory( JNIEnv *env, jclass cls );
 
-int setError(JNIEnv *env, jobject *obj, int code);
-int setString(JNIEnv *env, jobject *obj, char *field, char *string);
+int     setError (JNIEnv *env, jobject *obj, int code);
+int     setString(JNIEnv *env, jobject *obj, char *field, char *string);
+char*   getNativeString(JNIEnv *env, jstring jstr);
 
 #endif
 

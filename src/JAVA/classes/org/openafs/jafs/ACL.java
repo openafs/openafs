@@ -33,6 +33,8 @@ import java.util.StringTokenizer;
  * This class is an extension of the standard Java File class with file-based 
  * manipulation methods overridden by integrated AFS native methods.
  *
+ * @version 2.2, 03/24/2003 - Added new Delta ACL functionality and changes 
+ *                            from Stonehenge.
  * @version 2.0, 04/18/2001 - Completely revised class for efficiency.
  */
 
@@ -41,9 +43,23 @@ public class ACL implements Serializable, Comparable
   private ACL.Entry[] positiveEntries;
   private ACL.Entry[] negativeEntries;
 
-  private String path;
+  private ACL.Entry[] positiveExpungeEntries;
+  private ACL.Entry[] negativeExpungeEntries;
+
+  /** 
+   * Path for this ACL, if null then this ACL instance is most likely a 
+   * Delta ACL.
+   */
+  private String path = null;
  
-  public ACL(String path) throws AFSException
+  private ACL()
+  {
+  }
+  public ACL( String path ) throws AFSException
+  {
+    this( path, true );
+  }
+  public ACL( String path, boolean init ) throws AFSException
   {
     int numberPositiveEntries = 0;
     int numberNegativeEntries = 0;
@@ -52,85 +68,562 @@ public class ACL implements Serializable, Comparable
 
     this.path = path;
 
-    StringTokenizer st = new StringTokenizer(getACLString(path), "\n\t");
-
-    buffer = st.nextToken();
-    numberPositiveEntries = new Integer(buffer).intValue();
-    positiveEntries = new ACL.Entry[numberPositiveEntries];
-
-    buffer = st.nextToken();
-    numberNegativeEntries = new Integer(buffer).intValue();
-    negativeEntries = new ACL.Entry[numberNegativeEntries];
-
-    for(int i = 0; i < numberPositiveEntries; i++)
-    {
-      aclEntry = new ACL.Entry();
-      aclEntry.setUser(st.nextToken());
-      aclEntry.setPermissions(new Integer(st.nextToken()).intValue());
-      positiveEntries[i] = aclEntry;
-    }
-
-    for(int i = 0; i < numberNegativeEntries; i++)
-    {
-      aclEntry = new ACL.Entry();
-      aclEntry.setUser(st.nextToken());
-      aclEntry.setPermissions(new Integer(st.nextToken()).intValue());
-      negativeEntries[i] = aclEntry;
+    if ( init ) {
+      StringTokenizer st = new StringTokenizer( getACLString(path), "\n\t" );
+  
+      buffer = st.nextToken();
+      numberPositiveEntries = new Integer(buffer).intValue();
+      positiveEntries = new ACL.Entry[numberPositiveEntries];
+  
+      buffer = st.nextToken();
+      numberNegativeEntries = new Integer(buffer).intValue();
+      negativeEntries = new ACL.Entry[numberNegativeEntries];
+  
+      for(int i = 0; i < numberPositiveEntries; i++)
+      {
+        aclEntry = new ACL.Entry();
+        aclEntry.setUser(st.nextToken());
+        aclEntry.setPermissions(new Integer(st.nextToken()).intValue());
+        positiveEntries[i] = aclEntry;
+      }
+  
+      for(int i = 0; i < numberNegativeEntries; i++)
+      {
+        aclEntry = new ACL.Entry();
+        aclEntry.setUser(st.nextToken());
+        aclEntry.setPermissions(new Integer(st.nextToken()).intValue());
+        negativeEntries[i] = aclEntry;
+      }
+    } else {
+      positiveEntries = new ACL.Entry[0];
+      negativeEntries = new ACL.Entry[0];
     }
   }
+  /**
+   * Returns the total number of ACL entries, this is the sum of positive
+   * and negative entries.
+   *
+   * @return Total number of ACL entries
+   */
   public int getEntryCount()
   {
-    return positiveEntries.length + positiveEntries.length;
+    return getPositiveEntryCount() + getNegativeEntryCount();
   }
+  /**
+   * Returns the path this ACL instance is bound to.
+   *
+   * @return Path for this ACL
+   */
   public String getPath()
   {
     return path;
   }
-  public ACL.Entry[] getPositiveEntries()
-  {
-    return positiveEntries;
-  }
-  public void addPositiveEntry(ACL.Entry entry) throws AFSException
-  {
-    int n = positiveEntries.length;
-    ACL.Entry[] e = new ACL.Entry[n + 1];
-    System.arraycopy(positiveEntries, 0, e, 0, n);
-    e[n] = entry;
-    positiveEntries = e;
-    setACLString(path, getFormattedString());
-  }
-  public void setPositiveEntries(ACL.Entry[] entries) throws AFSException
-  {
-    this.positiveEntries = entries;
-    setACLString(path, getFormattedString());
-  }
-  public ACL.Entry[] getNegativeEntries()
-  {
-    return negativeEntries;
-  }
-  public void addNegativeEntry(ACL.Entry entry) throws AFSException
-  {
-    int n = negativeEntries.length;
-    ACL.Entry[] e = new ACL.Entry[n + 1];
-    System.arraycopy(negativeEntries, 0, e, 0, n);
-    e[n] = entry;
-    negativeEntries = e;
-    setACLString(path, getFormattedString());
-  }
-  public void setNegativeEntries(ACL.Entry[] entries) throws AFSException
-  {
-    this.negativeEntries = entries;
-    setACLString(path, getFormattedString());
-  }
-
+  /**
+   * Writes the ACL to AFS, making all changes immediately effective.
+   * This method requires an active connection to AFS.
+   */
   public void flush() throws AFSException
   {
     setACLString(path, getFormattedString());
   }
 
-  private ACL.Entry[] getNonEmptyEntries(ACL.Entry[] entries)
+
+  /*--------------------------------------------------------------------------*/
+  /* Positive ACL Methods                                                     */
+  /*--------------------------------------------------------------------------*/
+
+  /**
+   * Returns the number of positive ACL entries for this ACL instance.
+   *
+   * @return Positive ACL entry count
+   */
+  public int getPositiveEntryCount()
   {
-    ArrayList response = new ArrayList(entries.length);
+    return ( positiveEntries == null ) ? 0 : positiveEntries.length;
+  }
+  /**
+   * Returns all positive ACL entries for this ACL instance.
+   *
+   * @return All positive ACL entries
+   */
+  public ACL.Entry[] getPositiveEntries()
+  {
+    return ( positiveEntries == null ) ? new ACL.Entry[0] : positiveEntries;
+  }
+  /**
+   * Returns the positive ACL entry associated with the specified 
+   * user/group name.
+   *
+   * @param  name Name of user/group for desired ACL entry.
+   * @return Positive ACL entry
+   * @see ACL.Entry#getUser()
+   */
+  public Entry getPositiveEntry(String name)
+  {
+    int n = getPositiveEntryCount();
+    for (int i = 0; i < n; i++) {
+      if (positiveEntries[i].getUser().equalsIgnoreCase(name)) {
+        return positiveEntries[i];
+      }
+    }
+    return null;
+  }
+  /**
+   * Returns all positive ACL entries to be expunged; used in Delta ACLs.
+   *
+   * @return All positive ACL entries
+   */
+  public ACL.Entry[] getPositiveExpungeEntries()
+  {
+    return ( positiveExpungeEntries == null ) ? new ACL.Entry[0] : positiveExpungeEntries;
+  }
+  /**
+   * Returns <code>true</code> if this ACL contains the specified ACL entry.
+   *
+   * @param  entry Positive ACL entry
+   * @return <code>true</code> if the specified ACL entry is present; 
+   *         <code>false</code> otherwise.
+   */
+  public boolean containsPositiveEntry(Entry entry)
+  {
+    int n = getPositiveEntryCount();
+    for (int i = 0; i < n; i++) {
+      if (positiveEntries[i].equals(entry)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  /**
+   * Adds a single positive ACL entry to this ACL instance.
+   *
+   * @param entry ACL.Entry object to add
+   */
+  public void addPositiveEntry( ACL.Entry entry ) throws AFSException
+  {
+    int n = getPositiveEntryCount();
+    ACL.Entry[] e = new ACL.Entry[n + 1];
+    if ( n > 0 ) System.arraycopy(positiveEntries, 0, e, 0, n);
+    e[n] = entry;
+    positiveEntries = e;
+    update();
+  }
+  /**
+   * Adds the provided list of positive ACL entries to this ACL instance.
+   *
+   * @param entries Array of ACL.Entry objects to add
+   */
+  public void addPositiveEntries( ACL.Entry[] entries ) throws AFSException
+  {
+    int n = getPositiveEntryCount();
+    ACL.Entry[] e = new ACL.Entry[n + entries.length];
+    System.arraycopy(positiveEntries, 0, e, 0, n);
+    System.arraycopy(entries,0,e,n,entries.length);
+    positiveEntries = e;
+    update();
+  }
+  /**
+   * Sets the complete array of positive ACL entries to the provided
+   * ACL entry list (<code>entries</code>) for this ACL instance.
+   *
+   * @param entries Array of ACL.Entry objects that represent this
+   *                ACL's positive entry list.
+   */
+  public void setPositiveEntries( ACL.Entry[] entries ) throws AFSException
+  {
+    this.positiveEntries = entries;
+    update();
+  }
+  /**
+   * Add a positive ACL entry to the list of positive ACL entries to be 
+   * expunged; used in Delta ACLs.
+   *
+   * @param entry Positive ACL entries to be expunged.
+   */
+  public void addPositiveExpungeEntry( ACL.Entry entry ) throws AFSException
+  {
+    int n = ( positiveExpungeEntries == null ) ? 0 : positiveExpungeEntries.length;
+    ACL.Entry[] e = new ACL.Entry[n + 1];
+    if ( n > 0 ) System.arraycopy(positiveExpungeEntries, 0, e, 0, n);
+    e[n] = entry;
+    positiveExpungeEntries = e;
+    update();
+  }
+
+  /**
+   * Removes a single positive ACL entry from this ACL instance.
+   *
+   * @param entry ACL.Entry object to removed
+   */
+  public void removePositiveEntry(Entry entry) throws AFSException
+  {
+    int n = getPositiveEntryCount();
+    ArrayList list = new ArrayList();
+
+    for (int i = 0; i < n; i++) {
+      if (!positiveEntries[i].equals(entry)) {
+        list.add(positiveEntries[i]);
+      }
+    }
+
+    positiveEntries = (ACL.Entry[]) list.toArray(new ACL.Entry[list.size()]);
+    update();
+  }
+  /**
+   * Removes all positive ACL entries from this ACL instance.
+   */
+  public void removeAllPositiveEntries() throws AFSException
+  {
+    positiveEntries = new Entry[0];
+    update();
+  }
+
+
+  /*--------------------------------------------------------------------------*/
+  /* Negative ACL Methods                                                     */
+  /*--------------------------------------------------------------------------*/
+
+  /**
+   * Returns the number of negative ACL entries for this ACL instance.
+   *
+   * @return Negative ACL entry count
+   */
+  public int getNegativeEntryCount()
+  {
+    return ( negativeEntries == null ) ? 0 : negativeEntries.length;
+  }
+  /**
+   * Returns all negative ACL entries for this ACL instance.
+   *
+   * @return All negative ACL entries
+   */
+  public ACL.Entry[] getNegativeEntries()
+  {
+    return ( negativeEntries == null ) ? new ACL.Entry[0] : negativeEntries;
+  }
+  /**
+   * Returns the negative ACL entry associated with the specified 
+   * user/group name.
+   *
+   * @param  name Name of user/group for desired ACL entry.
+   * @return Negative ACL entry
+   * @see ACL.Entry#getUser()
+   */
+  public Entry getNegativeEntry(String name)
+  {
+    int n = getNegativeEntryCount();
+    for (int i = 0; i < n; i++) {
+      if (negativeEntries[i].getUser().equalsIgnoreCase(name)) {
+        return negativeEntries[i];
+      }
+    }
+    return null;
+  }
+  /**
+   * Returns all negative ACL entries to be expunged; used in Delta ACLs.
+   *
+   * @return All negative ACL entries to be expunged.
+   */
+  public ACL.Entry[] getNegativeExpungeEntries()
+  {
+    return ( negativeExpungeEntries == null ) ? new ACL.Entry[0] : negativeExpungeEntries;
+  }
+  /**
+   * Returns <code>true</code> if this ACL contains the specified ACL entry.
+   *
+   * @param  entry Negative ACL entry
+   * @return <code>true</code> if the specified ACL entry is present; 
+   *         <code>false</code> otherwise.
+   */
+  public boolean containsNegative(Entry entry)
+  {
+    int n = getNegativeEntryCount();
+    for (int i = 0; i < n; i++) {
+      if (negativeEntries[i].equals(entry)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  /**
+   * Adds a single negative ACL entry to this ACL instance.
+   *
+   * @param entry ACL.Entry object to add
+   */
+  public void addNegativeEntry( ACL.Entry entry ) throws AFSException
+  {
+    int n = getNegativeEntryCount();
+    ACL.Entry[] e = new ACL.Entry[n + 1];
+    if ( n > 0 ) System.arraycopy(negativeEntries, 0, e, 0, n);
+    e[n] = entry;
+    negativeEntries = e;
+    update();
+  }
+  /**
+   * Adds the provided list of negative ACL entries to this ACL instance.
+   *
+   * @param entries Array of ACL.Entry objects to add
+   */
+  public void addNegativeEntries( ACL.Entry[] entries ) throws AFSException
+  {
+    int n = getNegativeEntryCount();
+    ACL.Entry[] e = new ACL.Entry[n + entries.length];
+    System.arraycopy(negativeEntries, 0, e, 0, n);
+    System.arraycopy(entries,0,e,n,entries.length);
+    negativeEntries = e;
+    update();
+  }
+  /**
+   * Add a negative ACL entry to the list of negative ACL entries to be 
+   * expunged; used in Delta ACLs.
+   *
+   * @param entry Negative ACL entries to be expunged.
+   */
+  public void addNegativeExpungeEntry( ACL.Entry entry ) throws AFSException
+  {
+    int n = ( negativeExpungeEntries == null ) ? 0 : negativeExpungeEntries.length;
+    ACL.Entry[] e = new ACL.Entry[n + 1];
+    if ( n > 0 ) System.arraycopy(negativeExpungeEntries, 0, e, 0, n);
+    e[n] = entry;
+    negativeExpungeEntries = e;
+    update();
+  }
+  /**
+   * Sets the complete array of negative ACL entries to the provided
+   * ACL entry list (<code>entries</code>) for this ACL instance.
+   *
+   * @param entries Array of ACL.Entry objects that represent this
+   *                ACL's negative entry list.
+   */
+  public void setNegativeEntries( ACL.Entry[] entries ) throws AFSException
+  {
+    this.negativeEntries = entries;
+    update();
+  }
+
+  /**
+   * Removes a single negative ACL entry from this ACL instance.
+   *
+   * @param entry ACL.Entry object to removed
+   */
+  public void removeNegativeEntry(Entry entry) throws AFSException
+  {
+    int n = getNegativeEntryCount();
+    ArrayList list = new ArrayList();
+        
+    for (int i = 0; i < n; i++) {
+      if (!negativeEntries[i].equals(entry)) {
+        list.add(negativeEntries[i]);
+      }
+    }
+
+    negativeEntries = (ACL.Entry[]) list.toArray(new ACL.Entry[list.size()]);
+    update();
+  }
+  
+  /**
+   * Removes all negative ACL entries from this ACL instance.
+   */
+  public void removeAllNegativeEntries() throws AFSException
+  {
+    negativeEntries = new Entry[0];
+    update();
+  }
+  
+
+  /*--------------------------------------------------------------------------*/
+  /* Delta ACL Methods                                                        */
+  /*--------------------------------------------------------------------------*/
+
+  /**
+   * Returns a "Delta ACL", which is an ACL that represents only the difference
+   * (delta) of two ACLs, relative to the current ACL instance by the provided
+   * ACL specified by <code>acl</code>.
+   *
+   * <P> This ACL instance represents the base or reference object while the 
+   * provided ACL (<code>acl</code>) represents the object in question. 
+   * Therefore, if the provided ACL has an entry that differs from the base ACL,
+   * then the resulting Delta ACL will contain that entry found in the provided 
+   * ACL; base ACL entries are never entered into the Delta ACL, but rather are
+   * used solely for comparison.
+   *
+   * @param acl the ACL to compare this ACL instance to
+   * @return Delta ACL by comparing this ACL instance with <code>acl</code>
+   */
+  public ACL getDeltaACL( ACL acl ) throws AFSException
+  {
+    ACL delta = new ACL();
+    int n = getPositiveEntryCount();
+    
+    ACL.Entry[] pEntries = acl.getPositiveEntries();
+    for ( int i = 0; i < pEntries.length; i++ )
+    {
+      boolean match = false;
+      for ( int j = 0; j < n; j++ )
+      {
+        if ( pEntries[i].equals( positiveEntries[j] ) ) {
+          match = true;
+          break;
+        }
+      }
+      if ( !match ) delta.addPositiveEntry( pEntries[i] );
+    }
+
+    // Check for positive entries that need to be expunged.
+    n = getPositiveEntryCount();
+    if ( n > pEntries.length ) {
+      for ( int i = 0; i < n; i++ )
+      {
+        String eu = positiveEntries[i].getUser();
+        boolean match = false;
+        for ( int j = 0; j < pEntries.length; j++ )
+        {
+          if ( eu != null && eu.equals( pEntries[j].getUser() ) ) {
+            match = true;
+            break;
+          }
+        }
+        if ( !match ) delta.addPositiveExpungeEntry( positiveEntries[i] );
+      }
+    }
+
+    n = getNegativeEntryCount();
+    ACL.Entry[] nEntries = acl.getNegativeEntries();
+    for ( int i = 0; i < nEntries.length; i++ )
+    {
+      boolean match = false;
+      for ( int j = 0; j < n; j++ )
+      {
+        if ( nEntries[i].equals( negativeEntries[j] ) ) {
+          match = true;
+          break;
+        }
+      }
+      if ( !match ) delta.addNegativeEntry( nEntries[i] );
+    }
+
+    // Check for negative entries that need to be expunged.
+    n = getNegativeEntryCount();
+    if ( n > nEntries.length ) {
+      for ( int i = 0; i < n; i++ )
+      {
+        String eu = negativeEntries[i].getUser();
+        boolean match = false;
+        for ( int j = 0; j < nEntries.length; j++ )
+        {
+          if ( eu != null && eu.equals( nEntries[j].getUser() ) ) {
+            match = true;
+            break;
+          }
+        }
+        if ( !match ) delta.addNegativeExpungeEntry( negativeEntries[i] );
+      }
+    }
+
+    return delta;
+  }
+
+  /**
+   * Updates the current ACL instance by replacing, adding, or deleting 
+   * ACL entries designated by the specified Delta ACL (<code>delta</code>).
+   *
+   * <P> If the provided Delta ACL has an entry that differs from this ACL 
+   * instance, then the ACL entry of the Delta ACL will be set.
+   *
+   * @param delta the Delta ACL to be applied to this ACL instance
+   */
+  public void update( ACL delta ) throws AFSException
+  {
+    ArrayList pos = new ArrayList( this.getPositiveEntryCount() );
+    ArrayList neg = new ArrayList( this.getNegativeEntryCount() );
+
+    ACL.Entry[] pExpungeEntries = delta.getPositiveExpungeEntries();
+    ACL.Entry[] nExpungeEntries = delta.getNegativeExpungeEntries();
+
+    ACL.Entry[] pEntries = delta.getPositiveEntries();
+    ACL.Entry[] nEntries = delta.getNegativeEntries();
+
+    // Delete positive expunge entries first
+    int n = getPositiveEntryCount();
+    for ( int i = 0; i < n; i++ )
+    {
+      boolean match = false;
+      for ( int j = 0; j < pExpungeEntries.length; j++ )
+      {
+        if ( pExpungeEntries[j].equals( positiveEntries[i] ) ) {
+          match = true;
+          break;
+        }
+      }
+      if ( !match ) pos.add( positiveEntries[i] );
+    }
+
+    // Now check for entries that need replacing
+    for ( int i = 0; i < pEntries.length; i++ )
+    {
+      boolean match = false;
+      String user = pEntries[i].getUser();
+      for ( int j = 0; j < pos.size(); j++ )
+      {
+        if ( user.equals( ((ACL.Entry)pos.get(j)).getUser() ) ) {
+          pos.set( j, pEntries[i] );
+          match = true;
+          break;
+        }
+      }
+      if ( !match ) pos.add( pEntries[i] );
+    }
+    setPositiveEntries( (ACL.Entry[])pos.toArray(new ACL.Entry[pos.size()]) );
+
+    // Delete negative expunge entries next
+    n = getNegativeEntryCount();
+    for ( int i = 0; i < n; i++ )
+    {
+      boolean match = false;
+      for ( int j = 0; j < nExpungeEntries.length; j++ )
+      {
+        if ( nExpungeEntries[j].equals( negativeEntries[i] ) ) {
+          match = true;
+          break;
+        }
+      }
+      if ( !match ) neg.add( negativeEntries[i] );
+    }
+
+    // Now check for entries that need replacing (negative)
+    for ( int i = 0; i < nEntries.length; i++ )
+    {
+      boolean match = false;
+      String user = nEntries[i].getUser();
+      for ( int j = 0; j < neg.size(); j++ )
+      {
+        if ( user.equals( ((ACL.Entry)neg.get(j)).getUser() ) ) {
+          neg.set( j, nEntries[i] );
+          match = true;
+          break;
+        }
+      }
+      if ( !match ) neg.add( nEntries[i] );
+    }
+    setNegativeEntries( (ACL.Entry[])neg.toArray(new ACL.Entry[neg.size()]) );
+  }
+
+
+  /*--------------------------------------------------------------------------*/
+  /* Private Methods                                                          */
+  /*--------------------------------------------------------------------------*/
+
+  /**
+   * Returns a resized array containing only valid (non-empty) ACL entries.
+   *
+   * @param  entries Original array of entries, possibly containing empty 
+   *                 entries.
+   * @return         All non-empty ACL entries
+   */
+  private ACL.Entry[] getNonEmptyEntries( ACL.Entry[] entries )
+  {
+    if ( entries == null ) return new ACL.Entry[0];
+    ArrayList list = new ArrayList( entries.length );
     for (int i = 0; i < entries.length; i++)
     {
       boolean isNonEmpty = entries[i].canRead()   ||
@@ -140,23 +633,28 @@ public class ACL implements Serializable, Comparable
                            entries[i].canDelete() ||
                            entries[i].canLock()   ||
                            entries[i].canAdmin();
-      if (isNonEmpty) response.add(entries[i]);
+      if (isNonEmpty) list.add(entries[i]);
     }
-    if (response.size() == entries.length) return entries;
-    return (ACL.Entry[])response.toArray(new ACL.Entry[response.size()]);
+    if (list.size() == entries.length) return entries;
+    return (ACL.Entry[])list.toArray(new ACL.Entry[list.size()]);
   }
 
-  private void entriesToString(ACL.Entry[] entries, StringBuffer response)
+  private void entriesToString( ACL.Entry[] entries, StringBuffer buffer )
   {
     for (int i = 0; i < entries.length; i++)
     {
-      this.entryToString((ACL.Entry)entries[i], response);
+      this.entryToString((ACL.Entry)entries[i], buffer);
     }
   }
 
-  private void entryToString(ACL.Entry entry, StringBuffer response)
+  private void entryToString( ACL.Entry entry, StringBuffer buffer )
   {
-    response.append(entry.getUser() + '\t' + entry.getPermissionsMask() + '\n');
+    buffer.append(entry.getUser() + '\t' + entry.getPermissionsMask() + '\n');
+  }
+
+  private void update() throws AFSException
+  {
+    if ( path != null ) setACLString(path, getFormattedString());
   }
 
   /**
@@ -179,7 +677,10 @@ public class ACL implements Serializable, Comparable
     return out.toString();
   }
 
-  /////////////// custom override methods ////////////////////
+
+  /*--------------------------------------------------------------------------*/
+  /* Custom Override Methods                                                  */
+  /*--------------------------------------------------------------------------*/
 
   /**
    * Compares two ACL objects respective to their paths and does not
@@ -234,9 +735,14 @@ public class ACL implements Serializable, Comparable
     ACL.Entry[] nonEmptyPos = this.getNonEmptyEntries(this.getPositiveEntries());
     ACL.Entry[] nonEmptyNeg = this.getNonEmptyEntries(this.getNegativeEntries());
 
-    StringBuffer out = new StringBuffer("ACL for ");
-    out.append(path);
-    out.append("\n");
+    StringBuffer out = new StringBuffer();
+    if ( path == null ) {
+      out.append("Delta ACL\n");
+    } else {
+      out.append("ACL for ");
+      out.append(path);
+      out.append("\n");
+    }
     out.append("Positive Entries:\n");
     for (int i = 0; i < nonEmptyPos.length; i++) {
       out.append("  ");
@@ -250,10 +756,33 @@ public class ACL implements Serializable, Comparable
       }
     }
 
+    // Check to see if this is a Delta ACL
+    if ( path == null ) {
+      nonEmptyPos = this.getNonEmptyEntries(this.getPositiveExpungeEntries());
+      nonEmptyNeg = this.getNonEmptyEntries(this.getNegativeExpungeEntries());
+
+      if (nonEmptyPos.length > 0) {
+        out.append("Positive Entries to Delete:\n");
+        for (int i = 0; i < nonEmptyPos.length; i++) {
+          out.append("  ");
+          out.append(nonEmptyPos[i].toString());
+        }
+      }
+      if (nonEmptyNeg.length > 0) {
+        out.append("Negative Entries to Delete:\n");
+        for (int i = 0; i < nonEmptyNeg.length; i++) {
+          out.append("  ");
+          out.append(nonEmptyNeg[i].toString());
+        }
+      }
+    }
+
     return out.toString();
   }
 
-  /////////////// native methods ////////////////////
+  /*--------------------------------------------------------------------------*/
+  /* Native Methods                                                           */
+  /*--------------------------------------------------------------------------*/
 
   /**
    * Returns a formatted String representing the ACL for the specified path.
@@ -278,7 +807,7 @@ public class ACL implements Serializable, Comparable
   private native void setACLString(String path, String aclString) throws AFSException;
 
   /*====================================================================*/
-  /* INNER CLASSES  */
+  /* INNER CLASSES                                                      */
   /*====================================================================*/
 
   /**
@@ -456,13 +985,13 @@ public class ACL implements Serializable, Comparable
       username = user;
     }
     /** 
-     * <IMG SRC="file.gif" ALT="File Permission" WIDTH="15" HEIGHT="15" BORDER="0"> Tests whether the ACL permits <code>read</code> access.
+     * <IMG SRC="file.gif" ALT="File Permission" WIDTH="16" HEIGHT="16" BORDER="0"> Tests whether the ACL permits <code>read</code> access.
      *
      * <p> This permission enables a user to read the contents of files in the directory 
      * and to obtain complete status information for the files (read/retrieve the file 
      * attributes).
      *
-     * <p><FONT COLOR="666699"><IMG SRC="file.gif" ALT="File Permission" WIDTH="15" HEIGHT="15" BORDER="0"> <U><B>File Permission</B></U></FONT><BR>
+     * <p><FONT COLOR="666699"><IMG SRC="file.gif" ALT="File Permission" WIDTH="16" HEIGHT="16" BORDER="0"> <U><B>File Permission</B></U></FONT><BR>
      * This permission is meaningful with respect to files in 
      * a directory, rather than the directory itself or its subdirectories. 
      *
@@ -487,7 +1016,7 @@ public class ACL implements Serializable, Comparable
       r = flag;
     }
     /** 
-     * <IMG SRC="folder.gif" ALT="Directory Permission" WIDTH="15" HEIGHT="15" BORDER="0"> Tests whether the ACL permits lookup access.
+     * <IMG SRC="folder.gif" ALT="Directory Permission" WIDTH="16" HEIGHT="16" BORDER="0"> Tests whether the ACL permits lookup access.
      *
      * <p> This permission functions as something of a gate keeper for access to the directory 
      * and its files, because a user must have it in order to exercise any other permissions. 
@@ -507,7 +1036,7 @@ public class ACL implements Serializable, Comparable
      * the directory. Those operations require the <code>lookup</code> permission on the ACL
      * of the subdirectory itself.
      *
-     * <p><FONT COLOR="666699"><IMG SRC="folder.gif" ALT="Directory Permission" WIDTH="15" HEIGHT="15" BORDER="0"> <U><B>Directory Permission</B></U></FONT><BR>
+     * <p><FONT COLOR="666699"><IMG SRC="folder.gif" ALT="Directory Permission" WIDTH="16" HEIGHT="16" BORDER="0"> <U><B>Directory Permission</B></U></FONT><BR>
      * This permission is meaningful with respect to the 
      * directory itself. For example, the <code>insert</code> permission (see: {@link #canInsert})
      * does not control addition of data to a file, but rather creation of a new file or 
@@ -534,13 +1063,13 @@ public class ACL implements Serializable, Comparable
       l = flag;
     }
     /** 
-     * <IMG SRC="folder.gif" ALT="Directory Permission" WIDTH="15" HEIGHT="15" BORDER="0"> Tests whether the ACL permits <code>insert</code> access.
+     * <IMG SRC="folder.gif" ALT="Directory Permission" WIDTH="16" HEIGHT="16" BORDER="0"> Tests whether the ACL permits <code>insert</code> access.
      *
      * <p> This permission enables a user to add new files to the directory, either by creating 
      * or copying, and to create new subdirectories. It does not extend into any subdirectories,
      * which are protected by their own ACLs.
      *
-     * <p><FONT COLOR="666699"><IMG SRC="folder.gif" ALT="Directory Permission" WIDTH="15" HEIGHT="15" BORDER="0"> <U><B>Directory Permission</B></U></FONT><BR>
+     * <p><FONT COLOR="666699"><IMG SRC="folder.gif" ALT="Directory Permission" WIDTH="16" HEIGHT="16" BORDER="0"> <U><B>Directory Permission</B></U></FONT><BR>
      * This permission is meaningful with respect to the 
      * directory itself. For example, the <code>insert</code> permission (see: {@link #canInsert})
      * does not control addition of data to a file, but rather creation of a new file or 
@@ -567,13 +1096,13 @@ public class ACL implements Serializable, Comparable
       i = flag;
     }
     /** 
-     * <IMG SRC="folder.gif" ALT="Directory Permission" WIDTH="15" HEIGHT="15" BORDER="0"> Tests whether the ACL permits <code>delete</code> access.
+     * <IMG SRC="folder.gif" ALT="Directory Permission" WIDTH="16" HEIGHT="16" BORDER="0"> Tests whether the ACL permits <code>delete</code> access.
      *
      * <p> This permission enables a user to remove files and subdirectories from the directory 
      * or move them into other directories (assuming that the user has the <code>insert</code>
      * (see: {@link #canInsert}) permission on the ACL of the other directories).
      *
-     * <p><FONT COLOR="666699"><IMG SRC="folder.gif" ALT="Directory Permission" WIDTH="15" HEIGHT="15" BORDER="0"> <U><B>Directory Permission</B></U></FONT><BR>
+     * <p><FONT COLOR="666699"><IMG SRC="folder.gif" ALT="Directory Permission" WIDTH="16" HEIGHT="16" BORDER="0"> <U><B>Directory Permission</B></U></FONT><BR>
      * This permission is meaningful with respect to the 
      * directory itself. For example, the <code>insert</code> permission (see: {@link #canInsert})
      * does not control addition of data to a file, but rather creation of a new file or 
@@ -600,12 +1129,12 @@ public class ACL implements Serializable, Comparable
       d = flag;
     }
     /** 
-     * <IMG SRC="file.gif" ALT="File Permission" WIDTH="15" HEIGHT="15" BORDER="0"> Tests whether the ACL permits <code>write</code> access.
+     * <IMG SRC="file.gif" ALT="File Permission" WIDTH="16" HEIGHT="16" BORDER="0"> Tests whether the ACL permits <code>write</code> access.
      *
      * <p> This permission enables a user to modify the contents of files in the directory 
      * and to change their operating system specific mode bits. 
      *
-     * <p><FONT COLOR="666699"><IMG SRC="file.gif" ALT="File Permission" WIDTH="15" HEIGHT="15" BORDER="0"> <U><B>File Permission</B></U></FONT><BR>
+     * <p><FONT COLOR="666699"><IMG SRC="file.gif" ALT="File Permission" WIDTH="16" HEIGHT="16" BORDER="0"> <U><B>File Permission</B></U></FONT><BR>
      * This permission is meaningful with respect to files in 
      * a directory, rather than the directory itself or its subdirectories. 
      *
@@ -630,12 +1159,12 @@ public class ACL implements Serializable, Comparable
       w = flag;
     }
     /** 
-     * <IMG SRC="file.gif" ALT="File Permission" WIDTH="15" HEIGHT="15" BORDER="0"> Tests whether the ACL permits the <code>lock</code> authority.
+     * <IMG SRC="file.gif" ALT="File Permission" WIDTH="16" HEIGHT="16" BORDER="0"> Tests whether the ACL permits the <code>lock</code> authority.
      *
      * <p> This permission enables the user to run programs that issue system calls to 
      * lock files in the directory. 
      *
-     * <p><FONT COLOR="666699"><IMG SRC="file.gif" ALT="File Permission" WIDTH="15" HEIGHT="15" BORDER="0"> <U><B>File Permission</B></U></FONT><BR>
+     * <p><FONT COLOR="666699"><IMG SRC="file.gif" ALT="File Permission" WIDTH="16" HEIGHT="16" BORDER="0"> <U><B>File Permission</B></U></FONT><BR>
      * This permission is meaningful with respect to files in 
      * a directory, rather than the directory itself or its subdirectories. 
      *
@@ -660,7 +1189,7 @@ public class ACL implements Serializable, Comparable
       k = flag;
     }
     /** 
-     * <IMG SRC="folder.gif" ALT="Directory Permission" WIDTH="15" HEIGHT="15" BORDER="0"> Tests whether the ACL permits <code>administer</code> access.
+     * <IMG SRC="folder.gif" ALT="Directory Permission" WIDTH="16" HEIGHT="16" BORDER="0"> Tests whether the ACL permits <code>administer</code> access.
      *
      * <p> This permission enables a user to change the directory's ACL. Members of the 
      * <code>system:administrators</code> group implicitly have this permission on every 
@@ -668,7 +1197,7 @@ public class ACL implements Serializable, Comparable
      * owner of a directory implicitly has this permission on its ACL and those of all 
      * directories below it that he or she owns. 
      *
-     * <p><FONT COLOR="666699"><IMG SRC="folder.gif" ALT="Directory Permission" WIDTH="15" HEIGHT="15" BORDER="0"> <U><B>Directory Permission</B></U></FONT><BR>
+     * <p><FONT COLOR="666699"><IMG SRC="folder.gif" ALT="Directory Permission" WIDTH="16" HEIGHT="16" BORDER="0"> <U><B>Directory Permission</B></U></FONT><BR>
      * This permission is meaningful with respect to the 
      * directory itself. For example, the <code>insert</code> permission (see: {@link #canInsert})
      * does not control addition of data to a file, but rather creation of a new file or 
@@ -732,12 +1261,3 @@ public class ACL implements Serializable, Comparable
 
   }
 }
-
-
-
-
-
-
-
-
-

@@ -27,15 +27,16 @@
 
 extern int errno;
 
+jmethodID  MID_String_getBytes = 0;
+
 #ifndef LIBJUAFS
-// user class and fields //
-jclass userCls = 0;
+/* User Class and Fields */
+jclass   userCls = 0;
 jfieldID user_ptsField = 0;
 jfieldID user_kasField = 0;
 jfieldID user_nameField = 0;
-//jfieldID user_cellHandleField = 0;
 jfieldID user_cachedInfoField = 0;
-//pts fields
+/* PTS Fields */
 jfieldID user_nameUidField = 0;
 jfieldID user_ownerUidField = 0;
 jfieldID user_creatorUidField = 0;
@@ -46,7 +47,7 @@ jfieldID user_groupCreationQuotaField = 0;
 jfieldID user_groupMembershipCountField = 0;
 jfieldID user_ownerField = 0;
 jfieldID user_creatorField = 0;
-// kas fields
+/* KAS Fields */
 jfieldID user_adminSettingField = 0;
 jfieldID user_tgsSettingField = 0;
 jfieldID user_encSettingField = 0;
@@ -65,10 +66,9 @@ jfieldID user_failLoginCountField = 0;
 jfieldID user_lockTimeField = 0;
 jfieldID user_lockedUntilField = 0;
 
-// group class and fields //
-jclass groupCls = 0;
+/* Group Class and Fields */
+jclass   groupCls = 0;
 jfieldID group_nameField = 0;
-//jfieldID group_cellHandleField = 0;
 jfieldID group_cachedInfoField = 0;
 jfieldID group_nameUidField = 0;
 jfieldID group_ownerUidField = 0;
@@ -82,10 +82,9 @@ jfieldID group_membershipCountField = 0;
 jfieldID group_ownerField = 0;
 jfieldID group_creatorField = 0;
 
-// server class and fields //
-jclass serverCls = 0;
+/* Server Class and Fields */
+jclass   serverCls = 0;
 jfieldID server_nameField = 0;
-//jfieldID server_cellHandleField = 0;
 jfieldID server_cachedInfoField = 0;
 jfieldID server_databaseField = 0;
 jfieldID server_fileServerField = 0;
@@ -93,8 +92,8 @@ jfieldID server_badDatabaseField = 0;
 jfieldID server_badFileServerField = 0;
 jfieldID server_IPAddressField = 0;
 
-// executable time class and fields //
-jclass exectimeCls = 0;
+/* Executable Time Class and Fields */
+jclass   exectimeCls = 0;
 jfieldID exectime_HourField = 0;
 jfieldID exectime_MinField = 0;
 jfieldID exectime_SecField = 0;
@@ -102,8 +101,8 @@ jfieldID exectime_DayField = 0;
 jfieldID exectime_NowField = 0;
 jfieldID exectime_NeverField = 0;
 
-// partition class and fields //
-jclass partitionCls = 0;
+/* Partition Class and Fields */
+jclass   partitionCls = 0;
 jfieldID partition_nameField = 0;
 jfieldID partition_cachedInfoField = 0;
 jfieldID partition_idField = 0;
@@ -112,8 +111,8 @@ jfieldID partition_lockFileDescriptorField = 0;
 jfieldID partition_totalSpaceField = 0;
 jfieldID partition_totalFreeSpaceField = 0;
 
-// volume class and fields //
-jclass volumeCls = 0;
+/* Volume Class and Fields */
+jclass   volumeCls = 0;
 jfieldID volume_nameField = 0;
 jfieldID volume_cachedInfoField = 0;
 jfieldID volume_idField = 0;
@@ -133,8 +132,8 @@ jfieldID volume_statusField = 0;
 jfieldID volume_dispositionField = 0;
 jfieldID volume_typeField = 0;
 
-// key class and fields //
-jclass keyCls = 0;
+/* Key Class and Fields */
+jclass   keyCls = 0;
 jfieldID key_cachedInfoField = 0;
 jfieldID key_versionField = 0;
 jfieldID key_encryptionKeyField = 0;
@@ -142,11 +141,10 @@ jfieldID key_lastModDateField = 0;
 jfieldID key_lastModMsField = 0;
 jfieldID key_checkSumField = 0;
 
-// process class and fields //
-jclass processCls = 0;
+/* Process Class and Fields */
+jclass   processCls = 0;
 jfieldID process_cachedInfoField = 0;
 jfieldID process_nameField = 0;
-//jfieldID process_serverHandleField = 0;
 jfieldID process_typeField = 0;
 jfieldID process_stateField = 0;
 jfieldID process_goalField = 0;
@@ -159,6 +157,7 @@ jfieldID process_errorSignalField = 0;
 jfieldID process_stateOkField = 0;
 jfieldID process_stateTooManyErrorsField = 0;
 jfieldID process_stateBadFileAccessField = 0;
+
 #endif /* !LIBJUAFS */
 
 /**
@@ -173,23 +172,20 @@ void throwException
   if( *excCls == 0 ) {
     *excCls = (*env)->NewGlobalRef(env, (*env)->FindClass(env, excClsName ));
     if( !*excCls ) {
-      fprintf(stderr, "ERROR: Internal::throwException()\n
-                       Cannot find class: %s\n", excClsName);
+      fprintf(stderr, "ERROR: Internal::throwException()\n Cannot find class: %s\n", excClsName);
 	return;
     }
     *initID = (*env)->GetMethodID( env, *excCls, "<init>", "(I)V" );
     if( !*initID ) {
-      fprintf(stderr, "ERROR: Internal::throwException()\n
-                       Cannot find construction method: %s\n",
-                       excClsName);
+      fprintf(stderr, "ERROR: Internal::throwException()\n Cannot find construction method: %s\n",
+	      excClsName);
 	return;
     }
   }
   
   exc = (*env)->NewObject( env, *excCls, *initID, code );
   if( !exc ) {
-    fprintf(stderr, "ERROR: Internal::throwException()\n
-                     Cannot construct new exception object: %s\n",
+    fprintf(stderr, "ERROR: Internal::throwException()\n Cannot construct new exception object: %s\n",
                      excClsName);
     return;
   }
@@ -206,8 +202,7 @@ void throwMessageException( JNIEnv *env, char *msg )
 {
   jclass excCls = (*env)->FindClass(env, afsExceptionName);
   if(excCls == 0) {
-    fprintf(stderr, "ERROR: Internal::throwMessageException()\n
-                     Cannot find class: %s\n", afsExceptionName);
+    fprintf(stderr, "ERROR: Internal::throwMessageException()\n Cannot find class: %s\n", afsExceptionName);
     return;
   }
   (*env)->ThrowNew(env, excCls, msg);
@@ -226,16 +221,14 @@ void throwAFSException( JNIEnv *env, int code )
 
   afsExceptionCls = (*env)->FindClass(env, afsExceptionName);
   if( !afsExceptionCls ) {
-    fprintf(stderr, "ERROR: Internal::throwAFSException()\n
-                     Cannot find class: %s\n", afsExceptionName);
+    fprintf(stderr, "ERROR: Internal::throwAFSException()\n Cannot find class: %s\n", afsExceptionName);
     return;
   }
 
   afsExceptionInit = (*env)->GetMethodID( env, afsExceptionCls, 
                              "<init>", "(I)V" );
   if( !afsExceptionInit ) {
-    fprintf(stderr, "ERROR: Internal::throwAFSException()\n
-                     Cannot find construction method: %s\n",
+    fprintf(stderr, "ERROR: Internal::throwAFSException()\n Cannot find construction method: %s\n",
                      afsExceptionName);
     return;
   }
@@ -243,8 +236,7 @@ void throwAFSException( JNIEnv *env, int code )
   exc = (*env)->NewObject( env, afsExceptionCls, afsExceptionInit, code );
 
   if( !exc ) {
-    fprintf(stderr, "ERROR: Internal::throwAFSException()\n
-                     Cannot construct new exception object: %s\n",
+    fprintf(stderr, "ERROR: Internal::throwAFSException()\n Cannot construct new exception object: %s\n",
                      afsExceptionName);
     return;
   }
@@ -264,16 +256,15 @@ void throwAFSFileException( JNIEnv *env, int code, char *msg )
 
   afsFileExceptionCls = (*env)->FindClass(env, afsFileExceptionName);
   if( !afsFileExceptionCls ) {
-    fprintf(stderr, "ERROR: Internal::throwAFSFileException()\n
-                     Cannot find class: %s\n", afsFileExceptionName);
+    fprintf(stderr, "ERROR: Internal::throwAFSFileException()\n Cannot find class: %s\n", afsFileExceptionName);
     return;
   }
 
   afsFileExceptionInit = (*env)->GetMethodID( env, afsFileExceptionCls, 
                          "<init>", "(Ljava/lang/String;I)V" );
+
   if( !afsFileExceptionInit ) {
-    fprintf(stderr, "ERROR: Internal::throwAFSFileException()\n
-                     Cannot find construction method: %s\n",
+    fprintf(stderr, "ERROR: Internal::throwAFSFileException()\n Cannot find construction method: %s\n",
                      afsFileExceptionName);
     return;
   }
@@ -281,8 +272,7 @@ void throwAFSFileException( JNIEnv *env, int code, char *msg )
   exc = (*env)->NewObject( env, afsFileExceptionCls,
                            afsFileExceptionInit, msg, code );
   if( !exc ) {
-    fprintf(stderr, "ERROR: Internal::throwAFSFileException()\n
-                     Cannot construct new exception object: %s\n",
+    fprintf(stderr, "ERROR: Internal::throwAFSFileException()\n Cannot construct new exception object: %s\n",
                      afsFileExceptionName);
     return;
   }
@@ -302,25 +292,23 @@ void throwAFSSecurityException( JNIEnv *env, int code )
 
   afsSecurityExceptionCls = (*env)->FindClass(env, afsSecurityExceptionName);
   if( !afsSecurityExceptionCls ) {
-    fprintf(stderr, "ERROR: Internal::throwAFSSecurityException()\n
-                     Cannot find class: %s\n", afsSecurityExceptionName);
+    fprintf(stderr, "ERROR: Internal::throwAFSSecurityException()\n Cannot find class: %s\n", afsSecurityExceptionName);
     return;
   }
 
   afsSecurityExceptionInit = (*env)->GetMethodID( env, afsSecurityExceptionCls, 
                              "<init>", "(I)V" );
   if( !afsSecurityExceptionInit ) {
-    fprintf(stderr, "ERROR: Internal::throwAFSSecurityException()\n
-                     Cannot find construction method: %s\n",
+    fprintf(stderr, "ERROR: Internal::throwAFSSecurityException()\n Cannot find construction method: %s\n",
                      afsSecurityExceptionName);
     return;
   }
   
   exc = (*env)->NewObject( env, afsSecurityExceptionCls,
                            afsSecurityExceptionInit, code );
+
   if( !exc ) {
-    fprintf(stderr, "ERROR: Internal::throwAFSSecurityException()\n
-                     Cannot construct new exception object: %s\n",
+    fprintf(stderr, "ERROR: Internal::throwAFSSecurityException()\n Cannot construct new exception object: %s\n",
                      afsSecurityExceptionName);
     return;
   }
@@ -342,6 +330,98 @@ int setError(JNIEnv *env, jobject *obj, int code)
   return -1;
 }
 
+int setString(JNIEnv *env, jobject *obj, char *field, char *string)
+{
+  jclass cls;
+  jstring jstr;
+  jfieldID fid;
+
+  cls = (*env)->GetObjectClass(env, *obj);
+  /*fprintf(stderr, "setString: env=0x%x, obj=0x%x, cls=0x%x\n", env, obj, cls);*/
+  if (cls != NULL) {
+    fid = (*env)->GetFieldID(env, cls, field, "Ljava/lang/String;");
+    /*fprintf(stderr, "setString: field=%s, fid=0x%x\n", field, fid);*/
+    if (fid) {
+      jstr = (*env)->NewStringUTF(env, (string));
+      /*fprintf(stderr, "jstr = 0x%x\n", jstr);*/
+      (*env)->SetObjectField(env, *obj, fid, jstr);
+      return 0;
+    }
+  }
+  return -1;
+}
+
+/**
+ * Translates a jstring to a locale-specific native C string.
+ * Use in place of "GetStringUTFChars()" for internationalization
+ * purposes.
+ * 
+ * Make sure to "free()" any strings created by this function.
+ *
+ * A NULL (zero) return indicates a critical error has occurred and 
+ * relies on the caller of this function to throw a Java exception.
+ *
+ * This function does not throw any Java exceptions.
+ * 
+ *  env         the Java environment
+ *  jstr        the Java string (UTF) to translate
+ *
+ * @returns	    native C string with the appropriate locale-specific 
+ *              representation
+ */
+char* getNativeString(JNIEnv *env, const jstring jstr)
+{
+  jbyteArray bytes = 0;
+  char *result = NULL;
+  jint len = 0;
+  
+  if ((*env)->EnsureLocalCapacity(env, 2) < 0) {
+    // Out of memory error
+    fprintf(stderr, "Internal::getNativeString(): ");
+    fprintf(stderr, "EnsureLocalCapacity() failed: Most likely out of memory\n");
+    return NULL;
+  }
+  
+  if ( !MID_String_getBytes ) {
+    jclass stringClass = (*env)->FindClass(env, "java/lang/String");
+    if ( !stringClass ) {
+      fprintf(stderr, "Internal::getNativeString(): ");
+      fprintf(stderr, "Could not locate Java class: java.lang.String.\n");
+      return NULL;
+    }
+
+    MID_String_getBytes = (*env)->GetMethodID(env, stringClass, "getBytes","()[B");
+    if ( !MID_String_getBytes ) {
+      fprintf(stderr, "Internal::getNativeString(): ");
+      fprintf(stderr, "Could not get Java method id for java.lang.String method \"getBytes()\".\n");
+      return NULL;
+    }
+  }
+
+  bytes = (*env)->CallObjectMethod(env, jstr, MID_String_getBytes);
+  if ( !bytes ) {
+    fprintf(stderr, "Internal::getNativeString(): ");
+    fprintf(stderr, "CallObjectMethod() failed for java.lang.String.getBytes().\n");
+    fprintf(stderr, "\tMID_String_getBytes = %d\n", MID_String_getBytes);
+    return NULL;
+  }
+
+  len = (*env)->GetArrayLength(env, bytes);
+  result = (char *)malloc(len + 1);
+
+  if ( !result ) {
+    fprintf(stderr, "Internal::getNativeString(): ");
+    fprintf(stderr, "Could not allocate memory for byte array.\n");
+    (*env)->DeleteLocalRef(env, bytes);
+    return NULL;
+  }
+  (*env)->GetByteArrayRegion(env, bytes, 0, len, (jbyte *)result);
+  result[len] = '\0';   // NULL-terminate
+
+  (*env)->DeleteLocalRef(env, bytes);
+  return result;
+}
+
 #ifdef LIBJUAFS
 
 /**
@@ -357,34 +437,46 @@ int setError(JNIEnv *env, jobject *obj, int code)
  * @returns		file descriptor
  */
 int openAFSFile
-  (JNIEnv *env, jstring fileNameUTF, int flags, int mode, int *err)
+  (JNIEnv *env, jstring filenameUTF, int flags, int mode, int *err)
 {
-    char *fileName;
+    char *filename;
     int fd = -1;
 
     *err = 0;
     errno = 0;
-    fileName=(char*) (*env)->GetStringUTFChars(env, fileNameUTF, 0);
-    if(fileName == NULL) {
-      fprintf(stderr, "Internal::openAFSFile(): failed to get fileName\n");
+    filename = getNativeString(env, filenameUTF);
+    if(filename == NULL) {
+      fprintf(stderr, "Internal::openAFSFile(): failed to get filename\n");
       *err = -1;
       return fd;
     }
-    fd  = uafs_open(fileName, flags, mode);
+    fd  = uafs_open(filename, flags, mode);
+    free( filename );
     *err = errno;
     if (errno != 0) {
       fprintf(stderr, "Internal::openAFSFile(): errno=%d\n", errno);
       fprintf(stderr, "Internal::openAFSFile(): fd=%d\n", fd);
     }
-    (*env)->ReleaseStringUTFChars(env, fileNameUTF, fileName);
     if (fd < 0) {
-      fprintf(stderr, "Internal::openAFSFile(): failed to open fileName\n");
+      fprintf(stderr, "Internal::openAFSFile(): failed to open filename\n");
       fprintf(stderr, "Internal::openAFSFile(): fd=%d\n", fd);
       return -1;
     }
     return fd;
 }
 
+/**
+ * Reads the "CacheConfig" file for user space configuration.
+ * By default, this file resides in "/usr/afswsp/etc/CacheConfig",
+ * however if the environment variable "LIBJAFS_CACHE_CONFIG" is
+ * set this function will use that value instead.
+ *
+ * The CacheConfig file contains several cache tuning parameters 
+ * as well as a few parameters that define the runtime environment 
+ * for the user space client, including: mount point location, 
+ * configuration directory (where to find ThisCell and CellServDB), 
+ * cache directory, debug and verbose options, and log file location.
+ */
 int readCacheParms(char *afsMountPoint, char *afsConfDir, char *afsCacheDir,
                    int *cacheBlocks, int *cacheFiles, int *cacheStatEntries,
                    int *dCacheSize, int *vCacheSize, int *chunkSize,
@@ -455,27 +547,6 @@ int readCacheParms(char *afsMountPoint, char *afsConfDir, char *afsCacheDir,
   return 0;
 }
 
-int setString(JNIEnv *env, jobject *obj, char *field, char *string)
-{
-  jclass cls;
-  jstring jstr;
-  jfieldID fid;
-
-  cls = (*env)->GetObjectClass(env, *obj);
-  /*fprintf(stderr, "setString: env=0x%x, obj=0x%x, cls=0x%x\n", env, obj, cls);*/
-  if (cls != NULL) {
-    fid = (*env)->GetFieldID(env, cls, field, "Ljava/lang/String;");
-    /*fprintf(stderr, "setString: field=%s, fid=0x%x\n", field, fid);*/
-    if (fid) {
-      jstr = (*env)->NewStringUTF(env, (string));
-      /*fprintf(stderr, "jstr = 0x%x\n", jstr);*/
-      (*env)->SetObjectField(env, *obj, fid, jstr);
-      return 0;
-    }
-  }
-  return -1;
-}
-
 #else
 
 /**
@@ -485,9 +556,8 @@ int setString(JNIEnv *env, jobject *obj, char *field, char *string)
  * the instance is the empty string.  The memory for who 
  * that's passed in should be fully allocated in advance.
  */
-void internal_makeKasIdentity( const char *fullName, 
-				       kas_identity_p who ) {
-
+void internal_makeKasIdentity( const char *fullName, kas_identity_p who )
+{
   char *period;
 
   if( (period = (char *) strchr( fullName, '.' )) != NULL ) {
@@ -499,14 +569,14 @@ void internal_makeKasIdentity( const char *fullName,
     strcpy( who->principal, fullName);
     strcpy( who->instance, "" );
   }
-
 }
 
 /**
  * Given a Java environment and an instance of a user, gets the object and
  * field information for the user object from the Java environment.
  */
-void internal_getUserClass( JNIEnv *env, jobject user ) {
+void internal_getUserClass( JNIEnv *env, jobject user )
+{
   if( userCls == 0 ) {
     userCls = (*env)->NewGlobalRef( env, (*env)->GetObjectClass(env, user) );
     if( !userCls ) {
@@ -595,7 +665,6 @@ void internal_getUserClass( JNIEnv *env, jobject user ) {
 
 	throwAFSException( env, JAFSADMFIELDNOTFOUND );
 	return;
-
     }
   } 
 }
@@ -604,7 +673,8 @@ void internal_getUserClass( JNIEnv *env, jobject user ) {
  * Given a Java environment and an instance of a group, gets the object and
  * field information for the group object from the Java environment.
  */
-void internal_getGroupClass( JNIEnv *env, jobject group ) {
+void internal_getGroupClass( JNIEnv *env, jobject group )
+{
   if( groupCls == 0 ) {
     groupCls = (*env)->NewGlobalRef( env, (*env)->GetObjectClass(env, group) );
     if( !groupCls ) {
@@ -643,7 +713,6 @@ void internal_getGroupClass( JNIEnv *env, jobject group ) {
 
 	throwAFSException( env, JAFSADMFIELDNOTFOUND );
 	return;
-
     }
   }
 }
@@ -652,7 +721,8 @@ void internal_getGroupClass( JNIEnv *env, jobject group ) {
  * Given a Java environment and an instance of a server, gets the object and
  * field information for the server object from the Java environment.
  */
-void internal_getServerClass( JNIEnv *env, jobject server ) {
+void internal_getServerClass( JNIEnv *env, jobject server )
+{
   if( serverCls == 0 ) {
     serverCls = (*env)->NewGlobalRef( env,
                                       (*env)->GetObjectClass(env, server) );
@@ -690,7 +760,8 @@ void internal_getServerClass( JNIEnv *env, jobject server ) {
  * object and field information for the executableTime object from the 
  * Java environment.
  */
-void internal_getExecTimeClass( JNIEnv *env, jobject exectime ) {
+void internal_getExecTimeClass( JNIEnv *env, jobject exectime )
+{
   if( exectimeCls == 0 ) {
     exectimeCls = (*env)->NewGlobalRef( env, 
 				       (*env)->GetObjectClass(env, exectime) );
@@ -720,7 +791,8 @@ void internal_getExecTimeClass( JNIEnv *env, jobject exectime ) {
  * Given a Java environment and an instance of a partition, gets the object and
  * field information for the partition object from the Java environment.
  */
-void internal_getPartitionClass( JNIEnv *env, jobject partition ) {
+void internal_getPartitionClass( JNIEnv *env, jobject partition )
+{
   if( partitionCls == 0 ) {
     partitionCls = (*env)->NewGlobalRef( env, 
 				      (*env)->GetObjectClass(env, partition) );
@@ -759,7 +831,8 @@ void internal_getPartitionClass( JNIEnv *env, jobject partition ) {
  * Given a Java environment and an instance of a volume, gets the object and
  * field information for the volume object from the Java environment.
  */
-void internal_getVolumeClass( JNIEnv *env, jobject volume ) {
+void internal_getVolumeClass( JNIEnv *env, jobject volume )
+{
   if( volumeCls == 0 ) {
     volumeCls = (*env)->NewGlobalRef( env, 
 				      (*env)->GetObjectClass(env, volume) );
@@ -823,7 +896,8 @@ void internal_getVolumeClass( JNIEnv *env, jobject volume ) {
  * Given a Java environment and an instance of a key, gets the object and
  * field information for the key object from the Java environment.
  */
-void internal_getKeyClass( JNIEnv *env, jobject key ) {
+void internal_getKeyClass( JNIEnv *env, jobject key )
+{
   if( keyCls == 0 ) {
     keyCls = (*env)->NewGlobalRef( env, (*env)->GetObjectClass(env, key) );
     if( !keyCls ) {
@@ -854,7 +928,8 @@ void internal_getKeyClass( JNIEnv *env, jobject key ) {
  * Given a Java environment and an instance of a process, gets the object and
  * field information for the process object from the Java environment.
  */
-void internal_getProcessClass( JNIEnv *env, jobject process ) {
+void internal_getProcessClass( JNIEnv *env, jobject process )
+{
   if( processCls == 0 ) {
     processCls = (*env)->NewGlobalRef( env, 
 				       (*env)->GetObjectClass(env, process) );
@@ -905,5 +980,3 @@ void internal_getProcessClass( JNIEnv *env, jobject process ) {
 }
 
 #endif /* LIBJUAFS */
-
-

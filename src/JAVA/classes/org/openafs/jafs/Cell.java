@@ -270,7 +270,7 @@ public class Cell implements java.io.Serializable
 
   /**
    * Sets all the information fields of this <code>Cell</code> object, 
-   * such as max group and user ids, to trheir most current values.
+   * such as max group and user ids, to their most current values.
    *
    * @exception AFSException  If an error occurs in the native code     
    */
@@ -310,8 +310,13 @@ public class Cell implements java.io.Serializable
         System.err.println("ERROR Cell::refreshUsers():kas (User: " 
 			   + currUser.getName() + ") -> " + e.getMessage());
         authorized = false;
-        //if (org.openafs.jafs.ErrorCodes.isPermissionDenied(e.getErrorCode())) 
-	//r = 0;
+        if (org.openafs.jafs.ErrorTable.isPermissionDenied(e.getErrorCode())) {
+	  // Check to see if the user has failed more than 25 times,
+	  // if so it is most likely because they are not appropriately
+	  // authorized to list or examine users.  May want to check for
+	  // KAS admin attribute.
+	  if ( r++ > 25 ) r = 0;
+	}
       }
     } 
     getKasUsersDone( iterationId );
@@ -334,8 +339,13 @@ public class Cell implements java.io.Serializable
         System.err.println("ERROR Cell::refreshUsers():pts (User: " 
 			   + currUser.getName() + ") -> " + e.getMessage());
         authorized = false;
-        //if (org.openafs.jafs.ErrorCodes.isPermissionDenied(e.getErrorCode())) 
-	// r = 0;
+        if (org.openafs.jafs.ErrorTable.isPermissionDenied(e.getErrorCode())) {
+	  // Check to see if the user has failed more than 25 times,
+	  // if so it is most likely because they are not appropriately
+	  // authorized to list or examine users.  May want to check for
+	  // KAS admin attribute.
+	  if ( r++ > 25 ) r = 0;
+	}
       }
     } 
     getPtsUsersDone( iterationId );
@@ -400,8 +410,10 @@ public class Cell implements java.io.Serializable
         System.err.println("ERROR Cell::refreshGroups() (Group: " 
 			   + currGroup.getName() + ") -> " + e.getMessage());
         authorized = false;
-        //if (org.openafs.jafs.ErrorCodes.isPermissionDenied(e.getErrorCode())) 
-	// r = 0;
+        if (org.openafs.jafs.ErrorTable.isPermissionDenied(e.getErrorCode())) {
+	  if ( r++ > 25 ) r = 0;
+	}
+
       }
     } 
     Cell.getGroupsDone( iterationId );
@@ -456,8 +468,9 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
         System.err.println("ERROR Cell::refreshServers() (Server: " 
 			   + currServer.getName() + ") -> " + e.getMessage());
         authorized = false;
-        //if (e.getErrorCode() == org.openafs.jafs.ErrorCodes.PERMISSION_DENIED) 
-        // r = 0;
+        if (org.openafs.jafs.ErrorTable.isPermissionDenied(e.getErrorCode())) {
+	  if ( r++ > 25 ) r = 0;
+	}
       }
     } 
     getServersDone( iterationId );
@@ -1864,11 +1877,3 @@ System.out.println("[Java] Cell::refreshServers() -> r: " + r);
   protected static native void closeCell( int cellHandle ) 
 	throws AFSException;
 }
-
-
-
-
-
-
-
-

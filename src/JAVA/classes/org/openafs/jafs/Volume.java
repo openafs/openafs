@@ -315,7 +315,7 @@ public class Volume implements Serializable, Comparable
   protected void refreshInfo() throws AFSException
   {
     getVolumeInfo( cell.getCellHandle(), server.getVosHandle(), 
-		   partition.getID(), getID(), this );
+                   partition.getID(), getID(), this );
     cachedInfo = true;
     creationDateCal = null;
     lastUpdateDateCal = null;
@@ -333,7 +333,7 @@ public class Volume implements Serializable, Comparable
   public void create( int quota ) throws AFSException
   {
     id = create( cell.getCellHandle(), server.getVosHandle(), 
-		 partition.getID(), name, quota );
+                 partition.getID(), name, quota );
     maxQuota = quota;
   }
 
@@ -366,7 +366,7 @@ public class Volume implements Serializable, Comparable
   {
     Server siteServer = sitePartition.getServer();
     createReadOnlyVolume( cell.getCellHandle(), siteServer.getVosHandle(), 
-			  sitePartition.getID(), getID() );
+                          sitePartition.getID(), getID() );
     release( false );
     return new Volume( name + ".readonly", sitePartition );
   }
@@ -379,7 +379,7 @@ public class Volume implements Serializable, Comparable
   public void delete() throws AFSException
   {
     delete( cell.getCellHandle(), server.getVosHandle(), partition.getID(), 
-	    getID() );
+            getID() );
     name = null;
     creationDateCal = null;
     lastUpdateDateCal = null;
@@ -434,7 +434,7 @@ public class Volume implements Serializable, Comparable
       startTime = (int) ((dumpSince.getTime().getTime())/((long) 1000));
     }
     dump( cell.getCellHandle(), server.getVosHandle(), partition.getID(), 
-	  getID(), startTime, fileName );
+          getID(), startTime, fileName );
   }
 
   /**
@@ -485,7 +485,7 @@ public class Volume implements Serializable, Comparable
       throws AFSException
   {
     restore( cell.getCellHandle(), server.getVosHandle(), partition.getID(), 
-	     id, name, fileName, incremental );
+             id, name, fileName, incremental );
   }
 
   /**
@@ -541,7 +541,7 @@ public class Volume implements Serializable, Comparable
   {
     Server newServer = newPartition.getServer();
     move( cell.getCellHandle(), server.getVosHandle(), partition.getID(), 
-	  newServer.getVosHandle(), newPartition.getID(), getID() );
+          newServer.getVosHandle(), newPartition.getID(), getID() );
 
     server = newServer;
     partition = newPartition;
@@ -568,8 +568,8 @@ public class Volume implements Serializable, Comparable
   public void salvage() throws AFSException
   {
     Server.salvage( cell.getCellHandle(), server.getBosHandle(), 
-		    partition.getName(), name, 4, null, null, false, false, 
-		    false, false, false, false );
+                    partition.getName(), name, 4, null, null, false, false, 
+                    false, false, false, false );
   }
 
   /**
@@ -598,7 +598,7 @@ public class Volume implements Serializable, Comparable
     throws AFSException
   {
     Cell.createMountPoint( cell.getCellHandle(), directory, getName(), 
-			   readWrite, false ); 
+                           readWrite, false ); 
   }
 
   //////////////// accessors:  ////////////////////////
@@ -847,7 +847,7 @@ public class Volume implements Serializable, Comparable
     if ( !cachedInfo ) refreshInfo();
     if (maxQuota == 0) {
       throw new AFSException("Volume with id " + id + 
-                                  " has an unlimited quota configured.", 0);
+                             " has an unlimited quota configured.", 0);
     }
     return maxQuota;
   }
@@ -954,7 +954,7 @@ public class Volume implements Serializable, Comparable
   public void setQuota( int quota ) throws AFSException
   {
     this.changeQuota( cell.getCellHandle(), server.getVosHandle(), 
-		      partition.getID(), getID(), quota );
+                      partition.getID(), getID(), quota );
     maxQuota = quota;
   }
 
@@ -1097,8 +1097,8 @@ public class Volume implements Serializable, Comparable
    * @exception AFSException   If an error occurs in the native code
    */
   protected static native void getVolumeInfo( int cellHandle, int serverHandle,
-					      int partition, int volId, 
-					      Volume theVolume ) 
+                                              int partition, int volId, 
+                                              Volume theVolume ) 
 	throws AFSException;
 
   /**
@@ -1117,8 +1117,8 @@ public class Volume implements Serializable, Comparable
    * @exception AFSException   If an error occurs in the native code
    */
   protected static native int create( int cellHandle, int serverHandle, 
-				      int partition, String volumeName, 
-				      int quota ) 
+                                      int partition, String volumeName, 
+                                      int quota ) 
 	throws AFSException;
 
   /**
@@ -1135,7 +1135,7 @@ public class Volume implements Serializable, Comparable
    * @exception AFSException   If an error occurs in the native code
    */
   protected static native void delete( int cellHandle, int serverHandle, 
-				       int partition, int volId ) 
+                                       int partition, int volId ) 
 	throws AFSException;
 
   /**
@@ -1162,8 +1162,8 @@ public class Volume implements Serializable, Comparable
    * @see Cell#getCellHandle
    */
   protected static native void createReadOnlyVolume( int cellHandle, 
-						     int serverHandle, 
-						     int partition, int volId )
+                                                     int serverHandle, 
+                                                     int partition, int volId )
 	throws AFSException;
 
   /**
@@ -1180,8 +1180,8 @@ public class Volume implements Serializable, Comparable
    * @see Cell#getCellHandle
    */
   protected static native void deleteReadOnlyVolume( int cellHandle, 
-						     int serverHandle, 
-						     int partition, int volId )
+                                                     int serverHandle, 
+                                                     int partition, int volId )
 	throws AFSException;
 
   /**
@@ -1199,8 +1199,8 @@ public class Volume implements Serializable, Comparable
    * @exception AFSException   If an error occurs in the native code
    */
   protected static native void changeQuota( int cellHandle, int serverHandle, 
-					    int partition, int volId, 
-					    int newQuota ) 
+                                            int partition, int volId, 
+                                            int newQuota ) 
 	throws AFSException;
 
   /**
@@ -1221,8 +1221,8 @@ public class Volume implements Serializable, Comparable
    * @exception AFSException   If an error occurs in the native code
    */
   protected static native void move( int cellHandle, int fromServerHandle, 
-				     int fromPartition, int toServerHandle, 
-				     int toPartition, int volId ) 
+                                     int fromPartition, int toServerHandle, 
+                                     int toPartition, int volId ) 
 	throws AFSException;
 
   /**
@@ -1234,7 +1234,7 @@ public class Volume implements Serializable, Comparable
    * @see Cell#getCellHandle
    */
   protected static native void release( int cellHandle, int volId, 
-					boolean forceComplete )
+                                        boolean forceComplete )
 	throws AFSException;
 
   /**
@@ -1254,8 +1254,8 @@ public class Volume implements Serializable, Comparable
    * @exception AFSException   If an error occurs in the native code
    */
   protected static native void dump( int cellHandle, int serverHandle, 
-				     int partition, int volId, int startTime, 
-				     String dumpFile ) 
+                                     int partition, int volId, int startTime, 
+                                     String dumpFile ) 
 	throws AFSException;
 
   /**
@@ -1278,9 +1278,9 @@ public class Volume implements Serializable, Comparable
    * @exception AFSException   If an error occurs in the native code
    */
   protected static native void restore( int cellHandle, int serverHandle, 
-					int partition, int volId, 
-					String volumeName, String dumpFile, 
-					boolean incremental ) 
+                                        int partition, int volId, 
+                                        String volumeName, String dumpFile, 
+                                        boolean incremental ) 
 	throws AFSException;
 
   /**
@@ -1293,7 +1293,7 @@ public class Volume implements Serializable, Comparable
    * @exception AFSException   If an error occurs in the native code
    */
   protected static native void rename( int cellHandle, int volId, 
-				       String newVolumeName ) 
+                                       String newVolumeName ) 
 	throws AFSException;
 
   /**
@@ -1312,8 +1312,8 @@ public class Volume implements Serializable, Comparable
    * @exception AFSException   If an error occurs in the native code
    */
   protected static native void mount( int serverHandle, int partition, 
-				      int volId, int sleepTime, 
-				      boolean offline ) 
+                                      int volId, int sleepTime, 
+                                      boolean offline ) 
 	throws AFSException;
 
   /**
@@ -1328,7 +1328,7 @@ public class Volume implements Serializable, Comparable
    * @exception AFSException   If an error occurs in the native code
    */
   protected static native void unmount( int serverHandle, int partition, 
-					int volId ) 
+                                        int volId ) 
 	throws AFSException;
 
   /**
@@ -1369,7 +1369,7 @@ public class Volume implements Serializable, Comparable
    * @exception AFSException  If an error occurs in the native code
    */
   protected static native int translateNameToID( int cellHandle, String name, 
-						 int volumeType )
+                                                 int volumeType )
     throws AFSException;
 
   /**
@@ -1379,16 +1379,3 @@ public class Volume implements Serializable, Comparable
    */
   protected static native void reclaimVolumeMemory();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

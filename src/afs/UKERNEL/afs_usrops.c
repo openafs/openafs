@@ -1581,9 +1581,13 @@ void uafs_Init(
     }
     else {
 	if (afsd_verbose)
-	    printf("%s: My home cell is '%s'\n",
-		   rn, afs_LclCellName);
+	    printf("%s: My home cell is '%s'\n", rn, afs_LclCellName);
     }
+
+    /*
+     * Set the primary cell name.
+     */
+    call_syscall(AFSOP_SET_THISCELL, afs_LclCellName, 0, 0, 0, 0);
 
     if ((logfd = fopen(fullpn_AFSLogFile,"r+")) == 0) {
 	if (afsd_verbose)  printf("%s: Creating '%s'\n",  rn, fullpn_AFSLogFile);
@@ -1656,6 +1660,10 @@ void uafs_Init(
     if (preallocs < cacheStatEntries+50)
 	preallocs = cacheStatEntries+50;
     fork_syscall(AFSCALL_CALL, AFSOP_START_RXCALLBACK, preallocs);
+
+    if (afsd_verbose)
+       printf("%s: Initializing AFS daemon.\n", rn);
+    fork_syscall(AFSCALL_CALL, AFSOP_BASIC_INIT);
 
     if (afsd_verbose)
 	printf("%s: Forking AFS daemon.\n", rn);

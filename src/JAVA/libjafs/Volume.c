@@ -56,13 +56,13 @@ extern jfieldID volume_typeField;
  * volume      the Volume object to populate with the info
  * volEntry     the container of the volume's information
  */
-extern void fillVolumeInfo( JNIEnv *env, jobject volume, 
-			    vos_volumeEntry_t volEntry ) {
-
+extern void fillVolumeInfo
+  ( JNIEnv *env, jobject volume, vos_volumeEntry_t volEntry )
+{
   jstring jvolume;
 
   // get the class fields if need be
-  if( volumeCls == 0 ) {
+  if ( volumeCls == 0 ) {
     internal_getVolumeClass( env, volume );
   }
 
@@ -236,12 +236,10 @@ extern void fillVolumeInfo( JNIEnv *env, jobject volume,
  *                        the information
  */
 JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Volume_getVolumeInfo (JNIEnv *env, jclass cls, 
-					       jint cellHandle, 
-					       jint serverHandle, 
-					       jint partition, jint volID, 
-					       jobject jvolumeObject) {
-
+Java_org_openafs_jafs_Volume_getVolumeInfo 
+  (JNIEnv *env, jclass cls, jint cellHandle, jint serverHandle, jint partition,
+   jint volID, jobject jvolumeObject)
+{
   afs_status_t ast;
   vos_volumeEntry_t volEntry;
 
@@ -254,7 +252,6 @@ Java_org_openafs_jafs_Volume_getVolumeInfo (JNIEnv *env, jclass cls,
   }
 
   fillVolumeInfo( env, jvolumeObject, volEntry );
-
 }
 
 /**
@@ -272,40 +269,34 @@ Java_org_openafs_jafs_Volume_getVolumeInfo (JNIEnv *env, jclass cls,
  * returns the numeric ID assigned to the volume
  */
 JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Volume_create (JNIEnv *env, jclass cls, 
-					jint cellHandle, jint serverHandle, 
-					jint partition, jstring jvolName, 
-					jint quota) {
-
+Java_org_openafs_jafs_Volume_create 
+  (JNIEnv *env, jclass cls, jint cellHandle, jint serverHandle, 
+   jint partition, jstring jvolName, jint quota)
+{
   afs_status_t ast;
-  const char *volName;
+  char *volName;
   int id;
 
-  if( jvolName != NULL ) {
-    volName = (*env)->GetStringUTFChars(env, jvolName, 0);
-    if( !volName ) {
+  if ( jvolName != NULL ) {
+    volName = getNativeString(env, jvolName);
+    if ( !volName ) {
 	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+	return -1;
     }
   } else {
-    volName = NULL;
+    throwAFSException( env, JAFSNULLVOLUME );
+    return -1;
   }
 
-  if( !vos_VolumeCreate( (void *) cellHandle, (void *) serverHandle, NULL, 
+  if ( !vos_VolumeCreate( (void *) cellHandle, (void *) serverHandle, NULL, 
 			 (unsigned int) partition, volName, 
 			 (unsigned int) quota, &id, &ast ) ) {
-    if( volName != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, jvolName, volName);
-    }
     throwAFSException( env, ast );
-    return;
   }
 
-  if( volName != NULL ) {
-    (*env)->ReleaseStringUTFChars(env, jvolName, volName);
-  }
+  free( volName );
+
   return (jint) id;
-
 }
 
 /**
@@ -321,19 +312,18 @@ Java_org_openafs_jafs_Volume_create (JNIEnv *env, jclass cls,
  * volId   the numeric id of the volume to delete
  */
 JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Volume_delete (JNIEnv *env, jclass cls, 
-					jint cellHandle, jint serverHandle, 
-					jint partition, jint volID) {
-
+Java_org_openafs_jafs_Volume_delete 
+  (JNIEnv *env, jclass cls, jint cellHandle, jint serverHandle, 
+   jint partition, jint volID)
+{
   afs_status_t ast;
 
-  if( !vos_VolumeDelete( (void *) cellHandle, (void *) serverHandle, NULL, 
+  if ( !vos_VolumeDelete( (void *) cellHandle, (void *) serverHandle, NULL, 
 			 (unsigned int) partition, 
 			 (unsigned int) volID, &ast ) ) {
     throwAFSException( env, ast );
     return;
   }
-
 }
 
 /**
@@ -346,18 +336,16 @@ Java_org_openafs_jafs_Volume_delete (JNIEnv *env, jclass cls,
  *               volume
  */
 JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Volume_createBackupVolume (JNIEnv *env, jclass cls, 
-						    jint cellHandle, 
-						    jint volID) {
-
+Java_org_openafs_jafs_Volume_createBackupVolume 
+  (JNIEnv *env, jclass cls, jint cellHandle, jint volID)
+{
   afs_status_t ast;
 
-  if( !vos_BackupVolumeCreate( (void *) cellHandle, NULL, 
+  if ( !vos_BackupVolumeCreate( (void *) cellHandle, NULL, 
 			       (unsigned int) volID, &ast ) ) {
     throwAFSException( env, ast );
     return;
   }
-
 }
 
 /**
@@ -374,21 +362,18 @@ Java_org_openafs_jafs_Volume_createBackupVolume (JNIEnv *env, jclass cls,
  *               create a read-only volume
  */
 JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Volume_createReadOnlyVolume (JNIEnv *env, jclass cls, 
-						      jint cellHandle, 
-						      jint serverHandle, 
-						      jint partition, 
-						      jint volID) {
-
+Java_org_openafs_jafs_Volume_createReadOnlyVolume 
+  (JNIEnv *env, jclass cls, jint cellHandle, jint serverHandle, jint partition,
+   jint volID)
+{
   afs_status_t ast;
 
-  if( !vos_VLDBReadOnlySiteCreate( (void *) cellHandle, (void *) serverHandle, 
+  if ( !vos_VLDBReadOnlySiteCreate( (void *) cellHandle, (void *) serverHandle, 
 				   NULL, (unsigned int) partition, 
 				   (unsigned int) volID, &ast ) ) {
     throwAFSException( env, ast );
     return;
   }
-
 }
 
 /**
@@ -405,21 +390,18 @@ Java_org_openafs_jafs_Volume_createReadOnlyVolume (JNIEnv *env, jclass cls,
  *               delete the read-only volume
  */
 JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Volume_deleteReadOnlyVolume (JNIEnv *env, jclass cls, 
-						      jint cellHandle, 
-						      jint serverHandle, 
-						      jint partition, 
-						      jint volID) {
-
+Java_org_openafs_jafs_Volume_deleteReadOnlyVolume 
+  (JNIEnv *env, jclass cls, jint cellHandle, jint serverHandle, jint partition,
+   jint volID)
+{
   afs_status_t ast;
 
-  if( !vos_VLDBReadOnlySiteDelete( (void *) cellHandle, (void *) serverHandle, 
+  if ( !vos_VLDBReadOnlySiteDelete( (void *) cellHandle, (void *) serverHandle, 
 				   NULL, (unsigned int) partition, 
 				   (unsigned int) volID, &ast ) ) {
     throwAFSException( env, ast );
     return;
   }
-
 }
 
 /**
@@ -436,22 +418,19 @@ Java_org_openafs_jafs_Volume_deleteReadOnlyVolume (JNIEnv *env, jclass cls,
  * newQuota    the new quota (in KB) to assign the volume
  */
 JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Volume_changeQuota (JNIEnv *env, jclass cls, 
-					     jint cellHandle, 
-					     jint serverHandle, 
-					     jint partition, jint volID, 
-					     jint newQuota) {
-
+Java_org_openafs_jafs_Volume_changeQuota 
+  (JNIEnv *env, jclass cls, jint cellHandle, jint serverHandle, jint partition,
+   jint volID, jint newQuota)
+{
   afs_status_t ast;
 
-  if( !vos_VolumeQuotaChange( (void *) cellHandle, (void *) serverHandle, 
+  if ( !vos_VolumeQuotaChange( (void *) cellHandle, (void *) serverHandle, 
 			      NULL, (unsigned int) partition, 
 			      (unsigned int) volID, (unsigned int) newQuota, 
 			      &ast ) ) {
     throwAFSException( env, ast );
     return;
   }
-
 }
 
 /**
@@ -477,14 +456,13 @@ Java_org_openafs_jafs_Volume_move
 {
   afs_status_t ast;
 
-  if( !vos_VolumeMove( (void *) cellHandle, NULL, (unsigned int) volID, 
+  if ( !vos_VolumeMove( (void *) cellHandle, NULL, (unsigned int) volID, 
 		       (void *) fromServerHandle, (unsigned int) fromPartition,
 		       (void *) toServerHandle, (unsigned int) toPartition, 
 		       &ast ) ) {
     throwAFSException( env, ast );
     return;
   }
-
 }
 
 /**
@@ -503,18 +481,17 @@ Java_org_openafs_jafs_Volume_release
   afs_status_t ast;
   vos_force_t force;
 
-  if( forceComplete ) {
+  if ( forceComplete ) {
     force = VOS_FORCE;
   } else {
     force = VOS_NORMAL;
   }
 
-  if( !vos_VolumeRelease( (void *) cellHandle, NULL, (unsigned int) volID,
+  if ( !vos_VolumeRelease( (void *) cellHandle, NULL, (unsigned int) volID,
                           force, &ast )) {
     throwAFSException( env, ast );
     return;
   }
-
 }
 
 /**
@@ -533,38 +510,31 @@ Java_org_openafs_jafs_Volume_release
  * jdumpFile   the full path of the file to which to dump
  */
 JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Volume_dump (JNIEnv *env, jclass cls, 
-				      jint cellHandle, jint serverHandle, 
-				      jint partition, jint volID, 
-				      jint startTime, jstring jdumpFile) {
-
+Java_org_openafs_jafs_Volume_dump 
+  (JNIEnv *env, jclass cls, jint cellHandle, jint serverHandle, jint partition,
+   jint volID, jint startTime, jstring jdumpFile)
+{
   afs_status_t ast;
-  const char *dumpFile;
+  char *dumpFile;
 
-  if( jdumpFile != NULL ) {
-    dumpFile = (*env)->GetStringUTFChars(env, jdumpFile, 0);
-    if( !dumpFile ) {
+  if ( jdumpFile != NULL ) {
+    dumpFile = getNativeString(env, jdumpFile);
+    if ( !dumpFile ) {
 	throwAFSException( env, JAFSADMNOMEM );
 	return;    
     }
   } else {
-    dumpFile = NULL;
-  }
-
-  if( !vos_VolumeDump( (void *) cellHandle, (void *) serverHandle, NULL, 
-		       (unsigned int *) &partition, (unsigned int) volID, 
-		       (unsigned int) startTime, dumpFile, &ast ) ) {
-    if( dumpFile != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, jdumpFile, dumpFile);
-    }
-    throwAFSException( env, ast );
+    throwAFSException( env, JAFSNULLARG );
     return;
   }
 
-  if( dumpFile != NULL ) {
-    (*env)->ReleaseStringUTFChars(env, jdumpFile, dumpFile);
+  if ( !vos_VolumeDump( (void *) cellHandle, (void *) serverHandle, NULL, 
+		       (unsigned int *) &partition, (unsigned int) volID, 
+		       (unsigned int) startTime, dumpFile, &ast ) ) {
+    throwAFSException( env, ast );
   }
 
+  free( dumpFile );
 }
 
 /**
@@ -586,34 +556,31 @@ Java_org_openafs_jafs_Volume_dump (JNIEnv *env, jclass cls,
  *                     otherwise restores a full dump
  */
 JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Volume_restore (JNIEnv *env, jclass cls, 
-					 jint cellHandle, jint serverHandle, 
-					 jint partition, jint volID, 
-					 jstring jvolName, jstring jdumpFile, 
-					 jboolean incremental) {
-
+Java_org_openafs_jafs_Volume_restore 
+  (JNIEnv *env, jclass cls, jint cellHandle, jint serverHandle, jint partition,
+   jint volID, jstring jvolName, jstring jdumpFile, jboolean incremental)
+{
   afs_status_t ast;
-  const char *volName;
-  const char *dumpFile;
-  int *volumeIDp;
+  char *volName;
+  char *dumpFile;
+  int  *volumeIDp;
   vos_volumeRestoreType_t vrt;
 
-  if( jvolName != NULL ) {
-    volName = (*env)->GetStringUTFChars(env, jvolName, 0);
-    if( !volName ) {
+  if ( jvolName != NULL ) {
+    volName = getNativeString(env, jvolName);
+    if ( !volName ) {
 	throwAFSException( env, JAFSADMNOMEM );
 	return;    
     }
   } else {
-    volName = NULL;
+    throwAFSException( env, JAFSNULLVOLUME );
+    return;
   }
 
-  if( jdumpFile != NULL ) {
-    dumpFile = (*env)->GetStringUTFChars(env, jdumpFile, 0);
-    if( !dumpFile ) {
-      if( volName != NULL ) {
-	(*env)->ReleaseStringUTFChars(env, jvolName, volName);
-      }
+  if ( jdumpFile != NULL ) {
+    dumpFile = getNativeString(env, jdumpFile);
+    if ( !dumpFile ) {
+      free( volName );
       throwAFSException( env, JAFSADMNOMEM );
       return;    
     }
@@ -621,38 +588,26 @@ Java_org_openafs_jafs_Volume_restore (JNIEnv *env, jclass cls,
     dumpFile = NULL;
   }
 
-  if( volID == 0 ) {
+  if ( volID == 0 ) {
     volumeIDp = NULL;
   } else {
     volumeIDp = (int *) &volID;
   }
   
-  if( incremental ) {
+  if ( incremental ) {
     vrt = VOS_RESTORE_INCREMENTAL;
   } else {
     vrt = VOS_RESTORE_FULL;
   }
 
-  if( !vos_VolumeRestore( (void *) cellHandle, (void *) serverHandle, NULL, 
+  if ( !vos_VolumeRestore( (void *) cellHandle, (void *) serverHandle, NULL, 
 			  (unsigned int) partition, (unsigned int *) volumeIDp,
 			  volName, dumpFile, vrt, &ast ) ) {
-    if( volName != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, jvolName, volName);
-    }
-    if( dumpFile != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, jdumpFile, dumpFile);
-    }
     throwAFSException( env, ast );
-    return;
   }
 
-  if( dumpFile != NULL ) {
-    (*env)->ReleaseStringUTFChars(env, jdumpFile, dumpFile);
-  }
-  if( volName != NULL ) {
-    (*env)->ReleaseStringUTFChars(env, jvolName, volName);
-  }
-
+  if ( dumpFile != NULL ) free( dumpFile );
+  free( volName );
 }
 
 /**
@@ -665,36 +620,29 @@ Java_org_openafs_jafs_Volume_restore (JNIEnv *env, jclass cls,
  * jnewName  the new name for the volume
  */
 JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Volume_rename (JNIEnv *env, jclass cls, 
-					jint cellHandle, jint volID, 
-					jstring jnewName) {
-
+Java_org_openafs_jafs_Volume_rename 
+  (JNIEnv *env, jclass cls, jint cellHandle, jint volID, jstring jnewName)
+{
   afs_status_t ast;
-  const char *newName;
+  char *newName;
 
-  if( jnewName != NULL ) {
-    newName = (*env)->GetStringUTFChars(env, jnewName, 0);
-    if( !newName ) {
+  if ( jnewName != NULL ) {
+    newName = getNativeString(env, jnewName);
+    if ( !newName ) {
 	throwAFSException( env, JAFSADMNOMEM );
 	return;    
     }
   } else {
-    newName = NULL;
-  }
-
-  if( !vos_VolumeRename( (void *) cellHandle, NULL, (unsigned int) volID, 
-			 newName, &ast ) ) {
-    if( newName != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, jnewName, newName);
-    }
-    throwAFSException( env, ast );
+    throwAFSException( env, JAFSNULLVOLUME );
     return;
   }
 
-  if( newName != NULL ) {
-    (*env)->ReleaseStringUTFChars(env, jnewName, newName);
+  if ( !vos_VolumeRename( (void *) cellHandle, NULL, (unsigned int) volID, 
+			 newName, &ast ) ) {
+    throwAFSException( env, ast );
   }
 
+  free( newName );
 }
 
 /**
@@ -713,27 +661,25 @@ Java_org_openafs_jafs_Volume_rename (JNIEnv *env, jclass cls,
  *                     status of the volume -- busy or offline)
  */
 JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Volume_mount (JNIEnv *env, jclass cls, 
-				       jint serverHandle, jint partition, 
-				       jint volID, jint sleepTime, 
-				       jboolean offline) {
-
+Java_org_openafs_jafs_Volume_mount 
+  (JNIEnv *env, jclass cls, jint serverHandle, jint partition, jint volID, 
+   jint sleepTime, jboolean offline)
+{
   afs_status_t ast;
   vos_volumeOnlineType_t volumeStatus;
 
-  if( offline ) {
+  if ( offline ) {
     volumeStatus = VOS_ONLINE_OFFLINE;
   } else {
     volumeStatus = VOS_ONLINE_BUSY;
   }
 
-  if( !vos_VolumeOnline( (void *) serverHandle, NULL, (unsigned int) partition,
+  if ( !vos_VolumeOnline( (void *) serverHandle, NULL, (unsigned int) partition,
 			 (unsigned int) volID, (unsigned int) sleepTime, 
 			 volumeStatus, &ast ) ) {
     throwAFSException( env, ast );
     return;
   }
-
 }
 
 /**
@@ -748,19 +694,17 @@ Java_org_openafs_jafs_Volume_mount (JNIEnv *env, jclass cls,
  * volId  the numeric id of the volume to bring offline
  */
 JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Volume_unmount (JNIEnv *env, jclass cls, 
-					 jint serverHandle, jint partition, 
-					 jint volID) {
-
+Java_org_openafs_jafs_Volume_unmount 
+  (JNIEnv *env, jclass cls, jint serverHandle, jint partition, jint volID)
+{
   afs_status_t ast;
 
-  if( !vos_VolumeOffline( (void *) serverHandle, NULL, 
+  if ( !vos_VolumeOffline( (void *) serverHandle, NULL, 
 			  (unsigned int) partition, (unsigned int) volID, 
 			  &ast ) ) {
     throwAFSException( env, ast );
     return;
   }
-
 }
 
 /**
@@ -772,17 +716,16 @@ Java_org_openafs_jafs_Volume_unmount (JNIEnv *env, jclass cls,
  * volId  the numeric id of the volume to lock
  */
 JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Volume_lock (JNIEnv *env, jclass cls, 
-				      jint cellHandle, jint volID ) {
-
+Java_org_openafs_jafs_Volume_lock 
+  (JNIEnv *env, jclass cls, jint cellHandle, jint volID )
+{
   afs_status_t ast;
 
-  if( !vos_VLDBEntryLock( (void *) cellHandle, NULL, (unsigned int) volID, 
+  if ( !vos_VLDBEntryLock( (void *) cellHandle, NULL, (unsigned int) volID, 
 			  &ast ) ) {
     throwAFSException( env, ast );
     return;
   }
-
 }
 
 /**
@@ -794,17 +737,16 @@ Java_org_openafs_jafs_Volume_lock (JNIEnv *env, jclass cls,
  * volId  the numeric id of the volume to unlock
  */
 JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Volume_unlock (JNIEnv *env, jclass cls, 
-					jint cellHandle, jint volID) {
-
+Java_org_openafs_jafs_Volume_unlock 
+  (JNIEnv *env, jclass cls, jint cellHandle, jint volID)
+{
   afs_status_t ast;
 
-  if( !vos_VLDBEntryUnlock( (void *) cellHandle, NULL, (unsigned int) volID, 
+  if ( !vos_VLDBEntryUnlock( (void *) cellHandle, NULL, (unsigned int) volID, 
 			    &ast ) ) {
     throwAFSException( env, ast );
     return;
   }
-
 }
 
 /**
@@ -823,41 +765,37 @@ Java_org_openafs_jafs_Volume_unlock (JNIEnv *env, jclass cls,
  * returns   the id of the volume in question
  */
 JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Volume_translateNameToID (JNIEnv *env, jclass cls, 
-						   jint cellHandle, 
-						   jstring jname, jint type) {
-
+Java_org_openafs_jafs_Volume_translateNameToID 
+  (JNIEnv *env, jclass cls, jint cellHandle, jstring jname, jint type)
+{
   afs_status_t ast;
-  const char *name;
+  char *name;
   vos_vldbEntry_t vldbEntry;
 
-  if( jname != NULL ) {
-    name = (*env)->GetStringUTFChars(env, jname, 0);
-    if( !name ) {
+  if ( jname != NULL ) {
+    name = getNativeString(env, jname);
+    if ( !name ) {
 	throwAFSException( env, JAFSADMNOMEM );
-	return;    
-    }
+	return -1;
+    } 
   } else {
-    name = NULL;
+    throwAFSException( env, JAFSNULLVOLUME );
+    return -1;
   }
 
   // get the id
-  if( !vos_VLDBGet( (void *) cellHandle, NULL, NULL, name, 
+  if ( !vos_VLDBGet( (void *) cellHandle, NULL, NULL, name, 
 		    &vldbEntry, &ast ) ) {
-    if( name != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, jname, name);
-    }
+    free( name );
     throwAFSException( env, ast );
     return -1;
   } 
 
-  if( name != NULL ) {
-    (*env)->ReleaseStringUTFChars(env, jname, name);
-  }
+  free( name );
 
-  if( type == org_openafs_jafs_Volume_VOLUME_TYPE_READ_WRITE ) {
+  if ( type == org_openafs_jafs_Volume_VOLUME_TYPE_READ_WRITE ) {
     return vldbEntry.volumeId[VOS_READ_WRITE_VOLUME];
-  } else if( type == org_openafs_jafs_Volume_VOLUME_TYPE_READ_ONLY ) {
+  } else if ( type == org_openafs_jafs_Volume_VOLUME_TYPE_READ_ONLY ) {
     return vldbEntry.volumeId[VOS_READ_ONLY_VOLUME];
   } else {
     return vldbEntry.volumeId[VOS_BACKUP_VOLUME];
@@ -868,34 +806,11 @@ Java_org_openafs_jafs_Volume_translateNameToID (JNIEnv *env, jclass cls,
 
 // reclaim global memory being used by this portion
 JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Volume_reclaimVolumeMemory (JNIEnv *env, jclass cls) {
-
-  if( volumeCls ) {
-      (*env)->DeleteGlobalRef(env, volumeCls);
-      volumeCls = 0;
+Java_org_openafs_jafs_Volume_reclaimVolumeMemory 
+  (JNIEnv *env, jclass cls)
+{
+  if ( volumeCls ) {
+    (*env)->DeleteGlobalRef(env, volumeCls);
+    volumeCls = 0;
   }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

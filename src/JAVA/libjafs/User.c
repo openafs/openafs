@@ -68,7 +68,6 @@ extern jfieldID user_lockTimeField;
 extern jfieldID user_lockedUntilField;
 
 extern jclass groupCls;
-//extern jfieldID group_cellHandleField;
 extern jfieldID group_nameField;
 extern jfieldID group_cachedInfoField;
 
@@ -81,140 +80,113 @@ extern jfieldID group_cachedInfoField;
  * env      the Java environment
  * cls      the current Java class
  * cellHandle    the handle of the cell to which the user belongs
- * juserName      the name of the user to create
+ * jusername      the name of the user to create
  * jpassword      the password for the new user
  * uid     the user id to assign to the user (0 to have one 
  *                automatically assigned)
  */
 JNIEXPORT void JNICALL 
 Java_org_openafs_jafs_User_create
-  (JNIEnv *env, jclass cls, jint cellHandle, jstring juserName, 
+  (JNIEnv *env, jclass cls, jint cellHandle, jstring jusername, 
    jstring jpassword, jint uid )
 {
   afs_status_t ast;
-  const char *userName;
-  const char *password;
+  char *username;
+  char *password;
   kas_identity_p who = (kas_identity_p) malloc( sizeof(kas_identity_t) );
   
-  if( !who ) {
+  if ( !who ) {
     throwAFSException( env, JAFSADMNOMEM );
     return;    
   }
 
   // convert java strings
-  if( juserName != NULL ) {
-    userName = (*env)->GetStringUTFChars(env, juserName, 0);
-    if( !userName ) {
+  if ( jusername != NULL ) {
+    username = getNativeString(env, jusername);
+    if ( username == NULL ) {
       free( who );
       throwAFSException( env, JAFSADMNOMEM );
       return;    
     }
   } else {
-    userName = NULL;
+    free( who );
+    throwAFSException( env, JAFSNULLUSER );
+    return;
   }
-  if( jpassword != NULL ) {
-    password = (*env)->GetStringUTFChars(env, jpassword, 0);
-    if( !password ) {
+
+  if ( jpassword != NULL ) {
+    password = getNativeString(env, jpassword);
+    if ( password == NULL ) {
       free( who );
-      if( userName != NULL ) {
-	(*env)->ReleaseStringUTFChars(env, juserName, userName);
-      }
+      free( username );
       throwAFSException( env, JAFSADMNOMEM );
       return;    
     }
   } else {
-    password = NULL;
+    free( who );
+    free( username );
+    throwAFSException( env, JAFSNULLPASS );
+    return;
   }
 
   // make sure the name is within the allowed bounds
-  if( userName != NULL && strlen( userName ) > KAS_MAX_NAME_LEN ) {
+  if ( strlen( username ) > KAS_MAX_NAME_LEN ) {
     free( who );
-    // release converted java strings
-    if( userName != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, juserName, userName);
-    }
-    if( password != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, jpassword, password);
-    }
+    free( username );
+    free( password );
     throwAFSException( env, ADMPTSUSERNAMETOOLONG  );
     return;
   }
 
   // make sure name doesn't have ":" in it
-  if( userName != NULL && strchr( userName, ':' ) != (int) NULL ) {
-      free(who);
-      // release converted java strings
-      if( userName != NULL ) {
-	(*env)->ReleaseStringUTFChars(env, juserName, userName);
-      }
-      if( password != NULL ) {
-	(*env)->ReleaseStringUTFChars(env, jpassword, password);
-      }
-      throwAFSException( env, PRBADNAM );
-      return;
+  if ( strchr( username, ':' ) != (int) NULL ) {
+    free( who );
+    free( username );
+    free( password );
+    throwAFSException( env, PRBADNAM );
+    return;
   }
 
   // make sure the id isn't negative
-  if( uid < 0 ) {
-      free(who);
-      // release converted java strings
-      if( userName != NULL ) {
-	(*env)->ReleaseStringUTFChars(env, juserName, userName);
-      }
-      if( password != NULL ) {
-	(*env)->ReleaseStringUTFChars(env, jpassword, password);
-      }
-      // use the "bad arg" error code even though it's an ID exception.  
-      // There isn't a bad user ID error code
-      throwAFSException( env, PRBADARG );
-      return;
+  if ( uid < 0 ) {
+    free( who );
+    free( username );
+    free( password );
+    // use the "bad arg" error code even though it's an ID exception.  
+    // There isn't a bad user ID error code
+    throwAFSException( env, PRBADARG );
+    return;
   }
 
-  if( userName != NULL ) {
-    internal_makeKasIdentity( userName, who );
+  if ( username != NULL ) {
+    internal_makeKasIdentity( username, who );
   }
 
   // create the kas entry
   if (!kas_PrincipalCreate( (void *) cellHandle, NULL, who, 
 			    password, &ast ) ) {
-    free(who);
-    // release converted java strings
-    if( userName != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, juserName, userName);
-    }
-    if( password != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, jpassword, password);
-    }
+    free( who );
+    free( username );
+    free( password );
     throwAFSException( env, ast );
     return;
   } 
 
   // create the pts entry - if there's an error, make sure to delete 
   // the kas entry 
-  if( !pts_UserCreate( (void *) cellHandle, userName, (int *) &uid, &ast ) ) {
+  if ( !pts_UserCreate( (void *) cellHandle, username, (int *) &uid, &ast ) ) {
     afs_status_t ast_kd;
     kas_PrincipalDelete( (void *) cellHandle, NULL, who, &ast_kd );
     free( who );
-    // release converted java strings
-    if( userName != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, juserName, userName);
-    }
-    if( password != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, jpassword, password);
-    }
+    free( username );
+    free( password );
     throwAFSException( env, ast );
     return;
   }
 
   free( who );
-  // release converted java strings
-  if( userName != NULL ) {
-    (*env)->ReleaseStringUTFChars(env, juserName, userName);
-  }
-  if( password != NULL ) {
-    (*env)->ReleaseStringUTFChars(env, jpassword, password);
-  }
-
+  free( username );
+  free( password );
 }
 
 /**
@@ -225,81 +197,72 @@ Java_org_openafs_jafs_User_create
  * env      the Java environment
  * cls      the current Java class
  * cellHandle    the handle of the cell to which the user belongs
- * juserName      the name of the user to delete
+ * jusername      the name of the user to delete
  */
 JNIEXPORT void JNICALL 
 Java_org_openafs_jafs_User_delete
-  (JNIEnv *env, jclass cls, jint cellHandle, jstring juserName )
+  (JNIEnv *env, jclass cls, jint cellHandle, jstring jusername )
 {
   afs_status_t ast;
-  const char *userName;
+  char *username;
   kas_identity_p who = (kas_identity_p) malloc( sizeof(kas_identity_t) );  
   int kas;
   
-  if( !who ) {
+  if ( !who ) {
     throwAFSException( env, JAFSADMNOMEM );
     return;    
   }
 
-  if( juserName != NULL ) {
-      userName = (*env)->GetStringUTFChars(env, juserName, 0);
-      if( !userName ) {
+  if ( jusername != NULL ) {
+    username = getNativeString(env, jusername);
+    if ( username == NULL ) {
 	free( who );
 	throwAFSException( env, JAFSADMNOMEM );
 	return;    
-      }
+    }
   } else {
-      userName = NULL;
+    free( who );
+    throwAFSException( env, JAFSNULLUSER );
+    return;
   }
 
   // make sure the name is within the allowed bounds
-  if( userName != NULL && strlen( userName ) > KAS_MAX_NAME_LEN ) {
+  if ( strlen( username ) > KAS_MAX_NAME_LEN ) {
     free( who );
-    if( userName != NULL ) {
-	(*env)->ReleaseStringUTFChars(env, juserName, userName);
-    }
+    free( username );
     throwAFSException( env, ADMPTSUSERNAMETOOLONG  );
     return;
   }
 
-  if( userName != NULL ) {
-      internal_makeKasIdentity( userName, who );
-  }
+  internal_makeKasIdentity( username, who );
 
   // delete the kas entry
-  if( !kas_PrincipalDelete( (void *) cellHandle, NULL, who, &ast ) ) {
-      if( ast != KANOENT ) {
-	  free(who);
-	  if( userName != NULL ) {
-	      (*env)->ReleaseStringUTFChars(env, juserName, userName);
-	  }
-	  throwAFSException( env, ast );
-	  return;
-      } else {
-	  kas = FALSE;
-      }
+  if ( !kas_PrincipalDelete( (void *) cellHandle, NULL, who, &ast ) ) {
+    if ( ast != KANOENT ) {
+      free(who);
+      free( username );
+      throwAFSException( env, ast );
+      return;
+    } else {
+      kas = FALSE;
+    }
   }
 
   //delete the pts entry
-  if( !pts_UserDelete( (void *) cellHandle, userName, &ast ) ) {
-      // throw exception if there was no such pts user only if there was 
-      // also no such kas user
-      if( (ast == ADMPTSFAILEDNAMETRANSLATE && !kas ) || 
-	  ast != ADMPTSFAILEDNAMETRANSLATE ) {
-	  free( who );
-	  if( userName != NULL ) {
-	      (*env)->ReleaseStringUTFChars(env, juserName, userName);
-	  }
-	  throwAFSException( env, ast );
-	  return;
-      }
+  if ( !pts_UserDelete( (void *) cellHandle, username, &ast ) ) {
+    // throw exception if there was no such pts user only if there was 
+    // also no such kas user
+    if ( (ast == ADMPTSFAILEDNAMETRANSLATE && !kas ) || 
+	   ast != ADMPTSFAILEDNAMETRANSLATE ) {
+      free( who );
+      free( username );
+      throwAFSException( env, ast );
+      return;
+    }
   }
 
   free( who );
-  // release converted java strings
-  if( userName != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, juserName, userName);
-  }
+  free( username );
 }
 
 /**
@@ -308,60 +271,54 @@ Java_org_openafs_jafs_User_delete
  * env      the Java environment
  * cls      the current Java class
  * cellHandle    the handle of the cell to which the user belongs
- * juserName      the name of the user to unlock
+ * jusername      the name of the user to unlock
  */
 JNIEXPORT void JNICALL 
 Java_org_openafs_jafs_User_unlock
-  (JNIEnv *env, jclass cls, jint cellHandle, jstring juserName )
+  (JNIEnv *env, jclass cls, jint cellHandle, jstring jusername )
 {
   afs_status_t ast;
-  const char *userName;
+  char *username;
   kas_identity_p who = (kas_identity_p) malloc( sizeof(kas_identity_t) );  
   
-  if( !who ) {
+  if ( !who ) {
     throwAFSException( env, JAFSADMNOMEM );
     return;    
   }
 
   // convert java strings
-  if( juserName != NULL ) {
-      userName = (*env)->GetStringUTFChars(env, juserName, 0);
-    if( !userName ) {
-	throwAFSException( env, JAFSADMNOMEM );
+  if ( jusername != NULL ) {
+    username = getNativeString(env, jusername);
+    if ( username == NULL ) {
+      free( who );
+    	throwAFSException( env, JAFSADMNOMEM );
 	return;    
     }
   } else {
-      userName = NULL;
+    free( who );
+    throwAFSException( env, JAFSNULLUSER );
+    return;
   }
 
   // make sure the name is within the allowed bounds
-  if( userName != NULL && strlen( userName ) > KAS_MAX_NAME_LEN ) {
+  if ( strlen( username ) > KAS_MAX_NAME_LEN ) {
     free( who );
-    if( userName != NULL ) {
-	(*env)->ReleaseStringUTFChars(env, juserName, userName);
-    }
+    free( username );
     throwAFSException( env, ADMPTSUSERNAMETOOLONG  );
     return;
   }  
 
-  if( userName != NULL ) {
-    internal_makeKasIdentity( userName, who );
-  }
+  internal_makeKasIdentity( username, who );
 
-  if( !kas_PrincipalUnlock( (void *) cellHandle, NULL, who, &ast ) ) {
+  if ( !kas_PrincipalUnlock( (void *) cellHandle, NULL, who, &ast ) ) {
     free( who );
-    if( userName != NULL ) {
-	(*env)->ReleaseStringUTFChars(env, juserName, userName);
-    }
+    free( username );
     throwAFSException( env, ast );
     return;
   }
 
   free( who );
-  // release converted java strings
-  if( userName != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, juserName, userName);
-  }
+  free( username );
 }
 
 /**
@@ -388,65 +345,65 @@ void getUserInfoChar
   kas_principalEntry_t kasEntry;
   unsigned int lockedUntil;
 
-  if( !who ) {
+  if ( !who ) {
     throwAFSException( env, JAFSADMNOMEM );
     return;    
   }
 
   // make sure the name is within the allowed bounds
-  if( name != NULL && strlen( name ) > KAS_MAX_NAME_LEN ) {
+  if ( name != NULL && strlen( name ) > KAS_MAX_NAME_LEN ) {
     free( who );
     throwAFSException( env, ADMPTSUSERNAMETOOLONG );
     return;
   }
   
-  if( name != NULL ) {
-      internal_makeKasIdentity( name, who );
+  if ( name != NULL ) {
+    internal_makeKasIdentity( name, who );
   }
 
   // get all the field ids, if you haven't done so already
-  if( userCls == 0 ) {
+  if ( userCls == 0 ) {
     internal_getUserClass( env, user );
   }
 
   // get the pts entry
   if ( !pts_UserGet( (void *) cellHandle, name, &ptsEntry, &ast ) ) {
     // if the user has no pts ptsEntry
-    if( ast == ADMPTSFAILEDNAMETRANSLATE ) {
+    if ( ast == ADMPTSFAILEDNAMETRANSLATE ) {
 	pts = FALSE;	
     } else {
-	free( who );
+      free( who );
 	throwAFSException( env, ast );
 	return;
     }
   } else {
-      pts = TRUE;
+    pts = TRUE;
   }
   
 
   // get the kas entry
-  if( !kas_PrincipalGet( (void *) cellHandle, NULL, who, &kasEntry, &ast ) ) {
+  if ( !kas_PrincipalGet( (void *) cellHandle, NULL, who, &kasEntry, &ast ) ) {
     // no kas entry
-    if( ast == KANOENT ) { 
-	if( !pts ) {
-	    free( who );
-	    throwAFSException( env, ast );
-	    return;
+    if ( ast == KANOENT ) { 
+	if ( !pts ) {
+        free( who );
+        throwAFSException( env, ast );
+        return;
 	} else {
-	    kas = FALSE;
+        kas = FALSE;
 	}
-    // other
+      // other
     } else {
 	free( who );
 	throwAFSException( env, ast );
 	return;
     }
   } else {
-      kas = TRUE;
+    kas = TRUE;
   }
 
   // get the lock status
-  if( kas && !kas_PrincipalLockStatusGet( (void *) cellHandle, NULL, who, 
+  if ( kas && !kas_PrincipalLockStatusGet( (void *) cellHandle, NULL, who, 
 					  &lockedUntil, &ast ) ) {
     free( who );
     throwAFSException( env, ast );
@@ -457,7 +414,7 @@ void getUserInfoChar
   (*env)->SetBooleanField(env, user, user_kasField, kas);
 
   // set the pts fields
-  if( pts ) {
+  if ( pts ) {
       (*env)->SetIntField(env, user, user_nameUidField, ptsEntry.nameUid);
       (*env)->SetIntField(env, user, user_ownerUidField, ptsEntry.ownerUid);
       (*env)->SetIntField(env, user, user_creatorUidField, 
@@ -467,21 +424,21 @@ void getUserInfoChar
       (*env)->SetIntField(env, user, user_groupMembershipCountField, 
 			  ptsEntry.groupMembershipCount);
       
-      if( ptsEntry.listStatus == PTS_USER_OWNER_ACCESS ) {
+      if ( ptsEntry.listStatus == PTS_USER_OWNER_ACCESS ) {
 	  (*env)->SetIntField(env, user, user_listStatusField, 
 			      org_openafs_jafs_User_USER_OWNER_ACCESS);
       } else {
 	  (*env)->SetIntField(env, user, user_listStatusField, 
 			      org_openafs_jafs_User_USER_ANYUSER_ACCESS);
       }
-      if( ptsEntry.listGroupsOwned == PTS_USER_OWNER_ACCESS ) {
+      if ( ptsEntry.listGroupsOwned == PTS_USER_OWNER_ACCESS ) {
 	  (*env)->SetIntField(env, user, user_listGroupsOwnedField, 
 			      org_openafs_jafs_User_USER_OWNER_ACCESS);
       } else {
 	  (*env)->SetIntField(env, user, user_listGroupsOwnedField, 
 			      org_openafs_jafs_User_USER_ANYUSER_ACCESS);
       }
-      if( ptsEntry.listMembership == PTS_USER_OWNER_ACCESS ) {
+      if ( ptsEntry.listMembership == PTS_USER_OWNER_ACCESS ) {
 	  (*env)->SetIntField(env, user, user_listMembershipField, 
 			      org_openafs_jafs_User_USER_OWNER_ACCESS);
       } else {
@@ -498,38 +455,38 @@ void getUserInfoChar
   }
 
   // set the kas fields
-  if( kas ) {
+  if ( kas ) {
       char *convertedKey;
       int i;
-      if( kasEntry.adminSetting == KAS_ADMIN ) {
+      if ( kasEntry.adminSetting == KAS_ADMIN ) {
 	  (*env)->SetIntField(env, user, user_adminSettingField, 
 			      org_openafs_jafs_User_ADMIN);
       } else {
 	  (*env)->SetIntField(env, user, user_adminSettingField, 
 			      org_openafs_jafs_User_NO_ADMIN);
       }
-      if( kasEntry.tgsSetting == TGS ) {
+      if ( kasEntry.tgsSetting == TGS ) {
 	  (*env)->SetIntField(env, user, user_tgsSettingField, 
 			      org_openafs_jafs_User_GRANT_TICKETS);
       } else {
 	  (*env)->SetIntField(env, user, user_tgsSettingField, 
 			      org_openafs_jafs_User_NO_GRANT_TICKETS);
       }
-      if( kasEntry.encSetting != NO_ENCRYPT ) {
+      if ( kasEntry.encSetting != NO_ENCRYPT ) {
 	  (*env)->SetIntField(env, user, user_encSettingField, 
 			      org_openafs_jafs_User_ENCRYPT);
       } else {
 	  (*env)->SetIntField(env, user, user_encSettingField, 
 			      org_openafs_jafs_User_NO_ENCRYPT);
       }
-      if( kasEntry.cpwSetting == CHANGE_PASSWORD ) {
+      if ( kasEntry.cpwSetting == CHANGE_PASSWORD ) {
 	  (*env)->SetIntField(env, user, user_cpwSettingField, 
 			      org_openafs_jafs_User_CHANGE_PASSWORD);
       } else {
 	  (*env)->SetIntField(env, user, user_cpwSettingField, 
 			      org_openafs_jafs_User_NO_CHANGE_PASSWORD);
       }
-      if( kasEntry.rpwSetting == REUSE_PASSWORD ) {
+      if ( kasEntry.rpwSetting == REUSE_PASSWORD ) {
 	  (*env)->SetIntField(env, user, user_rpwSettingField, 
 			      org_openafs_jafs_User_REUSE_PASSWORD);
       } else {
@@ -561,19 +518,20 @@ void getUserInfoChar
 
       convertedKey = (char *) malloc( sizeof(char *)*
 				      (sizeof(kasEntry.key.key)*4+1) );
-      if( !convertedKey ) {
-	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+      if ( !convertedKey ) {
+        free( who );
+        throwAFSException( env, JAFSADMNOMEM );
+        return;    
       }
       for( i = 0; i < sizeof(kasEntry.key.key); i++ ) {
-	sprintf( &(convertedKey[i*4]), "\\%0.3o", kasEntry.key.key[i] );
+        sprintf( &(convertedKey[i*4]), "\\%0.3o", kasEntry.key.key[i] );
       }
       jencryptionKey =  (*env)->NewStringUTF(env, convertedKey);
       (*env)->SetObjectField(env, user, user_encryptionKeyField, 
-			     jencryptionKey);
+                             jencryptionKey);
       free( convertedKey );
   }
-  free(who);
+  free( who );
 }
 
 /**
@@ -591,31 +549,30 @@ JNIEXPORT void JNICALL
 Java_org_openafs_jafs_User_getUserInfo
   (JNIEnv *env, jclass cls, jint cellHandle, jstring jname, jobject user)
 {
-  const char *name;
+  char *name;
 
-  if( jname != NULL ) {
-      name = (*env)->GetStringUTFChars(env, jname, 0);
-    if( !name ) {
+  if ( jname != NULL ) {
+    name = getNativeString(env, jname);
+    if ( !name ) {
 	throwAFSException( env, JAFSADMNOMEM );
 	return;    
     }
   } else {
-      name = NULL;
+    throwAFSException( env, JAFSNULLUSER );
+    return;  
   }
 
   getUserInfoChar( env, cellHandle, name, user );
  
   // get class fields if need be
-  if( userCls == 0 ) {
+  if ( userCls == 0 ) {
     internal_getUserClass( env, user );
   }
   
   // set name in case blank object
   (*env)->SetObjectField(env, user, user_nameField, jname);
   
-  if( name != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, jname, name);
-  }      
+  free( name );
 }
 
 /**
@@ -633,7 +590,7 @@ JNIEXPORT void JNICALL
 Java_org_openafs_jafs_User_setUserInfo
   (JNIEnv *env, jclass cls, jint cellHandle, jstring jname, jobject user )
 {
-  const char *name;
+  char *name;
   kas_identity_p who = (kas_identity_p) malloc( sizeof(kas_identity_t) );
   pts_UserUpdateEntry_t ptsEntry;
   afs_status_t ast;
@@ -650,137 +607,130 @@ Java_org_openafs_jafs_User_setUserInfo
   int kas;
   int pts;
 
-  if( !who ) {
+  if ( !who ) {
     throwAFSException( env, JAFSADMNOMEM );
     return;    
   }
 
-  if( jname != NULL ) {
-      name = (*env)->GetStringUTFChars(env, jname, 0);
-    if( !name ) {
+  if ( jname != NULL ) {
+    name = getNativeString(env, jname);
+    if ( name == NULL ) {
+      free( who );
 	throwAFSException( env, JAFSADMNOMEM );
 	return;    
     }
   } else {
-      name = NULL;
+    free( who );
+    throwAFSException( env, JAFSNULLUSER );
+    return;  
   }
 
   // make sure the name is within the allowed bounds
-  if( name != NULL && strlen( name ) > KAS_MAX_NAME_LEN ) {
+  if ( strlen( name ) > KAS_MAX_NAME_LEN ) {
     free( who );
-    (*env)->ReleaseStringUTFChars(env, jname, name);
+    free( name );
     throwAFSException( env, ADMPTSUSERNAMETOOLONG );
     return;
   }
 
-  if( name != NULL ) {
-      internal_makeKasIdentity( name, who );
-  }
+  internal_makeKasIdentity( name, who );
 
   // get class fields if need be
-  if( userCls == 0 ) {
+  if ( userCls == 0 ) {
     internal_getUserClass( env, user );
   }
 
   kas = (*env)->GetBooleanField(env, user, user_kasField);
   pts = (*env)->GetBooleanField(env, user, user_ptsField);
 
-  if( pts ) {
-      // set the pts fields: 
-      ptsEntry.flag = PTS_USER_UPDATE_GROUP_CREATE_QUOTA | 
+  if ( pts ) {
+    // set the pts fields: 
+    ptsEntry.flag = PTS_USER_UPDATE_GROUP_CREATE_QUOTA | 
 	PTS_USER_UPDATE_PERMISSIONS;
-      ptsEntry.groupCreationQuota = 
+    ptsEntry.groupCreationQuota = 
 	(*env)->GetIntField(env, user, user_groupCreationQuotaField);
-      if( (*env)->GetIntField(env, user, user_listStatusField) == 
+    if ( (*env)->GetIntField(env, user, user_listStatusField) == 
 	  org_openafs_jafs_User_USER_OWNER_ACCESS ) {
-	  ptsEntry.listStatus = PTS_USER_OWNER_ACCESS;
-      } else {
-	  ptsEntry.listStatus = PTS_USER_ANYUSER_ACCESS;
-      }
-      if( (*env)->GetIntField(env, user, user_listGroupsOwnedField) == 
+      ptsEntry.listStatus = PTS_USER_OWNER_ACCESS;
+    } else {
+      ptsEntry.listStatus = PTS_USER_ANYUSER_ACCESS;
+    }
+    if ( (*env)->GetIntField(env, user, user_listGroupsOwnedField) == 
 	  org_openafs_jafs_User_USER_OWNER_ACCESS ) {
-	  ptsEntry.listGroupsOwned = PTS_USER_OWNER_ACCESS;
-      } else {
-	  ptsEntry.listGroupsOwned = PTS_USER_ANYUSER_ACCESS;
-      }
-      if( (*env)->GetIntField(env, user, user_listMembershipField) == 
+      ptsEntry.listGroupsOwned = PTS_USER_OWNER_ACCESS;
+    } else {
+      ptsEntry.listGroupsOwned = PTS_USER_ANYUSER_ACCESS;
+    }
+    if ( (*env)->GetIntField(env, user, user_listMembershipField) == 
 	  org_openafs_jafs_User_USER_OWNER_ACCESS ) {
-	  ptsEntry.listMembership = PTS_USER_OWNER_ACCESS;
-      } else {
-	  ptsEntry.listMembership = PTS_USER_ANYUSER_ACCESS;
-      }
-      if( !pts_UserModify( (void *) cellHandle, name, &ptsEntry, &ast ) ) {
-	  free( who );
-	  if( name != NULL ) {
-	      (*env)->ReleaseStringUTFChars(env, jname, name);
-	  }
-	  throwAFSException( env, ast );
-	  return;    
-      }
+      ptsEntry.listMembership = PTS_USER_OWNER_ACCESS;
+    } else {
+      ptsEntry.listMembership = PTS_USER_ANYUSER_ACCESS;
+    }
+    if ( !pts_UserModify( (void *) cellHandle, name, &ptsEntry, &ast ) ) {
+      free( who );
+      free( name );
+      throwAFSException( env, ast );
+      return;    
+    }
   }
 
-  if( kas ) {
-      // set the kas fields:
-      if( (*env)->GetIntField(env, user, user_adminSettingField) == 
+  if ( kas ) {
+    // set the kas fields:
+    if ( (*env)->GetIntField(env, user, user_adminSettingField) == 
 	  org_openafs_jafs_User_ADMIN ) {
-	  isAdmin = KAS_ADMIN;
-      } else {
-	  isAdmin = NO_KAS_ADMIN;
-      }
-      if( (*env)->GetIntField(env, user, user_tgsSettingField) == 
+      isAdmin = KAS_ADMIN;
+    } else {
+      isAdmin = NO_KAS_ADMIN;
+    }
+    if ( (*env)->GetIntField(env, user, user_tgsSettingField) == 
 	  org_openafs_jafs_User_GRANT_TICKETS ) {
-	  grantTickets = TGS;
-      } else {
-	  grantTickets = NO_TGS;
-      }
-      if( (*env)->GetIntField(env, user, user_encSettingField) == 
+      grantTickets = TGS;
+    } else {
+      grantTickets = NO_TGS;
+    }
+    if ( (*env)->GetIntField(env, user, user_encSettingField) == 
 	  org_openafs_jafs_User_ENCRYPT ) {
-	  canEncrypt = 0;
-      } else {
-	  canEncrypt = NO_ENCRYPT;
-      }
-      if( (*env)->GetIntField(env, user, user_cpwSettingField) == 
+      canEncrypt = 0;
+    } else {
+      canEncrypt = NO_ENCRYPT;
+    }
+    if ( (*env)->GetIntField(env, user, user_cpwSettingField) == 
 	  org_openafs_jafs_User_CHANGE_PASSWORD ) {
-	  canChangePassword = CHANGE_PASSWORD;
-      } else {
-	  canChangePassword = NO_CHANGE_PASSWORD;
-      }
-      if( (*env)->GetIntField(env, user, user_rpwSettingField) == 
+      canChangePassword = CHANGE_PASSWORD;
+    } else {
+      canChangePassword = NO_CHANGE_PASSWORD;
+    }
+    if ( (*env)->GetIntField(env, user, user_rpwSettingField) == 
 	  org_openafs_jafs_User_REUSE_PASSWORD ) {
-	  passwordReuse = REUSE_PASSWORD;
-      } else {
-	  passwordReuse = NO_REUSE_PASSWORD;
-      }
-      expirationDate = (*env)->GetIntField(env, user, 
-					   user_userExpirationField);
-      maxTicketLifetime = (*env)->GetIntField(env, user, 
-					      user_maxTicketLifetimeField);
-      passwordExpires = (*env)->GetIntField(env, user, 
-					    user_daysToPasswordExpireField);
-      failedPasswordAttempts = (*env)->GetIntField(env, user, 
-						   user_failLoginCountField);
-      failedPasswordLockTime =  (*env)->GetIntField(env, user, 
-						    user_lockTimeField);
+      passwordReuse = REUSE_PASSWORD;
+    } else {
+      passwordReuse = NO_REUSE_PASSWORD;
+    }
+    expirationDate = (*env)->GetIntField(env, user, 
+                                         user_userExpirationField);
+    maxTicketLifetime = (*env)->GetIntField(env, user, 
+                                            user_maxTicketLifetimeField);
+    passwordExpires = (*env)->GetIntField(env, user, 
+                                          user_daysToPasswordExpireField);
+    failedPasswordAttempts = (*env)->GetIntField(env, user, 
+                                                 user_failLoginCountField);
+    failedPasswordLockTime =  (*env)->GetIntField(env, user, 
+                                                  user_lockTimeField);
       
-      if( !kas_PrincipalFieldsSet( (void *) cellHandle, NULL, who, &isAdmin, 
-				   &grantTickets, &canEncrypt, 
-				   &canChangePassword, &expirationDate, 
-				   &maxTicketLifetime, &passwordExpires, 
-				   &passwordReuse, &failedPasswordAttempts, 
-				   &failedPasswordLockTime, &ast ) ) {
-	  free( who );
-	  if( name != NULL ) {
-	      (*env)->ReleaseStringUTFChars(env, jname, name);
-	  }
-	  throwAFSException( env, ast );
-	  return;    
-      }
+
+    if ( !kas_PrincipalFieldsSet( (void *) cellHandle, NULL, who, &isAdmin, 
+                                 &grantTickets, &canEncrypt, 
+                                 &canChangePassword, &expirationDate, 
+                                 &maxTicketLifetime, &passwordExpires, 
+                                 &passwordReuse, &failedPasswordAttempts, 
+                                 &failedPasswordLockTime, &ast ) ) {
+      throwAFSException( env, ast );
+    }
   }      
 
   free( who );
-  if( name != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, jname, name);
-  }
+  free( name );
 }
 
 /**
@@ -797,192 +747,154 @@ JNIEXPORT void JNICALL
 Java_org_openafs_jafs_User_rename
   (JNIEnv *env, jclass cls, jint cellHandle, jstring joldName, jstring jnewName)
 {
+  char *oldName;
+  char *newName;
+  kas_identity_p whoOld = (kas_identity_p) malloc( sizeof(kas_identity_t) );
+  kas_identity_p whoNew = (kas_identity_p) malloc( sizeof(kas_identity_t) );
+  kas_principalEntry_t kasEntry;
+  pts_UserEntry_t ptsEntry;
+  afs_status_t ast;
+  int kas;
 
-    const char *oldName;
-    const char *newName;
-    kas_identity_p whoOld = (kas_identity_p) malloc( sizeof(kas_identity_t) );
-    kas_identity_p whoNew = (kas_identity_p) malloc( sizeof(kas_identity_t) );
-    kas_principalEntry_t kasEntry;
-    pts_UserEntry_t ptsEntry;
-    afs_status_t ast;
-    int kas;
-
-    if( !whoOld || !whoNew ) {
-      if( whoOld ) {
+  if ( !whoOld || !whoNew ) {
+    if ( whoOld ) {
 	free( whoOld );
-      }
-      if( whoNew ) {
+    }
+    if ( whoNew ) {
 	free( whoNew );
-      } 
+    } 
+    throwAFSException( env, JAFSADMNOMEM );
+    return;    
+  }
+
+  if ( joldName != NULL ) {
+    oldName = getNativeString(env, joldName);
+    if ( oldName == NULL ) {
+      free( whoOld );
+      free( whoNew );
       throwAFSException( env, JAFSADMNOMEM );
       return;    
     }
+  } else {
+    oldName = NULL;
+  }
+  if ( jnewName != NULL ) {
+    newName = getNativeString(env, jnewName);
+    if ( newName == NULL ) {
+      free( whoOld );
+      free( whoNew );
+      if ( oldName != NULL ) free ( oldName );
+      throwAFSException( env, JAFSADMNOMEM );
+      return;    
+    }
+  } else {
+    newName = NULL;
+  }
 
-    if( joldName != NULL ) {
-	oldName = (*env)->GetStringUTFChars(env, joldName, 0);
-	if( !oldName ) {
-	    throwAFSException( env, JAFSADMNOMEM );
-	    return;    
-	}
-    } else {
-	oldName = NULL;
-    }
-    if( jnewName != NULL ) {
-	newName = (*env)->GetStringUTFChars(env, jnewName, 0);
-	if( !newName ) {
-	  if( oldName != NULL ) {
-	    (*env)->ReleaseStringUTFChars(env, joldName, oldName);
-	  }
-	  throwAFSException( env, JAFSADMNOMEM );
-	  return;    
-	}
-    } else {
-	newName = NULL;
-    }
-
-    // make sure the names are within the allowed bounds
-    if( oldName != NULL && strlen( oldName ) > KAS_MAX_NAME_LEN ) {
-	free( whoOld );
-	free( whoNew );
-	if( oldName != NULL ) {
-	    (*env)->ReleaseStringUTFChars(env, joldName, oldName);
-	}
-	if( newName != NULL ) {
-	    (*env)->ReleaseStringUTFChars(env, jnewName, newName);
-	}
-	throwAFSException( env, ADMPTSUSERNAMETOOLONG );
-	return;
-    }
-    if( newName != NULL && strlen( newName ) > KAS_MAX_NAME_LEN ) {
-	free( whoOld );
-	free( whoNew );
-	if( oldName != NULL ) {
-	    (*env)->ReleaseStringUTFChars(env, joldName, oldName);
-	}
-	if( newName != NULL ) {
-	    (*env)->ReleaseStringUTFChars(env, jnewName, newName);
-	}
-	throwAFSException( env, ADMPTSUSERNAMETOOLONG );
-	return;
-    }
-    
-    if( oldName != NULL ) {
-	internal_makeKasIdentity( oldName, whoOld );
-    }
-    if( newName != NULL ) {
-	internal_makeKasIdentity( newName, whoNew );
-    }
-
-    // retrieve the old kas info
-    if( !kas_PrincipalGet( (void *) cellHandle, NULL, whoOld, 
-			   &kasEntry, &ast ) ) {
-	if( ast != KANOENT ) {
-	    free( whoOld );
-	    free( whoNew );
-	    if( oldName != NULL ) {
-		(*env)->ReleaseStringUTFChars(env, joldName, oldName);
-	    }
-	    if( newName != NULL ) {
-		(*env)->ReleaseStringUTFChars(env, jnewName, newName);
-	    }
-	    throwAFSException( env, ast );
-	    return;
-	} else {
-	    kas = FALSE;
-	}
-    } else {
-	kas = TRUE;
-    }   
-	
-    if( kas ) {
-	// create a new kas entry
-	// temporarily set the password equal to the new name
-	if (!kas_PrincipalCreate( (void *) cellHandle, NULL, whoNew, 
-				  newName, &ast ) ) {	    
-	    free( whoOld );
-	    free( whoNew );
-	    if( oldName != NULL ) {
-		(*env)->ReleaseStringUTFChars(env, joldName, oldName);
-	    }
-	    if( newName != NULL ) {
-		(*env)->ReleaseStringUTFChars(env, jnewName, newName);
-	    }
-	    throwAFSException( env, ast );
-	    return;
-	} 
-
-	// set the password 
-	ast = 0;
-	// For some reason kas_PrincipalKeySet doesn't set the return code 
-	// correctly.  It always returns 0.
-	// So instead of checking the return code, we see if there's an 
-	// error in the status variable.
-	kas_PrincipalKeySet( (void *) cellHandle, NULL, whoNew, 0, 
-			     &(kasEntry.key), &ast );
-	if( ast ) {
-	    afs_status_t ast_kd;
-	    kas_PrincipalDelete( (void *) cellHandle, NULL, whoNew, &ast_kd );
-	    free( whoOld );
-	    free( whoNew );
-	    if( oldName != NULL ) {
-		(*env)->ReleaseStringUTFChars(env, joldName, oldName);
-	    }
-	    if( newName != NULL ) {
-		(*env)->ReleaseStringUTFChars(env, jnewName, newName);
-	    }
-	    throwAFSException( env, ast );
-	    return;
-	}
-    }
-
-    // rename the pts entry
-    if( !pts_UserRename( (void *) cellHandle, oldName, newName, &ast ) ) {
-	// throw exception if there was no such pts user only if 
-        // there was also no such kas user
-	if( (ast == ADMPTSFAILEDNAMETRANSLATE && !kas ) || 
-	    ast != ADMPTSFAILEDNAMETRANSLATE ) {
-	    afs_status_t ast_kd;
-	    if( kas ) {
-		kas_PrincipalDelete( (void *) cellHandle, NULL, whoNew, 
-				     &ast_kd );
-	    }
-	    free( whoOld );
-	    free( whoNew );
-	    if( oldName != NULL ) {
-		(*env)->ReleaseStringUTFChars(env, joldName, oldName);
-	    }
-	    if( newName != NULL ) {
-		(*env)->ReleaseStringUTFChars(env, jnewName, newName);
-	    }
-	    throwAFSException( env, ast );
-	    return;
-	}
-    }
-
-    if( kas ) {
-	// delete the old kas entry
-	if( !kas_PrincipalDelete( (void *) cellHandle, NULL, whoOld, &ast ) ) {
-	    free( whoOld );
-	    free( whoNew );
-	    if( oldName != NULL ) {
-		(*env)->ReleaseStringUTFChars(env, joldName, oldName);
-	    }
-	    if( newName != NULL ) {
-		(*env)->ReleaseStringUTFChars(env, jnewName, newName);
-	    }
-	    throwAFSException( env, ast );
-	    return;
-	}
-    }    
-
+  // make sure the names are within the allowed bounds
+  if ( (oldName != NULL && strlen( oldName ) > KAS_MAX_NAME_LEN) ||
+      (newName != NULL && strlen( newName ) > KAS_MAX_NAME_LEN) )
+  {
     free( whoOld );
     free( whoNew );
-    if( oldName != NULL ) {
-	(*env)->ReleaseStringUTFChars(env, joldName, oldName);
+    if ( oldName != NULL ) free( oldName );
+    if ( newName != NULL ) free( newName );
+    throwAFSException( env, ADMPTSUSERNAMETOOLONG );
+    return;
+  }
+    
+  if ( oldName != NULL ) {
+    internal_makeKasIdentity( oldName, whoOld );
+  }
+  if ( newName != NULL ) {
+    internal_makeKasIdentity( newName, whoNew );
+  }
+
+  // retrieve the old kas info
+  if ( !kas_PrincipalGet( (void *) cellHandle, NULL, whoOld, 
+                         &kasEntry, &ast ) ) {
+    if ( ast != KANOENT ) {
+      free( whoOld );
+      free( whoNew );
+      if ( oldName != NULL ) free( oldName );
+      if ( newName != NULL ) free( newName );
+      throwAFSException( env, ast );
+      return;
+    } else {
+      kas = FALSE;
     }
-    if( newName != NULL ) {
-	(*env)->ReleaseStringUTFChars(env, jnewName, newName);
+  } else {
+    kas = TRUE;
+  }   
+	
+  if ( kas ) {
+    // create a new kas entry
+    // temporarily set the password equal to the new name
+    if (!kas_PrincipalCreate( (void *) cellHandle, NULL, whoNew, 
+                              newName, &ast ) ) {	    
+      free( whoOld );
+      free( whoNew );
+      if ( oldName != NULL ) free( oldName );
+      if ( newName != NULL ) free( newName );
+      throwAFSException( env, ast );
+      return;
+    } 
+
+    // set the password 
+    ast = 0;
+    // For some reason kas_PrincipalKeySet doesn't set the return code 
+    // correctly.  It always returns 0.
+    // So instead of checking the return code, we see if there's an 
+    // error in the status variable.
+    kas_PrincipalKeySet( (void *) cellHandle, NULL, whoNew, 0, 
+                         &(kasEntry.key), &ast );
+    if ( ast ) {
+      afs_status_t ast_kd;
+      kas_PrincipalDelete( (void *) cellHandle, NULL, whoNew, &ast_kd );
+      free( whoOld );
+      free( whoNew );
+      if ( oldName != NULL ) free( oldName );
+      if ( newName != NULL ) free( newName );
+      throwAFSException( env, ast );
+      return;
     }
+  }
+
+  // rename the pts entry
+  if ( !pts_UserRename( (void *) cellHandle, oldName, newName, &ast ) ) {
+    // throw exception if there was no such pts user only if 
+    // there was also no such kas user
+    if ( (ast == ADMPTSFAILEDNAMETRANSLATE && !kas ) || 
+        ast != ADMPTSFAILEDNAMETRANSLATE ) {
+      afs_status_t ast_kd;
+      if ( kas ) {
+        kas_PrincipalDelete( (void *) cellHandle, NULL, whoNew, &ast_kd );
+      }
+      free( whoOld );
+      free( whoNew );
+      if ( oldName != NULL ) free( oldName );
+      if ( newName != NULL ) free( newName );
+      throwAFSException( env, ast );
+      return;
+    }
+  }
+
+  if ( kas ) {
+    // delete the old kas entry
+    if ( !kas_PrincipalDelete( (void *) cellHandle, NULL, whoOld, &ast ) ) {
+      free( whoOld );
+      free( whoNew );
+      if ( oldName != NULL ) free( oldName );
+      if ( newName != NULL ) free( newName );
+      throwAFSException( env, ast );
+      return;
+    }
+  }    
+
+  free( whoOld );
+  free( whoNew );
+  if ( oldName != NULL ) free( oldName );
+  if ( newName != NULL ) free( newName );
 }
 
 /**
@@ -991,95 +903,94 @@ Java_org_openafs_jafs_User_rename
  * env      the Java environment
  * cls      the current Java class
  * cellHandle    the handle of the cell to which the user belongs
- * juserName     the name of the user for which to set the password
+ * jusername     the name of the user for which to set the password
  * jnewPassword     the new password for the user
  */
 JNIEXPORT void JNICALL 
 Java_org_openafs_jafs_User_setPassword
-  (JNIEnv *env, jclass cls, jint cellHandle, jstring juserName,
+  (JNIEnv *env, jclass cls, jint cellHandle, jstring jusername,
    jstring jnewPassword)
 {
   afs_status_t ast;
   char *cellName;
-  const char *userName;
-  const char *newPassword;
+  char *username;
+  char *newPassword;
   kas_encryptionKey_p newKey = 
     (kas_encryptionKey_p) malloc( sizeof(kas_encryptionKey_t) );
   kas_identity_p who = (kas_identity_p) malloc( sizeof(kas_identity_t) );
 
-  if( !who || !newKey ) {
-    if( who ) {
+  if ( !who || !newKey ) {
+    if ( who ) {
       free( who );
     }
-    if( newKey ) {
+    if ( newKey ) {
       free( newKey );
     }
     throwAFSException( env, JAFSADMNOMEM );
     return;    
   }
 
-  if( juserName != NULL ) {
-      userName = (*env)->GetStringUTFChars(env, juserName, 0);
-      if( !userName ) {
-	  throwAFSException( env, JAFSADMNOMEM );
-	  return;    
-      }
+  if ( jusername != NULL ) {
+    username = getNativeString(env, jusername);
+    if ( username == NULL ) {
+      free( who );
+      free( newKey );
+      throwAFSException( env, JAFSADMNOMEM );
+      return;    
+    }
   } else {
-      userName = NULL;
+    free( who );
+    free( newKey );
+    throwAFSException( env, JAFSNULLUSER );
+    return;    
   }
-  if( jnewPassword != NULL ) {
-      newPassword = (*env)->GetStringUTFChars(env, jnewPassword, 0);
-      if( !newPassword ) {
-	  throwAFSException( env, JAFSADMNOMEM );
-	  return;    
-      }
+
+  if ( jnewPassword != NULL ) {
+    newPassword = getNativeString(env, jnewPassword);
+    if ( newPassword == NULL ) {
+      free( who );
+      free( newKey );
+      free( username );
+      throwAFSException( env, JAFSADMNOMEM );
+      return;    
+    }
   } else {
-      newPassword = NULL;
+    free( who );
+    free( newKey );
+    free( username );
+    throwAFSException( env, JAFSNULLPASS );
+    return;    
   }
 
   // make sure the name is within the allowed bounds
-  if( userName != NULL && strlen( userName ) > KAS_MAX_NAME_LEN ) {
-    free(who);
+  if ( strlen( username ) > KAS_MAX_NAME_LEN ) {
+    free( who );
     free( newKey );
-    if( userName != NULL ) {
-	(*env)->ReleaseStringUTFChars(env, juserName, userName);
-    }
-    if( newPassword != NULL ) {
-	(*env)->ReleaseStringUTFChars(env, jnewPassword, newPassword);
-    }
+    free( username );
+    free( newPassword );
     throwAFSException( env, ADMPTSUSERNAMETOOLONG );
     return;
   }
 
-  if( !afsclient_CellNameGet( (void *) cellHandle, &cellName, &ast ) ) {
-      free(who);
-      free( newKey );
-      if( userName != NULL ) {
-	  (*env)->ReleaseStringUTFChars(env, juserName, userName);
-      }
-      if( newPassword != NULL ) {
-	  (*env)->ReleaseStringUTFChars(env, jnewPassword, newPassword);
-      }
-      throwAFSException( env, ast );
-      return;
+  if ( !afsclient_CellNameGet( (void *) cellHandle, &cellName, &ast ) ) {
+    free( who );
+    free( newKey );
+    free( username );
+    free( newPassword );
+    throwAFSException( env, ast );
+    return;
   }
   
-  if( !kas_StringToKey( cellName, newPassword, newKey, &ast ) ) {
-      free(who);
-      free( newKey );
-      if( userName != NULL ) {
-	  (*env)->ReleaseStringUTFChars(env, juserName, userName);
-      }
-      if( newPassword != NULL ) {
-	  (*env)->ReleaseStringUTFChars(env, jnewPassword, newPassword);
-      }
-      throwAFSException( env, ast );
-      return;
+  if ( !kas_StringToKey( cellName, newPassword, newKey, &ast ) ) {
+    free( who );
+    free( newKey );
+    free( username );
+    free( newPassword );
+    throwAFSException( env, ast );
+    return;
   }
 
-  if( userName != NULL ) {
-      internal_makeKasIdentity( userName, who );
-  }
+  internal_makeKasIdentity( username, who );
 
   ast = 0;
   // For some reason kas_PrincipalKeySet doesn't set the return code correctly.
@@ -1087,28 +998,14 @@ Java_org_openafs_jafs_User_setPassword
   // So instead of checking the return code, we see if there's an error 
   // in the status variable.
   kas_PrincipalKeySet( (void *) cellHandle, NULL, who, 0, newKey, &ast );
-  if( ast ) {
-    free( who );
-    free( newKey );
-    if( userName != NULL ) {
-	(*env)->ReleaseStringUTFChars(env, juserName, userName);
-    }
-    if( newPassword != NULL ) {
-	(*env)->ReleaseStringUTFChars(env, jnewPassword, newPassword);
-    }
+  if ( ast ) {
     throwAFSException( env, ast );
-    return;
   }
 
   free( who );
   free( newKey );
-  if( userName != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, juserName, userName);
-  }
-  if( newPassword != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, jnewPassword, newPassword);
-  }
-
+  free( username );
+  free( newPassword );
 }
 
 /**
@@ -1126,35 +1023,29 @@ JNIEXPORT jint JNICALL
 Java_org_openafs_jafs_User_getUserGroupsBegin
   (JNIEnv *env, jclass cls, jint cellHandle, jstring jname)
 {
-  const char *name;
+  char *name;
   afs_status_t ast;
   void *iterationId;
 
-  if( jname != NULL ) {
-      name = (*env)->GetStringUTFChars(env, jname, 0);
-      if( !name ) {
-	  throwAFSException( env, JAFSADMNOMEM );
-	  return;    
-      }
+  if ( jname != NULL ) {
+    name = getNativeString(env, jname);
+    if ( name == NULL ) {
+      throwAFSException( env, JAFSADMNOMEM );
+      return;    
+    }
   } else {
-      name = NULL;
+    throwAFSException( env, JAFSNULLUSER );
+    return;  
   }
 
-  if( !pts_UserMemberListBegin( (void *) cellHandle, name, &iterationId, 
-				&ast ) ) {
-      if( name != NULL ) {
-	  (*env)->ReleaseStringUTFChars(env, jname, name);
-      }
-      throwAFSException( env, ast );
-      return;
+  if ( !pts_UserMemberListBegin( (void *) cellHandle, name, &iterationId, 
+                                &ast ) ) {
+    throwAFSException( env, ast );
   }
 
-  if( name != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, jname, name);
-  }
+  free( name );
 
   return (jint) iterationId;
-
 }
 
 /**
@@ -1174,14 +1065,14 @@ Java_org_openafs_jafs_User_getUserGroupsNextString
   char *groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
   jstring jgroup;
 
-  if( !groupName ) {
+  if ( !groupName ) {
     throwAFSException( env, JAFSADMNOMEM );
     return;    
   }
 
-  if( !pts_UserMemberListNext( (void *) iterationId, groupName, &ast ) ) {
+  if ( !pts_UserMemberListNext( (void *) iterationId, groupName, &ast ) ) {
     free( groupName );
-    if( ast == ADMITERATORDONE ) {
+    if ( ast == ADMITERATORDONE ) {
       return NULL;
     } else {
       throwAFSException( env, ast );
@@ -1217,14 +1108,14 @@ Java_org_openafs_jafs_User_getUserGroupsNext
 
   groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
 
-  if( !groupName ) {
+  if ( !groupName ) {
     throwAFSException( env, JAFSADMNOMEM );
     return;    
   }
 
-  if( !pts_UserMemberListNext( (void *) iterationId, groupName, &ast ) ) {
+  if ( !pts_UserMemberListNext( (void *) iterationId, groupName, &ast ) ) {
     free( groupName );
-    if( ast == ADMITERATORDONE ) {
+    if ( ast == ADMITERATORDONE ) {
       return 0;
     } else {
       throwAFSException( env, ast );
@@ -1234,7 +1125,7 @@ Java_org_openafs_jafs_User_getUserGroupsNext
 
   jgroup = (*env)->NewStringUTF(env, groupName);
 
-  if( groupCls == 0 ) {
+  if ( groupCls == 0 ) {
     internal_getGroupClass( env, jgroupObject );
   }
 
@@ -1261,7 +1152,7 @@ Java_org_openafs_jafs_User_getUserGroupsDone
 {
   afs_status_t ast;
 
-  if( !pts_UserMemberListDone( (void *) iterationId, &ast ) ) {
+  if ( !pts_UserMemberListDone( (void *) iterationId, &ast ) ) {
     throwAFSException( env, ast );
     return;
   }
@@ -1292,7 +1183,7 @@ Java_org_openafs_jafs_User_getGroupsOwnedCount
 
   groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
 
-  if( !groupName ) {
+  if ( !groupName ) {
     throwAFSException( env, JAFSADMNOMEM );
     return -1;    
   }
@@ -1302,7 +1193,7 @@ Java_org_openafs_jafs_User_getGroupsOwnedCount
 
   free( groupName );  
 
-  if( ast != ADMITERATORDONE ) {
+  if ( ast != ADMITERATORDONE ) {
     throwAFSException( env, ast );
     return -1;
   }
@@ -1325,35 +1216,29 @@ JNIEXPORT jint JNICALL
 Java_org_openafs_jafs_User_getGroupsOwnedBegin
   (JNIEnv *env, jclass cls, jint cellHandle, jstring jname)
 {
-  const char *name;
+  char *name;
   afs_status_t ast;
   void *iterationId;
 
-  if( jname != NULL ) {
-      name = (*env)->GetStringUTFChars(env, jname, 0);
-      if( !name ) {
-	  throwAFSException( env, JAFSADMNOMEM );
-	  return;    
-      }
+  if ( jname != NULL ) {
+    name = getNativeString(env, jname);
+    if ( name == NULL ) {
+      throwAFSException( env, JAFSADMNOMEM );
+      return -1;
+    }
   } else {
-      name = NULL;
+    throwAFSException( env, JAFSNULLUSER );
+    return -1;
   }
 
-  if( !pts_OwnedGroupListBegin( (void *) cellHandle, name, 
-				&iterationId, &ast ) ) {
-      if( jname != NULL ) {
-	  (*env)->ReleaseStringUTFChars(env, jname, name);
-      }
-      throwAFSException( env, ast );
-      return;
+  if ( !pts_OwnedGroupListBegin( (void *) cellHandle, name, 
+                                &iterationId, &ast ) ) {
+    throwAFSException( env, ast );
   }
 
-  if( jname != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, jname, name);
-  }
+  free( name );
 
   return (jint) iterationId;
-
 }
 
 /**
@@ -1373,18 +1258,18 @@ Java_org_openafs_jafs_User_getGroupsOwnedNextString
   char *groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
   jstring jgroup;
 
-  if( !groupName ) {
+  if ( !groupName ) {
     throwAFSException( env, JAFSADMNOMEM );
     return;    
   }
 
-  if( !pts_OwnedGroupListNext( (void *) iterationId, groupName, &ast ) ) {
+  if ( !pts_OwnedGroupListNext( (void *) iterationId, groupName, &ast ) ) {
     free( groupName );
-    if( ast == ADMITERATORDONE ) {
+    if ( ast == ADMITERATORDONE ) {
       return NULL;
     } else {
       throwAFSException( env, ast );
-      return;
+      return NULL;
     }
   }
   
@@ -1417,14 +1302,14 @@ Java_org_openafs_jafs_User_getGroupsOwnedNext
 
   groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
 
-  if( !groupName ) {
+  if ( !groupName ) {
     throwAFSException( env, JAFSADMNOMEM );
-    return;    
+    return 0;    
   }
 
-  if( !pts_OwnedGroupListNext( (void *) iterationId, groupName, &ast ) ) {
+  if ( !pts_OwnedGroupListNext( (void *) iterationId, groupName, &ast ) ) {
     free( groupName );
-    if( ast == ADMITERATORDONE ) {
+    if ( ast == ADMITERATORDONE ) {
       return 0;
     } else {
       throwAFSException( env, ast );
@@ -1434,7 +1319,7 @@ Java_org_openafs_jafs_User_getGroupsOwnedNext
 
   jgroup = (*env)->NewStringUTF(env, groupName);
 
-  if( groupCls == 0 ) {
+  if ( groupCls == 0 ) {
     internal_getGroupClass( env, jgroupObject );
   }
 
@@ -1461,11 +1346,10 @@ Java_org_openafs_jafs_User_getGroupsOwnedDone
 {
   afs_status_t ast;
 
-  if( !pts_OwnedGroupListDone( (void *) iterationId, &ast ) ) {
+  if ( !pts_OwnedGroupListDone( (void *) iterationId, &ast ) ) {
     throwAFSException( env, ast );
     return;
   }
-  
 }
 
 // reclaim global memory being used by this portion
@@ -1473,12 +1357,8 @@ JNIEXPORT void JNICALL
 Java_org_openafs_jafs_User_reclaimUserMemory
   (JNIEnv *env, jclass cls)
 {
-  if( userCls ) {
-      (*env)->DeleteGlobalRef(env, userCls);
-      userCls = 0;
+  if ( userCls ) {
+    (*env)->DeleteGlobalRef(env, userCls);
+    userCls = 0;
   }
-
 }
-
-
-

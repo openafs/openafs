@@ -19,6 +19,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <afs/param.h>
+
 #include "Internal.h"
 #include "org_openafs_jafs_Token.h"
 
@@ -27,8 +29,8 @@
 #include <afs/vice.h>
 #include <afs/venus.h>
 #include <afs/afs_args.h>
-#include <afs/afs_osi.h>
-#include <afs/afs_usrops.h>
+/*#include <afs/afs_osi.h>
+  #include <afs/afs_usrops.h>*/
 #include <pthread.h>
 
 #ifdef DMALLOC
@@ -36,7 +38,9 @@
 #endif
 
 pthread_mutex_t jafs_init_lock;
+
 extern pthread_mutex_t jafs_login_lock;
+
 extern int readCacheParms(char *afsMountPoint, char *afsConfDir,
                           char *afsCacheDir,  int *cacheBlocks, 
                           int *cacheFiles, int *cacheStatEntries,
@@ -47,7 +51,7 @@ extern int readCacheParms(char *afsMountPoint, char *afsConfDir,
 /**
  * Be carefull with the memory management:
  *
- * - For every GetStringUTFChars call the corresponding ReleaseStringUTFChars.
+ * - For every getNativeString call the corresponding free().
  * - For every Get<type>ArrayElements call the corresponding
  *   Release<type>ArrayElements
  * - For every malloc call the corresponding free.
@@ -167,45 +171,48 @@ Java_org_openafs_jafs_Token_klog (JNIEnv *env, jobject obj,
   char *password;
   char *cell;
   char *reason;
-  jint rc = -1;
-  int code;
+  int   code;
+  jint  rc = -1;
 
-  if( jcell != NULL ) { 
-    cell = (char*) (*env)->GetStringUTFChars(env, jcell, 0);
-    if( !cell ) {
-      char *error = "UserToken::klog(): failed to get cell name\n";
-      fprintf(stderr, error);
-      throwMessageException( env, error );
+  if ( jcell != NULL ) { 
+    cell = getNativeString(env, jcell);
+    if ( !cell ) {
+      fprintf(stderr, "UserToken::klog(): failed to get cell name\n");
+      throwMessageException( env, "Internal error, failed to translate cell name." );
       return -1;
     }
   } else {
     cell = NULL;
   }
 
-  if( jusername != NULL ) {
-    username = (char*) (*env)->GetStringUTFChars(env, jusername, 0);
-    if( !username ) {
-      char *error = "UserToken::klog(): failed to get username\n";
-      (*env)->ReleaseStringUTFChars(env, jcell, cell);
-      fprintf(stderr, error);
-      throwMessageException( env, error );
+  if ( jusername != NULL ) {
+    username = getNativeString(env, jusername);
+    if ( !username ) {
+      if ( cell != NULL ) free( cell );
+      fprintf(stderr, "UserToken::klog(): failed to get username\n");
+      throwMessageException( env, "Internal error, failed to translate username." );
       return -1;
     }
   } else {
-    username = NULL;
+    if ( cell != NULL ) free( cell );
+    throwAFSException( env, JAFSNULLUSER );
+    return -1;
   }
-  if( jpassword != NULL ) {
-    password = (char*) (*env)->GetStringUTFChars(env, jpassword, 0);
-    if( !password ) {
-      char *error = "UserToken::klog(): failed to get password\n";
-      (*env)->ReleaseStringUTFChars(env, jcell, cell);
-      (*env)->ReleaseStringUTFChars(env, jusername, username);
-      fprintf(stderr, error);
-      throwMessageException( env, error );
+
+  if ( jpassword != NULL ) {
+    password = getNativeString(env, jpassword);
+    if ( !password ) {
+      if ( cell != NULL ) free( cell );
+      free( username );
+      fprintf(stderr, "UserToken::klog(): failed to get password\n");
+      throwMessageException( env, "Internal error, failed to translate password." );
       return -1;
     }
   } else {
-    password = NULL;
+    if ( cell != NULL ) free( cell );
+    free( username );
+    throwAFSException( env, JAFSNULLPASS );
+    return -1;
   }
 
   if (id == 0) {
@@ -218,34 +225,23 @@ Java_org_openafs_jafs_Token_klog (JNIEnv *env, jobject obj,
   }
 
   if (code != 0) {
-    if( cell != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, jcell, cell);
-    }
-    if( username != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, jusername, username);
-    }
-    if( password != NULL ) {
-      (*env)->ReleaseStringUTFChars(env, jpassword, password);
-    }
+    if ( cell     != NULL ) free( cell );
+    if ( username != NULL ) free( username );
+    if ( password != NULL ) free( password );
     fprintf(stderr, "UserToken::klog(): uafs_klog failed to cell %s: %s\n",
                      cell, reason);
     fprintf(stderr, "code = %d\n", code);
     throwAFSException( env, code );
+    return -1;
   }
 
   /* Get the PAG we were assigned as the return value */
   rc = afs_getpag_val();
 
   /* clean up */
-  if( cell != NULL ) {
-    (*env)->ReleaseStringUTFChars(env, jcell, cell);
-  }
-  if( username != NULL ) {
-    (*env)->ReleaseStringUTFChars(env, jusername, username);
-  }
-  if( password != NULL ) {
-    (*env)->ReleaseStringUTFChars(env, jpassword, password);
-  }
+  if ( cell     != NULL ) free( cell );
+  if ( username != NULL ) free( username );
+  if ( password != NULL ) free( password );
 
   /* return PAG ID */
   return rc;
@@ -315,7 +311,3 @@ JNIEXPORT void JNICALL Java_org_openafs_jafs_Token_shutdown
 {
   uafs_Shutdown();
 }
-
-
-
-
