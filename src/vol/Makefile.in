@@ -97,13 +97,13 @@ ${DEST}/lib/afs/vlib.a: vlib.a
 ${DEST}/lib/afs/libvlib.a: vlib.a
 	${INSTALL} $? $@
 
-${DESTDIR}/${afssrvsbindir}/fs_conv_dux40D:  fs_conv_dux40D
+${DESTDIR}${afssrvsbindir}/fs_conv_dux40D:  fs_conv_dux40D
 	${INSTALL} -s $? $@
 
-${DESTDIR}/${afssrvsbindir}/xfs_size_check:  xfs_size_check
+${DESTDIR}${afssrvsbindir}/xfs_size_check:  xfs_size_check
 	${INSTALL} -s $? $@
 
-${DESTDIR}/${afssrvsbindir}/fs_conv_sol26:  fs_conv_sol26
+${DESTDIR}${afssrvsbindir}/fs_conv_sol26:  fs_conv_sol26
 	${INSTALL} -s $? $@
 
 $(DEST)/root.server/usr/afs/bin/fs_conv_dux40D:  fs_conv_dux40D
