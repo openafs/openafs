@@ -68,46 +68,46 @@ casestrcpy.o: ${srcdir}/casestrcpy.c ${includes}
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/casestrcpy.c
 
 hputil.o: ${srcdir}/hputil.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/hputil.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/hputil.c
 
 flipbase64.o: ${srcdir}/flipbase64.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/flipbase64.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/flipbase64.c
 
 volparse.o: ${srcdir}/volparse.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/volparse.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/volparse.c
 
 snprintf.o: ${srcdir}/snprintf.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/snprintf.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/snprintf.c
 
 base64.o: ${srcdir}/base64.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/base64.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/base64.c
 
 hostparse.o: ${srcdir}/hostparse.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/hostparse.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/hostparse.c
 
 ktime.o: ${srcdir}/ktime.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/ktime.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/ktime.c
 
 kreltime.o: ${srcdir}/kreltime.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/kreltime.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/kreltime.c
 
 get_krbrlm.o: ${srcdir}/get_krbrlm.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/get_krbrlm.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/get_krbrlm.c
 
 uuid.o: ${srcdir}/uuid.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/uuid.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/uuid.c
 
 sys.o: ${srcdir}/sys.c AFS_component_version_number.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/sys.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/sys.c
 
 sys: sys.o 
 	${CC} ${LDFLAGS} -o sys sys.o
 
 isathing.o: ${srcdir}/isathing.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/isathing.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/isathing.c
 
 serverLog.o: ${srcdir}/serverLog.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/serverLog.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/serverLog.c
 
 dirpath.o: ${srcdir}/dirpath.c ${includes}
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/dirpath.c
@@ -116,19 +116,19 @@ fileutil.o: ${srcdir}/fileutil.c ${includes}
 	${CCOBJ} ${CFLAGS} -c ${srcdir}/fileutil.c
 
 netutils.o: ${srcdir}/netutils.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/netutils.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/netutils.c
 
 afs_atomlist.o: ${srcdir}/afs_atomlist.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/afs_atomlist.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/afs_atomlist.c
 
 afs_lhash.o: ${srcdir}/afs_lhash.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/afs_lhash.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/afs_lhash.c
 
 strlcat.o: ${srcdir}/strlcat.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/strlcat.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/strlcat.c
 
 strlcpy.o: ${srcdir}/strlcpy.c ${includes}
-	${CC} ${CFLAGS} -c ${srcdir}/strlcpy.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/strlcpy.c
 
 #
 # Install targets

@@ -185,10 +185,10 @@ kpwvalid: kpwvalid.o $(LIBS)
 	${CC} ${LDFLAGS} -o kpwvalid kpwvalid.o ${LIBS} ${XLIBS}
 
 user.krb.o: user.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
-	${CC} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/user.c -o user.krb.o
+	${CCOBJ} ${CFLAGS} -DAFS_KERBEROS_ENV -c ${srcdir}/user.c -o user.krb.o
 
 user.o: user.c ${INCLS} ${TOP_INCDIR}/afs/vice.h
-	${CC} ${CFLAGS} -c ${srcdir}/user.c
+	${CCOBJ} ${CFLAGS} -c ${srcdir}/user.c
 
 kdb: kdb.o ${INCLS} ${LIBS} libkauth.a
 	${CC} ${LDFLAGS} -o kdb kdb.o libkauth.a ${LIBS} ${XLIBS}
