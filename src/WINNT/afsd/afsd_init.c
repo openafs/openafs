@@ -590,7 +590,7 @@ int afsd_InitCM(char **reasonP)
 	code = RegQueryValueEx(parmKey, "CachePath", NULL, &regType,
 				buf, &dummyLen);
     if (code == ERROR_SUCCESS && buf[0]) {
-        if(regType == REG_EXPAND_SZ) {
+        if (regType == REG_EXPAND_SZ) {
             dummyLen = ExpandEnvironmentStrings(buf, cm_CachePath, sizeof(cm_CachePath));
             if(dummyLen > sizeof(cm_CachePath)) {
                 afsi_log("Cache path [%s] longer than %d after expanding env strings", buf, sizeof(cm_CachePath));

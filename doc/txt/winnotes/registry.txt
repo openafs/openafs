@@ -28,7 +28,7 @@ Variable: LANadapter
   name will be 'AFS'.
 
 Value   : CacheSize
-Type    : QWORD
+Type    : DWORD
 Default : 20480 (CM_CONFIGDEFAULT_CACHESIZE)
 Variable: cm_initParams.cacheSize
 
@@ -58,7 +58,7 @@ Variable: numSvThreads
   smb_Server in smb.c).
 
 Value	: Stats
-Type	: QWORD
+Type	: DWORD
 Default : 1000 (CM_CONFIGDEFAULT_STATS)
 Variable: cm_initParams.nStatCaches
 
@@ -76,7 +76,7 @@ Variable: smb_LogoffTokenTransfer
   that the tokens remain valid until the profile save is complete.
 
 Value	: LogoffTokenTransferTimeout
-Type	: QWORD
+Type	: DWORD
 Default : 10
 Variable: smb_LogoffTokenTransferTimeout
 
@@ -165,7 +165,7 @@ Variable: reportSessionStartups
   or various error types to be logged.
 
 Value	: TraceBufferSize
-Type	: QWORD
+Type	: DWORD
 Default : 5000 (CM_CONFIGDEFAULT_TRACEBUFSIZE)
 Variable: traceBufSize
 
