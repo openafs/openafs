@@ -40,7 +40,7 @@ LD = ld
 CCFLAGS =   -O2 -fomit-frame-pointer \
 	-fno-strength-reduce -pipe -march=i486 -malign-loops=2 -malign-jumps=2 \
 	-malign-functions=2
-DEFINES = -D__KERNEL__  -DCPU=586 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
+DEFINES = -D__KERNEL__  -DCPU=586 -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF} ${KDEFINES}
 <alpha_linux_22 alpha_linux_24>
 CCFLAGS = -O2 -fomit-frame-pointer -fno-strength-reduce -pipe -mno-fp-regs -ffixed-8
 DEFINES = -D__KERNEL__ -DKERNEL -D_KERNEL -DMODULE ${SMP_DEF}
@@ -73,6 +73,9 @@ CFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES)
 KOBJ = MODLOAD
 MPS = MP SP
 
+# To pick up anything we might have missed
+include Makefile.extradefs
+
 # COMPDIRS is called in Makefile.common to do the actual builds.
 COMPDIRS=linux_compdirs
 
@@ -88,6 +91,9 @@ setup:
 			mkdir -p $${KDIR}; \
 			ln -fs ../Makefile $${KDIR}/Makefile ; \
 			ln -fs ../Makefile.common $${KDIR}/Makefile.common; \
+<i386_linux22 i386_linux24>
+			sh ./redhat.sh ${LINUX_VERS} $${KDIR}/Makefile.extradefs; \
+<all>
 		done \
 	done
 	
