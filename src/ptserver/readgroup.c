@@ -36,10 +36,7 @@ int verbose = 0;
 void skip();
 
 void
-report_error(code, name, gname)
-     afs_int32 code;
-     char *name;
-     char *gname;
+report_error(afs_int32 code, char *name, char *gname)
 {
     if (code == 0) {
 	if (verbose)
@@ -65,9 +62,8 @@ osi_audit()
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     afs_int32 argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     register afs_int32 code;
     char name[PR_MAXNAMELEN];
@@ -218,8 +214,7 @@ main(argc, argv)
 }
 
 void
-skip(s)
-     char **s;
+skip(char **s)
 {
     while (**s != ' ' && **s != '\t' && **s != '\0')
 	(*s)++;

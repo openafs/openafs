@@ -613,7 +613,7 @@ HandleVolume(struct DiskPartition *dp, char *name)
     }
 }
 
-
+int
 main(int argc, char **argv)
 {
     register struct cmd_syndesc *ts;

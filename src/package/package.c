@@ -204,12 +204,8 @@ getsystype()
  *------------------------------------------------------------------------*/
 
 static int
-packageInit(as, arock)
-     struct cmd_syndesc *as;
-     char *arock;
-
+packageInit(struct cmd_syndesc *as, char *arock)
 {				/*packageInit */
-
     systype = getsystype();
 
     /*
@@ -287,10 +283,8 @@ packageInit(as, arock)
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
-
+int
+main(int argc, char **argv)
 {				/*main */
 
     register afs_int32 code;	/*Return code */

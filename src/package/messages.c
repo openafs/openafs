@@ -57,11 +57,7 @@
 
 
 static char *
-putnum(dp, n, b)
-     register char *dp;
-     register unsigned n;
-     register int b;
-
+putnum(register char *dp, register unsigned n, register int b)
 {				/*putnum */
     register int s;
 
@@ -79,10 +75,7 @@ putnum(dp, n, b)
 }				/*putnum */
 
 static char *
-putstr(dp, s)
-     register char *dp;
-     register char *s;
-
+putstr(register char *dp, register char *s)
 {				/*putstr */
 
     while (*s)
@@ -93,11 +86,7 @@ putstr(dp, s)
 }				/*putstr */
 
 static char *
-putformat(dp, fp, ap)
-     register char *dp;
-     register char *fp;
-     register va_list ap;
-
+putformat(register char *dp, register char *fp, register va_list ap)
 {				/*putformat */
 
     while (*fp) {

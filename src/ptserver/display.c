@@ -62,12 +62,7 @@ pr_TimeToString(time_t clock)
 #define host(a) (hostOrder ? (a) : ntohl(a))
 
 static void
-PrintEntries(f, hostOrder, indent, e, n)
-     FILE *f;
-     int hostOrder;		/* structures in host order */
-     int indent;
-     struct prentry *e;
-     int n;
+PrintEntries(FILE *f, int hostOrder, int indent, struct prentry *e, int n)
 {
     int i;
     int newline;
@@ -98,12 +93,7 @@ PrintEntries(f, hostOrder, indent, e, n)
 }
 
 int
-pr_PrintEntry(f, hostOrder, ea, e, indent)
-     FILE *f;
-     int hostOrder;		/* structures in host order */
-     afs_int32 ea;
-     struct prentry *e;
-     int indent;
+pr_PrintEntry(FILE *f, int hostOrder, afs_int32 ea, struct prentry *e, int indent)
 {
     int i;
 

@@ -103,6 +103,7 @@ void StickOnLruChain_r(register Vnode * vnp,
 #define	THELOGSIZE	5120
 static afs_int32 theLog[THELOGSIZE];
 static afs_int32 vnLogPtr = 0;
+void
 VNLog(aop, anparms, av1, av2, av3, av4)
      afs_int32 aop, anparms;
      afs_int32 av1, av2, av3, av4;

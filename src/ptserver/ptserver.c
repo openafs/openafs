@@ -195,8 +195,7 @@ prp_access_mask(s)
 
 /* check whether caller is authorized to manage RX statistics */
 int
-pr_rxstat_userok(call)
-     struct rx_call *call;
+pr_rxstat_userok(struct rx_call *call)
 {
     return afsconf_SuperUser(prdir, call, NULL);
 }

@@ -42,9 +42,8 @@ osi_audit()
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     afs_int32 argc;
-     char **argv;
+int
+main(afs_int32 argc, char **argv)
 {
 
     register afs_int32 code;

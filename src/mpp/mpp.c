@@ -45,38 +45,23 @@ static char inline[maxlinesize];
 static char outline[maxlinesize];
 static struct macro *macrohashtable[macrohashsize];
 
-static
-error(a0, a1)
-     char *a0, *a1;
+static int
+error(char *a0, char *a1)
 {
     fprintf(stderr, a0, a1);
     putc('\n', stderr);
     exit(1);
 }
 
-static
-fileerror(a0, a1)
-     char *a0, *a1;
+static int
+fileerror(char *a0, char *a1);
 {
     fprintf(stderr, "%s; line %d: ", filep->name, filep->lineno);
     error(a0, a1);
 }
 
-static char *
-strsav(s)
-     char *s;
-{
-    char *p;
-
-    if ((p = malloc(strlen(s) + 1)) == NULL)
-	error("Out of Memory");
-    strcpy(p, s);
-    return p;
-}
-
 static struct macro **
-macrolookup(name)
-     char *name;
+macrolookup(char *name)
 {
     register struct macro **mpp, *mp;
     register char *cp;
@@ -89,9 +74,8 @@ macrolookup(name)
     return mpp;
 }
 
-static
-macroundefine(name)
-     char *name;
+static void
+macroundefine(char *name)
 {
     register struct macro **mpp, *mp;
 
@@ -104,11 +88,8 @@ macroundefine(name)
     }
 }
 
-static
-macrodefine(name, value, mode)
-     char *name;
-     char *value;
-     enum macromode mode;
+static void
+macrodefine(char *name, char *value, enum macromode mode)
 {
     register struct macro **mpp, *mp;
 
@@ -120,18 +101,17 @@ macrodefine(name, value, mode)
     } else {
 	if ((mp = (struct macro *)malloc(sizeof(struct macro))) == 0)
 	    error("Out of memory");
-	mp->name = strsav(name);
+	mp->name = strdup(name);
 	mp->next = 0;
 	*mpp = mp;
     }
     mp->mode = mode;
-    mp->value = strsav(value);
+    mp->value = strdup(value);
 }
 
 
 static char *
-macroexpand(dst, src)
-     register char *dst, *src;
+macroexpand(register char *dst, register char *src)
 {
     char name[macronamesize];
     register char *np;
@@ -174,9 +154,8 @@ macroexpand(dst, src)
 
 
 
-static
-readline(line)
-     char *line;
+static int
+readline(char *line)
 {
     while (filep >= &files[0]) {
 	filep->lineno++;
@@ -192,17 +171,15 @@ readline(line)
     return 0;
 }
 
-static
-writeline(line)
-     char *line;
+static void
+writeline(char *line)
 {
     fputs(line, stdout);
 }
 
 
-static
-directive(what)
-     char *what;
+static int
+directive(char *what)
 {
     char *arg[3], *cp;
     int n;
@@ -271,7 +248,7 @@ directive(what)
 	    filep--;
 	    fileerror("Can't open %s", arg[1]);
 	}
-	filep->name = strsav(arg[1]);
+	filep->name = strdup(arg[1]);
 	filep->lineno = 0;
 	return 1;
     }
@@ -286,18 +263,18 @@ directive(what)
     fileerror("Unknown directive %s", arg[0]);
 }
 
-expandfile(name)
-     char *name;
+void 
+expandfile(char *name)
 {
     if (strcmp(name, "-") == 0) {
 	filep->stream = stdin;
-	filep->name = strsav("(stdin)");
+	filep->name = strdup("(stdin)");
     } else {
 	if ((filep->stream = fopen(name, "r")) == NULL) {
 	    fileerror("Can't open %s", name);
 	    exit(1);
 	}
-	filep->name = strsav(name);
+	filep->name = strdup(name);
     }
     filep->lineno = 0;
     while (readline(inline)) {
@@ -316,7 +293,7 @@ expandfile(name)
     }
 }
 
-static
+static int
 usage()
 {
     fprintf(stderr, "Usage: mpp [-cC][-s][-Dname=value][-Uname][-][files]\n");
@@ -325,9 +302,8 @@ usage()
 
 #include "AFS_component_version_number.c"
 
-main(argc, argv)
-     int argc;
-     char **argv;
+int
+main(int argc, char **argv)
 {
     argv++, argc--;
     if (argc == 0)
