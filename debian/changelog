@@ -6,8 +6,9 @@ openafs (1.0.2-1) unstable; urgency=low
   * New upstream version.
   * Conflict with openafs-ptutil since it is now included
   * Fix message in RC script, closes: #82489
+  * Attempt to avoid using pinstall  in kernel module build
 
- -- Sam Hartman <hartmans@debian.org>  Fri, 19 Jan 2001 17:58:04 -0500
+ -- Sam Hartman <hartmans@debian.org>  Fri, 19 Jan 2001 22:38:32 -0500
 
 openafs (1.0.1-3) unstable; urgency=low
 
