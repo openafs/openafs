@@ -95,6 +95,7 @@ LSA_STRING smb_lsaLogonOrigin;
 #define NCBmax MAXIMUM_WAIT_OBJECTS
 EVENT_HANDLE NCBavails[NCBmax], NCBevents[NCBmax];
 EVENT_HANDLE **NCBreturns;
+EVENT_HANDLE *smb_ServerShutdown;
 DWORD NCBsessions[NCBmax];
 NCB *NCBs[NCBmax];
 struct smb_packet *bufs[NCBmax];
@@ -2862,9 +2863,13 @@ void smb_Daemon(void *parmp)
 {
     afs_uint32 count = 0;
 
-    while(1) {
+    while(smbShutdownFlag == 0) {
         count++;
         thrd_Sleep(10000);
+
+        if (smbShutdownFlag == 1)
+            break;
+        
         if ((count % 72) == 0)	{	/* every five minutes */
             struct tm myTime;
             time_t old_localZero = smb_localZero;
@@ -6665,9 +6670,10 @@ void smb_Server(VOID *parmp)
 
         /* terminate silently if shutdown flag is set */
         if (code == WAIT_OBJECT_0) {
-            if (smbShutdownFlag == 1)
+            if (smbShutdownFlag == 1) {
+                thrd_SetEvent(smb_ServerShutdown[myIdx]);
                 break;
-            else
+            } else
                 continue;
         }
 
@@ -7535,6 +7541,15 @@ void smb_Init(osi_log_t *logp, char *snamep, int useV3, int LANadapt,
         NCBreturns[i] = malloc(NCBmax * sizeof(EVENT_HANDLE));
         NCBreturns[i][0] = retHandle;
     }
+
+    smb_ServerShutdown = malloc(smb_NumServerThreads * sizeof(EVENT_HANDLE));
+    for (i = 0; i < smb_NumServerThreads; i++) {
+        sprintf(eventName, "smb_ServerShutdown[%d]", i);
+        smb_ServerShutdown[i] = thrd_CreateEvent(NULL, FALSE, FALSE, eventName);
+        if ( GetLastError() == ERROR_ALREADY_EXISTS )
+            afsi_log("Event Object Already Exists: %s", eventName);
+    }
+
     for (i = 1; i <= nThreads; i++)
         InitNCBslot(i);
     numNCBs = nThreads + 1;
@@ -7831,13 +7846,21 @@ void smb_Shutdown(void)
     }
 
     /* Trigger the shutdown of all SMB threads */
-    for (i = 0; i < numSessions; i++)
+    for (i = 0; i < smb_NumServerThreads; i++)
         thrd_SetEvent(NCBreturns[i][0]);
 
     thrd_SetEvent(NCBevents[0]);
     thrd_SetEvent(SessionEvents[0]);
     thrd_SetEvent(NCBavails[0]);
-    thrd_Sleep(1000);
+
+    for (i = 0;i < smb_NumServerThreads; i++) {
+        DWORD code = thrd_WaitForSingleObject_Event(smb_ServerShutdown[i], INFINITE);
+        if (code == WAIT_OBJECT_0) {
+            continue;
+        } else {
+            afsi_log("smb_Shutdown[%d] wait error",i);
+        }
+    }
 }
 
 /* Get the UNC \\<servername>\<sharename> prefix. */
