@@ -459,11 +459,12 @@ int GetDefaultCell (LPTSTR pszCell)
         }
 
         if (szCellA[0] == '\0') {
-            if ((rc = cm_GetRootCellName (szCellA)) == 0)
-                CopyAnsiToString (pszCell, szCellA);
+            rc = cm_GetRootCellName (szCellA);
         } else {
             rc = 0;
         }
+		if (rc == 0)
+			CopyAnsiToString(pszCell, szCellA);
     }
     return rc;
 }
