@@ -54,6 +54,7 @@
 #define VFS 1
 
 #include <afs/param.h>
+#include "afsconfig.h"
 #include <afs/cmd.h>
 
 #include <assert.h>
@@ -72,30 +73,41 @@
 #include <sys/file.h>
 #include <errno.h>
 #include <sys/time.h>
-#ifdef	AFS_DEC_ENV
-#include <sys/param.h>
-#include <sys/fs_types.h>
-#endif
-#if	defined(AFS_SUN_ENV)
-#include <sys/vfs.h>
-#endif
-#ifndef	AFS_AIX41_ENV
-#include <sys/mount.h>
-#endif
 #include <dirent.h>
-#ifdef	  AFS_SUN5_ENV
-#include <sys/fcntl.h>
-#include <sys/mnttab.h>
-#include <sys/mntent.h>
-#else
-#if	defined(AFS_SUN_ENV) || defined(AFS_SGI_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX20_ENV)
-#include <mntent.h>
-#endif
+
+#ifdef HAVE_SYS_PARAM_H
+#include <sys/param.h>
 #endif
 
-#if defined(AFS_OSF_ENV) || defined(AFS_DEC_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
+#ifdef HAVE_SYS_FS_TYPES_H
+#include <sys/fs_types.h>
+#endif
+
+#ifdef HAVE_SYS_MOUNT_H
 #include <sys/mount.h>
-#else
+#endif
+
+#ifdef HAVE_SYS_FCNTL_H
+#include <sys/fcntl.h>
+#endif
+
+#ifdef HAVE_SYS_MNTTAB_H
+#include <sys/mnttab.h>
+#endif
+
+#ifdef HAVE_SYS_MNTENT_H
+#include <sys/mntent.h>
+#endif
+
+#ifdef HAVE_MNTENT_H
+#include <mntent.h>
+#endif
+
+#ifdef HAVE_SYS_MOUNT_H
+#include <sys/mount.h>
+#endif
+
+#ifdef HAVE_SYS_VFS_H
 #include <sys/vfs.h>
 #endif
 

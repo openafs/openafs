@@ -36,7 +36,7 @@ WITH_DEPRECATED=YES
 
 all:
 	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
-	$(MAKE) install "COMPILE_PART1=cd obj; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME} "WASHTOOL=echo No washtool: "
+	$(MAKE) install "COMPILE_PART1=cd obj; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ SRCDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=`pwd`/${SYS_NAME}/obj" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ SRCDIR=`pwd`/${SYS_NAME}/dest/ TOP_SRCDIR=`pwd`/${SYS_NAME}/obj" SYS_NAME=${SYS_NAME} "WASHTOOL=echo No washtool: "
 
 basics:
 	-if test -f "${WASHTOOL}"; \
@@ -523,7 +523,12 @@ links:
 	cd src; \
 	for file in `find [!NW]* -type f -print` ; do \
 		/bin/ln -s `pwd`/$${file} $${here}/obj/$${file} ; \
-	done;
+	done; \
+	/bin/ln -s $${here}/obj/afsconfig.h.in $${here}/obj/config/afsconfig.h ;
+
+# config.h link will eventually be replaced with generating the file 
+# directly from config.h.in via configure run. I'm linking instead of
+# copying to ease development for now
 
 #
 # Below targets are all deprecated, insecure, or obsolte, 
