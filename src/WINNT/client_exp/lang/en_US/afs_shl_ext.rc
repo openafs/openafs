@@ -105,6 +105,7 @@ BEGIN
     MENUITEM "Show &File Servers...",       IDM_SHOW_SERVER
     MENUITEM "Show &Cell...",               IDM_SHOWCELL
     MENUITEM "Show Server Status...",       IDM_SERVER_STATUS
+    MENUITEM "Remove SymLink",              IDM_REMOVE_SYMLINK
 END
 
 
@@ -629,6 +630,8 @@ BEGIN
     IDS_SHOW_FS_COLUMN      "File Server(s)"
     IDS_REMOVE_MP           "Remove Mount Points"
     IDS_REMOVE_MP_COLUMN    "Result"
+    IDS_REMOVE_SYMLINK_ITEM "&Remove Symbolic Link"
+    IDS_REALLY_REMOVE_SYMLINK "Are you sure you want to remove the selected Symbolic Link?"
 END
 
 #endif    // English (U.S.) resources

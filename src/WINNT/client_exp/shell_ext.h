@@ -18,10 +18,14 @@
 
 #include <shlobj.h>
 
-
 extern ULONG nCMRefCount;	// IContextMenu ref count
 extern ULONG nSERefCount;	// IShellExtInit ref count
+extern ULONG nICRefCount;	// IContextMenu ref count
+extern ULONG nTPRefCount;	// IQueryInfo ref count
+extern ULONG nXPRefCount;	// IPersistFile ref count
 
+#define STR_EXT_TITLE   TEXT("AfsClientContextMenu")
+#define STR_REG_PATH    TEXT("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\ShellIconOverlayIdentifiers")
 
 /////////////////////////////////////////////////////////////////////////////
 // CShellExt command target
@@ -31,10 +35,13 @@ class CShellExt : public CCmdTarget
 	DECLARE_DYNCREATE(CShellExt)
 
 	BOOL m_bDirSelected;
+	BOOL m_bIsSymlink;	// is symbolic link!
+	TCHAR m_szFile[MAX_PATH];
 
     CStringArray m_astrFileNames;
 
 	CShellExt();           // protected constructor used by dynamic creation
+	LPMALLOC m_pAlloc;
 
 // Attributes
 public:
@@ -80,6 +87,26 @@ protected:
     BEGIN_INTERFACE_PART(ShellInit, IShellExtInit)
         STDMETHOD(Initialize)(LPCITEMIDLIST pidlFolder,LPDATAOBJECT lpdobj, HKEY hkeyProgID);
     END_INTERFACE_PART(ShellInit)
+
+    BEGIN_INTERFACE_PART(IconExt, IShellIconOverlayIdentifier)
+        STDMETHOD(GetOverlayInfo)(LPWSTR pwszIconFile,int cchMax,int* pIndex,DWORD* pdwFlags);
+        STDMETHOD(GetPriority)(int* pPriority);
+        STDMETHOD(IsMemberOf)(LPCWSTR pwszPath,DWORD dwAttrib);
+    END_INTERFACE_PART(IconExt)
+
+	BEGIN_INTERFACE_PART(ToolTipExt, IQueryInfo)
+		STDMETHOD(GetInfoTip)(DWORD dwFlags, LPWSTR *ppwszTip);
+		STDMETHOD(GetInfoFlags)(LPDWORD pdwFlags);
+    END_INTERFACE_PART(ToolTipExt)
+
+	BEGIN_INTERFACE_PART(PersistFileExt, IPersistFile)
+		STDMETHOD(Load)(LPCOLESTR wszFile, DWORD dwMode);
+		STDMETHOD(GetClassID)(LPCLSID);
+		STDMETHOD(IsDirty)(VOID);
+		STDMETHOD(Save)(LPCOLESTR, BOOL);
+		STDMETHOD(SaveCompleted)(LPCOLESTR);
+		STDMETHOD(GetCurFile)(LPOLESTR FAR*);
+    END_INTERFACE_PART(PersistFileExt)
 
 	DECLARE_INTERFACE_MAP()
 };

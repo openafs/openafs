@@ -89,6 +89,7 @@ BEGIN
     MENUITEM "顯示檔案伺服器(&F)...",       IDM_SHOW_SERVER
     MENUITEM "顯示 Cell (&C)...",           IDM_SHOWCELL
     MENUITEM "顯示伺服器狀態...",           IDM_SERVER_STATUS
+    MENUITEM "Remove SymLink",              IDM_REMOVE_SYMLINK
 END
 
 
