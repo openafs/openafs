@@ -190,7 +190,7 @@ else
 		hppa*-hp-hpux11*)
 			AFS_SYSNAME="hp_ux110"
 			;;
-		hppa-hp-hpux10*)
+		hppa*-hp-hpux10*)
 			AFS_SYSNAME="hp_ux102"
 			;;
 		powerpc-apple-darwin1.2*)
