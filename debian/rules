@@ -62,6 +62,7 @@ clean:
 	-$(MAKE) -ki distclean
 	-rm -rf obj dest $(SYS_NAME) @sys Makefile debian/openafs-client.init
 	-rm -rf config.status config.cache lib include
+	-rm -f src/venus/livesys src/tests/Makefile src/tests/OpenAFS/DirPath.pm 
 	dh_clean
 
 install: DH_OPTIONS=

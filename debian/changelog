@@ -2,6 +2,8 @@ openafs (1.2.8-2) unstable; urgency=low
 
   * Convert v5 principal names to v4 style names in rxkad 2b.  Especially
     important for rcmd vs host
+  * Fix debian/rules clean to remove  generated files, Closes: #174625
+  * Fix AFS not to declare errno, Closes: #174059
 
  --
 
