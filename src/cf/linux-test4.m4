@@ -85,8 +85,13 @@ CPPFLAGS="-I${LINUX_KERNEL_PATH}/include -D__KERNEL__ $CPPFLAGS"
 AC_CACHE_VAL(ac_cv_linux_completion_h_exists,
 [
 AC_TRY_COMPILE(
-[#include <linux/completion.h>],
-[struct completion _c;],
+[#include <linux/completion.h>
+#include <linux/version.h?],
+[struct completion _c;
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,4,8)
+lose
+#endif
+],
 ac_cv_linux_completion_h_exists=yes,
 ac_cv_linux_completion_h_exists=no)])
 AC_MSG_RESULT($ac_cv_linux_completion_h_exists)
