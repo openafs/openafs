@@ -157,7 +157,7 @@ case $AFS_SYSNAME in
 		DBM="/lib/hpux32/libndbm.so"
 		LD="/bin/ld   "
 		LEX="/opt/langtools/bin/lex"
-		LWP_OPTMZ="-O"
+		LWP_OPTMZ=""
 		MT_CC="$CC"
 		MT_CFLAGS='-D_POSIX_C_SOURCE=199506L -DAFS_PTHREAD_ENV ${XCFLAGS}'
 		MT_LIBS="-lpthread"
