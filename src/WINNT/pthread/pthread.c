@@ -587,15 +587,11 @@ static DWORD WINAPI terminate_thread_routine(LPVOID param) {
 
 
 static void pthread_sync_terminate_thread(void) {
-
     (pthread_cache_done || pthread_once(&pthread_cache_once, create_once));
 
     if (terminate_thread_handle == INVALID_HANDLE_VALUE) {
-        CHAR eventName[MAX_PATH];
-        static eventCount = 0;
-        sprintf(eventName, "pthread terminate thread %d", eventCount++);
 	terminate_thread_wakeup_event = CreateEvent((LPSECURITY_ATTRIBUTES) 0,
-				TRUE, FALSE, (LPCTSTR) eventName);
+				TRUE, FALSE, (LPCTSTR) 0);
 	terminate_thread_handle = CreateThread((LPSECURITY_ATTRIBUTES) 0, 0, 
 		                terminate_thread_routine, (LPVOID) 0, 0, 
 			        &terminate_thread_id);
@@ -714,17 +710,22 @@ static cond_waiters_t *get_waiter() {
  
     if (queue_IsEmpty(&waiter_cache)) {
         new = (cond_waiters_t *) malloc(sizeof(cond_waiters_t));
-	if (new != NULL) {
-        CHAR eventName[MAX_PATH];
-        static eventCount = 0;
-        sprintf(eventName, "cond_waiters_t %d", eventCount++);
-	    new->event = CreateEvent((LPSECURITY_ATTRIBUTES) 0, FALSE,
-				     FALSE, (LPCTSTR) eventName);
-	    if (new->event == NULL) {
-		free(new);
-		new = NULL;
-	    }
-	}
+        if (new != NULL) {
+#if 1
+            CHAR eventName[MAX_PATH];
+            static eventCount = 0;
+            sprintf(eventName, "cond_waiters_t %d::%d", _getpid(), eventCount++);
+            new->event = CreateEvent((LPSECURITY_ATTRIBUTES) 0, FALSE,
+                                      FALSE, (LPCTSTR) eventName);
+#else
+            new->event = CreateEvent((LPSECURITY_ATTRIBUTES) 0, FALSE,
+                                      FALSE, (LPCTSTR) 0);
+            if (new->event == NULL) {
+                free(new);
+                new = NULL;
+            }
+#endif
+        }
     } else {
         new = queue_First(&waiter_cache, cond_waiter);
         queue_Remove(new);
@@ -732,7 +733,6 @@ static cond_waiters_t *get_waiter() {
  
     LeaveCriticalSection(&waiter_cache_cs);
     return new;
- 
 }
  
 static void put_waiter(cond_waiters_t *old) {
