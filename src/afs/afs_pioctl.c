@@ -3326,6 +3326,9 @@ HandleClientContext(struct afs_ioctl *ablob, int *com,
 	uid = afs_nobody;	/* NFS_NOBODY == -2 */
     }
     newcred = crget();
+#if defined(AFS_LINUX26_ENV)
+    newcred->cr_group_info = groups_alloc(0);
+#endif
 #ifdef	AFS_AIX41_ENV
     setuerror(0);
 #endif
