@@ -25,7 +25,9 @@ typedef struct vnode {
 	struct list_head	i_hash;
 	struct list_head	i_list;
 	struct list_head	i_dentry;
-
+#if defined(AFS_LINUX24_ENV)
+        struct list_head        i_dirty_buffers;
+#endif
 	unsigned long		i_ino;
 	unsigned int		i_count;
 	kdev_t			i_dev;
@@ -76,6 +78,8 @@ typedef struct vnode {
 #if defined(AFS_LINUX24_ENV)
         struct pipe_inode_info  *i_pipe;
         struct block_device     *i_bdev;
+        unsigned long           i_dnotify_mask;
+        struct dnotify_struct   *i_dnotify;
 #endif
 
 	unsigned long		i_state;

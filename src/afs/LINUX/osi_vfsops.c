@@ -210,7 +210,11 @@ static LIST_HEAD(dummy_inode_list);
  * pages to disk. So it needs an inode syncing function to update metadata when it
  * has synced some pages of a file to disk.
  */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
+void afs_write_inode(struct inode *ip, int unused) 
+#else
 void afs_write_inode(struct inode *ip) 
+#endif
 {
     /* and put it back on our dummy list. */
     list_del(&ip->i_list);

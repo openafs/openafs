@@ -923,7 +923,10 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 	sema_init(&ip->i_zombie, 1);
 	init_waitqueue_head(&ip->i_wait);
 	spin_lock_init(&ip->i_data.i_shared_lock);
-	INIT_LIST_HEAD(&ip->i_data.pages);
+	INIT_LIST_HEAD(&ip->i_data.clean_pages);
+	INIT_LIST_HEAD(&ip->i_data.dirty_pages);
+	INIT_LIST_HEAD(&ip->i_data.locked_pages);
+	INIT_LIST_HEAD(&ip->i_dirty_buffers);
 	ip->i_data.host = (void*) ip;
 	ip->i_mapping = &ip->i_data;
 #else
