@@ -531,9 +531,9 @@ end;
 function NotUpgradable(pApp)
 begin
 	// The 3.5 beta is not upgradable
-	if ((pApp->iVer.nMajorVersion = 3) && (pApp->iVer.nMinorVersion = 5) && (pApp->iVer.nPatchLevel = 0) && (pApp->iVer.szReleaseType = RELEASE_TYPE_BETA)) then
-		return TRUE;
-	endif;
+//	if ((pApp->iVer.nMajorVersion = 3) && (pApp->iVer.nMinorVersion = 5) && (pApp->iVer.nPatchLevel = 0) && (pApp->iVer.szReleaseType = RELEASE_TYPE_BETA)) then
+//		return TRUE;
+//	endif;
 	
 	return FALSE;
 end;
