@@ -167,4 +167,4 @@ RestartService()
     StartService
 }
 
-RunService "$1"
+RunService "${1:-start}"

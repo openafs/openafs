@@ -139,7 +139,32 @@ struct vnodeopv_desc afs_vnodeop_opv_desc =
 
 #define DROPNAME() FREE(name, M_TEMP)
 
+void 
+darwin_vn_hold(struct vnode *vp)
+{
+    int haveGlock=ISAFS_GLOCK(); 
+    struct vcache *tvc = VTOAFS(vp);
 
+    tvc->states |= CUBCinit;
+    if (haveGlock) AFS_GUNLOCK(); 
+
+    /* vget needed for 0 ref'd vnode in GetVCache to not panic in vref.
+       vref needed for multiref'd vnode in vnop_remove not to deadlock
+       ourselves during vop_inactive, except we also need to not reinst
+       the ubc... so we just call VREF there now anyway. */
+
+    if (VREFCOUNT(tvc) > 0)
+	VREF(((struct vnode *)(vp))); 
+    else
+	afs_vget(afs_globalVFS, 0, (vp));
+
+    if (UBCINFOMISSING(vp) || UBCINFORECLAIMED(vp)) {
+	ubc_info_init(vp); 
+    }
+
+    if (haveGlock) AFS_GLOCK(); 
+    tvc->states &= ~CUBCinit;
+}
 
 int
 afs_vop_lookup(ap)
@@ -190,14 +215,9 @@ afs_vop_lookup(ap)
 
     if (UBCINFOMISSING(vp) ||
 	UBCINFORECLAIMED(vp)) {
-#ifdef AFS_DARWIN14_ENV
-	if (UBCINFORECLAIMED(vp) && ISSET(vp->v_flag, (VXLOCK|VORECLAIM))) {
-	    DROPNAME();
-	    return (ENXIO);
-	} else 
-#endif
 	    ubc_info_init(vp);
     }
+
     /* The parent directory comes in locked.  We unlock it on return
      * unless the caller wants it left locked.
      * we also always return the vnode locked. */
@@ -264,15 +284,9 @@ afs_vop_create(ap)
 	(*ap->a_vpp)->v_vfsp = dvp->v_vfsp;
 	vn_lock(*ap->a_vpp, LK_EXCLUSIVE | LK_RETRY, p);
 	if (UBCINFOMISSING(*ap->a_vpp) || UBCINFORECLAIMED(*ap->a_vpp)) {
-#ifdef AFS_DARWIN14_ENV
-	    if (UBCINFORECLAIMED(*ap->a_vpp) && ISSET((*ap->a_vpp)->v_flag, 
-						      (VXLOCK|VORECLAIM))) {
-		vput(dvp);
-		DROPNAME();
-		return (ENXIO);
-	    } else 
-#endif
-		ubc_info_init(*ap->a_vpp);
+	    vcp->states |= CUBCinit;
+	    ubc_info_init(*ap->a_vpp);
+	    vcp->states &= ~CUBCinit;
 	}
     } else
 	*ap->a_vpp = 0;
@@ -331,7 +345,9 @@ afs_vop_open(ap)
     if (AFSTOV(vc) != vp)
 	panic("AFS open changed vnode!");
 #endif
+#if 0
     osi_FlushPages(vc, ap->a_cred);
+#endif
     AFS_GUNLOCK();
 #ifdef AFS_DARWIN14_ENV
     if (error && didhold)
@@ -357,29 +373,10 @@ afs_vop_close(ap)
 	code = afs_close(avc, ap->a_fflag, ap->a_cred, ap->a_p);
     else
 	code = afs_close(avc, ap->a_fflag, &afs_osi_cred, ap->a_p);
+#if 0
     osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
-    AFS_GUNLOCK();
-#ifdef AFS_DARWIN14_ENV
-    if (UBCINFOEXISTS(ap->a_vp) && ap->a_vp->v_ubcinfo->ui_refcount < 2) {
-	ubc_hold(ap->a_vp);
-	if (ap->a_vp->v_ubcinfo->ui_refcount < 2) {
-	    printf("afs: Imminent ui_refcount panic\n");
-	} else {
-	    printf("afs: WARNING: ui_refcount panic averted\n");
-	}
-    }
-    if (UBCINFOMISSING(ap->a_vp) ||
-	UBCINFORECLAIMED(ap->a_vp)) {
-	if (UBCINFORECLAIMED(ap->a_vp) && ISSET(ap->a_vp->v_flag, 
-						(VXLOCK|VORECLAIM))) {
-	    printf("no ubc for %x in close, reclaim set\n", ap->a_vp);
-	    return (ENXIO);
-	} else {
-	    printf("no ubc for %x in close, put back\n", ap->a_vp);
-	    ubc_info_init(ap->a_vp);
-	}
-    }
 #endif
+    AFS_GUNLOCK();
 
     return code;
 }
@@ -410,6 +407,7 @@ afs_vop_getattr(ap)
 				 * } */ *ap;
 {
     int code;
+
     AFS_GLOCK();
     code = afs_getattr(VTOAFS(ap->a_vp), ap->a_vap, ap->a_cred);
     AFS_GUNLOCK();
@@ -442,9 +440,12 @@ afs_vop_read(ap)
 				 * } */ *ap;
 {
     int code;
-    struct vcache *avc = VTOAFS(ap->a_vp);
+    struct vnode *vp = ap->a_vp;
+    struct vcache *avc = VTOAFS(vp);
     AFS_GLOCK();
+#if 0
     osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
+#endif
     code = afs_read(avc, ap->a_uio, ap->a_cred, 0, 0, 0);
     AFS_GUNLOCK();
     return code;
@@ -520,7 +521,9 @@ afs_vop_pagein(ap)
     auio.uio_resid = aiov.iov_len = size;
     aiov.iov_base = (caddr_t) ioaddr;
     AFS_GLOCK();
+#if 0
     osi_FlushPages(tvc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
+#endif
     code = afs_read(tvc, uio, cred, 0, 0, 0);
     if (code == 0) {
 	ObtainWriteLock(&tvc->lock, 2);
@@ -561,9 +564,12 @@ afs_vop_write(ap)
     struct vcache *avc = VTOAFS(ap->a_vp);
     void *object;
     AFS_GLOCK();
+#if 0
     osi_FlushPages(avc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
-    if (UBCINFOEXISTS(ap->a_vp))
+#endif
+    if (UBCINFOEXISTS(ap->a_vp)) {
 	ubc_clean(ap->a_vp, 1);
+    }
     if (UBCINFOEXISTS(ap->a_vp))
 	osi_VM_NukePages(ap->a_vp, ap->a_uio->uio_offset,
 			 ap->a_uio->uio_resid);
@@ -703,7 +709,9 @@ afs_vop_pageout(ap)
 #endif /* ] USV */
 
     AFS_GLOCK();
+#if 0
     osi_FlushPages(tvc, ap->a_cred);	/* hold bozon lock, but not basic vnode lock */
+#endif
     ObtainWriteLock(&tvc->lock, 1);
     afs_FakeOpen(tvc);
     ReleaseWriteLock(&tvc->lock);
@@ -808,14 +816,15 @@ afs_vop_fsync(ap)
     int wait = ap->a_waitfor == MNT_WAIT;
     int error;
     register struct vnode *vp = ap->a_vp;
+    int haveGlock = ISAFS_GLOCK();
 
-    AFS_GLOCK();
-    /*vflushbuf(vp, wait); */
+    /* afs_vop_lookup glocks, can call us through vinvalbuf from GetVCache */
+    if (!haveGlock) AFS_GLOCK();
     if (ap->a_cred)
 	error = afs_fsync(VTOAFS(vp), ap->a_cred);
     else
 	error = afs_fsync(VTOAFS(vp), &afs_osi_cred);
-    AFS_GUNLOCK();
+    if (!haveGlock) AFS_GUNLOCK();
     return error;
 }
 
@@ -850,25 +859,19 @@ afs_vop_remove(ap)
     error = afs_remove(VTOAFS(dvp), name, cnp->cn_cred);
     AFS_GUNLOCK();
     cache_purge(vp);
-    if (!error && UBCINFOEXISTS(vp)) {
-#ifdef AFS_DARWIN14_ENV
+    vput(dvp);
+    if (!error) {
+        /* necessary so we don't deadlock ourselves in vclean */
+        VOP_UNLOCK(vp, 0, cnp->cn_proc);
+
 	/* If crashes continue in ubc_hold, comment this out */
-	/* (void)ubc_uncache(vp);*/
-#else
-	int wasmapped = ubc_issetflags(vp, UI_WASMAPPED);
-	int hasobjref = ubc_issetflags(vp, UI_HASOBJREF);
-	if (wasmapped)
-	    (void)ubc_uncache(vp);
-	if (hasobjref)
-	    ubc_release(vp);
-	/* WARNING vp may not be valid after this */
-#endif
+        (void)ubc_uncache(vp);
     }
+
     if (dvp == vp)
 	vrele(vp);
     else
 	vput(vp);
-    vput(dvp);
 
     FREE_ZONE(cnp->cn_pnbuf, cnp->cn_pnlen, M_NAMEI);
     DROPNAME();
@@ -933,14 +936,14 @@ afs_vop_rename(ap)
     register struct vnode *fdvp = ap->a_fdvp;
     struct proc *p = fcnp->cn_proc;
 
-	/* Check for cross-device rename.
-	 * For AFS, this means anything not in AFS-space
-	 */
-	if ((0 != strcmp(tdvp->v_mount->mnt_stat.f_fstypename, "afs")) ||
-		(tvp && (0 != strcmp(tvp->v_mount->mnt_stat.f_fstypename, "afs")))) {
-			error = EXDEV;
-			goto abortit;
-	}
+    /* Check for cross-device rename.
+     * For AFS, this means anything not in AFS-space
+     */
+    if ((0 != strcmp(tdvp->v_mount->mnt_stat.f_fstypename, "afs")) ||
+	(tvp && (0 != strcmp(tvp->v_mount->mnt_stat.f_fstypename, "afs")))) {
+	error = EXDEV;
+	goto abortit;
+    }
 
     /*
      * if fvp == tvp, we're just removing one name of a pair of
@@ -1217,30 +1220,25 @@ afs_vop_reclaim(ap)
 				 * struct vnode *a_vp;
 				 * } */ *ap;
 {
-    int error;
+    int error = 0;
     int sl;
     register struct vnode *vp = ap->a_vp;
+    int haveGlock = ISAFS_GLOCK();
+    struct vcache *tvc = VTOAFS(vp);
 
     cache_purge(vp);		/* just in case... */
+    if (!haveGlock)
+	AFS_GLOCK();
+    error = afs_FlushVCache(VTOAFS(vp), &sl);	/* toss our stuff from vnode */
+    if (!haveGlock)
+	AFS_GUNLOCK();
 
-#if 0
-    AFS_GLOCK();
-    error = afs_FlushVCache(VTOAFS(vp), &sl);	/* tosses our stuff from vnode */
-    AFS_GUNLOCK();
-    ubc_unlink(vp);
     if (!error && vp->v_data)
 	panic("afs_reclaim: vnode not cleaned");
-    return error;
-#else
-    if (vp->v_usecount == 2) {
-	vprint("reclaim count==2", vp);
-    } else if (vp->v_usecount == 1) {
-	vprint("reclaim count==1", vp);
-    } else
-	vprint("reclaim bad count", vp);
+    if (!error && (tvc->v != NULL)) 
+        panic("afs_reclaim: vcache not cleaned");
 
-    return 0;
-#endif
+    return error;
 }
 
 int
@@ -1254,6 +1252,7 @@ afs_vop_lock(ap)
 
     if (vp->v_tag == VT_NON)
 	return (ENOENT);
+
     return (lockmgr(&avc->rwlock, ap->a_flags, &vp->v_interlock, ap->a_p));
 }
 
@@ -1265,6 +1264,7 @@ afs_vop_unlock(ap)
 {
     struct vnode *vp = ap->a_vp;
     struct vcache *avc = VTOAFS(vp);
+
     return (lockmgr
 	    (&avc->rwlock, ap->a_flags | LK_RELEASE, &vp->v_interlock,
 	     ap->a_p));
@@ -1282,7 +1282,6 @@ afs_vop_bmap(ap)
 				 * int *a_runb;
 				 * } */ *ap;
 {
-    struct vcache *vcp;
     int error;
     if (ap->a_bnp) {
 	*ap->a_bnp = ap->a_bn * (PAGE_SIZE / DEV_BSIZE);
@@ -1496,4 +1495,14 @@ afs_vop_cmap(ap)
     *ap->a_bpn = (daddr_t) (ap->a_foffset / DEV_BSIZE);
     *ap->a_run = MAX(ap->a_size, AFS_CHUNKSIZE(ap->a_foffset));
     return 0;
+}
+
+void
+afs_darwin_getnewvnode(struct vcache *tvc)
+{
+    while (getnewvnode(VT_AFS, afs_globalVFS, afs_vnodeop_p, &tvc->v)) {
+        /* no vnodes available, force an alloc (limits be damned)! */
+	printf("failed to get vnode\n");
+    }
+    tvc->v->v_data = (void *)tvc;
 }
