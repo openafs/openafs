@@ -845,8 +845,12 @@ afsconf_GetKeys(adir, astr)
 struct afsconf_dir *adir;
 struct afsconf_keys *astr;
 {
+    register afs_int32 code;
+
     LOCK_GLOBAL_MUTEX
-    afsconf_Check(adir);
+    code = afsconf_Check(adir);
+    if (code)
+	return AFSCONF_FAILURE;
     bcopy(adir->keystr, astr, sizeof(struct afsconf_keys));
     UNLOCK_GLOBAL_MUTEX
     return 0;
@@ -863,9 +867,12 @@ afs_int32 afsconf_GetLatestKey(adir, avno, akey)
     register struct afsconf_key *tk;
     register afs_int32 best;
     struct afsconf_key *bestk;
+    register afs_int32 code;
     
     LOCK_GLOBAL_MUTEX
-    afsconf_Check(adir);
+    code = afsconf_Check(adir);
+    if (code)
+	return AFSCONF_FAILURE;
     maxa = adir->keystr->nkeys;
 
     best = -1;	    /* highest kvno we've seen yet */
@@ -895,9 +902,12 @@ char *akey;
 {
     register int i, maxa;
     register struct afsconf_key *tk;
+    register afs_int32 code;
 
     LOCK_GLOBAL_MUTEX
-    afsconf_Check(adir);
+    code = afsconf_Check(adir);
+    if (code)
+	return AFSCONF_FAILURE;
     maxa = adir->keystr->nkeys;
 
     for(tk = adir->keystr->key,i=0;i<maxa;i++,tk++) {
