@@ -1260,6 +1260,13 @@ int DirAccessOK ()
     for (i=0; i<bozo_nbosEntryStats; i++) {
 	struct bozo_bosEntryStats *e = &bozo_bosEntryStats[i];
 	if (!StatEachEntry (e)) {
+	    bozo_Log("unhappy with %s which is a %s that should "
+		     "have at least rights %o, at most rights %o %s\n",
+		     e->path, 
+		     e->dir ? "dir" : "file", 
+		     e->reqPerm, 
+		     e->proPerm, 
+		     e->rootOwner ? ", owned by root" : "");
 	    result = 0;
 	    break;
 	}
