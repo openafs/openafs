@@ -1160,7 +1160,7 @@ int SRXAFSCB_GetCellServDB(
 
     t_name[i] = '\0';
     if (p_name)
-	bcopy(p_name, t_name, i);
+	memcpy(t_name, p_name, i);
 
     ReleaseReadLock(&afs_xcell);
 
@@ -1237,7 +1237,7 @@ int SRXAFSCB_GetLocalCell(
 
     t_name[plen] = '\0';
     if (p_name)
-	bcopy(p_name, t_name, plen);
+	memcpy(t_name, p_name, plen);
 
     ReleaseReadLock(&afs_xcell);
 
