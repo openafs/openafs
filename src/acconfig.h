@@ -1,0 +1,3 @@
+#undef HAVE_CONNECT
+#undef HAVE_GETHOSTBYNAME
+#undef HAVE_SOCKET

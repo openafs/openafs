@@ -1,0 +1,135 @@
+AC_INIT(src/config/stds.h)
+AC_CANONICAL_HOST
+AC_CONFIG_HEADER(src/afsconfig.h)
+
+AC_ARG_ENABLE( obsolete,
+[  --disable-obsolete disable obsolete portions of AFS (mpp, ntp and package)],, enable_obsolete="yes")
+AC_ARG_ENABLE( insecure,
+[  --disable-insecure disable insecure portions of AFS (ftpd, inetd, rcp, rlogind and rsh)],, enable_insecure="yes")
+AC_ARG_ENABLE( afsdb,
+[  --enable-afsdb enable AFSDB RR support],, enable_afsdb="no")
+AC_ARG_ENABLE( namei-fileserver,
+[  --enable-namei-fileserver force compilation of namei fileserver in preference to inode fileserver],, enable_namei_fileserver="no")
+
+AC_PROG_CC
+
+dnl weird ass systems
+AC_AIX
+AC_ISC_POSIX
+AC_MINIX
+
+dnl Various compiler setup.
+AC_C_BIGENDIAN
+AC_C_INLINE
+AC_C_CONST
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_TYPE_SIGNAL
+
+dnl Checks for programs.
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_RANLIB
+
+dnl fix to use config.sub output
+AC_MSG_CHECKING(your OS)
+system=$host
+IRIX=no
+case $system in
+        *-linux*)
+                LINUX=1
+                AC_MSG_RESULT(Linux)
+                ;;
+        *-solaris*)
+                SYSV=1
+                SVR4=1
+                SOLARIS=1
+                AC_MSG_RESULT(Solaris)
+                if test "$CC" = cc; then
+                        CFLAGS="$CFLAGS -mt"
+                fi
+                ;;
+        *-hpux*)
+                hpux=1
+                AC_MSG_RESULT(HP-UX)
+                CFLAGS="$CFLAGS -D_HPUX_SOURCE -DHPUX"
+                if test "$CC" = cc; then
+                        CFLAGS="$CFLAGS -Aa"
+                fi
+                ;;
+        *-irix*)
+                IRIX=yes
+                AC_MSG_RESULT(IRIX)
+                ;;
+        *-aix*)
+                AIX=yes
+                AC_MSG_RESULT(AIX)
+                ;;
+        *)
+                AC_MSG_RESULT($system)
+                ;;
+esac
+
+if test ${IRIX} = yes; then
+        echo Skipping library tests because they confuse Irix.
+else
+  AC_CHECK_FUNCS(socket)
+
+  if test "$ac_cv_func_socket" = no; then
+    for lib in socket inet; do
+        if test "$HAVE_SOCKET" != 1; then
+                AC_CHECK_LIB($lib, socket,LIBS="$LIBS -l$lib";HAVE_SOCKET=1;AC_DEFINE(HAVE_SOCKET))
+        fi
+    done
+  fi
+  
+  AC_CHECK_FUNCS(connect)       
+
+  if test "$ac_cv_func_connect" = no; then
+    for lib in nsl; do
+        if test "$HAVE_CONNECT" != 1; then
+                AC_CHECK_LIB($lib, connect,LIBS="$LIBS -l$lib";HAVE_CONNECT=1;AC_DEFINE(HAVE_CONNECT))
+        fi
+    done
+  fi
+
+  AC_CHECK_FUNCS(gethostbyname)
+  if test "$ac_cv_func_gethostbyname" = no; then
+        for lib in dns nsl resolv; do
+          if test "$HAVE_GETHOSTBYNAME" != 1; then
+            AC_CHECK_LIB($lib, gethostbyname, LIBS="$LIBS -l$lib";HAVE_GETHOSTBYNAME=1;AC_DEFINE(HAVE_GETHOSTBYNAME))
+          fi
+        done    
+  fi    
+fi
+
+PTHREAD_LIBS=error
+AC_CHECK_LIB(pthread, pthread_attr_init,
+             PTHREAD_LIBS="-lpthread")
+if test "x$PTHREAD_LIBS" = xerror; then
+        AC_CHECK_LIB(pthreads, pthread_attr_init,
+                PTHREAD_LIBS="-lpthreads")
+fi
+if test "x$PTHREAD_LIBS" = xerror; then
+        AC_CHECK_LIB(c_r, pthread_attr_init,
+                PTHREAD_LIBS="-lc_r")
+fi
+if test "x$PTHREAD_LIBS" = xerror; then
+        AC_CHECK_FUNC(pthread_attr_init, PTHREAD_LIBS="")
+fi
+if test "x$PTHREAD_LIBS" = xerror; then
+        AC_MSG_ERROR(*** Unable to locate working posix thread library ***)
+fi
+AC_SUBST(PTHREAD_LIBS)
+
+dnl checks for header files.
+AC_HEADER_STDC
+AC_HEADER_SYS_WAIT
+AC_HEADER_DIRENT
+AC_CHECK_HEADERS(stdlib.h string.h unistd.h fcntl.h sys/time.h sys/file.h)
+AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
+AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h)
+AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h)
+AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h)
+
+AC_CHECK_FUNCS(utimes random srandom getdtablesize snprintf re_comp re_exec)
