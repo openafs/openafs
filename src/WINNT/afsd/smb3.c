@@ -232,6 +232,8 @@ long smb_ReceiveV3UserLogoffX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *ou
     return 0;
 }
 
+#define SMB_SUPPORT_SEARCH_BITS        0x0001
+
 long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 {
     smb_tid_t *tidp;
@@ -281,7 +283,10 @@ long smb_ReceiveV3TreeConnectX(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *o
     smb_ReleaseTID(tidp);
 
 	if (vcp->flags & SMB_VCFLAG_USENT)
-		smb_SetSMBParm(outp, 2, 0);	/* OptionalSupport bits */
+    {
+        int policy = smb_FindShareCSCPolicy(shareName);
+        smb_SetSMBParm(outp, 2, SMB_SUPPORT_SEARCH_BITS | (policy << 2));
+    }
 
 	((smb_t *)outp)->tid = newTid;
 	((smb_t *)inp)->tid = newTid;

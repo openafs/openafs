@@ -339,6 +339,7 @@ DWORD APIENTRY NPLogonNotify(
     int sleepInterval = DEFAULT_SLEEP_INTERVAL;        /* seconds        */
     BOOLEAN afsWillAutoStart;
 	CHAR RandomName[MAXRANDOMNAMELEN];
+    BOOLEAN uppercased_name = TRUE;
 
     /* Initialize Logon Script to none */
 	*lpLogonScript=NULL;
@@ -355,6 +356,14 @@ DWORD APIENTRY NPLogonNotify(
 	/* Make sure AD-DOMANS sent from login that is sent to us is striped */
     ctemp = strchr(uname, '@');
     if (ctemp) *ctemp = 0;
+
+    /* is the name all uppercase? */
+    for ( ctemp = uname; *ctemp ; ctemp++) {
+        if ( islower(*ctemp) ) {
+            uppercased_name = FALSE;
+            break;
+        }
+    }
 
 	(void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_CLIENT_PARMS_KEY,
                         0, KEY_QUERY_VALUE, &NPKey);
@@ -423,6 +432,13 @@ DWORD APIENTRY NPLogonNotify(
                                                 &reason);
 			DebugEvent("AFS AfsLogon - (INTEGRATED only)ka_UserAuthenticateGeneral2","Code[%x]",
                         code);
+            if ( code && code != KTC_NOCM && code != KTC_NOCMRPC && uppercased_name ) {
+                for ( ctemp = uname; *ctemp ; ctemp++) {
+                    *ctemp = tolower(*ctemp);
+                }
+                uppercased_name = FALSE;
+                continue;
+            }
 		} 
         /* if Integrated Logon and High Security pass random generated name*/
         else if (ISLOGONINTEGRATED(LogonOption) && ISHIGHSECURITY(LogonOption))
@@ -432,6 +448,14 @@ DWORD APIENTRY NPLogonNotify(
                                                 &reason);
 			DebugEvent("AFS AfsLogon - (Both)ka_UserAuthenticateGeneral2","Code[%x] RandomName[%s]",
                        code, RandomName);
+
+            if ( code && code != KTC_NOCM && code != KTC_NOCMRPC && uppercased_name ) {
+                for ( ctemp = uname; *ctemp ; ctemp++) {
+                    *ctemp = tolower(*ctemp);
+                }
+                uppercased_name = FALSE;
+                continue;
+            }
 		} else {  
             /*JUST check to see if its running*/
 		    if (IsServiceRunning())

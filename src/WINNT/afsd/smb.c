@@ -1306,6 +1306,48 @@ int smb_FindShare(smb_vc_t *vcp, smb_packet_t *inp, char *shareName,
     return 0;
 }
 
+/* Client-side offline caching policy types */
+#define CSC_POLICY_MANUAL 0
+#define CSC_POLICY_DOCUMENTS 1
+#define CSC_POLICY_PROGRAMS 2
+#define CSC_POLICY_DISABLE 3
+
+int smb_FindShareCSCPolicy(char *shareName)
+{
+	DWORD len;
+	char policy[1024];
+	char sbmtpath[256];
+
+#ifndef DJGPP
+        strcpy(sbmtpath, "afsdsbmt.ini");
+#else /* DJGPP */
+        strcpy(sbmtpath, cm_confDir);
+        strcat(sbmtpath, "/afsdsbmt.ini");
+#endif /* !DJGPP */
+	len = GetPrivateProfileString("CSC Policy", shareName, "",
+				      policy, sizeof(policy), sbmtpath);
+	if (len == 0 || len == sizeof(policy) - 1) {
+		return CSC_POLICY_MANUAL;
+	}
+	
+	if (stricmp(policy, "documents") == 0)
+	{
+		return CSC_POLICY_DOCUMENTS;
+	}
+	
+	if (stricmp(policy, "programs") == 0)
+	{
+		return CSC_POLICY_PROGRAMS;
+	}
+	
+	if (stricmp(policy, "disable") == 0)
+	{
+		return CSC_POLICY_DISABLE;
+	}
+	
+	return CSC_POLICY_MANUAL;
+}
+
 /* find a dir search structure by cookie value, and return it held.
  * Must be called with smb_globalLock held.
  */

@@ -381,6 +381,8 @@ extern void smb_ReleaseFID(smb_fid_t *fidp);
 
 extern int smb_FindShare(smb_vc_t *vcp, smb_packet_t *inp, char *shareName, char **pathNamep);
 
+extern int smb_FindShareCSCPolicy(char *shareName);
+
 extern smb_dirSearch_t *smb_FindDirSearchNL(long cookie);
 
 extern void smb_DeleteDirSearch(smb_dirSearch_t *dsp);

@@ -188,7 +188,7 @@ LOGON_DLLLIBS =\
 	$(DESTDIR)\lib\libafsconf.lib
 
 $(LOGON_DLLFILE): $(LOGON_DLLOBJS) $(LOGON_DLLLIBS)
-	$(DLLGUILINK) $(LOGONLINKFLAGS) -def:afslogon.def dnsapi.lib
+	$(DLLGUILINK) $(LOGONLINKFLAGS) -def:afslogon.def dnsapi.lib secur32.lib
 	$(DLLPREP)
 	$(COPY) $*.lib $(DESTDIR)\lib
 	$(DEL) $*.lib $*.exp

@@ -44,6 +44,7 @@ static struct ubik_client *uclient;
 #endif /* not WIN32 */
 
 static MemDumpCmd(struct cmd_syndesc *asp);
+static CSCPolicyCmd(struct cmd_syndesc *asp);
 
 extern afs_int32 VL_GetEntryByNameO();
 
@@ -3013,6 +3014,13 @@ char **argv; {
     cmd_AddParm(ts, "-begin", CMD_FLAG, CMD_OPTIONAL, "set a memory checkpoint");
     cmd_AddParm(ts, "-end", CMD_FLAG, CMD_OPTIONAL, "dump memory allocs");
     
+    ts = cmd_CreateSyntax("cscpolicy", CSCPolicyCmd, 0, "change client side caching policy for AFS shares");
+    cmd_AddParm(ts, "-share", CMD_SINGLE, CMD_OPTIONAL, "AFS share");
+    cmd_AddParm(ts, "-manual", CMD_FLAG, CMD_OPTIONAL, "manual caching of documents");
+    cmd_AddParm(ts, "-programs", CMD_FLAG, CMD_OPTIONAL, "automatic caching of programs and documents");
+    cmd_AddParm(ts, "-documents", CMD_FLAG, CMD_OPTIONAL, "automatic caching of documents");
+    cmd_AddParm(ts, "-disable", CMD_FLAG, CMD_OPTIONAL, "disable caching");
+
     code = cmd_Dispatch(argc, argv);
 
 #ifndef WIN32
@@ -3106,3 +3114,58 @@ static MemDumpCmd(struct cmd_syndesc *asp)
     return 0;
 }
 
+static CSCPolicyCmd(struct cmd_syndesc *asp)
+{
+	struct cmd_item *ti;
+	char *share = NULL;
+	char sbmtpath[256];
+	char *policy;
+	
+	for(ti=asp->parms[0].items; ti;ti=ti->next) {
+		share = ti->data;
+		if (share)
+		{
+			break;
+		}
+	}
+	
+	if (share)
+	{
+		policy = "manual";
+		
+		if (asp->parms[1].items)
+			policy = "manual";
+		if (asp->parms[2].items)
+			policy = "programs";
+		if (asp->parms[3].items)
+			policy = "documents";
+		if (asp->parms[4].items)
+			policy = "disable";
+		
+		strcpy(sbmtpath, "afsdsbmt.ini");
+		WritePrivateProfileString("CSC Policy", share, policy, sbmtpath);
+		
+		printf("CSC policy on share \"%s\" changed to \"%s\".\n\n", share, policy);
+		printf("Close all applications that accessed files on this share or restart AFS Client for the change to take effect.\n"); 
+	}
+	else
+	{
+		char policies[1024];
+		DWORD len = sizeof(policies);
+
+		/* list current csc policies */
+		strcpy(sbmtpath, "afsdsbmt.ini");
+				
+		GetPrivateProfileSection("CSC Policy", policies, len, sbmtpath);
+		
+		printf("Current CSC policies:\n");
+		policy = policies;
+		while (policy[0])
+		{
+			printf("  %s\n", policy);
+			policy += strlen(policy) + 1;
+		}
+	}
+
+	return (0);
+}
