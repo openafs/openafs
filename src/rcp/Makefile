@@ -54,13 +54,13 @@ rcp: ${OBJS} ${LIBS}
         esac
 
 ../rsh/rcmd.o: ../rsh/rcmd.c
-	(cd ../rsh ; make rcmd.o SRCDIR=${SRCDIR} DESTDIR=${DESTDIR})
+	(cd ../rsh ; $(MAKE) rcmd.o SRCDIR=${SRCDIR} DESTDIR=${DESTDIR})
 
 ../rsh/herror.o: ../rsh/herror.c
-	(cd ../rsh ; make herror.o SRCDIR=${SRCDIR} DESTDIR=${DESTDIR})
+	(cd ../rsh ; $(MAKE) herror.o SRCDIR=${SRCDIR} DESTDIR=${DESTDIR})
 
 ../inetd/ta-rauth.o: ../inetd/ta-rauth.c
-	(cd ../inetd ; make ta-rauth.o SRCDIR=${SRCDIR} DESTDIR=${DESTDIR})
+	(cd ../inetd ; $(MAKE) ta-rauth.o SRCDIR=${SRCDIR} DESTDIR=${DESTDIR})
 
 clean:
 clean:

@@ -66,13 +66,13 @@ rexecd: rexecd.o ${ALIBS}
 
 
 ../login/libutil.a : ../login/util_login.c ../login/util_logout.c ../login/util_logwtmp.c
-	( cd ../login ; make libutil.a )
+	( cd ../login ; $(MAKE) libutil.a )
 
 ../rsh/rcmd.o : ../rsh/rcmd.c
-	(cp AFS_component_version_number.c ../rsh/AFS_component_version_number.c ;  cd ../rsh ; make rsh.o )
+	(cp AFS_component_version_number.c ../rsh/AFS_component_version_number.c ;  cd ../rsh ; $(MAKE) rsh.o )
 
 ../rsh/herror.o : ../rsh/herror.c
-	( cd ../rsh ; make herror.o )
+	( cd ../rsh ; $(MAKE) herror.o )
 
 clean:
 	rm -f ${OBJS} core rlogind AFS_component_version_number.c

@@ -13,7 +13,8 @@ include $(DESTDIR)../obj/config/Makefile.${SYS_NAME}
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 # System specific build commands and flags
-CC = /opt/SUNWspro/bin/cc
+# Redundant
+# CC = /opt/SUNWspro/bin/cc
 DEFINES= -D_REENTRANT -DAFSDEBUG -DKERNEL -DUKERNEL -DAFS -DVICE
 CFLAGS=-I. -I.. ${FSINCLUDES} $(DEFINES) $(KOPTS) ${DBUG}
 OPTF=-O
@@ -73,9 +74,9 @@ $(LIBUAFS): $(UAFSOBJ)
 
 $(LIBAFSWEB): $(AFSWEBOBJ) ${DES}/libdes.a
 	-rm -f $(LIBAFSWEB)
-	ld -G -M../mapfile -o $(LIBAFSWEB) $(AFSWEBOBJ) ${DES}/libdes.a $(WEBLIBS)
+	${LD} -G -M../mapfile -o $(LIBAFSWEB) $(AFSWEBOBJ) ${DES}/libdes.a $(WEBLIBS)
 
 
 $(LIBAFSWEBKRB): $(AFSWEBOBJKRB) $(DES)/libdes.a
 	-rm -f $(LIBAFSWEBKRB)
-	ld -G -M../mapfile -o $(LIBAFSWEBKRB) $(AFSWEBOBJKRB) ${DES}/libdes.a $(WEBLIBS)
+	${LD} -G -M../mapfile -o $(LIBAFSWEBKRB) $(AFSWEBOBJKRB) ${DES}/libdes.a $(WEBLIBS)

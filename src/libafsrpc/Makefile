@@ -109,9 +109,9 @@ LIBOBJS = \
 
 system install:
 	if [ -f "../des/Makefile" ] ; then \
-		make install.lib ; \
+		$(MAKE) install.lib ; \
 	else \
-		make libstub ; \
+		$(MAKE) libstub ; \
 	fi
 
 install.lib: ${DESTDIR}lib/libafsrpc.a
