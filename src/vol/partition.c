@@ -5,6 +5,8 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
+ *
+ * Portions Copyright (c) 2003 Apple Computer, Inc.
  */
 
 /*
@@ -18,7 +20,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.13 2003/01/02 03:55:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/partition.c,v 1.14 2004/01/10 21:12:32 hartmans Exp $");
 
 #include <ctype.h>
 #ifdef AFS_NT40_ENV
@@ -1033,6 +1035,9 @@ void VLockPartition_r(char *name)
     unsigned int	*globalMask;
     int			globalMaskIndex;
 #endif /* defined(AFS_HPUX_ENV) */
+#if defined(AFS_DARWIN_ENV)
+    char lockfile[MAXPATHLEN];
+#endif /* defined(AFS_DARWIN_ENV) */
     
     if (!dp) return;	/* no partition, will fail later */
     if (dp->lock_fd != -1) return;
@@ -1040,13 +1045,21 @@ void VLockPartition_r(char *name)
 #if    defined(AFS_SUN5_ENV) || defined(AFS_AIX41_ENV)
     partitionName = dp->devName;
     code = O_RDWR;
+#elif defined(AFS_DARWIN_ENV)
+    strlcpy((partitionName = lockfile), dp->name, sizeof(lockfile));
+    strlcat(lockfile, "/.lock.afs", sizeof(lockfile));
+    code = O_RDONLY | O_CREAT;
 #else
     partitionName = dp->name;
     code = O_RDONLY;
 #endif
 
     for (retries=25; retries; retries--) {
+#if defined(AFS_DARWIN_ENV)
+        dp->lock_fd = open(partitionName, code, 0600);
+#else /* ! defined(AFS_DARWIN_ENV) */
         dp->lock_fd = open(partitionName, code);
+#endif /* defined(AFS_DARWIN_ENV) */
         if (dp->lock_fd != -1) break;
         pausing.tv_sec = 0;
         pausing.tv_usec = 500000;

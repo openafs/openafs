@@ -1,7 +1,7 @@
 {
   Description     = "OpenAFS network file system";
   Provides        = ("AFS");
-  Requires        = ("Resolver");
+  Requires        = ("Resolver", "Disks");
   OrderPreference = "None";
   Messages =
   {

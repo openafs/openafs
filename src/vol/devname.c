@@ -10,7 +10,7 @@
 #include <sys/param.h>
 #include <afsconfig.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/devname.c,v 1.2 2003/11/20 21:43:49 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/devname.c,v 1.3 2004/01/10 21:12:32 hartmans Exp $");
 
 #include <afs/param.h>
 #include <rx/xdr.h>
@@ -85,10 +85,6 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/vol/devname.c,v 1.2 2003/11/20 21:43:49
 #include <sys/time.h>
 #endif /* ITIMER_REAL */
 #include "partition.h"
-#ifdef AFS_LINUX22_ENV
-#include <ext2fs/ext2_fs.h>
-#define ROOTINO EXT2_ROOT_INO /* Assuming we do this on ext2, of course. */
-#endif
 
 /* ensure that we don't have a "/" instead of a "/dev/rxd0a" type of device.
  * returns pointer to static storage; copy it out quickly!
@@ -179,7 +175,7 @@ dev_t adev; {
 	if (stat(part, &status) == -1) {
 	    continue;
 	}
-#ifndef AFS_SGI_XFS_IOPS_ENV
+#if !defined(AFS_SGI_XFS_IOPS_ENV) && !defined(AFS_LINUX22_ENV)
 	if ((status.st_ino != ROOTINO) /*|| ((status.st_mode & S_IFMT) != S_IFBLK)*/) {
 	    continue;
 	}
