@@ -7,8 +7,9 @@ openafs (1.2.9-1) unstable; urgency=low
     not mounted, Closes: #188000
   * Report i386_linux24 not linux22 on i386, Closes: #187789
   * Convert to po-debconf, patch from Andre Luis Lopes, CLoses: #187901
+  * Fix from Lamont to build on hppa, Closes: #179679
 
- -- Sam Hartman <hartmans@mit.edu>  Sun, 13 Apr 2003 17:00:43 -0400
+ -- Sam Hartman <hartmans@debian.org>  Sun, 13 Apr 2003 17:21:54 -0400
 
 openafs (1.2.8-4) unstable; urgency=low
 
