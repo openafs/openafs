@@ -692,3 +692,5 @@ StoreData64(
   AFSVolSync *Sync
 ) split = 65538;
 
+GiveUpAllCallBacks(
+) = 65539;
