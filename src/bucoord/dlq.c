@@ -100,7 +100,7 @@ dlqMoveb(fromptr, toptr)
     DLQ_ASSERT_HEAD(toptr);
 
     if (dlqEmpty(fromptr))
-	return (0);
+	return;
 
     tailptr = toptr->dlq_prev;
 
@@ -115,7 +115,7 @@ dlqMoveb(fromptr, toptr)
 
     fromptr->dlq_next = fromptr;
     fromptr->dlq_prev = fromptr;
-    return (0);
+    return;
 }
 
 /* dlqUnlinkb
