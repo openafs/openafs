@@ -313,7 +313,7 @@ int rxkad_CheckResponse (struct rx_securityClass *aobj,
 				  kvno,
 				  client.name, client.instance, client.cell,
 				  &sessionkey, &host, &start, &end);
-	if (code) return RXKADBADTICKET;
+	if (code) return code;
     }
 
     /*
