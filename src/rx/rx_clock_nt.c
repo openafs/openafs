@@ -27,6 +27,7 @@ struct clock clock_now;	/* The last elapsed time ready by clock_GetTimer */
 int clock_haveCurrentTime;
 
 int clock_nUpdates;		/* The actual number of clock updates */
+static int clockInitialized = 0;
 
 /* Timing tests show that we can compute times at about 4uS per call. */
 LARGE_INTEGER rxi_clock0;
@@ -38,10 +39,19 @@ void clock_Init()
 	exit(1);
     }
 
+    clockInitialized = 1;
     (void) QueryPerformanceCounter(&rxi_clock0);
 
     clock_UpdateTime();
 }
+
+#ifndef KERNEL
+/* Make clock uninitialized. */
+clock_UnInit()
+{
+    clockInitialized = 0;
+}
+#endif
 
 void clock_UpdateTime(void)
 {

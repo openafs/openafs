@@ -91,6 +91,10 @@ extern afs_int32 afs_termState;
 # include <afs/rxgen_consts.h>
 #endif /* KERNEL */
 
+#ifdef RXDEBUG
+extern afs_uint32 LWP_ThreadId();
+#endif /* RXDEBUG */
+
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 struct rx_tq_debug {
     afs_int32 rxi_start_aborted; /* rxi_start awoke after rxi_Send in error. */
@@ -6256,12 +6260,43 @@ void shutdown_rx(void)
 {
     struct rx_serverQueueEntry *np;
     register int i, j;
+    register struct rx_call *call;
+    register struct rx_serverQueueEntry *sq;
 
     LOCK_RX_INIT
     if (rxinit_status == 1) {
 	UNLOCK_RX_INIT
 	return; /* Already shutdown. */
     }
+
+#ifndef KERNEL
+    rx_port = 0;
+#ifndef AFS_PTHREAD_ENV
+    FD_ZERO(&rx_selectMask);
+#endif /* AFS_PTHREAD_ENV */
+    rxi_dataQuota = RX_MAX_QUOTA;
+#ifndef AFS_PTHREAD_ENV
+    rxi_StopListener();
+#endif /* AFS_PTHREAD_ENV */
+    shutdown_rxevent();
+    rx_SetEpoch(0);
+#ifndef AFS_PTHREAD_ENV
+#ifndef AFS_USE_GETTIMEOFDAY
+    clock_UnInit();
+#endif /* AFS_USE_GETTIMEOFDAY */
+#endif /* AFS_PTHREAD_ENV */
+
+    while (!queue_IsEmpty(&rx_freeCallQueue)) {
+        call = queue_First(&rx_freeCallQueue, rx_call);
+        queue_Remove(call);
+        rxi_Free(call, sizeof(struct rx_call));
+    }
+
+    while (!queue_IsEmpty(&rx_idleServerQueue)) {
+        sq = queue_First(&rx_idleServerQueue, rx_serverQueueEntry);
+        queue_Remove(sq);                                                    
+    }
+#endif /* KERNEL */
 
     {	
 	struct rx_peer **peer_ptr, **peer_end;
