@@ -386,6 +386,12 @@ maximum number of Status Cache entries.  Each entry requires 164K.  Only
 those entries which are used are allocated.
 
 
+26. "Netbios over TCP/IP" must be active on the machine in order for
+communication with the AFS Client Service to succeed.  If "Netbios over
+TCP/IP" is disabled on the machine, then communication with the AFS Client
+Service will be impossible.
+
+
 ------------------------------------------------------------------------
 
 Reporting Bugs:

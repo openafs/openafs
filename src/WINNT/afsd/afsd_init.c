@@ -102,7 +102,7 @@ int cm_dnsEnabled = 1;
 extern initUpperCaseTable();
 void afsd_initUpperCaseTable() 
 {
-	initUpperCaseTable();
+    initUpperCaseTable();
 }
 
 void
@@ -152,16 +152,16 @@ afsi_start()
     }
 
     SetFilePointer(afsi_file, 0, NULL, FILE_END);
-	GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, u, sizeof(u));
-	StringCbCatA(t, sizeof(t), ": Create log file\n");
-	StringCbCatA(u, sizeof(u), ": Created log file\n");
-	WriteFile(afsi_file, t, strlen(t), &zilch, NULL);
-	WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
+    GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, u, sizeof(u));
+    StringCbCatA(t, sizeof(t), ": Create log file\n");
+    StringCbCatA(u, sizeof(u), ": Created log file\n");
+    WriteFile(afsi_file, t, strlen(t), &zilch, NULL);
+    WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
     p = "PATH=";
     path = getenv("PATH");
-	WriteFile(afsi_file, p, strlen(p), &zilch, NULL);
-	WriteFile(afsi_file, path, strlen(path), &zilch, NULL);
-	WriteFile(afsi_file, "\n", 1, &zilch, NULL);
+    WriteFile(afsi_file, p, strlen(p), &zilch, NULL);
+    WriteFile(afsi_file, path, strlen(path), &zilch, NULL);
+    WriteFile(afsi_file, "\n", 1, &zilch, NULL);
 }
 
 static int afsi_log_useTimestamp = 1;
@@ -169,16 +169,16 @@ static int afsi_log_useTimestamp = 1;
 void
 afsi_log(char *pattern, ...)
 {
-	char s[256], t[100], d[100], u[512];
-	int zilch;
-	va_list ap;
-	va_start(ap, pattern);
+    char s[256], t[100], d[100], u[512];
+    int zilch;
+    va_list ap;
+    va_start(ap, pattern);
 
-	StringCbVPrintfA(s, sizeof(s), pattern, ap);
+    StringCbVPrintfA(s, sizeof(s), pattern, ap);
     if ( afsi_log_useTimestamp ) {
         GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, t, sizeof(t));
-		GetDateFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, d, sizeof(d));
-		StringCbPrintfA(u, sizeof(u), "%s %s: %s\n", d, t, s);
+        GetDateFormat(LOCALE_SYSTEM_DEFAULT, 0, NULL, NULL, d, sizeof(d));
+        StringCbPrintfA(u, sizeof(u), "%s %s: %s\n", d, t, s);
         if (afsi_file != INVALID_HANDLE_VALUE)
             WriteFile(afsi_file, u, strlen(u), &zilch, NULL);
 #ifdef NOTSERVICE
@@ -196,25 +196,25 @@ afsi_log(char *pattern, ...)
 
 void afsd_ForceTrace(BOOL flush)
 {
-	HANDLE handle;
-	int len;
-	char buf[256];
+    HANDLE handle;
+    int len;
+    char buf[256];
 
-	if (!logReady) 
+    if (!logReady) 
         return;
 
-	len = GetTempPath(sizeof(buf)-10, buf);
-	StringCbCopyA(&buf[len], sizeof(buf)-len, "/afsd.log");
-	handle = CreateFile(buf, GENERIC_WRITE, FILE_SHARE_READ,
-			    NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (handle == INVALID_HANDLE_VALUE) {
-		logReady = 0;
-		osi_panic("Cannot create log file", __FILE__, __LINE__);
-	}
-	osi_LogPrint(afsd_logp, handle);
-	if (flush)
-		FlushFileBuffers(handle);
-	CloseHandle(handle);
+    len = GetTempPath(sizeof(buf)-10, buf);
+    StringCbCopyA(&buf[len], sizeof(buf)-len, "/afsd.log");
+    handle = CreateFile(buf, GENERIC_WRITE, FILE_SHARE_READ,
+                         NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (handle == INVALID_HANDLE_VALUE) {
+        logReady = 0;
+        osi_panic("Cannot create log file", __FILE__, __LINE__);
+    }
+    osi_LogPrint(afsd_logp, handle);
+    if (flush)
+        FlushFileBuffers(handle);
+    CloseHandle(handle);
 }
 
 static void
@@ -974,12 +974,12 @@ int afsd_InitCM(char **reasonP)
 
 int afsd_InitDaemons(char **reasonP)
 {
-	long code;
-	cm_req_t req;
+    long code;
+    cm_req_t req;
 
-	cm_InitReq(&req);
+    cm_InitReq(&req);
 
-	/* this should really be in an init daemon from here on down */
+    /* this should really be in an init daemon from here on down */
 
     if (!cm_freelanceEnabled) {
 		osi_Log0(afsd_logp, "Loading Root Volume from cell");
@@ -993,39 +993,39 @@ int afsd_InitDaemons(char **reasonP)
         }
     }
 
-	/* compute the root fid */
-	if (!cm_freelanceEnabled) {
+    /* compute the root fid */
+    if (!cm_freelanceEnabled) {
         cm_rootFid.cell = cm_rootCellp->cellID;
         cm_rootFid.volume = cm_GetROVolumeID(cm_rootVolumep);
         cm_rootFid.vnode = 1;
         cm_rootFid.unique = 1;
-	}
-	else
+    }
+    else
         cm_FakeRootFid(&cm_rootFid);
         
     code = cm_GetSCache(&cm_rootFid, &cm_rootSCachep, cm_rootUserp, &req);
-	afsi_log("cm_GetSCache code %x scache %x", code,
+    afsi_log("cm_GetSCache code %x scache %x", code,
              (code ? (cm_scache_t *)-1 : cm_rootSCachep));
-	if (code != 0) {
-		*reasonP = "unknown error";
-		return -1;
-	}
+    if (code != 0) {
+        *reasonP = "unknown error";
+        return -1;
+    }
 
-	cm_InitDaemon(numBkgD);
-	afsi_log("cm_InitDaemon");
+    cm_InitDaemon(numBkgD);
+    afsi_log("cm_InitDaemon");
 
-	return 0;
+    return 0;
 }
 
 int afsd_InitSMB(char **reasonP, void *aMBfunc)
 {
-	/* Do this last so that we don't handle requests before init is done.
+    /* Do this last so that we don't handle requests before init is done.
      * Here we initialize the SMB listener.
      */
     smb_Init(afsd_logp, cm_NetbiosName, smb_UseV3, LANadapter, numSvThreads, aMBfunc);
     afsi_log("smb_Init");
 
-	return 0;
+    return 0;
 }
 
 #ifdef ReadOnly

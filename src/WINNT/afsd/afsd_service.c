@@ -11,6 +11,7 @@
 #include <afs/stds.h>
 
 #include <windows.h>
+#include <psapi.h>
 #include <string.h>
 #include <setjmp.h>
 #include "afsd.h"
@@ -421,6 +422,136 @@ static void DismountGlobalDrives()
     RegCloseKey(hKey);
 }
 
+DWORD
+GetVersionInfo( CHAR * filename, CHAR * szOutput, DWORD dwOutput )
+{
+    DWORD dwVersionHandle;
+    LPVOID pVersionInfo = 0;
+    DWORD retval = 0;
+    LPDWORD pLangInfo = 0;
+    LPTSTR szVersion = 0;
+    UINT len = 0;
+    TCHAR szVerQ[] = TEXT("\\StringFileInfo\\12345678\\FileVersion");
+    DWORD size = GetFileVersionInfoSize(filename, &dwVersionHandle);
+
+    if (!size) {
+        afsi_log("GetFileVersionInfoSize failed");
+        return GetLastError();
+    }
+
+    pVersionInfo = malloc(size);
+    if (!pVersionInfo) {
+        afsi_log("out of memory 1");
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    GetFileVersionInfo(filename, dwVersionHandle, size, pVersionInfo);
+    if (retval = GetLastError())
+    {
+        afsi_log("GetFileVersionInfo failed: %d", retval);
+        goto cleanup;
+    }
+
+    VerQueryValue(pVersionInfo, TEXT("\\VarFileInfo\\Translation"),
+                       (LPVOID*)&pLangInfo, &len);
+    if (retval = GetLastError())
+    {
+        afsi_log("VerQueryValue 1 failed: %d", retval);
+        goto cleanup;
+    }
+
+    wsprintf(szVerQ,
+             TEXT("\\StringFileInfo\\%04x%04x\\FileVersion"),
+             LOWORD(*pLangInfo), HIWORD(*pLangInfo));
+
+    VerQueryValue(pVersionInfo, szVerQ, (LPVOID*)&szVersion, &len);
+    if (retval = GetLastError())
+    {
+        /* try again with language 409 since the old binaries were tagged wrong */
+        wsprintf(szVerQ,
+                  TEXT("\\StringFileInfo\\0409%04x\\FileVersion"),
+                  HIWORD(*pLangInfo));
+
+        VerQueryValue(pVersionInfo, szVerQ, (LPVOID*)&szVersion, &len);
+        if (retval = GetLastError()) {
+            afsi_log("VerQueryValue 2 failed: [%s] %d", szVerQ, retval);
+            goto cleanup;
+        }
+    }
+    snprintf(szOutput, dwOutput, TEXT("%s"), szVersion);
+    szOutput[dwOutput - 1] = 0;
+
+ cleanup:
+    if (pVersionInfo)
+        free(pVersionInfo);
+
+    return retval;
+}
+
+
+BOOL AFSModulesVerify(void)
+{
+    CHAR filename[1024];
+    CHAR afsdVersion[128];
+    CHAR modVersion[128];
+    CHAR checkName[1024];
+    HMODULE hMods[1024];
+    HANDLE hProcess;
+    DWORD cbNeeded;
+    unsigned int i;
+    BOOL success = TRUE;
+
+    if (!GetModuleFileName(NULL, filename, sizeof(filename)))
+        return FALSE;
+
+    if (GetVersionInfo(filename, afsdVersion, sizeof(afsdVersion)))
+        return FALSE;
+
+    afsi_log("%s version %s", filename, afsdVersion);
+
+    // Get a list of all the modules in this process.
+    hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+                           FALSE, GetCurrentProcessId());
+
+    if (EnumProcessModules(hProcess, hMods, sizeof(hMods), &cbNeeded))
+    {
+        afsi_log("Num of Process Modules: %d", (cbNeeded / sizeof(HMODULE)));
+
+        for (i = 0; i < (cbNeeded / sizeof(HMODULE)); i++)
+        {
+            char szModName[2048];
+
+            // Get the full path to the module's file.
+            if (GetModuleFileNameEx(hProcess, hMods[i], szModName, sizeof(szModName)))
+            {
+                lstrcpy(checkName, szModName);
+                strlwr(checkName);
+
+                if ( strstr(checkName, "afspthread.dll") ||
+                     strstr(checkName, "afsauthent.dll") ||
+                     strstr(checkName, "afsrpc.dll") ||
+                     strstr(checkName, "libafsconf.dll") ||
+                     strstr(checkName, "libosi.dll") )
+                {
+                    if (GetVersionInfo(szModName, modVersion, sizeof(modVersion))) {
+                        success = FALSE;
+                        continue;
+                    }
+
+                    afsi_log("%s version %s", szModName, modVersion);
+                    if (strcmp(afsdVersion,modVersion)) {
+                        afsi_log("Version mismatch: %s", szModName);
+                        success = FALSE;
+                    }
+                }
+            }
+        }
+    }
+
+    CloseHandle(hProcess);
+    return success;
+}
+
 typedef BOOL ( APIENTRY * AfsdInitHook )(void);
 #define AFSD_INIT_HOOK "AfsdInitHook"
 #define AFSD_HOOK_DLL  "afsdhook.dll"
@@ -526,6 +657,19 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
         }
     }
 #endif
+
+    /* Verify the versions of the DLLs which were loaded */
+    if (!AFSModulesVerify()) {
+        ServiceStatus.dwCurrentState = SERVICE_STOPPED;
+        ServiceStatus.dwWin32ExitCode = NO_ERROR;
+        ServiceStatus.dwCheckPoint = 0;
+        ServiceStatus.dwWaitHint = 0;
+        ServiceStatus.dwControlsAccepted = 0;
+        SetServiceStatus(StatusHandle, &ServiceStatus);
+                       
+        /* exit if initialization failed */
+        return;
+    }
 
     /* allow an exit to be called prior to any initialization */
     hInitHookDll = LoadLibrary(AFSD_HOOK_DLL);

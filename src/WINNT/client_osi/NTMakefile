@@ -72,8 +72,8 @@ DLLOBJS =\
 DLLLIBS =\
         rpcndr.lib \
         rpcrt4.lib \
-        rpcns4.lib \
-	largeint.lib
+        rpcns4.lib
+#	largeint.lib
 
 $(DLLFILE): $(DLLOBJS) 
 	$(DLLGUILINK) $(DLLLIBS) -def:libosi.def
