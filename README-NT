@@ -33,8 +33,10 @@ The following steps describe how to configure Windows 2000/XP:
    F. Build Win2000 binaries
    G. Install NSIS 2.0
    H. Build NSIS Install Package
-   I. Final Results
-   J. Optional Items
+   I. Install Wix 2.0
+   J. Build Wix MSI Install Package
+   K. Final Results
+   L. Optional Items
    	
 The Microsoft development tools require anywhere from 660 MB to 1.8GB
 of storage depending on which compilers are selected.  The following 
@@ -269,7 +271,161 @@ From the DOS command prompt window run:
     nmake /f NTMakefile NSIS
 
 
-STEP I. Final Results
+STEP I.  Install Wix MSI Installer
+
+Download the Wix 2.0.1727 installer from 
+
+    http://prdownloads.sourceforge.net/wix/sources-2.0.1727.0.zip
+
+Apply the following patches to the source tree and execute 
+
+    make ship
+
+from the \src\wix directory.  
+
+Index: src/wix/Compiler.cs
+===================================================================
+RCS file: /cvsroot/wix/wix/src/wix/Compiler.cs,v
+retrieving revision 1.9
+diff -u -b -r1.9 Compiler.cs
+--- src/wix/Compiler.cs	31 May 2004 01:07:39 -0000	1.9
++++ src/wix/Compiler.cs	20 Jun 2004 14:06:54 -0000
+@@ -657,7 +657,7 @@
+                 // add the core registry keys for each context in the class
+                 for (int i = 0; i < contextCount; ++i)
+                 {
+-                    this.AddRegistryKey(sourceLineNumbers, null, 0, String.Concat("CLSID\\", classId, "\\", context[i]), String.Empty, String.Concat("\"[!", fileServer, "]", argument == null ? String.Empty : " ", argument, "\""), componentId); // ClassId context
++                    this.AddRegistryKey(sourceLineNumbers, null, 0, String.Concat("CLSID\\", classId, "\\", context[i]), String.Empty, String.Concat("\"[#", fileServer, "]", argument == null ? String.Empty : " ", argument, "\""), componentId); // ClassId context
+                     if (null != icon) // ClassId default icon
+                     {
+                         if (null != iconIndex)
+@@ -5710,6 +5710,20 @@
+                                 break;
+                         }
+                         break;
++					case "Delete":
++						switch (attrib.Value)
++						{
++							case "install":
++								events |= MsiInterop.MsidbServiceControlEventDelete;
++								break;
++							case "uninstall":
++								events |= MsiInterop.MsidbServiceControlEventUninstallDelete;
++								break;
++							case "both":
++								events |= MsiInterop.MsidbServiceControlEventDelete | MsiInterop.MsidbServiceControlEventUninstallDelete;
++								break;
++						}
++						break;
+                     case "Wait":
+                         wait = Common.IsYes(attrib.Value, sourceLineNumbers, node.Name, attrib.Name, id) ? "1" : "0";   // strings used since integer column is nullable
+                         break;
+@@ -7034,6 +7048,7 @@
+                         }
+                         bits ^= (bit * 65536);
+                         break;
++
+                     default:
+                         bit = this.NameToBit(MsiInterop.CommonControlAttributes, attrib.Name, attrib.Value, node.Name, id);
+                         if (-1 == bit)
+Index: src/wix/Decompiler.cs
+===================================================================
+RCS file: /cvsroot/wix/wix/src/wix/Decompiler.cs,v
+retrieving revision 1.6
+diff -u -b -r1.6 Decompiler.cs
+--- src/wix/Decompiler.cs	21 May 2004 03:57:42 -0000	1.6
++++ src/wix/Decompiler.cs	20 Jun 2004 14:06:54 -0000
+@@ -2562,7 +2562,7 @@
+                             this.writer.WriteAttributeString("Group", "yes");
+                             text = text.Substring(1);
+                         }
+-                        this.writer.WriteString(text);
++						this.writer.WriteAttributeString("Id", text);
+                         this.writer.WriteEndElement();
+                     }
+                 }
+Index: src/wix/Preprocessor.cs
+===================================================================
+RCS file: /cvsroot/wix/wix/src/wix/Preprocessor.cs,v
+retrieving revision 1.4
+diff -u -b -r1.4 Preprocessor.cs
+--- src/wix/Preprocessor.cs	31 May 2004 01:07:40 -0000	1.4
++++ src/wix/Preprocessor.cs	20 Jun 2004 14:06:55 -0000
+@@ -269,12 +269,12 @@
+                             break;
+                         case "ifdef":
+                             stack.Push(context);
+-                            context = new IfContext(context.IsTrue & context.Active, this.variables.ContainsKey(reader.Value.Trim()), IfState.If);
++                            context = new IfContext(context.IsTrue & context.Active, this.IsDefined(reader.Value.Trim()), IfState.If);
+                             ignore = true;
+                             break;
+                         case "ifndef":
+                             stack.Push(context);
+-                            context = new IfContext(context.IsTrue & context.Active, !this.variables.ContainsKey(reader.Value.Trim()), IfState.If);
++                            context = new IfContext(context.IsTrue & context.Active, !this.IsDefined(reader.Value.Trim()), IfState.If);
+                             ignore = true;
+                             break;
+                         case "elseif":
+@@ -356,6 +356,8 @@
+                             break;
+                         case "endforeach": // endforeach is handled in PreprocessForeach, so seeing it here is an error
+                             throw new WixPreprocessorException(this.GetCurrentSourceLineNumbers(), "Cannot have a <?endforeach?> processing instruction without a matching <?foreach?>.");
++						case "error":
++							throw new WixPreprocessorException(this.GetCurrentSourceLineNumbers(), this.PreprocessVariables(reader.Value));
+                         default:
+                             // Console.WriteLine("processing instruction: {0}, {1}", reader.Name, reader.Value);
+                             break;
+@@ -403,6 +405,22 @@
+         }
+ 
+         /// <summary>
++		/// Returns true if the symbol exists.
++		/// </summary>
++		/// <param name="symbol">symbol name to check</param>
++		/// <returns>true if symbol is defined</returns>
++		private bool IsDefined(string symbol)
++		{
++			if( symbol.StartsWith("env.") )
++				return Environment.GetEnvironmentVariable(symbol.Substring(4)) != null;
++			if( symbol.StartsWith("var.") )
++				return this.variables.ContainsKey(symbol.Substring(4));
++			if( symbol.StartsWith("sys.") )
++				return this.systemVariables.ContainsKey(symbol.Substring(4));
++			return this.variables.ContainsKey(symbol);
++		}
++
++        /// <summary>
+         /// Replaces parameters in the source text.
+         /// </summary>
+         /// <param name="value">Text that may contain parameters to replace.</param>
+Index: src/wix/Xsd/wix.xsd
+===================================================================
+RCS file: /cvsroot/wix/wix/src/wix/Xsd/wix.xsd,v
+retrieving revision 1.11
+diff -u -b -r1.11 wix.xsd
+--- src/wix/Xsd/wix.xsd	31 May 2004 01:07:40 -0000	1.11
++++ src/wix/Xsd/wix.xsd	20 Jun 2004 14:06:55 -0000
+@@ -1736,6 +1736,7 @@
+ 					</xs:restriction>
+ 				</xs:simpleType>
+ 			</xs:attribute>
++			<xs:attribute name="Separator" type="xs:string"/>
+ 			<xs:attribute name="Permanent" type="YesNoType"/>
+ 			<xs:attribute name="System" type="YesNoType"/>
+ 		</xs:complexType>
+
+
+STEP J.  Build Wix MSI install package
+
+From the DOS command prompt window run:
+
+    nmake /f NTMakefile wix
+
+Make sure the binaries installed to \src\wix\release\ship are
+available in the PATH environment variable
+
+
+STEP K. Final Results
 
 The build process generates its binaries in %AFSROOT%\DEST. The subdirectory
 would look like the following:
@@ -289,7 +445,7 @@ would look like the following:
     WinInstall\OpenAFSforWindows.exe - is the install package for Open AFS
 
 
-STEP J. Optional Items
+STEP L. Optional Items
 
 The build process has an error table that is compiled for many OpenAFS
 applications.  This table is generated by Unix based tools.  It is not
