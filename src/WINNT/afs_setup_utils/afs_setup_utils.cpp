@@ -419,7 +419,7 @@ struct FILEINFO fileInfo[] = {
     { TARGETDIR"\\Common\\afsadminutil.dll",            SERVER | CLIENT | LCLIENT | CC },
     { TARGETDIR"\\Common\\afsrpc.dll",                  SERVER | CLIENT | LCLIENT | CC },
     { TARGETDIR"\\Common\\afsauthent.dll",              SERVER | CLIENT | LCLIENT | CC },
-    { TARGETDIR"\\Common\\pthread.dll",                 SERVER | CLIENT | LCLIENT | CC },
+    { TARGETDIR"\\Common\\afspthread.dll",              SERVER | CLIENT | LCLIENT | CC },
     { TARGETDIR"\\Common\\TaAfsAppLib.dll",             SERVER | CLIENT | LCLIENT | CC },
     { TARGETDIR"\\Common\\afsprocmgmt.dll",             SERVER | CLIENT | LCLIENT },
     { TARGETDIR"\\Common\\afs_config.exe",              CLIENT | LCLIENT| CC },

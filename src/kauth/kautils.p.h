@@ -279,6 +279,18 @@ extern afs_int32 ka_UserAuthenticateGeneral (
   char **reasonP
 );
 
+extern afs_int32 ka_UserAuthenticateGeneral2 (
+  afs_int32 flags,
+  char *name,
+  char *instance,
+  char *realm,
+  char *password,
+  char *smbname,
+  Date lifetime,
+  afs_int32 *password_expires,
+  afs_int32 spare2,
+  char **reasonP
+);
 extern afs_int32 ka_UserAuthenticate (
   char *name,
   char *instance,

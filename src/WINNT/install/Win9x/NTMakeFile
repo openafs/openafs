@@ -29,7 +29,7 @@ DLLCOMPONENTS = \
 	$(DESTDIR)\root.client\usr\vice\etc\libosi.dll \
 	$(DESTDIR)\root.client\usr\vice\etc\libafsconf.dll \
 	$(DESTDIR)\root.client\usr\vice\etc\afs_shl_ext.dll \
-	$(DESTDIR)\lib\win95\pthread.dll \
+	$(DESTDIR)\lib\win95\afspthread.dll \
 	$(DESTDIR)\lib\afsrpc.dll
 		
 $(COMPONENTS)::

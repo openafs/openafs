@@ -105,7 +105,7 @@ DLLFILE = $(DESTDIR)\root.server\usr\afs\bin\afsadminutil.dll
 ILIBDIR = $(DESTDIR)\lib\afs
 
 DLLLIBS =\
-	$(DESTDIR)\lib\pthread.lib \
+	$(DESTDIR)\lib\afspthread.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
 	$(DESTDIR)\lib\afsauthent.lib
 

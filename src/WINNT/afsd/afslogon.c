@@ -373,8 +373,6 @@ DWORD APIENTRY NPLogonNotify(
 	if ( ISLOGONINTEGRATED(LogonOption) && (password[0] == 0) )  {
 		code = GT_PW_NULL;
 		reason = "zero length password is illegal";
-		if (!ISHIGHSECURITY(LogonOption))
-			goto checkauth;	/*skip the rest if integrated logon and not high security*/
 		code=0;
 	}
 
@@ -385,8 +383,6 @@ DWORD APIENTRY NPLogonNotify(
 		if (code < 0) { 
 			code = KTC_NOCELL;
 			reason = "unknown cell";
-			if (!ISHIGHSECURITY(LogonOption))
-				goto checkauth;	/*skip the rest if integrated logon and not high security*/
 			code=0;
 		}
 	}
@@ -396,24 +392,15 @@ DWORD APIENTRY NPLogonNotify(
         
     afsWillAutoStart = AFSWillAutoStart();
         
-	if ( ISHIGHSECURITY(LogonOption))
-		*lpLogonScript = GetLogonScript(GenRandomName(RandomName));	/*only do if high security option is on*/
+    *lpLogonScript = GetLogonScript(GenRandomName(RandomName));	/*only do if high security option is on*/
 
 
-	/* Possibly loop until AFS is started. */
-    while ( (ISHIGHSECURITY(LogonOption) || ISLOGONINTEGRATED(LogonOption))) {
-		code=0;
+    /* loop until AFS is started. */
+    while (TRUE) {
+	code=0;
 		
-		/* is service started yet?*/
-
-		if (ISHIGHSECURITY(LogonOption) && !ISLOGONINTEGRATED(LogonOption))	/* if high security only then check for service started only*/
-		{
-			if (IsServiceRunning())
-				break;
-			code = KTC_NOCM;
-			if (!afsWillAutoStart)
-				break;
-		} else if (ISLOGONINTEGRATED(LogonOption) && !ISHIGHSECURITY(LogonOption))	/* if Integrated Logon only */
+	/* is service started yet?*/
+	if (ISLOGONINTEGRATED(LogonOption) && !ISHIGHSECURITY(LogonOption))	/* if Integrated Logon only */
 		{			
 			DebugEvent("AFS AfsLogon - ka_UserAuthenticateGeneral2","Code[%x],uame[%s] Cell[%s]",code,uname,cell);
 			code = ka_UserAuthenticateGeneral2(
@@ -428,8 +415,12 @@ DWORD APIENTRY NPLogonNotify(
 				uname, "", cell, password,RandomName, 0, &pw_exp, 0,
 				&reason);
 			DebugEvent("AFS AfsLogon - (Both)ka_UserAuthenticateGeneral2","Code[%x],RandomName[%s]",code,RandomName);
-		} else {
-			code = KTC_NOCM;	/* we shouldn't ever get here*/
+		} else {  /*JUST check to see if its running*/
+		    if (IsServiceRunning())
+			break;
+		    code = KTC_NOCM;
+		    if (!afsWillAutoStart)
+			break;
 		}
 			
 		/* If we've failed because the client isn't running yet and the
@@ -465,7 +456,6 @@ DWORD APIENTRY NPLogonNotify(
         retryInterval -= sleepInterval;
      }
 
-checkauth:
 	if (code) {
                 char msg[128];
         sprintf(msg, "Integrated login failed: %s", reason);

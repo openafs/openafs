@@ -10,7 +10,7 @@
 test tests: pmgttest.exe
 
 PMGTTEST_EXELIBS =\
-	$(DESTDIR)\lib\pthread.lib \
+	$(DESTDIR)\lib\afspthread.lib \
 	$(DESTDIR)\lib\afs\afsprocmgmt.lib \
 	$(DESTDIR)\lib\afs\afsutil.lib
 

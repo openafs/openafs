@@ -54,7 +54,7 @@ echo [TopDir] > Client_Common_Files.fgl
 echo file0=%IS5_DEST%\root.client\usr\vice\etc\afs_config.exe >> Client_Common_Files.fgl
 echo file1=%IS5_DEST%\lib\afsrpc.dll >> Client_Common_Files.fgl
 echo file2=%IS5_DEST%\lib\afsauthent.dll >> Client_Common_Files.fgl
-echo file3=%IS5_DEST%\lib\pthread.dll >> Client_Common_Files.fgl
+echo file3=%IS5_DEST%\lib\afspthread.dll >> Client_Common_Files.fgl
 echo file4=%IS5_DEST%\root.server\usr\afs\bin\afsprocmgmt.dll >> Client_Common_Files.fgl
 echo file5=%IS5_DEST%\root.server\usr\afs\bin\TaAfsAppLib.dll >> Client_Common_Files.fgl
 echo file6=%IS5_DEST%\root.server\usr\afs\bin\afsadminutil.dll >> Client_Common_Files.fgl
@@ -130,7 +130,7 @@ echo [TopDir] > Light_Client_Common_Files.fgl
 echo file0=%IS5_DEST%\root.client\usr\vice\etc\afs_config.exe >> Light_Client_Common_Files.fgl
 echo file1=%IS5_DEST%\lib\afsrpc.dll >> Light_Client_Common_Files.fgl
 echo file2=%IS5_DEST%\lib\afsauthent.dll >> Light_Client_Common_Files.fgl
-echo file3=%IS5_DEST%\lib\pthread.dll >> Light_Client_Common_Files.fgl
+echo file3=%IS5_DEST%\lib\afspthread.dll >> Light_Client_Common_Files.fgl
 echo file4=%IS5_DEST%\root.server\usr\afs\bin\afsprocmgmt.dll >> Light_Client_Common_Files.fgl
 echo file5=%IS5_DEST%\root.server\usr\afs\bin\TaAfsAppLib.dll >> Light_Client_Common_Files.fgl
 echo file6=%IS5_DEST%\root.server\usr\afs\bin\afsadminutil.dll >> Light_Client_Common_Files.fgl
@@ -188,7 +188,7 @@ echo [TopDir] > Light95_Client_Common_Files.fgl
 echo file0=%IS5_DEST%\root.client\usr\vice\etc\afs_config.exe >> Light95_Client_Common_Files.fgl
 echo file1=%IS5_DEST%\lib\afsrpc.dll >> Light95_Client_Common_Files.fgl
 echo file2=%IS5_DEST%\lib\afsauthent.dll >> Light95_Client_Common_Files.fgl
-echo file3=%IS5_DEST%\lib\win95\pthread.dll >> Light95_Client_Common_Files.fgl
+echo file3=%IS5_DEST%\lib\win95\afspthread.dll >> Light95_Client_Common_Files.fgl
 echo file4=%IS5_DEST%\root.server\usr\afs\bin\TaAfsAppLib.dll >> Light95_Client_Common_Files.fgl
 echo file5=%IS5_DEST%\root.server\usr\afs\bin\afsadminutil.dll >> Light95_Client_Common_Files.fgl
 echo file6=%IS5_DEST%\root.server\usr\afs\bin\afsclientadmin.dll >> Light95_Client_Common_Files.fgl
@@ -258,7 +258,7 @@ echo file5=%IS5_DEST%\root.server\usr\afs\bin\afsvosadmin.dll >> Server_Common_F
 echo file6=%IS5_DEST%\root.server\usr\afs\bin\afsadminutil.dll >> Server_Common_Files.fgl
 echo file7=%IS5_DEST%\lib\afsrpc.dll >> Server_Common_Files.fgl
 echo file8=%IS5_DEST%\lib\afsauthent.dll >> Server_Common_Files.fgl
-echo file9=%IS5_DEST%\lib\pthread.dll >> Server_Common_Files.fgl
+echo file9=%IS5_DEST%\lib\afspthread.dll >> Server_Common_Files.fgl
 echo file10=%IS5_DEST%\root.server\usr\afs\bin\TaAfsAppLib.dll >> Server_Common_Files.fgl
 echo file11=%IS5_DEST%\root.server\usr\afs\bin\afsprocmgmt.dll >> Server_Common_Files.fgl
 echo.  >> Server_Common_Files.fgl
@@ -312,7 +312,7 @@ echo file5=%IS5_DEST%\root.server\usr\afs\bin\afsvosadmin.dll >> Control_Center_
 echo file6=%IS5_DEST%\root.server\usr\afs\bin\afsadminutil.dll >> Control_Center_Common_Files.fgl
 echo file7=%IS5_DEST%\lib\afsrpc.dll >> Control_Center_Common_Files.fgl
 echo file8=%IS5_DEST%\lib\afsauthent.dll >> Control_Center_Common_Files.fgl
-echo file9=%IS5_DEST%\lib\pthread.dll >> Control_Center_Common_Files.fgl
+echo file9=%IS5_DEST%\lib\afspthread.dll >> Control_Center_Common_Files.fgl
 echo file10=%IS5_DEST%\root.server\usr\afs\bin\TaAfsAppLib.dll >> Control_Center_Common_Files.fgl
 echo file11=%IS5_DEST%\root.client\usr\vice\etc\afs_config.exe >> Control_Center_Common_Files.fgl
 echo.  >> Control_Center_Common_Files.fgl
