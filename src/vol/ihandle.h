@@ -414,17 +414,29 @@ extern Inode ih_icreate(IHandle_t * ih, int dev, char *part, Inode nI, int p1,
 #ifdef AFS_LINUX22_ENV
 #define OS_IOPEN(H) -1
 #else
+#ifdef O_LARGEFILE
+#define OS_IOPEN(H) (IOPEN((H)->ih_dev, (H)->ih_ino, O_RDWR|O_LARGEFILE))
+#else
 #define OS_IOPEN(H) (IOPEN((H)->ih_dev, (H)->ih_ino, O_RDWR))
+#endif
 #endif
 #define OS_OPEN(F, M, P) open(F, M, P)
 #define OS_CLOSE(FD) close(FD)
 
 #define OS_READ(FD, B, S) read(FD, B, S)
 #define OS_WRITE(FD, B, S) write(FD, B, S)
-#define OS_SEEK(FD, O, F) lseek(FD, O, F)
+#ifdef O_LARGEFILE
+#define OS_SEEK(FD, O, F) lseek64(FD, (off64_t) (O), F)
+#else /* !O_LARGEFILE */
+#define OS_SEEK(FD, O, F) lseek(FD, (off_t) (O), F)
+#endif /* !O_LARGEFILE */
 
 #define OS_SYNC(FD) fsync(FD)
-#define OS_TRUNC(FD, L) ftruncate(FD, L)
+#ifdef O_LARGEFILE
+#define OS_TRUNC(FD, L) ftruncate64(FD, (off64_t) (L))
+#else /* !O_LARGEFILE */
+#define OS_TRUNC(FD, L) ftruncate(FD, (off_t) (L))
+#endif /* !O_LARGEFILE */
 #define OS_SIZE(FD) ih_size(FD)
 extern afs_sfsize_t ih_size(int fd);
 
