@@ -89,6 +89,7 @@ static int StringToAuth (authname)
 #define aRECLAIM     21
 #define a2DCHOICE     22
 #define aMAXSKEW	23
+#define aUSETOKENS 24
 
 static int CommandProc (as, arock)
   char *arock;
@@ -122,6 +123,7 @@ static int CommandProc (as, arock)
     cParms->callTest = (as->parms[aCALLTEST].items != 0);
     cParms->hijackTest = (as->parms[aHIJACKTEST].items != 0);
     cParms->stopServer = (as->parms[aSTOPSERVER].items != 0);
+    cParms->useTokens = (as->parms[aUSETOKENS].items != 0);
 
     if (as->parms[aMELT1b].items) 
 	meltdown_1pkt = 0; 
@@ -268,6 +270,7 @@ void main (argc, argv)
     initialize_RXK_error_table();
     initialize_RKS_error_table();
     initialize_CMD_error_table();
+    initialize_KTC_error_table();
 
     code = rx_Init (0);
     rx_SetRxDeadTime(120);
@@ -308,6 +311,7 @@ void main (argc, argv)
     cmd_AddParm (ts, "-noreclaim", CMD_FLAG, CMD_OPTIONAL, "dont aggressively reclaim packets");
     cmd_AddParm (ts, "-no2dchoice", CMD_FLAG, CMD_OPTIONAL, "disable rx_getcall 2d choice code");
     cmd_AddParm (ts, "-maxskew", CMD_SINGLE, CMD_OPTIONAL, "max client server skew in seconds");
+    cmd_AddParm (ts, "-usetokens", CMD_FLAG, CMD_OPTIONAL, "use existing tokens");
 
     code = cmd_Dispatch (argc, argv);
     exit (code!=0);

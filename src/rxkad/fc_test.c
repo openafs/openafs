@@ -32,13 +32,10 @@
  */
 
 #include <afs/param.h>
-#include "rxkad.h"
+#include "rxkad_locl.h"
 #include <rx/rx.h>
-#include "private_data.h"
 
 #define ROUNDS 16
-#define ENCRYPT 1
-#define DECRYPT 0
 
 typedef afs_int32 int32;
 typedef afs_uint32 u_int32;
@@ -72,7 +69,8 @@ const char ciph2[] = {
 #define rxkad_EncryptPacket _afs_bpwQbdoghO
 #endif
 
-int main(void)
+int
+main()
 {
   int32 sched[ROUNDS];
   char ciph[100], clear[100];
@@ -80,13 +78,17 @@ int main(void)
   u_int32 iv[2];
   struct rx_connection conn;
   struct rx_securityClass obj;
+#if 0
   struct rxkad_cprivate cpriv;
+#endif
   struct rx_packet packet;
   int fail = 0;
 
   conn.securityObject = &obj;
+#if 0
   obj.privateData = (void *)&cpriv;
   cpriv.type = 0;
+#endif
 
   if (sizeof(int32) != 4) {
     fprintf(stderr, "error: sizeof(int32) != 4\n");

@@ -33,8 +33,8 @@ RCSID("$Header$");
 extern RXKST_ExecuteRequest();
 
 struct ktc_encryptionKey serviceKey =
-    {0x45, 0xe3, 0x3d, 0x16, 0x29, 0x64, 0x8a, 0x8f};
-long serviceKeyVersion = 7;
+    {0x0b, 0x20, 0xbc, 0x1a, 0x08, 0x61, 0x20, 0x3d};
+long serviceKeyVersion = 3;
 
 static long GetKey (rock, kvno, key)
   IN char *rock;
@@ -108,13 +108,14 @@ static long CheckAuth (call)
     if (kvno != serviceKeyVersion) return RXKST_BADKVNO;
     if (strcmp (name, RXKST_CLIENT_NAME) ||
 	strcmp (inst, RXKST_CLIENT_INST) ||
-	cell[0]) return RXKST_BADCLIENT;
+	strcmp (cell, RXKST_CLIENT_CELL))
+	    return RXKST_BADCLIENT;
     return 0;
 }
 
 /* Stop the server.  There isn't a graceful way to do this so just exit. */
 
-long SRXKST_Kill (call)
+afs_int32 SRXKST_Kill (call)
   IN struct rx_call *call;
 {
     long code;
@@ -131,7 +132,7 @@ long SRXKST_Kill (call)
     return 0;    
 }
 
-long SRXKST_Fast (call, n, inc_nP)
+afs_int32 SRXKST_Fast (call, n, inc_nP)
   IN struct rx_call *call;
   IN u_long n;
   OUT u_long *inc_nP;
@@ -140,7 +141,7 @@ long SRXKST_Fast (call, n, inc_nP)
     return 0;
 }
 
-long SRXKST_Slow (call, tag, nowP)
+afs_int32 SRXKST_Slow (call, tag, nowP)
   IN struct rx_call *call;
   IN u_long tag;
   OUT u_long *nowP;
@@ -184,7 +185,7 @@ static void PutBuffer(b)
     buflist = bl;
 }
 
-long SRXKST_Copious (call, inlen, insum, outlen, outsum)
+afs_int32 SRXKST_Copious (call, inlen, insum, outlen, outsum)
   IN struct rx_call *call;
   IN u_long inlen;
   IN u_long insum;

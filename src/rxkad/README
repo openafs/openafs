@@ -1,2 +1,0 @@
-NOTE: fc_cbc_encrypt now modifies its 5th argument, to permit chaining over
-scatter/gather vectors.

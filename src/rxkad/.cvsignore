@@ -3,7 +3,6 @@ Makefile
 crypt_conn.c
 fcrypt.c
 fcrypt.h
-rxkad.h
 rxkad_errs.c
 sboxes.h
 fc_test
