@@ -551,8 +551,14 @@ Section "AFS Client" SecClient
    ; Do SYSTEM32 DIR
    SetOutPath "$SYSDIR"
    File "${AFS_CLIENT_BUILDDIR}\afs_cpa.cpl"
+!IFDEF DEBUG
+   ;File "${SDK_DIR}\REDIST\msvcrtd.dll"
+   ;File "${SDK_DIR}\REDIST\msvcrtd.pdb"
+   !insertmacro UpgradeDLL "${AFS_WININSTALL_DIR}\mfc42d.dll" "$SYSDIR\mfc42d.dll"
+!ELSE
    ;File "${SDK_DIR}\REDIST\msvcrt.dll"
    !insertmacro UpgradeDLL "${AFS_WININSTALL_DIR}\mfc42.dll" "$SYSDIR\mfc42.dll"
+!ENDIF
    
   ; Do WINDOWSDIR components
   ; Get AFS CellServDB file
@@ -756,8 +762,21 @@ Section "AFS Control Center" SecControl
  SetOutPath "$INSTDIR\Common"
 
   SetOutPath "$INSTDIR\Common"
+!IFDEF DEBUG
+!IFDEF CL1310
+  File "${AFS_WININSTALL_DIR}\msvcr71d.dll"
+  File "${AFS_WININSTALL_DIR}\msvcr71d.pdb"
+!ELSE
+  File "${AFS_WININSTALL_DIR}\msvcrtd.dll"
+  File "${AFS_WININSTALL_DIR}\msvcrtd.pdb"
+!ENDIF
+!ELSE
+!IFDEF CL1310
   File "${AFS_WININSTALL_DIR}\msvcr71.dll"
-      
+!ELSE
+  File "${AFS_WININSTALL_DIR}\msvcrt.dll"
+!ENDIF
+!ENDIF
    
    ;Store install folder
   WriteRegStr HKCU "${AFS_REGKEY_ROOT}\AFS Control Center\CurrentVersion" "PathName" $INSTDIR
@@ -1104,8 +1123,21 @@ Section "Uninstall"
    Delete /REBOOTOK "$INSTDIR\Common\afscfgadmin.dll"
    Delete /REBOOTOK "$INSTDIR\Common\afskasadmin.dll"
    Delete /REBOOTOK "$INSTDIR\Common\afsptsadmin.dll"
+!IFDEF DEBUG
+!IFDEF CL1310
+   Delete /REBOOTOK "$INSTDIR\Common\msvcr71d.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcr71d.pdb"
+!ELSE
+   Delete /REBOOTOK "$INSTDIR\Common\msvcrtd.dll"
+   Delete /REBOOTOK "$INSTDIR\Common\msvcrtd.pdb"
+!ENDIF
+!ELSE
+!IFDEF CL1310
    Delete /REBOOTOK "$INSTDIR\Common\msvcr71.dll"
-   ;Delete /REBOOTOK "$INSTDIR\Common\msvcp60.dll"
+!ELSE
+   Delete /REBOOTOK "$INSTDIR\Common\msvcrt.dll"
+!ENDIF
+!ENDIF
   
    Call un.IsSilent
    Pop $R1
@@ -1172,7 +1204,21 @@ Section "Uninstall"
   RMDir  "$INSTDIR\Client\Program"
   RMDir  "$INSTDIR\Client"
   
+!IFDEF DEBUG
+!IFDEF CL1310
+  Delete /REBOOTOK "$INSTDIR\Common\msvcr71d.dll"
+  Delete /REBOOTOK "$INSTDIR\Common\msvcr71d.pdb"
+!ELSE
+  Delete /REBOOTOK "$INSTDIR\Common\msvcrtd.dll"
+  Delete /REBOOTOK "$INSTDIR\Common\msvcrtd.pdb"
+!ENDIF
+!ELSE
+!IFDEF CL1310
   Delete /REBOOTOK "$INSTDIR\Common\msvcr71.dll"
+!ELSE
+  Delete /REBOOTOK "$INSTDIR\Common\msvcrt.dll"
+!ENDIF
+!ENDIF
   Delete /REBOOTOK "$INSTDIR\Common\*"
   RMDir "$INSTDIR\Common"
 
@@ -1587,8 +1633,21 @@ Function AFSLangFiles
    File "${AFS_SERVER_BUILDDIR}\afscfgadmin.dll"
    File "${AFS_SERVER_BUILDDIR}\afskasadmin.dll"
    File "${AFS_SERVER_BUILDDIR}\afsptsadmin.dll"
+!IFDEF DEBUG
+!IFDEF CL1310
+   File "${AFS_WININSTALL_DIR}\msvcr71d.dll"
+   File "${AFS_WININSTALL_DIR}\msvcr71d.pdb"
+!ELSE
+   File "${AFS_WININSTALL_DIR}\msvcrtd.dll"
+   File "${AFS_WININSTALL_DIR}\msvcrtd.pdb"
+!ENDIF
+!ELSE
+!IFDEF CL1310
    File "${AFS_WININSTALL_DIR}\msvcr71.dll"
-   ;File "${AFS_WININSTALL_DIR}\msvcp60.dll"
+!ELSE
+   File "${AFS_WININSTALL_DIR}\msvcrt.dll"
+!ENDIF
+!ENDIF
 
 !ifdef DEBUG
    File "${AFS_CLIENT_BUILDDIR}\afs_config.pdb"
@@ -1689,8 +1748,13 @@ DoGerman:
    ;File "${AFS_SERVER_BUILDDIR}\TaAfsAccountManager_1033.pdb"
    ;File "${AFS_SERVER_BUILDDIR}\TaAfsAppLib_1033.pdb"
    ;File "${AFS_SERVER_BUILDDIR}\TaAfsServerManager_1033.pdb"
+!IFDEF CL1310
    File "${AFS_WININSTALL_DIR}\msvcr71d.dll"
    File "${AFS_WININSTALL_DIR}\msvcr71d.pdb"
+!ELSE
+   File "${AFS_WININSTALL_DIR}\msvcrtd.dll"
+   File "${AFS_WININSTALL_DIR}\msvcrtd.pdb"
+!ENDIF
 !endif
    goto done   
 

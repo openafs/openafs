@@ -17,13 +17,42 @@ $(EXEDIR)\Killer.exe: $(OUT)\Killer.obj
       $(EXECONLINK) $(OUT)\Killer.obj
 
 prebuild:
+!IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
+!IF ("$(AFSVER_CL)"=="1310")
    $(COPY) %SystemRoot%\System32\Msvcr71.dll $(EXEDIR)
+!ELSE IF ("$(AFSVER_CL)"=="1300")
+   $(COPY) %SystemRoot%\System32\Msvcp70.dll $(EXEDIR)
+!ELSE IF ("$(AFSVER_CL)"=="1200")
+   $(COPY) %SystemRoot%\System32\MSVCRT.DLL $(EXEDIR)
+!ELSE
+!ERROR Unknown Compiler Version
+!ENDIF
    $(COPY) %SystemRoot%\System32\MFC42.DLL $(EXEDIR)
+!ELSE
+!IF ("$(AFSVER_CL)"=="1310")
+   $(COPY) %SystemRoot%\System32\Msvcr71d.dll $(EXEDIR)
+   $(COPY) %SystemRoot%\System32\Msvcr71d.pdb $(EXEDIR)
+!ELSE IF ("$(AFSVER_CL)"=="1300")
+   $(COPY) %SystemRoot%\System32\Msvcp70d.dll $(EXEDIR)
+   $(COPY) %SystemRoot%\System32\Msvcp70d.pdb $(EXEDIR)
+!ELSE IF ("$(AFSVER_CL)"=="1200")
+   $(COPY) %SystemRoot%\System32\MSVCRTD.DLL $(EXEDIR)
+   $(COPY) %SystemRoot%\System32\MSVCRTD.pdb $(EXEDIR)
+!ELSE
+!ERROR Unknown Compiler Version
+!ENDIF
+   $(COPY) %SystemRoot%\System32\MFC42D.DLL $(EXEDIR)
+   $(COPY) %SystemRoot%\System32\MFC42D.pdb $(EXEDIR)
+!ENDIF
    MakeCommon.bat "$(AFSPRODUCT_VERSION)"
 
 build: prebuild
    "C:\Program Files\NSIS\makensis.exe" OpenAFS.nsi
+!IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
    $(COPY) OpenAFSforWindows.exe $(DESTDIR)\Wininstall\
+!ELSE
+   $(COPY) OpenAFSforWindows-Debug.exe $(DESTDIR)\Wininstall\
+!ENDIf
 
 install: $(OUT)\Service.obj $(EXEDIR)\Service.exe $(OUT)\Killer.obj $(EXEDIR)\Killer.exe build
 
