@@ -1,0 +1,171 @@
+﻿<?xml version="1.0" ?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2003/01/wi'>
+
+    <!-- See config.wxi for the symbols that it defines/asserts -->
+    <?include config.wxi?>
+
+    <!-- See language_config for localization options. -->
+    <?include language_config.wxi?>
+
+    <Product 
+        Id="$(var.ProductCode)"
+        Codepage="$(var.Codepage)"
+        Language="$(var.LanguageCode)"
+        Manufacturer="$(var.Manufacturer)"
+        Name="$(var.ProductName)"
+        UpgradeCode="6823EEDD-84FC-4204-ABB3-A80D25779833"
+        Version="$(var.NumericVersion)"
+        >
+
+		<!--
+		Note that we are not specifying an explicit Package Code below.  That way WiX will
+		generate a new one for each build.  If an explicit one needs to be specified, use :
+		         Id="$(var.PackageCode)"
+		-->
+        <Package
+         AdminImage="no"
+         Comments="$(var.PackageComments)"
+         Compressed="yes"
+         Description="$(var.ProductName)"
+         InstallerVersion="110"
+         Keywords="Installer,OpenAFS,$(var.Manufacturer)"
+         Languages="$(var.Languages)"
+         Manufacturer="$(var.Manufacturer)"
+         Platforms="Intel"
+         ShortNames="no"
+         SummaryCodepage="1252"
+         />
+        
+        <!-- Launch conditions -->
+        <Condition
+         Message="$(loc.StrLaunchCond)">
+         <![CDATA[VersionNT >= 500]]>
+        </Condition>
+        
+        <!-- Global Properties -->
+        <?include property.wxi?>
+        
+        <!-- File system and registry settings -->
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <?include registry.wxi?>
+            <?include files.wxi?>
+        </Directory>
+        
+        <!-- Features -->
+        <?include feature.wxi?>
+        
+        <!-- User interface -->
+        <?include lang\$(var.Language)\ui.wxi?>
+        
+        <!-- Custom actions -->
+        <Binary
+         Id="BIN_Instloop"
+         src="$(var.MediaBinDir)instloop.exe"/>
+        <Binary
+		 Id="BIN_afsCustom"
+		 src="$(var.MediaBinDir)afscustom.dll"/>
+        <CustomAction
+         Id="InstallLoopback"
+         BinaryKey="BIN_Instloop"
+         ExeCommand="-i"
+         Execute="deferred"
+         Impersonate="no"
+         />
+	<?ifdef RemoveLoopback?>
+        <CustomAction
+         Id="RemoveLoopback"
+         BinaryKey="BIN_Instloop"
+         ExeCommand="-u"
+         Execute="deferred"
+         Return="ignore"
+         Impersonate="no"
+         />
+        <CustomAction
+         Id="RollbackLoopback"
+         BinaryKey="BIN_Instloop"
+         ExeCommand="-u"
+         Execute="rollback"
+         Return="ignore"
+         Impersonate="no"
+         />
+	<?endif?>
+        <CustomAction
+         Id="InstallNetProvider" 
+         BinaryKey="BIN_afsCustom" 
+         DllEntry="InstallNetProvider"
+         Execute="oncePerProcess" />
+		<CustomAction 
+		 Id="RemoveNetProvider" 
+		 BinaryKey="BIN_afsCustom"
+		 DllEntry="UninstallNetProvider"
+		 Return="ignore"
+		 Execute="oncePerProcess" />
+		<CustomAction 
+		 Id="RollbackNetProvider" 
+		 BinaryKey="BIN_afsCustom"
+		 DllEntry="UninstallNetProvider"
+		 Return="ignore"
+		 Execute="rollback" />
+		<CustomAction
+		 Id="ConfigureClient"
+		 BinaryKey="BIN_afsCustom"
+		 DllEntry="ConfigureClientService"
+		 Impersonate="no"
+		 Execute="deferred" />
+		<CustomAction
+		 Id="ConfigureServer"
+		 BinaryKey="BIN_afsCustom"
+		 DllEntry="ConfigureServerService"
+		 Impersonate="no"
+		 Execute="deferred" />
+		<CustomAction 
+		 Id="RemoveNsisInstallation" 
+		 BinaryKey="BIN_afsCustom"
+		 DllEntry="UninstallNsisInstallation"
+		 Execute="immediate" />
+		<CustomAction
+		 Id="AbortInstallation"
+		 BinaryKey="BIN_afsCustom"
+		 DllEntry="AbortMsiImmediate"
+		 Execute="immediate" />
+
+        <!-- Installation Sequences -->
+        <AdvertiseExecuteSequence />
+        <AdminExecuteSequence />
+        <InstallExecuteSequence>
+			<RemoveExistingProducts After="InstallValidate">IBMAFS_UPGRADE OR OPENAFS_UPGRADE</RemoveExistingProducts>
+			<Custom Action="RemoveNsisInstallation" Before="AbortInstallation">NSISUNINSTALL &lt;&gt; "" AND UILevel &gt;= 4</Custom>
+			<Custom Action="AbortInstallation" Before="CostInitialize">NSISUNINSTALL &lt;&gt; "" AND UILevel &lt; 4</Custom>
+		<?ifdef RemoveLoopback?>
+			<Custom Action="RemoveLoopback" After="SelfRegModules">&amp;feaLoopback=2 OR &amp;feaLoopback=3</Custom>
+            <Custom Action="RollbackLoopback" After="RemoveLoopback">&amp;feaLoopback=3</Custom>
+            <Custom Action="InstallLoopback" After="RollbackLoopback">&amp;feaLoopback=3</Custom>
+		<?else?>
+            <Custom Action="InstallLoopback" After="SelfRegModules">&amp;feaLoopback=3</Custom>
+        <?endif?>
+            <Custom Action="RollbackNetProvider" After="WriteRegistryValues">&amp;feaClient=3</Custom>
+			<Custom Action="InstallNetProvider" After="RollbackNetProvider">&amp;feaClient=3</Custom>
+			<Custom Action="RemoveNetProvider" After="InstallNetProvider">&amp;feaClient=2</Custom>
+			<Custom Action="ConfigureClient" After="InstallServices">&amp;feaClient=3</Custom>
+			<Custom Action="ConfigureServer" After="ConfigureClient">&amp;feaServer=3</Custom>
+            <ScheduleReboot After="PublishProduct">&amp;feaClient=3 OR &amp;feaServer=3 OR &amp;feaClient=2 OR &amp;feaServer=2</ScheduleReboot>
+        </InstallExecuteSequence>
+
+        <!-- Related producs -->
+        <!-- MIT's OpenAFS MSI installer -->
+        <Upgrade Id="6823EEDD-84FC-4204-ABB3-A80D25779833">
+            <UpgradeVersion IgnoreRemoveFailure="no" IncludeMaximum="no" Maximum="$(var.NumericVersion)" MigrateFeatures="yes" Property="OPENAFS_UPGRADE" />
+        </Upgrade>
+        
+        <!-- MIT's Transarc AFS MSI Installer -->
+        <Upgrade Id="5332B94F-DE38-4927-9EAB-51F4A64193A7">
+            <UpgradeVersion IgnoreRemoveFailure="no" IncludeMaximum="yes" Maximum="3.6.2" MigrateFeatures="no" Property="IBMAFS_UPGRADE" />
+        </Upgrade>
+        
+        <!-- openafs.org NSIS installer is detected using other means -->
+        <!-- Please let us know if you want other Installers to be detected and upgraded/removed -->
+
+		<!-- Media -->
+		<Media Id="1" Cabinet="disk1.cab" CompressionLevel="mszip" EmbedCab="yes" />
+    </Product>
+</Wix>

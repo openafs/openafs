@@ -1,0 +1,56 @@
+# rcsid : $Id$
+
+RELDIR=WINNT\install\wix\custom
+!INCLUDE ..\..\..\..\config\NTMakefile.$(SYS_NAME)
+!INCLUDE ..\..\..\..\config\NTMakefile.version
+
+MEDIABINDIR = $(DESTDIR)\WinInstall\Dll
+
+EXEFILE = $(MEDIABINDIR)\instloop.exe
+
+DLLFILE = $(MEDIABINDIR)\afscustom.dll
+
+DLLEXPORTS=\
+	-EXPORT:InstallNetProvider \
+	-EXPORT:UninstallNetProvider \
+	-EXPORT:ConfigureClientService \
+	-EXPORT:ConfigureServerService \
+	-EXPORT:AbortMsiImmediate \
+	-EXPORT:UninstallNsisInstallation
+
+DLLLIBFILES=\
+	msi.lib advapi32.lib
+
+LINK=link
+
+# afscustom.dll
+
+$(OUT)\afscustom.obj: afscustom.cpp
+	$(CC) -ML -c /Fo$@ $**
+
+$(DLLFILE): $(OUT)\afscustom.obj
+	$(LINK) -DLL $(DLLEXPORTS) \
+	  -OUT:$@ $** $(DLLLIBFILES)
+
+# instloop.exe
+
+SOURCEFILES = instloop.c renameconnection.cpp wmi.cpp
+OBJFILES = $(OUT)\instloop.obj $(OUT)\renameconnection.obj $(OUT)\wmi.obj
+EXELIBFILES = setupapi.lib msi.lib uuid.lib Shell32.lib ole32.lib advapi32.lib wbemuuid.lib
+
+$(OUT)\instloop.obj: instloop.c
+	$(CC) -ML -c -DUNICODE -D_UNICODE /Fo$@ $**
+
+$(OUT)\renameconnection.obj: renameconnection.cpp
+	$(CC) -ML -c -DUNICODE -D_UNICODE /Fo$@ $**
+
+$(OUT)\wmi.obj: wmi.cpp
+	$(CC)  -I$(NTDDKDIR) -ML -c -DUNICODE -D_UNICODE /Fo$@ $**
+
+$(EXEFILE): $(OBJFILES)
+	$(LINK) /OUT:$@ $(OBJFILES) $(EXELIBFILES)
+
+
+install: $(EXEFILE) $(DLLFILE)
+
+clean	::
