@@ -103,7 +103,7 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 {
     char *drivep;
     char netbiosName[MAX_NB_NAME_LENGTH];
-    char tbuffer[100]="";
+    char tbuffer[256]="";
     HANDLE fh;
 
     if (fileNamep) {
@@ -112,6 +112,15 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             tbuffer[0] = *(drivep - 1);
             tbuffer[1] = ':';
             strcpy(tbuffer + 2, SMB_IOCTL_FILENAME);
+        } else {
+            char curdir[256]="";
+
+            GetCurrentDirectory(sizeof(curdir), curdir);
+            if ( curdir[1] == ':' ) {
+                tbuffer[0] = curdir[0];
+                tbuffer[1] = ':';
+                strcpy(tbuffer + 2, SMB_IOCTL_FILENAME);
+            }
         }
 	}
 	if (!tbuffer[0]) {
