@@ -1431,7 +1431,10 @@ long cm_NameI(cm_scache_t *rootSCachep, char *pathp, long flags,
                     cm_ReleaseSCache(tscp);
                     if (psp) 
                         cm_FreeSpace(psp);
-                    return code;
+                    if (code == CM_ERROR_NOSUCHFILE && tscp->fileType == CM_SCACHETYPE_SYMLINK)
+                        return CM_ERROR_NOSUCHPATH;
+                    else
+                        return code;
                 }
                 haveComponent = 0;	/* component done */
                 dirScp = tscp;		/* for some symlinks */

@@ -100,6 +100,7 @@ DECL_FUNC_PTR(Leash_get_default_life_max);
 DECL_FUNC_PTR(Leash_get_default_renew_min);
 DECL_FUNC_PTR(Leash_get_default_renew_max);
 DECL_FUNC_PTR(Leash_get_default_renewable);
+DECL_FUNC_PTR(Leash_get_default_mslsa_import);
 
 // krb5 functions
 DECL_FUNC_PTR(krb5_change_password);
@@ -154,6 +155,7 @@ DECL_FUNC_PTR(krb5_get_renewed_creds);
 DECL_FUNC_PTR(krb5_get_default_config_files);
 DECL_FUNC_PTR(krb5_free_config_files);
 DECL_FUNC_PTR(krb5_get_default_realm);
+DECL_FUNC_PTR(krb5_free_default_realm);
 DECL_FUNC_PTR(krb5_free_ticket);
 DECL_FUNC_PTR(krb5_decode_ticket);
 DECL_FUNC_PTR(krb5_get_host_realm);
@@ -357,7 +359,9 @@ static int                inited = 0;
 static int                mid_cnt = 0;
 static struct textField * mid_tb = NULL;
 static HINSTANCE hKrb5 = 0;
+#ifdef USE_KRB4
 static HINSTANCE hKrb4 = 0;
+#endif /* USE_KRB4 */
 static HINSTANCE hKrb524 = 0;
 #ifdef USE_MS2MIT
 static HINSTANCE hSecur32 = 0;
@@ -427,8 +431,10 @@ KFW_cleanup(void)
 {
     if (hKrb5)
         FreeLibrary(hKrb5);
+#ifdef USE_KRB4
     if (hKrb4)
         FreeLibrary(hKrb4);
+#endif /* USE_KRB4 */
     if (hProfile)
         FreeLibrary(hProfile);
     if (hComErr)
@@ -901,8 +907,9 @@ KFW_import_windows_lsa(void)
     char * pname = NULL;
     krb5_data *  princ_realm;
     krb5_error_code code;
-    char cell[128]="", realm[128]="";
+    char cell[128]="", realm[128]="", *def_realm = 0;
     int i;
+    DWORD dwMsLsaImport;
          
     if (!pkrb5_init_context)
         return;
@@ -922,6 +929,32 @@ KFW_import_windows_lsa(void)
 
     code = pkrb5_cc_get_principal(ctx, cc, &princ);
     if ( code ) goto cleanup;
+
+    dwMsLsaImport = pLeash_get_default_mslsa_import();
+    switch ( dwMsLsaImport ) {
+    case 0: /* do not import */
+        goto cleanup;
+    case 1: /* always import */
+        break;
+    case 2: { /* matching realm */
+        char ms_realm[128] = "", *r;
+        int i;
+
+        for ( r=ms_realm, i=0; i<krb5_princ_realm(ctx, princ)->length; r++, i++ ) {
+            *r = krb5_princ_realm(ctx, princ)->data[i];
+        }
+        *r = '\0';
+
+        if (code = pkrb5_get_default_realm(ctx, &def_realm))
+            goto cleanup;
+
+        if (strcmp(def_realm, ms_realm))
+            goto cleanup;
+        break;
+    }
+    default:
+        break;
+    }
 
     code = pkrb5_unparse_name(ctx,princ,&pname);
     if ( code ) goto cleanup;
@@ -949,6 +982,8 @@ KFW_import_windows_lsa(void)
         pkrb5_free_unparsed_name(ctx,pname);
     if (princ)
         pkrb5_free_principal(ctx,princ);
+    if (def_realm)
+        pkrb5_free_default_realm(ctx, def_realm);
     if (cc)
         pkrb5_cc_close(ctx,cc);
     if (ctx)
