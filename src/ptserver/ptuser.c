@@ -29,6 +29,7 @@ RCSID
 #include "afs/cellconfig.h"
 #include "afs/afsutil.h"
 #include "afs/ptclient.h"
+#include "afs/ptuser.h"
 #include "afs/pterror.h"
 #else /* defined(UKERNEL) */
 #include <afs/stds.h>
@@ -54,6 +55,7 @@ RCSID
 #include <afs/cellconfig.h>
 #include <afs/afsutil.h>
 #include "ptclient.h"
+#include "ptuser.h"
 #include "pterror.h"
 #endif /* defined(UKERNEL) */
 
