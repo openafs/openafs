@@ -99,10 +99,10 @@ error_table 2 ZCM
 	ec	CM_TRACE_READLINK, "readlink 0x%lx"
 	ec	CM_TRACE_FSYNC, "fsync 0x%lx"
 
-	ec      CM_TRACE_LOCKDONE,  "Released lock 0x%lx level %d"
-	ec	CM_TRACE_LOCKDOWN,  "Downgraded lock 0x%lx to %d"
-	ec	CM_TRACE_LOCKOBTAIN,"Obtained lock 0x%lx level %d"
-	ec	CM_TRACE_LOCKSLEPT, "Slept for lock 0x%lx level %d"
+	ec      CM_TRACE_LOCKDONE,  "%s line %d: Released lock 0x%lx level %d"
+	ec	CM_TRACE_LOCKDOWN,  "%s line %d: Downgraded lock 0x%lx to %d"
+	ec	CM_TRACE_LOCKOBTAIN,"%s line %d: Obtained lock 0x%lx level %d"
+	ec	CM_TRACE_LOCKSLEPT, "%s line %d: Slept for lock 0x%lx level %d"
 
 	ec	CM_TRACE_PAGE_READ, "0x%lx called page_read (returned %d) states 0x%x"
 	ec	CM_TRACE_PAGE_WRITE, "0x%lx called page_write (returned %d) states 0x%x"

@@ -362,3 +362,34 @@ struct afs_bozoLock *alock; {
     return 0;
 }
 #endif
+
+Afs_Lock_Trace(op, alock, type, file, line)
+   int op;
+    struct afs_lock *alock;
+    int type;
+    char *file;
+    int line;
+{
+    int traceok;
+    struct afs_icl_log *tlp;
+    struct afs_icl_set *tsp;
+
+    if (!afs_trclock) return 1;
+    if ((alock) == &afs_icl_lock) return 1;
+
+    ObtainReadLock(&afs_icl_lock);
+    traceok = 1;
+    for (tlp = afs_icl_allLogs; tlp; tlp = tlp->nextp)
+	if ((alock) == &tlp->lock) traceok = 0;
+    for (tsp = afs_icl_allSets; tsp; tsp = tsp->nextp)
+	if ((alock) == &tsp->lock) traceok = 0;
+    ReleaseReadLock(&afs_icl_lock);
+    if (!traceok) return 1;
+
+    afs_Trace4(afs_iclSetp, op,
+	       ICL_TYPE_STRING,  (long)file,
+	       ICL_TYPE_INT32,   (long)line,
+	       ICL_TYPE_POINTER, (long)alock,
+	       ICL_TYPE_LONG,    (long)type);
+    return 0;
+}
