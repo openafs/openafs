@@ -808,17 +808,23 @@ static int afs_linux_dentry_revalidate(struct dentry *dp)
 /* afs_dentry_iput */
 static void afs_dentry_iput(struct dentry *dp, struct inode *ip)
 {
+    afs_Trace3(afs_iclSetp, CM_TRACE_DENTRYIPUT,
+	       ICL_TYPE_POINTER, ip,
+	       ICL_TYPE_STRING, dp->d_parent->d_name.name,
+	       ICL_TYPE_STRING, dp->d_name.name);
+
     osi_iput(ip);
 }
 
 static int afs_dentry_delete(struct dentry *dp)
 {
-    if (dp->d_inode && (ITOAFS(dp->d_inode)->states & CUnlinked))
-	return 1;               /* bad inode? */
-
     afs_Trace3(afs_iclSetp, CM_TRACE_DENTRYDELETE, ICL_TYPE_POINTER, 
 	       dp->d_inode, ICL_TYPE_STRING, dp->d_parent->d_name.name,
 	       ICL_TYPE_STRING, dp->d_name.name);
+
+    if (dp->d_inode && (ITOAFS(dp->d_inode)->states & CUnlinked))
+	return 1;               /* bad inode? */
+
     return 0;
 }
 
@@ -834,7 +840,7 @@ struct dentry_operations afs_dentry_operations = {
 	afs_linux_dentry_revalidate,	/* d_validate(struct dentry *) */
 	NULL,			/* d_hash */
 	NULL,			/* d_compare */
-	NULL,			/* d_delete(struct dentry *) */
+	afs_dentry_delete,	/* d_delete(struct dentry *) */
 	NULL,			/* d_release(struct dentry *) */
 	afs_dentry_iput		/* d_iput(struct dentry *, struct inode *) */
 };
