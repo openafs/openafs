@@ -461,6 +461,9 @@ Section "AFS Client" secClient
   File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"   ; Might not have the MSVCR71.DLL file to run
   nsExec::Exec '$R0 afscreds.exe'
   nsExec::Exec "afscreds.exe -z"
+  ; in case we are upgrading an old version that does not support -z
+  Sleep 2000
+  nsExec::Exec '$R0 afscreds.exe'
 !IFDEF INSTALL_KFW
   ;nsExec::Exec '$R0 krbcc32s.exe'
 !ENDIF
@@ -687,6 +690,9 @@ Section "AFS Server" secServer
   File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"   ; Might not have the MSVCR71.DLL file to run
   nsExec::Exec '$R0 afscreds.exe'
   nsExec::Exec "afscreds.exe -z"
+  ; in case we are upgrading an old version that does not support -z
+  Sleep 2000
+  nsExec::Exec '$R0 afscreds.exe'
 !IFDEF INSTALL_KFW
   ;nsExec::Exec '$R0 krbcc32s.exe'
 !ENDIF
@@ -1555,6 +1561,9 @@ StartRemove:
   File /oname=$R0 "${AFS_WININSTALL_DIR}\Killer.exe"
   nsExec::Exec '$R0 afscreds.exe'
   nsExec::Exec "afscreds.exe -z"
+  ; in case we are upgrading an old version that does not support -z
+  Sleep 2000
+  nsExec::Exec '$R0 afscreds.exe'
 !IFDEF INSTALL_KFW
   nsExec::Exec '$R0 krbcc32s.exe'
 !ENDIF
