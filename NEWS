@@ -1,4 +1,4 @@
-OpenAFS News -- history of user-visible changes.  December 9, 2002.
+OpenAFS News -- history of user-visible changes.  April 10, 2003.
 
 * Changes incorporated in OpenAFS 1.3
 
@@ -17,6 +17,18 @@ OpenAFS News -- history of user-visible changes.  December 9, 2002.
    making operations such as stat'ing all cells under /afs much faster.
    This is enabled by passing -fakestat to afsd, but might not be stable
    on all platforms.
+
+* Changes incorporated in OpenAFS 1.2.9
+
+** The kaserver now defaults to not allowing interrealm authentication,
+   due to security vulnerabilities in the krb4 protocol.  The new
+   "-crossrealm" flag to the kaserver is provided to reenable interrealm
+   authentication if desired.
+
+** RedHat Linux 9.0 is now supported.
+
+** Solaris 9 12/02 is now supported.  Solaris 7 and 8 x86 should now
+   work again.
 
 * Changes incorporated in OpenAFS 1.2.8
 
