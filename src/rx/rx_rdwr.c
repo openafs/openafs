@@ -1301,7 +1301,7 @@ rxi_FlushWrite(register struct rx_call *call)
 		return;
 	    }
 	    cp->length = 0;
-	    cp->niovecs = 1;	/* just the header */
+	    cp->niovecs = 2;	/* header + space for rxkad stuff */
 	    call->nFree = 0;
 	}
 
