@@ -3489,9 +3489,9 @@ Function RegWriteMultiStr
 !define RegCloseKey              "Advapi32::RegCloseKeyA(i) i"
 
   Exch $R0
-  Push $R1
-  Push $R2
-  Push $R9
+  Push $1
+  Push $2
+  Push $9
 
   SetPluginUnload alwaysoff
   ; Create a buffer for the multi_sz value
@@ -3499,41 +3499,41 @@ Function RegWriteMultiStr
   ; Open/create the registry key
   System::Call "${RegCreateKey}(${HKEY_LOCAL_MACHINE}, '$REG_SUB_KEY', .r0) .r9"
   ; Failed?
-  IntCmp $R9 0 write
+  IntCmp $9 0 write
     MessageBox MB_OK|MB_ICONSTOP "Can't create registry key! ($9)"
     Goto noClose
 
   write:
     ; Fill in the buffer with our strings
-    StrCpy $R2 $R1                            ; Initial position
+    StrCpy $2 $1                            ; Initial position
 
-    StrLen $R9 '$REG_DATA_1'                 ; Length of first string
-    IntOp $R9 $R9 + 1                         ; Plus null
-    System::Call "*$R2(&t$R9 '$REG_DATA_1')"  ; Place the string
-    IntOp $R2 $R2 + $R9                        ; Advance to the next position
+    StrLen $9 '$REG_DATA_1'                 ; Length of first string
+    IntOp $9 $9 + 1                         ; Plus null
+    System::Call "*$2(&t$9 '$REG_DATA_1')"  ; Place the string
+    IntOp $2 $2 + $9                        ; Advance to the next position
 
     StrCmp '$REG_DATA_2' "" terminate
-    StrLen $R9 '$REG_DATA_2'                 ; Length of second string
-    IntOp $R9 $R9 + 1                         ; Plus null
-    System::Call "*$R2(&t$R9 '$REG_DATA_2')"  ; Place the string
-    IntOp $R2 $R2 + $R9                        ; Advance to the next position
+    StrLen $9 '$REG_DATA_2'                 ; Length of second string
+    IntOp $9 $9 + 1                         ; Plus null
+    System::Call "*$2(&t$9 '$REG_DATA_2')"  ; Place the string
+    IntOp $2 $2 + $9                        ; Advance to the next position
 
     StrCmp '$REG_DATA_3' "" terminate
-    StrLen $R9 '$REG_DATA_3'                 ; Length of third string
-    IntOp $R9 $R9 + 1                         ; Plus null
-    System::Call "*$R2(&t$R9 '$REG_DATA_3')"  ; Place the string
-    IntOp $R2 $R2 + $9                        ; Advance to the next position
+    StrLen $9 '$REG_DATA_3'                 ; Length of third string
+    IntOp $9 $9 + 1                         ; Plus null
+    System::Call "*$2(&t$9 '$REG_DATA_3')"  ; Place the string
+    IntOp $2 $2 + $9                        ; Advance to the next position
 
   terminate:
-    System::Call "*$R2(&t1 '')"              ; Place the terminating null
-    IntOp $R2 $R2 + 1                         ; Advance to the next position
+    System::Call "*$2(&t1 '')"              ; Place the terminating null
+    IntOp $2 $2 + 1                         ; Advance to the next position
 
     ; Create/write the value
-    IntOp $R2 $R2 - $R1                        ; Total length
+    IntOp $2 $2 - $1                        ; Total length
     System::Call "${RegSetValueEx}(r0, '$REG_VALUE', 0, ${REG_MULTI_SZ}, r1, r2) .r9"
     ; Failed?
-    IntCmp $R9 0 done
-      MessageBox MB_OK|MB_ICONSTOP "Can't set key value! ($R9)"
+    IntCmp $9 0 done
+      MessageBox MB_OK|MB_ICONSTOP "Can't set key value! ($9)"
       Goto done
 
   done:
@@ -3543,10 +3543,10 @@ Function RegWriteMultiStr
 noClose:
   ; Clear the buffer
   SetPluginUnload manual
-  System::Free $R1
+  System::Free $1
 
-  Pop $R9
-  Pop $R2
-  Pop $R1
+  Pop $9
+  Pop $2
+  Pop $1
   Exch $R0
 FunctionEnd
