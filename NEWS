@@ -1,4 +1,4 @@
-OpenAFS News -- history of user-visible changes.  July 22, 2002.
+OpenAFS News -- history of user-visible changes.  September 25, 2002.
 
 * Changes incorporated in OpenAFS 1.3
 
@@ -11,6 +11,21 @@ OpenAFS News -- history of user-visible changes.  July 22, 2002.
    making operations such as stat'ing all cells under /afs much faster.
    This is enabled by passing -fakestat to afsd, but might not be stable
    on all platforms.
+
+* Changes incorporated in OpenAFS 1.2.7
+
+** MacOS X 10.2 is now supported.  FreeBSD 4.3 and later support is included
+   in this release, but is still under active development and should only
+   be used by those doing active development on the OpenAFS FreeBSD client.
+
+** When fakestat is enabled on MacOSX, the Finder can be used to browse
+   a fully-populated /afs directory.  However, this precludes reliable
+   use of entire volumes as MacOS bundles (i.e. containing a Contents
+   directory in the root of the volume).
+
+** The fileserver will now use Rx pings to determine if clients are reachable
+   prior to allocating resources to them, to prevent asymmetric clients from
+   consuming all fileserver resources.
 
 * Changes incorporated in OpenAFS 1.2.6
 
