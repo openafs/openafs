@@ -1064,7 +1064,7 @@ CheckCacheBaseDir(char *dir)
 	    return "unable to statfs cache base directory";
 	}
 
-	if (sysfs(GETFSTYP, statfsbuf.f_fsid, name) != 0) {
+	if (sysfs(GETFSTYP, statfsbuf.f_fsid[1], name) != 0) {
 	    return "unable to determine filesystem type for cache base dir";
 	}
 
@@ -2233,6 +2233,7 @@ HandleMTab()
     tmntent.mnt_freq = 1;
     tmntent.mnt_passno = 3;
 #ifdef	AFS_HPUX_ENV
+    tmntent.mnt_type = "afs";
     tmntent.mnt_time = time(0);
     tmntent.mnt_cnode = 0;
 #endif

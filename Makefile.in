@@ -396,7 +396,7 @@ libuafs: libuafs_setup vlserver_depinstall rx_depinstall fsint_depinstall \
 		rxstat_depinstall lwp_depinstall des
 	set -x; \
 	case ${SYS_NAME} in \
-	hp_ux102* | *_obsd* | sun*_4* | *_nbsd*| hp_ux11i | ia64_hpux1122) \
+	hp_ux102* | *_obsd* | sun*_4* | *_nbsd*| hp_ux11i | ia64_hpux112*) \
 		echo Skipping libuafs for ${SYS_NAME} ;; \
 	* ) \
 		${COMPILE_PART1} libuafs ${COMPILE_PART2} ;; \

@@ -226,7 +226,7 @@ ${LIBAFS}: $(AFSAOBJS) $(AFSNFSOBJS)
 	$(AR) cru $@ $?
 	$(RANLIB) $@
 <ia64_hpux1123>
-	-$(MODLINK) -o $@ $?
+	$(MODLINK) -o $@ $(AFSAOBJS) $(AFSNFSOBJS)
 <all>
 
 ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
@@ -234,7 +234,7 @@ ${LIBAFSNONFS}:  $(AFSAOBJS) $(AFSNONFSOBJS)
 	$(AR) cru $@ $?
 	$(RANLIB) $@
 <ia64_hpux1123>
-	-$(MODLINK) -o $@ $?
+	$(MODLINK) -o $@ $(AFSAOBJS) $(AFSNONFSOBJS)
 <all>
 
 <ia64_hpux1123>
