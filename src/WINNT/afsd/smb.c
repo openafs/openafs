@@ -530,7 +530,14 @@ smb_CalculateNowTZ()
 	local_tm = *(localtime(&t));
 
 	days = local_tm.tm_yday - gmt_tm.tm_yday;
-	hours = 24 * days + local_tm.tm_hour - gmt_tm.tm_hour - (local_tm.tm_isdst ? 1 : 0);
+	hours = 24 * days + local_tm.tm_hour - gmt_tm.tm_hour
+#ifdef COMMENT
+        /* There is a problem with DST immediately after the time change
+         * which may continue to exist until the machine is rebooted
+         */
+        - (local_tm.tm_isdst ? 1 : 0)
+#endif /* COMMENT */
+        ;
 	minutes = 60 * hours + local_tm.tm_min - gmt_tm.tm_min;
 	seconds = 60 * minutes + local_tm.tm_sec - gmt_tm.tm_sec;
 

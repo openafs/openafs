@@ -146,11 +146,65 @@ afsd_ServiceFlushVolume(DWORD dwlpEventData)
     return dwRet;
 }
 
+
+/* service control handler used in nt4 only for backward compat. */
+VOID WINAPI 
+afsd_ServiceControlHandler(DWORD ctrlCode)
+{
+	HKEY parmKey;
+	DWORD dummyLen, doTrace;
+	long code;
+
+	switch (ctrlCode) {
+		case SERVICE_CONTROL_STOP:
+			/* Shutdown RPC */
+			RpcMgmtStopServerListening(NULL);
+
+			/* Force trace if requested */
+			code = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+					    AFSConfigKeyName,
+					    0, KEY_QUERY_VALUE, &parmKey);
+			if (code != ERROR_SUCCESS)
+				goto doneTrace;
+
+			dummyLen = sizeof(doTrace);
+			code = RegQueryValueEx(parmKey, "TraceOnShutdown",
+						NULL, NULL,
+						(BYTE *) &doTrace, &dummyLen);
+			RegCloseKey (parmKey);
+			if (code != ERROR_SUCCESS)
+				doTrace = 0;
+			if (doTrace)
+				afsd_ForceTrace(FALSE);
+
+doneTrace:
+			ServiceStatus.dwCurrentState = SERVICE_STOP_PENDING;
+			ServiceStatus.dwWin32ExitCode = NO_ERROR;
+			ServiceStatus.dwCheckPoint = 1;
+			ServiceStatus.dwWaitHint = 10000;
+			ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+			SetServiceStatus(StatusHandle, &ServiceStatus);
+			SetEvent(WaitToTerminate);
+			break;
+		case SERVICE_CONTROL_INTERROGATE:
+			ServiceStatus.dwCurrentState = SERVICE_RUNNING;
+			ServiceStatus.dwWin32ExitCode = NO_ERROR;
+			ServiceStatus.dwCheckPoint = 0;
+			ServiceStatus.dwWaitHint = 0;
+			ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+			SetServiceStatus(StatusHandle, &ServiceStatus);
+			break;
+		/* XXX handle system shutdown */
+		/* XXX handle pause & continue */
+	}
+}
+
+
 /*
 **    Extended ServiceControlHandler that provides Event types
 **    for monitoring Power events, for example.
 */
-DWORD
+DWORD WINAPI
 afsd_ServiceControlHandlerEx(
               DWORD  ctrlCode,
               DWORD  dwEventType,
@@ -350,6 +404,16 @@ typedef BOOL ( APIENTRY * AfsdInitHook )(void);
 #define AFSD_INIT_HOOK "AfsdInitHook"
 #define AFSD_HOOK_DLL  "afsdhook.dll"
 
+/*
+control serviceex exists only on 2000/xp. These functions will be loaded dynamically.
+*/
+
+typedef SERVICE_STATUS_HANDLE ( * RegisterServiceCtrlHandlerExFunc )(  LPCTSTR , LPHANDLER_FUNCTION_EX , LPVOID );
+typedef SERVICE_STATUS_HANDLE ( * RegisterServiceCtrlHandlerFunc   )(  LPCTSTR ,  LPHANDLER_FUNCTION );
+
+RegisterServiceCtrlHandlerExFunc pRegisterServiceCtrlHandlerEx = NULL;
+RegisterServiceCtrlHandlerFunc   pRegisterServiceCtrlHandler   = NULL; 
+
 void afsd_Main(DWORD argc, LPTSTR *argv)
 {
 	long code;
@@ -358,6 +422,7 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
 	int jmpret;
 #endif /* JUMP */
     HANDLE hInitHookDll;
+    HANDLE hAdvApi32;
     AfsdInitHook initHook;
 
 #ifdef _DEBUG
@@ -377,10 +442,23 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
         afsi_log("Event Object Already Exists: %s", TEXT("afsd_service_WaitToTerminate"));
 
 #ifndef NOTSERVICE
-	StatusHandle = RegisterServiceCtrlHandlerEx(argv[0] /* AFS_DAEMON_SERVICE_NAME */,
-			(LPHANDLER_FUNCTION_EX) afsd_ServiceControlHandlerEx,
-                                                 NULL /* user context */
-                                                 );
+    hAdvApi32 = LoadLibrary("advapi32.dll");
+    if (hAdvApi32 == NULL)
+    {
+        afsi_log("Fatal: cannot load advapi32.dll");
+        return;
+    }
+
+    pRegisterServiceCtrlHandlerEx = (RegisterServiceCtrlHandlerExFunc)GetProcAddress(hAdvApi32, "RegisterServiceCtrlHandlerExA");
+    if (pRegisterServiceCtrlHandlerEx)
+    {
+        afsi_log("running on 2000+ - using RegisterServiceCtrlHandlerEx");
+        StatusHandle = RegisterServiceCtrlHandlerEx(AFS_DAEMON_SERVICE_NAME, afsd_ServiceControlHandlerEx, NULL );
+    }
+    else
+    {
+        StatusHandle = RegisterServiceCtrlHandler(AFS_DAEMON_SERVICE_NAME, afsd_ServiceControlHandler);
+    }
 
 	ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
 	ServiceStatus.dwServiceSpecificExitCode = 0;
@@ -417,7 +495,8 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
             hookRc = initHook();
         }
         FreeLibrary(hInitHookDll);
-               
+        hInitHookDll = NULL;
+
         if (hookRc == FALSE)
         {
             ServiceStatus.dwCurrentState = SERVICE_STOPPED;
@@ -524,18 +603,12 @@ void afsd_Main(DWORD argc, LPTSTR *argv)
     /* Remove the ExceptionFilter */
     SetUnhandledExceptionFilter(NULL);
 
-    if ( hInitHookDll )
-        FreeLibrary(hInitHookDll);
-
-    Sleep(5000);
-
     ServiceStatus.dwCurrentState = SERVICE_STOPPED;
 	ServiceStatus.dwWin32ExitCode = GlobalStatus ? ERROR_EXCEPTION_IN_SERVICE : NO_ERROR;
 	ServiceStatus.dwCheckPoint = 0;
 	ServiceStatus.dwWaitHint = 0;
 	ServiceStatus.dwControlsAccepted = 0;
 	SetServiceStatus(StatusHandle, &ServiceStatus);
-
 }
 
 DWORD __stdcall afsdMain_thread(void* notUsed)

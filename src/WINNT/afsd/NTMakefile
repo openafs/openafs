@@ -139,7 +139,7 @@ $(INCFILEDIR)\afsd_eventmessages.h:  afsd_eventmessages.mc
 # Flags for linking LOGON DLL'S
 #
 
-LOGONLINKFLAGS = -entry:DllEntryPoint /NODEFAULTLIB:msvcr70d.lib /NODEFAULTLIB:msvcrtd.lib  msvcrt.lib
+LOGONLINKFLAGS = -entry:DllEntryPoint
 
 
 ############################################################################
@@ -328,7 +328,7 @@ $(AFSD_EXEFILE): $(OUT)\afsd.obj $(AFSDOBJS) $(OUT)\afsd.res  $(RXOBJS) $(AFSD_E
 
 # afsd_service.exe
 $(EXEDIR)\afsd_service.exe: $(OUT)\afsd_service.obj $(AFSDOBJS) $(OUT)\afsd_service.res  $(RXOBJS) $(AFSD_EXELIBS)
-	$(EXECONLINK) $(AFSD_SDKLIBS) /NODEFAULTLIB:libc.lib /MAP 
+	$(EXECONLINK) $(AFSD_SDKLIBS) /MAP 
 	$(EXEPREP)
 
 # fs.exe
