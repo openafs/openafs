@@ -186,6 +186,7 @@ kinstall: \
 	${KERNELDIR}/rx/rx_kcommon.c \
 	${KERNELDIR}/rx/rx_kcommon.h \
 	${KERNELDIR}/rx/rx_kernel.h \
+	${KERNELDIR}/rx/rx_kmutex.c \
 	${KERNELDIR}/rx/rx_kmutex.h \
 	${KERNELDIR}/rx/rx_knet.c \
 	${KERNELDIR}/rx/rx_misc.c \
@@ -221,6 +222,7 @@ ukinstall: \
 	${UKERNELDIR}/rx/rx_kcommon.c \
 	${UKERNELDIR}/rx/rx_kcommon.h \
 	${UKERNELDIR}/rx/rx_kernel.h \
+	${UKERNELDIR}/rx/rx_kmutex.c \
 	${UKERNELDIR}/rx/rx_kmutex.h \
 	${UKERNELDIR}/rx/rx_knet.c \
 	${UKERNELDIR}/rx/rx_misc.c \
@@ -282,6 +284,9 @@ ${KERNELDIR}/rx/rx_kcommon.h: rx_kcommon.h
 	${INSTALL} $? $@
 
 ${KERNELDIR}/rx/rx_kernel.h: rx_kernel.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/rx/rx_kmutex.c: ${MKAFS_OSTYPE}/rx_kmutex.c
 	${INSTALL} $? $@
 
 ${KERNELDIR}/rx/rx_kmutex.h: ${MKAFS_OSTYPE}/rx_kmutex.h
@@ -378,6 +383,9 @@ ${UKERNELDIR}/rx/rx_kcommon.h: UKERNEL/rx_kcommon.h
 	${INSTALL} $? $@
 
 ${UKERNELDIR}/rx/rx_kernel.h: rx_kernel.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rx_kmutex.c: UKERNEL/rx_kmutex.c
 	${INSTALL} $? $@
 
 ${UKERNELDIR}/rx/rx_kmutex.h: UKERNEL/rx_kmutex.h

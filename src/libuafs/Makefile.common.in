@@ -113,6 +113,7 @@ UAFSOBJ = \
 	$(UOBJ)/rx_clock.o \
 	$(UOBJ)/rx_event.o \
 	$(UOBJ)/rx_globals.o \
+	$(UOBJ)/rx_kmutex.o \
 	$(UOBJ)/rx_knet.o \
 	$(UOBJ)/rx_kcommon.o \
 	$(UOBJ)/rx_misc.o \
@@ -230,6 +231,7 @@ AFSWEBOBJ = \
 	$(WEBOBJ)/rx_clock.o \
 	$(WEBOBJ)/rx_event.o \
 	$(WEBOBJ)/rx_globals.o \
+	$(WEBOBJ)/rx_kmutex.o \
 	$(WEBOBJ)/rx_knet.o \
 	$(WEBOBJ)/rx_kcommon.o \
 	$(WEBOBJ)/rx_misc.o \
@@ -347,6 +349,7 @@ AFSWEBOBJKRB = \
 	$(WEBOBJ)/rx_clock.o \
 	$(WEBOBJ)/rx_event.o \
 	$(WEBOBJ)/rx_globals.o \
+	$(WEBOBJ)/rx_kmutex.o \
 	$(WEBOBJ)/rx_knet.o \
 	$(WEBOBJ)/rx_kcommon.o \
 	$(WEBOBJ)/rx_misc.o \
@@ -563,6 +566,8 @@ $(UOBJ)/Kvldbint.cs.o: $(AFSINT)/Kvldbint.cs.c
 $(UOBJ)/Kvldbint.xdr.o: $(AFSINT)/Kvldbint.xdr.c
 	$(CRULE1)
 $(UOBJ)/afs_main.o: $(AFS)/afs_main.c
+	$(CRULE1)
+$(UOBJ)/rx_kmutex.o: $(RX)/rx_kmutex.c
 	$(CRULE1)
 $(UOBJ)/rx_knet.o: $(RX)/rx_knet.c
 	$(CRULE1)
@@ -806,6 +811,8 @@ $(WEBOBJ)/Kvldbint.cs.o: $(AFSINT)/Kvldbint.cs.c
 $(WEBOBJ)/Kvldbint.xdr.o: $(AFSINT)/Kvldbint.xdr.c
 	$(CRULE2)
 $(WEBOBJ)/afs_main.o: $(AFS)/afs_main.c
+	$(CRULE2)
+$(WEBOBJ)/rx_kmutex.o: $(RX)/rx_kmutex.c
 	$(CRULE2)
 $(WEBOBJ)/rx_knet.o: $(RX)/rx_knet.c
 	$(CRULE2)

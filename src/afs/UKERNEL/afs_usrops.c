@@ -487,6 +487,13 @@ caddr_t x;
     }
 }
 
+int afs_osi_SleepSig(x)
+    caddr_t x;
+{
+    afs_osi_Sleep(x);
+    return 0;
+}
+
 int afs_osi_Wakeup(x)
 caddr_t x;
 {

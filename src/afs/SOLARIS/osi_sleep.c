@@ -136,6 +136,24 @@ void afs_osi_Sleep(char *event)
     relevent(evp);
 }
 
+int afs_osi_SleepSig(char *event)
+{
+    struct afs_event *evp;
+    int seq, code = 0;
+
+    evp = afs_getevent(event);
+    seq = evp->seq;
+    while (seq == evp->seq) {
+	AFS_ASSERT_GLOCK();
+	if (cv_wait_sig(&evp->cond, &afs_global_lock) == 0) {
+	    code = EINTR;
+	    break;
+	}
+    }
+    relevent(evp);
+    return code;
+}
+
 /* osi_TimedSleep
  * 
  * Arguments:
@@ -158,7 +176,7 @@ static int osi_TimedSleep(char *event, afs_int32 ams, int aintok)
 
     AFS_ASSERT_GLOCK();
     if (aintok) {
-	if (cv_timedwait_sig(&evp->cond, &afs_global_lock, ticks) == -1)
+	if (cv_timedwait_sig(&evp->cond, &afs_global_lock, ticks) == 0)
 	    code = EINTR;
     } else {
 	cv_timedwait(&evp->cond, &afs_global_lock, ticks);

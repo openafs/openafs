@@ -192,24 +192,33 @@ tagain:
 			ConvertWToSLock(&tdc->mflock);
 			/* don't use bp pointer! */
 		    }
+		    code = 0;
 		    ConvertSToRLock(&tdc->mflock);
-		    while (tdc->mflags & DFFetchReq) {
+		    while (!code && tdc->mflags & DFFetchReq) {
 			/* don't need waiting flag on this one */
 			ReleaseReadLock(&tdc->mflock);
 			ReleaseReadLock(&tdc->lock);
 			ReleaseReadLock(&avc->lock);
-			afs_osi_Sleep(&tdc->validPos);
+			code = afs_osi_SleepSig(&tdc->validPos);
 			ObtainReadLock(&avc->lock);
 			ObtainReadLock(&tdc->lock);
 			ObtainReadLock(&tdc->mflock);
 		    }
 		    ReleaseReadLock(&tdc->mflock);
+		    if (code) {
+			error = code;
+			break;
+		    }
 		}
 	    }
 	    /* now data may have started flowing in (if DFFetching is on).  If
-	     * data is now streaming in, then wait for some interesting stuff. */
-	    while ((tdc->dflags & DFFetching) && tdc->validPos <= filePos) {
-		/* too early: wait for DFFetching flag to vanish, or data to appear */
+	     * data is now streaming in, then wait for some interesting stuff.
+	     */
+	    code = 0;
+	    while (!code && (tdc->dflags & DFFetching) &&
+		   tdc->validPos <= filePos) {
+		/* too early: wait for DFFetching flag to vanish,
+		 * or data to appear */
 		afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
 				ICL_TYPE_STRING, __FILE__,
 				ICL_TYPE_INT32, __LINE__,
@@ -217,9 +226,13 @@ tagain:
 				ICL_TYPE_INT32, tdc->dflags);
 		ReleaseReadLock(&tdc->lock);
 		ReleaseReadLock(&avc->lock);
-		afs_osi_Sleep(&tdc->validPos);
+		code = afs_osi_SleepSig(&tdc->validPos);
 		ObtainReadLock(&avc->lock);
 		ObtainReadLock(&tdc->lock);
+	    }
+	    if (code) {
+		error = code;
+		break;
 	    }
 	    /* fetching flag gone, data is here, or we never tried (BBusy for instance) */
 	    if (tdc->dflags & DFFetching) {
@@ -711,24 +724,33 @@ tagain:
 			}
 			ConvertWToSLock(&tdc->mflock);
 		    }
+		    code = 0;
 		    ConvertSToRLock(&tdc->mflock);
-		    while (tdc->mflags & DFFetchReq) {
+		    while (!code && tdc->mflags & DFFetchReq) {
 			/* don't need waiting flag on this one */
 			ReleaseReadLock(&tdc->mflock);
 			ReleaseReadLock(&tdc->lock);
 			ReleaseReadLock(&avc->lock);
-			afs_osi_Sleep(&tdc->validPos);
+			code = afs_osi_SleepSig(&tdc->validPos);
 			ObtainReadLock(&avc->lock);
 			ObtainReadLock(&tdc->lock);
 			ObtainReadLock(&tdc->mflock);
 		    }
 		    ReleaseReadLock(&tdc->mflock);
+		    if (code) {
+			error = code;
+			break;
+		    }
 		}
 	    }
 	    /* now data may have started flowing in (if DFFetching is on).  If
-	     * data is now streaming in, then wait for some interesting stuff. */
-	    while ((tdc->dflags & DFFetching) && tdc->validPos <= filePos) {
-		/* too early: wait for DFFetching flag to vanish, or data to appear */
+	     * data is now streaming in, then wait for some interesting stuff.
+	     */
+	    code = 0;
+	    while (!code && (tdc->dflags & DFFetching) &&
+		   tdc->validPos <= filePos) {
+		/* too early: wait for DFFetching flag to vanish,
+		 * or data to appear */
 		afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
 				ICL_TYPE_STRING, __FILE__,
 				ICL_TYPE_INT32, __LINE__,
@@ -736,18 +758,25 @@ tagain:
 				ICL_TYPE_INT32, tdc->dflags);
 		ReleaseReadLock(&tdc->lock);
 		ReleaseReadLock(&avc->lock);
-		afs_osi_Sleep(&tdc->validPos);
+		code = afs_osi_SleepSig(&tdc->validPos);
 		ObtainReadLock(&avc->lock);
 		ObtainReadLock(&tdc->lock);
 	    }
-	    /* fetching flag gone, data is here, or we never tried (BBusy for instance) */
+	    if (code) {
+		error = code;
+		break;
+	    }
+	    /* fetching flag gone, data is here, or we never tried
+	     * (BBusy for instance) */
 	    if (tdc->dflags & DFFetching) {
-		/* still fetching, some new data is here: compute length and offset */
+		/* still fetching, some new data is here:
+		 * compute length and offset */
 		offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 		len = tdc->validPos - filePos;
 	    }
 	    else {
-		/* no longer fetching, verify data version (avoid new GetDCache call) */
+		/* no longer fetching, verify data version (avoid new
+		 * GetDCache call) */
 		if (hsame(avc->m.DataVersion, tdc->f.versionNo)) {
 		    offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 		    len = tdc->f.chunkBytes - offset;

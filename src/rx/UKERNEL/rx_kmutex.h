@@ -10,7 +10,7 @@
 /*
  * rx_kmutex.h - mutex and condition variable macros for kernel environment.
  *
- * Solaris implementation.
+ * User-space implementation.
  */
 
 #ifndef _RX_KMUTEX_H_

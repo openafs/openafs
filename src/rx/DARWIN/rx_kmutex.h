@@ -54,6 +54,7 @@
 	                        thread_block(0);                \
 	                        if (isGlockOwner) AFS_GLOCK();  \
 	                        MUTEX_ENTER(lck);       \
+				}
 
 #define CV_SIGNAL(cv)           thread_wakeup_one((event_t)(cv))
 #define CV_BROADCAST(cv)        thread_wakeup((event_t)(cv))

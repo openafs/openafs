@@ -143,6 +143,12 @@ void afs_osi_Sleep(char *event)
     relevent(evp);
 }
 
+int afs_osi_SleepSig(char *event)
+{
+    afs_osi_Sleep(event);
+    return 0;
+}
+
 /* osi_TimedSleep
  * 
  * Arguments:
