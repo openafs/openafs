@@ -1,3 +1,1163 @@
+2001-10-13 05:28  shadow
+
+	* src/afs/VNOPS/afs_vnop_lookup.c:
+	
+	DELTA disable-client-inlinebulk-20011013 AUTHOR shadow@dementia.org
+	
+	until we can remember which servers support it
+
+2001-10-13 05:27  shadow
+
+	* NEWS:
+	
+	DELTA update-news-file-20011013 AUTHOR shadow@dementia.org
+	
+	update news file for new advances
+
+2001-10-13 05:24  shadow
+
+	* src/afs/VNOPS/afs_vnop_lookup.c:
+	
+	DELTA disable-client-inlinebulk-20011013 AUTHOR shadow@dementia.org
+	
+	until we can remember which servers support it
+
+2001-10-13 05:22  shadow
+
+	* doc/txt/RELNOTES-1.2.2:
+	
+	DELTA add-relnotes-for-122-20011013 AUTHOR shadow@dementia.org
+	
+	1.2.2 release notes
+
+2001-10-12 17:55  shadow
+
+	* src/afs/LINUX/osi_vfsops.c:
+	
+	DELTA linux-no-umount-begin-20011012 AUTHOR shadow@dementia.org
+	
+	to fix problem reported by rtm@cert.org
+	
+	this code needs to be reworked before it can be reactivated
+
+2001-10-12 13:55  shadow
+
+	* src/libafs/MakefileProto.FBSD.in:
+	
+	DELTA fbsd-makefile-typo-20011012 AUTHOR zik@msu.edu
+	
+	add missing =
+
+2001-10-12 00:24  shadow
+
+	* src/bozo/bnode.c:
+	
+	DELTA make-logging-enhancements-aix-friendly-20011011 AUTHOR
+	shadow@dementia.org
+	
+	AIX lacks WCOREDUMP so we work around it
+
+2001-10-11 21:51  shadow
+
+	* src/volser/volprocs.c:
+	
+	DELTA
+	fix-attach-directories-code-to-properly-use-vgetpartition-20011011
+	AUTHOR shadow@dementia.org
+	
+	irix hates us when we misuse functions
+
+2001-10-11 21:41  shadow
+
+	* src/rx/IRIX/rx_knet.c:
+	
+	DELTA irix-adapt-mtu-correctly-in-multi-interface-case-20011011
+	AUTHOR kolya@mit.edu
+	
+	undo chas's earlier patch fix another flub
+
+2001-10-11 21:33  shadow
+
+	* src/util/assert.c:
+	
+	DELTA logging-enhancements-need-ctime-decl-20011011 AUTHOR
+	shadow@dementia.org
+	
+	make irix happy
+
+2001-10-11 21:14  shadow
+
+	* src/rx/IRIX/rx_knet.c:
+	
+	DELTA irix-adapt-mtu-correctly-in-multi-interface-case-20011011
+	AUTHOR kolya@mit.edu
+	
+	let hash_enum iterate so we get the right interface
+
+2001-10-11 20:43  shadow
+
+	* src/tbutc/Makefile.in:
+	
+	DELTA tbutc-make-tsm-a-configure-option-20011009 AUTHOR
+	shadow@dementia.org
+	
+	gmake wasn't part of the deal
+
+2001-10-11 20:34  shadow
+
+	* acinclude.m4:
+	
+	DELTA support-nested-variables-20011009 AUTHOR jhutz@cmu.edu
+	
+	bash 1.14.7 can't deal with backslash-quoting for this
+
+2001-10-11 18:39  shadow
+
+	* src/rx/IRIX/rx_knet.c:
+	
+	DELTA irix-adapt-mtu-correctly-20011011 AUTHOR
+	chas@cmf.nrl.navy.mil
+	
+	rxi_MatchIfnet() always returns 0 (i.e. not a match).  so
+	rxi_FindIfnet() will always return 0 and the ADAPT_MTU code can
+	never determine the interface (and its mtu)
+	
+	fix by returning 1 if we have a match_value
+
+2001-10-11 17:39  shadow
+
+	* configure-libafs.in, configure.in:
+	
+	DELTA
+	check-for-makefile-fragments-for-systype-at-configure-time-20011011
+	AUTHOR nneul@umr.edu
+	
+	don't look at the generated files
+
+2001-10-11 16:41  shadow
+
+	* src/config/: param.sgi_62.h, param.sgi_63.h, param.sgi_64.h,
+	param.sgi_65.h:
+	
+	DELTA
+	
+	same as how we fix solaris
+	irix-lacks-mem-functions-in-kernel-so-revert-to-b-functions-2001101
+	1 AUTHOR chas@cmf.nrl.navy.mil
+
+2001-10-11 07:55  shadow
+
+	* configure-libafs.in, configure.in:
+	
+	DELTA
+	check-for-makefile-fragments-for-systype-at-configure-time-20011011
+	AUTHOR raeburn@raeburn.org
+	
+	don't succeed configuring if we can't build for them
+
+2001-10-11 07:50  shadow
+
+	* src/config/: Makefile.alpha_linux_24.in, param.alpha_linux_24.h,
+	param.alpha_linux_24_usr.h:
+	
+	DELTA alpha-linux-24-base-support-20011011 AUTHOR
+	raeburn@raeburn.org
+	
+	openafs works on alpha linux 2.4
+
+2001-10-11 07:43  shadow
+
+	* acinclude.m4:
+	
+	DELTA merged-configure-support-solaris9-20011011 AUTHOR
+	kolya@mit.edu
+	
+	this slipped through the cracks when configure and configure-libafs
+	were merged
+
+2001-10-11 07:41  shadow
+
+	* src/afs/VNOPS/afs_vnop_lookup.c:
+	
+	DELTA bulkstat-correctly-return-fetchstatus-error-20011011 AUTHOR
+	kolya@mit.edu
+	
+	actually fall back to fetchstatus's error
+
+2001-10-11 07:36  shadow
+
+	* src/afs/afs_nfsdisp.c:
+	
+	DELTA solaris-afs-nfs-translator-not-a-prayer-20011011 AUTHOR
+	shadow@dementia.org
+	
+	first pass at afs-nfs translator for solaris. it has not a prayer
+	of working. i don't really have time to work on it, hopefully
+	someone will see it and care.
+
+2001-10-11 03:15  shadow
+
+	* src/afs/LINUX/osi_vfsops.c:
+	
+	DELTA
+	
+	afs_put_super calls afs_shutdown, which expects to be called with
+	afs_shuttingdown equal to 0, not 1
+	linux-umount-begin-dont-preclude-afs-put-super-from-usefully-callin
+	g-afs-shutdown-20011010 AUTHOR shadow@dementia.org
+
+2001-10-10 19:32  shadow
+
+	* src/afs/afs_cell.c:
+	
+	DELTA cell-alias-support-fix-memory-leak-20011010 AUTHOR
+	kolya@mit.edu
+	
+	be careful to clean up after ourselves
+
+2001-10-10 14:00  shadow
+
+	* src/viced/host.c:
+	
+	DELTA h-release-r-should-try-harder-to-reap-deleted-hosts-20011008
+	AUTHOR jimmy@e.kth.se
+	
+	mask holdbit in case i missed
+
+2001-10-10 03:16  shadow
+
+	* src/afsd/afs.rc.linux:
+	
+	DELTA linux-rc-file-cleanup-20011008 AUTHOR warlord@mit.edu
+	
+	fix silly typo
+
+2001-10-10 00:10  shadow
+
+	* NEWS, README, src/afs/afs.h, src/afs/afs_call.c,
+	src/afs/afs_daemons.c, src/afs/afs_dcache.c, src/afs/afs_dynroot.c,
+	src/afs/afs_vcache.c, src/afs/afs_volume.c,
+	src/afs/VNOPS/afs_vnop_lookup.c, src/afsd/afsd.c,
+	src/config/afs_args.h, src/dir/dir.h, src/libafs/Makefile.common,
+	src/libuafs/Makefile.common:
+	
+	DELTA unix-dynroot-support-20011009 AUTHOR kolya@mit.edu
+	
+	  The result is that if afsd is started with "-dynroot", /afs
+	  will be a locally-generated directory, with mountpoints for every
+	  cell in CellServDB (and /afs/.cellname as the rw mountpoint).  If
+	  AFSDB support is also enabled, attempting to access /afs/foo will
+	  cause the cache manager to do an AFSDB lookup on foo, similar to
+	  an automounter.  Cell aliases become symlinks to the real cell
+	  names under /afs.
+
+2001-10-10 00:05  shadow
+
+	* src/: afs/afs.h, afs/afs_call.c, afs/afs_cell.c,
+	afs/afs_pioctl.c, afsd/afsd.c, auth/cellconfig.c:
+	
+	DELTA support-cell-aliases-20011009 AUTHOR kolya@mit.edu This patch
+	adds support for "cell aliases": a cell alias allows a	 single
+	cell to be known by multiple names (one of them the primary).	
+	This is useful in conjunction with AFSDB support, where you want
+	all    the possible names for the same cell to share the same
+	tokens, etc.
+	
+	  For instance, if the local resolver has "mit.edu" in its search
+	  domain, an AFSDB lookup on cell "athena" will cause the primary
+	  cell "athena.mit.edu" to be created, and "athena" made an alias
+	  for it.
+
+2001-10-09 23:59  shadow
+
+	* src/rx/rx_trace.c:
+	
+	DELTA
+	rx-trace-check-correctly-for-file-descriptor-validity-20011009
+	AUTHOR kolya@mit.edu
+	
+	file descriptor numbered 0 is valid
+
+2001-10-09 23:58  shadow
+
+	* src/afs/afs_buffer.c:
+	
+	DELTA release-buffer-cache-lock-before-opening-file-20011009 AUTHOR
+	kolya@mit.edu	make the buffer cache release	the buffer hash
+	lock before trying to open the corresponding file.    Since we're
+	already holding a buffer cache entry, we can lock it	instead and
+	let other threads obtain the big hash lock.
+	
+2001-10-09 23:57  shadow
+
+	* acinclude.m4, src/config/Makefile.rs_aix42.in,
+	src/config/Makefile.sun4x_56.in, src/config/Makefile.sun4x_57.in,
+	src/config/Makefile.sun4x_58.in, src/config/Makefile.sun4x_59.in,
+	src/tbutc/Makefile.in:
+	
+	DELTA tbutc-make-tsm-a-configure-option-20011009 AUTHOR
+	nneul@umr.edu
+	
+	not tsm support can be configure'd on
+
+2001-10-09 23:45  shadow
+
+	* acinclude.m4, src/util/Makefile.in:
+	
+	DELTA support-nested-variables-20011009 AUTHOR katzj@redhat.com
+	
+	necessary changes to nest variables so build directories can be
+	changed when installing by overriding fewer variables
+
+2001-10-09 14:48  shadow
+
+	* acinclude.m4, configure-libafs.in:
+	
+	DELTA
+	
+	except don't require autoconf 2.50
+	configure-and-configure-libafs-use-acinclude-as-common-ground-20011
+	008 AUTHOR jhutz@cmu.edu
+
+2001-10-09 06:32  shadow
+
+	* src/venus/livesys.c:
+	
+	DELTA add-live-sys-cmd-20011008 AUTHOR jhutz@cmu.edu
+	
+	The attached patch adds a program named 'livesys' to the venus
+	directory.    This program has exactly the same interface as 'sys',
+	but actually does a    pioctl to find out the current sysname
+	instead of printing a value    compiled into it.  It is intended
+	for sites who want 'sys' to report the	  active, locally-assigned
+	sysname of the machine on which it is run.
+
+2001-10-09 06:16  shadow
+
+	* acinclude.m4:
+	
+	DELTA configure-and-configure-libafs-use-acinclude-as-common-ground
+	-20011008 AUTHOR jhutz@cmu.edu
+	
+	use a single file for most of both configure scripts
+
+2001-10-09 05:56  shadow
+
+	* src/afs/afs_server.c:
+	
+	DELTA avoid-losing-when-sorting-server-prefs-if-a-server-has-left-out
+	-from-under-us-while-we-were-playing-20011009 AUTHOR
+	shadow@dementia.org
+
+	
+	but it would be better to figure out how we're losing a server out
+	from under us.
+
+2001-10-09 05:29  shadow
+
+	* src/volser/volprocs.c:
+	
+	DELTA volser-update-backup-times-20011009 AUTHOR jhutz@cmu.edu
+	
+	update backup time when the backup is recloned
+
+2001-10-09 05:27  shadow
+
+	* src/util/assert.c:
+	
+	DELTA logging-enhancements-20011009 AUTHOR jhutz@cmu.edu
+	
+	Messages generated as the result of assertion failures now include
+	timestamps.
+
+2001-10-09 05:27  shadow
+
+	* src/bozo/bnode.c:
+	
+	DELTA logging-enhancements-20011009 AUTHOR jhutz@cmu.edu
+	
+	The bosserver now logs the exit status of processes under its
+	control.
+
+2001-10-09 05:18  shadow
+
+	* src/config/afs_sysnames.h:
+	
+	DELTA parisc-linux-initial-support-20011008 AUTHOR nneul@umr.edu
+	
+	initial support for the pa risc linux port
+
+2001-10-09 05:14  shadow
+
+	* Makefile.in, config.sub, src/afs/LINUX/osi_module.c,
+	src/config/Makefile.parisc_linux24.in,
+	src/config/param.parisc_linux24.h,
+	src/config/param.parisc_linux24_usr.h, src/des/andrew-conf.h,
+	src/des/conf-parisc-linux.h, src/libafs/MakefileProto.LINUX.in:
+	
+	DELTA parisc-linux-initial-support-20011008 AUTHOR nneul@umr.edu
+	
+	initial support for the pa risc linux port
+
+2001-10-09 04:57  shadow
+
+	* src/WINNT/afsd/cm_freelance.c:
+	
+	DELTA freelance-compute-dirsize-correctly-20011009 AUTHOR
+	kolya@mit.edu
+	
+	compute directory size properly
+
+2001-10-09 04:56  shadow
+
+	* src/WINNT/afsd/: cm_dns.c, cm_dns.h, cm_dns_private.h,
+	cm_freelance.c, cm_freelance.h:
+	
+	DELTA windows-afsdb-and-freelance-afs-root-support-20011005 AUTHOR
+	riegel@almaden.ibm.com
+	
+	afsdb record support for windows freelance /afs (make up an afs
+	root instead of using root.afs from some cell) support for windows
+
+2001-10-09 00:07  shadow
+
+	* src/afs/afs_vcache.c:
+	
+	DELTA linux-dcache-cleanup-aggressively-to-avoid-having-too-many-
+	vcache-entries-locked-down-20011008 AUTHOR cg2v@andrew.cmu.edu
+	
+	less aggressive, though, than the "don't use the dcache at all"
+	d_drop solution i proposed.
+
+2001-10-08 22:58  shadow
+
+	* src/venus/Makefile.in:
+	
+	DELTA add-live-sys-cmd-20011008 AUTHOR jhutz@cmu.edu
+	
+	The attached patch adds a program named 'livesys' to the venus
+	directory.    This program has exactly the same interface as 'sys',
+	but actually does a    pioctl to find out the current sysname
+	instead of printing a value    compiled into it.  It is intended
+	for sites who want 'sys' to report the	  active, locally-assigned
+	sysname of the machine on which it is run.
+
+2001-10-08 22:55  shadow
+
+	* src/volser/: volser.p.h, vos.c, vsprocs.c, vsutils.c:
+	
+	DELTA vos-command-enhancements-20011008 AUTHOR jhutz@cmu.edu
+	
+	- Adds the -crypt option, which causes rx connections to be
+	encrypted
+	
+	  - Adds the 'vos setfields' command, which allows volume info
+	fields to
+	    be set.  Currently, this command allows a volume's quota to be
+	set,
+	    and allows its dayuse counter to be manually cleared.  At
+	present,
+	    no other changes are supported by the volserver RPC interface.
+	
+	  - Adds the 'vos changeloc' command, which allows the VLDB's idea
+	of the
+	    location of an RW volume to be explicitly changed without
+	actually
+	    moving the volume.	This can be used in cases where the VLDB
+	has the
+	    wrong idea of the location of a volume for some reason.  It is
+	    somewhat more predictable and easy to understand than the
+	syncserv
+	    and syncvldb commands.
+	
+	  - Adds the -offline option to 'vos restore'.	This option causes
+	the
+	    restored volume to be left offline.  This functionality was
+	already
+	    present in the code but previously had no user interface.
+	
+	  - Adds the -readonly option to 'vos restore'.  This option causes
+	the
+	    restored volume to be an RO volume.  It is not permitted to
+	restore
+	    an RO volume when the associated RW volume already exists. 
+	While
+	    it is possible to restore an RW volume where an RO volume
+	exists,
+	    caution should be used to avoid doing this with VLDB entries
+	created
+	    by 'vos restore -readonly', since such entries have their ROVOL
+	and
+	    RWVOL ID's set to the same thing.
+
+2001-10-08 22:47  shadow
+
+	* src/auth/cellconfig.c:
+	
+	DELTA fix-uafs-build-20011008 AUTHOR kolya@mit.edu
+	
+	apply until intent of change is clear
+
+2001-10-08 22:42  shadow
+
+	* src/viced/host.c:
+	
+	DELTA h-release-r-should-try-harder-to-reap-deleted-hosts-20011008
+	AUTHOR shadow@dementia.org
+	
+	based on complaint from and work with jimmy@e.kth.se
+	
+	h_OtherHolds_r will never return 0 if we mask our own hold bit
+	before calling it. however we must be careful to mask before
+	h_TossStuff_r so we aren't still "holding" then
+	
+	otherwise just release our hold
+
+2001-10-08 22:34  shadow
+
+	* src/: config/.cvsignore, libafs/.cvsignore, venus/.cvsignore:
+	
+	DELTA more-cvsignore-updates-20011008 AUTHOR nneul@umr.edu
+	
+	fix some cases where versions were hardcoded
+
+2001-10-08 22:29  shadow
+
+	* src/afsd/: afs.conf.linux, afs.rc.linux:
+	
+	DELTA linux-rc-file-cleanup-20011008 AUTHOR warlord@mit.edu
+	
+	Modularize the Linux RC file(s) a bit.	In particular, add more
+	options for larger caches, allow autogeneration of the cacheinfo
+	file, make sure AFS only starts if the network is running, add SuSE
+	header information, and cope with the Red Hat initscripts better
+	(on Red Hat only, but should work on all systems).
+
+2001-10-08 22:22  shadow
+
+	* configure-libafs.in, configure.in:
+	
+	DELTA configure-and-configure-libafs-use-acinclude-as-common
+	-ground-20011008 AUTHOR jhutz@cmu.edu
+
+	
+	use a single file for most of both configure scripts
+
+2001-10-08 22:19  shadow
+
+	* src/: afs/SOLARIS/osi_file.c, afs/SOLARIS/osi_vfsops.c,
+	afs/SOLARIS/osi_vnodeops.c, afs/VNOPS/afs_vnop_strategy.c,
+	afsd/Makefile.in, afsd/afs.rc.solaris.2.9,
+	config/Makefile.sun4x_59.in, config/afs_sysnames.h,
+	config/param.sun4x_59.h, config/param.sun4x_59_usr.h,
+	libafs/MakefileProto.SOLARIS.in:
+	
+	DELTA solaris-9-support-20011008 AUTHOR kolya@mit.edu
+	
+	support solaris 9
+
+2001-10-08 22:15  shadow
+
+	* src/afs/: afs.h, afs_callback.c, afs_pioctl.c, afs_util.c,
+	afs_vcache.c, LINUX/osi_vfs.hin, LINUX/osi_vm.c,
+	VNOPS/afs_vnop_lookup.c, VNOPS/afs_vnop_remove.c,
+	VNOPS/afs_vnop_write.c:
+	
+	DELTA
+	fix-linux-atomic-t-lossage-by-macroizing-vnode-refcounts-20011008
+	AUTHOR kolya@mit.edu
+	
+	convert to macros for dealing with vnode refcounts deal with linux
+	2.4 atomic_t in the process
+
+2001-10-05 21:40  shadow
+
+	* src/: Makefile.djgpp, NTMake9x, NTMakefile,
+	WINNT/afsd/Makefile.djgpp, WINNT/afsd/NTMakefile,
+	WINNT/afsd/afsd.h, WINNT/afsd/afsd95.c, WINNT/afsd/afsd_init.c,
+	WINNT/afsd/afsd_init95.c, WINNT/afsd/cm_callback.c,
+	WINNT/afsd/cm_cell.c, WINNT/afsd/cm_cell.h, WINNT/afsd/cm_config.c,
+	WINNT/afsd/cm_config.h, WINNT/afsd/cm_dcache.c,
+	WINNT/afsd/cm_ioctl.c, WINNT/afsd/cm_ioctl.h,
+	WINNT/afsd/cm_scache.c, WINNT/afsd/cm_vnodeops.c,
+	WINNT/afsd/libafsconf.def, WINNT/client_osi/osisleep.h,
+	auth/NTMakefile, auth/cellconfig.c, config/Makefile.i386_djgpp,
+	config/NTMakefile.i386_nt40, config/NTMakefile.i386_win95,
+	config/afsconfig-windows.h, kauth/NTMakefile, kauth/kpasswd.c,
+	kauth/user_nt.c, libafsauthent/NTMakefile, ptserver/NTMakefile,
+	ptserver/pts.c:
+	
+	DELTA windows-afsdb-and-freelance-afs-root-support-20011005 AUTHOR
+	riegel@almaden.ibm.com
+	
+	afsdb record support for windows freelance /afs (make up an afs
+	root instead of using root.afs from some cell) support for windows
+
+2001-10-05 21:31  shadow
+
+	* src/vol/: ihandle.c, ihandle.h:
+	
+	DELTA vol-warnings-cleanup-20011005 AUTHOR nneul@umr.edu
+	
+	make stream_open take const arguments
+
+2001-10-05 21:30  shadow
+
+	* src/sys/rmtsysnet.c:
+	
+	DELTA sys-warnings-cleanup-20011005 AUTHOR nneul@umr.edu
+	
+	add headers
+
+2001-10-05 21:30  shadow
+
+	* src/rx/: rx_clock.c, rx_packet.c:
+	
+	DELTA rx-warnings-cleanup-20011005 AUTHOR nneul@umr.edu
+	
+	add header, pull ++ out of ntohl
+
+2001-10-05 21:28  shadow
+
+	* src/util/Makefile.in:
+	
+	DELTA util-makefile-suppress-multiple-install-target-20011005
+	AUTHOR nneul@umr.edu
+	
+	extra install target unneeded
+
+2001-10-05 21:25  shadow
+
+	* src/viced/host.c:
+	
+	DELTA viced-server-shutdown-diagnostics-20011005 AUTHOR
+	nneul@umr.edu
+	
+	print some debugging if we shutdown due to failure
+
+2001-10-05 21:24  shadow
+
+	* src/util/: assert.c, casestrcpy.c, fileutil.c, kreltime.c,
+	ktime.c, uuid.c:
+	
+	DELTA util-warning-cleanup-20011005 AUTHOR nneul@umr.edu
+	
+	add headers, parens, and braces ifdef notdef unused routines
+
+2001-10-05 21:23  shadow
+
+	* src/auth/: cellconfig.c, ktc.c, writeconfig.c:
+	
+	DELTA auth-warning-cleanup-20011005 AUTHOR nneul@umr.edu
+	
+	add headers, parens, and braces
+
+2001-10-05 21:22  shadow
+
+	* src/pinstall/install.c:
+	
+	DELTA pinstall-warning-cleanup-20011005 AUTHOR nneul@umr.edu
+	
+	add header to suppress warning
+
+2001-10-05 21:19  shadow
+
+	* src/des/: main.c, make_ip.c:
+	
+	DELTA des-warning-cleanup-20011005 AUTHOR nneul@umr.edu
+	
+	cleanup warnings from des (add headers)
+
+2001-10-05 21:18  shadow
+
+	* src/rxkad/: rxkad_client.c, rxkad_common.c, rxkad_server.c,
+	ticket.c:
+	
+	DELTA rxkad-warning-cleanup-20011005 AUTHOR nneul@umr.edu
+	
+	cleanup warnings from rxkad (add headers, move a ++ outside a
+	htonl)
+
+2001-10-05 21:17  shadow
+
+	* src/kauth/: authclient.c, client.c, kaauxdb.c, kadatabase.c,
+	kalocalcell.c, kalog.c, kas.c, kaserver.c, kautils.c, klog.c,
+	kpasswd.c, kpwvalid.c, krb_tf.c, krb_udp.c, rebuild.c, token.c,
+	user.c:
+	
+	DELTA kauth-warning-cleanup-20011005 AUTHOR nneul@umr.edu
+	
+	cleanup warnings from kauth (add headers)
+
+2001-10-05 21:13  shadow
+
+	* src/update/client.c:
+	
+	DELTA make-upclient-clean-up-after-itself-20011005 AUTHOR
+	nneul@umr.edu to preclude lots of turds being left in /tmp from
+	failures
+
+2001-10-05 21:10  shadow
+
+	* src/viced/host.c:
+	
+	DELTA viced-hosts-dump-make-output-more-useful-for-holds-20011005
+	AUTHOR lha@e.kth.se
+	
+	don't just print pointer to holds array
+
+2001-10-05 21:07  shadow
+
+	* src/ptserver/: db_verify.c, ptprocs.c, ptserver.c, ptuser.c,
+	ptutils.c, readgroup.c, readpwd.c, testpt.c, utils.c:
+	
+	DELTA ptserver-warning-cleanup-20011005 AUTHOR nneul@umr.edu
+	
+	clean up warnings in ptserver dir
+
+2001-10-05 21:05  shadow
+
+	* src/ubik/: beacon.c, disk.c, phys.c, recovery.c, remote.c,
+	ubik.c, ubikcmd.c, utst_client.c, utst_server.c, vote.c:
+	
+	DELTA ubik-warning-cleanup-20011005 AUTHOR nneul@umr.edu
+	
+	clean up warnings (mostly new headers or added parens) in ubik
+
+2001-10-05 21:03  shadow
+
+	* src/afsd/: afsd.c, vsys.c:
+	
+	DELTA afsd-warning-cleanup-20011005 AUTHOR nneul@umr.edu
+	
+	clean up warnings in afsd directory
+
+2001-10-05 20:58  shadow
+
+	* src/ptserver/ptclient.c:
+	
+	DELTA ptclient-add-lh-command-20011005 AUTHOR jhutz@cmu.edu
+	
+	The attached patch adds a new 'lh' command to the ptclient utility.
+	   Analogous to 'l', this command lists the hostCPS for a specified
+	host.
+
+2001-10-05 20:45  shadow
+
+	* src/rxdebug/rxdebug.c:
+	
+	DELTA rxdebug-add-verbosity-20011005 AUTHOR kolya@mit.edu
+	
+	This patch adds a "-long" option to rxdebug, to print out more
+	verbose output, and makes rxdebug print out more information about
+	the Rx peers when ran with "-long".
+
+2001-10-05 20:44  shadow
+
+	* src/: afs/afs_server.c, rx/rx_kcommon.c, rx/rx_kcommon.h,
+	rx/rx_misc.h, rx/SOLARIS/rx_knet.c:
+	
+	DELTA solaris-mtu-cleanup-20011005 AUTHOR kolya@mit.edu
+	
+	This patch provides better MTU selection on Solaris, by   actually
+	going through the list of interfaces and picking   the correct MTU,
+	rather than assuming 1500.
+	
+	  It also fixes a small bug in the server preference code,
+	  which wasn't checking for IPv6 interfaces, and if there
+	  were any IPv6 interface, it would believe all servers
+	  were on the local subnet.
+
+2001-10-05 20:41  shadow
+
+	* src/: config/.cvsignore, libafs/.cvsignore, ntp/.cvsignore,
+	ptserver/.cvsignore, venus/.cvsignore, vfsck/.cvsignore,
+	vol/.cvsignore:
+	
+	DELTA cvsignore-updates-kolya-20011005 AUTHOR kolya@mit.edu ignore
+	more things since we missed them before
+
+2001-10-05 20:41  shadow
+
+	* src/: config/mkvers.c, kauth/admin_tools.c:
+	
+	DELTA
+	fix-prototype-warnings-and-eliminate-unused-variables-20011005
+	AUTHOR kolya@mit.edu
+	
+	minor cleanup in mkvers and kauth/admin_tools
+
+2001-10-05 20:38  shadow
+
+	* src/: afs/afs_call.c, afsd/afsd.c, rx/rx_getaddr.c:
+	
+	DELTA linux-compute-mtu-correctly-20011005 AUTHOR kolya@mit.edu
+	
+	This patch fixes two bugs:
+	
+	  (1) pass more than 4 parameters to AFSCALL syscalls on Linux,
+	      allowing the ADVISEADDR op to pass the MTU array pointer.
+	
+	  (2) properly convert MTU's to network byte order, since that's
+	      what the rest of the code expects them to be.
+
+2001-10-05 20:36  shadow
+
+	* src/: afs/afs_call.c, afs/afs_cell.c, afs/afs_dcache.c,
+	afsd/afsd.c, config/afs_args.h:
+	
+	DELTA afsd-afsdb-shutdown-cleanly-20011005 AUTHOR kolya@mit.edu
+	
+	make userspace afsdb handler shut down cleanly
+
+2001-10-01 22:58  shadow
+
+	* Makefile.in, NEWS, acconfig.h, configure-libafs.in, configure.in,
+	src/afs/LINUX/osi_vfs.h, src/afs/LINUX/osi_vfs.hin,
+	src/cf/linux-test2.m4, src/config/make_vnode.pl:
+	
+	DELTA
+	linux-generate-struct-vnode-dyanmically-from-kernel-headers-instead
+	-of-by-perverting-configure-to-test-for-every-one-of-alan-coxs-addi
+	tions-some-of-which-will-doubtless-never-make-it-into-mainline-kern
+	els-20011001 AUTHOR warlord@mit.edu
+	
+	hopefully this will be the end (at least for a while) of problems
+	where every linux version requires a new openafs release. the
+	struct vnode is now dynamically generated by parsing the linux/fs.h
+	file and pulling out the struct inode, then rewriting osi_vfs.h
+
+2001-10-01 19:20  shadow
+
+	* configure.in:
+	
+	DELTA allow-configure-time-override-of-DEST-20011001 AUTHOR
+	shadow@dementia.org
+	
+	so DEST=foo ./configure will work
+
+2001-10-01 17:51  shadow
+
+	* src/viced/callback.c:
+	
+	DELTA
+	be-more-careful-about-references-when-adding-and-deleting-callbacks
+	-20011001 AUTHOR shadow@dementia.org
+	
+	remove extra ) which snuck in
+
+2001-10-01 17:38  shadow
+
+	* src/viced/callback.c:
+	
+	DELTA
+	be-more-careful-about-references-when-adding-and-deleting-callbacks
+	-20011001 AUTHOR shadow@dementia.org
+	
+	perhaps too careful. to fix potential crash in TDel and TAdd
+
+2001-10-01 17:35  shadow
+
+	* src/viced/afsfileprocs.c:
+	
+	DELTA
+	require-administer-permission-for-mount-point-creation-harder-20010
+	926 AUTHOR kolya@mit.edu
+	
+	make sure a mount point isn't being created if the user isn't
+	allowed to do that
+
+2001-10-01 17:31  shadow
+
+	* acconfig.h, configure-libafs.in, configure.in,
+	src/afs/LINUX/osi_vfs.h, src/cf/linux-test4.m4:
+	
+	DELTA linux24-another-new-inode-field-sigh-20011001 AUTHOR
+	eichin-oa@boxedpenguin.com
+	
+	with configure glue by shadow@dementia.org
+	
+	one of these days we really need to implement a better solution
+
+2001-10-01 17:20  shadow
+
+	* src/login/Makefile.in:
+	
+	DELTA login-makefile-needs-new-build-system-update-20011001 AUTHOR
+	nneul@umr.edu
+	
+	fixed missed case of afs/ in libdir
+
+2001-10-01 17:19  shadow
+
+	* src/pam/afs_util.c:
+	
+	DELTA pam-build-on-hpux11-20011001 AUTHOR nneul@umr.edu
+	
+	so pam now builds on hpux 11
+
+2001-10-01 17:17  shadow
+
+	* src/venus/: Makefile.in, kdump.sh.linux:
+	
+	DELTA linux-kdump-wrapper-20011001 AUTHOR nneul@umr.edu
+	
+	install a kdump wrapper for linux. (with mod to use $0 instead of
+	kdump)
+
+2001-10-01 17:11  shadow
+
+	* src/vol/Makefile.in:
+	
+	DELTA fix-destdir-support-for-fsconv-and-xfs-binaries-20011001
+	AUTHOR jhutz@cmu.edu
+	
+	properly support DESTDIR case in vol makefile for certain files
+	which were broken before
+
+2001-09-28 13:09  shadow
+
+	* src/rx/rx.h:
+	
+	DELTA rx-ignore-vab-harder-20010928 AUTHOR shadow@dementia.org
+	
+	if the other side suggests we use the vab security class, ignore
+	them harder than we did before
+
+2001-09-27 17:37  shadow
+
+	* src/afs/VNOPS/afs_vnop_lookup.c:
+	
+	DELTA
+	afs-lookup-put-back-vcache-entry-on-failed-evalmountpoint-20010927
+	AUTHOR shadow@dementia.org
+	
+	based on observations of effects related to
+	afs-lookup-check-evalmountpoint-return-20010221 and affirmed based
+	on mail from Todd_DeSantis@transarc.com
+	
+	this should reduce but perhaps not eliminate the VLRU cycle:
+	increase -stat parameter problem on Linux as it's not yet clear
+	that this is the only problem and circumstantially it is probably
+	not.
+
+2001-09-27 02:16  shadow
+
+	* src/afs/VNOPS/afs_vnop_flock.c:
+	
+	DELTA afs-client-inline-bulkstatus-rpc-support-20010926 AUTHOR
+	shadow@dementia.org
+	
+	rename spare2
+
+2001-09-27 00:32  shadow
+
+	* src/audit/audit.h:
+	
+	DELTA afs-client-inline-bulkstatus-rpc-support-20010926 AUTHOR
+	shadow@dementia.org
+	
+	create audit event for inlinebulk
+
+2001-09-26 21:49  rees
+
+	* src/: afs/lock.h, config/param.i386_obsd29.h:
+	
+	DELTA fix-locks-for-openbsd-20010926 AUTHOR rees@umich.edu
+	
+	don't confuse direct with dirent use curproc instead of cur_proc()
+
+2001-09-26 15:28  shadow
+
+	* src/bozo/bos.c:
+	
+	DELTA bos-avoid-false-errors-when-salvaging-20010926 AUTHOR
+	shadow@dementia.org
+	
+	there were some cases where we falsely reported the BZNOENT from
+	salvage-tmp being cleanup up as "bos: failed to start 'salvager'
+	(no such entity)"..  despite having just reported: bos: salvage
+	completed
+	
+	this should no longer happen.
+
+2001-09-26 13:07  shadow
+
+	* src/afs/VNOPS/afs_vnop_lookup.c:
+	
+	DELTA afs-client-inline-bulkstatus-rpc-support-20010926 AUTHOR
+	shadow@dementia.org
+	
+	this cuts rpc traffic in half for directories on which you have no
+	permissions and is capable of doing more if a useful way can be
+	conceived of caching errors.
+	
+	currently bulkstat works thus: say a directory has 100 files.
+	bulkstat will on the first hit stat the first 30 files, integrating
+	the information if successful, and when you hit file 31, repeat.
+	meaning if you can read that 100 files is 4 bulkstatus rpcs
+	(3*30+10). if you can't, you do bulkstatus, get an abort, then do
+	fetchstatus on the file and find out why you lost. you go on and
+	try bulkstatus again this time for files 2-31 instead of 1-30. same
+	failure, meaning you do 2N rpcs for the N files. inlinebulk doesn't
+	abort but instead fills in stat info for any of the up to 30 files
+	it can, and errors for any it can't.
+	
+	currently the client will pull out any stat info filled in, and
+	then return the error from the first file, meaning if you can't
+	read the directory we do N inlinebulk rpcs instead of N bulkstatus
+	+ N fetchstatus rpcs. if the errors for the other 29 could be
+	meaningfully cached (and you have to be careful not to pollute
+	information such that it's not useful for someone in a different
+	auth context) then we could get down to the same 4 rpcs we have for
+	success, but that's an exercise for later give how the cache
+	manager works.
+
+2001-09-26 00:02  shadow
+
+	* src/vol/partition.c:
+	
+	DELTA
+	allow-namei-fileservers-to-use-directories-instead-of-partitions-fo
+	r-vicep-20010924 AUTHOR kolya@mit.edu
+	
+	more carefully avoid non-vicepX partitions
+
+2001-09-25 15:44  shadow
+
+	* src/: fsint/afsint.xg, viced/afsfileprocs.c:
+	
+	DELTA create-inline-bulkstatus-rpc-and-server-stub-20010925 AUTHOR
+	shadow@dementia.org
+	
+	this way it's possible to do a bulkstatus where some items succeed
+	and fill in that stat info, instead of just getting an error.
+
+2001-09-25 15:42  shadow
+
+	* src/vol/partition.c:
+	
+	DELTA
+	allow-namei-fileservers-to-use-directories-instead-of-partitions-fo
+	r-vicep-20010924 AUTHOR kolya@mit.edu
+	
+	carefully avoid non vicep directories and/or partitions as it may
+	get upset at automounters or running cachemanagers!
+
+2001-09-24 22:19  shadow
+
+	* src/: viced/afsfileprocs.c, rx/rx.h:
+	
+	DELTA fileserver-remove-delay-on-stat-errors-20010925 AUTHOR
+	shadow@dementia.org
+	
+	previously and since 3.5 rx enhancements fileserver would delay 3
+	seconds on sending an rx abort when the abort was the 11th or more
+	occurance of the same error on the same call. the problem was
+	fetchstatus/bulkstatus on a directory on which you have "l" but not
+	"r" would take forever after the first 5 files (bulkstatus and then
+	fetchstatus on each file, 2*5=10)
+	
+	so in FetchStatus and BulkStatus stubs we suppress repeated errors
+	from Check_PermissionRights *only*, which has the effect of
+	suppressing the problem without removing the theoretical benefit of
+	avoiding letting any one client throw requests at as as fast as we
+	can abort them unless those requests happen to be fetch/bulkstat
+	requests which fail a permission check, but in order to avoid that
+	we'd also need to cache what they last tried to stat, and then
+	things would get ugly.
+
+2001-09-24 16:11  shadow
+
+	* src/comerr/compile_et.c:
+	
+	DELTA comerr-include-proper-old-compat-glue-20010924 AUTHOR
+	shadow@dementia.org
+	
+	so old initialize function works correctly
+
+2001-09-24 12:17  shadow
+
+	* src/vlserver/vlserver.p.h:
+	
+	DELTA export-vlops-in-vldbint-xg-file-20010924 AUTHOR
+	shadow@dementia.org
+	
+	based on report from lha@stacken.kth.se
+	
+	remove from vlserver.p.h
+
+2001-09-24 11:16  shadow
+
+	* src/vlserver/vldbint.xg:
+	
+	DELTA export-vlops-in-vldbint-xg-file-20010924 AUTHOR
+	shadow@dementia.org
+	
+	based on report from lha@stacken.kth.se
+	
+	include vlops in the "published" interface
+
+2001-09-24 10:51  shadow
+
+	* NEWS:
+	
+	DELTA NEWS-updates-20010924 AUTHOR shadow@dementia.org
+	
+	update NEWS for stuff in 1.2.1 and stuff to go into 1.2.2 DELTA
+	some-name-yyyymmdd AUTHOR contributor@some.site
+
+2001-09-24 10:49  shadow
+
+	* src/: vol/namei_ops.c, vol/partition.c, vol/partition.h,
+	volser/volprocs.c:
+	
+	DELTA
+	allow-namei-fileservers-to-use-directories-instead-of-partitions-fo
+	r-vicep-20010924 AUTHOR kolya@mit.edu
+	
+	 -- /vicepX/AFSIDat/README is created the first time the fileserver
+	    is started, rather than the second time.
+	
+	 -- For the namei fileserver, /vicepa/Lock/vicepa is created as
+	    the lockfile.  Previously, on Solaris, the raw device was
+	    was being used for LockPartition(), and that breaks when
+	    there isn't a corresponding device.
+	
+	 -- The VolPartitions and XVolPartitions volserver calls now return
+	    the list of attached (rather than mounted) partitions.  This is
+	    consistent with the NT fileserver and removes duplicate code.
+	
+	The actual magic for allowing the fileserver to attach non-mounted
+	partitions is to create /vicepX/AlwaysAttach.
+
+2001-09-24 10:48  shadow
+
+	* src/viced/viced.c:
+	
+	DELTA viced-deal-gracefully-with-afsconf-failure-20010924 AUTHOR
+	kolya@mit.edu
+	
+	-- Fileserver will complain if afsconf_Open() fails, rather than   
+	 mysteriously segfault'ing later on.
+
+2001-09-24 10:44  shadow
+
+	* src/rx/: rx.c, rx_packet.c:
+	
+	DELTA rx-cleanup-20010924 AUTHOR kolya@mit.edu
+	
+	The rxi_ReceiveAckPacket() change makes sure we have two extra
+	fields (the max and recommended packet sizes) hanging off the
+	packet, rather than just one.
+	
+	The PKTFLAG_FREE stuff in rx_packet.c just initialized flags in
+	case PKTFLAG_ACKED somehow didn't get cleared there.
+	
+	The wirevec changes are off-by-1 errors: there's p->niovecs iovecs
+	in a packet, from 0 (header) to p->niovecs-1, so p->niovecs doesn't
+	refer to a meaningful iovec.
+
 2001-09-20 05:10  shadow
 
 	* configure-libafs.in, configure.in, doc/txt/RELNOTES-1.2.1,
