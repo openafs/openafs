@@ -38,7 +38,7 @@ afs_ustrategy(abp)
     register struct buf *abp; {
     register afs_int32 code;
     struct uio tuio;
-    register struct vcache *tvc = (struct vcache *) abp->b_vp;
+    register struct vcache *tvc = VTOAFS(abp->b_vp);
     register afs_int32 len = abp->b_bcount;
 #if	!defined(AFS_SUN5_ENV) && !defined(AFS_OSF_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 #ifdef	AFS_AIX41_ENV
@@ -97,9 +97,9 @@ afs_ustrategy(abp)
 	/* are user's credentials valid here?  probably, but this
 	     sure seems like the wrong things to do. */
 #if	defined(AFS_SUN5_ENV)
-	code = afs_nlrdwr((struct vcache *) abp->b_vp, &tuio, UIO_READ, 0, credp);
+	code = afs_nlrdwr(VTOAFS(abp->b_vp), &tuio, UIO_READ, 0, credp);
 #else
-	code = afs_rdwr((struct vcache *) abp->b_vp, &tuio, UIO_READ, 0, credp);
+	code = afs_rdwr(VTOAFS(abp->b_vp), &tuio, UIO_READ, 0, credp);
 #endif
 	if (code == 0) {
 	    if (tuio.afsio_resid > 0)
@@ -153,7 +153,7 @@ afs_ustrategy(abp)
 	len = MIN(len, tvc->m.Length - dbtob(abp->b_blkno));
 #endif
 #ifdef	AFS_ALPHA_ENV
-	len = MIN(abp->b_bcount, ((struct vcache *)abp->b_vp)->m.Length - dbtob(abp->b_blkno));
+	len = MIN(abp->b_bcount, (VTOAFS(abp->b_vp))->m.Length - dbtob(abp->b_blkno));
 #endif	/* AFS_ALPHA_ENV */
 	tuio.afsio_resid = len;
 #if defined(AFS_FBSD_ENV)
@@ -165,9 +165,9 @@ afs_ustrategy(abp)
 	/* are user's credentials valid here?  probably, but this
 	     sure seems like the wrong things to do. */
 #if	defined(AFS_SUN5_ENV)
-	code = afs_nlrdwr((struct vcache *) abp->b_vp, &tuio, UIO_WRITE, 0, credp);
+	code = afs_nlrdwr(VTOAFS(abp->b_vp), &tuio, UIO_WRITE, 0, credp);
 #else
-	code = afs_rdwr((struct vcache *) abp->b_vp, &tuio, UIO_WRITE, 0, credp);
+	code = afs_rdwr(VTOAFS(abp->b_vp), &tuio, UIO_WRITE, 0, credp);
 #endif
     }
 #if	!defined(AFS_AIX32_ENV) && !defined(AFS_SUN5_ENV)
@@ -180,7 +180,7 @@ afs_ustrategy(abp)
     if (code && !(abp->b_flags & B_READ)) {
 	/* prevent ubc from retrying writes */
 	AFS_GUNLOCK();
-	ubc_invalidate(((struct vnode *)tvc)->v_object,
+	ubc_invalidate(AFSTOV(tvc)->v_object,
 		       (vm_offset_t)dbtob(abp->b_blkno),
 		       PAGE_SIZE, B_INVAL);
 	AFS_GLOCK();

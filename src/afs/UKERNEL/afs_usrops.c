@@ -4274,7 +4274,7 @@ int uafs_statmountpoint_r(char *path)
      return -1;
     }
 
-    avc = (struct vcache *) vp;
+    avc = VTOAFS(vp);
 
     r = avc->mvstat;
     VN_RELE(vp);

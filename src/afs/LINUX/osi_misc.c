@@ -300,7 +300,7 @@ void osi_linux_free_inode_pages(void)
 
     for (i=0; i<VCSIZE; i++) {
 	for(tvc = afs_vhashT[i]; tvc; tvc=tvc->hnext) {
-	    ip = (struct inode*)tvc;
+	    ip = AFSTOV(tvc);
 #if defined(AFS_LINUX24_ENV)
 	    if (ip->i_data.nrpages) {
 #else
@@ -329,7 +329,7 @@ void osi_linux_free_inode_pages(void)
 void osi_clear_inode(struct inode *ip)
 {
     cred_t *credp = crref();
-    struct vcache *vc = (struct vcache*)ip;
+    struct vcache *vc = VTOAFS(ip);
 
 #if defined(AFS_LINUX24_ENV)
     if (atomic_read(&ip->i_count) > 1)
@@ -405,8 +405,8 @@ void osi_iput(struct inode *ip)
 void check_bad_parent(struct dentry *dp)
 {
   cred_t *credp;
-  struct vcache *vcp = (struct vcache*)dp->d_inode, *avc = NULL;
-  struct vcache *pvc = (struct vcache *)dp->d_parent->d_inode;
+  struct vcache *vcp = VTOAFS(dp->d_inode), *avc = NULL;
+  struct vcache *pvc = VTOAFS(dp->d_parent->d_inode);
 
   if (vcp->mvid->Fid.Volume != pvc->fid.Fid.Volume) { /* bad parent */
     credp = crref();

@@ -150,13 +150,13 @@ int mp_afs_root (struct mount *afsp, struct vnode **avpp)
     if (tvp) {
 	AFS_GUNLOCK();
 	VN_HOLD((struct vnode *)tvp);
-	VN_LOCK((struct vnode *)tvp);
+	VN_LOCK(AFSTOV(tvp));
 	tvp->v.v_flag |= VROOT;	    /* No-op on Ultrix 2.2 */
 	VN_UNLOCK((struct vnode *)tvp);
 	AFS_GLOCK();
 
 	afs_globalVFS = afsp;
-	*avpp = (struct vnode *) tvp;
+	*avpp = AFSTOV(tvp);
     }
 
     afs_Trace2(afs_iclSetp, CM_TRACE_VFSROOT, ICL_TYPE_POINTER, *avpp,

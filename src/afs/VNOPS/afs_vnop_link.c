@@ -34,7 +34,7 @@ extern afs_rwlock_t afs_xcbhash;
 afs_link(avc, ndp)
     register struct vcache *avc;
     struct nameidata *ndp; {
-    register struct vcache *adp = (struct vcache *)ndp->ni_dvp;
+    register struct vcache *adp = VTOAFS(ndp->ni_dvp);
     char *aname = ndp->ni_dent.d_name;
     struct ucred *acred = ndp->ni_cred;
 #else	/* AFS_OSF_ENV */

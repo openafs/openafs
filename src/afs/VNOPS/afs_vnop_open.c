@@ -51,7 +51,7 @@ afs_open(avcp, aflags, acred)
     if (code = afs_InitReq(&treq, acred)) return code;
 #ifdef AFS_SGI64_ENV
     /* avcpp can be, but is not necesarily, bhp's vnode. */
-    tvc = (struct vcache *)BHV_TO_VNODE(bhv);
+    tvc = VTOAFS(BHV_TO_VNODE(bhv));
 #else
     tvc = *avcp;
 #endif

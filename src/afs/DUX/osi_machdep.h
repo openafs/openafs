@@ -39,7 +39,7 @@ extern struct timeval time;
 #define afs_bufferpages bufpages
 
 #define osi_vnhold(avc,r)  do { \
-       if ((avc)->vrefCount) { VN_HOLD((struct vnode *)(avc)); } \
+       if ((avc)->vrefCount) { VN_HOLD(AFSTOV(avc)); } \
        else osi_Panic("refcnt==0");  } while(0)
 
 #define	gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \

@@ -156,7 +156,7 @@ osi_VM_TryToSmush(avc, acred, sync)
     osi_Assert(OSI_GET_LOCKID() != avc->vc_rwlockid);
     if (((vnode_t *)avc)->v_type == VREG && AFS_VN_MAPPED(((vnode_t *)avc)))
         remapf(((vnode_t *)avc), 0, 0);
-    PTOSSVP((struct vnode *)avc, (off_t)0, (off_t)MAXLONG);
+    PTOSSVP(AFSTOV(avc), (off_t)0, (off_t)MAXLONG);
     AFS_GLOCK();
     ObtainWriteLock(&avc->lock,62);
 }
@@ -195,10 +195,10 @@ osi_VM_StoreAllSegments(avc)
 
     /* Write out dirty pages list to avoid B_DELWRI buffers. */
     while (VN_GET_DPAGES((vnode_t*)avc)) {
-	pdflush((struct vnode*)avc, 0);
+	pdflush(AFSTOV(avc), 0);
     }
 
-    PFLUSHVP((struct vnode *)avc, (off_t)avc->m.Length, (off_t)0, error);
+    PFLUSHVP(AFSTOV(avc), (off_t)avc->m.Length, (off_t)0, error);
     AFS_GLOCK();
     if (error) {
 	/*

@@ -38,7 +38,7 @@ osi_VM_FlushVCache(avc, slept)
     struct vcache *avc;
     int *slept;
 {
-    struct vnode *vp=(struct vnode *)avc;
+    struct vnode *vp=AFSTOV(avc);
 #ifdef AFS_DARWIN14_ENV
     if (UBCINFOEXISTS(vp))
 	return EBUSY;
@@ -80,7 +80,7 @@ void
 osi_VM_StoreAllSegments(avc)
     struct vcache *avc;
 {
-    struct vnode *vp=(struct vnode *)avc;
+    struct vnode *vp=AFSTOV(avc);
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
     if (UBCINFOEXISTS(vp)) {
@@ -105,7 +105,7 @@ osi_VM_TryToSmush(avc, acred, sync)
     struct AFS_UCRED *acred;
     int sync;
 {
-    struct vnode *vp=(struct vnode *)avc;
+    struct vnode *vp=AFSTOV(avc);
     void *object;
     kern_return_t kret;
     off_t size, lastpg;
@@ -134,7 +134,7 @@ osi_VM_FlushPages(avc, credp)
     struct vcache *avc;
     struct AFS_UCRED *credp;
 {
-    struct vnode *vp=(struct vnode *)avc;
+    struct vnode *vp=AFSTOV(avc);
     void *object;
     kern_return_t kret;
     off_t size;
@@ -161,7 +161,7 @@ osi_VM_Truncate(avc, alen, acred)
     int alen;
     struct AFS_UCRED *acred;
 {
-    struct vnode *vp=(struct vnode *)avc;
+    struct vnode *vp=AFSTOV(avc);
     if (UBCINFOEXISTS(vp))  {
 	ubc_setsize(vp, alen);
     }
@@ -177,7 +177,7 @@ void osi_VM_TryReclaim(avc, slept)
      int *slept;
 {
     struct proc *p=current_proc();
-    struct vnode *vp=(struct vnode *)avc;
+    struct vnode *vp=AFSTOV(avc);
     void *obj;
 
     if (slept)
@@ -276,7 +276,7 @@ void osi_VM_TryReclaim(avc, slept)
 void osi_VM_NukePages(struct vnode *vp, off_t offset, off_t size) {
 
     void *object;
-    struct vcache *avc = (struct vcache *)vp;
+    struct vcache *avc = VTOAFS(vp);
 
 #ifdef AFS_DARWIN14_ENV
     offset=trunc_page(offset);
@@ -322,7 +322,7 @@ void osi_VM_NukePages(struct vnode *vp, off_t offset, off_t size) {
 }
 int osi_VM_Setup(struct vcache *avc) {
    int error;
-   struct vnode *vp=(struct vnode *)avc;
+   struct vnode *vp=AFSTOV(avc);
 
    if (UBCISVALID(vp) && (avc->states & CStatd)) {
       if (!UBCINFOEXISTS(vp) && !ISSET(vp->v_flag, VTERMINATE)) {

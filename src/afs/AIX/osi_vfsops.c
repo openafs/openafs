@@ -121,14 +121,14 @@ static int afs_root_nolock (struct vfs *afsp, struct vnode **avpp)
 	crfree(credp);
     }
     if (tvp) {
-	VN_HOLD((struct vnode *)tvp);
+	VN_HOLD(AFSTOV(tvp));
 
-	VN_LOCK((struct vnode *)tvp);
-	tvp->v.v_flag |= VROOT;	    /* No-op on Ultrix 2.2 */
-	VN_UNLOCK((struct vnode *)tvp);
+	VN_LOCK(AFSTOV(tvp));
+	AFSTOV(tvp)->v_flag |= VROOT;	    /* No-op on Ultrix 2.2 */
+	VN_UNLOCK(AFSTOV(tvp));
 
 	afs_globalVFS = afsp;
-	*avpp = (struct vnode *) tvp;
+	*avpp = AFSTOV(tvp);
 	afsp->vfs_mntd = *avpp;	  
     }
 

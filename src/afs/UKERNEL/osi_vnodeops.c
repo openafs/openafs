@@ -58,7 +58,7 @@ int afs_vrdwr(
 
 int afs_inactive(struct vcache *avc, struct AFS_UCRED *acred)
 {
-    struct vnode *vp = (struct vnode *)avc;
+    struct vnode *vp = AFSTOV(avc);
     if (afs_shuttingdown) return ;
 
     usr_assert(avc->vrefCount == 0);

@@ -516,10 +516,10 @@ mp_afs_ubcrdwr(avc, uio, ioflag, cred)
 	ReleaseWriteLock(&avc->lock);
 	AFS_GUNLOCK();
 #ifdef AFS_DUX50_ENV
-	code = ubc_lookup(((struct vnode *)avc)->v_object, pageBase,
+	code = ubc_lookup(AFSTOV(avc)->v_object, pageBase,
 			  PAGE_SIZE, PAGE_SIZE, &page, &flags, NULL);
 #else
-	code = ubc_lookup(((struct vnode *)avc)->v_object, pageBase,
+	code = ubc_lookup(AFSTOV(avc)->v_object, pageBase,
 			  PAGE_SIZE, PAGE_SIZE, &page, &flags);
 #endif
 	AFS_GLOCK();
@@ -538,7 +538,7 @@ mp_afs_ubcrdwr(avc, uio, ioflag, cred)
 	     */
 	    if ((uio->uio_rw == UIO_WRITE) &&
 		((pageOffset == 0 && (size == PAGE_SIZE || fileBase >= avc->m.Length)))) {
-		struct vnode *vp = (struct vnode *)avc;
+		struct vnode *vp = AFSTOV(avc);
 		/* we're doing a write operation past eof; no need to read it */
 		newpage = 1;
 		AFS_GUNLOCK();
@@ -553,7 +553,7 @@ mp_afs_ubcrdwr(avc, uio, ioflag, cred)
 		bp = ubc_bufalloc(page, 1, PAGE_SIZE, 1, B_READ);
 		AFS_GLOCK();
 		bp->b_dev = 0;
-		bp->b_vp = (struct vnode *)avc;
+		bp->b_vp = AFSTOV(avc);
 		bp->b_blkno = btodb(pageBase);
 		ReleaseWriteLock(&avc->lock);
 		code = afs_ustrategy(bp, cred);	/* do the I/O */
@@ -595,12 +595,12 @@ mp_afs_ubcrdwr(avc, uio, ioflag, cred)
 		    /* We released the page, so we can get a null page
 		     * list if another thread calls the strategy routine.
 		     */
-		    pl = ubc_dirty_kluster(((struct vnode *)avc)->v_object, 
+		    pl = ubc_dirty_kluster(AFSTOV(avc)->v_object, 
 			   NULL, toffset, 0, B_WANTED, FALSE, &kpcnt);
 		    if (pl) {
 			bp = ubc_bufalloc(pl, 1, PAGE_SIZE, 1, B_WRITE);
 			bp->b_dev = 0;
-			bp->b_vp = (struct vnode *)avc;
+			bp->b_vp = AFSTOV(avc);
 			bp->b_blkno = btodb(pageBase);
 			AFS_GLOCK();
 			code = afs_ustrategy(bp, cred);	/* do the I/O */
@@ -642,7 +642,7 @@ mp_afs_ubcrdwr(avc, uio, ioflag, cred)
     afs_BozonUnlock(&avc->pvnLock, avc);
     if (DO_FLUSH || (!newpage && (cnt < 10))) {
 	AFS_GUNLOCK();
-	ubc_flush_dirty(((struct vnode *)avc)->v_object, flags); 
+	ubc_flush_dirty(AFSTOV(avc)->v_object, flags); 
 	AFS_GLOCK();
     }
 
@@ -702,7 +702,7 @@ mp_afs_mmap(avc, offset, map, addrp, len, prot, maxprot, flags, cred)
 {
     struct vp_mmap_args args;
     register struct vp_mmap_args *ap = &args;
-    struct vnode *vp = (struct vnode *)avc;
+    struct vnode *vp = AFSTOV(avc);
     int code;
     struct vrequest treq;
 #if	!defined(DYNEL)
@@ -767,7 +767,7 @@ int mp_afs_getpage(vop, offset, len, protp, pl, plsz,
     vm_page_t *pagep;
     vm_offset_t off;
 
-   struct vcache *avc =  (struct vcache *)vop->vu_vp;
+   struct vcache *avc =  VTOAFS(vop->vu_vp);
 
     /* first, obtain the proper lock for the VM system */
 
@@ -799,10 +799,10 @@ int mp_afs_getpage(vop, offset, len, protp, pl, plsz,
 	ReleaseWriteLock(&avc->lock);
 	AFS_GUNLOCK();
 #ifdef AFS_DUX50_ENV
-	code = ubc_lookup(((struct vnode *)avc)->v_object, off,
+	code = ubc_lookup(AFSTOV(avc)->v_object, off,
 			PAGE_SIZE, PAGE_SIZE, pagep, &flags, NULL);
 #else
-	code = ubc_lookup(((struct vnode *)avc)->v_object, off,
+	code = ubc_lookup(AFSTOV(avc)->v_object, off,
 			PAGE_SIZE, PAGE_SIZE, pagep, &flags);
 #endif
 	AFS_GLOCK();
@@ -812,7 +812,7 @@ int mp_afs_getpage(vop, offset, len, protp, pl, plsz,
 	}
 	if(flags & B_NOCACHE) {		/* if (page) */
 	    if ((rw & B_WRITE) && (offset+len >= avc->m.Length)) {
-		struct vnode *vp = (struct vnode *)avc;
+		struct vnode *vp = AFSTOV(avc);
 		/* we're doing a write operation past eof; no need to read it */
 		AFS_GUNLOCK();
 		ubc_page_zero(*pagep, 0, PAGE_SIZE);
@@ -826,7 +826,7 @@ int mp_afs_getpage(vop, offset, len, protp, pl, plsz,
 		bp = ubc_bufalloc(*pagep, 1, PAGE_SIZE, 1, B_READ);
 		AFS_GLOCK();
 		bp->b_dev = 0;
-		bp->b_vp = (struct vnode *)avc;
+		bp->b_vp = AFSTOV(avc);
 		bp->b_blkno = btodb(off);
 		ReleaseWriteLock(&avc->lock);
 		code = afs_ustrategy(bp, cred);	/* do the I/O */
@@ -876,8 +876,8 @@ int mp_afs_putpage(vop, pl, pcnt, flags, cred)
     struct ucred *cred;
 {
     register afs_int32 code=0;
-    struct vcache *avc = (struct vcache *)vop->vu_vp;
-    struct vnode *vp = (struct vnode *)avc;
+    struct vnode *vp = vop->vu_vp;
+    struct vcache *avc = VTOAFS(vp);
     int i;
 
     AFS_GLOCK();
@@ -912,7 +912,7 @@ int mp_afs_putpage(vop, pl, pcnt, flags, cred)
 	bp = ubc_bufalloc(page, 1, PAGE_SIZE, 1, B_WRITE);
 	AFS_GLOCK();
 	bp->b_dev = 0;
-	bp->b_vp = (struct vnode *)avc;
+	bp->b_vp = AFSTOV(avc);
 	bp->b_blkno = btodb(page->pg_offset);
 	ReleaseWriteLock(&avc->lock);
 	code = afs_ustrategy(bp, cred);	/* do the I/O */
@@ -996,7 +996,7 @@ mp_afs_bread(vp, lbn, bpp, cred)
 	uio.afsio_offset = offset;
 	uio.afsio_resid = fsbsize;
 	*bpp = 0;
-	error = afs_read((struct vcache *)vp, &uio, cred, lbn, bpp, 0);
+	error = afs_read(VTOAFS(vp), &uio, cred, lbn, bpp, 0);
 	if (error) {
 		afs_bread_freebp = bp;
 		AFS_GUNLOCK();

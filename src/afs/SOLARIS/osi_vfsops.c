@@ -122,13 +122,13 @@ int afs_root (struct vfs *afsp, struct vnode **avpp)
 	}
     }
     if (tvp) {
-	VN_HOLD((struct vnode *)tvp);
-	mutex_enter(&(((struct vnode*)tvp)->v_lock));
-	tvp->v.v_flag |= VROOT;
-	mutex_exit(&(((struct vnode*)tvp)->v_lock));
+	VN_HOLD(AFSTOV(tvp));
+	mutex_enter(&AFSTOV(tvp)->v_lock);
+	AFSTOV(tvp)->v_flag |= VROOT;
+	mutex_exit(&AFSTOV(tvp)->v_lock);
 
 	afs_globalVFS = afsp;
-	*avpp = (struct vnode *) tvp;
+	*avpp = AFSTOV(tvp);
     }
 
     afs_Trace2(afs_iclSetp, CM_TRACE_VFSROOT, ICL_TYPE_POINTER, *avpp,

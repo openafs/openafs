@@ -90,11 +90,11 @@ int afs_root (struct vfs *afsp, struct vnode **avpp, char *unused1)
 	}
     }
     if (tvp) {
-	VN_HOLD((struct vnode *)tvp);
-	SET_V_FLAG( ((struct vnode *)tvp), VROOT);
+	VN_HOLD(AFSTOV(tvp));
+	SET_V_FLAG(AFSTOV(tvp), VROOT);
 
 	afs_globalVFS = afsp;
-	*avpp = (struct vnode *) tvp;
+	*avpp = AFSTOV(tvp);
     }
 
     afs_Trace2(afs_iclSetp, CM_TRACE_VFSROOT, ICL_TYPE_POINTER, *avpp,

@@ -36,7 +36,7 @@
 #define	afs_hz	    HZ
 #define osi_Time() (time(NULL))
 
-#define osi_vnhold(avc, r)  do { VN_HOLD((struct vnode *)(avc)); } while(0)
+#define osi_vnhold(avc, r)  do { VN_HOLD(AFSTOV(avc)); } while(0)
 #define	afs_suser	    suser
 
 /*

@@ -132,7 +132,7 @@ int afs_FlushVCache(struct vcache *avc, int *slept)
 	       ICL_TYPE_INT32, avc->states);
 #ifdef  AFS_OSF_ENV
     AFS_GUNLOCK();
-    VN_LOCK((struct vnode *)avc);
+    VN_LOCK(AFSTOV(avc));
     AFS_GLOCK();
 #endif
 
@@ -214,15 +214,15 @@ int afs_FlushVCache(struct vcache *avc, int *slept)
     afs_vcount--;
     vSetType(avc, VREG);
     if (VREFCOUNT(avc) > 0) {
-        VN_UNLOCK((struct vnode *)avc);
-        AFS_RELE((struct vnode *)avc);
+        VN_UNLOCK(AFSTOV(avc));
+        AFS_RELE(AFSTOV(avc));
     } else {
        if (afs_norefpanic) {
 	  printf ("flush vc refcnt < 1");
 	  afs_norefpanic++;
 	  (void) vgone(avc, VX_NOSLEEP, (struct vnodeops *) 0);
 	  AFS_GLOCK();
-	  VN_UNLOCK((struct vnode *)avc);
+	  VN_UNLOCK(AFSTOV(avc));
        }
        else osi_Panic ("flush vc refcnt < 1");
     }
@@ -232,7 +232,7 @@ int afs_FlushVCache(struct vcache *avc, int *slept)
 
 bad:
 #ifdef	AFS_OSF_ENV
-    VN_UNLOCK((struct vnode *)avc);
+    VN_UNLOCK(AFSTOV(avc));
 #endif
     return code;
 
@@ -825,7 +825,7 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
     hzero(tvc->m.DataVersion);		/* in case we copy it into flushDV */
 #ifdef	AFS_OSF_ENV
     /* Hold it for the LRU (should make count 2) */
-    VN_HOLD((struct vnode *)tvc);
+    VN_HOLD(AFSTOV(tvc));
 #else	/* AFS_OSF_ENV */
     VREFCOUNT_SET(tvc, 1);	/* us */
 #endif	/* AFS_OSF_ENV */
@@ -894,12 +894,12 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
     AFS_VN_INIT_BUF_LOCK(&(tvc->v));
 #endif
 #else
-    SetAfsVnode((struct vnode *)tvc);
+    SetAfsVnode(AFSTOV(tvc));
 #endif /* AFS_SGI64_ENV */
 #ifdef AFS_DARWIN_ENV
     tvc->v.v_ubcinfo = UBC_INFO_NULL;
     lockinit(&tvc->rwlock, PINOD, "vcache rwlock", 0, 0);
-    cache_purge((struct vnode *)tvc); 
+    cache_purge(AFSTOV(tvc)); 
     tvc->v.v_data=tvc;
     tvc->v.v_tag=VT_AFS;
     /* VLISTNONE(&tvc->v); */
@@ -957,7 +957,7 @@ struct vcache *afs_NewVCache(struct VenusFid *afid, struct server *serverp,
 #endif /* AFS_SGI_ENV */
 #if defined(AFS_LINUX22_ENV)
     {
-	struct inode *ip = (struct inode*)tvc;
+	struct inode *ip = AFSTOV(tvc);
 	sema_init(&ip->i_sem, 1);
 #if defined(AFS_LINUX24_ENV)
 	sema_init(&ip->i_zombie, 1);
@@ -1159,7 +1159,7 @@ afs_FlushActiveVcaches(doflocks)
 #ifdef	AFS_GFS_ENV
 		    VREFCOUNT_DEC(tvc);
 #else
-		    AFS_RELE((struct vnode *)tvc);
+		    AFS_RELE(AFSTOV(tvc));
 #endif
 		    /* Matches write code setting CCore flag */
 		    crfree(cred);
@@ -1942,7 +1942,7 @@ struct vcache *afs_GetRootVCache(struct VenusFid *afid,
 	     * can be safely implemented */
 	    int vg;
 	    AFS_GUNLOCK();
-            vg = vget((struct vnode *)tvc);   /* this bumps ref count */
+            vg = vget(AFSTOV(tvc));   /* this bumps ref count */
 	    AFS_GLOCK();
 	    if (vg)
                 continue;
@@ -2393,7 +2393,7 @@ struct vcache *afs_FindVCache(struct VenusFid *afid, afs_int32 lockit,
             /* Grab this vnode, possibly reactivating from the free list */
 	    int vg;
 	    AFS_GUNLOCK();
-            vg = vget((struct vnode *)tvc);
+            vg = vget(AFSTOV(tvc));
 	    AFS_GLOCK();
 	    if (vg)
                 continue;
@@ -2515,7 +2515,7 @@ afs_int32 afs_NFSFindVCache(avcp, afid, lockit)
             /* Grab this vnode, possibly reactivating from the free list */
 	    int vg;
 	    AFS_GUNLOCK();
-            vg = vget((struct vnode *)tvc);
+            vg = vget(AFSTOV(tvc));
 	    AFS_GLOCK();
 	    if (vg) {
 		/* This vnode no longer exists. */
@@ -2527,8 +2527,8 @@ afs_int32 afs_NFSFindVCache(avcp, afid, lockit)
 		/* Duplicates */
 #ifdef AFS_OSF_ENV
 		/* Drop our reference counts. */
-		vrele((struct vnode *)tvc);
-		vrele((struct vnode *)found_tvc);
+		vrele(AFSTOV(tvc));
+		vrele(AFSTOV(found_tvc));
 #endif
 		afs_duplicate_nfs_fids++;
 		ReleaseSharedLock(&afs_xvcache);
@@ -2697,7 +2697,7 @@ void shutdown_vcache(void)
 		tvc->mvid = (struct VenusFid*)0;
 	    }
 #ifdef	AFS_AIX_ENV
-	    aix_gnode_rele((struct vnode *)tvc);
+	    aix_gnode_rele(AFSTOV(tvc));
 #endif
 	    if (tvc->linkData) {
 		afs_osi_Free(tvc->linkData, strlen(tvc->linkData)+1);
