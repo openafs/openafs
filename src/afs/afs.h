@@ -1195,7 +1195,8 @@ struct afs_fakestat_state {
 extern int afs_fakestat_enable;
 
 struct buffer {
-    struct dcache *fid;
+    afs_int32 fid;		/* is adc->index, the cache file number */
+    afs_inode_t inode;		/* is adc->f.inode, the inode number of the cache file */
     afs_int32 page;
     afs_int32 accesstime;
     struct buffer *hashNext;
