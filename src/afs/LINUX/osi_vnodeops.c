@@ -231,7 +231,37 @@ tagain:
 
 	/* filldir returns -EINVAL when the buffer is full. */
 #ifdef AFS_LINUX24_ENV
-	code = (*filldir)(dirbuf, de->name, len, offset, ino, DT_UNKNOWN);
+        {
+             unsigned int type=DT_UNKNOWN;
+             struct VenusFid afid;
+             struct vcache *tvc;
+             int vtype;
+             afid.Cell=avc->fid.Cell;
+             afid.Fid.Volume=avc->fid.Fid.Volume;
+             afid.Fid.Vnode=ntohl(de->fid.vnode);
+             afid.Fid.Unique=ntohl(de->fid.vunique);
+             if ((avc->states & CForeign) == 0 &&
+                 (ntohl(de->fid.vnode) & 1)) {
+                  type=DT_DIR;
+             } else if ((tvc=afs_FindVCache(&afid,0,0,0,0))) {
+                  if (tvc->mvstat) {
+                       type=DT_DIR;
+                  } else if (((tvc->states) & (CStatd|CTruth))) {
+                       /* CTruth will be set if the object has 
+                        *ever* been statd */
+                       vtype=vType(tvc);
+                       if (vtype == VDIR)
+                            type=DT_DIR;
+                       else if (vtype == VREG)
+                            type=DT_REG;
+                       /* Don't do this until we're sure it can't be a mtpt */
+                       /* else if (vtype == VLNK)
+                          type=DT_LNK; */
+                       /* what other types does AFS support? */
+                  }
+             }
+             code = (*filldir)(dirbuf, de->name, len, offset, ino, type);
+        }
 #else
 	code = (*filldir)(dirbuf, de->name, len, offset, ino); 
 #endif
