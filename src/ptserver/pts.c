@@ -125,8 +125,11 @@ CreateGroup (as)
 	if (code) {
 	    if (owner || id) 
 		com_err (whoami, code,
-			 "; unable to create group %s with id %d owned by '%s' %s",
-			 namei->data, id, owner, (force?"(ignored)":""));
+			 "; unable to create group %s with id %d%s%s%s%s",
+			 namei->data, id, owner ? " owned by '" : "",
+			 owner ? owner : "",
+			 owner ? "'" : "",
+			 (force ? " (ignored)" : ""));
 	    else com_err (whoami, code,
 			 "; unable to create group %s %s", namei->data, (force?"(ignored)":""));
 	    if (!force)
