@@ -894,7 +894,7 @@ static void rxi_DestroyConnectionNoLock(register struct rx_connection *conn)
 				   RX_CALL_REFCOUNT_DELAY);
 		    if (call->state == RX_STATE_PRECALL ||
 			call->state == RX_STATE_ACTIVE) {
-			rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_DELAY, 0);
+			rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
 		    } else {
 			rxi_AckAll(NULL, call, 0);
 		    }
@@ -1473,7 +1473,7 @@ struct rx_call *rx_GetCall(int tno, struct rx_service *cur_service, osi_socket *
 
 	    if (queue_IsEmpty(&call->rq) ||
 		queue_First(&call->rq, rx_packet)->header.seq != 1)
-		rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_DELAY, 0);
+		rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
 
 	    CLEAR_CALL_QUEUE_LOCK(call);
 	    call->flags &= ~RX_CALL_WAIT_PROC;
@@ -1613,7 +1613,7 @@ struct rx_call *rx_GetCall(int tno, struct rx_service *cur_service, osi_socket *
 	if (queue_IsEmpty(&call->rq) ||
 	    queue_First(&call->rq, rx_packet)->header.seq != 1 ||
 	    call->rprev != queue_Last(&call->rq, rx_packet)->header.seq)
-	  rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_DELAY, 0);
+	  rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
 
 	call->flags &= (~RX_CALL_WAIT_PROC);
 	service->nRequestsRunning++;
@@ -2705,7 +2705,7 @@ struct rx_packet *rxi_ReceivePacket(register struct rx_packet *np,
 		if (call->error)
 		    (void) rxi_SendCallAbort(call, 0, 1, 0);
 		else
-		    (void) rxi_SendAck(call, 0, 0, np->header.serial, 0,
+		    (void) rxi_SendAck(call, 0, np->header.serial,
 				       RX_ACK_PING_RESPONSE, 1);
 	    }
 	    np = rxi_ReceiveAckPacket(call, np, 1);
@@ -2846,7 +2846,7 @@ static void rxi_CheckReachEvent(struct rxevent *event,
 
 	if (call) {
 	    if (call != acall) MUTEX_ENTER(&call->lock);
-	    rxi_SendAck(call, NULL, 0, 0, 0, RX_ACK_PING, 0);
+	    rxi_SendAck(call, NULL, 0, RX_ACK_PING, 0);
 	    if (call != acall) MUTEX_EXIT(&call->lock);
 
 	    clock_GetTime(&when);
@@ -2921,7 +2921,7 @@ struct rx_packet *rxi_ReceiveDataPacket(register struct rx_call *call,
 	register struct rx_packet *np, int istack, osi_socket socket, 
 	afs_uint32 host, u_short port, int *tnop, struct rx_call **newcallp)
 {
-    int ackNeeded = 0;
+    int ackNeeded = 0;	/* 0 means no, otherwise ack_reason */
     int newPackets = 0;
     int didHardAck = 0;
     int haveLast = 0;
@@ -3013,8 +3013,7 @@ struct rx_packet *rxi_ReceiveDataPacket(register struct rx_call *call,
 		dpf (("packet %x dropped on receipt - duplicate", np));
 		rxevent_Cancel(call->delayedAckEvent, call,
 			       RX_CALL_REFCOUNT_DELAY);
-		np = rxi_SendAck(call, np, seq, serial,
-				 flags, RX_ACK_DUPLICATE, istack);
+		np = rxi_SendAck(call, np, serial, RX_ACK_DUPLICATE, istack);
 		ackNeeded = 0;
 		call->rprev = seq;
 		continue;
@@ -3031,7 +3030,7 @@ struct rx_packet *rxi_ReceiveDataPacket(register struct rx_call *call,
 	    /* If an ack is requested then set a flag to make sure we
 	     * send an acknowledgement for this packet */
 	    if (flags & RX_REQUEST_ACK) {
-		ackNeeded = 1;
+		ackNeeded = RX_ACK_REQUESTED;
 	    }
 
 	    /* Keep track of whether we have received the last packet */
@@ -3099,8 +3098,7 @@ struct rx_packet *rxi_ReceiveDataPacket(register struct rx_call *call,
 		MUTEX_EXIT(&rx_stats_mutex);
 		rxevent_Cancel(call->delayedAckEvent, call,
 			       RX_CALL_REFCOUNT_DELAY);
-		np = rxi_SendAck(call, np, seq, serial,
-				 flags, RX_ACK_DUPLICATE, istack);
+		np = rxi_SendAck(call, np, serial, RX_ACK_DUPLICATE, istack);
 		ackNeeded = 0;
 		call->rprev = seq;
 		continue;
@@ -3112,8 +3110,8 @@ struct rx_packet *rxi_ReceiveDataPacket(register struct rx_call *call,
 	    if ((call->rnext + call->rwind) <= seq) {
 		rxevent_Cancel(call->delayedAckEvent, call,
 			       RX_CALL_REFCOUNT_DELAY);
-		np = rxi_SendAck(call, np, seq, serial,
-				 flags, RX_ACK_EXCEEDS_WINDOW, istack);
+		np = rxi_SendAck(call, np, serial,
+				 RX_ACK_EXCEEDS_WINDOW, istack);
 		ackNeeded = 0;
 		call->rprev = seq;
 		continue;
@@ -3129,8 +3127,8 @@ struct rx_packet *rxi_ReceiveDataPacket(register struct rx_call *call,
 		    MUTEX_EXIT(&rx_stats_mutex);
 		    rxevent_Cancel(call->delayedAckEvent, call,
 				   RX_CALL_REFCOUNT_DELAY);
-		    np = rxi_SendAck(call, np, seq, serial, 
-				     flags, RX_ACK_DUPLICATE, istack);
+		    np = rxi_SendAck(call, np, serial, 
+				     RX_ACK_DUPLICATE, istack);
 		    ackNeeded = 0;
 		    call->rprev = seq;
 		    goto nextloop;
@@ -3180,7 +3178,7 @@ struct rx_packet *rxi_ReceiveDataPacket(register struct rx_call *call,
 	    /* We need to send an ack of the packet is out of sequence, 
 	     * or if an ack was requested by the peer. */
 	    if (seq != prev+1 || missing || (flags & RX_REQUEST_ACK)) {
-		ackNeeded = 1;
+		ackNeeded = RX_ACK_OUT_OF_SEQUENCE;
 	    }
 
 	    /* Acknowledge the last packet for each call */
@@ -3198,7 +3196,7 @@ nextloop:;
 	 * If the receiver is waiting for an iovec, fill the iovec
 	 * using the data from the receive queue */
 	if (call->flags & RX_CALL_IOVEC_WAIT) {
-	    didHardAck = rxi_FillReadVec(call, seq, serial, flags); 
+	    didHardAck = rxi_FillReadVec(call, serial); 
 	    /* the call may have been aborted */
 	    if (call->error) {
 		return NULL;
@@ -3229,12 +3227,10 @@ nextloop:;
      * the server's reply. */
     if (ackNeeded) {
 	rxevent_Cancel(call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
-	np = rxi_SendAck(call, np, seq, serial, flags,
-			 RX_ACK_REQUESTED, istack);
+	np = rxi_SendAck(call, np, serial, ackNeeded, istack);
     } else if (call->nSoftAcks > (u_short)rxi_SoftAckRate) {
 	rxevent_Cancel(call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
-	np = rxi_SendAck(call, np, seq, serial, flags,
-			 RX_ACK_IDLE, istack);
+	np = rxi_SendAck(call, np, serial, RX_ACK_IDLE, istack);
     } else if (call->nSoftAcks) {
 	clock_GetTime(&when);
 	if (haveLast && !(flags & RX_CLIENT_INITIATED)) {
@@ -3280,6 +3276,7 @@ static void rxi_UpdatePeerReach(struct rx_connection *conn, struct rx_call *acal
 	    struct rx_call *call = conn->call[i];
 	    if (call) {
 		if (call != acall) MUTEX_ENTER(&call->lock);
+		/* tnop can be null if newcallp is null */
 		TryAttach(call, (osi_socket) -1, NULL, NULL, 1);
 		if (call != acall) MUTEX_EXIT(&call->lock);
 	    }
@@ -3779,6 +3776,7 @@ struct rx_packet *rxi_ReceiveResponsePacket(register struct rx_connection *conn,
 		MUTEX_ENTER(&call->lock);
 		if (call->state == RX_STATE_PRECALL)
 		    rxi_AttachServerProc(call, (osi_socket) -1, NULL, NULL);
+		    /* tnop can be null if newcallp is null */
 		MUTEX_EXIT(&call->lock);
 	    }
 	}
@@ -3896,7 +3894,7 @@ void rxi_AttachServerProc(register struct rx_call *call,
 	if (call->flags & RX_CALL_CLEARED) {
 	    /* send an ack now to start the packet flow up again */
 	    call->flags &= ~RX_CALL_CLEARED;
-	    rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_IDLE, 0);
+	    rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
 	}
 #ifdef	RX_ENABLE_LOCKS
 	CV_SIGNAL(&sq->cv);
@@ -3943,12 +3941,12 @@ void rxi_SendDelayedAck(struct rxevent *event, register struct rx_call *call, ch
 	    call->delayedAckEvent = NULL;
 	CALL_RELE(call, RX_CALL_REFCOUNT_DELAY);
     }
-    (void) rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_DELAY, 0);
+    (void) rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
     if (event)
 	MUTEX_EXIT(&call->lock);
 #else /* RX_ENABLE_LOCKS */
     if (event) call->delayedAckEvent = NULL;
-    (void) rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_DELAY, 0);
+    (void) rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
 #endif /* RX_ENABLE_LOCKS */
 }
 
@@ -4356,8 +4354,8 @@ void rxi_ResetCall(register struct rx_call *call, register int newcall)
 */
 
 struct rx_packet *rxi_SendAck(register struct rx_call *call, 
-	register struct rx_packet *optionalPacket, int seq, int serial, 
-	int pflags, int reason, int istack)
+	register struct rx_packet *optionalPacket, int serial, 
+	int reason, int istack)
 {
     struct rx_ackPacket *ap;
     register struct rx_packet *rqp;
@@ -4459,7 +4457,7 @@ struct rx_packet *rxi_SendAck(register struct rx_call *call,
     p->header.serviceId = call->conn->serviceId;
     p->header.cid = (call->conn->cid | call->channel);
     p->header.callNumber = *call->callNumber;
-    p->header.seq = seq;
+    p->header.seq = 0;
     p->header.securityIndex = call->conn->securityIndex;
     p->header.epoch = call->conn->epoch;
     p->header.type = RX_PACKET_TYPE_ACK;
@@ -5181,7 +5179,7 @@ void rxi_KeepAliveEvent(struct rxevent *event, register struct rx_call *call,
       /* Don't try to send keepalives if there is unacknowledged data */
       /* the rexmit code should be good enough, this little hack 
        * doesn't quite work XXX */
-	(void) rxi_SendAck(call, NULL, 0, 0, 0, RX_ACK_PING, 0);
+	(void) rxi_SendAck(call, NULL, 0, RX_ACK_PING, 0);
     }
     rxi_ScheduleKeepAliveEvent(call);
     MUTEX_EXIT(&call->lock);

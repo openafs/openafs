@@ -91,8 +91,8 @@ extern void rxi_ConnectionError(register struct rx_connection *conn,
 extern void rxi_CallError(register struct rx_call *call, afs_int32 error);
 extern void rxi_ResetCall(register struct rx_call *call, register int newcall);
 extern struct rx_packet *rxi_SendAck(register struct rx_call *call, 
-        register struct rx_packet *optionalPacket, int seq, int serial, 
-        int pflags, int reason, int istack);
+        register struct rx_packet *optionalPacket, int serial, 
+        int reason, int istack);
 extern void rxi_StartUnlocked(struct rxevent *event, register struct rx_call *call, 
         int istack);
 extern void rxi_Start(struct rxevent *event, register struct rx_call *call,
@@ -423,8 +423,7 @@ extern int rxi_ReadProc(register struct rx_call *call, register char *buf,
         register int nbytes);
 extern int rx_ReadProc(struct rx_call *call, char *buf, int nbytes);
 extern int rx_ReadProc32(struct rx_call *call, afs_int32 *value);
-extern int rxi_FillReadVec(struct rx_call *call, afs_uint32 seq, 
-        afs_uint32 serial, afs_uint32 flags);
+extern int rxi_FillReadVec(struct rx_call *call, afs_uint32 serial);
 extern int rxi_ReadvProc(struct rx_call *call, struct iovec *iov, int *nio, 
         int maxio, int nbytes);
 extern int rx_ReadvProc(struct rx_call *call, struct iovec *iov, 

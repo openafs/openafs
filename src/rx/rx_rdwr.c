@@ -185,7 +185,7 @@ int rxi_ReadProc(register struct rx_call *call, register char *buf,
 		if (call->nHardAcks > (u_short)rxi_HardAckRate) {
 		  rxevent_Cancel(call->delayedAckEvent, call,
 				 RX_CALL_REFCOUNT_DELAY);
-		  rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_DELAY, 0);
+		  rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
 		}
 		else {
 		  struct clock when;
@@ -399,8 +399,7 @@ int rx_ReadProc32(struct rx_call *call, afs_int32 *value)
  * current iovec as possible. Does not block if it runs out
  * of packets to complete the iovec. Return true if an ack packet
  * was sent, otherwise return false */
-int rxi_FillReadVec(struct rx_call *call, afs_uint32 seq, 
-	afs_uint32 serial, afs_uint32 flags)
+int rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
 {
     int didConsume = 0;
     int didHardAck = 0;
@@ -526,7 +525,7 @@ int rxi_FillReadVec(struct rx_call *call, afs_uint32 seq,
     if (didConsume && (!(call->flags &RX_CALL_RECEIVE_DONE))) {
       if (call->nHardAcks > (u_short)rxi_HardAckRate) {
 	rxevent_Cancel(call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
-	rxi_SendAck(call, 0, seq, serial, flags, RX_ACK_DELAY, 0);
+	rxi_SendAck(call, 0, serial, RX_ACK_DELAY, 0);
 	didHardAck = 1;
       }
       else {
@@ -591,7 +590,7 @@ int rxi_ReadvProc(struct rx_call *call, struct iovec *iov, int *nio,
     call->iovMax = maxio;
     call->iovNext = 0;
     call->iov = iov;
-    rxi_FillReadVec(call, 0, 0, 0);
+    rxi_FillReadVec(call, 0);
 
     /* if we need more data then sleep until the receive thread has
      * filled in the rest. */
