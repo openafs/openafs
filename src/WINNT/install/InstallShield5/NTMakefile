@@ -25,7 +25,6 @@ build:
     BuildSetup.bat
     xcopy/s/e/y "Media\Transarc AFS\Disk Images\disk1\*.*" $(DESTDIR)\WinInstall
     copy AFS_component_version_number.txt $(DESTDIR)\WinInstall\Version.txt
-    $(DEL) /q "Media\Transarc AFS\Disk Images\disk1\*.*"
 !IF ((EXIST("$(ISWEB)")) &&("$(ISWEB)"!=""))
 !	IF (!EXIST($(DESTDIR)\Wininstall\PackageWeb))
 		$(MKDIR) $(DESTDIR)\Wininstall\PackageWeb
@@ -33,5 +32,6 @@ build:
 	$(DEL) /q $(DESTDIR)\Wininstall\PackageWeb\*.*
 	$(ISWEB)\Pftwwiz.exe $(AFSROOT)\src\winnt\install\InstallShield5\PackageWeb.pfw -s -a 
 !ENDIF
+    $(DEL) /q "Media\Transarc AFS\Disk Images\disk1\*.*"
 
 install: prep build
