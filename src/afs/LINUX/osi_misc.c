@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_misc.c,v 1.9 2002/05/12 05:50:42 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_misc.c,v 1.10 2002/05/18 20:11:52 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -441,6 +441,7 @@ void osi_linux_mask() {
 void osi_linux_unmask() {
     spin_lock_irq(&rxk_ListenerTask->sigmask_lock);
     sigemptyset(&rxk_ListenerTask->blocked);
+    flush_signals(rxk_ListenerTask);
     recalc_sigpending(rxk_ListenerTask);
     spin_unlock_irq(&rxk_ListenerTask->sigmask_lock);
 }
