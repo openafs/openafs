@@ -341,6 +341,9 @@ afsd_ServiceFlushVolumesThreadProc(LPVOID lpParam)
 		case WAIT_OBJECT_0:
 			// termination signaled
 			RevertToSelf();
+            CheckAndCloseHandle(ThreadInfo.hEventPowerEvent);
+            CheckAndCloseHandle(ThreadInfo.hEventResumeMain);
+            CheckAndCloseHandle(ThreadInfo.hEventTerminate);
 			ExitThread(0);
 			break;
 
