@@ -25,6 +25,7 @@ AFS_OS_OBJS = \
 	osi_vm.o \
 	osi_vnodeops.o \
 	xdr.o \
+	xdr_int64.o \
 	xdr_array.o
 
 AFS_OS_NFSOBJS =
@@ -189,6 +190,8 @@ osi_vm.o: $(AFS)/osi_vm.c
 osi_vnodeops.o: $(AFS)/osi_vnodeops.c
 	$(CRULE1);
 xdr.o: $(RX)/xdr.c
+	$(CRULE1);
+xdr_int64.o: $(RX)/xdr_int64.c
 	$(CRULE1);
 xdr_array.o: $(RX)/xdr_array.c
 	$(CRULE1);

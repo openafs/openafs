@@ -251,6 +251,12 @@ write_int32_macros(fout)
 	f_print(fout, "#ifndef xdr_afs_uint32\n");
 	f_print(fout, "#define xdr_afs_uint32 xdr_u_int\n");
 	f_print(fout, "#endif\n");
+        f_print(fout, "#ifndef xdr_afs_int64\n");
+        f_print(fout, "#define xdr_afs_int64 xdr_int64\n");
+        f_print(fout, "#endif\n");
+        f_print(fout, "#ifndef xdr_afs_uint64\n");
+        f_print(fout, "#define xdr_afs_uint64 xdr_uint64\n");
+        f_print(fout, "#endif\n");
 #else
 #error Need to do some work here...
 #endif
@@ -560,6 +566,8 @@ h_output(infile, define, extend, outfile, append)
 	f_print(fout, "#ifdef AFS_LINUX22_ENV\n");
 	f_print(fout, "#include \"../rx/xdr.h\"\n");
 	f_print(fout, "#else /* AFS_LINUX22_ENV */\n");
+	f_print(fout, "extern bool_t xdr_int64();\n");
+	f_print(fout, "extern bool_t xdr_uint64();\n");
 	f_print(fout, "#include \"../rpc/xdr.h\"\n");
 	f_print(fout, "#endif /* AFS_LINUX22_ENV */\n");
 	f_print(fout, "#endif /* XDR_GETLONG */\n");

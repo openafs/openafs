@@ -176,5 +176,6 @@ struct cm_initparams {
 #define VIOC_RXSTAT_PEER	_VICEIOCTL(54)	/* Control peer RX stats */
 #define VIOC_GETRXKCRYPT        _VICEIOCTL(55)  /* Set rxkad enc flag */
 #define VIOC_SETRXKCRYPT        _VICEIOCTL(56)  /* Set rxkad enc flag */
-
+#define VIOC_PREFETCHTAPE       _VICEIOCTL(66)  /* MR-AFS prefetch from tape */
+#define VIOC_RESIDENCY_CMD      _VICEIOCTL(67)  /* generic MR-AFS cmds */
 #endif /* AFS_VENUS_H */
