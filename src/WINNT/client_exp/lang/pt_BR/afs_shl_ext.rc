@@ -89,6 +89,7 @@ BEGIN
     MENUITEM "Mostrar Servidores de Ar&quivos...", IDM_SHOW_SERVER
     MENUITEM "Mostrar &Célula...",          IDM_SHOWCELL
     MENUITEM "Mostrar &Status do Servidor...", IDM_SERVER_STATUS
+    MENUITEM "Remove SymLink",              IDM_REMOVE_SYMLINK
 END
 
 

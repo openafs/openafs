@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/HPUX/osi_vnodeops.c,v 1.1.1.6 2002/05/10 23:43:53 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/HPUX/osi_vnodeops.c,v 1.1.1.7 2002/12/11 02:36:12 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -179,10 +179,6 @@ afs_lockf( vp, flag, len, cred, fp, LB, UB )
 #include "../h/tuneable.h"
 #include "../h/buf.h"
 #include "../netinet/in.h"
-#include "../rpc/types.h"
-#include "../rpc/auth.h"
-#include "../rpc/clnt.h"
-#include "../rpc/xdr.h"
 
 /* a freelist of one */
 struct buf *afs_bread_freebp = 0;

@@ -23,6 +23,8 @@ LIBOBJS =\
 	rxkad_errs.obj \
 	AFS_component_version_number.obj \
 	fcrypt.obj \
+	crc.obj \
+	ticket5.obj \
 	crypt_conn.obj 
 
 # afsrxkad.lib

@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_create.c,v 1.1.1.8 2002/08/02 04:29:01 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_create.c,v 1.1.1.9 2002/12/11 02:36:23 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -106,14 +106,18 @@ afs_create(OSI_VC_ARG(adp), aname, attrs, aexcl, amode, avcp, acred)
 	code = EINVAL;
 	goto done;
     }
-#if	defined(AFS_SUN5_ENV)
-    if ((attrs->va_type == VBLK) || (attrs->va_type == VCHR)) {
-#else
-    if ((attrs->va_type == VBLK) || (attrs->va_type == VCHR) || (attrs->va_type == VSOCK)) {
+    switch (attrs->va_type) {
+    case VBLK:
+    case VCHR:
+#if	!defined(AFS_SUN5_ENV)
+    case VSOCK:
 #endif
-	/* We don't support special devices */
+    case VFIFO:
+	/* We don't support special devices or FIFOs */
 	code = EINVAL;		
 	goto done;
+    default:
+	;
     }
     code = afs_EvalFakeStat(&adp, &fakestate, &treq);
     if (code) goto done;

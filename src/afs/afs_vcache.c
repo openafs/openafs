@@ -38,7 +38,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_vcache.c,v 1.1.1.14 2002/09/26 18:57:58 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/afs_vcache.c,v 1.1.1.15 2002/12/11 02:36:03 hartmans Exp $");
 
 #include "../afs/sysincludes.h" /*Standard vendor system headers*/
 #include "../afs/afsincludes.h" /*AFS-based standard headers*/
@@ -467,6 +467,79 @@ static afs_int32 afs_QueueVCB(struct vcache *avc)
 }
 
 #ifdef AFS_LINUX22_ENV
+
+static void __shrink_dcache_parent(struct dentry * parent)
+{
+	struct dentry *this_parent = parent;
+	struct list_head *next;
+	int found = 0;
+	LIST_HEAD(afs_dentry_unused);
+
+repeat:
+	next = this_parent->d_subdirs.next;
+resume:
+	while (next != &this_parent->d_subdirs) {
+		struct list_head *tmp = next;
+		struct dentry *dentry = list_entry(tmp, struct dentry, d_child);
+		next = tmp->next;
+		if (!DCOUNT(dentry)) {
+			list_del(&dentry->d_lru);
+			list_add(&dentry->d_lru, afs_dentry_unused.prev);
+			found++;
+		}
+		/*
+		 * Descend a level if the d_subdirs list is non-empty.
+		 */
+		if (!list_empty(&dentry->d_subdirs)) {
+			this_parent = dentry;
+			goto repeat;
+		}
+	}
+	/*
+	 * All done at this level ... ascend and resume the search.
+	 */
+	if (this_parent != parent) {
+		next = this_parent->d_child.next; 
+		this_parent = this_parent->d_parent;
+		goto resume;
+	}
+
+	for (;;) {
+		struct dentry *dentry;
+		struct list_head *tmp;
+
+		tmp = afs_dentry_unused.prev;
+
+		if (tmp == &afs_dentry_unused)
+			break;
+#ifdef AFS_LINUX24_ENV
+		list_del_init(tmp);
+#else
+		list_del(tmp);
+		INIT_LIST_HEAD(tmp);
+#endif /* AFS_LINUX24_ENV */
+		dentry = list_entry(tmp, struct dentry, d_lru);
+
+#ifdef AFS_LINUX24_ENV
+		/* Unused dentry with a count? */
+		if (DCOUNT(dentry))
+			BUG();
+#endif
+		DGET(dentry);
+#ifdef AFS_LINUX24_ENV
+		list_del_init(&dentry->d_hash);		/* d_drop */
+#else
+		list_del(&dentry->d_hash);
+		INIT_LIST_HEAD(&dentry->d_hash);
+#endif /* AFS_LINUX24_ENV */
+		DUNLOCK();
+		dput(dentry);
+		DLOCK();
+		if (!--found)
+			break;
+	}
+}
+
 /* afs_TryFlushDcacheChildren -- Shakes loose vcache references held by
  *                               children of the dentry
  *
@@ -485,51 +558,48 @@ static void afs_TryFlushDcacheChildren(struct vcache *tvc)
     struct list_head *head = &ip->i_dentry;
     struct dentry *dentry;
     
+    AFS_GUNLOCK();
 restart:
+#ifndef old_vcache_scheme
     DLOCK();
     cur = head;
     while ((cur = cur->next) != head) {
 	dentry = list_entry(cur, struct dentry, d_alias);
-#ifdef notdef
-	if (DCOUNT(dentry)) {
-	    this_parent = dentry;
-	repeat:
-	    next = this_parent->d_subdirs.next;
-	resume:
-	    while (next && next != &this_parent->d_subdirs) {
-		struct list_head *tmp = next;
-		struct dentry *dchld = list_entry(tmp, struct dentry, d_child);
-		
-		next = tmp->next;
-		if (!DCOUNT(dchld) && !dchld->d_inode) {
-		    DGET(dchld);
-		    AFS_GUNLOCK();
-		    DUNLOCK();
-		    d_drop(dchld);
-		    dput(dchld);
-		    AFS_GLOCK();
-		    DLOCK();
-		    goto repeat;
-		}
-		/*
-		 * Descend a level if the d_subdirs list is non-empty.
-		 */
-		if (!list_empty(&dchld->d_subdirs)) {
-		    this_parent = dchld;
-		    goto repeat;
-		}
-	    }
-	    
-	    /*
-	     * All done at this level ... ascend and resume the search.
-	     */
-	    if (this_parent != dentry) {
-		next = this_parent->d_child.next;
-		this_parent = this_parent->d_parent;
-		goto resume;
-	    }
-	}
-#endif
+
+	afs_Trace3(afs_iclSetp, CM_TRACE_TRYFLUSHDCACHECHILDREN,
+		   ICL_TYPE_POINTER, ip,
+		   ICL_TYPE_STRING, dentry->d_parent->d_name.name,
+		   ICL_TYPE_STRING, dentry->d_name.name);
+
+        if (!list_empty(&dentry->d_hash) && !list_empty(&dentry->d_subdirs))
+            __shrink_dcache_parent(dentry);
+
+        if (!DCOUNT(dentry)) {
+            DGET(dentry);
+#ifdef AFS_LINUX24_ENV 
+            list_del_init(&dentry->d_hash);     /* d_drop */
+#else
+	    list_del(&dentry->d_hash);
+	    INIT_LIST_HEAD(&dentry->d_hash);
+#endif /* AFS_LINUX24_ENV */
+            DUNLOCK();
+            dput(dentry);
+            goto restart;
+        }
+    }
+    DUNLOCK();
+    AFS_GLOCK();
+#else
+restart:
+    DLOCK();
+    cur = head;
+    while ((cur = cur->next) != head) {
+        dentry = list_entry(cur, struct dentry, d_alias);
+
+        afs_Trace3(afs_iclSetp, CM_TRACE_TRYFLUSHDCACHECHILDREN,
+                   ICL_TYPE_POINTER, ip,
+                   ICL_TYPE_STRING, dentry->d_parent->d_name.name,
+                   ICL_TYPE_STRING, dentry->d_name.name);
 
 	if (!DCOUNT(dentry)) {
 	    AFS_GUNLOCK();
@@ -542,7 +612,7 @@ restart:
 	}
     }
     DUNLOCK();
-
+#endif
 }
 #endif /* AFS_LINUX22_ENV */
 

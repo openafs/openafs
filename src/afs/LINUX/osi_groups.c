@@ -16,7 +16,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_groups.c,v 1.1.1.9 2002/05/10 23:44:03 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/LINUX/osi_groups.c,v 1.1.1.10 2002/12/11 02:36:15 hartmans Exp $");
 
 #include "../afs/sysincludes.h"
 #include "../afs/afsincludes.h"
@@ -42,7 +42,7 @@ int set_pag_in_parent(int pag, int g0, int g1)
     gp = current->p_pptr->groups;
 
 
-    if (afs_get_pag_from_groups(gp[0], gp[1]) == NOPAG) {
+    if ((ngroups < 2) || (afs_get_pag_from_groups(gp[0], gp[1]) == NOPAG)) {
 	/* We will have to shift grouplist to make room for pag */
 	if (ngroups + 2 > NGROUPS) {
 	    return EINVAL;

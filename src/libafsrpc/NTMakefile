@@ -262,7 +262,8 @@ DLLLIBS =\
 	$(DESTDIR)\lib\afspthread.lib \
 !ENDIF
 	$(DESTDIR)\lib\afs\afsutil.lib \
-	$(DESTDIR)\lib\afs\afsreg.lib
+	$(DESTDIR)\lib\afs\afsreg.lib  \
+	$(DESTDIR)\lib\afsrxkad.lib
 
 $(DESTDIR)\lib\afsrpc.dll: $(DLLOBJS) $(DLLLIBS)
 	$(DLLCONLINK) /DEF:afsrpc.def

@@ -28,12 +28,16 @@ BOOL CopyACL(const CString& strToDir, const CStringArray& normal, const CStringA
 BOOL ListMount(CStringArray& files);
 BOOL MakeMount(const CString& strDir, const CString& strVolName, const CString& strCellName, BOOL bRW);
 BOOL RemoveMount(CStringArray& files);
+BOOL RemoveSymlink(const char *);
 BOOL GetVolumeInfo(CString strFile, CVolInfo& volInfo);
 BOOL SetVolInfo(CVolInfo& volInfo);
 enum WHICH_CELLS { LOCAL_CELL = 0, SPECIFIC_CELL = 1, ALL_CELLS = 2 };
 BOOL CheckServers(const CString& strCellName, WHICH_CELLS nCellsToCheck, BOOL bFast);
 BOOL GetTokenInfo(CStringArray& tokenInfo);
-BOOL IsPathInAfs(const CString& strPath);
+BOOL IsPathInAfs(const CHAR *strPath);
 int GetCellName(char *baseNamep, struct afsconf_cell *infop);
+long fs_StripDriveLetter(const char *inPathp, char *outPathp, long outSize);
+long fs_ExtractDriveLetter(const char *inPathp, char *outPathp);
+BOOL IsSymlink(const char * true_name);
 
 #endif //__GUI2FS_H__

@@ -14,7 +14,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/UKERNEL/afs_usrops.c,v 1.1.1.8 2002/05/10 23:44:15 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/UKERNEL/afs_usrops.c,v 1.1.1.9 2002/12/11 02:36:21 hartmans Exp $");
 
 
 #ifdef	UKERNEL
@@ -2219,7 +2219,7 @@ int uafs_LookupName(
 	/*
 	 * terminate the current component and skip over slashes
 	 */
-	nextPathP = strchr(pathP, '/');
+	nextPathP = afs_strchr(pathP, '/');
 	if (nextPathP != NULL) {
 	    while (*nextPathP == '/') {
 		*(nextPathP++) = '\0';

@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/test/stress.c,v 1.1.1.7 2001/10/14 18:06:37 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/test/stress.c,v 1.1.1.8 2002/12/11 02:44:48 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -89,6 +89,9 @@ static int StringToAuth (authname)
 #define aRECLAIM     21
 #define a2DCHOICE     22
 #define aMAXSKEW	23
+#define aUSETOKENS 24
+#define aCELL 25
+#define aKEYFILE 26
 
 static int CommandProc (as, arock)
   char *arock;
@@ -122,6 +125,7 @@ static int CommandProc (as, arock)
     cParms->callTest = (as->parms[aCALLTEST].items != 0);
     cParms->hijackTest = (as->parms[aHIJACKTEST].items != 0);
     cParms->stopServer = (as->parms[aSTOPSERVER].items != 0);
+    cParms->useTokens = (as->parms[aUSETOKENS].items != 0);
 
     if (as->parms[aMELT1b].items) 
 	meltdown_1pkt = 0; 
@@ -151,6 +155,8 @@ static int CommandProc (as, arock)
 	if (as->parms[aMINSERVERAUTH].items)
 	    sParms->authentication =
 		StringToAuth (as->parms[aMINSERVERAUTH].items->data);
+        if (as->parms[aKEYFILE].items)
+            sParms->keyfile = as->parms[aKEYFILE].items->data;
 
 #ifdef AFS_PTHREAD_ENV
 	{
@@ -231,6 +237,9 @@ static int CommandProc (as, arock)
 	if (as->parms[aAUTHENTICATION].items)
 	    cParms->authentication =
 		StringToAuth (as->parms[aAUTHENTICATION].items->data);
+        cParms->cell = RXKST_CLIENT_CELL;
+        if (as->parms[aCELL].items)
+            cParms->cell = as->parms[aCELL].items->data;
 
 	code = rxkst_StartClient (cParms);
 	if (code) {
@@ -268,6 +277,7 @@ void main (argc, argv)
     initialize_RXK_error_table();
     initialize_RKS_error_table();
     initialize_CMD_error_table();
+    initialize_KTC_error_table();
 
     code = rx_Init (0);
     rx_SetRxDeadTime(120);
@@ -308,6 +318,9 @@ void main (argc, argv)
     cmd_AddParm (ts, "-noreclaim", CMD_FLAG, CMD_OPTIONAL, "dont aggressively reclaim packets");
     cmd_AddParm (ts, "-no2dchoice", CMD_FLAG, CMD_OPTIONAL, "disable rx_getcall 2d choice code");
     cmd_AddParm (ts, "-maxskew", CMD_SINGLE, CMD_OPTIONAL, "max client server skew in seconds");
+    cmd_AddParm (ts, "-usetokens", CMD_FLAG, CMD_OPTIONAL, "use ktc tokens");
+    cmd_AddParm (ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "name of test cell");
+    cmd_AddParm (ts, "-keyfile", CMD_SINGLE, CMD_OPTIONAL, "read server key from file");
 
     code = cmd_Dispatch (argc, argv);
     exit (code!=0);

@@ -38,7 +38,7 @@ static int newVLDB = 1;
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/fssync.c,v 1.1.1.7 2002/09/26 19:09:21 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/fssync.c,v 1.1.1.8 2002/12/11 02:46:15 hartmans Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>

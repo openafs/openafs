@@ -1448,7 +1448,10 @@ long smb_ReceiveTran2SetFileInfo(smb_vc_t *vcp, smb_tran2Packet_t *p, smb_packet
 		/* prepare for setattr call */
 		attr.mask = 0;
 		lastMod = *((FILETIME *)(p->datap + 16));
-		if (LargeIntegerNotEqualToZero(*((LARGE_INTEGER *)&lastMod))) {
+		/* when called as result of move a b, lastMod is (-1, -1). If the check for -1 is not present, timestamp
+		of the resulting file will be 1969 (-1)
+		 */
+		if (LargeIntegerNotEqualToZero(*((LARGE_INTEGER *)&lastMod)) && lastMod.dwLowDateTime != -1 && lastMod.dwHighDateTime != -1) {
 			attr.mask |= CM_ATTRMASK_CLIENTMODTIME;
 			smb_UnixTimeFromLargeSearchTime(&attr.clientModTime,
 							&lastMod);
@@ -4064,7 +4067,7 @@ long smb_ReceiveNTCancel(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
                         
                         osi_Log3(afsd_logp, "Cancelling change notification for fid %d wtree %d file %s", 
                                 fid, watchtree,
-                                osi_LogSaveString(afsd_logp, fidp->NTopen_wholepathp));
+								osi_LogSaveString(afsd_logp, (fidp)?fidp->NTopen_wholepathp:""));
 
 			scp = fidp->scp;
 			lock_ObtainMutex(&scp->mx);

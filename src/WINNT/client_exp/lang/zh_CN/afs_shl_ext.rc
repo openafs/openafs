@@ -89,6 +89,7 @@ BEGIN
     MENUITEM "显示文件服务器(&F)...",       IDM_SHOW_SERVER
     MENUITEM "显示单元(&C)...",             IDM_SHOWCELL
     MENUITEM "显示服务器状态...",           IDM_SERVER_STATUS
+    MENUITEM "Remove SymLink",              IDM_REMOVE_SYMLINK
 END
 
 

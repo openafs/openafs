@@ -126,6 +126,23 @@ afs_IsDynroot(avc)
 }
 
 /*
+ * Given the current page and chunk pointers in a directory, adjust them
+ * appropriately so that the given file name can be appended.  Used for
+ * computing the size of a directory.
+ */
+static void afs_dynroot_computeDirEnt(char *name, int *curPageP, int *curChunkP)
+{
+    int esize;
+
+    esize = afs_dir_NameBlobs(name);
+    if (*curChunkP + esize > EPP) {
+	*curPageP += 1;
+	*curChunkP = 1;
+    }
+    *curChunkP += esize;
+}
+
+/*
  * Add directory entry by given name to a directory.  Assumes the
  * caller has allocated the directory to be large enough to hold
  * the necessary entry.
@@ -207,7 +224,7 @@ afs_RefreshDynroot()
     int cellidx, maxcellidx, i;
     struct cell *c;
     int curChunk, curPage;
-    int dirSize, sizeOfCurEntry;
+    int dirSize, sizeOfCurEntry, dotLen;
     char *newDir, *dotCell;
     struct DirHeader *dirHeader;
     struct PageHeader *pageHeader;
@@ -229,6 +246,9 @@ afs_RefreshDynroot()
     curChunk = 13;
     curPage = 0;
 
+    /* Reserve space for "." and ".." */
+    curChunk += 2;
+
     for (cellidx = 0; cellidx < maxcellidx; cellidx++) {
 	c = afs_GetCellByIndex(cellidx, READ_LOCK, 0 /* don't refresh */);
 	if (!c) continue;
@@ -240,7 +260,8 @@ afs_RefreshDynroot()
 	}
 	curChunk += sizeOfCurEntry;
 
-	dotCell = afs_osi_Alloc(strlen(c->cellName) + 2);
+	dotLen = strlen(c->cellName) + 2;
+	dotCell = afs_osi_Alloc(dotLen);
 	strcpy(dotCell, ".");
 	strcat(dotCell, c->cellName);
 	sizeOfCurEntry = afs_dir_NameBlobs(dotCell);
@@ -250,6 +271,7 @@ afs_RefreshDynroot()
 	}
 	curChunk += sizeOfCurEntry;
 
+	afs_osi_Free(dotCell, dotLen);
 	afs_PutCell(c, READ_LOCK);
     }
 
@@ -294,14 +316,12 @@ afs_RefreshDynroot()
     afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk, "..", 1);
     linkCount += 2;
 
-    /* Reserve space for "." and ".." */
-    curChunk += 2;
-
     for (cellidx = 0; cellidx < maxcellidx; cellidx++) {
 	c = afs_GetCellByIndex(cellidx, READ_LOCK, 0 /* don't refresh */);
 	if (!c) continue;
 
-	dotCell = afs_osi_Alloc(strlen(c->cellName) + 2);
+	dotLen = strlen(c->cellName) + 2;
+	dotCell = afs_osi_Alloc(dotLen);
 	strcpy(dotCell, ".");
 	strcat(dotCell, c->cellName);
 	afs_dynroot_addDirEnt(dirHeader, &curPage, &curChunk,
@@ -310,6 +330,8 @@ afs_RefreshDynroot()
 			      dotCell, VNUM_FROM_CIDX_RW(cellidx, 1));
 
 	if (!(c->states & CAlias)) linkCount += 2;
+
+	afs_osi_Free(dotCell, dotLen);
 	afs_PutCell(c, READ_LOCK);
     }
 

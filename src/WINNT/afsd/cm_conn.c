@@ -63,9 +63,9 @@ long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
 	struct cm_req *reqp, cm_serverRef_t **serverspp)
 {
 	long code;
-        cm_volume_t *volp;
-        cm_serverRef_t *serversp;
-        cm_cell_t *cellp;
+        cm_volume_t *volp = NULL;
+        cm_serverRef_t *serversp = NULL;
+        cm_cell_t *cellp = NULL;
 
         if (!fidp) {
 		*serverspp = NULL;

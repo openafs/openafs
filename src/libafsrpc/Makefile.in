@@ -31,7 +31,7 @@ SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 CC=${MT_CC}
-INCLUDES=-I${TOP_INCDIR} -I.. -I../rx
+INCLUDES=-I${TOP_INCDIR} -I.. -I../rx -I../rxkad
 CFLAGS = ${OPTMZ} ${DBG} ${INCLUDES} -DRXDEBUG ${MT_CFLAGS} -I${TOP_SRCDIR}/config
 SFLAGS=-P -I${TOP_INCDIR}
 RX = ../rx
@@ -63,6 +63,8 @@ XDROBJS =\
 	xdr_rx.o \
 	xdr_int64.o \
 	xdr_afsuuid.o \
+	xdr_update.o \
+	xdr_refernce.o \
 	AFS_component_version_number.o
 
 RXOBJS =\
@@ -98,6 +100,8 @@ RXKADOBJS =\
 	rxkad_server.o \
 	rxkad_common.o \
 	ticket.o \
+	ticket5.o \
+	crc.o \
 	fcrypt.o \
 	crypt_conn.o
 
@@ -197,6 +201,12 @@ rxkad_common.o: ${RXKAD}/rxkad_common.c
 ticket.o: ${RXKAD}/ticket.c
 	${CCRULE}
 
+ticket5.o: ${RXKAD}/ticket5.c
+	${CCRULE}
+
+crc.o: ${RXKAD}/crc.c
+	${CCRULE}
+
 fcrypt.o: ${RXKAD}/fcrypt.c
 	${CCRULE}
 
@@ -258,7 +268,7 @@ xdr_afsuuid.o: ${RX}/xdr_afsuuid.c
 #
 #   $ what /opt/langtools/bin/pxdb32
 #   /opt/langtools/bin/pxdb32:
-#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.1.1.3 $
+#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.1.1.4 $
 #
 # The problem occurs when -g and -O are both used when compiling des.c.
 # The simplest way to work around the problem is to leave out either -g or -O.

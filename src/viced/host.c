@@ -10,7 +10,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/host.c,v 1.1.1.11 2002/09/26 19:09:14 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/host.c,v 1.1.1.12 2002/12/11 02:46:09 hartmans Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -956,7 +956,6 @@ struct host *h_GetHost_r(tcon)
     int held;
     struct interfaceAddr interf;
     int interfValid = 0;
-    afs_int32	buffer[AFS_MAX_INTERFACE_ADDR];
     struct Identity *identP = NULL;
     afs_int32 haddr;
     afs_int32 hport;
@@ -1934,7 +1933,6 @@ int CheckHost(host, held)
 
 {
     register struct client *client;
-    struct interfaceAddr interf;
     int code;
 
     /* Host is held by h_Enumerate */
@@ -2070,11 +2068,11 @@ struct interfaceAddr *interf;
 		host->host, interf->numberOfInterfaces));
 
 	number = interf->numberOfInterfaces;
-	myPort   = host->port;
-	myHost   = host->host; /* current interface address */
+	myPort = host->port;
+	myHost = host->host; /* current interface address */
 
 	/* validation checks */
-	if ( number < 0 )
+	if ( number < 0 || number > AFS_MAX_INTERFACE_ADDR )
         {
 		ViceLog(0,("Number of alternate addresses returned is %d\n",
 			 number));

@@ -12,7 +12,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/test/stress_c.c,v 1.1.1.6 2001/09/11 14:34:44 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/test/stress_c.c,v 1.1.1.7 2002/12/11 02:44:49 hartmans Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -26,6 +26,7 @@ RCSID("$Header: /tmp/cvstemp/openafs/src/rxkad/test/stress_c.c,v 1.1.1.6 2001/09
 #include <afs/com_err.h>
 #include <afs/afsutil.h>
 #include <rx/rxkad.h>
+#include <afs/auth.h>
 #include "stress.h"
 #include "stress_internal.h"
 #ifdef AFS_PTHREAD_ENV
@@ -52,7 +53,30 @@ static long GetServer(aname)
     return addr;
 }
 
-static long GetTicket (versionP, session, ticketLenP, ticket)
+static long GetToken (versionP, session, ticketLenP, ticket, cell)
+  OUT long *versionP;
+  OUT struct ktc_encryptionKey *session;
+  OUT int *ticketLenP;
+  OUT char *ticket;
+{
+  struct ktc_principal sname;
+  struct ktc_token ttoken;
+    long code;
+
+  strcpy(sname.cell, cell);
+  sname.instance[0] = 0;
+  strcpy(sname.name, "afs");
+  code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
+  if (code) return code;
+
+  *versionP = ttoken.kvno;
+  *ticketLenP = ttoken.ticketLen;
+  memcpy(ticket, ttoken.ticket, ttoken.ticketLen);
+  memcpy(session, &ttoken.sessionKey, sizeof(struct ktc_encryptionKey));
+  return 0;
+}
+
+static long GetTicket (versionP, session, ticketLenP, ticket, cell)
   OUT long *versionP;
   OUT struct ktc_encryptionKey *session;
   OUT int *ticketLenP;
@@ -68,7 +92,7 @@ static long GetTicket (versionP, session, ticketLenP, ticket)
     /* now create the actual ticket */
     *ticketLenP = 0;
     code = tkt_MakeTicket(ticket, ticketLenP, &serviceKey,
-			  RXKST_CLIENT_NAME, RXKST_CLIENT_INST, "",
+			  RXKST_CLIENT_NAME, RXKST_CLIENT_INST, cell,
 			  /*start,end*/0, 0xffffffff, session, /*host*/0,
 			  RXKST_SERVER_NAME, RXKST_SERVER_NAME);
     /* parms were buffer, ticketlen, key to seal ticket with, principal name,
@@ -1142,7 +1166,10 @@ long rxkst_StartClient (parms)
 	int ticketLen;
 	struct ktc_encryptionKey Ksession;
 
-	code = GetTicket (&kvno, &Ksession, &ticketLen, ticket);
+	if (parms->useTokens)
+	    code = GetToken (&kvno, &Ksession, &ticketLen, ticket, parms->cell);
+	else
+	    code = GetTicket (&kvno, &Ksession, &ticketLen, ticket, parms->cell);
 	if (code) return code;
 
 	/* next, we have ticket, kvno and session key, authenticate the conn */

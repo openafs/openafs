@@ -80,6 +80,10 @@
  * supress the warnings.
  */
 struct uio;
+
+#define memset(A, B, S) bzero(A, S)
+#define memcpy(B, A, S) bcopy(A, B, S)
+#define memcmp(A, B, S) bcmp(A, B, S)
 #endif
 #endif /* KERNEL */
 #define	AFS_DIRENT	

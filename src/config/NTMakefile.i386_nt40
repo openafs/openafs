@@ -37,8 +37,8 @@ APPVER = 4.0
 !ENDIF
 
 #define used in WinNT/2000 installation and program version display
-AFSPRODUCT_VERSION=1.2.2 b
-CELLNAME_DEFAULT=Your Cell Name
+AFSPRODUCT_VERSION=1.2.8
+CELLNAME_DEFAULT=openafs.org
 CELLSERVDB_INSTALL=CellServDB.GrandCentral
 CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
 #NMAKE_DEFINES=-DDEBUG_VERBOSE
@@ -61,42 +61,9 @@ AFSDEV_BUILDTYPE = NONE
 
 !ENDIF
 
-# Limit default include and library directories to those specified for build.
-
-!IFNDEF AFSDEV_INCLUDE
-!ERROR Must define AFSDEV_INCLUDE to be the default include directories.
-!ENDIF
-
-!IF ((!DEFINED(INCLUDE)) && ([set INCLUDE=$(AFSDEV_INCLUDE)] != 0))
-#    If env. var. INCLUDE not defined then macro assignment won't set it.
-!ERROR Failed setting environment variable INCLUDE.
-!ENDIF
-INCLUDE = $(AFSDEV_INCLUDE)
-
-
-!IFNDEF AFSDEV_LIB
-!ERROR Must define AFSDEV_LIB to be the default library directories.
-!ENDIF
-
-!IF ((!DEFINED(LIB)) && ([set LIB=$(AFSDEV_LIB)] != 0))
-#    If env. var. LIB not defined then macro assignment won't set it.
-!ERROR Failed setting environment variable LIB.
-!ENDIF
-LIB = $(AFSDEV_LIB)
-
-
-# Put default build binary directories at front of path.
-
 !IFNDEF AFSDEV_BIN
 !ERROR Must define AFSDEV_BIN to be the default build binary directories.
 !ENDIF
-
-!IF ((!DEFINED(PATH)) && ([set PATH=$(AFSDEV_BIN)] != 0))
-#    If env. var. PATH not defined then macro assignment won't set it.
-!ERROR Failed setting environment variable PATH.
-!ENDIF
-PATH = $(AFSDEV_BIN);$(PATH)
-
 
 # Undefine WIN32.MAK NODEBUG macro.
 # Always generate full debug info, unless profiling or tuning (see below).
@@ -116,6 +83,42 @@ PATH = $(AFSDEV_BIN);$(PATH)
 DESTDIR = $(AFSDEV_DESTDIR)
 !ELSE
 DESTDIR = $(AFSROOT)\DEST
+!ENDIF
+
+#CHECK which VERSION of the complier we are using
+#v6.0 doesn't work using msvcrtd.lib unless AFSDEV_CRTDEBUG is defined, v7.0 requires it
+!IF ("$(AFSVER)"=="")
+!IF EXISTS("$(DESTDIR)\bin\util_cr.exe")
+!IF EXISTS("$(AFSDEV_BIN)\CL.exe")
+!IF	(([$(DESTDIR)\bin\util_cr.exe __ $(AFSDEV_BIN)\CL.exe 7])==1) 
+AFSVER_CL=70
+!ELSE
+AFSVER_CL=60
+!ENDIF
+!ELSE
+!MESSAGE WARNING-Complier version not available
+!ENDIF
+!ELSE
+!MESSAGE WARNING-Complier version not available
+!ENDIF
+!ENDIF
+
+#CHECK which VERSION of the complier we are using
+#v6.0 doesn't work using msvcrtd.lib unless AFSDEV_CRTDEBUG is defined, v7.0 requires it
+!IF ("$(AFSVER)"=="")
+!IF EXISTS("$(DESTDIR)\bin\util_cr.exe")
+!IF EXISTS("$(AFSDEV_BIN)\CL.exe")
+!IF	(([$(DESTDIR)\bin\util_cr.exe __ $(AFSDEV_BIN)\CL.exe 7])==1) 
+AFSVER_CL=70
+!ELSE
+AFSVER_CL=60
+!ENDIF
+!ELSE
+!MESSAGE WARNING-Complier version not available
+!ENDIF
+!ELSE
+!MESSAGE WARNING-Complier version not available
+!ENDIF
 !ENDIF
 
 # Command macros.
@@ -184,13 +187,15 @@ afscflags =\
 !IF ("$(AFSDEV_BUILDTYPE)" == "FREE")
 #    Apply full optimization; generate full debug info in obj.
 afscflags = $(afscflags) /Ox /Z7
-ldebug = $(ldebug) -debugtype:both
+ldebug = $(ldebug)
 cdebug = $(cdebug:-Od=)  # avoid annoying override warning (D4025)
+cvarsdll = $(cvarsdll:-MDd=-MD)
 
 !ELSEIF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
 #    Disable optimization; generate full debug info in obj.
 afscflags = $(afscflags) /Od /Z7
 ldebug = $(ldebug) -debugtype:both
+cdebug = $(cdebug:-Z7=-Z7)  # avoid annoying override warning (D4025)
 !ENDIF
 
 # Set compiler warning level
@@ -215,13 +220,13 @@ afscflags = $(afscflags) /W$(AFSDEV_WARNLEVEL)
 # /FIXED:NO   generates a relocation section in the executable
 
 afslflags =\
-	/FIXED:NO
+	/FIXED:NO /VERBOSE:LIB
 
 
 
 # For checked builds, define DEBUG (but not the MS control flag _DEBUG).
 
-!IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
+!IF (("$(AFSDEV_BUILDTYPE)" == "CHECKED") && ("$(AFSVER_CL)"=="60"))
 afscdefs = $(afscdefs) -DDEBUG
 !ENDIF
 
@@ -267,7 +272,7 @@ mfcdlllflags = $(mfcdlllflags) /NODEFAULTLIB:msvcrt.lib
 # Macros for creating/modifying binary targets
 
 # EXE link macro for console applications
-EXECONLINK = $(link) /OUT:$@ $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) $**
+EXECONLINK = $(link) /OUT:$@ $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) version.lib $**
 
 # EXE link macro for GUI applications
 EXEGUILINK = $(link) /OUT:$@ $(ldebug) $(guilflags) $(afslflags) $(guilibsdll) $**
@@ -279,10 +284,22 @@ EXEMFCLINK = $(link) /OUT:$@ $(ldebug) $(mfclflags) $(afslflags) $(mfclibsdll) $
 DLLCONLINK = $(link) /OUT:$@ $(ldebug) $(dlllflags) $(afslflags) $(conlibsdll) $**
 
 # DLL link macro for GUI applications
+!IF ("$(AFSDEV_BUILDTYPE)" == "CHECKED")
+DLLGUILINK = $(link) /OUT:$@ /NODEFAULTLIB:LIBC $(ldebug) $(dlllflags) $(afslflags) $(guilibsdll)  $**
+!ELSE
 DLLGUILINK = $(link) /OUT:$@ $(ldebug) $(dlllflags) $(afslflags) $(guilibsdll) $**
+!ENDIF
 
 # DLL link macro for MFC applications
 DLLMFCLINK = $(link) /OUT:$@ $(ldebug) $(mfcdlllflags) $(afslflags) $(mfclibsdll) $**
+
+#v6.0 doesn't work using msvcrtd.lib unless AFSDEV_CRTDEBUG is defined, v7.0 requires it
+!IFNDEF AFSDEV_CRTDEBUG
+!IF ("$(AFSVER_CL)"=="60")
+EXEMFCLINK=$(EXEMFCLINK:/NODEFAULTLIB:msvcrtd.lib=)
+DLLMFCLINK=$(DLLMFCLINK:/NODEFAULTLIB:msvcrtd.lib=)
+!ENDIF
+!ENDIF
 
 # DLL link macro for resource-only DLLs
 DLLRESLINK = $(link) /OUT:$@ $(dlllflags:-entry:_DllMainCRTStartup@12=-noentry) $(afslflags) $**

@@ -16,6 +16,7 @@ extern "C" {
 #include <initguid.h>
 #include <windows.h>
 #include <windowsx.h>
+#undef INITGUID
 #include <shlobj.h>
 #include <shellapi.h>
 #include "shortcut.h"

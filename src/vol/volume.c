@@ -19,7 +19,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/vol/volume.c,v 1.1.1.12 2002/09/26 19:09:28 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/vol/volume.c,v 1.1.1.13 2002/12/11 02:46:19 hartmans Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -388,6 +388,11 @@ static void ReadHeader(Error *ec, IHandle_t *h, char *to, int size,
     FdHandle_t *fdP;
 
     *ec = 0;
+    if (h == NULL) {
+	*ec = VSALVAGE;
+	return;
+    }
+
     fdP = IH_OPEN(h);
     if (fdP == NULL) {
 	*ec = VSALVAGE;
