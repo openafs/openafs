@@ -417,7 +417,10 @@ int afsd_InitCM(char **reasonP)
 	}
 	else {
 	  cm_dnsEnabled = 1;   /* default on */
+	  afsi_log("Default to use DNS to find AFS cell servers");
 	}
+#else /* AFS_AFSDB_ENV */
+	afsi_log("AFS not built with DNS support to find AFS cell servers");
 #endif /* AFS_AFSDB_ENV */
 
 #ifdef AFS_FREELANCE_CLIENT

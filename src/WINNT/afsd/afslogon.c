@@ -321,6 +321,7 @@ DWORD APIENTRY NPLogonNotify(
 	LPWSTR *lpLogonScript)
 {
 	char uname[256];
+	char *ctemp;
 	char password[256];
 	char cell[256];
 	MSV1_0_INTERACTIVE_LOGON *IL;
@@ -347,6 +348,10 @@ DWORD APIENTRY NPLogonNotify(
 	/* Convert from Unicode to ANSI */
 	wcstombs(uname, IL->UserName.Buffer, 256);
 	wcstombs(password, IL->Password.Buffer, 256);
+
+	/* Make sure AD-DOMANS sent from login that is sent to us is striped */
+        ctemp = strchr(uname, '@');
+        if (ctemp) *ctemp = 0;
 
 	(void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_CLIENT_PARMS_KEY,
 		    0, KEY_QUERY_VALUE, &NPKey);
@@ -436,6 +441,7 @@ DWORD APIENTRY NPLogonNotify(
                  * mode or the failSilently flag is set, otherwise let the
                  * user know we failed and give them a chance to try again. */
         if (retryInterval <= 0) {
+	     reason = "AFS not running";
              if (!interactive || failSilently)
                  break;
 			flag = MessageBox(hwndOwner,
