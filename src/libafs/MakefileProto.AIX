@@ -23,7 +23,6 @@ AFS_OS_OBJS = \
 	osi_timeout.o \
 	osi_vm.o \
 	xdr.o \
-	xdr_int64.o \
 	xdr_array.o
 
 AFSNOIAUTHOBJS = \
