@@ -12,6 +12,7 @@ extern "C" {
 #include <afs/stds.h>
 }
 
+#include <afxpriv.h>
 #include "stdafx.h"
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -331,7 +332,7 @@ STDMETHODIMP CShellExt::XMenuExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 									}
 									break;
 		case IDM_REMOVE_SYMLINK:	{
-										if (files.GetCount()>1)
+										if (files.GetSize()>1)
 											break;
 										int nChoice = ShowMessageBox(IDS_REALLY_REMOVE_SYMLINK, MB_ICONQUESTION | MB_YESNO, IDS_REALLY_REMOVE_SYMLINK);
 										if (nChoice == IDYES)
