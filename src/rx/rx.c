@@ -455,7 +455,7 @@ int rx_Init(u_int port)
 #else
 	struct sockaddr_in addr;
 	int addrlen = sizeof(addr);
-	if (getsockname(rx_socket, (struct sockaddr *) &addr, &addrlen)) {
+	if (getsockname((int)rx_socket, (struct sockaddr *) &addr, &addrlen)) {
 	    rx_Finalize();
 	    return -1;
 	}

@@ -19,7 +19,9 @@
 #include <fcntl.h>
 #include <mntent.h>
 #include "partition.h"
+#ifdef AFS_SGI_EFS_IOPS_ENV
 #include "../sgiefs/efs.h"
+#endif
 #include <afs/xfsattrs.h>
 
 char *prog = "xfs_size_check";

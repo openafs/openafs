@@ -166,7 +166,8 @@ getinode(struct vfs *vfsp, dev_t dev, ino_t inode, struct inode **ipp)
 	return ENOSYS;
 #endif
 
-    if (error = iget(vfstom(vfsp), (unsigned int)(inode&0xffffffff), &ip)) {
+    if (error = iget((((struct mount *)((vfsp)->vfs_bh.bh_first)->bd_pdata)), 
+		     (unsigned int)(inode&0xffffffff), &ip)) {
 	return error;
     }
     *ipp = ip;
@@ -216,8 +217,10 @@ int xfs_getinode(struct vfs *vfsp, dev_t dev, ino_t inode,
     }
 #endif
 
-    if (error = xfs_iget(vfstom(vfsp), (void*)0,
-			 (xfs_ino_t)inode,XFS_ILOCK_SHARED, &ip, (daddr_t)0)) {
+    if (error = xfs_iget((((struct mount *)
+			   ((vfsp)->vfs_bh.bh_first)->bd_pdata)),
+			 (void*)0, (xfs_ino_t)inode, 
+			 XFS_ILOCK_SHARED, &ip, (daddr_t)0)) {
 	SET_XFS_ERROR(3, vfsp->vfs_dev, inode);
 	return error;
     }
@@ -277,6 +280,7 @@ struct icreateargs {
 };
 
 /* EFS only fs suite uses this entry point - icreate in afssyscalls.c. */
+#ifdef AFS_SGI_EFS_IOPS_ENV
 int
 icreate(struct icreateargs *uap, rval_t *rvp)
 {
@@ -327,6 +331,7 @@ rval_t *rvp;
 	iput(newip);
 	return 0;
 }
+#endif /* AFS_SGI_EFS_IOPS_ENV */
 
 #ifdef AFS_SGI_XFS_IOPS_ENV
 /* inode creation routines for icreatename64 entry point. Use for EFS/XFS
@@ -620,6 +625,7 @@ afs_syscall_iopen(int dev, ino_t inode, int usrmod, rval_t *rvp)
 	if (!vfsp)
 	    return ENXIO;
 
+#ifdef AFS_SGI_EFS_IOPS_ENV
 	if (vfsp->vfs_fstype == efs_fstype) {
 	    struct inode *ip;
 	    if (error = igetinode(vfsp, (dev_t)dev, inode, &ip))
@@ -631,20 +637,22 @@ afs_syscall_iopen(int dev, ino_t inode, int usrmod, rval_t *rvp)
 	    }
 	    iunlock(ip);
 	}
-	else if (vfsp->vfs_fstype == xfs_fstype) {
-	    struct xfs_inode *xip;
-	    if (error = xfs_igetinode(vfsp, (dev_t)dev, inode, &xip))
-		return error;
-	    vp = XFS_ITOV(xip);
-	    if (error = vfile_alloc((usrmod+1) & (FMASK), &fp, &fd)) {
-		VN_RELE(vp);
-		return error;
-	    }
-	}
-	else {
-	    osi_Panic("afs_syscall_iopen: bad fstype = %d\n",
-		      vfsp->vfs_fstype);
-	}
+	else 
+#endif /* AFS_SGI_EFS_IOPS_ENV */
+	  if (vfsp->vfs_fstype == xfs_fstype) {
+	      struct xfs_inode *xip;
+	      if (error = xfs_igetinode(vfsp, (dev_t)dev, inode, &xip))
+		  return error;
+	      vp = XFS_ITOV(xip);
+	      if (error = vfile_alloc((usrmod+1) & (FMASK), &fp, &fd)) {
+		  VN_RELE(vp);
+		  return error;
+	      }
+	  }
+	  else {
+	      osi_Panic("afs_syscall_iopen: bad fstype = %d\n",
+			vfsp->vfs_fstype);
+	  }
         vfile_ready(fp, vp);
 	rvp->r_val1 = fd;
 	return 0;
@@ -765,6 +773,7 @@ rval_t *rvp;
  * Only VICEMAGIC type inodes.
  */
 #ifdef AFS_SGI_XFS_IOPS_ENV
+#ifdef AFS_SGI_EFS_IOPS_ENV
 /* efs_iincdec
  *
  * XFS/EFS iinc/idec code for EFS. Uses 32 bit inode numbers. 
@@ -796,6 +805,7 @@ int inode, inode_p1, amount;
     iput(ip);
     return error;
 }
+#endif /* AFS_SGI_EFS_IOPS_ENV */
 
 /* xfs_iincdec
  *
@@ -814,8 +824,9 @@ static int xfs_iincdec64(struct vfs *vfsp, ino_t inode, int inode_p1,
     int nlink;
     int vol;
     
-    code = xfs_iget(vfstom(vfsp), (void*)0, (xfs_ino_t)inode, XFS_ILOCK_SHARED,
-		    &ip, (daddr_t)0);
+    code = xfs_iget((((struct mount *)((vfsp)->vfs_bh.bh_first)->bd_pdata)),
+		    (void*)0, (xfs_ino_t)inode, XFS_ILOCK_SHARED, &ip, 
+		    (daddr_t)0);
     if (code)
 	return code;
 
@@ -963,9 +974,11 @@ iincdec64(int dev, int inode_hi, int inode_lo, int inode_p1, int amount)
 	inode |= inode_lo;
 	return xfs_iincdec64(vfsp, inode, inode_p1, amount);
     }
+#ifdef AFS_SGI_EFS_IOPS_ENV
     else if (vfsp->vfs_fstype == efs_fstype) {
 	return efs_iincdec(vfsp, inode_lo, inode_p1, amount);
     }
+#endif /* AFS_SGI_EFS_IOPS_ENV */
     return ENXIO;
 }
 
@@ -1143,7 +1156,8 @@ afs_syscall_ilistinode64(int dev, int inode_hi, int inode_lo,
     inode = inode_hi;
     inode <<= 32;
     inode |= inode_lo;
-    code = xfs_iget(vfstom(vfsp), (void*)0, (xfs_ino_t)inode,
+    code = xfs_iget((((struct mount *)((vfsp)->vfs_bh.bh_first)->bd_pdata)), 
+		    (void*)0, (xfs_ino_t)inode,
 		    XFS_ILOCK_SHARED, &ip, (daddr_t)0);
     if (code)
 	return code;
