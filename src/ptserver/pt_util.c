@@ -1,4 +1,4 @@
-/* $Id: pt_util.c,v 1.1 2001/01/19 20:55:42 hartmans Exp $ */
+/* $Id: pt_util.c,v 1.2 2001/01/20 20:01:36 hartmans Exp $ */
 
 /*
  *
@@ -99,7 +99,7 @@ char **argv;
     struct prentry uentry, gentry;
     struct ubik_hdr *uh;
     char *dfile = 0;
-    char *pfile = "/usr/afs/db/prdb.DB0";
+    char *pfile = "/var/lib/openafs/db/prdb.DB0";
     
     while ((cc = getopt(argc, argv, "wugmxsnp:d:")) != EOF) {
 	switch (cc) {
