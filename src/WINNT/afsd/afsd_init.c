@@ -388,7 +388,7 @@ int afsd_InitCM(char **reasonP)
     long maxcpus;
     long ltt, ltto;
     long rx_mtu, rx_nojumbo;
-    long virtualCache;
+    long virtualCache = 0;
     char rootCellName[256];
     struct rx_service *serverp;
     static struct rx_securityClass *nullServerSecurityClassp;
@@ -622,9 +622,12 @@ int afsd_InitCM(char **reasonP)
         }
         afsi_log("Cache path %s", cm_CachePath);
     } else {
-        GetWindowsDirectory(cm_CachePath, sizeof(cm_CachePath));
-        cm_CachePath[2] = 0;	/* get drive letter only */
-        StringCbCatA(cm_CachePath, sizeof(cm_CachePath), "\\AFSCache");
+        dummyLen = ExpandEnvironmentStrings("%TEMP%\AFSCache", cm_CachePath, sizeof(cm_CachePath));
+        if (dummyLen > sizeof(cm_CachePath)) {
+            afsi_log("Cache path [%%TEMP%%\\AFSCache] longer than %d after expanding env strings", 
+                     sizeof(cm_CachePath));
+            osi_panic("CachePath too long", __FILE__, __LINE__);
+        }
         afsi_log("Default cache path %s", cm_CachePath);
     }
 

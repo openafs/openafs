@@ -463,7 +463,18 @@ As of 1.3.75, a new registry value, HKLM\SOFTWARE\OpenAFS\Client
 filenames using the ANSI Code Page instead of the OEM Code Page.  The ANSI
 Code Page is a compatible superset of Latin-1.  This setting is not the 
 default setting because making this change would prevent OpenAFS for Windows 
-from being able to access filenames containing the above characters.
+from being able to access filenames containing the above characters which
+were created without this setting.
+
+
+30. There is a known issue with storing Windows Roaming Profiles when
+the profile contains either directories or files with names which cannot
+be represented in the local OEM character set.  In this case, attempts
+to write the profile back to AFS will fail.  OpenAFS for Windows does
+not currently support UNICODE.  To avoid this problem some sites run
+logoff scripts (assigned by group policy) which rename all files to use
+only the supported characters for the locale.
+
 
 ------------------------------------------------------------------------
 

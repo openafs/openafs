@@ -86,6 +86,9 @@ int buf_cacheType = CM_BUF_CACHETYPE_FILE;
 static
 HANDLE CacheHandle;
 
+static 
+VOID * ViewOfFile;
+
 static
 SYSTEM_INFO sysInfo;
 #endif /* !DJGPP */
@@ -334,11 +337,11 @@ long buf_Init(cm_buf_ops_t *opsp)
             }
             return CM_ERROR_INVAL;
         }
-        data = MapViewOfFile(hm,
-                              FILE_MAP_ALL_ACCESS,
-                              0, 0,   
-                              buf_nbuffers * buf_bufferSize);
-        if (data == NULL) {
+        ViewOfFile = MapViewOfFile(hm,
+                                   FILE_MAP_ALL_ACCESS,
+                                   0, 0,   
+                                   buf_nbuffers * buf_bufferSize);
+        if (ViewOfFile == NULL) {
             afsi_log("Error mapping view of file: 0x%X", GetLastError());
             if (hf != INVALID_HANDLE_VALUE)
                 CloseHandle(hf);
@@ -346,6 +349,8 @@ long buf_Init(cm_buf_ops_t *opsp)
             return CM_ERROR_INVAL;
         }
         CloseHandle(hm);
+
+        data = ViewOfFile;
 #else   
         /* djgpp doesn't support memory mapped files */
         data = malloc(buf_nbuffers * buf_bufferSize);
@@ -404,6 +409,13 @@ long buf_Init(cm_buf_ops_t *opsp)
     }
 
     return 0;
+}
+
+void
+buf_Shutdown(void)
+{
+    UnmapViewOfFile(ViewOfFile);
+    CloseHandle(CacheHandle);
 }
 
 /* add nbuffers to the buffer pool, if possible.
