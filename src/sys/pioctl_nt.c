@@ -150,8 +150,8 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
                 strcat(tbuffer, SMB_IOCTL_FILENAME_NOSLASH);
             }
         }
-	}
-	if (!tbuffer[0]) {
+    }
+    if (!tbuffer[0]) {
         /* No file name starting with drive colon specified, use UNC name */
         lana_GetNetbiosName(netbiosName,LANA_NETBIOS_NAME_FULL);
         sprintf(tbuffer,"\\\\%s\\all%s",netbiosName,SMB_IOCTL_FILENAME);
@@ -163,16 +163,43 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
 		    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
 		    FILE_FLAG_WRITE_THROUGH, NULL);
     fflush(stdout);
-	if (fh == INVALID_HANDLE_VALUE) {
+    if (fh == INVALID_HANDLE_VALUE) {
         HKEY hk;
         char szUser[64] = "";
         char szClient[MAX_PATH] = "";
         char szPath[MAX_PATH] = "";
         NETRESOURCE nr;
         DWORD res;
+        DWORD ioctlDebug = 0;
+        DWORD gle;
 
-        if (GetLastError() != ERROR_DOWNGRADE_DETECTED)
-            return -1;
+        if (RegOpenKey (HKEY_LOCAL_MACHINE, 
+                        TEXT("Software\\OpenAFS\\Client"), &hk) == 0)
+        {
+            DWORD dwSize = sizeof(DWORD);
+            DWORD dwType = REG_DWORD;
+            RegQueryValueEx (hk, TEXT("IoctlDebug"), NULL, &dwType, (PBYTE)&ioctlDebug, &dwSize);
+            RegCloseKey (hk);
+        }
+
+        gle = GetLastError();
+        if (gle && ioctlDebug ) {
+            char buf[4096];
+
+            if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+                               NULL,
+                               gle,
+                               MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
+                               buf,
+                               4096,
+                               (va_list *) NULL
+                               ) )
+            {
+                fprintf(stderr,"pioctl CreateFile(%s) failed: [%s]\r\n",tbuffer,buf);
+            }
+        }
+        if (gle != ERROR_DOWNGRADE_DETECTED)
+            return -1;                                   
 
         lana_GetNetbiosName(szClient, LANA_NETBIOS_NAME_FULL);
         sprintf(szPath, "\\\\%s", szClient);
@@ -186,22 +213,46 @@ GetIoctlHandle(char *fileNamep, HANDLE * handlep)
             RegQueryValueEx (hk, TEXT("Logon User Name"), NULL, &dwType, (PBYTE)szUser, &dwSize);
             RegCloseKey (hk);
         }
+        if ( ioctlDebug )
+            fprintf(stderr, "pioctl logon user: [%s]\r\n",szUser);
 
         memset (&nr, 0x00, sizeof(NETRESOURCE));
         nr.dwType=RESOURCETYPE_DISK;
         nr.lpLocalName=0;
         nr.lpRemoteName=szPath;
         res = WNetAddConnection2(&nr,NULL,szUser,0);
-        if (res)
+        if (res) {
+            if ( ioctlDebug ) {
+                fprintf(stderr, "pioctl WNetAddConnection2(%s,%s) failed: 0x%X\r\n",
+                         szPath,szUser,res);
+            }
             return -1;
+        }
 
         fh = CreateFile(tbuffer, GENERIC_READ | GENERIC_WRITE,
                          FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
                          FILE_FLAG_WRITE_THROUGH, NULL);
         fflush(stdout);
-        if (fh == INVALID_HANDLE_VALUE)
+        if (fh == INVALID_HANDLE_VALUE) {
+            gle = GetLastError();
+            if (gle && ioctlDebug ) {
+                char buf[4096];
+
+                if ( FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM,
+                                    NULL,
+                                    gle,
+                                    MAKELANGID(LANG_ENGLISH,SUBLANG_ENGLISH_US),
+                                    buf,
+                                    4096,
+                                    (va_list *) NULL
+                                    ) )
+                {
+                    fprintf(stderr,"pioctl CreateFile(%s) failed: [%s]\r\n",tbuffer,buf);
+                }
+            }
             return -1;
-	}
+        }
+    }
 
     /* return fh and success code */
     *handlep = fh;
