@@ -548,8 +548,8 @@ long parm, parm2, parm3, parm4, parm5, parm6;
 	if (afs_globalVFS != 0) {
 	    afs_warn("AFS isn't unmounted yet! Call aborted\n");
 	    code = EACCES;
-	}
-	afs_shutdown();
+	} else
+	    afs_shutdown();
     }
 
 #if	! defined(AFS_HPUX90_ENV) || defined(AFS_HPUX100_ENV)
