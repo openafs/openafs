@@ -1,9 +1,10 @@
 Source: openafs
 Section: non-us/main
 Priority: optional
+Architecture: powerpc i386 sparc
 Maintainer: Sam Hartman <hartmans@debian.org>
-Build-Depends: debhelper (>= 2.1.16), libncurses5-dev, libpam0g-dev, bison, docbook-to-man
-Standards-Version: 3.1.1
+Build-Depends: debhelper (>= 2.2.20), libncurses5-dev, libpam0g-dev, bison, docbook-to-man
+Standards-Version: 3.5.0
 
 Package: openafs-client
 Architecture: i386 powerpc sparc
@@ -49,6 +50,7 @@ Architecture: i386 powerpc sparc
 Depends: ${shlibs:Depends}, debconf, openafs-fileserver (= ${Source-Version}), openafs-client (= ${Source-Version}), perl5
 Conflicts: openafs-ptutil
 Replaces: openafs-ptutil
+Provides: openafs-ptutil
 Description: The AFS distributed filesystem- database server
  AFS is a distributed filesystem allowing cross-platform sharing of
  files among multiple computers.  Facilities are provided for access

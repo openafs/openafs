@@ -25,7 +25,7 @@ case "$1" in
 	THISCELL=$RET
 
 	if test -f /etc/openafs/CellServDB; then :
-	    else cp /usr/share/doc/openafs-client/examples/CellServDB \
+	    else cp /usr/share/openafs/CellServDB \
 	      /etc/openafs
 	    fi
 	if grep  -q -F $RET /etc/openafs/CellServDB ; then :

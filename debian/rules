@@ -83,6 +83,7 @@ install: build
 		done
 	# Add here commands to install the package into debian/tmp.
 	cat debian/filelist |sh debian/movefiles
+	cp debian/CellServDB debian/openafs-client/usr/share/openafs
 	cp dest/root.client/usr/vice/etc/afs.rc debian/openafs-client.init
 	cp dest/root.client/usr/vice/etc/afs.conf debian/openafs-client/etc/openafs/afs.conf
 	install -m 755 -o root -g root debian/afs-rootvol debian/openafs-dbserver/usr/sbin

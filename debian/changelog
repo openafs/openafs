@@ -1,3 +1,16 @@
+openafs (1.0.2-2) unstable; urgency=low
+
+  * Provide openafs-ptutil in hope that apt will deal better with upgrade,
+    closes: #84303
+  * Make thiscell default to dnsdomainname so things don't break quite as
+    bad if you don't enter it, closes: #81149 
+  * Include source architecture line, Closes: #84530
+  * Rebuild with new debhelper to fix dh_installinit not shutting down on
+    removal (Thanks Joey) (now requires debhelper 2.2.20)
+  * Move CellServDB to /usr/share/openafs  so we comply with policy 3.5
+
+ -- Sam Hartman <hartmans@debian.org>  Mon,  5 Feb 2001 13:23:51 -0500
+
 openafs (1.0.2-1) unstable; urgency=low
 
   * Add support for ppc and sparc, closes: #80835
