@@ -46,6 +46,18 @@ case $AFS_SYSNAME in
 		SHLIB_LINKER="${CC} -all -shared -expect_unresolved \"*\""
 		;;
 
+	alpha_dux51)
+		LEX="flex -l"
+		DBG="-g3"
+		CSTATIC="-non_shared"
+		LWP_OPTMZ="-O2"
+		MT_CFLAGS='-D_REENTRANT=1 -pthread -DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_LIBS="-pthread -lpthread -lmach -lexc -lc"
+		TXLIBS="-lcurses"
+		XCFLAGS="-D_NO_PROTO -DOSF"
+		SHLIB_LINKER="${CC} -all -shared -expect_unresolved \"*\""
+		;;
+
 	alpha_linux_22)
 		LEX="flex -l"
 		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
