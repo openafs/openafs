@@ -1935,12 +1935,17 @@ void afs_inactive(struct vcache *avc, struct AFS_UCRED *acred)
         mutex_exit(&vp->v_lock);
         return;
     }	
-    mutex_exit(&vp->v_lock);    
+    mutex_exit(&vp->v_lock);
+
     /*
-     * Solaris calls VOP_OPEN on exec, but isn't very diligent about calling
-     * VOP_CLOSE when executable exits.
+     * Solaris calls VOP_OPEN on exec, but doesn't call VOP_CLOSE when
+     * the executable exits.  So we clean up the open count here.
+     *
+     * Only do this for mvstat 0 vnodes: when using fakestat, we can't
+     * lose the open count for volume roots (mvstat 2), even though they
+     * will get VOP_INACTIVE'd when released by afs_PutFakeStat().
      */
-    if (avc->opens > 0 && !(avc->states & CCore))
+    if (avc->opens > 0 && avc->mvstat == 0 && !(avc->states & CCore))
 	avc->opens = avc->execsOrWriters = 0;
 
     afs_InactiveVCache(avc, acred);
