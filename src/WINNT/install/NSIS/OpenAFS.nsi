@@ -98,7 +98,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   
   !define MUI_UNINSTALLER
   !define MUI_UNCONFIRMPAGE
-
+  
   
 !IFNDEF v2.0b4       ; v2.0b3
   !insertmacro MUI_PAGECOMMAND_WELCOME
@@ -130,7 +130,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   !insertmacro MUI_LANGUAGE "SimpChinese"
   !insertmacro MUI_LANGUAGE "TradChinese"    
   !insertmacro MUI_LANGUAGE "Japanese"
-  !ifdef v2.0b4
+  !ifndef v2.0b3
   !insertmacro MUI_LANGUAGE "Korean"
   !endif
   ;!insertmacro MUI_LANGUAGE "Italian"
@@ -162,7 +162,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   LangString DESC_SecCopyUI ${LANG_SIMPCHINESE} "OpenAFS for Windows: Simplified Chinese"
   LangString DESC_SecCopyUI ${LANG_TRADCHINESE} "OpenAFS for Windows: Traditional Chinese description"
   LangString DESC_SecCopyUI ${LANG_JAPANESE} "OpenAFS for Windows: Japanese description"
-!ifdef v2.0b4
+!ifndef v2.0b3
   LangString DESC_SecCopyUI ${LANG_KOREAN} "OpenAFS for Windows: Korean description"
 !endif
   ;LangString DESC_SecCopyUI ${LANG_ITALIAN} "OpenAFS for Windows: Italian description"
@@ -183,49 +183,49 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   ;LangString DESC_SecCopyUI ${LANG_MACEDONIAN} "OpenAFS for Windows: Macedonian description"
   ;LangString DESC_SecCopyUI ${LANG_TURKISH} "OpenAFS for Windows: Turkish description"
 
-  LangString DESC_SecClient ${LANG_ENGLISH} "OpenAFS Client: Allows you to access AFS from your Windows PC."
-  LangString DESC_SecClient ${LANG_GERMAN} "OpenAFS Client: Allows you to access AFS from your Windows PC."
-  LangString DESC_SecClient ${LANG_SPANISH} "OpenAFS Client: Allows you to access AFS from your Windows PC."
-  LangString DESC_SecClient ${LANG_SIMPCHINESE} "OpenAFS Client: Allows you to access AFS from your Windows PC."
-  LangString DESC_SecClient ${LANG_TRADCHINESE} "OpenAFS Client: Allows you to access AFS from your Windows PC."
-  LangString DESC_SecClient ${LANG_JAPANESE} "OpenAFS Client: Allows you to access AFS from your Windows PC."
-!ifdef v2.0b4  
-  LangString DESC_SecClient ${LANG_KOREAN} "OpenAFS Client: Allows you to access AFS from your Windows PC."
+  LangString DESC_secClient ${LANG_ENGLISH} "OpenAFS Client: Allows you to access AFS from your Windows PC."
+  LangString DESC_secClient ${LANG_GERMAN} "OpenAFS Client: Allows you to access AFS from your Windows PC."
+  LangString DESC_secClient ${LANG_SPANISH} "OpenAFS Client: Allows you to access AFS from your Windows PC."
+  LangString DESC_secClient ${LANG_SIMPCHINESE} "OpenAFS Client: Allows you to access AFS from your Windows PC."
+  LangString DESC_secClient ${LANG_TRADCHINESE} "OpenAFS Client: Allows you to access AFS from your Windows PC."
+  LangString DESC_secClient ${LANG_JAPANESE} "OpenAFS Client: Allows you to access AFS from your Windows PC."
+!ifndef v2.0b3  
+  LangString DESC_secClient ${LANG_KOREAN} "OpenAFS Client: Allows you to access AFS from your Windows PC."
 !endif
-  LangString DESC_SecClient ${LANG_PORTUGUESEBR} "OpenAFS Client: Allows you to access AFS from your Windows PC."
+  LangString DESC_secClient ${LANG_PORTUGUESEBR} "OpenAFS Client: Allows you to access AFS from your Windows PC."
   
-  LangString DESC_SecServer ${LANG_ENGLISH} "OpenAFS Server: Allows you to run an AFS file server."
-  LangString DESC_SecServer ${LANG_GERMAN} "OpenAFS Server: Allows you to run an AFS file server."
-  LangString DESC_SecServer ${LANG_SPANISH} "OpenAFS Server: Allows you to run an AFS file server."
-  LangString DESC_SecServer ${LANG_SIMPCHINESE} "OpenAFS Server: Allows you to run an AFS file server."
-  LangString DESC_SecServer ${LANG_TRADCHINESE} "OpenAFS Server: Allows you to run an AFS file server."
-  LangString DESC_SecServer ${LANG_JAPANESE} "OpenAFS Server: Allows you to run an AFS file server."
+  LangString DESC_secServer ${LANG_ENGLISH} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
+  LangString DESC_secServer ${LANG_GERMAN} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
+  LangString DESC_secServer ${LANG_SPANISH} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
+  LangString DESC_secServer ${LANG_SIMPCHINESE} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
+  LangString DESC_secServer ${LANG_TRADCHINESE} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
+  LangString DESC_secServer ${LANG_JAPANESE} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
 !ifdef v2.0b4  
-  LangString DESC_SecServer ${LANG_KOREAN} "OpenAFS Server: Allows you to run an AFS file server."
+  LangString DESC_secServer ${LANG_KOREAN} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
 !endif
-  LangString DESC_SecServer ${LANG_PORTUGUESEBR} "OpenAFS Server: Allows you to run an AFS file server."
+  LangString DESC_secServer ${LANG_PORTUGUESEBR} "OpenAFS Server: Allows you to run an AFS file server. This option requires the AFS Client."
   
-  LangString DESC_SecControl ${LANG_ENGLISH} "OpenAFS Control Center: GUI utilities for managing and configuring AFS servers."
-  LangString DESC_SecControl ${LANG_GERMAN} "OpenAFS Control Center: GUI utilities for managing and configuring AFS servers."
-  LangString DESC_SecControl ${LANG_SPANISH} "OpenAFS Control Center: GUI utilities for managing and configuring AFS servers."
-  LangString DESC_SecControl ${LANG_SIMPCHINESE} "OpenAFS Control Center: GUI utilities for managing and configuring AFS servers."
-  LangString DESC_SecControl ${LANG_TRADCHINESE} "OpenAFS Control Center: GUI utilities for managing and configuring AFS servers."
-  LangString DESC_SecControl ${LANG_JAPANESE} "OpenAFS Control Center: GUI utilities for managing and configuring AFS servers."
-!ifdef v2.0b4  
-  LangString DESC_SecControl ${LANG_KOREAN} "OpenAFS Control Center: GUI utilities for managing and configuring AFS servers."
+  LangString DESC_secControl ${LANG_ENGLISH} "Control Center: GUI utilities for managing and configuring AFS servers.  This option requires the AFS Client."
+  LangString DESC_secControl ${LANG_GERMAN} "Control Center: GUI utilities for managing and configuring AFS servers.  This option requires the AFS Client."
+  LangString DESC_secControl ${LANG_SPANISH} "Control Center: GUI utilities for managing and configuring AFS servers.  This option requires the AFS Client."
+  LangString DESC_secControl ${LANG_SIMPCHINESE} "Control Center: GUI utilities for managing and configuring AFS servers.  This option requires the AFS Client."
+  LangString DESC_secControl ${LANG_TRADCHINESE} "Control Center: GUI utilities for managing and configuring AFS servers.  This option requires the AFS Client."
+  LangString DESC_secControl ${LANG_JAPANESE} "Control Center: GUI utilities for managing and configuring AFS servers.  This option requires the AFS Client."
+!ifndef v2.0b3  
+  LangString DESC_secControl ${LANG_KOREAN} "Control Center: GUI utilities for managing and configuring AFS servers.  This option requires the AFS Client."
 !endif
-  LangString DESC_SecControl ${LANG_PORTUGUESEBR} "OpenAFS Control Center: GUI utilities for managing and configuring AFS servers."
+  LangString DESC_secControl ${LANG_PORTUGUESEBR} "Control Center: GUI utilities for managing and configuring AFS servers.  This option requires the AFS Client."
   
-  LangString DESC_SecDocs ${LANG_ENGLISH} "Supplemental Documentation: Additional documentation for using OpenAFS."
-  LangString DESC_SecDocs ${LANG_GERMAN} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
-  LangString DESC_SecDocs ${LANG_SPANISH} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
-  LangString DESC_SecDocs ${LANG_SIMPCHINESE} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
-  LangString DESC_SecDocs ${LANG_TRADCHINESE} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
-  LangString DESC_SecDocs ${LANG_JAPANESE} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
-!ifdef v2.0b4  
-  LangString DESC_SecDocs ${LANG_KOREAN} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
+  LangString DESC_secDocs ${LANG_ENGLISH} "Supplemental Documentation: Additional documentation for using OpenAFS."
+  LangString DESC_secDocs ${LANG_GERMAN} "Supplemental Documentation: Additional documentation for using OpenAFS."
+  LangString DESC_secDocs ${LANG_SPANISH} "Supplemental Documentation: Additional documentation for using OpenAFS."
+  LangString DESC_secDocs ${LANG_SIMPCHINESE} "Supplemental Documentation: Additional documentation for using OpenAFS."
+  LangString DESC_secDocs ${LANG_TRADCHINESE} "Supplemental Documentation: Additional documentation for using OpenAFS."
+  LangString DESC_secDocs ${LANG_JAPANESE} "Supplemental Documentation: Additional documentation for using OpenAFS."
+!ifndef v2.0b3  
+  LangString DESC_secDocs ${LANG_KOREAN} "Supplemental Documentation: Additional documentation for using OpenAFS."
 !endif
-  LangString DESC_SecDocs ${LANG_PORTUGUESEBR} "OpenAFS Supplemental Documentation: Additional documentation for using OpenAFS."
+  LangString DESC_secDocs ${LANG_PORTUGUESEBR} "Supplemental Documentation: Additional documentation for using OpenAFS."
   
 ; Popup error messages
   LangString CellError ${LANG_ENGLISH} "You must specify a valid CellServDB file to copy during install"
@@ -234,7 +234,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   LangString CellError ${LANG_SIMPCHINESE} "You must specify a valid CellServDB file to copy during the install"
   LangString CellError ${LANG_TRADCHINESE} "You must specify a valid CellServDB file to copy during the install"
   LangString CellError ${LANG_JAPANESE} "You must specify a valid CellServDB file to copy during the install"
-!ifdef v2.0b4  
+!ifndef v2.0b3  
   LangString CellError ${LANG_KOREAN} "You must specify a valid CellServDB file to copy during the install"
 !endif
   LangString CellError ${LANG_PORTUGUESEBR} "You must specify a valid CellServDB file to copy during the install"
@@ -245,7 +245,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   LangString CellNameError ${LANG_SIMPCHINESE} "You must specify a cell name for your client to use."
   LangString CellNameError ${LANG_TRADCHINESE} "You must specify a cell name for your client to use."
   LangString CellNameError ${LANG_JAPANESE} "You must specify a cell name for your client to use."
-!ifdef v2.0b4
+!ifndef v2.0b3
   LangString CellNameError ${LANG_KOREAN} "You must specify a cell name for your client to use."
 !endif
   LangString CellNameError ${LANG_PORTUGUESEBR} "You must specify a cell name for your client to use."
@@ -256,7 +256,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   LangString URLError ${LANG_SIMPCHINESE} "You must specify a URL if you choose the option to download the CellServDB."
   LangString URLError ${LANG_TRADCHINESE} "You must specify a URL if you choose the option to download the CellServDB."
   LangString URLError ${LANG_JAPANESE} "You must specify a URL if you choose the option to download the CellServDB."
-!ifdef v2.0b4
+!ifndef v2.0b3
   LangString URLError ${LANG_KOREAN} "You must specify a URL if you choose the option to download the CellServDB."
 !endif
   LangString URLError ${LANG_PORTUGUESEBR} "You must specify a URL if you choose the option to download the CellServDB."
@@ -269,7 +269,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
    LangString UPGRADE_CLIENT ${LANG_SIMPCHINESE} "Upgrade AFS Client"
    LangString UPGRADE_CLIENT ${LANG_TRADCHINESE} "Upgrade AFS Client"
    LangString UPGRADE_CLIENT ${LANG_JAPANESE} "Upgrade AFS Client"
-!ifdef v2.0b4
+!ifndef v2.0b3
    LangString UPGRADE_CLIENT ${LANG_KOREAN} "Upgrade AFS Client"
 !endif
    LangString UPGRADE_CLIENT ${LANG_PORTUGUESEBR} "Upgrade AFS Client"
@@ -280,7 +280,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
    LangString REINSTALL_CLIENT ${LANG_SIMPCHINESE} "Re-install AFS Client"
    LangString REINSTALL_CLIENT ${LANG_TRADCHINESE} "Re-install AFS Client"
    LangString REINSTALL_CLIENT ${LANG_JAPANESE} "Re-install AFS Client"
-!ifdef v2.0b4
+!ifndef v2.0b3
    LangString REINSTALL_CLIENT ${LANG_KOREAN} "Re-install AFS Client"
 !endif
    LangString REINSTALL_CLIENT ${LANG_PORTUGUESEBR} "Re-install AFS Client"
@@ -291,7 +291,7 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
    LangString UPGRADE_SERVER ${LANG_SIMPCHINESE} "Upgrade AFS Server"
    LangString UPGRADE_SERVER ${LANG_TRADCHINESE} "Upgrade AFS Server"
    LangString UPGRADE_SERVER ${LANG_JAPANESE} "Upgrade AFS Server"
-!ifdef v2.0b4
+!ifndef v2.0b3
    LangString UPGRADE_SERVER ${LANG_KOREAN} "Upgrade AFS Server"
 !endif
    LangString UPGRADE_SERVER ${LANG_PORTUGUESEBR} "Upgrade AFS Server"
@@ -302,11 +302,15 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
    LangString REINSTALL_SERVER ${LANG_SIMPCHINESE} "Re-install AFS Server"
    LangString REINSTALL_SERVER ${LANG_TRADCHINESE} "Re-install AFS Server"
    LangString REINSTALL_SERVER ${LANG_JAPANESE} "Re-install AFS Server"
-!ifdef v2.0b4   
+!ifndef v2.0b3   
    LangString REINSTALL_SERVER ${LANG_KOREAN} "Re-install AFS Server"
 !endif
    LangString REINSTALL_SERVER ${LANG_PORTUGUESEBR} "Re-install AFS Server"
   
+  ReserveFile "CellServPage.ini"
+  ReserveFile "AFSCell.ini"
+  !insertmacro MUI_RESERVEFILE_INSTALLOPTIONS ;InstallOptions plug-in
+  !insertmacro MUI_RESERVEFILE_LANGDLL ;Language selection dialog
 ;--------------------------------
 ; Macros
 ; Macro - Upgrade DLL File
@@ -433,12 +437,13 @@ VIAddVersionKey "PrivateBuild" "Checked/Debug"
   ;Only useful for BZIP2 compression
   !insertmacro MUI_RESERVEFILE_LANGDLL
   
+
 ;--------------------------------
 ;Installer Sections
 
 ;----------------------
 ; OpenAFS CLIENT
-Section "AFS Client" SecClient
+Section "AFS Client" secClient
 
   SetShellVarContext all
   ; Stop any running services or we can't replace the files
@@ -662,6 +667,14 @@ Section "AFS Client" SecClient
 
    
   ; Do WINDOWSDIR components
+  
+  ; Do Windows SYSDIR (Control panel)
+  SetOutPath "$SYSDIR"
+  File "${AFS_CLIENT_BUILDDIR}\afs_cpa.cpl"
+!ifdef DEBUG
+  File "${AFS_CLIENT_BUILDDIR}\afs_cpa.pdb"
+!endif
+  
   ; Get AFS CellServDB file
   Call afs.GetCellServDB
 !ifdef INSTALL_LOOPBACK
@@ -675,19 +688,6 @@ Section "AFS Client" SecClient
   SetOutPath "$INSTDIR\kfw\doc"
   File "${KFW_SOURCE}\doc\*"
 !endif
-  
-  ReadINIStr $R0 $0 "Field 2" "State"
-  StrCmp $R0 "1" UsePkg DontUsePkg
- UsePkg:
-   SetOutPath "$WINDIR"
-   File "afsdcell.ini"
-DontUsePkg:
-   ReadINIStr $R0 $0 "Field 6" "State"
-   StrCmp $R0 "1" UseFile DontUseFile
-UseFile:
-   ReadINIStr $R0 $0 "Field 7" "State"
-   CopyFiles $R0 "$WINDIR\afsdcell.ini"
-DontUseFile:
    
   ;Store install folder
   WriteRegStr HKCU "${AFS_REGKEY_ROOT}\Client" "" $INSTDIR
@@ -753,9 +753,9 @@ DontUseFile:
   nsExec::Exec "net stop TransarcAFSDaemon"
   ;IMPORTANT!  If we are not refreshing the config files, do NOT remove the service
   ;Don't re-install because it must be present or we wouldn't have passed the Reg check
-  ReadINIStr $R2 $1 "Field 2" "State"
-
-  StrCmp $R2 "" skipremove
+ 
+  ReadRegStr $R2 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon" "Cell"
+  StrCmp $R2 "" +1 skipremove
   nsExec::Exec '$INSTDIR\Common\Service.exe u TransarcAFSDaemon'
   nsExec::Exec '$INSTDIR\Common\Service.exe TransarcAFSDaemon "$INSTDIR\Client\Program\afsd_service.exe" "OpenAFS Client Service"'
 skipremove:
@@ -792,7 +792,7 @@ SectionEnd
 
 ;------------------------
 ; OpenAFS SERVER  
-Section "AFS Server" SecServer
+Section "AFS Server" secServer
 
   SetShellVarContext all
   ; Stop any running services or we can't replace the files
@@ -807,7 +807,7 @@ Section "AFS Server" SecServer
 
   CreateDirectory "$INSTDIR\Server\usr\afs\etc"
   CreateDirectory "$INSTDIR\Server\usr\afs\local"
-  CreateDirectory "$INSTDIR\Server\usr\afs\logs"
+  CreateDirectory "$INSTDIR\Server\usr\afs\etc\logs"
   
   SetOutPath "$INSTDIR\Server\usr\afs\bin"  
   File "${AFS_SERVER_BUILDDIR}\afskill.exe"
@@ -864,7 +864,7 @@ Section "AFS Server" SecServer
  SetOutPath "$INSTDIR\Common"
    Call AFSLangFiles
    
-   SetOutPath "$WINDIR"
+   SetOutPath "$SYSDIR"
    File "${AFS_SERVER_BUILDDIR}\afsserver.cpl"
 
 !ifdef DEBUG
@@ -905,13 +905,16 @@ Section "AFS Server" SecServer
 !ifdef DEBUG
   File "${AFS_WININSTALL_DIR}\Service.pdb"
 !endif
-  nsExec::Exec "net stop TransarcAFSServer"
-  nsExec::Exec '$INSTDIR\Common\service.exe u TransarcAFSServer'
+  ;Don't want to whack existing settings... Make users un-install and then re-install if they want that
+  ;nsExec::Exec '$INSTDIR\Common\service.exe u TransarcAFSServer'
   nsExec::Exec '$INSTDIR\Common\service.exe TransarcAFSServer "$INSTDIR\Server\usr\afs\bin\bosctlsvc.exe" "OpenAFS AFS Server"'
   Delete "$INSTDIR\Common\service.exe"
   
   CreateDirectory "$SMPROGRAMS\OpenAFS\Server"
-  CreateShortCut "$SMPROGRAMS\OpenAFS\Server\Configuration Wizard.lnk" "$INSTDIR\Server\usr\afs\bin\afssvrcfg.exe" "/wizard"
+  CreateShortCut "$SMPROGRAMS\OpenAFS\Server\Server Configuration.lnk" "$INSTDIR\Server\usr\afs\bin\afssvrcfg.exe"
+  
+  ; Make the server config wizard auto-start on bootup
+  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce" "AFS Server Wizard" '"$INSTDIR\Server\usr\afs\bin\afssvrcfg.exe" /wizard"'
   
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
@@ -920,7 +923,7 @@ SectionEnd
 
 ;----------------------------
 ; OpenAFS Control Center
-Section "AFS Control Center" SecControl
+Section "AFS Control Center" secControl
 
   SetShellVarContext all
 
@@ -997,7 +1000,7 @@ SectionEnd
 
 ;----------------------------
 ; OpenAFS Supplemental Documentation
-Section "Supplemental Documentation" SecDocs
+Section "Supplemental Documentation" secDocs
   SetShellVarContext all
 
    StrCmp $LANGUAGE ${LANG_ENGLISH} DoEnglish
@@ -1187,6 +1190,7 @@ contInstall:
    Pop $R2
    
    StrCmp $R2 "0" NoClient
+   StrCmp $R2 "1" ReinstallClient
    StrCmp $R2 "2" UpgradeClient
    StrCmp $R3 "3" DowngradeClient
    
@@ -1207,6 +1211,12 @@ UpgradeClient:
 	SectionSetFlags ${secClient} $0
    SectionSetText ${secClient} $(UPGRADE_CLIENT)
    goto skipClient
+ReinstallClient:
+	SectionGetFlags ${secClient} $0
+	IntOp $0 $0 | ${SF_SELECTED}
+	SectionSetFlags ${secClient} $0
+   SectionSetText ${secClient} $(REINSTALL_CLIENT)
+   goto skipClient
 DowngradeClient:
 	SectionGetFlags ${secClient} $0
 	IntOp $0 $0 | ${SF_SELECTED}
@@ -1220,6 +1230,7 @@ skipClient:
    Call ShouldServerInstall
    Pop $R2
    StrCmp $R2 "0" NoServer
+   StrCmp $R2 "1" ReinstallServer
    StrCmp $R2 "2" UpgradeServer
    StrCmp $R2 "3" DowngradeServer
    
@@ -1234,6 +1245,13 @@ UpgradeServer:
    IntOp $0 $0 | ${SF_SELECTED}
    SectionSetFlags ${secServer} $0
    SectionSetText ${secServer} $(UPGRADE_SERVER)
+   goto skipServer
+
+ReinstallServer:
+   SectionGetFlags ${secServer} $0
+   IntOp $0 $0 | ${SF_SELECTED}
+   SectionSetFlags ${secServer} $0
+   SectionSetText ${secServer} $(REINSTALL_SERVER)
    goto skipServer
 
 DowngradeServer:
@@ -1355,12 +1373,12 @@ FunctionEnd
 ; These are our cleanup functions
 Function .onInstFailed
 Delete $0
-
+Delete $1
 FunctionEnd
 
 Function .onInstSuccess
 Delete $0
-
+Delete $1
 FunctionEnd
 
 
@@ -1372,10 +1390,10 @@ FunctionEnd
 !else
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
 !endif
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecServer} $(DESC_SecServer)
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecClient} $(DESC_SecClient)
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecControl} $(DESC_SecControl)
-  !insertmacro MUI_DESCRIPTION_TEXT ${SecDocs} $(DESC_SecDocs)
+  !insertmacro MUI_DESCRIPTION_TEXT ${secServer} $(DESC_secServer)
+  !insertmacro MUI_DESCRIPTION_TEXT ${secClient} $(DESC_secClient)
+  !insertmacro MUI_DESCRIPTION_TEXT ${secControl} $(DESC_secControl)
+  !insertmacro MUI_DESCRIPTION_TEXT ${secDocs} $(DESC_secDocs)
 !ifndef v2.0b4
   !insertmacro MUI_FUNCTIONS_DESCRIPTION_END
 !else
@@ -1386,6 +1404,14 @@ FunctionEnd
 ;Uninstaller Section
 
 Section "Uninstall"
+  ; Make sure the user REALLY wants to do this, unless they did a silent uninstall, in which case...let them!
+#ifdef v2.0b4
+  IfSilent StartRemove     ; New in v2.0b4
+#endif
+  MessageBox MB_YESNO "Are you sure you want to remove OpenAFS from this machine?" IDYES StartRemove
+  abort
+  
+StartRemove:
   
   SetShellVarContext all
   ; Stop the running processes
@@ -1471,9 +1497,13 @@ Section "Uninstall"
 !ENDIF
 !ENDIF
   
+!ifdef v2.0b3
    Call un.IsSilent
    Pop $R1
    StrCmp $R1 "/S" SkipAsk
+!else
+   IfSilent SkipAsk
+!endif
 ;  IfFileExists "$WINDIR\afsdcell.ini" CellExists SkipDelAsk
 ;  CellExists:
   MessageBox MB_YESNO "Would you like to keep your configuration files?" IDYES SkipDel
@@ -1534,12 +1564,12 @@ Section "Uninstall"
   RmDir /r "$INSTDIR\Server\usr\afs\local"
   RMDIR /r "$INSTDIR\Server\usr\afs\logs"
   
-  Delete /REBOOTOK "$WINDIR\afsserver.cpl"
-  Delete /REBOOTOK "$WINDIR\afs_cpa.cpl"
+  Delete /REBOOTOK "$SYSDIR\afsserver.cpl"
+  Delete /REBOOTOK "$SYSDIR\afs_cpa.cpl"
 
 !ifdef DEBUG
-  Delete /REBOOTOK "$WINDIR\afsserver.pdb"
-  Delete /REBOOTOK "$WINDIR\afs_cpa.pdb"
+  Delete /REBOOTOK "$SYSDIR\afsserver.pdb"
+  Delete /REBOOTOK "$SYSDIR\afs_cpa.pdb"
 !endif
   
   RMDir /r "$INSTDIR\Documentation\html\CmdRef"
@@ -1673,23 +1703,34 @@ Function afs.GetCellServDB
 
 ;Check if we should download CellServDB
 ReadINIStr $R0 $0 "Field 4" "State"
-StrCmp $R0 "0" CheckIncl
+StrCmp $R0 "1" DoDownload
 
+;Do nothing if we're keeping the existing file
+ReadINIStr $R0 $0 "Field 2" "State"
+StrCmp $R0 "1" done
+
+ReadINIStr $R0 $0 "Field 3" "State"
+StrCmp $R0 "1" UsePackaged
+
+; If none of these, grab file from other location
+goto CheckOther
+
+DoDownload:
    ReadINIStr $R0 $0 "Field 5" "State"
    NSISdl::download $R0 "$WINDIR\afsdcell.ini"
    Pop $R0 ;Get the return value
    StrCmp $R0 "success" +2
       MessageBox MB_OK|MB_ICONSTOP "Download failed: $R0"
    goto done
-CheckIncl:
-   ReadINIStr $R0 $0 "Field 3" "State"
-   StrCmp $R0 "0" CheckOther
+
+UsePackaged:
    SetOutPath "$WINDIR"
    File "afsdcell.ini"
    goto done
    
 CheckOther:
    ReadINIStr $R0 $0 "Field 7" "State"
+   StrCmp $R0 "1" +1 done
    CopyFiles $R0 "$WINDIR\afsdcell.ini"
    
 done:
@@ -1702,6 +1743,11 @@ FunctionEnd
 ;Do the page to get the CellServDB
 
 Function AFSPageGetCellServDB
+  ; Skip this page if we are not installing the client
+  SectionGetFlags ${secClient} $R0
+  IntOp $R0 $R0 & ${SF_SELECTED}
+  StrCmp $R0 "0" Skip
+  
   ; Set the install options here
   
 startOver:
@@ -1756,11 +1802,40 @@ FunctionEnd
 
 
 Function AFSPageGetCellName
+!ifndef v2.0b4
    Call IsSilent
    Pop $R1
    StrCmp $R1 "/S" exit
+!else
+   IfSilent good
+!endif
+  ; Skip this page if we are not installing the client
+  SectionGetFlags ${secClient} $R0
+  IntOp $R0 $R0 & ${SF_SELECTED}
+  StrCmp $R0 "0" good
+  
 startOver:
-   !insertmacro MUI_HEADER_TEXT "Cell Name Configuration" "Please enter the name for your default cell:" 
+   ; If this is a server install, we do NOT want to recommend the Freelance client
+   ; And we do not need to ask for the cell name.
+   SectionGetFlags ${secServer} $R1
+   IntOp $R1 $R1 & ${SF_SELECTED}
+   StrCmp $R1 "1" +1 NotServer
+   WriteINIStr $1 "Field 6" "Text" "Enable AFS Freelance client (Not Recommended for servers)"
+   WriteINIStr $1 "Field 5" "State" "0"
+   WriteINIStr $1 "Field 1" "Flags" "DISABLED"
+   WriteINIStr $1 "Field 2" "Flags" "DISABLED"
+   goto SkipServerTest
+NotServer:
+   WriteINIStr $1 "Field 6" "Text" "Enable AFS Freelance client (Recommended)"
+   WriteINIStr $1 "Field 5" "State" "1"
+   WriteINIStr $1 "Field 1" "Flags" ""
+   WriteINIStr $1 "Field 2" "Flags" ""
+SkipServerTest:
+   ; Get the current cell name, if any
+   ReadRegStr $R1 HKLM "SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters" "Cell"
+   StrCmp $R1 "" +2
+   WriteINIStr $1 "Field 2" "State" $R1
+  !insertmacro MUI_HEADER_TEXT "Client Cell Name Configuration" "Please enter the name for your default cell:" 
   InstallOptions::dialog $1
   Pop $R1
   StrCmp $R1 "cancel" exit
@@ -1791,7 +1866,8 @@ WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS" "
 
 FunctionEnd
 
-
+; This code is all needed in v2.0b3 to handle the /S switch...
+!ifdef v2.0b3
 ; Check if install should be silent
 Function IsSilent
   Push $0
@@ -1807,7 +1883,6 @@ Function IsSilent
   silent: StrCpy $0 1
   notsilent: Exch $0
 FunctionEnd
-
 
 
 ; Check if uninstall should be silent
@@ -1857,6 +1932,9 @@ Function StrStr
   Pop $R2
   Exch $R1
 FunctionEnd
+!endif
+; End of specific v2.0b3 code...
+
 
 ;-------------------
 ; Get the currently installed version and place it on the stack
@@ -2961,3 +3039,28 @@ Function GetParent
     Exch $R0
     
 FunctionEnd
+
+
+;--------------------------------
+;Handle what must and what must not be installed
+Function .onSelChange
+   ; If they install the server, they MUST install the client
+   SectionGetFlags ${secServer} $R0
+   IntOp $R0 $R0 & ${SF_SELECTED}
+   StrCmp $R0 "1" MakeClientSelected
+   
+   ; If they install the control center, we'll give them the client.
+   ; It may not be required, but it's a bit more useful
+   SectionGetFlags ${secControl} $R0
+   IntOp $R0 $R0 & ${SF_SELECTED}
+   StrCmp $R0 "1" MakeClientSelected
+   goto end
+   
+MakeClientSelected:
+   SectionGetFlags ${secClient} $R0
+   IntOp $R0 $R0 | ${SF_SELECTED}
+   SectionSetFlags ${secClient} $R0
+   
+end:
+FunctionEnd
+
