@@ -39,8 +39,8 @@ The simplest way to compile this package is:
   3. Optionally, type `make check' to run any self-tests that come with
      the package.
 
-  4. Type `make install' to install the programs and any data files and
-     documentation.
+  4. Resulting binaries will be in a directory named for the AFS system 
+     name for which you're building, e.g. i386_linux24 or sun4x_57.
 
   5. You can remove the program binaries and object files from the
      source code directory by typing `make clean'.  To also remove the
@@ -80,29 +80,6 @@ variable, you have to compile the package for one architecture at a time
 in the source code directory.  After you have installed the package for
 one architecture, use `make distclean' before reconfiguring for another
 architecture.
-
-Installation Names
-==================
-
-   By default, `make install' will install the package's files in
-`/usr/local/bin', `/usr/local/man', etc.  You can specify an
-installation prefix other than `/usr/local' by giving `configure' the
-option `--prefix=PATH'.
-
-   You can specify separate installation prefixes for
-architecture-specific files and architecture-independent files.  If you
-give `configure' the option `--exec-prefix=PATH', the package will use
-PATH as the prefix for installing programs and libraries.
-Documentation and other data files will still use the regular prefix.
-
-   In addition, if you use an unusual directory layout you can give
-options like `--bindir=PATH' to specify different values for particular
-kinds of files.  Run `configure --help' for a list of the directories
-you can set and what kinds of files go in them.
-
-   If the package supports it, you can cause programs to be installed
-with an extra prefix or suffix on their names by giving `configure' the
-option `--program-prefix=PREFIX' or `--program-suffix=SUFFIX'.
 
 Optional Features
 =================
