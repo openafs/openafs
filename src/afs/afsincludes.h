@@ -7,6 +7,8 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
+#include <afsconfig.h>
+
 /* AFS based headers */
 #include "../afs/stds.h"
 #ifdef	AFS_AIX_ENV

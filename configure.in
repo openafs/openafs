@@ -94,6 +94,12 @@ case $system in
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 		 LINUX_NEED_RHCONFIG
 		 LINUX_WHICH_MODULES
+		 if test "x$ac_cv_linux_func_inode_setattr_returns_int" = "xyes" ; then
+		  AC_DEFINE(INODE_SETATTR_NOT_VOID)
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_bytes" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_BYTES)
+		 fi
                 :
 		fi
                 ;;
