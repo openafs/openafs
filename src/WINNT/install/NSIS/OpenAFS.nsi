@@ -3423,16 +3423,16 @@ FunctionEnd
 ; Installs the loopback adpater and disables it on Windows 2000
 Function afs.InstallMSLoopback
    GetTempFileName $R0
-   File /oname=$R0 "${AFS_WININSTALL_DIR}\loopback_install.dll"
-   nsExec::Exec "rundll32.exe $R0 doLoopBackEntry quiet"
+   File /oname=$R0 "${AFS_WININSTALL_DIR}\afsloopback.dll"
+   nsExec::Exec "rundll32.exe $R0 doLoopBackEntry AFS  10.254.253.1 255.255.255.0"
    Delete $R0
 FunctionEnd
 
 Function afs.isLoopbackInstalled
    SetOutPath $TEMP
-   File "${AFS_WININSTALL_DIR}\loopback_install.dll"
-   System::Call "$TEMP\loopback_install.dll::loopback_isInstalled() i().r11"
-   Delete "$TEMP\loopback_install.dll"
+   File "${AFS_WININSTALL_DIR}\afsloopback.dll"
+   System::Call "$TEMP\afsloopback.dll::IsLoopbackInstalled() i().r11"
+   Delete "$TEMP\afsloopback.dll"
 FunctionEnd
 
 
