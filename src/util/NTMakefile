@@ -29,7 +29,7 @@ INCFILES =\
 $(DESTDIR)\include\afs\dirent.h: dirent_nt.h
 	$(COPY) $** $@
 
-$(DESTDIR)\include\afs\dirpath.h: dirpath.hin
+$(DESTDIR)\include\afs\dirpath.h: dirpath_nt.h
 	$(COPY) $** $@
 
 LIBFILE = $(DESTDIR)\lib\afs\afsutil.lib
