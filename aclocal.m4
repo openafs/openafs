@@ -1,4 +1,4 @@
-dnl aclocal.m4 generated automatically by aclocal 1.4
+dnl aclocal.m4 generated automatically by aclocal 1.4-p4
 
 dnl Copyright (C) 1994, 1995-8, 1999 Free Software Foundation, Inc.
 dnl This file is free software; the Free Software Foundation
@@ -112,7 +112,7 @@ AC_PROG_LEX
 AC_DECL_YYTEXT])
 
 dnl
-dnl $Id: aclocal.m4,v 1.3 2001/07/16 08:55:09 hartmans Exp $
+dnl $Id: aclocal.m4,v 1.4 2001/07/16 09:32:21 hartmans Exp $
 dnl
 
 dnl check if this computer is little or big-endian
