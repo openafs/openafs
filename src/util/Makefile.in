@@ -58,67 +58,67 @@ util.a: ${objects} AFS_component_version_number.o
 	$(AR) crv util.a ${objects} AFS_component_version_number.o
 	$(RANLIB) util.a
 
-assert.o: ${srcdir}/assert.c ${srcdir}/afsutil_prototypes.h
+assert.o: ${srcdir}/assert.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/assert.c
 
-casestrcpy.o: ${srcdir}/casestrcpy.c ${srcdir}/afsutil_prototypes.h
+casestrcpy.o: ${srcdir}/casestrcpy.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/casestrcpy.c
 
-hputil.o: ${srcdir}/hputil.c ${srcdir}/afsutil_prototypes.h
+hputil.o: ${srcdir}/hputil.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/hputil.c
 
-flipbase64.o: ${srcdir}/flipbase64.c ${TOP_INCDIR}/afs/dirpath.h ${srcdir}/afsutil_prototypes.h
+flipbase64.o: ${srcdir}/flipbase64.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/flipbase64.c
 
-volparse.o: ${srcdir}/volparse.c ${srcdir}/afsutil_prototypes.h
+volparse.o: ${srcdir}/volparse.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/volparse.c
 
-snprintf.o: ${srcdir}/snprintf.c ${srcdir}/afsutil_prototypes.h
+snprintf.o: ${srcdir}/snprintf.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/snprintf.c
 
-base64.o: ${srcdir}/base64.c ${srcdir}/afsutil_prototypes.h
+base64.o: ${srcdir}/base64.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/base64.c
 
-hostparse.o: ${srcdir}/hostparse.c ${srcdir}/afsutil.h ${srcdir}/afsutil_prototypes.h ${TOP_INCDIR}/afs/dirpath.h
+hostparse.o: ${srcdir}/hostparse.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/hostparse.c
 
-ktime.o: ${srcdir}/ktime.c ${TOP_INCDIR}/afs/dirpath.h ${srcdir}/afsutil_prototypes.h
+ktime.o: ${srcdir}/ktime.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/ktime.c
 
-kreltime.o: ${srcdir}/kreltime.c ${TOP_INCDIR}/afs/dirpath.h ${srcdir}/afsutil_prototypes.h
+kreltime.o: ${srcdir}/kreltime.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/kreltime.c
 
-get_krbrlm.o: ${srcdir}/get_krbrlm.c ${TOP_INCDIR}/afs/dirpath.h ${srcdir}/afsutil_prototypes.h
+get_krbrlm.o: ${srcdir}/get_krbrlm.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/get_krbrlm.c
 
-uuid.o: ${srcdir}/uuid.c ${TOP_INCDIR}/afs/dirpath.h ${srcdir}/afsutil_prototypes.h
+uuid.o: ${srcdir}/uuid.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/uuid.c
 
-sys.o: ${srcdir}/sys.c ${TOP_INCDIR}/afs/param.h AFS_component_version_number.c ${srcdir}/afsutil_prototypes.h
+sys.o: ${srcdir}/sys.c AFS_component_version_number.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/sys.c
 
 sys: sys.o 
 	${CC} ${LDFLAGS} -o sys sys.o
 
-isathing.o: ${srcdir}/isathing.c ${srcdir}/afsutil_prototypes.h
+isathing.o: ${srcdir}/isathing.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/isathing.c
 
-serverLog.o: ${srcdir}/serverLog.c ${TOP_INCDIR}/afs/dirpath.h ${srcdir}/afsutil_prototypes.h
+serverLog.o: ${srcdir}/serverLog.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/serverLog.c
 
-dirpath.o: ${srcdir}/dirpath.c ${TOP_INCDIR}/afs/dirpath.h ${srcdir}/afsutil_prototypes.h
+dirpath.o: ${srcdir}/dirpath.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/dirpath.c
 
-fileutil.o: ${srcdir}/fileutil.c ${srcdir}/fileutil.h ${srcdir}/afsutil_prototypes.h
+fileutil.o: ${srcdir}/fileutil.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/fileutil.c
 
-netutils.o: ${srcdir}/netutils.c ${srcdir}/netutils.h ${srcdir}/afsutil_prototypes.h
+netutils.o: ${srcdir}/netutils.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/netutils.c
 
-afs_atomlist.o: ${srcdir}/afs_atomlist.c ${srcdir}/afs_atomlist.h ${srcdir}/afsutil_prototypes.h
+afs_atomlist.o: ${srcdir}/afs_atomlist.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/afs_atomlist.c
 
-afs_lhash.o: ${srcdir}/afs_lhash.c ${srcdir}/afs_lhash.h ${srcdir}/afs_atomlist.h ${srcdir}/afsutil_prototypes.h
+afs_lhash.o: ${srcdir}/afs_lhash.c includes
 	${CC} ${CFLAGS} -c ${srcdir}/afs_lhash.c
 
 #

@@ -89,7 +89,7 @@ tcrypt: tcrypt.o librxkad.a
 
 tcrypt.o: tcrypt.c AFS_component_version_number.o
 
-fc_test: ${fc_test_OBJS}
+fc_test: ${fc_test_OBJS} ${fc_test_LIBS}
 	${CC} ${CFLAGS} -o fc_test ${fc_test_OBJS} ${fc_test_LIBS} ${XLIBS}
 
 fc_test.o: ${INCLS}
