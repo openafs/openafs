@@ -83,6 +83,7 @@
 #define IDD_WIZ_FINISH                  119
 #define IDD_MAPPING                     120
 #define IDD_TERMINATE_SMALL_95          121
+#define IDD_AUTH                        122
 #define M_TERMINATE                     3000
 #define M_ACTIVATE                      3001
 #define M_REMIND                        3002

@@ -89,6 +89,7 @@ BOOL CALLBACK Creds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 void Creds_OnCheckRemind (HWND hDlg)
 {
    LPTSTR pszCell = (LPTSTR)GetWindowLong (hDlg, DWL_USER);
+   lock_ObtainMutex(&g.credsLock);
    for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
       {
       if (!lstrcmpi (g.aCreds[ iCreds ].szCell, pszCell))
@@ -100,6 +101,7 @@ void Creds_OnCheckRemind (HWND hDlg)
       g.aCreds[ iCreds ].fRemind = IsDlgButtonChecked (hDlg, IDC_CREDS_REMIND);
       SaveRemind (iCreds);
       }
+   lock_ReleaseMutex(&g.credsLock);
 }
 
 
@@ -115,6 +117,7 @@ void Creds_OnUpdate (HWND hDlg)
       return;
       }
 
+   lock_ObtainMutex(&g.credsLock);
    for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
       {
       if (!lstrcmpi (g.aCreds[ iCreds ].szCell, pszCell))
@@ -162,6 +165,7 @@ void Creds_OnUpdate (HWND hDlg)
       FreeString (pszCreds);
       }
 
+   lock_ReleaseMutex(&g.credsLock);
    CheckDlgButton (hDlg, IDC_CREDS_REMIND, (iCreds == g.cCreds) ? FALSE : g.aCreds[iCreds].fRemind);
 
    EnableWindow (GetDlgItem (hDlg, IDC_CREDS_OBTAIN), IsServiceRunning());
@@ -191,18 +195,41 @@ void Creds_OnClickDestroy (HWND hDlg)
 }
 
 
+struct _obtaincreds {
+    DWORD type;
+    HWND  parent;
+    char * cell;
+};
+
+void ObtainCredsThread(void * data)
+{
+    struct _obtaincreds * oc = (struct _obtaincreds *)data;
+
+    ModalDialogParam (oc->type, oc->parent, (DLGPROC)NewCreds_DlgProc, (LPARAM)oc->cell);
+    free(oc->cell);
+    free(oc);
+}
+
 void ShowObtainCreds (BOOL fExpiring, LPTSTR pszCell)
 {
-   HWND hParent = (IsWindowVisible (g.hMain)) ? g.hMain : NULL;
+    struct _obtaincreds * oc = (struct _obtaincreds *)malloc(sizeof(struct _obtaincreds));
+    if ( !oc )
+        return;
+    oc->parent = (IsWindowVisible (g.hMain)) ? g.hMain : NULL;
+    oc->type = fExpiring ? IDD_NEWCREDS_EXPIRE : IDD_NEWCREDS;
+    oc->cell = _strdup(pszCell);
 
-   if (fExpiring)
-      {
-      ModalDialogParam (IDD_NEWCREDS_EXPIRE, hParent, (DLGPROC)NewCreds_DlgProc, (LPARAM)pszCell);
-      }
-   else // (!fExpiring)
-      {
-      ModalDialogParam (IDD_NEWCREDS, hParent, (DLGPROC)NewCreds_DlgProc, (LPARAM)pszCell);
-      }
+    HANDLE thread = 0;
+    ULONG  threadID = 123;
+
+    thread = CreateThread(NULL, 0, (PTHREAD_START_ROUTINE)ObtainCredsThread,
+                                    oc, 0, &threadID);
+    if (thread != NULL)
+        CloseHandle(thread);
+	else {
+		free(oc->cell);
+		free(oc);
+	}
 }
 
 
@@ -217,7 +244,6 @@ BOOL CALLBACK NewCreds_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
 
       case WM_DESTROY:
          InterlockedDecrement (&g.fShowingMessage);
-         Main_EnableRemindTimer (TRUE);
          break;
 
       case WM_COMMAND:
@@ -278,6 +304,7 @@ void NewCreds_OnInitDialog (HWND hDlg)
       SetDlgItemText (hDlg, IDC_NEWCREDS_CELL, szCell);
       }
 
+   lock_ObtainMutex(&g.credsLock);
    for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
       {
       if (*pszCell && !lstrcmpi (g.aCreds[ iCreds ].szCell, pszCell))
@@ -292,8 +319,10 @@ void NewCreds_OnInitDialog (HWND hDlg)
       SetDlgItemText (hDlg, IDC_NEWCREDS_USER, g.aCreds[ iCreds ].szUser);
       PostMessage (hDlg, WM_NEXTDLGCTL, (WPARAM)GetDlgItem (hDlg, IDC_NEWCREDS_PASSWORD), TRUE);
       }
+   lock_ReleaseMutex(&g.credsLock);
 
    NewCreds_OnEnable (hDlg);
+   SetForegroundWindow(hDlg);
    KillTimer (g.hMain, ID_SERVICE_TIMER);
 }
 
@@ -345,9 +374,21 @@ BOOL NewCreds_OnOK (HWND hDlg)
 
 void NewCreds_OnCancel (HWND hDlg)
 {
-   LPTSTR pszCell = (LPTSTR)GetWindowLong (hDlg, DWL_USER);
+   TCHAR szText[ cchRESOURCE ] = "";
+   LPTSTR pszCell = NULL;
+
+   if (GetDlgItem (hDlg, IDC_NEWCREDS_CELL))
+   {
+       GetDlgItemText (hDlg, IDC_NEWCREDS_CELL, szText, cchRESOURCE);
+       if ( szText[0] )
+           pszCell = szText;
+   }
+
+   if ( !pszCell )
+       pszCell = (LPTSTR)GetWindowLong (hDlg, DWL_USER);
    if (pszCell)
       {
+      lock_ObtainMutex(&g.credsLock);
       for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
          {
          if (!lstrcmpi (g.aCreds[ iCreds ].szCell, pszCell))
@@ -367,6 +408,7 @@ void NewCreds_OnCancel (HWND hDlg)
                }
             }
          }
+      lock_ReleaseMutex(&g.credsLock);
       }
 }
 

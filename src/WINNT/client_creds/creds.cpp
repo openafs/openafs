@@ -177,10 +177,12 @@ BOOL IsServiceRunning (void)
             {
             QueryServiceStatus (hService, &Status);
             CloseServiceHandle (hService);
-            }
+            } else if ( IsDebuggerPresent() )
+                OutputDebugString("Unable to open Transarc AFS Daemon Service\n");
 
          CloseServiceHandle (hManager);
-         }
+         } else if ( IsDebuggerPresent() )
+             OutputDebugString("Unable to open SC Manager\n");
 
       return (Status.dwCurrentState == SERVICE_RUNNING);
       }
@@ -250,6 +252,8 @@ BOOL IsServiceConfigured (void)
 int GetCurrentCredentials (void)
 {
    int rc = KTC_NOCM;
+
+   lock_ObtainMutex(&g.credsLock);
 
    // Free any knowledge we currently have about the user's credentials
    //
@@ -323,6 +327,8 @@ int GetCurrentCredentials (void)
          LoadRemind (iCreds);
          }
       }
+
+   lock_ReleaseMutex(&g.credsLock);
 
    // We've finished updating g.aCreds. Update the tray icon to reflect
    // whether the user currently has any credentials at all, and

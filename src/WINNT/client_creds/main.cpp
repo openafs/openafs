@@ -127,18 +127,8 @@ BOOL InitApp (LPSTR pszCmdLineA)
 			 break;
          case 'x':
          case 'X':
-	     DWORD LogonOption;
-	     DWORD LSPtype, LSPsize;
-	     HKEY NPKey;
-	     LSPsize=sizeof(LogonOption);
-	     (void) RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_CLIENT_PROVIDER_KEY,
-				 0, KEY_QUERY_VALUE, &NPKey);
-	     RegQueryValueEx(NPKey, "LogonOptions", NULL,
-                             &LSPtype, (LPBYTE)&LogonOption, &LSPsize);
-	     RegCloseKey (NPKey);
-	     if (ISHIGHSECURITY(LogonOption))
-		 DoMapShare();
-	     GlobalMountDrive();
+             TestAndDoMapShare(SERVICE_START_PENDING);
+             TestAndDoMapShare(SERVICE_RUNNING);
 	     return 0;
          }
 
@@ -225,6 +215,23 @@ BOOL InitApp (LPSTR pszCmdLineA)
 
    InitCommonControls();
    RegisterCheckListClass();
+   osi_Init();
+   lock_InitializeMutex(&g.expirationCheckLock, "expiration check lock");
+   lock_InitializeMutex(&g.credsLock, "global creds lock");
+
+   if ( IsDebuggerPresent() ) {
+       if ( !g.fIsWinNT )
+           OutputDebugString("No Service Present on non-NT systems\n");
+       else {
+           if ( IsServiceRunning() )
+               OutputDebugString("AFSD Service started\n");
+           else {
+               OutputDebugString("AFSD Service stopped\n");
+               if ( !IsServiceConfigured() )
+                   OutputDebugString("AFSD Service not configured\n");
+           }   
+       }
+   }
 
    // Create a main window. All further initialization will be done during
    // processing of WM_INITDIALOG.
@@ -253,12 +260,16 @@ BOOL InitApp (LPSTR pszCmdLineA)
       else if (!IsServerInstalled())
          Message (MB_ICONHAND, IDS_UNCONFIG_TITLE, IDS_UNCONFIG_DESC);
       }
-   if (IsServiceRunning() && fShow)
+   if (IsServiceRunning()) { 
+      if (fShow)
       {
+      if ( IsDebuggerPresent() )
+          OutputDebugString("Displaying Main window\n");
       Main_Show (TRUE);
       }
-
-   return TRUE;
+   } else if ( IsDebuggerPresent() )
+      OutputDebugString("Displaying Main window\n");
+    return TRUE;
 }
 
 

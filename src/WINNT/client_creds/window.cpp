@@ -162,11 +162,13 @@ BOOL CALLBACK Main_DlgProc (HWND hDlg, UINT msg, WPARAM wp, LPARAM lp)
                   InsertMenu (hmDummy, 0, MF_POPUP, (UINT)hm, NULL);
 
                   BOOL fRemind = FALSE;
+                  lock_ObtainMutex(&g.credsLock);
                   for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
                      {
                      if (g.aCreds[ iCreds ].fRemind)
                         fRemind = TRUE;
                      }
+                  lock_ReleaseMutex(&g.credsLock);
                   CheckMenuItem (hm, M_REMIND, MF_BYCOMMAND | ((fRemind) ? MF_CHECKED : MF_UNCHECKED));
 
                   TrackPopupMenu (GetSubMenu (hmDummy, 0),
@@ -268,6 +270,7 @@ void Main_OnInitDialog (HWND hDlg)
 void Main_OnCheckMenuRemind (void)
 {
    BOOL fRemind = FALSE;
+   lock_ObtainMutex(&g.credsLock);
    for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
       {
       if (g.aCreds[ iCreds ].fRemind)
@@ -283,6 +286,7 @@ void Main_OnCheckMenuRemind (void)
          SaveRemind (iCreds);
          }
       }
+   lock_ReleaseMutex(&g.credsLock);
 
    // Check the active tab, and fix its checkbox if necessary
    //
@@ -297,7 +301,7 @@ void Main_OnCheckMenuRemind (void)
 
    // Make sure the reminder timer is going
    //
-   Main_EnableRemindTimer (TRUE);
+   Main_EnableRemindTimer (fRemind);
 }
 
 
@@ -405,7 +409,6 @@ void Main_RepopulateTabs (BOOL fDestroyInvalid)
 
       if (IsWindowVisible (g.hMain))
          fDestroyInvalid = FALSE;
-      Main_EnableRemindTimer (FALSE);
 
       // First we'll have to look around and see what credentials we currently
       // have. This call just updates g.aCreds[]; it doesn't do anything else.
@@ -424,6 +427,7 @@ void Main_RepopulateTabs (BOOL fDestroyInvalid)
       size_t iTabOut = 0;
 
       size_t nCreds = 0;
+      lock_ObtainMutex(&g.credsLock);
       for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
          {
          if (g.aCreds[ iCreds ].szCell[0])
@@ -471,6 +475,7 @@ void Main_RepopulateTabs (BOOL fDestroyInvalid)
                }
             }
          }
+      lock_ReleaseMutex(&g.credsLock);
 
       if (REALLOC (aTabs, cTabs, 1+iTabOut, cREALLOC_TABS))
          aTabs[ iTabOut++ ] = dwTABPARAM_MOUNT;
@@ -533,7 +538,6 @@ void Main_RepopulateTabs (BOOL fDestroyInvalid)
 
       TabCtrl_SetCurSel (hTab, iTabSel);
       Main_OnSelectTab ();
-      Main_EnableRemindTimer (TRUE);
 
       fInHere = FALSE;
       }
@@ -542,15 +546,23 @@ void Main_RepopulateTabs (BOOL fDestroyInvalid)
 
 void Main_EnableRemindTimer (BOOL fEnable)
 {
-   KillTimer (g.hMain, ID_REMIND_TIMER);
+   static BOOL bEnabled = FALSE;
 
-   if (fEnable)
+   if ( fEnable == FALSE && bEnabled == TRUE ) {
+       KillTimer (g.hMain, ID_REMIND_TIMER);
+       bEnabled = FALSE;
+   } else if ( fEnable == TRUE && bEnabled == FALSE ) {
       SetTimer (g.hMain, ID_REMIND_TIMER, (ULONG)cmsec1MINUTE * cminREMIND_TEST, NULL);
+      bEnabled = TRUE;
+   }
 }
 
 
 size_t Main_FindExpiredCreds (void)
 {
+   size_t retval = (size_t) -1;
+   lock_ObtainMutex(&g.expirationCheckLock);
+   lock_ObtainMutex(&g.credsLock);
    for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
       {
       if (!g.aCreds[ iCreds ].szCell[0])
@@ -574,10 +586,14 @@ size_t Main_FindExpiredCreds (void)
       llExpires /= c100ns1SECOND;
 
       if (llExpires <= (llNow + (LONGLONG)cminREMIND_WARN * csec1MINUTE))
-         return iCreds;
+         retval = (size_t) iCreds;
+         break;
       }
+   
+   lock_ReleaseMutex(&g.credsLock);
+   lock_ReleaseMutex(&g.expirationCheckLock);
 
-   return (size_t)-1;
+   return retval;
 }
 
 

@@ -16,6 +16,7 @@ extern "C" {
 #include <initguid.h>
 #include <windows.h>
 #include <windowsx.h>
+#undef INITGUID
 #include <shlobj.h>
 #include <shellapi.h>
 #include <shobjidl.h>
@@ -40,7 +41,7 @@ void Shortcut_Exit (void)
 }
 
 
-BOOL Shortcut_Create (LPTSTR pszTarget, LPCTSTR pszSource, LPTSTR pszDesc)
+BOOL Shortcut_Create (LPTSTR pszTarget, LPCTSTR pszSource, LPTSTR pszDesc, LPTSTR pszArgs)
 {
    IShellLink *psl;
    HRESULT rc = CoCreateInstance (CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void **)&psl);
@@ -56,13 +57,18 @@ BOOL Shortcut_Create (LPTSTR pszTarget, LPCTSTR pszSource, LPTSTR pszDesc)
             rc = psl->SetDescription (pszDesc ? pszDesc : pszSource);
             if (SUCCEEDED (rc))
                {
+               if ( pszArgs )
+                   rc = psl->SetArguments (pszArgs);
+                   if (SUCCEEDED (rc))
+                   {
 #ifdef UNICODE
-               rc = ppf->Save (pszTarget, TRUE);
+                   rc = ppf->Save (pszTarget, TRUE);
 #else
-               WORD wsz[ MAX_PATH ];
-               MultiByteToWideChar (CP_ACP, 0, pszTarget, -1, wsz, MAX_PATH);
-               rc = ppf->Save (wsz, TRUE);
+                   WORD wsz[ MAX_PATH ];
+                   MultiByteToWideChar (CP_ACP, 0, pszTarget, -1, wsz, MAX_PATH);
+                   rc = ppf->Save (wsz, TRUE);
 #endif
+                   }
                }
             }
          ppf->Release ();
@@ -75,7 +81,7 @@ BOOL Shortcut_Create (LPTSTR pszTarget, LPCTSTR pszSource, LPTSTR pszDesc)
 
 void Shortcut_FixStartup (LPCTSTR pszLinkName, BOOL fAutoStart)
 {
-   TCHAR szShortcut[ MAX_PATH ] = TEXT("");
+   TCHAR szShortcut[ MAX_PATH + 10 ] = TEXT("");
 
    HKEY hk;
    if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders"), &hk) == 0)
@@ -104,7 +110,7 @@ void Shortcut_FixStartup (LPCTSTR pszLinkName, BOOL fAutoStart)
 
    if (fAutoStart)
       {
-      Shortcut_Create (szShortcut, szSource);
+      Shortcut_Create (szShortcut, szSource, "Autostart Authentication Agent");
       }
    else // (!g.fAutoStart)
       {

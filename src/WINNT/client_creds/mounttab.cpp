@@ -115,6 +115,7 @@ void Mount_OnInitDialog (HWND hDlg)
 void Mount_OnUpdate (HWND hDlg, BOOL fOnInitDialog)
 {
    DRIVEMAPLIST List;
+   memset(&List, 0, sizeof(DRIVEMAPLIST));
    QueryDriveMapList (&List);
 
    HWND hList = GetDlgItem (hDlg, IDC_LIST);
