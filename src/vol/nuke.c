@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/nuke.c,v 1.13.2.1 2004/08/25 07:14:19 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/nuke.c,v 1.13.2.2 2004/10/18 17:44:06 shadow Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -65,14 +65,14 @@ struct ilist {
     afs_int32 freePtr;		/* first free index in this table */
     Inode inode[MAXATONCE];	/* inode # */
     afs_int32 count[MAXATONCE];	/* link count */
-} *allInodes = 0;
+};
 
 /* called with a structure specifying info about the inode, and our rock (which
  * is the volume ID.  Returns true if we should keep this inode, otherwise false.
  * Note that ainfo->u.param[0] is always the volume ID, for any vice inode.
  */
 static int
-NukeProc(struct ViceInodeInfo *ainfo, afs_int32 avolid)
+NukeProc(struct ViceInodeInfo *ainfo, afs_int32 avolid, struct ilist *allInodes)
 {
     struct ilist *ti;
     register afs_int32 i;
@@ -113,7 +113,7 @@ nuke(char *aname, afs_int32 avolid)
 {
     /* first process the partition containing this junk */
     struct afs_stat tstat;
-    struct ilist *ti, *ni;
+    struct ilist *ti, *ni, *li=NULL;
     register afs_int32 code;
     int i, forceSal;
     char devName[64], wpath[100];
@@ -127,6 +127,7 @@ nuke(char *aname, afs_int32 avolid)
 #endif
 #endif /* AFS_NAMEI_ENV */
     IHandle_t *fileH;
+    struct ilist *allInodes = 0;
 
     if (avolid == 0)
 	return EINVAL;
@@ -169,11 +170,11 @@ nuke(char *aname, afs_int32 avolid)
 #ifdef AFS_NAMEI_ENV
     code =
 	ListViceInodes(lastDevComp, aname, NULL, NukeProc, avolid, &forceSal,
-		       0, wpath);
+		       0, wpath, allInodes);
 #else
     code =
 	ListViceInodes(lastDevComp, aname, "/tmp/vNukeXX", NukeProc, avolid,
-		       &forceSal, 0, wpath);
+		       &forceSal, 0, wpath, allInodes);
     unlink("/tmp/vNukeXX");	/* clean it up now */
 #endif
     if (code == 0) {
@@ -211,8 +212,10 @@ nuke(char *aname, afs_int32 avolid)
 #endif /* AFS_NAMEI_ENV */
 	    }
 	    ni = ti->next;
-	    free(ti);
+	    if (li) free(li);
+	    li = ti;
 	}
+	if (li) free(li);
 	code = 0;		/* we really don't care about it except for debugging */
 	allInodes = NULL;
 
@@ -236,8 +239,10 @@ nuke(char *aname, afs_int32 avolid)
 	/* just free things */
 	for (ti = allInodes; ti; ti = ni) {
 	    ni = ti->next;
-	    free(ti);
+	    if (li) free(li);
+	    li = ti;
 	}
+	if (li) free(li);
 	allInodes = NULL;
     }
     ReleaseWriteLock(&localLock);

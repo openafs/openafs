@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/venus/fs.c,v 1.24 2004/06/02 06:57:37 shadow Exp $");
+    ("$Header: /cvs/openafs/src/venus/fs.c,v 1.24.2.1 2004/10/18 07:12:20 shadow Exp $");
 
 #include <afs/afs_args.h>
 #include <rx/xdr.h>
@@ -724,7 +724,7 @@ AclToString(struct Acl *acl)
 }
 
 static int
-SetACLCmd(struct cmd_syndesc *as)
+SetACLCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -858,7 +858,7 @@ SetACLCmd(struct cmd_syndesc *as)
 
 
 static int
-CopyACLCmd(struct cmd_syndesc *as)
+CopyACLCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1038,7 +1038,7 @@ CleanAcl(struct Acl *aa, char *fname)
 
 /* clean up an acl to not have bogus entries */
 static int
-CleanACLCmd(struct cmd_syndesc *as)
+CleanACLCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct Acl *ta = 0;
@@ -1125,7 +1125,7 @@ CleanACLCmd(struct cmd_syndesc *as)
 }
 
 static int
-ListACLCmd(struct cmd_syndesc *as)
+ListACLCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct Acl *ta;
@@ -1189,7 +1189,7 @@ ListACLCmd(struct cmd_syndesc *as)
 }
 
 static int
-FlushVolumeCmd(struct cmd_syndesc *as)
+FlushVolumeCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1211,7 +1211,7 @@ FlushVolumeCmd(struct cmd_syndesc *as)
 }
 
 static int
-FlushCmd(struct cmd_syndesc *as)
+FlushCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1238,7 +1238,7 @@ FlushCmd(struct cmd_syndesc *as)
 
 /* all this command does is repackage its args and call SetVolCmd */
 static int
-SetQuotaCmd(struct cmd_syndesc *as)
+SetQuotaCmd(struct cmd_syndesc *as, char *arock)
 {
     struct cmd_syndesc ts;
 
@@ -1248,7 +1248,7 @@ SetQuotaCmd(struct cmd_syndesc *as)
 }
 
 static int
-SetVolCmd(struct cmd_syndesc *as)
+SetVolCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1312,7 +1312,7 @@ struct VenusFid {
 };
 
 static int
-ExamineCmd(struct cmd_syndesc *as)
+ExamineCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1353,7 +1353,7 @@ ExamineCmd(struct cmd_syndesc *as)
 }
 
 static int
-ListQuotaCmd(struct cmd_syndesc *as)
+ListQuotaCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1384,7 +1384,7 @@ ListQuotaCmd(struct cmd_syndesc *as)
 }
 
 static int
-WhereIsCmd(struct cmd_syndesc *as)
+WhereIsCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1423,7 +1423,7 @@ WhereIsCmd(struct cmd_syndesc *as)
 
 
 static int
-DiskFreeCmd(struct cmd_syndesc *as)
+DiskFreeCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1454,7 +1454,7 @@ DiskFreeCmd(struct cmd_syndesc *as)
 }
 
 static int
-QuotaCmd(struct cmd_syndesc *as)
+QuotaCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1487,7 +1487,7 @@ QuotaCmd(struct cmd_syndesc *as)
 }
 
 static int
-ListMountCmd(struct cmd_syndesc *as)
+ListMountCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1608,7 +1608,7 @@ ListMountCmd(struct cmd_syndesc *as)
 }
 
 static
-MakeMountCmd(struct cmd_syndesc *as)
+MakeMountCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     char *cellName, *volName, *tmpName;
@@ -1716,7 +1716,7 @@ defect #3069
  *      tp: Set to point to the actual name of the mount point to nuke.
  */
 static int
-RemoveMountCmd(struct cmd_syndesc *as)
+RemoveMountCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code = 0;
     struct ViceIoctl blob;
@@ -1768,7 +1768,7 @@ RemoveMountCmd(struct cmd_syndesc *as)
 */
 
 static int
-CheckServersCmd(struct cmd_syndesc *as)
+CheckServersCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1867,7 +1867,7 @@ CheckServersCmd(struct cmd_syndesc *as)
 }
 
 static int
-MessagesCmd(struct cmd_syndesc *as)
+MessagesCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code = 0;
     struct ViceIoctl blob;
@@ -1913,7 +1913,7 @@ MessagesCmd(struct cmd_syndesc *as)
 }
 
 static int
-CheckVolumesCmd(struct cmd_syndesc *as)
+CheckVolumesCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1931,7 +1931,7 @@ CheckVolumesCmd(struct cmd_syndesc *as)
 }
 
 static int
-SetCacheSizeCmd(struct cmd_syndesc *as)
+SetCacheSizeCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1970,7 +1970,7 @@ SetCacheSizeCmd(struct cmd_syndesc *as)
 
 #define MAXGCSIZE	16
 static int
-GetCacheParmsCmd(struct cmd_syndesc *as)
+GetCacheParmsCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -1995,7 +1995,7 @@ GetCacheParmsCmd(struct cmd_syndesc *as)
 }
 
 static int
-ListCellsCmd(struct cmd_syndesc *as)
+ListCellsCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     afs_int32 i, j;
@@ -2046,7 +2046,7 @@ ListCellsCmd(struct cmd_syndesc *as)
 }
 
 static int
-ListAliasesCmd(struct cmd_syndesc *as)
+ListAliasesCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code, i;
     char *tp, *aliasName, *realName;
@@ -2076,7 +2076,7 @@ ListAliasesCmd(struct cmd_syndesc *as)
 }
 
 static int
-CallBackRxConnCmd(struct cmd_syndesc *as)
+CallBackRxConnCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2115,7 +2115,7 @@ CallBackRxConnCmd(struct cmd_syndesc *as)
 }
 
 static int
-NewCellCmd(struct cmd_syndesc *as)
+NewCellCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code, linkedstate = 0, size = 0, *lp;
     struct ViceIoctl blob;
@@ -2227,7 +2227,7 @@ NewCellCmd(struct cmd_syndesc *as)
 }
 
 static int
-NewAliasCmd(struct cmd_syndesc *as)
+NewAliasCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2262,7 +2262,7 @@ NewAliasCmd(struct cmd_syndesc *as)
 }
 
 static int
-WhichCellCmd(struct cmd_syndesc *as)
+WhichCellCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct cmd_item *ti;
@@ -2287,7 +2287,7 @@ WhichCellCmd(struct cmd_syndesc *as)
 }
 
 static int
-WSCellCmd(struct cmd_syndesc *as)
+WSCellCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2317,7 +2317,7 @@ static PrimaryCellCmd(as)
 */
 
 static int
-MonitorCmd(struct cmd_syndesc *as)
+MonitorCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2378,7 +2378,7 @@ MonitorCmd(struct cmd_syndesc *as)
 }
 
 static int
-SysNameCmd(struct cmd_syndesc *as)
+SysNameCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2432,7 +2432,7 @@ SysNameCmd(struct cmd_syndesc *as)
 
 static char *exported_types[] = { "null", "nfs", "" };
 static int
-ExportAfsCmd(struct cmd_syndesc *as)
+ExportAfsCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2531,7 +2531,7 @@ ExportAfsCmd(struct cmd_syndesc *as)
 
 
 static int
-GetCellCmd(struct cmd_syndesc *as)
+GetCellCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2582,7 +2582,7 @@ GetCellCmd(struct cmd_syndesc *as)
 }
 
 static int
-SetCellCmd(struct cmd_syndesc *as)
+SetCellCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -2659,75 +2659,14 @@ static int
 VLDBInit(int noAuthFlag, struct afsconf_cell *info)
 {
     afs_int32 code;
-    struct ktc_principal sname;
-    struct ktc_token ttoken;
-    afs_int32 scIndex;
-    struct rx_securityClass *sc;
-    struct rx_connection *serverconns[VLDB_MAXSERVERS];
-    afs_int32 i;
 
-    code = rx_Init(0);
-    if (code) {
-	fprintf(stderr, "%s: could not initialize rx.\n", pn);
-	return code;
-    }
+    code = ugen_ClientInit(noAuthFlag, AFSDIR_CLIENT_ETC_DIRPATH, 
+			   info->name, 0, &uclient, 
+                           NULL, pn, rxkad_clear,
+                           VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 50,
+                           0, 0, USER_SERVICE_ID);
     rxInitDone = 1;
-    rx_SetRxDeadTime(50);
-    if (!noAuthFlag) {		/* we don't need tickets for null */
-	strcpy(sname.cell, info->name);
-	sname.instance[0] = 0;
-	strcpy(sname.name, "afs");
-	code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
-	if (code) {
-	    fprintf(stderr,
-		    "%s: Could not get afs tokens, running unauthenticated.\n",
-		    pn);
-	    scIndex = 0;
-	} else {
-	    /* got a ticket */
-	    if (ttoken.kvno >= 0 && ttoken.kvno <= 255)
-		scIndex = 2;	/* kerberos */
-	    else {
-		fprintf(stderr, "%s: funny kvno (%d) in ticket, proceeding\n",
-			pn, ttoken.kvno);
-		scIndex = 2;
-	    }
-	}
-    } else
-	scIndex = 0;		/* don't authenticate */
-    switch (scIndex) {
-    case 0:
-	sc = rxnull_NewClientSecurityObject();
-	break;
-
-    case 1:
-	break;
-    case 2:
-	sc = (struct rx_securityClass *)
-	    rxkad_NewClientSecurityObject(rxkad_clear, &ttoken.sessionKey,
-					  ttoken.kvno, ttoken.ticketLen,
-					  ttoken.ticket);
-	break;
-    }
-    if (info->numServers > VLDB_MAXSERVERS) {
-	fprintf(stderr, "%s: info.numServers=%d (> VLDB_MAXSERVERS=%d)\n", pn,
-		info->numServers, VLDB_MAXSERVERS);
-	exit(1);
-    }
-    memset(serverconns, 0, sizeof(serverconns));
-    for (i = 0; i < info->numServers; i++)
-	serverconns[i] =
-	    rx_NewConnection(info->hostAddr[i].sin_addr.s_addr,
-			     info->hostAddr[i].sin_port, USER_SERVICE_ID, sc,
-			     scIndex);
-
-    code = ubik_ClientInit(serverconns, &uclient);
-
-    if (code) {
-	fprintf(stderr, "%s: ubik client init failed.\n", pn);
-	return code;
-    }
-    return 0;
+    return code;
 }
 
 static struct ViceIoctl gblob;
@@ -2827,7 +2766,7 @@ addServer(char *name, afs_int32 rank)
 
 
 static int
-SetPrefCmd(struct cmd_syndesc *as)
+SetPrefCmd(struct cmd_syndesc *as, char *arock)
 {
     FILE *infd;
     afs_int32 code;
@@ -2933,7 +2872,7 @@ SetPrefCmd(struct cmd_syndesc *as)
 
 
 static int
-GetPrefCmd(struct cmd_syndesc *as)
+GetPrefCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct cmd_item *ti;
@@ -3003,7 +2942,7 @@ GetPrefCmd(struct cmd_syndesc *as)
 }
 
 static int
-StoreBehindCmd(struct cmd_syndesc *as)
+StoreBehindCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code = 0;
     struct ViceIoctl blob;
@@ -3104,7 +3043,7 @@ StoreBehindCmd(struct cmd_syndesc *as)
 
 
 static afs_int32
-SetCryptCmd(struct cmd_syndesc *as)
+SetCryptCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code = 0, flag;
     struct ViceIoctl blob;
@@ -3131,7 +3070,7 @@ SetCryptCmd(struct cmd_syndesc *as)
 
 
 static afs_int32
-GetCryptCmd(struct cmd_syndesc *as)
+GetCryptCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code = 0, flag;
     struct ViceIoctl blob;
@@ -3511,7 +3450,7 @@ Die(int errnum, char *filename)
 
 /* get clients interface addresses */
 static int
-GetClientAddrsCmd(struct cmd_syndesc *as)
+GetClientAddrsCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct cmd_item *ti;
@@ -3557,7 +3496,7 @@ GetClientAddrsCmd(struct cmd_syndesc *as)
 }
 
 static int
-SetClientAddrsCmd(struct cmd_syndesc *as)
+SetClientAddrsCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code, addr;
     struct cmd_item *ti;
@@ -3631,7 +3570,7 @@ SetClientAddrsCmd(struct cmd_syndesc *as)
 }
 
 static int
-FlushMountCmd(struct cmd_syndesc *as)
+FlushMountCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     struct ViceIoctl blob;
@@ -3747,7 +3686,7 @@ FlushMountCmd(struct cmd_syndesc *as)
 }
 
 static int
-RxStatProcCmd(struct cmd_syndesc *as)
+RxStatProcCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     afs_int32 flags = 0;
@@ -3782,7 +3721,7 @@ RxStatProcCmd(struct cmd_syndesc *as)
 }
 
 static int
-RxStatPeerCmd(struct cmd_syndesc *as)
+RxStatPeerCmd(struct cmd_syndesc *as, char *arock)
 {
     afs_int32 code;
     afs_int32 flags = 0;

@@ -444,28 +444,65 @@ KFW_cleanup(void)
 
 static char OpenAFSConfigKeyName[] = "SOFTWARE\\OpenAFS\\Client";
 
+int
+KFW_use_krb524(void)
+{
+    HKEY parmKey;
+    DWORD code, len;
+    DWORD use524 = 0;
+
+    code = RegOpenKeyEx(HKEY_CURRENT_USER, OpenAFSConfigKeyName,
+                         0, KEY_QUERY_VALUE, &parmKey);
+    if (code == ERROR_SUCCESS) {
+        len = sizeof(use524);
+        code = RegQueryValueEx(parmKey, "Use524", NULL, NULL,
+                                (BYTE *) &use524, &len);
+        if (code != ERROR_SUCCESS) {
+            RegCloseKey(parmKey);
+
+            code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
+                                 0, KEY_QUERY_VALUE, &parmKey);
+            if (code == ERROR_SUCCESS) {
+                len = sizeof(use524);
+                code = RegQueryValueEx(parmKey, "Use524", NULL, NULL,
+                                        (BYTE *) &use524, &len);
+                if (code != ERROR_SUCCESS)
+                    use524 = 0;
+            }
+        }
+        RegCloseKey (parmKey);
+    }
+    return use524;
+}
+
 int 
 KFW_is_available(void)
 {
     HKEY parmKey;
-	DWORD code, len;
+    DWORD code, len;
     DWORD enableKFW = 1;
 
     code = RegOpenKeyEx(HKEY_CURRENT_USER, OpenAFSConfigKeyName,
                          0, KEY_QUERY_VALUE, &parmKey);
-    if (code != ERROR_SUCCESS)
-        code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
-                             0, KEY_QUERY_VALUE, &parmKey);
-	if (code == ERROR_SUCCESS) {
+    if (code == ERROR_SUCCESS) {
         len = sizeof(enableKFW);
         code = RegQueryValueEx(parmKey, "EnableKFW", NULL, NULL,
                                 (BYTE *) &enableKFW, &len);
         if (code != ERROR_SUCCESS) {
-            enableKFW = 1;
+            RegCloseKey(parmKey);
+
+            code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, OpenAFSConfigKeyName,
+                                 0, KEY_QUERY_VALUE, &parmKey);
+            if (code == ERROR_SUCCESS) {
+                len = sizeof(enableKFW);
+                code = RegQueryValueEx(parmKey, "EnableKFW", NULL, NULL,
+                                        (BYTE *) &enableKFW, &len);
+                if (code != ERROR_SUCCESS)
+                    enableKFW = 1;
+            }
         }
         RegCloseKey (parmKey);
-	}
-
+    }
     if ( !enableKFW )
         return FALSE;
 
@@ -890,11 +927,11 @@ KFW_import_windows_lsa(void)
 
     princ_realm = krb5_princ_realm(ctx, princ);
     for ( i=0; i<princ_realm->length; i++ ) {
-		realm[i] = princ_realm->data[i];
+        realm[i] = princ_realm->data[i];
         cell[i] = tolower(princ_realm->data[i]);
     }
-	cell[i] = '\0';
-	realm[i] = '\0';
+    cell[i] = '\0';
+    realm[i] = '\0';
 
     code = KFW_AFS_klog(ctx, cc, "afs", cell, realm, pLeash_get_default_lifetime(),NULL);
     if ( IsDebuggerPresent() ) {
@@ -2546,10 +2583,10 @@ KFW_AFS_klog(
     memset(ServiceName, '\0', sizeof(ServiceName));
     memset(realm_of_user, '\0', sizeof(realm_of_user));
     memset(realm_of_cell, '\0', sizeof(realm_of_cell));
-	if (cell && cell[0])
-		strcpy(Dmycell, cell);
-	else
-		memset(Dmycell, '\0', sizeof(Dmycell));
+    if (cell && cell[0])
+        strcpy(Dmycell, cell);
+    else
+        memset(Dmycell, '\0', sizeof(Dmycell));
 
     // NULL or empty cell returns information on local cell
     if (rc = KFW_AFS_get_cellconfig(Dmycell, &ak_cellconfig, local_cell))
@@ -2575,13 +2612,21 @@ KFW_AFS_klog(
     memset((char *)&increds, 0, sizeof(increds));
 
     code = pkrb5_cc_get_principal(ctx, cc, &client_principal);
-	if (code) {
+    if (code) {
         if ( code == KRB5_CC_NOTFOUND && IsDebuggerPresent() ) 
         {
             OutputDebugString("Principal Not Found for ccache\n");
         }
         goto skip_krb5_init;
     }
+
+    if ( strchr(krb5_princ_component(ctx,client_principal,0),'.') != NULL )
+    {
+        OutputDebugString("Illegal Principal name contains dot in first component\n");
+        rc = KRB5KRB_ERR_GENERIC;
+        goto cleanup;
+    }
+
     i = krb5_princ_realm(ctx, client_principal)->length;
     if (i > REALM_SZ-1) 
         i = REALM_SZ-1;
@@ -2761,7 +2806,8 @@ KFW_AFS_klog(
          * No need to perform a krb524 translation which is 
          * commented out in the code below
          */
-        if (k5creds->ticket.length > MAXKTCTICKETLEN)
+        if (KFW_use_krb524() ||
+            k5creds->ticket.length > MAXKTCTICKETLEN)
             goto try_krb524d;
 
         memset(&aserver, '\0', sizeof(aserver));

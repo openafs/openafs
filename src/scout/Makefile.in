@@ -24,6 +24,7 @@ INCLS=${TOP_INCDIR}/afs/gtxobjects.h \
 LIBS=${TOP_LIBDIR}/libgtx.a \
 	${TOP_LIBDIR}/libfsprobe.a \
 	${TOP_LIBDIR}/libvolser.a \
+        ${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libkauth.a \
 	${TOP_LIBDIR}/libauth.a \
 	${TOP_LIBDIR}/librxkad.a \
@@ -31,7 +32,6 @@ LIBS=${TOP_LIBDIR}/libgtx.a \
 	${TOP_LIBDIR}/libcmd.a \
 	${TOP_LIBDIR}/vlib.a ${TOP_LIBDIR}/libacl.a \
         ${TOP_LIBDIR}/libvldb.a \
-        ${TOP_LIBDIR}/libubik.a \
 	${TOP_LIBDIR}/libafsint.a \
 	${TOP_LIBDIR}/libsys.a \
 	${TOP_LIBDIR}/librx.a \

@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bucoord/commands.c,v 1.14 2003/12/08 01:45:28 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/bucoord/commands.c,v 1.14.2.1 2004/10/18 07:11:50 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -626,7 +626,8 @@ compactDateString(date_long, string, size)
     if (*date_long == NEVERDATE) {
 	sprintf(string, "NEVER");
     } else {
-	ltime = localtime(date_long);
+        time_t t = *date_long;
+	ltime = localtime(&t);
 	/* prints date in U.S. format of mm/dd/yyyy */
 	strftime(string, size, "%m/%d/%Y %H:%M", ltime);
     }
@@ -2902,13 +2903,14 @@ dumpInfo(dumpid, detailFlag)
 	printf("----\n");
 	printDumpEntry(&dumpEntry);
     } else {
+        time_t t = dumpEntry.created;
 	if (dbDump)
 	    printf("Dump: id %u, created: %s\n", dumpEntry.id,
-		   ctime(&dumpEntry.created));
-	else
+		   ctime(&t));
+ 	else
 	    printf("Dump: id %u, level %d, volumes %d, created: %s\n",
 		   dumpEntry.id, dumpEntry.level, dumpEntry.nVolumes,
-		   ctime(&dumpEntry.created));
+		   ctime(&t));
     }
 
     if (!detailFlag && (strlen(dumpEntry.tapes.tapeServer) > 0)

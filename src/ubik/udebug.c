@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ubik/udebug.c,v 1.16 2004/01/01 05:56:25 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ubik/udebug.c,v 1.16.2.1 2004/10/18 07:12:16 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdlib.h>
@@ -97,7 +97,7 @@ CommandProc(struct cmd_syndesc *as, char *arock)
     register afs_int32 i, j, code;
     short port;
     int int32p;
-    afs_int32 now, diff, newtime;
+    time_t now, diff, newtime;
     struct hostent *th;
     struct rx_connection *tconn;
     struct rx_securityClass *sc;

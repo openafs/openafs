@@ -287,6 +287,9 @@
 /* define if your linux kernel uses SELinux features */
 #undef LINUX_KERNEL_IS_SELINUX
 
+/* define if your linux kernel uses 5 arguments for sock_create */
+#undef LINUX_KERNEL_SOCK_CREATE_V
+
 /* define if your linux kernel has linux/syscall.h */
 #undef HAVE_KERNEL_LINUX_SYSCALL_H
 

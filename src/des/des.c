@@ -37,7 +37,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/des/des.c,v 1.11.2.1 2004/08/25 07:09:37 shadow Exp $");
+    ("$Header: /cvs/openafs/src/des/des.c,v 1.11.2.2 2004/10/18 17:43:56 shadow Exp $");
 
 #ifndef KERNEL
 #include <stdio.h>
@@ -72,12 +72,13 @@ pthread_mutex_t rxkad_stats_mutex;
 /* encrypt == 0  ==> decrypt, else encrypt */
 
 afs_int32
-des_ecb_encrypt(afs_uint32 * clear, afs_uint32 * cipher,
+des_ecb_encrypt(void * clear, void * cipher,
 		register des_key_schedule schedule, int encrypt)
 {
     /* better pass 8 bytes, length not checked here */
 
-    register afs_uint32 R1 = 0, L1 = 0;	/* R1 = r10, L1 = r9 */
+    register afs_uint32 R1 = 0;
+    register afs_uint32 L1 = 0;	/* R1 = r10, L1 = r9 */
     register afs_uint32 R2 = 0, L2 = 0;	/* R2 = r8, L2 = r7 */
     afs_int32 i;
     /* one more registers left on VAX, see below P_temp_p */
@@ -128,20 +129,22 @@ des_ecb_encrypt(afs_uint32 * clear, afs_uint32 * cipher,
 	abort();
     }
 #endif
-    if ((afs_int32) clear & 3) {
-	memcpy((char *)&L_save, (char *)clear++, sizeof(L_save));
-	memcpy((char *)&R_save, (char *)clear, sizeof(R_save));
+    if ((afs_uint32) clear & 3) {
+	memcpy((char *)(&L_save), (char *)clear, sizeof(L_save));
+	clear=((afs_uint32*)clear)+1;
+	memcpy((char *)(&R_save), (char *)clear, sizeof(R_save));
 	L1 = L_save;
 	R1 = R_save;
     } else
 #endif
     {
-	if (clear)
-	    L1 = *clear++;
-	else
+	if (clear) {
+	    L1 = *((afs_uint32 *)clear);
+            clear=((afs_uint32*)clear)+1;
+	} else
 	    L1 = 0;
 	if (clear)
-	    R1 = *clear;
+	    R1 = *((afs_uint32 *)clear);
 	else
 	    R1 = 0;
     }
@@ -441,13 +444,15 @@ des_ecb_encrypt(afs_uint32 * clear, afs_uint32 * cipher,
     if ((afs_int32) cipher & 3) {
 	L_save = L2;		/* cant bcopy a reg */
 	R_save = R2;
-	memcpy((char *)cipher++, (char *)&L_save, sizeof(L_save));
+	memcpy((char *)cipher, (char *)&L_save, sizeof(L_save));
+	cipher=((afs_uint32*)cipher)+1;
 	memcpy((char *)cipher, (char *)&R_save, sizeof(R_save));
     } else
 #endif
     {
-	*cipher++ = L2;
-	*cipher = R2;
+        *((afs_uint32*)cipher)= L2;	
+	cipher = ((afs_int32 *)cipher)+1;
+	*((afs_uint32 *)cipher) = R2;
     }
 
 #ifdef DEBUG

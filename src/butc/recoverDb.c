@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/butc/recoverDb.c,v 1.10 2003/12/07 22:49:23 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/butc/recoverDb.c,v 1.10.2.1 2004/10/18 07:11:51 shadow Exp $");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -59,6 +59,7 @@ PrintDumpLabel(labelptr)
      struct butm_tapeLabel *labelptr;
 {
     char tapeName[BU_MAXTAPELEN + 32];
+    time_t t;
 
     printf("Dump label\n");
     printf("----------\n");
@@ -66,9 +67,12 @@ PrintDumpLabel(labelptr)
     printf("permanent tape name = %s\n", tapeName);
     TAPENAME(tapeName, labelptr->AFSName, labelptr->dumpid);
     printf("AFS tape name = %s\n", tapeName);
-    printf("creationTime = %s", ctime(&labelptr->creationTime));
-    if (labelptr->expirationDate)
-	printf("expirationDate = %s", cTIME(&labelptr->expirationDate));
+    t = labelptr->creationTime;
+    printf("creationTime = %s", ctime(&t));
+    if (labelptr->expirationDate) {
+        t = labelptr->expirationDate;
+	printf("expirationDate = %s", cTIME(&t));
+    }
     printf("cell = %s\n", labelptr->cell);
     printf("size = %u Kbytes\n", labelptr->size);
     printf("dump path = %s\n", labelptr->dumpPath);
@@ -87,6 +91,8 @@ static
 PrintVolumeHeader(volHeader)
      struct volumeHeader *volHeader;
 {
+    time_t t;
+
     printf("-- volume --\n");
     printf("volume name: %s\n", volHeader->volumeName);
     printf("volume ID %d\n", volHeader->volumeID);
@@ -97,7 +103,8 @@ PrintVolumeHeader(volHeader)
     printf("parentID %d\n", volHeader->parentID);
     printf("endTime %d\n", volHeader->endTime);
     /* printf("versionflags %d\n", volHeader->versionflags); */
-    printf("clonedate %s\n", ctime(&volHeader->cloneDate));
+    t = volHeader->cloneDate;
+    printf("clonedate %s\n", ctime(&t));
 }
 
 /* Ask

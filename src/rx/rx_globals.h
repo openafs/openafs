@@ -151,6 +151,7 @@ EXT afs_kmutex_t rx_freePktQ_lock;
 EXT int rx_nFreePackets INIT(0);
 EXT int rxi_NeedMorePackets INIT(0);
 EXT int rx_nWaiting INIT(0);
+EXT int rx_nWaited INIT(0);
 EXT int rx_packetReclaims INIT(0);
 
 /* largest packet which we can safely receive, initialized to AFS 3.2 value

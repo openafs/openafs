@@ -23,7 +23,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/ptserver/pts.c,v 1.13 2004/06/23 14:27:42 shadow Exp $");
+    ("$Header: /cvs/openafs/src/ptserver/pts.c,v 1.13.2.1 2004/10/18 07:12:04 shadow Exp $");
 
 #include <stdio.h>
 #include <string.h>
@@ -853,7 +853,7 @@ SetFields(register struct cmd_syndesc *as)
     idlist ids;
     namelist names;
     int i;
-    afs_int32 mask, flags, ngroups, nusers;
+    afs_int32 mask, flags=0, ngroups, nusers;
 
     if (GetNameOrId(as, &ids, &names))
 	return PRBADARG;

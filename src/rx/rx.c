@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.2 2004/08/25 07:13:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx.c,v 1.58.2.3 2004/10/18 17:43:57 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/sysincludes.h"
@@ -662,7 +662,7 @@ void
 rx_StartServer(int donateMe)
 {
     register struct rx_service *service;
-    register int i, nProcs = 0;
+    register int i;
     SPLVAR;
     clock_NewTime();
 
@@ -701,6 +701,7 @@ rx_StartServer(int donateMe)
 #ifndef AFS_NT40_ENV
 #ifndef KERNEL
 	char name[32];
+	static int nProcs;
 #ifdef AFS_PTHREAD_ENV
 	pid_t pid;
 	pid = (pid_t) pthread_self();
@@ -816,15 +817,16 @@ rxi_CleanupConnection(struct rx_connection *conn)
      * idle (refCount == 0) after rx_idlePeerTime (60 seconds) have passed.
      */
     MUTEX_ENTER(&rx_peerHashTable_lock);
-    if (--conn->peer->refCount <= 0) {
+    if (conn->peer->refCount < 2) {
 	conn->peer->idleWhen = clock_Sec();
-	if (conn->peer->refCount < 0) {
-	    conn->peer->refCount = 0;
+	if (conn->peer->refCount < 1) {
+	    conn->peer->refCount = 1;
 	    MUTEX_ENTER(&rx_stats_mutex);
 	    rxi_lowPeerRefCount++;
 	    MUTEX_EXIT(&rx_stats_mutex);
 	}
     }
+    conn->peer->refCount--;
     MUTEX_EXIT(&rx_peerHashTable_lock);
 
     MUTEX_ENTER(&rx_stats_mutex);
@@ -1010,6 +1012,20 @@ rx_DestroyConnection(register struct rx_connection *conn)
     NETPRI;
     AFS_RXGLOCK();
     rxi_DestroyConnection(conn);
+    AFS_RXGUNLOCK();
+    USERPRI;
+}
+
+void
+rx_GetConnection(register struct rx_connection *conn)
+{
+    SPLVAR;
+
+    NETPRI;
+    AFS_RXGLOCK();
+    MUTEX_ENTER(&conn->conn_data_lock);
+    conn->refCount++;
+    MUTEX_EXIT(&conn->conn_data_lock);
     AFS_RXGUNLOCK();
     USERPRI;
 }
@@ -3984,6 +4000,7 @@ rxi_AttachServerProc(register struct rx_call *call,
 	    call->flags |= RX_CALL_WAIT_PROC;
 	    MUTEX_ENTER(&rx_stats_mutex);
 	    rx_nWaiting++;
+	    rx_nWaited++;
 	    MUTEX_EXIT(&rx_stats_mutex);
 	    rxi_calltrace(RX_CALL_ARRIVAL, call);
 	    SET_CALL_QUEUE_LOCK(call, &rx_serverPool_lock);
@@ -5747,7 +5764,7 @@ rxi_ReapConnections(void)
 		    MUTEX_ENTER(&rx_stats_mutex);
 		    rx_stats.nPeerStructs--;
 		    MUTEX_EXIT(&rx_stats_mutex);
-		    if (prev == *peer_ptr) {
+		    if (peer == *peer_ptr) {
 			*peer_ptr = next;
 			prev = next;
 		    } else
@@ -6217,6 +6234,9 @@ rx_GetServerDebug(osi_socket socket, afs_uint32 remoteAddr,
 	}
 	if (stat->version >= RX_DEBUGI_VERSION_W_GETPEER) {
 	    *supportedValues |= RX_SERVER_DEBUG_ALL_PEER;
+	}
+	if (stat->version >= RX_DEBUGI_VERSION_W_WAITED) {
+	    *supportedValues |= RX_SERVER_DEBUG_WAITED_CNT;
 	}
 
 	stat->nFreePackets = ntohl(stat->nFreePackets);

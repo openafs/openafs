@@ -16,7 +16,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/LINUX/rx_knet.c,v 1.23.2.1 2004/08/25 07:41:00 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/LINUX/rx_knet.c,v 1.23.2.3 2004/10/18 17:43:59 shadow Exp $");
 
 #include <linux/version.h>
 #ifdef AFS_LINUX22_ENV
@@ -35,12 +35,14 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
     struct socket *sockp;
     struct sockaddr_in myaddr;
     int code;
+    KERNEL_SPACE_DECL;
+    int pmtu = IP_PMTUDISC_DONT;
 
 
     /* We need a better test for this. if you need it back, tell us
      * how to detect it. 
      */
-#if 0/*def LINUX_KERNEL_IS_SELINUX*/
+#ifdef LINUX_KERNEL_SOCK_CREATE_V
     code = sock_create(AF_INET, SOCK_DGRAM, IPPROTO_UDP, &sockp, 0);
 #else
     code = sock_create(AF_INET, SOCK_DGRAM, IPPROTO_UDP, &sockp);
@@ -64,6 +66,9 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 	return NULL;
     }
 
+    TO_USER_SPACE();
+    sockp->ops->setsockopt(sockp, SOL_IP, IP_MTU_DISCOVER, &pmtu, sizeof(pmtu));
+    TO_KERNEL_SPACE();
     return (struct osi_socket *)sockp;
 }
 

@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_readdir.c,v 1.24.2.1 2004/08/25 07:09:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_readdir.c,v 1.24.2.2 2004/10/18 17:43:53 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -66,24 +66,8 @@ extern struct DirEntry *afs_dir_GetBlob();
     BlobScan is used by the Linux port in a separate file, so it should not
     become static.
 */
-#if defined(AFS_SGI62_ENV) || defined(AFS_SUN57_64BIT_ENV)
 int
-BlobScan(ino64_t * afile, afs_int32 ablob)
-#else
-#if defined(AFS_HPUX1123_ENV)
-/*DEE should use afs_inode_t for all */
-int
-BlobScan(ino_t * afile, afs_int32 ablob)
-#else
-#ifdef AFS_LINUX_64BIT_KERNEL
-int
-BlobScan(long *afile, afs_int32 ablob)
-#else
-int
-BlobScan(afs_int32 * afile, afs_int32 ablob)
-#endif
-#endif
-#endif
+BlobScan(struct fcache * afile, afs_int32 ablob)
 {
     register afs_int32 relativeBlob;
     afs_int32 pageBlob;
@@ -657,8 +641,8 @@ afs_readdir(OSI_VC_ARG(avc), auio, acred)
 	origOffset = auio->afsio_offset;
 	/* scan for the next interesting entry scan for in-use blob otherwise up point at
 	 * this blob note that ode, if non-zero, also represents a held dir page */
-	if (!(us = BlobScan(&tdc->f.inode, (origOffset >> 5)))
-	    || !(nde = (struct DirEntry *)afs_dir_GetBlob(&tdc->f.inode, us))) {
+	if (!(us = BlobScan(&tdc->f, (origOffset >> 5)))
+	    || !(nde = (struct DirEntry *)afs_dir_GetBlob(&tdc->f, us))) {
 	    /* failed to setup nde, return what we've got, and release ode */
 	    if (len) {
 		/* something to hand over. */
@@ -948,8 +932,8 @@ afs1_readdir(avc, auio, acred)
 
 	/* scan for the next interesting entry scan for in-use blob otherwise up point at
 	 * this blob note that ode, if non-zero, also represents a held dir page */
-	if (!(us = BlobScan(&tdc->f.inode, (origOffset >> 5)))
-	    || !(nde = (struct DirEntry *)afs_dir_GetBlob(&tdc->f.inode, us))) {
+	if (!(us = BlobScan(&tdc->f, (origOffset >> 5)))
+	    || !(nde = (struct DirEntry *)afs_dir_GetBlob(&tdc->f, us))) {
 	    /* failed to setup nde, return what we've got, and release ode */
 	    if (len) {
 		/* something to hand over. */

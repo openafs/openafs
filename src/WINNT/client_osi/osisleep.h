@@ -35,7 +35,7 @@ typedef struct osi_sleepInfo {
 	unsigned short states;	/* states bits */
 	unsigned short idx;	/* sleep hash table we're in, if in hash */
         unsigned short waitFor;	/* what are we waiting for; used for bulk wakeups */
-	unsigned short refCount;/* reference count from FDs */
+	unsigned long refCount;/* reference count from FDs */
 } osi_sleepInfo_t;
 
 /* first guy is the most recently added process */

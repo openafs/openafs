@@ -202,11 +202,11 @@ md4.o: ${RXKAD}/md4.c
 md5.o: ${RXKAD}/md5.c
 	${CCRULE} ${RXKAD}/md5.c
 
-fcrypt.o: ${TOP_OBJDIR}/src/rxkad/fcrypt.c
-	${CCRULE} ${TOP_OBJDIR}/src/rxkad/fcrypt.c
+fcrypt.o: ${TOP_OBJDIR}/src/rxkad/domestic/fcrypt.c
+	${CCRULE} ${TOP_OBJDIR}/src/rxkad/domestic/fcrypt.c
 
-crypt_conn.o: ${TOP_OBJDIR}/src/rxkad/crypt_conn.c
-	${CCRULE} ${TOP_OBJDIR}/src/rxkad/crypt_conn.c
+crypt_conn.o: ${TOP_OBJDIR}/src/rxkad/domestic/crypt_conn.c
+	${CCRULE} ${TOP_OBJDIR}/src/rxkad/domestic/crypt_conn.c
 
 AFS_component_version_number.o: ${TOP_OBJDIR}/src/rx/AFS_component_version_number.c
 	${CCRULE} ${TOP_OBJDIR}/src/rx/AFS_component_version_number.c
@@ -266,7 +266,7 @@ xdr_afsuuid.o: ${RX}/xdr_afsuuid.c
 #
 #   $ what /opt/langtools/bin/pxdb32
 #   /opt/langtools/bin/pxdb32:
-#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.29 $
+#           HP92453-02 A.10.0A HP-UX SYMBOLIC DEBUGGER (PXDB) $Revision: 1.29.2.1 $
 #
 # The problem occurs when -g and -O are both used when compiling des.c.
 # The simplest way to work around the problem is to leave out either -g or -O.

@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_create.c,v 1.16.2.1 2004/08/25 07:09:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_create.c,v 1.16.2.2 2004/10/18 17:43:51 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -154,7 +154,7 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     if (tdc) {
 	/* see if file already exists.  If it does, we only set 
 	 * the size attributes (to handle O_TRUNC) */
-	code = afs_dir_Lookup(&tdc->f.inode, aname, &newFid.Fid);	/* use dnlc first xxx */
+	code = afs_dir_Lookup(&tdc->f, aname, &newFid.Fid);	/* use dnlc first xxx */
 	if (code == 0) {
 	    ReleaseSharedLock(&tdc->lock);
 	    afs_PutDCache(tdc);
@@ -368,10 +368,10 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
 	UpgradeSToWLock(&tdc->lock, 631);
     if (afs_LocalHero(adp, tdc, &OutDirStatus, 1)) {
 	/* we can do it locally */
-	code = afs_dir_Create(&tdc->f.inode, aname, &newFid.Fid);
+	code = afs_dir_Create(&tdc->f, aname, &newFid.Fid);
 	if (code) {
 	    ZapDCE(tdc);
-	    DZap(&tdc->f.inode);
+	    DZap(&tdc->f);
 	}
     }
     if (tdc) {
@@ -531,7 +531,7 @@ afs_LocalHero(register struct vcache *avc, register struct dcache *adc,
     } else {
 	if (adc) {
 	    ZapDCE(adc);
-	    DZap(&adc->f.inode);
+	    DZap(&adc->f);
 	}
 	if (avc->states & CStatd) {
 	    osi_dnlc_purgedp(avc);

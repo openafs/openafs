@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_getaddr.c,v 1.15 2003/07/15 23:16:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_getaddr.c,v 1.15.2.1 2004/10/18 07:12:06 shadow Exp $");
 
 #ifndef AFS_DJGPP_ENV
 #ifndef KERNEL
@@ -118,9 +118,7 @@ rxi_getaddr(void)
 #define ADVANCE(x, n) (x += ROUNDUP((n)->sa_len))
 
 static void
-rt_xaddrs(cp, cplim, rtinfo)
-     caddr_t cp, cplim;
-     struct rt_addrinfo *rtinfo;
+rt_xaddrs(caddr_t cp, caddr_t cplim, struct rt_addrinfo *rtinfo)
 {
     struct sockaddr *sa;
     int i;
@@ -141,9 +139,7 @@ rt_xaddrs(cp, cplim, rtinfo)
 */
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 int
-rx_getAllAddr(buffer, maxSize)
-     afs_int32 buffer[];
-     int maxSize;		/* sizeof of buffer in afs_int32 units */
+rx_getAllAddr(afs_int32 buffer[], int maxSize)
 {
     size_t needed;
     int mib[6];
@@ -221,11 +217,8 @@ rx_getAllAddr(buffer, maxSize)
 }
 
 int
-rxi_getAllAddrMaskMtu(addrBuffer, maskBuffer, mtuBuffer, maxSize)
-     afs_int32 addrBuffer[];	/* the network addrs in net byte order */
-     afs_int32 maskBuffer[];	/* the subnet masks */
-     afs_int32 mtuBuffer[];	/* the MTU sizes */
-     int maxSize;		/* sizeof of buffer in afs_int32 units */
+rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
+		      afs_int32 mtuBuffer[], int maxSize)
 {
     int s;
 
@@ -279,9 +272,6 @@ rxi_getAllAddrMaskMtu(addrBuffer, maskBuffer, mtuBuffer, maxSize)
 	}
 	if ((ifm->ifm_flags & IFF_UP) == 0)
 	    continue;		/* not up */
-	if (ifm->ifm_flags & IFF_LOOPBACK) {
-	    continue;		/* skip aliased loopbacks as well. */
-	}
 	while (addrcount > 0) {
 	    struct sockaddr_in *a;
 
@@ -322,13 +312,9 @@ rxi_getAllAddrMaskMtu(addrBuffer, maskBuffer, mtuBuffer, maxSize)
     free(buf);
     return count;
 }
-
-
 #else
-int
-rx_getAllAddr(buffer, maxSize)
-     afs_int32 buffer[];
-     int maxSize;		/* sizeof of buffer in afs_int32 units */
+static int
+rx_getAllAddr_internal(afs_int32 buffer[], int maxSize, int loopbacks)
 {
     int s;
     int i, len, count = 0;
@@ -381,7 +367,7 @@ rx_getAllAddr(buffer, maxSize)
 	    continue;		/* ignore this address */
 	}
 	if (a->sin_addr.s_addr != 0) {
-	    if (ifr->ifr_flags & IFF_LOOPBACK) {
+	    if (!loopbacks && (ifr->ifr_flags & IFF_LOOPBACK)) {
 		continue;	/* skip aliased loopbacks as well. */
 	    }
 	    if (count >= maxSize)	/* no more space */
@@ -395,6 +381,12 @@ rx_getAllAddr(buffer, maxSize)
     return count;
 }
 
+int
+rx_getAllAddr(afs_int32 buffer[], int maxSize)
+{
+    return rx_getAllAddr_internal(buffer, maxSize, 0);
+}
+
 /* this function returns the total number of interface addresses
  * the buffer has to be passed in by the caller. It also returns
  * the interface mask. If AFS_USERSPACE_IP_ADDR is defined, it
@@ -402,11 +394,8 @@ rx_getAllAddr(buffer, maxSize)
  * by afsi_SetServerIPRank().
  */
 int
-rxi_getAllAddrMaskMtu(addrBuffer, maskBuffer, mtuBuffer, maxSize)
-     afs_int32 addrBuffer[];	/* the network addrs in net byte order */
-     afs_int32 maskBuffer[];	/* the subnet masks */
-     afs_int32 mtuBuffer[];	/* the MTU sizes */
-     int maxSize;		/* sizeof of buffer in afs_int32 units */
+rxi_getAllAddrMaskMtu(afs_int32 addrBuffer[], afs_int32 maskBuffer[],
+		      afs_int32 mtuBuffer[], int maxSize)
 {
     int s;
     int i, len, count = 0;
@@ -418,7 +407,7 @@ rxi_getAllAddrMaskMtu(addrBuffer, maskBuffer, mtuBuffer, maxSize)
 #endif
 
 #if !defined(AFS_USERSPACE_IP_ADDR)
-    count = rx_getAllAddr(addrBuffer, 1024);
+    count = rx_getAllAddr_internal(addrBuffer, 1024, 1);
     for (i = 0; i < count; i++) {
 	maskBuffer[i] = htonl(0xffffffff);
 	mtuBuffer[i] = htonl(1500);
@@ -457,9 +446,6 @@ rxi_getAllAddrMaskMtu(addrBuffer, maskBuffer, mtuBuffer, maxSize)
 	    if (ioctl(s, SIOCGIFFLAGS, ifr) < 0) {
 		perror("SIOCGIFFLAGS");
 		continue;	/* ignore this address */
-	    }
-	    if (ifr->ifr_flags & IFF_LOOPBACK) {
-		continue;	/* skip aliased loopbacks as well. */
 	    }
 
 	    if (count >= maxSize) {	/* no more space */

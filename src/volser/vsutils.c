@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/volser/vsutils.c,v 1.16 2003/12/07 22:49:46 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/volser/vsutils.c,v 1.16.2.1 2004/10/18 07:12:29 shadow Exp $");
 
 #include <afs/stds.h>
 #ifdef AFS_NT40_ENV
@@ -445,128 +445,10 @@ vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc)
     static struct rx_connection *serverconns[VLDB_MAXSERVERS];
     char cellstr[64];
 
-
-    code = rx_Init(0);
-    if (code) {
-	fprintf(STDERR, "vsu_ClientInit: could not initialize rx.\n");
-	return code;
-    }
-    rx_SetRxDeadTime(90);
-
-    if (sauth) {		/* -localauth */
-	tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
-	if (!tdir) {
-	    fprintf(STDERR,
-		    "vsu_ClientInit: Could not process files in configuration directory (%s).\n",
-		    AFSDIR_SERVER_ETC_DIRPATH);
-	    return -1;
-	}
-	code = afsconf_ClientAuth(tdir, &sc, &scIndex);	/* sets sc,scIndex */
-	if (code) {
-	    fprintf(STDERR,
-		    "vsu_ClientInit: Could not get security object for -localAuth\n");
-	    return -1;
-	}
-	code =
-	    afsconf_GetCellInfo(tdir, tdir->cellName, AFSCONF_VLDBSERVICE,
-				&info);
-	if (code) {
-	    fprintf(STDERR,
-		    "vsu_ClientInit: can't find cell %s's hosts in %s/%s\n",
-		    cellName, AFSDIR_SERVER_ETC_DIRPATH,
-		    AFSDIR_CELLSERVDB_FILE);
-	    exit(1);
-	}
-    } else {			/* not -localauth */
-	tdir = afsconf_Open(confDir);
-	if (!tdir) {
-	    fprintf(STDERR,
-		    "vsu_ClientInit: Could not process files in configuration directory (%s).\n",
-		    confDir);
-	    return -1;
-	}
-
-	if (!cellName) {
-	    code = afsconf_GetLocalCell(tdir, cellstr, sizeof(cellstr));
-	    if (code) {
-		fprintf(STDERR,
-			"vsu_ClientInit: can't get local cellname, check %s/%s\n",
-			confDir, AFSDIR_THISCELL_FILE);
-		exit(1);
-	    }
-	    cellName = cellstr;
-	}
-
-	code =
-	    afsconf_GetCellInfo(tdir, cellName, AFSCONF_VLDBSERVICE, &info);
-	if (code) {
-	    fprintf(STDERR,
-		    "vsu_ClientInit: can't find cell %s's hosts in %s/%s\n",
-		    cellName, confDir, AFSDIR_CELLSERVDB_FILE);
-	    exit(1);
-	}
-	if (noAuthFlag)		/* -noauth */
-	    scIndex = 0;
-	else {			/* not -noauth */
-	    strcpy(sname.cell, info.name);
-	    sname.instance[0] = 0;
-	    strcpy(sname.name, "afs");
-	    code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
-	    if (code) {		/* did not get ticket */
-		fprintf(STDERR,
-			"vsu_ClientInit: Could not get afs tokens, running unauthenticated.\n");
-		scIndex = 0;
-	    } else {		/* got a ticket */
-		scIndex = 2;
-		if ((ttoken.kvno < 0) || (ttoken.kvno > 255)) {
-		    fprintf(STDERR,
-			    "vsu_ClientInit: funny kvno (%d) in ticket, proceeding\n",
-			    ttoken.kvno);
-		}
-	    }
-	}
-
-	switch (scIndex) {
-	case 0:
-	    sc = rxnull_NewClientSecurityObject();
-	    break;
-	case 2:
-	    sc = rxkad_NewClientSecurityObject(vsu_rxkad_level,
-					       &ttoken.sessionKey,
-					       ttoken.kvno, ttoken.ticketLen,
-					       ttoken.ticket);
-	    break;
-	default:
-	    fprintf(STDERR, "vsu_ClientInit: unsupported security index %d\n",
-		    scIndex);
-	    exit(1);
-	    break;
-	}
-    }
-
-    afsconf_Close(tdir);
-
-    if (secproc)		/* tell UV module about default authentication */
-	(*secproc) (sc, scIndex);
-    if (info.numServers > VLDB_MAXSERVERS) {
-	fprintf(STDERR,
-		"vsu_ClientInit: info.numServers=%d (> VLDB_MAXSERVERS=%d)\n",
-		info.numServers, VLDB_MAXSERVERS);
-	exit(1);
-    }
-    for (i = 0; i < info.numServers; i++) {
-	serverconns[i] =
-	    rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
-			     info.hostAddr[i].sin_port, USER_SERVICE_ID, sc,
-			     scIndex);
-    }
-    *uclientp = 0;
-    code = ubik_ClientInit(serverconns, uclientp);
-    if (code) {
-	fprintf(STDERR, "vsu_ClientInit: ubik client init failed.\n");
-	return code;
-    }
-    return 0;
+    return ugen_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, 
+			   secproc, "vsu_ClientInit", vsu_rxkad_level,
+			   VLDB_MAXSERVERS, AFSCONF_VLDBSERVICE, 90,
+			   0, 0, USER_SERVICE_ID);
 }
 
 

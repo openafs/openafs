@@ -18,7 +18,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_rename.c,v 1.16.2.1 2004/08/25 07:09:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_rename.c,v 1.16.2.2 2004/10/18 17:43:53 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -146,7 +146,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
     }
 
     if (code == 0)
-	code = afs_dir_Lookup(&tdc1->f.inode, aname1, &fileFid.Fid);
+	code = afs_dir_Lookup(&tdc1->f, aname1, &fileFid.Fid);
     if (code) {
 	if (tdc1) {
 	    ReleaseWriteLock(&tdc1->lock);
@@ -205,38 +205,38 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    if (!doLocally) {
 		if (tdc1) {
 		    ZapDCE(tdc1);
-		    DZap(&tdc1->f.inode);
+		    DZap(&tdc1->f);
 		}
 		if (tdc2) {
 		    ZapDCE(tdc2);
-		    DZap(&tdc2->f.inode);
+		    DZap(&tdc2->f);
 		}
 	    }
 	}
 	/* now really do the work */
 	if (doLocally) {
 	    /* first lookup the fid of the dude we're moving */
-	    code = afs_dir_Lookup(&tdc1->f.inode, aname1, &fileFid.Fid);
+	    code = afs_dir_Lookup(&tdc1->f, aname1, &fileFid.Fid);
 	    if (code == 0) {
 		/* delete the source */
-		code = afs_dir_Delete(&tdc1->f.inode, aname1);
+		code = afs_dir_Delete(&tdc1->f, aname1);
 	    }
 	    /* first see if target is there */
 	    if (code == 0
-		&& afs_dir_Lookup(&tdc2->f.inode, aname2,
+		&& afs_dir_Lookup(&tdc2->f, aname2,
 				  &unlinkFid.Fid) == 0) {
 		/* target already exists, and will be unlinked by server */
-		code = afs_dir_Delete(&tdc2->f.inode, aname2);
+		code = afs_dir_Delete(&tdc2->f, aname2);
 	    }
 	    if (code == 0) {
-		code = afs_dir_Create(&tdc2->f.inode, aname2, &fileFid.Fid);
+		code = afs_dir_Create(&tdc2->f, aname2, &fileFid.Fid);
 	    }
 	    if (code != 0) {
 		ZapDCE(tdc1);
-		DZap(&tdc1->f.inode);
+		DZap(&tdc1->f);
 		if (!oneDir) {
 		    ZapDCE(tdc2);
-		    DZap(&tdc2->f.inode);
+		    DZap(&tdc2->f);
 		}
 	    }
 	}
@@ -339,7 +339,7 @@ afsrename(struct vcache *aodp, char *aname1, struct vcache *andp,
 	    if (tdc1) {
 		ObtainWriteLock(&tdc1->lock, 648);
 		ZapDCE(tdc1);	/* mark as unknown */
-		DZap(&tdc1->f.inode);
+		DZap(&tdc1->f);
 		ReleaseWriteLock(&tdc1->lock);
 		afs_PutDCache(tdc1);	/* put it back */
 	    }

@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.1 2004/08/25 07:03:36 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/LINUX/osi_module.c,v 1.52.2.2 2004/10/18 17:43:51 shadow Exp $");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -223,11 +223,6 @@ asmlinkage int (*sys_setgroups32p) (int gidsetsize,
 #define SYSCALL2POINTER (void *)
 #endif
 
-#ifdef AFS_PPC64_LINUX20_ENV
-extern void *set_afs_syscall(void*);
-extern void *set_afs_xsetgroups_syscall(void*);
-extern void *set_afs_xsetgroups_syscall32(void*);
-#endif
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
 int __init
@@ -525,11 +520,6 @@ init_module(void)
 #endif /* AFS_AMD64_LINUX20_ENV */
 #endif /* AFS_IA64_LINUX20_ENV */
 
-#ifdef AFS_PPC64_LINUX20_ENV
-    afs_ni_syscall = set_afs_syscall(afs_syscall);
-    sys_setgroupsp = set_afs_xsetgroups_syscall(afs_xsetgroups);
-    sys32_setgroupsp = set_afs_xsetgroups_syscall32(afs32_xsetgroups);
-#endif
     }
 
     osi_sysctl_init();
@@ -582,11 +572,6 @@ cleanup_module(void)
     }
 #endif
     }
-#ifdef AFS_PPC64_LINUX20_ENV
-    set_afs_syscall(afs_ni_syscall);
-    set_afs_xsetgroups_syscall(sys_setgroupsp);
-    set_afs_xsetgroups_syscall32(sys32_setgroupsp);
-#endif
     unregister_filesystem(&afs_fs_type);
 
     osi_linux_free_inode_pages();	/* Invalidate all pages using AFS inodes. */

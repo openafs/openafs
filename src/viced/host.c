@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/viced/host.c,v 1.57 2004/08/05 14:48:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/viced/host.c,v 1.57.2.1 2004/10/18 07:12:22 shadow Exp $");
 
 #include <stdio.h>
 #include <errno.h>
@@ -781,6 +781,7 @@ h_TossStuff_r(register struct host *host)
 		    *hp = th->next;
 		    h_DeleteList_r(host);
 		    FreeHT(host);
+		    free(th);
 		    break;
 		}
 	    }

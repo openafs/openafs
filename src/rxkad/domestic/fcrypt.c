@@ -20,7 +20,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/domestic/fcrypt.c,v 1.11.2.1 2004/08/25 07:17:01 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/domestic/fcrypt.c,v 1.11.2.2 2004/10/18 17:44:01 shadow Exp $");
 
 #define DEBUG 0
 #ifdef KERNEL
@@ -110,7 +110,7 @@ fc_keysched(struct ktc_encryptionKey *key, fc_KeySchedule schedule)
 
 /* IN int encrypt; * 0 ==> decrypt, else encrypt */
 afs_int32
-fc_ecb_encrypt(afs_uint32 * clear, afs_uint32 * cipher,
+fc_ecb_encrypt(void * clear, void * cipher,
 	       fc_KeySchedule schedule, int encrypt)
 {
     afs_uint32 L, R;
@@ -135,8 +135,8 @@ fc_ecb_encrypt(afs_uint32 * clear, afs_uint32 * cipher,
     memcpy(&L, clear, sizeof(afs_int32));
     memcpy(&R, clear + 1, sizeof(afs_int32));
 #else
-    L = ntohl(*clear);
-    R = ntohl(*(clear + 1));
+    L = ntohl(*((afs_uint32 *)clear));
+    R = ntohl(*((afs_uint32 *)clear + 1));
 #endif
 
     if (encrypt) {
@@ -185,8 +185,8 @@ fc_ecb_encrypt(afs_uint32 * clear, afs_uint32 * cipher,
     memcpy(cipher, &L, sizeof(afs_int32));
     memcpy(cipher + 1, &R, sizeof(afs_int32));
 #else
-    *cipher = htonl(L);
-    *(cipher + 1) = htonl(R);
+    *((afs_int32 *)cipher) = htonl(L);
+    *((afs_int32 *)cipher + 1) = htonl(R);
 #endif
     return 0;
 }
@@ -203,7 +203,7 @@ fc_ecb_encrypt(afs_uint32 * clear, afs_uint32 * cipher,
   afs_uint32 *xor; * 8 bytes of initialization vector *
 */
 afs_int32
-fc_cbc_encrypt(char *input, char *output, afs_int32 length,
+fc_cbc_encrypt(void *input, void *output, afs_int32 length,
 	       fc_KeySchedule key, afs_uint32 * xor, int encrypt)
 {
     afs_uint32 i, j;
@@ -215,7 +215,7 @@ fc_cbc_encrypt(char *input, char *output, afs_int32 length,
 	for (i = 0; length > 0; i++, length -= 8) {
 	    /* get input */
 	    memcpy(t_input, input, sizeof(t_input));
-	    input += sizeof(t_input);
+	    input=((char *)input) + sizeof(t_input);
 
 	    /* zero pad */
 	    for (j = length; j <= 7; j++)
@@ -229,7 +229,7 @@ fc_cbc_encrypt(char *input, char *output, afs_int32 length,
 
 	    /* copy temp output and save it for cbc */
 	    memcpy(output, t_output, sizeof(t_output));
-	    output += sizeof(t_output);
+	    output=(char *)output + sizeof(t_output);
 
 	    /* calculate xor value for next round from plain & cipher text */
 	    xor[0] = t_input[0] ^ t_output[0];
@@ -244,7 +244,7 @@ fc_cbc_encrypt(char *input, char *output, afs_int32 length,
 	for (i = 0; length > 0; i++, length -= 8) {
 	    /* get input */
 	    memcpy(t_input, input, sizeof(t_input));
-	    input += sizeof(t_input);
+	    input=((char *)input) + sizeof(t_input);
 
 	    /* no padding for decrypt */
 	    fc_ecb_encrypt(t_input, t_output, key, encrypt);
@@ -255,7 +255,7 @@ fc_cbc_encrypt(char *input, char *output, afs_int32 length,
 
 	    /* copy temp output */
 	    memcpy(output, t_output, sizeof(t_output));
-	    output += sizeof(t_output);
+	    output=((char *)output) + sizeof(t_output);
 
 	    /* calculate xor value for next round from plain & cipher text */
 	    xor[0] = t_input[0] ^ t_output[0];

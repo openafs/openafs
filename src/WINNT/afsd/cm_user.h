@@ -39,7 +39,7 @@ typedef struct cm_ucell {
 #define CM_UCELLFLAG_BADTIX	4	/* tickets are bad or expired */
 
 typedef struct cm_user {
-	int refCount;			/* ref count */
+	unsigned long refCount;			/* ref count */
 	cm_ucell_t *cellInfop;		/* list of cell info */
         osi_mutex_t mx;			/* mutex */
         int vcRefs;			/* count of references from virtual circuits */

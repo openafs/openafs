@@ -14,7 +14,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_segments.c,v 1.16.2.1 2004/08/25 07:09:32 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_segments.c,v 1.16.2.2 2004/10/18 17:43:50 shadow Exp $");
 
 #include "afs/sysincludes.h"	/*Standard vendor system headers */
 #include "afsincludes.h"	/*AFS-based standard headers */
@@ -898,7 +898,7 @@ afs_InvalidateAllSegments(struct vcache *avc)
 	ObtainWriteLock(&tdc->lock, 679);
 	ZapDCE(tdc);
 	if (vType(avc) == VDIR)
-	    DZap(&tdc->f.inode);
+	    DZap(&tdc->f);
 	ReleaseWriteLock(&tdc->lock);
 	afs_PutDCache(tdc);
     }
@@ -1041,6 +1041,12 @@ afs_TruncateAllSegments(register struct vcache *avc, afs_size_t alen,
 	    afs_CFileTruncate(tfile, newSize);
 	    afs_CFileClose(tfile);
 	    afs_AdjustSize(tdc, newSize);
+	    if (alen < tdc->validPos) {
+                if (alen < AFS_CHUNKTOBASE(tdc->f.chunk))
+                    tdc->validPos = 0;
+                else
+                    tdc->validPos = alen;
+            }
 	    ConvertWToSLock(&tdc->lock);
 	}
 	ReleaseSharedLock(&tdc->lock);

@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.1 2004/08/25 07:03:35 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_pioctl.c,v 1.81.2.2 2004/10/18 17:43:49 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #ifdef AFS_OBSD_ENV
@@ -268,7 +268,11 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
 #elif defined(AFS_AMD64_LINUX20_ENV)
     if (current->thread.flags & THREAD_IA32)
 #elif defined(AFS_PPC64_LINUX20_ENV)
-    if (current->thread.flags & PPC_FLAG_32BIT)
+#ifdef AFS_PPC64_LINUX26_ENV
+      if (current->thread_info->flags & _TIF_32BIT)
+#else /*Linux 2.6*/
+    if (current->thread.flags & PPC_FLAG_32BIT) 
+#endif
 #elif defined(AFS_S390X_LINUX20_ENV)
     if (current->thread.flags & S390_FLAG_31BIT)
 #else
@@ -488,7 +492,7 @@ struct afs_ioctl_sys {
     unsigned int com;
     unsigned long arg;
 };
-asmlinkage int
+int
 afs_xioctl(struct inode *ip, struct file *fp, unsigned int com,
 	   unsigned long arg)
 {
@@ -1713,7 +1717,7 @@ DECL_PIOCTL(PNewStatMount)
     Check_AtSys(avc, ain, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
-	code = afs_dir_Lookup(&tdc->f.inode, sysState.name, &tfid.Fid);
+	code = afs_dir_Lookup(&tdc->f, sysState.name, &tfid.Fid);
     } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);		/* we're done with the data */
@@ -2393,7 +2397,7 @@ DECL_PIOCTL(PRemoveMount)
     Check_AtSys(avc, ain, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
-	code = afs_dir_Lookup(&tdc->f.inode, sysState.name, &tfid.Fid);
+	code = afs_dir_Lookup(&tdc->f, sysState.name, &tfid.Fid);
     } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
     ReleaseReadLock(&tdc->lock);
     bufp = sysState.name;
@@ -2464,10 +2468,10 @@ DECL_PIOCTL(PRemoveMount)
 	ObtainWriteLock(&tdc->lock, 661);
 	if (afs_LocalHero(avc, tdc, &OutDirStatus, 1)) {
 	    /* we can do it locally */
-	    code = afs_dir_Delete(&tdc->f.inode, bufp);
+	    code = afs_dir_Delete(&tdc->f, bufp);
 	    if (code) {
 		ZapDCE(tdc);	/* surprise error -- invalid value */
-		DZap(&tdc->f.inode);
+		DZap(&tdc->f);
 	    }
 	}
 	ReleaseWriteLock(&tdc->lock);
@@ -3499,7 +3503,7 @@ DECL_PIOCTL(PFlushMount)
     Check_AtSys(avc, ain, &sysState, areq);
     ObtainReadLock(&tdc->lock);
     do {
-	code = afs_dir_Lookup(&tdc->f.inode, sysState.name, &tfid.Fid);
+	code = afs_dir_Lookup(&tdc->f, sysState.name, &tfid.Fid);
     } while (code == ENOENT && Next_AtSys(avc, areq, &sysState));
     ReleaseReadLock(&tdc->lock);
     afs_PutDCache(tdc);		/* we're done with the data */
