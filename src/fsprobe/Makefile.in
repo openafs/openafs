@@ -36,7 +36,7 @@ CFLAGS=${DBG} -I. \
 	-I${TOP_INCDIR} \
 	-I${TOP_INCDIR}/afs \
 	-I${SRCDIR} \
-	-I/usr/include ${XCFLAGS}
+	${XCFLAGS}
 
 RPCINCLS=${TOP_INCDIR}/lwp.h ${TOP_INCDIR}/rx/rx.h
 

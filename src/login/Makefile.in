@@ -53,7 +53,7 @@ KAFSLIBS = ${TOP_LIBDIR}/libkauth.krb.a ${TOP_LIBDIR}/libprot.a \
 	   ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/libcmd.a \
 	   ${TOP_LIBDIR}/libcom_err.a ${TOP_LIBDIR}/util.a
 
-INCLUDES=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} -I/usr/include -I/usr/include/sys
+INCLUDES=-I${TOP_SRCDIR}/config -I${TOP_INCDIR} 
 CFLAGS=	${DBG} ${XCFLAGS} ${INCLUDES}
 LIBC=	/lib/libc.a
 SRCS=	login.c 

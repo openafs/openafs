@@ -32,7 +32,7 @@ include ../config/Makefile.${SYS_NAME}
 
 all: uss
 
-CFLAGS=${DBUG} -I/usr/include -I${TOP_SRCDIR}/config \
+CFLAGS=${DBUG} -I${TOP_SRCDIR}/config \
 	-I${TOP_INCDIR} -I. ${XCFLAGS}
 
 #

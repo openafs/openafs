@@ -8,7 +8,7 @@
 # Common elements for Makefiles for all system types.
 #
 SHELL=/bin/sh
-INCLUDE= -I.  -I/usr/include -I${TOP_SRCDIR}/config
+INCLUDE= -I. -I${TOP_SRCDIR}/config
 AFS	=../afs
 RX	=../rx
 AFSINT	=../afsint
