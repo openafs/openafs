@@ -210,15 +210,18 @@ else
 			;;
 		powerpc-apple-darwin1.2*)
 			AFS_SYSNAME="ppc_darwin_12"
-			DARWIN_PLIST=src/afsd/afs.${AFS_SYSNAME}.plist
+			DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
+			DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
 			;;
 		powerpc-apple-darwin1.3*)
 			AFS_SYSNAME="ppc_darwin_13"
-			DARWIN_PLIST=src/afsd/afs.${AFS_SYSNAME}.plist
+			DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
+			DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
 			;;
 		powerpc-apple-darwin1.4*)
 			AFS_SYSNAME="ppc_darwin_14"
-			DARWIN_PLIST=src/afsd/afs.${AFS_SYSNAME}.plist
+			DARWIN_PLIST=src/libafs/afs.${AFS_SYSNAME}.plist
+			DARWIN_INFOFILE=afs.${AFS_SYSNAME}.plist
 			;;
 		sparc-sun-solaris2.5*)
 			AFS_SYSNAME="sun4x_55"
@@ -461,12 +464,12 @@ AC_SUBST(TOP_LIBDIR)
 AC_SUBST(DEST)
 AC_SUBST(WITH_OBSOLETE)
 AC_SUBST(WITH_INSECURE)
+AC_SUBST(DARWIN_INFOFILE)
 
 AC_OUTPUT(             \
 Makefile               \
 src/afs/Makefile \
 src/afsd/Makefile \
-${DARWIN_PLIST} \
 src/afsmonitor/Makefile \
 src/afsweb/Makefile \
 src/audit/Makefile \
@@ -516,6 +519,7 @@ src/libadmin/samples/Makefile \
 src/libadmin/test/Makefile \
 src/libadmin/vos/Makefile \
 src/libafs/MakefileProto.${MKAFS_OSTYPE} \
+${DARWIN_PLIST} \
 src/libafsauthent/Makefile \
 src/libafsrpc/Makefile \
 src/libuafs/MakefileProto.${MKAFS_OSTYPE} \

@@ -30,6 +30,7 @@ MKAFS_OSTYPE=@MKAFS_OSTYPE@
 # Systype-specific items
 LINUX_KERNEL_PATH=@LINUX_KERNEL_PATH@
 LINUX_VERSION=@LINUX_VERSION@
+DARWIN_INFOFILE=@DARWIN_INFOFILE@
 
 # Other items
 LIB_AFSDB=@LIB_AFSDB@
@@ -354,7 +355,7 @@ libafs_tree: libafs_setup ${KERNELDIR}
 		[ -d libafs_tree/$$d ] || mkdir -p libafs_tree/$$d; \
 	done
 	for f in `cd src/libafs; find . -name '*.[ch]'` \
-		Makefile.common Makefile.extradefs \
+		Makefile.common Makefile.extradefs ${DARWIN_INFOFILE} \
 		afs.shutdown afs.startup redhat.sh sgi_master sgi_system \
 		; do \
 		${INSTALL} -c -f src/libafs/$$f libafs_tree/$$f; \
