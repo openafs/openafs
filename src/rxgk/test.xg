@@ -1,0 +1,21 @@
+/* hej emacs det h{r {r en -*- c -*- fil */
+
+/*
+ * Copyright (c) 2002, Stockholms Universitet
+ * (Stockholm University, Stockholm Sweden)
+ * All rights reserved.
+ * 
+ * Redistribution is not permitted
+ */
+
+/* $Id$ */
+
+package TEST_
+
+const TEST_DEFAULT_PORT = 7009;
+
+const TEST_RXGK_SERVICE = 64000;
+
+const TEST_SERVICE_ID   = 10;
+
+get_hundraelva(OUT afs_int32 *foo, OUT string bar<100>) = 18;
