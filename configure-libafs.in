@@ -12,6 +12,12 @@ if test "${DEST}x" = "x"; then
 	DEST="${SRCDIR_PARENT}/${AFS_SYSNAME}/dest"
 fi
 
+# Check for files involved in porting.  Report errors, don't make the
+# user hunt through the configure log after the build fails!
+if test ! -r config/Makefile.${AFS_SYSNAME}.in ; then
+  AC_MSG_ERROR(no source file config/Makefile.${AFS_SYSNAME}.in)
+fi
+
 AC_OUTPUT(             \
 Makefile               \
 config/Makefile.${AFS_SYSNAME} \
