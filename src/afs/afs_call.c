@@ -1510,6 +1510,11 @@ afs_shutdown(void)
     extern struct osi_file *afs_cacheInodep;
 
     AFS_STATCNT(afs_shutdown);
+    if (afs_initState == 0) {
+        afs_warn("AFS not initialized - not shutting down\n");
+      return;
+    }
+
     if (afs_shuttingdown)
 	return;
     afs_shuttingdown = 1;
