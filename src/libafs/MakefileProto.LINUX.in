@@ -89,7 +89,7 @@ CCFLAGS =   $(KDEBUG) -O2 $(FOMIT) $(GCC_KOPTS) -pipe -ffixed-r13 \
 	 -mfixed-range=f10-f15,f32-f127 -falign-functions=32 -mb-step
 DEFINES = -D__KERNEL__ -DKERNEL -D_KERNEL ${SMP_DEF} -DMODULE
 <all>
-INCLUDES = -I. -I../ -I${TOP_SRCDIR}/config
+INCLUDES = -I. -I../ -I${LINUX_KERNEL_PATH}/include -I${TOP_SRCDIR}/config
 
 CFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES)
 

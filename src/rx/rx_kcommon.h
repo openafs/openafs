@@ -33,7 +33,10 @@ typedef unsigned short                  etap_event_t;
 #include "../h/disp.h"
 #endif
 #include "../h/socket.h"
-#ifndef AFS_LINUX22_ENV
+#ifdef AFS_LINUX22_ENV
+#define _LINUX_CODA_FS_I
+struct coda_inode_info {};
+#else
 #include "../h/socketvar.h"
 #include "../h/protosw.h"
 #if !defined(AFS_SUN5_ENV) && !defined(AFS_XBSD_ENV)
@@ -80,8 +83,6 @@ typedef unsigned short                  etap_event_t;
 #include "../h/user.h"
 #endif
 #ifdef AFS_LINUX22_ENV
-#define _LINUX_CODA_FS_I
-struct coda_inode_info {};
 #include "../h/sched.h"
 #include "../h/netdevice.h"
 #else
