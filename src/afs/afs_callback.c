@@ -1141,23 +1141,22 @@ int SRXAFSCB_GetCellServDB(
 
     /* search the list for the cell with this index */
     ObtainReadLock(&afs_xcell);
-    for (i=0, cq = CellLRU.next; cq != &CellLRU && i<= a_index; cq = tq, i++) {
-        tq = QNext(cq);
-	if (i == a_index) {
-	    tcell = QTOC(cq);
-	    p_name = tcell->cellName;
-	    for (j = 0 ; j < AFSMAXCELLHOSTS && tcell->cellHosts[j] ; j++) {
-		a_hosts[j] = ntohl(tcell->cellHosts[j]->addr->sa_ip);
-	    }
-	}
+
+    tcell = afs_GetCellByIndex(a_index, READ_LOCK, 0);
+
+    if (!tcell) {
+      i = 0;
+    } else {
+      p_name = tcell->cellName;
+      for (j = 0 ; j < AFSMAXCELLHOSTS && tcell->cellHosts[j] ; j++) {
+	a_hosts[j] = ntohl(tcell->cellHosts[j]->addr->sa_ip);
+      }
+      i = strlen(p_name);
     }
 
-    if (p_name)
-	i = strlen(p_name);
-    else
-	i = 0;
     t_name = (char *)rxi_Alloc(i+1);
     if (t_name == NULL) {
+        ReleaseReadLock(&afs_xcell);
 #ifdef RX_ENABLE_LOCKS
 	AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS */
@@ -1217,6 +1216,7 @@ int SRXAFSCB_GetLocalCell(
      * the primary cell is when no other cell is explicitly marked as
      * the primary cell.  */
     ObtainReadLock(&afs_xcell);
+
     for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
         tq = QNext(cq);
 	tcell = QTOC(cq);
@@ -1235,6 +1235,7 @@ int SRXAFSCB_GetLocalCell(
 	plen = 0;
     t_name = (char *)rxi_Alloc(plen+1);
     if (t_name == NULL) {
+        ReleaseReadLock(&afs_xcell);
 #ifdef RX_ENABLE_LOCKS
 	AFS_GUNLOCK();
 #endif /* RX_ENABLE_LOCKS */
