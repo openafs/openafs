@@ -74,13 +74,14 @@ osi_Init(void)
 #endif /* AFS_HPUX_ENV */
 
     if (!afs_osicred_initialized) {
-#if defined(AFS_LINUX26_ENV)
-	afs_osi_credp = crref();
-#elif defined(AFS_XBSD_ENV)
+#if defined(AFS_XBSD_ENV)
 	/* Can't just invent one, must use crget() because of mutex */
 	afs_osi_credp = crdup(osi_curcred());
 #else
 	memset(&afs_osi_cred, 0, sizeof(struct AFS_UCRED));
+#if defined(AFS_LINUX26_ENV)
+        afs_osi_cred.cr_group_info = groups_alloc(0);
+#endif
 	crhold(&afs_osi_cred);	/* don't let it evaporate */
 	afs_osi_credp = &afs_osi_cred;
 #endif
