@@ -55,45 +55,45 @@ main(int argc, char *argv[])
     struct stat sb1;
 
 
-    ret = mkdir ("1", 0777);
+    ret = mkdir("1", 0777);
     if (ret < 0)
-	err (1, "mkdir 1");
+	err(1, "mkdir 1");
 
-    ret = mkdir ("2", 0777);
+    ret = mkdir("2", 0777);
     if (ret < 0)
-	err (1, "mkdir 2");
+	err(1, "mkdir 2");
 
-    fd1 = open("1/foo", O_RDWR|O_CREAT, 0666);
+    fd1 = open("1/foo", O_RDWR | O_CREAT, 0666);
     if (fd1 < 0)
-	err (1, "open 1/foo");
+	err(1, "open 1/foo");
 
-    ret = fstat (fd1, &sb1);
+    ret = fstat(fd1, &sb1);
     if (ret < 0)
-	err (1, "stat foo");
+	err(1, "stat foo");
 
     if (sb1.st_nlink != 1)
-	errx (1, "foo.st_nlink != 1");
+	errx(1, "foo.st_nlink != 1");
 
-    ret = close (fd1);
+    ret = close(fd1);
     if (ret < 0)
-	err (1, "close 1/foo");
+	err(1, "close 1/foo");
 
-    ret = link ("1/foo", "2/foo");
+    ret = link("1/foo", "2/foo");
     if (ret == 0)
-	unlink ("2/foo");
+	unlink("2/foo");
     if (ret < 0 && errno != EXDEV)
-	err (1, "link 1/foo, 2/foo");
+	err(1, "link 1/foo, 2/foo");
 
-    ret = unlink ("1/foo");
+    ret = unlink("1/foo");
     if (ret < 0)
-	err (1, "unlink 1/foo");
+	err(1, "unlink 1/foo");
 
-    ret = rmdir ("1");
+    ret = rmdir("1");
     if (ret < 0)
-	err (1, "rmdir 1");
+	err(1, "rmdir 1");
 
-    ret = rmdir ("2");
+    ret = rmdir("2");
     if (ret < 0)
-	err (1, "rmdir 2");
+	err(1, "rmdir 2");
     return 0;
 }

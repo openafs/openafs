@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <sys/types.h>
 #include <afs/cmd.h>
@@ -33,8 +34,8 @@ RCSID("$Header$");
 #include <afs/bubasics.h>
 #include <afs/butc.h>
 #include <afs/com_err.h>
-#include <lock.h>			/* for checking TC_ABORTFAILED. PA */
-#include <afs/tcdata.h>			/* for checking TC_ABORTFAILED. PA */
+#include <lock.h>		/* for checking TC_ABORTFAILED. PA */
+#include <afs/tcdata.h>		/* for checking TC_ABORTFAILED. PA */
 #include <afs/butc.h>
 
 #include "bc.h"
@@ -49,7 +50,7 @@ extern char *whoami;
 extern char *tailCompPtr();
 extern statusP createStatusNode();
 extern afs_int32 bc_jobNumber();
-    
+
 extern afs_int32 lastTaskCode;
 
 #ifdef AFS_DEC_ENV
@@ -78,44 +79,45 @@ bc_Dumper(aindex)
 
     struct tc_dumpInterface dumpInterface;
     struct tc_dumpInterface *tcdiPtr = &dumpInterface;
-     register struct bc_dumpTask *dumpTaskPtr;
+    register struct bc_dumpTask *dumpTaskPtr;
 
     register afs_int32 code = 0;
 
     dumpTaskPtr = &bc_dumpTasks[aindex];
 
     if (!dumpTaskPtr->portOffset || (dumpTaskPtr->portCount == 0))
-       port = 0;
-    else 
-       port = dumpTaskPtr->portOffset[0];
+	port = 0;
+    else
+	port = dumpTaskPtr->portOffset[0];
 
     code = ConnectButc(dumpTaskPtr->config, port, &tconn);
-    if (code) return(code);
-    
+    if (code)
+	return (code);
+
     /* count number of volumes to be dumped and
      * build array of volumes to be sent to backup system 
      */
-    for (count=0, tde=dumpTaskPtr->volumes; tde; tde=tde->next, count++);
-    volDesc = (struct tc_dumpDesc *) malloc(count*sizeof(struct tc_dumpDesc));
-    if (!volDesc)
-    {
-	com_err(whoami,BC_NOMEM,"");
+    for (count = 0, tde = dumpTaskPtr->volumes; tde;
+	 tde = tde->next, count++);
+    volDesc =
+	(struct tc_dumpDesc *)malloc(count * sizeof(struct tc_dumpDesc));
+    if (!volDesc) {
+	com_err(whoami, BC_NOMEM, "");
 	ERROR(BC_NOMEM);
     }
 
-    for (count=0, tde=dumpTaskPtr->volumes; tde; tde=tde->next, count++)
-    {
+    for (count = 0, tde = dumpTaskPtr->volumes; tde; tde = tde->next, count++) {
 	strcpy(volDesc[count].name, tde->name);
-	volDesc[count].vid        = tde->vid;
-	volDesc[count].vtype      = tde->volType;
-	volDesc[count].partition  = tde->partition;
-	volDesc[count].hostAddr   = HOSTADDR(&tde->server);  /* the internet address */
-	volDesc[count].date       = tde->date;
-	volDesc[count].cloneDate  = tde->cloneDate;          /* Not yet known */
+	volDesc[count].vid = tde->vid;
+	volDesc[count].vtype = tde->volType;
+	volDesc[count].partition = tde->partition;
+	volDesc[count].hostAddr = HOSTADDR(&tde->server);	/* the internet address */
+	volDesc[count].date = tde->date;
+	volDesc[count].cloneDate = tde->cloneDate;	/* Not yet known */
     }
 
-    volArray.tc_dumpArray_len = count;		    /* element count */
-    volArray.tc_dumpArray_val = volDesc;	    /* and data */
+    volArray.tc_dumpArray_len = count;	/* element count */
+    volArray.tc_dumpArray_val = volDesc;	/* and data */
 
     baseNamePtr = tailCompPtr(dumpTaskPtr->dumpName);
 
@@ -134,7 +136,7 @@ bc_Dumper(aindex)
     tcdiPtr->tapeSet.a = 1;
     tcdiPtr->tapeSet.b = 1;
     tcdiPtr->tapeSet.maxTapes = 1000000000;
-    tcdiPtr->tapeSet.expDate = dumpTaskPtr->expDate;		/* PA */
+    tcdiPtr->tapeSet.expDate = dumpTaskPtr->expDate;	/* PA */
     tcdiPtr->tapeSet.expType = dumpTaskPtr->expType;
 
     /* construct dump set name */
@@ -149,33 +151,35 @@ bc_Dumper(aindex)
     /* start the dump on the tape coordinator */
     printf("Starting dump\n");
     code = TC_PerformDump(tconn, tcdiPtr, &volArray, &dumpTaskPtr->dumpID);
-    if (code)
-    {
+    if (code) {
 	com_err(whoami, code, "; Failed to start dump");
 	ERROR(code);
     }
 
-    com_err(whoami,0,"Task %u: Dump (%s)", dumpTaskPtr->dumpID, tcdiPtr->dumpName);
+    com_err(whoami, 0, "Task %u: Dump (%s)", dumpTaskPtr->dumpID,
+	    tcdiPtr->dumpName);
 
     /* create status monitor block */
     statusPtr = createStatusNode();
     lock_Status();
-    statusPtr->taskId    = dumpTaskPtr->dumpID;
-    statusPtr->port      = port;
+    statusPtr->taskId = dumpTaskPtr->dumpID;
+    statusPtr->port = port;
     statusPtr->jobNumber = bc_jobNumber();
     statusPtr->volsTotal = volArray.tc_dumpArray_len;
-    statusPtr->flags    &= ~STARTING;
-    sprintf(statusPtr->taskName, "Dump (%s.%s)", dumpTaskPtr->volSetName, baseNamePtr);
+    statusPtr->flags &= ~STARTING;
+    sprintf(statusPtr->taskName, "Dump (%s.%s)", dumpTaskPtr->volSetName,
+	    baseNamePtr);
     unlock_Status();
 
-error_exit:
+  error_exit:
     /* locally allocated resources */
-    if (volDesc) free(volDesc);
+    if (volDesc)
+	free(volDesc);
 
-    if (tconn) 
+    if (tconn)
 	rx_DestroyConnection(tconn);
 
-    return(code);
+    return (code);
 }
 
 /* freeDumpTaskVolumeList
@@ -185,18 +189,17 @@ error_exit:
 freeDumpTaskVolumeList(vdptr)
      struct bc_volumeDump *vdptr;
 {
-     struct bc_volumeDump *nextVdPtr;
+    struct bc_volumeDump *nextVdPtr;
 
-     while (vdptr != 0)
-     {
-	 nextVdPtr = vdptr->next;
+    while (vdptr != 0) {
+	nextVdPtr = vdptr->next;
 
-	 if ( vdptr->name )
-	 	free(vdptr->name);
-	 free(vdptr);
+	if (vdptr->name)
+	    free(vdptr->name);
+	free(vdptr);
 
-	 vdptr = nextVdPtr;
-     }
+	vdptr = nextVdPtr;
+    }
 }
 
 /* bc_DmpRstStart
@@ -204,23 +207,28 @@ freeDumpTaskVolumeList(vdptr)
  *     we allocated a dumpTask entry. Here we do the task and then free the entry.
  */
 bc_DmpRstStart(aindex)
-     afs_int32 aindex; 
+     afs_int32 aindex;
 {
     register struct bc_dumpTask *tdump;
-    register afs_int32              code;
+    register afs_int32 code;
 
     tdump = &bc_dumpTasks[aindex];
 
-    code = (tdump->callProc)(aindex);
-    if (code) lastTaskCode = code;
+    code = (tdump->callProc) (aindex);
+    if (code)
+	lastTaskCode = code;
 
     /* Cleanup allocated data structures */
     freeDumpTaskVolumeList(tdump->volumes);
     tdump->dumpID = 0;
-    if (tdump->dumpName)   free(tdump->dumpName);
-    if (tdump->newExt)     free(tdump->newExt);
-    if (tdump->volSetName) free(tdump->volSetName);
-    if (tdump->portOffset) free(tdump->portOffset);
+    if (tdump->dumpName)
+	free(tdump->dumpName);
+    if (tdump->newExt)
+	free(tdump->newExt);
+    if (tdump->volSetName)
+	free(tdump->volSetName);
+    if (tdump->portOffset)
+	free(tdump->portOffset);
     tdump->flags &= ~BC_DI_INUSE;
 
     return code;
@@ -238,24 +246,24 @@ bc_DmpRstStart(aindex)
  *		bc_Restorer for doing restores
  */
 
-bc_StartDmpRst(aconfig, adname, avname, avolsToDump, adestServer, adestPartition,
-	       afromDate, anewExt, aoldFlag, aparent, alevel, aproc, ports, 
-	       portCount, dsptr, append, dontExecute)
-    struct bc_config *aconfig;
-    char *adname;
-    char *avname;
-    struct bc_volumeDump *avolsToDump;
-    struct sockaddr_in *adestServer;
-    afs_int32 adestPartition;
-    afs_int32 afromDate;
-    char *anewExt;
-    int aoldFlag;
-    afs_int32 aparent, alevel;
-    int (*aproc)();
-    afs_int32 *ports;
-    afs_int32 portCount;
-    struct bc_dumpSchedule *dsptr;
-    int append, dontExecute;
+bc_StartDmpRst(aconfig, adname, avname, avolsToDump, adestServer,
+	       adestPartition, afromDate, anewExt, aoldFlag, aparent, alevel,
+	       aproc, ports, portCount, dsptr, append, dontExecute)
+     struct bc_config *aconfig;
+     char *adname;
+     char *avname;
+     struct bc_volumeDump *avolsToDump;
+     struct sockaddr_in *adestServer;
+     afs_int32 adestPartition;
+     afs_int32 afromDate;
+     char *anewExt;
+     int aoldFlag;
+     afs_int32 aparent, alevel;
+     int (*aproc) ();
+     afs_int32 *ports;
+     afs_int32 portCount;
+     struct bc_dumpSchedule *dsptr;
+     int append, dontExecute;
 {
     register int i;
     register afs_int32 code;
@@ -263,61 +271,65 @@ bc_StartDmpRst(aconfig, adname, avname, avolsToDump, adestServer, adestPartition
     int doit;
     struct bc_volumeDump *tvol, *temp;
 
-    for (i=0; i<BC_MAXSIMDUMPS; i++)
-	if (!(bc_dumpTasks[i].flags & BC_DI_INUSE)) break;
+    for (i = 0; i < BC_MAXSIMDUMPS; i++)
+	if (!(bc_dumpTasks[i].flags & BC_DI_INUSE))
+	    break;
 
-    if (i >= BC_MAXSIMDUMPS) 
-    {
+    if (i >= BC_MAXSIMDUMPS) {
 	com_err(whoami, BC_NOTLOCKED,
 		"All of the dump/restore slots are in use, try again later");
-	return(BC_NOTLOCKED);
+	return (BC_NOTLOCKED);
     }
-    
-    memset(&bc_dumpTasks[i], 0, sizeof(struct bc_dumpTask));
-    bc_dumpTasks[i].callProc      = aproc;
-    bc_dumpTasks[i].config        = aconfig;
-    bc_dumpTasks[i].volumes       = avolsToDump;
-    bc_dumpTasks[i].flags         = BC_DI_INUSE;
-    bc_dumpTasks[i].dumpName      = bc_CopyString(adname);
-    bc_dumpTasks[i].volSetName    = bc_CopyString(avname);
-    bc_dumpTasks[i].newExt        = bc_CopyString(anewExt);
-    bc_dumpTasks[i].dumpLevel     = alevel;
-    bc_dumpTasks[i].parentDumpID  = aparent;
-    bc_dumpTasks[i].oldFlag       = aoldFlag;
-    bc_dumpTasks[i].fromDate      = afromDate;
-    bc_dumpTasks[i].destPartition = adestPartition;
-    bc_dumpTasks[i].portOffset    = ports;
-    bc_dumpTasks[i].portCount     = portCount;
-    bc_dumpTasks[i].doAppend      = append;
-    bc_dumpTasks[i].dontExecute   = dontExecute;
 
-    if (dsptr)
-    {
+    memset(&bc_dumpTasks[i], 0, sizeof(struct bc_dumpTask));
+    bc_dumpTasks[i].callProc = aproc;
+    bc_dumpTasks[i].config = aconfig;
+    bc_dumpTasks[i].volumes = avolsToDump;
+    bc_dumpTasks[i].flags = BC_DI_INUSE;
+    bc_dumpTasks[i].dumpName = bc_CopyString(adname);
+    bc_dumpTasks[i].volSetName = bc_CopyString(avname);
+    bc_dumpTasks[i].newExt = bc_CopyString(anewExt);
+    bc_dumpTasks[i].dumpLevel = alevel;
+    bc_dumpTasks[i].parentDumpID = aparent;
+    bc_dumpTasks[i].oldFlag = aoldFlag;
+    bc_dumpTasks[i].fromDate = afromDate;
+    bc_dumpTasks[i].destPartition = adestPartition;
+    bc_dumpTasks[i].portOffset = ports;
+    bc_dumpTasks[i].portCount = portCount;
+    bc_dumpTasks[i].doAppend = append;
+    bc_dumpTasks[i].dontExecute = dontExecute;
+
+    if (dsptr) {
 	/* This should be specified for dumps, but will be 0 for restores */
 	bc_dumpTasks[i].expDate = dsptr->expDate;
 	bc_dumpTasks[i].expType = dsptr->expType;
     }
     if (adestServer)
-	memcpy(&bc_dumpTasks[i].destServer, adestServer, sizeof(struct sockaddr_in));
+	memcpy(&bc_dumpTasks[i].destServer, adestServer,
+	       sizeof(struct sockaddr_in));
     else
-        memset(&bc_dumpTasks[i].destServer, 0, sizeof(struct sockaddr_in));
- 
-    code = LWP_CreateProcess(bc_DmpRstStart, 20480, LWP_NORMAL_PRIORITY, 
-			     (void *) i, "helper", &junk);
-    if (code)
-    {
+	memset(&bc_dumpTasks[i].destServer, 0, sizeof(struct sockaddr_in));
+
+    code =
+	LWP_CreateProcess(bc_DmpRstStart, 20480, LWP_NORMAL_PRIORITY,
+			  (void *)i, "helper", &junk);
+    if (code) {
 	bc_HandleMisc(code);
-	com_err(whoami,code,"; Can't start thread");
+	com_err(whoami, code, "; Can't start thread");
 
 	/* Cleanup allocated data structures */
 	freeDumpTaskVolumeList(bc_dumpTasks[i].volumes);
 	bc_dumpTasks[i].dumpID = 0;
-	if (bc_dumpTasks[i].dumpName)   free(bc_dumpTasks[i].dumpName);
-	if (bc_dumpTasks[i].newExt)     free(bc_dumpTasks[i].newExt);
-	if (bc_dumpTasks[i].volSetName) free(bc_dumpTasks[i].volSetName);
-	if (bc_dumpTasks[i].portOffset) free(bc_dumpTasks[i].portOffset);
+	if (bc_dumpTasks[i].dumpName)
+	    free(bc_dumpTasks[i].dumpName);
+	if (bc_dumpTasks[i].newExt)
+	    free(bc_dumpTasks[i].newExt);
+	if (bc_dumpTasks[i].volSetName)
+	    free(bc_dumpTasks[i].volSetName);
+	if (bc_dumpTasks[i].portOffset)
+	    free(bc_dumpTasks[i].portOffset);
 	bc_dumpTasks[i].flags &= ~BC_DI_INUSE;
-	return(code);
+	return (code);
     }
 
     return 0;
@@ -340,17 +352,15 @@ bc_FindDumpSlot(dumpID, port)
      afs_int32 port;
 {
     int i;
-    
-    for ( i = 0; i < BC_MAXSIMDUMPS; i++ )
-    {
-	if ( (bc_dumpTasks[i].flags & BC_DI_INUSE) &&
-	     (bc_dumpTasks[i].dumpID == dumpID)    &&
-	     ((afs_int32)bc_dumpTasks[i].portOffset == port) )
-	{
-	    return(i);
+
+    for (i = 0; i < BC_MAXSIMDUMPS; i++) {
+	if ((bc_dumpTasks[i].flags & BC_DI_INUSE)
+	    && (bc_dumpTasks[i].dumpID == dumpID)
+	    && ((afs_int32) bc_dumpTasks[i].portOffset == port)) {
+	    return (i);
 	}
     }
-    return(-1);
+    return (-1);
 }
 #endif
 
@@ -359,11 +369,11 @@ bc_FindDumpSlot(dumpID, port)
  *	label a tape
  */
 
-bc_LabelTape (afsname, pname, size, config, port)
-char *afsname, *pname;
-struct bc_config *config;
-afs_int32 port;
-afs_int32 size;
+bc_LabelTape(afsname, pname, size, config, port)
+     char *afsname, *pname;
+     struct bc_config *config;
+     afs_int32 port;
+     afs_int32 size;
 {
     struct rx_connection *tconn;
     afs_int32 code = 0;
@@ -372,20 +382,20 @@ afs_int32 size;
     afs_uint32 taskId;
 
     code = ConnectButc(config, port, &tconn);
-    if (code) return(code);
-    
+    if (code)
+	return (code);
+
     memset(&label, 0, sizeof(label));
     if (afsname)
-       strcpy(label.afsname, afsname);
+	strcpy(label.afsname, afsname);
     if (pname)
-       strcpy(label.pname, (strcmp(pname,"")?pname:"<NULL>"));
+	strcpy(label.pname, (strcmp(pname, "") ? pname : "<NULL>"));
     label.size = size;
 
     code = TC_LabelTape(tconn, &label, &taskId);
-    if (code)
-    {
-        com_err(whoami,code,"; Failed to start labeltape");
-	return(code);
+    if (code) {
+	com_err(whoami, code, "; Failed to start labeltape");
+	return (code);
     }
 
     /* create status monitor block */
@@ -394,13 +404,13 @@ afs_int32 size;
     statusPtr->taskId = taskId;
     statusPtr->port = port;
     statusPtr->jobNumber = bc_jobNumber();
-    /* statusPtr->flags    |= SILENT; */        /* don't report termination */
-    statusPtr->flags    &= ~STARTING;		/* ok to examine */
+    /* statusPtr->flags    |= SILENT; *//* don't report termination */
+    statusPtr->flags &= ~STARTING;	/* ok to examine */
 
     sprintf(statusPtr->taskName, "Labeltape (%s)",
 	    (pname ? pname : (afsname ? afsname : "<NULL>")));
     unlock_Status();
-    
+
     return 0;
 }
 
@@ -409,53 +419,53 @@ afs_int32 size;
  *	a tape
  */
 
-bc_ReadLabel(config,port)
-    struct bc_config *config;
-    afs_int32 port;
+bc_ReadLabel(config, port)
+     struct bc_config *config;
+     afs_int32 port;
 {
     struct rx_connection *tconn;
     struct tc_tapeLabel label;
     afs_uint32 taskId;
     afs_int32 code = 0;
-    char *tname=0;
+    char *tname = 0;
 
     code = ConnectButc(config, port, &tconn);
-    if (code) return(code);
-    
+    if (code)
+	return (code);
+
     memset(&label, 0, sizeof(label));
     code = TC_ReadLabel(tconn, &label, &taskId);
     if (code) {
-        if (code == BUTM_NOLABEL) {
-	   printf("Tape read was unlabelled\n");
-	   return 0;
+	if (code == BUTM_NOLABEL) {
+	    printf("Tape read was unlabelled\n");
+	    return 0;
 	}
-	com_err(whoami,code,"; Failed to start readlabel");
-	return(code);
+	com_err(whoami, code, "; Failed to start readlabel");
+	return (code);
     }
 
-    if (strcmp(label.pname,""))
-       tname = label.pname;
-    else if (strcmp(label.afsname,""))
-       tname = label.afsname;
+    if (strcmp(label.pname, ""))
+	tname = label.pname;
+    else if (strcmp(label.afsname, ""))
+	tname = label.afsname;
 
     if (!tname) {
-	printf("Tape read was labelled : <NULL>  size : %u\n",label.size);
-    }
-    else if (!label.tapeId) {
-	printf("Tape read was labelled : %s size : %lu Kbytes\n", tname, label.size);
-    }
-    else {
-	printf("Tape read was labelled : %s (%lu) size : %lu Kbytes\n", 
-	       tname, label.tapeId, label.size);
+	printf("Tape read was labelled : <NULL>  size : %u\n", label.size);
+    } else if (!label.tapeId) {
+	printf("Tape read was labelled : %s size : %lu Kbytes\n", tname,
+	       label.size);
+    } else {
+	printf("Tape read was labelled : %s (%lu) size : %lu Kbytes\n", tname,
+	       label.tapeId, label.size);
     }
 
     return 0;
 }
 
 bc_ScanDumps(config, dbAddFlag, port)
-    struct bc_config *config;
-    afs_int32 dbAddFlag;
-    afs_int32 port;
+     struct bc_config *config;
+     afs_int32 dbAddFlag;
+     afs_int32 port;
 {
     struct rx_connection *tconn;
     statusP statusPtr;
@@ -463,26 +473,26 @@ bc_ScanDumps(config, dbAddFlag, port)
     afs_int32 code = 0;
 
     code = ConnectButc(config, port, &tconn);
-    if (code) return(code);
-    
-    code = TC_ScanDumps(tconn, dbAddFlag, &taskId);
     if (code)
-    {
+	return (code);
+
+    code = TC_ScanDumps(tconn, dbAddFlag, &taskId);
+    if (code) {
 	com_err(whoami, code, "; Failed to start scantape");
-	return(code);
+	return (code);
     }
 
     /* create status monitor block */
     statusPtr = createStatusNode();
     lock_Status();
-    statusPtr->taskId    = taskId;
-    statusPtr->port      = port;
-    statusPtr->jobNumber =  bc_jobNumber();
-    statusPtr->flags    &= ~STARTING;		/* ok to examine */
+    statusPtr->taskId = taskId;
+    statusPtr->port = port;
+    statusPtr->jobNumber = bc_jobNumber();
+    statusPtr->flags &= ~STARTING;	/* ok to examine */
     sprintf(statusPtr->taskName, "Scantape");
     unlock_Status();
-    
-    return(0);
+
+    return (0);
 }
 
 /*************/
@@ -491,12 +501,12 @@ bc_ScanDumps(config, dbAddFlag, port)
 
 /* get a connection to the tape controller */
 afs_int32
-bc_GetConn (aconfig, aport, tconn)
-    struct bc_config *aconfig;
-    afs_int32 aport;
-    struct rx_connection **tconn;
+bc_GetConn(aconfig, aport, tconn)
+     struct bc_config *aconfig;
+     afs_int32 aport;
+     struct rx_connection **tconn;
 {
-    afs_int32   code = 0;
+    afs_int32 code = 0;
     afs_uint32 host;
     unsigned short port;
     static struct rx_securityClass *rxsc;
@@ -507,24 +517,24 @@ bc_GetConn (aconfig, aport, tconn)
     /* use non-secure connections to butc */
     if (!rxsc)
 	rxsc = rxnull_NewClientSecurityObject();
-    if (!rxsc || !aconfig) return(-1);
+    if (!rxsc || !aconfig)
+	return (-1);
 
-    for (te = aconfig->tapeHosts; te; te = te->next)
-    {
-	if ( te->portOffset == aport )
-	{
+    for (te = aconfig->tapeHosts; te; te = te->next) {
+	if (te->portOffset == aport) {
 	    /* found the right port */
-	    host = te->addr.sin_addr.s_addr;	    
-	    if (!host) return (BC_NOHOSTENTRY);  /* gethostbyname in bc_ParseHosts failed */
+	    host = te->addr.sin_addr.s_addr;
+	    if (!host)
+		return (BC_NOHOSTENTRY);	/* gethostbyname in bc_ParseHosts failed */
 
 	    port = htons(BC_TAPEPORT + aport);
 
 	    /* servers is 1; sec index is 0 */
 	    *tconn = rx_NewConnection(host, port, 1, rxsc, 0);
-	    return((*tconn ? 0 : -1));
+	    return ((*tconn ? 0 : -1));
 	}
     }
-    return(BC_NOHOSTENTRY);
+    return (BC_NOHOSTENTRY);
 }
 
 /* CheckTCVersion
@@ -541,39 +551,42 @@ CheckTCVersion(tconn)
     afs_int32 code;
 
     code = TC_TCInfo(tconn, &tci);
-    if (code) return(code);
-    
+    if (code)
+	return (code);
+
     if (tci.tcVersion != CUR_BUTC_VERSION)
-    	return(BC_VERSIONFAIL);
+	return (BC_VERSIONFAIL);
 
     return 0;
 }
+
 ConnectButc(config, port, tconn)
-    struct bc_config     *config;
-    afs_int32                port;
-    struct rx_connection **tconn;
+     struct bc_config *config;
+     afs_int32 port;
+     struct rx_connection **tconn;
 {
     afs_int32 code;
 
     code = bc_GetConn(config, port, tconn);
-    if (code)
-    {
-	com_err(whoami,code,"; Can't connect to tape coordinator at port %d", port);
-        return(code);
+    if (code) {
+	com_err(whoami, code,
+		"; Can't connect to tape coordinator at port %d", port);
+	return (code);
     }
 
     code = CheckTCVersion(*tconn);
-    if (code)
-    {
+    if (code) {
 	rx_DestroyConnection(*tconn);
 
 	if (code == BC_VERSIONFAIL)
-	    com_err(whoami, code, "; Backup and butc are not the same version");
+	    com_err(whoami, code,
+		    "; Backup and butc are not the same version");
 	else
-	    com_err(whoami, code, "; Can't access tape coordinator at port %d", port);
+	    com_err(whoami, code,
+		    "; Can't access tape coordinator at port %d", port);
 
-	return(code);
+	return (code);
     }
-    
-    return(0);
+
+    return (0);
 }

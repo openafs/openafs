@@ -10,7 +10,7 @@
 #ifndef _SOFTSIG_H
 #define _SOFTSIG_H
 
-void softsig_init ();
-void softsig_signal (int signo, void (*handler) (int));
+void softsig_init();
+void softsig_signal(int signo, void (*handler) (int));
 
 #endif

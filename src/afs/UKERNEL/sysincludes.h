@@ -11,7 +11,7 @@
 #define __AFS_SYSINCLUDESH__ 1
 
 #include  <stdio.h>
-#if !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_USR_FBSD_ENV) /* must be included after KERNEL undef'd */
+#if !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_USR_FBSD_ENV)	/* must be included after KERNEL undef'd */
 #include  <errno.h>
 #endif
 #include  <stdlib.h>
@@ -98,9 +98,9 @@
 #endif /* AFS_USR_OSF_ENV */
 
 #ifdef AFS_USR_LINUX22_ENV
-#include  <sys/ioctl.h>	/* _IOW() */
-#include  <sys/uio.h>	/* struct iovec */
-#include  <sys/time.h>	/* struct timeval */
+#include  <sys/ioctl.h>		/* _IOW() */
+#include  <sys/uio.h>		/* struct iovec */
+#include  <sys/time.h>		/* struct timeval */
 #include  <sys/param.h>
 #include  <sys/types.h>
 #include  <sys/socket.h>
@@ -147,7 +147,7 @@
 #define pthread_attr_setstacksize(a,b) 0
 #endif
 
-#include  <sys/stat.h>	/* afs_usrops.h uses struct stat in prototypes */
+#include  <sys/stat.h>		/* afs_usrops.h uses struct stat in prototypes */
 
 #ifdef NETSCAPE_NSAPI
 
@@ -631,7 +631,7 @@ typedef int usr_vtype_t;
 #ifdef IO_SYNC
 #undef IO_SYNC
 #endif
- 
+
 #define FAPPEND			0x0100
 #define IO_APPEND		FAPPEND
 #define FSYNC			0x0200
@@ -840,9 +840,9 @@ enum usr_uio_rw { USR_UIO_READ, USR_UIO_WRITE };
  * waking when we do the signal.
  */
 typedef struct {
-	int			waiters;
-	CRITICAL		lock;
-	CONDVAR			cond;
+    int waiters;
+    CRITICAL lock;
+    CONDVAR cond;
 } usr_cond_t;
 
 #define usr_mutex_t		CRITICAL
@@ -991,7 +991,7 @@ extern pthread_cond_t usr_sleep_cond;
 { \
     (vp)->v_count++; \
 }
- 
+
 #define VN_RELE(vp)     \
 do { \
     AFS_ASSERT_GLOCK(); \
@@ -1001,40 +1001,40 @@ do { \
 } while(0)
 
 struct usr_statfs {
-	unsigned long		f_type;
-	unsigned long		f_bsize;
-	unsigned long		f_frsize;
-	unsigned long		f_ffree;
-	unsigned long		f_favail;
-	struct {
-	    unsigned long	val[2];
-	} f_fsid;
-	char			f_basetype[FSTYPSZ];
-	unsigned long		f_flag;
-	unsigned long		f_namemax;
-	unsigned long		f_blocks;
-	unsigned long		f_bfree;
-	unsigned long		f_bavail;
-	unsigned long		f_files;
+    unsigned long f_type;
+    unsigned long f_bsize;
+    unsigned long f_frsize;
+    unsigned long f_ffree;
+    unsigned long f_favail;
+    struct {
+	unsigned long val[2];
+    } f_fsid;
+    char f_basetype[FSTYPSZ];
+    unsigned long f_flag;
+    unsigned long f_namemax;
+    unsigned long f_blocks;
+    unsigned long f_bfree;
+    unsigned long f_bavail;
+    unsigned long f_files;
 };
 
 struct usr_vattr {
-	long			va_mask;
-	usr_vtype_t		va_type;
-	unsigned short		va_mode;
-	long			va_uid;
-	long			va_gid;
-	unsigned long		va_fsid;
-	unsigned long		va_nodeid;
-	unsigned long		va_nlink;
-	unsigned long		va_size;
-	struct timeval		va_atime;
-	struct timeval		va_mtime;
-	struct timeval		va_ctime;
-	unsigned long		va_rdev;
-	unsigned long		va_blocksize;
-	unsigned long		va_blocks;
-	unsigned long		va_vcode;
+    long va_mask;
+    usr_vtype_t va_type;
+    unsigned short va_mode;
+    long va_uid;
+    long va_gid;
+    unsigned long va_fsid;
+    unsigned long va_nodeid;
+    unsigned long va_nlink;
+    unsigned long va_size;
+    struct timeval va_atime;
+    struct timeval va_mtime;
+    struct timeval va_ctime;
+    unsigned long va_rdev;
+    unsigned long va_blocksize;
+    unsigned long va_blocks;
+    unsigned long va_vcode;
 };
 
 #ifdef VSUID
@@ -1056,7 +1056,7 @@ struct usr_vattr {
 #undef VEXEC
 #endif
 
-#define VSUID			04000 
+#define VSUID			04000
 #define VSGID			02000
 #define VSVTX			01000
 #define VREAD			00400
@@ -1065,74 +1065,74 @@ struct usr_vattr {
 
 
 struct usr_vnode {
-	unsigned short		v_flag;
-	unsigned long		v_count;
-	struct usr_vnodeops	*v_op;
-	struct usr_vfs	*	v_vfsp;
-	long			v_type;
-	unsigned long		v_rdev;
-	char *			v_data;
+    unsigned short v_flag;
+    unsigned long v_count;
+    struct usr_vnodeops *v_op;
+    struct usr_vfs *v_vfsp;
+    long v_type;
+    unsigned long v_rdev;
+    char *v_data;
 };
 
-struct	usr_inode {
-	daddr_t			i_db[NDADDR];
-	struct usr_vnode	*i_devvp;
-	unsigned long		i_dev;
-	long			i_flag;
-	struct usr_inode	*i_freef;
-	struct usr_inode	**i_freeb;
-	long			i_gid;
-	daddr_t			i_ib[NIADDR];
-	unsigned short		i_mode;
-	short			i_nlink;
-	unsigned long		i_number;
-	long			i_size;
-	long			i_uid;
-	struct usr_vnode	i_vnode;
-	struct {
-	    unsigned long	ic_spare[4];
-	} i_ic;
+struct usr_inode {
+    daddr_t i_db[NDADDR];
+    struct usr_vnode *i_devvp;
+    unsigned long i_dev;
+    long i_flag;
+    struct usr_inode *i_freef;
+    struct usr_inode **i_freeb;
+    long i_gid;
+    daddr_t i_ib[NIADDR];
+    unsigned short i_mode;
+    short i_nlink;
+    unsigned long i_number;
+    long i_size;
+    long i_uid;
+    struct usr_vnode i_vnode;
+    struct {
+	unsigned long ic_spare[4];
+    } i_ic;
 };
 extern struct usr_inode *iget();
 
 struct usr_fileops {
-	int			(*vno_rw)(void);
-	int			(*vno_ioctl)(void);
-	int			(*vno_select)(void);
-	int			(*vno_closex)(void);
+    int (*vno_rw) (void);
+    int (*vno_ioctl) (void);
+    int (*vno_select) (void);
+    int (*vno_closex) (void);
 };
 
 struct usr_file {
-	unsigned short		f_flag;
-	offset_t		f_offset;
-	struct usr_ucred	*f_cred;
-	struct usr_fileops	*f_ops;
-	char *			f_data;
-	long			f_type;
+    unsigned short f_flag;
+    offset_t f_offset;
+    struct usr_ucred *f_cred;
+    struct usr_fileops *f_ops;
+    char *f_data;
+    long f_type;
 };
 extern struct usr_file *falloc();
 extern struct usr_file *getf(int);
 
-#ifdef	fid_len	
-#undef	fid_len	
+#ifdef	fid_len
+#undef	fid_len
 #endif
 #ifdef	fid_data
 #undef	fid_data
 #endif
 
 struct usr_fid {
-	unsigned short 		fid_len;
-	unsigned short 		fid_reserved;
-	char			fid_data[MAXFIDSZ];
+    unsigned short fid_len;
+    unsigned short fid_reserved;
+    char fid_data[MAXFIDSZ];
 };
 
 struct usr_flock {
-	short   		l_type;
-	short   		l_whence;
-	off_t   		l_start;
-	off_t   		l_len;
-	long    		l_sysid;
-	pid_t   		l_pid;
+    short l_type;
+    short l_whence;
+    off_t l_start;
+    off_t l_len;
+    long l_sysid;
+    pid_t l_pid;
 };
 
 extern struct usr_ucred *usr_crget(void);
@@ -1141,23 +1141,23 @@ extern int usr_crhold(struct usr_ucred *);
 extern int usr_crfree(struct usr_ucred *);
 extern struct usr_ucred *afs_global_ucredp;
 
-struct	usr_proc {
-	unsigned long		p_flag;
-	pid_t			p_pid;
-	pid_t			p_ppid;
-	struct usr_ucred	*p_ucred;
-	char			p_cursig;
+struct usr_proc {
+    unsigned long p_flag;
+    pid_t p_pid;
+    pid_t p_ppid;
+    struct usr_ucred *p_ucred;
+    char p_cursig;
 };
 
-struct	usr_a {
-	int 			fd;
-	int 			syscall;
-	int 			parm1;
-	int 			parm2;
-	int 			parm3;
-	int 			parm4;
-	int 			parm5;
-	int 			parm6;
+struct usr_a {
+    int fd;
+    int syscall;
+    int parm1;
+    int parm2;
+    int parm3;
+    int parm4;
+    int parm5;
+    int parm6;
 };
 
 #ifdef uio_offset
@@ -1165,12 +1165,12 @@ struct	usr_a {
 #endif
 
 struct usr_uio {
-        struct iovec		*uio_iov;
-        int     		uio_iovcnt;
-        long			uio_offset;
-        int			uio_segflg;
-        short   		uio_fmode;
-        int     		uio_resid;
+    struct iovec *uio_iov;
+    int uio_iovcnt;
+    long uio_offset;
+    int uio_segflg;
+    short uio_fmode;
+    int uio_resid;
 };
 
 #ifdef b_blkno
@@ -1180,111 +1180,110 @@ struct usr_uio {
 #undef b_vp
 #endif
 
-struct	usr_buf {
-	int			b_flags;
-	short			b_dev;
-	unsigned 		b_bcount;
-	struct {
-	    char * 		b_addr;
-	    struct usr_fs	*b_fs;
-	} b_un;
-	long 			b_blkno;
-	unsigned int 		b_resid;
-	struct	usr_vnode 	*b_vp;
+struct usr_buf {
+    int b_flags;
+    short b_dev;
+    unsigned b_bcount;
+    struct {
+	char *b_addr;
+	struct usr_fs *b_fs;
+    } b_un;
+    long b_blkno;
+    unsigned int b_resid;
+    struct usr_vnode *b_vp;
 };
 
 struct usr_socket {
-	int			sock;
-	short			port;
+    int sock;
+    short port;
 };
 
 #define NDIRSIZ_LEN(len) \
 ((sizeof (struct usr_dirent)+4 - (MAXNAMLEN+1)) + (((len)+1 + 3) &~ 3))
 
 struct usr_vnodeops {
-	int			(*vn_open)(char *path, int flags, int mode);
-	int			(*vn_close)(int fd);
-	int			(*vn_rdwr)();
-	int			(*vn_ioctl)(void);
-	int			(*vn_select)(void);
-	int			(*vn_getattr)();
-	int			(*vn_setattr)();
-	int			(*vn_access)();
-	int			(*vn_lookup)();
-	int			(*vn_create)();
-	int			(*vn_remove)();
-	int			(*vn_link)();
-	int			(*vn_rename)();
-	int			(*vn_mkdir)();
-	int			(*vn_rmdir)();
-	int			(*vn_readdir)();
-	int			(*vn_symlink)();
-	int			(*vn_readlink)();
-	int			(*vn_fsync)();
-	int			(*vn_inactive)();
-	int			(*vn_bmap)();
-	int			(*vn_strategy)();
-	int			(*vn_bread)();
-	int			(*vn_brelse)();
-	int			(*vn_lockctl)();
-	int			(*vn_fid)();
+    int (*vn_open) (char *path, int flags, int mode);
+    int (*vn_close) (int fd);
+    int (*vn_rdwr) ();
+    int (*vn_ioctl) (void);
+    int (*vn_select) (void);
+    int (*vn_getattr) ();
+    int (*vn_setattr) ();
+    int (*vn_access) ();
+    int (*vn_lookup) ();
+    int (*vn_create) ();
+    int (*vn_remove) ();
+    int (*vn_link) ();
+    int (*vn_rename) ();
+    int (*vn_mkdir) ();
+    int (*vn_rmdir) ();
+    int (*vn_readdir) ();
+    int (*vn_symlink) ();
+    int (*vn_readlink) ();
+    int (*vn_fsync) ();
+    int (*vn_inactive) ();
+    int (*vn_bmap) ();
+    int (*vn_strategy) ();
+    int (*vn_bread) ();
+    int (*vn_brelse) ();
+    int (*vn_lockctl) ();
+    int (*vn_fid) ();
 };
 
 struct usr_fs {
-	int			dummy;
+    int dummy;
 };
 
-struct usr_mount
-{
-	char			m_flags;
-	unsigned long		m_dev;
-	struct usr_inode 	*m_inodp;
-	struct usr_buf 		*m_bufp;
-	struct usr_vnode 	*m_mount;
+struct usr_mount {
+    char m_flags;
+    unsigned long m_dev;
+    struct usr_inode *m_inodp;
+    struct usr_buf *m_bufp;
+    struct usr_vnode *m_mount;
 };
 extern struct usr_mount *getmp(unsigned long);
 
 typedef long usr_whymountroot_t;
 
 struct usr_vfsops {
-	int (*vfs_mount)();
-	int (*vfs_unmount)();
-	int (*vfs_root)();
-	int (*vfs_statfs)();
-	int (*vfs_mountroot)();
-	int (*vfs_swapvp)();
+    int (*vfs_mount) ();
+    int (*vfs_unmount) ();
+    int (*vfs_root) ();
+    int (*vfs_statfs) ();
+    int (*vfs_mountroot) ();
+    int (*vfs_swapvp) ();
 };
 
 struct usr_vfs {
-	struct usr_vnode	*vfs_vnodecovered;
-	struct {
-	    unsigned long	val[2];
-	} vfs_fsid;
-	char *			vfs_data;
-	unsigned long		vfs_bsize;
-	struct usr_mount	*vfs_mount;
-	struct usr_vfsops	*vfs_op;
+    struct usr_vnode *vfs_vnodecovered;
+    struct {
+	unsigned long val[2];
+    } vfs_fsid;
+    char *vfs_data;
+    unsigned long vfs_bsize;
+    struct usr_mount *vfs_mount;
+    struct usr_vfsops *vfs_op;
 };
 
 struct usr_sysent {
-	char			sy_narg;
-	int			(*sy_call)();
+    char sy_narg;
+    int (*sy_call) ();
 };
 extern struct usr_sysent usr_sysent[];
 
 struct usr_ifnet {
-	struct usr_ifnet	*if_next;
-	short			if_flags;
-	u_int			if_mtu;
-	u_int			if_metric;
-	struct usr_ifaddr	*if_addrlist;
+    struct usr_ifnet *if_next;
+    short if_flags;
+    u_int if_mtu;
+    u_int if_metric;
+    struct usr_ifaddr *if_addrlist;
 };
 extern struct usr_ifnet *usr_ifnet;
 
 struct usr_ifaddr {
-	struct usr_ifaddr 	*ifa_next;
-	struct usr_ifnet 	*ifa_ifp;
-	struct sockaddr 	ifa_addr;
+    struct usr_ifaddr *ifa_next;
+    struct usr_ifnet *ifa_ifp;
+    struct sockaddr ifa_addr;
 };
 
 #ifdef ia_ifp
@@ -1295,14 +1294,14 @@ struct usr_ifaddr {
 #endif
 
 struct usr_in_ifaddr {
-	struct usr_in_ifaddr 	*ia_next;
-	struct usr_ifnet 	*ia_ifp;
-	struct			sockaddr_in ia_addr;
-	unsigned long		ia_net;
-	unsigned long		ia_netmask;
-	unsigned long		ia_subnet;
-	unsigned long		ia_subnetmask;
-	struct			in_addr ia_netbroadcast;
+    struct usr_in_ifaddr *ia_next;
+    struct usr_ifnet *ia_ifp;
+    struct sockaddr_in ia_addr;
+    unsigned long ia_net;
+    unsigned long ia_netmask;
+    unsigned long ia_subnet;
+    unsigned long ia_subnetmask;
+    struct in_addr ia_netbroadcast;
 };
 extern struct usr_in_ifaddr *usr_in_ifaddr;
 
@@ -1318,12 +1317,12 @@ extern long V;
 
 struct min_direct {
 #if defined(AFS_OFS_ENV) || defined(AFS_USR_OSF_ENV)
-    unsigned int		d_fileno;
-#else /* AFS_OFS_ENV || AFS_USR_OSF_ENV */
-    unsigned long		d_fileno;
-#endif /* AFS_OFS_ENV || AFS_USR_OSF_ENV */
-    unsigned short		d_reclen;
-    unsigned short		d_namlen;
+    unsigned int d_fileno;
+#else				/* AFS_OFS_ENV || AFS_USR_OSF_ENV */
+    unsigned long d_fileno;
+#endif				/* AFS_OFS_ENV || AFS_USR_OSF_ENV */
+    unsigned short d_reclen;
+    unsigned short d_namlen;
 };
 
 #ifndef NGROUPS
@@ -1337,33 +1336,33 @@ struct min_direct {
 #endif
 
 struct usr_ucred {
-	unsigned long		cr_ref;
-	long			cr_uid;
-	long			cr_gid;
-	long			cr_ruid;
-	long			cr_rgid;
-	long			cr_suid;
-	long			cr_sgid;
-	long 			cr_ngroups;
-	gid_t			cr_groups[NGROUPS];
+    unsigned long cr_ref;
+    long cr_uid;
+    long cr_gid;
+    long cr_ruid;
+    long cr_rgid;
+    long cr_suid;
+    long cr_sgid;
+    long cr_ngroups;
+    gid_t cr_groups[NGROUPS];
 };
 
 #ifdef u_rval1
 #undef u_rval1
 #endif
 
-struct	usr_user {
-	int			u_error;
-	int			u_prio;
-	char *			u_ap;
-	int			u_rval1;
-	long			u_viceid;
-	unsigned long		u_expiration;
-	struct usr_proc		*u_procp;
-	struct usr_ucred	*u_cred;
-	struct {
-	    int			r_val1;
-	} u_r;
+struct usr_user {
+    int u_error;
+    int u_prio;
+    char *u_ap;
+    int u_rval1;
+    long u_viceid;
+    unsigned long u_expiration;
+    struct usr_proc *u_procp;
+    struct usr_ucred *u_cred;
+    struct {
+	int r_val1;
+    } u_r;
 };
 #define u_rval1			u_r.r_val1
 #define u			(*(get_user_struct()))
@@ -1373,18 +1372,18 @@ extern struct usr_user *get_user_struct(void);
 #define USR_DIRSIZE		2048
 
 struct usr_dirent {
-	unsigned long		d_ino;
-	unsigned long		d_off;
-	unsigned short		d_reclen;
-	char			d_name[MAXNAMLEN+1];
+    unsigned long d_ino;
+    unsigned long d_off;
+    unsigned short d_reclen;
+    char d_name[MAXNAMLEN + 1];
 };
 
 typedef struct {
-        int			dd_fd;
-        int			dd_loc;
-        int			dd_size;
-	int			dd_reserved;
-        char			*dd_buf;
+    int dd_fd;
+    int dd_loc;
+    int dd_size;
+    int dd_reserved;
+    char *dd_buf;
 } usr_DIR;
 
 extern unsigned short usr_rx_port;

@@ -40,8 +40,8 @@
 #define OMAXHOSTS 8
 #define MAXNAME   100
 #define MAXSIZE	2048
-#define MAXINSIZE 1300    /* pioctl complains if data is larger than this */
-#define VMSGSIZE  128      /* size of msg buf in volume hdr */
+#define MAXINSIZE 1300		/* pioctl complains if data is larger than this */
+#define VMSGSIZE  128		/* size of msg buf in volume hdr */
 
 static char space[MAXSIZE];
 
@@ -59,30 +59,32 @@ extern int errno;
  * path     the directory path
  * returns NULL if an exception is encountered.
  */
-char* getACL(char *path)
+char *
+getACL(char *path)
 {
     struct ViceIoctl params;
     char *buffer;
 
-    params.in  = NULL;
+    params.in = NULL;
     params.out = NULL;
-    params.in_size  = 0; 
+    params.in_size = 0;
     params.out_size = 0;
-    
-    buffer = (char*) malloc(ACL_LEN);
+
+    buffer = (char *)malloc(ACL_LEN);
 
     if (!buffer) {
-      fprintf(stderr, "ERROR: ACL::getACL -> could not allocate buffer\n");
-      return NULL;
+	fprintf(stderr, "ERROR: ACL::getACL -> could not allocate buffer\n");
+	return NULL;
     }
 
     params.out = buffer;
-    params.out_size = ACL_LEN; 
+    params.out_size = ACL_LEN;
 
-    if ( call_syscall(AFSCALL_PIOCTL, path, VIOCGETAL, &params, 1, 0) ) {
-      fprintf(stderr, "ERROR: ACL::getACL -> VIOCGETAL failed: %d\n", errno);
-      free( buffer );
-      return NULL;
+    if (call_syscall(AFSCALL_PIOCTL, path, VIOCGETAL, &params, 1, 0)) {
+	fprintf(stderr, "ERROR: ACL::getACL -> VIOCGETAL failed: %d\n",
+		errno);
+	free(buffer);
+	return NULL;
     }
 
     return params.out;
@@ -96,7 +98,8 @@ char* getACL(char *path)
  * aclString  string representation of ACL to be set
  * returns TRUE if the operation succeeds; otherwise FALSE;
  */
-jboolean setACL(char *path, char *aclString)
+jboolean
+setACL(char *path, char *aclString)
 {
     struct ViceIoctl params;
     char *redirect, *parentURI, *cptr;
@@ -106,9 +109,10 @@ jboolean setACL(char *path, char *aclString)
     params.out = NULL;
     params.out_size = 0;
 
-    if ( call_syscall(AFSCALL_PIOCTL, path, VIOCGETAL, &params, 1) ) {
-      fprintf(stderr, "ERROR: ACL::setACL -> VIOCSETAL failed: %d\n", errno);
-      return JNI_FALSE;
+    if (call_syscall(AFSCALL_PIOCTL, path, VIOCGETAL, &params, 1)) {
+	fprintf(stderr, "ERROR: ACL::setACL -> VIOCSETAL failed: %d\n",
+		errno);
+	return JNI_FALSE;
     }
 
     return JNI_TRUE;
@@ -124,28 +128,29 @@ jboolean setACL(char *path, char *aclString)
  * path     the directory path
  * returns NULL if an exception is encountered.
  */
-JNIEXPORT jstring JNICALL Java_org_openafs_jafs_ACL_getACLString
-  (JNIEnv *env, jobject obj, jstring pathUTF)
+JNIEXPORT jstring JNICALL
+Java_org_openafs_jafs_ACL_getACLString(JNIEnv * env, jobject obj,
+				       jstring pathUTF)
 {
     char *path, *acl;
     jstring answer = NULL;
 
     path = getNativeString(env, pathUTF);
-    if ( path == NULL ) {
-      fprintf(stderr, "ERROR: ACL::getACLString ->");
-      fprintf(stderr, "path = NULL\n");
-      throwAFSException( env, JAFSNULLPATH ); 
-      return NULL;
+    if (path == NULL) {
+	fprintf(stderr, "ERROR: ACL::getACLString ->");
+	fprintf(stderr, "path = NULL\n");
+	throwAFSException(env, JAFSNULLPATH);
+	return NULL;
     }
 
-    acl = getACL( path );
-    free( path );
+    acl = getACL(path);
+    free(path);
 
-    if ( acl ) {
-      answer = (*env)->NewStringUTF( env, acl );
-      free( acl );
+    if (acl) {
+	answer = (*env)->NewStringUTF(env, acl);
+	free(acl);
     } else {
-      throwAFSException( env, errno );
+	throwAFSException(env, errno);
     }
 
     return answer;
@@ -163,50 +168,52 @@ JNIEXPORT jstring JNICALL Java_org_openafs_jafs_ACL_getACLString
  * aclString  string representation of ACL to be set
  * throws an afsAdminExceptionName if an internal exception is encountered.
  */
-JNIEXPORT void JNICALL Java_org_openafs_jafs_ACL_setACLString
-  (JNIEnv *env, jobject obj, jstring pathUTF, jstring aclStringUTF)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_ACL_setACLString(JNIEnv * env, jobject obj,
+				       jstring pathUTF, jstring aclStringUTF)
 {
     char *path, *aclString;
 
-    if ( pathUTF == NULL ) {
-      fprintf(stderr, "ERROR: ACL::setACLString -> pathUTF == NULL\n");
-      throwAFSException( env, JAFSNULLPATH );
-      return;
+    if (pathUTF == NULL) {
+	fprintf(stderr, "ERROR: ACL::setACLString -> pathUTF == NULL\n");
+	throwAFSException(env, JAFSNULLPATH);
+	return;
     }
 
-    if ( aclStringUTF == NULL ) {
-      fprintf(stderr, "ERROR: ACL::setACLString -> aclStringUTF == NULL\n");
-      throwAFSException( env, JAFSNULLACL );
-      return;
+    if (aclStringUTF == NULL) {
+	fprintf(stderr, "ERROR: ACL::setACLString -> aclStringUTF == NULL\n");
+	throwAFSException(env, JAFSNULLACL);
+	return;
     }
 
     /* path = (char*) (*env)->GetStringUTFChars(env, pathUTF, 0); */
-    path = getNativeString( env, pathUTF );
-    if ( path == NULL ) {
-      fprintf(stderr, "ERROR: ACL::setACLString -> failed to get path\n");
-      throwMessageException( env, "Failed to get path." );
-      return;
+    path = getNativeString(env, pathUTF);
+    if (path == NULL) {
+	fprintf(stderr, "ERROR: ACL::setACLString -> failed to get path\n");
+	throwMessageException(env, "Failed to get path.");
+	return;
     }
 
     /* aclString = (char*) (*env)->GetStringUTFChars(env, aclStringUTF, 0); */
-    aclString = getNativeString( env, aclStringUTF );
-    if ( aclString == NULL ) {
-      free( path );
-      fprintf(stderr, "ERROR: ACL::setACLString -> failed to get aclString\n");
-      throwMessageException( env, "Failed to get ACL string." ); 
-      return;
+    aclString = getNativeString(env, aclStringUTF);
+    if (aclString == NULL) {
+	free(path);
+	fprintf(stderr,
+		"ERROR: ACL::setACLString -> failed to get aclString\n");
+	throwMessageException(env, "Failed to get ACL string.");
+	return;
     }
 
-    if ( !setACL(path, aclString) ) {
-      throwAFSException( env, errno );
+    if (!setACL(path, aclString)) {
+	throwAFSException(env, errno);
     }
 
     /* Clean up */
-    free( path );
-    free( aclString );
+    free(path);
+    free(aclString);
 
     /*
-    (*env)->ReleaseStringUTFChars(env, pathUTF, path);
-    (*env)->ReleaseStringUTFChars(env, aclStringUTF, aclString);
-    */
+     * (*env)->ReleaseStringUTFChars(env, pathUTF, path);
+     * (*env)->ReleaseStringUTFChars(env, aclStringUTF, aclString);
+     */
 }

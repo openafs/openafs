@@ -30,7 +30,7 @@
 #define AFS_SUN58_ENV		1
 #define AFS_X86_ENV		1
 
-#define AFS_64BIT_ENV		1       /* Defines afs_int32 as int, not long. */
+#define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
 
 #define AFS_HAVE_FLOCK_SYSID    1
 
@@ -38,7 +38,7 @@
 
 #define AFS_GLOBAL_SUNLOCK	1	/* For global locking */
 #define RXK_LISTENER_ENV   1
-#define AFS_GCPAGS		1       /* if nonzero, garbage collect PAGs */
+#define AFS_GCPAGS		1	/* if nonzero, garbage collect PAGs */
 
 #ifdef AFS_NAMEI_ENV
 #define AFS_64BIT_IOPS_ENV	1	/* needed for NAMEI... */
@@ -56,13 +56,13 @@
 #define SYS_NAME	"sunx86_58"
 #define SYS_NAME_ID	SYS_NAME_ID_sunx86_58
 #define AFSLITTLE_ENDIAN	1
-#define AFS_HAVE_FFS    1       /* Use system's ffs. */
+#define AFS_HAVE_FFS    1	/* Use system's ffs. */
 #define AFS_HAVE_VXFS	1	/* Support cache on Veritas vxfs file system */
 #define AFS_HAVE_STATVFS 1	/* System supports statvfs */
 #define AFS_VM_RDWR_ENV	1	/* read/write implemented via VM */
-#define AFS_USE_GETTIMEOFDAY 1  /* use gettimeofday to implement rx clock */
+#define AFS_USE_GETTIMEOFDAY 1	/* use gettimeofday to implement rx clock */
 
-#define NEARINODE_HINT  1   /* hint to ufs module to scatter inodes on disk*/
+#define NEARINODE_HINT  1	/* hint to ufs module to scatter inodes on disk */
 #define nearInodeHash(volid, hval) {                                 \
                 unsigned char*  ts = (unsigned char*)&(volid)+sizeof(volid)-1;\
                 for ( (hval)=0; ts >= (unsigned char*)&(volid); ts--){\
@@ -118,7 +118,7 @@
 #define memcpy(B, A, S) bcopy(A, B, S)
 #define memcmp(A, B, S) bcmp(A, B, S)
 #endif /* KERNEL */
-#define	AFS_DIRENT	
+#define	AFS_DIRENT
 #ifndef CMSERVERPREF
 #define CMSERVERPREF
 #endif
@@ -146,7 +146,7 @@
 /* Used only in vfsck code; is it needed any more???? */
 #define RXK_LISTENER_ENV	1
 #define AFS_USERSPACE_IP_ADDR	1
-#define AFS_GCPAGS		0       /* if nonzero, garbage collect PAGs */
+#define AFS_GCPAGS		0	/* if nonzero, garbage collect PAGs */
 
 #define UKERNEL			1	/* user space kernel */
 #define AFS_GREEDY43_ENV	1	/* Used only in rx/rx_user.c */
@@ -171,8 +171,8 @@
 #define SYS_NAME	"sun4x_55"
 #define SYS_NAME_ID	SYS_NAME_ID_sun4x_55
 #define AFSLITTLE_ENDIAN	1
-#define AFS_HAVE_FFS            1       /* Use system's ffs. */
-#define AFS_HAVE_STATVFS      0       /* System doesn't support statvfs */
+#define AFS_HAVE_FFS            1	/* Use system's ffs. */
+#define AFS_HAVE_STATVFS      0	/* System doesn't support statvfs */
 
 /* Extra kernel definitions (from kdefs file) */
 #ifdef KERNEL
@@ -191,7 +191,7 @@
 #define	AFS_MINCHANGE	2
 #define	VATTR_NULL	usr_vattr_null
 #endif /* KERNEL */
-#define	AFS_DIRENT	
+#define	AFS_DIRENT
 #ifndef CMSERVERPREF
 #define CMSERVERPREF
 #endif

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/stds.h>
 #ifdef	AFS_AIX32_ENV
@@ -62,13 +63,15 @@ static int verbose;
 
 /* prototypes */
 static int GetFileFromUpServer(struct rx_connection *conn, char *filename,
-			       short uid, short gid, afs_uint32 mode, 
+			       short uid, short gid, afs_uint32 mode,
 			       afs_int32 atime, afs_int32 mtime);
 static int RenameNewFiles(struct filestr *modFiles);
 static int PathsAreEquivalent(char *path1, char *path2);
-			
-afs_int32 GetServer(aname)
-char *aname; {
+
+afs_int32
+GetServer(aname)
+     char *aname;
+{
     register struct hostent *th;
     afs_int32 addr;
 
@@ -82,20 +85,22 @@ char *aname; {
 }
 
 
-int osi_audit()
+int
+osi_audit()
 {
 /* this sucks but it works for now.
 */
-return 0;
+    return 0;
 }
 
 #ifndef AFS_NT40_ENV
 #include "AFS_component_version_number.c"
 #endif
 
-int main(argc,argv)
-  int argc;
-  char **argv;
+int
+main(argc, argv)
+     int argc;
+     char **argv;
 {
     struct rx_connection *conn;
     struct rx_call *call;
@@ -104,7 +109,7 @@ int main(argc,argv)
     struct rx_securityClass *sc;
 
     short uid, gid;
-    afs_uint32 u_uid, u_gid;    /*Unsigned long versions of the above*/
+    afs_uint32 u_uid, u_gid;	/*Unsigned long versions of the above */
     struct stat tstat;
 
     afs_uint32 mode;
@@ -113,8 +118,8 @@ int main(argc,argv)
     FILE *stream;
     afs_int32 time, length, atime;
     struct filestr *df;
-    afs_int32 errcode ;
-    int retrytime ;
+    afs_int32 errcode;
+    int retrytime;
     unsigned int interval;
     afs_int32 host;
     int a, cnt;
@@ -130,7 +135,7 @@ int main(argc,argv)
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
@@ -143,101 +148,112 @@ int main(argc,argv)
     signal(SIGUSR1, SIG_DFL);
 
     /* initialize winsock */
-    if (afs_winsockInit()<0) {
-      ReportErrorEventAlt(AFSEVT_SVR_WINSOCK_INIT_FAILED, 0,
-                          argv[0],0);
-      fprintf(stderr, "%s: Couldn't initialize winsock.\n", whoami);
-      exit(1);
+    if (afs_winsockInit() < 0) {
+	ReportErrorEventAlt(AFSEVT_SVR_WINSOCK_INIT_FAILED, 0, argv[0], 0);
+	fprintf(stderr, "%s: Couldn't initialize winsock.\n", whoami);
+	exit(1);
     }
 #endif
-    
+
     /* Initialize dirpaths */
     if (!(initAFSDirPath() & AFSDIR_SERVER_PATHS_OK)) {
 #ifdef AFS_NT40_ENV
-	ReportErrorEventAlt(AFSEVT_SVR_NO_INSTALL_DIR, 0, argv[0],0);
+	ReportErrorEventAlt(AFSEVT_SVR_NO_INSTALL_DIR, 0, argv[0], 0);
 #endif
-	fprintf(stderr, "%s: Unable to obtain AFS server directory.\n", argv[0]);
+	fprintf(stderr, "%s: Unable to obtain AFS server directory.\n",
+		argv[0]);
 	exit(2);
     }
     retrytime = 60;
     dirname = NULL;
-    ModFiles =  NULL;
+    ModFiles = NULL;
     okhostfiles = NULL;
 
     verbose = 0;
     interval = TIMEOUT;
-    level = rxkad_crypt;		/* safest default */
-    strcpy (hostname, "");
+    level = rxkad_crypt;	/* safest default */
+    strcpy(hostname, "");
 
     /* Note that IsArg only checks as many bytes as specified in the command line arg,
      * so that, for instance, -t still matches -time.
      */
-    for (a=1; a<argc; a++) {
-	if (argv[a][0] == '-') { /* parse options */
+    for (a = 1; a < argc; a++) {
+	if (argv[a][0] == '-') {	/* parse options */
 	    int arglen = strlen(argv[a]);
 	    char arg[256];
-	    lcstring (arg, argv[a], sizeof(arg));
+	    lcstring(arg, argv[a], sizeof(arg));
 #define IsArg(a) (strncmp (arg,a, arglen) == 0)
-	    if (IsArg("-time")) interval = atol(argv[++a]);
-	    else if (IsArg("-crypt")) level = rxkad_crypt;
-	    else if (IsArg("-clear")) level = rxkad_clear;
-	    else if (IsArg("-verbose")) verbose++;
+	    if (IsArg("-time"))
+		interval = atol(argv[++a]);
+	    else if (IsArg("-crypt"))
+		level = rxkad_crypt;
+	    else if (IsArg("-clear"))
+		level = rxkad_clear;
+	    else if (IsArg("-verbose"))
+		verbose++;
 	    else {
-usage:
-		printf("Usage: upclient <hostname> [-crypt] [-clear] [-t <retry time>] [-verbose]* <dir>+ [-help]\n");
+	      usage:
+		printf
+		    ("Usage: upclient <hostname> [-crypt] [-clear] [-t <retry time>] [-verbose]* <dir>+ [-help]\n");
 		exit(1);
 	    }
-	}
-	else if (strlen (hostname) == 0) strcpy (hostname, argv[a]);
+	} else if (strlen(hostname) == 0)
+	    strcpy(hostname, argv[a]);
 	else {
 	    strcpy(filename, argv[a]);
 	    FilepathNormalize(filename);
 	    AddToList(&dirname, filename);
 	}
     }
-    if (level == -1) goto usage;
-    if (strlen(hostname) == 0) goto usage;
+    if (level == -1)
+	goto usage;
+    if (strlen(hostname) == 0)
+	goto usage;
     host = GetServer(hostname);
-    if(interval < retrytime) retrytime  = interval;
-    if (dirname == 0) goto usage;
+    if (interval < retrytime)
+	retrytime = interval;
+    if (dirname == 0)
+	goto usage;
 
     errcode = rx_Init(0);
-    if(errcode) {
+    if (errcode) {
 	printf("Rx initialize failed \n");
-	com_err (whoami, errcode, "calling Rx init");
+	com_err(whoami, errcode, "calling Rx init");
 	exit(1);
     }
 
     cdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
     if (cdir == 0) {
-	fprintf (stderr, "Can't get server configuration info (%s)\n",
-		 AFSDIR_SERVER_ETC_DIRPATH);
-	exit (1);
+	fprintf(stderr, "Can't get server configuration info (%s)\n",
+		AFSDIR_SERVER_ETC_DIRPATH);
+	exit(1);
     }
 
     if (level == rxkad_crypt)
-	errcode = afsconf_ClientAuthSecure (cdir, &sc, &scIndex);
+	errcode = afsconf_ClientAuthSecure(cdir, &sc, &scIndex);
     else if (level == rxkad_clear)
-	errcode = afsconf_ClientAuth (cdir, &sc, &scIndex);
+	errcode = afsconf_ClientAuth(cdir, &sc, &scIndex);
     else {
 	printf("Unsupported security level %d\n", level);
 	exit(1);
     }
     if (errcode) {
-	com_err (whoami, errcode, "Couldn't get security obect for localAuth");
-	exit (1);
+	com_err(whoami, errcode, "Couldn't get security obect for localAuth");
+	exit(1);
     }
 
-again:
-    conn = rx_NewConnection(host, htons(AFSCONF_UPDATEPORT), UPDATE_SERVICEID,
-			    sc, scIndex);
+  again:
+    conn =
+	rx_NewConnection(host, htons(AFSCONF_UPDATEPORT), UPDATE_SERVICEID,
+			 sc, scIndex);
     cnt = 0;
-    while(1){/*keep doing it */
+    while (1) {			/*keep doing it */
 	char c, c1;
-	for(df = dirname; df; df=df->next) {   /*for each directory do */
+	for (df = dirname; df; df = df->next) {	/*for each directory do */
 	    char *curDir;
 
-	    if (verbose) printf ("Checking dir %s\n", df->name);
+	    if (verbose)
+		printf("Checking dir %s\n", df->name);
 	    /* initialize lists */
 	    ZapList(&ModFiles);
 	    ZapList(&okhostfiles);
@@ -249,75 +265,81 @@ again:
 	    }
 
 	    if (stat(curDir, &tstat) < 0) {
-	      /* try to make the dir */
+		/* try to make the dir */
 #ifdef AFS_NT40_ENV
-	      if (mkdir(curDir) < 0) {
+		if (mkdir(curDir) < 0) {
 #else
-	      if (mkdir(curDir, 0700) < 0) {
+		if (mkdir(curDir, 0700) < 0) {
 #endif
-		com_err(whoami, errno, "can't create dir");
-		printf("upclient: Can't update dir %s\n", curDir);
-		return -1;
-	      }
+		    com_err(whoami, errno, "can't create dir");
+		    printf("upclient: Can't update dir %s\n", curDir);
+		    return -1;
+		}
 	    } else {
-	      if ((tstat.st_mode & S_IFMT) != S_IFDIR){
-		printf(" file %s is not a directory; aborting\n", curDir);
-		return -1;
-	      }
+		if ((tstat.st_mode & S_IFMT) != S_IFDIR) {
+		    printf(" file %s is not a directory; aborting\n", curDir);
+		    return -1;
+		}
 	    }
 	    call = rx_NewCall(conn);
 
 	    /* scratch pad file */
 	    sprintf(dirbuf, "%s/upclient.%d", gettmpdir(), getpid());
 
-	    errcode = FetchFile(call, df->name, dirbuf,1);/* get the names and relevant info about all the files in the directory df->name into file dirbuf*/ 
+	    errcode = FetchFile(call, df->name, dirbuf, 1);	/* get the names and relevant info about all the files in the directory df->name into file dirbuf */
 	    error = rx_EndCall(call, 0);
-	    if(error && !errcode){
+	    if (error && !errcode) {
 		printf("could not end rx call \n");
-		com_err (whoami, error, "calling EndCall");
+		com_err(whoami, error, "calling EndCall");
 		goto fail;
 	    }
-	    if(errcode) {
-		printf("warning: could not fetch the contents of directory %s \n", df->name);
-		com_err (whoami, errcode, "calling FetchFile");
+	    if (errcode) {
+		printf
+		    ("warning: could not fetch the contents of directory %s \n",
+		     df->name);
+		com_err(whoami, errcode, "calling FetchFile");
 		cnt++;
 		goto fail;
 	    }
 
-	    stream = fopen(dirbuf,"r");
-	    if(stream == NULL){
-		printf("fopen failed on %s \n",dirbuf);
-		com_err (whoami, errno, "fopen");
+	    stream = fopen(dirbuf, "r");
+	    if (stream == NULL) {
+		printf("fopen failed on %s \n", dirbuf);
+		com_err(whoami, errno, "fopen");
 		goto fail;
 	    }
 	    umask(00);
 
 	    /* while there is more info about files in file dirbuf */
-	    while(fscanf(stream,"%c%[^\"]%c %u %u %u %u %u %u\n", &c, filename, &c1,
-			 &time, &length, &mode, &u_uid, &u_gid,
-			 &atime) != EOF){
+	    while (fscanf
+		   (stream, "%c%[^\"]%c %u %u %u %u %u %u\n", &c, filename,
+		    &c1, &time, &length, &mode, &u_uid, &u_gid,
+		    &atime) != EOF) {
 		uid = (short)u_uid;
 		gid = (short)u_gid;
 		AddToList(&okhostfiles, filename);
 		/*record all the file names which exist on the remote
-		 sync site, to enable purging of redundant files*/
-		if (verbose >= 3) printf ("    checking %s\n", filename);
-		if(!IsCompatible(filename, time, length)){
+		 * sync site, to enable purging of redundant files */
+		if (verbose >= 3)
+		    printf("    checking %s\n", filename);
+		if (!IsCompatible(filename, time, length)) {
 		    /* if the file info has changed , record all the 
 		     *changed files in the ModFiles array*/
-		    if (verbose >= 2) printf ("  getting %s\n", filename);
+		    if (verbose >= 2)
+			printf("  getting %s\n", filename);
 		    AddToList(&ModFiles, filename);
-		    
+
 		    /* now get the file from the server. The received 
-		    * file is created under the name filename.NEW */
-		    errcode = GetFileFromUpServer(conn, filename, uid, gid, 
-						  mode, atime, time);
-		    if (errcode == 1) /* this file failed, but keep trying */
-		      goto fail_dirbuf;  
-		    if (errcode == -1) /* time to quit */ {
-		      fclose(stream);
-		      unlink(dirbuf);
-		      return -1;
+		     * file is created under the name filename.NEW */
+		    errcode =
+			GetFileFromUpServer(conn, filename, uid, gid, mode,
+					    atime, time);
+		    if (errcode == 1)	/* this file failed, but keep trying */
+			goto fail_dirbuf;
+		    if (errcode == -1) {	/* time to quit */
+			fclose(stream);
+			unlink(dirbuf);
+			return -1;
 		    }
 		}
 
@@ -325,33 +347,34 @@ again:
 	    fclose(stream);
 	    unlink(dirbuf);
 
-	    {/*delete all the redundant files on the client */
+	    {			/*delete all the redundant files on the client */
 		DIR *dirp;
 		struct dirent *dp;
 		char filename[MAXSIZE];
 
 		dirp = opendir(curDir);
 		if (dirp == 0) {
-		    com_err (whoami, errno,
-			     "Can't open local dir %s", curDir);
+		    com_err(whoami, errno, "Can't open local dir %s", curDir);
 		    goto fail;
 		}
 
-		while((dp = readdir(dirp))) {
-		    /* for all the files in the directory df->name do*/
+		while ((dp = readdir(dirp))) {
+		    /* for all the files in the directory df->name do */
 		    strcpy(filename, curDir);
-		    strcat(filename,"/");
-		    strcat(filename,dp->d_name);
+		    strcat(filename, "/");
+		    strcat(filename, dp->d_name);
 		    /* if the file filename is redundant, delete it */
 		    errcode = NotOnHost(filename, okhostfiles);
 		    if (errcode == -1)
-		      return -1;
-		    if ( errcode == 1) {
-			if (verbose >= 2) printf ("  flushing %s\n", filename);
+			return -1;
+		    if (errcode == 1) {
+			if (verbose >= 2)
+			    printf("  flushing %s\n", filename);
 			errcode = unlink(filename);
-			if(errcode) {
-			    printf("could not delete file %s \n",filename);
-			    com_err (whoami, errno,"could not delete file %s",filename);
+			if (errcode) {
+			    printf("could not delete file %s \n", filename);
+			    com_err(whoami, errno, "could not delete file %s",
+				    filename);
 			}
 		    }
 		}
@@ -359,18 +382,18 @@ again:
 	    }
 	    /* Now, rename the .NEW files created by FetchFile */
 	    if (RenameNewFiles(ModFiles))
-	      return -1;
-	    
+		return -1;
+
 	    free(curDir);
-	} /* end for each dir loop */
+	}			/* end for each dir loop */
 	/*delete the file with info on files in directory df->name */
 	IOMGR_Sleep(interval);
 	continue;
 
-fail_dirbuf:
+      fail_dirbuf:
 	fclose(stream);
 	unlink(dirbuf);
-fail:
+      fail:
 	IOMGR_Sleep(retrytime);
 	if (cnt > 10) {
 	    rx_DestroyConnection(conn);
@@ -382,9 +405,10 @@ fail:
 }
 
 /* returns 1 if the file is upto date else returns 0*/
-int IsCompatible(filename, time, length)/*check the dir case more carefully*/
-char *filename;
-afs_int32 time, length;
+int
+IsCompatible(filename, time, length)	/*check the dir case more carefully */
+     char *filename;
+     afs_int32 time, length;
 {
     struct stat status;
     afs_int32 error;
@@ -400,56 +424,61 @@ afs_int32 time, length;
 
     free(localname);
 
-    if(error == -1) return 0;/*a non-existent file, has to be fetched fresh*/
-    if( (status.st_mode & S_IFMT) == S_IFDIR || ((status.st_mtime == time) && (status.st_size == length)))
-	return(1);
+    if (error == -1)
+	return 0;		/*a non-existent file, has to be fetched fresh */
+    if ((status.st_mode & S_IFMT) == S_IFDIR
+	|| ((status.st_mtime == time) && (status.st_size == length)))
+	return (1);
     else
 	return 0;
 }
 
 int
 FetchFile(call, remoteFile, localFile, dirFlag)
-  struct rx_call *call;
-  char *localFile, *remoteFile;
-  int dirFlag;
+     struct rx_call *call;
+     char *localFile, *remoteFile;
+     int dirFlag;
 {
-      int fd = -1, error = 0;
-      struct stat status;
-     
-    if(dirFlag){
-	if (StartUPDATE_FetchInfo(call,remoteFile)) return UPDATE_ERROR;
+    int fd = -1, error = 0;
+    struct stat status;
+
+    if (dirFlag) {
+	if (StartUPDATE_FetchInfo(call, remoteFile))
+	    return UPDATE_ERROR;
+    } else {
+	if (StartUPDATE_FetchFile(call, remoteFile))
+	    return UPDATE_ERROR;
     }
-    else{
-	if (StartUPDATE_FetchFile(call,remoteFile)) return UPDATE_ERROR;
-    }
-    fd = open(localFile, O_CREAT|O_TRUNC|O_WRONLY, 0666);
+    fd = open(localFile, O_CREAT | O_TRUNC | O_WRONLY, 0666);
     if (fd < 0) {
 	printf("Could not create %s\n", localFile);
-	com_err (whoami, errno, "Could not create %s", localFile);
+	com_err(whoami, errno, "Could not create %s", localFile);
 	error = UPDATE_ERROR;
 	return error;
     }
     if (fstat(fd, &status) < 0) {
-	com_err (whoami, errno, "Could not stat %s", localFile);
+	com_err(whoami, errno, "Could not stat %s", localFile);
 	close(fd);
 	printf("could not stast %s\n", localFile);
 	return UPDATE_ERROR;
     }
-    if (update_ReceiveFile(fd, call, &status)) error = UPDATE_ERROR;
-    
+    if (update_ReceiveFile(fd, call, &status))
+	error = UPDATE_ERROR;
+
     close(fd);
-    
+
     return error;
 }
-		    
 
-	    
-int update_ReceiveFile(fd, call, status)
-    register int fd;
-    register struct rx_call *call;
-    register struct stat *status;
+
+
+int
+update_ReceiveFile(fd, call, status)
+     register int fd;
+     register struct rx_call *call;
+     register struct stat *status;
 {
-    register char *buffer = (char*) 0;
+    register char *buffer = (char *)0;
     afs_int32 length;
 #ifdef notdef
     XDR xdr;
@@ -463,11 +492,13 @@ int update_ReceiveFile(fd, call, status)
 
 #ifdef	notdef
     xdrrx_create(&xdr, call, XDR_DECODE);
-    if (!xdr_afs_int32(&xdr, &length)) return UPDATE_ERROR;
+    if (!xdr_afs_int32(&xdr, &length))
+	return UPDATE_ERROR;
 #else
     len = rx_Read(call, &length, sizeof(afs_int32));
     length = ntohl(length);
-    if (len != sizeof(afs_int32)) return UPDATE_ERROR;
+    if (len != sizeof(afs_int32))
+	return UPDATE_ERROR;
 #endif
 #ifdef	AFS_AIX_ENV
     /* Unfortunately in AIX valuable fields such as st_blksize are gone from the stat structure!! */
@@ -484,18 +515,21 @@ int update_ReceiveFile(fd, call, status)
 	return UPDATE_ERROR;
     }
     while (!error && length) {
-	register int nbytes = (length>blockSize?blockSize:length);
+	register int nbytes = (length > blockSize ? blockSize : length);
 	nbytes = rx_Read(call, buffer, nbytes);
-	if (!nbytes) error = UPDATE_ERROR;
+	if (!nbytes)
+	    error = UPDATE_ERROR;
 	if (write(fd, buffer, nbytes) != nbytes) {
-	    com_err (whoami, errno, "File system write failed!");
+	    com_err(whoami, errno, "File system write failed!");
 	    printf("File system write failed!\n");
 	    error = UPDATE_ERROR;
 	}
 	length -= nbytes;
     }
-    if (buffer) free(buffer);
-    if (!error) fstat(fd, status);
+    if (buffer)
+	free(buffer);
+    if (!error)
+	fstat(fd, status);
     return error;
 }
 
@@ -550,24 +584,25 @@ PathsAreEquivalent(char *path1, char *path2)
 /* returns 1 if filename does not exist on the host site (=> it should be
  * deleted on client site) else it returns 0 */
 
-int NotOnHost(filename, okhostfiles)
-  char *filename;
-  struct filestr *okhostfiles;
+int
+NotOnHost(filename, okhostfiles)
+     char *filename;
+     struct filestr *okhostfiles;
 {
     int i, rc;
     struct stat status;
     struct filestr *tf;
     char *hostfile;
 
-    stat(filename,&status);
+    stat(filename, &status);
 
-    if((status.st_mode & S_IFMT) == S_IFDIR)
+    if ((status.st_mode & S_IFMT) == S_IFDIR)
 	return 0;
     i = strlen(filename);
-    if(!strcmp(&filename[i-4],".NEW"))
+    if (!strcmp(&filename[i - 4], ".NEW"))
 	return 0;
-    
-    for(tf=okhostfiles; tf; tf=tf->next) {
+
+    for (tf = okhostfiles; tf; tf = tf->next) {
 	/* construct local path from canonical (wire-format) path */
 	if ((rc = ConstructLocalPath(tf->name, "/", &hostfile))) {
 	    com_err(whoami, rc, "Unable to construct local path");
@@ -586,29 +621,33 @@ int NotOnHost(filename, okhostfiles)
 /* RenameNewFiles() - renames all the newly copied files from the
  * server. Looks for files with .NEW extension and renames them
  */
-static int RenameNewFiles(struct filestr *modFiles)
-{  
-  char newname[MAXSIZE];
-  char *fname;
-  int errcode = 0;
-  struct filestr *tf;
+static int
+RenameNewFiles(struct filestr *modFiles)
+{
+    char newname[MAXSIZE];
+    char *fname;
+    int errcode = 0;
+    struct filestr *tf;
 
-  for(tf = modFiles; tf; tf=tf->next) {
-      /* construct local path from canonical (wire-format) path */
-      if ((errcode = ConstructLocalPath(tf->name, "/", &fname))) {
-	  com_err(whoami, errcode, "Unable to construct local path");
-	  return errcode;
-      }
-      strcpy(newname, fname); strcat(newname, ".NEW");
-      if (verbose >= 2) printf ("  renaming %s\n", newname);
-      errcode = renamefile(newname, fname);
-      if (errcode) {
-	  printf("could not rename %s to %s\n", newname, fname);
-	  com_err (whoami, errno, "could not rename %s to %s", newname, fname);
-      }
-      free(fname);
-  }
-  return errcode;
+    for (tf = modFiles; tf; tf = tf->next) {
+	/* construct local path from canonical (wire-format) path */
+	if ((errcode = ConstructLocalPath(tf->name, "/", &fname))) {
+	    com_err(whoami, errcode, "Unable to construct local path");
+	    return errcode;
+	}
+	strcpy(newname, fname);
+	strcat(newname, ".NEW");
+	if (verbose >= 2)
+	    printf("  renaming %s\n", newname);
+	errcode = renamefile(newname, fname);
+	if (errcode) {
+	    printf("could not rename %s to %s\n", newname, fname);
+	    com_err(whoami, errno, "could not rename %s to %s", newname,
+		    fname);
+	}
+	free(fname);
+    }
+    return errcode;
 }
 
 
@@ -625,80 +664,83 @@ static int RenameNewFiles(struct filestr *modFiles)
  * the passed in values.
  */
 static
-int GetFileFromUpServer(struct rx_connection *conn, /* handle for upserver */
-			char *filename,        /* name of file to be fetched */
-			short uid, short gid,  /* uid/gid for fetched file */
-			afs_uint32 mode,          /* file mode */
-			afs_int32 atime, afs_int32 mtime) /* access/modification times */
-			
-{
-  struct rx_call *call;
-  afs_int32  errcode;
-  char *lfile;
+    int
+GetFileFromUpServer(struct rx_connection *conn,	/* handle for upserver */
+		    char *filename,	/* name of file to be fetched */
+		    short uid, short gid,	/* uid/gid for fetched file */
+		    afs_uint32 mode,	/* file mode */
+		    afs_int32 atime, afs_int32 mtime)
+{				/* access/modification times */
+    struct rx_call *call;
+    afs_int32 errcode;
+    char *lfile;
 #ifdef AFS_NT40_ENV
-  struct _utimbuf utbuf;
+    struct _utimbuf utbuf;
 #else
-  struct timeval tvp[2];
+    struct timeval tvp[2];
 #endif
-  char newfile[MAXSIZE];
+    char newfile[MAXSIZE];
 
-  /* construct local path from canonical (wire-format) path */
-  errcode = ConstructLocalPath(filename, "/", &lfile);
-  if (errcode) {
-      com_err(whoami, errcode, "Unable to construct local path");
-      return -1; 
-  }
-  strcpy(newfile, lfile);
-  free(lfile);
+    /* construct local path from canonical (wire-format) path */
+    errcode = ConstructLocalPath(filename, "/", &lfile);
+    if (errcode) {
+	com_err(whoami, errcode, "Unable to construct local path");
+	return -1;
+    }
+    strcpy(newfile, lfile);
+    free(lfile);
 
-  strcat(newfile, ".NEW");
-  
-  /* fetch filename into newfile from the host, since the current file
-   * is outdated. the new versions of changed files is stored as
-   * oldname.new */
-  call = rx_NewCall(conn);
-  errcode = FetchFile(call, filename, newfile, 0);
-  errcode = rx_EndCall(call, errcode);
-  
-  if(errcode) {
-    printf("failed to fetch file %s \n",filename);
-    com_err (whoami, errcode, "fetching file");
-    return 1; 
-  }
-  
-  /* now set the rest of the file status */
-  errcode = chmod(newfile, mode);
-  if(errcode){
-    printf("could not change protection on %s to %u\n",newfile, 
-	(unsigned int) mode);
-    com_err (whoami, errno,
-	     "could not change protection on %s to %u",
-	     newfile, mode);
-    return 1;
-  }
+    strcat(newfile, ".NEW");
+
+    /* fetch filename into newfile from the host, since the current file
+     * is outdated. the new versions of changed files is stored as
+     * oldname.new */
+    call = rx_NewCall(conn);
+    errcode = FetchFile(call, filename, newfile, 0);
+    errcode = rx_EndCall(call, errcode);
+
+    if (errcode) {
+	printf("failed to fetch file %s \n", filename);
+	com_err(whoami, errcode, "fetching file");
+	return 1;
+    }
+
+    /* now set the rest of the file status */
+    errcode = chmod(newfile, mode);
+    if (errcode) {
+	printf("could not change protection on %s to %u\n", newfile,
+	       (unsigned int)mode);
+	com_err(whoami, errno, "could not change protection on %s to %u",
+		newfile, mode);
+	return 1;
+    }
 #ifdef AFS_NT40_ENV
-  utbuf.actime = atime;
-  utbuf.modtime = mtime;
-  errcode = _utime(newfile, &utbuf);
+    utbuf.actime = atime;
+    utbuf.modtime = mtime;
+    errcode = _utime(newfile, &utbuf);
 #else
-  errcode = chown(newfile, uid, gid);
-  if(errcode){
-    printf("warning: could not change uid and gid on %s to %u and %u \n",newfile, gid, uid);
-    com_err (whoami, errno,
-	     "warning: could not change uid and gid on %s to %u and %u",newfile, gid, uid);
-  }
-  tvp[0].tv_sec = atime;
-  tvp[0].tv_usec = 0;
-  tvp[1].tv_sec = mtime;
-  tvp[1].tv_usec = 0;
-  errcode = utimes(newfile, tvp);
+    errcode = chown(newfile, uid, gid);
+    if (errcode) {
+	printf("warning: could not change uid and gid on %s to %u and %u \n",
+	       newfile, gid, uid);
+	com_err(whoami, errno,
+		"warning: could not change uid and gid on %s to %u and %u",
+		newfile, gid, uid);
+    }
+    tvp[0].tv_sec = atime;
+    tvp[0].tv_usec = 0;
+    tvp[1].tv_sec = mtime;
+    tvp[1].tv_usec = 0;
+    errcode = utimes(newfile, tvp);
 #endif /* NT40 */
-  if (errcode) {
-    printf("could not change access and modify times on %s to %u %u\n",newfile, (unsigned int) atime, (unsigned int) mtime);
-    com_err (whoami, errno,
-	     "could not change access and modify times on %s to %u %u",newfile, atime, mtime);
-    return 1;
-  }
-  
-  return 0;
+    if (errcode) {
+	printf("could not change access and modify times on %s to %u %u\n",
+	       newfile, (unsigned int)atime, (unsigned int)mtime);
+	com_err(whoami, errno,
+		"could not change access and modify times on %s to %u %u",
+		newfile, atime, mtime);
+	return 1;
+    }
+
+    return 0;
 }

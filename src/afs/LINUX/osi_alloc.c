@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -24,13 +25,13 @@ RCSID("$Header$");
 #include "afs_atomlist.h"
 #include "afs_lhash.h"
 
-#define MAX_KMALLOC_SIZE PAGE_SIZE /* Max we should alloc with kmalloc */
-#define MAX_BUCKET_LEN 30 /* max. no. of entries per buckets we expect to see */
-#define STAT_INTERVAL 8192 /* we collect stats once every STAT_INTERVAL allocs*/
+#define MAX_KMALLOC_SIZE PAGE_SIZE	/* Max we should alloc with kmalloc */
+#define MAX_BUCKET_LEN 30	/* max. no. of entries per buckets we expect to see */
+#define STAT_INTERVAL 8192	/* we collect stats once every STAT_INTERVAL allocs */
 
 /* types of alloc */
-#define KM_TYPE 1        /* kmalloc */
-#define VM_TYPE 2        /* vmalloc */
+#define KM_TYPE 1		/* kmalloc */
+#define VM_TYPE 2		/* vmalloc */
 
 struct osi_linux_mem {
     void *chunk;
@@ -41,30 +42,31 @@ struct osi_linux_mem {
 #define MEMADDR(A) (void *)((unsigned long)(A) & (~0x3))
 
 /* globals */
-afs_atomlist *al_mem_pool; /* pool of osi_linux_mem structures */
-afs_lhash    *lh_mem_htab; /* mem hash table */
-unsigned int allocator_init = 0; /* has the allocator been initialized? */
+afs_atomlist *al_mem_pool;	/* pool of osi_linux_mem structures */
+afs_lhash *lh_mem_htab;		/* mem hash table */
+unsigned int allocator_init = 0;	/* has the allocator been initialized? */
 unsigned int afs_linux_cur_allocs = 0;
 unsigned int afs_linux_total_allocs = 0;
-unsigned int afs_linux_hash_verify_count = 0; /* used by hash_verify */
-struct afs_lhash_stat afs_linux_lsb; /* hash table statistics */
-unsigned int afs_linux_hash_bucket_dist[MAX_BUCKET_LEN]; /* bucket population distribution in our hash table */
+unsigned int afs_linux_hash_verify_count = 0;	/* used by hash_verify */
+struct afs_lhash_stat afs_linux_lsb;	/* hash table statistics */
+unsigned int afs_linux_hash_bucket_dist[MAX_BUCKET_LEN];	/* bucket population distribution in our hash table */
 
 #if defined(AFS_LINUX24_ENV)
 #include "h/vmalloc.h"
 #else
 /* externs : can we do this in a better way. Including vmalloc.h causes other
  * problems.*/
-extern void vfree(void * addr);
+extern void vfree(void *addr);
 extern void *vmalloc(unsigned long size);
 #endif
 
 /* Allocator support functions (static) */
 
-static int hash_equal(const void *a, const void *b) 
+static int
+hash_equal(const void *a, const void *b)
 {
-    return ( MEMADDR(((struct osi_linux_mem *)a)->chunk) == 
-	    MEMADDR(((struct osi_linux_mem *)b)->chunk) );
+    return (MEMADDR(((struct osi_linux_mem *)a)->chunk) ==
+	    MEMADDR(((struct osi_linux_mem *)b)->chunk));
 
 }
 
@@ -76,30 +78,30 @@ static int hash_equal(const void *a, const void *b)
  *  returns NULL if we failed to allocate memory.
  *  or pointer to memory if we succeeded.
  */
-static void *linux_alloc(unsigned int asize, int drop_glock)
+static void *
+linux_alloc(unsigned int asize, int drop_glock)
 {
     void *new = NULL;
     int max_retry = 10;
     int haveGlock = ISAFS_GLOCK();
 
     /*  if we can use kmalloc use it to allocate the required memory. */
-    while(!new && max_retry)
-    {
-        if (asize <=  MAX_KMALLOC_SIZE) {
-        new = (void *)(unsigned long)kmalloc(asize, 
+    while (!new && max_retry) {
+	if (asize <= MAX_KMALLOC_SIZE) {
+	    new = (void *)(unsigned long)kmalloc(asize,
 #ifdef GFP_NOFS
-					     GFP_NOFS
+						 GFP_NOFS
 #else
-					     GFP_KERNEL
+						 GFP_KERNEL
 #endif
-					     );
-        if (new) /* piggy back alloc type */
-            (unsigned long)new |= KM_TYPE;
-        } else {
-            new = (void *)vmalloc(asize);
-	    if (new) /* piggy back alloc type */
-	        (unsigned long)new |= VM_TYPE;
-            }
+		);
+	    if (new)		/* piggy back alloc type */
+		(unsigned long)new |= KM_TYPE;
+	} else {
+	    new = (void *)vmalloc(asize);
+	    if (new)		/* piggy back alloc type */
+		(unsigned long)new |= VM_TYPE;
+	}
 
 	if (!new) {
 #ifdef set_current_state
@@ -107,16 +109,18 @@ static void *linux_alloc(unsigned int asize, int drop_glock)
 #else
 	    current->state = TASK_INTERRUPTIBLE;
 #endif
-	    if (drop_glock && haveGlock) AFS_GUNLOCK();
+	    if (drop_glock && haveGlock)
+		AFS_GUNLOCK();
 	    schedule_timeout(HZ);
-	    if (drop_glock && haveGlock) AFS_GLOCK();
+	    if (drop_glock && haveGlock)
+		AFS_GLOCK();
 #ifdef set_current_state
-            set_current_state(TASK_RUNNING);
+	    set_current_state(TASK_RUNNING);
 #else
-            current->state = TASK_RUNNING;
+	    current->state = TASK_RUNNING;
 #endif
-            --max_retry;
-        }
+	    --max_retry;
+	}
     }
     if (new)
 	memset(MEMADDR(new), 0, asize);
@@ -124,23 +128,24 @@ static void *linux_alloc(unsigned int asize, int drop_glock)
     return new;
 }
 
-static void linux_free(void *p)
+static void
+linux_free(void *p)
 {
-    
+
     /* mask out the type information from the pointer and
-     *	use the appropriate free routine to free the chunk.
+     *  use the appropriate free routine to free the chunk.
      */
-    switch(MEMTYPE(p)) {
-      case KM_TYPE:
-        kfree(MEMADDR(p));
-        break;
-      case VM_TYPE:
-        vfree(MEMADDR(p));
-        break;
-      default:
-        printf("afs_osi_Free: Asked to free unknown type %d at 0x%x\n",
-               MEMTYPE(p), MEMADDR(p));
-        break;
+    switch (MEMTYPE(p)) {
+    case KM_TYPE:
+	kfree(MEMADDR(p));
+	break;
+    case VM_TYPE:
+	vfree(MEMADDR(p));
+	break;
+    default:
+	printf("afs_osi_Free: Asked to free unknown type %d at 0x%x\n",
+	       MEMTYPE(p), MEMADDR(p));
+	break;
     }
 
 }
@@ -152,12 +157,13 @@ static void linux_free(void *p)
  */
 #define HASH_CONST   32786
 #define HASH_PRIME   79367
-static unsigned hash_chunk(void *p)
+static unsigned
+hash_chunk(void *p)
 {
     unsigned int key;
 
     key = (unsigned int)(long)p >> 2;
-    key = (key * HASH_CONST)%HASH_PRIME;
+    key = (key * HASH_CONST) % HASH_PRIME;
 
     return key;
 }
@@ -190,23 +196,30 @@ hash_verify(size_t index, unsigned key, void *data)
     memtype = MEMTYPE(lmp->chunk);
 #if defined(AFS_SPARC64_LINUX24_ENV) || defined(AFS_I386_UMLINUX20_ENV)
     if ((memtype == KM_TYPE) && (!VALID_PAGE(virt_to_page(lmp->chunk)))) {
-	printf("osi_linux_verify_alloced_memory: address 0x%x outside range, index=%d, key=%d\n", lmp->chunk, index, key);
+	printf
+	    ("osi_linux_verify_alloced_memory: address 0x%x outside range, index=%d, key=%d\n",
+	     lmp->chunk, index, key);
     }
 #else
     if ((memtype == KM_TYPE) && (AFS_LINUX_MAP_NR(lmp->chunk) > max_mapnr)) {
-	printf("osi_linux_verify_alloced_memory: address 0x%x outside range, index=%d, key=%d\n", lmp->chunk, index, key);
+	printf
+	    ("osi_linux_verify_alloced_memory: address 0x%x outside range, index=%d, key=%d\n",
+	     lmp->chunk, index, key);
     }
 #endif
-    
+
     if (memtype != KM_TYPE && memtype != VM_TYPE) {
-	printf("osi_linux_verify_alloced_memory: unknown type %d at 0x%x, index=%d\n",    memtype, lmp->chunk, index);
+	printf
+	    ("osi_linux_verify_alloced_memory: unknown type %d at 0x%x, index=%d\n",
+	     memtype, lmp->chunk, index);
     }
     afs_linux_hash_verify_count++;
 }
 
 
 /* local_free() : wrapper for vfree(), to deal with incompatible protoypes */
-static void local_free(void *p, size_t n)
+static void
+local_free(void *p, size_t n)
 {
     vfree(p);
 }
@@ -218,57 +231,62 @@ static void local_free(void *p, size_t n)
  *    0 - failure
  *    1 - success
  */
-static int linux_alloc_init()
+static int
+linux_alloc_init()
 {
     /* initiate our pool of osi_linux_mem structs */
-    al_mem_pool = afs_atomlist_create(sizeof(struct osi_linux_mem),
-				      sizeof(long)*1024, (void *)vmalloc, 
-				      local_free);
+    al_mem_pool =
+	afs_atomlist_create(sizeof(struct osi_linux_mem), sizeof(long) * 1024,
+			    (void *)vmalloc, local_free);
     if (!al_mem_pool) {
-        printf("afs_osi_Alloc: Error in initialization(atomlist_create)\n");
-        return 0;
+	printf("afs_osi_Alloc: Error in initialization(atomlist_create)\n");
+	return 0;
     }
 
     /* initialize the hash table to hold references to alloc'ed chunks */
     lh_mem_htab = afs_lhash_create(hash_equal, (void *)vmalloc, local_free);
     if (!lh_mem_htab) {
-        printf("afs_osi_Alloc: Error in initialization(lhash_create)\n");
-        return 0;
+	printf("afs_osi_Alloc: Error in initialization(lhash_create)\n");
+	return 0;
     }
-    
+
     return 1;
-    
+
 }
 
 /* hash_bucket_stat() : Counts the no. of elements in each bucket and
  *   stores results in our bucket stats vector.
  */
 static unsigned int cur_bucket, cur_bucket_len;
-static void hash_bucket_stat(size_t index, unsigned key, void *data)
+static void
+hash_bucket_stat(size_t index, unsigned key, void *data)
 {
-    if (index == cur_bucket) { 
+    if (index == cur_bucket) {
 	/* while still on the same bucket, inc len & return */
 	cur_bucket_len++;
 	return;
-    }
-    else { /* if we're on the next bucket, store the distribution */
+    } else {			/* if we're on the next bucket, store the distribution */
 	if (cur_bucket_len < MAX_BUCKET_LEN)
 	    afs_linux_hash_bucket_dist[cur_bucket_len]++;
 	else
-	    printf("afs_get_hash_stats: Warning! exceeded max bucket len %d\n", cur_bucket_len);
+	    printf
+		("afs_get_hash_stats: Warning! exceeded max bucket len %d\n",
+		 cur_bucket_len);
 	cur_bucket = index;
 	cur_bucket_len = 1;
     }
 }
+
 /* get_hash_stats() : get hash table statistics */
-static void get_hash_stats()
+static void
+get_hash_stats()
 {
     int i;
 
     afs_lhash_stat(lh_mem_htab, &afs_linux_lsb);
 
     /* clear out the bucket stat vector */
-    for(i=0;i<MAX_BUCKET_LEN;i++, afs_linux_hash_bucket_dist[i]=0);
+    for (i = 0; i < MAX_BUCKET_LEN; i++, afs_linux_hash_bucket_dist[i] = 0);
     cur_bucket = cur_bucket_len = 00;
 
     /* populate the bucket stat vector */
@@ -283,12 +301,13 @@ DECLARE_MUTEX(afs_linux_alloc_sem);
 struct semaphore afs_linux_alloc_sem = MUTEX;
 #endif
 
-void *osi_linux_alloc(unsigned int asize, int drop_glock)
+void *
+osi_linux_alloc(unsigned int asize, int drop_glock)
 {
     void *new = NULL;
     struct osi_linux_mem *lmem;
 
-    new = linux_alloc(asize, drop_glock); /* get a chunk of memory of size asize */
+    new = linux_alloc(asize, drop_glock);	/* get a chunk of memory of size asize */
 
     if (!new) {
 	printf("afs_osi_Alloc: Can't vmalloc %d bytes.\n", asize);
@@ -301,10 +320,10 @@ void *osi_linux_alloc(unsigned int asize, int drop_glock)
     if (allocator_init == 0) {
 	if (linux_alloc_init() == 0) {
 	    goto error;
-	 }
-	allocator_init = 1; /* initialization complete */
+	}
+	allocator_init = 1;	/* initialization complete */
     }
-    
+
     /* get an atom to store the pointer to the chunk */
     lmem = (struct osi_linux_mem *)afs_atomlist_get(al_mem_pool);
     if (!lmem) {
@@ -319,8 +338,8 @@ void *osi_linux_alloc(unsigned int asize, int drop_glock)
 	printf("afs_osi_Alloc: lhash_enter failed\n");
 	goto free_error;
     }
-    afs_linux_cur_allocs++;   /* no. of current allocations */
-    afs_linux_total_allocs++; /* total no. of allocations done so far */
+    afs_linux_cur_allocs++;	/* no. of current allocations */
+    afs_linux_total_allocs++;	/* total no. of allocations done so far */
     if ((afs_linux_cur_allocs % STAT_INTERVAL) == 0) {
 	get_hash_stats();
     }
@@ -337,26 +356,28 @@ void *osi_linux_alloc(unsigned int asize, int drop_glock)
     new = NULL;
     goto error;
 
-    
+
 }
 
 /* osi_linux_free() - free chunk of memory passed to us.
  */
-void osi_linux_free(void *addr)
+void
+osi_linux_free(void *addr)
 {
     struct osi_linux_mem lmem, *lmp;
 
     down(&afs_linux_alloc_sem);
-    
+
     lmem.chunk = addr;
     /* remove this chunk from our hash table */
-    if ((lmp = (struct osi_linux_mem *)afs_lhash_remove(lh_mem_htab, hash_chunk(addr), &lmem))) {
-        linux_free(lmp->chunk); /* this contains the piggybacked type info*/
-        afs_atomlist_put(al_mem_pool, lmp); /* return osi_linux_mem struct to pool*/
-        afs_linux_cur_allocs--;
-    }
-    else   {
-        printf("osi_linux_free: failed to remove chunk from hashtable\n");
+    if ((lmp =
+	 (struct osi_linux_mem *)afs_lhash_remove(lh_mem_htab,
+						  hash_chunk(addr), &lmem))) {
+	linux_free(lmp->chunk);	/* this contains the piggybacked type info */
+	afs_atomlist_put(al_mem_pool, lmp);	/* return osi_linux_mem struct to pool */
+	afs_linux_cur_allocs--;
+    } else {
+	printf("osi_linux_free: failed to remove chunk from hashtable\n");
     }
 
     up(&afs_linux_alloc_sem);
@@ -364,7 +385,8 @@ void osi_linux_free(void *addr)
 
 /* osi_linux_free_afs_memory() - free all chunks of memory allocated.
  */
-void osi_linux_free_afs_memory(void)
+void
+osi_linux_free_afs_memory(void)
 {
     down(&afs_linux_alloc_sem);
 
@@ -379,20 +401,21 @@ void osi_linux_free_afs_memory(void)
 
 	/* free the hashlist. */
 	afs_lhash_destroy(lh_mem_htab);
-	
+
 	/* change the state so that the allocator is now uninitialized. */
 	allocator_init = 0;
     }
-    up(&afs_linux_alloc_sem);    
+    up(&afs_linux_alloc_sem);
 }
 
 /* osi_linux_verify_alloced_memory(): verify all chunks of alloced memory in
  *          our hash table.
  */
-void osi_linux_verify_alloced_memory()
+void
+osi_linux_verify_alloced_memory()
 {
     down(&afs_linux_alloc_sem);
-    
+
     /* count of times hash_verify was called. reset it to 0 before iteration */
     afs_linux_hash_verify_count = 0;
 
@@ -401,10 +424,11 @@ void osi_linux_verify_alloced_memory()
 
     if (afs_linux_hash_verify_count != afs_linux_cur_allocs) {
 	/* hmm, some pieces of memory are missing. */
-	printf("osi_linux_verify_alloced_memory: %d chunks of memory are not accounted for during verify!\n", afs_linux_hash_verify_count - afs_linux_cur_allocs);
+	printf
+	    ("osi_linux_verify_alloced_memory: %d chunks of memory are not accounted for during verify!\n",
+	     afs_linux_hash_verify_count - afs_linux_cur_allocs);
     }
 
     up(&afs_linux_alloc_sem);
     return;
 }
-

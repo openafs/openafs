@@ -22,11 +22,12 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
-#include "afs/afs_stats.h" /* statistics */
+#include "afs/afs_stats.h"	/* statistics */
 #include "afs/afs_cbqueue.h"
 #include "afs/nfsclient.h"
 #include "afs/afs_osidnlc.h"
@@ -70,7 +71,8 @@ afs_uint32 pagCounter = 0;
  * secure (although of course not absolutely secure).
 */
 #if !defined(UKERNEL) || !defined(AFS_WEB_ENHANCEMENTS)
-afs_uint32 genpag(void)
+afs_uint32
+genpag(void)
 {
     AFS_STATCNT(genpag);
 #ifdef AFS_LINUX20_ENV
@@ -81,7 +83,8 @@ afs_uint32 genpag(void)
 #endif /* AFS_LINUX20_ENV */
 }
 
-afs_uint32 getpag(void)
+afs_uint32
+getpag(void)
 {
     AFS_STATCNT(getpag);
 #ifdef AFS_LINUX20_ENV
@@ -97,7 +100,8 @@ afs_uint32 getpag(void)
 /* Web enhancement: we don't need to restrict pags to 41XXXXXX since
  * we are not sharing the space with anyone.  So we use the full 32 bits. */
 
-afs_uint32 genpag(void)
+afs_uint32
+genpag(void)
 {
     AFS_STATCNT(genpag);
 #ifdef AFS_LINUX20_ENV
@@ -107,7 +111,8 @@ afs_uint32 genpag(void)
 #endif /* AFS_LINUX20_ENV */
 }
 
-afs_uint32 getpag(void)
+afs_uint32
+getpag(void)
 {
     AFS_STATCNT(getpag);
 #ifdef AFS_LINUX20_ENV
@@ -136,11 +141,11 @@ afs_uint32 getpag(void)
 
 int
 #if	defined(AFS_SUN5_ENV)
-afs_setpag (struct AFS_UCRED **credpp)
+afs_setpag(struct AFS_UCRED **credpp)
 #elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_setpag (struct proc *p, void *args, int *retval)
+afs_setpag(struct proc *p, void *args, int *retval)
 #else
-afs_setpag (void) 
+afs_setpag(void)
 #endif
 {
     int code = 0;
@@ -148,7 +153,7 @@ afs_setpag (void)
 #if defined(AFS_SGI53_ENV) && defined(MP)
     /* This is our first chance to get the global lock. */
     AFS_GLOCK();
-#endif /* defined(AFS_SGI53_ENV) && defined(MP) */    
+#endif /* defined(AFS_SGI53_ENV) && defined(MP) */
 
     AFS_STATCNT(afs_setpag);
 #if	defined(AFS_SUN5_ENV)
@@ -159,11 +164,10 @@ afs_setpag (void)
     if (!afs_suser())
 #endif
     {
-	while (osi_Time() - pag_epoch < pagCounter ) {
-	    afs_osi_Wait(1000, (struct afs_osi_WaitHandle *) 0, 0);
-	}	
+	while (osi_Time() - pag_epoch < pagCounter) {
+	    afs_osi_Wait(1000, (struct afs_osi_WaitHandle *)0, 0);
+	}
     }
-
 #if	defined(AFS_SUN5_ENV)
     code = AddPag(genpag(), credpp);
 #elif	defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV)
@@ -172,7 +176,7 @@ afs_setpag (void)
     {
 	struct ucred *credp;
 	struct ucred *credp0;
-	
+
 	credp = crref();
 	credp0 = credp;
 	code = AddPag(genpag(), &credp);
@@ -200,9 +204,9 @@ afs_setpag (void)
     }
 #elif defined(AFS_DARWIN_ENV)
     {
-       struct ucred *credp = crdup(p->p_cred->pc_ucred);
-       code = AddPag(p, genpag(), &credp);
-       crfree(credp);
+	struct ucred *credp = crdup(p->p_cred->pc_ucred);
+	code = AddPag(p, genpag(), &credp);
+	crfree(credp);
     }
 #else
     code = AddPag(genpag(), &u.u_cred);
@@ -229,11 +233,11 @@ afs_setpag (void)
  */
 int
 #if	defined(AFS_SUN5_ENV)
-afs_setpag_val (struct AFS_UCRED **credpp, int pagval)
+afs_setpag_val(struct AFS_UCRED **credpp, int pagval)
 #elif  defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-afs_setpag_val (struct proc *p, void *args, int *retval, int pagval)
+afs_setpag_val(struct proc *p, void *args, int *retval, int pagval)
 #else
-afs_setpag_val (int pagval) 
+afs_setpag_val(int pagval)
 #endif
 {
     int code = 0;
@@ -241,7 +245,7 @@ afs_setpag_val (int pagval)
 #if defined(AFS_SGI53_ENV) && defined(MP)
     /* This is our first chance to get the global lock. */
     AFS_GLOCK();
-#endif /* defined(AFS_SGI53_ENV) && defined(MP) */    
+#endif /* defined(AFS_SGI53_ENV) && defined(MP) */
 
     AFS_STATCNT(afs_setpag);
 #ifdef AFS_SUN5_ENV
@@ -250,11 +254,10 @@ afs_setpag_val (int pagval)
     if (!afs_suser())
 #endif
     {
-	while (osi_Time() - pag_epoch < pagCounter ) {
-	    afs_osi_Wait(1000, (struct afs_osi_WaitHandle *) 0, 0);
-	}	
+	while (osi_Time() - pag_epoch < pagCounter) {
+	    afs_osi_Wait(1000, (struct afs_osi_WaitHandle *)0, 0);
+	}
     }
-
 #if	defined(AFS_SUN5_ENV)
     code = AddPag(pagval, credpp);
 #elif	defined(AFS_OSF_ENV) || defined(AFS_XBSD_ENV)
@@ -263,7 +266,7 @@ afs_setpag_val (int pagval)
     {
 	struct ucred *credp;
 	struct ucred *credp0;
-	
+
 	credp = crref();
 	credp0 = credp;
 	code = AddPag(pagval, &credp);
@@ -291,9 +294,9 @@ afs_setpag_val (int pagval)
     }
 #elif defined(AFS_DARWIN_ENV)
     {
-       struct ucred *credp = crdup(p->p_cred->pc_ucred);
-       code=AddPag(p, pagval, &credp);
-       crfree(credp);
+	struct ucred *credp = crdup(p->p_cred->pc_ucred);
+	code = AddPag(p, pagval, &credp);
+	crfree(credp);
     }
 #else
     code = AddPag(pagval, &u.u_cred);
@@ -306,29 +309,32 @@ afs_setpag_val (int pagval)
 #endif
 #if defined(AFS_SGI53_ENV) && defined(MP)
     AFS_GUNLOCK();
-#endif /* defined(AFS_SGI53_ENV) && defined(MP) */    
+#endif /* defined(AFS_SGI53_ENV) && defined(MP) */
     return (code);
 }
 
-int afs_getpag_val()
+int
+afs_getpag_val()
 {
-  int pagvalue;
-  struct AFS_UCRED *credp = u.u_cred;
-  int gidset0, gidset1;
+    int pagvalue;
+    struct AFS_UCRED *credp = u.u_cred;
+    int gidset0, gidset1;
 
-  gidset0 = credp->cr_groups[0];
-  gidset1 = credp->cr_groups[1];
-  pagvalue=afs_get_pag_from_groups(gidset0, gidset1);
-  return pagvalue;
+    gidset0 = credp->cr_groups[0];
+    gidset1 = credp->cr_groups[1];
+    pagvalue = afs_get_pag_from_groups(gidset0, gidset1);
+    return pagvalue;
 }
 #endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
 
 
 /* Note - needs to be available on AIX, others can be static - rework this */
 #if defined(AFS_OSF_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
-int AddPag(struct proc *p, afs_int32 aval, struct AFS_UCRED **credpp)
+int
+AddPag(struct proc *p, afs_int32 aval, struct AFS_UCRED **credpp)
 #else
-int AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
+int
+AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
 #endif
 {
     afs_int32 newpag, code;
@@ -348,24 +354,26 @@ int AddPag(afs_int32 aval, struct AFS_UCRED **credpp)
 }
 
 
-int afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
+int
+afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
 {
     AFS_STATCNT(afs_InitReq);
-    if (afs_shuttingdown) return EIO;
+    if (afs_shuttingdown)
+	return EIO;
     av->uid = PagInCred(acred);
     if (av->uid == NOPAG) {
 	/* Afs doesn't use the unix uid for anuthing except a handle
 	 * with which to find the actual authentication tokens so I
 	 * think it's ok to use the real uid to make setuid
-         * programs (without setpag) to work properly.
-         */
+	 * programs (without setpag) to work properly.
+	 */
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 	if (acred == NOCRED)
-	    av->uid = -2; /* XXX nobody... ?*/
+	    av->uid = -2;	/* XXX nobody... ? */
 	else
-	    av->uid = acred->cr_uid; /* bsd creds don't have ruid */
+	    av->uid = acred->cr_uid;	/* bsd creds don't have ruid */
 #else
-	av->uid	= acred->cr_ruid;    /* default when no pag is set */
+	av->uid = acred->cr_ruid;	/* default when no pag is set */
 #endif
     }
     av->initd = 0;
@@ -374,7 +382,8 @@ int afs_InitReq(register struct vrequest *av, struct AFS_UCRED *acred)
 
 
 
-afs_uint32 afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
+afs_uint32
+afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
 {
     afs_uint32 g0 = g0a;
     afs_uint32 g1 = g1a;
@@ -402,7 +411,8 @@ afs_uint32 afs_get_pag_from_groups(gid_t g0a, gid_t g1a)
 }
 
 
-void afs_get_groups_from_pag(afs_uint32 pag, gid_t *g0p, gid_t *g1p)
+void
+afs_get_groups_from_pag(afs_uint32 pag, gid_t * g0p, gid_t * g1p)
 {
     unsigned short g0, g1;
 
@@ -420,7 +430,8 @@ void afs_get_groups_from_pag(afs_uint32 pag, gid_t *g0p, gid_t *g1p)
 }
 
 
-afs_int32 PagInCred(const struct AFS_UCRED *cred)
+afs_int32
+PagInCred(const struct AFS_UCRED *cred)
 {
     afs_int32 pag;
     gid_t g0, g1;
@@ -431,9 +442,10 @@ afs_int32 PagInCred(const struct AFS_UCRED *cred)
     }
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if (cred == NOCRED || cred == FSCRED) {
-        return NOPAG;
+	return NOPAG;
     }
-    if (cred->cr_ngroups < 3) return NOPAG;
+    if (cred->cr_ngroups < 3)
+	return NOPAG;
     /* gid is stored in cr_groups[0] */
     g0 = cred->cr_groups[1];
     g1 = cred->cr_groups[2];
@@ -450,7 +462,8 @@ afs_int32 PagInCred(const struct AFS_UCRED *cred)
 #endif
 #else
 #if defined(AFS_SGI_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DUX40_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_XBSD_ENV)
-    if (cred->cr_ngroups < 2) return NOPAG;
+    if (cred->cr_ngroups < 2)
+	return NOPAG;
 #endif
 #endif
 #ifdef AFS_AIX51_ENV
@@ -461,6 +474,6 @@ afs_int32 PagInCred(const struct AFS_UCRED *cred)
     g1 = cred->cr_groups[1];
 #endif
 #endif
-    pag = (afs_int32)afs_get_pag_from_groups(g0, g1);
+    pag = (afs_int32) afs_get_pag_from_groups(g0, g1);
     return pag;
 }

@@ -16,11 +16,11 @@
 \*******************************************************************/
 
 struct TM_Elem {
-    struct TM_Elem	*Next;		/* filled by package */
-    struct TM_Elem	*Prev;		/* filled by package */
-    struct timeval	TotalTime;	/* filled in by caller -- modified by package */
-    struct timeval	TimeLeft;	/* filled by package */
-    char		*BackPointer;	/* filled by caller, not interpreted by package */
+    struct TM_Elem *Next;	/* filled by package */
+    struct TM_Elem *Prev;	/* filled by package */
+    struct timeval TotalTime;	/* filled in by caller -- modified by package */
+    struct timeval TimeLeft;	/* filled by package */
+    char *BackPointer;		/* filled by caller, not interpreted by package */
 };
 
 void openafs_insque(struct TM_Elem *elementp, struct TM_Elem *quep);

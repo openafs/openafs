@@ -21,7 +21,7 @@
 #endif
 #define ENCRYPTIONBLOCKSIZE 8
 
-typedef afs_int32 fc_InitializationVector[ENCRYPTIONBLOCKSIZE/4];
+typedef afs_int32 fc_InitializationVector[ENCRYPTIONBLOCKSIZE / 4];
 
 #ifdef MAXROUNDS
 #undef MAXROUNDS

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -19,10 +20,10 @@ RCSID("$Header$");
 
 #include "AFS_component_version_number.c"
 
-main(argc,argv)
-char **argv;
+main(argc, argv)
+     char **argv;
 {
-    
+
     int fd;
     int ino;
     struct stat status;
@@ -41,7 +42,6 @@ char **argv;
 	perror("fstat");
 	exit(1);
     }
-    printf("links=%d, size=%d\n",
-    	status.st_nlink, status.st_size);
+    printf("links=%d, size=%d\n", status.st_nlink, status.st_size);
     exit(0);
 }

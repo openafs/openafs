@@ -40,8 +40,8 @@
 #define LWP_EBADPRI	-11
 #define LWP_NO_STACK	-12
 /* These two are for the signal mechanism. */
-#define LWP_EBADSIG	-13		/* bad signal number */
-#define LWP_ESYSTEM	-14		/* system call failed */
+#define LWP_EBADSIG	-13	/* bad signal number */
+#define LWP_ESYSTEM	-14	/* system call failed */
 /* These are for the rock mechanism */
 #define LWP_ENOROCKS	-15	/* all rocks are in use */
 #define LWP_EBADROCK	-16	/* the specified rock does not exist */
@@ -52,8 +52,8 @@
 typedef int pthread_t;
 typedef void *pthread_addr_t;
 typedef void *pthread_condattr_t;
-typedef void (*pthread_destructor_t)(void *);
-typedef pthread_addr_t (*pthread_startroutine_t)(pthread_addr_t);
+typedef void (*pthread_destructor_t) (void *);
+typedef pthread_addr_t(*pthread_startroutine_t) (pthread_addr_t);
 #define	pthread_mutex_lock	mutex_lock
 #define	pthread_mutex_unlock	mutex_unlock
 #define	pthread_getspecific	thr_getspecific
@@ -61,12 +61,12 @@ typedef pthread_addr_t (*pthread_startroutine_t)(pthread_addr_t);
 #define	pthread_yield		thr_yield
 /*typedef mutex_t pthread_mutex_t;*/
 typedef thread_key_t pthread_key_t;
-typedef cond_t   PTHREAD_COND, *pthread_cond_t;
+typedef cond_t PTHREAD_COND, *pthread_cond_t;
 
 #define PTHREAD_DEFAULT_SCHED 1
 #define SCHED_FIFO  2
 #define MUTEX_FAST_NP              0
-#define PTHREAD_DEFAULT_STACK           65536 /* 64 K */
+#define PTHREAD_DEFAULT_STACK           65536	/* 64 K */
 #define PRI_OTHER_MIN   1
 #define PRI_OTHER_MAX   127
 #define PRI_OTHER_MID   ((PRI_OTHER_MIN + PRI_OTHER_MAX)/2)
@@ -75,30 +75,30 @@ typedef cond_t   PTHREAD_COND, *pthread_cond_t;
 #define restoreAllSignals(o) thr_sigsetmask(SIG_SETMASK,&o,NULL)
 
 typedef struct PTHREAD_MUTEX {
-    int                 kind;
-    pthread_t           ownerId;
-    mutex_t             fastMutex;
-    int                 timesInside;
+    int kind;
+    pthread_t ownerId;
+    mutex_t fastMutex;
+    int timesInside;
 } PTHREAD_MUTEX, *pthread_mutex_t;
 
 
 typedef struct PTHREAD_ATTR {
-    long                stackSize;
-    int                 prio;
+    long stackSize;
+    int prio;
 } PTHREAD_ATTR, *pthread_attr_t;
 
 typedef struct {
-    void                (*destructor)(void*);
-    thread_key_t          key;
+    void (*destructor) (void *);
+    thread_key_t key;
 } dest_slot_t;
 
 typedef struct {
-    int            nentries;  /* size allocated (in terms of number of slots) */
-    int            next_free; /* next free slot */
-    dest_slot_t    slot[1];
+    int nentries;		/* size allocated (in terms of number of slots) */
+    int next_free;		/* next free slot */
+    dest_slot_t slot[1];
 } pthread_destructor_tab_t;
-define DTAB_SIZE(size) (sizeof(pthread_destructor_tab_t) + (size)*sizeof(dest_slot_t))
-
+define DTAB_SIZE(size) (sizeof(pthread_destructor_tab_t) +
+			(size) * sizeof(dest_slot_t))
 #else
 #include "pthread.h"
 #endif
@@ -113,18 +113,17 @@ define DTAB_SIZE(size) (sizeof(pthread_destructor_tab_t) + (size)*sizeof(dest_sl
  * non-zero. This can't be done on a pthread_t.
  */
 typedef struct lwp_process {
-    pthread_t handle;			/* The pthreads handle */
-    struct lwp_process *next;		/* Next LWP process */
-    char *name;				/* LWP name of the process */
-    pthread_startroutine_t ep;		/* Process entry point */
-    pthread_addr_t arg;			/* Initial parameter */
-} * PROCESS;
+    pthread_t handle;		/* The pthreads handle */
+    struct lwp_process *next;	/* Next LWP process */
+    char *name;			/* LWP name of the process */
+    pthread_startroutine_t ep;	/* Process entry point */
+    pthread_addr_t arg;		/* Initial parameter */
+} *PROCESS;
 
-struct rock
-    {/* to hide things associated with this LWP under */
-    int  tag;		/* unique identifier for this rock */
-    char *value;	/* pointer to some arbitrary data structure */
-    };
+struct rock {			/* to hide things associated with this LWP under */
+    int tag;			/* unique identifier for this rock */
+    char *value;		/* pointer to some arbitrary data structure */
+};
 
 #define MAXROCKS	4	/* max no. of rocks per LWP */
 
@@ -165,7 +164,7 @@ extern pthread_mutex_t lwp_mutex;
 /* Usual priority used by user LWPs */
 #define LWP_NORMAL_PRIORITY (LWP_MAX_PRIORITY-2)
 
-/* Initial size of eventlist in a PCB; grows dynamically  */ 
+/* Initial size of eventlist in a PCB; grows dynamically  */
 #define EVINITSIZE  5
 
 typedef struct lwp_pcb *PROCESS;
@@ -173,12 +172,12 @@ typedef struct lwp_pcb *PROCESS;
 #ifdef AFS_NT40_ENV
 #include <windef.h>
 typedef struct lwp_pcb {
-    char name[32];	/* name of LWP */
+    char name[32];		/* name of LWP */
     LPVOID fiber;
-    int (*funP)();	/* function to execute on this LWP */
-    void *argP;		/* argument for function */
-    int priority;	/* LWP priority */
-    int stacksize;	/* Just for reference. */
+    int (*funP) ();		/* function to execute on this LWP */
+    void *argP;			/* argument for function */
+    int priority;		/* LWP priority */
+    int stacksize;		/* Just for reference. */
     /* the following are used for scheduling */
     int status:8;
     int eventlistsize:8;
@@ -189,98 +188,97 @@ typedef struct lwp_pcb {
     int waitcnt;
     struct lwp_pcb *next, *prev;
     struct IoRequest *iomgrRequest;
-    int index;	/* new number (++) for each process created. */
+    int index;			/* new number (++) for each process created. */
 } lwp_pcb_t;
 
 #else
-struct lwp_context {	/* saved context for dispatcher */
-    char *topstack;	/* ptr to top of process stack */
+struct lwp_context {		/* saved context for dispatcher */
+    char *topstack;		/* ptr to top of process stack */
 #if defined(USE_UCONTEXT) && defined(HAVE_UCONTEXT_H)
     ucontext_t ucontext;
     int state;
-#else /* !HAVE_UCONTEXT_H */
+#else				/* !HAVE_UCONTEXT_H */
 # if defined(sparc) && !defined(__linux__)
 # ifdef	save_allregs
-    int globals[7+1+32+2+32+2];    /* g1-g7, y reg, f0-f31, fsr, fq, c0-c31, csr, cq. */
+    int globals[7 + 1 + 32 + 2 + 32 + 2];	/* g1-g7, y reg, f0-f31, fsr, fq, c0-c31, csr, cq. */
 # else
-    int globals[8];    /* g1-g7 and y registers. */
+    int globals[8];		/* g1-g7 and y registers. */
 # endif
 # endif
     jmp_buf setjmp_buffer;
-#endif /* HAVE_UCONTEXT_H */
+#endif				/* HAVE_UCONTEXT_H */
 };
 
-struct rock
-    {/* to hide things associated with this LWP under */
-    int  tag;		/* unique identifier for this rock */
-    char *value;	/* pointer to some arbitrary data structure */
-    };
+struct rock {			/* to hide things associated with this LWP under */
+    int tag;			/* unique identifier for this rock */
+    char *value;		/* pointer to some arbitrary data structure */
+};
 
 #define MAXROCKS	4	/* max no. of rocks per LWP */
 
-struct lwp_pcb {			/* process control block */
-  char		name[32];		/* ASCII name */
-  int		rc;			/* most recent return code */
-  char		status;			/* status flags */
-  char		blockflag;		/* if (blockflag), process blocked */
-  char		eventlistsize;		/* size of eventlist array */
-  char          padding;                /* force 32-bit alignment */
-  char		**eventlist;		/* ptr to array of eventids */
-  int		eventcnt;		/* no. of events currently in eventlist array*/
-  int		wakevent;		/* index of eventid causing wakeup */
-  int		waitcnt;		/* min number of events awaited */
-  int		priority;		/* dispatching priority */
-  struct lwp_pcb *misc;			/* for LWP internal use only */
-  char		*stack;			/* ptr to process stack */
-  int		stacksize;		/* size of stack */
-  int		stackcheck;		/* first word of stack for overflow checking */
-  int		(*ep)();		/* initial entry point */
-  char		*parm;			/* initial parm for process */
-  struct lwp_context
-		context;		/* saved context for next dispatch */
-  int		lwp_rused;		/* no of rocks presently in use */
-  struct rock	lwp_rlist[MAXROCKS];	/* set of rocks to hide things under */
-  struct lwp_pcb *next, *prev;		/* ptrs to next and previous pcb */
-  int		level;			/* nesting level of critical sections */
-  struct IoRequest	*iomgrRequest;	/* request we're waiting for */
-  int           index;                  /* LWP index: should be small index; actually is
-                                           incremented on each lwp_create_process */ 
-  };
+struct lwp_pcb {		/* process control block */
+    char name[32];		/* ASCII name */
+    int rc;			/* most recent return code */
+    char status;		/* status flags */
+    char blockflag;		/* if (blockflag), process blocked */
+    char eventlistsize;		/* size of eventlist array */
+    char padding;		/* force 32-bit alignment */
+    char **eventlist;		/* ptr to array of eventids */
+    int eventcnt;		/* no. of events currently in eventlist array */
+    int wakevent;		/* index of eventid causing wakeup */
+    int waitcnt;		/* min number of events awaited */
+    int priority;		/* dispatching priority */
+    struct lwp_pcb *misc;	/* for LWP internal use only */
+    char *stack;		/* ptr to process stack */
+    int stacksize;		/* size of stack */
+    int stackcheck;		/* first word of stack for overflow checking */
+    int (*ep) ();		/* initial entry point */
+    char *parm;			/* initial parm for process */
+    struct lwp_context
+      context;			/* saved context for next dispatch */
+    int lwp_rused;		/* no of rocks presently in use */
+    struct rock lwp_rlist[MAXROCKS];	/* set of rocks to hide things under */
+    struct lwp_pcb *next, *prev;	/* ptrs to next and previous pcb */
+    int level;			/* nesting level of critical sections */
+    struct IoRequest *iomgrRequest;	/* request we're waiting for */
+    int index;			/* LWP index: should be small index; actually is
+				 * incremented on each lwp_create_process */
+};
 #endif /* AFS_NT40_ENV */
 
-extern int lwp_nextindex;                      /* Next lwp index to assign */
+extern int lwp_nextindex;	/* Next lwp index to assign */
 
 
 #ifndef LWP_KERNEL
 #define LWP_ActiveProcess	(lwp_cpptr+0)
 #define LWP_Index() (LWP_ActiveProcess->index)
 #define LWP_HighestIndex() (lwp_nextindex - 1)
-#ifndef	AFS_SUN5_ENV	/* Actual functions for solaris */
+#ifndef	AFS_SUN5_ENV		/* Actual functions for solaris */
 #define LWP_SignalProcess(event)	LWP_INTERNALSIGNAL(event, 1)
 #define LWP_NoYieldSignal(event)	LWP_INTERNALSIGNAL(event, 0)
 #endif
 
 extern
 #endif
-  struct lwp_pcb *lwp_cpptr;	/* pointer to current process pcb */
+struct lwp_pcb *lwp_cpptr;	/* pointer to current process pcb */
 
-struct	 lwp_ctl {			/* LWP control structure */
-    int		processcnt;		/* number of lightweight processes */
-    char	*outersp;		/* outermost stack pointer */
-    struct lwp_pcb *outerpid;		/* process carved by Initialize */
+struct lwp_ctl {		/* LWP control structure */
+    int processcnt;		/* number of lightweight processes */
+    char *outersp;		/* outermost stack pointer */
+    struct lwp_pcb *outerpid;	/* process carved by Initialize */
     struct lwp_pcb *first, last;	/* ptrs to first and last pcbs */
 #ifdef __hp9000s800
-    double	dsptchstack[200];	/* stack for dispatcher use only */
-					/* force 8 byte alignment        */
+    double dsptchstack[200];	/* stack for dispatcher use only */
+    /* force 8 byte alignment        */
 #else
-    char	dsptchstack[800];	/* stack for dispatcher use only */
+    char dsptchstack[800];	/* stack for dispatcher use only */
 #endif
 };
 
 #ifndef LWP_KERNEL
 extern
 #endif
-       char lwp_debug;		/* ON = show LWP debugging trace */
+char lwp_debug;			/* ON = show LWP debugging trace */
 
 /* 
  * Under hpux, any stack size smaller than 16K seems prone to
@@ -309,9 +307,9 @@ extern
 #endif
 
 /* Action to take on stack overflow. */
-#define LWP_SOQUIET	1		/* do nothing */
-#define LWP_SOABORT	2		/* abort the program */
-#define LWP_SOMESSAGE	3		/* print a message and be quiet */
+#define LWP_SOQUIET	1	/* do nothing */
+#define LWP_SOABORT	2	/* abort the program */
+#define LWP_SOMESSAGE	3	/* print a message and be quiet */
 extern int lwp_overflowAction;
 
 /* Tells if stack size counting is enabled. */
@@ -325,7 +323,7 @@ extern int lwp_MaxStackSeen;
 
 /* External function declarations. */
 #ifdef AFS_NT40_ENV
-#ifndef _MFC_VER	 /*skip if doing Microsoft foundation class*/
+#ifndef _MFC_VER		/*skip if doing Microsoft foundation class */
 #include <winsock2.h>
 #endif
 #elif defined(AFS_LINUX20_ENV)
@@ -333,43 +331,43 @@ extern int lwp_MaxStackSeen;
 #include <time.h>
 #include <sys/time.h>
 #else
-# include <unistd.h>			/* select() prototype */
-# include <sys/types.h>			/* fd_set on older platforms */
-# include <sys/time.h>			/* struct timeval, select() prototype */
+# include <unistd.h>		/* select() prototype */
+# include <sys/types.h>		/* fd_set on older platforms */
+# include <sys/time.h>		/* struct timeval, select() prototype */
 # ifndef FD_SET
-#  include <sys/select.h>		/* fd_set on newer platforms */
+#  include <sys/select.h>	/* fd_set on newer platforms */
 # endif
 #endif
 
-#endif	/* USE_PTHREADS */
+#endif /* USE_PTHREADS */
 
 /* iomgr.c */
 extern fd_set *IOMGR_AllocFDSet(void);
-extern int IOMGR_Select(int nfds, fd_set *rfds, fd_set *wfds, fd_set *efds,
+extern int IOMGR_Select(int nfds, fd_set * rfds, fd_set * wfds, fd_set * efds,
 			struct timeval *tvp);
 extern int IOMGR_Poll(void);
 extern void IOMGR_Sleep(int seconds);
 extern int IOMGR_Cancel(PROCESS pid);
 extern int IOMGR_Initialize(void);
 extern void IOMGR_FreeFDSet(fd_set * fds);
-extern int IOMGR_SoftSig( int (*aproc)(), char *arock);
+extern int IOMGR_SoftSig(int (*aproc) (), char *arock);
 
 
 /* fasttime.c */
 extern int FT_GetTimeOfDay(struct timeval *tv, struct timezone *tz);
-extern int FT_Init (int printErrors, int notReally);
+extern int FT_Init(int printErrors, int notReally);
 extern int FT_AGetTimeOfDay(struct timeval *tv, struct timezone *tz);
 extern unsigned int FT_ApproxTime(void);
 
 
-extern int LWP_WaitForKeystroke(int seconds); /* -1 => forever */
+extern int LWP_WaitForKeystroke(int seconds);	/* -1 => forever */
 extern int LWP_GetResponseKey(int seconds, char *key);
 extern int LWP_GetLine(char *linebuf, int len);
 #ifdef AFS_NT40_ENV
 /* lwp.c */
-extern int LWP_InitializeProcessSupport(int priority, PROCESS *pid);
-extern int LWP_CreateProcess(int (*funP)(), int stacksize, int priority,
-			     void *argP, char *name, PROCESS *pid);
+extern int LWP_InitializeProcessSupport(int priority, PROCESS * pid);
+extern int LWP_CreateProcess(int (*funP) (), int stacksize, int priority,
+			     void *argP, char *name, PROCESS * pid);
 extern int LWP_DestroyProcess(PROCESS pid);
 extern int LWP_DispatchProcess(void);
 extern int LWP_WaitProcess(void *event);
@@ -377,21 +375,21 @@ extern int LWP_INTERNALSIGNAL(void *event, int yield);
 extern int LWP_QWait(void);
 extern int LWP_QSignal(PROCESS pid);
 #else
-extern int LWP_CurrentProcess(PROCESS *pid);
+extern int LWP_CurrentProcess(PROCESS * pid);
 extern int LWP_INTERNALSIGNAL(char *event, int yield);
-extern int LWP_InitializeProcessSupport(int priority, PROCESS *pid);
-extern int LWP_CreateProcess(int (*ep)(), int stacksize, int priority,
-        void *parm, char *name, PROCESS *pid);
+extern int LWP_InitializeProcessSupport(int priority, PROCESS * pid);
+extern int LWP_CreateProcess(int (*ep) (), int stacksize, int priority,
+			     void *parm, char *name, PROCESS * pid);
 extern int LWP_DestroyProcess(PROCESS pid);
 extern int LWP_WaitProcess(char *event);
 extern PROCESS LWP_ThreadId(void);
 #endif
 
 /* max time we are allowed to spend in a select call on NT */
-#define IOMGR_MAXWAITTIME        5 /* seconds */
+#define IOMGR_MAXWAITTIME        5	/* seconds */
 
 /* max time we spend on a select in a Win95 DOS box */
-#define IOMGR_WIN95WAITTIME 5000 /* microseconds */
+#define IOMGR_WIN95WAITTIME 5000	/* microseconds */
 
 #endif /* __LWP_INCLUDE_ */
 

@@ -25,20 +25,20 @@
 
 #if !defined(AFS_OSF20_ENV) || defined(AFS_OSF30_ENV) || defined(AFS_OSF32_ENV)
     /* We do not instrument locks on osf20 because the vcache structure
-    ** exceeds the maximim possible limit for a vnode.
-    */
+     ** exceeds the maximim possible limit for a vnode.
+     */
 #define INSTRUMENT_LOCKS
 /* This is the max lock number in use. Please update it if you add any new
  * lock numbers.
  */
 #define MAX_LOCK_NUMBER 700
-#endif 
+#endif
 
 struct afs_bozoLock {
-    short count;    /* count of excl locks */
-    char flags;	    /* bit 1: is anyone waiting? */
-    char spare;	    /* for later */
-    char *proc;	    /* process holding the lock, really a struct proc * */
+    short count;		/* count of excl locks */
+    char flags;			/* bit 1: is anyone waiting? */
+    char spare;			/* for later */
+    char *proc;			/* process holding the lock, really a struct proc * */
 };
 #ifndef	AFS_NOBOZO_LOCK
 typedef struct afs_bozoLock afs_bozoLock_t;
@@ -55,7 +55,7 @@ typedef struct afs_bozoLock afs_bozoLock_t;
 #define afs_CheckBozonLockBlocking(lock)	0
 #endif
 
-#define	AFS_BOZONWAITING    1	    /* someone is waiting for this lock */
+#define	AFS_BOZONWAITING    1	/* someone is waiting for this lock */
 
 #undef MObtainWriteLock		/* Defined also in ../rx/rx_machdep.h" */
 #undef MReleaseWriteLock
@@ -123,26 +123,26 @@ extern tid_t thread_self();
 #endif /* AFS_SGI64_ENV */
 #endif /* AFS_HPUX101_ENV */
 #endif /* AFS_AIX41_ENV */
-#endif 
+#endif
 
 /* all locks wait on excl_locked except for READ_LOCK, which waits on readers_reading */
 struct afs_lock {
-    unsigned char	wait_states;	/* type of lockers waiting */
-    unsigned char	excl_locked;	/* anyone have boosted, shared or write lock? */
-    unsigned short	readers_reading;/* # readers actually with read locks */
-    unsigned short	num_waiting;	/* probably need this soon */
-    unsigned short	spare;		/* not used now */
-    osi_timeval_t       time_waiting;   /* for statistics gathering */
+    unsigned char wait_states;	/* type of lockers waiting */
+    unsigned char excl_locked;	/* anyone have boosted, shared or write lock? */
+    unsigned short readers_reading;	/* # readers actually with read locks */
+    unsigned short num_waiting;	/* probably need this soon */
+    unsigned short spare;	/* not used now */
+    osi_timeval_t time_waiting;	/* for statistics gathering */
 #if defined(INSTRUMENT_LOCKS)
     /* the following are useful for debugging 
-    ** the field 'src_indicator' is updated only by ObtainLock() and
-    ** only for writes/shared  locks. Hence, it indictes where in the
-    ** source code the shared/write lock was set.
-    */
-    unsigned int       	pid_last_reader;/* proceess id of last reader */
-    unsigned int       	pid_writer;     /* process id of writer, else 0 */
-    unsigned int        src_indicator;  /* third param to ObtainLock()*/
-#endif /* INSTRUMENT_LOCKS */
+     ** the field 'src_indicator' is updated only by ObtainLock() and
+     ** only for writes/shared  locks. Hence, it indictes where in the
+     ** source code the shared/write lock was set.
+     */
+    unsigned int pid_last_reader;	/* proceess id of last reader */
+    unsigned int pid_writer;	/* process id of writer, else 0 */
+    unsigned int src_indicator;	/* third param to ObtainLock() */
+#endif				/* INSTRUMENT_LOCKS */
 };
 typedef struct afs_lock afs_lock_t;
 typedef struct afs_lock afs_rwlock_t;
@@ -305,7 +305,7 @@ extern int afs_trclock;
    ENDMAC
 
 #define NBObtainSharedLock(lock, src) (((lock)->excl_locked) ? EWOULDBLOCK : (((lock) -> excl_locked = SHARED_LOCK), 0))
-   
+
 #define UpgradeSToWLock(lock, src)\
   BEGINMAC  \
 	AFS_LOCK_TRACE(CM_TRACE_LOCKOBTAIN, lock, BOOSTED_LOCK);\

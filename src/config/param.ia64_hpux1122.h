@@ -21,14 +21,14 @@
 #define AFS_HPUX1111_ENV 1
 #define AFS_HPUX1122_ENV 1
 
-#define AFS_64BIT_ENV		1       /* Defines afs_int32 as int, not long. */
+#define AFS_64BIT_ENV		1	/* Defines afs_int32 as int, not long. */
 #if defined(__LP64__)
 #define AFS_64BITPOINTER_ENV	1	/* pointers are 64 bits. */
 #endif
 
 #include <afs/afs_sysnames.h>
 
-#define AFS_SYSCALL	48 /* slot reserved for AFS */
+#define AFS_SYSCALL	48	/* slot reserved for AFS */
 
 /* Machine / Operating system information */
 #define SYS_NAME	"ia64_hpux1122"
@@ -39,14 +39,14 @@
 #define AFS_GLOBAL_SUNLOCK 1
 #define RXK_LISTENER_ENV   1
 #define AFS_USERSPACE_IP_ADDR 1
-#define AFS_GCPAGS		0       /* if nonzero, garbage collect PAGs */
+#define AFS_GCPAGS		0	/* if nonzero, garbage collect PAGs */
 #define AFS_USE_VOID_PTR 1
 /*
  * #define AFS_VM_RDWR_ENV	1
  */
 #define AFS_TEXT_ENV	1	/* Older kernels use TEXT */
-#define AFS_USE_GETTIMEOFDAY 1  /* use gettimeofday to implement rx clock */
-#define NEARINODE_HINT  1   /* hint to ufs module to scatter inodes on disk*/
+#define AFS_USE_GETTIMEOFDAY 1	/* use gettimeofday to implement rx clock */
+#define NEARINODE_HINT  1	/* hint to ufs module to scatter inodes on disk */
 #define nearInodeHash(volid, hval) {                                 \
                 unsigned char*  ts = (unsigned char*)&(volid)+sizeof(volid)-1;\
                 for ( (hval)=0; ts >= (unsigned char*)&(volid); ts--){\
@@ -91,12 +91,12 @@ struct uio;
 #define memcmp(A, B, S) bcmp(A, B, S)
 #endif
 #endif /* KERNEL */
-#define	AFS_DIRENT	
+#define	AFS_DIRENT
 /* Non-standard definitions */
 #ifndef	EDQUOT
-#define	EDQUOT		69	/* Disc quota exceeded 		*/
+#define	EDQUOT		69	/* Disc quota exceeded          */
 #endif
 
-#define USE_UCONTEXT        /* should be in afsconfig.h */
+#define USE_UCONTEXT		/* should be in afsconfig.h */
 
 #endif /* AFS_PARAM_H */

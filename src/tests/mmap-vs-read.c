@@ -53,19 +53,19 @@ RCSID("$Id$");
 static int debug = 0;
 
 static void
-generate_file (const char *filename, int randomp, size_t sz)
+generate_file(const char *filename, int randomp, size_t sz)
 {
     int fd;
     char *buf;
     int i;
 
-    buf = malloc (sz);
+    buf = malloc(sz);
     if (buf == NULL)
-	err (1, "malloc %u", (unsigned)sz);
+	err(1, "malloc %u", (unsigned)sz);
 
-    fd = open (filename, O_WRONLY | O_CREAT, 0666);
+    fd = open(filename, O_WRONLY | O_CREAT, 0666);
     if (fd < 0)
-	err (1, "open %s", filename);
+	err(1, "open %s", filename);
 
     for (i = 0; i < sz; ++i)
 	if (randomp)
@@ -73,27 +73,27 @@ generate_file (const char *filename, int randomp, size_t sz)
 	else
 	    buf[0] = 0;
 
-    if (write (fd, buf, sz) != sz)
-	err (1, "write");
-    if (close (fd))
-	err (1, "close");
-    free (buf);
+    if (write(fd, buf, sz) != sz)
+	err(1, "write");
+    if (close(fd))
+	err(1, "close");
+    free(buf);
 }
 
 static char *
-read_file (int fd, size_t sz)
+read_file(int fd, size_t sz)
 {
     char *buf;
     ssize_t ret;
 
-    buf = malloc (sz);
+    buf = malloc(sz);
     if (buf == NULL)
-	err (1, "malloc %u", (unsigned)sz);
-    ret = read (fd, buf, sz);
+	err(1, "malloc %u", (unsigned)sz);
+    ret = read(fd, buf, sz);
     if (ret < 0)
-        err(1, "read");
+	err(1, "read");
     if (ret != sz)
-        errx(1, "short read %d < %u", (int)ret, (unsigned)sz);
+	errx(1, "short read %d < %u", (int)ret, (unsigned)sz);
     return buf;
 }
 
@@ -102,52 +102,52 @@ read_file (int fd, size_t sz)
 #endif
 
 static void *
-mmap_file (int fd, size_t sz)
+mmap_file(int fd, size_t sz)
 {
     void *ret;
 
-    ret = mmap (0, sz, PROT_READ, MAP_SHARED, fd, 0);
+    ret = mmap(0, sz, PROT_READ, MAP_SHARED, fd, 0);
     if (ret == (void *)MAP_FAILED)
-	err (1, "mmap");
+	err(1, "mmap");
     return ret;
 }
 
 static void __attribute__ ((__unused__))
-print_area (unsigned char *ptr,  size_t len)
+    print_area(unsigned char *ptr, size_t len)
 {
     while (len--) {
-	printf ("%x", *ptr);
+	printf("%x", *ptr);
 	ptr++;
     }
 }
 
 static int
-do_test (int randomp)
+do_test(int randomp)
 {
     unsigned char *malloc_buf;
     void *mmap_buf;
     int fd;
     const char *file = "foo";
-    const size_t sz  = 4 * getpagesize();
+    const size_t sz = 4 * getpagesize();
 
-    generate_file (file, randomp, sz);
+    generate_file(file, randomp, sz);
 
-    fd = open (file, O_RDONLY, 0);
+    fd = open(file, O_RDONLY, 0);
     if (fd < 0)
-	err (1, "open %s", file);
+	err(1, "open %s", file);
 
-    mmap_buf   = mmap_file (fd, sz);
-    malloc_buf = read_file (fd, sz);
-    close (fd);
-    unlink (file);
-    if (memcmp (malloc_buf, mmap_buf, sz) != 0) {
+    mmap_buf = mmap_file(fd, sz);
+    malloc_buf = read_file(fd, sz);
+    close(fd);
+    unlink(file);
+    if (memcmp(malloc_buf, mmap_buf, sz) != 0) {
 	if (debug) {
-	    printf ("type: %s\n", randomp ? "random" : "allzero");
-	    printf ("read: ");
-	    print_area (malloc_buf, sz);
-	    printf ("\nmmap: ");
-	    print_area (mmap_buf, sz);
-	    printf ("\n");
+	    printf("type: %s\n", randomp ? "random" : "allzero");
+	    printf("read: ");
+	    print_area(malloc_buf, sz);
+	    printf("\nmmap: ");
+	    print_area(mmap_buf, sz);
+	    printf("\n");
 	}
 	return 1;
     }
@@ -155,17 +155,17 @@ do_test (int randomp)
 }
 
 int
-main (int argc, char **argv)
+main(int argc, char **argv)
 {
 
     if (argc != 1)
 	debug = 1;
 
-    srand (time(NULL));
+    srand(time(NULL));
 
-    if (do_test (0))
+    if (do_test(0))
 	return 1;
-    if (do_test (1))
+    if (do_test(1))
 	return 2;
 
     return 0;

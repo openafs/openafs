@@ -27,8 +27,9 @@
 
 #include <des.h>
 #include "des_prototypes.h"
- 
-RCSID("$Header$");
+
+RCSID
+    ("$Header$");
 
 
 #define XPRT_CBC_ENCRYPT
@@ -59,18 +60,18 @@ RCSID("$Header$");
     des_key_schedule key;		* precomputed key schedule *
     des_cblock *iv;		* 8 bytes of ivec *
 */
-afs_int32 des_cbc_encrypt(des_cblock *in, des_cblock *out, 
-	register afs_int32 length, des_key_schedule key, 
-	des_cblock *iv, int encrypt)
+afs_int32
+des_cbc_encrypt(des_cblock * in, des_cblock * out, register afs_int32 length,
+		des_key_schedule key, des_cblock * iv, int encrypt)
 {
     register afs_uint32 *input = (afs_uint32 *) in;
     register afs_uint32 *output = (afs_uint32 *) out;
     register afs_uint32 *ivec = (afs_uint32 *) iv;
 
-    afs_uint32 i,j;
+    afs_uint32 i, j;
     afs_uint32 t_input[2];
     afs_uint32 t_output[2];
-    unsigned char *t_in_p = (unsigned char *) t_input;
+    unsigned char *t_in_p = (unsigned char *)t_input;
     afs_uint32 xor_0, xor_1;
 
     if (encrypt) {
@@ -78,8 +79,7 @@ afs_int32 des_cbc_encrypt(des_cblock *in, des_cblock *out,
 	if ((afs_int32) ivec & 3) {
 	    memcpy((char *)&t_output[0], (char *)ivec++, sizeof(t_output[0]));
 	    memcpy((char *)&t_output[1], (char *)ivec, sizeof(t_output[1]));
-	}
-	else
+	} else
 #endif
 	{
 	    t_output[0] = *ivec++;
@@ -90,10 +90,11 @@ afs_int32 des_cbc_encrypt(des_cblock *in, des_cblock *out,
 	    /* get input */
 #ifdef MUSTALIGN
 	    if ((afs_int32) input & 3) {
-		memcpy((char *)&t_input[0], (char *)input++, sizeof(t_input[0]));
-		memcpy((char *)&t_input[1], (char *)input++, sizeof(t_input[1]));
-	    }
-	    else
+		memcpy((char *)&t_input[0], (char *)input++,
+		       sizeof(t_input[0]));
+		memcpy((char *)&t_input[1], (char *)input++,
+		       sizeof(t_input[1]));
+	    } else
 #endif
 	    {
 		t_input[0] = *input++;
@@ -103,24 +104,25 @@ afs_int32 des_cbc_encrypt(des_cblock *in, des_cblock *out,
 	    /* zero pad */
 	    if (length < 8)
 		for (j = length; j <= 7; j++)
-		    *(t_in_p+j)= 0;
+		    *(t_in_p + j) = 0;
 
 #ifdef DEBUG
 	    if (des_debug)
-		des_debug_print("clear",length,t_input[0],t_input[1]);
+		des_debug_print("clear", length, t_input[0], t_input[1]);
 #endif
 	    /* do the xor for cbc into the temp */
 	    t_input[0] ^= t_output[0];
 	    t_input[1] ^= t_output[1];
 	    /* encrypt */
-	    (void) des_ecb_encrypt(t_input,t_output,key,encrypt);
+	    (void)des_ecb_encrypt(t_input, t_output, key, encrypt);
 	    /* copy temp output and save it for cbc */
 #ifdef MUSTALIGN
 	    if ((afs_int32) output & 3) {
-		memcpy((char *)output++, (char *)&t_output[0], sizeof(t_output[0]));
-		memcpy((char *)output++, (char *)&t_output[1], sizeof(t_output[1]));
-	    }
-	    else
+		memcpy((char *)output++, (char *)&t_output[0],
+		       sizeof(t_output[0]));
+		memcpy((char *)output++, (char *)&t_output[1],
+		       sizeof(t_output[1]));
+	    } else
 #endif
 	    {
 		*output++ = t_output[0];
@@ -129,8 +131,8 @@ afs_int32 des_cbc_encrypt(des_cblock *in, des_cblock *out,
 
 #ifdef DEBUG
 	    if (des_debug) {
-		des_debug_print("xor'ed",i,t_input[0],t_input[1]);
-		des_debug_print("cipher",i,t_output[0],t_output[1]);
+		des_debug_print("xor'ed", i, t_input[0], t_input[1]);
+		des_debug_print("cipher", i, t_output[0], t_output[1]);
 	    }
 #endif
 	}
@@ -143,8 +145,7 @@ afs_int32 des_cbc_encrypt(des_cblock *in, des_cblock *out,
 	if ((afs_int32) ivec & 3) {
 	    memcpy((char *)&xor_0, (char *)ivec++, sizeof(xor_0));
 	    memcpy((char *)&xor_1, (char *)ivec, sizeof(xor_1));
-	}
-	else
+	} else
 #endif
 	{
 	    xor_0 = *ivec++;
@@ -155,10 +156,11 @@ afs_int32 des_cbc_encrypt(des_cblock *in, des_cblock *out,
 	    /* get input */
 #ifdef MUSTALIGN
 	    if ((afs_int32) input & 3) {
-		memcpy((char *)&t_input[0], (char *)input++, sizeof(t_input[0]));
-		memcpy((char *)&t_input[1], (char *)input++, sizeof(t_input[0]));
-	    }
-	    else
+		memcpy((char *)&t_input[0], (char *)input++,
+		       sizeof(t_input[0]));
+		memcpy((char *)&t_input[1], (char *)input++,
+		       sizeof(t_input[0]));
+	    } else
 #endif
 	    {
 		t_input[0] = *input++;
@@ -168,17 +170,17 @@ afs_int32 des_cbc_encrypt(des_cblock *in, des_cblock *out,
 	    /* no padding for decrypt */
 #ifdef DEBUG
 	    if (des_debug)
-		des_debug_print("cipher",i,t_input[0],t_input[1]);
+		des_debug_print("cipher", i, t_input[0], t_input[1]);
 #else
 #ifdef lint
 	    i = i;
 #endif
 #endif
 	    /* encrypt */
-	    (void) des_ecb_encrypt(t_input,t_output,key,encrypt);
+	    (void)des_ecb_encrypt(t_input, t_output, key, encrypt);
 #ifdef DEBUG
 	    if (des_debug)
-		des_debug_print("out pre xor",i,t_output[0],t_output[1]);
+		des_debug_print("out pre xor", i, t_output[0], t_output[1]);
 #endif
 	    /* do the xor for cbc into the output */
 	    t_output[0] ^= xor_0;
@@ -186,10 +188,11 @@ afs_int32 des_cbc_encrypt(des_cblock *in, des_cblock *out,
 	    /* copy temp output */
 #ifdef MUSTALIGN
 	    if ((afs_int32) output & 3) {
-		memcpy((char *)output++, (char *)&t_output[0], sizeof(t_output[0]));
-		memcpy((char *)output++, (char *)&t_output[1], sizeof(t_output[1]));
-	    }
-	    else
+		memcpy((char *)output++, (char *)&t_output[0],
+		       sizeof(t_output[0]));
+		memcpy((char *)output++, (char *)&t_output[1],
+		       sizeof(t_output[1]));
+	    } else
 #endif
 	    {
 		*output++ = t_output[0];
@@ -201,7 +204,7 @@ afs_int32 des_cbc_encrypt(des_cblock *in, des_cblock *out,
 	    xor_1 = t_input[1];
 #ifdef DEBUG
 	    if (des_debug)
-		des_debug_print("clear",i,t_output[0],t_output[1]);
+		des_debug_print("clear", i, t_output[0], t_output[1]);
 #endif
 	}
 	return 0;

@@ -37,7 +37,8 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #define DEBUG 0
 #ifdef KERNEL
@@ -131,8 +132,8 @@ RCSID("$Header$");
 static inline afs_uint32
 bswap(afs_uint32 x)
 {
-  asm("bswap %0" : "=r" (x) : "0" (x));
-  return x;
+  asm("bswap %0": "=r"(x):"0"(x));
+    return x;
 }
 #endif
 #endif
@@ -145,114 +146,210 @@ bswap(afs_uint32 x)
 #undef Z
 #define Z(x) NTOH(x << 3)
 static const afs_uint32 sbox0[256] = {
-  Z(0xea), Z(0x7f), Z(0xb2), Z(0x64), Z(0x9d), Z(0xb0), Z(0xd9), Z(0x11), Z(0xcd), Z(0x86), Z(0x86),
-  Z(0x91), Z(0x0a), Z(0xb2), Z(0x93), Z(0x06), Z(0x0e), Z(0x06), Z(0xd2), Z(0x65), Z(0x73), Z(0xc5),
-  Z(0x28), Z(0x60), Z(0xf2), Z(0x20), Z(0xb5), Z(0x38), Z(0x7e), Z(0xda), Z(0x9f), Z(0xe3), Z(0xd2),
-  Z(0xcf), Z(0xc4), Z(0x3c), Z(0x61), Z(0xff), Z(0x4a), Z(0x4a), Z(0x35), Z(0xac), Z(0xaa), Z(0x5f),
-  Z(0x2b), Z(0xbb), Z(0xbc), Z(0x53), Z(0x4e), Z(0x9d), Z(0x78), Z(0xa3), Z(0xdc), Z(0x09), Z(0x32),
-  Z(0x10), Z(0xc6), Z(0x6f), Z(0x66), Z(0xd6), Z(0xab), Z(0xa9), Z(0xaf), Z(0xfd), Z(0x3b), Z(0x95),
-  Z(0xe8), Z(0x34), Z(0x9a), Z(0x81), Z(0x72), Z(0x80), Z(0x9c), Z(0xf3), Z(0xec), Z(0xda), Z(0x9f),
-  Z(0x26), Z(0x76), Z(0x15), Z(0x3e), Z(0x55), Z(0x4d), Z(0xde), Z(0x84), Z(0xee), Z(0xad), Z(0xc7),
-  Z(0xf1), Z(0x6b), Z(0x3d), Z(0xd3), Z(0x04), Z(0x49), Z(0xaa), Z(0x24), Z(0x0b), Z(0x8a), Z(0x83),
-  Z(0xba), Z(0xfa), Z(0x85), Z(0xa0), Z(0xa8), Z(0xb1), Z(0xd4), Z(0x01), Z(0xd8), Z(0x70), Z(0x64),
-  Z(0xf0), Z(0x51), Z(0xd2), Z(0xc3), Z(0xa7), Z(0x75), Z(0x8c), Z(0xa5), Z(0x64), Z(0xef), Z(0x10),
-  Z(0x4e), Z(0xb7), Z(0xc6), Z(0x61), Z(0x03), Z(0xeb), Z(0x44), Z(0x3d), Z(0xe5), Z(0xb3), Z(0x5b),
-  Z(0xae), Z(0xd5), Z(0xad), Z(0x1d), Z(0xfa), Z(0x5a), Z(0x1e), Z(0x33), Z(0xab), Z(0x93), Z(0xa2),
-  Z(0xb7), Z(0xe7), Z(0xa8), Z(0x45), Z(0xa4), Z(0xcd), Z(0x29), Z(0x63), Z(0x44), Z(0xb6), Z(0x69),
-  Z(0x7e), Z(0x2e), Z(0x62), Z(0x03), Z(0xc8), Z(0xe0), Z(0x17), Z(0xbb), Z(0xc7), Z(0xf3), Z(0x3f),
-  Z(0x36), Z(0xba), Z(0x71), Z(0x8e), Z(0x97), Z(0x65), Z(0x60), Z(0x69), Z(0xb6), Z(0xf6), Z(0xe6),
-  Z(0x6e), Z(0xe0), Z(0x81), Z(0x59), Z(0xe8), Z(0xaf), Z(0xdd), Z(0x95), Z(0x22), Z(0x99), Z(0xfd),
-  Z(0x63), Z(0x19), Z(0x74), Z(0x61), Z(0xb1), Z(0xb6), Z(0x5b), Z(0xae), Z(0x54), Z(0xb3), Z(0x70),
-  Z(0xff), Z(0xc6), Z(0x3b), Z(0x3e), Z(0xc1), Z(0xd7), Z(0xe1), Z(0x0e), Z(0x76), Z(0xe5), Z(0x36),
-  Z(0x4f), Z(0x59), Z(0xc7), Z(0x08), Z(0x6e), Z(0x82), Z(0xa6), Z(0x93), Z(0xc4), Z(0xaa), Z(0x26),
-  Z(0x49), Z(0xe0), Z(0x21), Z(0x64), Z(0x07), Z(0x9f), Z(0x64), Z(0x81), Z(0x9c), Z(0xbf), Z(0xf9),
-  Z(0xd1), Z(0x43), Z(0xf8), Z(0xb6), Z(0xb9), Z(0xf1), Z(0x24), Z(0x75), Z(0x03), Z(0xe4), Z(0xb0),
-  Z(0x99), Z(0x46), Z(0x3d), Z(0xf5), Z(0xd1), Z(0x39), Z(0x72), Z(0x12), Z(0xf6), Z(0xba), Z(0x0c),
-  Z(0x0d), Z(0x42), Z(0x2e)};
+    Z(0xea), Z(0x7f), Z(0xb2), Z(0x64), Z(0x9d), Z(0xb0), Z(0xd9), Z(0x11),
+    Z(0xcd), Z(0x86), Z(0x86),
+    Z(0x91), Z(0x0a), Z(0xb2), Z(0x93), Z(0x06), Z(0x0e), Z(0x06), Z(0xd2),
+    Z(0x65), Z(0x73), Z(0xc5),
+    Z(0x28), Z(0x60), Z(0xf2), Z(0x20), Z(0xb5), Z(0x38), Z(0x7e), Z(0xda),
+    Z(0x9f), Z(0xe3), Z(0xd2),
+    Z(0xcf), Z(0xc4), Z(0x3c), Z(0x61), Z(0xff), Z(0x4a), Z(0x4a), Z(0x35),
+    Z(0xac), Z(0xaa), Z(0x5f),
+    Z(0x2b), Z(0xbb), Z(0xbc), Z(0x53), Z(0x4e), Z(0x9d), Z(0x78), Z(0xa3),
+    Z(0xdc), Z(0x09), Z(0x32),
+    Z(0x10), Z(0xc6), Z(0x6f), Z(0x66), Z(0xd6), Z(0xab), Z(0xa9), Z(0xaf),
+    Z(0xfd), Z(0x3b), Z(0x95),
+    Z(0xe8), Z(0x34), Z(0x9a), Z(0x81), Z(0x72), Z(0x80), Z(0x9c), Z(0xf3),
+    Z(0xec), Z(0xda), Z(0x9f),
+    Z(0x26), Z(0x76), Z(0x15), Z(0x3e), Z(0x55), Z(0x4d), Z(0xde), Z(0x84),
+    Z(0xee), Z(0xad), Z(0xc7),
+    Z(0xf1), Z(0x6b), Z(0x3d), Z(0xd3), Z(0x04), Z(0x49), Z(0xaa), Z(0x24),
+    Z(0x0b), Z(0x8a), Z(0x83),
+    Z(0xba), Z(0xfa), Z(0x85), Z(0xa0), Z(0xa8), Z(0xb1), Z(0xd4), Z(0x01),
+    Z(0xd8), Z(0x70), Z(0x64),
+    Z(0xf0), Z(0x51), Z(0xd2), Z(0xc3), Z(0xa7), Z(0x75), Z(0x8c), Z(0xa5),
+    Z(0x64), Z(0xef), Z(0x10),
+    Z(0x4e), Z(0xb7), Z(0xc6), Z(0x61), Z(0x03), Z(0xeb), Z(0x44), Z(0x3d),
+    Z(0xe5), Z(0xb3), Z(0x5b),
+    Z(0xae), Z(0xd5), Z(0xad), Z(0x1d), Z(0xfa), Z(0x5a), Z(0x1e), Z(0x33),
+    Z(0xab), Z(0x93), Z(0xa2),
+    Z(0xb7), Z(0xe7), Z(0xa8), Z(0x45), Z(0xa4), Z(0xcd), Z(0x29), Z(0x63),
+    Z(0x44), Z(0xb6), Z(0x69),
+    Z(0x7e), Z(0x2e), Z(0x62), Z(0x03), Z(0xc8), Z(0xe0), Z(0x17), Z(0xbb),
+    Z(0xc7), Z(0xf3), Z(0x3f),
+    Z(0x36), Z(0xba), Z(0x71), Z(0x8e), Z(0x97), Z(0x65), Z(0x60), Z(0x69),
+    Z(0xb6), Z(0xf6), Z(0xe6),
+    Z(0x6e), Z(0xe0), Z(0x81), Z(0x59), Z(0xe8), Z(0xaf), Z(0xdd), Z(0x95),
+    Z(0x22), Z(0x99), Z(0xfd),
+    Z(0x63), Z(0x19), Z(0x74), Z(0x61), Z(0xb1), Z(0xb6), Z(0x5b), Z(0xae),
+    Z(0x54), Z(0xb3), Z(0x70),
+    Z(0xff), Z(0xc6), Z(0x3b), Z(0x3e), Z(0xc1), Z(0xd7), Z(0xe1), Z(0x0e),
+    Z(0x76), Z(0xe5), Z(0x36),
+    Z(0x4f), Z(0x59), Z(0xc7), Z(0x08), Z(0x6e), Z(0x82), Z(0xa6), Z(0x93),
+    Z(0xc4), Z(0xaa), Z(0x26),
+    Z(0x49), Z(0xe0), Z(0x21), Z(0x64), Z(0x07), Z(0x9f), Z(0x64), Z(0x81),
+    Z(0x9c), Z(0xbf), Z(0xf9),
+    Z(0xd1), Z(0x43), Z(0xf8), Z(0xb6), Z(0xb9), Z(0xf1), Z(0x24), Z(0x75),
+    Z(0x03), Z(0xe4), Z(0xb0),
+    Z(0x99), Z(0x46), Z(0x3d), Z(0xf5), Z(0xd1), Z(0x39), Z(0x72), Z(0x12),
+    Z(0xf6), Z(0xba), Z(0x0c),
+    Z(0x0d), Z(0x42), Z(0x2e)
+};
 
 #undef Z
 #define Z(x) NTOH((x << 27) | (x >> 5))
 static const afs_uint32 sbox1[256] = {
-  Z(0x77), Z(0x14), Z(0xa6), Z(0xfe), Z(0xb2), Z(0x5e), Z(0x8c), Z(0x3e), Z(0x67), Z(0x6c), Z(0xa1),
-  Z(0x0d), Z(0xc2), Z(0xa2), Z(0xc1), Z(0x85), Z(0x6c), Z(0x7b), Z(0x67), Z(0xc6), Z(0x23), Z(0xe3),
-  Z(0xf2), Z(0x89), Z(0x50), Z(0x9c), Z(0x03), Z(0xb7), Z(0x73), Z(0xe6), Z(0xe1), Z(0x39), Z(0x31),
-  Z(0x2c), Z(0x27), Z(0x9f), Z(0xa5), Z(0x69), Z(0x44), Z(0xd6), Z(0x23), Z(0x83), Z(0x98), Z(0x7d),
-  Z(0x3c), Z(0xb4), Z(0x2d), Z(0x99), Z(0x1c), Z(0x1f), Z(0x8c), Z(0x20), Z(0x03), Z(0x7c), Z(0x5f),
-  Z(0xad), Z(0xf4), Z(0xfa), Z(0x95), Z(0xca), Z(0x76), Z(0x44), Z(0xcd), Z(0xb6), Z(0xb8), Z(0xa1),
-  Z(0xa1), Z(0xbe), Z(0x9e), Z(0x54), Z(0x8f), Z(0x0b), Z(0x16), Z(0x74), Z(0x31), Z(0x8a), Z(0x23),
-  Z(0x17), Z(0x04), Z(0xfa), Z(0x79), Z(0x84), Z(0xb1), Z(0xf5), Z(0x13), Z(0xab), Z(0xb5), Z(0x2e),
-  Z(0xaa), Z(0x0c), Z(0x60), Z(0x6b), Z(0x5b), Z(0xc4), Z(0x4b), Z(0xbc), Z(0xe2), Z(0xaf), Z(0x45),
-  Z(0x73), Z(0xfa), Z(0xc9), Z(0x49), Z(0xcd), Z(0x00), Z(0x92), Z(0x7d), Z(0x97), Z(0x7a), Z(0x18),
-  Z(0x60), Z(0x3d), Z(0xcf), Z(0x5b), Z(0xde), Z(0xc6), Z(0xe2), Z(0xe6), Z(0xbb), Z(0x8b), Z(0x06),
-  Z(0xda), Z(0x08), Z(0x15), Z(0x1b), Z(0x88), Z(0x6a), Z(0x17), Z(0x89), Z(0xd0), Z(0xa9), Z(0xc1),
-  Z(0xc9), Z(0x70), Z(0x6b), Z(0xe5), Z(0x43), Z(0xf4), Z(0x68), Z(0xc8), Z(0xd3), Z(0x84), Z(0x28),
-  Z(0x0a), Z(0x52), Z(0x66), Z(0xa3), Z(0xca), Z(0xf2), Z(0xe3), Z(0x7f), Z(0x7a), Z(0x31), Z(0xf7),
-  Z(0x88), Z(0x94), Z(0x5e), Z(0x9c), Z(0x63), Z(0xd5), Z(0x24), Z(0x66), Z(0xfc), Z(0xb3), Z(0x57),
-  Z(0x25), Z(0xbe), Z(0x89), Z(0x44), Z(0xc4), Z(0xe0), Z(0x8f), Z(0x23), Z(0x3c), Z(0x12), Z(0x52),
-  Z(0xf5), Z(0x1e), Z(0xf4), Z(0xcb), Z(0x18), Z(0x33), Z(0x1f), Z(0xf8), Z(0x69), Z(0x10), Z(0x9d),
-  Z(0xd3), Z(0xf7), Z(0x28), Z(0xf8), Z(0x30), Z(0x05), Z(0x5e), Z(0x32), Z(0xc0), Z(0xd5), Z(0x19),
-  Z(0xbd), Z(0x45), Z(0x8b), Z(0x5b), Z(0xfd), Z(0xbc), Z(0xe2), Z(0x5c), Z(0xa9), Z(0x96), Z(0xef),
-  Z(0x70), Z(0xcf), Z(0xc2), Z(0x2a), Z(0xb3), Z(0x61), Z(0xad), Z(0x80), Z(0x48), Z(0x81), Z(0xb7),
-  Z(0x1d), Z(0x43), Z(0xd9), Z(0xd7), Z(0x45), Z(0xf0), Z(0xd8), Z(0x8a), Z(0x59), Z(0x7c), Z(0x57),
-  Z(0xc1), Z(0x79), Z(0xc7), Z(0x34), Z(0xd6), Z(0x43), Z(0xdf), Z(0xe4), Z(0x78), Z(0x16), Z(0x06),
-  Z(0xda), Z(0x92), Z(0x76), Z(0x51), Z(0xe1), Z(0xd4), Z(0x70), Z(0x03), Z(0xe0), Z(0x2f), Z(0x96),
-  Z(0x91), Z(0x82), Z(0x80)};
+    Z(0x77), Z(0x14), Z(0xa6), Z(0xfe), Z(0xb2), Z(0x5e), Z(0x8c), Z(0x3e),
+    Z(0x67), Z(0x6c), Z(0xa1),
+    Z(0x0d), Z(0xc2), Z(0xa2), Z(0xc1), Z(0x85), Z(0x6c), Z(0x7b), Z(0x67),
+    Z(0xc6), Z(0x23), Z(0xe3),
+    Z(0xf2), Z(0x89), Z(0x50), Z(0x9c), Z(0x03), Z(0xb7), Z(0x73), Z(0xe6),
+    Z(0xe1), Z(0x39), Z(0x31),
+    Z(0x2c), Z(0x27), Z(0x9f), Z(0xa5), Z(0x69), Z(0x44), Z(0xd6), Z(0x23),
+    Z(0x83), Z(0x98), Z(0x7d),
+    Z(0x3c), Z(0xb4), Z(0x2d), Z(0x99), Z(0x1c), Z(0x1f), Z(0x8c), Z(0x20),
+    Z(0x03), Z(0x7c), Z(0x5f),
+    Z(0xad), Z(0xf4), Z(0xfa), Z(0x95), Z(0xca), Z(0x76), Z(0x44), Z(0xcd),
+    Z(0xb6), Z(0xb8), Z(0xa1),
+    Z(0xa1), Z(0xbe), Z(0x9e), Z(0x54), Z(0x8f), Z(0x0b), Z(0x16), Z(0x74),
+    Z(0x31), Z(0x8a), Z(0x23),
+    Z(0x17), Z(0x04), Z(0xfa), Z(0x79), Z(0x84), Z(0xb1), Z(0xf5), Z(0x13),
+    Z(0xab), Z(0xb5), Z(0x2e),
+    Z(0xaa), Z(0x0c), Z(0x60), Z(0x6b), Z(0x5b), Z(0xc4), Z(0x4b), Z(0xbc),
+    Z(0xe2), Z(0xaf), Z(0x45),
+    Z(0x73), Z(0xfa), Z(0xc9), Z(0x49), Z(0xcd), Z(0x00), Z(0x92), Z(0x7d),
+    Z(0x97), Z(0x7a), Z(0x18),
+    Z(0x60), Z(0x3d), Z(0xcf), Z(0x5b), Z(0xde), Z(0xc6), Z(0xe2), Z(0xe6),
+    Z(0xbb), Z(0x8b), Z(0x06),
+    Z(0xda), Z(0x08), Z(0x15), Z(0x1b), Z(0x88), Z(0x6a), Z(0x17), Z(0x89),
+    Z(0xd0), Z(0xa9), Z(0xc1),
+    Z(0xc9), Z(0x70), Z(0x6b), Z(0xe5), Z(0x43), Z(0xf4), Z(0x68), Z(0xc8),
+    Z(0xd3), Z(0x84), Z(0x28),
+    Z(0x0a), Z(0x52), Z(0x66), Z(0xa3), Z(0xca), Z(0xf2), Z(0xe3), Z(0x7f),
+    Z(0x7a), Z(0x31), Z(0xf7),
+    Z(0x88), Z(0x94), Z(0x5e), Z(0x9c), Z(0x63), Z(0xd5), Z(0x24), Z(0x66),
+    Z(0xfc), Z(0xb3), Z(0x57),
+    Z(0x25), Z(0xbe), Z(0x89), Z(0x44), Z(0xc4), Z(0xe0), Z(0x8f), Z(0x23),
+    Z(0x3c), Z(0x12), Z(0x52),
+    Z(0xf5), Z(0x1e), Z(0xf4), Z(0xcb), Z(0x18), Z(0x33), Z(0x1f), Z(0xf8),
+    Z(0x69), Z(0x10), Z(0x9d),
+    Z(0xd3), Z(0xf7), Z(0x28), Z(0xf8), Z(0x30), Z(0x05), Z(0x5e), Z(0x32),
+    Z(0xc0), Z(0xd5), Z(0x19),
+    Z(0xbd), Z(0x45), Z(0x8b), Z(0x5b), Z(0xfd), Z(0xbc), Z(0xe2), Z(0x5c),
+    Z(0xa9), Z(0x96), Z(0xef),
+    Z(0x70), Z(0xcf), Z(0xc2), Z(0x2a), Z(0xb3), Z(0x61), Z(0xad), Z(0x80),
+    Z(0x48), Z(0x81), Z(0xb7),
+    Z(0x1d), Z(0x43), Z(0xd9), Z(0xd7), Z(0x45), Z(0xf0), Z(0xd8), Z(0x8a),
+    Z(0x59), Z(0x7c), Z(0x57),
+    Z(0xc1), Z(0x79), Z(0xc7), Z(0x34), Z(0xd6), Z(0x43), Z(0xdf), Z(0xe4),
+    Z(0x78), Z(0x16), Z(0x06),
+    Z(0xda), Z(0x92), Z(0x76), Z(0x51), Z(0xe1), Z(0xd4), Z(0x70), Z(0x03),
+    Z(0xe0), Z(0x2f), Z(0x96),
+    Z(0x91), Z(0x82), Z(0x80)
+};
 
 #undef Z
 #define Z(x) NTOH(x << 11)
 static const afs_uint32 sbox2[256] = {
-  Z(0xf0), Z(0x37), Z(0x24), Z(0x53), Z(0x2a), Z(0x03), Z(0x83), Z(0x86), Z(0xd1), Z(0xec), Z(0x50),
-  Z(0xf0), Z(0x42), Z(0x78), Z(0x2f), Z(0x6d), Z(0xbf), Z(0x80), Z(0x87), Z(0x27), Z(0x95), Z(0xe2),
-  Z(0xc5), Z(0x5d), Z(0xf9), Z(0x6f), Z(0xdb), Z(0xb4), Z(0x65), Z(0x6e), Z(0xe7), Z(0x24), Z(0xc8),
-  Z(0x1a), Z(0xbb), Z(0x49), Z(0xb5), Z(0x0a), Z(0x7d), Z(0xb9), Z(0xe8), Z(0xdc), Z(0xb7), Z(0xd9),
-  Z(0x45), Z(0x20), Z(0x1b), Z(0xce), Z(0x59), Z(0x9d), Z(0x6b), Z(0xbd), Z(0x0e), Z(0x8f), Z(0xa3),
-  Z(0xa9), Z(0xbc), Z(0x74), Z(0xa6), Z(0xf6), Z(0x7f), Z(0x5f), Z(0xb1), Z(0x68), Z(0x84), Z(0xbc),
-  Z(0xa9), Z(0xfd), Z(0x55), Z(0x50), Z(0xe9), Z(0xb6), Z(0x13), Z(0x5e), Z(0x07), Z(0xb8), Z(0x95),
-  Z(0x02), Z(0xc0), Z(0xd0), Z(0x6a), Z(0x1a), Z(0x85), Z(0xbd), Z(0xb6), Z(0xfd), Z(0xfe), Z(0x17),
-  Z(0x3f), Z(0x09), Z(0xa3), Z(0x8d), Z(0xfb), Z(0xed), Z(0xda), Z(0x1d), Z(0x6d), Z(0x1c), Z(0x6c),
-  Z(0x01), Z(0x5a), Z(0xe5), Z(0x71), Z(0x3e), Z(0x8b), Z(0x6b), Z(0xbe), Z(0x29), Z(0xeb), Z(0x12),
-  Z(0x19), Z(0x34), Z(0xcd), Z(0xb3), Z(0xbd), Z(0x35), Z(0xea), Z(0x4b), Z(0xd5), Z(0xae), Z(0x2a),
-  Z(0x79), Z(0x5a), Z(0xa5), Z(0x32), Z(0x12), Z(0x7b), Z(0xdc), Z(0x2c), Z(0xd0), Z(0x22), Z(0x4b),
-  Z(0xb1), Z(0x85), Z(0x59), Z(0x80), Z(0xc0), Z(0x30), Z(0x9f), Z(0x73), Z(0xd3), Z(0x14), Z(0x48),
-  Z(0x40), Z(0x07), Z(0x2d), Z(0x8f), Z(0x80), Z(0x0f), Z(0xce), Z(0x0b), Z(0x5e), Z(0xb7), Z(0x5e),
-  Z(0xac), Z(0x24), Z(0x94), Z(0x4a), Z(0x18), Z(0x15), Z(0x05), Z(0xe8), Z(0x02), Z(0x77), Z(0xa9),
-  Z(0xc7), Z(0x40), Z(0x45), Z(0x89), Z(0xd1), Z(0xea), Z(0xde), Z(0x0c), Z(0x79), Z(0x2a), Z(0x99),
-  Z(0x6c), Z(0x3e), Z(0x95), Z(0xdd), Z(0x8c), Z(0x7d), Z(0xad), Z(0x6f), Z(0xdc), Z(0xff), Z(0xfd),
-  Z(0x62), Z(0x47), Z(0xb3), Z(0x21), Z(0x8a), Z(0xec), Z(0x8e), Z(0x19), Z(0x18), Z(0xb4), Z(0x6e),
-  Z(0x3d), Z(0xfd), Z(0x74), Z(0x54), Z(0x1e), Z(0x04), Z(0x85), Z(0xd8), Z(0xbc), Z(0x1f), Z(0x56),
-  Z(0xe7), Z(0x3a), Z(0x56), Z(0x67), Z(0xd6), Z(0xc8), Z(0xa5), Z(0xf3), Z(0x8e), Z(0xde), Z(0xae),
-  Z(0x37), Z(0x49), Z(0xb7), Z(0xfa), Z(0xc8), Z(0xf4), Z(0x1f), Z(0xe0), Z(0x2a), Z(0x9b), Z(0x15),
-  Z(0xd1), Z(0x34), Z(0x0e), Z(0xb5), Z(0xe0), Z(0x44), Z(0x78), Z(0x84), Z(0x59), Z(0x56), Z(0x68),
-  Z(0x77), Z(0xa5), Z(0x14), Z(0x06), Z(0xf5), Z(0x2f), Z(0x8c), Z(0x8a), Z(0x73), Z(0x80), Z(0x76),
-  Z(0xb4), Z(0x10), Z(0x86)};
+    Z(0xf0), Z(0x37), Z(0x24), Z(0x53), Z(0x2a), Z(0x03), Z(0x83), Z(0x86),
+    Z(0xd1), Z(0xec), Z(0x50),
+    Z(0xf0), Z(0x42), Z(0x78), Z(0x2f), Z(0x6d), Z(0xbf), Z(0x80), Z(0x87),
+    Z(0x27), Z(0x95), Z(0xe2),
+    Z(0xc5), Z(0x5d), Z(0xf9), Z(0x6f), Z(0xdb), Z(0xb4), Z(0x65), Z(0x6e),
+    Z(0xe7), Z(0x24), Z(0xc8),
+    Z(0x1a), Z(0xbb), Z(0x49), Z(0xb5), Z(0x0a), Z(0x7d), Z(0xb9), Z(0xe8),
+    Z(0xdc), Z(0xb7), Z(0xd9),
+    Z(0x45), Z(0x20), Z(0x1b), Z(0xce), Z(0x59), Z(0x9d), Z(0x6b), Z(0xbd),
+    Z(0x0e), Z(0x8f), Z(0xa3),
+    Z(0xa9), Z(0xbc), Z(0x74), Z(0xa6), Z(0xf6), Z(0x7f), Z(0x5f), Z(0xb1),
+    Z(0x68), Z(0x84), Z(0xbc),
+    Z(0xa9), Z(0xfd), Z(0x55), Z(0x50), Z(0xe9), Z(0xb6), Z(0x13), Z(0x5e),
+    Z(0x07), Z(0xb8), Z(0x95),
+    Z(0x02), Z(0xc0), Z(0xd0), Z(0x6a), Z(0x1a), Z(0x85), Z(0xbd), Z(0xb6),
+    Z(0xfd), Z(0xfe), Z(0x17),
+    Z(0x3f), Z(0x09), Z(0xa3), Z(0x8d), Z(0xfb), Z(0xed), Z(0xda), Z(0x1d),
+    Z(0x6d), Z(0x1c), Z(0x6c),
+    Z(0x01), Z(0x5a), Z(0xe5), Z(0x71), Z(0x3e), Z(0x8b), Z(0x6b), Z(0xbe),
+    Z(0x29), Z(0xeb), Z(0x12),
+    Z(0x19), Z(0x34), Z(0xcd), Z(0xb3), Z(0xbd), Z(0x35), Z(0xea), Z(0x4b),
+    Z(0xd5), Z(0xae), Z(0x2a),
+    Z(0x79), Z(0x5a), Z(0xa5), Z(0x32), Z(0x12), Z(0x7b), Z(0xdc), Z(0x2c),
+    Z(0xd0), Z(0x22), Z(0x4b),
+    Z(0xb1), Z(0x85), Z(0x59), Z(0x80), Z(0xc0), Z(0x30), Z(0x9f), Z(0x73),
+    Z(0xd3), Z(0x14), Z(0x48),
+    Z(0x40), Z(0x07), Z(0x2d), Z(0x8f), Z(0x80), Z(0x0f), Z(0xce), Z(0x0b),
+    Z(0x5e), Z(0xb7), Z(0x5e),
+    Z(0xac), Z(0x24), Z(0x94), Z(0x4a), Z(0x18), Z(0x15), Z(0x05), Z(0xe8),
+    Z(0x02), Z(0x77), Z(0xa9),
+    Z(0xc7), Z(0x40), Z(0x45), Z(0x89), Z(0xd1), Z(0xea), Z(0xde), Z(0x0c),
+    Z(0x79), Z(0x2a), Z(0x99),
+    Z(0x6c), Z(0x3e), Z(0x95), Z(0xdd), Z(0x8c), Z(0x7d), Z(0xad), Z(0x6f),
+    Z(0xdc), Z(0xff), Z(0xfd),
+    Z(0x62), Z(0x47), Z(0xb3), Z(0x21), Z(0x8a), Z(0xec), Z(0x8e), Z(0x19),
+    Z(0x18), Z(0xb4), Z(0x6e),
+    Z(0x3d), Z(0xfd), Z(0x74), Z(0x54), Z(0x1e), Z(0x04), Z(0x85), Z(0xd8),
+    Z(0xbc), Z(0x1f), Z(0x56),
+    Z(0xe7), Z(0x3a), Z(0x56), Z(0x67), Z(0xd6), Z(0xc8), Z(0xa5), Z(0xf3),
+    Z(0x8e), Z(0xde), Z(0xae),
+    Z(0x37), Z(0x49), Z(0xb7), Z(0xfa), Z(0xc8), Z(0xf4), Z(0x1f), Z(0xe0),
+    Z(0x2a), Z(0x9b), Z(0x15),
+    Z(0xd1), Z(0x34), Z(0x0e), Z(0xb5), Z(0xe0), Z(0x44), Z(0x78), Z(0x84),
+    Z(0x59), Z(0x56), Z(0x68),
+    Z(0x77), Z(0xa5), Z(0x14), Z(0x06), Z(0xf5), Z(0x2f), Z(0x8c), Z(0x8a),
+    Z(0x73), Z(0x80), Z(0x76),
+    Z(0xb4), Z(0x10), Z(0x86)
+};
 
 #undef Z
 #define Z(x) NTOH(x << 19)
 static const afs_uint32 sbox3[256] = {
-  Z(0xa9), Z(0x2a), Z(0x48), Z(0x51), Z(0x84), Z(0x7e), Z(0x49), Z(0xe2), Z(0xb5), Z(0xb7), Z(0x42),
-  Z(0x33), Z(0x7d), Z(0x5d), Z(0xa6), Z(0x12), Z(0x44), Z(0x48), Z(0x6d), Z(0x28), Z(0xaa), Z(0x20),
-  Z(0x6d), Z(0x57), Z(0xd6), Z(0x6b), Z(0x5d), Z(0x72), Z(0xf0), Z(0x92), Z(0x5a), Z(0x1b), Z(0x53),
-  Z(0x80), Z(0x24), Z(0x70), Z(0x9a), Z(0xcc), Z(0xa7), Z(0x66), Z(0xa1), Z(0x01), Z(0xa5), Z(0x41),
-  Z(0x97), Z(0x41), Z(0x31), Z(0x82), Z(0xf1), Z(0x14), Z(0xcf), Z(0x53), Z(0x0d), Z(0xa0), Z(0x10),
-  Z(0xcc), Z(0x2a), Z(0x7d), Z(0xd2), Z(0xbf), Z(0x4b), Z(0x1a), Z(0xdb), Z(0x16), Z(0x47), Z(0xf6),
-  Z(0x51), Z(0x36), Z(0xed), Z(0xf3), Z(0xb9), Z(0x1a), Z(0xa7), Z(0xdf), Z(0x29), Z(0x43), Z(0x01),
-  Z(0x54), Z(0x70), Z(0xa4), Z(0xbf), Z(0xd4), Z(0x0b), Z(0x53), Z(0x44), Z(0x60), Z(0x9e), Z(0x23),
-  Z(0xa1), Z(0x18), Z(0x68), Z(0x4f), Z(0xf0), Z(0x2f), Z(0x82), Z(0xc2), Z(0x2a), Z(0x41), Z(0xb2),
-  Z(0x42), Z(0x0c), Z(0xed), Z(0x0c), Z(0x1d), Z(0x13), Z(0x3a), Z(0x3c), Z(0x6e), Z(0x35), Z(0xdc),
-  Z(0x60), Z(0x65), Z(0x85), Z(0xe9), Z(0x64), Z(0x02), Z(0x9a), Z(0x3f), Z(0x9f), Z(0x87), Z(0x96),
-  Z(0xdf), Z(0xbe), Z(0xf2), Z(0xcb), Z(0xe5), Z(0x6c), Z(0xd4), Z(0x5a), Z(0x83), Z(0xbf), Z(0x92),
-  Z(0x1b), Z(0x94), Z(0x00), Z(0x42), Z(0xcf), Z(0x4b), Z(0x00), Z(0x75), Z(0xba), Z(0x8f), Z(0x76),
-  Z(0x5f), Z(0x5d), Z(0x3a), Z(0x4d), Z(0x09), Z(0x12), Z(0x08), Z(0x38), Z(0x95), Z(0x17), Z(0xe4),
-  Z(0x01), Z(0x1d), Z(0x4c), Z(0xa9), Z(0xcc), Z(0x85), Z(0x82), Z(0x4c), Z(0x9d), Z(0x2f), Z(0x3b),
-  Z(0x66), Z(0xa1), Z(0x34), Z(0x10), Z(0xcd), Z(0x59), Z(0x89), Z(0xa5), Z(0x31), Z(0xcf), Z(0x05),
-  Z(0xc8), Z(0x84), Z(0xfa), Z(0xc7), Z(0xba), Z(0x4e), Z(0x8b), Z(0x1a), Z(0x19), Z(0xf1), Z(0xa1),
-  Z(0x3b), Z(0x18), Z(0x12), Z(0x17), Z(0xb0), Z(0x98), Z(0x8d), Z(0x0b), Z(0x23), Z(0xc3), Z(0x3a),
-  Z(0x2d), Z(0x20), Z(0xdf), Z(0x13), Z(0xa0), Z(0xa8), Z(0x4c), Z(0x0d), Z(0x6c), Z(0x2f), Z(0x47),
-  Z(0x13), Z(0x13), Z(0x52), Z(0x1f), Z(0x2d), Z(0xf5), Z(0x79), Z(0x3d), Z(0xa2), Z(0x54), Z(0xbd),
-  Z(0x69), Z(0xc8), Z(0x6b), Z(0xf3), Z(0x05), Z(0x28), Z(0xf1), Z(0x16), Z(0x46), Z(0x40), Z(0xb0),
-  Z(0x11), Z(0xd3), Z(0xb7), Z(0x95), Z(0x49), Z(0xcf), Z(0xc3), Z(0x1d), Z(0x8f), Z(0xd8), Z(0xe1),
-  Z(0x73), Z(0xdb), Z(0xad), Z(0xc8), Z(0xc9), Z(0xa9), Z(0xa1), Z(0xc2), Z(0xc5), Z(0xe3), Z(0xba),
-  Z(0xfc), Z(0x0e), Z(0x25)};
+    Z(0xa9), Z(0x2a), Z(0x48), Z(0x51), Z(0x84), Z(0x7e), Z(0x49), Z(0xe2),
+    Z(0xb5), Z(0xb7), Z(0x42),
+    Z(0x33), Z(0x7d), Z(0x5d), Z(0xa6), Z(0x12), Z(0x44), Z(0x48), Z(0x6d),
+    Z(0x28), Z(0xaa), Z(0x20),
+    Z(0x6d), Z(0x57), Z(0xd6), Z(0x6b), Z(0x5d), Z(0x72), Z(0xf0), Z(0x92),
+    Z(0x5a), Z(0x1b), Z(0x53),
+    Z(0x80), Z(0x24), Z(0x70), Z(0x9a), Z(0xcc), Z(0xa7), Z(0x66), Z(0xa1),
+    Z(0x01), Z(0xa5), Z(0x41),
+    Z(0x97), Z(0x41), Z(0x31), Z(0x82), Z(0xf1), Z(0x14), Z(0xcf), Z(0x53),
+    Z(0x0d), Z(0xa0), Z(0x10),
+    Z(0xcc), Z(0x2a), Z(0x7d), Z(0xd2), Z(0xbf), Z(0x4b), Z(0x1a), Z(0xdb),
+    Z(0x16), Z(0x47), Z(0xf6),
+    Z(0x51), Z(0x36), Z(0xed), Z(0xf3), Z(0xb9), Z(0x1a), Z(0xa7), Z(0xdf),
+    Z(0x29), Z(0x43), Z(0x01),
+    Z(0x54), Z(0x70), Z(0xa4), Z(0xbf), Z(0xd4), Z(0x0b), Z(0x53), Z(0x44),
+    Z(0x60), Z(0x9e), Z(0x23),
+    Z(0xa1), Z(0x18), Z(0x68), Z(0x4f), Z(0xf0), Z(0x2f), Z(0x82), Z(0xc2),
+    Z(0x2a), Z(0x41), Z(0xb2),
+    Z(0x42), Z(0x0c), Z(0xed), Z(0x0c), Z(0x1d), Z(0x13), Z(0x3a), Z(0x3c),
+    Z(0x6e), Z(0x35), Z(0xdc),
+    Z(0x60), Z(0x65), Z(0x85), Z(0xe9), Z(0x64), Z(0x02), Z(0x9a), Z(0x3f),
+    Z(0x9f), Z(0x87), Z(0x96),
+    Z(0xdf), Z(0xbe), Z(0xf2), Z(0xcb), Z(0xe5), Z(0x6c), Z(0xd4), Z(0x5a),
+    Z(0x83), Z(0xbf), Z(0x92),
+    Z(0x1b), Z(0x94), Z(0x00), Z(0x42), Z(0xcf), Z(0x4b), Z(0x00), Z(0x75),
+    Z(0xba), Z(0x8f), Z(0x76),
+    Z(0x5f), Z(0x5d), Z(0x3a), Z(0x4d), Z(0x09), Z(0x12), Z(0x08), Z(0x38),
+    Z(0x95), Z(0x17), Z(0xe4),
+    Z(0x01), Z(0x1d), Z(0x4c), Z(0xa9), Z(0xcc), Z(0x85), Z(0x82), Z(0x4c),
+    Z(0x9d), Z(0x2f), Z(0x3b),
+    Z(0x66), Z(0xa1), Z(0x34), Z(0x10), Z(0xcd), Z(0x59), Z(0x89), Z(0xa5),
+    Z(0x31), Z(0xcf), Z(0x05),
+    Z(0xc8), Z(0x84), Z(0xfa), Z(0xc7), Z(0xba), Z(0x4e), Z(0x8b), Z(0x1a),
+    Z(0x19), Z(0xf1), Z(0xa1),
+    Z(0x3b), Z(0x18), Z(0x12), Z(0x17), Z(0xb0), Z(0x98), Z(0x8d), Z(0x0b),
+    Z(0x23), Z(0xc3), Z(0x3a),
+    Z(0x2d), Z(0x20), Z(0xdf), Z(0x13), Z(0xa0), Z(0xa8), Z(0x4c), Z(0x0d),
+    Z(0x6c), Z(0x2f), Z(0x47),
+    Z(0x13), Z(0x13), Z(0x52), Z(0x1f), Z(0x2d), Z(0xf5), Z(0x79), Z(0x3d),
+    Z(0xa2), Z(0x54), Z(0xbd),
+    Z(0x69), Z(0xc8), Z(0x6b), Z(0xf3), Z(0x05), Z(0x28), Z(0xf1), Z(0x16),
+    Z(0x46), Z(0x40), Z(0xb0),
+    Z(0x11), Z(0xd3), Z(0xb7), Z(0x95), Z(0x49), Z(0xcf), Z(0xc3), Z(0x1d),
+    Z(0x8f), Z(0xd8), Z(0xe1),
+    Z(0x73), Z(0xdb), Z(0xad), Z(0xc8), Z(0xc9), Z(0xa9), Z(0xa1), Z(0xc2),
+    Z(0xc5), Z(0xe3), Z(0xba),
+    Z(0xfc), Z(0x0e), Z(0x25)
+};
 
 /*
  * This is a 16 round Feistel network with permutation F_ENCRYPT
@@ -275,182 +372,158 @@ static const afs_uint32 sbox3[256] = {
  L ^= sbox0[FF(un, 0)] ^ sbox1[FF(un, 8)] ^ sbox2[FF(un, 16)] ^ sbox3[FF(un, 24)];}
 #endif
 
-static inline
-void
-fc_ecb_enc(afs_uint32 l,
-	   afs_uint32 r,
-	   afs_uint32 out[2],
+static inline void
+fc_ecb_enc(afs_uint32 l, afs_uint32 r, afs_uint32 out[2],
 	   const afs_int32 sched[MAXROUNDS])
 {
 #if !defined(UNROLL_LOOPS)
-  {
-    int i;
-    for (i = 0; i < (MAXROUNDS/4); i++)
-      {
-	F_ENCRYPT(r, l, *sched++);
-	F_ENCRYPT(l, r, *sched++);
-	F_ENCRYPT(r, l, *sched++);
-	F_ENCRYPT(l, r, *sched++);
-      }
-  }
-#else
-  F_ENCRYPT(r, l, *sched++);
-  F_ENCRYPT(l, r, *sched++);
-  F_ENCRYPT(r, l, *sched++);
-  F_ENCRYPT(l, r, *sched++);
-  F_ENCRYPT(r, l, *sched++);
-  F_ENCRYPT(l, r, *sched++);
-  F_ENCRYPT(r, l, *sched++);
-  F_ENCRYPT(l, r, *sched++);
-  F_ENCRYPT(r, l, *sched++);
-  F_ENCRYPT(l, r, *sched++);
-  F_ENCRYPT(r, l, *sched++);
-  F_ENCRYPT(l, r, *sched++);
-  F_ENCRYPT(r, l, *sched++);
-  F_ENCRYPT(l, r, *sched++);
-  F_ENCRYPT(r, l, *sched++);
-  F_ENCRYPT(l, r, *sched++);
-#endif /* UNROLL_LOOPS */
-
-  out[0] = l;
-  out[1] = r;
-}
-
-static inline
-void
-fc_ecb_dec(afs_uint32 l,
-	   afs_uint32 r,
-	   afs_uint32 out[2],
-	   const afs_int32 sched[MAXROUNDS])
-{
-  sched = &sched[MAXROUNDS-1];
-
-#if !defined(UNROLL_LOOPS)
-  {
-    int i;
-    for (i = 0; i < (MAXROUNDS/4); i++)
-      {
-	F_ENCRYPT(l, r, *sched--);
-	F_ENCRYPT(r, l, *sched--);
-	F_ENCRYPT(l, r, *sched--);
-	F_ENCRYPT(r, l, *sched--);
-      }
-  }
-#else
-  F_ENCRYPT(l, r, *sched--);
-  F_ENCRYPT(r, l, *sched--);
-  F_ENCRYPT(l, r, *sched--);
-  F_ENCRYPT(r, l, *sched--);
-  F_ENCRYPT(l, r, *sched--);
-  F_ENCRYPT(r, l, *sched--);
-  F_ENCRYPT(l, r, *sched--);
-  F_ENCRYPT(r, l, *sched--);
-  F_ENCRYPT(l, r, *sched--);
-  F_ENCRYPT(r, l, *sched--);
-  F_ENCRYPT(l, r, *sched--);
-  F_ENCRYPT(r, l, *sched--);
-  F_ENCRYPT(l, r, *sched--);
-  F_ENCRYPT(r, l, *sched--);
-  F_ENCRYPT(l, r, *sched--);
-  F_ENCRYPT(r, l, *sched--);
-#endif /* UNROLL_LOOPS */
-
-  out[0] = l;
-  out[1] = r;
-}
-
-static inline
-void
-fc_cbc_enc(const afs_uint32 *in,
-	   afs_uint32 *out,
-	   afs_int32 length,
-	   const afs_int32 sched[MAXROUNDS],
-	   afs_uint32 *iv)
-{
-  afs_int32 xor0 = iv[0], xor1 = iv[1];
-
-  for (; length > 0; length -= 8)
     {
-      afs_uint32 b8[2];
-      /* If length < 8 we read to much, usally ok */
-      xor0 ^= in[0];
-      xor1 ^= in[1];
-      fc_ecb_enc(xor0, xor1, b8, sched);
-      xor0 = in[0] ^ b8[0];
-      xor1 = in[1] ^ b8[1];
-
-      /* Out is always a multiple of 8 */
-      memcpy(out, b8, 8);
-      out += 2;
-      in += 2;
+	int i;
+	for (i = 0; i < (MAXROUNDS / 4); i++) {
+	    F_ENCRYPT(r, l, *sched++);
+	    F_ENCRYPT(l, r, *sched++);
+	    F_ENCRYPT(r, l, *sched++);
+	    F_ENCRYPT(l, r, *sched++);
+	}
     }
-  iv[0] = xor0;
-  iv[1] = xor1;
+#else
+    F_ENCRYPT(r, l, *sched++);
+    F_ENCRYPT(l, r, *sched++);
+    F_ENCRYPT(r, l, *sched++);
+    F_ENCRYPT(l, r, *sched++);
+    F_ENCRYPT(r, l, *sched++);
+    F_ENCRYPT(l, r, *sched++);
+    F_ENCRYPT(r, l, *sched++);
+    F_ENCRYPT(l, r, *sched++);
+    F_ENCRYPT(r, l, *sched++);
+    F_ENCRYPT(l, r, *sched++);
+    F_ENCRYPT(r, l, *sched++);
+    F_ENCRYPT(l, r, *sched++);
+    F_ENCRYPT(r, l, *sched++);
+    F_ENCRYPT(l, r, *sched++);
+    F_ENCRYPT(r, l, *sched++);
+    F_ENCRYPT(l, r, *sched++);
+#endif /* UNROLL_LOOPS */
+
+    out[0] = l;
+    out[1] = r;
 }
 
-static inline
-void
-fc_cbc_dec(const afs_uint32 *in,
-	   afs_uint32 *out,
-	   afs_int32 length,
-	   const afs_int32 sched[MAXROUNDS],
-	   afs_uint32 *iv)
+static inline void
+fc_ecb_dec(afs_uint32 l, afs_uint32 r, afs_uint32 out[2],
+	   const afs_int32 sched[MAXROUNDS])
 {
-  afs_int32 xor0 = iv[0], xor1 = iv[1];
+    sched = &sched[MAXROUNDS - 1];
 
-  for (; length > 0; length -= 8)
+#if !defined(UNROLL_LOOPS)
     {
-      afs_uint32 b8[2];
-      /* In is always a multiple of 8 */
-      fc_ecb_dec(in[0], in[1], b8, sched);
-      b8[0] ^= xor0;
-      b8[1] ^= xor1;
-      xor0 = in[0] ^ b8[0];
-      xor1 = in[1] ^ b8[1];
+	int i;
+	for (i = 0; i < (MAXROUNDS / 4); i++) {
+	    F_ENCRYPT(l, r, *sched--);
+	    F_ENCRYPT(r, l, *sched--);
+	    F_ENCRYPT(l, r, *sched--);
+	    F_ENCRYPT(r, l, *sched--);
+	}
+    }
+#else
+    F_ENCRYPT(l, r, *sched--);
+    F_ENCRYPT(r, l, *sched--);
+    F_ENCRYPT(l, r, *sched--);
+    F_ENCRYPT(r, l, *sched--);
+    F_ENCRYPT(l, r, *sched--);
+    F_ENCRYPT(r, l, *sched--);
+    F_ENCRYPT(l, r, *sched--);
+    F_ENCRYPT(r, l, *sched--);
+    F_ENCRYPT(l, r, *sched--);
+    F_ENCRYPT(r, l, *sched--);
+    F_ENCRYPT(l, r, *sched--);
+    F_ENCRYPT(r, l, *sched--);
+    F_ENCRYPT(l, r, *sched--);
+    F_ENCRYPT(r, l, *sched--);
+    F_ENCRYPT(l, r, *sched--);
+    F_ENCRYPT(r, l, *sched--);
+#endif /* UNROLL_LOOPS */
+
+    out[0] = l;
+    out[1] = r;
+}
+
+static inline void
+fc_cbc_enc(const afs_uint32 * in, afs_uint32 * out, afs_int32 length,
+	   const afs_int32 sched[MAXROUNDS], afs_uint32 * iv)
+{
+    afs_int32 xor0 = iv[0], xor1 = iv[1];
+
+    for (; length > 0; length -= 8) {
+	afs_uint32 b8[2];
+	/* If length < 8 we read to much, usally ok */
+	xor0 ^= in[0];
+	xor1 ^= in[1];
+	fc_ecb_enc(xor0, xor1, b8, sched);
+	xor0 = in[0] ^ b8[0];
+	xor1 = in[1] ^ b8[1];
+
+	/* Out is always a multiple of 8 */
+	memcpy(out, b8, 8);
+	out += 2;
+	in += 2;
+    }
+    iv[0] = xor0;
+    iv[1] = xor1;
+}
+
+static inline void
+fc_cbc_dec(const afs_uint32 * in, afs_uint32 * out, afs_int32 length,
+	   const afs_int32 sched[MAXROUNDS], afs_uint32 * iv)
+{
+    afs_int32 xor0 = iv[0], xor1 = iv[1];
+
+    for (; length > 0; length -= 8) {
+	afs_uint32 b8[2];
+	/* In is always a multiple of 8 */
+	fc_ecb_dec(in[0], in[1], b8, sched);
+	b8[0] ^= xor0;
+	b8[1] ^= xor1;
+	xor0 = in[0] ^ b8[0];
+	xor1 = in[1] ^ b8[1];
 
 #if 0
-      if (length >= 8)
-	memcpy(out, b8, 8);
-      else
-	memcpy(out, b8, length); /* Don't write to much when length < 8 */
+	if (length >= 8)
+	    memcpy(out, b8, 8);
+	else
+	    memcpy(out, b8, length);	/* Don't write to much when length < 8 */
 #else
-      /* If length < 8 we write to much, this is not always ok */
-      memcpy(out, b8, 8);
+	/* If length < 8 we write to much, this is not always ok */
+	memcpy(out, b8, 8);
 #endif
-      out += 2;
-      in += 2;
+	out += 2;
+	in += 2;
     }
-  iv[0] = xor0;
-  iv[1] = xor1;
+    iv[0] = xor0;
+    iv[1] = xor1;
 }
 
 afs_int32
-fc_ecb_encrypt(afs_uint32 *in, afs_uint32 *out,
-	       fc_KeySchedule sched,
+fc_ecb_encrypt(afs_uint32 * in, afs_uint32 * out, fc_KeySchedule sched,
 	       int encrypt)
 {
-  LOCK_RXKAD_STATS
-  rxkad_stats.fc_encrypts[encrypt]++;
-  UNLOCK_RXKAD_STATS
-  if (encrypt) 
-    fc_ecb_enc(in[0], in[1], out, sched);
-  else
-    fc_ecb_dec(in[0], in[1], out, sched);
-  return 0;
+    LOCK_RXKAD_STATS rxkad_stats.fc_encrypts[encrypt]++;
+    UNLOCK_RXKAD_STATS if (encrypt)
+	  fc_ecb_enc(in[0], in[1], out, sched);
+    else
+	fc_ecb_dec(in[0], in[1], out, sched);
+    return 0;
 }
 
 afs_int32
-fc_cbc_encrypt(afs_uint32 *in, afs_uint32 *out,
-	       afs_int32 length,
-	       fc_KeySchedule sched,
-	       afs_uint32 *iv,
-	       int encrypt)
+fc_cbc_encrypt(afs_uint32 * in, afs_uint32 * out, afs_int32 length,
+	       fc_KeySchedule sched, afs_uint32 * iv, int encrypt)
 {
-  if (encrypt)
-    fc_cbc_enc(in, out, length, sched, iv);
-  else
-    fc_cbc_dec(in, out, length, sched, iv);
-  return 0;
+    if (encrypt)
+	fc_cbc_enc(in, out, length, sched, iv);
+    else
+	fc_cbc_dec(in, out, length, sched, iv);
+    return 0;
 }
 
 /* Rotate two 32 bit numbers as a 56 bit number */
@@ -476,129 +549,126 @@ fc_cbc_encrypt(afs_uint32 *in, afs_uint32 *out,
  * from different implementations. Keep them in the same module!
  */
 int
-fc_keysched(void *key_,
-	    fc_KeySchedule sched)
+fc_keysched(void *key_, fc_KeySchedule sched)
 {
-  const unsigned char *key = key_;
+    const unsigned char *key = key_;
 
-  /* Do we have 56 bit longs or even longer longs? */
+    /* Do we have 56 bit longs or even longer longs? */
 #if ((1ul << 31) << 1) && defined(ULONG_MAX) && ((ULONG_MAX >> 55) != 0) && ((1ul << 55) != 0)
-  unsigned long k;		/* k holds all 56 non parity bits */
+    unsigned long k;		/* k holds all 56 non parity bits */
 
-  /* Compress out parity bits */
-  k = (*key++) >> 1;
-  k <<= 7;
-  k |= (*key++) >> 1;
-  k <<= 7;
-  k |= (*key++) >> 1;
-  k <<= 7;
-  k |= (*key++) >> 1;
-  k <<= 7;
-  k |= (*key++) >> 1;
-  k <<= 7;
-  k |= (*key++) >> 1;
-  k <<= 7;
-  k |= (*key++) >> 1;
-  k <<= 7;
-  k |= (*key) >> 1;
+    /* Compress out parity bits */
+    k = (*key++) >> 1;
+    k <<= 7;
+    k |= (*key++) >> 1;
+    k <<= 7;
+    k |= (*key++) >> 1;
+    k <<= 7;
+    k |= (*key++) >> 1;
+    k <<= 7;
+    k |= (*key++) >> 1;
+    k <<= 7;
+    k |= (*key++) >> 1;
+    k <<= 7;
+    k |= (*key++) >> 1;
+    k <<= 7;
+    k |= (*key) >> 1;
 
-  /* Use lower 32 bits for schedule, rotate by 11 each round (16 times) */
-  *sched++ = EFF_NTOHL((afs_uint32)k);
-  ROT56R64(k, 11);
-  *sched++ = EFF_NTOHL((afs_uint32)k);
-  ROT56R64(k, 11);
-  *sched++ = EFF_NTOHL((afs_uint32)k);
-  ROT56R64(k, 11);
-  *sched++ = EFF_NTOHL((afs_uint32)k);
-  ROT56R64(k, 11);
+    /* Use lower 32 bits for schedule, rotate by 11 each round (16 times) */
+    *sched++ = EFF_NTOHL((afs_uint32) k);
+    ROT56R64(k, 11);
+    *sched++ = EFF_NTOHL((afs_uint32) k);
+    ROT56R64(k, 11);
+    *sched++ = EFF_NTOHL((afs_uint32) k);
+    ROT56R64(k, 11);
+    *sched++ = EFF_NTOHL((afs_uint32) k);
+    ROT56R64(k, 11);
 
-  *sched++ = EFF_NTOHL((afs_uint32)k);
-  ROT56R64(k, 11);
-  *sched++ = EFF_NTOHL((afs_uint32)k);
-  ROT56R64(k, 11);
-  *sched++ = EFF_NTOHL((afs_uint32)k);
-  ROT56R64(k, 11);
-  *sched++ = EFF_NTOHL((afs_uint32)k);
-  ROT56R64(k, 11);
+    *sched++ = EFF_NTOHL((afs_uint32) k);
+    ROT56R64(k, 11);
+    *sched++ = EFF_NTOHL((afs_uint32) k);
+    ROT56R64(k, 11);
+    *sched++ = EFF_NTOHL((afs_uint32) k);
+    ROT56R64(k, 11);
+    *sched++ = EFF_NTOHL((afs_uint32) k);
+    ROT56R64(k, 11);
 
-  *sched++ = EFF_NTOHL((afs_uint32)k);
-  ROT56R64(k, 11);
-  *sched++ = EFF_NTOHL((afs_uint32)k);
-  ROT56R64(k, 11);
-  *sched++ = EFF_NTOHL((afs_uint32)k);
-  ROT56R64(k, 11);
-  *sched++ = EFF_NTOHL((afs_uint32)k);
-  ROT56R64(k, 11);
+    *sched++ = EFF_NTOHL((afs_uint32) k);
+    ROT56R64(k, 11);
+    *sched++ = EFF_NTOHL((afs_uint32) k);
+    ROT56R64(k, 11);
+    *sched++ = EFF_NTOHL((afs_uint32) k);
+    ROT56R64(k, 11);
+    *sched++ = EFF_NTOHL((afs_uint32) k);
+    ROT56R64(k, 11);
 
-  *sched++ = EFF_NTOHL((afs_uint32)k);
-  ROT56R64(k, 11);
-  *sched++ = EFF_NTOHL((afs_uint32)k);
-  ROT56R64(k, 11);
-  *sched++ = EFF_NTOHL((afs_uint32)k);
-  ROT56R64(k, 11);
-  *sched++ = EFF_NTOHL((afs_uint32)k);
+    *sched++ = EFF_NTOHL((afs_uint32) k);
+    ROT56R64(k, 11);
+    *sched++ = EFF_NTOHL((afs_uint32) k);
+    ROT56R64(k, 11);
+    *sched++ = EFF_NTOHL((afs_uint32) k);
+    ROT56R64(k, 11);
+    *sched++ = EFF_NTOHL((afs_uint32) k);
 #else
-  afs_uint32 hi, lo; /* hi is upper 24 bits and lo lower 32, total 56 */
+    afs_uint32 hi, lo;		/* hi is upper 24 bits and lo lower 32, total 56 */
 
-  /* Compress out parity bits */
-  lo = (*key++) >> 1;
-  lo <<= 7;
-  lo |= (*key++) >> 1;
-  lo <<= 7;
-  lo |= (*key++) >> 1;
-  lo <<= 7;
-  lo |= (*key++) >> 1;
-  hi = lo >> 4;
-  lo &= 0xf;
-  lo <<= 7;
-  lo |= (*key++) >> 1;
-  lo <<= 7;
-  lo |= (*key++) >> 1;
-  lo <<= 7;
-  lo |= (*key++) >> 1;
-  lo <<= 7;
-  lo |= (*key) >> 1;
+    /* Compress out parity bits */
+    lo = (*key++) >> 1;
+    lo <<= 7;
+    lo |= (*key++) >> 1;
+    lo <<= 7;
+    lo |= (*key++) >> 1;
+    lo <<= 7;
+    lo |= (*key++) >> 1;
+    hi = lo >> 4;
+    lo &= 0xf;
+    lo <<= 7;
+    lo |= (*key++) >> 1;
+    lo <<= 7;
+    lo |= (*key++) >> 1;
+    lo <<= 7;
+    lo |= (*key++) >> 1;
+    lo <<= 7;
+    lo |= (*key) >> 1;
 
-  /* Use lower 32 bits for schedule, rotate by 11 each round (16 times) */
-  *sched++ = EFF_NTOHL(lo);
-  ROT56R(hi, lo, 11);
-  *sched++ = EFF_NTOHL(lo);
-  ROT56R(hi, lo, 11);
-  *sched++ = EFF_NTOHL(lo);
-  ROT56R(hi, lo, 11);
-  *sched++ = EFF_NTOHL(lo);
-  ROT56R(hi, lo, 11);
+    /* Use lower 32 bits for schedule, rotate by 11 each round (16 times) */
+    *sched++ = EFF_NTOHL(lo);
+    ROT56R(hi, lo, 11);
+    *sched++ = EFF_NTOHL(lo);
+    ROT56R(hi, lo, 11);
+    *sched++ = EFF_NTOHL(lo);
+    ROT56R(hi, lo, 11);
+    *sched++ = EFF_NTOHL(lo);
+    ROT56R(hi, lo, 11);
 
-  *sched++ = EFF_NTOHL(lo);
-  ROT56R(hi, lo, 11);
-  *sched++ = EFF_NTOHL(lo);
-  ROT56R(hi, lo, 11);
-  *sched++ = EFF_NTOHL(lo);
-  ROT56R(hi, lo, 11);
-  *sched++ = EFF_NTOHL(lo);
-  ROT56R(hi, lo, 11);
+    *sched++ = EFF_NTOHL(lo);
+    ROT56R(hi, lo, 11);
+    *sched++ = EFF_NTOHL(lo);
+    ROT56R(hi, lo, 11);
+    *sched++ = EFF_NTOHL(lo);
+    ROT56R(hi, lo, 11);
+    *sched++ = EFF_NTOHL(lo);
+    ROT56R(hi, lo, 11);
 
-  *sched++ = EFF_NTOHL(lo);
-  ROT56R(hi, lo, 11);
-  *sched++ = EFF_NTOHL(lo);
-  ROT56R(hi, lo, 11);
-  *sched++ = EFF_NTOHL(lo);
-  ROT56R(hi, lo, 11);
-  *sched++ = EFF_NTOHL(lo);
-  ROT56R(hi, lo, 11);
+    *sched++ = EFF_NTOHL(lo);
+    ROT56R(hi, lo, 11);
+    *sched++ = EFF_NTOHL(lo);
+    ROT56R(hi, lo, 11);
+    *sched++ = EFF_NTOHL(lo);
+    ROT56R(hi, lo, 11);
+    *sched++ = EFF_NTOHL(lo);
+    ROT56R(hi, lo, 11);
 
-  *sched++ = EFF_NTOHL(lo);
-  ROT56R(hi, lo, 11);
-  *sched++ = EFF_NTOHL(lo);
-  ROT56R(hi, lo, 11);
-  *sched++ = EFF_NTOHL(lo);
-  ROT56R(hi, lo, 11);
-  *sched++ = EFF_NTOHL(lo);
+    *sched++ = EFF_NTOHL(lo);
+    ROT56R(hi, lo, 11);
+    *sched++ = EFF_NTOHL(lo);
+    ROT56R(hi, lo, 11);
+    *sched++ = EFF_NTOHL(lo);
+    ROT56R(hi, lo, 11);
+    *sched++ = EFF_NTOHL(lo);
 #endif
-  LOCK_RXKAD_STATS
-  rxkad_stats.fc_key_scheds++;
-  UNLOCK_RXKAD_STATS
-  return 0;
+    LOCK_RXKAD_STATS rxkad_stats.fc_key_scheds++;
+    UNLOCK_RXKAD_STATS return 0;
 }
 
 /*
@@ -607,78 +677,68 @@ fc_keysched(void *key_,
  * processed. Skip the Rx packet header but not the security header.
  */
 afs_int32
-rxkad_EncryptPacket(const struct rx_connection *rx_connection_not_used,
-		    const fc_KeySchedule *sched,
-		    const afs_uint32 *iv,
-		    int len,
-		    struct rx_packet *packet)
+rxkad_EncryptPacket(const struct rx_connection * rx_connection_not_used,
+		    const fc_KeySchedule * sched, const afs_uint32 * iv,
+		    int len, struct rx_packet * packet)
 {
-  afs_uint32 ivec[2];
-  struct iovec *frag;
-  struct rx_securityClass *obj;
-  struct rxkad_cprivate *tp;          /* s & c have type at same offset */
+    afs_uint32 ivec[2];
+    struct iovec *frag;
+    struct rx_securityClass *obj;
+    struct rxkad_cprivate *tp;	/* s & c have type at same offset */
 
-  obj = rx_SecurityObjectOf(rx_connection_not_used);
-  tp = (struct rxkad_cprivate *)obj->privateData;
-  LOCK_RXKAD_STATS
-  rxkad_stats.bytesEncrypted[rxkad_TypeIndex(tp->type)] += len;
-  UNLOCK_RXKAD_STATS
-
-  {
-    /* What is this good for?
-     * It turns out that the security header for auth_enc is of
-     * size 8 bytes and the last 4 bytes are defined to be 0!
-     */
-    afs_uint32 *t = (afs_uint32 *)packet->wirevec[1].iov_base;
-    t[1] = 0;
-  }
-
-  memcpy(ivec, iv, sizeof(ivec)); /* Must use copy of iv */
-  for (frag = &packet->wirevec[1]; len; frag++)
-    {
-      int      iov_len = frag->iov_len;
-      afs_uint32 *iov_bas = (afs_uint32 *) frag->iov_base;
-      if (iov_len == 0)
-	return RXKADDATALEN;	/* Length mismatch */
-      if (len < iov_len)
-	iov_len = len;		/* Don't process to much data */
-      fc_cbc_enc(iov_bas, iov_bas, iov_len, sched, ivec);
-      len -= iov_len;
+    obj = rx_SecurityObjectOf(rx_connection_not_used);
+    tp = (struct rxkad_cprivate *)obj->privateData;
+    LOCK_RXKAD_STATS rxkad_stats.bytesEncrypted[rxkad_TypeIndex(tp->type)] +=
+	len;
+    UNLOCK_RXKAD_STATS {
+	/* What is this good for?
+	 * It turns out that the security header for auth_enc is of
+	 * size 8 bytes and the last 4 bytes are defined to be 0!
+	 */
+	afs_uint32 *t = (afs_uint32 *) packet->wirevec[1].iov_base;
+	t[1] = 0;
     }
-  return 0;
+
+    memcpy(ivec, iv, sizeof(ivec));	/* Must use copy of iv */
+    for (frag = &packet->wirevec[1]; len; frag++) {
+	int iov_len = frag->iov_len;
+	afs_uint32 *iov_bas = (afs_uint32 *) frag->iov_base;
+	if (iov_len == 0)
+	    return RXKADDATALEN;	/* Length mismatch */
+	if (len < iov_len)
+	    iov_len = len;	/* Don't process to much data */
+	fc_cbc_enc(iov_bas, iov_bas, iov_len, sched, ivec);
+	len -= iov_len;
+    }
+    return 0;
 }
 
 afs_int32
-rxkad_DecryptPacket(const struct rx_connection *rx_connection_not_used,
-		    const fc_KeySchedule *sched,
-		    const afs_uint32 *iv,
-		    int len,
-		    struct rx_packet *packet)
+rxkad_DecryptPacket(const struct rx_connection * rx_connection_not_used,
+		    const fc_KeySchedule * sched, const afs_uint32 * iv,
+		    int len, struct rx_packet * packet)
 {
-  afs_uint32 ivec[2];
-  struct iovec *frag;
-  struct rx_securityClass *obj;
-  struct rxkad_cprivate *tp;          /* s & c have type at same offset */
+    afs_uint32 ivec[2];
+    struct iovec *frag;
+    struct rx_securityClass *obj;
+    struct rxkad_cprivate *tp;	/* s & c have type at same offset */
 
-  obj = rx_SecurityObjectOf(rx_connection_not_used);
-  tp = (struct rxkad_cprivate *)obj->privateData;
-  LOCK_RXKAD_STATS
-  rxkad_stats.bytesDecrypted[rxkad_TypeIndex(tp->type)] += len;
-  UNLOCK_RXKAD_STATS
-
-  memcpy(ivec, iv, sizeof(ivec)); /* Must use copy of iv */
-  for (frag = &packet->wirevec[1]; len > 0; frag++)
-    {
-      int      iov_len = frag->iov_len;
-      afs_uint32 *iov_bas = (afs_uint32 *) frag->iov_base;
-      if (iov_len == 0)
-	return RXKADDATALEN;	/* Length mismatch */
-      if (len < iov_len)
-	iov_len = len;		/* Don't process to much data */
-      fc_cbc_dec(iov_bas, iov_bas, iov_len, sched, ivec);
-      len -= iov_len;
+    obj = rx_SecurityObjectOf(rx_connection_not_used);
+    tp = (struct rxkad_cprivate *)obj->privateData;
+    LOCK_RXKAD_STATS rxkad_stats.bytesDecrypted[rxkad_TypeIndex(tp->type)] +=
+	len;
+    UNLOCK_RXKAD_STATS memcpy(ivec, iv, sizeof(ivec));	/* Must use copy of iv */
+    for (frag = &packet->wirevec[1]; len > 0; frag++) {
+	int iov_len = frag->iov_len;
+	afs_uint32 *iov_bas = (afs_uint32 *) frag->iov_base;
+	if (iov_len == 0)
+	    return RXKADDATALEN;	/* Length mismatch */
+	if (len < iov_len)
+	    iov_len = len;	/* Don't process to much data */
+	fc_cbc_dec(iov_bas, iov_bas, iov_len, sched, ivec);
+	len -= iov_len;
     }
-  return 0;
+    return 0;
 }
 
 #if defined(TEST) || defined(TEST_KERNEL)
@@ -694,19 +754,23 @@ rxkad_DecryptPacket(const struct rx_connection *rx_connection_not_used,
 
 const char the_quick[] = "The quick brown fox jumps over the lazy dogs.\0\0";
 
-const unsigned char key1[8]={0xf0,0xe1,0xd2,0xc3,0xb4,0xa5,0x96,0x87};
+const unsigned char key1[8] =
+    { 0xf0, 0xe1, 0xd2, 0xc3, 0xb4, 0xa5, 0x96, 0x87 };
 const char ciph1[] = {
-  0x00, 0xf0, 0xe,  0x11, 0x75, 0xe6, 0x23, 0x82, 0xee, 0xac, 0x98, 0x62,
-  0x44, 0x51, 0xe4, 0x84, 0xc3, 0x59, 0xd8, 0xaa, 0x64, 0x60, 0xae, 0xf7,
-  0xd2, 0xd9, 0x13, 0x79, 0x72, 0xa3, 0x45, 0x03, 0x23, 0xb5, 0x62, 0xd7,
-  0xc,  0xf5, 0x27, 0xd1, 0xf8, 0x91, 0x3c, 0xac, 0x44, 0x22, 0x92, 0xef };
+    0x00, 0xf0, 0xe, 0x11, 0x75, 0xe6, 0x23, 0x82, 0xee, 0xac, 0x98, 0x62,
+    0x44, 0x51, 0xe4, 0x84, 0xc3, 0x59, 0xd8, 0xaa, 0x64, 0x60, 0xae, 0xf7,
+    0xd2, 0xd9, 0x13, 0x79, 0x72, 0xa3, 0x45, 0x03, 0x23, 0xb5, 0x62, 0xd7,
+    0xc, 0xf5, 0x27, 0xd1, 0xf8, 0x91, 0x3c, 0xac, 0x44, 0x22, 0x92, 0xef
+};
 
-const unsigned char key2[8]={0xfe,0xdc,0xba,0x98,0x76,0x54,0x32,0x10};
+const unsigned char key2[8] =
+    { 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10 };
 const char ciph2[] = {
-  0xca, 0x90, 0xf5, 0x9d, 0xcb, 0xd4, 0xd2, 0x3c, 0x01, 0x88, 0x7f, 0x3e,
-  0x31, 0x6e, 0x62, 0x9d, 0xd8, 0xe0, 0x57, 0xa3, 0x06, 0x3a, 0x42, 0x58,
-  0x2a, 0x28, 0xfe, 0x72, 0x52, 0x2f, 0xdd, 0xe0, 0x19, 0x89, 0x09, 0x1c,
-  0x2a, 0x8e, 0x8c, 0x94, 0xfc, 0xc7, 0x68, 0xe4, 0x88, 0xaa, 0xde, 0x0f };
+    0xca, 0x90, 0xf5, 0x9d, 0xcb, 0xd4, 0xd2, 0x3c, 0x01, 0x88, 0x7f, 0x3e,
+    0x31, 0x6e, 0x62, 0x9d, 0xd8, 0xe0, 0x57, 0xa3, 0x06, 0x3a, 0x42, 0x58,
+    0x2a, 0x28, 0xfe, 0x72, 0x52, 0x2f, 0xdd, 0xe0, 0x19, 0x89, 0x09, 0x1c,
+    0x2a, 0x8e, 0x8c, 0x94, 0xfc, 0xc7, 0x68, 0xe4, 0x88, 0xaa, 0xde, 0x0f
+};
 
 #ifdef TEST_KERNEL
 #define fc_keysched    _afs_QTKrFdpoFL
@@ -716,100 +780,106 @@ const char ciph2[] = {
 #define rxkad_EncryptPacket _afs_bpwQbdoghO
 #endif
 
-int rx_SlowPutInt32() { abort(); }
+int
+rx_SlowPutInt32()
+{
+    abort();
+}
 
 int
 main()
 {
-  afs_int32 sched[MAXROUNDS];
-  char ciph[100], clear[100], tmp[100];
-  afs_uint32 data[2];
-  afs_uint32 iv[2];
-  struct rx_packet packet;
+    afs_int32 sched[MAXROUNDS];
+    char ciph[100], clear[100], tmp[100];
+    afs_uint32 data[2];
+    afs_uint32 iv[2];
+    struct rx_packet packet;
 
-  if (sizeof(afs_int32) != 4)
-    fprintf(stderr, "error: sizeof(afs_int32) != 4\n");
-  if (sizeof(afs_uint32) != 4)
-    fprintf(stderr, "error: sizeof(afs_uint32) != 4\n");
+    if (sizeof(afs_int32) != 4)
+	fprintf(stderr, "error: sizeof(afs_int32) != 4\n");
+    if (sizeof(afs_uint32) != 4)
+	fprintf(stderr, "error: sizeof(afs_uint32) != 4\n");
 
-  /*
-   * Use key1 and key2 as iv */
-  fc_keysched(key1, sched);
-  memcpy(iv, key2, sizeof(iv));
-  fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv, ENCRYPT);
-  if (memcmp(ciph1, ciph, sizeof(ciph1)) != 0)
-    fprintf(stderr, "encrypt FAILED\n");
-  memcpy(iv, key2, sizeof(iv));
-  fc_cbc_encrypt(ciph, clear, sizeof(the_quick), sched, iv, DECRYPT);
-  if (strcmp(the_quick, clear) != 0)
-    fprintf(stderr, "crypt decrypt FAILED\n");
-
-  /*
-   * Use key2 and key1 as iv
-   */
-  fc_keysched(key2, sched);
-  memcpy(iv, key1, sizeof(iv));
-  fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv, ENCRYPT);
-  if (memcmp(ciph2, ciph, sizeof(ciph2)) != 0)
-    fprintf(stderr, "encrypt FAILED\n");
-  memcpy(iv, key1, sizeof(iv));
-  fc_cbc_encrypt(ciph, clear, sizeof(the_quick), sched, iv, DECRYPT);
-  if (strcmp(the_quick, clear) != 0)
-    fprintf(stderr, "crypt decrypt FAILED\n");
-
-  /*
-   * Test Encrypt- and Decrypt-Packet, use key1 and key2 as iv
-   */
-  fc_keysched(key1, sched);
-  memcpy(iv, key2, sizeof(iv));
-  strcpy(clear, the_quick);
-  packet.wirevec[1].iov_base = clear;
-  packet.wirevec[1].iov_len = sizeof(the_quick);
-  packet.wirevec[2].iov_len = 0;
-
-  /* For unknown reasons bytes 4-7 are zeroed in rxkad_EncryptPacket */
-  rxkad_EncryptPacket(tmp, sched, iv, sizeof(the_quick), &packet);
-  rxkad_DecryptPacket(tmp, sched, iv, sizeof(the_quick), &packet);
-  clear[4] ^= 'q';
-  clear[5] ^= 'u';
-  clear[6] ^= 'i';
-  clear[7] ^= 'c';
-  if (strcmp(the_quick, clear) != 0)
-    fprintf(stderr, "rxkad_EncryptPacket/rxkad_DecryptPacket FAILED\n");
-
-  {
-    struct timeval start, stop;
-    int i;
-    
+    /*
+     * Use key1 and key2 as iv */
     fc_keysched(key1, sched);
-    gettimeofday(&start, 0);
-    for (i = 0; i < 1000000; i++)
-      fc_keysched(key1, sched);
-    gettimeofday(&stop, 0);
-    printf("fc_keysched    = %2.2f us\n",
-	   (stop.tv_sec - start.tv_sec
-	    + (stop.tv_usec - start.tv_usec)/1e6)*1);
-	   
-    fc_ecb_encrypt(data, data, sched, ENCRYPT);
-    gettimeofday(&start, 0);
-    for (i = 0; i < 1000000; i++)
-      fc_ecb_encrypt(data, data, sched, ENCRYPT);
-    gettimeofday(&stop, 0);
-    printf("fc_ecb_encrypt = %2.2f us\n",
-	   (stop.tv_sec - start.tv_sec
-	    + (stop.tv_usec - start.tv_usec)/1e6)*1);
-	   
+    memcpy(iv, key2, sizeof(iv));
     fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv, ENCRYPT);
-    gettimeofday(&start, 0);
-    for (i = 0; i < 100000; i++)
-      fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv, ENCRYPT);
-    gettimeofday(&stop, 0);
-    printf("fc_cbc_encrypt = %2.2f us\n",
-	   (stop.tv_sec - start.tv_sec
-	    + (stop.tv_usec - start.tv_usec)/1e6)*10);
-	   
-  }
+    if (memcmp(ciph1, ciph, sizeof(ciph1)) != 0)
+	fprintf(stderr, "encrypt FAILED\n");
+    memcpy(iv, key2, sizeof(iv));
+    fc_cbc_encrypt(ciph, clear, sizeof(the_quick), sched, iv, DECRYPT);
+    if (strcmp(the_quick, clear) != 0)
+	fprintf(stderr, "crypt decrypt FAILED\n");
 
-  exit(0);
+    /*
+     * Use key2 and key1 as iv
+     */
+    fc_keysched(key2, sched);
+    memcpy(iv, key1, sizeof(iv));
+    fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv, ENCRYPT);
+    if (memcmp(ciph2, ciph, sizeof(ciph2)) != 0)
+	fprintf(stderr, "encrypt FAILED\n");
+    memcpy(iv, key1, sizeof(iv));
+    fc_cbc_encrypt(ciph, clear, sizeof(the_quick), sched, iv, DECRYPT);
+    if (strcmp(the_quick, clear) != 0)
+	fprintf(stderr, "crypt decrypt FAILED\n");
+
+    /*
+     * Test Encrypt- and Decrypt-Packet, use key1 and key2 as iv
+     */
+    fc_keysched(key1, sched);
+    memcpy(iv, key2, sizeof(iv));
+    strcpy(clear, the_quick);
+    packet.wirevec[1].iov_base = clear;
+    packet.wirevec[1].iov_len = sizeof(the_quick);
+    packet.wirevec[2].iov_len = 0;
+
+    /* For unknown reasons bytes 4-7 are zeroed in rxkad_EncryptPacket */
+    rxkad_EncryptPacket(tmp, sched, iv, sizeof(the_quick), &packet);
+    rxkad_DecryptPacket(tmp, sched, iv, sizeof(the_quick), &packet);
+    clear[4] ^= 'q';
+    clear[5] ^= 'u';
+    clear[6] ^= 'i';
+    clear[7] ^= 'c';
+    if (strcmp(the_quick, clear) != 0)
+	fprintf(stderr, "rxkad_EncryptPacket/rxkad_DecryptPacket FAILED\n");
+
+    {
+	struct timeval start, stop;
+	int i;
+
+	fc_keysched(key1, sched);
+	gettimeofday(&start, 0);
+	for (i = 0; i < 1000000; i++)
+	    fc_keysched(key1, sched);
+	gettimeofday(&stop, 0);
+	printf("fc_keysched    = %2.2f us\n",
+	       (stop.tv_sec - start.tv_sec +
+		(stop.tv_usec - start.tv_usec) / 1e6) * 1);
+
+	fc_ecb_encrypt(data, data, sched, ENCRYPT);
+	gettimeofday(&start, 0);
+	for (i = 0; i < 1000000; i++)
+	    fc_ecb_encrypt(data, data, sched, ENCRYPT);
+	gettimeofday(&stop, 0);
+	printf("fc_ecb_encrypt = %2.2f us\n",
+	       (stop.tv_sec - start.tv_sec +
+		(stop.tv_usec - start.tv_usec) / 1e6) * 1);
+
+	fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv,
+		       ENCRYPT);
+	gettimeofday(&start, 0);
+	for (i = 0; i < 100000; i++)
+	    fc_cbc_encrypt(the_quick, ciph, sizeof(the_quick), sched, iv,
+			   ENCRYPT);
+	gettimeofday(&stop, 0);
+	printf("fc_cbc_encrypt = %2.2f us\n",
+	       (stop.tv_sec - start.tv_sec +
+		(stop.tv_usec - start.tv_usec) / 1e6) * 10);
+
+    }
+
+    exit(0);
 }
 #endif /* TEST */

@@ -7,19 +7,19 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-#define AFSNCNAMESIZE 36 /* multiple of 4 */
+#define AFSNCNAMESIZE 36	/* multiple of 4 */
 struct nc {
-  unsigned int key;
-  struct nc *next, *prev;
-  struct vcache *dirp, *vp;
-  unsigned char name[AFSNCNAMESIZE];   
-  /* I think that we can avoid wasting a byte for NULL, with a 
-   * a little bit of thought.
-   */
+    unsigned int key;
+    struct nc *next, *prev;
+    struct vcache *dirp, *vp;
+    unsigned char name[AFSNCNAMESIZE];
+    /* I think that we can avoid wasting a byte for NULL, with a 
+     * a little bit of thought.
+     */
 };
 
 typedef struct {
-  unsigned int enters, lookups, misses, removes;
-  unsigned int purgeds, purgevs, purgevols, purges;
-  unsigned int cycles, lookuprace;
+    unsigned int enters, lookups, misses, removes;
+    unsigned int purgeds, purgevs, purgevols, purges;
+    unsigned int cycles, lookuprace;
 } dnlcstats_t;

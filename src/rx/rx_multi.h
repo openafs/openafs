@@ -20,13 +20,13 @@ struct multi_handle {
     int nConns;
     struct rx_call **calls;
     short *ready;
-    short nReady;        /* XXX UNALIGNED */
+    short nReady;		/* XXX UNALIGNED */
     short *nextReady;
     short *firstNotReady;
 #ifdef RX_ENABLE_LOCKS
     afs_kmutex_t lock;
     afs_kcondvar_t cv;
-#endif /* RX_ENABLE_LOCKS */
+#endif				/* RX_ENABLE_LOCKS */
 };
 
 #define multi_Rx(conns, nConns) \
@@ -59,4 +59,4 @@ struct multi_handle {
 	multi_Finalize_Ignore(multi_h);\
     } while (0)
 
-#endif /* _RX_MULTI_	 End of rx_multi.h */
+#endif /* _RX_MULTI_     End of rx_multi.h */

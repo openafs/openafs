@@ -42,9 +42,9 @@
 #endif
 #else /* AFS_NT40_ENV */
 #if !defined(AFS_DARWIN_ENV) && !defined(AFS_USR_DARWIN_ENV) && !defined(AFS_XBSD_ENV) && !defined(AFS_USR_FBSD_ENV)
-#include <sys/sysmacros.h>      /* MIN, MAX on Solaris */
+#include <sys/sysmacros.h>	/* MIN, MAX on Solaris */
 #endif
-#include <sys/param.h>          /* MIN, MAX elsewhere */
+#include <sys/param.h>		/* MIN, MAX elsewhere */
 #endif /* AFS_NT40_ENV */
 
 #define	IPv6_HDR_SIZE		40	/* IPv6 Header */
@@ -67,7 +67,7 @@
  * the MAX packet size will be the maximum receive size, but the maximum send
  * size will be larger than that. */
 
-#ifdef notdef 
+#ifdef notdef
 /*  some sample MTUs 
            4352   what FDDI(RFC1188) uses... Larger? 
            4096   VJ's recommendation for FDDI 
@@ -87,17 +87,17 @@
 #define	RX_MAX_PACKET_DATA_SIZE	(RX_MAX_PACKET_SIZE-RX_HEADER_SIZE)
 #ifdef AFS_HPUX_ENV
 /* HPUX by default uses an 802.3 size, and it's not evident from SIOCGIFCONF */
-#define	RX_LOCAL_PACKET_SIZE	(1492 - RX_IPUDP_SIZE)   
-#define	RX_REMOTE_PACKET_SIZE	(1492 - RX_IPUDP_SIZE)   
+#define	RX_LOCAL_PACKET_SIZE	(1492 - RX_IPUDP_SIZE)
+#define	RX_REMOTE_PACKET_SIZE	(1492 - RX_IPUDP_SIZE)
 #else
-#define	RX_LOCAL_PACKET_SIZE	RX_MAX_PACKET_SIZE  /* For hosts on same net */
-#define	RX_REMOTE_PACKET_SIZE	RX_MAX_PACKET_SIZE  /* see note above */
+#define	RX_LOCAL_PACKET_SIZE	RX_MAX_PACKET_SIZE	/* For hosts on same net */
+#define	RX_REMOTE_PACKET_SIZE	RX_MAX_PACKET_SIZE	/* see note above */
 #endif
 #endif /* notdef */
 
 /* These are the new, streamlined ones.
  */
-#define	RX_HEADER_SIZE		sizeof (struct rx_header) 
+#define	RX_HEADER_SIZE		sizeof (struct rx_header)
 
 /* The minimum MTU for an IP network is 576 bytes including headers */
 #define RX_MIN_PACKET_SIZE      (576 - RX_IPUDP_SIZE)
@@ -106,32 +106,32 @@
 #define	OLD_MAX_PACKET_SIZE	(1500 - RX_IPUDP_SIZE)
 
 /* if the other guy is not on the local net, use this size */
-#define	RX_REMOTE_PACKET_SIZE	(1500 - RX_IPUDP_SIZE)   
+#define	RX_REMOTE_PACKET_SIZE	(1500 - RX_IPUDP_SIZE)
 
 /* for now, never send more data than this */
 #define	RX_MAX_PACKET_SIZE	16384
-#define	RX_MAX_PACKET_DATA_SIZE	(16384 - RX_HEADER_SIZE) 
+#define	RX_MAX_PACKET_DATA_SIZE	(16384 - RX_HEADER_SIZE)
 
 /* Packet types, for rx_packet.type */
-#define	RX_PACKET_TYPE_DATA	    1    /* A vanilla data packet */
-#define	RX_PACKET_TYPE_ACK	    2    /* Acknowledge packet */
-#define	RX_PACKET_TYPE_BUSY	    3    /* Busy: can't accept call immediately; try later */
-#define	RX_PACKET_TYPE_ABORT	    4    /* Abort packet.  No response needed. */
-#define	RX_PACKET_TYPE_ACKALL	    5    /* Acknowledges receipt of all packets */
-#define	RX_PACKET_TYPE_CHALLENGE    6    /* Challenge client's identity: request credentials */
-#define	RX_PACKET_TYPE_RESPONSE	    7    /* Respond to challenge packet */
-#define	RX_PACKET_TYPE_DEBUG	    8	 /* Get debug information */
+#define	RX_PACKET_TYPE_DATA	    1	/* A vanilla data packet */
+#define	RX_PACKET_TYPE_ACK	    2	/* Acknowledge packet */
+#define	RX_PACKET_TYPE_BUSY	    3	/* Busy: can't accept call immediately; try later */
+#define	RX_PACKET_TYPE_ABORT	    4	/* Abort packet.  No response needed. */
+#define	RX_PACKET_TYPE_ACKALL	    5	/* Acknowledges receipt of all packets */
+#define	RX_PACKET_TYPE_CHALLENGE    6	/* Challenge client's identity: request credentials */
+#define	RX_PACKET_TYPE_RESPONSE	    7	/* Respond to challenge packet */
+#define	RX_PACKET_TYPE_DEBUG	    8	/* Get debug information */
 
-#define RX_PACKET_TYPE_PARAMS       9    /* exchange size params (showUmine) */
+#define RX_PACKET_TYPE_PARAMS       9	/* exchange size params (showUmine) */
 #define RX_PACKET_TYPE_VERSION	   13	/* get AFS version */
 
 
 #define	RX_PACKET_TYPES	    {"data", "ack", "busy", "abort", "ackall", "challenge", "response", "debug", "params", "unused", "unused", "unused", "version"}
-#define	RX_N_PACKET_TYPES	    13	    /* Must agree with above list;
-					       counts 0
-					       WARNING: if this number ever
-					       grows past 13, rxdebug packets
-					       will need to be modified */
+#define	RX_N_PACKET_TYPES	    13	/* Must agree with above list;
+					 * counts 0
+					 * WARNING: if this number ever
+					 * grows past 13, rxdebug packets
+					 * will need to be modified */
 
 /* Packet classes, for rx_AllocPacket */
 #define	RX_PACKET_CLASS_RECEIVE	    0
@@ -140,23 +140,23 @@
 #define	RX_PACKET_CLASS_RECV_CBUF   3
 #define	RX_PACKET_CLASS_SEND_CBUF   4
 
-#define	RX_N_PACKET_CLASSES	    5	    /* Must agree with above list */
+#define	RX_N_PACKET_CLASSES	    5	/* Must agree with above list */
 
 /* Flags for rx_header flags field */
-#define	RX_CLIENT_INITIATED	1   /* Packet is sent/received from client side of call */
-#define	RX_REQUEST_ACK		2   /* Peer requests acknowledgement */
-#define	RX_LAST_PACKET		4   /* This is the last packet from this side of the call */
-#define	RX_MORE_PACKETS		8   /* There are more packets following this,
-				     * i.e. the next sequence number seen by
-				     * the receiver should be greater than
-                                     * this one, rather than a resend of an
-				     * earlier sequence number */
-#define RX_SLOW_START_OK	32  /* Set this flag in an ack packet to
-				     * inform the sender that slow start is
-				     * supported by the receiver. */
-#define RX_JUMBO_PACKET         32  /* Set this flag in a data packet to
-				     * indicate that more packets follow
-				     * this packet in the datagram */
+#define	RX_CLIENT_INITIATED	1	/* Packet is sent/received from client side of call */
+#define	RX_REQUEST_ACK		2	/* Peer requests acknowledgement */
+#define	RX_LAST_PACKET		4	/* This is the last packet from this side of the call */
+#define	RX_MORE_PACKETS		8	/* There are more packets following this,
+					 * i.e. the next sequence number seen by
+					 * the receiver should be greater than
+					 * this one, rather than a resend of an
+					 * earlier sequence number */
+#define RX_SLOW_START_OK	32	/* Set this flag in an ack packet to
+					 * inform the sender that slow start is
+					 * supported by the receiver. */
+#define RX_JUMBO_PACKET         32	/* Set this flag in a data packet to
+					 * indicate that more packets follow
+					 * this packet in the datagram */
 
 /* The following flags are preset per packet, i.e. they don't change
  * on retransmission of the packet */
@@ -173,19 +173,19 @@
 
 /* The rx part of the header of a packet, in host form */
 struct rx_header {
-    afs_uint32 epoch;	/* Start time of client process */
+    afs_uint32 epoch;		/* Start time of client process */
     afs_uint32 cid;		/* Connection id (defined by client) */
     afs_uint32 callNumber;	/* Current call number */
     afs_uint32 seq;		/* Sequence number of this packet, within this call */
-    afs_uint32 serial;	/* Serial number of this packet: a new serial
-                         * number is stamped on each packet sent out */
-    u_char type;	/* RX packet type */
-    u_char flags;	/* Flags, defined below */
-    u_char userStatus;	/* User defined status information,
-                         * returned/set by macros
-                         * rx_Get/SetLocal/RemoteStatus */
-    u_char securityIndex; /* Which service-defined security method to use */
-    u_short serviceId;	/* service this packet is directed _to_ */
+    afs_uint32 serial;		/* Serial number of this packet: a new serial
+				 * number is stamped on each packet sent out */
+    u_char type;		/* RX packet type */
+    u_char flags;		/* Flags, defined below */
+    u_char userStatus;		/* User defined status information,
+				 * returned/set by macros
+				 * rx_Get/SetLocal/RemoteStatus */
+    u_char securityIndex;	/* Which service-defined security method to use */
+    u_short serviceId;		/* service this packet is directed _to_ */
     /* This spare is now used for packet header checkksum.  see
      * rxi_ReceiveDataPacket and packet cksum macros above for details. */
     u_short spare;
@@ -196,14 +196,14 @@ struct rx_header {
  * derived from their counterparts in the main packet header.
  */
 struct rx_jumboHeader {
-    u_char flags;      /* Flags, defined below */
+    u_char flags;		/* Flags, defined below */
     u_char spare1;
-    u_short cksum;     /* packet header checksum */
+    u_short cksum;		/* packet header checksum */
 };
 
 /* For most Unixes, maximum elements in an iovec is 16 */
-#define RX_MAXIOVECS 16            /* limit for ReadvProc/WritevProc */
-#define RX_MAXWVECS RX_MAXIOVECS-1 /* need one iovec for packet header */
+#define RX_MAXIOVECS 16		/* limit for ReadvProc/WritevProc */
+#define RX_MAXWVECS RX_MAXIOVECS-1	/* need one iovec for packet header */
 
 /*
  * The values for the RX buffer sizes are calculated to ensure efficient
@@ -243,27 +243,27 @@ struct rx_jumboHeader {
 #define RX_EXTRABUFFERSIZE 4
 
 struct rx_packet {
-    struct rx_queue queueItemHeader;   /* Packets are chained using the queue.h package */
-    struct clock retryTime;	    /* When this packet should NEXT be re-transmitted */
-    struct clock timeSent;	    /* When this packet was transmitted last */
-    afs_uint32 firstSerial;	            /* Original serial number of this packet */
-    struct clock firstSent;	    /* When this packet was transmitted first */
-    struct rx_header header;	    /* The internal packet header */
+    struct rx_queue queueItemHeader;	/* Packets are chained using the queue.h package */
+    struct clock retryTime;	/* When this packet should NEXT be re-transmitted */
+    struct clock timeSent;	/* When this packet was transmitted last */
+    afs_uint32 firstSerial;	/* Original serial number of this packet */
+    struct clock firstSent;	/* When this packet was transmitted first */
+    struct rx_header header;	/* The internal packet header */
     unsigned int niovecs;
-    struct iovec wirevec[RX_MAXWVECS+1];       /* the new form of the packet */
-    
-    u_char flags;		    /* Flags for local state of this packet */
-    u_char backoff;                 /* for multiple re-sends */
-    u_short length;		    /* Data length */
+    struct iovec wirevec[RX_MAXWVECS + 1];	/* the new form of the packet */
+
+    u_char flags;		/* Flags for local state of this packet */
+    u_char backoff;		/* for multiple re-sends */
+    u_short length;		/* Data length */
     /* NT port relies on the fact that the next two are physically adjacent.
      * If that assumption changes change sendmsg and recvmsg in rx_xmit_nt.c .
      * The jumbo datagram code also relies on the next two being
      * physically adjacent.
      * The Linux port uses this knowledge as well in osi_NetSend.
      */
-    afs_uint32 wirehead[RX_HEADER_SIZE/sizeof(afs_int32)];
-    afs_uint32 localdata[RX_CBUFFERSIZE/sizeof(afs_int32)]; 
-    afs_uint32 extradata[RX_EXTRABUFFERSIZE/sizeof(afs_int32)];
+    afs_uint32 wirehead[RX_HEADER_SIZE / sizeof(afs_int32)];
+    afs_uint32 localdata[RX_CBUFFERSIZE / sizeof(afs_int32)];
+    afs_uint32 extradata[RX_EXTRABUFFERSIZE / sizeof(afs_int32)];
 };
 
 /* Macro to convert continuation buffer pointers to packet pointers */
@@ -342,7 +342,7 @@ struct rx_packet {
 /* try to ensure that rx_DataOf will return a contiguous space at
  * least size bytes long */
 /* return what the actual contiguous space is: should be min(length,size) */
-#define rx_Pullup(p,size) /* this idea here is that this will make a guarantee */
+#define rx_Pullup(p,size)	/* this idea here is that this will make a guarantee */
 
 
 /* The offset of the actual user's data in the packet, skipping any

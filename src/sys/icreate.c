@@ -14,13 +14,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 
 #include "AFS_component_version_number.c"
 
-main(argc,argv)
-char **argv;
+main(argc, argv)
+     char **argv;
 {
     int inode;
     struct stat status;

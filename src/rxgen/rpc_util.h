@@ -41,8 +41,8 @@
 #define	f_print	if (scan_print) (void) fprintf
 
 struct list {
-	char *val;
-	struct list *next;
+    char *val;
+    struct list *next;
 };
 typedef struct list list;
 
@@ -76,8 +76,9 @@ extern list *defined;
 
 extern void reinitialize(void);
 extern int streq(char *a, char *b);
-extern char *findval(list *lst, char *val, int (*cmp)(definition *def, char *type));
-extern void storeval(list **lstp, char *val);
+extern char *findval(list * lst, char *val,
+		     int (*cmp) (definition * def, char *type));
+extern void storeval(list ** lstp, char *val);
 extern char *fixtype(char *type);
 extern char *stringfix(char *type);
 extern void ptype(char *prefix, char *type, int follow);
@@ -89,8 +90,9 @@ extern void record_open(char *file);
 extern void expected1(tok_kind exp1);
 extern void expected2(tok_kind exp1, tok_kind exp2);
 extern void expected3(tok_kind exp1, tok_kind exp2, tok_kind exp3);
-extern void expected4(tok_kind exp1, tok_kind exp2, tok_kind exp3, tok_kind exp4);
-extern void tabify(FILE *f, int tab);
+extern void expected4(tok_kind exp1, tok_kind exp2, tok_kind exp3,
+		      tok_kind exp4);
+extern void tabify(FILE * f, int tab);
 
 #define STOREVAL(list,item)	\
 	storeval(list,(char *)item)
@@ -102,16 +104,17 @@ extern void tabify(FILE *f, int tab);
 extern void write_stubs(void);
 
 /* rpc_cout.c */
-extern void emit(definition *def);
-extern void print_param(declaration *dec);
+extern void emit(definition * def);
+extern void print_param(declaration * dec);
 
 /* rpc_hout.c */
-extern void print_datadef(definition *def);
+extern void print_datadef(definition * def);
 extern void pdefine(char *name, char *num);
-extern void pprocdef(proc_list *proc, version_list *vp);
+extern void pprocdef(proc_list * proc, version_list * vp);
 
 /* rpc_parse.c */
-extern list *proc_defined[MAX_PACKAGES], *special_defined, *typedef_defined, *uniondef_defined;
+extern list *proc_defined[MAX_PACKAGES], *special_defined, *typedef_defined,
+    *uniondef_defined;
 extern char *SplitStart;
 extern char *SplitEnd;
 extern char *MasterPrefix;
@@ -130,17 +133,17 @@ extern int PackageIndex;
 extern int PerProcCounter;
 extern int Multi_Init;
 extern char function_list[MAX_PACKAGES]
-                  [MAX_FUNCTIONS_PER_PACKAGE]
-                  [MAX_FUNCTION_NAME_LEN];
+    [MAX_FUNCTIONS_PER_PACKAGE]
+    [MAX_FUNCTION_NAME_LEN];
 extern int function_list_index;
 
 extern definition *get_definition(void);
 
 extern void er_Proc_CodeGeneration(void);
 extern void h_opcode_stats(void);
-extern void generate_multi_macros(definition *defp);
-extern int IsRxgenToken(token *tokp);
-extern int IsRxgenDefinition(definition *def);
+extern void generate_multi_macros(definition * defp);
+extern int IsRxgenToken(token * tokp);
+extern int IsRxgenDefinition(definition * def);
 
 
 
@@ -149,7 +152,7 @@ extern proc1_list *Proc_list, **Proc_listp;
 
 
 /* rpc_svcout.c */
-extern int nullproc(proc_list *proc);
+extern int nullproc(proc_list * proc);
 extern void write_programs(char *storage);
 extern void write_rest(void);
 extern void write_most(void);
@@ -160,18 +163,16 @@ extern int pushed;
 extern token lasttok;
 extern int scan_print;
 
-extern void scan(tok_kind expect, token *tokp);
-extern void scan2(tok_kind expect1, tok_kind expect2,
-        token *tokp);
-extern void scan3(tok_kind expect1, tok_kind expect2,
-        tok_kind expect3, token *tokp);
-extern void scan4(tok_kind expect1, tok_kind expect2,
-        tok_kind expect3, tok_kind expect4, token *tokp);
-extern void scan_num(token *tokp);
-extern void peek(token *tokp);
-extern int peekscan(tok_kind expect, token *tokp);
-extern void get_token(token *tokp);
-extern void unget_token(token *tokp);
-extern void findkind(char **mark, token *tokp);
+extern void scan(tok_kind expect, token * tokp);
+extern void scan2(tok_kind expect1, tok_kind expect2, token * tokp);
+extern void scan3(tok_kind expect1, tok_kind expect2, tok_kind expect3,
+		  token * tokp);
+extern void scan4(tok_kind expect1, tok_kind expect2, tok_kind expect3,
+		  tok_kind expect4, token * tokp);
+extern void scan_num(token * tokp);
+extern void peek(token * tokp);
+extern int peekscan(tok_kind expect, token * tokp);
+extern void get_token(token * tokp);
+extern void unget_token(token * tokp);
+extern void findkind(char **mark, token * tokp);
 extern void printdirective(char *line);
-

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <mit-cpyright.h>
-int	des_debug	= 0;
+int des_debug = 0;

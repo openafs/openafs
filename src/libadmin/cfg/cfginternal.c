@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/stds.h>
 
@@ -56,21 +57,20 @@ RCSID("$Header$");
  * RETURN CODES: 1 success, 0 failure
  */
 int
-cfgutil_HostHandleValidate(const cfg_host_p cfg_host,
-			   afs_status_p st)
+cfgutil_HostHandleValidate(const cfg_host_p cfg_host, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst = 0;
 
     if (cfg_host == NULL) {
-        tst = ADMCFGHOSTHANDLENULL;
+	tst = ADMCFGHOSTHANDLENULL;
 
-    } else if (cfg_host->begin_magic != BEGIN_MAGIC ||
-	       cfg_host->end_magic != END_MAGIC) {
-        tst = ADMCFGHOSTHANDLEBADMAGIC;
+    } else if (cfg_host->begin_magic != BEGIN_MAGIC
+	       || cfg_host->end_magic != END_MAGIC) {
+	tst = ADMCFGHOSTHANDLEBADMAGIC;
 
     } else if (cfg_host->is_valid == 0) {
-        tst = ADMCFGHOSTHANDLEINVALID;
+	tst = ADMCFGHOSTHANDLEINVALID;
 
     } else if (cfg_host->hostName == NULL) {
 	tst = ADMCFGHOSTHANDLEHOSTNAMENULL;
@@ -100,8 +100,7 @@ cfgutil_HostHandleValidate(const cfg_host_p cfg_host,
  * RETURN CODES: 1 success, 0 failure
  */
 int
-cfgutil_HostHandleBosInit(cfg_host_p cfg_host,
-			  afs_status_p st)
+cfgutil_HostHandleBosInit(cfg_host_p cfg_host, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst = 0;
@@ -114,10 +113,9 @@ cfgutil_HostHandleBosInit(cfg_host_p cfg_host,
 	    void *bosHandle;
 	    afs_status_t tst2;
 
-	    if (bos_ServerOpen(cfg_host->cellHandle,
-			       cfg_host->hostName,
-			       &bosHandle,
-			       &tst2)) {
+	    if (bos_ServerOpen
+		(cfg_host->cellHandle, cfg_host->hostName, &bosHandle,
+		 &tst2)) {
 		cfg_host->bosHandle = bosHandle;
 	    } else {
 		tst = tst2;
@@ -172,8 +170,7 @@ cfgutil_HostHandleCellNameCompatible(const cfg_host_p cfg_host,
  * RETURN CODES: 1 success, 0 failure
  */
 int
-cfgutil_HostNameGetFull(const char *hostName,
-			char *fullHostName,
+cfgutil_HostNameGetFull(const char *hostName, char *fullHostName,
 			afs_status_p st)
 {
     int rc = 1;
@@ -190,15 +187,15 @@ cfgutil_HostNameGetFull(const char *hostName,
 	char *fqName = hentryp->h_name;
 
 	/* verify that canonical name is an expansion of name specified */
-	if (strncasecmp(fqName, hostName, hostNameLen) != 0 ||
-	    fqName[hostNameLen] != '.') {
+	if (strncasecmp(fqName, hostName, hostNameLen) != 0
+	    || fqName[hostNameLen] != '.') {
 	    /* canonical name not a direct expansion; consider aliases */
 	    int i;
 
 	    for (i = 0; hentryp->h_aliases[i] != NULL; i++) {
 		char *aliasName = hentryp->h_aliases[i];
-		if (strncasecmp(aliasName, hostName, hostNameLen) == 0 &&
-		    aliasName[hostNameLen] == '.') {
+		if (strncasecmp(aliasName, hostName, hostNameLen) == 0
+		    && aliasName[hostNameLen] == '.') {
 		    /* found a direct exapansion of specified name */
 		    fqName = aliasName;
 		    break;
@@ -238,10 +235,8 @@ cfgutil_HostNameGetFull(const char *hostName,
  * RETURN CODES: 1 success, 0 failure
  */
 int
-cfgutil_HostNameIsAlias(const char *hostName1,
-			const char *hostName2,
-			short *isAlias,
-			afs_status_p st)
+cfgutil_HostNameIsAlias(const char *hostName1, const char *hostName2,
+			short *isAlias, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst2, tst = 0;
@@ -250,16 +245,16 @@ cfgutil_HostNameIsAlias(const char *hostName1,
 
     /* get all addrs for first host */
 
-    if (!cfgutil_HostAddressFetchAll(hostName1,
-				     &addrCount1, &addrList1, &tst2)) {
+    if (!cfgutil_HostAddressFetchAll
+	(hostName1, &addrCount1, &addrList1, &tst2)) {
 	tst = tst2;
     }
 
     /* get all addrs for second host */
 
     if (tst == 0) {
-	if (!cfgutil_HostAddressFetchAll(hostName2,
-					 &addrCount2, &addrList2, &tst2)) {
+	if (!cfgutil_HostAddressFetchAll
+	    (hostName2, &addrCount2, &addrList2, &tst2)) {
 	    tst = tst2;
 	    free(addrList1);
 	}
@@ -303,9 +298,7 @@ cfgutil_HostNameIsAlias(const char *hostName1,
  * RETURN CODES: 1 success, 0 failure
  */
 int
-cfgutil_HostNameIsLocal(const char *hostName,
-			short *isLocal,
-			afs_status_p st)
+cfgutil_HostNameIsLocal(const char *hostName, short *isLocal, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst2, tst = 0;
@@ -339,10 +332,8 @@ cfgutil_HostNameIsLocal(const char *hostName,
  * RETURN CODES: 1 success, 0 failure
  */
 int
-cfgutil_HostNameGetCellServDbAlias(const char *fsDbHost,
-				   const char *hostName,
-				   char *hostNameAlias,
-				   afs_status_p st)
+cfgutil_HostNameGetCellServDbAlias(const char *fsDbHost, const char *hostName,
+				   char *hostNameAlias, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst2, tst = 0;
@@ -366,18 +357,16 @@ cfgutil_HostNameGetCellServDbAlias(const char *fsDbHost,
 		while (!dbhostDone) {
 		    short isAlias;
 
-		    if (!bos_HostGetNext(dbIter,
-					 hostNameAlias, &tst2)) {
+		    if (!bos_HostGetNext(dbIter, hostNameAlias, &tst2)) {
 			/* no more entries (or failure) */
 			if (tst2 != ADMITERATORDONE) {
 			    tst = tst2;
 			}
 			dbhostDone = 1;
 
-		    } else if (!cfgutil_HostNameIsAlias(hostName,
-							hostNameAlias,
-							&isAlias,
-							&tst2)) {
+		    } else
+			if (!cfgutil_HostNameIsAlias
+			    (hostName, hostNameAlias, &isAlias, &tst2)) {
 			tst = tst2;
 			dbhostDone = 1;
 
@@ -424,8 +413,7 @@ cfgutil_HostNameGetCellServDbAlias(const char *fsDbHost,
  *     Returns pointer to a per-thread buffer; do not deallocate.
  */
 int
-cfgutil_HostNameGetAddressString(const char *hostName,
-				 const char **hostAddr,
+cfgutil_HostNameGetAddressString(const char *hostName, const char **hostAddr,
 				 afs_status_p st)
 {
     int rc = 1;
@@ -435,8 +423,7 @@ cfgutil_HostNameGetAddressString(const char *hostName,
 
     /* get address list for host */
 
-    if (!cfgutil_HostAddressFetchAll(hostName,
-				     &addrCount, &addrList, &tst2)) {
+    if (!cfgutil_HostAddressFetchAll(hostName, &addrCount, &addrList, &tst2)) {
 	tst = tst2;
     }
 
@@ -476,10 +463,8 @@ cfgutil_HostNameGetAddressString(const char *hostName,
  * RETURN CODES: 1 success, 0 failure
  */
 int
-cfgutil_HostAddressFetchAll(const char *hostName,
-			    int *addrCount,
-			    afs_int32 **addrList,
-			    afs_status_p st)
+cfgutil_HostAddressFetchAll(const char *hostName, int *addrCount,
+			    afs_int32 ** addrList, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst = 0;
@@ -500,13 +485,13 @@ cfgutil_HostAddressFetchAll(const char *hostName,
 	aCount = i;
 
 	if ((aList =
-	     (afs_int32 *)malloc(aCount * sizeof(afs_int32))) == NULL) {
+	     (afs_int32 *) malloc(aCount * sizeof(afs_int32))) == NULL) {
 	    tst = ADMNOMEM;
 	} else {
 	    for (i = 0; i < aCount; i++) {
 		afs_int32 hostAddr;
-		memcpy((void *)&hostAddr,
-		       (void *)hentryp->h_addr_list[i], sizeof(afs_int32));
+		memcpy((void *)&hostAddr, (void *)hentryp->h_addr_list[i],
+		       sizeof(afs_int32));
 		aList[i] = ntohl(hostAddr);
 	    }
 	}
@@ -540,9 +525,7 @@ cfgutil_HostAddressFetchAll(const char *hostName,
  * RETURN CODES: 1 success, 0 failure
  */
 int
-cfgutil_HostAddressIsValid(const char *hostName,
-			   int hostAddr,
-			   short *isValid,
+cfgutil_HostAddressIsValid(const char *hostName, int hostAddr, short *isValid,
 			   afs_status_p st)
 {
     int rc = 1;
@@ -554,8 +537,7 @@ cfgutil_HostAddressIsValid(const char *hostName,
 
     /* get all addrs for host */
 
-    if (!cfgutil_HostAddressFetchAll(hostName,
-				     &addrCount, &addrList, &tst2)) {
+    if (!cfgutil_HostAddressFetchAll(hostName, &addrCount, &addrList, &tst2)) {
 	tst = tst2;
     }
 
@@ -591,8 +573,7 @@ cfgutil_HostAddressIsValid(const char *hostName,
  * RETURN CODES: 1 success, 0 failure
  */
 int
-cfgutil_CleanDirectory(const char *dirName,
-		       afs_status_p st)
+cfgutil_CleanDirectory(const char *dirName, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst = 0;
@@ -625,7 +606,7 @@ cfgutil_CleanDirectory(const char *dirName,
 	    }
 	}
 
-	(void) closedir(dirp);
+	(void)closedir(dirp);
     }
 
     if (tst != 0) {
@@ -645,8 +626,7 @@ cfgutil_CleanDirectory(const char *dirName,
  * RETURN CODES: 1 success, 0 failure (st indicates why)
  */
 int
-cfgutil_HostSetNoAuthFlag(const cfg_host_p cfg_host,
-			  short noAuth,
+cfgutil_HostSetNoAuthFlag(const cfg_host_p cfg_host, short noAuth,
 			  afs_status_p st)
 {
     int rc = 1;
@@ -739,38 +719,37 @@ cfgutil_Sleep(unsigned sec)
 /* Service control functions */
 
 /* define generic service error codes */
-#define CFGUTIL_SVC_NOPRIV      1  /* insufficient privilege */
-#define CFGUTIL_SVC_BAD         2  /* service not properly configured */
-#define CFGUTIL_SVC_NOTREADY    3  /* service not ready to accept command */
-#define CFGUTIL_SVC_TIMEOUT     4  /* timed out waiting for stop/start */
-#define CFGUTIL_SVC_STATUSUNK   5  /* service status cannot be determined */
+#define CFGUTIL_SVC_NOPRIV      1	/* insufficient privilege */
+#define CFGUTIL_SVC_BAD         2	/* service not properly configured */
+#define CFGUTIL_SVC_NOTREADY    3	/* service not ready to accept command */
+#define CFGUTIL_SVC_TIMEOUT     4	/* timed out waiting for stop/start */
+#define CFGUTIL_SVC_STATUSUNK   5	/* service status cannot be determined */
 
 
 /*
  * ServiceCodeXlate() -- translate generic code to service-specific code
  */
 static afs_status_t
-ServiceCodeXlate(LPCTSTR svcName,
-		 int code)
+ServiceCodeXlate(LPCTSTR svcName, int code)
 {
     afs_status_t tst = ADMCFGNOTSUPPORTED;
 
     if (!strcmp(svcName, AFSREG_CLT_SVC_NAME)) {
 	/* AFS client (CM) service code required */
 	switch (code) {
-	  case CFGUTIL_SVC_NOPRIV:
+	case CFGUTIL_SVC_NOPRIV:
 	    tst = ADMNOPRIV;
 	    break;
-	  case CFGUTIL_SVC_BAD:
+	case CFGUTIL_SVC_BAD:
 	    tst = ADMCFGCACHEMGRSERVICEBAD;
 	    break;
-	  case CFGUTIL_SVC_NOTREADY:
+	case CFGUTIL_SVC_NOTREADY:
 	    tst = ADMCFGCACHEMGRSERVICENOTREADY;
 	    break;
-	  case CFGUTIL_SVC_TIMEOUT:
+	case CFGUTIL_SVC_TIMEOUT:
 	    tst = ADMCFGCACHEMGRSERVICETIMEOUT;
 	    break;
-	  default:
+	default:
 	    tst = ADMCFGCACHEMGRSERVICESTATUSUNK;
 	    break;
 	}
@@ -778,19 +757,19 @@ ServiceCodeXlate(LPCTSTR svcName,
     } else if (!strcmp(svcName, AFSREG_SVR_SVC_NAME)) {
 	/* AFS BOS control service code required */
 	switch (code) {
-	  case CFGUTIL_SVC_NOPRIV:
+	case CFGUTIL_SVC_NOPRIV:
 	    tst = ADMNOPRIV;
 	    break;
-	  case CFGUTIL_SVC_BAD:
+	case CFGUTIL_SVC_BAD:
 	    tst = ADMCFGBOSSERVERCTLSERVICEBAD;
 	    break;
-	  case CFGUTIL_SVC_NOTREADY:
+	case CFGUTIL_SVC_NOTREADY:
 	    tst = ADMCFGBOSSERVERCTLSERVICENOTREADY;
 	    break;
-	  case CFGUTIL_SVC_TIMEOUT:
+	case CFGUTIL_SVC_TIMEOUT:
 	    tst = ADMCFGBOSSERVERCTLSERVICETIMEOUT;
 	    break;
-	  default:
+	default:
 	    tst = ADMCFGBOSSERVERCTLSERVICESTATUSUNK;
 	    break;
 	}
@@ -810,11 +789,8 @@ ServiceCodeXlate(LPCTSTR svcName,
  * RETURN CODES: 1 success, 0 failure (st indicates why)
  */
 int
-cfgutil_WindowsServiceStart(LPCTSTR svcName,
-			    DWORD svcArgc,
-			    LPCTSTR *svcArgv,
-			    unsigned timeout,
-			    short *wasRunning,
+cfgutil_WindowsServiceStart(LPCTSTR svcName, DWORD svcArgc, LPCTSTR * svcArgv,
+			    unsigned timeout, short *wasRunning,
 			    afs_status_p st)
 {
     int rc = 1;
@@ -824,8 +800,8 @@ cfgutil_WindowsServiceStart(LPCTSTR svcName,
 
     *wasRunning = 0;
 
-    if ((scmHandle = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT)) == NULL ||
-	(svcHandle = OpenService(scmHandle, svcName, svcAccess)) == NULL) {
+    if ((scmHandle = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT)) == NULL
+	|| (svcHandle = OpenService(scmHandle, svcName, svcAccess)) == NULL) {
 	/* can't connect to SCM or can't open service */
 	DWORD status = GetLastError();
 
@@ -852,9 +828,9 @@ cfgutil_WindowsServiceStart(LPCTSTR svcName,
 	    } else {
 		if (status == ERROR_ACCESS_DENIED) {
 		    tst = ServiceCodeXlate(svcName, CFGUTIL_SVC_NOPRIV);
-		} else if (status == ERROR_SERVICE_DATABASE_LOCKED ||
-			   status == ERROR_SERVICE_DISABLED ||
-			   status == ERROR_SERVICE_REQUEST_TIMEOUT) {
+		} else if (status == ERROR_SERVICE_DATABASE_LOCKED
+			   || status == ERROR_SERVICE_DISABLED
+			   || status == ERROR_SERVICE_REQUEST_TIMEOUT) {
 		    tst = ServiceCodeXlate(svcName, CFGUTIL_SVC_NOTREADY);
 		} else {
 		    tst = ServiceCodeXlate(svcName, CFGUTIL_SVC_BAD);
@@ -914,10 +890,8 @@ cfgutil_WindowsServiceStart(LPCTSTR svcName,
  * RETURN CODES: 1 success, 0 failure (st indicates why)
  */
 int
-cfgutil_WindowsServiceStop(LPCTSTR svcName,
-			   unsigned timeout,
-			   short *wasStopped,
-			   afs_status_p st)
+cfgutil_WindowsServiceStop(LPCTSTR svcName, unsigned timeout,
+			   short *wasStopped, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst = 0;
@@ -926,8 +900,8 @@ cfgutil_WindowsServiceStop(LPCTSTR svcName,
 
     *wasStopped = 0;
 
-    if ((scmHandle = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT)) == NULL ||
-	(svcHandle = OpenService(scmHandle, svcName, svcAccess)) == NULL) {
+    if ((scmHandle = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT)) == NULL
+	|| (svcHandle = OpenService(scmHandle, svcName, svcAccess)) == NULL) {
 	/* can't connect to SCM or can't open service */
 	DWORD status = GetLastError();
 
@@ -956,9 +930,9 @@ cfgutil_WindowsServiceStop(LPCTSTR svcName,
 	    } else {
 		if (status == ERROR_ACCESS_DENIED) {
 		    tst = ServiceCodeXlate(svcName, CFGUTIL_SVC_NOPRIV);
-		} else if (status == ERROR_INVALID_SERVICE_CONTROL ||
-			   status == ERROR_SERVICE_CANNOT_ACCEPT_CTRL ||
-			   status == ERROR_SERVICE_REQUEST_TIMEOUT) {
+		} else if (status == ERROR_INVALID_SERVICE_CONTROL
+			   || status == ERROR_SERVICE_CANNOT_ACCEPT_CTRL
+			   || status == ERROR_SERVICE_REQUEST_TIMEOUT) {
 		    tst = ServiceCodeXlate(svcName, CFGUTIL_SVC_NOTREADY);
 		} else {
 		    tst = ServiceCodeXlate(svcName, CFGUTIL_SVC_BAD);
@@ -1012,8 +986,7 @@ cfgutil_WindowsServiceStop(LPCTSTR svcName,
  * RETURN CODES: 1 success, 0 failure (st indicates why)
  */
 int
-cfgutil_WindowsServiceQuery(LPCTSTR svcName,
-			    DWORD *svcState,
+cfgutil_WindowsServiceQuery(LPCTSTR svcName, DWORD * svcState,
 			    afs_status_p st)
 {
     int rc = 1;
@@ -1021,8 +994,8 @@ cfgutil_WindowsServiceQuery(LPCTSTR svcName,
     SC_HANDLE scmHandle, svcHandle;
     DWORD svcAccess = SERVICE_QUERY_STATUS;
 
-    if ((scmHandle = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT)) == NULL ||
-	(svcHandle = OpenService(scmHandle, svcName, svcAccess)) == NULL) {
+    if ((scmHandle = OpenSCManager(NULL, NULL, SC_MANAGER_CONNECT)) == NULL
+	|| (svcHandle = OpenService(scmHandle, svcName, svcAccess)) == NULL) {
 	/* can't connect to SCM or can't open service */
 	DWORD status = GetLastError();
 

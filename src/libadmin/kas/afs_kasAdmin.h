@@ -45,11 +45,11 @@ typedef struct kas_encryptionKey {
     unsigned char key[KAS_ENCRYPTION_KEY_LEN];
 } kas_encryptionKey_t, *kas_encryptionKey_p;
 
-typedef enum {KAS_ADMIN, NO_KAS_ADMIN} kas_admin_t, *kas_admin_p;
-typedef enum {TGS, NO_TGS} kas_tgs_t, *kas_tgs_p;
-typedef enum {ENCRYPT, NO_ENCRYPT} kas_enc_t, *kas_enc_p;
-typedef enum {CHANGE_PASSWORD, NO_CHANGE_PASSWORD} kas_cpw_t, *kas_cpw_p;
-typedef enum {REUSE_PASSWORD, NO_REUSE_PASSWORD} kas_rpw_t, *kas_rpw_p;
+typedef enum { KAS_ADMIN, NO_KAS_ADMIN } kas_admin_t, *kas_admin_p;
+typedef enum { TGS, NO_TGS } kas_tgs_t, *kas_tgs_p;
+typedef enum { ENCRYPT, NO_ENCRYPT } kas_enc_t, *kas_enc_p;
+typedef enum { CHANGE_PASSWORD, NO_CHANGE_PASSWORD } kas_cpw_t, *kas_cpw_p;
+typedef enum { REUSE_PASSWORD, NO_REUSE_PASSWORD } kas_rpw_t, *kas_rpw_p;
 
 
 typedef struct kas_principalEntry {
@@ -147,132 +147,95 @@ typedef struct kas_serverDebugInfo {
     key_keyCacheItem_t keyCache[KAS_KEYCACHE_DEBUG_INFO_SIZE];
 } kas_serverDebugInfo_t, *kas_serverDebugInfo_p;
 
-extern int ADMINAPI kas_ServerOpen(
-  const void *cellHandle,
-  const char **serverList,
-  void **serverHandleP,
-  afs_status_p st
-);
+extern int ADMINAPI kas_ServerOpen(const void *cellHandle,
+				   const char **serverList,
+				   void **serverHandleP, afs_status_p st);
 
-extern int ADMINAPI kas_ServerClose(
-  const void *serverHandle,
-  afs_status_p st
-);
+extern int ADMINAPI kas_ServerClose(const void *serverHandle,
+				    afs_status_p st);
 
-extern int ADMINAPI kas_PrincipalCreate(
-  const void *cellHandle,
-  const void *serverHandle,
-  const kas_identity_p who,
-  const char *password,
-  afs_status_p st
-);
+extern int ADMINAPI kas_PrincipalCreate(const void *cellHandle,
+					const void *serverHandle,
+					const kas_identity_p who,
+					const char *password,
+					afs_status_p st);
 
-extern int ADMINAPI kas_PrincipalDelete(
-  const void *cellHandle,
-  const void *serverHandle,
-  const kas_identity_p who,
-  afs_status_p st
-);
+extern int ADMINAPI kas_PrincipalDelete(const void *cellHandle,
+					const void *serverHandle,
+					const kas_identity_p who,
+					afs_status_p st);
 
-extern int ADMINAPI kas_PrincipalGet(
-  const void *cellHandle,
-  const void *serverHandle,
-  const kas_identity_p who,
-  kas_principalEntry_p principal,
-  afs_status_p st
-);
+extern int ADMINAPI kas_PrincipalGet(const void *cellHandle,
+				     const void *serverHandle,
+				     const kas_identity_p who,
+				     kas_principalEntry_p principal,
+				     afs_status_p st);
 
-extern int ADMINAPI kas_PrincipalGetBegin(
-  const void *cellHandle,
-  const void *serverHandle,
-  void **iterationIdP,
-  afs_status_p st
-);
+extern int ADMINAPI kas_PrincipalGetBegin(const void *cellHandle,
+					  const void *serverHandle,
+					  void **iterationIdP,
+					  afs_status_p st);
 
-extern int ADMINAPI kas_PrincipalGetNext(
-  const void *iterationId,
-  kas_identity_p who,
-  afs_status_p st
-);
+extern int ADMINAPI kas_PrincipalGetNext(const void *iterationId,
+					 kas_identity_p who, afs_status_p st);
 
-extern int ADMINAPI kas_PrincipalGetDone(
-  const void *iterationIdP,
-  afs_status_p st
-);
+extern int ADMINAPI kas_PrincipalGetDone(const void *iterationIdP,
+					 afs_status_p st);
 
-extern int ADMINAPI kas_PrincipalKeySet(
-  const void *cellHandle,
-  const void *serverHandle,
-  const kas_identity_p who,
-  int keyVersion,
-  const kas_encryptionKey_p key,
-  afs_status_p st
-);
+extern int ADMINAPI kas_PrincipalKeySet(const void *cellHandle,
+					const void *serverHandle,
+					const kas_identity_p who,
+					int keyVersion,
+					const kas_encryptionKey_p key,
+					afs_status_p st);
 
-extern int ADMINAPI kas_PrincipalLockStatusGet(
-  const void *cellHandle,
-  const void *serverHandle,
-  const kas_identity_p who,
-  unsigned int *lock_end_timeP,
-  afs_status_p st
-);
+extern int ADMINAPI kas_PrincipalLockStatusGet(const void *cellHandle,
+					       const void *serverHandle,
+					       const kas_identity_p who,
+					       unsigned int *lock_end_timeP,
+					       afs_status_p st);
 
-extern int ADMINAPI kas_PrincipalUnlock(
-  const void *cellHandle,
-  const void *serverHandle,
-  const kas_identity_p who,
-  afs_status_p st
-);
+extern int ADMINAPI kas_PrincipalUnlock(const void *cellHandle,
+					const void *serverHandle,
+					const kas_identity_p who,
+					afs_status_p st);
 
-extern int ADMINAPI kas_PrincipalFieldsSet(
-  const void *cellHandle,
-  const void *serverHandle,
-  const kas_identity_p who,
-  const kas_admin_p isAdmin,
-  const kas_tgs_p grantTickets,
-  const kas_enc_p canEncrypt,
-  const kas_cpw_p canChangePassword,
-  const unsigned int *expirationDate,
-  const unsigned int *maxTicketLifetime,
-  const unsigned int *passwordExpires,
-  const kas_rpw_p passwordReuse,
-  const unsigned int *failedPasswordAttempts,
-  const unsigned int *failedPasswordLockTime,
-  afs_status_p st
-);
+extern int ADMINAPI kas_PrincipalFieldsSet(const void *cellHandle,
+					   const void *serverHandle,
+					   const kas_identity_p who,
+					   const kas_admin_p isAdmin,
+					   const kas_tgs_p grantTickets,
+					   const kas_enc_p canEncrypt,
+					   const kas_cpw_p canChangePassword,
+					   const unsigned int *expirationDate,
+					   const unsigned int
+					   *maxTicketLifetime, const unsigned int
+					   *passwordExpires,
+					   const kas_rpw_p passwordReuse,
+					   const unsigned int
+					   *failedPasswordAttempts, const unsigned int
+					   *failedPasswordLockTime,
+					   afs_status_p st);
 
-extern int ADMINAPI kas_ServerStatsGet(
-  const void *cellHandle,
-  const void *serverHandle,
-  kas_serverStats_p stats,
-  afs_status_p st
-);
+extern int ADMINAPI kas_ServerStatsGet(const void *cellHandle,
+				       const void *serverHandle,
+				       kas_serverStats_p stats,
+				       afs_status_p st);
 
-extern int ADMINAPI kas_ServerDebugGet(
-  const void *cellHandle,
-  const void *serverHandle,
-  kas_serverDebugInfo_p debug,
-  afs_status_p st
-);
+extern int ADMINAPI kas_ServerDebugGet(const void *cellHandle,
+				       const void *serverHandle,
+				       kas_serverDebugInfo_p debug,
+				       afs_status_p st);
 
-extern int ADMINAPI kas_ServerRandomKeyGet(
-  const void *cellHandle,
-  const void *serverHandle,
-  kas_encryptionKey_p key,
-  afs_status_p st
-);
+extern int ADMINAPI kas_ServerRandomKeyGet(const void *cellHandle,
+					   const void *serverHandle,
+					   kas_encryptionKey_p key,
+					   afs_status_p st);
 
-extern int ADMINAPI kas_StringToKey(
-  const char *cellName,
-  const char *string,
-  kas_encryptionKey_p key,
-  afs_status_p st
-);
+extern int ADMINAPI kas_StringToKey(const char *cellName, const char *string,
+				    kas_encryptionKey_p key, afs_status_p st);
 
-extern int ADMINAPI kas_KeyCheckSum(
-  const kas_encryptionKey_p key,
-  unsigned int *cksumP,
-  afs_status_p st
-);
+extern int ADMINAPI kas_KeyCheckSum(const kas_encryptionKey_p key,
+				    unsigned int *cksumP, afs_status_p st);
 
 #endif /* OPENAFS_KAS_ADMIN_H */

@@ -10,7 +10,8 @@
 #include "afs/param.h"
 #include <afsconfig.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -25,32 +26,37 @@ RCSID("$Header$");
 static int port;
 static short stats = 0;
 
-void SigInt(int ignore) {
+void
+SigInt(int ignore)
+{
     if (rx_debugFile) {
 	rx_PrintStats(rx_debugFile);
 	fflush(rx_debugFile);
     }
-    if (stats) rx_PrintStats(stdout);
+    if (stats)
+	rx_PrintStats(stdout);
     exit(1);
 }
 
 
-static ParseCmd(argc, argv)
-int argc;
-char **argv; {
+static
+ParseCmd(argc, argv)
+     int argc;
+     char **argv;
+{
     register int i;
-    for(i=1;i<argc;i++) {
-	if (!strcmp(argv[i],"-port")) {
-	    port = atoi(argv[i+1]);
+    for (i = 1; i < argc; i++) {
+	if (!strcmp(argv[i], "-port")) {
+	    port = atoi(argv[i + 1]);
 	    port = htons(port);
 	    i++;
-	}
-	else if (!strcmp(argv[i],"-log")) {
+	} else if (!strcmp(argv[i], "-log")) {
 	    rx_debugFile = fopen("kstest.log", "w");
-	    if (rx_debugFile == NULL) printf("Couldn't open rx_stest.db");
+	    if (rx_debugFile == NULL)
+		printf("Couldn't open rx_stest.db");
 	    signal(SIGINT, SigInt);
-	}
-	else if (!strcmp(argv[i], "-stats")) stats = 1;
+	} else if (!strcmp(argv[i], "-stats"))
+	    stats = 1;
 	else {
 	    printf("unrecognized switch '%s'\n", argv[i]);
 	    return -1;
@@ -60,8 +66,10 @@ char **argv; {
 }
 
 /* er loop */
-static rxk_erproc (acall)
-struct rx_call *acall; {
+static
+rxk_erproc(acall)
+     struct rx_call *acall;
+{
     XDR xdr;
     long temp;
 
@@ -74,10 +82,11 @@ struct rx_call *acall; {
 }
 
 main(argc, argv)
-int argc;
-char **argv; {
+     int argc;
+     char **argv;
+{
     register long code;
-    static struct rx_securityClass *sc[3];  /* so other kernel procs can reference it */
+    static struct rx_securityClass *sc[3];	/* so other kernel procs can reference it */
     register struct rx_service *tservice;
 
     port = htons(10000);
@@ -95,11 +104,11 @@ char **argv; {
     sc[0] = rxnull_NewServerSecurityObject();
     sc[1] = sc[2] = 0;
     printf("new secobj created\n");
-    tservice = rx_NewService(0, 1, "test", sc, 1 /* 3 */, rxk_erproc);
+    tservice = rx_NewService(0, 1, "test", sc, 1 /* 3 */ , rxk_erproc);
     printf("service is %x\n", tservice);
     if (!tservice) {
 	printf("failed to create service\n");
 	exit(1);
     }
-    rx_StartServer(1);	/* donate self */
+    rx_StartServer(1);		/* donate self */
 }

@@ -11,13 +11,13 @@
 #define OPENAFS_BUTC_XBSA_H
 
 /* The following serverTypes are currently supported by this interface */
-#define XBSA_SERVER_TYPE_NONE       0x00    /* no server, use tape drive         */
-#define XBSA_SERVER_TYPE_UNKNOWN    0x01    /* server, don't know which type yet */
-#define XBSA_SERVER_TYPE_ADSM       0x02    /* server type is ADSM               */
-#define XBSA_SERVER_TYPE_MASK       0xFF    /* for (butx_transactionInfo *)->serverType (byte 1) */
+#define XBSA_SERVER_TYPE_NONE       0x00	/* no server, use tape drive         */
+#define XBSA_SERVER_TYPE_UNKNOWN    0x01	/* server, don't know which type yet */
+#define XBSA_SERVER_TYPE_ADSM       0x02	/* server type is ADSM               */
+#define XBSA_SERVER_TYPE_MASK       0xFF	/* for (butx_transactionInfo *)->serverType (byte 1) */
 
 #ifdef xbsa
-#define CONF_XBSA (xbsaType != XBSA_SERVER_TYPE_NONE) /*test if butc is XBSA */
+#define CONF_XBSA (xbsaType != XBSA_SERVER_TYPE_NONE)	/*test if butc is XBSA */
 #else
 #define CONF_XBSA 0
 #endif
@@ -27,16 +27,16 @@
 #define XBSA_GET_SERVER_TYPE(server)       ((server) & XBSA_SERVER_TYPE_MASK)
 
 /* The following serverType flags are currently supported by this interface */
-#define XBSA_SERVER_FLAG_NONE      0x0000 /* don't allow multiple server connections */
-#define XBSA_SERVER_FLAG_MULTIPLE  0x0100 /* allow multiple server connections */
-#define XBSA_SERVER_FLAG_MASK      0xFF00 /* for (butx_transactionInfo *)->serverType (byte 2) */
+#define XBSA_SERVER_FLAG_NONE      0x0000	/* don't allow multiple server connections */
+#define XBSA_SERVER_FLAG_MULTIPLE  0x0100	/* allow multiple server connections */
+#define XBSA_SERVER_FLAG_MASK      0xFF00	/* for (butx_transactionInfo *)->serverType (byte 2) */
 #define XBSA_SET_SERVER_FLAG(server, flag)    ((server) |= ((flag) & XBSA_SERVER_FLAG_MASK))
 #define XBSA_GET_SERVER_FLAG(server)          ((server) & XBSA_SERVER_FLAG_MASK)
 #define XBSA_IS_SERVER_FLAG_SET(server, flag) (XBSA_GET_SERVER_FLAG(server) & flag)
 
-#define XBSAMINBUFFER  1024        /* minimum size is 1KB */
-#define XBSADFLTBUFFER 16384       /* default size is 16KB */
-#define XBSAMAXBUFFER  65535       /* maximum size in 64KB-1; has to fit in 16bit integer */
+#define XBSAMINBUFFER  1024	/* minimum size is 1KB */
+#define XBSADFLTBUFFER 16384	/* default size is 16KB */
+#define XBSAMAXBUFFER  65535	/* maximum size in 64KB-1; has to fit in 16bit integer */
 
 #include <xbsa.h>
 
@@ -67,22 +67,23 @@
  * The spec says bsaHandle should be a long but ADSM has it as a ulong!
  */
 struct butx_transactionInfo {
-    ApiVersion        apiVersion;
-    u_long             bsaHandle;
-    afs_int32             serverType;               /* Type and flags           */
-    afs_int32             maxObjects;               /* max objects/transaction  */
-    afs_int32             numObjects;               /* objects in current trans */
-    char              serverName[BSA_MAX_DESC];
-    SecurityToken     secToken;
-    ObjectOwner       objOwner;
-    ObjectDescriptor  curObject;
+    ApiVersion apiVersion;
+    u_long bsaHandle;
+    afs_int32 serverType;	/* Type and flags           */
+    afs_int32 maxObjects;	/* max objects/transaction  */
+    afs_int32 numObjects;	/* objects in current trans */
+    char serverName[BSA_MAX_DESC];
+    SecurityToken secToken;
+    ObjectOwner objOwner;
+    ObjectDescriptor curObject;
 };
 
-extern afs_int32 xbsa_MountLibrary(struct butx_transactionInfo *info, afs_int32 serverType);
+extern afs_int32 xbsa_MountLibrary(struct butx_transactionInfo *info,
+				   afs_int32 serverType);
 
 extern afs_int32 xbsa_Initialize(struct butx_transactionInfo *info,
-                           char *bsaObjectOwner, char *appObjectOwner,
-                           char *secToken, char *serverName);
+				 char *bsaObjectOwner, char *appObjectOwner,
+				 char *secToken, char *serverName);
 
 extern afs_int32 xbsa_Finalize(struct butx_transactionInfo *info);
 
@@ -91,38 +92,35 @@ extern afs_int32 xbsa_BeginTrans(struct butx_transactionInfo *info);
 extern afs_int32 xbsa_EndTrans(struct butx_transactionInfo *info);
 
 extern afs_int32 xbsa_QueryObject(struct butx_transactionInfo *info,
-			    char *objectSpaceName, char *pathName);
+				  char *objectSpaceName, char *pathName);
 
 extern afs_int32 xbsa_ReadObjectBegin(struct butx_transactionInfo *info,
-                                char *dataBuffer,
-                                afs_int32 bufferSize,
-                                afs_int32 *count,
-                                afs_int32 *endOfData);
+				      char *dataBuffer, afs_int32 bufferSize,
+				      afs_int32 * count,
+				      afs_int32 * endOfData);
 
 extern afs_int32 xbsa_ReadObjectEnd(struct butx_transactionInfo *info);
 
 extern afs_int32 xbsa_WriteObjectBegin(struct butx_transactionInfo *info,
-                                 char *objectSpaceName,
-                                 char *pathName,
-                                 char *lGName,
-                                 afs_hyper_t estimatedSize,
-                                 char *objectDescription,
-                                 char *objectInfo);
+				       char *objectSpaceName, char *pathName,
+				       char *lGName,
+				       afs_hyper_t estimatedSize,
+				       char *objectDescription,
+				       char *objectInfo);
 
 extern afs_int32 xbsa_WriteObjectEnd(struct butx_transactionInfo *info);
 
 extern afs_int32 xbsa_WriteObjectData(struct butx_transactionInfo *info,
-                                char *dataBuffer,
-                                afs_int32 bufferSize, afs_int32 *count);
+				      char *dataBuffer, afs_int32 bufferSize,
+				      afs_int32 * count);
 
 extern afs_int32 xbsa_ReadObjectData(struct butx_transactionInfo *info,
-                               char *dataBuffer,
-                               afs_int32 bufferSize,
-                               afs_int32 *count,
-                               afs_int32 *endOfData);
+				     char *dataBuffer, afs_int32 bufferSize,
+				     afs_int32 * count,
+				     afs_int32 * endOfData);
 
 extern afs_int32 xbsa_DeleteObject(struct butx_transactionInfo *info,
-                             char *objectSpaceName, char *pathName);
+				   char *objectSpaceName, char *pathName);
 
-#endif /*xbsa*/
+#endif /*xbsa */
 #endif /* OPENAFS_BUTC_XBSA_H */

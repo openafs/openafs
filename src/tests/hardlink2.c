@@ -55,17 +55,17 @@ main(int argc, char *argv[])
     struct stat sb1;
 
 
-    ret = mkdir ("1", 0777);
+    ret = mkdir("1", 0777);
     if (ret < 0)
-	err (1, "mkdir 1");
+	err(1, "mkdir 1");
 
-    ret = link ("1", "2");
+    ret = link("1", "2");
     if (ret == 0)
-	errx (1, "link 1 2 should have failed");
+	errx(1, "link 1 2 should have failed");
 
-    ret = rmdir ("1");
+    ret = rmdir("1");
     if (ret < 0)
-	err (1, "rmdir 1");
+	err(1, "rmdir 1");
 
     return 0;
 }

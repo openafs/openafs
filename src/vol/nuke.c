@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -55,38 +56,40 @@ char *vol_DevName();
  */
 struct ilist {
     struct ilist *next;
-    afs_int32 freePtr;				/* first free index in this table */
-    Inode inode[MAXATONCE];			/* inode # */
-    afs_int32 count[MAXATONCE];			/* link count */
+    afs_int32 freePtr;		/* first free index in this table */
+    Inode inode[MAXATONCE];	/* inode # */
+    afs_int32 count[MAXATONCE];	/* link count */
 } *allInodes = 0;
 
 /* called with a structure specifying info about the inode, and our rock (which
  * is the volume ID.  Returns true if we should keep this inode, otherwise false.
  * Note that ainfo->u.param[0] is always the volume ID, for any vice inode.
  */
-static int NukeProc(struct ViceInodeInfo *ainfo, afs_int32 avolid)
+static int
+NukeProc(struct ViceInodeInfo *ainfo, afs_int32 avolid)
 {
     struct ilist *ti;
     register afs_int32 i;
 
 #ifndef AFS_PTHREAD_ENV
-    IOMGR_Poll();	/* poll so we don't kill the RPC connection */
+    IOMGR_Poll();		/* poll so we don't kill the RPC connection */
 #endif /* !AFS_PTHREAD_ENV */
 
     /* check if this is the volume we're looking for */
-    if (ainfo->u.param[0] != avolid) return 0;	/* don't want this one */
+    if (ainfo->u.param[0] != avolid)
+	return 0;		/* don't want this one */
     /* record the info */
     if (!allInodes || allInodes->freePtr >= MAXATONCE) {
-	ti = (struct ilist *) malloc(sizeof(struct ilist));
+	ti = (struct ilist *)malloc(sizeof(struct ilist));
 	memset(ti, 0, sizeof(*ti));
 	ti->next = allInodes;
 	allInodes = ti;
-    }
-    else ti = allInodes;	/* use the one with space */
-    i = ti->freePtr++;	/* find our slot in this mess */
+    } else
+	ti = allInodes;		/* use the one with space */
+    i = ti->freePtr++;		/* find our slot in this mess */
     ti->inode[i] = ainfo->inodeNumber;
     ti->count[i] = ainfo->linkCount;
-    return 0;	/* don't care if anything's written out, actually */
+    return 0;			/* don't care if anything's written out, actually */
 }
 
 /* function called with partition name and volid ID, and which removes all
@@ -99,7 +102,8 @@ static int NukeProc(struct ViceInodeInfo *ainfo, afs_int32 avolid)
  * cloned from that RW volume ID, too, since everything except for their
  * indices will be gone.
  */
-int nuke(char *aname, afs_int32 avolid)
+int
+nuke(char *aname, afs_int32 avolid)
 {
     /* first process the partition containing this junk */
     struct stat tstat;
@@ -119,7 +123,8 @@ int nuke(char *aname, afs_int32 avolid)
 #endif /* AFS_NAMEI_ENV */
     IHandle_t *fileH;
 
-    if (avolid == 0) return EINVAL;
+    if (avolid == 0)
+	return EINVAL;
     code = stat(aname, &tstat);
     if (code) {
 	printf("volnuke: partition %s does not exist.\n", aname);
@@ -130,7 +135,7 @@ int nuke(char *aname, afs_int32 avolid)
     lastDevComp = aname;
 #else
 #ifdef AFS_NT40_ENV
-    lastDevComp = &aname[strlen(aname)-1];
+    lastDevComp = &aname[strlen(aname) - 1];
     *lastDevComp = toupper(*lastDevComp);
 #else
     tfile = vol_DevName(tstat.st_dev, wpath);
@@ -144,7 +149,8 @@ int nuke(char *aname, afs_int32 avolid)
     /* either points at slash, or there is no slash; adjust appropriately */
     if (lastDevComp)
 	lastDevComp++;
-    else lastDevComp = devName;
+    else
+	lastDevComp = devName;
 #endif /* AFS_NT40_ENV */
 #endif /* AFS_NAMEI_ENV && !AFS_NT40_ENV */
 
@@ -154,39 +160,41 @@ int nuke(char *aname, afs_int32 avolid)
      * volume we're nuking.
      */
 #ifdef AFS_NAMEI_ENV
-    code = ListViceInodes(lastDevComp, aname, NULL, NukeProc, avolid,
-			  &forceSal, 0, wpath);
+    code =
+	ListViceInodes(lastDevComp, aname, NULL, NukeProc, avolid, &forceSal,
+		       0, wpath);
 #else
-    code = ListViceInodes(lastDevComp, aname, "/tmp/vNukeXX", NukeProc, avolid, &forceSal, 0, wpath);
+    code =
+	ListViceInodes(lastDevComp, aname, "/tmp/vNukeXX", NukeProc, avolid,
+		       &forceSal, 0, wpath);
     unlink("/tmp/vNukeXX");	/* clean it up now */
 #endif
     if (code == 0) {
 	/* actually do the idecs now */
-	for(ti=allInodes; ti; ti=ti->next) {
-	    for(i=0;i<ti->freePtr;i++) {
+	for (ti = allInodes; ti; ti = ti->next) {
+	    for (i = 0; i < ti->freePtr; i++) {
 #ifndef AFS_PTHREAD_ENV
 		IOMGR_Poll();	/* keep RPC running */
 #endif /* !AFS_PTHREAD_ENV */
 		/* idec this inode into oblivion */
 #ifdef AFS_NAMEI_ENV
 #ifdef AFS_NT40_ENV
-		IH_INIT(fileH, (int) (*lastDevComp - 'A'), avolid,
+		IH_INIT(fileH, (int)(*lastDevComp - 'A'), avolid,
 			ti->inode[i]);
 		nt_HandleToName(path, fileH);
 #else
-		IH_INIT(fileH, (int) volutil_GetPartitionID(aname), avolid,
+		IH_INIT(fileH, (int)volutil_GetPartitionID(aname), avolid,
 			ti->inode[i]);
 		namei_HandleToName(&ufs_name, fileH);
 		path = ufs_name.n_path;
 #endif /* AFS_NT40_ENV */
 		IH_RELEASE(fileH);
-		if (unlink(path)<0) {
+		if (unlink(path) < 0) {
 		    Log("Nuke: Failed to remove %s\n", path);
 		}
 #else /* AFS_NAMEI_ENV */
-		IH_INIT(fileH, (int) tstat.st_dev, avolid,
-			ti->inode[i]);
-		for(j=0;j<ti->count[i];j++) {
+		IH_INIT(fileH, (int)tstat.st_dev, avolid, ti->inode[i]);
+		for (j = 0; j < ti->count[i]; j++) {
 		    code = IH_DEC(fileH, ti->inode[i], avolid);
 		}
 		IH_RELEASE(fileH);
@@ -195,7 +203,7 @@ int nuke(char *aname, afs_int32 avolid)
 	    ni = ti->next;
 	    free(ti);
 	}
-	code = 0;	/* we really don't care about it except for debugging */
+	code = 0;		/* we really don't care about it except for debugging */
 	allInodes = NULL;
 
 	/* at this point, we should try to remove the volume header file itself.
@@ -205,18 +213,18 @@ int nuke(char *aname, afs_int32 avolid)
 	 */
 	/* reuse devName buffer now */
 #ifdef AFS_NT40_ENV
-	afs_snprintf(devName, sizeof devName,
-		     "%c:\\%s", *lastDevComp , VolumeExternalName(avolid));
+	afs_snprintf(devName, sizeof devName, "%c:\\%s", *lastDevComp,
+		     VolumeExternalName(avolid));
 #else
-	afs_snprintf(devName, sizeof devName,
-		     "%s/%s", aname, VolumeExternalName(avolid));
+	afs_snprintf(devName, sizeof devName, "%s/%s", aname,
+		     VolumeExternalName(avolid));
 #endif /* AFS_NT40_ENV */
 	code = unlink(devName);
-	if (code) code = errno;
-    }
-    else {
+	if (code)
+	    code = errno;
+    } else {
 	/* just free things */
-	for(ti=allInodes; ti; ti = ni) {
+	for (ti = allInodes; ti; ti = ni) {
 	    ni = ti->next;
 	    free(ti);
 	}
@@ -225,4 +233,3 @@ int nuke(char *aname, afs_int32 avolid)
     ReleaseWriteLock(&localLock);
     return code;
 }
-

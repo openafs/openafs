@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>
@@ -38,10 +39,11 @@ RCSID("$Header$");
 
 
 char *prog = "nincdec";
-IHandle_t * GetLinkHandle(char *part, int volid);
+IHandle_t *GetLinkHandle(char *part, int volid);
 
 
-void Usage(void)
+void
+Usage(void)
 {
     printf("Usage: %s <part> <volid> <-i ino | -v vno uniq tag> <inc|dec>\n",
 	   prog);
@@ -63,11 +65,12 @@ main(int ac, char **av)
     int i;
 
 
-    if (ac < 5) Usage();
+    if (ac < 5)
+	Usage();
 
     part = av[1];
     volid = atoi(av[2]);
-    
+
     i = 4;
     if (!strcmp(av[3], "-i")) {
 	code = sscanf(av[i++], "%Lu", &ino);
@@ -75,31 +78,31 @@ main(int ac, char **av)
 	    printf("Failed to get inode from %s\n", av[4]);
 	    exit(1);
 	}
-    }
-    else if (!strcmp(av[3], "-v")) {
-	vno = (int64_t)atoi(av[i++]);
+    } else if (!strcmp(av[3], "-v")) {
+	vno = (int64_t) atoi(av[i++]);
 	vno &= 0x3ffffff;
-	tag = (int64_t)atoi(av[i++]);
-	uniq = (int64_t)atoi(av[i++]);
+	tag = (int64_t) atoi(av[i++]);
+	uniq = (int64_t) atoi(av[i++]);
 	ino = uniq;
 	ino |= tag << 32;
 	ino |= vno << 35;
 	printf("ino=%Lu\n", ino);
-    }
-    else {
+    } else {
 	printf("Expected \"-i\" or \"-v\" for inode value\n");
 	Usage();
     }
 
     incdecarg = av[i++];
-    if (!strcmp(incdecarg, "dec")) do_inc = 0;
-    else if (!strcmp(incdecarg, "inc")) do_inc = 1;
+    if (!strcmp(incdecarg, "dec"))
+	do_inc = 0;
+    else if (!strcmp(incdecarg, "inc"))
+	do_inc = 1;
     else {
 	printf("%s: Expected \"inc\" or \"dec\"\n", incdecarg);
 	Usage();
     }
 
-    
+
     lh = GetLinkHandle(part, volid);
     if (!lh) {
 	printf("Failed to get link handle, exiting\n");
@@ -110,7 +113,7 @@ main(int ac, char **av)
 	code = namei_inc(lh, ino, volid);
     else
 	code = namei_dec(lh, ino, volid);
-    
+
     printf("namei_%s returned %d\n", do_inc ? "inc" : "dec", code);
 
     exit(0);

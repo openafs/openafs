@@ -64,7 +64,7 @@ extern struct lock afs_global_lock;
 #define simple_unlock(x) mtx_unlock(x)
 #define        gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(cred),(aresid), curthread)
-extern struct thread * afs_global_owner;
+extern struct thread *afs_global_owner;
 #define AFS_GLOCK() \
     do { \
         osi_Assert(curthread); \
@@ -87,7 +87,7 @@ extern struct thread * afs_global_owner;
 #define getpid()	curproc
 #define        gop_rdwr(rw,gp,base,len,offset,segflg,unit,cred,aresid) \
   vn_rdwr((rw),(gp),(base),(len),(offset),(segflg),(unit),(cred),(aresid), curproc)
-extern struct proc * afs_global_owner;
+extern struct proc *afs_global_owner;
 #define AFS_GLOCK() \
     do { \
         osi_Assert(curproc); \

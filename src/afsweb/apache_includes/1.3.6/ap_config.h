@@ -121,15 +121,15 @@ stat() properly */
 
 /* Define one of these according to your system. */
 #if defined(MINT)
-typedef int rlim_t;
+    typedef int rlim_t;
 #define JMP_BUF sigjmp_buf
 #define NO_LONG_DOUBLE
 #define USE_FLOCK_SERIALIZED_ACCEPT
 #define _BSD_SOURCE
 #define EAGAIN EWOULDBLOCK
-int initgroups (char *, int);     
-char *crypt (const char *pw, const char *salt);
-int gethostname (char *name, int namelen);
+    int initgroups(char *, int);
+    char *crypt(const char *pw, const char *salt);
+    int gethostname(char *name, int namelen);
 
 #elif defined(MPE)
 #include <sys/times.h>
@@ -138,15 +138,15 @@ int gethostname (char *name, int namelen);
 #define NO_WRITEV
 #define HAVE_SHMGET 1
 #define USE_SHMGET_SCOREBOARD
-#define SHM_R 0400  /* Read permission */
-#define SHM_W 0200  /* Write permission */
+#define SHM_R 0400		/* Read permission */
+#define SHM_W 0200		/* Write permission */
 #define NEED_INITGROUPS
 #define NEED_STRCASECMP
 #define NEED_STRDUP
 #define NEED_STRNCASECMP
-extern void GETPRIVMODE();
-extern void GETUSERMODE();
-extern char *inet_ntoa();
+    extern void GETPRIVMODE();
+    extern void GETUSERMODE();
+    extern char *inet_ntoa();
 #define NO_SLACK
 #define NO_GETTIMEOFDAY
 #define S_IEXEC  S_IXUSR
@@ -158,14 +158,14 @@ extern char *inet_ntoa();
 #define HAVE_GMTOFF 1
 #undef NO_KILLPG
 #undef NO_SETSID
-char *crypt(const char *pw, const char *salt);
-char *mktemp(char *template);
+    char *crypt(const char *pw, const char *salt);
+    char *mktemp(char *template);
 #define HAVE_MMAP 1
 #define USE_MMAP_SCOREBOARD
 #define USE_MMAP_FILES
 #include <sys/time.h>
 #define NEED_STRERROR
-typedef int rlim_t;
+    typedef int rlim_t;
 #ifndef HAVE_MEMMOVE
 #define memmove(a,b,c) memcpy(a, b, c)
 #endif
@@ -188,8 +188,8 @@ typedef int rlim_t;
 #define USE_MMAP_FILES
 /* Transarc hack to get AIX to build */
 #if ! defined(AIX) && ! defined(linux)
-int gethostname(char *name, int namelen);
-#endif /* ! AIX && ! linux */
+    int gethostname(char *name, int namelen);
+#endif				/* ! AIX && ! linux */
 #define HAVE_SYSLOG 1
 #define SYS_SIGLIST _sys_siglist
 
@@ -237,7 +237,7 @@ int gethostname(char *name, int namelen);
 #define HAVE_SYSLOG 1
 #ifndef HPUX10
 #define SELECT_NEEDS_CAST
-typedef int rlim_t;
+    typedef int rlim_t;
 #endif
 
 #elif defined(HPUX11)
@@ -274,7 +274,7 @@ typedef int rlim_t;
 #define DEFAULT_USER "nobody"
 #endif
 #ifdef NEED_RLIM_T
-typedef int rlim_t;
+    typedef int rlim_t;
 #endif
 #define USE_FCNTL_SERIALIZED_ACCEPT
 #ifdef USEBCOPY
@@ -319,7 +319,7 @@ typedef int rlim_t;
 #define USE_MMAP_FILES
 #define NO_LONG_DOUBLE
 #define HAVE_SYSLOG 1
-typedef int rlim_t;
+    typedef int rlim_t;
 
 #elif defined(SEQUENT)
 #define HAVE_GMTOFF 1
@@ -329,7 +329,7 @@ typedef int rlim_t;
 #define HAVE_SYSLOG 1
 
 #elif defined(NEXT)
-typedef unsigned short mode_t;
+    typedef unsigned short mode_t;
 #define HAVE_GMTOFF 1
 #undef NO_KILLPG
 #define NO_SETSID
@@ -372,9 +372,9 @@ typedef unsigned short mode_t;
 #ifndef S_IWOTH
 #define S_IWOTH 000002
 #ifndef rlim_t
-typedef int rlim_t;
+    typedef int rlim_t;
 #endif
-typedef u_long n_long;
+    typedef u_long n_long;
 #endif
 
 #define STDIN_FILENO  0
@@ -387,12 +387,12 @@ typedef u_long n_long;
 #define WEXITSTATUS(status)     (int)( WIFEXITED(status) ? ( (status).w_retcode ) : -1)
 #define WTERMSIG(status)	(int)( (status).w_termsig )
 
-typedef int pid_t;
+    typedef int pid_t;
 #define USE_LONGJMP
 #define NO_USE_SIGACTION
 #define HAVE_SYSLOG 1
 
-#elif defined(RHAPSODY) /* Mac OS X Server */
+#elif defined(RHAPSODY)		/* Mac OS X Server */
 #define HAVE_GMTOFF
 #define HAVE_MMAP
 #define USE_MMAP_FILES
@@ -487,7 +487,7 @@ typedef int pid_t;
 
 /* glibc 2.1 and later finally define rlim_t */
 #if !defined(__GLIBC__) || __GLIBC__ < 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ < 1)
-typedef int rlim_t;
+    typedef int rlim_t;
 #endif
 
 #elif defined(SCO)
@@ -511,23 +511,23 @@ typedef int rlim_t;
 
 /* Although SCO 5 defines these in <strings.h> (note the "s") they don't have
    consts. Sigh. */
-extern int strcasecmp(const char *, const char *);
-extern int strncasecmp(const char *, const char *, unsigned);
+    extern int strcasecmp(const char *, const char *);
+    extern int strncasecmp(const char *, const char *, unsigned);
 
 #elif defined(AUX3)
 /* These are to let -Wall compile more cleanly */
-extern int strcasecmp(const char *, const char *);
-extern int strncasecmp(const char *, const char *, unsigned);
-extern int set42sig(), getopt(), getpeername();
-extern int listen(), bind(), socket(), getsockname();
-extern int accept(), gethostname(), connect(), lstat();
-extern int select(), killpg(), shutdown();
-extern int initgroups(), setsockopt();
-extern char *shmat();
-extern int shmctl();
-extern int shmget();
-extern char *sbrk();
-extern char *crypt();
+    extern int strcasecmp(const char *, const char *);
+    extern int strncasecmp(const char *, const char *, unsigned);
+    extern int set42sig(), getopt(), getpeername();
+    extern int listen(), bind(), socket(), getsockname();
+    extern int accept(), gethostname(), connect(), lstat();
+    extern int select(), killpg(), shutdown();
+    extern int initgroups(), setsockopt();
+    extern char *shmat();
+    extern int shmctl();
+    extern int shmget();
+    extern char *sbrk();
+    extern char *crypt();
 #include <sys/time.h>
 #undef HAVE_GMTOFF
 #undef NO_KILLPG
@@ -559,8 +559,8 @@ extern char *crypt();
 #define NEED_STRCASECMP
 #ifndef ENCORE
 #define NEED_STRNCASECMP
-#endif /* ENCORE */
-#endif /* MPRAS */
+#endif				/* ENCORE */
+#endif				/* MPRAS */
 /* A lot of SVR4 systems need this */
 #ifndef USE_SYSVSEM_SERIALIZED_ACCEPT
 #define USE_FCNTL_SERIALIZED_ACCEPT
@@ -569,9 +569,9 @@ extern char *crypt();
 #define NET_SIZE_T size_t
 #define HAVE_SHMGET 1
 #define USE_SHMGET_SCOREBOARD
-#ifdef _OSD_POSIX /* BS2000-POSIX mainframe needs initgroups */
+#ifdef _OSD_POSIX		/* BS2000-POSIX mainframe needs initgroups */
 #define NEED_INITGROUPS
-#define NEED_HASHBANG_EMUL /* execve() doesn't start shell scripts by default */
+#define NEED_HASHBANG_EMUL	/* execve() doesn't start shell scripts by default */
 #undef HAVE_SHMGET
 #undef NEED_STRCASECMP
 #undef NEED_STRNCASECMP
@@ -656,9 +656,9 @@ extern char *crypt();
 #define WEXITSTATUS(status)	(int)((status).w_retcode)
 #define WTERMSIG(status)	(int)((status).w_termsig)
 #define strftime(buf,bufsize,fmt,tm)    ascftime(buf,fmt,tm)
-#undef HAVE_SYS_RESOURCE_H /* exists but does not provide *rlimit funcs */
+#undef HAVE_SYS_RESOURCE_H	/* exists but does not provide *rlimit funcs */
 #include <sys/types.h>
-#include <sys/time.h>     
+#include <sys/time.h>
 
 #elif defined(APOLLO)
 #undef HAVE_GMTOFF
@@ -684,7 +684,7 @@ extern char *crypt();
 #endif
 #if defined(__bsdi__) || \
 (defined(__FreeBSD_version) && (__FreeBSD_version < 220000))
-typedef quad_t rlim_t;
+    typedef quad_t rlim_t;
 #endif
 #define USE_FLOCK_SERIALIZED_ACCEPT
 #define SINGLE_LISTEN_UNSERIALIZED_ACCEPT
@@ -693,10 +693,10 @@ typedef quad_t rlim_t;
 
 #elif defined(QNX)
 #ifndef crypt
-char *crypt(const char *pw, const char *salt);
+    char *crypt(const char *pw, const char *salt);
 #endif
 #ifndef initgroups
-int initgroups(char *, int);
+    int initgroups(char *, int);
 #endif
 #ifndef strncasecmp
 #define strncasecmp strnicmp
@@ -724,8 +724,8 @@ int initgroups(char *, int);
 #undef NO_SETSID
 #undef NO_USE_SIGACTION
 #undef NO_LINGCLOSE
-extern char *crypt(char *pw, char *salt);
-typedef int rlim_t;
+    extern char *crypt(char *pw, char *salt);
+    typedef int rlim_t;
 #define HAVE_SYSLOG 1
 
 #elif defined(UXPDS)
@@ -759,7 +759,7 @@ typedef int rlim_t;
 #define SINGLE_LISTEN_UNSERIALIZED_ACCEPT
 
 #elif defined(__MACHTEN__)
-typedef int rlim_t;
+    typedef int rlim_t;
 #undef NO_KILLPG
 #define NO_SETSID
 #define HAVE_GMTOFF 1
@@ -792,7 +792,7 @@ typedef int rlim_t;
 #define NO_TIMEZONE
 #include <stdio.h>
 #include <sys/types.h>
-typedef int rlim_t;
+    typedef int rlim_t;
 
 #elif defined(ISC)
 #include <net/errno.h>
@@ -815,13 +815,13 @@ typedef int rlim_t;
 #include <sys/time.h>
 #include <stdlib.h>
 #include <sys/types.h>
-typedef int pid_t;
-typedef int rlim_t;
-typedef int mode_t;
+    typedef int pid_t;
+    typedef int rlim_t;
+    typedef int mode_t;
 
 #elif defined(RISCIX)
 #include <sys/time.h>
-typedef int rlim_t;
+    typedef int rlim_t;
 #define NO_USE_SIGACTION
 #define USE_LONGJMP
 #define NEED_STRCASECMP
@@ -844,7 +844,7 @@ typedef int rlim_t;
 
 /* All windows stuff is now in os/win32/os.h */
 
-#elif defined(TPF) /* IBM Transaction Processing Facility operating system */
+#elif defined(TPF)		/* IBM Transaction Processing Facility operating system */
 
 #include <tpfeq.h>
 #include <tpfio.h>
@@ -965,10 +965,10 @@ typedef int rlim_t;
 #include <sys/socket.h>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
-#endif /* HAVE_SYS_SELECT_H */
+#endif				/* HAVE_SYS_SELECT_H */
 #ifndef TPF
 #include <netinet/in.h>
-#endif /* TPF */
+#endif				/* TPF */
 #include <netdb.h>
 #include <sys/ioctl.h>
 #if !defined(MPE) && !defined(BEOS) && !defined(TPF)
@@ -984,12 +984,12 @@ typedef int rlim_t;
 #define O_BINARY (0)
 #endif
 
-#else /* WIN32 */
+#else				/* WIN32 */
 #include <winsock.h>
 #include <malloc.h>
 #include <io.h>
 #include <fcntl.h>
-#endif /* ndef WIN32 */
+#endif				/* ndef WIN32 */
 
 #include <time.h>		/* for ctime */
 #ifdef WIN32
@@ -1016,8 +1016,8 @@ typedef int rlim_t;
 #ifdef HAVE_SYS_RESOURCE_H
 #include <sys/resource.h>
 #ifdef SUNOS4
-int getrlimit(int, struct rlimit *);
-int setrlimit(int, struct rlimit *);
+    int getrlimit(int, struct rlimit *);
+    int setrlimit(int, struct rlimit *);
 #endif
 #endif
 #ifdef USE_MMAP_SCOREBOARD
@@ -1066,7 +1066,7 @@ int setrlimit(int, struct rlimit *);
  * Replace signal function with sigaction equivalent
  */
 #ifndef NO_USE_SIGACTION
-typedef void Sigfunc(int);
+    typedef void Sigfunc(int);
 
 #if defined(SIG_IGN) && !defined(SIG_ERR)
 #define SIG_ERR ((Sigfunc *)-1)
@@ -1079,7 +1079,7 @@ typedef void Sigfunc(int);
 #undef signal
 #endif
 #define signal(s,f)	ap_signal(s,f)
-Sigfunc *signal(int signo, Sigfunc * func);
+    Sigfunc *signal(int signo, Sigfunc * func);
 #endif
 
 #include <setjmp.h>
@@ -1125,9 +1125,9 @@ Sigfunc *signal(int signo, Sigfunc * func);
  * with a HASHBANG (#!) followed by interpreter name and args, define this.
  */
 #ifdef NEED_HASHBANG_EMUL
-extern int ap_execle(const char *filename, const char *arg,...);
-extern int ap_execve(const char *filename, const char *argv[],
-                     const char *envp[]);
+    extern int ap_execle(const char *filename, const char *arg, ...);
+    extern int ap_execve(const char *filename, const char *argv[],
+			 const char *envp[]);
 /* ap_execle() is a wrapper function around ap_execve(). */
 #define execle  ap_execle
 #define execve(path,argv,envp)  ap_execve(path,argv,envp)
@@ -1146,18 +1146,18 @@ extern int ap_execve(const char *filename, const char *argv[],
 #define XtOffset(p_type,field) \
 	(sizeof(int)*((unsigned int)&(((p_type)NULL)->field)))
 
-#else /* !CRAY2 */
+#else				/* !CRAY2 */
 
 #define XtOffset(p_type,field) ((unsigned int)&(((p_type)NULL)->field))
 
-#endif /* !CRAY2 */
-#endif /* __STDC__ */
-#else /* ! (CRAY || __arm) */
+#endif				/* !CRAY2 */
+#endif				/* __STDC__ */
+#else				/* ! (CRAY || __arm) */
 
 #define XtOffset(p_type,field) \
 	((long) (((char *) (&(((p_type)NULL)->field))) - ((char *) NULL)))
 
-#endif /* !CRAY */
+#endif				/* !CRAY */
 
 #ifdef offsetof
 #define XtOffsetOf(s_type,field) offsetof(s_type,field)
@@ -1204,82 +1204,82 @@ extern int ap_execve(const char *filename, const char *argv[],
  * currently (13Nov97) used.
  */
 
-int getopt(int, char **, char *);
+    int getopt(int, char **, char *);
 
-int strcasecmp(const char *, const char *);
-int strncasecmp(const char *, const char *, int);
-int toupper(int);
-int tolower(int);
+    int strcasecmp(const char *, const char *);
+    int strncasecmp(const char *, const char *, int);
+    int toupper(int);
+    int tolower(int);
 
-int printf(char *,...);
-int fprintf(FILE *, char *,...);
-int fputs(char *, FILE *);
-int fread(char *, int, int, FILE *);
-int fwrite(char *, int, int, FILE *);
-int fgetc(FILE *);
-char *fgets(char *s, int, FILE*);
-int fflush(FILE *);
-int fclose(FILE *);
-int ungetc(int, FILE *);
-int _filbuf(FILE *);	/* !!! */
-int _flsbuf(unsigned char, FILE *);	/* !!! */
-int sscanf(char *, char *,...);
-void setbuf(FILE *, char *);
-void perror(char *);
+    int printf(char *, ...);
+    int fprintf(FILE *, char *, ...);
+    int fputs(char *, FILE *);
+    int fread(char *, int, int, FILE *);
+    int fwrite(char *, int, int, FILE *);
+    int fgetc(FILE *);
+    char *fgets(char *s, int, FILE *);
+    int fflush(FILE *);
+    int fclose(FILE *);
+    int ungetc(int, FILE *);
+    int _filbuf(FILE *);	/* !!! */
+    int _flsbuf(unsigned char, FILE *);	/* !!! */
+    int sscanf(char *, char *, ...);
+    void setbuf(FILE *, char *);
+    void perror(char *);
 
-time_t time(time_t *);
-int strftime(char *, int, const char *, struct tm *);
+    time_t time(time_t *);
+    int strftime(char *, int, const char *, struct tm *);
 
-int initgroups(char *, int);
-int wait3(int *, int, void *);	/* Close enough for us... */
-int lstat(const char *, struct stat *);
-int stat(const char *, struct stat *);
-int flock(int, int);
+    int initgroups(char *, int);
+    int wait3(int *, int, void *);	/* Close enough for us... */
+    int lstat(const char *, struct stat *);
+    int stat(const char *, struct stat *);
+    int flock(int, int);
 #ifndef NO_KILLPG
-int killpg(int, int);
+    int killpg(int, int);
 #endif
-int socket(int, int, int);
-int setsockopt(int, int, int, const char *, int);
-int listen(int, int);
-int bind(int, struct sockaddr *, int);
-int connect(int, struct sockaddr *, int);
-int accept(int, struct sockaddr *, int *);
-int shutdown(int, int);
+    int socket(int, int, int);
+    int setsockopt(int, int, int, const char *, int);
+    int listen(int, int);
+    int bind(int, struct sockaddr *, int);
+    int connect(int, struct sockaddr *, int);
+    int accept(int, struct sockaddr *, int *);
+    int shutdown(int, int);
 
-int getsockname(int s, struct sockaddr *name, int *namelen);
-int getpeername(int s, struct sockaddr *name, int *namelen);
-int gethostname(char *name, int namelen);
-void syslog(int, char *,...);
-char *mktemp(char *);
+    int getsockname(int s, struct sockaddr *name, int *namelen);
+    int getpeername(int s, struct sockaddr *name, int *namelen);
+    int gethostname(char *name, int namelen);
+    void syslog(int, char *, ...);
+    char *mktemp(char *);
 
-long vfprintf(FILE *, const char *, va_list);
+    long vfprintf(FILE *, const char *, va_list);
 
-#endif /* SUNOS_LIB_PROTOTYPES */
+#endif				/* SUNOS_LIB_PROTOTYPES */
 
 /* The assumption is that when the functions are missing,
  * then there's no matching prototype available either.
  * Declare what is needed exactly as the replacement routines implement it.
  */
 #ifdef NEED_STRDUP
-extern char *strdup (const char *str);
+    extern char *strdup(const char *str);
 #endif
 #ifdef NEED_STRCASECMP
-extern int strcasecmp (const char *a, const char *b);
+    extern int strcasecmp(const char *a, const char *b);
 #endif
 #ifdef NEED_STRNCASECMP
-extern int strncasecmp (const char *a, const char *b, int n);
+    extern int strncasecmp(const char *a, const char *b, int n);
 #endif
 #ifdef NEED_INITGROUPS
-extern int initgroups(const char *name, gid_t basegid);
+    extern int initgroups(const char *name, gid_t basegid);
 #endif
 #ifdef NEED_WAITPID
-extern int waitpid(pid_t pid, int *statusp, int options);
+    extern int waitpid(pid_t pid, int *statusp, int options);
 #endif
 #ifdef NEED_STRERROR
-extern char *strerror (int err);
+    extern char *strerror(int err);
 #endif
 #ifdef NEED_DIFFTIME
-extern double difftime(time_t time1, time_t time0);
+    extern double difftime(time_t time1, time_t time0);
 #endif
 
 #ifndef ap_wait_t
@@ -1289,5 +1289,4 @@ extern double difftime(time_t time1, time_t time0);
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* !AP_CONFIG_H */
+#endif				/* !AP_CONFIG_H */

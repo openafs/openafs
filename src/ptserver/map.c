@@ -33,8 +33,9 @@
 
 #include <afsconfig.h>
 #include <afs/param.h>
- 
-RCSID("$Header$");
+
+RCSID
+    ("$Header$");
 
 #ifdef SUPERGROUPS
 #include <errno.h>
@@ -46,12 +47,12 @@ char *malloc();
 /* #define NEED_READ_WRITE /**/
 
 #define LSHIFT 5
-#define MSHIFT 8	/* XXX make this 8 in the production version... */
+#define MSHIFT 8		/* XXX make this 8 in the production version... */
 #define MDATA (1<<MSHIFT)
 struct bitmap {
-	struct bitmap *m_next;
-	int m_page;
-	long m_data[MDATA];
+    struct bitmap *m_next;
+    int m_page;
+    long m_data[MDATA];
 };
 
 #define MAP(p)	((struct bitmap*)((long)(p)&~1))
@@ -69,791 +70,750 @@ struct bitmap {
 extern int debug_mask;
 
 #if __STDC__
-int in_map(struct map *parm, long node)
+int
+in_map(struct map *parm, long node)
 #else
-int in_map(parm, node)
-	struct map *parm;
-	long node;
+int
+in_map(parm, node)
+     struct map *parm;
+     long node;
 #endif
 {
-	struct bitmap *map;
-	long bit;
-	int x, page;
-	int result;
+    struct bitmap *map;
+    long bit;
+    int x, page;
+    int result;
 
 #ifdef MAP_DEBUG
-if (Aflag)
-{
-printf ("in_map: is %d in [", node);
-print_map(parm);
-printf (" ]");
-}
+    if (Aflag) {
+	printf("in_map: is %d in [", node);
+	print_map(parm);
+	printf(" ]");
+    }
 #endif
-	bit = NUMBERTOBIT(node);
-	x = NUMBERTOINDEX(node);
-	page = NUMBERTOPAGE(node);
+    bit = NUMBERTOBIT(node);
+    x = NUMBERTOINDEX(node);
+    page = NUMBERTOPAGE(node);
 #ifdef MAP_DEBUG
-if (Aflag)
-if (TONUMBER(page,x,bit) != node)
-{
-printf ("bxp mixup: node=%ld -> p=%d x=%d b=%d -> %ld, %ld, %ld = %ld\n",
-node,
-page,
-x,
-bit,
-TONUMBER(page,0,0),
-TONUMBER(0,x,0),
-TONUMBER(0,0,bit),
-TONUMBER(page,x,bit));
-}
+    if (Aflag)
+	if (TONUMBER(page, x, bit) != node) {
+	    printf
+		("bxp mixup: node=%ld -> p=%d x=%d b=%d -> %ld, %ld, %ld = %ld\n",
+		 node, page, x, bit, TONUMBER(page, 0, 0), TONUMBER(0, x, 0),
+		 TONUMBER(0, 0, bit), TONUMBER(page, x, bit));
+	}
 #endif
-	bit = 1L<<bit;;
+    bit = 1L << bit;;
 
-	for (map = MAP(parm); map; map = map->m_next)
-		if (map->m_page == page)
-			return NEGMAP(parm) ^ (!!(map->m_data[x] & bit));
-	result = !POSMAP(parm);
+    for (map = MAP(parm); map; map = map->m_next)
+	if (map->m_page == page)
+	    return NEGMAP(parm) ^ (!!(map->m_data[x] & bit));
+    result = !POSMAP(parm);
 #ifdef MAP_DEBUG
-if (Aflag)
-printf (" -> %s\n", result ? "yes" : "no");
+    if (Aflag)
+	printf(" -> %s\n", result ? "yes" : "no");
 #endif
-	return result;
+    return result;
 }
 
 void
 free_map(parm)
-	struct map *parm;
+     struct map *parm;
 {
-	struct bitmap *map, *next;
+    struct bitmap *map, *next;
 #ifdef MAP_DEBUG
-if (Aflag)
-{
-printf ("Freeing map");
-print_map(parm);
-printf ("\n");
-}
+    if (Aflag) {
+	printf("Freeing map");
+	print_map(parm);
+	printf("\n");
+    }
 #endif
-	map = MAP(parm);
-	while (map) {
-		next = map->m_next;
-		free(map);
-		map = next;
-	}
+    map = MAP(parm);
+    while (map) {
+	next = map->m_next;
+	free(map);
+	map = next;
+    }
 }
 
-struct map *add_map(parm, node)
-	struct map *parm;
-	long node;
+struct map *
+add_map(parm, node)
+     struct map *parm;
+     long node;
 {
-	struct bitmap *map;
-	long bit;
-	int x, page;
+    struct bitmap *map;
+    long bit;
+    int x, page;
 
 #ifdef MAP_DEBUG
-if (Aflag)
-{
-printf ("add_map: adding %d to [", node);
-print_map(parm);
-printf (" ] ");
-}
+    if (Aflag) {
+	printf("add_map: adding %d to [", node);
+	print_map(parm);
+	printf(" ] ");
+    }
 #endif
-	bit = NUMBERTOBIT(node);
-	x = NUMBERTOINDEX(node);
-	page = NUMBERTOPAGE(node);
+    bit = NUMBERTOBIT(node);
+    x = NUMBERTOINDEX(node);
+    page = NUMBERTOPAGE(node);
 
-	bit = 1L<<bit;;
+    bit = 1L << bit;;
 
-	for (map = MAP(parm); map; map = map->m_next)
-		if (map->m_page == page)
-			break;
+    for (map = MAP(parm); map; map = map->m_next)
+	if (map->m_page == page)
+	    break;
+    if (!map) {
+	map = (struct bitmap *)malloc(sizeof *map);
 	if (!map) {
-		map = (struct bitmap *) malloc(sizeof *map);
-		if (!map) {
 #ifdef PRINT_MAP_ERROR
-printf ("No memory!\n"); 
+	    printf("No memory!\n");
 #endif
-			free_map((struct map *) map);
-			return 0;
-		}
-		map->m_page = page;
-		bzero((char*) map->m_data, sizeof map->m_data);
-		if (NEGMAP(parm))
-		{
-			int i;
-			for (i = 0; i < MDATA; ++i)
-				map->m_data[i] = ~0;
-		}
-		map->m_next = MAP(parm);
-		if (POSMAP(parm))
-			parm = (struct map *) map;
-		else
-			parm = NOT_MAP(map);
+	    free_map((struct map *)map);
+	    return 0;
 	}
+	map->m_page = page;
+	bzero((char *)map->m_data, sizeof map->m_data);
+	if (NEGMAP(parm)) {
+	    int i;
+	    for (i = 0; i < MDATA; ++i)
+		map->m_data[i] = ~0;
+	}
+	map->m_next = MAP(parm);
 	if (POSMAP(parm))
-		map->m_data[x] |= bit;
+	    parm = (struct map *)map;
 	else
-		map->m_data[x] &= ~bit;
+	    parm = NOT_MAP(map);
+    }
+    if (POSMAP(parm))
+	map->m_data[x] |= bit;
+    else
+	map->m_data[x] &= ~bit;
 #ifdef MAP_DEBUG
-if (Aflag)
-{
-printf (" ->");
-print_map(parm);
-printf ("\n");
-}
+    if (Aflag) {
+	printf(" ->");
+	print_map(parm);
+	printf("\n");
+    }
 #endif
-	return (struct map *) parm;
+    return (struct map *)parm;
 }
 
 struct bitmap *
 simplify_bitmap(map)
-	struct bitmap *map;
+     struct bitmap *map;
 {
-	struct bitmap **mpp, *mp2;
-	int i;
-	for (mpp = &map; mp2 = *mpp; )
-	{
-		for (i = 0; i < MDATA; ++i)
-			if (map->m_data[i])
-				break;
-		if (i == MDATA) {
+    struct bitmap **mpp, *mp2;
+    int i;
+    for (mpp = &map; mp2 = *mpp;) {
+	for (i = 0; i < MDATA; ++i)
+	    if (map->m_data[i])
+		break;
+	if (i == MDATA) {
 #ifdef PRINT_MAP_ERROR
-printf ("simplify_bitmap: failed to eliminate zero page %d\n", mp2->m_page);
+	    printf("simplify_bitmap: failed to eliminate zero page %d\n",
+		   mp2->m_page);
 #endif
-			*mpp = mp2->m_next;
-			free((char*)mp2);
-		}
-		else mpp = &mp2->m_next;
-	}
-	return map;
+	    *mpp = mp2->m_next;
+	    free((char *)mp2);
+	} else
+	    mpp = &mp2->m_next;
+    }
+    return map;
 }
 
-struct bitmap *or_bitmap(left, right)
-	struct bitmap *left, *right;
+struct bitmap *
+or_bitmap(left, right)
+     struct bitmap *left, *right;
 {
-	struct bitmap **rightmp, *lmap, *rmap;
-	int i;
-	for (lmap = left; lmap; lmap = lmap->m_next)
-	{
-		for (rightmp = &right; rmap = *rightmp; rightmp = &rmap->m_next)
-			if (rmap->m_page == lmap->m_page)
-			{
-				for (i = 0; i < MDATA; ++i)
-					lmap->m_data[i] |= rmap->m_data[i];
-				*rightmp = rmap->m_next;
-				free((char*)rmap);
-				break;
-			}
-	}
-	for (rightmp = &left; *rightmp; rightmp = &(*rightmp)->m_next)
-		;
-	*rightmp = right;
-	return left;
+    struct bitmap **rightmp, *lmap, *rmap;
+    int i;
+    for (lmap = left; lmap; lmap = lmap->m_next) {
+	for (rightmp = &right; rmap = *rightmp; rightmp = &rmap->m_next)
+	    if (rmap->m_page == lmap->m_page) {
+		for (i = 0; i < MDATA; ++i)
+		    lmap->m_data[i] |= rmap->m_data[i];
+		*rightmp = rmap->m_next;
+		free((char *)rmap);
+		break;
+	    }
+    }
+    for (rightmp = &left; *rightmp; rightmp = &(*rightmp)->m_next);
+    *rightmp = right;
+    return left;
 }
 
-struct bitmap *and_bitmap(left, right)
-	struct bitmap *left, *right;
+struct bitmap *
+and_bitmap(left, right)
+     struct bitmap *left, *right;
 {
-	struct bitmap **rightmp, *lmap, *rmap, **leftmp;
-	int i;
-	long sig;
-	for (leftmp = &left; lmap = *leftmp; )
-	{
-		sig = 0;
-		for (rightmp = &right; rmap = *rightmp; rightmp = &rmap->m_next)
-			if (rmap->m_page == lmap->m_page)
-			{
-				for (i = 0; i < MDATA; ++i)
-					sig |= (lmap->m_data[i] &= rmap->m_data[i]);
-				*rightmp = rmap->m_next;
-				free((char*)rmap);
-				break;
-			}
-		if (rmap && sig)
-		{
-			leftmp = &lmap->m_next;
-		} else {
-			*leftmp = lmap->m_next;
-			free((char*)lmap);
-		}
+    struct bitmap **rightmp, *lmap, *rmap, **leftmp;
+    int i;
+    long sig;
+    for (leftmp = &left; lmap = *leftmp;) {
+	sig = 0;
+	for (rightmp = &right; rmap = *rightmp; rightmp = &rmap->m_next)
+	    if (rmap->m_page == lmap->m_page) {
+		for (i = 0; i < MDATA; ++i)
+		    sig |= (lmap->m_data[i] &= rmap->m_data[i]);
+		*rightmp = rmap->m_next;
+		free((char *)rmap);
+		break;
+	    }
+	if (rmap && sig) {
+	    leftmp = &lmap->m_next;
+	} else {
+	    *leftmp = lmap->m_next;
+	    free((char *)lmap);
 	}
-	free_map((struct map *) right);
-	return simplify_bitmap(left);
+    }
+    free_map((struct map *)right);
+    return simplify_bitmap(left);
 }
 
 /* bit set in left, but not in right */
-struct bitmap *bic_bitmap(left, right)
-	struct bitmap *left, *right;
+struct bitmap *
+bic_bitmap(left, right)
+     struct bitmap *left, *right;
 {
-	struct bitmap **rightmp, *lmap, *rmap, **leftmp;
-	int i;
-	long sig;
+    struct bitmap **rightmp, *lmap, *rmap, **leftmp;
+    int i;
+    long sig;
 #ifdef MAP_DEBUG
-if (Mflag)
-{
-printf ("bic_bitmap: left=%#lx right=%#lx\n", left, right);
-}
+    if (Mflag) {
+	printf("bic_bitmap: left=%#lx right=%#lx\n", left, right);
+    }
 #endif
-	for (leftmp = &left; lmap = *leftmp; )
-	{
-		sig = 0;
-		for (rightmp = &right; rmap = *rightmp; rightmp = &rmap->m_next)
-			if (rmap->m_page == lmap->m_page)
-			{
-				for (i = 0; i < MDATA; ++i)
-					sig |= (lmap->m_data[i] &= ~rmap->m_data[i]);
-				*rightmp = rmap->m_next;
-				free((char*)rmap);
-				break;
-			}
-		if (!rmap || sig)
-		{
-			leftmp = &lmap->m_next;
-		} else {
-			*leftmp = lmap->m_next;
-			free((char*)lmap);
-		}
+    for (leftmp = &left; lmap = *leftmp;) {
+	sig = 0;
+	for (rightmp = &right; rmap = *rightmp; rightmp = &rmap->m_next)
+	    if (rmap->m_page == lmap->m_page) {
+		for (i = 0; i < MDATA; ++i)
+		    sig |= (lmap->m_data[i] &= ~rmap->m_data[i]);
+		*rightmp = rmap->m_next;
+		free((char *)rmap);
+		break;
+	    }
+	if (!rmap || sig) {
+	    leftmp = &lmap->m_next;
+	} else {
+	    *leftmp = lmap->m_next;
+	    free((char *)lmap);
 	}
-	free_map((struct map *) right);
-	left = simplify_bitmap(left);
+    }
+    free_map((struct map *)right);
+    left = simplify_bitmap(left);
 #ifdef MAP_DEBUG
-if (Mflag)
-{
-printf ("bic_bitmap: result=%#lx\n", left);
-}
+    if (Mflag) {
+	printf("bic_bitmap: result=%#lx\n", left);
+    }
 #endif
-	return left;
+    return left;
 }
 
-struct map *and_map(mp1, mp2)
-	struct map *mp1, *mp2;
+struct map *
+and_map(mp1, mp2)
+     struct map *mp1, *mp2;
 {
 #ifdef MAP_DEBUG
-if (Mflag)
-{
-printf ("Anding maps");
-print_map(mp1);
-printf (" and");
-print_map(mp2);
-}
+    if (Mflag) {
+	printf("Anding maps");
+	print_map(mp1);
+	printf(" and");
+	print_map(mp2);
+    }
 #endif
-	if (POSMAP(mp1))
-		if (POSMAP(mp2))
-			mp1 = (struct map *) and_bitmap(mp1, mp2);
-		else
-			mp1 = (struct map *) bic_bitmap(mp1, MAP(mp2));
+    if (POSMAP(mp1))
+	if (POSMAP(mp2))
+	    mp1 = (struct map *)and_bitmap(mp1, mp2);
 	else
-		if (POSMAP(mp2))
-			mp1 = (struct map *) bic_bitmap(mp2, MAP(mp1));
-		else
-			mp1 =  NOT_MAP(or_bitmap(MAP(mp1), MAP(mp2)));
+	    mp1 = (struct map *)bic_bitmap(mp1, MAP(mp2));
+    else if (POSMAP(mp2))
+	mp1 = (struct map *)bic_bitmap(mp2, MAP(mp1));
+    else
+	mp1 = NOT_MAP(or_bitmap(MAP(mp1), MAP(mp2)));
 #ifdef MAP_DEBUG
-if (Mflag)
-{
-printf (" ->");
-print_map(mp1);
-printf ("\n");
-}
+    if (Mflag) {
+	printf(" ->");
+	print_map(mp1);
+	printf("\n");
+    }
 #endif
-	return mp1;
+    return mp1;
 }
 
-struct map *or_map(mp1, mp2)
-	struct map *mp1, *mp2;
+struct map *
+or_map(mp1, mp2)
+     struct map *mp1, *mp2;
 {
 #ifdef MAP_DEBUG
-if (Mflag)
-{
-printf ("Oring maps");
-print_map(mp1);
-printf (" and");
-print_map(mp2);
-}
+    if (Mflag) {
+	printf("Oring maps");
+	print_map(mp1);
+	printf(" and");
+	print_map(mp2);
+    }
 #endif
-	if (POSMAP(mp1))
-		if (POSMAP(mp2))
-			mp1 = (struct map *) or_bitmap(mp1, mp2);
-		else
-			mp1 = NOT_MAP(bic_bitmap(MAP(mp2), mp1));
+    if (POSMAP(mp1))
+	if (POSMAP(mp2))
+	    mp1 = (struct map *)or_bitmap(mp1, mp2);
 	else
-		if (POSMAP(mp2))
-			mp1 = NOT_MAP(bic_bitmap(MAP(mp1), mp2));
-		else
-			mp1 = NOT_MAP(and_bitmap(MAP(mp1), MAP(mp2)));
+	    mp1 = NOT_MAP(bic_bitmap(MAP(mp2), mp1));
+    else if (POSMAP(mp2))
+	mp1 = NOT_MAP(bic_bitmap(MAP(mp1), mp2));
+    else
+	mp1 = NOT_MAP(and_bitmap(MAP(mp1), MAP(mp2)));
 #ifdef MAP_DEBUG
-if (Mflag)
-{
-printf (" ->");
-print_map(mp1);
-printf ("\n");
-}
+    if (Mflag) {
+	printf(" ->");
+	print_map(mp1);
+	printf("\n");
+    }
 #endif
-	return mp1;
+    return mp1;
 }
 
-struct map *not_map(map)
-	struct map *map;
+struct map *
+not_map(map)
+     struct map *map;
 {
 #ifdef MAP_DEBUG
-if (Mflag)
-{
-printf ("Notting map");
-print_map(map);
-printf ("\n");
-}
+    if (Mflag) {
+	printf("Notting map");
+	print_map(map);
+	printf("\n");
+    }
 #endif
-	return NOT_MAP(map);
+    return NOT_MAP(map);
 }
 
-struct map *copy_map(parm)
-	struct map *parm;
+struct map *
+copy_map(parm)
+     struct map *parm;
 {
-	struct bitmap *result, **mpp, *map;
+    struct bitmap *result, **mpp, *map;
 #ifdef MAP_DEBUG
-if (Mflag)
-{
-printf ("copymap:");
-print_map(parm);
-printf ("\n");
-}
+    if (Mflag) {
+	printf("copymap:");
+	print_map(parm);
+	printf("\n");
+    }
 #endif
-	map = MAP(parm);
-	for (mpp = &result; *mpp = 0, map; map = map->m_next) {
-		*mpp = (struct bitmap *) malloc(sizeof **mpp);
-		if (!*mpp) {
+    map = MAP(parm);
+    for (mpp = &result; *mpp = 0, map; map = map->m_next) {
+	*mpp = (struct bitmap *)malloc(sizeof **mpp);
+	if (!*mpp) {
 #ifdef MAP_DEBUG
-if (Mflag)
-printf ("copy_map: out of memory\n");
+	    if (Mflag)
+		printf("copy_map: out of memory\n");
 #endif
-			free_map((struct map *) result);
-			result = 0;
-			break;
-		}
-		**mpp = *map;
-		mpp = &(*mpp)->m_next;
+	    free_map((struct map *)result);
+	    result = 0;
+	    break;
 	}
-	if (NEGMAP(parm))
-		return NOT_MAP(result);
-	else
-		return (struct map*) result;
+	**mpp = *map;
+	mpp = &(*mpp)->m_next;
+    }
+    if (NEGMAP(parm))
+	return NOT_MAP(result);
+    else
+	return (struct map *)result;
 }
 
 long
 count_map(parm)
-	struct map *parm;
+     struct map *parm;
 {
-	long nf;
-	struct bitmap *map;
-	register i, j;
+    long nf;
+    struct bitmap *map;
+    register i, j;
 
-	nf = 0;
-	for (map = MAP(parm); map; map = map->m_next)
-	{
-		for (i = 0; i < MDATA; ++i)
-		{
-			if (!map->m_data[i])
-				;
-			else if (!~map->m_data[i])
-				nf += (1<<LSHIFT);
-			else for (j = 0; j < (1L<<LSHIFT); ++j)
-				if (map->m_data[i] & (1L<<j))
-					++nf;
-		}
+    nf = 0;
+    for (map = MAP(parm); map; map = map->m_next) {
+	for (i = 0; i < MDATA; ++i) {
+	    if (!map->m_data[i]);
+	    else if (!~map->m_data[i])
+		nf += (1 << LSHIFT);
+	    else
+		for (j = 0; j < (1L << LSHIFT); ++j)
+		    if (map->m_data[i] & (1L << j))
+			++nf;
 	}
-	if (NEGMAP(parm))
-		nf = ~nf;	/* note 1's complement */
+    }
+    if (NEGMAP(parm))
+	nf = ~nf;		/* note 1's complement */
 #ifdef MAP_DEBUG
-if (Mflag)
-{
-printf ("countmap:");
-print_map(parm);
-printf (" -> %d\n", nf);
-}
+    if (Mflag) {
+	printf("countmap:");
+	print_map(parm);
+	printf(" -> %d\n", nf);
+    }
 #endif
-	return nf;
+    return nf;
 }
 
 long
 next_map(parm, node)
-	struct map *parm;
-	long node;
+     struct map *parm;
+     long node;
 {
-	struct bitmap *map, *lowest;
-	long bit, mask;
-	int x, page;
-	int best;
-	int i;
-	int bn;
+    struct bitmap *map, *lowest;
+    long bit, mask;
+    int x, page;
+    int best;
+    int i;
+    int bn;
 
 #ifdef MAP_DEBUG
-if (Aflag)
-{
-printf ("next_map: selecting next after %d from", node);
-print_map(parm);
-}
+    if (Aflag) {
+	printf("next_map: selecting next after %d from", node);
+	print_map(parm);
+    }
 #endif
-	if (NEGMAP(parm)) {
+    if (NEGMAP(parm)) {
 #ifdef MAP_DEBUG
-if (Aflag)
-printf ("next_map failed; negative map\n");
+	if (Aflag)
+	    printf("next_map failed; negative map\n");
 #endif
-		return -1;
-	}
+	return -1;
+    }
 
-	++node;
-	bit = NUMBERTOBIT(node);
-	x = NUMBERTOINDEX(node);
-	page = NUMBERTOPAGE(node);
-	bit = 1L<<bit;
-	best = -1;
-	lowest = 0;
-	for (map = MAP(parm); map; map = map->m_next)
-		if (map->m_page >= page && (!lowest || lowest->m_page > map->m_page))
-		{
-			i = 0; mask = ~0;
-			if (page == map->m_page) i = x, mask = -bit;
-			for (; i < MDATA; ++i, mask = ~0)
-				if (map->m_data[i] & mask) break;
-			if (i < MDATA) {
-				for (bn = 0; bn < (1<<LSHIFT); ++bn)
-					if (map->m_data[i]&mask&(1L<<bn)) {
-						break;
-					}
+    ++node;
+    bit = NUMBERTOBIT(node);
+    x = NUMBERTOINDEX(node);
+    page = NUMBERTOPAGE(node);
+    bit = 1L << bit;
+    best = -1;
+    lowest = 0;
+    for (map = MAP(parm); map; map = map->m_next)
+	if (map->m_page >= page && (!lowest || lowest->m_page > map->m_page)) {
+	    i = 0;
+	    mask = ~0;
+	    if (page == map->m_page)
+		i = x, mask = -bit;
+	    for (; i < MDATA; ++i, mask = ~0)
+		if (map->m_data[i] & mask)
+		    break;
+	    if (i < MDATA) {
+		for (bn = 0; bn < (1 << LSHIFT); ++bn)
+		    if (map->m_data[i] & mask & (1L << bn)) {
+			break;
+		    }
 #ifdef MAP_DEBUG
-if (Aflag)
-{
-if (bn == (1<<LSHIFT)){
-printf ("next_map: botch; pageno %d index %d data %#lx mask %#lx x,bit %d,%#lx\n",
-map->m_page,
-i,
-map->m_data[i],
-mask,
-x,bit);
-continue;
-}
-}
-#endif
-				best = bn + ((i+((map->m_page)<<MSHIFT)
-					) << LSHIFT);
-				lowest = map;
-			}
+		if (Aflag) {
+		    if (bn == (1 << LSHIFT)) {
+			printf
+			    ("next_map: botch; pageno %d index %d data %#lx mask %#lx x,bit %d,%#lx\n",
+			     map->m_page, i, map->m_data[i], mask, x, bit);
+			continue;
+		    }
 		}
-#ifdef MAP_DEBUG
-if (Aflag)
-{
-printf (" -> %d\n", best);
-if (best >= 0 && !in_map((struct map *) parm, best)) {
-printf ("next_map: botch; %d not in map\n", best);
-return -1;
-}
-}
 #endif
-	return best;
+		best = bn + ((i + ((map->m_page) << MSHIFT)
+			     ) << LSHIFT);
+		lowest = map;
+	    }
+	}
+#ifdef MAP_DEBUG
+    if (Aflag) {
+	printf(" -> %d\n", best);
+	if (best >= 0 && !in_map((struct map *)parm, best)) {
+	    printf("next_map: botch; %d not in map\n", best);
+	    return -1;
+	}
+    }
+#endif
+    return best;
 }
 
 long
 first_map(parm)
-	struct map *parm;
+     struct map *parm;
 {
-	return next_map(parm, -9999);
+    return next_map(parm, -9999);
 }
 
 long
 prev_map(parm, node)
-	struct map *parm;
-	long node;
+     struct map *parm;
+     long node;
 {
-	struct bitmap *map, *lowest;
-	long bit, mask;
-	int x, page;
-	int best;
-	int i;
-	int bn;
+    struct bitmap *map, *lowest;
+    long bit, mask;
+    int x, page;
+    int best;
+    int i;
+    int bn;
 
 #ifdef MAP_DEBUG
-if (Aflag)
-{
-printf ("prev_map: selecting previous before %d from", node);
-print_map(parm);
-}
+    if (Aflag) {
+	printf("prev_map: selecting previous before %d from", node);
+	print_map(parm);
+    }
 #endif
-	if (NEGMAP(parm)) {
+    if (NEGMAP(parm)) {
 #ifdef MAP_DEBUG
-if (Aflag)
-printf ("prev_map failed; negative map\n");
+	if (Aflag)
+	    printf("prev_map failed; negative map\n");
 #endif
-		return -1;
-	}
+	return -1;
+    }
 
-	if (node < 0)
-		node = ((unsigned long)~0)>>1;
+    if (node < 0)
+	node = ((unsigned long)~0) >> 1;
 
-	--node;
-	bit = NUMBERTOBIT(node);
-	x = NUMBERTOINDEX(node);
-	page = NUMBERTOPAGE(node);
-	bit = 1L<<bit;
-	best = -1;
-	lowest = 0;
-	for (map = MAP(parm); map; map = map->m_next)
-		if (map->m_page <= page && (!lowest || lowest->m_page < map->m_page))
-		{
-			i = MDATA-1; mask = ~0;
-			if (page == map->m_page) i = x, mask = (bit<<1)-1;
-			for (; i >= 0; --i, mask = ~0)
-				if (map->m_data[i] & mask) break;
-			if (i >= 0) {
-				for (bn = (1<<LSHIFT)-1; bn >= 0; --bn)
-					if (map->m_data[i]&mask&(1L<<bn)) {
-						break;
-					}
+    --node;
+    bit = NUMBERTOBIT(node);
+    x = NUMBERTOINDEX(node);
+    page = NUMBERTOPAGE(node);
+    bit = 1L << bit;
+    best = -1;
+    lowest = 0;
+    for (map = MAP(parm); map; map = map->m_next)
+	if (map->m_page <= page && (!lowest || lowest->m_page < map->m_page)) {
+	    i = MDATA - 1;
+	    mask = ~0;
+	    if (page == map->m_page)
+		i = x, mask = (bit << 1) - 1;
+	    for (; i >= 0; --i, mask = ~0)
+		if (map->m_data[i] & mask)
+		    break;
+	    if (i >= 0) {
+		for (bn = (1 << LSHIFT) - 1; bn >= 0; --bn)
+		    if (map->m_data[i] & mask & (1L << bn)) {
+			break;
+		    }
 #ifdef MAP_DEBUG
-if (Aflag)
-{
-if (bn < 0){
-printf ("prev_map: botch; pageno %d index %d data %#lx mask %#lx x,bit %d,%#lx\n",
-map->m_page,
-i,
-map->m_data[i],
-mask,
-x,bit);
-continue;
-}
-}
-#endif
-				best = bn + ((i+((map->m_page)<<MSHIFT)
-					) << LSHIFT);
-				lowest = map;
-			}
+		if (Aflag) {
+		    if (bn < 0) {
+			printf
+			    ("prev_map: botch; pageno %d index %d data %#lx mask %#lx x,bit %d,%#lx\n",
+			     map->m_page, i, map->m_data[i], mask, x, bit);
+			continue;
+		    }
 		}
-#ifdef MAP_DEBUG
-if (Aflag)
-{
-printf (" -> %d\n", best);
-if (best >= 0 && !in_map(parm, best)) {
-printf ("prev_map: botch; %d not in map\n", best);
-return -1;
-}
-}
 #endif
-	return best;
+		best = bn + ((i + ((map->m_page) << MSHIFT)
+			     ) << LSHIFT);
+		lowest = map;
+	    }
+	}
+#ifdef MAP_DEBUG
+    if (Aflag) {
+	printf(" -> %d\n", best);
+	if (best >= 0 && !in_map(parm, best)) {
+	    printf("prev_map: botch; %d not in map\n", best);
+	    return -1;
+	}
+    }
+#endif
+    return best;
 }
 
 long
 last_map(parm)
-	struct map *parm;
+     struct map *parm;
 {
-	return prev_map(parm, 0x7fffffff);
+    return prev_map(parm, 0x7fffffff);
 }
 
-struct map *negative_map(map)
-	struct map *map;
+struct map *
+negative_map(map)
+     struct map *map;
 {
-	return (struct map *) NEGMAP(map);
+    return (struct map *)NEGMAP(map);
 }
 
-struct map *bic_map(mp1, mp2)
-	struct map *mp1, *mp2;
+struct map *
+bic_map(mp1, mp2)
+     struct map *mp1, *mp2;
 {
 #ifdef MAP_DEBUG
-if (Mflag)
-{
-printf ("Bic maps");
-print_map(mp1);
-printf (" minus");
-print_map(mp2);
-}
+    if (Mflag) {
+	printf("Bic maps");
+	print_map(mp1);
+	printf(" minus");
+	print_map(mp2);
+    }
 #endif
-	mp1 = and_map(mp1, NOT_MAP(mp2));
+    mp1 = and_map(mp1, NOT_MAP(mp2));
 #ifdef MAP_DEBUG
-if (Mflag)
-{
-printf (" ->");
-print_map(mp1);
-printf ("\n");
-}
+    if (Mflag) {
+	printf(" ->");
+	print_map(mp1);
+	printf("\n");
+    }
 #endif
-	return mp1;
+    return mp1;
 }
 
 #ifdef PRINT_MAP_ERROR
 print_map(parm)
-	struct map *parm;
+     struct map *parm;
 {
-	struct bitmap *map;
-	int i, j;
-	int bitno, firstbitno, lastbitno;
-	if (NEGMAP(parm)) {
-		printf (" NOT");
-	}
-	map = MAP(parm);
-	if (!map)
-		printf (" nil(%lx)", parm);
-else printf (" %lx", parm);
-	lastbitno = -100;
-	firstbitno = -100;
-	for (; map; map = map->m_next)
-		for (i = 0; i < MDATA; ++i)
-			if (map->m_data[i])
-				for (j = 0; j < (1<<LSHIFT); ++j)
-				{
-					bitno = j+
-						(i<<LSHIFT)+
-						((map->m_page)<<(LSHIFT+MSHIFT));
-					if (map->m_data[i] & (1<<j))
-					{
-						if (bitno == lastbitno + 1)
-						{
-							++lastbitno;
-							continue;
-						}
-						if (bitno != (lastbitno + 1)) {
-							if (firstbitno >= 0
-							&& firstbitno != lastbitno)
-							printf ("-%d", lastbitno);
-							firstbitno = -100;
-						}
-						printf (" %d",
-							bitno);
-						firstbitno = lastbitno = bitno;
-					} else {
-						if (firstbitno >= 0 && firstbitno != lastbitno)
-							printf ("-%d", lastbitno);
-						firstbitno = -100;
-					}
-				}
-	if (firstbitno >= 0 && firstbitno != lastbitno)
-		printf ("-%d", lastbitno);
+    struct bitmap *map;
+    int i, j;
+    int bitno, firstbitno, lastbitno;
+    if (NEGMAP(parm)) {
+	printf(" NOT");
+    }
+    map = MAP(parm);
+    if (!map)
+	printf(" nil(%lx)", parm);
+    else
+	printf(" %lx", parm);
+    lastbitno = -100;
+    firstbitno = -100;
+    for (; map; map = map->m_next)
+	for (i = 0; i < MDATA; ++i)
+	    if (map->m_data[i])
+		for (j = 0; j < (1 << LSHIFT); ++j) {
+		    bitno =
+			j + (i << LSHIFT) +
+			((map->m_page) << (LSHIFT + MSHIFT));
+		    if (map->m_data[i] & (1 << j)) {
+			if (bitno == lastbitno + 1) {
+			    ++lastbitno;
+			    continue;
+			}
+			if (bitno != (lastbitno + 1)) {
+			    if (firstbitno >= 0 && firstbitno != lastbitno)
+				printf("-%d", lastbitno);
+			    firstbitno = -100;
+			}
+			printf(" %d", bitno);
+			firstbitno = lastbitno = bitno;
+		    } else {
+			if (firstbitno >= 0 && firstbitno != lastbitno)
+			    printf("-%d", lastbitno);
+			firstbitno = -100;
+		    }
+		}
+    if (firstbitno >= 0 && firstbitno != lastbitno)
+	printf("-%d", lastbitno);
 }
 #endif
 
 #ifdef NEED_READ_WRITE
 struct map *
 read_map(f, arg)
-	int (*f)();
-	char *arg;
+     int (*f) ();
+     char *arg;
 {
-	struct bitmap *map, *result, **mp;
-	int page;
-	int bitno, lastno, thisno, prevno;
-	int i, j;
-	int data;
+    struct bitmap *map, *result, **mp;
+    int page;
+    int bitno, lastno, thisno, prevno;
+    int i, j;
+    int data;
 
 /* count, then startbitno, then bits. */
-	lastno = ((*f)(arg));
-	if (lastno == -1)
-		return 0;
-	if (lastno & ((1<<LSHIFT)-1))
-	{
+    lastno = ((*f) (arg));
+    if (lastno == -1)
+	return 0;
+    if (lastno & ((1 << LSHIFT) - 1)) {
 #ifdef PRINT_MAP_ERROR
-		printf ("read_map: bad count\n");
+	printf("read_map: bad count\n");
 #endif
-		return 0;
-	}
-	bitno = ((*f)(arg));
-	if (bitno & ((1<<LSHIFT)-1))
-	{
+	return 0;
+    }
+    bitno = ((*f) (arg));
+    if (bitno & ((1 << LSHIFT) - 1)) {
 #ifdef PRINT_MAP_ERROR
-		printf ("read_map: bad start\n");
+	printf("read_map: bad start\n");
 #endif
-		return 0;
-	}
-	lastno += bitno;
-	map = result = 0;
-	for (; bitno < lastno; bitno += (1<<LSHIFT))
-	{
-		data = (*f)(arg);
-		if (!data) continue;
-		page = NUMBERTOPAGE(bitno);
-		if (!map || map->m_page != page)
-			for (mp = &result; map = *mp; mp = &map->m_next)
-				if (map->m_page == page)
-					break;
-		if (!map)
-		{
-			map = (struct bitmap *) malloc(sizeof *map);
-			if (!map) {
+	return 0;
+    }
+    lastno += bitno;
+    map = result = 0;
+    for (; bitno < lastno; bitno += (1 << LSHIFT)) {
+	data = (*f) (arg);
+	if (!data)
+	    continue;
+	page = NUMBERTOPAGE(bitno);
+	if (!map || map->m_page != page)
+	    for (mp = &result; map = *mp; mp = &map->m_next)
+		if (map->m_page == page)
+		    break;
+	if (!map) {
+	    map = (struct bitmap *)malloc(sizeof *map);
+	    if (!map) {
 #ifdef PRINT_MAP_ERROR
-printf ("No memory!\n"); 
+		printf("No memory!\n");
 #endif
-				if (result)
-					free_map((struct map *) result);
-				return 0;
-			}
-			bzero((char*) map->m_data, sizeof map->m_data);
-			map->m_page = page;
-			map->m_next = 0;
-			*mp = map;
-		}
-		map->m_data[NUMBERTOINDEX(bitno)] = data;
+		if (result)
+		    free_map((struct map *)result);
+		return 0;
+	    }
+	    bzero((char *)map->m_data, sizeof map->m_data);
+	    map->m_page = page;
+	    map->m_next = 0;
+	    *mp = map;
 	}
-	return (struct map *) result;
+	map->m_data[NUMBERTOINDEX(bitno)] = data;
+    }
+    return (struct map *)result;
 }
 
 write_map(parm, f, arg)
-	struct map *parm;
-	int (*f)();
-	char *arg;
+     struct map *parm;
+     int (*f) ();
+     char *arg;
 {
-	struct bitmap *map;
-	int page;
-	int bitno, lastno, thisno, prevno;
-	int i, j;
+    struct bitmap *map;
+    int page;
+    int bitno, lastno, thisno, prevno;
+    int i, j;
 
-	bitno = first_map(parm);
-	bitno &= ~((1<<LSHIFT)-1);
+    bitno = first_map(parm);
+    bitno &= ~((1 << LSHIFT) - 1);
 
-	lastno = last_map(parm);
-	lastno -= bitno;
-	lastno += ((1<<LSHIFT));
-	lastno &= ~((1<<LSHIFT)-1);
+    lastno = last_map(parm);
+    lastno -= bitno;
+    lastno += ((1 << LSHIFT));
+    lastno &= ~((1 << LSHIFT) - 1);
 /* count, then startbitno, then bits. */
-	if ((*f)(arg, lastno) == -1)
-		return -1;
-	/* word: number of bits */
-	if ((*f)(arg, bitno) == -1)
-		return -1;
-	lastno += bitno;
-	prevno = bitno;
-	for (bitno = first_map(parm); bitno >= 0; bitno = next_map(parm, bitno))
-	{
-		page = NUMBERTOPAGE(bitno);
-		for (map = MAP(parm); map; map = map->m_next)
-			if (map->m_page == page)
-				break;
-		if (!map)
-		{
+    if ((*f) (arg, lastno) == -1)
+	return -1;
+    /* word: number of bits */
+    if ((*f) (arg, bitno) == -1)
+	return -1;
+    lastno += bitno;
+    prevno = bitno;
+    for (bitno = first_map(parm); bitno >= 0; bitno = next_map(parm, bitno)) {
+	page = NUMBERTOPAGE(bitno);
+	for (map = MAP(parm); map; map = map->m_next)
+	    if (map->m_page == page)
+		break;
+	if (!map) {
 #ifdef PRINT_MAP_ERROR
-printf ("write_map: botch #1: can't find page %d\n", page);
+	    printf("write_map: botch #1: can't find page %d\n", page);
 #endif
-continue;
-		}
-		for (i = 0; i < MDATA; ++i)
-		{
-			if (!map->m_data[i])
-				continue;
-			thisno = TONUMBER(page, i, 0);
-			for (j = thisno - prevno; j > 0; j -= (1<<LSHIFT))
-				if ((*f)(arg, 0) == -1)
-					return -1;
-			prevno = thisno;
-			for (;;)
-			{
-				if ((*f)(arg, map->m_data[i]) == -1)
-					return -1;
-				prevno += (1<<LSHIFT);
-				++i;
-				if (i >= MDATA || !map->m_data[i])
-					break;
-			}
-			--i;
-		}
-		bitno = TONUMBER(page, i, 0)-1;
+	    continue;
 	}
+	for (i = 0; i < MDATA; ++i) {
+	    if (!map->m_data[i])
+		continue;
+	    thisno = TONUMBER(page, i, 0);
+	    for (j = thisno - prevno; j > 0; j -= (1 << LSHIFT))
+		if ((*f) (arg, 0) == -1)
+		    return -1;
+	    prevno = thisno;
+	    for (;;) {
+		if ((*f) (arg, map->m_data[i]) == -1)
+		    return -1;
+		prevno += (1 << LSHIFT);
+		++i;
+		if (i >= MDATA || !map->m_data[i])
+		    break;
+	    }
+	    --i;
+	}
+	bitno = TONUMBER(page, i, 0) - 1;
+    }
 #ifdef PRINT_MAP_ERROR
-if (prevno != lastno)
-printf ("write_map: botch #2: bitno=%d prevno=%d lastno=%d\n", bitno, prevno, lastno);
+    if (prevno != lastno)
+	printf("write_map: botch #2: bitno=%d prevno=%d lastno=%d\n", bitno,
+	       prevno, lastno);
 #endif
-	return 0;
+    return 0;
 }
 #endif
 

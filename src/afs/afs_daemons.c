@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef AFS_AIX51_ENV
 #define __FULL_PROTO
@@ -19,8 +20,8 @@ RCSID("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
-#include "afs/afs_stats.h"   /* statistics gathering code */
-#include "afs/afs_cbqueue.h" 
+#include "afs/afs_stats.h"	/* statistics gathering code */
+#include "afs/afs_cbqueue.h"
 #ifdef AFS_AIX_ENV
 #include <sys/adspace.h>	/* for vm_att(), vm_det() */
 #endif
@@ -31,40 +32,42 @@ afs_lock_t afs_xbrs;		/* lock for brs */
 static int brsInit = 0;
 short afs_brsWaiters = 0;	/* number of users waiting for brs buffers */
 short afs_brsDaemons = 0;	/* number of daemons waiting for brs requests */
-struct brequest	afs_brs[NBRS];	/* request structures */
+struct brequest afs_brs[NBRS];	/* request structures */
 struct afs_osi_WaitHandle AFS_WaitHandler, AFS_CSWaitHandler;
 static int afs_brs_count = 0;	/* request counter, to service reqs in order */
 
-static int rxepoch_checked=0;
+static int rxepoch_checked = 0;
 #define afs_CheckRXEpoch() {if (rxepoch_checked == 0 && rxkad_EpochWasSet) { \
 	rxepoch_checked = 1; afs_GCUserData(/* force flag */ 1);  } }
 
 /* PAG garbage collection */
 /* We induce a compile error if param.h does not define AFS_GCPAGS */
-afs_int32 afs_gcpags=AFS_GCPAGS;
+afs_int32 afs_gcpags = AFS_GCPAGS;
 afs_int32 afs_gcpags_procsize = 0;
 
 afs_int32 afs_CheckServerDaemonStarted = 0;
 #ifdef DEFAULT_PROBE_INTERVAL
-afs_int32 PROBE_INTERVAL=DEFAULT_PROBE_INTERVAL;  /* overridding during compile */
+afs_int32 PROBE_INTERVAL = DEFAULT_PROBE_INTERVAL;	/* overridding during compile */
 #else
-afs_int32 PROBE_INTERVAL=180;	/* default to 3 min */
+afs_int32 PROBE_INTERVAL = 180;	/* default to 3 min */
 #endif
 
 #define PROBE_WAIT() (1000 * (PROBE_INTERVAL - ((afs_random() & 0x7fffffff) \
 		      % (PROBE_INTERVAL/2))))
 
-void afs_CheckServerDaemon(void)
+void
+afs_CheckServerDaemon(void)
 {
     afs_int32 now, delay, lastCheck, last10MinCheck;
 
     afs_CheckServerDaemonStarted = 1;
 
-    while (afs_initState < 101) afs_osi_Sleep(&afs_initState);
-    afs_osi_Wait(PROBE_WAIT(), &AFS_CSWaitHandler, 0);  
-    
+    while (afs_initState < 101)
+	afs_osi_Sleep(&afs_initState);
+    afs_osi_Wait(PROBE_WAIT(), &AFS_CSWaitHandler, 0);
+
     last10MinCheck = lastCheck = osi_Time();
-    while ( 1 ) {
+    while (1) {
 	if (afs_termState == AFSOP_STOP_CS) {
 	    afs_termState = AFSOP_STOP_BKG;
 	    afs_osi_Wakeup(&afs_termState);
@@ -73,7 +76,7 @@ void afs_CheckServerDaemon(void)
 
 	now = osi_Time();
 	if (PROBE_INTERVAL + lastCheck <= now) {
-	    afs_CheckServers(1, NULL); /* check down servers */
+	    afs_CheckServers(1, NULL);	/* check down servers */
 	    lastCheck = now = osi_Time();
 	}
 
@@ -96,12 +99,13 @@ void afs_CheckServerDaemon(void)
 	delay -= now;
 	if (delay < 1)
 	    delay = 1;
-	afs_osi_Wait(delay * 1000,  &AFS_CSWaitHandler, 0);  
+	afs_osi_Wait(delay * 1000, &AFS_CSWaitHandler, 0);
     }
     afs_CheckServerDaemonStarted = 0;
 }
 
-void afs_Daemon(void)
+void
+afs_Daemon(void)
 {
     afs_int32 code;
     struct afs_exporter *exporter;
@@ -112,10 +116,12 @@ void afs_Daemon(void)
     char cs_warned = 0;
 
     AFS_STATCNT(afs_Daemon);
-    last1MinCheck = last3MinCheck = last60MinCheck = last10MinCheck = lastNMinCheck = 0;
+    last1MinCheck = last3MinCheck = last60MinCheck = last10MinCheck =
+	lastNMinCheck = 0;
 
     afs_rootFid.Fid.Volume = 0;
-    while (afs_initState < 101) afs_osi_Sleep(&afs_initState);
+    while (afs_initState < 101)
+	afs_osi_Sleep(&afs_initState);
 
     now = osi_Time();
     lastCBSlotBump = now;
@@ -123,22 +129,22 @@ void afs_Daemon(void)
     /* when a lot of clients are booted simultaneously, they develop
      * annoying synchronous VL server bashing behaviors.  So we stagger them.
      */
-    last1MinCheck = now + ((afs_random() & 0x7fffffff) % 60); /* an extra 30 */
+    last1MinCheck = now + ((afs_random() & 0x7fffffff) % 60);	/* an extra 30 */
     last3MinCheck = now - 90 + ((afs_random() & 0x7fffffff) % 180);
     last60MinCheck = now - 1800 + ((afs_random() & 0x7fffffff) % 3600);
     last10MinCheck = now - 300 + ((afs_random() & 0x7fffffff) % 600);
     lastNMinCheck = now - 90 + ((afs_random() & 0x7fffffff) % 180);
 
     /* start off with afs_initState >= 101 (basic init done) */
-    while(1) {
-	afs_CheckCallbacks(20);  /* unstat anything which will expire soon */
-	
+    while (1) {
+	afs_CheckCallbacks(20);	/* unstat anything which will expire soon */
+
 	/* things to do every 20 seconds or less - required by protocol spec */
-	if (afs_nfsexporter) 
+	if (afs_nfsexporter)
 	    afs_FlushActiveVcaches(0);	/* flush NFS writes */
-	afs_FlushVCBs(1);		/* flush queued callbacks */
+	afs_FlushVCBs(1);	/* flush queued callbacks */
 	afs_MaybeWakeupTruncateDaemon();	/* free cache space if have too */
-	rx_CheckPackets();		/* Does RX need more packets? */
+	rx_CheckPackets();	/* Does RX need more packets? */
 #if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
 	/* 
 	 * Hack: We always want to make sure there are plenty free
@@ -146,37 +152,39 @@ void afs_Daemon(void)
 	 * worry about rx (with disabled interrupts) to have to call
 	 * malloc). So we do the dummy call below...
 	 */
-	if (((afs_stats_cmperf.SmallBlocksAlloced - afs_stats_cmperf.SmallBlocksActive) 
+	if (((afs_stats_cmperf.SmallBlocksAlloced -
+	      afs_stats_cmperf.SmallBlocksActive)
 	     <= AFS_SALLOC_LOW_WATER))
 	    osi_FreeSmallSpace(osi_AllocSmallSpace(AFS_SMALLOCSIZ));
-	if (((afs_stats_cmperf.MediumBlocksAlloced - afs_stats_cmperf.MediumBlocksActive) 
-	     <= AFS_MALLOC_LOW_WATER+50)) 
-	    osi_AllocMoreMSpace(AFS_MALLOC_LOW_WATER * 2); 
+	if (((afs_stats_cmperf.MediumBlocksAlloced -
+	      afs_stats_cmperf.MediumBlocksActive)
+	     <= AFS_MALLOC_LOW_WATER + 50))
+	    osi_AllocMoreMSpace(AFS_MALLOC_LOW_WATER * 2);
 #endif
-	
+
 	now = osi_Time();
-	if (lastCBSlotBump + CBHTSLOTLEN < now) {  /* pretty time-dependant */
+	if (lastCBSlotBump + CBHTSLOTLEN < now) {	/* pretty time-dependant */
 	    lastCBSlotBump = now;
 	    if (afs_BumpBase()) {
-		afs_CheckCallbacks(20);  /* unstat anything which will expire soon */
+		afs_CheckCallbacks(20);	/* unstat anything which will expire soon */
 	    }
 	}
-	
+
 	if (last1MinCheck + 60 < now) {
 	    /* things to do every minute */
-	    DFlush();			/* write out dir buffers */
+	    DFlush();		/* write out dir buffers */
 	    afs_WriteThroughDSlots();	/* write through cacheinfo entries */
-	    afs_FlushActiveVcaches(1);/* keep flocks held & flush nfs writes */
+	    afs_FlushActiveVcaches(1);	/* keep flocks held & flush nfs writes */
 #ifdef AFS_DISCON_ENV
 	    afs_StoreDirtyVcaches();
 #endif
 	    afs_CheckRXEpoch();
 	    last1MinCheck = now;
 	}
-	
+
 	if (last3MinCheck + 180 < now) {
 	    afs_CheckTokenCache();	/* check for access cache resets due to expired
-					   tickets */
+					 * tickets */
 	    last3MinCheck = now;
 	}
 	if (!afs_CheckServerDaemonStarted) {
@@ -192,29 +200,29 @@ void afs_Daemon(void)
 	    }
 	}
 	if (last10MinCheck + 600 < now) {
-#ifdef AFS_USERSPACE_IP_ADDR	
+#ifdef AFS_USERSPACE_IP_ADDR
 	    extern int rxi_GetcbiInfo(void);
 #endif
-	    afs_Trace1(afs_iclSetp, CM_TRACE_PROBEUP,
-		       ICL_TYPE_INT32, 600);
-#ifdef AFS_USERSPACE_IP_ADDR	
-	    if (rxi_GetcbiInfo()) { /* addresses changed from last time */
+	    afs_Trace1(afs_iclSetp, CM_TRACE_PROBEUP, ICL_TYPE_INT32, 600);
+#ifdef AFS_USERSPACE_IP_ADDR
+	    if (rxi_GetcbiInfo()) {	/* addresses changed from last time */
 		afs_FlushCBs();
 	    }
-#else  /* AFS_USERSPACE_IP_ADDR */
-	    if (rxi_GetIFInfo()) { /* addresses changed from last time */
+#else /* AFS_USERSPACE_IP_ADDR */
+	    if (rxi_GetIFInfo()) {	/* addresses changed from last time */
 		afs_FlushCBs();
 	    }
 #endif /* else AFS_USERSPACE_IP_ADDR */
 	    if (!afs_CheckServerDaemonStarted)
 		afs_CheckServers(0, NULL);
-	    afs_GCUserData(0);	    /* gc old conns */
+	    afs_GCUserData(0);	/* gc old conns */
 	    /* This is probably the wrong way of doing GC for the various exporters but it will suffice for a while */
-	    for (exporter = root_exported; exporter; exporter = exporter->exp_next) {
-		(void) EXP_GC(exporter, 0);	/* Generalize params */
+	    for (exporter = root_exported; exporter;
+		 exporter = exporter->exp_next) {
+		(void)EXP_GC(exporter, 0);	/* Generalize params */
 	    }
 	    {
-		static int cnt=0;
+		static int cnt = 0;
 		if (++cnt < 12) {
 		    afs_CheckVolumeNames(AFS_VOLCHECK_EXPIRED |
 					 AFS_VOLCHECK_BUSY);
@@ -228,12 +236,12 @@ void afs_Daemon(void)
 	    last10MinCheck = now;
 	}
 	if (last60MinCheck + 3600 < now) {
-	    afs_Trace1(afs_iclSetp, CM_TRACE_PROBEVOLUME,
-		       ICL_TYPE_INT32, 3600);
+	    afs_Trace1(afs_iclSetp, CM_TRACE_PROBEVOLUME, ICL_TYPE_INT32,
+		       3600);
 	    afs_CheckRootVolume();
 #if AFS_GCPAGS
 	    if (afs_gcpags == AFS_GCPAGS_OK) {
-	        afs_int32 didany;
+		afs_int32 didany;
 		afs_GCPAGs(&didany);
 	    }
 #endif
@@ -241,11 +249,13 @@ void afs_Daemon(void)
 	}
 	if (afs_initState < 300) {	/* while things ain't rosy */
 	    code = afs_CheckRootVolume();
-	    if (code ==	0) afs_initState = 300;		    /* succeeded */
-	    if (afs_initState <	200) afs_initState = 200;   /* tried once */
+	    if (code == 0)
+		afs_initState = 300;	/* succeeded */
+	    if (afs_initState < 200)
+		afs_initState = 200;	/* tried once */
 	    afs_osi_Wakeup(&afs_initState);
 	}
-	
+
 	/* 18285 is because we're trying to divide evenly into 128, that is,
 	 * CBSlotLen, while staying just under 20 seconds.  If CBSlotLen
 	 * changes, should probably change this interval, too. 
@@ -253,9 +263,9 @@ void afs_Daemon(void)
 	 * might not want to wait the entire interval */
 	now = 18285 - (osi_Time() - now);
 	if (now > 0) {
-	    afs_osi_Wait(now, &AFS_WaitHandler, 0);  
+	    afs_osi_Wait(now, &AFS_WaitHandler, 0);
 	}
-	
+
 	if (afs_termState == AFSOP_STOP_AFS) {
 	    if (afs_CheckServerDaemonStarted)
 		afs_termState = AFSOP_STOP_CS;
@@ -267,7 +277,8 @@ void afs_Daemon(void)
     }
 }
 
-int afs_CheckRootVolume (void)
+int
+afs_CheckRootVolume(void)
 {
     char rootVolName[32];
     struct volume *tvp = NULL;
@@ -308,7 +319,7 @@ int afs_CheckRootVolume (void)
     }
     if (tvp) {
 	if (!usingDynroot) {
-	    int volid = (tvp->roVol? tvp->roVol : tvp->volume);
+	    int volid = (tvp->roVol ? tvp->roVol : tvp->volume);
 	    afs_rootFid.Cell = localcell;
 	    if (afs_rootFid.Fid.Volume && afs_rootFid.Fid.Volume != volid
 		&& afs_globalVp) {
@@ -326,7 +337,7 @@ int afs_CheckRootVolume (void)
 	    afs_rootFid.Fid.Vnode = 1;
 	    afs_rootFid.Fid.Unique = 1;
 	}
-	afs_initState = 300;    /* won */
+	afs_initState = 300;	/* won */
 	afs_osi_Wakeup(&afs_initState);
 	afs_PutVolume(tvp, READ_LOCK);
     }
@@ -339,26 +350,29 @@ int afs_CheckRootVolume (void)
 	int code;
 
 	/* Only do this if afs_globalVFS is properly set due to race conditions
-	   this routine could be called before the gfs_mount is performed!
-	   Furthermore, afs_root (called below) *waits* until
-	   initState >= 200, so we don't try this until we've gotten
-	   at least that far */
+	 * this routine could be called before the gfs_mount is performed!
+	 * Furthermore, afs_root (called below) *waits* until
+	 * initState >= 200, so we don't try this until we've gotten
+	 * at least that far */
 	if (afs_globalVFS && afs_initState >= 200) {
 	    if (code = afs_root(afs_globalVFS, &rootgp))
 		return code;
-	    mp = (struct mount *) afs_globalVFS->vfs_data ;
+	    mp = (struct mount *)afs_globalVFS->vfs_data;
 	    mp->m_rootgp = gget(mp, 0, 0, (char *)rootgp);
 	    afs_unlock(mp->m_rootgp);	/* unlock basic gnode */
-	    afs_vrele(VTOAFS(rootgp));  /* zap afs_root's vnode hold */
+	    afs_vrele(VTOAFS(rootgp));	/* zap afs_root's vnode hold */
 	}
     }
 #endif
-    if (afs_rootFid.Fid.Volume) return 0;
-    else return ENOENT;
+    if (afs_rootFid.Fid.Volume)
+	return 0;
+    else
+	return ENOENT;
 }
 
 /* ptr_parm 0 is the pathname, size_parm 0 to the fetch is the chunk number */
-static void BPath(register struct brequest *ab)
+static void
+BPath(register struct brequest *ab)
 {
     register struct dcache *tdc = NULL;
     struct vcache *tvc = NULL;
@@ -371,18 +385,20 @@ static void BPath(register struct brequest *ab)
     afs_int32 code;
 
     AFS_STATCNT(BPath);
-    if ((code = afs_InitReq(&treq, ab->cred))) return;
+    if ((code = afs_InitReq(&treq, ab->cred)))
+	return;
     AFS_GUNLOCK();
 #ifdef AFS_LINUX22_ENV
-    code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1,  NULL, &dp);
+    code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1, NULL, &dp);
     if (dp)
-	tvn = (struct vnode*)dp->d_inode;
+	tvn = (struct vnode *)dp->d_inode;
 #else
-    code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1,  NULL, &tvn);
+    code = gop_lookupname((char *)ab->ptr_parm[0], AFS_UIOSYS, 1, NULL, &tvn);
 #endif
     AFS_GLOCK();
-    osi_FreeLargeSpace((char *)ab->ptr_parm[0]); /* free path name buffer here */
-    if (code) return;
+    osi_FreeLargeSpace((char *)ab->ptr_parm[0]);	/* free path name buffer here */
+    if (code)
+	return;
     /* now path may not have been in afs, so check that before calling our cache manager */
     if (!tvn || !IsAfsVnode(tvn)) {
 	/* release it and give up */
@@ -424,7 +440,8 @@ static void BPath(register struct brequest *ab)
  * ptr_parm 0 is the dcache entry to wakeup,
  * size_parm 1 is true iff we should release the dcache entry here.
  */
-static void BPrefetch(register struct brequest *ab)
+static void
+BPrefetch(register struct brequest *ab)
 {
     register struct dcache *tdc;
     register struct vcache *tvc;
@@ -432,7 +449,8 @@ static void BPrefetch(register struct brequest *ab)
     struct vrequest treq;
 
     AFS_STATCNT(BPrefetch);
-    if ((len = afs_InitReq(&treq, ab->cred))) return;
+    if ((len = afs_InitReq(&treq, ab->cred)))
+	return;
     tvc = ab->vc;
     tdc = afs_GetDCache(tvc, ab->size_parm[0], &treq, &offset, &len, 1);
     if (tdc) {
@@ -442,7 +460,7 @@ static void BPrefetch(register struct brequest *ab)
      * use tdc from GetDCache since afs_GetDCache may fail, but someone may
      * be waiting for our wakeup anyway.
      */
-    tdc = (struct dcache *) (ab->ptr_parm[0]);
+    tdc = (struct dcache *)(ab->ptr_parm[0]);
     ObtainSharedLock(&tdc->lock, 640);
     if (tdc->mflags & DFFetchReq) {
 	UpgradeSToWLock(&tdc->lock, 641);
@@ -458,7 +476,8 @@ static void BPrefetch(register struct brequest *ab)
 }
 
 
-static void BStore(register struct brequest *ab)
+static void
+BStore(register struct brequest *ab)
 {
     register struct vcache *tvc;
     register afs_int32 code;
@@ -468,7 +487,8 @@ static void BStore(register struct brequest *ab)
 #endif
 
     AFS_STATCNT(BStore);
-    if ((code = afs_InitReq(&treq, ab->cred))) return;
+    if ((code = afs_InitReq(&treq, ab->cred)))
+	return;
     code = 0;
     tvc = ab->vc;
 #if defined(AFS_SGI_ENV)
@@ -485,18 +505,18 @@ static void BStore(register struct brequest *ab)
      * operations, we hold the VOP_RWLOCK across this transaction as
      * do the other callers of StoreOnLastReference
      */
-    AFS_RWLOCK((vnode_t *)tvc, 1);
+    AFS_RWLOCK((vnode_t *) tvc, 1);
 #endif
-    ObtainWriteLock(&tvc->lock,209);
+    ObtainWriteLock(&tvc->lock, 209);
     code = afs_StoreOnLastReference(tvc, &treq);
     ReleaseWriteLock(&tvc->lock);
 #if defined(AFS_SGI_ENV)
     OSI_SET_CURRENT_CRED(tmpcred);
-    AFS_RWUNLOCK((vnode_t *)tvc, 1);
+    AFS_RWUNLOCK((vnode_t *) tvc, 1);
 #endif
     /* now set final return code, and wakeup anyone waiting */
     if ((ab->flags & BUVALID) == 0) {
-	ab->code = afs_CheckCode(code, &treq, 43);    /* set final code, since treq doesn't go across processes */
+	ab->code = afs_CheckCode(code, &treq, 43);	/* set final code, since treq doesn't go across processes */
 	ab->flags |= BUVALID;
 	if (ab->flags & BUWAIT) {
 	    ab->flags &= ~BUWAIT;
@@ -506,39 +526,45 @@ static void BStore(register struct brequest *ab)
 }
 
 /* release a held request buffer */
-void afs_BRelease(register struct brequest *ab)
+void
+afs_BRelease(register struct brequest *ab)
 {
 
     AFS_STATCNT(afs_BRelease);
-    MObtainWriteLock(&afs_xbrs,294);
+    MObtainWriteLock(&afs_xbrs, 294);
     if (--ab->refCount <= 0) {
 	ab->flags = 0;
     }
-    if (afs_brsWaiters) afs_osi_Wakeup(&afs_brsWaiters);
+    if (afs_brsWaiters)
+	afs_osi_Wakeup(&afs_brsWaiters);
     MReleaseWriteLock(&afs_xbrs);
 }
 
 /* return true if bkg fetch daemons are all busy */
-int afs_BBusy(void)
+int
+afs_BBusy(void)
 {
     AFS_STATCNT(afs_BBusy);
-    if (afs_brsDaemons > 0) return 0;
+    if (afs_brsDaemons > 0)
+	return 0;
     return 1;
 }
 
-struct brequest *afs_BQueue(register short aopcode, register struct vcache *avc, 
-	afs_int32 dontwait, afs_int32 ause, struct AFS_UCRED *acred, 
-	afs_size_t asparm0, afs_size_t asparm1, void *apparm0)
+struct brequest *
+afs_BQueue(register short aopcode, register struct vcache *avc,
+	   afs_int32 dontwait, afs_int32 ause, struct AFS_UCRED *acred,
+	   afs_size_t asparm0, afs_size_t asparm1, void *apparm0)
 {
     register int i;
     register struct brequest *tb;
 
     AFS_STATCNT(afs_BQueue);
-    MObtainWriteLock(&afs_xbrs,296);
+    MObtainWriteLock(&afs_xbrs, 296);
     while (1) {
 	tb = afs_brs;
-	for(i=0;i<NBRS;i++,tb++) {
-	    if (tb->refCount == 0) break;
+	for (i = 0; i < NBRS; i++, tb++) {
+	    if (tb->refCount == 0)
+		break;
 	}
 	if (i < NBRS) {
 	    /* found a buffer */
@@ -557,10 +583,10 @@ struct brequest *afs_BQueue(register short aopcode, register struct vcache *avc,
 #endif
 #endif
 	    }
-	    tb->refCount = ause+1;
+	    tb->refCount = ause + 1;
 	    tb->size_parm[0] = asparm0;
 	    tb->size_parm[1] = asparm1;
-	    tb->ptr_parm[0]  = apparm0;
+	    tb->ptr_parm[0] = apparm0;
 	    tb->flags = 0;
 	    tb->code = 0;
 	    tb->ts = afs_brs_count++;
@@ -571,7 +597,7 @@ struct brequest *afs_BQueue(register short aopcode, register struct vcache *avc,
 	    MReleaseWriteLock(&afs_xbrs);
 	    return tb;
 	}
-        if (dontwait) {
+	if (dontwait) {
 	    MReleaseWriteLock(&afs_xbrs);
 	    return NULL;
 	}
@@ -579,7 +605,7 @@ struct brequest *afs_BQueue(register short aopcode, register struct vcache *avc,
 	afs_brsWaiters++;
 	MReleaseWriteLock(&afs_xbrs);
 	afs_osi_Sleep(&afs_brsWaiters);
-	MObtainWriteLock(&afs_xbrs,301);
+	MObtainWriteLock(&afs_xbrs, 301);
 	afs_brsWaiters--;
     }
 }
@@ -589,7 +615,7 @@ struct brequest *afs_BQueue(register short aopcode, register struct vcache *avc,
 /* AIX 4.1 has a much different sleep/wakeup mechanism available for use. 
  * The modifications here will work for either a UP or MP machine.
  */
-struct buf *afs_asyncbuf = (struct buf*)0;
+struct buf *afs_asyncbuf = (struct buf *)0;
 tid_t afs_asyncbuf_cv = EVENT_NULL;
 afs_int32 afs_biodcnt = 0;
 
@@ -620,47 +646,48 @@ afs_int32 afs_biodcnt = 0;
  * process and interrupts.
  */
 Simple_lock afs_asyncbuf_lock;
-/*static*/ struct buf *afs_get_bioreq()
+/*static*/ struct buf *
+afs_get_bioreq()
 {
     struct buf *bp = NULL;
     struct buf *bestbp;
     struct buf **bestlbpP, **lbpP;
     long bestage, stop;
-    struct buf *t1P, *t2P;      /* temp pointers for list manipulation */
+    struct buf *t1P, *t2P;	/* temp pointers for list manipulation */
     int oldPriority;
     afs_uint32 wait_ret;
     struct afs_bioqueue *s;
 
     /* ??? Does the forward pointer of the returned buffer need to be NULL?
-    */
-    
+     */
+
     /* Disable interrupts from the strategy function, and save the 
      * prior priority level and lock access to the afs_asyncbuf.
      */
     AFS_GUNLOCK();
-    oldPriority = disable_lock(INTMAX, &afs_asyncbuf_lock) ;
+    oldPriority = disable_lock(INTMAX, &afs_asyncbuf_lock);
 
-    while(1) {
+    while (1) {
 	if (afs_asyncbuf) {
 	    /* look for oldest buffer */
 	    bp = bestbp = afs_asyncbuf;
-	    bestage = (long) bestbp->av_back;
+	    bestage = (long)bestbp->av_back;
 	    bestlbpP = &afs_asyncbuf;
 	    while (1) {
 		lbpP = &bp->av_forw;
 		bp = *lbpP;
-		if (!bp) break;
-		if ((long) bp->av_back - bestage < 0) {
+		if (!bp)
+		    break;
+		if ((long)bp->av_back - bestage < 0) {
 		    bestbp = bp;
 		    bestlbpP = lbpP;
-		    bestage = (long) bp->av_back;
+		    bestage = (long)bp->av_back;
 		}
 	    }
 	    bp = bestbp;
 	    *bestlbpP = bp->av_forw;
 	    break;
-	}
-	else {
+	} else {
 	    /* If afs_asyncbuf is null, it is necessary to go to sleep.
 	     * e_wakeup_one() ensures that only one thread wakes.
 	     */
@@ -668,20 +695,20 @@ Simple_lock afs_asyncbuf_lock;
 	    /* The LOCK_HANDLER indicates to e_sleep_thread to only drop the
 	     * lock on an MP machine.
 	     */
-	    interrupted = e_sleep_thread(&afs_asyncbuf_cv,
-					 &afs_asyncbuf_lock,
-					 LOCK_HANDLER|INTERRUPTIBLE);
-	    if (interrupted==THREAD_INTERRUPTED) {
+	    interrupted =
+		e_sleep_thread(&afs_asyncbuf_cv, &afs_asyncbuf_lock,
+			       LOCK_HANDLER | INTERRUPTIBLE);
+	    if (interrupted == THREAD_INTERRUPTED) {
 		/* re-enable interrupts from strategy */
 		unlock_enable(oldPriority, &afs_asyncbuf_lock);
 		AFS_GLOCK();
-		return(NULL);
+		return (NULL);
 	    }
-	}  /* end of "else asyncbuf is empty" */
-    } /* end of "inner loop" */
-    
-    /*assert (bp);*/
-    
+	}			/* end of "else asyncbuf is empty" */
+    }				/* end of "inner loop" */
+
+    /*assert (bp); */
+
     unlock_enable(oldPriority, &afs_asyncbuf_lock);
     AFS_GLOCK();
 
@@ -692,14 +719,14 @@ Simple_lock afs_asyncbuf_lock;
      * ??? what happens to the gnodes?  They're not just cut loose,
      * are they?
      */
-    for(t1P=bp;;) {
-	t2P = (struct buf *) t1P->b_work;
-	t1P->b_vp = ((struct gnode *) t1P->b_vp)->gn_vnode;
-	if (!t2P) 
+    for (t1P = bp;;) {
+	t2P = (struct buf *)t1P->b_work;
+	t1P->b_vp = ((struct gnode *)t1P->b_vp)->gn_vnode;
+	if (!t2P)
 	    break;
 
-	t1P = (struct buf *) t2P->b_work;
-	t2P->b_vp = ((struct gnode *) t2P->b_vp)->gn_vnode;
+	t1P = (struct buf *)t2P->b_work;
+	t2P->b_vp = ((struct gnode *)t2P->b_vp)->gn_vnode;
 	if (!t1P)
 	    break;
     }
@@ -711,12 +738,12 @@ Simple_lock afs_asyncbuf_lock;
      * violation, rather than a request for I/O.  The remainder
      * of the outer loop handles the case where the B_PFPROT bit is clear.
      */
-    if (bp->b_flags & B_PFPROT)  {
+    if (bp->b_flags & B_PFPROT) {
 	return (bp);
     }
     return (bp);
 
-} /* end of function get_bioreq() */
+}				/* end of function get_bioreq() */
 
 
 /* afs_BioDaemon
@@ -728,13 +755,14 @@ Simple_lock afs_asyncbuf_lock;
  * each making the appropriate syscall, which will cause this
  * function to be invoked.
  */
-static int afs_initbiod = 0;		/* this is self-initializing code */
+static int afs_initbiod = 0;	/* this is self-initializing code */
 int DOvmlock = 0;
-int afs_BioDaemon (afs_int32 nbiods)
+int
+afs_BioDaemon(afs_int32 nbiods)
 {
     afs_int32 code, s, pflg = 0;
     label_t jmpbuf;
-    struct buf *bp, *bp1, *tbp1, *tbp2;		/* temp pointers only */
+    struct buf *bp, *bp1, *tbp1, *tbp2;	/* temp pointers only */
     caddr_t tmpaddr;
     struct vnode *vp;
     struct vcache *vcp;
@@ -745,19 +773,19 @@ int afs_BioDaemon (afs_int32 nbiods)
 	/* pin lock, since we'll be using it in an interrupt. */
 	lock_alloc(&afs_asyncbuf_lock, LOCK_ALLOC_PIN, 2, 1);
 	simple_lock_init(&afs_asyncbuf_lock);
-	pin (&afs_asyncbuf, sizeof(struct buf*));
-	pin (&afs_asyncbuf_cv, sizeof(afs_int32));
+	pin(&afs_asyncbuf, sizeof(struct buf *));
+	pin(&afs_asyncbuf_cv, sizeof(afs_int32));
     }
 
     /* Ignore HUP signals... */
     {
- 	sigset_t sigbits, osigbits;
- 	/*
- 	 * add SIGHUP to the set of already masked signals
- 	 */
- 	SIGFILLSET(sigbits);			/* allow all signals	*/
- 	SIGDELSET(sigbits, SIGHUP);		/*   except SIGHUP	*/
- 	limit_sigs(&sigbits, &osigbits);	/*   and already masked */
+	sigset_t sigbits, osigbits;
+	/*
+	 * add SIGHUP to the set of already masked signals
+	 */
+	SIGFILLSET(sigbits);	/* allow all signals    */
+	SIGDELSET(sigbits, SIGHUP);	/*   except SIGHUP      */
+	limit_sigs(&sigbits, &osigbits);	/*   and already masked */
     }
     /* Main body starts here -- this is an intentional infinite loop, and
      * should NEVER exit 
@@ -768,14 +796,14 @@ int afs_BioDaemon (afs_int32 nbiods)
     while (1) {
 	bp = afs_get_bioreq();
 	if (!bp)
-	    break;	/* we were interrupted */
+	    break;		/* we were interrupted */
 	if (code = setjmpx(&jmpbuf)) {
 	    /* This should not have happend, maybe a lack of resources  */
 	    AFS_GUNLOCK();
 	    s = disable_lock(INTMAX, &afs_asyncbuf_lock);
-	    for (bp1 = bp; bp ; bp = bp1) {
+	    for (bp1 = bp; bp; bp = bp1) {
 		if (bp1)
-		    bp1 = (struct buf *) bp1->b_work;
+		    bp1 = (struct buf *)bp1->b_work;
 		bp->b_actf = 0;
 		bp->b_error = code;
 		bp->b_flags |= B_ERROR;
@@ -787,16 +815,16 @@ int afs_BioDaemon (afs_int32 nbiods)
 	}
 	vcp = VTOAFS(bp->b_vp);
 	if (bp->b_flags & B_PFSTORE) {	/* XXXX */
-	    ObtainWriteLock(&vcp->lock,404);	    
+	    ObtainWriteLock(&vcp->lock, 404);
 	    if (vcp->v.v_gnode->gn_mwrcnt) {
-	    	afs_offs_t newlength = 
-			(afs_offs_t) dbtob(bp->b_blkno) + bp->b_bcount;
+		afs_offs_t newlength =
+		    (afs_offs_t) dbtob(bp->b_blkno) + bp->b_bcount;
 		if (vcp->m.Length < newlength) {
 		    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH,
-			ICL_TYPE_STRING, __FILE__,
-			ICL_TYPE_LONG, __LINE__,
-			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(vcp->m.Length),
-			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(newlength));
+			       ICL_TYPE_STRING, __FILE__, ICL_TYPE_LONG,
+			       __LINE__, ICL_TYPE_OFFSET,
+			       ICL_HANDLE_OFFSET(vcp->m.Length),
+			       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(newlength));
 		    vcp->m.Length = newlength;
 		}
 	    }
@@ -805,13 +833,13 @@ int afs_BioDaemon (afs_int32 nbiods)
 	/* If the buffer represents a protection violation, rather than
 	 * an actual request for I/O, no special action need be taken.  
 	 */
-	if ( bp->b_flags & B_PFPROT ) {   
-	    iodone (bp);    /* Notify all users of the buffer that we're done */
+	if (bp->b_flags & B_PFPROT) {
+	    iodone(bp);		/* Notify all users of the buffer that we're done */
 	    clrjmpx(&jmpbuf);
 	    continue;
-        }
-if (DOvmlock)
-	ObtainWriteLock(&vcp->pvmlock,211);     
+	}
+	if (DOvmlock)
+	    ObtainWriteLock(&vcp->pvmlock, 211);
 	/*
 	 * First map its data area to a region in the current address space
 	 * by calling vm_att with the subspace identifier, and a pointer to
@@ -819,10 +847,10 @@ if (DOvmlock)
 	 * also want to hang onto the old one.
 	 */
 	tmpaddr = bp->b_baddr;
-	bp->b_baddr = (caddr_t) vm_att (bp->b_xmemd.subspace_id, tmpaddr);
+	bp->b_baddr = (caddr_t) vm_att(bp->b_xmemd.subspace_id, tmpaddr);
 	tmperr = afs_ustrategy(bp);	/* temp variable saves offset calculation */
-	if (tmperr) {			/* in non-error case */
-	    bp->b_flags |= B_ERROR;		/* should other flags remain set ??? */
+	if (tmperr) {		/* in non-error case */
+	    bp->b_flags |= B_ERROR;	/* should other flags remain set ??? */
 	    bp->b_error = tmperr;
 	}
 
@@ -839,22 +867,22 @@ if (DOvmlock)
 	 * using it by calling iodone.  
 	 * assumes iodone can modify the b_work field.
 	 */
-	for(tbp1=bp;;) {
-	    tbp2 = (struct buf *) tbp1->b_work;
+	for (tbp1 = bp;;) {
+	    tbp2 = (struct buf *)tbp1->b_work;
 	    iodone(tbp1);
-	    if (!tbp2) 
+	    if (!tbp2)
 		break;
 
-	    tbp1 = (struct buf *) tbp2->b_work;
+	    tbp1 = (struct buf *)tbp2->b_work;
 	    iodone(tbp2);
 	    if (!tbp1)
 		break;
 	}
-if (DOvmlock)
-	ReleaseWriteLock(&vcp->pvmlock);     /* Unlock the vnode.  */
+	if (DOvmlock)
+	    ReleaseWriteLock(&vcp->pvmlock);	/* Unlock the vnode.  */
 	clrjmpx(&jmpbuf);
-    } /* infinite loop (unless we're interrupted) */
-} /* end of afs_BioDaemon() */
+    }				/* infinite loop (unless we're interrupted) */
+}				/* end of afs_BioDaemon() */
 
 #else /* AFS_AIX41_ENV */
 
@@ -904,167 +932,165 @@ afs_int32 afs_biodcnt = 0;
  * The list of sleepers is variable afs_bioqueue.  The unique address
  * on which to sleep is passed to get_bioreq as its parameter.
  */
-/*static*/ struct buf *afs_get_bioreq(self)
-    struct afs_bioqueue *self;      /* address on which to sleep */
+/*static*/ struct buf *
+afs_get_bioreq(self)
+     struct afs_bioqueue *self;	/* address on which to sleep */
 
 {
     struct buf *bp = NULL;
     struct buf *bestbp;
     struct buf **bestlbpP, **lbpP;
     int bestage, stop;
-    struct buf *t1P, *t2P;      /* temp pointers for list manipulation */
+    struct buf *t1P, *t2P;	/* temp pointers for list manipulation */
     int oldPriority;
     afs_uint32 wait_ret;
-struct afs_bioqueue *s;
+    struct afs_bioqueue *s;
 
     /* ??? Does the forward pointer of the returned buffer need to be NULL?
-    */
-    
-	/* Disable interrupts from the strategy function, and save the 
-	 * prior priority level
-	 */
-	oldPriority = i_disable ( INTMAX ) ;
+     */
 
-	/* Each iteration of following loop either pulls
-	 * a buffer off afs_asyncbuf, or sleeps.  
-	 */
-	while (1) {   /* inner loop */
-		if (afs_asyncbuf) {
-			/* look for oldest buffer */
-			bp = bestbp = afs_asyncbuf;
-			bestage = (int) bestbp->av_back;
-			bestlbpP = &afs_asyncbuf;
-			while (1) {
-				lbpP = &bp->av_forw;
-				bp = *lbpP;
-				if (!bp) break;
-				if ((int) bp->av_back - bestage < 0) {
-					bestbp = bp;
-					bestlbpP = lbpP;
-					bestage = (int) bp->av_back;
-				}
-			}
-			bp = bestbp;
-			*bestlbpP = bp->av_forw;
-			break;  
-			}
-		else {
-		        int interrupted;
+    /* Disable interrupts from the strategy function, and save the 
+     * prior priority level
+     */
+    oldPriority = i_disable(INTMAX);
 
-		/* If afs_asyncbuf is null, it is necessary to go to sleep.
-		 * There are two possibilities:  either there is already a
-		 * daemon that is sleeping on the address of afs_asyncbuf,
-		 * or there isn't. 
-		 */
-			if (afs_bioqueue.sleeper) {
-				/* enqueue */
-				QAdd (&(afs_bioqueue.lruq), &(self->lruq));
-				interrupted = sleep ((caddr_t) self, PCATCH|(PZERO + 1));
-				if (self->lruq.next != &self->lruq) {	/* XXX ##3 XXX */
-				    QRemove (&(self->lruq));		/* dequeue */
-				}
-self->cnt++;
-				afs_bioqueue.sleeper = FALSE;
-				if (interrupted) {
-				    /* re-enable interrupts from strategy */
-				    i_enable (oldPriority);
-				    return(NULL);
-				}
-				continue;
-			} else {
-				afs_bioqueue.sleeper = TRUE;
-				interrupted = sleep ((caddr_t) &afs_asyncbuf, PCATCH|(PZERO + 1));
-				afs_bioqueue.sleeper = FALSE;
-				if (interrupted)
-				{
-				    /*
-				     * We need to wakeup another daemon if present
-				     * since we were waiting on afs_asyncbuf.
-				     */
-#ifdef	notdef	/* The following doesn't work as advertised */				    
-				     if (afs_bioqueue.lruq.next != &afs_bioqueue.lruq)
-				     {
-					 struct squeue *bq = afs_bioqueue.lruq.next;
-					 QRemove (bq);
-					 wakeup (bq);
-				     }
-#endif
-				    /* re-enable interrupts from strategy */
-				     i_enable (oldPriority);
-				     return(NULL);
-				 }
-				continue;
-				}
-
-			}  /* end of "else asyncbuf is empty" */
-		} /* end of "inner loop" */
-
-	/*assert (bp);*/
-
-	i_enable (oldPriority);     /* re-enable interrupts from strategy */
-
-	/* For the convenience of other code, replace the gnodes in
-	 * the b_vp field of bp and the other buffers on the b_work
-	 * chain with the corresponding vnodes.   
-	 *
-	 * ??? what happens to the gnodes?  They're not just cut loose,
-	 * are they?
-	 */
-	for(t1P=bp;;) {
-		t2P = (struct buf *) t1P->b_work;
-		t1P->b_vp = ((struct gnode *) t1P->b_vp)->gn_vnode;
-		if (!t2P) 
-			break;
-
-		t1P = (struct buf *) t2P->b_work;
-		t2P->b_vp = ((struct gnode *) t2P->b_vp)->gn_vnode;
-		if (!t1P)
-			break;
+    /* Each iteration of following loop either pulls
+     * a buffer off afs_asyncbuf, or sleeps.  
+     */
+    while (1) {			/* inner loop */
+	if (afs_asyncbuf) {
+	    /* look for oldest buffer */
+	    bp = bestbp = afs_asyncbuf;
+	    bestage = (int)bestbp->av_back;
+	    bestlbpP = &afs_asyncbuf;
+	    while (1) {
+		lbpP = &bp->av_forw;
+		bp = *lbpP;
+		if (!bp)
+		    break;
+		if ((int)bp->av_back - bestage < 0) {
+		    bestbp = bp;
+		    bestlbpP = lbpP;
+		    bestage = (int)bp->av_back;
 		}
+	    }
+	    bp = bestbp;
+	    *bestlbpP = bp->av_forw;
+	    break;
+	} else {
+	    int interrupted;
 
-	/* If the buffer does not specify I/O, it may immediately
-	 * be returned to the caller.  This condition is detected
-	 * by examining the buffer's flags (the b_flags field).  If
-	 * the B_PFPROT bit is set, the buffer represents a protection
-	 * violation, rather than a request for I/O.  The remainder
-	 * of the outer loop handles the case where the B_PFPROT bit is clear.
-	 */
-	 if (bp->b_flags & B_PFPROT)  {
-		return (bp);
+	    /* If afs_asyncbuf is null, it is necessary to go to sleep.
+	     * There are two possibilities:  either there is already a
+	     * daemon that is sleeping on the address of afs_asyncbuf,
+	     * or there isn't. 
+	     */
+	    if (afs_bioqueue.sleeper) {
+		/* enqueue */
+		QAdd(&(afs_bioqueue.lruq), &(self->lruq));
+		interrupted = sleep((caddr_t) self, PCATCH | (PZERO + 1));
+		if (self->lruq.next != &self->lruq) {	/* XXX ##3 XXX */
+		    QRemove(&(self->lruq));	/* dequeue */
+		}
+		self->cnt++;
+		afs_bioqueue.sleeper = FALSE;
+		if (interrupted) {
+		    /* re-enable interrupts from strategy */
+		    i_enable(oldPriority);
+		    return (NULL);
+		}
+		continue;
+	    } else {
+		afs_bioqueue.sleeper = TRUE;
+		interrupted =
+		    sleep((caddr_t) & afs_asyncbuf, PCATCH | (PZERO + 1));
+		afs_bioqueue.sleeper = FALSE;
+		if (interrupted) {
+		    /*
+		     * We need to wakeup another daemon if present
+		     * since we were waiting on afs_asyncbuf.
+		     */
+#ifdef	notdef			/* The following doesn't work as advertised */
+		    if (afs_bioqueue.lruq.next != &afs_bioqueue.lruq) {
+			struct squeue *bq = afs_bioqueue.lruq.next;
+			QRemove(bq);
+			wakeup(bq);
+		    }
+#endif
+		    /* re-enable interrupts from strategy */
+		    i_enable(oldPriority);
+		    return (NULL);
+		}
+		continue;
 	    }
 
-	/* wake up another process to handle the next buffer, and return
-	 * bp to the caller.
-	 */
-	oldPriority = i_disable ( INTMAX ) ;
+	}			/* end of "else asyncbuf is empty" */
+    }				/* end of "inner loop" */
 
-	/* determine where to find the sleeping process. 
-	 * There are two cases: either it is sleeping on
-	 * afs_asyncbuf, or it is sleeping on its own unique
-	 * address.  These cases are distinguished by examining
-	 * the sleeper field of afs_bioqueue.
-	 */
-	if (afs_bioqueue.sleeper) {
-		wakeup (&afs_asyncbuf);
-		}
-	else {
-		if (afs_bioqueue.lruq.next == &afs_bioqueue.lruq) {
-			/* queue is empty, what now? ???*/
-			/* Should this be impossible, or does    */
-			/* it just mean that nobody is sleeping? */;
-			}
-		else {
-			struct squeue *bq = afs_bioqueue.lruq.next;
-			QRemove (bq);
-			QInit (bq);
-			wakeup (bq);
-			afs_bioqueue.sleeper = TRUE; 
-			}
-		}
-	i_enable (oldPriority);     /* re-enable interrupts from strategy */
+    /*assert (bp); */
+
+    i_enable(oldPriority);	/* re-enable interrupts from strategy */
+
+    /* For the convenience of other code, replace the gnodes in
+     * the b_vp field of bp and the other buffers on the b_work
+     * chain with the corresponding vnodes.   
+     *
+     * ??? what happens to the gnodes?  They're not just cut loose,
+     * are they?
+     */
+    for (t1P = bp;;) {
+	t2P = (struct buf *)t1P->b_work;
+	t1P->b_vp = ((struct gnode *)t1P->b_vp)->gn_vnode;
+	if (!t2P)
+	    break;
+
+	t1P = (struct buf *)t2P->b_work;
+	t2P->b_vp = ((struct gnode *)t2P->b_vp)->gn_vnode;
+	if (!t1P)
+	    break;
+    }
+
+    /* If the buffer does not specify I/O, it may immediately
+     * be returned to the caller.  This condition is detected
+     * by examining the buffer's flags (the b_flags field).  If
+     * the B_PFPROT bit is set, the buffer represents a protection
+     * violation, rather than a request for I/O.  The remainder
+     * of the outer loop handles the case where the B_PFPROT bit is clear.
+     */
+    if (bp->b_flags & B_PFPROT) {
 	return (bp);
+    }
 
-} /* end of function get_bioreq() */
+    /* wake up another process to handle the next buffer, and return
+     * bp to the caller.
+     */
+    oldPriority = i_disable(INTMAX);
+
+    /* determine where to find the sleeping process. 
+     * There are two cases: either it is sleeping on
+     * afs_asyncbuf, or it is sleeping on its own unique
+     * address.  These cases are distinguished by examining
+     * the sleeper field of afs_bioqueue.
+     */
+    if (afs_bioqueue.sleeper) {
+	wakeup(&afs_asyncbuf);
+    } else {
+	if (afs_bioqueue.lruq.next == &afs_bioqueue.lruq) {
+	    /* queue is empty, what now? ??? */
+	    /* Should this be impossible, or does    */
+	    /* it just mean that nobody is sleeping? */ ;
+	} else {
+	    struct squeue *bq = afs_bioqueue.lruq.next;
+	    QRemove(bq);
+	    QInit(bq);
+	    wakeup(bq);
+	    afs_bioqueue.sleeper = TRUE;
+	}
+    }
+    i_enable(oldPriority);	/* re-enable interrupts from strategy */
+    return (bp);
+
+}				/* end of function get_bioreq() */
 
 
 /* afs_BioDaemon
@@ -1076,15 +1102,15 @@ self->cnt++;
  * each making the appropriate syscall, which will cause this
  * function to be invoked.
  */
-static int afs_initbiod = 0;		/* this is self-initializing code */
+static int afs_initbiod = 0;	/* this is self-initializing code */
 int DOvmlock = 0;
-afs_BioDaemon (nbiods)
-    afs_int32 nbiods;
+afs_BioDaemon(nbiods)
+     afs_int32 nbiods;
 {
     struct afs_bioqueue *self;
     afs_int32 code, s, pflg = 0;
     label_t jmpbuf;
-    struct buf *bp, *bp1, *tbp1, *tbp2;		/* temp pointers only */
+    struct buf *bp, *bp1, *tbp1, *tbp2;	/* temp pointers only */
     caddr_t tmpaddr;
     struct vnode *vp;
     struct vcache *vcp;
@@ -1093,17 +1119,17 @@ afs_BioDaemon (nbiods)
 	/* XXX ###1 XXX */
 	afs_initbiod = 1;
 	/* Initialize the queue of waiting processes, afs_bioqueue.  */
-	QInit (&(afs_bioqueue.lruq));           
+	QInit(&(afs_bioqueue.lruq));
     }
 
     /* establish ourself as a kernel process so shutdown won't kill us */
 /*    u.u_procp->p_flag |= SKPROC;*/
 
     /* Initialize a token (self) to use in the queue of sleeping processes.   */
-    self = (struct afs_bioqueue *) afs_osi_Alloc (sizeof (struct afs_bioqueue));
-    pin (self, sizeof (struct afs_bioqueue)); /* fix in memory */
+    self = (struct afs_bioqueue *)afs_osi_Alloc(sizeof(struct afs_bioqueue));
+    pin(self, sizeof(struct afs_bioqueue));	/* fix in memory */
     memset(self, 0, sizeof(*self));
-    QInit (&(self->lruq));		/* initialize queue entry pointers */
+    QInit(&(self->lruq));	/* initialize queue entry pointers */
 
 
     /* Ignore HUP signals... */
@@ -1119,11 +1145,11 @@ afs_BioDaemon (nbiods)
     while (1) {
 	bp = afs_get_bioreq(self);
 	if (!bp)
-	    break;	/* we were interrupted */
+	    break;		/* we were interrupted */
 	if (code = setjmpx(&jmpbuf)) {
 	    /* This should not have happend, maybe a lack of resources  */
 	    s = splimp();
-	    for (bp1 = bp; bp ; bp = bp1) {
+	    for (bp1 = bp; bp; bp = bp1) {
 		if (bp1)
 		    bp1 = bp1->b_work;
 		bp->b_actf = 0;
@@ -1136,16 +1162,16 @@ afs_BioDaemon (nbiods)
 	}
 	vcp = VTOAFS(bp->b_vp);
 	if (bp->b_flags & B_PFSTORE) {
-	    ObtainWriteLock(&vcp->lock,210);	    
+	    ObtainWriteLock(&vcp->lock, 210);
 	    if (vcp->v.v_gnode->gn_mwrcnt) {
-	    	afs_offs_t newlength = 
-			(afs_offs_t) dbtob(bp->b_blkno) + bp->b_bcount;
+		afs_offs_t newlength =
+		    (afs_offs_t) dbtob(bp->b_blkno) + bp->b_bcount;
 		if (vcp->m.Length < newlength) {
 		    afs_Trace4(afs_iclSetp, CM_TRACE_SETLENGTH,
-			ICL_TYPE_STRING, __FILE__,
-			ICL_TYPE_LONG, __LINE__,
-			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(vcp->m.Length),
-			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(newlength));
+			       ICL_TYPE_STRING, __FILE__, ICL_TYPE_LONG,
+			       __LINE__, ICL_TYPE_OFFSET,
+			       ICL_HANDLE_OFFSET(vcp->m.Length),
+			       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(newlength));
 		    vcp->m.Length = newlength;
 		}
 	    }
@@ -1154,12 +1180,12 @@ afs_BioDaemon (nbiods)
 	/* If the buffer represents a protection violation, rather than
 	 * an actual request for I/O, no special action need be taken.  
 	 */
-	if ( bp->b_flags & B_PFPROT ) {   
-	    iodone (bp);    /* Notify all users of the buffer that we're done */
+	if (bp->b_flags & B_PFPROT) {
+	    iodone(bp);		/* Notify all users of the buffer that we're done */
 	    continue;
-        }
-if (DOvmlock)
-	ObtainWriteLock(&vcp->pvmlock,558);     
+	}
+	if (DOvmlock)
+	    ObtainWriteLock(&vcp->pvmlock, 558);
 	/*
 	 * First map its data area to a region in the current address space
 	 * by calling vm_att with the subspace identifier, and a pointer to
@@ -1167,10 +1193,10 @@ if (DOvmlock)
 	 * also want to hang onto the old one.
 	 */
 	tmpaddr = bp->b_baddr;
-	bp->b_baddr = vm_att (bp->b_xmemd.subspace_id, tmpaddr);
+	bp->b_baddr = vm_att(bp->b_xmemd.subspace_id, tmpaddr);
 	tmperr = afs_ustrategy(bp);	/* temp variable saves offset calculation */
-	if (tmperr) {			/* in non-error case */
-	    bp->b_flags |= B_ERROR;		/* should other flags remain set ??? */
+	if (tmperr) {		/* in non-error case */
+	    bp->b_flags |= B_ERROR;	/* should other flags remain set ??? */
 	    bp->b_error = tmperr;
 	}
 
@@ -1187,30 +1213,31 @@ if (DOvmlock)
 	 * using it by calling iodone.  
 	 * assumes iodone can modify the b_work field.
 	 */
-	for(tbp1=bp;;) {
-	    tbp2 = (struct buf *) tbp1->b_work;
+	for (tbp1 = bp;;) {
+	    tbp2 = (struct buf *)tbp1->b_work;
 	    iodone(tbp1);
-	    if (!tbp2) 
+	    if (!tbp2)
 		break;
 
-	    tbp1 = (struct buf *) tbp2->b_work;
+	    tbp1 = (struct buf *)tbp2->b_work;
 	    iodone(tbp2);
 	    if (!tbp1)
 		break;
 	}
-if (DOvmlock)
-	ReleaseWriteLock(&vcp->pvmlock);     /* Unlock the vnode.  */
+	if (DOvmlock)
+	    ReleaseWriteLock(&vcp->pvmlock);	/* Unlock the vnode.  */
 	clrjmpx(&jmpbuf);
-    } /* infinite loop (unless we're interrupted) */
-    unpin (self, sizeof (struct afs_bioqueue));
-    afs_osi_Free (self, sizeof (struct afs_bioqueue));
-} /* end of afs_BioDaemon() */
-#endif /* AFS_AIX41_ENV */ 
+    }				/* infinite loop (unless we're interrupted) */
+    unpin(self, sizeof(struct afs_bioqueue));
+    afs_osi_Free(self, sizeof(struct afs_bioqueue));
+}				/* end of afs_BioDaemon() */
+#endif /* AFS_AIX41_ENV */
 #endif /* AFS_AIX32_ENV */
 
 
 int afs_nbrs = 0;
-void afs_BackgroundDaemon(void)
+void
+afs_BackgroundDaemon(void)
 {
     struct brequest *tb;
     int i, foundAny;
@@ -1222,18 +1249,18 @@ void afs_BackgroundDaemon(void)
 	memset((char *)afs_brs, 0, sizeof(afs_brs));
 	brsInit = 1;
 #if defined (AFS_SGI_ENV) && defined(AFS_SGI_SHORTSTACK)
-        /*
-         * steal the first daemon for doing delayed DSlot flushing
-         * (see afs_GetDownDSlot)
-         */
+	/*
+	 * steal the first daemon for doing delayed DSlot flushing
+	 * (see afs_GetDownDSlot)
+	 */
 	AFS_GUNLOCK();
-        afs_sgidaemon();
-        return;
+	afs_sgidaemon();
+	return;
 #endif
     }
     afs_nbrs++;
 
-    MObtainWriteLock(&afs_xbrs,302);
+    MObtainWriteLock(&afs_xbrs, 302);
     while (1) {
 	int min_ts = 0;
 	struct brequest *min_tb = NULL;
@@ -1249,7 +1276,7 @@ void afs_BackgroundDaemon(void)
 	/* find a request */
 	tb = afs_brs;
 	foundAny = 0;
-	for(i=0; i<NBRS; i++, tb++) {
+	for (i = 0; i < NBRS; i++, tb++) {
 	    /* look for request with smallest ts */
 	    if ((tb->refCount > 0) && !(tb->flags & BSTARTED)) {
 		/* new request, not yet picked up */
@@ -1264,18 +1291,19 @@ void afs_BackgroundDaemon(void)
 	    tb->flags |= BSTARTED;
 	    MReleaseWriteLock(&afs_xbrs);
 	    foundAny = 1;
-	    afs_Trace1(afs_iclSetp, CM_TRACE_BKG1,
-		       ICL_TYPE_INT32, tb->opcode);
+	    afs_Trace1(afs_iclSetp, CM_TRACE_BKG1, ICL_TYPE_INT32,
+		       tb->opcode);
 	    if (tb->opcode == BOP_FETCH)
 		BPrefetch(tb);
 	    else if (tb->opcode == BOP_STORE)
 		BStore(tb);
 	    else if (tb->opcode == BOP_PATH)
 		BPath(tb);
-	    else panic("background bop");
+	    else
+		panic("background bop");
 	    if (tb->vc) {
 #ifdef	AFS_DEC_ENV
-		tb->vc->vrefCount--;	    /* fix up reference count */
+		tb->vc->vrefCount--;	/* fix up reference count */
 #else
 		AFS_RELE(AFSTOV(tb->vc));	/* MUST call vnode layer or could lose vnodes */
 #endif
@@ -1283,45 +1311,46 @@ void afs_BackgroundDaemon(void)
 	    }
 	    if (tb->cred) {
 		crfree(tb->cred);
-		tb->cred = (struct AFS_UCRED *) 0;
+		tb->cred = (struct AFS_UCRED *)0;
 	    }
-	    afs_BRelease(tb);   /* this grabs and releases afs_xbrs lock */
-	    MObtainWriteLock(&afs_xbrs,305);
+	    afs_BRelease(tb);	/* this grabs and releases afs_xbrs lock */
+	    MObtainWriteLock(&afs_xbrs, 305);
 	}
 	if (!foundAny) {
 	    /* wait for new request */
 	    afs_brsDaemons++;
 	    MReleaseWriteLock(&afs_xbrs);
 	    afs_osi_Sleep(&afs_brsDaemons);
-	    MObtainWriteLock(&afs_xbrs,307);
+	    MObtainWriteLock(&afs_xbrs, 307);
 	    afs_brsDaemons--;
 	}
     }
 }
 
 
-void shutdown_daemons(void)
+void
+shutdown_daemons(void)
 {
-  AFS_STATCNT(shutdown_daemons);
-  if (afs_cold_shutdown) {
-      afs_brsDaemons = brsInit = 0;
-      rxepoch_checked = afs_nbrs = 0;
-      memset((char *)afs_brs, 0, sizeof(afs_brs));
-      memset((char *)&afs_xbrs, 0, sizeof(afs_lock_t));
-      afs_brsWaiters = 0;
+    AFS_STATCNT(shutdown_daemons);
+    if (afs_cold_shutdown) {
+	afs_brsDaemons = brsInit = 0;
+	rxepoch_checked = afs_nbrs = 0;
+	memset((char *)afs_brs, 0, sizeof(afs_brs));
+	memset((char *)&afs_xbrs, 0, sizeof(afs_lock_t));
+	afs_brsWaiters = 0;
 #ifdef AFS_AIX32_ENV
 #ifdef AFS_AIX41_ENV
-      lock_free(&afs_asyncbuf_lock);
-      unpin(&afs_asyncbuf, sizeof(struct buf*));
-      pin (&afs_asyncbuf_cv, sizeof(afs_int32));
+	lock_free(&afs_asyncbuf_lock);
+	unpin(&afs_asyncbuf, sizeof(struct buf *));
+	pin(&afs_asyncbuf_cv, sizeof(afs_int32));
 #else /* AFS_AIX41_ENV */
-      afs_busyq = NULL;
-      afs_biodcnt = 0;
-      memset((char *)&afs_bioqueue, 0, sizeof(struct afs_bioqueue));
+	afs_busyq = NULL;
+	afs_biodcnt = 0;
+	memset((char *)&afs_bioqueue, 0, sizeof(struct afs_bioqueue));
 #endif
-      afs_initbiod = 0;
+	afs_initbiod = 0;
 #endif
-  }
+    }
 }
 
 #if defined(AFS_SGI_ENV) && defined(AFS_SGI_SHORTSTACK)
@@ -1338,38 +1367,38 @@ SV_TYPE afs_sgibkwait;
 lock_t afs_sgibklock;
 struct dcache *afs_sgibklist;
 
-int afs_sgidaemon(void)
+int
+afs_sgidaemon(void)
 {
-	int s;
-	struct dcache *tdc;
+    int s;
+    struct dcache *tdc;
 
-	if (afs_sgibklock == NULL) {
-		SV_INIT(&afs_sgibksync, "bksync", 0, 0);
-		SV_INIT(&afs_sgibkwait, "bkwait", 0, 0);
-		SPINLOCK_INIT(&afs_sgibklock, "bklock");
-	}
+    if (afs_sgibklock == NULL) {
+	SV_INIT(&afs_sgibksync, "bksync", 0, 0);
+	SV_INIT(&afs_sgibkwait, "bkwait", 0, 0);
+	SPINLOCK_INIT(&afs_sgibklock, "bklock");
+    }
+    s = SPLOCK(afs_sgibklock);
+    for (;;) {
+	/* wait for something to do */
+	SP_WAIT(afs_sgibklock, s, &afs_sgibksync, PINOD);
+	osi_Assert(afs_sgibklist);
+
+	/* XX will probably need to generalize to real list someday */
 	s = SPLOCK(afs_sgibklock);
-	for (;;) {
-		/* wait for something to do */
-		SP_WAIT(afs_sgibklock, s, &afs_sgibksync, PINOD);
-		osi_Assert(afs_sgibklist);
-
-		/* XX will probably need to generalize to real list someday */
-		s = SPLOCK(afs_sgibklock);
-		while (afs_sgibklist) {
-			tdc = afs_sgibklist;
-			afs_sgibklist = NULL;
-			SPUNLOCK(afs_sgibklock, s);
-			AFS_GLOCK();
-			tdc->dflags &= ~DFEntryMod;
-			afs_WriteDCache(tdc, 1);
-			AFS_GUNLOCK();
-			s = SPLOCK(afs_sgibklock);
-		}
-
-		/* done all the work - wake everyone up */
-		while (SV_SIGNAL(&afs_sgibkwait))
-			;
+	while (afs_sgibklist) {
+	    tdc = afs_sgibklist;
+	    afs_sgibklist = NULL;
+	    SPUNLOCK(afs_sgibklock, s);
+	    AFS_GLOCK();
+	    tdc->dflags &= ~DFEntryMod;
+	    afs_WriteDCache(tdc, 1);
+	    AFS_GUNLOCK();
+	    s = SPLOCK(afs_sgibklock);
 	}
+
+	/* done all the work - wake everyone up */
+	while (SV_SIGNAL(&afs_sgibkwait));
+    }
 }
 #endif

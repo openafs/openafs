@@ -48,22 +48,22 @@ RCSID("$Id$");
 int
 main(int argc, char *argv[])
 {
-  int fd;
-  int ret;
+    int fd;
+    int ret;
 
-  fd = open("foo", O_RDWR|O_CREAT, 0);
-  if (fd < 0)
-      err (1, "open foo");
-  ret = write (fd, "foo", 3);
-  if (ret < 0) {
-      unlink("foo");
-      err (1, "write foo");
-  }
-  ret = close (fd);
-  if (ret < 0) {
-      unlink("foo");
-      err (1, "close foo");
-  }
-  unlink("foo");
-  return 0;
+    fd = open("foo", O_RDWR | O_CREAT, 0);
+    if (fd < 0)
+	err(1, "open foo");
+    ret = write(fd, "foo", 3);
+    if (ret < 0) {
+	unlink("foo");
+	err(1, "write foo");
+    }
+    ret = close(fd);
+    if (ret < 0) {
+	unlink("foo");
+	err(1, "close foo");
+    }
+    unlink("foo");
+    return 0;
 }

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #if	defined(REFCLOCK) && defined(PSTI)
 #define	ERR_RATE	60	/* Repeat errors once an hour */
@@ -72,313 +73,331 @@ int debug = 1;
 #include "AFS_component_version_number.c"
 
 main(argc, argv)
-int argc;
-char **argv;
+     int argc;
+     char **argv;
 {
-	struct timeval *tvp, *otvp;
+    struct timeval *tvp, *otvp;
 
-	debug = argc;
-	if (openclock(CLOCKDEV))
-		do {
-			(void)readclock(&tvp, &otvp);
-			sleep(1);
-		} while (debug>1);
-	exit(0);
+    debug = argc;
+    if (openclock(CLOCKDEV))
+	do {
+	    (void)readclock(&tvp, &otvp);
+	    sleep(1);
+	} while (debug > 1);
+    exit(0);
 }
 #endif /* STANDALONE */
 
 
 init_clock_psti(timesource)
-char *timesource;
+     char *timesource;
 {
-	int cfd;
+    int cfd;
 #ifdef TCSETA
-	struct termio tty;
+    struct termio tty;
 #else
-	struct sgttyb tty;
+    struct sgttyb tty;
 #endif
 
-	if ((cfd = open(timesource, 2)) < 0) {
+    if ((cfd = open(timesource, 2)) < 0) {
 #ifdef DEBUG
-		if (debug) perror(timesource); else
+	if (debug)
+	    perror(timesource);
+	else
 #endif /* DEBUG */
-		syslog(LOG_ERR, "can't open %s: %m", timesource);
-		return(-1);
-	}
+	    syslog(LOG_ERR, "can't open %s: %m", timesource);
+	return (-1);
+    }
 
-	if (ioctl(cfd, TIOCEXCL, 0) < 0) {
+    if (ioctl(cfd, TIOCEXCL, 0) < 0) {
 #ifdef DEBUG
-		if (debug) perror("TIOCEXCL on radioclock failed"); else
+	if (debug)
+	    perror("TIOCEXCL on radioclock failed");
+	else
 #endif /* DEBUG */
-		syslog(LOG_ERR, "TIOCEXCL on %s failed: %m", timesource);
-		return(-1);
-	}
-
+	    syslog(LOG_ERR, "TIOCEXCL on %s failed: %m", timesource);
+	return (-1);
+    }
 #ifdef TCSETA
-	if (ioctl(cfd, TCGETA, &tty) < 0) {
+    if (ioctl(cfd, TCGETA, &tty) < 0) {
 #ifdef DEBUG
-		if (debug) perror("ioctl on radioclock failed"); else
+	if (debug)
+	    perror("ioctl on radioclock failed");
+	else
 #endif /* DEBUG */
-		syslog(LOG_ERR, "ioctl on %s failed: %m", timesource);
-		return(-1);
-	}
-	tty.c_cflag = (B9600<<16)|B9600|CS8|CLOCAL|CREAD;
-	tty.c_iflag = ICRNL;
-	tty.c_oflag = 0;
-	tty.c_lflag = 0;
-	memset((char *)tty.c_cc, 0, sizeof tty.c_cc);
-	tty.c_cc[VMIN] = MIN_READ;
-	tty.c_cc[VTIME] = 0;
-	if (ioctl(cfd, TCSETA, &tty) < 0) {
-#else /* TCSETA	 Use older Berkeley style IOCTL's */
-	memset((char *)&tty, 0, sizeof tty);
-	tty.sg_ispeed = tty.sg_ospeed = B9600;
-	tty.sg_flags = ANYP|CRMOD;
-	tty.sg_erase = tty.sg_kill = '\0';
-	if (ioctl(cfd, TIOCSETP, &tty) < 0) {
+	    syslog(LOG_ERR, "ioctl on %s failed: %m", timesource);
+	return (-1);
+    }
+    tty.c_cflag = (B9600 << 16) | B9600 | CS8 | CLOCAL | CREAD;
+    tty.c_iflag = ICRNL;
+    tty.c_oflag = 0;
+    tty.c_lflag = 0;
+    memset((char *)tty.c_cc, 0, sizeof tty.c_cc);
+    tty.c_cc[VMIN] = MIN_READ;
+    tty.c_cc[VTIME] = 0;
+    if (ioctl(cfd, TCSETA, &tty) < 0) {
+#else /* TCSETA  Use older Berkeley style IOCTL's */
+    memset((char *)&tty, 0, sizeof tty);
+    tty.sg_ispeed = tty.sg_ospeed = B9600;
+    tty.sg_flags = ANYP | CRMOD;
+    tty.sg_erase = tty.sg_kill = '\0';
+    if (ioctl(cfd, TIOCSETP, &tty) < 0) {
 #endif /* TCSETA */
 #ifdef DEBUG
-		if (debug) perror("ioctl on radioclock failed"); else
+	if (debug)
+	    perror("ioctl on radioclock failed");
+	else
 #endif /* DEBUG */
-		syslog(LOG_ERR, "ioctl on %s failed: %m", timesource);
-		return(-1);
-	}
-	if (write(cfd, "xxxxxxsn\r", 9) != 9) {
+	    syslog(LOG_ERR, "ioctl on %s failed: %m", timesource);
+	return (-1);
+    }
+    if (write(cfd, "xxxxxxsn\r", 9) != 9) {
 #ifdef DEBUG
-		if (debug) perror("init write to radioclock failed"); else
+	if (debug)
+	    perror("init write to radioclock failed");
+	else
 #endif /* DEBUG */
-		syslog(LOG_ERR, "init write to %s failed: %m", timesource);
-		return(-1);
-	}
-	return(cfd);			/* Succeeded in opening the clock */
+	    syslog(LOG_ERR, "init write to %s failed: %m", timesource);
+	return (-1);
+    }
+    return (cfd);		/* Succeeded in opening the clock */
 }
 
 /*
  * read_clock_psti() -- Read the PSTI Radio Clock.
  */
 read_clock_psti(cfd, tvpp, otvpp)
-int cfd;
-struct timeval **tvpp, **otvpp;
+     int cfd;
+     struct timeval **tvpp, **otvpp;
 {
-	static struct timeval radiotime;
-	static struct timeval mytime;
-	struct timeval timeout;
-	struct tm *mtm;
-	struct tm radio_tm, *rtm = &radio_tm;
-	register int i;
-	register int millis;
-	register double diff;
-	int stat1, stat2;
-	fd_set readfds;
-	char message[256];
+    static struct timeval radiotime;
+    static struct timeval mytime;
+    struct timeval timeout;
+    struct tm *mtm;
+    struct tm radio_tm, *rtm = &radio_tm;
+    register int i;
+    register int millis;
+    register double diff;
+    int stat1, stat2;
+    fd_set readfds;
+    char message[256];
 #ifndef TCSETA
-	register char *cp;
-	int  need;
+    register char *cp;
+    int need;
 #endif /* TCSETA */
 
-	FD_ZERO(&readfds);
-	FD_SET(cfd, &readfds);
-	timeout.tv_sec = 2;
-	timeout.tv_usec = 0;
+    FD_ZERO(&readfds);
+    FD_SET(cfd, &readfds);
+    timeout.tv_sec = 2;
+    timeout.tv_usec = 0;
 
-	(void) ioctl(cfd, TIOCFLUSH, 0);	/* scrap the I/O queues */
+    (void)ioctl(cfd, TIOCFLUSH, 0);	/* scrap the I/O queues */
 
-	/* BEGIN TIME CRITICAL CODE SECTION!!!!!! */
-	/* EVERY CYCLE FROM THIS POINT OUT ADDS TO THE INACCURACY OF
-	     THE READ CLOCK VALUE!!!!! */
-	if (write(cfd, "\003qu0000", 7) != 7) {
+    /* BEGIN TIME CRITICAL CODE SECTION!!!!!! */
+    /* EVERY CYCLE FROM THIS POINT OUT ADDS TO THE INACCURACY OF
+     * THE READ CLOCK VALUE!!!!! */
+    if (write(cfd, "\003qu0000", 7) != 7) {
 #ifdef DEBUG
-		if (debug) printf("radioclock write failed\n"); else
+	if (debug)
+	    printf("radioclock write failed\n");
+	else
 #endif /* DEBUG */
-		if ((nerrors++%ERR_RATE) == 0)
-			syslog(LOG_ERR, "write to radioclock failed: %m");
-		return(1);
-	}
-	if(select(cfd+1, &readfds, 0, 0, &timeout) != 1) {
+	if ((nerrors++ % ERR_RATE) == 0)
+	    syslog(LOG_ERR, "write to radioclock failed: %m");
+	return (1);
+    }
+    if (select(cfd + 1, &readfds, 0, 0, &timeout) != 1) {
 #ifdef DEBUG
-		if (debug) printf("radioclock poll timed out\n"); else
+	if (debug)
+	    printf("radioclock poll timed out\n");
+	else
 #endif /* DEBUG */
-		if ((nerrors++%ERR_RATE) == 0)
-			syslog(LOG_ERR, "poll of radioclock failed: %m");
-		return(1);
-	}
-	if ((i = read(cfd, clockdata, sizeof clockdata)) < MIN_READ) {
+	if ((nerrors++ % ERR_RATE) == 0)
+	    syslog(LOG_ERR, "poll of radioclock failed: %m");
+	return (1);
+    }
+    if ((i = read(cfd, clockdata, sizeof clockdata)) < MIN_READ) {
 #ifdef DEBUG
-		if (debug) printf("radioclock read error (%d)\n", i); else
+	if (debug)
+	    printf("radioclock read error (%d)\n", i);
+	else
 #endif /* DEBUG */
-		if ((nerrors++%ERR_RATE) == 0)
-			syslog(LOG_ERR, "radioclock read error (%d!=13): %m", i);
-		return(1);
-	}
+	if ((nerrors++ % ERR_RATE) == 0)
+	    syslog(LOG_ERR, "radioclock read error (%d!=13): %m", i);
+	return (1);
+    }
 
-	(void) gettimeofday(&mytime, NULL);
-	/* END OF TIME CRITICAL CODE SECTION!!!! */
+    (void)gettimeofday(&mytime, NULL);
+    /* END OF TIME CRITICAL CODE SECTION!!!! */
 
-	if (clockdata[i-1] != '\n') {
+    if (clockdata[i - 1] != '\n') {
 #ifdef DEBUG
-		if (debug) printf("radioclock format error1 (%.12s)(0x%x)\n",
-			clockdata, clockdata[12]); else
+	if (debug)
+	    printf("radioclock format error1 (%.12s)(0x%x)\n", clockdata,
+		   clockdata[12]);
+	else
 #endif /* DEBUG */
-		if ((nerrors++%ERR_RATE) == 0)
-			syslog(LOG_ERR, "radioclock format error1 (%.12s)(0x%x)",
-				clockdata, clockdata[12]);
-		return(1);
-	}
-	for (i = 0; i < 12; i++) {
-		if (clockdata[i] < '0' || clockdata[i] > 'o') {
+	if ((nerrors++ % ERR_RATE) == 0)
+	    syslog(LOG_ERR, "radioclock format error1 (%.12s)(0x%x)",
+		   clockdata, clockdata[12]);
+	return (1);
+    }
+    for (i = 0; i < 12; i++) {
+	if (clockdata[i] < '0' || clockdata[i] > 'o') {
 #ifdef DEBUG
-			if (debug) printf("radioclock format error2\n"); else
+	    if (debug)
+		printf("radioclock format error2\n");
+	    else
 #endif /* DEBUG */
-			if ((nerrors++%ERR_RATE) == 0)
-				syslog(LOG_ERR, "radioclock format error2\n");
-			return(1);
-		}
+	    if ((nerrors++ % ERR_RATE) == 0)
+		syslog(LOG_ERR, "radioclock format error2\n");
+	    return (1);
 	}
-	stat1 = clockdata[0]-'0';
-	stat2 = clockdata[1]-'0';
-	millis = ((clockdata[2]-'0')*64)+(clockdata[3]-'0');
-	rtm->tm_sec = (clockdata[4]-'0');
-	rtm->tm_min = (clockdata[5]-'0');
-	rtm->tm_hour = (clockdata[6]-'0');
-	rtm->tm_yday = ((clockdata[7]-'0')*64)+(clockdata[8]-'0')-1;
-	rtm->tm_year = 86+(clockdata[9]-'0');
-	/* byte 10 and 11 reserved */
+    }
+    stat1 = clockdata[0] - '0';
+    stat2 = clockdata[1] - '0';
+    millis = ((clockdata[2] - '0') * 64) + (clockdata[3] - '0');
+    rtm->tm_sec = (clockdata[4] - '0');
+    rtm->tm_min = (clockdata[5] - '0');
+    rtm->tm_hour = (clockdata[6] - '0');
+    rtm->tm_yday = ((clockdata[7] - '0') * 64) + (clockdata[8] - '0') - 1;
+    rtm->tm_year = 86 + (clockdata[9] - '0');
+    /* byte 10 and 11 reserved */
 
-	/*
-	 * Correct "hours" based on whether or not AM/PM mode is enabled.
-	 * If clock is in 24 hour (military) mode then no correction is
-	 * needed.
-	 */
-	if(stat2&0x10) {	    /* Map AM/PM time to Military */
-		if (stat2&0x8) {
-			if (rtm->tm_hour != 12) rtm->tm_hour += 12;
-		} else {
-			if (rtm->tm_hour == 12) rtm->tm_hour = 0;
-		}
+    /*
+     * Correct "hours" based on whether or not AM/PM mode is enabled.
+     * If clock is in 24 hour (military) mode then no correction is
+     * needed.
+     */
+    if (stat2 & 0x10) {		/* Map AM/PM time to Military */
+	if (stat2 & 0x8) {
+	    if (rtm->tm_hour != 12)
+		rtm->tm_hour += 12;
+	} else {
+	    if (rtm->tm_hour == 12)
+		rtm->tm_hour = 0;
 	}
+    }
 
-	if (stat1 != 0x4 && (nerrors++%ERR_RATE)==0) {
+    if (stat1 != 0x4 && (nerrors++ % ERR_RATE) == 0) {
 #ifdef DEBUG
-		if (debug) printf("radioclock fault #%d 0x%x:%s%s%s%s%s%s\n",
-			nerrors, stat1,
-			stat1&0x20?" Out of Spec,":"",
-			stat1&0x10?" Hardware Fault,":"",
-			stat1&0x8?" Signal Fault,":"",
-			stat1&0x4?" Time Avail,":"",
-			stat1&0x2?" Year Mismatch,":"",
-			stat1&0x1?" Clock Reset,":"");
-		else {
+	if (debug)
+	    printf("radioclock fault #%d 0x%x:%s%s%s%s%s%s\n", nerrors, stat1,
+		   stat1 & 0x20 ? " Out of Spec," : "",
+		   stat1 & 0x10 ? " Hardware Fault," : "",
+		   stat1 & 0x8 ? " Signal Fault," : "",
+		   stat1 & 0x4 ? " Time Avail," : "",
+		   stat1 & 0x2 ? " Year Mismatch," : "",
+		   stat1 & 0x1 ? " Clock Reset," : "");
+	else {
 #endif /* DEBUG */
-			sprintf(message, "radioclock fault #%d 0x%x:%s%s%s%s%s%s\n",
-				nerrors, stat1,
-				stat1&0x20?" Out of Spec,":"",
-				stat1&0x10?" Hardware Fault,":"",
-				stat1&0x8?" Signal Fault,":"",
-				stat1&0x4?" Time Avail,":"",
-				stat1&0x2?" Year Mismatch,":"",
-				stat1&0x1?" Clock Reset,":"");
-			syslog(LOG_ERR, message);
-		}
+	    sprintf(message, "radioclock fault #%d 0x%x:%s%s%s%s%s%s\n",
+		    nerrors, stat1, stat1 & 0x20 ? " Out of Spec," : "",
+		    stat1 & 0x10 ? " Hardware Fault," : "",
+		    stat1 & 0x8 ? " Signal Fault," : "",
+		    stat1 & 0x4 ? " Time Avail," : "",
+		    stat1 & 0x2 ? " Year Mismatch," : "",
+		    stat1 & 0x1 ? " Clock Reset," : "");
+	    syslog(LOG_ERR, message);
 	}
-	if (stat1&0x38) /* Out of Spec, Hardware Fault, Signal Fault */
-		return(1);
-	if ((millis > 999 || rtm->tm_sec > 60 || rtm->tm_min > 60 ||
-	     rtm->tm_hour > 23 || rtm->tm_yday > 365) && (nerrors++%ERR_RATE)==0) {
+    }
+    if (stat1 & 0x38)		/* Out of Spec, Hardware Fault, Signal Fault */
+	return (1);
+    if ((millis > 999 || rtm->tm_sec > 60 || rtm->tm_min > 60
+	 || rtm->tm_hour > 23 || rtm->tm_yday > 365)
+	&& (nerrors++ % ERR_RATE) == 0) {
 #ifdef DEBUG
-		if (debug) printf("radioclock bogon #%d: %dd %dh %dm %ds %dms\n",
-			nerrors, rtm->tm_yday, rtm->tm_hour,
-			rtm->tm_min, rtm->tm_sec, millis);
-		else
+	if (debug)
+	    printf("radioclock bogon #%d: %dd %dh %dm %ds %dms\n", nerrors,
+		   rtm->tm_yday, rtm->tm_hour, rtm->tm_min, rtm->tm_sec,
+		   millis);
+	else
 #endif /* DEBUG */
-		sprintf(message, "radioclock bogon #%d: %dd %dh %dm %ds %dms\n",
-			nerrors, rtm->tm_yday, rtm->tm_hour,
-			rtm->tm_min, rtm->tm_sec, millis);
-		syslog(LOG_ERR, message);
-		return(1);
-	}
+	    sprintf(message, "radioclock bogon #%d: %dd %dh %dm %ds %dms\n",
+		    nerrors, rtm->tm_yday, rtm->tm_hour, rtm->tm_min,
+		    rtm->tm_sec, millis);
+	syslog(LOG_ERR, message);
+	return (1);
+    }
 
-	mtm = gmtime(&mytime.tv_sec);
-	diff =  reltime(rtm, millis*1000) - reltime(mtm, mytime.tv_usec);
+    mtm = gmtime(&mytime.tv_sec);
+    diff = reltime(rtm, millis * 1000) - reltime(mtm, mytime.tv_usec);
 #ifdef DEBUG
-	if (debug > 1) {
-            char buf[256];
-	    strftime (buf, 256, "Clock time:  %Y day %j %T", rtm);
-	    strcat (buf, ".%03d diff %.3f\n", millis, diff);
-            printf (buf);
-	}
+    if (debug > 1) {
+	char buf[256];
+	strftime(buf, 256, "Clock time:  %Y day %j %T", rtm);
+	strcat(buf, ".%03d diff %.3f\n", millis, diff);
+	printf(buf);
+    }
 #endif /* DEBUG */
-	
-	if (diff > (90*24*60*60.0) && (nerrors++%ERR_RATE)==0) {
-	    char buf1[16], buf2[16];
-	    strftime (buf1, 16, "%Y/%j", mtm);
-	    strftime (buf2, 16, "%Y/%j", rtm);
-#ifdef DEBUG
-		if (debug) {
-		    printf("offset excessive (system %s, clock %s)\n",
-			buf1, buf2);
-		}
-		else
-#endif /* DEBUG */
-		syslog(LOG_ERR, "offset excessive (system %s, clock %s)\n",
-			buf1, buf2);
-		return(1);
-	}
 
-	diff += (double)mytime.tv_sec + ((double)mytime.tv_usec/1000000.0);
-	radiotime.tv_sec = diff;
-	radiotime.tv_usec = (diff - (double)radiotime.tv_sec) * 1000000;
+    if (diff > (90 * 24 * 60 * 60.0) && (nerrors++ % ERR_RATE) == 0) {
+	char buf1[16], buf2[16];
+	strftime(buf1, 16, "%Y/%j", mtm);
+	strftime(buf2, 16, "%Y/%j", rtm);
 #ifdef DEBUG
-	if (debug > 1) {
-		char buf[256];
-		strftime (buf, 256, "%Y day %j %T", mtm);
-		printf("System time: %s.%03d\n", buf, mytime.tv_usec/1000);
-		printf("stat1 0%o, stat2 0%o: ", stat1, stat2);
-		if (stat1 || stat2)
-			printf("%s%s%s%s%s%s%s%s%s%s%s%s",
-				stat1&0x20?" Out of Spec,":"",
-				stat1&0x10?" Hardware Fault,":"",
-				stat1&0x8?" Signal Fault,":"",
-				stat1&0x4?" Time Avail,":"",
-				stat1&0x2?" Year Mismatch,":"",
-				stat1&0x1?" Clock Reset,":"",
-				stat2&0x20?" DST on,":"",
-				stat2&0x10?" 12hr mode,":"",
-				stat2&0x8?" PM,":"",
-				stat2&0x4?" Spare?,":"",
-				stat2&0x2?" DST??? +1,":"",
-				stat2&0x1?" DST??? -1,":"");
-		printf("\n");
-	}
+	if (debug) {
+	    printf("offset excessive (system %s, clock %s)\n", buf1, buf2);
+	} else
 #endif /* DEBUG */
-	/* If necessary, acknowledge "Clock Reset" flag bit */
-	if (stat1 & 0x1) {
-		if (write(cfd, "si0", 3) != 3) {
+	    syslog(LOG_ERR, "offset excessive (system %s, clock %s)\n", buf1,
+		   buf2);
+	return (1);
+    }
+
+    diff += (double)mytime.tv_sec + ((double)mytime.tv_usec / 1000000.0);
+    radiotime.tv_sec = diff;
+    radiotime.tv_usec = (diff - (double)radiotime.tv_sec) * 1000000;
 #ifdef DEBUG
-			if (debug) printf("radioclock reset write failed\n"); else
+    if (debug > 1) {
+	char buf[256];
+	strftime(buf, 256, "%Y day %j %T", mtm);
+	printf("System time: %s.%03d\n", buf, mytime.tv_usec / 1000);
+	printf("stat1 0%o, stat2 0%o: ", stat1, stat2);
+	if (stat1 || stat2)
+	    printf("%s%s%s%s%s%s%s%s%s%s%s%s",
+		   stat1 & 0x20 ? " Out of Spec," : "",
+		   stat1 & 0x10 ? " Hardware Fault," : "",
+		   stat1 & 0x8 ? " Signal Fault," : "",
+		   stat1 & 0x4 ? " Time Avail," : "",
+		   stat1 & 0x2 ? " Year Mismatch," : "",
+		   stat1 & 0x1 ? " Clock Reset," : "",
+		   stat2 & 0x20 ? " DST on," : "",
+		   stat2 & 0x10 ? " 12hr mode," : "",
+		   stat2 & 0x8 ? " PM," : "", stat2 & 0x4 ? " Spare?," : "",
+		   stat2 & 0x2 ? " DST??? +1," : "",
+		   stat2 & 0x1 ? " DST??? -1," : "");
+	printf("\n");
+    }
 #endif /* DEBUG */
-			syslog(LOG_ERR, "reset write to radioclock failed: %m");
-			return(1);
-		}
+    /* If necessary, acknowledge "Clock Reset" flag bit */
+    if (stat1 & 0x1) {
+	if (write(cfd, "si0", 3) != 3) {
+#ifdef DEBUG
+	    if (debug)
+		printf("radioclock reset write failed\n");
+	    else
+#endif /* DEBUG */
+		syslog(LOG_ERR, "reset write to radioclock failed: %m");
+	    return (1);
 	}
-	if (nerrors && stat1==0x4) {
-		syslog(LOG_ERR, "radioclock OK (after %d errors)", nerrors);
-		nerrors = 0;
-	}
-	*tvpp = &radiotime;
-	*otvpp = &mytime;
-	return(0);
+    }
+    if (nerrors && stat1 == 0x4) {
+	syslog(LOG_ERR, "radioclock OK (after %d errors)", nerrors);
+	nerrors = 0;
+    }
+    *tvpp = &radiotime;
+    *otvpp = &mytime;
+    return (0);
 }
 
 static double
 reltime(tm, usec)
-register struct tm *tm;
-register int usec;
+     register struct tm *tm;
+     register int usec;
 {
-	return(tm->tm_year*(366.0*24.0*60.0*60.0) +
-	       tm->tm_yday*(24.0*60.0*60.0) +
-	       tm->tm_hour*(60.0*60.0) +
-	       tm->tm_min*(60.0) +
-	       tm->tm_sec +
-	       usec/1000000.0);
+    return (tm->tm_year * (366.0 * 24.0 * 60.0 * 60.0) +
+	    tm->tm_yday * (24.0 * 60.0 * 60.0) + tm->tm_hour * (60.0 * 60.0) +
+	    tm->tm_min * (60.0) + tm->tm_sec + usec / 1000000.0);
 }
 #endif

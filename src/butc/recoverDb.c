@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -32,7 +33,7 @@ RCSID("$Header$");
 #include <afs/budb.h>
 #include "error_macros.h"
 
-#define BELLCHAR 7      			/* ascii for bell */
+#define BELLCHAR 7		/* ascii for bell */
 
 /* GLOBAL CONFIGURATION PARAMETERS */
 extern int autoQuery;
@@ -40,13 +41,12 @@ extern int queryoperator;
 extern int isafile;
 
 /* Handle for the information read from all the tapes of a dump */
-afs_int32 tapepos;      /* when read a label, remember its position */
-struct tapeScanInfo
-{
-    struct butm_tapeLabel     tapeLabel, dumpLabel;
-    struct budb_dumpEntry     dumpEntry;
-    afs_int32    initialDumpId;
-    int      addDbFlag;
+afs_int32 tapepos;		/* when read a label, remember its position */
+struct tapeScanInfo {
+    struct butm_tapeLabel tapeLabel, dumpLabel;
+    struct budb_dumpEntry dumpEntry;
+    afs_int32 initialDumpId;
+    int addDbFlag;
 };
 
 extern struct tapeConfig globalTapeConfig;
@@ -59,7 +59,7 @@ extern struct deviceSyncNode *deviceLatch;
 PrintDumpLabel(labelptr)
      struct butm_tapeLabel *labelptr;
 {
-    char tapeName[BU_MAXTAPELEN+32];
+    char tapeName[BU_MAXTAPELEN + 32];
 
     printf("Dump label\n");
     printf("----------\n");
@@ -68,14 +68,13 @@ PrintDumpLabel(labelptr)
     TAPENAME(tapeName, labelptr->AFSName, labelptr->dumpid);
     printf("AFS tape name = %s\n", tapeName);
     printf("creationTime = %s", ctime(&labelptr->creationTime));
-    if ( labelptr->expirationDate )
+    if (labelptr->expirationDate)
 	printf("expirationDate = %s", cTIME(&labelptr->expirationDate));
     printf("cell = %s\n", labelptr->cell);
     printf("size = %u Kbytes\n", labelptr->size);
     printf("dump path = %s\n", labelptr->dumpPath);
 
-    if ( labelptr->structVersion >= TAPE_VERSION_3 )
-    {
+    if (labelptr->structVersion >= TAPE_VERSION_3) {
 	printf("dump id = %u\n", labelptr->dumpid);
 	printf("useCount = %d\n", labelptr->useCount);
     }
@@ -113,17 +112,18 @@ afs_int32
 Ask(st)
      char *st;
 {
-    int  response;
+    int response;
 
-    while (1)
-    {
+    while (1) {
 	FFlushInput();
 	putchar(BELLCHAR);
 	printf("%s? (y/n) ", st);
 	fflush(stdout);
 	response = getchar();
-	if      ( response == 'y' ) return(1);
-	else if ( response == 'n' || response == EOF) return(0);
+	if (response == 'y')
+	    return (1);
+	else if (response == 'n' || response == EOF)
+	    return (0);
 	printf("please answer y/n\n");
     }
 }
@@ -133,18 +133,19 @@ Ask(st)
  * The first tape label is the first dumpLabel.
  */
 readDumps(taskId, tapeInfoPtr, scanInfoPtr)
-    afs_uint32              taskId;
-    struct butm_tapeInfo *tapeInfoPtr;
-    struct tapeScanInfo  *scanInfoPtr;
+     afs_uint32 taskId;
+     struct butm_tapeInfo *tapeInfoPtr;
+     struct tapeScanInfo *scanInfoPtr;
 {
     afs_int32 code, c;
 
-    memcpy(&scanInfoPtr->dumpLabel, &scanInfoPtr->tapeLabel, sizeof(struct butm_tapeLabel));
+    memcpy(&scanInfoPtr->dumpLabel, &scanInfoPtr->tapeLabel,
+	   sizeof(struct butm_tapeLabel));
 
-    while(1)
-    {
-        code = readDump(taskId, tapeInfoPtr, scanInfoPtr);
-	if (code) ERROR_EXIT(code);
+    while (1) {
+	code = readDump(taskId, tapeInfoPtr, scanInfoPtr);
+	if (code)
+	    ERROR_EXIT(code);
 
 	if (scanInfoPtr->tapeLabel.structVersion < TAPE_VERSION_4)
 	    break;
@@ -152,54 +153,55 @@ readDumps(taskId, tapeInfoPtr, scanInfoPtr)
 	/* Remember the initial dump and see if appended dump exists */
 
 	if (!scanInfoPtr->initialDumpId)
-	      scanInfoPtr->initialDumpId = scanInfoPtr->dumpEntry.id;
+	    scanInfoPtr->initialDumpId = scanInfoPtr->dumpEntry.id;
 
-	c = butm_ReadLabel(tapeInfoPtr, &scanInfoPtr->dumpLabel, 0);  /* no rewind */
+	c = butm_ReadLabel(tapeInfoPtr, &scanInfoPtr->dumpLabel, 0);	/* no rewind */
 	tapepos = tapeInfoPtr->position - 1;
-	if (c) break;
+	if (c)
+	    break;
     }
 
-error_exit:
-    return(code);
+  error_exit:
+    return (code);
 }
 
-afs_int32 getScanTape(taskId, tapeInfoPtr, tname, tapeId, prompt, tapeLabelPtr)
-    afs_int32                 taskId;
-    struct butm_tapeInfo  *tapeInfoPtr;
-    char                  *tname;
-    afs_int32                 tapeId;
-    int                   prompt;
-    struct butm_tapeLabel *tapeLabelPtr;
+afs_int32
+getScanTape(taskId, tapeInfoPtr, tname, tapeId, prompt, tapeLabelPtr)
+     afs_int32 taskId;
+     struct butm_tapeInfo *tapeInfoPtr;
+     char *tname;
+     afs_int32 tapeId;
+     int prompt;
+     struct butm_tapeLabel *tapeLabelPtr;
 {
     afs_int32 code = 0;
-    int   tapecount = 1;
+    int tapecount = 1;
     afs_int32 curseq;
-    char tapename[BU_MAXTAPELEN+32];
-    char gotname[BU_MAXTAPELEN+32];
+    char tapename[BU_MAXTAPELEN + 32];
+    char gotname[BU_MAXTAPELEN + 32];
 
-    while (1)
-    {
-        /* prompt for a tape */
-        if (prompt)
-	{
-	    code = PromptForTape(SCANOPCODE, tname, tapeId, taskId, tapecount);
-	    if (code) ERROR_EXIT(code);
+    while (1) {
+	/* prompt for a tape */
+	if (prompt) {
+	    code =
+		PromptForTape(SCANOPCODE, tname, tapeId, taskId, tapecount);
+	    if (code)
+		ERROR_EXIT(code);
 	}
 	prompt = 1;
 	tapecount++;
 
-	code = butm_Mount(tapeInfoPtr, "");		/* open the tape device */
-	if (code) 
-	{
+	code = butm_Mount(tapeInfoPtr, "");	/* open the tape device */
+	if (code) {
 	    TapeLog(0, taskId, code, tapeInfoPtr->error, "Can't open tape\n");
 	    goto newtape;
 	}
 
 	/* read the label on the tape */
-	code = butm_ReadLabel(tapeInfoPtr, tapeLabelPtr, 1);         /* rewind tape */
-	if (code) 
-	{
-	    ErrorLog(0, taskId, code, tapeInfoPtr->error, "Can't read tape label\n");
+	code = butm_ReadLabel(tapeInfoPtr, tapeLabelPtr, 1);	/* rewind tape */
+	if (code) {
+	    ErrorLog(0, taskId, code, tapeInfoPtr->error,
+		     "Can't read tape label\n");
 	    goto newtape;
 	}
 	tapepos = tapeInfoPtr->position - 1;
@@ -211,38 +213,38 @@ afs_int32 getScanTape(taskId, tapeInfoPtr, tname, tapeId, prompt, tapeLabelPtr)
 	curseq = extractTapeSeq(tapeLabelPtr->AFSName);
 
 	/* Label can't be null or a bad name */
-	if ( !strcmp(tapeLabelPtr->AFSName,"") || (curseq <= 0) )
-	{
+	if (!strcmp(tapeLabelPtr->AFSName, "") || (curseq <= 0)) {
 	    TLog(taskId, "Expected tape with dump, label seen %s\n", gotname);
 	    goto newtape;
 	}
 
 	/* Label can't be a database tape */
-	if (databaseTape(tapeLabelPtr->AFSName))
-	{
-	    TLog(taskId, "Expected tape with dump. Can't scan database tape %s\n", gotname);
+	if (databaseTape(tapeLabelPtr->AFSName)) {
+	    TLog(taskId,
+		 "Expected tape with dump. Can't scan database tape %s\n",
+		 gotname);
 	    goto newtape;
 	}
 
 	/* If no name, accept any tape */
-	if (strcmp(tname,"") == 0)
-	{
-	    break;                              /* Start scan on any tape */
+	if (strcmp(tname, "") == 0) {
+	    break;		/* Start scan on any tape */
 #ifdef notdef
-	    if (curseq == 1) break;                /* The first tape */
-	    else
-	    {
-	        TLog(taskId, "Expected first tape of dump, label seen %s\n", gotname);
+	    if (curseq == 1)
+		break;		/* The first tape */
+	    else {
+		TLog(taskId, "Expected first tape of dump, label seen %s\n",
+		     gotname);
 		goto newtape;
 	    }
 #endif
 	}
 
-	if ( strcmp(tname,tapeLabelPtr->AFSName) ||
-	     ((tapeLabelPtr->structVersion >= TAPE_VERSION_3) &&
-	      (tapeLabelPtr->dumpid != tapeId)) )
-	{
-	    TLog(taskId, "Tape label expected %s, label seen %s\n", tapename, gotname);
+	if (strcmp(tname, tapeLabelPtr->AFSName)
+	    || ((tapeLabelPtr->structVersion >= TAPE_VERSION_3)
+		&& (tapeLabelPtr->dumpid != tapeId))) {
+	    TLog(taskId, "Tape label expected %s, label seen %s\n", tapename,
+		 gotname);
 	    goto newtape;
 	}
 
@@ -253,8 +255,8 @@ afs_int32 getScanTape(taskId, tapeInfoPtr, tname, tapeId, prompt, tapeLabelPtr)
 	unmountTape(taskId, tapeInfoPtr);
     }
 
-error_exit:
-    return(code);
+  error_exit:
+    return (code);
 }
 
 /* ScanDumps
@@ -264,12 +266,12 @@ error_exit:
  */
 
 ScanDumps(ptr)
-     struct scanTapeIf   *ptr;
+     struct scanTapeIf *ptr;
 {
     struct butm_tapeInfo curTapeInfo;
-    struct tapeScanInfo  tapeScanInfo;
-    afs_uint32              taskId;
-    afs_int32                code = 0;
+    struct tapeScanInfo tapeScanInfo;
+    afs_uint32 taskId;
+    afs_int32 code = 0;
 
     taskId = ptr->taskId;
     setStatus(taskId, DRIVE_WAIT);
@@ -277,51 +279,52 @@ ScanDumps(ptr)
     clearStatus(taskId, DRIVE_WAIT);
 
     printf("\n\n");
-    if (ptr->addDbFlag) TLog(taskId, "ScanTape and add to the database\n");
-    else                TLog(taskId, "Scantape\n");
+    if (ptr->addDbFlag)
+	TLog(taskId, "ScanTape and add to the database\n");
+    else
+	TLog(taskId, "Scantape\n");
 
     memset(&tapeScanInfo, 0, sizeof(tapeScanInfo));
     tapeScanInfo.addDbFlag = ptr->addDbFlag;
 
     memset(&curTapeInfo, 0, sizeof(curTapeInfo));
     curTapeInfo.structVersion = BUTM_MAJORVERSION;
-    code = butm_file_Instantiate (&curTapeInfo, &globalTapeConfig);
-    if (code)
-    {
-        ErrorLog(0, taskId, code, curTapeInfo.error, "Can't initialize tape module\n");
+    code = butm_file_Instantiate(&curTapeInfo, &globalTapeConfig);
+    if (code) {
+	ErrorLog(0, taskId, code, curTapeInfo.error,
+		 "Can't initialize tape module\n");
 	ERROR_EXIT(code);
     }
 
-    code = getScanTape(taskId, &curTapeInfo, "", 0, autoQuery, &tapeScanInfo.tapeLabel);
-    if (code) ERROR_EXIT(code);
+    code =
+	getScanTape(taskId, &curTapeInfo, "", 0, autoQuery,
+		    &tapeScanInfo.tapeLabel);
+    if (code)
+	ERROR_EXIT(code);
 
     code = readDumps(taskId, &curTapeInfo, &tapeScanInfo);
-    if (code) ERROR_EXIT(code);
+    if (code)
+	ERROR_EXIT(code);
 
-error_exit:
+  error_exit:
     unmountTape(taskId, &curTapeInfo);
     waitDbWatcher();
 
-    if (code == TC_ABORTEDBYREQUEST)
-    {
-        ErrorLog(0, taskId, 0, 0, "Scantape: Aborted by request\n");
+    if (code == TC_ABORTEDBYREQUEST) {
+	ErrorLog(0, taskId, 0, 0, "Scantape: Aborted by request\n");
 	clearStatus(taskId, ABORT_REQUEST);
 	setStatus(taskId, ABORT_DONE);
-    }
-    else if (code)
-    {
-        ErrorLog(0, taskId, code, 0, "Scantape: Finished with errors\n");
+    } else if (code) {
+	ErrorLog(0, taskId, code, 0, "Scantape: Finished with errors\n");
 	setStatus(taskId, TASK_ERROR);
-    }
-    else
-    {
-        TLog(taskId, "Scantape: Finished\n");
+    } else {
+	TLog(taskId, "Scantape: Finished\n");
     }
 
     free(ptr);
     setStatus(taskId, TASK_DONE);
     LeaveDeviceQueue(deviceLatch);
-    return(code);
+    return (code);
 }
 
 /* scanVolData
@@ -343,17 +346,18 @@ error_exit:
 #define BIGCHUNK 102400
 
 static
-scanVolData(taskId, curTapePtr, tapeVersion, volumeHeader, volumeTrailer, bytesRead)
-     afs_int32                taskId;
+scanVolData(taskId, curTapePtr, tapeVersion, volumeHeader, volumeTrailer,
+	    bytesRead)
+     afs_int32 taskId;
      struct butm_tapeInfo *curTapePtr;
-     afs_int32                tapeVersion;
-     struct volumeHeader  *volumeHeader, *volumeTrailer;
-     afs_uint32              *bytesRead;
+     afs_int32 tapeVersion;
+     struct volumeHeader *volumeHeader, *volumeTrailer;
+     afs_uint32 *bytesRead;
 {
     afs_int32 headBytes, tailBytes;
-    char  *block = NULL;
-    char  *buffer[2];
-    int   hasdata[2], curr, prev;
+    char *block = NULL;
+    char *buffer[2];
+    int hasdata[2], curr, prev;
     afs_uint32 chunkSize = 0;
     afs_int32 nbytes;
     afs_int32 code = 0;
@@ -361,112 +365,115 @@ scanVolData(taskId, curTapePtr, tapeVersion, volumeHeader, volumeTrailer, bytesR
 
     memset(volumeHeader, 0, sizeof(struct volumeHeader));
 
-    block = (char *) malloc(2*BUTM_BLOCKSIZE);
-    if (!block) return(TC_NOMEMORY);
+    block = (char *)malloc(2 * BUTM_BLOCKSIZE);
+    if (!block)
+	return (TC_NOMEMORY);
     buffer[0] = &block[sizeof(struct blockMark)];
     buffer[1] = &block[BUTM_BLOCKSIZE + sizeof(struct blockMark)];
     hasdata[0] = hasdata[1] = 0;
     curr = 0;
 
-    tcode = NextFile(curTapePtr);  /* guarantees we are at a filemark */
-    if (tcode) ERROR_EXIT(tcode)
+    tcode = NextFile(curTapePtr);	/* guarantees we are at a filemark */
+    if (tcode)
+	ERROR_EXIT(tcode)
 
-    /* Read the FileBegin FileMark */
-    code = butm_ReadFileBegin(curTapePtr);
-    if (code)
-    {
-        /*
-         * Tapes made with 3.0 have no software EOT markers. Therefore
+	    /* Read the FileBegin FileMark */
+	    code = butm_ReadFileBegin(curTapePtr);
+    if (code) {
+	/*
+	 * Tapes made with 3.0 have no software EOT markers. Therefore
 	 * at this point, we will most likely get a read error, indicating
 	 * the end of this dump
 	 */
-        if ( (tapeVersion == TAPE_VERSION_0) || (tapeVersion == TAPE_VERSION_1) )
-	{
+	if ((tapeVersion == TAPE_VERSION_0)
+	    || (tapeVersion == TAPE_VERSION_1)) {
 	    /*
 	     * then a tape error is possible at this point, and it
 	     * signals the end of the dump. Tapes that are continued
 	     * have an EOT marker.
 	     */
-	    TapeLog(0, taskId, code, curTapePtr->error, "Read error - end-of-dump inferred\n");
+	    TapeLog(0, taskId, code, curTapePtr->error,
+		    "Read error - end-of-dump inferred\n");
 	    code = BUTM_EOD;
 	}
 
 	if (code != BUTM_EOD)
-	    ErrorLog(0, taskId, code, curTapePtr->error, "Can't read FileBegin on tape\n");
+	    ErrorLog(0, taskId, code, curTapePtr->error,
+		     "Can't read FileBegin on tape\n");
 	ERROR_EXIT(code);
     }
 
     /* now read the volume header */
     code = ReadVolHeader(taskId, curTapePtr, volumeHeader);
-    if (code) ERROR_EXIT(code);
+    if (code)
+	ERROR_EXIT(code);
 
     *bytesRead = 0;
-    while (1)
-    { /*w*/
+    while (1) {			/*w */
 
-        /* Check for abort in the middle of scanning data */
-        if (*bytesRead >= chunkSize)
-	{
-	    if ( checkAbortByTaskId(taskId) ) 
-	        ERROR_EXIT(TC_ABORTEDBYREQUEST);
+	/* Check for abort in the middle of scanning data */
+	if (*bytesRead >= chunkSize) {
+	    if (checkAbortByTaskId(taskId))
+		ERROR_EXIT(TC_ABORTEDBYREQUEST);
 	    chunkSize += BIGCHUNK;
 	}
 
-        /* 
+	/* 
 	 * Read volume date - If prematurely hit the HW EOF 
 	 * marker, check to see if data contains a volumetrailer.
 	 */
-        rcode = butm_ReadFileData(curTapePtr, buffer[curr], BUTM_BLKSIZE, &nbytes);
-	if (rcode)
-	{
+	rcode =
+	    butm_ReadFileData(curTapePtr, buffer[curr], BUTM_BLKSIZE,
+			      &nbytes);
+	if (rcode) {
 	    hasdata[curr] = 0;
-	    if ( (rcode == BUTM_EOF) || (rcode == BUTM_ENDVOLUME) ) break;
+	    if ((rcode == BUTM_EOF) || (rcode == BUTM_ENDVOLUME))
+		break;
 
-	    ErrorLog(0, taskId, rcode, curTapePtr->error, "Can't read FileData on tape\n");
+	    ErrorLog(0, taskId, rcode, curTapePtr->error,
+		     "Can't read FileData on tape\n");
 	    ERROR_EXIT(rcode)
 	}
 	hasdata[curr] = 1;
 	*bytesRead += nbytes;
 
-	if ( (nbytes != BUTM_BLKSIZE) ||
-	     (FindVolTrailer(buffer[curr], nbytes, &tailBytes, volumeTrailer)) )
+	if ((nbytes != BUTM_BLKSIZE)
+	    ||
+	    (FindVolTrailer(buffer[curr], nbytes, &tailBytes, volumeTrailer)))
 	    break;
 
-	curr = ((curr == 0) ? 1 : 0);          /* Switch buffers */
-    } /*w*/
+	curr = ((curr == 0) ? 1 : 0);	/* Switch buffers */
+    }				/*w */
 
     /* Now verify that there is a volume trailer and its valid and copy it */
     prev = ((curr == 0) ? 1 : 0);
-    if ( !FindVolTrailer2(buffer[prev], (hasdata[prev]?BUTM_BLKSIZE:0), &headBytes,
-			  buffer[curr], nbytes                        , &tailBytes,
-			  volumeTrailer) )
-    {
-        code = TC_MISSINGTRAILER;
-        ErrorLog(0, taskId, code, 0, "Missing volume trailer on tape\n");
+    if (!FindVolTrailer2
+	(buffer[prev], (hasdata[prev] ? BUTM_BLKSIZE : 0), &headBytes,
+	 buffer[curr], nbytes, &tailBytes, volumeTrailer)) {
+	code = TC_MISSINGTRAILER;
+	ErrorLog(0, taskId, code, 0, "Missing volume trailer on tape\n");
+    } else {
+	/* subtract size of the volume trailer from data read */
+	*bytesRead -= sizeof(struct volumeHeader);
     }
-    else
-    {
-        /* subtract size of the volume trailer from data read */
-        *bytesRead -= sizeof(struct volumeHeader);    
-    }
-    
+
     /* 
      * If we didn't hit the EOF while reading data, read FileEnd marker 
      * or EOF marker. 
      */
-    if (!rcode)
-    {
-        tcode = butm_ReadFileEnd(curTapePtr);
-	if (tcode)
-	{
-	    ErrorLog(0, taskId, tcode, curTapePtr->error, "Can't read EOF on tape\n");
+    if (!rcode) {
+	tcode = butm_ReadFileEnd(curTapePtr);
+	if (tcode) {
+	    ErrorLog(0, taskId, tcode, curTapePtr->error,
+		     "Can't read EOF on tape\n");
 	    ERROR_EXIT(tcode);
 	}
     }
 
-error_exit:
-    if (block) free(block);
-    return(code);
+  error_exit:
+    if (block)
+	free(block);
+    return (code);
 }
 
 /* nextTapeLabel
@@ -477,11 +484,11 @@ error_exit:
 
 char *
 nextTapeLabel(prevTapeName)
-    char *prevTapeName;
+     char *prevTapeName;
 {
     char *prevdot;
     char *retval;
-    int  seq;
+    int seq;
     static char buffer[BU_MAXTAPELEN];
 
     retval = "";
@@ -489,14 +496,15 @@ nextTapeLabel(prevTapeName)
     /* extract information from previous tape label */
     strcpy(buffer, prevTapeName);
     prevdot = strrchr(buffer, '.');
-    if (!prevdot) return(retval);
+    if (!prevdot)
+	return (retval);
     prevdot++;
 
     seq = extractTapeSeq(prevTapeName);
     seq++;
     sprintf(prevdot, "%-d", seq);
 
-    return(&buffer[0]);
+    return (&buffer[0]);
 }
 
 /* readDump
@@ -518,134 +526,126 @@ afs_int32 RcreateDump();
 
 static
 readDump(taskId, tapeInfoPtr, scanInfoPtr)
-     afs_uint32              taskId;
+     afs_uint32 taskId;
      struct butm_tapeInfo *tapeInfoPtr;
-     struct tapeScanInfo  *scanInfoPtr;
+     struct tapeScanInfo *scanInfoPtr;
 {
     int moreTapes = 1;
     afs_int32 nbytes, flags, seq;
-    int  newDump = 1, newTape = 1;
+    int newDump = 1, newTape = 1;
     afs_int32 tapePosition, c;
     afs_int32 code = 0, tcode;
-    int  interactiveFlag, badscan;
+    int interactiveFlag, badscan;
 
-    struct volumeHeader      volHeader, volTrailer;
+    struct volumeHeader volHeader, volTrailer;
 
     int good;
-    struct budb_tapeEntry   tapeEntry;
+    struct budb_tapeEntry tapeEntry;
     struct budb_volumeEntry volEntry;
 
     volEntry.dump = 0;
     PrintDumpLabel(&scanInfoPtr->dumpLabel);
 
-    while (moreTapes)   /* While there is a tape to read */
-    { /*t*/
-        badscan = 0;
-	while (1)                /* Read each volume on the tape */
-	{ /*w*/
+    while (moreTapes) {		/* While there is a tape to read *//*t */
+	badscan = 0;
+	while (1) {		/* Read each volume on the tape *//*w */
 	    moreTapes = -1;
-	    tapePosition = tapeInfoPtr->position;    /* remember position */
+	    tapePosition = tapeInfoPtr->position;	/* remember position */
 
 	    /*
 	     * Skip the volume data
 	     */
-	    tcode = scanVolData(taskId, tapeInfoPtr, 
-				scanInfoPtr->tapeLabel.structVersion, 
-				&volHeader, &volTrailer, &nbytes);
+	    tcode =
+		scanVolData(taskId, tapeInfoPtr,
+			    scanInfoPtr->tapeLabel.structVersion, &volHeader,
+			    &volTrailer, &nbytes);
 	    if (tcode) {
 		badscan++;
 
-	        if (tcode == TC_ABORTEDBYREQUEST) {    /* Aborted */
+		if (tcode == TC_ABORTEDBYREQUEST) {	/* Aborted */
 		    ERROR_EXIT(tcode);
 		}
 
-	        if (tcode == BUTM_EOD) {
-		    moreTapes = 0;            /* the end of the dump */
+		if (tcode == BUTM_EOD) {
+		    moreTapes = 0;	/* the end of the dump */
 		    break;
 		}
 
 		/* Found a volume but it's incomplete. Skip over these */
 		if (volHeader.volumeID) {
-		   TapeLog(0, taskId, tcode, 0, 
-			   "Warning: volume %s (%u) ignored. Incomplete\n",
-			   volHeader.volumeName, volHeader.volumeID);
-		   continue;
+		    TapeLog(0, taskId, tcode, 0,
+			    "Warning: volume %s (%u) ignored. Incomplete\n",
+			    volHeader.volumeName, volHeader.volumeID);
+		    continue;
 		}
 
 		/* No volume was found. We may have hit the EOT or a 
 		 * bad-spot. Try to skip over this spot.
 		 */
-		if (badscan < 2) {              /* allow 2 errors, then fail */
-		   TapeLog(0, taskId, tcode, 0, 
-			   "Warning: Error in scanning tape - will try skipping volume\n");
-		   continue;
+		if (badscan < 2) {	/* allow 2 errors, then fail */
+		    TapeLog(0, taskId, tcode, 0,
+			    "Warning: Error in scanning tape - will try skipping volume\n");
+		    continue;
 		}
 		if (scanInfoPtr->tapeLabel.structVersion >= TAPE_VERSION_4) {
-		   TapeLog(0, taskId, tcode, 0, 
-			   "Warning: Error in scanning tape - end-of-tape inferred\n");
-		   moreTapes = 1;              /* then assume next tape */
-		}
-		else {
-		   ErrorLog(0, taskId, tcode, 0, "Error in scanning tape\n");
-		   /* will ask if there is a next tape */
+		    TapeLog(0, taskId, tcode, 0,
+			    "Warning: Error in scanning tape - end-of-tape inferred\n");
+		    moreTapes = 1;	/* then assume next tape */
+		} else {
+		    ErrorLog(0, taskId, tcode, 0, "Error in scanning tape\n");
+		    /* will ask if there is a next tape */
 		}
 		break;
 	    }
-	 
+
 	    PrintVolumeHeader(&volHeader);
 
 	    /* If this is not the first volume fragment, make sure it follows
 	     * the last volume fragment 
 	     */
-	    if (volEntry.dump)
-	    {
-		if ( (volEntry.dump != volHeader.dumpID) ||
-		     (volEntry.id   != volHeader.volumeID) ||
-		     (volEntry.seq  != volHeader.frag - 2) ||
-		     (strcmp(volEntry.name, volHeader.volumeName)) )
-		{
-		    TLog(taskId, 
+	    if (volEntry.dump) {
+		if ((volEntry.dump != volHeader.dumpID)
+		    || (volEntry.id != volHeader.volumeID)
+		    || (volEntry.seq != volHeader.frag - 2)
+		    || (strcmp(volEntry.name, volHeader.volumeName))) {
+		    TLog(taskId,
 			 "Warning: volume %s (%u) ignored. Incomplete - no last fragment\n",
 			 volEntry.name, volEntry.id);
 
-		    if (scanInfoPtr->addDbFlag)
-		    {
+		    if (scanInfoPtr->addDbFlag) {
 			tcode = flushSavedEntries(DUMP_FAILED);
-			if (tcode) ERROR_EXIT(tcode);
+			if (tcode)
+			    ERROR_EXIT(tcode);
 			volEntry.dump = 0;
 		    }
 		}
 	    }
 
 	    /* If this is the first volume fragment, make sure says so */
-	    if (scanInfoPtr->addDbFlag && 
-		!volEntry.dump && (volHeader.frag != 1))
-	    {
-	        TLog(taskId, 
+	    if (scanInfoPtr->addDbFlag && !volEntry.dump
+		&& (volHeader.frag != 1)) {
+		TLog(taskId,
 		     "Warning: volume %s (%u) ignored. Incomplete - no first fragment\n",
 		     volHeader.volumeName, volHeader.volumeID);
 	    }
 
 	    /* Check that this volume belongs to the dump we are scanning */
-	    else if (scanInfoPtr->dumpLabel.dumpid && 
-		     (volHeader.dumpID != scanInfoPtr->dumpLabel.dumpid) )
-	    {
-	        TLog(taskId, 
+	    else if (scanInfoPtr->dumpLabel.dumpid
+		     && (volHeader.dumpID != scanInfoPtr->dumpLabel.dumpid)) {
+		TLog(taskId,
 		     "Warning: volume %s (%u) ignored. Expected DumpId %u, got %u\n",
 		     volHeader.volumeName, volHeader.volumeID,
 		     scanInfoPtr->dumpLabel.dumpid, volHeader.dumpID);
 	    }
 
 	    /* Passed tests, Now add to the database (if dbadd flag is set) */
-	    else if (scanInfoPtr->addDbFlag)
-	    {
-	        /* Have enough information to create a dump entry */
-	        if (newDump)
-		{
+	    else if (scanInfoPtr->addDbFlag) {
+		/* Have enough information to create a dump entry */
+		if (newDump) {
 		    tcode = RcreateDump(scanInfoPtr, &volHeader);
-		    if (tcode)
-		    {
-		        ErrorLog(0, taskId, tcode, 0, "Can't add dump %u to database\n",
+		    if (tcode) {
+			ErrorLog(0, taskId, tcode, 0,
+				 "Can't add dump %u to database\n",
 				 volHeader.dumpID);
 			ERROR_EXIT(tcode);
 		    }
@@ -653,24 +653,23 @@ readDump(taskId, tapeInfoPtr, scanInfoPtr)
 		}
 
 		/* Have enough information to create a tape entry */
-		if (newTape)
-		{
+		if (newTape) {
 		    seq = extractTapeSeq(scanInfoPtr->tapeLabel.AFSName);
-		    if (seq < 0) ERROR_EXIT(TC_INTERNALERROR);
+		    if (seq < 0)
+			ERROR_EXIT(TC_INTERNALERROR);
 
-		    tcode = useTape(&tapeEntry,
-				    volHeader.dumpID, 
-				    TNAME(&scanInfoPtr->tapeLabel), seq,
-				    scanInfoPtr->tapeLabel.useCount,
-				    scanInfoPtr->dumpLabel.creationTime,
-				    scanInfoPtr->dumpLabel.expirationDate,
-				    tapepos);
-		    if (tcode)
-		    {
-		        char gotName[BU_MAXTAPELEN+32];
+		    tcode =
+			useTape(&tapeEntry, volHeader.dumpID,
+				TNAME(&scanInfoPtr->tapeLabel), seq,
+				scanInfoPtr->tapeLabel.useCount,
+				scanInfoPtr->dumpLabel.creationTime,
+				scanInfoPtr->dumpLabel.expirationDate,
+				tapepos);
+		    if (tcode) {
+			char gotName[BU_MAXTAPELEN + 32];
 
 			LABELNAME(gotName, &scanInfoPtr->tapeLabel);
-		        ErrorLog(0, taskId, tcode, 0, 
+			ErrorLog(0, taskId, tcode, 0,
 				 "Can't add tape %s for dump %u to database\n",
 				 gotName, volHeader.dumpID);
 			ERROR_EXIT(tcode);
@@ -679,56 +678,49 @@ readDump(taskId, tapeInfoPtr, scanInfoPtr)
 		}
 
 		/* Create the volume entry */
-		flags = ( (volHeader.frag == 1) ? BUDB_VOL_FIRSTFRAG : 0);
-		if (!volTrailer.contd) flags |= BUDB_VOL_LASTFRAG;
-		tcode = addVolume(&volEntry, 
-				  volHeader.dumpID, 
-				  TNAME(&scanInfoPtr->tapeLabel),
-				  volHeader.volumeName,
-				  volHeader.volumeID,
-				  volHeader.cloneDate,
-				  tapePosition, nbytes,
-				  (volHeader.frag - 1), flags);
-		if (tcode)
-		{
-		    ErrorLog(0, taskId, tcode, 0, 
+		flags = ((volHeader.frag == 1) ? BUDB_VOL_FIRSTFRAG : 0);
+		if (!volTrailer.contd)
+		    flags |= BUDB_VOL_LASTFRAG;
+		tcode =
+		    addVolume(&volEntry, volHeader.dumpID,
+			      TNAME(&scanInfoPtr->tapeLabel),
+			      volHeader.volumeName, volHeader.volumeID,
+			      volHeader.cloneDate, tapePosition, nbytes,
+			      (volHeader.frag - 1), flags);
+		if (tcode) {
+		    ErrorLog(0, taskId, tcode, 0,
 			     "Can't add volume %s (%u) for dump %u to database\n",
 			     volHeader.volumeName, volHeader.volumeID,
 			     volHeader.dumpID);
 		    ERROR_EXIT(tcode);
 		}
 	    }
-	    
-	    if (volTrailer.contd) 
-	    {
-	        /* No need to read the EOD marker, we know there is a next tape */
+
+	    if (volTrailer.contd) {
+		/* No need to read the EOD marker, we know there is a next tape */
 		moreTapes = 1;
 		break;
-	    }
-	    else
-	    {
-	        if (scanInfoPtr->addDbFlag)
-		{
+	    } else {
+		if (scanInfoPtr->addDbFlag) {
 		    tcode = flushSavedEntries(DUMP_SUCCESS);
 		    if (tcode)
-		       ERROR_EXIT(tcode);
+			ERROR_EXIT(tcode);
 		    volEntry.dump = 0;
 		}
 	    }
-	} /*w*/
+	}			/*w */
 
-	if (!newTape)
-	{
-	    if (scanInfoPtr->addDbFlag)
-	    {
-		tcode = finishTape(&tapeEntry,
-				  (tapeInfoPtr->kBytes + (tapeInfoPtr->nBytes ? 1 : 0)));
-		if (tcode)
-		{
-		    char gotName[BU_MAXTAPELEN+32];
-			
+	if (!newTape) {
+	    if (scanInfoPtr->addDbFlag) {
+		tcode =
+		    finishTape(&tapeEntry,
+			       (tapeInfoPtr->kBytes +
+				(tapeInfoPtr->nBytes ? 1 : 0)));
+		if (tcode) {
+		    char gotName[BU_MAXTAPELEN + 32];
+
 		    LABELNAME(gotName, &scanInfoPtr->tapeLabel);
-		    ErrorLog(0, taskId, tcode, 0, 
+		    ErrorLog(0, taskId, tcode, 0,
 			     "Can't mark tape %s 'completed' for dump %u in database\n",
 			     gotName, tapeEntry.dump);
 		    ERROR_EXIT(tcode);
@@ -741,40 +733,40 @@ readDump(taskId, tapeInfoPtr, scanInfoPtr)
 	    moreTapes = (queryoperator ? Ask("Are there more tapes") : 1);
 
 	/* Get the next tape label */
-	if (moreTapes)
-	{
+	if (moreTapes) {
 	    char *tapeName;
 	    afs_int32 dumpid;
 
 	    unmountTape(taskId, tapeInfoPtr);
 
 	    tapeName = nextTapeLabel(scanInfoPtr->tapeLabel.AFSName);
-	    dumpid   = scanInfoPtr->tapeLabel.dumpid;
-	    tcode = getScanTape(taskId, tapeInfoPtr, tapeName, dumpid, 1, &scanInfoPtr->tapeLabel);
-	    if (tcode) ERROR_EXIT(tcode);
+	    dumpid = scanInfoPtr->tapeLabel.dumpid;
+	    tcode =
+		getScanTape(taskId, tapeInfoPtr, tapeName, dumpid, 1,
+			    &scanInfoPtr->tapeLabel);
+	    if (tcode)
+		ERROR_EXIT(tcode);
 	    newTape = 1;
 	}
-    } /*t*/
+    }				/*t */
 
-    if (!newDump)
-    {
-        if (scanInfoPtr->addDbFlag)
-	{
+    if (!newDump) {
+	if (scanInfoPtr->addDbFlag) {
 	    tcode = finishDump(&scanInfoPtr->dumpEntry);
-	    if (tcode)
-	    {
-	        ErrorLog(0, taskId, tcode, 0, 
+	    if (tcode) {
+		ErrorLog(0, taskId, tcode, 0,
 			 "Can't mark dump %u 'completed' in database\n",
 			 scanInfoPtr->dumpEntry.id);
 	    }
 
 	    tcode = flushSavedEntries(DUMP_SUCCESS);
-	    if (tcode) ERROR_EXIT(tcode);
+	    if (tcode)
+		ERROR_EXIT(tcode);
 	}
     }
 
-error_exit:
-    return(code);
+  error_exit:
+    return (code);
 }
 
 /* validatePath
@@ -790,36 +782,36 @@ validatePath(labelptr, pathptr)
     char tapeName[BU_MAXTAPELEN];
 
     /* check length */
-    if ( strlen(pathptr) > BU_MAX_DUMP_PATH-1 )
-    {
+    if (strlen(pathptr) > BU_MAX_DUMP_PATH - 1) {
 	fprintf(stderr, "Invalid pathname - too long\n");
-	return(0);
+	return (0);
     }
 
-    if ( !labelptr ) return(1);
+    if (!labelptr)
+	return (1);
 
     strcpy(tapeName, labelptr->AFSName);
 
     tp = strrchr(tapeName, '.');
-    if ( !tp ) return(1);
+    if (!tp)
+	return (1);
     tp++;
 
     up = strrchr(pathptr, '/');
-    if ( !up )
-    {
+    if (!up) {
 	fprintf(stderr, "Invalid path name, missing /\n");
-    	return(0);
+	return (0);
     }
     up++;
 
-    if ( strcmp(up, tp) != 0 )
-    {
+    if (strcmp(up, tp) != 0) {
 	fprintf(stderr, "Invalid path name\n");
-	fprintf(stderr, "Mismatch between tape dump name '%s' and users dump name '%s'\n",
+	fprintf(stderr,
+		"Mismatch between tape dump name '%s' and users dump name '%s'\n",
 		tp, up);
-	return(0);
+	return (0);
     }
-    return(1);
+    return (1);
 }
 
 /* volumesetNamePtr
@@ -840,15 +832,17 @@ volumesetNamePtr(ptr)
     int dotIndex;
 
     dotPtr = strchr(ptr, '.');
-    if ( !dotPtr ) return(0);
+    if (!dotPtr)
+	return (0);
 
     dotIndex = dotPtr - ptr;
-    if ((dotIndex + 1) > sizeof(vsname)) return(0);	/* name too long */
+    if ((dotIndex + 1) > sizeof(vsname))
+	return (0);		/* name too long */
 
     strncpy(&vsname[0], ptr, dotIndex);
-    vsname[dotIndex] = 0;				/* ensure null terminated */
+    vsname[dotIndex] = 0;	/* ensure null terminated */
 
-    return(&vsname[0]);
+    return (&vsname[0]);
 }
 
 char *
@@ -860,15 +854,17 @@ extractDumpName(ptr)
     int dotIndex;
 
     dotPtr = strrchr(ptr, '.');
-    if (!dotPtr) return(0);
+    if (!dotPtr)
+	return (0);
 
     dotIndex = dotPtr - ptr;
-    if ((dotIndex + 1) > sizeof(dname)) return(0);	/* name too long */
+    if ((dotIndex + 1) > sizeof(dname))
+	return (0);		/* name too long */
 
     strncpy(&dname[0], ptr, dotIndex);
-    dname[dotIndex] = 0;				/* ensure null terminated */
+    dname[dotIndex] = 0;	/* ensure null terminated */
 
-    return(&dname[0]);
+    return (&dname[0]);
 }
 
 /* extractTapeSeq
@@ -888,56 +884,62 @@ extractTapeSeq(tapename)
     char *sptr;
 
     sptr = strrchr(tapename, '.');
-    if ( !sptr ) return(-1);
+    if (!sptr)
+	return (-1);
     sptr++;
-    return(atol(sptr));
+    return (atol(sptr));
 }
 
 /* databaseTape
  *   returns true or false depending on whether the tape is 
  *   a database tape or not.
  */
-int databaseTape(tapeName)
-    char *tapeName;
+int
+databaseTape(tapeName)
+     char *tapeName;
 {
     char *sptr;
-    int  c;
+    int c;
 
     sptr = strrchr(tapeName, '.');
-    if ( !sptr ) return(0);
-    
-    c = (int)( (afs_int32)sptr - (afs_int32)tapeName );
-    if ( strncmp(tapeName, DUMP_TAPE_NAME, c) == 0 )
-        return(1);
+    if (!sptr)
+	return (0);
 
-    return(0);
+    c = (int)((afs_int32) sptr - (afs_int32) tapeName);
+    if (strncmp(tapeName, DUMP_TAPE_NAME, c) == 0)
+	return (1);
+
+    return (0);
 }
 
-afs_int32 RcreateDump(tapeScanInfoPtr, volHeaderPtr)
-    struct tapeScanInfo *tapeScanInfoPtr;
-    struct volumeHeader *volHeaderPtr;
+afs_int32
+RcreateDump(tapeScanInfoPtr, volHeaderPtr)
+     struct tapeScanInfo *tapeScanInfoPtr;
+     struct volumeHeader *volHeaderPtr;
 {
     afs_int32 code;
-    struct butm_tapeLabel    *dumpLabelPtr  = &tapeScanInfoPtr->dumpLabel;
-    struct budb_dumpEntry    *dumpEntryPtr  = &tapeScanInfoPtr->dumpEntry;
+    struct butm_tapeLabel *dumpLabelPtr = &tapeScanInfoPtr->dumpLabel;
+    struct budb_dumpEntry *dumpEntryPtr = &tapeScanInfoPtr->dumpEntry;
 
     /* construct dump entry */
     memset(dumpEntryPtr, 0, sizeof(struct budb_dumpEntry));
-    dumpEntryPtr->id            = volHeaderPtr->dumpID;
+    dumpEntryPtr->id = volHeaderPtr->dumpID;
     dumpEntryPtr->initialDumpID = tapeScanInfoPtr->initialDumpId;
-    dumpEntryPtr->parent        = volHeaderPtr->parentID;
-    dumpEntryPtr->level         = volHeaderPtr->level;
-    dumpEntryPtr->created       = volHeaderPtr->dumpID;  /* time dump was created */
-    dumpEntryPtr->flags         = 0;
-    dumpEntryPtr->incTime       = 0;
-    dumpEntryPtr->nVolumes      = 0;
-    strcpy(dumpEntryPtr->volumeSetName, volumesetNamePtr(volHeaderPtr->dumpSetName));
-    strcpy(dumpEntryPtr->dumpPath,      dumpLabelPtr->dumpPath);
-    strcpy(dumpEntryPtr->name,          volHeaderPtr->dumpSetName);
+    dumpEntryPtr->parent = volHeaderPtr->parentID;
+    dumpEntryPtr->level = volHeaderPtr->level;
+    dumpEntryPtr->created = volHeaderPtr->dumpID;	/* time dump was created */
+    dumpEntryPtr->flags = 0;
+    dumpEntryPtr->incTime = 0;
+    dumpEntryPtr->nVolumes = 0;
+    strcpy(dumpEntryPtr->volumeSetName,
+	   volumesetNamePtr(volHeaderPtr->dumpSetName));
+    strcpy(dumpEntryPtr->dumpPath, dumpLabelPtr->dumpPath);
+    strcpy(dumpEntryPtr->name, volHeaderPtr->dumpSetName);
     default_tapeset(&dumpEntryPtr->tapes, volHeaderPtr->dumpSetName);
     dumpEntryPtr->tapes.b = extractTapeSeq(dumpLabelPtr->AFSName);
-    copy_ktcPrincipal_to_budbPrincipal(&dumpLabelPtr->creator, &dumpEntryPtr->dumper);
+    copy_ktcPrincipal_to_budbPrincipal(&dumpLabelPtr->creator,
+				       &dumpEntryPtr->dumper);
 
     code = bcdb_CreateDump(dumpEntryPtr);
-    return(code);
+    return (code);
 }

@@ -20,12 +20,8 @@ typedef enum _WELLKNOWN_TRUSTEE_ID {
     LocalAdministratorsGroup
 } WELLKNOWN_TRUSTEE_ID;
 
-DWORD
-ObjectDaclEntryAdd(HANDLE objectHandle,
-		   SE_OBJECT_TYPE objectType,
-		   WELLKNOWN_TRUSTEE_ID trustee,
-		   DWORD accessPerm,
-		   ACCESS_MODE accessMode,
-		   DWORD inheritance);
+DWORD ObjectDaclEntryAdd(HANDLE objectHandle, SE_OBJECT_TYPE objectType,
+			 WELLKNOWN_TRUSTEE_ID trustee, DWORD accessPerm,
+			 ACCESS_MODE accessMode, DWORD inheritance);
 
 #endif /* OPENAFS_SECUTIL_NT_H */

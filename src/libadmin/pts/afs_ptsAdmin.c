@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <stdio.h>
 
@@ -69,17 +70,16 @@ extern int PR_ListEntries();
  *
  */
 
-static int IsValidCellHandle(
-  const afs_cell_handle_p c_handle,
-  afs_status_p st)
+static int
+IsValidCellHandle(const afs_cell_handle_p c_handle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
 
-    if (!CellHandleIsValid((void *) c_handle, &tst)) {
+    if (!CellHandleIsValid((void *)c_handle, &tst)) {
 	goto fail_IsValidCellHandle;
     }
- 
+
     if (c_handle->pts_valid == 0) {
 	tst = ADMCLIENTCELLPTSINVALID;
 	goto fail_IsValidCellHandle;
@@ -92,10 +92,10 @@ static int IsValidCellHandle(
     rc = 1;
 
 
-fail_IsValidCellHandle:
+  fail_IsValidCellHandle:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -124,11 +124,9 @@ fail_IsValidCellHandle:
  *
  */
 
-static int TranslatePTSNames(
-  const afs_cell_handle_p cellHandle,
-  namelist *names,
-  idlist *ids,
-  afs_status_p st)
+static int
+TranslatePTSNames(const afs_cell_handle_p cellHandle, namelist * names,
+		  idlist * ids, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -139,7 +137,7 @@ static int TranslatePTSNames(
      * Lowercase the names to translate
      */
 
-    for(i=0;i<names->namelist_len;i++) {
+    for (i = 0; i < names->namelist_len; i++) {
 	p = names->namelist_val[i];
 	while (*p) {
 	    *p = tolower(*p);
@@ -158,7 +156,7 @@ static int TranslatePTSNames(
      * Check to see if the lookup failed
      */
 
-    for(i=0;i<ids->idlist_len;i++) {
+    for (i = 0; i < ids->idlist_len; i++) {
 	if (ids->idlist_val[i] == ANONYMOUSID) {
 	    tst = ADMPTSFAILEDNAMETRANSLATE;
 	    goto fail_TranslatePTSNames;
@@ -166,10 +164,10 @@ static int TranslatePTSNames(
     }
     rc = 1;
 
-fail_TranslatePTSNames:
+  fail_TranslatePTSNames:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -205,29 +203,25 @@ fail_TranslatePTSNames:
  *
  */
 
-static int TranslateTwoNames(
-  const afs_cell_handle_p c_handle,
-  const char *id1,
-  afs_status_t error1,
-  const char *id2,
-  afs_status_t error2,
-  idlist *ids,
-  afs_status_p st)
+static int
+TranslateTwoNames(const afs_cell_handle_p c_handle, const char *id1,
+		  afs_status_t error1, const char *id2, afs_status_t error2,
+		  idlist * ids, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     namelist names;
-    char tmp_array[2*PTS_MAX_NAME_LEN];
- 
+    char tmp_array[2 * PTS_MAX_NAME_LEN];
+
     /*
      * Copy the group and user names in order to translate them
      */
 
     names.namelist_len = 2;
-    names.namelist_val = (prname *) &tmp_array[0];
+    names.namelist_val = (prname *) & tmp_array[0];
 
-    strncpy(names.namelist_val[0],id1,PTS_MAX_NAME_LEN);
-    strncpy(names.namelist_val[1],id2,PTS_MAX_NAME_LEN);
+    strncpy(names.namelist_val[0], id1, PTS_MAX_NAME_LEN);
+    strncpy(names.namelist_val[1], id2, PTS_MAX_NAME_LEN);
     ids->idlist_val = 0;
     ids->idlist_len = 0;
 
@@ -236,12 +230,12 @@ static int TranslateTwoNames(
      * This is a cheaper check than calling strlen
      */
 
-    if (names.namelist_val[0][PTS_MAX_NAME_LEN-1] != 0) {
+    if (names.namelist_val[0][PTS_MAX_NAME_LEN - 1] != 0) {
 	tst = error1;
 	goto fail_TranslateTwoNames;
     }
 
-    if (names.namelist_val[0][PTS_MAX_NAME_LEN-1] != 0) {
+    if (names.namelist_val[0][PTS_MAX_NAME_LEN - 1] != 0) {
 	tst = error2;
 	goto fail_TranslateTwoNames;
     }
@@ -250,16 +244,16 @@ static int TranslateTwoNames(
      * Translate user and group into pts ID's
      */
 
-    if(TranslatePTSNames(c_handle, &names, ids, &tst) == 0) {
+    if (TranslatePTSNames(c_handle, &names, ids, &tst) == 0) {
 	goto fail_TranslateTwoNames;
     }
     rc = 1;
 
 
-fail_TranslateTwoNames:
+  fail_TranslateTwoNames:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -286,27 +280,25 @@ fail_TranslateTwoNames:
  *
  */
 
-static int TranslateOneName(
-  const afs_cell_handle_p c_handle,
-  const char *ptsName,
-  afs_status_t tooLongError,
-  afs_int32 *ptsId,
-  afs_status_p st)
+static int
+TranslateOneName(const afs_cell_handle_p c_handle, const char *ptsName,
+		 afs_status_t tooLongError, afs_int32 * ptsId,
+		 afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     namelist names[1];
     char tmp_array[PTS_MAX_NAME_LEN];
     idlist ids;
- 
+
     /*
      * Copy the name in order to translate it
      */
 
     names[0].namelist_len = 1;
-    names[0].namelist_val = (prname *) &tmp_array[0];
+    names[0].namelist_val = (prname *) & tmp_array[0];
 
-    strncpy(names[0].namelist_val,ptsName,PTS_MAX_NAME_LEN);
+    strncpy(names[0].namelist_val, ptsName, PTS_MAX_NAME_LEN);
     ids.idlist_val = 0;
     ids.idlist_len = 0;
 
@@ -315,7 +307,7 @@ static int TranslateOneName(
      * This is a cheaper check than calling strlen
      */
 
-    if (names[0].namelist_val[0][PTS_MAX_NAME_LEN-1] != 0) {
+    if (names[0].namelist_val[0][PTS_MAX_NAME_LEN - 1] != 0) {
 	tst = tooLongError;
 	goto fail_TranslateOneName;
     }
@@ -324,7 +316,7 @@ static int TranslateOneName(
      * Translate user into pts ID
      */
 
-    if(TranslatePTSNames(c_handle, names, &ids, &tst) == 0) {
+    if (TranslatePTSNames(c_handle, names, &ids, &tst) == 0) {
 	goto fail_TranslateOneName;
     } else {
 	if (ids.idlist_val != NULL) {
@@ -335,10 +327,10 @@ static int TranslateOneName(
     rc = 1;
 
 
-fail_TranslateOneName:
+  fail_TranslateOneName:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -366,11 +358,9 @@ fail_TranslateOneName:
  *
  */
 
-static int TranslatePTSIds(
-  const afs_cell_handle_p cellHandle,
-  namelist *names,
-  idlist *ids,
-  afs_status_p st)
+static int
+TranslatePTSIds(const afs_cell_handle_p cellHandle, namelist * names,
+		idlist * ids, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -382,10 +372,10 @@ static int TranslatePTSIds(
     }
     rc = 1;
 
-fail_TranslatePTSIds:
+  fail_TranslatePTSIds:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -412,17 +402,15 @@ fail_TranslatePTSIds:
  *
  */
 
-int ADMINAPI pts_GroupMemberAdd(
-  const void *cellHandle,
-  const char *userName,
-  const char *groupName,
-  afs_status_p st)
+int ADMINAPI
+pts_GroupMemberAdd(const void *cellHandle, const char *userName,
+		   const char *groupName, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     idlist ids;
- 
+
     /*
      * Validate arguments
      */
@@ -441,8 +429,9 @@ int ADMINAPI pts_GroupMemberAdd(
 	goto fail_pts_GroupMemberAdd;
     }
 
-    if (!TranslateTwoNames(c_handle, userName, ADMPTSUSERNAMETOOLONG, groupName,
-			 ADMPTSGROUPNAMETOOLONG, &ids, &tst)) {
+    if (!TranslateTwoNames
+	(c_handle, userName, ADMPTSUSERNAMETOOLONG, groupName,
+	 ADMPTSGROUPNAMETOOLONG, &ids, &tst)) {
 	goto fail_pts_GroupMemberAdd;
     }
 
@@ -450,22 +439,23 @@ int ADMINAPI pts_GroupMemberAdd(
      * Make the rpc
      */
 
-    tst = ubik_Call(PR_AddToGroup, c_handle->pts, 0, ids.idlist_val[0],
-		    ids.idlist_val[1]);
+    tst =
+	ubik_Call(PR_AddToGroup, c_handle->pts, 0, ids.idlist_val[0],
+		  ids.idlist_val[1]);
 
     if (tst != 0) {
 	goto fail_pts_GroupMemberAdd;
     }
     rc = 1;
 
-fail_pts_GroupMemberAdd:
+  fail_pts_GroupMemberAdd:
 
     if (ids.idlist_val != 0) {
 	free(ids.idlist_val);
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -492,17 +482,15 @@ fail_pts_GroupMemberAdd:
  *
  */
 
-int ADMINAPI pts_GroupOwnerChange(
-  const void *cellHandle,
-  const char *targetGroup,
-  const char *newOwner,
-  afs_status_p st)
+int ADMINAPI
+pts_GroupOwnerChange(const void *cellHandle, const char *targetGroup,
+		     const char *newOwner, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     idlist ids;
- 
+
     /*
      * Validate arguments
      */
@@ -521,8 +509,9 @@ int ADMINAPI pts_GroupOwnerChange(
 	goto fail_pts_GroupOwnerChange;
     }
 
-    if (!TranslateTwoNames(c_handle, newOwner, ADMPTSNEWOWNERTOOLONG,
-			 targetGroup, ADMPTSTARGETGROUPTOOLONG, &ids, &tst)) {
+    if (!TranslateTwoNames
+	(c_handle, newOwner, ADMPTSNEWOWNERTOOLONG, targetGroup,
+	 ADMPTSTARGETGROUPTOOLONG, &ids, &tst)) {
 	goto fail_pts_GroupOwnerChange;
     }
 
@@ -530,22 +519,23 @@ int ADMINAPI pts_GroupOwnerChange(
      * Make the rpc
      */
 
-    tst = ubik_Call(PR_ChangeEntry, c_handle->pts, 0, ids.idlist_val[1],
-		    "", ids.idlist_val[0], 0);
+    tst =
+	ubik_Call(PR_ChangeEntry, c_handle->pts, 0, ids.idlist_val[1], "",
+		  ids.idlist_val[0], 0);
 
     if (tst != 0) {
 	goto fail_pts_GroupOwnerChange;
     }
     rc = 1;
 
-fail_pts_GroupOwnerChange:
+  fail_pts_GroupOwnerChange:
 
     if (ids.idlist_val != 0) {
 	free(ids.idlist_val);
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -578,18 +568,15 @@ fail_pts_GroupOwnerChange:
  *
  */
 
-int ADMINAPI pts_GroupCreate(
-  const void *cellHandle,
-  const char *newGroup,
-  const char *newOwner,
-  int *newGroupId,
-  afs_status_p st)
+int ADMINAPI
+pts_GroupCreate(const void *cellHandle, const char *newGroup,
+		const char *newOwner, int *newGroupId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     afs_int32 newOwnerId = 0;
- 
+
     /*
      * Validate arguments
      */
@@ -618,8 +605,8 @@ int ADMINAPI pts_GroupCreate(
      */
 
     if (newOwner != NULL) {
-	if (!TranslateOneName(c_handle, newOwner, ADMPTSNEWOWNERTOOLONG,
-			    &newOwnerId, &tst)) {
+	if (!TranslateOneName
+	    (c_handle, newOwner, ADMPTSNEWOWNERTOOLONG, &newOwnerId, &tst)) {
 	    goto fail_pts_GroupCreate;
 	}
     }
@@ -629,11 +616,13 @@ int ADMINAPI pts_GroupCreate(
      */
 
     if (*newGroupId != 0) {
-	tst = ubik_Call(PR_INewEntry, c_handle->pts, 0, newGroup, *newGroupId,
-			newOwnerId);
+	tst =
+	    ubik_Call(PR_INewEntry, c_handle->pts, 0, newGroup, *newGroupId,
+		      newOwnerId);
     } else {
-	tst = ubik_Call(PR_NewEntry, c_handle->pts, 0, newGroup, PRGRP,
-			newOwnerId, newGroupId);
+	tst =
+	    ubik_Call(PR_NewEntry, c_handle->pts, 0, newGroup, PRGRP,
+		      newOwnerId, newGroupId);
     }
 
     if (tst != 0) {
@@ -641,10 +630,10 @@ int ADMINAPI pts_GroupCreate(
     }
     rc = 1;
 
-fail_pts_GroupCreate:
+  fail_pts_GroupCreate:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -670,9 +659,8 @@ fail_pts_GroupCreate:
  *
  */
 
-static void GetGroupAccess(
-  pts_groupAccess_p access,
-  afs_int32 flag)
+static void
+GetGroupAccess(pts_groupAccess_p access, afs_int32 flag)
 {
 
     *access = PTS_GROUP_OWNER_ACCESS;
@@ -684,7 +672,7 @@ static void GetGroupAccess(
 	*access = PTS_GROUP_ANYUSER_ACCESS;
     }
 }
- 
+
 
 /*
  * pts_GroupGet - retrieve information about a particular group.
@@ -709,11 +697,9 @@ static void GetGroupAccess(
  *
  */
 
-int ADMINAPI pts_GroupGet(
-  const void *cellHandle,
-  const char *groupName,
-  pts_GroupEntry_p groupP,
-  afs_status_p st)
+int ADMINAPI
+pts_GroupGet(const void *cellHandle, const char *groupName,
+	     pts_GroupEntry_p groupP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -748,8 +734,8 @@ int ADMINAPI pts_GroupGet(
      * Translate the group name into an id.
      */
 
-    if (!TranslateOneName(c_handle, groupName, ADMPTSGROUPNAMETOOLONG,
-			&groupId, &tst)) {
+    if (!TranslateOneName
+	(c_handle, groupName, ADMPTSGROUPNAMETOOLONG, &groupId, &tst)) {
 	goto fail_pts_GroupGet;
     }
 
@@ -825,7 +811,7 @@ int ADMINAPI pts_GroupGet(
     twobit = flags & 3;
 
     GetGroupAccess(&groupP->listMembership, twobit);
- 
+
     flags = flags >> 2;
 
     if (flags & 1) {
@@ -850,7 +836,7 @@ int ADMINAPI pts_GroupGet(
     ptsids[1] = groupEntry.creator;
     names.namelist_len = 0;
     names.namelist_val = 0;
- 
+
 
     if (!TranslatePTSIds(c_handle, &names, &ids, &tst)) {
 	goto fail_pts_GroupGet;
@@ -861,10 +847,10 @@ int ADMINAPI pts_GroupGet(
     free(names.namelist_val);
     rc = 1;
 
-fail_pts_GroupGet:
+  fail_pts_GroupGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -895,18 +881,15 @@ fail_pts_GroupGet:
  *
  */
 
-static int EntryDelete(
-  const void *cellHandle,
-  const char *entryName,
-  afs_status_t error1,
-  afs_status_t error2,
-  afs_status_p st)
+static int
+EntryDelete(const void *cellHandle, const char *entryName,
+	    afs_status_t error1, afs_status_t error2, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     afs_int32 entryId = 0;
- 
+
     /*
      * Validate arguments
      */
@@ -924,8 +907,7 @@ static int EntryDelete(
      * Translate the entry name into an id.
      */
 
-    if (!TranslateOneName(c_handle, entryName, error2,
-			&entryId, &tst)) {
+    if (!TranslateOneName(c_handle, entryName, error2, &entryId, &tst)) {
 	goto fail_EntryDelete;
     }
 
@@ -940,10 +922,10 @@ static int EntryDelete(
     }
     rc = 1;
 
-fail_EntryDelete:
+  fail_EntryDelete:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -969,10 +951,9 @@ fail_EntryDelete:
  *
  */
 
-int ADMINAPI pts_GroupDelete(
-  const void *cellHandle,
-  const char *groupName,
-  afs_status_p st)
+int ADMINAPI
+pts_GroupDelete(const void *cellHandle, const char *groupName,
+		afs_status_p st)
 {
 
     return EntryDelete(cellHandle, groupName, ADMPTSGROUPNAMENULL,
@@ -1000,16 +981,14 @@ int ADMINAPI pts_GroupDelete(
  *
  */
 
-int ADMINAPI pts_GroupMaxGet(
-  const void *cellHandle,
-  int *maxGroupId,
-  afs_status_p st)
+int ADMINAPI
+pts_GroupMaxGet(const void *cellHandle, int *maxGroupId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     afs_int32 maxUserId = 0;
- 
+
     /*
      * Validate arguments
      */
@@ -1030,10 +1009,10 @@ int ADMINAPI pts_GroupMaxGet(
     }
     rc = 1;
 
-fail_pts_GroupMaxGet:
+  fail_pts_GroupMaxGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1058,15 +1037,13 @@ fail_pts_GroupMaxGet:
  *
  */
 
-int ADMINAPI pts_GroupMaxSet(
-  const void *cellHandle,
-  int maxGroupId,
-  afs_status_p st)
+int ADMINAPI
+pts_GroupMaxSet(const void *cellHandle, int maxGroupId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
- 
+
     /*
      * Validate arguments
      */
@@ -1082,10 +1059,10 @@ int ADMINAPI pts_GroupMaxSet(
     }
     rc = 1;
 
-fail_pts_GroupMaxSet:
+  fail_pts_GroupMaxSet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1104,7 +1081,7 @@ fail_pts_GroupMaxSet:
 typedef struct pts_group_member_list_iterator {
     int begin_magic;
     int is_valid;
-    pthread_mutex_t mutex; /* hold to manipulate this structure */
+    pthread_mutex_t mutex;	/* hold to manipulate this structure */
     prlist ids;
     namelist names;
     int index;
@@ -1129,37 +1106,37 @@ typedef struct pts_group_member_list_iterator {
  *
  */
 
-static int IsValidPtsGroupMemberListIterator(
-  pts_group_member_list_iterator_p iter,
-  afs_status_p st)
+static int
+IsValidPtsGroupMemberListIterator(pts_group_member_list_iterator_p iter,
+				  afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
 
     if (iter == NULL) {
-        tst = ADMITERATORNULL;
-        goto fail_IsValidPtsGroupMemberListIterator;
+	tst = ADMITERATORNULL;
+	goto fail_IsValidPtsGroupMemberListIterator;
     }
- 
-    if ((iter->begin_magic != BEGIN_MAGIC) ||
-        (iter->end_magic != END_MAGIC)) {
-        tst = ADMITERATORBADMAGICNULL;
-        goto fail_IsValidPtsGroupMemberListIterator;
+
+    if ((iter->begin_magic != BEGIN_MAGIC) || (iter->end_magic != END_MAGIC)) {
+	tst = ADMITERATORBADMAGICNULL;
+	goto fail_IsValidPtsGroupMemberListIterator;
     }
- 
+
     if (iter->is_valid == 0) {
-        tst = ADMITERATORINVALID;
-        goto fail_IsValidPtsGroupMemberListIterator;
+	tst = ADMITERATORINVALID;
+	goto fail_IsValidPtsGroupMemberListIterator;
     }
     rc = 1;
 
-fail_IsValidPtsGroupMemberListIterator:
+  fail_IsValidPtsGroupMemberListIterator:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
+
 /*
  * MemberListBegin - an internal function which is used to get both
  * the list of members in a group and the list of groups a user belongs
@@ -1185,25 +1162,22 @@ fail_IsValidPtsGroupMemberListIterator:
  *
  */
 
-static int MemberListBegin(
-  const void *cellHandle,
-  const char *name,
-  afs_status_t error1,
-  afs_status_t error2,
-  void **iterationIdP,
-  afs_status_p st)
+static int
+MemberListBegin(const void *cellHandle, const char *name, afs_status_t error1,
+		afs_status_t error2, void **iterationIdP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     afs_int32 groupId = 0;
     afs_int32 exceeded = 0;
-    pts_group_member_list_iterator_p iter = (pts_group_member_list_iterator_p) malloc(sizeof(pts_group_member_list_iterator_t));
+    pts_group_member_list_iterator_p iter = (pts_group_member_list_iterator_p)
+	malloc(sizeof(pts_group_member_list_iterator_t));
     int iter_allocated = 0;
     int ids_allocated = 0;
     int names_allocated = 0;
     int mutex_inited = 0;
- 
+
     /*
      * Validate arguments
      */
@@ -1233,8 +1207,8 @@ static int MemberListBegin(
      * Translate the name into an id.
      */
 
-    if (!TranslateOneName(c_handle, name, ADMPTSGROUPNAMETOOLONG,
-			&groupId, &tst)) {
+    if (!TranslateOneName
+	(c_handle, name, ADMPTSGROUPNAMETOOLONG, &groupId, &tst)) {
 	goto fail_MemberListBegin;
     }
 
@@ -1248,8 +1222,9 @@ static int MemberListBegin(
     iter->ids.prlist_len = 0;
     iter->ids.prlist_val = 0;
 
-    tst = ubik_Call(PR_ListElements, c_handle->pts, 0, groupId, &iter->ids,
-		    &exceeded);
+    tst =
+	ubik_Call(PR_ListElements, c_handle->pts, 0, groupId, &iter->ids,
+		  &exceeded);
 
     if (tst != 0) {
 	goto fail_MemberListBegin;
@@ -1264,7 +1239,8 @@ static int MemberListBegin(
     iter->names.namelist_len = 0;
     iter->names.namelist_val = 0;
 
-    if (!TranslatePTSIds(c_handle, &iter->names, (idlist *) &iter->ids, &tst)) {
+    if (!TranslatePTSIds
+	(c_handle, &iter->names, (idlist *) & iter->ids, &tst)) {
 	goto fail_MemberListBegin;
     }
 
@@ -1274,10 +1250,10 @@ static int MemberListBegin(
     iter->index = 0;
     iter->is_valid = 1;
 
-    *iterationIdP = (void *) iter;
+    *iterationIdP = (void *)iter;
     rc = 1;
 
-fail_MemberListBegin:
+  fail_MemberListBegin:
 
     if (ids_allocated) {
 	free(iter->ids.prlist_val);
@@ -1295,7 +1271,7 @@ fail_MemberListBegin:
 	}
     }
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1325,11 +1301,9 @@ fail_MemberListBegin:
  *
  */
 
-int ADMINAPI pts_GroupMemberListBegin(
-  const void *cellHandle,
-  const char *groupName,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+pts_GroupMemberListBegin(const void *cellHandle, const char *groupName,
+			 void **iterationIdP, afs_status_p st)
 {
     return MemberListBegin(cellHandle, groupName, ADMPTSGROUPNAMENULL,
 			   ADMPTSGROUPNAMETOOLONG, iterationIdP, st);
@@ -1355,16 +1329,16 @@ int ADMINAPI pts_GroupMemberListBegin(
  *
  */
 
-int ADMINAPI pts_GroupMemberListNext(
-  const void *iterationId,
-  char *memberName,
-  afs_status_p st)
+int ADMINAPI
+pts_GroupMemberListNext(const void *iterationId, char *memberName,
+			afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
-    pts_group_member_list_iterator_p iter = (pts_group_member_list_iterator_p) iterationId;
+    pts_group_member_list_iterator_p iter =
+	(pts_group_member_list_iterator_p) iterationId;
     int mutex_locked = 0;
- 
+
     /*
      * Validate arguments
      */
@@ -1403,19 +1377,19 @@ int ADMINAPI pts_GroupMemberListNext(
 	tst = ADMITERATORDONE;
 	goto fail_pts_GroupMemberListNext;
     } else {
-	strcpy(memberName,iter->names.namelist_val[iter->index]);
+	strcpy(memberName, iter->names.namelist_val[iter->index]);
 	iter->index++;
     }
     rc = 1;
 
-fail_pts_GroupMemberListNext:
+  fail_pts_GroupMemberListNext:
 
     if (mutex_locked) {
 	pthread_mutex_unlock(&iter->mutex);
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1441,15 +1415,15 @@ fail_pts_GroupMemberListNext:
  * is called only once for each iterator.
  */
 
-int ADMINAPI pts_GroupMemberListDone(
-  const void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+pts_GroupMemberListDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
-    pts_group_member_list_iterator_p iter = (pts_group_member_list_iterator_p) iterationId;
+    pts_group_member_list_iterator_p iter =
+	(pts_group_member_list_iterator_p) iterationId;
     int mutex_locked = 0;
- 
+
     /*
      * Validate arguments
      */
@@ -1470,7 +1444,7 @@ int ADMINAPI pts_GroupMemberListDone(
 
     mutex_locked = 1;
 
-    if (!IsValidPtsGroupMemberListIterator(iter,&tst)) {
+    if (!IsValidPtsGroupMemberListIterator(iter, &tst)) {
 	goto fail_pts_GroupMemberListDone;
     }
 
@@ -1485,14 +1459,14 @@ int ADMINAPI pts_GroupMemberListDone(
     free(iter);
     rc = 1;
 
-fail_pts_GroupMemberListDone:
+  fail_pts_GroupMemberListDone:
 
     if (mutex_locked) {
 	pthread_mutex_unlock(&iter->mutex);
     }
- 
+
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1519,17 +1493,15 @@ fail_pts_GroupMemberListDone:
  *
  */
 
-int ADMINAPI pts_GroupMemberRemove(
-  const void *cellHandle,
-  const char *userName,
-  const char *groupName,
-  afs_status_p st)
+int ADMINAPI
+pts_GroupMemberRemove(const void *cellHandle, const char *userName,
+		      const char *groupName, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     idlist ids;
- 
+
     /*
      * Validate arguments
      */
@@ -1548,8 +1520,9 @@ int ADMINAPI pts_GroupMemberRemove(
 	goto fail_pts_GroupMemberRemove;
     }
 
-    if (!TranslateTwoNames(c_handle, userName, ADMPTSUSERNAMETOOLONG, groupName,
-			 ADMPTSGROUPNAMETOOLONG, &ids, &tst)) {
+    if (!TranslateTwoNames
+	(c_handle, userName, ADMPTSUSERNAMETOOLONG, groupName,
+	 ADMPTSGROUPNAMETOOLONG, &ids, &tst)) {
 	goto fail_pts_GroupMemberRemove;
     }
 
@@ -1557,22 +1530,23 @@ int ADMINAPI pts_GroupMemberRemove(
      * Make the rpc
      */
 
-    tst = ubik_Call(PR_RemoveFromGroup, c_handle->pts, 0, ids.idlist_val[0],
-		    ids.idlist_val[1]);
+    tst =
+	ubik_Call(PR_RemoveFromGroup, c_handle->pts, 0, ids.idlist_val[0],
+		  ids.idlist_val[1]);
 
     if (tst != 0) {
 	goto fail_pts_GroupMemberRemove;
     }
     rc = 1;
 
-fail_pts_GroupMemberRemove:
+  fail_pts_GroupMemberRemove:
 
     if (ids.idlist_val != 0) {
 	free(ids.idlist_val);
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1599,17 +1573,15 @@ fail_pts_GroupMemberRemove:
  *
  */
 
-int ADMINAPI pts_GroupRename(
-  const void *cellHandle,
-  const char *oldName,
-  const char *newName,
-  afs_status_p st)
+int ADMINAPI
+pts_GroupRename(const void *cellHandle, const char *oldName,
+		const char *newName, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     afs_int32 groupId = 0;
- 
+
     /*
      * Validate arguments
      */
@@ -1632,8 +1604,8 @@ int ADMINAPI pts_GroupRename(
      * Translate the group name into an id.
      */
 
-    if (!TranslateOneName(c_handle, oldName, ADMPTSOLDNAMETOOLONG,
-			&groupId, &tst)) {
+    if (!TranslateOneName
+	(c_handle, oldName, ADMPTSOLDNAMETOOLONG, &groupId, &tst)) {
 	goto fail_pts_GroupRename;
     }
 
@@ -1648,10 +1620,10 @@ int ADMINAPI pts_GroupRename(
     }
     rc = 1;
 
-fail_pts_GroupRename:
+  fail_pts_GroupRename:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1676,10 +1648,9 @@ fail_pts_GroupRename:
  *
  */
 
-static int SetGroupAccess(
-  const pts_GroupUpdateEntry_p rights,
-  afs_int32 *flags,
-  afs_status_p st)
+static int
+SetGroupAccess(const pts_GroupUpdateEntry_p rights, afs_int32 * flags,
+	       afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1719,10 +1690,10 @@ static int SetGroupAccess(
     }
     rc = 1;
 
-fail_SetGroupAccess:
+  fail_SetGroupAccess:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1750,18 +1721,16 @@ fail_SetGroupAccess:
  *
  */
 
-int ADMINAPI pts_GroupModify(
-  const void *cellHandle,
-  const char *groupName,
-  const pts_GroupUpdateEntry_p newEntryP,
-  afs_status_p st)
+int ADMINAPI
+pts_GroupModify(const void *cellHandle, const char *groupName,
+		const pts_GroupUpdateEntry_p newEntryP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     afs_int32 groupId = 0;
     afs_int32 flags = 0;
- 
+
     /*
      * Validate arguments
      */
@@ -1785,8 +1754,8 @@ int ADMINAPI pts_GroupModify(
      * Translate the group name into an id.
      */
 
-    if (!TranslateOneName(c_handle, groupName, ADMPTSGROUPNAMETOOLONG,
-			&groupId, &tst)) {
+    if (!TranslateOneName
+	(c_handle, groupName, ADMPTSGROUPNAMETOOLONG, &groupId, &tst)) {
 	goto fail_pts_GroupModify;
     }
 
@@ -1801,19 +1770,20 @@ int ADMINAPI pts_GroupModify(
     /*
      * Make the rpc
      */
-    
-    tst = ubik_Call(PR_SetFieldsEntry, c_handle->pts, 0, groupId,
-		    PR_SF_ALLBITS, flags, 0, 0, 0, 0);
+
+    tst =
+	ubik_Call(PR_SetFieldsEntry, c_handle->pts, 0, groupId, PR_SF_ALLBITS,
+		  flags, 0, 0, 0, 0);
 
     if (tst != 0) {
 	goto fail_pts_GroupModify;
     }
     rc = 1;
 
-fail_pts_GroupModify:
+  fail_pts_GroupModify:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1841,17 +1811,15 @@ fail_pts_GroupModify:
  *
  */
 
-int ADMINAPI pts_UserCreate(
-  const void *cellHandle,
-  const char *userName,
-  int *newUserId,
-  afs_status_p st)
+int ADMINAPI
+pts_UserCreate(const void *cellHandle, const char *userName, int *newUserId,
+	       afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     afs_int32 userId = 0;
- 
+
     /*
      * Validate arguments
      */
@@ -1875,11 +1843,13 @@ int ADMINAPI pts_UserCreate(
      */
 
     if (*newUserId != 0) {
-	tst = ubik_Call(PR_INewEntry, c_handle->pts, 0, userName, *newUserId,
-			0);
+	tst =
+	    ubik_Call(PR_INewEntry, c_handle->pts, 0, userName, *newUserId,
+		      0);
     } else {
-	tst = ubik_Call(PR_NewEntry, c_handle->pts, 0, userName, 0,
-			0, newUserId);
+	tst =
+	    ubik_Call(PR_NewEntry, c_handle->pts, 0, userName, 0, 0,
+		      newUserId);
     }
 
     if (tst != 0) {
@@ -1887,10 +1857,10 @@ int ADMINAPI pts_UserCreate(
     }
     rc = 1;
 
-fail_pts_UserCreate:
+  fail_pts_UserCreate:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1915,10 +1885,8 @@ fail_pts_UserCreate:
  *
  */
 
-int ADMINAPI pts_UserDelete(
-  const void *cellHandle,
-  const char *userName,
-  afs_status_p st)
+int ADMINAPI
+pts_UserDelete(const void *cellHandle, const char *userName, afs_status_p st)
 {
     return EntryDelete(cellHandle, userName, ADMPTSUSERNAMENULL,
 		       ADMPTSUSERNAMETOOLONG, st);
@@ -1946,9 +1914,8 @@ int ADMINAPI pts_UserDelete(
  *
  */
 
-static void GetUserAccess(
-  pts_userAccess_p access,
-  afs_int32 flag)
+static void
+GetUserAccess(pts_userAccess_p access, afs_int32 flag)
 {
 
     *access = PTS_USER_OWNER_ACCESS;
@@ -1956,7 +1923,7 @@ static void GetUserAccess(
 	*access = PTS_USER_ANYUSER_ACCESS;
     }
 }
- 
+
 /*
  * IsAdministrator - determine if a user is an administrator.
  *
@@ -1979,11 +1946,9 @@ static void GetUserAccess(
  *
  */
 
-static int IsAdministrator(
-  const afs_cell_handle_p c_handle,
-  afs_int32 userId,
-  int *admin,
-  afs_status_p st)
+static int
+IsAdministrator(const afs_cell_handle_p c_handle, afs_int32 userId,
+		int *admin, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1995,11 +1960,14 @@ static int IsAdministrator(
     if (userId == SYSADMINID) {
 	*admin = 1;
     } else {
-	if (!TranslateOneName(c_handle, "system:administrators",
-			      ADMPTSGROUPNAMETOOLONG, &adminId, &tst)) {
+	if (!TranslateOneName
+	    (c_handle, "system:administrators", ADMPTSGROUPNAMETOOLONG,
+	     &adminId, &tst)) {
 	    goto fail_IsAdministrator;
 	}
-	tst = ubik_Call(PR_IsAMemberOf, c_handle->pts, 0, userId, adminId, &isAdmin);
+	tst =
+	    ubik_Call(PR_IsAMemberOf, c_handle->pts, 0, userId, adminId,
+		      &isAdmin);
 	if (tst != 0) {
 	    goto fail_IsAdministrator;
 	}
@@ -2009,10 +1977,10 @@ static int IsAdministrator(
     }
     rc = 1;
 
-fail_IsAdministrator:
+  fail_IsAdministrator:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2040,11 +2008,9 @@ fail_IsAdministrator:
  *
  */
 
-int ADMINAPI pts_UserGet(
-  const void *cellHandle,
-  const char *userName,
-  pts_UserEntry_p userP,
-  afs_status_p st)
+int ADMINAPI
+pts_UserGet(const void *cellHandle, const char *userName,
+	    pts_UserEntry_p userP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2058,7 +2024,7 @@ int ADMINAPI pts_UserGet(
     namelist names;
     int admin = 0;
 
- 
+
     /*
      * Validate arguments
      */
@@ -2081,8 +2047,8 @@ int ADMINAPI pts_UserGet(
      * Translate the group name into an id.
      */
 
-    if (!TranslateOneName(c_handle, userName, ADMPTSUSERNAMETOOLONG,
-			  &userId, &tst)) {
+    if (!TranslateOneName
+	(c_handle, userName, ADMPTSUSERNAMETOOLONG, &userId, &tst)) {
 	goto fail_pts_UserGet;
     }
 
@@ -2103,7 +2069,7 @@ int ADMINAPI pts_UserGet(
      * has unlimited group creation quota.  Denote this by setting
      * quota to -1.
      */
-    
+
     if (!IsAdministrator(c_handle, userEntry.id, &admin, &tst)) {
 	goto fail_pts_UserGet;
     }
@@ -2128,7 +2094,7 @@ int ADMINAPI pts_UserGet(
     twobit = flags & 3;
 
     GetUserAccess(&userP->listMembership, twobit);
- 
+
     flags = flags >> 2;
 
     if (flags & 1) {
@@ -2153,7 +2119,7 @@ int ADMINAPI pts_UserGet(
     ptsids[1] = userEntry.creator;
     names.namelist_len = 0;
     names.namelist_val = 0;
- 
+
 
     if (!TranslatePTSIds(c_handle, &names, &ids, &tst)) {
 	goto fail_pts_UserGet;
@@ -2164,10 +2130,10 @@ int ADMINAPI pts_UserGet(
     free(names.namelist_val);
     rc = 1;
 
-fail_pts_UserGet:
+  fail_pts_UserGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2194,17 +2160,15 @@ fail_pts_UserGet:
  *
  */
 
-int ADMINAPI pts_UserRename(
-  const void *cellHandle,
-  const char *oldName,
-  const char *newName,
-  afs_status_p st)
+int ADMINAPI
+pts_UserRename(const void *cellHandle, const char *oldName,
+	       const char *newName, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     afs_int32 userId = 0;
- 
+
     /*
      * Validate arguments
      */
@@ -2227,8 +2191,8 @@ int ADMINAPI pts_UserRename(
      * Translate the user name into an id.
      */
 
-    if (!TranslateOneName(c_handle, oldName, ADMPTSOLDNAMETOOLONG,
-			&userId, &tst)) {
+    if (!TranslateOneName
+	(c_handle, oldName, ADMPTSOLDNAMETOOLONG, &userId, &tst)) {
 	goto fail_pts_UserRename;
     }
 
@@ -2243,10 +2207,10 @@ int ADMINAPI pts_UserRename(
     }
     rc = 1;
 
-fail_pts_UserRename:
+  fail_pts_UserRename:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2271,10 +2235,9 @@ fail_pts_UserRename:
  *
  */
 
-static int SetUserAccess(
-  const pts_UserUpdateEntry_p userP,
-  afs_int32 *flags,
-  afs_status_p st)
+static int
+SetUserAccess(const pts_UserUpdateEntry_p userP, afs_int32 * flags,
+	      afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2294,10 +2257,10 @@ static int SetUserAccess(
     }
     rc = 1;
 
-fail_SetUserAccess:
+  fail_SetUserAccess:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2326,11 +2289,9 @@ fail_SetUserAccess:
  *
  */
 
-int ADMINAPI pts_UserModify(
-  const void *cellHandle,
-  const char *userName,
-  const pts_UserUpdateEntry_p newEntryP,
-  afs_status_p st)
+int ADMINAPI
+pts_UserModify(const void *cellHandle, const char *userName,
+	       const pts_UserUpdateEntry_p newEntryP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2339,7 +2300,7 @@ int ADMINAPI pts_UserModify(
     afs_int32 newQuota = 0;
     afs_int32 mask = 0;
     afs_int32 flags = 0;
- 
+
     /*
      * Validate arguments
      */
@@ -2362,8 +2323,8 @@ int ADMINAPI pts_UserModify(
      * Translate the user name into an id.
      */
 
-    if (!TranslateOneName(c_handle, userName, ADMPTSUSERNAMETOOLONG,
-			&userId, &tst)) {
+    if (!TranslateOneName
+	(c_handle, userName, ADMPTSUSERNAMETOOLONG, &userId, &tst)) {
 	goto fail_pts_UserModify;
     }
 
@@ -2384,18 +2345,19 @@ int ADMINAPI pts_UserModify(
      * Make the rpc
      */
 
-    tst = ubik_Call(PR_SetFieldsEntry, c_handle->pts, 0, userId, mask, flags,
-		    newQuota, 0, 0, 0);
+    tst =
+	ubik_Call(PR_SetFieldsEntry, c_handle->pts, 0, userId, mask, flags,
+		  newQuota, 0, 0, 0);
 
     if (tst != 0) {
 	goto fail_pts_UserModify;
     }
     rc = 1;
 
-fail_pts_UserModify:
+  fail_pts_UserModify:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2419,17 +2381,15 @@ fail_pts_UserModify:
  * Returns != 0 upon successful completion.
  *
  */
- 
-int ADMINAPI pts_UserMaxGet(
-  const void *cellHandle,
-  int *maxUserId,
-  afs_status_p st)
+
+int ADMINAPI
+pts_UserMaxGet(const void *cellHandle, int *maxUserId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     afs_int32 maxGroupId = 0;
- 
+
     /*
      * Validate arguments
      */
@@ -2450,10 +2410,10 @@ int ADMINAPI pts_UserMaxGet(
     }
     rc = 1;
 
-fail_pts_UserMaxGet:
+  fail_pts_UserMaxGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2477,16 +2437,14 @@ fail_pts_UserMaxGet:
  * Returns != 0 upon successful completion.
  *
  */
- 
-int ADMINAPI pts_UserMaxSet(
-  const void *cellHandle,
-  int maxUserId,
-  afs_status_p st)
+
+int ADMINAPI
+pts_UserMaxSet(const void *cellHandle, int maxUserId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
- 
+
     /*
      * Validate arguments
      */
@@ -2502,10 +2460,10 @@ int ADMINAPI pts_UserMaxSet(
     }
     rc = 1;
 
-fail_pts_UserMaxSet:
+  fail_pts_UserMaxSet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2534,11 +2492,9 @@ fail_pts_UserMaxSet:
  *
  */
 
-int ADMINAPI pts_UserMemberListBegin(
-  const void *cellHandle,
-  const char *userName,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+pts_UserMemberListBegin(const void *cellHandle, const char *userName,
+			void **iterationIdP, afs_status_p st)
 {
     return MemberListBegin(cellHandle, userName, ADMPTSUSERNAMENULL,
 			   ADMPTSUSERNAMETOOLONG, iterationIdP, st);
@@ -2565,10 +2521,9 @@ int ADMINAPI pts_UserMemberListBegin(
  *
  */
 
-int ADMINAPI pts_UserMemberListNext(
-  const void *iterationId,
-  char *userName,
-  afs_status_p st)
+int ADMINAPI
+pts_UserMemberListNext(const void *iterationId, char *userName,
+		       afs_status_p st)
 {
     return pts_GroupMemberListNext(iterationId, userName, st);
 }
@@ -2594,27 +2549,25 @@ int ADMINAPI pts_UserMemberListNext(
  * is called only once for each iterator.
  */
 
-int ADMINAPI pts_UserMemberListDone(
-  const void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+pts_UserMemberListDone(const void *iterationId, afs_status_p st)
 {
     return pts_GroupMemberListDone(iterationId, st);
 }
 
 typedef struct owned_group_list {
-  namelist owned_names; /* the list of character names owned by this id */
-  prlist owned_ids; /* the list of pts ids owned by this id */
-  afs_int32 index; /* the index into owned_names for the next group */
-  afs_int32 owner; /* the pts id of the owner */
-  afs_int32 more; /* the last parameter to PR_ListOwned */
-  int finished_retrieving; /* set when we've processed the last owned_names */
-  afs_cell_handle_p c_handle; /* ubik client to pts server's from c_handle */
-  char group[CACHED_ITEMS][PTS_MAX_NAME_LEN]; /* cache of names */
+    namelist owned_names;	/* the list of character names owned by this id */
+    prlist owned_ids;		/* the list of pts ids owned by this id */
+    afs_int32 index;		/* the index into owned_names for the next group */
+    afs_int32 owner;		/* the pts id of the owner */
+    afs_int32 more;		/* the last parameter to PR_ListOwned */
+    int finished_retrieving;	/* set when we've processed the last owned_names */
+    afs_cell_handle_p c_handle;	/* ubik client to pts server's from c_handle */
+    char group[CACHED_ITEMS][PTS_MAX_NAME_LEN];	/* cache of names */
 } owned_group_list_t, *owned_group_list_p;
 
-static int DeleteOwnedGroupSpecificData(
-  void *rpc_specific,
-  afs_status_p st)
+static int
+DeleteOwnedGroupSpecificData(void *rpc_specific, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2630,17 +2583,14 @@ static int DeleteOwnedGroupSpecificData(
     rc = 1;
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
-static int GetOwnedGroupRPC(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+GetOwnedGroupRPC(void *rpc_specific, int slot, int *last_item,
+		 int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2656,8 +2606,7 @@ static int GetOwnedGroupRPC(
      * Check to see if we are done retrieving data
      */
 
-    if ((list->finished_retrieving) &&
-	(list->owned_names.namelist_len == 0)) {
+    if ((list->finished_retrieving) && (list->owned_names.namelist_len == 0)) {
 	*last_item = 1;
 	*last_item_contains_data = 0;
 	goto fail_GetOwnedGroupRPC;
@@ -2668,14 +2617,16 @@ static int GetOwnedGroupRPC(
      */
 
     if ((!list->finished_retrieving) && (list->owned_names.namelist_len == 0)) {
-	tst = ubik_Call(PR_ListOwned, list->c_handle->pts, 0, list->owner,
-			&list->owned_ids, &list->more);
+	tst =
+	    ubik_Call(PR_ListOwned, list->c_handle->pts, 0, list->owner,
+		      &list->owned_ids, &list->more);
 	if (tst != 0) {
 	    goto fail_GetOwnedGroupRPC;
 	}
 
-	if (!TranslatePTSIds(list->c_handle, &list->owned_names,
-			     (idlist *) &list->owned_ids, &tst)) {
+	if (!TranslatePTSIds
+	    (list->c_handle, &list->owned_names, (idlist *) & list->owned_ids,
+	     &tst)) {
 	    goto fail_GetOwnedGroupRPC;
 	}
 	list->index = 0;
@@ -2716,29 +2667,27 @@ static int GetOwnedGroupRPC(
     }
     rc = 1;
 
-fail_GetOwnedGroupRPC:
+  fail_GetOwnedGroupRPC:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
-static int GetOwnedGroupFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+GetOwnedGroupFromCache(void *rpc_specific, int slot, void *dest,
+		       afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     owned_group_list_p list = (owned_group_list_p) rpc_specific;
 
-    strcpy((char *) dest, list->group[slot]);
+    strcpy((char *)dest, list->group[slot]);
     rc = 1;
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
 
     return rc;
@@ -2768,18 +2717,18 @@ static int GetOwnedGroupFromCache(
  *
  */
 
-int ADMINAPI pts_OwnedGroupListBegin(
-  const void *cellHandle,
-  const char *userName,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+pts_OwnedGroupListBegin(const void *cellHandle, const char *userName,
+			void **iterationIdP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    owned_group_list_p list = (owned_group_list_p) malloc(sizeof(owned_group_list_t));
- 
+    afs_admin_iterator_p iter =
+	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    owned_group_list_p list =
+	(owned_group_list_p) malloc(sizeof(owned_group_list_t));
+
     /*
      * Validate arguments
      */
@@ -2806,7 +2755,7 @@ int ADMINAPI pts_OwnedGroupListBegin(
     /*
      * Initialize the iterator specific data
      */
-    
+
     list->index = 0;
     list->finished_retrieving = 0;
     list->c_handle = c_handle;
@@ -2819,19 +2768,19 @@ int ADMINAPI pts_OwnedGroupListBegin(
      * Translate the user name into an id.
      */
 
-    if (!TranslateOneName(c_handle, userName, ADMPTSUSERNAMETOOLONG,
-			&list->owner, &tst)) {
+    if (!TranslateOneName
+	(c_handle, userName, ADMPTSUSERNAMETOOLONG, &list->owner, &tst)) {
 	goto fail_pts_OwnedGroupListBegin;
     }
 
-    if (IteratorInit(iter, (void *) list, GetOwnedGroupRPC,
-		     GetOwnedGroupFromCache, NULL,
-		     DeleteOwnedGroupSpecificData, &tst)) {
-	*iterationIdP = (void *) iter;
+    if (IteratorInit
+	(iter, (void *)list, GetOwnedGroupRPC, GetOwnedGroupFromCache, NULL,
+	 DeleteOwnedGroupSpecificData, &tst)) {
+	*iterationIdP = (void *)iter;
 	rc = 1;
     }
 
-fail_pts_OwnedGroupListBegin:
+  fail_pts_OwnedGroupListBegin:
 
     if (rc == 0) {
 	if (iter != NULL) {
@@ -2843,7 +2792,7 @@ fail_pts_OwnedGroupListBegin:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2868,15 +2817,14 @@ fail_pts_OwnedGroupListBegin:
  *
  */
 
-int ADMINAPI pts_OwnedGroupListNext(
-  const void *iterationId,
-  char *groupName,
-  afs_status_p st)
+int ADMINAPI
+pts_OwnedGroupListNext(const void *iterationId, char *groupName,
+		       afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     /*
      * Validate arguments
      */
@@ -2891,12 +2839,12 @@ int ADMINAPI pts_OwnedGroupListNext(
 	goto fail_pts_OwnedGroupListNext;
     }
 
-    rc = IteratorNext(iter, (void *) groupName, &tst);
+    rc = IteratorNext(iter, (void *)groupName, &tst);
 
-fail_pts_OwnedGroupListNext:
+  fail_pts_OwnedGroupListNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2921,10 +2869,9 @@ fail_pts_OwnedGroupListNext:
  * It is the user's responsibility to make sure pts_OwnedGroupListDone
  * is called only once for each iterator.
  */
- 
-int ADMINAPI pts_OwnedGroupListDone(
-  const void *iterationId,
-  afs_status_p st)
+
+int ADMINAPI
+pts_OwnedGroupListDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2941,29 +2888,28 @@ int ADMINAPI pts_OwnedGroupListDone(
 
     rc = IteratorDone(iter, &tst);
 
-fail_pts_OwnedGroupListDone:
+  fail_pts_OwnedGroupListDone:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
 typedef struct pts_list {
-  prlistentries *names; /* the current list of pts names in this cell */
-  prlistentries *currName; /* the current pts entry */
-  afs_int32 index; /* the index into names for the next pts entry */
-  afs_int32 nextstartindex; /* the next start index for the RPC */
-  afs_int32 nentries; /* the number of entries in names */
-  afs_int32 flag; /* the type of the list */
-  int finished_retrieving; /* set when we've processed the last owned_names */
-  afs_cell_handle_p c_handle; /* ubik client to pts server's from c_handle */
-  char entries[CACHED_ITEMS][PTS_MAX_NAME_LEN]; /* cache of pts names */
+    prlistentries *names;	/* the current list of pts names in this cell */
+    prlistentries *currName;	/* the current pts entry */
+    afs_int32 index;		/* the index into names for the next pts entry */
+    afs_int32 nextstartindex;	/* the next start index for the RPC */
+    afs_int32 nentries;		/* the number of entries in names */
+    afs_int32 flag;		/* the type of the list */
+    int finished_retrieving;	/* set when we've processed the last owned_names */
+    afs_cell_handle_p c_handle;	/* ubik client to pts server's from c_handle */
+    char entries[CACHED_ITEMS][PTS_MAX_NAME_LEN];	/* cache of pts names */
 } pts_list_t, *pts_list_p;
 
-static int DeletePTSSpecificData(
-  void *rpc_specific,
-  afs_status_p st)
+static int
+DeletePTSSpecificData(void *rpc_specific, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2976,17 +2922,14 @@ static int DeletePTSSpecificData(
     rc = 1;
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
-static int GetPTSRPC(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+GetPTSRPC(void *rpc_specific, int slot, int *last_item,
+	  int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -3012,23 +2955,24 @@ static int GetPTSRPC(
      * Check to see if we really need to make an rpc
      */
 
-    if ((!list->finished_retrieving) && (list->index >= list->nentries) ) {
-        afs_int32 start = list->nextstartindex;
+    if ((!list->finished_retrieving) && (list->index >= list->nentries)) {
+	afs_int32 start = list->nextstartindex;
 	prentries bulkentries;
 	list->nextstartindex = -1;
 	bulkentries.prentries_val = 0;
 	bulkentries.prentries_len = 0;
 
-        tst = ubik_Call(PR_ListEntries, list->c_handle->pts, 0, list->flag, start,
-			&bulkentries, &(list->nextstartindex) );
+	tst =
+	    ubik_Call(PR_ListEntries, list->c_handle->pts, 0, list->flag,
+		      start, &bulkentries, &(list->nextstartindex));
 
 	if (tst != 0) {
 	    goto fail_GetPTSRPC;
 	}
-	
+
 	list->nentries = bulkentries.prentries_len;
 	list->names = bulkentries.prentries_val;
-	
+
 	list->index = 0;
 	list->currName = list->names;
 
@@ -3051,8 +2995,8 @@ static int GetPTSRPC(
      */
 
     if (list->index >= list->nentries) {
-        if( list->names ) {
-	  free(list->names);
+	if (list->names) {
+	    free(list->names);
 	}
 	list->names = NULL;
 
@@ -3062,30 +3006,27 @@ static int GetPTSRPC(
     }
     rc = 1;
 
-fail_GetPTSRPC:
+  fail_GetPTSRPC:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
 
     return rc;
 }
 
-static int GetPTSFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+GetPTSFromCache(void *rpc_specific, int slot, void *dest, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     pts_list_p list = (pts_list_p) rpc_specific;
 
-    strcpy((char *) dest, list->entries[slot]);
+    strcpy((char *)dest, list->entries[slot]);
     rc = 1;
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
 
     return rc;
@@ -3113,17 +3054,17 @@ static int GetPTSFromCache(
  *
  */
 
-int ADMINAPI pts_UserListBegin(
-  const void *cellHandle,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+pts_UserListBegin(const void *cellHandle, void **iterationIdP,
+		  afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    afs_admin_iterator_p iter =
+	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
     pts_list_p list = (pts_list_p) malloc(sizeof(pts_list_t));
- 
+
     /*
      * Validate arguments
      */
@@ -3145,7 +3086,7 @@ int ADMINAPI pts_UserListBegin(
     /*
      * Initialize the iterator specific data
      */
-    
+
     list->index = 0;
     list->finished_retrieving = 0;
     list->c_handle = c_handle;
@@ -3154,14 +3095,14 @@ int ADMINAPI pts_UserListBegin(
     list->nentries = 0;
     list->flag = PRUSERS;
 
-    if (IteratorInit(iter, (void *) list, GetPTSRPC,
-		     GetPTSFromCache, NULL,
-		     DeletePTSSpecificData, &tst)) {
-	*iterationIdP = (void *) iter;
+    if (IteratorInit
+	(iter, (void *)list, GetPTSRPC, GetPTSFromCache, NULL,
+	 DeletePTSSpecificData, &tst)) {
+	*iterationIdP = (void *)iter;
 	rc = 1;
     }
 
-fail_pts_UserListBegin:
+  fail_pts_UserListBegin:
 
     if (rc == 0) {
 	if (iter != NULL) {
@@ -3173,7 +3114,7 @@ fail_pts_UserListBegin:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3197,15 +3138,13 @@ fail_pts_UserListBegin:
  *
  */
 
-int ADMINAPI pts_UserListNext(
-  const void *iterationId,
-  char *userName,
-  afs_status_p st)
+int ADMINAPI
+pts_UserListNext(const void *iterationId, char *userName, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     /*
      * Validate arguments
      */
@@ -3220,12 +3159,12 @@ int ADMINAPI pts_UserListNext(
 	goto fail_pts_UserListNext;
     }
 
-    rc = IteratorNext(iter, (void *) userName, &tst);
+    rc = IteratorNext(iter, (void *)userName, &tst);
 
-fail_pts_UserListNext:
+  fail_pts_UserListNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3250,10 +3189,9 @@ fail_pts_UserListNext:
  * It is the user's responsibility to make sure pts_UserListDone
  * is called only once for each iterator.
  */
- 
-int ADMINAPI pts_UserListDone(
-  const void *iterationId,
-  afs_status_p st)
+
+int ADMINAPI
+pts_UserListDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -3270,10 +3208,10 @@ int ADMINAPI pts_UserListDone(
 
     rc = IteratorDone(iter, &tst);
 
-fail_pts_UserListDone:
+  fail_pts_UserListDone:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3300,17 +3238,17 @@ fail_pts_UserListDone:
  *
  */
 
-int ADMINAPI pts_GroupListBegin(
-  const void *cellHandle,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+pts_GroupListBegin(const void *cellHandle, void **iterationIdP,
+		   afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    afs_admin_iterator_p iter =
+	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
     pts_list_p list = (pts_list_p) malloc(sizeof(pts_list_t));
- 
+
     /*
      * Validate arguments
      */
@@ -3332,7 +3270,7 @@ int ADMINAPI pts_GroupListBegin(
     /*
      * Initialize the iterator specific data
      */
-    
+
     list->index = 0;
     list->finished_retrieving = 0;
     list->c_handle = c_handle;
@@ -3341,14 +3279,14 @@ int ADMINAPI pts_GroupListBegin(
     list->nentries = 0;
     list->flag = PRGROUPS;
 
-    if (IteratorInit(iter, (void *) list, GetPTSRPC,
-		     GetPTSFromCache, NULL,
-		     DeletePTSSpecificData, &tst)) {
-	*iterationIdP = (void *) iter;
+    if (IteratorInit
+	(iter, (void *)list, GetPTSRPC, GetPTSFromCache, NULL,
+	 DeletePTSSpecificData, &tst)) {
+	*iterationIdP = (void *)iter;
 	rc = 1;
     }
 
-fail_pts_GroupListBegin:
+  fail_pts_GroupListBegin:
 
     if (rc == 0) {
 	if (iter != NULL) {
@@ -3360,7 +3298,7 @@ fail_pts_GroupListBegin:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3384,15 +3322,13 @@ fail_pts_GroupListBegin:
  *
  */
 
-int ADMINAPI pts_GroupListNext(
-  const void *iterationId,
-  char *groupName,
-  afs_status_p st)
+int ADMINAPI
+pts_GroupListNext(const void *iterationId, char *groupName, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     /*
      * Validate arguments
      */
@@ -3407,12 +3343,12 @@ int ADMINAPI pts_GroupListNext(
 	goto fail_pts_GroupListNext;
     }
 
-    rc = IteratorNext(iter, (void *) groupName, &tst);
+    rc = IteratorNext(iter, (void *)groupName, &tst);
 
-fail_pts_GroupListNext:
+  fail_pts_GroupListNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3437,10 +3373,9 @@ fail_pts_GroupListNext:
  * It is the user's responsibility to make sure pts_GroupListDone
  * is called only once for each iterator.
  */
- 
-int ADMINAPI pts_GroupListDone(
-  const void *iterationId,
-  afs_status_p st)
+
+int ADMINAPI
+pts_GroupListDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -3457,11 +3392,10 @@ int ADMINAPI pts_GroupListDone(
 
     rc = IteratorDone(iter, &tst);
 
-fail_pts_GroupListDone:
+  fail_pts_GroupListDone:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
-

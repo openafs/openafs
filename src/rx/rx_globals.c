@@ -16,7 +16,8 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 /* Enable data initialization when the header file is included */
 #define INIT(stuff) = stuff

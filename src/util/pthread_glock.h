@@ -23,7 +23,7 @@ typedef struct {
 
 #if defined(AFS_NT40_ENV) && defined(AFS_PTHREAD_ENV)
 #ifndef AFS_GRMUTEX_DECLSPEC
-#define AFS_GRMUTEX_DECLSPEC __declspec(dllimport) extern 
+#define AFS_GRMUTEX_DECLSPEC __declspec(dllimport) extern
 #endif
 #else
 #define AFS_GRMUTEX_DECLSPEC extern

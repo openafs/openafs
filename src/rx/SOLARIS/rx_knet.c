@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef AFS_SUN5_ENV
 #include "rx/rx_kcommon.h"
@@ -40,21 +41,21 @@ RCSID("$Header$");
  * Function pointers for kernel socket routines
  */
 struct sonode *(*sockfs_socreate)
-    (vnode_t *, int, int, int, int, struct sonode *, int *) = NULL;
+  (vnode_t *, int, int, int, int, struct sonode *, int *) = NULL;
 struct vnode *(*sockfs_solookup)
-    (int, int, int, char *, int *) = NULL;
+  (int, int, int, char *, int *) = NULL;
 int (*sockfs_sobind)
-    (struct sonode *, struct sockaddr *, int, int, int) = NULL;
+  (struct sonode *, struct sockaddr *, int, int, int) = NULL;
 int (*sockfs_sorecvmsg)
-    (struct sonode *, struct nmsghdr *, struct uio *) = NULL;
+  (struct sonode *, struct nmsghdr *, struct uio *) = NULL;
 int (*sockfs_sosendmsg)
-    (struct sonode *, struct nmsghdr *, struct uio *) = NULL;
+  (struct sonode *, struct nmsghdr *, struct uio *) = NULL;
 int (*sockfs_sosetsockopt)
-    (struct sonode *, int, int, void *, int) = NULL;
+  (struct sonode *, int, int, void *, int) = NULL;
 int (*sockfs_sounbind)
-    (struct sonode *, int);
+  (struct sonode *, int);
 void (*sockfs_sockfree)
-    (struct sonode *);
+  (struct sonode *);
 
 static afs_uint32 myNetAddrs[ADDRSPERSITE];
 static int myNetMTUs[ADDRSPERSITE];
@@ -80,15 +81,18 @@ rxi_GetIFInfo()
     for (ill = ill_g_head; ill; ill = ill->ill_next) {
 #ifdef AFS_SUN58_ENV
 	/* Make sure this is an IPv4 ILL */
-	if (ill->ill_isv6) continue;
+	if (ill->ill_isv6)
+	    continue;
 #endif
 
 	/* Iterate over all the addresses on this ILL */
 	for (ipif = ill->ill_ipif; ipif; ipif = ipif->ipif_next) {
-	    if (i >= ADDRSPERSITE) break;
+	    if (i >= ADDRSPERSITE)
+		break;
 
 	    /* Ignore addresses which are down.. */
-	    if (!(ipif->ipif_flags & IFF_UP)) continue;
+	    if (!(ipif->ipif_flags & IFF_UP))
+		continue;
 
 	    /* Compute the Rx interface MTU */
 	    rxmtu = (ipif->ipif_mtu - RX_IPUDP_SIZE);
@@ -100,23 +104,24 @@ rxi_GetIFInfo()
 	    /* Copy interface MTU and address; adjust maxmtu */
 	    mtus[i] = rxmtu;
 	    rxmtu = rxi_AdjustIfMTU(rxmtu);
-	    maxmtu = rxmtu * rxi_nRecvFrags + ((rxi_nRecvFrags-1) *
-					       UDP_HDR_SIZE);
+	    maxmtu =
+		rxmtu * rxi_nRecvFrags +
+		((rxi_nRecvFrags - 1) * UDP_HDR_SIZE);
 	    maxmtu = rxi_AdjustMaxMTU(rxmtu, maxmtu);
 	    addrs[i] = ifinaddr;
 	    i++;
 
 	    if (ifinaddr != 0x7f000001 && maxmtu > rx_maxReceiveSize) {
-		rx_maxReceiveSize = MIN( RX_MAX_PACKET_SIZE, maxmtu);
-		rx_maxReceiveSize = MIN( rx_maxReceiveSize,
-					 rx_maxReceiveSizeUser);
+		rx_maxReceiveSize = MIN(RX_MAX_PACKET_SIZE, maxmtu);
+		rx_maxReceiveSize =
+		    MIN(rx_maxReceiveSize, rx_maxReceiveSizeUser);
 	    }
 	}
     }
 
-    rx_maxJumboRecvSize = RX_HEADER_SIZE +
-			  rxi_nDgramPackets * RX_JUMBOBUFFERSIZE +
-			  (rxi_nDgramPackets-1) * RX_JUMBOHEADERSIZE;
+    rx_maxJumboRecvSize =
+	RX_HEADER_SIZE + rxi_nDgramPackets * RX_JUMBOBUFFERSIZE +
+	(rxi_nDgramPackets - 1) * RX_JUMBOHEADERSIZE;
     rx_maxJumboRecvSize = MAX(rx_maxJumboRecvSize, rx_maxReceiveSize);
 
     if (different) {
@@ -131,7 +136,8 @@ rxi_GetIFInfo()
     return different;
 }
 
-int rxi_FindIfMTU(afs_uint32 addr)
+int
+rxi_FindIfMTU(afs_uint32 addr)
 {
     ill_t *ill;
     ipif_t *ipif;
@@ -143,15 +149,20 @@ int rxi_FindIfMTU(afs_uint32 addr)
 	rxi_GetIFInfo();
     myAddr = ntohl(addr);
 
-    if      (IN_CLASSA(myAddr)) netMask = IN_CLASSA_NET;
-    else if (IN_CLASSB(myAddr)) netMask = IN_CLASSB_NET;
-    else if (IN_CLASSC(myAddr)) netMask = IN_CLASSC_NET;
-    else                       netMask = 0;
+    if (IN_CLASSA(myAddr))
+	netMask = IN_CLASSA_NET;
+    else if (IN_CLASSB(myAddr))
+	netMask = IN_CLASSB_NET;
+    else if (IN_CLASSC(myAddr))
+	netMask = IN_CLASSC_NET;
+    else
+	netMask = 0;
 
     for (ill = ill_g_head; ill; ill = ill->ill_next) {
 #ifdef AFS_SUN58_ENV
 	/* Make sure this is an IPv4 ILL */
-	if (ill->ill_isv6) continue;
+	if (ill->ill_isv6)
+	    continue;
 #endif
 
 	/* Iterate over all the addresses on this ILL */
@@ -159,9 +170,9 @@ int rxi_FindIfMTU(afs_uint32 addr)
 	    afs_uint32 thisAddr, subnetMask;
 	    int thisMtu;
 
-	    thisAddr   = ipif->ipif_local_addr;
+	    thisAddr = ipif->ipif_local_addr;
 	    subnetMask = ipif->ipif_net_mask;
-	    thisMtu    = ipif->ipif_mtu;
+	    thisMtu = ipif->ipif_mtu;
 
 	    if ((myAddr & netMask) == (thisAddr & netMask)) {
 		if ((myAddr & subnetMask) == (thisAddr & subnetMask)) {
@@ -194,7 +205,8 @@ int rxi_FindIfMTU(afs_uint32 addr)
 struct sockaddr_in rx_sockaddr;
 
 /* Allocate a new socket at specified port in network byte order. */
-struct osi_socket *rxk_NewSocket(short aport)
+struct osi_socket *
+rxk_NewSocket(short aport)
 {
     vnode_t *accessvp;
     struct sonode *so;
@@ -205,13 +217,15 @@ struct osi_socket *rxk_NewSocket(short aport)
     AFS_STATCNT(osi_NewSocket);
 
     if (sockfs_solookup == NULL) {
-	sockfs_solookup = (struct vnode *(*)())modlookup("sockfs", "solookup");
+	sockfs_solookup =
+	    (struct vnode * (*)())modlookup("sockfs", "solookup");
 	if (sockfs_solookup == NULL) {
 	    return NULL;
 	}
     }
     if (sockfs_socreate == NULL) {
-	sockfs_socreate = (struct sonode *(*)())modlookup("sockfs", "socreate");
+	sockfs_socreate =
+	    (struct sonode * (*)())modlookup("sockfs", "socreate");
 	if (sockfs_socreate == NULL) {
 	    return NULL;
 	}
@@ -256,8 +270,8 @@ struct osi_socket *rxk_NewSocket(short aport)
 	return NULL;
     }
 
-    so = sockfs_socreate(accessvp, AF_INET, SOCK_DGRAM, 0,
-			 SOV_STREAM, NULL, &error);
+    so = sockfs_socreate(accessvp, AF_INET, SOCK_DGRAM, 0, SOV_STREAM, NULL,
+			 &error);
     if (so == NULL) {
 	return NULL;
     }
@@ -285,7 +299,8 @@ struct osi_socket *rxk_NewSocket(short aport)
     return (struct osi_socket *)so;
 }
 
-int osi_FreeSocket(register struct osi_socket *asocket)
+int
+osi_FreeSocket(register struct osi_socket *asocket)
 {
     extern int rxk_ListenerPid;
     struct sonode *so = (struct sonode *)asocket;
@@ -312,8 +327,9 @@ int osi_FreeSocket(register struct osi_socket *asocket)
     return 0;
 }
 
-int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, 
-	struct iovec *dvec, int nvecs, afs_int32 asize, int istack) 
+int
+osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
+	    int nvecs, afs_int32 asize, int istack)
 {
     struct sonode *so = (struct sonode *)asocket;
     struct nmsghdr msg;
@@ -321,9 +337,9 @@ int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
     struct iovec iov[RX_MAXIOVECS];
     int error;
     int i;
- 
+
     if (nvecs > RX_MAXIOVECS) {
-        osi_Panic("osi_NetSend: %d: Too many iovecs.\n", nvecs);
+	osi_Panic("osi_NetSend: %d: Too many iovecs.\n", nvecs);
     }
 
     msg.msg_name = (struct sockaddr *)addr;
@@ -334,7 +350,7 @@ int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
     msg.msg_controllen = 0;
     msg.msg_flags = 0;
 
-    for (i = 0 ; i < nvecs ; i++) {
+    for (i = 0; i < nvecs; i++) {
 	iov[i].iov_base = dvec[i].iov_base;
 	iov[i].iov_len = dvec[i].iov_len;
     }
@@ -342,7 +358,7 @@ int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
     uio.uio_iovcnt = nvecs;
     uio.uio_loffset = 0;
     uio.uio_segflg = UIO_SYSSPACE;
-    uio.uio_fmode = FREAD|FWRITE;
+    uio.uio_fmode = FREAD | FWRITE;
     uio.uio_limit = 0;
     uio.uio_resid = asize;
 
@@ -351,18 +367,19 @@ int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
     return error;
 }
 
-int osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
-        int nvecs, int *alength)
-{  
+int
+osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
+	       int nvecs, int *alength)
+{
     struct sonode *asocket = (struct sonode *)so;
     struct nmsghdr msg;
     struct uio uio;
     struct iovec iov[RX_MAXIOVECS];
     int error;
     int i;
- 
+
     if (nvecs > RX_MAXIOVECS) {
-        osi_Panic("osi_NetSend: %d: Too many iovecs.\n", nvecs);
+	osi_Panic("osi_NetSend: %d: Too many iovecs.\n", nvecs);
     }
 
     msg.msg_name = NULL;
@@ -373,7 +390,7 @@ int osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     msg.msg_controllen = 0;
     msg.msg_flags = 0;
 
-    for (i = 0 ; i < nvecs ; i++) {
+    for (i = 0; i < nvecs; i++) {
 	iov[i].iov_base = dvec[i].iov_base;
 	iov[i].iov_len = dvec[i].iov_len;
     }
@@ -416,11 +433,13 @@ int osi_NetReceive(osi_socket so, struct sockaddr_in *addr, struct iovec *dvec,
     return error;
 }
 
-void shutdown_rxkernel(void)
+void
+shutdown_rxkernel(void)
 {
 }
 
-void osi_StopListener(void)
+void
+osi_StopListener(void)
 {
     osi_FreeSocket(rx_socket);
 }
@@ -447,7 +466,8 @@ void osi_StopListener(void)
 extern dev_t afs_udp_rdev;
 
 
-int rxi_GetIFInfo()
+int
+rxi_GetIFInfo()
 {
     return 0;
 }
@@ -457,10 +477,11 @@ int rxi_GetIFInfo()
  * afs_osinet.c. 
  */
 
-dev_t afs_udp_rdev = (dev_t)0;
+dev_t afs_udp_rdev = (dev_t) 0;
 
 /* Allocate a new socket at specified port in network byte order. */
-struct osi_socket *rxk_NewSocket(short aport)
+struct osi_socket *
+rxk_NewSocket(short aport)
 {
     TIUSER *udp_tiptr;
     struct t_bind *reqp, *rspp;
@@ -471,7 +492,7 @@ struct osi_socket *rxk_NewSocket(short aport)
 
     AFS_STATCNT(osi_NewSocket);
     afs_udp_rdev = makedevice(11 /*CLONE*/, ddi_name_to_major("udp"));
-    code = t_kopen(NULL, afs_udp_rdev, FREAD|FWRITE, &udp_tiptr, CRED());
+    code = t_kopen(NULL, afs_udp_rdev, FREAD | FWRITE, &udp_tiptr, CRED());
     if (code) {
 	return (struct osi_socket *)0;
     }
@@ -488,7 +509,7 @@ struct osi_socket *rxk_NewSocket(short aport)
     }
 
     reqp->addr.len = sizeof(struct sockaddr_in);
-    myaddrp = (struct sockaddr_in *) reqp->addr.buf;
+    myaddrp = (struct sockaddr_in *)reqp->addr.buf;
     myaddrp->sin_family = AF_INET;
     myaddrp->sin_port = aport;
     myaddrp->sin_addr.s_addr = INADDR_ANY;	/* XXX Was 0 XXX */
@@ -518,14 +539,15 @@ struct osi_socket *rxk_NewSocket(short aport)
     q->q_next->q_hiwat = rx_UdpBufSize;
     RD(q)->q_hiwat = rx_UdpBufSize;
 
-    return (struct osi_socket *) udp_tiptr;
+    return (struct osi_socket *)udp_tiptr;
 }
 
 
-int osi_FreeSocket(register struct osi_socket *asocket)
+int
+osi_FreeSocket(register struct osi_socket *asocket)
 {
     extern int rxk_ListenerPid;
-    TIUSER *udp_tiptr = (TIUSER *) asocket;    
+    TIUSER *udp_tiptr = (TIUSER *) asocket;
     AFS_STATCNT(osi_FreeSocket);
 
     if (rxk_ListenerPid) {
@@ -536,12 +558,13 @@ int osi_FreeSocket(register struct osi_socket *asocket)
 }
 
 
-int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, 
-		struct iovec *dvec, int nvecs, afs_int32 asize, int istack) 
+int
+osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
+	    int nvecs, afs_int32 asize, int istack)
 {
     int i;
     int code;
-    TIUSER *udp_tiptr = (TIUSER *) asocket;    
+    TIUSER *udp_tiptr = (TIUSER *) asocket;
     struct t_kunitdata *udreq;
     struct sockaddr_in sin;
     mblk_t *bp;
@@ -575,7 +598,7 @@ int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
     /*
      * Append each element in the iovec to the buffer
      */
-    for (i = 1 ; i < nvecs ; i++) {
+    for (i = 1; i < nvecs; i++) {
 	/* Get a buffer for the next chunk */
 	while (!(dbp = allocb(dvec[i].iov_len, BPRI_LO))) {
 	    if (strwaitbuf(dvec[i].iov_len, BPRI_LO)) {
@@ -585,7 +608,8 @@ int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
 	}
 
 	/* Copy the data into the buffer */
-	memcpy((char *)dbp->b_wptr, (char *)dvec[i].iov_base, dvec[i].iov_len);
+	memcpy((char *)dbp->b_wptr, (char *)dvec[i].iov_base,
+	       dvec[i].iov_len);
 	dbp->b_datap->db_type = M_DATA;
 	dbp->b_wptr += dvec[i].iov_len;
 
@@ -604,7 +628,8 @@ int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
     }
     udreq->addr.len = sizeof(struct sockaddr_in);
     udreq->addr.maxlen = sizeof(struct sockaddr_in);
-    udreq->addr.buf = (char *)kmem_alloc(sizeof(struct sockaddr_in), KM_SLEEP);
+    udreq->addr.buf =
+	(char *)kmem_alloc(sizeof(struct sockaddr_in), KM_SLEEP);
     udreq->opt.len = 0;
     udreq->opt.maxlen = 0;
     memcpy(udreq->addr.buf, (char *)&sin, sizeof(struct sockaddr_in));
@@ -616,16 +641,17 @@ int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
 	printf("osi_NetSend: t_ksndudata failed %d\n", code);
     }
 
-    t_kfree(udp_tiptr, (caddr_t)udreq, T_UNITDATA);
+    t_kfree(udp_tiptr, (caddr_t) udreq, T_UNITDATA);
     return code;
 }
 
 
-int osi_NetReceive(struct osi_socket *asocket, struct sockaddr_in *addr, 
-	struct iovec *dvec, int nvecs, int *alength)
+int
+osi_NetReceive(struct osi_socket *asocket, struct sockaddr_in *addr,
+	       struct iovec *dvec, int nvecs, int *alength)
 {
     int i;
-    TIUSER *udp_tiptr = (TIUSER *) asocket;    
+    TIUSER *udp_tiptr = (TIUSER *) asocket;
     struct t_kunitdata *udreq;
     mblk_t *dbp;
     char *phandle;
@@ -649,14 +675,15 @@ int osi_NetReceive(struct osi_socket *asocket, struct sockaddr_in *addr,
     }
     udreq->addr.len = sizeof(struct sockaddr_in);
     udreq->addr.maxlen = sizeof(struct sockaddr_in);
-    udreq->addr.buf = (char *)kmem_alloc(sizeof(struct sockaddr_in), KM_SLEEP);
+    udreq->addr.buf =
+	(char *)kmem_alloc(sizeof(struct sockaddr_in), KM_SLEEP);
     udreq->opt.len = 0;
     udreq->opt.maxlen = 0;
 
     /*
      * Loop until we get an error or receive some data.
      */
-    while(1) {
+    while (1) {
 	/*
 	 * Wait until there is something to do
 	 */
@@ -686,7 +713,8 @@ int osi_NetReceive(struct osi_socket *asocket, struct sockaddr_in *addr,
 	    }
 	    lwp->lwp_cursig = 0;
 	    if (lwp->lwp_curinfo) {
-		kmem_free((caddr_t)lwp->lwp_curinfo, sizeof(*lwp->lwp_curinfo));
+		kmem_free((caddr_t) lwp->lwp_curinfo,
+			  sizeof(*lwp->lwp_curinfo));
 		lwp->lwp_curinfo = NULL;
 	    }
 	}
@@ -711,9 +739,9 @@ int osi_NetReceive(struct osi_socket *asocket, struct sockaddr_in *addr,
 	 * Copy out the message buffers, take care not to overflow
 	 * the I/O vector.
 	 */
-        dbp = udreq->udata.udata_mp;
+	dbp = udreq->udata.udata_mp;
 	length = *alength;
-        for (i = 0 ; dbp != NULL && length > 0 && i < nvecs ; i++) {
+	for (i = 0; dbp != NULL && length > 0 && i < nvecs; i++) {
 	    tlen = dvec[i].iov_len;
 	    tbase = dvec[i].iov_base;
 	    if (tlen > length) {
@@ -734,23 +762,25 @@ int osi_NetReceive(struct osi_socket *asocket, struct sockaddr_in *addr,
 		    dbp = dbp->b_cont;
 		}
 	    }
-        }
+	}
 	*alength = *alength - length;
 	break;
     }
 
-    t_kfree(udp_tiptr, (caddr_t)udreq, T_UNITDATA);
+    t_kfree(udp_tiptr, (caddr_t) udreq, T_UNITDATA);
     return code;
 }
 
 
-void osi_StopListener(void)
+void
+osi_StopListener(void)
 {
     osi_FreeSocket(rx_socket);
 }
 
 
-void shutdown_rxkernel(void)
+void
+shutdown_rxkernel(void)
 {
 }
 

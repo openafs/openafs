@@ -29,7 +29,8 @@
 
 #ifndef _LINUX_CODA_FS_I
 #define _LINUX_CODA_FS_I
-struct coda_inode_info {};
+struct coda_inode_info {
+};
 #endif
 #include "linux/wait.h"
 #include "linux/sched.h"
@@ -49,7 +50,8 @@ typedef wait_queue_head_t afs_kcondvar_t;
 typedef struct wait_queue *afs_kcondvar_t;
 #endif
 
-static inline int MUTEX_ISMINE(afs_kmutex_t *l)
+static inline int
+MUTEX_ISMINE(afs_kmutex_t * l)
 {
     return l->owner == current->pid;
 }
@@ -86,8 +88,8 @@ static inline int MUTEX_ISMINE(afs_kmutex_t *l)
 #define MUTEX_DESTROY(a)
 #define MUTEX_ENTER(a)
 #define MUTEX_TRYENTER(a) 1
-#define MUTEX_EXIT(a)  
-#define MUTEX_INIT(a,b,c,d) 
+#define MUTEX_EXIT(a)
+#define MUTEX_INIT(a,b,c,d)
 #define CV_INIT(a,b,c,d)
 #define CV_DESTROY(a)
 #endif

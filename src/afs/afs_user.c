@@ -13,7 +13,8 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -33,7 +34,7 @@ RCSID("$Header$");
 #endif /* !defined(UKERNEL) */
 
 #include "afsincludes.h"	/* Afs-based standard headers */
-#include "afs/afs_stats.h"   /* afs statistics */
+#include "afs/afs_stats.h"	/* afs statistics */
 
 #if	defined(AFS_SUN56_ENV)
 #include <inet/led.h>
@@ -57,7 +58,8 @@ void afs_ResetAccessCache(afs_int32 uid, int alock);
  * Called with afs_xuser, afs_xserver and afs_xconn locks held, to delete
  * appropriate conn structures for au
  */
-static void RemoveUserConns(register struct unixuser *au)
+static void
+RemoveUserConns(register struct unixuser *au)
 {
     register int i;
     register struct server *ts;
@@ -65,9 +67,9 @@ static void RemoveUserConns(register struct unixuser *au)
     register struct conn *tc, **lc;
 
     AFS_STATCNT(RemoveUserConns);
-    for (i=0;i<NSERVERS;i++) {
-	for (ts = afs_servers[i]; ts; ts=ts->next) {
-	    for (sa = ts->addr; sa; sa = sa->next_sa) {	
+    for (i = 0; i < NSERVERS; i++) {
+	for (ts = afs_servers[i]; ts; ts = ts->next) {
+	    for (sa = ts->addr; sa; sa = sa->next_sa) {
 		lc = &sa->conns;
 		for (tc = *lc; tc; lc = &tc->next, tc = *lc) {
 		    if (tc->user == au && tc->refCount == 0) {
@@ -76,14 +78,14 @@ static void RemoveUserConns(register struct unixuser *au)
 			rx_DestroyConnection(tc->id);
 			AFS_GLOCK();
 			afs_osi_Free(tc, sizeof(struct conn));
-			break;  /* at most one instance per server */
-		    } /*Found unreferenced connection for user*/
-		} /*For each connection on the server*/
+			break;	/* at most one instance per server */
+		    }		/*Found unreferenced connection for user */
+		}		/*For each connection on the server */
 	    }
-	} /*For each server on chain*/
-    } /*For each chain*/
+	}			/*For each server on chain */
+    }				/*For each chain */
 
-} /*RemoveUserConns*/
+}				/*RemoveUserConns */
 
 
 /* Called from afs_Daemon to garbage collect unixusers no longer using system,
@@ -93,7 +95,8 @@ static void RemoveUserConns(register struct unixuser *au)
  * other epochs as soon as possible (old file servers act bizarrely when they
  * see epoch changes).
  */
-void afs_GCUserData(int aforce)
+void
+afs_GCUserData(int aforce)
 {
     register struct unixuser *tu, **lu, *nu;
     register int i;
@@ -101,11 +104,11 @@ void afs_GCUserData(int aforce)
 
     AFS_STATCNT(afs_GCUserData);
     /* Obtain locks in valid order */
-    ObtainWriteLock(&afs_xuser,95);
+    ObtainWriteLock(&afs_xuser, 95);
     ObtainReadLock(&afs_xserver);
-    ObtainWriteLock(&afs_xconn,96);
+    ObtainWriteLock(&afs_xconn, 96);
     now = osi_Time();
-    for (i=0;i<NUSERS;i++) {
+    for (i = 0; i < NUSERS; i++) {
 	for (lu = &afs_users[i], tu = *lu; tu; tu = nu) {
 	    delFlag = 0;	/* should we delete this dude? */
 	    /* Don't garbage collect users in use now (refCount) */
@@ -117,8 +120,7 @@ void afs_GCUserData(int aforce)
 		     */
 		    if (tu->ct.EndTimestamp < now - NOTOKTIMEOUT)
 			delFlag = 1;
-		}
-		else {
+		} else {
 		    if (aforce || (tu->tokenTime < now - NOTOKTIMEOUT))
 			delFlag = 1;
 		}
@@ -132,8 +134,7 @@ void afs_GCUserData(int aforce)
 		if (tu->exporter)
 		    EXP_RELE(tu->exporter);
 		afs_osi_Free(tu, sizeof(struct unixuser));
-	    }
-	    else {
+	    } else {
 		lu = &tu->next;
 	    }
 	}
@@ -142,7 +143,7 @@ void afs_GCUserData(int aforce)
     ReleaseWriteLock(&afs_xuser);
     ReleaseReadLock(&afs_xserver);
 
-} /*afs_GCUserData*/
+}				/*afs_GCUserData */
 
 
 /*
@@ -150,7 +151,8 @@ void afs_GCUserData(int aforce)
  * cache for these guys.  Can't do this when token expiration detected,
  * since too many locks are set then.
  */
-void afs_CheckTokenCache(void)
+void
+afs_CheckTokenCache(void)
 {
     register int i;
     register struct unixuser *tu;
@@ -160,8 +162,8 @@ void afs_CheckTokenCache(void)
     ObtainReadLock(&afs_xvcache);
     ObtainReadLock(&afs_xuser);
     now = osi_Time();
-    for (i=0;i<NUSERS;i++) {
-	for (tu=afs_users[i]; tu; tu=tu->next) {
+    for (i = 0; i < NUSERS; i++) {
+	for (tu = afs_users[i]; tu; tu = tu->next) {
 	    register afs_int32 uid;
 
 	    /*
@@ -176,8 +178,9 @@ void afs_CheckTokenCache(void)
 		     */
 #ifdef notdef
 		    /* I really hate this message - MLK */
-		    afs_warn("afs: Tokens for user of AFS id %d for cell %s expired now\n",
-			   tu->vid, afs_GetCell(tu->cell)->cellName);
+		    afs_warn
+			("afs: Tokens for user of AFS id %d for cell %s expired now\n",
+			 tu->vid, afs_GetCell(tu->cell)->cellName);
 #endif
 		    tu->states |= (UTokensBad | UNeedsReset);
 		}
@@ -192,10 +195,11 @@ void afs_CheckTokenCache(void)
     ReleaseReadLock(&afs_xuser);
     ReleaseReadLock(&afs_xvcache);
 
-} /*afs_CheckTokenCache*/
+}				/*afs_CheckTokenCache */
 
 
-void afs_ResetAccessCache(afs_int32 uid, int alock)
+void
+afs_ResetAccessCache(afs_int32 uid, int alock)
 {
     register int i;
     register struct vcache *tvc;
@@ -204,42 +208,43 @@ void afs_ResetAccessCache(afs_int32 uid, int alock)
     AFS_STATCNT(afs_ResetAccessCache);
     if (alock)
 	ObtainReadLock(&afs_xvcache);
-    for(i=0;i<VCSIZE;i++) {
-	for(tvc=afs_vhashT[i]; tvc; tvc=tvc->hnext) {
-	  /* really should do this under cache write lock, but that.
-	     is hard to under locking hierarchy */
-         if (tvc->Access && (ac = afs_FindAxs(tvc->Access, uid))) {
-            afs_RemoveAxs (&tvc->Access, ac);
-          }
+    for (i = 0; i < VCSIZE; i++) {
+	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+	    /* really should do this under cache write lock, but that.
+	     * is hard to under locking hierarchy */
+	    if (tvc->Access && (ac = afs_FindAxs(tvc->Access, uid))) {
+		afs_RemoveAxs(&tvc->Access, ac);
+	    }
 	}
     }
     if (alock)
 	ReleaseReadLock(&afs_xvcache);
 
-} /*afs_ResetAccessCache*/
+}				/*afs_ResetAccessCache */
 
 
 /*
  * Ensure all connections make use of new tokens.  Discard incorrectly-cached
  * access info.
  */
-void afs_ResetUserConns (register struct unixuser *auser)
+void
+afs_ResetUserConns(register struct unixuser *auser)
 {
     int i;
     struct srvAddr *sa;
     struct conn *tc;
-    
+
     AFS_STATCNT(afs_ResetUserConns);
     ObtainReadLock(&afs_xsrvAddr);
-    ObtainWriteLock(&afs_xconn,98);
+    ObtainWriteLock(&afs_xconn, 98);
 
-    for (i=0;i<NSERVERS;i++) {
-	for (sa = afs_srvAddrs[i]; sa; sa=sa->next_bkt) {
-		for (tc = sa->conns; tc; tc=tc->next) {
-		    if (tc->user == auser) {
-			tc->forceConnectFS = 1;
-		    }
+    for (i = 0; i < NSERVERS; i++) {
+	for (sa = afs_srvAddrs[i]; sa; sa = sa->next_bkt) {
+	    for (tc = sa->conns; tc; tc = tc->next) {
+		if (tc->user == auser) {
+		    tc->forceConnectFS = 1;
 		}
+	    }
 	}
     }
 
@@ -247,18 +252,19 @@ void afs_ResetUserConns (register struct unixuser *auser)
     ReleaseReadLock(&afs_xsrvAddr);
     afs_ResetAccessCache(auser->uid, 1);
     auser->states &= ~UNeedsReset;
-} /*afs_ResetUserConns*/
+}				/*afs_ResetUserConns */
 
 
-struct unixuser *afs_FindUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
+struct unixuser *
+afs_FindUser(afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 {
     register struct unixuser *tu;
     register afs_int32 i;
 
     AFS_STATCNT(afs_FindUser);
     i = UHash(auid);
-    ObtainWriteLock(&afs_xuser,99);
-    for(tu = afs_users[i]; tu; tu = tu->next) {
+    ObtainWriteLock(&afs_xuser, 99);
+    for (tu = afs_users[i]; tu; tu = tu->next) {
 	if (tu->uid == auid && ((tu->cell == acell) || (acell == -1))) {
 	    tu->refCount++;
 	    ReleaseWriteLock(&afs_xuser);
@@ -268,7 +274,7 @@ struct unixuser *afs_FindUser(afs_int32 auid, afs_int32 acell, afs_int32 locktyp
     ReleaseWriteLock(&afs_xuser);
     return NULL;
 
-} /*afs_FindUser*/
+}				/*afs_FindUser */
 
 
 /*------------------------------------------------------------------------
@@ -293,15 +299,16 @@ struct unixuser *afs_FindUser(afs_int32 auid, afs_int32 acell, afs_int32 locktyp
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-void afs_ComputePAGStats(void)
+void
+afs_ComputePAGStats(void)
 {
-    register struct unixuser *currPAGP;		  /*Ptr to curr PAG*/
-    register struct unixuser *cmpPAGP;		  /*Ptr to PAG being compared*/
-    register struct afs_stats_AuthentInfo *authP; /*Ptr to stats area*/
-    int curr_Record;                              /*Curr record */
-    int currChain;				  /*Curr hash chain*/
-    int currChainLen;				  /*Length of curr hash chain*/
-    int currPAGRecords;				  /*# records in curr PAG*/
+    register struct unixuser *currPAGP;	/*Ptr to curr PAG */
+    register struct unixuser *cmpPAGP;	/*Ptr to PAG being compared */
+    register struct afs_stats_AuthentInfo *authP;	/*Ptr to stats area */
+    int curr_Record;		/*Curr record */
+    int currChain;		/*Curr hash chain */
+    int currChainLen;		/*Length of curr hash chain */
+    int currPAGRecords;		/*# records in curr PAG */
 
     /*
      * Lock out everyone else from scribbling on the PAG entries.
@@ -315,18 +322,17 @@ void afs_ComputePAGStats(void)
      */
     curr_Record = 0;
     authP = &(afs_stats_cmfullperf.authent);
-    authP->curr_PAGs		 = 0;
-    authP->curr_Records		 = 0;
-    authP->curr_AuthRecords	 = 0;
-    authP->curr_UnauthRecords	 = 0;
-    authP->curr_MaxRecordsInPAG	 = 0;
-    authP->curr_LongestChain	 = 0;
+    authP->curr_PAGs = 0;
+    authP->curr_Records = 0;
+    authP->curr_AuthRecords = 0;
+    authP->curr_UnauthRecords = 0;
+    authP->curr_MaxRecordsInPAG = 0;
+    authP->curr_LongestChain = 0;
 
     for (currChain = 0; currChain < NUSERS; currChain++) {
 	currChainLen = 0;
 	for (currPAGP = afs_users[currChain]; currPAGP;
-	     currPAGP = currPAGP->next) 
-	  {
+	     currPAGP = currPAGP->next) {
 	    /*
 	     * Bump the number of records on this current chain, along with
 	     * the total number of records in existence.
@@ -344,14 +350,15 @@ void afs_ComputePAGStats(void)
 	     * If this PAG record has already been ``counted', namely
 	     * associated with a PAG and tallied, clear its bit and move on.
 	     */
-            (authP->curr_Records)++;
+	    (authP->curr_Records)++;
 	    if (currPAGP->states & UPAGCounted) {
 		currPAGP->states &= ~UPAGCounted;
 		continue;
-	    } /*We've counted this one already*/
+	    }
 
 
 
+	    /*We've counted this one already */
 	    /*
 	     * Jot initial info down, then sweep down the rest of the hash
 	     * chain, looking for matching PAG entries.  Note: to properly
@@ -370,13 +377,13 @@ void afs_ComputePAGStats(void)
 		     */
 		    cmpPAGP->states |= UPAGCounted;
 		    currPAGRecords++;
-		    if ((cmpPAGP->states & UHasTokens) &&
-			!(cmpPAGP->states & UTokensBad))
+		    if ((cmpPAGP->states & UHasTokens)
+			&& !(cmpPAGP->states & UTokensBad))
 			(authP->curr_AuthRecords)++;
 		    else
 			(authP->curr_UnauthRecords)++;
-		} /*Records belong to same PAG*/
-	    } /*Compare to rest of PAG records in chain*/
+		}		/*Records belong to same PAG */
+	    }			/*Compare to rest of PAG records in chain */
 
 	    /*
 	     * In the above comparisons, the current PAG record has been
@@ -396,7 +403,7 @@ void afs_ComputePAGStats(void)
 		if (currPAGRecords > authP->HWM_MaxRecordsInPAG)
 		    authP->HWM_MaxRecordsInPAG = currPAGRecords;
 	    }
-	} /*Sweep a hash chain*/
+	}			/*Sweep a hash chain */
 
 	/*
 	 * If the chain we just finished zipping through is the longest we've
@@ -408,7 +415,7 @@ void afs_ComputePAGStats(void)
 		authP->HWM_LongestChain = currChainLen;
 	}
 
-    } /*For each hash chain in afs_user*/
+    }				/*For each hash chain in afs_user */
 
     /*
      * Now that we've counted everything up, we can consider all-time
@@ -424,19 +431,19 @@ void afs_ComputePAGStats(void)
      */
     ReleaseReadLock(&afs_xuser);
 
-} /*afs_ComputePAGStats*/
+}				/*afs_ComputePAGStats */
 
 
-struct unixuser *afs_GetUser(register afs_int32 auid, 
-	afs_int32 acell, afs_int32 locktype)
+struct unixuser *
+afs_GetUser(register afs_int32 auid, afs_int32 acell, afs_int32 locktype)
 {
-    register struct unixuser *tu, *pu=0;
+    register struct unixuser *tu, *pu = 0;
     register afs_int32 i;
     register afs_int32 RmtUser = 0;
 
     AFS_STATCNT(afs_GetUser);
     i = UHash(auid);
-    ObtainWriteLock(&afs_xuser,104);
+    ObtainWriteLock(&afs_xuser, 104);
     for (tu = afs_users[i]; tu; tu = tu->next) {
 	if (tu->uid == auid) {
 	    RmtUser = 0;
@@ -451,15 +458,14 @@ struct unixuser *afs_GetUser(register afs_int32 auid,
 		tu->refCount++;
 		ReleaseWriteLock(&afs_xuser);
 		return tu;
-	    } else
-		if (tu->cell == acell || acell == -1) {
-		    tu->refCount++;
-		    ReleaseWriteLock(&afs_xuser);
-		    return tu;
-		}		
+	    } else if (tu->cell == acell || acell == -1) {
+		tu->refCount++;
+		ReleaseWriteLock(&afs_xuser);
+		return tu;
+	    }
 	}
     }
-    tu = (struct unixuser *) afs_osi_Alloc(sizeof(struct unixuser));
+    tu = (struct unixuser *)afs_osi_Alloc(sizeof(struct unixuser));
 #ifndef AFS_NOSTATS
     afs_stats_cmfullperf.authent.PAGCreations++;
 #endif /* AFS_NOSTATS */
@@ -473,8 +479,8 @@ struct unixuser *afs_GetUser(register afs_int32 auid,
 	 * we simply rerecord relevant information from the original
 	 * structure
 	 */
-        if (pu && pu->exporter) {
-	    (void) EXP_HOLD(tu->exporter = pu->exporter);
+	if (pu && pu->exporter) {
+	    (void)EXP_HOLD(tu->exporter = pu->exporter);
 	}
     }
     tu->uid = auid;
@@ -485,21 +491,23 @@ struct unixuser *afs_GetUser(register afs_int32 auid,
     ReleaseWriteLock(&afs_xuser);
     return tu;
 
-} /*afs_GetUser*/
+}				/*afs_GetUser */
 
 
-void afs_PutUser(register struct unixuser *au, afs_int32 locktype)
+void
+afs_PutUser(register struct unixuser *au, afs_int32 locktype)
 {
     AFS_STATCNT(afs_PutUser);
     --au->refCount;
-} /*afs_PutUser*/
+}				/*afs_PutUser */
 
 
 /*
  * Set the primary flag on a unixuser structure, ensuring that exactly one
  * dude has the flag set at any time for a particular unix uid.
  */
-void afs_SetPrimary(register struct unixuser *au, register int aflag)
+void
+afs_SetPrimary(register struct unixuser *au, register int aflag)
 {
     register struct unixuser *tu;
     register int i;
@@ -508,12 +516,12 @@ void afs_SetPrimary(register struct unixuser *au, register int aflag)
     AFS_STATCNT(afs_SetPrimary);
     i = UHash(au->uid);
     pu = NULL;
-    ObtainWriteLock(&afs_xuser,105);
+    ObtainWriteLock(&afs_xuser, 105);
     /*
      * See if anyone is this uid's primary cell yet; recording in pu the
      * corresponding user
      */
-    for (tu=afs_users[i]; tu; tu=tu->next) {
+    for (tu = afs_users[i]; tu; tu = tu->next) {
 	if (tu->uid == au->uid && (tu->states & UPrimary)) {
 	    pu = tu;
 	}
@@ -529,21 +537,19 @@ void afs_SetPrimary(register struct unixuser *au, register int aflag)
     }
     if (aflag == 1) {
 	/* setting au to be primary */
-	if (pu) pu->states &= ~UPrimary;
+	if (pu)
+	    pu->states &= ~UPrimary;
 	au->states |= UPrimary;
-    }
-    else
-	if (aflag == 0) {
-	    /* we don't know if we're supposed to be primary or not */
-	    if (!pu || au == pu) {
-		au->states |= UPrimary;
-	    }
-	    else
-		au->states &= ~UPrimary;
+    } else if (aflag == 0) {
+	/* we don't know if we're supposed to be primary or not */
+	if (!pu || au == pu) {
+	    au->states |= UPrimary;
+	} else
+	    au->states &= ~UPrimary;
     }
     ReleaseWriteLock(&afs_xuser);
 
-} /*afs_SetPrimary*/
+}				/*afs_SetPrimary */
 
 
 #if AFS_GCPAGS
@@ -561,7 +567,7 @@ void afs_SetPrimary(register struct unixuser *au, register int aflag)
  * the per process loop in GCPAGs doesn't have to
  * check processes without pags against the afs_users table.
  */
-static afs_int32 afs_GCPAGs_UIDBaseTokenCount=0;
+static afs_int32 afs_GCPAGs_UIDBaseTokenCount = 0;
 
 /*
  * These variables keep track of the number of times
@@ -569,13 +575,14 @@ static afs_int32 afs_GCPAGs_UIDBaseTokenCount=0;
  * walking the process table, there is something wrong and we should not
  * prematurely expire any tokens.
  */
-static size_t afs_GCPAGs_perproc_count=0;
-static size_t afs_GCPAGs_cred_count=0;
+static size_t afs_GCPAGs_perproc_count = 0;
+static size_t afs_GCPAGs_cred_count = 0;
 
 /*
  * LOCKS: afs_GCPAGs_perproc_func requires write lock on afs_xuser
  */
-void afs_GCPAGs_perproc_func(AFS_PROC *pproc)
+void
+afs_GCPAGs_perproc_func(AFS_PROC * pproc)
 {
     afs_int32 pag, hash, uid;
     const struct AFS_UCRED *pcred;
@@ -583,7 +590,7 @@ void afs_GCPAGs_perproc_func(AFS_PROC *pproc)
     afs_GCPAGs_perproc_count++;
 
     pcred = afs_osi_proc2cred(pproc);
-    if(!pcred) 
+    if (!pcred)
 	return;
 
     afs_GCPAGs_cred_count++;
@@ -597,22 +604,22 @@ void afs_GCPAGs_perproc_func(AFS_PROC *pproc)
     hash = UHash(uid);
 
     /* if this token is PAG based, or it's UID based and 
-       UID-based tokens exist */
-    if((pag != NOPAG) || (afs_GCPAGs_UIDBaseTokenCount)) {
+     * UID-based tokens exist */
+    if ((pag != NOPAG) || (afs_GCPAGs_UIDBaseTokenCount)) {
 	/* find the entries for this uid in all cells and clear the not
 	 * referenced flag.  Can't use afs_FindUser, because it just returns
-         * the specific cell asked for, or the first one found. 
-         */
+	 * the specific cell asked for, or the first one found. 
+	 */
 	struct unixuser *pu;
-	for(pu = afs_users[hash]; pu; pu = pu->next) {
+	for (pu = afs_users[hash]; pu; pu = pu->next) {
 	    if (pu->uid == uid) {
-		if(pu->states & TMP_UPAGNotReferenced) {
+		if (pu->states & TMP_UPAGNotReferenced) {
 		    /* clear the 'deleteme' flag for this entry */
 		    pu->states &= ~TMP_UPAGNotReferenced;
-		    if(pag == NOPAG) {
+		    if (pag == NOPAG) {
 			/* This is a uid based token that hadn't 
-			   previously been cleared, so decrement the
-			   outstanding uid based token count */
+			 * previously been cleared, so decrement the
+			 * outstanding uid based token count */
 			afs_GCPAGs_UIDBaseTokenCount--;
 		    }
 		}
@@ -634,7 +641,8 @@ void afs_GCPAGs_perproc_func(AFS_PROC *pproc)
  * an entry in the login cache, so this routine is not needed.
  */
 
-afs_int32 afs_GCPAGs(afs_int32 *ReleasedCount)
+afs_int32
+afs_GCPAGs(afs_int32 * ReleasedCount)
 {
     struct unixuser *pu;
     int i;
@@ -646,10 +654,10 @@ afs_int32 afs_GCPAGs(afs_int32 *ReleasedCount)
     *ReleasedCount = 0;
 
     /* first, loop through afs_users, setting the temporary 'deleteme' flag */
-    ObtainWriteLock(&afs_xuser,419);
-    afs_GCPAGs_UIDBaseTokenCount=0;
-    for(i=0; i < NUSERS; i++) {
-	for(pu = afs_users[i]; pu; pu = pu->next) {
+    ObtainWriteLock(&afs_xuser, 419);
+    afs_GCPAGs_UIDBaseTokenCount = 0;
+    for (i = 0; i < NUSERS; i++) {
+	for (pu = afs_users[i]; pu; pu = pu->next) {
 	    pu->states |= TMP_UPAGNotReferenced;
 	    if (((pu->uid >> 24) & 0xff) != 'A') {
 		/* this is a uid-based token, */
@@ -663,8 +671,8 @@ afs_int32 afs_GCPAGs(afs_int32 *ReleasedCount)
      * for each process, mark it's PAGs (if any) in use.
      * i.e. clear the temporary deleteme flag.
      */
-    afs_GCPAGs_perproc_count=0;
-    afs_GCPAGs_cred_count=0;
+    afs_GCPAGs_perproc_count = 0;
+    afs_GCPAGs_cred_count = 0;
 
     afs_osi_TraverseProcTable();
 
@@ -684,24 +692,24 @@ afs_int32 afs_GCPAGs(afs_int32 *ReleasedCount)
      * (temp deleteme flag still set) will be marked for later deletion,
      * by setting their expire times to 0.
      */
-    for(i=0; i < NUSERS; i++) {
-	for(pu = afs_users[i]; pu; pu = pu->next) {
-	    if(pu->states & TMP_UPAGNotReferenced) {
-		
+    for (i = 0; i < NUSERS; i++) {
+	for (pu = afs_users[i]; pu; pu = pu->next) {
+	    if (pu->states & TMP_UPAGNotReferenced) {
+
 		/* clear the temp flag */
 		pu->states &= ~TMP_UPAGNotReferenced;
-		
+
 		/* Is this entry on behalf of a 'remote' user ?
 		 * i.e. nfs translator, etc.
 		 */
-		if(!pu->exporter && afs_gcpags == AFS_GCPAGS_OK) {
+		if (!pu->exporter && afs_gcpags == AFS_GCPAGS_OK) {
 		    /* set the expire times to 0, causes 
 		     * afs_GCUserData to remove this entry 
 		     */
 		    pu->ct.EndTimestamp = 0;
 		    pu->tokenTime = 0;
-		    
-		    (*ReleasedCount)++;   /* remember how many we marked (info only) */
+
+		    (*ReleasedCount)++;	/* remember how many we marked (info only) */
 		}
 	    }
 	}
@@ -712,4 +720,4 @@ afs_int32 afs_GCPAGs(afs_int32 *ReleasedCount)
     return 0;
 }
 
-#endif	/* AFS_GCPAGS */
+#endif /* AFS_GCPAGS */

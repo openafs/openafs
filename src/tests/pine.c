@@ -55,45 +55,45 @@ main(int argc, char *argv[])
     int retrycount = 0;
 
 
-    snprintf (unique, sizeof(unique), LOCK ".%d.%d",
-	      getpid(), (int)time(NULL));
+    snprintf(unique, sizeof(unique), LOCK ".%d.%d", getpid(),
+	     (int)time(NULL));
 
     ret = umask(077);
     if (ret < 0)
-	err (1, "umask");
+	err(1, "umask");
 
-    ret = open(unique, O_WRONLY|O_CREAT|O_EXCL, 0666);
+    ret = open(unique, O_WRONLY | O_CREAT | O_EXCL, 0666);
     if (ret < 0)
-	errx (1, "open");
+	errx(1, "open");
 
-    close (ret);
-    
- retry:
+    close(ret);
+
+  retry:
     retrycount++;
     if (retrycount > 10000000)
-	errx (1, "failed getting the lock");
+	errx(1, "failed getting the lock");
     ret = link(unique, LOCK);
     if (ret < 0)
 	goto retry;
-    
+
     ret = stat(unique, &sb);
     if (ret < 0)
-	errx (1, "stat");
-    
+	errx(1, "stat");
+
     if (sb.st_nlink != 2)
 	goto retry;
 
-    ret = chmod (LOCK, 0666);
+    ret = chmod(LOCK, 0666);
     if (ret < 0)
-	errx (1, "chmod");
+	errx(1, "chmod");
 
-    ret = unlink (LOCK);
+    ret = unlink(LOCK);
     if (ret < 0)
-	err (1, "unlink " LOCK);
+	err(1, "unlink " LOCK);
 
-    ret = unlink (unique);
+    ret = unlink(unique);
     if (ret < 0)
-	err (1, "unlink: %s", unique);
+	err(1, "unlink: %s", unique);
 
     return 0;
 }

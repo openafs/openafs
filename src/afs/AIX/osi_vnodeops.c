@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "h/systm.h"
 #include "h/types.h"
@@ -106,71 +107,71 @@ int afs_gn_enosys();
  * declare a struct vnodeops and initialize it with ptrs to all functions
  */
 struct vnodeops afs_gn_vnodeops = {
-	/* creation/naming/deletion */
-	afs_gn_link,
-	afs_gn_mkdir,
-	afs_gn_mknod,
-	afs_gn_remove,
-	afs_gn_rename,
-	afs_gn_rmdir,
-	/* lookup, file handle stuff */
-	afs_gn_lookup,
-	afs_gn_fid,
-	/* access to files */
-	afs_gn_open,
-	afs_gn_create,
-	afs_gn_hold,
-	afs_gn_rele,
-	afs_gn_close,
-	afs_gn_map,
-	afs_gn_unmap,
-	/* manipulate attributes of files */
-	afs_gn_access,
-	afs_gn_getattr,
-	afs_gn_setattr,
-	/* data update operations */
-	afs_gn_fclear,
-	afs_gn_fsync,
-	afs_gn_ftrunc,
-	afs_gn_rdwr,
-	afs_gn_lockctl,
-	/* extensions */
-	afs_gn_ioctl,
-	afs_gn_readlink,
-	afs_gn_select,
-	afs_gn_symlink,
-	afs_gn_readdir,
-	/* buffer ops */
-	afs_gn_strategy,
-	/* security things */
-	afs_gn_revoke,
-	afs_gn_getacl,
-	afs_gn_setacl,
-	afs_gn_getpcl,
-	afs_gn_setpcl,
-	afs_gn_enosys,	/* vn_seek */
-	afs_gn_enosys,	/* vn_fsync_range */
-	afs_gn_enosys,	/* vn_create_attr */
-	afs_gn_enosys,	/* vn_finfo */ 
-	afs_gn_enosys,	/* vn_map_lloff */
-	afs_gn_enosys,	/* vn_readdir_eofp */
-	afs_gn_enosys,	/* vn_rdwr_attr */
-	afs_gn_enosys,	/* vn_memcntl */
-	afs_gn_enosys,	/* vn_spare7 */
-	afs_gn_enosys,	/* vn_spare8 */
-	afs_gn_enosys,	/* vn_spare9 */
-	afs_gn_enosys,	/* vn_spareA */
-	afs_gn_enosys,	/* vn_spareB */
-	afs_gn_enosys,	/* vn_spareC */
-	afs_gn_enosys,	/* vn_spareD */
-	afs_gn_enosys,	/* vn_spareE */
-	afs_gn_enosys	/* vn_spareF */
+    /* creation/naming/deletion */
+    afs_gn_link,
+    afs_gn_mkdir,
+    afs_gn_mknod,
+    afs_gn_remove,
+    afs_gn_rename,
+    afs_gn_rmdir,
+    /* lookup, file handle stuff */
+    afs_gn_lookup,
+    afs_gn_fid,
+    /* access to files */
+    afs_gn_open,
+    afs_gn_create,
+    afs_gn_hold,
+    afs_gn_rele,
+    afs_gn_close,
+    afs_gn_map,
+    afs_gn_unmap,
+    /* manipulate attributes of files */
+    afs_gn_access,
+    afs_gn_getattr,
+    afs_gn_setattr,
+    /* data update operations */
+    afs_gn_fclear,
+    afs_gn_fsync,
+    afs_gn_ftrunc,
+    afs_gn_rdwr,
+    afs_gn_lockctl,
+    /* extensions */
+    afs_gn_ioctl,
+    afs_gn_readlink,
+    afs_gn_select,
+    afs_gn_symlink,
+    afs_gn_readdir,
+    /* buffer ops */
+    afs_gn_strategy,
+    /* security things */
+    afs_gn_revoke,
+    afs_gn_getacl,
+    afs_gn_setacl,
+    afs_gn_getpcl,
+    afs_gn_setpcl,
+    afs_gn_enosys,		/* vn_seek */
+    afs_gn_enosys,		/* vn_fsync_range */
+    afs_gn_enosys,		/* vn_create_attr */
+    afs_gn_enosys,		/* vn_finfo */
+    afs_gn_enosys,		/* vn_map_lloff */
+    afs_gn_enosys,		/* vn_readdir_eofp */
+    afs_gn_enosys,		/* vn_rdwr_attr */
+    afs_gn_enosys,		/* vn_memcntl */
+    afs_gn_enosys,		/* vn_spare7 */
+    afs_gn_enosys,		/* vn_spare8 */
+    afs_gn_enosys,		/* vn_spare9 */
+    afs_gn_enosys,		/* vn_spareA */
+    afs_gn_enosys,		/* vn_spareB */
+    afs_gn_enosys,		/* vn_spareC */
+    afs_gn_enosys,		/* vn_spareD */
+    afs_gn_enosys,		/* vn_spareE */
+    afs_gn_enosys		/* vn_spareF */
 #ifdef AFS_AIX51_ENV
-	,afs_gn_enosys, /* pagerBackRange */
- 	afs_gn_enosys,  /* pagerGetFileSize */
-	afs_gn_enosys,  /* pagerReadAhead */
-	afs_gn_enosys,  /* pagerWriteBehind */
-	afs_gn_enosys   /* pagerEndCopy */
+	, afs_gn_enosys,	/* pagerBackRange */
+    afs_gn_enosys,		/* pagerGetFileSize */
+    afs_gn_enosys,		/* pagerReadAhead */
+    afs_gn_enosys,		/* pagerWriteBehind */
+    afs_gn_enosys		/* pagerEndCopy */
 #endif
 };
 struct vnodeops *afs_ops = &afs_gn_vnodeops;
@@ -178,67 +179,68 @@ struct vnodeops *afs_ops = &afs_gn_vnodeops;
 
 int
 afs_gn_link(vp, dp, name, cred)
-struct	vnode	*vp;
-struct	vnode	*dp;
-char		*name;
-struct ucred	*cred;
+     struct vnode *vp;
+     struct vnode *dp;
+     char *name;
+     struct ucred *cred;
 {
-    int		error;
+    int error;
 
     AFS_STATCNT(afs_gn_link);
     error = afs_link(vp, dp, name, cred);
     afs_Trace3(afs_iclSetp, CM_TRACE_GNLINK, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_STRING, name, ICL_TYPE_LONG, error);
-    return(error);
+    return (error);
 }
 
 
 int
 afs_gn_mkdir(dp, name, Mode, cred)
-struct	vnode	*dp;
-char		*name;
+     struct vnode *dp;
+     char *name;
 #ifdef AFS_AIX51_ENV
-int32long64_t	Mode;
+     int32long64_t Mode;
 #else
-int		Mode;
+     int Mode;
 #endif
-struct ucred	*cred;
+     struct ucred *cred;
 {
-    struct	vattr	va;
-    struct	vnode	*vp;
-    int		error;
-    int 	mode = Mode;
+    struct vattr va;
+    struct vnode *vp;
+    int error;
+    int mode = Mode;
 
     AFS_STATCNT(afs_gn_mkdir);
     VATTR_NULL(&va);
     va.va_type = VDIR;
     va.va_mode = (mode & 07777) & ~get_umask();
     error = afs_mkdir(dp, name, &va, &vp, cred);
-    if (! error) {
+    if (!error) {
 	AFS_RELE(vp);
     }
     afs_Trace4(afs_iclSetp, CM_TRACE_GMKDIR, ICL_TYPE_POINTER, vp,
-	       ICL_TYPE_STRING, name, ICL_TYPE_LONG, mode, ICL_TYPE_LONG, error);
-    return(error);
+	       ICL_TYPE_STRING, name, ICL_TYPE_LONG, mode, ICL_TYPE_LONG,
+	       error);
+    return (error);
 }
 
 
 int
 afs_gn_mknod(dp, name, Mode, dev, cred)
-struct	vnode	*dp;
-char		*name;
+     struct vnode *dp;
+     char *name;
 #ifdef AFS_AIX51_ENV
-int		Mode;
+     int Mode;
 #else
-int		Mode;
+     int Mode;
 #endif
-dev_t		dev;
-struct ucred	*cred;
+     dev_t dev;
+     struct ucred *cred;
 {
-    struct	vattr	va;
-    struct	vnode	*vp;
-    int		error;
-    int 	mode = Mode;
+    struct vattr va;
+    struct vnode *vp;
+    int error;
+    int mode = Mode;
 
     AFS_STATCNT(afs_gn_mknod);
     VATTR_NULL(&va);
@@ -247,166 +249,171 @@ struct ucred	*cred;
 
 /**** I'm not sure if suser() should stay here since it makes no sense in AFS; however the documentation says that one "should be super-user unless making a FIFO file. Others systems such as SUN do this checking in the early stages of mknod (before the abstraction), so it's equivalently the same! *****/
     if (va.va_type != VFIFO && !suser(&error))
-	return(EPERM);
+	return (EPERM);
     switch (va.va_type) {
-	case VDIR:
-	    error = afs_mkdir(dp, name, &va, &vp, cred);
-	    break;
-	case VNON:
-	    error = EINVAL;
-	    break;
-	case VBAD:
-	case VCHR:
-	case VBLK:
-	    va.va_rdev = dev;
-	default:
-	    error = afs_create(dp, name, &va, NONEXCL, mode, &vp, cred);
+    case VDIR:
+	error = afs_mkdir(dp, name, &va, &vp, cred);
+	break;
+    case VNON:
+	error = EINVAL;
+	break;
+    case VBAD:
+    case VCHR:
+    case VBLK:
+	va.va_rdev = dev;
+    default:
+	error = afs_create(dp, name, &va, NONEXCL, mode, &vp, cred);
     }
-    if (! error) {
+    if (!error) {
 	AFS_RELE(vp);
     }
-    afs_Trace4(afs_iclSetp, CM_TRACE_GMKNOD, ICL_TYPE_POINTER, (afs_int32)vp,
-	       ICL_TYPE_STRING, name, ICL_TYPE_LONG, mode, ICL_TYPE_LONG, error);
-    return(error);
+    afs_Trace4(afs_iclSetp, CM_TRACE_GMKNOD, ICL_TYPE_POINTER, (afs_int32) vp,
+	       ICL_TYPE_STRING, name, ICL_TYPE_LONG, mode, ICL_TYPE_LONG,
+	       error);
+    return (error);
 }
 
 
 int
 afs_gn_remove(vp, dp, name, cred)
-struct	vnode	*vp;	    /* Ignored in AFS */
-struct	vnode	*dp;
-char		*name;
-struct ucred	*cred;
+     struct vnode *vp;		/* Ignored in AFS */
+     struct vnode *dp;
+     char *name;
+     struct ucred *cred;
 {
-   int		error;
+    int error;
 
-   AFS_STATCNT(afs_gn_remove);
-   error = afs_remove(dp, name, cred);
-   afs_Trace3(afs_iclSetp, CM_TRACE_GREMOVE, ICL_TYPE_POINTER, dp,
-	      ICL_TYPE_STRING, name, ICL_TYPE_LONG, error);
-   return(error);
+    AFS_STATCNT(afs_gn_remove);
+    error = afs_remove(dp, name, cred);
+    afs_Trace3(afs_iclSetp, CM_TRACE_GREMOVE, ICL_TYPE_POINTER, dp,
+	       ICL_TYPE_STRING, name, ICL_TYPE_LONG, error);
+    return (error);
 }
 
 
 int
 afs_gn_rename(vp, dp, name, tp, tdp, tname, cred)
-struct	vnode	*dp;
-char		*name;
-struct	vnode	*vp;	    /* Ignored in AFS */
-struct	vnode	*tp;	    /* Ignored in AFS */
-struct	vnode	*tdp;
-char	       	*tname;
-struct ucred	*cred;
+     struct vnode *dp;
+     char *name;
+     struct vnode *vp;		/* Ignored in AFS */
+     struct vnode *tp;		/* Ignored in AFS */
+     struct vnode *tdp;
+     char *tname;
+     struct ucred *cred;
 {
-   int		error;
+    int error;
 
-   AFS_STATCNT(afs_gn_rename);
+    AFS_STATCNT(afs_gn_rename);
     error = afs_rename(dp, name, tdp, tname, cred);
     afs_Trace4(afs_iclSetp, CM_TRACE_GRENAME, ICL_TYPE_POINTER, dp,
-	       ICL_TYPE_STRING, name, ICL_TYPE_STRING, tname, ICL_TYPE_LONG, error);
-    return(error);
+	       ICL_TYPE_STRING, name, ICL_TYPE_STRING, tname, ICL_TYPE_LONG,
+	       error);
+    return (error);
 }
 
 
 int
 afs_gn_rmdir(vp, dp, name, cred)
-struct	vnode	*vp;	    /* Ignored in AFS */
-struct	vnode	*dp;
-char		*name;
-struct ucred	*cred;
+     struct vnode *vp;		/* Ignored in AFS */
+     struct vnode *dp;
+     char *name;
+     struct ucred *cred;
 {
-   int		error;
+    int error;
 
-   AFS_STATCNT(afs_gn_rmdir);
+    AFS_STATCNT(afs_gn_rmdir);
     error = afs_rmdir(dp, name, cred);
     if (error) {
-	if (error == 66 /* 4.3's ENOTEMPTY */)
-	    error = EEXIST; 	/* AIX returns EEXIST where 4.3 used ENOTEMPTY */
+	if (error == 66 /* 4.3's ENOTEMPTY */ )
+	    error = EEXIST;	/* AIX returns EEXIST where 4.3 used ENOTEMPTY */
     }
     afs_Trace3(afs_iclSetp, CM_TRACE_GRMDIR, ICL_TYPE_POINTER, dp,
 	       ICL_TYPE_STRING, name, ICL_TYPE_LONG, error);
-    return(error);
+    return (error);
 }
 
 
 int
 afs_gn_lookup(dp, vpp, name, Flags, vattrp, cred)
-struct	vattr	*vattrp;
-struct	vnode	*dp;
-struct	vnode	**vpp;
-char		*name;
+     struct vattr *vattrp;
+     struct vnode *dp;
+     struct vnode **vpp;
+     char *name;
 #ifdef AFS_AIX51_ENV
-int32long64_t      Flags;  /* includes FOLLOW... */
+     int32long64_t Flags;	/* includes FOLLOW... */
 #else
-afs_uint32         Flags;  /* includes FOLLOW... */
+     afs_uint32 Flags;		/* includes FOLLOW... */
 #endif
-struct ucred	*cred;
+     struct ucred *cred;
 {
-   int		error;
-   int		flags = Flags;
+    int error;
+    int flags = Flags;
 
-   AFS_STATCNT(afs_gn_lookup);
+    AFS_STATCNT(afs_gn_lookup);
     error = afs_lookup(dp, name, vpp, cred);
     afs_Trace3(afs_iclSetp, CM_TRACE_GLOOKUP, ICL_TYPE_POINTER, dp,
 	       ICL_TYPE_STRING, name, ICL_TYPE_LONG, error);
-   if (vattrp != NULL && error == 0)
-       afs_gn_getattr(*vpp, vattrp, cred);
-    return(error);
+    if (vattrp != NULL && error == 0)
+	afs_gn_getattr(*vpp, vattrp, cred);
+    return (error);
 }
 
 
 int
 afs_gn_fid(vp, fidp, cred)
-struct	vnode	*vp;
-struct fid	*fidp;
-struct ucred	*cred;
+     struct vnode *vp;
+     struct fid *fidp;
+     struct ucred *cred;
 {
-    int	    error;
+    int error;
 
     AFS_STATCNT(afs_gn_fid);
-    error =  afs_fid(vp, fidp);
+    error = afs_fid(vp, fidp);
     afs_Trace3(afs_iclSetp, CM_TRACE_GFID, ICL_TYPE_POINTER, vp,
-	       ICL_TYPE_LONG, (afs_int32)fidp, ICL_TYPE_LONG, error);
-    return(error);
+	       ICL_TYPE_LONG, (afs_int32) fidp, ICL_TYPE_LONG, error);
+    return (error);
 }
 
 
 int
 afs_gn_open(vp, Flags, ext, vinfop, cred)
-struct	vnode	*vp;
+     struct vnode *vp;
 #ifdef AFS_AIX51_ENV
-int32long64_t	Flags;
-ext_t		ext;		/* Ignored in AFS */
+     int32long64_t Flags;
+     ext_t ext;			/* Ignored in AFS */
 #else
-int		Flags;
-int		ext;		/* Ignored in AFS */
+     int Flags;
+     int ext;			/* Ignored in AFS */
 #endif
-struct ucred	**vinfop;	/* return ptr for fp->f_vinfo, used as fp->f_cred */
-struct ucred	*cred;
+     struct ucred **vinfop;	/* return ptr for fp->f_vinfo, used as fp->f_cred */
+     struct ucred *cred;
 {
-    int		error;
-    struct vattr	va;
+    int error;
+    struct vattr va;
     struct vcache *tvp = VTOAFS(vp);
     afs_int32 modes;
-    int 	flags = Flags;
+    int flags = Flags;
 
     AFS_STATCNT(afs_gn_open);
     modes = 0;
-    if ((flags & FREAD)) modes |= R_ACC;
-    if ((flags & FEXEC)) modes |= X_ACC;
-    if ((flags & FWRITE) || (flags & FTRUNC)) modes |= W_ACC;
+    if ((flags & FREAD))
+	modes |= R_ACC;
+    if ((flags & FEXEC))
+	modes |= X_ACC;
+    if ((flags & FWRITE) || (flags & FTRUNC))
+	modes |= W_ACC;
 
     while ((flags & FNSHARE) && tvp->opens) {
 	if (!(flags & FDELAY)) {
-	   error = ETXTBSY;
-	   goto abort;
+	    error = ETXTBSY;
+	    goto abort;
 	}
 	afs_osi_Sleep(&tvp->opens);
     }
 
     error = afs_access(vp, modes, cred);
     if (error) {
-       goto abort;
+	goto abort;
     }
 
     error = afs_open(&vp, flags, cred);
@@ -420,58 +427,60 @@ struct ucred	*cred;
 	if (flags & FNSHARE)
 	    tvp->states |= CNSHARE;
 
-	if (! error) {
-	    *vinfop = cred; /* fp->f_vinfo is like fp->f_cred in suns */
-	}
-	else {
+	if (!error) {
+	    *vinfop = cred;	/* fp->f_vinfo is like fp->f_cred in suns */
+	} else {
 	    /* an error occurred; we've told CM that the file
-             * is open, so close it now so that open and
-             * writer counts are correct.  Ignore error code,
-             * as it is likely to fail (the setattr just did).
-             */
+	     * is open, so close it now so that open and
+	     * writer counts are correct.  Ignore error code,
+	     * as it is likely to fail (the setattr just did).
+	     */
 	    afs_close(vp, flags, cred);
 	}
     }
 
-abort:
+  abort:
     afs_Trace3(afs_iclSetp, CM_TRACE_GOPEN, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, flags, ICL_TYPE_LONG, error);
-    return(error);
+    return (error);
 }
 
 
 int
 afs_gn_create(dp, vpp, Flags, name, Mode, vinfop, cred)
-struct	vnode	*dp;
-struct	vnode	**vpp;
-char		*name;
+     struct vnode *dp;
+     struct vnode **vpp;
+     char *name;
 #ifdef AFS_AIX51_ENV
-int32long64_t	Flags;
-int32long64_t	Mode;
+     int32long64_t Flags;
+     int32long64_t Mode;
 #else
-int		Flags;
-int		Mode;
+     int Flags;
+     int Mode;
 #endif
-struct ucred	**vinfop; /* return ptr for fp->f_vinfo, used as fp->f_cred */
-struct ucred	*cred;
+     struct ucred **vinfop;	/* return ptr for fp->f_vinfo, used as fp->f_cred */
+     struct ucred *cred;
 {
-    struct	vattr	va;
-    enum	vcexcl	exclusive;
-    int		error, modes=0;
-    int 	flags = Flags;
-    int 	mode = Mode;
+    struct vattr va;
+    enum vcexcl exclusive;
+    int error, modes = 0;
+    int flags = Flags;
+    int mode = Mode;
 
     AFS_STATCNT(afs_gn_create);
-    if ((flags & (O_EXCL|O_CREAT)) == (O_EXCL|O_CREAT))
+    if ((flags & (O_EXCL | O_CREAT)) == (O_EXCL | O_CREAT))
 	exclusive = EXCL;
-    else	
+    else
 	exclusive = NONEXCL;
     VATTR_NULL(&va);
     va.va_type = VREG;
     va.va_mode = (mode & 07777) & ~get_umask();
-    if ((flags & FREAD)) modes |= R_ACC;
-    if ((flags & FEXEC)) modes |= X_ACC;
-    if ((flags & FWRITE) || (flags & FTRUNC)) modes |= W_ACC;
+    if ((flags & FREAD))
+	modes |= R_ACC;
+    if ((flags & FEXEC))
+	modes |= X_ACC;
+    if ((flags & FWRITE) || (flags & FTRUNC))
+	modes |= W_ACC;
     error = afs_create(dp, name, &va, exclusive, modes, vpp, cred);
     if (error) {
 	return error;
@@ -492,61 +501,62 @@ struct ucred	*cred;
 	 * are stuff in afs_open that we need. For example advance the
 	 * execsOrWriters flag (else we'll be treated as the sun's "core"
 	 * case). */
-	*vinfop	= cred; /* save user creds in fp->f_vinfo */
+	*vinfop = cred;		/* save user creds in fp->f_vinfo */
 	error = afs_open(vpp, flags, cred);
     }
     afs_Trace4(afs_iclSetp, CM_TRACE_GCREATE, ICL_TYPE_POINTER, dp,
-	       ICL_TYPE_STRING, name, ICL_TYPE_LONG, mode, ICL_TYPE_LONG, error);
+	       ICL_TYPE_STRING, name, ICL_TYPE_LONG, mode, ICL_TYPE_LONG,
+	       error);
     return error;
 }
 
 
 int
 afs_gn_hold(vp)
-struct	vnode	*vp;
+     struct vnode *vp;
 {
     AFS_STATCNT(afs_gn_hold);
     ++(vp->v_count);
-    return(0);
+    return (0);
 }
 
 int vmPageHog = 0;
 
 int
 afs_gn_rele(vp)
-struct	vnode	*vp;
+     struct vnode *vp;
 {
-   struct vcache *vcp = VTOAFS(vp);
-   int		error = 0;
+    struct vcache *vcp = VTOAFS(vp);
+    int error = 0;
 
     AFS_STATCNT(afs_gn_rele);
     if (vp->v_count == 0)
 	osi_Panic("afs_rele: zero v_count");
     if (--(vp->v_count) == 0) {
 	if (vcp->states & CPageHog) {
-	    vmPageHog --;
+	    vmPageHog--;
 	    vcp->states &= ~CPageHog;
 	}
 	error = afs_inactive(vp, 0);
     }
-    return(error);
+    return (error);
 }
 
 
 int
 afs_gn_close(vp, Flags, vinfo, cred)
-struct	vnode	*vp;
+     struct vnode *vp;
 #ifdef AFS_AIX51_ENV
-int32long64_t	Flags;
+     int32long64_t Flags;
 #else
-int		Flags;
+     int Flags;
 #endif
-caddr_t		vinfo;		/* Ignored in AFS */
-struct ucred	*cred;
+     caddr_t vinfo;		/* Ignored in AFS */
+     struct ucred *cred;
 {
-    int		error;
+    int error;
     struct vcache *tvp = VTOAFS(vp);
-    int 	flags = Flags;
+    int flags = Flags;
 
     AFS_STATCNT(afs_gn_close);
 
@@ -556,22 +566,22 @@ struct ucred	*cred;
     }
 
     error = afs_close(vp, flags, cred);
-    afs_Trace3(afs_iclSetp, CM_TRACE_GCLOSE, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace3(afs_iclSetp, CM_TRACE_GCLOSE, ICL_TYPE_POINTER, (afs_int32) vp,
 	       ICL_TYPE_LONG, flags, ICL_TYPE_LONG, error);
-    return(error);
+    return (error);
 }
 
 
 int
 afs_gn_map(vp, addr, Len, Off, Flag, cred)
-struct	vnode	*vp;
-caddr_t		addr;
+     struct vnode *vp;
+     caddr_t addr;
 #ifdef AFS_AIX51_ENV
-uint32long64_t  Len, Off, Flag;
+     uint32long64_t Len, Off, Flag;
 #else
-u_int 		Len, Off, Flag;
+     u_int Len, Off, Flag;
 #endif
-struct ucred	*cred;
+     struct ucred *cred;
 {
     struct vcache *vcp = VTOAFS(vp);
     struct vrequest treq;
@@ -582,39 +592,40 @@ struct ucred	*cred;
 
     AFS_STATCNT(afs_gn_map);
 #ifdef	notdef
-    if (error = afs_InitReq(&treq, cred)) return error;
+    if (error = afs_InitReq(&treq, cred))
+	return error;
     error = afs_VerifyVCache(vcp, &treq);
     if (error)
 	return afs_CheckCode(error, &treq, 49);
 #endif
-    osi_FlushPages(vcp, cred);		/* XXX ensure old pages are gone XXX */
+    osi_FlushPages(vcp, cred);	/* XXX ensure old pages are gone XXX */
     ObtainWriteLock(&vcp->lock, 401);
-    vcp->states |= CMAPPED;		/* flag cleared at afs_inactive */
+    vcp->states |= CMAPPED;	/* flag cleared at afs_inactive */
     /*
      * We map the segment into our address space using the handle returned by vm_create.
      */
     if (!vcp->segid) {
-        afs_uint32 tlen = vcp->m.Length;
+	afs_uint32 tlen = vcp->m.Length;
 #ifdef AFS_64BIT_CLIENT
-        if (vcp->m.Length > afs_vmMappingEnd)
-            tlen = afs_vmMappingEnd;
+	if (vcp->m.Length > afs_vmMappingEnd)
+	    tlen = afs_vmMappingEnd;
 #endif
 	/* Consider  V_INTRSEG too for interrupts */
-	if (error = vms_create(&vcp->segid, V_CLIENT, vcp->v.v_gnode, tlen, 0, 0)) {
+	if (error =
+	    vms_create(&vcp->segid, V_CLIENT, vcp->v.v_gnode, tlen, 0, 0)) {
 	    ReleaseWriteLock(&vcp->lock);
-	    return(EOPNOTSUPP);
+	    return (EOPNOTSUPP);
 	}
 #ifdef AFS_64BIT_KERNEL
-        vcp->vmh = vm_handle(vcp->segid, (int32long64_t) 0);
+	vcp->vmh = vm_handle(vcp->segid, (int32long64_t) 0);
 #else
 	vcp->vmh = SRVAL(vcp->segid, 0, 0);
 #endif
     }
-    vcp->v.v_gnode->gn_seg = vcp->segid; 	/* XXX Important XXX */
+    vcp->v.v_gnode->gn_seg = vcp->segid;	/* XXX Important XXX */
     if (flag & SHM_RDONLY) {
 	vp->v_gnode->gn_mrdcnt++;
-    }
-    else {
+    } else {
 	vp->v_gnode->gn_mwrcnt++;
     }
     /*
@@ -634,30 +645,31 @@ struct ucred	*cred;
     VN_HOLD(vp);
     afs_Trace4(afs_iclSetp, CM_TRACE_GMAP, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, addr, ICL_TYPE_LONG, len, ICL_TYPE_LONG, off);
-    return(0);
+    return (0);
 }
 
 
 int
 afs_gn_unmap(vp, flag, cred)
-struct	vnode	*vp;
+     struct vnode *vp;
 #ifdef AFS_AIX51_ENV
-int32long64_t	flag;
+     int32long64_t flag;
 #else
-int 		flag;
+     int flag;
 #endif
-struct ucred	*cred;
+     struct ucred *cred;
 {
     struct vcache *vcp = VTOAFS(vp);
     AFS_STATCNT(afs_gn_unmap);
     ObtainWriteLock(&vcp->lock, 402);
     if (flag & SHM_RDONLY) {
 	vp->v_gnode->gn_mrdcnt--;
-	if (vp->v_gnode->gn_mrdcnt <=0) vp->v_gnode->gn_mrdcnt = 0;
-    }
-    else {
+	if (vp->v_gnode->gn_mrdcnt <= 0)
+	    vp->v_gnode->gn_mrdcnt = 0;
+    } else {
 	vp->v_gnode->gn_mwrcnt--;
-	if (vp->v_gnode->gn_mwrcnt <=0) vp->v_gnode->gn_mwrcnt = 0;
+	if (vp->v_gnode->gn_mwrcnt <= 0)
+	    vp->v_gnode->gn_mwrcnt = 0;
     }
     ReleaseWriteLock(&vcp->lock);
 
@@ -668,17 +680,17 @@ struct ucred	*cred;
 
 int
 afs_gn_access(vp, Mode, Who, cred)
-struct	vnode		*vp;
+     struct vnode *vp;
 #ifdef AFS_AIX51_ENV
-int32long64_t		Mode;
-int32long64_t		Who;
+     int32long64_t Mode;
+     int32long64_t Who;
 #else
-int			Mode;
-int			Who;
+     int Mode;
+     int Who;
 #endif
-struct ucred		*cred;
+     struct ucred *cred;
 {
-    int	error;
+    int error;
     struct vattr vattr;
     int mode = Mode;
     int who = Who;
@@ -697,130 +709,131 @@ struct ucred		*cred;
 	    if (!error) {
 		if (who == ACC_ANY) {
 		    if (((vattr.va_mode >> 6) & mode) == mode) {
-			error = 0;	
+			error = 0;
 			goto out;
 		    }
 		}
 		if (((vattr.va_mode >> 3) & mode) == mode)
-		    error = 0;	
+		    error = 0;
 		else
 		    error = EACCES;
 	    }
 	} else if (who == ACC_ALL) {
 	    error = afs_getattr(vp, &vattr, cred);
 	    if (!error) {
-		if ((!((vattr.va_mode >> 6) & mode)) || (!((vattr.va_mode >> 3) & mode)) ||
-			(!(vattr.va_mode & mode)))
+		if ((!((vattr.va_mode >> 6) & mode))
+		    || (!((vattr.va_mode >> 3) & mode))
+		    || (!(vattr.va_mode & mode)))
 		    error = EACCES;
 		else
 		    error = 0;
 	    }
 	}
-  
+
     }
-out:
+  out:
     afs_Trace3(afs_iclSetp, CM_TRACE_GACCESS, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, mode, ICL_TYPE_LONG, error);
-    return(error);
+    return (error);
 }
 
 
 int
 afs_gn_getattr(vp, vattrp, cred)
-struct	vnode	*vp;
-struct	vattr	*vattrp;
-struct ucred	*cred;
+     struct vnode *vp;
+     struct vattr *vattrp;
+     struct ucred *cred;
 {
-   int		error;
+    int error;
 
-   AFS_STATCNT(afs_gn_getattr);
+    AFS_STATCNT(afs_gn_getattr);
     error = afs_getattr(vp, vattrp, cred);
     afs_Trace2(afs_iclSetp, CM_TRACE_GGETATTR, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, error);
-    return(error);
+    return (error);
 }
 
 
 int
 afs_gn_setattr(vp, op, arg1, arg2, arg3, cred)
-struct	vnode	*vp;
+     struct vnode *vp;
 #ifdef AFS_AIX51_ENV
-int32long64_t	op;
-int32long64_t	arg1;
-int32long64_t	arg2;
-int32long64_t	arg3;
+     int32long64_t op;
+     int32long64_t arg1;
+     int32long64_t arg2;
+     int32long64_t arg3;
 #else
-int		op;
-int		arg1;
-int		arg2;
-int		arg3;
+     int op;
+     int arg1;
+     int arg2;
+     int arg3;
 #endif
-struct ucred	*cred;
+     struct ucred *cred;
 {
-    struct	vattr	va;
-    int		error = 0;
+    struct vattr va;
+    int error = 0;
 
-   AFS_STATCNT(afs_gn_setattr);
+    AFS_STATCNT(afs_gn_setattr);
     VATTR_NULL(&va);
-    switch(op) {
+    switch (op) {
 	/* change mode */
-	case V_MODE:
-	    va.va_mode = arg1;
-	    break;
-	case V_OWN:
-	    if ((arg1 & T_OWNER_AS_IS) == 0)
-		va.va_uid = arg2;
-	    if ((arg1 & T_GROUP_AS_IS) == 0)
-		va.va_gid = arg3;
-	    break;
-	case V_UTIME:
+    case V_MODE:
+	va.va_mode = arg1;
+	break;
+    case V_OWN:
+	if ((arg1 & T_OWNER_AS_IS) == 0)
+	    va.va_uid = arg2;
+	if ((arg1 & T_GROUP_AS_IS) == 0)
+	    va.va_gid = arg3;
+	break;
+    case V_UTIME:
 #ifdef	notdef
-	    error = afs_access(vp, VWRITE, cred);
-	    if (error) 
-		goto out;
-#endif
-	    if (arg1 & T_SETTIME) {
-		va.va_atime.tv_sec = time;
-		va.va_mtime.tv_sec = time;
-	    } else {
-		va.va_atime = *(struct timestruc_t *) arg2;
-		va.va_mtime = *(struct timestruc_t *) arg3;
-	    }
-	    break;
-	default:
-	    error = EINVAL;
+	error = afs_access(vp, VWRITE, cred);
+	if (error)
 	    goto out;
+#endif
+	if (arg1 & T_SETTIME) {
+	    va.va_atime.tv_sec = time;
+	    va.va_mtime.tv_sec = time;
+	} else {
+	    va.va_atime = *(struct timestruc_t *)arg2;
+	    va.va_mtime = *(struct timestruc_t *)arg3;
+	}
+	break;
+    default:
+	error = EINVAL;
+	goto out;
     }
 
     error = afs_setattr(vp, &va, cred);
-out:
+  out:
     afs_Trace2(afs_iclSetp, CM_TRACE_GSETATTR, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, error);
-    return(error);
+    return (error);
 }
 
 
 char zero_buffer[PAGESIZE];
 int
-afs_gn_fclear(vp, flags, offset, length, vinfo, cred) 
-struct	vnode	*vp;
+afs_gn_fclear(vp, flags, offset, length, vinfo, cred)
+     struct vnode *vp;
 #ifdef AFS_AIX51_ENV
-int32long64_t	flags;
+     int32long64_t flags;
 #else
-int		flags;
+     int flags;
 #endif
-offset_t	offset;
-offset_t	length;
-caddr_t		vinfo;
-struct ucred	*cred;
+     offset_t offset;
+     offset_t length;
+     caddr_t vinfo;
+     struct ucred *cred;
 {
     int i, len, error = 0;
     struct iovec iov;
     struct uio uio;
-    static int fclear_init =0; 
+    static int fclear_init = 0;
     register struct vcache *avc = VTOAFS(vp);
 
-   AFS_STATCNT(afs_gn_fclear);
+    AFS_STATCNT(afs_gn_fclear);
     if (!fclear_init) {
 	memset(zero_buffer, 0, PAGESIZE);
 	fclear_init = 1;
@@ -829,19 +842,19 @@ struct ucred	*cred;
      * Don't clear past ulimit
      */
     if (offset + length > get_ulimit())
-	return(EFBIG);
+	return (EFBIG);
 
     /* Flush all pages first */
     if (avc->segid) {
 	AFS_GUNLOCK();
-	vm_flushp(avc->segid, 0, MAXFSIZE/PAGESIZE - 1);
-	vms_iowait(avc->segid);	
+	vm_flushp(avc->segid, 0, MAXFSIZE / PAGESIZE - 1);
+	vms_iowait(avc->segid);
 	AFS_GLOCK();
-    }	
+    }
     uio.afsio_offset = offset;
     for (i = offset; i < offset + length; i = uio.afsio_offset) {
 	len = offset + length - i;
-	iov.iov_len = (len > PAGESIZE) ? PAGESIZE : len;	
+	iov.iov_len = (len > PAGESIZE) ? PAGESIZE : len;
 	iov.iov_base = zero_buffer;
 	uio.afsio_iov = &iov;
 	uio.afsio_iovcnt = 1;
@@ -851,80 +864,81 @@ struct ucred	*cred;
 	    break;
     }
     afs_Trace4(afs_iclSetp, CM_TRACE_GFCLEAR, ICL_TYPE_POINTER, vp,
-	       ICL_TYPE_LONG, offset, ICL_TYPE_LONG, length, ICL_TYPE_LONG, error);
+	       ICL_TYPE_LONG, offset, ICL_TYPE_LONG, length, ICL_TYPE_LONG,
+	       error);
     return (error);
 }
 
 
 int
 afs_gn_fsync(vp, flags, vinfo, cred)
-struct	vnode	*vp;
+     struct vnode *vp;
 #ifdef AFS_AIX51_ENV
-int32long64_t	flags;	    /* Not used by AFS */
-int32long64_t	vinfo;	    /* Not used by AFS */
+     int32long64_t flags;	/* Not used by AFS */
+     int32long64_t vinfo;	/* Not used by AFS */
 #else
-int		flags;	    /* Not used by AFS */
-caddr_t		vinfo;	    /* Not used by AFS */
+     int flags;			/* Not used by AFS */
+     caddr_t vinfo;		/* Not used by AFS */
 #endif
-struct ucred	*cred;
+     struct ucred *cred;
 {
-   int		error;
+    int error;
 
-   AFS_STATCNT(afs_gn_fsync);
+    AFS_STATCNT(afs_gn_fsync);
     error = afs_fsync(vp, cred);
     afs_Trace3(afs_iclSetp, CM_TRACE_GFSYNC, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, flags, ICL_TYPE_LONG, error);
-    return(error);
+    return (error);
 }
 
 
 int
 afs_gn_ftrunc(vp, flags, length, vinfo, cred)
-struct	vnode	*vp;
+     struct vnode *vp;
 #ifdef AFS_AIX51_ENV
-int32long64_t	flags;	    /* Ignored in AFS */
+     int32long64_t flags;	/* Ignored in AFS */
 #else
-int		flags;	    /* Ignored in AFS */
+     int flags;			/* Ignored in AFS */
 #endif
-offset_t	length;
-caddr_t		vinfo;	    /* Ignored in AFS */
-struct ucred	*cred;
+     offset_t length;
+     caddr_t vinfo;		/* Ignored in AFS */
+     struct ucred *cred;
 {
-    struct vattr	va;
-    int		error;
+    struct vattr va;
+    int error;
 
     AFS_STATCNT(afs_gn_ftrunc);
     VATTR_NULL(&va);
     va.va_size = length;
     error = afs_setattr(vp, &va, cred);
     afs_Trace4(afs_iclSetp, CM_TRACE_GFTRUNC, ICL_TYPE_POINTER, vp,
-	       	ICL_TYPE_LONG, flags, 
-		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(length), 
-		ICL_TYPE_LONG, error);
-    return(error);
+	       ICL_TYPE_LONG, flags, ICL_TYPE_OFFSET,
+	       ICL_HANDLE_OFFSET(length), ICL_TYPE_LONG, error);
+    return (error);
 }
 
 /* Min size of a file which is dumping core before we declare it a page hog. */
 #define MIN_PAGE_HOG_SIZE 8388608
 
-int afs_gn_rdwr(vp, op, Flags, ubuf, ext, vinfo, vattrp, cred)
-struct	vnode	*vp;
-enum	uio_rw	op;
+int
+afs_gn_rdwr(vp, op, Flags, ubuf, ext, vinfo, vattrp, cred)
+     struct vnode *vp;
+     enum uio_rw op;
 #ifdef AFS_AIX51_ENV
-int32long64_t	Flags;
-ext_t		ext;	    /* Ignored in AFS */
+     int32long64_t Flags;
+     ext_t ext;			/* Ignored in AFS */
 #else
-int		Flags;
-int		ext;	    /* Ignored in AFS */
+     int Flags;
+     int ext;			/* Ignored in AFS */
 #endif
-struct	uio	*ubuf;
-caddr_t		vinfo;	    /* Ignored in AFS */
-struct	vattr	*vattrp;
-struct ucred	*cred;
+     struct uio *ubuf;
+     caddr_t vinfo;		/* Ignored in AFS */
+     struct vattr *vattrp;
+     struct ucred *cred;
 {
-    register struct vcache *vcp = VTOAFS(vp);   
+    register struct vcache *vcp = VTOAFS(vp);
     struct vrequest treq;
-    int error=0;
+    int error = 0;
     int free_cred = 0;
     int flags = Flags;
 
@@ -932,12 +946,11 @@ struct ucred	*cred;
 
     if (vcp->vc_error) {
 	if (op == UIO_WRITE) {
-            afs_Trace2(afs_iclSetp, CM_TRACE_GRDWR1, 
-	    ICL_TYPE_POINTER, vp,
-	    ICL_TYPE_LONG, vcp->vc_error);
+	    afs_Trace2(afs_iclSetp, CM_TRACE_GRDWR1, ICL_TYPE_POINTER, vp,
+		       ICL_TYPE_LONG, vcp->vc_error);
 	    return vcp->vc_error;
 	} else
- 	    return EIO;
+	    return EIO;
     }
 
     ObtainSharedLock(&vcp->lock, 507);
@@ -957,7 +970,7 @@ struct ucred	*cred;
 	    free_cred = 1;
 	}
 #endif
-	crhold(cred); /* Bump refcount for reference in vcache */
+	crhold(cred);		/* Bump refcount for reference in vcache */
 
 	if (vcp->credp) {
 	    struct ucred *crp;
@@ -967,27 +980,29 @@ struct ucred	*cred;
 	    ConvertWToSLock(&vcp->lock);
 	    crfree(crp);
 	}
-	vcp->credp = cred;	
+	vcp->credp = cred;
     }
     ReleaseSharedLock(&vcp->lock);
 
     /*
      * XXX Is the following really required?? XXX
      */
-    if (error = afs_InitReq(&treq, cred)) return error;
+    if (error = afs_InitReq(&treq, cred))
+	return error;
     if (error = afs_VerifyVCache(vcp, &treq))
 	return afs_CheckCode(error, &treq, 50);
-    osi_FlushPages(vcp, cred);		/* Flush old pages */
+    osi_FlushPages(vcp, cred);	/* Flush old pages */
 
     if (AFS_NFSXLATORREQ(cred)) {
 	if (flags & FSYNC)
 	    flags &= ~FSYNC;
 	if (op == UIO_READ) {
-	    if (!afs_AccessOK(vcp, PRSFS_READ, &treq,
-			      CHECK_MODE_BITS|CMB_ALLOW_EXEC_AS_READ)) {
-	      if (free_cred)
-		crfree(cred);
-	      return EACCES;
+	    if (!afs_AccessOK
+		(vcp, PRSFS_READ, &treq,
+		 CHECK_MODE_BITS | CMB_ALLOW_EXEC_AS_READ)) {
+		if (free_cred)
+		    crfree(cred);
+		return EACCES;
 	    }
 	}
     }
@@ -999,14 +1014,14 @@ struct ucred	*cred;
      */
     if (op == UIO_WRITE) {
 #ifdef AFS_64BIT_CLIENT
-      if (ubuf->afsio_offset < afs_vmMappingEnd) {
+	if (ubuf->afsio_offset < afs_vmMappingEnd) {
 #endif /* AFS_64BIT_ENV */
-	ObtainWriteLock(&vcp->lock,240);
-	vcp->states |= CDirty;		/* Set the dirty bit */
-	afs_FakeOpen(vcp);
-	ReleaseWriteLock(&vcp->lock);
+	    ObtainWriteLock(&vcp->lock, 240);
+	    vcp->states |= CDirty;	/* Set the dirty bit */
+	    afs_FakeOpen(vcp);
+	    ReleaseWriteLock(&vcp->lock);
 #ifdef AFS_64BIT_CLIENT
-      } 
+	}
 #endif /* AFS_64BIT_ENV */
     }
 
@@ -1014,13 +1029,13 @@ struct ucred	*cred;
 
     if (op == UIO_WRITE) {
 #ifdef AFS_64BIT_CLIENT
-      if (ubuf->afsio_offset < afs_vmMappingEnd) {
+	if (ubuf->afsio_offset < afs_vmMappingEnd) {
 #endif /* AFS_64BIT_ENV */
-	ObtainWriteLock(&vcp->lock,241);
-	afs_FakeClose(vcp, cred);	/* XXXX For nfs trans and cores XXXX */
-	ReleaseWriteLock(&vcp->lock);
+	    ObtainWriteLock(&vcp->lock, 241);
+	    afs_FakeClose(vcp, cred);	/* XXXX For nfs trans and cores XXXX */
+	    ReleaseWriteLock(&vcp->lock);
 #ifdef AFS_64BIT_CLIENT
-      } 
+	}
 #endif /* AFS_64BIT_ENV */
     }
     if (vattrp != NULL && error == 0)
@@ -1030,17 +1045,17 @@ struct ucred	*cred;
 	       ICL_TYPE_LONG, flags, ICL_TYPE_LONG, op, ICL_TYPE_LONG, error);
 
     if (free_cred)
-      crfree(cred);
-    return(error);
+	crfree(cred);
+    return (error);
 }
 
 #define AFS_MAX_VM_CHUNKS 10
 afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
-    register struct vnode *vp;
-    struct uio *uiop;
-    enum uio_rw rw;
-    int ioflag;
-    struct ucred *credp; 
+     register struct vnode *vp;
+     struct uio *uiop;
+     enum uio_rw rw;
+     int ioflag;
+     struct ucred *credp;
 {
     register afs_int32 code = 0;
     register int i;
@@ -1061,14 +1076,16 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
     int counter = 0;
     struct vrequest treq;
 
-    if (code = afs_InitReq(&treq, credp)) return code;
+    if (code = afs_InitReq(&treq, credp))
+	return code;
 
     /* special case easy transfer; apparently a lot are done */
-    if ((xfrSize=uiop->afsio_resid) == 0) return 0;
+    if ((xfrSize = uiop->afsio_resid) == 0)
+	return 0;
 
     ObtainReadLock(&vcp->lock);
     fileSize = vcp->m.Length;
-    if (rw == UIO_WRITE && (ioflag & IO_APPEND)) { /* handle IO_APPEND mode */
+    if (rw == UIO_WRITE && (ioflag & IO_APPEND)) {	/* handle IO_APPEND mode */
 	uiop->afsio_offset = fileSize;
     }
     /* compute xfrOffset now, and do some checks */
@@ -1077,7 +1094,6 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	code = EINVAL;
 	goto fail;
     }
-
 #ifndef AFS_64BIT_CLIENT
     /* check for "file too big" error, which should really be done above us */
     if (rw == UIO_WRITE && xfrSize + fileSize > get_ulimit()) {
@@ -1091,69 +1107,70 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	if (xfrOffset < afs_vmMappingEnd) {
 	    /* special case of a buffer crossing the VM mapping line */
 	    struct uio tuio;
-	    struct iovec tvec[16]; /* Should have access to #define */
-	    afs_int32 tsize; 
+	    struct iovec tvec[16];	/* Should have access to #define */
+	    afs_int32 tsize;
 
 	    mixed = 1;
 	    finalOffset = xfrOffset + xfrSize;
-	    tsize = (afs_size_t) (xfrOffset + xfrSize - afs_vmMappingEnd); 
+	    tsize = (afs_size_t) (xfrOffset + xfrSize - afs_vmMappingEnd);
 	    txfrSize = xfrSize;
 	    afsio_copy(uiop, &tuio, tvec);
 	    afsio_skip(&tuio, txfrSize - tsize);
 	    afsio_trim(&tuio, tsize);
 	    tuio.afsio_offset = afs_vmMappingEnd;
 	    ReleaseReadLock(&vcp->lock);
-	    ObtainWriteLock(&vcp->lock,243);
+	    ObtainWriteLock(&vcp->lock, 243);
 	    afs_FakeClose(vcp, credp);	/* XXXX For nfs trans and cores XXXX */
 	    ReleaseWriteLock(&vcp->lock);
 	    code = afs_direct_rdwr(vp, &tuio, rw, ioflag, credp);
-	    ObtainWriteLock(&vcp->lock,244);
-	    afs_FakeOpen(vcp);	 	/* XXXX For nfs trans and cores XXXX */
+	    ObtainWriteLock(&vcp->lock, 244);
+	    afs_FakeOpen(vcp);	/* XXXX For nfs trans and cores XXXX */
 	    ReleaseWriteLock(&vcp->lock);
 	    ObtainReadLock(&vcp->lock);
-	    if (code) goto fail; 
-	    xfrSize = afs_vmMappingEnd - xfrOffset; 
+	    if (code)
+		goto fail;
+	    xfrSize = afs_vmMappingEnd - xfrOffset;
 	    txfrSize = xfrSize;
 	    afsio_trim(uiop, txfrSize);
 	} else {
 	    ReleaseReadLock(&vcp->lock);
-            code = afs_direct_rdwr(vp, uiop, rw, ioflag, credp);
+	    code = afs_direct_rdwr(vp, uiop, rw, ioflag, credp);
 	    return code;
 	}
     }
 #endif /* AFS_64BIT_CLIENT */
 
     if (!vcp->segid) {
-        afs_uint32 tlen = vcp->m.Length;
+	afs_uint32 tlen = vcp->m.Length;
 #ifdef AFS_64BIT_CLIENT
-        if (vcp->m.Length > afs_vmMappingEnd)
-            tlen = afs_vmMappingEnd;
+	if (vcp->m.Length > afs_vmMappingEnd)
+	    tlen = afs_vmMappingEnd;
 #endif
 	/* Consider  V_INTRSEG too for interrupts */
-	if (code = vms_create(&vcp->segid, V_CLIENT, vcp->v.v_gnode,
-			      tlen, 0, 0)) {
+	if (code =
+	    vms_create(&vcp->segid, V_CLIENT, vcp->v.v_gnode, tlen, 0, 0)) {
 	    goto fail;
 	}
 #ifdef AFS_64BIT_KERNEL
-        vcp->vmh = vm_handle(vcp->segid, (int32long64_t) 0);
+	vcp->vmh = vm_handle(vcp->segid, (int32long64_t) 0);
 #else
-	vcp->vmh = SRVAL(vcp->segid, 0, 0);	
+	vcp->vmh = SRVAL(vcp->segid, 0, 0);
 #endif
     }
     vcp->v.v_gnode->gn_seg = vcp->segid;
     if (rw == UIO_READ) {
 	/* don't read past EOF */
-	if (xfrSize+xfrOffset > fileSize)
+	if (xfrSize + xfrOffset > fileSize)
 	    xfrSize = fileSize - xfrOffset;
-	if (xfrSize <= 0) goto fail;	    
+	if (xfrSize <= 0)
+	    goto fail;
 	ReleaseReadLock(&vcp->lock);
 #ifdef AFS_64BIT_CLIENT
 	toffset = xfrOffset;
 	uiop->afsio_offset = xfrOffset;
-        afs_Trace3(afs_iclSetp, CM_TRACE_VMWRITE, 
-			ICL_TYPE_POINTER, vcp,  
-	       		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(xfrOffset),
-	       		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(xfrSize));
+	afs_Trace3(afs_iclSetp, CM_TRACE_VMWRITE, ICL_TYPE_POINTER, vcp,
+		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(xfrOffset),
+		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(xfrSize));
 	AFS_GUNLOCK();
 	txfrSize = xfrSize;
 	code = vm_move(vcp->segid, toffset, txfrSize, rw, uiop);
@@ -1168,13 +1185,13 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	 */
 	if (counter == 0 || AFS_CHUNKOFFSET(xfrOffset) == 0
 	    && xfrSize <= AFS_CHUNKSIZE(xfrOffset)) {
-	    ObtainWriteLock(&vcp->lock,407);
+	    ObtainWriteLock(&vcp->lock, 407);
 	    tdc = afs_FindDCache(vcp, xfrOffset);
-            if (tdc) {
+	    if (tdc) {
 		if (!(tdc->mflags & DFNextStarted))
-	            afs_PrefetchChunk(vcp, tdc, credp, &treq);
-	        afs_PutDCache(tdc);
-            }
+		    afs_PrefetchChunk(vcp, tdc, credp, &treq);
+		afs_PutDCache(tdc);
+	    }
 	    ReleaseWriteLock(&vcp->lock);
 	}
 #ifdef AFS_64BIT_CLIENT
@@ -1187,30 +1204,29 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 
     /* UIO_WRITE */
     start_offset = uiop->afsio_offset;
-    afs_Trace3(afs_iclSetp, CM_TRACE_VMWRITE, 
-			ICL_TYPE_POINTER, vcp,  
-	       		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(start_offset),
-	       		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(xfrSize));
+    afs_Trace3(afs_iclSetp, CM_TRACE_VMWRITE, ICL_TYPE_POINTER, vcp,
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(start_offset),
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(xfrSize));
     ReleaseReadLock(&vcp->lock);
-    ObtainWriteLock(&vcp->lock,400);
+    ObtainWriteLock(&vcp->lock, 400);
     vcp->m.Date = osi_Time();	/* Set file date (for ranlib) */
     /* extend file */
     /* un-protect last page. */
-    last_page = vcp->m.Length/PAGESIZE;
+    last_page = vcp->m.Length / PAGESIZE;
 #ifdef AFS_64BIT_CLIENT
     if (vcp->m.Length > afs_vmMappingEnd)
-        last_page = afs_vmMappingEnd/PAGESIZE;
+	last_page = afs_vmMappingEnd / PAGESIZE;
 #endif
     vm_protectp(vcp->segid, last_page, 1, FILEKEY);
     if (xfrSize + xfrOffset > fileSize) {
-	vcp->m.Length = xfrSize+xfrOffset;
-    }	    
+	vcp->m.Length = xfrSize + xfrOffset;
+    }
     if ((!(vcp->states & CPageHog)) && (xfrSize >= MIN_PAGE_HOG_SIZE)) {
-	vmPageHog ++;
+	vmPageHog++;
 	vcp->states |= CPageHog;
     }
     ReleaseWriteLock(&vcp->lock);
-    
+
     /* If the write will fit into a single chunk we'll write all of it
      * at once. Otherwise, we'll write one chunk at a time, flushing
      * some of it to disk.
@@ -1221,19 +1237,20 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
      * small file which is either new or completely overwrites the 
      * existing file.
      */
-    if ((xfrOffset == 0) && (xfrSize < PAGESIZE) && (xfrSize >= fileSize) &&
-	(vcp->v.v_gnode->gn_mwrcnt == 0) &&
-	(vcp->v.v_gnode->gn_mrdcnt == 0)) {
-	    (void) vm_makep(vcp->segid, 0);
+    if ((xfrOffset == 0) && (xfrSize < PAGESIZE) && (xfrSize >= fileSize)
+	&& (vcp->v.v_gnode->gn_mwrcnt == 0)
+	&& (vcp->v.v_gnode->gn_mrdcnt == 0)) {
+	(void)vm_makep(vcp->segid, 0);
     }
-	
+
     while (xfrSize > 0) {
 	offset = AFS_CHUNKBASE(xfrOffset);
 	len = xfrSize;
-	
+
 	if (AFS_CHUNKSIZE(xfrOffset) <= len)
-	    len = (afs_size_t)AFS_CHUNKSIZE(xfrOffset) - (xfrOffset - offset);
-	
+	    len =
+		(afs_size_t) AFS_CHUNKSIZE(xfrOffset) - (xfrOffset - offset);
+
 	if (len == xfrSize) {
 	    /* All data goes to this one chunk. */
 	    AFS_GUNLOCK();
@@ -1249,30 +1266,29 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	    AFS_GLOCK();
 	    xfrOffset += len;
 	    xfrSize = 0;
-	}
-	else {
+	} else {
 	    /* Write just one chunk's worth of data. */
 	    struct uio tuio;
-	    struct iovec tvec[16]; /* Should have access to #define */
+	    struct iovec tvec[16];	/* Should have access to #define */
 
 	    /* Purge dirty chunks of file if there are too many dirty chunks.
 	     * Inside the write loop, we only do this at a chunk boundary.
 	     * Clean up partial chunk if necessary at end of loop.
 	     */
 	    if (counter > 0 && code == 0 && xfrOffset == offset) {
-		ObtainWriteLock(&vcp->lock,403);
+		ObtainWriteLock(&vcp->lock, 403);
 		if (xfrOffset > vcp->m.Length)
 		    vcp->m.Length = xfrOffset;
-	        code = afs_DoPartialWrite(vcp, &treq);
+		code = afs_DoPartialWrite(vcp, &treq);
 		vcp->states |= CDirty;
 		ReleaseWriteLock(&vcp->lock);
 	    }
 	    counter++;
-	    
+
 	    afsio_copy(uiop, &tuio, tvec);
 	    afsio_trim(&tuio, len);
 	    tuio.afsio_offset = xfrOffset;
-	    
+
 	    AFS_GUNLOCK();
 	    old_offset = uiop->afsio_offset;
 #ifdef AFS_64BIT_CLIENT
@@ -1287,13 +1303,13 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	    xfrSize -= len;
 	    xfrOffset += len;
 	}
-	
-	first_page = (afs_size_t)old_offset >> PGSHIFT;
-	pages = 1 + (((afs_size_t)old_offset + (len - 1)) >> PGSHIFT) - first_page;
-        afs_Trace3(afs_iclSetp, CM_TRACE_VMWRITE2, 
-		ICL_TYPE_POINTER, vcp,
-		ICL_TYPE_INT32, first_page,
-		ICL_TYPE_INT32, pages);
+
+	first_page = (afs_size_t) old_offset >> PGSHIFT;
+	pages =
+	    1 + (((afs_size_t) old_offset + (len - 1)) >> PGSHIFT) -
+	    first_page;
+	afs_Trace3(afs_iclSetp, CM_TRACE_VMWRITE2, ICL_TYPE_POINTER, vcp,
+		   ICL_TYPE_INT32, first_page, ICL_TYPE_INT32, pages);
 	AFS_GUNLOCK();
 	code = vm_writep(vcp->segid, first_page, pages);
 	if (++count > AFS_MAX_VM_CHUNKS) {
@@ -1301,7 +1317,7 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	    vms_iowait(vcp->segid);
 	}
 	AFS_GLOCK();
-	
+
     }
 
     if (count) {
@@ -1310,17 +1326,17 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	AFS_GLOCK();
     }
 
-    ObtainWriteLock(&vcp->lock,242);
+    ObtainWriteLock(&vcp->lock, 242);
     if (code == 0 && (vcp->states & CDirty)) {
 	code = afs_DoPartialWrite(vcp, &treq);
     }
     vm_protectp(vcp->segid, last_page, 1, RDONLY);
     ReleaseWriteLock(&vcp->lock);
-    
+
     /* If requested, fsync the file after every write */
     if (ioflag & FSYNC)
 	afs_fsync(vp, credp);
-    
+
     ObtainReadLock(&vcp->lock);
     if (vcp->vc_error) {
 	/* Pretend we didn't write anything. We need to get the error back to
@@ -1331,7 +1347,7 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	 */
 	code = vcp->vc_error;
 	if (code == EDQUOT || code == ENOSPC)
-	    uiop->afsio_resid = save_resid; 
+	    uiop->afsio_resid = save_resid;
     }
 #ifdef AFS_64BIT_CLIENT
     if (mixed) {
@@ -1341,41 +1357,42 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 
   fail:
     ReleaseReadLock(&vcp->lock);
-    afs_Trace2(afs_iclSetp, CM_TRACE_VMWRITE3, 
-			ICL_TYPE_POINTER, vcp,  
-	       		ICL_TYPE_INT32, code);
+    afs_Trace2(afs_iclSetp, CM_TRACE_VMWRITE3, ICL_TYPE_POINTER, vcp,
+	       ICL_TYPE_INT32, code);
     return code;
 }
 
 
 afs_direct_rdwr(vp, uiop, rw, ioflag, credp)
-    register struct vnode *vp;
-    struct uio *uiop;
-    enum uio_rw rw;
-    int ioflag;
-    struct ucred *credp;
-{ 
+     register struct vnode *vp;
+     struct uio *uiop;
+     enum uio_rw rw;
+     int ioflag;
+     struct ucred *credp;
+{
     register afs_int32 code = 0;
     afs_size_t fileSize, xfrOffset, offset, old_offset, xfrSize;
     struct vcache *vcp = VTOAFS(vp);
     afs_int32 save_resid = uiop->afsio_resid;
     struct vrequest treq;
 
-    if (code = afs_InitReq(&treq, credp)) return code;
+    if (code = afs_InitReq(&treq, credp))
+	return code;
 
     /* special case easy transfer; apparently a lot are done */
-    if ((xfrSize=uiop->afsio_resid) == 0) return 0;
+    if ((xfrSize = uiop->afsio_resid) == 0)
+	return 0;
 
     ObtainReadLock(&vcp->lock);
     fileSize = vcp->m.Length;
-    if (rw == UIO_WRITE && (ioflag & IO_APPEND)) { /* handle IO_APPEND mode */
+    if (rw == UIO_WRITE && (ioflag & IO_APPEND)) {	/* handle IO_APPEND mode */
 	uiop->afsio_offset = fileSize;
     }
     /* compute xfrOffset now, and do some checks */
     xfrOffset = uiop->afsio_offset;
     if (xfrOffset < 0 || xfrOffset + xfrSize < 0) {
 	code = EINVAL;
-        ReleaseReadLock(&vcp->lock);
+	ReleaseReadLock(&vcp->lock);
 	goto fail;
     }
 
@@ -1383,29 +1400,28 @@ afs_direct_rdwr(vp, uiop, rw, ioflag, credp)
 #ifdef notdef
     if (rw == UIO_WRITE && xfrSize + fileSize > get_ulimit()) {
 	code = EFBIG;
-        ReleaseReadLock(&vcp->lock);
+	ReleaseReadLock(&vcp->lock);
 	goto fail;
     }
 #endif
     ReleaseReadLock(&vcp->lock);
     if (rw == UIO_WRITE) {
-        ObtainWriteLock(&vcp->lock,400);
-        vcp->m.Date = osi_Time();	/* Set file date (for ranlib) */
-        /* extend file */
-        if (xfrSize + xfrOffset > fileSize)
+	ObtainWriteLock(&vcp->lock, 400);
+	vcp->m.Date = osi_Time();	/* Set file date (for ranlib) */
+	/* extend file */
+	if (xfrSize + xfrOffset > fileSize)
 	    vcp->m.Length = xfrSize + xfrOffset;
-        ReleaseWriteLock(&vcp->lock);
-    }	    
-    afs_Trace3(afs_iclSetp, CM_TRACE_DIRECTRDWR, 
-			ICL_TYPE_POINTER, vp,
-			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(uiop->afsio_offset),
-	       		ICL_TYPE_LONG, uiop->afsio_resid);
+	ReleaseWriteLock(&vcp->lock);
+    }
+    afs_Trace3(afs_iclSetp, CM_TRACE_DIRECTRDWR, ICL_TYPE_POINTER, vp,
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(uiop->afsio_offset),
+	       ICL_TYPE_LONG, uiop->afsio_resid);
     code = afs_rdwr(vp, uiop, rw, ioflag, credp);
     if (code != 0) {
 	uiop->afsio_resid = save_resid;
     } else {
 	uiop->afsio_offset = xfrOffset + xfrSize;
-        if (uiop->afsio_resid > 0) {
+	if (uiop->afsio_resid > 0) {
 	    /* should zero here the remaining buffer */
 	    uiop->afsio_resid = 0;
 	}
@@ -1414,7 +1430,7 @@ afs_direct_rdwr(vp, uiop, rw, ioflag, credp)
 	 * Clean up partial chunk if necessary at end of loop.
 	 */
 	if (AFS_CHUNKBASE(uiop->afsio_offset) != AFS_CHUNKBASE(xfrOffset)) {
-	    ObtainWriteLock(&vcp->lock,402);
+	    ObtainWriteLock(&vcp->lock, 402);
 	    code = afs_DoPartialWrite(vcp, &treq);
 	    vcp->states |= CDirty;
 	    ReleaseWriteLock(&vcp->lock);
@@ -1426,28 +1442,30 @@ afs_direct_rdwr(vp, uiop, rw, ioflag, credp)
 }
 
 
-static int lock_normalize(vp, lckdat, offset, cred)
-    struct vnode *vp;
-    struct eflock *lckdat;
-    offset_t offset;
-    struct ucred *cred;
+static int
+lock_normalize(vp, lckdat, offset, cred)
+     struct vnode *vp;
+     struct eflock *lckdat;
+     offset_t offset;
+     struct ucred *cred;
 {
     struct vattr vattr;
     int code;
 
-    switch(lckdat->l_whence) {
-	case 0:
-	    return 0;
-	case 1:
-	    lckdat->l_start += (off_t) offset;
-	    break;
-	case 2:
-	    code = afs_getattr(vp, &vattr, cred);
-	    if (code != 0) return code;
-	    lckdat->l_start += (off_t) vattr.va_size;
-	    break;
-	default: 
-	    return EINVAL;
+    switch (lckdat->l_whence) {
+    case 0:
+	return 0;
+    case 1:
+	lckdat->l_start += (off_t) offset;
+	break;
+    case 2:
+	code = afs_getattr(vp, &vattr, cred);
+	if (code != 0)
+	    return code;
+	lckdat->l_start += (off_t) vattr.va_size;
+	break;
+    default:
+	return EINVAL;
     }
     lckdat->l_whence = 0;
     return 0;
@@ -1456,142 +1474,144 @@ static int lock_normalize(vp, lckdat, offset, cred)
 
 
 afs_gn_lockctl(vp, offset, lckdat, cmd, ignored_fcn, ignored_id, cred)
-void (*ignored_fcn)();
-void *ignored_id;
-struct	vnode	*vp;
-offset_t	offset;
-struct	eflock	*lckdat;
-struct ucred	*cred;
+     void (*ignored_fcn) ();
+     void *ignored_id;
+     struct vnode *vp;
+     offset_t offset;
+     struct eflock *lckdat;
+     struct ucred *cred;
 #ifdef AFS_AIX51_ENV
-int32long64_t	cmd;
+     int32long64_t cmd;
 #else
-int		cmd;
+     int cmd;
 #endif
 {
-   int		error, ncmd=0;
-   struct flock	flkd;
-   struct vattr *attrs;
+    int error, ncmd = 0;
+    struct flock flkd;
+    struct vattr *attrs;
 
-   AFS_STATCNT(afs_gn_lockctl);
-     /* Convert from AIX's cmd to standard lockctl lock types... */
-     if (cmd == 0)
-       ncmd = F_GETLK;
-     else if (cmd & SETFLCK) {
-       ncmd = F_SETLK;
-       if (cmd & SLPFLCK)
-	 ncmd = F_SETLKW;
-     }
-   flkd.l_type   = lckdat->l_type;
-   flkd.l_whence = lckdat->l_whence;
-   flkd.l_start  = lckdat->l_start;
-   flkd.l_len    = lckdat->l_len;
-   flkd.l_pid    = lckdat->l_pid;
-   flkd.l_sysid  = lckdat->l_sysid;
-   
-   if (flkd.l_start != lckdat->l_start || flkd.l_len != lckdat->l_len)
-       return EINVAL;
+    AFS_STATCNT(afs_gn_lockctl);
+    /* Convert from AIX's cmd to standard lockctl lock types... */
+    if (cmd == 0)
+	ncmd = F_GETLK;
+    else if (cmd & SETFLCK) {
+	ncmd = F_SETLK;
+	if (cmd & SLPFLCK)
+	    ncmd = F_SETLKW;
+    }
+    flkd.l_type = lckdat->l_type;
+    flkd.l_whence = lckdat->l_whence;
+    flkd.l_start = lckdat->l_start;
+    flkd.l_len = lckdat->l_len;
+    flkd.l_pid = lckdat->l_pid;
+    flkd.l_sysid = lckdat->l_sysid;
+
+    if (flkd.l_start != lckdat->l_start || flkd.l_len != lckdat->l_len)
+	return EINVAL;
     if (error = lock_normalize(vp, &flkd, offset, cred))
-      return(error);
+	return (error);
     error = afs_lockctl(vp, &flkd, ncmd, cred);
-   lckdat->l_type   = flkd.l_type;
-   lckdat->l_whence = flkd.l_whence;
-   lckdat->l_start  = flkd.l_start;
-   lckdat->l_len    = flkd.l_len;
-   lckdat->l_pid    = flkd.l_pid;
-   lckdat->l_sysid  = flkd.l_sysid;
+    lckdat->l_type = flkd.l_type;
+    lckdat->l_whence = flkd.l_whence;
+    lckdat->l_start = flkd.l_start;
+    lckdat->l_len = flkd.l_len;
+    lckdat->l_pid = flkd.l_pid;
+    lckdat->l_sysid = flkd.l_sysid;
     afs_Trace3(afs_iclSetp, CM_TRACE_GLOCKCTL, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, ncmd, ICL_TYPE_LONG, error);
-    return(error);
+    return (error);
 }
 
 
 /* NOTE: In the nfs glue routine (nfs_gn2sun.c) the order was wrong (vp, flags, cmd, arg, ext); was that another typo? */
-int afs_gn_ioctl(vp, Cmd, arg, flags, channel, ext)
-struct	vnode	*vp;
+int
+afs_gn_ioctl(vp, Cmd, arg, flags, channel, ext)
+     struct vnode *vp;
 #ifdef AFS_AIX51_ENV
-int32long64_t	Cmd;
+     int32long64_t Cmd;
 #else
-int		Cmd;
+     int Cmd;
 #endif
-int		arg;
-int		flags;		/* Ignored in AFS */
-int		channel;	/* Ignored in AFS */
-int		ext;		/* Ignored in AFS */
+     int arg;
+     int flags;			/* Ignored in AFS */
+     int channel;		/* Ignored in AFS */
+     int ext;			/* Ignored in AFS */
 {
-    int	error;
+    int error;
     int cmd = Cmd;
 
     AFS_STATCNT(afs_gn_ioctl);
-    /* This seems to be a perfect fit for our ioctl redirection (afs_xioctl hack); thus the ioctl(2) entry in sysent.c is unaffected in the aix/afs port. */ 
+    /* This seems to be a perfect fit for our ioctl redirection (afs_xioctl hack); thus the ioctl(2) entry in sysent.c is unaffected in the aix/afs port. */
     error = afs_ioctl(vp, cmd, arg);
     afs_Trace3(afs_iclSetp, CM_TRACE_GIOCTL, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, cmd, ICL_TYPE_LONG, error);
-    return(error);
+    return (error);
 }
 
 
 int
-afs_gn_readlink(vp, uiop, cred) 
-struct	vnode	*vp;
-struct	uio	*uiop;
-struct	ucred	*cred;
+afs_gn_readlink(vp, uiop, cred)
+     struct vnode *vp;
+     struct uio *uiop;
+     struct ucred *cred;
 {
-   int		error;
+    int error;
 
-   AFS_STATCNT(afs_gn_readlink);
+    AFS_STATCNT(afs_gn_readlink);
     error = afs_readlink(vp, uiop, cred);
     afs_Trace2(afs_iclSetp, CM_TRACE_GREADLINK, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, error);
-    return(error);
+    return (error);
 }
 
 
 int
 afs_gn_select(vp, which, vinfo, mpx)
-struct	vnode	*vp;
-int		which;
-caddr_t		*vinfo;
-caddr_t		*mpx;
+     struct vnode *vp;
+     int which;
+     caddr_t *vinfo;
+     caddr_t *mpx;
 {
-   AFS_STATCNT(afs_gn_select);
+    AFS_STATCNT(afs_gn_select);
     /* NO SUPPORT for this in afs YET! */
-    return(EOPNOTSUPP);
+    return (EOPNOTSUPP);
 }
 
 
 int
 afs_gn_symlink(vp, link, target, cred)
-struct	vnode	*vp;
-char		*target;
-char	   	*link;
-struct ucred	*cred;
+     struct vnode *vp;
+     char *target;
+     char *link;
+     struct ucred *cred;
 {
-    struct vattr	va;
-   int		error;
+    struct vattr va;
+    int error;
 
     AFS_STATCNT(afs_gn_symlink);
     VATTR_NULL(&va);
     va.va_mode = 0777;
     error = afs_symlink(vp, link, &va, target, cred);
     afs_Trace4(afs_iclSetp, CM_TRACE_GSYMLINK, ICL_TYPE_POINTER, vp,
-	       ICL_TYPE_STRING, link, ICL_TYPE_STRING, target, ICL_TYPE_LONG, error);
-    return(error);
+	       ICL_TYPE_STRING, link, ICL_TYPE_STRING, target, ICL_TYPE_LONG,
+	       error);
+    return (error);
 }
 
 
 int
 afs_gn_readdir(vp, uiop, cred)
-struct	vnode	*vp;
-struct	uio	*uiop;
-struct ucred	*cred;
+     struct vnode *vp;
+     struct uio *uiop;
+     struct ucred *cred;
 {
-   int		error;
+    int error;
 
-   AFS_STATCNT(afs_gn_readdir);
+    AFS_STATCNT(afs_gn_readdir);
     error = afs_readdir(vp, uiop, cred);
     afs_Trace2(afs_iclSetp, CM_TRACE_GREADDIR, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, error);
-    return(error);
+    return (error);
 }
 
 
@@ -1615,14 +1635,14 @@ extern int afs_asyncbuf_cv;
  */
 #define	AIX_VM_BLKSIZE	8192
 afs_gn_strategy(abp, cred)
-struct ucred *cred;
-register struct buf *abp; 
+     struct ucred *cred;
+     register struct buf *abp;
 {
     register struct buf **lbp, *tbp;
 #ifdef AFS_64BIT_KERNEL
-    afs_int64 *lwbp;    /* last quy in work chain */
+    afs_int64 *lwbp;		/* last quy in work chain */
 #else
-    int *lwbp;		/* last guy in work chain */
+    int *lwbp;			/* last guy in work chain */
 #endif
     struct buf *nbp, *qbp, *qnbp, *firstComparable;
     int doMerge;
@@ -1635,10 +1655,10 @@ register struct buf *abp;
 				 && !((y)->b_flags & B_PFPROT))
 
     oldPriority = disable_lock(INTMAX, &afs_asyncbuf_lock);
-    for(tbp = abp; tbp; tbp=nbp) {
+    for (tbp = abp; tbp; tbp = nbp) {
 	nbp = tbp->av_forw;	/* remember for later */
 	tbp->b_work = 0;
-	tbp->av_back = (struct buf *) afs_biotime++;
+	tbp->av_back = (struct buf *)afs_biotime++;
 
 	/* first insert the buffer into the afs_async queue.  Insert buffer
 	 * sorted within its disk position within a set of comparable buffers.
@@ -1647,9 +1667,10 @@ register struct buf *abp;
 	 */
 	firstComparable = NULL;
 	lbp = &afs_asyncbuf;
-	for(qbp = *lbp; qbp; lbp = &qbp->av_forw, qbp = *lbp) {
+	for (qbp = *lbp; qbp; lbp = &qbp->av_forw, qbp = *lbp) {
 	    if (EFS_COMPARABLE(tbp, qbp)) {
-		if (!firstComparable) firstComparable = qbp;
+		if (!firstComparable)
+		    firstComparable = qbp;
 		/* this buffer is comparable, so see if the next buffer
 		 * is farther in the file; if it is insert before next buffer.
 		 */
@@ -1701,31 +1722,34 @@ register struct buf *abp;
 	 * the file system block size, then we know that such blocks are also
 	 * on block boundaries.
 	 */
-	
-	doMerge = 1;			/* start the loop */
-	while(doMerge) {		/* loop until an iteration doesn't
-					 * make any more changes */
+
+	doMerge = 1;		/* start the loop */
+	while (doMerge) {	/* loop until an iteration doesn't
+				 * make any more changes */
 	    doMerge = 0;
-	    for (qbp = firstComparable; ; qbp = qnbp) {
+	    for (qbp = firstComparable;; qbp = qnbp) {
 		qnbp = qbp->av_forw;
-		if (!qnbp) break;	/* we're done */
-		if (!EFS_COMPARABLE(qbp, qnbp)) break;
+		if (!qnbp)
+		    break;	/* we're done */
+		if (!EFS_COMPARABLE(qbp, qnbp))
+		    break;
 
 		/* try to merge qbp and qnbp */
 
 		/* first check if both not adjacent go on to next region */
-		if ((dbtob(qbp->b_blkno) + qbp->b_bcount) != dbtob(qnbp->b_blkno)) 
+		if ((dbtob(qbp->b_blkno) + qbp->b_bcount) !=
+		    dbtob(qnbp->b_blkno))
 		    continue;
 
 		/* note if both in the same block, the first byte of leftmost guy
 		 * and last byte of rightmost guy are in the same block.
 		 */
-		if ((dbtob(qbp->b_blkno) & ~(AIX_VM_BLKSIZE-1)) ==
-		    ((dbtob(qnbp->b_blkno)+qnbp->b_bcount-1) & ~(AIX_VM_BLKSIZE-1))) {
+		if ((dbtob(qbp->b_blkno) & ~(AIX_VM_BLKSIZE - 1)) ==
+		    ((dbtob(qnbp->b_blkno) + qnbp->b_bcount -
+		      1) & ~(AIX_VM_BLKSIZE - 1))) {
 		    doMerge = 1;	/* both in same block */
-		}
-		else if ((qbp->b_bcount & (AIX_VM_BLKSIZE-1)) == 0
-			 && (qnbp->b_bcount & (AIX_VM_BLKSIZE-1)) == 0) {
+		} else if ((qbp->b_bcount & (AIX_VM_BLKSIZE - 1)) == 0
+			   && (qnbp->b_bcount & (AIX_VM_BLKSIZE - 1)) == 0) {
 		    doMerge = 1;	/* both integral #s of blocks */
 		}
 		if (doMerge) {
@@ -1734,100 +1758,106 @@ register struct buf *abp;
 		    /* merge both of these blocks together */
 		    /* first set age to the older of the two */
 #ifdef AFS_64BIT_KERNEL
-		    if ((afs_int64) qnbp->av_back - (afs_int64) qbp->av_back < 0)
+		    if ((afs_int64) qnbp->av_back - (afs_int64) qbp->av_back <
+			0)
 #else
-		    if ((int) qnbp->av_back - (int) qbp->av_back < 0)
+		    if ((int)qnbp->av_back - (int)qbp->av_back < 0)
 #endif
 			qbp->av_back = qnbp->av_back;
 		    lwbp = &qbp->b_work;
 		    /* find end of qbp's work queue */
-		    for(xbp = (struct buf *)(*lwbp); xbp;
-			lwbp = &xbp->b_work, xbp = (struct buf *) (*lwbp));
+		    for (xbp = (struct buf *)(*lwbp); xbp;
+			 lwbp = &xbp->b_work, xbp = (struct buf *)(*lwbp));
 		    /*
 		     * now setting *lwbp will change the last ptr in the qbp's
 		     * work chain
 		     */
-		    qbp->av_forw = qnbp->av_forw; /* splice out qnbp */
-		    qbp->b_bcount += qnbp->b_bcount; /* fix count */
+		    qbp->av_forw = qnbp->av_forw;	/* splice out qnbp */
+		    qbp->b_bcount += qnbp->b_bcount;	/* fix count */
 #ifdef AFS_64BIT_KERNEL
-		    *lwbp = (afs_int64) qnbp; /* append qnbp to end */
+		    *lwbp = (afs_int64) qnbp;	/* append qnbp to end */
 #else
-		    *lwbp = (int) qnbp; /* append qnbp to end */
+		    *lwbp = (int)qnbp;	/* append qnbp to end */
 #endif
 		    /*
 		     * note that qnbp is bogus, but it doesn't matter because
 		     * we're going to restart the for loop now.
 		     */
-		    break; /* out of the for loop */
+		    break;	/* out of the for loop */
 		}
 	    }
 	}
-    }	/* for loop for all interrupt data */
+    }				/* for loop for all interrupt data */
     /* at this point, all I/O has been queued.  Wakeup the daemon */
-    e_wakeup_one((int*) &afs_asyncbuf_cv);
+    e_wakeup_one((int *)&afs_asyncbuf_cv);
     unlock_enable(oldPriority, &afs_asyncbuf_lock);
     return 0;
 }
 
 
 afs_inactive(avc, acred)
-    register struct vcache *avc;
-    struct AFS_UCRED *acred;
+     register struct vcache *avc;
+     struct AFS_UCRED *acred;
 {
     afs_InactiveVCache(avc, acred);
 }
 
 int
 afs_gn_revoke(vp)
-struct	vnode	*vp;
+     struct vnode *vp;
 {
     AFS_STATCNT(afs_gn_revoke);
     /* NO SUPPORT for this in afs YET! */
-    return(EOPNOTSUPP);
+    return (EOPNOTSUPP);
 }
 
-int afs_gn_getacl(vp, uiop, cred) 
-    struct vnode *vp;
-    struct uio *uiop;
-    struct ucred *cred;
-{ 
+int
+afs_gn_getacl(vp, uiop, cred)
+     struct vnode *vp;
+     struct uio *uiop;
+     struct ucred *cred;
+{
     return ENOSYS;
 };
 
 
-int afs_gn_setacl(vp, uiop, cred) 
-    struct vnode *vp;
-    struct uio *uiop;
-    struct ucred *cred;
-{ 
+int
+afs_gn_setacl(vp, uiop, cred)
+     struct vnode *vp;
+     struct uio *uiop;
+     struct ucred *cred;
+{
     return ENOSYS;
 };
 
 
-int afs_gn_getpcl(vp, uiop, cred) 
-    struct vnode *vp;
-    struct uio *uiop;
-    struct ucred *cred;
-{ 
+int
+afs_gn_getpcl(vp, uiop, cred)
+     struct vnode *vp;
+     struct uio *uiop;
+     struct ucred *cred;
+{
     return ENOSYS;
 };
 
 
-int afs_gn_setpcl(vp, uiop, cred) 
-    struct vnode *vp;
-    struct uio *uiop;
-    struct ucred *cred;
-{ 
+int
+afs_gn_setpcl(vp, uiop, cred)
+     struct vnode *vp;
+     struct uio *uiop;
+     struct ucred *cred;
+{
     return ENOSYS;
 };
-int afs_gn_enosys()
+int
+afs_gn_enosys()
 {
     return ENOSYS;
 }
- 
-extern struct vfsops	Afs_vfsops;
-extern struct vnodeops	afs_gn_vnodeops;
-extern int		Afs_init();
+
+extern struct vfsops Afs_vfsops;
+extern struct vnodeops afs_gn_vnodeops;
+extern int Afs_init();
 
 #define	AFS_CALLOUT_TBL_SIZE	256
 
@@ -1838,764 +1868,825 @@ extern int		Afs_init();
  */
 
 static
-vfs_mount(struct vfs *a, struct ucred *b) {
-	register glockOwner, ret;
+vfs_mount(struct vfs *a, struct ucred *b)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*Afs_vfsops.vfs_mount)(a, b);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*Afs_vfsops.vfs_mount) (a, b);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vfs_unmount(struct vfs *a, int b, struct ucred *c) {
-	register glockOwner, ret;
+vfs_unmount(struct vfs *a, int b, struct ucred *c)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*Afs_vfsops.vfs_unmount)(a, b, c);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*Afs_vfsops.vfs_unmount) (a, b, c);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vfs_root(struct vfs *a, struct vnode **b, struct ucred *c) {
-	register glockOwner, ret;
+vfs_root(struct vfs *a, struct vnode **b, struct ucred *c)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*Afs_vfsops.vfs_root)(a, b, c);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*Afs_vfsops.vfs_root) (a, b, c);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vfs_statfs(struct vfs *a, struct statfs *b, struct ucred *c) {
-	register glockOwner, ret;
+vfs_statfs(struct vfs *a, struct statfs *b, struct ucred *c)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*Afs_vfsops.vfs_statfs)(a, b, c);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*Afs_vfsops.vfs_statfs) (a, b, c);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vfs_sync(struct gfs *a) {
-	register glockOwner, ret;
+vfs_sync(struct gfs *a)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*Afs_vfsops.vfs_sync)(a);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
-	return ret;
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*Afs_vfsops.vfs_sync) (a);
+    if (!glockOwner)
+	AFS_GUNLOCK();
+    return ret;
 }
 
 static
-vfs_vget(struct vfs *a, struct vnode **b, struct fileid *c
-	 , struct ucred *d) {
-	register glockOwner, ret;
+vfs_vget(struct vfs *a, struct vnode **b, struct fileid *c, struct ucred *d)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*Afs_vfsops.vfs_vget)(a, b, c, d);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*Afs_vfsops.vfs_vget) (a, b, c, d);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vfs_cntl(struct vfs *a, int b, caddr_t c, size_t d, struct ucred *e) {
-	register glockOwner, ret;
+vfs_cntl(struct vfs *a, int b, caddr_t c, size_t d, struct ucred *e)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*Afs_vfsops.vfs_cntl)(a, b, c, d, e);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*Afs_vfsops.vfs_cntl) (a, b, c, d, e);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vfs_quotactl(struct vfs *a, int b, uid_t c, caddr_t d
-	     , struct ucred *e) {
-	register glockOwner, ret;
+vfs_quotactl(struct vfs *a, int b, uid_t c, caddr_t d, struct ucred *e)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*Afs_vfsops.vfs_quotactl)(a, b, c, d, e);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*Afs_vfsops.vfs_quotactl) (a, b, c, d, e);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 #ifdef AFS_AIX51_ENV
 static
 vfs_syncvfs(struct gfs *a, struct vfs *b, int c, struct ucred *d)
 {
-	register glockOwner, ret;
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*Afs_vfsops.vfs_syncvfs)(a, b, c, d);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*Afs_vfsops.vfs_syncvfs) (a, b, c, d);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 #endif
 
 
 struct vfsops locked_Afs_vfsops = {
-	vfs_mount,
-	vfs_unmount,
-	vfs_root,
-	vfs_statfs,
-	vfs_sync,
-	vfs_vget,
-	vfs_cntl,
-	vfs_quotactl,
+    vfs_mount,
+    vfs_unmount,
+    vfs_root,
+    vfs_statfs,
+    vfs_sync,
+    vfs_vget,
+    vfs_cntl,
+    vfs_quotactl,
 #ifdef AFS_AIX51_ENV
-	vfs_syncvfs
+    vfs_syncvfs
 #endif
 };
 
 static
-vn_link(struct vnode *a, struct vnode *b, char *c, struct ucred *d) {
-	register glockOwner, ret;
+vn_link(struct vnode *a, struct vnode *b, char *c, struct ucred *d)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_link)(a, b, c, d);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_link) (a, b, c, d);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_mkdir(struct vnode *a, char *b, int32long64_t c, struct ucred *d) {
+vn_mkdir(struct vnode *a, char *b, int32long64_t c, struct ucred *d)
+{
 #else
-vn_mkdir(struct vnode *a, char *b, int c, struct ucred *d) {
+vn_mkdir(struct vnode *a, char *b, int c, struct ucred *d)
+{
 #endif
-	register glockOwner, ret;
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_mkdir)(a, b, c, d);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_mkdir) (a, b, c, d);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_mknod(struct vnode *a, caddr_t b, int32long64_t c, dev_t d, struct ucred *e) {
+vn_mknod(struct vnode *a, caddr_t b, int32long64_t c, dev_t d,
+	 struct ucred *e)
+{
 #else
-vn_mknod(struct vnode *a, caddr_t b, int c, dev_t d, struct ucred *e) {
+vn_mknod(struct vnode *a, caddr_t b, int c, dev_t d, struct ucred *e)
+{
 #endif
-	register glockOwner, ret;
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_mknod)(a, b, c, d, e);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_mknod) (a, b, c, d, e);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vn_remove(struct vnode *a, struct vnode *b, char *c, struct ucred *d) {
-	register glockOwner, ret;
+vn_remove(struct vnode *a, struct vnode *b, char *c, struct ucred *d)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_remove)(a, b, c, d);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_remove) (a, b, c, d);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vn_rename(struct vnode *a, struct vnode *b, caddr_t c
-	  , struct vnode *d, struct vnode *e, caddr_t f, struct ucred *g) {
-	register glockOwner, ret;
+vn_rename(struct vnode *a, struct vnode *b, caddr_t c, struct vnode *d,
+	  struct vnode *e, caddr_t f, struct ucred *g)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_rename)(a, b, c, d, e, f, g);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_rename) (a, b, c, d, e, f, g);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vn_rmdir(struct vnode *a, struct vnode *b, char *c, struct ucred *d) {
-	register glockOwner, ret;
+vn_rmdir(struct vnode *a, struct vnode *b, char *c, struct ucred *d)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_rmdir)(a, b, c, d);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_rmdir) (a, b, c, d);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_lookup(struct vnode *a, struct vnode **b, char *c, int32long64_t d,
+  vn_lookup(struct vnode *a, struct vnode **b, char *c, int32long64_t d,
 #else
 vn_lookup(struct vnode *a, struct vnode **b, char *c, int d,
 #endif
-	  struct vattr *v, struct ucred *e) {
-	register glockOwner, ret;
+	  struct vattr *v, struct ucred *e)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_lookup)(a, b, c, d, v, e);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_lookup) (a, b, c, d, v, e);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vn_fid(struct vnode *a, struct fileid *b, struct ucred *c) {
-	register glockOwner, ret;
+vn_fid(struct vnode *a, struct fileid *b, struct ucred *c)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_fid)(a, b, c);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_fid) (a, b, c);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_open(struct vnode *a, int b, int c, caddr_t *d, struct ucred *e) {
+vn_open(struct vnode *a, int b, int c, caddr_t * d, struct ucred *e)
+{
 #else
-vn_open(struct vnode *a, int32long64_t b, ext_t c, caddr_t *d, struct ucred *e) {
+vn_open(struct vnode *a, int32long64_t b, ext_t c, caddr_t * d,
+	struct ucred *e)
+{
 #endif
-	register glockOwner, ret;
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_open)(a, b, c, d, e);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_open) (a, b, c, d, e);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_create(struct vnode *a, struct vnode **b, int32long64_t c, caddr_t d
-	  , int32long64_t e, caddr_t *f, struct ucred *g) {
+vn_create(struct vnode *a, struct vnode **b, int32long64_t c, caddr_t d,
+	  int32long64_t e, caddr_t * f, struct ucred *g)
+{
 #else
-vn_create(struct vnode *a, struct vnode **b, int c, caddr_t d
-	  , int e, caddr_t *f, struct ucred *g) {
+vn_create(struct vnode *a, struct vnode **b, int c, caddr_t d, int e,
+	  caddr_t * f, struct ucred *g)
+{
 #endif
-	register glockOwner, ret;
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_create)(a, b, c, d, e, f, g);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_create) (a, b, c, d, e, f, g);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vn_hold(struct vnode *a) {
-	register glockOwner, ret;
+vn_hold(struct vnode *a)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_hold)(a);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_hold) (a);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vn_rele(struct vnode *a) {
-	register glockOwner, ret;
+vn_rele(struct vnode *a)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_rele)(a);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_rele) (a);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_close(struct vnode *a, int32long64_t b, caddr_t c, struct ucred *d) {
+vn_close(struct vnode *a, int32long64_t b, caddr_t c, struct ucred *d)
+{
 #else
-vn_close(struct vnode *a, int b, caddr_t c, struct ucred *d) {
+vn_close(struct vnode *a, int b, caddr_t c, struct ucred *d)
+{
 #endif
-	register glockOwner, ret;
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_close)(a, b, c, d);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_close) (a, b, c, d);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_map(struct vnode *a, caddr_t b, uint32long64_t c, uint32long64_t d, uint32long64_t e, struct ucred *f) {
+vn_map(struct vnode *a, caddr_t b, uint32long64_t c, uint32long64_t d,
+       uint32long64_t e, struct ucred *f)
+{
 #else
-vn_map(struct vnode *a, caddr_t b, uint c, uint d, uint e, struct ucred *f) {
+vn_map(struct vnode *a, caddr_t b, uint c, uint d, uint e, struct ucred *f)
+{
 #endif
-	register glockOwner, ret;
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_map)(a, b, c, d, e, f);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_map) (a, b, c, d, e, f);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_unmap(struct vnode *a, int32long64_t b, struct ucred *c) {
+vn_unmap(struct vnode *a, int32long64_t b, struct ucred *c)
+{
 #else
-vn_unmap(struct vnode *a, int b, struct ucred *c) {
+vn_unmap(struct vnode *a, int b, struct ucred *c)
+{
 #endif
-	register glockOwner, ret;
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_unmap)(a, b, c);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_unmap) (a, b, c);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_access(struct vnode *a, int32long64_t b, int32long64_t c, struct ucred *d) {
+vn_access(struct vnode *a, int32long64_t b, int32long64_t c, struct ucred *d)
+{
 #else
-vn_access(struct vnode *a, int b, int c, struct ucred *d) {
+vn_access(struct vnode *a, int b, int c, struct ucred *d)
+{
 #endif
-	register glockOwner, ret;
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_access)(a, b, c, d);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_access) (a, b, c, d);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vn_getattr(struct vnode *a, struct vattr *b, struct ucred *c) {
-	register glockOwner, ret;
+vn_getattr(struct vnode *a, struct vattr *b, struct ucred *c)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_getattr)(a, b, c);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_getattr) (a, b, c);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_setattr(struct vnode *a, int32long64_t b, int32long64_t c, int32long64_t d, int32long64_t e, struct ucred *f) {
+vn_setattr(struct vnode *a, int32long64_t b, int32long64_t c, int32long64_t d,
+	   int32long64_t e, struct ucred *f)
+{
 #else
-vn_setattr(struct vnode *a, int b, int c, int d, int e, struct ucred *f) {
+vn_setattr(struct vnode *a, int b, int c, int d, int e, struct ucred *f)
+{
 #endif
-	register glockOwner, ret;
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_setattr)(a, b, c, d, e, f);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_setattr) (a, b, c, d, e, f);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_fclear(struct vnode *a, int32long64_t b, offset_t c, offset_t d
+  vn_fclear(struct vnode *a, int32long64_t b, offset_t c, offset_t d
 #else
 vn_fclear(struct vnode *a, int b, offset_t c, offset_t d
 #endif
-	  , caddr_t e, struct ucred *f) {
-	register glockOwner, ret;
+	  , caddr_t e, struct ucred *f)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_fclear)(a, b, c, d, e, f);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_fclear) (a, b, c, d, e, f);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_fsync(struct vnode *a, int32long64_t b, int32long64_t c, struct ucred *d) {
+vn_fsync(struct vnode *a, int32long64_t b, int32long64_t c, struct ucred *d)
+{
 #else
-vn_fsync(struct vnode *a, int b, int c, struct ucred *d) {
+vn_fsync(struct vnode *a, int b, int c, struct ucred *d)
+{
 #endif
-	register glockOwner, ret;
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_fsync)(a, b, c, d);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_fsync) (a, b, c, d);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_ftrunc(struct vnode *a, int32long64_t b, offset_t c, caddr_t d, struct ucred *e) {
+vn_ftrunc(struct vnode *a, int32long64_t b, offset_t c, caddr_t d,
+	  struct ucred *e)
+{
 #else
-vn_ftrunc(struct vnode *a, int b, offset_t c, caddr_t d, struct ucred *e) {
+vn_ftrunc(struct vnode *a, int b, offset_t c, caddr_t d, struct ucred *e)
+{
 #endif
-	register glockOwner, ret;
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_ftrunc)(a, b, c, d, e);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_ftrunc) (a, b, c, d, e);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_rdwr(struct vnode *a, enum uio_rw b, int32long64_t c, struct uio *d
-	, ext_t e, caddr_t f, struct vattr *v, struct ucred *g) {
+vn_rdwr(struct vnode *a, enum uio_rw b, int32long64_t c, struct uio *d,
+	ext_t e, caddr_t f, struct vattr *v, struct ucred *g)
+{
 #else
-vn_rdwr(struct vnode *a, enum uio_rw b, int c, struct uio *d
-	, int e, caddr_t f, struct vattr *v, struct ucred *g) {
+vn_rdwr(struct vnode *a, enum uio_rw b, int c, struct uio *d, int e,
+	caddr_t f, struct vattr *v, struct ucred *g)
+{
 #endif
-	register glockOwner, ret;
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_rdwr)(a, b, c, d, e, f, v, g);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_rdwr) (a, b, c, d, e, f, v, g);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_lockctl(struct vnode *a, offset_t b, struct eflock *c, int32long64_t d
-	   , int (*e)(), ulong32int64_t *f, struct ucred *g) {
+vn_lockctl(struct vnode *a, offset_t b, struct eflock *c, int32long64_t d,
+	   int (*e) (), ulong32int64_t * f, struct ucred *g)
+{
 #else
-vn_lockctl(struct vnode *a, offset_t b, struct eflock *c, int d
-	   , int (*e)(), ulong *f, struct ucred *g) {
+vn_lockctl(struct vnode *a, offset_t b, struct eflock *c, int d, int (*e) (),
+	   ulong * f, struct ucred *g)
+{
 #endif
-	register glockOwner, ret;
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_lockctl)(a, b, c, d, e, f, g);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_lockctl) (a, b, c, d, e, f, g);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_ioctl(struct vnode *a, int32long64_t b, caddr_t c, size_t d, ext_t e, struct ucred *f) {
+vn_ioctl(struct vnode *a, int32long64_t b, caddr_t c, size_t d, ext_t e,
+	 struct ucred *f)
+{
 #else
-vn_ioctl(struct vnode *a, int b, caddr_t c, size_t d, int e, struct ucred *f) {
+vn_ioctl(struct vnode *a, int b, caddr_t c, size_t d, int e, struct ucred *f)
+{
 #endif
-	register glockOwner, ret;
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_ioctl)(a, b, c, d, e, f);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_ioctl) (a, b, c, d, e, f);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vn_readlink(struct vnode *a, struct uio *b, struct ucred *c) {
-	register glockOwner, ret;
+vn_readlink(struct vnode *a, struct uio *b, struct ucred *c)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_readlink)(a, b, c);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_readlink) (a, b, c);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_select(struct vnode *a, int32long64_t b, ushort c, ushort *d, void (*e)()
+  vn_select(struct vnode *a, int32long64_t b, ushort c, ushort * d,
+	    void (*e) ()
 #else
-vn_select(struct vnode *a, int b, ushort c, ushort *d, void (*e)()
+vn_select(struct vnode *a, int b, ushort c, ushort * d, void (*e) ()
 #endif
-	  , caddr_t f, struct ucred *g) {
-	register glockOwner, ret;
+	  , caddr_t f, struct ucred *g)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_select)(a, b, c, d, e, f, g);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_select) (a, b, c, d, e, f, g);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vn_symlink(struct vnode *a, char *b, char *c, struct ucred *d) {
-	register glockOwner, ret;
+vn_symlink(struct vnode *a, char *b, char *c, struct ucred *d)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_symlink)(a, b, c, d);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_symlink) (a, b, c, d);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vn_readdir(struct vnode *a, struct uio *b, struct ucred *c) {
-	register glockOwner, ret;
+vn_readdir(struct vnode *a, struct uio *b, struct ucred *c)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_readdir)(a, b, c);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_readdir) (a, b, c);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
 #ifdef AFS_AIX51_ENV
-vn_revoke(struct vnode *a, int32long64_t b, int32long64_t c, struct vattr *d, struct ucred *e) {
+vn_revoke(struct vnode *a, int32long64_t b, int32long64_t c, struct vattr *d,
+	  struct ucred *e)
+{
 #else
-vn_revoke(struct vnode *a, int b, int c, struct vattr *d, struct ucred *e) {
+vn_revoke(struct vnode *a, int b, int c, struct vattr *d, struct ucred *e)
+{
 #endif
-	register glockOwner, ret;
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_revoke)(a, b, c, d, e);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_revoke) (a, b, c, d, e);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vn_getacl(struct vnode *a, struct uio *b, struct ucred *c) {
-	register glockOwner, ret;
+vn_getacl(struct vnode *a, struct uio *b, struct ucred *c)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_getacl)(a, b, c);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_getacl) (a, b, c);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vn_setacl(struct vnode *a, struct uio *b, struct ucred *c) {
-	register glockOwner, ret;
+vn_setacl(struct vnode *a, struct uio *b, struct ucred *c)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_setacl)(a, b, c);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_setacl) (a, b, c);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vn_getpcl(struct vnode *a, struct uio *b, struct ucred *c) {
-	register glockOwner, ret;
+vn_getpcl(struct vnode *a, struct uio *b, struct ucred *c)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_getpcl)(a, b, c);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_getpcl) (a, b, c);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 static
-vn_setpcl(struct vnode *a, struct uio *b, struct ucred *c) {
-	register glockOwner, ret;
+vn_setpcl(struct vnode *a, struct uio *b, struct ucred *c)
+{
+    register glockOwner, ret;
 
-	glockOwner = ISAFS_GLOCK();
-	if (!glockOwner)
-	    AFS_GLOCK();
-	ret = (*afs_gn_vnodeops.vn_setpcl)(a, b, c);
-	if (!glockOwner)
-	    AFS_GUNLOCK();
+    glockOwner = ISAFS_GLOCK();
+    if (!glockOwner)
+	AFS_GLOCK();
+    ret = (*afs_gn_vnodeops.vn_setpcl) (a, b, c);
+    if (!glockOwner)
+	AFS_GUNLOCK();
 
-	return ret;
+    return ret;
 }
 
 extern int afs_gn_strategy();
 
 struct vnodeops locked_afs_gn_vnodeops = {
-	vn_link,
-	vn_mkdir,
-	vn_mknod,
-	vn_remove,
-	vn_rename,
-	vn_rmdir,
-	vn_lookup,
-	vn_fid,
-	vn_open,
-	vn_create,
-	vn_hold,
-	vn_rele,
-	vn_close,
-	vn_map,
-	vn_unmap,
-	vn_access,
-	vn_getattr,
-	vn_setattr,
-	vn_fclear,
-	vn_fsync,
-	vn_ftrunc,
-	vn_rdwr,
-	vn_lockctl,
-	vn_ioctl,
-	vn_readlink,
-	vn_select,
-	vn_symlink,
-	vn_readdir,
-	afs_gn_strategy,	/* no locking!!! (discovered the hard way) */
-	vn_revoke,
-	vn_getacl,
-	vn_setacl,
-	vn_getpcl,
-	vn_setpcl,
-	afs_gn_enosys,	/* vn_seek */
-	afs_gn_enosys,	/* vn_fsync_range */
-	afs_gn_enosys,	/* vn_create_attr */
-	afs_gn_enosys,	/* vn_finfo */ 
-	afs_gn_enosys,	/* vn_map_lloff */
-	afs_gn_enosys,	/* vn_readdir_eofp */
-	afs_gn_enosys,	/* vn_rdwr_attr */
-	afs_gn_enosys,	/* vn_memcntl */
-	afs_gn_enosys,	/* vn_spare7 */
-	afs_gn_enosys,	/* vn_spare8 */
-	afs_gn_enosys,	/* vn_spare9 */
-	afs_gn_enosys,	/* vn_spareA */
-	afs_gn_enosys,	/* vn_spareB */
-	afs_gn_enosys,	/* vn_spareC */
-	afs_gn_enosys,	/* vn_spareD */
-	afs_gn_enosys,	/* vn_spareE */
-	afs_gn_enosys	/* vn_spareF */
+    vn_link,
+    vn_mkdir,
+    vn_mknod,
+    vn_remove,
+    vn_rename,
+    vn_rmdir,
+    vn_lookup,
+    vn_fid,
+    vn_open,
+    vn_create,
+    vn_hold,
+    vn_rele,
+    vn_close,
+    vn_map,
+    vn_unmap,
+    vn_access,
+    vn_getattr,
+    vn_setattr,
+    vn_fclear,
+    vn_fsync,
+    vn_ftrunc,
+    vn_rdwr,
+    vn_lockctl,
+    vn_ioctl,
+    vn_readlink,
+    vn_select,
+    vn_symlink,
+    vn_readdir,
+    afs_gn_strategy,		/* no locking!!! (discovered the hard way) */
+    vn_revoke,
+    vn_getacl,
+    vn_setacl,
+    vn_getpcl,
+    vn_setpcl,
+    afs_gn_enosys,		/* vn_seek */
+    afs_gn_enosys,		/* vn_fsync_range */
+    afs_gn_enosys,		/* vn_create_attr */
+    afs_gn_enosys,		/* vn_finfo */
+    afs_gn_enosys,		/* vn_map_lloff */
+    afs_gn_enosys,		/* vn_readdir_eofp */
+    afs_gn_enosys,		/* vn_rdwr_attr */
+    afs_gn_enosys,		/* vn_memcntl */
+    afs_gn_enosys,		/* vn_spare7 */
+    afs_gn_enosys,		/* vn_spare8 */
+    afs_gn_enosys,		/* vn_spare9 */
+    afs_gn_enosys,		/* vn_spareA */
+    afs_gn_enosys,		/* vn_spareB */
+    afs_gn_enosys,		/* vn_spareC */
+    afs_gn_enosys,		/* vn_spareD */
+    afs_gn_enosys,		/* vn_spareE */
+    afs_gn_enosys		/* vn_spareF */
 #ifdef AFS_AIX51_ENV
-	,afs_gn_enosys, /* pagerBackRange */
- 	afs_gn_enosys,  /* pagerGetFileSize */
-	afs_gn_enosys,  /* pagerReadAhead */
-	afs_gn_enosys,  /* pagerWriteBehind */
-	afs_gn_enosys   /* pagerEndCopy */
+	, afs_gn_enosys,	/* pagerBackRange */
+    afs_gn_enosys,		/* pagerGetFileSize */
+    afs_gn_enosys,		/* pagerReadAhead */
+    afs_gn_enosys,		/* pagerWriteBehind */
+    afs_gn_enosys		/* pagerEndCopy */
 #endif
 };
 
 struct gfs afs_gfs = {
-	&locked_Afs_vfsops,
-	&locked_afs_gn_vnodeops,
-	AFS_MOUNT_AFS,
-	"afs",
-	Afs_init,
-	GFS_VERSION4 | GFS_REMOTE,
-	NULL
+    &locked_Afs_vfsops,
+    &locked_afs_gn_vnodeops,
+    AFS_MOUNT_AFS,
+    "afs",
+    Afs_init,
+    GFS_VERSION4 | GFS_REMOTE,
+    NULL
 };
-

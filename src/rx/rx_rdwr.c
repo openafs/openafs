@@ -1,11 +1,11 @@
  /*
- * Copyright 2000, International Business Machines Corporation and others.
- * All Rights Reserved.
- * 
- * This software has been released under the terms of the IBM Public
- * License.  For details, see the LICENSE file in the top-level source
- * directory or online at http://www.openafs.org/dl/license10.html
- */
+  * Copyright 2000, International Business Machines Corporation and others.
+  * All Rights Reserved.
+  * 
+  * This software has been released under the terms of the IBM Public
+  * License.  For details, see the LICENSE file in the top-level source
+  * directory or online at http://www.openafs.org/dl/license10.html
+  */
 
 #include <afsconfig.h>
 #ifdef KERNEL
@@ -14,7 +14,8 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -29,7 +30,7 @@ RCSID("$Header$");
 #include "h/stat.h"
 #ifdef	AFS_OSF_ENV
 #include <net/net_globals.h>
-#endif	/* AFS_OSF_ENV */
+#endif /* AFS_OSF_ENV */
 #ifdef AFS_LINUX20_ENV
 #include "h/socket.h"
 #endif
@@ -47,7 +48,7 @@ RCSID("$Header$");
 #include "afs/sysincludes.h"
 #endif /* !UKERNEL */
 #ifdef RXDEBUG
-#undef RXDEBUG	    /* turn off debugging */
+#undef RXDEBUG			/* turn off debugging */
 #endif /* RXDEBUG */
 
 #include "rx_kmutex.h"
@@ -64,7 +65,7 @@ RCSID("$Header$");
 #undef mem_alloc
 #undef mem_free
 #undef register
-#endif  /* AFS_ALPHA_ENV */
+#endif /* AFS_ALPHA_ENV */
 #else /* KERNEL */
 # include <sys/types.h>
 #ifndef AFS_NT40_ENV
@@ -100,12 +101,13 @@ static int rxdb_fileID = RXDB_FILE_RX_RDWR;
  *
  * LOCKS USED -- called at netpri with rx global lock and call->lock held.
  */
-int rxi_ReadProc(register struct rx_call *call, register char *buf, 
-	register int nbytes)
+int
+rxi_ReadProc(register struct rx_call *call, register char *buf,
+	     register int nbytes)
 {
     register struct rx_packet *cp = call->currentPacket;
     register struct rx_packet *rp;
-    register struct rx_packet *nxp; /* Next packet pointer, for queue_Scan */
+    register struct rx_packet *nxp;	/* Next packet pointer, for queue_Scan */
     register int requestCount;
     register unsigned int t;
 /* XXXX took out clock_NewTime from here.  Was it needed? */
@@ -120,166 +122,170 @@ int rxi_ReadProc(register struct rx_call *call, register char *buf,
     }
 
     do {
-      if (call->nLeft == 0) {
-	/* Get next packet */
-	for (;;) {
-	  if (call->error || (call->mode != RX_MODE_RECEIVING)) {
-	    if (call->error) {
-	      return 0;
-	    }
-	    if (call->mode == RX_MODE_SENDING) {
-	      rxi_FlushWrite(call);
-	      continue;
-	    }
-	  }
-	  if (queue_IsNotEmpty(&call->rq)) {
-	    /* Check that next packet available is next in sequence */
-	    rp = queue_First(&call->rq, rx_packet);
-	    if (rp->header.seq == call->rnext) {
-	      afs_int32 error;
-	      register struct rx_connection *conn = call->conn;
-	      queue_Remove(rp);
-	      
-	      /* RXS_CheckPacket called to undo RXS_PreparePacket's
-               * work.  It may reduce the length of the packet by up
-               * to conn->maxTrailerSize, to reflect the length of the
-               * data + the header. */
-	      if ((error = RXS_CheckPacket(conn->securityObject, call, rp))) {
-		/* Used to merely shut down the call, but now we 
-		 * shut down the whole connection since this may 
-		 * indicate an attempt to hijack it */
-
-		MUTEX_EXIT(&call->lock);
-		rxi_ConnectionError(conn, error);
-		MUTEX_ENTER(&conn->conn_data_lock);
-		rp = rxi_SendConnectionAbort(conn, rp, 0, 0);
-		MUTEX_EXIT(&conn->conn_data_lock);
-		rxi_FreePacket(rp);
-		MUTEX_ENTER(&call->lock);
-
-		return 0;
-	      }
-	      call->rnext++;
-	      cp = call->currentPacket = rp;
-	      call->curvec = 1;   /* 0th vec is always header */
-	      /* begin at the beginning [ more or less ], continue 
-	       * on until the end, then stop. */
-	      call->curpos = (char *)cp->wirevec[1].iov_base
-			     + call->conn->securityHeaderSize; 
-	      call->curlen = cp->wirevec[1].iov_len
-			     - call->conn->securityHeaderSize; 
-	      
-	      /* Notice that this code works correctly if the data
-               * size is 0 (which it may be--no reply arguments from
-               * server, for example).  This relies heavily on the
-               * fact that the code below immediately frees the packet
-               * (no yields, etc.).  If it didn't, this would be a
-               * problem because a value of zero for call->nLeft
-               * normally means that there is no read packet */
-	      call->nLeft = cp->length;
-	      hadd32(call->bytesRcvd, cp->length);
-	      
-	      /* Send a hard ack for every rxi_HardAckRate+1 packets
-	       * consumed. Otherwise schedule an event to send
-	       * the hard ack later on.
-	       */
-	      call->nHardAcks++;
-	      if (!(call->flags &RX_CALL_RECEIVE_DONE)) {
-		if (call->nHardAcks > (u_short)rxi_HardAckRate) {
-		  rxevent_Cancel(call->delayedAckEvent, call,
-				 RX_CALL_REFCOUNT_DELAY);
-		  rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
+	if (call->nLeft == 0) {
+	    /* Get next packet */
+	    for (;;) {
+		if (call->error || (call->mode != RX_MODE_RECEIVING)) {
+		    if (call->error) {
+			return 0;
+		    }
+		    if (call->mode == RX_MODE_SENDING) {
+			rxi_FlushWrite(call);
+			continue;
+		    }
 		}
-		else {
-		  struct clock when;
-		  clock_GetTime(&when);
-		  /* Delay to consolidate ack packets */
-		  clock_Add(&when, &rx_hardAckDelay);
-		  if (!call->delayedAckEvent ||
-		      clock_Gt(&call->delayedAckEvent->eventTime, &when)) {
-		      rxevent_Cancel(call->delayedAckEvent, call,
-				     RX_CALL_REFCOUNT_DELAY);
-		      CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
-		      call->delayedAckEvent = rxevent_Post(&when,
-							   rxi_SendDelayedAck,
-							   call, 0);
-		  }
+		if (queue_IsNotEmpty(&call->rq)) {
+		    /* Check that next packet available is next in sequence */
+		    rp = queue_First(&call->rq, rx_packet);
+		    if (rp->header.seq == call->rnext) {
+			afs_int32 error;
+			register struct rx_connection *conn = call->conn;
+			queue_Remove(rp);
+
+			/* RXS_CheckPacket called to undo RXS_PreparePacket's
+			 * work.  It may reduce the length of the packet by up
+			 * to conn->maxTrailerSize, to reflect the length of the
+			 * data + the header. */
+			if ((error =
+			     RXS_CheckPacket(conn->securityObject, call,
+					     rp))) {
+			    /* Used to merely shut down the call, but now we 
+			     * shut down the whole connection since this may 
+			     * indicate an attempt to hijack it */
+
+			    MUTEX_EXIT(&call->lock);
+			    rxi_ConnectionError(conn, error);
+			    MUTEX_ENTER(&conn->conn_data_lock);
+			    rp = rxi_SendConnectionAbort(conn, rp, 0, 0);
+			    MUTEX_EXIT(&conn->conn_data_lock);
+			    rxi_FreePacket(rp);
+			    MUTEX_ENTER(&call->lock);
+
+			    return 0;
+			}
+			call->rnext++;
+			cp = call->currentPacket = rp;
+			call->curvec = 1;	/* 0th vec is always header */
+			/* begin at the beginning [ more or less ], continue 
+			 * on until the end, then stop. */
+			call->curpos =
+			    (char *)cp->wirevec[1].iov_base +
+			    call->conn->securityHeaderSize;
+			call->curlen =
+			    cp->wirevec[1].iov_len -
+			    call->conn->securityHeaderSize;
+
+			/* Notice that this code works correctly if the data
+			 * size is 0 (which it may be--no reply arguments from
+			 * server, for example).  This relies heavily on the
+			 * fact that the code below immediately frees the packet
+			 * (no yields, etc.).  If it didn't, this would be a
+			 * problem because a value of zero for call->nLeft
+			 * normally means that there is no read packet */
+			call->nLeft = cp->length;
+			hadd32(call->bytesRcvd, cp->length);
+
+			/* Send a hard ack for every rxi_HardAckRate+1 packets
+			 * consumed. Otherwise schedule an event to send
+			 * the hard ack later on.
+			 */
+			call->nHardAcks++;
+			if (!(call->flags & RX_CALL_RECEIVE_DONE)) {
+			    if (call->nHardAcks > (u_short) rxi_HardAckRate) {
+				rxevent_Cancel(call->delayedAckEvent, call,
+					       RX_CALL_REFCOUNT_DELAY);
+				rxi_SendAck(call, 0, 0, RX_ACK_DELAY, 0);
+			    } else {
+				struct clock when;
+				clock_GetTime(&when);
+				/* Delay to consolidate ack packets */
+				clock_Add(&when, &rx_hardAckDelay);
+				if (!call->delayedAckEvent
+				    || clock_Gt(&call->delayedAckEvent->
+						eventTime, &when)) {
+				    rxevent_Cancel(call->delayedAckEvent,
+						   call,
+						   RX_CALL_REFCOUNT_DELAY);
+				    CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
+				    call->delayedAckEvent =
+					rxevent_Post(&when,
+						     rxi_SendDelayedAck, call,
+						     0);
+				}
+			    }
+			}
+			break;
+		    }
 		}
-	      }
-	      break;
-	    }
-	  }
 
 /*
 MTUXXX  doesn't there need to be an "else" here ??? 
 */
-	  /* Are there ever going to be any more packets? */
-	  if (call->flags & RX_CALL_RECEIVE_DONE) {
-	    return requestCount - nbytes;
-	  }
-	  /* Wait for in-sequence packet */
-	  call->flags |= RX_CALL_READER_WAIT;
-	  clock_NewTime();
-	  call->startWait = clock_Sec();
-	  while (call->flags & RX_CALL_READER_WAIT) {
+		/* Are there ever going to be any more packets? */
+		if (call->flags & RX_CALL_RECEIVE_DONE) {
+		    return requestCount - nbytes;
+		}
+		/* Wait for in-sequence packet */
+		call->flags |= RX_CALL_READER_WAIT;
+		clock_NewTime();
+		call->startWait = clock_Sec();
+		while (call->flags & RX_CALL_READER_WAIT) {
 #ifdef	RX_ENABLE_LOCKS
-	      CV_WAIT(&call->cv_rq, &call->lock);
+		    CV_WAIT(&call->cv_rq, &call->lock);
 #else
-	      osi_rxSleep(&call->rq);
+		    osi_rxSleep(&call->rq);
 #endif
-	  }
+		}
 
-	  call->startWait = 0;
+		call->startWait = 0;
 #ifdef RX_ENABLE_LOCKS
-	  if (call->error) {
-	      return 0;
-	  }
+		if (call->error) {
+		    return 0;
+		}
 #endif /* RX_ENABLE_LOCKS */
-	}
-      }
-      else /* assert(cp); */  /* MTUXXX  this should be replaced by some error-recovery code before shipping */
-/* yes, the following block is allowed to be the ELSE clause (or not) */
-
-        /* It's possible for call->nLeft to be smaller than any particular
-         * iov_len.  Usually, recvmsg doesn't change the iov_len, since it
-         * reflects the size of the buffer.  We have to keep track of the
-         * number of bytes read in the length field of the packet struct.  On
-         * the final portion of a received packet, it's almost certain that
-         * call->nLeft will be smaller than the final buffer. */
-
-	while (nbytes && cp) {
-	  t = MIN((int)call->curlen, nbytes);
-	  t = MIN(t, (int)call->nLeft);
-	  memcpy(buf, call->curpos, t);
-	  buf += t;
-	  nbytes -= t;
-	  call->curpos += t;
-	  call->curlen -= t;
-	  call->nLeft -= t;
-
-	  if (!call->nLeft) {
-	    /* out of packet.  Get another one. */
-	    rxi_FreePacket(cp);
-	    cp = call->currentPacket = (struct rx_packet *)0;
-	  }
-	  else if (!call->curlen) {
-	    /* need to get another struct iov */
-	    if (++call->curvec >= cp->niovecs) {
-	      /* current packet is exhausted, get ready for another */
-	      /* don't worry about curvec and stuff, they get set somewhere else */
-	      rxi_FreePacket(cp);
-	      cp = call->currentPacket = (struct rx_packet *)0;
-	      call->nLeft = 0;
 	    }
-	    else {
-	      call->curpos = (char *)cp->wirevec[call->curvec].iov_base;
-	      call->curlen = cp->wirevec[call->curvec].iov_len;
+	} else
+	    /* assert(cp); */
+	    /* MTUXXX  this should be replaced by some error-recovery code before shipping */
+	    /* yes, the following block is allowed to be the ELSE clause (or not) */
+	    /* It's possible for call->nLeft to be smaller than any particular
+	     * iov_len.  Usually, recvmsg doesn't change the iov_len, since it
+	     * reflects the size of the buffer.  We have to keep track of the
+	     * number of bytes read in the length field of the packet struct.  On
+	     * the final portion of a received packet, it's almost certain that
+	     * call->nLeft will be smaller than the final buffer. */
+	    while (nbytes && cp) {
+		t = MIN((int)call->curlen, nbytes);
+		t = MIN(t, (int)call->nLeft);
+		memcpy(buf, call->curpos, t);
+		buf += t;
+		nbytes -= t;
+		call->curpos += t;
+		call->curlen -= t;
+		call->nLeft -= t;
+
+		if (!call->nLeft) {
+		    /* out of packet.  Get another one. */
+		    rxi_FreePacket(cp);
+		    cp = call->currentPacket = (struct rx_packet *)0;
+		} else if (!call->curlen) {
+		    /* need to get another struct iov */
+		    if (++call->curvec >= cp->niovecs) {
+			/* current packet is exhausted, get ready for another */
+			/* don't worry about curvec and stuff, they get set somewhere else */
+			rxi_FreePacket(cp);
+			cp = call->currentPacket = (struct rx_packet *)0;
+			call->nLeft = 0;
+		    } else {
+			call->curpos =
+			    (char *)cp->wirevec[call->curvec].iov_base;
+			call->curlen = cp->wirevec[call->curvec].iov_len;
+		    }
+		}
 	    }
-	  }  
-	}
 	if (!nbytes) {
-	  /* user buffer is full, return */
-	  return requestCount;
+	    /* user buffer is full, return */
+	    return requestCount;
 	}
 
     } while (nbytes);
@@ -287,7 +293,8 @@ MTUXXX  doesn't there need to be an "else" here ???
     return requestCount;
 }
 
-int rx_ReadProc(struct rx_call *call, char *buf, int nbytes)
+int
+rx_ReadProc(struct rx_call *call, char *buf, int nbytes)
 {
     int bytes;
     int tcurlen;
@@ -303,7 +310,7 @@ int rx_ReadProc(struct rx_call *call, char *buf, int nbytes)
      * ReadvProc/WritevProc.
      */
     if (!queue_IsEmpty(&call->iovq)) {
-	register struct rx_packet *rp; 
+	register struct rx_packet *rp;
 	register struct rx_packet *nxp;
 	for (queue_Scan(&call->iovq, rp, nxp, rx_packet)) {
 	    queue_Remove(rp);
@@ -340,7 +347,8 @@ int rx_ReadProc(struct rx_call *call, char *buf, int nbytes)
 }
 
 /* Optimization for unmarshalling 32 bit integers */
-int rx_ReadProc32(struct rx_call *call, afs_int32 *value)
+int
+rx_ReadProc32(struct rx_call *call, afs_int32 * value)
 {
     int bytes;
     int tcurlen;
@@ -356,7 +364,7 @@ int rx_ReadProc32(struct rx_call *call, afs_int32 *value)
      * ReadvProc/WritevProc.
      */
     if (!queue_IsEmpty(&call->iovq)) {
-	register struct rx_packet *rp; 
+	register struct rx_packet *rp;
 	register struct rx_packet *nxp;
 	for (queue_Scan(&call->iovq, rp, nxp, rx_packet)) {
 	    queue_Remove(rp);
@@ -373,10 +381,11 @@ int rx_ReadProc32(struct rx_call *call, afs_int32 *value)
      */
     tcurlen = call->curlen;
     tnLeft = call->nLeft;
-    if (!call->error && tcurlen > sizeof(afs_int32) && tnLeft > sizeof(afs_int32)) {
+    if (!call->error && tcurlen > sizeof(afs_int32)
+	&& tnLeft > sizeof(afs_int32)) {
 	tcurpos = call->curpos;
-	if (!((long)tcurpos & (sizeof(afs_int32)-1))) {
-	    *value = *((afs_int32 *)(tcurpos));
+	if (!((long)tcurpos & (sizeof(afs_int32) - 1))) {
+	    *value = *((afs_int32 *) (tcurpos));
 	} else {
 	    memcpy((char *)value, tcurpos, sizeof(afs_int32));
 	}
@@ -402,7 +411,8 @@ int rx_ReadProc32(struct rx_call *call, afs_int32 *value)
  * current iovec as possible. Does not block if it runs out
  * of packets to complete the iovec. Return true if an ack packet
  * was sent, otherwise return false */
-int rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
+int
+rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
 {
     int didConsume = 0;
     int didHardAck = 0;
@@ -419,131 +429,133 @@ int rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
     call_iov = &call->iov[call->iovNext];
 
     while (!call->error && call->iovNBytes && call->iovNext < call->iovMax) {
-      if (call->nLeft == 0) {
-	/* Get next packet */
-	if (queue_IsNotEmpty(&call->rq)) {
-	  /* Check that next packet available is next in sequence */
-	  rp = queue_First(&call->rq, rx_packet);
-	  if (rp->header.seq == call->rnext) {
-	    afs_int32 error;
-	    register struct rx_connection *conn = call->conn;
-	    queue_Remove(rp);
-	      
-	    /* RXS_CheckPacket called to undo RXS_PreparePacket's
-             * work.  It may reduce the length of the packet by up
-             * to conn->maxTrailerSize, to reflect the length of the
-             * data + the header. */
-	    if ((error = RXS_CheckPacket(conn->securityObject, call, rp))) {
-	      /* Used to merely shut down the call, but now we 
-	       * shut down the whole connection since this may 
-	       * indicate an attempt to hijack it */
+	if (call->nLeft == 0) {
+	    /* Get next packet */
+	    if (queue_IsNotEmpty(&call->rq)) {
+		/* Check that next packet available is next in sequence */
+		rp = queue_First(&call->rq, rx_packet);
+		if (rp->header.seq == call->rnext) {
+		    afs_int32 error;
+		    register struct rx_connection *conn = call->conn;
+		    queue_Remove(rp);
 
-	      MUTEX_EXIT(&call->lock);
-	      rxi_ConnectionError(conn, error);
-	      MUTEX_ENTER(&conn->conn_data_lock);
-	      rp = rxi_SendConnectionAbort(conn, rp, 0, 0);
-	      MUTEX_EXIT(&conn->conn_data_lock);
-	      rxi_FreePacket(rp);
-	      MUTEX_ENTER(&call->lock);
+		    /* RXS_CheckPacket called to undo RXS_PreparePacket's
+		     * work.  It may reduce the length of the packet by up
+		     * to conn->maxTrailerSize, to reflect the length of the
+		     * data + the header. */
+		    if ((error =
+			 RXS_CheckPacket(conn->securityObject, call, rp))) {
+			/* Used to merely shut down the call, but now we 
+			 * shut down the whole connection since this may 
+			 * indicate an attempt to hijack it */
 
-	      return 1;
+			MUTEX_EXIT(&call->lock);
+			rxi_ConnectionError(conn, error);
+			MUTEX_ENTER(&conn->conn_data_lock);
+			rp = rxi_SendConnectionAbort(conn, rp, 0, 0);
+			MUTEX_EXIT(&conn->conn_data_lock);
+			rxi_FreePacket(rp);
+			MUTEX_ENTER(&call->lock);
+
+			return 1;
+		    }
+		    call->rnext++;
+		    curp = call->currentPacket = rp;
+		    call->curvec = 1;	/* 0th vec is always header */
+		    cur_iov = &curp->wirevec[1];
+		    /* begin at the beginning [ more or less ], continue 
+		     * on until the end, then stop. */
+		    call->curpos =
+			(char *)curp->wirevec[1].iov_base +
+			call->conn->securityHeaderSize;
+		    call->curlen =
+			curp->wirevec[1].iov_len -
+			call->conn->securityHeaderSize;
+
+		    /* Notice that this code works correctly if the data
+		     * size is 0 (which it may be--no reply arguments from
+		     * server, for example).  This relies heavily on the
+		     * fact that the code below immediately frees the packet
+		     * (no yields, etc.).  If it didn't, this would be a
+		     * problem because a value of zero for call->nLeft
+		     * normally means that there is no read packet */
+		    call->nLeft = curp->length;
+		    hadd32(call->bytesRcvd, curp->length);
+
+		    /* Send a hard ack for every rxi_HardAckRate+1 packets
+		     * consumed. Otherwise schedule an event to send
+		     * the hard ack later on.
+		     */
+		    call->nHardAcks++;
+		    didConsume = 1;
+		    continue;
+		}
 	    }
-	    call->rnext++;
-	    curp = call->currentPacket = rp;
-	    call->curvec = 1;   /* 0th vec is always header */
-	    cur_iov = &curp->wirevec[1];
-	    /* begin at the beginning [ more or less ], continue 
-	     * on until the end, then stop. */
-	    call->curpos = (char *)curp->wirevec[1].iov_base
-			   + call->conn->securityHeaderSize; 
-	    call->curlen = curp->wirevec[1].iov_len
-			   - call->conn->securityHeaderSize; 
-	      
-	    /* Notice that this code works correctly if the data
-             * size is 0 (which it may be--no reply arguments from
-             * server, for example).  This relies heavily on the
-             * fact that the code below immediately frees the packet
-             * (no yields, etc.).  If it didn't, this would be a
-             * problem because a value of zero for call->nLeft
-             * normally means that there is no read packet */
-	    call->nLeft = curp->length;
-	    hadd32(call->bytesRcvd, curp->length);
-	      
-	    /* Send a hard ack for every rxi_HardAckRate+1 packets
-	     * consumed. Otherwise schedule an event to send
-	     * the hard ack later on.
-	     */
-	    call->nHardAcks++;
-	    didConsume = 1;
-	    continue;
-	  }
+	    break;
 	}
-	break;
-      }
 
-      /* It's possible for call->nLeft to be smaller than any particular
-       * iov_len.  Usually, recvmsg doesn't change the iov_len, since it
-       * reflects the size of the buffer.  We have to keep track of the
-       * number of bytes read in the length field of the packet struct.  On
-       * the final portion of a received packet, it's almost certain that
-       * call->nLeft will be smaller than the final buffer. */
-      while (call->iovNBytes && call->iovNext < call->iovMax && curp) {
-	
-	t = MIN((int)call->curlen, call->iovNBytes);
-	t = MIN(t, (int)call->nLeft);
-	call_iov->iov_base = call->curpos;
-	call_iov->iov_len = t;
-	call_iov++;
-	call->iovNext++;
-	call->iovNBytes -= t;
-	call->curpos += t;
-	call->curlen -= t;
-	call->nLeft -= t;
+	/* It's possible for call->nLeft to be smaller than any particular
+	 * iov_len.  Usually, recvmsg doesn't change the iov_len, since it
+	 * reflects the size of the buffer.  We have to keep track of the
+	 * number of bytes read in the length field of the packet struct.  On
+	 * the final portion of a received packet, it's almost certain that
+	 * call->nLeft will be smaller than the final buffer. */
+	while (call->iovNBytes && call->iovNext < call->iovMax && curp) {
 
-	if (!call->nLeft) {
-	  /* out of packet.  Get another one. */
-	  queue_Append(&call->iovq, curp);
-	  curp = call->currentPacket = (struct rx_packet *)0;
+	    t = MIN((int)call->curlen, call->iovNBytes);
+	    t = MIN(t, (int)call->nLeft);
+	    call_iov->iov_base = call->curpos;
+	    call_iov->iov_len = t;
+	    call_iov++;
+	    call->iovNext++;
+	    call->iovNBytes -= t;
+	    call->curpos += t;
+	    call->curlen -= t;
+	    call->nLeft -= t;
+
+	    if (!call->nLeft) {
+		/* out of packet.  Get another one. */
+		queue_Append(&call->iovq, curp);
+		curp = call->currentPacket = (struct rx_packet *)0;
+	    } else if (!call->curlen) {
+		/* need to get another struct iov */
+		if (++call->curvec >= curp->niovecs) {
+		    /* current packet is exhausted, get ready for another */
+		    /* don't worry about curvec and stuff, they get set somewhere else */
+		    queue_Append(&call->iovq, curp);
+		    curp = call->currentPacket = (struct rx_packet *)0;
+		    call->nLeft = 0;
+		} else {
+		    cur_iov++;
+		    call->curpos = (char *)cur_iov->iov_base;
+		    call->curlen = cur_iov->iov_len;
+		}
+	    }
 	}
-	else if (!call->curlen) {
-	  /* need to get another struct iov */
-	  if (++call->curvec >= curp->niovecs) {
-	    /* current packet is exhausted, get ready for another */
-	    /* don't worry about curvec and stuff, they get set somewhere else */
-	    queue_Append(&call->iovq, curp);
-	    curp = call->currentPacket = (struct rx_packet *)0;
-	    call->nLeft = 0;
-	  }
-	  else {
-	    cur_iov++;
-	    call->curpos = (char *)cur_iov->iov_base;
-	    call->curlen = cur_iov->iov_len;
-	  }
-	}  
-      }  
     }
 
     /* If we consumed any packets then check whether we need to
      * send a hard ack. */
-    if (didConsume && (!(call->flags &RX_CALL_RECEIVE_DONE))) {
-      if (call->nHardAcks > (u_short)rxi_HardAckRate) {
-	rxevent_Cancel(call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
-	rxi_SendAck(call, 0, serial, RX_ACK_DELAY, 0);
-	didHardAck = 1;
-      }
-      else {
-	struct clock when;
-	clock_GetTime(&when);
-	/* Delay to consolidate ack packets */
-	clock_Add(&when, &rx_hardAckDelay);
-	if (!call->delayedAckEvent ||
-	  clock_Gt(&call->delayedAckEvent->eventTime, &when)) {
-	  rxevent_Cancel(call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
-	  CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
-	  call->delayedAckEvent = rxevent_Post(&when, rxi_SendDelayedAck,
-					       call, 0);
+    if (didConsume && (!(call->flags & RX_CALL_RECEIVE_DONE))) {
+	if (call->nHardAcks > (u_short) rxi_HardAckRate) {
+	    rxevent_Cancel(call->delayedAckEvent, call,
+			   RX_CALL_REFCOUNT_DELAY);
+	    rxi_SendAck(call, 0, serial, RX_ACK_DELAY, 0);
+	    didHardAck = 1;
+	} else {
+	    struct clock when;
+	    clock_GetTime(&when);
+	    /* Delay to consolidate ack packets */
+	    clock_Add(&when, &rx_hardAckDelay);
+	    if (!call->delayedAckEvent
+		|| clock_Gt(&call->delayedAckEvent->eventTime, &when)) {
+		rxevent_Cancel(call->delayedAckEvent, call,
+			       RX_CALL_REFCOUNT_DELAY);
+		CALL_HOLD(call, RX_CALL_REFCOUNT_DELAY);
+		call->delayedAckEvent =
+		    rxevent_Post(&when, rxi_SendDelayedAck, call, 0);
+	    }
 	}
-      }
     }
     return didHardAck;
 }
@@ -557,11 +569,12 @@ int rxi_FillReadVec(struct rx_call *call, afs_uint32 serial)
  *
  * LOCKS USED -- called at netpri with rx global lock and call->lock held.
  */
-int rxi_ReadvProc(struct rx_call *call, struct iovec *iov, int *nio, 
-	int maxio, int nbytes)
+int
+rxi_ReadvProc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
+	      int nbytes)
 {
-    struct rx_packet *rp; 
-    struct rx_packet *nxp; /* Next packet pointer, for queue_Scan */
+    struct rx_packet *rp;
+    struct rx_packet *nxp;	/* Next packet pointer, for queue_Scan */
     int requestCount;
     int nextio;
 
@@ -575,11 +588,11 @@ int rxi_ReadvProc(struct rx_call *call, struct iovec *iov, int *nio,
     }
 
     if (call->mode == RX_MODE_SENDING) {
-        rxi_FlushWrite(call);
+	rxi_FlushWrite(call);
     }
 
     if (call->error) {
-        return 0;
+	return 0;
     }
 
     /* Get whatever data is currently available in the receive queue.
@@ -597,25 +610,24 @@ int rxi_ReadvProc(struct rx_call *call, struct iovec *iov, int *nio,
 
     /* if we need more data then sleep until the receive thread has
      * filled in the rest. */
-    if (!call->error && call->iovNBytes &&
-	call->iovNext < call->iovMax &&
-	!(call->flags & RX_CALL_RECEIVE_DONE)) {
-      call->flags |= RX_CALL_READER_WAIT;
-      clock_NewTime();
-      call->startWait = clock_Sec();
-      while (call->flags & RX_CALL_READER_WAIT) {
+    if (!call->error && call->iovNBytes && call->iovNext < call->iovMax
+	&& !(call->flags & RX_CALL_RECEIVE_DONE)) {
+	call->flags |= RX_CALL_READER_WAIT;
+	clock_NewTime();
+	call->startWait = clock_Sec();
+	while (call->flags & RX_CALL_READER_WAIT) {
 #ifdef	RX_ENABLE_LOCKS
-	CV_WAIT(&call->cv_rq, &call->lock);
+	    CV_WAIT(&call->cv_rq, &call->lock);
 #else
-	osi_rxSleep(&call->rq);
+	    osi_rxSleep(&call->rq);
 #endif
-      }
-      call->startWait = 0;
+	}
+	call->startWait = 0;
     }
     call->flags &= ~RX_CALL_IOVEC_WAIT;
 #ifdef RX_ENABLE_LOCKS
     if (call->error) {
-      return 0;
+	return 0;
     }
 #endif /* RX_ENABLE_LOCKS */
 
@@ -624,8 +636,9 @@ int rxi_ReadvProc(struct rx_call *call, struct iovec *iov, int *nio,
     return nbytes - call->iovNBytes;
 }
 
-int rx_ReadvProc(struct rx_call *call, struct iovec *iov, 
-	int *nio, int maxio, int nbytes)
+int
+rx_ReadvProc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
+	     int nbytes)
 {
     int bytes;
     SPLVAR;
@@ -644,13 +657,14 @@ int rx_ReadvProc(struct rx_call *call, struct iovec *iov,
  *
  * LOCKS USED -- called at netpri with rx global lock and call->lock held. */
 
-int rxi_WriteProc(register struct rx_call *call, register char *buf, 	
-	register int nbytes)
+int
+rxi_WriteProc(register struct rx_call *call, register char *buf,
+	      register int nbytes)
 {
     struct rx_connection *conn = call->conn;
     register struct rx_packet *cp = call->currentPacket;
-    register struct rx_packet *tp; /* Temporary packet pointer */
-    register struct rx_packet *nxp; /* Next packet pointer, for queue_Scan */
+    register struct rx_packet *tp;	/* Temporary packet pointer */
+    register struct rx_packet *nxp;	/* Next packet pointer, for queue_Scan */
     register unsigned int t;
     int requestCount = nbytes;
 
@@ -668,12 +682,11 @@ int rxi_WriteProc(register struct rx_call *call, register char *buf,
 	    call->mode = RX_MODE_SENDING;
 	    if (cp) {
 		rxi_FreePacket(cp);
-		cp = call->currentPacket = (struct rx_packet *) 0;
+		cp = call->currentPacket = (struct rx_packet *)0;
 		call->nLeft = 0;
 		call->nFree = 0;
 	    }
-	}
-	else {
+	} else {
 	    return 0;
 	}
     }
@@ -698,7 +711,7 @@ int rxi_WriteProc(register struct rx_call *call, register char *buf,
 #endif /* RX_ENABLE_LOCKS */
 		}
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-		clock_NewTime(); /* Bogus:  need new time package */
+		clock_NewTime();	/* Bogus:  need new time package */
 		/* The 0, below, specifies that it is not the last packet: 
 		 * there will be others. PrepareSendPacket may
 		 * alter the packet length by up to
@@ -707,13 +720,16 @@ int rxi_WriteProc(register struct rx_call *call, register char *buf,
 		rxi_PrepareSendPacket(call, cp, 0);
 		queue_Append(&call->tq, cp);
 		cp = call->currentPacket = NULL;
-		if (!(call->flags & (RX_CALL_FAST_RECOVER|
-				     RX_CALL_FAST_RECOVER_WAIT))) {
+		if (!
+		    (call->
+		     flags & (RX_CALL_FAST_RECOVER |
+			      RX_CALL_FAST_RECOVER_WAIT))) {
 		    rxi_Start(0, call, 0);
 		}
 	    }
 	    /* Wait for transmit window to open up */
-	    while (!call->error && call->tnext + 1 > call->tfirst + call->twind) {
+	    while (!call->error
+		   && call->tnext + 1 > call->tfirst + call->twind) {
 		clock_NewTime();
 		call->startWait = clock_Sec();
 
@@ -734,80 +750,81 @@ int rxi_WriteProc(register struct rx_call *call, register char *buf,
 	    if ((cp = rxi_AllocSendPacket(call, nbytes))) {
 		call->currentPacket = cp;
 		call->nFree = cp->length;
-		call->curvec = 1;   /* 0th vec is always header */
+		call->curvec = 1;	/* 0th vec is always header */
 		/* begin at the beginning [ more or less ], continue 
 		 * on until the end, then stop. */
-		call->curpos = (char *)cp->wirevec[1].iov_base
-			       + call->conn->securityHeaderSize; 
-		call->curlen = cp->wirevec[1].iov_len
-			       - call->conn->securityHeaderSize; 
+		call->curpos =
+		    (char *)cp->wirevec[1].iov_base +
+		    call->conn->securityHeaderSize;
+		call->curlen =
+		    cp->wirevec[1].iov_len - call->conn->securityHeaderSize;
 	    }
 	    if (call->error) {
-	        if (cp) {
-		  rxi_FreePacket(cp);
-		  call->currentPacket = NULL;
+		if (cp) {
+		    rxi_FreePacket(cp);
+		    call->currentPacket = NULL;
 		}
 		return 0;
 	    }
 	}
 
 	if (cp && (int)call->nFree < nbytes) {
-	      /* Try to extend the current buffer */
-	      register int len, mud;
-	      len = cp->length;
-	      mud = rx_MaxUserDataSize(call);
-	      if (mud > len) {
+	    /* Try to extend the current buffer */
+	    register int len, mud;
+	    len = cp->length;
+	    mud = rx_MaxUserDataSize(call);
+	    if (mud > len) {
 		int want;
 		want = MIN(nbytes - (int)call->nFree, mud - len);
 		rxi_AllocDataBuf(cp, want, RX_PACKET_CLASS_SEND_CBUF);
 		if (cp->length > (unsigned)mud)
 		    cp->length = mud;
 		call->nFree += (cp->length - len);
-	      }
+	    }
 	}
 
 	/* If the remaining bytes fit in the buffer, then store them
-         * and return.  Don't ship a buffer that's full immediately to
-         * the peer--we don't know if it's the last buffer yet */
+	 * and return.  Don't ship a buffer that's full immediately to
+	 * the peer--we don't know if it's the last buffer yet */
 
-	if (!cp)  {
-	  call->nFree = 0;
+	if (!cp) {
+	    call->nFree = 0;
 	}
 
 	while (nbytes && call->nFree) {
-	
-	  t = MIN((int)call->curlen, nbytes);
-	  t = MIN((int)call->nFree, t);
-	  memcpy(call->curpos, buf, t);
-	  buf += t;
-	  nbytes -= t;
-	  call->curpos += t;
-	  call->curlen -= t;
-	  call->nFree -= t;
 
-	  if (!call->curlen) {
-	    /* need to get another struct iov */
-	    if (++call->curvec >= cp->niovecs) {
-	      /* current packet is full, extend or send it */
-	      call->nFree = 0;
-	    } else {
-	      call->curpos = (char *)cp->wirevec[call->curvec].iov_base;
-	      call->curlen = cp->wirevec[call->curvec].iov_len;
+	    t = MIN((int)call->curlen, nbytes);
+	    t = MIN((int)call->nFree, t);
+	    memcpy(call->curpos, buf, t);
+	    buf += t;
+	    nbytes -= t;
+	    call->curpos += t;
+	    call->curlen -= t;
+	    call->nFree -= t;
+
+	    if (!call->curlen) {
+		/* need to get another struct iov */
+		if (++call->curvec >= cp->niovecs) {
+		    /* current packet is full, extend or send it */
+		    call->nFree = 0;
+		} else {
+		    call->curpos = (char *)cp->wirevec[call->curvec].iov_base;
+		    call->curlen = cp->wirevec[call->curvec].iov_len;
+		}
 	    }
-	  }  
-	} /* while bytes to send and room to send them */
+	}			/* while bytes to send and room to send them */
 
 	/* might be out of space now */
 	if (!nbytes) {
 	    return requestCount;
-	}
-	else ; /* more data to send, so get another packet and keep going */
-    } while(nbytes);
+	} else;			/* more data to send, so get another packet and keep going */
+    } while (nbytes);
 
     return requestCount - nbytes;
 }
 
-int rx_WriteProc(struct rx_call *call, char *buf, int nbytes)
+int
+rx_WriteProc(struct rx_call *call, char *buf, int nbytes)
 {
     int bytes;
     int tcurlen;
@@ -823,7 +840,7 @@ int rx_WriteProc(struct rx_call *call, char *buf, int nbytes)
      * ReadvProc/WritevProc.
      */
     if (!queue_IsEmpty(&call->iovq)) {
-	register struct rx_packet *rp; 
+	register struct rx_packet *rp;
 	register struct rx_packet *nxp;
 	for (queue_Scan(&call->iovq, rp, nxp, rx_packet)) {
 	    queue_Remove(rp);
@@ -860,7 +877,8 @@ int rx_WriteProc(struct rx_call *call, char *buf, int nbytes)
 }
 
 /* Optimization for marshalling 32 bit arguments */
-int rx_WriteProc32(register struct rx_call *call, register afs_int32 *value)
+int
+rx_WriteProc32(register struct rx_call *call, register afs_int32 * value)
 {
     int bytes;
     int tcurlen;
@@ -876,7 +894,7 @@ int rx_WriteProc32(register struct rx_call *call, register afs_int32 *value)
      * ReadvProc/WritevProc.
      */
     if (!queue_IsEmpty(&call->iovq)) {
-	register struct rx_packet *rp; 
+	register struct rx_packet *rp;
 	register struct rx_packet *nxp;
 	for (queue_Scan(&call->iovq, rp, nxp, rx_packet)) {
 	    queue_Remove(rp);
@@ -893,10 +911,11 @@ int rx_WriteProc32(register struct rx_call *call, register afs_int32 *value)
      */
     tcurlen = (int)call->curlen;
     tnFree = (int)call->nFree;
-    if (!call->error && tcurlen >= sizeof(afs_int32) && tnFree >= sizeof(afs_int32)) {
+    if (!call->error && tcurlen >= sizeof(afs_int32)
+	&& tnFree >= sizeof(afs_int32)) {
 	tcurpos = call->curpos;
-	if (!((long)tcurpos & (sizeof(afs_int32)-1))) {
-	    *((afs_int32 *)(tcurpos)) = *value;
+	if (!((long)tcurpos & (sizeof(afs_int32) - 1))) {
+	    *((afs_int32 *) (tcurpos)) = *value;
 	} else {
 	    memcpy(tcurpos, (char *)value, sizeof(afs_int32));
 	}
@@ -923,24 +942,25 @@ int rx_WriteProc32(register struct rx_call *call, register afs_int32 *value)
  *
  * LOCKS USED -- called at netpri with rx global lock and call->lock held. */
 
-int rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, 
-	int *nio, int maxio, int nbytes)
+int
+rxi_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
+		int nbytes)
 {
     struct rx_connection *conn = call->conn;
     struct rx_packet *cp = call->currentPacket;
-    struct rx_packet *tp; /* temporary packet pointer */
-    struct rx_packet *nxp; /* Next packet pointer, for queue_Scan */
+    struct rx_packet *tp;	/* temporary packet pointer */
+    struct rx_packet *nxp;	/* Next packet pointer, for queue_Scan */
     int requestCount;
     int nextio;
     /* Temporary values, real work is done in rxi_WritevProc */
-    int tnFree;	
+    int tnFree;
     int tcurvec;
-    char * tcurpos;
+    char *tcurpos;
     int tcurlen;
 
     requestCount = nbytes;
     nextio = 0;
-    
+
     /* Free any packets from the last call to ReadvProc/WritevProc */
     for (queue_Scan(&call->iovq, tp, nxp, rx_packet)) {
 	queue_Remove(tp);
@@ -953,12 +973,11 @@ int rxi_WritevAlloc(struct rx_call *call, struct iovec *iov,
 	    call->mode = RX_MODE_SENDING;
 	    if (cp) {
 		rxi_FreePacket(cp);
-		cp = call->currentPacket = (struct rx_packet *) 0;
+		cp = call->currentPacket = (struct rx_packet *)0;
 		call->nLeft = 0;
 		call->nFree = 0;
 	    }
-	}
-	else {
+	} else {
 	    return 0;
 	}
     }
@@ -969,71 +988,72 @@ int rxi_WritevAlloc(struct rx_call *call, struct iovec *iov,
     tcurpos = call->curpos;
     tcurlen = call->curlen;
     do {
-      register unsigned int t;
+	register unsigned int t;
 
-      if (tnFree == 0) {
-	/* current packet is full, allocate a new one */
-	cp = rxi_AllocSendPacket(call, nbytes);
-	if (cp == NULL) {
-	  /* out of space, return what we have */
-	  *nio = nextio;
-	  return requestCount - nbytes;
+	if (tnFree == 0) {
+	    /* current packet is full, allocate a new one */
+	    cp = rxi_AllocSendPacket(call, nbytes);
+	    if (cp == NULL) {
+		/* out of space, return what we have */
+		*nio = nextio;
+		return requestCount - nbytes;
+	    }
+	    queue_Append(&call->iovq, cp);
+	    tnFree = cp->length;
+	    tcurvec = 1;
+	    tcurpos =
+		(char *)cp->wirevec[1].iov_base +
+		call->conn->securityHeaderSize;
+	    tcurlen = cp->wirevec[1].iov_len - call->conn->securityHeaderSize;
 	}
-	queue_Append(&call->iovq, cp);
-	tnFree = cp->length;
-	tcurvec = 1;
-	tcurpos = (char *)cp->wirevec[1].iov_base
-		  + call->conn->securityHeaderSize;
-	tcurlen = cp->wirevec[1].iov_len
-		  - call->conn->securityHeaderSize;
-      }
 
-      if (tnFree < nbytes) {
-	/* try to extend the current packet */
-        register int len, mud;
-        len = cp->length;
-        mud = rx_MaxUserDataSize(call);
-        if (mud > len) {
-          int want;
-          want = MIN(nbytes - tnFree, mud - len);
-          rxi_AllocDataBuf(cp, want, RX_PACKET_CLASS_SEND_CBUF);
-	  if (cp->length > (unsigned)mud)
-	    cp->length = mud;
-	  tnFree += (cp->length - len);
-          if (cp == call->currentPacket) {
-	    call->nFree += (cp->length - len);
-          }
-        }
-      }
+	if (tnFree < nbytes) {
+	    /* try to extend the current packet */
+	    register int len, mud;
+	    len = cp->length;
+	    mud = rx_MaxUserDataSize(call);
+	    if (mud > len) {
+		int want;
+		want = MIN(nbytes - tnFree, mud - len);
+		rxi_AllocDataBuf(cp, want, RX_PACKET_CLASS_SEND_CBUF);
+		if (cp->length > (unsigned)mud)
+		    cp->length = mud;
+		tnFree += (cp->length - len);
+		if (cp == call->currentPacket) {
+		    call->nFree += (cp->length - len);
+		}
+	    }
+	}
 
-      /* fill in the next entry in the iovec */
-      t = MIN(tcurlen, nbytes);
-      t = MIN(tnFree, t);
-      iov[nextio].iov_base = tcurpos;
-      iov[nextio].iov_len = t;
-      nbytes -= t;
-      tcurpos += t;
-      tcurlen -= t;
-      tnFree -= t;
-      nextio++;
+	/* fill in the next entry in the iovec */
+	t = MIN(tcurlen, nbytes);
+	t = MIN(tnFree, t);
+	iov[nextio].iov_base = tcurpos;
+	iov[nextio].iov_len = t;
+	nbytes -= t;
+	tcurpos += t;
+	tcurlen -= t;
+	tnFree -= t;
+	nextio++;
 
-      if (!tcurlen) {
-          /* need to get another struct iov */
-          if (++tcurvec >= cp->niovecs) {
-            /* current packet is full, extend it or move on to next packet */
-            tnFree = 0;
-          } else { 
-      	    tcurpos = (char *)cp->wirevec[tcurvec].iov_base;
-      	    tcurlen = cp->wirevec[tcurvec].iov_len;
-	  }
-      }
+	if (!tcurlen) {
+	    /* need to get another struct iov */
+	    if (++tcurvec >= cp->niovecs) {
+		/* current packet is full, extend it or move on to next packet */
+		tnFree = 0;
+	    } else {
+		tcurpos = (char *)cp->wirevec[tcurvec].iov_base;
+		tcurlen = cp->wirevec[tcurvec].iov_len;
+	    }
+	}
     } while (nbytes && nextio < maxio);
     *nio = nextio;
     return requestCount - nbytes;
 }
 
-int rx_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, 
-	int maxio, int nbytes)
+int
+rx_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio, int maxio,
+	       int nbytes)
 {
     int bytes;
     SPLVAR;
@@ -1054,12 +1074,12 @@ int rx_WritevAlloc(struct rx_call *call, struct iovec *iov, int *nio,
  *
  * LOCKS USED -- called at netpri with rx global lock and call->lock held. */
 
-int rxi_WritevProc(struct rx_call *call, struct iovec *iov, 
-	int nio, int nbytes)
+int
+rxi_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 {
     struct rx_packet *cp = call->currentPacket;
-    register struct rx_packet *tp; /* Temporary packet pointer */
-    register struct rx_packet *nxp; /* Next packet pointer, for queue_Scan */
+    register struct rx_packet *tp;	/* Temporary packet pointer */
+    register struct rx_packet *nxp;	/* Next packet pointer, for queue_Scan */
     int nextio;
     int requestCount;
     struct rx_queue tmpq;
@@ -1070,7 +1090,6 @@ int rxi_WritevProc(struct rx_call *call, struct iovec *iov,
     if (call->mode != RX_MODE_SENDING) {
 	call->error = RX_PROTOCOL_ERROR;
     }
-
 #ifdef AFS_GLOBAL_RXLOCK_KERNEL
     /* Wait until TQ_BUSY is reset before trying to move any
      * packets to the transmit queue.  */
@@ -1105,7 +1124,7 @@ int rxi_WritevProc(struct rx_call *call, struct iovec *iov,
     queue_Init(&tmpq);
     do {
 	if (call->nFree == 0 && cp) {
-	    clock_NewTime(); /* Bogus:  need new time package */
+	    clock_NewTime();	/* Bogus:  need new time package */
 	    /* The 0, below, specifies that it is not the last packet: 
 	     * there will be others. PrepareSendPacket may
 	     * alter the packet length by up to
@@ -1116,7 +1135,7 @@ int rxi_WritevProc(struct rx_call *call, struct iovec *iov,
 
 	    /* The head of the iovq is now the current packet */
 	    if (nbytes) {
-	        if (queue_IsEmpty(&call->iovq)) {
+		if (queue_IsEmpty(&call->iovq)) {
 		    call->error = RX_PROTOCOL_ERROR;
 		    cp = call->currentPacket = NULL;
 		    for (queue_Scan(&tmpq, tp, nxp, rx_packet)) {
@@ -1124,47 +1143,48 @@ int rxi_WritevProc(struct rx_call *call, struct iovec *iov,
 			rxi_FreePacket(tp);
 		    }
 		    return 0;
-	        }
-	        cp = queue_First(&call->iovq, rx_packet);
-	        queue_Remove(cp);
-	        call->currentPacket = cp;
-	        call->nFree = cp->length;
-	        call->curvec = 1;
-	        call->curpos = (char *)cp->wirevec[1].iov_base
-			       + call->conn->securityHeaderSize;
-	        call->curlen = cp->wirevec[1].iov_len
-			       - call->conn->securityHeaderSize;
+		}
+		cp = queue_First(&call->iovq, rx_packet);
+		queue_Remove(cp);
+		call->currentPacket = cp;
+		call->nFree = cp->length;
+		call->curvec = 1;
+		call->curpos =
+		    (char *)cp->wirevec[1].iov_base +
+		    call->conn->securityHeaderSize;
+		call->curlen =
+		    cp->wirevec[1].iov_len - call->conn->securityHeaderSize;
 	    }
 	}
 
 	if (nbytes) {
-	  /* The next iovec should point to the current position */
-	  if (iov[nextio].iov_base != call->curpos
-	      || iov[nextio].iov_len > (int)call->curlen) {
-	      call->error = RX_PROTOCOL_ERROR;
-	      for (queue_Scan(&tmpq, tp, nxp, rx_packet)) {
-		  queue_Remove(tp);
-		  rxi_FreePacket(tp);
-	      }
-	      if (cp) {
-		rxi_FreePacket(cp);
-		call->currentPacket = NULL;
-	      }
-	      return 0;
-	  }
-	  nbytes -= iov[nextio].iov_len;
-	  call->curpos += iov[nextio].iov_len;
-	  call->curlen -= iov[nextio].iov_len;
-	  call->nFree -= iov[nextio].iov_len;
-	  nextio++;
-	  if (call->curlen == 0) {
-	    if (++call->curvec > cp->niovecs) {
-	        call->nFree = 0;
-	    } else {
-	        call->curpos = (char *)cp->wirevec[call->curvec].iov_base;
-	        call->curlen = cp->wirevec[call->curvec].iov_len;
+	    /* The next iovec should point to the current position */
+	    if (iov[nextio].iov_base != call->curpos
+		|| iov[nextio].iov_len > (int)call->curlen) {
+		call->error = RX_PROTOCOL_ERROR;
+		for (queue_Scan(&tmpq, tp, nxp, rx_packet)) {
+		    queue_Remove(tp);
+		    rxi_FreePacket(tp);
+		}
+		if (cp) {
+		    rxi_FreePacket(cp);
+		    call->currentPacket = NULL;
+		}
+		return 0;
 	    }
-	  }
+	    nbytes -= iov[nextio].iov_len;
+	    call->curpos += iov[nextio].iov_len;
+	    call->curlen -= iov[nextio].iov_len;
+	    call->nFree -= iov[nextio].iov_len;
+	    nextio++;
+	    if (call->curlen == 0) {
+		if (++call->curvec > cp->niovecs) {
+		    call->nFree = 0;
+		} else {
+		    call->curpos = (char *)cp->wirevec[call->curvec].iov_base;
+		    call->curlen = cp->wirevec[call->curvec].iov_len;
+		}
+	    }
 	}
     } while (nbytes && nextio < nio);
 
@@ -1175,7 +1195,7 @@ int rxi_WritevProc(struct rx_call *call, struct iovec *iov,
 	queue_Append(&call->tq, tp);
     }
 
-    if (!(call->flags & (RX_CALL_FAST_RECOVER|RX_CALL_FAST_RECOVER_WAIT))) {
+    if (!(call->flags & (RX_CALL_FAST_RECOVER | RX_CALL_FAST_RECOVER_WAIT))) {
 	rxi_Start(0, call, 0);
     }
 
@@ -1203,7 +1223,8 @@ int rxi_WritevProc(struct rx_call *call, struct iovec *iov,
     return requestCount - nbytes;
 }
 
-int rx_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
+int
+rx_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 {
     int bytes;
     SPLVAR;
@@ -1220,11 +1241,12 @@ int rx_WritevProc(struct rx_call *call, struct iovec *iov, int nio, int nbytes)
 
 /* Flush any buffered data to the stream, switch to read mode
  * (clients) or to EOF mode (servers) */
-void rxi_FlushWrite(register struct rx_call *call)
+void
+rxi_FlushWrite(register struct rx_call *call)
 {
     register struct rx_packet *cp = call->currentPacket;
-    register struct rx_packet *tp; /* Temporary packet pointer */
-    register struct rx_packet *nxp; /* Next packet pointer, for queue_Scan */
+    register struct rx_packet *tp;	/* Temporary packet pointer */
+    register struct rx_packet *nxp;	/* Next packet pointer, for queue_Scan */
 
     /* Free any packets from the last call to ReadvProc/WritevProc */
     for (queue_Scan(&call->iovq, tp, nxp, rx_packet)) {
@@ -1234,21 +1256,21 @@ void rxi_FlushWrite(register struct rx_call *call)
 
     if (call->mode == RX_MODE_SENDING) {
 
-	call->mode = (call->conn->type == RX_CLIENT_CONNECTION ?
-		                          RX_MODE_RECEIVING: RX_MODE_EOF);
+	call->mode =
+	    (call->conn->type ==
+	     RX_CLIENT_CONNECTION ? RX_MODE_RECEIVING : RX_MODE_EOF);
 
 #ifdef RX_KERNEL_TRACE
-        {
-                int glockOwner = ISAFS_GLOCK();
-                if (!glockOwner)
-                        AFS_GLOCK();
-                afs_Trace3(afs_iclSetp, CM_TRACE_WASHERE,
-                        ICL_TYPE_STRING, __FILE__,
-                        ICL_TYPE_INT32, __LINE__,
-                        ICL_TYPE_POINTER, call);
-                if (!glockOwner)
-                        AFS_GUNLOCK();
-        }
+	{
+	    int glockOwner = ISAFS_GLOCK();
+	    if (!glockOwner)
+		AFS_GLOCK();
+	    afs_Trace3(afs_iclSetp, CM_TRACE_WASHERE, ICL_TYPE_STRING,
+		       __FILE__, ICL_TYPE_INT32, __LINE__, ICL_TYPE_POINTER,
+		       call);
+	    if (!glockOwner)
+		AFS_GUNLOCK();
+	}
 #endif
 
 #ifdef AFS_GLOBAL_RXLOCK_KERNEL
@@ -1270,17 +1292,16 @@ void rxi_FlushWrite(register struct rx_call *call)
 	    /* cp->length was already set to (then-current) 
 	     * MaxUserDataSize or less. */
 	    cp->length -= call->nFree;
-	    call->currentPacket = (struct rx_packet *) 0;
+	    call->currentPacket = (struct rx_packet *)0;
 	    call->nFree = 0;
-	}
-	else {
-	    cp = rxi_AllocSendPacket(call,0);
+	} else {
+	    cp = rxi_AllocSendPacket(call, 0);
 	    if (!cp) {
 		/* Mode can no longer be MODE_SENDING */
 		return;
 	    }
 	    cp->length = 0;
-	    cp->niovecs = 1;  /* just the header */
+	    cp->niovecs = 1;	/* just the header */
 	    call->nFree = 0;
 	}
 
@@ -1288,8 +1309,9 @@ void rxi_FlushWrite(register struct rx_call *call)
 	hadd32(call->bytesSent, cp->length);
 	rxi_PrepareSendPacket(call, cp, 1);
 	queue_Append(&call->tq, cp);
-	if (!(call->flags & (RX_CALL_FAST_RECOVER|
-			     RX_CALL_FAST_RECOVER_WAIT))) {
+	if (!
+	    (call->
+	     flags & (RX_CALL_FAST_RECOVER | RX_CALL_FAST_RECOVER_WAIT))) {
 	    rxi_Start(0, call, 0);
 	}
     }
@@ -1297,7 +1319,8 @@ void rxi_FlushWrite(register struct rx_call *call)
 
 /* Flush any buffered data to the stream, switch to read mode
  * (clients) or to EOF mode (servers) */
-void rx_FlushWrite(struct rx_call *call)
+void
+rx_FlushWrite(struct rx_call *call)
 {
     SPLVAR;
     NETPRI;

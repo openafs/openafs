@@ -16,10 +16,9 @@
 
 #define Date afs_uint32
 
-typedef struct ViceLock
-{
-    int		lockCount;
-    int		lockTime;
+typedef struct ViceLock {
+    int lockCount;
+    int lockTime;
 } ViceLock;
 
 #define ViceLockCheckLocked(vptr) ((vptr)->lockTime == 0)
@@ -49,13 +48,13 @@ struct VnodeClassInfo {
     int residentSize;		/* resident size of vnode */
     int cacheSize;		/* Vnode cache size */
     bit32 magic;		/* Magic number for this type of vnode,
-    				   for as long as we're using vnode magic
-				   numbers */
-    int	allocs;			/* Total number of successful allocation
-    				   requests; this is the same as the number
-				   of sanity checks on the vnode index */
-    int gets,reads;		/* Number of VGetVnodes and corresponding
-    				   reads */
+				 * for as long as we're using vnode magic
+				 * numbers */
+    int allocs;			/* Total number of successful allocation
+				 * requests; this is the same as the number
+				 * of sanity checks on the vnode index */
+    int gets, reads;		/* Number of VGetVnodes and corresponding
+				 * reads */
     int writes;			/* Number of vnode writes */
 };
 
@@ -72,42 +71,42 @@ extern struct VnodeClassInfo VnodeClassInfo[nVNODECLASSES];
 #define vnodeIsDirectory(vnodeNumber) (vnodeIdToClass(vnodeNumber) == vLarge)
 
 typedef struct VnodeDiskObject {
-    unsigned int  type:3;	/* Vnode is file, directory, symbolic link
-    				   or not allocated */
-    unsigned int  cloned:1;	/* This vnode was cloned--therefore the inode
-    				   is copy-on-write; only set for directories*/
-    unsigned int  modeBits:12;	/* Unix mode bits */
-    signed int    linkCount:16;	/* Number of directory references to vnode
-    				   (from single directory only!) */
-    bit32	  length;	/* Number of bytes in this file */
-    Unique	  uniquifier;	/* Uniquifier for the vnode; assigned
-				   from the volume uniquifier (actually
-				   from nextVnodeUnique in the Volume
-				   structure) */
-    FileVersion   dataVersion;	/* version number of the data */
-    afs_int32	  vn_ino_lo;	/* inode number of the data attached to
-    				   this vnode - entire ino for standard*/
-    Date	  unixModifyTime;/* set by user */
-    UserId	  author;	/* Userid of the last user storing the file */
-    UserId	  owner;	/* Userid of the user who created the file */
-    VnodeId	  parent;	/* Parent directory vnode */
-    bit32	  vnodeMagic;	/* Magic number--mainly for file server
-    				   paranoia checks */
+    unsigned int type:3;	/* Vnode is file, directory, symbolic link
+				 * or not allocated */
+    unsigned int cloned:1;	/* This vnode was cloned--therefore the inode
+				 * is copy-on-write; only set for directories */
+    unsigned int modeBits:12;	/* Unix mode bits */
+    signed int linkCount:16;	/* Number of directory references to vnode
+				 * (from single directory only!) */
+    bit32 length;		/* Number of bytes in this file */
+    Unique uniquifier;		/* Uniquifier for the vnode; assigned
+				 * from the volume uniquifier (actually
+				 * from nextVnodeUnique in the Volume
+				 * structure) */
+    FileVersion dataVersion;	/* version number of the data */
+    afs_int32 vn_ino_lo;	/* inode number of the data attached to
+				 * this vnode - entire ino for standard */
+    Date unixModifyTime;	/* set by user */
+    UserId author;		/* Userid of the last user storing the file */
+    UserId owner;		/* Userid of the user who created the file */
+    VnodeId parent;		/* Parent directory vnode */
+    bit32 vnodeMagic;		/* Magic number--mainly for file server
+				 * paranoia checks */
 #   define	  SMALLVNODEMAGIC	0xda8c041F
 #   define	  LARGEVNODEMAGIC	0xad8765fe
     /* Vnode magic can be removed, someday, if we run need the room.  Simply
-       have to be sure that the thing we replace can be VNODEMAGIC, rather
-       than 0 (in an old file system).  Or go through and zero the fields,
-       when we notice a version change (the index version number) */
-    ViceLock	  lock;		/* Advisory lock */
-    Date	  serverModifyTime;	/* Used only by the server; for incremental
-    				   backup purposes */
-    afs_int32	  group;	    /* unix group */
-    afs_int32	  vn_ino_hi;	/* high part of 64 bit inode. */
-    bit32	  reserved6;
+     * have to be sure that the thing we replace can be VNODEMAGIC, rather
+     * than 0 (in an old file system).  Or go through and zero the fields,
+     * when we notice a version change (the index version number) */
+    ViceLock lock;		/* Advisory lock */
+    Date serverModifyTime;	/* Used only by the server; for incremental
+				 * backup purposes */
+    afs_int32 group;		/* unix group */
+    afs_int32 vn_ino_hi;	/* high part of 64 bit inode. */
+    bit32 reserved6;
     /* Missing:
-       archiving/migration
-       encryption key
+     * archiving/migration
+     * encryption key
      */
 } VnodeDiskObject;
 
@@ -117,36 +116,36 @@ typedef struct VnodeDiskObject {
 #define SIZEOF_LARGEDISKVNODE	256
 
 typedef struct Vnode {
-    struct	Vnode *hashNext;/* Next vnode on hash conflict chain */
-    struct	Vnode *lruNext;	/* Less recently used vnode than this one */
-    struct	Vnode *lruPrev;	/* More recently used vnode than this one */
-				/* The lruNext, lruPrev fields are not
-				   meaningful if the vnode is in use */
-    bit16	hashIndex;	/* Hash table index */
+    struct Vnode *hashNext;	/* Next vnode on hash conflict chain */
+    struct Vnode *lruNext;	/* Less recently used vnode than this one */
+    struct Vnode *lruPrev;	/* More recently used vnode than this one */
+    /* The lruNext, lruPrev fields are not
+     * meaningful if the vnode is in use */
+    bit16 hashIndex;		/* Hash table index */
 #ifdef	AFS_AIX_ENV
-    unsigned	changed_newTime:1;	/* 1 if vnode changed, write time */
-    unsigned	changed_oldTime:1; /* 1 changed, don't update time. */
-    unsigned	delete:1;	/* 1 if the vnode should be deleted; in
-    				   this case, changed must also be 1 */
+    unsigned changed_newTime:1;	/* 1 if vnode changed, write time */
+    unsigned changed_oldTime:1;	/* 1 changed, don't update time. */
+    unsigned delete:1;		/* 1 if the vnode should be deleted; in
+				 * this case, changed must also be 1 */
 #else
-    byte	changed_newTime:1;	/* 1 if vnode changed, write time */
-    byte	changed_oldTime:1; /* 1 changed, don't update time. */
-    byte	delete:1;	/* 1 if the vnode should be deleted; in
-    				   this case, changed must also be 1 */
+    byte changed_newTime:1;	/* 1 if vnode changed, write time */
+    byte changed_oldTime:1;	/* 1 changed, don't update time. */
+    byte delete:1;		/* 1 if the vnode should be deleted; in
+				 * this case, changed must also be 1 */
 #endif
-    VnodeId	vnodeNumber;
+    VnodeId vnodeNumber;
     struct Volume
-    		*volumePtr;	/* Pointer to the volume containing this file*/
-    byte	nUsers;		/* Number of lwp's who have done a VGetVnode */
-    bit32	cacheCheck;	/* Must equal the value in the volume Header
-    				   for the cache entry to be valid */
-    struct	Lock lock;	/* Internal lock */
+     *volumePtr;		/* Pointer to the volume containing this file */
+    byte nUsers;		/* Number of lwp's who have done a VGetVnode */
+    bit32 cacheCheck;		/* Must equal the value in the volume Header
+				 * for the cache entry to be valid */
+    struct Lock lock;		/* Internal lock */
 #ifdef AFS_PTHREAD_ENV
-    pthread_t	writer;		/* thread holding write lock */
-#else /* AFS_PTHREAD_ENV */
-    PROCESS	writer;		/* Process id having write lock */
-#endif /* AFS_PTHREAD_ENV */
-    IHandle_t	*handle;
+    pthread_t writer;		/* thread holding write lock */
+#else				/* AFS_PTHREAD_ENV */
+    PROCESS writer;		/* Process id having write lock */
+#endif				/* AFS_PTHREAD_ENV */
+    IHandle_t *handle;
     VnodeDiskObject disk;	/* The actual disk data for the vnode */
 } Vnode;
 

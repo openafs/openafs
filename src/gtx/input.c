@@ -11,7 +11,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef AFS_HPUX_ENV
 #include <sys/types.h>
@@ -29,12 +30,13 @@ RCSID("$Header$");
 
 /* process input */
 gtx_InputServer(awin)
-register struct gwin *awin; {
+     register struct gwin *awin;
+{
     register int tc;
     register int code;
     register struct gtx_frame *tframe;
 
-    WOP_DISPLAY(awin);	/* start off with a clean display */
+    WOP_DISPLAY(awin);		/* start off with a clean display */
     while (1) {
 	/* get a character from the generic window */
 	tframe = awin->w_frame;
@@ -45,7 +47,8 @@ register struct gwin *awin; {
 	}
 	tc = WOP_GETCHAR(awin);
 	tframe->flags &= ~GTXFRAME_NEWDISPLAY;	/* OK to clear now */
-	if (tc < 0) break;	/* EOF or some such */
+	if (tc < 0)
+	    break;		/* EOF or some such */
 	/* otherwise, process the character and go get a new one */
 	gtxframe_ClearMessageLine(tframe);
 	tframe->flags &= ~(GTXFRAME_RECURSIVEEND | GTXFRAME_RECURSIVEERR);
@@ -60,22 +63,24 @@ register struct gwin *awin; {
     }
 }
 
-struct gwin *gtx_Init(astartInput, atype)
-int atype;					/* type of window to create */
-int astartInput; {
+struct gwin *
+gtx_Init(astartInput, atype)
+     int atype;			/* type of window to create */
+     int astartInput;
+{
     PROCESS junk;
-    struct onode_initparams oi_params;          /* object init params*/
-    struct gwin_initparams wi_params;		/* window initialization params*/
+    struct onode_initparams oi_params;	/* object init params */
+    struct gwin_initparams wi_params;	/* window initialization params */
     register struct gwin *twin;
     register int code;
 
     /* setup the main window structure */
-    wi_params.i_type   = GATOR_WIN_CURSES;
-    wi_params.i_x      =   0;
-    wi_params.i_y      =   0;
-    wi_params.i_width  =  80;
+    wi_params.i_type = GATOR_WIN_CURSES;
+    wi_params.i_x = 0;
+    wi_params.i_y = 0;
+    wi_params.i_width = 80;
     wi_params.i_height = 200;
-    wi_params.i_debug  = 0;	/* or 1 if we want debugging done */
+    wi_params.i_debug = 0;	/* or 1 if we want debugging done */
 
     /*
      * Set up the basic onode initialization parameters, throwing in
@@ -85,13 +90,15 @@ int astartInput; {
     oi_params.i_gwparams = &wi_params;
 
     code = gator_objects_init(&oi_params);
-    if (code) return NULL;
-    
+    if (code)
+	return NULL;
+
     /* if we start input thread */
-    IOMGR_Initialize();	/* input thread uses it */
+    IOMGR_Initialize();		/* input thread uses it */
     if (astartInput)
-	code = LWP_CreateProcess(gtx_InputServer, 8192, LWP_NORMAL_PRIORITY,
-				 (void *) 0, "gx-listener", &junk);
+	code =
+	    LWP_CreateProcess(gtx_InputServer, 8192, LWP_NORMAL_PRIORITY,
+			      (void *)0, "gx-listener", &junk);
     /* all done */
     twin = &gator_basegwin;
     return twin;

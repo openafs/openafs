@@ -16,19 +16,20 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
-#include "afs/sysincludes.h" /*Standard vendor system headers*/
-#include "afsincludes.h" /*AFS-based standard headers*/
-#include "afs/afs_stats.h"	/*Cache Manager stats*/
+#include "afs/sysincludes.h"	/*Standard vendor system headers */
+#include "afsincludes.h"	/*AFS-based standard headers */
+#include "afs/afs_stats.h"	/*Cache Manager stats */
 #include "afs/afs_args.h"
 
-afs_int32 afs_allCBs	= 0;		/*Break callbacks on all objects */
-afs_int32 afs_oddCBs	= 0;		/*Break callbacks on dirs*/
-afs_int32 afs_evenCBs = 0;		/*Break callbacks received on files*/
-afs_int32 afs_allZaps = 0;		/*Objects entries deleted */
-afs_int32 afs_oddZaps = 0;		/*Dir cache entries deleted*/
-afs_int32 afs_evenZaps = 0;		/*File cache entries deleted*/
+afs_int32 afs_allCBs = 0;	/*Break callbacks on all objects */
+afs_int32 afs_oddCBs = 0;	/*Break callbacks on dirs */
+afs_int32 afs_evenCBs = 0;	/*Break callbacks received on files */
+afs_int32 afs_allZaps = 0;	/*Objects entries deleted */
+afs_int32 afs_oddZaps = 0;	/*Dir cache entries deleted */
+afs_int32 afs_evenZaps = 0;	/*File cache entries deleted */
 afs_int32 afs_connectBacks = 0;
 
 /*
@@ -37,29 +38,32 @@ afs_int32 afs_connectBacks = 0;
 static struct ltable {
     char *name;
     char *addr;
-} ltable []= {
-    {"afs_xvcache", (char *)&afs_xvcache},
-    {"afs_xdcache", (char *)&afs_xdcache},
-    {"afs_xserver", (char *)&afs_xserver},
-    {"afs_xvcb",    (char *)&afs_xvcb},
-    {"afs_xbrs",    (char *)&afs_xbrs},
-    {"afs_xcell",   (char *)&afs_xcell},
-    {"afs_xconn",   (char *)&afs_xconn},
-    {"afs_xuser",   (char *)&afs_xuser},
-    {"afs_xvolume", (char *)&afs_xvolume},
-    {"puttofile",   (char *)&afs_puttofileLock},
-    {"afs_ftf",     (char *)&afs_ftf},
-    {"afs_xcbhash", (char *)&afs_xcbhash},
-    {"afs_xaxs",    (char *)&afs_xaxs},
-    {"afs_xinterface", (char *)&afs_xinterface},
+} ltable[] = {
+    {
+    "afs_xvcache", (char *)&afs_xvcache}, {
+    "afs_xdcache", (char *)&afs_xdcache}, {
+    "afs_xserver", (char *)&afs_xserver}, {
+    "afs_xvcb", (char *)&afs_xvcb}, {
+    "afs_xbrs", (char *)&afs_xbrs}, {
+    "afs_xcell", (char *)&afs_xcell}, {
+    "afs_xconn", (char *)&afs_xconn}, {
+    "afs_xuser", (char *)&afs_xuser}, {
+    "afs_xvolume", (char *)&afs_xvolume}, {
+    "puttofile", (char *)&afs_puttofileLock}, {
+    "afs_ftf", (char *)&afs_ftf}, {
+    "afs_xcbhash", (char *)&afs_xcbhash}, {
+    "afs_xaxs", (char *)&afs_xaxs}, {
+    "afs_xinterface", (char *)&afs_xinterface},
 #ifndef UKERNEL
-    {"afs_xosi",    (char *)&afs_xosi},
+    {
+    "afs_xosi", (char *)&afs_xosi},
 #endif
-    {"afs_xsrvAddr",(char *)&afs_xsrvAddr}
+    {
+    "afs_xsrvAddr", (char *)&afs_xsrvAddr}
 };
-unsigned long  lastCallBack_vnode;
-unsigned int   lastCallBack_dv;
-osi_timeval_t  lastCallBack_time;
+unsigned long lastCallBack_vnode;
+unsigned int lastCallBack_dv;
+osi_timeval_t lastCallBack_time;
 
 /* these are for storing alternate interface addresses */
 struct interfaceAddr afs_cb_interface;
@@ -87,12 +91,14 @@ struct interfaceAddr afs_cb_interface;
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index, struct AFSDBCacheEntry *a_result)
+int
+SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index,
+	       struct AFSDBCacheEntry *a_result)
 {
 
-    register int i;			/*Loop variable*/
-    register struct vcache *tvc;	/*Ptr to current cache entry*/
-    int code;				/*Return code*/
+    register int i;		/*Loop variable */
+    register struct vcache *tvc;	/*Ptr to current cache entry */
+    int code;			/*Return code */
     XSTATS_DECLS;
 
     RX_AFS_GLOCK();
@@ -105,12 +111,12 @@ int SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index, struct AFSDBCacheE
 	    if (a_index == 0)
 		goto searchDone;
 	    a_index--;
-	} /*Zip through current hash chain*/
-    } /*Zip through hash chains*/
+	}			/*Zip through current hash chain */
+    }				/*Zip through hash chains */
 
   searchDone:
     if (tvc == NULL) {
-	/*Past EOF*/
+	/*Past EOF */
 	code = 1;
 	goto fcnDone;
     }
@@ -143,7 +149,7 @@ int SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index, struct AFSDBCacheE
     a_result->Length = tvc->m.Length;
 #endif /* AFS_64BIT_CLIENT */
     a_result->DataVersion = hgetlo(tvc->m.DataVersion);
-    a_result->callback = afs_data_pointer_to_int32(tvc->callback);		/* XXXX Now a pointer; change it XXXX */
+    a_result->callback = afs_data_pointer_to_int32(tvc->callback);	/* XXXX Now a pointer; change it XXXX */
     a_result->cbExpires = tvc->cbExpires;
     a_result->refCount = VREFCOUNT(tvc);
     a_result->opens = tvc->opens;
@@ -155,20 +161,22 @@ int SRXAFSCB_GetCE(struct rx_call *a_call, afs_int32 a_index, struct AFSDBCacheE
     /*
      * Return our results.
      */
-fcnDone:
+  fcnDone:
     XSTATS_END_TIME;
 
     RX_AFS_GUNLOCK();
 
-    return(code);
+    return (code);
 
-} /*SRXAFSCB_GetCE*/
+}				/*SRXAFSCB_GetCE */
 
-int SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index, struct AFSDBCacheEntry64 *a_result)
+int
+SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index,
+		 struct AFSDBCacheEntry64 *a_result)
 {
-    register int i;			/*Loop variable*/
-    register struct vcache *tvc;	/*Ptr to current cache entry*/
-    int code;				/*Return code*/
+    register int i;		/*Loop variable */
+    register struct vcache *tvc;	/*Ptr to current cache entry */
+    int code;			/*Return code */
     XSTATS_DECLS;
 
     RX_AFS_GLOCK();
@@ -181,12 +189,12 @@ int SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index, struct AFSDBCach
 	    if (a_index == 0)
 		goto searchDone;
 	    a_index--;
-	} /*Zip through current hash chain*/
-    } /*Zip through hash chains*/
+	}			/*Zip through current hash chain */
+    }				/*Zip through hash chains */
 
   searchDone:
     if (tvc == NULL) {
-	/*Past EOF*/
+	/*Past EOF */
 	code = 1;
 	goto fcnDone;
     }
@@ -224,7 +232,7 @@ int SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index, struct AFSDBCach
 #endif /* AFS_64BIT_CLIENT */
 #endif /* AFS_64BIT_ENV */
     a_result->DataVersion = hgetlo(tvc->m.DataVersion);
-    a_result->callback = afs_data_pointer_to_int32(tvc->callback);		/* XXXX Now a pointer; change it XXXX */
+    a_result->callback = afs_data_pointer_to_int32(tvc->callback);	/* XXXX Now a pointer; change it XXXX */
     a_result->cbExpires = tvc->cbExpires;
     a_result->refCount = VREFCOUNT(tvc);
     a_result->opens = tvc->opens;
@@ -236,14 +244,14 @@ int SRXAFSCB_GetCE64(struct rx_call *a_call, afs_int32 a_index, struct AFSDBCach
     /*
      * Return our results.
      */
-fcnDone:
+  fcnDone:
     XSTATS_END_TIME;
 
     RX_AFS_GUNLOCK();
 
-    return(code);
+    return (code);
 
-} /*SRXAFSCB_GetCE64*/
+}				/*SRXAFSCB_GetCE64 */
 
 
 /*------------------------------------------------------------------------
@@ -270,39 +278,47 @@ fcnDone:
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_GetLock (struct rx_call *a_call, afs_int32 a_index, struct AFSDBLock *a_result)
+int
+SRXAFSCB_GetLock(struct rx_call *a_call, afs_int32 a_index,
+		 struct AFSDBLock *a_result)
 {
-    struct ltable *tl;		/*Ptr to lock table entry*/
-    int nentries;		/*Num entries in table*/
-    int code;			/*Return code*/
+    struct ltable *tl;		/*Ptr to lock table entry */
+    int nentries;		/*Num entries in table */
+    int code;			/*Return code */
     XSTATS_DECLS;
 
     RX_AFS_GLOCK();
 
     XSTATS_START_CMTIME(AFS_STATS_CM_RPCIDX_GETLOCK);
-    
+
     AFS_STATCNT(SRXAFSCB_GetLock);
-    nentries = sizeof(ltable)/sizeof(struct ltable);
+    nentries = sizeof(ltable) / sizeof(struct ltable);
     if (a_index < 0 || a_index >= nentries) {
 	/*
-	  * Past EOF
-	  */
+	 * Past EOF
+	 */
 	code = 1;
-    }
-    else {
+    } else {
 	/*
 	 * Found it - copy out its contents.
 	 */
 	tl = &ltable[a_index];
 	strcpy(a_result->name, tl->name);
-	a_result->lock.waitStates = ((struct afs_lock *)(tl->addr))->wait_states;
-	a_result->lock.exclLocked = ((struct afs_lock *)(tl->addr))->excl_locked;
-	a_result->lock.readersReading = ((struct afs_lock *)(tl->addr))->readers_reading;
-	a_result->lock.numWaiting = ((struct afs_lock *)(tl->addr))->num_waiting;
+	a_result->lock.waitStates =
+	    ((struct afs_lock *)(tl->addr))->wait_states;
+	a_result->lock.exclLocked =
+	    ((struct afs_lock *)(tl->addr))->excl_locked;
+	a_result->lock.readersReading =
+	    ((struct afs_lock *)(tl->addr))->readers_reading;
+	a_result->lock.numWaiting =
+	    ((struct afs_lock *)(tl->addr))->num_waiting;
 #ifdef INSTRUMENT_LOCKS
-	a_result->lock.pid_last_reader = ((struct afs_lock *)(tl->addr))->pid_last_reader;
-	a_result->lock.pid_writer = ((struct afs_lock *)(tl->addr))->pid_writer;
-	a_result->lock.src_indicator = ((struct afs_lock *)(tl->addr))->src_indicator;
+	a_result->lock.pid_last_reader =
+	    ((struct afs_lock *)(tl->addr))->pid_last_reader;
+	a_result->lock.pid_writer =
+	    ((struct afs_lock *)(tl->addr))->pid_writer;
+	a_result->lock.src_indicator =
+	    ((struct afs_lock *)(tl->addr))->src_indicator;
 #else
 	a_result->lock.pid_last_reader = 0;
 	a_result->lock.pid_writer = 0;
@@ -315,9 +331,9 @@ int SRXAFSCB_GetLock (struct rx_call *a_call, afs_int32 a_index, struct AFSDBLoc
 
     RX_AFS_GUNLOCK();
 
-    return(code);
+    return (code);
 
-}  /*SRXAFSCB_GetLock*/
+}				/*SRXAFSCB_GetLock */
 
 
 /*------------------------------------------------------------------------
@@ -346,12 +362,14 @@ Appears to need to be called with GLOCK held, as the icl_Event4 stuff asserts ot
 
  *------------------------------------------------------------------------*/
 
-static int ClearCallBack(register struct rx_connection *a_conn, register struct AFSFid *a_fid)
+static int
+ClearCallBack(register struct rx_connection *a_conn,
+	      register struct AFSFid *a_fid)
 {
     register struct vcache *tvc;
     register int i;
     struct VenusFid localFid;
-    struct volume * tv;
+    struct volume *tv;
 
     AFS_STATCNT(ClearCallBack);
 
@@ -366,8 +384,8 @@ static int ClearCallBack(register struct rx_connection *a_conn, register struct 
     localFid.Fid.Unique = a_fid->Unique;
 
     /*
-      * Volume ID of zero means don't do anything.
-      */
+     * Volume ID of zero means don't do anything.
+     */
     if (a_fid->Volume != 0) {
 	if (a_fid->Vnode == 0) {
 	    /*
@@ -378,26 +396,27 @@ static int ClearCallBack(register struct rx_connection *a_conn, register struct 
 		for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 		    if (tvc->fid.Fid.Volume == a_fid->Volume) {
 			tvc->callback = NULL;
-			tvc->quick.stamp = 0; 
+			tvc->quick.stamp = 0;
 			if (!localFid.Cell)
 			    localFid.Cell = tvc->fid.Cell;
-			tvc->h1.dchint = NULL; /* invalidate hints */
+			tvc->h1.dchint = NULL;	/* invalidate hints */
 			ObtainWriteLock(&afs_xcbhash, 449);
 			afs_DequeueCallback(tvc);
 			tvc->states &= ~(CStatd | CUnique | CBulkFetching);
 			afs_allCBs++;
 			if (tvc->fid.Fid.Vnode & 1)
-			  afs_oddCBs++;	
+			    afs_oddCBs++;
 			else
-			  afs_evenCBs++; 
+			    afs_evenCBs++;
 			ReleaseWriteLock(&afs_xcbhash);
 			if (tvc->fid.Fid.Vnode & 1 || (vType(tvc) == VDIR))
 			    osi_dnlc_purgedp(tvc);
 			afs_Trace3(afs_iclSetp, CM_TRACE_CALLBACK,
-				   ICL_TYPE_POINTER, tvc, 
-				   ICL_TYPE_INT32, tvc->states,
-				   ICL_TYPE_INT32, a_fid->Volume);
-		    } else if ((tvc->states & CMValid) && (tvc->mvid->Fid.Volume == a_fid->Volume)) {
+				   ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32,
+				   tvc->states, ICL_TYPE_INT32,
+				   a_fid->Volume);
+		    } else if ((tvc->states & CMValid)
+			       && (tvc->mvid->Fid.Volume == a_fid->Volume)) {
 			tvc->states &= ~CMValid;
 			if (!localFid.Cell)
 			    localFid.Cell = tvc->mvid->Cell;
@@ -409,28 +428,28 @@ static int ClearCallBack(register struct rx_connection *a_conn, register struct 
 	     */
 	    tv = afs_FindVolume(&localFid, 0);
 	    if (tv) {
-	      afs_ResetVolumeInfo(tv);
-	      afs_PutVolume(tv, 0);
-	      /* invalidate mtpoint? */
+		afs_ResetVolumeInfo(tv);
+		afs_PutVolume(tv, 0);
+		/* invalidate mtpoint? */
 	    }
-	} /*Clear callbacks for whole volume*/
+	} /*Clear callbacks for whole volume */
 	else {
 	    /*
 	     * Clear callbacks just for the one file.
 	     */
 	    afs_allCBs++;
 	    if (a_fid->Vnode & 1)
-		afs_oddCBs++;	/*Could do this on volume basis, too*/
+		afs_oddCBs++;	/*Could do this on volume basis, too */
 	    else
-		afs_evenCBs++; /*A particular fid was specified*/
+		afs_evenCBs++;	/*A particular fid was specified */
 	    i = VCHash(&localFid);
 	    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 		if (tvc->fid.Fid.Vnode == a_fid->Vnode
 		    && tvc->fid.Fid.Volume == a_fid->Volume
-		    && tvc->fid.Fid.Unique == a_fid->Unique ) {
+		    && tvc->fid.Fid.Unique == a_fid->Unique) {
 		    tvc->callback = NULL;
-		    tvc->quick.stamp = 0; 
-		    tvc->h1.dchint = NULL; /* invalidate hints */
+		    tvc->quick.stamp = 0;
+		    tvc->h1.dchint = NULL;	/* invalidate hints */
 		    ObtainWriteLock(&afs_xcbhash, 450);
 		    afs_DequeueCallback(tvc);
 		    tvc->states &= ~(CStatd | CUnique | CBulkFetching);
@@ -438,24 +457,25 @@ static int ClearCallBack(register struct rx_connection *a_conn, register struct 
 		    if (a_fid->Vnode & 1 || (vType(tvc) == VDIR))
 			osi_dnlc_purgedp(tvc);
 		    afs_Trace3(afs_iclSetp, CM_TRACE_CALLBACK,
-			       ICL_TYPE_POINTER, tvc, 
-			       ICL_TYPE_INT32, tvc->states, ICL_TYPE_LONG, 0);
+			       ICL_TYPE_POINTER, tvc, ICL_TYPE_INT32,
+			       tvc->states, ICL_TYPE_LONG, 0);
 #ifdef CBDEBUG
 		    lastCallBack_vnode = afid->Vnode;
 		    lastCallBack_dv = tvc->mstat.DataVersion.low;
 		    osi_GetuTime(&lastCallBack_time);
 #endif /* CBDEBUG */
 		}
-	    } /*Walk through hash table*/
-	} /*Clear callbacks for one file*/
-    } /*Fid has non-zero volume ID*/
+	    }			/*Walk through hash table */
+	}			/*Clear callbacks for one file */
+    }
 
+    /*Fid has non-zero volume ID */
     /*
      * Always return a predictable value.
      */
-    return(0);
+    return (0);
 
-} /*ClearCallBack*/
+}				/*ClearCallBack */
 
 
 /*------------------------------------------------------------------------
@@ -481,12 +501,14 @@ static int ClearCallBack(register struct rx_connection *a_conn, register struct 
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_CallBack(struct rx_call *a_call, register struct AFSCBFids *a_fids, struct AFSCBs *a_callbacks)
+int
+SRXAFSCB_CallBack(struct rx_call *a_call, register struct AFSCBFids *a_fids,
+		  struct AFSCBs *a_callbacks)
 {
-    register int i;			    /*Loop variable*/
-    struct AFSFid *tfid;		    /*Ptr to current fid*/
-    register struct rx_connection *tconn;   /*Call's connection*/
-    int code=0;
+    register int i;		/*Loop variable */
+    struct AFSFid *tfid;	/*Ptr to current fid */
+    register struct rx_connection *tconn;	/*Call's connection */
+    int code = 0;
     XSTATS_DECLS;
 
     RX_AFS_GLOCK();
@@ -494,23 +516,24 @@ int SRXAFSCB_CallBack(struct rx_call *a_call, register struct AFSCBFids *a_fids,
     XSTATS_START_CMTIME(AFS_STATS_CM_RPCIDX_CALLBACK);
 
     AFS_STATCNT(SRXAFSCB_CallBack);
-    if (!(tconn = rx_ConnectionOf(a_call))) return(0);
-    tfid = (struct AFSFid *) a_fids->AFSCBFids_val;
-    
+    if (!(tconn = rx_ConnectionOf(a_call)))
+	return (0);
+    tfid = (struct AFSFid *)a_fids->AFSCBFids_val;
+
     /*
      * For now, we ignore callbacks, since the File Server only *breaks*
      * callbacks at present.
      */
-    for (i = 0; i < a_fids->AFSCBFids_len; i++) 
+    for (i = 0; i < a_fids->AFSCBFids_len; i++)
 	ClearCallBack(tconn, &tfid[i]);
 
     XSTATS_END_TIME;
 
     RX_AFS_GUNLOCK();
-    
-    return(0);
 
-} /*SRXAFSCB_CallBack*/
+    return (0);
+
+}				/*SRXAFSCB_CallBack */
 
 
 /*------------------------------------------------------------------------
@@ -534,7 +557,8 @@ int SRXAFSCB_CallBack(struct rx_call *a_call, register struct AFSCBFids *a_fids,
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_Probe(struct rx_call *a_call)
+int
+SRXAFSCB_Probe(struct rx_call *a_call)
 {
     int code = 0;
     XSTATS_DECLS;
@@ -547,9 +571,9 @@ int SRXAFSCB_Probe(struct rx_call *a_call)
 
     RX_AFS_GUNLOCK();
 
-    return(0);
+    return (0);
 
-} /*SRXAFSCB_Probe*/
+}				/*SRXAFSCB_Probe */
 
 
 /*------------------------------------------------------------------------
@@ -572,7 +596,8 @@ int SRXAFSCB_Probe(struct rx_call *a_call)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_InitCallBackState(struct rx_call *a_call)
+int
+SRXAFSCB_InitCallBackState(struct rx_call *a_call)
 {
     register int i;
     register struct vcache *tvc;
@@ -593,10 +618,11 @@ int SRXAFSCB_InitCallBackState(struct rx_call *a_call)
     if ((tconn = rx_ConnectionOf(a_call)) && (peer = rx_PeerOf(tconn))) {
 
 	afs_allCBs++;
-	afs_oddCBs++;	/*Including any missed via create race*/
-	afs_evenCBs++;	/*Including any missed via create race*/
+	afs_oddCBs++;		/*Including any missed via create race */
+	afs_evenCBs++;		/*Including any missed via create race */
 
-	ts = afs_FindServer(rx_HostOf(peer), rx_PortOf(peer), (afsUUID *)0, 0);
+	ts = afs_FindServer(rx_HostOf(peer), rx_PortOf(peer), (afsUUID *) 0,
+			    0);
 	if (ts) {
 	    for (i = 0; i < VCSIZE; i++)
 		for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
@@ -610,30 +636,30 @@ int SRXAFSCB_InitCallBackState(struct rx_call *a_call)
 		}
 	}
 
-      
- 
+
+
 	/* find any volumes residing on this server and flush their state */
 	{
 	    register struct volume *tv;
 	    register int j;
-        
-	    for (i=0;i<NVOLS;i++) 
-		for (tv = afs_volumes[i]; tv; tv=tv->next) {
-		    for (j=0; j<MAXHOSTS; j++)
+
+	    for (i = 0; i < NVOLS; i++)
+		for (tv = afs_volumes[i]; tv; tv = tv->next) {
+		    for (j = 0; j < MAXHOSTS; j++)
 			if (tv->serverHost[j] == ts)
 			    afs_ResetVolumeInfo(tv);
 		}
 	}
-	osi_dnlc_purge(); /* may be a little bit extreme */
+	osi_dnlc_purge();	/* may be a little bit extreme */
     }
 
     XSTATS_END_TIME;
 
     RX_AFS_GUNLOCK();
 
-    return(0);
+    return (0);
 
-} /*SRXAFSCB_InitCallBackState*/
+}				/*SRXAFSCB_InitCallBackState */
 
 
 /*------------------------------------------------------------------------
@@ -657,9 +683,10 @@ int SRXAFSCB_InitCallBackState(struct rx_call *a_call)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_XStatsVersion(struct rx_call *a_call, afs_int32 *a_versionP)
+int
+SRXAFSCB_XStatsVersion(struct rx_call *a_call, afs_int32 * a_versionP)
 {
-   int code=0;
+    int code = 0;
 
     XSTATS_DECLS;
 
@@ -672,8 +699,8 @@ int SRXAFSCB_XStatsVersion(struct rx_call *a_call, afs_int32 *a_versionP)
 
     RX_AFS_GUNLOCK();
 
-    return(0);
-}  /*SRXAFSCB_XStatsVersion*/
+    return (0);
+}				/*SRXAFSCB_XStatsVersion */
 
 
 /*------------------------------------------------------------------------
@@ -703,13 +730,14 @@ int SRXAFSCB_XStatsVersion(struct rx_call *a_call, afs_int32 *a_versionP)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum, 
-	afs_int32 a_collectionNumber, afs_int32 *a_srvVersionNumP, 
-	afs_int32 *a_timeP, AFSCB_CollData *a_dataP)
+int
+SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
+		   afs_int32 a_collectionNumber, afs_int32 * a_srvVersionNumP,
+		   afs_int32 * a_timeP, AFSCB_CollData * a_dataP)
 {
-    register int code;		/*Return value*/
-    afs_int32 *dataBuffP;		/*Ptr to data to be returned*/
-    afs_int32 dataBytes;		/*Bytes in data buffer*/
+    register int code;		/*Return value */
+    afs_int32 *dataBuffP;	/*Ptr to data to be returned */
+    afs_int32 dataBytes;	/*Bytes in data buffer */
     XSTATS_DECLS;
 
     RX_AFS_GLOCK();
@@ -735,8 +763,8 @@ int SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
     a_dataP->AFSCB_CollData_len = 0;
     a_dataP->AFSCB_CollData_val = NULL;
 #else
-    switch(a_collectionNumber) {
-      case AFSCB_XSTATSCOLL_CALL_INFO:
+    switch (a_collectionNumber) {
+    case AFSCB_XSTATSCOLL_CALL_INFO:
 	/*
 	 * Pass back all the call-count-related data.
 	 *
@@ -745,13 +773,13 @@ int SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	 * >>> will be freed at the tail end of the server stub code.
 	 */
 	dataBytes = sizeof(struct afs_CMStats);
-	dataBuffP = (afs_int32 *)afs_osi_Alloc(dataBytes);
+	dataBuffP = (afs_int32 *) afs_osi_Alloc(dataBytes);
 	memcpy((char *)dataBuffP, (char *)&afs_cmstats, dataBytes);
-	a_dataP->AFSCB_CollData_len = dataBytes>>2;
+	a_dataP->AFSCB_CollData_len = dataBytes >> 2;
 	a_dataP->AFSCB_CollData_val = dataBuffP;
 	break;
 
-      case AFSCB_XSTATSCOLL_PERF_INFO:
+    case AFSCB_XSTATSCOLL_PERF_INFO:
 	/*
 	 * Update and then pass back all the performance-related data.
 	 * Note: the only performance fields that need to be computed
@@ -765,13 +793,13 @@ int SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	afs_stats_cmperf.numPerfCalls++;
 	afs_CountServers();
 	dataBytes = sizeof(afs_stats_cmperf);
-	dataBuffP = (afs_int32 *)afs_osi_Alloc(dataBytes);
+	dataBuffP = (afs_int32 *) afs_osi_Alloc(dataBytes);
 	memcpy((char *)dataBuffP, (char *)&afs_stats_cmperf, dataBytes);
-	a_dataP->AFSCB_CollData_len = dataBytes>>2;
+	a_dataP->AFSCB_CollData_len = dataBytes >> 2;
 	a_dataP->AFSCB_CollData_val = dataBuffP;
 	break;
 
-      case AFSCB_XSTATSCOLL_FULL_PERF_INFO:
+    case AFSCB_XSTATSCOLL_FULL_PERF_INFO:
 	/*
 	 * Pass back the full range of performance and statistical
 	 * data available.  We have to bring the normal performance
@@ -784,33 +812,34 @@ int SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
 	 */
 	afs_stats_cmperf.numPerfCalls++;
 	afs_CountServers();
-	memcpy((char *)(&(afs_stats_cmfullperf.perf)), (char *)(&afs_stats_cmperf), sizeof(struct afs_stats_CMPerf));
+	memcpy((char *)(&(afs_stats_cmfullperf.perf)),
+	       (char *)(&afs_stats_cmperf), sizeof(struct afs_stats_CMPerf));
 	afs_stats_cmfullperf.numFullPerfCalls++;
 
 	dataBytes = sizeof(afs_stats_cmfullperf);
-	dataBuffP = (afs_int32 *)afs_osi_Alloc(dataBytes);
+	dataBuffP = (afs_int32 *) afs_osi_Alloc(dataBytes);
 	memcpy((char *)dataBuffP, (char *)(&afs_stats_cmfullperf), dataBytes);
-	a_dataP->AFSCB_CollData_len = dataBytes>>2;
+	a_dataP->AFSCB_CollData_len = dataBytes >> 2;
 	a_dataP->AFSCB_CollData_val = dataBuffP;
 	break;
 
-      default:
+    default:
 	/*
 	 * Illegal collection number.
 	 */
 	a_dataP->AFSCB_CollData_len = 0;
 	a_dataP->AFSCB_CollData_val = NULL;
 	code = 1;
-    } /*Switch on collection number*/
+    }				/*Switch on collection number */
 #endif /* AFS_NOSTATS */
 
     XSTATS_END_TIME;
 
     RX_AFS_GUNLOCK();
 
-    return(code);
+    return (code);
 
-} /*SRXAFSCB_GetXStats*/
+}				/*SRXAFSCB_GetXStats */
 
 
 /*------------------------------------------------------------------------
@@ -832,7 +861,8 @@ int SRXAFSCB_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int afs_RXCallBackServer(void)
+int
+afs_RXCallBackServer(void)
 {
     AFS_STATCNT(afs_RXCallBackServer);
 
@@ -846,9 +876,9 @@ int afs_RXCallBackServer(void)
      * Donate this process to Rx.
      */
     rx_ServerProc();
-    return(0);
+    return (0);
 
-} /*afs_RXCallBackServer*/
+}				/*afs_RXCallBackServer */
 
 
 /*------------------------------------------------------------------------
@@ -870,18 +900,19 @@ int afs_RXCallBackServer(void)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int shutdown_CB(void) 
+int
+shutdown_CB(void)
 {
-  AFS_STATCNT(shutdown_CB);
+    AFS_STATCNT(shutdown_CB);
 
-  if (afs_cold_shutdown) {
-    afs_oddCBs = afs_evenCBs = afs_allCBs = afs_allZaps = afs_oddZaps = afs_evenZaps =
-	afs_connectBacks = 0;
-  }
+    if (afs_cold_shutdown) {
+	afs_oddCBs = afs_evenCBs = afs_allCBs = afs_allZaps = afs_oddZaps =
+	    afs_evenZaps = afs_connectBacks = 0;
+    }
 
-  return(0);
+    return (0);
 
-} /*shutdown_CB*/
+}				/*shutdown_CB */
 
 /*------------------------------------------------------------------------
  * EXPORTED SRXAFSCB_InitCallBackState2
@@ -903,9 +934,11 @@ int shutdown_CB(void)
  *      None
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_InitCallBackState2(struct rx_call *a_call, struct interfaceAddr *addr)
+int
+SRXAFSCB_InitCallBackState2(struct rx_call *a_call,
+			    struct interfaceAddr *addr)
 {
-	return RXGEN_OPCODE;
+    return RXGEN_OPCODE;
 }
 
 /*------------------------------------------------------------------------
@@ -932,7 +965,8 @@ int SRXAFSCB_InitCallBackState2(struct rx_call *a_call, struct interfaceAddr *ad
  *      As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_WhoAreYou(struct rx_call *a_call, struct interfaceAddr *addr)
+int
+SRXAFSCB_WhoAreYou(struct rx_call *a_call, struct interfaceAddr *addr)
 {
     int i;
     int code = 0;
@@ -946,7 +980,7 @@ int SRXAFSCB_WhoAreYou(struct rx_call *a_call, struct interfaceAddr *addr)
     /* return all network interface addresses */
     addr->numberOfInterfaces = afs_cb_interface.numberOfInterfaces;
     addr->uuid = afs_cb_interface.uuid;
-    for ( i=0; i < afs_cb_interface.numberOfInterfaces; i++) {
+    for (i = 0; i < afs_cb_interface.numberOfInterfaces; i++) {
 	addr->addr_in[i] = ntohl(afs_cb_interface.addr_in[i]);
 	addr->subnetmask[i] = ntohl(afs_cb_interface.subnetmask[i]);
 	addr->mtu[i] = ntohl(afs_cb_interface.mtu[i]);
@@ -980,7 +1014,8 @@ int SRXAFSCB_WhoAreYou(struct rx_call *a_call, struct interfaceAddr *addr)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_InitCallBackState3(struct rx_call *a_call, afsUUID *a_uuid)
+int
+SRXAFSCB_InitCallBackState3(struct rx_call *a_call, afsUUID * a_uuid)
 {
     int code;
 
@@ -991,7 +1026,7 @@ int SRXAFSCB_InitCallBackState3(struct rx_call *a_call, afsUUID *a_uuid)
 
     return code;
 }
- 
+
 
 /*------------------------------------------------------------------------
  * EXPORTED SRXAFSCB_ProbeUuid
@@ -1016,7 +1051,8 @@ int SRXAFSCB_InitCallBackState3(struct rx_call *a_call, afsUUID *a_uuid)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_ProbeUuid(struct rx_call *a_call, afsUUID *a_uuid)
+int
+SRXAFSCB_ProbeUuid(struct rx_call *a_call, afsUUID * a_uuid)
 {
     int code = 0;
     XSTATS_DECLS;
@@ -1026,14 +1062,14 @@ int SRXAFSCB_ProbeUuid(struct rx_call *a_call, afsUUID *a_uuid)
 
     XSTATS_START_CMTIME(AFS_STATS_CM_RPCIDX_PROBE);
     if (!afs_uuid_equal(a_uuid, &afs_cb_interface.uuid))
-	code = 1; /* failure */
+	code = 1;		/* failure */
     XSTATS_END_TIME;
 
     RX_AFS_GUNLOCK();
 
     return code;
 }
- 
+
 
 /*------------------------------------------------------------------------
  * EXPORTED SRXAFSCB_GetServerPrefs
@@ -1058,8 +1094,9 @@ int SRXAFSCB_ProbeUuid(struct rx_call *a_call, afsUUID *a_uuid)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_GetServerPrefs(struct rx_call *a_call, afs_int32 a_index,
-	afs_int32 *a_srvr_addr, afs_int32 *a_srvr_rank)
+int
+SRXAFSCB_GetServerPrefs(struct rx_call *a_call, afs_int32 a_index,
+			afs_int32 * a_srvr_addr, afs_int32 * a_srvr_rank)
 {
     int i, j;
     struct srvAddr *sa;
@@ -1072,7 +1109,7 @@ int SRXAFSCB_GetServerPrefs(struct rx_call *a_call, afs_int32 a_index,
     /* Search the hash table for the server with this index */
     *a_srvr_addr = 0xffffffff;
     *a_srvr_rank = 0xffffffff;
-    for (i=0, j=0; j < NSERVERS && i <= a_index; j++) {
+    for (i = 0, j = 0; j < NSERVERS && i <= a_index; j++) {
 	for (sa = afs_srvAddrs[j]; sa && i <= a_index; sa = sa->next_bkt, i++) {
 	    if (i == a_index) {
 		*a_srvr_addr = ntohl(sa->sa_ip);
@@ -1087,7 +1124,7 @@ int SRXAFSCB_GetServerPrefs(struct rx_call *a_call, afs_int32 a_index,
 
     return 0;
 }
- 
+
 
 /*------------------------------------------------------------------------
  * EXPORTED SRXAFSCB_GetCellServDB
@@ -1111,8 +1148,9 @@ int SRXAFSCB_GetServerPrefs(struct rx_call *a_call, afs_int32 a_index,
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_GetCellServDB(struct rx_call *a_call, afs_int32 a_index,
-    char **a_name, serverList *a_hosts)
+int
+SRXAFSCB_GetCellServDB(struct rx_call *a_call, afs_int32 a_index,
+		       char **a_name, serverList * a_hosts)
 {
     afs_int32 i, j = 0;
     struct cell *tcell;
@@ -1129,19 +1167,20 @@ int SRXAFSCB_GetCellServDB(struct rx_call *a_call, afs_int32 a_index,
 	a_hosts->serverList_len = 0;
     } else {
 	p_name = tcell->cellName;
-	for (j = 0 ; j < AFSMAXCELLHOSTS && tcell->cellHosts[j] ; j++) 
-	  ;
+	for (j = 0; j < AFSMAXCELLHOSTS && tcell->cellHosts[j]; j++);
 	i = strlen(p_name);
-	a_hosts->serverList_val = (afs_int32 *)afs_osi_Alloc(j*sizeof(afs_int32));
+	a_hosts->serverList_val =
+	    (afs_int32 *) afs_osi_Alloc(j * sizeof(afs_int32));
 	a_hosts->serverList_len = j;
-	for (j = 0 ; j < AFSMAXCELLHOSTS && tcell->cellHosts[j] ; j++) 
-	    a_hosts->serverList_val[j] = ntohl(tcell->cellHosts[j]->addr->sa_ip);
+	for (j = 0; j < AFSMAXCELLHOSTS && tcell->cellHosts[j]; j++)
+	    a_hosts->serverList_val[j] =
+		ntohl(tcell->cellHosts[j]->addr->sa_ip);
 	afs_PutCell(tcell, READ_LOCK);
     }
 
-    t_name = (char *)afs_osi_Alloc(i+1);
+    t_name = (char *)afs_osi_Alloc(i + 1);
     if (t_name == NULL) {
-	afs_osi_Free(a_hosts->serverList_val, (j*sizeof(afs_int32)));
+	afs_osi_Free(a_hosts->serverList_val, (j * sizeof(afs_int32)));
 	RX_AFS_GUNLOCK();
 	return ENOMEM;
     }
@@ -1155,7 +1194,7 @@ int SRXAFSCB_GetCellServDB(struct rx_call *a_call, afs_int32 a_index,
     *a_name = t_name;
     return 0;
 }
- 
+
 
 /*------------------------------------------------------------------------
  * EXPORTED SRXAFSCB_GetLocalCell
@@ -1177,7 +1216,8 @@ int SRXAFSCB_GetCellServDB(struct rx_call *a_call, afs_int32 a_index,
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_GetLocalCell(struct rx_call *a_call, char **a_name)
+int
+SRXAFSCB_GetLocalCell(struct rx_call *a_call, char **a_name)
 {
     int plen;
     struct cell *tcell;
@@ -1196,9 +1236,10 @@ int SRXAFSCB_GetLocalCell(struct rx_call *a_call, char **a_name)
 	plen = strlen(p_name);
     else
 	plen = 0;
-    t_name = (char *)afs_osi_Alloc(plen+1);
+    t_name = (char *)afs_osi_Alloc(plen + 1);
     if (t_name == NULL) {
-	if (tcell) afs_PutCell(tcell, READ_LOCK);
+	if (tcell)
+	    afs_PutCell(tcell, READ_LOCK);
 	RX_AFS_GUNLOCK();
 	return ENOMEM;
     }
@@ -1210,7 +1251,8 @@ int SRXAFSCB_GetLocalCell(struct rx_call *a_call, char **a_name)
     RX_AFS_GUNLOCK();
 
     *a_name = t_name;
-    if (tcell) afs_PutCell(tcell, READ_LOCK);
+    if (tcell)
+	afs_PutCell(tcell, READ_LOCK);
     return 0;
 }
 
@@ -1230,8 +1272,9 @@ int SRXAFSCB_GetLocalCell(struct rx_call *a_call, char **a_name)
  *
  * Returns void.
  */
-static void afs_MarshallCacheConfig(afs_uint32 callerVersion,
-	cm_initparams_v1 *config, afs_uint32 *ptr)
+static void
+afs_MarshallCacheConfig(afs_uint32 callerVersion, cm_initparams_v1 * config,
+			afs_uint32 * ptr)
 {
     AFS_STATCNT(afs_MarshallCacheConfig);
     /*
@@ -1247,7 +1290,7 @@ static void afs_MarshallCacheConfig(afs_uint32 callerVersion,
     *(ptr++) = config->setTime;
     *(ptr++) = config->memCache;
 }
- 
+
 
 /*------------------------------------------------------------------------
  * EXPORTED SRXAFSCB_GetCacheConfig
@@ -1274,8 +1317,10 @@ static void afs_MarshallCacheConfig(afs_uint32 callerVersion,
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_GetCacheConfig(struct rx_call *a_call, afs_uint32 callerVersion,
-	afs_uint32 *serverVersion, afs_uint32 *configCount, cacheConfig *config)
+int
+SRXAFSCB_GetCacheConfig(struct rx_call *a_call, afs_uint32 callerVersion,
+			afs_uint32 * serverVersion, afs_uint32 * configCount,
+			cacheConfig * config)
 {
     afs_uint32 *t_config;
     size_t allocsize;
@@ -1288,7 +1333,7 @@ int SRXAFSCB_GetCacheConfig(struct rx_call *a_call, afs_uint32 callerVersion,
      * Currently only support version 1
      */
     allocsize = sizeof(cm_initparams_v1);
-    t_config = (afs_uint32 *)afs_osi_Alloc(allocsize);
+    t_config = (afs_uint32 *) afs_osi_Alloc(allocsize);
     if (t_config == NULL) {
 	RX_AFS_GUNLOCK();
 	return ENOMEM;
@@ -1309,7 +1354,7 @@ int SRXAFSCB_GetCacheConfig(struct rx_call *a_call, afs_uint32 callerVersion,
     *serverVersion = AFS_CLIENT_RETRIEVAL_FIRST_EDITION;
     *configCount = allocsize;
     config->cacheConfig_val = t_config;
-    config->cacheConfig_len = allocsize/sizeof(afs_uint32);
+    config->cacheConfig_len = allocsize / sizeof(afs_uint32);
 
     RX_AFS_GUNLOCK();
 
@@ -1340,8 +1385,10 @@ int SRXAFSCB_GetCacheConfig(struct rx_call *a_call, afs_uint32 callerVersion,
  *
  * Side Effects:
  *------------------------------------------------------------------------*/
-int SRXAFSCB_FetchData(struct rx_call *rxcall, struct AFSFid *Fid, afs_int32 Fd, 
-	afs_int64 Position, afs_int64 Length, afs_int64 *TotalLength)
+int
+SRXAFSCB_FetchData(struct rx_call *rxcall, struct AFSFid *Fid, afs_int32 Fd,
+		   afs_int64 Position, afs_int64 Length,
+		   afs_int64 * TotalLength)
 {
     return ENOSYS;
 }
@@ -1371,8 +1418,10 @@ int SRXAFSCB_FetchData(struct rx_call *rxcall, struct AFSFid *Fid, afs_int32 Fd,
  * Side Effects:
  *      As advertised.
  *------------------------------------------------------------------------*/
-int SRXAFSCB_StoreData(struct rx_call *rxcall, struct AFSFid *Fid, afs_int32 Fd, 
-	afs_int64 Position, afs_int64 Length, afs_int64 *TotalLength)
+int
+SRXAFSCB_StoreData(struct rx_call *rxcall, struct AFSFid *Fid, afs_int32 Fd,
+		   afs_int64 Position, afs_int64 Length,
+		   afs_int64 * TotalLength)
 {
     return ENOSYS;
 }
@@ -1400,8 +1449,9 @@ int SRXAFSCB_StoreData(struct rx_call *rxcall, struct AFSFid *Fid, afs_int32 Fd,
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int SRXAFSCB_GetCellByNum(struct rx_call *a_call, afs_int32 a_cellnum,
-    char **a_name, serverList *a_hosts)
+int
+SRXAFSCB_GetCellByNum(struct rx_call *a_call, afs_int32 a_cellnum,
+		      char **a_name, serverList * a_hosts)
 {
     afs_int32 i, sn;
     struct cell *tcell;
@@ -1422,10 +1472,10 @@ int SRXAFSCB_GetCellByNum(struct rx_call *a_call, afs_int32 a_cellnum,
     ObtainReadLock(&tcell->lock);
     *a_name = afs_strdup(tcell->cellName);
 
-    for (sn = 0; sn < AFSMAXCELLHOSTS && tcell->cellHosts[sn]; sn++) 
-	;
+    for (sn = 0; sn < AFSMAXCELLHOSTS && tcell->cellHosts[sn]; sn++);
     a_hosts->serverList_len = sn;
-    a_hosts->serverList_val = (afs_int32 *) afs_osi_Alloc(sn*sizeof(afs_int32));
+    a_hosts->serverList_val =
+	(afs_int32 *) afs_osi_Alloc(sn * sizeof(afs_int32));
 
     for (i = 0; i < sn; i++)
 	a_hosts->serverList_val[i] = ntohl(tcell->cellHosts[i]->addr->sa_ip);
@@ -1435,15 +1485,16 @@ int SRXAFSCB_GetCellByNum(struct rx_call *a_call, afs_int32 a_cellnum,
     RX_AFS_GUNLOCK();
     return 0;
 }
- 
-int SRXAFSCB_TellMeAboutYourself(struct rx_call *a_call, 
-                                 struct interfaceAddr *addr, 
-                                 Capabilities *capabilities)
+
+int
+SRXAFSCB_TellMeAboutYourself(struct rx_call *a_call,
+			     struct interfaceAddr *addr,
+			     Capabilities * capabilities)
 {
     int i;
     int code = 0;
-    afs_int32 *dataBuffP;               
-    afs_int32 dataBytes;                
+    afs_int32 *dataBuffP;
+    afs_int32 dataBytes;
 
     RX_AFS_GLOCK();
 
@@ -1454,20 +1505,20 @@ int SRXAFSCB_TellMeAboutYourself(struct rx_call *a_call,
     /* return all network interface addresses */
     addr->numberOfInterfaces = afs_cb_interface.numberOfInterfaces;
     addr->uuid = afs_cb_interface.uuid;
-    for ( i=0; i < afs_cb_interface.numberOfInterfaces; i++) {
+    for (i = 0; i < afs_cb_interface.numberOfInterfaces; i++) {
 	addr->addr_in[i] = ntohl(afs_cb_interface.addr_in[i]);
 	addr->subnetmask[i] = ntohl(afs_cb_interface.subnetmask[i]);
 	addr->mtu[i] = ntohl(afs_cb_interface.mtu[i]);
     }
 
     ReleaseReadLock(&afs_xinterface);
-    
+
     RX_AFS_GUNLOCK();
-    
+
     dataBytes = 1 * sizeof(afs_int32);
-    dataBuffP = (afs_int32 *)afs_osi_Alloc(dataBytes);
+    dataBuffP = (afs_int32 *) afs_osi_Alloc(dataBytes);
     dataBuffP[0] = CAPABILITY_ERRORTRANS;
-    capabilities->Capabilities_len = dataBytes/sizeof(afs_int32);
+    capabilities->Capabilities_len = dataBytes / sizeof(afs_int32);
     capabilities->Capabilities_val = dataBuffP;
 
     return code;

@@ -46,7 +46,7 @@
 #include <net/if.h>
 #endif
 #include <sys/protosw.h>
-#include <sys/ioctl.h> 
+#include <sys/ioctl.h>
 #include <sys/timeout.h>
 #else /* AFS_OBSD_ENV */
 #ifdef AFS_LINUX22_ENV
@@ -65,9 +65,11 @@
  */
 #define _LINUX_CODA_FS_I
 #define _CFS_HEADER_
-struct coda_inode_info {};
+struct coda_inode_info {
+};
 #define _LINUX_XFS_FS_I
-struct xfs_inode_info {};
+struct xfs_inode_info {
+};
 #include <asm/uaccess.h>
 #include <linux/list.h>
 #include <linux/dcache.h>
@@ -85,8 +87,8 @@ struct xfs_inode_info {};
 #else /* AFS_LINUX22_ENV */
 #if defined(AFS_DARWIN_ENV)
 #ifndef _MACH_ETAP_H_
-#define _MACH_ETAP_H_   
-typedef unsigned short                  etap_event_t; 
+#define _MACH_ETAP_H_
+typedef unsigned short etap_event_t;
 #endif
 #endif
 #if	!defined(AFS_OSF_ENV)
@@ -159,7 +161,7 @@ typedef unsigned short                  etap_event_t;
 #include "sys/sysmacros.h"
 #include "sys/fs_subr.h"
 #include "sys/siginfo.h"
-#endif  /* AFS_SGI_ENV */
+#endif /* AFS_SGI_ENV */
 
 #if !defined(AFS_AIX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_SGI_ENV)
 #  include "h/kernel.h"
@@ -171,8 +173,8 @@ typedef unsigned short                  etap_event_t;
 
 #if	defined(AFS_SUN56_ENV)
 #include "h/vfs.h"		/* stops SUN56 socketvar.h warnings */
-#include "h/stropts.h"	/* stops SUN56 socketvar.h warnings */
-#include "h/stream.h"	/* stops SUN56 socketvar.h errors */
+#include "h/stropts.h"		/* stops SUN56 socketvar.h warnings */
+#include "h/stream.h"		/* stops SUN56 socketvar.h errors */
 #endif
 
 #include "h/socket.h"
@@ -231,8 +233,8 @@ typedef unsigned short                  etap_event_t;
 #  endif /* AFS_SUN5_ENV */
 #  ifdef AFS_HPUX_ENV
 struct vfspage;			/* for vnode.h compiler warnings */
-#    include "h/swap.h"	/* for struct swpdbd, for vnode.h compiler warnings */
-#    include "h/dbd.h"	/* for union idbd, for vnode.h compiler warnings */
+#    include "h/swap.h"		/* for struct swpdbd, for vnode.h compiler warnings */
+#    include "h/dbd.h"		/* for union idbd, for vnode.h compiler warnings */
 #ifdef AFS_HPUX110_ENV
 #    include "h/resource.h"
 #endif
@@ -242,10 +244,10 @@ struct vfspage;			/* for vnode.h compiler warnings */
 struct vop_getwritemount_args;
 #  endif
 #  include <sys/uio.h>
-#  include <sys/mount.h> 
+#  include <sys/mount.h>
 #  include <sys/namei.h>
-#  include <sys/vnode.h>  
-#  include <sys/queue.h>    
+#  include <sys/vnode.h>
+#  include <sys/queue.h>
 #  include <sys/malloc.h>
 #ifndef AFS_FBSD_ENV
 #  include <sys/ubc.h>
@@ -286,7 +288,7 @@ MALLOC_DECLARE(M_AFS);
 
 /* These mainly deal with networking and rpc headers */
 #include "netinet/in.h"
-#undef	MFREE	/* defined at mount.h for AIX */
+#undef	MFREE			/* defined at mount.h for AIX */
 #ifdef	AFS_SUN5_ENV
 #  include "h/time.h"
 #else
@@ -321,11 +323,11 @@ MALLOC_DECLARE(M_AFS);
 #if !defined(AFS_SGI_ENV) && !defined(AFS_SUN_ENV) && !defined(AFS_MACH_ENV) && !defined(AFS_AIX32_ENV) && !defined(AFS_HPUX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 
 #  include "h/text.h"
-#endif 
+#endif
 
 
 #if	defined(AFS_AIX_ENV) || defined(AFS_DEC_ENV)
-#  include "h/flock.h"	/* fcntl.h is a user-level include in aix */
+#  include "h/flock.h"		/* fcntl.h is a user-level include in aix */
 #else
 #  include "h/fcntl.h"
 #endif /* AIX || DEC */
@@ -347,7 +349,7 @@ MALLOC_DECLARE(M_AFS);
 #include <sys/debug.h>
 #endif
 
-#else	/* ! AFS_OSF_ENV */
+#else /* ! AFS_OSF_ENV */
 /* All of the OSF/1 stuff is here */
 #include <net/net_globals.h>
 #include <errno.h>
@@ -389,13 +391,13 @@ MALLOC_DECLARE(M_AFS);
 #undef mem_alloc
 #undef mem_free
 #undef register
-#endif	/* AFS_ALPHA_ENV */
+#endif /* AFS_ALPHA_ENV */
 
 #include <rx/xdr.h>
 #include <sys/proc.h>
 #include <sys/ioctl.h>
 
-#endif	/* AFS_OSF_ENV */
+#endif /* AFS_OSF_ENV */
 #endif /* AFS_LINUX22_ENV */
 #endif /* AFS_OBSD_ENV */
 

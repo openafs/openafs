@@ -10,7 +10,7 @@
 #ifndef __gator_dumbwindows_h
 #define	__gator_dumbwindows_h  1
 
-#include "gtxwindows.h"		/*Base gator window dfns*/
+#include "gtxwindows.h"		/*Base gator window dfns */
 
 /*Value for gwin w_type field*/
 #define	GATOR_WIN_DUMB    1
@@ -18,19 +18,19 @@
 /*Private data for a dumb gwin*/
 #if 0
 struct gator_dumbgwin {
-    WINDOW *wp;		/*Window pointer*/
-    int	charwidth;	/*Character width in pixels*/
-    int	charheight;	/*Character height in pixels*/
-    char box_vertchar;	/*Vertical char for boxing purposes*/
-    char box_horizchar;	/*Horizontal char for boxing purposes*/
+    WINDOW *wp;			/*Window pointer */
+    int charwidth;		/*Character width in pixels */
+    int charheight;		/*Character height in pixels */
+    char box_vertchar;		/*Vertical char for boxing purposes */
+    char box_horizchar;		/*Horizontal char for boxing purposes */
 };
 #endif /* 0 */
 
 /*Dumb gwin's creation parameters*/
 struct gator_dumbgwin_params {
-    struct gwin_createparams gwin_params;   /*Basic params for the window*/
-    char box_vertchar;			    /*Vertical char for boxing purposes*/
-    char box_horizchar;			    /*Horizontal char for boxing purposes*/
+    struct gwin_createparams gwin_params;	/*Basic params for the window */
+    char box_vertchar;		/*Vertical char for boxing purposes */
+    char box_horizchar;		/*Horizontal char for boxing purposes */
 };
 
 /*Dumb windows initialization routine*/
@@ -41,11 +41,11 @@ extern int gator_dumbgwin_init();
      *    Initialize the dumb window package.
      *
      * Args:
-     *	  int adebug: Is debugging turned on?
+     *    int adebug: Is debugging turned on?
      *
      * Returns:
-     *	  0 on success,
-     *	  Error value otherwise.
+     *    0 on success,
+     *    Error value otherwise.
      */
 
 /*Dumb window's creation routine*/
@@ -56,11 +56,11 @@ extern struct gwin *gator_dumbgwin_create();
      *    Create a dumb window.
      *
      * Args:
-     *	  struct gator_dumbgwin_params *params : Ptr to creation parameters.
+     *    struct gator_dumbgwin_params *params : Ptr to creation parameters.
      *
      * Returns:
-     *	  Ptr to the created dumb window structure if successful,
-     *	  Error value otherwise.
+     *    Ptr to the created dumb window structure if successful,
+     *    Error value otherwise.
      */
 
 /*Dumb cleanup routine*/
@@ -71,11 +71,11 @@ extern int gator_dumbgwin_cleanup();
      *    Clean up after the dumb window package.
      *
      * Args:
-     *	  struct gwin *gwp : Ptr to base window.
+     *    struct gwin *gwp : Ptr to base window.
      *
      * Returns:
-     *	  0 on success,
-     *	  Error value otherwise.
+     *    0 on success,
+     *    Error value otherwise.
      */
 
 extern struct gwinbaseops gator_dumb_gwinbops;
@@ -88,12 +88,12 @@ extern int gator_dumbgwin_box();
      *    Draw a box around the given dumb window.
      *
      * Args:
-     *	 struct gwin *gwp : Ptr to the dumb window to draw
-     *	                            a box around.
+     *   struct gwin *gwp : Ptr to the dumb window to draw
+     *                              a box around.
      *
      * Returns:
-     *	  0: Success.
-     *	  Error value otherwise.
+     *    0: Success.
+     *    Error value otherwise.
      */
 
 extern int gator_dumbgwin_clear();
@@ -102,12 +102,12 @@ extern int gator_dumbgwin_clear();
      *    Clear out the given dumb window.
      *
      * Args:
-     *	 struct gwin *gwp : Ptr to the dumb window to clear
-     *	                            out.
+     *   struct gwin *gwp : Ptr to the dumb window to clear
+     *                              out.
      *
      * Returns:
-     *	  0: Success.
-     *	  Error value otherwise.
+     *    0: Success.
+     *    Error value otherwise.
      */
 
 extern int gator_dumbgwin_destroy();
@@ -116,11 +116,11 @@ extern int gator_dumbgwin_destroy();
      *    Destroy the given dumb window.
      *
      * Args:
-     *	 struct gwin *gwp : Ptr to the dumb window to destroy.
+     *   struct gwin *gwp : Ptr to the dumb window to destroy.
      *
      * Returns:
-     *	  0: Success.
-     *	  Error value otherwise.
+     *    0: Success.
+     *    Error value otherwise.
      */
 
 extern int gator_dumbgwin_display();
@@ -129,11 +129,11 @@ extern int gator_dumbgwin_display();
      *    Display/redraw the given dumb window.
      *
      * Args:
-     *	 struct gwin *gwp : Ptr to the dumb window to draw.
+     *   struct gwin *gwp : Ptr to the dumb window to draw.
      *
      * Returns:
-     *	  0: Success.
-     *	  Error value otherwise.
+     *    0: Success.
+     *    Error value otherwise.
      */
 
 extern int gator_dumbgwin_drawline();
@@ -143,13 +143,13 @@ extern int gator_dumbgwin_drawline();
      *    window.
      *
      * Args:
-     *	 struct gwin *gwp : Ptr to the dumb window in which
-     *	                            the line is to be drawn.
-     *	 struct gwin_lineparams *params : Ptr to other params.
+     *   struct gwin *gwp : Ptr to the dumb window in which
+     *                              the line is to be drawn.
+     *   struct gwin_lineparams *params : Ptr to other params.
      *
      * Returns:
-     *	  0: Success.
-     *	  Error value otherwise.
+     *    0: Success.
+     *    Error value otherwise.
      */
 
 extern int gator_dumbgwin_drawrectangle();
@@ -158,13 +158,13 @@ extern int gator_dumbgwin_drawrectangle();
      *    Draw a rectangle in the given dumb window.
      *
      * Args:
-     *	 struct gwin *gwp : Ptr to the dumb window in which
-     *	                            the rectangle is to be drawn.
-     *	 struct gwin_rectparams *params : Ptr to other params.
+     *   struct gwin *gwp : Ptr to the dumb window in which
+     *                              the rectangle is to be drawn.
+     *   struct gwin_rectparams *params : Ptr to other params.
      *
      * Returns:
-     *	  0: Success.
-     *	  Error value otherwise.
+     *    0: Success.
+     *    Error value otherwise.
      */
 
 extern int gator_dumbgwin_drawchar();
@@ -173,13 +173,13 @@ extern int gator_dumbgwin_drawchar();
      *    Draw a character in the given dumb window.
      *
      * Args:
-     *	 struct gwin *gwp : Ptr to the dumb window in which
-     *	                            the character is to be drawn.
-     *	 struct gwin_charparams *params : Ptr to other params.
+     *   struct gwin *gwp : Ptr to the dumb window in which
+     *                              the character is to be drawn.
+     *   struct gwin_charparams *params : Ptr to other params.
      *
      * Returns:
-     *	  0: Success.
-     *	  Error value otherwise.
+     *    0: Success.
+     *    Error value otherwise.
      */
 
 extern int gator_dumbgwin_drawstring();
@@ -188,13 +188,13 @@ extern int gator_dumbgwin_drawstring();
      *    Draw a string in the given dumb window.
      *
      * Args:
-     *	 struct gwin *gwp : Ptr to the dumb window in which
-     *	                            the string is to be drawn.
-     *	 struct gwin_strparams *params : Ptr to other params.
+     *   struct gwin *gwp : Ptr to the dumb window in which
+     *                              the string is to be drawn.
+     *   struct gwin_strparams *params : Ptr to other params.
      *
      * Returns:
-     *	  0: Success.
-     *	  Error value otherwise.
+     *    0: Success.
+     *    Error value otherwise.
      */
 
 extern int gator_dumbgwin_invert();
@@ -203,13 +203,13 @@ extern int gator_dumbgwin_invert();
      *    Invert a region in the given dumb window.
      *
      * Args:
-     *	 struct gwin *gwp : Ptr to the dumb window in which
-     *	                            the inverted region lies.
-     *	 struct gwin_invparams *params : Ptr to other params.
+     *   struct gwin *gwp : Ptr to the dumb window in which
+     *                              the inverted region lies.
+     *   struct gwin_invparams *params : Ptr to other params.
      *
      * Returns:
-     *	  0: Success.
-     *	  Error value otherwise.
+     *    0: Success.
+     *    Error value otherwise.
      */
 
 extern int gator_dumbgwin_getchar();

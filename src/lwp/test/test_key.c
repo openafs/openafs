@@ -20,7 +20,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -36,15 +37,19 @@ RCSID("$Header$");
 void interTest();
 void lineTest();
 
-void Usage(void)
+void
+Usage(void)
 {
     printf("Usage: test_key [-nobuf] [-delay seconds [-iters n]]\n");
-    printf("test_key waits for keystrokes. Without options it will wait indefinitely.\n");
-    printf("To show that LWP is still running there is a rotating '|' which cycles every quarter second.\n");
+    printf
+	("test_key waits for keystrokes. Without options it will wait indefinitely.\n");
+    printf
+	("To show that LWP is still running there is a rotating '|' which cycles every quarter second.\n");
     printf("-nobuf - don't buffer input. Don't need to wait for <cr>.\n");
     printf("-delay seconds - wait for <seconds> for a keystroke.\n");
     printf("-iters n - repeat the wait n times.\n");
-    printf("-inter - wait for key and beep every five seconds until pressed(overrides other options).\n");
+    printf
+	("-inter - wait for key and beep every five seconds until pressed(overrides other options).\n");
     printf("-line - wait for a whole line to be typed.");
     exit(1);
 }
@@ -52,7 +57,8 @@ void Usage(void)
 
 int waitingForAnswer = 0;
 
-static void PrintDots()
+static void
+PrintDots()
 {
     static struct timeval constSleepTime = { 1, 0 };
     struct timeval sleepTime;
@@ -62,20 +68,23 @@ static void PrintDots()
 	IOMGR_Select(0, 0, 0, 0, &sleepTime);
 	if (!waitingForAnswer)
 	    break;
-	printf("."); fflush(stdout);
+	printf(".");
+	fflush(stdout);
     }
 }
 
-static int DotWriter(char *junk)
+static int
+DotWriter(char *junk)
 {
-    while (1 ) {
+    while (1) {
 	LWP_WaitProcess(&waitingForAnswer);
 	PrintDots();
     }
     return 0;
 }
 
-void main(int ac, char **av)
+void
+main(int ac, char **av)
 {
     int delay = 0;
     int iters = 0;
@@ -85,7 +94,7 @@ void main(int ac, char **av)
     PROCESS dotpid;
     int rc;
 
-    for (i=1; i<ac; i++) {
+    for (i = 1; i < ac; i++) {
 	if (!strcmp("-delay", av[i])) {
 	    if (++i >= ac) {
 		printf("Missing delay time for -delay option.\n");
@@ -95,8 +104,7 @@ void main(int ac, char **av)
 		printf("Delay must be at least 0 seconds.\n");
 		Usage();
 	    }
-	}
-	else if(!strcmp("-iters", av[i])) {
+	} else if (!strcmp("-iters", av[i])) {
 	    if (++i >= ac) {
 		printf("Missing iteration count for -iters option.\n");
 	    }
@@ -105,40 +113,36 @@ void main(int ac, char **av)
 		printf("Number of iterations must be at least 0.\n");
 		Usage();
 	    }
-	}
-	else if (!strcmp("-nobuf", av[i])) {
+	} else if (!strcmp("-nobuf", av[i])) {
 	    rc = setvbuf(stdin, NULL, _IONBF, 0);
-	    if (rc<0) {
+	    if (rc < 0) {
 		perror("Setting -nobuf for stdin");
 	    }
-	}
-	else if (!strcmp("-inter", av[i])) {
-	  inter = 1;
-	}
-	else if (!strcmp("-line", av[i])) {
-	  line = 1;
-	}
-	else
+	} else if (!strcmp("-inter", av[i])) {
+	    inter = 1;
+	} else if (!strcmp("-line", av[i])) {
+	    line = 1;
+	} else
 	    Usage();
     }
 
-    IOMGR_Initialize(); 
+    IOMGR_Initialize();
 
-    LWP_CreateProcess(DotWriter, 32000, LWP_NORMAL_PRIORITY, (char*)0,
+    LWP_CreateProcess(DotWriter, 32000, LWP_NORMAL_PRIORITY, (char *)0,
 		      "DotWriter", &dotpid);
 
     if (inter) {
-      interTest();
-      exit(1);
+	interTest();
+	exit(1);
     }
     if (line) {
-      lineTest();
-      exit(1);
+	lineTest();
+	exit(1);
     }
     if (delay == 0) {
-	delay = -1; /* Means wait indefinitely. */
+	delay = -1;		/* Means wait indefinitely. */
     }
-    for (; iters >= 0; iters -- ) {
+    for (; iters >= 0; iters--) {
 	waitingForAnswer = 1;
 	LWP_NoYieldSignal(&waitingForAnswer);
 	rc = LWP_WaitForKeystroke(delay);
@@ -146,68 +150,65 @@ void main(int ac, char **av)
 	if (rc) {
 	    printf("\n'%c'\n", getchar());
 	    printf("Flushing remaining input.\n");
-	    while(LWP_WaitForKeystroke(0)) {
+	    while (LWP_WaitForKeystroke(0)) {
 		printf("'%c'\n", getchar());
 	    }
-	}
-	else {
+	} else {
 	    printf("\nNo data available on this iteration.\n");
 	}
     }
-	
+
 
 }
 
 /* interTest() : wait for key press and beep to remind user every five 
  *    seconds.
 */
-void interTest()
+void
+interTest()
 {
-  char ch;
-  int rc;
+    char ch;
+    int rc;
 
-  printf("Will print dots until you hit a key!\n");
-  /* start the dotwriter thread running */
-  waitingForAnswer = 1;
-  LWP_NoYieldSignal(&waitingForAnswer); 
-  
-  do {
-    rc = LWP_GetResponseKey(5, &ch);
-    if (rc == 0)
-      printf("\a");
-  } while (rc == 0);
+    printf("Will print dots until you hit a key!\n");
+    /* start the dotwriter thread running */
+    waitingForAnswer = 1;
+    LWP_NoYieldSignal(&waitingForAnswer);
 
-  waitingForAnswer = 0; /* turn off dotwriter lwp */
+    do {
+	rc = LWP_GetResponseKey(5, &ch);
+	if (rc == 0)
+	    printf("\a");
+    } while (rc == 0);
 
-  printf("\nYou typed %c\n", ch);
+    waitingForAnswer = 0;	/* turn off dotwriter lwp */
 
-  return;
+    printf("\nYou typed %c\n", ch);
+
+    return;
 }
-  
+
 /* lineTest() : wait until a whole line has been entered before processing.
  */
-void lineTest()
+void
+lineTest()
 {
-  char ch;
-  int rc;
-  char line[256];
+    char ch;
+    int rc;
+    char line[256];
 
-  printf("Will print dots until enter a line\n");
-  /* start the dotwriter thread running */
-  waitingForAnswer = 1;
-  LWP_NoYieldSignal(&waitingForAnswer); 
-  
-  rc = LWP_GetLine(line, 256);
+    printf("Will print dots until enter a line\n");
+    /* start the dotwriter thread running */
+    waitingForAnswer = 1;
+    LWP_NoYieldSignal(&waitingForAnswer);
 
-  waitingForAnswer = 0;
+    rc = LWP_GetLine(line, 256);
 
-  printf("You entered : %s\n", line);
-  if (rc)
-    printf("linebuf was too small\n");
+    waitingForAnswer = 0;
 
-  return;
+    printf("You entered : %s\n", line);
+    if (rc)
+	printf("linebuf was too small\n");
+
+    return;
 }
-
-    
-      
-	

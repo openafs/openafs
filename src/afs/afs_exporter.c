@@ -10,21 +10,23 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
-#include "afs/afs_stats.h"   /* statistics gathering code */
+#include "afs/afs_stats.h"	/* statistics gathering code */
 
-struct afs_exporter	*root_exported=0;   /* Head of "exporters" link list */
-afs_lock_t		afs_xexp;
+struct afs_exporter *root_exported = 0;	/* Head of "exporters" link list */
+afs_lock_t afs_xexp;
 
 
 /* Add a new "afs exporter" entry to the table of exporters. The default initial values of the entry are passed in as parameters. */
 static afs_int32 init_xexported = 0;
 
-struct afs_exporter *exporter_add(afs_int32 size, struct exporterops *ops, afs_int32 state, 
-	afs_int32 type, char *data)
+struct afs_exporter *
+exporter_add(afs_int32 size, struct exporterops *ops, afs_int32 state,
+	     afs_int32 type, char *data)
 {
     struct afs_exporter *ex, *op;
     afs_int32 length;
@@ -35,14 +37,14 @@ struct afs_exporter *exporter_add(afs_int32 size, struct exporterops *ops, afs_i
 	LOCK_INIT(&afs_xexp, "afs_xexp");
     }
     length = (size ? size : sizeof(struct afs_exporter));
-    ex = (struct afs_exporter *) afs_osi_Alloc(length);
+    ex = (struct afs_exporter *)afs_osi_Alloc(length);
     memset((char *)ex, 0, length);
-    MObtainWriteLock(&afs_xexp,308);
+    MObtainWriteLock(&afs_xexp, 308);
     for (op = root_exported; op; op = op->exp_next) {
 	if (!op->exp_next)
 	    break;
     }
-    if (op) 
+    if (op)
 	op->exp_next = ex;
     else
 	root_exported = ex;
@@ -57,7 +59,8 @@ struct afs_exporter *exporter_add(afs_int32 size, struct exporterops *ops, afs_i
 
 
 /* Returns the "afs exporter" structure of type, "type". NULL is returned if not found */
-struct afs_exporter *exporter_find(int type)
+struct afs_exporter *
+exporter_find(int type)
 {
     struct afs_exporter *op;
 
@@ -74,7 +77,8 @@ struct afs_exporter *exporter_find(int type)
 }
 
 
-void shutdown_exporter(void) 
+void
+shutdown_exporter(void)
 {
     struct afs_exporter *ex, *op;
 

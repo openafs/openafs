@@ -51,57 +51,57 @@ RCSID("$Id$");
 #endif
 
 static char *
-write_random_file (int fd, size_t sz)
+write_random_file(int fd, size_t sz)
 {
     char *buf;
     int i;
 
-    buf = malloc (sz);
+    buf = malloc(sz);
     if (buf == NULL)
-	err (1, "malloc %u", (unsigned)sz);
+	err(1, "malloc %u", (unsigned)sz);
 
     for (i = 0; i < sz; ++i)
 	buf[i] = rand();
 
-    if (write (fd, buf, sz) != sz)
-	err (1, "write");
+    if (write(fd, buf, sz) != sz)
+	err(1, "write");
 
     return buf;
 }
 
 static void
-write_null_file (int fd, size_t sz)
+write_null_file(int fd, size_t sz)
 {
     char *buf;
     int i;
 
-    buf = malloc (sz);
+    buf = malloc(sz);
     if (buf == NULL)
-	err (1, "malloc %u", (unsigned)sz);
+	err(1, "malloc %u", (unsigned)sz);
 
     for (i = 0; i < sz; ++i)
 	buf[i] = 0;
 
-    if (write (fd, buf, sz) != sz)
-	err (1, "write");
+    if (write(fd, buf, sz) != sz)
+	err(1, "write");
 
-    free (buf);
+    free(buf);
 }
 
 static char *
-read_file (int fd, size_t sz)
+read_file(int fd, size_t sz)
 {
     char *buf;
     ssize_t ret;
 
-    buf = malloc (sz);
+    buf = malloc(sz);
     if (buf == NULL)
-	err (1, "malloc %u", (unsigned)sz);
+	err(1, "malloc %u", (unsigned)sz);
     ret = read(fd, buf, sz);
-    if(ret < 0)
-	err (1, "read");
-    else if(ret == 0)
-        errx(1, "EOF on read");
+    if (ret < 0)
+	err(1, "read");
+    else if (ret == 0)
+	errx(1, "EOF on read");
     return buf;
 }
 
@@ -110,38 +110,38 @@ read_file (int fd, size_t sz)
 #endif
 
 int
-main (int argc, char **argv)
+main(int argc, char **argv)
 {
     const char *file = "foo";
-    const size_t sz  = 16384;
+    const size_t sz = 16384;
     char *random_buf;
     char *read_buf1;
     char *read_buf2;
     int fd;
 
 
-    srand (time(NULL));
+    srand(time(NULL));
 
-    fd = open (file, O_RDWR | O_CREAT, 0);
+    fd = open(file, O_RDWR | O_CREAT, 0);
     if (fd < 0)
-	err (1, "open %s", file);
+	err(1, "open %s", file);
 
     if (lseek(fd, 0, SEEK_SET) < 0)
-	err (1, "lseek");
+	err(1, "lseek");
     write_null_file(fd, sz);
     if (lseek(fd, 0, SEEK_SET) < 0)
-	err (1, "lseek");
-    read_buf1 = read_file (fd, sz);
+	err(1, "lseek");
+    read_buf1 = read_file(fd, sz);
     if (lseek(fd, 0, SEEK_SET) < 0)
-	err (1, "lseek");
+	err(1, "lseek");
     random_buf = write_random_file(fd, sz);
     if (lseek(fd, 0, SEEK_SET) < 0)
-	err (1, "lseek");
-    read_buf2 = read_file (fd, sz);
+	err(1, "lseek");
+    read_buf2 = read_file(fd, sz);
 
-    close (fd);
-    unlink (file);
-    if (memcmp (random_buf, read_buf2, sz) != 0)
+    close(fd);
+    unlink(file);
+    if (memcmp(random_buf, read_buf2, sz) != 0)
 	return 1;
     return 0;
 }

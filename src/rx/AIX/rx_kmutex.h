@@ -72,7 +72,7 @@ typedef tid_t afs_kcondvar_t;
 #define RXObtainWriteLock(a)    simple_lock((void *)(a)), \
 				rxdb_grablock((void *)(a), thread_self(),rxdb_fileID,\
 					      __LINE__)
-	
+
 #define RXReleaseWriteLock(a)	rxdb_droplock((void *)(a), thread_self(), rxdb_fileID,\
 					      __LINE__), \
 				simple_unlock((void *)(a))
@@ -149,9 +149,8 @@ typedef tid_t afs_kcondvar_t;
 #define MUTEX_ISMINE(a)	(lock_mine((void *)(a)))
 
 #undef osirx_AssertMine
-extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
+extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 
 #endif /* AFS_AIX41_ENV */
 
 #endif /* _RX_KMUTEX_H_ */
-

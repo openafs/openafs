@@ -53,15 +53,15 @@ RCSID("$Id$");
 #endif
 
 static void
-print_groups (int ngroups, gid_t groups[NGROUPS])
+print_groups(int ngroups, gid_t groups[NGROUPS])
 {
     int i;
 
-    printf ("groups: ");
+    printf("groups: ");
     for (i = 0; i < ngroups; ++i)
-	printf ("%d%s", groups[i], (i < ngroups - 1) ? ", " : "");
-    printf ("\n");
-}    
+	printf("%d%s", groups[i], (i < ngroups - 1) ? ", " : "");
+    printf("\n");
+}
 
 int
 main(int argc, char **argv)
@@ -76,50 +76,49 @@ main(int argc, char **argv)
 
 
     if (argc != 2)
-	errx (1, "Usage: %s user", argv[0]);
+	errx(1, "Usage: %s user", argv[0]);
     user = argv[1];
 
-    this_pwd = getpwuid (getuid ());
+    this_pwd = getpwuid(getuid());
     if (this_pwd == NULL)
-	errx (1, "Who are you?");
-    this_user = strdup (this_pwd->pw_name);
+	errx(1, "Who are you?");
+    this_user = strdup(this_pwd->pw_name);
 
-    pwd = getpwnam (user);
+    pwd = getpwnam(user);
     if (pwd == NULL)
-	errx (1, "User %s not found", user);
+	errx(1, "User %s not found", user);
 
-    ngroups = getgroups (NGROUPS, groups);
+    ngroups = getgroups(NGROUPS, groups);
     if (ngroups < 0)
-	err (1, "getgroups %d", NGROUPS);
-    printf ("user %s ", this_user);
-    print_groups (ngroups, groups);
-    printf ("doing setpag()\n");
-    ret = setpag ();
+	err(1, "getgroups %d", NGROUPS);
+    printf("user %s ", this_user);
+    print_groups(ngroups, groups);
+    printf("doing setpag()\n");
+    ret = setpag();
     if (ret < 0)
-	err (1, "setpag");
+	err(1, "setpag");
 
-    ngroups = getgroups (NGROUPS, groups);
+    ngroups = getgroups(NGROUPS, groups);
     if (ngroups < 0)
-	err (1, "getgroups %d", NGROUPS);
+	err(1, "getgroups %d", NGROUPS);
     pag0 = groups[0];
     pag1 = groups[1];
     pag2 = groups[2];
-    printf ("user %s ", this_user);
-    print_groups (ngroups, groups);
+    printf("user %s ", this_user);
+    print_groups(ngroups, groups);
 
-    ret = initgroups (user, pwd->pw_gid);
+    ret = initgroups(user, pwd->pw_gid);
     if (ret < 0)
-	err (1, "initgroups");
+	err(1, "initgroups");
 
-    ngroups = getgroups (NGROUPS, groups);
+    ngroups = getgroups(NGROUPS, groups);
     if (ngroups < 0)
-	err (1, "getgroups %d", NGROUPS);
-    printf ("user %s ", user);
-    print_groups (ngroups, groups);
+	err(1, "getgroups %d", NGROUPS);
+    printf("user %s ", user);
+    print_groups(ngroups, groups);
     if ((groups[0] == pag0 && groups[1] == pag1)
 	|| (groups[1] == pag1 && groups[2] == pag2))
 	return 0;
     else
 	return 1;
 }
-

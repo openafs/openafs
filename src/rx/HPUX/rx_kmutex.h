@@ -24,19 +24,19 @@
 #include <sys/errno.h>
 #include <net/netmp.h>
 
-#include "../rx/rx_kernel.h" /* For osi_Panic() */
+#include "../rx/rx_kernel.h"	/* For osi_Panic() */
 
 #define RX_ENABLE_LOCKS         1
 #define AFS_GLOBAL_RXLOCK_KERNEL
 
-extern lock_t*  rx_sleepLock;
+extern lock_t *rx_sleepLock;
 
 /* We use beta semaphores instead of sync semaphores for Rx locks as
  * recommended by HP labs. Sync semaphores are not supported by HP
  * any more.
  */
 
-#define CV_INIT(cv,a,b,c) 
+#define CV_INIT(cv,a,b,c)
 
 /* This is supposed to atomically drop the mutex and go to sleep
  * and reacquire the mutex when it wakes up.
@@ -101,9 +101,9 @@ typedef caddr_t afs_kcondvar_t;
 #define RXReleaseWriteLock(a)
 
 
-#if defined(AFS_HPUX110_ENV) 
+#if defined(AFS_HPUX110_ENV)
 #undef osirx_AssertMine
-extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
+extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 
 #define AFS_RX_ORDER 30
 
@@ -135,10 +135,9 @@ extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
 #define MUTEX_DESTROY(a)
 #define MUTEX_ENTER(a)
 #define MUTEX_TRYENTER(a) 1
-#define MUTEX_EXIT(a)  
-#define MUTEX_INIT(a,b,c,d) 
+#define MUTEX_EXIT(a)
+#define MUTEX_INIT(a,b,c,d)
 
 #endif /* else AFS_HPUX110_ENV */
 #endif /* AFS_HPUX102_ENV */
 #endif /* _RX_KMUTEX_H_ */
-

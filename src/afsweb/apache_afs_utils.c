@@ -23,44 +23,48 @@
  * sets up the ViceIoctl buffer with all the parameters required
  * NOTE: in_buffer and out_buffer may point to the same memory buffer
  */
-int do_pioctl(char *in_buffer, int in_size, 
-	      char *out_buffer, int out_size, 
-	      int opcode, char *path, int followSymLinks)
+int
+do_pioctl(char *in_buffer, int in_size, char *out_buffer, int out_size,
+	  int opcode, char *path, int followSymLinks)
 {
-  struct ViceIoctl iob;
-  iob.in = in_buffer;
-  iob.in_size = in_size;
-  iob.out = out_buffer;
-  iob.out_size = out_size;
-  
+    struct ViceIoctl iob;
+    iob.in = in_buffer;
+    iob.in_size = in_size;
+    iob.out = out_buffer;
+    iob.out_size = out_size;
+
 #ifdef AFS_USR_SUN5_ENV
-  return syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, _VICEIOCTL(opcode), &iob, 
-		 followSymLinks);
+    return syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, _VICEIOCTL(opcode),
+		   &iob, followSymLinks);
 #else /* AFS_USR_SUN5_ENV */
-  return lpioctl(path, _VICEIOCTL(opcode), &iob, followSymLinks);
+    return lpioctl(path, _VICEIOCTL(opcode), &iob, followSymLinks);
 #endif /* AFS_USR_SUN5_ENV */
 }
 
-int do_setpag()
+int
+do_setpag()
 {
-  return lsetpag();
+    return lsetpag();
 }
 
 /*
  * Return 1 if we have a token, 0 if we don't
  */
-int haveToken()
+int
+haveToken()
 {
-  char temp[1024]; 
-  afs_int32 i = 0;
-  int code;
+    char temp[1024];
+    afs_int32 i = 0;
+    int code;
 
-  memcpy((void *)temp, (void *)&i, sizeof(afs_int32));
-  code = do_pioctl(temp, sizeof(afs_int32), temp, sizeof(temp),VIOCGETTOK, NULL,0);
-  if (code) 
-    return 0;
-  else
-    return 1;
+    memcpy((void *)temp, (void *)&i, sizeof(afs_int32));
+    code =
+	do_pioctl(temp, sizeof(afs_int32), temp, sizeof(temp), VIOCGETTOK,
+		  NULL, 0);
+    if (code)
+	return 0;
+    else
+	return 1;
 }
 
 
@@ -70,66 +74,69 @@ int haveToken()
  */
 flipPrimary(char *tokenBuf)
 {
-  afs_int32 i;
-  char * temp = tokenBuf;
+    afs_int32 i;
+    char *temp = tokenBuf;
 
-  /* skip over the secret token */
-  memcpy(&i, temp, sizeof(afs_int32));
-  temp += (i + sizeof(afs_int32));
+    /* skip over the secret token */
+    memcpy(&i, temp, sizeof(afs_int32));
+    temp += (i + sizeof(afs_int32));
 
-  /* skip over the clear token */
-  memcpy(&i, temp, sizeof(afs_int32));
-  temp += (i + sizeof(afs_int32));
-  
-  /* set the primary flag */
-  memcpy(&i, temp, sizeof(afs_int32)); 
-  i |= 0x8000;
-  memcpy(temp, &i, sizeof(afs_int32));
-  temp += sizeof(afs_int32);
-  return 0;
+    /* skip over the clear token */
+    memcpy(&i, temp, sizeof(afs_int32));
+    temp += (i + sizeof(afs_int32));
+
+    /* set the primary flag */
+    memcpy(&i, temp, sizeof(afs_int32));
+    i |= 0x8000;
+    memcpy(temp, &i, sizeof(afs_int32));
+    temp += sizeof(afs_int32);
+    return 0;
 }
 
-/* get the current AFS pag for the calling process */ 
-static afs_int32 curpag()
+/* get the current AFS pag for the calling process */
+static afs_int32
+curpag()
 {
-  gid_t groups[30];
-  afs_uint32 g0, g1;
-  afs_uint32 h, l, ret;
-  
-  if (getgroups(sizeof groups/sizeof groups[0], groups) < 2) return 0;
-  
-  g0 = groups[0]  & 0xffff;
-  g1 = groups[1]  & 0xffff;
-  g0 -= 0x3f00;
-  g1 -= 0x3f00;
-  if (g0 < 0xc000 && g1 < 0xc000) {
-    l = ((g0 & 0x3fff) << 14) | (g1 & 0x3fff);
-    h = (g0 >> 14);
-    h = (g1 >> 14) + h + h + h;
-    ret = ((h << 28) | l);
-    /* Additional testing */
-    if (((ret >> 24) & 0xff) == 'A')
-      return ret;
-    else
-      return -1;
-  }
-  return -1;
+    gid_t groups[30];
+    afs_uint32 g0, g1;
+    afs_uint32 h, l, ret;
+
+    if (getgroups(sizeof groups / sizeof groups[0], groups) < 2)
+	return 0;
+
+    g0 = groups[0] & 0xffff;
+    g1 = groups[1] & 0xffff;
+    g0 -= 0x3f00;
+    g1 -= 0x3f00;
+    if (g0 < 0xc000 && g1 < 0xc000) {
+	l = ((g0 & 0x3fff) << 14) | (g1 & 0x3fff);
+	h = (g0 >> 14);
+	h = (g1 >> 14) + h + h + h;
+	ret = ((h << 28) | l);
+	/* Additional testing */
+	if (((ret >> 24) & 0xff) == 'A')
+	    return ret;
+	else
+	    return -1;
+    }
+    return -1;
 }
 
 /* Returns the AFS pag number, if any, otherwise return -1 */
-afs_int32 getPAG()
+afs_int32
+getPAG()
 {
-  afs_int32 pag;
+    afs_int32 pag;
 
-  assert(sizeof(afs_uint32) == 4);
-  assert(sizeof(afs_int32) == 4);
+    assert(sizeof(afs_uint32) == 4);
+    assert(sizeof(afs_int32) == 4);
 
-  pag = curpag();
-  if (pag == 0 || pag == -1)
-    return -1;
+    pag = curpag();
+    if (pag == 0 || pag == -1)
+	return -1;
 
-  /* high order byte is always 'A'; actual pag value is low 24 bits */
-  return (pag & 0xFFFFFF);
+    /* high order byte is always 'A'; actual pag value is low 24 bits */
+    return (pag & 0xFFFFFF);
 }
 
 /*
@@ -138,46 +145,48 @@ afs_int32 getPAG()
  * the directive SetAFSDebugLevel in the httpd.conf file
  */
 /* VARARGS1 */
-void afsLogError (a, b, c, d, e, f, g, h, i, j, k, l, m, n)
-char    * a;
-char    * b;
-char    * c;
-char    * d;
-char    * e;
-char    * f;
-char    * g;
-char    * h;
-char    * i;
-char    * j;
-char    * k;
-char    * l;
-char    * m;
-char    * n;
+void
+afsLogError(a, b, c, d, e, f, g, h, i, j, k, l, m, n)
+     char *a;
+     char *b;
+     char *c;
+     char *d;
+     char *e;
+     char *f;
+     char *g;
+     char *h;
+     char *i;
+     char *j;
+     char *k;
+     char *l;
+     char *m;
+     char *n;
 {
-  char reason[1024];
-  
-  sprintf (reason, a,b,c,d,e,f,g,h,i,j,k,l,m,n);
-  /*  LOG_REASON(reason,r->uri,r); */
-  strcat(reason,"\n");
-  fprintf(stderr, reason);
+    char reason[1024];
+
+    sprintf(reason, a, b, c, d, e, f, g, h, i, j, k, l, m, n);
+    /*  LOG_REASON(reason,r->uri,r); */
+    strcat(reason, "\n");
+    fprintf(stderr, reason);
 }
-    
+
 
 /* the following are debug utilities */
 
-void hexDump(char *tbuffer, int len)
+void
+hexDump(char *tbuffer, int len)
 {
-  int i;
-  int byte;
-  char *temp = tbuffer;
+    int i;
+    int byte;
+    char *temp = tbuffer;
 
-  fprintf(stderr, "HEXDUMP:\n");
-  for (i=0; i < len; i++) {
-    byte = *temp;
-    temp++;
-    fprintf(stderr, "%x",byte);
-  }
-  fprintf(stderr, "\n");
+    fprintf(stderr, "HEXDUMP:\n");
+    for (i = 0; i < len; i++) {
+	byte = *temp;
+	temp++;
+	fprintf(stderr, "%x", byte);
+    }
+    fprintf(stderr, "\n");
 }
 
 /* 
@@ -185,67 +194,71 @@ void hexDump(char *tbuffer, int len)
  * call this before and after the routine to dosetpag and verify results 
  */
 
-int printGroups()
+int
+printGroups()
 {
-  int numGroups,i;
-  gid_t grouplist[NGROUPS_MAX];
+    int numGroups, i;
+    gid_t grouplist[NGROUPS_MAX];
 
-  numGroups = getgroups(NGROUPS_MAX, &grouplist[0]);
-  if (numGroups == -1) {
-    perror("getgroups:");
-    return -1;
-  }
-  for (i=0; i<numGroups; i++) {
-    fprintf(stderr, "grouplist[%d]=%d\n",i,grouplist[i]);
-  }
-  return 0;
+    numGroups = getgroups(NGROUPS_MAX, &grouplist[0]);
+    if (numGroups == -1) {
+	perror("getgroups:");
+	return -1;
+    }
+    for (i = 0; i < numGroups; i++) {
+	fprintf(stderr, "grouplist[%d]=%d\n", i, grouplist[i]);
+    }
+    return 0;
 }
 
 /* 
  * prints clear token fields, cell name and primary flag to stdout 
  */
 
-void parseToken(char *buf)
+void
+parseToken(char *buf)
 {
-  afs_int32 len=0;
-  char cellName[64];
-  register char *tp;
+    afs_int32 len = 0;
+    char cellName[64];
+    register char *tp;
 
-  struct ClearToken {
-    afs_int32 AuthHandle;
-    char HandShakeKey[8];
-    afs_int32 ViceId;
-    afs_int32 BeginTimestamp;
-    afs_int32 EndTimestamp;
-  } clearToken;
-  
-  assert ( buf != NULL );
+    struct ClearToken {
+	afs_int32 AuthHandle;
+	char HandShakeKey[8];
+	afs_int32 ViceId;
+	afs_int32 BeginTimestamp;
+	afs_int32 EndTimestamp;
+    } clearToken;
 
-  tp = buf;
-  memcpy(&len, tp, sizeof(afs_int32));    /* get size of secret token */
-  tp += (sizeof(afs_int32)+ len);        /* skip secret token */
+    assert(buf != NULL);
 
-  memcpy(&len, tp, sizeof(afs_int32));    /* get size of clear token */
-  if (len != sizeof(struct ClearToken)) {
-    fprintf(stderr, "weblog:parseToken: error getting length of ClearToken\n");
-    return;
-  }
-  
-  tp += sizeof(afs_int32);	            /* skip length of cleartoken */
-  memcpy(&clearToken, tp, sizeof(struct ClearToken)); /* copy cleartoken */
-  
-  tp += len;		            /* skip clear token itself */
+    tp = buf;
+    memcpy(&len, tp, sizeof(afs_int32));	/* get size of secret token */
+    tp += (sizeof(afs_int32) + len);	/* skip secret token */
 
-  memcpy(&len, tp, sizeof(afs_int32));   /* copy the primary flag */
-  tp += sizeof(afs_int32);	            /* skip primary flag */
+    memcpy(&len, tp, sizeof(afs_int32));	/* get size of clear token */
+    if (len != sizeof(struct ClearToken)) {
+	fprintf(stderr,
+		"weblog:parseToken: error getting length of ClearToken\n");
+	return;
+    }
 
-  /* tp now points to the cell name */
-  strcpy(cellName, tp);
+    tp += sizeof(afs_int32);	/* skip length of cleartoken */
+    memcpy(&clearToken, tp, sizeof(struct ClearToken));	/* copy cleartoken */
 
-  fprintf(stderr, "CellName:%s\n", cellName);
-  fprintf(stderr, "Primary Flag (Hex):%x\n", len);
-  fprintf(stderr, "ClearToken Fields:-\nAuthHandle=%d\n"
-	  "ViceId=%d\nBeginTimestamp=%d\nEndTimestamp=%d\n",
-	  clearToken.AuthHandle, clearToken.ViceId,
-	  clearToken.BeginTimestamp,clearToken.EndTimestamp);
+    tp += len;			/* skip clear token itself */
+
+    memcpy(&len, tp, sizeof(afs_int32));	/* copy the primary flag */
+    tp += sizeof(afs_int32);	/* skip primary flag */
+
+    /* tp now points to the cell name */
+    strcpy(cellName, tp);
+
+    fprintf(stderr, "CellName:%s\n", cellName);
+    fprintf(stderr, "Primary Flag (Hex):%x\n", len);
+    fprintf(stderr,
+	    "ClearToken Fields:-\nAuthHandle=%d\n"
+	    "ViceId=%d\nBeginTimestamp=%d\nEndTimestamp=%d\n",
+	    clearToken.AuthHandle, clearToken.ViceId,
+	    clearToken.BeginTimestamp, clearToken.EndTimestamp);
 }

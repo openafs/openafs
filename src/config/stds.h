@@ -13,9 +13,9 @@
 #include <afs/param.h>
 #include <sys/types.h>
 
-#define IN              /* indicates a parameter is read in */
-#define OUT             /* indicates a parameter is sent out (a ptr) */
-#define INOUT           /* indicates a parameter is read in and sent out (a ptr) */
+#define IN			/* indicates a parameter is read in */
+#define OUT			/* indicates a parameter is sent out (a ptr) */
+#define INOUT			/* indicates a parameter is read in and sent out (a ptr) */
 
 #ifndef	MACRO_BEGIN
 #define MACRO_BEGIN	do {
@@ -44,13 +44,13 @@ pragma Off(Prototype_override_warnings);
 #error We require size of long and pointers to be equal
 #endif */
 
-typedef short            afs_int16;
-typedef unsigned short   afs_uint16;
+typedef short afs_int16;
+typedef unsigned short afs_uint16;
 #ifdef  AFS_64BIT_ENV
-typedef int              afs_int32;
-typedef unsigned int     afs_uint32;
-typedef long long 	 afs_int64;
-typedef  unsigned long long afs_uint64;
+typedef int afs_int32;
+typedef unsigned int afs_uint32;
+typedef long long afs_int64;
+typedef unsigned long long afs_uint64;
 #define ZeroInt64(a)       (a) = 0
 #define AssignInt64(a, b)   *(a) = (b)
 #define AddInt64(a,b,c) *(c) = (a) + (b)
@@ -60,9 +60,9 @@ typedef  unsigned long long afs_uint64;
 #define Int64ToInt32(a)    (a) & 0xFFFFFFFFL
 #define FillInt64(t,h,l) (t) = (h); (t) <<= 32; (t) |= (l);
 #define SplitInt64(t,h,l) (h) = (t) >> 32; (l) = (t) & 0xFFFFFFFF;
-#else   /* AFS_64BIT_ENV */
-typedef long             afs_int32;
-typedef unsigned long    afs_uint32;
+#else /* AFS_64BIT_ENV */
+typedef long afs_int32;
+typedef unsigned long afs_uint32;
 
 struct Int64 {
     afs_int32 high;
@@ -81,7 +81,7 @@ typedef struct u_Int64 afs_uint64;
 #define Int64ToInt32(a)    (a).low
 #define FillInt64(t,h,l) (t).high = (h); (t).low = (l);
 #define SplitInt64(t,h,l) (h) = (t).high; (l) = (t).low;
-#endif  /* AFS_64BIT_ENV */
+#endif /* AFS_64BIT_ENV */
 
 /* AFS_64BIT_CLIENT should presently be set only for AFS_64BIT_ENV systems */
 
@@ -129,7 +129,7 @@ typedef afs_uint32 afs_uintmax_t;
 
 #if	defined(AFS_64BIT_ENV) && 0
 
-typedef	unsigned long	afs_hyper_t;
+typedef unsigned long afs_hyper_t;
 
 #define	hcmp(a,b)	((a) < (b) ? -1 : ((a) > (b) ? 1 : 0))
 #define	hsame(a,b)	((a) == (b))
@@ -149,9 +149,9 @@ typedef	unsigned long	afs_hyper_t;
 #define	hadd32(a,b)	((a) += (b))
 #define hshlft(a,n)     ((a)<<(n))
 
-#else	/* AFS_64BIT_ENV */
+#else /* AFS_64BIT_ENV */
 
-typedef struct afs_hyper_t { /* unsigned 64 bit integers */
+typedef struct afs_hyper_t {	/* unsigned 64 bit integers */
     unsigned int high;
     unsigned int low;
 } afs_hyper_t;
@@ -198,7 +198,7 @@ typedef struct afs_hyper_t { /* unsigned 64 bit integers */
      (a).low += (int)(i))
 
 #define hadd(a,b) (hadd32(a,(b).low), (a).high += (b).high)
-#endif	/* AFS_64BIT_ENV */
+#endif /* AFS_64BIT_ENV */
 
 #ifndef	KERNEL
 #ifndef AFS_NT40_ENV

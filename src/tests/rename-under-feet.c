@@ -52,11 +52,11 @@
 #define RETSIGTYPE void
 
 static void
-emkdir (const char *path, mode_t mode)
+emkdir(const char *path, mode_t mode)
 {
-    int ret = mkdir (path, mode);
+    int ret = mkdir(path, mode);
     if (ret < 0)
-	err (1, "mkdir %s", path);
+	err(1, "mkdir %s", path);
 }
 
 static pid_t child_pid;
@@ -64,26 +64,26 @@ static pid_t child_pid;
 static sig_atomic_t term_sig = 0;
 
 static RETSIGTYPE
-child_sigterm (int signo)
+child_sigterm(int signo)
 {
     term_sig = 1;
 }
 
 static int
-child_chdir (const char *path)
+child_chdir(const char *path)
 {
     int ret;
     int pfd[2];
 
-    ret = pipe (pfd);
+    ret = pipe(pfd);
     if (ret < 0)
-	err (1, "pipe");
+	err(1, "pipe");
 
-    child_pid = fork ();
+    child_pid = fork();
     if (child_pid < 0)
-	err (1, "fork");
+	err(1, "fork");
     if (child_pid != 0) {
-	close (pfd[1]);
+	close(pfd[1]);
 	return pfd[0];
     } else {
 	char buf[256];
@@ -93,36 +93,36 @@ child_chdir (const char *path)
 	sa.sa_handler = child_sigterm;
 	sigfillset(&sa.sa_mask);
 	sa.sa_flags = 0;
-	sigaction (SIGTERM, &sa, NULL);
+	sigaction(SIGTERM, &sa, NULL);
 
-	close (pfd[0]);
-	ret = chdir (path);
+	close(pfd[0]);
+	ret = chdir(path);
 	if (ret < 0)
-	    err (1, "chdir %s", path);
-	ret = write (pfd[1], "", 1);
+	    err(1, "chdir %s", path);
+	ret = write(pfd[1], "", 1);
 	if (ret != 1)
-	    err (1, "write");
+	    err(1, "write");
 	while (!term_sig)
-	    pause ();
+	    pause();
 #if 0
-	if(getcwd (buf, sizeof(buf)) == NULL)
-	    err (1, "getcwd");
+	if (getcwd(buf, sizeof(buf)) == NULL)
+	    err(1, "getcwd");
 #endif
-	fp = fdopen (4, "w");
+	fp = fdopen(4, "w");
 	if (fp != NULL)
-	    fprintf (fp, "child: cwd = %s\n", buf);
-	exit (0);
+	    fprintf(fp, "child: cwd = %s\n", buf);
+	exit(0);
     }
 }
 
 static void
-kill_child (void)
+kill_child(void)
 {
-    kill (child_pid, SIGTERM);
+    kill(child_pid, SIGTERM);
 }
 
 int
-main (int argc, char **argv)
+main(int argc, char **argv)
 {
     struct stat sb;
     int ret;
@@ -131,37 +131,37 @@ main (int argc, char **argv)
     int status;
 
 
-    emkdir ("one", 0777);
-    emkdir ("two", 0777);
-    emkdir ("one/a", 0777);
+    emkdir("one", 0777);
+    emkdir("two", 0777);
+    emkdir("one/a", 0777);
 
-    fd = child_chdir ("one/a");
-    atexit (kill_child);
-    ret = read (fd, buf, 1);
+    fd = child_chdir("one/a");
+    atexit(kill_child);
+    ret = read(fd, buf, 1);
     if (ret < 0)
-        err(1, "read");
+	err(1, "read");
     if (ret == 0)
-        errx(1, "EOF on read");
+	errx(1, "EOF on read");
 
-    ret = rename ("one/a", "two/a");
+    ret = rename("one/a", "two/a");
     if (ret < 0)
-	err (1, "rename one/a two");
-    ret = lstat ("two/a", &sb);
+	err(1, "rename one/a two");
+    ret = lstat("two/a", &sb);
     if (ret < 0)
-	err (1, "lstat two/a");
-    ret = lstat ("one/a", &sb);
+	err(1, "lstat two/a");
+    ret = lstat("one/a", &sb);
     if (ret != -1 || errno != ENOENT)
-	errx (1, "one/a still exists");
-    kill_child ();
-    waitpid (child_pid, &status, 0);
-    ret = lstat ("one/a", &sb);
+	errx(1, "one/a still exists");
+    kill_child();
+    waitpid(child_pid, &status, 0);
+    ret = lstat("one/a", &sb);
     if (ret != -1 || errno != ENOENT)
-	errx (1, "one/a still exists after child");
+	errx(1, "one/a still exists after child");
     if (WIFEXITED(status) && WEXITSTATUS(status) == 0) {
-	rmdir ("one/a");
-	rmdir ("two/a");
-	rmdir ("one");
-	rmdir ("two");
+	rmdir("one/a");
+	rmdir("two/a");
+	rmdir("one");
+	rmdir("two");
 	return 0;
     } else
 	return 1;

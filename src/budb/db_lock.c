@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -32,111 +33,115 @@ RCSID("$Header$");
 
 afs_int32 FreeAllLocks(), FreeLock(), GetInstanceId(), GetLock();
 
-afs_int32 SBUDB_FreeAllLocks (call, instanceId)
+afs_int32
+SBUDB_FreeAllLocks(call, instanceId)
      struct rx_call *call;
      afs_uint32 instanceId;
 {
-  afs_int32 code;
+    afs_int32 code;
 
-  code = FreeAllLocks (call, instanceId);
-  osi_auditU (call, BUDB_FrALckEvent, code, AUD_END);
-  return code;
+    code = FreeAllLocks(call, instanceId);
+    osi_auditU(call, BUDB_FrALckEvent, code, AUD_END);
+    return code;
 }
 
-afs_int32 FreeAllLocks (call, instanceId)
+afs_int32
+FreeAllLocks(call, instanceId)
      struct rx_call *call;
      afs_uint32 instanceId;
 {
-    db_lockP    startPtr, endPtr;
+    db_lockP startPtr, endPtr;
     struct ubik_trans *ut;
     afs_int32 code;
 
-    if ( callPermitted(call) == 0 )
-	return(BUDB_NOTPERMITTED);
+    if (callPermitted(call) == 0)
+	return (BUDB_NOTPERMITTED);
 
     code = InitRPC(&ut, LOCKWRITE, 1);
-    if ( code )
-    	return(code);
+    if (code)
+	return (code);
 
     startPtr = &db.h.textLocks[0];
-    endPtr = &db.h.textLocks[TB_NUM-1];
-    while ( startPtr <= endPtr )
-    {
-	if ( (ntohl(startPtr->lockState) == 1)
-        &&   (ntohl(startPtr->instanceId) == instanceId)
-           )
-	{
+    endPtr = &db.h.textLocks[TB_NUM - 1];
+    while (startPtr <= endPtr) {
+	if ((ntohl(startPtr->lockState) == 1)
+	    && (ntohl(startPtr->instanceId) == instanceId)
+	    ) {
 	    /* release the lock */
-	    startPtr->lockState = 0;			/* unlock it */
+	    startPtr->lockState = 0;	/* unlock it */
 	    startPtr->lockTime = 0;
 	    startPtr->expires = 0;
 	    startPtr->instanceId = 0;
-	    dbwrite(ut, DBH_POS(startPtr), (char *) startPtr, 
+	    dbwrite(ut, DBH_POS(startPtr), (char *)startPtr,
 		    sizeof(db_lockT));
 	}
-        startPtr++;
+	startPtr++;
     }
     code = ubik_EndTrans(ut);
-    return(code);
+    return (code);
 }
 
-afs_int32 SBUDB_FreeLock (call, lockHandle)
+afs_int32
+SBUDB_FreeLock(call, lockHandle)
      struct rx_call *call;
      afs_uint32 lockHandle;
 {
-  afs_int32 code;
+    afs_int32 code;
 
-  code = FreeLock (call, lockHandle);
-  osi_auditU (call, BUDB_FreLckEvent, code, AUD_END);
-  return code;
+    code = FreeLock(call, lockHandle);
+    osi_auditU(call, BUDB_FreLckEvent, code, AUD_END);
+    return code;
 }
 
-afs_int32 FreeLock (call, lockHandle)
+afs_int32
+FreeLock(call, lockHandle)
      struct rx_call *call;
      afs_uint32 lockHandle;
 {
-    db_lockP	lockPtr = 0;
+    db_lockP lockPtr = 0;
     struct ubik_trans *ut;
     afs_int32 code;
 
-    if ( callPermitted(call) == 0 )
-	return(BUDB_NOTPERMITTED);
+    if (callPermitted(call) == 0)
+	return (BUDB_NOTPERMITTED);
 
     code = InitRPC(&ut, LOCKWRITE, 1);
-    if ( code )
-        return(code);
+    if (code)
+	return (code);
 
-    if ( checkLockHandle(ut, lockHandle) == 0 )
-    	ABORT(BUDB_BADARGUMENT);
+    if (checkLockHandle(ut, lockHandle) == 0)
+	ABORT(BUDB_BADARGUMENT);
 
-    lockPtr = &db.h.textLocks[lockHandle-1];
+    lockPtr = &db.h.textLocks[lockHandle - 1];
 
-    lockPtr->lockState = 0;                             /* unlock it */
+    lockPtr->lockState = 0;	/* unlock it */
     lockPtr->lockTime = 0;
     lockPtr->expires = 0;
     lockPtr->instanceId = 0;
-    dbwrite(ut, DBH_POS(lockPtr), (char *) lockPtr, sizeof(db_lockT));
+    dbwrite(ut, DBH_POS(lockPtr), (char *)lockPtr, sizeof(db_lockT));
 
     code = ubik_EndTrans(ut);
-    return(code);
-    
-abort_exit:
-    ubik_AbortTrans (ut);
-    return(code);
+    return (code);
+
+  abort_exit:
+    ubik_AbortTrans(ut);
+    return (code);
 }
 
-afs_int32 SBUDB_GetInstanceId(call, instanceId)
+afs_int32
+SBUDB_GetInstanceId(call, instanceId)
      struct rx_call *call;
      afs_uint32 *instanceId;
 {
-  afs_int32 code;
+    afs_int32 code;
 
-  code = GetInstanceId (call, instanceId);
-  osi_auditU (call, BUDB_GetIIdEvent, code, AUD_END);
-  return code;
+    code = GetInstanceId(call, instanceId);
+    osi_auditU(call, BUDB_GetIIdEvent, code, AUD_END);
+    return code;
 }
 
-afs_int32 GetInstanceId (call, instanceId)
+afs_int32
+GetInstanceId(call, instanceId)
      struct rx_call *call;
      afs_uint32 *instanceId;
 {
@@ -152,33 +157,35 @@ afs_int32 GetInstanceId (call, instanceId)
      */
 
     code = InitRPC(&ut, LOCKWRITE, 1);
-    if ( code )
-    	return(code);
+    if (code)
+	return (code);
 
     instanceValue = ntohl(db.h.lastInstanceId) + 1;
 
     set_header_word(ut, lastInstanceId, htonl(instanceValue));
 
     code = ubik_EndTrans(ut);
-    return(code);
+    return (code);
 }
 
 
-afs_int32 SBUDB_GetLock (call, instanceId, lockName, expiration, lockHandle)
+afs_int32
+SBUDB_GetLock(call, instanceId, lockName, expiration, lockHandle)
      struct rx_call *call;
      afs_uint32 instanceId;
      afs_int32 lockName;
      afs_int32 expiration;
      afs_uint32 *lockHandle;
 {
-  afs_int32 code;
+    afs_int32 code;
 
-  code = GetLock (call, instanceId, lockName, expiration, lockHandle);
-  osi_auditU (call, BUDB_GetLckEvent, code, AUD_END);
-  return code;
+    code = GetLock(call, instanceId, lockName, expiration, lockHandle);
+    osi_auditU(call, BUDB_GetLckEvent, code, AUD_END);
+    return code;
 }
 
-afs_int32 GetLock (call, instanceId, lockName, expiration, lockHandle)
+afs_int32
+GetLock(call, instanceId, lockName, expiration, lockHandle)
      struct rx_call *call;
      afs_uint32 instanceId;
      afs_int32 lockName;
@@ -186,51 +193,51 @@ afs_int32 GetLock (call, instanceId, lockName, expiration, lockHandle)
      afs_uint32 *lockHandle;
 {
     struct timeval tv;
-    db_lockP	lockPtr;
+    db_lockP lockPtr;
     struct ubik_trans *ut;
 
     afs_int32 code;
 
-    if ( callPermitted(call) == 0 )
-	return(BUDB_NOTPERMITTED);
+    if (callPermitted(call) == 0)
+	return (BUDB_NOTPERMITTED);
 
-    if ( (lockName < 0) || (lockName >= TB_NUM) )
-    	return(BUDB_BADARGUMENT);
+    if ((lockName < 0) || (lockName >= TB_NUM))
+	return (BUDB_BADARGUMENT);
 
     /* get the current time */
     gettimeofday(&tv, 0);
 
     code = InitRPC(&ut, LOCKWRITE, 1);
-    if ( code )
-        return(code);
+    if (code)
+	return (code);
 
     lockPtr = &db.h.textLocks[lockName];
 
-    if ( (ntohl(lockPtr->lockState) != 0)		/* lock set */
-    &&   (ntohl(lockPtr->expires) > tv.tv_sec)		/* not expired */
-       )
-    {
-	if ( ntohl(lockPtr->instanceId) == instanceId )
-		code = BUDB_SELFLOCKED;
+    if ((ntohl(lockPtr->lockState) != 0)	/* lock set */
+	&&(ntohl(lockPtr->expires) > tv.tv_sec)	/* not expired */
+	) {
+	if (ntohl(lockPtr->instanceId) == instanceId)
+	    code = BUDB_SELFLOCKED;
 	else
-		code = BUDB_LOCKED;
+	    code = BUDB_LOCKED;
 	goto abort_exit;
     }
-    
-    lockPtr->lockState = htonl(1);			/* lock it */
-    lockPtr->lockTime = htonl(tv.tv_sec);		/* when locked */
+
+    lockPtr->lockState = htonl(1);	/* lock it */
+    lockPtr->lockTime = htonl(tv.tv_sec);	/* when locked */
     lockPtr->expires = htonl(tv.tv_sec + expiration);
     lockPtr->instanceId = htonl(instanceId);
-    code = dbwrite(ut, DBH_POS(lockPtr), (char *) lockPtr, sizeof(db_lockT));
-    if (code) ABORT(code);
+    code = dbwrite(ut, DBH_POS(lockPtr), (char *)lockPtr, sizeof(db_lockT));
+    if (code)
+	ABORT(code);
 
-    *lockHandle = (afs_uint32)(lockName + 1);
+    *lockHandle = (afs_uint32) (lockName + 1);
     code = ubik_EndTrans(ut);
-    return(code);
+    return (code);
 
-abort_exit:
-    ubik_AbortTrans (ut);
-    return(code);
+  abort_exit:
+    ubik_AbortTrans(ut);
+    return (code);
 }
 
 
@@ -246,4 +253,3 @@ checkLockHandle(ut, lockHandle)
 {
     return (((lockHandle > 0) && (lockHandle <= TB_NUM)) ? 1 : 0);
 }
-

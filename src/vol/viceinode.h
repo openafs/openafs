@@ -20,23 +20,23 @@
 /* The four inode parameters for most inodes (files, directories,
    symbolic links) */
 struct InodeParams {
-    VolId	volumeId;
-    VnodeId	vnodeNumber;
-    Unique	vnodeUniquifier;
-    FileVersion	inodeDataVersion;
+    VolId volumeId;
+    VnodeId vnodeNumber;
+    Unique vnodeUniquifier;
+    FileVersion inodeDataVersion;
 };
 
 /* The four inode parameters for special inodes, i.e. the descriptive
    inodes for a volume */
 struct SpecialInodeParams {
-    VolId	volumeId;
-    VnodeId	vnodeNumber; /* this must be INODESPECIAL */
+    VolId volumeId;
+    VnodeId vnodeNumber;	/* this must be INODESPECIAL */
 #ifdef	AFS_3DISPARES
-    VolId	parentId;
-    int		type;
+    VolId parentId;
+    int type;
 #else
-    int		type;
-    VolId	parentId;
+    int type;
+    VolId parentId;
 #endif
 };
 
@@ -45,20 +45,20 @@ struct SpecialInodeParams {
    these correspond to the params.fsck array of this record.
  */
 struct ViceInodeInfo {
-    Inode	inodeNumber;
-    int		byteCount;
-    int		linkCount;
+    Inode inodeNumber;
+    int byteCount;
+    int linkCount;
     union {
-        bit32			  param[4];
-        struct InodeParams 	  vnode;
+	bit32 param[4];
+	struct InodeParams vnode;
 	struct SpecialInodeParams special;
     } u;
-}; 
+};
 
 #ifdef	AFS_3DISPARES
-#define INODESPECIAL	0x1fffffff	
+#define INODESPECIAL	0x1fffffff
 #else
-#define INODESPECIAL	0xffffffff	
+#define INODESPECIAL	0xffffffff
 #endif
 /* Special inode types.  Be careful of the ordering.  Must start at 1.
    See vutil.h */

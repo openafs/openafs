@@ -14,14 +14,14 @@
 typedef struct iovec
 #ifndef AFS_DJGPP_ENV
 {
-	void *iov_base;
-	int iov_len;
+    void *iov_base;
+    int iov_len;
 }
 #endif
 iovec_t;
 
 struct msghdr {
-    char * msg_name;
+    char *msg_name;
     int msg_namelen;
     iovec_t *msg_iov;
     int msg_iovlen;

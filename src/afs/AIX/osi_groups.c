@@ -16,31 +16,26 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
-#include "afs/afs_stats.h"  /* statistics */
+#include "afs/afs_stats.h"	/* statistics */
 
 
 static int
-afs_getgroups(
-    struct ucred *cred,
-    int ngroups,
-    gid_t *gidset);
+  afs_getgroups(struct ucred *cred, int ngroups, gid_t * gidset);
 
 static int
-afs_setgroups(
-    struct ucred **cred,
-    int ngroups,
-    gid_t *gidset,
-    int change_parent);
+  afs_setgroups(struct ucred **cred, int ngroups, gid_t * gidset,
+		int change_parent);
 
 #ifndef AFS_AIX51_ENV
 int
 setgroups(ngroups, gidset)
-    int ngroups;
-    gid_t *gidset;
+     int ngroups;
+     gid_t *gidset;
 {
     int code = 0;
     struct vrequest treq;
@@ -54,7 +49,8 @@ setgroups(ngroups, gidset)
     code = afs_InitReq(&treq, credp);
     AFS_GUNLOCK();
     crfree(credp);
-    if (code) return code;
+    if (code)
+	return code;
 
     code = osetgroups(ngroups, gidset);
 
@@ -82,10 +78,10 @@ setgroups(ngroups, gidset)
 
 int
 setpag(cred, pagvalue, newpag, change_parent)
-    struct ucred **cred;
-    afs_uint32 pagvalue;
-    afs_uint32 *newpag;
-    afs_uint32 change_parent;
+     struct ucred **cred;
+     afs_uint32 pagvalue;
+     afs_uint32 *newpag;
+     afs_uint32 change_parent;
 {
     gid_t gidset[NGROUPS];
     int ngroups, code;
@@ -99,13 +95,13 @@ setpag(cred, pagvalue, newpag, change_parent)
 	if (ngroups + 2 > NGROUPS) {
 	    return (setuerror(E2BIG), E2BIG);
 	}
-	for (j = ngroups -1; j >= 0; j--) {
- 	    gidset[j+2] = gidset[j];
- 	}
+	for (j = ngroups - 1; j >= 0; j--) {
+	    gidset[j + 2] = gidset[j];
+	}
 	ngroups += 2;
     }
 #endif
-    *newpag = (pagvalue == -1 ? genpag(): pagvalue);
+    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
 #ifdef AFS_AIX51_ENV
     if (change_parent) {
 	code = kcred_setpag(*cred, PAG_AFS, *newpag);
@@ -128,10 +124,7 @@ setpag(cred, pagvalue, newpag, change_parent)
 
 #ifndef AFS_AIX51_ENV
 static int
-afs_getgroups(
-    struct ucred *cred,
-    int ngroups,
-    gid_t *gidset)
+afs_getgroups(struct ucred *cred, int ngroups, gid_t * gidset)
 {
     int ngrps, savengrps;
     gid_t *gp;
@@ -150,9 +143,9 @@ afs_getgroups(
 
 static void
 copy_to_cred(newcr, ngroups, gidset)
-    struct ucred *newcr;
-    int ngroups;
-    gid_t *gidset;
+     struct ucred *newcr;
+     int ngroups;
+     gid_t *gidset;
 {
     gid_t *gp;
     int newngroups;
@@ -178,11 +171,8 @@ copy_to_cred(newcr, ngroups, gidset)
  */
 
 static int
-afs_setgroups(
-    struct ucred **cred,
-    int ngroups,
-    gid_t *gidset,
-    int change_parent)
+afs_setgroups(struct ucred **cred, int ngroups, gid_t * gidset,
+	      int change_parent)
 {
     AFS_STATCNT(afs_setgroups);
 

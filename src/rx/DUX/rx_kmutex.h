@@ -100,10 +100,9 @@ typedef int afs_kcondvar_t;
 #define MUTEX_ISMINE(a)	(((afs_kmutex_t *)(a))->owner == current_thread())
 
 #undef osirx_AssertMine
-extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
+extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 
-#endif	/* DUX40 */
+#endif /* DUX40 */
 
 
 #endif /* _RX_KMUTEX_H_ */
-

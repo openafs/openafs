@@ -6,7 +6,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <stdio.h>
 #include "afsutil.h"
@@ -25,20 +26,21 @@ RCSID("$Header$");
 #define	KSUCCESS	0
 #define	KFAILURE	-1
 
-int afs_krb_get_lrealm(char *r, int n)
+int
+afs_krb_get_lrealm(char *r, int n)
 {
     FILE *cnffile, *fopen();
 
     if (n > 1)
-	return(KFAILURE);  /* Temporary restriction */
+	return (KFAILURE);	/* Temporary restriction */
 
     if ((cnffile = fopen(AFSDIR_SERVER_KCONF_FILEPATH, "r")) == NULL) {
-	return(KFAILURE);
+	return (KFAILURE);
     }
-    if (fscanf(cnffile,"%s",r) != 1) {
-        (void) fclose(cnffile);
-        return(KFAILURE);
+    if (fscanf(cnffile, "%s", r) != 1) {
+	(void)fclose(cnffile);
+	return (KFAILURE);
     }
-    (void) fclose(cnffile);
-    return(KSUCCESS);
+    (void)fclose(cnffile);
+    return (KSUCCESS);
 }

@@ -53,20 +53,20 @@ extern jfieldID server_cachedInfoField;
 /*-----------------------------------------------------------------------
  * Definition in User.c
  */
-extern void getUserInfoChar (JNIEnv *env, int cellHandle, const char *name, 
-			     jobject user);
+extern void getUserInfoChar(JNIEnv * env, int cellHandle, const char *name,
+			    jobject user);
 
 /*-----------------------------------------------------------------------
  * Definition in Group.c
  */
-extern void getGroupInfoChar (JNIEnv *env, int cellHandle, const char *name, 
-			      jobject group);
+extern void getGroupInfoChar(JNIEnv * env, int cellHandle, const char *name,
+			     jobject group);
 
 /*-----------------------------------------------------------------------
  * Definition in Server.c
  */
-extern void fillServerInfo (JNIEnv *env, jint cellHandle, jobject server, 
-			    afs_serverEntry_t servEntry);
+extern void fillServerInfo(JNIEnv * env, jint cellHandle, jobject server,
+			   afs_serverEntry_t servEntry);
 
 
 /*-----------------------------------------------------------------------*/
@@ -80,29 +80,29 @@ extern void fillServerInfo (JNIEnv *env, jint cellHandle, jobject server,
  *  cellHandle    the handle of the cell to which the users belong
  *  returns total count of KAS users
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getKasUserCount 
-  (JNIEnv *env, jclass cls, jint cellHandle) 
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getKasUserCount(JNIEnv * env, jclass cls,
+					   jint cellHandle)
 {
-  afs_status_t ast;
-  void *iterationId;
-  kas_identity_t who;
-  int i = 0;
+    afs_status_t ast;
+    void *iterationId;
+    kas_identity_t who;
+    int i = 0;
 
-  if ( !kas_PrincipalGetBegin( (void *) cellHandle, NULL, 
-			      &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (!kas_PrincipalGetBegin((void *)cellHandle, NULL, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  while ( kas_PrincipalGetNext( (void *) iterationId, &who, &ast ) ) i++;
+    while (kas_PrincipalGetNext((void *)iterationId, &who, &ast))
+	i++;
 
-  if ( ast != ADMITERATORDONE ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (ast != ADMITERATORDONE) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  return i;
+    return i;
 }
 
 
@@ -117,20 +117,19 @@ Java_org_openafs_jafs_Cell_getKasUserCount
  *  cellHandle    the handle of the cell to which the users belong
  *  returns an iteration ID
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getKasUsersBegin 
-  (JNIEnv *env, jclass cls, jint cellHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getKasUsersBegin(JNIEnv * env, jclass cls,
+					    jint cellHandle)
 {
-  afs_status_t ast;
-  void *iterationId;
+    afs_status_t ast;
+    void *iterationId;
 
-  if ( !kas_PrincipalGetBegin( (void *) cellHandle, NULL, &iterationId, 
-			      &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!kas_PrincipalGetBegin((void *)cellHandle, NULL, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 
-  return (jint) iterationId;
+    return (jint) iterationId;
 }
 
 /**
@@ -146,33 +145,33 @@ Java_org_openafs_jafs_Cell_getKasUsersBegin
  *  startIndex    the starting base-zero index
  *  returns an iteration ID
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getKasUsersBeginAt 
-  (JNIEnv *env, jclass cls, jint cellHandle, jint startIndex)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getKasUsersBeginAt(JNIEnv * env, jclass cls,
+					      jint cellHandle,
+					      jint startIndex)
 {
-  afs_status_t ast;
-  void *iterationId;
-  kas_identity_t who;
-  int i;
+    afs_status_t ast;
+    void *iterationId;
+    kas_identity_t who;
+    int i;
 
-  if ( !kas_PrincipalGetBegin( (void *) cellHandle, NULL, 
-			      &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
-
-  for ( i = 1; i < startIndex; i++) {
-    if ( !kas_PrincipalGetNext( (void *) iterationId, &who, &ast ) ) {
-      if ( ast == ADMITERATORDONE ) {
-        return 0;
-      } else {
-        throwAFSException( env, ast );
-        return 0;
-      }
+    if (!kas_PrincipalGetBegin((void *)cellHandle, NULL, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return;
     }
-  }
 
-  return (jint) iterationId;
+    for (i = 1; i < startIndex; i++) {
+	if (!kas_PrincipalGetNext((void *)iterationId, &who, &ast)) {
+	    if (ast == ADMITERATORDONE) {
+		return 0;
+	    } else {
+		throwAFSException(env, ast);
+		return 0;
+	    }
+	}
+    }
+
+    return (jint) iterationId;
 }
 
 /**
@@ -185,43 +184,43 @@ Java_org_openafs_jafs_Cell_getKasUsersBeginAt
  *  iterationId   the iteration ID of this iteration
  *  returns the name of the next user of the cell
  */
-JNIEXPORT jstring JNICALL 
-Java_org_openafs_jafs_Cell_getKasUsersNextString 
-  (JNIEnv *env, jclass cls, jint iterationId)
+JNIEXPORT jstring JNICALL
+Java_org_openafs_jafs_Cell_getKasUsersNextString(JNIEnv * env, jclass cls,
+						 jint iterationId)
 {
-  afs_status_t ast;
-  kas_identity_t who;
-  jstring juser;
+    afs_status_t ast;
+    kas_identity_t who;
+    jstring juser;
 
-  if ( !kas_PrincipalGetNext( (void *) iterationId, &who, &ast ) ) {
-    if ( ast == ADMITERATORDONE ) {
-	return NULL;
-    // other
-    } else {
-      throwAFSException( env, ast );
-      return;
-    }    
-  }
-
-  if ( strcmp( who.instance, "" ) ) {
-    char *fullName = (char *) malloc( sizeof(char)*( strlen( who.principal ) 
-						     + strlen( who.instance ) 
-						     + 2 ) );
-    if ( !fullName ) {
-      throwAFSException( env, JAFSADMNOMEM );
-      return;    
+    if (!kas_PrincipalGetNext((void *)iterationId, &who, &ast)) {
+	if (ast == ADMITERATORDONE) {
+	    return NULL;
+	    // other
+	} else {
+	    throwAFSException(env, ast);
+	    return;
+	}
     }
-    *fullName = '\0';
-    strcat( fullName, who.principal );
-    strcat( fullName, "." );
-    strcat( fullName, who.instance );
-    juser = (*env)->NewStringUTF(env, fullName );
-    free( fullName );
-  } else {
-    juser = (*env)->NewStringUTF(env, who.principal);
-  }
 
-  return juser;
+    if (strcmp(who.instance, "")) {
+	char *fullName = (char *)malloc(sizeof(char) * (strlen(who.principal)
+							+ strlen(who.instance)
+							+ 2));
+	if (!fullName) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+	*fullName = '\0';
+	strcat(fullName, who.principal);
+	strcat(fullName, ".");
+	strcat(fullName, who.instance);
+	juser = (*env)->NewStringUTF(env, fullName);
+	free(fullName);
+    } else {
+	juser = (*env)->NewStringUTF(env, who.principal);
+    }
+
+    return juser;
 
 }
 
@@ -237,60 +236,61 @@ Java_org_openafs_jafs_Cell_getKasUsersNextString
  *                  the next kas user
  *  returns 0 if there are no more users, != 0 otherwise
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getKasUsersNext 
-  (JNIEnv *env, jclass cls, jint cellHandle, jint iterationId, 
-   jobject juserObject)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getKasUsersNext(JNIEnv * env, jclass cls,
+					   jint cellHandle, jint iterationId,
+					   jobject juserObject)
 {
 
-  afs_status_t ast;
-  kas_identity_t who;
-  jstring juser;
-  char *fullName = NULL;
+    afs_status_t ast;
+    kas_identity_t who;
+    jstring juser;
+    char *fullName = NULL;
 
 
-  if ( !kas_PrincipalGetNext( (void *) iterationId, &who, &ast ) ) {
-    if ( ast == ADMITERATORDONE ) {
-	return 0;
-    // other
-    } else {
-      throwAFSException( env, ast );
-      return 0;
-    }    
-  }
-
-  // take care of the instance stuff(by concatenating with a period in between)
-  if ( strcmp( who.instance, "" ) ) {
-    fullName = (char *) malloc( sizeof(char)*( strlen( who.principal ) + 
-					       strlen( who.instance ) + 2 ) );
-    if ( !fullName ) {
-      throwAFSException( env, JAFSADMNOMEM );
-      return;    
+    if (!kas_PrincipalGetNext((void *)iterationId, &who, &ast)) {
+	if (ast == ADMITERATORDONE) {
+	    return 0;
+	    // other
+	} else {
+	    throwAFSException(env, ast);
+	    return 0;
+	}
     }
-    *fullName = '\0';
-    strcat( fullName, who.principal );
-    strcat( fullName, "." );
-    strcat( fullName, who.instance );
-    juser = (*env)->NewStringUTF(env, fullName );
-  } else {
-    juser = (*env)->NewStringUTF(env, who.principal);
-  }
+    // take care of the instance stuff(by concatenating with a period in between)
+    if (strcmp(who.instance, "")) {
+	fullName =
+	    (char *)malloc(sizeof(char) *
+			   (strlen(who.principal) + strlen(who.instance) +
+			    2));
+	if (!fullName) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+	*fullName = '\0';
+	strcat(fullName, who.principal);
+	strcat(fullName, ".");
+	strcat(fullName, who.instance);
+	juser = (*env)->NewStringUTF(env, fullName);
+    } else {
+	juser = (*env)->NewStringUTF(env, who.principal);
+    }
 
-  if ( userCls == 0 ) {
-    internal_getUserClass( env, juserObject );
-  }
+    if (userCls == 0) {
+	internal_getUserClass(env, juserObject);
+    }
 
-  (*env)->SetObjectField(env, juserObject, user_nameField, juser);
+    (*env)->SetObjectField(env, juserObject, user_nameField, juser);
 
-  if ( fullName != NULL ) { 
-      getUserInfoChar( env, (int) cellHandle, fullName, juserObject );
-      free( fullName );
-  } else {
-      getUserInfoChar( env, (int) cellHandle, who.principal, juserObject );
-  }
-  (*env)->SetBooleanField( env, juserObject, user_cachedInfoField, TRUE );
+    if (fullName != NULL) {
+	getUserInfoChar(env, (int)cellHandle, fullName, juserObject);
+	free(fullName);
+    } else {
+	getUserInfoChar(env, (int)cellHandle, who.principal, juserObject);
+    }
+    (*env)->SetBooleanField(env, juserObject, user_cachedInfoField, TRUE);
 
-  return 1;
+    return 1;
 
 }
 
@@ -301,16 +301,16 @@ Java_org_openafs_jafs_Cell_getKasUsersNext
  *  cls      the current Java class
  *  iterationId   the iteration ID of this iteration
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Cell_getKasUsersDone 
-  (JNIEnv *env, jclass cls, jint iterationId)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Cell_getKasUsersDone(JNIEnv * env, jclass cls,
+					   jint iterationId)
 {
-  afs_status_t ast;
+    afs_status_t ast;
 
-  if ( !kas_PrincipalGetDone( (void *) iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!kas_PrincipalGetDone((void *)iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 
 }
 
@@ -322,23 +322,23 @@ Java_org_openafs_jafs_Cell_getKasUsersDone
  *  cellHandle    the handle of the cell to which the user belongs
  *  returns the name of the cell
  */
-JNIEXPORT jstring JNICALL 
-Java_org_openafs_jafs_Cell_getCellName 
-  (JNIEnv *env, jclass cls, jint cellHandle)
+JNIEXPORT jstring JNICALL
+Java_org_openafs_jafs_Cell_getCellName(JNIEnv * env, jclass cls,
+				       jint cellHandle)
 {
-  afs_status_t ast;
-  char *cellName;
-  jstring jcellName;
+    afs_status_t ast;
+    char *cellName;
+    jstring jcellName;
 
-  if ( !afsclient_CellNameGet( (void *) cellHandle, 
-			      (const char **) &cellName, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
-  
-  jcellName = (*env)->NewStringUTF(env, cellName);
+    if (!afsclient_CellNameGet
+	((void *)cellHandle, (const char **)&cellName, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 
-  return jcellName;
+    jcellName = (*env)->NewStringUTF(env, cellName);
+
+    return jcellName;
 
 }
 
@@ -351,37 +351,38 @@ Java_org_openafs_jafs_Cell_getCellName
  *  cellHandle    the handle of the cell to which the users belong
  *  returns total number of PTS users
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getPtsUserCount 
-  (JNIEnv *env, jclass cls, jint cellHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getPtsUserCount(JNIEnv * env, jclass cls,
+					   jint cellHandle)
 {
-  afs_status_t ast;
-  void *iterationId;
-  char *userName;
-  int i = 0;
+    afs_status_t ast;
+    void *iterationId;
+    char *userName;
+    int i = 0;
 
-  if ( !pts_UserListBegin( (void *) cellHandle, &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (!pts_UserListBegin((void *)cellHandle, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  userName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+    userName = (char *)malloc(sizeof(char) * PTS_MAX_NAME_LEN);
 
-  if ( !userName ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return -1;    
-  }
+    if (!userName) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return -1;
+    }
 
-  while ( pts_UserListNext( (void *) iterationId, userName, &ast ) ) i++;
+    while (pts_UserListNext((void *)iterationId, userName, &ast))
+	i++;
 
-  free( userName );
+    free(userName);
 
-  if ( ast != ADMITERATORDONE ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (ast != ADMITERATORDONE) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  return i;
+    return i;
 }
 
 /**
@@ -393,61 +394,61 @@ Java_org_openafs_jafs_Cell_getPtsUserCount
  *  cellHandle    the handle of the cell to which the users belong
  *  returns total number of users that are in PTS and not KAS
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getPtsOnlyUserCount 
-  (JNIEnv *env, jclass cls, jint cellHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getPtsOnlyUserCount(JNIEnv * env, jclass cls,
+					       jint cellHandle)
 {
-  afs_status_t ast;
-  void *iterationId;
-  kas_identity_p who = (kas_identity_p) malloc( sizeof(kas_identity_t) );
-  kas_principalEntry_t kasEntry;
-  char *userName;
-  int i = 0;
+    afs_status_t ast;
+    void *iterationId;
+    kas_identity_p who = (kas_identity_p) malloc(sizeof(kas_identity_t));
+    kas_principalEntry_t kasEntry;
+    char *userName;
+    int i = 0;
 
-  if ( who == NULL ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return -1;
-  }
+    if (who == NULL) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return -1;
+    }
 
-  if ( !pts_UserListBegin( (void *) cellHandle, &iterationId, &ast ) ) {
-    free( who );
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (!pts_UserListBegin((void *)cellHandle, &iterationId, &ast)) {
+	free(who);
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  userName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
-  if ( !userName ) {
-    free( who );
-    throwAFSException( env, JAFSADMNOMEM );
-    return -1;
-  }
+    userName = (char *)malloc(sizeof(char) * PTS_MAX_NAME_LEN);
+    if (!userName) {
+	free(who);
+	throwAFSException(env, JAFSADMNOMEM);
+	return -1;
+    }
 
-  while ( pts_UserListNext( (void *) iterationId, userName, &ast ) ) {
-    if ( strcmp( userName, "anonymous" ) != 0 ) {
-      // make sure the name is within the allowed bounds
-      if ( strlen( userName ) > KAS_MAX_NAME_LEN ) {
-	    free( who );
-	    free( userName );
-	    throwAFSException( env, ADMPTSUSERNAMETOOLONG );
-	    return -1;
-	  }
-  
-      // if there is a kas entry, recurse
-      internal_makeKasIdentity( userName, who );
-      if ( !kas_PrincipalGet( (void *) cellHandle, NULL, who, 
-			     &kasEntry, &ast ) ) i++;
+    while (pts_UserListNext((void *)iterationId, userName, &ast)) {
+	if (strcmp(userName, "anonymous") != 0) {
+	    // make sure the name is within the allowed bounds
+	    if (strlen(userName) > KAS_MAX_NAME_LEN) {
+		free(who);
+		free(userName);
+		throwAFSException(env, ADMPTSUSERNAMETOOLONG);
+		return -1;
+	    }
+	    // if there is a kas entry, recurse
+	    internal_makeKasIdentity(userName, who);
+	    if (!kas_PrincipalGet
+		((void *)cellHandle, NULL, who, &kasEntry, &ast))
+		i++;
 	}
-  }
+    }
 
-  free( userName );
-  free( who );
+    free(userName);
+    free(who);
 
-  if ( ast != ADMITERATORDONE ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (ast != ADMITERATORDONE) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  return i;
+    return i;
 }
 
 /**
@@ -461,19 +462,19 @@ Java_org_openafs_jafs_Cell_getPtsOnlyUserCount
  *  cellHandle    the handle of the cell to which the users belong
  *  returns an iteration ID
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getPtsUsersBegin 
-  (JNIEnv *env, jclass cls, jint cellHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getPtsUsersBegin(JNIEnv * env, jclass cls,
+					    jint cellHandle)
 {
-  afs_status_t ast;
-  void *iterationId;
+    afs_status_t ast;
+    void *iterationId;
 
-  if ( !pts_UserListBegin( (void *) cellHandle, &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (!pts_UserListBegin((void *)cellHandle, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  return (jint) iterationId;
+    return (jint) iterationId;
 
 }
 
@@ -486,40 +487,40 @@ Java_org_openafs_jafs_Cell_getPtsUsersBegin
  *  iterationId   the iteration ID of this iteration
  *  returns the name of the next user of the cell
  */
-JNIEXPORT jstring JNICALL 
-Java_org_openafs_jafs_Cell_getPtsUsersNextString 
-  (JNIEnv *env, jclass cls, jint iterationId)
+JNIEXPORT jstring JNICALL
+Java_org_openafs_jafs_Cell_getPtsUsersNextString(JNIEnv * env, jclass cls,
+						 jint iterationId)
 {
-  afs_status_t ast;
-  char *userName;
-  jstring juser;
+    afs_status_t ast;
+    char *userName;
+    jstring juser;
 
-  userName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+    userName = (char *)malloc(sizeof(char) * PTS_MAX_NAME_LEN);
 
-  if ( !userName ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return NULL;
-  }
-
-  if ( !pts_UserListNext( (void *) iterationId, userName, &ast ) ) {
-    free( userName );
-    if ( ast == ADMITERATORDONE ) {
-      return NULL;
-    } else {
-      throwAFSException( env, ast );
-      return NULL;
+    if (!userName) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return NULL;
     }
-  }
 
-  if ( strcmp( userName, "anonymous" ) == 0 ) {
-    free( userName );
-    return Java_org_openafs_jafs_Cell_getPtsUsersNextString( env, cls, 
-								iterationId );
-  }
+    if (!pts_UserListNext((void *)iterationId, userName, &ast)) {
+	free(userName);
+	if (ast == ADMITERATORDONE) {
+	    return NULL;
+	} else {
+	    throwAFSException(env, ast);
+	    return NULL;
+	}
+    }
 
-  juser = (*env)->NewStringUTF(env, userName);
-  free( userName );
-  return juser;
+    if (strcmp(userName, "anonymous") == 0) {
+	free(userName);
+	return Java_org_openafs_jafs_Cell_getPtsUsersNextString(env, cls,
+								iterationId);
+    }
+
+    juser = (*env)->NewStringUTF(env, userName);
+    free(userName);
+    return juser;
 
 }
 
@@ -533,64 +534,62 @@ Java_org_openafs_jafs_Cell_getPtsUsersNextString
  *  cellHandle   the cell handle to which these users will belong
  *  returns the name of the next pts user (not kas user) of the cell
  */
-JNIEXPORT jstring JNICALL 
-Java_org_openafs_jafs_Cell_getPtsOnlyUsersNextString 
-  (JNIEnv *env, jclass cls, jint iterationId, jint cellHandle)
+JNIEXPORT jstring JNICALL
+Java_org_openafs_jafs_Cell_getPtsOnlyUsersNextString(JNIEnv * env, jclass cls,
+						     jint iterationId,
+						     jint cellHandle)
 {
-    kas_identity_p who = (kas_identity_p) malloc( sizeof(kas_identity_t) );
+    kas_identity_p who = (kas_identity_p) malloc(sizeof(kas_identity_t));
     kas_principalEntry_t kasEntry;
     afs_status_t ast;
     char *userName;
     jstring juser;
 
-    if ( !who ) {
-      throwAFSException( env, JAFSADMNOMEM );
-      return NULL;
+    if (!who) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return NULL;
     }
 
-    userName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+    userName = (char *)malloc(sizeof(char) * PTS_MAX_NAME_LEN);
 
-    if ( !userName ) {
-      free( who );
-      throwAFSException( env, JAFSADMNOMEM );
-      return NULL;
+    if (!userName) {
+	free(who);
+	throwAFSException(env, JAFSADMNOMEM);
+	return NULL;
     }
 
-    while( 1 ) {
+    while (1) {
 
-	if ( !pts_UserListNext( (void *) iterationId, userName, &ast ) ) {
-	    free( userName );
-	    free( who );
-	    if ( ast == ADMITERATORDONE ) {
+	if (!pts_UserListNext((void *)iterationId, userName, &ast)) {
+	    free(userName);
+	    free(who);
+	    if (ast == ADMITERATORDONE) {
 		return NULL;
 	    } else {
-		throwAFSException( env, ast );
+		throwAFSException(env, ast);
 		return NULL;
 	    }
 	}
 
-	if ( strcmp( userName, "anonymous" ) == 0 ) {
+	if (strcmp(userName, "anonymous") == 0) {
 	    continue;
 	}
-	
 	// make sure the name is within the allowed bounds
-	if ( strlen( userName ) > KAS_MAX_NAME_LEN ) {
-	    free( who );
-	    free( userName );
-	    throwAFSException( env, ADMPTSUSERNAMETOOLONG );
+	if (strlen(userName) > KAS_MAX_NAME_LEN) {
+	    free(who);
+	    free(userName);
+	    throwAFSException(env, ADMPTSUSERNAMETOOLONG);
 	    return NULL;
 	}
-	
 	// if there is a kas entry, recurse
-	internal_makeKasIdentity( userName, who );
-	if ( kas_PrincipalGet( (void *) cellHandle, NULL, who, 
-			      &kasEntry, &ast ) ) {
+	internal_makeKasIdentity(userName, who);
+	if (kas_PrincipalGet((void *)cellHandle, NULL, who, &kasEntry, &ast)) {
 	    continue;
 	}
-	
+
 	juser = (*env)->NewStringUTF(env, userName);
-	free( userName );
-	free( who );
+	free(userName);
+	free(who);
 	return juser;
     }
 
@@ -608,54 +607,54 @@ Java_org_openafs_jafs_Cell_getPtsOnlyUsersNextString
  *                  the next pts user
  *  returns 0 if there are no more users, != 0 otherwise
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getPtsUsersNext 
-  (JNIEnv *env, jclass cls, jint cellHandle, jint iterationId, 
-   jobject juserObject )
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getPtsUsersNext(JNIEnv * env, jclass cls,
+					   jint cellHandle, jint iterationId,
+					   jobject juserObject)
 {
-   
-  afs_status_t ast;
-  char *userName;
-  jstring juser;
 
-  userName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+    afs_status_t ast;
+    char *userName;
+    jstring juser;
 
-  if ( !userName ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return 0;
-  }
+    userName = (char *)malloc(sizeof(char) * PTS_MAX_NAME_LEN);
 
-  if ( !pts_UserListNext( (void *) iterationId, userName, &ast ) ) {
-    free( userName );
-    if ( ast == ADMITERATORDONE ) {
-      return 0;
-    } else {
-      throwAFSException( env, ast );
-      return 0;
+    if (!userName) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return 0;
     }
-  }
 
-  if ( strcmp( userName, "anonymous" ) == 0 ) {
-    free( userName );
-    return Java_org_openafs_jafs_Cell_getPtsUsersNext( env, cls, 
-							  cellHandle, 
-							  iterationId, 
-							  juserObject );
-  }
-  
-  juser = (*env)->NewStringUTF(env, userName);
+    if (!pts_UserListNext((void *)iterationId, userName, &ast)) {
+	free(userName);
+	if (ast == ADMITERATORDONE) {
+	    return 0;
+	} else {
+	    throwAFSException(env, ast);
+	    return 0;
+	}
+    }
 
-  if ( userCls == 0 ) {
-    internal_getUserClass( env, juserObject );
-  }
+    if (strcmp(userName, "anonymous") == 0) {
+	free(userName);
+	return Java_org_openafs_jafs_Cell_getPtsUsersNext(env, cls,
+							  cellHandle,
+							  iterationId,
+							  juserObject);
+    }
 
-  (*env)->SetObjectField(env, juserObject, user_nameField, juser);
+    juser = (*env)->NewStringUTF(env, userName);
 
-  getUserInfoChar( env, (int) cellHandle, userName, juserObject );
-  (*env)->SetBooleanField( env, juserObject, user_cachedInfoField, TRUE );
+    if (userCls == 0) {
+	internal_getUserClass(env, juserObject);
+    }
 
-  free( userName );
-  return 1;
+    (*env)->SetObjectField(env, juserObject, user_nameField, juser);
+
+    getUserInfoChar(env, (int)cellHandle, userName, juserObject);
+    (*env)->SetBooleanField(env, juserObject, user_cachedInfoField, TRUE);
+
+    free(userName);
+    return 1;
 }
 
 /**
@@ -670,78 +669,75 @@ Java_org_openafs_jafs_Cell_getPtsUsersNext
  *                  the next pts (with no kas) user
  *  returns 0 if there are no more users, != 0 otherwise
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getPtsOnlyUsersNext 
-  (JNIEnv *env, jclass cls, jint cellHandle, jint iterationId, 
-   jobject juserObject )
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getPtsOnlyUsersNext(JNIEnv * env, jclass cls,
+					       jint cellHandle,
+					       jint iterationId,
+					       jobject juserObject)
 {
-  kas_identity_p who = (kas_identity_p) malloc( sizeof(kas_identity_t) );
-  kas_principalEntry_t kasEntry;
-  afs_status_t ast;
-  char *userName;
-  jstring juser;
+    kas_identity_p who = (kas_identity_p) malloc(sizeof(kas_identity_t));
+    kas_principalEntry_t kasEntry;
+    afs_status_t ast;
+    char *userName;
+    jstring juser;
 
-  if ( !who ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return 0;
-  }
-  
-  userName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+    if (!who) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return 0;
+    }
 
-  if ( !userName ) {
-    free( who );
-    throwAFSException( env, JAFSADMNOMEM );
-    return 0;
-  }
+    userName = (char *)malloc(sizeof(char) * PTS_MAX_NAME_LEN);
 
-  while( 1 ) {
+    if (!userName) {
+	free(who);
+	throwAFSException(env, JAFSADMNOMEM);
+	return 0;
+    }
 
-      if ( !pts_UserListNext( (void *) iterationId, userName, &ast ) ) {
-	  free( userName );
-	  free( who );
-	  if ( ast == ADMITERATORDONE ) {
-	      return 0;
-	  } else {
-	      throwAFSException( env, ast );
-	      return 0;
-	  }
-      }
-      
-      if ( strcmp( userName, "anonymous" ) == 0 ) {
-	  continue;
-      }
-      
-      // make sure the name is within the allowed bounds
-      if ( strlen( userName ) > KAS_MAX_NAME_LEN ) {
-	  free( userName );
-	  free( who );
-	  throwAFSException( env, ADMPTSUSERNAMETOOLONG );
-	  return 0;
-      }
-      
-      if ( userCls == 0 ) {
-	  internal_getUserClass( env, juserObject );
-      }
-      
-      
-      // if there is a kas entry, recurse
-      internal_makeKasIdentity( userName, who );
-      if ( kas_PrincipalGet( (void *) cellHandle, NULL, who, 
-			    &kasEntry, &ast ) ) {
-	  continue;
-      } 
-      
-      juser = (*env)->NewStringUTF(env, userName);
-      
-      (*env)->SetObjectField(env, juserObject, user_nameField, juser);
-      getUserInfoChar( env, (int) cellHandle, userName, juserObject );
-      (*env)->SetBooleanField( env, juserObject, user_cachedInfoField, TRUE );
-      
-      free( who );
-      free( userName );
-      return 1;
-      
-  }
+    while (1) {
+
+	if (!pts_UserListNext((void *)iterationId, userName, &ast)) {
+	    free(userName);
+	    free(who);
+	    if (ast == ADMITERATORDONE) {
+		return 0;
+	    } else {
+		throwAFSException(env, ast);
+		return 0;
+	    }
+	}
+
+	if (strcmp(userName, "anonymous") == 0) {
+	    continue;
+	}
+	// make sure the name is within the allowed bounds
+	if (strlen(userName) > KAS_MAX_NAME_LEN) {
+	    free(userName);
+	    free(who);
+	    throwAFSException(env, ADMPTSUSERNAMETOOLONG);
+	    return 0;
+	}
+
+	if (userCls == 0) {
+	    internal_getUserClass(env, juserObject);
+	}
+	// if there is a kas entry, recurse
+	internal_makeKasIdentity(userName, who);
+	if (kas_PrincipalGet((void *)cellHandle, NULL, who, &kasEntry, &ast)) {
+	    continue;
+	}
+
+	juser = (*env)->NewStringUTF(env, userName);
+
+	(*env)->SetObjectField(env, juserObject, user_nameField, juser);
+	getUserInfoChar(env, (int)cellHandle, userName, juserObject);
+	(*env)->SetBooleanField(env, juserObject, user_cachedInfoField, TRUE);
+
+	free(who);
+	free(userName);
+	return 1;
+
+    }
 
 }
 
@@ -752,17 +748,17 @@ Java_org_openafs_jafs_Cell_getPtsOnlyUsersNext
  *  cls      the current Java class
  *  iterationId   the iteration ID of this iteration
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Cell_getPtsUsersDone 
-  (JNIEnv *env, jclass cls, jint iterationId)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Cell_getPtsUsersDone(JNIEnv * env, jclass cls,
+					   jint iterationId)
 {
-  afs_status_t ast;
+    afs_status_t ast;
 
-  if ( !pts_UserListDone( (void *) iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
-  
+    if (!pts_UserListDone((void *)iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
+
 }
 
 /**
@@ -774,38 +770,39 @@ Java_org_openafs_jafs_Cell_getPtsUsersDone
  *  cellHandle    the handle of the cell to which the groups belong
  *  returns total number of groups
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getGroupCount 
-  (JNIEnv *env, jclass cls, jint cellHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getGroupCount(JNIEnv * env, jclass cls,
+					 jint cellHandle)
 {
 
-  afs_status_t ast;
-  void *iterationId;
-  char *groupName;
-  int i = 0;
+    afs_status_t ast;
+    void *iterationId;
+    char *groupName;
+    int i = 0;
 
-  if ( !pts_GroupListBegin( (void *) cellHandle, &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (!pts_GroupListBegin((void *)cellHandle, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+    groupName = (char *)malloc(sizeof(char) * PTS_MAX_NAME_LEN);
 
-  if ( !groupName ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return -1;
-  }
+    if (!groupName) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return -1;
+    }
 
-  while ( pts_GroupListNext( (void *) iterationId, groupName, &ast ) ) i++;
+    while (pts_GroupListNext((void *)iterationId, groupName, &ast))
+	i++;
 
-  free( groupName );
+    free(groupName);
 
-  if ( ast != ADMITERATORDONE ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (ast != ADMITERATORDONE) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  return i;
+    return i;
 }
 
 /**
@@ -819,19 +816,19 @@ Java_org_openafs_jafs_Cell_getGroupCount
  *  cellHandle    the handle of the cell to which the groups belong
  *  returns an iteration ID
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getGroupsBegin 
-  (JNIEnv *env, jclass cls, jint cellHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getGroupsBegin(JNIEnv * env, jclass cls,
+					  jint cellHandle)
 {
-  afs_status_t ast;
-  void *iterationId;
+    afs_status_t ast;
+    void *iterationId;
 
-  if ( !pts_GroupListBegin( (void *) cellHandle, &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!pts_GroupListBegin((void *)cellHandle, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 
-  return (jint) iterationId;
+    return (jint) iterationId;
 }
 
 /**
@@ -846,36 +843,36 @@ Java_org_openafs_jafs_Cell_getGroupsBegin
  *  startIndex    the starting base-zero index
  *  returns an iteration ID
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getGroupsBeginAt 
-  (JNIEnv *env, jclass cls, jint cellHandle, jint startIndex)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getGroupsBeginAt(JNIEnv * env, jclass cls,
+					    jint cellHandle, jint startIndex)
 {
-  afs_status_t ast;
-  void *iterationId;
-  char *groupName;
-  int i;
+    afs_status_t ast;
+    void *iterationId;
+    char *groupName;
+    int i;
 
-  groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+    groupName = (char *)malloc(sizeof(char) * PTS_MAX_NAME_LEN);
 
-  if ( !pts_GroupListBegin( (void *) cellHandle, &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return 0;
-  }
-
-  for ( i = 1; i < startIndex; i++) {
-    if ( !pts_GroupListNext( (void *) iterationId, groupName, &ast ) ) {
-      free( groupName );
-      if ( ast == ADMITERATORDONE ) {
-        return 0;
-      } else {
-        throwAFSException( env, ast );
-        return 0;
-      }
+    if (!pts_GroupListBegin((void *)cellHandle, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return 0;
     }
-  }
 
-  free( groupName );
-  return (jint) iterationId;
+    for (i = 1; i < startIndex; i++) {
+	if (!pts_GroupListNext((void *)iterationId, groupName, &ast)) {
+	    free(groupName);
+	    if (ast == ADMITERATORDONE) {
+		return 0;
+	    } else {
+		throwAFSException(env, ast);
+		return 0;
+	    }
+	}
+    }
+
+    free(groupName);
+    return (jint) iterationId;
 }
 
 /**
@@ -887,34 +884,34 @@ Java_org_openafs_jafs_Cell_getGroupsBeginAt
  *  iterationId   the iteration ID of this iteration
  *  returns the name of the next user of the cell
  */
-JNIEXPORT jstring JNICALL 
-Java_org_openafs_jafs_Cell_getGroupsNextString 
-  (JNIEnv *env, jclass cls, jint iterationId)
+JNIEXPORT jstring JNICALL
+Java_org_openafs_jafs_Cell_getGroupsNextString(JNIEnv * env, jclass cls,
+					       jint iterationId)
 {
-  afs_status_t ast;
-  char *groupName;
-  jstring jgroup;
+    afs_status_t ast;
+    char *groupName;
+    jstring jgroup;
 
-  groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+    groupName = (char *)malloc(sizeof(char) * PTS_MAX_NAME_LEN);
 
-  if ( !groupName ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return NULL;
-  }
-
-  if ( !pts_GroupListNext( (void *) iterationId, groupName, &ast ) ) {
-    free( groupName );
-    if ( ast == ADMITERATORDONE ) {
-      return NULL;
-    } else {
-      throwAFSException( env, ast );
-      return NULL;
+    if (!groupName) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return NULL;
     }
-  }
 
-  jgroup = (*env)->NewStringUTF(env, groupName);
-  free( groupName );
-  return jgroup;
+    if (!pts_GroupListNext((void *)iterationId, groupName, &ast)) {
+	free(groupName);
+	if (ast == ADMITERATORDONE) {
+	    return NULL;
+	} else {
+	    throwAFSException(env, ast);
+	    return NULL;
+	}
+    }
+
+    jgroup = (*env)->NewStringUTF(env, groupName);
+    free(groupName);
+    return jgroup;
 
 }
 
@@ -930,45 +927,45 @@ Java_org_openafs_jafs_Cell_getGroupsNextString
  *                   the next group
  *  returns 0 if there are no more users, != 0 otherwise
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getGroupsNext 
-  (JNIEnv *env, jclass cls, jint cellHandle, jint iterationId, 
-   jobject jgroupObject)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getGroupsNext(JNIEnv * env, jclass cls,
+					 jint cellHandle, jint iterationId,
+					 jobject jgroupObject)
 {
-  afs_status_t ast;
-  char *groupName;
-  jstring jgroup;
+    afs_status_t ast;
+    char *groupName;
+    jstring jgroup;
 
-  groupName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN );
+    groupName = (char *)malloc(sizeof(char) * PTS_MAX_NAME_LEN);
 
-  if ( !groupName ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return;    
-  }
-  
-  if ( !pts_GroupListNext( (void *) iterationId, groupName, &ast ) ) {
-    free( groupName );
-    if ( ast == ADMITERATORDONE ) {
-      return 0;
-    } else {
-      throwAFSException( env, ast );
-      return 0;
+    if (!groupName) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return;
     }
-  }
 
-  jgroup = (*env)->NewStringUTF(env, groupName);
+    if (!pts_GroupListNext((void *)iterationId, groupName, &ast)) {
+	free(groupName);
+	if (ast == ADMITERATORDONE) {
+	    return 0;
+	} else {
+	    throwAFSException(env, ast);
+	    return 0;
+	}
+    }
 
-  if ( groupCls == 0 ) {
-    internal_getGroupClass( env, jgroupObject );
-  }
+    jgroup = (*env)->NewStringUTF(env, groupName);
 
-  (*env)->SetObjectField(env, jgroupObject, group_nameField, jgroup);
+    if (groupCls == 0) {
+	internal_getGroupClass(env, jgroupObject);
+    }
 
-  getGroupInfoChar( env, (int) cellHandle, groupName, jgroupObject );
-  (*env)->SetBooleanField( env, jgroupObject, group_cachedInfoField, TRUE );
+    (*env)->SetObjectField(env, jgroupObject, group_nameField, jgroup);
 
-  free( groupName );
-  return 1;
+    getGroupInfoChar(env, (int)cellHandle, groupName, jgroupObject);
+    (*env)->SetBooleanField(env, jgroupObject, group_cachedInfoField, TRUE);
+
+    free(groupName);
+    return 1;
 }
 
 /**
@@ -978,17 +975,17 @@ Java_org_openafs_jafs_Cell_getGroupsNext
  *  cls      the current Java class
  *  iterationId   the iteration ID of this iteration
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Cell_getGroupsDone 
-  (JNIEnv *env, jclass cls,  jint iterationId)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Cell_getGroupsDone(JNIEnv * env, jclass cls,
+					 jint iterationId)
 {
-  afs_status_t ast;
+    afs_status_t ast;
 
-  if ( !pts_GroupListDone( (void *) iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
- 
+    if (!pts_GroupListDone((void *)iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
+
 }
 
 /**
@@ -1001,19 +998,19 @@ Java_org_openafs_jafs_Cell_getGroupsDone
  *  cellHandle    the handle of the cell to which the group belongs
  *  returns an integer reresenting the max group id in a cell
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getMaxGroupID 
-  (JNIEnv *env, jclass cls, jint cellHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getMaxGroupID(JNIEnv * env, jclass cls,
+					 jint cellHandle)
 {
-  afs_status_t ast;
-  jint maxID;
+    afs_status_t ast;
+    jint maxID;
 
-  if ( !pts_GroupMaxGet( (void *) cellHandle, (int *) &maxID, &ast ) ) {
-    throwAFSException( env, ast );
-    return 0;
-  }
+    if (!pts_GroupMaxGet((void *)cellHandle, (int *)&maxID, &ast)) {
+	throwAFSException(env, ast);
+	return 0;
+    }
 
-  return maxID;
+    return maxID;
 }
 
 /**
@@ -1025,16 +1022,16 @@ Java_org_openafs_jafs_Cell_getMaxGroupID
  *  cellHandle    the handle of the cell to which the group belongs
  *  maxID an integer reresenting the new max group id in a cell
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Cell_setMaxGroupID 
-  (JNIEnv *env, jclass cls, jint cellHandle, jint maxID)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Cell_setMaxGroupID(JNIEnv * env, jclass cls,
+					 jint cellHandle, jint maxID)
 {
-  afs_status_t ast;
+    afs_status_t ast;
 
-  if ( !pts_GroupMaxSet( (void *) cellHandle, (int) maxID, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!pts_GroupMaxSet((void *)cellHandle, (int)maxID, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 }
 
 /**
@@ -1047,19 +1044,19 @@ Java_org_openafs_jafs_Cell_setMaxGroupID
  *  cellHandle    the handle of the cell to which the user belongs
  *  returns an integer reresenting the max user id in a cell
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getMaxUserID 
-  (JNIEnv *env, jclass cls, jint cellHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getMaxUserID(JNIEnv * env, jclass cls,
+					jint cellHandle)
 {
-  afs_status_t ast;
-  jint maxID;
+    afs_status_t ast;
+    jint maxID;
 
-  if ( !pts_UserMaxGet( (void *) cellHandle, (int *) &maxID, &ast ) ) {
-    throwAFSException( env, ast );
-    return 0;
-  }
+    if (!pts_UserMaxGet((void *)cellHandle, (int *)&maxID, &ast)) {
+	throwAFSException(env, ast);
+	return 0;
+    }
 
-  return maxID;
+    return maxID;
 }
 
 /**
@@ -1071,16 +1068,16 @@ Java_org_openafs_jafs_Cell_getMaxUserID
  *  cellHandle    the handle of the cell to which the user belongs
  *  maxID an integer reresenting the new max user id in a cell
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Cell_setMaxUserID 
-  (JNIEnv *env, jclass cls, jint cellHandle, jint maxID)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Cell_setMaxUserID(JNIEnv * env, jclass cls,
+					jint cellHandle, jint maxID)
 {
-  afs_status_t ast;
+    afs_status_t ast;
 
-  if ( !pts_UserMaxSet( (void *) cellHandle, (int) maxID, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!pts_UserMaxSet((void *)cellHandle, (int)maxID, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 }
 
 /**
@@ -1092,30 +1089,29 @@ Java_org_openafs_jafs_Cell_setMaxUserID
  *  cellHandle    the handle of the cell to which the servers belong
  *  returns total number of servers
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getServerCount 
-  (JNIEnv *env, jclass cls, jint cellHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getServerCount(JNIEnv * env, jclass cls,
+					  jint cellHandle)
 {
-  afs_status_t ast;
-  void *iterationId;
-  afs_serverEntry_t servEntry;
-  int i = 0;
+    afs_status_t ast;
+    void *iterationId;
+    afs_serverEntry_t servEntry;
+    int i = 0;
 
-  if ( !afsclient_AFSServerGetBegin( (void *) cellHandle, 
-				    &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (!afsclient_AFSServerGetBegin((void *)cellHandle, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  while ( afsclient_AFSServerGetNext( (void *) iterationId, 
-				      &servEntry, &ast ) ) i++;
+    while (afsclient_AFSServerGetNext((void *)iterationId, &servEntry, &ast))
+	i++;
 
-  if ( ast != ADMITERATORDONE ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (ast != ADMITERATORDONE) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  return i;
+    return i;
 }
 
 /**
@@ -1128,20 +1124,19 @@ Java_org_openafs_jafs_Cell_getServerCount
  *  cellHandle    the handle of the cell to which the servers belong
  *  returns an iteration ID
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getServersBegin 
-  (JNIEnv *env, jclass cls, jint cellHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getServersBegin(JNIEnv * env, jclass cls,
+					   jint cellHandle)
 {
-  afs_status_t ast;
-  void *iterationId;
+    afs_status_t ast;
+    void *iterationId;
 
-  if ( !afsclient_AFSServerGetBegin( (void *) cellHandle, 
-				    &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (!afsclient_AFSServerGetBegin((void *)cellHandle, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  return (jint) iterationId;
+    return (jint) iterationId;
 }
 
 /**
@@ -1153,23 +1148,23 @@ Java_org_openafs_jafs_Cell_getServersBegin
  *  iterationId   the iteration ID of this iteration
  *  returns the name of the next server of the cell
  */
-JNIEXPORT jstring JNICALL 
-Java_org_openafs_jafs_Cell_getServersNextString 
-  (JNIEnv *env, jclass cls, jint iterationId)
+JNIEXPORT jstring JNICALL
+Java_org_openafs_jafs_Cell_getServersNextString(JNIEnv * env, jclass cls,
+						jint iterationId)
 {
-  afs_status_t ast;
-  jstring jserver;
-  afs_serverEntry_t servEntry;
+    afs_status_t ast;
+    jstring jserver;
+    afs_serverEntry_t servEntry;
 
-  if ( !afsclient_AFSServerGetNext( (void *) iterationId, &servEntry, &ast ) ) {
-    if ( ast == ADMITERATORDONE ) {
-      return NULL;
-    } else {
-      throwAFSException( env, ast );
-      return NULL;
+    if (!afsclient_AFSServerGetNext((void *)iterationId, &servEntry, &ast)) {
+	if (ast == ADMITERATORDONE) {
+	    return NULL;
+	} else {
+	    throwAFSException(env, ast);
+	    return NULL;
+	}
     }
-  }
-  return jserver;
+    return jserver;
 }
 
 /**
@@ -1184,35 +1179,34 @@ Java_org_openafs_jafs_Cell_getServersNextString
  *                    of the next server 
  *  returns 0 if there are no more servers, != 0 otherwise
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Cell_getServersNext
-  (JNIEnv *env, jclass cls, jint cellHandle, jint iterationId,
-   jobject jserverObject)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Cell_getServersNext(JNIEnv * env, jclass cls,
+					  jint cellHandle, jint iterationId,
+					  jobject jserverObject)
 {
-  afs_status_t ast;
-  jstring jserver;
-  afs_serverEntry_t servEntry;
-  jintArray jaddress;
+    afs_status_t ast;
+    jstring jserver;
+    afs_serverEntry_t servEntry;
+    jintArray jaddress;
 
-  if ( !afsclient_AFSServerGetNext( (void *) iterationId, &servEntry, &ast ) ) {
-    if ( ast == ADMITERATORDONE ) {
-      return 0;
-    } else {
-      throwAFSException( env, ast );
-      return 0;
+    if (!afsclient_AFSServerGetNext((void *)iterationId, &servEntry, &ast)) {
+	if (ast == ADMITERATORDONE) {
+	    return 0;
+	} else {
+	    throwAFSException(env, ast);
+	    return 0;
+	}
     }
-  }
+    // get the class fields if need be
+    if (serverCls == 0) {
+	internal_getServerClass(env, jserverObject);
+    }
 
-  // get the class fields if need be
-  if ( serverCls == 0 ) {
-    internal_getServerClass( env, jserverObject );
-  }
+    fillServerInfo(env, (int)cellHandle, jserverObject, servEntry);
 
-  fillServerInfo( env, (int) cellHandle, jserverObject, servEntry );
+    (*env)->SetBooleanField(env, jserverObject, server_cachedInfoField, TRUE);
 
-  (*env)->SetBooleanField( env, jserverObject, server_cachedInfoField, TRUE );
-
-  return 1;
+    return 1;
 }
 
 /**
@@ -1222,16 +1216,16 @@ Java_org_openafs_jafs_Cell_getServersNext
  *  cls      the current Java class
  *  iterationId   the iteration ID of this iteration
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Cell_getServersDone
-  (JNIEnv *env, jclass cls, jint iterationId)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Cell_getServersDone(JNIEnv * env, jclass cls,
+					  jint iterationId)
 {
-  afs_status_t ast;
+    afs_status_t ast;
 
-  if ( !afsclient_AFSServerGetDone( (void *) iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!afsclient_AFSServerGetDone((void *)iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 }
 
 /**
@@ -1246,59 +1240,62 @@ Java_org_openafs_jafs_Cell_getServersDone
  *  readWrite   whether or not this is to be a readwrite mount point
  *  forceCheck  whether or not to check if this volume name exists
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Cell_createMountPoint 
-  (JNIEnv *env, jclass cls, jint cellHandle, jstring jdirectory, 
-   jstring jvolumeName, jboolean readWrite, jboolean forceCheck)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Cell_createMountPoint(JNIEnv * env, jclass cls,
+					    jint cellHandle,
+					    jstring jdirectory,
+					    jstring jvolumeName,
+					    jboolean readWrite,
+					    jboolean forceCheck)
 {
-  afs_status_t ast;
-  char *directory;
-  char *volumeName;
-  vol_type_t type;
-  vol_check_t check;
+    afs_status_t ast;
+    char *directory;
+    char *volumeName;
+    vol_type_t type;
+    vol_check_t check;
 
-  if ( jdirectory != NULL ) {
-    directory = getNativeString(env, jdirectory);
-    if ( !directory ) {
-	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+    if (jdirectory != NULL) {
+	directory = getNativeString(env, jdirectory);
+	if (!directory) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	throwAFSException(env, JAFSNULLPATH);
+	return;
     }
-  } else {
-    throwAFSException( env, JAFSNULLPATH );
-    return;
-  }
-  if ( jvolumeName != NULL ) {
-    volumeName = getNativeString(env, jvolumeName);
-    if ( volumeName == NULL ) {
-      free( directory );
-      throwAFSException( env, JAFSADMNOMEM );
-      return;    
+    if (jvolumeName != NULL) {
+	volumeName = getNativeString(env, jvolumeName);
+	if (volumeName == NULL) {
+	    free(directory);
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	free(directory);
+	throwAFSException(env, JAFSNULLVOLUME);
+	return;
     }
-  } else {
-    free( directory );
-    throwAFSException( env, JAFSNULLVOLUME );
-    return;
-  }
 
-  if ( readWrite ) {
-    type = READ_WRITE;
-  } else {
-    type = READ_ONLY;
-  }
+    if (readWrite) {
+	type = READ_WRITE;
+    } else {
+	type = READ_ONLY;
+    }
 
-  if ( forceCheck ) {
-    check = CHECK_VOLUME;
-  } else {
-    check = DONT_CHECK_VOLUME;
-  }
+    if (forceCheck) {
+	check = CHECK_VOLUME;
+    } else {
+	check = DONT_CHECK_VOLUME;
+    }
 
-  if ( !afsclient_MountPointCreate( (void *) cellHandle, directory, 
-				   volumeName, type, check, &ast ) ) {
-    throwAFSException( env, ast );
-  }
+    if (!afsclient_MountPointCreate
+	((void *)cellHandle, directory, volumeName, type, check, &ast)) {
+	throwAFSException(env, ast);
+    }
 
-  free( directory );
-  free( volumeName );
+    free(directory);
+    free(volumeName);
 }
 
 /*
@@ -1317,98 +1314,100 @@ Java_org_openafs_jafs_Cell_createMountPoint
  *  lock    whether or not to allow lock access to this user
  *  admin    whether or not to allow admin access to this user
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Cell_setACL 
-  (JNIEnv *env, jclass cls, jstring jdirectory, jstring juserName, 
-   jboolean read, jboolean write, jboolean lookup, jboolean delete, 
-   jboolean insert, jboolean lock, jboolean admin)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Cell_setACL(JNIEnv * env, jclass cls,
+				  jstring jdirectory, jstring juserName,
+				  jboolean read, jboolean write,
+				  jboolean lookup, jboolean delete,
+				  jboolean insert, jboolean lock,
+				  jboolean admin)
 {
-  afs_status_t ast;
-  char *directory;
-  char *userName;
-  acl_t acl;
+    afs_status_t ast;
+    char *directory;
+    char *userName;
+    acl_t acl;
 
-  if ( !afsclient_Init( &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
-
-  if ( jdirectory != NULL ) {
-    directory = getNativeString(env, jdirectory);
-    if ( !directory ) {
-	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+    if (!afsclient_Init(&ast)) {
+	throwAFSException(env, ast);
+	return;
     }
-  } else {
-    throwAFSException( env, JAFSNULLPATH );
-    return;
-  }
 
-  if ( juserName != NULL ) {
-    userName = getNativeString(env, juserName);
-    if ( !userName ) {
-      free( directory );
-      throwAFSException( env, JAFSADMNOMEM );
-      return;    
+    if (jdirectory != NULL) {
+	directory = getNativeString(env, jdirectory);
+	if (!directory) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	throwAFSException(env, JAFSNULLPATH);
+	return;
     }
-  } else {
-    free( directory );
-    throwAFSException( env, JAFSNULLUSER );
-    return;
-  }
 
-  if ( read ) {
-    acl.read = READ;
-  } else {
-    acl.read = NO_READ;
-  }
+    if (juserName != NULL) {
+	userName = getNativeString(env, juserName);
+	if (!userName) {
+	    free(directory);
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	free(directory);
+	throwAFSException(env, JAFSNULLUSER);
+	return;
+    }
 
-  if ( write ) {
-    acl.write = WRITE;
-  } else {
-    acl.write = NO_WRITE;
-  }
+    if (read) {
+	acl.read = READ;
+    } else {
+	acl.read = NO_READ;
+    }
 
-  if ( lookup ) {
-    acl.lookup = LOOKUP;
-  } else {
-    acl.lookup = NO_LOOKUP;
-  }
+    if (write) {
+	acl.write = WRITE;
+    } else {
+	acl.write = NO_WRITE;
+    }
 
-  if ( delete ) {
-    acl.del = DELETE;
-  } else {
-    acl.del = NO_DELETE;
-  }
+    if (lookup) {
+	acl.lookup = LOOKUP;
+    } else {
+	acl.lookup = NO_LOOKUP;
+    }
 
-  if ( insert ) {
-    acl.insert = INSERT;
-  } else {
-    acl.insert = NO_INSERT;
-  }
+    if (delete) {
+	acl.del = DELETE;
+    } else {
+	acl.del = NO_DELETE;
+    }
 
-  if ( lock ) {
-    acl.lock = LOCK;
-  } else {
-    acl.lock = NO_LOCK;
-  }
+    if (insert) {
+	acl.insert = INSERT;
+    } else {
+	acl.insert = NO_INSERT;
+    }
 
-  if ( admin ) {
-    acl.admin = ADMIN;
-  } else {
-    acl.admin = NO_ADMIN;
-  }
+    if (lock) {
+	acl.lock = LOCK;
+    } else {
+	acl.lock = NO_LOCK;
+    }
 
-  if ( !afsclient_ACLEntryAdd( directory, userName, &acl, &ast ) ) {
-    throwAFSException( env, ast );
-  }
+    if (admin) {
+	acl.admin = ADMIN;
+    } else {
+	acl.admin = NO_ADMIN;
+    }
 
-  free( userName );
-  free( directory );
+    if (!afsclient_ACLEntryAdd(directory, userName, &acl, &ast)) {
+	throwAFSException(env, ast);
+    }
+
+    free(userName);
+    free(directory);
 }
 
 // reclaim global memory used by this portion
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Cell_reclaimCellMemory (JNIEnv *env, jclass cls)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Cell_reclaimCellMemory(JNIEnv * env, jclass cls)
 {
 }

@@ -46,7 +46,8 @@ such damages.
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
@@ -66,7 +67,7 @@ RCSID("$Header$");
 int
 afs_osi_suser(void *credp)
 {
-    return (suser((struct ucred *) credp, &curproc->p_acflag) ? 0 : 1);
+    return (suser((struct ucred *)credp, &curproc->p_acflag) ? 0 : 1);
 }
 
 void *
@@ -86,23 +87,23 @@ afs_nbsd_Free(void *p, size_t asize)
 
 int
 afs_syscall_icreate(dev, near_inode, param1, param2, param3, param4, retval)
-long *retval;
-long dev, near_inode, param1, param2, param3, param4;
+     long *retval;
+     long dev, near_inode, param1, param2, param3, param4;
 {
     return EINVAL;
 }
 
 int
 afs_syscall_iopen(dev, inode, usrmod, retval)
-long *retval;
-int dev, inode, usrmod;
+     long *retval;
+     int dev, inode, usrmod;
 {
     return EINVAL;
 }
 
 int
 afs_syscall_iincdec(dev, inode, inode_p1, amount)
-int dev, inode, inode_p1, amount;
+     int dev, inode, inode_p1, amount;
 {
     return EINVAL;
 }

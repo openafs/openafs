@@ -19,7 +19,8 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #define DEBUG 0
 #ifdef KERNEL
@@ -64,13 +65,14 @@ int ROUNDS = 16;
 
 #define XPRT_FCRYPT
 
-int fc_keysched (struct ktc_encryptionKey *key, 
-	fc_KeySchedule schedule)
-{   unsigned char *keychar = (unsigned char *)key;
-    afs_uint32  kword[2];
+int
+fc_keysched(struct ktc_encryptionKey *key, fc_KeySchedule schedule)
+{
+    unsigned char *keychar = (unsigned char *)key;
+    afs_uint32 kword[2];
 
-    unsigned int   temp;
-    int		   i;
+    unsigned int temp;
+    int i;
 
     /* first, flush the losing key parity bits. */
     kword[0] = (*keychar++) >> 1;
@@ -80,7 +82,7 @@ int fc_keysched (struct ktc_encryptionKey *key,
     kword[0] += (*keychar++) >> 1;
     kword[0] <<= 7;
     kword[0] += (*keychar++) >> 1;
-    kword[1] = kword[0] >> 4;		/* get top 24 bits for hi word */
+    kword[1] = kword[0] >> 4;	/* get top 24 bits for hi word */
     kword[0] &= 0xf;
     kword[0] <<= 7;
     kword[0] += (*keychar++) >> 1;
@@ -92,30 +94,31 @@ int fc_keysched (struct ktc_encryptionKey *key,
     kword[0] += (*keychar) >> 1;
 
     schedule[0] = kword[0];
-    for (i=1; i<ROUNDS; i++) {
+    for (i = 1; i < ROUNDS; i++) {
 	/* rotate right 3 */
-	temp = kword[0] & ((1<<11)-1);	/* get 11 lsb */
-	kword[0] = (kword[0] >> 11) | ((kword[1] & ((1<<11)-1)) << (32-11));
-	kword[1] = (kword[1] >> 11) | (temp << (56-32-11));
+	temp = kword[0] & ((1 << 11) - 1);	/* get 11 lsb */
+	kword[0] =
+	    (kword[0] >> 11) | ((kword[1] & ((1 << 11) - 1)) << (32 - 11));
+	kword[1] = (kword[1] >> 11) | (temp << (56 - 32 - 11));
 	schedule[i] = kword[0];
     }
-    LOCK_RXKAD_STATS
-    rxkad_stats.fc_key_scheds++;
-    UNLOCK_RXKAD_STATS
-    return 0;
+    LOCK_RXKAD_STATS rxkad_stats.fc_key_scheds++;
+    UNLOCK_RXKAD_STATS return 0;
 }
 
 /* IN int encrypt; * 0 ==> decrypt, else encrypt */
-afs_int32 fc_ecb_encrypt(afs_uint32 *clear, afs_uint32 *cipher, 
-	fc_KeySchedule schedule, int encrypt)
-{   afs_uint32  L,R;
-    afs_uint32  S,P;
+afs_int32
+fc_ecb_encrypt(afs_uint32 * clear, afs_uint32 * cipher,
+	       fc_KeySchedule schedule, int encrypt)
+{
+    afs_uint32 L, R;
+    afs_uint32 S, P;
     unsigned char *Pchar = (unsigned char *)&P;
     unsigned char *Schar = (unsigned char *)&S;
     int i;
 
 #if defined(vax) || (defined(mips) && defined(MIPSEL)) || defined(AFSLITTLE_ENDIAN)
-#define Byte0 3 
+#define Byte0 3
 #define Byte1 2
 #define Byte2 1
 #define Byte3 0
@@ -128,61 +131,56 @@ afs_int32 fc_ecb_encrypt(afs_uint32 *clear, afs_uint32 *cipher,
 
 #if 0
     memcpy(&L, clear, sizeof(afs_int32));
-    memcpy(&R, clear+1, sizeof(afs_int32));
+    memcpy(&R, clear + 1, sizeof(afs_int32));
 #else
     L = ntohl(*clear);
-    R = ntohl(*(clear+1));
+    R = ntohl(*(clear + 1));
 #endif
 
     if (encrypt) {
-	LOCK_RXKAD_STATS
-	rxkad_stats.fc_encrypts[ENCRYPT]++;
-	UNLOCK_RXKAD_STATS
-	for (i=0; i<(ROUNDS/2); i++) {
+	LOCK_RXKAD_STATS rxkad_stats.fc_encrypts[ENCRYPT]++;
+	UNLOCK_RXKAD_STATS for (i = 0; i < (ROUNDS / 2); i++) {
 	    S = *schedule++ ^ R;	/* xor R with key bits from schedule */
 	    Pchar[Byte2] = sbox0[Schar[Byte0]];	/* do 8-bit S Box subst. */
 	    Pchar[Byte3] = sbox1[Schar[Byte1]];	/* and permute the result */
 	    Pchar[Byte1] = sbox2[Schar[Byte2]];
 	    Pchar[Byte0] = sbox3[Schar[Byte3]];
-	    P = (P >> 5) | ((P & ((1<<5)-1)) << (32-5)); /* right rot 5 bits */
-	    L ^= P;			/* we're done with L, so save there */
+	    P = (P >> 5) | ((P & ((1 << 5) - 1)) << (32 - 5));	/* right rot 5 bits */
+	    L ^= P;		/* we're done with L, so save there */
 	    S = *schedule++ ^ L;	/* this time xor with L */
 	    Pchar[Byte2] = sbox0[Schar[Byte0]];
 	    Pchar[Byte3] = sbox1[Schar[Byte1]];
 	    Pchar[Byte1] = sbox2[Schar[Byte2]];
 	    Pchar[Byte0] = sbox3[Schar[Byte3]];
-	    P = (P >> 5) | ((P & ((1<<5)-1)) << (32-5)); /* right rot 5 bits */
+	    P = (P >> 5) | ((P & ((1 << 5) - 1)) << (32 - 5));	/* right rot 5 bits */
 	    R ^= P;
 	}
-    }
-    else {
-	LOCK_RXKAD_STATS
-	rxkad_stats.fc_encrypts[DECRYPT]++;
-	UNLOCK_RXKAD_STATS
-	schedule = &schedule[ROUNDS-1];	/* start at end of key schedule */
-	for (i=0; i<(ROUNDS/2); i++) {
+    } else {
+	LOCK_RXKAD_STATS rxkad_stats.fc_encrypts[DECRYPT]++;
+	UNLOCK_RXKAD_STATS schedule = &schedule[ROUNDS - 1];	/* start at end of key schedule */
+	for (i = 0; i < (ROUNDS / 2); i++) {
 	    S = *schedule-- ^ L;	/* xor R with key bits from schedule */
 	    Pchar[Byte2] = sbox0[Schar[Byte0]];	/* do 8-bit S Box subst. and */
 	    Pchar[Byte3] = sbox1[Schar[Byte1]];	/* permute the result */
 	    Pchar[Byte1] = sbox2[Schar[Byte2]];
 	    Pchar[Byte0] = sbox3[Schar[Byte3]];
-	    P = (P >> 5) | ((P & ((1<<5)-1)) << (32-5)); /* right rot 5 bits */
-	    R ^= P;			/* we're done with L, so save there */
+	    P = (P >> 5) | ((P & ((1 << 5) - 1)) << (32 - 5));	/* right rot 5 bits */
+	    R ^= P;		/* we're done with L, so save there */
 	    S = *schedule-- ^ R;	/* this time xor with L */
 	    Pchar[Byte2] = sbox0[Schar[Byte0]];
 	    Pchar[Byte3] = sbox1[Schar[Byte1]];
 	    Pchar[Byte1] = sbox2[Schar[Byte2]];
 	    Pchar[Byte0] = sbox3[Schar[Byte3]];
-	    P = (P >> 5) | ((P & ((1<<5)-1)) << (32-5)); /* right rot 5 bits */
+	    P = (P >> 5) | ((P & ((1 << 5) - 1)) << (32 - 5));	/* right rot 5 bits */
 	    L ^= P;
 	}
     }
 #if 0
     memcpy(cipher, &L, sizeof(afs_int32));
-    memcpy(cipher+1, &R, sizeof(afs_int32));
+    memcpy(cipher + 1, &R, sizeof(afs_int32));
 #else
     *cipher = htonl(L);
-    *(cipher+1) = htonl(R);
+    *(cipher + 1) = htonl(R);
 #endif
     return 0;
 }
@@ -198,12 +196,14 @@ afs_int32 fc_ecb_encrypt(afs_uint32 *clear, afs_uint32 *cipher,
   fc_KeySchedule key; * precomputed key schedule *
   afs_uint32 *xor; * 8 bytes of initialization vector *
 */
-afs_int32 fc_cbc_encrypt (char *input, char *output, afs_int32 length, 
-	fc_KeySchedule key, afs_uint32 *xor, int encrypt)
-{   afs_uint32 i,j;
+afs_int32
+fc_cbc_encrypt(char *input, char *output, afs_int32 length,
+	       fc_KeySchedule key, afs_uint32 * xor, int encrypt)
+{
+    afs_uint32 i, j;
     afs_uint32 t_input[2];
     afs_uint32 t_output[2];
-    unsigned char *t_in_p = (unsigned char *) t_input;
+    unsigned char *t_in_p = (unsigned char *)t_input;
 
     if (encrypt) {
 	for (i = 0; length > 0; i++, length -= 8) {
@@ -213,13 +213,13 @@ afs_int32 fc_cbc_encrypt (char *input, char *output, afs_int32 length,
 
 	    /* zero pad */
 	    for (j = length; j <= 7; j++)
-		*(t_in_p+j)= 0;
+		*(t_in_p + j) = 0;
 
 	    /* do the xor for cbc into the temp */
-	    xor[0] ^= t_input[0] ;
-	    xor[1] ^= t_input[1] ;
+	    xor[0] ^= t_input[0];
+	    xor[1] ^= t_input[1];
 	    /* encrypt */
-	    fc_ecb_encrypt (xor, t_output, key, encrypt);
+	    fc_ecb_encrypt(xor, t_output, key, encrypt);
 
 	    /* copy temp output and save it for cbc */
 	    memcpy(output, t_output, sizeof(t_output));
@@ -233,8 +233,7 @@ afs_int32 fc_cbc_encrypt (char *input, char *output, afs_int32 length,
 	}
 	t_output[0] = 0;
 	t_output[1] = 0;
-    }
-    else {
+    } else {
 	/* decrypt */
 	for (i = 0; length > 0; i++, length -= 8) {
 	    /* get input */
@@ -245,8 +244,8 @@ afs_int32 fc_cbc_encrypt (char *input, char *output, afs_int32 length,
 	    fc_ecb_encrypt(t_input, t_output, key, encrypt);
 
 	    /* do the xor for cbc into the output */
-	    t_output[0] ^= xor[0] ;
-	    t_output[1] ^= xor[1] ;
+	    t_output[0] ^= xor[0];
+	    t_output[1] ^= xor[1];
 
 	    /* copy temp output */
 	    memcpy(output, t_output, sizeof(t_output));

@@ -81,7 +81,7 @@ extern "C" {
 #define B_RDERR (16)
 /* A write error has occurred */
 #define B_WRERR (32)
-#ifdef B_ERROR  /* in SVR4: sometimes defined in /usr/include/sys/buf.h */
+#ifdef B_ERROR			/* in SVR4: sometimes defined in /usr/include/sys/buf.h */
 #undef B_ERROR
 #endif
 #define B_ERROR (48)
@@ -92,89 +92,90 @@ extern "C" {
 /* buffer is a socket */
 #define B_SOCKET (256)
 #ifdef CHARSET_EBCDIC
-#define B_ASCII2EBCDIC 0x40000000  /* Enable conversion for this buffer */
-#define B_EBCDIC2ASCII 0x80000000  /* Enable conversion for this buffer */
-#endif /*CHARSET_EBCDIC*/
+#define B_ASCII2EBCDIC 0x40000000	/* Enable conversion for this buffer */
+#define B_EBCDIC2ASCII 0x80000000	/* Enable conversion for this buffer */
+#endif				/*CHARSET_EBCDIC */
 
-typedef struct buff_struct BUFF;
+    typedef struct buff_struct BUFF;
 
-struct buff_struct {
-    int flags;			/* flags */
-    unsigned char *inptr;	/* pointer to next location to read */
-    int incnt;			/* number of bytes left to read from input buffer;
+    struct buff_struct {
+	int flags;		/* flags */
+	unsigned char *inptr;	/* pointer to next location to read */
+	int incnt;		/* number of bytes left to read from input buffer;
 				 * always 0 if had a read error  */
-    int outchunk;		/* location of chunk header when chunking */
-    int outcnt;			/* number of byte put in output buffer */
-    unsigned char *inbase;
-    unsigned char *outbase;
-    int bufsiz;
-    void (*error) (BUFF *fb, int op, void *data);
-    void *error_data;
-    long int bytes_sent;	/* number of bytes actually written */
+	int outchunk;		/* location of chunk header when chunking */
+	int outcnt;		/* number of byte put in output buffer */
+	unsigned char *inbase;
+	unsigned char *outbase;
+	int bufsiz;
+	void (*error) (BUFF * fb, int op, void *data);
+	void *error_data;
+	long int bytes_sent;	/* number of bytes actually written */
 
-    ap_pool *pool;
+	ap_pool *pool;
 
 /* could also put pointers to the basic I/O routines here */
-    int fd;			/* the file descriptor */
-    int fd_in;			/* input file descriptor, if different */
+	int fd;			/* the file descriptor */
+	int fd_in;		/* input file descriptor, if different */
 #ifdef WIN32
-    HANDLE hFH;			/* Windows filehandle */
+	HANDLE hFH;		/* Windows filehandle */
 #endif
 
-    /* transport handle, for RPC binding handle or some such */
-    void *t_handle;
+	/* transport handle, for RPC binding handle or some such */
+	void *t_handle;
 
 #ifdef B_SFIO
-    Sfio_t *sf_in;
-    Sfio_t *sf_out;
+	Sfio_t *sf_in;
+	Sfio_t *sf_out;
 #endif
-};
+    };
 
 #ifdef B_SFIO
-typedef struct {
-    Sfdisc_t disc;
-    BUFF *buff;
-} apache_sfio;
+    typedef struct {
+	Sfdisc_t disc;
+	BUFF *buff;
+    } apache_sfio;
 
-extern Sfdisc_t *bsfio_new(pool *p, BUFF *b);
+    extern Sfdisc_t *bsfio_new(pool * p, BUFF * b);
 #endif
 
 /* Options to bset/getopt */
 #define BO_BYTECT (1)
 
 /* Stream creation and modification */
-API_EXPORT(BUFF *) ap_bcreate(pool *p, int flags);
-API_EXPORT(void) ap_bpushfd(BUFF *fb, int fd_in, int fd_out);
+      API_EXPORT(BUFF *) ap_bcreate(pool * p, int flags);
+      API_EXPORT(void) ap_bpushfd(BUFF * fb, int fd_in, int fd_out);
 #ifdef WIN32
-API_EXPORT(void) ap_bpushh(BUFF *fb, HANDLE hFH);
+      API_EXPORT(void) ap_bpushh(BUFF * fb, HANDLE hFH);
 #endif
-API_EXPORT(int) ap_bsetopt(BUFF *fb, int optname, const void *optval);
-API_EXPORT(int) ap_bgetopt(BUFF *fb, int optname, void *optval);
-API_EXPORT(int) ap_bsetflag(BUFF *fb, int flag, int value);
-API_EXPORT(int) ap_bclose(BUFF *fb);
+      API_EXPORT(int) ap_bsetopt(BUFF * fb, int optname, const void *optval);
+      API_EXPORT(int) ap_bgetopt(BUFF * fb, int optname, void *optval);
+      API_EXPORT(int) ap_bsetflag(BUFF * fb, int flag, int value);
+      API_EXPORT(int) ap_bclose(BUFF * fb);
 
 #define ap_bgetflag(fb, flag)	((fb)->flags & (flag))
 
 /* Error handling */
-API_EXPORT(void) ap_bonerror(BUFF *fb, void (*error) (BUFF *, int, void *),
-			  void *data);
+      API_EXPORT(void) ap_bonerror(BUFF * fb,
+				   void (*error) (BUFF *, int, void *),
+				   void *data);
 
 /* I/O */
-API_EXPORT(int) ap_bread(BUFF *fb, void *buf, int nbyte);
-API_EXPORT(int) ap_bgets(char *s, int n, BUFF *fb);
-API_EXPORT(int) ap_blookc(char *buff, BUFF *fb);
-API_EXPORT(int) ap_bskiplf(BUFF *fb);
-API_EXPORT(int) ap_bwrite(BUFF *fb, const void *buf, int nbyte);
-API_EXPORT(int) ap_bflush(BUFF *fb);
-API_EXPORT(int) ap_bputs(const char *x, BUFF *fb);
-API_EXPORT(int) ap_bvputs(BUFF *fb,...);
-API_EXPORT_NONSTD(int) ap_bprintf(BUFF *fb, const char *fmt,...)
-				__attribute__((format(printf,2,3)));
-API_EXPORT(int) ap_vbprintf(BUFF *fb, const char *fmt, va_list vlist);
+      API_EXPORT(int) ap_bread(BUFF * fb, void *buf, int nbyte);
+      API_EXPORT(int) ap_bgets(char *s, int n, BUFF * fb);
+      API_EXPORT(int) ap_blookc(char *buff, BUFF * fb);
+      API_EXPORT(int) ap_bskiplf(BUFF * fb);
+      API_EXPORT(int) ap_bwrite(BUFF * fb, const void *buf, int nbyte);
+      API_EXPORT(int) ap_bflush(BUFF * fb);
+      API_EXPORT(int) ap_bputs(const char *x, BUFF * fb);
+      API_EXPORT(int) ap_bvputs(BUFF * fb, ...);
+      API_EXPORT_NONSTD(int) ap_bprintf(BUFF * fb, const char *fmt, ...)
+	__attribute__ ((format(printf, 2, 3)));
+      API_EXPORT(int) ap_vbprintf(BUFF * fb, const char *fmt, va_list vlist);
 
 /* Internal routines */
-API_EXPORT(int) ap_bflsbuf(int c, BUFF *fb);
-API_EXPORT(int) ap_bfilbuf(BUFF *fb);
+      API_EXPORT(int) ap_bflsbuf(int c, BUFF * fb);
+      API_EXPORT(int) ap_bfilbuf(BUFF * fb);
 
 #ifndef CHARSET_EBCDIC
 
@@ -185,7 +186,7 @@ API_EXPORT(int) ap_bfilbuf(BUFF *fb);
 		     (fb)->outcnt == (fb)->bufsiz) ? ap_bflsbuf(c, (fb)) : \
 		     ((fb)->outbase[(fb)->outcnt++] = (c), 0))
 
-#else /*CHARSET_EBCDIC*/
+#else				/*CHARSET_EBCDIC */
 
 #define ap_bgetc(fb)   ( ((fb)->incnt == 0) ? ap_bfilbuf(fb) : \
 		    ((fb)->incnt--, (fb->flags & B_ASCII2EBCDIC)\
@@ -196,41 +197,41 @@ API_EXPORT(int) ap_bfilbuf(BUFF *fb);
 		     ((fb)->outbase[(fb)->outcnt++] = (fb->flags & B_EBCDIC2ASCII)\
 		     ?os_toascii[(unsigned char)c]:(c), 0))
 
-#endif /*CHARSET_EBCDIC*/
-struct child_info {
+#endif				/*CHARSET_EBCDIC */
+    struct child_info {
 #ifdef WIN32
-    /*
-     *  These handles are used by ap_call_exec to call 
-     *  create process with pipe handles.
-     */
-    HANDLE hPipeInputRead;
-    HANDLE hPipeOutputWrite;
-    HANDLE hPipeErrorWrite;
+	/*
+	 *  These handles are used by ap_call_exec to call 
+	 *  create process with pipe handles.
+	 */
+	HANDLE hPipeInputRead;
+	HANDLE hPipeOutputWrite;
+	HANDLE hPipeErrorWrite;
 #else
-    /* 
-     * We need to put a dummy member in here to avoid compilation
-     * errors under certain Unix compilers, like SGI's and HPUX's,
-     * which fail to compile a zero-sized struct.  Of course
-     * it would be much nicer if there was actually a use for this
-     * structure under Unix.  Aah the joys of x-platform code.
-     */
-    int dummy;
+	/* 
+	 * We need to put a dummy member in here to avoid compilation
+	 * errors under certain Unix compilers, like SGI's and HPUX's,
+	 * which fail to compile a zero-sized struct.  Of course
+	 * it would be much nicer if there was actually a use for this
+	 * structure under Unix.  Aah the joys of x-platform code.
+	 */
+	int dummy;
 #endif
-};
-API_EXPORT(int) ap_bspawn_child(pool *, int (*)(void *, child_info *), void *,
-					enum kill_conditions, BUFF **pipe_in, BUFF **pipe_out,
-					BUFF **pipe_err);
+    };
+      API_EXPORT(int) ap_bspawn_child(pool *, int (*)(void *, child_info *),
+				      void *, enum kill_conditions,
+				      BUFF ** pipe_in, BUFF ** pipe_out,
+				      BUFF ** pipe_err);
 
 /* enable non-blocking operations */
-API_EXPORT(int) ap_bnonblock(BUFF *fb, int direction);
+      API_EXPORT(int) ap_bnonblock(BUFF * fb, int direction);
 /* and get an fd to select() on */
-API_EXPORT(int) ap_bfileno(BUFF *fb, int direction);
+      API_EXPORT(int) ap_bfileno(BUFF * fb, int direction);
 
 /* bflush() if a read now would block, but don't actually read anything */
-API_EXPORT(void) ap_bhalfduplex(BUFF *fb);
+      API_EXPORT(void) ap_bhalfduplex(BUFF * fb);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif	/* !APACHE_BUFF_H */
+#endif				/* !APACHE_BUFF_H */

@@ -35,7 +35,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <stdio.h>
 #ifdef HAVE_STRING_H
@@ -56,24 +57,24 @@ RCSID("$Header$");
 #include "rpc_util.h"
 
 char curline[MAXLINESIZE];	/* current read line */
-char *where = curline;	/* current point in line */
-int linenum = 0;	/* current line number */
+char *where = curline;		/* current point in line */
+int linenum = 0;		/* current line number */
 
-char *infilename;	/* input filename */
+char *infilename;		/* input filename */
 
 #define NFILES 6
-char *outfiles[NFILES];	/* output file names */
+char *outfiles[NFILES];		/* output file names */
 int nfiles;
 
-FILE *fout;	/* file pointer of current output */
-FILE *fin;	/* file pointer of current input */
+FILE *fout;			/* file pointer of current output */
+FILE *fin;			/* file pointer of current input */
 
-list *defined;	/* list of defined things */
+list *defined;			/* list of defined things */
 
 /* static prototypes */
-static int findit(definition *def, char *type);
+static int findit(definition * def, char *type);
 static char *fixit(char *type, char *orig);
-static int typedefed(definition *def, char *type);
+static int typedefed(definition * def, char *type);
 static char *locase(char *str);
 static char *toktostr(tok_kind kind);
 static void printbuf(void);
@@ -83,204 +84,220 @@ static void printwhere(void);
 /*
  * Reinitialize the world 
  */
-void reinitialize(void)
+void
+reinitialize(void)
 {
     int i;
-	memset(curline, 0, MAXLINESIZE);
-	where = curline;
-	linenum = 0;
-	defined = NULL;
-	special_defined = typedef_defined = uniondef_defined = NULL;
-	PackageIndex = -1;
-	master_opcodenumber= 99999;
-	master_highest_opcode = 0;
-	no_of_stat_funcs = 0;
-	for(i=0;i<MAX_PACKAGES;i++) {
-	    no_of_stat_funcs_header[i] = 0;
-	}
+    memset(curline, 0, MAXLINESIZE);
+    where = curline;
+    linenum = 0;
+    defined = NULL;
+    special_defined = typedef_defined = uniondef_defined = NULL;
+    PackageIndex = -1;
+    master_opcodenumber = 99999;
+    master_highest_opcode = 0;
+    no_of_stat_funcs = 0;
+    for (i = 0; i < MAX_PACKAGES; i++) {
+	no_of_stat_funcs_header[i] = 0;
+    }
 }
 
 /*
  * string equality 
  */
-int streq(char *a, char *b)
+int
+streq(char *a, char *b)
 {
-	return (strcmp(a, b) == 0);
+    return (strcmp(a, b) == 0);
 }
 
 /*
  * find a value in a list 
  */
-char *findval(list *lst, char *val, int (*cmp)(definition *def, char *type))
+char *
+findval(list * lst, char *val, int (*cmp) (definition * def, char *type))
 {
-	for (; lst != NULL; lst = lst->next) {
-		if ((*cmp) ((definition *) lst->val, val)) {
-			return (lst->val);
-		}
+    for (; lst != NULL; lst = lst->next) {
+	if ((*cmp) ((definition *) lst->val, val)) {
+	    return (lst->val);
 	}
-	return (NULL);
+    }
+    return (NULL);
 }
 
 /*
  * store a value in a list 
  */
-void storeval(list **lstp, char *val)
+void
+storeval(list ** lstp, char *val)
 {
-	list **l;
-	list *lst;
+    list **l;
+    list *lst;
 
-	for (l = lstp; *l != NULL; l = (list **) & (*l)->next);
-	lst = ALLOC(list);
-	lst->val = val;
-	lst->next = NULL;
-	*l = lst;
+    for (l = lstp; *l != NULL; l = (list **) & (*l)->next);
+    lst = ALLOC(list);
+    lst->val = val;
+    lst->next = NULL;
+    *l = lst;
 }
 
 
-static int findit(definition *def, char *type)
+static int
+findit(definition * def, char *type)
 {
+    return (streq(def->def_name, type));
+}
+
+
+static char *
+fixit(char *type, char *orig)
+{
+    definition *def;
+
+    def = (definition *) FINDVAL(defined, type, findit);
+    if (def == NULL || def->def_kind != DEF_TYPEDEF) {
+	return (orig);
+    }
+    switch (def->def.ty.rel) {
+    case REL_VECTOR:
+	return (def->def.ty.old_type);
+    case REL_ALIAS:
+	return (fixit(def->def.ty.old_type, orig));
+    default:
+	return (orig);
+    }
+}
+
+char *
+fixtype(char *type)
+{
+    return (fixit(type, type));
+}
+
+char *
+stringfix(char *type)
+{
+    if (streq(type, "string")) {
+	return ("wrapstring");
+    } else {
+	return (type);
+    }
+}
+
+void
+ptype(char *prefix, char *type, int follow)
+{
+    if (prefix != NULL) {
+	if (streq(prefix, "enum")) {
+	    f_print(fout, "enum ");
+	} else {
+	    f_print(fout, "struct ");
+	}
+    }
+    if (streq(type, "bool")) {
+	f_print(fout, "bool_t ");
+    } else if (streq(type, "string")) {
+	f_print(fout, "char *");
+    } else {
+	f_print(fout, "%s ", follow ? fixtype(type) : type);
+    }
+}
+
+
+static int
+typedefed(definition * def, char *type)
+{
+    if (def->def_kind != DEF_TYPEDEF || def->def.ty.old_prefix != NULL) {
+	return (0);
+    } else {
 	return (streq(def->def_name, type));
+    }
 }
 
-
-static char *fixit(char *type, char *orig)
+int
+isvectordef(char *type, relation rel)
 {
-	definition *def;
+    definition *def;
 
-	def = (definition *) FINDVAL(defined, type, findit);
-	if (def == NULL || def->def_kind != DEF_TYPEDEF) {
-		return (orig);
-	}
-	switch (def->def.ty.rel) {
+    for (;;) {
+	switch (rel) {
 	case REL_VECTOR:
-		return (def->def.ty.old_type);
+	    return (!streq(type, "string"));
+	case REL_ARRAY:
+	    return (0);
+	case REL_POINTER:
+	    return (0);
 	case REL_ALIAS:
-		return (fixit(def->def.ty.old_type, orig));
-	default:
-		return (orig);
-	}
-}
-
-char *fixtype(char *type)
-{
-	return (fixit(type, type));
-}
-
-char *stringfix(char *type)
-{
-	if (streq(type, "string")) {
-		return ("wrapstring");
-	} else {
-		return (type);
-	}
-}
-
-void ptype(char *prefix, char *type, int follow)
-{
-	if (prefix != NULL) {
-		if (streq(prefix, "enum")) {
-			f_print(fout, "enum ");
-		} else {
-			f_print(fout, "struct ");
-		}
-	}
-	if (streq(type, "bool")) {
-		f_print(fout, "bool_t ");
-	} else if (streq(type, "string")) {
-		f_print(fout, "char *");
-	} else {
-		f_print(fout, "%s ", follow ? fixtype(type) : type);
-	}
-}
-
-
-static int typedefed(definition *def, char *type)
-{
-	if (def->def_kind != DEF_TYPEDEF || def->def.ty.old_prefix != NULL) {
+	    def = (definition *) FINDVAL(defined, type, typedefed);
+	    if (def == NULL) {
 		return (0);
-	} else {
-		return (streq(def->def_name, type));
+	    }
+	    type = def->def.ty.old_type;
+	    rel = def->def.ty.rel;
 	}
-}
-
-int isvectordef(char *type, relation rel)
-{
-	definition *def;
-
-	for (;;) {
-		switch (rel) {
-		case REL_VECTOR:
-			return (!streq(type, "string"));
-		case REL_ARRAY:
-			return (0);
-		case REL_POINTER:
-			return (0);
-		case REL_ALIAS:
-			def = (definition *) FINDVAL(defined, type, typedefed);
-			if (def == NULL) {
-				return (0);
-			}
-			type = def->def.ty.old_type;
-			rel = def->def.ty.rel;
-		}
-	}
+    }
 }
 
 
-static char *locase(char *str)
+static char *
+locase(char *str)
 {
-	char c;
-	static char buf[100];
-	char *p = buf;
+    char c;
+    static char buf[100];
+    char *p = buf;
 
-	while ((c = *str++)) {
-		*p++ = (c >= 'A' && c <= 'Z') ? (c - 'A' + 'a') : c;
-	}
-	*p = 0;
-	return (buf);
+    while ((c = *str++)) {
+	*p++ = (c >= 'A' && c <= 'Z') ? (c - 'A' + 'a') : c;
+    }
+    *p = 0;
+    return (buf);
 }
 
 
-void pvname(char *pname, char *vnum)
+void
+pvname(char *pname, char *vnum)
 {
-	f_print(fout, "%s_%s", locase(pname), vnum);
+    f_print(fout, "%s_%s", locase(pname), vnum);
 }
 
 
 /*
  * print a useful (?) error message, and then die 
  */
-void error(char *msg)
+void
+error(char *msg)
 {
-	printwhere();
-	f_print(stderr, "%s, line %d: ", infilename, linenum);
-	f_print(stderr, "%s\n", msg);
-	crash();
+    printwhere();
+    f_print(stderr, "%s, line %d: ", infilename, linenum);
+    f_print(stderr, "%s\n", msg);
+    crash();
 }
 
 /*
  * Something went wrong, unlink any files that we may have created and then
  * die. 
  */
-void crash(void)
+void
+crash(void)
 {
-	int i;
+    int i;
 
-	for (i = 0; i < nfiles; i++) {
-		(void) unlink(outfiles[i]);
-	}
-	exit(1);
+    for (i = 0; i < nfiles; i++) {
+	(void)unlink(outfiles[i]);
+    }
+    exit(1);
 }
 
 
-void record_open(char *file)
+void
+record_open(char *file)
 {
-	if (nfiles < NFILES) {
-		outfiles[nfiles++] = file;
-	} else {
-		f_print(stderr, "too many files!\n");
-		crash();
-	}
+    if (nfiles < NFILES) {
+	outfiles[nfiles++] = file;
+    } else {
+	f_print(stderr, "too many files!\n");
+	crash();
+    }
 }
 
 /* buffer shared for all of the expected* routines */
@@ -289,158 +306,159 @@ static char expectbuf[100];
 /*
  * error, token encountered was not the expected one 
  */
-void expected1(tok_kind exp1)
+void
+expected1(tok_kind exp1)
 {
-	s_print(expectbuf, "expected '%s'",
-		toktostr(exp1));
-	error(expectbuf);
+    s_print(expectbuf, "expected '%s'", toktostr(exp1));
+    error(expectbuf);
 }
 
 /*
  * error, token encountered was not one of two expected ones 
  */
-void expected2(tok_kind exp1, tok_kind exp2)
+void
+expected2(tok_kind exp1, tok_kind exp2)
 {
-	s_print(expectbuf, "expected '%s' or '%s'",
-		toktostr(exp1),
-		toktostr(exp2));
-	error(expectbuf);
+    s_print(expectbuf, "expected '%s' or '%s'", toktostr(exp1),
+	    toktostr(exp2));
+    error(expectbuf);
 }
 
 /*
  * error, token encountered was not one of 3 expected ones 
  */
-void expected3(tok_kind exp1, tok_kind exp2, tok_kind exp3)
+void
+expected3(tok_kind exp1, tok_kind exp2, tok_kind exp3)
 {
-	s_print(expectbuf, "expected '%s', '%s' or '%s'",
-		toktostr(exp1),
-		toktostr(exp2),
-		toktostr(exp3));
-	error(expectbuf);
+    s_print(expectbuf, "expected '%s', '%s' or '%s'", toktostr(exp1),
+	    toktostr(exp2), toktostr(exp3));
+    error(expectbuf);
 }
 
 
 /*
  * error, token encountered was not one of 4 expected ones
  */
-void expected4(tok_kind exp1, tok_kind exp2, tok_kind exp3, tok_kind exp4)
+void
+expected4(tok_kind exp1, tok_kind exp2, tok_kind exp3, tok_kind exp4)
 {
-	sprintf(expectbuf,"expected '%s', '%s', '%s', or '%s'",
-		toktostr(exp1),
-		toktostr(exp2),
-		toktostr(exp3),
-		toktostr(exp4));
-	error(expectbuf);
+    sprintf(expectbuf, "expected '%s', '%s', '%s', or '%s'", toktostr(exp1),
+	    toktostr(exp2), toktostr(exp3), toktostr(exp4));
+    error(expectbuf);
 }
 
-void tabify(FILE *f, int tab)
+void
+tabify(FILE * f, int tab)
 {
-	if (scan_print)
+    if (scan_print)
 	while (tab--) {
-		(void) fputc('\t', f);
+	    (void)fputc('\t', f);
 	}
 }
 
 static token tokstrings[] = {
-	{ TOK_IDENT, "identifier"},
-	{ TOK_CONST, "const"},
-	{ TOK_RPAREN, ")"},
-	{ TOK_LPAREN, "("},
-	{ TOK_RBRACE, "}"},
-	{ TOK_LBRACE, "{"},
-	{ TOK_LBRACKET, "["},
-	{ TOK_RBRACKET, "]"},
-	{ TOK_STAR, "*"},
-	{ TOK_COMMA, ","},
-	{ TOK_EQUAL, "="},
-	{ TOK_COLON, ":"},
-	{ TOK_SEMICOLON, ";"},
-	{ TOK_UNION, "union"},
-	{ TOK_STRUCT, "struct"},
-	{ TOK_SWITCH, "switch"},
-	{ TOK_CASE, "case"},
-	{ TOK_DEFAULT, "default"},
-	{ TOK_ENUM, "enum"},
-	{ TOK_TYPEDEF, "typedef"},
-	{ TOK_INT, "int"},
-	{ TOK_SHORT, "short"},
-	{ TOK_INT32, "afs_int32"},	/* XXX */
-	{ TOK_UNSIGNED, "unsigned"},
-	{ TOK_DOUBLE, "double"},
-	{ TOK_FLOAT, "float"},
-	{ TOK_CHAR, "char"},
-	{ TOK_STRING, "string"},
-	{ TOK_OPAQUE, "opaque"},
-	{ TOK_BOOL, "bool"},
-	{ TOK_VOID, "void"},
-	{ TOK_PROGRAM, "program"},
-	{ TOK_VERSION, "version"},
-	{ TOK_PACKAGE, "package" },
-	{ TOK_PREFIX, "prefix" },
-	{ TOK_STATINDEX, "statindex" },
-	{ TOK_SPECIAL, "special" },
-	{ TOK_STARTINGOPCODE, "startingopcode" },
-	{ TOK_CUSTOMIZED, "customized" },
-	{ TOK_PROC, "proc" },
-	{ TOK_SPLITPREFIX, "splitprefix" },
-	{ TOK_SPLIT, "split" },
-	{ TOK_MULTI, "multi" },
-	{ TOK_IN,   "IN" },
-	{ TOK_OUT,  "OUT" },
-	{ TOK_INOUT, "INOUT" },
-	{ TOK_AFSUUID, "afsUUID" },
-	{ TOK_EOF, "??????"}
+    {TOK_IDENT, "identifier"},
+    {TOK_CONST, "const"},
+    {TOK_RPAREN, ")"},
+    {TOK_LPAREN, "("},
+    {TOK_RBRACE, "}"},
+    {TOK_LBRACE, "{"},
+    {TOK_LBRACKET, "["},
+    {TOK_RBRACKET, "]"},
+    {TOK_STAR, "*"},
+    {TOK_COMMA, ","},
+    {TOK_EQUAL, "="},
+    {TOK_COLON, ":"},
+    {TOK_SEMICOLON, ";"},
+    {TOK_UNION, "union"},
+    {TOK_STRUCT, "struct"},
+    {TOK_SWITCH, "switch"},
+    {TOK_CASE, "case"},
+    {TOK_DEFAULT, "default"},
+    {TOK_ENUM, "enum"},
+    {TOK_TYPEDEF, "typedef"},
+    {TOK_INT, "int"},
+    {TOK_SHORT, "short"},
+    {TOK_INT32, "afs_int32"},	/* XXX */
+    {TOK_UNSIGNED, "unsigned"},
+    {TOK_DOUBLE, "double"},
+    {TOK_FLOAT, "float"},
+    {TOK_CHAR, "char"},
+    {TOK_STRING, "string"},
+    {TOK_OPAQUE, "opaque"},
+    {TOK_BOOL, "bool"},
+    {TOK_VOID, "void"},
+    {TOK_PROGRAM, "program"},
+    {TOK_VERSION, "version"},
+    {TOK_PACKAGE, "package"},
+    {TOK_PREFIX, "prefix"},
+    {TOK_STATINDEX, "statindex"},
+    {TOK_SPECIAL, "special"},
+    {TOK_STARTINGOPCODE, "startingopcode"},
+    {TOK_CUSTOMIZED, "customized"},
+    {TOK_PROC, "proc"},
+    {TOK_SPLITPREFIX, "splitprefix"},
+    {TOK_SPLIT, "split"},
+    {TOK_MULTI, "multi"},
+    {TOK_IN, "IN"},
+    {TOK_OUT, "OUT"},
+    {TOK_INOUT, "INOUT"},
+    {TOK_AFSUUID, "afsUUID"},
+    {TOK_EOF, "??????"}
 };
 
-static char *toktostr(tok_kind kind)
+static char *
+toktostr(tok_kind kind)
 {
-	token *sp;
+    token *sp;
 
-	for (sp = tokstrings; sp->kind != TOK_EOF && sp->kind != kind; sp++);
-	return (sp->str);
+    for (sp = tokstrings; sp->kind != TOK_EOF && sp->kind != kind; sp++);
+    return (sp->str);
 }
 
 
 
-static void printbuf(void)
+static void
+printbuf(void)
 {
-	char c;
-	int i;
-	int cnt;
+    char c;
+    int i;
+    int cnt;
 
 #	define TABSIZE 4
 
-	for (i = 0; (c = curline[i]); i++) {
-		if (c == '\t') {
-			cnt = 8 - (i % TABSIZE);
-			c = ' ';
-		} else {
-			cnt = 1;
-		}
-		while (cnt--) {
-			fputc(c, stderr);
-		}
+    for (i = 0; (c = curline[i]); i++) {
+	if (c == '\t') {
+	    cnt = 8 - (i % TABSIZE);
+	    c = ' ';
+	} else {
+	    cnt = 1;
 	}
+	while (cnt--) {
+	    fputc(c, stderr);
+	}
+    }
 }
 
 
-static void printwhere(void)
+static void
+printwhere(void)
 {
-	int i;
-	char c;
-	int cnt;
+    int i;
+    char c;
+    int cnt;
 
-	printbuf();
-	for (i = 0; i < where - curline; i++) {
-		c = curline[i];
-		if (c == '\t') {
-			cnt = 8 - (i % TABSIZE);
-		} else {
-			cnt = 1;
-		}
-		while (cnt--) {
-			fputc('^', stderr);
-		}
+    printbuf();
+    for (i = 0; i < where - curline; i++) {
+	c = curline[i];
+	if (c == '\t') {
+	    cnt = 8 - (i % TABSIZE);
+	} else {
+	    cnt = 1;
 	}
-	fputc('\n', stderr);
+	while (cnt--) {
+	    fputc('^', stderr);
+	}
+    }
+    fputc('\n', stderr);
 }

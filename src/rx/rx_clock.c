@@ -21,7 +21,8 @@
 #include <sys/time_impl.h>
 #endif
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -63,7 +64,8 @@ int clock_nUpdates;		/* The actual number of clock updates */
 static int clockInitialized = 0;
 
 /* Initialize the clock */
-void clock_Init(void)
+void
+clock_Init(void)
 {
     struct itimerval itimer, otimer;
 
@@ -76,7 +78,7 @@ void clock_Init(void)
 	if (setitimer(ITIMER_REAL, &itimer, &otimer) != 0) {
 	    fprintf(stderr, "clock:  could not set interval timer; \
 				aborted(errno=%d)\n", errno);
-	    fflush (stderr);
+	    fflush(stderr);
 	    exit(1);
 	}
 	clockInitialized = 1;
@@ -86,20 +88,23 @@ void clock_Init(void)
 }
 
 /* Make clock uninitialized. */
-int clock_UnInit(void)
+int
+clock_UnInit(void)
 {
     clockInitialized = 0;
     return 0;
-} 
+}
 
 /* Compute the current time.  The timer gets the current total elapsed time since startup, expressed in seconds and microseconds.  This call is almost 200 usec on an APC RT */
-void clock_UpdateTime(void)
+void
+clock_UpdateTime(void)
 {
     struct itimerval itimer;
     getitimer(ITIMER_REAL, &itimer);
-    clock_now.sec = STARTVALUE - 1 - itimer.it_value.tv_sec; /* The "-1" makes up for adding 1000000 usec, on the next line */
+    clock_now.sec = STARTVALUE - 1 - itimer.it_value.tv_sec;	/* The "-1" makes up for adding 1000000 usec, on the next line */
     clock_now.usec = 1000000 - itimer.it_value.tv_usec;
-    if (clock_now.usec == 1000000) clock_now.usec = 0, clock_now.sec++;
+    if (clock_now.usec == 1000000)
+	clock_now.usec = 0, clock_now.sec++;
     clock_haveCurrentTime = 1;
     clock_nUpdates++;
 }

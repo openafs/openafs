@@ -21,12 +21,12 @@
 #include <string.h>
 
 
-#define VERINFO_STRING_CHARS_MAX  950   /* max chars in verinfo string */
-#define CFILE_STRING_CHARS_MAX    2000  /* max chars in C file string */
+#define VERINFO_STRING_CHARS_MAX  950	/* max chars in verinfo string */
+#define CFILE_STRING_CHARS_MAX    2000	/* max chars in C file string */
 
-#define DEPTH_MAX  6  /* maximum depth of src dir search (>= 3) */
+#define DEPTH_MAX  6		/* maximum depth of src dir search (>= 3) */
 
-#define CMLDIR_DFLT   "../../src/CML"  /* default starting point for search */
+#define CMLDIR_DFLT   "../../src/CML"	/* default starting point for search */
 #define CMLDIR_BUFSZ  ((DEPTH_MAX * (sizeof("../") - 1)) + sizeof("src/CML"))
 static char cmldir[CMLDIR_BUFSZ];
 
@@ -65,17 +65,20 @@ char *programName;
 
 void PrintStamps(void);
 
-void Usage(void)
+void
+Usage(void)
 {
-    printf("Usage: %s [-d directory] [-o output file name] [-c component] [-v | -t]\n",
-	   programName);
+    printf
+	("Usage: %s [-d directory] [-o output file name] [-c component] [-v | -t]\n",
+	 programName);
     printf("%s creates the AFS_component_version_number.c file.\n",
 	   programName);
     printf("Options:\n");
     printf("-d directory - path of the CML directory, default is %s.\n",
 	   CMLDIR_DFLT);
     printf("-o file name - alternate output file name.\n");
-    printf("-c component - if not \"afs\" prefix for cml_version_number variable.\n");
+    printf
+	("-c component - if not \"afs\" prefix for cml_version_number variable.\n");
     printf("-v generate NT versioninfo style declarations.\n");
     printf("-t generate text file style information.\n");
     exit(1);
@@ -107,49 +110,44 @@ main(int argc, char **argv)
 
     programName = argv[0];
 
-    for (i=1; i<argc; i++) {
+    for (i = 1; i < argc; i++) {
 	if (!strcmp("-d", argv[i])) {
-	    i ++;
-	    if (i>=argc || *argv[i] == '-') {
+	    i++;
+	    if (i >= argc || *argv[i] == '-') {
 		printf("Missing directory name for -d option.\n");
 		Usage();
 	    }
 	    baseDir = argv[i];
 	    argDir = 1;
-	}
-	else if (!strcmp("-o", argv[i])) {
-	    i ++;
-	    if (i>=argc || *argv[i] == '-') {
+	} else if (!strcmp("-o", argv[i])) {
+	    i++;
+	    if (i >= argc || *argv[i] == '-') {
 		printf("Missing output file name for -o option.\n");
 		Usage();
 	    }
 	    outputFile = argv[i];
-	}
-	else if (!strcmp("-c", argv[i])) {
-	    i ++;
-	    if (i>=argc || *argv[i] == '-') {
+	} else if (!strcmp("-c", argv[i])) {
+	    i++;
+	    if (i >= argc || *argv[i] == '-') {
 		printf("Missing component for -c option.\n");
 		Usage();
 	    }
 	    cml_prefix = argv[i];
-	}
-	else if (!strcmp("-v", argv[i])) {
+	} else if (!strcmp("-v", argv[i])) {
 	    if (cfgFormat == CF_DEFAULT || cfgFormat == CF_VERINFO) {
 		cfgFormat = CF_VERINFO;
 	    } else {
 		printf("Specify only one alternative output format\n");
 		Usage();
 	    }
-	}
-	else if (!strcmp("-t", argv[i])) {
+	} else if (!strcmp("-t", argv[i])) {
 	    if (cfgFormat == CF_DEFAULT || cfgFormat == CF_TEXT) {
 		cfgFormat = CF_TEXT;
 	    } else {
 		printf("Specify only one alternative output format\n");
 		Usage();
 	    }
-	}
-	else {
+	} else {
 	    printf("%s: Unknown argument.\n", argv[i]);
 	    Usage();
 	}
@@ -173,9 +171,8 @@ main(int argc, char **argv)
 
     if ((code = stat(outputFile, &sbuf)) < 0) {
 	reBuild = 1;
-	versTime = (time_t)0; /* inidicates no output file. */
-    }
-    else {
+	versTime = (time_t) 0;	/* inidicates no output file. */
+    } else {
 	versTime = sbuf.st_mtime;
     }
 
@@ -200,22 +197,22 @@ main(int argc, char **argv)
 	if (code == 0 && versTime <= sbuf.st_mtime)
 	    reBuild = 1;
     }
-	
+
     if (!reBuild) {
 	printf("Not rebuilding %s since it is up to date.\n", outputFile);
 	exit(0);
     }
 
     if (cml_prefix) {
-	cml_string = malloc(strlen("char ") +
-			    strlen(cml_prefix) + strlen(CML_STRING) + 1);
+	cml_string =
+	    malloc(strlen("char ") + strlen(cml_prefix) + strlen(CML_STRING) +
+		   1);
 	if (!cml_string) {
 	    printf("No space to use prefix in cml string, ignoring it.\n");
 	    cml_string = CML_VER_DECL;
-	}
-	else {
-	    (void) sprintf(cml_string, "%s%s%s",
-			   "char ", cml_prefix, CML_STRING);
+	} else {
+	    (void)sprintf(cml_string, "%s%s%s", "char ", cml_prefix,
+			  CML_STRING);
 	}
     }
 
@@ -230,8 +227,7 @@ main(int argc, char **argv)
 			"%s \"No configuration information available\"\n",
 			VERINFO_BUILD_STRING);
 	    } else if (cfgFormat == CF_TEXT) {
-		fprintf(fpVers,
-			"No configuration information available.\n");
+		fprintf(fpVers, "No configuration information available.\n");
 	    } else {
 		fprintf(fpVers,
 			"%sNo configuration information available\";\n",
@@ -239,9 +235,8 @@ main(int argc, char **argv)
 		fprintf(fpVers, "%safs??\";\n", AFS_STRING);
 	    }
 	    fclose(fpVers);
-	}
-	else {
-	    fprintf(stderr,"Can't write version information to %s.\n",
+	} else {
+	    fprintf(stderr, "Can't write version information to %s.\n",
 		    outputFile);
 	}
 	fprintf(stderr,
@@ -254,11 +249,11 @@ main(int argc, char **argv)
     while (fgets(s, sizeof(s), fpState)) {
 	if (*s == 'I' || *s == 'N' || *s == 'C' || *s == 'O') {
 	    stateDeltas[nStates].type = *s;
-	    s[strlen(s)-1] = '\0';
-	    (void) strcpy(stateDeltas[nStates].name, s+2);
-	    nStates ++;
+	    s[strlen(s) - 1] = '\0';
+	    (void)strcpy(stateDeltas[nStates].name, s + 2);
+	    nStates++;
 	}
-	
+
     }
     fclose(fpState);
 
@@ -269,7 +264,8 @@ main(int argc, char **argv)
 }
 
 
-void PrintStamps(void)
+void
+PrintStamps(void)
 {
     char *s;
     char *c = NULL;
@@ -279,12 +275,12 @@ void PrintStamps(void)
     if (cfgFormat == CF_VERINFO) {
 	outMax = VERINFO_STRING_CHARS_MAX;
     } else if (cfgFormat == CF_TEXT) {
-	outMax = 0;  /* signifies that there is no maximum */
+	outMax = 0;		/* signifies that there is no maximum */
     } else {
 	outMax = CFILE_STRING_CHARS_MAX;
     }
 
-    for (i=0; i<nStates; i++) {
+    for (i = 0; i < nStates; i++) {
 	if (stateDeltas[i].type == 'C') {
 	    if (cfgFormat == CF_VERINFO) {
 		fprintf(fpVers, "%s \"Base configuration %s",
@@ -293,15 +289,15 @@ void PrintStamps(void)
 		fprintf(fpVers, "Base configuration %s\n",
 			stateDeltas[i].name);
 	    } else {
-		fprintf(fpVers, "%sBase configuration %s",
-			cml_string, stateDeltas[i].name);
+		fprintf(fpVers, "%sBase configuration %s", cml_string,
+			stateDeltas[i].name);
 	    }
 	    c = stateDeltas[i].name;
 	    break;
 	}
     }
 
-    for (i=0; i<nStates; i++) {
+    for (i = 0; i < nStates; i++) {
 	if (stateDeltas[i].type == 'I' || stateDeltas[i].type == 'N') {
 	    outCount += strlen(stateDeltas[i].name) + 2;
 	    if (outMax && outCount > outMax) {
@@ -317,7 +313,7 @@ void PrintStamps(void)
 	}
     }
 
-    for (i=0; i<nStates; i++) {
+    for (i = 0; i < nStates; i++) {
 	if (stateDeltas[i].type == 'O') {
 	    outCount += strlen(stateDeltas[i].name) + 2;
 	    if (outMax && outCount > outMax) {
@@ -344,7 +340,7 @@ void PrintStamps(void)
 
 	if (c)
 	    c += 3;
-	s = (char*)strchr(c, ' ');
+	s = (char *)strchr(c, ' ');
 	if (s)
 	    *s = '\0';
 	fprintf(fpVers, "%s%s\";\n", AFS_STRING, c ? c : "Unknown");

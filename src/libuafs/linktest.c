@@ -15,7 +15,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <sys/socket.h>
 #include <sys/stat.h>
@@ -27,7 +28,8 @@ RCSID("$Header$");
 
 void uafs_Shutdown(void);
 
-int main(int argc, char **argv)
+int
+main(int argc, char **argv)
 {
     int port = 0;
     char *afsMount = 0;
@@ -51,9 +53,8 @@ int main(int argc, char **argv)
     uafs_SetRxPort(port);
 
     uafs_Init("linktest", afsMount, confDir, cacheBaseDir, cacheBlocks,
-	      cacheFiles, cacheStatEntries, dCacheSize, vCacheSize,
-	      chunkSize, closeSynch, debug, nDaemons,
-	      memCache, logFile);
+	      cacheFiles, cacheStatEntries, dCacheSize, vCacheSize, chunkSize,
+	      closeSynch, debug, nDaemons, memCache, logFile);
 
     uafs_RxServerProc();
 

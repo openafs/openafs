@@ -51,64 +51,63 @@ RCSID("$Id$");
 #endif
 
 static void
-kill_one (const char *filename);
+  kill_one(const char *filename);
 
 static void
-kill_dir (const char *dirname);
+  kill_dir(const char *dirname);
 
 static void
-do_dir (const char *dirname);
+  do_dir(const char *dirname);
 
 static void
-kill_one (const char *filename)
+kill_one(const char *filename)
 {
     int ret;
 
-    ret = unlink (filename);
+    ret = unlink(filename);
     if (ret < 0) {
 	if (errno == EISDIR || errno == EPERM)
-	    do_dir (filename);
+	    do_dir(filename);
 	else
-	    err (1, "unlink %s", filename);
+	    err(1, "unlink %s", filename);
     }
 }
 
 static void
-do_dir (const char *dirname)
+do_dir(const char *dirname)
 {
     int ret;
 
-    ret = fs_rmmount (dirname);
+    ret = fs_rmmount(dirname);
     if (ret == 0)
-      return;
+	return;
 
-    ret = chdir (dirname);
+    ret = chdir(dirname);
     if (ret < 0)
-	err (1, "chdir %s", dirname);
-    kill_dir (dirname);
-    ret = chdir ("..");
+	err(1, "chdir %s", dirname);
+    kill_dir(dirname);
+    ret = chdir("..");
     if (ret < 0)
-	err (1, "chdir ..");
-    ret = rmdir (dirname);
+	err(1, "chdir ..");
+    ret = rmdir(dirname);
     if (ret < 0)
-	err (1, "rmdir %s", dirname);
+	err(1, "rmdir %s", dirname);
 }
 
 static void
-kill_dir (const char *dirname)
+kill_dir(const char *dirname)
 {
     DIR *dir;
     struct dirent *dp;
 
-    dir = opendir (".");
+    dir = opendir(".");
     if (dir == NULL)
-	err (1, "opendir %s", dirname);
-    while ((dp = readdir (dir)) != NULL) {
-	if (strcmp (dp->d_name, ".") == 0
-	    || strcmp (dp->d_name, "..") == 0)
+	err(1, "opendir %s", dirname);
+    while ((dp = readdir(dir)) != NULL) {
+	if (strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
 	    continue;
 
-	kill_one (dp->d_name);
+	kill_one(dp->d_name);
     }
     closedir(dir);
 }
@@ -118,9 +117,9 @@ main(int argc, char **argv)
 {
 
     if (argc < 2)
-	errx (1, "usage: %s directory [...]", argv[0]);
+	errx(1, "usage: %s directory [...]", argv[0]);
     while (argc >= 2) {
-	do_dir (argv[1]);
+	do_dir(argv[1]);
 	argc--;
 	argv++;
     }

@@ -18,11 +18,12 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
-#include "afs/afs_stats.h" /* statistics */
+#include "afs/afs_stats.h"	/* statistics */
 #include "afs/afs_cbqueue.h"
 #include "afs/nfsclient.h"
 #include "afs/afs_osidnlc.h"
@@ -31,31 +32,33 @@ RCSID("$Header$");
 extern char afs_zeros[AFS_ZEROS];
 
 afs_int32 maxIHint;
-afs_int32 nihints;                           /* # of above actually in-use */
+afs_int32 nihints;		/* # of above actually in-use */
 afs_int32 usedihint;
 
 
 /* Imported variables */
 extern afs_rwlock_t afs_xdcache;
 extern unsigned char *afs_indexFlags;
-extern afs_hyper_t *afs_indexTimes;          /* Dcache entry Access times */
-extern afs_hyper_t afs_indexCounter;         /* Fake time for marking index */
+extern afs_hyper_t *afs_indexTimes;	/* Dcache entry Access times */
+extern afs_hyper_t afs_indexCounter;	/* Fake time for marking index */
 
 
 /* Forward declarations */
 void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
-			      struct AFS_UCRED *acred, struct vrequest *areq);
+		       struct AFS_UCRED *acred, struct vrequest *areq);
 
-int afs_MemRead(register struct vcache *avc, struct uio *auio, struct AFS_UCRED *acred, 
-	daddr_t albn, struct buf **abpp, int noLock)
+int
+afs_MemRead(register struct vcache *avc, struct uio *auio,
+	    struct AFS_UCRED *acred, daddr_t albn, struct buf **abpp,
+	    int noLock)
 {
     afs_size_t totalLength;
     afs_size_t transferLength;
     afs_size_t filePos;
     afs_size_t offset, len, tlen;
     afs_int32 trimlen;
-    struct dcache *tdc=0;
-    afs_int32 error, trybusy=1;
+    struct dcache *tdc = 0;
+    afs_int32 error, trybusy = 1;
     struct uio tuio;
     struct iovec *tvec;
     afs_int32 code;
@@ -66,31 +69,32 @@ int afs_MemRead(register struct vcache *avc, struct uio *auio, struct AFS_UCRED 
 	return EIO;
 
     /* check that we have the latest status info in the vnode cache */
-    if ((code = afs_InitReq(&treq, acred))) return code;
+    if ((code = afs_InitReq(&treq, acred)))
+	return code;
     if (!noLock) {
 	code = afs_VerifyVCache(avc, &treq);
 	if (code) {
-	  code = afs_CheckCode(code, &treq, 8); /* failed to get it */
-	  return code;
+	    code = afs_CheckCode(code, &treq, 8);	/* failed to get it */
+	    return code;
 	}
     }
-
 #ifndef	AFS_VM_RDWR_ENV
     if (AFS_NFSXLATORREQ(acred)) {
-	if (!afs_AccessOK(avc, PRSFS_READ, &treq,
-			  CHECK_MODE_BITS|CMB_ALLOW_EXEC_AS_READ)) {
+	if (!afs_AccessOK
+	    (avc, PRSFS_READ, &treq,
+	     CHECK_MODE_BITS | CMB_ALLOW_EXEC_AS_READ)) {
 	    return afs_CheckCode(EACCES, &treq, 9);
 	}
     }
 #endif
 
-    tvec = (struct iovec *) osi_AllocSmallSpace(sizeof(struct iovec));
+    tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
     totalLength = auio->afsio_resid;
     filePos = auio->afsio_offset;
-    afs_Trace4(afs_iclSetp, CM_TRACE_READ, ICL_TYPE_POINTER, avc, 
-		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos),
-		ICL_TYPE_INT32, totalLength,
-		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
+    afs_Trace4(afs_iclSetp, CM_TRACE_READ, ICL_TYPE_POINTER, avc,
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos), ICL_TYPE_INT32,
+	       totalLength, ICL_TYPE_OFFSET,
+	       ICL_HANDLE_OFFSET(avc->m.Length));
     error = 0;
     transferLength = 0;
     if (!noLock)
@@ -107,7 +111,8 @@ int afs_MemRead(register struct vcache *avc, struct uio *auio, struct AFS_UCRED 
      */
     while (totalLength > 0) {
 	/* read all of the cached info */
-	if (filePos >= avc->m.Length) break;	/* all done */
+	if (filePos >= avc->m.Length)
+	    break;		/* all done */
 	if (noLock) {
 	    if (tdc) {
 		ReleaseReadLock(&tdc->lock);
@@ -121,34 +126,34 @@ int afs_MemRead(register struct vcache *avc, struct uio *auio, struct AFS_UCRED 
 	    }
 	} else {
 	    /* a tricky question: does the presence of the DFFetching flag
-	       mean that we're fetching the latest version of the file?  No.
-	       The server could update the file as soon as the fetch responsible
-	       for the setting of the DFFetching flag completes.
-	    
-	       However, the presence of the DFFetching flag (visible under
-	       a dcache read lock since it is set and cleared only under a
-	       dcache write lock) means that we're fetching as good a version
-	       as was known to this client at the time of the last call to
-	       afs_VerifyVCache, since the latter updates the stat cache's
-	       m.DataVersion field under a vcache write lock, and from the
-	       time that the DFFetching flag goes on in afs_GetDCache (before
-	       the fetch starts), to the time it goes off (after the fetch
-	       completes), afs_GetDCache keeps at least a read lock on the
-	       vcache entry.
-	    
-	       This means that if the DFFetching flag is set, we can use that
-	       data for any reads that must come from the current version of
-	       the file (current == m.DataVersion).
-	     
-	       Another way of looking at this same point is this: if we're
-	       fetching some data and then try do an afs_VerifyVCache, the
-	       VerifyVCache operation will not complete until after the
-	       DFFetching flag is turned off and the dcache entry's f.versionNo
-	       field is updated.
-	     
-	       Note, by the way, that if DFFetching is set,
-	       m.DataVersion > f.versionNo (the latter is not updated until
-	       after the fetch completes).
+	     * mean that we're fetching the latest version of the file?  No.
+	     * The server could update the file as soon as the fetch responsible
+	     * for the setting of the DFFetching flag completes.
+	     * 
+	     * However, the presence of the DFFetching flag (visible under
+	     * a dcache read lock since it is set and cleared only under a
+	     * dcache write lock) means that we're fetching as good a version
+	     * as was known to this client at the time of the last call to
+	     * afs_VerifyVCache, since the latter updates the stat cache's
+	     * m.DataVersion field under a vcache write lock, and from the
+	     * time that the DFFetching flag goes on in afs_GetDCache (before
+	     * the fetch starts), to the time it goes off (after the fetch
+	     * completes), afs_GetDCache keeps at least a read lock on the
+	     * vcache entry.
+	     * 
+	     * This means that if the DFFetching flag is set, we can use that
+	     * data for any reads that must come from the current version of
+	     * the file (current == m.DataVersion).
+	     * 
+	     * Another way of looking at this same point is this: if we're
+	     * fetching some data and then try do an afs_VerifyVCache, the
+	     * VerifyVCache operation will not complete until after the
+	     * DFFetching flag is turned off and the dcache entry's f.versionNo
+	     * field is updated.
+	     * 
+	     * Note, by the way, that if DFFetching is set,
+	     * m.DataVersion > f.versionNo (the latter is not updated until
+	     * after the fetch completes).
 	     */
 	    if (tdc) {
 		ReleaseReadLock(&tdc->lock);
@@ -164,7 +169,7 @@ int afs_MemRead(register struct vcache *avc, struct uio *auio, struct AFS_UCRED 
 		&& !hsame(avc->m.DataVersion, tdc->f.versionNo)) {
 		/* have cache entry, it is not coming in now,
 		 * and we'll need new data */
-tagain:
+	      tagain:
 		if (trybusy && !afs_BBusy()) {
 		    struct brequest *bp;
 		    /* daemon is not busy */
@@ -174,7 +179,7 @@ tagain:
 			UpgradeSToWLock(&tdc->mflock, 666);
 			tdc->mflags |= DFFetchReq;
 			bp = afs_BQueue(BOP_FETCH, avc, B_DONTWAIT, 0, acred,
-					(afs_size_t)filePos, (afs_size_t) 0,
+					(afs_size_t) filePos, (afs_size_t) 0,
 					tdc);
 			if (!bp) {
 			    tdc->mflags &= ~DFFetchReq;
@@ -189,10 +194,9 @@ tagain:
 		    ConvertSToRLock(&tdc->mflock);
 		    while (!code && tdc->mflags & DFFetchReq) {
 			afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
-				ICL_TYPE_STRING, __FILE__,
-				ICL_TYPE_INT32, __LINE__,
-				ICL_TYPE_POINTER, tdc,
-				ICL_TYPE_INT32, tdc->dflags);
+				   ICL_TYPE_STRING, __FILE__, ICL_TYPE_INT32,
+				   __LINE__, ICL_TYPE_POINTER, tdc,
+				   ICL_TYPE_INT32, tdc->dflags);
 			/* don't need waiting flag on this one */
 			ReleaseReadLock(&tdc->mflock);
 			ReleaseReadLock(&tdc->lock);
@@ -213,15 +217,14 @@ tagain:
 	     * data is now streaming in, then wait for some interesting stuff.
 	     */
 	    code = 0;
-	    while (!code && (tdc->dflags & DFFetching) &&
-		   tdc->validPos <= filePos) {
+	    while (!code && (tdc->dflags & DFFetching)
+		   && tdc->validPos <= filePos) {
 		/* too early: wait for DFFetching flag to vanish,
 		 * or data to appear */
-		afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
-				ICL_TYPE_STRING, __FILE__,
-				ICL_TYPE_INT32, __LINE__,
-				ICL_TYPE_POINTER, tdc,
-				ICL_TYPE_INT32, tdc->dflags);
+		afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT, ICL_TYPE_STRING,
+			   __FILE__, ICL_TYPE_INT32, __LINE__,
+			   ICL_TYPE_POINTER, tdc, ICL_TYPE_INT32,
+			   tdc->dflags);
 		ReleaseReadLock(&tdc->lock);
 		ReleaseReadLock(&avc->lock);
 		code = afs_osi_SleepSig(&tdc->validPos);
@@ -239,20 +242,18 @@ tagain:
 		 * compute length and offset */
 		offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 		len = tdc->validPos - filePos;
-	    }
-	    else {
+	    } else {
 		/* no longer fetching, verify data version 
 		 * (avoid new GetDCache call) */
-		if (hsame(avc->m.DataVersion, tdc->f.versionNo) 
+		if (hsame(avc->m.DataVersion, tdc->f.versionNo)
 		    && ((len = tdc->validPos - filePos) > 0)) {
 		    offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
-		}
-		else {
+		} else {
 		    /* don't have current data, so get it below */
 		    afs_Trace3(afs_iclSetp, CM_TRACE_VERSIONNO,
-				ICL_TYPE_INT64, ICL_HANDLE_OFFSET(filePos),
-				ICL_TYPE_HYPER, &avc->m.DataVersion,
-				ICL_TYPE_HYPER, &tdc->f.versionNo);
+			       ICL_TYPE_INT64, ICL_HANDLE_OFFSET(filePos),
+			       ICL_TYPE_HYPER, &avc->m.DataVersion,
+			       ICL_TYPE_HYPER, &tdc->f.versionNo);
 		    ReleaseReadLock(&tdc->lock);
 		    afs_PutDCache(tdc);
 		    tdc = NULL;
@@ -260,21 +261,21 @@ tagain:
 	    }
 
 	    if (!tdc) {
-                /* If we get, it was not possible to start the
-                 * background daemon. With flag == 1 afs_GetDCache
-                 * does the FetchData rpc synchronously.
-                 */
+		/* If we get, it was not possible to start the
+		 * background daemon. With flag == 1 afs_GetDCache
+		 * does the FetchData rpc synchronously.
+		 */
 		ReleaseReadLock(&avc->lock);
 		tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 1);
 		ObtainReadLock(&avc->lock);
-		if (tdc) ObtainReadLock(&tdc->lock);
+		if (tdc)
+		    ObtainReadLock(&tdc->lock);
 	    }
 	}
 
-        afs_Trace3(afs_iclSetp, CM_TRACE_VNODEREAD,
-                        ICL_TYPE_POINTER, tdc,
-                        ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(offset),
-                        ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(len));
+	afs_Trace3(afs_iclSetp, CM_TRACE_VNODEREAD, ICL_TYPE_POINTER, tdc,
+		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(offset),
+		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(len));
 	if (!tdc) {
 	    error = EIO;
 	    break;
@@ -286,15 +287,19 @@ tagain:
 	 * tdc->lock(R)
 	 */
 
-	if (len	> totalLength) len = totalLength;   /* will read len bytes */
-	if (len	<= 0) {	/* shouldn't get here if DFFetching is on */
+	if (len > totalLength)
+	    len = totalLength;	/* will read len bytes */
+	if (len <= 0) {		/* shouldn't get here if DFFetching is on */
 	    /* read past the end of a chunk, may not be at next chunk yet, and yet
-		also not at eof, so may have to supply fake zeros */
-	    len	= AFS_CHUNKTOSIZE(tdc->f.chunk) - offset; /* bytes left in chunk addr space */
-	    if (len > totalLength) len = totalLength;	/* and still within xfr request */
-	    tlen = avc->m.Length - offset; /* and still within file */ 
-	    if (len > tlen) len = tlen;
-	    if (len > AFS_ZEROS) len = sizeof(afs_zeros);   /* and in 0 buffer */
+	     * also not at eof, so may have to supply fake zeros */
+	    len = AFS_CHUNKTOSIZE(tdc->f.chunk) - offset;	/* bytes left in chunk addr space */
+	    if (len > totalLength)
+		len = totalLength;	/* and still within xfr request */
+	    tlen = avc->m.Length - offset;	/* and still within file */
+	    if (len > tlen)
+		len = tlen;
+	    if (len > AFS_ZEROS)
+		len = sizeof(afs_zeros);	/* and in 0 buffer */
 	    afsio_copy(auio, &tuio, tvec);
 	    trimlen = len;
 	    afsio_trim(&tuio, trimlen);
@@ -303,8 +308,7 @@ tagain:
 		error = code;
 		break;
 	    }
-	}
-	else {
+	} else {
 	    /* get the data from the mem cache */
 
 	    /* mung uio structure to be right for this transfer */
@@ -321,15 +325,16 @@ tagain:
 	    }
 	}
 	/* otherwise we've read some, fixup length, etc and continue with next seg */
-	len = len - tuio.afsio_resid; /* compute amount really transferred */
+	len = len - tuio.afsio_resid;	/* compute amount really transferred */
 	trimlen = len;
-	afsio_skip(auio, trimlen);	    /* update input uio structure */
+	afsio_skip(auio, trimlen);	/* update input uio structure */
 	totalLength -= len;
 	transferLength += len;
 	filePos += len;
 
-	if (len <= 0) break;	/* surprise eof */
-    }	/* the whole while loop */
+	if (len <= 0)
+	    break;		/* surprise eof */
+    }				/* the whole while loop */
 
     /*
      * Locks held:
@@ -367,18 +372,20 @@ tagain:
  * This function must be called with the vnode at least read-locked, and
  * no locks on the dcache, because it plays around with dcache entries.
  */
-void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
-			      struct AFS_UCRED *acred, struct vrequest *areq)
+void
+afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
+		  struct AFS_UCRED *acred, struct vrequest *areq)
 {
     register struct dcache *tdc;
     afs_size_t offset;
-    afs_size_t j1, j2;	/* junk vbls for GetDCache to trash */
+    afs_size_t j1, j2;		/* junk vbls for GetDCache to trash */
 
-    offset = adc->f.chunk+1;		/* next chunk we'll need */
-    offset = AFS_CHUNKTOBASE(offset);   /* base of next chunk */
+    offset = adc->f.chunk + 1;	/* next chunk we'll need */
+    offset = AFS_CHUNKTOBASE(offset);	/* base of next chunk */
     ObtainReadLock(&adc->lock);
     ObtainSharedLock(&adc->mflock, 662);
-    if (offset < avc->m.Length && !(adc->mflags & DFNextStarted) && !afs_BBusy()) {
+    if (offset < avc->m.Length && !(adc->mflags & DFNextStarted)
+	&& !afs_BBusy()) {
 	struct brequest *bp;
 
 	UpgradeSToWLock(&adc->mflock, 663);
@@ -428,21 +435,23 @@ void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
     }
 }
 
-int afs_UFSRead(register struct vcache *avc, struct uio *auio,
-	struct AFS_UCRED *acred, daddr_t albn, struct buf **abpp, int noLock)
+int
+afs_UFSRead(register struct vcache *avc, struct uio *auio,
+	    struct AFS_UCRED *acred, daddr_t albn, struct buf **abpp,
+	    int noLock)
 {
     afs_size_t totalLength;
     afs_size_t transferLength;
     afs_size_t filePos;
     afs_size_t offset, len, tlen;
     afs_int32 trimlen;
-    struct dcache *tdc=0;
+    struct dcache *tdc = 0;
     afs_int32 error;
     struct uio tuio;
     struct iovec *tvec;
     struct osi_file *tfile;
     afs_int32 code;
-    int trybusy=1;
+    int trybusy = 1;
     struct vrequest treq;
 
     AFS_STATCNT(afs_UFSRead);
@@ -450,35 +459,36 @@ int afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	return EIO;
 
     /* check that we have the latest status info in the vnode cache */
-    if ((code = afs_InitReq(&treq, acred))) return code;
+    if ((code = afs_InitReq(&treq, acred)))
+	return code;
     if (!noLock) {
-      if (!avc) 
-	osi_Panic ("null avc in afs_UFSRead");
-      else {
-	code = afs_VerifyVCache(avc, &treq);
-	if (code) {
-	  code = afs_CheckCode(code, &treq, 11); /* failed to get it */
-	  return code;
+	if (!avc)
+	    osi_Panic("null avc in afs_UFSRead");
+	else {
+	    code = afs_VerifyVCache(avc, &treq);
+	    if (code) {
+		code = afs_CheckCode(code, &treq, 11);	/* failed to get it */
+		return code;
+	    }
 	}
-      }
     }
-
 #ifndef	AFS_VM_RDWR_ENV
     if (AFS_NFSXLATORREQ(acred)) {
-	if (!afs_AccessOK(avc, PRSFS_READ, &treq,
-			  CHECK_MODE_BITS|CMB_ALLOW_EXEC_AS_READ)) {
+	if (!afs_AccessOK
+	    (avc, PRSFS_READ, &treq,
+	     CHECK_MODE_BITS | CMB_ALLOW_EXEC_AS_READ)) {
 	    return afs_CheckCode(EACCES, &treq, 12);
 	}
     }
 #endif
 
-    tvec = (struct iovec *) osi_AllocSmallSpace(sizeof(struct iovec));
+    tvec = (struct iovec *)osi_AllocSmallSpace(sizeof(struct iovec));
     totalLength = auio->afsio_resid;
     filePos = auio->afsio_offset;
-    afs_Trace4(afs_iclSetp, CM_TRACE_READ, ICL_TYPE_POINTER, avc, 
-		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos),
-		ICL_TYPE_INT32, totalLength,
-		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
+    afs_Trace4(afs_iclSetp, CM_TRACE_READ, ICL_TYPE_POINTER, avc,
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(filePos), ICL_TYPE_INT32,
+	       totalLength, ICL_TYPE_OFFSET,
+	       ICL_HANDLE_OFFSET(avc->m.Length));
     error = 0;
     transferLength = 0;
     if (!noLock)
@@ -488,10 +498,11 @@ int afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	hset(avc->flushDV, avc->m.DataVersion);
     }
 #endif
-    
+
     while (totalLength > 0) {
 	/* read all of the cached info */
-	if (filePos >= avc->m.Length) break;	/* all done */
+	if (filePos >= avc->m.Length)
+	    break;		/* all done */
 	if (noLock) {
 	    if (tdc) {
 		ReleaseReadLock(&tdc->lock);
@@ -505,34 +516,34 @@ int afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	    }
 	} else {
 	    /* a tricky question: does the presence of the DFFetching flag
-	       mean that we're fetching the latest version of the file?  No.
-	       The server could update the file as soon as the fetch responsible
-	       for the setting of the DFFetching flag completes.
-	    
-	       However, the presence of the DFFetching flag (visible under
-	       a dcache read lock since it is set and cleared only under a
-	       dcache write lock) means that we're fetching as good a version
-	       as was known to this client at the time of the last call to
-	       afs_VerifyVCache, since the latter updates the stat cache's
-	       m.DataVersion field under a vcache write lock, and from the
-	       time that the DFFetching flag goes on in afs_GetDCache (before
-	       the fetch starts), to the time it goes off (after the fetch
-	       completes), afs_GetDCache keeps at least a read lock on the
-	       vcache entry.
-	    
-	       This means that if the DFFetching flag is set, we can use that
-	       data for any reads that must come from the current version of
-	       the file (current == m.DataVersion).
-	     
-	       Another way of looking at this same point is this: if we're
-	       fetching some data and then try do an afs_VerifyVCache, the
-	       VerifyVCache operation will not complete until after the
-	       DFFetching flag is turned off and the dcache entry's f.versionNo
-	       field is updated.
-	     
-	       Note, by the way, that if DFFetching is set,
-	       m.DataVersion > f.versionNo (the latter is not updated until
-	       after the fetch completes).
+	     * mean that we're fetching the latest version of the file?  No.
+	     * The server could update the file as soon as the fetch responsible
+	     * for the setting of the DFFetching flag completes.
+	     * 
+	     * However, the presence of the DFFetching flag (visible under
+	     * a dcache read lock since it is set and cleared only under a
+	     * dcache write lock) means that we're fetching as good a version
+	     * as was known to this client at the time of the last call to
+	     * afs_VerifyVCache, since the latter updates the stat cache's
+	     * m.DataVersion field under a vcache write lock, and from the
+	     * time that the DFFetching flag goes on in afs_GetDCache (before
+	     * the fetch starts), to the time it goes off (after the fetch
+	     * completes), afs_GetDCache keeps at least a read lock on the
+	     * vcache entry.
+	     * 
+	     * This means that if the DFFetching flag is set, we can use that
+	     * data for any reads that must come from the current version of
+	     * the file (current == m.DataVersion).
+	     * 
+	     * Another way of looking at this same point is this: if we're
+	     * fetching some data and then try do an afs_VerifyVCache, the
+	     * VerifyVCache operation will not complete until after the
+	     * DFFetching flag is turned off and the dcache entry's f.versionNo
+	     * field is updated.
+	     * 
+	     * Note, by the way, that if DFFetching is set,
+	     * m.DataVersion > f.versionNo (the latter is not updated until
+	     * after the fetch completes).
 	     */
 	    if (tdc) {
 		ReleaseReadLock(&tdc->lock);
@@ -546,7 +557,7 @@ int afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	    if (!(tdc->dflags & DFFetching)
 		&& !hsame(avc->m.DataVersion, tdc->f.versionNo)) {
 		/* have cache entry, it is not coming in now, and we'll need new data */
-tagain:
+	      tagain:
 		if (trybusy && !afs_BBusy()) {
 		    struct brequest *bp;
 		    /* daemon is not busy */
@@ -570,10 +581,9 @@ tagain:
 		    ConvertSToRLock(&tdc->mflock);
 		    while (!code && tdc->mflags & DFFetchReq) {
 			afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
-				ICL_TYPE_STRING, __FILE__,
-				ICL_TYPE_INT32, __LINE__,
-				ICL_TYPE_POINTER, tdc,
-				ICL_TYPE_INT32, tdc->dflags);
+				   ICL_TYPE_STRING, __FILE__, ICL_TYPE_INT32,
+				   __LINE__, ICL_TYPE_POINTER, tdc,
+				   ICL_TYPE_INT32, tdc->dflags);
 			/* don't need waiting flag on this one */
 			ReleaseReadLock(&tdc->mflock);
 			ReleaseReadLock(&tdc->lock);
@@ -594,15 +604,14 @@ tagain:
 	     * data is now streaming in, then wait for some interesting stuff.
 	     */
 	    code = 0;
-	    while (!code && (tdc->dflags & DFFetching) &&
-		   tdc->validPos <= filePos) {
+	    while (!code && (tdc->dflags & DFFetching)
+		   && tdc->validPos <= filePos) {
 		/* too early: wait for DFFetching flag to vanish,
 		 * or data to appear */
-		afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT,
-				ICL_TYPE_STRING, __FILE__,
-				ICL_TYPE_INT32, __LINE__,
-				ICL_TYPE_POINTER, tdc,
-				ICL_TYPE_INT32, tdc->dflags);
+		afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAIT, ICL_TYPE_STRING,
+			   __FILE__, ICL_TYPE_INT32, __LINE__,
+			   ICL_TYPE_POINTER, tdc, ICL_TYPE_INT32,
+			   tdc->dflags);
 		ReleaseReadLock(&tdc->lock);
 		ReleaseReadLock(&avc->lock);
 		code = afs_osi_SleepSig(&tdc->validPos);
@@ -620,20 +629,18 @@ tagain:
 		 * compute length and offset */
 		offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 		len = tdc->validPos - filePos;
-	    }
-	    else {
+	    } else {
 		/* no longer fetching, verify data version (avoid new
 		 * GetDCache call) */
-		if (hsame(avc->m.DataVersion, tdc->f.versionNo) 
+		if (hsame(avc->m.DataVersion, tdc->f.versionNo)
 		    && ((len = tdc->validPos - filePos) > 0)) {
 		    offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
-		}
-		else {
+		} else {
 		    /* don't have current data, so get it below */
 		    afs_Trace3(afs_iclSetp, CM_TRACE_VERSIONNO,
-				ICL_TYPE_INT64, ICL_HANDLE_OFFSET(filePos),
-				ICL_TYPE_HYPER, &avc->m.DataVersion,
-				ICL_TYPE_HYPER, &tdc->f.versionNo);
+			       ICL_TYPE_INT64, ICL_HANDLE_OFFSET(filePos),
+			       ICL_TYPE_HYPER, &avc->m.DataVersion,
+			       ICL_TYPE_HYPER, &tdc->f.versionNo);
 		    ReleaseReadLock(&tdc->lock);
 		    afs_PutDCache(tdc);
 		    tdc = NULL;
@@ -648,33 +655,36 @@ tagain:
 		ReleaseReadLock(&avc->lock);
 		tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 1);
 		ObtainReadLock(&avc->lock);
-		if (tdc) ObtainReadLock(&tdc->lock);
+		if (tdc)
+		    ObtainReadLock(&tdc->lock);
 	    }
 	}
-	
+
 	if (!tdc) {
 	    error = EIO;
 	    break;
 	}
 	len = tdc->validPos - filePos;
-	afs_Trace3(afs_iclSetp, CM_TRACE_VNODEREAD,
-			ICL_TYPE_POINTER, tdc,
-			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(offset),
-			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(len));
-	if (len	> totalLength) len = totalLength;   /* will read len bytes */
-	if (len	<= 0) {	/* shouldn't get here if DFFetching is on */
-	    afs_Trace4(afs_iclSetp, CM_TRACE_VNODEREAD2,
-			ICL_TYPE_POINTER, tdc,
-			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(tdc->validPos),
-			ICL_TYPE_INT32, tdc->f.chunkBytes,
-			ICL_TYPE_INT32, tdc->dflags);
+	afs_Trace3(afs_iclSetp, CM_TRACE_VNODEREAD, ICL_TYPE_POINTER, tdc,
+		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(offset),
+		   ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(len));
+	if (len > totalLength)
+	    len = totalLength;	/* will read len bytes */
+	if (len <= 0) {		/* shouldn't get here if DFFetching is on */
+	    afs_Trace4(afs_iclSetp, CM_TRACE_VNODEREAD2, ICL_TYPE_POINTER,
+		       tdc, ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(tdc->validPos),
+		       ICL_TYPE_INT32, tdc->f.chunkBytes, ICL_TYPE_INT32,
+		       tdc->dflags);
 	    /* read past the end of a chunk, may not be at next chunk yet, and yet
-		also not at eof, so may have to supply fake zeros */
-	    len	= AFS_CHUNKTOSIZE(tdc->f.chunk) - offset; /* bytes left in chunk addr space */
-	    if (len > totalLength) len = totalLength;	/* and still within xfr request */
-	    tlen = avc->m.Length - offset; /* and still within file */
-	    if (len > tlen) len = tlen;
-	    if (len > AFS_ZEROS) len = sizeof(afs_zeros);   /* and in 0 buffer */
+	     * also not at eof, so may have to supply fake zeros */
+	    len = AFS_CHUNKTOSIZE(tdc->f.chunk) - offset;	/* bytes left in chunk addr space */
+	    if (len > totalLength)
+		len = totalLength;	/* and still within xfr request */
+	    tlen = avc->m.Length - offset;	/* and still within file */
+	    if (len > tlen)
+		len = tlen;
+	    if (len > AFS_ZEROS)
+		len = sizeof(afs_zeros);	/* and in 0 buffer */
 	    afsio_copy(auio, &tuio, tvec);
 	    trimlen = len;
 	    afsio_trim(&tuio, trimlen);
@@ -683,42 +693,42 @@ tagain:
 		error = code;
 		break;
 	    }
-	}
-	else {
+	} else {
 	    /* get the data from the file */
 #ifdef IHINT
-	  if (tfile = tdc->ihint) {
-             if (tdc->f.inode != tfile->inum){ 
-                    afs_warn( "afs_UFSRead: %x hint mismatch tdc %d inum %d\n",
-                        tdc, tdc->f.inode, tfile->inum );
-                    osi_UFSClose(tfile);
+	    if (tfile = tdc->ihint) {
+		if (tdc->f.inode != tfile->inum) {
+		    afs_warn("afs_UFSRead: %x hint mismatch tdc %d inum %d\n",
+			     tdc, tdc->f.inode, tfile->inum);
+		    osi_UFSClose(tfile);
 		    tdc->ihint = tfile = 0;
 		    nihints--;
-		  }
-	   }
-	  if (tfile != 0) {
-	    usedihint++;
-	  }
-	  else
+		}
+	    }
+	    if (tfile != 0) {
+		usedihint++;
+	    } else
 #endif /* IHINT */
 
-	    tfile = (struct osi_file *)osi_UFSOpen(tdc->f.inode);
+		tfile = (struct osi_file *)osi_UFSOpen(tdc->f.inode);
 	    /* mung uio structure to be right for this transfer */
 	    afsio_copy(auio, &tuio, tvec);
 	    trimlen = len;
 	    afsio_trim(&tuio, trimlen);
 	    tuio.afsio_offset = offset;
 #if defined(AFS_AIX41_ENV)
-	  AFS_GUNLOCK();
-	  code = VNOP_RDWR(tfile->vnode, UIO_READ, FREAD, &tuio, NULL, NULL,
-			   NULL, &afs_osi_cred);
-	  AFS_GLOCK();
+	    AFS_GUNLOCK();
+	    code =
+		VNOP_RDWR(tfile->vnode, UIO_READ, FREAD, &tuio, NULL, NULL,
+			  NULL, &afs_osi_cred);
+	    AFS_GLOCK();
 #elif defined(AFS_AIX32_ENV)
-	    code = VNOP_RDWR(tfile->vnode, UIO_READ, FREAD, &tuio, NULL, NULL);
-	  /* Flush all JFS pages now for big performance gain in big file cases
-	   * If we do something like this, must check to be sure that AFS file 
-	   * isn't mmapped... see afs_gn_map() for why.
-	  */
+	    code =
+		VNOP_RDWR(tfile->vnode, UIO_READ, FREAD, &tuio, NULL, NULL);
+	    /* Flush all JFS pages now for big performance gain in big file cases
+	     * If we do something like this, must check to be sure that AFS file 
+	     * isn't mmapped... see afs_gn_map() for why.
+	     */
 /*
 	  if (tfile->vnode->v_gnode && tfile->vnode->v_gnode->gn_seg) {
  many different ways to do similar things:
@@ -740,13 +750,15 @@ tagain:
 	  }	
 */
 #elif defined(AFS_AIX_ENV)
-	  code = VNOP_RDWR(tfile->vnode, UIO_READ, FREAD, (off_t)&offset, &tuio, NULL, NULL, -1);
+	    code =
+		VNOP_RDWR(tfile->vnode, UIO_READ, FREAD, (off_t) & offset,
+			  &tuio, NULL, NULL, -1);
 #elif defined(AFS_SUN5_ENV)
-	  AFS_GUNLOCK();
+	    AFS_GUNLOCK();
 	    VOP_RWLOCK(tfile->vnode, 0);
 	    code = VOP_READ(tfile->vnode, &tuio, 0, &afs_osi_cred);
 	    VOP_RWUNLOCK(tfile->vnode, 0);
-	  AFS_GLOCK();
+	    AFS_GLOCK();
 #elif defined(AFS_SGI_ENV)
 	    AFS_GUNLOCK();
 	    AFS_VOP_RWLOCK(tfile->vnode, VRWLOCK_READ);
@@ -770,35 +782,34 @@ tagain:
 	    code = osi_file_uio_rdwr(tfile, &tuio, UIO_READ);
 	    AFS_GLOCK();
 #elif defined(AFS_DARWIN_ENV)
-            AFS_GUNLOCK();
-            VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, current_proc());
-            code = VOP_READ(tfile->vnode, &tuio, 0, &afs_osi_cred);
-            VOP_UNLOCK(tfile->vnode, 0, current_proc());
-            AFS_GLOCK();
+	    AFS_GUNLOCK();
+	    VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, current_proc());
+	    code = VOP_READ(tfile->vnode, &tuio, 0, &afs_osi_cred);
+	    VOP_UNLOCK(tfile->vnode, 0, current_proc());
+	    AFS_GLOCK();
 #elif defined(AFS_FBSD50_ENV)
-            AFS_GUNLOCK();
-            VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curthread);
-            code = VOP_READ(tfile->vnode, &tuio, 0, &afs_osi_cred);
-            VOP_UNLOCK(tfile->vnode, 0, curthread);
-            AFS_GLOCK();
+	    AFS_GUNLOCK();
+	    VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curthread);
+	    code = VOP_READ(tfile->vnode, &tuio, 0, &afs_osi_cred);
+	    VOP_UNLOCK(tfile->vnode, 0, curthread);
+	    AFS_GLOCK();
 #elif defined(AFS_XBSD_ENV)
-            AFS_GUNLOCK();
-            VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curproc);
-            code = VOP_READ(tfile->vnode, &tuio, 0, &afs_osi_cred);
-            VOP_UNLOCK(tfile->vnode, 0, curproc);
-            AFS_GLOCK();
+	    AFS_GUNLOCK();
+	    VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curproc);
+	    code = VOP_READ(tfile->vnode, &tuio, 0, &afs_osi_cred);
+	    VOP_UNLOCK(tfile->vnode, 0, curproc);
+	    AFS_GLOCK();
 #else
 	    code = VOP_RDWR(tfile->vnode, &tuio, UIO_READ, 0, &afs_osi_cred);
 #endif
 
 #ifdef IHINT
-	     if (!tdc->ihint && nihints < maxIHint) {
-	       tdc->ihint = tfile;
-	       nihints++;
-	     }
-	     else
+	    if (!tdc->ihint && nihints < maxIHint) {
+		tdc->ihint = tfile;
+		nihints++;
+	    } else
 #endif /* IHINT */
-	       osi_UFSClose(tfile);
+		osi_UFSClose(tfile);
 
 	    if (code) {
 		error = code;
@@ -806,13 +817,14 @@ tagain:
 	    }
 	}
 	/* otherwise we've read some, fixup length, etc and continue with next seg */
-	len = len - tuio.afsio_resid; /* compute amount really transferred */
+	len = len - tuio.afsio_resid;	/* compute amount really transferred */
 	trimlen = len;
-	afsio_skip(auio, trimlen);	    /* update input uio structure */
+	afsio_skip(auio, trimlen);	/* update input uio structure */
 	totalLength -= len;
 	transferLength += len;
 	filePos += len;
-	if (len <= 0) break;	/* surprise eof */
+	if (len <= 0)
+	    break;		/* surprise eof */
     }
 
     /* if we make it here with tdc non-zero, then it is the last chunk we

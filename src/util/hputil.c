@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef AFS_HPUX_ENV
 #include <stdio.h>
@@ -21,39 +22,44 @@ RCSID("$Header$");
 /* insque/remque moved to timer.c where they are used. */
 
 #ifndef AFS_HPUX102_ENV
-int utimes(char *file, struct timeval tvp[2])
+int
+utimes(char *file, struct timeval tvp[2])
 {
-	struct utimbuf times;
-	
-	times.actime = tvp[0].tv_sec;
-	times.modtime = tvp[1].tv_sec;
-	return (utime(file,&times));
+    struct utimbuf times;
+
+    times.actime = tvp[0].tv_sec;
+    times.modtime = tvp[1].tv_sec;
+    return (utime(file, &times));
 }
 #endif
 
-int random(void)
+int
+random(void)
 {
-	return rand();
+    return rand();
 }
 
-void srandom(int seed)
+void
+srandom(int seed)
 {
-	srand(seed);
-}
-	       
-int getdtablesize(void)
-{
-	return (20);
+    srand(seed);
 }
 
-void setlinebuf(FILE *file)
+int
+getdtablesize(void)
 {
-	setbuf(file,NULL);
+    return (20);
 }
 
-void psignal(unsigned int sig, char *s)
+void
+setlinebuf(FILE * file)
 {
-	fprintf (stderr,"%s: signal %d\n",s,sig);
+    setbuf(file, NULL);
+}
+
+void
+psignal(unsigned int sig, char *s)
+{
+    fprintf(stderr, "%s: signal %d\n", s, sig);
 }
 #endif /* AFS_HPUX_ENV */
-

@@ -90,7 +90,7 @@ find(const char *dirname)
 
     dir = opendir(dirname);
     if (dir == NULL)
-	err (1, "opendir %s", dirname);
+	err(1, "opendir %s", dirname);
     while ((dp = readdir(dir)) != NULL) {
 	char fname[MAXPATHLEN];
 	struct stat sb;
@@ -99,16 +99,15 @@ find(const char *dirname)
 	    alarm(1);
 	    set_alarm = 0;
 	}
-	if (strcmp (dp->d_name, ".") == 0
-	    || strcmp (dp->d_name, "..") == 0)
+	if (strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
 	    continue;
 	snprintf(fname, sizeof(fname), "%s/%s", dirname, dp->d_name);
 	if (lstat(fname, &sb) < 0)
 	    err(1, "stat %s", fname);
 	if (S_ISDIR(sb.st_mode))
-	  find(fname);
+	    find(fname);
 	else
-	  try_read(fname);
+	    try_read(fname);
     }
     closedir(dir);
 }
@@ -120,7 +119,7 @@ main(int argc, char **argv)
 
     sa.sa_handler = sigalrm;
     sigfillset(&sa.sa_mask);
-    sa.sa_flags   = 0;
+    sa.sa_flags = 0;
     sigaction(SIGALRM, &sa, NULL);
     while (--argc)
 	find(*++argv);

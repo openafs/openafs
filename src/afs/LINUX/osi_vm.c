@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -39,7 +40,8 @@ RCSID("$Header$");
  * is not dropped and re-acquired for any platform.  It may be that *slept is
  * therefore obsolescent.
  */
-int osi_VM_FlushVCache(struct vcache *avc, int *slept)
+int
+osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
     struct inode *ip = AFSTOI(avc);
 
@@ -68,7 +70,8 @@ int osi_VM_FlushVCache(struct vcache *avc, int *slept)
  * Since we drop and re-obtain the lock, we can't guarantee that there won't
  * be some pages around when we return, newly created by concurrent activity.
  */
-void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
+void
+osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 {
     invalidate_inode_pages(AFSTOI(avc));
 }
@@ -77,7 +80,8 @@ void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
  *
  * Locking:  only the global lock is held.
  */
-void osi_VM_FSyncInval(struct vcache *avc)
+void
+osi_VM_FSyncInval(struct vcache *avc)
 {
 
 }
@@ -87,7 +91,8 @@ void osi_VM_FSyncInval(struct vcache *avc)
  * Locking:  the vcache entry's lock is held.  It will usually be dropped and
  * re-obtained.
  */
-void osi_VM_StoreAllSegments(struct vcache *avc)
+void
+osi_VM_StoreAllSegments(struct vcache *avc)
 {
     struct inode *ip = AFSTOI(avc);
 
@@ -106,7 +111,8 @@ void osi_VM_StoreAllSegments(struct vcache *avc)
  *
  * Locking:  No lock is held, not even the global lock.
  */
-void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
+void
+osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     struct inode *ip = AFSTOI(avc);
@@ -127,7 +133,8 @@ void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
  * activeV is raised.  This is supposed to block pageins, but at present
  * it only works on Solaris.
  */
-void osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
+void
+osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,0)
     struct inode *ip = AFSTOI(avc);

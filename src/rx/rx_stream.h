@@ -10,34 +10,29 @@
 /* rx_stream.h:  the stream I/O layer for RX */
 
 This file is now obsolete.
-
-
-
 #ifndef _RX_STREAM_
 #define _RX_STREAM_
-
 #ifdef	KERNEL
 #include "rx/rx.h"
-#else /* KERNEL */
+#else				/* KERNEL */
 #include <sys/types.h>
 #include <sys/uio.h>
 #include "rx.h"
-#endif /* KERNEL */
-
+#endif				/* KERNEL */
 /* Write descriptor */
-struct rx_stream_wd {
+    struct rx_stream_wd {
     char *freePtr;		/* Pointer to bytes in first packet */
-    int	nFree;			/* Number of bytes free in first packet */
+    int nFree;			/* Number of bytes free in first packet */
     struct rx_call *call;	/* The call this stream is attached to */
     struct rx_queue wq;		/* Currently allocated packets for this stream */
-    int	packetSize;		/* Data size used in each packet */
+    int packetSize;		/* Data size used in each packet */
 };
 
 /* Read descriptor */
 struct rx_stream_rd {
     struct rx_packet *packet;	/* The current packet */
     char *nextByte;		/* Pointer to bytes in current packet */
-    int	nLeft;			/* Number of bytes free in current packet */
+    int nLeft;			/* Number of bytes free in current packet */
     struct rx_call *call;	/* The call this stream is attached to */
     struct rx_queue rq;		/* Currently allocated packets for this stream */
     struct rx_queue freeTheseQ;	/* These packets should be freed on the next operation */
@@ -78,4 +73,4 @@ int rx_stream_AllocIov();
     (iod)->sd.rd.nLeft -= (nbytes), (iod)->sd.rd.nextByte += (nbytes), (nbytes)	\
    : rx_stream_ReadProc((iod), (buf), (nbytes))
 
-#endif /* _RX_STREAM_	 End of rx_stream.h */
+#endif /* _RX_STREAM_    End of rx_stream.h */

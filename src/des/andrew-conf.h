@@ -92,8 +92,9 @@
 #if defined(AFS_DARWIN_ENV) && defined(AFS_PPC_ENV)
 #include "conf-ppc-darwin.h"
 #else
-Sorry, you lose.
-Figure out what the machine looks like and fix this file to include it.
+Sorry,
+    you lose.
+    Figure out what the machine looks like and fix this file to include it.
 #endif
 #endif /* AFS_LINUX20_ENV */
 #endif /* AFS_NT40_ENV */
@@ -102,9 +103,9 @@ Figure out what the machine looks like and fix this file to include it.
 #endif /* __alpha */
 #endif /* SGI */
 #endif /* NeXT */
-#endif	/* HP/UX */
+#endif /* HP/UX */
 #endif /* mac */
-#endif	/* aix */
+#endif /* aix */
 #endif /* sun */
 #endif /* mips */
 #endif /* not vax */

@@ -25,7 +25,7 @@
 #ifdef DEBUG
 #define	dbgprint(x)   {fprintf x ; fflush(stderr);}
 #else
-#define	dbgprint(x)   
+#define	dbgprint(x)
 #endif /* DEBUG */
 
 char *emalloc();

@@ -9,7 +9,7 @@
 
 #ifndef OPENAFS_USD_H
 #define OPENAFS_USD_H
- 
+
 /* Define I/O functions that operate on both device and regular files.
  *
  * Essentially, this is a mechanism for dealing with systems (such as NT)
@@ -44,15 +44,17 @@
  *     preemptive environment.  Treat all calls as if they had an "_r"
  *     suffix. */
 
-typedef struct usd_handle * usd_handle_t;
- 
+typedef struct usd_handle *usd_handle_t;
+
 struct usd_handle {
-    int (*read)(usd_handle_t usd, char *buf, afs_uint32 nbyte, afs_uint32 *xferdP);
-    int (*write)(usd_handle_t usd, char *buf, afs_uint32 nbyte, afs_uint32 *xferdP);
-    int (*seek)(usd_handle_t usd,
-		afs_hyper_t inOff, int whence, afs_hyper_t *outOffP);
-    int (*ioctl)(usd_handle_t usd, int req, void *arg);
-    int (*close)(usd_handle_t usd);
+    int (*read) (usd_handle_t usd, char *buf, afs_uint32 nbyte,
+		 afs_uint32 * xferdP);
+    int (*write) (usd_handle_t usd, char *buf, afs_uint32 nbyte,
+		  afs_uint32 * xferdP);
+    int (*seek) (usd_handle_t usd, afs_hyper_t inOff, int whence,
+		 afs_hyper_t * outOffP);
+    int (*ioctl) (usd_handle_t usd, int req, void *arg);
+    int (*close) (usd_handle_t usd);
 
     /* private members */
     void *handle;
@@ -60,7 +62,7 @@ struct usd_handle {
     int openFlags;
     void *privateData;
 };
- 
+
 #define USD_READ(usd, buf, nbyte, xferP) \
     ((*(usd)->read)(usd, buf, nbyte, xferP))
 #define USD_WRITE(usd, buf, nbyte, xferP) \
@@ -82,9 +84,10 @@ struct usd_handle {
 
 #define USD_CLOSE(usd) ((*(usd)->close)(usd))
 
-extern int usd_Open(const char *path, int oflag, int mode, usd_handle_t *usdP);
-extern int usd_StandardInput(usd_handle_t *usdP);
-extern int usd_StandardOutput(usd_handle_t *usdP);
+extern int usd_Open(const char *path, int oflag, int mode,
+		    usd_handle_t * usdP);
+extern int usd_StandardInput(usd_handle_t * usdP);
+extern int usd_StandardOutput(usd_handle_t * usdP);
 
 /* Open flag bits */
 
@@ -137,15 +140,15 @@ extern int usd_StandardOutput(usd_handle_t *usdP);
 #define USD_IOCTL_GETBLKSIZE	9
 
 typedef struct {
-    int  tp_op;       /* tape operation */
-    int  tp_count;    /* tape operation count argument */
+    int tp_op;			/* tape operation */
+    int tp_count;		/* tape operation count argument */
 } usd_tapeop_t;
 
-#define USDTAPE_WEOF     0  /* write specified number of tape marks */
-#define USDTAPE_REW      1  /* rewind tape */
-#define USDTAPE_FSF      2  /* forward-space specified number of tape marks */
-#define USDTAPE_BSF      3  /* back-space specified number of tape marks*/
-#define USDTAPE_PREPARE  4  /* ready tape drive for operation */
-#define USDTAPE_SHUTDOWN 5  /* decommission tape drive after operation */
+#define USDTAPE_WEOF     0	/* write specified number of tape marks */
+#define USDTAPE_REW      1	/* rewind tape */
+#define USDTAPE_FSF      2	/* forward-space specified number of tape marks */
+#define USDTAPE_BSF      3	/* back-space specified number of tape marks */
+#define USDTAPE_PREPARE  4	/* ready tape drive for operation */
+#define USDTAPE_SHUTDOWN 5	/* decommission tape drive after operation */
 
 #endif /* OPENAFS_USD_H */

@@ -16,13 +16,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
-#include "gtxobjdict.h"			/*Interface for this module*/
-#include <stdio.h>			/*Standard I/O package*/
+#include "gtxobjdict.h"		/*Interface for this module */
+#include <stdio.h>		/*Standard I/O package */
 
-static char mn[] = "gator_objdict";	/*Module name*/
-static int objdict_debug;		/*Is debugging turned on?*/
+static char mn[] = "gator_objdict";	/*Module name */
+static int objdict_debug;	/*Is debugging turned on? */
 
 /*------------------------------------------------------------------------
  * gator_objdict_init
@@ -45,27 +46,28 @@ static int objdict_debug;		/*Is debugging turned on?*/
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_objdict_init(adebug)
-    int adebug;
+int
+gator_objdict_init(adebug)
+     int adebug;
 
-{ /*gator_objdict_init*/
+{				/*gator_objdict_init */
 
-    static char	rn[] = "gator_objdict_init";	/*Routine name*/
+    static char rn[] = "gator_objdict_init";	/*Routine name */
 
     /*
-      * Remember what our debugging setting is.
-      */
+     * Remember what our debugging setting is.
+     */
     objdict_debug = adebug;
 
     if (objdict_debug)
-      fprintf(stderr, "[%s:%s] Called\n", mn, rn);
+	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
     /*
      * Finally, return the good news.
      */
-    return(0);
+    return (0);
 
-} /*gator_objdict_init*/
+}				/*gator_objdict_init */
 
 /*------------------------------------------------------------------------
  * gator_objdict_add
@@ -87,22 +89,23 @@ int gator_objdict_init(adebug)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_objdict_add(objtoadd)
-    struct onode *objtoadd;
+int
+gator_objdict_add(objtoadd)
+     struct onode *objtoadd;
 
-{ /*gator_objdict_add*/
+{				/*gator_objdict_add */
 
-    static char	rn[] = "gator_objdict_add"; /*Routine name*/
+    static char rn[] = "gator_objdict_add";	/*Routine name */
 
     if (objdict_debug)
-      fprintf(stderr, "[%s:%s] Called\n", mn, rn);
+	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
     /*
      * Finally, return the good news.
      */
-    return(0);
+    return (0);
 
-} /*gator_objdict_add*/
+}				/*gator_objdict_add */
 
 /*------------------------------------------------------------------------
  * gator_objdict_delete
@@ -124,22 +127,23 @@ int gator_objdict_add(objtoadd)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_objdict_delete(objtodelete)
-    struct onode *objtodelete;
+int
+gator_objdict_delete(objtodelete)
+     struct onode *objtodelete;
 
-{ /*gator_objdict_delete*/
+{				/*gator_objdict_delete */
 
-    static char	rn[] = "gator_objdict_delete";	/*Routine name*/
+    static char rn[] = "gator_objdict_delete";	/*Routine name */
 
     if (objdict_debug)
-      fprintf(stderr, "[%s:%s] Called\n", mn, rn);
+	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
     /*
      * Finally, return the good news.
      */
-    return(0);
+    return (0);
 
-} /*gator_objdict_delete*/
+}				/*gator_objdict_delete */
 
 /*------------------------------------------------------------------------
  * gator_objdict_lookup
@@ -161,19 +165,20 @@ int gator_objdict_delete(objtodelete)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-struct onode *gator_objdict_lookup(nametofind)
-    char *nametofind;
+struct onode *
+gator_objdict_lookup(nametofind)
+     char *nametofind;
 
-{ /*gator_objdict_lookup*/
+{				/*gator_objdict_lookup */
 
-    static char	rn[] = "gator_objdict_lookup";	/*Routine name*/
+    static char rn[] = "gator_objdict_lookup";	/*Routine name */
 
     if (objdict_debug)
-      fprintf(stderr, "[%s:%s] Called\n", mn, rn);
+	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
     /*
      * Finally, return the good news.
      */
-    return(NULL);
+    return (NULL);
 
-} /*gator_objdict_lookup*/
+}				/*gator_objdict_lookup */

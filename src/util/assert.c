@@ -22,28 +22,31 @@
 #endif
 #endif
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <stdio.h>
 #include "afsutil.h"
 
 #ifdef AFS_NT40_ENV
-void afs_NTAbort(void)
+void
+afs_NTAbort(void)
 {
-    _asm int 3h; /* always trap. */
+    _asm int 3 h;		/* always trap. */
 }
 #endif
 
 
-void AssertionFailed(char *file, int line)
+void
+AssertionFailed(char *file, int line)
 {
     char tdate[26];
     time_t when;
 
     time(&when);
     afs_ctime(&when, tdate, 25);
-    fprintf(stderr, "%s: Assertion failed! file %s, line %d.\n",
-	tdate, file, line);
+    fprintf(stderr, "%s: Assertion failed! file %s, line %d.\n", tdate, file,
+	    line);
     fflush(stderr);
 #ifdef AFS_NT40_ENV
     afs_NTAbort();
@@ -51,4 +54,3 @@ void AssertionFailed(char *file, int line)
     abort();
 #endif
 }
-

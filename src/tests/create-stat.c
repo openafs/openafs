@@ -51,8 +51,8 @@
 #include <err.h>
 
 struct VenusFid {
-  afs_int32 Cell;
-  struct AFSFid Fid;
+    afs_int32 Cell;
+    struct AFSFid Fid;
 };
 
 #ifdef RCSID
@@ -60,10 +60,10 @@ RCSID("$Id$");
 #endif
 
 static void
-usage (int ret)
+usage(int ret)
 {
-    fprintf (stderr, "%s file\n", __progname);
-    exit (ret);
+    fprintf(stderr, "%s file\n", __progname);
+    exit(ret);
 }
 
 int
@@ -79,69 +79,70 @@ main(int argc, char **argv)
     ino_t afsfileid;
 
     if (argc != 2)
-	usage (1);
+	usage(1);
 
     file = argv[1];
 
-    asprintf (&filename, "%s.new", file);
+    asprintf(&filename, "%s.new", file);
 
-    ret = open (file, O_RDWR, 0600);
+    ret = open(file, O_RDWR, 0600);
     if (ret < 0)
-	err (1, "open");
-    close (ret);
+	err(1, "open");
+    close(ret);
 
-    ret = open (filename, O_RDWR|O_CREAT|O_EXCL, 0600);
+    ret = open(filename, O_RDWR | O_CREAT | O_EXCL, 0600);
     if (ret < 0) {
 	unlink(file);
-	err (1, "open");
+	err(1, "open");
     }
-    close (ret);
+    close(ret);
 
-    ret = stat (file, &sb);
+    ret = stat(file, &sb);
     if (ret < 0) {
 	unlink(filename);
 	unlink(file);
-	err (1, "stat");
+	err(1, "stat");
     }
 
-    ret = lstat (filename, &sb_new);
+    ret = lstat(filename, &sb_new);
     if (ret < 0) {
 	unlink(filename);
 	unlink(file);
-	err (1, "stat");
+	err(1, "stat");
     }
 
     if (sb.st_ino == sb_new.st_ino)
-	err (1, "sb.st_ino == sb_new.st_ino");
+	err(1, "sb.st_ino == sb_new.st_ino");
 
-    ret = lstat (file, &sb_old);
+    ret = lstat(file, &sb_old);
     if (ret < 0) {
 	unlink(filename);
 	unlink(file);
-	err (1, "stat");
+	err(1, "stat");
     }
 
     if (sb_old.st_ino == sb_new.st_ino)
-	err (1, "sb_old.st_ino == sb_new.st_ino");
+	err(1, "sb_old.st_ino == sb_new.st_ino");
     if (sb.st_ino == sb_new.st_ino)
-	err (1, "sb.st_ino == sb_new.st_ino");
+	err(1, "sb.st_ino == sb_new.st_ino");
     if (sb_old.st_ino != sb.st_ino)
-	err (1, "sb_old.st_ino != sb.st_ino");
+	err(1, "sb_old.st_ino != sb.st_ino");
 
-    ret = fs_getfid (file, &fid);
+    ret = fs_getfid(file, &fid);
     if (ret) {
 	unlink(file);
 	unlink(filename);
-	err (1, "fs_getfid: %d", ret);
+	err(1, "fs_getfid: %d", ret);
     }
 
-    afsfileid = ((fid.Fid.Volume & 0x7FFF) << 16 | (fid.Fid.Vnode & 0xFFFFFFFF));
+    afsfileid =
+	((fid.Fid.Volume & 0x7FFF) << 16 | (fid.Fid.Vnode & 0xFFFFFFFF));
     if (sb.st_ino != afsfileid) {
 	unlink(file);
 	unlink(filename);
-	errx (1, "sb.st_ino(%ld) != afsfileid(%ld) (%d.%d.%d.%d)",
-	      (long)sb.st_ino, (long)afsfileid,
-	      fid.Cell, fid.Fid.Volume, fid.Fid.Vnode, fid.Fid.Unique);
+	errx(1, "sb.st_ino(%ld) != afsfileid(%ld) (%d.%d.%d.%d)",
+	     (long)sb.st_ino, (long)afsfileid, fid.Cell, fid.Fid.Volume,
+	     fid.Fid.Vnode, fid.Fid.Unique);
     }
 
     unlink(filename);

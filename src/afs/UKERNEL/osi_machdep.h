@@ -23,7 +23,7 @@
 #define MAX_OSI_PATH            1024
 #define MAX_OSI_FILES           1024
 #define MAX_OSI_LINKS           25
-#define OSI_WAITHASH_SIZE       128     /* must be power of two */
+#define OSI_WAITHASH_SIZE       128	/* must be power of two */
 #define MAX_HOSTADDR            32
 
 #define AFS_UCRED usr_ucred
@@ -65,4 +65,3 @@ extern usr_mutex_t afs_global_lock;
 extern int afs_bufferpages;
 
 #endif /* _OSI_MACHDEP_H_ */
-

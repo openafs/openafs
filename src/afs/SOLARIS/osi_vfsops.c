@@ -13,11 +13,12 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
-#include "afs/afs_stats.h"   /* statistics stuff */
+#include "afs/afs_stats.h"	/* statistics stuff */
 #include "h/modctl.h"
 #include "h/syscall.h"
 #include <sys/kobj.h>
@@ -33,7 +34,8 @@ extern struct sysent sysent32[];
 
 int afsfstype = 0;
 
-int afs_mount(struct vfs *afsp, struct vnode *amvp, struct mounta *uap,
+int
+afs_mount(struct vfs *afsp, struct vnode *amvp, struct mounta *uap,
 	  struct AFS_UCRED *credp)
 {
 
@@ -47,15 +49,15 @@ int afs_mount(struct vfs *afsp, struct vnode *amvp, struct mounta *uap,
     }
     afsp->vfs_fstype = afsfstype;
 
-    if (afs_globalVFS) { /* Don't allow remounts. */
+    if (afs_globalVFS) {	/* Don't allow remounts. */
 	AFS_GUNLOCK();
 	return EBUSY;
     }
 
     afs_globalVFS = afsp;
     afsp->vfs_bsize = 8192;
-    afsp->vfs_fsid.val[0] = AFS_VFSMAGIC; /* magic */
-    afsp->vfs_fsid.val[1] = AFS_VFSFSID; 
+    afsp->vfs_fsid.val[0] = AFS_VFSMAGIC;	/* magic */
+    afsp->vfs_fsid.val[1] = AFS_VFSFSID;
     afsp->vfs_dev = AFS_VFSMAGIC;
 
     AFS_GUNLOCK();
@@ -63,9 +65,11 @@ int afs_mount(struct vfs *afsp, struct vnode *amvp, struct mounta *uap,
 }
 
 #if defined(AFS_SUN58_ENV)
-int afs_unmount (struct vfs *afsp, int flag, struct AFS_UCRED *credp)
+int
+afs_unmount(struct vfs *afsp, int flag, struct AFS_UCRED *credp)
 #else
-int afs_unmount (struct vfs *afsp, struct AFS_UCRED *credp)
+int
+afs_unmount(struct vfs *afsp, struct AFS_UCRED *credp)
 #endif
 {
     AFS_GLOCK();
@@ -82,11 +86,12 @@ int afs_unmount (struct vfs *afsp, struct AFS_UCRED *credp)
     return 0;
 }
 
-int afs_root (struct vfs *afsp, struct vnode **avpp)
+int
+afs_root(struct vfs *afsp, struct vnode **avpp)
 {
     register afs_int32 code = 0;
     struct vrequest treq;
-    register struct vcache *tvp=0;
+    register struct vcache *tvp = 0;
     struct proc *proc = ttoproc(curthread);
     struct vnode *vp = afsp->vfs_vnodecovered;
     int locked = 0;
@@ -116,8 +121,8 @@ int afs_root (struct vfs *afsp, struct vnode **avpp)
 	    afs_globalVp = NULL;
 	}
 
-	if (!(code = afs_InitReq(&treq, proc->p_cred)) &&
-	    !(code = afs_CheckInit())) {
+	if (!(code = afs_InitReq(&treq, proc->p_cred))
+	    && !(code = afs_CheckInit())) {
 	    tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	    /* we really want this to stay around */
 	    if (tvp) {
@@ -153,9 +158,11 @@ int afs_root (struct vfs *afsp, struct vnode **avpp)
 }
 
 #ifdef AFS_SUN56_ENV
-int afs_statvfs(struct vfs *afsp, struct statvfs64 *abp)
+int
+afs_statvfs(struct vfs *afsp, struct statvfs64 *abp)
 #else
-int afs_statvfs(struct vfs *afsp, struct statvfs *abp)
+int
+afs_statvfs(struct vfs *afsp, struct statvfs *abp)
 #endif
 {
     AFS_GLOCK();
@@ -163,22 +170,24 @@ int afs_statvfs(struct vfs *afsp, struct statvfs *abp)
     AFS_STATCNT(afs_statfs);
 
     abp->f_frsize = 1024;
-    abp->f_favail =  9000000;
+    abp->f_favail = 9000000;
     abp->f_bsize = afsp->vfs_bsize;
     abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
-	abp->f_ffree  = 9000000;
+	abp->f_ffree = 9000000;
     abp->f_fsid = (AFS_VFSMAGIC << 16) || AFS_VFSFSID;
 
     AFS_GUNLOCK();
     return 0;
 }
 
-int afs_sync(struct vfs *afsp, short flags, struct AFS_UCRED *credp)
+int
+afs_sync(struct vfs *afsp, short flags, struct AFS_UCRED *credp)
 {
     return 0;
 }
 
-int afs_vget(struct vfs *afsp, struct vnode **avcp, struct fid *fidp)
+int
+afs_vget(struct vfs *afsp, struct vnode **avcp, struct fid *fidp)
 {
     cred_t *credp = CRED();
     struct vrequest treq;
@@ -190,7 +199,7 @@ int afs_vget(struct vfs *afsp, struct vnode **avcp, struct fid *fidp)
 
     *avcp = NULL;
     if (!(code = afs_InitReq(&treq, credp))) {
-	code = afs_osi_vget((struct vcache**)avcp, fidp, &treq);
+	code = afs_osi_vget((struct vcache **)avcp, fidp, &treq);
     }
 
     afs_Trace3(afs_iclSetp, CM_TRACE_VGET, ICL_TYPE_POINTER, *avcp,
@@ -204,7 +213,7 @@ int afs_vget(struct vfs *afsp, struct vnode **avcp, struct fid *fidp)
 /* This is only called by vfs_mount when afs is going to be mounted as root.
  * Since we don't support diskless clients we shouldn't come here.
  */
-int afsmountroot=0;
+int afsmountroot = 0;
 afs_mountroot(struct vfs *afsp, whymountroot_t why)
 {
     AFS_GLOCK();
@@ -217,7 +226,7 @@ afs_mountroot(struct vfs *afsp, whymountroot_t why)
 /* afs_swapvp is called to setup swapping over the net for diskless clients.
  * Again not for us.
  */
-int afsswapvp=0;
+int afsswapvp = 0;
 afs_swapvp(struct vfs *afsp, struct vnode **avpp, char *nm)
 {
     AFS_GLOCK();
@@ -246,13 +255,13 @@ struct vfsops Afs_vfsops = {
 /*
  * afsinit - intialize VFS
  */
-int (*ufs_iallocp)();
-void (*ufs_iupdatp)();
-int (*ufs_igetp)();
-void (*ufs_itimes_nolockp)();
+int (*ufs_iallocp) ();
+void (*ufs_iupdatp) ();
+int (*ufs_igetp) ();
+void (*ufs_itimes_nolockp) ();
 
-int (*afs_orig_ioctl)(), (*afs_orig_ioctl32)();
-int (*afs_orig_setgroups)(), (*afs_orig_setgroups32)();
+int (*afs_orig_ioctl) (), (*afs_orig_ioctl32) ();
+int (*afs_orig_setgroups) (), (*afs_orig_setgroups32) ();
 
 struct streamtab *udp_infop = 0;
 struct ill_s *ill_g_headp = 0;
@@ -260,12 +269,12 @@ struct ill_s *ill_g_headp = 0;
 int afs_sinited = 0;
 
 #if	!defined(AFS_NONFSTRANS)
-int (*nfs_rfsdisptab_v2)();
-int (*nfs_rfsdisptab_v3)();
-int (*nfs_acldisptab_v2)();
-int (*nfs_acldisptab_v3)();
+int (*nfs_rfsdisptab_v2) ();
+int (*nfs_rfsdisptab_v3) ();
+int (*nfs_acldisptab_v2) ();
+int (*nfs_acldisptab_v3) ();
 
-int (*nfs_checkauth)();
+int (*nfs_checkauth) ();
 #endif
 
 extern Afs_syscall();
@@ -294,45 +303,44 @@ afsinit(struct vfssw *vfsswp, int fstype)
 
 
 #if	!defined(AFS_NONFSTRANS)
-    nfs_rfsdisptab_v2 = (int (*)()) modlookup("nfssrv", "rfsdisptab_v2");
-    if ( !nfs_rfsdisptab_v2 ) {
+    nfs_rfsdisptab_v2 = (int (*)())modlookup("nfssrv", "rfsdisptab_v2");
+    if (!nfs_rfsdisptab_v2) {
 	afs_warn("warning : rfsdisptab_v2 NOT FOUND\n");
     }
     if (nfs_rfsdisptab_v2) {
-	nfs_acldisptab_v2 = (int (*)()) modlookup("nfssrv", "acldisptab_v2");
-	if ( !nfs_acldisptab_v2 ) {
+	nfs_acldisptab_v2 = (int (*)())modlookup("nfssrv", "acldisptab_v2");
+	if (!nfs_acldisptab_v2) {
 	    afs_warn("warning : acldisptab_v2 NOT FOUND\n");
-	}
-	else {
+	} else {
 	    afs_xlatorinit_v2(nfs_rfsdisptab_v2, nfs_acldisptab_v2);
 	}
     }
-    nfs_rfsdisptab_v3 = (int (*)()) modlookup("nfssrv", "rfsdisptab_v3");
-    if ( !nfs_rfsdisptab_v3 ) {
+    nfs_rfsdisptab_v3 = (int (*)())modlookup("nfssrv", "rfsdisptab_v3");
+    if (!nfs_rfsdisptab_v3) {
 	afs_warn("warning : rfsdisptab_v3 NOT FOUND\n");
     }
     if (nfs_rfsdisptab_v3) {
-	nfs_acldisptab_v3 = (int (*)()) modlookup("nfssrv", "acldisptab_v3");
-	if ( !nfs_acldisptab_v3 ) {
+	nfs_acldisptab_v3 = (int (*)())modlookup("nfssrv", "acldisptab_v3");
+	if (!nfs_acldisptab_v3) {
 	    afs_warn("warning : acldisptab_v3 NOT FOUND\n");
-	}
-	else {
+	} else {
 	    afs_xlatorinit_v3(nfs_rfsdisptab_v3, nfs_acldisptab_v3);
 	}
     }
 
-    nfs_checkauth = (int (*)()) modlookup("nfssrv", "checkauth");
-    if ( !nfs_checkauth ) afs_warn("nfs_checkauth not initialised");
+    nfs_checkauth = (int (*)())modlookup("nfssrv", "checkauth");
+    if (!nfs_checkauth)
+	afs_warn("nfs_checkauth not initialised");
 #endif
-    ufs_iallocp = (int (*)()) modlookup("ufs", "ufs_ialloc");    
-    ufs_iupdatp = (void (*)()) modlookup("ufs", "ufs_iupdat");
-    ufs_igetp = (int (*)()) modlookup("ufs", "ufs_iget");    
-    ufs_itimes_nolockp = (void (*)()) modlookup("ufs", "ufs_itimes_nolock");
-    udp_infop = (struct streamtab *) modlookup("udp", "udpinfo");    
-    ill_g_headp = (struct ill_s *) modlookup("ip", "ill_g_head");    
+    ufs_iallocp = (int (*)())modlookup("ufs", "ufs_ialloc");
+    ufs_iupdatp = (void (*)())modlookup("ufs", "ufs_iupdat");
+    ufs_igetp = (int (*)())modlookup("ufs", "ufs_iget");
+    ufs_itimes_nolockp = (void (*)())modlookup("ufs", "ufs_itimes_nolock");
+    udp_infop = (struct streamtab *)modlookup("udp", "udpinfo");
+    ill_g_headp = (struct ill_s *)modlookup("ip", "ill_g_head");
 
-    if ( !ufs_iallocp || !ufs_iupdatp || !ufs_itimes_nolockp ||
-	 !ufs_igetp || !udp_infop || !ill_g_headp )
+    if (!ufs_iallocp || !ufs_iupdatp || !ufs_itimes_nolockp || !ufs_igetp
+	|| !udp_infop || !ill_g_headp)
 	afs_warn("AFS to UFS mapping cannot be fully initialised\n");
 
     afs_sinited = 1;
@@ -345,13 +353,13 @@ static struct vfssw afs_vfw = {
     afsinit,
     &Afs_vfsops,
     0
-    };
+};
 
 static struct sysent afssysent = {
     6,
     0,
     Afs_syscall
-    };
+};
 
 /* inter-module dependencies */
 char _depends_on[] = "drv/ip drv/udp strmod/rpcmod";
@@ -366,13 +374,13 @@ static struct modlfs afsmodlfs = {
     &mod_fsops,
     "afs filesystem",
     &afs_vfw
-    };
+};
 
 static struct modlsys afsmodlsys = {
     &mod_syscallops,
     "afs syscall interface",
     &afssysent
-    };
+};
 
 /** The two structures afssysent32 and afsmodlsys32 are being added
   * for supporting 32 bit syscalls. In Solaris 7 there are two system
@@ -402,7 +410,7 @@ static struct modlinkage afs_modlinkage = {
 #endif
     (void *)&afsmodlfs,
     NULL
-    };
+};
 
 /** This is the function that modload calls when loading the afs kernel
   * extensions. The solaris modload program searches for the _init
@@ -420,29 +428,38 @@ _init()
     if (afs_sinited)
 	return EBUSY;
 
-    if ((!(mp = mod_find_by_filename("fs", "ufs")) && 
-	!(mp = mod_find_by_filename(NULL, "/kernel/fs/ufs")) &&
-	!(mp = mod_find_by_filename(NULL, "sys/ufs"))) ||
-	(mp && !mp->mod_installed)) {
-	printf("ufs module must be loaded before loading afs; use modload /kernel/fs/ufs\n");
+    if ((!(mp = mod_find_by_filename("fs", "ufs"))
+	 && !(mp = mod_find_by_filename(NULL, "/kernel/fs/ufs"))
+	 && !(mp = mod_find_by_filename(NULL, "sys/ufs"))) || (mp
+							       && !mp->
+							       mod_installed))
+    {
+	printf
+	    ("ufs module must be loaded before loading afs; use modload /kernel/fs/ufs\n");
 	return (ENOSYS);
     }
 #ifndef	AFS_NONFSTRANS
 #if     defined(AFS_SUN55_ENV)
-    if ((!(mp = mod_find_by_filename("misc", "nfssrv")) &&
-	 !(mp = mod_find_by_filename(NULL, NFSSRV)) &&
-	 !(mp = mod_find_by_filename(NULL, NFSSRV_V9))) || 
-	(mp && !mp->mod_installed)) {
-        printf("misc/nfssrv module must be loaded before loading afs with nfs-xlator\n");
-        return (ENOSYS);
+    if ((!(mp = mod_find_by_filename("misc", "nfssrv"))
+	 && !(mp = mod_find_by_filename(NULL, NFSSRV))
+	 && !(mp = mod_find_by_filename(NULL, NFSSRV_V9))) || (mp
+							       && !mp->
+							       mod_installed))
+    {
+	printf
+	    ("misc/nfssrv module must be loaded before loading afs with nfs-xlator\n");
+	return (ENOSYS);
     }
 #else /* !AFS_SUN55_ENV */
 #if	defined(AFS_SUN52_ENV)
-    if ((!(mp = mod_find_by_filename("fs", "nfs")) && 
-	!(mp = mod_find_by_filename(NULL, "/kernel/fs/nfs")) &&
-	!(mp = mod_find_by_filename(NULL, "sys/nfs"))) ||
-	(mp && !mp->mod_installed)) {
-	printf("fs/nfs module must be loaded before loading afs with nfs-xlator\n");
+    if ((!(mp = mod_find_by_filename("fs", "nfs"))
+	 && !(mp = mod_find_by_filename(NULL, "/kernel/fs/nfs"))
+	 && !(mp = mod_find_by_filename(NULL, "sys/nfs"))) || (mp
+							       && !mp->
+							       mod_installed))
+    {
+	printf
+	    ("fs/nfs module must be loaded before loading afs with nfs-xlator\n");
 	return (ENOSYS);
     }
 #endif /* AFS_SUN52_ENV */
@@ -471,25 +488,25 @@ _init()
     if (sysent[AFS_SYSCALL].sy_call == nosys) {
 	if ((sysn = mod_getsysname(AFS_SYSCALL)) != NULL) {
 	    sysent[AFS_SYSCALL].sy_lock =
-		(krwlock_t *) kobj_zalloc(sizeof (krwlock_t), KM_SLEEP);
+		(krwlock_t *) kobj_zalloc(sizeof(krwlock_t), KM_SLEEP);
 	    rw_init(sysent[AFS_SYSCALL].sy_lock, "afs_syscall",
 #ifdef AFS_SUN57_ENV
 		    RW_DEFAULT, NULL);
 #else /* !AFS_SUN57_ENV */
-			RW_DEFAULT, DEFAULT_WT);
+		    RW_DEFAULT, DEFAULT_WT);
 #endif /* AFS_SUN57_ENV */
 	}
     }
 #endif /* !AFS_SUN58_ENV */
 
-    osi_Init();				/* initialize global lock, etc */
+    osi_Init();			/* initialize global lock, etc */
 
     code = mod_install(&afs_modlinkage);
     return code;
 }
 
 _info(modp)
-    struct modinfo *modp;
+     struct modinfo *modp;
 {
     int code;
 

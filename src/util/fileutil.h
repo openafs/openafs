@@ -13,18 +13,18 @@
 /* File-oriented utility functions */
 
 extern int
-renamefile(const char *oldname, const char *newname);
+  renamefile(const char *oldname, const char *newname);
 
 /* Path normalization routines */
 #define FPN_FORWARD_SLASHES 1
 #define FPN_BACK_SLASHES    2
 
 extern void
-FilepathNormalizeEx(char *path, int slashType);
+  FilepathNormalizeEx(char *path, int slashType);
 
 /* Just a wrapper for FilepathNormalizeEx(path, FPN_FORWARD_SLASHES); */
 extern void
-FilepathNormalize(char *path);
+  FilepathNormalize(char *path);
 
 /*
  * Data structure used to implement buffered I/O. We cannot
@@ -45,15 +45,14 @@ typedef struct {
 } bufio_t, *bufio_p;
 
 /* Open a file for buffered I/O */
-extern bufio_p
-BufioOpen(char *path, int oflag, int mode);
+extern bufio_p BufioOpen(char *path, int oflag, int mode);
 
 /* Read the next line of a file */
 extern int
-BufioGets(bufio_p bp, char *buf, int len);
+  BufioGets(bufio_p bp, char *buf, int len);
 
 /* Close a buffered I/O handle */
 extern int
-BufioClose(bufio_p bp);
+  BufioClose(bufio_p bp);
 
 #endif /* OPENAFS_FILEUTIL_H */

@@ -21,14 +21,15 @@
 #ifdef AFS_LINUX22_ENV
 #define _LINUX_CODA_FS_I 1
 #define _CODA_HEADER_ 1
-struct coda_inode_info {};
+struct coda_inode_info {
+};
 #endif
 #ifdef AFS_DARWIN_ENV
 #ifndef _MACH_ETAP_H_
 #define _MACH_ETAP_H_
-typedef unsigned short                  etap_event_t;
+typedef unsigned short etap_event_t;
 #endif
-#endif  
+#endif
 
 
 #include "h/types.h"
@@ -39,8 +40,8 @@ typedef unsigned short                  etap_event_t;
 #include "h/time.h"
 #ifdef AFS_SUN56_ENV
 #include "h/vfs.h"		/* stops SUN56 socketvar.h warnings */
-#include "h/stropts.h"	/* stops SUN56 socketvar.h warnings */
-#include "h/stream.h"	/* stops SUN56 socketvar.h errors */
+#include "h/stropts.h"		/* stops SUN56 socketvar.h warnings */
+#include "h/stream.h"		/* stops SUN56 socketvar.h errors */
 #include "h/disp.h"
 #endif
 #include "h/socket.h"
@@ -119,7 +120,7 @@ typedef unsigned short                  etap_event_t;
 #if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN60_ENV)
 #include "netinet/in_var.h"
 #endif /* ! AFS_HPUX110_ENV && ! AFS_LINUX22_ENV */
-#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DUX40_ENV) 
+#if !defined(AFS_LINUX22_ENV) && !defined(AFS_DUX40_ENV)
 #include "rpc/types.h"
 #endif
 #include "afs/afs_osi.h"

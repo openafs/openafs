@@ -22,18 +22,3 @@
 #define CBHash(t) ((t)>>7)
 
 #define	CBQTOV(e)	    ((struct vcache *)(((char *) (e)) - (((char *)(&(((struct vcache *)(e))->callsort))) - ((char *)(e)))))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -76,7 +76,7 @@
 #ifdef	AFS_SGI53_ENV
 #define AFSOP_NFSSTATICADDR	 32	/* to contents addr of nfs kernel addr */
 #define AFSOP_NFSSTATICADDRPTR	 33	/* pass addr of variable containing 
-					   address into kernel. */
+					 * address into kernel. */
 #define AFSOP_NFSSTATICADDR2	 34	/* pass address in as hyper. */
 #define AFSOP_SBLOCKSTATICADDR2  35	/* for sblock and sbunlock */
 #endif
@@ -92,10 +92,10 @@
 
 /* flags for rxstats pioctl */
 
-#define AFSCALL_RXSTATS_MASK	0x7 /* Valid flag bits */
-#define AFSCALL_RXSTATS_ENABLE	0x1 /* Enable RX stats */
-#define AFSCALL_RXSTATS_DISABLE	0x2 /* Disable RX stats */
-#define AFSCALL_RXSTATS_CLEAR	0x4 /* Clear RX stats */
+#define AFSCALL_RXSTATS_MASK	0x7	/* Valid flag bits */
+#define AFSCALL_RXSTATS_ENABLE	0x1	/* Enable RX stats */
+#define AFSCALL_RXSTATS_DISABLE	0x2	/* Disable RX stats */
+#define AFSCALL_RXSTATS_CLEAR	0x4	/* Clear RX stats */
 
 #define	AFSOP_GO		100	/* whether settime is being done */
 /* not for initialization: debugging assist */
@@ -139,11 +139,11 @@ struct afs_cacheParams {
 /* Used in rx.c as well as afs directory. */
 #if	defined(AFS_AIX32_ENV) || defined(AFS_HPUX_ENV)
 /* XXX Because of rxkad_cprivate... XXX */
-#define	AFS_MDALLOCSIZ 	(127*sizeof(void *))	    /* "Medium" allocated size */
-#define	AFS_MALLOC_LOW_WATER	50 /* Min free blocks before allocating more */
-#define	AFS_SMALLOCSIZ 	(38*sizeof(void *))	    /* "Small" allocated size */
+#define	AFS_MDALLOCSIZ 	(127*sizeof(void *))	/* "Medium" allocated size */
+#define	AFS_MALLOC_LOW_WATER	50	/* Min free blocks before allocating more */
+#define	AFS_SMALLOCSIZ 	(38*sizeof(void *))	/* "Small" allocated size */
 #else
-#define	AFS_SMALLOCSIZ 	(64*sizeof(void *))         /*  "Small" allocated size */
+#define	AFS_SMALLOCSIZ 	(64*sizeof(void *))	/*  "Small" allocated size */
 #endif
 
 /* Cache configuration available through the client callback interface */

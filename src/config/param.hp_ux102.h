@@ -23,7 +23,7 @@
 
 #include <afs/afs_sysnames.h>
 
-#define AFS_SYSCALL	48 /* slot reserved for AFS */
+#define AFS_SYSCALL	48	/* slot reserved for AFS */
 
 /* Machine / Operating system information */
 #define SYS_NAME	"hp_ux102"
@@ -34,13 +34,13 @@
 #define AFS_GLOBAL_SUNLOCK 1
 #define RXK_LISTENER_ENV   1
 #define AFS_USERSPACE_IP_ADDR 1
-#define AFS_GCPAGS		0       /* if nonzero, garbage collect PAGs */
+#define AFS_GCPAGS		0	/* if nonzero, garbage collect PAGs */
 /*
  * #define AFS_VM_RDWR_ENV	1
  */
 #define AFS_TEXT_ENV	1	/* Older kernels use TEXT */
-#define AFS_USE_GETTIMEOFDAY 1  /* use gettimeofday to implement rx clock */
-#define NEARINODE_HINT  1   /* hint to ufs module to scatter inodes on disk*/
+#define AFS_USE_GETTIMEOFDAY 1	/* use gettimeofday to implement rx clock */
+#define NEARINODE_HINT  1	/* hint to ufs module to scatter inodes on disk */
 #define nearInodeHash(volid, hval) {                                 \
                 unsigned char*  ts = (unsigned char*)&(volid)+sizeof(volid)-1;\
                 for ( (hval)=0; ts >= (unsigned char*)&(volid); ts--){\
@@ -83,10 +83,10 @@
 struct uio;
 #endif
 #endif /* KERNEL */
-#define	AFS_DIRENT	
+#define	AFS_DIRENT
 /* Non-standard definitions */
 #ifndef	EDQUOT
-#define	EDQUOT		69	/* Disc quota exceeded 		*/
+#define	EDQUOT		69	/* Disc quota exceeded          */
 #endif
 
 #endif /* AFS_PARAM_H */
@@ -111,7 +111,7 @@ struct uio;
 /* Used only in vfsck code; is it needed any more???? */
 #define RXK_LISTENER_ENV	1
 #define AFS_USERSPACE_IP_ADDR	1
-#define AFS_GCPAGS		0       /* if nonzero, garbage collect PAGs */
+#define AFS_GCPAGS		0	/* if nonzero, garbage collect PAGs */
 
 #define UKERNEL			1	/* user space kernel */
 #define AFS_GREEDY43_ENV	1	/* Used only in rx/rx_user.c */
@@ -120,11 +120,11 @@ struct uio;
 
 #include <afs/afs_sysnames.h>
 
-/*#define AFS_GLOBAL_SUNLOCK	1*/	/* For global locking */
+									   /*#define AFS_GLOBAL_SUNLOCK    1 *//* For global locking */
 
 #define	AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */
 
-#define AFS_SYSCALL   48 /* slot reserved for AFS */
+#define AFS_SYSCALL   48	/* slot reserved for AFS */
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS	 1
@@ -133,7 +133,7 @@ struct uio;
 #define SYS_NAME	"hp_ux102"
 #define SYS_NAME_ID	SYS_NAME_ID_hp_ux102
 #define AFSBIG_ENDIAN	1
-#define AFS_HAVE_FFS            1       /* Use system's ffs. */
+#define AFS_HAVE_FFS            1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS	0	/* System doesn't support statvfs */
 
 /* Extra kernel definitions (from kdefs file) */
@@ -153,11 +153,11 @@ struct uio;
 #define	AFS_MINCHANGE	2
 #define	VATTR_NULL	usr_vattr_null
 #endif /* KERNEL */
-#define	AFS_DIRENT	
+#define	AFS_DIRENT
 #ifndef CMSERVERPREF
 #define CMSERVERPREF
 #endif
 
-#endif	/* AFS_PARAM_H */
+#endif /* AFS_PARAM_H */
 
 #endif /* !defined(UKERNEL) */

@@ -17,7 +17,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifndef HAVE_STRLCAT
 
@@ -45,7 +46,7 @@ strlcat(char *dst, const char *src, size_t siz)
     n = siz - dlen;
 
     if (n == 0)
-	return(dlen + strlen(s));
+	return (dlen + strlen(s));
     while (*s != '\0') {
 	if (n != 1) {
 	    *d++ = *s;
@@ -55,6 +56,6 @@ strlcat(char *dst, const char *src, size_t siz)
     }
     *d = '\0';
 
-    return(dlen + (s - src));	/* count does not include NUL */
+    return (dlen + (s - src));	/* count does not include NUL */
 }
 #endif

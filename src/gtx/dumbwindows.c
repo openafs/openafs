@@ -16,14 +16,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
-#include "gtxdumbwin.h"			/*Interface definition*/
-#include <stdio.h>			/*Standard I/O package*/
+#include "gtxdumbwin.h"		/*Interface definition */
+#include <stdio.h>		/*Standard I/O package */
 #include <errno.h>
 
-int dumb_debug;				/*Is debugging turned on?*/
-static char mn[] = "gator_dumbwindows";	/*Module name*/
+int dumb_debug;			/*Is debugging turned on? */
+static char mn[] = "gator_dumbwindows";	/*Module name */
 
 /*
  * Version of standard operations for a dumb window.
@@ -75,12 +76,13 @@ struct gwinbaseops gator_dumb_gwinbops = {
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_dumbgwin_init(adebug)
-    int adebug;
+int
+gator_dumbgwin_init(adebug)
+     int adebug;
 
-{ /*gator_dumbgwin_init*/
+{				/*gator_dumbgwin_init */
 
-    static char	rn[] = "gator_dumbgwin_init";	/*Routine name*/
+    static char rn[] = "gator_dumbgwin_init";	/*Routine name */
 
     /*
      * Remember if we'll be doing debugging, init dumb and clear the
@@ -94,9 +96,9 @@ int gator_dumbgwin_init(adebug)
     /*
      * We always return success here.
      */
-    return(0);
+    return (0);
 
-} /*gator_dumbgwin_init*/
+}				/*gator_dumbgwin_init */
 
 /*------------------------------------------------------------------------
  * gator_dumbgwin_create
@@ -118,22 +120,23 @@ int gator_dumbgwin_init(adebug)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-struct gwin *gator_dumbgwin_create(params)
-    struct gator_dumbgwin_params *params;
+struct gwin *
+gator_dumbgwin_create(params)
+     struct gator_dumbgwin_params *params;
 
-{ /*gator_dumbgwin_create*/
+{				/*gator_dumbgwin_create */
 
-    static char	rn[] = "gator_dumbgwin_create";	/*Routine name*/
+    static char rn[] = "gator_dumbgwin_create";	/*Routine name */
 
     if (dumb_debug)
 	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
     /*
-      * Return failure here, fill this routine in at some point.
-      */
-    return(NULL);
+     * Return failure here, fill this routine in at some point.
+     */
+    return (NULL);
 
-} /*gator_dumbgwin_create*/
+}				/*gator_dumbgwin_create */
 
 /*------------------------------------------------------------------------
  * gator_dumbgwin_cleanup
@@ -155,12 +158,13 @@ struct gwin *gator_dumbgwin_create(params)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_dumbgwin_cleanup(gwp)
-    struct gwin *gwp;
+int
+gator_dumbgwin_cleanup(gwp)
+     struct gwin *gwp;
 
-{ /*gator_dumbgwin_cleanup*/
+{				/*gator_dumbgwin_cleanup */
 
-    static char	rn[] = "gator_dumbgwin_cleanup";  /*Routine name*/
+    static char rn[] = "gator_dumbgwin_cleanup";	/*Routine name */
 
     if (dumb_debug)
 	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
@@ -168,9 +172,9 @@ int gator_dumbgwin_cleanup(gwp)
     /*
      * Return success here, fill this routine in at some point.
      */
-    return(0);
+    return (0);
 
-} /*gator_dumbgwin_cleanup*/
+}				/*gator_dumbgwin_cleanup */
 
 /*------------------------------------------------------------------------
  * gator_dumbgwin_box
@@ -193,22 +197,23 @@ int gator_dumbgwin_cleanup(gwp)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_dumbgwin_box(gwp)
-    struct gwin *gwp;
+int
+gator_dumbgwin_box(gwp)
+     struct gwin *gwp;
 
-{ /*gator_dumbgwin_box*/
+{				/*gator_dumbgwin_box */
 
-    static char	rn[] = "gator_dumbgwin_box";	/*Routine name*/
+    static char rn[] = "gator_dumbgwin_box";	/*Routine name */
 
     if (dumb_debug)
 	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
     /*
-      * Return success here, fill in the routine at some point.
-      */
-    return(0);
+     * Return success here, fill in the routine at some point.
+     */
+    return (0);
 
-} /*gator_dumbgwin_box*/
+}				/*gator_dumbgwin_box */
 
 /*------------------------------------------------------------------------
  * gator_dumbgwin_clear
@@ -230,22 +235,23 @@ int gator_dumbgwin_box(gwp)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_dumbgwin_clear(gwp)
-    struct gwin *gwp;
+int
+gator_dumbgwin_clear(gwp)
+     struct gwin *gwp;
 
-{ /*gator_dumbgwin_clear*/
+{				/*gator_dumbgwin_clear */
 
-    static char	rn[] = "gator_dumbgwin_clear";	/*Routine name*/
+    static char rn[] = "gator_dumbgwin_clear";	/*Routine name */
 
     if (dumb_debug)
 	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
     /*
-      * Return success, fill in this routine at some point.
-      */
-    return(0);
+     * Return success, fill in this routine at some point.
+     */
+    return (0);
 
-} /*gator_dumbgwin_clear*/
+}				/*gator_dumbgwin_clear */
 
 /*------------------------------------------------------------------------
  * gator_dumbgwin_destroy
@@ -267,19 +273,20 @@ int gator_dumbgwin_clear(gwp)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_dumbgwin_destroy(gwp)
-    struct gwin *gwp;
+int
+gator_dumbgwin_destroy(gwp)
+     struct gwin *gwp;
 
-{ /*gator_dumbgwin_destroy*/
+{				/*gator_dumbgwin_destroy */
 
-    static char	rn[] = "gator_dumbgwin_destroy";    /*Routine name*/
+    static char rn[] = "gator_dumbgwin_destroy";	/*Routine name */
 
     if (dumb_debug)
 	fprintf(stderr, "[%s:%s] Called", mn, rn);
 
-    return(0);
+    return (0);
 
-} /*gator_dumbgwin_destroy*/
+}				/*gator_dumbgwin_destroy */
 
 /*------------------------------------------------------------------------
  * gator_dumbgwin_display
@@ -301,22 +308,23 @@ int gator_dumbgwin_destroy(gwp)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_dumbgwin_display(gwp)
-    struct gwin *gwp;
+int
+gator_dumbgwin_display(gwp)
+     struct gwin *gwp;
 
-{ /*gator_dumbgwin_display*/
+{				/*gator_dumbgwin_display */
 
-    static char	rn[] = "gator_dumbgwin_display";    /*Routine name*/
+    static char rn[] = "gator_dumbgwin_display";	/*Routine name */
 
     if (dumb_debug)
 	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
     /*
-      * Return success, fill in this routine at some point.
-      */
-    return(0);
+     * Return success, fill in this routine at some point.
+     */
+    return (0);
 
-} /*gator_dumbgwin_display*/
+}				/*gator_dumbgwin_display */
 
 /*------------------------------------------------------------------------
  * gator_dumbgwin_drawline
@@ -341,23 +349,25 @@ int gator_dumbgwin_display(gwp)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_dumbgwin_drawline(gwp, params)
-    struct gwin *gwp;
-    struct gwin_lineparams *params;
+int
+gator_dumbgwin_drawline(gwp, params)
+     struct gwin *gwp;
+     struct gwin_lineparams *params;
 
-{ /*gator_dumbgwin_drawline*/
+{				/*gator_dumbgwin_drawline */
 
-    static char	rn[] = "gator_dumbgwin_drawline"; /*Routine name*/
+    static char rn[] = "gator_dumbgwin_drawline";	/*Routine name */
 
     if (dumb_debug)
-	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn, rn);
+	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn,
+		rn);
 
     /*
-      * Return success, fill in this routine at some point.
-      */
-    return(0);
+     * Return success, fill in this routine at some point.
+     */
+    return (0);
 
-} /*gator_dumbgwin_drawline*/
+}				/*gator_dumbgwin_drawline */
 
 /*------------------------------------------------------------------------
  * gator_dumbgwin_drawrectangle
@@ -381,23 +391,25 @@ int gator_dumbgwin_drawline(gwp, params)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_dumbgwin_drawrectangle(gwp, params)
-    struct gwin *gwp;
-    struct gwin_rectparams *params;
+int
+gator_dumbgwin_drawrectangle(gwp, params)
+     struct gwin *gwp;
+     struct gwin_rectparams *params;
 
-{ /*gator_dumbgwin_drawrectangle*/
+{				/*gator_dumbgwin_drawrectangle */
 
-    static char	rn[] = "gator_dumbgwin_drawrectangle";    /*Routine name*/
+    static char rn[] = "gator_dumbgwin_drawrectangle";	/*Routine name */
 
     if (dumb_debug)
-	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn, rn);
+	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn,
+		rn);
 
     /*
-      * Return success, fill in this routine at some point.
-      */
-    return(0);
+     * Return success, fill in this routine at some point.
+     */
+    return (0);
 
-} /*gator_dumbgwin_drawrectangle*/
+}				/*gator_dumbgwin_drawrectangle */
 
 /*------------------------------------------------------------------------
  * gator_dumbgwin_drawchar
@@ -421,23 +433,24 @@ int gator_dumbgwin_drawrectangle(gwp, params)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_dumbgwin_drawchar(gwp, params)
-    struct gwin *gwp;
-    struct gwin_charparams *params;
+int
+gator_dumbgwin_drawchar(gwp, params)
+     struct gwin *gwp;
+     struct gwin_charparams *params;
 
-{ /*gator_dumbgwin_drawchar*/
+{				/*gator_dumbgwin_drawchar */
 
-    static char	rn[] = "gator_dumbgwin_drawchar"; /*Routine name*/
+    static char rn[] = "gator_dumbgwin_drawchar";	/*Routine name */
 
     if (dumb_debug)
 	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
     /*
-      * Return success, fill in this routine at some point.
-      */
-    return(0);
+     * Return success, fill in this routine at some point.
+     */
+    return (0);
 
-} /*gator_dumbgwin_drawchar*/
+}				/*gator_dumbgwin_drawchar */
 
 /*------------------------------------------------------------------------
  * gator_dumbgwin_drawstring
@@ -461,23 +474,24 @@ int gator_dumbgwin_drawchar(gwp, params)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_dumbgwin_drawstring(gwp, params)
-    struct gwin *gwp;
-    struct gwin_strparams *params;
+int
+gator_dumbgwin_drawstring(gwp, params)
+     struct gwin *gwp;
+     struct gwin_strparams *params;
 
-{ /*gator_dumbgwin_drawstring*/
+{				/*gator_dumbgwin_drawstring */
 
-    static char	rn[] = "gator_dumbgwin_drawstring";	/*Routine name*/
+    static char rn[] = "gator_dumbgwin_drawstring";	/*Routine name */
 
     if (dumb_debug)
 	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
     /*
-      * Return success, fill in this routine at some point.
-      */
-    return(0);
+     * Return success, fill in this routine at some point.
+     */
+    return (0);
 
-} /*gator_dumbgwin_drawstring*/
+}				/*gator_dumbgwin_drawstring */
 
 /*------------------------------------------------------------------------
  * gator_dumbgwin_invert
@@ -501,23 +515,25 @@ int gator_dumbgwin_drawstring(gwp, params)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_dumbgwin_invert(gwp, params)
-    struct gwin *gwp;
-    struct gwin_invparams *params;
+int
+gator_dumbgwin_invert(gwp, params)
+     struct gwin *gwp;
+     struct gwin_invparams *params;
 
-{ /*gator_dumbgwin_invert*/
+{				/*gator_dumbgwin_invert */
 
-    static char	rn[] = "gator_dumbgwin_invert";   /*Routine name*/
+    static char rn[] = "gator_dumbgwin_invert";	/*Routine name */
 
     if (dumb_debug)
-	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn, rn);
+	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn,
+		rn);
 
     /*
-      * Return success, fill in this routine at some point.
-      */
-    return(0);
+     * Return success, fill in this routine at some point.
+     */
+    return (0);
 
-} /*gator_dumbgwin_invert*/
+}				/*gator_dumbgwin_invert */
 
 /*------------------------------------------------------------------------
  * gator_dumbgwin_getchar
@@ -539,19 +555,21 @@ int gator_dumbgwin_invert(gwp, params)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_dumbgwin_getchar(gwp)
-    struct gwin *gwp;
+int
+gator_dumbgwin_getchar(gwp)
+     struct gwin *gwp;
 
-{ /*gator_dumbgwin_getchar*/
+{				/*gator_dumbgwin_getchar */
 
-    static char	rn[] = "gator_dumbgwin_getchar";   /*Routine name*/
+    static char rn[] = "gator_dumbgwin_getchar";	/*Routine name */
 
     if (dumb_debug)
-	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn, rn);
+	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn,
+		rn);
 
-    return(-1);
+    return (-1);
 
-} /*gator_dumbgwin_getchar*/
+}				/*gator_dumbgwin_getchar */
 
 /*------------------------------------------------------------------------
  * gator_dumbgwin_getdimensions
@@ -574,20 +592,22 @@ int gator_dumbgwin_getchar(gwp)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_dumbgwin_getdimensions(gwp, aparms)
-    struct gwin *gwp;
-    struct gwin_sizeparams *aparms;
+int
+gator_dumbgwin_getdimensions(gwp, aparms)
+     struct gwin *gwp;
+     struct gwin_sizeparams *aparms;
 
-{/*gator_dumbgwin_getdimensions*/
+{				/*gator_dumbgwin_getdimensions */
 
-    static char	rn[] = "gator_dumbgwin_getdimensions";   /*Routine name*/
+    static char rn[] = "gator_dumbgwin_getdimensions";	/*Routine name */
 
     if (dumb_debug)
-	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn, rn);
+	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn,
+		rn);
 
-    return(-1);
+    return (-1);
 
-} /*gator_dumbgwin_getdimensions*/
+}				/*gator_dumbgwin_getdimensions */
 
 /*------------------------------------------------------------------------
  * gator_dumbgwin_wait
@@ -609,16 +629,18 @@ int gator_dumbgwin_getdimensions(gwp, aparms)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_dumbgwin_wait(gwp)
-    struct gwin *gwp;
+int
+gator_dumbgwin_wait(gwp)
+     struct gwin *gwp;
 
-{ /*gator_dumbgwin_wait*/
+{				/*gator_dumbgwin_wait */
 
-    static char	rn[] = "gator_dumbgwin_wait";   /*Routine name*/
+    static char rn[] = "gator_dumbgwin_wait";	/*Routine name */
 
     if (dumb_debug)
-	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn, rn);
+	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn,
+		rn);
 
-    return(-1);
+    return (-1);
 
-} /*gator_dumbgwin_wait*/
+}				/*gator_dumbgwin_wait */

@@ -16,9 +16,10 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
-#if defined(AFS_SUN5_ENV) && defined(KERNEL) 
+#if defined(AFS_SUN5_ENV) && defined(KERNEL)
 
 #include "rx/rx_kcommon.h"
 #include "rx_kmutex.h"
@@ -30,15 +31,17 @@ RCSID("$Header$");
 #include <sys/mutex.h>
 
 #ifdef RX_LOCKS_DB
-int afs_cv_wait(cv, m, sigok, fileid, line)
-    int fileid;
-    int line;
+int
+afs_cv_wait(cv, m, sigok, fileid, line)
+     int fileid;
+     int line;
 #else
-int afs_cv_wait(cv, m, sigok)
+int
+afs_cv_wait(cv, m, sigok)
 #endif
-    afs_kcondvar_t *cv;
-    afs_kmutex_t *m;
-    int sigok;
+     afs_kcondvar_t *cv;
+     afs_kmutex_t *m;
+     int sigok;
 {
     int haveGlock = ISAFS_GLOCK();
     int retval = 0;
@@ -66,16 +69,18 @@ int afs_cv_wait(cv, m, sigok)
 }
 
 #ifdef RX_LOCKS_DB
-int afs_cv_timedwait(cv, m, t, sigok, fileid, line)
-    int fileid;
-    int line;
+int
+afs_cv_timedwait(cv, m, t, sigok, fileid, line)
+     int fileid;
+     int line;
 #else
-int afs_cv_timedwait(cv, m, t, sigok)
+int
+afs_cv_timedwait(cv, m, t, sigok)
 #endif
-    afs_kcondvar_t *cv;
-    afs_kmutex_t *m;
-    clock_t t;
-    int sigok;
+     afs_kcondvar_t *cv;
+     afs_kmutex_t *m;
+     clock_t t;
+     int sigok;
 {
     int haveGlock = ISAFS_GLOCK();
     int retval = 0;
@@ -102,4 +107,4 @@ int afs_cv_timedwait(cv, m, t, sigok)
     return retval;
 }
 
-#endif	/* SUN5 && KERNEL */
+#endif /* SUN5 && KERNEL */

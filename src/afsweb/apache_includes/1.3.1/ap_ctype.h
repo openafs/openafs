@@ -85,5 +85,4 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-
-#endif	/* !AP_CTYPE_H */
+#endif				/* !AP_CTYPE_H */

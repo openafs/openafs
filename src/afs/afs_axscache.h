@@ -26,9 +26,9 @@
  */
 
 struct axscache {
-  afs_int32 uid;             /* most frequently used field, I think */
-  afs_int32 axess;
-  struct axscache * next;
+    afs_int32 uid;		/* most frequently used field, I think */
+    afs_int32 axess;
+    struct axscache *next;
 };
 
 /* DON'T use this with a NULL pointer! 
@@ -47,4 +47,3 @@ struct axscache {
  cachep = ac; }}
 
 #endif
-

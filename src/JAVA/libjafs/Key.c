@@ -27,7 +27,7 @@
 #include <kautils.h>
 
 //// definitions in Internal.c  //////////////////
-extern jclass   keyCls;
+extern jclass keyCls;
 extern jfieldID key_versionField;
 extern jfieldID key_encryptionKeyField;
 extern jfieldID key_lastModDateField;
@@ -44,40 +44,41 @@ extern jfieldID key_checkSumField;
  * key      the Key object to populate with the info
  * keyEntry     the container of the key's information
  */
-void fillKeyInfo( JNIEnv *env, jobject key, bos_KeyInfo_t keyEntry )
+void
+fillKeyInfo(JNIEnv * env, jobject key, bos_KeyInfo_t keyEntry)
 {
-  jstring jencryptionKey;
-  char *convertedKey;
-  int i;
+    jstring jencryptionKey;
+    char *convertedKey;
+    int i;
 
-  // get the class fields if need be
-  if ( keyCls == 0 ) {
-    internal_getKeyClass( env, key );
-  }
+    // get the class fields if need be
+    if (keyCls == 0) {
+	internal_getKeyClass(env, key);
+    }
+    // set all the fields
+    (*env)->SetIntField(env, key, key_versionField,
+			keyEntry.keyVersionNumber);
 
-  // set all the fields
-  (*env)->SetIntField( env, key, key_versionField, keyEntry.keyVersionNumber );
-  
-  convertedKey = (char *) malloc( sizeof(char *)*
-				  (sizeof(keyEntry.key.key)*4+1) );
-  if ( !convertedKey ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return;    
-  }
-  for( i = 0; i < sizeof(keyEntry.key.key); i++ ) {
-    sprintf( &(convertedKey[i*4]), "\\%0.3o", keyEntry.key.key[i] );
-  }
-  jencryptionKey = (*env)->NewStringUTF(env, convertedKey);
-  (*env)->SetObjectField( env, key, key_encryptionKeyField, jencryptionKey );
-  
-  (*env)->SetIntField( env, key, key_lastModDateField, 
-		       keyEntry.keyStatus.lastModificationDate );
-  (*env)->SetIntField( env, key, key_lastModMsField, 
-		       keyEntry.keyStatus.lastModificationMicroSeconds );
-  (*env)->SetLongField( env, key, key_checkSumField, 
-			(unsigned int) keyEntry.keyStatus.checkSum );
+    convertedKey =
+	(char *)malloc(sizeof(char *) * (sizeof(keyEntry.key.key) * 4 + 1));
+    if (!convertedKey) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return;
+    }
+    for (i = 0; i < sizeof(keyEntry.key.key); i++) {
+	sprintf(&(convertedKey[i * 4]), "\\%0.3o", keyEntry.key.key[i]);
+    }
+    jencryptionKey = (*env)->NewStringUTF(env, convertedKey);
+    (*env)->SetObjectField(env, key, key_encryptionKeyField, jencryptionKey);
 
-  free( convertedKey );
+    (*env)->SetIntField(env, key, key_lastModDateField,
+			keyEntry.keyStatus.lastModificationDate);
+    (*env)->SetIntField(env, key, key_lastModMsField,
+			keyEntry.keyStatus.lastModificationMicroSeconds);
+    (*env)->SetLongField(env, key, key_checkSumField,
+			 (unsigned int)keyEntry.keyStatus.checkSum);
+
+    free(convertedKey);
 }
 
 /**
@@ -91,55 +92,56 @@ void fillKeyInfo( JNIEnv *env, jobject key, bos_KeyInfo_t keyEntry )
  * key     the Key object in which to fill in the 
  *                information
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Key_getKeyInfo
-  (JNIEnv *env, jclass cls, jint serverHandle, jint version, jobject key)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Key_getKeyInfo(JNIEnv * env, jclass cls,
+				     jint serverHandle, jint version,
+				     jobject key)
 {
-  afs_status_t ast;
-  bos_KeyInfo_t keyEntry;
-  void *iterationId;
-  int done;
+    afs_status_t ast;
+    bos_KeyInfo_t keyEntry;
+    void *iterationId;
+    int done;
 
-  if ( !bos_KeyGetBegin( (void *) serverHandle, &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
-
-  done = FALSE;
-
-  // there's no KeyGet function, so we must iterate and find the 
-  // one with the matching version
-  while( !done ) {
-
-    if ( !bos_KeyGetNext( iterationId, &keyEntry, &ast ) ) {
-      // no matching key
-      if ( ast == ADMITERATORDONE ) {
-        afs_status_t astnew;
-        if ( !bos_KeyGetDone( iterationId, &astnew ) ) {
-          throwAFSException( env, astnew );
-          return;
-        }
-        throwAFSException( env, KAUNKNOWNKEY );
-        return;
-        // other
-      } else {
-        throwAFSException( env, ast );
-        return;
-      }
+    if (!bos_KeyGetBegin((void *)serverHandle, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return;
     }
 
-    if ( keyEntry.keyVersionNumber == version ) {
-      done = TRUE;
+    done = FALSE;
+
+    // there's no KeyGet function, so we must iterate and find the 
+    // one with the matching version
+    while (!done) {
+
+	if (!bos_KeyGetNext(iterationId, &keyEntry, &ast)) {
+	    // no matching key
+	    if (ast == ADMITERATORDONE) {
+		afs_status_t astnew;
+		if (!bos_KeyGetDone(iterationId, &astnew)) {
+		    throwAFSException(env, astnew);
+		    return;
+		}
+		throwAFSException(env, KAUNKNOWNKEY);
+		return;
+		// other
+	    } else {
+		throwAFSException(env, ast);
+		return;
+	    }
+	}
+
+	if (keyEntry.keyVersionNumber == version) {
+	    done = TRUE;
+	}
+
     }
 
-  }
+    fillKeyInfo(env, key, keyEntry);
 
-  fillKeyInfo( env, key, keyEntry );
-
-  if ( !bos_KeyGetDone( iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!bos_KeyGetDone(iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 
 }
 
@@ -155,56 +157,60 @@ Java_org_openafs_jafs_Key_getKeyInfo
  * jkeyString     the String version of the key that will
  *                      be encrypted
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Key_create
-  (JNIEnv *env, jclass cls, jint cellHandle, jint serverHandle, jint version, 
-   jstring jkeyString)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Key_create(JNIEnv * env, jclass cls, jint cellHandle,
+				 jint serverHandle, jint version,
+				 jstring jkeyString)
 {
     afs_status_t ast;
     char *keyString;
     char *cellName;
-    kas_encryptionKey_p key = 
-      (kas_encryptionKey_p) malloc( sizeof(kas_encryptionKey_t) );
-    
-    if ( !key ) {
-      throwAFSException( env, JAFSADMNOMEM );
-      return;    
+    kas_encryptionKey_p key =
+	(kas_encryptionKey_p) malloc(sizeof(kas_encryptionKey_t));
+
+    if (!key) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return;
     }
 
-    if ( jkeyString != NULL ) {
-      keyString = getNativeString(env, jkeyString);
-      if ( keyString == NULL ) {
-        free( key );
-	  throwAFSException( env, JAFSADMNOMEM );
-	  return;    
-      }
+    if (jkeyString != NULL) {
+	keyString = getNativeString(env, jkeyString);
+	if (keyString == NULL) {
+	    free(key);
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
     } else {
-      keyString = NULL;
+	keyString = NULL;
     }
 
-    if ( !afsclient_CellNameGet( (void *) cellHandle, &cellName, &ast ) ) {
-	free( key );
-      if ( keyString != NULL ) free( keyString );
-	throwAFSException( env, ast );
-	return;
-    }   
-
-    if ( !kas_StringToKey( cellName, keyString, key, &ast ) ) {
-	free( key );
-      if ( keyString != NULL ) free( keyString );
-	throwAFSException( env, ast );
+    if (!afsclient_CellNameGet((void *)cellHandle, &cellName, &ast)) {
+	free(key);
+	if (keyString != NULL)
+	    free(keyString);
+	throwAFSException(env, ast);
 	return;
     }
 
-    if ( !bos_KeyCreate( (void *) serverHandle, version, key, &ast ) ) {
-	free( key );
-      if ( keyString != NULL ) free( keyString );
-	throwAFSException( env, ast );
+    if (!kas_StringToKey(cellName, keyString, key, &ast)) {
+	free(key);
+	if (keyString != NULL)
+	    free(keyString);
+	throwAFSException(env, ast);
 	return;
     }
 
-    free( key );
-    if ( keyString != NULL ) free( keyString );
+    if (!bos_KeyCreate((void *)serverHandle, version, key, &ast)) {
+	free(key);
+	if (keyString != NULL)
+	    free(keyString);
+	throwAFSException(env, ast);
+	return;
+    }
+
+    free(key);
+    if (keyString != NULL)
+	free(keyString);
 }
 
 /**
@@ -215,24 +221,24 @@ Java_org_openafs_jafs_Key_create
  * serverHandle  the bos handle of the server to which the key belongs
  * versionNumber   the version number of the key to remove (0 to 255)
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Key_delete
-  (JNIEnv *env, jclass cls, jint serverHandle, jint version )
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Key_delete(JNIEnv * env, jclass cls, jint serverHandle,
+				 jint version)
 {
-  afs_status_t ast;
+    afs_status_t ast;
 
-  if ( !bos_KeyDelete( (void *) serverHandle, version, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!bos_KeyDelete((void *)serverHandle, version, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 }
 
 // reclaim global memory being used by this portion
 JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Key_reclaimKeyMemory (JNIEnv *env, jclass cls)
+Java_org_openafs_jafs_Key_reclaimKeyMemory(JNIEnv * env, jclass cls)
 {
-  if ( keyCls ) {
-    (*env)->DeleteGlobalRef(env, keyCls);
-    keyCls = 0;
-  }
+    if (keyCls) {
+	(*env)->DeleteGlobalRef(env, keyCls);
+	keyCls = 0;
+    }
 }

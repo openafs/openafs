@@ -22,7 +22,7 @@
 
 #include <afs/afssyscalls.h>
 #include <afs/afsutil.h>
-#include "fs_stats.h"	/*Defs for xstat-based statistics*/
+#include "fs_stats.h"		/*Defs for xstat-based statistics */
 
 #define AFS_HARDDEADTIME	120
 
@@ -36,27 +36,27 @@ typedef struct DirHandle {
      * fids are copied out of the handle to allow the handle to be reused
      * while pages for the old fid are still in the buffer cache.
      */
-    int		dirh_vid;
-    int		dirh_dev;
-    Inode 	dirh_ino;
-    VnodeId	dirh_vnode;
-    afs_int32	dirh_cacheCheck;
-    Unique 	dirh_unique;
-    IHandle_t	*dirh_handle;
+    int dirh_vid;
+    int dirh_dev;
+    Inode dirh_ino;
+    VnodeId dirh_vnode;
+    afs_int32 dirh_cacheCheck;
+    Unique dirh_unique;
+    IHandle_t *dirh_handle;
 } DirHandle;
 
 
 struct cbcounters {
-    int	    DeleteFiles;
-    int	    DeleteCallBacks;
-    int	    BreakCallBacks;
-    int	    AddCallBacks;
-    int	    GotSomeSpaces;
-    int	    DeleteAllCallBacks;
-    int	    nFEs, nCBs, nblks;
-    int	    CBsTimedOut;
-    int     nbreakers;
-    int     GSS1, GSS2, GSS3, GSS4, GSS5;
+    int DeleteFiles;
+    int DeleteCallBacks;
+    int BreakCallBacks;
+    int AddCallBacks;
+    int GotSomeSpaces;
+    int DeleteAllCallBacks;
+    int nFEs, nCBs, nblks;
+    int CBsTimedOut;
+    int nbreakers;
+    int GSS1, GSS2, GSS3, GSS4, GSS5;
 };
 
 #define MAXCNTRS (AFS_HIGHEST_OPCODE+1)
@@ -91,102 +91,99 @@ struct cbcounters {
 
 #define BIGTIME	(0x7FFFFFFF)	/* Should be max u_int, rather than max int */
 
-struct AFSCallStatistics
-{
-	/* References to AFS interface calls */
-	afs_uint32	FetchData;
-	afs_uint32	FetchACL;
-	afs_uint32	FetchStatus;
-	afs_uint32	StoreData;
-	afs_uint32	StoreACL;
-	afs_uint32	StoreStatus;
-	afs_uint32	RemoveFile;
-	afs_uint32	CreateFile;
-	afs_uint32	Rename;
-	afs_uint32	Symlink;
-	afs_uint32	Link;
-	afs_uint32	MakeDir;
-	afs_uint32	RemoveDir;
-	afs_uint32	SetLock;
-	afs_uint32	ExtendLock;	
-	afs_uint32	ReleaseLock;
-	afs_uint32	GetStatistics;
-	afs_uint32	GiveUpCallBacks;
-	afs_uint32	GetVolumeInfo;
-	afs_uint32	GetVolumeStatus;
-	afs_uint32	SetVolumeStatus;
-	afs_uint32	GetRootVolume;
-	afs_uint32	CheckToken;
-	afs_uint32	GetTime;
+struct AFSCallStatistics {
+    /* References to AFS interface calls */
+    afs_uint32 FetchData;
+    afs_uint32 FetchACL;
+    afs_uint32 FetchStatus;
+    afs_uint32 StoreData;
+    afs_uint32 StoreACL;
+    afs_uint32 StoreStatus;
+    afs_uint32 RemoveFile;
+    afs_uint32 CreateFile;
+    afs_uint32 Rename;
+    afs_uint32 Symlink;
+    afs_uint32 Link;
+    afs_uint32 MakeDir;
+    afs_uint32 RemoveDir;
+    afs_uint32 SetLock;
+    afs_uint32 ExtendLock;
+    afs_uint32 ReleaseLock;
+    afs_uint32 GetStatistics;
+    afs_uint32 GiveUpCallBacks;
+    afs_uint32 GetVolumeInfo;
+    afs_uint32 GetVolumeStatus;
+    afs_uint32 SetVolumeStatus;
+    afs_uint32 GetRootVolume;
+    afs_uint32 CheckToken;
+    afs_uint32 GetTime;
 
-	/* General Fetch/Store Stats */
-	afs_uint32	TotalCalls;
-	afs_uint32	TotalFetchedBytes;
-	afs_uint32	AccumFetchTime;
-	afs_uint32	FetchSize1;
-	afs_uint32	FetchSize2;
-	afs_uint32	FetchSize3;
-	afs_uint32	FetchSize4;
-	afs_uint32	FetchSize5;
-	afs_uint32	TotalStoredBytes;
-	afs_uint32	AccumStoreTime;
-	afs_uint32	StoreSize1;
-	afs_uint32	StoreSize2;
-	afs_uint32	StoreSize3;
-	afs_uint32	StoreSize4;
-	afs_uint32	StoreSize5;
+    /* General Fetch/Store Stats */
+    afs_uint32 TotalCalls;
+    afs_uint32 TotalFetchedBytes;
+    afs_uint32 AccumFetchTime;
+    afs_uint32 FetchSize1;
+    afs_uint32 FetchSize2;
+    afs_uint32 FetchSize3;
+    afs_uint32 FetchSize4;
+    afs_uint32 FetchSize5;
+    afs_uint32 TotalStoredBytes;
+    afs_uint32 AccumStoreTime;
+    afs_uint32 StoreSize1;
+    afs_uint32 StoreSize2;
+    afs_uint32 StoreSize3;
+    afs_uint32 StoreSize4;
+    afs_uint32 StoreSize5;
 };
 
-struct AFSDisk
-{
-	afs_int32		BlocksAvailable;
-	afs_int32		TotalBlocks;
-	DiskName	Name;
+struct AFSDisk {
+    afs_int32 BlocksAvailable;
+    afs_int32 TotalBlocks;
+    DiskName Name;
 };
 
 #define	AFS_MSTATSPARES	8
-#define	AFS_MSTATDISKS	10	
-struct AFSStatistics
-{
-	afs_uint32	CurrentMsgNumber;
-	afs_uint32	OldestMsgNumber;
-	afs_uint32	CurrentTime;
-	afs_uint32	BootTime;
-	afs_uint32	StartTime;
-	afs_int32	CurrentConnections;
-	afs_uint32	TotalAFSCalls;
-	afs_uint32	TotalFetchs;
-	afs_uint32	FetchDatas;
-	afs_uint32	FetchedBytes;
-	afs_int32	FetchDataRate;
-	afs_uint32	TotalStores;
-	afs_uint32	StoreDatas;
-	afs_uint32	StoredBytes;
-	afs_int32	StoreDataRate;
-	afs_uint32	TotalRPCBytesSent;
-	afs_uint32	TotalRPCBytesReceived;
-	afs_uint32	TotalRPCPacketsSent;
-	afs_uint32	TotalRPCPacketsReceived;
-	afs_uint32	TotalRPCPacketsLost;
-	afs_uint32 TotalRPCBogusPackets;
-	afs_int32	SystemCPU;
-	afs_int32	UserCPU;
-	afs_int32	NiceCPU;
-	afs_int32	IdleCPU;
-	afs_int32	TotalIO;
-	afs_int32	ActiveVM;
-	afs_int32	TotalVM;
-	afs_int32	EtherNetTotalErrors;
-	afs_int32	EtherNetTotalWrites;
-	afs_int32	EtherNetTotalInterupts;
-	afs_int32	EtherNetGoodReads;
-	afs_int32	EtherNetTotalBytesWritten;
-	afs_int32	EtherNetTotalBytesRead;
-	afs_int32	ProcessSize;
-	afs_int32	WorkStations;
-	afs_int32	ActiveWorkStations;
-	afs_int32	Spares[AFS_MSTATSPARES];
-	struct AFSDisk	Disks[AFS_MSTATDISKS];
+#define	AFS_MSTATDISKS	10
+struct AFSStatistics {
+    afs_uint32 CurrentMsgNumber;
+    afs_uint32 OldestMsgNumber;
+    afs_uint32 CurrentTime;
+    afs_uint32 BootTime;
+    afs_uint32 StartTime;
+    afs_int32 CurrentConnections;
+    afs_uint32 TotalAFSCalls;
+    afs_uint32 TotalFetchs;
+    afs_uint32 FetchDatas;
+    afs_uint32 FetchedBytes;
+    afs_int32 FetchDataRate;
+    afs_uint32 TotalStores;
+    afs_uint32 StoreDatas;
+    afs_uint32 StoredBytes;
+    afs_int32 StoreDataRate;
+    afs_uint32 TotalRPCBytesSent;
+    afs_uint32 TotalRPCBytesReceived;
+    afs_uint32 TotalRPCPacketsSent;
+    afs_uint32 TotalRPCPacketsReceived;
+    afs_uint32 TotalRPCPacketsLost;
+    afs_uint32 TotalRPCBogusPackets;
+    afs_int32 SystemCPU;
+    afs_int32 UserCPU;
+    afs_int32 NiceCPU;
+    afs_int32 IdleCPU;
+    afs_int32 TotalIO;
+    afs_int32 ActiveVM;
+    afs_int32 TotalVM;
+    afs_int32 EtherNetTotalErrors;
+    afs_int32 EtherNetTotalWrites;
+    afs_int32 EtherNetTotalInterupts;
+    afs_int32 EtherNetGoodReads;
+    afs_int32 EtherNetTotalBytesWritten;
+    afs_int32 EtherNetTotalBytesRead;
+    afs_int32 ProcessSize;
+    afs_int32 WorkStations;
+    afs_int32 ActiveWorkStations;
+    afs_int32 Spares[AFS_MSTATSPARES];
+    struct AFSDisk Disks[AFS_MSTATDISKS];
 };
 
 extern int busyonrst;
@@ -198,10 +195,10 @@ extern int busyonrst;
 #define DONTPANIC 0
 #define PANIC 1
 
-#define MAX_FILESERVER_THREAD	128 /* max number of threads in fileserver, subject to system limits */
+#define MAX_FILESERVER_THREAD	128	/* max number of threads in fileserver, subject to system limits */
 
-#define FILESERVER_HELPER_THREADS 7 /* Listner, IOMGR, FiveMinute, 
-					HostCheck, Signal, min 2 for RXSTATS */
+#define FILESERVER_HELPER_THREADS 7	/* Listner, IOMGR, FiveMinute, 
+					 * HostCheck, Signal, min 2 for RXSTATS */
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
 #include <assert.h>

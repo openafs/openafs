@@ -19,7 +19,7 @@ extern afs_rwlock_t afs_xosi;
 
 /* osi_misc.c */
 extern int osi_lookupname(char *aname, enum uio_seg seg, int followlink,
-	                  struct vnode **dirvpp, struct vnode **vpp);
+			  struct vnode **dirvpp, struct vnode **vpp);
 
 /* osi_vfsops.c */
 extern int afs_statfs(struct mount *mp, struct statfs *abp, struct proc *p);

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -24,23 +25,26 @@ RCSID("$Header$");
 
 #include "AFS_component_version_number.c"
 
-void Usage(void)
+void
+Usage(void)
 {
     printf("Usage: iopen <partition> <inode>\n");
-    printf("iopen opens file by inode, then tries to read it, printing it to stdout.\n");
+    printf
+	("iopen opens file by inode, then tries to read it, printing it to stdout.\n");
     exit(1);
 }
 
-main(argc,argv)
-char **argv;
+main(argc, argv)
+     char **argv;
 {
     char *part;
     char buf[5];
-    int fd,n;
+    int fd, n;
     struct stat status;
     Inode ino;
 
-    if (argc != 3) Usage();
+    if (argc != 3)
+	Usage();
 
     part = argv[1];
 #ifdef AFS_64BIT_IOPS_ENV
@@ -55,7 +59,7 @@ char **argv;
     }
     printf("ino=%lld\n", ino);
     printf("About to iopen(dev=(%d,%d), inode=%s, mode=%d\n",
-    	major(status.st_dev), minor(status.st_dev), PrintInode(NULL, ino),
+	   major(status.st_dev), minor(status.st_dev), PrintInode(NULL, ino),
 	   O_RDONLY);
     fflush(stdout);
     fd = IOPEN(status.st_dev, ino, O_RDONLY);
@@ -65,8 +69,8 @@ char **argv;
     }
     printf("iopen successful, fd=%d\n", fd);
     while ((n = read(fd, buf, 5)) > 0)
-    	write(1,buf,n);
-    if (n<0)
+	write(1, buf, n);
+    if (n < 0)
 	perror("read");
     exit(0);
 }

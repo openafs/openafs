@@ -93,11 +93,12 @@ NONINFRINGEMENT.
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
-#include "afs/afs_stats.h" /* statistics */
+#include "afs/afs_stats.h"	/* statistics */
 
 #include <sys/conf.h>
 #include <sys/exec.h>
@@ -112,7 +113,7 @@ extern void insmntque(struct vnode *, struct mount *);
 extern int sys_lkmnosys(), afs3_syscall(), afs_xioctl(), Afs_xsetgroups();
 
 static int lkmid = -1;
-static int afs_badcall(struct proc *p, void *xx, register_t *yy);
+static int afs_badcall(struct proc *p, void *xx, register_t * yy);
 static struct sysent old_sysent;
 
 char afs_NetBSD_osname[] = "OpenBSD";
@@ -150,11 +151,8 @@ struct vfsops afs_vfsops = {
 };
 
 int
-afs_nbsd_lookupname(char *fnamep,
-		    enum uio_seg segflg,
-		    int followlink,
-		    struct vnode **dirvpp,
-		    struct vnode **compvpp)
+afs_nbsd_lookupname(char *fnamep, enum uio_seg segflg, int followlink,
+		    struct vnode **dirvpp, struct vnode **compvpp)
 {
     struct nameidata nd;
     int niflag;
@@ -168,11 +166,8 @@ afs_nbsd_lookupname(char *fnamep,
     /* XXX LOCKLEAF ? */
     niflag = followlink ? FOLLOW : NOFOLLOW;
     if (dirvpp)
-	niflag |= WANTPARENT;		/* XXX LOCKPARENT? */
-    NDINIT(&nd, LOOKUP,
-	   niflag,
-	   segflg,
-	   fnamep, osi_curproc());
+	niflag |= WANTPARENT;	/* XXX LOCKPARENT? */
+    NDINIT(&nd, LOOKUP, niflag, segflg, fnamep, osi_curproc());
     if ((error = namei(&nd)))
 	return error;
     *compvpp = nd.ni_vp;
@@ -201,9 +196,9 @@ afs_checkexp()
 
 int
 afs_fhtovp(mp, fhp, vpp)
-struct mount *mp;
-struct fid *fhp;
-struct vnode **vpp;
+     struct mount *mp;
+     struct fid *fhp;
+     struct vnode **vpp;
 {
 
     return (EINVAL);
@@ -211,8 +206,8 @@ struct vnode **vpp;
 
 int
 afs_vptofh(vp, fhp)
-struct vnode *vp;
-struct fid *fhp;
+     struct vnode *vp;
+     struct fid *fhp;
 {
 
     return (EINVAL);
@@ -220,23 +215,23 @@ struct fid *fhp;
 
 int
 afs_start(mp, flags, p)
-struct mount *mp;
-int flags;
-struct proc *p;
+     struct mount *mp;
+     int flags;
+     struct proc *p;
 {
-    return (0);				/* nothing to do. ? */
+    return (0);			/* nothing to do. ? */
 }
 
 int
 afs_mount(mp, path, data, ndp, p)
-register struct mount *mp;
-char *path;
-caddr_t data;
-struct nameidata *ndp;
-struct proc *p;
+     register struct mount *mp;
+     char *path;
+     caddr_t data;
+     struct nameidata *ndp;
+     struct proc *p;
 {
     /* ndp contains the mounted-from device.  Just ignore it.
-       we also don't care about our proc struct. */
+     * we also don't care about our proc struct. */
     int size;
 
     if (mp->mnt_flag & MNT_UPDATE)
@@ -257,25 +252,25 @@ struct proc *p;
 #endif
     afs_globalVFS = mp;
     mp->osi_vfs_bsize = 8192;
-    mp->osi_vfs_fsid.val[0] = AFS_VFSMAGIC; /* magic */
-    mp->osi_vfs_fsid.val[1] = (int) AFS_VFSFSID; 
+    mp->osi_vfs_fsid.val[0] = AFS_VFSMAGIC;	/* magic */
+    mp->osi_vfs_fsid.val[1] = (int)AFS_VFSFSID;
 
-    (void) copyinstr(path, mp->mnt_stat.f_mntonname, MNAMELEN-1, &size);
+    (void)copyinstr(path, mp->mnt_stat.f_mntonname, MNAMELEN - 1, &size);
     bzero(mp->mnt_stat.f_mntonname + size, MNAMELEN - size);
     bzero(mp->mnt_stat.f_mntfromname, MNAMELEN);
     strcpy(mp->mnt_stat.f_mntfromname, "AFS");
     /* null terminated string "AFS" will fit, just leave it be. */
     strcpy(mp->mnt_stat.f_fstypename, MOUNT_AFS);
-    (void) afs_statfs(mp, &mp->mnt_stat);
+    (void)afs_statfs(mp, &mp->mnt_stat);
 
     return 0;
 }
 
 int
 afs_unmount(afsp, flags, p)
-struct mount *afsp;
-int flags;
-struct proc *p;
+     struct mount *afsp;
+     int flags;
+     struct proc *p;
 {
     extern int sys_ioctl(), sys_setgroups();
 
@@ -291,12 +286,12 @@ struct proc *p;
 	AFS_RELE(AFSTOV(afs_globalVp));
     afs_globalVp = NULL;
 
-    vflush(afsp, NULLVP, 0); /* don't support forced */
+    vflush(afsp, NULLVP, 0);	/* don't support forced */
     afsp->mnt_data = NULL;
     AFS_GLOCK();
     afs_globalVFS = 0;
     afs_cold_shutdown = 1;
-    afs_shutdown();			/* XXX */
+    afs_shutdown();		/* XXX */
     AFS_GUNLOCK();
 
     /* give up syscall entries for ioctl & setgroups, which we've stolen */
@@ -307,12 +302,14 @@ struct proc *p;
     sysent[AFS_SYSCALL].sy_narg = 0;
     sysent[AFS_SYSCALL].sy_argsize = 0;
     sysent[AFS_SYSCALL].sy_call = afs_badcall;
-    printf("AFS unmounted--use `/sbin/modunload -i %d' to unload before restarting AFS\n", lkmid);
+    printf
+	("AFS unmounted--use `/sbin/modunload -i %d' to unload before restarting AFS\n",
+	 lkmid);
     return 0;
 }
 
 static int
-afs_badcall(struct proc *p, void *xx, register_t *yy)
+afs_badcall(struct proc *p, void *xx, register_t * yy)
 {
     return ENOSYS;
 }
@@ -328,8 +325,7 @@ afs_nbsd_getnewvnode(struct vcache *tvc)
 }
 
 int
-afs_root(struct mount *mp,
-	      struct vnode **vpp)
+afs_root(struct mount *mp, struct vnode **vpp)
 {
     struct vrequest treq;
     struct vcache *tvp;
@@ -338,12 +334,12 @@ afs_root(struct mount *mp,
     AFS_STATCNT(afs_root);
 
     AFS_GLOCK();
-    if (!(code = afs_InitReq(&treq, osi_curcred())) &&
-	!(code = afs_CheckInit())) {
+    if (!(code = afs_InitReq(&treq, osi_curcred()))
+	&& !(code = afs_CheckInit())) {
 	tvp = afs_GetVCache(&afs_rootFid, &treq, NULL, NULL);
 	if (tvp) {
 	    /* There is really no reason to over-hold this bugger--it's held
-	       by the root filesystem reference. */
+	     * by the root filesystem reference. */
 	    if (afs_globalVp != tvp) {
 #ifdef AFS_DONT_OVERHOLD_GLOBALVP
 		if (afs_globalVp)
@@ -361,7 +357,7 @@ afs_root(struct mount *mp,
     AFS_GUNLOCK();
 
     if (!code)
-	vn_lock(*vpp, LK_EXCLUSIVE | LK_RETRY, curproc); /* return it locked */
+	vn_lock(*vpp, LK_EXCLUSIVE | LK_RETRY, curproc);	/* return it locked */
     return code;
 }
 
@@ -377,9 +373,10 @@ afs_statfs(struct osi_vfs *afsp, struct statfs *abp)
      * enough * space in the device partition before storing something there
      * (like * ed(1))
      */
-    abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files = abp->f_ffree  = 9000000;
-    abp->f_fsid.val[0] = AFS_VFSMAGIC; /* magic */
-    abp->f_fsid.val[1] = (int) AFS_VFSFSID;
+    abp->f_blocks = abp->f_bfree = abp->f_bavail = abp->f_files =
+	abp->f_ffree = 9000000;
+    abp->f_fsid.val[0] = AFS_VFSMAGIC;	/* magic */
+    abp->f_fsid.val[1] = (int)AFS_VFSFSID;
     return 0;
 }
 
@@ -416,8 +413,8 @@ afs_nbsd_rele(struct vnode *vp)
 
 int
 afs_vget(vp, lfl)
-struct vnode *vp;
-int lfl;
+     struct vnode *vp;
+     int lfl;
 {
     int error;
 
@@ -467,8 +464,7 @@ afsinit()
 }
 
 int
-afs_vfs_load(struct lkm_table *lkmtp,
-	     int cmd)
+afs_vfs_load(struct lkm_table *lkmtp, int cmd)
 {
     extern char *memname[];
 
@@ -517,8 +513,7 @@ libafs_lkmentry(struct lkm_table *lkmtp, int cmd, int ver)
     if (cmd == LKM_E_LOAD) {
 	if (strcmp(ostype, afs_NetBSD_osname)) {
 	    printf("This is %s version %s\n", ostype, osrelease);
-	    printf("This version of AFS is only for %s\n",
-		   afs_NetBSD_osname);
+	    printf("This version of AFS is only for %s\n", afs_NetBSD_osname);
 	    return EPROGMISMATCH;
 	}
 	if (sysent[AFS_SYSCALL].sy_call == afs3_syscall
@@ -527,5 +522,5 @@ libafs_lkmentry(struct lkm_table *lkmtp, int cmd, int ver)
 	    return EINVAL;
 	}
     }
-    DISPATCH(lkmtp,cmd,ver,afs_vfs_load,afs_vfs_unload,lkm_nofunc);
+    DISPATCH(lkmtp, cmd, ver, afs_vfs_load, afs_vfs_unload, lkm_nofunc);
 }

@@ -35,7 +35,7 @@
 #else
 #define RECALC_SIGPENDING(X) recalc_sigpending(X)
 #endif
- 
+
 #if defined (STRUCT_TASK_STRUCT_HAS_SIGMASK_LOCK)
 #define SIG_LOCK(X) spin_lock_irq(&X->sigmask_lock)
 #define SIG_UNLOCK(X) spin_unlock_irq(&X->sigmask_lock)
@@ -121,10 +121,10 @@ typedef struct cred {		/* maps to task field: */
 #else
     int cr_ref;
 #endif
-    uid_t cr_uid;	/* euid */
-    uid_t cr_ruid;	/* uid */
-    gid_t cr_gid;	/* egid */
-    gid_t cr_rgid;	/* gid */
+    uid_t cr_uid;		/* euid */
+    uid_t cr_ruid;		/* uid */
+    gid_t cr_gid;		/* egid */
+    gid_t cr_rgid;		/* gid */
     gid_t cr_groups[NGROUPS];	/* 32 groups - empty set to NOGROUP */
     int cr_ngroups;
 } cred_t;
@@ -136,12 +136,12 @@ typedef struct cred {		/* maps to task field: */
 typedef enum { AFS_UIOSYS, AFS_UIOUSER } uio_seg_t;
 typedef enum { UIO_READ, UIO_WRITE } uio_flag_t;
 typedef struct uio {
-    struct  	iovec *uio_iov;
-    int     	uio_iovcnt;
-    afs_offs_t 	uio_offset;
-    uio_seg_t   uio_seg;
-    int     	uio_resid;
-    uio_flag_t 	uio_flag;
+    struct iovec *uio_iov;
+    int uio_iovcnt;
+    afs_offs_t uio_offset;
+    uio_seg_t uio_seg;
+    int uio_resid;
+    uio_flag_t uio_flag;
 } uio_t;
 #define	afsio_iov	uio_iov
 #define	afsio_iovcnt	uio_iovcnt

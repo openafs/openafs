@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -28,17 +29,15 @@ RCSID("$Header$");
 #define	MAX_DAY_VALUE	30
 
 /* for parsing relative expiration dates */
-static struct parseseqS
-{
+static struct parseseqS {
     afs_int32 ps_field;
     char ps_keychar;
     afs_int32 ps_maxValue;
 } parseseq[] = {
     KTIMEDATE_YEAR, 'y', MAX_YEAR_VALUE,	/* no max. value */
-    KTIMEDATE_MONTH, 'm', MAX_MONTH_VALUE,	/* months max. 12 */
-    KTIMEDATE_DAY, 'd',	MAX_DAY_VALUE,		/* days max. 31 */
-    0, 0, 0,
-};
+	KTIMEDATE_MONTH, 'm', MAX_MONTH_VALUE,	/* months max. 12 */
+	KTIMEDATE_DAY, 'd', MAX_DAY_VALUE,	/* days max. 31 */
+0, 0, 0,};
 
 /* Encodings to and from relative dates. The caller is responsible for
  * enforcing appropriate use of these routines
@@ -49,9 +48,10 @@ ktimeRelDate_ToLong(kdptr)
 {
     afs_int32 retval;
 
-    retval = (((kdptr->year*(MAX_MONTH_VALUE+1)) +
-	       kdptr->month)*(MAX_DAY_VALUE+1)) + kdptr->day;
-    return(retval);
+    retval =
+	(((kdptr->year * (MAX_MONTH_VALUE + 1)) +
+	  kdptr->month) * (MAX_DAY_VALUE + 1)) + kdptr->day;
+    return (retval);
 }
 
 /* LongTo_ktimeRelDate
@@ -64,26 +64,26 @@ LongTo_ktimeRelDate(longDate, kdptr)
      struct ktime_date *kdptr;
 {
     memset(kdptr, 0, sizeof(*kdptr));
-    
+
     kdptr->day = longDate % (MAX_DAY_VALUE + 1);
-    if ( kdptr->day != 0 )
-    	kdptr->mask |= KTIMEDATE_DAY;
+    if (kdptr->day != 0)
+	kdptr->mask |= KTIMEDATE_DAY;
 
-    longDate = longDate/(MAX_DAY_VALUE + 1);
-    
+    longDate = longDate / (MAX_DAY_VALUE + 1);
+
     kdptr->month = longDate % (MAX_MONTH_VALUE + 1);
-    if ( kdptr->month != 0 )
-    	kdptr->mask |= KTIMEDATE_MONTH;
+    if (kdptr->month != 0)
+	kdptr->mask |= KTIMEDATE_MONTH;
 
-    longDate = longDate/(MAX_MONTH_VALUE + 1);
-    
+    longDate = longDate / (MAX_MONTH_VALUE + 1);
+
     kdptr->year = longDate;
-    if ( kdptr->year != 0 )
-    	kdptr->mask |= KTIMEDATE_YEAR;
+    if (kdptr->year != 0)
+	kdptr->mask |= KTIMEDATE_YEAR;
 
-    return(0);
+    return (0);
 }
-     
+
 
 #ifdef notdef
 /* First some date storage and retrieval routines.
@@ -107,15 +107,10 @@ ktimeDate_ToCompactString(kdptr)
 {
     char buffer[1024];
 
-    sprintf(buffer, "%-d:%-d:%-d:%-d:%-d:%-d",
-	    kdptr->year,
-	    kdptr->month,
-	    kdptr->day,
-	    kdptr->hour,
-	    kdptr->min,
-	    kdptr->sec);
+    sprintf(buffer, "%-d:%-d:%-d:%-d:%-d:%-d", kdptr->year, kdptr->month,
+	    kdptr->day, kdptr->hour, kdptr->min, kdptr->sec);
 
-    return(&buffer[0]);
+    return (&buffer[0]);
 }
 
 /* CompactStringTo_ktimeDate
@@ -131,38 +126,34 @@ CompactStringTo_ktimeDate(stptr, kdptr)
 {
     afs_int32 code;
 
-    code = sscanf(stptr, "%d:%d:%d:%d:%d:%d",
-	    &kdptr->year,
-	    &kdptr->month,
-	    &kdptr->day,
-	    &kdptr->hour,
-	    &kdptr->min,
-	    &kdptr->sec);
+    code =
+	sscanf(stptr, "%d:%d:%d:%d:%d:%d", &kdptr->year, &kdptr->month,
+	       &kdptr->day, &kdptr->hour, &kdptr->min, &kdptr->sec);
 
-    if ( code != 6 )
-    	return(-1);
+    if (code != 6)
+	return (-1);
 
     kdptr->mask = 0;
 
-    if ( kdptr->year )
-    	kdptr->mask |= KTIMEDATE_YEAR;
+    if (kdptr->year)
+	kdptr->mask |= KTIMEDATE_YEAR;
 
-    if ( kdptr->month )
-    	kdptr->mask |= KTIMEDATE_MONTH;
+    if (kdptr->month)
+	kdptr->mask |= KTIMEDATE_MONTH;
 
-    if ( kdptr->day )
-    	kdptr->mask |= KTIMEDATE_DAY;
+    if (kdptr->day)
+	kdptr->mask |= KTIMEDATE_DAY;
 
-    if ( kdptr->hour )
-    	kdptr->mask |= KTIMEDATE_HOUR;
+    if (kdptr->hour)
+	kdptr->mask |= KTIMEDATE_HOUR;
 
-    if ( kdptr->min )
-    	kdptr->mask |= KTIMEDATE_MIN;
+    if (kdptr->min)
+	kdptr->mask |= KTIMEDATE_MIN;
 
-    if ( kdptr->sec )
-    	kdptr->mask |= KTIMEDATE_SEC;
+    if (kdptr->sec)
+	kdptr->mask |= KTIMEDATE_SEC;
 
-    return(0);
+    return (0);
 }
 
 /* ktimeDate_FromLong
@@ -189,10 +180,11 @@ ktimeDate_FromLong(timeSecs, ktimePtr)
     ktimePtr->month = timePtr->mon;
     ktimePtr->year = timePtr->year;
 
-    ktimePtr->mask = KTIMEDATE_YEAR | KTIMEDATE_MONTH | KTIMEDATE_DAY |
-    	KTIMEDATE_HOUR | KTIMEDATE_MIN | KTIMEDATE_SEC;
+    ktimePtr->mask =
+	KTIMEDATE_YEAR | KTIMEDATE_MONTH | KTIMEDATE_DAY | KTIMEDATE_HOUR |
+	KTIMEDATE_MIN | KTIMEDATE_SEC;
 
-    return(0);
+    return (0);
 }
 
 
@@ -208,15 +200,15 @@ ktimeDate_FromLong(timeSecs, ktimePtr)
  */
 
 afs_int32
-AddKtimeToNow( relDatePtr )
+AddKtimeToNow(relDatePtr)
      struct ktime_date *relDatePtr;
 {
     struct parseseqS typePtr;
     afs_int32 curTime;
     afs_int32 moreYears;
     static struct ktime_date absDate;
-    
-    curTime = time(0);				/* get current time */
+
+    curTime = time(0);		/* get current time */
     ktimeDate_FromLong(curTime, &absDate);	/* convert to ktime */
 
     /* add in years */
@@ -224,24 +216,24 @@ AddKtimeToNow( relDatePtr )
 
     /* add in months */
     absDate.month += relDatePtr->month;
-    if ( absDate.month > 12 )
-    {
+    if (absDate.month > 12) {
 	moreYears = absDate.month / 12;
 	absDate.month = absDate.month % 12;
 	absDate.year += moreYears;
     }
-    
+
     /* day computations depend upon month size, so do these in seconds */
     curTime = ktime_InterpretDate(&absDate);
-    
-    curTime = curTime + relDatePtr->sec + relDatePtr->min*60 +
-		relDatePtr->hour*60*60 + relDatePtr->day*24*60*60;
 
-    return(curTime);
-}	
+    curTime =
+	curTime + relDatePtr->sec + relDatePtr->min * 60 +
+	relDatePtr->hour * 60 * 60 + relDatePtr->day * 24 * 60 * 60;
+
+    return (curTime);
+}
 #endif /* notdef */
 
-#define	RD_DIGIT_LIMIT	4			/* max. no. digits permitted */
+#define	RD_DIGIT_LIMIT	4	/* max. no. digits permitted */
 
 
 /* ParseRelDate
@@ -267,79 +259,74 @@ ParseRelDate(dateStr, relDatePtr)
     memset(relDatePtr, 0, sizeof(*relDatePtr));
     type_index = 0;
 
-    while ( 1 )
-    { /*w*/
+    while (1) {			/*w */
 
-	while ( isspace(*dateStr) )                /* skip leading whitespace */
-                dateStr++;
+	while (isspace(*dateStr))	/* skip leading whitespace */
+	    dateStr++;
 
-	if ( isdigit(*dateStr) == 0 )
-    		goto error;
+	if (isdigit(*dateStr) == 0)
+	    goto error;
 
 	digit_limit = RD_DIGIT_LIMIT;
 	value = 0;
-	while ( isdigit(*dateStr) )
-	{
-	    value = value*10 + *dateStr - '0';
+	while (isdigit(*dateStr)) {
+	    value = value * 10 + *dateStr - '0';
 	    dateStr++;
-	    if ( digit_limit-- == 0 )
-	    	goto error;
+	    if (digit_limit-- == 0)
+		goto error;
 	}
 
 	psPtr = &parseseq[type_index];
 	/* determine the units. Search for a matching type character */
-	while ( (psPtr->ps_keychar != *dateStr)
-	&&  	(psPtr->ps_keychar != 0)
-	      )
-	{
+	while ((psPtr->ps_keychar != *dateStr)
+	       && (psPtr->ps_keychar != 0)
+	    ) {
 	    type_index++;
 	    psPtr = &parseseq[type_index];
 	}
 
 	/* no matching type found */
-	if ( psPtr->ps_keychar == 0 )
- 		goto error;
+	if (psPtr->ps_keychar == 0)
+	    goto error;
 
 	/* check the bounds on the maximum value. Can't be negative
 	 * and if a maximum value is specified, check against it
 	 */
-	if ( (value < 0)
-	||   ((psPtr->ps_maxValue > 0) && (value > psPtr->ps_maxValue))
-	   )
-	    	goto error;
+	if ((value < 0)
+	    || ((psPtr->ps_maxValue > 0) && (value > psPtr->ps_maxValue))
+	    )
+	    goto error;
 
 	/* save computed value in the relevant type field */
-	switch ( psPtr->ps_field )
-	{
-	  case KTIMEDATE_YEAR:
+	switch (psPtr->ps_field) {
+	case KTIMEDATE_YEAR:
 	    relDatePtr->year = value;
 	    relDatePtr->mask |= KTIMEDATE_YEAR;
 	    break;
 
-	  case KTIMEDATE_MONTH:
+	case KTIMEDATE_MONTH:
 	    relDatePtr->month = value;
 	    relDatePtr->mask |= KTIMEDATE_MONTH;
 	    break;
 
-	  case KTIMEDATE_DAY:
+	case KTIMEDATE_DAY:
 	    relDatePtr->mask |= KTIMEDATE_DAY;
 	    relDatePtr->day = value;
 	    break;
 
-	  default:
+	default:
 	    goto error;
 	}
-	dateStr++;				/* next digit */
+	dateStr++;		/* next digit */
 
-	if ( *dateStr == 0 )
-	{
+	if (*dateStr == 0) {
 	    /* no more chars to process, return the result */
-	    return(0);
+	    return (0);
 	}
-    } /*w*/
+    }				/*w */
 
-error:
-    return(1);
+  error:
+    return (1);
 }
 
 /* RelDatetoString
@@ -361,26 +348,23 @@ RelDatetoString(datePtr)
     dateString[0] = 0;
     sptr = &dateString[0];
 
-    if ( datePtr->mask & KTIMEDATE_YEAR )
-    {
+    if (datePtr->mask & KTIMEDATE_YEAR) {
 	sprintf(tempstring, "%-dy", datePtr->year);
 	strcat(sptr, tempstring);
     }
 
-    if ( datePtr->mask & KTIMEDATE_MONTH )
-    {
+    if (datePtr->mask & KTIMEDATE_MONTH) {
 	strcat(sptr, " ");
 	sprintf(tempstring, "%-dm", datePtr->month);
 	strcat(sptr, tempstring);
     }
 
-    if ( datePtr->mask & KTIMEDATE_DAY )
-    {
+    if (datePtr->mask & KTIMEDATE_DAY) {
 	strcat(sptr, " ");
 	sprintf(tempstring, "%-dd", datePtr->day);
 	strcat(sptr, tempstring);
     }
-    return(sptr);
+    return (sptr);
 }
 
 #define	FAIL(n)						\
@@ -404,92 +388,83 @@ bc_ParseExpiration(paramPtr, expType, expDate)
      afs_int32 *expType;
      afs_int32 *expDate;
 {
-     struct cmd_item *itemPtr, *tempPtr;
-     struct ktime_date kt;
-     char *dateString;
-     afs_int32 length = 0;
-     afs_int32 code = 0;
-    
-     if ( paramPtr->items == 0 )
-     {
-	 /* no expiration specified */
-	 *expType = BC_NO_EXPDATE;
-	 *expDate = 0;
-	 return(0);
-     }
+    struct cmd_item *itemPtr, *tempPtr;
+    struct ktime_date kt;
+    char *dateString;
+    afs_int32 length = 0;
+    afs_int32 code = 0;
 
-     /* some form of expiration date specified. First validate the prefix */
-     itemPtr = paramPtr->items;
+    if (paramPtr->items == 0) {
+	/* no expiration specified */
+	*expType = BC_NO_EXPDATE;
+	*expDate = 0;
+	return (0);
+    }
 
-     if ( strcmp(itemPtr->data, "at") == 0 )
-     {
-	 *expType = BC_ABS_EXPDATE;
-     }
-     else
-     if ( strcmp(itemPtr->data, "in") == 0 )
-     {
-	 *expType = BC_REL_EXPDATE;
-     }
-     else
-     	FAIL(1);
+    /* some form of expiration date specified. First validate the prefix */
+    itemPtr = paramPtr->items;
 
-     /* before parsing the date string - concatenate all the pieces */
-     itemPtr = itemPtr->next;
-     tempPtr = itemPtr;
+    if (strcmp(itemPtr->data, "at") == 0) {
+	*expType = BC_ABS_EXPDATE;
+    } else if (strcmp(itemPtr->data, "in") == 0) {
+	*expType = BC_REL_EXPDATE;
+    } else
+	FAIL(1);
 
-     /* compute the length of string required */
-     while ( tempPtr != 0 )
-     {
-	 length += strlen(tempPtr->data);
-	 tempPtr = tempPtr->next;
-	 length++;				/* space or null terminator */
-     }
-     if ( length == 0 )				/* no actual date string */
-     	FAIL(1);
+    /* before parsing the date string - concatenate all the pieces */
+    itemPtr = itemPtr->next;
+    tempPtr = itemPtr;
 
-     dateString = (char *) malloc(length);
-     if ( dateString == 0 )
-     	FAIL(2);
+    /* compute the length of string required */
+    while (tempPtr != 0) {
+	length += strlen(tempPtr->data);
+	tempPtr = tempPtr->next;
+	length++;		/* space or null terminator */
+    }
+    if (length == 0)		/* no actual date string */
+	FAIL(1);
 
-     /* now assemble the date string */
-     dateString[0] = 0;
-     while ( itemPtr != 0 )
-     {
-	 strcat(dateString, itemPtr->data);
-	 itemPtr = itemPtr->next;
-	 if ( itemPtr != 0 )
-	 	strcat(dateString, " ");
-     }
+    dateString = (char *)malloc(length);
+    if (dateString == 0)
+	FAIL(2);
 
-     switch ( *expType )
-     {
-       case BC_ABS_EXPDATE:
-	 code = ktime_DateToLong(dateString, expDate);
-	 if ( code )
-		FAIL(1);
-	 break;
+    /* now assemble the date string */
+    dateString[0] = 0;
+    while (itemPtr != 0) {
+	strcat(dateString, itemPtr->data);
+	itemPtr = itemPtr->next;
+	if (itemPtr != 0)
+	    strcat(dateString, " ");
+    }
 
-       case BC_REL_EXPDATE:
-	 code = ParseRelDate(dateString, &kt);
-	 if ( code )
-	 	FAIL(1);
-	 *expDate = ktimeRelDate_ToLong(&kt);
-	 break;
+    switch (*expType) {
+    case BC_ABS_EXPDATE:
+	code = ktime_DateToLong(dateString, expDate);
+	if (code)
+	    FAIL(1);
+	break;
 
-       default:
-	 FAIL(1);
-     }
+    case BC_REL_EXPDATE:
+	code = ParseRelDate(dateString, &kt);
+	if (code)
+	    FAIL(1);
+	*expDate = ktimeRelDate_ToLong(&kt);
+	break;
 
-     /* code will be 0 */
-exit:
-     /* normal exit */
-     if ( dateString )
+    default:
+	FAIL(1);
+    }
+
+    /* code will be 0 */
+  exit:
+    /* normal exit */
+    if (dateString)
 	free(dateString);
-     return(code);    
- 
-error:
-     /* assign default values */
-     *expType = BC_NO_EXPDATE;
-     *expDate = 0;
-     goto exit;
+    return (code);
+
+  error:
+    /* assign default values */
+    *expType = BC_NO_EXPDATE;
+    *expDate = 0;
+    goto exit;
 }

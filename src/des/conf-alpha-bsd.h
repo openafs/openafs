@@ -18,4 +18,3 @@
 #define LSBFIRST
 #define BSDUNIX
 #define MUSTALIGN
-

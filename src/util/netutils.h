@@ -16,4 +16,4 @@
 
 #include "afsutil_prototypes.h"
 
-#endif /* OPENAFS_NETUTILS_H */ 
+#endif /* OPENAFS_NETUTILS_H */

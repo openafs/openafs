@@ -28,13 +28,14 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #ifdef	AFS_SGI_ENV
-#undef SHARED		/* XXX */
+#undef SHARED			/* XXX */
 #endif
 #ifdef AFS_NT40_ENV
 #include <fcntl.h>
@@ -162,7 +163,7 @@ pthread_mutex_t fileproc_glock_mutex;
 extern struct afsconf_dir *confDir;
 extern afs_int32 dataVersionHigh;
 
-extern	int	    SystemId;
+extern int SystemId;
 static struct AFSCallStatistics AFSCallStats;
 #if FS_STATS_DETAILED
 struct fs_stats_FullPerfStats afs_FullPerfStats;
@@ -178,11 +179,11 @@ struct afs_FSStats {
 
 struct afs_FSStats afs_fsstats;
 
-void	ResetDebug(), SetDebug(), Terminate();
+void ResetDebug(), SetDebug(), Terminate();
 
-int	LogLevel = 0;
-int	supported = 1;
-int	Console = 0;
+int LogLevel = 0;
+int supported = 1;
+int Console = 0;
 afs_int32 BlocksSpare = 1024;	/* allow 1 MB overruns */
 afs_int32 PctSpare;
 extern afs_int32 implicitAdminRights;
@@ -196,82 +197,69 @@ extern int CEs, CEBlocks;
 
 extern int HTs, HTBlocks;
 
-afs_int32
-FetchData_RXStyle(Volume *volptr, 
-		  Vnode *targetptr, 
-		  register struct rx_call *Call,
-		  afs_int32 Pos,
-		  afs_int32 Len,
-		  afs_int32 Int64Mode,
+afs_int32 FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
+			    register struct rx_call *Call, afs_int32 Pos,
+			    afs_int32 Len, afs_int32 Int64Mode,
 #if FS_STATS_DETAILED
-		  afs_int32 *a_bytesToFetchP,
-		  afs_int32 *a_bytesFetchedP
-#endif /* FS_STATS_DETAILED */
-		  );
+			    afs_int32 * a_bytesToFetchP,
+			    afs_int32 * a_bytesFetchedP
+#endif				/* FS_STATS_DETAILED */
+    );
 
-afs_int32
-StoreData_RXStyle(Volume *volptr,
-		  Vnode *targetptr,
-		  struct AFSFid *Fid,
-		  struct client *client,
-		  register struct rx_call *Call,
-		  afs_uint32 Pos,
-		  afs_uint32 Length,
-		  afs_uint32 FileLength,
-		  int sync,
+afs_int32 StoreData_RXStyle(Volume * volptr, Vnode * targetptr,
+			    struct AFSFid *Fid, struct client *client,
+			    register struct rx_call *Call, afs_uint32 Pos,
+			    afs_uint32 Length, afs_uint32 FileLength,
+			    int sync,
 #if FS_STATS_DETAILED
-		  afs_int32 *a_bytesToStoreP,
-		  afs_int32 *a_bytesStoredP
-#endif /* FS_STATS_DETAILED */
-		  );
+			    afs_int32 * a_bytesToStoreP,
+			    afs_int32 * a_bytesStoredP
+#endif				/* FS_STATS_DETAILED */
+    );
 
 #ifdef AFS_SGI_XFS_IOPS_ENV
 #include <afs/xfsattrs.h>
-static int GetLinkCount(Volume *avp, struct stat *astat)
+static int
+GetLinkCount(Volume * avp, struct stat *astat)
 {
     if (!strcmp("xfs", astat->st_fstype)) {
 	return (astat->st_mode & AFS_XFS_MODE_LINK_MASK);
-    }
-    else
+    } else
 	return astat->st_nlink;
 }
 #else
 #define GetLinkCount(V, S) (S)->st_nlink
 #endif
 
-afs_int32 SpareComp(Volume *avolp)
+afs_int32
+SpareComp(Volume * avolp)
 {
     register afs_int32 temp;
 
-    FS_LOCK
-    if (PctSpare) {
+    FS_LOCK if (PctSpare) {
 	temp = V_maxquota(avolp);
 	if (temp == 0) {
 	    /* no matter; doesn't check in this case */
-	    FS_UNLOCK
-	    return 0;
+	    FS_UNLOCK return 0;
 	}
 	temp = (temp * PctSpare) / 100;
-	FS_UNLOCK
-	return temp;
-    }
-    else {
-	FS_UNLOCK
-	return BlocksSpare;
+	FS_UNLOCK return temp;
+    } else {
+	FS_UNLOCK return BlocksSpare;
     }
 
-} /*SpareComp*/
+}				/*SpareComp */
 
 /*
  * Set the volume synchronization parameter for this volume.  If it changes,
  * the Cache Manager knows that the volume must be purged from the stat cache.
  */
-static void SetVolumeSync(register struct AFSVolSync *async, 
-			  register Volume *avol)
+static void
+SetVolumeSync(register struct AFSVolSync *async, register Volume * avol)
 {
     FS_LOCK
-    /* date volume instance was created */
-    if (async) {
+	/* date volume instance was created */
+	if (async) {
 	if (avol)
 	    async->spare1 = avol->header->diskstuff.creationDate;
 	else
@@ -282,116 +270,115 @@ static void SetVolumeSync(register struct AFSVolSync *async,
 	async->spare5 = 0;
 	async->spare6 = 0;
     }
-    FS_UNLOCK
-} /*SetVolumeSync*/
+FS_UNLOCK}			/*SetVolumeSync */
 
 /*
  * Note that this function always returns a held host, so
  * that CallPostamble can block without the host's disappearing.
  * Call returns rx connection in passed in *tconn
  */
-static int CallPreamble(register struct rx_call *acall, int activecall,
-			struct rx_connection **tconn)
+static int
+CallPreamble(register struct rx_call *acall, int activecall,
+	     struct rx_connection **tconn)
 {
     struct host *thost;
     struct client *tclient;
-    int retry_flag=1;
+    int retry_flag = 1;
     int code = 0;
     char hoststr[16];
     if (!tconn) {
-	ViceLog (0, ("CallPreamble: unexpected null tconn!\n"));
+	ViceLog(0, ("CallPreamble: unexpected null tconn!\n"));
 	return -1;
     }
     *tconn = rx_ConnectionOf(acall);
 
-    H_LOCK
-retry:
-    tclient = h_FindClient_r(*tconn);
+    H_LOCK retry:tclient = h_FindClient_r(*tconn);
     if (tclient->prfail == 1) {	/* couldn't get the CPS */
-       if (!retry_flag) {
-	  h_ReleaseClient_r(tclient);
-	  ViceLog(0, ("CallPreamble: Couldn't get CPS. Fail\n"));
-	  H_UNLOCK
-	  return -1001;
-       }
-       retry_flag=0;	/* Retry once */
+	if (!retry_flag) {
+	    h_ReleaseClient_r(tclient);
+	    ViceLog(0, ("CallPreamble: Couldn't get CPS. Fail\n"));
+	    H_UNLOCK return -1001;
+	}
+	retry_flag = 0;		/* Retry once */
 
-       /* Take down the old connection and re-read the key file */
-       ViceLog(0, ("CallPreamble: Couldn't get CPS. Reconnect to ptserver\n"));
-       H_UNLOCK
-       code = pr_Initialize(2, AFSDIR_SERVER_ETC_DIRPATH, 0);
-       H_LOCK
-       if (code) {
-	  h_ReleaseClient_r(tclient);
-	  H_UNLOCK
-	  ViceLog(0,("CallPreamble: couldn't reconnect to ptserver\n"));
-	  return -1001;
-       }
+	/* Take down the old connection and re-read the key file */
+	ViceLog(0,
+		("CallPreamble: Couldn't get CPS. Reconnect to ptserver\n"));
+	H_UNLOCK code = pr_Initialize(2, AFSDIR_SERVER_ETC_DIRPATH, 0);
+	H_LOCK if (code) {
+	    h_ReleaseClient_r(tclient);
+	    H_UNLOCK ViceLog(0,
+			     ("CallPreamble: couldn't reconnect to ptserver\n"));
+	    return -1001;
+	}
 
-       tclient->prfail = 2;      /* Means re-eval client's cps */
-       h_ReleaseClient_r(tclient);
-       goto retry;
+	tclient->prfail = 2;	/* Means re-eval client's cps */
+	h_ReleaseClient_r(tclient);
+	goto retry;
     }
 
     thost = tclient->host;
     tclient->LastCall = thost->LastCall = FT_ApproxTime();
-    if (activecall) /* For all but "GetTime" calls */
+    if (activecall)		/* For all but "GetTime" calls */
 	thost->ActiveCall = thost->LastCall;
 
     h_Lock_r(thost);
     if (thost->hostFlags & HOSTDELETED) {
-      ViceLog(3,("Discarded a packet for deleted host %s\n",afs_inet_ntoa_r(thost->host,hoststr)));
-      code = VBUSY; /* raced, so retry */
-    }
-    else if ((thost->hostFlags & VENUSDOWN) || (thost->hostFlags & HFE_LATER)){
-      if (BreakDelayedCallBacks_r(thost)) {
-	ViceLog(0,("BreakDelayedCallbacks FAILED for host %s which IS UP.  Possible network or routing failure.\n",
-		afs_inet_ntoa_r(thost->host, hoststr)));
-	if ( MultiProbeAlternateAddress_r (thost) ) {
-	    ViceLog(0, ("MultiProbe failed to find new address for host %s:%d\n",
-			afs_inet_ntoa_r(thost->host, hoststr), 
-			ntohs(thost->port)));
-	    code = -1;
-	} else {
-	    ViceLog(0, ("MultiProbe found new address for host %s:%d\n",
-			afs_inet_ntoa_r(thost->host, hoststr), 
-			ntohs(thost->port)));
-	    if (BreakDelayedCallBacks_r(thost)) {
-		ViceLog(0,("BreakDelayedCallbacks FAILED AGAIN for host %s which IS UP.  Possible network or routing failure.\n",
-			afs_inet_ntoa_r(thost->host, hoststr)));
+	ViceLog(3,
+		("Discarded a packet for deleted host %s\n",
+		 afs_inet_ntoa_r(thost->host, hoststr)));
+	code = VBUSY;		/* raced, so retry */
+    } else if ((thost->hostFlags & VENUSDOWN)
+	       || (thost->hostFlags & HFE_LATER)) {
+	if (BreakDelayedCallBacks_r(thost)) {
+	    ViceLog(0,
+		    ("BreakDelayedCallbacks FAILED for host %s which IS UP.  Possible network or routing failure.\n",
+		     afs_inet_ntoa_r(thost->host, hoststr)));
+	    if (MultiProbeAlternateAddress_r(thost)) {
+		ViceLog(0,
+			("MultiProbe failed to find new address for host %s:%d\n",
+			 afs_inet_ntoa_r(thost->host, hoststr),
+			 ntohs(thost->port)));
 		code = -1;
+	    } else {
+		ViceLog(0,
+			("MultiProbe found new address for host %s:%d\n",
+			 afs_inet_ntoa_r(thost->host, hoststr),
+			 ntohs(thost->port)));
+		if (BreakDelayedCallBacks_r(thost)) {
+		    ViceLog(0,
+			    ("BreakDelayedCallbacks FAILED AGAIN for host %s which IS UP.  Possible network or routing failure.\n",
+			     afs_inet_ntoa_r(thost->host, hoststr)));
+		    code = -1;
+		}
 	    }
 	}
-      }
     } else {
-       code =  0;
+	code = 0;
     }
 
     h_ReleaseClient_r(tclient);
     h_Unlock_r(thost);
-    H_UNLOCK
-    return code;      
+    H_UNLOCK return code;
 
-} /*CallPreamble*/
+}				/*CallPreamble */
 
 
-static afs_int32 CallPostamble(register struct rx_connection *aconn,
-			       afs_int32 ret)
+static afs_int32
+CallPostamble(register struct rx_connection *aconn, afs_int32 ret)
 {
     struct host *thost;
     struct client *tclient;
     int translate = 0;
 
-    H_LOCK
-    tclient = h_FindClient_r(aconn);
+    H_LOCK tclient = h_FindClient_r(aconn);
     thost = tclient->host;
-    if (thost->hostFlags & HERRORTRANS) translate = 1;
+    if (thost->hostFlags & HERRORTRANS)
+	translate = 1;
     h_ReleaseClient_r(tclient);
     h_Release_r(thost);
-    H_UNLOCK
-
-    return (translate ? sys_error_to_et(ret) : ret);
-} /*CallPostamble*/
+    H_UNLOCK return (translate ? sys_error_to_et(ret) : ret);
+}				/*CallPostamble */
 
 /*
  * Returns the volume and vnode pointers associated with file Fid; the lock
@@ -399,111 +386,108 @@ static afs_int32 CallPostamble(register struct rx_connection *aconn,
  * are incremented and they must be eventualy released.
  */
 static afs_int32
-CheckVnode(AFSFid *fid, Volume **volptr, Vnode **vptr, int lock)
+CheckVnode(AFSFid * fid, Volume ** volptr, Vnode ** vptr, int lock)
 {
     int fileCode = 0;
     int errorCode = -1;
-    static struct timeval restartedat = {0,0};
+    static struct timeval restartedat = { 0, 0 };
 
-    if (fid->Volume == 0 || fid->Vnode == 0) /* not: || fid->Unique == 0) */
-	return(EINVAL);
+    if (fid->Volume == 0 || fid->Vnode == 0)	/* not: || fid->Unique == 0) */
+	return (EINVAL);
     if ((*volptr) == 0) {
-      extern int VInit;
+	extern int VInit;
 
-      while(1) {
-	errorCode = 0;
-	*volptr = VGetVolume(&errorCode, (afs_int32)fid->Volume);
-	if (!errorCode) {
-	  assert (*volptr);
-	  break;
-	}
-	if ((errorCode == VOFFLINE) && (VInit < 2)) {
-	    /* The volume we want may not be attached yet because
-	     * the volume initialization is not yet complete.
-             * We can do several things: 
-	     *     1.  return -1, which will cause users to see
-	     *         "connection timed out".  This is more or
-	     *         less the same as always, except that the servers
-	     *         may appear to bounce up and down while they
-	     *         are actually restarting.
-	     *     2.  return VBUSY which will cause clients to 
-	     *         sleep and retry for 6.5 - 15 minutes, depending
-	     *         on what version of the CM they are running.  If
-	     *         the file server takes longer than that interval 
-	     *         to attach the desired volume, then the application
-	     *         will see an ENODEV or EIO.  This approach has 
-	     *         the advantage that volumes which have been attached
-	     *         are immediately available, it keeps the server's
-	     *         immediate backlog low, and the call is interruptible
-	     *         by the user.  Users see "waiting for busy volume."
-	     *     3.  sleep here and retry.  Some people like this approach
-	     *         because there is no danger of seeing errors.  However, 
-	     *         this approach only works with a bounded number of 
-	     *         clients, since the pending queues will grow without
-	     *         stopping.  It might be better to find a way to take
-	     *         this call and stick it back on a queue in order to
-	     *         recycle this thread for a different request.    
-	     *     4.  Return a new error code, which new cache managers will
-	     *         know enough to interpret as "sleep and retry", without
-	     *         the upper bound of 6-15 minutes that is imposed by the
-	     *         VBUSY handling.  Users will see "waiting for
-	     *         busy volume," so they know that something is
-	     *         happening.  Old cache managers must be able to do  
-	     *         something reasonable with this, for instance, mark the
-	     *         server down.  Fortunately, any error code < 0
-	     *         will elicit that behavior. See #1.
-	     *     5.  Some combination of the above.  I like doing #2 for 10
-	     *         minutes, followed by #4.  3.1b and 3.2 cache managers
-	     *         will be fine as long as the restart period is
-	     *         not longer than 6.5 minutes, otherwise they may
-	     *         return ENODEV to users.  3.3 cache managers will be
-	     *         fine for 10 minutes, then will return
-	     *         ETIMEDOUT.  3.4 cache managers will just wait
-	     *         until the call works or fails definitively.
-	     *  NB. The problem with 2,3,4,5 is that old clients won't
-	     *  fail over to an alternate read-only replica while this
-	     *  server is restarting.  3.4 clients will fail over right away.
-	     */
-	  if (restartedat.tv_sec == 0) {
-	    /* I'm not really worried about when we restarted, I'm   */
-	    /* just worried about when the first VBUSY was returned. */
-	    TM_GetTimeOfDay(&restartedat, 0);
-	    return(busyonrst?VBUSY:VRESTARTING);
-	  }
-	  else {
-	    struct timeval now;
-	    TM_GetTimeOfDay(&now, 0);
-	    if ((now.tv_sec - restartedat.tv_sec) < (11*60)) {
-	      return(busyonrst?VBUSY:VRESTARTING);
+	while (1) {
+	    errorCode = 0;
+	    *volptr = VGetVolume(&errorCode, (afs_int32) fid->Volume);
+	    if (!errorCode) {
+		assert(*volptr);
+		break;
 	    }
-	    else {
-	      return (VRESTARTING);
+	    if ((errorCode == VOFFLINE) && (VInit < 2)) {
+		/* The volume we want may not be attached yet because
+		 * the volume initialization is not yet complete.
+		 * We can do several things: 
+		 *     1.  return -1, which will cause users to see
+		 *         "connection timed out".  This is more or
+		 *         less the same as always, except that the servers
+		 *         may appear to bounce up and down while they
+		 *         are actually restarting.
+		 *     2.  return VBUSY which will cause clients to 
+		 *         sleep and retry for 6.5 - 15 minutes, depending
+		 *         on what version of the CM they are running.  If
+		 *         the file server takes longer than that interval 
+		 *         to attach the desired volume, then the application
+		 *         will see an ENODEV or EIO.  This approach has 
+		 *         the advantage that volumes which have been attached
+		 *         are immediately available, it keeps the server's
+		 *         immediate backlog low, and the call is interruptible
+		 *         by the user.  Users see "waiting for busy volume."
+		 *     3.  sleep here and retry.  Some people like this approach
+		 *         because there is no danger of seeing errors.  However, 
+		 *         this approach only works with a bounded number of 
+		 *         clients, since the pending queues will grow without
+		 *         stopping.  It might be better to find a way to take
+		 *         this call and stick it back on a queue in order to
+		 *         recycle this thread for a different request.    
+		 *     4.  Return a new error code, which new cache managers will
+		 *         know enough to interpret as "sleep and retry", without
+		 *         the upper bound of 6-15 minutes that is imposed by the
+		 *         VBUSY handling.  Users will see "waiting for
+		 *         busy volume," so they know that something is
+		 *         happening.  Old cache managers must be able to do  
+		 *         something reasonable with this, for instance, mark the
+		 *         server down.  Fortunately, any error code < 0
+		 *         will elicit that behavior. See #1.
+		 *     5.  Some combination of the above.  I like doing #2 for 10
+		 *         minutes, followed by #4.  3.1b and 3.2 cache managers
+		 *         will be fine as long as the restart period is
+		 *         not longer than 6.5 minutes, otherwise they may
+		 *         return ENODEV to users.  3.3 cache managers will be
+		 *         fine for 10 minutes, then will return
+		 *         ETIMEDOUT.  3.4 cache managers will just wait
+		 *         until the call works or fails definitively.
+		 *  NB. The problem with 2,3,4,5 is that old clients won't
+		 *  fail over to an alternate read-only replica while this
+		 *  server is restarting.  3.4 clients will fail over right away.
+		 */
+		if (restartedat.tv_sec == 0) {
+		    /* I'm not really worried about when we restarted, I'm   */
+		    /* just worried about when the first VBUSY was returned. */
+		    TM_GetTimeOfDay(&restartedat, 0);
+		    return (busyonrst ? VBUSY : VRESTARTING);
+		} else {
+		    struct timeval now;
+		    TM_GetTimeOfDay(&now, 0);
+		    if ((now.tv_sec - restartedat.tv_sec) < (11 * 60)) {
+			return (busyonrst ? VBUSY : VRESTARTING);
+		    } else {
+			return (VRESTARTING);
+		    }
+		}
 	    }
-	  }
+	    /* allow read operations on busy volume */
+	    else if (errorCode == VBUSY && lock == READ_LOCK) {
+		errorCode = 0;
+		break;
+	    } else if (errorCode)
+		return (errorCode);
 	}
-	  /* allow read operations on busy volume */
-	else if(errorCode==VBUSY && lock==READ_LOCK) {
-	  errorCode=0;
-	  break;
-	}
-	else if (errorCode)
-	  return(errorCode);
-      }
     }
-    assert (*volptr);
+    assert(*volptr);
 
     /* get the vnode  */
     *vptr = VGetVnode(&errorCode, *volptr, fid->Vnode, lock);
     if (errorCode)
-	return(errorCode);
+	return (errorCode);
     if ((*vptr)->disk.uniquifier != fid->Unique) {
 	VPutVnode(&fileCode, *vptr);
 	assert(fileCode == 0);
 	*vptr = 0;
-	return(VNOVNODE);   /* return the right error code, at least */
+	return (VNOVNODE);	/* return the right error code, at least */
     }
-    return(0);
-} /*CheckVnode*/
+    return (0);
+}				/*CheckVnode */
 
 /*
  * This routine returns the ACL associated with the targetptr. If the
@@ -512,46 +496,44 @@ CheckVnode(AFSFid *fid, Volume **volptr, Vnode **vptr, int lock)
  * READ_LOCK mode.
  */
 static afs_int32
-SetAccessList(Vnode **targetptr,
-	      Volume **volume,
-	      struct acl_accessList **ACL,
-	      int * ACLSize,
-	      Vnode **parent,
-	      AFSFid *Fid,
-	      int Lock)
+SetAccessList(Vnode ** targetptr, Volume ** volume,
+	      struct acl_accessList **ACL, int *ACLSize, Vnode ** parent,
+	      AFSFid * Fid, int Lock)
 {
     if ((*targetptr)->disk.type == vDirectory) {
 	*parent = 0;
 	*ACL = VVnodeACL(*targetptr);
 	*ACLSize = VAclSize(*targetptr);
-	return(0);
-    }
-    else {
+	return (0);
+    } else {
 	assert(Fid != 0);
-	while(1) {
+	while (1) {
 	    VnodeId parentvnode;
 	    int errorCode = 0;
-	    
+
 	    parentvnode = (*targetptr)->disk.parent;
-	    VPutVnode(&errorCode,*targetptr);
+	    VPutVnode(&errorCode, *targetptr);
 	    *targetptr = 0;
-	    if (errorCode) return(errorCode);
+	    if (errorCode)
+		return (errorCode);
 	    *parent = VGetVnode(&errorCode, *volume, parentvnode, READ_LOCK);
-	    if (errorCode) return(errorCode);
+	    if (errorCode)
+		return (errorCode);
 	    *ACL = VVnodeACL(*parent);
 	    *ACLSize = VAclSize(*parent);
 	    if ((errorCode = CheckVnode(Fid, volume, targetptr, Lock)) != 0)
-		return(errorCode);
+		return (errorCode);
 	    if ((*targetptr)->disk.parent != parentvnode) {
 		VPutVnode(&errorCode, *parent);
 		*parent = 0;
-		if (errorCode) return(errorCode);
+		if (errorCode)
+		    return (errorCode);
 	    } else
-		return(0);
+		return (0);
 	}
     }
 
-} /*SetAccessList*/
+}				/*SetAccessList */
 
 /*
  * Compare the directory's ACL with the user's access rights in the client
@@ -559,10 +541,8 @@ SetAccessList(Vnode **targetptr,
  * in rights and anyrights, respectively
  */
 static afs_int32
-GetRights (struct client *client,
-	   struct acl_accessList *ACL,
-	   afs_int32 *rights,
-	   afs_int32 *anyrights)
+GetRights(struct client *client, struct acl_accessList *ACL,
+	  afs_int32 * rights, afs_int32 * anyrights)
 {
     extern prlist SystemAnyUserCPS;
     afs_int32 hrights = 0;
@@ -570,39 +550,40 @@ GetRights (struct client *client,
 
     if (acl_CheckRights(ACL, &SystemAnyUserCPS, anyrights) != 0) {
 
-	ViceLog(0,("CheckRights failed\n"));
+	ViceLog(0, ("CheckRights failed\n"));
 	*anyrights = 0;
     }
     *rights = 0;
     acl_CheckRights(ACL, &client->CPS, rights);
 
-        /* wait if somebody else is already doing the getCPS call */
-    H_LOCK
-    while ( client->host->hostFlags & HCPS_INPROGRESS )
-    {
-	client->host->hostFlags |= HCPS_WAITING;  /* I am waiting */
+    /* wait if somebody else is already doing the getCPS call */
+    H_LOCK while (client->host->hostFlags & HCPS_INPROGRESS) {
+	client->host->hostFlags |= HCPS_WAITING;	/* I am waiting */
 #ifdef AFS_PTHREAD_ENV
 	pthread_cond_wait(&client->host->cond, &host_glock_mutex);
 #else /* AFS_PTHREAD_ENV */
-        if ((code=LWP_WaitProcess( &(client->host->hostFlags))) !=LWP_SUCCESS)
-                ViceLog(0, ("LWP_WaitProcess returned %d\n", code));
+	if ((code =
+	     LWP_WaitProcess(&(client->host->hostFlags))) != LWP_SUCCESS)
+	    ViceLog(0, ("LWP_WaitProcess returned %d\n", code));
 #endif /* AFS_PTHREAD_ENV */
     }
 
     if (client->host->hcps.prlist_len && !client->host->hcps.prlist_val) {
-	ViceLog(0,("CheckRights: len=%d, for host=0x%x\n", client->host->hcps.prlist_len, client->host->host));
+	ViceLog(0,
+		("CheckRights: len=%d, for host=0x%x\n",
+		 client->host->hcps.prlist_len, client->host->host));
     } else
 	acl_CheckRights(ACL, &client->host->hcps, &hrights);
     H_UNLOCK
-    /* Allow system:admin the rights given with the -implicit option */
-    if (acl_IsAMember(SystemId, &client->CPS))
-        *rights |= implicitAdminRights;
+	/* Allow system:admin the rights given with the -implicit option */
+	if (acl_IsAMember(SystemId, &client->CPS))
+	*rights |= implicitAdminRights;
     *rights |= hrights;
     *anyrights |= hrights;
 
-    return(0);
+    return (0);
 
-} /*GetRights*/
+}				/*GetRights */
 
 /*
  * VanillaUser returns 1 (true) if the user is a vanilla user (i.e., not
@@ -612,10 +593,10 @@ static afs_int32
 VanillaUser(struct client *client)
 {
     if (acl_IsAMember(SystemId, &client->CPS))
-	return(0);  /* not a system administrator, then you're "vanilla" */
-    return(1);
+	return (0);		/* not a system administrator, then you're "vanilla" */
+    return (1);
 
-} /*VanillaUser*/
+}				/*VanillaUser */
 
 
 /*
@@ -624,36 +605,36 @@ VanillaUser(struct client *client)
  * interface calls.
  */
 static afs_int32
-GetVolumePackage(struct rx_connection *tcon,
-		 AFSFid *Fid,
-		 Volume **volptr,
-		 Vnode **targetptr,
-		 int chkforDir,
-		 Vnode **parent,
-		 struct client **client,
-		 int locktype,
-		 afs_int32 *rights, 
-		 afs_int32 *anyrights)
+GetVolumePackage(struct rx_connection *tcon, AFSFid * Fid, Volume ** volptr,
+		 Vnode ** targetptr, int chkforDir, Vnode ** parent,
+		 struct client **client, int locktype, afs_int32 * rights,
+		 afs_int32 * anyrights)
 {
-    struct acl_accessList * aCL;    /* Internal access List */
-    int	aCLSize;	    /* size of the access list */
-    int	errorCode = 0;	    /* return code to caller */
+    struct acl_accessList *aCL;	/* Internal access List */
+    int aCLSize;		/* size of the access list */
+    int errorCode = 0;		/* return code to caller */
 
     if ((errorCode = CheckVnode(Fid, volptr, targetptr, locktype)))
-	return(errorCode);
+	return (errorCode);
     if (chkforDir) {
-	if (chkforDir == MustNOTBeDIR && ((*targetptr)->disk.type == vDirectory))
-	    return(EISDIR);
-	else if (chkforDir == MustBeDIR && ((*targetptr)->disk.type != vDirectory))
-	    return(ENOTDIR);
+	if (chkforDir == MustNOTBeDIR
+	    && ((*targetptr)->disk.type == vDirectory))
+	    return (EISDIR);
+	else if (chkforDir == MustBeDIR
+		 && ((*targetptr)->disk.type != vDirectory))
+	    return (ENOTDIR);
     }
-    if ((errorCode = SetAccessList(targetptr, volptr, &aCL, &aCLSize, parent, (chkforDir == MustBeDIR ? (AFSFid *)0 : Fid), (chkforDir == MustBeDIR ? 0 : locktype))) != 0)
-	return(errorCode);
-    if (chkforDir == MustBeDIR) assert((*parent) == 0);
+    if ((errorCode =
+	 SetAccessList(targetptr, volptr, &aCL, &aCLSize, parent,
+		       (chkforDir == MustBeDIR ? (AFSFid *) 0 : Fid),
+		       (chkforDir == MustBeDIR ? 0 : locktype))) != 0)
+	return (errorCode);
+    if (chkforDir == MustBeDIR)
+	assert((*parent) == 0);
     if ((errorCode = GetClient(tcon, client)) != 0)
-	return(errorCode);
+	return (errorCode);
     if (!(*client))
-	return(EINVAL);
+	return (EINVAL);
     assert(GetRights(*client, aCL, rights, anyrights) == 0);
     /* ok, if this is not a dir, set the PRSFS_ADMINISTER bit iff we're the owner */
     if ((*targetptr)->disk.type != vDirectory) {
@@ -665,11 +646,12 @@ GetVolumePackage(struct rx_connection *tcon,
     }
 #ifdef ADMIN_IMPLICIT_LOOKUP
     /* admins get automatic lookup on everything */
-    if (!VanillaUser(*client)) (*rights) |= PRSFS_LOOKUP;
+    if (!VanillaUser(*client))
+	(*rights) |= PRSFS_LOOKUP;
 #endif /* ADMIN_IMPLICIT_LOOKUP */
     return errorCode;
 
-} /*GetVolumePackage*/
+}				/*GetVolumePackage */
 
 
 /*
@@ -677,12 +659,10 @@ GetVolumePackage(struct rx_connection *tcon,
  * AFS calls to put back all used vnodes and the volume in the proper order!
  */
 static void
-PutVolumePackage(Vnode *parentwhentargetnotdir, 
-		 Vnode *targetptr,
-		 Vnode *parentptr,
-		 Volume *volptr)
+PutVolumePackage(Vnode * parentwhentargetnotdir, Vnode * targetptr,
+		 Vnode * parentptr, Volume * volptr)
 {
-    int	fileCode = 0;	/* Error code returned by the volume package */
+    int fileCode = 0;		/* Error code returned by the volume package */
 
     if (parentwhentargetnotdir) {
 	VPutVnode(&fileCode, parentwhentargetnotdir);
@@ -699,10 +679,10 @@ PutVolumePackage(Vnode *parentwhentargetnotdir,
     if (volptr) {
 	VPutVolume(volptr);
     }
-} /*PutVolumePackage*/
+}				/*PutVolumePackage */
 
-static int VolumeOwner (register struct client *client, 
-			register Vnode *targetptr)
+static int
+VolumeOwner(register struct client *client, register Vnode * targetptr)
 {
     afs_int32 owner = V_owner(targetptr->volumePtr);	/* get volume owner */
 
@@ -716,14 +696,15 @@ static int VolumeOwner (register struct client *client,
 	return (acl_IsAMember(owner, &client->CPS));
     }
 
-} /*VolumeOwner*/
+}				/*VolumeOwner */
 
-static int VolumeRootVnode (Vnode *targetptr)
+static int
+VolumeRootVnode(Vnode * targetptr)
 {
-    return ((targetptr->vnodeNumber == ROOTVNODE) &&
-	    (targetptr->disk.uniquifier == 1));
+    return ((targetptr->vnodeNumber == ROOTVNODE)
+	    && (targetptr->disk.uniquifier == 1));
 
-} /*VolumeRootVnode*/
+}				/*VolumeRootVnode */
 
 /*
  * Check if target file has the proper access permissions for the Fetch
@@ -736,11 +717,9 @@ static int VolumeRootVnode (Vnode *targetptr)
  * of the privilege       XXX
  */
 static afs_int32
-Check_PermissionRights(Vnode *targetptr,
-		       struct client *client,
-		       afs_int32 rights,
-		       int CallingRoutine,
-		       AFSStoreStatus *InStatus)
+Check_PermissionRights(Vnode * targetptr, struct client *client,
+		       afs_int32 rights, int CallingRoutine,
+		       AFSStoreStatus * InStatus)
 {
     int errorCode = 0;
 #define OWNSp(client, target) ((client)->ViceId == (target)->disk.owner)
@@ -748,31 +727,34 @@ Check_PermissionRights(Vnode *targetptr,
 #define CHGRP(i,t) (((i)->Mask & AFS_SETGROUP) &&((i)->Group != (t)->disk.group))
 
     if (CallingRoutine & CHK_FETCH) {
-	if (CallingRoutine == CHK_FETCHDATA || VanillaUser(client)) 
-	  {
-	    if (targetptr->disk.type == vDirectory || targetptr->disk.type == vSymlink) {
-		if (   !(rights & PRSFS_LOOKUP)
-#ifdef ADMIN_IMPLICIT_LOOKUP  
+	if (CallingRoutine == CHK_FETCHDATA || VanillaUser(client)) {
+	    if (targetptr->disk.type == vDirectory
+		|| targetptr->disk.type == vSymlink) {
+		if (!(rights & PRSFS_LOOKUP)
+#ifdef ADMIN_IMPLICIT_LOOKUP
 		    /* grant admins fetch on all directories */
 		    && VanillaUser(client)
 #endif /* ADMIN_IMPLICIT_LOOKUP */
 		    && !VolumeOwner(client, targetptr))
-		    return(EACCES);
-	    } else {    /* file */
+		    return (EACCES);
+	    } else {		/* file */
 		/* must have read access, or be owner and have insert access */
-		if (!(rights & PRSFS_READ) &&
-		    !(OWNSp(client, targetptr) && (rights & PRSFS_INSERT)))
-		    return(EACCES);
+		if (!(rights & PRSFS_READ)
+		    && !(OWNSp(client, targetptr) && (rights & PRSFS_INSERT)))
+		    return (EACCES);
 	    }
-	    if (CallingRoutine == CHK_FETCHDATA && targetptr->disk.type == vFile)
+	    if (CallingRoutine == CHK_FETCHDATA
+		&& targetptr->disk.type == vFile)
 #ifdef USE_GROUP_PERMS
-		if (!OWNSp(client, targetptr) &&
-		    !acl_IsAMember(targetptr->disk.owner, &client->CPS)) {
-		    errorCode = (((GROUPREAD|GROUPEXEC) & targetptr->disk.modeBits)
-				 ? 0: EACCES);
+		if (!OWNSp(client, targetptr)
+		    && !acl_IsAMember(targetptr->disk.owner, &client->CPS)) {
+		    errorCode =
+			(((GROUPREAD | GROUPEXEC) & targetptr->disk.modeBits)
+			 ? 0 : EACCES);
 		} else {
-		    errorCode =(((OWNERREAD|OWNEREXEC) & targetptr->disk.modeBits)
-				? 0: EACCES);
+		    errorCode =
+			(((OWNERREAD | OWNEREXEC) & targetptr->disk.modeBits)
+			 ? 0 : EACCES);
 		}
 #else
 		/*
@@ -780,127 +762,137 @@ Check_PermissionRights(Vnode *targetptr,
 		 * reading of files created with no read permission. The owner
 		 * of the file is always allowed to read it.
 		 */
-		if ((client->ViceId != targetptr->disk.owner) && VanillaUser(client))
-		    errorCode =(((OWNERREAD|OWNEREXEC) & targetptr->disk.modeBits) ? 0: EACCES);
+		if ((client->ViceId != targetptr->disk.owner)
+		    && VanillaUser(client))
+		    errorCode =
+			(((OWNERREAD | OWNEREXEC) & targetptr->disk.
+			  modeBits) ? 0 : EACCES);
 #endif
+	} else {		/*  !VanillaUser(client) && !FetchData */
+
+	    osi_audit(PrivilegeEvent, 0, AUD_INT,
+		      (client ? client->ViceId : 0), AUD_INT, CallingRoutine,
+		      AUD_END);
 	}
-	else /*  !VanillaUser(client) && !FetchData */ {
-	  osi_audit( PrivilegeEvent, 0, AUD_INT, (client ? client->ViceId : 0), 
-                                        AUD_INT, CallingRoutine, AUD_END);
-	}
-    }
-    else { /* a store operation */
-      if ( (rights & PRSFS_INSERT) && OWNSp(client, targetptr)
-	  && (CallingRoutine != CHK_STOREACL)
-	  && (targetptr->disk.type == vFile))
-	{
-	  /* bypass protection checks on first store after a create
-	   * for the creator; also prevent chowns during this time
-	   * unless you are a system administrator */
+    } else {			/* a store operation */
+	if ((rights & PRSFS_INSERT) && OWNSp(client, targetptr)
+	    && (CallingRoutine != CHK_STOREACL)
+	    && (targetptr->disk.type == vFile)) {
+	    /* bypass protection checks on first store after a create
+	     * for the creator; also prevent chowns during this time
+	     * unless you are a system administrator */
 	  /******  InStatus->Owner && UnixModeBits better be SET!! */
-	  if ( CHOWN(InStatus, targetptr) || CHGRP(InStatus, targetptr)) {
-	    if (readonlyServer) 
-	      return(VREADONLY);
-	    else if (VanillaUser (client)) 
-	      return(EPERM);      /* Was EACCES */
-	    else
-	      osi_audit( PrivilegeEvent, 0, AUD_INT, (client ? client->ViceId : 0), 
-                                            AUD_INT, CallingRoutine, AUD_END);
-	  }
-	} else {
-	  if (CallingRoutine != CHK_STOREDATA && !VanillaUser(client)) {
-	    osi_audit( PrivilegeEvent, 0, AUD_INT, (client ? client->ViceId : 0),
-		                          AUD_INT, CallingRoutine, AUD_END);
-	  }
-	  else {
-	    if (readonlyServer) {
-		return(VREADONLY);
-	    }
-	    if (CallingRoutine == CHK_STOREACL) {
-	      if (!(rights & PRSFS_ADMINISTER) &&
-		  !VolumeOwner(client, targetptr)) return(EACCES);
-	    }
-	    else {	/* store data or status */
-	      /* watch for chowns and chgrps */
-	      if (CHOWN(InStatus, targetptr) || CHGRP(InStatus, targetptr)) {
-		if (readonlyServer) 
-		  return(VREADONLY);
-		else if (VanillaUser (client)) 
-		  return(EPERM);	/* Was EACCES */
+	    if (CHOWN(InStatus, targetptr) || CHGRP(InStatus, targetptr)) {
+		if (readonlyServer)
+		    return (VREADONLY);
+		else if (VanillaUser(client))
+		    return (EPERM);	/* Was EACCES */
 		else
-		  osi_audit(PrivilegeEvent, 0,
-			    AUD_INT, (client ? client->ViceId : 0), 
-			    AUD_INT, CallingRoutine, AUD_END);
-	      }
-	      /* must be sysadmin to set suid/sgid bits */
-	      if ((InStatus->Mask & AFS_SETMODE) &&
+		    osi_audit(PrivilegeEvent, 0, AUD_INT,
+			      (client ? client->ViceId : 0), AUD_INT,
+			      CallingRoutine, AUD_END);
+	    }
+	} else {
+	    if (CallingRoutine != CHK_STOREDATA && !VanillaUser(client)) {
+		osi_audit(PrivilegeEvent, 0, AUD_INT,
+			  (client ? client->ViceId : 0), AUD_INT,
+			  CallingRoutine, AUD_END);
+	    } else {
+		if (readonlyServer) {
+		    return (VREADONLY);
+		}
+		if (CallingRoutine == CHK_STOREACL) {
+		    if (!(rights & PRSFS_ADMINISTER)
+			&& !VolumeOwner(client, targetptr))
+			return (EACCES);
+		} else {	/* store data or status */
+		    /* watch for chowns and chgrps */
+		    if (CHOWN(InStatus, targetptr)
+			|| CHGRP(InStatus, targetptr)) {
+			if (readonlyServer)
+			    return (VREADONLY);
+			else if (VanillaUser(client))
+			    return (EPERM);	/* Was EACCES */
+			else
+			    osi_audit(PrivilegeEvent, 0, AUD_INT,
+				      (client ? client->ViceId : 0), AUD_INT,
+				      CallingRoutine, AUD_END);
+		    }
+		    /* must be sysadmin to set suid/sgid bits */
+		    if ((InStatus->Mask & AFS_SETMODE) &&
 #ifdef AFS_NT40_ENV
-		  (InStatus->UnixModeBits & 0xc00) != 0) {
+			(InStatus->UnixModeBits & 0xc00) != 0) {
 #else
-		  (InStatus->UnixModeBits & (S_ISUID|S_ISGID)) != 0) {
+			(InStatus->UnixModeBits & (S_ISUID | S_ISGID)) != 0) {
 #endif
-		if (readonlyServer)
-		  return(VREADONLY);
-		if (VanillaUser(client))
-		  return(EACCES);
-		else osi_audit( PrivSetID, 0, AUD_INT, (client ? client->ViceId : 0),
-			                      AUD_INT, CallingRoutine, AUD_END);
-	      }
-	      if (CallingRoutine == CHK_STOREDATA) {
-		if (readonlyServer)
-		  return(VREADONLY);
-		if (!(rights & PRSFS_WRITE))
-		  return(EACCES);
-		/* Next thing is tricky.  We want to prevent people
-                 * from writing files sans 0200 bit, but we want
-                 * creating new files with 0444 mode to work.  We
-                 * don't check the 0200 bit in the "you are the owner"
-                 * path above, but here we check the bit.  However, if
-                 * you're a system administrator, we ignore the 0200
-                 * bit anyway, since you may have fchowned the file,
-                 * too */
+			if (readonlyServer)
+			    return (VREADONLY);
+			if (VanillaUser(client))
+			    return (EACCES);
+			else
+			    osi_audit(PrivSetID, 0, AUD_INT,
+				      (client ? client->ViceId : 0), AUD_INT,
+				      CallingRoutine, AUD_END);
+		    }
+		    if (CallingRoutine == CHK_STOREDATA) {
+			if (readonlyServer)
+			    return (VREADONLY);
+			if (!(rights & PRSFS_WRITE))
+			    return (EACCES);
+			/* Next thing is tricky.  We want to prevent people
+			 * from writing files sans 0200 bit, but we want
+			 * creating new files with 0444 mode to work.  We
+			 * don't check the 0200 bit in the "you are the owner"
+			 * path above, but here we check the bit.  However, if
+			 * you're a system administrator, we ignore the 0200
+			 * bit anyway, since you may have fchowned the file,
+			 * too */
 #ifdef USE_GROUP_PERMS
 			if ((targetptr->disk.type == vFile)
 			    && VanillaUser(client)) {
-			    if (!OWNSp(client, targetptr) &&
-				!acl_IsAMember(targetptr->disk.owner,
-					       &client->CPS)) {
-				errorCode = ((GROUPWRITE & targetptr->disk.modeBits)
-					     ? 0: EACCES);
+			    if (!OWNSp(client, targetptr)
+				&& !acl_IsAMember(targetptr->disk.owner,
+						  &client->CPS)) {
+				errorCode =
+				    ((GROUPWRITE & targetptr->disk.modeBits)
+				     ? 0 : EACCES);
 			    } else {
-				errorCode = ((OWNERWRITE & targetptr->disk.modeBits)
-					     ? 0 : EACCES);
+				errorCode =
+				    ((OWNERWRITE & targetptr->disk.modeBits)
+				     ? 0 : EACCES);
 			    }
 			} else
 #endif
-		if ((targetptr->disk.type != vDirectory)
-		    && (!(targetptr->disk.modeBits & OWNERWRITE))) {
-		  if (readonlyServer)
-		    return(VREADONLY);
-		  if (VanillaUser(client))
-		    return(EACCES);
-		  else osi_audit( PrivilegeEvent, 0, AUD_INT, (client ? client->ViceId : 0),
-				                     AUD_INT, CallingRoutine, AUD_END);
+			    if ((targetptr->disk.type != vDirectory)
+				&& (!(targetptr->disk.modeBits & OWNERWRITE))) {
+			    if (readonlyServer)
+				return (VREADONLY);
+			    if (VanillaUser(client))
+				return (EACCES);
+			    else
+				osi_audit(PrivilegeEvent, 0, AUD_INT,
+					  (client ? client->ViceId : 0),
+					  AUD_INT, CallingRoutine, AUD_END);
+			}
+		    } else {	/* a status store */
+			if (readonlyServer)
+			    return (VREADONLY);
+			if (targetptr->disk.type == vDirectory) {
+			    if (!(rights & PRSFS_DELETE)
+				&& !(rights & PRSFS_INSERT))
+				return (EACCES);
+			} else {	/* a file  or symlink */
+			    if (!(rights & PRSFS_WRITE))
+				return (EACCES);
+			}
+		    }
 		}
-	      }
-	      else {  /* a status store */
-		if (readonlyServer)
-		  return(VREADONLY);
-		if (targetptr->disk.type == vDirectory) {
-		  if (!(rights & PRSFS_DELETE) && !(rights & PRSFS_INSERT))
-		    return(EACCES);
-		}
-		else {	/* a file  or symlink */
-		  if (!(rights & PRSFS_WRITE)) return(EACCES);
-		}
-	      }
 	    }
-	  }
 	}
     }
-    return(errorCode);
+    return (errorCode);
 
-} /*Check_PermissionRights*/
+}				/*Check_PermissionRights */
 
 
 /*
@@ -910,28 +902,28 @@ Check_PermissionRights(Vnode *targetptr,
  * structure
  */
 static afs_int32
-RXFetch_AccessList(Vnode *targetptr,
-		   Vnode *parentwhentargetnotdir,
+RXFetch_AccessList(Vnode * targetptr, Vnode * parentwhentargetnotdir,
 		   struct AFSOpaque *AccessList)
 {
-    char * eACL;	/* External access list placeholder */
+    char *eACL;			/* External access list placeholder */
 
-    if (acl_Externalize((targetptr->disk.type == vDirectory ?
-			 VVnodeACL(targetptr) :
-			 VVnodeACL(parentwhentargetnotdir)), &eACL) != 0) {
+    if (acl_Externalize
+	((targetptr->disk.type ==
+	  vDirectory ? VVnodeACL(targetptr) :
+	  VVnodeACL(parentwhentargetnotdir)), &eACL) != 0) {
 	return EIO;
     }
-    if ((strlen(eACL)+1) > AFSOPAQUEMAX) {
+    if ((strlen(eACL) + 1) > AFSOPAQUEMAX) {
 	acl_FreeExternalACL(&eACL);
-	return(E2BIG);
+	return (E2BIG);
     } else {
 	strcpy((char *)(AccessList->AFSOpaque_val), (char *)eACL);
-	AccessList->AFSOpaque_len = strlen(eACL) +1;
+	AccessList->AFSOpaque_len = strlen(eACL) + 1;
     }
     acl_FreeExternalACL(&eACL);
-    return(0);
+    return (0);
 
-} /*RXFetch_AccessList*/
+}				/*RXFetch_AccessList */
 
 
 /*
@@ -940,41 +932,42 @@ RXFetch_AccessList(Vnode *targetptr,
  * the target dir's vnode storage.
  */
 static afs_int32
-RXStore_AccessList(Vnode *targetptr, struct AFSOpaque *AccessList)
+RXStore_AccessList(Vnode * targetptr, struct AFSOpaque *AccessList)
 {
-    struct acl_accessList * newACL;	/* PlaceHolder for new access list */
+    struct acl_accessList *newACL;	/* PlaceHolder for new access list */
 
     if (acl_Internalize(AccessList->AFSOpaque_val, &newACL) != 0)
-	return(EINVAL);
+	return (EINVAL);
     if ((newACL->size + 4) > VAclSize(targetptr))
-	return(E2BIG);
-    memcpy((char *) VVnodeACL(targetptr), (char *) newACL, (int)(newACL->size));
+	return (E2BIG);
+    memcpy((char *)VVnodeACL(targetptr), (char *)newACL, (int)(newACL->size));
     acl_FreeACL(&newACL);
-    return(0);
+    return (0);
 
-} /*RXStore_AccessList*/
+}				/*RXStore_AccessList */
 
 
 static afs_int32
-Fetch_AccessList(Vnode *targetptr, Vnode *parentwhentargetnotdir,
+Fetch_AccessList(Vnode * targetptr, Vnode * parentwhentargetnotdir,
 		 struct AFSAccessList *AccessList)
 {
-    char * eACL;	/* External access list placeholder */
+    char *eACL;			/* External access list placeholder */
 
-    assert(acl_Externalize((targetptr->disk.type == vDirectory ?
-			    VVnodeACL(targetptr) :
-			    VVnodeACL(parentwhentargetnotdir)), &eACL) == 0);
-    if ((strlen(eACL)+1) > AccessList->MaxSeqLen) {
+    assert(acl_Externalize
+	   ((targetptr->disk.type ==
+	     vDirectory ? VVnodeACL(targetptr) :
+	     VVnodeACL(parentwhentargetnotdir)), &eACL) == 0);
+    if ((strlen(eACL) + 1) > AccessList->MaxSeqLen) {
 	acl_FreeExternalACL(&eACL);
-	return(E2BIG);
+	return (E2BIG);
     } else {
 	strcpy((char *)(AccessList->SeqBody), (char *)eACL);
-	AccessList->SeqLen = strlen(eACL) +1;
+	AccessList->SeqLen = strlen(eACL) + 1;
     }
     acl_FreeExternalACL(&eACL);
-    return(0);
+    return (0);
 
-} /*Fetch_AccessList*/
+}				/*Fetch_AccessList */
 
 /*
  * The Access List information is converted from its external form in the
@@ -982,19 +975,19 @@ Fetch_AccessList(Vnode *targetptr, Vnode *parentwhentargetnotdir,
  * the target dir's vnode storage.
  */
 static afs_int32
-Store_AccessList(Vnode *targetptr, struct AFSAccessList *AccessList)
+Store_AccessList(Vnode * targetptr, struct AFSAccessList *AccessList)
 {
-    struct acl_accessList * newACL;	/* PlaceHolder for new access list */
+    struct acl_accessList *newACL;	/* PlaceHolder for new access list */
 
     if (acl_Internalize(AccessList->SeqBody, &newACL) != 0)
-	return(EINVAL);
+	return (EINVAL);
     if ((newACL->size + 4) > VAclSize(targetptr))
-	return(E2BIG);
-    memcpy((char *) VVnodeACL(targetptr), (char *) newACL, (int)(newACL->size));
+	return (E2BIG);
+    memcpy((char *)VVnodeACL(targetptr), (char *)newACL, (int)(newACL->size));
     acl_FreeACL(&newACL);
-    return(0);
+    return (0);
 
-} /*Store_AccessList*/
+}				/*Store_AccessList */
 
 
 /* In our current implementation, each successive data store (new file
@@ -1005,20 +998,22 @@ Store_AccessList(Vnode *targetptr, struct AFSAccessList *AccessList)
  * disk.inodeNumber and cloned)
  */
 #define	COPYBUFFSIZE	8192
-static int CopyOnWrite(Vnode *targetptr, Volume *volptr)
+static int
+CopyOnWrite(Vnode * targetptr, Volume * volptr)
 {
-    Inode	ino, nearInode;
-    int		rdlen;
-    int		wrlen;
+    Inode ino, nearInode;
+    int rdlen;
+    int wrlen;
     register int size, length;
     int ifd, ofd;
-    char	*buff;
-    int 	rc;		/* return code */
-    IHandle_t	*newH;	/* Use until finished copying, then cp to vnode.*/
-    FdHandle_t  *targFdP;  /* Source Inode file handle */
-    FdHandle_t  *newFdP; /* Dest Inode file handle */
+    char *buff;
+    int rc;			/* return code */
+    IHandle_t *newH;		/* Use until finished copying, then cp to vnode. */
+    FdHandle_t *targFdP;	/* Source Inode file handle */
+    FdHandle_t *newFdP;		/* Dest Inode file handle */
 
-    if (targetptr->disk.type ==	vDirectory) DFlush();	/* just in case? */
+    if (targetptr->disk.type == vDirectory)
+	DFlush();		/* just in case? */
 
     VN_GET_LEN(size, targetptr);
     buff = (char *)malloc(COPYBUFFSIZE);
@@ -1031,20 +1026,25 @@ static int CopyOnWrite(Vnode *targetptr, Volume *volptr)
     targFdP = IH_OPEN(targetptr->handle);
     if (targFdP == NULL) {
 	rc = errno;
-	ViceLog(0, ("CopyOnWrite failed: Failed to open target vnode %u in volume %u (errno = %d)\n", targetptr->vnodeNumber, V_id(volptr), rc));
+	ViceLog(0,
+		("CopyOnWrite failed: Failed to open target vnode %u in volume %u (errno = %d)\n",
+		 targetptr->vnodeNumber, V_id(volptr), rc));
 	free(buff);
-	VTakeOffline (volptr);
+	VTakeOffline(volptr);
 	return rc;
     }
 
     nearInode = VN_GET_INO(targetptr);
-    ino	= IH_CREATE(V_linkHandle(volptr), V_device(volptr),
-		    VPartitionPath(V_partition(volptr)),nearInode, V_id(volptr),
-		    targetptr->vnodeNumber, targetptr->disk.uniquifier,
-		    (int)targetptr->disk.dataVersion);
-    if (!VALID_INO(ino))
-    {
-	ViceLog(0,("CopyOnWrite failed: Partition %s that contains volume %u may be out of free inodes(errno = %d)\n", volptr->partition->name, V_id(volptr), errno));
+    ino =
+	IH_CREATE(V_linkHandle(volptr), V_device(volptr),
+		  VPartitionPath(V_partition(volptr)), nearInode,
+		  V_id(volptr), targetptr->vnodeNumber,
+		  targetptr->disk.uniquifier,
+		  (int)targetptr->disk.dataVersion);
+    if (!VALID_INO(ino)) {
+	ViceLog(0,
+		("CopyOnWrite failed: Partition %s that contains volume %u may be out of free inodes(errno = %d)\n",
+		 volptr->partition->name, V_id(volptr), errno));
 	FDH_CLOSE(targFdP);
 	free(buff);
 	return ENOSPC;
@@ -1053,15 +1053,15 @@ static int CopyOnWrite(Vnode *targetptr, Volume *volptr)
     newFdP = IH_OPEN(newH);
     assert(newFdP != NULL);
 
-    while(size > 0) {
-	if (size > COPYBUFFSIZE) { /* more than a buffer */
+    while (size > 0) {
+	if (size > COPYBUFFSIZE) {	/* more than a buffer */
 	    length = COPYBUFFSIZE;
 	    size -= COPYBUFFSIZE;
 	} else {
 	    length = size;
 	    size = 0;
 	}
-	rdlen = FDH_READ(targFdP, buff, length); 
+	rdlen = FDH_READ(targFdP, buff, length);
 	if (rdlen == length)
 	    wrlen = FDH_WRITE(newFdP, buff, length);
 	else
@@ -1075,52 +1075,50 @@ static int CopyOnWrite(Vnode *targetptr, Volume *volptr)
 	 *  error code indicates that the disk is full, we roll-back to
 	 *  the initial state.
 	 */
-	if((rdlen != length) || (wrlen != length))
-		if ( (wrlen < 0) && (errno == ENOSPC) )	/* disk full */
-		{
-	    		ViceLog(0,("CopyOnWrite failed: Partition %s containing volume %u is full\n",
-		    			volptr->partition->name, V_id(volptr)));
-			/* remove destination inode which was partially copied till now*/
-			FDH_REALLYCLOSE(newFdP);
-			IH_RELEASE(newH);
-			FDH_REALLYCLOSE(targFdP);
-			rc = IH_DEC(V_linkHandle(volptr), ino,
-				  V_parentId(volptr));
-    			if (!rc ) {
-			    ViceLog(0,("CopyOnWrite failed: error %u after i_dec on disk full, volume %u in partition %s needs salvage\n",
-				       rc, V_id(volptr), 
-				       volptr->partition->name));
-			    VTakeOffline (volptr);
-			}
-			free(buff);
-			return ENOSPC;
+	if ((rdlen != length) || (wrlen != length))
+	    if ((wrlen < 0) && (errno == ENOSPC)) {	/* disk full */
+		ViceLog(0,
+			("CopyOnWrite failed: Partition %s containing volume %u is full\n",
+			 volptr->partition->name, V_id(volptr)));
+		/* remove destination inode which was partially copied till now */
+		FDH_REALLYCLOSE(newFdP);
+		IH_RELEASE(newH);
+		FDH_REALLYCLOSE(targFdP);
+		rc = IH_DEC(V_linkHandle(volptr), ino, V_parentId(volptr));
+		if (!rc) {
+		    ViceLog(0,
+			    ("CopyOnWrite failed: error %u after i_dec on disk full, volume %u in partition %s needs salvage\n",
+			     rc, V_id(volptr), volptr->partition->name));
+		    VTakeOffline(volptr);
 		}
-		else {
-		    ViceLog(0,("CopyOnWrite failed: volume %u in partition %s  (tried reading %u, read %u, wrote %u, errno %u) volume needs salvage\n",
-			       V_id(volptr), volptr->partition->name, length,
-			       rdlen, wrlen, errno));
-#ifdef FAST_RESTART /* if running in no-salvage, don't core the server */
-		    ViceLog(0,("CopyOnWrite failed: taking volume offline\n"));
+		free(buff);
+		return ENOSPC;
+	    } else {
+		ViceLog(0,
+			("CopyOnWrite failed: volume %u in partition %s  (tried reading %u, read %u, wrote %u, errno %u) volume needs salvage\n",
+			 V_id(volptr), volptr->partition->name, length, rdlen,
+			 wrlen, errno));
+#ifdef FAST_RESTART		/* if running in no-salvage, don't core the server */
+		ViceLog(0, ("CopyOnWrite failed: taking volume offline\n"));
 #else /* Avoid further corruption and try to get a core. */
-		    assert(0); 
+		assert(0);
 #endif
-                    /* Decrement this inode so salvager doesn't find it. */
-		    FDH_REALLYCLOSE(newFdP);
-		    IH_RELEASE(newH);
-		    FDH_REALLYCLOSE(targFdP);
-		    rc = IH_DEC(V_linkHandle(volptr), ino,
-				V_parentId(volptr));
-		    free(buff);
-		    VTakeOffline (volptr);
-		    return EIO;
-		}
+		/* Decrement this inode so salvager doesn't find it. */
+		FDH_REALLYCLOSE(newFdP);
+		IH_RELEASE(newH);
+		FDH_REALLYCLOSE(targFdP);
+		rc = IH_DEC(V_linkHandle(volptr), ino, V_parentId(volptr));
+		free(buff);
+		VTakeOffline(volptr);
+		return EIO;
+	    }
 #ifndef AFS_PTHREAD_ENV
 	IOMGR_Poll();
 #endif /* !AFS_PTHREAD_ENV */
     }
     FDH_REALLYCLOSE(targFdP);
     rc = IH_DEC(V_linkHandle(volptr), VN_GET_INO(targetptr),
-	      V_parentId(volptr)) ;
+		V_parentId(volptr));
     assert(!rc);
     IH_RELEASE(targetptr->handle);
 
@@ -1133,8 +1131,8 @@ static int CopyOnWrite(Vnode *targetptr, Volume *volptr)
     /* Internal change to vnode, no user level change to volume - def 5445 */
     targetptr->changed_oldTime = 1;
     free(buff);
-    return 0;				/* success */
-} /*CopyOnWrite*/
+    return 0;			/* success */
+}				/*CopyOnWrite */
 
 
 /*
@@ -1142,42 +1140,37 @@ static int CopyOnWrite(Vnode *targetptr, Volume *volptr)
  * SAFS_RemoveFile() or an empty dir when called from SAFS_rmdir()) from a
  * given directory, parentptr.
  */
-int DT1=0, DT0=0;
+int DT1 = 0, DT0 = 0;
 static afs_int32
-DeleteTarget(Vnode *parentptr,
-	     Volume *volptr,
-	     Vnode **targetptr,
-	     DirHandle *dir,
-	     AFSFid *fileFid,
-	     char *Name,
-	     int ChkForDir)
+DeleteTarget(Vnode * parentptr, Volume * volptr, Vnode ** targetptr,
+	     DirHandle * dir, AFSFid * fileFid, char *Name, int ChkForDir)
 {
-    DirHandle childdir;	    /* Handle for dir package I/O */
+    DirHandle childdir;		/* Handle for dir package I/O */
     int errorCode = 0;
     int code;
 
     /* watch for invalid names */
     if (!strcmp(Name, ".") || !strcmp(Name, ".."))
 	return (EINVAL);
-    if (parentptr->disk.cloned)	
-    {
+    if (parentptr->disk.cloned) {
 	ViceLog(25, ("DeleteTarget : CopyOnWrite called\n"));
-	if ((errorCode = CopyOnWrite(parentptr, volptr)))
-	{
-		ViceLog(20, ("DeleteTarget %s: CopyOnWrite failed %d\n",Name,errorCode));
-		return errorCode;
+	if ((errorCode = CopyOnWrite(parentptr, volptr))) {
+	    ViceLog(20,
+		    ("DeleteTarget %s: CopyOnWrite failed %d\n", Name,
+		     errorCode));
+	    return errorCode;
 	}
     }
 
     /* check that the file is in the directory */
     SetDirHandle(dir, parentptr);
     if (Lookup(dir, Name, fileFid))
-	return(ENOENT);
+	return (ENOENT);
     fileFid->Volume = V_id(volptr);
 
     /* just-in-case check for something causing deadlock */
     if (fileFid->Vnode == parentptr->vnodeNumber)
-	return(EINVAL);
+	return (EINVAL);
 
     *targetptr = VGetVnode(&errorCode, volptr, fileFid->Vnode, WRITE_LOCK);
     if (errorCode) {
@@ -1185,81 +1178,86 @@ DeleteTarget(Vnode *parentptr,
     }
     if (ChkForDir == MustBeDIR) {
 	if ((*targetptr)->disk.type != vDirectory)
-	    return(ENOTDIR);
+	    return (ENOTDIR);
     } else if ((*targetptr)->disk.type == vDirectory)
-	return(EISDIR);
-    
-    /*assert((*targetptr)->disk.uniquifier == fileFid->Unique);*/
+	return (EISDIR);
+
+    /*assert((*targetptr)->disk.uniquifier == fileFid->Unique); */
     /**
       * If the uniquifiers dont match then instead of asserting
       * take the volume offline and return VSALVAGE
       */
-    if ( (*targetptr)->disk.uniquifier != fileFid->Unique ) {
+    if ((*targetptr)->disk.uniquifier != fileFid->Unique) {
 	VTakeOffline(volptr);
 	errorCode = VSALVAGE;
 	return errorCode;
     }
-	
+
     if (ChkForDir == MustBeDIR) {
 	SetDirHandle(&childdir, *targetptr);
 	if (IsEmpty(&childdir) != 0)
-	    return(EEXIST);
+	    return (EEXIST);
 	DZap(&childdir);
 	(*targetptr)->delete = 1;
-    } else if ((--(*targetptr)->disk.linkCount) == 0) 
+    } else if ((--(*targetptr)->disk.linkCount) == 0)
 	(*targetptr)->delete = 1;
     if ((*targetptr)->delete) {
 	if (VN_GET_INO(*targetptr)) {
 	    DT0++;
 	    IH_REALLYCLOSE((*targetptr)->handle);
-	    errorCode = IH_DEC(V_linkHandle(volptr),
-			     VN_GET_INO(*targetptr),
-			     V_parentId(volptr));
+	    errorCode =
+		IH_DEC(V_linkHandle(volptr), VN_GET_INO(*targetptr),
+		       V_parentId(volptr));
 	    IH_RELEASE((*targetptr)->handle);
 	    if (errorCode == -1) {
-		ViceLog(0, ("DT: inode=%s, name=%s, errno=%d\n",
-			    PrintInode(NULL, VN_GET_INO(*targetptr)),
-			    Name, errno));
+		ViceLog(0,
+			("DT: inode=%s, name=%s, errno=%d\n",
+			 PrintInode(NULL, VN_GET_INO(*targetptr)), Name,
+			 errno));
 #ifdef	AFS_DEC_ENV
 		if ((errno != ENOENT) && (errno != EIO) && (errno != ENXIO))
 #else
-		if (errno != ENOENT) 
+		if (errno != ENOENT)
 #endif
-		    {
-		    ViceLog(0, ("Volume %u now offline, must be salvaged.\n", 
-                                volptr->hashid));
-                    VTakeOffline(volptr);
+		{
+		    ViceLog(0,
+			    ("Volume %u now offline, must be salvaged.\n",
+			     volptr->hashid));
+		    VTakeOffline(volptr);
 		    return (EIO);
-		    }
+		}
 		DT1++;
 		errorCode = 0;
 	    }
 	}
-	VN_SET_INO(*targetptr, (Inode)0);
+	VN_SET_INO(*targetptr, (Inode) 0);
 	{
 	    afs_fsize_t adjLength;
 	    VN_GET_LEN(adjLength, *targetptr);
-	    VAdjustDiskUsage(&errorCode, volptr,
-			     -(int)nBlocks(adjLength), 0);
+	    VAdjustDiskUsage(&errorCode, volptr, -(int)nBlocks(adjLength), 0);
 	}
     }
-    
-    (*targetptr)->changed_newTime = 1; /* Status change of deleted file/dir */
 
-    code = Delete(dir,(char *) Name);
+    (*targetptr)->changed_newTime = 1;	/* Status change of deleted file/dir */
+
+    code = Delete(dir, (char *)Name);
     if (code) {
-       ViceLog(0, ("Error %d deleting %s\n", code,
-		   (((*targetptr)->disk.type== Directory)?"directory":"file")));
-       ViceLog(0, ("Volume %u now offline, must be salvaged.\n", 
-                  volptr->hashid));
-       VTakeOffline(volptr);
-       if (!errorCode) errorCode = code;
+	ViceLog(0,
+		("Error %d deleting %s\n", code,
+		 (((*targetptr)->disk.type ==
+		   Directory) ? "directory" : "file")));
+	ViceLog(0,
+		("Volume %u now offline, must be salvaged.\n",
+		 volptr->hashid));
+	VTakeOffline(volptr);
+	if (!errorCode)
+	    errorCode = code;
     }
 
     DFlush();
-    return(errorCode);
+    return (errorCode);
 
-} /*DeleteTarget*/
+}				/*DeleteTarget */
 
 
 /*
@@ -1269,23 +1267,20 @@ DeleteTarget(Vnode *parentptr,
  * been performed.
  */
 static void
-Update_ParentVnodeStatus(Vnode *parentptr,
-			 Volume *volptr,
-			 DirHandle *dir,
-			 int author,
-			 int linkcount,
+Update_ParentVnodeStatus(Vnode * parentptr, Volume * volptr, DirHandle * dir,
+			 int author, int linkcount,
 #if FS_STATS_DETAILED
 			 char a_inSameNetwork
-#endif /* FS_STATS_DETAILED */
-			 )
+#endif				/* FS_STATS_DETAILED */
+    )
 {
     afs_fsize_t newlength;	/* Holds new directory length */
     afs_fsize_t parentLength;
     int errorCode;
 #if FS_STATS_DETAILED
-    Date currDate;		/*Current date*/
-    int writeIdx;		/*Write index to bump*/
-    int timeIdx;		/*Authorship time index to bump*/
+    Date currDate;		/*Current date */
+    int writeIdx;		/*Write index to bump */
+    int timeIdx;		/*Authorship time index to bump */
 #endif /* FS_STATS_DETAILED */
 
     parentptr->disk.dataVersion++;
@@ -1298,7 +1293,7 @@ Update_ParentVnodeStatus(Vnode *parentptr,
      */
     VN_GET_LEN(parentLength, parentptr);
     if (nBlocks(newlength) != nBlocks(parentLength)) {
-	VAdjustDiskUsage(&errorCode, volptr, 
+	VAdjustDiskUsage(&errorCode, volptr,
 			 (nBlocks(newlength) - nBlocks(parentLength)),
 			 (nBlocks(newlength) - nBlocks(parentLength)));
     }
@@ -1316,7 +1311,7 @@ Update_ParentVnodeStatus(Vnode *parentptr,
 	writeIdx = VOL_STATS_DIFF_NET;
     V_stat_writes(volptr, writeIdx)++;
     if (author != AnonymousID) {
-	V_stat_writes(volptr, writeIdx+1)++;
+	V_stat_writes(volptr, writeIdx + 1)++;
     }
 
     /*
@@ -1325,16 +1320,15 @@ Update_ParentVnodeStatus(Vnode *parentptr,
      * slot this operation belongs, and bump the appropriate slot.
      */
     currDate = (FT_ApproxTime() - parentptr->disk.unixModifyTime);
-    timeIdx = (currDate < VOL_STATS_TIME_CAP_0 ? VOL_STATS_TIME_IDX_0 :
-	       currDate < VOL_STATS_TIME_CAP_1 ? VOL_STATS_TIME_IDX_1 :
-	       currDate < VOL_STATS_TIME_CAP_2 ? VOL_STATS_TIME_IDX_2 :
-	       currDate < VOL_STATS_TIME_CAP_3 ? VOL_STATS_TIME_IDX_3 :
-	       currDate < VOL_STATS_TIME_CAP_4 ? VOL_STATS_TIME_IDX_4 :
-	       VOL_STATS_TIME_IDX_5);
+    timeIdx =
+	(currDate < VOL_STATS_TIME_CAP_0 ? VOL_STATS_TIME_IDX_0 : currDate <
+	 VOL_STATS_TIME_CAP_1 ? VOL_STATS_TIME_IDX_1 : currDate <
+	 VOL_STATS_TIME_CAP_2 ? VOL_STATS_TIME_IDX_2 : currDate <
+	 VOL_STATS_TIME_CAP_3 ? VOL_STATS_TIME_IDX_3 : currDate <
+	 VOL_STATS_TIME_CAP_4 ? VOL_STATS_TIME_IDX_4 : VOL_STATS_TIME_IDX_5);
     if (parentptr->disk.author == author) {
 	V_stat_dirSameAuthor(volptr, timeIdx)++;
-    }
-    else {
+    } else {
 	V_stat_dirDiffAuthor(volptr, timeIdx)++;
     }
 #endif /* FS_STATS_DETAILED */
@@ -1343,7 +1337,7 @@ Update_ParentVnodeStatus(Vnode *parentptr,
     parentptr->disk.linkCount = linkcount;
     parentptr->disk.unixModifyTime = FT_ApproxTime();	/* This should be set from CLIENT!! */
     parentptr->disk.serverModifyTime = FT_ApproxTime();
-    parentptr->changed_newTime = 1; /* vnode changed, write it back. */
+    parentptr->changed_newTime = 1;	/* vnode changed, write it back. */
 }
 
 
@@ -1355,31 +1349,27 @@ Update_ParentVnodeStatus(Vnode *parentptr,
 
 /* XXX INCOMPLETE - More attention is needed here! */
 static void
-Update_TargetVnodeStatus(Vnode *targetptr,
-			 afs_uint32 Caller,
-			 struct client *client,
-			 AFSStoreStatus *InStatus,
-			 Vnode *parentptr,
-			 Volume *volptr,
+Update_TargetVnodeStatus(Vnode * targetptr, afs_uint32 Caller,
+			 struct client *client, AFSStoreStatus * InStatus,
+			 Vnode * parentptr, Volume * volptr,
 			 afs_fsize_t length)
 {
 #if FS_STATS_DETAILED
-    Date currDate;		/*Current date*/
-    int writeIdx;		/*Write index to bump*/
-    int timeIdx;		/*Authorship time index to bump*/
+    Date currDate;		/*Current date */
+    int writeIdx;		/*Write index to bump */
+    int timeIdx;		/*Authorship time index to bump */
 #endif /* FS_STATS_DETAILED */
 
-    if (Caller & (TVS_CFILE|TVS_SLINK|TVS_MKDIR))	{   /* initialize new file */
+    if (Caller & (TVS_CFILE | TVS_SLINK | TVS_MKDIR)) {	/* initialize new file */
 	targetptr->disk.parent = parentptr->vnodeNumber;
 	VN_SET_LEN(targetptr, length);
-	/* targetptr->disk.group =	0;  save some cycles */
+	/* targetptr->disk.group =      0;  save some cycles */
 	targetptr->disk.modeBits = 0777;
 	targetptr->disk.owner = client->ViceId;
-	targetptr->disk.dataVersion =  0 ; /* consistent with the client */
+	targetptr->disk.dataVersion = 0;	/* consistent with the client */
 	targetptr->disk.linkCount = (Caller & TVS_MKDIR ? 2 : 1);
 	/* the inode was created in Alloc_NewVnode() */
     }
-
 #if FS_STATS_DETAILED
     /*
      * Update file write stats for this volume.  Note that the auth
@@ -1392,7 +1382,7 @@ Update_TargetVnodeStatus(Vnode *targetptr,
 	writeIdx = VOL_STATS_DIFF_NET;
     V_stat_writes(volptr, writeIdx)++;
     if (client->ViceId != AnonymousID) {
-	V_stat_writes(volptr, writeIdx+1)++;
+	V_stat_writes(volptr, writeIdx + 1)++;
     }
 
     /*
@@ -1407,29 +1397,30 @@ Update_TargetVnodeStatus(Vnode *targetptr,
 	 * slot this operation belongs, and bump the appropriate slot.
 	 */
 	currDate = (FT_ApproxTime() - targetptr->disk.unixModifyTime);
-	timeIdx = (currDate < VOL_STATS_TIME_CAP_0 ? VOL_STATS_TIME_IDX_0 :
-		   currDate < VOL_STATS_TIME_CAP_1 ? VOL_STATS_TIME_IDX_1 :
-		   currDate < VOL_STATS_TIME_CAP_2 ? VOL_STATS_TIME_IDX_2 :
-		   currDate < VOL_STATS_TIME_CAP_3 ? VOL_STATS_TIME_IDX_3 :
-		   currDate < VOL_STATS_TIME_CAP_4 ? VOL_STATS_TIME_IDX_4 :
-		   VOL_STATS_TIME_IDX_5);
+	timeIdx =
+	    (currDate <
+	     VOL_STATS_TIME_CAP_0 ? VOL_STATS_TIME_IDX_0 : currDate <
+	     VOL_STATS_TIME_CAP_1 ? VOL_STATS_TIME_IDX_1 : currDate <
+	     VOL_STATS_TIME_CAP_2 ? VOL_STATS_TIME_IDX_2 : currDate <
+	     VOL_STATS_TIME_CAP_3 ? VOL_STATS_TIME_IDX_3 : currDate <
+	     VOL_STATS_TIME_CAP_4 ? VOL_STATS_TIME_IDX_4 :
+	     VOL_STATS_TIME_IDX_5);
 	if (targetptr->disk.author == client->ViceId) {
 	    V_stat_fileSameAuthor(volptr, timeIdx)++;
 	} else {
 	    V_stat_fileDiffAuthor(volptr, timeIdx)++;
 	}
-      }
+    }
 #endif /* FS_STATS_DETAILED */
 
     if (!(Caller & TVS_SSTATUS))
-      targetptr->disk.author = client->ViceId;
+	targetptr->disk.author = client->ViceId;
     if (Caller & TVS_SDATA) {
-      targetptr->disk.dataVersion++;
-      if (VanillaUser(client))
-	{
-	  targetptr->disk.modeBits &= ~04000; /* turn off suid for file. */
+	targetptr->disk.dataVersion++;
+	if (VanillaUser(client)) {
+	    targetptr->disk.modeBits &= ~04000;	/* turn off suid for file. */
 #ifdef CREATE_SGUID_ADMIN_ONLY
-	  targetptr->disk.modeBits &= ~02000; /* turn off sgid for file. */
+	    targetptr->disk.modeBits &= ~02000;	/* turn off sgid for file. */
 #endif
 	}
     }
@@ -1437,21 +1428,21 @@ Update_TargetVnodeStatus(Vnode *targetptr,
 	/* store status, must explicitly request to change the date */
 	if (InStatus->Mask & AFS_SETMODTIME)
 	    targetptr->disk.unixModifyTime = InStatus->ClientModTime;
-    }
-    else {/* other: date always changes, but perhaps to what is specified by caller */
-	targetptr->disk.unixModifyTime = (InStatus->Mask & AFS_SETMODTIME ? InStatus->ClientModTime : FT_ApproxTime());
+    } else {			/* other: date always changes, but perhaps to what is specified by caller */
+	targetptr->disk.unixModifyTime =
+	    (InStatus->Mask & AFS_SETMODTIME ? InStatus->
+	     ClientModTime : FT_ApproxTime());
     }
     if (InStatus->Mask & AFS_SETOWNER) {
 	/* admin is allowed to do chmod, chown as well as chown, chmod. */
-	if (VanillaUser(client))
-	  {
-	    targetptr->disk.modeBits &= ~04000; /* turn off suid for file. */
+	if (VanillaUser(client)) {
+	    targetptr->disk.modeBits &= ~04000;	/* turn off suid for file. */
 #ifdef CREATE_SGUID_ADMIN_ONLY
-	    targetptr->disk.modeBits &= ~02000; /* turn off sgid for file. */
+	    targetptr->disk.modeBits &= ~02000;	/* turn off sgid for file. */
 #endif
-	  }
+	}
 	targetptr->disk.owner = InStatus->Owner;
-	if (VolumeRootVnode (targetptr)) {
+	if (VolumeRootVnode(targetptr)) {
 	    Error errorCode = 0;	/* what should be done with this? */
 
 	    V_owner(targetptr->volumePtr) = InStatus->Owner;
@@ -1462,31 +1453,35 @@ Update_TargetVnodeStatus(Vnode *targetptr,
 	int modebits = InStatus->UnixModeBits;
 #define	CREATE_SGUID_ADMIN_ONLY 1
 #ifdef CREATE_SGUID_ADMIN_ONLY
-	if (VanillaUser(client)) 
+	if (VanillaUser(client))
 	    modebits = modebits & 0777;
 #endif
 	if (VanillaUser(client)) {
-	  targetptr->disk.modeBits = modebits;
+	    targetptr->disk.modeBits = modebits;
+	} else {
+	    targetptr->disk.modeBits = modebits;
+	    switch (Caller) {
+	    case TVS_SDATA:
+		osi_audit(PrivSetID, 0, AUD_INT, client->ViceId, AUD_INT,
+			  CHK_STOREDATA, AUD_END);
+		break;
+	    case TVS_CFILE:
+	    case TVS_SSTATUS:
+		osi_audit(PrivSetID, 0, AUD_INT, client->ViceId, AUD_INT,
+			  CHK_STORESTATUS, AUD_END);
+		break;
+	    default:
+		break;
+	    }
 	}
-	else {
-	  targetptr->disk.modeBits = modebits;
-	  switch ( Caller ) {
-	  case TVS_SDATA: osi_audit( PrivSetID, 0, AUD_INT, client->ViceId,
-				    AUD_INT, CHK_STOREDATA, AUD_END); break;
-	  case TVS_CFILE:
-	  case TVS_SSTATUS: osi_audit( PrivSetID, 0, AUD_INT, client->ViceId,
-				    AUD_INT, CHK_STORESTATUS, AUD_END); break;
-	  default: break;
-	  }
-	}
-      }
+    }
     targetptr->disk.serverModifyTime = FT_ApproxTime();
     if (InStatus->Mask & AFS_SETGROUP)
 	targetptr->disk.group = InStatus->Group;
     /* vnode changed : to be written back by VPutVnode */
     targetptr->changed_newTime = 1;
 
-} /*Update_TargetVnodeStatus*/
+}				/*Update_TargetVnodeStatus */
 
 
 /*
@@ -1501,11 +1496,11 @@ SetCallBackStruct(afs_uint32 CallBackTime, struct AFSCallBack *CallBack)
 	ViceLog(0, ("WARNING: CallBackTime == 0!\n"));
 	CallBack->ExpirationTime = 0;
     } else
-	CallBack->ExpirationTime = CallBackTime - FT_ApproxTime();	
-    CallBack->CallBackVersion =	CALLBACK_VERSION;
-    CallBack->CallBackType = CB_SHARED;		    /* The default for now */
+	CallBack->ExpirationTime = CallBackTime - FT_ApproxTime();
+    CallBack->CallBackVersion = CALLBACK_VERSION;
+    CallBack->CallBackType = CB_SHARED;	/* The default for now */
 
-} /*SetCallBackStruct*/
+}				/*SetCallBackStruct */
 
 
 /*
@@ -1516,7 +1511,7 @@ SetCallBackStruct(afs_uint32 CallBackTime, struct AFSCallBack *CallBack)
  * enough space before consuming some.
  */
 static afs_int32
-AdjustDiskUsage(Volume *volptr, afs_int32 length, afs_int32 checkLength)
+AdjustDiskUsage(Volume * volptr, afs_int32 length, afs_int32 checkLength)
 {
     int rc;
     int nc;
@@ -1525,75 +1520,74 @@ AdjustDiskUsage(Volume *volptr, afs_int32 length, afs_int32 checkLength)
     if (rc) {
 	VAdjustDiskUsage(&nc, volptr, -length, 0);
 	if (rc == VOVERQUOTA) {
-	    ViceLog(2,("Volume %u (%s) is full\n",
-		    V_id(volptr), V_name(volptr)));
-	    return(rc);
+	    ViceLog(2,
+		    ("Volume %u (%s) is full\n", V_id(volptr),
+		     V_name(volptr)));
+	    return (rc);
 	}
 	if (rc == VDISKFULL) {
-	    ViceLog(0,("Partition %s that contains volume %u is full\n",
-		    volptr->partition->name, V_id(volptr)));
-	    return(rc);
+	    ViceLog(0,
+		    ("Partition %s that contains volume %u is full\n",
+		     volptr->partition->name, V_id(volptr)));
+	    return (rc);
 	}
-	ViceLog(0,("Got error return %d from VAdjustDiskUsage\n",rc));
-	return(rc);
+	ViceLog(0, ("Got error return %d from VAdjustDiskUsage\n", rc));
+	return (rc);
     }
-    return(0);
+    return (0);
 
-} /*AdjustDiskUsage*/
+}				/*AdjustDiskUsage */
 
 /*
  * Common code that handles the creation of a new file (SAFS_CreateFile and
  * SAFS_Symlink) or a new dir (SAFS_MakeDir)
  */
 static afs_int32
-Alloc_NewVnode(Vnode *parentptr,
-	       DirHandle *dir,
-	       Volume *volptr,
-	       Vnode **targetptr,
-	       char *Name,
-	       struct AFSFid *OutFid,
-	       int FileType,
-	       int BlocksPreallocatedForVnode)
+Alloc_NewVnode(Vnode * parentptr, DirHandle * dir, Volume * volptr,
+	       Vnode ** targetptr, char *Name, struct AFSFid *OutFid,
+	       int FileType, int BlocksPreallocatedForVnode)
 {
-    int	errorCode = 0;		/* Error code returned back */
+    int errorCode = 0;		/* Error code returned back */
     int temp;
-    Inode inode=0;
+    Inode inode = 0;
     Inode nearInode;		/* hint for inode allocation in solaris */
 
-    if ((errorCode = AdjustDiskUsage(volptr, BlocksPreallocatedForVnode,
-				    BlocksPreallocatedForVnode))) {
-	ViceLog(25, ("Insufficient space to allocate %d blocks\n", 
-		     BlocksPreallocatedForVnode));
-	return(errorCode);
+    if ((errorCode =
+	 AdjustDiskUsage(volptr, BlocksPreallocatedForVnode,
+			 BlocksPreallocatedForVnode))) {
+	ViceLog(25,
+		("Insufficient space to allocate %d blocks\n",
+		 BlocksPreallocatedForVnode));
+	return (errorCode);
     }
 
     *targetptr = VAllocVnode(&errorCode, volptr, FileType);
     if (errorCode != 0) {
-	VAdjustDiskUsage(&temp, volptr, - BlocksPreallocatedForVnode, 0);
-	return(errorCode);
+	VAdjustDiskUsage(&temp, volptr, -BlocksPreallocatedForVnode, 0);
+	return (errorCode);
     }
     OutFid->Volume = V_id(volptr);
     OutFid->Vnode = (*targetptr)->vnodeNumber;
     OutFid->Unique = (*targetptr)->disk.uniquifier;
 
-    nearInode = VN_GET_INO(parentptr);   /* parent is also in same vol */
+    nearInode = VN_GET_INO(parentptr);	/* parent is also in same vol */
 
     /* create the inode now itself */
-    inode = IH_CREATE(V_linkHandle(volptr), V_device(volptr),
-		      VPartitionPath(V_partition(volptr)), nearInode,
-		      V_id(volptr), (*targetptr)->vnodeNumber,
-		      (*targetptr)->disk.uniquifier, 1);
+    inode =
+	IH_CREATE(V_linkHandle(volptr), V_device(volptr),
+		  VPartitionPath(V_partition(volptr)), nearInode,
+		  V_id(volptr), (*targetptr)->vnodeNumber,
+		  (*targetptr)->disk.uniquifier, 1);
 
     /* error in creating inode */
-    if (!VALID_INO(inode)) 
-    {
-               ViceLog(0, ("Volume : %u vnode = %u Failed to create inode: errno = %d\n", 
-                         (*targetptr)->volumePtr->header->diskstuff.id,
-                         (*targetptr)->vnodeNumber, 
-                         errno));
-		VAdjustDiskUsage(&temp, volptr, -BlocksPreallocatedForVnode,0);
-		(*targetptr)->delete = 1; /* delete vnode */
-		return ENOSPC;
+    if (!VALID_INO(inode)) {
+	ViceLog(0,
+		("Volume : %u vnode = %u Failed to create inode: errno = %d\n",
+		 (*targetptr)->volumePtr->header->diskstuff.id,
+		 (*targetptr)->vnodeNumber, errno));
+	VAdjustDiskUsage(&temp, volptr, -BlocksPreallocatedForVnode, 0);
+	(*targetptr)->delete = 1;	/* delete vnode */
+	return ENOSPC;
     }
     VN_SET_INO(*targetptr, inode);
     IH_INIT(((*targetptr)->handle), V_device(volptr), V_id(volptr), inode);
@@ -1601,44 +1595,41 @@ Alloc_NewVnode(Vnode *parentptr,
     /* copy group from parent dir */
     (*targetptr)->disk.group = parentptr->disk.group;
 
-    if (parentptr->disk.cloned)	
-    {
+    if (parentptr->disk.cloned) {
 	ViceLog(25, ("Alloc_NewVnode : CopyOnWrite called\n"));
-	if ((errorCode = CopyOnWrite(parentptr, volptr)))  /* disk full */
-	{
-		ViceLog(25, ("Alloc_NewVnode : CopyOnWrite failed\n"));
-		/* delete the vnode previously allocated */
-		(*targetptr)->delete = 1;
-		VAdjustDiskUsage(&temp, volptr,
-				 -BlocksPreallocatedForVnode, 0);
-		IH_REALLYCLOSE((*targetptr)->handle);
-		if ( IH_DEC(V_linkHandle(volptr), inode, V_parentId(volptr)) )
-		    ViceLog(0,("Alloc_NewVnode: partition %s idec %s failed\n",
-				volptr->partition->name,
-			       PrintInode(NULL, inode)));
-		IH_RELEASE((*targetptr)->handle);
-			
-		return errorCode;
+	if ((errorCode = CopyOnWrite(parentptr, volptr))) {	/* disk full */
+	    ViceLog(25, ("Alloc_NewVnode : CopyOnWrite failed\n"));
+	    /* delete the vnode previously allocated */
+	    (*targetptr)->delete = 1;
+	    VAdjustDiskUsage(&temp, volptr, -BlocksPreallocatedForVnode, 0);
+	    IH_REALLYCLOSE((*targetptr)->handle);
+	    if (IH_DEC(V_linkHandle(volptr), inode, V_parentId(volptr)))
+		ViceLog(0,
+			("Alloc_NewVnode: partition %s idec %s failed\n",
+			 volptr->partition->name, PrintInode(NULL, inode)));
+	    IH_RELEASE((*targetptr)->handle);
+
+	    return errorCode;
 	}
     }
-    
+
     /* add the name to the directory */
     SetDirHandle(dir, parentptr);
-    if ((errorCode = Create(dir,(char *)Name, OutFid))) {
+    if ((errorCode = Create(dir, (char *)Name, OutFid))) {
 	(*targetptr)->delete = 1;
-	VAdjustDiskUsage(&temp, volptr, - BlocksPreallocatedForVnode, 0);
+	VAdjustDiskUsage(&temp, volptr, -BlocksPreallocatedForVnode, 0);
 	IH_REALLYCLOSE((*targetptr)->handle);
-	if ( IH_DEC(V_linkHandle(volptr), inode, V_parentId(volptr)))
-	    ViceLog(0,("Alloc_NewVnode: partition %s idec %s failed\n",
-		       volptr->partition->name,
-		       PrintInode(NULL, inode)));
+	if (IH_DEC(V_linkHandle(volptr), inode, V_parentId(volptr)))
+	    ViceLog(0,
+		    ("Alloc_NewVnode: partition %s idec %s failed\n",
+		     volptr->partition->name, PrintInode(NULL, inode)));
 	IH_RELEASE((*targetptr)->handle);
-	return(errorCode);
+	return (errorCode);
     }
     DFlush();
-    return(0);
+    return (0);
 
-} /*Alloc_NewVnode*/
+}				/*Alloc_NewVnode */
 
 
 /*
@@ -1646,63 +1637,69 @@ Alloc_NewVnode(Vnode *parentptr,
  * SAFS_ReleaseLock)
  */
 static afs_int32
-HandleLocking(Vnode *targetptr, afs_int32 rights, ViceLockType LockingType)
+HandleLocking(Vnode * targetptr, afs_int32 rights, ViceLockType LockingType)
 {
-    int	Time;		/* Used for time */
-    int writeVnode = targetptr->changed_oldTime; /* save original status */
+    int Time;			/* Used for time */
+    int writeVnode = targetptr->changed_oldTime;	/* save original status */
 
     /* Does the caller has Lock priviledges; root extends locks, however */
     if (LockingType != LockExtend && !(rights & PRSFS_LOCK))
-	return(EACCES);
-    targetptr->changed_oldTime = 1; /* locking doesn't affect any time stamp */
+	return (EACCES);
+    targetptr->changed_oldTime = 1;	/* locking doesn't affect any time stamp */
     Time = FT_ApproxTime();
     switch (LockingType) {
-	case LockRead:
-	case LockWrite:
-	    if (Time > targetptr->disk.lock.lockTime)
-		targetptr->disk.lock.lockTime = targetptr->disk.lock.lockCount = 0;
-	    Time += AFS_LOCKWAIT;
-	    if (LockingType == LockRead) {
-		if (targetptr->disk.lock.lockCount >= 0) {
-		    ++(targetptr->disk.lock.lockCount);
-		    targetptr->disk.lock.lockTime = Time;
-		} else return(EAGAIN);
-	    } else {
-		if (targetptr->disk.lock.lockCount == 0) {
-		    targetptr->disk.lock.lockCount = -1;
-		    targetptr->disk.lock.lockTime = Time;
-		} else return(EAGAIN);
-	    }
-	    break;
-	case LockExtend:
-	    Time += AFS_LOCKWAIT;
-	    if (targetptr->disk.lock.lockCount != 0)
+    case LockRead:
+    case LockWrite:
+	if (Time > targetptr->disk.lock.lockTime)
+	    targetptr->disk.lock.lockTime = targetptr->disk.lock.lockCount =
+		0;
+	Time += AFS_LOCKWAIT;
+	if (LockingType == LockRead) {
+	    if (targetptr->disk.lock.lockCount >= 0) {
+		++(targetptr->disk.lock.lockCount);
 		targetptr->disk.lock.lockTime = Time;
-	    else return(EINVAL);	    
-	    break;
-	case LockRelease:
-	    if ((--targetptr->disk.lock.lockCount) <= 0)
-		targetptr->disk.lock.lockCount = targetptr->disk.lock.lockTime = 0;
-	    break;
-	default:
-	    targetptr->changed_oldTime = writeVnode; /* restore old status */
-	    ViceLog(0, ("Illegal Locking type %d\n", LockingType));
+	    } else
+		return (EAGAIN);
+	} else {
+	    if (targetptr->disk.lock.lockCount == 0) {
+		targetptr->disk.lock.lockCount = -1;
+		targetptr->disk.lock.lockTime = Time;
+	    } else
+		return (EAGAIN);
+	}
+	break;
+    case LockExtend:
+	Time += AFS_LOCKWAIT;
+	if (targetptr->disk.lock.lockCount != 0)
+	    targetptr->disk.lock.lockTime = Time;
+	else
+	    return (EINVAL);
+	break;
+    case LockRelease:
+	if ((--targetptr->disk.lock.lockCount) <= 0)
+	    targetptr->disk.lock.lockCount = targetptr->disk.lock.lockTime =
+		0;
+	break;
+    default:
+	targetptr->changed_oldTime = writeVnode;	/* restore old status */
+	ViceLog(0, ("Illegal Locking type %d\n", LockingType));
     }
-    return(0);
-} /*HandleLocking*/
+    return (0);
+}				/*HandleLocking */
 
 /* Checks if caller has the proper AFS and Unix (WRITE) access permission to the target directory; Prfs_Mode refers to the AFS Mode operation while rights contains the caller's access permissions to the directory. */
 
 static afs_int32
-CheckWriteMode(Vnode *targetptr, afs_int32 rights, int Prfs_Mode)
+CheckWriteMode(Vnode * targetptr, afs_int32 rights, int Prfs_Mode)
 {
     if (readonlyServer)
-	return(VREADONLY);
+	return (VREADONLY);
     if (!(rights & Prfs_Mode))
-	return(EACCES);
-    if ((targetptr->disk.type != vDirectory) && (!(targetptr->disk.modeBits & OWNERWRITE)))
-	return(EACCES);
-    return(0);
+	return (EACCES);
+    if ((targetptr->disk.type != vDirectory)
+	&& (!(targetptr->disk.modeBits & OWNERWRITE)))
+	return (EACCES);
+    return (0);
 }
 
 /*
@@ -1711,7 +1708,7 @@ CheckWriteMode(Vnode *targetptr, afs_int32 rights, int Prfs_Mode)
  * update, if applicable.
  */
 static afs_int32
-RXUpdate_VolumeStatus(Volume *volptr, AFSStoreVolumeStatus* StoreVolStatus,
+RXUpdate_VolumeStatus(Volume * volptr, AFSStoreVolumeStatus * StoreVolStatus,
 		      char *Name, char *OfflineMsg, char *Motd)
 {
     Error errorCode = 0;
@@ -1737,14 +1734,14 @@ RXUpdate_VolumeStatus(Volume *volptr, AFSStoreVolumeStatus* StoreVolStatus,
     }
 #endif /* FS_STATS_DETAILED */
     VUpdateVolume(&errorCode, volptr);
-    return(errorCode);
+    return (errorCode);
 
-} /*RXUpdate_VolumeStatus*/
+}				/*RXUpdate_VolumeStatus */
 
 
 /* old interface */
 static afs_int32
-Update_VolumeStatus(Volume *volptr, VolumeStatus *StoreVolStatus,
+Update_VolumeStatus(Volume * volptr, VolumeStatus * StoreVolStatus,
 		    struct BBS *Name, struct BBS *OfflineMsg,
 		    struct BBS *Motd)
 {
@@ -1768,9 +1765,9 @@ Update_VolumeStatus(Volume *volptr, VolumeStatus *StoreVolStatus,
 	strcpy(V_motd(volptr), Motd->SeqBody);
 #endif /* FS_STATS_DETAILED */
     VUpdateVolume(&errorCode, volptr);
-    return(errorCode);
+    return (errorCode);
 
-} /*Update_VolumeStatus*/
+}				/*Update_VolumeStatus */
 
 
 /*
@@ -1780,8 +1777,8 @@ Update_VolumeStatus(Volume *volptr, VolumeStatus *StoreVolStatus,
  * the volume status to the caller.
  */
 static afs_int32
-GetVolumeStatus(VolumeStatus *status, struct BBS *name, struct BBS *offMsg,
-		struct BBS *motd, Volume *volptr)
+GetVolumeStatus(VolumeStatus * status, struct BBS *name, struct BBS *offMsg,
+		struct BBS *motd, Volume * volptr)
 {
     status->Vid = V_id(volptr);
     status->ParentId = V_parentId(volptr);
@@ -1800,24 +1797,25 @@ GetVolumeStatus(VolumeStatus *status, struct BBS *name, struct BBS *offMsg,
     status->PartMaxBlocks = volptr->partition->totalUsable;
     strncpy(name->SeqBody, V_name(volptr), (int)name->MaxSeqLen);
     name->SeqLen = strlen(V_name(volptr)) + 1;
-    if (name->SeqLen > name->MaxSeqLen) name->SeqLen = name -> MaxSeqLen;
+    if (name->SeqLen > name->MaxSeqLen)
+	name->SeqLen = name->MaxSeqLen;
     strncpy(offMsg->SeqBody, V_offlineMessage(volptr), (int)name->MaxSeqLen);
     offMsg->SeqLen = strlen(V_offlineMessage(volptr)) + 1;
     if (offMsg->SeqLen > offMsg->MaxSeqLen)
-	offMsg->SeqLen = offMsg -> MaxSeqLen;
+	offMsg->SeqLen = offMsg->MaxSeqLen;
 #ifdef notdef
-    /*Don't do anything with the motd field*/
+    /*Don't do anything with the motd field */
     strncpy(motd->SeqBody, nullString, (int)offMsg->MaxSeqLen);
     motd->SeqLen = strlen(nullString) + 1;
 #endif
     if (motd->SeqLen > motd->MaxSeqLen)
-	motd->SeqLen = motd -> MaxSeqLen;
+	motd->SeqLen = motd->MaxSeqLen;
 
-} /*GetVolumeStatus*/
+}				/*GetVolumeStatus */
 
 static afs_int32
-RXGetVolumeStatus(AFSFetchVolumeStatus *status, char **name, char **offMsg,
-		  char **motd, Volume *volptr)
+RXGetVolumeStatus(AFSFetchVolumeStatus * status, char **name, char **offMsg,
+		  char **motd, Volume * volptr)
 {
     int temp;
 
@@ -1869,7 +1867,7 @@ RXGetVolumeStatus(AFSFetchVolumeStatus *status, char **name, char **offMsg,
     strcpy(*motd, V_motd(volptr));
 #endif /* FS_STATS_DETAILED */
 
-} /*RXGetVolumeStatus*/
+}				/*RXGetVolumeStatus */
 
 
 static afs_int32
@@ -1879,29 +1877,36 @@ FileNameOK(register char *aname)
     i = strlen(aname);
     if (i >= 4) {
 	/* watch for @sys on the right */
-	if (strcmp(aname+i-4, "@sys") == 0) return 0;
+	if (strcmp(aname + i - 4, "@sys") == 0)
+	    return 0;
     }
     while ((tc = *aname++)) {
-	if (tc == '/') return 0;    /* very bad character to encounter */
+	if (tc == '/')
+	    return 0;		/* very bad character to encounter */
     }
-    return 1;	/* file name is ok */
+    return 1;			/* file name is ok */
 
-} /*FileNameOK*/
+}				/*FileNameOK */
 
 
 /* Debugging tool to print Volume Statu's contents */
 static void
-PrintVolumeStatus(VolumeStatus *status)
+PrintVolumeStatus(VolumeStatus * status)
 {
-    ViceLog(5,("Volume header contains:\n"));
-    ViceLog(5,("Vid = %u, Parent = %u, Online = %d, InService = %d, Blessed = %d, NeedsSalvage = %d\n",
-	    status->Vid, status->ParentId, status->Online, status->InService,
-	    status->Blessed, status->NeedsSalvage));
-    ViceLog(5,("MinQuota = %d, MaxQuota = %d\n", status->MinQuota, status->MaxQuota));
-    ViceLog(5,("Type = %d, BlocksInUse = %d, PartBlocksAvail = %d, PartMaxBlocks = %d\n",
-	    status->Type, status->BlocksInUse, status->PartBlocksAvail, status->PartMaxBlocks));
+    ViceLog(5, ("Volume header contains:\n"));
+    ViceLog(5,
+	    ("Vid = %u, Parent = %u, Online = %d, InService = %d, Blessed = %d, NeedsSalvage = %d\n",
+	     status->Vid, status->ParentId, status->Online, status->InService,
+	     status->Blessed, status->NeedsSalvage));
+    ViceLog(5,
+	    ("MinQuota = %d, MaxQuota = %d\n", status->MinQuota,
+	     status->MaxQuota));
+    ViceLog(5,
+	    ("Type = %d, BlocksInUse = %d, PartBlocksAvail = %d, PartMaxBlocks = %d\n",
+	     status->Type, status->BlocksInUse, status->PartBlocksAvail,
+	     status->PartMaxBlocks));
 
-} /*PrintVolumeStatus*/
+}				/*PrintVolumeStatus */
 
 
 /*
@@ -1909,23 +1914,20 @@ PrintVolumeStatus(VolumeStatus *status)
  * and is not supported by the AFS fileserver. We just return EINVAL.
  * The cache manager should not generate this call to an AFS cache manager.
  */
-afs_int32 SRXAFS_DFSSymlink (struct rx_call *acall,
-			     struct AFSFid *DirFid,
-			     char *Name,
-			     char *LinkContents,
-			     struct AFSStoreStatus *InStatus,
-			     struct AFSFid *OutFid,
-			     struct AFSFetchStatus *OutFidStatus,
-			     struct AFSFetchStatus *OutDirStatus,
-			     struct AFSCallBack *CallBack,
-			     struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_DFSSymlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
+		  char *LinkContents, struct AFSStoreStatus *InStatus,
+		  struct AFSFid *OutFid, struct AFSFetchStatus *OutFidStatus,
+		  struct AFSFetchStatus *OutDirStatus,
+		  struct AFSCallBack *CallBack, struct AFSVolSync *Sync)
 {
     return EINVAL;
 }
 
-afs_int32 SRXAFS_ResidencyCmd (struct rx_call *acall, struct AFSFid *Fid,
-			       struct ResidencyCmdInputs *Inputs,
-			       struct ResidencyCmdOutputs *Outputs)
+afs_int32
+SRXAFS_ResidencyCmd(struct rx_call * acall, struct AFSFid * Fid,
+		    struct ResidencyCmdInputs * Inputs,
+		    struct ResidencyCmdOutputs * Outputs)
 {
     return EINVAL;
 }
@@ -1935,29 +1937,26 @@ static struct afs_buffer {
 } *freeBufferList = 0;
 static int afs_buffersAlloced = 0;
 
-static FreeSendBuffer(register struct afs_buffer *adata)
+static
+FreeSendBuffer(register struct afs_buffer *adata)
 {
-    FS_LOCK
-    afs_buffersAlloced--;
+    FS_LOCK afs_buffersAlloced--;
     adata->next = freeBufferList;
     freeBufferList = adata;
-    FS_UNLOCK
-    return 0;
+    FS_UNLOCK return 0;
 
-} /*FreeSendBuffer*/
+}				/*FreeSendBuffer */
 
 /* allocate space for sender */
-static char *AllocSendBuffer()
+static char *
+AllocSendBuffer()
 {
     register struct afs_buffer *tp;
 
-    FS_LOCK
-    afs_buffersAlloced++;
+    FS_LOCK afs_buffersAlloced++;
     if (!freeBufferList) {
 	char *tmp;
-	FS_UNLOCK
-
-	tmp = malloc(sendBufSize);
+	FS_UNLOCK tmp = malloc(sendBufSize);
 	if (!tmp) {
 	    ViceLog(0, ("Failed malloc in AllocSendBuffer\n"));
 	    assert(0);
@@ -1966,28 +1965,25 @@ static char *AllocSendBuffer()
     }
     tp = freeBufferList;
     freeBufferList = tp->next;
-    FS_UNLOCK
-    return (char *) tp;
+    FS_UNLOCK return (char *)tp;
 
-} /*AllocSendBuffer*/
+}				/*AllocSendBuffer */
 
 /*
  * This routine returns the status info associated with the targetptr vnode
  * in the AFSFetchStatus structure.  Some of the newer fields, such as
  * SegSize and Group are not yet implemented
  */
-static 
-void GetStatus(Vnode *targetptr,
-	       AFSFetchStatus *status,
-	       afs_int32 rights,
-	       afs_int32 anyrights,
-	       Vnode *parentptr)
+static
+    void
+GetStatus(Vnode * targetptr, AFSFetchStatus * status, afs_int32 rights,
+	  afs_int32 anyrights, Vnode * parentptr)
 {
     /* initialize return status from a vnode  */
     status->InterfaceVersion = 1;
     status->SyncCounter = status->dataVersionHigh = status->lockCount =
-    status->errorCode = 0;
-    status->ResidencyMask = 1; /* means for MR-AFS: file in /vicepr-partition */
+	status->errorCode = 0;
+    status->ResidencyMask = 1;	/* means for MR-AFS: file in /vicepr-partition */
     if (targetptr->disk.type == vFile)
 	status->FileType = File;
     else if (targetptr->disk.type == vDirectory)
@@ -1995,7 +1991,7 @@ void GetStatus(Vnode *targetptr,
     else if (targetptr->disk.type == vSymlink)
 	status->FileType = SymbolicLink;
     else
-	status->FileType = Invalid;			/*invalid type field */
+	status->FileType = Invalid;	/*invalid type field */
     status->LinkCount = targetptr->disk.linkCount;
     {
 	afs_fsize_t targetLen;
@@ -2009,83 +2005,80 @@ void GetStatus(Vnode *targetptr,
     status->AnonymousAccess = anyrights;
     status->UnixModeBits = targetptr->disk.modeBits;
     status->ClientModTime = targetptr->disk.unixModifyTime;	/* This might need rework */
-    status->ParentVnode = (status->FileType == Directory ? targetptr->vnodeNumber : parentptr->vnodeNumber);
-    status->ParentUnique = (status->FileType == Directory ? targetptr->disk.uniquifier : parentptr->disk.uniquifier);
-    status->ServerModTime = targetptr->disk.serverModifyTime;			
+    status->ParentVnode =
+	(status->FileType ==
+	 Directory ? targetptr->vnodeNumber : parentptr->vnodeNumber);
+    status->ParentUnique =
+	(status->FileType ==
+	 Directory ? targetptr->disk.uniquifier : parentptr->disk.uniquifier);
+    status->ServerModTime = targetptr->disk.serverModifyTime;
     status->Group = targetptr->disk.group;
     status->lockCount = targetptr->disk.lock.lockCount;
     status->errorCode = 0;
 
-} /*GetStatus*/
+}				/*GetStatus */
 
 static
-afs_int32 common_FetchData64 (struct rx_call *acall, 
-			      struct AFSFid *Fid,    
-			      afs_int32 Pos,         
-			      afs_int32 Len,         
-			      struct AFSFetchStatus *OutStatus,
-			      struct AFSCallBack *CallBack,
-			      struct AFSVolSync *Sync,
-			      int type)              
-{ 
-    Vnode * targetptr =	0;		    /* pointer to vnode to fetch */
-    Vnode * parentwhentargetnotdir = 0;	    /* parent vnode if vptr is a file */
-    Vnode   tparentwhentargetnotdir;	    /* parent vnode for GetStatus */
-    int	    errorCode =	0;		    /* return code to caller */
-    int	    fileCode =	0;		    /* return code from vol package */
-    Volume * volptr = 0;		    /* pointer to the volume */
-    struct client *client;		    /* pointer to the client data */
-    struct rx_connection *tcon;		    /* the connection we're part of */
-    afs_int32 rights, anyrights;		    /* rights for this and any user */
-    struct client *t_client;                /* tmp ptr to client data */
-    struct in_addr logHostAddr;		    /* host ip holder for inet_ntoa */
+  afs_int32
+common_FetchData64(struct rx_call *acall, struct AFSFid *Fid, afs_int32 Pos,
+		   afs_int32 Len, struct AFSFetchStatus *OutStatus,
+		   struct AFSCallBack *CallBack, struct AFSVolSync *Sync,
+		   int type)
+{
+    Vnode *targetptr = 0;	/* pointer to vnode to fetch */
+    Vnode *parentwhentargetnotdir = 0;	/* parent vnode if vptr is a file */
+    Vnode tparentwhentargetnotdir;	/* parent vnode for GetStatus */
+    int errorCode = 0;		/* return code to caller */
+    int fileCode = 0;		/* return code from vol package */
+    Volume *volptr = 0;		/* pointer to the volume */
+    struct client *client;	/* pointer to the client data */
+    struct rx_connection *tcon;	/* the connection we're part of */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
+    struct client *t_client;	/* tmp ptr to client data */
+    struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct fs_stats_xferData *xferP;	    /* Ptr to this op's byte size struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval xferStartTime,
-                   xferStopTime;	    /* Start/stop times for xfer portion*/
-    struct timeval elapsedTime;		    /* Transfer time */
-    afs_int32 bytesToXfer;			    /* # bytes to xfer*/
-    afs_int32 bytesXferred;			    /* # bytes actually xferred*/
-    int readIdx;			    /* Index of read stats array to bump*/
-    static afs_int32 tot_bytesXferred; /* shared access protected by FS_LOCK */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct fs_stats_xferData *xferP;	/* Ptr to this op's byte size struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval xferStartTime, xferStopTime;	/* Start/stop times for xfer portion */
+    struct timeval elapsedTime;	/* Transfer time */
+    afs_int32 bytesToXfer;	/* # bytes to xfer */
+    afs_int32 bytesXferred;	/* # bytes actually xferred */
+    int readIdx;		/* Index of read stats array to bump */
+    static afs_int32 tot_bytesXferred;	/* shared access protected by FS_LOCK */
 
     /*
      * Set our stats pointers, remember when the RPC operation started, and
      * tally the operation.
      */
-    opP   = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_FETCHDATA]);
+    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_FETCHDATA]);
     xferP = &(afs_FullPerfStats.det.xferOpTimes[FS_STATS_XFERIDX_FETCHDATA]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    ViceLog(1,("SRXAFS_FetchData, Fid = %u.%u.%u\n",
-	    Fid->Volume, Fid->Vnode, Fid->Unique));	
-    FS_LOCK
-    AFSCallStats.FetchData++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-
-    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
+    ViceLog(1,
+	    ("SRXAFS_FetchData, Fid = %u.%u.%u\n", Fid->Volume, Fid->Vnode,
+	     Fid->Unique));
+    FS_LOCK AFSCallStats.FetchData++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_FetchData;
 
     /* Get ptr to client data for user Id for logging */
-    t_client = (struct client *)  rx_GetSpecific(tcon, rxcon_client_key);
-    logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
-    ViceLog(5,("SRXAFS_FetchData, Fid = %u.%u.%u, Host %s, Id %d\n",
-	    Fid->Volume, Fid->Vnode, Fid->Unique,
-	    inet_ntoa(logHostAddr), t_client->ViceId));	
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+    logHostAddr.s_addr = rx_HostOf(rx_PeerOf(tcon));
+    ViceLog(5,
+	    ("SRXAFS_FetchData, Fid = %u.%u.%u, Host %s, Id %d\n",
+	     Fid->Volume, Fid->Vnode, Fid->Unique, inet_ntoa(logHostAddr),
+	     t_client->ViceId));
     /*
      * Get volume/vnode for the fetched file; caller's access rights to
      * it are also returned
      */
-    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
-				     DONTCHECK, &parentwhentargetnotdir,
-				     &client, READ_LOCK, &rights, &anyrights)))
+    if ((errorCode =
+	 GetVolumePackage(tcon, Fid, &volptr, &targetptr, DONTCHECK,
+			  &parentwhentargetnotdir, &client, READ_LOCK,
+			  &rights, &anyrights)))
 	goto Bad_FetchData;
 
     SetVolumeSync(Sync, volptr);
@@ -2094,21 +2087,20 @@ afs_int32 common_FetchData64 (struct rx_call *acall,
     /*
      * Remember that another read operation was performed.
      */
-    FS_LOCK
-    if (client->InSameNetwork)
-	readIdx = VOL_STATS_SAME_NET;
+    FS_LOCK if (client->InSameNetwork)
+	  readIdx = VOL_STATS_SAME_NET;
     else
 	readIdx = VOL_STATS_DIFF_NET;
     V_stat_reads(volptr, readIdx)++;
     if (client->ViceId != AnonymousID) {
-	V_stat_reads(volptr, readIdx+1)++;
+	V_stat_reads(volptr, readIdx + 1)++;
     }
     FS_UNLOCK
 #endif /* FS_STATS_DETAILED */
-
-    /* Check whether the caller has permission access to fetch the data */
-    if ((errorCode = Check_PermissionRights(targetptr, client, rights,
-					   CHK_FETCHDATA, 0))) 
+	/* Check whether the caller has permission access to fetch the data */
+	if ((errorCode =
+	     Check_PermissionRights(targetptr, client, rights, CHK_FETCHDATA,
+				    0)))
 	goto Bad_FetchData;
 
     /*
@@ -2121,7 +2113,6 @@ afs_int32 common_FetchData64 (struct rx_call *acall,
 	assert(!fileCode || (fileCode == VSALVAGE));
 	parentwhentargetnotdir = NULL;
     }
-
 #if FS_STATS_DETAILED
     /*
      * Remember when the data transfer started.
@@ -2131,10 +2122,12 @@ afs_int32 common_FetchData64 (struct rx_call *acall,
 
     /* actually do the data transfer */
 #if FS_STATS_DETAILED
-    errorCode = FetchData_RXStyle(volptr, targetptr, acall, Pos, Len, type,
-				  &bytesToXfer, &bytesXferred);
+    errorCode =
+	FetchData_RXStyle(volptr, targetptr, acall, Pos, Len, type,
+			  &bytesToXfer, &bytesXferred);
 #else
-    if ((errorCode = FetchData_RXStyle(volptr, targetptr, acall, Pos, Len, type)))
+    if ((errorCode =
+	 FetchData_RXStyle(volptr, targetptr, acall, Pos, Len, type)))
 	goto Bad_FetchData;
 #endif /* FS_STATS_DETAILED */
 
@@ -2146,206 +2139,187 @@ afs_int32 common_FetchData64 (struct rx_call *acall,
      * operation failed, we jump to the appropriate point.
      */
     TM_GetTimeOfDay(&xferStopTime, 0);
-    FS_LOCK
-    (xferP->numXfers)++;
+    FS_LOCK(xferP->numXfers)++;
     if (!errorCode) {
 	(xferP->numSuccesses)++;
 
-        /*
-         * Bump the xfer sum by the number of bytes actually sent, NOT the
-         * target number.
-         */
+	/*
+	 * Bump the xfer sum by the number of bytes actually sent, NOT the
+	 * target number.
+	 */
 	tot_bytesXferred += bytesXferred;
-        (xferP->sumBytes) += (tot_bytesXferred >> 10);
+	(xferP->sumBytes) += (tot_bytesXferred >> 10);
 	tot_bytesXferred &= 0x3FF;
-        if (bytesXferred < xferP->minBytes)
+	if (bytesXferred < xferP->minBytes)
 	    xferP->minBytes = bytesXferred;
-        if (bytesXferred > xferP->maxBytes)
+	if (bytesXferred > xferP->maxBytes)
 	    xferP->maxBytes = bytesXferred;
 
-        /*
-         * Tally the size of the object.  Note: we tally the actual size,
-         * NOT the number of bytes that made it out over the wire.
-         */
-        if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET0)
+	/*
+	 * Tally the size of the object.  Note: we tally the actual size,
+	 * NOT the number of bytes that made it out over the wire.
+	 */
+	if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET0)
 	    (xferP->count[0])++;
-        else
-	    if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET1)
-	        (xferP->count[1])++;
-        else
-	    if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET2)
-	        (xferP->count[2])++;
-        else
-	    if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET3)
-	        (xferP->count[3])++;
-        else
-	    if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET4)
-	        (xferP->count[4])++;
-        else
-	    if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET5)
-                (xferP->count[5])++;
-        else
-            if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET6)
-                (xferP->count[6])++;
-        else
-            if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET7)
-                (xferP->count[7])++;
-        else
-            (xferP->count[8])++;
+	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET1)
+	    (xferP->count[1])++;
+	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET2)
+	    (xferP->count[2])++;
+	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET3)
+	    (xferP->count[3])++;
+	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET4)
+	    (xferP->count[4])++;
+	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET5)
+	    (xferP->count[5])++;
+	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET6)
+	    (xferP->count[6])++;
+	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET7)
+	    (xferP->count[7])++;
+	else
+	    (xferP->count[8])++;
 
-        fs_stats_GetDiff(elapsedTime, xferStartTime, xferStopTime);
-        fs_stats_AddTo((xferP->sumTime), elapsedTime);
-        fs_stats_SquareAddTo((xferP->sqrTime), elapsedTime);
-        if (fs_stats_TimeLessThan(elapsedTime, (xferP->minTime))) {
+	fs_stats_GetDiff(elapsedTime, xferStartTime, xferStopTime);
+	fs_stats_AddTo((xferP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((xferP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (xferP->minTime))) {
 	    fs_stats_TimeAssign((xferP->minTime), elapsedTime);
-        }
-        if (fs_stats_TimeGreaterThan(elapsedTime, (xferP->maxTime))) {
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (xferP->maxTime))) {
 	    fs_stats_TimeAssign((xferP->maxTime), elapsedTime);
-        }
-      }
+	}
+    }
     FS_UNLOCK
-    /*
-     * Finally, go off to tell our caller the bad news in case the
-     * fetch failed.
-     */
-    if (errorCode)
+	/*
+	 * Finally, go off to tell our caller the bad news in case the
+	 * fetch failed.
+	 */
+	if (errorCode)
 	goto Bad_FetchData;
 #endif /* FS_STATS_DETAILED */
 
     /* write back  the OutStatus from the target vnode  */
-    GetStatus(targetptr, OutStatus, rights, anyrights, &tparentwhentargetnotdir);
+    GetStatus(targetptr, OutStatus, rights, anyrights,
+	      &tparentwhentargetnotdir);
 
     /* if a r/w volume, promise a callback to the caller */
     if (VolumeWriteable(volptr))
 	SetCallBackStruct(AddCallBack(client->host, Fid), CallBack);
     else {
-      struct AFSFid myFid;		
-      memset(&myFid, 0, sizeof(struct AFSFid));
-      myFid.Volume = Fid->Volume;
-      SetCallBackStruct(AddVolCallBack(client->host, &myFid), CallBack);
-      }
+	struct AFSFid myFid;
+	memset(&myFid, 0, sizeof(struct AFSFid));
+	myFid.Volume = Fid->Volume;
+	SetCallBackStruct(AddVolCallBack(client->host, &myFid), CallBack);
+    }
 
-Bad_FetchData: 
+  Bad_FetchData:
     /* Update and store volume/vnode and parent vnodes back */
-    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
-			    volptr);
-    ViceLog(2, ("SRXAFS_FetchData returns %d\n", errorCode)); 
+    (void)PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0,
+			   volptr);
+    ViceLog(2, ("SRXAFS_FetchData returns %d\n", errorCode));
     errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (errorCode == 0) {
-	FS_LOCK
-	(opP->numSuccesses)++;
-        fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-        fs_stats_AddTo((opP->sumTime), elapsedTime);
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
 	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-        if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
 	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-        }
-        if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
 	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-        }
-	FS_UNLOCK
-      }
-
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU (acall, FetchDataEvent, errorCode, AUD_FID, Fid, AUD_END);
-    return(errorCode);
+    osi_auditU(acall, FetchDataEvent, errorCode, AUD_FID, Fid, AUD_END);
+    return (errorCode);
 
-} /*SRXAFS_FetchData*/
+}				/*SRXAFS_FetchData */
 
-afs_int32 SRXAFS_FetchData (struct rx_call *acall,   
-			    struct AFSFid *Fid,      
-			    afs_int32 Pos,           
-			    afs_int32 Len,           
-			    struct AFSFetchStatus *OutStatus,
-			    struct AFSCallBack *CallBack, 
-			    struct AFSVolSync *Sync) 
-
+afs_int32
+SRXAFS_FetchData(struct rx_call * acall, struct AFSFid * Fid, afs_int32 Pos,
+		 afs_int32 Len, struct AFSFetchStatus * OutStatus,
+		 struct AFSCallBack * CallBack, struct AFSVolSync * Sync)
 {
     int code;
 
-    code = common_FetchData64 (acall, Fid, Pos, Len, OutStatus,
-			     CallBack, Sync, 0);
+    code =
+	common_FetchData64(acall, Fid, Pos, Len, OutStatus, CallBack, Sync,
+			   0);
     return code;
 }
 
-afs_int32 SRXAFS_FetchData64 (struct rx_call *acall, 
-			      struct AFSFid *Fid,    
-			      afs_int64 Pos,         
-			      afs_int64 Len,         
-			      struct AFSFetchStatus *OutStatus,
-			      struct AFSCallBack *CallBack,
-			      struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_FetchData64(struct rx_call * acall, struct AFSFid * Fid, afs_int64 Pos,
+		   afs_int64 Len, struct AFSFetchStatus * OutStatus,
+		   struct AFSCallBack * CallBack, struct AFSVolSync * Sync)
 {
     int code;
     afs_int32 tPos, tLen;
 
 #ifdef AFS_64BIT_ENV
     if (Pos + Len > 0x7fffffff)
-        return E2BIG;
+	return E2BIG;
     tPos = Pos;
     tLen = Len;
 #else /* AFS_64BIT_ENV */
     if (Pos.high || Len.high)
-        return E2BIG;
+	return E2BIG;
     tPos = Pos.low;
     tLen = Len.low;
 #endif /* AFS_64BIT_ENV */
 
-    code = common_FetchData64 (acall, Fid, tPos, tLen, OutStatus,
-			     CallBack, Sync, 1);
+    code =
+	common_FetchData64(acall, Fid, tPos, tLen, OutStatus, CallBack, Sync,
+			   1);
     return code;
 }
 
-afs_int32 SRXAFS_FetchACL (struct rx_call *acall,    
-			   struct AFSFid *Fid,       
-			   struct AFSOpaque *AccessList,     
-			   struct AFSFetchStatus *OutStatus, 
-			   struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_FetchACL(struct rx_call * acall, struct AFSFid * Fid,
+		struct AFSOpaque * AccessList,
+		struct AFSFetchStatus * OutStatus, struct AFSVolSync * Sync)
 {
-    Vnode * targetptr =	0;		/* pointer to vnode to fetch */
-    Vnode * parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
-    int	    errorCode =	0;		/* return error code to caller */
-    Volume * volptr = 0;		/* pointer to the volume */
-    struct client *client;		/* pointer to the client data */
-    afs_int32 rights, anyrights;		/* rights for this and any user */
+    Vnode *targetptr = 0;	/* pointer to vnode to fetch */
+    Vnode *parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
+    int errorCode = 0;		/* return error code to caller */
+    Volume *volptr = 0;		/* pointer to the volume */
+    struct client *client;	/* pointer to the client data */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
-    struct client *t_client;                /* tmp ptr to client data */
-    struct in_addr logHostAddr;		    /* host ip holder for inet_ntoa */
+    struct client *t_client;	/* tmp ptr to client data */
+    struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_FETCHACL]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    ViceLog(1, ("SAFS_FetchACL, Fid = %u.%u.%u\n",
-	    Fid->Volume, Fid->Vnode, Fid->Unique));
-    FS_LOCK
-    AFSCallStats.FetchACL++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
+    ViceLog(1,
+	    ("SAFS_FetchACL, Fid = %u.%u.%u\n", Fid->Volume, Fid->Vnode,
+	     Fid->Unique));
+    FS_LOCK AFSCallStats.FetchACL++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_FetchACL;
 
     /* Get ptr to client data for user Id for logging */
-    t_client = (struct client *)  rx_GetSpecific(tcon, rxcon_client_key);
-    logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
-    ViceLog(5, ("SAFS_FetchACL, Fid = %u.%u.%u, Host %s, Id %d\n",
-	    Fid->Volume, Fid->Vnode, Fid->Unique,
-	    inet_ntoa(logHostAddr), t_client->ViceId));
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+    logHostAddr.s_addr = rx_HostOf(rx_PeerOf(tcon));
+    ViceLog(5,
+	    ("SAFS_FetchACL, Fid = %u.%u.%u, Host %s, Id %d\n", Fid->Volume,
+	     Fid->Vnode, Fid->Unique, inet_ntoa(logHostAddr),
+	     t_client->ViceId));
 
     AccessList->AFSOpaque_len = 0;
     AccessList->AFSOpaque_val = malloc(AFSOPAQUEMAX);
@@ -2358,95 +2332,95 @@ afs_int32 SRXAFS_FetchACL (struct rx_call *acall,
      * Get volume/vnode for the fetched file; caller's access rights to it
      * are also returned
      */
-    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
-				     DONTCHECK, &parentwhentargetnotdir,
-				     &client, READ_LOCK, &rights, &anyrights)))
+    if ((errorCode =
+	 GetVolumePackage(tcon, Fid, &volptr, &targetptr, DONTCHECK,
+			  &parentwhentargetnotdir, &client, READ_LOCK,
+			  &rights, &anyrights)))
 	goto Bad_FetchACL;
 
     SetVolumeSync(Sync, volptr);
 
     /* Check whether we have permission to fetch the ACL */
-    if ((errorCode = Check_PermissionRights(targetptr, client, rights,
-					   CHK_FETCHACL, 0)))
+    if ((errorCode =
+	 Check_PermissionRights(targetptr, client, rights, CHK_FETCHACL, 0)))
 	goto Bad_FetchACL;
 
     /* Get the Access List from the dir's vnode */
-    if ((errorCode = RXFetch_AccessList(targetptr, parentwhentargetnotdir,
-				       AccessList)))
+    if ((errorCode =
+	 RXFetch_AccessList(targetptr, parentwhentargetnotdir, AccessList)))
 	goto Bad_FetchACL;
 
     /* Get OutStatus back From the target Vnode  */
-    GetStatus(targetptr, OutStatus, rights, anyrights, parentwhentargetnotdir);
+    GetStatus(targetptr, OutStatus, rights, anyrights,
+	      parentwhentargetnotdir);
 
-Bad_FetchACL: 
+  Bad_FetchACL:
     /* Update and store volume/vnode and parent vnodes back */
-    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
-			    volptr);
-    ViceLog(2, ("SAFS_FetchACL returns %d (ACL=%s)\n",
-	    errorCode, AccessList->AFSOpaque_val));
+    (void)PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0,
+			   volptr);
+    ViceLog(2,
+	    ("SAFS_FetchACL returns %d (ACL=%s)\n", errorCode,
+	     AccessList->AFSOpaque_val));
     errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (errorCode == 0) {
- 	FS_LOCK
-        (opP->numSuccesses)++;
-        fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-        fs_stats_AddTo((opP->sumTime), elapsedTime);
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
 	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-        if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
 	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-        }
-        if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
 	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-        }
-	FS_UNLOCK
-      }
-
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU (acall, FetchACLEvent, errorCode, AUD_FID, Fid, AUD_END);
+    osi_auditU(acall, FetchACLEvent, errorCode, AUD_FID, Fid, AUD_END);
     return errorCode;
-} /*SRXAFS_FetchACL*/
+}				/*SRXAFS_FetchACL */
 
 
 /*
  * This routine is called exclusively by SRXAFS_FetchStatus(), and should be
  * merged into it when possible.
  */
-static 
-afs_int32 SAFSS_FetchStatus (struct rx_call *acall,
-			     struct AFSFid *Fid,  
-			     struct AFSFetchStatus *OutStatus,
-			     struct AFSCallBack *CallBack,	
-			     struct AFSVolSync *Sync)		
+static
+  afs_int32
+SAFSS_FetchStatus(struct rx_call *acall, struct AFSFid *Fid,
+		  struct AFSFetchStatus *OutStatus,
+		  struct AFSCallBack *CallBack, struct AFSVolSync *Sync)
 {
-    Vnode * targetptr =	0;		/* pointer to vnode to fetch */
-    Vnode * parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
-    int	    errorCode =	0;		/* return code to caller */
-    Volume * volptr = 0;		/* pointer to the volume */
-    struct client *client;		/* pointer to the client data */
-    afs_int32 rights, anyrights;		/* rights for this and any user */
-    struct client *t_client;            /* tmp ptr to client data */
-    struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
+    Vnode *targetptr = 0;	/* pointer to vnode to fetch */
+    Vnode *parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
+    int errorCode = 0;		/* return code to caller */
+    Volume *volptr = 0;		/* pointer to the volume */
+    struct client *client;	/* pointer to the client data */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
+    struct client *t_client;	/* tmp ptr to client data */
+    struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
     /* Get ptr to client data for user Id for logging */
-    t_client = (struct client *)  rx_GetSpecific(tcon, rxcon_client_key);
-    logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
-    ViceLog(1, ("SAFS_FetchStatus,  Fid = %u.%u.%u, Host %s, Id %d\n",
-	    Fid->Volume, Fid->Vnode, Fid->Unique,
-	    inet_ntoa(logHostAddr), t_client->ViceId));
-    FS_LOCK
-    AFSCallStats.FetchStatus++, AFSCallStats.TotalCalls++;
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+    logHostAddr.s_addr = rx_HostOf(rx_PeerOf(tcon));
+    ViceLog(1,
+	    ("SAFS_FetchStatus,  Fid = %u.%u.%u, Host %s, Id %d\n",
+	     Fid->Volume, Fid->Vnode, Fid->Unique, inet_ntoa(logHostAddr),
+	     t_client->ViceId));
+    FS_LOCK AFSCallStats.FetchStatus++, AFSCallStats.TotalCalls++;
     FS_UNLOCK
-    /*
-     * Get volume/vnode for the fetched file; caller's rights to it are
-     * also returned
-     */
-    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
-				     DONTCHECK, &parentwhentargetnotdir,
-				     &client, READ_LOCK, &rights, &anyrights)))
+	/*
+	 * Get volume/vnode for the fetched file; caller's rights to it are
+	 * also returned
+	 */
+	if ((errorCode =
+	     GetVolumePackage(tcon, Fid, &volptr, &targetptr, DONTCHECK,
+			      &parentwhentargetnotdir, &client, READ_LOCK,
+			      &rights, &anyrights)))
 	goto Bad_FetchStatus;
 
     /* set volume synchronization information */
@@ -2454,77 +2428,72 @@ afs_int32 SAFSS_FetchStatus (struct rx_call *acall,
 
     /* Are we allowed to fetch Fid's status? */
     if (targetptr->disk.type != vDirectory) {
-      if ((errorCode = Check_PermissionRights(targetptr, client, rights,
-					     CHK_FETCHSTATUS, 0))) {
-	  if (rx_GetCallAbortCode(acall) == errorCode) 
-	      rx_SetCallAbortCode(acall, 0);
-	  goto Bad_FetchStatus;
-      }
+	if ((errorCode =
+	     Check_PermissionRights(targetptr, client, rights,
+				    CHK_FETCHSTATUS, 0))) {
+	    if (rx_GetCallAbortCode(acall) == errorCode)
+		rx_SetCallAbortCode(acall, 0);
+	    goto Bad_FetchStatus;
+	}
     }
 
     /* set OutStatus From the Fid  */
-    GetStatus(targetptr, OutStatus, rights, anyrights, parentwhentargetnotdir);
+    GetStatus(targetptr, OutStatus, rights, anyrights,
+	      parentwhentargetnotdir);
 
     /* If a r/w volume, also set the CallBack state */
     if (VolumeWriteable(volptr))
 	SetCallBackStruct(AddCallBack(client->host, Fid), CallBack);
     else {
-      struct AFSFid myFid;		
-      memset(&myFid, 0, sizeof(struct AFSFid));
-      myFid.Volume = Fid->Volume;
-      SetCallBackStruct(AddVolCallBack(client->host, &myFid), CallBack);
-      }
+	struct AFSFid myFid;
+	memset(&myFid, 0, sizeof(struct AFSFid));
+	myFid.Volume = Fid->Volume;
+	SetCallBackStruct(AddVolCallBack(client->host, &myFid), CallBack);
+    }
 
-Bad_FetchStatus: 
+  Bad_FetchStatus:
     /* Update and store volume/vnode and parent vnodes back */
-    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
-			    volptr);
-    ViceLog(2, ("SAFS_FetchStatus returns %d\n", errorCode)); 
+    (void)PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0,
+			   volptr);
+    ViceLog(2, ("SAFS_FetchStatus returns %d\n", errorCode));
     return errorCode;
 
-} /*SAFSS_FetchStatus*/
+}				/*SAFSS_FetchStatus */
 
 
-afs_int32 SRXAFS_BulkStatus(struct rx_call *acall,
-			    struct AFSCBFids *Fids,
-			    struct AFSBulkStats *OutStats,
-			    struct AFSCBs *CallBacks,
-			    struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_BulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
+		  struct AFSBulkStats * OutStats, struct AFSCBs * CallBacks,
+		  struct AFSVolSync * Sync)
 {
     register int i;
     afs_int32 nfiles;
-    Vnode * targetptr =	0;		/* pointer to vnode to fetch */
-    Vnode * parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
-    int	    errorCode =	0;		/* return code to caller */
-    Volume * volptr = 0;		/* pointer to the volume */
-    struct client *client;		/* pointer to the client data */
-    afs_int32 rights, anyrights;		/* rights for this and any user */
+    Vnode *targetptr = 0;	/* pointer to vnode to fetch */
+    Vnode *parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
+    int errorCode = 0;		/* return code to caller */
+    Volume *volptr = 0;		/* pointer to the volume */
+    struct client *client;	/* pointer to the client data */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
     register struct AFSFid *tfid;	/* file id we're dealing with now */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_BULKSTATUS]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     ViceLog(1, ("SAFS_BulkStatus\n"));
-    FS_LOCK
-    AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-
-    nfiles = Fids->AFSCBFids_len;	/* # of files in here */
-    if (nfiles <= 0) {                  /* Sanity check */
+    FS_LOCK AFSCallStats.TotalCalls++;
+    FS_UNLOCK nfiles = Fids->AFSCBFids_len;	/* # of files in here */
+    if (nfiles <= 0) {		/* Sanity check */
 	errorCode = EINVAL;
 	goto Audit_and_Return;
     }
@@ -2549,128 +2518,120 @@ afs_int32 SRXAFS_BulkStatus(struct rx_call *acall,
 	goto Bad_BulkStatus;
 
     tfid = Fids->AFSCBFids_val;
-    for (i=0; i<nfiles; i++, tfid++) {
+    for (i = 0; i < nfiles; i++, tfid++) {
 	/*
 	 * Get volume/vnode for the fetched file; caller's rights to it
 	 * are also returned
 	 */
 	if ((errorCode =
-	    GetVolumePackage(tcon, tfid, &volptr, &targetptr,
-			     DONTCHECK, &parentwhentargetnotdir, &client,
-			     READ_LOCK, &rights, &anyrights)))
-	    	goto Bad_BulkStatus;
+	     GetVolumePackage(tcon, tfid, &volptr, &targetptr, DONTCHECK,
+			      &parentwhentargetnotdir, &client, READ_LOCK,
+			      &rights, &anyrights)))
+	    goto Bad_BulkStatus;
 	/* set volume synchronization information, but only once per call */
 	if (i == nfiles)
 	    SetVolumeSync(Sync, volptr);
 
 	/* Are we allowed to fetch Fid's status? */
 	if (targetptr->disk.type != vDirectory) {
-	    if ((errorCode = Check_PermissionRights(targetptr, client, rights,
-						   CHK_FETCHSTATUS, 0))) {
-		if (rx_GetCallAbortCode(acall) == errorCode) 
+	    if ((errorCode =
+		 Check_PermissionRights(targetptr, client, rights,
+					CHK_FETCHSTATUS, 0))) {
+		if (rx_GetCallAbortCode(acall) == errorCode)
 		    rx_SetCallAbortCode(acall, 0);
 		goto Bad_BulkStatus;
 	    }
 	}
 
 	/* set OutStatus From the Fid  */
-	GetStatus(targetptr, &OutStats->AFSBulkStats_val[i],
-		  rights, anyrights, parentwhentargetnotdir);
+	GetStatus(targetptr, &OutStats->AFSBulkStats_val[i], rights,
+		  anyrights, parentwhentargetnotdir);
 
 	/* If a r/w volume, also set the CallBack state */
 	if (VolumeWriteable(volptr))
 	    SetCallBackStruct(AddBulkCallBack(client->host, tfid),
 			      &CallBacks->AFSCBs_val[i]);
 	else {
-	  struct AFSFid myFid;		
-	  memset(&myFid, 0, sizeof(struct AFSFid));
-	  myFid.Volume = tfid->Volume;
-	  SetCallBackStruct(AddVolCallBack(client->host, &myFid),
+	    struct AFSFid myFid;
+	    memset(&myFid, 0, sizeof(struct AFSFid));
+	    myFid.Volume = tfid->Volume;
+	    SetCallBackStruct(AddVolCallBack(client->host, &myFid),
 			      &CallBacks->AFSCBs_val[i]);
 	}
 
 	/* put back the file ID and volume */
-	(void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0,
-				volptr);
+	(void)PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0,
+			       volptr);
 	parentwhentargetnotdir = (Vnode *) 0;
 	targetptr = (Vnode *) 0;
 	volptr = (Volume *) 0;
     }
 
-Bad_BulkStatus: 
+  Bad_BulkStatus:
     /* Update and store volume/vnode and parent vnodes back */
-    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
-			    volptr);
+    (void)PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0,
+			   volptr);
     errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (errorCode == 0) {
-	FS_LOCK
-        (opP->numSuccesses)++;
-        fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-        fs_stats_AddTo((opP->sumTime), elapsedTime);
-        fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-        if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
 	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-        }
-        if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
 	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-        }
-	FS_UNLOCK
-    }	
-
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-Audit_and_Return:
-    ViceLog(2, ("SAFS_BulkStatus	returns	%d\n", errorCode)); 
-    osi_auditU (acall, BulkFetchStatusEvent, errorCode, AUD_FIDS, Fids, AUD_END);
+  Audit_and_Return:
+    ViceLog(2, ("SAFS_BulkStatus	returns	%d\n", errorCode));
+    osi_auditU(acall, BulkFetchStatusEvent, errorCode, AUD_FIDS, Fids,
+	       AUD_END);
     return errorCode;
 
-} /*SRXAFS_BulkStatus*/
+}				/*SRXAFS_BulkStatus */
 
 
-afs_int32 SRXAFS_InlineBulkStatus(struct rx_call *acall,
-				  struct AFSCBFids *Fids,
-				  struct AFSBulkStats *OutStats,
-				  struct AFSCBs *CallBacks,
-				  struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_InlineBulkStatus(struct rx_call * acall, struct AFSCBFids * Fids,
+			struct AFSBulkStats * OutStats,
+			struct AFSCBs * CallBacks, struct AFSVolSync * Sync)
 {
     register int i;
     afs_int32 nfiles;
-    Vnode * targetptr =	0;		/* pointer to vnode to fetch */
-    Vnode * parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
-    int	    errorCode =	0;		/* return code to caller */
-    Volume * volptr = 0;		/* pointer to the volume */
-    struct client *client;		/* pointer to the client data */
-    afs_int32 rights, anyrights;		/* rights for this and any user */
+    Vnode *targetptr = 0;	/* pointer to vnode to fetch */
+    Vnode *parentwhentargetnotdir = 0;	/* parent vnode if targetptr is a file */
+    int errorCode = 0;		/* return code to caller */
+    Volume *volptr = 0;		/* pointer to the volume */
+    struct client *client;	/* pointer to the client data */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
     register struct AFSFid *tfid;	/* file id we're dealing with now */
     struct rx_connection *tcon;
     AFSFetchStatus *tstatus;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_BULKSTATUS]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     ViceLog(1, ("SAFS_InlineBulkStatus\n"));
-    FS_LOCK
-    AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-
-    nfiles = Fids->AFSCBFids_len;	/* # of files in here */
-    if (nfiles <= 0) {                  /* Sanity check */
+    FS_LOCK AFSCallStats.TotalCalls++;
+    FS_UNLOCK nfiles = Fids->AFSCBFids_len;	/* # of files in here */
+    if (nfiles <= 0) {		/* Sanity check */
 	errorCode = EINVAL;
 	goto Audit_and_Return;
     }
@@ -2696,15 +2657,15 @@ afs_int32 SRXAFS_InlineBulkStatus(struct rx_call *acall,
     }
 
     tfid = Fids->AFSCBFids_val;
-    for (i=0; i<nfiles; i++, tfid++) {
+    for (i = 0; i < nfiles; i++, tfid++) {
 	/*
 	 * Get volume/vnode for the fetched file; caller's rights to it
 	 * are also returned
 	 */
 	if ((errorCode =
-	    GetVolumePackage(tcon, tfid, &volptr, &targetptr,
-			     DONTCHECK, &parentwhentargetnotdir, &client,
-			     READ_LOCK, &rights, &anyrights))) {
+	     GetVolumePackage(tcon, tfid, &volptr, &targetptr, DONTCHECK,
+			      &parentwhentargetnotdir, &client, READ_LOCK,
+			      &rights, &anyrights))) {
 	    tstatus = &OutStats->AFSBulkStats_val[i];
 	    tstatus->errorCode = errorCode;
 	    parentwhentargetnotdir = (Vnode *) 0;
@@ -2719,11 +2680,13 @@ afs_int32 SRXAFS_InlineBulkStatus(struct rx_call *acall,
 
 	/* Are we allowed to fetch Fid's status? */
 	if (targetptr->disk.type != vDirectory) {
-	    if ((errorCode = Check_PermissionRights(targetptr, client, rights,
-						   CHK_FETCHSTATUS, 0))) {
+	    if ((errorCode =
+		 Check_PermissionRights(targetptr, client, rights,
+					CHK_FETCHSTATUS, 0))) {
 		tstatus = &OutStats->AFSBulkStats_val[i];
 		tstatus->errorCode = errorCode;
-		(void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0, volptr);
+		(void)PutVolumePackage(parentwhentargetnotdir, targetptr,
+				       (Vnode *) 0, volptr);
 		parentwhentargetnotdir = (Vnode *) 0;
 		targetptr = (Vnode *) 0;
 		volptr = (Volume *) 0;
@@ -2732,186 +2695,172 @@ afs_int32 SRXAFS_InlineBulkStatus(struct rx_call *acall,
 	}
 
 	/* set OutStatus From the Fid  */
-	GetStatus(targetptr, (struct AFSFetchStatus *) &OutStats->AFSBulkStats_val[i], 
-	  rights, anyrights, parentwhentargetnotdir);
+	GetStatus(targetptr,
+		  (struct AFSFetchStatus *)&OutStats->AFSBulkStats_val[i],
+		  rights, anyrights, parentwhentargetnotdir);
 
 	/* If a r/w volume, also set the CallBack state */
 	if (VolumeWriteable(volptr))
 	    SetCallBackStruct(AddBulkCallBack(client->host, tfid),
 			      &CallBacks->AFSCBs_val[i]);
 	else {
-	  struct AFSFid myFid;		
-	  memset(&myFid, 0, sizeof(struct AFSFid));
-	  myFid.Volume = tfid->Volume;
-	  SetCallBackStruct(AddVolCallBack(client->host, &myFid),
+	    struct AFSFid myFid;
+	    memset(&myFid, 0, sizeof(struct AFSFid));
+	    myFid.Volume = tfid->Volume;
+	    SetCallBackStruct(AddVolCallBack(client->host, &myFid),
 			      &CallBacks->AFSCBs_val[i]);
 	}
 
 	/* put back the file ID and volume */
-	(void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0, volptr);
+	(void)PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0,
+			       volptr);
 	parentwhentargetnotdir = (Vnode *) 0;
 	targetptr = (Vnode *) 0;
 	volptr = (Volume *) 0;
     }
 
-Bad_InlineBulkStatus: 
+  Bad_InlineBulkStatus:
     /* Update and store volume/vnode and parent vnodes back */
-    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
+    (void)PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0,
+			   volptr);
     errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (errorCode == 0) {
-	FS_LOCK
-        (opP->numSuccesses)++;
-        fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-        fs_stats_AddTo((opP->sumTime), elapsedTime);
-        fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-        if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
 	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-        }
-        if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
 	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-        }
-	FS_UNLOCK
-    }	
-
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-Audit_and_Return:
-    ViceLog(2, ("SAFS_InlineBulkStatus	returns	%d\n", errorCode)); 
-    osi_auditU (acall, InlineBulkFetchStatusEvent, errorCode, AUD_FIDS, Fids, AUD_END);
+  Audit_and_Return:
+    ViceLog(2, ("SAFS_InlineBulkStatus	returns	%d\n", errorCode));
+    osi_auditU(acall, InlineBulkFetchStatusEvent, errorCode, AUD_FIDS, Fids,
+	       AUD_END);
     return 0;
 
-} /*SRXAFS_InlineBulkStatus*/
+}				/*SRXAFS_InlineBulkStatus */
 
 
-afs_int32 SRXAFS_FetchStatus (struct rx_call *acall,		
-			      struct AFSFid *Fid,		
-			      struct AFSFetchStatus *OutStatus,	
-			      struct AFSCallBack *CallBack,	
-			      struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_FetchStatus(struct rx_call * acall, struct AFSFid * Fid,
+		   struct AFSFetchStatus * OutStatus,
+		   struct AFSCallBack * CallBack, struct AFSVolSync * Sync)
 {
     afs_int32 code;
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_FETCHSTATUS]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_FetchStatus;
 
-    code = SAFSS_FetchStatus (acall, Fid, OutStatus, CallBack, Sync);
+    code = SAFSS_FetchStatus(acall, Fid, OutStatus, CallBack, Sync);
 
-Bad_FetchStatus:    
+  Bad_FetchStatus:
     code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
-	FS_LOCK
-        (opP->numSuccesses)++;
-        fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-        fs_stats_AddTo((opP->sumTime), elapsedTime);
-        fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-        if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
 	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-        }
-        if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
 	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-        }
-	FS_UNLOCK
-      }
-
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU (acall, FetchStatusEvent, code, AUD_FID, Fid, AUD_END);
+    osi_auditU(acall, FetchStatusEvent, code, AUD_FID, Fid, AUD_END);
     return code;
 
-} /*SRXAFS_FetchStatus*/
+}				/*SRXAFS_FetchStatus */
 
 static
-afs_int32 common_StoreData64 (struct rx_call *acall,		
-			      struct AFSFid *Fid,			
-			      struct AFSStoreStatus *InStatus,	
-			      afs_uint32 Pos,                     
-			      afs_uint32 Length,                  
-			      afs_uint32 FileLength,              
-			      struct AFSFetchStatus *OutStatus,	
-			      struct AFSVolSync *Sync)
+  afs_int32
+common_StoreData64(struct rx_call *acall, struct AFSFid *Fid,
+		   struct AFSStoreStatus *InStatus, afs_uint32 Pos,
+		   afs_uint32 Length, afs_uint32 FileLength,
+		   struct AFSFetchStatus *OutStatus, struct AFSVolSync *Sync)
 {
-    Vnode * targetptr =	0;		/* pointer to input fid */
-    Vnode * parentwhentargetnotdir = 0;	/* parent of Fid to get ACL */
-    Vnode   tparentwhentargetnotdir;	/* parent vnode for GetStatus */
-    int	    errorCode =	0;		/* return code for caller */
-    int	    fileCode =	0;		/* return code from vol package */
-    Volume * volptr = 0;		/* pointer to the volume header */
-    struct client * client;		/* pointer to client structure */
-    afs_int32 rights, anyrights;		/* rights for this and any user */
-    struct client *t_client;            /* tmp ptr to client data */
-    struct in_addr logHostAddr;		    /* host ip holder for inet_ntoa */
+    Vnode *targetptr = 0;	/* pointer to input fid */
+    Vnode *parentwhentargetnotdir = 0;	/* parent of Fid to get ACL */
+    Vnode tparentwhentargetnotdir;	/* parent vnode for GetStatus */
+    int errorCode = 0;		/* return code for caller */
+    int fileCode = 0;		/* return code from vol package */
+    Volume *volptr = 0;		/* pointer to the volume header */
+    struct client *client;	/* pointer to client structure */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
+    struct client *t_client;	/* tmp ptr to client data */
+    struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct fs_stats_xferData *xferP;	    /* Ptr to this op's byte size struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval xferStartTime,
-                   xferStopTime;	    /* Start/stop times for xfer portion*/
-    struct timeval elapsedTime;		    /* Transfer time */
-    afs_int32 bytesToXfer;			    /* # bytes to xfer */
-    afs_int32 bytesXferred;			    /* # bytes actually xfer */
-    static afs_int32 tot_bytesXferred; /* shared access protected by FS_LOCK */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct fs_stats_xferData *xferP;	/* Ptr to this op's byte size struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval xferStartTime, xferStopTime;	/* Start/stop times for xfer portion */
+    struct timeval elapsedTime;	/* Transfer time */
+    afs_int32 bytesToXfer;	/* # bytes to xfer */
+    afs_int32 bytesXferred;	/* # bytes actually xfer */
+    static afs_int32 tot_bytesXferred;	/* shared access protected by FS_LOCK */
 
     /*
      * Set our stats pointers, remember when the RPC operation started, and
      * tally the operation.
      */
-    opP   = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_STOREDATA]);
+    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_STOREDATA]);
     xferP = &(afs_FullPerfStats.det.xferOpTimes[FS_STATS_XFERIDX_STOREDATA]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-
-    ViceLog(1, ("StoreData: Fid = %u.%u.%u\n",
-	    Fid->Volume, Fid->Vnode, Fid->Unique));
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK ViceLog(1,
+		      ("StoreData: Fid = %u.%u.%u\n", Fid->Volume, Fid->Vnode,
+		       Fid->Unique));
     TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    FS_LOCK
-    AFSCallStats.StoreData++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-
-    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
+    FS_LOCK AFSCallStats.StoreData++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_StoreData;
 
     /* Get ptr to client data for user Id for logging */
-    t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
-    logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
-    ViceLog(5, ("StoreData: Fid = %u.%u.%u, Host %s, Id %d\n",
-	    Fid->Volume, Fid->Vnode, Fid->Unique,
-	    inet_ntoa(logHostAddr), t_client->ViceId));
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+    logHostAddr.s_addr = rx_HostOf(rx_PeerOf(tcon));
+    ViceLog(5,
+	    ("StoreData: Fid = %u.%u.%u, Host %s, Id %d\n", Fid->Volume,
+	     Fid->Vnode, Fid->Unique, inet_ntoa(logHostAddr),
+	     t_client->ViceId));
 
     /*
      * Get associated volume/vnode for the stored file; caller's rights
      * are also returned
      */
-    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
-				     MustNOTBeDIR, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights))) {
+    if ((errorCode =
+	 GetVolumePackage(tcon, Fid, &volptr, &targetptr, MustNOTBeDIR,
+			  &parentwhentargetnotdir, &client, WRITE_LOCK,
+			  &rights, &anyrights))) {
 	goto Bad_StoreData;
     }
 
@@ -2925,8 +2874,9 @@ afs_int32 common_StoreData64 (struct rx_call *acall,
     }
 
     /* Check if we're allowed to store the data */
-    if ((errorCode = Check_PermissionRights(targetptr, client, rights,
-					   CHK_STOREDATA, InStatus))) {
+    if ((errorCode =
+	 Check_PermissionRights(targetptr, client, rights, CHK_STOREDATA,
+				InStatus))) {
 	goto Bad_StoreData;
     }
 
@@ -2941,8 +2891,6 @@ afs_int32 common_StoreData64 (struct rx_call *acall,
 	parentwhentargetnotdir = NULL;
     }
 
-
-
 #if FS_STATS_DETAILED
     /*
      * Remember when the data transfer started.
@@ -2952,16 +2900,16 @@ afs_int32 common_StoreData64 (struct rx_call *acall,
 
     /* Do the actual storing of the data */
 #if FS_STATS_DETAILED
-    errorCode = StoreData_RXStyle(volptr, targetptr, Fid, client, acall,
-				  Pos, Length, FileLength,
-				  (InStatus->Mask & AFS_FSYNC),
-				  &bytesToXfer, &bytesXferred);
+    errorCode =
+	StoreData_RXStyle(volptr, targetptr, Fid, client, acall, Pos, Length,
+			  FileLength, (InStatus->Mask & AFS_FSYNC),
+			  &bytesToXfer, &bytesXferred);
 #else
-    errorCode = StoreData_RXStyle(volptr, targetptr, Fid, client,
-				      acall, Pos, Length, FileLength,
-				      (InStatus->Mask & AFS_FSYNC));
+    errorCode =
+	StoreData_RXStyle(volptr, targetptr, Fid, client, acall, Pos, Length,
+			  FileLength, (InStatus->Mask & AFS_FSYNC));
     if (errorCode && (!targetptr->changed_newTime))
-	    goto Bad_StoreData;
+	goto Bad_StoreData;
 #endif /* FS_STATS_DETAILED */
 #if FS_STATS_DETAILED
     /*
@@ -2971,84 +2919,76 @@ afs_int32 common_StoreData64 (struct rx_call *acall,
      * operation failed, we jump to the appropriate point.
      */
     TM_GetTimeOfDay(&xferStopTime, 0);
-    FS_LOCK
-    (xferP->numXfers)++;
+    FS_LOCK(xferP->numXfers)++;
     if (!errorCode) {
 	(xferP->numSuccesses)++;
 
-        /*
-         * Bump the xfer sum by the number of bytes actually sent, NOT the
-         * target number.
-         */
+	/*
+	 * Bump the xfer sum by the number of bytes actually sent, NOT the
+	 * target number.
+	 */
 	tot_bytesXferred += bytesXferred;
-        (xferP->sumBytes) += (tot_bytesXferred >> 10);
+	(xferP->sumBytes) += (tot_bytesXferred >> 10);
 	tot_bytesXferred &= 0x3FF;
-        if (bytesXferred < xferP->minBytes)
+	if (bytesXferred < xferP->minBytes)
 	    xferP->minBytes = bytesXferred;
-        if (bytesXferred > xferP->maxBytes)
+	if (bytesXferred > xferP->maxBytes)
 	    xferP->maxBytes = bytesXferred;
-      
-        /*
-         * Tally the size of the object.  Note: we tally the actual size,
-         * NOT the number of bytes that made it out over the wire.
-         */
-        if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET0)
+
+	/*
+	 * Tally the size of the object.  Note: we tally the actual size,
+	 * NOT the number of bytes that made it out over the wire.
+	 */
+	if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET0)
 	    (xferP->count[0])++;
-        else
-	    if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET1)
-	        (xferP->count[1])++;
-        else
-	    if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET2)
-	        (xferP->count[2])++;
-        else
-	    if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET3)
-	        (xferP->count[3])++;
-        else
-	    if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET4)
-	        (xferP->count[4])++;
-        else
-	    if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET5)
-                (xferP->count[5])++;
-        else
-            if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET6)
-                (xferP->count[6])++;
-        else
-            if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET7)
-                (xferP->count[7])++;
-        else
+	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET1)
+	    (xferP->count[1])++;
+	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET2)
+	    (xferP->count[2])++;
+	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET3)
+	    (xferP->count[3])++;
+	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET4)
+	    (xferP->count[4])++;
+	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET5)
+	    (xferP->count[5])++;
+	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET6)
+	    (xferP->count[6])++;
+	else if (bytesToXfer <= FS_STATS_MAXBYTES_BUCKET7)
+	    (xferP->count[7])++;
+	else
 	    (xferP->count[8])++;
-      
-        fs_stats_GetDiff(elapsedTime, xferStartTime, xferStopTime);
-        fs_stats_AddTo((xferP->sumTime), elapsedTime);
-        fs_stats_SquareAddTo((xferP->sqrTime), elapsedTime);
-        if (fs_stats_TimeLessThan(elapsedTime, (xferP->minTime))) {
+
+	fs_stats_GetDiff(elapsedTime, xferStartTime, xferStopTime);
+	fs_stats_AddTo((xferP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((xferP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (xferP->minTime))) {
 	    fs_stats_TimeAssign((xferP->minTime), elapsedTime);
 	}
-        if (fs_stats_TimeGreaterThan(elapsedTime, (xferP->maxTime))) {
+	if (fs_stats_TimeGreaterThan(elapsedTime, (xferP->maxTime))) {
 	    fs_stats_TimeAssign((xferP->maxTime), elapsedTime);
-        }
+	}
     }
     FS_UNLOCK
-
-    /*
-     * Finally, go off to tell our caller the bad news in case the
-     * store failed.
-     */
-    if (errorCode && (!targetptr->changed_newTime))
-	    goto Bad_StoreData;
+	/*
+	 * Finally, go off to tell our caller the bad news in case the
+	 * store failed.
+	 */
+	if (errorCode && (!targetptr->changed_newTime))
+	goto Bad_StoreData;
 #endif /* FS_STATS_DETAILED */
 
     /* Update the status of the target's vnode */
-    Update_TargetVnodeStatus(targetptr, TVS_SDATA, client, InStatus, targetptr,
-			     volptr, 0);
+    Update_TargetVnodeStatus(targetptr, TVS_SDATA, client, InStatus,
+			     targetptr, volptr, 0);
 
     /* Get the updated File's status back to the caller */
-    GetStatus(targetptr, OutStatus, rights, anyrights, &tparentwhentargetnotdir);
+    GetStatus(targetptr, OutStatus, rights, anyrights,
+	      &tparentwhentargetnotdir);
 
-Bad_StoreData: 
+  Bad_StoreData:
     /* Update and store volume/vnode and parent vnodes back */
-    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
-			    volptr);
+    (void)PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0,
+			   volptr);
     ViceLog(2, ("SAFS_StoreData	returns	%d\n", errorCode));
 
     errorCode = CallPostamble(tcon, errorCode);
@@ -3056,51 +2996,45 @@ Bad_StoreData:
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (errorCode == 0) {
-	FS_LOCK
-        (opP->numSuccesses)++;
+	FS_LOCK(opP->numSuccesses)++;
 	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-        fs_stats_AddTo((opP->sumTime), elapsedTime);
-        fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-        if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
 	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
-        }
-        if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
 	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-        }
-	FS_UNLOCK
-      }
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU (acall, StoreDataEvent, errorCode, AUD_FID, Fid, AUD_END);
-    return(errorCode);
+    osi_auditU(acall, StoreDataEvent, errorCode, AUD_FID, Fid, AUD_END);
+    return (errorCode);
 
-} /*common_StoreData64*/
+}				/*common_StoreData64 */
 
-afs_int32 SRXAFS_StoreData (struct rx_call *acall,		
-			    struct AFSFid *Fid,			
-			    struct AFSStoreStatus *InStatus,	
-			    afs_uint32 Pos,                     
-			    afs_uint32 Length,                  
-			    afs_uint32 FileLength,              
-			    struct AFSFetchStatus *OutStatus,	
-			    struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_StoreData(struct rx_call * acall, struct AFSFid * Fid,
+		 struct AFSStoreStatus * InStatus, afs_uint32 Pos,
+		 afs_uint32 Length, afs_uint32 FileLength,
+		 struct AFSFetchStatus * OutStatus, struct AFSVolSync * Sync)
 {
     int code;
 
-    code = common_StoreData64 (acall, Fid, InStatus, Pos, Length, FileLength,
-			       OutStatus, Sync);
+    code =
+	common_StoreData64(acall, Fid, InStatus, Pos, Length, FileLength,
+			   OutStatus, Sync);
     return code;
 
-} /*SRXAFS_StoreData*/
+}				/*SRXAFS_StoreData */
 
-afs_int32 SRXAFS_StoreData64 (struct rx_call *acall, 		
-			      struct AFSFid *Fid,               
-			      struct AFSStoreStatus *InStatus,  
-			      afs_uint64 Pos,                   
-			      afs_uint64 Length,                
-			      afs_uint64 FileLength,            
-			      struct AFSFetchStatus *OutStatus, 
-			      struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_StoreData64(struct rx_call * acall, struct AFSFid * Fid,
+		   struct AFSStoreStatus * InStatus, afs_uint64 Pos,
+		   afs_uint64 Length, afs_uint64 FileLength,
+		   struct AFSFetchStatus * OutStatus,
+		   struct AFSVolSync * Sync)
 {
     int code;
     afs_int32 tPos;
@@ -3109,77 +3043,73 @@ afs_int32 SRXAFS_StoreData64 (struct rx_call *acall,
 
 #ifdef AFS_64BIT_ENV
     if (FileLength > 0x7fffffff)
-        return E2BIG;
+	return E2BIG;
     tPos = Pos;
     tLength = Length;
     tFileLength = FileLength;
 #else /* AFS_64BIT_ENV */
     if (FileLength.high)
-        return E2BIG;
+	return E2BIG;
     tPos = Pos.low;
     tLength = Length.low;
     tFileLength = FileLength.low;
 #endif /* AFS_64BIT_ENV */
 
-    code = common_StoreData64 (acall, Fid, InStatus, tPos, tLength, tFileLength,
-			       OutStatus, Sync);
+    code =
+	common_StoreData64(acall, Fid, InStatus, tPos, tLength, tFileLength,
+			   OutStatus, Sync);
     return code;
 }
 
-afs_int32 SRXAFS_StoreACL (struct rx_call *acall,		
-			   struct AFSFid *Fid,			
-			   struct AFSOpaque *AccessList,	
-			   struct AFSFetchStatus *OutStatus,
-			   struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_StoreACL(struct rx_call * acall, struct AFSFid * Fid,
+		struct AFSOpaque * AccessList,
+		struct AFSFetchStatus * OutStatus, struct AFSVolSync * Sync)
 {
-    Vnode * targetptr =	0;		/* pointer to input fid */
-    Vnode * parentwhentargetnotdir = 0;	/* parent of Fid to get ACL */
-    int	    errorCode =	0;		/* return code for caller */
+    Vnode *targetptr = 0;	/* pointer to input fid */
+    Vnode *parentwhentargetnotdir = 0;	/* parent of Fid to get ACL */
+    int errorCode = 0;		/* return code for caller */
     struct AFSStoreStatus InStatus;	/* Input status for fid */
-    Volume * volptr = 0;		/* pointer to the volume header */
-    struct client * client;		/* pointer to client structure */
-    afs_int32 rights, anyrights;		/* rights for this and any user */
+    Volume *volptr = 0;		/* pointer to the volume header */
+    struct client *client;	/* pointer to client structure */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
     struct rx_connection *tcon;
-    struct client *t_client;            /* tmp ptr to client data */
-    struct in_addr logHostAddr;		    /* host ip holder for inet_ntoa */
+    struct client *t_client;	/* tmp ptr to client data */
+    struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_STOREACL]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
     if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_StoreACL;
 
     /* Get ptr to client data for user Id for logging */
-    t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
-    logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
-    ViceLog(1, ("SAFS_StoreACL, Fid = %u.%u.%u, ACL=%s, Host %s, Id %d\n",
-	    Fid->Volume, Fid->Vnode, Fid->Unique, AccessList->AFSOpaque_val,
-	    inet_ntoa(logHostAddr), t_client->ViceId));
-    FS_LOCK
-    AFSCallStats.StoreACL++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-
-    InStatus.Mask = 0;	    /* not storing any status */
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+    logHostAddr.s_addr = rx_HostOf(rx_PeerOf(tcon));
+    ViceLog(1,
+	    ("SAFS_StoreACL, Fid = %u.%u.%u, ACL=%s, Host %s, Id %d\n",
+	     Fid->Volume, Fid->Vnode, Fid->Unique, AccessList->AFSOpaque_val,
+	     inet_ntoa(logHostAddr), t_client->ViceId));
+    FS_LOCK AFSCallStats.StoreACL++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK InStatus.Mask = 0;	/* not storing any status */
 
     /*
      * Get associated volume/vnode for the target dir; caller's rights
      * are also returned.
      */
-    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
-				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights))) {
+    if ((errorCode =
+	 GetVolumePackage(tcon, Fid, &volptr, &targetptr, MustBeDIR,
+			  &parentwhentargetnotdir, &client, WRITE_LOCK,
+			  &rights, &anyrights))) {
 	goto Bad_StoreACL;
     }
 
@@ -3187,8 +3117,9 @@ afs_int32 SRXAFS_StoreACL (struct rx_call *acall,
     SetVolumeSync(Sync, volptr);
 
     /* Check if we have permission to change the dir's ACL */
-    if ((errorCode = Check_PermissionRights(targetptr, client, rights,
-					   CHK_STOREACL, &InStatus))) {
+    if ((errorCode =
+	 Check_PermissionRights(targetptr, client, rights, CHK_STOREACL,
+				&InStatus))) {
 	goto Bad_StoreACL;
     }
 
@@ -3196,8 +3127,8 @@ afs_int32 SRXAFS_StoreACL (struct rx_call *acall,
     if ((errorCode = RXStore_AccessList(targetptr, AccessList))) {
 	goto Bad_StoreACL;
     }
-    
-    targetptr->changed_newTime = 1; /* status change of directory */
+
+    targetptr->changed_newTime = 1;	/* status change of directory */
 
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, targetptr);
@@ -3209,34 +3140,32 @@ afs_int32 SRXAFS_StoreACL (struct rx_call *acall,
     /* Get the updated dir's status back to the caller */
     GetStatus(targetptr, OutStatus, rights, anyrights, 0);
 
-Bad_StoreACL: 
+  Bad_StoreACL:
     /* Update and store volume/vnode and parent vnodes back */
-    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
-    ViceLog(2, ("SAFS_StoreACL returns %d\n", errorCode)); 
+    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0, volptr);
+    ViceLog(2, ("SAFS_StoreACL returns %d\n", errorCode));
     errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (errorCode == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU (acall, StoreACLEvent, errorCode, AUD_FID, Fid, AUD_END);
+    osi_auditU(acall, StoreACLEvent, errorCode, AUD_FID, Fid, AUD_END);
     return errorCode;
 
-} /*SRXAFS_StoreACL*/
+}				/*SRXAFS_StoreACL */
 
 
 /*
@@ -3244,39 +3173,37 @@ Bad_StoreACL:
  * should be merged when possible.
  */
 static afs_int32
-SAFSS_StoreStatus (struct rx_call *acall,		
-		   struct AFSFid *Fid,			
-		   struct AFSStoreStatus *InStatus,	
-		   struct AFSFetchStatus *OutStatus,	
-		   struct AFSVolSync *Sync)
-
+SAFSS_StoreStatus(struct rx_call *acall, struct AFSFid *Fid,
+		  struct AFSStoreStatus *InStatus,
+		  struct AFSFetchStatus *OutStatus, struct AFSVolSync *Sync)
 {
-    Vnode * targetptr =	0;		/* pointer to input fid */
-    Vnode * parentwhentargetnotdir = 0;	/* parent of Fid to get ACL */
-    int	    errorCode =	0;		/* return code for caller */
-    Volume * volptr = 0;		/* pointer to the volume header */
-    struct client * client;		/* pointer to client structure */
-    afs_int32 rights, anyrights;		/* rights for this and any user */
-    struct client *t_client;            /* tmp ptr to client data */
-    struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
+    Vnode *targetptr = 0;	/* pointer to input fid */
+    Vnode *parentwhentargetnotdir = 0;	/* parent of Fid to get ACL */
+    int errorCode = 0;		/* return code for caller */
+    Volume *volptr = 0;		/* pointer to the volume header */
+    struct client *client;	/* pointer to client structure */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
+    struct client *t_client;	/* tmp ptr to client data */
+    struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
     /* Get ptr to client data for user Id for logging */
-    t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
-    logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
-    ViceLog(1, ("SAFS_StoreStatus,  Fid	= %u.%u.%u, Host %s, Id %d\n",
-	    Fid->Volume, Fid->Vnode,	Fid->Unique,
-	    inet_ntoa(logHostAddr), t_client->ViceId));
-    FS_LOCK
-    AFSCallStats.StoreStatus++, AFSCallStats.TotalCalls++;
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+    logHostAddr.s_addr = rx_HostOf(rx_PeerOf(tcon));
+    ViceLog(1,
+	    ("SAFS_StoreStatus,  Fid	= %u.%u.%u, Host %s, Id %d\n",
+	     Fid->Volume, Fid->Vnode, Fid->Unique, inet_ntoa(logHostAddr),
+	     t_client->ViceId));
+    FS_LOCK AFSCallStats.StoreStatus++, AFSCallStats.TotalCalls++;
     FS_UNLOCK
-    /*
-     * Get volume/vnode for the target file; caller's rights to it are
-     * also returned
-     */
-    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
-				     DONTCHECK, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights))) {
+	/*
+	 * Get volume/vnode for the target file; caller's rights to it are
+	 * also returned
+	 */
+	if ((errorCode =
+	     GetVolumePackage(tcon, Fid, &volptr, &targetptr, DONTCHECK,
+			      &parentwhentargetnotdir, &client, WRITE_LOCK,
+			      &rights, &anyrights))) {
 	goto Bad_StoreStatus;
     }
 
@@ -3284,8 +3211,9 @@ SAFSS_StoreStatus (struct rx_call *acall,
     SetVolumeSync(Sync, volptr);
 
     /* Check if the caller has proper permissions to store status to Fid */
-    if ((errorCode = Check_PermissionRights(targetptr, client, rights,
-					   CHK_STORESTATUS, InStatus))) {
+    if ((errorCode =
+	 Check_PermissionRights(targetptr, client, rights, CHK_STORESTATUS,
+				InStatus))) {
 	goto Bad_StoreStatus;
     }
     /*
@@ -3299,8 +3227,8 @@ SAFSS_StoreStatus (struct rx_call *acall,
 
     /* Update the status of the target's vnode */
     Update_TargetVnodeStatus(targetptr, TVS_SSTATUS, client, InStatus,
-			     (parentwhentargetnotdir ?
-			      parentwhentargetnotdir : targetptr), volptr, 0);
+			     (parentwhentargetnotdir ? parentwhentargetnotdir
+			      : targetptr), volptr, 0);
 
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, targetptr);
@@ -3310,73 +3238,68 @@ SAFSS_StoreStatus (struct rx_call *acall,
     BreakCallBack(client->host, Fid, 0);
 
     /* Return the updated status back to caller */
-    GetStatus(targetptr, OutStatus, rights, anyrights, parentwhentargetnotdir);
+    GetStatus(targetptr, OutStatus, rights, anyrights,
+	      parentwhentargetnotdir);
 
-Bad_StoreStatus: 
+  Bad_StoreStatus:
     /* Update and store volume/vnode and parent vnodes back */
-    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
+    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0, volptr);
     ViceLog(2, ("SAFS_StoreStatus returns %d\n", errorCode));
     return errorCode;
 
-} /*SAFSS_StoreStatus*/
+}				/*SAFSS_StoreStatus */
 
 
-afs_int32 SRXAFS_StoreStatus (struct rx_call *acall,		
-			      struct AFSFid *Fid,		
-			      struct AFSStoreStatus *InStatus,	
-			      struct AFSFetchStatus *OutStatus,	
-			      struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_StoreStatus(struct rx_call * acall, struct AFSFid * Fid,
+		   struct AFSStoreStatus * InStatus,
+		   struct AFSFetchStatus * OutStatus,
+		   struct AFSVolSync * Sync)
 {
     afs_int32 code;
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_STORESTATUS]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_StoreStatus;
 
-    code = SAFSS_StoreStatus (acall, Fid, InStatus, OutStatus, Sync);
+    code = SAFSS_StoreStatus(acall, Fid, InStatus, OutStatus, Sync);
 
-Bad_StoreStatus:
+  Bad_StoreStatus:
     code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
-
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU (acall, StoreStatusEvent, code, AUD_FID, Fid, AUD_END);
+    osi_auditU(acall, StoreStatusEvent, code, AUD_FID, Fid, AUD_END);
     return code;
 
-} /*SRXAFS_StoreStatus*/
+}				/*SRXAFS_StoreStatus */
 
 
 /*
@@ -3384,42 +3307,40 @@ Bad_StoreStatus:
  * merged in when possible.
  */
 static afs_int32
-SAFSS_RemoveFile (struct rx_call *acall,	       
-		  struct AFSFid *DirFid,	       
-		  char *Name,			       
-		  struct AFSFetchStatus *OutDirStatus, 
-		  struct AFSVolSync *Sync)
+SAFSS_RemoveFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
+		 struct AFSFetchStatus *OutDirStatus, struct AFSVolSync *Sync)
 {
-    Vnode * parentptr =	0;		/* vnode of input Directory */
-    Vnode * parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
-    Vnode * targetptr =	0;		/* file to be deleted */
-    Volume * volptr = 0;		/* pointer to the volume header */
-    AFSFid fileFid;			/* area for Fid from the directory */
-    int	    errorCode =	0;		/* error code */
-    DirHandle dir;			/* Handle for dir package I/O */
-    struct client * client;		/* pointer to client structure */
-    afs_int32 rights, anyrights;		/* rights for this and any user */
-    struct client *t_client;            /* tmp ptr to client data */
-    struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
+    Vnode *parentptr = 0;	/* vnode of input Directory */
+    Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
+    Vnode *targetptr = 0;	/* file to be deleted */
+    Volume *volptr = 0;		/* pointer to the volume header */
+    AFSFid fileFid;		/* area for Fid from the directory */
+    int errorCode = 0;		/* error code */
+    DirHandle dir;		/* Handle for dir package I/O */
+    struct client *client;	/* pointer to client structure */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
+    struct client *t_client;	/* tmp ptr to client data */
+    struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
     FidZero(&dir);
     /* Get ptr to client data for user Id for logging */
-    t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
-    logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
-    ViceLog(1, ("SAFS_RemoveFile %s,  Did = %u.%u.%u, Host %s, Id %d\n",
-	    Name, DirFid->Volume, DirFid->Vnode, DirFid->Unique,
-	    inet_ntoa(logHostAddr), t_client->ViceId));
-    FS_LOCK
-    AFSCallStats.RemoveFile++, AFSCallStats.TotalCalls++;
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+    logHostAddr.s_addr = rx_HostOf(rx_PeerOf(tcon));
+    ViceLog(1,
+	    ("SAFS_RemoveFile %s,  Did = %u.%u.%u, Host %s, Id %d\n", Name,
+	     DirFid->Volume, DirFid->Vnode, DirFid->Unique,
+	     inet_ntoa(logHostAddr), t_client->ViceId));
+    FS_LOCK AFSCallStats.RemoveFile++, AFSCallStats.TotalCalls++;
     FS_UNLOCK
-    /*
-     * Get volume/vnode for the parent dir; caller's access rights are
-     * also returned
-     */
-    if ((errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
-				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights))) {
+	/*
+	 * Get volume/vnode for the parent dir; caller's access rights are
+	 * also returned
+	 */
+	if ((errorCode =
+	     GetVolumePackage(tcon, DirFid, &volptr, &parentptr, MustBeDIR,
+			      &parentwhentargetnotdir, &client, WRITE_LOCK,
+			      &rights, &anyrights))) {
 	goto Bad_RemoveFile;
     }
     /* set volume synchronization information */
@@ -3431,15 +3352,17 @@ SAFSS_RemoveFile (struct rx_call *acall,
     }
 
     /* Actually delete the desired file */
-    if ((errorCode = DeleteTarget(parentptr, volptr, &targetptr, &dir,
-				 &fileFid, Name, MustNOTBeDIR))) {
+    if ((errorCode =
+	 DeleteTarget(parentptr, volptr, &targetptr, &dir, &fileFid, Name,
+		      MustNOTBeDIR))) {
 	goto Bad_RemoveFile;
     }
 
     /* Update the vnode status of the parent dir */
 #if FS_STATS_DETAILED
     Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
-			     parentptr->disk.linkCount, client->InSameNetwork);
+			     parentptr->disk.linkCount,
+			     client->InSameNetwork);
 #else
     Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
 			     parentptr->disk.linkCount);
@@ -3469,72 +3392,66 @@ SAFSS_RemoveFile (struct rx_call *acall,
     /* break call back on the directory */
     BreakCallBack(client->host, DirFid, 0);
 
-Bad_RemoveFile: 
+  Bad_RemoveFile:
     /* Update and store volume/vnode and parent vnodes back */
     PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr, volptr);
     FidZap(&dir);
-    ViceLog(2, ("SAFS_RemoveFile returns %d\n",	errorCode)); 
+    ViceLog(2, ("SAFS_RemoveFile returns %d\n", errorCode));
     return errorCode;
 
-} /*SAFSS_RemoveFile*/
+}				/*SAFSS_RemoveFile */
 
 
-afs_int32 SRXAFS_RemoveFile (struct rx_call *acall,
-			     struct AFSFid *DirFid,
-			     char *Name,
-			     struct AFSFetchStatus *OutDirStatus,
-			     struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_RemoveFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
+		  struct AFSFetchStatus * OutDirStatus,
+		  struct AFSVolSync * Sync)
 {
     afs_int32 code;
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_REMOVEFILE]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_RemoveFile;
 
-    code = SAFSS_RemoveFile (acall, DirFid, Name, OutDirStatus, Sync);
+    code = SAFSS_RemoveFile(acall, DirFid, Name, OutDirStatus, Sync);
 
-Bad_RemoveFile:    
+  Bad_RemoveFile:
     code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
-
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU (acall, RemoveFileEvent, code, AUD_FID, DirFid, AUD_STR, Name, AUD_END);
+    osi_auditU(acall, RemoveFileEvent, code, AUD_FID, DirFid, AUD_STR, Name,
+	       AUD_END);
     return code;
 
-} /*SRXAFS_RemoveFile*/
+}				/*SRXAFS_RemoveFile */
 
 
 /*
@@ -3542,51 +3459,47 @@ Bad_RemoveFile:
  * be merged in when possible.
  */
 static afs_int32
-SAFSS_CreateFile (struct rx_call *acall,
-		  struct AFSFid *DirFid,
-		  char *Name,
-		  struct AFSStoreStatus *InStatus,
-		  struct AFSFid *OutFid,
-		  struct AFSFetchStatus *OutFidStatus,
-		  struct AFSFetchStatus *OutDirStatus,
-		  struct AFSCallBack *CallBack,
-		  struct AFSVolSync *Sync)
+SAFSS_CreateFile(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
+		 struct AFSStoreStatus *InStatus, struct AFSFid *OutFid,
+		 struct AFSFetchStatus *OutFidStatus,
+		 struct AFSFetchStatus *OutDirStatus,
+		 struct AFSCallBack *CallBack, struct AFSVolSync *Sync)
 {
-    Vnode * parentptr =	0;		/* vnode of input Directory */
-    Vnode * targetptr =	0;		/* vnode of the new file */
-    Vnode * parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
-    Volume * volptr = 0;		/* pointer to the volume header */
-    int	    errorCode =	0;		/* error code */
-    DirHandle dir;			/* Handle for dir package I/O */
-    struct client * client;		/* pointer to client structure */
-    afs_int32 rights, anyrights;		/* rights for this and any user */
-    struct client *t_client;            /* tmp ptr to client data */
-    struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
+    Vnode *parentptr = 0;	/* vnode of input Directory */
+    Vnode *targetptr = 0;	/* vnode of the new file */
+    Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
+    Volume *volptr = 0;		/* pointer to the volume header */
+    int errorCode = 0;		/* error code */
+    DirHandle dir;		/* Handle for dir package I/O */
+    struct client *client;	/* pointer to client structure */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
+    struct client *t_client;	/* tmp ptr to client data */
+    struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
     FidZero(&dir);
 
     /* Get ptr to client data for user Id for logging */
-    t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
-    logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
-    ViceLog(1, ("SAFS_CreateFile %s,  Did = %u.%u.%u, Host %s, Id %d\n",
-	    Name, DirFid->Volume, DirFid->Vnode, DirFid->Unique,
-	    inet_ntoa(logHostAddr), t_client->ViceId));
-    FS_LOCK
-    AFSCallStats.CreateFile++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-    if (!FileNameOK(Name)) {
-      errorCode = EINVAL;
-      goto Bad_CreateFile;
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+    logHostAddr.s_addr = rx_HostOf(rx_PeerOf(tcon));
+    ViceLog(1,
+	    ("SAFS_CreateFile %s,  Did = %u.%u.%u, Host %s, Id %d\n", Name,
+	     DirFid->Volume, DirFid->Vnode, DirFid->Unique,
+	     inet_ntoa(logHostAddr), t_client->ViceId));
+    FS_LOCK AFSCallStats.CreateFile++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK if (!FileNameOK(Name)) {
+	errorCode = EINVAL;
+	goto Bad_CreateFile;
     }
 
     /*
      * Get associated volume/vnode for the parent dir; caller long are
      * also returned
      */
-    if ((errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
-				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights))) {
+    if ((errorCode =
+	 GetVolumePackage(tcon, DirFid, &volptr, &parentptr, MustBeDIR,
+			  &parentwhentargetnotdir, &client, WRITE_LOCK,
+			  &rights, &anyrights))) {
 	goto Bad_CreateFile;
     }
 
@@ -3598,15 +3511,17 @@ SAFSS_CreateFile (struct rx_call *acall,
 	goto Bad_CreateFile;
     }
     /* get a new vnode for the file to be created and set it up */
-    if ((errorCode = Alloc_NewVnode(parentptr, &dir, volptr, &targetptr,
-				   Name, OutFid, vFile, nBlocks(0)))) {
+    if ((errorCode =
+	 Alloc_NewVnode(parentptr, &dir, volptr, &targetptr, Name, OutFid,
+			vFile, nBlocks(0)))) {
 	goto Bad_CreateFile;
     }
 
     /* update the status of the parent vnode */
 #if FS_STATS_DETAILED
     Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
-			     parentptr->disk.linkCount, client->InSameNetwork);
+			     parentptr->disk.linkCount,
+			     client->InSameNetwork);
 #else
     Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
 			     parentptr->disk.linkCount);
@@ -3623,84 +3538,78 @@ SAFSS_CreateFile (struct rx_call *acall,
     /* convert the write lock to a read lock before breaking callbacks */
     VVnodeWriteToRead(&errorCode, parentptr);
     assert(!errorCode || errorCode == VSALVAGE);
-    
+
     /* break call back on parent dir */
     BreakCallBack(client->host, DirFid, 0);
 
     /* Return a callback promise for the newly created file to the caller */
     SetCallBackStruct(AddCallBack(client->host, OutFid), CallBack);
 
-Bad_CreateFile:
+  Bad_CreateFile:
     /* Update and store volume/vnode and parent vnodes back */
-    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr,
-			    volptr);
+    (void)PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr,
+			   volptr);
     FidZap(&dir);
-    ViceLog(2, ("SAFS_CreateFile returns %d\n",	errorCode)); 
+    ViceLog(2, ("SAFS_CreateFile returns %d\n", errorCode));
     return errorCode;
 
-} /*SAFSS_CreateFile*/
+}				/*SAFSS_CreateFile */
 
 
-afs_int32 SRXAFS_CreateFile (struct rx_call *acall,
-			     struct AFSFid *DirFid,
-			     char *Name,
-			     struct AFSStoreStatus *InStatus,
-			     struct AFSFid *OutFid,
-			     struct AFSFetchStatus *OutFidStatus,
-			     struct AFSFetchStatus *OutDirStatus, 
-			     struct AFSCallBack *CallBack,	 
-			     struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_CreateFile(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
+		  struct AFSStoreStatus * InStatus, struct AFSFid * OutFid,
+		  struct AFSFetchStatus * OutFidStatus,
+		  struct AFSFetchStatus * OutDirStatus,
+		  struct AFSCallBack * CallBack, struct AFSVolSync * Sync)
 {
     afs_int32 code;
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_CREATEFILE]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_CreateFile;
 
-    code = SAFSS_CreateFile (acall, DirFid, Name, InStatus, OutFid,
-			    OutFidStatus, OutDirStatus, CallBack, Sync);
+    code =
+	SAFSS_CreateFile(acall, DirFid, Name, InStatus, OutFid, OutFidStatus,
+			 OutDirStatus, CallBack, Sync);
 
-Bad_CreateFile:    
+  Bad_CreateFile:
     code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU (acall, CreateFileEvent, code, AUD_FID, DirFid, AUD_STR, Name, AUD_END);
+    osi_auditU(acall, CreateFileEvent, code, AUD_FID, DirFid, AUD_STR, Name,
+	       AUD_END);
     return code;
 
-} /*SRXAFS_CreateFile*/
+}				/*SRXAFS_CreateFile */
 
 
 /*
@@ -3708,23 +3617,19 @@ Bad_CreateFile:
  * merged in when possible.
  */
 static afs_int32
-SAFSS_Rename (struct rx_call *acall,
-	      struct AFSFid *OldDirFid,
-	      char *OldName,
-	      struct AFSFid *NewDirFid,
-	      char *NewName,
-	      struct AFSFetchStatus *OutOldDirStatus,
-	      struct AFSFetchStatus *OutNewDirStatus,
-	      struct AFSVolSync *Sync)
+SAFSS_Rename(struct rx_call *acall, struct AFSFid *OldDirFid, char *OldName,
+	     struct AFSFid *NewDirFid, char *NewName,
+	     struct AFSFetchStatus *OutOldDirStatus,
+	     struct AFSFetchStatus *OutNewDirStatus, struct AFSVolSync *Sync)
 {
-    Vnode * oldvptr = 0;	/* vnode of the old Directory */
-    Vnode * newvptr = 0;	/* vnode of the new Directory */
-    Vnode * fileptr = 0;	/* vnode of the file to move */
-    Vnode * newfileptr = 0;	/* vnode of the file to delete */
-    Vnode * testvptr = 0;	/* used in directory tree walk */
-    Vnode * parent = 0;		/* parent for use in SetAccessList */
-    int     errorCode = 0;	/* error code */
-    int     fileCode = 0;	/* used when writing Vnodes */
+    Vnode *oldvptr = 0;		/* vnode of the old Directory */
+    Vnode *newvptr = 0;		/* vnode of the new Directory */
+    Vnode *fileptr = 0;		/* vnode of the file to move */
+    Vnode *newfileptr = 0;	/* vnode of the file to delete */
+    Vnode *testvptr = 0;	/* used in directory tree walk */
+    Vnode *parent = 0;		/* parent for use in SetAccessList */
+    int errorCode = 0;		/* error code */
+    int fileCode = 0;		/* used when writing Vnodes */
     VnodeId testnode;		/* used in directory tree walk */
     AFSFid fileFid;		/* Fid of file to move */
     AFSFid newFileFid;		/* Fid of new file */
@@ -3732,15 +3637,15 @@ SAFSS_Rename (struct rx_call *acall,
     DirHandle newdir;		/* Handle for dir package I/O */
     DirHandle filedir;		/* Handle for dir package I/O */
     DirHandle newfiledir;	/* Handle for dir package I/O */
-    Volume * volptr = 0;	/* pointer to the volume header */
-    struct client * client;	/* pointer to client structure */
+    Volume *volptr = 0;		/* pointer to the volume header */
+    struct client *client;	/* pointer to client structure */
     afs_int32 rights, anyrights;	/* rights for this and any user */
-    afs_int32 newrights;		/* rights for this user */
-    afs_int32 newanyrights;		/* rights for any user */
-    int	doDelete;		/* deleted the rename target (ref count now 0) */
+    afs_int32 newrights;	/* rights for this user */
+    afs_int32 newanyrights;	/* rights for any user */
+    int doDelete;		/* deleted the rename target (ref count now 0) */
     int code;
-    struct client *t_client;            /* tmp ptr to client data */
-    struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
+    struct client *t_client;	/* tmp ptr to client data */
+    struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
     FidZero(&olddir);
@@ -3749,17 +3654,15 @@ SAFSS_Rename (struct rx_call *acall,
     FidZero(&newfiledir);
 
     /* Get ptr to client data for user Id for logging */
-    t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
-    logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
-    ViceLog(1, ("SAFS_Rename %s	to %s,	Fid = %u.%u.%u to %u.%u.%u, Host %s, Id %d\n",
-	    OldName, NewName, OldDirFid->Volume, OldDirFid->Vnode,
-	    OldDirFid->Unique, NewDirFid->Volume, NewDirFid->Vnode,
-	    NewDirFid->Unique,
-	    inet_ntoa(logHostAddr), t_client->ViceId));
-    FS_LOCK
-    AFSCallStats.Rename++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-    if (!FileNameOK(NewName)) {
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+    logHostAddr.s_addr = rx_HostOf(rx_PeerOf(tcon));
+    ViceLog(1,
+	    ("SAFS_Rename %s	to %s,	Fid = %u.%u.%u to %u.%u.%u, Host %s, Id %d\n",
+	     OldName, NewName, OldDirFid->Volume, OldDirFid->Vnode,
+	     OldDirFid->Unique, NewDirFid->Volume, NewDirFid->Vnode,
+	     NewDirFid->Unique, inet_ntoa(logHostAddr), t_client->ViceId));
+    FS_LOCK AFSCallStats.Rename++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK if (!FileNameOK(NewName)) {
 	errorCode = EINVAL;
 	goto Bad_Rename;
     }
@@ -3768,46 +3671,45 @@ SAFSS_Rename (struct rx_call *acall,
 	errorCode = EXDEV;
 	goto Bad_Rename;
     }
-    if ( (strcmp(OldName, ".") == 0) || (strcmp(OldName, "..") == 0) ||
-	 (strcmp(NewName, ".") == 0) || (strcmp(NewName, "..") == 0) || 
-	 (strlen(NewName) == 0) || (strlen(OldName) == 0)  ) {
+    if ((strcmp(OldName, ".") == 0) || (strcmp(OldName, "..") == 0)
+	|| (strcmp(NewName, ".") == 0) || (strcmp(NewName, "..") == 0)
+	|| (strlen(NewName) == 0) || (strlen(OldName) == 0)) {
 	DFlush();
 	errorCode = EINVAL;
 	goto Bad_Rename;
     }
 
     if (OldDirFid->Vnode <= NewDirFid->Vnode) {
-	if  ((errorCode = GetVolumePackage(tcon, OldDirFid, &volptr,
-					   &oldvptr, MustBeDIR, &parent,
-					   &client, WRITE_LOCK, &rights,
-					   &anyrights))) {
+	if ((errorCode =
+	     GetVolumePackage(tcon, OldDirFid, &volptr, &oldvptr, MustBeDIR,
+			      &parent, &client, WRITE_LOCK, &rights,
+			      &anyrights))) {
 	    DFlush();
 	    goto Bad_Rename;
 	}
 	if (OldDirFid->Vnode == NewDirFid->Vnode) {
 	    newvptr = oldvptr;
 	    newrights = rights, newanyrights = anyrights;
-	}
-	else
-	    if ((errorCode = GetVolumePackage(tcon, NewDirFid, &volptr,
-					     &newvptr, MustBeDIR, &parent,
-					     &client, WRITE_LOCK, &newrights,
-					     &newanyrights))) {
-		DFlush();
-		goto Bad_Rename;
-	    }
-    }
-    else {
-	if ((errorCode = GetVolumePackage(tcon, NewDirFid, &volptr,
-					 &newvptr, MustBeDIR, &parent,
-					 &client, WRITE_LOCK, &newrights,
-					 &newanyrights))) {
+	} else
+	    if ((errorCode =
+		 GetVolumePackage(tcon, NewDirFid, &volptr, &newvptr,
+				  MustBeDIR, &parent, &client, WRITE_LOCK,
+				  &newrights, &newanyrights))) {
 	    DFlush();
 	    goto Bad_Rename;
 	}
-	if ((errorCode = GetVolumePackage(tcon, OldDirFid, &volptr, &oldvptr,
-					 MustBeDIR, &parent, &client, WRITE_LOCK,
-					 &rights, &anyrights))) {
+    } else {
+	if ((errorCode =
+	     GetVolumePackage(tcon, NewDirFid, &volptr, &newvptr, MustBeDIR,
+			      &parent, &client, WRITE_LOCK, &newrights,
+			      &newanyrights))) {
+	    DFlush();
+	    goto Bad_Rename;
+	}
+	if ((errorCode =
+	     GetVolumePackage(tcon, OldDirFid, &volptr, &oldvptr, MustBeDIR,
+			      &parent, &client, WRITE_LOCK, &rights,
+			      &anyrights))) {
 	    DFlush();
 	    goto Bad_Rename;
 	}
@@ -3824,22 +3726,20 @@ SAFSS_Rename (struct rx_call *acall,
     }
 
     /* The CopyOnWrite might return ENOSPC ( disk full). Even if the second
-    *  call to CopyOnWrite returns error, it is not necessary to revert back
-    *  the effects of the first call because the contents of the volume is 
-    *  not modified, it is only replicated.
-    */
-    if (oldvptr->disk.cloned)
-    {
+     *  call to CopyOnWrite returns error, it is not necessary to revert back
+     *  the effects of the first call because the contents of the volume is 
+     *  not modified, it is only replicated.
+     */
+    if (oldvptr->disk.cloned) {
 	ViceLog(25, ("Rename : calling CopyOnWrite on  old dir\n"));
-	 if ( ( errorCode = CopyOnWrite(oldvptr, volptr) ) )
-		goto Bad_Rename;
+	if ((errorCode = CopyOnWrite(oldvptr, volptr)))
+	    goto Bad_Rename;
     }
     SetDirHandle(&olddir, oldvptr);
-    if (newvptr->disk.cloned)
-    {
+    if (newvptr->disk.cloned) {
 	ViceLog(25, ("Rename : calling CopyOnWrite on  new dir\n"));
-	if ( ( errorCode = CopyOnWrite(newvptr, volptr) ) )
-		goto Bad_Rename;	
+	if ((errorCode = CopyOnWrite(newvptr, volptr)))
+	    goto Bad_Rename;
     }
 
     SetDirHandle(&newdir, newvptr);
@@ -3849,28 +3749,31 @@ SAFSS_Rename (struct rx_call *acall,
 	errorCode = ENOENT;
 	goto Bad_Rename;
     }
-    if (fileFid.Vnode == oldvptr->vnodeNumber ||
-	fileFid.Vnode == newvptr->vnodeNumber) {
+    if (fileFid.Vnode == oldvptr->vnodeNumber
+	|| fileFid.Vnode == newvptr->vnodeNumber) {
 	errorCode = FSERR_ELOOP;
 	goto Bad_Rename;
     }
     fileFid.Volume = V_id(volptr);
     fileptr = VGetVnode(&errorCode, volptr, fileFid.Vnode, WRITE_LOCK);
     if (errorCode != 0) {
-        ViceLog (0, ("SAFSS_Rename(): Error in VGetVnode() for old file %s, code %d\n", OldName, errorCode));
-        VTakeOffline (volptr);
-        goto Bad_Rename;
+	ViceLog(0,
+		("SAFSS_Rename(): Error in VGetVnode() for old file %s, code %d\n",
+		 OldName, errorCode));
+	VTakeOffline(volptr);
+	goto Bad_Rename;
     }
     if (fileptr->disk.uniquifier != fileFid.Unique) {
-        ViceLog (0, ("SAFSS_Rename(): Old file %s uniquifier mismatch\n", OldName));
-        VTakeOffline (volptr);
-        errorCode = EIO;
-        goto Bad_Rename;
+	ViceLog(0,
+		("SAFSS_Rename(): Old file %s uniquifier mismatch\n",
+		 OldName));
+	VTakeOffline(volptr);
+	errorCode = EIO;
+	goto Bad_Rename;
     }
 
-    if (fileptr->disk.type != vDirectory &&
-	oldvptr != newvptr &&
-	fileptr->disk.linkCount != 1) {
+    if (fileptr->disk.type != vDirectory && oldvptr != newvptr
+	&& fileptr->disk.linkCount != 1) {
 	/*
 	 * Hard links exist to this file - cannot move one of the links to
 	 * a new directory because of AFS restrictions (this is the same
@@ -3891,25 +3794,30 @@ SAFSS_Rename (struct rx_call *acall,
 	    errorCode = EACCES;
 	    goto Bad_Rename;
 	}
-	if (newFileFid.Vnode == oldvptr->vnodeNumber ||
-		newFileFid.Vnode == newvptr->vnodeNumber ||
-		newFileFid.Vnode == fileFid.Vnode) {
+	if (newFileFid.Vnode == oldvptr->vnodeNumber
+	    || newFileFid.Vnode == newvptr->vnodeNumber
+	    || newFileFid.Vnode == fileFid.Vnode) {
 	    errorCode = EINVAL;
 	    goto Bad_Rename;
 	}
 	newFileFid.Volume = V_id(volptr);
-	newfileptr = VGetVnode(&errorCode, volptr, newFileFid.Vnode, WRITE_LOCK);
-        if (errorCode != 0) {
-            ViceLog (0, ("SAFSS_Rename(): Error in VGetVnode() for new file %s, code %d\n", NewName, errorCode));
-            VTakeOffline (volptr);
-            goto Bad_Rename;
-        }
-        if (fileptr->disk.uniquifier != fileFid.Unique) {
-            ViceLog (0, ("SAFSS_Rename(): New file %s uniquifier mismatch\n", NewName));
-            VTakeOffline (volptr);
-            errorCode = EIO;
-            goto Bad_Rename;
-        }
+	newfileptr =
+	    VGetVnode(&errorCode, volptr, newFileFid.Vnode, WRITE_LOCK);
+	if (errorCode != 0) {
+	    ViceLog(0,
+		    ("SAFSS_Rename(): Error in VGetVnode() for new file %s, code %d\n",
+		     NewName, errorCode));
+	    VTakeOffline(volptr);
+	    goto Bad_Rename;
+	}
+	if (fileptr->disk.uniquifier != fileFid.Unique) {
+	    ViceLog(0,
+		    ("SAFSS_Rename(): New file %s uniquifier mismatch\n",
+		     NewName));
+	    VTakeOffline(volptr);
+	    errorCode = EIO;
+	    goto Bad_Rename;
+	}
 	SetDirHandle(&newfiledir, newfileptr);
 	/* Now check that we're moving directories over directories properly, etc.
 	 * return proper POSIX error codes:
@@ -3926,8 +3834,7 @@ SAFSS_Rename (struct rx_call *acall,
 		errorCode = EEXIST;
 		goto Bad_Rename;
 	    }
-	}
-	else {
+	} else {
 	    if (fileptr->disk.type == vDirectory) {
 		errorCode = ENOTDIR;
 		goto Bad_Rename;
@@ -3945,8 +3852,8 @@ SAFSS_Rename (struct rx_call *acall,
 		testnode = oldvptr->disk.parent;
 		continue;
 	    }
-	    if ((testnode == fileptr->vnodeNumber) ||
-		(testnode == newvptr->vnodeNumber)) {
+	    if ((testnode == fileptr->vnodeNumber)
+		|| (testnode == newvptr->vnodeNumber)) {
 		errorCode = FSERR_ELOOP;
 		goto Bad_Rename;
 	    }
@@ -3964,42 +3871,43 @@ SAFSS_Rename (struct rx_call *acall,
     /* Do the CopyonWrite first before modifying anything else. Copying is
      *  required because we may have to change entries for .. 
      */
-    if ((fileptr->disk.type == vDirectory ) && (fileptr->disk.cloned) )
-    {
+    if ((fileptr->disk.type == vDirectory) && (fileptr->disk.cloned)) {
 	ViceLog(25, ("Rename : calling CopyOnWrite on  target dir\n"));
-	if ( ( errorCode = CopyOnWrite(fileptr, volptr) ) )
-		goto Bad_Rename;
+	if ((errorCode = CopyOnWrite(fileptr, volptr)))
+	    goto Bad_Rename;
     }
 
     /* If the new name exists already, delete it and the file it points to */
     doDelete = 0;
     if (newfileptr) {
-        /* Delete NewName from its directory */
-        code = Delete(&newdir, NewName);
+	/* Delete NewName from its directory */
+	code = Delete(&newdir, NewName);
 	assert(code == 0);
 
 	/* Drop the link count */
 	newfileptr->disk.linkCount--;
-	if (newfileptr->disk.linkCount == 0) {      /* Link count 0 - delete */
-	    afs_fsize_t	newSize;
+	if (newfileptr->disk.linkCount == 0) {	/* Link count 0 - delete */
+	    afs_fsize_t newSize;
 	    VN_GET_LEN(newSize, newfileptr);
 	    VAdjustDiskUsage(&errorCode, volptr, -nBlocks(newSize), 0);
 	    if (VN_GET_INO(newfileptr)) {
 		IH_REALLYCLOSE(newfileptr->handle);
-		errorCode = IH_DEC(V_linkHandle(volptr),
-				 VN_GET_INO(newfileptr),
-				 V_parentId(volptr));
+		errorCode =
+		    IH_DEC(V_linkHandle(volptr), VN_GET_INO(newfileptr),
+			   V_parentId(volptr));
 		IH_RELEASE(newfileptr->handle);
 		if (errorCode == -1) {
-		    ViceLog(0, ("Del: inode=%s, name=%s, errno=%d\n",
-				PrintInode(NULL, VN_GET_INO(newfileptr)),
-				NewName, errno));
-		    if ((errno != ENOENT) && (errno != EIO) && (errno != ENXIO))
+		    ViceLog(0,
+			    ("Del: inode=%s, name=%s, errno=%d\n",
+			     PrintInode(NULL, VN_GET_INO(newfileptr)),
+			     NewName, errno));
+		    if ((errno != ENOENT) && (errno != EIO)
+			&& (errno != ENXIO))
 			ViceLog(0, ("Do we need to fsck?"));
-		} 
+		}
 	    }
-	    VN_SET_INO(newfileptr, (Inode)0);
-	    newfileptr->delete = 1;         /* Mark NewName vnode to delete */
+	    VN_SET_INO(newfileptr, (Inode) 0);
+	    newfileptr->delete = 1;	/* Mark NewName vnode to delete */
 	    doDelete = 1;
 	} else {
 	    /* Link count did not drop to zero.
@@ -4008,7 +3916,7 @@ SAFSS_Rename (struct rx_call *acall,
 	    newfileptr->changed_newTime = 1;
 	}
     }
-    
+
     /*
      * If the create below fails, and the delete above worked, we have
      * removed the new name and not replaced it.  This is not very likely,
@@ -4016,11 +3924,11 @@ SAFSS_Rename (struct rx_call *acall,
      * highly unlikely that it would work since it would involve issuing
      * another create.
      */
-    if ((errorCode = Create(&newdir,(char *) NewName, &fileFid)))
+    if ((errorCode = Create(&newdir, (char *)NewName, &fileFid)))
 	goto Bad_Rename;
 
     /* Delete the old name */
-    assert(Delete(&olddir,(char *) OldName) == 0);
+    assert(Delete(&olddir, (char *)OldName) == 0);
 
     /* if the directory length changes, reflect it in the statistics */
 #if FS_STATS_DETAILED
@@ -4035,21 +3943,21 @@ SAFSS_Rename (struct rx_call *acall,
 			     newvptr->disk.linkCount);
 #endif /* FS_STATS_DETAILED */
 
-    if (oldvptr	== newvptr)
-	oldvptr->disk.dataVersion--;    /* Since it was bumped by 2! */
+    if (oldvptr == newvptr)
+	oldvptr->disk.dataVersion--;	/* Since it was bumped by 2! */
 
     fileptr->disk.parent = newvptr->vnodeNumber;
-    fileptr->changed_newTime = 1;       /* status change of moved file */
+    fileptr->changed_newTime = 1;	/* status change of moved file */
 
     /* if we are dealing with a rename of a directory */
     if (fileptr->disk.type == vDirectory) {
-	assert(!fileptr->disk.cloned);		
+	assert(!fileptr->disk.cloned);
 	SetDirHandle(&filedir, fileptr);
 	/* fix .. to point to the correct place */
-	Delete(&filedir, ".."); /* No assert--some directories may be bad */
+	Delete(&filedir, "..");	/* No assert--some directories may be bad */
 	assert(Create(&filedir, "..", NewDirFid) == 0);
 	fileptr->disk.dataVersion++;
-	/* if the parent directories are different the link counts have to be	*/
+	/* if the parent directories are different the link counts have to be   */
 	/* changed due to .. in the renamed directory */
 	if (oldvptr != newvptr) {
 	    oldvptr->disk.linkCount--;
@@ -4083,7 +3991,7 @@ SAFSS_Rename (struct rx_call *acall,
     BreakCallBack(client->host, NewDirFid, 0);
     if (oldvptr != newvptr) {
 	BreakCallBack(client->host, OldDirFid, 0);
-	if (fileptr->disk.type == vDirectory) /* if a dir moved, .. changed */
+	if (fileptr->disk.type == vDirectory)	/* if a dir moved, .. changed */
 	    BreakCallBack(client->host, &fileFid, 0);
     }
     if (newfileptr) {
@@ -4095,14 +4003,15 @@ SAFSS_Rename (struct rx_call *acall,
 	    BreakCallBack(client->host, &newFileFid, 1);
     }
 
-Bad_Rename: 
+  Bad_Rename:
     if (newfileptr) {
 	VPutVnode(&fileCode, newfileptr);
 	assert(fileCode == 0);
     }
-    (void) PutVolumePackage(fileptr,
-			    (newvptr && newvptr != oldvptr? newvptr : 0),
-			    oldvptr, volptr);
+    (void)PutVolumePackage(fileptr,
+			   (newvptr
+			    && newvptr != oldvptr ? newvptr : 0), oldvptr,
+			   volptr);
     FidZap(&olddir);
     FidZap(&newdir);
     FidZap(&filedir);
@@ -4110,113 +4019,100 @@ Bad_Rename:
     ViceLog(2, ("SAFS_Rename returns %d\n", errorCode));
     return errorCode;
 
-} /*SAFSS_Rename*/
+}				/*SAFSS_Rename */
 
 
-afs_int32 SRXAFS_Rename (struct rx_call *acall,		     
-			 struct AFSFid *OldDirFid,		     
-			 char *OldName,			     
-			 struct AFSFid *NewDirFid,
-			 char *NewName,
-			 struct AFSFetchStatus *OutOldDirStatus,
-			 struct AFSFetchStatus *OutNewDirStatus,
-			 struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_Rename(struct rx_call * acall, struct AFSFid * OldDirFid,
+	      char *OldName, struct AFSFid * NewDirFid, char *NewName,
+	      struct AFSFetchStatus * OutOldDirStatus,
+	      struct AFSFetchStatus * OutNewDirStatus,
+	      struct AFSVolSync * Sync)
 {
     afs_int32 code;
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_RENAME]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_Rename;
 
-    code = SAFSS_Rename (acall, OldDirFid, OldName, NewDirFid, NewName,
-			 OutOldDirStatus, OutNewDirStatus, Sync);
+    code =
+	SAFSS_Rename(acall, OldDirFid, OldName, NewDirFid, NewName,
+		     OutOldDirStatus, OutNewDirStatus, Sync);
 
-Bad_Rename:    
+  Bad_Rename:
     code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
-
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU (acall, RenameFileEvent, code, AUD_FID, OldDirFid, AUD_STR, OldName, AUD_FID, NewDirFid, AUD_STR, NewName, AUD_END);
+    osi_auditU(acall, RenameFileEvent, code, AUD_FID, OldDirFid, AUD_STR,
+	       OldName, AUD_FID, NewDirFid, AUD_STR, NewName, AUD_END);
     return code;
 
-} /*SRXAFS_Rename*/
+}				/*SRXAFS_Rename */
 
 
 /*
  * This routine is called exclusively by SRXAFS_Symlink(), and should be
  * merged into it when possible.
  */
-static afs_int32 
-SAFSS_Symlink (struct rx_call *acall,
-	       struct AFSFid *DirFid,
-	       char *Name,
-	       char *LinkContents,
-	       struct AFSStoreStatus *InStatus,
-	       struct AFSFid *OutFid,
-	       struct AFSFetchStatus *OutFidStatus,
-	       struct AFSFetchStatus *OutDirStatus,
-	       struct AFSVolSync *Sync)		
-
+static afs_int32
+SAFSS_Symlink(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
+	      char *LinkContents, struct AFSStoreStatus *InStatus,
+	      struct AFSFid *OutFid, struct AFSFetchStatus *OutFidStatus,
+	      struct AFSFetchStatus *OutDirStatus, struct AFSVolSync *Sync)
 {
-    Vnode * parentptr =	0;		/* vnode of input Directory */
-    Vnode * targetptr =	0;		/* vnode of the new link */
-    Vnode * parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
-    int	    errorCode =	0;		/* error code */
+    Vnode *parentptr = 0;	/* vnode of input Directory */
+    Vnode *targetptr = 0;	/* vnode of the new link */
+    Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
+    int errorCode = 0;		/* error code */
     int code = 0;
-    DirHandle dir;			/* Handle for dir package I/O */
-    Volume * volptr = 0;		/* pointer to the volume header */
-    struct client * client;		/* pointer to client structure */
+    DirHandle dir;		/* Handle for dir package I/O */
+    Volume *volptr = 0;		/* pointer to the volume header */
+    struct client *client;	/* pointer to client structure */
     afs_int32 rights, anyrights, fd;	/* rights for this and any user */
-    struct client *t_client;            /* tmp ptr to client data */
-    struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
+    struct client *t_client;	/* tmp ptr to client data */
+    struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     FdHandle_t *fdP;
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
     FidZero(&dir);
 
     /* Get ptr to client data for user Id for logging */
-    t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
-    logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
-    ViceLog(1, ("SAFS_Symlink %s to %s,  Did = %u.%u.%u, Host %s, Id %d\n", Name,
-	    LinkContents, DirFid->Volume, DirFid->Vnode, DirFid->Unique,
-	    inet_ntoa(logHostAddr), t_client->ViceId));
-    FS_LOCK
-    AFSCallStats.Symlink++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-    if (!FileNameOK(Name)) {
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+    logHostAddr.s_addr = rx_HostOf(rx_PeerOf(tcon));
+    ViceLog(1,
+	    ("SAFS_Symlink %s to %s,  Did = %u.%u.%u, Host %s, Id %d\n", Name,
+	     LinkContents, DirFid->Volume, DirFid->Vnode, DirFid->Unique,
+	     inet_ntoa(logHostAddr), t_client->ViceId));
+    FS_LOCK AFSCallStats.Symlink++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK if (!FileNameOK(Name)) {
 	errorCode = EINVAL;
 	goto Bad_SymLink;
     }
@@ -4225,9 +4121,10 @@ SAFSS_Symlink (struct rx_call *acall,
      * Get the vnode and volume for the parent dir along with the caller's
      * rights to it
      */
-    if ((errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
-				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights))) {
+    if ((errorCode =
+	 GetVolumePackage(tcon, DirFid, &volptr, &parentptr, MustBeDIR,
+			  &parentwhentargetnotdir, &client, WRITE_LOCK,
+			  &rights, &anyrights))) {
 	goto Bad_SymLink;
     }
 
@@ -4259,31 +4156,33 @@ SAFSS_Symlink (struct rx_call *acall,
 	    goto Bad_SymLink;
 	}
     }
- 
+
     /* get a new vnode for the symlink and set it up */
-    if ((errorCode = Alloc_NewVnode(parentptr, &dir, volptr, &targetptr,
-				   Name, OutFid, vSymlink,
-				   nBlocks(strlen((char *) LinkContents))))) {
+    if ((errorCode =
+	 Alloc_NewVnode(parentptr, &dir, volptr, &targetptr, Name, OutFid,
+			vSymlink, nBlocks(strlen((char *)LinkContents))))) {
 	goto Bad_SymLink;
     }
 
     /* update the status of the parent vnode */
 #if FS_STATS_DETAILED
     Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
-			     parentptr->disk.linkCount, client->InSameNetwork);
+			     parentptr->disk.linkCount,
+			     client->InSameNetwork);
 #else
     Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
 			     parentptr->disk.linkCount);
 #endif /* FS_STATS_DETAILED */
 
     /* update the status of the new symbolic link file vnode */
-    Update_TargetVnodeStatus(targetptr, TVS_SLINK, client, InStatus, parentptr,
-			     volptr, strlen((char *)LinkContents));
+    Update_TargetVnodeStatus(targetptr, TVS_SLINK, client, InStatus,
+			     parentptr, volptr, strlen((char *)LinkContents));
 
     /* Write the contents of the symbolic link name into the target inode */
     fdP = IH_OPEN(targetptr->handle);
     assert(fdP != NULL);
-    assert(FDH_WRITE(fdP, (char *) LinkContents, strlen((char *) LinkContents)) == strlen((char *) LinkContents));
+    assert(FDH_WRITE(fdP, (char *)LinkContents, strlen((char *)LinkContents))
+	   == strlen((char *)LinkContents));
     FDH_CLOSE(fdP);
     /*
      * Set up and return modified status for the parent dir and new symlink
@@ -4299,120 +4198,113 @@ SAFSS_Symlink (struct rx_call *acall,
     /* break call back on the parent dir */
     BreakCallBack(client->host, DirFid, 0);
 
-Bad_SymLink: 
+  Bad_SymLink:
     /* Write the all modified vnodes (parent, new files) and volume back */
-    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr,
-			    volptr);
+    (void)PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr,
+			   volptr);
     FidZap(&dir);
     ViceLog(2, ("SAFS_Symlink returns %d\n", errorCode));
     return errorCode;
 
-} /*SAFSS_Symlink*/
+}				/*SAFSS_Symlink */
 
 
-afs_int32 SRXAFS_Symlink (acall, DirFid, Name, LinkContents, InStatus, OutFid, OutFidStatus, OutDirStatus, Sync)
-    struct AFSVolSync *Sync;
-    struct rx_call *acall;		 /* Rx call */
-    struct AFSFid *DirFid;		 /* Parent dir's fid */
-    char *Name;				 /* File name to create */
-    char *LinkContents;			 /* Contents of the new created file */
-    struct AFSStoreStatus *InStatus;	 /* Input status for the new symbolic link */
-    struct AFSFid *OutFid;		 /* Fid for newly created symbolic link */
-    struct AFSFetchStatus *OutFidStatus; /* Output status for new symbolic link */
-    struct AFSFetchStatus *OutDirStatus; /* Output status for parent dir */
+afs_int32
+SRXAFS_Symlink(acall, DirFid, Name, LinkContents, InStatus, OutFid,
+	       OutFidStatus, OutDirStatus, Sync)
+     struct AFSVolSync *Sync;
+     struct rx_call *acall;	/* Rx call */
+     struct AFSFid *DirFid;	/* Parent dir's fid */
+     char *Name;		/* File name to create */
+     char *LinkContents;	/* Contents of the new created file */
+     struct AFSStoreStatus *InStatus;	/* Input status for the new symbolic link */
+     struct AFSFid *OutFid;	/* Fid for newly created symbolic link */
+     struct AFSFetchStatus *OutFidStatus;	/* Output status for new symbolic link */
+     struct AFSFetchStatus *OutDirStatus;	/* Output status for parent dir */
 
 {
     afs_int32 code;
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_SYMLINK]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_Symlink;
 
-    code = SAFSS_Symlink (acall, DirFid, Name, LinkContents, InStatus, OutFid,
-			 OutFidStatus, OutDirStatus, Sync);
+    code =
+	SAFSS_Symlink(acall, DirFid, Name, LinkContents, InStatus, OutFid,
+		      OutFidStatus, OutDirStatus, Sync);
 
-Bad_Symlink:    
+  Bad_Symlink:
     code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
-
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU (acall, SymlinkEvent, code, AUD_FID, DirFid, AUD_STR, Name, AUD_END);
+    osi_auditU(acall, SymlinkEvent, code, AUD_FID, DirFid, AUD_STR, Name,
+	       AUD_END);
     return code;
 
-} /*SRXAFS_Symlink*/
+}				/*SRXAFS_Symlink */
 
 
 /*
  * This routine is called exclusively by SRXAFS_Link(), and should be
  * merged into it when possible.
  */
-static afs_int32 
-SAFSS_Link (struct rx_call *acall,
-	    struct AFSFid *DirFid,
-	    char *Name,
-	    struct AFSFid *ExistingFid,
-	    struct AFSFetchStatus *OutFidStatus,
-	    struct AFSFetchStatus *OutDirStatus,
-	    struct AFSVolSync *Sync)
+static afs_int32
+SAFSS_Link(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
+	   struct AFSFid *ExistingFid, struct AFSFetchStatus *OutFidStatus,
+	   struct AFSFetchStatus *OutDirStatus, struct AFSVolSync *Sync)
 {
-    Vnode * parentptr =	0;		/* vnode of input Directory */
-    Vnode * targetptr =	0;		/* vnode of the new file */
-    Vnode * parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
-    Volume * volptr = 0;		/* pointer to the volume header */
-    int	    errorCode =	0;		/* error code */
-    DirHandle dir;			/* Handle for dir package I/O */
-    struct client * client;		/* pointer to client structure */
-    afs_int32 rights, anyrights;		/* rights for this and any user */
-    struct client *t_client;            /* tmp ptr to client data */
-    struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
+    Vnode *parentptr = 0;	/* vnode of input Directory */
+    Vnode *targetptr = 0;	/* vnode of the new file */
+    Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
+    Volume *volptr = 0;		/* pointer to the volume header */
+    int errorCode = 0;		/* error code */
+    DirHandle dir;		/* Handle for dir package I/O */
+    struct client *client;	/* pointer to client structure */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
+    struct client *t_client;	/* tmp ptr to client data */
+    struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
     FidZero(&dir);
 
     /* Get ptr to client data for user Id for logging */
-    t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
-    logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
-    ViceLog(1, ("SAFS_Link %s,	Did = %u.%u.%u,	Fid = %u.%u.%u, Host %s, Id %d\n",
-	    Name, DirFid->Volume, DirFid->Vnode, DirFid->Unique,
-	    ExistingFid->Volume, ExistingFid->Vnode, ExistingFid->Unique,
-	    inet_ntoa(logHostAddr), t_client->ViceId));
-    FS_LOCK
-    AFSCallStats.Link++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-    if (DirFid->Volume != ExistingFid->Volume) {
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+    logHostAddr.s_addr = rx_HostOf(rx_PeerOf(tcon));
+    ViceLog(1,
+	    ("SAFS_Link %s,	Did = %u.%u.%u,	Fid = %u.%u.%u, Host %s, Id %d\n",
+	     Name, DirFid->Volume, DirFid->Vnode, DirFid->Unique,
+	     ExistingFid->Volume, ExistingFid->Vnode, ExistingFid->Unique,
+	     inet_ntoa(logHostAddr), t_client->ViceId));
+    FS_LOCK AFSCallStats.Link++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK if (DirFid->Volume != ExistingFid->Volume) {
 	errorCode = EXDEV;
 	goto Bad_Link;
     }
@@ -4425,9 +4317,10 @@ SAFSS_Link (struct rx_call *acall,
      * Get the vnode and volume for the parent dir along with the caller's
      * rights to it
      */
-    if ((errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
-				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights))) {
+    if ((errorCode =
+	 GetVolumePackage(tcon, DirFid, &volptr, &parentptr, MustBeDIR,
+			  &parentwhentargetnotdir, &client, WRITE_LOCK,
+			  &rights, &anyrights))) {
 	goto Bad_Link;
     }
 
@@ -4439,16 +4332,16 @@ SAFSS_Link (struct rx_call *acall,
 	goto Bad_Link;
     }
 
-    if (((DirFid->Vnode & 1) && (ExistingFid->Vnode & 1)) ||
-        (DirFid->Vnode == ExistingFid->Vnode)) {  /* at present, */
-      /* AFS fileservers always have directory vnodes that are odd.   */
-      errorCode = EISDIR;
-      goto Bad_Link;
+    if (((DirFid->Vnode & 1) && (ExistingFid->Vnode & 1)) || (DirFid->Vnode == ExistingFid->Vnode)) {	/* at present, */
+	/* AFS fileservers always have directory vnodes that are odd.   */
+	errorCode = EISDIR;
+	goto Bad_Link;
     }
 
     /* get the file vnode  */
-    if ((errorCode = CheckVnode(ExistingFid, &volptr, &targetptr, WRITE_LOCK))) {
-        goto Bad_Link;
+    if ((errorCode =
+	 CheckVnode(ExistingFid, &volptr, &targetptr, WRITE_LOCK))) {
+	goto Bad_Link;
     }
     if (targetptr->disk.type != vFile) {
 	errorCode = EISDIR;
@@ -4458,11 +4351,10 @@ SAFSS_Link (struct rx_call *acall,
 	errorCode = EXDEV;
 	goto Bad_Link;
     }
-    if (parentptr->disk.cloned)	
-    {
+    if (parentptr->disk.cloned) {
 	ViceLog(25, ("Link : calling CopyOnWrite on  target dir\n"));
-	if ( ( errorCode = CopyOnWrite(parentptr, volptr)))
-		goto Bad_Link;		/* disk full error */
+	if ((errorCode = CopyOnWrite(parentptr, volptr)))
+	    goto Bad_Link;	/* disk full error */
     }
 
     /* add the name to the directory */
@@ -4475,7 +4367,8 @@ SAFSS_Link (struct rx_call *acall,
     /**WARNING** --> disk.author SHOULDN'T be modified???? */
 #if FS_STATS_DETAILED
     Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
-			     parentptr->disk.linkCount, client->InSameNetwork);
+			     parentptr->disk.linkCount,
+			     client->InSameNetwork);
 #else
     Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
 			     parentptr->disk.linkCount);
@@ -4483,7 +4376,7 @@ SAFSS_Link (struct rx_call *acall,
 
     targetptr->disk.linkCount++;
     targetptr->disk.author = client->ViceId;
-    targetptr->changed_newTime = 1; /* Status change of linked-to file */
+    targetptr->changed_newTime = 1;	/* Status change of linked-to file */
 
     /* set up return status */
     GetStatus(targetptr, OutFidStatus, rights, anyrights, parentptr);
@@ -4494,7 +4387,7 @@ SAFSS_Link (struct rx_call *acall,
     assert(!errorCode || errorCode == VSALVAGE);
     VVnodeWriteToRead(&errorCode, parentptr);
     assert(!errorCode || errorCode == VSALVAGE);
-    
+
     /* break call back on DirFid */
     BreakCallBack(client->host, DirFid, 0);
     /*
@@ -4503,76 +4396,69 @@ SAFSS_Link (struct rx_call *acall,
      */
     BreakCallBack(client->host, ExistingFid, 0);
 
-Bad_Link:
+  Bad_Link:
     /* Write the all modified vnodes (parent, new files) and volume back */
-    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr,
-			    volptr);
+    (void)PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr,
+			   volptr);
     FidZap(&dir);
     ViceLog(2, ("SAFS_Link returns %d\n", errorCode));
     return errorCode;
 
-} /*SAFSS_Link*/
+}				/*SAFSS_Link */
 
 
-afs_int32 SRXAFS_Link (struct rx_call *acall,
-		       struct AFSFid *DirFid,
-		       char *Name,
-		       struct AFSFid *ExistingFid,
-		       struct AFSFetchStatus *OutFidStatus,
-		       struct AFSFetchStatus *OutDirStatus,
-		       struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_Link(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
+	    struct AFSFid * ExistingFid, struct AFSFetchStatus * OutFidStatus,
+	    struct AFSFetchStatus * OutDirStatus, struct AFSVolSync * Sync)
 {
     afs_int32 code;
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_LINK]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_Link;
 
-    code = SAFSS_Link (acall, DirFid, Name, ExistingFid, OutFidStatus,
-		      OutDirStatus, Sync);
-    
-Bad_Link:
+    code =
+	SAFSS_Link(acall, DirFid, Name, ExistingFid, OutFidStatus,
+		   OutDirStatus, Sync);
+
+  Bad_Link:
     code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
-
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU (acall, LinkEvent, code, AUD_FID, DirFid, AUD_STR, Name, AUD_FID, ExistingFid, AUD_END);
+    osi_auditU(acall, LinkEvent, code, AUD_FID, DirFid, AUD_STR, Name,
+	       AUD_FID, ExistingFid, AUD_END);
     return code;
 
-} /*SRXAFS_Link*/
+}				/*SRXAFS_Link */
 
 
 /*
@@ -4580,45 +4466,39 @@ Bad_Link:
  * merged into it when possible.
  */
 static afs_int32
-SAFSS_MakeDir (struct rx_call *acall,
-	       struct AFSFid *DirFid,
-	       char *Name,
-	       struct AFSStoreStatus *InStatus,
-	       struct AFSFid *OutFid,
-	       struct AFSFetchStatus *OutFidStatus,
-	       struct AFSFetchStatus *OutDirStatus,
-	       struct AFSCallBack *CallBack,
-	       struct AFSVolSync *Sync)
-
+SAFSS_MakeDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
+	      struct AFSStoreStatus *InStatus, struct AFSFid *OutFid,
+	      struct AFSFetchStatus *OutFidStatus,
+	      struct AFSFetchStatus *OutDirStatus,
+	      struct AFSCallBack *CallBack, struct AFSVolSync *Sync)
 {
-    Vnode * parentptr =	0;		/* vnode of input Directory */
-    Vnode * targetptr =	0;		/* vnode of the new file */
-    Vnode * parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
-    Volume * volptr = 0;		/* pointer to the volume header */
-    int	    errorCode =	0;		/* error code */
-    struct acl_accessList * newACL;	/* Access list */
-    int	    newACLSize;			/* Size of access list */
-    DirHandle dir;			/* Handle for dir package I/O */
-    DirHandle parentdir;		/* Handle for dir package I/O */
-    struct client * client;		/* pointer to client structure */
-    afs_int32 rights, anyrights;		/* rights for this and any user */
-    struct client *t_client;            /* tmp ptr to client data */
-    struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
+    Vnode *parentptr = 0;	/* vnode of input Directory */
+    Vnode *targetptr = 0;	/* vnode of the new file */
+    Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
+    Volume *volptr = 0;		/* pointer to the volume header */
+    int errorCode = 0;		/* error code */
+    struct acl_accessList *newACL;	/* Access list */
+    int newACLSize;		/* Size of access list */
+    DirHandle dir;		/* Handle for dir package I/O */
+    DirHandle parentdir;	/* Handle for dir package I/O */
+    struct client *client;	/* pointer to client structure */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
+    struct client *t_client;	/* tmp ptr to client data */
+    struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
     FidZero(&dir);
     FidZero(&parentdir);
 
     /* Get ptr to client data for user Id for logging */
-    t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
-    logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
-    ViceLog(1, ("SAFS_MakeDir %s,  Did = %u.%u.%u, Host %s, Id %d\n",
-	    Name, DirFid->Volume, DirFid->Vnode, DirFid->Unique,
-	    inet_ntoa(logHostAddr), t_client->ViceId));
-    FS_LOCK
-    AFSCallStats.MakeDir++, AFSCallStats.TotalCalls++;    
-    FS_UNLOCK
-    if (!FileNameOK(Name)) {
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+    logHostAddr.s_addr = rx_HostOf(rx_PeerOf(tcon));
+    ViceLog(1,
+	    ("SAFS_MakeDir %s,  Did = %u.%u.%u, Host %s, Id %d\n", Name,
+	     DirFid->Volume, DirFid->Vnode, DirFid->Unique,
+	     inet_ntoa(logHostAddr), t_client->ViceId));
+    FS_LOCK AFSCallStats.MakeDir++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK if (!FileNameOK(Name)) {
 	errorCode = EINVAL;
 	goto Bad_MakeDir;
     }
@@ -4627,12 +4507,13 @@ SAFSS_MakeDir (struct rx_call *acall,
      * Get the vnode and volume for the parent dir along with the caller's
      * rights to it.
      */
-    if ((errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
-				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights))) {
+    if ((errorCode =
+	 GetVolumePackage(tcon, DirFid, &volptr, &parentptr, MustBeDIR,
+			  &parentwhentargetnotdir, &client, WRITE_LOCK,
+			  &rights, &anyrights))) {
 	goto Bad_MakeDir;
     }
- 
+
     /* set volume synchronization information */
     SetVolumeSync(Sync, volptr);
 
@@ -4645,33 +4526,35 @@ SAFSS_MakeDir (struct rx_call *acall,
      * implcit a access that goes with dir ownership, and proceed to 
      * subvert quota in the volume.
      */
-    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT)) ||
-	(errorCode = CheckWriteMode(parentptr, rights, PRSFS_WRITE))) {
-#else 
+    if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT))
+	|| (errorCode = CheckWriteMode(parentptr, rights, PRSFS_WRITE))) {
+#else
     if ((errorCode = CheckWriteMode(parentptr, rights, PRSFS_INSERT))) {
-#endif /* DIRCREATE_NEED_WRITE */ 
+#endif /* DIRCREATE_NEED_WRITE */
 	goto Bad_MakeDir;
     }
-
 #define EMPTYDIRBLOCKS 2
     /* get a new vnode and set it up */
-    if ((errorCode = Alloc_NewVnode(parentptr, &parentdir, volptr, &targetptr,
-				   Name, OutFid, vDirectory, EMPTYDIRBLOCKS))) {
+    if ((errorCode =
+	 Alloc_NewVnode(parentptr, &parentdir, volptr, &targetptr, Name,
+			OutFid, vDirectory, EMPTYDIRBLOCKS))) {
 	goto Bad_MakeDir;
     }
 
     /* Update the status for the parent dir */
 #if FS_STATS_DETAILED
     Update_ParentVnodeStatus(parentptr, volptr, &parentdir, client->ViceId,
-			     parentptr->disk.linkCount+1, client->InSameNetwork);
+			     parentptr->disk.linkCount + 1,
+			     client->InSameNetwork);
 #else
     Update_ParentVnodeStatus(parentptr, volptr, &parentdir, client->ViceId,
-			     parentptr->disk.linkCount+1);
+			     parentptr->disk.linkCount + 1);
 #endif /* FS_STATS_DETAILED */
 
     /* Point to target's ACL buffer and copy the parent's ACL contents to it */
-    assert((SetAccessList(&targetptr, &volptr, &newACL, &newACLSize,
-			  &parentwhentargetnotdir, (AFSFid *)0, 0)) == 0);
+    assert((SetAccessList
+	    (&targetptr, &volptr, &newACL, &newACLSize,
+	     &parentwhentargetnotdir, (AFSFid *) 0, 0)) == 0);
     assert(parentwhentargetnotdir == 0);
     memcpy((char *)newACL, (char *)VVnodeACL(parentptr), VAclSize(parentptr));
 
@@ -4679,7 +4562,7 @@ SAFSS_MakeDir (struct rx_call *acall,
     Update_TargetVnodeStatus(targetptr, TVS_MKDIR, client, InStatus,
 			     parentptr, volptr, 0);
 
-    /* Actually create the New directory in the directory package */ 
+    /* Actually create the New directory in the directory package */
     SetDirHandle(&dir, targetptr);
     assert(!(MakeDir(&dir, OutFid, DirFid)));
     DFlush();
@@ -4699,78 +4582,71 @@ SAFSS_MakeDir (struct rx_call *acall,
     /* Return a callback promise to caller */
     SetCallBackStruct(AddCallBack(client->host, OutFid), CallBack);
 
-Bad_MakeDir: 
+  Bad_MakeDir:
     /* Write the all modified vnodes (parent, new files) and volume back */
-    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr,
-			    volptr);
+    (void)PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr,
+			   volptr);
     FidZap(&dir);
     FidZap(&parentdir);
-    ViceLog(2, ("SAFS_MakeDir returns %d\n", errorCode)); 
+    ViceLog(2, ("SAFS_MakeDir returns %d\n", errorCode));
     return errorCode;
 
-} /*SAFSS_MakeDir*/
+}				/*SAFSS_MakeDir */
 
 
-afs_int32 SRXAFS_MakeDir (struct rx_call *acall,
-			  struct AFSFid *DirFid,
-			  char *Name,
-			  struct AFSStoreStatus *InStatus,
-			  struct AFSFid *OutFid,
-			  struct AFSFetchStatus *OutFidStatus,
-			  struct AFSFetchStatus *OutDirStatus,
-			  struct AFSCallBack *CallBack,
-			  struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_MakeDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
+	       struct AFSStoreStatus * InStatus, struct AFSFid * OutFid,
+	       struct AFSFetchStatus * OutFidStatus,
+	       struct AFSFetchStatus * OutDirStatus,
+	       struct AFSCallBack * CallBack, struct AFSVolSync * Sync)
 {
     afs_int32 code;
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_MAKEDIR]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_MakeDir;
 
-    code = SAFSS_MakeDir (acall, DirFid, Name, InStatus, OutFid,
-			 OutFidStatus, OutDirStatus, CallBack, Sync);
-    
-Bad_MakeDir:
+    code =
+	SAFSS_MakeDir(acall, DirFid, Name, InStatus, OutFid, OutFidStatus,
+		      OutDirStatus, CallBack, Sync);
+
+  Bad_MakeDir:
     code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
-
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU (acall, MakeDirEvent, code, AUD_FID, DirFid, AUD_STR, Name, AUD_END);
+    osi_auditU(acall, MakeDirEvent, code, AUD_FID, DirFid, AUD_STR, Name,
+	       AUD_END);
     return code;
 
-} /*SRXAFS_MakeDir*/
+}				/*SRXAFS_MakeDir */
 
 
 /*
@@ -4778,45 +4654,42 @@ Bad_MakeDir:
  * merged into it when possible.
  */
 static afs_int32
-SAFSS_RemoveDir (struct rx_call *acall,
-		 struct AFSFid *DirFid,
-		 char *Name,
-		 struct AFSFetchStatus *OutDirStatus,
-		 struct AFSVolSync *Sync)
-
+SAFSS_RemoveDir(struct rx_call *acall, struct AFSFid *DirFid, char *Name,
+		struct AFSFetchStatus *OutDirStatus, struct AFSVolSync *Sync)
 {
-    Vnode * parentptr =	0;		/* vnode of input Directory */
-    Vnode * parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
-    Vnode * targetptr =	0;		/* file to be deleted */
-    AFSFid fileFid;			/* area for Fid from the directory */
-    int	    errorCode =	0;		/* error code */
-    DirHandle dir;			/* Handle for dir package I/O */
-    Volume * volptr = 0;		/* pointer to the volume header */
-    struct client * client;		/* pointer to client structure */
-    afs_int32 rights, anyrights;		/* rights for this and any user */
+    Vnode *parentptr = 0;	/* vnode of input Directory */
+    Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
+    Vnode *targetptr = 0;	/* file to be deleted */
+    AFSFid fileFid;		/* area for Fid from the directory */
+    int errorCode = 0;		/* error code */
+    DirHandle dir;		/* Handle for dir package I/O */
+    Volume *volptr = 0;		/* pointer to the volume header */
+    struct client *client;	/* pointer to client structure */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
     Vnode debugvnode1, debugvnode2;
-    struct client *t_client;            /* tmp ptr to client data */
-    struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
+    struct client *t_client;	/* tmp ptr to client data */
+    struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
     FidZero(&dir);
 
     /* Get ptr to client data for user Id for logging */
-    t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
-    logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
-    ViceLog(1, ("SAFS_RemoveDir	%s,  Did = %u.%u.%u, Host %s, Id %d\n",
-	    Name, DirFid->Volume, DirFid->Vnode, DirFid->Unique,
-	    inet_ntoa(logHostAddr), t_client->ViceId));
-    FS_LOCK
-    AFSCallStats.RemoveDir++, AFSCallStats.TotalCalls++;
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+    logHostAddr.s_addr = rx_HostOf(rx_PeerOf(tcon));
+    ViceLog(1,
+	    ("SAFS_RemoveDir	%s,  Did = %u.%u.%u, Host %s, Id %d\n", Name,
+	     DirFid->Volume, DirFid->Vnode, DirFid->Unique,
+	     inet_ntoa(logHostAddr), t_client->ViceId));
+    FS_LOCK AFSCallStats.RemoveDir++, AFSCallStats.TotalCalls++;
     FS_UNLOCK
-    /*
-     * Get the vnode and volume for the parent dir along with the caller's
-     * rights to it
-     */
-    if ((errorCode = GetVolumePackage(tcon, DirFid, &volptr, &parentptr,
-				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights))) {
+	/*
+	 * Get the vnode and volume for the parent dir along with the caller's
+	 * rights to it
+	 */
+	if ((errorCode =
+	     GetVolumePackage(tcon, DirFid, &volptr, &parentptr, MustBeDIR,
+			      &parentwhentargetnotdir, &client, WRITE_LOCK,
+			      &rights, &anyrights))) {
 	goto Bad_RemoveDir;
     }
     debugvnode1 = *parentptr;
@@ -4831,18 +4704,20 @@ SAFSS_RemoveDir (struct rx_call *acall,
 
     debugvnode2 = *parentptr;
     /* Do the actual delete of the desired (empty) directory, Name */
-    if ((errorCode = DeleteTarget(parentptr, volptr, &targetptr, &dir, &fileFid,
-				 Name, MustBeDIR))) {
+    if ((errorCode =
+	 DeleteTarget(parentptr, volptr, &targetptr, &dir, &fileFid, Name,
+		      MustBeDIR))) {
 	goto Bad_RemoveDir;
     }
 
     /* Update the status for the parent dir; link count is also adjusted */
 #if FS_STATS_DETAILED
     Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
-			     parentptr->disk.linkCount-1, client->InSameNetwork);
+			     parentptr->disk.linkCount - 1,
+			     client->InSameNetwork);
 #else
     Update_ParentVnodeStatus(parentptr, volptr, &dir, client->ViceId,
-			     parentptr->disk.linkCount-1);
+			     parentptr->disk.linkCount - 1);
 #endif /* FS_STATS_DETAILED */
 
     /* Return to the caller the updated parent dir status */
@@ -4862,73 +4737,67 @@ SAFSS_RemoveDir (struct rx_call *acall,
     /* break call back on DirFid and fileFid */
     BreakCallBack(client->host, DirFid, 0);
 
-Bad_RemoveDir: 
+  Bad_RemoveDir:
     /* Write the all modified vnodes (parent, new files) and volume back */
-    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr,
-			    volptr);
+    (void)PutVolumePackage(parentwhentargetnotdir, targetptr, parentptr,
+			   volptr);
     FidZap(&dir);
     ViceLog(2, ("SAFS_RemoveDir	returns	%d\n", errorCode));
     return errorCode;
 
-} /*SAFSS_RemoveDir*/
+}				/*SAFSS_RemoveDir */
 
 
-afs_int32 SRXAFS_RemoveDir (struct rx_call *acall,
-			    struct AFSFid *DirFid,
-			    char *Name,
-			    struct AFSFetchStatus *OutDirStatus,
-			    struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_RemoveDir(struct rx_call * acall, struct AFSFid * DirFid, char *Name,
+		 struct AFSFetchStatus * OutDirStatus,
+		 struct AFSVolSync * Sync)
 {
     afs_int32 code;
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_REMOVEDIR]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_RemoveDir;
 
-    code = SAFSS_RemoveDir (acall, DirFid, Name, OutDirStatus, Sync);
-    
-Bad_RemoveDir:
+    code = SAFSS_RemoveDir(acall, DirFid, Name, OutDirStatus, Sync);
+
+  Bad_RemoveDir:
     code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
-
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU (acall, RemoveDirEvent, code, AUD_FID, DirFid, AUD_STR, Name, AUD_END);
+    osi_auditU(acall, RemoveDirEvent, code, AUD_FID, DirFid, AUD_STR, Name,
+	       AUD_END);
     return code;
 
-} /*SRXAFS_RemoveDir*/
+}				/*SRXAFS_RemoveDir */
 
 
 /*
@@ -4936,43 +4805,41 @@ Bad_RemoveDir:
  * merged into it when possible.
  */
 static afs_int32
-SAFSS_SetLock (struct rx_call *acall,
-	       struct AFSFid *Fid,
-	       ViceLockType type,
-	       struct AFSVolSync *Sync)
+SAFSS_SetLock(struct rx_call *acall, struct AFSFid *Fid, ViceLockType type,
+	      struct AFSVolSync *Sync)
 {
-    Vnode * targetptr =	0;		/* vnode of input file */
-    Vnode * parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
-    int	    errorCode =	0;		/* error code */
-    Volume * volptr = 0;		/* pointer to the volume header */
-    struct client * client;		/* pointer to client structure */
-    afs_int32 rights, anyrights;		/* rights for this and any user */
-    struct client *t_client;            /* tmp ptr to client data */
-    struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
-    static char	* locktype[2] = {"LockRead","LockWrite"};
+    Vnode *targetptr = 0;	/* vnode of input file */
+    Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
+    int errorCode = 0;		/* error code */
+    Volume *volptr = 0;		/* pointer to the volume header */
+    struct client *client;	/* pointer to client structure */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
+    struct client *t_client;	/* tmp ptr to client data */
+    struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
+    static char *locktype[2] = { "LockRead", "LockWrite" };
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
     if (type != LockRead && type != LockWrite) {
-        errorCode = EINVAL;
+	errorCode = EINVAL;
 	goto Bad_SetLock;
     }
     /* Get ptr to client data for user Id for logging */
-    t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
-    logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
-    ViceLog(1,("SAFS_SetLock type = %s Fid = %u.%u.%u, Host %s, Id %d\n",
-	    locktype[(int)type], Fid->Volume, Fid->Vnode, Fid->Unique,
-	    inet_ntoa(logHostAddr), t_client->ViceId));
-    FS_LOCK
-    AFSCallStats.SetLock++, AFSCallStats.TotalCalls++;
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+    logHostAddr.s_addr = rx_HostOf(rx_PeerOf(tcon));
+    ViceLog(1,
+	    ("SAFS_SetLock type = %s Fid = %u.%u.%u, Host %s, Id %d\n",
+	     locktype[(int)type], Fid->Volume, Fid->Vnode, Fid->Unique,
+	     inet_ntoa(logHostAddr), t_client->ViceId));
+    FS_LOCK AFSCallStats.SetLock++, AFSCallStats.TotalCalls++;
     FS_UNLOCK
-
-    /*
-     * Get the vnode and volume for the desired file along with the caller's
-     * rights to it
-     */
-    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
-				     DONTCHECK, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights))) {
+	/*
+	 * Get the vnode and volume for the desired file along with the caller's
+	 * rights to it
+	 */
+	if ((errorCode =
+	     GetVolumePackage(tcon, Fid, &volptr, &targetptr, DONTCHECK,
+			      &parentwhentargetnotdir, &client, WRITE_LOCK,
+			      &rights, &anyrights))) {
 	goto Bad_SetLock;
     }
 
@@ -4982,122 +4849,115 @@ SAFSS_SetLock (struct rx_call *acall,
     /* Handle the particular type of set locking, type */
     errorCode = HandleLocking(targetptr, rights, type);
 
-Bad_SetLock: 
+  Bad_SetLock:
     /* Write the all modified vnodes (parent, new files) and volume back */
-    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
-			    volptr);
+    (void)PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0,
+			   volptr);
 
     if ((errorCode == VREADONLY) && (type == LockRead))
-       errorCode = 0;  /* allow read locks on RO volumes without saving state */
+	errorCode = 0;		/* allow read locks on RO volumes without saving state */
 
-    ViceLog(2,("SAFS_SetLock returns %d\n", errorCode));
-    return(errorCode);
+    ViceLog(2, ("SAFS_SetLock returns %d\n", errorCode));
+    return (errorCode);
 
-}  /*SAFSS_SetLock*/
+}				/*SAFSS_SetLock */
 
 
-afs_int32 SRXAFS_OldSetLock(struct rx_call *acall,
-			    struct AFSFid *Fid,
-			    ViceLockType type,
-			    struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_OldSetLock(struct rx_call * acall, struct AFSFid * Fid,
+		  ViceLockType type, struct AFSVolSync * Sync)
 {
     return SRXAFS_SetLock(acall, Fid, type, Sync);
 
-} /*SRXAFS_OldSetLock*/
+}				/*SRXAFS_OldSetLock */
 
 
-afs_int32 SRXAFS_SetLock (struct rx_call *acall,
-			  struct AFSFid *Fid,
-			  ViceLockType type,
-			  struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_SetLock(struct rx_call * acall, struct AFSFid * Fid, ViceLockType type,
+	       struct AFSVolSync * Sync)
 {
     afs_int32 code;
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_SETLOCK]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_SetLock;
 
-    code = SAFSS_SetLock (acall, Fid, type, Sync);
-    
-Bad_SetLock:
+    code = SAFSS_SetLock(acall, Fid, type, Sync);
+
+  Bad_SetLock:
     code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
-    TM_GetTimeOfDay(&opStopTime, 0); 
+    TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU (acall, SetLockEvent, code, AUD_FID, Fid, AUD_LONG, type, AUD_END);
+    osi_auditU(acall, SetLockEvent, code, AUD_FID, Fid, AUD_LONG, type,
+	       AUD_END);
     return code;
 
-} /*SRXAFS_SetLock*/
+}				/*SRXAFS_SetLock */
 
 
 /*
  * This routine is called exclusively by SRXAFS_ExtendLock(), and should be
  * merged into it when possible.
  */
-static afs_int32 
-SAFSS_ExtendLock (struct rx_call *acall,
-		  struct AFSFid *Fid,
-		  struct AFSVolSync *Sync)
-
+static afs_int32
+SAFSS_ExtendLock(struct rx_call *acall, struct AFSFid *Fid,
+		 struct AFSVolSync *Sync)
 {
-    Vnode * targetptr =	0;		/* vnode of input file */
-    Vnode * parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
-    int	    errorCode =	0;		/* error code */
-    Volume * volptr = 0;		/* pointer to the volume header */
-    struct client * client;		/* pointer to client structure */
-    afs_int32 rights, anyrights;		/* rights for this and any user */
-    struct client *t_client;            /* tmp ptr to client data */
-    struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
+    Vnode *targetptr = 0;	/* vnode of input file */
+    Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
+    int errorCode = 0;		/* error code */
+    Volume *volptr = 0;		/* pointer to the volume header */
+    struct client *client;	/* pointer to client structure */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
+    struct client *t_client;	/* tmp ptr to client data */
+    struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
     /* Get ptr to client data for user Id for logging */
-    t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
-    logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
-    ViceLog(1,("SAFS_ExtendLock Fid = %u.%u.%u, Host %s, Id %d\n", 
-	       Fid->Volume, Fid->Vnode, Fid->Unique, 
-	       inet_ntoa(logHostAddr), t_client->ViceId));
-    FS_LOCK
-    AFSCallStats.ExtendLock++, AFSCallStats.TotalCalls++;    
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+    logHostAddr.s_addr = rx_HostOf(rx_PeerOf(tcon));
+    ViceLog(1,
+	    ("SAFS_ExtendLock Fid = %u.%u.%u, Host %s, Id %d\n", Fid->Volume,
+	     Fid->Vnode, Fid->Unique, inet_ntoa(logHostAddr),
+	     t_client->ViceId));
+    FS_LOCK AFSCallStats.ExtendLock++, AFSCallStats.TotalCalls++;
     FS_UNLOCK
-    /*
-     * Get the vnode and volume for the desired file along with the caller's
-     * rights to it
-     */
-    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
-				     DONTCHECK, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights))) {
+	/*
+	 * Get the vnode and volume for the desired file along with the caller's
+	 * rights to it
+	 */
+	if ((errorCode =
+	     GetVolumePackage(tcon, Fid, &volptr, &targetptr, DONTCHECK,
+			      &parentwhentargetnotdir, &client, WRITE_LOCK,
+			      &rights, &anyrights))) {
 	goto Bad_ExtendLock;
     }
 
@@ -5107,121 +4967,114 @@ SAFSS_ExtendLock (struct rx_call *acall,
     /* Handle the actual lock extension */
     errorCode = HandleLocking(targetptr, rights, LockExtend);
 
-Bad_ExtendLock: 
+  Bad_ExtendLock:
     /* Put back file's vnode and volume */
-    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
-			    volptr);
+    (void)PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0,
+			   volptr);
 
-    if ((errorCode == VREADONLY))  /* presumably, we already granted this lock */
-       errorCode = 0;              /* under our generous policy re RO vols */
+    if ((errorCode == VREADONLY))	/* presumably, we already granted this lock */
+	errorCode = 0;		/* under our generous policy re RO vols */
 
-    ViceLog(2,("SAFS_ExtendLock returns %d\n", errorCode));
-    return(errorCode);
+    ViceLog(2, ("SAFS_ExtendLock returns %d\n", errorCode));
+    return (errorCode);
 
-} /*SAFSS_ExtendLock*/
+}				/*SAFSS_ExtendLock */
 
 
-afs_int32 SRXAFS_OldExtendLock (struct rx_call *acall,
-				struct AFSFid *Fid,
-				struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_OldExtendLock(struct rx_call * acall, struct AFSFid * Fid,
+		     struct AFSVolSync * Sync)
 {
     return SRXAFS_ExtendLock(acall, Fid, Sync);
 
-} /*SRXAFS_OldExtendLock*/
+}				/*SRXAFS_OldExtendLock */
 
 
-afs_int32 SRXAFS_ExtendLock (struct rx_call *acall,
-			     struct AFSFid *Fid,
-			     struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_ExtendLock(struct rx_call * acall, struct AFSFid * Fid,
+		  struct AFSVolSync * Sync)
 {
     afs_int32 code;
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_EXTENDLOCK]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_ExtendLock;
 
-    code = SAFSS_ExtendLock (acall, Fid, Sync);
+    code = SAFSS_ExtendLock(acall, Fid, Sync);
 
-Bad_ExtendLock:
+  Bad_ExtendLock:
     code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
-
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU (acall, ExtendLockEvent, code, AUD_FID, Fid , AUD_END);
+    osi_auditU(acall, ExtendLockEvent, code, AUD_FID, Fid, AUD_END);
     return code;
 
-} /*SRXAFS_ExtendLock*/
+}				/*SRXAFS_ExtendLock */
 
 
 /*
  * This routine is called exclusively by SRXAFS_ReleaseLock(), and should be
  * merged into it when possible.
  */
-static afs_int32 
-SAFSS_ReleaseLock (struct rx_call *acall,
-		   struct AFSFid *Fid,
-		   struct AFSVolSync *Sync)
-
+static afs_int32
+SAFSS_ReleaseLock(struct rx_call *acall, struct AFSFid *Fid,
+		  struct AFSVolSync *Sync)
 {
-    Vnode * targetptr =	0;		/* vnode of input file */
-    Vnode * parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
-    int	    errorCode =	0;		/* error code */
-    Volume * volptr = 0;		/* pointer to the volume header */
-    struct client * client;		/* pointer to client structure */
-    afs_int32 rights, anyrights;		/* rights for this and any user */
-    struct client *t_client;            /* tmp ptr to client data */
-    struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
+    Vnode *targetptr = 0;	/* vnode of input file */
+    Vnode *parentwhentargetnotdir = 0;	/* parent for use in SetAccessList */
+    int errorCode = 0;		/* error code */
+    Volume *volptr = 0;		/* pointer to the volume header */
+    struct client *client;	/* pointer to client structure */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
+    struct client *t_client;	/* tmp ptr to client data */
+    struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
     /* Get ptr to client data for user Id for logging */
-    t_client = (struct client *) rx_GetSpecific(tcon, rxcon_client_key); 
-    logHostAddr.s_addr =  rx_HostOf(rx_PeerOf(tcon));
-    ViceLog(1,("SAFS_ReleaseLock Fid = %u.%u.%u, Host %s, Id %d\n",
-	    Fid->Volume, Fid->Vnode, Fid->Unique,
-	    inet_ntoa(logHostAddr), t_client->ViceId));
-    FS_LOCK
-    AFSCallStats.ReleaseLock++, AFSCallStats.TotalCalls++;
+    t_client = (struct client *)rx_GetSpecific(tcon, rxcon_client_key);
+    logHostAddr.s_addr = rx_HostOf(rx_PeerOf(tcon));
+    ViceLog(1,
+	    ("SAFS_ReleaseLock Fid = %u.%u.%u, Host %s, Id %d\n", Fid->Volume,
+	     Fid->Vnode, Fid->Unique, inet_ntoa(logHostAddr),
+	     t_client->ViceId));
+    FS_LOCK AFSCallStats.ReleaseLock++, AFSCallStats.TotalCalls++;
     FS_UNLOCK
-    /*
-     * Get the vnode and volume for the desired file along with the caller's
-     * rights to it
-     */
-    if ((errorCode = GetVolumePackage(tcon, Fid, &volptr, &targetptr,
-				     DONTCHECK, &parentwhentargetnotdir,
-				     &client, WRITE_LOCK, &rights, &anyrights))) {
+	/*
+	 * Get the vnode and volume for the desired file along with the caller's
+	 * rights to it
+	 */
+	if ((errorCode =
+	     GetVolumePackage(tcon, Fid, &volptr, &targetptr, DONTCHECK,
+			      &parentwhentargetnotdir, &client, WRITE_LOCK,
+			      &rights, &anyrights))) {
 	goto Bad_ReleaseLock;
     }
 
@@ -5240,138 +5093,141 @@ SAFSS_ReleaseLock (struct rx_call *acall,
 	BreakCallBack(client->host, Fid, 0);
     }
 
-Bad_ReleaseLock: 
+  Bad_ReleaseLock:
     /* Put back file's vnode and volume */
-    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
-			    volptr);
+    (void)PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0,
+			   volptr);
 
-    if ((errorCode == VREADONLY))  /* presumably, we already granted this lock */
-       errorCode = 0;              /* under our generous policy re RO vols */
+    if ((errorCode == VREADONLY))	/* presumably, we already granted this lock */
+	errorCode = 0;		/* under our generous policy re RO vols */
 
-    ViceLog(2,("SAFS_ReleaseLock returns %d\n", errorCode));
-    return(errorCode);
+    ViceLog(2, ("SAFS_ReleaseLock returns %d\n", errorCode));
+    return (errorCode);
 
-} /*SAFSS_ReleaseLock*/
+}				/*SAFSS_ReleaseLock */
 
 
-afs_int32 SRXAFS_OldReleaseLock (struct rx_call *acall,
-				 struct AFSFid *Fid,
-				 struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_OldReleaseLock(struct rx_call * acall, struct AFSFid * Fid,
+		      struct AFSVolSync * Sync)
 {
     return SRXAFS_ReleaseLock(acall, Fid, Sync);
 
-} /*SRXAFS_OldReleaseLock*/
+}				/*SRXAFS_OldReleaseLock */
 
 
-afs_int32 SRXAFS_ReleaseLock (struct rx_call *acall,
-			      struct AFSFid *Fid,
-			      struct AFSVolSync *Sync)
+afs_int32
+SRXAFS_ReleaseLock(struct rx_call * acall, struct AFSFid * Fid,
+		   struct AFSVolSync * Sync)
 {
     afs_int32 code;
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_RELEASELOCK]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_ReleaseLock;
 
-    code = SAFSS_ReleaseLock (acall, Fid, Sync);
-    
-Bad_ReleaseLock:
+    code = SAFSS_ReleaseLock(acall, Fid, Sync);
+
+  Bad_ReleaseLock:
     code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
-
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU (acall, ReleaseLockEvent, code, AUD_FID, Fid , AUD_END);
+    osi_auditU(acall, ReleaseLockEvent, code, AUD_FID, Fid, AUD_END);
     return code;
 
-} /*SRXAFS_ReleaseLock*/
+}				/*SRXAFS_ReleaseLock */
 
 
-void SetSystemStats(struct AFSStatistics *stats)
+void
+SetSystemStats(struct AFSStatistics *stats)
 {
-  /* Fix this sometime soon.. */
-  /* Because hey, it's not like we have a network monitoring protocol... */
-    struct	timeval	time;
+    /* Fix this sometime soon.. */
+    /* Because hey, it's not like we have a network monitoring protocol... */
+    struct timeval time;
 
     /* this works on all system types */
     TM_GetTimeOfDay(&time, 0);
     stats->CurrentTime = time.tv_sec;
-} /*SetSystemStats*/
+}				/*SetSystemStats */
 
-void SetAFSStats(struct AFSStatistics *stats)
+void
+SetAFSStats(struct AFSStatistics *stats)
 {
     extern afs_int32 StartTime, CurrentConnections;
-    int	seconds;
+    int seconds;
 
-    FS_LOCK
-    stats->CurrentMsgNumber = 0;
+    FS_LOCK stats->CurrentMsgNumber = 0;
     stats->OldestMsgNumber = 0;
     stats->StartTime = StartTime;
     stats->CurrentConnections = CurrentConnections;
     stats->TotalAFSCalls = AFSCallStats.TotalCalls;
-    stats->TotalFetchs = AFSCallStats.FetchData+AFSCallStats.FetchACL+AFSCallStats.FetchStatus;
+    stats->TotalFetchs =
+	AFSCallStats.FetchData + AFSCallStats.FetchACL +
+	AFSCallStats.FetchStatus;
     stats->FetchDatas = AFSCallStats.FetchData;
     stats->FetchedBytes = AFSCallStats.TotalFetchedBytes;
-    seconds = AFSCallStats.AccumFetchTime/1000;
-    if (seconds <= 0) seconds = 1;
-    stats->FetchDataRate = AFSCallStats.TotalFetchedBytes/seconds;
-    stats->TotalStores = AFSCallStats.StoreData+AFSCallStats.StoreACL+AFSCallStats.StoreStatus;
+    seconds = AFSCallStats.AccumFetchTime / 1000;
+    if (seconds <= 0)
+	seconds = 1;
+    stats->FetchDataRate = AFSCallStats.TotalFetchedBytes / seconds;
+    stats->TotalStores =
+	AFSCallStats.StoreData + AFSCallStats.StoreACL +
+	AFSCallStats.StoreStatus;
     stats->StoreDatas = AFSCallStats.StoreData;
     stats->StoredBytes = AFSCallStats.TotalStoredBytes;
-    seconds = AFSCallStats.AccumStoreTime/1000;
-    if (seconds <= 0) seconds = 1;
-    stats->StoreDataRate = AFSCallStats.TotalStoredBytes/seconds;
+    seconds = AFSCallStats.AccumStoreTime / 1000;
+    if (seconds <= 0)
+	seconds = 1;
+    stats->StoreDataRate = AFSCallStats.TotalStoredBytes / seconds;
 #ifdef AFS_NT40_ENV
-    stats->ProcessSize = -1; /* TODO: */
+    stats->ProcessSize = -1;	/* TODO: */
 #else
-    stats->ProcessSize = (afs_int32)((long) sbrk(0) >> 10);
+    stats->ProcessSize = (afs_int32) ((long)sbrk(0) >> 10);
 #endif
-    FS_UNLOCK
-    h_GetWorkStats((int *)&(stats->WorkStations),(int *)&(stats->ActiveWorkStations),
-	    (int *)0, (afs_int32)(FT_ApproxTime())-(15*60));
+    FS_UNLOCK h_GetWorkStats((int *)&(stats->WorkStations),
+			     (int *)&(stats->ActiveWorkStations), (int *)0,
+			     (afs_int32) (FT_ApproxTime()) - (15 * 60));
 
-} /*SetAFSStats*/
+}				/*SetAFSStats */
 
 /* Get disk related information from all AFS partitions. */
 
-void SetVolumeStats(struct AFSStatistics *stats)
+void
+SetVolumeStats(struct AFSStatistics *stats)
 {
-    struct DiskPartition * part;
+    struct DiskPartition *part;
     int i = 0;
 
-    for (part = DiskPartitionList; part && i < AFS_MSTATDISKS; part = part->next) {
+    for (part = DiskPartitionList; part && i < AFS_MSTATDISKS;
+	 part = part->next) {
 	stats->Disks[i].TotalBlocks = part->totalUsable;
 	stats->Disks[i].BlocksAvailable = part->free;
 	memset(stats->Disks[i].Name, 0, AFS_DISKNAMESIZE);
@@ -5382,66 +5238,59 @@ void SetVolumeStats(struct AFSStatistics *stats)
 	stats->Disks[i].TotalBlocks = -1;
 	i++;
     }
-} /*SetVolumeStats*/
+}				/*SetVolumeStats */
 
-afs_int32 SRXAFS_GetStatistics (struct rx_call *acall,
-				struct ViceStatistics *Statistics)
+afs_int32
+SRXAFS_GetStatistics(struct rx_call *acall, struct ViceStatistics *Statistics)
 {
     afs_int32 code;
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GETSTATISTICS]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     if ((code = CallPreamble(acall, NOTACTIVECALL, &tcon)))
 	goto Bad_GetStatistics;
 
     ViceLog(1, ("SAFS_GetStatistics Received\n"));
-    FS_LOCK
-    AFSCallStats.GetStatistics++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-    memset(Statistics, 0, sizeof(*Statistics));
+    FS_LOCK AFSCallStats.GetStatistics++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK memset(Statistics, 0, sizeof(*Statistics));
     SetAFSStats((struct AFSStatistics *)Statistics);
     SetVolumeStats((struct AFSStatistics *)Statistics);
     SetSystemStats((struct AFSStatistics *)Statistics);
-    
-Bad_GetStatistics:
+
+  Bad_GetStatistics:
     code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
     return code;
 
-} /*SRXAFS_GetStatistics*/
+}				/*SRXAFS_GetStatistics */
 
 
 /*------------------------------------------------------------------------
@@ -5464,24 +5313,22 @@ Bad_GetStatistics:
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 SRXAFS_XStatsVersion(struct rx_call *a_call, afs_int32 *a_versionP)
-{ /*SRXAFS_XStatsVersion*/
+afs_int32
+SRXAFS_XStatsVersion(struct rx_call * a_call, afs_int32 * a_versionP)
+{				/*SRXAFS_XStatsVersion */
 
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_XSTATSVERSION]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     *a_versionP = AFS_XSTAT_VERSION;
@@ -5497,14 +5344,12 @@ afs_int32 SRXAFS_XStatsVersion(struct rx_call *a_call, afs_int32 *a_versionP)
     if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
 	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
     }
-    FS_LOCK
-    (opP->numSuccesses)++;
+    FS_LOCK(opP->numSuccesses)++;
     FS_UNLOCK
 #endif /* FS_STATS_DETAILED */
+	return (0);
 
-    return(0);
-
-}  /*SRXAFS_XStatsVersion*/
+}				/*SRXAFS_XStatsVersion */
 
 
 /*------------------------------------------------------------------------
@@ -5527,12 +5372,13 @@ afs_int32 SRXAFS_XStatsVersion(struct rx_call *a_call, afs_int32 *a_versionP)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static void FillPerfValues(struct afs_PerfStats *a_perfP)
-{ /*FillPerfValues*/
+static void
+FillPerfValues(struct afs_PerfStats *a_perfP)
+{				/*FillPerfValues */
 
-    int dir_Buffers;		/*# buffers in use by dir package*/
-    int dir_Calls;		/*# read calls in dir package*/
-    int dir_IOs;		/*# I/O ops in dir package*/
+    int dir_Buffers;		/*# buffers in use by dir package */
+    int dir_Calls;		/*# read calls in dir package */
+    int dir_IOs;		/*# I/O ops in dir package */
 
     /*
      * Vnode cache section.
@@ -5550,52 +5396,42 @@ static void FillPerfValues(struct afs_PerfStats *a_perfP)
     a_perfP->vcache_H_Entries = VolumeCacheSize;
     a_perfP->vcache_H_Gets = VolumeGets;
     a_perfP->vcache_H_Replacements = VolumeReplacements;
-    
+
     /*
      * Directory section.
      */
     DStat(&dir_Buffers, &dir_Calls, &dir_IOs);
     a_perfP->dir_Buffers = (afs_int32) dir_Buffers;
-    a_perfP->dir_Calls = (afs_int32 )dir_Calls;
+    a_perfP->dir_Calls = (afs_int32) dir_Calls;
     a_perfP->dir_IOs = (afs_int32) dir_IOs;
-    
+
     /*
      * Rx section.
      */
-    a_perfP->rx_packetRequests =
-	(afs_int32) rx_stats.packetRequests;
+    a_perfP->rx_packetRequests = (afs_int32) rx_stats.packetRequests;
     a_perfP->rx_noPackets_RcvClass =
 	(afs_int32) rx_stats.receivePktAllocFailures;
     a_perfP->rx_noPackets_SendClass =
 	(afs_int32) rx_stats.sendPktAllocFailures;
     a_perfP->rx_noPackets_SpecialClass =
 	(afs_int32) rx_stats.specialPktAllocFailures;
-    a_perfP->rx_socketGreedy =
-	(afs_int32) rx_stats.socketGreedy;
-    a_perfP->rx_bogusPacketOnRead =
-	(afs_int32) rx_stats.bogusPacketOnRead;
-    a_perfP->rx_bogusHost =
-	(afs_int32) rx_stats.bogusHost;
-    a_perfP->rx_noPacketOnRead =
-	(afs_int32) rx_stats.noPacketOnRead;
+    a_perfP->rx_socketGreedy = (afs_int32) rx_stats.socketGreedy;
+    a_perfP->rx_bogusPacketOnRead = (afs_int32) rx_stats.bogusPacketOnRead;
+    a_perfP->rx_bogusHost = (afs_int32) rx_stats.bogusHost;
+    a_perfP->rx_noPacketOnRead = (afs_int32) rx_stats.noPacketOnRead;
     a_perfP->rx_noPacketBuffersOnRead =
 	(afs_int32) rx_stats.noPacketBuffersOnRead;
-    a_perfP->rx_selects =
-	(afs_int32) rx_stats.selects;
-    a_perfP->rx_sendSelects =
-	(afs_int32) rx_stats.sendSelects;
+    a_perfP->rx_selects = (afs_int32) rx_stats.selects;
+    a_perfP->rx_sendSelects = (afs_int32) rx_stats.sendSelects;
     a_perfP->rx_packetsRead_RcvClass =
 	(afs_int32) rx_stats.packetsRead[RX_PACKET_CLASS_RECEIVE];
     a_perfP->rx_packetsRead_SendClass =
 	(afs_int32) rx_stats.packetsRead[RX_PACKET_CLASS_SEND];
     a_perfP->rx_packetsRead_SpecialClass =
 	(afs_int32) rx_stats.packetsRead[RX_PACKET_CLASS_SPECIAL];
-    a_perfP->rx_dataPacketsRead =
-	(afs_int32) rx_stats.dataPacketsRead;
-    a_perfP->rx_ackPacketsRead =
-	(afs_int32) rx_stats.ackPacketsRead;
-    a_perfP->rx_dupPacketsRead =
-	(afs_int32) rx_stats.dupPacketsRead;
+    a_perfP->rx_dataPacketsRead = (afs_int32) rx_stats.dataPacketsRead;
+    a_perfP->rx_ackPacketsRead = (afs_int32) rx_stats.ackPacketsRead;
+    a_perfP->rx_dupPacketsRead = (afs_int32) rx_stats.dupPacketsRead;
     a_perfP->rx_spuriousPacketsRead =
 	(afs_int32) rx_stats.spuriousPacketsRead;
     a_perfP->rx_packetsSent_RcvClass =
@@ -5604,47 +5440,27 @@ static void FillPerfValues(struct afs_PerfStats *a_perfP)
 	(afs_int32) rx_stats.packetsSent[RX_PACKET_CLASS_SEND];
     a_perfP->rx_packetsSent_SpecialClass =
 	(afs_int32) rx_stats.packetsSent[RX_PACKET_CLASS_SPECIAL];
-    a_perfP->rx_ackPacketsSent =
-	(afs_int32) rx_stats.ackPacketsSent;
-    a_perfP->rx_pingPacketsSent =
-	(afs_int32) rx_stats.pingPacketsSent;
-    a_perfP->rx_abortPacketsSent =
-	(afs_int32) rx_stats.abortPacketsSent;
-    a_perfP->rx_busyPacketsSent =
-	(afs_int32) rx_stats.busyPacketsSent;
-    a_perfP->rx_dataPacketsSent =
-	(afs_int32) rx_stats.dataPacketsSent;
-    a_perfP->rx_dataPacketsReSent =
-	(afs_int32) rx_stats.dataPacketsReSent;
-    a_perfP->rx_dataPacketsPushed =
-	(afs_int32) rx_stats.dataPacketsPushed;
-    a_perfP->rx_ignoreAckedPacket =
-	(afs_int32) rx_stats.ignoreAckedPacket;
-    a_perfP->rx_totalRtt_Sec =
-	(afs_int32) rx_stats.totalRtt.sec;
-    a_perfP->rx_totalRtt_Usec =
-	(afs_int32) rx_stats.totalRtt.usec;
-    a_perfP->rx_minRtt_Sec =
-	(afs_int32) rx_stats.minRtt.sec;
-    a_perfP->rx_minRtt_Usec =
-	(afs_int32) rx_stats.minRtt.usec;
-    a_perfP->rx_maxRtt_Sec =
-	(afs_int32) rx_stats.maxRtt.sec;
-    a_perfP->rx_maxRtt_Usec =
-	(afs_int32) rx_stats.maxRtt.usec;
-    a_perfP->rx_nRttSamples =
-	(afs_int32) rx_stats.nRttSamples;
-    a_perfP->rx_nServerConns =
-	(afs_int32) rx_stats.nServerConns;
-    a_perfP->rx_nClientConns =
-	(afs_int32) rx_stats.nClientConns;
-    a_perfP->rx_nPeerStructs =
-	(afs_int32) rx_stats.nPeerStructs;
-    a_perfP->rx_nCallStructs =
-	(afs_int32) rx_stats.nCallStructs;
-    a_perfP->rx_nFreeCallStructs =
-	(afs_int32) rx_stats.nFreeCallStructs;
-    
+    a_perfP->rx_ackPacketsSent = (afs_int32) rx_stats.ackPacketsSent;
+    a_perfP->rx_pingPacketsSent = (afs_int32) rx_stats.pingPacketsSent;
+    a_perfP->rx_abortPacketsSent = (afs_int32) rx_stats.abortPacketsSent;
+    a_perfP->rx_busyPacketsSent = (afs_int32) rx_stats.busyPacketsSent;
+    a_perfP->rx_dataPacketsSent = (afs_int32) rx_stats.dataPacketsSent;
+    a_perfP->rx_dataPacketsReSent = (afs_int32) rx_stats.dataPacketsReSent;
+    a_perfP->rx_dataPacketsPushed = (afs_int32) rx_stats.dataPacketsPushed;
+    a_perfP->rx_ignoreAckedPacket = (afs_int32) rx_stats.ignoreAckedPacket;
+    a_perfP->rx_totalRtt_Sec = (afs_int32) rx_stats.totalRtt.sec;
+    a_perfP->rx_totalRtt_Usec = (afs_int32) rx_stats.totalRtt.usec;
+    a_perfP->rx_minRtt_Sec = (afs_int32) rx_stats.minRtt.sec;
+    a_perfP->rx_minRtt_Usec = (afs_int32) rx_stats.minRtt.usec;
+    a_perfP->rx_maxRtt_Sec = (afs_int32) rx_stats.maxRtt.sec;
+    a_perfP->rx_maxRtt_Usec = (afs_int32) rx_stats.maxRtt.usec;
+    a_perfP->rx_nRttSamples = (afs_int32) rx_stats.nRttSamples;
+    a_perfP->rx_nServerConns = (afs_int32) rx_stats.nServerConns;
+    a_perfP->rx_nClientConns = (afs_int32) rx_stats.nClientConns;
+    a_perfP->rx_nPeerStructs = (afs_int32) rx_stats.nPeerStructs;
+    a_perfP->rx_nCallStructs = (afs_int32) rx_stats.nCallStructs;
+    a_perfP->rx_nFreeCallStructs = (afs_int32) rx_stats.nFreeCallStructs;
+
     a_perfP->host_NumHostEntries = HTs;
     a_perfP->host_HostBlocks = HTBlocks;
     h_GetHostNetStats(&(a_perfP->host_NonDeletedHosts),
@@ -5653,10 +5469,10 @@ static void FillPerfValues(struct afs_PerfStats *a_perfP)
 		      &(a_perfP->host_HostsInDiffNetwork));
     a_perfP->host_NumClients = CEs;
     a_perfP->host_ClientBlocks = CEBlocks;
-    
+
     a_perfP->sysname_ID = afs_perfstats.sysname_ID;
 
-} /*FillPerfValues*/
+}				/*FillPerfValues */
 
 
 /*------------------------------------------------------------------------
@@ -5686,32 +5502,27 @@ static void FillPerfValues(struct afs_PerfStats *a_perfP)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-afs_int32 SRXAFS_GetXStats(struct rx_call *a_call,
-			   afs_int32 a_clientVersionNum,
-			   afs_int32 a_collectionNumber,
-			   afs_int32 *a_srvVersionNumP,
-			   afs_int32 *a_timeP,
-			   AFS_CollData *a_dataP)
-{ /*SRXAFS_GetXStats*/
+afs_int32
+SRXAFS_GetXStats(struct rx_call *a_call, afs_int32 a_clientVersionNum,
+		 afs_int32 a_collectionNumber, afs_int32 * a_srvVersionNumP,
+		 afs_int32 * a_timeP, AFS_CollData * a_dataP)
+{				/*SRXAFS_GetXStats */
 
-    register int code;		/*Return value*/
-    afs_int32 *dataBuffP;		/*Ptr to data to be returned*/
-    afs_int32 dataBytes;		/*Bytes in data buffer*/
+    register int code;		/*Return value */
+    afs_int32 *dataBuffP;	/*Ptr to data to be returned */
+    afs_int32 dataBytes;	/*Bytes in data buffer */
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GETXSTATS]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     /*
@@ -5725,7 +5536,9 @@ afs_int32 SRXAFS_GetXStats(struct rx_call *a_call,
      */
     code = 0;
 
-    ViceLog(1, ("Received GetXStats call for collection %d\n",  a_collectionNumber));
+    ViceLog(1,
+	    ("Received GetXStats call for collection %d\n",
+	     a_collectionNumber));
 
 #if 0
     /*
@@ -5736,8 +5549,8 @@ afs_int32 SRXAFS_GetXStats(struct rx_call *a_call,
     a_dataP->AFS_CollData_val = NULL;
 #endif /* 0 */
 
-    switch(a_collectionNumber) {
-      case AFS_XSTATSCOLL_CALL_INFO:
+    switch (a_collectionNumber) {
+    case AFS_XSTATSCOLL_CALL_INFO:
 	/*
 	 * Pass back all the call-count-related data.
 	 *
@@ -5751,9 +5564,9 @@ afs_int32 SRXAFS_GetXStats(struct rx_call *a_call,
 	 * for the File Server.
 	 */
 	dataBytes = sizeof(struct afs_Stats);
-	dataBuffP = (afs_int32 *)malloc(dataBytes);
+	dataBuffP = (afs_int32 *) malloc(dataBytes);
 	memcpy(dataBuffP, &afs_cmstats, dataBytes);
-	a_dataP->AFS_CollData_len = dataBytes>>2;
+	a_dataP->AFS_CollData_len = dataBytes >> 2;
 	a_dataP->AFS_CollData_val = dataBuffP;
 #else
 	a_dataP->AFS_CollData_len = 0;
@@ -5761,7 +5574,7 @@ afs_int32 SRXAFS_GetXStats(struct rx_call *a_call,
 #endif /* 0 */
 	break;
 
-      case AFS_XSTATSCOLL_PERF_INFO:
+    case AFS_XSTATSCOLL_PERF_INFO:
 	/*
 	 * Pass back all the regular performance-related data.
 	 *
@@ -5778,13 +5591,13 @@ afs_int32 SRXAFS_GetXStats(struct rx_call *a_call,
 	 */
 
 	dataBytes = sizeof(struct afs_PerfStats);
-	dataBuffP = (afs_int32 *)malloc(dataBytes);
+	dataBuffP = (afs_int32 *) malloc(dataBytes);
 	memcpy(dataBuffP, &afs_perfstats, dataBytes);
-	a_dataP->AFS_CollData_len = dataBytes>>2;
+	a_dataP->AFS_CollData_len = dataBytes >> 2;
 	a_dataP->AFS_CollData_val = dataBuffP;
 	break;
 
-      case AFS_XSTATSCOLL_FULL_PERF_INFO:
+    case AFS_XSTATSCOLL_FULL_PERF_INFO:
 	/*
 	 * Pass back the full collection of performance-related data.
 	 * We have to stuff the basic, overall numbers in, but the
@@ -5805,150 +5618,146 @@ afs_int32 SRXAFS_GetXStats(struct rx_call *a_call,
 	 */
 
 	dataBytes = sizeof(struct fs_stats_FullPerfStats);
-	dataBuffP = (afs_int32 *)malloc(dataBytes);
+	dataBuffP = (afs_int32 *) malloc(dataBytes);
 	memcpy(dataBuffP, &afs_FullPerfStats, dataBytes);
-	a_dataP->AFS_CollData_len = dataBytes>>2;
+	a_dataP->AFS_CollData_len = dataBytes >> 2;
 	a_dataP->AFS_CollData_val = dataBuffP;
 #endif
 	break;
 
-      default:
+    default:
 	/*
 	 * Illegal collection number.
 	 */
 	a_dataP->AFS_CollData_len = 0;
 	a_dataP->AFS_CollData_val = NULL;
 	code = 1;
-    } /*Switch on collection number*/
+    }				/*Switch on collection number */
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
-
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    return(code);
+    return (code);
 
-} /*SRXAFS_GetXStats*/
+}				/*SRXAFS_GetXStats */
 
 
-static afs_int32 common_GiveUpCallBacks (struct rx_call *acall,
-					 struct AFSCBFids *FidArray,
-					 struct AFSCBs *CallBackArray)
+static afs_int32
+common_GiveUpCallBacks(struct rx_call *acall, struct AFSCBFids *FidArray,
+		       struct AFSCBs *CallBackArray)
 {
     afs_int32 errorCode = 0;
     register int i;
     struct client *client;
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GIVEUPCALLBACKS]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    opP =
+	&(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GIVEUPCALLBACKS]);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     if (FidArray)
-	ViceLog(1, ("SAFS_GiveUpCallBacks (Noffids=%d)\n", FidArray->AFSCBFids_len));
+	ViceLog(1,
+		("SAFS_GiveUpCallBacks (Noffids=%d)\n",
+		 FidArray->AFSCBFids_len));
 
-    FS_LOCK
-    AFSCallStats.GiveUpCallBacks++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-    if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
+    FS_LOCK AFSCallStats.GiveUpCallBacks++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_GiveUpCallBacks;
 
     if (!FidArray && !CallBackArray) {
-	ViceLog(1, ("SAFS_GiveUpAllCallBacks: host=%x\n", 
-		(tcon->peer ? tcon->peer->host : 0)));
+	ViceLog(1,
+		("SAFS_GiveUpAllCallBacks: host=%x\n",
+		 (tcon->peer ? tcon->peer->host : 0)));
 	errorCode = GetClient(tcon, &client);
-        if (!errorCode) 
+	if (!errorCode)
 	    DeleteAllCallBacks_r(client->host, 1);
     } else {
 	if (FidArray->AFSCBFids_len < CallBackArray->AFSCBs_len) {
-	    ViceLog(0, ("GiveUpCallBacks: #Fids %d < #CallBacks %d, host=%x\n", 
-			FidArray->AFSCBFids_len, CallBackArray->AFSCBs_len, 
-			(tcon->peer ? tcon->peer->host : 0)));
+	    ViceLog(0,
+		    ("GiveUpCallBacks: #Fids %d < #CallBacks %d, host=%x\n",
+		     FidArray->AFSCBFids_len, CallBackArray->AFSCBs_len,
+		     (tcon->peer ? tcon->peer->host : 0)));
 	    errorCode = EINVAL;
 	    goto Bad_GiveUpCallBacks;
 	}
 
 	errorCode = GetClient(tcon, &client);
 	if (!errorCode) {
-	    for (i=0; i < FidArray->AFSCBFids_len; i++) {
+	    for (i = 0; i < FidArray->AFSCBFids_len; i++) {
 		register struct AFSFid *fid = &(FidArray->AFSCBFids_val[i]);
 		DeleteCallBack(client->host, fid);
 	    }
 	}
     }
 
-Bad_GiveUpCallBacks:
+  Bad_GiveUpCallBacks:
     errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (errorCode == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
-out:
+  out:
     return errorCode;
 
-} /*common_GiveUpCallBacks*/
+}				/*common_GiveUpCallBacks */
 
 
-afs_int32 SRXAFS_GiveUpCallBacks (struct rx_call *acall,
-				  struct AFSCBFids *FidArray,
-				  struct AFSCBs *CallBackArray)
+afs_int32
+SRXAFS_GiveUpCallBacks(struct rx_call * acall, struct AFSCBFids * FidArray,
+		       struct AFSCBs * CallBackArray)
 {
     return common_GiveUpCallBacks(acall, FidArray, CallBackArray);
-} /*SRXAFS_GiveUpCallBacks*/
+}				/*SRXAFS_GiveUpCallBacks */
 
-afs_int32 SRXAFS_GiveUpAllCallBacks (struct rx_call *acall)
+afs_int32
+SRXAFS_GiveUpAllCallBacks(struct rx_call * acall)
 {
     return common_GiveUpCallBacks(acall, 0, 0);
-} /*SRXAFS_GiveUpAllCallBacks*/
+}				/*SRXAFS_GiveUpAllCallBacks */
 
 
-afs_int32 SRXAFS_NGetVolumeInfo (struct rx_call *acall,
-				 char *avolid,
-				 struct AFSVolumeInfo *avolinfo)
+afs_int32
+SRXAFS_NGetVolumeInfo(struct rx_call * acall, char *avolid,
+		      struct AFSVolumeInfo * avolinfo)
 {
-    return(VNOVOL);		/* XXX Obsolete routine XXX */
+    return (VNOVOL);		/* XXX Obsolete routine XXX */
 
-} /*SRXAFS_NGetVolumeInfo*/
+}				/*SRXAFS_NGetVolumeInfo */
 
 
 /*
@@ -5956,54 +5765,49 @@ afs_int32 SRXAFS_NGetVolumeInfo (struct rx_call *acall,
  * invoke this interface when communicating with a AFS/DFS Protocol
  * Translator).
  */
-afs_int32 SRXAFS_Lookup(struct rx_call *call_p,
-			struct AFSFid *afs_dfid_p,
-			char *afs_name_p,
-			struct AFSFid *afs_fid_p,
-			struct AFSFetchStatus *afs_status_p,
-			struct AFSFetchStatus *afs_dir_status_p,
-			struct AFSCallBack *afs_callback_p,
-			struct AFSVolSync *afs_sync_p)
+afs_int32
+SRXAFS_Lookup(struct rx_call * call_p, struct AFSFid * afs_dfid_p,
+	      char *afs_name_p, struct AFSFid * afs_fid_p,
+	      struct AFSFetchStatus * afs_status_p,
+	      struct AFSFetchStatus * afs_dir_status_p,
+	      struct AFSCallBack * afs_callback_p,
+	      struct AFSVolSync * afs_sync_p)
 {
     return EINVAL;
 }
 
 
-afs_int32 SRXAFS_GetCapabilities(struct rx_call *acall,
-				 Capabilities *capabilities)
+afs_int32
+SRXAFS_GetCapabilities(struct rx_call * acall, Capabilities * capabilities)
 {
-    afs_int32 *dataBuffP;               
+    afs_int32 *dataBuffP;
     afs_int32 *dataP;
-    afs_int32 dataBytes;   
+    afs_int32 dataBytes;
 
     dataBytes = 1 * sizeof(afs_int32);
-    dataBuffP = (afs_int32 *)malloc(dataBytes);
+    dataBuffP = (afs_int32 *) malloc(dataBytes);
     dataBuffP[0] = CAPABILITY_ERRORTRANS;
-    capabilities->Capabilities_len = dataBytes/sizeof(afs_int32);
+    capabilities->Capabilities_len = dataBytes / sizeof(afs_int32);
     capabilities->Capabilities_val = dataBuffP;
 
     return 0;
-} 
+}
 
-afs_int32 SRXAFS_FlushCPS(struct rx_call *acall,
-			  struct ViceIds *vids,
-			  struct IPAddrs *addrs,
-			  afs_int32 spare1,
-			  afs_int32 *spare2, 
-			  afs_int32 *spare3)
+afs_int32
+SRXAFS_FlushCPS(struct rx_call * acall, struct ViceIds * vids,
+		struct IPAddrs * addrs, afs_int32 spare1, afs_int32 * spare2,
+		afs_int32 * spare3)
 {
     int i;
     afs_int32 nids, naddrs;
     afs_int32 *vd, *addr;
-    int	    errorCode =	0;		/* return code to caller */
+    int errorCode = 0;		/* return code to caller */
     struct client *client;
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 
     ViceLog(1, ("SRXAFS_FlushCPS\n"));
-    FS_LOCK
-    AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-    nids = vids->ViceIds_len;	/* # of users in here */
+    FS_LOCK AFSCallStats.TotalCalls++;
+    FS_UNLOCK nids = vids->ViceIds_len;	/* # of users in here */
     naddrs = addrs->IPAddrs_len;	/* # of hosts in here */
     if (nids < 0 || naddrs < 0) {
 	errorCode = EINVAL;
@@ -6011,48 +5815,50 @@ afs_int32 SRXAFS_FlushCPS(struct rx_call *acall,
     }
 
     vd = vids->ViceIds_val;
-    for (i=0; i<nids; i++, vd++) {
-      if (!*vd)
-	continue;
-      client = h_ID2Client(*vd);  /* returns client locked, or NULL */
-      if (!client)
-	continue;
+    for (i = 0; i < nids; i++, vd++) {
+	if (!*vd)
+	    continue;
+	client = h_ID2Client(*vd);	/* returns client locked, or NULL */
+	if (!client)
+	    continue;
 
-      BoostSharedLock(&client->lock);
-      client->prfail = 2;	/* Means re-eval client's cps */
+	BoostSharedLock(&client->lock);
+	client->prfail = 2;	/* Means re-eval client's cps */
 #ifdef	notdef
-      if (client->tcon) {
-	rx_SetRock(((struct rx_connection *) client->tcon), 0);
-      }
+	if (client->tcon) {
+	    rx_SetRock(((struct rx_connection *)client->tcon), 0);
+	}
 #endif
-      if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val) {
-	free(client->CPS.prlist_val);
-	client->CPS.prlist_val = NULL;
-	client->CPS.prlist_len = 0;
-      }
-      ReleaseWriteLock(&client->lock);
+	if ((client->ViceId != ANONYMOUSID) && client->CPS.prlist_val) {
+	    free(client->CPS.prlist_val);
+	    client->CPS.prlist_val = NULL;
+	    client->CPS.prlist_len = 0;
+	}
+	ReleaseWriteLock(&client->lock);
     }
 
     addr = addrs->IPAddrs_val;
-    for (i=0; i<naddrs; i++, addr++) {
-      if (*addr)
-	h_flushhostcps(*addr, htons(7001));
+    for (i = 0; i < naddrs; i++, addr++) {
+	if (*addr)
+	    h_flushhostcps(*addr, htons(7001));
     }
 
-Bad_FlushCPS:
-    ViceLog(2, ("SAFS_FlushCPS	returns	%d\n", errorCode)); 
+  Bad_FlushCPS:
+    ViceLog(2, ("SAFS_FlushCPS	returns	%d\n", errorCode));
     return errorCode;
-} /*SRXAFS_FlushCPS */
+}				/*SRXAFS_FlushCPS */
 
 /* worthless hack to let CS keep running ancient software */
-static int afs_vtoi(register char *aname)
+static int
+afs_vtoi(register char *aname)
 {
     register afs_int32 temp;
     register int tc;
 
     temp = 0;
-    while((tc = *aname++)) {
-	if (tc > '9' ||	tc < '0') return 0; /* invalid name */
+    while ((tc = *aname++)) {
+	if (tc > '9' || tc < '0')
+	    return 0;		/* invalid name */
 	temp *= 10;
 	temp += tc - '0';
     }
@@ -6063,63 +5869,69 @@ static int afs_vtoi(register char *aname)
  * may get name or #, but must handle all weird cases (recognize readonly
  * or backup volumes by name or #
  */
-static afs_int32 CopyVolumeEntry(char *aname,register struct vldbentry *ave,
-				 register struct VolumeInfo *av)
+static afs_int32
+CopyVolumeEntry(char *aname, register struct vldbentry *ave,
+		register struct VolumeInfo *av)
 {
     register int i, j, vol;
     afs_int32 mask, whichType;
     afs_uint32 *serverHost, *typePtr;
-    
+
     /* figure out what type we want if by name */
     i = strlen(aname);
-    if (i >= 8 && strcmp(aname+i-7, ".backup") == 0)
+    if (i >= 8 && strcmp(aname + i - 7, ".backup") == 0)
 	whichType = BACKVOL;
-    else if (i >= 10 && strcmp(aname+i-9, ".readonly")==0)
+    else if (i >= 10 && strcmp(aname + i - 9, ".readonly") == 0)
 	whichType = ROVOL;
-    else whichType = RWVOL;
-    
+    else
+	whichType = RWVOL;
+
     vol = afs_vtoi(aname);
-    if (vol == 0) vol = ave->volumeId[whichType];
-    
+    if (vol == 0)
+	vol = ave->volumeId[whichType];
+
     /*
      * Now vol has volume # we're interested in.  Next, figure out the type
      * of the volume by looking finding it in the vldb entry
      */
-    if ((ave->flags&VLF_RWEXISTS) && vol == ave->volumeId[RWVOL]) {
+    if ((ave->flags & VLF_RWEXISTS) && vol == ave->volumeId[RWVOL]) {
 	mask = VLSF_RWVOL;
 	whichType = RWVOL;
-    }
-    else if ((ave->flags&VLF_ROEXISTS) && vol == ave->volumeId[ROVOL]) {
+    } else if ((ave->flags & VLF_ROEXISTS) && vol == ave->volumeId[ROVOL]) {
 	mask = VLSF_ROVOL;
 	whichType = ROVOL;
-    }
-    else if ((ave->flags&VLF_BACKEXISTS) && vol == ave->volumeId[BACKVOL]) {
-	mask = VLSF_RWVOL;  /* backup always is on the same volume as parent */
+    } else if ((ave->flags & VLF_BACKEXISTS) && vol == ave->volumeId[BACKVOL]) {
+	mask = VLSF_RWVOL;	/* backup always is on the same volume as parent */
 	whichType = BACKVOL;
-    }
-    else
-	return	EINVAL;	    /* error: can't find volume in vldb entry */
-    
+    } else
+	return EINVAL;		/* error: can't find volume in vldb entry */
+
     typePtr = &av->Type0;
     serverHost = &av->Server0;
     av->Vid = vol;
     av->Type = whichType;
     av->Type0 = av->Type1 = av->Type2 = av->Type3 = av->Type4 = 0;
-    if (ave->flags & VLF_RWEXISTS) typePtr[RWVOL] = ave->volumeId[RWVOL];
-    if (ave->flags & VLF_ROEXISTS) typePtr[ROVOL] = ave->volumeId[ROVOL];
-    if (ave->flags & VLF_BACKEXISTS) typePtr[BACKVOL] = ave->volumeId[BACKVOL];
+    if (ave->flags & VLF_RWEXISTS)
+	typePtr[RWVOL] = ave->volumeId[RWVOL];
+    if (ave->flags & VLF_ROEXISTS)
+	typePtr[ROVOL] = ave->volumeId[ROVOL];
+    if (ave->flags & VLF_BACKEXISTS)
+	typePtr[BACKVOL] = ave->volumeId[BACKVOL];
 
-    for(i=0,j=0; i<ave->nServers; i++) {
-	if ((ave->serverFlags[i] & mask) == 0) continue;    /* wrong volume */
+    for (i = 0, j = 0; i < ave->nServers; i++) {
+	if ((ave->serverFlags[i] & mask) == 0)
+	    continue;		/* wrong volume */
 	serverHost[j] = ave->serverNumber[i];
 	j++;
     }
     av->ServerCount = j;
-    if (j < 8) serverHost[j++] = 0; /* bogus 8, but compat only now */
+    if (j < 8)
+	serverHost[j++] = 0;	/* bogus 8, but compat only now */
     return 0;
 }
 
-static afs_int32 TryLocalVLServer(char *avolid, struct VolumeInfo *avolinfo)
+static afs_int32
+TryLocalVLServer(char *avolid, struct VolumeInfo *avolinfo)
 {
     static struct rx_connection *vlConn = 0;
     static int down = 0;
@@ -6130,18 +5942,20 @@ static afs_int32 TryLocalVLServer(char *avolid, struct VolumeInfo *avolinfo)
 
     if (!vlConn) {
 	vlSec = rxnull_NewClientSecurityObject();
-	vlConn = rx_NewConnection(htonl(0x7f000001), htons(7003), 52, vlSec, 0);
+	vlConn =
+	    rx_NewConnection(htonl(0x7f000001), htons(7003), 52, vlSec, 0);
 	rx_SetConnDeadTime(vlConn, 15);	/* don't wait long */
     }
     if (down && (FT_ApproxTime() < lastDownTime + 180)) {
-	return 1;   /* failure */
+	return 1;		/* failure */
     }
 
     code = VL_GetEntryByNameO(vlConn, avolid, &tve);
-    if (code >=	0) down	= 0;	/* call worked */
+    if (code >= 0)
+	down = 0;		/* call worked */
     if (code) {
 	if (code < 0) {
-	    lastDownTime = FT_ApproxTime(); /* last time we tried an RPC */
+	    lastDownTime = FT_ApproxTime();	/* last time we tried an RPC */
 	    down = 1;
 	}
 	return code;
@@ -6157,209 +5971,195 @@ static afs_int32 TryLocalVLServer(char *avolid, struct VolumeInfo *avolinfo)
 
 
 
-afs_int32 SRXAFS_GetVolumeInfo (struct rx_call *acall,
-				char *avolid,
-				struct VolumeInfo *avolinfo)
+afs_int32
+SRXAFS_GetVolumeInfo(struct rx_call * acall, char *avolid,
+		     struct VolumeInfo * avolinfo)
 {
     afs_int32 code;
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GETVOLUMEINFO]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_GetVolumeInfo;
 
-    FS_LOCK
-    AFSCallStats.GetVolumeInfo++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
+    FS_LOCK AFSCallStats.GetVolumeInfo++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK code = TryLocalVLServer(avolid, avolinfo);
+    ViceLog(1,
+	    ("SAFS_GetVolumeInfo returns %d, Volume %u, type %x, servers %x %x %x %x...\n",
+	     code, avolinfo->Vid, avolinfo->Type, avolinfo->Server0,
+	     avolinfo->Server1, avolinfo->Server2, avolinfo->Server3));
+    avolinfo->Type4 = 0xabcd9999;	/* tell us to try new vldb */
 
-    code = TryLocalVLServer(avolid, avolinfo);
-    ViceLog(1, ("SAFS_GetVolumeInfo returns %d, Volume %u, type %x, servers %x %x %x %x...\n",
-		code, avolinfo->Vid, avolinfo->Type,
-		avolinfo->Server0, avolinfo->Server1, avolinfo->Server2,
-		avolinfo->Server3));
-    avolinfo->Type4	= 0xabcd9999;	/* tell us to try new vldb */
-
-Bad_GetVolumeInfo:
+  Bad_GetVolumeInfo:
     code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
-
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
     return code;
 
-} /*SRXAFS_GetVolumeInfo*/
+}				/*SRXAFS_GetVolumeInfo */
 
 
-afs_int32 SRXAFS_GetVolumeStatus(struct rx_call *acall,
-				 afs_int32 avolid,
-				 AFSFetchVolumeStatus *FetchVolStatus,
-				 char **Name,
-				 char **OfflineMsg,
-				 char **Motd)
+afs_int32
+SRXAFS_GetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
+		       AFSFetchVolumeStatus * FetchVolStatus, char **Name,
+		       char **OfflineMsg, char **Motd)
 {
-    Vnode * targetptr =	0;		/* vnode of the new file */
-    Vnode * parentwhentargetnotdir = 0;	/* vnode of parent */
-    int	    errorCode =	0;		/* error code */
-    Volume * volptr = 0;		/* pointer to the volume header */
-    struct client * client;		/* pointer to client entry */
-    afs_int32 rights, anyrights;		/* rights for this and any user */
-    AFSFid  dummyFid;
+    Vnode *targetptr = 0;	/* vnode of the new file */
+    Vnode *parentwhentargetnotdir = 0;	/* vnode of parent */
+    int errorCode = 0;		/* error code */
+    Volume *volptr = 0;		/* pointer to the volume header */
+    struct client *client;	/* pointer to client entry */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
+    AFSFid dummyFid;
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GETVOLUMESTATUS]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    opP =
+	&(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GETVOLUMESTATUS]);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    ViceLog(1,("SAFS_GetVolumeStatus for volume %u\n", avolid));
+    ViceLog(1, ("SAFS_GetVolumeStatus for volume %u\n", avolid));
     if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_GetVolumeStatus;
 
-    FS_LOCK
-    AFSCallStats.GetVolumeStatus++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-
-    if (avolid == 0) {
+    FS_LOCK AFSCallStats.GetVolumeStatus++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK if (avolid == 0) {
 	errorCode = EINVAL;
 	goto Bad_GetVolumeStatus;
     }
-    dummyFid.Volume = avolid, dummyFid.Vnode = (afs_int32)ROOTVNODE, dummyFid.Unique = 1;
+    dummyFid.Volume = avolid, dummyFid.Vnode =
+	(afs_int32) ROOTVNODE, dummyFid.Unique = 1;
 
-    if ((errorCode = GetVolumePackage(tcon, &dummyFid, &volptr, &targetptr,
-				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, READ_LOCK, &rights, &anyrights)))
+    if ((errorCode =
+	 GetVolumePackage(tcon, &dummyFid, &volptr, &targetptr, MustBeDIR,
+			  &parentwhentargetnotdir, &client, READ_LOCK,
+			  &rights, &anyrights)))
 	goto Bad_GetVolumeStatus;
 
     if ((VanillaUser(client)) && (!(rights & PRSFS_READ))) {
 	errorCode = EACCES;
 	goto Bad_GetVolumeStatus;
     }
-    (void) RXGetVolumeStatus(FetchVolStatus, Name, OfflineMsg, Motd,
-			     volptr);
+    (void)RXGetVolumeStatus(FetchVolStatus, Name, OfflineMsg, Motd, volptr);
 
-Bad_GetVolumeStatus:
-    (void) PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0,
-			    volptr);
-    ViceLog(2,("SAFS_GetVolumeStatus returns %d\n",errorCode));
+  Bad_GetVolumeStatus:
+    (void)PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0,
+			   volptr);
+    ViceLog(2, ("SAFS_GetVolumeStatus returns %d\n", errorCode));
     /* next is to guarantee out strings exist for stub */
-    if (*Name == 0) {*Name = (char *) malloc(1); **Name = 0;}
-    if (*Motd == 0) {*Motd = (char *) malloc(1); **Motd = 0;}
-    if (*OfflineMsg == 0) {*OfflineMsg = (char *) malloc(1); **OfflineMsg = 0;}
+    if (*Name == 0) {
+	*Name = (char *)malloc(1);
+	**Name = 0;
+    }
+    if (*Motd == 0) {
+	*Motd = (char *)malloc(1);
+	**Motd = 0;
+    }
+    if (*OfflineMsg == 0) {
+	*OfflineMsg = (char *)malloc(1);
+	**OfflineMsg = 0;
+    }
     errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (errorCode == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
-
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
-    return(errorCode);
+    return (errorCode);
 
-} /*SRXAFS_GetVolumeStatus*/
+}				/*SRXAFS_GetVolumeStatus */
 
 
-afs_int32 SRXAFS_SetVolumeStatus (struct rx_call *acall,
-				  afs_int32 avolid,
-				  AFSStoreVolumeStatus *StoreVolStatus,
-				  char *Name,
-				  char *OfflineMsg,
-				  char *Motd)
+afs_int32
+SRXAFS_SetVolumeStatus(struct rx_call * acall, afs_int32 avolid,
+		       AFSStoreVolumeStatus * StoreVolStatus, char *Name,
+		       char *OfflineMsg, char *Motd)
 {
-    Vnode * targetptr =	0;		/* vnode of the new file */
-    Vnode * parentwhentargetnotdir = 0;	/* vnode of parent */
-    int	    errorCode =	0;		/* error code */
-    Volume * volptr = 0;		/* pointer to the volume header */
-    struct client * client;		/* pointer to client entry */
-    afs_int32 rights, anyrights;		/* rights for this and any user */
-    AFSFid  dummyFid;
+    Vnode *targetptr = 0;	/* vnode of the new file */
+    Vnode *parentwhentargetnotdir = 0;	/* vnode of parent */
+    int errorCode = 0;		/* error code */
+    Volume *volptr = 0;		/* pointer to the volume header */
+    struct client *client;	/* pointer to client entry */
+    afs_int32 rights, anyrights;	/* rights for this and any user */
+    AFSFid dummyFid;
     struct rx_connection *tcon = rx_ConnectionOf(acall);
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
-    opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_SETVOLUMESTATUS]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    opP =
+	&(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_SETVOLUMESTATUS]);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
-    ViceLog(1,("SAFS_SetVolumeStatus for volume %u\n", avolid));
+    ViceLog(1, ("SAFS_SetVolumeStatus for volume %u\n", avolid));
     if ((errorCode = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_SetVolumeStatus;
 
-    FS_LOCK
-    AFSCallStats.SetVolumeStatus++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-
-    if (avolid == 0) {
+    FS_LOCK AFSCallStats.SetVolumeStatus++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK if (avolid == 0) {
 	errorCode = EINVAL;
 	goto Bad_SetVolumeStatus;
     }
-    dummyFid.Volume = avolid, dummyFid.Vnode = (afs_int32)ROOTVNODE, dummyFid.Unique = 1;
+    dummyFid.Volume = avolid, dummyFid.Vnode =
+	(afs_int32) ROOTVNODE, dummyFid.Unique = 1;
 
-    if ((errorCode = GetVolumePackage(tcon, &dummyFid, &volptr, &targetptr,
-				     MustBeDIR, &parentwhentargetnotdir,
-				     &client, READ_LOCK, &rights, &anyrights)))
+    if ((errorCode =
+	 GetVolumePackage(tcon, &dummyFid, &volptr, &targetptr, MustBeDIR,
+			  &parentwhentargetnotdir, &client, READ_LOCK,
+			  &rights, &anyrights)))
 	goto Bad_SetVolumeStatus;
 
     if (readonlyServer) {
@@ -6371,41 +6171,40 @@ afs_int32 SRXAFS_SetVolumeStatus (struct rx_call *acall,
 	goto Bad_SetVolumeStatus;
     }
 
-    errorCode = RXUpdate_VolumeStatus(volptr, StoreVolStatus, Name,
-				      OfflineMsg, Motd);
+    errorCode =
+	RXUpdate_VolumeStatus(volptr, StoreVolStatus, Name, OfflineMsg, Motd);
 
- Bad_SetVolumeStatus:
-    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *)0, volptr);
-    ViceLog(2,("SAFS_SetVolumeStatus returns %d\n",errorCode));
+  Bad_SetVolumeStatus:
+    PutVolumePackage(parentwhentargetnotdir, targetptr, (Vnode *) 0, volptr);
+    ViceLog(2, ("SAFS_SetVolumeStatus returns %d\n", errorCode));
     errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (errorCode == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
-
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    osi_auditU (acall, SetVolumeStatusEvent, errorCode, AUD_LONG, avolid, AUD_STR, Name, AUD_END);
-    return(errorCode);
+    osi_auditU(acall, SetVolumeStatusEvent, errorCode, AUD_LONG, avolid,
+	       AUD_STR, Name, AUD_END);
+    return (errorCode);
 
-} /*SRXAFS_SetVolumeStatus*/
+}				/*SRXAFS_SetVolumeStatus */
 
 #define	DEFAULTVOLUME	"root.afs"
 
-afs_int32 SRXAFS_GetRootVolume (struct rx_call *acall, char **VolumeName)
+afs_int32
+SRXAFS_GetRootVolume(struct rx_call * acall, char **VolumeName)
 {
     int fd;
     int len;
@@ -6413,20 +6212,17 @@ afs_int32 SRXAFS_GetRootVolume (struct rx_call *acall, char **VolumeName)
     int errorCode = 0;		/* error code */
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GETROOTVOLUME]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     return FSERR_EOPNOTSUPP;
@@ -6434,11 +6230,8 @@ afs_int32 SRXAFS_GetRootVolume (struct rx_call *acall, char **VolumeName)
 #ifdef	notdef
     if (errorCode = CallPreamble(acall, ACTIVECALL, &tcon))
 	goto Bad_GetRootVolume;
-    FS_LOCK
-    AFSCallStats.GetRootVolume++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-
-    temp = malloc(256);
+    FS_LOCK AFSCallStats.GetRootVolume++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK temp = malloc(256);
     fd = open(AFSDIR_SERVER_ROOTVOL_FILEPATH, O_RDONLY, 0666);
     if (fd <= 0)
 	strcpy(temp, DEFAULTVOLUME);
@@ -6455,155 +6248,139 @@ afs_int32 SRXAFS_GetRootVolume (struct rx_call *acall, char **VolumeName)
 	flock(fd, LOCK_UN);
 #endif
 	close(fd);
-	if (temp[len-1] == '\n') len--;
+	if (temp[len - 1] == '\n')
+	    len--;
 	temp[len] = '\0';
     }
-    *VolumeName	= temp;	    /* freed by rx server-side stub */
+    *VolumeName = temp;		/* freed by rx server-side stub */
 
-Bad_GetRootVolume:
+  Bad_GetRootVolume:
     errorCode = CallPostamble(tcon, errorCode);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (errorCode == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
-    return(errorCode);
-#endif	/* notdef */
+    return (errorCode);
+#endif /* notdef */
 
-} /*SRXAFS_GetRootVolume*/
+}				/*SRXAFS_GetRootVolume */
 
 
 /* still works because a struct CBS is the same as a struct AFSOpaque */
-afs_int32 SRXAFS_CheckToken (struct rx_call *acall,
-			     afs_int32 AfsId,
-			     struct AFSOpaque *Token)
+afs_int32
+SRXAFS_CheckToken(struct rx_call * acall, afs_int32 AfsId,
+		  struct AFSOpaque * Token)
 {
     afs_int32 code;
     struct rx_connection *tcon;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_CHECKTOKEN]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     if ((code = CallPreamble(acall, ACTIVECALL, &tcon)))
 	goto Bad_CheckToken;
 
     code = FSERR_ECONNREFUSED;
-    
-Bad_CheckToken:
+
+  Bad_CheckToken:
     code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     if (code == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
-
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
     return code;
 
-} /*SRXAFS_CheckToken*/
+}				/*SRXAFS_CheckToken */
 
-afs_int32 SRXAFS_GetTime (struct rx_call *acall,
-			  afs_uint32 *Seconds,
-			  afs_uint32 *USeconds)
+afs_int32
+SRXAFS_GetTime(struct rx_call * acall, afs_uint32 * Seconds,
+	       afs_uint32 * USeconds)
 {
     afs_int32 code;
     struct rx_connection *tcon;
     struct timeval tpl;
 #if FS_STATS_DETAILED
-    struct fs_stats_opTimingData *opP;      /* Ptr to this op's timing struct */
-    struct timeval opStartTime,
-                   opStopTime;		    /* Start/stop times for RPC op*/
-    struct timeval elapsedTime;		    /* Transfer time */
+    struct fs_stats_opTimingData *opP;	/* Ptr to this op's timing struct */
+    struct timeval opStartTime, opStopTime;	/* Start/stop times for RPC op */
+    struct timeval elapsedTime;	/* Transfer time */
 
     /*
      * Set our stats pointer, remember when the RPC operation started, and
      * tally the operation.
      */
     opP = &(afs_FullPerfStats.det.rpcOpTimes[FS_STATS_RPCIDX_GETTIME]);
-    FS_LOCK
-    (opP->numOps)++;
-    FS_UNLOCK
-    TM_GetTimeOfDay(&opStartTime, 0);
+    FS_LOCK(opP->numOps)++;
+    FS_UNLOCK TM_GetTimeOfDay(&opStartTime, 0);
 #endif /* FS_STATS_DETAILED */
 
     if ((code = CallPreamble(acall, NOTACTIVECALL, &tcon)))
 	goto Bad_GetTime;
 
-    FS_LOCK
-    AFSCallStats.GetTime++, AFSCallStats.TotalCalls++;
-    FS_UNLOCK
-
-    TM_GetTimeOfDay(&tpl, 0);
+    FS_LOCK AFSCallStats.GetTime++, AFSCallStats.TotalCalls++;
+    FS_UNLOCK TM_GetTimeOfDay(&tpl, 0);
     *Seconds = tpl.tv_sec;
     *USeconds = tpl.tv_usec;
 
     ViceLog(2, ("SAFS_GetTime returns %u, %u\n", *Seconds, *USeconds));
-    
-Bad_GetTime:
+
+  Bad_GetTime:
     code = CallPostamble(tcon, code);
 
 #if FS_STATS_DETAILED
     TM_GetTimeOfDay(&opStopTime, 0);
     fs_stats_GetDiff(elapsedTime, opStartTime, opStopTime);
     if (code == 0) {
-      FS_LOCK
-      (opP->numSuccesses)++;
-      fs_stats_AddTo((opP->sumTime), elapsedTime);
-      fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
-      if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
-	fs_stats_TimeAssign((opP->minTime), elapsedTime);
-      }
-      if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
-	fs_stats_TimeAssign((opP->maxTime), elapsedTime);
-      }
-      FS_UNLOCK
-    }
-
+	FS_LOCK(opP->numSuccesses)++;
+	fs_stats_AddTo((opP->sumTime), elapsedTime);
+	fs_stats_SquareAddTo((opP->sqrTime), elapsedTime);
+	if (fs_stats_TimeLessThan(elapsedTime, (opP->minTime))) {
+	    fs_stats_TimeAssign((opP->minTime), elapsedTime);
+	}
+	if (fs_stats_TimeGreaterThan(elapsedTime, (opP->maxTime))) {
+	    fs_stats_TimeAssign((opP->maxTime), elapsedTime);
+	}
+    FS_UNLOCK}
 #endif /* FS_STATS_DETAILED */
 
     return code;
 
-} /*SRXAFS_GetTime*/
+}				/*SRXAFS_GetTime */
 
 
 /*
@@ -6627,20 +6404,16 @@ Bad_GetTime:
  */
 
 afs_int32
-FetchData_RXStyle(Volume *volptr, 
-		  Vnode *targetptr, 
-		  register struct rx_call *Call,
-		  afs_int32 Pos,
-		  afs_int32 Len,
-		  afs_int32 Int64Mode,
+FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
+		  register struct rx_call * Call, afs_int32 Pos,
+		  afs_int32 Len, afs_int32 Int64Mode,
 #if FS_STATS_DETAILED
-		  afs_int32 *a_bytesToFetchP,
-		  afs_int32 *a_bytesFetchedP
-#endif /* FS_STATS_DETAILED */
-		  )
+		  afs_int32 * a_bytesToFetchP, afs_int32 * a_bytesFetchedP
+#endif				/* FS_STATS_DETAILED */
+    )
 {
-    struct timeval StartTime, StopTime; /* used to calculate file  transfer rates */
-    int	errorCode = 0;			/* Returned error code to caller */
+    struct timeval StartTime, StopTime;	/* used to calculate file  transfer rates */
+    int errorCode = 0;		/* Returned error code to caller */
     int code;
     IHandle_t *ihP;
     FdHandle_t *fdP;
@@ -6671,15 +6444,16 @@ FetchData_RXStyle(Volume *volptr,
 	 * back to make the cache manager happy...
 	 */
 	tlen = htonl(0);
-        if (Int64Mode)
-            rx_Write(Call, (char *)&tlen, sizeof(afs_int32));   /* send 0-length  */
+	if (Int64Mode)
+	    rx_Write(Call, (char *)&tlen, sizeof(afs_int32));	/* send 0-length  */
 	rx_Write(Call, (char *)&tlen, sizeof(afs_int32));	/* send 0-length  */
 	return (0);
     }
     TM_GetTimeOfDay(&StartTime, 0);
     ihP = targetptr->handle;
     fdP = IH_OPEN(ihP);
-    if (fdP == NULL) return EIO;
+    if (fdP == NULL)
+	return EIO;
     optSize = sendBufSize;
     tlen = FDH_SIZE(fdP);
     if (tlen < 0) {
@@ -6687,12 +6461,13 @@ FetchData_RXStyle(Volume *volptr,
 	return EIO;
     }
 
-    if (Pos + Len > tlen) Len =	tlen - Pos;	/* get length we should send */
-    (void) FDH_SEEK(fdP, Pos, 0);
+    if (Pos + Len > tlen)
+	Len = tlen - Pos;	/* get length we should send */
+    (void)FDH_SEEK(fdP, Pos, 0);
     tlen = htonl(Len);
     if (Int64Mode) {
-        afs_int32 zero = 0;
-        rx_Write(Call, (char *)&zero, sizeof(afs_int32)); /* High order bits */
+	afs_int32 zero = 0;
+	rx_Write(Call, (char *)&zero, sizeof(afs_int32));	/* High order bits */
     }
     rx_Write(Call, (char *)&tlen, sizeof(afs_int32));	/* send length on fetch */
 #if FS_STATS_DETAILED
@@ -6702,13 +6477,15 @@ FetchData_RXStyle(Volume *volptr,
     tbuffer = AllocSendBuffer();
 #endif /* AFS_NT40_ENV */
     while (Len > 0) {
-	if (Len > optSize) tlen = optSize;
-	else tlen = Len;
+	if (Len > optSize)
+	    tlen = optSize;
+	else
+	    tlen = Len;
 #ifdef AFS_NT40_ENV
 	errorCode = FDH_READ(fdP, tbuffer, tlen);
 	if (errorCode != tlen) {
 	    FDH_CLOSE(fdP);
-	    FreeSendBuffer((struct afs_buffer *) tbuffer);
+	    FreeSendBuffer((struct afs_buffer *)tbuffer);
 	    return EIO;
 	}
 	errorCode = rx_Write(Call, tbuffer, tlen);
@@ -6728,52 +6505,52 @@ FetchData_RXStyle(Volume *volptr,
 #endif /* AFS_NT40_ENV */
 #if FS_STATS_DETAILED
 	/*
-	  * Bump the number of bytes actually sent by the number from this
-	  * latest iteration
-	  */
+	 * Bump the number of bytes actually sent by the number from this
+	 * latest iteration
+	 */
 	(*a_bytesFetchedP) += errorCode;
 #endif /* FS_STATS_DETAILED */
 	if (errorCode != tlen) {
 	    FDH_CLOSE(fdP);
 #ifdef AFS_NT40_ENV
-	    FreeSendBuffer((struct afs_buffer *) tbuffer);
+	    FreeSendBuffer((struct afs_buffer *)tbuffer);
 #endif /* AFS_NT40_ENV */
 	    return -31;
 	}
 	Len -= tlen;
     }
 #ifdef AFS_NT40_ENV
-    FreeSendBuffer((struct afs_buffer *) tbuffer);
+    FreeSendBuffer((struct afs_buffer *)tbuffer);
 #endif /* AFS_NT40_ENV */
     FDH_CLOSE(fdP);
     TM_GetTimeOfDay(&StopTime, 0);
 
     /* Adjust all Fetch Data related stats */
-    FS_LOCK
-    if (AFSCallStats.TotalFetchedBytes > 2000000000) /* Reset if over 2 billion */
-	AFSCallStats.TotalFetchedBytes = AFSCallStats.AccumFetchTime = 0;
-    AFSCallStats.AccumFetchTime += ((StopTime.tv_sec - StartTime.tv_sec) * 1000) +
-      ((StopTime.tv_usec - StartTime.tv_usec) / 1000);
+    FS_LOCK if (AFSCallStats.TotalFetchedBytes > 2000000000)	/* Reset if over 2 billion */
+	  AFSCallStats.TotalFetchedBytes = AFSCallStats.AccumFetchTime = 0;
+    AFSCallStats.AccumFetchTime +=
+	((StopTime.tv_sec - StartTime.tv_sec) * 1000) +
+	((StopTime.tv_usec - StartTime.tv_usec) / 1000);
     {
-	afs_fsize_t	targLen;
+	afs_fsize_t targLen;
 	VN_GET_LEN(targLen, targetptr);
 	AFSCallStats.TotalFetchedBytes += targLen;
 	AFSCallStats.FetchSize1++;
 	if (targLen < SIZE2)
-	    AFSCallStats.FetchSize2++;  
+	    AFSCallStats.FetchSize2++;
 	else if (targLen < SIZE3)
 	    AFSCallStats.FetchSize3++;
 	else if (targLen < SIZE4)
-	    AFSCallStats.FetchSize4++;  
+	    AFSCallStats.FetchSize4++;
 	else
 	    AFSCallStats.FetchSize5++;
     }
-    FS_UNLOCK
-    return (0);
+    FS_UNLOCK return (0);
 
-} /*FetchData_RXStyle*/
+}				/*FetchData_RXStyle */
 
-static int GetLinkCountAndSize(Volume *vp, FdHandle_t *fdP, int *lc, int *size)
+static int
+GetLinkCountAndSize(Volume * vp, FdHandle_t * fdP, int *lc, int *size)
 {
 #ifdef AFS_NAMEI_ENV
     FdHandle_t *lhp;
@@ -6786,21 +6563,21 @@ static int GetLinkCountAndSize(Volume *vp, FdHandle_t *fdP, int *lc, int *size)
     *lc = namei_GetLinkCount(lhp, fdP->fd_ih->ih_ino, 0);
 #endif
     FDH_CLOSE(lhp);
-    if (*lc < 0 )
+    if (*lc < 0)
 	return -1;
     *size = OS_SIZE(fdP->fd_fd);
     return (*size == -1) ? -1 : 0;
 #else
     struct stat status;
 
-    if (fstat(fdP->fd_fd, &status)<0) {
+    if (fstat(fdP->fd_fd, &status) < 0) {
 	return -1;
     }
 
     *lc = GetLinkCount(vp, &status);
     *size = status.st_size;
     return 0;
-#endif   
+#endif
 }
 
 /*
@@ -6823,48 +6600,42 @@ static int GetLinkCountAndSize(Volume *vp, FdHandle_t *fdP, int *lc, int *size)
  * endif
  */
 afs_int32
-StoreData_RXStyle(Volume *volptr,
-		  Vnode *targetptr,
-		  struct AFSFid *Fid,
-		  struct client *client,
-		  register struct rx_call *Call,
-		  afs_uint32 Pos,
-		  afs_uint32 Length,
-		  afs_uint32 FileLength,
+StoreData_RXStyle(Volume * volptr, Vnode * targetptr, struct AFSFid * Fid,
+		  struct client * client, register struct rx_call * Call,
+		  afs_uint32 Pos, afs_uint32 Length, afs_uint32 FileLength,
 		  int sync,
 #if FS_STATS_DETAILED
-		  afs_int32 *a_bytesToStoreP,
-		  afs_int32 *a_bytesStoredP
-#endif /* FS_STATS_DETAILED */
-		  )
+		  afs_int32 * a_bytesToStoreP, afs_int32 * a_bytesStoredP
+#endif				/* FS_STATS_DETAILED */
+    )
 {
-    int	    bytesTransfered;		/* number of bytes actually transfered */
+    int bytesTransfered;	/* number of bytes actually transfered */
     struct timeval StartTime, StopTime;	/* Used to measure how long the store takes */
-    int	errorCode = 0;			/* Returned error code to caller */
+    int errorCode = 0;		/* Returned error code to caller */
 #ifdef AFS_NT40_ENV
-    register char *tbuffer;		/* data copying buffer */
+    register char *tbuffer;	/* data copying buffer */
 #else /* AFS_NT40_ENV */
-    struct iovec tiov[RX_MAXIOVECS];    /* no data copying with iovec */
-    int tnio;				/* temp for iovec size */
+    struct iovec tiov[RX_MAXIOVECS];	/* no data copying with iovec */
+    int tnio;			/* temp for iovec size */
 #endif /* AFS_NT40_ENV */
-    int	tlen;				/* temp for xfr length */
-    Inode tinode;			/* inode for I/O */
-    afs_int32 optSize;			/* optimal transfer size */
-    int DataLength;			/* size of inode */
-    afs_int32 TruncatedLength;		/* size after ftruncate */
-    afs_uint32 NewLength;		/* size after this store completes */
-    afs_int32 adjustSize;		/* bytes to call VAdjust... with */
-    int linkCount;			/* link count on inode */
+    int tlen;			/* temp for xfr length */
+    Inode tinode;		/* inode for I/O */
+    afs_int32 optSize;		/* optimal transfer size */
+    int DataLength;		/* size of inode */
+    afs_int32 TruncatedLength;	/* size after ftruncate */
+    afs_uint32 NewLength;	/* size after this store completes */
+    afs_int32 adjustSize;	/* bytes to call VAdjust... with */
+    int linkCount;		/* link count on inode */
     int code;
     FdHandle_t *fdP;
-    struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
+    struct in_addr logHostAddr;	/* host ip holder for inet_ntoa */
 
 #if FS_STATS_DETAILED
     /*
      * Initialize the byte count arguments.
      */
     (*a_bytesToStoreP) = 0;
-    (*a_bytesStoredP)  = 0;
+    (*a_bytesStoredP) = 0;
 #endif /* FS_STATS_DETAILED */
 
     /*
@@ -6876,33 +6647,34 @@ StoreData_RXStyle(Volume *volptr,
     if (Pos == -1 || VN_GET_INO(targetptr) == 0) {
 	/* the inode should have been created in Alloc_NewVnode */
 	logHostAddr.s_addr = rx_HostOf(rx_PeerOf(rx_ConnectionOf(Call)));
-	ViceLog(0, ("StoreData_RXStyle : Inode non-existent Fid = %u.%u.%u, inode = %llu, Pos %d Host %s\n",
-		    Fid->Volume, Fid->Vnode, Fid->Unique, 
-		    (afs_uintmax_t)VN_GET_INO(targetptr),
-		    Pos, inet_ntoa(logHostAddr) ));
-	return ENOENT;  /* is this proper error code? */
-    }
-    else {
+	ViceLog(0,
+		("StoreData_RXStyle : Inode non-existent Fid = %u.%u.%u, inode = %llu, Pos %d Host %s\n",
+		 Fid->Volume, Fid->Vnode, Fid->Unique,
+		 (afs_uintmax_t) VN_GET_INO(targetptr), Pos,
+		 inet_ntoa(logHostAddr)));
+	return ENOENT;		/* is this proper error code? */
+    } else {
 	/*
 	 * See if the file has several links (from other volumes).  If it
 	 * does, then we have to make a copy before changing it to avoid
 	 *changing read-only clones of this dude
 	 */
-	ViceLog(25, ("StoreData_RXStyle : Opening inode %s\n",
-		     PrintInode(NULL, VN_GET_INO(targetptr))));
+	ViceLog(25,
+		("StoreData_RXStyle : Opening inode %s\n",
+		 PrintInode(NULL, VN_GET_INO(targetptr))));
 	fdP = IH_OPEN(targetptr->handle);
-	if (fdP == NULL) 
+	if (fdP == NULL)
 	    return ENOENT;
-	if (GetLinkCountAndSize(volptr, fdP, &linkCount,
-				&DataLength)<0) {
+	if (GetLinkCountAndSize(volptr, fdP, &linkCount, &DataLength) < 0) {
 	    FDH_CLOSE(fdP);
 	    return EIO;
 	}
-	
+
 	if (linkCount != 1) {
 	    afs_fsize_t size;
-	    ViceLog(25, ("StoreData_RXStyle : inode %s has more than onelink\n",
-			 PrintInode(NULL, VN_GET_INO(targetptr))));
+	    ViceLog(25,
+		    ("StoreData_RXStyle : inode %s has more than onelink\n",
+		     PrintInode(NULL, VN_GET_INO(targetptr))));
 	    /* other volumes share this data, better copy it first */
 
 	    /* Adjust the disk block count by the creation of the new inode.
@@ -6918,21 +6690,21 @@ StoreData_RXStyle(Volume *volptr,
 	    volptr->partition->flags |= PART_DONTUPDATE;
 	    if ((errorCode = VDiskUsage(volptr, nBlocks(size)))) {
 		volptr->partition->flags &= ~PART_DONTUPDATE;
-		return(errorCode);
+		return (errorCode);
 	    }
 
 	    ViceLog(25, ("StoreData : calling CopyOnWrite on  target dir\n"));
-	    if ((errorCode = CopyOnWrite(targetptr, volptr)))
-	    {
-	    	ViceLog(25, ("StoreData : CopyOnWrite failed\n"));
-	    	volptr->partition->flags &= ~PART_DONTUPDATE;
+	    if ((errorCode = CopyOnWrite(targetptr, volptr))) {
+		ViceLog(25, ("StoreData : CopyOnWrite failed\n"));
+		volptr->partition->flags &= ~PART_DONTUPDATE;
 		return (errorCode);
 	    }
 	    volptr->partition->flags &= ~PART_DONTUPDATE;
 	    VSetPartitionDiskUsage(volptr->partition);
 	    fdP = IH_OPEN(targetptr->handle);
-	    if (fdP == NULL)  {
-	    	ViceLog(25, ("StoreData : Reopen after CopyOnWrite failed\n"));
+	    if (fdP == NULL) {
+		ViceLog(25,
+			("StoreData : Reopen after CopyOnWrite failed\n"));
 		return ENOENT;
 	    }
 	}
@@ -6944,21 +6716,22 @@ StoreData_RXStyle(Volume *volptr,
     NewLength = DataLength;
     if (FileLength < NewLength)
 	/* simulate truncate */
-	NewLength = FileLength;	
-    TruncatedLength = NewLength; /* remember length after possible ftruncate */
+	NewLength = FileLength;
+    TruncatedLength = NewLength;	/* remember length after possible ftruncate */
     if (Pos + Length > NewLength)
-	NewLength = Pos+Length;   /* and write */
+	NewLength = Pos + Length;	/* and write */
 
     /* adjust the disk block count by the difference in the files */
     {
-	afs_fsize_t	targSize;
+	afs_fsize_t targSize;
 	VN_GET_LEN(targSize, targetptr);
 	adjustSize = nBlocks(NewLength) - nBlocks(targSize);
     }
-    if((errorCode = AdjustDiskUsage(volptr, adjustSize,
-				   adjustSize - SpareComp(volptr)))) {
+    if ((errorCode =
+	 AdjustDiskUsage(volptr, adjustSize,
+			 adjustSize - SpareComp(volptr)))) {
 	FDH_CLOSE(fdP);
-	return(errorCode);
+	return (errorCode);
     }
 
     /* can signal cache manager to proceed from close now */
@@ -6970,8 +6743,10 @@ StoreData_RXStyle(Volume *volptr,
     optSize = sendBufSize;
 
     /* truncate the file iff it needs it (ftruncate is slow even when its a noop) */
-    if (FileLength < DataLength) FDH_TRUNC(fdP, FileLength);
-    if (Pos > 0) FDH_SEEK(fdP, Pos, 0);
+    if (FileLength < DataLength)
+	FDH_TRUNC(fdP, FileLength);
+    if (Pos > 0)
+	FDH_SEEK(fdP, Pos, 0);
     bytesTransfered = 0;
 #ifdef AFS_NT40_ENV
     tbuffer = AllocSendBuffer();
@@ -6988,10 +6763,10 @@ StoreData_RXStyle(Volume *volptr,
 	 * spot above.
 	 */
 	errorCode = FDH_WRITE(fdP, &tlen, 1);
-	if (errorCode != 1) goto done;
+	if (errorCode != 1)
+	    goto done;
 	errorCode = FDH_TRUNC(fdP, Pos);
-    }
-    else {
+    } else {
 	/* have some data to copy */
 #if FS_STATS_DETAILED
 	(*a_bytesToStoreP) = Length;
@@ -7001,8 +6776,9 @@ StoreData_RXStyle(Volume *volptr,
 		errorCode = 0;
 		break;
 	    }
-	    tlen = Length -	bytesTransfered;    /* how much more to do */
-	    if (tlen > optSize) tlen = optSize; /* bound by buffer size */
+	    tlen = Length - bytesTransfered;	/* how much more to do */
+	    if (tlen > optSize)
+		tlen = optSize;	/* bound by buffer size */
 #ifdef AFS_NT40_ENV
 	    errorCode = rx_Read(Call, tbuffer, tlen);
 #else /* AFS_NT40_ENV */
@@ -7030,15 +6806,15 @@ StoreData_RXStyle(Volume *volptr,
     }
   done:
 #ifdef AFS_NT40_ENV
-    FreeSendBuffer((struct afs_buffer *) tbuffer);
+    FreeSendBuffer((struct afs_buffer *)tbuffer);
 #endif /* AFS_NT40_ENV */
     if (sync) {
-      FDH_SYNC(fdP);
+	FDH_SYNC(fdP);
     }
     if (errorCode) {
-	afs_fsize_t	nfSize = FDH_SIZE(fdP);
+	afs_fsize_t nfSize = FDH_SIZE(fdP);
 	/* something went wrong: adjust size and return */
-	VN_SET_LEN(targetptr, nfSize); /* set new file size. */
+	VN_SET_LEN(targetptr, nfSize);	/* set new file size. */
 	/* changed_newTime is tested in StoreData to detemine if we
 	 * need to update the target vnode.
 	 */
@@ -7056,12 +6832,11 @@ StoreData_RXStyle(Volume *volptr,
     VN_SET_LEN(targetptr, NewLength);
 
     /* Update all StoreData related stats */
-    FS_LOCK
-    if (AFSCallStats.TotalStoredBytes >	2000000000)	/* reset if over 2 billion */
-	AFSCallStats.TotalStoredBytes = AFSCallStats.AccumStoreTime = 0;
-    AFSCallStats.StoreSize1++;			/* Piggybacked data */
+    FS_LOCK if (AFSCallStats.TotalStoredBytes > 2000000000)	/* reset if over 2 billion */
+	  AFSCallStats.TotalStoredBytes = AFSCallStats.AccumStoreTime = 0;
+    AFSCallStats.StoreSize1++;	/* Piggybacked data */
     {
-	afs_fsize_t	targLen;
+	afs_fsize_t targLen;
 	VN_GET_LEN(targLen, targetptr);
 	if (targLen < SIZE2)
 	    AFSCallStats.StoreSize2++;
@@ -7072,14 +6847,15 @@ StoreData_RXStyle(Volume *volptr,
 	else
 	    AFSCallStats.StoreSize5++;
     }
-    FS_UNLOCK
-    return(errorCode);
+    FS_UNLOCK return (errorCode);
 
-} /*StoreData_RXStyle*/
+}				/*StoreData_RXStyle */
 
 static int sys2et[512];
 
-void init_sys_error_to_et(void) {
+void
+init_sys_error_to_et(void)
+{
     memset(&sys2et, 0, sizeof(sys2et));
     sys2et[EPERM] = UAEPERM;
     sys2et[ENOENT] = UAENOENT;
@@ -7207,9 +6983,14 @@ void init_sys_error_to_et(void) {
     sys2et[EMEDIUMTYPE] = UAEMEDIUMTYPE;
 }
 
-afs_int32 sys_error_to_et(afs_int32 in) {
-    if (in == 0) return 0;
-    if (in < 0 || in > 511) return in;
-    if (sys2et[in] != 0) return sys2et[in];
+afs_int32
+sys_error_to_et(afs_int32 in)
+{
+    if (in == 0)
+	return 0;
+    if (in < 0 || in > 511)
+	return in;
+    if (sys2et[in] != 0)
+	return sys2et[in];
     return in;
 }

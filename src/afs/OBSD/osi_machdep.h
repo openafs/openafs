@@ -40,7 +40,7 @@ extern struct simplelock afs_rxglobal_lock;
 #define v_vfsp		v_mount
 
 /* vnode */
-#define SetAfsVnode(vn) /* nothing; done in getnewvnode() */
+#define SetAfsVnode(vn)		/* nothing; done in getnewvnode() */
 #define	IsAfsVnode(vn)	((vn)->v_op == afs_vnodeop_p)
 #define AFS_HOLD(vp)	afs_nbsd_ref(vp)
 #define AFS_RELE(vp)	afs_nbsd_rele(vp)
@@ -68,7 +68,7 @@ extern struct simplelock afs_rxglobal_lock;
 /* proc, cred */
 #define	AFS_PROC	struct proc
 #define	AFS_UCRED	ucred
-#define afs_suser()	afs_osi_suser(osi_curcred()) 
+#define afs_suser()	afs_osi_suser(osi_curcred())
 #define getpid()	curproc
 #define osi_curcred()	(curproc->p_cred->pc_ucred)
 #define osi_curproc()	curproc
@@ -102,8 +102,9 @@ extern struct timeval time;
 /* This is not always in scope yet */
 struct vcache;
 
-extern int afs_nbsd_lookupname(char *fnamep, enum uio_seg segflg, int followlink,
-			       struct vnode **dirvpp, struct vnode **compvpp);
+extern int afs_nbsd_lookupname(char *fnamep, enum uio_seg segflg,
+			       int followlink, struct vnode **dirvpp,
+			       struct vnode **compvpp);
 extern void afs_nbsd_getnewvnode(struct vcache *tvc);
 extern void afs_nbsd_ref(struct vnode *);
 extern void afs_nbsd_rele(struct vnode *);
@@ -115,10 +116,10 @@ extern int afs_vget();
 	afs_nbsd_lookupname((fnamep), (segflg), (followlink), (dirvpp), (compvpp))
 
 #ifdef KERNEL
-extern int (**afs_vnodeop_p)();
+extern int (**afs_vnodeop_p) ();
 
 #ifdef AFS_GLOBAL_SUNLOCK
-extern struct proc * afs_global_owner;
+extern struct proc *afs_global_owner;
 extern struct lock afs_global_lock;
 #define AFS_GLOCK() \
     do { \

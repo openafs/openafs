@@ -10,21 +10,23 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
-#include "afs/afs_stats.h"  /* afs statistics */
+#include "afs/afs_stats.h"	/* afs statistics */
 
 
 int afs_osicred_initialized;
-struct  AFS_UCRED afs_osi_cred;
+struct AFS_UCRED afs_osi_cred;
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct mount *afs_cacheVfsp;
 
 
-void *osi_UFSOpen(afs_int32 ainode)
+void *
+osi_UFSOpen(afs_int32 ainode)
 {
     struct osi_file *afile;
     struct vnode *vp;
@@ -34,7 +36,7 @@ void *osi_UFSOpen(afs_int32 ainode)
     AFS_STATCNT(osi_UFSOpen);
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS)
 	osi_Panic("UFSOpen called for non-UFS cache\n");
-    afile = (struct osi_file *) osi_AllocSmallSpace(sizeof(struct osi_file));
+    afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
     code = VFS_VGET(cacheDev.mp, (ino_t) ainode, &vp);
     if (code) {
 	osi_FreeSmallSpace(afile);
@@ -46,10 +48,11 @@ void *osi_UFSOpen(afs_int32 ainode)
     afile->proc = NULL;
     afile->inum = ainode;	/* for hint validity checking */
     VOP_UNLOCK(vp, 0, curproc);
-    return (void *) afile;
+    return (void *)afile;
 }
 
-int afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
+int
+afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
 {
     afs_int32 code;
     struct vattr tvattr;
@@ -69,7 +72,8 @@ int afs_osi_Stat(struct osi_file *afile, struct osi_stat *astat)
     return code;
 }
 
-int osi_UFSClose(struct osi_file *afile)
+int
+osi_UFSClose(struct osi_file *afile)
 {
     AFS_STATCNT(osi_Close);
 
@@ -80,7 +84,8 @@ int osi_UFSClose(struct osi_file *afile)
     return 0;
 }
 
-int osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
+int
+osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
 {
     struct vattr tvattr;
     afs_int32 code;
@@ -97,7 +102,7 @@ int osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     if (code || tstat.size <= asize)
 	return code;
 
-    MObtainWriteLock(&afs_xosi,321);
+    MObtainWriteLock(&afs_xosi, 321);
     VATTR_NULL(&tvattr);
     tvattr.va_size = asize;
     AFS_GUNLOCK();
@@ -111,7 +116,8 @@ int osi_UFSTruncate(struct osi_file *afile, afs_int32 asize)
     return code;
 }
 
-void osi_DisableAtimes(struct vnode *avp)
+void
+osi_DisableAtimes(struct vnode *avp)
 {
 #if 0
     VTOI(avp)->i_flag &= ~IN_ACCESS;
@@ -120,7 +126,8 @@ void osi_DisableAtimes(struct vnode *avp)
 
 
 /* Generic read interface */
-int afs_osi_Read(struct osi_file *afile, int offset, void *aptr, afs_int32 asize)
+int
+afs_osi_Read(struct osi_file *afile, int offset, void *aptr, afs_int32 asize)
 {
     unsigned int resid;
     afs_int32 code;
@@ -141,8 +148,9 @@ int afs_osi_Read(struct osi_file *afile, int offset, void *aptr, afs_int32 asize
     if (offset != -1)
 	afile->offset = offset;
     AFS_GUNLOCK();
-    code = vn_rdwr(UIO_READ, afile->vnode, aptr, asize, afile->offset,
-		   AFS_UIOSYS, IO_UNIT, &afs_osi_cred, &resid, curproc);
+    code =
+	vn_rdwr(UIO_READ, afile->vnode, aptr, asize, afile->offset,
+		AFS_UIOSYS, IO_UNIT, &afs_osi_cred, &resid, curproc);
     AFS_GLOCK();
     if (code == 0) {
 	code = asize - resid;
@@ -157,21 +165,24 @@ int afs_osi_Read(struct osi_file *afile, int offset, void *aptr, afs_int32 asize
 }
 
 /* Generic write interface */
-int afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr, afs_int32 asize)
+int
+afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr,
+	      afs_int32 asize)
 {
     unsigned int resid;
     afs_int32 code;
 
     AFS_STATCNT(osi_Write);
     if (!afile)
-        osi_Panic("afs_osi_Write called with null afile");
+	osi_Panic("afs_osi_Write called with null afile");
     if (offset != -1)
 	afile->offset = offset;
 
     AFS_GUNLOCK();
     VOP_LOCK(afile->vnode, LK_EXCLUSIVE | LK_RETRY, curproc);
-    code = vn_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize, afile->offset,
-		   AFS_UIOSYS, IO_UNIT, &afs_osi_cred, &resid, curproc);
+    code =
+	vn_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize, afile->offset,
+		AFS_UIOSYS, IO_UNIT, &afs_osi_cred, &resid, curproc);
     VOP_UNLOCK(afile->vnode, 0, curproc);
     AFS_GLOCK();
 
@@ -184,7 +195,7 @@ int afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr, afs_int3
 	code = -1;
 
     if (afile->proc)
-	(*afile->proc)(afile, code);
+	(*afile->proc) (afile, code);
 
     return code;
 }
@@ -194,17 +205,19 @@ int afs_osi_Write(struct osi_file *afile, afs_int32 offset, void *aptr, afs_int3
  * written from the RT NFS port strategy routine.  It has been generalized a
  * bit, but should still be pretty clear.
  */
-int afs_osi_MapStrategy(int (*aproc)(), struct buf *bp)
+int
+afs_osi_MapStrategy(int (*aproc) (), struct buf *bp)
 {
     afs_int32 returnCode;
 
     AFS_STATCNT(osi_MapStrategy);
-    returnCode = (*aproc)(bp);
+    returnCode = (*aproc) (bp);
 
     return returnCode;
 }
 
-void shutdown_osifile(void)
+void
+shutdown_osifile(void)
 {
     AFS_STATCNT(shutdown_osifile);
     if (afs_cold_shutdown)

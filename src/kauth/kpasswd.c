@@ -11,7 +11,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -85,18 +86,19 @@ static char **zero_argv;
 extern int init_child(), pasword_bad(), give_to_child(), terminate_child();
 
 #ifdef AFS_NT40_ENV
-struct  passwd {
-  char *pw_name;
+struct passwd {
+    char *pw_name;
 };
 char userName[128];
 DWORD userNameLen;
 #endif
 
-main (argc, argv, envp)
-  int   argc;
-  char *argv[];
-  char **envp;
-{   struct cmd_syndesc *ts;
+main(argc, argv, envp)
+     int argc;
+     char *argv[];
+     char **envp;
+{
+    struct cmd_syndesc *ts;
     afs_int32 code;
 
 #ifdef	AFS_AIX32_ENV
@@ -107,7 +109,7 @@ main (argc, argv, envp)
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
@@ -131,9 +133,11 @@ main (argc, argv, envp)
     cmd_AddParm(ts, "-x", CMD_FLAG, CMD_OPTIONAL, "(obsolete, noop)");
     cmd_AddParm(ts, "-principal", CMD_SINGLE, CMD_OPTIONAL, "user name");
     cmd_AddParm(ts, "-password", CMD_SINGLE, CMD_OPTIONAL, "user's password");
-    cmd_AddParm(ts, "-newpassword", CMD_SINGLE, CMD_OPTIONAL, "user's new password");
+    cmd_AddParm(ts, "-newpassword", CMD_SINGLE, CMD_OPTIONAL,
+		"user's new password");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
-    cmd_AddParm(ts, "-servers", CMD_LIST, CMD_OPTIONAL, "explicit list of servers");
+    cmd_AddParm(ts, "-servers", CMD_LIST, CMD_OPTIONAL,
+		"explicit list of servers");
     cmd_AddParm(ts, "-pipe", CMD_FLAG, CMD_OPTIONAL, "silent operation");
 
     code = cmd_Dispatch(argc, argv);
@@ -141,71 +145,79 @@ main (argc, argv, envp)
 }
 
 
-static void getpipepass(gpbuf, len)
-  char *gpbuf;
-  int   len;
+static void
+getpipepass(gpbuf, len)
+     char *gpbuf;
+     int len;
 {
     /* read a password from stdin, stop on \n or eof */
     register int i, tc;
     memset(gpbuf, 0, len);
-    for(i=0;i<len;i++) {
+    for (i = 0; i < len; i++) {
 	tc = fgetc(stdin);
-	if (tc == '\n' || tc == EOF) break;
+	if (tc == '\n' || tc == EOF)
+	    break;
 	gpbuf[i] = tc;
     }
     return;
 }
 
-static afs_int32 read_pass (passwd, len, prompt, verify)
-  char *passwd;
-  int   len;
-  char *prompt;
-  int   verify;
-{   afs_int32 code;
-    code = read_pw_string (passwd, len, prompt, verify);
+static afs_int32
+read_pass(passwd, len, prompt, verify)
+     char *passwd;
+     int len;
+     char *prompt;
+     int verify;
+{
+    afs_int32 code;
+    code = read_pw_string(passwd, len, prompt, verify);
     if (code == -1) {
-	getpipepass (passwd, len);
+	getpipepass(passwd, len);
 	return 0;
     }
     return code;
 }
 
-static int password_ok (newpw, insist)
-  char *newpw;
-  int  *insist;
+static int
+password_ok(newpw, insist)
+     char *newpw;
+     int *insist;
 {
     if (insist == 0) {
 	/* see if it is reasonable, but don't get so obnoxious */
-	(*insist)++;	/* so we don't get called again */
-	if (strlen(newpw) < 6) return 0;
+	(*insist)++;		/* so we don't get called again */
+	if (strlen(newpw) < 6)
+	    return 0;
     }
-    return 1;	/* lie about it */
+    return 1;			/* lie about it */
 }
 
-static char rn[] = "kpasswd";		/* Routine name */
-static int  Pipe = 0;			/* reading from a pipe */
+static char rn[] = "kpasswd";	/* Routine name */
+static int Pipe = 0;		/* reading from a pipe */
 
 #if TIMEOUT
-int timedout ()
+int
+timedout()
 {
-    if (!Pipe) fprintf (stderr, "%s: timed out\n", rn);
-    exit (1);
+    if (!Pipe)
+	fprintf(stderr, "%s: timed out\n", rn);
+    exit(1);
 }
 #endif
 
 char passwd[BUFSIZ], npasswd[BUFSIZ], verify[BUFSIZ];
-CommandProc (as, arock)
-  char *arock;
-  struct cmd_syndesc *as;
+CommandProc(as, arock)
+     char *arock;
+     struct cmd_syndesc *as;
 {
-    char  name[MAXKTCNAMELEN];
-    char  instance[MAXKTCNAMELEN];
-    char  cell[MAXKTCREALMLEN];
-    char  realm[MAXKTCREALMLEN];
-    afs_int32  serverList[MAXSERVERS];
-    char *lcell;			/* local cellname */
-    int	  code;
-    int   i;
+    char name[MAXKTCNAMELEN];
+    char instance[MAXKTCNAMELEN];
+    char cell[MAXKTCREALMLEN];
+    char realm[MAXKTCREALMLEN];
+    afs_int32 serverList[MAXSERVERS];
+    char *lcell;		/* local cellname */
+    int code;
+    int i;
 
     struct ubik_client *conn = 0;
     struct ktc_encryptionKey key;
@@ -213,17 +225,17 @@ CommandProc (as, arock)
     struct ktc_encryptionKey newkey;
     struct ktc_encryptionKey newmitkey;
 
-    struct ktc_token    token;
+    struct ktc_token token;
 
     struct passwd pwent;
     struct passwd *pw = &pwent;
 
-    int insist;				/* insist on good password quality */
-    int lexplicit=0;			/* servers specified explicitly */
-    int local;				/* explicit cell is same a local cell */
-    int	foundPassword =	0;		/*Not yet, anyway*/
-    int	foundNewPassword = 0;		/*Not yet, anyway*/
-    int	foundExplicitCell = 0;		/*Not yet, anyway*/
+    int insist;			/* insist on good password quality */
+    int lexplicit = 0;		/* servers specified explicitly */
+    int local;			/* explicit cell is same a local cell */
+    int foundPassword = 0;	/*Not yet, anyway */
+    int foundNewPassword = 0;	/*Not yet, anyway */
+    int foundExplicitCell = 0;	/*Not yet, anyway */
 #ifdef DEFAULT_MITV4_STRINGTOKEY
     int dess2k = 1;
 #elif DEFAULT_AFS_STRINGTOKEY
@@ -233,7 +245,8 @@ CommandProc (as, arock)
 #endif
 
     /* blow away command line arguments */
-    for (i=1; i<zero_argc; i++) memset(zero_argv[i], 0, strlen(zero_argv[i]));
+    for (i = 1; i < zero_argc; i++)
+	memset(zero_argv[i], 0, strlen(zero_argv[i]));
     zero_argc = 0;
 
     /* first determine quiet flag based on -pipe switch */
@@ -241,25 +254,26 @@ CommandProc (as, arock)
 
 #if TIMEOUT
     signal(SIGALRM, timedout);
-    alarm (30);
+    alarm(30);
 #endif
 
     code = ka_Init(0);
-    if (code ||
-	!(lcell = ka_LocalCell())) {
+    if (code || !(lcell = ka_LocalCell())) {
 #ifndef AFS_FREELANCE_CLIENT
-	if (!Pipe) com_err (rn, code , "Can't get local cell name!");
-	exit (1);
+	if (!Pipe)
+	    com_err(rn, code, "Can't get local cell name!");
+	exit(1);
 #endif
     }
 
     code = rx_Init(0);
     if (code) {
-	if (!Pipe) com_err (rn, code , "Failed to initialize Rx");
-	exit (1);
+	if (!Pipe)
+	    com_err(rn, code, "Failed to initialize Rx");
+	exit(1);
     }
 
-    strcpy (instance, "");
+    strcpy(instance, "");
 
     /* Parse our arguments. */
 
@@ -270,67 +284,75 @@ CommandProc (as, arock)
 	 * the given cell name differs from our own, we don't do a lookup.
 	 */
 	foundExplicitCell = 1;
-	strncpy (realm, as->parms[aCELL].items->data, sizeof(realm));
+	strncpy(realm, as->parms[aCELL].items->data, sizeof(realm));
     }
 
     if (as->parms[aSERVERS].items) {
 	/* explicit server list */
 	int i;
 	struct cmd_item *ip;
-	char *ap[MAXSERVERS+2];
+	char *ap[MAXSERVERS + 2];
 
-	for (ip = as->parms[aSERVERS].items, i=2; ip; ip=ip->next, i++)
+	for (ip = as->parms[aSERVERS].items, i = 2; ip; ip = ip->next, i++)
 	    ap[i] = ip->data;
 	ap[0] = "";
 	ap[1] = "-servers";
 	code = ubik_ParseClientList(i, ap, serverList);
 	if (code) {
-	    if (!Pipe) com_err (rn, code, "could not parse server list");
+	    if (!Pipe)
+		com_err(rn, code, "could not parse server list");
 	    return code;
 	}
 	lexplicit = 1;
     }
 
     if (as->parms[aPRINCIPAL].items) {
-	ka_ParseLoginName (as->parms[aPRINCIPAL].items->data,
-			   name, instance, cell);
-	if (strlen (instance) > 0)
+	ka_ParseLoginName(as->parms[aPRINCIPAL].items->data, name, instance,
+			  cell);
+	if (strlen(instance) > 0)
 	    if (!Pipe)
-		fprintf (stderr, "Non-null instance (%s) may cause strange behavior.\n",
-			 instance);
+		fprintf(stderr,
+			"Non-null instance (%s) may cause strange behavior.\n",
+			instance);
 	if (strlen(cell) > 0) {
 	    if (foundExplicitCell) {
 		if (!Pipe)
-		    fprintf (stderr, "%s: May not specify an explicit cell twice.\n", rn);
+		    fprintf(stderr,
+			    "%s: May not specify an explicit cell twice.\n",
+			    rn);
 		return -1;
 	    }
 	    foundExplicitCell = 1;
-	    strncpy (realm, cell, sizeof(realm));
+	    strncpy(realm, cell, sizeof(realm));
 	}
 	pw->pw_name = name;
     } else {
 	/* No explicit name provided: use Unix uid. */
 #ifdef AFS_NT40_ENV
-      userNameLen = 128;
-      if (GetUserName(userName, &userNameLen) == 0) {
-	if (!Pipe) {
-	  fprintf (stderr, "Can't figure out your name in local cell %s from your user id.\n", lcell);
-	  fprintf (stderr, "Try providing the user name.\n");
+	userNameLen = 128;
+	if (GetUserName(userName, &userNameLen) == 0) {
+	    if (!Pipe) {
+		fprintf(stderr,
+			"Can't figure out your name in local cell %s from your user id.\n",
+			lcell);
+		fprintf(stderr, "Try providing the user name.\n");
+	    }
+	    exit(1);
 	}
-	exit (1);
-      }
-      pw->pw_name = userName;
-#else	
+	pw->pw_name = userName;
+#else
 	pw = getpwuid(getuid());
 	if (pw == 0) {
 	    if (!Pipe) {
-		fprintf (stderr, "Can't figure out your name in local cell %s from your user id.\n", lcell);
-		fprintf (stderr, "Try providing the user name.\n");
+		fprintf(stderr,
+			"Can't figure out your name in local cell %s from your user id.\n",
+			lcell);
+		fprintf(stderr, "Try providing the user name.\n");
 	    }
-	    exit (1);
+	    exit(1);
 	}
 #endif
-    } 
+    }
 
     if (as->parms[aPASSWORD].items) {
 	/*
@@ -339,8 +361,9 @@ CommandProc (as, arock)
 	 * see it there with ps!
 	 */
 	foundPassword = 1;
-	strncpy (passwd, as->parms[aPASSWORD].items->data, sizeof(passwd));
-	memset(as->parms[aPASSWORD].items->data, 0, strlen(as->parms[aPASSWORD].items->data));
+	strncpy(passwd, as->parms[aPASSWORD].items->data, sizeof(passwd));
+	memset(as->parms[aPASSWORD].items->data, 0,
+	       strlen(as->parms[aPASSWORD].items->data));
     }
 
     if (as->parms[aNEWPASSWORD].items) {
@@ -350,45 +373,51 @@ CommandProc (as, arock)
 	 * see it there with ps!
 	 */
 	foundNewPassword = 1;
-	strncpy (npasswd, as->parms[aNEWPASSWORD].items->data,
-		 sizeof(npasswd));
-	memset(as->parms[aNEWPASSWORD].items->data, 0, strlen(as->parms[aNEWPASSWORD].items->data));
+	strncpy(npasswd, as->parms[aNEWPASSWORD].items->data,
+		sizeof(npasswd));
+	memset(as->parms[aNEWPASSWORD].items->data, 0,
+	       strlen(as->parms[aNEWPASSWORD].items->data));
     }
-
 #ifdef AFS_FREELANCE_CLIENT
     if (!foundExplicitCell && !lcell) {
-	if (!Pipe) com_err (rn, code, "no cell name provided");
-        exit(1);
+	if (!Pipe)
+	    com_err(rn, code, "no cell name provided");
+	exit(1);
     }
 #else
-    if (!foundExplicitCell) strcpy (realm, lcell);
+    if (!foundExplicitCell)
+	strcpy(realm, lcell);
 #endif /* freelance */
-    
-    if (code = ka_CellToRealm (realm, realm, &local)) {
-	if (!Pipe) com_err (rn, code, "Can't convert cell to realm");
-	exit (1);
-    }
-    lcstring (cell, realm, sizeof(cell));
 
-    ka_PrintUserID ("Changing password for '", pw->pw_name, instance, "'");
-    printf (" in cell '%s'.\n", cell);
+    if (code = ka_CellToRealm(realm, realm, &local)) {
+	if (!Pipe)
+	    com_err(rn, code, "Can't convert cell to realm");
+	exit(1);
+    }
+    lcstring(cell, realm, sizeof(cell));
+
+    ka_PrintUserID("Changing password for '", pw->pw_name, instance, "'");
+    printf(" in cell '%s'.\n", cell);
 
     /* Get the password if it wasn't provided. */
     if (!foundPassword) {
-	if (Pipe) getpipepass (passwd, sizeof(passwd));
+	if (Pipe)
+	    getpipepass(passwd, sizeof(passwd));
 	else {
-	    code = read_pass (passwd, sizeof(passwd), "Old password: ", 0);
-	    if (code || (strlen (passwd) == 0)) {
-		if (code) code = KAREADPW;
+	    code = read_pass(passwd, sizeof(passwd), "Old password: ", 0);
+	    if (code || (strlen(passwd) == 0)) {
+		if (code)
+		    code = KAREADPW;
 		memset(&mitkey, 0, sizeof(mitkey));
 		memset(&key, 0, sizeof(key));
 		memset(passwd, 0, sizeof(passwd));
-		if (code) com_err (rn, code, "reading password");
-		exit (1);
+		if (code)
+		    com_err(rn, code, "reading password");
+		exit(1);
 	    }
 	}
-    } 
-    ka_StringToKey (passwd, realm, &key);
+    }
+    ka_StringToKey(passwd, realm, &key);
     des_string_to_key(passwd, &mitkey);
     give_to_child(passwd);
 
@@ -396,51 +425,51 @@ CommandProc (as, arock)
     insist = 0;
     if (!foundNewPassword) {
 	if (Pipe)
-	   getpipepass (npasswd, sizeof(npasswd));
+	    getpipepass(npasswd, sizeof(npasswd));
 	else {
 	    do {
-		code = read_pass (npasswd, sizeof(npasswd),
-				  "New password (RETURN to abort): ", 0);
-		if (code || (strlen (npasswd) == 0)) {
-		    if (code) 
-		       code = KAREADPW;
+		code =
+		    read_pass(npasswd, sizeof(npasswd),
+			      "New password (RETURN to abort): ", 0);
+		if (code || (strlen(npasswd) == 0)) {
+		    if (code)
+			code = KAREADPW;
 		    goto no_change;
 
 		}
-	    } while (password_bad (npasswd));
+	    } while (password_bad(npasswd));
 
-	    code = read_pass (verify, sizeof(verify),
-				  "Retype new password: ", 0);
+	    code =
+		read_pass(verify, sizeof(verify), "Retype new password: ", 0);
 	    if (code) {
-	      code = KAREADPW;
-	      goto no_change;
+		code = KAREADPW;
+		goto no_change;
 	    }
-	    if (strcmp (verify, npasswd) != 0) {
-	      printf ("Mismatch - ");
-	      goto no_change;
+	    if (strcmp(verify, npasswd) != 0) {
+		printf("Mismatch - ");
+		goto no_change;
 	    }
 	    memset(verify, 0, sizeof(verify));
-	  }
-      }
-    if (code = password_bad (npasswd)) {  /* assmt here! */
+	}
+    }
+    if (code = password_bad(npasswd)) {	/* assmt here! */
 	goto no_change_no_msg;
     }
-
 #if TRUNCATEPASSWORD
     if (strlen(npasswd) > 8) {
 	npasswd[8] = 0;
 	fprintf(stderr,
 		"%s: password too long, only the first 8 chars will be used.\n",
 		rn);
-    }
-    else
-	npasswd[8] = 0;	/* in case the password was exactly 8 chars long */
+    } else
+	npasswd[8] = 0;		/* in case the password was exactly 8 chars long */
 #endif
-    ka_StringToKey (npasswd, realm, &newkey);
+    ka_StringToKey(npasswd, realm, &newkey);
     des_string_to_key(npasswd, &newmitkey);
     memset(npasswd, 0, sizeof(npasswd));
 
-    if (lexplicit) ka_ExplicitCell (realm, serverList);
+    if (lexplicit)
+	ka_ExplicitCell(realm, serverList);
 
     /* Get an connection to kaserver's admin service in desired cell.  Set the
      * lifetime above the time uncertainty so that badly skewed clocks are
@@ -451,66 +480,76 @@ CommandProc (as, arock)
 
 #define ADMIN_LIFETIME (KTC_TIME_UNCERTAINTY+1)
 
-    code = ka_GetAdminToken (pw->pw_name, instance, realm,
-			     &key, ADMIN_LIFETIME, &token, /*!new*/0);
+    code =
+	ka_GetAdminToken(pw->pw_name, instance, realm, &key, ADMIN_LIFETIME,
+			 &token, /*!new */ 0);
     if (code == KABADREQUEST) {
-	code = ka_GetAdminToken (pw->pw_name, instance, realm,
-				 &mitkey, ADMIN_LIFETIME, &token, /*!new*/0);
-	if ((code == KABADREQUEST) && (strlen (passwd) > 8)) {
+	code =
+	    ka_GetAdminToken(pw->pw_name, instance, realm, &mitkey,
+			     ADMIN_LIFETIME, &token, /*!new */ 0);
+	if ((code == KABADREQUEST) && (strlen(passwd) > 8)) {
 	    /* try with only the first 8 characters incase they set their password
 	     * with an old style passwd program. */
 	    char pass8[9];
-	    strncpy (pass8, passwd, 8);
+	    strncpy(pass8, passwd, 8);
 	    pass8[8] = 0;
-	    ka_StringToKey (pass8, realm, &key);
+	    ka_StringToKey(pass8, realm, &key);
 	    memset(pass8, 0, sizeof(pass8));
 	    memset(passwd, 0, sizeof(passwd));
-	    code = ka_GetAdminToken (pw->pw_name, instance, realm,
-				     &key, ADMIN_LIFETIME, &token, /*!new*/0);
+	    code = ka_GetAdminToken(pw->pw_name, instance, realm, &key, ADMIN_LIFETIME, &token,	/*!new */
+				    0);
 #ifdef notdef
 	    /* the folks in testing really *hate* this message */
 	    if (code == 0) {
-		fprintf (stderr, "Warning: only the first 8 characters of your old password were significant.\n");
+		fprintf(stderr,
+			"Warning: only the first 8 characters of your old password were significant.\n");
 	    }
 #endif
 	    if (code == 0) {
 		if (dess2k == -1)
-		    dess2k=0;
+		    dess2k = 0;
 	    }
 	} else {
 	    if (dess2k == -1)
-		dess2k=1;
+		dess2k = 1;
 	}
     } else {
 	if (dess2k == -1)
-	    dess2k=0;
-    } 
+	    dess2k = 0;
+    }
 
     memset(&mitkey, 0, sizeof(mitkey));
     memset(&key, 0, sizeof(key));
-    if (code == KAUBIKCALL) com_err (rn, code, "(Authentication Server unavailable, try later)");
+    if (code == KAUBIKCALL)
+	com_err(rn, code, "(Authentication Server unavailable, try later)");
     else if (code) {
 	if (code == KABADREQUEST)
 	    fprintf(stderr, "%s: Incorrect old password.\n", rn);
 	else
-	    com_err (rn, code, "so couldn't change password");
-    }
-    else {
-	code = ka_AuthServerConn (realm, KA_MAINTENANCE_SERVICE, &token, &conn);
-	if (code) com_err (rn, code, "contacting Admin Server");
+	    com_err(rn, code, "so couldn't change password");
+    } else {
+	code =
+	    ka_AuthServerConn(realm, KA_MAINTENANCE_SERVICE, &token, &conn);
+	if (code)
+	    com_err(rn, code, "contacting Admin Server");
 	else {
 	    if (dess2k == 1)
-		code = ka_ChangePassword (pw->pw_name, instance, conn, 0, &newmitkey);
+		code =
+		    ka_ChangePassword(pw->pw_name, instance, conn, 0,
+				      &newmitkey);
 	    else
-		code = ka_ChangePassword (pw->pw_name, instance, conn, 0, &newkey);
+		code =
+		    ka_ChangePassword(pw->pw_name, instance, conn, 0,
+				      &newkey);
 	    memset(&newkey, 0, sizeof(newkey));
 	    memset(&newmitkey, 0, sizeof(newmitkey));
 	    if (code) {
-	      char * reason;
-	      reason = (char *) error_message(code);
-	      fprintf (stderr, "%s: Password was not changed because %s\n", rn, reason);
-	    }
-	    else printf("Password changed.\n\n");
+		char *reason;
+		reason = (char *)error_message(code);
+		fprintf(stderr, "%s: Password was not changed because %s\n",
+			rn, reason);
+	    } else
+		printf("Password changed.\n\n");
 	}
     }
     memset(&newkey, 0, sizeof(newkey));
@@ -523,14 +562,16 @@ CommandProc (as, arock)
     }
     rx_Finalize();
     terminate_child();
-    exit (code);
+    exit(code);
 
-  no_change:                       /* yuck, yuck, yuck */
-    if (code) com_err (rn, code, "getting new password");
- no_change_no_msg:
+  no_change:			/* yuck, yuck, yuck */
+    if (code)
+	com_err(rn, code, "getting new password");
+  no_change_no_msg:
     memset(&key, 0, sizeof(key));
     memset(npasswd, 0, sizeof(npasswd));
-    printf("Password for '%s' in cell '%s' unchanged.\n\n", pw->pw_name, cell);
+    printf("Password for '%s' in cell '%s' unchanged.\n\n", pw->pw_name,
+	   cell);
     terminate_child();
-    exit (code ? code : 1);
+    exit(code ? code : 1);
 }

@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -32,42 +33,47 @@ RCSID("$Header$");
 #ifndef AFS_NAMEI_ENV
 main()
 {
-     printf("nilist is only useful for namei AFS file server"
-	    " implementations.\n");
-     exit(1);
+    printf("nilist is only useful for namei AFS file server"
+	   " implementations.\n");
+    exit(1);
 }
 #else
 
-void Usage(void)
+void
+Usage(void)
 {
     printf("Usage: nilist partition [volume]\n");
-    printf("List all \"inodes\" for the volume group containing the volume\n");
+    printf
+	("List all \"inodes\" for the volume group containing the volume\n");
     printf("or for the entire partition.\n");
     exit(1);
 }
 
 /* This judge function can be a dummy since I know how nt_ListAFSFiles works */
-int Judge(struct ViceInodeInfo *info, int vid)
+int
+Judge(struct ViceInodeInfo *info, int vid)
 {
     return 1;
 }
 
-int PrintInodeInfo(FILE *fp, struct ViceInodeInfo *info, char *dir, char *name)
+int
+PrintInodeInfo(FILE * fp, struct ViceInodeInfo *info, char *dir, char *name)
 {
     static int lastVID = -1;
     int rwVID;
     char dname[1024];
-    
-    rwVID = info->u.param[1] == -1 ? info->u.special.parentId : 
-	info->u.vnode.volumeId;
+
+    rwVID =
+	info->u.param[1] ==
+	-1 ? info->u.special.parentId : info->u.vnode.volumeId;
 
     if (rwVID != lastVID) {
 	if (lastVID != -1)
 	    printf("\n");
 	lastVID = rwVID;
 	/* This munging of the name remove a "\R". */
-	(void) strcpy(dname, dir);
-	dname[strlen(dname)-2] = '\0';
+	(void)strcpy(dname, dir);
+	dname[strlen(dname) - 2] = '\0';
 	printf("Parent Volume %d, Directory %s\n", rwVID, dname);
 	printf("%19s %8s %5s %10s %10s %10s %10s %s\n", "Inode", "Size",
 	       "Nlink", "P1", "P2", "P3", "P4", "Name");
@@ -91,18 +97,21 @@ main(int ac, char **av)
     char *part;
     int ninodes;
 
-    if (ac < 2 || ac > 3) Usage();
+    if (ac < 2 || ac > 3)
+	Usage();
 
     part = av[1];
     if (ac == 3)
 	singleVolumeNumber = atoi(av[2]);
 
 #ifdef AFS_NT40_ENV
-    ninodes = nt_ListAFSFiles(part, PrintInodeInfo, stdout,
-			      Judge, singleVolumeNumber);
+    ninodes =
+	nt_ListAFSFiles(part, PrintInodeInfo, stdout, Judge,
+			singleVolumeNumber);
 #else
-    ninodes = namei_ListAFSFiles(part, PrintInodeInfo, stdout,
-				 Judge, singleVolumeNumber);
+    ninodes =
+	namei_ListAFSFiles(part, PrintInodeInfo, stdout, Judge,
+			   singleVolumeNumber);
 #endif
 }
 

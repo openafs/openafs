@@ -55,30 +55,30 @@
 #endif
 
 static void
-doit (const char *filename)
+doit(const char *filename)
 {
     int fd;
     int ret;
     void *buf;
 
-    fd = open (filename, O_RDWR | O_CREAT | O_TRUNC, 0600);
+    fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, 0600);
     if (fd < 0)
-	err (1, "open %s", filename);
-    ret = ftruncate (fd, 1);
+	err(1, "open %s", filename);
+    ret = ftruncate(fd, 1);
     if (ret < 0)
-	err (1, "ftruncate %s", filename);
-    buf = mmap (NULL, 1, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (buf == (void *) MAP_FAILED)
-	err (1, "mmap");
-    if (fchmod (fd, 0) < 0)
-	err (1, "fchmod %s, 0", filename);
-    ret = close (fd);
+	err(1, "ftruncate %s", filename);
+    buf = mmap(NULL, 1, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    if (buf == (void *)MAP_FAILED)
+	err(1, "mmap");
+    if (fchmod(fd, 0) < 0)
+	err(1, "fchmod %s, 0", filename);
+    ret = close(fd);
     if (ret < 0)
-	err (1, "close %s", filename);
+	err(1, "close %s", filename);
     *((char *)buf) = 0x17;
-    ret = munmap (buf, 1);
+    ret = munmap(buf, 1);
     if (ret < 0)
-	err (1, "munmap");
+	err(1, "munmap");
 }
 
 int
@@ -87,9 +87,9 @@ main(int argc, char **argv)
     const char *file = "foo";
 
     if (argc != 1 && argc != 2)
-	errx (1, "usage: %s [file]", argv[0]);
+	errx(1, "usage: %s [file]", argv[0]);
     if (argc == 2)
 	file = argv[1];
-    doit (file);
+    doit(file);
     return 0;
 }

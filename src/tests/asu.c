@@ -72,13 +72,13 @@ main(int argc, char **argv)
 	gid_t gid;
 
 	pw = getpwnam(user);
-	if(pw == NULL)
+	if (pw == NULL)
 	    errx(1, "no such user %s", user);
-	
+
 	uid = pw->pw_uid;
 	gid = pw->pw_gid;
 	groups[0] = gid;
-	
+
 	if (setgroups(1, groups))
 	    errx(1, "setgroups failed");
 
@@ -87,7 +87,6 @@ main(int argc, char **argv)
 	setegid(gid);
 	seteuid(uid);
     }
-
 #if 0
     if (k_hasafs()) {
 	int ret = k_setpag();
@@ -95,7 +94,7 @@ main(int argc, char **argv)
 	    warn("k_setpag");
     }
 #endif
-    
+
     execvp(prog, &argv[2]);
 
     return 0;

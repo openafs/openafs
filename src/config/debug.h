@@ -69,7 +69,8 @@ if(!(x)) { printf("assertion failed: line %d, file %s\n",\
 /* 
  *  Should get here only once per kernel instance!
  */
-char afsdebug[MAXMODS_DEBUG] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+char afsdebug[MAXMODS_DEBUG] =
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
 /*
  * AFSLOG
@@ -81,11 +82,12 @@ char afsdebug[MAXMODS_DEBUG] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
  *
  * NOTE: This should become a macro!
  */
-AFSLOG(index,level,a,b,c,d,e,f,g,h,i,j,k,l,m,n)
-    char index,level,*a,*b,*c,*d,*e,*f,*g,*h,*i,*j,*k,*l,*m,*n;
+AFSLOG(index, level, a, b, c, d, e, f, g, h, i, j, k, l, m, n)
+     char index, level, *a, *b, *c, *d, *e, *f, *g, *h, *i, *j, *k, *l, *m,
+	 *n;
 {
-    if ((afsdebug[index] & level) || !level) 
-	osi_dp(a,b,c,d,e,f,g,h,i,j,k,l,m,n);
+    if ((afsdebug[index] & level) || !level)
+	osi_dp(a, b, c, d, e, f, g, h, i, j, k, l, m, n);
 }
 #else
 extern char afsdebug[20];
@@ -121,7 +123,7 @@ if(!(x)) { fprintf(stderr, "assertion failed: line %d, file %s\n",\
 #define dmprintf(flag, bit, str) dprintf(((flag)&(1<<((bit)-1))), str)
 
 #endif /* lint */
-	  
+
 #else /* AFS_DEBUG */
 
 #define dprintf(flag, str)
@@ -131,4 +133,3 @@ if(!(x)) { fprintf(stderr, "assertion failed: line %d, file %s\n",\
 #endif /* AFS_DEBUG */
 
 #endif /* OPENAFS_DEBUG_H */
-

@@ -17,11 +17,13 @@
 #ifndef _LINUX_CODA_FS_I
 #define _LINUX_CODA_FS_I
 #define _CODA_HEADER_
-struct coda_inode_info {};
+struct coda_inode_info {
+};
 #endif
 #ifndef _LINUX_XFS_FS_I
 #define _LINUX_XFS_FS_I
-struct xfs_inode_info {};
+struct xfs_inode_info {
+};
 #endif
 #include "h/fs.h"
 #include "h/mm.h"
@@ -34,17 +36,17 @@ struct osi_socket {
 };
 
 struct osi_stat {
-    afs_int32 size;	    /* file size in bytes */
-    afs_int32 blksize;   /* optimal transfer size in bytes */
-    afs_int32 mtime;	    /* modification date */
-    afs_int32 atime;	    /* access time */
+    afs_int32 size;		/* file size in bytes */
+    afs_int32 blksize;		/* optimal transfer size in bytes */
+    afs_int32 mtime;		/* modification date */
+    afs_int32 atime;		/* access time */
 };
 
 struct osi_file {
-    afs_int32 size;	    	/* file size in bytes XXX Must be first field XXX */
+    afs_int32 size;		/* file size in bytes XXX Must be first field XXX */
 #ifdef AFS_LINUX22_ENV
-    struct dentry dentry; /* merely to hold the pointer to the inode. */
-    struct file file; /* May need this if we really open the file. */
+    struct dentry dentry;	/* merely to hold the pointer to the inode. */
+    struct file file;		/* May need this if we really open the file. */
 #else
     struct vnode *vnode;
 #endif
@@ -57,12 +59,12 @@ struct osi_file {
     afs_int32 offset;
 #endif
 #endif
-    int	(*proc)(struct osi_file *afile, afs_int32 code);	/* proc, which, if not null, is called on writes */
-    char *rock;		/* rock passed to proc */
-    ino_t inum;         /* guarantee validity of hint */
+    int (*proc) (struct osi_file * afile, afs_int32 code);	/* proc, which, if not null, is called on writes */
+    char *rock;			/* rock passed to proc */
+    ino_t inum;			/* guarantee validity of hint */
 #if defined(UKERNEL)
-    int fd;		/* file descriptor for user space files */
-#endif /* defined(UKERNEL) */
+    int fd;			/* file descriptor for user space files */
+#endif				/* defined(UKERNEL) */
 };
 
 struct osi_dev {
@@ -79,7 +81,7 @@ struct osi_dev {
 };
 
 struct afs_osi_WaitHandle {
-    caddr_t proc;	/* process waiting */
+    caddr_t proc;		/* process waiting */
 };
 
 #define	osi_SetFileProc(x,p)	((x)->proc=(p))
@@ -95,12 +97,12 @@ struct afs_osi_WaitHandle {
 #endif
 
 
-#define AFSOP_STOP_RXEVENT   214 /* stop rx event deamon */
-#define AFSOP_STOP_COMPLETE  215 /* afs has been shutdown */
-#define AFSOP_STOP_RXK_LISTENER   217 /* stop rx listener daemon */
+#define AFSOP_STOP_RXEVENT   214	/* stop rx event deamon */
+#define AFSOP_STOP_COMPLETE  215	/* afs has been shutdown */
+#define AFSOP_STOP_RXK_LISTENER   217	/* stop rx listener daemon */
 
 
-#define	osi_NPACKETS	20		/* number of cluster pkts to alloc */
+#define	osi_NPACKETS	20	/* number of cluster pkts to alloc */
 
 /*
  * Alloc declarations.
@@ -112,7 +114,7 @@ struct afs_osi_WaitHandle {
  */
 #ifndef AFS_OBSD_ENV
 #if defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
-extern int (**afs_vnodeop_p)();
+extern int (**afs_vnodeop_p) ();
 #define IsAfsVnode(vc)      ((vc)->v_op == afs_vnodeop_p)
 #define SetAfsVnode(vc)     (vc)->v_op = afs_vnodeop_p
 #else
@@ -147,7 +149,7 @@ extern struct vnodeops *afs_ops;
  */
 #if !defined(AFS_SGI65_ENV)
 #ifndef	DEBUG
-#define	DEBUG	1	/* Default is to enable debugging/logging */
+#define	DEBUG	1		/* Default is to enable debugging/logging */
 #endif
 #endif
 

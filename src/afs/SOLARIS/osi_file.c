@@ -10,16 +10,17 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
-#include "afs/afs_stats.h"  /* afs statistics */
+#include "afs/afs_stats.h"	/* afs statistics */
 #include "afs/osi_inode.h"
 
 
-int afs_osicred_initialized=0;
-struct  AFS_UCRED afs_osi_cred;
+int afs_osicred_initialized = 0;
+struct AFS_UCRED afs_osi_cred;
 afs_lock_t afs_xosi;		/* lock is for tvattr */
 extern struct osi_dev cacheDev;
 extern struct vfs *afs_cacheVfsp;
@@ -35,17 +36,18 @@ extern struct vfs *afs_cacheVfsp;
 int afs_CacheFSType = -1;
 
 /* pointer to VXFS routine to access vnodes by inode number */
-int (*vxfs_vx_vp_byino)();
+int (*vxfs_vx_vp_byino) ();
 
 /* Initialize the cache operations. Called while initializing cache files. */
-void afs_InitDualFSCacheOps(struct vnode *vp)
+void
+afs_InitDualFSCacheOps(struct vnode *vp)
 {
     int code;
     static int inited = 0;
     struct vfs *vfsp;
 #ifdef AFS_SUN56_ENV
     struct statvfs64 vfst;
-#else  /* AFS_SUN56_ENV */
+#else /* AFS_SUN56_ENV */
     struct statvfs vfst;
 #endif /* AFS_SUN56_ENV */
 
@@ -66,7 +68,8 @@ void afs_InitDualFSCacheOps(struct vnode *vp)
     if (strcmp(vfst.f_basetype, "vxfs") == 0) {
 	vxfs_vx_vp_byino = (int (*)())modlookup("vxfs", "vx_vp_byino");
 	if (vxfs_vx_vp_byino == NULL)
-	    osi_Panic("afs_InitDualFSCacheOps: modlookup(vx_vp_byino) failed");
+	    osi_Panic
+		("afs_InitDualFSCacheOps: modlookup(vx_vp_byino) failed");
 
 	afs_CacheFSType = AFS_SUN_VXFS_CACHE;
 	return;
@@ -76,12 +79,13 @@ void afs_InitDualFSCacheOps(struct vnode *vp)
     return;
 }
 
-ino_t VnodeToIno(vnode_t *vp)
+ino_t
+VnodeToIno(vnode_t * vp)
 {
     int code;
     struct vattr vattr;
 
-    vattr.va_mask = AT_FSID|AT_NODEID; /* quick return using this mask. */
+    vattr.va_mask = AT_FSID | AT_NODEID;	/* quick return using this mask. */
     code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred);
     if (code) {
 	osi_Panic("VnodeToIno");
@@ -89,22 +93,24 @@ ino_t VnodeToIno(vnode_t *vp)
     return vattr.va_nodeid;
 }
 
-dev_t VnodeToDev(vnode_t *vp)
+dev_t
+VnodeToDev(vnode_t * vp)
 {
     int code;
     struct vattr vattr;
 
-    vattr.va_mask = AT_FSID|AT_NODEID; /* quick return using this mask. */
+    vattr.va_mask = AT_FSID | AT_NODEID;	/* quick return using this mask. */
     AFS_GUNLOCK();
     code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred);
     AFS_GLOCK();
     if (code) {
 	osi_Panic("VnodeToDev");
     }
-    return (dev_t)vattr.va_fsid;
+    return (dev_t) vattr.va_fsid;
 }
 
-afs_int32 VnodeToSize(vnode_t *vp)
+afs_int32
+VnodeToSize(vnode_t * vp)
 {
     int code;
     struct vattr vattr;
@@ -112,8 +118,8 @@ afs_int32 VnodeToSize(vnode_t *vp)
     /*
      * We lock xosi in osi_Stat, so we probably should
      * lock it here too - RWH.
-     */ 
-    MObtainWriteLock(&afs_xosi,578);
+     */
+    MObtainWriteLock(&afs_xosi, 578);
     vattr.va_mask = AT_SIZE;
     AFS_GUNLOCK();
     code = VOP_GETATTR(vp, &vattr, 0, &afs_osi_cred);
@@ -122,18 +128,19 @@ afs_int32 VnodeToSize(vnode_t *vp)
 	osi_Panic("VnodeToSize");
     }
     MReleaseWriteLock(&afs_xosi);
-    return (afs_int32)(vattr.va_size);
+    return (afs_int32) (vattr.va_size);
 }
 
-void *osi_VxfsOpen(afs_int32 ainode)
+void *
+osi_VxfsOpen(afs_int32 ainode)
 {
     struct vnode *vp;
     register struct osi_file *afile = NULL;
     afs_int32 code = 0;
     int dummy;
-    afile = (struct osi_file *) osi_AllocSmallSpace(sizeof(struct osi_file));
+    afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
-    code = (*vxfs_vx_vp_byino)(afs_cacheVfsp, &vp, (unsigned int)ainode);
+    code = (*vxfs_vx_vp_byino) (afs_cacheVfsp, &vp, (unsigned int)ainode);
     AFS_GLOCK();
     if (code) {
 	osi_FreeSmallSpace(afile);
@@ -142,25 +149,29 @@ void *osi_VxfsOpen(afs_int32 ainode)
     afile->vnode = vp;
     afile->size = VnodeToSize(afile->vnode);
     afile->offset = 0;
-    afile->proc = (int (*)()) 0;
-    afile->inum = ainode;        /* for hint validity checking */
+    afile->proc = (int (*)())0;
+    afile->inum = ainode;	/* for hint validity checking */
     return (void *)afile;
 }
 #endif /* AFS_HAVE_VXFS */
 
 #if defined(AFS_SUN57_64BIT_ENV)
-void *osi_UfsOpen(ino_t ainode)
+void *
+osi_UfsOpen(ino_t ainode)
 #else
-void *osi_UfsOpen(afs_int32 ainode)
+void *
+osi_UfsOpen(afs_int32 ainode)
 #endif
 {
     struct inode *ip;
     register struct osi_file *afile = NULL;
     afs_int32 code = 0;
     int dummy;
-    afile = (struct osi_file *) osi_AllocSmallSpace(sizeof(struct osi_file));
+    afile = (struct osi_file *)osi_AllocSmallSpace(sizeof(struct osi_file));
     AFS_GUNLOCK();
-    code = igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, (ino_t)ainode, &ip, CRED(),&dummy);
+    code =
+	igetinode(afs_cacheVfsp, (dev_t) cacheDev.dev, (ino_t) ainode, &ip,
+		  CRED(), &dummy);
     AFS_GLOCK();
     if (code) {
 	osi_FreeSmallSpace(afile);
@@ -169,8 +180,8 @@ void *osi_UfsOpen(afs_int32 ainode)
     afile->vnode = ITOV(ip);
     afile->size = VTOI(afile->vnode)->i_size;
     afile->offset = 0;
-    afile->proc = (int (*)()) 0;
-    afile->inum = ainode;        /* for hint validity checking */
+    afile->proc = (int (*)())0;
+    afile->inum = ainode;	/* for hint validity checking */
     return (void *)afile;
 }
 
@@ -178,14 +189,16 @@ void *osi_UfsOpen(afs_int32 ainode)
   * In Solaris 7 we use 64 bit inode numbers
   */
 #if defined(AFS_SUN57_64BIT_ENV)
-void *osi_UFSOpen(ino_t ainode)
+void *
+osi_UFSOpen(ino_t ainode)
 #else
-void *osi_UFSOpen(afs_int32 ainode)
+void *
+osi_UFSOpen(afs_int32 ainode)
 #endif
 {
     extern int cacheDiskType;
     AFS_STATCNT(osi_UFSOpen);
-    if(cacheDiskType != AFS_FCACHE_TYPE_UFS) {
+    if (cacheDiskType != AFS_FCACHE_TYPE_UFS) {
 	osi_Panic("UFSOpen called for non-UFS cache\n");
     }
     if (!afs_osicred_initialized) {
@@ -201,12 +214,13 @@ void *osi_UFSOpen(afs_int32 ainode)
     return osi_UfsOpen(ainode);
 }
 
-int afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
+int
+afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *astat)
 {
     register afs_int32 code;
     struct vattr tvattr;
     AFS_STATCNT(osi_Stat);
-    MObtainWriteLock(&afs_xosi,320);
+    MObtainWriteLock(&afs_xosi, 320);
     /* Ufs doesn't seem to care about the flags so we pass 0 for now */
     tvattr.va_mask = AT_ALL;
     AFS_GUNLOCK();
@@ -222,18 +236,20 @@ int afs_osi_Stat(register struct osi_file *afile, register struct osi_stat *asta
     return code;
 }
 
-int osi_UFSClose(register struct osi_file *afile)
-  {
-      AFS_STATCNT(osi_Close);
-      if(afile->vnode) {
+int
+osi_UFSClose(register struct osi_file *afile)
+{
+    AFS_STATCNT(osi_Close);
+    if (afile->vnode) {
 	AFS_RELE(afile->vnode);
-      }
-      
-      osi_FreeSmallSpace(afile);
-      return 0;
-  }
+    }
 
-int osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
+    osi_FreeSmallSpace(afile);
+    return 0;
+}
+
+int
+osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
 {
     struct AFS_UCRED *oldCred;
     struct vattr tvattr;
@@ -246,8 +262,9 @@ int osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
      * small enough.  Check now and save some time.
      */
     code = afs_osi_Stat(afile, &tstat);
-    if (code || tstat.size <= asize) return code;
-    MObtainWriteLock(&afs_xosi,321);    
+    if (code || tstat.size <= asize)
+	return code;
+    MObtainWriteLock(&afs_xosi, 321);
     tvattr.va_mask = AT_SIZE;
     tvattr.va_size = asize;
     /*
@@ -260,21 +277,24 @@ int osi_UFSTruncate(register struct osi_file *afile, afs_int32 asize)
     return code;
 }
 
-void osi_DisableAtimes(struct vnode *avp)
+void
+osi_DisableAtimes(struct vnode *avp)
 {
-   if (afs_CacheFSType == AFS_SUN_UFS_CACHE) {
-       struct inode *ip = VTOI(avp);
-       rw_enter(&ip->i_contents, RW_READER);
-       mutex_enter(&ip->i_tlock);
-       ip->i_flag &= ~IACC;
-       mutex_exit(&ip->i_tlock);
-       rw_exit(&ip->i_contents);
-   }
+    if (afs_CacheFSType == AFS_SUN_UFS_CACHE) {
+	struct inode *ip = VTOI(avp);
+	rw_enter(&ip->i_contents, RW_READER);
+	mutex_enter(&ip->i_tlock);
+	ip->i_flag &= ~IACC;
+	mutex_exit(&ip->i_tlock);
+	rw_exit(&ip->i_contents);
+    }
 }
 
 
 /* Generic read interface */
-int afs_osi_Read(register struct osi_file *afile, int offset, void *aptr, afs_int32 asize)
+int
+afs_osi_Read(register struct osi_file *afile, int offset, void *aptr,
+	     afs_int32 asize)
 {
     struct AFS_UCRED *oldCred;
 #if defined(AFS_SUN57_ENV)
@@ -283,66 +303,70 @@ int afs_osi_Read(register struct osi_file *afile, int offset, void *aptr, afs_in
     int resid;
 #endif
     register afs_int32 code;
-    register afs_int32 cnt1=0;
+    register afs_int32 cnt1 = 0;
     AFS_STATCNT(osi_Read);
 
     /**
       * If the osi_file passed in is NULL, panic only if AFS is not shutting
       * down. No point in crashing when we are already shutting down
       */
-    if ( !afile ) {
-	if ( !afs_shuttingdown )
-           osi_Panic("osi_Read called with null param");
+    if (!afile) {
+	if (!afs_shuttingdown)
+	    osi_Panic("osi_Read called with null param");
 	else
 	    return EIO;
     }
 
-    if (offset != -1) afile->offset = offset;
+    if (offset != -1)
+	afile->offset = offset;
     AFS_GUNLOCK();
-    code = gop_rdwr(UIO_READ, afile->vnode, (caddr_t) aptr, asize, afile->offset,
-		  AFS_UIOSYS, 0, 0, &afs_osi_cred, &resid);
+    code =
+	gop_rdwr(UIO_READ, afile->vnode, (caddr_t) aptr, asize, afile->offset,
+		 AFS_UIOSYS, 0, 0, &afs_osi_cred, &resid);
     AFS_GLOCK();
     if (code == 0) {
 	code = asize - resid;
 	afile->offset += code;
 	osi_DisableAtimes(afile->vnode);
-    }
-    else {
+    } else {
 	afs_Trace2(afs_iclSetp, CM_TRACE_READFAILED, ICL_TYPE_INT32, resid,
-		 ICL_TYPE_INT32, code);
+		   ICL_TYPE_INT32, code);
 	code = -1;
     }
     return code;
 }
 
 /* Generic write interface */
-int afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr, afs_int32 asize)
+int
+afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr,
+	      afs_int32 asize)
 {
     struct AFS_UCRED *oldCred;
 #if defined(AFS_SUN57_ENV)
     ssize_t resid;
 #else
-   int resid;
+    int resid;
 #endif
     register afs_int32 code;
     AFS_STATCNT(osi_Write);
-    if ( !afile )
-        osi_Panic("afs_osi_Write called with null param");
-    if (offset != -1) afile->offset = offset;
+    if (!afile)
+	osi_Panic("afs_osi_Write called with null param");
+    if (offset != -1)
+	afile->offset = offset;
     AFS_GUNLOCK();
-    code = gop_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize,
-		    afile->offset, AFS_UIOSYS, 0, RLIM64_INFINITY,
-		    &afs_osi_cred, &resid);
+    code =
+	gop_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize,
+		 afile->offset, AFS_UIOSYS, 0, RLIM64_INFINITY, &afs_osi_cred,
+		 &resid);
     AFS_GLOCK();
     if (code == 0) {
 	code = asize - resid;
 	afile->offset += code;
-    }
-    else {
+    } else {
 	code = -1;
     }
     if (afile->proc) {
-	(*afile->proc)(afile, code);
+	(*afile->proc) (afile, code);
     }
     return code;
 }
@@ -351,7 +375,8 @@ int afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr,
 /*  This work should be handled by physstrat in ca/machdep.c.
     This routine written from the RT NFS port strategy routine.
     It has been generalized a bit, but should still be pretty clear. */
-int afs_osi_MapStrategy(int (*aproc)(), register struct buf *bp)
+int
+afs_osi_MapStrategy(int (*aproc) (), register struct buf *bp)
 {
     afs_int32 returnCode;
 
@@ -363,13 +388,13 @@ int afs_osi_MapStrategy(int (*aproc)(), register struct buf *bp)
 
 
 
-void shutdown_osifile(void)
+void
+shutdown_osifile(void)
 {
-  extern int afs_cold_shutdown;
+    extern int afs_cold_shutdown;
 
-  AFS_STATCNT(shutdown_osifile);
-  if (afs_cold_shutdown) {
-    afs_osicred_initialized = 0;
-  }
+    AFS_STATCNT(shutdown_osifile);
+    if (afs_cold_shutdown) {
+	afs_osicred_initialized = 0;
+    }
 }
-

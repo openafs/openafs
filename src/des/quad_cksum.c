@@ -66,7 +66,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <mit-cpyright.h>
 
@@ -103,8 +104,9 @@ static unsigned short two_bytes_vax_to_nets();
     afs_int32 length;		* original length in bytes *
 */
 
-afs_uint32 des_quad_cksum(unsigned char *in, afs_uint32 *out, 
-	afs_int32 length, int out_count, des_cblock *c_seed)
+afs_uint32
+des_quad_cksum(unsigned char *in, afs_uint32 * out, afs_int32 length,
+	       int out_count, des_cblock * c_seed)
 {
 
     /*
@@ -125,12 +127,12 @@ afs_uint32 des_quad_cksum(unsigned char *in, afs_uint32 *out,
     /* use all 8 bytes of seed */
 
     z = vaxtohl(c_seed);
-    z2 = vaxtohl((char *)c_seed+4);
+    z2 = vaxtohl((char *)c_seed + 4);
     if (out == NULL)
 	out_count = 1;		/* default */
 
     /* This is repeated n times!! */
-    for (i = 1; i <=4 && i<= out_count; i++) {
+    for (i = 1; i <= 4 && i <= out_count; i++) {
 	len = length;
 	p = in;
 	while (len) {
@@ -138,16 +140,15 @@ afs_uint32 des_quad_cksum(unsigned char *in, afs_uint32 *out,
 		x = (z + vaxtohs(p));
 		p += 2;
 		len -= 2;
-	    }
-	    else {
+	    } else {
 		x = (z + *(char *)p++);
 		len = 0;
 	    }
 	    x2 = z2;
-	    z  = ((x * x) + (x2 * x2)) % 0x7fffffff;
-	    z2 = (x * (x2+83653421))   % 0x7fffffff; /* modulo */
+	    z = ((x * x) + (x2 * x2)) % 0x7fffffff;
+	    z2 = (x * (x2 + 83653421)) % 0x7fffffff;	/* modulo */
 	    if (des_debug & 8)
-		printf("%ld %ld\n",z,z2);
+		printf("%ld %ld\n", z, z2);
 	}
 
 	if (out != NULL) {
@@ -158,9 +159,11 @@ afs_uint32 des_quad_cksum(unsigned char *in, afs_uint32 *out,
     /* return final z value as 32 bit version of checksum */
     return z;
 }
+
 #ifdef MSBFIRST
 
-static unsigned short two_bytes_vax_to_nets(char *p)
+static unsigned short
+two_bytes_vax_to_nets(char *p)
 {
     union {
 	char pieces[2];
@@ -169,10 +172,11 @@ static unsigned short two_bytes_vax_to_nets(char *p)
 
     short_conv.pieces[0] = p[1];
     short_conv.pieces[1] = p[0];
-    return(short_conv.result);
+    return (short_conv.result);
 }
 
-static afs_uint32 four_bytes_vax_to_nets(char *p)
+static afs_uint32
+four_bytes_vax_to_nets(char *p)
 {
     union {
 	char pieces[4];
@@ -183,7 +187,7 @@ static afs_uint32 four_bytes_vax_to_nets(char *p)
     long_conv.pieces[1] = p[2];
     long_conv.pieces[2] = p[1];
     long_conv.pieces[3] = p[0];
-    return(long_conv.result);
+    return (long_conv.result);
 }
 
 #endif

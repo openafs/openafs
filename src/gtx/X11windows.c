@@ -18,16 +18,17 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
-#include "gtxX11win.h"			/*Interface definition*/
-#include <stdio.h>			/*Standard I/O package*/
+#include "gtxX11win.h"		/*Interface definition */
+#include <stdio.h>		/*Standard I/O package */
 
 #if	!defined(NeXT)
-extern int errno;			/*System error number*/
+extern int errno;		/*System error number */
 #endif /* NeXT */
-int X11_debug;				/*Is debugging turned on?*/
-static char mn[] = "gator_X11windows";	/*Module name*/
+int X11_debug;			/*Is debugging turned on? */
+static char mn[] = "gator_X11windows";	/*Module name */
 
 /*
  * Version of standard operations for a X11 window.
@@ -79,12 +80,13 @@ struct gwinbaseops gator_X11_gwinbops = {
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_X11gwin_init(adebug)
-    int adebug;
+int
+gator_X11gwin_init(adebug)
+     int adebug;
 
-{ /*gator_X11gwin_init*/
+{				/*gator_X11gwin_init */
 
-    static char	rn[] = "gator_X11gwin_init";	/*Routine name*/
+    static char rn[] = "gator_X11gwin_init";	/*Routine name */
 
     /*
      * Remember if we'll be doing debugging, init X11 and clear the
@@ -98,9 +100,9 @@ int gator_X11gwin_init(adebug)
     /*
      * We return success, fill this routine it at some point.
      */
-    return(0);
+    return (0);
 
-} /*gator_X11gwin_init*/
+}				/*gator_X11gwin_init */
 
 /*------------------------------------------------------------------------
  * gator_X11gwin_create
@@ -122,19 +124,20 @@ int gator_X11gwin_init(adebug)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-struct gwin *gator_X11gwin_create(params)
-    struct gator_X11gwin_params *params;
+struct gwin *
+gator_X11gwin_create(params)
+     struct gator_X11gwin_params *params;
 
-{ /*gator_X11gwin_create*/
+{				/*gator_X11gwin_create */
 
-    static char	rn[] = "gator_X11gwin_create";	/*Routine name*/
+    static char rn[] = "gator_X11gwin_create";	/*Routine name */
 
     if (X11_debug)
 	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
-    return(NULL);
+    return (NULL);
 
-} /*gator_X11gwin_create*/
+}				/*gator_X11gwin_create */
 
 /*------------------------------------------------------------------------
  * gator_X11gwin_cleanup
@@ -156,19 +159,20 @@ struct gwin *gator_X11gwin_create(params)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_X11gwin_cleanup(gwp)
-    struct gwin *gwp;
+int
+gator_X11gwin_cleanup(gwp)
+     struct gwin *gwp;
 
-{ /*gator_X11gwin_cleanup*/
+{				/*gator_X11gwin_cleanup */
 
-    static char	rn[] = "gator_X11gwin_cleanup";  /*Routine name*/
+    static char rn[] = "gator_X11gwin_cleanup";	/*Routine name */
 
     if (X11_debug)
 	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
-    return(0);
+    return (0);
 
-} /*gator_X11gwin_cleanup*/
+}				/*gator_X11gwin_cleanup */
 
 /*------------------------------------------------------------------------
  * gator_X11gwin_box
@@ -191,19 +195,20 @@ int gator_X11gwin_cleanup(gwp)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_X11gwin_box(gwp)
-    struct gwin *gwp;
+int
+gator_X11gwin_box(gwp)
+     struct gwin *gwp;
 
-{ /*gator_X11gwin_box*/
+{				/*gator_X11gwin_box */
 
-    static char	rn[] = "gator_X11gwin_box";	/*Routine name*/
+    static char rn[] = "gator_X11gwin_box";	/*Routine name */
 
     if (X11_debug)
 	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
-    return(0);
+    return (0);
 
-} /*gator_X11gwin_box*/
+}				/*gator_X11gwin_box */
 
 /*------------------------------------------------------------------------
  * gator_X11gwin_clear
@@ -225,19 +230,20 @@ int gator_X11gwin_box(gwp)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_X11gwin_clear(gwp)
-    struct gwin *gwp;
+int
+gator_X11gwin_clear(gwp)
+     struct gwin *gwp;
 
-{ /*gator_X11gwin_clear*/
+{				/*gator_X11gwin_clear */
 
-    static char	rn[] = "gator_X11gwin_clear";    /*Routine name*/
+    static char rn[] = "gator_X11gwin_clear";	/*Routine name */
 
     if (X11_debug)
 	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
-    return(0);
+    return (0);
 
-} /*gator_X11gwin_clear*/
+}				/*gator_X11gwin_clear */
 
 /*------------------------------------------------------------------------
  * gator_X11gwin_destroy
@@ -259,19 +265,20 @@ int gator_X11gwin_clear(gwp)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_X11gwin_destroy(gwp)
-    struct gwin *gwp;
+int
+gator_X11gwin_destroy(gwp)
+     struct gwin *gwp;
 
-{ /*gator_X11gwin_destroy*/
+{				/*gator_X11gwin_destroy */
 
-    static char	rn[] = "gator_X11gwin_destroy";  /*Routine name*/
+    static char rn[] = "gator_X11gwin_destroy";	/*Routine name */
 
     if (X11_debug)
 	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
-    return(0);
+    return (0);
 
-} /*gator_X11gwin_destroy*/
+}				/*gator_X11gwin_destroy */
 
 /*------------------------------------------------------------------------
  * gator_X11gwin_display
@@ -293,19 +300,20 @@ int gator_X11gwin_destroy(gwp)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_X11gwin_display(gwp)
-    struct gwin *gwp;
+int
+gator_X11gwin_display(gwp)
+     struct gwin *gwp;
 
-{ /*gator_X11gwin_display*/
+{				/*gator_X11gwin_display */
 
-    static char	rn[] = "gator_X11gwin_display";  /*Routine name*/
+    static char rn[] = "gator_X11gwin_display";	/*Routine name */
 
     if (X11_debug)
 	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
-    return(0);
+    return (0);
 
-} /*gator_X11gwin_display*/
+}				/*gator_X11gwin_display */
 
 /*------------------------------------------------------------------------
  * gator_X11gwin_drawline
@@ -330,20 +338,22 @@ int gator_X11gwin_display(gwp)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_X11gwin_drawline(gwp, params)
-    struct gwin *gwp;
-    struct gwin_lineparams *params;
+int
+gator_X11gwin_drawline(gwp, params)
+     struct gwin *gwp;
+     struct gwin_lineparams *params;
 
-{ /*gator_X11gwin_drawline*/
+{				/*gator_X11gwin_drawline */
 
-    static char	rn[] = "gator_X11gwin_drawline"; /*Routine name*/
+    static char rn[] = "gator_X11gwin_drawline";	/*Routine name */
 
     if (X11_debug)
-	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn, rn);
+	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn,
+		rn);
 
-    return(0);
+    return (0);
 
-} /*gator_X11gwin_drawline*/
+}				/*gator_X11gwin_drawline */
 
 /*------------------------------------------------------------------------
  * gator_X11gwin_drawrectangle
@@ -367,20 +377,22 @@ int gator_X11gwin_drawline(gwp, params)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_X11gwin_drawrectangle(gwp, params)
-    struct gwin *gwp;
-    struct gwin_rectparams *params;
+int
+gator_X11gwin_drawrectangle(gwp, params)
+     struct gwin *gwp;
+     struct gwin_rectparams *params;
 
-{ /*gator_X11gwin_drawrectangle*/
+{				/*gator_X11gwin_drawrectangle */
 
-    static char	rn[] = "gator_X11gwin_drawrectangle";    /*Routine name*/
+    static char rn[] = "gator_X11gwin_drawrectangle";	/*Routine name */
 
     if (X11_debug)
-	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn, rn);
+	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn,
+		rn);
 
-    return(0);
+    return (0);
 
-} /*gator_X11gwin_drawrectangle*/
+}				/*gator_X11gwin_drawrectangle */
 
 /*------------------------------------------------------------------------
  * gator_X11gwin_drawchar
@@ -404,20 +416,21 @@ int gator_X11gwin_drawrectangle(gwp, params)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_X11gwin_drawchar(gwp, params)
-    struct gwin *gwp;
-    struct gwin_charparams *params;
+int
+gator_X11gwin_drawchar(gwp, params)
+     struct gwin *gwp;
+     struct gwin_charparams *params;
 
-{ /*gator_X11gwin_drawchar*/
+{				/*gator_X11gwin_drawchar */
 
-    static char	rn[] = "gator_X11gwin_drawchar"; /*Routine name*/
+    static char rn[] = "gator_X11gwin_drawchar";	/*Routine name */
 
     if (X11_debug)
 	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
-    return(0);
+    return (0);
 
-} /*gator_X11gwin_drawchar*/
+}				/*gator_X11gwin_drawchar */
 
 /*------------------------------------------------------------------------
  * gator_X11gwin_drawstring
@@ -441,20 +454,21 @@ int gator_X11gwin_drawchar(gwp, params)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_X11gwin_drawstring(gwp, params)
-    struct gwin *gwp;
-    struct gwin_strparams *params;
+int
+gator_X11gwin_drawstring(gwp, params)
+     struct gwin *gwp;
+     struct gwin_strparams *params;
 
-{ /*gator_X11gwin_drawstring*/
+{				/*gator_X11gwin_drawstring */
 
-    static char	rn[] = "gator_X11gwin_drawstring";	/*Routine name*/
+    static char rn[] = "gator_X11gwin_drawstring";	/*Routine name */
 
     if (X11_debug)
 	fprintf(stderr, "[%s:%s] Called\n", mn, rn);
 
-    return(0);
+    return (0);
 
-} /*gator_X11gwin_drawstring*/
+}				/*gator_X11gwin_drawstring */
 
 /*------------------------------------------------------------------------
  * gator_X11gwin_invert
@@ -478,20 +492,22 @@ int gator_X11gwin_drawstring(gwp, params)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_X11gwin_invert(gwp, params)
-    struct gwin *gwp;
-    struct gwin_invparams *params;
+int
+gator_X11gwin_invert(gwp, params)
+     struct gwin *gwp;
+     struct gwin_invparams *params;
 
-{ /*gator_X11gwin_invert*/
+{				/*gator_X11gwin_invert */
 
-    static char	rn[] = "gator_X11gwin_invert";   /*Routine name*/
+    static char rn[] = "gator_X11gwin_invert";	/*Routine name */
 
     if (X11_debug)
-	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn, rn);
+	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn,
+		rn);
 
-    return(0);
+    return (0);
 
-} /*gator_X11gwin_invert*/
+}				/*gator_X11gwin_invert */
 
 /*------------------------------------------------------------------------
  * gator_X11gwin_getchar
@@ -513,19 +529,21 @@ int gator_X11gwin_invert(gwp, params)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_X11gwin_getchar(gwp)
-    struct gwin *gwp;
+int
+gator_X11gwin_getchar(gwp)
+     struct gwin *gwp;
 
-{ /*gator_X11gwin_getchar*/
+{				/*gator_X11gwin_getchar */
 
-    static char	rn[] = "gator_X11gwin_getchar";   /*Routine name*/
+    static char rn[] = "gator_X11gwin_getchar";	/*Routine name */
 
     if (X11_debug)
-	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn, rn);
+	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn,
+		rn);
 
-    return(-1);
+    return (-1);
 
-} /*gator_X11gwin_getchar*/
+}				/*gator_X11gwin_getchar */
 
 /*------------------------------------------------------------------------
  * gator_X11gwin_getdimensions
@@ -548,20 +566,22 @@ int gator_X11gwin_getchar(gwp)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_X11gwin_getdimensions(gwp, aparms)
-    struct gwin *gwp;
-    struct gwin_sizeparams *aparms;
+int
+gator_X11gwin_getdimensions(gwp, aparms)
+     struct gwin *gwp;
+     struct gwin_sizeparams *aparms;
 
-{/*gator_X11gwin_getdimensions*/
+{				/*gator_X11gwin_getdimensions */
 
-    static char	rn[] = "gator_X11gwin_getdimensions";   /*Routine name*/
+    static char rn[] = "gator_X11gwin_getdimensions";	/*Routine name */
 
     if (X11_debug)
-	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn, rn);
+	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn,
+		rn);
 
-    return(-1);
+    return (-1);
 
-} /*gator_X11gwin_getdimensions*/
+}				/*gator_X11gwin_getdimensions */
 
 /*------------------------------------------------------------------------
  * gator_X11gwin_wait
@@ -583,16 +603,18 @@ int gator_X11gwin_getdimensions(gwp, aparms)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-int gator_X11gwin_wait(gwp)
-    struct gwin *gwp;
+int
+gator_X11gwin_wait(gwp)
+     struct gwin *gwp;
 
-{ /*gator_X11gwin_wait*/
+{				/*gator_X11gwin_wait */
 
-    static char	rn[] = "gator_X11gwin_wait";   /*Routine name*/
+    static char rn[] = "gator_X11gwin_wait";	/*Routine name */
 
     if (X11_debug)
-	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn, rn);
+	fprintf(stderr, "[%s:%s] This routine is currently a no-op\n", mn,
+		rn);
 
-    return(-1);
+    return (-1);
 
-} /*gator_X11gwin_wait*/
+}				/*gator_X11gwin_wait */

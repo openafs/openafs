@@ -31,7 +31,7 @@
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
 #define AFS_SYSCALL 227
 #define AFS_64BIT_IOPS_ENV  1
-#define AFS_NAMEI_ENV     1   /* User space interface to file system */
+#define AFS_NAMEI_ENV     1	/* User space interface to file system */
 
 #if defined(__KERNEL__) && !defined(KDUMP_KERNEL)
 #include <linux/threads.h>
@@ -55,19 +55,19 @@
 #define MODVERSIONS
 #include <linux/modversions.h>
 #endif
-#endif /* __KERNEL__  && !DUMP_KERNEL*/
+#endif /* __KERNEL__  && !DUMP_KERNEL */
 
 #include <afs/afs_sysnames.h>
 
 #define AFS_USERSPACE_IP_ADDR 1
 #define RXK_LISTENER_ENV 1
-#define AFS_GCPAGS       2 /* Set to Userdisabled, allow sysctl to override */
+#define AFS_GCPAGS       2	/* Set to Userdisabled, allow sysctl to override */
 
 /* Machine / Operating system information */
 #define SYS_NAME	"sparc_linux24"
 #define SYS_NAME_ID	SYS_NAME_ID_sparc_linux24
 #define AFSBIG_ENDIAN    1
-#define AFS_HAVE_FFS        1       /* Use system's ffs. */
+#define AFS_HAVE_FFS        1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS    0	/* System doesn't support statvfs */
 #define AFS_VM_RDWR_ENV	    1	/* read/write implemented via VM */
 
@@ -132,19 +132,19 @@
 #define AFS_MOUNT_AFS "afs"	/* The name of the filesystem type. */
 #define AFS_SYSCALL 227
 #define AFS_64BIT_IOPS_ENV  1
-#define AFS_NAMEI_ENV     1   /* User space interface to file system */
+#define AFS_NAMEI_ENV     1	/* User space interface to file system */
 #include <afs/afs_sysnames.h>
 
 #define AFS_USERSPACE_IP_ADDR 1
 #define RXK_LISTENER_ENV 1
-#define AFS_GCPAGS		0       /* if nonzero, garbage collect PAGs */
+#define AFS_GCPAGS		0	/* if nonzero, garbage collect PAGs */
 
 
 /* Machine / Operating system information */
 #define SYS_NAME	"sparc_linux24"
 #define SYS_NAME_ID	SYS_NAME_ID_sparc_linux24
 #define AFSBIG_ENDIAN    1
-#define AFS_HAVE_FFS        1       /* Use system's ffs. */
+#define AFS_HAVE_FFS        1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS    0	/* System doesn't support statvfs */
 #define AFS_VM_RDWR_ENV	    1	/* read/write implemented via VM */
 

@@ -14,18 +14,19 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
-#include "afs/afs_stats.h"   /* statistics stuff */
+#include "afs/afs_stats.h"	/* statistics stuff */
 
 
 
 #if !defined(AFS_LINUX20_ENV)
 /* This is the common part of the vget VFS call. */
-int afs_osi_vget(struct vcache **avcpp, struct fid *afidp,
-		 struct vrequest *areqp)
+int
+afs_osi_vget(struct vcache **avcpp, struct fid *afidp, struct vrequest *areqp)
 {
     struct VenusFid vfid;
     struct SmallFid Sfid;
@@ -62,12 +63,11 @@ int afs_osi_vget(struct vcache **avcpp, struct fid *afidp,
     if (ret > 1) {
 	/* More than one entry matches. */
 	code = ENOENT;
-    }
-    else if (ret == 0) {
+    } else if (ret == 0) {
 	/* didn't find an entry. */
 	*avcpp = afs_GetVCache(&vfid, &treq, NULL, NULL);
     }
-    if (! *avcpp) {
+    if (!*avcpp) {
 	code = ENOENT;
     }
 

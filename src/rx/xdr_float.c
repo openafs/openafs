@@ -29,7 +29,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifndef	NeXT
 
@@ -52,46 +53,48 @@ RCSID("$Header$");
  * in the system libraries.
  */
 
-bool_t xdr_float(register XDR *xdrs, register float *fp)
+bool_t
+xdr_float(register XDR * xdrs, register float *fp)
 {
 #ifdef AFS_NT40_ENV
-	return(FALSE);
+    return (FALSE);
 #else
-	switch (xdrs->x_op) {
+    switch (xdrs->x_op) {
 
-	case XDR_ENCODE:
-		return (XDR_PUTINT32(xdrs, (afs_int32 *)fp));
+    case XDR_ENCODE:
+	return (XDR_PUTINT32(xdrs, (afs_int32 *) fp));
 
-	case XDR_DECODE:
-		return (XDR_GETINT32(xdrs, (afs_int32 *)fp));
+    case XDR_DECODE:
+	return (XDR_GETINT32(xdrs, (afs_int32 *) fp));
 
-	case XDR_FREE:
-		return (TRUE);
-	}
-	return (FALSE);
+    case XDR_FREE:
+	return (TRUE);
+    }
+    return (FALSE);
 #endif
 }
 
-bool_t xdr_double(register XDR *xdrs, double *dp)
+bool_t
+xdr_double(register XDR * xdrs, double *dp)
 {
 #ifdef AFS_NT40_ENV
-	return(FALSE);
+    return (FALSE);
 #else
-	afs_int32 *ip;
-	switch (xdrs->x_op) {
+    afs_int32 *ip;
+    switch (xdrs->x_op) {
 
-	case XDR_ENCODE:
-		ip = (afs_int32 *)(dp);
-		return(XDR_PUTINT32(xdrs, *(ip+1)) && XDR_PUTINT32(xdrs, *ip));
+    case XDR_ENCODE:
+	ip = (afs_int32 *) (dp);
+	return (XDR_PUTINT32(xdrs, *(ip + 1)) && XDR_PUTINT32(xdrs, *ip));
 
-	case XDR_DECODE:
-		ip = (afs_int32 *)(dp);
-		return(XDR_GETINT32(xdrs, *(ip+1)) && XDR_GETINT32(xdrs, *ip));
+    case XDR_DECODE:
+	ip = (afs_int32 *) (dp);
+	return (XDR_GETINT32(xdrs, *(ip + 1)) && XDR_GETINT32(xdrs, *ip));
 
-	case XDR_FREE:
-		return (TRUE);
-	}
-	return (FALSE);
+    case XDR_FREE:
+	return (TRUE);
+    }
+    return (FALSE);
 #endif
 }
 

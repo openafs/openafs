@@ -16,7 +16,8 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "rx/rx_kcommon.h"
 #include "rx_kmutex.h"
@@ -24,7 +25,8 @@ RCSID("$Header$");
 
 #ifdef CONFIG_SMP
 
-void afs_mutex_init(afs_kmutex_t *l)
+void
+afs_mutex_init(afs_kmutex_t * l)
 {
 #if defined(AFS_LINUX24_ENV)
     init_MUTEX(&l->sem);
@@ -34,15 +36,17 @@ void afs_mutex_init(afs_kmutex_t *l)
     l->owner = 0;
 }
 
-void afs_mutex_enter(afs_kmutex_t *l)
+void
+afs_mutex_enter(afs_kmutex_t * l)
 {
     down(&l->sem);
     if (l->owner)
 	osi_Panic("mutex_enter: 0x%x held by %d", l, l->owner);
     l->owner = current->pid;
 }
-							      
-int afs_mutex_tryenter(afs_kmutex_t *l)
+
+int
+afs_mutex_tryenter(afs_kmutex_t * l)
 {
     if (down_trylock(&l->sem))
 	return 0;
@@ -50,11 +54,11 @@ int afs_mutex_tryenter(afs_kmutex_t *l)
     return 1;
 }
 
-void afs_mutex_exit(afs_kmutex_t *l)
+void
+afs_mutex_exit(afs_kmutex_t * l)
 {
     if (l->owner != current->pid)
-	osi_Panic("mutex_exit: 0x%x held by %d",
-		  l, l->owner);
+	osi_Panic("mutex_exit: 0x%x held by %d", l, l->owner);
     l->owner = 0;
     up(&l->sem);
 }
@@ -67,7 +71,8 @@ void afs_mutex_exit(afs_kmutex_t *l)
  *   caller that the wait has been interrupted and the stack should be cleaned
  *   up preparatory to signal delivery
  */
-int afs_cv_wait(afs_kcondvar_t *cv, afs_kmutex_t *l, int sigok)
+int
+afs_cv_wait(afs_kcondvar_t * cv, afs_kmutex_t * l, int sigok)
 {
     int isAFSGlocked = ISAFS_GLOCK();
     sigset_t saved_set;
@@ -80,7 +85,8 @@ int afs_cv_wait(afs_kcondvar_t *cv, afs_kmutex_t *l, int sigok)
     add_wait_queue(cv, &wait);
     set_current_state(TASK_INTERRUPTIBLE);
 
-    if (isAFSGlocked) AFS_GUNLOCK();
+    if (isAFSGlocked)
+	AFS_GUNLOCK();
     MUTEX_EXIT(l);
 
     if (!sigok) {
@@ -101,13 +107,15 @@ int afs_cv_wait(afs_kcondvar_t *cv, afs_kmutex_t *l, int sigok)
 	SIG_UNLOCK(current);
     }
 
-    if (isAFSGlocked) AFS_GLOCK();
+    if (isAFSGlocked)
+	AFS_GLOCK();
     MUTEX_ENTER(l);
 
     return (sigok && signal_pending(current)) ? EINTR : 0;
 }
 
-void afs_cv_timedwait(afs_kcondvar_t *cv, afs_kmutex_t *l, int waittime)
+void
+afs_cv_timedwait(afs_kcondvar_t * cv, afs_kmutex_t * l, int waittime)
 {
     int isAFSGlocked = ISAFS_GLOCK();
     long t = waittime * HZ / 1000;
@@ -120,13 +128,15 @@ void afs_cv_timedwait(afs_kcondvar_t *cv, afs_kmutex_t *l, int waittime)
     add_wait_queue(cv, &wait);
     set_current_state(TASK_INTERRUPTIBLE);
 
-    if (isAFSGlocked) AFS_GUNLOCK();
+    if (isAFSGlocked)
+	AFS_GUNLOCK();
     MUTEX_EXIT(l);
-    
+
     t = schedule_timeout(t);
     remove_wait_queue(cv, &wait);
-    
-    if (isAFSGlocked) AFS_GLOCK();
+
+    if (isAFSGlocked)
+	AFS_GLOCK();
     MUTEX_ENTER(l);
 }
 

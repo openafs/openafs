@@ -10,7 +10,7 @@
 /* rx_pthread.h defines the lock and cv primitives required for a thread
  * safe user mode rx. The current implemenation is only tested on Solaris.
  */
- 
+
 #ifndef RX_PTHREAD_H
 #define RX_PTHREAD_H
 
@@ -66,7 +66,7 @@ typedef pthread_cond_t afs_kcondvar_t;
 #endif /* !MUTEX_ISMINE */
 #endif /* AFS_NT40_ENV */
 
-extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
+extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 
 #ifdef AFS_PTHREAD_ENV
 #ifdef MUTEX_INIT

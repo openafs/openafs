@@ -18,7 +18,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -30,55 +31,53 @@ extern char *malloc(), *realloc(), *_findenv();
  *	"value".  If rewrite is set, replace any current value.
  */
 setenv(name, value, rewrite)
-	register char *name, *value;
-	int rewrite;
+     register char *name, *value;
+     int rewrite;
 {
-	extern char **environ;
-	static int alloced;			/* if allocated space before */
-	register char *C;
-	int l_value, offset;
+    extern char **environ;
+    static int alloced;		/* if allocated space before */
+    register char *C;
+    int l_value, offset;
 
-	if (*value == '=')			/* no `=' in value */
-		++value;
-	l_value = strlen(value);
-	if ((C = _findenv(name, &offset))) {	/* find if already exists */
-		if (!rewrite)
-			return(0);
-		if (strlen(C) >= l_value) {	/* old larger; copy over */
-			while (*C++ = *value++);
-			return(0);
-		}
+    if (*value == '=')		/* no `=' in value */
+	++value;
+    l_value = strlen(value);
+    if ((C = _findenv(name, &offset))) {	/* find if already exists */
+	if (!rewrite)
+	    return (0);
+	if (strlen(C) >= l_value) {	/* old larger; copy over */
+	    while (*C++ = *value++);
+	    return (0);
 	}
-	else {					/* create new slot */
-		register int	cnt;
-		register char	**P;
+    } else {			/* create new slot */
+	register int cnt;
+	register char **P;
 
-		for (P = environ, cnt = 0; *P; ++P, ++cnt);
-		if (alloced) {			/* just increase size */
-			environ = (char **)realloc((char *)environ,
-			    (u_int)(sizeof(char *) * (cnt + 2)));
-			if (!environ)
-				return(-1);
-		}
-		else {				/* get new space */
-			alloced = 1;		/* copy old entries into it */
-			P = (char **)malloc((u_int)(sizeof(char *) *
-			    (cnt + 2)));
-			if (!P)
-				return(-1);
-			memcpy(P, environ, cnt * sizeof(char *));
-			environ = P;
-		}
-		environ[cnt + 1] = NULL;
-		offset = cnt;
+	for (P = environ, cnt = 0; *P; ++P, ++cnt);
+	if (alloced) {		/* just increase size */
+	    environ =
+		(char **)realloc((char *)environ,
+				 (u_int) (sizeof(char *) * (cnt + 2)));
+	    if (!environ)
+		return (-1);
+	} else {		/* get new space */
+	    alloced = 1;	/* copy old entries into it */
+	    P = (char **)malloc((u_int) (sizeof(char *) * (cnt + 2)));
+	    if (!P)
+		return (-1);
+	    memcpy(P, environ, cnt * sizeof(char *));
+	    environ = P;
 	}
-	for (C = name; *C && *C != '='; ++C);	/* no `=' in name */
-	if (!(environ[offset] =			/* name + `=' + value */
-	    malloc((u_int)((int)(C - name) + l_value + 2))))
-		return(-1);
-	for (C = environ[offset]; (*C = *name++) && *C != '='; ++C);
-	for (*C++ = '='; *C++ = *value++;);
-	return(0);
+	environ[cnt + 1] = NULL;
+	offset = cnt;
+    }
+    for (C = name; *C && *C != '='; ++C);	/* no `=' in name */
+    if (!(environ[offset] =	/* name + `=' + value */
+	  malloc((u_int) ((int)(C - name) + l_value + 2))))
+	return (-1);
+    for (C = environ[offset]; (*C = *name++) && *C != '='; ++C);
+    for (*C++ = '='; *C++ = *value++;);
+    return (0);
 }
 
 /*
@@ -87,14 +86,14 @@ setenv(name, value, rewrite)
  */
 void
 unsetenv(name)
-	char	*name;
+     char *name;
 {
-	extern	char	**environ;
-	register char	**P;
-	int	offset;
+    extern char **environ;
+    register char **P;
+    int offset;
 
-	while (_findenv(name, &offset))		/* if set multiple times */
-		for (P = &environ[offset];; ++P)
-			if (!(*P = *(P + 1)))
-				break;
+    while (_findenv(name, &offset))	/* if set multiple times */
+	for (P = &environ[offset];; ++P)
+	    if (!(*P = *(P + 1)))
+		break;
 }

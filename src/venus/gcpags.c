@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <rx/xdr.h>
 #include <sys/ioctl.h>
@@ -41,17 +42,18 @@ RCSID("$Header$");
 #include "AFS_component_version_number.c"
 
 main(argc, argv)
-int argc;
-char **argv; {
-    afs_int32 code=0;
+     int argc;
+     char **argv;
+{
+    afs_int32 code = 0;
     struct ViceIoctl blob;
-    
+
     blob.in = 0;
     blob.out = 0;
     blob.in_size = 0;
     blob.out_size = 0;
     code = pioctl(0, VIOC_GCPAGS, &blob, 1);
-    if(code)
+    if (code)
 	perror("disable gcpags failed");
 
     exit(code);

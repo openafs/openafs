@@ -5,7 +5,7 @@
  * This software has been released under the terms of the IBM Public
  * License.  For details, see the LICENSE file in the top-level source
  * directory or online at http://www.openafs.org/dl/license10.html
- */ 
+ */
 /* ********************************************************************** */
 /*                                                                        */
 /*  trheadname.c                                                          */
@@ -22,7 +22,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -43,11 +44,12 @@ int nThreads = 0;
 #if defined(AFS_PTHREAD_ENV)
 pthread_t ThreadId[MAX_THREADS];
 #else /* defined(AFS_PTHREAD_ENV) */
-PROCESS   ThreadId[MAX_THREADS];
+PROCESS ThreadId[MAX_THREADS];
 #endif /* defined(AFS_PTHREAD_ENV) */
-char      ThreadName[MAX_THREADS][MAXTHREADNAMELENGTH];
+char ThreadName[MAX_THREADS][MAXTHREADNAMELENGTH];
 
-char *threadname(void)
+char *
+threadname(void)
 {
     int i;
     static char MainThread[] = "main";
@@ -60,63 +62,65 @@ char *threadname(void)
 #endif /* AFS_PTHREAD_ENV */
 
 #ifdef AFS_PTHREAD_ENV
-    me =  pthread_self();
+    me = pthread_self();
 #else /* AFS_PTHREAD_ENV */
-    me =  (PROCESS) LWP_ThreadId();
+    me = (PROCESS) LWP_ThreadId();
 #endif /* AFS_PTHREAD_ENV */
-    ptr = (char *) &MainThread; 
+    ptr = (char *)&MainThread;
     for (i = 0; i < nThreads; i++) {
-       if (ThreadId[i] == me) {
-           ptr = (char *)&ThreadName[i];
-           break;
-       }
- }
+	if (ThreadId[i] == me) {
+	    ptr = (char *)&ThreadName[i];
+	    break;
+	}
+    }
     p = ptr;
     return p;
 }
 
-int registerthread(
+int
+registerthread(
 #ifdef AFS_PTHREAD_ENV
-    pthread_t id,
-#else /* AFS_PTHREAD_ENV */
-    PROCESS id,
-#endif /* AFS_PTHREAD_ENV */
-    char *name)
+		  pthread_t id,
+#else				/* AFS_PTHREAD_ENV */
+		  PROCESS id,
+#endif				/* AFS_PTHREAD_ENV */
+		  char *name)
 {
     int i;
 
     for (i = 0; i < nThreads; i++) {
-       if (ThreadId[i] == id) {
-           strncpy(&ThreadName[i][0], name, MAXTHREADNAMELENGTH);
-           return 0;
-       }
+	if (ThreadId[i] == id) {
+	    strncpy(&ThreadName[i][0], name, MAXTHREADNAMELENGTH);
+	    return 0;
+	}
     }
-    if (nThreads == MAX_THREADS) return 0;
+    if (nThreads == MAX_THREADS)
+	return 0;
     ThreadId[nThreads] = id;
     strncpy(&ThreadName[nThreads][0], name, MAXTHREADNAMELENGTH);
-    ThreadName[nThreads][MAXTHREADNAMELENGTH -1] =0;
+    ThreadName[nThreads][MAXTHREADNAMELENGTH - 1] = 0;
     nThreads++;
 
     return 0;
 }
 
-int swapthreadname(
+int
+swapthreadname(
 #ifdef AFS_PTHREAD_ENV
-    pthread_t id,
-#else /* AFS_PTHREAD_ENV */
-    PROCESS id,
-#endif /* AFS_PTHREAD_ENV */
-    char *new,
-    char *old)
+		  pthread_t id,
+#else				/* AFS_PTHREAD_ENV */
+		  PROCESS id,
+#endif				/* AFS_PTHREAD_ENV */
+		  char *new, char *old)
 {
     int i;
 
     for (i = 0; i < nThreads; i++) {
-        if (ThreadId[i] == id) {
-           if (old)
-                strncpy(old, &ThreadName[i][0], MAXTHREADNAMELENGTH);
-            strncpy(&ThreadName[i][0], new, MAXTHREADNAMELENGTH);
-            return 0;
+	if (ThreadId[i] == id) {
+	    if (old)
+		strncpy(old, &ThreadName[i][0], MAXTHREADNAMELENGTH);
+	    strncpy(&ThreadName[i][0], new, MAXTHREADNAMELENGTH);
+	    return 0;
 	}
     }
     return 1;

@@ -76,18 +76,18 @@ typedef struct pool pool;
 
 extern pool *permanent_pool;
 void init_alloc();		/* Set up everything */
-pool *make_sub_pool (pool *);	/* All pools are subpools of permanent_pool */
-void destroy_pool (pool *);
+pool *make_sub_pool(pool *);	/* All pools are subpools of permanent_pool */
+void destroy_pool(pool *);
 
 /* Clearing out EVERYTHING in an pool... destroys any sub-pools */
 
-void clear_pool (struct pool *);
+void clear_pool(struct pool *);
 
 /* Preparing for exec() --- close files, etc., but *don't* flush I/O
  * buffers, *don't* wait for subprocesses, and *don't* free any memory.
  */
 
-void cleanup_for_exec ();
+void cleanup_for_exec();
 
 /* routines to allocate memory from an pool... */
 
@@ -95,7 +95,7 @@ void *palloc(struct pool *, int nbytes);
 void *pcalloc(struct pool *, int nbytes);
 extern char *pstrdup(struct pool *, const char *s);
 extern char *pstrndup(struct pool *, const char *s, int n);
-char *pstrcat(struct pool *, ...); /* all '...' must be char* */
+char *pstrcat(struct pool *, ...);	/* all '...' must be char* */
 
 /* array and alist management... keeping lists of things.
  * Common enough to want common support code ...
@@ -109,20 +109,20 @@ typedef struct {
     char *elts;
 } array_header;
 
-array_header *make_array (pool *p, int nelts, int elt_size);
-void *push_array (array_header *);
-void array_cat (array_header *dst, const array_header *src);
-array_header *append_arrays (pool *, const array_header *,
-			     const array_header *);
+array_header *make_array(pool * p, int nelts, int elt_size);
+void *push_array(array_header *);
+void array_cat(array_header * dst, const array_header * src);
+array_header *append_arrays(pool *, const array_header *,
+			    const array_header *);
 
 /* copy_array copies the *entire* array.  copy_array_hdr just copies
  * the header, and arranges for the elements to be copied if (and only
  * if) the code subsequently does a push or arraycat.
  */
-     
-array_header *copy_array (pool *p, const array_header *src);
-array_header *copy_array_hdr (pool *p, const array_header *src);
-			   
+
+array_header *copy_array(pool * p, const array_header * src);
+array_header *copy_array_hdr(pool * p, const array_header * src);
+
 
 /* Tables.  Implemented alist style, for now, though we try to keep
  * it so that imposing a hash table structure on top in the future
@@ -133,8 +133,8 @@ array_header *copy_array_hdr (pool *p, const array_header *src);
  * currently being used...
  */
 
-typedef array_header table;     
-     
+typedef array_header table;
+
 typedef struct {
     char *key;			/* maybe NULL in future;
 				 * check when iterating thru table_elts
@@ -142,20 +142,20 @@ typedef struct {
     char *val;
 } table_entry;
 
-table *make_table (pool *p, int nelts);
-table *copy_table (pool *p, const table *);     
-void clear_table (table *);     
-char *table_get (const table *, const char *);
-void table_set (table *, const char *name, const char *val);
-void table_merge (table *, const char *name, const char *more_val);
-void table_unset (table *, const char *key);
-void table_add (table *, const char *name, const char *val);
-void table_do (int (*comp)(void *, const char *, const char *), void *rec,
-               const table *t, ...);
+table *make_table(pool * p, int nelts);
+table *copy_table(pool * p, const table *);
+void clear_table(table *);
+char *table_get(const table *, const char *);
+void table_set(table *, const char *name, const char *val);
+void table_merge(table *, const char *name, const char *more_val);
+void table_unset(table *, const char *key);
+void table_add(table *, const char *name, const char *val);
+void table_do(int (*comp) (void *, const char *, const char *), void *rec,
+	      const table * t, ...);
 
-table *overlay_tables (pool *p, const table *overlay, const table *base);     
+table *overlay_tables(pool * p, const table * overlay, const table * base);
 
-array_header *table_elts (table *);     
+array_header *table_elts(table *);
 
 #define is_empty_table(t) (((t) == NULL)||((t)->nelts == 0))
 
@@ -181,12 +181,11 @@ array_header *table_elts (table *);
  * unblock_alarms() below...
  */
 
-void register_cleanup (pool *p, void *data,
-		       void (*plain_cleanup)(void *),
-		       void (*child_cleanup)(void *));
+void register_cleanup(pool * p, void *data, void (*plain_cleanup) (void *),
+		      void (*child_cleanup) (void *));
 
-void kill_cleanup (pool *p, void *data, void (*plain_cleanup)(void *));
-void run_cleanup (pool *p, void *data, void (*cleanup)(void *));
+void kill_cleanup(pool * p, void *data, void (*plain_cleanup) (void *));
+void run_cleanup(pool * p, void *data, void (*cleanup) (void *));
 
 /* The time between when a resource is actually allocated, and when it
  * its cleanup is registered is a critical section, during which the
@@ -207,14 +206,14 @@ extern void unblock_alarms();
 
 FILE *pfopen(struct pool *, const char *name, const char *fmode);
 FILE *pfdopen(struct pool *, int fd, const char *fmode);
-int popenf(struct pool *, const char *name, int flg, int mode); 
+int popenf(struct pool *, const char *name, int flg, int mode);
 
-void note_cleanups_for_file (pool *, FILE *);
-void note_cleanups_for_fd (pool *, int);
-void kill_cleanups_for_fd (pool *p, int fd);
+void note_cleanups_for_file(pool *, FILE *);
+void note_cleanups_for_fd(pool *, int);
+void kill_cleanups_for_fd(pool * p, int fd);
 
-regex_t *pregcomp (pool *p, const char *pattern, int cflags);
-void pregfree (pool *p, regex_t *reg);
+regex_t *pregcomp(pool * p, const char *pattern, int cflags);
+void pregfree(pool * p, regex_t * reg);
 
 /* routines to note closes... file descriptors are constrained enough
  * on some systems that we want to support this.
@@ -232,12 +231,13 @@ int pclosef(struct pool *, int fd);
  * set the associated args to NULL).  It takes as args a function
  * to call in the child, and an argument to be passed to the function.
  */
-     
-enum kill_conditions { kill_never, kill_always, kill_after_timeout, just_wait};
 
-int spawn_child_err (pool *, void (*)(void *), void *,
-		 enum kill_conditions, FILE **pipe_in, FILE **pipe_out,
-                 FILE **pipe_err);
+enum kill_conditions { kill_never, kill_always, kill_after_timeout,
+    just_wait
+};
+
+int spawn_child_err(pool *, void (*)(void *), void *, enum kill_conditions,
+		    FILE ** pipe_in, FILE ** pipe_out, FILE ** pipe_err);
 #define spawn_child(p,f,v,k,in,out) spawn_child_err(p,f,v,k,in,out,NULL)
 
 /* magic numbers --- min free bytes to consider a free pool block useable,
@@ -248,5 +248,5 @@ int spawn_child_err (pool *, void (*)(void *), void *,
 
 /* Finally, some accounting */
 
-long bytes_in_pool(pool *p);
+long bytes_in_pool(pool * p);
 long bytes_in_free_blocks();

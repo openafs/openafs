@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -24,18 +25,15 @@ RCSID("$Header$");
 #include <afs/afs_clientAdmin.h>
 #include <afs/afs_utilAdmin.h>
 
-void Usage()
+void
+Usage()
 {
-    fprintf(stderr,
-	    "Usage: rxdebug_peers <host> <port>\n");
+    fprintf(stderr, "Usage: rxdebug_peers <host> <port>\n");
     exit(1);
 }
 
-void ParseArgs(
-    int argc,
-    char *argv[],
-    char **srvrName,
-    long *srvrPort)
+void
+ParseArgs(int argc, char *argv[], char **srvrName, long *srvrPort)
 {
     char **argp = argv;
 
@@ -51,7 +49,8 @@ void ParseArgs(
 	Usage();
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     int rc;
     afs_status_t st = 0;
@@ -85,9 +84,9 @@ int main(int argc, char *argv[])
 
     while (util_RXDebugPeersNext(iterator, &peer, &supportedValues, &st)) {
 	printf("\n");
-	printf("host:            %u.%u.%u.%u\n",
-	       (peer.host >> 24) & 0xff, (peer.host >> 16) & 0xff,
-	       (peer.host >> 8) & 0xff, peer.host & 0xff);
+	printf("host:            %u.%u.%u.%u\n", (peer.host >> 24) & 0xff,
+	       (peer.host >> 16) & 0xff, (peer.host >> 8) & 0xff,
+	       peer.host & 0xff);
 	printf("port:            %u\n", peer.port);
 	printf("ifMTU:           %u\n", peer.ifMTU);
 	printf("idleWhen:        %u\n", peer.idleWhen);
@@ -97,8 +96,8 @@ int main(int argc, char *argv[])
 	printf("burstWait:       %u\n", peer.burstWait);
 	printf("rtt:             %u\n", peer.rtt);
 	printf("rtt_dev:         %u\n", peer.rtt_dev);
-	printf("timeout:         %u.%06u\n",
-	       peer.timeout.sec, peer.timeout.usec);
+	printf("timeout:         %u.%06u\n", peer.timeout.sec,
+	       peer.timeout.usec);
 	printf("nSent:           %u\n", peer.nSent);
 	printf("reSends:         %u\n", peer.reSends);
 	printf("inPacketSkew:    %u\n", peer.inPacketSkew);
@@ -112,10 +111,10 @@ int main(int argc, char *argv[])
 	printf("cwind:           %u\n", peer.cwind);
 	printf("nDgramPackets:   %u\n", peer.nDgramPackets);
 	printf("congestSeq:      %u\n", peer.congestSeq);
-	printf("bytesSent:       (%u.%u)\n",
-	       hgethi(peer.bytesSent), hgetlo(peer.bytesSent));
-	printf("bytesReceived:   (%u.%u)\n",
-	       hgethi(peer.bytesReceived), hgetlo(peer.bytesReceived));
+	printf("bytesSent:       (%u.%u)\n", hgethi(peer.bytesSent),
+	       hgetlo(peer.bytesSent));
+	printf("bytesReceived:   (%u.%u)\n", hgethi(peer.bytesReceived),
+	       hgetlo(peer.bytesReceived));
     }
     if (st != ADMITERATORDONE) {
 	fprintf(stderr, "util_RXDebugPeersNext, status %d\n", st);

@@ -10,13 +10,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <stdio.h>
 #include <afs/afsutil.h>
 #include <afs/com_err.h>
 
-/*@printflike@*/ void Log(const char *format, ...)
+/*@printflike@*/ void
+Log(const char *format, ...)
 {
     va_list args;
 
@@ -25,12 +27,15 @@ RCSID("$Header$");
     va_end(args);
 }
 
-void LogError(afs_int32 errcode)
+void
+LogError(afs_int32 errcode)
 {
-    ViceLog(0, ("%s: %s\n", error_table_name(errcode),error_message(errcode)));
+    ViceLog(0,
+	    ("%s: %s\n", error_table_name(errcode), error_message(errcode)));
 }
 
-/*@printflike@*/ void Abort(const char* format, ...)
+/*@printflike@*/ void
+Abort(const char *format, ...)
 {
     va_list args;
 
@@ -41,7 +46,8 @@ void LogError(afs_int32 errcode)
     abort();
 }
 
-void InitErrTabs(void)
+void
+InitErrTabs(void)
 {
     initialize_KA_error_table();
     initialize_RXK_error_table();

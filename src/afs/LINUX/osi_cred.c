@@ -14,13 +14,14 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 
 /* Setup a pool for creds. Allocate several at a time. */
-#define CRED_ALLOC_STEP 29 /* at 140 bytes/cred = 4060 bytes. */
+#define CRED_ALLOC_STEP 29	/* at 140 bytes/cred = 4060 bytes. */
 
 
 static cred_t *cred_pool = NULL;
@@ -39,7 +40,8 @@ static struct semaphore linux_cred_pool_lock = MUTEX;
 #define CRED_LOCK() down(&linux_cred_pool_lock)
 #define CRED_UNLOCK() up(&linux_cred_pool_lock)
 
-cred_t *crget(void)
+cred_t *
+crget(void)
 {
     cred_t *tmp;
     int i;
@@ -47,16 +49,16 @@ cred_t *crget(void)
     CRED_LOCK();
     if (!cred_pool) {
 	cred_allocs++;
-	cred_pool = (cred_t*)osi_Alloc(CRED_ALLOC_STEP * sizeof(cred_t));
+	cred_pool = (cred_t *) osi_Alloc(CRED_ALLOC_STEP * sizeof(cred_t));
 	if (!cred_pool)
 	    osi_Panic("crget: No more memory for creds!\n");
-	
-	for (i=0; i < CRED_ALLOC_STEP-1; i++)
-	    cred_pool[i].cr_ref = (long)&cred_pool[i+1];
+
+	for (i = 0; i < CRED_ALLOC_STEP - 1; i++)
+	    cred_pool[i].cr_ref = (long)&cred_pool[i + 1];
 	cred_pool[i].cr_ref = 0;
     }
     tmp = cred_pool;
-    cred_pool = (cred_t*)tmp->cr_ref;
+    cred_pool = (cred_t *) tmp->cr_ref;
     ncreds_inuse++;
     CRED_UNLOCK();
 
@@ -65,7 +67,8 @@ cred_t *crget(void)
     return tmp;
 }
 
-void crfree(cred_t *cr)
+void
+crfree(cred_t * cr)
 {
     if (cr->cr_ref > 1) {
 	cr->cr_ref--;
@@ -76,12 +79,13 @@ void crfree(cred_t *cr)
     cr->cr_ref = (long)cred_pool;
     cred_pool = cr;
     CRED_UNLOCK();
-    ncreds_inuse --;
+    ncreds_inuse--;
 }
 
 
 /* Return a duplicate of the cred. */
-cred_t *crdup(cred_t *cr)
+cred_t *
+crdup(cred_t * cr)
 {
     cred_t *tmp = crget();
     *tmp = *cr;
@@ -89,7 +93,8 @@ cred_t *crdup(cred_t *cr)
     return tmp;
 }
 
-cred_t *crref(void)
+cred_t *
+crref(void)
 {
     cred_t *cr = crget();
     cr->cr_uid = current->fsuid;
@@ -103,7 +108,8 @@ cred_t *crref(void)
 
 
 /* Set the cred info into the current task */
-void crset(cred_t *cr)
+void
+crset(cred_t * cr)
 {
     current->fsuid = cr->cr_uid;
     current->uid = cr->cr_ruid;

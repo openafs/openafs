@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -26,18 +27,15 @@ RCSID("$Header$");
 
 extern int RXSTATS_QueryProcessRPCStats();
 
-void Usage()
+void
+Usage()
 {
-    fprintf(stderr,
-	    "Usage: rxstat_query_process <host> <port>\n");
+    fprintf(stderr, "Usage: rxstat_query_process <host> <port>\n");
     exit(1);
 }
 
-void ParseArgs(
-    int argc,
-    char *argv[],
-    char **srvrName,
-    long *srvrPort)
+void
+ParseArgs(int argc, char *argv[], char **srvrName, long *srvrPort)
 {
     char **argp = argv;
 
@@ -53,7 +51,8 @@ void ParseArgs(
 	Usage();
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     int rc;
     afs_status_t st = 0;
@@ -77,13 +76,15 @@ int main(int argc, char *argv[])
 	exit(1);
     }
 
-    rc = afsclient_RPCStatOpenPort(cellHandle, srvrName, srvrPort, &conn, &st);
+    rc = afsclient_RPCStatOpenPort(cellHandle, srvrName, srvrPort, &conn,
+				   &st);
     if (!rc) {
 	fprintf(stderr, "afsclient_RPCStatOpenPort, status %d\n", st);
 	exit(1);
     }
 
-    rc = util_RPCStatsStateGet(conn, RXSTATS_QueryProcessRPCStats, &state, &st);
+    rc = util_RPCStatsStateGet(conn, RXSTATS_QueryProcessRPCStats, &state,
+			       &st);
     if (!rc) {
 	fprintf(stderr, "util_RPCStatsStateGet, status %d\n", st);
 	exit(1);
@@ -103,14 +104,14 @@ int main(int argc, char *argv[])
 
     printf("\n");
     printf("Process RPC stats are ");
-    switch(state) {
-      case AFS_RPC_STATS_DISABLED:
+    switch (state) {
+    case AFS_RPC_STATS_DISABLED:
 	printf("disabled\n");
 	break;
-      case AFS_RPC_STATS_ENABLED:
+    case AFS_RPC_STATS_ENABLED:
 	printf("enabled\n");
 	break;
-      default:
+    default:
 	printf("INVALID\n");
 	break;
     }

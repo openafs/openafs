@@ -10,18 +10,21 @@
 #include <sys/types.h>
 #include <signal.h>
 
-static int ignore=0;
+static int ignore = 0;
 static int sleepTime = 10;
 
-sigproc() {
+sigproc()
+{
     printf("testproc received signal\n");
-    if (ignore) return 0;
+    if (ignore)
+	return 0;
     exit(0);
 }
 
 main(argc, argv)
-int argc;
-char **argv; {
+     int argc;
+     char **argv;
+{
     register int i;
 
 #ifdef	AFS_AIX31_ENV
@@ -32,7 +35,7 @@ char **argv; {
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
@@ -40,15 +43,13 @@ char **argv; {
 #endif
     signal(SIGTERM, sigproc);
     signal(SIGQUIT, sigproc);
-    for(i=1;i<argc;i++) {
-	if (strcmp(argv[i], "-ignore")==0) {
+    for (i = 1; i < argc; i++) {
+	if (strcmp(argv[i], "-ignore") == 0) {
 	    ignore = 1;
-	}
-	else if (strcmp(argv[i], "-sleep")==0) {
-	    sleepTime = atoi(argv[i+1]);
+	} else if (strcmp(argv[i], "-sleep") == 0) {
+	    sleepTime = atoi(argv[i + 1]);
 	    i++;
-	}
-	else {
+	} else {
 	    printf("unrecognized option '%s', try one of\n", argv[i]);
 	    printf("-ignore	    ignore SIGTERM signal\n");
 	    printf("-sleep <n>	    sleep N seconds before exiting\n");

@@ -65,61 +65,60 @@ extern jfieldID group_creatorField;
  * gid     the group id to assign to the group (0 to have one 
  *                automatically assigned)
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Group_create
-  (JNIEnv *env, jclass cls, jint cellHandle, jstring jgroupName, 
-   jstring jownerName, jint gid )
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Group_create(JNIEnv * env, jclass cls, jint cellHandle,
+				   jstring jgroupName, jstring jownerName,
+				   jint gid)
 {
-  afs_status_t ast;
-  // convert java strings
-  char *groupName;
-  char *ownerName;
+    afs_status_t ast;
+    // convert java strings
+    char *groupName;
+    char *ownerName;
 
-  if ( jgroupName != NULL ) {
-    groupName = getNativeString(env, jgroupName);
-    if ( groupName == NULL ) {
-	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+    if (jgroupName != NULL) {
+	groupName = getNativeString(env, jgroupName);
+	if (groupName == NULL) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	throwAFSException(env, JAFSNULLGROUP);
+	return;
     }
-  } else {
-    throwAFSException( env, JAFSNULLGROUP );
-    return;    
-  }
 
-  if ( jownerName != NULL ) {
-    ownerName = getNativeString(env, jownerName);
-    if ( ownerName == NULL ) {
-      free( groupName );
-	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+    if (jownerName != NULL) {
+	ownerName = getNativeString(env, jownerName);
+	if (ownerName == NULL) {
+	    free(groupName);
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	free(groupName);
+	throwAFSException(env, JAFSNULLOWNER);
+	return;
     }
-  } else {
-    free( groupName );
-    throwAFSException( env, JAFSNULLOWNER );
-    return;
-  }
 
-  // make sure the name is within the allowed bounds
-  if ( strlen( groupName ) > PTS_MAX_NAME_LEN ) {
-    // release converted java strings
-    free( groupName );
-    free( ownerName );
-    throwAFSException( env, ADMPTSGROUPNAMETOOLONG );
-    return;
-  }
-  
-  if ( !pts_GroupCreate( (void *) cellHandle, groupName, ownerName, 
-			(int *) &gid, &ast ) ) {
-    // release converted java strings
-    free( groupName );
-    free( ownerName );
-    throwAFSException( env, ast );
-    return;
-  }
+    // make sure the name is within the allowed bounds
+    if (strlen(groupName) > PTS_MAX_NAME_LEN) {
+	// release converted java strings
+	free(groupName);
+	free(ownerName);
+	throwAFSException(env, ADMPTSGROUPNAMETOOLONG);
+	return;
+    }
 
-  // release converted java strings
-  free( groupName );
-  free( ownerName );
+    if (!pts_GroupCreate
+	((void *)cellHandle, groupName, ownerName, (int *)&gid, &ast)) {
+	// release converted java strings
+	free(groupName);
+	free(ownerName);
+	throwAFSException(env, ast);
+	return;
+    }
+    // release converted java strings
+    free(groupName);
+    free(ownerName);
 }
 
 /**
@@ -132,31 +131,30 @@ Java_org_openafs_jafs_Group_create
  * cellHandle    the handle of the cell to which the group belongs
  * jgroupName      the name of the group to delete
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Group_delete
-  (JNIEnv *env, jclass cls, jint cellHandle, jstring jgroupName )
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Group_delete(JNIEnv * env, jclass cls, jint cellHandle,
+				   jstring jgroupName)
 {
-  afs_status_t ast;
-  // convert java strings
-  char *groupName;
+    afs_status_t ast;
+    // convert java strings
+    char *groupName;
 
-  if ( jgroupName != NULL ) {
-    groupName = getNativeString(env, jgroupName);
-    if ( !groupName ) {
-	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+    if (jgroupName != NULL) {
+	groupName = getNativeString(env, jgroupName);
+	if (!groupName) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	throwAFSException(env, JAFSNULLGROUP);
+	return;
     }
-  } else {
-    throwAFSException( env, JAFSNULLGROUP );
-    return;
-  }
 
-  if ( !pts_GroupDelete( (void *) cellHandle, groupName, &ast ) ) {
-    throwAFSException( env, ast );
-  }
-  
-  // release converted java strings
-  free( groupName );
+    if (!pts_GroupDelete((void *)cellHandle, groupName, &ast)) {
+	throwAFSException(env, ast);
+    }
+    // release converted java strings
+    free(groupName);
 }
 
 /**
@@ -168,91 +166,91 @@ Java_org_openafs_jafs_Group_delete
  * name      the name of the group for which to get the info
  * group      the Group object to populate with the info
  */
-void getGroupInfoChar
-  ( JNIEnv *env, jint cellHandle, const char *name, jobject group )
+void
+getGroupInfoChar(JNIEnv * env, jint cellHandle, const char *name,
+		 jobject group)
 {
 
-  jstring jowner;
-  jstring jcreator;
-  pts_GroupEntry_t entry;
-  afs_status_t ast;
-  // get the field ids if you haven't already
-  if ( groupCls == 0 ) {
-    internal_getGroupClass( env, group );
-  }
+    jstring jowner;
+    jstring jcreator;
+    pts_GroupEntry_t entry;
+    afs_status_t ast;
+    // get the field ids if you haven't already
+    if (groupCls == 0) {
+	internal_getGroupClass(env, group);
+    }
 
-  if ( !pts_GroupGet( (void *) cellHandle, name, &entry, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!pts_GroupGet((void *)cellHandle, name, &entry, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
+    // set the fields
+    (*env)->SetIntField(env, group, group_nameUidField, entry.nameUid);
+    (*env)->SetIntField(env, group, group_ownerUidField, entry.ownerUid);
+    (*env)->SetIntField(env, group, group_creatorUidField, entry.creatorUid);
+    (*env)->SetIntField(env, group, group_membershipCountField,
+			entry.membershipCount);
 
-  // set the fields
-  (*env)->SetIntField(env, group, group_nameUidField, entry.nameUid);
-  (*env)->SetIntField(env, group, group_ownerUidField, entry.ownerUid);
-  (*env)->SetIntField(env, group, group_creatorUidField, entry.creatorUid);
-  (*env)->SetIntField(env, group, group_membershipCountField, 
-		      entry.membershipCount);
+    if (entry.listStatus == PTS_GROUP_OWNER_ACCESS) {
+	(*env)->SetIntField(env, group, group_listStatusField,
+			    org_openafs_jafs_Group_GROUP_OWNER_ACCESS);
+    } else if (entry.listStatus == PTS_GROUP_ACCESS) {
+	(*env)->SetIntField(env, group, group_listStatusField,
+			    org_openafs_jafs_Group_GROUP_GROUP_ACCESS);
+    } else {
+	(*env)->SetIntField(env, group, group_listStatusField,
+			    org_openafs_jafs_Group_GROUP_ANYUSER_ACCESS);
+    }
 
-  if ( entry.listStatus == PTS_GROUP_OWNER_ACCESS ) {
-      (*env)->SetIntField(env, group, group_listStatusField, 
-			  org_openafs_jafs_Group_GROUP_OWNER_ACCESS);
-  } else if ( entry.listStatus == PTS_GROUP_ACCESS ) {
-      (*env)->SetIntField(env, group, group_listStatusField, 
-			  org_openafs_jafs_Group_GROUP_GROUP_ACCESS);
-  } else {
-      (*env)->SetIntField(env, group, group_listStatusField, 
-			  org_openafs_jafs_Group_GROUP_ANYUSER_ACCESS);
-  }
+    if (entry.listGroupsOwned == PTS_GROUP_OWNER_ACCESS) {
+	(*env)->SetIntField(env, group, group_listGroupsOwnedField,
+			    org_openafs_jafs_Group_GROUP_OWNER_ACCESS);
+    } else if (entry.listGroupsOwned == PTS_GROUP_ACCESS) {
+	(*env)->SetIntField(env, group, group_listGroupsOwnedField,
+			    org_openafs_jafs_Group_GROUP_GROUP_ACCESS);
+    } else {
+	(*env)->SetIntField(env, group, group_listGroupsOwnedField,
+			    org_openafs_jafs_Group_GROUP_ANYUSER_ACCESS);
+    }
 
-  if ( entry.listGroupsOwned == PTS_GROUP_OWNER_ACCESS ) {
-      (*env)->SetIntField(env, group, group_listGroupsOwnedField, 
-			  org_openafs_jafs_Group_GROUP_OWNER_ACCESS);
-  } else if ( entry.listGroupsOwned == PTS_GROUP_ACCESS ) {
-      (*env)->SetIntField(env, group, group_listGroupsOwnedField, 
-			  org_openafs_jafs_Group_GROUP_GROUP_ACCESS);
-  } else {
-      (*env)->SetIntField(env, group, group_listGroupsOwnedField, 
-			  org_openafs_jafs_Group_GROUP_ANYUSER_ACCESS);
-  }
+    if (entry.listMembership == PTS_GROUP_OWNER_ACCESS) {
+	(*env)->SetIntField(env, group, group_listMembershipField,
+			    org_openafs_jafs_Group_GROUP_OWNER_ACCESS);
+    } else if (entry.listMembership == PTS_GROUP_ACCESS) {
+	(*env)->SetIntField(env, group, group_listMembershipField,
+			    org_openafs_jafs_Group_GROUP_GROUP_ACCESS);
+    } else {
+	(*env)->SetIntField(env, group, group_listMembershipField,
+			    org_openafs_jafs_Group_GROUP_ANYUSER_ACCESS);
+    }
 
-  if ( entry.listMembership == PTS_GROUP_OWNER_ACCESS ) {
-      (*env)->SetIntField(env, group, group_listMembershipField, 
-			  org_openafs_jafs_Group_GROUP_OWNER_ACCESS);
-  } else if ( entry.listMembership == PTS_GROUP_ACCESS ) {
-      (*env)->SetIntField(env, group, group_listMembershipField, 
-			  org_openafs_jafs_Group_GROUP_GROUP_ACCESS);
-  } else {
-      (*env)->SetIntField(env, group, group_listMembershipField, 
-			  org_openafs_jafs_Group_GROUP_ANYUSER_ACCESS);
-  }
+    if (entry.listAdd == PTS_GROUP_OWNER_ACCESS) {
+	(*env)->SetIntField(env, group, group_listAddField,
+			    org_openafs_jafs_Group_GROUP_OWNER_ACCESS);
+    } else if (entry.listAdd == PTS_GROUP_ACCESS) {
+	(*env)->SetIntField(env, group, group_listAddField,
+			    org_openafs_jafs_Group_GROUP_GROUP_ACCESS);
+    } else {
+	(*env)->SetIntField(env, group, group_listAddField,
+			    org_openafs_jafs_Group_GROUP_ANYUSER_ACCESS);
+    }
 
-  if ( entry.listAdd == PTS_GROUP_OWNER_ACCESS ) {
-      (*env)->SetIntField(env, group, group_listAddField, 
-			  org_openafs_jafs_Group_GROUP_OWNER_ACCESS);
-  } else if ( entry.listAdd == PTS_GROUP_ACCESS ) {
-      (*env)->SetIntField(env, group, group_listAddField, 
-			  org_openafs_jafs_Group_GROUP_GROUP_ACCESS);
-  } else {
-      (*env)->SetIntField(env, group, group_listAddField, 
-			  org_openafs_jafs_Group_GROUP_ANYUSER_ACCESS);
-  }
+    if (entry.listDelete == PTS_GROUP_OWNER_ACCESS) {
+	(*env)->SetIntField(env, group, group_listDeleteField,
+			    org_openafs_jafs_Group_GROUP_OWNER_ACCESS);
+    } else if (entry.listDelete == PTS_GROUP_ACCESS) {
+	(*env)->SetIntField(env, group, group_listDeleteField,
+			    org_openafs_jafs_Group_GROUP_GROUP_ACCESS);
+    } else {
+	(*env)->SetIntField(env, group, group_listDeleteField,
+			    org_openafs_jafs_Group_GROUP_ANYUSER_ACCESS);
+    }
 
-  if ( entry.listDelete == PTS_GROUP_OWNER_ACCESS ) {
-      (*env)->SetIntField(env, group, group_listDeleteField, 
-			  org_openafs_jafs_Group_GROUP_OWNER_ACCESS);
-  } else if ( entry.listDelete == PTS_GROUP_ACCESS ) {
-      (*env)->SetIntField(env, group, group_listDeleteField, 
-			  org_openafs_jafs_Group_GROUP_GROUP_ACCESS);
-  } else {
-      (*env)->SetIntField(env, group, group_listDeleteField, 
-			  org_openafs_jafs_Group_GROUP_ANYUSER_ACCESS);
-  }
+    jowner = (*env)->NewStringUTF(env, entry.owner);
+    jcreator = (*env)->NewStringUTF(env, entry.creator);
 
-  jowner   = (*env)->NewStringUTF(env, entry.owner);
-  jcreator =  (*env)->NewStringUTF(env, entry.creator);
-
-  (*env)->SetObjectField(env, group, group_ownerField, jowner);
-  (*env)->SetObjectField(env, group, group_creatorField, jcreator);
+    (*env)->SetObjectField(env, group, group_ownerField, jowner);
+    (*env)->SetObjectField(env, group, group_creatorField, jcreator);
 }
 
 /**
@@ -266,33 +264,33 @@ void getGroupInfoChar
  * group     the Group object in which to fill in the 
  *                  information
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Group_getGroupInfo
-  (JNIEnv *env, jclass cls, jint cellHandle, jstring jname, jobject group)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Group_getGroupInfo(JNIEnv * env, jclass cls,
+					 jint cellHandle, jstring jname,
+					 jobject group)
 {
-  char *name;
+    char *name;
 
-  if ( jname != NULL ) {
-    name = getNativeString(env, jname);
-    if ( !name ) {
-	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+    if (jname != NULL) {
+	name = getNativeString(env, jname);
+	if (!name) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	throwAFSException(env, JAFSNULLGROUP);
+	return;
     }
-  } else {
-    throwAFSException( env, JAFSNULLGROUP );
-    return;
-  }
-  getGroupInfoChar( env, cellHandle, name, group );
+    getGroupInfoChar(env, cellHandle, name, group);
 
-  // get class fields if need be
-  if ( groupCls == 0 ) {
-    internal_getGroupClass( env, group );
-  }
+    // get class fields if need be
+    if (groupCls == 0) {
+	internal_getGroupClass(env, group);
+    }
+    // set name in case blank object
+    (*env)->SetObjectField(env, group, group_nameField, jname);
 
-  // set name in case blank object
-  (*env)->SetObjectField(env, group, group_nameField, jname);
-
-  free( name );
+    free(name);
 }
 
 /**
@@ -304,86 +302,86 @@ Java_org_openafs_jafs_Group_getGroupInfo
  * name     the name of the user for which to set the information
  * theGroup   the group object containing the desired information
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Group_setGroupInfo
-  (JNIEnv *env, jclass cls, jint cellHandle, jstring jname, jobject group)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Group_setGroupInfo(JNIEnv * env, jclass cls,
+					 jint cellHandle, jstring jname,
+					 jobject group)
 {
-  char *name;
-  pts_GroupUpdateEntry_t ptsEntry;
-  afs_status_t ast;
+    char *name;
+    pts_GroupUpdateEntry_t ptsEntry;
+    afs_status_t ast;
 
-  jint jlistStatus;
-  jint jlistGroupsOwned;
-  jint jlistMembership;
-  jint jlistAdd;
-  jint jlistDelete;
+    jint jlistStatus;
+    jint jlistGroupsOwned;
+    jint jlistMembership;
+    jint jlistAdd;
+    jint jlistDelete;
 
-  // get the field ids if you haven't already
-  if ( groupCls == 0 ) {
-    internal_getGroupClass( env, group );
-  }
-
-  jlistStatus = (*env)->GetIntField(env, group, group_listStatusField);
-  jlistGroupsOwned = (*env)->GetIntField(env, group, 
-					 group_listGroupsOwnedField);
-  jlistMembership = (*env)->GetIntField(env, group, group_listMembershipField);
-  jlistAdd = (*env)->GetIntField(env, group, group_listAddField);
-  jlistDelete = (*env)->GetIntField(env, group, group_listDeleteField);
-
-  if ( jname != NULL ) {
-    name = getNativeString(env, jname);
-    if ( name == NULL ) {
-	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+    // get the field ids if you haven't already
+    if (groupCls == 0) {
+	internal_getGroupClass(env, group);
     }
-  } else {
-    throwAFSException( env, JAFSNULLGROUP );
-    return;
-  }
 
-  if ( jlistStatus == org_openafs_jafs_Group_GROUP_OWNER_ACCESS ) {
-    ptsEntry.listStatus = PTS_GROUP_OWNER_ACCESS;
-  } else if ( jlistStatus == org_openafs_jafs_Group_GROUP_GROUP_ACCESS ) {
-    ptsEntry.listStatus = PTS_GROUP_ACCESS;
-  } else {
-    ptsEntry.listStatus = PTS_GROUP_ANYUSER_ACCESS;
-  }
-  if ( jlistGroupsOwned == org_openafs_jafs_Group_GROUP_OWNER_ACCESS ) {
-    ptsEntry.listGroupsOwned = PTS_GROUP_OWNER_ACCESS;
-  } else if ( jlistGroupsOwned == 
-	     org_openafs_jafs_Group_GROUP_GROUP_ACCESS ) {
-    ptsEntry.listGroupsOwned = PTS_GROUP_ACCESS;
-  } else {
-    ptsEntry.listGroupsOwned = PTS_GROUP_ANYUSER_ACCESS;
-  }
-  if ( jlistMembership == org_openafs_jafs_Group_GROUP_OWNER_ACCESS ) {
-    ptsEntry.listMembership = PTS_GROUP_OWNER_ACCESS;
-  } else if ( jlistMembership == 
-	     org_openafs_jafs_Group_GROUP_GROUP_ACCESS ) {
-    ptsEntry.listMembership = PTS_GROUP_ACCESS;
-  } else {
-    ptsEntry.listMembership = PTS_GROUP_ANYUSER_ACCESS;
-  }
-  if ( jlistAdd == org_openafs_jafs_Group_GROUP_OWNER_ACCESS ) {
-    ptsEntry.listAdd = PTS_GROUP_OWNER_ACCESS;
-  } else if ( jlistAdd == org_openafs_jafs_Group_GROUP_GROUP_ACCESS ) {
-    ptsEntry.listAdd = PTS_GROUP_ACCESS;
-  } else {
-    ptsEntry.listAdd = PTS_GROUP_ANYUSER_ACCESS;
-  }
-  if ( jlistDelete == org_openafs_jafs_Group_GROUP_OWNER_ACCESS ) {
-    ptsEntry.listDelete = PTS_GROUP_OWNER_ACCESS;
-  } else if ( jlistDelete == org_openafs_jafs_Group_GROUP_GROUP_ACCESS ) {
-    ptsEntry.listDelete = PTS_GROUP_ACCESS;
-  } else {
-    ptsEntry.listDelete = PTS_GROUP_ANYUSER_ACCESS;
-  }
+    jlistStatus = (*env)->GetIntField(env, group, group_listStatusField);
+    jlistGroupsOwned =
+	(*env)->GetIntField(env, group, group_listGroupsOwnedField);
+    jlistMembership =
+	(*env)->GetIntField(env, group, group_listMembershipField);
+    jlistAdd = (*env)->GetIntField(env, group, group_listAddField);
+    jlistDelete = (*env)->GetIntField(env, group, group_listDeleteField);
 
-  if ( !pts_GroupModify( (void *) cellHandle, name, &ptsEntry, &ast ) ) {
-    throwAFSException( env, ast );
-  }
+    if (jname != NULL) {
+	name = getNativeString(env, jname);
+	if (name == NULL) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	throwAFSException(env, JAFSNULLGROUP);
+	return;
+    }
 
-  free( name );
+    if (jlistStatus == org_openafs_jafs_Group_GROUP_OWNER_ACCESS) {
+	ptsEntry.listStatus = PTS_GROUP_OWNER_ACCESS;
+    } else if (jlistStatus == org_openafs_jafs_Group_GROUP_GROUP_ACCESS) {
+	ptsEntry.listStatus = PTS_GROUP_ACCESS;
+    } else {
+	ptsEntry.listStatus = PTS_GROUP_ANYUSER_ACCESS;
+    }
+    if (jlistGroupsOwned == org_openafs_jafs_Group_GROUP_OWNER_ACCESS) {
+	ptsEntry.listGroupsOwned = PTS_GROUP_OWNER_ACCESS;
+    } else if (jlistGroupsOwned == org_openafs_jafs_Group_GROUP_GROUP_ACCESS) {
+	ptsEntry.listGroupsOwned = PTS_GROUP_ACCESS;
+    } else {
+	ptsEntry.listGroupsOwned = PTS_GROUP_ANYUSER_ACCESS;
+    }
+    if (jlistMembership == org_openafs_jafs_Group_GROUP_OWNER_ACCESS) {
+	ptsEntry.listMembership = PTS_GROUP_OWNER_ACCESS;
+    } else if (jlistMembership == org_openafs_jafs_Group_GROUP_GROUP_ACCESS) {
+	ptsEntry.listMembership = PTS_GROUP_ACCESS;
+    } else {
+	ptsEntry.listMembership = PTS_GROUP_ANYUSER_ACCESS;
+    }
+    if (jlistAdd == org_openafs_jafs_Group_GROUP_OWNER_ACCESS) {
+	ptsEntry.listAdd = PTS_GROUP_OWNER_ACCESS;
+    } else if (jlistAdd == org_openafs_jafs_Group_GROUP_GROUP_ACCESS) {
+	ptsEntry.listAdd = PTS_GROUP_ACCESS;
+    } else {
+	ptsEntry.listAdd = PTS_GROUP_ANYUSER_ACCESS;
+    }
+    if (jlistDelete == org_openafs_jafs_Group_GROUP_OWNER_ACCESS) {
+	ptsEntry.listDelete = PTS_GROUP_OWNER_ACCESS;
+    } else if (jlistDelete == org_openafs_jafs_Group_GROUP_GROUP_ACCESS) {
+	ptsEntry.listDelete = PTS_GROUP_ACCESS;
+    } else {
+	ptsEntry.listDelete = PTS_GROUP_ANYUSER_ACCESS;
+    }
+
+    if (!pts_GroupModify((void *)cellHandle, name, &ptsEntry, &ast)) {
+	throwAFSException(env, ast);
+    }
+
+    free(name);
 }
 
 /**
@@ -397,33 +395,34 @@ Java_org_openafs_jafs_Group_setGroupInfo
  * jname          the name of the group for which to get the members
  * returns an iteration ID
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Group_getGroupMembersBegin
-  (JNIEnv *env, jclass cls, jint cellHandle, jstring jname)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Group_getGroupMembersBegin(JNIEnv * env, jclass cls,
+						 jint cellHandle,
+						 jstring jname)
 {
-  char *name;
-  afs_status_t ast;
-  void *iterationId;
+    char *name;
+    afs_status_t ast;
+    void *iterationId;
 
-  if ( jname != NULL ) {
-    name = getNativeString(env, jname);
-    if ( name == NULL ) {
-	throwAFSException( env, JAFSADMNOMEM );
-	return 0;    
+    if (jname != NULL) {
+	name = getNativeString(env, jname);
+	if (name == NULL) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return 0;
+	}
+    } else {
+	throwAFSException(env, JAFSNULLGROUP);
+	return 0;
     }
-  } else {
-    throwAFSException( env, JAFSNULLGROUP );
-    return 0;
-  }
 
-  if ( !pts_GroupMemberListBegin( (void *) cellHandle, name, &iterationId, 
-				 &ast ) ) {
-    throwAFSException( env, ast );
-  }
+    if (!pts_GroupMemberListBegin
+	((void *)cellHandle, name, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+    }
 
-  free( name );
+    free(name);
 
-  return (jint) iterationId;
+    return (jint) iterationId;
 }
 
 /**
@@ -435,32 +434,33 @@ Java_org_openafs_jafs_Group_getGroupMembersBegin
  * iterationId   the iteration ID of this iteration
  * returns the name of the next member
  */
-JNIEXPORT jstring JNICALL 
-Java_org_openafs_jafs_Group_getGroupMembersNextString
-  (JNIEnv *env, jclass cls, jint iterationId)
+JNIEXPORT jstring JNICALL
+Java_org_openafs_jafs_Group_getGroupMembersNextString(JNIEnv * env,
+						      jclass cls,
+						      jint iterationId)
 {
-  afs_status_t ast;
-  char *userName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
-  jstring juser;
+    afs_status_t ast;
+    char *userName = (char *)malloc(sizeof(char) * PTS_MAX_NAME_LEN);
+    jstring juser;
 
-  if ( !userName ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return;    
-  }
-
-  if ( !pts_GroupMemberListNext( (void *) iterationId, userName, &ast ) ) {
-    free( userName );
-    if ( ast == ADMITERATORDONE ) {
-      return NULL;
-    } else {
-      throwAFSException( env, ast );
-      return;
+    if (!userName) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return;
     }
-  }
-  
-  juser = (*env)->NewStringUTF(env, userName);
-  free( userName );
-  return juser;
+
+    if (!pts_GroupMemberListNext((void *)iterationId, userName, &ast)) {
+	free(userName);
+	if (ast == ADMITERATORDONE) {
+	    return NULL;
+	} else {
+	    throwAFSException(env, ast);
+	    return;
+	}
+    }
+
+    juser = (*env)->NewStringUTF(env, userName);
+    free(userName);
+    return juser;
 }
 
 /**
@@ -475,45 +475,46 @@ Java_org_openafs_jafs_Group_getGroupMembersNextString
  *                  next user
  * returns 0 if there are no more users, != 0 otherwise
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Group_getGroupMembersNext
-  (JNIEnv *env, jclass cls, jint cellHandle, jint iterationId,
-   jobject juserObject)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Group_getGroupMembersNext(JNIEnv * env, jclass cls,
+						jint cellHandle,
+						jint iterationId,
+						jobject juserObject)
 {
-  afs_status_t ast;
-  char *userName;
-  jstring juser;
+    afs_status_t ast;
+    char *userName;
+    jstring juser;
 
-  userName = (char *) malloc( sizeof(char)*PTS_MAX_NAME_LEN);
+    userName = (char *)malloc(sizeof(char) * PTS_MAX_NAME_LEN);
 
-  if ( !userName ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return;    
-  }
-
-  if ( !pts_GroupMemberListNext( (void *) iterationId, userName, &ast ) ) {
-    free( userName );
-    if ( ast == ADMITERATORDONE ) {
-      return 0;
-    } else {
-      throwAFSException( env, ast );
-      return 0;
+    if (!userName) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return;
     }
-  }
 
-  juser = (*env)->NewStringUTF(env, userName);
+    if (!pts_GroupMemberListNext((void *)iterationId, userName, &ast)) {
+	free(userName);
+	if (ast == ADMITERATORDONE) {
+	    return 0;
+	} else {
+	    throwAFSException(env, ast);
+	    return 0;
+	}
+    }
 
-  if ( userCls == 0 ) {
-    internal_getUserClass( env, juserObject );
-  }
+    juser = (*env)->NewStringUTF(env, userName);
 
-  (*env)->SetObjectField(env, juserObject, user_nameField, juser);
+    if (userCls == 0) {
+	internal_getUserClass(env, juserObject);
+    }
 
-  getUserInfoChar( env, (void *) cellHandle, userName, juserObject );
-  (*env)->SetBooleanField( env, juserObject, user_cachedInfoField, TRUE );
+    (*env)->SetObjectField(env, juserObject, user_nameField, juser);
 
-  free( userName );
-  return 1;
+    getUserInfoChar(env, (void *)cellHandle, userName, juserObject);
+    (*env)->SetBooleanField(env, juserObject, user_cachedInfoField, TRUE);
+
+    free(userName);
+    return 1;
 
 }
 
@@ -524,16 +525,16 @@ Java_org_openafs_jafs_Group_getGroupMembersNext
  * cls      the current Java class
  * iterationId   the iteration ID of this iteration
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Group_getGroupMembersDone
-  (JNIEnv *env, jclass cls, jint iterationId)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Group_getGroupMembersDone(JNIEnv * env, jclass cls,
+						jint iterationId)
 {
-  afs_status_t ast;
+    afs_status_t ast;
 
-  if ( !pts_GroupMemberListDone( (void *) iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!pts_GroupMemberListDone((void *)iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 }
 
 /**
@@ -545,45 +546,45 @@ Java_org_openafs_jafs_Group_getGroupMembersDone
  * jgroupName          the name of the group to which to add a member
  * juserName      the name of the user to add
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Group_addMember
-  (JNIEnv *env, jclass cls, jint cellHandle, jstring jgroupName,
-   jstring juserName )
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Group_addMember(JNIEnv * env, jclass cls,
+				      jint cellHandle, jstring jgroupName,
+				      jstring juserName)
 {
-  afs_status_t ast;
-  char *groupName;
-  char *userName;
+    afs_status_t ast;
+    char *groupName;
+    char *userName;
 
-  if ( jgroupName != NULL ) {
-    groupName = getNativeString(env, jgroupName);
-    if ( groupName == NULL ) {
-	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+    if (jgroupName != NULL) {
+	groupName = getNativeString(env, jgroupName);
+	if (groupName == NULL) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	throwAFSException(env, JAFSNULLGROUP);
+	return;
     }
-  } else {
-    throwAFSException( env, JAFSNULLGROUP );
-    return;
-  }
 
-  if ( juserName != NULL ) {
-    userName = getNativeString(env, juserName);
-    if ( userName == NULL ) {
-      free( groupName );
-      throwAFSException( env, JAFSADMNOMEM );
-      return;    
+    if (juserName != NULL) {
+	userName = getNativeString(env, juserName);
+	if (userName == NULL) {
+	    free(groupName);
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	free(groupName);
+	throwAFSException(env, JAFSNULLUSER);
+	return;
     }
-  } else {
-    free( groupName );
-    throwAFSException( env, JAFSNULLUSER );
-    return;
-  }
 
-  if ( !pts_GroupMemberAdd( (void *) cellHandle, userName, groupName, &ast ) ) {
-    throwAFSException( env, ast );
-  }
+    if (!pts_GroupMemberAdd((void *)cellHandle, userName, groupName, &ast)) {
+	throwAFSException(env, ast);
+    }
 
-  free( userName );
-  free( groupName );
+    free(userName);
+    free(groupName);
 }
 
 /**
@@ -596,46 +597,45 @@ Java_org_openafs_jafs_Group_addMember
  *                           member
  * juserName      the name of the user to remove
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Group_removeMember
-  (JNIEnv *env, jclass cls, jint cellHandle, jstring jgroupName,
-   jstring juserName)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Group_removeMember(JNIEnv * env, jclass cls,
+					 jint cellHandle, jstring jgroupName,
+					 jstring juserName)
 {
-  afs_status_t ast;
-  char *groupName;
-  char *userName;
+    afs_status_t ast;
+    char *groupName;
+    char *userName;
 
-  if ( jgroupName != NULL ) {
-    groupName = getNativeString(env, jgroupName);
-    if ( groupName == NULL ) {
-	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+    if (jgroupName != NULL) {
+	groupName = getNativeString(env, jgroupName);
+	if (groupName == NULL) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	throwAFSException(env, JAFSNULLGROUP);
+	return;
     }
-  } else {
-    throwAFSException( env, JAFSNULLGROUP );
-    return;
-  }
 
-  if ( juserName != NULL ) {
-    userName = getNativeString(env, juserName);
-    if ( userName == NULL ) {
-      free( groupName );
-      throwAFSException( env, JAFSADMNOMEM );
-      return;    
+    if (juserName != NULL) {
+	userName = getNativeString(env, juserName);
+	if (userName == NULL) {
+	    free(groupName);
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	free(groupName);
+	throwAFSException(env, JAFSNULLUSER);
+	return;
     }
-  } else {
-    free( groupName );
-    throwAFSException( env, JAFSNULLUSER );
-    return;
-  }
 
-  if ( !pts_GroupMemberRemove( (void *)cellHandle, userName, 
-			      groupName, &ast ) ) {
-    throwAFSException( env, ast );
-  }
-  
-  free( groupName );
-  free( userName );
+    if (!pts_GroupMemberRemove((void *)cellHandle, userName, groupName, &ast)) {
+	throwAFSException(env, ast);
+    }
+
+    free(groupName);
+    free(userName);
 }
 
 /**
@@ -648,46 +648,45 @@ Java_org_openafs_jafs_Group_removeMember
  *                           owner
  * jownerName      the name of the new owner
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Group_changeOwner
-  (JNIEnv *env, jclass cls, jint cellHandle, jstring jgroupName,
-   jstring jownerName )
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Group_changeOwner(JNIEnv * env, jclass cls,
+					jint cellHandle, jstring jgroupName,
+					jstring jownerName)
 {
-  afs_status_t ast;
-  char *groupName;
-  char *ownerName;
+    afs_status_t ast;
+    char *groupName;
+    char *ownerName;
 
-  if ( jgroupName != NULL ) {
-    groupName = getNativeString(env, jgroupName);
-    if ( groupName == NULL ) {
-	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+    if (jgroupName != NULL) {
+	groupName = getNativeString(env, jgroupName);
+	if (groupName == NULL) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	throwAFSException(env, JAFSNULLGROUP);
+	return;
     }
-  } else {
-    throwAFSException( env, JAFSNULLGROUP );
-    return;
-  }
 
-  if ( jownerName != NULL ) {
-    ownerName = getNativeString(env, jownerName);
-    if ( ownerName == NULL ) {
-      free( groupName );
-      throwAFSException( env, JAFSADMNOMEM );
-      return;    
+    if (jownerName != NULL) {
+	ownerName = getNativeString(env, jownerName);
+	if (ownerName == NULL) {
+	    free(groupName);
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	free(groupName);
+	throwAFSException(env, JAFSNULLOWNER);
+	return;
     }
-  } else {
-    free( groupName );
-    throwAFSException( env, JAFSNULLOWNER );
-    return;
-  }
 
-  if ( !pts_GroupOwnerChange( (void *)cellHandle, groupName, 
-			     ownerName, &ast ) ) {
-    throwAFSException( env, ast );
-  }
+    if (!pts_GroupOwnerChange((void *)cellHandle, groupName, ownerName, &ast)) {
+	throwAFSException(env, ast);
+    }
 
-  free( groupName );
-  free( ownerName );
+    free(groupName);
+    free(ownerName);
 }
 
 /**
@@ -699,54 +698,54 @@ Java_org_openafs_jafs_Group_changeOwner
  * joldGroupName          the old name of the group
  * jnewGroupName      the new name for the group
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Group_rename
-  (JNIEnv *env, jclass cls, jint cellHandle, jstring jgroupOldName, 
-   jstring jgroupNewName )
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Group_rename(JNIEnv * env, jclass cls, jint cellHandle,
+				   jstring jgroupOldName,
+				   jstring jgroupNewName)
 {
-  afs_status_t ast;
-  char *groupOldName;
-  char *groupNewName;
+    afs_status_t ast;
+    char *groupOldName;
+    char *groupNewName;
 
-  if ( jgroupOldName != NULL ) {
-    groupOldName = getNativeString(env, jgroupOldName);
-    if ( groupOldName == NULL ) {
-	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+    if (jgroupOldName != NULL) {
+	groupOldName = getNativeString(env, jgroupOldName);
+	if (groupOldName == NULL) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	throwAFSException(env, JAFSNULLGROUP);
+	return;
     }
-  } else {
-    throwAFSException( env, JAFSNULLGROUP );
-    return;
-  }
 
-  if ( jgroupNewName != NULL ) {
-    groupNewName = getNativeString(env, jgroupNewName);
-    if ( groupNewName == NULL ) {
-      free( groupOldName );
-      throwAFSException( env, JAFSADMNOMEM );
-      return;    
+    if (jgroupNewName != NULL) {
+	groupNewName = getNativeString(env, jgroupNewName);
+	if (groupNewName == NULL) {
+	    free(groupOldName);
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	free(groupOldName);
+	throwAFSException(env, JAFSNULLGROUP);
+	return;
     }
-  } else {
-    free( groupOldName );
-    throwAFSException( env, JAFSNULLGROUP );
-    return;
-  }
 
-  if ( !pts_GroupRename( (void *)cellHandle, groupOldName, 
-			groupNewName, &ast ) ) {
-    throwAFSException( env, ast );
-  }
+    if (!pts_GroupRename
+	((void *)cellHandle, groupOldName, groupNewName, &ast)) {
+	throwAFSException(env, ast);
+    }
 
-  free( groupOldName );
-  free( groupNewName );
+    free(groupOldName);
+    free(groupNewName);
 }
 
 // reclaim global memory used by this portion
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Group_reclaimGroupMemory (JNIEnv *env, jclass cls)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Group_reclaimGroupMemory(JNIEnv * env, jclass cls)
 {
-  if ( groupCls ) {
-    (*env)->DeleteGlobalRef(env, groupCls);
-    groupCls = 0;
-  }
+    if (groupCls) {
+	(*env)->DeleteGlobalRef(env, groupCls);
+	groupCls = 0;
+    }
 }

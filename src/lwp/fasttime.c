@@ -26,7 +26,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -42,7 +43,7 @@ RCSID("$Header$");
 #endif
 #include <afs/afsutil.h>
 
-extern char *valloc ();
+extern char *valloc();
 int ft_debug;
 
 #define TRUE	1
@@ -51,7 +52,7 @@ int ft_debug;
 static enum InitState { notTried, tried, done } initState = notTried;
 
 struct timeval FT_LastTime;	/* last time returned by RT_FastTime.  Used to implement
-			    	   FT_ApproxTime */
+				 * FT_ApproxTime */
 
 
 /* Call this to get the memory mapped.  It will return -1 if anything went
@@ -62,17 +63,18 @@ struct timeval FT_LastTime;	/* last time returned by RT_FastTime.  Used to imple
    You might want this if your program won't run too long and the nlist
    call is too expensive.  Yeah, it's pretty horrible.
 */
-int FT_Init (int printErrors, int notReally)
+int
+FT_Init(int printErrors, int notReally)
 {
     if (initState != notTried && !notReally)
-	return (initState == done? 0: -1);	/* This is in case explicit initialization
-						   occurs after automatic initialization */
+	return (initState == done ? 0 : -1);	/* This is in case explicit initialization
+						 * occurs after automatic initialization */
     initState = tried;
     if (notReally)
 	return 0;		/* fake success, but leave initState
-				   wrong. */
+				 * wrong. */
     if (printErrors)
-	fprintf (stderr, "FT_Init: mmap  not implemented on this kernel\n");
+	fprintf(stderr, "FT_Init: mmap  not implemented on this kernel\n");
     return (-1);
 }
 
@@ -81,17 +83,20 @@ int FT_Init (int printErrors, int notReally)
    call FT_Init yourself.  If the initialization failed, this will just
    call gettimeofday.  If you ask for the timezone info, this routine will
    punt to gettimeofday. */
-int FT_GetTimeOfDay(struct timeval *tv, struct timezone *tz)
+int
+FT_GetTimeOfDay(struct timeval *tv, struct timezone *tz)
 {
     register int ret;
-    ret = gettimeofday (tv, tz);
+    ret = gettimeofday(tv, tz);
     if (!ret) {
 	/* need to bounds check 'cause Unix can fail these checks, (esp on Suns)
-	    and time package can generate invalid (to select syscall) values
-	    for the time until the next interesting event if it encounters
-	    out of range microsecond fields */
-	if (tv->tv_usec < 0) tv->tv_usec = 0;
-	if (tv->tv_usec > 999999) tv->tv_usec = 999999;
+	 * and time package can generate invalid (to select syscall) values
+	 * for the time until the next interesting event if it encounters
+	 * out of range microsecond fields */
+	if (tv->tv_usec < 0)
+	    tv->tv_usec = 0;
+	if (tv->tv_usec > 999999)
+	    tv->tv_usec = 999999;
 	FT_LastTime.tv_sec = tv->tv_sec;
 	FT_LastTime.tv_usec = tv->tv_usec;
     }
@@ -100,12 +105,14 @@ int FT_GetTimeOfDay(struct timeval *tv, struct timezone *tz)
 
 
 /* For compatibility.  Should go away. */
-int TM_GetTimeOfDay (struct timeval *tv, struct timezone *tz)
+int
+TM_GetTimeOfDay(struct timeval *tv, struct timezone *tz)
 {
     return FT_GetTimeOfDay(tv, tz);
 }
 
-int FT_AGetTimeOfDay(struct timeval *tv, struct timezone *tz)
+int
+FT_AGetTimeOfDay(struct timeval *tv, struct timezone *tz)
 {
     if (FT_LastTime.tv_sec) {
 	tv->tv_sec = FT_LastTime.tv_sec;
@@ -115,7 +122,8 @@ int FT_AGetTimeOfDay(struct timeval *tv, struct timezone *tz)
     return FT_GetTimeOfDay(tv, tz);
 }
 
-unsigned int FT_ApproxTime(void)
+unsigned int
+FT_ApproxTime(void)
 {
     if (!FT_LastTime.tv_sec) {
 	FT_GetTimeOfDay(&FT_LastTime, 0);

@@ -196,7 +196,6 @@ typedef struct {
 
 
 #undef osirx_AssertMine
-extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
+extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 
 #endif /* _RX_KMUTEX_H_ */
-

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/stds.h>
 
@@ -32,11 +33,11 @@ RCSID("$Header$");
 /* Signal disposition table and associated definitions and locks */
 
 typedef struct {
-    struct sigaction action;  /* signal action information */
+    struct sigaction action;	/* signal action information */
 } sigtable_entry_t;
 
-static sigtable_entry_t signalTable[NSIG];  /* signal table; slot 0 unused */
-static pthread_mutex_t  signalTableLock;    /* lock protects signalTable */
+static sigtable_entry_t signalTable[NSIG];	/* signal table; slot 0 unused */
+static pthread_mutex_t signalTableLock;	/* lock protects signalTable */
 
 /* Global signal block lock; all signal handlers are serialized for now */
 static pthread_mutex_t signalBlockLock;
@@ -52,19 +53,19 @@ static pthread_mutex_t signalBlockLock;
 /* Child process table and associated definitions and locks */
 
 typedef struct {
-    HANDLE p_handle;      /* process handle (NULL if table entry not valid) */
-    BOOL   p_reserved;    /* table entry is reserved for spawn */
-    DWORD  p_id;          /* process id */
-    BOOL   p_terminated;  /* process terminated; status available/valid */
-    DWORD  p_status;      /* status of terminated process */
+    HANDLE p_handle;		/* process handle (NULL if table entry not valid) */
+    BOOL p_reserved;		/* table entry is reserved for spawn */
+    DWORD p_id;			/* process id */
+    BOOL p_terminated;		/* process terminated; status available/valid */
+    DWORD p_status;		/* status of terminated process */
 } proctable_entry_t;
 
 /* Max number of active child processes supported */
 #define PMGT_CHILD_MAX  100
 
-static proctable_entry_t procTable[PMGT_CHILD_MAX];  /* child process table */
-static int procEntryCount;   /* count of valid entries in procTable */
-static int procTermCount;    /* count of terminated entries in procTable */
+static proctable_entry_t procTable[PMGT_CHILD_MAX];	/* child process table */
+static int procEntryCount;	/* count of valid entries in procTable */
+static int procTermCount;	/* count of terminated entries in procTable */
 
 /* lock protects procTable, procEntryCount, and procTermCount */
 static pthread_mutex_t procTableLock;
@@ -87,7 +88,7 @@ size_t pmgt_spawnDataLen = 0;
 
 /* General definitions */
 
-#define DWORD_OF_ONES   ((DWORD)0xFFFFFFFF)  /* a common Win32 failure code */
+#define DWORD_OF_ONES   ((DWORD)0xFFFFFFFF)	/* a common Win32 failure code */
 
 
 
@@ -109,19 +110,19 @@ SignalIsDefined(int signo)
     if (signo >= 1 && signo <= (NSIG - 1)) {
 	/* value is in valid range; check specifics */
 	switch (signo) {
-	  case SIGHUP:
-	  case SIGINT:
-	  case SIGQUIT:
-	  case SIGILL:
-	  case SIGABRT:
-	  case SIGFPE:
-	  case SIGKILL:
-	  case SIGSEGV:
-	  case SIGTERM:
-	  case SIGUSR1:
-	  case SIGUSR2:
-	  case SIGCHLD:
-	  case SIGTSTP:
+	case SIGHUP:
+	case SIGINT:
+	case SIGQUIT:
+	case SIGILL:
+	case SIGABRT:
+	case SIGFPE:
+	case SIGKILL:
+	case SIGSEGV:
+	case SIGTERM:
+	case SIGUSR1:
+	case SIGUSR2:
+	case SIGCHLD:
+	case SIGTSTP:
 	    isDefined = 1;
 	    break;
 	}
@@ -137,37 +138,37 @@ static void __cdecl
 DefaultActionHandler(int signo)
 {
     switch (signo) {
-      case SIGHUP:
-      case SIGINT:
-      case SIGKILL:
-      case SIGTERM:
-      case SIGUSR1:
-      case SIGUSR2:
+    case SIGHUP:
+    case SIGINT:
+    case SIGKILL:
+    case SIGTERM:
+    case SIGUSR1:
+    case SIGUSR2:
 	/* default action is "exit" */
 	ExitProcess(PMGT_SIGSTATUS_ENCODE(signo));
 	break;
-      case SIGQUIT:
-      case SIGILL:
-      case SIGABRT:
-      case SIGFPE:
-      case SIGSEGV:
+    case SIGQUIT:
+    case SIGILL:
+    case SIGABRT:
+    case SIGFPE:
+    case SIGSEGV:
 	/* default action is "core" */
 	/* Best we can do is to raise an exception that can be caught by
 	 * Dr. Watson, which can in turn generate a crash dump file.
 	 * The default exception handler will call ExitProcess() with
 	 * our application-specific exception code.
 	 */
-	RaiseException((DWORD)PMGT_SIGSTATUS_ENCODE(signo),
+	RaiseException((DWORD) PMGT_SIGSTATUS_ENCODE(signo),
 		       EXCEPTION_NONCONTINUABLE, 0, NULL);
 	break;
-      case SIGCHLD:
+    case SIGCHLD:
 	/* default action is "ignore" */
 	break;
-      case SIGTSTP:
+    case SIGTSTP:
 	/* default action is "stop" */
 	/* No good way to implement this from inside a process so ignore */
 	break;
-      default:
+    default:
 	/* no default action for specified signal value; just ignore */
 	break;
     }
@@ -188,20 +189,19 @@ ProcessSignal(int signo)
 
     if (signo != SIGKILL) {
 	/* serialize signals, but never block processing of SIGKILL */
-	(void) pthread_mutex_lock(&signalBlockLock);
+	(void)pthread_mutex_lock(&signalBlockLock);
     }
 
     /* fetch disposition of signo, updating it if necessary */
 
-    (void) pthread_mutex_lock(&signalTableLock);
+    (void)pthread_mutex_lock(&signalTableLock);
     sigEntry = signalTable[signo].action;
 
-    if ((sigEntry.sa_handler != SIG_IGN) &&
-	(sigEntry.sa_flags & SA_RESETHAND) &&
-	(signo != SIGILL)) {
+    if ((sigEntry.sa_handler != SIG_IGN) && (sigEntry.sa_flags & SA_RESETHAND)
+	&& (signo != SIGILL)) {
 	signalTable[signo].action.sa_handler = SIG_DFL;
     }
-    (void) pthread_mutex_unlock(&signalTableLock);
+    (void)pthread_mutex_unlock(&signalTableLock);
 
     /* execute handler */
 
@@ -209,11 +209,11 @@ ProcessSignal(int signo)
 	if (sigEntry.sa_handler == SIG_DFL) {
 	    sigEntry.sa_handler = DefaultActionHandler;
 	}
-	(*sigEntry.sa_handler)(signo);
+	(*sigEntry.sa_handler) (signo);
     }
 
     if (signo != SIGKILL) {
-	(void) pthread_mutex_unlock(&signalBlockLock);
+	(void)pthread_mutex_unlock(&signalBlockLock);
     }
 }
 
@@ -250,48 +250,46 @@ RemoteSignalThread(LPVOID param)
 static DWORD WINAPI
 RemoteSignalListenerThread(LPVOID param)
 {
-    HANDLE sigPipeHandle = (HANDLE)param;
+    HANDLE sigPipeHandle = (HANDLE) param;
 
     while (1) {
 	/* wait for pipe client to connect */
 
-	if ((ConnectNamedPipe(sigPipeHandle, NULL)) ||
-	    (GetLastError() == ERROR_PIPE_CONNECTED)) {
+	if ((ConnectNamedPipe(sigPipeHandle, NULL))
+	    || (GetLastError() == ERROR_PIPE_CONNECTED)) {
 	    /* client connected; read signal value */
 	    int signo;
 	    DWORD bytesXfered;
 
-	    if ((ReadFile(sigPipeHandle,
-			  &signo, sizeof(signo), &bytesXfered, NULL)) &&
-		(bytesXfered == sizeof(signo))) {
+	    if ((ReadFile
+		 (sigPipeHandle, &signo, sizeof(signo), &bytesXfered, NULL))
+		&& (bytesXfered == sizeof(signo))) {
 		HANDLE sigThreadHandle;
 		DWORD sigThreadId;
 
 		/* ACK signal to release sender */
-		(void) WriteFile(sigPipeHandle,
-				 &signo, sizeof(signo), &bytesXfered, NULL);
+		(void)WriteFile(sigPipeHandle, &signo, sizeof(signo),
+				&bytesXfered, NULL);
 
 		/* spawn thread to process signal; we do this so that
 		 * we can always process a SIGKILL even if a signal handler
 		 * invoked earlier fails to return (blocked/spinning).
 		 */
-		sigThreadHandle =
-		    CreateThread(NULL,           /* default security attr. */
-				 0,              /* default stack size */
-				 RemoteSignalThread,
-				 (LPVOID)signo,  /* thread argument */
-				 0,              /* creation flags */
-				 &sigThreadId);  /* thread id */
+		sigThreadHandle = CreateThread(NULL,	/* default security attr. */
+					       0,	/* default stack size */
+					       RemoteSignalThread, (LPVOID) signo,	/* thread argument */
+					       0,	/* creation flags */
+					       &sigThreadId);	/* thread id */
 
 		if (sigThreadHandle != NULL) {
-		    (void) CloseHandle(sigThreadHandle);
+		    (void)CloseHandle(sigThreadHandle);
 		}
 	    }
 	    /* nothing to do if ReadFile, WriteFile or CreateThread fails. */
 
 	} else {
 	    /* connect failed; this should never happen */
-	    Sleep(2000); /* sleep 2 seconds to avoid tight loop */
+	    Sleep(2000);	/* sleep 2 seconds to avoid tight loop */
 	}
 
 	(void)DisconnectNamedPipe(sigPipeHandle);
@@ -310,8 +308,7 @@ RemoteSignalListenerThread(LPVOID param)
  *     signal (Unix sigaction() semantics).
  */
 int
-pmgt_SigactionSet(int signo,
-		  const struct sigaction *actionP,
+pmgt_SigactionSet(int signo, const struct sigaction *actionP,
 		  struct sigaction *old_actionP)
 {
     /* validate arguments */
@@ -330,7 +327,7 @@ pmgt_SigactionSet(int signo,
 
     /* fetch and/or set disposition of signo */
 
-    (void) pthread_mutex_lock(&signalTableLock);
+    (void)pthread_mutex_lock(&signalTableLock);
 
     if (old_actionP) {
 	*old_actionP = signalTable[signo].action;
@@ -340,7 +337,7 @@ pmgt_SigactionSet(int signo,
 	signalTable[signo].action = *actionP;
     }
 
-    (void) pthread_mutex_unlock(&signalTableLock);
+    (void)pthread_mutex_unlock(&signalTableLock);
 
     return 0;
 }
@@ -350,9 +347,7 @@ pmgt_SigactionSet(int signo,
  * pmgt_SignalSet() -- Specify the disposition for a given signal
  *     value (Unix signal() semantics).
  */
-void (__cdecl *pmgt_SignalSet(int signo,
-			      void (__cdecl *dispP)(int)))(int)
-{
+void (__cdecl * pmgt_SignalSet(int signo, void (__cdecl * dispP) (int))) (int) {
     struct sigaction newAction, oldAction;
 
     /* construct action to request Unix signal() semantics */
@@ -462,8 +457,7 @@ pmgt_SignalRaiseLocalByName(const char *signame, int *libSigno)
  *     Note: only supports sending signal to a specific (single) process.
  */
 int
-pmgt_SignalRaiseRemote(pid_t pid,
-		       int signo)
+pmgt_SignalRaiseRemote(pid_t pid, int signo)
 {
     BOOL fsuccess;
     char sigPipeName[sizeof(PMGT_SIGNAL_PIPE_PREFIX) + 20];
@@ -473,8 +467,7 @@ pmgt_SignalRaiseRemote(pid_t pid,
 
     /* validate arguments */
 
-    if ((pid <= (pid_t)0) ||
-	(!SignalIsDefined(signo) && signo != 0)) {
+    if ((pid <= (pid_t) 0) || (!SignalIsDefined(signo) && signo != 0)) {
 	/* invalid pid or signo */
 	errno = EINVAL;
 	return -1;
@@ -482,7 +475,7 @@ pmgt_SignalRaiseRemote(pid_t pid,
 
     /* optimize for the "this process" case */
 
-    if (pid == (pid_t)GetCurrentProcessId()) {
+    if (pid == (pid_t) GetCurrentProcessId()) {
 	return pmgt_SignalRaiseLocal(signo);
     }
 
@@ -490,14 +483,13 @@ pmgt_SignalRaiseRemote(pid_t pid,
 
     sprintf(sigPipeName, "%s%d", PMGT_SIGNAL_PIPE_PREFIX, (int)pid);
 
-    fsuccess =
-	CallNamedPipe(sigPipeName,         /* process pid's signal pipe */
-		      &signo,              /* data written to pipe */
-		      sizeof(signo),       /* size of data to write */
-		      &signoACK,           /* data read from pipe */
-		      sizeof(signoACK),    /* size of data read buffer */
-		      &ackBytesRead,       /* number of bytes actually read */
-		      5 * 1000);           /* 5 second timeout */
+    fsuccess = CallNamedPipe(sigPipeName,	/* process pid's signal pipe */
+			     &signo,	/* data written to pipe */
+			     sizeof(signo),	/* size of data to write */
+			     &signoACK,	/* data read from pipe */
+			     sizeof(signoACK),	/* size of data read buffer */
+			     &ackBytesRead,	/* number of bytes actually read */
+			     5 * 1000);	/* 5 second timeout */
 
     if (!fsuccess) {
 	/* failed to send signal via named pipe */
@@ -507,16 +499,16 @@ pmgt_SignalRaiseRemote(pid_t pid,
 	    /* could be a non-AFS process, which might still be kill-able */
 	    HANDLE procHandle;
 
-	    if (procHandle = OpenProcess(PROCESS_TERMINATE,
-					 FALSE, (DWORD)pid)) {
-		if (TerminateProcess(procHandle,
-				     PMGT_SIGSTATUS_ENCODE(SIGKILL))) {
+	    if (procHandle =
+		OpenProcess(PROCESS_TERMINATE, FALSE, (DWORD) pid)) {
+		if (TerminateProcess
+		    (procHandle, PMGT_SIGSTATUS_ENCODE(SIGKILL))) {
 		    /* successfully killed process */
 		    status = 0;
 		} else {
 		    errno = nterr_nt2unix(GetLastError(), EPERM);
 		}
-		(void) CloseHandle(procHandle);
+		(void)CloseHandle(procHandle);
 	    } else {
 		if (GetLastError() == ERROR_INVALID_PARAMETER) {
 		    errno = ESRCH;
@@ -555,12 +547,12 @@ StringArrayToString(char *strArray[])
     char *buffer = NULL;
 
     for (strCount = 0; strArray[strCount] != NULL; strCount++) {
-        /* sum all string lengths */
-        byteCount += strlen(strArray[strCount]);
+	/* sum all string lengths */
+	byteCount += strlen(strArray[strCount]);
     }
 
     /* put all strings into buffer; guarantee buffer is at least one char */
-    buffer = (char *)malloc(byteCount + (strCount * 3) /* quotes+space */ + 1);
+    buffer = (char *)malloc(byteCount + (strCount * 3) /* quotes+space */ +1);
     if (buffer != NULL) {
 	int i;
 
@@ -594,8 +586,8 @@ StringArrayToMultiString(char *strArray[])
     char *buffer = NULL;
 
     for (strCount = 0; strArray[strCount] != NULL; strCount++) {
-        /* sum all string lengths */
-        byteCount += strlen(strArray[strCount]);
+	/* sum all string lengths */
+	byteCount += strlen(strArray[strCount]);
     }
 
     /* put all strings into buffer; guarantee buffer is at least two chars */
@@ -608,7 +600,7 @@ StringArrayToMultiString(char *strArray[])
 	    int i;
 	    char *bufp = buffer;
 
-            for (i = 0; i < strCount; i++) {
+	    for (i = 0; i < strCount; i++) {
 		int strLen = strlen(strArray[i]);
 
 		if (strLen > 0) {
@@ -617,7 +609,7 @@ StringArrayToMultiString(char *strArray[])
 		    bufp += strLen + 1;
 		}
 	    }
-	    bufp = '\0';  /* terminate multistring */
+	    bufp = '\0';	/* terminate multistring */
 	}
     }
 
@@ -644,25 +636,25 @@ ComputeWaitStatus(DWORD exitStatus)
 	int signo;
 
 	switch (exitStatus) {
-	  case EXCEPTION_FLT_DENORMAL_OPERAND:
-	  case EXCEPTION_FLT_DIVIDE_BY_ZERO:
-	  case EXCEPTION_FLT_INEXACT_RESULT:
-	  case EXCEPTION_FLT_INVALID_OPERATION:
-	  case EXCEPTION_FLT_OVERFLOW:
-	  case EXCEPTION_FLT_STACK_CHECK:
-	  case EXCEPTION_FLT_UNDERFLOW:
-	  case EXCEPTION_INT_DIVIDE_BY_ZERO:
-	  case EXCEPTION_INT_OVERFLOW:
+	case EXCEPTION_FLT_DENORMAL_OPERAND:
+	case EXCEPTION_FLT_DIVIDE_BY_ZERO:
+	case EXCEPTION_FLT_INEXACT_RESULT:
+	case EXCEPTION_FLT_INVALID_OPERATION:
+	case EXCEPTION_FLT_OVERFLOW:
+	case EXCEPTION_FLT_STACK_CHECK:
+	case EXCEPTION_FLT_UNDERFLOW:
+	case EXCEPTION_INT_DIVIDE_BY_ZERO:
+	case EXCEPTION_INT_OVERFLOW:
 	    signo = SIGFPE;
 	    break;
-	  case EXCEPTION_PRIV_INSTRUCTION:
-	  case EXCEPTION_ILLEGAL_INSTRUCTION:
+	case EXCEPTION_PRIV_INSTRUCTION:
+	case EXCEPTION_ILLEGAL_INSTRUCTION:
 	    signo = SIGILL;
 	    break;
-	  case CONTROL_C_EXIT:
+	case CONTROL_C_EXIT:
 	    signo = SIGINT;
 	    break;
-	  default:
+	default:
 	    signo = SIGSEGV;
 	    break;
 	}
@@ -685,12 +677,12 @@ ComputeWaitStatus(DWORD exitStatus)
  *     otherwise no data transfer will take place.
  */
 static BOOL
-CreateChildDataBuffer(DWORD pid,                /* child pid */
-		      void *datap,              /* data to place in buffer */
-		      size_t dataLen,           /* size of data in bytes */
-		      HANDLE *bufMemHandlep,    /* buffer memory handle */
-		      HANDLE *bufEventHandlep)  /* buffer read event handle */
-{
+CreateChildDataBuffer(DWORD pid,	/* child pid */
+		      void *datap,	/* data to place in buffer */
+		      size_t dataLen,	/* size of data in bytes */
+		      HANDLE * bufMemHandlep,	/* buffer memory handle */
+		      HANDLE * bufEventHandlep)
+{				/* buffer read event handle */
     BOOL fsuccess = FALSE;
     DWORD bufMemSize = dataLen + sizeof(size_t);
     char bufMemName[sizeof(PMGT_DATA_MEM_PREFIX) + 20];
@@ -701,33 +693,29 @@ CreateChildDataBuffer(DWORD pid,                /* child pid */
 
     /* Create and initialize named shared memory and named event */
 
-    *bufMemHandlep =
-	CreateFileMapping((HANDLE)0xFFFFFFFF, /* page-file backed */
-			  NULL,
-			  PAGE_READWRITE,
-			  0,
-			  bufMemSize,
-			  bufMemName);
+    *bufMemHandlep = CreateFileMapping((HANDLE) 0xFFFFFFFF,	/* page-file backed */
+				       NULL, PAGE_READWRITE, 0, bufMemSize,
+				       bufMemName);
 
     if (*bufMemHandlep != NULL) {
 	void *bufMemp;
 
-	bufMemp = MapViewOfFile(*bufMemHandlep,
-				FILE_MAP_WRITE, 0, 0, bufMemSize);
+	bufMemp =
+	    MapViewOfFile(*bufMemHandlep, FILE_MAP_WRITE, 0, 0, bufMemSize);
 
 	if (bufMemp != NULL) {
 	    /* copy data into shared memory, prefixed with data size */
-	    size_t *memp = (size_t *)bufMemp;
+	    size_t *memp = (size_t *) bufMemp;
 
 	    *memp++ = dataLen;
 	    memcpy((void *)memp, datap, dataLen);
 
 	    if (UnmapViewOfFile(bufMemp)) {
 		/* create buffer read event */
-		*bufEventHandlep = CreateEvent(NULL,
-					       FALSE /* manual reset */,
-					       FALSE /* initial state */,
-					       bufEventName);
+		*bufEventHandlep =
+		    CreateEvent(NULL, FALSE /* manual reset */ ,
+				FALSE /* initial state */ ,
+				bufEventName);
 		if (*bufEventHandlep != NULL) {
 		    fsuccess = TRUE;
 		}
@@ -735,7 +723,7 @@ CreateChildDataBuffer(DWORD pid,                /* child pid */
 	}
 
 	if (!fsuccess) {
-	    (void) CloseHandle(*bufMemHandlep);
+	    (void)CloseHandle(*bufMemHandlep);
 	}
     }
 
@@ -752,18 +740,18 @@ CreateChildDataBuffer(DWORD pid,                /* child pid */
  *     if any, and place in allocated storage.
  */
 static BOOL
-ReadChildDataBuffer(void **datap,      /* allocated data buffer */
-		    size_t *dataLen)   /* size of data buffer returned */
-{
+ReadChildDataBuffer(void **datap,	/* allocated data buffer */
+		    size_t * dataLen)
+{				/* size of data buffer returned */
     BOOL fsuccess = FALSE;
     char bufMemName[sizeof(PMGT_DATA_MEM_PREFIX) + 20];
     char bufEventName[sizeof(PMGT_DATA_EVENT_PREFIX) + 20];
     HANDLE bufMemHandle, bufEventHandle;
 
-    sprintf(bufMemName, "%s%d",
-	    PMGT_DATA_MEM_PREFIX, (int)GetCurrentProcessId());
-    sprintf(bufEventName, "%s%d",
-	    PMGT_DATA_EVENT_PREFIX, (int)GetCurrentProcessId());
+    sprintf(bufMemName, "%s%d", PMGT_DATA_MEM_PREFIX,
+	    (int)GetCurrentProcessId());
+    sprintf(bufEventName, "%s%d", PMGT_DATA_EVENT_PREFIX,
+	    (int)GetCurrentProcessId());
 
     /* Attempt to open named event and named shared memory */
 
@@ -779,7 +767,7 @@ ReadChildDataBuffer(void **datap,      /* allocated data buffer */
 
 	    if (bufMemp != NULL) {
 		/* read data size and data from shared memory */
-		size_t *memp = (size_t *)bufMemp;
+		size_t *memp = (size_t *) bufMemp;
 
 		*dataLen = *memp++;
 		*datap = (void *)malloc(*dataLen);
@@ -788,14 +776,14 @@ ReadChildDataBuffer(void **datap,      /* allocated data buffer */
 		    memcpy(*datap, (void *)memp, *dataLen);
 		    fsuccess = TRUE;
 		}
-		(void) UnmapViewOfFile(bufMemp);
+		(void)UnmapViewOfFile(bufMemp);
 	    }
 
-	    (void) CloseHandle(bufMemHandle);
+	    (void)CloseHandle(bufMemHandle);
 	}
 
-	(void) SetEvent(bufEventHandle);
-	(void) CloseHandle(bufEventHandle);
+	(void)SetEvent(bufEventHandle);
+	(void)CloseHandle(bufEventHandle);
     }
 
     if (!fsuccess) {
@@ -822,41 +810,40 @@ ChildMonitorThread(LPVOID param)
 
     /* retrieve handle for child process from process table and duplicate */
 
-    (void) pthread_mutex_lock(&procTableLock);
+    (void)pthread_mutex_lock(&procTableLock);
 
-    fsuccess =
-	DuplicateHandle(GetCurrentProcess(),      /* source process handle */
-			procTable[tidx].p_handle, /* source handle to dup */
-			GetCurrentProcess(),      /* target process handle */
-			&childProcHandle,   /* target handle (duplicate) */
-			0,                  /* access (ignored here) */
-			FALSE,              /* not inheritable */
-			DUPLICATE_SAME_ACCESS);
+    fsuccess = DuplicateHandle(GetCurrentProcess(),	/* source process handle */
+			       procTable[tidx].p_handle,	/* source handle to dup */
+			       GetCurrentProcess(),	/* target process handle */
+			       &childProcHandle,	/* target handle (duplicate) */
+			       0,	/* access (ignored here) */
+			       FALSE,	/* not inheritable */
+			       DUPLICATE_SAME_ACCESS);
 
-    (void) pthread_mutex_unlock(&procTableLock);
+    (void)pthread_mutex_unlock(&procTableLock);
 
     if (fsuccess) {
 	/* wait for child process to terminate */
 
 	if (WaitForSingleObject(childProcHandle, INFINITE) == WAIT_OBJECT_0) {
 	    /* child process terminated; mark in table and signal event */
-	    (void) pthread_mutex_lock(&procTableLock);
+	    (void)pthread_mutex_lock(&procTableLock);
 
 	    procTable[tidx].p_terminated = TRUE;
-	    (void) GetExitCodeProcess(childProcHandle,
-				      &procTable[tidx].p_status);
+	    (void)GetExitCodeProcess(childProcHandle,
+				     &procTable[tidx].p_status);
 	    procTermCount++;
 
-	    (void) pthread_mutex_unlock(&procTableLock);
+	    (void)pthread_mutex_unlock(&procTableLock);
 
-	    (void) pthread_cond_broadcast(&childTermEvent);
+	    (void)pthread_cond_broadcast(&childTermEvent);
 
 	    /* process/raise SIGCHLD; do last in case handler never returns */
 	    ProcessSignal(SIGCHLD);
 	    rc = 0;
 	}
 
-	(void) CloseHandle(childProcHandle);
+	(void)CloseHandle(childProcHandle);
     }
 
     /* note: nothing can be done if DuplicateHandle() or WaitForSingleObject()
@@ -882,11 +869,8 @@ ChildMonitorThread(LPVOID param)
  * ASSUMPTIONS: sargv[0] is the same as spath (or its last component).
  */
 pid_t
-pmgt_ProcessSpawnVEB(const char *spath,
-		     char *sargv[],
-		     char *senvp[],
-		     void *sdatap,
-		     size_t sdatalen)
+pmgt_ProcessSpawnVEB(const char *spath, char *sargv[], char *senvp[],
+		     void *sdatap, size_t sdatalen)
 {
     int tidx;
     char *pathbuf, *argbuf, *envbuf;
@@ -902,16 +886,16 @@ pmgt_ProcessSpawnVEB(const char *spath,
     /* verify arguments */
     if (!spath || !sargv) {
 	errno = EFAULT;
-	return (pid_t)-1;
+	return (pid_t) - 1;
     } else if (*spath == '\0') {
 	errno = ENOENT;
-	return (pid_t)-1;
+	return (pid_t) - 1;
     }
 
     /* create path with .exe extension if no filename extension supplied */
-    if (!(pathbuf = (char *)malloc(strlen(spath) + 5 /* .exe */))) {
+    if (!(pathbuf = (char *)malloc(strlen(spath) + 5 /* .exe */ ))) {
 	errno = ENOMEM;
-	return ((pid_t)-1);
+	return ((pid_t) - 1);
     }
     strcpy(pathbuf, spath);
 
@@ -927,7 +911,7 @@ pmgt_ProcessSpawnVEB(const char *spath,
     if (!argbuf) {
 	free(pathbuf);
 	errno = ENOMEM;
-        return ((pid_t)-1);
+	return ((pid_t) - 1);
     }
 
     /* create environment variable block (multistring) */
@@ -939,7 +923,7 @@ pmgt_ProcessSpawnVEB(const char *spath,
 	    free(pathbuf);
 	    free(argbuf);
 	    errno = ENOMEM;
-	    return ((pid_t)-1);
+	    return ((pid_t) - 1);
 	}
     } else {
 	/* use default environment variables */
@@ -966,16 +950,16 @@ pmgt_ProcessSpawnVEB(const char *spath,
      *     6) resume spawned child process
      */
 
-    (void) pthread_mutex_lock(&procTableLock);
+    (void)pthread_mutex_lock(&procTableLock);
 
     for (tidx = 0; tidx < PMGT_CHILD_MAX; tidx++) {
-	if (procTable[tidx].p_handle == NULL && 
-	    procTable[tidx].p_reserved == FALSE) {
+	if (procTable[tidx].p_handle == NULL
+	    && procTable[tidx].p_reserved == FALSE) {
 	    procTable[tidx].p_reserved = TRUE;
 	    break;
 	}
     }
-    (void) pthread_mutex_unlock(&procTableLock);
+    (void)pthread_mutex_unlock(&procTableLock);
 
     if (tidx >= PMGT_CHILD_MAX) {
 	/* no space left in process table */
@@ -984,62 +968,59 @@ pmgt_ProcessSpawnVEB(const char *spath,
 	free(envbuf);
 
 	errno = EAGAIN;
-	return (pid_t)-1;
+	return (pid_t) - 1;
     }
 
-    fsuccess =
-	CreateProcess(pathbuf,     /* executable path */
-		      argbuf,      /* command line argument string */
-		      NULL,        /* default process security attr */
-		      NULL,        /* default thread security attr */
-		      FALSE,       /* do NOT inherit handles */
-		      createFlags, /* creation control flags */
-		      envbuf,      /* environment variable block */
-		      NULL,        /* current directory is that of parent */
-		      &startInfo,  /* startup info block */
-		      &procInfo);
+    fsuccess = CreateProcess(pathbuf,	/* executable path */
+			     argbuf,	/* command line argument string */
+			     NULL,	/* default process security attr */
+			     NULL,	/* default thread security attr */
+			     FALSE,	/* do NOT inherit handles */
+			     createFlags,	/* creation control flags */
+			     envbuf,	/* environment variable block */
+			     NULL,	/* current directory is that of parent */
+			     &startInfo,	/* startup info block */
+			     &procInfo);
 
     free(pathbuf);
     free(argbuf);
     free(envbuf);
 
     if (!fsuccess) {
-        /* failed to spawn process */
+	/* failed to spawn process */
 	errno = nterr_nt2unix(GetLastError(), ENOENT);
 
-	(void) pthread_mutex_lock(&procTableLock);
-	procTable[tidx].p_reserved = FALSE;   /* mark entry as not reserved */
-	(void) pthread_mutex_unlock(&procTableLock);
+	(void)pthread_mutex_lock(&procTableLock);
+	procTable[tidx].p_reserved = FALSE;	/* mark entry as not reserved */
+	(void)pthread_mutex_unlock(&procTableLock);
 
-	return (pid_t)-1;
+	return (pid_t) - 1;
     }
 
     if (passingBuffer) {
 	/* create named data buffer and read event for child */
-	fsuccess = CreateChildDataBuffer(procInfo.dwProcessId,
-					 sdatap,
-					 sdatalen,
-					 &bufMemHandle,
-					 &bufEventHandle);
+	fsuccess =
+	    CreateChildDataBuffer(procInfo.dwProcessId, sdatap, sdatalen,
+				  &bufMemHandle, &bufEventHandle);
 	if (!fsuccess) {
-	    (void) pthread_mutex_lock(&procTableLock);
-	    procTable[tidx].p_reserved = FALSE;  /* mark entry not reserved */
-	    (void) pthread_mutex_unlock(&procTableLock);
+	    (void)pthread_mutex_lock(&procTableLock);
+	    procTable[tidx].p_reserved = FALSE;	/* mark entry not reserved */
+	    (void)pthread_mutex_unlock(&procTableLock);
 
-	    (void) TerminateProcess(procInfo.hProcess,
-				    PMGT_SIGSTATUS_ENCODE(SIGKILL));
-	    (void) CloseHandle(procInfo.hThread);
-	    (void) CloseHandle(procInfo.hProcess);
+	    (void)TerminateProcess(procInfo.hProcess,
+				   PMGT_SIGSTATUS_ENCODE(SIGKILL));
+	    (void)CloseHandle(procInfo.hThread);
+	    (void)CloseHandle(procInfo.hProcess);
 
 	    errno = EAGAIN;
-	    return (pid_t)-1;
+	    return (pid_t) - 1;
 	}
     }
 
-    (void) pthread_mutex_lock(&procTableLock);
+    (void)pthread_mutex_lock(&procTableLock);
 
-    procTable[tidx].p_handle     = procInfo.hProcess;
-    procTable[tidx].p_id         = procInfo.dwProcessId;
+    procTable[tidx].p_handle = procInfo.hProcess;
+    procTable[tidx].p_id = procInfo.dwProcessId;
     procTable[tidx].p_terminated = FALSE;
 
     procEntryCount++;
@@ -1050,34 +1031,32 @@ pmgt_ProcessSpawnVEB(const char *spath,
      * procTableLock while resuming child process, since the procTable
      * entry contains a copy of the child process handle which we might use.
      */
-    monitorHandle =
-	CreateThread(NULL,                  /* default security attr. */
-		     0,                     /* default stack size */
-		     ChildMonitorThread,
-		     (LPVOID)tidx,          /* thread argument */
-		     0,                     /* creation flags */
-		     &monitorId);           /* thread id */
+    monitorHandle = CreateThread(NULL,	/* default security attr. */
+				 0,	/* default stack size */
+				 ChildMonitorThread, (LPVOID) tidx,	/* thread argument */
+				 0,	/* creation flags */
+				 &monitorId);	/* thread id */
 
     if (monitorHandle == NULL) {
 	/* failed to start child monitor thread */
-	procTable[tidx].p_handle   = NULL;   /* invalidate table entry */
-	procTable[tidx].p_reserved = FALSE;  /* mark entry as not reserved */
+	procTable[tidx].p_handle = NULL;	/* invalidate table entry */
+	procTable[tidx].p_reserved = FALSE;	/* mark entry as not reserved */
 	procEntryCount--;
 
-	(void) pthread_mutex_unlock(&procTableLock);
+	(void)pthread_mutex_unlock(&procTableLock);
 
-	(void) TerminateProcess(procInfo.hProcess,
-				PMGT_SIGSTATUS_ENCODE(SIGKILL));
-	(void) CloseHandle(procInfo.hThread);
-	(void) CloseHandle(procInfo.hProcess);
+	(void)TerminateProcess(procInfo.hProcess,
+			       PMGT_SIGSTATUS_ENCODE(SIGKILL));
+	(void)CloseHandle(procInfo.hThread);
+	(void)CloseHandle(procInfo.hProcess);
 
 	if (passingBuffer) {
-	    (void) CloseHandle(bufMemHandle);
-	    (void) CloseHandle(bufEventHandle);
+	    (void)CloseHandle(bufMemHandle);
+	    (void)CloseHandle(bufEventHandle);
 	}
 
 	errno = EAGAIN;
-	return (pid_t)-1;
+	return (pid_t) - 1;
     }
 
     /* Resume child process, which was created suspended to implement spawn
@@ -1087,19 +1066,19 @@ pmgt_ProcessSpawnVEB(const char *spath,
      * SIGKILL signal; the child monitor thread will then handle this.
      */
     if (ResumeThread(procInfo.hThread) == DWORD_OF_ONES) {
-	(void) TerminateProcess(procInfo.hProcess,
-				PMGT_SIGSTATUS_ENCODE(SIGKILL));
+	(void)TerminateProcess(procInfo.hProcess,
+			       PMGT_SIGSTATUS_ENCODE(SIGKILL));
 
 	if (passingBuffer) {
 	    /* child will never read data buffer */
-	    (void) SetEvent(bufEventHandle);
+	    (void)SetEvent(bufEventHandle);
 	}
     }
 
-    (void) pthread_mutex_unlock(&procTableLock);
+    (void)pthread_mutex_unlock(&procTableLock);
 
-    (void) CloseHandle(procInfo.hThread);
-    (void) CloseHandle(monitorHandle);
+    (void)CloseHandle(procInfo.hThread);
+    (void)CloseHandle(monitorHandle);
 
     /* After spawn returns, signals can not be sent to the new child process
      * until that child initializes its signal-receiving mechanism (assuming
@@ -1107,7 +1086,7 @@ pmgt_ProcessSpawnVEB(const char *spath,
      * eliminate) this window of opportunity for failure by yielding this
      * thread's time slice.
      */
-    (void) SwitchToThread();
+    (void)SwitchToThread();
 
     /* If passing a data buffer to child, wait until child reads buffer
      * before closing handles and thus freeing resources; if don't wait
@@ -1117,11 +1096,11 @@ pmgt_ProcessSpawnVEB(const char *spath,
     if (passingBuffer) {
 	WaitForSingleObject(bufEventHandle, 10000);
 	/* note: if wait times out, child may not get to read buffer */
-	(void) CloseHandle(bufMemHandle);
-	(void) CloseHandle(bufEventHandle);
+	(void)CloseHandle(bufMemHandle);
+	(void)CloseHandle(bufEventHandle);
     }
 
-    return (pid_t)procInfo.dwProcessId;
+    return (pid_t) procInfo.dwProcessId;
 }
 
 
@@ -1134,9 +1113,7 @@ pmgt_ProcessSpawnVEB(const char *spath,
  *           equals (pid_t)0 or pid is less than (pid_t)-1.
  */
 pid_t
-pmgt_ProcessWaitPid(pid_t pid,
-		    int *statusP,
-		    int options)
+pmgt_ProcessWaitPid(pid_t pid, int *statusP, int options)
 {
     pid_t rc;
     int tidx;
@@ -1144,9 +1121,9 @@ pmgt_ProcessWaitPid(pid_t pid,
     DWORD waitTime;
 
     /* validate arguments */
-    if (pid < (pid_t)-1 || pid == (pid_t)0) {
+    if (pid < (pid_t) - 1 || pid == (pid_t) 0) {
 	errno = EINVAL;
-	return (pid_t)-1;
+	return (pid_t) - 1;
     }
 
     /* determine how long caller is willing to wait for child */
@@ -1155,7 +1132,7 @@ pmgt_ProcessWaitPid(pid_t pid,
 
     /* get child status */
 
-    (void) pthread_mutex_lock(&procTableLock);
+    (void)pthread_mutex_lock(&procTableLock);
 
     while (1) {
 	BOOL waitForChild = FALSE;
@@ -1163,18 +1140,18 @@ pmgt_ProcessWaitPid(pid_t pid,
 	if (procEntryCount == 0) {
 	    /* no child processes */
 	    errno = ECHILD;
-	    rc = (pid_t)-1;
+	    rc = (pid_t) - 1;
 	} else {
 	    /* determine if status is available for specified child id */
 
-	    if (pid == (pid_t)-1) {
+	    if (pid == (pid_t) - 1) {
 		/* CASE 1: pid matches any child id */
 
 		if (procTermCount == 0) {
 		    /* status not available for any child ... */
 		    if (waitTime == 0) {
 			/* ... and caller is not willing to wait */
-			rc = (pid_t)0;
+			rc = (pid_t) 0;
 		    } else {
 			/* ... but caller is willing to wait */
 			waitForChild = TRUE;
@@ -1182,8 +1159,8 @@ pmgt_ProcessWaitPid(pid_t pid,
 		} else {
 		    /* status available for some child; locate table entry */
 		    for (tidx = 0; tidx < PMGT_CHILD_MAX; tidx++) {
-			if (procTable[tidx].p_handle != NULL &&
-			    procTable[tidx].p_terminated == TRUE) {
+			if (procTable[tidx].p_handle != NULL
+			    && procTable[tidx].p_terminated == TRUE) {
 			    statusFound = TRUE;
 			    break;
 			}
@@ -1191,8 +1168,8 @@ pmgt_ProcessWaitPid(pid_t pid,
 
 		    if (!statusFound) {
 			/* should never happen; indicates a bug */
-			errno = EINTR;  /* plausible lie for failure */
-			rc = (pid_t)-1;
+			errno = EINTR;	/* plausible lie for failure */
+			rc = (pid_t) - 1;
 		    }
 		}
 
@@ -1201,8 +1178,8 @@ pmgt_ProcessWaitPid(pid_t pid,
 
 		/* locate table entry */
 		for (tidx = 0; tidx < PMGT_CHILD_MAX; tidx++) {
-		    if (procTable[tidx].p_handle != NULL &&
-			procTable[tidx].p_id == (DWORD)pid) {
+		    if (procTable[tidx].p_handle != NULL
+			&& procTable[tidx].p_id == (DWORD) pid) {
 			break;
 		    }
 		}
@@ -1210,12 +1187,12 @@ pmgt_ProcessWaitPid(pid_t pid,
 		if (tidx >= PMGT_CHILD_MAX) {
 		    /* pid does not match any child id */
 		    errno = ECHILD;
-		    rc = (pid_t)-1;
+		    rc = (pid_t) - 1;
 		} else if (procTable[tidx].p_terminated == FALSE) {
 		    /* status not available for specified child ... */
 		    if (waitTime == 0) {
 			/* ... and caller is not willing to wait */
-			rc = (pid_t)0;
+			rc = (pid_t) 0;
 		    } else {
 			/* ... but caller is willing to wait */
 			waitForChild = TRUE;
@@ -1228,29 +1205,29 @@ pmgt_ProcessWaitPid(pid_t pid,
 	}
 
 	if (waitForChild) {
-	    (void) pthread_cond_wait(&childTermEvent, &procTableLock);
+	    (void)pthread_cond_wait(&childTermEvent, &procTableLock);
 	} else {
 	    break;
 	}
-    } /* while() */
+    }				/* while() */
 
     if (statusFound) {
 	/* child status available */
 	if (statusP) {
 	    *statusP = ComputeWaitStatus(procTable[tidx].p_status);
 	}
-	rc = (pid_t)procTable[tidx].p_id;
+	rc = (pid_t) procTable[tidx].p_id;
 
 	/* clean up process table */
-	(void) CloseHandle(procTable[tidx].p_handle);
-	procTable[tidx].p_handle   = NULL;
+	(void)CloseHandle(procTable[tidx].p_handle);
+	procTable[tidx].p_handle = NULL;
 	procTable[tidx].p_reserved = FALSE;
 
 	procEntryCount--;
 	procTermCount--;
     }
 
-    (void) pthread_mutex_unlock(&procTableLock);
+    (void)pthread_mutex_unlock(&procTableLock);
     return rc;
 }
 
@@ -1277,10 +1254,10 @@ PmgtLibraryInitialize(void)
 
     /* initialize mutex locks and condition variables */
 
-    if ((rc = pthread_mutex_init(&signalTableLock, NULL)) ||
-	(rc = pthread_mutex_init(&signalBlockLock, NULL)) ||
-	(rc = pthread_mutex_init(&procTableLock, NULL)) ||
-	(rc = pthread_cond_init(&childTermEvent, NULL))) {
+    if ((rc = pthread_mutex_init(&signalTableLock, NULL))
+	|| (rc = pthread_mutex_init(&signalBlockLock, NULL))
+	|| (rc = pthread_mutex_init(&procTableLock, NULL))
+	|| (rc = pthread_cond_init(&childTermEvent, NULL))) {
 	errno = rc;
 	return -1;
     }
@@ -1317,21 +1294,20 @@ PmgtLibraryInitialize(void)
 
     /* create named pipe for delivering signals to this process */
 
-    sprintf(sigPipeName, "%s%d",
-	    PMGT_SIGNAL_PIPE_PREFIX, (int)GetCurrentProcessId());
+    sprintf(sigPipeName, "%s%d", PMGT_SIGNAL_PIPE_PREFIX,
+	    (int)GetCurrentProcessId());
 
-    sigPipeHandle =
-	CreateNamedPipe(sigPipeName,             /* pipe for this process */
-			PIPE_ACCESS_DUPLEX |     /* full duplex pipe */
-			WRITE_DAC,               /* DACL write access */
-			PIPE_TYPE_MESSAGE |      /* message type pipe */
-			PIPE_READMODE_MESSAGE |  /* message read-mode */
-			PIPE_WAIT,               /* blocking mode */
-			1,                       /* max of 1 pipe instance */
-			64,                 /* output buffer size (advisory) */
-			64,                 /* input buffer size (advisory) */
-			1000,               /* 1 sec default client timeout */
-			NULL);              /* default security attr. */
+    sigPipeHandle = CreateNamedPipe(sigPipeName,	/* pipe for this process */
+				    PIPE_ACCESS_DUPLEX |	/* full duplex pipe */
+				    WRITE_DAC,	/* DACL write access */
+				    PIPE_TYPE_MESSAGE |	/* message type pipe */
+				    PIPE_READMODE_MESSAGE |	/* message read-mode */
+				    PIPE_WAIT,	/* blocking mode */
+				    1,	/* max of 1 pipe instance */
+				    64,	/* output buffer size (advisory) */
+				    64,	/* input buffer size (advisory) */
+				    1000,	/* 1 sec default client timeout */
+				    NULL);	/* default security attr. */
 
     if (sigPipeHandle == INVALID_HANDLE_VALUE) {
 	/* failed to create signal pipe */
@@ -1341,31 +1317,27 @@ PmgtLibraryInitialize(void)
 
     /* add entry to signal pipe ACL granting local Administrators R/W access */
 
-    (void) ObjectDaclEntryAdd(sigPipeHandle,
-			      SE_KERNEL_OBJECT,
-			      LocalAdministratorsGroup,
-			      GENERIC_READ | GENERIC_WRITE,
-			      GRANT_ACCESS,
-			      NO_INHERITANCE);
+    (void)ObjectDaclEntryAdd(sigPipeHandle, SE_KERNEL_OBJECT,
+			     LocalAdministratorsGroup,
+			     GENERIC_READ | GENERIC_WRITE, GRANT_ACCESS,
+			     NO_INHERITANCE);
 
     /* start signal pipe listener thread */
 
-    sigListenerHandle =
-	CreateThread(NULL,                    /* default security attr. */
-		     0,                       /* default stack size */
-		     RemoteSignalListenerThread,
-		     (LPVOID)sigPipeHandle,   /* thread argument */
-		     0,                       /* creation flags */
-		     &sigListenerId);         /* thread id */
+    sigListenerHandle = CreateThread(NULL,	/* default security attr. */
+				     0,	/* default stack size */
+				     RemoteSignalListenerThread, (LPVOID) sigPipeHandle,	/* thread argument */
+				     0,	/* creation flags */
+				     &sigListenerId);	/* thread id */
 
     if (sigListenerHandle != NULL) {
 	/* listener thread started; bump priority */
-	(void) SetThreadPriority(sigListenerHandle, THREAD_PRIORITY_HIGHEST);
-	(void) CloseHandle(sigListenerHandle);
+	(void)SetThreadPriority(sigListenerHandle, THREAD_PRIORITY_HIGHEST);
+	(void)CloseHandle(sigListenerHandle);
     } else {
 	/* failed to start listener thread */
 	errno = EAGAIN;
-	(void) CloseHandle(sigPipeHandle);
+	(void)CloseHandle(sigPipeHandle);
 	return -1;
     }
 
@@ -1387,10 +1359,10 @@ PmgtLibraryInitialize(void)
  *     Note: the system serializes calls to this function.
  */
 BOOL WINAPI
-DllMain(HINSTANCE dllInstHandle,  /* instance handle for this DLL module */
-	DWORD reason,             /* reason function is being called */
-	LPVOID reserved)          /* reserved for future use */
-{
+DllMain(HINSTANCE dllInstHandle,	/* instance handle for this DLL module */
+	DWORD reason,		/* reason function is being called */
+	LPVOID reserved)
+{				/* reserved for future use */
     if (reason == DLL_PROCESS_ATTACH) {
 	/* library is being attached to a process */
 	if (PmgtLibraryInitialize()) {
@@ -1399,7 +1371,7 @@ DllMain(HINSTANCE dllInstHandle,  /* instance handle for this DLL module */
 	}
 
 	/* disable thread attach/detach notifications */
-	(void) DisableThreadLibraryCalls(dllInstHandle);
+	(void)DisableThreadLibraryCalls(dllInstHandle);
     }
 
     return TRUE;

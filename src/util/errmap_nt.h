@@ -36,4 +36,4 @@ extern int nterr_nt2unix(long ntErr, int defaultErr);
 #define ENOMSG             (AFS_NT_ERRNO_BASE + 10)
 #define ETIME              (AFS_NT_ERRNO_BASE + 11)
 
-#endif	/* OPENAFS_ERRMAP_NT_H  */
+#endif /* OPENAFS_ERRMAP_NT_H  */

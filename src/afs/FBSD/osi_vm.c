@@ -21,11 +21,12 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
-#include "afs/afs_stats.h"  /* statistics */
+#include "afs/afs_stats.h"	/* statistics */
 #include <vm/vm_object.h>
 #include <vm/vm_map.h>
 #include <limits.h>
@@ -47,7 +48,8 @@ RCSID("$Header$");
  *
  * OSF/1 Locking:  VN_LOCK has been called.
  */
-int osi_VM_FlushVCache(struct vcache *avc, int *slept)
+int
+osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
     struct vm_object *obj;
     struct vnode *vp;
@@ -65,16 +67,16 @@ int osi_VM_FlushVCache(struct vcache *avc, int *slept)
     vp = AFSTOV(avc);
     simple_lock(&vp->v_interlock);
     if (VOP_GETVOBJECT(vp, &obj) == 0) {
-       vm_object_page_remove(obj, 0, 0, FALSE);
+	vm_object_page_remove(obj, 0, 0, FALSE);
 #if 0
-        if (obj->ref_count == 0) {
-           vgonel(vp,curproc);
-           simple_lock(&vp->v_interlock);
-           vp->v_tag=VT_AFS;
-           SetAfsVnode(vp);
-        }
+	if (obj->ref_count == 0) {
+	    vgonel(vp, curproc);
+	    simple_lock(&vp->v_interlock);
+	    vp->v_tag = VT_AFS;
+	    SetAfsVnode(vp);
+	}
 #endif
-    } 
+    }
     simple_unlock(&vp->v_interlock);
     AFS_GLOCK();
 
@@ -86,25 +88,27 @@ int osi_VM_FlushVCache(struct vcache *avc, int *slept)
  * Locking:  the vcache entry's lock is held.  It will usually be dropped and
  * re-obtained.
  */
-void osi_VM_StoreAllSegments(struct vcache *avc)
+void
+osi_VM_StoreAllSegments(struct vcache *avc)
 {
     struct vnode *vp;
     struct vm_object *obj;
-    int anyio,tries;
+    int anyio, tries;
 
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
-    tries=5;
+    tries = 5;
     vp = AFSTOV(avc);
     do {
-	anyio=0;
+	anyio = 0;
 	simple_lock(&vp->v_interlock);
-	if (VOP_GETVOBJECT(vp, &obj) == 0 &&
-	    (obj->flags & OBJ_MIGHTBEDIRTY)) {
+	if (VOP_GETVOBJECT(vp, &obj) == 0 && (obj->flags & OBJ_MIGHTBEDIRTY)) {
 #ifdef AFS_FBSD50_ENV
 	    if (!vget(vp, LK_INTERLOCK | LK_EXCLUSIVE | LK_RETRY, curthread)) {
 #else
-	    if (!vget(vp, LK_INTERLOCK | LK_EXCLUSIVE | LK_RETRY | LK_NOOBJ, curproc)) {
+	    if (!vget
+		(vp, LK_INTERLOCK | LK_EXCLUSIVE | LK_RETRY | LK_NOOBJ,
+		 curproc)) {
 #endif
 		if (VOP_GETVOBJECT(vp, &obj) == 0) {
 		    vm_object_page_clean(obj, 0, 0, OBJPC_SYNC);
@@ -116,7 +120,7 @@ void osi_VM_StoreAllSegments(struct vcache *avc)
 	    simple_unlock(&vp->v_interlock);
     } while (anyio && (--tries > 0));
     AFS_GLOCK();
-    ObtainWriteLock(&avc->lock,94);
+    ObtainWriteLock(&avc->lock, 94);
 }
 
 /* Try to invalidate pages, for "fs flush" or "fs flushv"; or
@@ -128,7 +132,8 @@ void osi_VM_StoreAllSegments(struct vcache *avc)
  * Since we drop and re-obtain the lock, we can't guarantee that there won't
  * be some pages around when we return, newly created by concurrent activity.
  */
-void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
+void
+osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 {
     struct vnode *vp;
     struct vm_object *obj;
@@ -139,14 +144,15 @@ void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
     tries = 5;
     vp = AFSTOV(avc);
     do {
-	anyio=0;
+	anyio = 0;
 	simple_lock(&vp->v_interlock);
-	if (VOP_GETVOBJECT(vp, &obj) == 0 &&
-	    (obj->flags & OBJ_MIGHTBEDIRTY)) {
+	if (VOP_GETVOBJECT(vp, &obj) == 0 && (obj->flags & OBJ_MIGHTBEDIRTY)) {
 #ifdef AFS_FBSD50_ENV
 	    if (!vget(vp, LK_INTERLOCK | LK_EXCLUSIVE | LK_RETRY, curthread)) {
 #else
-	    if (!vget(vp, LK_INTERLOCK | LK_EXCLUSIVE | LK_RETRY | LK_NOOBJ, curproc)) {
+	    if (!vget
+		(vp, LK_INTERLOCK | LK_EXCLUSIVE | LK_RETRY | LK_NOOBJ,
+		 curproc)) {
 #endif
 		if (VOP_GETVOBJECT(vp, &obj) == 0) {
 		    vm_object_page_clean(obj, 0, 0, OBJPC_SYNC);
@@ -162,16 +168,17 @@ void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 	vm_object_page_remove(obj, 0, 0, FALSE);
     }
     simple_unlock(&vp->v_interlock);
-    /*vinvalbuf(AFSTOV(avc),0, NOCRED, curproc, 0,0);*/
+    /*vinvalbuf(AFSTOV(avc),0, NOCRED, curproc, 0,0); */
     AFS_GLOCK();
-    ObtainWriteLock(&avc->lock,59);
+    ObtainWriteLock(&avc->lock, 59);
 }
 
 /* Purge VM for a file when its callback is revoked.
  *
  * Locking:  No lock is held, not even the global lock.
  */
-void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
+void
+osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
     struct vnode *vp;
     struct vm_object *obj;
@@ -182,7 +189,7 @@ void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 	vm_object_page_remove(obj, 0, 0, FALSE);
     }
     simple_unlock(&vp->v_interlock);
-    /*vinvalbuf(AFSTOV(avc),0, NOCRED, curproc, 0,0);*/
+    /*vinvalbuf(AFSTOV(avc),0, NOCRED, curproc, 0,0); */
 }
 
 /* Purge pages beyond end-of-file, when truncating a file.
@@ -191,7 +198,8 @@ void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
  * activeV is raised.  This is supposed to block pageins, but at present
  * it only works on Solaris.
  */
-void osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
+void
+osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
     vnode_pager_setsize(AFSTOV(avc), alen);
 }

@@ -60,13 +60,13 @@ Creation date:
  * Complete server info for one cell.
  */
 struct afsconf_cell {
-    char name[MAXCELLCHARS];			/*Cell name*/
-    short numServers;					/*Num active servers for the cell*/
-    short flags;				/* useful flags */
-    struct sockaddr_in hostAddr[MAXHOSTSPERCELL];	/*IP addresses for cell's servers*/
-    char hostName[MAXHOSTSPERCELL][MAXHOSTCHARS];	/*Names for cell's servers*/
-    char *linkedCell;				/* Linked cell name, if any */
-    int timeout;				/* Data timeout, if non-zero */
+    char name[MAXCELLCHARS];	/*Cell name */
+    short numServers;		/*Num active servers for the cell */
+    short flags;		/* useful flags */
+    struct sockaddr_in hostAddr[MAXHOSTSPERCELL];	/*IP addresses for cell's servers */
+    char hostName[MAXHOSTSPERCELL][MAXHOSTCHARS];	/*Names for cell's servers */
+    char *linkedCell;		/* Linked cell name, if any */
+    int timeout;		/* Data timeout, if non-zero */
 };
 
 struct afsconf_cellalias {
@@ -76,7 +76,7 @@ struct afsconf_cellalias {
 
 struct afsconf_entry {
     struct afsconf_entry *next;	/* next guy in afsconf_dir */
-    struct afsconf_cell	cellInfo;	/* info for this cell */
+    struct afsconf_cell cellInfo;	/* info for this cell */
 };
 
 struct afsconf_aliasentry {
@@ -85,12 +85,12 @@ struct afsconf_aliasentry {
 };
 
 struct afsconf_dir {
-    char *name;	    /* pointer to dir prefix */
-    char *cellName; /* cell name, if any, we're in */
-    struct afsconf_entry *entries; /* list of cell entries */
-    struct afsconf_keys	*keystr;    /* structure containing keys */
-    afs_int32 timeRead;		    /* time stamp of file last read */
-    struct afsconf_aliasentry *alias_entries; /* cell aliases */
+    char *name;			/* pointer to dir prefix */
+    char *cellName;		/* cell name, if any, we're in */
+    struct afsconf_entry *entries;	/* list of cell entries */
+    struct afsconf_keys *keystr;	/* structure containing keys */
+    afs_int32 timeRead;		/* time stamp of file last read */
+    struct afsconf_aliasentry *alias_entries;	/* cell aliases */
 };
 
 struct afsconf_servPair {
@@ -99,33 +99,43 @@ struct afsconf_servPair {
 };
 
 extern struct afsconf_dir *afsconf_Open(register const char *adir);
-extern int afsconf_CellApply(struct afsconf_dir *adir, int (*aproc)(struct afsconf_cell *cell, 
-	char *arock, struct afsconf_dir *dir), char *arock);
-extern int afsconf_CellAliasApply(struct afsconf_dir *adir, int (*aproc)(
-	struct afsconf_cellalias *alias, char *arock, struct afsconf_dir *dir), char *arock);
-extern int afsconf_GetExtendedCellInfo(struct afsconf_dir *adir, 
-        char *acellName, char *aservice, struct afsconf_cell *acellInfo, 
-        char clones[]);
-extern int afsconf_GetAfsdbInfo(char *acellName, char *aservice, 
-        struct afsconf_cell *acellInfo);
-extern int afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, 
-        char *aservice, struct afsconf_cell *acellInfo);
-extern int afsconf_GetLocalCell(register struct afsconf_dir *adir, 
-        char *aname, afs_int32 alen);
+extern int afsconf_CellApply(struct afsconf_dir *adir,
+			     int (*aproc) (struct afsconf_cell * cell,
+					   char *arock,
+					   struct afsconf_dir * dir),
+			     char *arock);
+extern int afsconf_CellAliasApply(struct afsconf_dir *adir,
+				  int (*aproc) (struct afsconf_cellalias *
+						alias, char *arock,
+						struct afsconf_dir * dir),
+				  char *arock);
+extern int afsconf_GetExtendedCellInfo(struct afsconf_dir *adir,
+				       char *acellName, char *aservice,
+				       struct afsconf_cell *acellInfo,
+				       char clones[]);
+extern int afsconf_GetAfsdbInfo(char *acellName, char *aservice,
+				struct afsconf_cell *acellInfo);
+extern int afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName,
+			       char *aservice,
+			       struct afsconf_cell *acellInfo);
+extern int afsconf_GetLocalCell(register struct afsconf_dir *adir,
+				char *aname, afs_int32 alen);
 extern int afsconf_Close(struct afsconf_dir *adir);
 extern int afsconf_IntGetKeys(struct afsconf_dir *adir);
-extern int afsconf_GetKeys(struct afsconf_dir *adir, struct afsconf_keys *astr);
-extern afs_int32 afsconf_GetLatestKey(struct afsconf_dir *adir, 
-        afs_int32 *avno, char *akey);
-extern int afsconf_GetKey(struct afsconf_dir *adir, afs_int32 avno, 
-        char *akey);
-extern int afsconf_AddKey(struct afsconf_dir *adir, afs_int32 akvno, 
-        char akey[8], afs_int32 overwrite);
+extern int afsconf_GetKeys(struct afsconf_dir *adir,
+			   struct afsconf_keys *astr);
+extern afs_int32 afsconf_GetLatestKey(struct afsconf_dir *adir,
+				      afs_int32 * avno, char *akey);
+extern int afsconf_GetKey(struct afsconf_dir *adir, afs_int32 avno,
+			  char *akey);
+extern int afsconf_AddKey(struct afsconf_dir *adir, afs_int32 akvno,
+			  char akey[8], afs_int32 overwrite);
 extern int afsconf_DeleteKey(struct afsconf_dir *adir, afs_int32 akvno);
 
 struct rx_securityClass;
-extern afs_int32 afsconf_ClientAuth(struct afsconf_dir *adir, 
-        struct rx_securityClass **astr, afs_int32 *aindex);
+extern afs_int32 afsconf_ClientAuth(struct afsconf_dir *adir,
+				    struct rx_securityClass **astr,
+				    afs_int32 * aindex);
 
 
 
@@ -153,6 +163,6 @@ extern afs_int32 afsconf_ClientAuth(struct afsconf_dir *adir,
 #define AFSCONF_RSDBSERVICE             "afsres"
 #define AFSCONF_RESPORT                 7010
 #define AFSCONF_REMIODBSERVICE          "afsremio"
-#define AFSCONF_REMIOPORT               7011 
+#define AFSCONF_REMIOPORT               7011
 
 #endif /* __CELLCONFIG_AFS_INCL_ */

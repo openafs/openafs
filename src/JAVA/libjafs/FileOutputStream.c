@@ -54,18 +54,19 @@
  * @returns		file descriptor
  * @exception	AFSFileException  if an I/O or other file related error occurs.
  */
-JNIEXPORT jint JNICALL Java_org_openafs_jafs_FileOutputStream_openWrite
-  (JNIEnv *env, jobject obj, jstring fileNameUTF)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_FileOutputStream_openWrite(JNIEnv * env, jobject obj,
+						 jstring fileNameUTF)
 {
-  int err;
-  jint fd = -1;		//file descriptor
+    int err;
+    jint fd = -1;		//file descriptor
 
-  fd = openAFSFile(env, fileNameUTF, O_CREAT | O_TRUNC, 0644, &err);
-  if (fd < 0) {
-    fprintf(stderr, "FileOutputStream::openWrite(): err=%d\n", err);
-    throwAFSFileException(env, err, NULL);
-  }
-  return fd;
+    fd = openAFSFile(env, fileNameUTF, O_CREAT | O_TRUNC, 0644, &err);
+    if (fd < 0) {
+	fprintf(stderr, "FileOutputStream::openWrite(): err=%d\n", err);
+	throwAFSFileException(env, err, NULL);
+    }
+    return fd;
 }
 
 /**
@@ -78,18 +79,19 @@ JNIEXPORT jint JNICALL Java_org_openafs_jafs_FileOutputStream_openWrite
  * @return		file descriptor
  * @exception	AFSFileException  if an I/O or other file related error occurs.
  */
-JNIEXPORT jint JNICALL Java_org_openafs_jafs_FileOutputStream_openAppend
-  (JNIEnv *env, jobject obj, jstring fileNameUTF)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_FileOutputStream_openAppend(JNIEnv * env, jobject obj,
+						  jstring fileNameUTF)
 {
-  int err;
-  jint fd = -1;		//file descriptor
+    int err;
+    jint fd = -1;		//file descriptor
 
-  fd = openAFSFile(env, fileNameUTF, O_CREAT | O_APPEND, 0644, &err);
-  if (fd < 0) {
-    fprintf(stderr, "FileOutputStream::openAppend(): err=%d\n", err);
-    throwAFSFileException(env, err, NULL);
-  }
-  return fd;
+    fd = openAFSFile(env, fileNameUTF, O_CREAT | O_APPEND, 0644, &err);
+    if (fd < 0) {
+	fprintf(stderr, "FileOutputStream::openAppend(): err=%d\n", err);
+	throwAFSFileException(env, err, NULL);
+    }
+    return fd;
 }
 
 /**
@@ -104,46 +106,49 @@ JNIEXPORT jint JNICALL Java_org_openafs_jafs_FileOutputStream_openAppend
  *
  * @exception	AFSFileException  if an I/O or other file related error occurs.
  */
-JNIEXPORT void JNICALL Java_org_openafs_jafs_FileOutputStream_write
-  (JNIEnv *env, jobject obj, jbyteArray jbytes, jint offset, jint length)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_FileOutputStream_write(JNIEnv * env, jobject obj,
+					     jbyteArray jbytes, jint offset,
+					     jint length)
 {
-  int fd, written, toWrite;
-  jint twritten;
-  jclass thisClass;
-  jmethodID getFileDescriptorID;
-  char *bytes;
-  jfieldID fid;
+    int fd, written, toWrite;
+    jint twritten;
+    jclass thisClass;
+    jmethodID getFileDescriptorID;
+    char *bytes;
+    jfieldID fid;
 
-  thisClass = (*env)->GetObjectClass(env, obj);
-  fid = (*env)->GetFieldID(env, thisClass, "fileDescriptor", "I");
-  fd = (*env)->GetIntField(env, obj, fid);
-  if(fd < 0) {
-    fprintf(stderr, "FileOutputStream::write(): failed to get file 
+    thisClass = (*env)->GetObjectClass(env, obj);
+    fid = (*env)->GetFieldID(env, thisClass, "fileDescriptor", "I");
+    fd = (*env)->GetIntField(env, obj, fid);
+    if (fd < 0) {
+	fprintf(stderr, "FileOutputStream::write(): failed to get file 
                        descriptor\n");
-    throwAFSFileException(env, 0, "Failed to get file descriptor!");
-  }
-
-  bytes = (char*) malloc(length);
-  if(bytes == NULL) {
-    fprintf(stderr, "FileOutputStream::write(): malloc failed of %d bytes\n",
-            length);
-    throwAFSFileException(env, 0, "Failed to allocate memory!");
-  }
-
-  (*env) -> GetByteArrayRegion(env, jbytes, offset, length, bytes);
-  toWrite = length;
-  twritten = 0;
-
-  while( toWrite > 0 ) {
-    written = uafs_write(fd, bytes, length);
-    twritten += written;
-    if( written < 0 ) {
-      free(bytes);
-      throwAFSFileException(env, errno, NULL);
+	throwAFSFileException(env, 0, "Failed to get file descriptor!");
     }
-    toWrite -= written;
-  }
-  free(bytes);
+
+    bytes = (char *)malloc(length);
+    if (bytes == NULL) {
+	fprintf(stderr,
+		"FileOutputStream::write(): malloc failed of %d bytes\n",
+		length);
+	throwAFSFileException(env, 0, "Failed to allocate memory!");
+    }
+
+    (*env)->GetByteArrayRegion(env, jbytes, offset, length, bytes);
+    toWrite = length;
+    twritten = 0;
+
+    while (toWrite > 0) {
+	written = uafs_write(fd, bytes, length);
+	twritten += written;
+	if (written < 0) {
+	    free(bytes);
+	    throwAFSFileException(env, errno, NULL);
+	}
+	toWrite -= written;
+    }
+    free(bytes);
 }
 
 /**
@@ -156,24 +161,25 @@ JNIEXPORT void JNICALL Java_org_openafs_jafs_FileOutputStream_write
  *
  * @exception	AFSFileException  if an I/O or other file related error occurs.
  */
-JNIEXPORT void JNICALL Java_org_openafs_jafs_FileOutputStream_close
-  (JNIEnv *env, jobject obj)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_FileOutputStream_close(JNIEnv * env, jobject obj)
 {
-  int fd, rc;
-  jclass thisClass;
-  jmethodID getFileDescriptorID;
-  char *bytes;
-  jfieldID fid;
+    int fd, rc;
+    jclass thisClass;
+    jmethodID getFileDescriptorID;
+    char *bytes;
+    jfieldID fid;
 
-  thisClass = (*env)->GetObjectClass(env, obj);
-  fid = (*env)->GetFieldID(env, thisClass, "fileDescriptor", "I");
-  fd  = (*env)->GetIntField(env, obj, fid);
-  if(fd < 0) {
-    fprintf(stderr, "FileOutputStream::close(): failed to get file descriptor\n");
-    throwAFSFileException(env, 0, "Failed to get file descriptor!");
-  }
-  rc = uafs_close(fd);
-  if (rc != 0) {
-    throwAFSFileException(env, rc, NULL);
-  }
+    thisClass = (*env)->GetObjectClass(env, obj);
+    fid = (*env)->GetFieldID(env, thisClass, "fileDescriptor", "I");
+    fd = (*env)->GetIntField(env, obj, fid);
+    if (fd < 0) {
+	fprintf(stderr,
+		"FileOutputStream::close(): failed to get file descriptor\n");
+	throwAFSFileException(env, 0, "Failed to get file descriptor!");
+    }
+    rc = uafs_close(fd);
+    if (rc != 0) {
+	throwAFSFileException(env, rc, NULL);
+    }
 }

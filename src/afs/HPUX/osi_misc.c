@@ -15,7 +15,8 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -28,7 +29,8 @@ RCSID("$Header$");
  * Here we have to save and restore errno since the HP-UX suser() sets errno.
  */
 
-afs_suser() {
+afs_suser()
+{
     int save_errno;
     int code;
 

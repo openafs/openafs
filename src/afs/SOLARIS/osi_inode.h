@@ -40,8 +40,8 @@
 #endif
 
 #if	defined(AFS_SUN56_ENV)
-#define	IS_VICEMAGIC(ip)	((ip)->i_vicemagic == VICEMAGIC) 
-#define	IS_DVICEMAGIC(dp)	((dp)->di_vicemagic == VICEMAGIC) 
+#define	IS_VICEMAGIC(ip)	((ip)->i_vicemagic == VICEMAGIC)
+#define	IS_DVICEMAGIC(dp)	((dp)->di_vicemagic == VICEMAGIC)
 
 #define	CLEAR_VICEMAGIC(ip)	(ip)->i_vicemagic = (ip)->i_vicep3 = 0
 #define	CLEAR_DVICEMAGIC(dp)	(dp)->di_vicemagic = (dp)->di_vicep3 = 0

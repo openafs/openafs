@@ -19,7 +19,8 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "h/systm.h"
 #include "h/types.h"
@@ -57,7 +58,7 @@ RCSID("$Header$");
  * initialization of all gfs; one day we might need to actual do somehing here.
  */
 Afs_init(gfsp)
-char	*gfsp;	/* this is really struct gfs *, but we do not use it */
+     char *gfsp;		/* this is really struct gfs *, but we do not use it */
 {
     extern int afs_gn_strategy();
 #define AFS_VM_BUFS 50
@@ -65,7 +66,7 @@ char	*gfsp;	/* this is really struct gfs *, but we do not use it */
     /* For now nothing special is required during AFS initialization. */
     AFS_STATCNT(afs_init);
 
-    (void) vm_mount(D_REMOTE, afs_gn_strategy, AFS_VM_BUFS);
+    (void)vm_mount(D_REMOTE, afs_gn_strategy, AFS_VM_BUFS);
     return 0;
 }
 
@@ -82,19 +83,19 @@ char	*gfsp;	/* this is really struct gfs *, but we do not use it */
  */
 int
 gop_rdwr(rw, vp, base, len, offset, segflg, unit, aresid)
-enum uio_rw	rw;
-struct vnode	*vp;
-caddr_t		base;
+     enum uio_rw rw;
+     struct vnode *vp;
+     caddr_t base;
 #ifdef AFS_64BIT_KERNEL
-offset_t        *offset;
+     offset_t *offset;
 #else
-off_t		*offset;
+     off_t *offset;
 #endif
-int		len, segflg;
-int		*aresid;
-int		unit;	    /* Ignored */
+     int len, segflg;
+     int *aresid;
+     int unit;			/* Ignored */
 {
-    struct uio	uio_struct;
+    struct uio uio_struct;
     struct iovec uiovector;
     register int code;
 
@@ -111,12 +112,14 @@ int		unit;	    /* Ignored */
     uio_struct.uio_fmode = (rw == UIO_READ ? FREAD : FWRITE);
 
 #ifdef AFS_64BIT_KERNEL
-    code = VNOP_RDWR(vp, rw,
-               (int32long64_t)(rw == UIO_READ ? FREAD : FWRITE), &uio_struct,
-               (ext_t) 0, (caddr_t) 0, (struct vattr *)0, &afs_osi_cred);
+    code =
+	VNOP_RDWR(vp, rw, (int32long64_t) (rw == UIO_READ ? FREAD : FWRITE),
+		  &uio_struct, (ext_t) 0, (caddr_t) 0, (struct vattr *)0,
+		  &afs_osi_cred);
 #else
-    code = VNOP_RDWR(vp, rw, (rw == UIO_READ ? FREAD : FWRITE), &uio_struct,
-		     NULL, NULL, NULL, &afs_osi_cred);
+    code =
+	VNOP_RDWR(vp, rw, (rw == UIO_READ ? FREAD : FWRITE), &uio_struct,
+		  NULL, NULL, NULL, &afs_osi_cred);
 #endif
     *aresid = uio_struct.uio_resid;
     return code;
@@ -134,7 +137,7 @@ int		unit;	    /* Ignored */
  * no linked list of gnodes to remove this element from.
  */
 aix_gnode_rele(vp)
-struct vnode *vp;
+     struct vnode *vp;
 {
     register struct vnode *tvp;
     register struct vfs *vfsp = vp->v_vfsp;
@@ -148,12 +151,12 @@ struct vnode *vp;
     if (vp->v_vfsprev != NULL)
 	vp->v_vfsprev->v_vfsnext = vp->v_vfsnext;
 
-    endgnode:
-      /* Free the allocated gnode that was accompanying the vcache's vnode */
-      if (vp->v_gnode) {
-	  osi_FreeSmallSpace(vp->v_gnode);
-	  vp->v_gnode = 0;
-      }
+  endgnode:
+    /* Free the allocated gnode that was accompanying the vcache's vnode */
+    if (vp->v_gnode) {
+	osi_FreeSmallSpace(vp->v_gnode);
+	vp->v_gnode = 0;
+    }
 
     return 0;
 }
@@ -164,11 +167,11 @@ struct vnode *vp;
  * Note that it must NOT set errno.
  */
 
-afs_suser() {
+afs_suser()
+{
     register rc;
     char err;
-    
+
     rc = suser(&err);
     return rc;
 }
-

@@ -29,8 +29,8 @@ extern char *int_to_base64(b64_string_t s, int a);
 extern int base64_to_int(char *s);
 
 /* casestrcpy.c */
-extern char *lcstring (char *d, char *s, int n);
-extern char *ucstring (char *d, char *s, int n);
+extern char *lcstring(char *d, char *s, int n);
+extern char *ucstring(char *d, char *s, int n);
 extern char *strcompose(char *buf, size_t len, ...);
 
 /* dirpath.c */
@@ -86,7 +86,7 @@ extern int utimes(char *file, struct timeval tvp[2]);
 extern int random(void);
 extern void srandom(int seed);
 extern int getdtablesize(void);
-extern void setlinebuf(FILE *file);
+extern void setlinebuf(FILE * file);
 extern void psignal(unsigned int sig, char *s);
 #endif
 
@@ -95,11 +95,14 @@ extern int util_isint(char *str);
 
 /* kreltime.c */
 extern afs_int32 ktimeRelDate_ToInt32(struct ktime_date *kdptr);
-extern int Int32To_ktimeRelDate(afs_int32 int32Date, struct ktime_date *kdptr);
-extern int ktimeDate_FromInt32(afs_int32 timeSecs, struct ktime_date *ktimePtr);
+extern int Int32To_ktimeRelDate(afs_int32 int32Date,
+				struct ktime_date *kdptr);
+extern int ktimeDate_FromInt32(afs_int32 timeSecs,
+			       struct ktime_date *ktimePtr);
 extern afs_int32 ParseRelDate(char *dateStr, struct ktime_date *relDatePtr);
 extern char *RelDatetoString(struct ktime_date *datePtr);
-extern afs_int32 Add_RelDate_to_Time(struct ktime_date *relDatePtr, afs_int32 atime);
+extern afs_int32 Add_RelDate_to_Time(struct ktime_date *relDatePtr,
+				     afs_int32 atime);
 
 /* ktime.c */
 extern char *ktime_DateOf(afs_int32 atime);
@@ -107,22 +110,25 @@ extern afs_int32 ktime_Str2int32(register char *astr);
 extern int ktime_ParsePeriodic(char *adate, register struct ktime *ak);
 extern int ktime_DisplayString(struct ktime *aparm, register char *astring);
 extern afs_int32 ktime_next(struct ktime *aktime, afs_int32 afrom);
-extern afs_int32 ktime_DateToInt32(char *adate, afs_int32 *aint32);
+extern afs_int32 ktime_DateToInt32(char *adate, afs_int32 * aint32);
 extern char *ktime_GetDateUsage(void);
 extern afs_int32 ktime_InterpretDate(struct ktime_date *akdate);
 
 /* netutils.c */
 extern afs_uint32 extract_Addr(char *line, int maxSize);
-extern int parseNetRestrictFile(afs_uint32 outAddrs[], afs_uint32 *mask, afs_uint32 *mtu,   
-        afs_uint32 maxAddrs, afs_uint32 *nAddrs, char reason[], const char *fileName);
-extern int ParseNetInfoFile(afs_uint32 *final, afs_uint32 *mask, afs_uint32 *mtu, 
-        int max, char reason[], const char *fileName);
-extern int filterAddrs(afs_uint32 addr1[], afs_uint32 addr2[], 
-        afs_uint32 mask1[], afs_uint32 mask2[], 
-        afs_uint32 mtu1[], afs_uint32 mtu2[], 
-        int n1, int n2);
-extern int parseNetFiles(afs_uint32 addrbuf[], afs_uint32 maskbuf[], afs_uint32 mtubuf[], 
-        afs_uint32 max, char reason[], const char *niFileName, const char *nrFileName);
+extern int parseNetRestrictFile(afs_uint32 outAddrs[], afs_uint32 * mask,
+				afs_uint32 * mtu, afs_uint32 maxAddrs,
+				afs_uint32 * nAddrs, char reason[],
+				const char *fileName);
+extern int ParseNetInfoFile(afs_uint32 * final, afs_uint32 * mask,
+			    afs_uint32 * mtu, int max, char reason[],
+			    const char *fileName);
+extern int filterAddrs(afs_uint32 addr1[], afs_uint32 addr2[],
+		       afs_uint32 mask1[], afs_uint32 mask2[],
+		       afs_uint32 mtu1[], afs_uint32 mtu2[], int n1, int n2);
+extern int parseNetFiles(afs_uint32 addrbuf[], afs_uint32 maskbuf[],
+			 afs_uint32 mtubuf[], afs_uint32 max, char reason[],
+			 const char *niFileName, const char *nrFileName);
 
 
 /* pthread_glock.c */
@@ -161,22 +167,21 @@ extern size_t strlcat(char *dst, const char *src, size_t siz);
 
 
 /* uuid.c */
-extern afs_int32 afs_uuid_equal(afsUUID *u1, afsUUID *u2);
-extern afs_int32 afs_uuid_is_nil(afsUUID *u1);
-extern void afs_htonuuid(afsUUID *uuidp);
-extern void afs_ntohuuid(afsUUID *uuidp);
-extern afs_int32 afs_uuid_create (afsUUID *uuid);
-extern u_short afs_uuid_hash (afsUUID *uuid);
+extern afs_int32 afs_uuid_equal(afsUUID * u1, afsUUID * u2);
+extern afs_int32 afs_uuid_is_nil(afsUUID * u1);
+extern void afs_htonuuid(afsUUID * uuidp);
+extern void afs_ntohuuid(afsUUID * uuidp);
+extern afs_int32 afs_uuid_create(afsUUID * uuid);
+extern u_short afs_uuid_hash(afsUUID * uuid);
 
 /* volparse.c */
 extern afs_int32 volutil_GetPartitionID(char *aname);
 extern char *volutil_PartitionName_r(int avalue, char *tbuffer, int buflen);
 extern char *volutil_PartitionName(int avalue);
-extern afs_int32 util_GetInt32(register char *as, afs_int32 *aval);
-extern afs_uint32 util_GetUInt32(register char *as, afs_uint32 *aval);
+extern afs_int32 util_GetInt32(register char *as, afs_int32 * aval);
+extern afs_uint32 util_GetUInt32(register char *as, afs_uint32 * aval);
 
 /* winsock_nt.c */
 
 
 #endif /* _AFSUTIL_PROTOTYPES_H */
-

@@ -58,82 +58,80 @@ do_dir(const char *dirname)
 {
     int ret;
 
-    ret = chdir (dirname);
+    ret = chdir(dirname);
     if (ret < 0)
-	err (1, "chdir %s", dirname);
-    repeat_dir (dirname);
-    ret = chdir ("..");
+	err(1, "chdir %s", dirname);
+    repeat_dir(dirname);
+    ret = chdir("..");
     if (ret < 0)
-	err (1, "chdir ..");
+	err(1, "chdir ..");
 }
 
 static void
-read_and_truncate (const char *filename, const struct stat *sb)
+read_and_truncate(const char *filename, const struct stat *sb)
 {
     int fd;
     char *buf;
     int ret;
     struct stat sb2;
 
-    buf = malloc (sb->st_size);
+    buf = malloc(sb->st_size);
     if (buf == NULL)
-	err (1, "malloc %lu", (unsigned long)sb->st_size);
-    fd = open (filename, O_RDONLY);
+	err(1, "malloc %lu", (unsigned long)sb->st_size);
+    fd = open(filename, O_RDONLY);
     if (fd < 0)
-	err (1, "open readonly %s", filename);
-    ret = read (fd, buf, sb->st_size);
+	err(1, "open readonly %s", filename);
+    ret = read(fd, buf, sb->st_size);
     if (ret < 0)
-	err (1, "read %s", filename);
+	err(1, "read %s", filename);
     if (ret != sb->st_size)
-	errx (1, "short read from %s", filename);
-    if (close (fd))
-	err (1, "close reading %s", filename);
-    fd = open (filename, O_WRONLY | O_TRUNC, 0);
+	errx(1, "short read from %s", filename);
+    if (close(fd))
+	err(1, "close reading %s", filename);
+    fd = open(filename, O_WRONLY | O_TRUNC, 0);
     if (fd < 0)
 	err(1, "open wronly-trunc %s", filename);
-    ret = write (fd, buf, sb->st_size);
+    ret = write(fd, buf, sb->st_size);
     if (ret < 0)
-	err (1, "write %s", filename);
+	err(1, "write %s", filename);
     if (ret != sb->st_size)
-	errx (1, "short write %s", filename);
-    if (close (fd))
-	err (1, "close writing %s", filename);
-    ret = lstat (filename, &sb2);
+	errx(1, "short write %s", filename);
+    if (close(fd))
+	err(1, "close writing %s", filename);
+    ret = lstat(filename, &sb2);
     if (ret < 0)
-	err (1, "stat %s", filename);
+	err(1, "stat %s", filename);
     if (sb2.st_size != sb->st_size)
-	errx (1, "wrong size after re-writing %s: %lu != %lu",
-	      filename,
-	      (unsigned long)sb->st_size, (unsigned long)sb2.st_size);
+	errx(1, "wrong size after re-writing %s: %lu != %lu", filename,
+	     (unsigned long)sb->st_size, (unsigned long)sb2.st_size);
     free(buf);
 }
 
 static void
-repeat_dir (const char *dirname)
+repeat_dir(const char *dirname)
 {
     DIR *dir;
     struct dirent *dp;
 
-    dir = opendir (".");
+    dir = opendir(".");
     if (dir == NULL)
 	err(1, "opendir %s", dirname);
-    while ((dp = readdir (dir)) != NULL) {
+    while ((dp = readdir(dir)) != NULL) {
 	struct stat sb;
 	int ret;
 
-	if (strcmp (dp->d_name, ".") == 0
-	    || strcmp (dp->d_name, "..") == 0)
+	if (strcmp(dp->d_name, ".") == 0 || strcmp(dp->d_name, "..") == 0)
 	    continue;
 
-	ret = lstat (dp->d_name, &sb);
+	ret = lstat(dp->d_name, &sb);
 	if (ret < 0)
-	    err (1, "lstat %s", dp->d_name);
+	    err(1, "lstat %s", dp->d_name);
 	if (S_ISDIR(sb.st_mode))
-	    do_dir (dp->d_name);
+	    do_dir(dp->d_name);
 	else if (S_ISREG(sb.st_mode))
-	    read_and_truncate (dp->d_name, &sb);
+	    read_and_truncate(dp->d_name, &sb);
     }
-    closedir (dir);
+    closedir(dir);
 }
 
 
@@ -142,7 +140,7 @@ main(int argc, char **argv)
 {
 
     if (argc != 2)
-	errx (1, "usage: %s directory", argv[0]);
-    do_dir (argv[1]);
+	errx(1, "usage: %s directory", argv[0]);
+    do_dir(argv[1]);
     return 0;
 }

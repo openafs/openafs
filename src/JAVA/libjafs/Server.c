@@ -66,21 +66,21 @@ extern jfieldID user_cachedInfoField;
 
 ///// definition in jafs_Partition.c /////////////////
 
-extern void fillPartitionInfo( JNIEnv *env, jobject partition, 
-			       vos_partitionEntry_t partEntry );
+extern void fillPartitionInfo(JNIEnv * env, jobject partition,
+			      vos_partitionEntry_t partEntry);
 
 ///////////////////////////////////////////////////
 
 ///// definition in jafs_Key.c /////////////////
 
-extern void fillKeyInfo( JNIEnv *env, jobject key, bos_KeyInfo_t keyEntry );
+extern void fillKeyInfo(JNIEnv * env, jobject key, bos_KeyInfo_t keyEntry);
 
 ///////////////////////////////////////////////////
 
 ///// definition in jafs_Process.c /////////////////
 
-extern void getProcessInfoChar( JNIEnv *env, void *serverHandle, 
-				const char *processName, jobject process );
+extern void getProcessInfoChar(JNIEnv * env, void *serverHandle,
+			       const char *processName, jobject process);
 
 ///////////////////////////////////////////////////
 
@@ -93,90 +93,97 @@ extern void getProcessInfoChar( JNIEnv *env, void *serverHandle,
  * server      the Server object to populate with the info
  * servEntry     the container of the server's information
  */
-void fillServerInfo
-  ( JNIEnv *env, jint cellHandle, jobject server, afs_serverEntry_t servEntry )
+void
+fillServerInfo(JNIEnv * env, jint cellHandle, jobject server,
+	       afs_serverEntry_t servEntry)
 {
-  jstring jip;
-  jobjectArray jaddresses;
-  jstring jserver;
-  int i = 0;
+    jstring jip;
+    jobjectArray jaddresses;
+    jstring jserver;
+    int i = 0;
 
-  // get the class fields if need be
-  if ( serverCls == 0 ) {
-    internal_getServerClass( env, server );
-  }
+    // get the class fields if need be
+    if (serverCls == 0) {
+	internal_getServerClass(env, server);
+    }
+    // in case it's blank
+    jserver = (*env)->NewStringUTF(env, servEntry.serverName);
+    (*env)->SetObjectField(env, server, server_nameField, jserver);
 
-  // in case it's blank
-  jserver = (*env)->NewStringUTF(env, servEntry.serverName);
-  (*env)->SetObjectField(env, server, server_nameField, jserver);
+    // let's convert just the addresses in the address array into an IP
+    jaddresses =
+	(jobjectArray) (*env)->GetObjectField(env, server,
+					      server_IPAddressField);
+    for (i = 0; i < 16; i++) {
+	if (servEntry.serverAddress[i] != 0) {
+	    jip = (*env)->NewStringUTF(env, (char *)
+				       inet_ntoa(htonl
+						 (servEntry.
+						  serverAddress[i])));
+	    (*env)->SetObjectArrayElement(env, jaddresses, i, jip);
+	} else {
+	    break;
+	}
+    }
 
-  // let's convert just the addresses in the address array into an IP
-  jaddresses = (jobjectArray) (*env)->GetObjectField( env, server, 
-						      server_IPAddressField );
-  for (i = 0; i < 16; i++) {
-    if (servEntry.serverAddress[i] != 0) {
-      jip = (*env)->NewStringUTF(env, (char *) 
-                                 inet_ntoa(htonl(servEntry.serverAddress[i])));
-      (*env)->SetObjectArrayElement(env, jaddresses, i, jip);
+    // let's check if this is really a database server
+    (*env)->SetBooleanField(env, server, server_databaseField,
+			    servEntry.serverType & DATABASE_SERVER);
+    if (servEntry.serverType & DATABASE_SERVER) {
+	// for now, if it thinks it's a database server than it is
+	// later, add checks for database configuration, and actual 
+	// on-ness of the machine
+	(*env)->SetBooleanField(env, server, server_badDatabaseField, FALSE);
     } else {
-      break;
+	(*env)->SetBooleanField(env, server, server_badDatabaseField, FALSE);
     }
-  }
 
-  // let's check if this is really a database server
-  (*env)->SetBooleanField(env, server, server_databaseField, 
-			  servEntry.serverType & DATABASE_SERVER);
-  if ( servEntry.serverType & DATABASE_SERVER ) {
-    // for now, if it thinks it's a database server than it is
-    // later, add checks for database configuration, and actual 
-    // on-ness of the machine
-    (*env)->SetBooleanField(env, server, server_badDatabaseField, FALSE);
-  } else {
-    (*env)->SetBooleanField(env, server, server_badDatabaseField, FALSE);
-  }
+    // we should check to see if this is truly a file server or not
+    // it could just be an old remnant, left over inside the vldb that 
+    // should be removed.
+    // if it is a file server, mark it as such.  If not, mark it as faulty.
+    (*env)->SetBooleanField(env, server, server_fileServerField,
+			    servEntry.serverType & FILE_SERVER);
+    if (servEntry.serverType & FILE_SERVER) {
 
-  // we should check to see if this is truly a file server or not
-  // it could just be an old remnant, left over inside the vldb that 
-  // should be removed.
-  // if it is a file server, mark it as such.  If not, mark it as faulty.
-  (*env)->SetBooleanField(env, server, server_fileServerField,  
-			  servEntry.serverType & FILE_SERVER);
-  if ( servEntry.serverType & FILE_SERVER ) {
-    
-    // to see if it's really a file server, make sure the 
-    // "fs" process is running
-    void *bosHandle;
-    afs_status_t ast;
-    bos_ProcessType_t processTypeT;
-    bos_ProcessInfo_t processInfoT;
-    char *fileServerProcessName = "fs";
+	// to see if it's really a file server, make sure the 
+	// "fs" process is running
+	void *bosHandle;
+	afs_status_t ast;
+	bos_ProcessType_t processTypeT;
+	bos_ProcessInfo_t processInfoT;
+	char *fileServerProcessName = "fs";
 
-    // set the file server to true (it thinks it's a file server)
-    (*env)->SetBooleanField(env, server, server_fileServerField, TRUE);
+	// set the file server to true (it thinks it's a file server)
+	(*env)->SetBooleanField(env, server, server_fileServerField, TRUE);
 
-    if ( !bos_ServerOpen( (void *) cellHandle, servEntry.serverName, 
-			 &bosHandle, &ast ) ) {
-      throwAFSException( env, ast );
-      return;
-    }
-    if ( !bos_ProcessInfoGet( bosHandle, fileServerProcessName, &processTypeT, 
-			     &processInfoT, &ast ) ) {
-      // if the machine does not have a fs process or is not responding 
-      // or is part of another cell
-      if ( ast == BZNOENT || ast == -1 || ast == RXKADBADTICKET ) {
-        (*env)->SetBooleanField(env, server, server_badFileServerField, TRUE);
-      // otherwise
-      } else {
-        throwAFSException( env, ast );
-        return;
-      }
+	if (!bos_ServerOpen
+	    ((void *)cellHandle, servEntry.serverName, &bosHandle, &ast)) {
+	    throwAFSException(env, ast);
+	    return;
+	}
+	if (!bos_ProcessInfoGet
+	    (bosHandle, fileServerProcessName, &processTypeT, &processInfoT,
+	     &ast)) {
+	    // if the machine does not have a fs process or is not responding 
+	    // or is part of another cell
+	    if (ast == BZNOENT || ast == -1 || ast == RXKADBADTICKET) {
+		(*env)->SetBooleanField(env, server,
+					server_badFileServerField, TRUE);
+		// otherwise
+	    } else {
+		throwAFSException(env, ast);
+		return;
+	    }
+	} else {
+	    // it's good
+	    (*env)->SetBooleanField(env, server, server_badFileServerField,
+				    FALSE);
+	}
     } else {
-      // it's good
-      (*env)->SetBooleanField(env, server, server_badFileServerField, FALSE);
+	(*env)->SetBooleanField(env, server, server_badFileServerField,
+				FALSE);
     }
-  } else {
-    (*env)->SetBooleanField(env, server, server_badFileServerField, FALSE);
-  }
 
 }
 
@@ -190,34 +197,34 @@ void fillServerInfo
  * server     the Server object in which to fill in 
  *                   the information
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Server_getServerInfo 
-  (JNIEnv *env, jclass cls, jint cellHandle, jstring jname, jobject server)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Server_getServerInfo(JNIEnv * env, jclass cls,
+					   jint cellHandle, jstring jname,
+					   jobject server)
 {
-  char *name;
-  afs_status_t ast;
-  afs_serverEntry_t servEntry;
+    char *name;
+    afs_status_t ast;
+    afs_serverEntry_t servEntry;
 
-  if ( jname != NULL ) {
-    name = getNativeString(env, jname);
-    if ( name == NULL ) {
-	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+    if (jname != NULL) {
+	name = getNativeString(env, jname);
+	if (name == NULL) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	throwAFSException(env, JAFSNULLSERVER);
+	return;
     }
-  } else {
-    throwAFSException( env, JAFSNULLSERVER );
-    return;
-  }
 
-  // get the server entry
-  if ( !afsclient_AFSServerGet( (void *) cellHandle, name, 
-				&servEntry, &ast ) ) {
-    throwAFSException( env, ast );
-  }
+    // get the server entry
+    if (!afsclient_AFSServerGet((void *)cellHandle, name, &servEntry, &ast)) {
+	throwAFSException(env, ast);
+    }
 
-  fillServerInfo( env, cellHandle, server, servEntry );
+    fillServerInfo(env, cellHandle, server, servEntry);
 
-  free( name );
+    free(name);
 }
 
 /**
@@ -231,29 +238,32 @@ Java_org_openafs_jafs_Server_getServerInfo
  *                      partitions belong
  * returns total number of partitions
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Server_getPartitionCount 
-  (JNIEnv *env, jclass cls, jint cellHandle, jint serverHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Server_getPartitionCount(JNIEnv * env, jclass cls,
+					       jint cellHandle,
+					       jint serverHandle)
 {
-  afs_status_t ast;
-  void *iterationId;
-  vos_partitionEntry_t partEntry;
-  int i = 0;
+    afs_status_t ast;
+    void *iterationId;
+    vos_partitionEntry_t partEntry;
+    int i = 0;
 
-  if ( !vos_PartitionGetBegin( (void *) cellHandle, (void *) serverHandle, 
-			      NULL, &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (!vos_PartitionGetBegin
+	((void *)cellHandle, (void *)serverHandle, NULL, &iterationId,
+	 &ast)) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  while ( vos_PartitionGetNext( (void *) iterationId, &partEntry, &ast ) ) i++;
+    while (vos_PartitionGetNext((void *)iterationId, &partEntry, &ast))
+	i++;
 
-  if ( ast != ADMITERATORDONE ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (ast != ADMITERATORDONE) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  return i;
+    return i;
 }
 
 /**
@@ -268,20 +278,22 @@ Java_org_openafs_jafs_Server_getPartitionCount
  *                      partitions belong
  * returns an iteration ID
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Server_getPartitionsBegin 
-  (JNIEnv *env, jclass cls, jint cellHandle, jint serverHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Server_getPartitionsBegin(JNIEnv * env, jclass cls,
+						jint cellHandle,
+						jint serverHandle)
 {
-  afs_status_t ast;
-  void *iterationId;
+    afs_status_t ast;
+    void *iterationId;
 
-  if ( !vos_PartitionGetBegin( (void *) cellHandle, (void *) serverHandle, 
-			      NULL, &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!vos_PartitionGetBegin
+	((void *)cellHandle, (void *)serverHandle, NULL, &iterationId,
+	 &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 
-  return (jint) iterationId;
+    return (jint) iterationId;
 
 }
 
@@ -294,25 +306,25 @@ Java_org_openafs_jafs_Server_getPartitionsBegin
  * iterationId   the iteration ID of this iteration
  * returns the name of the next partition of the server
  */
-JNIEXPORT jstring JNICALL 
-Java_org_openafs_jafs_Server_getPartitionsNextString 
-  (JNIEnv *env, jclass cls, jint iterationId)
+JNIEXPORT jstring JNICALL
+Java_org_openafs_jafs_Server_getPartitionsNextString(JNIEnv * env, jclass cls,
+						     jint iterationId)
 {
-  afs_status_t ast;
-  jstring jpartition;
-  vos_partitionEntry_t partEntry;
+    afs_status_t ast;
+    jstring jpartition;
+    vos_partitionEntry_t partEntry;
 
-  if ( !vos_PartitionGetNext( (void *) iterationId, &partEntry, &ast ) ) {
-    if ( ast == ADMITERATORDONE ) {
-      return NULL;
-    } else {
-      throwAFSException( env, ast );
-      return;
+    if (!vos_PartitionGetNext((void *)iterationId, &partEntry, &ast)) {
+	if (ast == ADMITERATORDONE) {
+	    return NULL;
+	} else {
+	    throwAFSException(env, ast);
+	    return;
+	}
     }
-  }
 
-  jpartition = (*env)->NewStringUTF(env, partEntry.name);
-  return jpartition;
+    jpartition = (*env)->NewStringUTF(env, partEntry.name);
+    return jpartition;
 
 }
 
@@ -327,33 +339,34 @@ Java_org_openafs_jafs_Server_getPartitionsNextString
  *                       values of the next partition
  * returns 0 if there are no more servers, != 0 otherwise
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Server_getPartitionsNext 
-  (JNIEnv *env, jclass cls, jint iterationId, jobject jpartitionObject)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Server_getPartitionsNext(JNIEnv * env, jclass cls,
+					       jint iterationId,
+					       jobject jpartitionObject)
 {
-  afs_status_t ast;
-  vos_partitionEntry_t partEntry;
+    afs_status_t ast;
+    vos_partitionEntry_t partEntry;
 
-  if ( !vos_PartitionGetNext( (void *) iterationId, &partEntry, &ast ) ) {
-    if ( ast == ADMITERATORDONE ) {
-      return 0;
-    } else {
-      throwAFSException( env, ast );
-      return 0;
+    if (!vos_PartitionGetNext((void *)iterationId, &partEntry, &ast)) {
+	if (ast == ADMITERATORDONE) {
+	    return 0;
+	} else {
+	    throwAFSException(env, ast);
+	    return 0;
+	}
     }
-  }
 
-  fillPartitionInfo( env, jpartitionObject, partEntry );
+    fillPartitionInfo(env, jpartitionObject, partEntry);
 
-  // get the class fields if need be
-  if ( partitionCls == 0 ) {
-    internal_getPartitionClass( env, jpartitionObject );
-  }
-  (*env)->SetBooleanField( env, jpartitionObject, partition_cachedInfoField, 
-			   TRUE );
+    // get the class fields if need be
+    if (partitionCls == 0) {
+	internal_getPartitionClass(env, jpartitionObject);
+    }
+    (*env)->SetBooleanField(env, jpartitionObject, partition_cachedInfoField,
+			    TRUE);
 
-    
-  return 1;
+
+    return 1;
 
 }
 
@@ -364,16 +377,16 @@ Java_org_openafs_jafs_Server_getPartitionsNext
  * cls      the current Java class
  * iterationId   the iteration ID of this iteration
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Server_getPartitionsDone 
-  (JNIEnv *env, jclass cls, jint iterationId)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Server_getPartitionsDone(JNIEnv * env, jclass cls,
+					       jint iterationId)
 {
-  afs_status_t ast;
+    afs_status_t ast;
 
-  if ( !vos_PartitionGetDone( (void *) iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!vos_PartitionGetDone((void *)iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 
 }
 
@@ -386,29 +399,29 @@ Java_org_openafs_jafs_Server_getPartitionsDone
  *                      partitions belong
  * jnewAdmin   the name of the admin to add to the list
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Server_addBosAdmin 
-  (JNIEnv *env, jclass cls, jint serverHandle, jstring jnewAdmin)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Server_addBosAdmin(JNIEnv * env, jclass cls,
+					 jint serverHandle, jstring jnewAdmin)
 {
-  afs_status_t ast;
-  char *newAdmin;
+    afs_status_t ast;
+    char *newAdmin;
 
-  if ( jnewAdmin != NULL ) {
-    newAdmin = getNativeString(env, jnewAdmin);
-    if ( newAdmin == NULL ) {
-	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+    if (jnewAdmin != NULL) {
+	newAdmin = getNativeString(env, jnewAdmin);
+	if (newAdmin == NULL) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	throwAFSException(env, JAFSNULLUSER);
+	return;
     }
-  } else {
-    throwAFSException( env, JAFSNULLUSER );
-    return;
-  }
 
-  if ( !bos_AdminCreate( (void *) serverHandle, newAdmin, &ast ) ) {
-    throwAFSException( env, ast );
-  }
+    if (!bos_AdminCreate((void *)serverHandle, newAdmin, &ast)) {
+	throwAFSException(env, ast);
+    }
 
-  free( newAdmin );
+    free(newAdmin);
 
 }
 
@@ -422,29 +435,30 @@ Java_org_openafs_jafs_Server_addBosAdmin
  *                      partitions belong
  * joldAdmin   the name of the admin to remove from the list
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Server_removeBosAdmin 
-  (JNIEnv *env, jclass cls, jint serverHandle, jstring joldAdmin)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Server_removeBosAdmin(JNIEnv * env, jclass cls,
+					    jint serverHandle,
+					    jstring joldAdmin)
 {
-  afs_status_t ast;
-  char *oldAdmin;
+    afs_status_t ast;
+    char *oldAdmin;
 
-  if ( joldAdmin != NULL ) {
-    oldAdmin = getNativeString(env, joldAdmin);
-    if ( oldAdmin == NULL ) {
-	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+    if (joldAdmin != NULL) {
+	oldAdmin = getNativeString(env, joldAdmin);
+	if (oldAdmin == NULL) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	throwAFSException(env, JAFSNULLUSER);
+	return;
     }
-  } else {
-    throwAFSException( env, JAFSNULLUSER );
-    return;
-  }
 
-  if ( !bos_AdminDelete( (void *) serverHandle, oldAdmin, &ast ) ) {
-    throwAFSException( env, ast );
-  }
+    if (!bos_AdminDelete((void *)serverHandle, oldAdmin, &ast)) {
+	throwAFSException(env, ast);
+    }
 
-  free( oldAdmin );
+    free(oldAdmin);
 }
 
 /**
@@ -457,38 +471,39 @@ Java_org_openafs_jafs_Server_removeBosAdmin
  *                      BOS admins belong
  * returns total number of BOS administrators
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Server_getBosAdminCount 
-  (JNIEnv *env, jclass cls, jint serverHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Server_getBosAdminCount(JNIEnv * env, jclass cls,
+					      jint serverHandle)
 {
-  afs_status_t ast;
-  void *iterationId;
-  char *admin;
-  jstring jadmin;
-  int i = 0;
+    afs_status_t ast;
+    void *iterationId;
+    char *admin;
+    jstring jadmin;
+    int i = 0;
 
-  if ( !bos_AdminGetBegin( (void *) serverHandle, &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (!bos_AdminGetBegin((void *)serverHandle, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  admin = (char *) malloc( sizeof(char)*BOS_MAX_NAME_LEN);
+    admin = (char *)malloc(sizeof(char) * BOS_MAX_NAME_LEN);
 
-  if ( !admin ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return -1;
-  }
+    if (!admin) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return -1;
+    }
 
-  while ( bos_AdminGetNext( (void *) iterationId, admin, &ast ) ) i++;
+    while (bos_AdminGetNext((void *)iterationId, admin, &ast))
+	i++;
 
-  free( admin );
+    free(admin);
 
-  if ( ast != ADMITERATORDONE ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (ast != ADMITERATORDONE) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  return i;
+    return i;
 }
 
 /**
@@ -502,19 +517,19 @@ Java_org_openafs_jafs_Server_getBosAdminCount
  *                      partitions belong
  * returns an iteration ID
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Server_getBosAdminsBegin 
-  (JNIEnv *env, jclass cls, jint serverHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Server_getBosAdminsBegin(JNIEnv * env, jclass cls,
+					       jint serverHandle)
 {
-  afs_status_t ast;
-  void *iterationId;
+    afs_status_t ast;
+    void *iterationId;
 
-  if ( !bos_AdminGetBegin( (void *) serverHandle, &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!bos_AdminGetBegin((void *)serverHandle, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 
-  return (jint) iterationId;
+    return (jint) iterationId;
 }
 
 /**
@@ -526,32 +541,33 @@ Java_org_openafs_jafs_Server_getBosAdminsBegin
  * iterationId   the iteration ID of this iteration
  * returns the name of the next admin of the server
  */
-JNIEXPORT jstring JNICALL 
-Java_org_openafs_jafs_Server_getBosAdminsNextString 
-  (JNIEnv *env, jclass cls, jint iterationId) {
+JNIEXPORT jstring JNICALL
+Java_org_openafs_jafs_Server_getBosAdminsNextString(JNIEnv * env, jclass cls,
+						    jint iterationId)
+{
 
-  afs_status_t ast;
-  jstring jadmin;
-  char *admin = (char *) malloc( sizeof(char)*BOS_MAX_NAME_LEN );
+    afs_status_t ast;
+    jstring jadmin;
+    char *admin = (char *)malloc(sizeof(char) * BOS_MAX_NAME_LEN);
 
-  if ( !admin ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return;    
-  }
-
-  if ( !bos_AdminGetNext( (void *) iterationId, admin, &ast ) ) {
-    free( admin );
-    if ( ast == ADMITERATORDONE ) {
-      return NULL;
-    } else {
-      throwAFSException( env, ast );
-      return;
+    if (!admin) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return;
     }
-  }
 
-  jadmin = (*env)->NewStringUTF(env, admin);
-  free( admin );
-  return jadmin;
+    if (!bos_AdminGetNext((void *)iterationId, admin, &ast)) {
+	free(admin);
+	if (ast == ADMITERATORDONE) {
+	    return NULL;
+	} else {
+	    throwAFSException(env, ast);
+	    return;
+	}
+    }
+
+    jadmin = (*env)->NewStringUTF(env, admin);
+    free(admin);
+    return jadmin;
 
 }
 
@@ -566,45 +582,46 @@ Java_org_openafs_jafs_Server_getBosAdminsNextString
  * juserObject   the user object in which to fill the values of this admin
  * returns 0 if no more admins, != 0 otherwise
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Server_getBosAdminsNext 
-  (JNIEnv *env, jclass cls, jint cellHandle, jint iterationId, 
-   jobject juserObject )
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Server_getBosAdminsNext(JNIEnv * env, jclass cls,
+					      jint cellHandle,
+					      jint iterationId,
+					      jobject juserObject)
 {
-  afs_status_t ast;
-  char *admin;
-  jstring jadmin;
+    afs_status_t ast;
+    char *admin;
+    jstring jadmin;
 
-  admin = (char *) malloc( sizeof(char)*BOS_MAX_NAME_LEN);
+    admin = (char *)malloc(sizeof(char) * BOS_MAX_NAME_LEN);
 
-  if ( !admin ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return;    
-  }
-
-  if ( !bos_AdminGetNext( (void *) iterationId, admin, &ast ) ) {
-    free( admin );
-    if ( ast == ADMITERATORDONE ) {
-      return 0;
-    } else {
-      throwAFSException( env, ast );
-      return 0;
+    if (!admin) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return;
     }
-  }
 
-  jadmin = (*env)->NewStringUTF(env, admin);
+    if (!bos_AdminGetNext((void *)iterationId, admin, &ast)) {
+	free(admin);
+	if (ast == ADMITERATORDONE) {
+	    return 0;
+	} else {
+	    throwAFSException(env, ast);
+	    return 0;
+	}
+    }
 
-  if ( userCls == 0 ) {
-    internal_getUserClass( env, juserObject );
-  }
+    jadmin = (*env)->NewStringUTF(env, admin);
 
-  (*env)->SetObjectField(env, juserObject, user_nameField, jadmin);
+    if (userCls == 0) {
+	internal_getUserClass(env, juserObject);
+    }
 
-  getUserInfoChar( env, cellHandle, admin, juserObject );
-  (*env)->SetBooleanField( env, juserObject, user_cachedInfoField, TRUE );
+    (*env)->SetObjectField(env, juserObject, user_nameField, jadmin);
 
-  free( admin );
-  return 1;
+    getUserInfoChar(env, cellHandle, admin, juserObject);
+    (*env)->SetBooleanField(env, juserObject, user_cachedInfoField, TRUE);
+
+    free(admin);
+    return 1;
 
 }
 
@@ -615,16 +632,16 @@ Java_org_openafs_jafs_Server_getBosAdminsNext
  * cls      the current Java class
  * iterationId   the iteration ID of this iteration
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Server_getBosAdminsDone 
-  (JNIEnv *env, jclass cls, jint iterationId)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Server_getBosAdminsDone(JNIEnv * env, jclass cls,
+					      jint iterationId)
 {
-  afs_status_t ast;
+    afs_status_t ast;
 
-  if ( !bos_AdminGetDone( (void *) iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!bos_AdminGetDone((void *)iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 }
 
 /**
@@ -637,28 +654,29 @@ Java_org_openafs_jafs_Server_getBosAdminsDone
  *                      keys belong
  * returns total number of keys
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Server_getKeyCount 
-  (JNIEnv *env, jclass cls, jint serverHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Server_getKeyCount(JNIEnv * env, jclass cls,
+					 jint serverHandle)
 {
-  afs_status_t ast;
-  void *iterationId;
-  bos_KeyInfo_t keyEntry;
-  int i = 0;
+    afs_status_t ast;
+    void *iterationId;
+    bos_KeyInfo_t keyEntry;
+    int i = 0;
 
-  if ( !bos_KeyGetBegin( (void *) serverHandle, &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (!bos_KeyGetBegin((void *)serverHandle, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  while ( bos_KeyGetNext( (void *) iterationId, &keyEntry, &ast ) ) i++;
+    while (bos_KeyGetNext((void *)iterationId, &keyEntry, &ast))
+	i++;
 
-  if ( ast != ADMITERATORDONE ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (ast != ADMITERATORDONE) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  return i;
+    return i;
 }
 
 /**
@@ -671,19 +689,19 @@ Java_org_openafs_jafs_Server_getKeyCount
  * serverHandle  the bos handle of the server to which the keys belong
  * returns an iteration ID
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Server_getKeysBegin 
-  (JNIEnv *env, jclass cls, jint serverHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Server_getKeysBegin(JNIEnv * env, jclass cls,
+					  jint serverHandle)
 {
-  afs_status_t ast;
-  void *iterationId;
+    afs_status_t ast;
+    void *iterationId;
 
-  if ( !bos_KeyGetBegin( (void *) serverHandle, &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!bos_KeyGetBegin((void *)serverHandle, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 
-  return (jint) iterationId;
+    return (jint) iterationId;
 }
 
 /**
@@ -697,33 +715,33 @@ Java_org_openafs_jafs_Server_getKeysBegin
  *                 properties of the next key.
  * returns 0 if there are no more keys, != 0 otherwise
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Server_getKeysNext 
-  (JNIEnv *env, jclass cls, jint iterationId, jobject jkeyObject)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Server_getKeysNext(JNIEnv * env, jclass cls,
+					 jint iterationId, jobject jkeyObject)
 {
-    
-  afs_status_t ast;
-  bos_KeyInfo_t keyEntry;
 
-  if ( !bos_KeyGetNext( (void *) iterationId, &keyEntry, &ast ) ) {
-    if ( ast == ADMITERATORDONE ) {
-      return 0;
-    } else {
-      throwAFSException( env, ast );
-      return 0;
+    afs_status_t ast;
+    bos_KeyInfo_t keyEntry;
+
+    if (!bos_KeyGetNext((void *)iterationId, &keyEntry, &ast)) {
+	if (ast == ADMITERATORDONE) {
+	    return 0;
+	} else {
+	    throwAFSException(env, ast);
+	    return 0;
+	}
     }
-  }
 
-  fillKeyInfo( env, jkeyObject, keyEntry );
+    fillKeyInfo(env, jkeyObject, keyEntry);
 
-  // get the class fields if need be
-  if ( keyCls == 0 ) {
-    internal_getKeyClass( env, jkeyObject );
-  }
+    // get the class fields if need be
+    if (keyCls == 0) {
+	internal_getKeyClass(env, jkeyObject);
+    }
 
-  (*env)->SetBooleanField( env, jkeyObject, key_cachedInfoField, TRUE );
+    (*env)->SetBooleanField(env, jkeyObject, key_cachedInfoField, TRUE);
 
-  return 1;
+    return 1;
 }
 
 /**
@@ -733,16 +751,16 @@ Java_org_openafs_jafs_Server_getKeysNext
  * cls      the current Java class
  * iterationId   the iteration ID of this iteration
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Server_getKeysDone 
-  (JNIEnv *env, jclass cls, jint iterationId)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Server_getKeysDone(JNIEnv * env, jclass cls,
+					 jint iterationId)
 {
-  afs_status_t ast;
+    afs_status_t ast;
 
-  if ( !bos_KeyGetDone( (void *) iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!bos_KeyGetDone((void *)iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 }
 
 /**
@@ -755,38 +773,39 @@ Java_org_openafs_jafs_Server_getKeysDone
  *                      processes belong
  * returns total number of processes
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Server_getProcessCount 
-  (JNIEnv *env, jclass cls, jint serverHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Server_getProcessCount(JNIEnv * env, jclass cls,
+					     jint serverHandle)
 {
-  afs_status_t ast;
-  void *iterationId;
-  char *process;
-  jstring jprocess;
-  int i = 0;
+    afs_status_t ast;
+    void *iterationId;
+    char *process;
+    jstring jprocess;
+    int i = 0;
 
-  if ( !bos_ProcessNameGetBegin( (void *) serverHandle, &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (!bos_ProcessNameGetBegin((void *)serverHandle, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  process = (char *) malloc( sizeof(char)*BOS_MAX_NAME_LEN );
+    process = (char *)malloc(sizeof(char) * BOS_MAX_NAME_LEN);
 
-  if ( !process ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return -1;
-  }
+    if (!process) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return -1;
+    }
 
-  while ( bos_ProcessNameGetNext( (void *) iterationId, process, &ast ) ) i++;
+    while (bos_ProcessNameGetNext((void *)iterationId, process, &ast))
+	i++;
 
-  free( process );
+    free(process);
 
-  if ( ast != ADMITERATORDONE ) {
-    throwAFSException( env, ast );
-    return -1;
-  }
+    if (ast != ADMITERATORDONE) {
+	throwAFSException(env, ast);
+	return -1;
+    }
 
-  return i;
+    return i;
 }
 
 /**
@@ -800,19 +819,19 @@ Java_org_openafs_jafs_Server_getProcessCount
  *                      processes belong
  * returns an iteration ID
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Server_getProcessesBegin 
-  (JNIEnv *env, jclass cls, jint serverHandle)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Server_getProcessesBegin(JNIEnv * env, jclass cls,
+					       jint serverHandle)
 {
-  afs_status_t ast;
-  void *iterationId;
+    afs_status_t ast;
+    void *iterationId;
 
-  if ( !bos_ProcessNameGetBegin( (void *) serverHandle, &iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!bos_ProcessNameGetBegin((void *)serverHandle, &iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 
-  return (jint) iterationId;
+    return (jint) iterationId;
 }
 
 /**
@@ -824,32 +843,32 @@ Java_org_openafs_jafs_Server_getProcessesBegin
  * iterationId   the iteration ID of this iteration
  * returns the name of the next process of the cell
  */
-JNIEXPORT jstring JNICALL 
-Java_org_openafs_jafs_Server_getProcessesNextString 
-  (JNIEnv *env, jclass cls, jint iterationId)
+JNIEXPORT jstring JNICALL
+Java_org_openafs_jafs_Server_getProcessesNextString(JNIEnv * env, jclass cls,
+						    jint iterationId)
 {
-  afs_status_t ast;
-  jstring jprocess;
-  char *process = (char *) malloc( sizeof(char)*BOS_MAX_NAME_LEN );
+    afs_status_t ast;
+    jstring jprocess;
+    char *process = (char *)malloc(sizeof(char) * BOS_MAX_NAME_LEN);
 
-  if ( !process ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return;    
-  }
-
-  if ( !bos_ProcessNameGetNext( (void *) iterationId, process, &ast ) ) {
-    free( process );
-    if ( ast == ADMITERATORDONE ) {
-      return NULL;
-    } else {
-      throwAFSException( env, ast );
-      return;
+    if (!process) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return;
     }
-  }
 
-  jprocess = (*env)->NewStringUTF(env, process);
-  free( process );
-  return jprocess;
+    if (!bos_ProcessNameGetNext((void *)iterationId, process, &ast)) {
+	free(process);
+	if (ast == ADMITERATORDONE) {
+	    return NULL;
+	} else {
+	    throwAFSException(env, ast);
+	    return;
+	}
+    }
+
+    jprocess = (*env)->NewStringUTF(env, process);
+    free(process);
+    return jprocess;
 }
 
 /**
@@ -864,45 +883,45 @@ Java_org_openafs_jafs_Server_getProcessesNextString
  *                          values of the next process
  * returns 0 if there are no more processes, != otherwise
  */
-JNIEXPORT jint JNICALL 
-Java_org_openafs_jafs_Server_getProcessesNext 
-  (JNIEnv *env, jclass cls, jint serverHandle, jint iterationId, 
-   jobject jprocessObject)
+JNIEXPORT jint JNICALL
+Java_org_openafs_jafs_Server_getProcessesNext(JNIEnv * env, jclass cls,
+					      jint serverHandle,
+					      jint iterationId,
+					      jobject jprocessObject)
 {
-  afs_status_t ast;
-  char *process = (char *) malloc( sizeof(char)*BOS_MAX_NAME_LEN );
-  jstring jprocess;
+    afs_status_t ast;
+    char *process = (char *)malloc(sizeof(char) * BOS_MAX_NAME_LEN);
+    jstring jprocess;
 
-  if ( !process ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return;    
-  }
-
-  if ( !bos_ProcessNameGetNext( (void *) iterationId, process, &ast ) ) {
-    free( process );
-    if ( ast == ADMITERATORDONE ) {
-      return 0;
-    } else {
-      throwAFSException( env, ast );
-      return 0;
+    if (!process) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return;
     }
-  }
 
-  // get the class fields if need be
-  if ( processCls == 0 ) {
-    internal_getProcessClass( env, jprocessObject );
-  }
+    if (!bos_ProcessNameGetNext((void *)iterationId, process, &ast)) {
+	free(process);
+	if (ast == ADMITERATORDONE) {
+	    return 0;
+	} else {
+	    throwAFSException(env, ast);
+	    return 0;
+	}
+    }
+    // get the class fields if need be
+    if (processCls == 0) {
+	internal_getProcessClass(env, jprocessObject);
+    }
 
-  jprocess = (*env)->NewStringUTF(env, process);
-  (*env)->SetObjectField(env, jprocessObject, process_nameField, jprocess);
+    jprocess = (*env)->NewStringUTF(env, process);
+    (*env)->SetObjectField(env, jprocessObject, process_nameField, jprocess);
 
-  getProcessInfoChar( env, (void *) serverHandle, process, jprocessObject );
+    getProcessInfoChar(env, (void *)serverHandle, process, jprocessObject);
 
-  (*env)->SetBooleanField( env, jprocessObject, 
-			   process_cachedInfoField, TRUE );
+    (*env)->SetBooleanField(env, jprocessObject, process_cachedInfoField,
+			    TRUE);
 
-  free( process );
-  return 1;
+    free(process);
+    return 1;
 }
 
 /**
@@ -912,16 +931,16 @@ Java_org_openafs_jafs_Server_getProcessesNext
  * cls      the current Java class
  * iterationId   the iteration ID of this iteration
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Server_getProcessesDone 
-  (JNIEnv *env, jclass cls, jint iterationId)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Server_getProcessesDone(JNIEnv * env, jclass cls,
+					      jint iterationId)
 {
-  afs_status_t ast;
+    afs_status_t ast;
 
-  if ( !bos_ProcessNameGetDone( (void *) iterationId, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!bos_ProcessNameGetDone((void *)iterationId, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 }
 
 /**
@@ -956,126 +975,132 @@ Java_org_openafs_jafs_Server_getProcessesDone
  *                          one block at a time and skip badly damaged 
  *                          blocks.  Use if partition has disk errors
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Server_salvage 
-  (JNIEnv *env, jclass cls, 
-   jint cellHandle, 
-   jint serverHandle, 
-   jstring jpartName, 
-   jstring jvolName, 
-   jint numSalvagers, 
-   jstring jtempDir, 
-   jstring jlogFile, 
-   jboolean inspectAllVolumes, 
-   jboolean removeBadlyDamaged, 
-   jboolean writeInodes, 
-   jboolean writeRootInodes, 
-   jboolean forceDirectory, 
-   jboolean forceBlockReads)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Server_salvage(JNIEnv * env, jclass cls,
+				     jint cellHandle, jint serverHandle,
+				     jstring jpartName, jstring jvolName,
+				     jint numSalvagers, jstring jtempDir,
+				     jstring jlogFile,
+				     jboolean inspectAllVolumes,
+				     jboolean removeBadlyDamaged,
+				     jboolean writeInodes,
+				     jboolean writeRootInodes,
+				     jboolean forceDirectory,
+				     jboolean forceBlockReads)
 {
-  afs_status_t ast;
-  char *partName;
-  char *volName;
-  char *tempDir;
-  char *logFile;
-  vos_force_t force;
-  bos_SalvageDamagedVolumes_t sdv;
-  bos_WriteInodes_t wi;
-  bos_WriteRootInodes_t wri;
-  bos_ForceDirectory_t forceD;
-  bos_ForceBlockRead_t forceBR;
-  
-  // convert strings
-  if ( jpartName != NULL ) {
-    partName = getNativeString(env, jpartName);
-    if ( !partName ) {
-	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+    afs_status_t ast;
+    char *partName;
+    char *volName;
+    char *tempDir;
+    char *logFile;
+    vos_force_t force;
+    bos_SalvageDamagedVolumes_t sdv;
+    bos_WriteInodes_t wi;
+    bos_WriteRootInodes_t wri;
+    bos_ForceDirectory_t forceD;
+    bos_ForceBlockRead_t forceBR;
+
+    // convert strings
+    if (jpartName != NULL) {
+	partName = getNativeString(env, jpartName);
+	if (!partName) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	partName = NULL;
     }
-  } else {
-    partName = NULL;
-  }
 
-  if ( jvolName != NULL ) {
-    volName = getNativeString(env, jvolName);
-    if ( !volName ) {
-      if ( partName != NULL ) free( partName );
-      throwAFSException( env, JAFSADMNOMEM );
-      return;    
+    if (jvolName != NULL) {
+	volName = getNativeString(env, jvolName);
+	if (!volName) {
+	    if (partName != NULL)
+		free(partName);
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	volName = NULL;
     }
-  } else {
-    volName = NULL;
-  }
 
-  if ( jtempDir != NULL ) {
-    tempDir = getNativeString(env, jtempDir);
-    if ( !tempDir ) {
-      if ( partName != NULL ) free( partName );
-      if ( volName != NULL )  free( volName );
-      throwAFSException( env, JAFSADMNOMEM );
-      return;    
+    if (jtempDir != NULL) {
+	tempDir = getNativeString(env, jtempDir);
+	if (!tempDir) {
+	    if (partName != NULL)
+		free(partName);
+	    if (volName != NULL)
+		free(volName);
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	tempDir = NULL;
     }
-  } else {
-    tempDir = NULL;
-  }
 
-  if ( jlogFile != NULL ) {
-    logFile = getNativeString(env, jlogFile);
-    if ( !logFile ) {
-      if ( partName != NULL ) free( partName );
-      if ( volName != NULL )  free( volName );
-      if ( tempDir != NULL )  free( tempDir );
-      throwAFSException( env, JAFSADMNOMEM );
-      return;    
+    if (jlogFile != NULL) {
+	logFile = getNativeString(env, jlogFile);
+	if (!logFile) {
+	    if (partName != NULL)
+		free(partName);
+	    if (volName != NULL)
+		free(volName);
+	    if (tempDir != NULL)
+		free(tempDir);
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	logFile = NULL;
     }
-  } else {
-    logFile = NULL;
-  }
 
-  // deal with booleans
-  if ( inspectAllVolumes ) {
-    force = VOS_FORCE;
-  } else {
-    force = VOS_NORMAL;
-  }
-  if ( removeBadlyDamaged ) {
-    sdv = BOS_DONT_SALVAGE_DAMAGED_VOLUMES;
-  } else {
-    sdv = BOS_SALVAGE_DAMAGED_VOLUMES;
-  }
-  if ( writeInodes ) {
-    wi = BOS_SALVAGE_WRITE_INODES;
-  } else {
-    wi = BOS_SALVAGE_DONT_WRITE_INODES;
-  }
-  if ( writeRootInodes ) {
-    wri = BOS_SALVAGE_WRITE_ROOT_INODES;
-  } else {
-    wri = BOS_SALVAGE_DONT_WRITE_ROOT_INODES;
-  }
-  if ( forceDirectory ) {
-    forceD = BOS_SALVAGE_FORCE_DIRECTORIES;
-  } else {
-    forceD = BOS_SALVAGE_DONT_FORCE_DIRECTORIES;
-  }
-  if ( forceBlockReads ) {
-    forceBR = BOS_SALVAGE_FORCE_BLOCK_READS;
-  } else {
-    forceBR = BOS_SALVAGE_DONT_FORCE_BLOCK_READS;
-  }
+    // deal with booleans
+    if (inspectAllVolumes) {
+	force = VOS_FORCE;
+    } else {
+	force = VOS_NORMAL;
+    }
+    if (removeBadlyDamaged) {
+	sdv = BOS_DONT_SALVAGE_DAMAGED_VOLUMES;
+    } else {
+	sdv = BOS_SALVAGE_DAMAGED_VOLUMES;
+    }
+    if (writeInodes) {
+	wi = BOS_SALVAGE_WRITE_INODES;
+    } else {
+	wi = BOS_SALVAGE_DONT_WRITE_INODES;
+    }
+    if (writeRootInodes) {
+	wri = BOS_SALVAGE_WRITE_ROOT_INODES;
+    } else {
+	wri = BOS_SALVAGE_DONT_WRITE_ROOT_INODES;
+    }
+    if (forceDirectory) {
+	forceD = BOS_SALVAGE_FORCE_DIRECTORIES;
+    } else {
+	forceD = BOS_SALVAGE_DONT_FORCE_DIRECTORIES;
+    }
+    if (forceBlockReads) {
+	forceBR = BOS_SALVAGE_FORCE_BLOCK_READS;
+    } else {
+	forceBR = BOS_SALVAGE_DONT_FORCE_BLOCK_READS;
+    }
 
-  //salvage!
-  if ( !bos_Salvage( (void *) cellHandle, (void *) serverHandle, partName, 
-		    volName, (int) numSalvagers, tempDir, logFile, force, sdv, 
-		    wi, wri, forceD, forceBR, &ast ) ) {
-    throwAFSException( env, ast );
-  }
-
-  // release strings
-  if ( partName != NULL ) free( partName );
-  if ( volName != NULL )  free( volName );
-  if ( tempDir != NULL )  free( tempDir );
-  if ( logFile != NULL )  free( logFile );
+    //salvage!
+    if (!bos_Salvage
+	((void *)cellHandle, (void *)serverHandle, partName, volName,
+	 (int)numSalvagers, tempDir, logFile, force, sdv, wi, wri, forceD,
+	 forceBR, &ast)) {
+	throwAFSException(env, ast);
+    }
+    // release strings
+    if (partName != NULL)
+	free(partName);
+    if (volName != NULL)
+	free(volName);
+    if (tempDir != NULL)
+	free(tempDir);
+    if (logFile != NULL)
+	free(logFile);
 
 }
 
@@ -1093,67 +1118,67 @@ Java_org_openafs_jafs_Server_salvage
  * execTime   the ExecutableTime object, in which 
  *                   to fill the restart time fields
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Server_getRestartTime
-  (JNIEnv *env, jclass cls, jint serverHandle, jint jtype, jobject exectime)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Server_getRestartTime(JNIEnv * env, jclass cls,
+					    jint serverHandle, jint jtype,
+					    jobject exectime)
 {
-  afs_status_t ast;
-  bos_Restart_t type;
-  bos_RestartTime_t time;
-  jfieldID hourField;
-  jfieldID minField;
-  jfieldID secField;
-  jfieldID dayField;
-  jfieldID neverField;
-  jfieldID nowField;
+    afs_status_t ast;
+    bos_Restart_t type;
+    bos_RestartTime_t time;
+    jfieldID hourField;
+    jfieldID minField;
+    jfieldID secField;
+    jfieldID dayField;
+    jfieldID neverField;
+    jfieldID nowField;
 
-  // get the class fields if need be
-  if ( exectimeCls == 0 ) {
-    internal_getExecTimeClass( env, exectime );
-  }
+    // get the class fields if need be
+    if (exectimeCls == 0) {
+	internal_getExecTimeClass(env, exectime);
+    }
 
-  if ( jtype == org_openafs_jafs_Server_RESTART_BINARY ) {
-    type = BOS_RESTART_DAILY;
-  } else {
-    type = BOS_RESTART_WEEKLY;
-  }
+    if (jtype == org_openafs_jafs_Server_RESTART_BINARY) {
+	type = BOS_RESTART_DAILY;
+    } else {
+	type = BOS_RESTART_WEEKLY;
+    }
 
-  hourField  = exectime_HourField;
-  minField   = exectime_MinField;
-  secField   = exectime_SecField;
-  dayField   = exectime_DayField;
-  neverField = exectime_NeverField;
-  nowField   = exectime_NowField;
+    hourField = exectime_HourField;
+    minField = exectime_MinField;
+    secField = exectime_SecField;
+    dayField = exectime_DayField;
+    neverField = exectime_NeverField;
+    nowField = exectime_NowField;
 
-  if ( !bos_ExecutableRestartTimeGet( (void *) serverHandle, type, 
-				     &time, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
-  
-  // set now
-  (*env)->SetBooleanField(env, exectime, nowField, 
-			  (time.mask & BOS_RESTART_TIME_NOW) );
-  
-  // set never
-  (*env)->SetBooleanField(env, exectime, neverField, 
-			  (time.mask & BOS_RESTART_TIME_NEVER) );
+    if (!bos_ExecutableRestartTimeGet
+	((void *)serverHandle, type, &time, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
+    // set now
+    (*env)->SetBooleanField(env, exectime, nowField,
+			    (time.mask & BOS_RESTART_TIME_NOW));
 
-  // set hour
-  (*env)->SetShortField(env, exectime, hourField, time.hour );
+    // set never
+    (*env)->SetBooleanField(env, exectime, neverField,
+			    (time.mask & BOS_RESTART_TIME_NEVER));
 
-  // set minute
-  (*env)->SetShortField(env, exectime, minField, time.min );
+    // set hour
+    (*env)->SetShortField(env, exectime, hourField, time.hour);
 
-  // set second
-  (*env)->SetShortField(env, exectime, secField, time.sec );
+    // set minute
+    (*env)->SetShortField(env, exectime, minField, time.min);
 
-  // set day
-  if ( time.mask & BOS_RESTART_TIME_DAY ) {
-    (*env)->SetShortField(env, exectime, dayField, time.day );
-  } else {
-    (*env)->SetShortField(env, exectime, dayField, (jshort) -1 );
-  }
+    // set second
+    (*env)->SetShortField(env, exectime, secField, time.sec);
+
+    // set day
+    if (time.mask & BOS_RESTART_TIME_DAY) {
+	(*env)->SetShortField(env, exectime, dayField, time.day);
+    } else {
+	(*env)->SetShortField(env, exectime, dayField, (jshort) - 1);
+    }
 
 }
 
@@ -1170,111 +1195,111 @@ Java_org_openafs_jafs_Server_getRestartTime
  * executableTime   the ExecutableTime object containing the 
  *                         desired information
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Server_setRestartTime 
-  (JNIEnv *env, jclass cls, jint serverHandle, jint jtype, jobject exectime )
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Server_setRestartTime(JNIEnv * env, jclass cls,
+					    jint serverHandle, jint jtype,
+					    jobject exectime)
 {
-  afs_status_t ast;
-  bos_Restart_t type;
-  bos_RestartTime_t time;
-  jboolean doHour;
-  jboolean doMinute;
-  jboolean doSecond;
-  jboolean doDay;
-  jboolean doNever;
-  jboolean doNow;  
-  jshort hour;
-  jshort minute;
-  jshort second;
-  jshort day;
-  jfieldID hourField;
-  jfieldID minField;
-  jfieldID secField;
-  jfieldID dayField;
-  jfieldID neverField;
-  jfieldID nowField;
+    afs_status_t ast;
+    bos_Restart_t type;
+    bos_RestartTime_t time;
+    jboolean doHour;
+    jboolean doMinute;
+    jboolean doSecond;
+    jboolean doDay;
+    jboolean doNever;
+    jboolean doNow;
+    jshort hour;
+    jshort minute;
+    jshort second;
+    jshort day;
+    jfieldID hourField;
+    jfieldID minField;
+    jfieldID secField;
+    jfieldID dayField;
+    jfieldID neverField;
+    jfieldID nowField;
 
-  // get the class fields if need be
-  if ( exectimeCls == 0 ) {
-    internal_getExecTimeClass( env, exectime );
-  }
+    // get the class fields if need be
+    if (exectimeCls == 0) {
+	internal_getExecTimeClass(env, exectime);
+    }
 
-  if ( jtype == org_openafs_jafs_Server_RESTART_BINARY ) {
-    type = BOS_RESTART_DAILY;
-  } else {
-    type = BOS_RESTART_WEEKLY;
-  }
+    if (jtype == org_openafs_jafs_Server_RESTART_BINARY) {
+	type = BOS_RESTART_DAILY;
+    } else {
+	type = BOS_RESTART_WEEKLY;
+    }
 
-  hourField  = exectime_HourField;
-  minField   = exectime_MinField;
-  secField   = exectime_SecField;
-  dayField   = exectime_DayField;
-  neverField = exectime_NeverField;
-  nowField   = exectime_NowField;
+    hourField = exectime_HourField;
+    minField = exectime_MinField;
+    secField = exectime_SecField;
+    dayField = exectime_DayField;
+    neverField = exectime_NeverField;
+    nowField = exectime_NowField;
 
-  hour = (*env)->GetShortField(env, exectime, hourField );
-  if ( hour != 0 ) {
-    doHour = TRUE;
-  } else {
-    doHour = FALSE;
-  }
-  minute = (*env)->GetShortField(env, exectime, minField );
-  if ( minute != 0 ) {
-    doMinute = TRUE;
-  } else {
-    doMinute = FALSE;
-  }
-  second = (*env)->GetShortField(env, exectime, secField );
-  if ( second != 0 ) {
-    doSecond = TRUE;
-  } else {
-    doSecond = FALSE;
-  }
-  day = (*env)->GetShortField(env, exectime, dayField );
-  if ( day != -1 ) {
-    doDay = TRUE;
-  } else {
-    doDay = FALSE;
-  }
-  doNever = (*env)->GetBooleanField(env, exectime, neverField );
-  doNow = (*env)->GetBooleanField(env, exectime, nowField );
+    hour = (*env)->GetShortField(env, exectime, hourField);
+    if (hour != 0) {
+	doHour = TRUE;
+    } else {
+	doHour = FALSE;
+    }
+    minute = (*env)->GetShortField(env, exectime, minField);
+    if (minute != 0) {
+	doMinute = TRUE;
+    } else {
+	doMinute = FALSE;
+    }
+    second = (*env)->GetShortField(env, exectime, secField);
+    if (second != 0) {
+	doSecond = TRUE;
+    } else {
+	doSecond = FALSE;
+    }
+    day = (*env)->GetShortField(env, exectime, dayField);
+    if (day != -1) {
+	doDay = TRUE;
+    } else {
+	doDay = FALSE;
+    }
+    doNever = (*env)->GetBooleanField(env, exectime, neverField);
+    doNow = (*env)->GetBooleanField(env, exectime, nowField);
 
-  bzero(&time, sizeof(time));
+    bzero(&time, sizeof(time));
 
-  if ( jtype == org_openafs_jafs_Server_RESTART_BINARY ) {
-    type = BOS_RESTART_DAILY;
-  } else {
-    type = BOS_RESTART_WEEKLY;
-  }  
+    if (jtype == org_openafs_jafs_Server_RESTART_BINARY) {
+	type = BOS_RESTART_DAILY;
+    } else {
+	type = BOS_RESTART_WEEKLY;
+    }
 
-  if ( doHour ) {
-    time.mask |= BOS_RESTART_TIME_HOUR;
-  }
-  if ( doMinute ) {
-    time.mask |= BOS_RESTART_TIME_MINUTE;
-  }
-  if ( doSecond ) {
-    time.mask |= BOS_RESTART_TIME_SECOND;
-  }
-  if ( doDay ) {
-    time.mask |= BOS_RESTART_TIME_DAY;
-  }
-  if ( doNever ) {
-    time.mask |= BOS_RESTART_TIME_NEVER;
-  }
-  if ( doNow ) {
-    time.mask |= BOS_RESTART_TIME_NOW;
-  }
+    if (doHour) {
+	time.mask |= BOS_RESTART_TIME_HOUR;
+    }
+    if (doMinute) {
+	time.mask |= BOS_RESTART_TIME_MINUTE;
+    }
+    if (doSecond) {
+	time.mask |= BOS_RESTART_TIME_SECOND;
+    }
+    if (doDay) {
+	time.mask |= BOS_RESTART_TIME_DAY;
+    }
+    if (doNever) {
+	time.mask |= BOS_RESTART_TIME_NEVER;
+    }
+    if (doNow) {
+	time.mask |= BOS_RESTART_TIME_NOW;
+    }
 
-  time.hour = hour;
-  time.min = minute;
-  time.sec = second;
-  time.day = day;
+    time.hour = hour;
+    time.min = minute;
+    time.sec = second;
+    time.day = day;
 
-  if ( !bos_ExecutableRestartTimeSet( (void *) serverHandle, type, 
-				     time, &ast ) ) {
-    throwAFSException( env, ast );
-  }
+    if (!bos_ExecutableRestartTimeSet((void *)serverHandle, type, time, &ast)) {
+	throwAFSException(env, ast);
+    }
 }
 
 /**
@@ -1286,23 +1311,25 @@ Java_org_openafs_jafs_Server_setRestartTime
  * serverHandle  the vos handle of the server     
  * partition   the id of the partition to sync, can be -1 to ignore
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Server_syncServerWithVLDB 
-  (JNIEnv *env, jclass cls, jint cellHandle, jint serverHandle, jint partition)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Server_syncServerWithVLDB(JNIEnv * env, jclass cls,
+						jint cellHandle,
+						jint serverHandle,
+						jint partition)
 {
-  afs_status_t ast;
-  int *part;
+    afs_status_t ast;
+    int *part;
 
-  if ( partition == -1 ) {
-    part = NULL;
-  } else {
-    part = (int *) &partition;
-  }
+    if (partition == -1) {
+	part = NULL;
+    } else {
+	part = (int *)&partition;
+    }
 
-  if ( !vos_ServerSync( (void *) cellHandle, (void *) serverHandle, 
-		       NULL, part, &ast ) ) {
-    throwAFSException( env, ast );
-  }
+    if (!vos_ServerSync
+	((void *)cellHandle, (void *)serverHandle, NULL, part, &ast)) {
+	throwAFSException(env, ast);
+    }
 }
 
 /**
@@ -1315,31 +1342,33 @@ Java_org_openafs_jafs_Server_syncServerWithVLDB
  * partition   the id of the partition to sync, can be -1 to ignore
  * forceDeletion   whether or not to force the deletion of bad volumes
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Server_syncVLDBWithServer 
-  (JNIEnv *env, jclass cls, jint cellHandle, jint serverHandle, jint partition, 
-   jboolean forceDeletion)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Server_syncVLDBWithServer(JNIEnv * env, jclass cls,
+						jint cellHandle,
+						jint serverHandle,
+						jint partition,
+						jboolean forceDeletion)
 {
-  afs_status_t ast;
-  int *part;
-  vos_force_t force;
+    afs_status_t ast;
+    int *part;
+    vos_force_t force;
 
-  if ( partition == -1 ) {
-    part = NULL;
-  } else {
-    part = (int *) &partition;
-  }
-  
-  if ( forceDeletion ) {
-    force = VOS_FORCE;
-  } else {
-    force = VOS_NORMAL;
-  }
+    if (partition == -1) {
+	part = NULL;
+    } else {
+	part = (int *)&partition;
+    }
 
-  if ( !vos_VLDBSync( (void *) cellHandle, (void *) serverHandle, NULL, part, 
-		     force, &ast ) ) {
-    throwAFSException( env, ast );
-  }
+    if (forceDeletion) {
+	force = VOS_FORCE;
+    } else {
+	force = VOS_NORMAL;
+    }
+
+    if (!vos_VLDBSync
+	((void *)cellHandle, (void *)serverHandle, NULL, part, force, &ast)) {
+	throwAFSException(env, ast);
+    }
 }
 
 /**
@@ -1350,16 +1379,16 @@ Java_org_openafs_jafs_Server_syncVLDBWithServer
  * serverHandle  the bos handle of the server to which the 
  *                      processes belong
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Server_startAllProcesses 
-  (JNIEnv *env, jclass cls, jint serverHandle)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Server_startAllProcesses(JNIEnv * env, jclass cls,
+					       jint serverHandle)
 {
-  afs_status_t ast;
+    afs_status_t ast;
 
-  if ( !bos_ProcessAllStart( (void *) serverHandle, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!bos_ProcessAllStart((void *)serverHandle, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 }
 
 /**
@@ -1370,16 +1399,16 @@ Java_org_openafs_jafs_Server_startAllProcesses
  * serverHandle  the bos handle of the server to which the 
  *                      processes belong
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Server_stopAllProcesses 
-  (JNIEnv *env, jclass cls, jint serverHandle)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Server_stopAllProcesses(JNIEnv * env, jclass cls,
+					      jint serverHandle)
 {
-  afs_status_t ast;
+    afs_status_t ast;
 
-  if ( !bos_ProcessAllStop( (void *) serverHandle, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (!bos_ProcessAllStop((void *)serverHandle, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 }
 
 /**
@@ -1391,23 +1420,24 @@ Java_org_openafs_jafs_Server_stopAllProcesses
  *                      processes belong
  * restartBosServer   whether or not to restart the bos server as well
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Server_restartAllProcesses 
-  (JNIEnv *env, jclass cls, jint serverHandle, jboolean restartBosServer)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Server_restartAllProcesses(JNIEnv * env, jclass cls,
+						 jint serverHandle,
+						 jboolean restartBosServer)
 {
-  afs_status_t ast;
-  bos_RestartBosServer_t rbs;
-  
-  if ( restartBosServer ) {
-    rbs = BOS_RESTART_BOS_SERVER;
-  } else {
-    rbs = BOS_DONT_RESTART_BOS_SERVER;
-  }
+    afs_status_t ast;
+    bos_RestartBosServer_t rbs;
 
-  if ( !bos_ProcessAllStopAndRestart( (void *) serverHandle, rbs, &ast ) ) {
-    throwAFSException( env, ast );
-    return;
-  }
+    if (restartBosServer) {
+	rbs = BOS_RESTART_BOS_SERVER;
+    } else {
+	rbs = BOS_DONT_RESTART_BOS_SERVER;
+    }
+
+    if (!bos_ProcessAllStopAndRestart((void *)serverHandle, rbs, &ast)) {
+	throwAFSException(env, ast);
+	return;
+    }
 }
 
 /**
@@ -1420,80 +1450,77 @@ Java_org_openafs_jafs_Server_restartAllProcesses
  * serverHandle  the bos handle of the server to which the key belongs
  * jlogFile   the full path and name of the desired bos log
  */
-JNIEXPORT jstring JNICALL 
-Java_org_openafs_jafs_Server_getLog
-  (JNIEnv *env, jclass cls, jint serverHandle, jstring jlogFile)
+JNIEXPORT jstring JNICALL
+Java_org_openafs_jafs_Server_getLog(JNIEnv * env, jclass cls,
+				    jint serverHandle, jstring jlogFile)
 {
-  afs_status_t ast;
-  char *logFile;
-  char *logData;
-  unsigned long currInLogSize = 1;
-  unsigned long currOutLogSize = 0;
-  jstring logOut;
+    afs_status_t ast;
+    char *logFile;
+    char *logData;
+    unsigned long currInLogSize = 1;
+    unsigned long currOutLogSize = 0;
+    jstring logOut;
 
-  logData = (char *) malloc( sizeof(char)*currInLogSize );
-  if ( logData == NULL ) {
-    throwAFSException( env, JAFSADMNOMEM );
-    return NULL;
-  }
-
-  if ( jlogFile != NULL ) {
-    logFile = getNativeString(env, jlogFile);
-    if ( logFile == NULL ) {
-      free( logData );
-      throwAFSException( env, JAFSADMNOMEM );
-      return NULL;
+    logData = (char *)malloc(sizeof(char) * currInLogSize);
+    if (logData == NULL) {
+	throwAFSException(env, JAFSADMNOMEM);
+	return NULL;
     }
-  } else {
-    free( logData );
-    throwAFSException( env, JAFSNULLARG );
-    return NULL;
-  }
 
-  // check how big the log is . . .
-  if ( !bos_LogGet( (void *) serverHandle, logFile, 
-                    &currOutLogSize, logData, &ast ) ) {
-    // anything but not enough room in buffer
-    if ( ast != ADMMOREDATA ) {
-      free( logData );
-      free( logFile );
-      throwAFSException( env, ast );
-      return NULL;
+    if (jlogFile != NULL) {
+	logFile = getNativeString(env, jlogFile);
+	if (logFile == NULL) {
+	    free(logData);
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return NULL;
+	}
+    } else {
+	free(logData);
+	throwAFSException(env, JAFSNULLARG);
+	return NULL;
     }
-  }
 
-  // free previous allocation
-  free( logData );
+    // check how big the log is . . .
+    if (!bos_LogGet
+	((void *)serverHandle, logFile, &currOutLogSize, logData, &ast)) {
+	// anything but not enough room in buffer
+	if (ast != ADMMOREDATA) {
+	    free(logData);
+	    free(logFile);
+	    throwAFSException(env, ast);
+	    return NULL;
+	}
+    }
+    // free previous allocation
+    free(logData);
 
-  // increase log size (plus one for terminator)
-  currInLogSize = currOutLogSize + 1;
+    // increase log size (plus one for terminator)
+    currInLogSize = currOutLogSize + 1;
 
-  // allocate buffer
-  logData = (char *) malloc( sizeof(char)*currInLogSize );
-  if ( logData == NULL ) {
-    free( logFile );
-    throwAFSException( env, JAFSADMNOMEM );
-    return NULL;
-  }
+    // allocate buffer
+    logData = (char *)malloc(sizeof(char) * currInLogSize);
+    if (logData == NULL) {
+	free(logFile);
+	throwAFSException(env, JAFSADMNOMEM);
+	return NULL;
+    }
+    // get the log for real
+    if (!bos_LogGet
+	((void *)serverHandle, logFile, &currOutLogSize, logData, &ast)) {
+	free(logData);
+	free(logFile);
+	throwAFSException(env, ast);
+	return NULL;
+    }
+    // NULL-terminate
+    logData[currOutLogSize] == '\0';
 
-  // get the log for real
-  if ( !bos_LogGet( (void *) serverHandle, logFile, &currOutLogSize, 
-                    logData, &ast ) ) {
-    free( logData );
-    free( logFile );
-    throwAFSException( env, ast );
-    return NULL;
-  }
-    
-  // NULL-terminate
-  logData[currOutLogSize] == '\0';
+    logOut = (*env)->NewStringUTF(env, logData);
 
-  logOut = (*env)->NewStringUTF(env, logData);
-    
-  free( logData );
-  free( logFile );
+    free(logData);
+    free(logFile);
 
-  return logOut;
+    return logOut;
 }
 
 
@@ -1505,38 +1532,38 @@ Java_org_openafs_jafs_Server_getLog
  * serverHandle  the bos handle of the server to which the key belongs
  * jcommand     the text of the commmand to execute
  */
-JNIEXPORT void JNICALL 
-Java_org_openafs_jafs_Server_executeCommand 
-  (JNIEnv *env, jclass cls, jint serverHandle, jstring jcommand)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Server_executeCommand(JNIEnv * env, jclass cls,
+					    jint serverHandle,
+					    jstring jcommand)
 {
-  afs_status_t ast;
-  char *command;
+    afs_status_t ast;
+    char *command;
 
-  if ( jcommand != NULL ) {
-    command = getNativeString(env, jcommand);
-    if ( command == NULL ) {
-	throwAFSException( env, JAFSADMNOMEM );
-	return;    
+    if (jcommand != NULL) {
+	command = getNativeString(env, jcommand);
+	if (command == NULL) {
+	    throwAFSException(env, JAFSADMNOMEM);
+	    return;
+	}
+    } else {
+	throwAFSException(env, JAFSNULLARG);
+	return;
     }
-  } else {
-    throwAFSException( env, JAFSNULLARG );
-    return;
-  }
 
-  if ( !bos_CommandExecute( (void *) serverHandle, command, &ast ) ) {
-    throwAFSException( env, ast );
-  }
+    if (!bos_CommandExecute((void *)serverHandle, command, &ast)) {
+	throwAFSException(env, ast);
+    }
 
-  free( command );
+    free(command);
 }
 
 // reclaim global memory being used by this portion
 JNIEXPORT void JNICALL
-Java_org_openafs_jafs_Server_reclaimServerMemory 
-  (JNIEnv *env, jclass cls)
+Java_org_openafs_jafs_Server_reclaimServerMemory(JNIEnv * env, jclass cls)
 {
-  if ( serverCls ) {
-    (*env)->DeleteGlobalRef(env, serverCls);
-    serverCls = 0;
-  }
+    if (serverCls) {
+	(*env)->DeleteGlobalRef(env, serverCls);
+	serverCls = 0;
+    }
 }

@@ -10,7 +10,7 @@
 #ifndef __INCL_KTIME_
 #define __INCL_KTIME_ 1
 
-#undef min 	/* redefined at end of file */
+#undef min			/* redefined at end of file */
 struct ktime_date {
     afs_int32 mask;		/* mask of valid fields */
     short year;
@@ -37,10 +37,10 @@ struct ktime_date {
 
 struct ktime {
     int mask;
-    short hour;	    /* 0 - 23 */
-    short min;	    /* 0 - 60 */
-    short sec;	    /* 0 - 60 */
-    short day;	    /* 0 is sunday */
+    short hour;			/* 0 - 23 */
+    short min;			/* 0 - 60 */
+    short sec;			/* 0 - 60 */
+    short day;			/* 0 is sunday */
 };
 
 #define	KTIME_HOUR	1	/* hour should match */

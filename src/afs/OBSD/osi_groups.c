@@ -18,11 +18,12 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"
 #include "afs/afsincludes.h"
-#include "afs/afs_stats.h"  /* statistics */
+#include "afs/afs_stats.h"	/* statistics */
 #include "sys/syscallargs.h"
 
 #define NOUID   ((uid_t) -1)
@@ -30,24 +31,17 @@ RCSID("$Header$");
 
 
 static int
-afs_getgroups(
-    struct ucred *cred,
-    int ngroups,
-    gid_t *gidset);
+  afs_getgroups(struct ucred *cred, int ngroups, gid_t * gidset);
 
 static int
-afs_setgroups(
-    struct proc *proc,
-    struct ucred **cred,
-    int ngroups,
-    gid_t *gidset,
-    int change_parent);
+  afs_setgroups(struct proc *proc, struct ucred **cred, int ngroups,
+		gid_t * gidset, int change_parent);
 
 int
 Afs_xsetgroups(p, args, retval)
-    struct proc *p;
-    void *args;
-    int *retval;
+     struct proc *p;
+     void *args;
+     int *retval;
 {
     int code = 0;
     struct vrequest treq;
@@ -79,7 +73,7 @@ Afs_xsetgroups(p, args, retval)
 
 int
 setpag(struct proc *proc, struct ucred **cred, afs_uint32 pagvalue,
-       afs_uint32 *newpag, int change_parent)
+       afs_uint32 * newpag, int change_parent)
 {
     gid_t gidset[NGROUPS];
     int ngroups, code;
@@ -92,12 +86,12 @@ setpag(struct proc *proc, struct ucred **cred, afs_uint32 pagvalue,
 	if (ngroups + 2 > NGROUPS) {
 	    return (E2BIG);
 	}
-	for (j = ngroups -1; j >= 0; j--) {
- 	    gidset[j+2] = gidset[j];
- 	}
+	for (j = ngroups - 1; j >= 0; j--) {
+	    gidset[j + 2] = gidset[j];
+	}
 	ngroups += 2;
     }
-    *newpag = (pagvalue == -1 ? genpag(): pagvalue);
+    *newpag = (pagvalue == -1 ? genpag() : pagvalue);
     afs_get_groups_from_pag(*newpag, &gidset[1], &gidset[2]);
     code = afs_setgroups(proc, cred, ngroups, gidset, change_parent);
     return code;
@@ -105,10 +99,7 @@ setpag(struct proc *proc, struct ucred **cred, afs_uint32 pagvalue,
 
 
 static int
-afs_getgroups(
-    struct ucred *cred,
-    int ngroups,
-    gid_t *gidset)
+afs_getgroups(struct ucred *cred, int ngroups, gid_t * gidset)
 {
     int ngrps, savengrps;
     gid_t *gp;
@@ -123,12 +114,8 @@ afs_getgroups(
 
 
 static int
-afs_setgroups(
-    struct proc *proc,
-    struct ucred **cred,
-    int ngroups,
-    gid_t *gidset,
-    int change_parent)
+afs_setgroups(struct proc *proc, struct ucred **cred, int ngroups,
+	      gid_t * gidset, int change_parent)
 {
     struct ucred *cr = *cred;
     int i;
@@ -148,5 +135,5 @@ afs_setgroups(
     cr->cr_ngroups = ngroups;
 
     *cred = cr;
-    return(0);
+    return (0);
 }

@@ -14,7 +14,8 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -49,9 +50,11 @@ RCSID("$Header$");
 #endif /* defined(UKERNEL) */
 
 /* return a null security object if nothing else can be done */
-static afs_int32 QuickAuth(astr, aindex)
-struct rx_securityClass **astr;
-afs_int32 *aindex; {
+static afs_int32
+QuickAuth(astr, aindex)
+     struct rx_securityClass **astr;
+     afs_int32 *aindex;
+{
     register struct rx_securityClass *tc;
     tc = rxnull_NewClientSecurityObject();
     *astr = tc;
@@ -61,61 +64,62 @@ afs_int32 *aindex; {
 
 #if !defined(UKERNEL)
 /* Return an appropriate security class and index */
-afs_int32 afsconf_ServerAuth(adir, astr, aindex)
-register struct afsconf_dir *adir;
-struct rx_securityClass **astr;
-afs_int32 *aindex; {
+afs_int32
+afsconf_ServerAuth(adir, astr, aindex)
+     register struct afsconf_dir *adir;
+     struct rx_securityClass **astr;
+     afs_int32 *aindex;
+{
     register struct rx_securityClass *tclass;
-    
-    LOCK_GLOBAL_MUTEX
-    tclass = (struct rx_securityClass *)
+
+    LOCK_GLOBAL_MUTEX tclass = (struct rx_securityClass *)
 	rxkad_NewServerSecurityObject(0, adir, afsconf_GetKey, NULL);
     if (tclass) {
 	*astr = tclass;
-	*aindex = 2;    /* kerberos security index */
-	UNLOCK_GLOBAL_MUTEX
-	return 0;
-    }
-    else {
-	UNLOCK_GLOBAL_MUTEX
-	return 2;
+	*aindex = 2;		/* kerberos security index */
+	UNLOCK_GLOBAL_MUTEX return 0;
+    } else {
+	UNLOCK_GLOBAL_MUTEX return 2;
     }
 }
 #endif /* !defined(UKERNEL) */
 
-static afs_int32 GenericAuth(adir, astr, aindex, enclevel)
-struct afsconf_dir *adir;
-struct rx_securityClass **astr;
-afs_int32 *aindex; 
-rxkad_level enclevel; {
+static afs_int32
+GenericAuth(adir, astr, aindex, enclevel)
+     struct afsconf_dir *adir;
+     struct rx_securityClass **astr;
+     afs_int32 *aindex;
+     rxkad_level enclevel;
+{
     char tbuffer[256];
     struct ktc_encryptionKey key, session;
     struct rx_securityClass *tclass;
     afs_int32 kvno;
     afs_int32 ticketLen;
     register afs_int32 code;
-    
+
     /* first, find the right key and kvno to use */
     code = afsconf_GetLatestKey(adir, &kvno, &key);
     if (code) {
 	return QuickAuth(astr, aindex);
     }
-    
+
     /* next create random session key, using key for seed to good random */
-    des_init_random_number_generator (&key);
-    code = des_random_key (&session);
+    des_init_random_number_generator(&key);
+    code = des_random_key(&session);
     if (code) {
 	return QuickAuth(astr, aindex);
     }
-    
+
     /* now create the actual ticket */
     ticketLen = sizeof(tbuffer);
     memset(tbuffer, '\0', sizeof(tbuffer));
-    code = tkt_MakeTicket(tbuffer, &ticketLen, &key, AUTH_SUPERUSER, "", "", 0,
-			   0xffffffff, &session, 0, "afs", "");
+    code =
+	tkt_MakeTicket(tbuffer, &ticketLen, &key, AUTH_SUPERUSER, "", "", 0,
+		       0xffffffff, &session, 0, "afs", "");
     /* parms were buffer, ticketlen, key to seal ticket with, principal
-	name, instance and cell, start time, end time, session key to seal
-	in ticket, inet host, server name and server instance */
+     * name, instance and cell, start time, end time, session key to seal
+     * in ticket, inet host, server name and server instance */
     if (code) {
 	return QuickAuth(astr, aindex);
     }
@@ -125,40 +129,38 @@ rxkad_level enclevel; {
      * order when compiling the system from scratch (rx/rxkad.h isn't installed
      * yet). */
     tclass = (struct rx_securityClass *)
-	rxkad_NewClientSecurityObject(enclevel, &session, kvno,
-				      ticketLen, tbuffer);
+	rxkad_NewClientSecurityObject(enclevel, &session, kvno, ticketLen,
+				      tbuffer);
     *astr = tclass;
-    *aindex = 2;    /* kerberos security index */
+    *aindex = 2;		/* kerberos security index */
     return 0;
 }
 
 /* build a fake ticket for 'afs' using keys from adir, returning an
  * appropriate security class and index
  */
-afs_int32 afsconf_ClientAuth(struct afsconf_dir *adir, 
-	struct rx_securityClass **astr, afs_int32 *aindex)
+afs_int32
+afsconf_ClientAuth(struct afsconf_dir * adir, struct rx_securityClass ** astr,
+		   afs_int32 * aindex)
 {
     afs_int32 rc;
 
-    LOCK_GLOBAL_MUTEX
-    rc = GenericAuth(adir, astr, aindex, rxkad_clear);
-    UNLOCK_GLOBAL_MUTEX
-    return rc;
+    LOCK_GLOBAL_MUTEX rc = GenericAuth(adir, astr, aindex, rxkad_clear);
+    UNLOCK_GLOBAL_MUTEX return rc;
 }
 
 /* build a fake ticket for 'afs' using keys from adir, returning an
  * appropriate security class and index.  This one, unlike the above,
  * tells rxkad to encrypt the data, too.
  */
-afs_int32 afsconf_ClientAuthSecure(adir, astr, aindex)
-struct afsconf_dir *adir;
-struct rx_securityClass **astr;
-afs_int32 *aindex; {
+afs_int32
+afsconf_ClientAuthSecure(adir, astr, aindex)
+     struct afsconf_dir *adir;
+     struct rx_securityClass **astr;
+     afs_int32 *aindex;
+{
     afs_int32 rc;
 
-    LOCK_GLOBAL_MUTEX
-    rc = GenericAuth(adir, astr, aindex, rxkad_crypt);
-    UNLOCK_GLOBAL_MUTEX
-    return rc;
+    LOCK_GLOBAL_MUTEX rc = GenericAuth(adir, astr, aindex, rxkad_crypt);
+    UNLOCK_GLOBAL_MUTEX return rc;
 }
-

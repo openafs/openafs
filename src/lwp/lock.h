@@ -54,20 +54,20 @@
 
 /* all locks wait on excl_locked except for READ_LOCK, which waits on readers_reading */
 struct Lock {
-    unsigned char	wait_states;	/* type of lockers waiting */
-    unsigned char	excl_locked;	/* anyone have boosted, shared or write lock? */
-    unsigned char	readers_reading;	/* # readers actually with read locks */
-    unsigned char	num_waiting;	/* probably need this soon */
+    unsigned char wait_states;	/* type of lockers waiting */
+    unsigned char excl_locked;	/* anyone have boosted, shared or write lock? */
+    unsigned char readers_reading;	/* # readers actually with read locks */
+    unsigned char num_waiting;	/* probably need this soon */
 #ifdef AFS_PTHREAD_ENV
-    pthread_mutex_t	mutex;		/* protects this structure */
-    pthread_cond_t	read_cv;	/* wait for read locks */
-    pthread_cond_t	write_cv;	/* wait for write/shared locks */
-#endif /* AFS_PTHREAD_ENV */
+    pthread_mutex_t mutex;	/* protects this structure */
+    pthread_cond_t read_cv;	/* wait for read locks */
+    pthread_cond_t write_cv;	/* wait for write/shared locks */
+#endif				/* AFS_PTHREAD_ENV */
 };
 
-extern void Afs_Lock_Obtain(struct Lock * lock, int how);
+extern void Afs_Lock_Obtain(struct Lock *lock, int how);
 extern void Afs_Lock_ReleaseR(struct Lock *lock);
-extern void Afs_Lock_ReleaseW(struct Lock * lock);
+extern void Afs_Lock_ReleaseW(struct Lock *lock);
 void Lock_Init(struct Lock *lock);
 void Lock_Destroy(struct Lock *lock);
 
@@ -89,7 +89,7 @@ void Lock_Destroy(struct Lock *lock);
 		Afs_Lock_Obtain(lock, READ_LOCK); \
 	    LOCK_UNLOCK(lock) \
 	ENDMAC
-    
+
 #define ObtainReadLockNoBlock(lock, code)\
         BEGINMAC \
             LOCK_LOCK(lock) \
@@ -111,7 +111,7 @@ void Lock_Destroy(struct Lock *lock);
 		Afs_Lock_Obtain(lock, WRITE_LOCK); \
 	    LOCK_UNLOCK(lock) \
 	ENDMAC
-    
+
 #define ObtainWriteLockNoBlock(lock, code)\
         BEGINMAC \
             LOCK_LOCK(lock) \

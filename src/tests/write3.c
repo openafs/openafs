@@ -96,27 +96,27 @@ main(int argc, char **argv)
 {
     int fd;
 
-    fd = open(fn, O_RDWR|O_CREAT|O_TRUNC, 0644);
+    fd = open(fn, O_RDWR | O_CREAT | O_TRUNC, 0644);
     if (fd < 0)
 	err(1, "open1");
-    if (write(fd,"kaka", 4) != 4)
+    if (write(fd, "kaka", 4) != 4)
 	errx(1, "write1");
     check_size(fn, 4, 1);
     if (close(fd) < 0)
 	err(1, "close1");
-    
+
     check_size(fn, 4, 0);
-    
-    fd = open(fn,O_RDWR|O_CREAT|O_TRUNC,644);
+
+    fd = open(fn, O_RDWR | O_CREAT | O_TRUNC, 644);
     if (fd < 0)
 	err(1, "open2");
     check_size(fn, 0, 1);
-    if (write(fd,"kaka", 4) != 4)
+    if (write(fd, "kaka", 4) != 4)
 	errx(1, "write2");
     check_size(fn, 4, 1);
     check_size_read(fd, 4);
     if (close(fd) < 0)
-        err(1, "close2");
+	err(1, "close2");
     check_size(fn, 4, 1);
 
     unlink(fn);

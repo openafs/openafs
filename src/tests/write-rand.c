@@ -51,37 +51,37 @@ RCSID("$Id$");
 #endif
 
 static char *
-write_random_file (int fd, size_t sz)
+write_random_file(int fd, size_t sz)
 {
     char *buf;
     int i, j;
 
     j = sz;
     if (j > 2048) {
-      j = 2048;
+	j = 2048;
     }
-    buf = malloc (j);
+    buf = malloc(j);
     if (buf == NULL)
-	err (1, "malloc %u", (unsigned)sz);
+	err(1, "malloc %u", (unsigned)sz);
 
     for (i = 0; i < j; ++i) {
-      buf[i] = rand();
-    }      
+	buf[i] = rand();
+    }
     while (sz > 0) {
-      if (write (fd, buf, j) != j)
-	err (1, "write");
-      
-      sz -= j;
-      j = sz;
-      if (j > 2048)
-	j = 2048;
+	if (write(fd, buf, j) != j)
+	    err(1, "write");
+
+	sz -= j;
+	j = sz;
+	if (j > 2048)
+	    j = 2048;
     }
 
     return 0;
 }
 
 int
-main (int argc, char **argv)
+main(int argc, char **argv)
 {
     const char *file;
     size_t sz;
@@ -90,22 +90,22 @@ main (int argc, char **argv)
     char *read_buf2;
     int fd;
 
-    if (argc != 3) 
-      errx (1, "usage: %s file size", argv[0]);
+    if (argc != 3)
+	errx(1, "usage: %s file size", argv[0]);
 
     file = argv[1];
     sz = atoi(argv[2]);
 
-    srand (time(NULL));
+    srand(time(NULL));
 
-    fd = open (file, O_RDWR | O_CREAT, 0755);
+    fd = open(file, O_RDWR | O_CREAT, 0755);
     if (fd < 0)
-	err (1, "open %s", file);
+	err(1, "open %s", file);
 
     if (lseek(fd, 0, SEEK_SET) < 0)
-	err (1, "lseek");
+	err(1, "lseek");
     write_random_file(fd, sz);
 
-    close (fd);
+    close(fd);
     return 0;
 }

@@ -68,14 +68,14 @@ extern int afs_mountDirLen;
 
 extern void uafs_InitClient(void);
 extern void uafs_InitThread(void);
-extern void uafs_Init(char *, char *, char *, char *, int, int, int, int,
-		      int, int, int, int, int, int, char *);
+extern void uafs_Init(char *, char *, char *, char *, int, int, int, int, int,
+		      int, int, int, int, int, char *);
 extern void uafs_RxServerProc(void);
 extern int uafs_LookupLink(struct usr_vnode *vp, struct usr_vnode *parentP,
 			   struct usr_vnode **vpp);
 extern int uafs_LookupName(char *path, struct usr_vnode *parentP,
 			   struct usr_vnode **vpp, int follow,
-                           int no_eval_mtpt);
+			   int no_eval_mtpt);
 extern int uafs_LookupParent(char *path, struct usr_vnode **vpp);
 extern int uafs_GetAttr(struct usr_vnode *vp, struct stat *stats);
 
@@ -127,16 +127,16 @@ extern int uafs_FlushFile(char *path);
 extern int uafs_FlushFile_r(char *path);
 extern usr_DIR *uafs_opendir(char *path);
 extern usr_DIR *uafs_opendir_r(char *path);
-extern struct usr_dirent *uafs_readdir(usr_DIR *dirp);
-extern struct usr_dirent *uafs_readdir_r(usr_DIR *dirp);
+extern struct usr_dirent *uafs_readdir(usr_DIR * dirp);
+extern struct usr_dirent *uafs_readdir_r(usr_DIR * dirp);
 extern int uafs_getdents(int fd, struct min_direct *buf, int len);
 extern int uafs_getdents_r(int fd, struct min_direct *buf, int len);
-extern int uafs_closedir(usr_DIR *dirp);
-extern int uafs_closedir_r(usr_DIR *dirp);
+extern int uafs_closedir(usr_DIR * dirp);
+extern int uafs_closedir_r(usr_DIR * dirp);
 extern void uafs_ThisCell(char *namep);
 extern void uafs_ThisCell_r(char *namep);
-extern int uafs_klog(char *user,char *cell,char *passwd,char **reason);
-extern int uafs_klog_r(char *user,char *cell,char *passwd,char **reason);
+extern int uafs_klog(char *user, char *cell, char *passwd, char **reason);
+extern int uafs_klog_r(char *user, char *cell, char *passwd, char **reason);
 extern int uafs_unlog(void);
 extern int uafs_unlog_r(void);
 extern void uafs_SetRxPort(int);

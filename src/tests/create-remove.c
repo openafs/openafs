@@ -51,44 +51,48 @@ RCSID("$Id$");
 #endif
 
 static int
-creat_dir (const char *name)
+creat_dir(const char *name)
 {
-    int ret = mkdir (name, 0777);
-    if (ret < 0) err (1, "mkdir %s", name);
+    int ret = mkdir(name, 0777);
+    if (ret < 0)
+	err(1, "mkdir %s", name);
     return 0;
 }
 
 static int
-remove_dir (const char *name)
+remove_dir(const char *name)
 {
-    int ret = rmdir (name);
-    if (ret < 0) err (1, "rmdir %s", name);
+    int ret = rmdir(name);
+    if (ret < 0)
+	err(1, "rmdir %s", name);
     return 0;
 }
 
 static int
-creat_file (const char *name)
+creat_file(const char *name)
 {
-    int ret = open (name, O_CREAT|O_RDWR, 0777);
-    if (ret < 0) err (1, "mkdir %s", name);
-    close (ret);
+    int ret = open(name, O_CREAT | O_RDWR, 0777);
+    if (ret < 0)
+	err(1, "mkdir %s", name);
+    close(ret);
     return 0;
 }
 
 static int
-unlink_file (const char *name)
+unlink_file(const char *name)
 {
-    int ret = unlink (name);
-    if (ret < 0) err (1, "unlink %s", name);
+    int ret = unlink(name);
+    if (ret < 0)
+	err(1, "unlink %s", name);
     return 0;
 }
 
 
 static void
-usage (int ret)
+usage(int ret)
 {
-    fprintf (stderr, "%s [file|dir] number-of-dirs\n", __progname);
-    exit (ret);
+    fprintf(stderr, "%s [file|dir] number-of-dirs\n", __progname);
+    exit(ret);
 }
 
 #ifndef MAXPATHLEN
@@ -100,16 +104,14 @@ usage (int ret)
 #endif
 
 static int
-creat_many (int num,
-	    int (*c) (const char *name),
-	    int (*d) (const char *name))
+creat_many(int num, int (*c) (const char *name), int (*d) (const char *name))
 {
     char name[MAXPATHLEN];
 
     if (num < 0)
-	errx (1, "not be negative");
+	errx(1, "not be negative");
 
-    snprintf (name, sizeof(name), "foo-%d-%d", num, getpid());
+    snprintf(name, sizeof(name), "foo-%d-%d", num, getpid());
 
     while (num-- > 0) {
 	(c) (name);
@@ -127,17 +129,17 @@ main(int argc, char **argv)
 
 
     if (argc != 3)
-	usage (1);
+	usage(1);
 
-    count = strtol (argv[2], &ptr, 0);
+    count = strtol(argv[2], &ptr, 0);
     if (count == 0 && ptr == argv[2])
-	errx (1, "'%s' not a number", argv[2]);
+	errx(1, "'%s' not a number", argv[2]);
 
-    if (strcmp ("file", argv[1]) == 0) 
-	return creat_many (count, creat_file, unlink_file);
+    if (strcmp("file", argv[1]) == 0)
+	return creat_many(count, creat_file, unlink_file);
     else if (strcmp("dir", argv[1]) == 0)
-	return creat_many (count, creat_dir, remove_dir);
+	return creat_many(count, creat_dir, remove_dir);
     else
-	errx (1, "unknown type: %s", argv[1]);
+	errx(1, "unknown type: %s", argv[1]);
     return 0;
 }

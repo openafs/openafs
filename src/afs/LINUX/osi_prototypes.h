@@ -22,25 +22,25 @@ extern void osi_linux_verify_alloced_memory(void);
 
 /* osi_cred.c */
 extern cred_t *crget(void);
-extern void crfree(cred_t *cr);
-extern cred_t *crdup(cred_t *cr);
+extern void crfree(cred_t * cr);
+extern cred_t *crdup(cred_t * cr);
 extern cred_t *crref(void);
-extern void crset(cred_t *cr);
+extern void crset(cred_t * cr);
 
 /* osi_file.c */
 extern afs_rwlock_t afs_xosi;
 
 /* osi_misc.c */
 extern int osi_lookupname(char *aname, uio_seg_t seg, int followlink,
-			  vnode_t **dirvpp, struct dentry **dpp);
+			  vnode_t ** dirvpp, struct dentry **dpp);
 extern int osi_InitCacheInfo(char *aname);
-extern int osi_rdwr(int rw, struct osi_file *file, caddr_t addrp, size_t asize,
-		    size_t *resid);
-extern void inline  setup_uio(uio_t *uiop, struct iovec *iovecp, char *buf,
+extern int osi_rdwr(int rw, struct osi_file *file, caddr_t addrp,
+		    size_t asize, size_t * resid);
+extern void inline setup_uio(uio_t * uiop, struct iovec *iovecp, char *buf,
 			     afs_offs_t pos, int count, uio_flag_t flag,
 			     uio_seg_t seg);
-extern int osi_file_uio_rdwr(struct osi_file *osifile, uio_t *uiop, int rw);
-extern void afs_osi_SetTime(osi_timeval_t *tvp);
+extern int osi_file_uio_rdwr(struct osi_file *osifile, uio_t * uiop, int rw);
+extern void afs_osi_SetTime(osi_timeval_t * tvp);
 extern void osi_linux_free_inode_pages(void);
 extern void check_bad_parent(struct dentry *dp);
 

@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include <net/if.h>
@@ -33,7 +34,7 @@ RCSID("$Header$");
 #define NSAFS_USERNAME_MAX	64	/* Maximum username length */
 #define NSAFS_PASSWORD_MAX	64	/* Maximum password length */
 #define NSAFS_LOGIN_HASH_SIZE	1024	/* MUST be power of two */
-#define TEN_MINUTES		600     /* 10 minutes = 600 seconds */
+#define TEN_MINUTES		600	/* 10 minutes = 600 seconds */
 
 #define NSAFS_DIR_ALLOW		"GET,HEAD,MOVE,INDEX,RMDIR"
 #define NSAFS_LINK_ALLOW	"GET,HEAD,MOVE,DELETE"
@@ -145,9 +146,10 @@ static int base64_to_value[256] = {
 /*
  * Decode a base64 encoded buffer in place
  */
-void nsafs_decode64(char *buf)
+void
+nsafs_decode64(char *buf)
 {
-    int i,j;
+    int i, j;
     int len;
     int val1;
     int val2;
@@ -157,7 +159,7 @@ void nsafs_decode64(char *buf)
     /*
      * Allow trailing blanks
      */
-    for (len = strlen(buf) ; buf[len-1] == ' ' && len > 0 ; len--);
+    for (len = strlen(buf); buf[len - 1] == ' ' && len > 0; len--);
 
     /*
      * Valid encodings are multiples of four characters
@@ -167,14 +169,14 @@ void nsafs_decode64(char *buf)
 	return;
     }
 
-    for (i = 0, j = 0 ; i < len ; i += 4, j += 3) {
+    for (i = 0, j = 0; i < len; i += 4, j += 3) {
 	val1 = base64_to_value[buf[i]];
-	val2 = base64_to_value[buf[i+1]];
-	val3 = base64_to_value[buf[i+2]];
-	val4 = base64_to_value[buf[i+3]];
-	buf[j] = ((val1<<2)&0xfc) | ((val2>>4)&0x3);
-	buf[j+1] = ((val2<<4)&0xf0) | ((val3>>2)&0xf);
-	buf[j+2] = ((val3<<6)&0xc0) | (val4&0x3f);
+	val2 = base64_to_value[buf[i + 1]];
+	val3 = base64_to_value[buf[i + 2]];
+	val4 = base64_to_value[buf[i + 3]];
+	buf[j] = ((val1 << 2) & 0xfc) | ((val2 >> 4) & 0x3);
+	buf[j + 1] = ((val2 << 4) & 0xf0) | ((val3 >> 2) & 0xf);
+	buf[j + 2] = ((val3 << 6) & 0xc0) | (val4 & 0x3f);
     }
     buf[j] = '\0';
 }
@@ -184,21 +186,21 @@ void nsafs_decode64(char *buf)
  * Interface for pioctls - used for unlogging 
  */
 #include "afs/venus.h"
-int do_pioctl(char *in_buffer, int in_size, 
-              char *out_buffer, int out_size, 
-              int opcode, char *path, int followSymLinks)
+int
+do_pioctl(char *in_buffer, int in_size, char *out_buffer, int out_size,
+	  int opcode, char *path, int followSymLinks)
 {
-  struct ViceIoctl iob;
-  iob.in = in_buffer;
-  iob.in_size = in_size;
-  iob.out = out_buffer;
-  iob.out_size = out_size;
-  
+    struct ViceIoctl iob;
+    iob.in = in_buffer;
+    iob.in_size = in_size;
+    iob.out = out_buffer;
+    iob.out_size = out_size;
+
 #ifdef AFS_USR_SUN5_ENV
-  return syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, _VICEIOCTL(opcode), &iob, 
-                 followSymLinks);
+    return syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, _VICEIOCTL(opcode),
+		   &iob, followSymLinks);
 #else /* AFS_USR_SUN5_ENV */
-  return lpioctl(path, _VICEIOCTL(opcode), &iob, followSymLinks);
+    return lpioctl(path, _VICEIOCTL(opcode), &iob, followSymLinks);
 #endif /* AFS_USR_SUN5_ENV */
 }
 
@@ -206,30 +208,32 @@ int do_pioctl(char *in_buffer, int in_size,
  * unlog - invalidate any existing AFS tokens with the kernel cache
  * manager. In case the server is started up with tokens
  */
-int unlog()
+int
+unlog()
 {
-  return do_pioctl(NULL, 0, NULL, 0, VIOCUNPAG, NULL, 0); 
+    return do_pioctl(NULL, 0, NULL, 0, VIOCUNPAG, NULL, 0);
 }
 
 /*
  * Initialize the AFS client and the login cache
  */
-void nsafs_init_once()
+void
+nsafs_init_once()
 {
     int i;
     crit_enter(nsafs_init_lock);
     if (nsafs_init_done == 0) {
-      i=unlog();
-      if (i) {
+	i = unlog();
+	if (i) {
 /*	printf("unlog from AFS failed: errno:%d\n", errno); */
-      }
-        uafs_Init("nsafs-init", mountDirParam, confDirParam,
+	}
+	uafs_Init("nsafs-init", mountDirParam, confDirParam,
 		  cacheBaseDirParam, cacheBlocksParam, cacheFilesParam,
 		  cacheStatEntriesParam, dCacheSizeParam, vCacheSizeParam,
 		  chunkSizeParam, 0, debugParam, nDaemonsParam, -1,
 		  logFileParam);
 	nsafs_login_lock = crit_init();
-	for (i = 0 ; i < NSAFS_LOGIN_HASH_SIZE ; i++) {
+	for (i = 0; i < NSAFS_LOGIN_HASH_SIZE; i++) {
 	    DLL_INIT_LIST(nsafs_login_cache[i].head,
 			  nsafs_login_cache[i].tail);
 	}
@@ -242,27 +246,25 @@ void nsafs_init_once()
 /*
  * Hash function for the AFS login cache
  */
-int nsafs_login_hash(char *name, char *cell)
+int
+nsafs_login_hash(char *name, char *cell)
 {
     char *p;
     afs_uint32 val;
-    for (val = *name , p = name ; *p != '\0' ; p++) {
-	val = (val << 2) ^ val ^ (afs_uint32)(*p);
+    for (val = *name, p = name; *p != '\0'; p++) {
+	val = (val << 2) ^ val ^ (afs_uint32) (*p);
     }
-    for (p = cell ; *p != '\0' ; p++) {
-	val = (val << 2) ^ val ^ (afs_uint32)(*p);
+    for (p = cell; *p != '\0'; p++) {
+	val = (val << 2) ^ val ^ (afs_uint32) (*p);
     }
-    return val & (NSAFS_LOGIN_HASH_SIZE-1);
+    return val & (NSAFS_LOGIN_HASH_SIZE - 1);
 }
 
 /*
  * Compute a SHA checksum on the username, cellname, and password
  */
-void nsafs_login_checksum(
-    char *user,
-    char *cell,
-    char *passwd,
-    char *cksum)
+void
+nsafs_login_checksum(char *user, char *cell, char *passwd, char *cksum)
 {
     int passwdLen;
     int userLen;
@@ -276,26 +278,29 @@ void nsafs_login_checksum(
     passwdLen = strlen(passwd);
     userLen = strlen(user);
     cellLen = strlen(cell);
-    shaBuffer = afs_osi_Alloc(MAX(userLen+cellLen,passwdLen)+SHA_HASH_BYTES);
+    shaBuffer =
+	afs_osi_Alloc(MAX(userLen + cellLen, passwdLen) + SHA_HASH_BYTES);
     strcpy(shaBuffer, passwd);
     memcpy((void *)(shaBuffer + passwdLen), (void *)(&nsafs_login_pad[0]),
 	   SHA_HASH_BYTES);
     sha_clear(&state);
-    sha_hash(&state, shaBuffer, passwdLen+SHA_HASH_BYTES);
+    sha_hash(&state, shaBuffer, passwdLen + SHA_HASH_BYTES);
     memcpy(shaBuffer, user, userLen);
-    memcpy(shaBuffer+userLen, cell, cellLen);
-    sha_bytes(&state, shaBuffer+userLen+cellLen);
+    memcpy(shaBuffer + userLen, cell, cellLen);
+    sha_bytes(&state, shaBuffer + userLen + cellLen);
     sha_clear(&state);
-    sha_hash(&state, shaBuffer, userLen+cellLen+SHA_HASH_BYTES);
+    sha_hash(&state, shaBuffer, userLen + cellLen + SHA_HASH_BYTES);
     sha_bytes(&state, &cksum[0]);
-    memset(shaBuffer, 0, MAX(userLen+cellLen,passwdLen)+SHA_HASH_BYTES);
-    afs_osi_Free(shaBuffer, MAX(userLen+cellLen,passwdLen)+SHA_HASH_BYTES);
+    memset(shaBuffer, 0, MAX(userLen + cellLen, passwdLen) + SHA_HASH_BYTES);
+    afs_osi_Free(shaBuffer,
+		 MAX(userLen + cellLen, passwdLen) + SHA_HASH_BYTES);
 }
 
 /*
  * Set the AFS identity given from the group0 and group1 strings
  */
-void nsafs_set_id_from_ints(int viceid, int group0, int group1)
+void
+nsafs_set_id_from_ints(int viceid, int group0, int group1)
 {
     int i;
     struct usr_ucred *crp;
@@ -309,7 +314,7 @@ void nsafs_set_id_from_ints(int viceid, int group0, int group1)
     crp->cr_groups[1] = group1;
     crp->cr_groups[2] = getgid();
     crp->cr_ngroups = 1;
-    for (i = 3 ; i < NGROUPS ; i++) {
+    for (i = 3; i < NGROUPS; i++) {
 	crp->cr_groups[i] = NOGROUP;
     }
 }
@@ -317,7 +322,8 @@ void nsafs_set_id_from_ints(int viceid, int group0, int group1)
 /*
  * Set the AFS identity given from the viceid, group0 and group1 strings
  */
-void nsafs_set_id_from_strings(char *viceid, char *group0, char *group1)
+void
+nsafs_set_id_from_strings(char *viceid, char *group0, char *group1)
 {
     int i;
     struct usr_ucred *crp;
@@ -332,7 +338,7 @@ void nsafs_set_id_from_strings(char *viceid, char *group0, char *group1)
 	crp->cr_suid = getuid();
 	crp->cr_groups[0] = getgid();
 	crp->cr_ngroups = 1;
-	for (i = 1 ; i < NGROUPS ; i++) {
+	for (i = 1; i < NGROUPS; i++) {
 	    crp->cr_groups[i] = NOGROUP;
 	}
     }
@@ -343,13 +349,9 @@ void nsafs_set_id_from_strings(char *viceid, char *group0, char *group1)
  * given username, and the SHA checksums match, then set the group0
  * and group1 parameters and return 1, otherwise return 0.
  */
-int nsafs_login_lookup(
-    char *user,
-    char *cell,
-    char *cksum,
-    int *viceid,
-    int *group0,
-    int *group1)
+int
+nsafs_login_lookup(char *user, char *cell, char *cksum, int *viceid,
+		   int *group0, int *group1)
 {
     int index;
     long curTime;
@@ -373,11 +375,11 @@ int nsafs_login_lookup(
 		       nsafs_login_cache[index].tail, next, prev);
 	    afs_osi_Free(tmpP, sizeof(struct nsafs_login));
 	    continue;
- 	}
-	if (strcmp(loginP->username, user) == 0 &&
-	    strcmp(loginP->cellname, cell) == 0 &&
-	    memcmp((void *)&loginP->cksum[0], (void *)cksum,
-		   SHA_HASH_BYTES) == 0) {
+	}
+	if (strcmp(loginP->username, user) == 0
+	    && strcmp(loginP->cellname, cell) == 0
+	    && memcmp((void *)&loginP->cksum[0], (void *)cksum,
+		      SHA_HASH_BYTES) == 0) {
 	    *viceid = loginP->viceid;
 	    *group0 = loginP->group0;
 	    *group1 = loginP->group1;
@@ -394,14 +396,9 @@ int nsafs_login_lookup(
  * Insert a login ID into the cache. If the user already has an entry,
  * then overwrite the old entry.
  */
-int nsafs_login_store(
-    char *user,
-    char *cell,
-    char *cksum,
-    int viceid,
-    int group0,
-    int group1,
-    afs_uint32 expiration)
+int
+nsafs_login_store(char *user, char *cell, char *cksum, int viceid, int group0,
+		  int group1, afs_uint32 expiration)
 {
     int index;
     long curTime;
@@ -416,8 +413,8 @@ int nsafs_login_store(
     crit_enter(nsafs_login_lock);
     loginP = nsafs_login_cache[index].head;
     while (loginP != NULL) {
-	if (strcmp(loginP->username, user) == 0 &&
-	    strcmp(loginP->cellname, cell) == 0) {
+	if (strcmp(loginP->username, user) == 0
+	    && strcmp(loginP->cellname, cell) == 0) {
 	    break;
 	}
 	if (loginP->expiration < curTime) {
@@ -429,18 +426,19 @@ int nsafs_login_store(
 		       nsafs_login_cache[index].tail, next, prev);
 	    afs_osi_Free(tmpP, sizeof(struct nsafs_login));
 	    continue;
- 	}
+	}
 	loginP = loginP->next;
     }
     if (loginP == NULL) {
 	loginP = (struct nsafs_login *)
-		 afs_osi_Alloc(sizeof(struct nsafs_login));
+	    afs_osi_Alloc(sizeof(struct nsafs_login));
 	strcpy(&loginP->username[0], user);
 	strcpy(&loginP->cellname[0], cell);
     } else {
 	DLL_DELETE(loginP, nsafs_login_cache[index].head,
 		   nsafs_login_cache[index].tail, next, prev);
-	nsafs_set_id_from_ints(loginP->viceid, loginP->group0, loginP->group1);
+	nsafs_set_id_from_ints(loginP->viceid, loginP->group0,
+			       loginP->group1);
 	uafs_unlog();
     }
     nsafs_set_id_from_ints(viceid, group0, group1);
@@ -458,19 +456,15 @@ int nsafs_login_store(
 /*
  * Extract a string parameter from the parameter block
  */
-int nsafs_get_string(
-    char **paramP,
-    char *dflt,
-    char *name,
-    pblock *pb,
-    Session *sn,
-    Request *rq)
+int
+nsafs_get_string(char **paramP, char *dflt, char *name, pblock * pb,
+		 Session * sn, Request * rq)
 {
     char *tmpPtr;
     char error[128];
 
     tmpPtr = pblock_findval(name, pb);
-    if(tmpPtr == NULL) {
+    if (tmpPtr == NULL) {
 	if (dflt == NULL) {
 	    log_error(LOG_MISCONFIG, "nsafs", sn, rq,
 		      "nsafs_init: please supply a %s parameter", name);
@@ -479,7 +473,7 @@ int nsafs_get_string(
 	    tmpPtr = dflt;
 	}
     }
-    *paramP = afs_osi_Alloc(strlen(tmpPtr)+1);
+    *paramP = afs_osi_Alloc(strlen(tmpPtr) + 1);
     strcpy(*paramP, tmpPtr);
     return REQ_PROCEED;
 }
@@ -487,19 +481,15 @@ int nsafs_get_string(
 /*
  * Extract a long integer parameter from the parameter block
  */
-int nsafs_get_long(
-    long *paramP,
-    long dflt,
-    char *name,
-    pblock *pb,
-    Session *sn,
-    Request *rq)
+int
+nsafs_get_long(long *paramP, long dflt, char *name, pblock * pb, Session * sn,
+	       Request * rq)
 {
     char *start, *end;
     long val;
 
     start = pblock_findval(name, pb);
-    if(start == NULL) {
+    if (start == NULL) {
 	if (dflt < 0) {
 	    log_error(LOG_MISCONFIG, "nsafs", sn, rq,
 		      "nsafs_init: please supply a %s parameter", name);
@@ -522,13 +512,9 @@ int nsafs_get_long(
 /*
  * Extract an integer parameter from the parameter block
  */
-int nsafs_get_int(
-    int *paramP,
-    int dflt,
-    char *name,
-    pblock *pb,
-    Session *sn,
-    Request *rq)
+int
+nsafs_get_int(int *paramP, int dflt, char *name, pblock * pb, Session * sn,
+	      Request * rq)
 {
     int code;
     long val;
@@ -543,11 +529,8 @@ int nsafs_get_int(
 /*
  * Parse the authorization header for username and password
  */
-void nsafs_parse_authhdr(
-    char *authHdr,
-    char *user,
-    char *cell,
-    char *passwd)
+void
+nsafs_parse_authhdr(char *authHdr, char *user, char *cell, char *passwd)
 {
     int i;
     char *p;
@@ -559,11 +542,11 @@ void nsafs_parse_authhdr(
     /*
      * Skip leading blanks, check for basic authentication
      */
-    for (p = authHdr ; *p == ' ' && *p != '\0' ; p++);
+    for (p = authHdr; *p == ' ' && *p != '\0'; p++);
     if (strncasecmp(p, "basic ", 6) != 0) {
 	return;
     }
-    for (p += 6 ; *p == ' ' ; p++);
+    for (p += 6; *p == ' '; p++);
 
     /*
      * Username and password are base64 encoded
@@ -573,18 +556,18 @@ void nsafs_parse_authhdr(
     /*
      * Format is user@cell:passwd. The user, cell or passwd may be missing
      */
-    for ( i = 0 ; *p != '@' && *p != ':' && *p != '\0' ; p++ , i++) {
+    for (i = 0; *p != '@' && *p != ':' && *p != '\0'; p++, i++) {
 	user[i] = *p;
     }
     user[i] = '\0';
     if (*p == '@') {
-	for (i = 0 , p++ ; *p != ':' && *p != '\0' ; p++ , i++) {
+	for (i = 0, p++; *p != ':' && *p != '\0'; p++, i++) {
 	    cell[i] = *p;
 	}
 	cell[i] = '\0';
     }
     if (*p == ':') {
-	for (i = 0 , p++ ; *p != '\0' ; p++ , i++) {
+	for (i = 0, p++; *p != '\0'; p++, i++) {
 	    passwd[i] = *p;
 	}
 	passwd[i] = '\0';
@@ -594,12 +577,9 @@ void nsafs_parse_authhdr(
 /*
  * Return an appropriate error given a system errno
  */
-int nsafs_error_check(
-    int code,
-    char *text,
-    pblock *pb,
-    Session *sn,
-    Request *rq)
+int
+nsafs_error_check(int code, char *text, pblock * pb, Session * sn,
+		  Request * rq)
 {
     char txtbuf[256];
     char *realmBuf;
@@ -618,21 +598,20 @@ int nsafs_error_check(
      * nsafs_nocheck is set. If nsafs_nocheck is set then change
      * EPERM to EACCES
      */
-    if (code == EACCES &&
-	pblock_findval("nsafs_nocheck", rq->vars) == NULL &&
-	(pblock_findval("nsafs_viceid", rq->vars) == NULL ||
-	 pblock_findval("nsafs_group0", rq->vars) == NULL ||
-	 pblock_findval("nsafs_group1", rq->vars) == NULL)) {
+    if (code == EACCES && pblock_findval("nsafs_nocheck", rq->vars) == NULL
+	&& (pblock_findval("nsafs_viceid", rq->vars) == NULL
+	    || pblock_findval("nsafs_group0", rq->vars) == NULL
+	    || pblock_findval("nsafs_group1", rq->vars) == NULL)) {
 	code = EPERM;
-    } else if (code == EPERM &&
-	       pblock_findval("nsafs_nocheck", rq->vars) == NULL) {
-        char *status=pblock_findval("status",rq->vars);
-	if (strcmp(status,"Login Failed"))
-	  code = EACCES;
+    } else if (code == EPERM
+	       && pblock_findval("nsafs_nocheck", rq->vars) == NULL) {
+	char *status = pblock_findval("status", rq->vars);
+	if (strcmp(status, "Login Failed"))
+	    code = EACCES;
     }
 
     switch (code) {
-      case EPERM:
+    case EPERM:
 	/*
 	 * We overload EPERM (not super-user) to mean unauthenticated.
 	 * We use the first subdirectory beneath the AFS mount point
@@ -642,7 +621,7 @@ int nsafs_error_check(
 	protocol_status(sn, rq, PROTOCOL_UNAUTHORIZED, NULL);
 	path = pblock_findval("path", rq->vars);
 	realmBuf = NULL;
-	if(path != NULL) {
+	if (path != NULL) {
 	    path = uafs_afsPathName(path);
 	}
 	if (path != NULL && *path != '\0') {
@@ -660,16 +639,16 @@ int nsafs_error_check(
 	}
 	pblock_nvinsert("WWW-authenticate", txtbuf, rq->srvhdrs);
 	break;
-      case EACCES:
+    case EACCES:
 	log_error(LOG_SECURITY, "nsafs", sn, rq, txtbuf);
 	protocol_status(sn, rq, PROTOCOL_FORBIDDEN, NULL);
 	break;
-      case ENOENT:
-      case ENOTDIR:
+    case ENOENT:
+    case ENOTDIR:
 	log_error(LOG_INFORM, "nsafs", sn, rq, txtbuf);
 	protocol_status(sn, rq, PROTOCOL_NOT_FOUND, NULL);
 	break;
-      default:
+    default:
 	log_error(LOG_FAILURE, "nsafs", sn, rq, txtbuf);
 	protocol_status(sn, rq, PROTOCOL_SERVER_ERROR, NULL);
 	break;
@@ -682,11 +661,9 @@ int nsafs_error_check(
  * if the preconditions are met. Any other return value means
  * that the request has been aborted.
  */
-int nsafs_check_preconditions(
-    struct stat *stp,
-    pblock *pb,
-    Session *sn,
-    Request *rq)
+int
+nsafs_check_preconditions(struct stat *stp, pblock * pb, Session * sn,
+			  Request * rq)
 {
     int code;
     time_t mtime;
@@ -717,26 +694,24 @@ int nsafs_check_preconditions(
  * We used to call protocol_set_finfo, but it wasn't handling
  * if-unmodified-since headers correctly.
  */
-int nsafs_set_finfo(
-    Session *sn,
-    Request *rq,
-    struct stat *stp)
+int
+nsafs_set_finfo(Session * sn, Request * rq, struct stat *stp)
 {
     int code;
     time_t mtime;
     struct tm tms, *tmsp;
     char *reqhdr;
     char dateStr[128];
-    char *days[] = {"Sun","Mon","Tue","Wed","Thu","Fri","Sat"};
-    char *months[] = {"Jan","Feb","Mar","Apr","May","Jun",
-		      "Jul","Aug","Sep","Oct","Nov","Dec"};
+    char *days[] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+    char *months[] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    };
 
     mtime = stp->st_mtime;
     tmsp = system_gmtime(&mtime, &tms);
-    sprintf(&dateStr[0],"%s, %02d %s %d %02d:%02d:%02d GMT",
-	    days[tmsp->tm_wday], tmsp->tm_mday,
-	    months[tmsp->tm_mon], tmsp->tm_year+1900,
-	    tmsp->tm_hour, tmsp->tm_min, tmsp->tm_sec);
+    sprintf(&dateStr[0], "%s, %02d %s %d %02d:%02d:%02d GMT",
+	    days[tmsp->tm_wday], tmsp->tm_mday, months[tmsp->tm_mon],
+	    tmsp->tm_year + 1900, tmsp->tm_hour, tmsp->tm_min, tmsp->tm_sec);
     pblock_nvinsert("Last-Modified", &dateStr[0], rq->srvhdrs);
     pblock_nninsert("Content-Length", stp->st_size, rq->srvhdrs);
 
@@ -748,7 +723,8 @@ int nsafs_set_finfo(
  * here because we are still in the parent process. We don't
  * initialize AFS until we get the first service request.
  */
-NSAPI_PUBLIC int nsafs_init(pblock *pb, Session *sn, Request *rq)
+NSAPI_PUBLIC int
+nsafs_init(pblock * pb, Session * sn, Request * rq)
 {
     int code;
 
@@ -810,7 +786,8 @@ NSAPI_PUBLIC int nsafs_init(pblock *pb, Session *sn, Request *rq)
     if (code != REQ_PROCEED) {
 	return code;
     }
-    code = nsafs_get_long(&maxExpirationParam, LONG_MAX, "exp-max", pb, sn, rq);
+    code =
+	nsafs_get_long(&maxExpirationParam, LONG_MAX, "exp-max", pb, sn, rq);
     if (code != REQ_PROCEED) {
 	return code;
     }
@@ -821,7 +798,8 @@ NSAPI_PUBLIC int nsafs_init(pblock *pb, Session *sn, Request *rq)
 /*
  * Extract name strings from a comma separated list
  */
-char *nsafs_NameFromNames(char *last, char *list, int *pos)
+char *
+nsafs_NameFromNames(char *last, char *list, int *pos)
 {
     int len;
     char *start;
@@ -830,18 +808,18 @@ char *nsafs_NameFromNames(char *last, char *list, int *pos)
     if (last == NULL) {
 	*pos = 0;
     } else {
-	afs_osi_Free(last, strlen(last)+1);
+	afs_osi_Free(last, strlen(last) + 1);
     }
     start = &list[*pos];
     if (*start == '\0') {
 	return NULL;
     }
-    for (len = 0 ; start[len] != ',' && start[len] != '\0' ; len++);
+    for (len = 0; start[len] != ',' && start[len] != '\0'; len++);
     *pos += len;
     if (list[*pos] == ',') {
 	*pos += 1;
     }
-    retVal = afs_osi_Alloc(len+1);
+    retVal = afs_osi_Alloc(len + 1);
     memcpy(retVal, start, len);
     retVal[len] = '\0';
     return retVal;
@@ -856,7 +834,8 @@ char *nsafs_NameFromNames(char *last, char *list, int *pos)
  * Send an Unauthorized response if login fails to prompt the user
  * to reenter the username and password.
  */
-NSAPI_PUBLIC int nsafs_basic(pblock *pb, Session *sn, Request *rq)
+NSAPI_PUBLIC int
+nsafs_basic(pblock * pb, Session * sn, Request * rq)
 {
     int i;
     int rc;
@@ -896,7 +875,7 @@ NSAPI_PUBLIC int nsafs_basic(pblock *pb, Session *sn, Request *rq)
     nsafs_parse_authhdr(authHdr, &user[0], &cell[0], &passwd[0]);
     if (user[0] == '\0' || passwd[0] == '\0') {
 	memset((void *)&passwd[0], 0, NSAFS_PASSWORD_MAX);
-	pblock_nvinsert("status","Login Failed",rq->vars);
+	pblock_nvinsert("status", "Login Failed", rq->vars);
 	return nsafs_error_check(EPERM, "Invalid auth header", pb, sn, rq);
     }
     if (cell[0] == '\0') {
@@ -929,10 +908,10 @@ NSAPI_PUBLIC int nsafs_basic(pblock *pb, Session *sn, Request *rq)
     }
     if (cellP == NULL) {
 	memset((void *)&passwd[0], 0, NSAFS_PASSWORD_MAX);
-	pblock_nvinsert("status","Login Failed",rq->vars);
+	pblock_nvinsert("status", "Login Failed", rq->vars);
 	return nsafs_error_check(EPERM, "Invalid cell", pb, sn, rq);
     }
-    afs_osi_Free(cellP, strlen(cellP)+1);
+    afs_osi_Free(cellP, strlen(cellP) + 1);
 
     u.u_expiration = 0;
     nsafs_set_id_from_strings(NULL, NULL, NULL);
@@ -941,15 +920,16 @@ NSAPI_PUBLIC int nsafs_basic(pblock *pb, Session *sn, Request *rq)
     if (code != 0) {
 #if 0
 	sprintf(txtbuf, "%s@%s: %s\n", user, cell, reason);
-	pblock_nvinsert("status","Login Failed",rq->vars);
+	pblock_nvinsert("status", "Login Failed", rq->vars);
 	return nsafs_error_check(EPERM, txtbuf, pb, sn, rq);
 #else /* 0 */
-    return REQ_PROCEED;
+	return REQ_PROCEED;
 #endif /* 0 */
     }
     expiration = u.u_expiration;
     usr_assert(expiration != 0);
-    expiration = MIN(expiration, (afs_uint32)(time(NULL) + maxExpirationParam));
+    expiration =
+	MIN(expiration, (afs_uint32) (time(NULL) + maxExpirationParam));
 
     /*
      * Insert the credentials into the login cache
@@ -971,7 +951,8 @@ NSAPI_PUBLIC int nsafs_basic(pblock *pb, Session *sn, Request *rq)
  * Terminates the name translation step for files in AFS.
  * Puts the AFS pathname into path and into ppath request vars.
  */
-NSAPI_PUBLIC int nsafs_mount(pblock *pb, Session *sn, Request *rq)
+NSAPI_PUBLIC int
+nsafs_mount(pblock * pb, Session * sn, Request * rq)
 {
     char *reqUri;
     char *newReqUri;
@@ -1034,7 +1015,8 @@ NSAPI_PUBLIC int nsafs_mount(pblock *pb, Session *sn, Request *rq)
 /*
  * Allow unauthorized users to access a specific directory in AFS
  */
-NSAPI_PUBLIC int nsafs_public(pblock *pb, Session *sn, Request *rq)
+NSAPI_PUBLIC int
+nsafs_public(pblock * pb, Session * sn, Request * rq)
 {
     char *path;
     char *public;
@@ -1062,13 +1044,13 @@ NSAPI_PUBLIC int nsafs_public(pblock *pb, Session *sn, Request *rq)
 	util_uri_parse(public);
     }
     pubLen = strlen(public);
-    if (strncmp(path, public, pubLen) != 0 ||
-	(path[pubLen] != '/' && path[pubLen] != '\0')) {
+    if (strncmp(path, public, pubLen) != 0
+	|| (path[pubLen] != '/' && path[pubLen] != '\0')) {
 	return REQ_NOACTION;
     }
-    if (pblock_findval("nsafs_viceid", rq->vars) == NULL ||
-	pblock_findval("nsafs_group0", rq->vars) == NULL ||
-	pblock_findval("nsafs_group1", rq->vars) == NULL) {
+    if (pblock_findval("nsafs_viceid", rq->vars) == NULL
+	|| pblock_findval("nsafs_group0", rq->vars) == NULL
+	|| pblock_findval("nsafs_group1", rq->vars) == NULL) {
 	pblock_nvinsert("nsafs_public", "TRUE", rq->vars);
     }
     return REQ_PROCEED;
@@ -1077,7 +1059,8 @@ NSAPI_PUBLIC int nsafs_public(pblock *pb, Session *sn, Request *rq)
 /*
  * Identify a path that should be an authentication realm.
  */
-NSAPI_PUBLIC int nsafs_realm(pblock *pb, Session *sn, Request *rq)
+NSAPI_PUBLIC int
+nsafs_realm(pblock * pb, Session * sn, Request * rq)
 {
     char *path;
     char *realm;
@@ -1112,8 +1095,8 @@ NSAPI_PUBLIC int nsafs_realm(pblock *pb, Session *sn, Request *rq)
     }
 
     pathLen = strlen(realm);
-    if (strncmp(path, realm, pathLen) != 0 ||
-	(path[pathLen] != '/' && path[pathLen] != '\0')) {
+    if (strncmp(path, realm, pathLen) != 0
+	|| (path[pathLen] != '/' && path[pathLen] != '\0')) {
 	return REQ_NOACTION;
     }
     pblock_nvinsert("nsafs_realm", realm, rq->vars);
@@ -1124,12 +1107,9 @@ NSAPI_PUBLIC int nsafs_realm(pblock *pb, Session *sn, Request *rq)
  * Check whether any path elements beneath the nolinks directory
  * are symbolic links. Return REQ_PROCEED if no links are found.
  */
-int nsafs_check_for_links(
-    char *path,
-    char *nolinks,
-    pblock *pb,
-    Session *sn,
-    Request *rq)
+int
+nsafs_check_for_links(char *path, char *nolinks, pblock * pb, Session * sn,
+		      Request * rq)
 {
     int rc;
     int code;
@@ -1144,19 +1124,18 @@ int nsafs_check_for_links(
      */
     dirLen = strlen(nolinks);
     pathLen = strlen(path);
-    if (pathLen < dirLen ||
-	strncmp(path, nolinks, dirLen) != 0 ||
-	(path[dirLen] != '/' && path[dirLen] != '\0')) {
+    if (pathLen < dirLen || strncmp(path, nolinks, dirLen) != 0
+	|| (path[dirLen] != '/' && path[dirLen] != '\0')) {
 	return REQ_PROCEED;
     }
     if (path[dirLen] == '/') {
 	dirLen++;
     }
 
-    allocSize = pathLen+1;
+    allocSize = pathLen + 1;
     tmpPath = (char *)afs_osi_Alloc(allocSize);
     strcpy(tmpPath, path);
-    while(tmpPath[pathLen] == '/' && pathLen > dirLen) {
+    while (tmpPath[pathLen] == '/' && pathLen > dirLen) {
 	tmpPath[pathLen] = '\0';
 	pathLen--;
     }
@@ -1171,11 +1150,11 @@ int nsafs_check_for_links(
 	    afs_osi_Free(tmpPath, allocSize);
 	    return nsafs_error_check(ENOENT, NULL, pb, sn, rq);
 	}
-	while(tmpPath[pathLen] != '/' && pathLen > dirLen) {
+	while (tmpPath[pathLen] != '/' && pathLen > dirLen) {
 	    tmpPath[pathLen] = '\0';
 	    pathLen--;
 	}
-	while(tmpPath[pathLen] == '/' && pathLen > dirLen) {
+	while (tmpPath[pathLen] == '/' && pathLen > dirLen) {
 	    tmpPath[pathLen] = '\0';
 	    pathLen--;
 	}
@@ -1187,7 +1166,8 @@ int nsafs_check_for_links(
 /*
  * Deny access to symbolic links in a directory or its descendents.
  */
-NSAPI_PUBLIC int nsafs_nolinks(pblock *pb, Session *sn, Request *rq)
+NSAPI_PUBLIC int
+nsafs_nolinks(pblock * pb, Session * sn, Request * rq)
 {
     int code;
     char *path;
@@ -1254,7 +1234,8 @@ NSAPI_PUBLIC int nsafs_nolinks(pblock *pb, Session *sn, Request *rq)
 /*
  * Set the MIME type for files in AFS.
  */
-NSAPI_PUBLIC int nsafs_force_type(pblock *pb, Session *sn, Request *rq)
+NSAPI_PUBLIC int
+nsafs_force_type(pblock * pb, Session * sn, Request * rq)
 {
     char *path;
     char *dflt;
@@ -1291,7 +1272,8 @@ NSAPI_PUBLIC int nsafs_force_type(pblock *pb, Session *sn, Request *rq)
  * Disable the Unauthorized response message so users never get
  * prompted for their name and password.
  */
-NSAPI_PUBLIC int nsafs_nocheck(pblock *pb, Session *sn, Request *rq)
+NSAPI_PUBLIC int
+nsafs_nocheck(pblock * pb, Session * sn, Request * rq)
 {
     char *path;
 
@@ -1331,7 +1313,8 @@ NSAPI_PUBLIC int nsafs_nocheck(pblock *pb, Session *sn, Request *rq)
  * Require all requests for AFS files that are not explicitly made
  * public to be authenticated.
  */
-NSAPI_PUBLIC int nsafs_check(pblock *pb, Session *sn, Request *rq)
+NSAPI_PUBLIC int
+nsafs_check(pblock * pb, Session * sn, Request * rq)
 {
     char *path;
 
@@ -1357,9 +1340,9 @@ NSAPI_PUBLIC int nsafs_check(pblock *pb, Session *sn, Request *rq)
 	return REQ_PROCEED;
     }
 
-    if (pblock_findval("nsafs_viceid", rq->vars) == NULL ||
-	pblock_findval("nsafs_group0", rq->vars) == NULL ||
-	pblock_findval("nsafs_group1", rq->vars) == NULL) {
+    if (pblock_findval("nsafs_viceid", rq->vars) == NULL
+	|| pblock_findval("nsafs_group0", rq->vars) == NULL
+	|| pblock_findval("nsafs_group1", rq->vars) == NULL) {
 	return nsafs_error_check(EPERM, NULL, pb, sn, rq);
     }
 
@@ -1369,7 +1352,8 @@ NSAPI_PUBLIC int nsafs_check(pblock *pb, Session *sn, Request *rq)
 /*
  * Find index files for directories
  */
-NSAPI_PUBLIC int nsafs_find_index(pblock *pb, Session *sn, Request *rq)
+NSAPI_PUBLIC int
+nsafs_find_index(pblock * pb, Session * sn, Request * rq)
 {
     char *path;
     char *indexNames;
@@ -1396,7 +1380,7 @@ NSAPI_PUBLIC int nsafs_find_index(pblock *pb, Session *sn, Request *rq)
     /*
      * Skip pathnames that don't end in a slash
      */
-    if (*path == '\0' || path[strlen(path)-1] != '/') {
+    if (*path == '\0' || path[strlen(path) - 1] != '/') {
 	return REQ_NOACTION;
     }
 
@@ -1423,17 +1407,17 @@ NSAPI_PUBLIC int nsafs_find_index(pblock *pb, Session *sn, Request *rq)
 
 	indexP = nsafs_NameFromNames(NULL, indexNames, &pos);
 	while (indexP != NULL) {
-	    nameP = afs_osi_Alloc(strlen(path)+strlen(indexP)+2);
+	    nameP = afs_osi_Alloc(strlen(path) + strlen(indexP) + 2);
 	    sprintf(nameP, "%s/%s", path, indexP);
 	    rc = stat(nameP, &st);
 	    if (rc == 0 && (st.st_mode & S_IFMT) != S_IFDIR) {
 		param_free(pblock_remove("path", rq->vars));
 		pblock_nvinsert("path", nameP, rq->vars);
-		afs_osi_Free(nameP, strlen(path)+strlen(indexP)+2);
-		afs_osi_Free(indexP, strlen(indexP)+1);
+		afs_osi_Free(nameP, strlen(path) + strlen(indexP) + 2);
+		afs_osi_Free(indexP, strlen(indexP) + 1);
 		return REQ_PROCEED;
 	    }
-	    afs_osi_Free(nameP, strlen(path)+strlen(indexP)+2);
+	    afs_osi_Free(nameP, strlen(path) + strlen(indexP) + 2);
 	    indexP = nsafs_NameFromNames(indexP, indexNames, &pos);
 	}
     } else {
@@ -1461,17 +1445,17 @@ NSAPI_PUBLIC int nsafs_find_index(pblock *pb, Session *sn, Request *rq)
 
 	indexP = nsafs_NameFromNames(NULL, indexNames, &pos);
 	while (indexP != NULL) {
-	    nameP = afs_osi_Alloc(strlen(path)+strlen(indexP)+2);
+	    nameP = afs_osi_Alloc(strlen(path) + strlen(indexP) + 2);
 	    sprintf(nameP, "%s/%s", path, indexP);
 	    rc = uafs_stat(nameP, &st);
 	    if (rc == 0 && (st.st_mode & S_IFMT) != S_IFDIR) {
 		param_free(pblock_remove("path", rq->vars));
 		pblock_nvinsert("path", nameP, rq->vars);
-		afs_osi_Free(nameP, strlen(path)+strlen(indexP)+2);
-		afs_osi_Free(indexP, strlen(indexP)+1);
+		afs_osi_Free(nameP, strlen(path) + strlen(indexP) + 2);
+		afs_osi_Free(indexP, strlen(indexP) + 1);
 		return REQ_PROCEED;
 	    }
-	    afs_osi_Free(nameP, strlen(path)+strlen(indexP)+2);
+	    afs_osi_Free(nameP, strlen(path) + strlen(indexP) + 2);
 	    indexP = nsafs_NameFromNames(indexP, indexNames, &pos);
 	}
     }
@@ -1495,7 +1479,8 @@ struct nsafs_tree {
 /*
  * Validate that the given tree is a valid balanced binary tree
  */
-int nsafs_tree_check(struct nsafs_tree *root)
+int
+nsafs_tree_check(struct nsafs_tree *root)
 {
     int leftDepth;
     int rightDepth;
@@ -1517,7 +1502,7 @@ int nsafs_tree_check(struct nsafs_tree *root)
     assert(balance == root->balance);
     assert(balance >= -1);
     assert(balance <= 1);
-    return (MAX(leftDepth, rightDepth)+1);
+    return (MAX(leftDepth, rightDepth) + 1);
 }
 #endif /* NSAFS_TREE_DEBUG */
 
@@ -1526,9 +1511,8 @@ int nsafs_tree_check(struct nsafs_tree *root)
  * rootP is the address of the parent's pointer to this node.
  * Returns the change in depth of this tree (0 or 1)
  */
-int nsafs_node_insert(
-    struct nsafs_tree *newNode,
-    struct nsafs_tree **rootP)
+int
+nsafs_node_insert(struct nsafs_tree *newNode, struct nsafs_tree **rootP)
 {
     struct nsafs_tree *thisNode;
     int delta;
@@ -1536,7 +1520,7 @@ int nsafs_node_insert(
     thisNode = *rootP;
     if (strcmp(newNode->name, thisNode->name) < 0) {
 	/*
- 	 * Insert left
+	 * Insert left
 	 */
 	if (thisNode->left == NULL) {
 	    thisNode->left = newNode;
@@ -1594,7 +1578,7 @@ int nsafs_node_insert(
 	}
     } else {
 	/*
- 	 * Insert right
+	 * Insert right
 	 */
 	if (thisNode->right == NULL) {
 	    thisNode->right = newNode;
@@ -1657,10 +1641,8 @@ int nsafs_node_insert(
  * Allocate storage for a new directory entry, copy in the name and
  * text, and insert the entry into the balanced binary tree.
  */
-void nsafs_tree_insert(
-    char *name,
-    char *text,
-    struct nsafs_tree **rootP)
+void
+nsafs_tree_insert(char *name, char *text, struct nsafs_tree **rootP)
 {
     int nameLen;
     int textLen;
@@ -1675,7 +1657,7 @@ void nsafs_tree_insert(
     allocLen = sizeof(struct nsafs_tree) + nameLen + textLen + 2;
     newNode = (struct nsafs_tree *)afs_osi_Alloc(allocLen);
     usr_assert(newNode != NULL);
-    newNode->name = (char *)(newNode+1);
+    newNode->name = (char *)(newNode + 1);
     newNode->text = newNode->name + nameLen + 1;
     newNode->textLen = textLen;
     newNode->allocLen = allocLen;
@@ -1703,19 +1685,16 @@ void nsafs_tree_insert(
 /*
  * Transmit the contents of the tree
  */
-int nsafs_tree_send(
-    SYS_NETFD sd,
-    struct nsafs_tree *root,
-    char *outbuf,
-    int *buflen,
-    int bufsize)
+int
+nsafs_tree_send(SYS_NETFD sd, struct nsafs_tree *root, char *outbuf,
+		int *buflen, int bufsize)
 {
     int code;
     struct nsafs_tree *node;
     char *txtBuf;
     int txtLen;
     int len;
- 
+
     /*
      * Recurse left, iterate right
      */
@@ -1751,11 +1730,11 @@ int nsafs_tree_send(
 /*
  * Free the binary tree and all data within
  */
-void nsafs_tree_free(
-    struct nsafs_tree *root)
+void
+nsafs_tree_free(struct nsafs_tree *root)
 {
     struct nsafs_tree *node, *next;
- 
+
     /*
      * Iterate left, recurse right
      */
@@ -1765,7 +1744,8 @@ void nsafs_tree_free(
 	    nsafs_tree_free(node->right);
 	}
 	next = node->left;
-	afs_osi_Free(node, sizeof(struct nsafs_tree) + strlen(node->name) +
+	afs_osi_Free(node,
+		     sizeof(struct nsafs_tree) + strlen(node->name) +
 		     strlen(node->text) + 2);
 	node = next;
     }
@@ -1774,12 +1754,9 @@ void nsafs_tree_free(
 /*
  * Send the contents of an AFS directory, Simple directory format
  */
-int nsafs_send_directory(
-    char *path,
-    struct stat *stp,
-    pblock *pb,
-    Session *sn,
-    Request *rq)
+int
+nsafs_send_directory(char *path, struct stat *stp, pblock * pb, Session * sn,
+		     Request * rq)
 {
     char *dirbuf;
     int buflen;
@@ -1789,10 +1766,9 @@ int nsafs_send_directory(
     int contentLength;
     int rc;
     int code;
-    char *htmlHdr = "<HTML>\r\n<BODY>\r\n"
-    		    "<TITLE>Index of %s</TITLE>\r\n"
-    		    "<h1>Index of %s</h1>\r\n"
-		    "<PRE><HR>\r\n";
+    char *htmlHdr =
+	"<HTML>\r\n<BODY>\r\n" "<TITLE>Index of %s</TITLE>\r\n"
+	"<h1>Index of %s</h1>\r\n" "<PRE><HR>\r\n";
     char *htmlTrl = "</PRE></BODY></HTML>\r\n";
     struct nsafs_tree *root;
 
@@ -1822,9 +1798,8 @@ int nsafs_send_directory(
 	} else {
 	    filename = enp->d_name;
 	}
-	sprintf(dirbuf,
-		"<A HREF=\"%s%s\" NAME=\"%s\"> %s</A>\r\n",
-		path, enp->d_name, filename, filename);
+	sprintf(dirbuf, "<A HREF=\"%s%s\" NAME=\"%s\"> %s</A>\r\n", path,
+		enp->d_name, filename, filename);
 	contentLength += strlen(dirbuf);
 	nsafs_tree_insert(enp->d_name, dirbuf, &root);
     }
@@ -1902,12 +1877,9 @@ int nsafs_send_directory(
 /*
  * Send the contents of an AFS file
  */
-int nsafs_send_file(
-    char *path,
-    struct stat *stp,
-    pblock *pb,
-    Session *sn,
-    Request *rq)
+int
+nsafs_send_file(char *path, struct stat *stp, pblock * pb, Session * sn,
+		Request * rq)
 {
     char *filebuf;
     int i;
@@ -1918,7 +1890,7 @@ int nsafs_send_file(
     /*
      * Make sure we can open the file before we send the response header
      */
-    fd  = uafs_open(path, O_RDONLY, 0);
+    fd = uafs_open(path, O_RDONLY, 0);
     if (fd < 0) {
 	code = errno;
 	return nsafs_error_check(code, NULL, pb, sn, rq);
@@ -1971,7 +1943,8 @@ int nsafs_send_file(
 /*
  * Service function for AFS files and directories
  */
-NSAPI_PUBLIC int nsafs_send(pblock *pb, Session *sn, Request *rq)
+NSAPI_PUBLIC int
+nsafs_send(pblock * pb, Session * sn, Request * rq)
 {
     char *path;
     char *dirPath;
@@ -2040,17 +2013,17 @@ NSAPI_PUBLIC int nsafs_send(pblock *pb, Session *sn, Request *rq)
      */
     if ((st.st_mode & S_IFMT) == S_IFDIR) {
 	len = strlen(path);
-	dirPath = afs_osi_Alloc(len+2);
+	dirPath = afs_osi_Alloc(len + 2);
 	strcpy(dirPath, path);
-	if (dirPath[len-1] != '/') {
+	if (dirPath[len - 1] != '/') {
 	    dirPath[len] = '/';
-	    dirPath[len+1] = '\0';
+	    dirPath[len + 1] = '\0';
 	}
 	if (util_uri_is_evil(dirPath)) {
 	    util_uri_parse(dirPath);
 	}
 	code = nsafs_send_directory(dirPath, &st, pb, sn, rq);
-	afs_osi_Free(dirPath, len+2);
+	afs_osi_Free(dirPath, len + 2);
     } else {
 	code = nsafs_send_file(path, &st, pb, sn, rq);
     }
@@ -2060,7 +2033,8 @@ NSAPI_PUBLIC int nsafs_send(pblock *pb, Session *sn, Request *rq)
 /*
  * Service function to create new AFS files
  */
-NSAPI_PUBLIC int nsafs_put(pblock *pb, Session *sn, Request *rq)
+NSAPI_PUBLIC int
+nsafs_put(pblock * pb, Session * sn, Request * rq)
 {
     char *path;
     char *viceid;
@@ -2141,7 +2115,7 @@ NSAPI_PUBLIC int nsafs_put(pblock *pb, Session *sn, Request *rq)
 	rspStatus = PROTOCOL_OK;
     }
 
-    fd  = uafs_open(path, O_WRONLY|O_CREAT|O_TRUNC, 0644);
+    fd = uafs_open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd < 0) {
 	code = errno;
 	return nsafs_error_check(code, NULL, pb, sn, rq);
@@ -2161,7 +2135,7 @@ NSAPI_PUBLIC int nsafs_put(pblock *pb, Session *sn, Request *rq)
 		eof = 1;
 	    }
 	}
-	for (bytesRead = 0 ; !eof && bytesRead < bytesToRead ; bytesRead++) {
+	for (bytesRead = 0; !eof && bytesRead < bytesToRead; bytesRead++) {
 	    rc = netbuf_getc(sn->inbuf);
 	    if (rc == IO_EOF) {
 		eof = 1;
@@ -2197,7 +2171,7 @@ NSAPI_PUBLIC int nsafs_put(pblock *pb, Session *sn, Request *rq)
 	log_error(LOG_FAILURE, "nsafs", sn, rq, "received partial contents");
 	return REQ_EXIT;
     }
-    
+
     pblock_nninsert("Content-Length", 0, rq->srvhdrs);
     protocol_status(sn, rq, rspStatus, NULL);
     code = protocol_start_response(sn, rq);
@@ -2207,7 +2181,8 @@ NSAPI_PUBLIC int nsafs_put(pblock *pb, Session *sn, Request *rq)
 /*
  * Service function to delete AFS files
  */
-NSAPI_PUBLIC int nsafs_delete(pblock *pb, Session *sn, Request *rq)
+NSAPI_PUBLIC int
+nsafs_delete(pblock * pb, Session * sn, Request * rq)
 {
     char *path;
     char *viceid;
@@ -2255,7 +2230,7 @@ NSAPI_PUBLIC int nsafs_delete(pblock *pb, Session *sn, Request *rq)
 	return REQ_ABORTED;
     }
 
-    rc  = uafs_unlink(path);
+    rc = uafs_unlink(path);
     if (rc < 0) {
 	code = errno;
 	return nsafs_error_check(code, NULL, pb, sn, rq);
@@ -2270,7 +2245,8 @@ NSAPI_PUBLIC int nsafs_delete(pblock *pb, Session *sn, Request *rq)
 /*
  * Service function to create AFS directories
  */
-NSAPI_PUBLIC int nsafs_mkdir(pblock *pb, Session *sn, Request *rq)
+NSAPI_PUBLIC int
+nsafs_mkdir(pblock * pb, Session * sn, Request * rq)
 {
     char *path;
     char *viceid;
@@ -2307,7 +2283,7 @@ NSAPI_PUBLIC int nsafs_mkdir(pblock *pb, Session *sn, Request *rq)
     /*
      * Create the directory
      */
-    rc  = uafs_mkdir(path, 0755);
+    rc = uafs_mkdir(path, 0755);
     if (rc < 0) {
 	code = errno;
 	return nsafs_error_check(code, NULL, pb, sn, rq);
@@ -2322,7 +2298,8 @@ NSAPI_PUBLIC int nsafs_mkdir(pblock *pb, Session *sn, Request *rq)
 /*
  * Service function to delete AFS directories
  */
-NSAPI_PUBLIC int nsafs_rmdir(pblock *pb, Session *sn, Request *rq)
+NSAPI_PUBLIC int
+nsafs_rmdir(pblock * pb, Session * sn, Request * rq)
 {
     char *path;
     char *viceid;
@@ -2370,7 +2347,7 @@ NSAPI_PUBLIC int nsafs_rmdir(pblock *pb, Session *sn, Request *rq)
      * to to delete directories.
      */
     if ((st.st_mode & S_IFMT) == S_IFDIR) {
-	rc  = uafs_rmdir(path);
+	rc = uafs_rmdir(path);
     } else if ((st.st_mode & S_IFMT) == S_IFLNK) {
 	log_error(LOG_INFORM, "nsafs", sn, rq, "Cannot RMDIR links");
 	protocol_status(sn, rq, PROTOCOL_METHOD_NOT_ALLOWED, NULL);
@@ -2396,7 +2373,8 @@ NSAPI_PUBLIC int nsafs_rmdir(pblock *pb, Session *sn, Request *rq)
 /*
  * Service function to rename AFS files and directories
  */
-NSAPI_PUBLIC int nsafs_move(pblock *pb, Session *sn, Request *rq)
+NSAPI_PUBLIC int
+nsafs_move(pblock * pb, Session * sn, Request * rq)
 {
     char *path;
     char *newPath;
@@ -2441,7 +2419,7 @@ NSAPI_PUBLIC int nsafs_move(pblock *pb, Session *sn, Request *rq)
     /*
      * Rename the object
      */
-    rc  = uafs_rename(path, newPath);
+    rc = uafs_rename(path, newPath);
     if (rc < 0) {
 	code = errno;
 	return nsafs_error_check(code, NULL, pb, sn, rq);
@@ -2456,10 +2434,8 @@ NSAPI_PUBLIC int nsafs_move(pblock *pb, Session *sn, Request *rq)
 /*
  * Send the index of an AFS directory
  */
-int nsafs_index(
-    pblock *pb,
-    Session *sn,
-    Request *rq)
+int
+nsafs_index(pblock * pb, Session * sn, Request * rq)
 {
     char *path;
     char *viceid;
@@ -2545,14 +2521,14 @@ int nsafs_index(
 	if (rc < 0) {
 	    continue;
 	} else if ((st.st_mode & S_IFMT) == S_IFDIR) {
-	    sprintf(dirbuf, "%s directory %u %u\r\n",
-		    enp->d_name, st.st_size, st.st_mtime);
+	    sprintf(dirbuf, "%s directory %u %u\r\n", enp->d_name, st.st_size,
+		    st.st_mtime);
 	} else if ((st.st_mode & S_IFMT) == S_IFLNK) {
-	    sprintf(dirbuf, "%s link %u %u\r\n",
-		    enp->d_name, st.st_size, st.st_mtime);
+	    sprintf(dirbuf, "%s link %u %u\r\n", enp->d_name, st.st_size,
+		    st.st_mtime);
 	} else {
-	    sprintf(dirbuf, "%s unknown %u %u\r\n",
-		    enp->d_name, st.st_size, st.st_mtime);
+	    sprintf(dirbuf, "%s unknown %u %u\r\n", enp->d_name, st.st_size,
+		    st.st_mtime);
 	}
 	contentLength += strlen(dirbuf);
 	nsafs_tree_insert(enp->d_name, dirbuf, &root);

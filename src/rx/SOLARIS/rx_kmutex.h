@@ -16,7 +16,7 @@
 #ifndef _RX_KMUTEX_H_
 #define _RX_KMUTEX_H_
 
-#if	defined(AFS_SUN5_ENV) && defined(KERNEL) 
+#if	defined(AFS_SUN5_ENV) && defined(KERNEL)
 
 #define RX_ENABLE_LOCKS 1
 #define AFS_GLOBAL_RXLOCK_KERNEL 1
@@ -29,7 +29,7 @@ typedef kmutex_t afs_kmutex_t;
 typedef kcondvar_t afs_kcondvar_t;
 
 #undef osirx_AssertMine
-extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
+extern void osirx_AssertMine(afs_kmutex_t * lockaddr, char *msg);
 
 #define MUTEX_DESTROY(a)	mutex_destroy(a)
 #define MUTEX_INIT(a,b,c,d)	mutex_init(a, b, c, d)
@@ -76,7 +76,6 @@ extern void osirx_AssertMine(afs_kmutex_t *lockaddr, char *msg);
 
 #endif /* RX_LOCKS_DB */
 
-#endif	/* SUN5 && KERNEL */
+#endif /* SUN5 && KERNEL */
 
 #endif /* _RX_KMUTEX_H_ */
-

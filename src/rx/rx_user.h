@@ -8,33 +8,27 @@
  */
 
 #ifdef	VALIDATE
-error-foo error-foo error-foo
+error - foo error - foo error - foo
 #endif /* VALIDATE */
 #ifndef RX_USER_INCLUDE
 #define RX_USER_INCLUDE
-
 /* rx_user.h:  definitions specific to the user-level implementation of Rx */
-
 #include <afs/param.h>
 #include <stdio.h>
-#include <stdlib.h>	/* for malloc() */
+#include <stdlib.h>		/* for malloc() */
 #include <lwp.h>
-
 /* These routines are no-ops in the user level implementation */
 #define SPLVAR
 #define NETPRI
 #define USERPRI
-
 #define AFS_GLOCK()
 #define AFS_GUNLOCK()
 #define ISAFS_GLOCK()
 #define AFS_ASSERT_GLOCK()
-
 #define AFS_RXGLOCK()
 #define AFS_RXGUNLOCK()
 #define ISAFS_RXGLOCK()
 #define AFS_ASSERT_RXGLOCK()
-
 /* Some "operating-system independent" stuff, for the user mode implementation */
 #ifdef UAFS_CLIENT
 typedef void *osi_socket;

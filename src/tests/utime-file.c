@@ -50,7 +50,7 @@ RCSID("$Id$");
 #include <err.h>
 
 int
-main (int argc, char ** argv)
+main(int argc, char **argv)
 {
     int len;
     int ret;
@@ -62,36 +62,37 @@ main (int argc, char ** argv)
 
     switch (argc) {
     case 1:
-	len = 8 * 1024; break;
+	len = 8 * 1024;
+	break;
     case 2:
 	len = atoi(argv[1]);
 	if (len == 0)
-	    errx (1, "invalid len");
+	    errx(1, "invalid len");
     default:
-	errx (1, "argv != [12]");
+	errx(1, "argv != [12]");
     }
 
-    buf = malloc (len);
-    memset (buf, 'a', len);
+    buf = malloc(len);
+    memset(buf, 'a', len);
 
-    fd = open (filename, O_RDWR|O_CREAT|O_EXCL, 0744);
+    fd = open(filename, O_RDWR | O_CREAT | O_EXCL, 0744);
     if (fd < 0)
-	errx (1, "open");
-    ret = fstat (fd, &sb);
+	errx(1, "open");
+    ret = fstat(fd, &sb);
     if (ret < 0)
-	errx (1, "open");
+	errx(1, "open");
 
-    ret = ftruncate (fd, len);
-    fstat (fd, &sb);
-    lseek (fd, 0, SEEK_SET);
-    write (fd, buf, len);
-    fstat (fd, &sb);
+    ret = ftruncate(fd, len);
+    fstat(fd, &sb);
+    lseek(fd, 0, SEEK_SET);
+    write(fd, buf, len);
+    fstat(fd, &sb);
 
-    t.modtime = t.actime = time (NULL); 
-    utime (filename, &t);
+    t.modtime = t.actime = time(NULL);
+    utime(filename, &t);
 
-    close (fd);
-    free (buf);
+    close(fd);
+    free(buf);
 
     return 0;
 }

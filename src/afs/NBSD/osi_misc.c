@@ -17,7 +17,8 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -28,11 +29,12 @@ RCSID("$Header$");
  * Note that it must NOT set errno.
  */
 
-afs_suser() {
+afs_suser()
+{
     int error;
 
     if (suser(curproc) == 0) {
-	return(1);
+	return (1);
     }
-    return(0);
+    return (0);
 }

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afsutil.h"
 
@@ -22,13 +23,14 @@ static char *c_xlate = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
  * The supplied string 's' must be at least 8 bytes long.
  * Use the b32_string_t tyepdef.
  */
-char *int_to_base32(b32_string_t s, int a)
+char *
+int_to_base32(b32_string_t s, int a)
 {
     int i, j;
     unsigned int n;
 
     i = 0;
-    if (a==0)
+    if (a == 0)
 	s[i++] = c_xlate[0];
     else {
 	j = 25;
@@ -37,21 +39,20 @@ char *int_to_base32(b32_string_t s, int a)
 	    n >>= 30;
 	    s[i++] = c_xlate[n];
 	    a &= ~0xc0000000;
-	}
-	else {
-	    for (; j>=0; j-=5) {
+	} else {
+	    for (; j >= 0; j -= 5) {
 		n = a & (0x1f << j);
 		if (n)
-		    break; /* found highest bits set. */
+		    break;	/* found highest bits set. */
 	    }
-	    s[i++] = c_xlate[n>>j];
+	    s[i++] = c_xlate[n >> j];
 	    a &= ~(0x1f << j);
-	    j -=5;
+	    j -= 5;
 	}
 	/* more to do. */
-	for (; j>=0; j-=5) {
+	for (; j >= 0; j -= 5) {
 	    n = a & (0x1f << j);
-	    s[i++] = c_xlate[n>>j];
+	    s[i++] = c_xlate[n >> j];
 	    a &= ~(0x1f << j);
 	}
     }
@@ -59,7 +60,8 @@ char *int_to_base32(b32_string_t s, int a)
     return s;
 }
 
-int base32_to_int(char *s)
+int
+base32_to_int(char *s)
 {
     int n = 0;
     int result = 0;
@@ -67,8 +69,7 @@ int base32_to_int(char *s)
     for (; *s; s++) {
 	if (*s <= '9') {
 	    n = (int)(*s - '0');
-	}
-	else {
+	} else {
 	    n = 10 + (int)(*s - 'A');
 	}
 	result = (result << 5) + n;

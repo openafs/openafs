@@ -32,7 +32,7 @@
 char *emalloc();
 FILE *efopen();
 char *strcpy();
-extern FILE *yyin;  /*Input file for the YACC parser*/
+extern FILE *yyin;		/*Input file for the YACC parser */
 
 /*------------------------------------------------------------------------
  * [static] namehash
@@ -53,19 +53,20 @@ extern FILE *yyin;  /*Input file for the YACC parser*/
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static int namehash(name)
-    register char *name;
+static int
+namehash(name)
+     register char *name;
 
-{ /*namehash*/
+{				/*namehash */
 
     register int hash;
 
     hash = 0;
     while (*name != '\0')
 	hash += (hash << 6) + *name++;
-    return(hash);
+    return (hash);
 
-} /*namehash*/
+}				/*namehash */
 
 /*------------------------------------------------------------------------
  * [static] AllocConfigNode
@@ -87,17 +88,17 @@ static int namehash(name)
  *	May exit from package entirely.
  *------------------------------------------------------------------------*/
 
-static CTREEPTR AllocConfigNode()
-
-{ /*AllocConfigNode*/
+static CTREEPTR
+AllocConfigNode()
+{				/*AllocConfigNode */
 
     register CTREEPTR np;
 
     np = (CTREEPTR) emalloc(sizeof(CTREE));
     memset((char *)np, 0, sizeof(CTREE));
-    return(np);
+    return (np);
 
-} /*AllocConfigNode*/
+}				/*AllocConfigNode */
 
 /*------------------------------------------------------------------------
  * [static] ValidUpdtSpec
@@ -121,24 +122,25 @@ static CTREEPTR AllocConfigNode()
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static int ValidUpdtSpec(ftype, uspec)
-    u_short ftype;
-    u_short uspec;
+static int
+ValidUpdtSpec(ftype, uspec)
+     u_short ftype;
+     u_short uspec;
 
-{ /*ValidUpdtSpec*/
+{				/*ValidUpdtSpec */
 
     register struct updatetype *u;
 
     /*
-      * Scan the list of valid update specs, succeed if you find an
-      * exact match.
-      */
+     * Scan the list of valid update specs, succeed if you find an
+     * exact match.
+     */
     for (u = validupdates; u->filetype != 0; u++)
 	if ((u->filetype == ftype) && (u->updtflags == uspec))
-	    return(TRUE);
-    return(FALSE);
+	    return (TRUE);
+    return (FALSE);
 
-} /*ValidUpdtSpec*/
+}				/*ValidUpdtSpec */
 
 /*------------------------------------------------------------------------
  * [static] ValidateUserName
@@ -166,52 +168,52 @@ static int ValidUpdtSpec(ftype, uspec)
  *	the results are already cached.
  *------------------------------------------------------------------------*/
 
-static int ValidateUserName(name, uidp)
-    register char *name;
-    register short *uidp;
+static int
+ValidateUserName(name, uidp)
+     register char *name;
+     register short *uidp;
 
-{ /*ValidateUserName*/
+{				/*ValidateUserName */
 
     register afs_int32 uid;
     char *nptr;
-    static struct passwd *pw = NULL;	/*Ptr to passwd file entry*/
-    
+    static struct passwd *pw = NULL;	/*Ptr to passwd file entry */
+
     /*
-      * We always know what root is; don't bother with a passwd lookup
-      * in this case.
-      */
+     * We always know what root is; don't bother with a passwd lookup
+     * in this case.
+     */
     if (strcmp(name, "root") == 0) {
-        *uidp = 0;
+	*uidp = 0;
 	return (TRUE);
     }
 
     /*
-      * If we have the results from a previous search, don't do it
-      * again.  Otherwise, take the plunge.
-      */
+     * If we have the results from a previous search, don't do it
+     * again.  Otherwise, take the plunge.
+     */
     if (pw == NULL || strcmp(pw->pw_name, name))
-      pw = getpwnam(name);
+	pw = getpwnam(name);
 
     if (pw == NULL) {
-        uid = strtol(name, &nptr, 10);
-	if ((int)(nptr-name) == strlen(name))
-	    pw = getpwuid((uid_t)uid);
+	uid = strtol(name, &nptr, 10);
+	if ((int)(nptr - name) == strlen(name))
+	    pw = getpwuid((uid_t) uid);
     }
 
     if (pw != NULL) {
-      /*
-	* Found the given name.  Return the matching pid.
-	*/
+	/*
+	 * Found the given name.  Return the matching pid.
+	 */
 	*uidp = pw->pw_uid;
-	return(TRUE);
-      }
-    else
-      /*
-	* Abject failure.
-	*/
-      return(FALSE);
+	return (TRUE);
+    } else
+	/*
+	 * Abject failure.
+	 */
+	return (FALSE);
 
-} /*ValidateUserName*/
+}				/*ValidateUserName */
 
 /*------------------------------------------------------------------------
  * [static] ValidateGroupName
@@ -239,49 +241,49 @@ static int ValidateUserName(name, uidp)
  *	the results are already cached.
  *------------------------------------------------------------------------*/
 
-static int ValidateGroupName(name, gidp)
-    register char *name;
-    register short *gidp;
+static int
+ValidateGroupName(name, gidp)
+     register char *name;
+     register short *gidp;
 
-{ /*ValidateGroupName*/
+{				/*ValidateGroupName */
 
     register afs_int32 gid;
     char *nptr;
-    static struct group *gr = NULL;	/*Ptr to group structure*/
+    static struct group *gr = NULL;	/*Ptr to group structure */
 
     /*
-      * We always know the group number for wheel, so don't bother doing
-      * any lookups.
-      */
+     * We always know the group number for wheel, so don't bother doing
+     * any lookups.
+     */
     if (strcmp(name, "wheel") == 0) {
-        *gidp = 0;
+	*gidp = 0;
 	return (TRUE);
     }
 
     /*
-      * If we have the results from a previous search, don't do it
-      * again.  Otherwise, take the plunge.
-      */
+     * If we have the results from a previous search, don't do it
+     * again.  Otherwise, take the plunge.
+     */
     if (gr == NULL || strcmp(gr->gr_name, name))
-      gr = getgrnam(name);
+	gr = getgrnam(name);
 
     if (gr == NULL) {
-        gid = strtol(name, &nptr, 10);
-	if ((int)(nptr-name) == strlen(name))
-	    gr = getgrgid((gid_t)gid);
+	gid = strtol(name, &nptr, 10);
+	if ((int)(nptr - name) == strlen(name))
+	    gr = getgrgid((gid_t) gid);
     }
 
     if (gr != NULL) {
-      /*
-	* Found the given group.  Return the matching gid.
-	*/
-      *gidp = gr->gr_gid;
-      return(TRUE);
-    }
-    else
-      return(FALSE);
+	/*
+	 * Found the given group.  Return the matching gid.
+	 */
+	*gidp = gr->gr_gid;
+	return (TRUE);
+    } else
+	return (FALSE);
 
-} /*ValidateGroupName*/
+}				/*ValidateGroupName */
 
 /*------------------------------------------------------------------------
  * InitializeConfigTree
@@ -303,14 +305,14 @@ static int ValidateGroupName(name, gidp)
  *	As described; may exit from package.
  *------------------------------------------------------------------------*/
 
-int InitializeConfigTree()
-
-{ /*InitializeConfigTree*/
+int
+InitializeConfigTree()
+{				/*InitializeConfigTree */
 
     config_root = AllocConfigNode();
-    return(0);
+    return (0);
 
-} /*InitializeConfigTree*/
+}				/*InitializeConfigTree */
 
 /*------------------------------------------------------------------------
  * LocateChildNode
@@ -339,77 +341,78 @@ int InitializeConfigTree()
  *	creations fail.
  *------------------------------------------------------------------------*/
 
-CTREEPTR LocateChildNode(dp, name, lmode)
-    register CTREEPTR dp;
-    register char *name;
-    register int lmode;
+CTREEPTR
+LocateChildNode(dp, name, lmode)
+     register CTREEPTR dp;
+     register char *name;
+     register int lmode;
 
-{ /*LocateChildNode*/
+{				/*LocateChildNode */
 
-    register int hash;		/*Hash value for given name*/
-    register ENTRYPTR ep;	/*Ptr to entry being examined*/
-    register int found_entry;	/*Found entry we want?*/
+    register int hash;		/*Hash value for given name */
+    register ENTRYPTR ep;	/*Ptr to entry being examined */
+    register int found_entry;	/*Found entry we want? */
 
     /*
-      * First, make sure dp corresponds to a directory
-      */
+     * First, make sure dp corresponds to a directory
+     */
     if (dp->type != S_IFDIR)
-	return(NULL);
+	return (NULL);
 
     /*
-      * Set up to search the entries hanging off the directory node.
-      * Precompute the hash value for the name.
-      */
+     * Set up to search the entries hanging off the directory node.
+     * Precompute the hash value for the name.
+     */
     hash = namehash(name);
     ep = dp->entryp;
     found_entry = FALSE;
 
     /*
-      * Sweep through the list of entries until we find our match or
-      * fall off the end.
-      */
+     * Sweep through the list of entries until we find our match or
+     * fall off the end.
+     */
     while ((ep != NULL) && !found_entry) {
-      /*
-	* We compare the hash value first, and only if that succeeds
-	* do we do the string compare.
-	*/
-      if ((ep->hash == hash) && (strcmp(ep->name, name) == 0))
-	found_entry = TRUE;
-      else
 	/*
-	  * No match.  Move on to the next entry, if any.
-	  */
-	ep = ep->nextp;
+	 * We compare the hash value first, and only if that succeeds
+	 * do we do the string compare.
+	 */
+	if ((ep->hash == hash) && (strcmp(ep->name, name) == 0))
+	    found_entry = TRUE;
+	else
+	    /*
+	     * No match.  Move on to the next entry, if any.
+	     */
+	    ep = ep->nextp;
 
-    } /*Search list of entries*/
+    }				/*Search list of entries */
 
     /*
-      * If we found it, return the node hanging off the entry.
-      */
+     * If we found it, return the node hanging off the entry.
+     */
     if (found_entry)
-      return(ep->nodep);
+	return (ep->nodep);
 
     /*
-      * We didn't find the given name.  If we aren't supposed to create
-      * a node for the name, we return failure.
-      */
+     * We didn't find the given name.  If we aren't supposed to create
+     * a node for the name, we return failure.
+     */
     if (!(lmode & C_CREATE))
-      return(NULL);
+	return (NULL);
 
     /*
-      * Create a new entry and node to stand for the given name, link it
-      * in, and return it to our caller.
-      */
-    ep = (ENTRYPTR)emalloc(sizeof(ENTRY));
+     * Create a new entry and node to stand for the given name, link it
+     * in, and return it to our caller.
+     */
+    ep = (ENTRYPTR) emalloc(sizeof(ENTRY));
     ep->nodep = AllocConfigNode();
-    ep->name = (char *) emalloc((unsigned)(strlen(name)+1));
+    ep->name = (char *)emalloc((unsigned)(strlen(name) + 1));
     ep->hash = hash;
     (void)strcpy(ep->name, name);
     ep->nextp = dp->entryp;
     dp->entryp = ep;
-    return(ep->nodep);
+    return (ep->nodep);
 
-} /*LocateChildNode*/
+}				/*LocateChildNode */
 
 /*------------------------------------------------------------------------
  * LocatePathNode
@@ -438,62 +441,64 @@ CTREEPTR LocateChildNode(dp, name, lmode)
  *	Exits from package.
  *------------------------------------------------------------------------*/
 
-CTREEPTR LocatePathNode(dp, path, lmode)
-    register CTREEPTR dp;
-    register char *path;
-    register int lmode;
+CTREEPTR
+LocatePathNode(dp, path, lmode)
+     register CTREEPTR dp;
+     register char *path;
+     register int lmode;
 
-{ /*LocatePathNode*/
+{				/*LocatePathNode */
 
-    register char *name;	/*Points to start of new subdir/file in path*/
-    register char savech;	/*Saves chars being murdered during search*/
+    register char *name;	/*Points to start of new subdir/file in path */
+    register char savech;	/*Saves chars being murdered during search */
 
     /*
-      * Skip over leading slashes.
-      */
+     * Skip over leading slashes.
+     */
     while (*path == '/')
 	path++;
 
     while (dp != NULL && *path != '\0') {
 	/*
-	  * Pull off the leftmost portion of the (remaining) pathname,
-	  * then search for it through all the entries for the current
-	  * directory node serving as the root of the search.
-	  */
+	 * Pull off the leftmost portion of the (remaining) pathname,
+	 * then search for it through all the entries for the current
+	 * directory node serving as the root of the search.
+	 */
 	name = path;
 	while (*path != '\0' && *path != '/')
 	    path++;
-	savech = *path; *path = '\0';
+	savech = *path;
+	*path = '\0';
 	if ((lmode & C_CREATE) && (dp->type == 0))
 	    /*
-	      * This is an unfilled non-leaf node.  Mark it as being
-	      * a directory node
-	      */
+	     * This is an unfilled non-leaf node.  Mark it as being
+	     * a directory node
+	     */
 	    dp->type = S_IFDIR;
 
 	/*
-	  * Look for the name fragment among all entries corresponding
-	  * to the root node.
-	  */
+	 * Look for the name fragment among all entries corresponding
+	 * to the root node.
+	 */
 	dp = LocateChildNode(dp, name, lmode);
 
 	/*
-	  * Restore the char we overwrote with a null, then bump the
-	  * path to the start of the next component.
-	  */
+	 * Restore the char we overwrote with a null, then bump the
+	 * path to the start of the next component.
+	 */
 	*path = savech;
 	while (*path == '/')
 	    path++;
 
-      } /*while loop*/
+    }				/*while loop */
 
     /*
-      * dp now contains the path associated with the given path, so
-      * just return it.
-      */
-    return(dp);
+     * dp now contains the path associated with the given path, so
+     * just return it.
+     */
+    return (dp);
 
-} /*LocatePathNode*/
+}				/*LocatePathNode */
 
 /*------------------------------------------------------------------------
  * BuildConfigTree
@@ -515,18 +520,19 @@ CTREEPTR LocatePathNode(dp, path, lmode)
  *	May exit from package.
  *------------------------------------------------------------------------*/
 
-int BuildConfigTree(f)
-    FILE *f;
+int
+BuildConfigTree(f)
+     FILE *f;
 
-{ /*BuildConfigTree*/
+{				/*BuildConfigTree */
 
     int ret;
 
     yyin = f;
     ret = yyparse();
-    return(ret);
+    return (ret);
 
-}  /*BuildConfigTree*/
+}				/*BuildConfigTree */
 
 /*------------------------------------------------------------------------
  * [static] AddEntry
@@ -557,34 +563,36 @@ int BuildConfigTree(f)
  *	As advertised; may exit from package.
  *------------------------------------------------------------------------*/
 
-int AddEntry(filetype, updtspec, filename, prototype, ownershipinfo, mode)
-    u_short filetype;
-    u_short updtspec;
-    char *filename;
-    PROTOTYPE prototype;
-    OWNER ownershipinfo;
-    MODE mode;
+int
+AddEntry(filetype, updtspec, filename, prototype, ownershipinfo, mode)
+     u_short filetype;
+     u_short updtspec;
+     char *filename;
+     PROTOTYPE prototype;
+     OWNER ownershipinfo;
+     MODE mode;
 
-{ /*AddEntry*/
+{				/*AddEntry */
 
-    CTREEPTR np;	/*Ptr to config tree node holding info on filename*/
-    short uid, gid;	/*Uid, gid returned from validation functions*/
-    
+    CTREEPTR np;		/*Ptr to config tree node holding info on filename */
+    short uid, gid;		/*Uid, gid returned from validation functions */
+
     debug_message("[AddEntry] Called for filename %s", filename);
-    
+
     /*
      * Check that the given update specification is a legal one.
      */
     if (ValidUpdtSpec(filetype, updtspec) == FALSE)
 	fatal("** Invalid update specification for file %s", filename);
-    
+
     /*
      * Find the node corresponding to the given filename, creating one if
      * necessary.
      */
-    if ((np = LocatePathNode(config_root, filename, C_LOCATE|C_CREATE)) == NULL)
+    if ((np =
+	 LocatePathNode(config_root, filename, C_LOCATE | C_CREATE)) == NULL)
 	fatal("** Invalid path encountered: %s", filename);
-    
+
     /*
      * Start adding entries to np after checking for potential conflicts.
      *
@@ -593,10 +601,10 @@ int AddEntry(filetype, updtspec, filename, prototype, ownershipinfo, mode)
      */
     if ((np->flag & F_TYPE) && (np->type != filetype))
 	fatal("** Type conflict for file %s", filename);
-    
+
     np->flag |= F_TYPE;
     np->type = filetype;
-    
+
 #if 0
     if ((np->flag & F_UPDT) && (np->updtspec != updtspec))
 	fatal("** Update specification conflict for file %s", filename);
@@ -606,7 +614,7 @@ int AddEntry(filetype, updtspec, filename, prototype, ownershipinfo, mode)
 	np->flag |= F_UPDT;
 	np->updtspec |= updtspec;
     }
-    
+
     if ((filetype == S_IFCHR)
 	|| (filetype == S_IFBLK)
 #ifdef S_IFIFO
@@ -620,18 +628,14 @@ int AddEntry(filetype, updtspec, filename, prototype, ownershipinfo, mode)
 	    if ((prototype.flag != P_DEV)
 		|| ((np->proto.info.rdev != prototype.info.rdev)))
 		fatal("** Device number conflict for device %s", filename);
+	} else if (prototype.flag == P_FILE)
+	    fatal("** Prototype conflict for device %s", filename);
+	else if (prototype.flag == P_DEV) {
+	    np->flag |= F_PROTO;
+	    np->proto.flag = P_DEV;
+	    np->proto.info.rdev = prototype.info.rdev;
 	}
-	else
-	    if (prototype.flag == P_FILE)
-		fatal("** Prototype conflict for device %s", filename);
-	    else
-		if (prototype.flag == P_DEV) {
-		    np->flag |= F_PROTO;
-		    np->proto.flag = P_DEV;
-		    np->proto.info.rdev = prototype.info.rdev;
-		}
-    }
-    else {
+    } else {
 	/*
 	 * File prototype, if any
 	 */
@@ -639,52 +643,48 @@ int AddEntry(filetype, updtspec, filename, prototype, ownershipinfo, mode)
 	    if ((prototype.flag != P_FILE)
 		|| (strcmp(np->proto.info.path, prototype.info.path)))
 		fatal("** Prototype conflict for file %s", filename);
+	} else if (prototype.flag == P_DEV)
+	    fatal("** Prototype conflict for file %s", filename);
+	else if (prototype.flag == P_FILE) {
+	    np->flag |= F_PROTO;
+	    np->proto.flag = P_FILE;
+	    np->proto.info.path =
+		emalloc((unsigned)(strlen(prototype.info.path) + 1));
+	    (void)strcpy(np->proto.info.path, prototype.info.path);
 	}
-	else
-	    if (prototype.flag == P_DEV)
-		fatal("** Prototype conflict for file %s", filename);
-	    else
-		if (prototype.flag == P_FILE) {
-		    np->flag |= F_PROTO;
-		    np->proto.flag = P_FILE;
-		    np->proto.info.path =
-			emalloc((unsigned)(strlen(prototype.info.path)+1));
-		    (void) strcpy(np->proto.info.path, prototype.info.path);
-		}
     }
-    
+
     if (ownershipinfo.username != NULL) {
 	/*
 	 * Ownership info, if any
 	 */
 	if (ValidateUserName(ownershipinfo.username, &uid) == FALSE)
-	    fatal("** Unknown user %s for file %s",
-		  ownershipinfo.username, filename);
-	else
-	    if ((np->flag & F_UID) && (np->uid != uid))
-		fatal("** Uid conflict for file %s (new val: %d, old val: %d)",
-		      filename, np->uid, uid);
-	    else {
-		np->flag |= F_UID;
-		np->uid = uid;
-	    }
-    } /*Process user ownership info*/
-    
+	    fatal("** Unknown user %s for file %s", ownershipinfo.username,
+		  filename);
+	else if ((np->flag & F_UID) && (np->uid != uid))
+	    fatal("** Uid conflict for file %s (new val: %d, old val: %d)",
+		  filename, np->uid, uid);
+	else {
+	    np->flag |= F_UID;
+	    np->uid = uid;
+	}
+    }
+    /*Process user ownership info */
     if (ownershipinfo.groupname != NULL) {
 	if (ValidateGroupName(ownershipinfo.groupname, &gid) == FALSE)
-	    fatal("** Unknown group %s for file %s",
-		  ownershipinfo.groupname, filename);
-	else
-	    if ((np->flag & F_GID) && (np->gid != gid))
-		fatal("** Gid conflict for file %s (new val: %d, old val: %d)",
-		      filename, np->gid, gid);
-	    else {
-		np->flag |= F_GID; np->gid = gid;
-	    }
-    } /*Process group ownership info*/
-    
+	    fatal("** Unknown group %s for file %s", ownershipinfo.groupname,
+		  filename);
+	else if ((np->flag & F_GID) && (np->gid != gid))
+	    fatal("** Gid conflict for file %s (new val: %d, old val: %d)",
+		  filename, np->gid, gid);
+	else {
+	    np->flag |= F_GID;
+	    np->gid = gid;
+	}
+    }
+    /*Process group ownership info */
     if (mode.inherit_flag != TRUE) {
-	if (mode.modeval > (u_short)~S_IFMT)
+	if (mode.modeval > (u_short) ~ S_IFMT)
 	    fatal("** Bad mode %d for file %s", mode.modeval, filename);
 	if ((np->flag & F_MODE) && ((np->mode & ~S_IFMT) != mode.modeval))
 	    fatal("** Mode conflict for file %s", filename);
@@ -692,14 +692,15 @@ int AddEntry(filetype, updtspec, filename, prototype, ownershipinfo, mode)
 	    np->flag |= F_MODE;
 	    np->mode |= mode.modeval;
 	}
-    } /*Mode inherit flag turned off*/
-    
+    }
+
+    /*Mode inherit flag turned off */
     /*
      * If we reached this point, everything must have been OK
      */
-    return(0);
+    return (0);
 
-}  /*AddEntry*/
+}				/*AddEntry */
 
 /*------------------------------------------------------------------------
  * ApplyConfigTree
@@ -721,24 +722,25 @@ int AddEntry(filetype, updtspec, filename, prototype, ownershipinfo, mode)
  *	Whatever the given function does.
  *------------------------------------------------------------------------*/
 
-void ApplyConfigTree(func)
-    int (*func)();
+void
+ApplyConfigTree(func)
+     int (*func) ();
 
-{ /*ApplyConfigTree*/
+{				/*ApplyConfigTree */
 
-    char *path;	/*Path to pass on down*/
+    char *path;			/*Path to pass on down */
 
     /*
-      * Create room for the largest path possible, and set it to the
-      * null string.  This forces the application to be started at
-      * ``/''.
-      */
-    path = (char *)emalloc(MAXPATHLEN+1);
+     * Create room for the largest path possible, and set it to the
+     * null string.  This forces the application to be started at
+     * ``/''.
+     */
+    path = (char *)emalloc(MAXPATHLEN + 1);
     path[0] = '\0';
 
     TraverseConfigTree(config_root, path, func);
 
-} /*ApplyConfigTree*/
+}				/*ApplyConfigTree */
 
 /*------------------------------------------------------------------------
  * TraverseConfigTree
@@ -763,60 +765,60 @@ void ApplyConfigTree(func)
  *------------------------------------------------------------------------*/
 
 TraverseConfigTree(np, path, func)
-    register CTREEPTR np;
-    char *path;
-    int (*func)();
+     register CTREEPTR np;
+     char *path;
+     int (*func) ();
 
-{ /*TraverseConfigTree*/
+{				/*TraverseConfigTree */
 
-    register char *endp;	/*Marks the end of a string*/
-    register ENTRYPTR ep;	/*Current entry pointer*/
-    register int len;		/*Length of the pathname*/
+    register char *endp;	/*Marks the end of a string */
+    register ENTRYPTR ep;	/*Current entry pointer */
+    register int len;		/*Length of the pathname */
 
     /*
-      * If the path is empty, start it off with "/".
-      */
+     * If the path is empty, start it off with "/".
+     */
     len = strlen(path);
     if (len == 0)
-	(void) strcpy(path, "/");
+	(void)strcpy(path, "/");
 
     /*
-      * Apply the function to the current node.
-      */
-    (void)(*func)(np, path);
+     * Apply the function to the current node.
+     */
+    (void)(*func) (np, path);
 
     if (len == 0)
-	(void) strcpy(path, "");
+	(void)strcpy(path, "");
 
     /*
-      * If we've reached a leaf node (a non-directory), start heading
-      * back up.
-      */
+     * If we've reached a leaf node (a non-directory), start heading
+     * back up.
+     */
     if ((np->type) != S_IFDIR)
-      return;
+	return;
 
     /*
-      * We're currently at a directory node.  For each entry in the entry
-      * list for this node, conjure up the name associated with the entry's
-      * node and call ourselves recursively.  This calling sequence gives
-      * us the preorder traversal.
-      */
+     * We're currently at a directory node.  For each entry in the entry
+     * list for this node, conjure up the name associated with the entry's
+     * node and call ourselves recursively.  This calling sequence gives
+     * us the preorder traversal.
+     */
     endp = path + len;
     *endp++ = '/';
     *endp = 0;
     for (ep = np->entryp; ep; ep = ep->nextp) {
-      /*
-	* Tack on the node's name component to the end of the path and
-	* descend.
-	*/
-      (void) strcpy(endp, ep->name);
-      TraverseConfigTree(ep->nodep, path, func);
+	/*
+	 * Tack on the node's name component to the end of the path and
+	 * descend.
+	 */
+	(void)strcpy(endp, ep->name);
+	TraverseConfigTree(ep->nodep, path, func);
     }
 
     /*
-      * We've finished the preorder walk under this node.  Terminate
-      * the path properly before returning.
-      */
+     * We've finished the preorder walk under this node.  Terminate
+     * the path properly before returning.
+     */
     *--endp = 0;
 
-}  /*TraverseConfigTree*/
+}				/*TraverseConfigTree */

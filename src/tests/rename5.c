@@ -51,31 +51,31 @@
 #include <err.h>
 
 static void
-emkdir (const char *path, mode_t mode)
+emkdir(const char *path, mode_t mode)
 {
     int ret;
 
-    ret = mkdir (path, mode);
+    ret = mkdir(path, mode);
     if (ret < 0)
-	err (1, "mkdir %s", path);
+	err(1, "mkdir %s", path);
 }
 
 static void
-elstat (const char *path, struct stat *sb)
+elstat(const char *path, struct stat *sb)
 {
     int ret;
 
-    ret = lstat (path, sb);
+    ret = lstat(path, sb);
     if (ret < 0)
-	err (1, "lstat %s", path);
+	err(1, "lstat %s", path);
 }
 
 static void
-check_inum (const struct stat *sb1, const struct stat *sb2)
+check_inum(const struct stat *sb1, const struct stat *sb2)
 {
     if (sb1->st_ino != sb2->st_ino)
-	errx (1, "wrong inode-number %u != %u",
-	      (unsigned)sb1->st_ino, (unsigned)sb2->st_ino);
+	errx(1, "wrong inode-number %u != %u", (unsigned)sb1->st_ino,
+	     (unsigned)sb2->st_ino);
 }
 
 int
@@ -84,22 +84,22 @@ main(int argc, char **argv)
     int ret;
     struct stat old_sb, new_sb, dot_sb;
 
-    emkdir ("old_parent", 0777);
-    emkdir ("new_parent", 0777);
-    emkdir ("old_parent/victim", 0777);
+    emkdir("old_parent", 0777);
+    emkdir("new_parent", 0777);
+    emkdir("old_parent/victim", 0777);
 
-    elstat ("old_parent", &old_sb);
-    elstat ("new_parent", &new_sb);
-    elstat ("old_parent/victim/..", &dot_sb);
-    check_inum (&old_sb, &dot_sb);
+    elstat("old_parent", &old_sb);
+    elstat("new_parent", &new_sb);
+    elstat("old_parent/victim/..", &dot_sb);
+    check_inum(&old_sb, &dot_sb);
 
     ret = rename("old_parent/victim", "new_parent/victim");
     if (ret < 0)
-	err (1, "rename old_parent/victim new_parent/victim");
+	err(1, "rename old_parent/victim new_parent/victim");
 
-    elstat ("new_parent/victim/..", &dot_sb);
+    elstat("new_parent/victim/..", &dot_sb);
 
-    check_inum (&new_sb, &dot_sb);
+    check_inum(&new_sb, &dot_sb);
 
     return 0;
 }

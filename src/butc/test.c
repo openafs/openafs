@@ -39,27 +39,30 @@
 afs_int32 code = 0;
 struct tc_tapeSet ttapeSet;
 char tdumpSetName[TC_MAXNAMELEN];
-tc_dumpArray tdumps;	/*defined by rxgen */
-tc_restoreArray trestores;/*defined by rxgen */
+tc_dumpArray tdumps;		/*defined by rxgen */
+tc_restoreArray trestores;	/*defined by rxgen */
 afs_int32 tdumpID;
 struct tc_dumpStat tstatus;
 int rxInitDone = 0;
 
-struct rx_connection *UV_Bind(aserver, port)
-afs_int32 aserver, port; 
+struct rx_connection *
+UV_Bind(aserver, port)
+     afs_int32 aserver, port;
 {
-	register struct rx_connection *tc;
-	struct rx_securityClass *uvclass;
+    register struct rx_connection *tc;
+    struct rx_securityClass *uvclass;
 
-	uvclass = rxnull_NewClientSecurityObject();
-	tc = rx_NewConnection(aserver, htons(port), TCSERVICE_ID, uvclass, 0);
-	return tc;
+    uvclass = rxnull_NewClientSecurityObject();
+    tc = rx_NewConnection(aserver, htons(port), TCSERVICE_ID, uvclass, 0);
+    return tc;
 }
 
 
 /* return host address in network byte order */
-afs_int32 GetServer(aname)
-char *aname; {
+afs_int32
+GetServer(aname)
+     char *aname;
+{
     register struct hostent *th;
     afs_int32 addr;
     char b1, b2, b3, b4;
@@ -67,61 +70,69 @@ char *aname; {
 
     code = sscanf(aname, "%d.%d.%d.%d", &b1, &b2, &b3, &b4);
     if (code == 4) {
-	addr = (b1<<24) | (b2<<16) | (b3<<8) | b4;
-	return htonl(addr); /* convert to network order (128 in byte 0) */
+	addr = (b1 << 24) | (b2 << 16) | (b3 << 8) | b4;
+	return htonl(addr);	/* convert to network order (128 in byte 0) */
     }
     th = gethostbyname(aname);
-    if (!th) return 0;
+    if (!th)
+	return 0;
     memcpy(&addr, th->h_addr, sizeof(addr));
     return addr;
 }
 
 
-static PerformDump(as)
-register struct cmd_syndesc *as;
+static
+PerformDump(as)
+     register struct cmd_syndesc *as;
 {
     struct rx_connection *aconn;
     afs_int32 server;
     FILE *fopen(), *fp;
     struct tc_dumpDesc *ptr;
     int i;
-    afs_int32 parentDumpID,dumpLevel;
+    afs_int32 parentDumpID, dumpLevel;
 
     server = GetServer(SERVERNAME);
-    if(!server) {
+    if (!server) {
 	printf("cant get server id \n");
 	exit(1);
     }
     parentDumpID = 1;
     dumpLevel = 1;
-    strcpy(tdumpSetName,"Test");
+    strcpy(tdumpSetName, "Test");
     ttapeSet.id = 1;
     ttapeSet.maxTapes = 10;
-    fp = fopen("dumpScr","r");
-    fscanf(fp,"%u %u %u\n",&tdumps.tc_dumpArray_len,&ttapeSet.a,&ttapeSet.b);
-    strcpy(ttapeSet.format,"tapeName%u");
-    strcpy(ttapeSet.tapeServer,"diskTapes");
-    tdumps.tc_dumpArray_val = (struct tc_dumpDesc *) (malloc(tdumps.tc_dumpArray_len*sizeof(struct tc_dumpDesc)));
+    fp = fopen("dumpScr", "r");
+    fscanf(fp, "%u %u %u\n", &tdumps.tc_dumpArray_len, &ttapeSet.a,
+	   &ttapeSet.b);
+    strcpy(ttapeSet.format, "tapeName%u");
+    strcpy(ttapeSet.tapeServer, "diskTapes");
+    tdumps.tc_dumpArray_val =
+	(struct tc_dumpDesc
+	 *)(malloc(tdumps.tc_dumpArray_len * sizeof(struct tc_dumpDesc)));
     ptr = tdumps.tc_dumpArray_val;
-    for(i = 0; i < tdumps.tc_dumpArray_len; i++){
-	fscanf(fp,"%s\n",ptr->name);
-	fscanf(fp,"%s\n",ptr->hostAddr);
-	fscanf(fp,"%u %u %u\n",&ptr->vid,&ptr->partition,&ptr->date);
+    for (i = 0; i < tdumps.tc_dumpArray_len; i++) {
+	fscanf(fp, "%s\n", ptr->name);
+	fscanf(fp, "%s\n", ptr->hostAddr);
+	fscanf(fp, "%u %u %u\n", &ptr->vid, &ptr->partition, &ptr->date);
 	ptr++;
     }
-	
+
     aconn = UV_Bind(server, TCPORT);
-    code = TC_PerformDump(aconn, tdumpSetName, &ttapeSet,&tdumps,parentDumpID,dumpLevel,&tdumpID);
+    code =
+	TC_PerformDump(aconn, tdumpSetName, &ttapeSet, &tdumps, parentDumpID,
+		       dumpLevel, &tdumpID);
     free(tdumps.tc_dumpArray_val);
-    if(code) {
-	printf("call to TC_PerformDump failed %u\n",code);
+    if (code) {
+	printf("call to TC_PerformDump failed %u\n", code);
 	exit(1);
     }
-    printf("dumpid returned %u\n",tdumpID);
+    printf("dumpid returned %u\n", tdumpID);
 }
 
-static PerformRestore(as)
-register struct cmd_syndesc *as;
+static
+PerformRestore(as)
+     register struct cmd_syndesc *as;
 {
     struct rx_connection *aconn;
     afs_int32 server;
@@ -130,113 +141,123 @@ register struct cmd_syndesc *as;
     struct tc_restoreDesc *ptr;
 
     server = GetServer(SERVERNAME);
-    if(!server) {
+    if (!server) {
 	printf("cant get server id \n");
 	exit(1);
     }
     aconn = UV_Bind(server, TCPORT);
-    strcpy(tdumpSetName,"");
-    strcpy(tdumpSetName,"Test");
-    fp = fopen("restoreScr","r");
-    fscanf(fp,"%u\n",&trestores.tc_restoreArray_len);
-    trestores.tc_restoreArray_val = (struct tc_restoreDesc *) malloc(trestores.tc_restoreArray_len*sizeof(struct tc_restoreDesc));
+    strcpy(tdumpSetName, "");
+    strcpy(tdumpSetName, "Test");
+    fp = fopen("restoreScr", "r");
+    fscanf(fp, "%u\n", &trestores.tc_restoreArray_len);
+    trestores.tc_restoreArray_val =
+	(struct tc_restoreDesc *)malloc(trestores.tc_restoreArray_len *
+					sizeof(struct tc_restoreDesc));
     ptr = trestores.tc_restoreArray_val;
-    for(i = 0; i < trestores.tc_restoreArray_len; i++){
-	fscanf(fp,"%s\n",ptr->oldName);
-	fscanf(fp,"%s\n",ptr->newName);
-	fscanf(fp,"%s\n",ptr->tapeName);
-	fscanf(fp,"%s\n",ptr->hostAddr);
-	fscanf(fp,"%u %u %u %u %d %u\n",&ptr->origVid,&ptr->vid,&ptr->partition,&ptr->flags,&ptr->frag,&ptr->position);
+    for (i = 0; i < trestores.tc_restoreArray_len; i++) {
+	fscanf(fp, "%s\n", ptr->oldName);
+	fscanf(fp, "%s\n", ptr->newName);
+	fscanf(fp, "%s\n", ptr->tapeName);
+	fscanf(fp, "%s\n", ptr->hostAddr);
+	fscanf(fp, "%u %u %u %u %d %u\n", &ptr->origVid, &ptr->vid,
+	       &ptr->partition, &ptr->flags, &ptr->frag, &ptr->position);
 	ptr++;
-	
+
     }
-    code = TC_PerformRestore(aconn, tdumpSetName, &trestores,&tdumpID);
-    if(code) {
-	printf("call to TC_PerformRestore failed %u\n",code);
+    code = TC_PerformRestore(aconn, tdumpSetName, &trestores, &tdumpID);
+    if (code) {
+	printf("call to TC_PerformRestore failed %u\n", code);
 	exit(1);
     }
-    printf("dumpid returned %u\n",tdumpID);
+    printf("dumpid returned %u\n", tdumpID);
 }
-static CheckDump(as)
-register struct cmd_syndesc *as;
+
+static
+CheckDump(as)
+     register struct cmd_syndesc *as;
 {
     struct rx_connection *aconn;
     afs_int32 server;
     server = GetServer(SERVERNAME);
-    if(!server) {
+    if (!server) {
 	printf("cant get server id \n");
 	exit(1);
     }
     tdumpID = atol(as->parms[0].items->data);
     aconn = UV_Bind(server, TCPORT);
-    code = TC_CheckDump(aconn,tdumpID, &tstatus);
-    if(code) {
-	printf("call to TC_CheckDump failed %u\n",code);
+    code = TC_CheckDump(aconn, tdumpID, &tstatus);
+    if (code) {
+	printf("call to TC_CheckDump failed %u\n", code);
 	exit(1);
     }
 }
 
-static AbortDump(as)
-register struct cmd_syndesc *as;
+static
+AbortDump(as)
+     register struct cmd_syndesc *as;
 {
     struct rx_connection *aconn;
     afs_int32 server;
     server = GetServer(SERVERNAME);
-    if(!server) {
+    if (!server) {
 	printf("cant get server id \n");
 	exit(1);
     }
     tdumpID = atol(as->parms[0].items->data);
     aconn = UV_Bind(server, TCPORT);
-    code = TC_AbortDump(aconn,tdumpID);
-    if(code) {
-	printf("call to TC_AbortDump failed %u\n",code);
+    code = TC_AbortDump(aconn, tdumpID);
+    if (code) {
+	printf("call to TC_AbortDump failed %u\n", code);
 	exit(1);
     }
 }
 
-static WaitForDump(as)
-register struct cmd_syndesc *as;
+static
+WaitForDump(as)
+     register struct cmd_syndesc *as;
 {
     struct rx_connection *aconn;
     afs_int32 server;
     server = GetServer(SERVERNAME);
-    if(!server) {
+    if (!server) {
 	printf("cant get server id \n");
 	exit(1);
     }
     tdumpID = atol(as->parms[0].items->data);
     aconn = UV_Bind(server, TCPORT);
-    code = TC_WaitForDump(aconn,tdumpID);
-    if(code) {
-	printf("call to TC_WaitForDump failed %u\n",code);
+    code = TC_WaitForDump(aconn, tdumpID);
+    if (code) {
+	printf("call to TC_WaitForDump failed %u\n", code);
 	exit(1);
     }
 }
 
-static EndDump(as)
-register struct cmd_syndesc *as;
+static
+EndDump(as)
+     register struct cmd_syndesc *as;
 {
     struct rx_connection *aconn;
     afs_int32 server;
     server = GetServer(SERVERNAME);
-    if(!server) {
+    if (!server) {
 	printf("cant get server id \n");
 	exit(1);
     }
     tdumpID = atol(as->parms[0].items->data);
     aconn = UV_Bind(server, TCPORT);
-    code = TC_EndDump(aconn,tdumpID);
-    if(code) {
-	printf("call to TC_EndDump failed %u\n",code);
+    code = TC_EndDump(aconn, tdumpID);
+    if (code) {
+	printf("call to TC_EndDump failed %u\n", code);
 	exit(1);
     }
 }
 
-static MyBeforeProc(as,arock)
-struct cmd_syndesc *as;
-char *arock; 
-{   afs_int32 code;
+static
+MyBeforeProc(as, arock)
+     struct cmd_syndesc *as;
+     char *arock;
+{
+    afs_int32 code;
 
     code = rx_Init(0);
     if (code) {
@@ -251,12 +272,13 @@ char *arock;
 #include "AFS_component_version_number.c"
 
 main(argc, argv)
-int argc;
-char **argv; {
+     int argc;
+     char **argv;
+{
     register afs_int32 code;
-    
+
     register struct cmd_syndesc *ts;
-    
+
 #ifdef	AFS_AIX32_ENV
     /*
      * The following signal action for AIX is necessary so that in case of a 
@@ -265,32 +287,33 @@ char **argv; {
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
     sigaction(SIGABRT, &nsa, NULL);
     sigaction(SIGSEGV, &nsa, NULL);
 #endif
-    cmd_SetBeforeProc(MyBeforeProc,  NULL);
+    cmd_SetBeforeProc(MyBeforeProc, NULL);
 
-    ts = cmd_CreateSyntax("dump",PerformDump,0,"perform a dump");
- 
-    ts = cmd_CreateSyntax("restore",PerformRestore,0,"perform a restore");
+    ts = cmd_CreateSyntax("dump", PerformDump, 0, "perform a dump");
 
-    ts = cmd_CreateSyntax("check",CheckDump,0,"check a dump");
-    cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "dump id");
-    
-    ts = cmd_CreateSyntax("abort",AbortDump,0,"abort a dump");
+    ts = cmd_CreateSyntax("restore", PerformRestore, 0, "perform a restore");
+
+    ts = cmd_CreateSyntax("check", CheckDump, 0, "check a dump");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "dump id");
 
-    ts = cmd_CreateSyntax("wait",WaitForDump,0,"wait for a dump");
+    ts = cmd_CreateSyntax("abort", AbortDump, 0, "abort a dump");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "dump id");
 
-    ts = cmd_CreateSyntax("end",EndDump,0,"end a dump");
+    ts = cmd_CreateSyntax("wait", WaitForDump, 0, "wait for a dump");
+    cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "dump id");
+
+    ts = cmd_CreateSyntax("end", EndDump, 0, "end a dump");
     cmd_AddParm(ts, "-id", CMD_SINGLE, 0, "dump id");
 
     code = cmd_Dispatch(argc, argv);
-    if (rxInitDone) rx_Finalize();
+    if (rxInitDone)
+	rx_Finalize();
     exit(code);
 }

@@ -27,7 +27,7 @@ typedef u_int64_t Inode;
 typedef uint64_t Inode;
 #else
 error Need 64 bit Inode defined.
-#endif /* AFS_SGI62_ENV */
+#endif				/* AFS_SGI62_ENV */
 #else /* AFS_64BIT_IOPS_ENV */
 typedef unsigned int Inode;
 #endif
@@ -51,21 +51,21 @@ extern int ilistinode64(int dev, uint64_t inode, void *data, int *datalen);
 #ifdef AFS_DEBUG_IOPS
 extern uint64_t debug_icreatename64(int dev, char *partname, int p0, int p1,
 				    int p2, int p3, char *file, int line);
-extern int debug_iopen64(int dev, uint64_t inode, int usrmod,
-			 char *file, int line);
-extern int debug_iinc64(int dev, uint64_t inode, int inode_p1,
-			char *file, int line);
-extern int debug_idec64(int dev, uint64_t inode, int inode_p1,
-			char *file, int line);
+extern int debug_iopen64(int dev, uint64_t inode, int usrmod, char *file,
+			 int line);
+extern int debug_iinc64(int dev, uint64_t inode, int inode_p1, char *file,
+			int line);
+extern int debug_idec64(int dev, uint64_t inode, int inode_p1, char *file,
+			int line);
 
 #endif /* AFS_DEBUG_IOPS */
 #endif /* AFS_SGI_XFS_IOPS_ENV */
 
 #ifdef AFS_64BIT_IOPS_ENV
-extern int inode_read(int dev, Inode inode, int inode_p1,
-		      uint32_t offset, char *cbuf, uint32_t count);
-extern int inode_write(int dev, Inode inode, int inode_p1,
-		      uint32_t offset, char *cbuf, uint32_t count);
+extern int inode_read(int dev, Inode inode, int inode_p1, uint32_t offset,
+		      char *cbuf, uint32_t count);
+extern int inode_write(int dev, Inode inode, int inode_p1, uint32_t offset,
+		       char *cbuf, uint32_t count);
 #else
 extern int inode_read();
 extern int inode_write();
@@ -97,7 +97,7 @@ extern char *PrintInode();
  */
 #define VALID_INO(I) ((I) != (Inode)-1 && (I) != (Inode)0)
 
-#ifndef AFS_NAMEI_ENV 
+#ifndef AFS_NAMEI_ENV
 
 /* Definitions of inode macros. */
 #ifdef AFS_SGI_XFS_IOPS_ENV

@@ -56,20 +56,20 @@ RCSID("$Id$");
 #endif
 
 static int
-creat_files (int count, long startsize)
+creat_files(int count, long startsize)
 {
     int i;
     long size = 0;
-    
+
     for (i = 0; i < count; ++i) {
 	char num[17];
 	int fd;
 
-	snprintf (num, sizeof(num), "%d", i);
-	
-	fd = open (num, O_WRONLY | O_CREAT | O_EXCL, 0777);
+	snprintf(num, sizeof(num), "%d", i);
+
+	fd = open(num, O_WRONLY | O_CREAT | O_EXCL, 0777);
 	if (fd < 0)
-	    err (1, "open %s", num);
+	    err(1, "open %s", num);
 	size = startsize;
 	while (size > 0) {
 	    char buf[8192];
@@ -78,24 +78,24 @@ creat_files (int count, long startsize)
 
 	    len = min(sizeof(buf), size);
 
-	    ret = write (fd, buf, len);
+	    ret = write(fd, buf, len);
 	    if (ret < 0)
-		err (1, "write to %s", num);
+		err(1, "write to %s", num);
 	    if (ret != len)
-		errx (1, "short write to %s", num);
+		errx(1, "short write to %s", num);
 	    size -= ret;
 	}
-	if (close (fd) < 0)
-	    err (1, "close %s", num);
+	if (close(fd) < 0)
+	    err(1, "close %s", num);
     }
     return 0;
 }
 
 static void
-usage (int ret)
+usage(int ret)
 {
-    fprintf (stderr, "%s number-of-files size-of-files\n", __progname);
-    exit (ret);
+    fprintf(stderr, "%s number-of-files size-of-files\n", __progname);
+    exit(ret);
 }
 
 int
@@ -107,15 +107,15 @@ main(int argc, char **argv)
 
 
     if (argc != 3)
-	usage (1);
+	usage(1);
 
-    count = strtol (argv[1], &ptr, 0);
+    count = strtol(argv[1], &ptr, 0);
     if (count == 0 && ptr == argv[1])
-	errx (1, "'%s' not a number", argv[1]);
+	errx(1, "'%s' not a number", argv[1]);
 
-    size = strtol (argv[2], &ptr, 0);
+    size = strtol(argv[2], &ptr, 0);
     if (size == 0 && ptr == argv[2])
-	errx (1, "`%s' not a number", argv[2]);
+	errx(1, "`%s' not a number", argv[2]);
 
-    return creat_files (count, size);
+    return creat_files(count, size);
 }

@@ -29,14 +29,14 @@
 #define	DM	242		/* data mark--for connect. cleaning */
 #define	NOP	241		/* nop */
 #define	SE	240		/* end sub negotiation */
-#define EOR     239             /* end of record (transparent mode) */
+#define EOR     239		/* end of record (transparent mode) */
 
 #define SYNCH	242		/* for telfunc calls */
 
 #ifdef TELCMDS
 char *telcmds[] = {
-	"SE", "NOP", "DMARK", "BRK", "IP", "AO", "AYT", "EC",
-	"EL", "GA", "SB", "WILL", "WONT", "DO", "DONT", "IAC",
+    "SE", "NOP", "DMARK", "BRK", "IP", "AO", "AYT", "EC",
+    "EL", "GA", "SB", "WILL", "WONT", "DO", "DONT", "IAC",
 };
 #endif
 
@@ -72,12 +72,12 @@ char *telcmds[] = {
 #ifdef TELOPTS
 #define	NTELOPTS	(1+TELOPT_EOR)
 char *telopts[NTELOPTS] = {
-	"BINARY", "ECHO", "RCP", "SUPPRESS GO AHEAD", "NAME",
-	"STATUS", "TIMING MARK", "RCTE", "NAOL", "NAOP",
-	"NAOCRD", "NAOHTS", "NAOHTD", "NAOFFD", "NAOVTS",
-	"NAOVTD", "NAOLFD", "EXTEND ASCII", "LOGOUT", "BYTE MACRO",
-	"DATA ENTRY TERMINAL", "SUPDUP", "SUPDUP OUTPUT",
-	"SEND LOCATION", "TERMINAL TYPE", "END OF RECORD",
+    "BINARY", "ECHO", "RCP", "SUPPRESS GO AHEAD", "NAME",
+    "STATUS", "TIMING MARK", "RCTE", "NAOL", "NAOP",
+    "NAOCRD", "NAOHTS", "NAOHTD", "NAOFFD", "NAOVTS",
+    "NAOVTD", "NAOLFD", "EXTEND ASCII", "LOGOUT", "BYTE MACRO",
+    "DATA ENTRY TERMINAL", "SUPDUP", "SUPDUP OUTPUT",
+    "SEND LOCATION", "TERMINAL TYPE", "END OF RECORD",
 };
 #endif
 

@@ -63,20 +63,22 @@
 
 /* AFS partition table entry */
 typedef struct {
-    char *partitionName;  /* vice partition name */
-    char *deviceName;     /* device path */
+    char *partitionName;	/* vice partition name */
+    char *deviceName;		/* device path */
 } cfg_partitionEntry_t;
 
 /* Status callback invoked by functions that update the CellServDB. */
 typedef struct {
-    char *fsDbHost;        /* host on which CellServDB update was attempted */
-    afs_status_t status;   /* update completion status */
+    char *fsDbHost;		/* host on which CellServDB update was attempted */
+    afs_status_t status;	/* update completion status */
 } cfg_cellServDbStatus_t;
 
 typedef void
-(ADMINAPI *cfg_cellServDbUpdateCallBack_t)(void *callBackId,
-					   cfg_cellServDbStatus_t *statusItemP,
-					   afs_status_t status);
+
+  (ADMINAPI * cfg_cellServDbUpdateCallBack_t) (void *callBackId,
+					       cfg_cellServDbStatus_t *
+					       statusItemP,
+					       afs_status_t status);
 
 /* BOS instance names used to configure database servers */
 ADMINEXPORT extern const char *cfg_kaserverBosName;
@@ -87,11 +89,11 @@ ADMINEXPORT extern const char *cfg_buserverBosName;
 
 /* Database server status information */
 typedef struct {
-    short inCellServDb;   /* host in its own server CellServDB */
-    short isKaserver;     /* authentication server configured */
-    short isPtserver;     /* protection server configured */
-    short isVlserver;     /* volume location server configured */
-    short isBuserver;     /* backup server configured */
+    short inCellServDb;		/* host in its own server CellServDB */
+    short isKaserver;		/* authentication server configured */
+    short isPtserver;		/* protection server configured */
+    short isVlserver;		/* volume location server configured */
+    short isBuserver;		/* backup server configured */
 
     /*  isStdDb = (inCellServDb && isKaserver && isPtserver && isVlserver)
      *  isBkDbP = (inCellServDb && isBuserver)
@@ -121,72 +123,50 @@ ADMINEXPORT extern const char *cfg_upclientBinBosSuffix;
 /* ---------------- Server Host ------------------ */
 
 
-extern int ADMINAPI
-cfg_HostQueryStatus(const char *hostName,
-		    afs_status_p configStP,
-		    char **cellNameP,
-		    afs_status_p st);
+extern int ADMINAPI cfg_HostQueryStatus(const char *hostName,
+					afs_status_p configStP,
+					char **cellNameP, afs_status_p st);
 
-extern int ADMINAPI
-cfg_HostOpen(void *cellHandle,
-	     const char *hostName,
-	     void **hostHandleP,
-	     afs_status_p st);
+extern int ADMINAPI cfg_HostOpen(void *cellHandle, const char *hostName,
+				 void **hostHandleP, afs_status_p st);
 
-extern int ADMINAPI
-cfg_HostClose(void *hostHandle,
-	      afs_status_p st);
+extern int ADMINAPI cfg_HostClose(void *hostHandle, afs_status_p st);
 
-extern int ADMINAPI
-cfg_HostSetCell(void *hostHandle,
-		const char *cellName,
-		const char *cellDbHosts,
-		afs_status_p st);
+extern int ADMINAPI cfg_HostSetCell(void *hostHandle, const char *cellName,
+				    const char *cellDbHosts, afs_status_p st);
 
-extern int ADMINAPI
-cfg_HostSetAfsPrincipal(void *hostHandle,
-			short isFirst,
-			const char *passwd,
-			afs_status_p st);
+extern int ADMINAPI cfg_HostSetAfsPrincipal(void *hostHandle, short isFirst,
+					    const char *passwd,
+					    afs_status_p st);
 
-extern int ADMINAPI
-cfg_HostSetAdminPrincipal(void *hostHandle,
-			  short isFirst,
-			  const char *admin,
-			  const char *passwd,
-			  unsigned int afsUid,
-			  afs_status_p st);
+extern int ADMINAPI cfg_HostSetAdminPrincipal(void *hostHandle, short isFirst,
+					      const char *admin,
+					      const char *passwd,
+					      unsigned int afsUid,
+					      afs_status_p st);
 
-extern int ADMINAPI
-cfg_HostInvalidate(void *hostHandle,
-		   afs_status_p st);
+extern int ADMINAPI cfg_HostInvalidate(void *hostHandle, afs_status_p st);
 
-extern int ADMINAPI
-cfg_HostPartitionTableEnumerate(void *hostHandle,
-				cfg_partitionEntry_t **tablePP,
-				int *nEntriesP,
-				afs_status_p st);
+extern int ADMINAPI cfg_HostPartitionTableEnumerate(void *hostHandle,
+						    cfg_partitionEntry_t **
+						    tablePP, int *nEntriesP,
+						    afs_status_p st);
 
-extern int ADMINAPI
-cfg_HostPartitionTableAddEntry(void *hostHandle,
-			       const char *partName,
-			       const char *devName,
-			       afs_status_p st);
+extern int ADMINAPI cfg_HostPartitionTableAddEntry(void *hostHandle,
+						   const char *partName,
+						   const char *devName,
+						   afs_status_p st);
 
-extern int ADMINAPI
-cfg_HostPartitionTableRemoveEntry(void *hostHandle,
-				  const char *partName,
-				  afs_status_p st);
+extern int ADMINAPI cfg_HostPartitionTableRemoveEntry(void *hostHandle,
+						      const char *partName,
+						      afs_status_p st);
 
-extern int ADMINAPI
-cfg_HostPartitionNameValid(const char *partName,
-			   short *isValidP,
-			   afs_status_p st);
+extern int ADMINAPI cfg_HostPartitionNameValid(const char *partName,
+					       short *isValidP,
+					       afs_status_p st);
 
-extern int ADMINAPI
-cfg_HostDeviceNameValid(const char *devName,
-			short *isValidP,
-			afs_status_p st);
+extern int ADMINAPI cfg_HostDeviceNameValid(const char *devName,
+					    short *isValidP, afs_status_p st);
 
 
 
@@ -194,230 +174,176 @@ cfg_HostDeviceNameValid(const char *devName,
 /* ---------------- AFS Client ------------------ */
 
 
-extern int ADMINAPI
-cfg_ClientQueryStatus(const char *hostName,
-		      short *isInstalledP,
-		      unsigned *versionP,
-		      afs_status_p configStP,
-		      char **cellNameP,
-		      afs_status_p st);
+extern int ADMINAPI cfg_ClientQueryStatus(const char *hostName,
+					  short *isInstalledP,
+					  unsigned *versionP,
+					  afs_status_p configStP,
+					  char **cellNameP, afs_status_p st);
 
-extern int ADMINAPI
-cfg_ClientSetCell(void *hostHandle,
-		  const char *cellName,
-		  const char *cellDbHosts,
-		  afs_status_p st);
+extern int ADMINAPI cfg_ClientSetCell(void *hostHandle, const char *cellName,
+				      const char *cellDbHosts,
+				      afs_status_p st);
 
-extern int ADMINAPI
-cfg_ClientCellServDbAdd(void *hostHandle,
-			const char *cellName,
-			const char *dbentry,
-			afs_status_p st);
+extern int ADMINAPI cfg_ClientCellServDbAdd(void *hostHandle,
+					    const char *cellName,
+					    const char *dbentry,
+					    afs_status_p st);
 
-extern int ADMINAPI
-cfg_ClientCellServDbRemove(void *hostHandle,
-			   const char *cellName,
-			   const char *dbentry,
-			   afs_status_p st);
+extern int ADMINAPI cfg_ClientCellServDbRemove(void *hostHandle,
+					       const char *cellName,
+					       const char *dbentry,
+					       afs_status_p st);
 
-extern int ADMINAPI
-cfg_ClientStop(void *hostHandle,
-	       unsigned int timeout,
-	       afs_status_p st);
+extern int ADMINAPI cfg_ClientStop(void *hostHandle, unsigned int timeout,
+				   afs_status_p st);
 
-extern int ADMINAPI
-cfg_ClientStart(void *hostHandle,
-		unsigned int timeout,
-		afs_status_p st);
+extern int ADMINAPI cfg_ClientStart(void *hostHandle, unsigned int timeout,
+				    afs_status_p st);
 
 
 
 /* ---------------- CellServDB ------------------ */
 
 
-extern int ADMINAPI
-cfg_CellServDbAddHost(void *hostHandle,
-		      const char *sysControlHost,
-		      cfg_cellServDbUpdateCallBack_t callBack,
-		      void *callBackId,
-		      int *maxUpdates,
-		      afs_status_p st);
+extern int ADMINAPI cfg_CellServDbAddHost(void *hostHandle,
+					  const char *sysControlHost,
+					  cfg_cellServDbUpdateCallBack_t
+					  callBack, void *callBackId,
+					  int *maxUpdates, afs_status_p st);
 
-extern int ADMINAPI
-cfg_CellServDbRemoveHost(void *hostHandle,
-			 const char *sysControlHost,
-			 cfg_cellServDbUpdateCallBack_t callBack,
-			 void *callBackId,
-			 int *maxUpdates,
-			 afs_status_p st);
+extern int ADMINAPI cfg_CellServDbRemoveHost(void *hostHandle,
+					     const char *sysControlHost,
+					     cfg_cellServDbUpdateCallBack_t
+					     callBack, void *callBackId,
+					     int *maxUpdates,
+					     afs_status_p st);
 
-extern int ADMINAPI
-cfg_CellServDbEnumerate(const char *fsDbHost,
-			char **cellName,
-			char **cellDbHosts,
-			afs_status_p st);
+extern int ADMINAPI cfg_CellServDbEnumerate(const char *fsDbHost,
+					    char **cellName,
+					    char **cellDbHosts,
+					    afs_status_p st);
 
 
 
 /* ---------------- BOS Server  ------------------ */
 
 
-extern int ADMINAPI
-cfg_BosServerStart(void *hostHandle,
-		   short noAuth,
-		   unsigned int timeout,
-		   afs_status_p st);
+extern int ADMINAPI cfg_BosServerStart(void *hostHandle, short noAuth,
+				       unsigned int timeout, afs_status_p st);
 
-extern int ADMINAPI
-cfg_BosServerStop(void *hostHandle,
-		  unsigned int timeout,
-		  afs_status_p st);
+extern int ADMINAPI cfg_BosServerStop(void *hostHandle, unsigned int timeout,
+				      afs_status_p st);
 
-extern int ADMINAPI
-cfg_BosServerQueryStatus(void *hostHandle,
-			 short *isStartedP,
-			 short *isBosProcP,
-			 afs_status_p st);
+extern int ADMINAPI cfg_BosServerQueryStatus(void *hostHandle,
+					     short *isStartedP,
+					     short *isBosProcP,
+					     afs_status_p st);
 
 
 
 /* ---------------- Database Servers ------------------ */
 
 
-extern int ADMINAPI
-cfg_AuthServerStart(void *hostHandle,
-		    afs_status_p st);
+extern int ADMINAPI cfg_AuthServerStart(void *hostHandle, afs_status_p st);
 
-extern int ADMINAPI
-cfg_DbServersStart(void *hostHandle,
-		   short startBkDb,
-		   afs_status_p st);
+extern int ADMINAPI cfg_DbServersStart(void *hostHandle, short startBkDb,
+				       afs_status_p st);
 
-extern int ADMINAPI
-cfg_DbServersStop(void *hostHandle,
-		  afs_status_p st);
+extern int ADMINAPI cfg_DbServersStop(void *hostHandle, afs_status_p st);
 
-extern int ADMINAPI
-cfg_DbServersQueryStatus(void *hostHandle,
-			 short *isStdDbP,
-			 short *isBkDbP,
-			 cfg_dbServersStatus_t *detailsP,
-			 afs_status_p st);
+extern int ADMINAPI cfg_DbServersQueryStatus(void *hostHandle,
+					     short *isStdDbP, short *isBkDbP,
+					     cfg_dbServersStatus_t * detailsP,
+					     afs_status_p st);
 
-extern int ADMINAPI
-cfg_DbServersRestartAll(void *hostHandle,
-			afs_status_p st);
+extern int ADMINAPI cfg_DbServersRestartAll(void *hostHandle,
+					    afs_status_p st);
 
-extern int ADMINAPI
-cfg_DbServersWaitForQuorum(void *hostHandle,
-			   unsigned int timeout,
-			   afs_status_p st);
+extern int ADMINAPI cfg_DbServersWaitForQuorum(void *hostHandle,
+					       unsigned int timeout,
+					       afs_status_p st);
 
-extern int ADMINAPI
-cfg_DbServersStopAllBackup(void *hostHandle,
-			   afs_status_p st);
+extern int ADMINAPI cfg_DbServersStopAllBackup(void *hostHandle,
+					       afs_status_p st);
 
 
 
 /* ---------------- File Server ------------------ */
 
 
-extern int ADMINAPI
-cfg_FileServerStart(void *hostHandle,
-		    afs_status_p st);
+extern int ADMINAPI cfg_FileServerStart(void *hostHandle, afs_status_p st);
 
-extern int ADMINAPI
-cfg_FileServerStop(void *hostHandle,
-		   afs_status_p st);
+extern int ADMINAPI cfg_FileServerStop(void *hostHandle, afs_status_p st);
 
-extern int ADMINAPI
-cfg_FileServerQueryStatus(void *hostHandle,
-			  short *isFsP,
-			  afs_status_p st);
+extern int ADMINAPI cfg_FileServerQueryStatus(void *hostHandle, short *isFsP,
+					      afs_status_p st);
 
 
 
 /* ---------------- Update Server ------------------ */
 
 
-extern int ADMINAPI
-cfg_UpdateServerStart(void *hostHandle,
-		      const char *exportClear,
-		      const char *exportCrypt,
-		      afs_status_p st);
+extern int ADMINAPI cfg_UpdateServerStart(void *hostHandle,
+					  const char *exportClear,
+					  const char *exportCrypt,
+					  afs_status_p st);
 
-extern int ADMINAPI
-cfg_UpdateServerStop(void *hostHandle,
-		     afs_status_p st);
+extern int ADMINAPI cfg_UpdateServerStop(void *hostHandle, afs_status_p st);
 
-extern int ADMINAPI
-cfg_UpdateServerQueryStatus(void *hostHandle,
-			    short *isUpserverP,
-			    short *isSysCtrlP,
-			    short *isBinDistP,
-			    afs_status_p st);
+extern int ADMINAPI cfg_UpdateServerQueryStatus(void *hostHandle,
+						short *isUpserverP,
+						short *isSysCtrlP,
+						short *isBinDistP,
+						afs_status_p st);
 
-extern int ADMINAPI
-cfg_SysBinServerStart(void *hostHandle,
-		      short makeSysCtrl,
-		      short makeBinDist,
-		      afs_status_p st);
+extern int ADMINAPI cfg_SysBinServerStart(void *hostHandle, short makeSysCtrl,
+					  short makeBinDist, afs_status_p st);
 
 
 
 /* ---------------- Update Client ------------------ */
 
 
-extern int ADMINAPI
-cfg_UpdateClientStart(void *hostHandle,
-		      const char *bosSuffix,
-		      const char *upserver,
-		      short crypt,
-		      const char *import,
-		      unsigned int frequency,
-		      afs_status_p st);
+extern int ADMINAPI cfg_UpdateClientStart(void *hostHandle,
+					  const char *bosSuffix,
+					  const char *upserver, short crypt,
+					  const char *import,
+					  unsigned int frequency,
+					  afs_status_p st);
 
-extern int ADMINAPI
-cfg_UpdateClientStop(void *hostHandle,
-		     const char *bosSuffix,
-		     afs_status_p st);
+extern int ADMINAPI cfg_UpdateClientStop(void *hostHandle,
+					 const char *bosSuffix,
+					 afs_status_p st);
 
-extern int ADMINAPI
-cfg_UpdateClientStopAll(void *hostHandle,
-			afs_status_p st);
+extern int ADMINAPI cfg_UpdateClientStopAll(void *hostHandle,
+					    afs_status_p st);
 
-extern int ADMINAPI
-cfg_UpdateClientQueryStatus(void *hostHandle,
-			    short *isUpclientP,
-			    short *isSysP,
-			    short *isBinP,
-			    afs_status_p st);
+extern int ADMINAPI cfg_UpdateClientQueryStatus(void *hostHandle,
+						short *isUpclientP,
+						short *isSysP, short *isBinP,
+						afs_status_p st);
 
-extern int ADMINAPI
-cfg_SysControlClientStart(void *hostHandle,
-			  const char *upserver,
-			  afs_status_p st);
+extern int ADMINAPI cfg_SysControlClientStart(void *hostHandle,
+					      const char *upserver,
+					      afs_status_p st);
 
-extern int ADMINAPI
-cfg_BinDistClientStart(void *hostHandle,
-		       const char *upserver,
-		       afs_status_p st);
+extern int ADMINAPI cfg_BinDistClientStart(void *hostHandle,
+					   const char *upserver,
+					   afs_status_p st);
 
 
 
 /* ---------------- Utilities ------------------ */
 
 
-extern int ADMINAPI
-cfg_StringDeallocate(char *stringDataP,
-		     afs_status_p st);
+extern int ADMINAPI cfg_StringDeallocate(char *stringDataP, afs_status_p st);
 
-extern int ADMINAPI
-cfg_PartitionListDeallocate(cfg_partitionEntry_t *partitionListDataP,
-			    afs_status_p st);
+extern int ADMINAPI cfg_PartitionListDeallocate(cfg_partitionEntry_t *
+						partitionListDataP,
+						afs_status_p st);
 
-extern int ADMINAPI
-cfg_CellServDbStatusDeallocate(cfg_cellServDbStatus_t *statusItempP,
-			       afs_status_p st);
+extern int ADMINAPI cfg_CellServDbStatusDeallocate(cfg_cellServDbStatus_t *
+						   statusItempP,
+						   afs_status_p st);
 
 #endif /* OPENAFS_CFG_ADMIN_H */

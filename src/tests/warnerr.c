@@ -56,10 +56,10 @@ setprogname(const char *argv0)
 {
 #ifndef HAVE___PROGNAME
     char *p;
-    if(argv0 == NULL)
+    if (argv0 == NULL)
 	return;
     p = strrchr(argv0, '/');
-    if(p == NULL)
+    if (p == NULL)
 	p = argv0;
     else
 	p++;
@@ -71,13 +71,13 @@ setprogname(const char *argv0)
 void
 set_progname(char *argv0)
 {
-    setprogname ((const char *)argv0);
+    setprogname((const char *)argv0);
 }
 
 const char *
-get_progname (void)
+get_progname(void)
 {
-    return getprogname ();
+    return getprogname();
 }
 
 void
@@ -86,17 +86,17 @@ warnerr(int doerrno, const char *fmt, va_list ap)
     int sverrno = errno;
     const char *progname = getprogname();
 
-    if(progname != NULL){
+    if (progname != NULL) {
 	fprintf(stderr, "%s", progname);
-	if(fmt != NULL || doerrno)
+	if (fmt != NULL || doerrno)
 	    fprintf(stderr, ": ");
     }
-    if (fmt != NULL){
+    if (fmt != NULL) {
 	vfprintf(stderr, fmt, ap);
-	if(doerrno)
+	if (doerrno)
 	    fprintf(stderr, ": ");
     }
-    if(doerrno)
+    if (doerrno)
 	fprintf(stderr, "%s", strerror(sverrno));
     fprintf(stderr, "\n");
 }

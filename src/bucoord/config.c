@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -27,15 +28,17 @@ RCSID("$Header$");
 
 struct bc_config *bc_globalConfig;
 
-static TrimLine(abuffer,aport)
-afs_int32 *aport;
-register char *abuffer; {
+static
+TrimLine(abuffer, aport)
+     afs_int32 *aport;
+     register char *abuffer;
+{
     register int tc;
     char garb[100];
 
     *aport = 0;
-    sscanf(abuffer,"%s %u",garb,aport);
-    while(tc = *abuffer) {
+    sscanf(abuffer, "%s %u", garb, aport);
+    while (tc = *abuffer) {
 	if (tc == ' ') {
 	    *abuffer = 0;
 	    return 0;
@@ -45,39 +48,42 @@ register char *abuffer; {
     return 0;
 }
 
-FILE *bc_open(aconfig, aname, aext, amode)
-register struct bc_config *aconfig;
-char *amode;
-char *aext;
-char *aname; {
+FILE *
+bc_open(aconfig, aname, aext, amode)
+     register struct bc_config *aconfig;
+     char *amode;
+     char *aext;
+     char *aname;
+{
     register FILE *tf;
     char tpath[256];
 
     strcpy(tpath, aconfig->path);
     strcat(tpath, "/");
     strcat(tpath, aname);
-    if (aext) strcat(tpath, aext);
+    if (aext)
+	strcat(tpath, aext);
     tf = fopen(tpath, amode);
     return tf;
 }
 
-bc_InitConfig(apath) 
-    char *apath;
+bc_InitConfig(apath)
+     char *apath;
 {
     register struct bc_config *tb;
     register struct bc_hostEntry *the;
 
     /* initialize global config structure */
-    tb = (struct bc_config *) malloc(sizeof(struct bc_config));
-    if (!tb) return(BC_NOMEM);
+    tb = (struct bc_config *)malloc(sizeof(struct bc_config));
+    if (!tb)
+	return (BC_NOMEM);
 
     bc_globalConfig = tb;
     memset(tb, 0, sizeof(struct bc_config));
-    tb->path = (char *) malloc(strlen(apath)+1);
-    if (!tb->path) 
-    {
-        free(tb);
-        return(BC_NOMEM);
+    tb->path = (char *)malloc(strlen(apath) + 1);
+    if (!tb->path) {
+	free(tb);
+	return (BC_NOMEM);
     }
 
     strcpy(tb->path, apath);
@@ -87,32 +93,36 @@ bc_InitConfig(apath)
     return 0;
 }
 
-static HostAdd(alist, aname,aport)
-struct bc_hostEntry **alist;
-afs_int32 aport;
-char *aname; {
+static
+HostAdd(alist, aname, aport)
+     struct bc_hostEntry **alist;
+     afs_int32 aport;
+     char *aname;
+{
     register struct bc_hostEntry **tlast, *tentry;
     struct hostent *th;
 
     /* check that the host address is real */
     th = gethostbyname(aname);
-    if (!th) return -1;
+    if (!th)
+	return -1;
 
     /* check if this guy is already in the list */
-    for(tentry = *alist; tentry; tentry=tentry->next)
-	if (tentry->portOffset == aport) return EEXIST;
+    for (tentry = *alist; tentry; tentry = tentry->next)
+	if (tentry->portOffset == aport)
+	    return EEXIST;
 
     /* add this guy to the end of the list */
     tlast = alist;
-    for(tentry = *tlast; tentry; tlast = &tentry->next, tentry = *tlast);
+    for (tentry = *tlast; tentry; tlast = &tentry->next, tentry = *tlast);
 
     /* tlast now points to the next pointer (or head pointer) we should overwrite */
-    tentry = (struct bc_hostEntry *) malloc(sizeof(struct bc_hostEntry));
+    tentry = (struct bc_hostEntry *)malloc(sizeof(struct bc_hostEntry));
     memset(tentry, 0, sizeof(*tentry));
-    tentry->name = (char *) malloc(strlen(aname)+1);
+    tentry->name = (char *)malloc(strlen(aname) + 1);
     strcpy(tentry->name, aname);
     *tlast = tentry;
-    tentry->next = (struct bc_hostEntry *) 0;
+    tentry->next = (struct bc_hostEntry *)0;
     tentry->addr.sin_family = AF_INET;
     memcpy(&tentry->addr.sin_addr.s_addr, th->h_addr, sizeof(afs_int32));
     tentry->addr.sin_port = 0;
@@ -123,18 +133,21 @@ char *aname; {
     return 0;
 }
 
-static HostDelete(alist, aname,aport)
-struct bc_hostEntry **alist;
-afs_int32 aport;
-char *aname; {
+static
+HostDelete(alist, aname, aport)
+     struct bc_hostEntry **alist;
+     afs_int32 aport;
+     char *aname;
+{
     register struct bc_hostEntry **tlast, *tentry;
 
     /* find guy to zap */
     tlast = alist;
-    for(tentry = *tlast; tentry; tlast = &tentry->next, tentry = *tlast)
+    for (tentry = *tlast; tentry; tlast = &tentry->next, tentry = *tlast)
 	if (strcmp(tentry->name, aname) == 0 && (aport == tentry->portOffset))
 	    break;
-    if (!tentry) return	ENOENT;	/* failed to find it */
+    if (!tentry)
+	return ENOENT;		/* failed to find it */
 
     /* otherwise delete the entry from the list and free appropriate structures */
     *tlast = tentry->next;
@@ -143,21 +156,23 @@ char *aname; {
     return 0;
 }
 
-bc_AddTapeHost(aconfig, aname,aport)
-struct bc_config *aconfig;
-afs_int32 aport;
-char *aname; {
+bc_AddTapeHost(aconfig, aname, aport)
+     struct bc_config *aconfig;
+     afs_int32 aport;
+     char *aname;
+{
     register afs_int32 code;
 
-    code = HostAdd(&aconfig->tapeHosts, aname,aport);
+    code = HostAdd(&aconfig->tapeHosts, aname, aport);
 
     return code;
 }
 
 bc_DeleteTapeHost(aconfig, aname, aport)
-struct bc_config *aconfig;
-afs_int32 aport;
-char *aname; {
+     struct bc_config *aconfig;
+     afs_int32 aport;
+     char *aname;
+{
     register afs_int32 code;
 
     code = HostDelete(&aconfig->tapeHosts, aname, aport);

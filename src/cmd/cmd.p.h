@@ -17,10 +17,10 @@
 
 /* syndesc flags */
 #define	CMD_ALIAS	1	/* this is an alias */
-#define CMD_ADMIN       2       /* admin. command, show only with -admin */
-#define CMD_HIDDEN      4       /* A hidden command - similar to CMD_HIDE */
+#define CMD_ADMIN       2	/* admin. command, show only with -admin */
+#define CMD_HIDDEN      4	/* A hidden command - similar to CMD_HIDE */
 
-#define CMD_HELPPARM	(CMD_MAXPARMS-1)/* last one is used by -help switch */
+#define CMD_HELPPARM	(CMD_MAXPARMS-1)	/* last one is used by -help switch */
 #define	CMD_MAXPARMS	64	/* max number of parm types to a cmd line */
 
 /* parse items are here */
@@ -31,9 +31,9 @@ struct cmd_item {
 
 struct cmd_parmdesc {
     char *name;			/* switch name */
-    int	type;			/* flag, single or list */
+    int type;			/* flag, single or list */
     struct cmd_item *items;	/* list of cmd items */
-    afs_int32 flags;			/* flags */
+    afs_int32 flags;		/* flags */
     char *help;			/* optional help descr */
 };
 
@@ -41,34 +41,41 @@ struct cmd_parmdesc {
 #define	CMD_REQUIRED	    0
 #define	CMD_OPTIONAL	    1
 #define	CMD_EXPANDS	    2	/* if list, try to eat tokens through eoline, instead of just 1 */
-#define CMD_HIDE            4   /* A hidden option */
+#define CMD_HIDE            4	/* A hidden option */
 #define	CMD_PROCESSED	    8
 
 struct cmd_syndesc {
     struct cmd_syndesc *next;	/* next one in system list */
-    struct cmd_syndesc *nextAlias;  /* next in alias chain */
-    struct cmd_syndesc *aliasOf;    /* back ptr for aliases */
-    char *name;		    /* subcommand name */
-    char *a0name;	    /* command name from argv[0] */
-    char *help;		    /* help description */
-    int (*proc)(struct cmd_syndesc *ts, char *arock);
+    struct cmd_syndesc *nextAlias;	/* next in alias chain */
+    struct cmd_syndesc *aliasOf;	/* back ptr for aliases */
+    char *name;			/* subcommand name */
+    char *a0name;		/* command name from argv[0] */
+    char *help;			/* help description */
+    int (*proc) (struct cmd_syndesc * ts, char *arock);
     char *rock;
-    int	nParms;		    /* number of parms */
-    afs_int32 flags;		    /* random flags */
+    int nParms;			/* number of parms */
+    afs_int32 flags;		/* random flags */
     struct cmd_parmdesc parms[CMD_MAXPARMS];	/* parms themselves */
 };
 
-extern struct cmd_syndesc *cmd_CreateSyntax(char *namep, 
-	int (*aprocp)(struct cmd_syndesc *ts, char *arock), char *rockp, char *helpp);
-extern int cmd_SetBeforeProc(int (*aproc)(struct cmd_syndesc *ts, char *beforeRock), char *arock);
-extern int cmd_SetAfterProc(int (*aproc)(struct cmd_syndesc *ts, char *afterRock), char *arock);
+extern struct cmd_syndesc *cmd_CreateSyntax(char *namep,
+					    int (*aprocp) (struct cmd_syndesc
+							   * ts, char *arock),
+					    char *rockp, char *helpp);
+extern int
+  cmd_SetBeforeProc(int (*aproc) (struct cmd_syndesc * ts, char *beforeRock),
+		    char *arock);
+extern int
+  cmd_SetAfterProc(int (*aproc) (struct cmd_syndesc * ts, char *afterRock),
+		   char *arock);
 extern int cmd_CreateAlias(struct cmd_syndesc *as, char *aname);
 extern int cmd_Seek(struct cmd_syndesc *as, int apos);
-extern int cmd_AddParm(struct cmd_syndesc *as, char *aname, int atype, 
-	afs_int32 aflags, char *ahelp);
+extern int cmd_AddParm(struct cmd_syndesc *as, char *aname, int atype,
+		       afs_int32 aflags, char *ahelp);
 extern int cmd_Dispatch(int argc, char **argv);
 extern int cmd_FreeArgv(char **argv);
-extern int cmd_ParseLine(char *aline, char **argv, afs_int32 *an, afs_int32 amaxn);
+extern int cmd_ParseLine(char *aline, char **argv, afs_int32 * an,
+			 afs_int32 amaxn);
 extern int cmd_IsAdministratorCommand(register struct cmd_syndesc *as);
 extern void PrintSyntax(register struct cmd_syndesc *as);
 extern void PrintFlagHelp(register struct cmd_syndesc *as);

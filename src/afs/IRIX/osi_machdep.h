@@ -129,7 +129,7 @@ extern flid_t osi_flid;
 
 #if defined(KERNEL)
 #if defined(MP)
-#define _MP_NETLOCKS			/* to get sblock to work right */
+#define _MP_NETLOCKS		/* to get sblock to work right */
 
 /* On SGI mutex_owned doesn't work, so simulate this by remembering the owning
  * thread explicitly.  This is only used for debugging so could be disabled for

@@ -16,7 +16,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -29,13 +30,15 @@ RCSID("$Header$");
 #include <afs/ptclient.h>
 #include "acl.h"
 
-int acl_HtonACL(acl)
-struct acl_accessList *acl;
+int
+acl_HtonACL(acl)
+     struct acl_accessList *acl;
 {
     /* Converts the access list defined by acl to network order.  Returns 0 always. */
 
     int i;
-    if (htonl(1) == 1) return(0);	/* no swapping needed */
+    if (htonl(1) == 1)
+	return (0);		/* no swapping needed */
     for (i = 0; i < acl->positive; i++) {
 	acl->entries[i].id = htonl(acl->entries[i].id);
 	acl->entries[i].rights = htonl(acl->entries[i].rights);
@@ -49,16 +52,18 @@ struct acl_accessList *acl;
     acl->total = htonl(acl->total);
     acl->positive = htonl(acl->positive);
     acl->negative = htonl(acl->negative);
-    return(0);
+    return (0);
 }
 
-int acl_NtohACL(acl)
-struct acl_accessList *acl;
+int
+acl_NtohACL(acl)
+     struct acl_accessList *acl;
 {
     /* Converts the access list defined by acl to network order. Returns 0 always. */
 
     int i;
-    if (ntohl(1) == 1) return(0);	/* no swapping needed */
+    if (ntohl(1) == 1)
+	return (0);		/* no swapping needed */
     acl->size = ntohl(acl->size);
     acl->version = ntohl(acl->version);
     acl->total = ntohl(acl->total);
@@ -72,6 +77,5 @@ struct acl_accessList *acl;
 	acl->entries[i].id = ntohl(acl->entries[i].id);
 	acl->entries[i].rights = ntohl(acl->entries[i].rights);
     }
-    return(0);
+    return (0);
 }
-

@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -51,18 +52,15 @@ RCSID("$Header$");
 
 extern int RXSTATS_RetrieveProcessRPCStats();
 
-void Usage()
+void
+Usage()
 {
-    fprintf(stderr,
-	    "Usage: rxstat_get_process <cell> <host> <port>\n");
+    fprintf(stderr, "Usage: rxstat_get_process <cell> <host> <port>\n");
     exit(1);
 }
 
-void ParseArgs(
-    int argc,
-    char *argv[],
-    char **srvrName,
-    long *srvrPort)
+void
+ParseArgs(int argc, char *argv[], char **srvrName, long *srvrPort)
 {
     char **argp = argv;
 
@@ -78,12 +76,9 @@ void ParseArgs(
 	Usage();
 }
 
-void GetPrintStrings(
-    afs_RPCStats_p statp,
-    char *ifName,
-    char *ifRole,
-    const char ***funcList,
-    int *funcListLen)
+void
+GetPrintStrings(afs_RPCStats_p statp, char *ifName, char *ifRole,
+		const char ***funcList, int *funcListLen)
 {
     if (statp->s.stats_v1.remote_is_server) {
 	strcpy(ifRole, "client");
@@ -91,68 +86,68 @@ void GetPrintStrings(
 	strcpy(ifRole, "server");
     }
 
-    switch(statp->s.stats_v1.interfaceId) {
-      case RXSTATS_STATINDEX:
+    switch (statp->s.stats_v1.interfaceId) {
+    case RXSTATS_STATINDEX:
 	strcpy(ifName, "rxstats interface");
 	*funcList = RXSTATS_function_names;
 	*funcListLen = RXSTATS_NO_OF_STAT_FUNCS;
 	break;
-      case RXAFS_STATINDEX:
+    case RXAFS_STATINDEX:
 	strcpy(ifName, "fileserver interface");
 	*funcList = RXAFS_function_names;
 	*funcListLen = RXAFS_NO_OF_STAT_FUNCS;
 	break;
-      case RXAFSCB_STATINDEX:
+    case RXAFSCB_STATINDEX:
 	strcpy(ifName, "callback interface");
 	*funcList = RXAFSCB_function_names;
 	*funcListLen = RXAFSCB_NO_OF_STAT_FUNCS;
 	break;
-      case PR_STATINDEX:
+    case PR_STATINDEX:
 	strcpy(ifName, "ptserver interface");
 	*funcList = PR_function_names;
 	*funcListLen = PR_NO_OF_STAT_FUNCS;
 	break;
-      case DISK_STATINDEX:
+    case DISK_STATINDEX:
 	strcpy(ifName, "ubik disk interface");
 	*funcList = DISK_function_names;
 	*funcListLen = DISK_NO_OF_STAT_FUNCS;
 	break;
-      case VOTE_STATINDEX:
+    case VOTE_STATINDEX:
 	strcpy(ifName, "ubik vote interface");
 	*funcList = VOTE_function_names;
 	*funcListLen = VOTE_NO_OF_STAT_FUNCS;
 	break;
-      case VL_STATINDEX:
+    case VL_STATINDEX:
 	strcpy(ifName, "volserver interface");
 	*funcList = VL_function_names;
 	*funcListLen = VL_NO_OF_STAT_FUNCS;
 	break;
-      case AFSVolSTATINDEX:
+    case AFSVolSTATINDEX:
 	strcpy(ifName, "volserver interface");
 	*funcList = AFSVolfunction_names;
 	*funcListLen = AFSVolNO_OF_STAT_FUNCS;
 	break;
-      case BOZO_STATINDEX:
+    case BOZO_STATINDEX:
 	strcpy(ifName, "bosserver interface");
 	*funcList = BOZO_function_names;
 	*funcListLen = BOZO_NO_OF_STAT_FUNCS;
 	break;
-      case KAA_STATINDEX:
+    case KAA_STATINDEX:
 	strcpy(ifName, "KAA interface");
 	*funcList = KAA_function_names;
 	*funcListLen = KAA_NO_OF_STAT_FUNCS;
 	break;
-      case KAM_STATINDEX:
+    case KAM_STATINDEX:
 	strcpy(ifName, "KAM interface");
 	*funcList = KAM_function_names;
 	*funcListLen = KAM_NO_OF_STAT_FUNCS;
 	break;
-      case KAT_STATINDEX:
+    case KAT_STATINDEX:
 	strcpy(ifName, "KAT interface");
 	*funcList = KAT_function_names;
 	*funcListLen = KAT_NO_OF_STAT_FUNCS;
 	break;
-      default:
+    default:
 	sprintf(ifName, "interface 0x%x", statp->s.stats_v1.interfaceId);
 	*funcList = NULL;
 	*funcListLen = 0;
@@ -160,7 +155,8 @@ void GetPrintStrings(
     }
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     int rc;
     afs_status_t st = 0;
@@ -190,7 +186,8 @@ int main(int argc, char *argv[])
 	exit(1);
     }
 
-    rc = afsclient_RPCStatOpenPort(cellHandle, srvrName, srvrPort, &conn, &st);
+    rc = afsclient_RPCStatOpenPort(cellHandle, srvrName, srvrPort, &conn,
+				   &st);
     if (!rc) {
 	fprintf(stderr, "afsclient_RPCStatOpenPort, status %d\n", st);
 	exit(1);
@@ -208,8 +205,8 @@ int main(int argc, char *argv[])
 
 	if (index == 0) {
 	    GetPrintStrings(&stats, ifName, role, &funcList, &funcListLen);
-	    printf("\nProcess RPC stats for %s accessed as a %s\n\n",
-		   ifName, role);
+	    printf("\nProcess RPC stats for %s accessed as a %s\n\n", ifName,
+		   role);
 	}
 
 	if (index >= funcListLen) {
@@ -220,32 +217,32 @@ int main(int argc, char *argv[])
 
 	if (!hiszero(stats.s.stats_v1.invocations)) {
 	    printf("\tinvoc (%u.%u) bytes_sent (%u.%u) bytes_rcvd (%u.%u)\n",
-                   hgethi(stats.s.stats_v1.invocations),
-                   hgetlo(stats.s.stats_v1.invocations),
-                   hgethi(stats.s.stats_v1.bytes_sent),
-                   hgetlo(stats.s.stats_v1.bytes_sent),
-                   hgethi(stats.s.stats_v1.bytes_rcvd),
-                   hgetlo(stats.s.stats_v1.bytes_rcvd));
+		   hgethi(stats.s.stats_v1.invocations),
+		   hgetlo(stats.s.stats_v1.invocations),
+		   hgethi(stats.s.stats_v1.bytes_sent),
+		   hgetlo(stats.s.stats_v1.bytes_sent),
+		   hgethi(stats.s.stats_v1.bytes_rcvd),
+		   hgetlo(stats.s.stats_v1.bytes_rcvd));
 	    printf("\tqsum %d.%06d qsqr %d.%06d"
-                   " qmin %d.%06d qmax %d.%06d\n",
-                   stats.s.stats_v1.queue_time_sum.sec,
-                   stats.s.stats_v1.queue_time_sum.usec,
-                   stats.s.stats_v1.queue_time_sum_sqr.sec,
-                   stats.s.stats_v1.queue_time_sum_sqr.usec,
-                   stats.s.stats_v1.queue_time_min.sec,
-                   stats.s.stats_v1.queue_time_min.usec,
-                   stats.s.stats_v1.queue_time_max.sec,
-                   stats.s.stats_v1.queue_time_max.usec);
+		   " qmin %d.%06d qmax %d.%06d\n",
+		   stats.s.stats_v1.queue_time_sum.sec,
+		   stats.s.stats_v1.queue_time_sum.usec,
+		   stats.s.stats_v1.queue_time_sum_sqr.sec,
+		   stats.s.stats_v1.queue_time_sum_sqr.usec,
+		   stats.s.stats_v1.queue_time_min.sec,
+		   stats.s.stats_v1.queue_time_min.usec,
+		   stats.s.stats_v1.queue_time_max.sec,
+		   stats.s.stats_v1.queue_time_max.usec);
 	    printf("\txsum %d.%06d xsqr %d.%06d"
-	           " xmin %d.%06d xmax %d.%06d\n",
-                   stats.s.stats_v1.execution_time_sum.sec,
-                   stats.s.stats_v1.execution_time_sum.usec,
-                   stats.s.stats_v1.execution_time_sum_sqr.sec,
-                   stats.s.stats_v1.execution_time_sum_sqr.usec,
-                   stats.s.stats_v1.execution_time_min.sec,
-                   stats.s.stats_v1.execution_time_min.usec,
-                   stats.s.stats_v1.execution_time_max.sec,
-                   stats.s.stats_v1.execution_time_max.usec);
+		   " xmin %d.%06d xmax %d.%06d\n",
+		   stats.s.stats_v1.execution_time_sum.sec,
+		   stats.s.stats_v1.execution_time_sum.usec,
+		   stats.s.stats_v1.execution_time_sum_sqr.sec,
+		   stats.s.stats_v1.execution_time_sum_sqr.usec,
+		   stats.s.stats_v1.execution_time_min.sec,
+		   stats.s.stats_v1.execution_time_min.usec,
+		   stats.s.stats_v1.execution_time_max.sec,
+		   stats.s.stats_v1.execution_time_max.usec);
 	} else {
 	    printf("\tNever invoked\n");
 	}

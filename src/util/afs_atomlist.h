@@ -51,31 +51,23 @@ typedef struct afs_atomlist afs_atomlist;
  * on error.
  */
 
-afs_atomlist *
-afs_atomlist_create
-( size_t atom_size
-, size_t block_size
-, void *(*allocate)(size_t n)
-, void (*deallocate)(void *p, size_t n)
-);
+afs_atomlist *afs_atomlist_create(size_t atom_size, size_t block_size,
+				  void *(*allocate) (size_t n)
+				  , void (*deallocate) (void *p, size_t n)
+    );
 
 /*
  * afs_atomlist_destroy() destroys the given afs_atomlist, freeing it
  * and all space that may have been allocated from it.
  */
 void
-afs_atomlist_destroy
-( afs_atomlist *al
-);
+  afs_atomlist_destroy(afs_atomlist * al);
 
 /*
  * afs_atomlist_get() returns a pointer to an unused atom.
  */
 
-void *
-afs_atomlist_get
-( afs_atomlist *al
-);
+void *afs_atomlist_get(afs_atomlist * al);
 
 /*
  * afs_atomlist_put() returns the given atom to the free list in the
@@ -88,9 +80,6 @@ afs_atomlist_get
  */
 
 void
-afs_atomlist_put
-( afs_atomlist *al
-, void *data
-);
+  afs_atomlist_put(afs_atomlist * al, void *data);
 
 #endif /* ATOMLIST_H */

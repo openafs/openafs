@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -50,10 +51,12 @@ static char *day[] = {
 
 /* free token list returned by parseLine */
 #ifdef undef
-static LocalFreeTokens(alist)
-    register struct token *alist; {
+static
+LocalFreeTokens(alist)
+     register struct token *alist;
+{
     register struct token *nlist;
-    for(; alist; alist = nlist) {
+    for (; alist; alist = nlist) {
 	nlist = alist->next;
 	free(alist->key);
 	free(alist);
@@ -62,13 +65,17 @@ static LocalFreeTokens(alist)
 }
 #endif
 
-static int space(int x)
+static int
+space(int x)
 {
-    if (x == 0 || x == ' ' || x == '\t' || x== '\n') return 1;
-    else return 0;
+    if (x == 0 || x == ' ' || x == '\t' || x == '\n')
+	return 1;
+    else
+	return 0;
 }
 
-static int LocalParseLine(char *aline, struct token **alist)
+static int
+LocalParseLine(char *aline, struct token **alist)
 {
     char tbuffer[256];
     register char *tptr = NULL;
@@ -76,40 +83,42 @@ static int LocalParseLine(char *aline, struct token **alist)
     struct token *first, *last;
     register struct token *ttok;
     register int tc;
-    
-    inToken = 0;	/* not copying token chars at start */
+
+    inToken = 0;		/* not copying token chars at start */
     first = NULL;
     last = NULL;
     while (1) {
 	tc = *aline++;
-	if (tc == 0 || space(tc)) {    /* terminating null gets us in here, too */
+	if (tc == 0 || space(tc)) {	/* terminating null gets us in here, too */
 	    if (inToken) {
-		inToken	= 0;	/* end of this token */
+		inToken = 0;	/* end of this token */
 		*tptr++ = 0;
-		ttok = (struct token *) malloc(sizeof(struct token));
+		ttok = (struct token *)malloc(sizeof(struct token));
 		ttok->next = NULL;
-		ttok->key = (char *) malloc(strlen(tbuffer)+1);
+		ttok->key = (char *)malloc(strlen(tbuffer) + 1);
 		strcpy(ttok->key, tbuffer);
 		if (last) {
 		    last->next = ttok;
 		    last = ttok;
-		}
-		else last = ttok;
-		if (!first) first = ttok;
+		} else
+		    last = ttok;
+		if (!first)
+		    first = ttok;
 	    }
-	}
-	else {
+	} else {
 	    /* an alpha character */
 	    if (!inToken) {
 		tptr = tbuffer;
 		inToken = 1;
 	    }
-	    if (tptr - tbuffer >= sizeof(tbuffer)) return -1;   /* token too long */
+	    if (tptr - tbuffer >= sizeof(tbuffer))
+		return -1;	/* token too long */
 	    *tptr++ = tc;
 	}
 	if (tc == 0) {
 	    /* last token flushed 'cause space(0) --> true */
-	    if (last) last->next = NULL;
+	    if (last)
+		last->next = NULL;
 	    *alist = first;
 	    return 0;
 	}
@@ -120,27 +129,28 @@ static int LocalParseLine(char *aline, struct token **alist)
 static struct ptemp {
     char *key;
     afs_int32 value;
-} ptkeys [] = {
-    { "sun", 0x10000, },
-    { "mon", 0x10001, },
-    { "tue", 0x10002, },
-    { "wed", 0x10003, },
-    { "thu", 0x10004, },
-    { "fri", 0x10005, },
-    { "sat", 0x10006, },
-    { "sunday", 0x10000, },
-    { "monday", 0x10001, },
-    { "tuesday", 0x10002, },
-    { "wednesday", 0x10003, },
-    { "thursday", 0x10004, },
-    { "thur", 0x10004, },
-    { "friday", 0x10005, },
-    { "saturday", 0x10006, },
-    { "am", 0x20000, },
-    { "pm", 0x20001, },
-    { "a.m.", 0x20000, },
-    { "p.m.", 0x20001, },
-    { 0, 0, }
+} ptkeys[] = {
+    {
+    "sun", 0x10000,}, {
+    "mon", 0x10001,}, {
+    "tue", 0x10002,}, {
+    "wed", 0x10003,}, {
+    "thu", 0x10004,}, {
+    "fri", 0x10005,}, {
+    "sat", 0x10006,}, {
+    "sunday", 0x10000,}, {
+    "monday", 0x10001,}, {
+    "tuesday", 0x10002,}, {
+    "wednesday", 0x10003,}, {
+    "thursday", 0x10004,}, {
+    "thur", 0x10004,}, {
+    "friday", 0x10005,}, {
+    "saturday", 0x10006,}, {
+    "am", 0x20000,}, {
+    "pm", 0x20001,}, {
+    "a.m.", 0x20000,}, {
+    "p.m.", 0x20001,}, {
+    0, 0,}
 };
 
 /* ktime_DateOf
@@ -150,16 +160,16 @@ static struct ptemp {
  *	return value - ptr to time in text form. Ptr is to a static string.
  */
 
-char *ktime_DateOf(afs_int32 atime)
+char *
+ktime_DateOf(afs_int32 atime)
 {
     static char tbuffer[30];
     register char *tp;
-    tp=ctime((time_t *)&atime);
+    tp = ctime((time_t *) & atime);
     if (tp) {
 	strcpy(tbuffer, tp);
-	tbuffer[24] = 0;    /* get rid of new line */
-    }
-    else
+	tbuffer[24] = 0;	/* get rid of new line */
+    } else
 	strcpy(tbuffer, "BAD TIME");
     return tbuffer;
 }
@@ -174,18 +184,19 @@ char *ktime_DateOf(afs_int32 atime)
  *	-1 - error in format
  */
 
-static int ParseTime(register struct ktime *ak, register char *astr)
+static int
+ParseTime(register struct ktime *ak, register char *astr)
 {
     int field;
     afs_int32 temp;
     register char *tp;
     register int tc;
 
-    field = 0;	/* 0=hour, 1=min, 2=sec */
+    field = 0;			/* 0=hour, 1=min, 2=sec */
     temp = 0;
 
     ak->mask |= (KTIME_HOUR | KTIME_MIN | KTIME_SEC);
-    for(tp=astr;;) {
+    for (tp = astr;;) {
 	tc = *tp++;
 	if (tc == 0 || tc == ':') {
 	    if (field == 0)
@@ -196,29 +207,32 @@ static int ParseTime(register struct ktime *ak, register char *astr)
 		ak->sec = temp;
 	    temp = 0;
 	    field++;
-	    if (tc == 0) break;
+	    if (tc == 0)
+		break;
 	    continue;
-	}
-	else if	(!isdigit(tc)) return -1;   /* syntax error */
+	} else if (!isdigit(tc))
+	    return -1;		/* syntax error */
 	else {
 	    /* digit */
 	    temp *= 10;
 	    temp += tc - '0';
 	}
     }
-    if (ak->hour >= 24 || ak->min >= 60 || ak->sec >= 60) return -1;
+    if (ak->hour >= 24 || ak->min >= 60 || ak->sec >= 60)
+	return -1;
     return 0;
 }
 
-afs_int32 ktime_Str2int32(register char *astr) 
+afs_int32
+ktime_Str2int32(register char *astr)
 {
     struct ktime tk;
 
     memset(&tk, 0, sizeof(tk));
-    if ( ParseTime(&tk, astr) )
-	return (-1);    /* syntax error */
-    
-    return ((tk.hour*60 + tk.min)*60 + tk.sec);
+    if (ParseTime(&tk, astr))
+	return (-1);		/* syntax error */
+
+    return ((tk.hour * 60 + tk.min) * 60 + tk.sec);
 }
 
 /* ktime_ParsePeriodic
@@ -234,16 +248,18 @@ afs_int32 ktime_Str2int32(register char *astr)
  */
 
 /* -1 means error, 0 means now, otherwise returns time of next event */
-int ktime_ParsePeriodic(char *adate, register struct ktime *ak)
+int
+ktime_ParsePeriodic(char *adate, register struct ktime *ak)
 {
     struct token *tt;
     register afs_int32 code;
     struct ptemp *tp;
-    
+
     memset(ak, 0, sizeof(*ak));
     code = LocalParseLine(adate, &tt);
-    if (code) return -1;
-    for(;tt;tt=tt->next) {
+    if (code)
+	return -1;
+    for (; tt; tt = tt->next) {
 	/* look at each token */
 	if (strcmp(tt->key, "now") == 0) {
 	    ak->mask |= KTIME_NOW;
@@ -253,23 +269,27 @@ int ktime_ParsePeriodic(char *adate, register struct ktime *ak)
 	    ak->mask |= KTIME_NEVER;
 	    return 0;
 	}
-	if (strcmp(tt->key, "at") == 0) continue;
-	if (strcmp(tt->key, "every") == 0) continue;
+	if (strcmp(tt->key, "at") == 0)
+	    continue;
+	if (strcmp(tt->key, "every") == 0)
+	    continue;
 	if (isdigit(tt->key[0])) {
 	    /* parse a time */
 	    code = ParseTime(ak, tt->key);
-	    if (code) return -1;
+	    if (code)
+		return -1;
 	    continue;
 	}
 	/* otherwise use keyword table */
-	for(tp = ptkeys;; tp++) {
+	for (tp = ptkeys;; tp++) {
 	    if (tp->key == NULL) {
 		return -1;
 	    }
-	    if (strcmp(tp->key, tt->key) == 0) break;
+	    if (strcmp(tp->key, tt->key) == 0)
+		break;
 	}
 	/* now look at tp->value to see what we've got */
-	if ((tp->value>>16) == 1) {
+	if ((tp->value >> 16) == 1) {
 	    /* a day */
 	    ak->mask |= KTIME_DAY;
 	    ak->day = tp->value & 0xff;
@@ -278,15 +298,19 @@ int ktime_ParsePeriodic(char *adate, register struct ktime *ak)
 	    /* am or pm token */
 	    if ((tp->value & 0xff) == 1) {
 		/* pm */
-		if (!(ak->mask & KTIME_HOUR)) return -1;
-		if (ak->hour < 12) ak->hour += 12;
+		if (!(ak->mask & KTIME_HOUR))
+		    return -1;
+		if (ak->hour < 12)
+		    ak->hour += 12;
 		/* 12 is 12 PM */
-		else if (ak->hour != 12) return -1;
-	    }
-	    else {
+		else if (ak->hour != 12)
+		    return -1;
+	    } else {
 		/* am is almost a noop, except that we map 12:01 am to 0:01 */
-		if (ak->hour > 12) return -1;
-		if (ak->hour == 12) ak->hour = 0;
+		if (ak->hour > 12)
+		    return -1;
+		if (ak->hour == 12)
+		    ak->hour = 0;
 	    }
 	}
     }
@@ -301,19 +325,18 @@ int ktime_ParsePeriodic(char *adate, register struct ktime *ak)
  * exit:
  *	0 - astring contains ktime string.
  */
-int ktime_DisplayString(struct ktime *aparm, register char *astring)
+int
+ktime_DisplayString(struct ktime *aparm, register char *astring)
 {
     char tempString[50];
 
     if (aparm->mask & KTIME_NEVER) {
 	strcpy(astring, "never");
 	return 0;
-    }
-    else if (aparm->mask & KTIME_NOW) {
+    } else if (aparm->mask & KTIME_NOW) {
 	strcpy(astring, "now");
 	return 0;
-    }
-    else {
+    } else {
 	strcpy(astring, "at");
 	if (aparm->mask & KTIME_DAY) {
 	    strcat(astring, " ");
@@ -321,7 +344,7 @@ int ktime_DisplayString(struct ktime *aparm, register char *astring)
 	}
 	if (aparm->mask & KTIME_HOUR) {
 	    if (aparm->hour > 12)
-		sprintf(tempString, " %d", aparm->hour-12);
+		sprintf(tempString, " %d", aparm->hour - 12);
 	    else if (aparm->hour == 0)
 		strcpy(tempString, " 12");
 	    else
@@ -347,43 +370,49 @@ int ktime_DisplayString(struct ktime *aparm, register char *astring)
 }
 
 /* get next time that matches ktime structure after time afrom */
-afs_int32 ktime_next(struct ktime *aktime, afs_int32 afrom)
+afs_int32
+ktime_next(struct ktime * aktime, afs_int32 afrom)
 {
     /* try by guessing from now */
     struct tm *tsp;
-    time_t start;	/* time to start looking */
-    time_t probe;	/* a placeholder to use for advancing day to day */
-    time_t time_next;    /* actual UTC time of probe, with time of day set */
+    time_t start;		/* time to start looking */
+    time_t probe;		/* a placeholder to use for advancing day to day */
+    time_t time_next;		/* actual UTC time of probe, with time of day set */
     afs_int32 tmask;
     struct ktime_date tdate;
 
-    start = afrom + time(0); /* time to start search */
+    start = afrom + time(0);	/* time to start search */
     tmask = aktime->mask;
 
     /* handle some special cases */
-    if (tmask & KTIME_NEVER) return 0x7fffffff;
-    if (tmask & KTIME_NOW) return 0;
+    if (tmask & KTIME_NEVER)
+	return 0x7fffffff;
+    if (tmask & KTIME_NOW)
+	return 0;
 
     /* Use probe to fill in members of *tsp. Add 23 hours each iteration until 
-       time_next is correct. Only add 23 hrs to avoid skipping spring 
-       daylight savings time day */
-    for (probe=start;;probe += (23*3600)) {
-       tsp = localtime(&probe);	/* find out what UTC time "probe" is */
+     * time_next is correct. Only add 23 hrs to avoid skipping spring 
+     * daylight savings time day */
+    for (probe = start;; probe += (23 * 3600)) {
+	tsp = localtime(&probe);	/* find out what UTC time "probe" is */
 
-       tdate.year = tsp->tm_year;
-       tdate.month = tsp->tm_mon+1;
-       tdate.day = tsp->tm_mday;
-       tdate.mask = KTIMEDATE_YEAR | KTIMEDATE_MONTH | KTIMEDATE_DAY |
-          KTIMEDATE_HOUR | KTIMEDATE_MIN | KTIMEDATE_SEC;
-       tdate.hour = aktime->hour;  /* edit in our changes */
-       tdate.min = aktime->min;
-       tdate.sec = aktime->sec;
-       time_next = ktime_InterpretDate(&tdate);  /* Convert back to UTC time */
-       if (time_next < start) continue;  /* "probe" time is already past */
-       if ((tmask & KTIME_DAY) == 0)   /* don't care about day, we're done */
-	  break;
-       tsp = localtime(&time_next);
-       if (tsp->tm_wday == aktime->day) break;  /* day matches, we're done */
+	tdate.year = tsp->tm_year;
+	tdate.month = tsp->tm_mon + 1;
+	tdate.day = tsp->tm_mday;
+	tdate.mask =
+	    KTIMEDATE_YEAR | KTIMEDATE_MONTH | KTIMEDATE_DAY | KTIMEDATE_HOUR
+	    | KTIMEDATE_MIN | KTIMEDATE_SEC;
+	tdate.hour = aktime->hour;	/* edit in our changes */
+	tdate.min = aktime->min;
+	tdate.sec = aktime->sec;
+	time_next = ktime_InterpretDate(&tdate);	/* Convert back to UTC time */
+	if (time_next < start)
+	    continue;		/* "probe" time is already past */
+	if ((tmask & KTIME_DAY) == 0)	/* don't care about day, we're done */
+	    break;
+	tsp = localtime(&time_next);
+	if (tsp->tm_wday == aktime->day)
+	    break;		/* day matches, we're done */
     }
     return time_next;
 }
@@ -391,50 +420,70 @@ afs_int32 ktime_next(struct ktime *aktime, afs_int32 afrom)
 
 /* compare date in both formats, and return as in strcmp */
 #ifdef undef
-static int KTimeCmp(register struct ktime *aktime, register struct tm *atm)
+static int
+KTimeCmp(register struct ktime *aktime, register struct tm *atm)
 {
     register afs_int32 tmask;
 
     /* don't compare day of the week, since we can't tell the
-       order in a cyclical set.  Caller must check for equality, if
-       she cares */
+     * order in a cyclical set.  Caller must check for equality, if
+     * she cares */
     tmask = aktime->mask;
     if (tmask & KTIME_HOUR) {
-	if (aktime->hour > atm->tm_hour) return 1;
-	if (aktime->hour < atm->tm_hour) return -1;
+	if (aktime->hour > atm->tm_hour)
+	    return 1;
+	if (aktime->hour < atm->tm_hour)
+	    return -1;
     }
     if (tmask & KTIME_MIN) {
-	if (aktime->min > atm->tm_min) return 1;
-	if (aktime->min < atm->tm_min) return -1;
+	if (aktime->min > atm->tm_min)
+	    return 1;
+	if (aktime->min < atm->tm_min)
+	    return -1;
     }
     if (tmask & KTIME_SEC) {
-	if (aktime->sec > atm->tm_sec) return 1;
-	if (aktime->sec < atm->tm_sec) return -1;
+	if (aktime->sec > atm->tm_sec)
+	    return 1;
+	if (aktime->sec < atm->tm_sec)
+	    return -1;
     }
     return 0;
 }
 #endif
 
 /* compare date in both formats, and return as in strcmp */
-static int KDateCmp(register struct ktime_date *akdate, register struct tm *atm)
+static int
+KDateCmp(register struct ktime_date *akdate, register struct tm *atm)
 {
-    if (akdate->year > atm->tm_year) return 1;
-    if (akdate->year < atm->tm_year) return -1;
-    if (akdate->month > atm->tm_mon) return 1;
-    if (akdate->month < atm->tm_mon) return -1;
-    if (akdate->day > atm->tm_mday) return 1;
-    if (akdate->day < atm->tm_mday) return -1;
+    if (akdate->year > atm->tm_year)
+	return 1;
+    if (akdate->year < atm->tm_year)
+	return -1;
+    if (akdate->month > atm->tm_mon)
+	return 1;
+    if (akdate->month < atm->tm_mon)
+	return -1;
+    if (akdate->day > atm->tm_mday)
+	return 1;
+    if (akdate->day < atm->tm_mday)
+	return -1;
     if (akdate->mask & KTIMEDATE_HOUR) {
-	if (akdate->hour > atm->tm_hour) return 1;
-	if (akdate->hour < atm->tm_hour) return -1;
+	if (akdate->hour > atm->tm_hour)
+	    return 1;
+	if (akdate->hour < atm->tm_hour)
+	    return -1;
     }
     if (akdate->mask & KTIMEDATE_MIN) {
-	if (akdate->min > atm->tm_min) return 1;
-	if (akdate->min < atm->tm_min) return -1;
+	if (akdate->min > atm->tm_min)
+	    return 1;
+	if (akdate->min < atm->tm_min)
+	    return -1;
     }
     if (akdate->mask & KTIMEDATE_SEC) {
-	if (akdate->sec > atm->tm_sec) return 1;
-	if (akdate->sec < atm->tm_sec) return -1;
+	if (akdate->sec > atm->tm_sec)
+	    return 1;
+	if (akdate->sec < atm->tm_sec)
+	    return -1;
     }
     return 0;
 }
@@ -449,56 +498,64 @@ static int KDateCmp(register struct ktime_date *akdate, register struct tm *atm)
  *	-1 - parsing failure
  */
 
-static afs_int32 ktime_ParseDate(char *adate, struct ktime_date *akdate)
+static afs_int32
+ktime_ParseDate(char *adate, struct ktime_date *akdate)
 {
     int code;
     afs_int32 month, day, year, hour, min, sec;
     char never[7];
     char c;
 
-    lcstring (never, adate, sizeof(never));
-    if (strcmp (never, "never") == 0) akdate->mask = KTIMEDATE_NEVER;
-    else if (strcmp (never, "now") == 0) akdate->mask = KTIMEDATE_NOW;
-    else akdate->mask = 0;
-    if (akdate->mask) return 0;
+    lcstring(never, adate, sizeof(never));
+    if (strcmp(never, "never") == 0)
+	akdate->mask = KTIMEDATE_NEVER;
+    else if (strcmp(never, "now") == 0)
+	akdate->mask = KTIMEDATE_NOW;
+    else
+	akdate->mask = 0;
+    if (akdate->mask)
+	return 0;
 
 
-    code = sscanf(adate, "%d / %d / %d %d : %d : %d%1s",
-		  &month, &day, &year, &hour, &min, &sec, &c);
+    code =
+	sscanf(adate, "%d / %d / %d %d : %d : %d%1s", &month, &day, &year,
+	       &hour, &min, &sec, &c);
     if (code != 6) {
-       sec = 0;
-       code = sscanf(adate, "%d / %d / %d %d : %d%1s",
-		     &month, &day, &year, &hour, &min, &c);
-       if (code != 5) {
-	  hour = min = 0;
-	  code = sscanf(adate, "%d / %d / %d%1s", &month, &day, &year, &c);
-	  if (code != 3) {
-	     return -1;
-	  }
-       }
+	sec = 0;
+	code =
+	    sscanf(adate, "%d / %d / %d %d : %d%1s", &month, &day, &year,
+		   &hour, &min, &c);
+	if (code != 5) {
+	    hour = min = 0;
+	    code = sscanf(adate, "%d / %d / %d%1s", &month, &day, &year, &c);
+	    if (code != 3) {
+		return -1;
+	    }
+	}
     }
 
-    if ((year  < 0) || 
-	(month < 1) || (month > 12) ||
-        (day   < 1) || (day   > 31) ||     /* more or less */
-	(hour  < 0) || (hour  > 23) || 
-	(min   < 0) || (min   > 59) ||
-	(sec   < 0) || (sec   > 59))
-      return -2;
+    if ((year < 0) || (month < 1) || (month > 12) || (day < 1) || (day > 31) ||	/* more or less */
+	(hour < 0) || (hour > 23) || (min < 0) || (min > 59) || (sec < 0)
+	|| (sec > 59))
+	return -2;
 
-    if      (year < 69)    year += 100;	   /* make 1/1/1 => Jan 1, 2001 */
-    else if (year >= 1900) year -= 1900;   /* allow 1/1/2001 to work */
-    else if (year > 99)    return -2;	   /* only allow 2 or 4 digit years */
+    if (year < 69)
+	year += 100;		/* make 1/1/1 => Jan 1, 2001 */
+    else if (year >= 1900)
+	year -= 1900;		/* allow 1/1/2001 to work */
+    else if (year > 99)
+	return -2;		/* only allow 2 or 4 digit years */
 
-    akdate->mask = KTIMEDATE_YEAR | KTIMEDATE_MONTH | KTIMEDATE_DAY |
-                   KTIMEDATE_HOUR | KTIMEDATE_MIN   | KTIMEDATE_SEC;
+    akdate->mask =
+	KTIMEDATE_YEAR | KTIMEDATE_MONTH | KTIMEDATE_DAY | KTIMEDATE_HOUR |
+	KTIMEDATE_MIN | KTIMEDATE_SEC;
 
-    akdate->year  = year;
+    akdate->year = year;
     akdate->month = month;
-    akdate->day   = day;
-    akdate->hour  = hour;
-    akdate->min   = min;
-    akdate->sec   = sec;
+    akdate->day = day;
+    akdate->hour = hour;
+    akdate->min = min;
+    akdate->sec = sec;
 
     /* done successfully */
     return 0;
@@ -513,22 +570,25 @@ static afs_int32 ktime_ParseDate(char *adate, struct ktime_date *akdate)
  *	0 - aint32 contains converted date.
  */
 
-afs_int32 ktime_DateToInt32(char *adate, afs_int32 *aint32)
+afs_int32
+ktime_DateToInt32(char *adate, afs_int32 * aint32)
 {
     struct ktime_date tdate;
     register afs_int32 code;
 
     /* parse the date into a ktime_date structure */
     code = ktime_ParseDate(adate, &tdate);
-    if (code) return code;	/* failed to parse */
+    if (code)
+	return code;		/* failed to parse */
 
     code = ktime_InterpretDate(&tdate);	/* interpret as seconds since 1970 */
-    *aint32 = code;	/* return it */
-    return 0;		/* and declare no errors */
+    *aint32 = code;		/* return it */
+    return 0;			/* and declare no errors */
 }
 
 /* get useful error message to print about date input format */
-char *ktime_GetDateUsage(void)
+char *
+ktime_GetDateUsage(void)
 {
     return "date format is 'mm/dd/yy [hh:mm]', using a 24 hour clock";
 }
@@ -543,19 +603,22 @@ char *ktime_GetDateUsage(void)
  *	date converted to afs_int32.
  */
 
-afs_int32 ktime_InterpretDate(struct ktime_date *akdate)
+afs_int32
+ktime_InterpretDate(struct ktime_date * akdate)
 {
     register afs_uint32 tresult;
     register afs_uint32 tbit;
     time_t temp;
     register struct tm *tsp;
 
-    if (akdate->mask & KTIMEDATE_NOW) return time(0);
-    if (akdate->mask & KTIMEDATE_NEVER) return KTIMEDATE_NEVERDATE;
+    if (akdate->mask & KTIMEDATE_NOW)
+	return time(0);
+    if (akdate->mask & KTIMEDATE_NEVER)
+	return KTIMEDATE_NEVERDATE;
 
-    tbit = 1<<30;		/* start off at max signed result */
+    tbit = 1 << 30;		/* start off at max signed result */
     tresult = 0;		/* result to return */
-    while(tbit > 0) {
+    while (tbit > 0) {
 	temp = tresult + tbit;	/* see if adding this bit keeps us < akdate */
 	tsp = localtime(&temp);
 	tsp->tm_mon++;
@@ -567,8 +630,8 @@ afs_int32 ktime_InterpretDate(struct ktime_date *akdate)
 #endif
 	if (KDateCmp(akdate, tsp) >= 0) {
 	    /* if temp still represents earlier than date than we're searching
-             * for, add in bit as increment, otherwise use old value and look
-             * for smaller increment */
+	     * for, add in bit as increment, otherwise use old value and look
+	     * for smaller increment */
 	    tresult = temp;
 	}
 	tbit = tbit >> 1;	/* try next bit */

@@ -43,4 +43,3 @@ vwarnx(const char *fmt, va_list ap)
 {
     warnerr(0, fmt, ap);
 }
-

@@ -19,7 +19,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <stdio.h>
 #ifdef AFS_NT40_ENV
@@ -33,7 +34,7 @@ RCSID("$Header$");
 #include <sys/time.h>
 #include <syslog.h>
 #endif
-#include <afs/procmgmt.h>  /* signal(), kill(), wait(), etc. */
+#include <afs/procmgmt.h>	/* signal(), kill(), wait(), etc. */
 #include <fcntl.h>
 #include <afs/stds.h>
 #ifdef HAVE_STRING_H
@@ -59,15 +60,15 @@ static pthread_mutex_t serverLogMutex;
 #endif
 
 #else /* AFS_PTHREAD_ENV */
-#define LOCK_SERVERLOG() 
-#define UNLOCK_SERVERLOG() 
-#endif  /* AFS_PTHREAD_ENV */
+#define LOCK_SERVERLOG()
+#define UNLOCK_SERVERLOG()
+#endif /* AFS_PTHREAD_ENV */
 
 #ifdef AFS_NT40_ENV
 #define F_OK 0
 #endif
 
-char *(*threadNameProgram)();
+char *(*threadNameProgram) ();
 
 static int serverLogFD = -1;
 
@@ -83,15 +84,17 @@ int mrafsStyleLogs = 0;
 int printLocks = 0;
 static char ourName[MAXPATHLEN];
 
-void WriteLogBuffer(char *buf, afs_uint32 len)
+void
+WriteLogBuffer(char *buf, afs_uint32 len)
 {
     LOCK_SERVERLOG();
     if (serverLogFD > 0)
-	(void) write(serverLogFD, buf, len);
+	(void)write(serverLogFD, buf, len);
     UNLOCK_SERVERLOG();
 }
 
-void vFSLog (const char *format, va_list args)
+void
+vFSLog(const char *format, va_list args)
 {
     time_t currenttime;
     char *timeStamp;
@@ -102,70 +105,72 @@ void vFSLog (const char *format, va_list args)
 
     currenttime = time(0);
     timeStamp = afs_ctime(&currenttime, tbuffer, sizeof(tbuffer));
-    timeStamp[24] = ' ';  /* ts[24] is the newline, 25 is the null */
+    timeStamp[24] = ' ';	/* ts[24] is the newline, 25 is the null */
     info = &timeStamp[25];
 
     if (mrafsStyleLogs) {
-       name = (*threadNameProgram)();
-       (void) afs_snprintf(info, (sizeof tbuffer) - strlen(tbuffer),
-			   "[%s] ", name);
-       info += strlen(info);
+	name = (*threadNameProgram) ();
+	(void)afs_snprintf(info, (sizeof tbuffer) - strlen(tbuffer), "[%s] ",
+			   name);
+	info += strlen(info);
     }
 
-    (void) afs_vsnprintf(info, (sizeof tbuffer) - strlen(tbuffer),
-			 format, args);
+    (void)afs_vsnprintf(info, (sizeof tbuffer) - strlen(tbuffer), format,
+			args);
 
     len = strlen(tbuffer);
     LOCK_SERVERLOG();
 #ifndef AFS_NT40_ENV
-    if ( serverLogSyslog ){
+    if (serverLogSyslog) {
 	syslog(LOG_INFO, "%s", info);
-    } else 
+    } else
 #endif
-	if (serverLogFD > 0)
-	    (void) write(serverLogFD, tbuffer, len);
+    if (serverLogFD > 0)
+	(void)write(serverLogFD, tbuffer, len);
     UNLOCK_SERVERLOG();
 
 #if !defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
-    if ( ! serverLogSyslog ) {
-        fflush(stdout);
-        fflush(stderr);     /* in case they're sharing the same FD */
+    if (!serverLogSyslog) {
+	fflush(stdout);
+	fflush(stderr);		/* in case they're sharing the same FD */
     }
 #endif
-} /*vFSLog*/
+}				/*vFSLog */
 
 /* VARARGS1 */
 /*@printflike@*/
-void FSLog(const char *format, ...)
+void
+FSLog(const char *format, ...)
 {
     va_list args;
 
     va_start(args, format);
     vFSLog(format, args);
     va_end(args);
-} /*FSLog*/
+}				/*FSLog */
 
-static int DebugOn(int loglevel)
+static int
+DebugOn(int loglevel)
 {
     if (loglevel == 0) {
-        ViceLog(0, ("Reset Debug levels to 0\n"));
+	ViceLog(0, ("Reset Debug levels to 0\n"));
     } else {
-        ViceLog(0, ("Set Debug On level = %d\n",loglevel));
+	ViceLog(0, ("Set Debug On level = %d\n", loglevel));
     }
     return 0;
-} /*DebugOn*/
+}				/*DebugOn */
 
 
 
-void SetDebug_Signal(int signo)
+void
+SetDebug_Signal(int signo)
 {
     extern int IOMGR_SoftSig();
 
     if (LogLevel > 0) {
-        LogLevel *= 5;
-    }
-    else {
-        LogLevel = 1;
+	LogLevel *= 5;
+    } else {
+	LogLevel = 1;
     }
     printLocks = 2;
 #if defined(AFS_PTHREAD_ENV)
@@ -174,39 +179,43 @@ void SetDebug_Signal(int signo)
     IOMGR_SoftSig(DebugOn, LogLevel);
 #endif /* AFS_PTHREAD_ENV */
 
-    (void) signal(signo, SetDebug_Signal); /* on some platforms, this
-					    * signal handler needs to
-					    * be set again */
-} /*SetDebug_Signal*/
+    (void)signal(signo, SetDebug_Signal);	/* on some platforms, this
+						 * signal handler needs to
+						 * be set again */
+}				/*SetDebug_Signal */
 
-void ResetDebug_Signal(int signo)
+void
+ResetDebug_Signal(int signo)
 {
     LogLevel = 0;
 
-    if (printLocks >0) --printLocks;
+    if (printLocks > 0)
+	--printLocks;
 #if defined(AFS_PTHREAD_ENV)
     DebugOn(LogLevel);
 #else /* AFS_PTHREAD_ENV */
     IOMGR_SoftSig(DebugOn, (void *)LogLevel);
 #endif /* AFS_PTHREAD_ENV */
 
-    (void) signal(signo, ResetDebug_Signal);  /* on some platforms,
-					       * this signal handler
-					       * needs to be set
-					       * again */
+    (void)signal(signo, ResetDebug_Signal);	/* on some platforms,
+						 * this signal handler
+						 * needs to be set
+						 * again */
     if (mrafsStyleLogs)
 	OpenLog((char *)&ourName);
-} /*ResetDebug_Signal*/
+}				/*ResetDebug_Signal */
 
 
-void SetupLogSignals(void)
+void
+SetupLogSignals(void)
 {
-    (void) signal(SIGHUP, ResetDebug_Signal);
+    (void)signal(SIGHUP, ResetDebug_Signal);
     /* Note that we cannot use SIGUSR1 -- Linux stole it for pthreads! */
-    (void) signal(SIGTSTP, SetDebug_Signal);
+    (void)signal(SIGTSTP, SetDebug_Signal);
 }
 
-int OpenLog(const char *fileName) 
+int
+OpenLog(const char *fileName)
 {
     /*
      * This function should allow various libraries that inconsistently
@@ -216,44 +225,42 @@ int OpenLog(const char *fileName)
     char oldName[MAXPATHLEN];
     struct timeval Start;
     struct tm *TimeFields;
-    char FileName[MAXPATHLEN]; 
+    char FileName[MAXPATHLEN];
 
 #ifndef AFS_NT40_ENV
-    if ( serverLogSyslog ) {
+    if (serverLogSyslog) {
 	openlog(serverLogSyslogTag, LOG_PID, serverLogSyslogFacility);
-	return(0);
+	return (0);
     }
 #endif
 
     if (mrafsStyleLogs) {
-        TM_GetTimeOfDay(&Start, 0);
-        TimeFields = localtime(&Start.tv_sec);
-        if (fileName) {
-            if (strncmp(fileName, (char *)&ourName, strlen(fileName)))
-            strcpy((char *)&ourName, (char *) fileName);
+	TM_GetTimeOfDay(&Start, 0);
+	TimeFields = localtime(&Start.tv_sec);
+	if (fileName) {
+	    if (strncmp(fileName, (char *)&ourName, strlen(fileName)))
+		strcpy((char *)&ourName, (char *)fileName);
 	}
-        afs_snprintf(FileName, MAXPATHLEN, "%s.%d%02d%02d%02d%02d%02d",
-		     ourName,
-		TimeFields->tm_year + 1900, TimeFields->tm_mon + 1, 
-		TimeFields->tm_mday, TimeFields->tm_hour, 
-		TimeFields->tm_min, TimeFields->tm_sec);
-        rename (fileName, FileName); /* don't check error code */
-        tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT, 0666); 
+	afs_snprintf(FileName, MAXPATHLEN, "%s.%d%02d%02d%02d%02d%02d",
+		     ourName, TimeFields->tm_year + 1900,
+		     TimeFields->tm_mon + 1, TimeFields->tm_mday,
+		     TimeFields->tm_hour, TimeFields->tm_min,
+		     TimeFields->tm_sec);
+	rename(fileName, FileName);	/* don't check error code */
+	tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT, 0666);
     } else {
-        strcpy(oldName, fileName);
-        strcat(oldName, ".old");
+	strcpy(oldName, fileName);
+	strcat(oldName, ".old");
 
-        /* don't check error */
-        renamefile(fileName, oldName);
-        tempfd = open(fileName, O_WRONLY|O_TRUNC|O_CREAT, 0666);
+	/* don't check error */
+	renamefile(fileName, oldName);
+	tempfd = open(fileName, O_WRONLY | O_TRUNC | O_CREAT, 0666);
     }
 
-    if(tempfd < 0)
-    {
+    if (tempfd < 0) {
 	printf("Unable to open log file %s\n", fileName);
 	return -1;
     }
-
 #if defined(AFS_PTHREAD_ENV)
     /* redirect stdout and stderr so random printf's don't write to data */
     assert(freopen(NULLDEV, "w", stdout) != NULL);
@@ -263,26 +270,27 @@ int OpenLog(const char *fileName)
 
     serverLogFD = tempfd;
 #else
-    close(tempfd); /* just checking.... */
-    (void) freopen(fileName, "w", stdout);
-    (void) freopen(fileName, "w", stderr);
+    close(tempfd);		/* just checking.... */
+    (void)freopen(fileName, "w", stdout);
+    (void)freopen(fileName, "w", stderr);
     serverLogFD = fileno(stdout);
 #endif /* AFS_PTHREAD_ENV */
 
     return 0;
-} /*OpenLog*/
+}				/*OpenLog */
 
-int ReOpenLog(const char *fileName) 
+int
+ReOpenLog(const char *fileName)
 {
 #if !defined(AFS_PTHREAD_ENV)
     int tempfd;
 #endif
 
-    if (access(fileName, F_OK)==0)
-	return 0; /* exists, no need to reopen. */
+    if (access(fileName, F_OK) == 0)
+	return 0;		/* exists, no need to reopen. */
 
 #if !defined(AFS_NT40_ENV)
-    if ( serverLogSyslog ) {
+    if (serverLogSyslog) {
 	return 0;
     }
 #endif
@@ -291,23 +299,22 @@ int ReOpenLog(const char *fileName)
     LOCK_SERVERLOG();
     if (serverLogFD > 0)
 	close(serverLogFD);
-    serverLogFD = open(fileName,O_WRONLY|O_APPEND|O_CREAT, 0666);
+    serverLogFD = open(fileName, O_WRONLY | O_APPEND | O_CREAT, 0666);
     UNLOCK_SERVERLOG();
     return serverLogFD < 0 ? -1 : 0;
 #else
 
-    tempfd = open(fileName,O_WRONLY|O_APPEND|O_CREAT, 0666);
-    if(tempfd < 0)
-    {
+    tempfd = open(fileName, O_WRONLY | O_APPEND | O_CREAT, 0666);
+    if (tempfd < 0) {
 	printf("Unable to open log file %s\n", fileName);
 	return -1;
     }
     close(tempfd);
 
-    (void) freopen(fileName, "a", stdout);
-    (void) freopen(fileName, "a", stderr);
+    (void)freopen(fileName, "a", stdout);
+    (void)freopen(fileName, "a", stderr);
     serverLogFD = fileno(stdout);
-  
+
 
     return 0;
 #endif /* AFS_PTHREAD_ENV */

@@ -71,7 +71,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -112,14 +113,17 @@ RCSID("$Header$");
 /*
  * Read a null-terminated password from stdin, stop on \n or eof
  */
-static char *getpipepass() {
+static char *
+getpipepass()
+{
     static char gpbuf[MAX_PASSWD_LEN];
 
     register int i, tc;
     memset(gpbuf, 0, sizeof(gpbuf));
-    for(i=0; i<(sizeof(gpbuf)-1); i++) {
+    for (i = 0; i < (sizeof(gpbuf) - 1); i++) {
 	tc = fgetc(stdin);
-	if (tc == '\n' || tc == EOF) break;
+	if (tc == '\n' || tc == EOF)
+	    break;
 	gpbuf[i] = tc;
     }
     return gpbuf;
@@ -147,31 +151,34 @@ static char **zero_argv;
  * Store the returned credentials as an AFS "token" for the user
  * "AFS ID <user_id>".
  */
-int store_afs_token(unix_id, realm_p, tkt_type, ticket_p, ticket_len,
-		    session_key, starttime, endtime, set_pag)
-    afs_int32 unix_id;
-    char *realm_p;
-    afs_int32 tkt_type;
-    unsigned char *ticket_p;
-    int ticket_len;
-    des_cblock session_key;
-    afs_int32 starttime;
-    afs_int32 endtime;
-    int set_pag;
+int
+store_afs_token(unix_id, realm_p, tkt_type, ticket_p, ticket_len, session_key,
+		starttime, endtime, set_pag)
+     afs_int32 unix_id;
+     char *realm_p;
+     afs_int32 tkt_type;
+     unsigned char *ticket_p;
+     int ticket_len;
+     des_cblock session_key;
+     afs_int32 starttime;
+     afs_int32 endtime;
+     int set_pag;
 {
     struct ktc_token token;
     struct ktc_principal client, server;
 
     token.startTime = starttime;
     token.endTime = endtime;
-    memcpy((char *) &token.sessionKey, session_key, sizeof(token.sessionKey));
+    memcpy((char *)&token.sessionKey, session_key, sizeof(token.sessionKey));
     token.kvno = tkt_type;
     token.ticketLen = ticket_len;
     if (ticket_len > MAXKTCTICKETLEN) {
-	fprintf(stderr, "dlog: DCE ticket is too long (length %d). Maximum length accepted by AFS cache manager is %d\n", ticket_len, MAXKTCTICKETLEN);
+	fprintf(stderr,
+		"dlog: DCE ticket is too long (length %d). Maximum length accepted by AFS cache manager is %d\n",
+		ticket_len, MAXKTCTICKETLEN);
 	exit(1);
     }
-    memcpy((char *) token.ticket, (char *) ticket_p, ticket_len);
+    memcpy((char *)token.ticket, (char *)ticket_p, ticket_len);
 
     sprintf(client.name, "AFS ID %d", unix_id);
     strcpy(client.instance, "");
@@ -181,15 +188,16 @@ int store_afs_token(unix_id, realm_p, tkt_type, ticket_p, ticket_len,
     strcpy(server.instance, "");
     strcpy(server.cell, realm_p);
 
-    return (ktc_SetToken(&server, &token, &client,
-			 set_pag ? AFS_SETTOK_SETPAG : 0));
+    return (ktc_SetToken
+	    (&server, &token, &client, set_pag ? AFS_SETTOK_SETPAG : 0));
 }
 
-char *make_string(s_p, length)
-    char *s_p;
-    int length;
+char *
+make_string(s_p, length)
+     char *s_p;
+     int length;
 {
-    char *new_p = (char *) malloc(length + 1);
+    char *new_p = (char *)malloc(length + 1);
     if (new_p == NULL) {
 	fprintf(stderr, "dlog: out of memory\n");
 	exit(1);
@@ -205,28 +213,30 @@ char *make_string(s_p, length)
  *
  * NOTE: A test for this procedure is included at the end of this file.
  */
-int decode_asn_time(buf, buflen, utime)
-    char *buf;
-    int buflen;
-    afs_int32 *utime;
+int
+decode_asn_time(buf, buflen, utime)
+     char *buf;
+     int buflen;
+     afs_int32 *utime;
 {
     int year, month, day, hour, mina, sec;
     int leapyear, days;
-    static mdays[11] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30};
+    static mdays[11] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30 };
     int m;
 
-    if (buflen != 15 ||
-	sscanf(buf, "%4d%2d%2d%2d%2d%2dZ",
-	       &year, &month, &day, &hour, &mina, &sec) != 6) {
+    if (buflen != 15
+	|| sscanf(buf, "%4d%2d%2d%2d%2d%2dZ", &year, &month, &day, &hour,
+		  &mina, &sec) != 6) {
 	return 1;
     }
     leapyear = month > 2 ? (year + 1) : year;	/* Account for feb 29 if
-						   current year is a leap year */
-    for (days = 0, m = 0; m < month - 1; m++) days += mdays[m];
+						 * current year is a leap year */
+    for (days = 0, m = 0; m < month - 1; m++)
+	days += mdays[m];
 
     *utime =
-	((((((year - 1970) * 365 + (leapyear - 1970 + 1)/4
-	     + days + day - 1) * 24) + hour) * 60 + mina) * 60) + sec;
+	((((((year - 1970) * 365 + (leapyear - 1970 + 1) / 4 + days + day -
+	     1) * 24) + hour) * 60 + mina) * 60) + sec;
     return 0;
 }
 
@@ -252,10 +262,11 @@ int decode_asn_time(buf, buflen, utime)
 #define ASN_GENERAL_STRING	0x1b
 #define KDC_REP			0x7a
 
-int decode_reply(buf, buflen, reply_p)
-    unsigned char *buf;		/* encoded ASN.1 string */
-    int buflen;			/* length of encoded string */
-    kdc_as_reply_t *reply_p;	/* result */
+int
+decode_reply(buf, buflen, reply_p)
+     unsigned char *buf;	/* encoded ASN.1 string */
+     int buflen;		/* length of encoded string */
+     kdc_as_reply_t *reply_p;	/* result */
 {
     unsigned char *limit = buf + buflen;
 
@@ -268,7 +279,7 @@ int decode_reply(buf, buflen, reply_p)
     char saw_realm = 0;
 
     int context = -1;		/* Initialize with invalid context */
-    
+
     reply_p->starttime = 0;	/* This is optionally provided by kdc */
 
     while (buf < limit) {
@@ -295,11 +306,11 @@ int decode_reply(buf, buflen, reply_p)
 	}
 
 	switch (op) {
-	  case KDC_REP:
+	case KDC_REP:
 	    saw_kdc_rep++;
 	    break;
 
-	  case ASN_INTEGER:
+	case ASN_INTEGER:
 	    {
 		/*
 		 * Since non ANSI C doesn't recognize the "signed"
@@ -321,7 +332,7 @@ int decode_reply(buf, buflen, reply_p)
 	    }
 	    break;
 
-	  case ASN_OCTET_STRING:
+	case ASN_OCTET_STRING:
 	    if (context == 1 && len == sizeof(reply_p->session_key)) {
 		saw_session_key++;
 		memcpy(reply_p->session_key, buf, len);
@@ -329,7 +340,7 @@ int decode_reply(buf, buflen, reply_p)
 	    buf += len;
 	    break;
 
-	  case ASN_GENERAL_STRING:
+	case ASN_GENERAL_STRING:
 	    if (context == 9) {
 		saw_realm = 1;
 		reply_p->realm = make_string(buf, len);
@@ -346,21 +357,21 @@ int decode_reply(buf, buflen, reply_p)
 	    buf += len;
 	    break;
 
-	  case ASN_TIME:
+	case ASN_TIME:
 	    switch (context) {
-	      case 5:
+	    case 5:
 		saw_authtime++;
-		if (decode_asn_time(buf, len, &reply_p->authtime)) 
+		if (decode_asn_time(buf, len, &reply_p->authtime))
 		    return 1;
 		break;
 
-	      case 6:
+	    case 6:
 		saw_starttime++;
 		if (decode_asn_time(buf, len, &reply_p->starttime))
 		    return 1;
 		break;
-		
-	      case 7:
+
+	    case 7:
 		saw_endtime++;
 		if (decode_asn_time(buf, len, &reply_p->endtime))
 		    return 1;
@@ -369,7 +380,7 @@ int decode_reply(buf, buflen, reply_p)
 	    buf += len;
 	    break;
 
-	  default:
+	default:
 	    if ((op & 0xe0) == 0xa0) {
 		/* Remember last context label */
 		context = op & 0x1f;
@@ -381,15 +392,17 @@ int decode_reply(buf, buflen, reply_p)
     }
 
   out:
-    return ! (saw_kdc_rep == 1 && saw_nonce == 1 && saw_session_key == 1 &&
-	      saw_authtime == 1 && (saw_starttime == 1 || saw_starttime == 0) &&
-	      saw_endtime == 1 && saw_realm == 1);
+    return !(saw_kdc_rep == 1 && saw_nonce == 1 && saw_session_key == 1
+	     && saw_authtime == 1 && (saw_starttime == 1
+				      || saw_starttime == 0)
+	     && saw_endtime == 1 && saw_realm == 1);
 }
 
-main (argc, argv)
-  int   argc;
-  char *argv[];
-{   struct cmd_syndesc *ts;
+main(argc, argv)
+     int argc;
+     char *argv[];
+{
+    struct cmd_syndesc *ts;
     afs_int32 code;
 #ifdef	AFS_AIX32_ENV
     /*
@@ -399,7 +412,7 @@ main (argc, argv)
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
@@ -412,7 +425,8 @@ main (argc, argv)
     initialize_KTC_error_table();
     initialize_ACFG_error_table();
 
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0, "obtain Kerberos authentication");
+    ts = cmd_CreateSyntax(NULL, CommandProc, 0,
+			  "obtain Kerberos authentication");
 
 #define aPRINCIPAL 0
 #define aCELL 1
@@ -426,10 +440,14 @@ main (argc, argv)
     cmd_AddParm(ts, "-principal", CMD_SINGLE, CMD_OPTIONAL, "user name");
     cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "cell name");
     cmd_AddParm(ts, "-password", CMD_SINGLE, CMD_OPTIONAL, "user's password");
-    cmd_AddParm(ts, "-servers", CMD_LIST, CMD_OPTIONAL, "explicit list of servers");
-    cmd_AddParm(ts, "-lifetime", CMD_SINGLE, CMD_OPTIONAL, "ticket lifetime in hh[:mm[:ss]]");
-    cmd_AddParm(ts, "-setpag", CMD_FLAG, CMD_OPTIONAL, "Create a new setpag before authenticating");
-    cmd_AddParm(ts, "-pipe", CMD_FLAG, CMD_OPTIONAL, "read password from stdin");
+    cmd_AddParm(ts, "-servers", CMD_LIST, CMD_OPTIONAL,
+		"explicit list of servers");
+    cmd_AddParm(ts, "-lifetime", CMD_SINGLE, CMD_OPTIONAL,
+		"ticket lifetime in hh[:mm[:ss]]");
+    cmd_AddParm(ts, "-setpag", CMD_FLAG, CMD_OPTIONAL,
+		"Create a new setpag before authenticating");
+    cmd_AddParm(ts, "-pipe", CMD_FLAG, CMD_OPTIONAL,
+		"read password from stdin");
 
 #ifdef DLOG_TEST
     cmd_AddParm(ts, "-test", CMD_FLAG, CMD_OPTIONAL, "self-test");
@@ -438,44 +456,45 @@ main (argc, argv)
     exit(code);
 }
 
-CommandProc (as, arock)
-  char *arock;
-  struct cmd_syndesc *as;
+CommandProc(as, arock)
+     char *arock;
+     struct cmd_syndesc *as;
 {
-    char  name[MAXKTCNAMELEN];
-    char  realm[MAXKTCREALMLEN];
+    char name[MAXKTCNAMELEN];
+    char realm[MAXKTCREALMLEN];
 
     extern ADK_GetTicket();
-    afs_int32  serverList[MAXSERVERS];
+    afs_int32 serverList[MAXSERVERS];
     struct rx_connection *serverconns[MAXSERVERS];
-    struct ubik_client *ubik_handle=0;
-    struct timeval now;			/* Current time */
-    afs_int32 nonce;				/* Kerberos V5 "nonce" */
-    adk_error_ptr error_p;		/* Error code from ktc intermediary */
-    adk_reply_ptr reply_p;		/* Reply from ktc intermediary */
-    des_cblock passwd_key;		/* des key from user password */
-    des_key_schedule schedule;		/* Key schedule from key */
-    kdc_as_reply_t kdcrep;		/* Our own decoded version of
-					   ciphertext portion of kdc reply */
+    struct ubik_client *ubik_handle = 0;
+    struct timeval now;		/* Current time */
+    afs_int32 nonce;		/* Kerberos V5 "nonce" */
+    adk_error_ptr error_p;	/* Error code from ktc intermediary */
+    adk_reply_ptr reply_p;	/* Reply from ktc intermediary */
+    des_cblock passwd_key;	/* des key from user password */
+    des_key_schedule schedule;	/* Key schedule from key */
+    kdc_as_reply_t kdcrep;	/* Our own decoded version of
+				 * ciphertext portion of kdc reply */
 
-    int	  code;
-    int   i, dosetpag;
-    afs_uint32 lifetime;		/* requested ticket lifetime */
+    int code;
+    int i, dosetpag;
+    afs_uint32 lifetime;	/* requested ticket lifetime */
     char passwd[MAX_PASSWD_LEN];
 
-    static char	rn[] = "dlog";		/*Routine name*/
-    static int readpipe;		/* reading from a pipe */
+    static char rn[] = "dlog";	/*Routine name */
+    static int readpipe;	/* reading from a pipe */
 
-    int explicit_cell = 0;		/* servers specified explicitly */
-    int	foundPassword =	0;		/*Not yet, anyway*/
+    int explicit_cell = 0;	/* servers specified explicitly */
+    int foundPassword = 0;	/*Not yet, anyway */
 
-    struct afsconf_dir *cdir;		/* Open configuration structure */
+    struct afsconf_dir *cdir;	/* Open configuration structure */
 
     /*
      * Discard command line arguments, in case the password is on the
      * command line (to avoid it showing up from a ps command).
      */
-    for (i=1; i<zero_argc; i++) memset(zero_argv[i], 0, strlen(zero_argv[i]));
+    for (i = 1; i < zero_argc; i++)
+	memset(zero_argv[i], 0, strlen(zero_argv[i]));
     zero_argc = 0;
 
 #ifdef DLOG_TEST
@@ -494,17 +513,18 @@ CommandProc (as, arock)
 
     /*
      * If reading the password from a pipe, don't prompt for it.
-     */  
+     */
     readpipe = (as->parms[aPIPE].items ? 1 : 0);
 
     cdir = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
     if (!cdir) {
-	fprintf(stderr, "dlog: unable to read or open AFS client configuration file\n");
+	fprintf(stderr,
+		"dlog: unable to read or open AFS client configuration file\n");
 	exit(1);
     }
 
     if (as->parms[aCELL].items) {
-	strncpy (realm, as->parms[aCELL].items->data, sizeof(realm) - 1);
+	strncpy(realm, as->parms[aCELL].items->data, sizeof(realm) - 1);
 	realm[sizeof(realm) - 1] = '\0';
 	explicit_cell = 1;
     } else {
@@ -520,15 +540,15 @@ CommandProc (as, arock)
 	 */
 	int i;
 	struct cmd_item *ip;
-	char *ap[MAXSERVERS+2];
+	char *ap[MAXSERVERS + 2];
 
-	for (ip = as->parms[aSERVERS].items, i=2; ip; ip=ip->next, i++)
+	for (ip = as->parms[aSERVERS].items, i = 2; ip; ip = ip->next, i++)
 	    ap[i] = ip->data;
 	ap[0] = "";
 	ap[1] = "-servers";
 	code = ubik_ParseClientList(i, ap, serverList);
 	if (code) {
-	    com_err (rn, code, "-- could not parse server list");
+	    com_err(rn, code, "-- could not parse server list");
 	    exit(1);
 	}
     } else {
@@ -548,7 +568,8 @@ CommandProc (as, arock)
 	for (i = 0; i < cellinfo.numServers && i < MAXSERVERS; i++) {
 	    serverList[i] = cellinfo.hostAddr[i].sin_addr.s_addr;
 	}
-	if (i < MAXSERVERS) serverList[i] = 0;
+	if (i < MAXSERVERS)
+	    serverList[i] = 0;
     }
 
     if (as->parms[aPRINCIPAL].items) {
@@ -559,8 +580,8 @@ CommandProc (as, arock)
 	struct passwd *pw;
 	pw = getpwuid(getuid());
 	if (pw == 0) {
-	    fprintf (stderr, "Can't determine your name from your user id.\n");
-	    fprintf (stderr, "Try providing a principal name.\n");
+	    fprintf(stderr, "Can't determine your name from your user id.\n");
+	    fprintf(stderr, "Try providing a principal name.\n");
 	    exit(1);
 	}
 	strncpy(name, pw->pw_name, sizeof(name) - 1);
@@ -574,46 +595,52 @@ CommandProc (as, arock)
 	 * see it there with ps!
 	 */
 	foundPassword = 1;
-	strncpy (passwd, as->parms[aPASSWORD].items->data, sizeof(passwd) - 1);
+	strncpy(passwd, as->parms[aPASSWORD].items->data, sizeof(passwd) - 1);
 	passwd[sizeof(passwd) - 1] = '\0';
-	memset(as->parms[aPASSWORD].items->data, 0, strlen(as->parms[aPASSWORD].items->data));
+	memset(as->parms[aPASSWORD].items->data, 0,
+	       strlen(as->parms[aPASSWORD].items->data));
     }
 
     if (as->parms[aLIFETIME].items) {
 	char *life = as->parms[aLIFETIME].items->data;
-	char *sp;			/* string ptr to rest of life */
-	lifetime = 3600*strtol (life, &sp, 0); /* hours */
+	char *sp;		/* string ptr to rest of life */
+	lifetime = 3600 * strtol(life, &sp, 0);	/* hours */
 	if (sp == life) {
-bad_lifetime:
-	    fprintf (stderr, "%s: translating '%s' to lifetime\n",
-		     rn, life);
+	  bad_lifetime:
+	    fprintf(stderr, "%s: translating '%s' to lifetime\n", rn, life);
 	    exit(1);
 	}
 	if (*sp == ':') {
-	    life = sp+1;		/* skip the colon */
-	    lifetime += 60*strtol (life, &sp, 0); /* minutes */
-	    if (sp == life) goto bad_lifetime;
+	    life = sp + 1;	/* skip the colon */
+	    lifetime += 60 * strtol(life, &sp, 0);	/* minutes */
+	    if (sp == life)
+		goto bad_lifetime;
 	    if (*sp == ':') {
-		life = sp+1;
-		lifetime += strtol (life, &sp, 0); /* seconds */
-		if (sp == life) goto bad_lifetime;
-		if (*sp) goto bad_lifetime;
-	    } else if (*sp) goto bad_lifetime;
-	} else if (*sp) goto bad_lifetime;
-    } else lifetime = 0;
+		life = sp + 1;
+		lifetime += strtol(life, &sp, 0);	/* seconds */
+		if (sp == life)
+		    goto bad_lifetime;
+		if (*sp)
+		    goto bad_lifetime;
+	    } else if (*sp)
+		goto bad_lifetime;
+	} else if (*sp)
+	    goto bad_lifetime;
+    } else
+	lifetime = 0;
 
     /*
      * Make connections to all the servers.
      */
     rx_Init(0);
     for (i = 0; i < MAXSERVERS; i++) {
-	if (! serverList[i]) {
+	if (!serverList[i]) {
 	    serverconns[i] = 0;
 	    break;
 	}
-	serverconns[i] = rx_NewConnection
-	    (serverList[i], htons(ADK_PORT), ADK_SERVICE,
-	     rxnull_NewClientSecurityObject(), 0);
+	serverconns[i] =
+	    rx_NewConnection(serverList[i], htons(ADK_PORT), ADK_SERVICE,
+			     rxnull_NewClientSecurityObject(), 0);
     }
 
     /*
@@ -638,15 +665,12 @@ bad_lifetime:
      */
     reply_p = (adk_reply_ptr) 0;
     error_p = (adk_error_ptr) 0;
-    code = ubik_Call
-	(ADK_GetTicket,
-	 ubik_handle,
-	 0,		/* Ubik flags */
-	 name,		/* IN:  Principal: must be exact DCE principal */
-	 nonce,		/* IN:	Input nonce */
-	 lifetime,	/* IN:  lifetime */
-	 &error_p,	/* OUT: Error, if any */
-	 &reply_p);	/* OUT: KTC reply, if no error */
+    code = ubik_Call(ADK_GetTicket, ubik_handle, 0,	/* Ubik flags */
+		     name,	/* IN:  Principal: must be exact DCE principal */
+		     nonce,	/* IN:  Input nonce */
+		     lifetime,	/* IN:  lifetime */
+		     &error_p,	/* OUT: Error, if any */
+		     &reply_p);	/* OUT: KTC reply, if no error */
 
     /*
      * Destroy Rx connections on the off-chance this will allow less state
@@ -681,7 +705,8 @@ bad_lifetime:
      * Make sure the reply was filled in.
      */
     if (!reply_p) {
-        fprintf(stderr, "dlog: unexpected error in server response; aborted\n");
+	fprintf(stderr,
+		"dlog: unexpected error in server response; aborted\n");
 	exit(1);
     }
 
@@ -694,7 +719,7 @@ bad_lifetime:
 	} else {
 	    code = des_read_pw_string(passwd, sizeof(passwd), "Password:", 0);
 	    if (code) {
-		com_err (rn, code, "-- couldn't read password");
+		com_err(rn, code, "-- couldn't read password");
 		exit(1);
 	    }
 	}
@@ -712,16 +737,18 @@ bad_lifetime:
     strcat(passwd, reply_p->salt);
     des_string_to_key(passwd, passwd_key);
     memset(passwd, 0, strlen(passwd));
-    
+
     /*
      * Decrypt the private data returned by the DCE KDC, and forwarded
      * to us by the translator.
      */
-    code = des_key_sched (passwd_key, schedule);
+    code = des_key_sched(passwd_key, schedule);
     if (!code) {
-	code = des_cbc_encrypt
-	    (reply_p->private.adk_code_val, reply_p->private.adk_code_val,
-	     reply_p->private.adk_code_len, schedule, passwd_key, DECRYPT);
+	code =
+	    des_cbc_encrypt(reply_p->private.adk_code_val,
+			    reply_p->private.adk_code_val,
+			    reply_p->private.adk_code_len, schedule,
+			    passwd_key, DECRYPT);
     }
     if (code) {
 	com_err(rn, code, "-- unable to decrypt reply from the DCE KDC");
@@ -741,12 +768,13 @@ bad_lifetime:
      * The decrypted data contains a 12-byte header (confounder and CRC-32
      * checksum). We choose to ignore this.
      */
-    code = decode_reply(reply_p->private.adk_code_val + 12,  /* Skip header */
-			reply_p->private.adk_code_len - 12,  /* ditto */
+    code = decode_reply(reply_p->private.adk_code_val + 12,	/* Skip header */
+			reply_p->private.adk_code_len - 12,	/* ditto */
 			&kdcrep);
-    
+
     if (code || kdcrep.nonce != nonce) {
-	fprintf(stderr, "dlog: DCE authentication failed -- your password is probably incorrect\n");
+	fprintf(stderr,
+		"dlog: DCE authentication failed -- your password is probably incorrect\n");
 	exit(1);
     }
 
@@ -756,21 +784,19 @@ bad_lifetime:
      * If not, we should get an error when we store it, so the user will see
      * the errant name at that time.
      */
-    if (!explicit_cell) strcpy(realm, kdcrep.realm);
+    if (!explicit_cell)
+	strcpy(realm, kdcrep.realm);
 
     /*
      * Make an AFS token out of the ticket and session key, and install it
      * in the cache manager.
      */
-    code = store_afs_token(reply_p->unix_id,
-			   realm,
-			   reply_p->tktype,
-			   reply_p->ticket.adk_code_val,
-			   reply_p->ticket.adk_code_len,
-			   kdcrep.session_key,
-			   kdcrep.starttime? kdcrep.starttime : kdcrep.authtime,
-			   kdcrep.endtime,
-			   dosetpag);
+    code =
+	store_afs_token(reply_p->unix_id, realm, reply_p->tktype,
+			reply_p->ticket.adk_code_val,
+			reply_p->ticket.adk_code_len, kdcrep.session_key,
+			kdcrep.starttime ? kdcrep.starttime : kdcrep.authtime,
+			kdcrep.endtime, dosetpag);
 
     if (code) {
 	com_err("dlog", code, "-- failed to store tickets");
@@ -798,47 +824,48 @@ struct test_times {
     char *generalized_time_p;
     afs_int32 unix_time;
 } test_times[] = {
-    {"19700101000000Z", 0},
-    {"19930101000000Z", 725846400},
-    {"19940101000000Z", 757382400},
-    {"19940201000000Z", 760060800},
-    {"19940301000000Z", 762480000},
-    {"19940401000000Z", 765158400},
-    {"19950101000000Z", 788918400},
-    {"19950201000000Z", 791596800},
-    {"19950301000000Z", 794016000},
-    {"19950401000000Z", 796694400},
-    {"19950501000000Z", 799286400},
-    {"19950601000000Z", 801964800},
-    {"19950701000000Z", 804556800},
-    {"19950801000000Z", 807235200},
-    {"19950901000000Z", 809913600},
-    {"19951001000000Z", 812505600},
-    {"19951101000000Z", 815184000},
-    {"19951201000000Z", 817776000},
-    {"19951231235959Z", 820454399},
-    {"19960101000000Z", 820454400},
-    {"19960131000000Z", 823046400},
-    {"19960131235959Z", 823132799},
-    {"19960201000000Z", 823132800},
-    {"19960229000000Z", 825552000},
-    {"19960229235959Z", 825638399},
-    {"19960301000000Z", 825638400},
-    {"19960331000000Z", 828230400},
-    {"19960331235959Z", 828316799},
-    {"19970101000000Z", 852076800},
-    {"19980101000000Z", 883612800},
-    {"19990101000000Z", 915148800},
-    {"20000101000000Z", 946684800},
-    {"20010101000000Z", 978307200},
-    {"20020101000000Z", 1009843200},
-    {"20030101000000Z", 1041379200},
-    {"20040101000000Z", 1072915200},
-    {"20050101000000Z", 1104537600},
-    {"20380119031407Z", 2147483647},
-};
+    {
+    "19700101000000Z", 0}, {
+    "19930101000000Z", 725846400}, {
+    "19940101000000Z", 757382400}, {
+    "19940201000000Z", 760060800}, {
+    "19940301000000Z", 762480000}, {
+    "19940401000000Z", 765158400}, {
+    "19950101000000Z", 788918400}, {
+    "19950201000000Z", 791596800}, {
+    "19950301000000Z", 794016000}, {
+    "19950401000000Z", 796694400}, {
+    "19950501000000Z", 799286400}, {
+    "19950601000000Z", 801964800}, {
+    "19950701000000Z", 804556800}, {
+    "19950801000000Z", 807235200}, {
+    "19950901000000Z", 809913600}, {
+    "19951001000000Z", 812505600}, {
+    "19951101000000Z", 815184000}, {
+    "19951201000000Z", 817776000}, {
+    "19951231235959Z", 820454399}, {
+    "19960101000000Z", 820454400}, {
+    "19960131000000Z", 823046400}, {
+    "19960131235959Z", 823132799}, {
+    "19960201000000Z", 823132800}, {
+    "19960229000000Z", 825552000}, {
+    "19960229235959Z", 825638399}, {
+    "19960301000000Z", 825638400}, {
+    "19960331000000Z", 828230400}, {
+    "19960331235959Z", 828316799}, {
+    "19970101000000Z", 852076800}, {
+    "19980101000000Z", 883612800}, {
+    "19990101000000Z", 915148800}, {
+    "20000101000000Z", 946684800}, {
+    "20010101000000Z", 978307200}, {
+    "20020101000000Z", 1009843200}, {
+    "20030101000000Z", 1041379200}, {
+    "20040101000000Z", 1072915200}, {
+    "20050101000000Z", 1104537600}, {
+"20380119031407Z", 2147483647},};
 
-self_test() {
+self_test()
+{
     int i;
     int nerrors = 0;
 
@@ -847,20 +874,22 @@ self_test() {
 	afs_int32 status;
 	afs_int32 unix_time;
 
-	status = decode_asn_time
-	    (t_p->generalized_time_p, strlen(t_p->generalized_time_p), &unix_time);
+	status =
+	    decode_asn_time(t_p->generalized_time_p,
+			    strlen(t_p->generalized_time_p), &unix_time);
 	if (status) {
 	    printf("dlog: decode of ASN.1 time %s failed\n",
 		   t_p->generalized_time_p);
 	    nerrors++;
 	} else if (t_p->unix_time != unix_time) {
-	    printf("dlog: ASN.1 time %s converted incorrectly to %lu (should be %lu)\n",
-		   t_p->generalized_time_p, unix_time, t_p->unix_time);
+	    printf
+		("dlog: ASN.1 time %s converted incorrectly to %lu (should be %lu)\n",
+		 t_p->generalized_time_p, unix_time, t_p->unix_time);
 	}
     }
 
     if (nerrors) {
-        fprintf(stderr, "dlog: self test failed\n");
+	fprintf(stderr, "dlog: self test failed\n");
 	return 1;
     }
     fprintf(stderr, "dlog: self test OK\n");

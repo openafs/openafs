@@ -12,12 +12,12 @@
 
 struct {
     afs_uint32 rxkad_stuff[34];	/* see rxkad.h */
-    afs_uint32 fc_stuff[3];		/* see rxkad.h */
+    afs_uint32 fc_stuff[3];	/* see rxkad.h */
     afs_uint32 des_encrypts[2];	/* DECRYPT==0, ENCRYPT==1 */
     afs_uint32 des_key_scheds;	/* key schedule creations */
-    afs_uint32 des_randoms;		/* random blocks generated */
+    afs_uint32 des_randoms;	/* random blocks generated */
     unsigned long spares[10];
-} rxkad_stats; /* put these here for convenience */
+} rxkad_stats;			/* put these here for convenience */
 
 #ifdef AFS_PTHREAD_ENV
 #include <pthread.h>
@@ -29,4 +29,3 @@ extern pthread_mutex_t rxkad_stats_mutex;
 #define LOCK_RXKAD_STATS
 #define UNLOCK_RXKAD_STATS
 #endif
-

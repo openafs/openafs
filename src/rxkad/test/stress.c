@@ -12,7 +12,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -42,26 +43,35 @@ int maxSkew = 5;
 
 static char *whoami;
 
-static int StringToAuth (authname)
-  IN char *authname;
+static int
+StringToAuth(authname)
+     IN char *authname;
 {
     int nonoauth = 0;
-    if (strcmp (authname, "rxkad") == 0) return rxkad_clear;
-    if (strcmp (authname, "rxkad_")) {
-	if (strncmp (authname, "rxkad_", 6) == 0)
+    if (strcmp(authname, "rxkad") == 0)
+	return rxkad_clear;
+    if (strcmp(authname, "rxkad_")) {
+	if (strncmp(authname, "rxkad_", 6) == 0)
 	    nonoauth++, authname += 6;
-	if (strcmp (authname, "clear") == 0) return rxkad_clear;
-	if (strcmp (authname, "auth") == 0) return rxkad_auth;
-	if (strcmp (authname, "crypt") == 0) return rxkad_crypt;
-	if (strcmp (authname, "null") == 0) return -1;
-	if (strcmp (authname, "none") == 0) return -1;
-	if (strncmp (authname, "noauth", 6) == 0) return -1;
-	if (strncmp (authname, "unauth", 6) == 0) return -1;
+	if (strcmp(authname, "clear") == 0)
+	    return rxkad_clear;
+	if (strcmp(authname, "auth") == 0)
+	    return rxkad_auth;
+	if (strcmp(authname, "crypt") == 0)
+	    return rxkad_crypt;
+	if (strcmp(authname, "null") == 0)
+	    return -1;
+	if (strcmp(authname, "none") == 0)
+	    return -1;
+	if (strncmp(authname, "noauth", 6) == 0)
+	    return -1;
+	if (strncmp(authname, "unauth", 6) == 0)
+	    return -1;
 	/* error */
     }
-    fprintf (stderr,
-	     "Unknown authentication name %s, using rxkad_clear by default\n",
-	     authname);
+    fprintf(stderr,
+	    "Unknown authentication name %s, using rxkad_clear by default\n",
+	    authname);
     return rxkad_clear;
 }
 
@@ -93,9 +103,10 @@ static int StringToAuth (authname)
 #define aCELL 25
 #define aKEYFILE 26
 
-static int CommandProc (as, arock)
-  char *arock;
-  struct cmd_syndesc *as;
+static int
+CommandProc(as, arock)
+     char *arock;
+     struct cmd_syndesc *as;
 {
     long code;
     int startServer = (as->parms[aSERVER].items != 0);
@@ -106,8 +117,8 @@ static int CommandProc (as, arock)
     struct serverParms *sParms;
     struct clientParms *cParms;
 
-    sParms = (struct serverParms *) osi_Alloc (sizeof(*sParms));
-    cParms = (struct clientParms *) osi_Alloc (sizeof(*cParms));
+    sParms = (struct serverParms *)osi_Alloc(sizeof(*sParms));
+    cParms = (struct clientParms *)osi_Alloc(sizeof(*cParms));
     memset(sParms, 0, sizeof(*sParms));
     memset(cParms, 0, sizeof(*cParms));
     sParms->whoami = cParms->whoami = whoami;
@@ -127,36 +138,36 @@ static int CommandProc (as, arock)
     cParms->stopServer = (as->parms[aSTOPSERVER].items != 0);
     cParms->useTokens = (as->parms[aUSETOKENS].items != 0);
 
-    if (as->parms[aMELT1b].items) 
-	meltdown_1pkt = 0; 
-    if (as->parms[aRECLAIM].items) 
-	rxi_doreclaim = 0; 
-    if (as->parms[a2DCHOICE].items) 
-	rxi_2dchoice = 0; 
+    if (as->parms[aMELT1b].items)
+	meltdown_1pkt = 0;
+    if (as->parms[aRECLAIM].items)
+	rxi_doreclaim = 0;
+    if (as->parms[a2DCHOICE].items)
+	rxi_2dchoice = 0;
 
     if (startServer) {
-        if (as->parms[aTRACE].items) {
-	  extern char rxi_tracename[];
-	  strcpy (rxi_tracename, as->parms[aTRACE].items->data);
+	if (as->parms[aTRACE].items) {
+	    extern char rxi_tracename[];
+	    strcpy(rxi_tracename, as->parms[aTRACE].items->data);
 	}
 
 	/* These options not compatible with -server */
 	if (cParms->stopServer) {
 	    code = RXKST_BADARGS;
-	    com_err (whoami, code, "stop server not compatible with -client");
+	    com_err(whoami, code, "stop server not compatible with -client");
 	    return code;
 	}
 
 	/* process -server options */
-	sParms->threads = 3;		/* one less than channels/conn */
+	sParms->threads = 3;	/* one less than channels/conn */
 	if (as->parms[aSTHREADS].items)
-	    sParms->threads = atoi (as->parms[aSTHREADS].items->data);
+	    sParms->threads = atoi(as->parms[aSTHREADS].items->data);
 	sParms->authentication = 0;
 	if (as->parms[aMINSERVERAUTH].items)
 	    sParms->authentication =
-		StringToAuth (as->parms[aMINSERVERAUTH].items->data);
-        if (as->parms[aKEYFILE].items)
-            sParms->keyfile = as->parms[aKEYFILE].items->data;
+		StringToAuth(as->parms[aMINSERVERAUTH].items->data);
+	if (as->parms[aKEYFILE].items)
+	    sParms->keyfile = as->parms[aKEYFILE].items->data;
 
 #ifdef AFS_PTHREAD_ENV
 	{
@@ -165,25 +176,30 @@ static int CommandProc (as, arock)
 
 	    code = pthread_attr_init(&tattr);
 	    if (code) {
-		com_err (whoami, code, "can't pthread_attr_init server process");
+		com_err(whoami, code,
+			"can't pthread_attr_init server process");
 		return code;
 	    }
 
-	    code = pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
+	    code =
+		pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED);
 	    if (code) {
-		com_err (whoami, code, "can't pthread_attr_setdetachstate server process");
+		com_err(whoami, code,
+			"can't pthread_attr_setdetachstate server process");
 		return code;
 	    }
 
-	    code = pthread_create(&serverID, &tattr, rxkst_StartServer,
-				  (void*)sParms);
+	    code =
+		pthread_create(&serverID, &tattr, rxkst_StartServer,
+			       (void *)sParms);
 	}
 #else
-	code = LWP_CreateProcess(rxkst_StartServer, 16000, LWP_NORMAL_PRIORITY,
-				 (opaque) sParms, "Server Process", &pid);
+	code =
+	    LWP_CreateProcess(rxkst_StartServer, 16000, LWP_NORMAL_PRIORITY,
+			      (opaque) sParms, "Server Process", &pid);
 #endif
 	if (code) {
-	    com_err (whoami, code, "can't create server process");
+	    com_err(whoami, code, "can't create server process");
 	    return code;
 	}
     } else {
@@ -191,42 +207,41 @@ static int CommandProc (as, arock)
     }
 
     if (startClient) {
-	u_long calls;			/* default number of calls */
+	u_long calls;		/* default number of calls */
 
 	/* process -client options */
 	if (as->parms[aCLIENT].items)
-	    lcstring (cParms->server, as->parms[aCLIENT].items->data,
-		      sizeof(cParms->server));
-	cParms->threads = 6;		/* 150% of channels/conn */
+	    lcstring(cParms->server, as->parms[aCLIENT].items->data,
+		     sizeof(cParms->server));
+	cParms->threads = 6;	/* 150% of channels/conn */
 	if (as->parms[aCTHREADS].items)
-	    cParms->threads = atoi (as->parms[aCTHREADS].items->data);
-	if (cParms->callTest || cParms->hijackTest ||
-	    cParms->printTiming || cParms->stopServer)
+	    cParms->threads = atoi(as->parms[aCTHREADS].items->data);
+	if (cParms->callTest || cParms->hijackTest || cParms->printTiming
+	    || cParms->stopServer)
 	    calls = 0;
-	else calls = 1;
+	else
+	    calls = 1;
 	cParms->fastCalls = cParms->slowCalls = cParms->copiousCalls = calls;
 
 	cParms->sendLen = cParms->recvLen = 10000;
 	if (as->parms[aSENDLEN].items)
-	    cParms->sendLen = atoi (as->parms[aSENDLEN].items->data);
+	    cParms->sendLen = atoi(as->parms[aSENDLEN].items->data);
 	if (as->parms[aRECVLEN].items)
-	    cParms->recvLen = atoi (as->parms[aRECVLEN].items->data);
+	    cParms->recvLen = atoi(as->parms[aRECVLEN].items->data);
 	if (as->parms[aFASTCALLS].items)
-	    cParms->fastCalls = atoi (as->parms[aFASTCALLS].items->data);
+	    cParms->fastCalls = atoi(as->parms[aFASTCALLS].items->data);
 	if (as->parms[aSLOWCALLS].items)
-	    cParms->slowCalls = atoi (as->parms[aSLOWCALLS].items->data);
+	    cParms->slowCalls = atoi(as->parms[aSLOWCALLS].items->data);
 	if (as->parms[aCOPIOUSCALLS].items)
-	    cParms->copiousCalls = atoi (as->parms[aCOPIOUSCALLS].items->data);
+	    cParms->copiousCalls = atoi(as->parms[aCOPIOUSCALLS].items->data);
 	cParms->repeatInterval = cParms->repeatCount = 0;
 	if (as->parms[aREPEATINTERVAL].items)
 	    cParms->repeatInterval =
-		atoi (as->parms[aREPEATINTERVAL].items->data);
+		atoi(as->parms[aREPEATINTERVAL].items->data);
 	if (as->parms[aREPEATCOUNT].items)
-	    cParms->repeatCount =
-		atoi (as->parms[aREPEATCOUNT].items->data);
+	    cParms->repeatCount = atoi(as->parms[aREPEATCOUNT].items->data);
 	if (as->parms[aMAXSKEW].items) {
-	    maxSkew = 
-		atoi (as->parms[aMAXSKEW].items->data);
+	    maxSkew = atoi(as->parms[aMAXSKEW].items->data);
 	    if (maxSkew < 1) {
 		printf("Minimum allowed maxSkew is 1, resetting.\n");
 		maxSkew = 1;
@@ -236,22 +251,23 @@ static int CommandProc (as, arock)
 	cParms->authentication = 0;
 	if (as->parms[aAUTHENTICATION].items)
 	    cParms->authentication =
-		StringToAuth (as->parms[aAUTHENTICATION].items->data);
-        cParms->cell = RXKST_CLIENT_CELL;
-        if (as->parms[aCELL].items)
-            cParms->cell = as->parms[aCELL].items->data;
+		StringToAuth(as->parms[aAUTHENTICATION].items->data);
+	cParms->cell = RXKST_CLIENT_CELL;
+	if (as->parms[aCELL].items)
+	    cParms->cell = as->parms[aCELL].items->data;
 
-	code = rxkst_StartClient (cParms);
+	code = rxkst_StartClient(cParms);
 	if (code) {
-	    com_err (whoami, code, "StartClient returned");
+	    com_err(whoami, code, "StartClient returned");
 	    return code;
 	}
     } else {
-	if (as->parms[aSENDLEN].items || as->parms[aRECVLEN].items ||
-	    as->parms[aFASTCALLS].items || as->parms[aSLOWCALLS].items ||
-	    as->parms[aCOPIOUSCALLS].items) {
+	if (as->parms[aSENDLEN].items || as->parms[aRECVLEN].items
+	    || as->parms[aFASTCALLS].items || as->parms[aSLOWCALLS].items
+	    || as->parms[aCOPIOUSCALLS].items) {
 	    code = RXKST_BADARGS;
-	    com_err (whoami, code, "send/recv len and # calls are client options");
+	    com_err(whoami, code,
+		    "send/recv len and # calls are client options");
 	    return code;
 	}
 
@@ -262,11 +278,12 @@ static int CommandProc (as, arock)
     return 0;
 }
 
-void main (argc, argv)
-  IN int   argc;
-  IN char *argv[];
+void
+main(argc, argv)
+     IN int argc;
+     IN char *argv[];
 {
-    long  code;
+    long code;
 #ifndef AFS_PTHREAD_ENV
     PROCESS initialProcess;
 #endif
@@ -279,49 +296,73 @@ void main (argc, argv)
     initialize_CMD_error_table();
     initialize_KTC_error_table();
 
-    code = rx_Init (0);
+    code = rx_Init(0);
     rx_SetRxDeadTime(120);
     if (code < 0) {
-	com_err (whoami, code, "can't init Rx");
-	exit (1);
+	com_err(whoami, code, "can't init Rx");
+	exit(1);
     }
 #ifndef AFS_PTHREAD_ENV
     initialProcess = 0;
-    code = LWP_CurrentProcess (&initialProcess);
+    code = LWP_CurrentProcess(&initialProcess);
     if (code) {
-	com_err (whoami, code, "LWP initialization failed");
-	exit (1);
+	com_err(whoami, code, "LWP initialization failed");
+	exit(1);
     }
 #endif
-    ts = cmd_CreateSyntax(NULL, CommandProc, 0, "run Rx authentication stress test");
-    cmd_AddParm (ts, "-server", CMD_FLAG, CMD_OPTIONAL, "start server");
-    cmd_AddParm (ts, "-client", CMD_SINGLE, CMD_OPTIONAL, "start client");
-    cmd_AddParm (ts, "-sendlen", CMD_SINGLE, CMD_OPTIONAL, "bytes to send to server in Copious call");
-    cmd_AddParm (ts, "-recvlen", CMD_SINGLE, CMD_OPTIONAL, "bytes to request from server in Copious call");
-    cmd_AddParm (ts, "-fastcalls", CMD_SINGLE, CMD_OPTIONAL, "number of fast calls to make");
-    cmd_AddParm (ts, "-slowcalls", CMD_SINGLE, CMD_OPTIONAL, "number of slow calls to make (one second)");
-    cmd_AddParm (ts, "-copiouscalls", CMD_SINGLE, CMD_OPTIONAL, "number of fast calls to make");
-    cmd_AddParm (ts, "-printstatistics", CMD_FLAG, CMD_OPTIONAL, "print statistics before exiting");
-    cmd_AddParm (ts, "-printtimings", CMD_FLAG, CMD_OPTIONAL, "print timing information for calls");
-    cmd_AddParm (ts, "-noexit", CMD_FLAG, CMD_OPTIONAL, "don't exit after successful finish");
-    cmd_AddParm (ts, "-sthreads", CMD_SINGLE, CMD_OPTIONAL, "number server threads");
-    cmd_AddParm (ts, "-cthreads", CMD_SINGLE, CMD_OPTIONAL, "number client threads");
-    cmd_AddParm (ts, "-calltest", CMD_FLAG, CMD_OPTIONAL, "check server's call number verification (this takes about 30 seconds)");
-    cmd_AddParm (ts, "-hijacktest", CMD_FLAG, CMD_OPTIONAL, "check hijack prevention measures by making various modifications to incoming/outgoing packets");
-    cmd_AddParm (ts, "-authentication", CMD_SINGLE, CMD_OPTIONAL, "type of authentication to use; one of: none, clear, auth, crypt");
-    cmd_AddParm (ts, "-minserverauth", CMD_SINGLE, CMD_OPTIONAL, "minimum level of authentication permitted by server");
-    cmd_AddParm (ts, "-repeatinterval", CMD_SINGLE, CMD_OPTIONAL, "seconds between load test activity");
-    cmd_AddParm (ts, "-repeatcount", CMD_SINGLE, CMD_OPTIONAL, "repetitions of load test activity");
-    cmd_AddParm (ts, "-stopserver", CMD_FLAG, CMD_OPTIONAL, "send RPC to cause server to exit");
-    cmd_AddParm (ts, "-trace", CMD_SINGLE, CMD_OPTIONAL, "file for per-call trace info");
-    cmd_AddParm (ts, "-nomd1pkt", CMD_FLAG, CMD_OPTIONAL, "dont prefer one-packet calls");
-    cmd_AddParm (ts, "-noreclaim", CMD_FLAG, CMD_OPTIONAL, "dont aggressively reclaim packets");
-    cmd_AddParm (ts, "-no2dchoice", CMD_FLAG, CMD_OPTIONAL, "disable rx_getcall 2d choice code");
-    cmd_AddParm (ts, "-maxskew", CMD_SINGLE, CMD_OPTIONAL, "max client server skew in seconds");
-    cmd_AddParm (ts, "-usetokens", CMD_FLAG, CMD_OPTIONAL, "use ktc tokens");
-    cmd_AddParm (ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "name of test cell");
-    cmd_AddParm (ts, "-keyfile", CMD_SINGLE, CMD_OPTIONAL, "read server key from file");
+    ts = cmd_CreateSyntax(NULL, CommandProc, 0,
+			  "run Rx authentication stress test");
+    cmd_AddParm(ts, "-server", CMD_FLAG, CMD_OPTIONAL, "start server");
+    cmd_AddParm(ts, "-client", CMD_SINGLE, CMD_OPTIONAL, "start client");
+    cmd_AddParm(ts, "-sendlen", CMD_SINGLE, CMD_OPTIONAL,
+		"bytes to send to server in Copious call");
+    cmd_AddParm(ts, "-recvlen", CMD_SINGLE, CMD_OPTIONAL,
+		"bytes to request from server in Copious call");
+    cmd_AddParm(ts, "-fastcalls", CMD_SINGLE, CMD_OPTIONAL,
+		"number of fast calls to make");
+    cmd_AddParm(ts, "-slowcalls", CMD_SINGLE, CMD_OPTIONAL,
+		"number of slow calls to make (one second)");
+    cmd_AddParm(ts, "-copiouscalls", CMD_SINGLE, CMD_OPTIONAL,
+		"number of fast calls to make");
+    cmd_AddParm(ts, "-printstatistics", CMD_FLAG, CMD_OPTIONAL,
+		"print statistics before exiting");
+    cmd_AddParm(ts, "-printtimings", CMD_FLAG, CMD_OPTIONAL,
+		"print timing information for calls");
+    cmd_AddParm(ts, "-noexit", CMD_FLAG, CMD_OPTIONAL,
+		"don't exit after successful finish");
+    cmd_AddParm(ts, "-sthreads", CMD_SINGLE, CMD_OPTIONAL,
+		"number server threads");
+    cmd_AddParm(ts, "-cthreads", CMD_SINGLE, CMD_OPTIONAL,
+		"number client threads");
+    cmd_AddParm(ts, "-calltest", CMD_FLAG, CMD_OPTIONAL,
+		"check server's call number verification (this takes about 30 seconds)");
+    cmd_AddParm(ts, "-hijacktest", CMD_FLAG, CMD_OPTIONAL,
+		"check hijack prevention measures by making various modifications to incoming/outgoing packets");
+    cmd_AddParm(ts, "-authentication", CMD_SINGLE, CMD_OPTIONAL,
+		"type of authentication to use; one of: none, clear, auth, crypt");
+    cmd_AddParm(ts, "-minserverauth", CMD_SINGLE, CMD_OPTIONAL,
+		"minimum level of authentication permitted by server");
+    cmd_AddParm(ts, "-repeatinterval", CMD_SINGLE, CMD_OPTIONAL,
+		"seconds between load test activity");
+    cmd_AddParm(ts, "-repeatcount", CMD_SINGLE, CMD_OPTIONAL,
+		"repetitions of load test activity");
+    cmd_AddParm(ts, "-stopserver", CMD_FLAG, CMD_OPTIONAL,
+		"send RPC to cause server to exit");
+    cmd_AddParm(ts, "-trace", CMD_SINGLE, CMD_OPTIONAL,
+		"file for per-call trace info");
+    cmd_AddParm(ts, "-nomd1pkt", CMD_FLAG, CMD_OPTIONAL,
+		"dont prefer one-packet calls");
+    cmd_AddParm(ts, "-noreclaim", CMD_FLAG, CMD_OPTIONAL,
+		"dont aggressively reclaim packets");
+    cmd_AddParm(ts, "-no2dchoice", CMD_FLAG, CMD_OPTIONAL,
+		"disable rx_getcall 2d choice code");
+    cmd_AddParm(ts, "-maxskew", CMD_SINGLE, CMD_OPTIONAL,
+		"max client server skew in seconds");
+    cmd_AddParm(ts, "-usetokens", CMD_FLAG, CMD_OPTIONAL, "use ktc tokens");
+    cmd_AddParm(ts, "-cell", CMD_SINGLE, CMD_OPTIONAL, "name of test cell");
+    cmd_AddParm(ts, "-keyfile", CMD_SINGLE, CMD_OPTIONAL,
+		"read server key from file");
 
-    code = cmd_Dispatch (argc, argv);
-    exit (code!=0);
+    code = cmd_Dispatch(argc, argv);
+    exit(code != 0);
 }

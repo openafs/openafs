@@ -66,58 +66,53 @@
 #define	status_error	2
 #define	status_reboot	4
 
-typedef struct prototype_struct
-{
-    u_short flag;	/*Union tag, or specifies absence of prototype*/
+typedef struct prototype_struct {
+    u_short flag;		/*Union tag, or specifies absence of prototype */
     union {
-	char *path;	/*Path, dir prefix, or absolute path of prototype*/
-	afs_uint32	rdev;	/*Device number*/
+	char *path;		/*Path, dir prefix, or absolute path of prototype */
+	afs_uint32 rdev;	/*Device number */
     } info;
 } PROTOTYPE;
 
-typedef struct owner_struct
-{
-    char *username;	/*Associated owner*/
-    char *groupname;	/*Associated group*/
+typedef struct owner_struct {
+    char *username;		/*Associated owner */
+    char *groupname;		/*Associated group */
 } OWNER;
 
-typedef struct mode_struct
-{
-    u_short inherit_flag;   /*Specifies whether the mode is inherited
-			      from the prototype or is given by the
-			      mode field */
+typedef struct mode_struct {
+    u_short inherit_flag;	/*Specifies whether the mode is inherited
+				 * from the prototype or is given by the
+				 * mode field */
     afs_uint32 modeval;
 } MODE;
 
-typedef struct entry
-{
-    struct entry *nextp;	/*Ptr to next entry in the same dir*/
-    struct node *nodep;		/*Ptr to config tree node w/info on this file*/
-    int hash;			/*Hashed value for quick filename comparison*/
-    char *name;			/*Actual file/directory name*/
+typedef struct entry {
+    struct entry *nextp;	/*Ptr to next entry in the same dir */
+    struct node *nodep;		/*Ptr to config tree node w/info on this file */
+    int hash;			/*Hashed value for quick filename comparison */
+    char *name;			/*Actual file/directory name */
 } ENTRY, *ENTRYPTR;
 
-typedef struct node
-{
-    ENTRYPTR entryp;	/*Ptr to child list for this node, if a directory*/
-    u_short flag;	/*Keeps track of updates to fields of this node*/
-    u_short type;	/*Type of file/directory*/
-    u_short updtspec;	/*Update spec*/
-    PROTOTYPE proto;	/*Prototype info*/
-    short uid;		/*Ownership info*/
-    short gid;		/*Group info*/
-    u_short mode;	/*Mode info*/
-    time_t mtime;	/*Last modification time*/
+typedef struct node {
+    ENTRYPTR entryp;		/*Ptr to child list for this node, if a directory */
+    u_short flag;		/*Keeps track of updates to fields of this node */
+    u_short type;		/*Type of file/directory */
+    u_short updtspec;		/*Update spec */
+    PROTOTYPE proto;		/*Prototype info */
+    short uid;			/*Ownership info */
+    short gid;			/*Group info */
+    u_short mode;		/*Mode info */
+    time_t mtime;		/*Last modification time */
 } CTREE, *CTREEPTR;
 
-extern int status;	/*Operating status*/
-extern int opt_lazy;	/*Just tell what you would have done, don't do it*/
-extern int opt_silent;	/*Don't print any error messages*/
-extern int opt_verbose;	/*Be chatty?*/
-extern int opt_reboot;	/*Do files that will cause reboot*/
+extern int status;		/*Operating status */
+extern int opt_lazy;		/*Just tell what you would have done, don't do it */
+extern int opt_silent;		/*Don't print any error messages */
+extern int opt_verbose;		/*Be chatty? */
+extern int opt_reboot;		/*Do files that will cause reboot */
 #ifdef KFLAG
-extern int opt_kflag;	/* $$question: why was this ifdefed? */
+extern int opt_kflag;		/* $$question: why was this ifdefed? */
 #endif /* KFLAG */
-extern int opt_debug;	/*Turn debugging output on*/
+extern int opt_debug;		/*Turn debugging output on */
 
-extern CTREEPTR config_root;	/*Top of the config tree*/
+extern CTREEPTR config_root;	/*Top of the config tree */

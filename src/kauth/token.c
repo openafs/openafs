@@ -18,7 +18,8 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -62,297 +63,264 @@ RCSID("$Header$");
 #endif /* defined(UKERNEL) */
 
 
-afs_int32 ka_GetAuthToken (
-  char *name,
-  char *instance,
-  char *cell,
-  struct ktc_encryptionKey *key,
-  afs_int32  lifetime,
-  afs_int32  *pwexpires)
-{ 
-    afs_int32                code;
+afs_int32
+ka_GetAuthToken(char *name, char *instance, char *cell,
+		struct ktc_encryptionKey *key, afs_int32 lifetime,
+		afs_int32 * pwexpires)
+{
+    afs_int32 code;
     struct ubik_client *conn;
-    afs_int32	        now = time(0);
-    struct ktc_token	token;
-    char		cellname[MAXKTCREALMLEN];
-    char		realm[MAXKTCREALMLEN];
+    afs_int32 now = time(0);
+    struct ktc_token token;
+    char cellname[MAXKTCREALMLEN];
+    char realm[MAXKTCREALMLEN];
     struct ktc_principal client, server;
 
-    LOCK_GLOBAL_MUTEX
-    code = ka_ExpandCell (cell, cellname, 0/*local*/);
+    LOCK_GLOBAL_MUTEX code = ka_ExpandCell(cell, cellname, 0 /*local */ );
     if (code) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
+	UNLOCK_GLOBAL_MUTEX return code;
     }
     cell = cellname;
 
     /* get an unauthenticated connection to desired cell */
-    code = ka_AuthServerConn (cell, KA_AUTHENTICATION_SERVICE, 0, &conn);
+    code = ka_AuthServerConn(cell, KA_AUTHENTICATION_SERVICE, 0, &conn);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
+	UNLOCK_GLOBAL_MUTEX return code;
     }
-    code = ka_Authenticate (name, instance, cell, conn,
-			    KA_TICKET_GRANTING_SERVICE,
-			    key, now, now+lifetime, &token, pwexpires);
+    code =
+	ka_Authenticate(name, instance, cell, conn,
+			KA_TICKET_GRANTING_SERVICE, key, now, now + lifetime,
+			&token, pwexpires);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
+	UNLOCK_GLOBAL_MUTEX return code;
     }
-    code = ubik_ClientDestroy (conn);
+    code = ubik_ClientDestroy(conn);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
+	UNLOCK_GLOBAL_MUTEX return code;
     }
 
-    code = ka_CellToRealm (cell, realm, 0/*local*/);
+    code = ka_CellToRealm(cell, realm, 0 /*local */ );
     if (code) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
+	UNLOCK_GLOBAL_MUTEX return code;
     }
-    strcpy (client.name, name);
-    strcpy (client.instance, instance);
-    strncpy (client.cell, cell, sizeof(client.cell));
-    strcpy (server.name, KA_TGS_NAME);
-    strcpy (server.instance, realm);
-    strcpy (server.cell, cell);
-    code = ktc_SetToken (&server, &token, &client, 0);
-    UNLOCK_GLOBAL_MUTEX
-    return code;
+    strcpy(client.name, name);
+    strcpy(client.instance, instance);
+    strncpy(client.cell, cell, sizeof(client.cell));
+    strcpy(server.name, KA_TGS_NAME);
+    strcpy(server.instance, realm);
+    strcpy(server.cell, cell);
+    code = ktc_SetToken(&server, &token, &client, 0);
+    UNLOCK_GLOBAL_MUTEX return code;
 }
 
-afs_int32 ka_GetServerToken (
-  char *name,
-  char *instance,
-  char *cell,
-  Date  lifetime,
-  struct ktc_token *token,
-  int   new,
-  int   dosetpag)
+afs_int32
+ka_GetServerToken(char *name, char *instance, char *cell, Date lifetime,
+		  struct ktc_token * token, int new, int dosetpag)
 {
-    afs_int32                code;
+    afs_int32 code;
     struct ubik_client *conn;
-    afs_int32	        now = time(0);
-    struct ktc_token	auth_token;
-    struct ktc_token	cell_token;
+    afs_int32 now = time(0);
+    struct ktc_token auth_token;
+    struct ktc_token cell_token;
     struct ktc_principal server, auth_server, client;
-    char	       *localCell = ka_LocalCell();
-    char	        cellname[MAXKTCREALMLEN];
-    char	        realm[MAXKTCREALMLEN];
-    char	        authDomain[MAXKTCREALMLEN];
-    int			local;
+    char *localCell = ka_LocalCell();
+    char cellname[MAXKTCREALMLEN];
+    char realm[MAXKTCREALMLEN];
+    char authDomain[MAXKTCREALMLEN];
+    int local;
 
-    LOCK_GLOBAL_MUTEX
-    code = ka_ExpandCell (cell, cellname, 0/*local*/);
+    LOCK_GLOBAL_MUTEX code = ka_ExpandCell(cell, cellname, 0 /*local */ );
     if (code) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
+	UNLOCK_GLOBAL_MUTEX return code;
     }
     cell = cellname;
 
-    strcpy (server.name, name);
-    strcpy (server.instance, instance);
-    lcstring (server.cell, cell, sizeof(server.cell));
+    strcpy(server.name, name);
+    strcpy(server.instance, instance);
+    lcstring(server.cell, cell, sizeof(server.cell));
     if (!new) {
-	code = ktc_GetToken (&server, token, sizeof(struct ktc_token), &client);
+	code =
+	    ktc_GetToken(&server, token, sizeof(struct ktc_token), &client);
 	if (!code) {
-	    UNLOCK_GLOBAL_MUTEX
-	    return 0;
+	    UNLOCK_GLOBAL_MUTEX return 0;
 	}
     }
-    
-    code = ka_CellToRealm (cell, realm, &local);
+
+    code = ka_CellToRealm(cell, realm, &local);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
+	UNLOCK_GLOBAL_MUTEX return code;
     }
 
     /* get TGS ticket for proper realm */
-    strcpy (auth_server.name, KA_TGS_NAME);
-    strcpy (auth_server.instance, realm);
-    lcstring (auth_server.cell, realm, sizeof(auth_server.cell));
-    strcpy (authDomain, realm);
-    code = ktc_GetToken (&auth_server, &auth_token, sizeof(auth_token), &client);
-    if (code && !local) {		/* try for remotely authenticated ticket */
-	strcpy (auth_server.cell, localCell);
-	strcpy (authDomain, "");
-	code = ktc_GetToken (&auth_server, &auth_token, sizeof(auth_token), &client);
+    strcpy(auth_server.name, KA_TGS_NAME);
+    strcpy(auth_server.instance, realm);
+    lcstring(auth_server.cell, realm, sizeof(auth_server.cell));
+    strcpy(authDomain, realm);
+    code =
+	ktc_GetToken(&auth_server, &auth_token, sizeof(auth_token), &client);
+    if (code && !local) {	/* try for remotely authenticated ticket */
+	strcpy(auth_server.cell, localCell);
+	strcpy(authDomain, "");
+	code =
+	    ktc_GetToken(&auth_server, &auth_token, sizeof(auth_token),
+			 &client);
     }
 
     if (code && local) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
-    }
-    else if (code) {
+	UNLOCK_GLOBAL_MUTEX return code;
+    } else if (code) {
 	/* here we invoke the inter-cell mechanism */
 
 	/* get local auth ticket */
-	ucstring (auth_server.instance, localCell, sizeof(auth_server.instance));
-	strcpy (auth_server.cell, localCell);
-	code = ktc_GetToken (&auth_server, &cell_token, sizeof(cell_token), &client);
+	ucstring(auth_server.instance, localCell,
+		 sizeof(auth_server.instance));
+	strcpy(auth_server.cell, localCell);
+	code =
+	    ktc_GetToken(&auth_server, &cell_token, sizeof(cell_token),
+			 &client);
 	if (code) {
-	    UNLOCK_GLOBAL_MUTEX
-	    return code;
+	    UNLOCK_GLOBAL_MUTEX return code;
 	}
 	/* get a connection to the local cell */
-	if ((code = ka_AuthServerConn (localCell, KA_TICKET_GRANTING_SERVICE, 0, &conn))) {
-	    UNLOCK_GLOBAL_MUTEX
-	    return code;
+	if ((code =
+	     ka_AuthServerConn(localCell, KA_TICKET_GRANTING_SERVICE, 0,
+			       &conn))) {
+	    UNLOCK_GLOBAL_MUTEX return code;
 	}
 	/* get foreign auth ticket */
-	if ((code = ka_GetToken (KA_TGS_NAME, realm, localCell, client.name,
-				client.instance, conn, now, now+lifetime,
-				&cell_token, "" /* local auth domain */,
-				&auth_token))) {
-	    UNLOCK_GLOBAL_MUTEX
-	    return code;
+	if ((code =
+	     ka_GetToken(KA_TGS_NAME, realm, localCell, client.name,
+			 client.instance, conn, now, now + lifetime,
+			 &cell_token, "" /* local auth domain */ ,
+			 &auth_token))) {
+	    UNLOCK_GLOBAL_MUTEX return code;
 	}
-	code = ubik_ClientDestroy (conn);
+	code = ubik_ClientDestroy(conn);
 	if (code) {
-	    UNLOCK_GLOBAL_MUTEX
-	    return code;
+	    UNLOCK_GLOBAL_MUTEX return code;
 	}
 	conn = 0;
 
 	/* save foreign auth ticket */
-	strcpy (auth_server.instance, realm);
-	lcstring (auth_server.cell, localCell, sizeof(auth_server.cell));
-	ucstring (authDomain, localCell, sizeof(authDomain));
-	if ((code = ktc_SetToken (&auth_server, &auth_token, &client, 0))) {
-	    UNLOCK_GLOBAL_MUTEX
-	    return code;
+	strcpy(auth_server.instance, realm);
+	lcstring(auth_server.cell, localCell, sizeof(auth_server.cell));
+	ucstring(authDomain, localCell, sizeof(authDomain));
+	if ((code = ktc_SetToken(&auth_server, &auth_token, &client, 0))) {
+	    UNLOCK_GLOBAL_MUTEX return code;
 	}
     }
 
-    if ((code = ka_AuthServerConn (cell, KA_TICKET_GRANTING_SERVICE, 0, &conn))) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
+    if ((code =
+	 ka_AuthServerConn(cell, KA_TICKET_GRANTING_SERVICE, 0, &conn))) {
+	UNLOCK_GLOBAL_MUTEX return code;
     }
-    if ((code = ka_GetToken (name, instance, cell, client.name,
-			    client.instance, conn, now, now+lifetime,
-			    &auth_token, authDomain, token))) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
+    if ((code =
+	 ka_GetToken(name, instance, cell, client.name, client.instance, conn,
+		     now, now + lifetime, &auth_token, authDomain, token))) {
+	UNLOCK_GLOBAL_MUTEX return code;
     }
-    code = ubik_ClientDestroy (conn);
+    code = ubik_ClientDestroy(conn);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
+	UNLOCK_GLOBAL_MUTEX return code;
     }
 
-    if ((code = ktc_SetToken (&server, token, &client,
-			     dosetpag ? AFS_SETTOK_SETPAG : 0))) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
+    if ((code =
+	 ktc_SetToken(&server, token, &client,
+		      dosetpag ? AFS_SETTOK_SETPAG : 0))) {
+	UNLOCK_GLOBAL_MUTEX return code;
     }
-    UNLOCK_GLOBAL_MUTEX
-    return 0;
+    UNLOCK_GLOBAL_MUTEX return 0;
 }
 
-afs_int32 ka_GetAdminToken (
-  char *name,
-  char *instance,
-  char *cell,
-  struct ktc_encryptionKey *key,
-  afs_int32  lifetime,
-  struct ktc_token *token,
-  int   new)
+afs_int32
+ka_GetAdminToken(char *name, char *instance, char *cell,
+		 struct ktc_encryptionKey * key, afs_int32 lifetime,
+		 struct ktc_token * token, int new)
 {
-    int			 code;
-    struct ubik_client	*conn;
-    afs_int32		 now = time(0);
+    int code;
+    struct ubik_client *conn;
+    afs_int32 now = time(0);
     struct ktc_principal server, client;
-    struct ktc_token	 localToken;
-    char		 cellname[MAXKTCREALMLEN];
+    struct ktc_token localToken;
+    char cellname[MAXKTCREALMLEN];
 
-    LOCK_GLOBAL_MUTEX
-    code = ka_ExpandCell (cell, cellname, 0/*local*/);
+    LOCK_GLOBAL_MUTEX code = ka_ExpandCell(cell, cellname, 0 /*local */ );
     if (code) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
+	UNLOCK_GLOBAL_MUTEX return code;
     }
     cell = cellname;
 
-    if (token == 0) token = &localToken; /* in case caller doesn't want token */
+    if (token == 0)
+	token = &localToken;	/* in case caller doesn't want token */
 
-    strcpy (server.name, KA_ADMIN_NAME);
-    strcpy (server.instance, KA_ADMIN_INST);
-    strncpy (server.cell, cell, sizeof(server.cell));
+    strcpy(server.name, KA_ADMIN_NAME);
+    strcpy(server.instance, KA_ADMIN_INST);
+    strncpy(server.cell, cell, sizeof(server.cell));
     if (!new) {
-	code = ktc_GetToken (&server,
-			     token, sizeof(struct ktc_token), &client);
+	code =
+	    ktc_GetToken(&server, token, sizeof(struct ktc_token), &client);
 	if (code == 0) {
-	    UNLOCK_GLOBAL_MUTEX
-	    return 0;
+	    UNLOCK_GLOBAL_MUTEX return 0;
 	}
     }
 
     if ((name == 0) || (key == 0)) {
 	/* just lookup in cache don't get new one */
-	UNLOCK_GLOBAL_MUTEX
-	return KANOTICKET;
+	UNLOCK_GLOBAL_MUTEX return KANOTICKET;
     }
 
     /* get an unauthenticated connection to desired cell */
-    code = ka_AuthServerConn (cell, KA_AUTHENTICATION_SERVICE, 0, &conn);
+    code = ka_AuthServerConn(cell, KA_AUTHENTICATION_SERVICE, 0, &conn);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
+	UNLOCK_GLOBAL_MUTEX return code;
     }
-    code = ka_Authenticate (name, instance, cell, conn, KA_MAINTENANCE_SERVICE,
-			    key, now, now+lifetime, token, 0);
-    (void) ubik_ClientDestroy (conn);
+    code =
+	ka_Authenticate(name, instance, cell, conn, KA_MAINTENANCE_SERVICE,
+			key, now, now + lifetime, token, 0);
+    (void)ubik_ClientDestroy(conn);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
+	UNLOCK_GLOBAL_MUTEX return code;
     }
 
-    strcpy (client.name, name);
-    strcpy (client.instance, instance);
-    strncpy (client.cell, cell, sizeof(client.cell));
-    code = ktc_SetToken (&server, token, &client, 0);
-    UNLOCK_GLOBAL_MUTEX
-    return code;
+    strcpy(client.name, name);
+    strcpy(client.instance, instance);
+    strncpy(client.cell, cell, sizeof(client.cell));
+    code = ktc_SetToken(&server, token, &client, 0);
+    UNLOCK_GLOBAL_MUTEX return code;
 }
 
 
-afs_int32 ka_VerifyUserToken(
-  char *name,
-  char *instance,
-  char *cell,
-  struct ktc_encryptionKey *key)
+afs_int32
+ka_VerifyUserToken(char *name, char *instance, char *cell,
+		   struct ktc_encryptionKey * key)
 {
     afs_int32 code;
     struct ubik_client *conn;
-    afs_int32	        now = time(0);
-    struct ktc_token	token;
-    char		cellname[MAXKTCREALMLEN];
+    afs_int32 now = time(0);
+    struct ktc_token token;
+    char cellname[MAXKTCREALMLEN];
     afs_int32 pwexpires;
 
-    LOCK_GLOBAL_MUTEX
-    code = ka_ExpandCell (cell, cellname, 0/*local*/);
+    LOCK_GLOBAL_MUTEX code = ka_ExpandCell(cell, cellname, 0 /*local */ );
     if (code) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
+	UNLOCK_GLOBAL_MUTEX return code;
     }
 
     cell = cellname;
 
     /* get an unauthenticated connection to desired cell */
-    code = ka_AuthServerConn (cell, KA_AUTHENTICATION_SERVICE, 0, &conn);
+    code = ka_AuthServerConn(cell, KA_AUTHENTICATION_SERVICE, 0, &conn);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
+	UNLOCK_GLOBAL_MUTEX return code;
     }
 
-    code = ka_Authenticate (name, instance, cell, conn,
-			    KA_TICKET_GRANTING_SERVICE,
-			    key, now, now+MAXKTCTICKETLIFETIME, &token, &pwexpires);
+    code =
+	ka_Authenticate(name, instance, cell, conn,
+			KA_TICKET_GRANTING_SERVICE, key, now,
+			now + MAXKTCTICKETLIFETIME, &token, &pwexpires);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX
-	return code;
+	UNLOCK_GLOBAL_MUTEX return code;
     }
-    code = ubik_ClientDestroy (conn);
-    UNLOCK_GLOBAL_MUTEX
-    return code;
+    code = ubik_ClientDestroy(conn);
+    UNLOCK_GLOBAL_MUTEX return code;
 }

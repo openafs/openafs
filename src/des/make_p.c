@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <mit-cpyright.h>
 #include <stdio.h>
@@ -19,36 +20,35 @@ RCSID("$Header$");
 #include "tables.h"
 #include "des_prototypes.h"
 
-void gen(FILE *stream)
+void
+gen(FILE * stream)
 {
-    /* P permutes 32 bit input R1 into 32 bit output R2 */	
+    /* P permutes 32 bit input R1 into 32 bit output R2 */
 
     /* clear the output */
-    fprintf(stream,"    L2 = 0;\n");
+    fprintf(stream, "    L2 = 0;\n");
 #ifndef	BIG
-    fprintf(stream,"    R2 = 0;\n");
-    fprintf(stream,
-	    "/* P operations */\n/* from right to right */\n");
+    fprintf(stream, "    R2 = 0;\n");
+    fprintf(stream, "/* P operations */\n/* from right to right */\n");
     /* first list mapping from left to left */
-    for (i = 0; i <=31; i++)
+    for (i = 0; i <= 31; i++)
 	if (P[i] < 32)
-	    fprintf(stream,
-		    "    if (R1 & (1<<%d)) R2 |= 1<<%d;\n",P[i],i);
+	    fprintf(stream, "    if (R1 & (1<<%d)) R2 |= 1<<%d;\n", P[i], i);
 #else /* BIG */
     /* flip p into p_temp */
-    fprintf(stream,"    P_temp = R1;\n");
-    fprintf(stream,"    P_temp_p = (unsigned char *) &P_temp;\n");
- 
+    fprintf(stream, "    P_temp = R1;\n");
+    fprintf(stream, "    P_temp_p = (unsigned char *) &P_temp;\n");
+
 #ifdef	LSBFIRST
-    fprintf(stream,"    R2 = P_prime[0][*P_temp_p++];\n");
-    fprintf(stream,"    R2 |= P_prime[1][*P_temp_p++];\n");
-    fprintf(stream,"    R2 |= P_prime[2][*P_temp_p++];\n");
-    fprintf(stream,"    R2 |= P_prime[3][*P_temp_p];\n");
+    fprintf(stream, "    R2 = P_prime[0][*P_temp_p++];\n");
+    fprintf(stream, "    R2 |= P_prime[1][*P_temp_p++];\n");
+    fprintf(stream, "    R2 |= P_prime[2][*P_temp_p++];\n");
+    fprintf(stream, "    R2 |= P_prime[3][*P_temp_p];\n");
 #else /* MSBFIRST */
-    fprintf(stream,"    R2 = P_prime[3][*P_temp_p++];\n");
-    fprintf(stream,"    R2 |= P_prime[2][*P_temp_p++];\n");
-    fprintf(stream,"    R2 |= P_prime[1][*P_temp_p++];\n");
-    fprintf(stream,"    R2 |= P_prime[0][*P_temp_p];\n");
+    fprintf(stream, "    R2 = P_prime[3][*P_temp_p++];\n");
+    fprintf(stream, "    R2 |= P_prime[2][*P_temp_p++];\n");
+    fprintf(stream, "    R2 |= P_prime[1][*P_temp_p++];\n");
+    fprintf(stream, "    R2 |= P_prime[0][*P_temp_p];\n");
 #endif /* MSBFIRST */
 #endif /* BIG */
 }

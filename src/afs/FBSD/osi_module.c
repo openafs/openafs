@@ -11,7 +11,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/sysincludes.h>
 #include <afsincludes.h>
@@ -45,8 +46,8 @@ afs_module_handler(module_t mod, int what, void *arg)
 	    error = -1;
 	    break;
 	}
-	if (sysent[AFS_SYSCALL].sy_call != nosys &&
-	    sysent[AFS_SYSCALL].sy_call != lkmnosys) {
+	if (sysent[AFS_SYSCALL].sy_call != nosys
+	    && sysent[AFS_SYSCALL].sy_call != lkmnosys) {
 	    printf("AFS_SYSCALL in use. aborting\n");
 	    error = -1;
 	    break;
@@ -101,4 +102,5 @@ static moduledata_t afs_mod = {
     afs_module_handler,
     &afs_mod
 };
+
 DECLARE_MODULE(afs, afs_mod, SI_SUB_VFS, SI_ORDER_MIDDLE);

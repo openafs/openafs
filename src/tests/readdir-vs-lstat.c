@@ -52,38 +52,38 @@ RCSID("$Id$");
 #endif
 
 static int
-verify_inodes (const char *dirname)
+verify_inodes(const char *dirname)
 {
     DIR *d;
     struct dirent *dp;
-    
-    if (chdir (dirname) < 0)
-	err (1, "chdir %s", dirname);
 
-    d = opendir (".");
+    if (chdir(dirname) < 0)
+	err(1, "chdir %s", dirname);
+
+    d = opendir(".");
     if (d == NULL)
-	err (1, "opendir %s", dirname);
-    while ((dp = readdir (d)) != NULL) {
+	err(1, "opendir %s", dirname);
+    while ((dp = readdir(d)) != NULL) {
 	struct stat sb;
 
-	if (lstat (dp->d_name, &sb) < 0) {
+	if (lstat(dp->d_name, &sb) < 0) {
 	    if (errno == EACCES)
 		continue;
-	    err (1, "lstat %s", dp->d_name);
+	    err(1, "lstat %s", dp->d_name);
 	}
 	if (dp->d_ino != sb.st_ino)
-	    errx (1, "%s: inode %u != %u", dp->d_name,
-		  (unsigned)dp->d_ino, (unsigned)sb.st_ino);
+	    errx(1, "%s: inode %u != %u", dp->d_name, (unsigned)dp->d_ino,
+		 (unsigned)sb.st_ino);
     }
-    closedir (d);
+    closedir(d);
     return 0;
 }
 
 static void
-usage (int ret)
+usage(int ret)
 {
-    fprintf (stderr, "%s [directory]\n", __progname);
-    exit (ret);
+    fprintf(stderr, "%s [directory]\n", __progname);
+    exit(ret);
 }
 
 int
@@ -93,10 +93,10 @@ main(int argc, char **argv)
 
 
     if (argc > 2)
-	usage (1);
+	usage(1);
 
     if (argc > 1)
 	name = argv[1];
 
-    return verify_inodes (name);
+    return verify_inodes(name);
 }

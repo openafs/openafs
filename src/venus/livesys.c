@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/afs_args.h>
 #include <rx/xdr.h>
@@ -38,9 +39,10 @@ RCSID("$Header$");
 #define	MAXSIZE	2048
 static char space[MAXSIZE];
 
-int main(argc, argv)
-    int argc;
-    char **argv;
+int
+main(argc, argv)
+     int argc;
+     char **argv;
 {
     afs_int32 code;
     struct ViceIoctl blob;

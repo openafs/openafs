@@ -27,36 +27,36 @@
 #else
 #define AFS_SET_SIGMASK pthread_sigmask
 #endif
-#ifdef SIGSEGV 
-#define _SETSEGV sigdelset(&i_tset, SIGSEGV); 
+#ifdef SIGSEGV
+#define _SETSEGV sigdelset(&i_tset, SIGSEGV);
 #else
 #define _SETSEGV ;
-#endif 
-#ifdef SIGBUS 
-#define _SETBUS sigdelset(&i_tset, SIGBUS); 
-#else 
+#endif
+#ifdef SIGBUS
+#define _SETBUS sigdelset(&i_tset, SIGBUS);
+#else
 #define _SETBUS ;
-#endif 
-#ifdef SIGILL 
-#define _SETILL sigdelset(&i_tset, SIGILL); 
+#endif
+#ifdef SIGILL
+#define _SETILL sigdelset(&i_tset, SIGILL);
 #else
 #define _SETILL ;
-#endif 
-#ifdef SIGTRAP 
-#define _SETTRAP sigdelset(&i_tset, SIGTRAP); 
+#endif
+#ifdef SIGTRAP
+#define _SETTRAP sigdelset(&i_tset, SIGTRAP);
 #else
 #define _SETTRAP ;
-#endif 
-#ifdef SIGABRT 
-#define _SETABRT sigdelset(&i_tset, SIGABRT); 
+#endif
+#ifdef SIGABRT
+#define _SETABRT sigdelset(&i_tset, SIGABRT);
 #else
 #define _SETABRT ;
-#endif 
-#ifdef SIGFPE 
-#define _SETFPE sigdelset(&i_tset, SIGFPE); 
+#endif
+#ifdef SIGFPE
+#define _SETFPE sigdelset(&i_tset, SIGFPE);
 #else
 #define _SETFPE ;
-#endif 
+#endif
 #define AFS_SIGSET_CLEAR() \
 do { \
 	 sigfillset(&i_tset); \

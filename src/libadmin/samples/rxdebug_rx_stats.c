@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -33,18 +34,15 @@ RCSID("$Header$");
 #include <afs/afs_clientAdmin.h>
 #include <afs/afs_utilAdmin.h>
 
-void Usage()
+void
+Usage()
 {
-    fprintf(stderr,
-	    "Usage: rxdebug_rx_stats <host> <port>\n");
+    fprintf(stderr, "Usage: rxdebug_rx_stats <host> <port>\n");
     exit(1);
 }
 
-void ParseArgs(
-    int argc,
-    char *argv[],
-    char **srvrName,
-    long *srvrPort)
+void
+ParseArgs(int argc, char *argv[], char **srvrName, long *srvrPort)
 {
     char **argp = argv;
 
@@ -62,7 +60,8 @@ void ParseArgs(
 
 static char *packetTypes[] = RX_PACKET_TYPES;
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     int rc;
     afs_status_t st = 0;
@@ -118,72 +117,49 @@ int main(int argc, char *argv[])
     }
     printf("    specialPktAllocFailures:     %d\n",
 	   stats.specialPktAllocFailures);
-    printf("    socketGreedy:                %d\n",
-	   stats.socketGreedy);
-    printf("    bogusPacketOnRead:           %d\n",
-	   stats.bogusPacketOnRead);
-    printf("    bogusHost:                   %d\n",
-	   stats.bogusHost);
-    printf("    noPacketOnRead:              %d\n",
-	   stats.noPacketOnRead);
+    printf("    socketGreedy:                %d\n", stats.socketGreedy);
+    printf("    bogusPacketOnRead:           %d\n", stats.bogusPacketOnRead);
+    printf("    bogusHost:                   %d\n", stats.bogusHost);
+    printf("    noPacketOnRead:              %d\n", stats.noPacketOnRead);
     printf("    noPacketBuffersOnRead:       %d\n",
 	   stats.noPacketBuffersOnRead);
-    printf("    selects:                     %d\n",
-	   stats.selects);
-    printf("    sendSelects:                 %d\n",
-	   stats.sendSelects);
+    printf("    selects:                     %d\n", stats.selects);
+    printf("    sendSelects:                 %d\n", stats.sendSelects);
     printf("    packetsRead:\n");
-    for (i = 0 ; i < RX_N_PACKET_TYPES ; i++) {
+    for (i = 0; i < RX_N_PACKET_TYPES; i++) {
 	strcpy(tstr, packetTypes[i]);
 	printf("\t%-24s %d\n", strcat(tstr, ":"), stats.packetsRead[i]);
     }
-    printf("    dataPacketsRead:             %d\n",
-	   stats.dataPacketsRead);
-    printf("    ackPacketsRead:              %d\n",
-	   stats.ackPacketsRead);
-    printf("    dupPacketsRead:              %d\n",
-	   stats.dupPacketsRead);
+    printf("    dataPacketsRead:             %d\n", stats.dataPacketsRead);
+    printf("    ackPacketsRead:              %d\n", stats.ackPacketsRead);
+    printf("    dupPacketsRead:              %d\n", stats.dupPacketsRead);
     printf("    spuriousPacketsRead:         %d\n",
 	   stats.spuriousPacketsRead);
-    printf("    ignorePacketDally:           %d\n",
-	   stats.ignorePacketDally);
+    printf("    ignorePacketDally:           %d\n", stats.ignorePacketDally);
     printf("    packetsSent:\n");
-    for (i = 0 ; i < RX_N_PACKET_TYPES ; i++) {
+    for (i = 0; i < RX_N_PACKET_TYPES; i++) {
 	strcpy(tstr, packetTypes[i]);
 	printf("\t%-24s %d\n", strcat(tstr, ":"), stats.packetsSent[i]);
     }
-    printf("    ackPacketsSent:              %d\n",
-	   stats.ackPacketsSent);
-    printf("    dataPacketsSent:             %d\n",
-	   stats.dataPacketsSent);
-    printf("    dataPacketsReSent:           %d\n",
-	   stats.dataPacketsReSent);
-    printf("    dataPacketsPushed:           %d\n",
-	   stats.dataPacketsPushed);
-    printf("    ignoreAckedPacket:           %d\n",
-	   stats.ignoreAckedPacket);
-    printf("    netSendFailures:             %d\n",
-	   stats.netSendFailures);
-    printf("    fatalErrors:                 %d\n",
-	   stats.fatalErrors);
-    printf("    nRttSamples:                 %d\n",
-	   stats.nRttSamples);
+    printf("    ackPacketsSent:              %d\n", stats.ackPacketsSent);
+    printf("    dataPacketsSent:             %d\n", stats.dataPacketsSent);
+    printf("    dataPacketsReSent:           %d\n", stats.dataPacketsReSent);
+    printf("    dataPacketsPushed:           %d\n", stats.dataPacketsPushed);
+    printf("    ignoreAckedPacket:           %d\n", stats.ignoreAckedPacket);
+    printf("    netSendFailures:             %d\n", stats.netSendFailures);
+    printf("    fatalErrors:                 %d\n", stats.fatalErrors);
+    printf("    nRttSamples:                 %d\n", stats.nRttSamples);
     printf("    totalRtt:                    %.6f\n",
 	   clock_Float(&stats.totalRtt));
     printf("    minRtt:                      %.6f\n",
 	   clock_Float(&stats.minRtt));
     printf("    maxRtt:                      %.6f\n",
 	   clock_Float(&stats.maxRtt));
-    printf("    nServerConns:                %d\n",
-	   stats.nServerConns);
-    printf("    nClientConns:                %d\n",
-	   stats.nClientConns);
-    printf("    nPeerStructs:                %d\n",
-	   stats.nPeerStructs);
-    printf("    nCallStructs:                %d\n",
-	   stats.nCallStructs);
-    printf("    nFreeCallStructs:            %d\n",
-	   stats.nFreeCallStructs);
+    printf("    nServerConns:                %d\n", stats.nServerConns);
+    printf("    nClientConns:                %d\n", stats.nClientConns);
+    printf("    nPeerStructs:                %d\n", stats.nPeerStructs);
+    printf("    nCallStructs:                %d\n", stats.nCallStructs);
+    printf("    nFreeCallStructs:            %d\n", stats.nFreeCallStructs);
     printf("\n");
 
     exit(0);

@@ -17,7 +17,7 @@
 #if defined(AFS_AIX_ENV) || defined(AFS_AUX_ENV)
 #include "h/systm.h"
 #include "h/time.h"
-#endif	/* System V */
+#endif /* System V */
 #else /* KERNEL */
 #ifndef AFS_NT40_ENV
 #ifndef ITIMER_REAL
@@ -38,8 +38,8 @@
 
 /* A clock value is the number of seconds and microseconds that have elapsed since calling clock_Init. */
 struct clock {
-    afs_int32 sec;	    /* Seconds since clock_Init */
-    afs_int32 usec;	    /* Microseconds since clock_Init */
+    afs_int32 sec;		/* Seconds since clock_Init */
+    afs_int32 usec;		/* Microseconds since clock_Init */
 };
 
 #ifndef	KERNEL
@@ -103,7 +103,7 @@ extern int clock_nUpdates;
 #endif /* defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL) */
 #endif
 #define clock_Sec() osi_Time()
-#define	clock_NewTime()    /* don't do anything; clock is fast enough in kernel */
+#define	clock_NewTime()		/* don't do anything; clock is fast enough in kernel */
 #endif /* KERNEL */
 
 /* Returns the elapsed time in milliseconds between clock values (*cv1) and (*cv2) */

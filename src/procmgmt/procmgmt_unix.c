@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/stds.h>
 
@@ -37,9 +38,7 @@ RCSID("$Header$");
  * ASSUMPTIONS: sargv[0] is the same as spath (or its last component).
  */
 pid_t
-pmgt_ProcessSpawnVE(const char *spath,
-		    char *sargv[],
-		    char *senvp[],
+pmgt_ProcessSpawnVE(const char *spath, char *sargv[], char *senvp[],
 		    int estatus)
 {
     pid_t pid;

@@ -12,7 +12,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/stds.h>
 #include <stddef.h>
@@ -75,11 +76,11 @@ FilepathNormalizeEx(char *path, int slashType)
 {
     short bWasSlash = 0;
     char *pP, *pCopyFrom;
-    char slash = '/';     /* Default to forward slashes */
-    
+    char slash = '/';		/* Default to forward slashes */
+
     if (slashType == FPN_BACK_SLASHES)
-        slash = '\\';
-    
+	slash = '\\';
+
     if (path != NULL) {
 	/* use only forward slashes; remove multiple slashes */
 	for (pP = pCopyFrom = path; *pCopyFrom != '\0'; pCopyFrom++) {
@@ -118,11 +119,12 @@ FilepathNormalize(char *path)
 }
 
 /* Open a file for buffered I/O */
-bufio_p BufioOpen(char *path, int oflag, int mode)
+bufio_p
+BufioOpen(char *path, int oflag, int mode)
 {
     bufio_p bp;
 
-    bp = (bufio_p)malloc(sizeof(bufio_t));
+    bp = (bufio_p) malloc(sizeof(bufio_t));
     if (bp == NULL) {
 	return NULL;
     }
@@ -147,7 +149,8 @@ bufio_p BufioOpen(char *path, int oflag, int mode)
  * and strip off the carriage return. buf is null terminated.
  * Returns -1 on EOF or error, length of string on success.
  */
-int BufioGets(bufio_p bp, char *buf, int buflen)
+int
+BufioGets(bufio_p bp, char *buf, int buflen)
 {
     int rc;
     char c;
@@ -190,7 +193,7 @@ int BufioGets(bufio_p bp, char *buf, int buflen)
 		return tlen;
 	    } else {
 		buf[tlen++] = c;
-		if (tlen >= buflen-1) {
+		if (tlen >= buflen - 1) {
 		    buf[tlen] = '\0';
 		    bp->pos = pos;
 		    bp->len = len;
@@ -202,7 +205,8 @@ int BufioGets(bufio_p bp, char *buf, int buflen)
 }
 
 /* Close a buffered I/O handle */
-int BufioClose(bufio_p bp)
+int
+BufioClose(bufio_p bp)
 {
     BUFIO_FD fd;
     int rc;

@@ -12,7 +12,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/stds.h>
 
@@ -51,9 +52,7 @@ void *tokenHandle;
  */
 
 static int
-MyBeforeProc(
-  struct cmd_syndesc *as,
-  char *arock)
+MyBeforeProc(struct cmd_syndesc *as, char *arock)
 {
     afs_status_t st = 0;
     int no_auth = 0;
@@ -91,7 +90,8 @@ MyBeforeProc(
 
     if (as->parms[USER_PARAM].items) {
 	if (!as->parms[PASSWORD_PARAM].items) {
-	    ERR_EXT("you must specify -authpassword if you specify -authuser");
+	    ERR_EXT
+		("you must specify -authpassword if you specify -authuser");
 	}
 	if (as->parms[AUTHCELL_PARAM].items) {
 	    strcpy(auth_cell, as->parms[AUTHCELL_PARAM].items->data);
@@ -120,19 +120,16 @@ MyBeforeProc(
      */
 
     if (no_auth) {
-	if (!afsclient_TokenGetNew(auth_cell,
-				   (const char *) 0,
-				   (const char *) 0,
-				   &tokenHandle,
-				   &st)) {
+	if (!afsclient_TokenGetNew
+	    (auth_cell, (const char *)0, (const char *)0, &tokenHandle,
+	     &st)) {
 	    ERR_ST_EXT("can't get noauth tokens", st);
 	}
     } else {
-	if (!afsclient_TokenGetNew(auth_cell,
-				   (const char *) as->parms[USER_PARAM].items->data,
-				   (const char *) as->parms[PASSWORD_PARAM].items->data,
-				   &tokenHandle,
-				   &st)) {
+	if (!afsclient_TokenGetNew
+	    (auth_cell, (const char *)as->parms[USER_PARAM].items->data,
+	     (const char *)as->parms[PASSWORD_PARAM].items->data,
+	     &tokenHandle, &st)) {
 	    ERR_ST_EXT("can't get tokens", st);
 	}
     }
@@ -144,8 +141,8 @@ MyBeforeProc(
     return 0;
 }
 
-static int MyAfterProc(
-    struct cmd_syndesc *as)
+static int
+MyAfterProc(struct cmd_syndesc *as)
 {
 
     afsclient_CellClose(cellHandle, (afs_status_p) 0);
@@ -160,18 +157,19 @@ SetupCommonCmdArgs(struct cmd_syndesc *as)
 {
     cmd_Seek(as, USER_PARAM);
     cmd_AddParm(as, "-authuser", CMD_SINGLE, CMD_OPTIONAL,
-		 "user name to use for authentication");
+		"user name to use for authentication");
     cmd_AddParm(as, "-authpassword", CMD_SINGLE, CMD_OPTIONAL,
-		 "password to use for authentication");
+		"password to use for authentication");
     cmd_AddParm(as, "-authcell", CMD_SINGLE, CMD_OPTIONAL,
-		 "cell to use for authentication");
+		"cell to use for authentication");
     cmd_AddParm(as, "-execcell", CMD_SINGLE, CMD_OPTIONAL,
-		 "cell where command will execute");
+		"cell where command will execute");
     cmd_AddParm(as, "-noauth", CMD_FLAG, CMD_OPTIONAL,
-		 "run this command unauthenticated");
+		"run this command unauthenticated");
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     int code;
     afs_status_t st;

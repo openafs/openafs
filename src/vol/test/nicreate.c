@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>
@@ -38,9 +39,10 @@ RCSID("$Header$");
 
 
 char *prog = "nicreate";
-IHandle_t * GetLinkHandle(char *part, int volid);
+IHandle_t *GetLinkHandle(char *part, int volid);
 
-void Usage(void)
+void
+Usage(void)
 {
     printf("Usage: %s partition RWvolid p1 p2 p3 p4\n", prog);
     exit(1);
@@ -54,7 +56,8 @@ main(int ac, char **av)
     IHandle_t lh, *lhp;
     Inode ino;
 
-    if (ac != 7) Usage();
+    if (ac != 7)
+	Usage();
 
     part = av[1];
     volid = atoi(av[2]);
@@ -76,11 +79,9 @@ main(int ac, char **av)
     ino = namei_icreate(lhp, part, p1, p2, p3, p4);
     if (!VALID_INO(ino)) {
 	perror("namei_icreate");
-    }
-    else {
+    } else {
 	printf("Returned inode %s\n", PrintInode(NULL, ino));
     }
 }
 
 #endif /* AFS_NAMEI_ENV */
-

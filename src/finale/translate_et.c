@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/com_err.h>
 #include <rx/rxkad.h>
@@ -28,13 +29,14 @@ RCSID("$Header$");
 #endif
 
 
-#define ERRCODE_RANGE 8			/* from error_table.h */
+#define ERRCODE_RANGE 8		/* from error_table.h */
 
 #include "AFS_component_version_number.c"
 
-int main (int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
-    int  i;
+    int i;
     afs_int32 code;
     afs_int32 offset;
 
@@ -46,7 +48,7 @@ int main (int argc, char *argv[])
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
@@ -64,17 +66,16 @@ int main (int argc, char *argv[])
     initialize_VOLS_error_table();
 
     if (argc < 2) {
-	fprintf (stderr, "Usage is: %s [<code>]+\n", argv[0]);
-	exit (1);
+	fprintf(stderr, "Usage is: %s [<code>]+\n", argv[0]);
+	exit(1);
     }
 
-    for (i=1; i<argc; i++) {
+    for (i = 1; i < argc; i++) {
 	code = atoi(argv[i]);
-	offset = code & ((1<<ERRCODE_RANGE)-1);
+	offset = code & ((1 << ERRCODE_RANGE) - 1);
 
-	printf ("%d (%s).%d = %s\n", (int) code, error_table_name (code), (int) offset,
-		error_message (code));
+	printf("%d (%s).%d = %s\n", (int)code, error_table_name(code),
+	       (int)offset, error_message(code));
     }
     return 0;
 }
-

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/stds.h>
 #ifdef AFS_NT40_ENV
@@ -61,29 +62,31 @@ extern int VL_GetEntryByNameO(), VL_GetEntryByNameN();
 extern int VL_ReplaceEntry(), VL_ReplaceEntryN();
 extern int VL_ListAttributes(), VL_ListAttributesN(), VL_ListAttributesN2();
 
-static void ovlentry_to_nvlentry(oentryp, nentryp)
-    struct vldbentry *oentryp;
-    struct nvldbentry *nentryp;
+static void
+ovlentry_to_nvlentry(oentryp, nentryp)
+     struct vldbentry *oentryp;
+     struct nvldbentry *nentryp;
 {
     register int i;
 
     memset(nentryp, 0, sizeof(struct nvldbentry));
     strncpy(nentryp->name, oentryp->name, sizeof(nentryp->name));
-    for (i=0; i < oentryp->nServers; i++) {
+    for (i = 0; i < oentryp->nServers; i++) {
 	nentryp->serverNumber[i] = oentryp->serverNumber[i];
 	nentryp->serverPartition[i] = oentryp->serverPartition[i];
 	nentryp->serverFlags[i] = oentryp->serverFlags[i];
     }
     nentryp->nServers = oentryp->nServers;
-    for (i=0; i<MAXTYPES; i++)
+    for (i = 0; i < MAXTYPES; i++)
 	nentryp->volumeId[i] = oentryp->volumeId[i];
     nentryp->cloneId = oentryp->cloneId;
     nentryp->flags = oentryp->flags;
 }
 
-static nvlentry_to_ovlentry(nentryp, oentryp)
-    struct nvldbentry *nentryp;
-    struct vldbentry *oentryp;
+static
+nvlentry_to_ovlentry(nentryp, oentryp)
+     struct nvldbentry *nentryp;
+     struct vldbentry *oentryp;
 {
     register int i;
 
@@ -96,29 +99,29 @@ static nvlentry_to_ovlentry(nentryp, oentryp)
 	 */
 	return VL_BADSERVER;
     }
-    for (i=0; i < nentryp->nServers; i++) {
+    for (i = 0; i < nentryp->nServers; i++) {
 	oentryp->serverNumber[i] = nentryp->serverNumber[i];
 	oentryp->serverPartition[i] = nentryp->serverPartition[i];
 	oentryp->serverFlags[i] = nentryp->serverFlags[i];
     }
     oentryp->nServers = i;
-    for (i=0; i<MAXTYPES; i++)
+    for (i = 0; i < MAXTYPES; i++)
 	oentryp->volumeId[i] = nentryp->volumeId[i];
     oentryp->cloneId = nentryp->cloneId;
     oentryp->flags = nentryp->flags;
     return 0;
 }
 
-static int newvlserver=0;
+static int newvlserver = 0;
 
 VLDB_CreateEntry(entryp)
-    struct nvldbentry *entryp;
+     struct nvldbentry *entryp;
 {
     struct vldbentry oentry;
     register int code;
 
     if (newvlserver == 1) {
-tryold:
+      tryold:
 	code = nvlentry_to_ovlentry(entryp, &oentry);
 	if (code)
 	    return code;
@@ -138,15 +141,16 @@ tryold:
 }
 
 VLDB_GetEntryByID(volid, voltype, entryp)
-    afs_int32 volid, voltype;
-    struct nvldbentry *entryp;
+     afs_int32 volid, voltype;
+     struct nvldbentry *entryp;
 {
     struct vldbentry oentry;
     register int code;
 
     if (newvlserver == 1) {
-tryold:
-	code = ubik_Call(VL_GetEntryByID, cstruct, 0, volid, voltype, &oentry);
+      tryold:
+	code =
+	    ubik_Call(VL_GetEntryByID, cstruct, 0, volid, voltype, &oentry);
 	if (!code)
 	    ovlentry_to_nvlentry(&oentry, entryp);
 	return code;
@@ -164,14 +168,14 @@ tryold:
 }
 
 VLDB_GetEntryByName(namep, entryp)
-    char *namep;
-    struct nvldbentry *entryp;
+     char *namep;
+     struct nvldbentry *entryp;
 {
     struct vldbentry oentry;
     register int code;
 
     if (newvlserver == 1) {
-tryold:
+      tryold:
 	code = ubik_Call(VL_GetEntryByNameO, cstruct, 0, namep, &oentry);
 	if (!code)
 	    ovlentry_to_nvlentry(&oentry, entryp);
@@ -190,21 +194,25 @@ tryold:
 }
 
 VLDB_ReplaceEntry(volid, voltype, entryp, releasetype)
-    afs_int32 volid, voltype, releasetype;
-    struct nvldbentry *entryp;
+     afs_int32 volid, voltype, releasetype;
+     struct nvldbentry *entryp;
 {
     struct vldbentry oentry;
     register int code;
 
     if (newvlserver == 1) {
-tryold:
+      tryold:
 	code = nvlentry_to_ovlentry(entryp, &oentry);
 	if (code)
 	    return code;
-	code = ubik_Call(VL_ReplaceEntry, cstruct, 0, volid, voltype, &oentry, releasetype);
+	code =
+	    ubik_Call(VL_ReplaceEntry, cstruct, 0, volid, voltype, &oentry,
+		      releasetype);
 	return code;
     }
-    code = ubik_Call(VL_ReplaceEntryN, cstruct, 0, volid, voltype, entryp, releasetype);
+    code =
+	ubik_Call(VL_ReplaceEntryN, cstruct, 0, volid, voltype, entryp,
+		  releasetype);
     if (!newvlserver) {
 	if (code == RXGEN_OPCODE) {
 	    newvlserver = 1;	/* Doesn't support new interface */
@@ -219,27 +227,34 @@ tryold:
 
 
 VLDB_ListAttributes(attrp, entriesp, blkentriesp)
-    VldbListByAttributes *attrp;     
-    afs_int32 *entriesp;
-    nbulkentries *blkentriesp;
+     VldbListByAttributes *attrp;
+     afs_int32 *entriesp;
+     nbulkentries *blkentriesp;
 {
     bulkentries arrayEntries;
     register int code, i;
 
     if (newvlserver == 1) {
-tryold:
-	memset(&arrayEntries, 0, sizeof(arrayEntries)); /*initialize to hint the stub  to alloc space */
-	code = ubik_Call(VL_ListAttributes, cstruct, 0, attrp, entriesp, &arrayEntries);
+      tryold:
+	memset(&arrayEntries, 0, sizeof(arrayEntries));	/*initialize to hint the stub  to alloc space */
+	code =
+	    ubik_Call(VL_ListAttributes, cstruct, 0, attrp, entriesp,
+		      &arrayEntries);
 	if (!code) {
-	    blkentriesp->nbulkentries_val = (nvldbentry *)malloc(*entriesp * sizeof(struct nvldbentry));
+	    blkentriesp->nbulkentries_val =
+		(nvldbentry *) malloc(*entriesp * sizeof(struct nvldbentry));
 	    for (i = 0; i < *entriesp; i++) {	/* process each entry */
-		ovlentry_to_nvlentry(&arrayEntries.bulkentries_val[i], &blkentriesp->nbulkentries_val[i]);		
+		ovlentry_to_nvlentry(&arrayEntries.bulkentries_val[i],
+				     &blkentriesp->nbulkentries_val[i]);
 	    }
 	}
-	if (arrayEntries.bulkentries_val) free(arrayEntries.bulkentries_val);
+	if (arrayEntries.bulkentries_val)
+	    free(arrayEntries.bulkentries_val);
 	return code;
     }
-    code = ubik_Call(VL_ListAttributesN, cstruct, 0, attrp, entriesp, blkentriesp);
+    code =
+	ubik_Call(VL_ListAttributesN, cstruct, 0, attrp, entriesp,
+		  blkentriesp);
     if (!newvlserver) {
 	if (code == RXGEN_OPCODE) {
 	    newvlserver = 1;	/* Doesn't support new interface */
@@ -251,24 +266,25 @@ tryold:
     return code;
 }
 
-VLDB_ListAttributesN2(attrp, name, thisindex, nentriesp, blkentriesp, nextindexp)
-  VldbListByAttributes *attrp;
-  char                 *name;
-  afs_int32                thisindex;
-  afs_int32                *nentriesp;
-  nbulkentries         *blkentriesp;
-  afs_int32                *nextindexp;
+VLDB_ListAttributesN2(attrp, name, thisindex, nentriesp, blkentriesp,
+		      nextindexp)
+     VldbListByAttributes *attrp;
+     char *name;
+     afs_int32 thisindex;
+     afs_int32 *nentriesp;
+     nbulkentries *blkentriesp;
+     afs_int32 *nextindexp;
 {
-  afs_int32 code;
+    afs_int32 code;
 
-  code = ubik_Call(VL_ListAttributesN2, cstruct, 0, 
-		   attrp, (name?name:""), thisindex, 
-		   nentriesp, blkentriesp, nextindexp);
-  return code;
+    code =
+	ubik_Call(VL_ListAttributesN2, cstruct, 0, attrp, (name ? name : ""),
+		  thisindex, nentriesp, blkentriesp, nextindexp);
+    return code;
 }
 
 
-static int vlserverv4=-1;
+static int vlserverv4 = -1;
 struct cacheips {
     afs_int32 server;
     afs_int32 count;
@@ -281,54 +297,58 @@ struct cacheips {
  */
 #define GETADDRUCACHESIZE             64
 struct cacheips cacheips[GETADDRUCACHESIZE];
-int cacheip_index=0;
+int cacheip_index = 0;
 extern int VL_GetAddrsU();
 VLDB_IsSameAddrs(serv1, serv2, errorp)
-    afs_int32 serv1, serv2, *errorp;
+     afs_int32 serv1, serv2, *errorp;
 {
     register int code;
     ListAddrByAttributes attrs;
     bulkaddrs addrs;
-    afs_uint32 *addrp, nentries,  unique, i, j, f1, f2;
+    afs_uint32 *addrp, nentries, unique, i, j, f1, f2;
     afsUUID uuid;
     static int initcache = 0;
 
     *errorp = 0;
 
-    if (serv1 == serv2)   
+    if (serv1 == serv2)
 	return 1;
     if (vlserverv4 == 1) {
 	return 0;
     }
     if (!initcache) {
-	for (i=0; i < GETADDRUCACHESIZE; i++) {
-	   cacheips[i].server = cacheips[i].count = 0;
+	for (i = 0; i < GETADDRUCACHESIZE; i++) {
+	    cacheips[i].server = cacheips[i].count = 0;
 	}
 	initcache = 1;
     }
 
     /* See if it's cached */
-    for (i=0; i < GETADDRUCACHESIZE; i++) {
-       f1 = f2 = 0;
-       for (j=0; j < cacheips[i].count; j++) {
-	  if      (serv1 == cacheips[i].addrs[j]) f1 = 1;
-	  else if (serv2 == cacheips[i].addrs[j]) f2 = 1;
+    for (i = 0; i < GETADDRUCACHESIZE; i++) {
+	f1 = f2 = 0;
+	for (j = 0; j < cacheips[i].count; j++) {
+	    if (serv1 == cacheips[i].addrs[j])
+		f1 = 1;
+	    else if (serv2 == cacheips[i].addrs[j])
+		f2 = 1;
 
-	  if (f1 && f2)
-	     return 1;
-       }	
-       if (f1 || f2)
-	  return 0;
-       if (cacheips[i].server == serv1)
-          return 0;
-  }
+	    if (f1 && f2)
+		return 1;
+	}
+	if (f1 || f2)
+	    return 0;
+	if (cacheips[i].server == serv1)
+	    return 0;
+    }
 
     memset(&attrs, 0, sizeof(attrs));
     attrs.Mask = VLADDR_IPADDR;
     attrs.ipaddr = serv1;
     memset(&addrs, 0, sizeof(addrs));
     memset(&uuid, 0, sizeof(uuid));
-    code = ubik_Call(VL_GetAddrsU, cstruct, 0, &attrs, &uuid, &unique, &nentries, &addrs);
+    code =
+	ubik_Call(VL_GetAddrsU, cstruct, 0, &attrs, &uuid, &unique, &nentries,
+		  &addrs);
     if (vlserverv4 == -1) {
 	if (code == RXGEN_OPCODE) {
 	    vlserverv4 = 1;	/* Doesn't support new interface */
@@ -345,12 +365,14 @@ VLDB_IsSameAddrs(serv1, serv2, errorp)
     }
 
     code = 0;
-    if (nentries > GETADDRUCACHESIZE) nentries = GETADDRUCACHESIZE;  /* safety check; should not happen */
-    if (++cacheip_index >= GETADDRUCACHESIZE) cacheip_index = 0;
+    if (nentries > GETADDRUCACHESIZE)
+	nentries = GETADDRUCACHESIZE;	/* safety check; should not happen */
+    if (++cacheip_index >= GETADDRUCACHESIZE)
+	cacheip_index = 0;
     cacheips[cacheip_index].server = serv1;
     cacheips[cacheip_index].count = nentries;
     addrp = addrs.bulkaddrs_val;
-    for (i=0; i<nentries; i++, addrp++) {
+    for (i = 0; i < nentries; i++, addrp++) {
 	cacheips[cacheip_index].addrs[i] = *addrp;
 	if (serv2 == *addrp) {
 	    code = 1;
@@ -361,18 +383,23 @@ VLDB_IsSameAddrs(serv1, serv2, errorp)
 
 
 #ifdef	notdef
-afs_int32 subik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16)
-    register struct ubik_client *aclient;
-    int (*aproc)();
-    afs_int32 aflags;
-    afs_int32 p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16;
+afs_int32
+subik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10,
+	   p11, p12, p13, p14, p15, p16)
+     register struct ubik_client *aclient;
+     int (*aproc) ();
+     afs_int32 aflags;
+     afs_int32 p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14,
+	 p15, p16;
 {
     struct vldbentry vldbentry;
-    register int code, (*nproc)();
+    register int code, (*nproc) ();
 
     if (newvlserver == 1) {
     }
-    code = ubik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16);
+    code =
+	ubik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9,
+		  p10, p11, p12, p13, p14, p15, p16);
     if (!newvlserver) {
 	if (code == RXGEN_OPCODE) {
 	    newvlserver = 1;	/* Doesn't support new interface */
@@ -390,27 +417,29 @@ afs_int32 subik_Call(aproc, aclient, aflags, p1, p2, p3, p4, p5, p6, p7, p8, p9,
   Calling this function always results in a level of at least rxkad_auth;
   to get a rxkad_clear connection, simply don't call this.
 */
-void vsu_SetCrypt(cryptflag)
-    int cryptflag;
+void
+vsu_SetCrypt(cryptflag)
+     int cryptflag;
 {
-  if (cryptflag) {
-    vsu_rxkad_level = rxkad_crypt;
-  } else {
-    vsu_rxkad_level = rxkad_auth;
-  }
+    if (cryptflag) {
+	vsu_rxkad_level = rxkad_crypt;
+    } else {
+	vsu_rxkad_level = rxkad_auth;
+    }
 }
 
 
 /*
   Get the appropriate type of ubik client structure out from the system.
 */
-afs_int32 vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc)
-    int noAuthFlag;
-    int (*secproc)();
-    char *cellName;
-    struct ubik_client **uclientp;
-    char *confDir;
-    afs_int32 sauth;
+afs_int32
+vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc)
+     int noAuthFlag;
+     int (*secproc) ();
+     char *cellName;
+     struct ubik_client **uclientp;
+     char *confDir;
+     afs_int32 sauth;
 {
     afs_int32 code, scIndex, i;
     struct afsconf_cell info;
@@ -424,111 +453,123 @@ afs_int32 vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc
 
     code = rx_Init(0);
     if (code) {
-        fprintf(STDERR,"vsu_ClientInit: could not initialize rx.\n");
-        return code;
+	fprintf(STDERR, "vsu_ClientInit: could not initialize rx.\n");
+	return code;
     }
     rx_SetRxDeadTime(90);
 
-    if (sauth) {  /* -localauth */
-        tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
-        if (!tdir) {
-            fprintf(STDERR, "vsu_ClientInit: Could not process files in configuration directory (%s).\n",
-                    AFSDIR_SERVER_ETC_DIRPATH);
-            return -1;
-        }
-        code = afsconf_ClientAuth(tdir, &sc, &scIndex); /* sets sc,scIndex */
-        if (code) {
-            fprintf(STDERR, "vsu_ClientInit: Could not get security object for -localAuth\n");
-            return -1;
-        }
-        code = afsconf_GetCellInfo(tdir, tdir->cellName, AFSCONF_VLDBSERVICE,
-               &info);
-        if (code) {
-            fprintf(STDERR, "vsu_ClientInit: can't find cell %s's hosts in %s/%s\n",
-                   cellName, AFSDIR_SERVER_ETC_DIRPATH,AFSDIR_CELLSERVDB_FILE);
-            exit(1);
-        }
-    }
-    else {  /* not -localauth */
-        tdir = afsconf_Open(confDir);
-        if (!tdir) {
-            fprintf(STDERR, "vsu_ClientInit: Could not process files in configuration directory (%s).\n",
-                    confDir);
-            return -1;
-        }
+    if (sauth) {		/* -localauth */
+	tdir = afsconf_Open(AFSDIR_SERVER_ETC_DIRPATH);
+	if (!tdir) {
+	    fprintf(STDERR,
+		    "vsu_ClientInit: Could not process files in configuration directory (%s).\n",
+		    AFSDIR_SERVER_ETC_DIRPATH);
+	    return -1;
+	}
+	code = afsconf_ClientAuth(tdir, &sc, &scIndex);	/* sets sc,scIndex */
+	if (code) {
+	    fprintf(STDERR,
+		    "vsu_ClientInit: Could not get security object for -localAuth\n");
+	    return -1;
+	}
+	code =
+	    afsconf_GetCellInfo(tdir, tdir->cellName, AFSCONF_VLDBSERVICE,
+				&info);
+	if (code) {
+	    fprintf(STDERR,
+		    "vsu_ClientInit: can't find cell %s's hosts in %s/%s\n",
+		    cellName, AFSDIR_SERVER_ETC_DIRPATH,
+		    AFSDIR_CELLSERVDB_FILE);
+	    exit(1);
+	}
+    } else {			/* not -localauth */
+	tdir = afsconf_Open(confDir);
+	if (!tdir) {
+	    fprintf(STDERR,
+		    "vsu_ClientInit: Could not process files in configuration directory (%s).\n",
+		    confDir);
+	    return -1;
+	}
 
-        if (!cellName) {
-            code = afsconf_GetLocalCell(tdir, cellstr, sizeof(cellstr));
-            if (code) {
-                fprintf(STDERR, "vsu_ClientInit: can't get local cellname, check %s/%s\n",
-                        confDir, AFSDIR_THISCELL_FILE);
-                exit(1);
-            }
-            cellName = cellstr;
-        }
+	if (!cellName) {
+	    code = afsconf_GetLocalCell(tdir, cellstr, sizeof(cellstr));
+	    if (code) {
+		fprintf(STDERR,
+			"vsu_ClientInit: can't get local cellname, check %s/%s\n",
+			confDir, AFSDIR_THISCELL_FILE);
+		exit(1);
+	    }
+	    cellName = cellstr;
+	}
 
-        code = afsconf_GetCellInfo(tdir, cellName, AFSCONF_VLDBSERVICE, &info);
-        if (code) {
-            fprintf(STDERR, "vsu_ClientInit: can't find cell %s's hosts in %s/%s\n",
-                    cellName, confDir,AFSDIR_CELLSERVDB_FILE);
-            exit(1);
-        }
-        if (noAuthFlag)    /* -noauth */
-            scIndex = 0;
-        else {             /* not -noauth */
-            strcpy(sname.cell, info.name);
-            sname.instance[0] = 0;
-            strcpy(sname.name, "afs");
-            code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
-            if (code) {   /* did not get ticket */
-                fprintf(STDERR, "vsu_ClientInit: Could not get afs tokens, running unauthenticated.\n");
-                scIndex = 0;
-            }
-            else {     /* got a ticket */
-                scIndex = 2;
-                if ((ttoken.kvno < 0) || (ttoken.kvno > 255)) {
-                    fprintf(STDERR, "vsu_ClientInit: funny kvno (%d) in ticket, proceeding\n",
-                            ttoken.kvno);
-                }
-            }
-        }
+	code =
+	    afsconf_GetCellInfo(tdir, cellName, AFSCONF_VLDBSERVICE, &info);
+	if (code) {
+	    fprintf(STDERR,
+		    "vsu_ClientInit: can't find cell %s's hosts in %s/%s\n",
+		    cellName, confDir, AFSDIR_CELLSERVDB_FILE);
+	    exit(1);
+	}
+	if (noAuthFlag)		/* -noauth */
+	    scIndex = 0;
+	else {			/* not -noauth */
+	    strcpy(sname.cell, info.name);
+	    sname.instance[0] = 0;
+	    strcpy(sname.name, "afs");
+	    code = ktc_GetToken(&sname, &ttoken, sizeof(ttoken), NULL);
+	    if (code) {		/* did not get ticket */
+		fprintf(STDERR,
+			"vsu_ClientInit: Could not get afs tokens, running unauthenticated.\n");
+		scIndex = 0;
+	    } else {		/* got a ticket */
+		scIndex = 2;
+		if ((ttoken.kvno < 0) || (ttoken.kvno > 255)) {
+		    fprintf(STDERR,
+			    "vsu_ClientInit: funny kvno (%d) in ticket, proceeding\n",
+			    ttoken.kvno);
+		}
+	    }
+	}
 
-        switch (scIndex) {
-          case 0 :
-            sc = rxnull_NewClientSecurityObject();
-            break;
-          case 2:
-            sc = rxkad_NewClientSecurityObject(
-                 vsu_rxkad_level, &ttoken.sessionKey, ttoken.kvno,
-                 ttoken.ticketLen, ttoken.ticket);
-            break;
-          default:
-            fprintf(STDERR, "vsu_ClientInit: unsupported security index %d\n",
-                     scIndex);
-            exit(1);
-            break;
-        }
+	switch (scIndex) {
+	case 0:
+	    sc = rxnull_NewClientSecurityObject();
+	    break;
+	case 2:
+	    sc = rxkad_NewClientSecurityObject(vsu_rxkad_level,
+					       &ttoken.sessionKey,
+					       ttoken.kvno, ttoken.ticketLen,
+					       ttoken.ticket);
+	    break;
+	default:
+	    fprintf(STDERR, "vsu_ClientInit: unsupported security index %d\n",
+		    scIndex);
+	    exit(1);
+	    break;
+	}
     }
 
     afsconf_Close(tdir);
 
-    if (secproc)     /* tell UV module about default authentication */
-        (*secproc) (sc, scIndex);
+    if (secproc)		/* tell UV module about default authentication */
+	(*secproc) (sc, scIndex);
     if (info.numServers > VLDB_MAXSERVERS) {
-        fprintf(STDERR, "vsu_ClientInit: info.numServers=%d (> VLDB_MAXSERVERS=%d)\n",
-                info.numServers, VLDB_MAXSERVERS);
-        exit(1);
+	fprintf(STDERR,
+		"vsu_ClientInit: info.numServers=%d (> VLDB_MAXSERVERS=%d)\n",
+		info.numServers, VLDB_MAXSERVERS);
+	exit(1);
     }
-    for (i=0; i<info.numServers; i++) {
-        serverconns[i] = rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
-                         info.hostAddr[i].sin_port, USER_SERVICE_ID,
-                         sc, scIndex);
+    for (i = 0; i < info.numServers; i++) {
+	serverconns[i] =
+	    rx_NewConnection(info.hostAddr[i].sin_addr.s_addr,
+			     info.hostAddr[i].sin_port, USER_SERVICE_ID, sc,
+			     scIndex);
     }
     *uclientp = 0;
     code = ubik_ClientInit(serverconns, uclientp);
     if (code) {
-        fprintf(STDERR, "vsu_ClientInit: ubik client init failed.\n");
-        return code;
+	fprintf(STDERR, "vsu_ClientInit: ubik client init failed.\n");
+	return code;
     }
     return 0;
 }
@@ -537,28 +578,27 @@ afs_int32 vsu_ClientInit(noAuthFlag, confDir, cellName, sauth, uclientp, secproc
 /*extract the name of volume <name> without readonly or backup suffixes
  * and return the result as <rname>.
  */
-vsu_ExtractName(rname,name)
-char rname[],name[];
-{   char sname[VOLSER_OLDMAXVOLNAME+1];
+vsu_ExtractName(rname, name)
+     char rname[], name[];
+{
+    char sname[VOLSER_OLDMAXVOLNAME + 1];
     int total;
 
     strncpy(sname, name, sizeof(sname));
-    sname[sizeof(sname)-1] = '\0';
+    sname[sizeof(sname) - 1] = '\0';
     total = strlen(sname);
-    if(!strcmp(&sname[total - 9],".readonly")) {
+    if (!strcmp(&sname[total - 9], ".readonly")) {
 	/*discard the last 8 chars */
 	sname[total - 9] = '\0';
 	strcpy(rname, sname);
 	return 0;
-    }
-    else if(!strcmp(&sname[total - 7],".backup")) {
+    } else if (!strcmp(&sname[total - 7], ".backup")) {
 	/*discard last 6 chars */
 	sname[total - 7] = '\0';
-	strcpy(rname,sname);
+	strcpy(rname, sname);
 	return 0;
-    }
-    else {
-	strncpy(rname,name,VOLSER_OLDMAXVOLNAME);
+    } else {
+	strncpy(rname, name, VOLSER_OLDMAXVOLNAME);
 	rname[VOLSER_OLDMAXVOLNAME] = '\0';
 	return -1;
     }
@@ -566,13 +606,15 @@ char rname[],name[];
 
 
 /* returns 0 if failed */
-afs_uint32 vsu_GetVolumeID(astring, acstruct, errp)
-struct ubik_client *acstruct;
-afs_int32 *errp;
-char *astring; {
+afs_uint32
+vsu_GetVolumeID(astring, acstruct, errp)
+     struct ubik_client *acstruct;
+     afs_int32 *errp;
+     char *astring;
+{
     afs_uint32 tc, value;
 
-    char *str,*ptr, volname[VOLSER_OLDMAXVOLNAME+1];
+    char *str, *ptr, volname[VOLSER_OLDMAXVOLNAME + 1];
     int tryname, curval;
     struct nvldbentry entry;
     afs_int32 vcode = 0;
@@ -583,38 +625,49 @@ char *astring; {
     str = astring;
     ptr = astring;
     tryname = 0;
-    while ((curval = *str++)){
-	if(curval < '0' || curval > '9')
+    while ((curval = *str++)) {
+	if (curval < '0' || curval > '9')
 	    tryname = 1;
     }
 
-    if(tryname) {
-	vsu_ExtractName(volname,astring);
+    if (tryname) {
+	vsu_ExtractName(volname, astring);
 	vcode = VLDB_GetEntryByName(volname, &entry);
-	if(!vcode) {
-	    if(!strcmp(&astring[total - 9],".readonly"))
+	if (!vcode) {
+	    if (!strcmp(&astring[total - 9], ".readonly"))
 		return entry.volumeId[ROVOL];
-	    else if ((!strcmp(&astring[total - 7 ],".backup")))
+	    else if ((!strcmp(&astring[total - 7], ".backup")))
 		return entry.volumeId[BACKVOL];
 	    else
-		return (entry.volumeId[RWVOL]);   
+		return (entry.volumeId[RWVOL]);
 	} else {
 	    *errp = vcode;
-	    return 0;	/* can't find volume */
+	    return 0;		/* can't find volume */
 	}
     }
 
     value = 0;
     while ((tc = *astring++)) {
 	if (tc & 0x80) {
-	    if(!tryname) fprintf(STDERR,"goofed in volid \n");
-	    else {fprintf(STDERR,"Could not get entry from vldb for %s\n",ptr);PrintError("",vcode);}
+	    if (!tryname)
+		fprintf(STDERR, "goofed in volid \n");
+	    else {
+		fprintf(STDERR, "Could not get entry from vldb for %s\n",
+			ptr);
+		PrintError("", vcode);
+	    }
 	    *errp = EINVAL;
 	    return 0;
 	}
-	if (tc < '0' || tc > '9'){
-	    if(!tryname) fprintf(STDERR,"internal error: out of range char in vol ID\n");
-	    else {fprintf(STDERR,"Could not get entry from vldb for %s\n",ptr);PrintError("",vcode);}
+	if (tc < '0' || tc > '9') {
+	    if (!tryname)
+		fprintf(STDERR,
+			"internal error: out of range char in vol ID\n");
+	    else {
+		fprintf(STDERR, "Could not get entry from vldb for %s\n",
+			ptr);
+		PrintError("", vcode);
+	    }
 	    *errp = ERANGE;
 	    return 0;
 	}

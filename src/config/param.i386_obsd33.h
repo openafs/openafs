@@ -30,8 +30,8 @@
 #define AFS_MOUNT_AFS		"afs"
 
 #define RXK_LISTENER_ENV	1
-#define AFS_GCPAGS	        0       /* if nonzero, garbage collect PAGs */
-#define AFS_USE_GETTIMEOFDAY    1       /* use gettimeofday to implement rx clock */
+#define AFS_GCPAGS	        0	/* if nonzero, garbage collect PAGs */
+#define AFS_USE_GETTIMEOFDAY    1	/* use gettimeofday to implement rx clock */
 
 #define AFSLITTLE_ENDIAN	1
 
@@ -45,7 +45,7 @@
 #define	AFS_SHORTGID		0	/* are group id's short? */
 
 #if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__)
-enum vcexcl {NONEXCL, EXCL};
+enum vcexcl { NONEXCL, EXCL };
 
 #ifndef MIN
 #define MIN(A,B) ((A) < (B) ? (A) : (B))
@@ -54,7 +54,7 @@ enum vcexcl {NONEXCL, EXCL};
 #define MAX(A,B) ((A) > (B) ? (A) : (B))
 #endif
 
-#endif	/* ! ASSEMBLER & ! __LANGUAGE_ASSEMBLY__ */
+#endif /* ! ASSEMBLER & ! __LANGUAGE_ASSEMBLY__ */
 #endif /* _KERNEL */
 
 #endif /* AFS_PARAM_H */

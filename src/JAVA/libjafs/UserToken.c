@@ -42,11 +42,11 @@ pthread_mutex_t jafs_init_lock;
 extern pthread_mutex_t jafs_login_lock;
 
 extern int readCacheParms(char *afsMountPoint, char *afsConfDir,
-                          char *afsCacheDir,  int *cacheBlocks, 
-                          int *cacheFiles, int *cacheStatEntries,
-                          int *dCacheSize, int *vCacheSize, int *chunkSize,
-                          int *closeSynch, int *debug, int *nDaemons, 
-                          int *cacheFlags, char *logFile);
+			  char *afsCacheDir, int *cacheBlocks,
+			  int *cacheFiles, int *cacheStatEntries,
+			  int *dCacheSize, int *vCacheSize, int *chunkSize,
+			  int *closeSynch, int *debug, int *nDaemons,
+			  int *cacheFlags, char *logFile);
 
 /**
  * Be carefull with the memory management:
@@ -57,13 +57,14 @@ extern int readCacheParms(char *afsMountPoint, char *afsConfDir,
  * - For every malloc call the corresponding free.
  */
 
-int osi_audit(void)
+int
+osi_audit(void)
 {
-   return 0;
+    return 0;
 }
 
-JNIEXPORT void JNICALL Java_org_openafs_jafs_Token_callDebugger
-  (JNIEnv *env, jobject obj)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Token_callDebugger(JNIEnv * env, jobject obj)
 {
     fprintf(stderr, "callDebugger called\n");
     __asm__("int $0x3");
@@ -81,72 +82,67 @@ JNIEXPORT void JNICALL Java_org_openafs_jafs_Token_callDebugger
  *
  * throws AFSException
  */
-JNIEXPORT void JNICALL Java_org_openafs_jafs_Token_initUserSpace
-  (JNIEnv *env, jclass cls)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Token_initUserSpace(JNIEnv * env, jclass cls)
 {
-  char afsMountPoint[100], afsConfDir[100], afsCacheDir[100], logFile[100];
-  jfieldID fid;
-  int pagval;
+    char afsMountPoint[100], afsConfDir[100], afsCacheDir[100], logFile[100];
+    jfieldID fid;
+    int pagval;
 
-  /* Initialize each init parameter with its associated default value */
-  int cacheBlocks = 100000;
-  int cacheFiles  = 12500;
-  int cacheStatEntries = 8192;
-  int dCacheSize  = 11398;
-  int vCacheSize  = 128;
-  int chunkSize   = 0;
-  int closeSynch  = 0;
-  int debug       = 0;
-  int nDaemons    = 3; 
-  int cacheFlags  = -1;
+    /* Initialize each init parameter with its associated default value */
+    int cacheBlocks = 100000;
+    int cacheFiles = 12500;
+    int cacheStatEntries = 8192;
+    int dCacheSize = 11398;
+    int vCacheSize = 128;
+    int chunkSize = 0;
+    int closeSynch = 0;
+    int debug = 0;
+    int nDaemons = 3;
+    int cacheFlags = -1;
 
-  /* Initialize each init parameter with its associated default value */
-  strcpy(afsMountPoint, "/afs");
-  strcpy(afsConfDir,  "/usr/afswsp/etc");
-  strcpy(afsCacheDir, "/usr/afswsp/cache");
-  strcpy(logFile,     "/usr/afswsp/log/libjafs.log");
+    /* Initialize each init parameter with its associated default value */
+    strcpy(afsMountPoint, "/afs");
+    strcpy(afsConfDir, "/usr/afswsp/etc");
+    strcpy(afsCacheDir, "/usr/afswsp/cache");
+    strcpy(logFile, "/usr/afswsp/log/libjafs.log");
 
-  pthread_mutex_init(&jafs_init_lock, NULL);
-  pthread_mutex_lock(&jafs_init_lock);
+    pthread_mutex_init(&jafs_init_lock, NULL);
+    pthread_mutex_lock(&jafs_init_lock);
 
-  readCacheParms(afsMountPoint, afsConfDir, afsCacheDir,
-                 &cacheBlocks, &cacheFiles, &cacheStatEntries,
-                 &dCacheSize, &vCacheSize, &chunkSize,
-                 &closeSynch, &debug, &nDaemons, &cacheFlags,
-                 logFile);
+    readCacheParms(afsMountPoint, afsConfDir, afsCacheDir, &cacheBlocks,
+		   &cacheFiles, &cacheStatEntries, &dCacheSize, &vCacheSize,
+		   &chunkSize, &closeSynch, &debug, &nDaemons, &cacheFlags,
+		   logFile);
 
-  /* See cache.tune for configuration details */
-  if (debug) {
-    fprintf(stderr, "uafs_Init(\"init_native\", \"%s\", \"%s\", \"%s\",
+    /* See cache.tune for configuration details */
+    if (debug) {
+	fprintf(stderr, "uafs_Init(\"init_native\", \"%s\", \"%s\", \"%s\",
                       %d, %d, %d,
                       %d, %d, %d,
-                      %d, %d, %d, %d, \"%s\");\n",
-              afsMountPoint, afsConfDir, afsCacheDir,
-              cacheBlocks, cacheFiles, cacheStatEntries,
-              dCacheSize, vCacheSize, chunkSize,
-              closeSynch, debug, nDaemons, cacheFlags, logFile);
-  }
-  uafs_Init("init_native", afsMountPoint, afsConfDir, afsCacheDir,
-             cacheBlocks, cacheFiles, cacheStatEntries,
-             dCacheSize, vCacheSize, chunkSize,
-             closeSynch, debug, nDaemons, cacheFlags, logFile);
+                      %d, %d, %d, %d, \"%s\");\n", afsMountPoint, afsConfDir, afsCacheDir, cacheBlocks, cacheFiles, cacheStatEntries, dCacheSize, vCacheSize, chunkSize, closeSynch, debug, nDaemons, cacheFlags, logFile);
+    }
+    uafs_Init("init_native", afsMountPoint, afsConfDir, afsCacheDir,
+	      cacheBlocks, cacheFiles, cacheStatEntries, dCacheSize,
+	      vCacheSize, chunkSize, closeSynch, debug, nDaemons, cacheFlags,
+	      logFile);
 
 
-  /* make the initial pag the unauthenticated pag */
-  afs_setpag();
-  uafs_unlog();
-  pagval = afs_getpag_val();
+    /* make the initial pag the unauthenticated pag */
+    afs_setpag();
+    uafs_unlog();
+    pagval = afs_getpag_val();
 
-  fid = (*env)->GetStaticFieldID(env, cls, "ANYUSER_PAG_ID", "I");
-  if (fid == 0) {
-    fprintf(stderr,
-    "UserToken::init(): GetFieldID (ANYUSER_PAG_ID) failed\n");
-    return;
-  }
-    
-  (*env)->SetStaticIntField(env, cls, fid, pagval);
+    fid = (*env)->GetStaticFieldID(env, cls, "ANYUSER_PAG_ID", "I");
+    if (fid == 0) {
+	fprintf(stderr,
+		"UserToken::init(): GetFieldID (ANYUSER_PAG_ID) failed\n");
+	return;
+    }
 
-  pthread_mutex_unlock(&jafs_init_lock);
+    (*env)->SetStaticIntField(env, cls, fid, pagval);
+
+    pthread_mutex_unlock(&jafs_init_lock);
 }
 
 /**
@@ -164,87 +160,103 @@ JNIEXPORT void JNICALL Java_org_openafs_jafs_Token_initUserSpace
  * throws AFSException
  */
 JNIEXPORT jint JNICALL
-Java_org_openafs_jafs_Token_klog (JNIEnv *env, jobject obj,
-  jstring jusername, jstring jpassword, jstring jcell, jint id)
+Java_org_openafs_jafs_Token_klog(JNIEnv * env, jobject obj, jstring jusername,
+				 jstring jpassword, jstring jcell, jint id)
 {
-  char *username;
-  char *password;
-  char *cell;
-  char *reason;
-  int   code;
-  jint  rc = -1;
+    char *username;
+    char *password;
+    char *cell;
+    char *reason;
+    int code;
+    jint rc = -1;
 
-  if ( jcell != NULL ) { 
-    cell = getNativeString(env, jcell);
-    if ( !cell ) {
-      fprintf(stderr, "UserToken::klog(): failed to get cell name\n");
-      throwMessageException( env, "Internal error, failed to translate cell name." );
-      return -1;
+    if (jcell != NULL) {
+	cell = getNativeString(env, jcell);
+	if (!cell) {
+	    fprintf(stderr, "UserToken::klog(): failed to get cell name\n");
+	    throwMessageException(env,
+				  "Internal error, failed to translate cell name.");
+	    return -1;
+	}
+    } else {
+	cell = NULL;
     }
-  } else {
-    cell = NULL;
-  }
 
-  if ( jusername != NULL ) {
-    username = getNativeString(env, jusername);
-    if ( !username ) {
-      if ( cell != NULL ) free( cell );
-      fprintf(stderr, "UserToken::klog(): failed to get username\n");
-      throwMessageException( env, "Internal error, failed to translate username." );
-      return -1;
+    if (jusername != NULL) {
+	username = getNativeString(env, jusername);
+	if (!username) {
+	    if (cell != NULL)
+		free(cell);
+	    fprintf(stderr, "UserToken::klog(): failed to get username\n");
+	    throwMessageException(env,
+				  "Internal error, failed to translate username.");
+	    return -1;
+	}
+    } else {
+	if (cell != NULL)
+	    free(cell);
+	throwAFSException(env, JAFSNULLUSER);
+	return -1;
     }
-  } else {
-    if ( cell != NULL ) free( cell );
-    throwAFSException( env, JAFSNULLUSER );
-    return -1;
-  }
 
-  if ( jpassword != NULL ) {
-    password = getNativeString(env, jpassword);
-    if ( !password ) {
-      if ( cell != NULL ) free( cell );
-      free( username );
-      fprintf(stderr, "UserToken::klog(): failed to get password\n");
-      throwMessageException( env, "Internal error, failed to translate password." );
-      return -1;
+    if (jpassword != NULL) {
+	password = getNativeString(env, jpassword);
+	if (!password) {
+	    if (cell != NULL)
+		free(cell);
+	    free(username);
+	    fprintf(stderr, "UserToken::klog(): failed to get password\n");
+	    throwMessageException(env,
+				  "Internal error, failed to translate password.");
+	    return -1;
+	}
+    } else {
+	if (cell != NULL)
+	    free(cell);
+	free(username);
+	throwAFSException(env, JAFSNULLPASS);
+	return -1;
     }
-  } else {
-    if ( cell != NULL ) free( cell );
-    free( username );
-    throwAFSException( env, JAFSNULLPASS );
-    return -1;
-  }
 
-  if (id == 0) {
-    code = uafs_klog(username, cell, password, &reason);
-  } else {
-    /* Use existing PAG for this thread */
-    code = afs_setpag_val(id);
-    if (code != 0) code = 180492L;  /* KABADARGUMENT */
-    if (!code) code = uafs_klog_nopag(username, cell, password, &reason);
-  }
+    if (id == 0) {
+	code = uafs_klog(username, cell, password, &reason);
+    } else {
+	/* Use existing PAG for this thread */
+	code = afs_setpag_val(id);
+	if (code != 0)
+	    code = 180492L;	/* KABADARGUMENT */
+	if (!code)
+	    code = uafs_klog_nopag(username, cell, password, &reason);
+    }
 
-  if (code != 0) {
-    if ( cell     != NULL ) free( cell );
-    if ( username != NULL ) free( username );
-    if ( password != NULL ) free( password );
-    fprintf(stderr, "UserToken::klog(): uafs_klog failed to cell %s: %s\n",
-                     cell, reason);
-    fprintf(stderr, "code = %d\n", code);
-    throwAFSException( env, code );
-    return -1;
-  }
+    if (code != 0) {
+	if (cell != NULL)
+	    free(cell);
+	if (username != NULL)
+	    free(username);
+	if (password != NULL)
+	    free(password);
+	fprintf(stderr,
+		"UserToken::klog(): uafs_klog failed to cell %s: %s\n", cell,
+		reason);
+	fprintf(stderr, "code = %d\n", code);
+	throwAFSException(env, code);
+	return -1;
+    }
 
-  /* Get the PAG we were assigned as the return value */
-  rc = afs_getpag_val();
+    /* Get the PAG we were assigned as the return value */
+    rc = afs_getpag_val();
 
-  /* clean up */
-  if ( cell     != NULL ) free( cell );
-  if ( username != NULL ) free( username );
-  if ( password != NULL ) free( password );
+    /* clean up */
+    if (cell != NULL)
+	free(cell);
+    if (username != NULL)
+	free(username);
+    if (password != NULL)
+	free(password);
 
-  /* return PAG ID */
-  return rc;
+    /* return PAG ID */
+    return rc;
 }
 
 /**
@@ -261,16 +273,16 @@ Java_org_openafs_jafs_Token_klog (JNIEnv *env, jobject obj,
  *
  * throws AFSException
  */
-JNIEXPORT void JNICALL Java_org_openafs_jafs_Token_relog
-  (JNIEnv *env, jobject obj, jint id)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Token_relog(JNIEnv * env, jobject obj, jint id)
 {
-  int rc;
+    int rc;
 
-  rc = afs_setpag_val(id);
+    rc = afs_setpag_val(id);
 
-  if (rc != 0) {
-    throwAFSException( env, rc );
-  }
+    if (rc != 0) {
+	throwAFSException(env, rc);
+    }
 }
 
 /**
@@ -282,16 +294,16 @@ JNIEXPORT void JNICALL Java_org_openafs_jafs_Token_relog
  *
  * throws AFSException
  */
-JNIEXPORT void JNICALL Java_org_openafs_jafs_Token_unlog
-  (JNIEnv *env, jobject obj)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Token_unlog(JNIEnv * env, jobject obj)
 {
-  int rc;
+    int rc;
 
-  rc = uafs_unlog();
+    rc = uafs_unlog();
 
-  if (rc != 0) {
-    throwAFSException( env, rc );
-  }
+    if (rc != 0) {
+	throwAFSException(env, rc);
+    }
 }
 
 /**
@@ -306,8 +318,8 @@ JNIEXPORT void JNICALL Java_org_openafs_jafs_Token_unlog
  *
  * throws AFSException
  */
-JNIEXPORT void JNICALL Java_org_openafs_jafs_Token_shutdown
-  (JNIEnv *env, jobject obj)
+JNIEXPORT void JNICALL
+Java_org_openafs_jafs_Token_shutdown(JNIEnv * env, jobject obj)
 {
-  uafs_Shutdown();
+    uafs_Shutdown();
 }

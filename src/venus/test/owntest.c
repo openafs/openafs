@@ -13,7 +13,8 @@
 #include <stdlib.h>
 #endif
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <sys/types.h>
 #include <sys/file.h>
@@ -24,27 +25,29 @@ RCSID("$Header$");
 extern int errno;
 
 main(argc, argv)
-int argc;
-char **argv; {
+     int argc;
+     char **argv;
+{
     struct timeval tv[2];
     struct stat tstat;
     register long code;
-    register char *pn;	/* path name we're dealing with */
+    register char *pn;		/* path name we're dealing with */
 
     if (argc != 2) {
-	printf("usage: owntest <file owned by somoneelse, but still writable>\n");
+	printf
+	    ("usage: owntest <file owned by somoneelse, but still writable>\n");
 	exit(1);
     }
 
     pn = argv[1];
     printf("Starting tests on %s.\n", pn);
     code = chmod(pn, 0444);
-    if (code<0) {
+    if (code < 0) {
 	perror("chmod to RO");
 	exit(errno);
     }
     code = chmod(pn, 0666);
-    if (code<0) {
+    if (code < 0) {
 	perror("chmod back to RW");
 	exit(errno);
     }
@@ -55,12 +58,12 @@ char **argv; {
     tv[1].tv_sec -= 20000;
     tv[1].tv_usec = 0;
     code = utimes(pn, tv);
-    if (code<0) {
+    if (code < 0) {
 	perror("utimes");
 	exit(errno);
     }
     code = stat(pn, &tstat);
-    if (code<0) {
+    if (code < 0) {
 	perror("stat");
 	exit(errno);
     }

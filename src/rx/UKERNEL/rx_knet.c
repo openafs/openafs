@@ -10,14 +10,15 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "rx/rx_kcommon.h"
 
 
 #define SECONDS_TO_SLEEP	0
-#define NANO_SECONDS_TO_SLEEP	100000000 /* 100 milliseconds */
-#define LOOPS_PER_WAITCHECK	10	  /* once per second */
+#define NANO_SECONDS_TO_SLEEP	100000000	/* 100 milliseconds */
+#define LOOPS_PER_WAITCHECK	10	/* once per second */
 
 unsigned short usr_rx_port = 0;
 
@@ -26,22 +27,23 @@ struct usr_in_ifaddr *usr_in_ifaddr = NULL;
 
 void rxk_InitializeSocket();
 
-void afs_rxevent_daemon(void)
+void
+afs_rxevent_daemon(void)
 {
     struct timespec tv;
     struct clock temp;
     int i = 0;
 
     AFS_GUNLOCK();
-    while(1) {
+    while (1) {
 	tv.tv_sec = SECONDS_TO_SLEEP;
 	tv.tv_nsec = NANO_SECONDS_TO_SLEEP;
 	usr_thread_sleep(&tv);
 	/*
 	 * Check for shutdown, don't try to stop the listener
 	 */
-        if (afs_termState == AFSOP_STOP_RXEVENT ||
-	    afs_termState == AFSOP_STOP_RXK_LISTENER) {
+	if (afs_termState == AFSOP_STOP_RXEVENT
+	    || afs_termState == AFSOP_STOP_RXK_LISTENER) {
 	    AFS_GLOCK();
 	    afs_termState = AFSOP_STOP_COMPLETE;
 	    afs_osi_Wakeup(&afs_termState);
@@ -58,7 +60,8 @@ void afs_rxevent_daemon(void)
 
 /* Loop to listen on a socket. Return setting *newcallp if this
  * thread should become a server thread.  */
-void rxi_ListenerProc(osi_socket usockp, int *tnop, struct rx_call **newcallp)
+void
+rxi_ListenerProc(osi_socket usockp, int *tnop, struct rx_call **newcallp)
 {
     struct rx_packet *tp;
     afs_uint32 host;
@@ -86,7 +89,7 @@ void rxi_ListenerProc(osi_socket usockp, int *tnop, struct rx_call **newcallp)
 	if (tp) {
 	    rxi_FreePacket(tp);
 	}
-	if (afs_termState == AFSOP_STOP_RXEVENT ) {
+	if (afs_termState == AFSOP_STOP_RXEVENT) {
 	    afs_termState = AFSOP_STOP_RXK_LISTENER;
 	    afs_osi_Wakeup(&afs_termState);
 	}
@@ -96,7 +99,8 @@ void rxi_ListenerProc(osi_socket usockp, int *tnop, struct rx_call **newcallp)
 /* This is the listener process request loop. The listener process loop
  * becomes a server thread when rxi_ListenerProc returns, and stays
  * server thread until rxi_ServerProc returns. */
-void rxk_Listener(void)
+void
+rxk_Listener(void)
 {
     int threadID;
     osi_socket sock = (osi_socket) rx_socket;
@@ -112,7 +116,7 @@ void rxk_Listener(void)
     assert(usockp != NULL);
 
     AFS_GUNLOCK();
-    while(1) {
+    while (1) {
 	newcall = NULL;
 	threadID = -1;
 	rxi_ListenerProc(sock, &threadID, &newcall);
@@ -130,20 +134,21 @@ void rxk_Listener(void)
 /* This is the server process request loop. The server process loop
  * becomes a listener thread when rxi_ServerProc returns, and stays
  * listener thread until rxi_ListenerProc returns. */
-void rx_ServerProc(void)
+void
+rx_ServerProc(void)
 {
     osi_socket sock;
     int threadID;
     struct rx_call *newcall = NULL;
 
-    rxi_MorePackets(rx_maxReceiveWindow+2); /* alloc more packets */
+    rxi_MorePackets(rx_maxReceiveWindow + 2);	/* alloc more packets */
     rxi_dataQuota += rx_initSendWindow;	/* Reserve some pkts for hard times */
     /* threadID is used for making decisions in GetCall.  Get it by bumping
      * number of threads handling incoming calls */
     threadID = rxi_availProcs++;
 
     AFS_GUNLOCK();
-    while(1) {
+    while (1) {
 	sock = OSI_NULLSOCKET;
 	rxi_ServerProc(threadID, newcall, &sock);
 	if (sock == OSI_NULLSOCKET) {
@@ -164,7 +169,8 @@ void rx_ServerProc(void)
  * routines. Allocate the socket buffer here, but don't open it until
  * we start the receiver threads.
  */
-struct osi_socket *rxk_NewSocket(short aport)
+struct osi_socket *
+rxk_NewSocket(short aport)
 {
     struct usr_socket *usockp;
 
@@ -182,7 +188,8 @@ struct osi_socket *rxk_NewSocket(short aport)
  * we allocated in rxk_NewSocket. Now is the time to bind our
  * socket and start the receiver threads.
  */
-void rxk_InitializeSocket(void)
+void
+rxk_InitializeSocket(void)
 {
     int rc, sock, i;
 #ifdef AFS_USR_AIX_ENV
@@ -215,12 +222,11 @@ void rxk_InitializeSocket(void)
     optval0 = 131072;
 #endif
     optval = optval0;
-    rc = setsockopt(sock, SOL_SOCKET, SO_SNDBUF,
-		    (void *)&optval, sizeof(optval));
+    rc = setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (void *)&optval,
+		    sizeof(optval));
     usr_assert(rc == 0);
     optlen = sizeof(optval);
-    rc = getsockopt(sock, SOL_SOCKET, SO_SNDBUF,
-		    (void *)&optval, &optlen);
+    rc = getsockopt(sock, SOL_SOCKET, SO_SNDBUF, (void *)&optval, &optlen);
     usr_assert(rc == 0);
     usr_assert(optval == optval0);
 #ifdef AFS_USR_LINUX22_ENV
@@ -229,19 +235,18 @@ void rxk_InitializeSocket(void)
     optval0 = 131072;
 #endif
     optval = optval0;
-    rc = setsockopt(sock, SOL_SOCKET, SO_RCVBUF,
-		    (void *)&optval, sizeof(optval));
+    rc = setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (void *)&optval,
+		    sizeof(optval));
     usr_assert(rc == 0);
     optlen = sizeof(optval);
-    rc = getsockopt(sock, SOL_SOCKET, SO_RCVBUF,
-		    (void *)&optval, &optlen);
+    rc = getsockopt(sock, SOL_SOCKET, SO_RCVBUF, (void *)&optval, &optlen);
     usr_assert(rc == 0);
     usr_assert(optval == optval0);
 
 #ifdef AFS_USR_AIX_ENV
     optval = 1;
-    rc = setsockopt(sock, SOL_SOCKET, SO_CKSUMRECV,
-		    (void *)&optval, sizeof(optval));
+    rc = setsockopt(sock, SOL_SOCKET, SO_CKSUMRECV, (void *)&optval,
+		    sizeof(optval));
     usr_assert(rc == 0);
 #endif /* AFS_USR_AIX_ENV */
 
@@ -255,18 +260,21 @@ void rxk_InitializeSocket(void)
     rx_port = usockp->port;
 }
 
-int rxk_FreeSocket(struct usr_socket *sockp)
+int
+rxk_FreeSocket(struct usr_socket *sockp)
 {
     return 0;
 }
 
-void osi_StopListener(void)
+void
+osi_StopListener(void)
 {
     rxk_FreeSocket((struct usr_socket *)rx_socket);
 }
 
-int osi_NetSend(osi_socket sockp, struct sockaddr_in *addr, 
-	struct iovec *iov, int nio, afs_int32 size, int stack) 
+int
+osi_NetSend(osi_socket sockp, struct sockaddr_in *addr, struct iovec *iov,
+	    int nio, afs_int32 size, int stack)
 {
     int rc;
     int i;
@@ -279,7 +287,7 @@ int osi_NetSend(osi_socket sockp, struct sockaddr_in *addr,
      * The header is in the first iovec
      */
     usr_assert(nio > 0 && nio <= 64);
-    for (i = 0 ; i < nio ; i++) {
+    for (i = 0; i < nio; i++) {
 	tmpiov[i].iov_base = iov[i].iov_base;
 	tmpiov[i].iov_len = iov[i].iov_len;
     }
@@ -299,13 +307,15 @@ int osi_NetSend(osi_socket sockp, struct sockaddr_in *addr,
     return 0;
 }
 
-void shutdown_rxkernel(void)
+void
+shutdown_rxkernel(void)
 {
     rxk_initDone = 0;
     rxk_shutdownPorts();
 }
 
-void rx_Finalize(void)
+void
+rx_Finalize(void)
 {
     usr_assert(0);
 }
@@ -314,7 +324,8 @@ void rx_Finalize(void)
  * Recvmsg.
  *
  */
-int rxi_Recvmsg(int socket, struct msghdr *msg_p, int flags)
+int
+rxi_Recvmsg(int socket, struct msghdr *msg_p, int flags)
 {
     int ret;
     do {
@@ -322,4 +333,3 @@ int rxi_Recvmsg(int socket, struct msghdr *msg_p, int flags)
     } while (ret == -1 && errno == EAGAIN);
     return ret;
 }
-

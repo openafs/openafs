@@ -7,7 +7,7 @@
  * directory or online at http://www.openafs.org/dl/license10.html
  */
 
-/* Event package */ 
+/* Event package */
 
 #ifndef _EVENT_
 #define _EVENT_
@@ -23,11 +23,11 @@
 /* An event is something that will happen at (or after) a specified clock time, unless cancelled prematurely.  The user routine (*func)() is called with arguments (event, arg, arg1) when the event occurs.  Warnings:  (1) The user supplied routine should NOT cause process preemption.   (2) The event passed to the user is still on the event queue at that time.  The user must not remove (event_Cancel) it explicitly, but the user may remove or schedule any OTHER event at this time. */
 
 struct rxevent {
-    struct rx_queue junk;    /* Events are queued */
-    struct clock eventTime; /* When this event times out (in clock.c units) */
-    void (*func)();	    /* Function to call when this expires */
-    char *arg;		    /* Argument to the function */
-    char *arg1;		    /* Another argument */
+    struct rx_queue junk;	/* Events are queued */
+    struct clock eventTime;	/* When this event times out (in clock.c units) */
+    void (*func) ();		/* Function to call when this expires */
+    char *arg;			/* Argument to the function */
+    char *arg1;			/* Another argument */
 };
 
 /* We used to maintain a sorted list of events, but the amount of CPU
@@ -38,7 +38,7 @@ struct rxevent {
 struct rxepoch {
     struct rx_queue junk;	/* Epochs are queued */
     int epochSec;		/* each epoch spans one second */
-    struct rx_queue events;     /* list of events for this epoch */
+    struct rx_queue events;	/* list of events for this epoch */
 };
 
 /* Some macros to make macros more reasonable (this allows a block to be used within a macro which does not cause if statements to screw up).   That is, you can use "if (...) macro_name(); else ...;" without having things blow up on the semi-colon. */
@@ -50,17 +50,17 @@ struct rxepoch {
 
 /* This routine must be called to initialize the event package.  nEvents is the number of events to allocate in a batch whenever more are needed.  If this is 0, a default number (10) will be allocated. */
 #if 0
-extern void rxevent_Init(/* nEvents, scheduler */);
+extern void rxevent_Init( /* nEvents, scheduler */ );
 #endif
 
 /* Get the expiration time for the next event */
 #if 0
-extern void exevent_NextEvent(/* when */);
+extern void exevent_NextEvent( /* when */ );
 #endif
 
 /* Arrange for the indicated event at the appointed time.  When is a "struct clock", in the clock.c time base */
 #if 0
-extern struct rxevent *rxevent_Post(/* when, func, arg, arg1 */);
+extern struct rxevent *rxevent_Post( /* when, func, arg, arg1 */ );
 #endif
 
 /* Remove the indicated event from the event queue.  The event must be pending.  Also see the warning, above.  The event pointer supplied is zeroed. */

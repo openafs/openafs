@@ -29,7 +29,7 @@
 
 #define	SYS_NAME_ID_UNDEFINED		   0
 
-	
+
 #define SYS_NAME_ID_aux_10		 200
 
 #define SYS_NAME_ID_pmax_ul4		 305
@@ -50,7 +50,7 @@
 #define SYS_NAME_ID_hp_ux11i             416
 #define SYS_NAME_ID_ia64_hpux1122		 417
 
-#define SYS_NAME_ID_mac2_51		 500	
+#define SYS_NAME_ID_mac2_51		 500
 #define SYS_NAME_ID_mac_aux10		 501
 #define SYS_NAME_ID_mac_mach51		 502
 #define SYS_NAME_ID_ppc_darwin_12        503
@@ -197,11 +197,11 @@
  * Placeholder to keep system-wide standard flags since this file is included by all 
  * files (i.e in afs/param.h)
  */
-#ifdef	notdef	
+#ifdef	notdef
 /* Should be enabled by src sites that are compiling afs in a kerberos environment
  * (i.e. use their headers and libs) and want to use the realm-related kerberos code
  */
-#define	AFS_ATHENA_STDENV		1   
+#define	AFS_ATHENA_STDENV		1
 #endif
 #ifdef	AFS_ATHENA_STDENV
 /* So that they don't get our own version of the kerb-related function  in libutil.a */
@@ -212,7 +212,7 @@
 /* Should be enabled by src sites that are compiling afs without the kerb headers/libs
  * but want to use the kerberos realm-related code
  */
-#define	AFS_KERBREALM_ENV	1   
+#define	AFS_KERBREALM_ENV	1
 #ifdef	AFS_KERBREALM_ENV
 #define	AFS_REALM_SZ		64
 #endif

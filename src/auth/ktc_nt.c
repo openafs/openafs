@@ -12,7 +12,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/stds.h>
 #include <stdio.h>
@@ -34,18 +35,16 @@ RCSID("$Header$");
 /* Forward declarations for local token cache. */
 static int SetLocalToken(struct ktc_principal *aserver,
 			 struct ktc_token *atoken,
-			 struct ktc_principal *aclient,
-			 afs_int32 flags);
+			 struct ktc_principal *aclient, afs_int32 flags);
 static int GetLocalToken(struct ktc_principal *aserver,
-			 struct ktc_token *atoken,
-			 int atokenLen,
+			 struct ktc_token *atoken, int atokenLen,
 			 struct ktc_principal *aclient);
 static int ForgetLocalTokens();
 static int ForgetOneLocalToken(struct ktc_principal *aserver);
 
 
 static char AFSConfigKeyName[] =
-	"SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters";
+    "SYSTEM\\CurrentControlSet\\Services\\TransarcAFSDaemon\\Parameters";
 
 /*
  * Support for RPC's to send and receive session keys
@@ -58,14 +57,16 @@ static char AFSConfigKeyName[] =
 
 char rpcErr[256];
 
-void __RPC_FAR * __RPC_USER midl_user_allocate (size_t cBytes)
+void __RPC_FAR *__RPC_USER
+midl_user_allocate(size_t cBytes)
 {
-	return ((void __RPC_FAR *) malloc(cBytes));
+    return ((void __RPC_FAR *)malloc(cBytes));
 }
 
-void __RPC_USER midl_user_free(void __RPC_FAR * p)
+void __RPC_USER
+midl_user_free(void __RPC_FAR * p)
 {
-	free(p);
+    free(p);
 }
 
 /*
@@ -73,607 +74,590 @@ void __RPC_USER midl_user_free(void __RPC_FAR * p)
  * the same as the client (i.e. standalone, non-gateway), NULL can be
  * used, so it is not necessary to call gethostbyname().
  */
-void getservername(char **snp, unsigned int snSize)
+void
+getservername(char **snp, unsigned int snSize)
 {
-	HKEY parmKey;
-	long code;
+    HKEY parmKey;
+    long code;
 
-	code = RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName,
-			    0, KEY_QUERY_VALUE, &parmKey);
-	if (code != ERROR_SUCCESS)
-		goto nogateway;
-	code = RegQueryValueEx(parmKey, "Gateway", NULL, NULL,
-				*snp, &snSize);
-	RegCloseKey (parmKey);
-	if (code == ERROR_SUCCESS)
-		return;
-nogateway:
-	/* No gateway name in registry; use ourself */
-	*snp = NULL;
+    code =
+	RegOpenKeyEx(HKEY_LOCAL_MACHINE, AFSConfigKeyName, 0, KEY_QUERY_VALUE,
+		     &parmKey);
+    if (code != ERROR_SUCCESS)
+	goto nogateway;
+    code = RegQueryValueEx(parmKey, "Gateway", NULL, NULL, *snp, &snSize);
+    RegCloseKey(parmKey);
+    if (code == ERROR_SUCCESS)
+	return;
+  nogateway:
+    /* No gateway name in registry; use ourself */
+    *snp = NULL;
 }
 
-RPC_STATUS send_key(afs_uuid_t uuid, char sessionKey[8])
+RPC_STATUS
+send_key(afs_uuid_t uuid, char sessionKey[8])
 {
-	RPC_STATUS status;
-	char *stringBinding = NULL;
-	ULONG authnLevel, authnSvc;
-	char serverName[256];
-	char *serverNamep = serverName;
-	char encrypt[32];
-	BOOL encryptionOff = FALSE;
-	char protseq[32];
+    RPC_STATUS status;
+    char *stringBinding = NULL;
+    ULONG authnLevel, authnSvc;
+    char serverName[256];
+    char *serverNamep = serverName;
+    char encrypt[32];
+    BOOL encryptionOff = FALSE;
+    char protseq[32];
 
-	/* Encryption on by default */
-	if (GetEnvironmentVariable("AFS_RPC_ENCRYPT",
-				   encrypt, sizeof(encrypt)))
-		if (!strcmpi(encrypt, "OFF"))
-			encryptionOff = TRUE;
+    /* Encryption on by default */
+    if (GetEnvironmentVariable("AFS_RPC_ENCRYPT", encrypt, sizeof(encrypt)))
+	if (!strcmpi(encrypt, "OFF"))
+	    encryptionOff = TRUE;
 
-	/* Protocol sequence is named pipe by default */
-	if (!GetEnvironmentVariable("AFS_RPC_PROTSEQ",
-				    protseq, sizeof(protseq)))
-		strcpy(protseq, "ncacn_np");
+    /* Protocol sequence is named pipe by default */
+    if (!GetEnvironmentVariable("AFS_RPC_PROTSEQ", protseq, sizeof(protseq)))
+	strcpy(protseq, "ncacn_np");
 
-	/* Server name */
-	getservername(&serverNamep, sizeof(serverName));
+    /* Server name */
+    getservername(&serverNamep, sizeof(serverName));
 
-	status = RpcStringBindingCompose("",	/* obj uuid */
-					 protseq,
-					 serverNamep,
-					 "",	/* endpoint */
-					 "",	/* protocol options */
-					 &stringBinding);
-	if (status != RPC_S_OK)
-		goto cleanup;
+    status = RpcStringBindingCompose("",	/* obj uuid */
+				     protseq, serverNamep, "",	/* endpoint */
+				     "",	/* protocol options */
+				     &stringBinding);
+    if (status != RPC_S_OK)
+	goto cleanup;
 
-	status = RpcBindingFromStringBinding(stringBinding, &hAfsHandle);
-	if (status != RPC_S_OK)
-		goto cleanup;
+    status = RpcBindingFromStringBinding(stringBinding, &hAfsHandle);
+    if (status != RPC_S_OK)
+	goto cleanup;
 
-	/*
-	 * On Windows 95/98, we must resolve the binding before calling
-	 * SetAuthInfo.  On Windows NT, we don't have to resolve yet,
-	 * but it does no harm.
-	 */
-	status = RpcEpResolveBinding(hAfsHandle, afsrpc_v1_0_c_ifspec);
-	if (status != RPC_S_OK)
-		goto cleanup;
+    /*
+     * On Windows 95/98, we must resolve the binding before calling
+     * SetAuthInfo.  On Windows NT, we don't have to resolve yet,
+     * but it does no harm.
+     */
+    status = RpcEpResolveBinding(hAfsHandle, afsrpc_v1_0_c_ifspec);
+    if (status != RPC_S_OK)
+	goto cleanup;
 
-	if (encryptionOff) {
-		authnLevel = RPC_C_AUTHN_LEVEL_NONE;
-		authnSvc = RPC_C_AUTHN_WINNT;
-	} else {
-		authnLevel = RPC_C_AUTHN_LEVEL_PKT_PRIVACY;
-		authnSvc = RPC_C_AUTHN_WINNT;
-	}
+    if (encryptionOff) {
+	authnLevel = RPC_C_AUTHN_LEVEL_NONE;
+	authnSvc = RPC_C_AUTHN_WINNT;
+    } else {
+	authnLevel = RPC_C_AUTHN_LEVEL_PKT_PRIVACY;
+	authnSvc = RPC_C_AUTHN_WINNT;
+    }
 
-	status = RpcBindingSetAuthInfo(hAfsHandle, NULL, authnLevel, authnSvc,
-					NULL, RPC_C_AUTHZ_NONE);
-	if (status != RPC_S_OK)
-		goto cleanup;
+    status =
+	RpcBindingSetAuthInfo(hAfsHandle, NULL, authnLevel, authnSvc, NULL,
+			      RPC_C_AUTHZ_NONE);
+    if (status != RPC_S_OK)
+	goto cleanup;
 
-	RpcTryExcept {
-		status = AFSRPC_SetToken(uuid, sessionKey);
-	}
-	RpcExcept(1) {
-		status = RpcExceptionCode();
-	}
-	RpcEndExcept
+    RpcTryExcept {
+	status = AFSRPC_SetToken(uuid, sessionKey);
+    }
+    RpcExcept(1) {
+	status = RpcExceptionCode();
+    }
+    RpcEndExcept cleanup:if (stringBinding)
+	  RpcStringFree(&stringBinding);
 
-cleanup:
-	if (stringBinding)
-		RpcStringFree(&stringBinding);
+    if (hAfsHandle != NULL)
+	RpcBindingFree(&hAfsHandle);
 
-	if (hAfsHandle != NULL)
-		RpcBindingFree(&hAfsHandle);
-
-	return status;
+    return status;
 }
 
-RPC_STATUS receive_key(afs_uuid_t uuid, char sessionKey[8])
+RPC_STATUS
+receive_key(afs_uuid_t uuid, char sessionKey[8])
 {
-	RPC_STATUS status;
-	char *stringBinding = NULL;
-	ULONG authnLevel, authnSvc;
-	char serverName[256];
-	char *serverNamep = serverName;
-	char encrypt[32];
-	BOOL encryptionOff = FALSE;
-	char protseq[32];
+    RPC_STATUS status;
+    char *stringBinding = NULL;
+    ULONG authnLevel, authnSvc;
+    char serverName[256];
+    char *serverNamep = serverName;
+    char encrypt[32];
+    BOOL encryptionOff = FALSE;
+    char protseq[32];
 
-	/* Encryption on by default */
-	if (GetEnvironmentVariable("AFS_RPC_ENCRYPT",
-				   encrypt, sizeof(encrypt)))
-		if (!strcmpi(encrypt, "OFF"))
-			encryptionOff = TRUE;
+    /* Encryption on by default */
+    if (GetEnvironmentVariable("AFS_RPC_ENCRYPT", encrypt, sizeof(encrypt)))
+	if (!strcmpi(encrypt, "OFF"))
+	    encryptionOff = TRUE;
 
-	/* Protocol sequence is named pipe by default */
-	if (!GetEnvironmentVariable("AFS_RPC_PROTSEQ",
-				    protseq, sizeof(protseq)))
-		strcpy(protseq, "ncacn_np");
+    /* Protocol sequence is named pipe by default */
+    if (!GetEnvironmentVariable("AFS_RPC_PROTSEQ", protseq, sizeof(protseq)))
+	strcpy(protseq, "ncacn_np");
 
-	/* Server name */
-	getservername(&serverNamep, sizeof(serverName));
+    /* Server name */
+    getservername(&serverNamep, sizeof(serverName));
 
-	status = RpcStringBindingCompose("",	/* obj uuid */
-					 protseq,
-					 serverNamep,
-					 "",	/* endpoint */
-					 "",	/* protocol options */
-					 &stringBinding);
-	if (status != RPC_S_OK)
-		goto cleanup;
+    status = RpcStringBindingCompose("",	/* obj uuid */
+				     protseq, serverNamep, "",	/* endpoint */
+				     "",	/* protocol options */
+				     &stringBinding);
+    if (status != RPC_S_OK)
+	goto cleanup;
 
-	status = RpcBindingFromStringBinding(stringBinding, &hAfsHandle);
-	if (status != RPC_S_OK)
-		goto cleanup;
+    status = RpcBindingFromStringBinding(stringBinding, &hAfsHandle);
+    if (status != RPC_S_OK)
+	goto cleanup;
 
-	/*
-	 * On Windows 95/98, we must resolve the binding before calling
-	 * SetAuthInfo.  On Windows NT, we don't have to resolve yet,
-	 * but it does no harm.
-	 */
-	status = RpcEpResolveBinding(hAfsHandle, afsrpc_v1_0_c_ifspec);
-	if (status != RPC_S_OK)
-		goto cleanup;
+    /*
+     * On Windows 95/98, we must resolve the binding before calling
+     * SetAuthInfo.  On Windows NT, we don't have to resolve yet,
+     * but it does no harm.
+     */
+    status = RpcEpResolveBinding(hAfsHandle, afsrpc_v1_0_c_ifspec);
+    if (status != RPC_S_OK)
+	goto cleanup;
 
-	if (encryptionOff) {
-		authnLevel = RPC_C_AUTHN_LEVEL_NONE;
-		authnSvc = RPC_C_AUTHN_WINNT;
-	} else {
-		authnLevel = RPC_C_AUTHN_LEVEL_PKT_PRIVACY;
-		authnSvc = RPC_C_AUTHN_WINNT;
-	}
+    if (encryptionOff) {
+	authnLevel = RPC_C_AUTHN_LEVEL_NONE;
+	authnSvc = RPC_C_AUTHN_WINNT;
+    } else {
+	authnLevel = RPC_C_AUTHN_LEVEL_PKT_PRIVACY;
+	authnSvc = RPC_C_AUTHN_WINNT;
+    }
 
-	status = RpcBindingSetAuthInfo(hAfsHandle, NULL, authnLevel, authnSvc,
-					NULL, RPC_C_AUTHZ_NONE);
-	if (status != RPC_S_OK)
-		goto cleanup;
+    status =
+	RpcBindingSetAuthInfo(hAfsHandle, NULL, authnLevel, authnSvc, NULL,
+			      RPC_C_AUTHZ_NONE);
+    if (status != RPC_S_OK)
+	goto cleanup;
 
-	RpcTryExcept {
-		status = AFSRPC_GetToken(uuid, sessionKey);
-	}
-	RpcExcept(1) {
-		status = RpcExceptionCode();
-	}
-	RpcEndExcept
+    RpcTryExcept {
+	status = AFSRPC_GetToken(uuid, sessionKey);
+    }
+    RpcExcept(1) {
+	status = RpcExceptionCode();
+    }
+    RpcEndExcept cleanup:if (stringBinding)
+	  RpcStringFree(&stringBinding);
 
-cleanup:
-	if (stringBinding)
-		RpcStringFree(&stringBinding);
+    if (hAfsHandle != NULL)
+	RpcBindingFree(&hAfsHandle);
 
-	if (hAfsHandle != NULL)
-		RpcBindingFree(&hAfsHandle);
-
-	return status;
+    return status;
 }
 
-int ktc_SetToken(
-	struct ktc_principal *server,
-	struct ktc_token *token,
-	struct ktc_principal *client,
-	int flags)
+int
+ktc_SetToken(struct ktc_principal *server, struct ktc_token *token,
+	     struct ktc_principal *client, int flags)
 {
-	struct ViceIoctl iob;
-	char tbuffer[1024];
-	char *tp;
-	struct ClearToken ct;
-	int temp;
-	int code;
-	RPC_STATUS status;
-	afs_uuid_t uuid;
+    struct ViceIoctl iob;
+    char tbuffer[1024];
+    char *tp;
+    struct ClearToken ct;
+    int temp;
+    int code;
+    RPC_STATUS status;
+    afs_uuid_t uuid;
 
-	if (token->ticketLen < MINKTCTICKETLEN
-	    || token->ticketLen > MAXKTCTICKETLEN)
-		return KTC_INVAL;
+    if (token->ticketLen < MINKTCTICKETLEN
+	|| token->ticketLen > MAXKTCTICKETLEN)
+	return KTC_INVAL;
 
-	if (strcmp(server->name, "afs")) {
-	    return SetLocalToken(server, token, client, flags);
-	}
+    if (strcmp(server->name, "afs")) {
+	return SetLocalToken(server, token, client, flags);
+    }
 
-	tp = tbuffer;
+    tp = tbuffer;
 
-	/* ticket length */
-	memcpy(tp, &token->ticketLen, sizeof(token->ticketLen));
-	tp += sizeof(&token->ticketLen);
+    /* ticket length */
+    memcpy(tp, &token->ticketLen, sizeof(token->ticketLen));
+    tp += sizeof(&token->ticketLen);
 
-	/* ticket */
-	memcpy(tp, token->ticket, token->ticketLen);
-	tp += token->ticketLen;
+    /* ticket */
+    memcpy(tp, token->ticket, token->ticketLen);
+    tp += token->ticketLen;
 
-	/* clear token */
-	ct.AuthHandle = token->kvno;
-	/*
-	 * Instead of sending the session key in the clear, we zero it,
-	 * and send it later, via RPC, encrypted.
-	 */
+    /* clear token */
+    ct.AuthHandle = token->kvno;
+    /*
+     * Instead of sending the session key in the clear, we zero it,
+     * and send it later, via RPC, encrypted.
+     */
 #ifndef AFS_WIN95_ENV
-	/*
-	memcpy(ct.HandShakeKey, &token->sessionKey, sizeof(token->sessionKey));
-	 */
-	memset(ct.HandShakeKey, 0, sizeof(ct.HandShakeKey));
+    /*
+     * memcpy(ct.HandShakeKey, &token->sessionKey, sizeof(token->sessionKey));
+     */
+    memset(ct.HandShakeKey, 0, sizeof(ct.HandShakeKey));
 #else
-	memcpy(ct.HandShakeKey, &token->sessionKey, sizeof(token->sessionKey));
+    memcpy(ct.HandShakeKey, &token->sessionKey, sizeof(token->sessionKey));
 #endif
-	ct.BeginTimestamp = token->startTime;
-	ct.EndTimestamp = token->endTime;
-	if (ct.BeginTimestamp == 0) ct.BeginTimestamp = 1;
+    ct.BeginTimestamp = token->startTime;
+    ct.EndTimestamp = token->endTime;
+    if (ct.BeginTimestamp == 0)
+	ct.BeginTimestamp = 1;
 
-	/* We don't know from Vice ID's yet */
-	ct.ViceId = 37;			/* XXX */
-	if (((ct.EndTimestamp - ct.BeginTimestamp) & 1) == 1)
-		ct.BeginTimestamp++;		/* force lifetime to be even */
+    /* We don't know from Vice ID's yet */
+    ct.ViceId = 37;		/* XXX */
+    if (((ct.EndTimestamp - ct.BeginTimestamp) & 1) == 1)
+	ct.BeginTimestamp++;	/* force lifetime to be even */
 
-	/* size of clear token */
-	temp = sizeof(struct ClearToken);
-	memcpy(tp, &temp, sizeof(temp));
-	tp += sizeof(temp);
+    /* size of clear token */
+    temp = sizeof(struct ClearToken);
+    memcpy(tp, &temp, sizeof(temp));
+    tp += sizeof(temp);
 
-	/* clear token itself */
-	memcpy(tp, &ct, sizeof(ct));
-	tp += sizeof(ct);
+    /* clear token itself */
+    memcpy(tp, &ct, sizeof(ct));
+    tp += sizeof(ct);
 
-	/* flags; on NT there is no setpag flag, but there is an
-	 * integrated logon flag */
-	temp = ((flags & AFS_SETTOK_LOGON) ? PIOCTL_LOGON : 0);
-	memcpy(tp, &temp, sizeof(temp));
-	tp += sizeof(temp);
+    /* flags; on NT there is no setpag flag, but there is an
+     * integrated logon flag */
+    temp = ((flags & AFS_SETTOK_LOGON) ? PIOCTL_LOGON : 0);
+    memcpy(tp, &temp, sizeof(temp));
+    tp += sizeof(temp);
 
-	/* cell name */
-	temp = strlen(server->cell);
-	if (temp >= MAXKTCREALMLEN)
-		return KTC_INVAL;
-	strcpy(tp, server->cell);
-	tp += temp+1;
+    /* cell name */
+    temp = strlen(server->cell);
+    if (temp >= MAXKTCREALMLEN)
+	return KTC_INVAL;
+    strcpy(tp, server->cell);
+    tp += temp + 1;
 
-	/* user name */
-	temp = strlen(client->name);
-	if (temp >= MAXKTCNAMELEN)
-		return KTC_INVAL;
-	strcpy(tp, client->name);
-	tp += temp+1;
+    /* user name */
+    temp = strlen(client->name);
+    if (temp >= MAXKTCNAMELEN)
+	return KTC_INVAL;
+    strcpy(tp, client->name);
+    tp += temp + 1;
 
     /* we need the SMB user name to associate the tokens with in the
-    integrated logon case. */
+     * integrated logon case. */
     if (flags & AFS_SETTOK_LOGON) {
-    if (client->smbname == NULL)
-      temp = 0;
-    else
+	if (client->smbname == NULL)
+	    temp = 0;
+	else
 	    temp = strlen(client->smbname);
-        if (temp == 0 || temp >= MAXKTCNAMELEN)
-          return KTC_INVAL;
-	    strcpy(tp, client->smbname);
-          tp += temp+1;
+	if (temp == 0 || temp >= MAXKTCNAMELEN)
+	    return KTC_INVAL;
+	strcpy(tp, client->smbname);
+	tp += temp + 1;
     }
-           
-	/* uuid */
-	status = UuidCreate((UUID *)&uuid);
-	memcpy(tp, &uuid, sizeof(uuid));
-	tp += sizeof(uuid);
+
+    /* uuid */
+    status = UuidCreate((UUID *) & uuid);
+    memcpy(tp, &uuid, sizeof(uuid));
+    tp += sizeof(uuid);
 
 #ifndef AFS_WIN95_ENV
-	/* RPC to send session key */
-	status = send_key(uuid, token->sessionKey.data);
-	if (status != RPC_S_OK) {
-		if (status == 1)
-			strcpy(rpcErr, "RPC failure in AFS gateway");
-		else
-			DceErrorInqText(status, rpcErr);
-		if (status == RPC_S_SERVER_UNAVAILABLE
-		    || status == EPT_S_NOT_REGISTERED)
-			return KTC_NOCMRPC;
-		else
-			return KTC_RPC;
-	}
+    /* RPC to send session key */
+    status = send_key(uuid, token->sessionKey.data);
+    if (status != RPC_S_OK) {
+	if (status == 1)
+	    strcpy(rpcErr, "RPC failure in AFS gateway");
+	else
+	    DceErrorInqText(status, rpcErr);
+	if (status == RPC_S_SERVER_UNAVAILABLE
+	    || status == EPT_S_NOT_REGISTERED)
+	    return KTC_NOCMRPC;
+	else
+	    return KTC_RPC;
+    }
 #endif /* AFS_WIN95_ENV */
 
-	/* set up for pioctl */
-	iob.in = tbuffer;
-	iob.in_size = tp - tbuffer;
-	iob.out = tbuffer;
-	iob.out_size = sizeof(tbuffer);
+    /* set up for pioctl */
+    iob.in = tbuffer;
+    iob.in_size = tp - tbuffer;
+    iob.out = tbuffer;
+    iob.out_size = sizeof(tbuffer);
 
-	code = pioctl(0, VIOCSETTOK, &iob, 0);
-	if (code) {
-		if (code == -1) {
-			if (errno == ESRCH)
-				return KTC_NOCELL;
-			else if (errno == ENODEV)
-				return KTC_NOCM;
-			else if (errno == EINVAL)
-				return KTC_INVAL;
-			else
-				return KTC_PIOCTLFAIL;
-		}
-		else
-			return KTC_PIOCTLFAIL;
-	}
+    code = pioctl(0, VIOCSETTOK, &iob, 0);
+    if (code) {
+	if (code == -1) {
+	    if (errno == ESRCH)
+		return KTC_NOCELL;
+	    else if (errno == ENODEV)
+		return KTC_NOCM;
+	    else if (errno == EINVAL)
+		return KTC_INVAL;
+	    else
+		return KTC_PIOCTLFAIL;
+	} else
+	    return KTC_PIOCTLFAIL;
+    }
 
-	return 0;
+    return 0;
 }
 
-int ktc_GetToken(
-	struct ktc_principal *server,
-	struct ktc_token *token,
-	int tokenLen,
-	struct ktc_principal *client)
+int
+ktc_GetToken(struct ktc_principal *server, struct ktc_token *token,
+	     int tokenLen, struct ktc_principal *client)
 {
-	struct ViceIoctl iob;
-	char tbuffer[1024];
-	char *tp, *cp;
-	char *ticketP;
-	int ticketLen, temp;
-	struct ClearToken ct;
-	char *cellName;
-	int cellNameSize;
-	int maxLen;
-	int code;
-	RPC_STATUS status;
-	afs_uuid_t uuid;
+    struct ViceIoctl iob;
+    char tbuffer[1024];
+    char *tp, *cp;
+    char *ticketP;
+    int ticketLen, temp;
+    struct ClearToken ct;
+    char *cellName;
+    int cellNameSize;
+    int maxLen;
+    int code;
+    RPC_STATUS status;
+    afs_uuid_t uuid;
 
-	tp = tbuffer;
+    tp = tbuffer;
 
-	/* check to see if the user is requesting tokens for a principal
-	 * other than afs.  If so, check the local token cache.
-	 */
-	if (strcmp(server->name, "afs")) {
-	    return GetLocalToken(server, token, tokenLen, client);
-	}
+    /* check to see if the user is requesting tokens for a principal
+     * other than afs.  If so, check the local token cache.
+     */
+    if (strcmp(server->name, "afs")) {
+	return GetLocalToken(server, token, tokenLen, client);
+    }
 
-	/* cell name */
-	strcpy(tp, server->cell);
-	tp += strlen(server->cell) + 1;
+    /* cell name */
+    strcpy(tp, server->cell);
+    tp += strlen(server->cell) + 1;
 
-	/* uuid */
-	status = UuidCreate((UUID *)&uuid);
-	memcpy(tp, &uuid, sizeof(uuid));
-	tp += sizeof(uuid);
+    /* uuid */
+    status = UuidCreate((UUID *) & uuid);
+    memcpy(tp, &uuid, sizeof(uuid));
+    tp += sizeof(uuid);
 
-	iob.in = tbuffer;
-	iob.in_size = tp - tbuffer;
-	iob.out = tbuffer;
-	iob.out_size = sizeof(tbuffer);
+    iob.in = tbuffer;
+    iob.in_size = tp - tbuffer;
+    iob.out = tbuffer;
+    iob.out_size = sizeof(tbuffer);
 
-	code = pioctl(0, VIOCNEWGETTOK, &iob, 0);
-	if (code) {
-		if (code == -1) {
-			if (errno == ESRCH)
-				return KTC_NOCELL;
-			else if (errno == ENODEV)
-				return KTC_NOCM;
-			else if (errno == EINVAL)
-				return KTC_INVAL;
-			else if (errno == EDOM)
-				return KTC_NOENT;
-			else
-				return KTC_PIOCTLFAIL;
-		}
-		else
-			return KTC_PIOCTLFAIL;
-	}
-
-#ifndef AFS_WIN95_ENV   /* get rid of RPC for win95 build */
-	/* RPC to receive session key */
-	status = receive_key(uuid, token->sessionKey.data);
-	if (status != RPC_S_OK) {
-		if (status == 1)
-			strcpy(rpcErr, "RPC failure in AFS gateway");
-		else
-			DceErrorInqText(status, rpcErr);
-		if (status == RPC_S_SERVER_UNAVAILABLE
-		    || status == EPT_S_NOT_REGISTERED)
-			return KTC_NOCMRPC;
-		else
-			return KTC_RPC;
-	}
+    code = pioctl(0, VIOCNEWGETTOK, &iob, 0);
+    if (code) {
+	if (code == -1) {
+	    if (errno == ESRCH)
+		return KTC_NOCELL;
+	    else if (errno == ENODEV)
+		return KTC_NOCM;
+	    else if (errno == EINVAL)
+		return KTC_INVAL;
+	    else if (errno == EDOM)
+		return KTC_NOENT;
+	    else
+		return KTC_PIOCTLFAIL;
+	} else
+	    return KTC_PIOCTLFAIL;
+    }
+#ifndef AFS_WIN95_ENV		/* get rid of RPC for win95 build */
+    /* RPC to receive session key */
+    status = receive_key(uuid, token->sessionKey.data);
+    if (status != RPC_S_OK) {
+	if (status == 1)
+	    strcpy(rpcErr, "RPC failure in AFS gateway");
+	else
+	    DceErrorInqText(status, rpcErr);
+	if (status == RPC_S_SERVER_UNAVAILABLE
+	    || status == EPT_S_NOT_REGISTERED)
+	    return KTC_NOCMRPC;
+	else
+	    return KTC_RPC;
+    }
 #endif /* AFS_WIN95_ENV */
 
-	cp = tbuffer;
+    cp = tbuffer;
 
-	/* ticket length */
-	memcpy(&ticketLen, cp, sizeof(ticketLen));
-	cp += sizeof(ticketLen);
+    /* ticket length */
+    memcpy(&ticketLen, cp, sizeof(ticketLen));
+    cp += sizeof(ticketLen);
 
-	/* remember where ticket is and skip over it */
-	ticketP = cp;
-	cp += ticketLen;
+    /* remember where ticket is and skip over it */
+    ticketP = cp;
+    cp += ticketLen;
 
-	/* size of clear token */
-	memcpy(&temp, cp, sizeof(temp));
-	cp += sizeof(temp);
-	if (temp != sizeof(ct))
-		return KTC_ERROR;
+    /* size of clear token */
+    memcpy(&temp, cp, sizeof(temp));
+    cp += sizeof(temp);
+    if (temp != sizeof(ct))
+	return KTC_ERROR;
 
-	/* clear token */
-	memcpy(&ct, cp, temp);
-	cp += temp;
+    /* clear token */
+    memcpy(&ct, cp, temp);
+    cp += temp;
 
-	/* skip over primary flag */
-	cp += sizeof(temp);
+    /* skip over primary flag */
+    cp += sizeof(temp);
 
-	/* remember cell name and skip over it */
-	cellName = cp;
-	cellNameSize = strlen(cp);
-	cp += cellNameSize + 1;
+    /* remember cell name and skip over it */
+    cellName = cp;
+    cellNameSize = strlen(cp);
+    cp += cellNameSize + 1;
 
-	/* user name is here */
+    /* user name is here */
 
-	/* check that ticket will fit */
-	maxLen = tokenLen - sizeof(struct ktc_token) + MAXKTCTICKETLEN;
-	if (maxLen < ticketLen)
-		return KTC_TOOBIG;
+    /* check that ticket will fit */
+    maxLen = tokenLen - sizeof(struct ktc_token) + MAXKTCTICKETLEN;
+    if (maxLen < ticketLen)
+	return KTC_TOOBIG;
 
-	/* set return values */
-	memcpy(token->ticket, ticketP, ticketLen);
-	token->startTime = ct.BeginTimestamp;
-	token->endTime = ct.EndTimestamp;
-	if (ct.AuthHandle == -1) ct.AuthHandle = 999;
-	token->kvno = ct.AuthHandle;
+    /* set return values */
+    memcpy(token->ticket, ticketP, ticketLen);
+    token->startTime = ct.BeginTimestamp;
+    token->endTime = ct.EndTimestamp;
+    if (ct.AuthHandle == -1)
+	ct.AuthHandle = 999;
+    token->kvno = ct.AuthHandle;
 #ifndef AFS_WIN95_ENV
-	/*
-	 * Session key has already been set via RPC
-	 */
+    /*
+     * Session key has already been set via RPC
+     */
 #else
-	memcpy(&token->sessionKey, ct.HandShakeKey, sizeof(ct.HandShakeKey));
+    memcpy(&token->sessionKey, ct.HandShakeKey, sizeof(ct.HandShakeKey));
 #endif /* AFS_WIN95_ENV */
-	token->ticketLen = ticketLen;
-	if (client) {
-		strcpy(client->name, cp);
-		client->instance[0] = '\0';
-		strcpy(client->cell, cellName);
-	}
+    token->ticketLen = ticketLen;
+    if (client) {
+	strcpy(client->name, cp);
+	client->instance[0] = '\0';
+	strcpy(client->cell, cellName);
+    }
 
-	return 0;
+    return 0;
 }
 
-int ktc_ListTokens(
-	int cellNum,
-	int *cellNumP,
-	struct ktc_principal *server)
+int
+ktc_ListTokens(int cellNum, int *cellNumP, struct ktc_principal *server)
 {
-	struct ViceIoctl iob;
-	char tbuffer[1024];
-	char *tp, *cp;
-	int newIter, ticketLen, temp;
-	int code;
+    struct ViceIoctl iob;
+    char tbuffer[1024];
+    char *tp, *cp;
+    int newIter, ticketLen, temp;
+    int code;
 
-	tp = tbuffer;
+    tp = tbuffer;
 
-	/* iterator */
-	memcpy(tp, &cellNum, sizeof(cellNum));
-	tp += sizeof(cellNum);
+    /* iterator */
+    memcpy(tp, &cellNum, sizeof(cellNum));
+    tp += sizeof(cellNum);
 
-	/* do pioctl */
-	iob.in = tbuffer;
-	iob.in_size = tp - tbuffer;
-	iob.out = tbuffer;
-	iob.out_size = sizeof(tbuffer);
+    /* do pioctl */
+    iob.in = tbuffer;
+    iob.in_size = tp - tbuffer;
+    iob.out = tbuffer;
+    iob.out_size = sizeof(tbuffer);
 
-	code = pioctl(0, VIOCGETTOK, &iob, 0);
-	if (code) {
-		if (code == -1) {
-			if (errno == ESRCH)
-				return KTC_NOCELL;
-			else if (errno == ENODEV)
-				return KTC_NOCM;
-			else if (errno == EINVAL)
-				return KTC_INVAL;
-			else if (errno == EDOM)
-				return KTC_NOENT;
-			else
-				return KTC_PIOCTLFAIL;
-		}
-		else
-			return KTC_PIOCTLFAIL;
-	}
+    code = pioctl(0, VIOCGETTOK, &iob, 0);
+    if (code) {
+	if (code == -1) {
+	    if (errno == ESRCH)
+		return KTC_NOCELL;
+	    else if (errno == ENODEV)
+		return KTC_NOCM;
+	    else if (errno == EINVAL)
+		return KTC_INVAL;
+	    else if (errno == EDOM)
+		return KTC_NOENT;
+	    else
+		return KTC_PIOCTLFAIL;
+	} else
+	    return KTC_PIOCTLFAIL;
+    }
 
-	cp = tbuffer;
+    cp = tbuffer;
 
-	/* new iterator */
-	memcpy(&newIter, cp, sizeof(newIter));
-	cp += sizeof(newIter);
+    /* new iterator */
+    memcpy(&newIter, cp, sizeof(newIter));
+    cp += sizeof(newIter);
 
-	/* ticket length */
-	memcpy(&ticketLen, cp, sizeof(ticketLen));
-	cp += sizeof(ticketLen);
+    /* ticket length */
+    memcpy(&ticketLen, cp, sizeof(ticketLen));
+    cp += sizeof(ticketLen);
 
-	/* skip over ticket */
-	cp += ticketLen;
+    /* skip over ticket */
+    cp += ticketLen;
 
-	/* clear token size */
-	memcpy(&temp, cp, sizeof(temp));
-	cp += sizeof(temp);
-	if (temp != sizeof(struct ClearToken))
-		return KTC_ERROR;
+    /* clear token size */
+    memcpy(&temp, cp, sizeof(temp));
+    cp += sizeof(temp);
+    if (temp != sizeof(struct ClearToken))
+	return KTC_ERROR;
 
-	/* skip over clear token */
-	cp += sizeof(struct ClearToken);
+    /* skip over clear token */
+    cp += sizeof(struct ClearToken);
 
-	/* skip over primary flag */
-	cp += sizeof(temp);
+    /* skip over primary flag */
+    cp += sizeof(temp);
 
-	/* cell name is here */
+    /* cell name is here */
 
-	/* set return values */
-	strcpy(server->cell, cp);
-	server->instance[0] = '\0';
-	strcpy(server->name, "afs");
+    /* set return values */
+    strcpy(server->cell, cp);
+    server->instance[0] = '\0';
+    strcpy(server->name, "afs");
 
-	*cellNumP = newIter;
-	return 0;
+    *cellNumP = newIter;
+    return 0;
 }
 
-int ktc_ForgetToken(
-	struct ktc_principal *server)
+int
+ktc_ForgetToken(struct ktc_principal *server)
 {
-	struct ViceIoctl iob;
-	char tbuffer[1024];
-	char *tp;
-	int code;
+    struct ViceIoctl iob;
+    char tbuffer[1024];
+    char *tp;
+    int code;
 
-	if (strcmp(server->name, "afs")) {
-	    return ForgetOneLocalToken(server);
-	}
+    if (strcmp(server->name, "afs")) {
+	return ForgetOneLocalToken(server);
+    }
 
-	tp = tbuffer;
+    tp = tbuffer;
 
-	/* cell name */
-	strcpy(tp, server->cell);
-	tp += strlen(tp) + 1;
+    /* cell name */
+    strcpy(tp, server->cell);
+    tp += strlen(tp) + 1;
 
-	/* do pioctl */
-	iob.in = tbuffer;
-	iob.in_size = tp - tbuffer;
-	iob.out = tbuffer;
-	iob.out_size = sizeof(tbuffer);
+    /* do pioctl */
+    iob.in = tbuffer;
+    iob.in_size = tp - tbuffer;
+    iob.out = tbuffer;
+    iob.out_size = sizeof(tbuffer);
 
-	code = pioctl(0, VIOCDELTOK, &iob, 0);
-	if (code) {
-		if (code == -1) {
-			if (errno == ESRCH)
-				return KTC_NOCELL;
-			else if (errno == EDOM)
-				return KTC_NOENT;
-			else if (errno == ENODEV)
-				return KTC_NOCM;
-			else
-				return KTC_PIOCTLFAIL;
-		}
-		else
-			return KTC_PIOCTLFAIL;
-	}
-	return 0;
+    code = pioctl(0, VIOCDELTOK, &iob, 0);
+    if (code) {
+	if (code == -1) {
+	    if (errno == ESRCH)
+		return KTC_NOCELL;
+	    else if (errno == EDOM)
+		return KTC_NOENT;
+	    else if (errno == ENODEV)
+		return KTC_NOCM;
+	    else
+		return KTC_PIOCTLFAIL;
+	} else
+	    return KTC_PIOCTLFAIL;
+    }
+    return 0;
 }
 
-int ktc_ForgetAllTokens()
+int
+ktc_ForgetAllTokens()
 {
-	struct ViceIoctl iob;
-	char tbuffer[1024];
-	int code;
+    struct ViceIoctl iob;
+    char tbuffer[1024];
+    int code;
 
-	(void) ForgetLocalTokens();
+    (void)ForgetLocalTokens();
 
-	/* do pioctl */
-	iob.in = tbuffer;
-	iob.in_size = 0;
-	iob.out = tbuffer;
-	iob.out_size = sizeof(tbuffer);
+    /* do pioctl */
+    iob.in = tbuffer;
+    iob.in_size = 0;
+    iob.out = tbuffer;
+    iob.out_size = sizeof(tbuffer);
 
-	code = pioctl(0, VIOCDELALLTOK, &iob, 0);
-	if (code) {
-		if (code == -1) {
-			if (errno == ENODEV)
-				return KTC_NOCM;
-			else
-				return KTC_PIOCTLFAIL;
-		}
-		else
-			return KTC_PIOCTLFAIL;
-	}
-	return 0;
+    code = pioctl(0, VIOCDELALLTOK, &iob, 0);
+    if (code) {
+	if (code == -1) {
+	    if (errno == ENODEV)
+		return KTC_NOCM;
+	    else
+		return KTC_PIOCTLFAIL;
+	} else
+	    return KTC_PIOCTLFAIL;
+    }
+    return 0;
 }
 
-int ktc_OldPioctl ()
+int
+ktc_OldPioctl()
 {
     return 1;
 }
@@ -686,98 +670,92 @@ static struct {
     struct ktc_principal server;
     struct ktc_principal client;
     struct ktc_token token;
-} local_tokens[MAXLOCALTOKENS] = {0};
+} local_tokens[MAXLOCALTOKENS] = {
+0};
 
-static int SetLocalToken(struct ktc_principal *aserver,
-			 struct ktc_token *atoken,
-			 struct ktc_principal *aclient,
-			 afs_int32 flags)
+static int
+SetLocalToken(struct ktc_principal *aserver, struct ktc_token *atoken,
+	      struct ktc_principal *aclient, afs_int32 flags)
 {
     int found = -1;
     int i;
 
-    LOCK_GLOBAL_MUTEX
-    for (i = 0; i < MAXLOCALTOKENS; i++)
+    LOCK_GLOBAL_MUTEX for (i = 0; i < MAXLOCALTOKENS; i++)
 	if (local_tokens[i].valid) {
-	    if ((strcmp(local_tokens[i].server.name, aserver->name) == 0) &&
-		(strcmp(local_tokens[i].server.instance,
-			aserver->instance) == 0) &&
-		(strcmp(local_tokens[i].server.cell, aserver->cell) == 0)) {
+	    if ((strcmp(local_tokens[i].server.name, aserver->name) == 0)
+		&& (strcmp(local_tokens[i].server.instance, aserver->instance)
+		    == 0)
+		&& (strcmp(local_tokens[i].server.cell, aserver->cell) == 0)) {
 		found = i;	/* replace existing entry */
 		break;
 	    }
 	} else if (found == -1)
-	    found = i; /* remember empty slot but keep looking for a match */
+	    found = i;		/* remember empty slot but keep looking for a match */
     if (found == -1) {
-	UNLOCK_GLOBAL_MUTEX
-	return KTC_NOENT;
+	UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
     }
     memcpy(&local_tokens[found].token, atoken, sizeof(struct ktc_token));
-    memcpy(&local_tokens[found].server, aserver, sizeof(struct ktc_principal));
-    memcpy(&local_tokens[found].client, aclient, sizeof(struct ktc_principal));
+    memcpy(&local_tokens[found].server, aserver,
+	   sizeof(struct ktc_principal));
+    memcpy(&local_tokens[found].client, aclient,
+	   sizeof(struct ktc_principal));
     local_tokens[found].valid = 1;
-    UNLOCK_GLOBAL_MUTEX
-    return 0;
+    UNLOCK_GLOBAL_MUTEX return 0;
 }
 
 
-static int GetLocalToken(struct ktc_principal *aserver,
-			 struct ktc_token *atoken,
-			 int atokenLen,
-			 struct ktc_principal *aclient)
+static int
+GetLocalToken(struct ktc_principal *aserver, struct ktc_token *atoken,
+	      int atokenLen, struct ktc_principal *aclient)
 {
     int i;
 
-    LOCK_GLOBAL_MUTEX
-    for (i = 0; i < MAXLOCALTOKENS; i++)
-	if (local_tokens[i].valid &&
-	    (strcmp(local_tokens[i].server.name, aserver->name) == 0) &&
-	    (strcmp(local_tokens[i].server.instance,aserver->instance) == 0) &&
-	    (strcmp(local_tokens[i].server.cell, aserver->cell) == 0)) {
+    LOCK_GLOBAL_MUTEX for (i = 0; i < MAXLOCALTOKENS; i++)
+	if (local_tokens[i].valid
+	    && (strcmp(local_tokens[i].server.name, aserver->name) == 0)
+	    && (strcmp(local_tokens[i].server.instance, aserver->instance) ==
+		0)
+	    && (strcmp(local_tokens[i].server.cell, aserver->cell) == 0)) {
 	    memcpy(atoken, &local_tokens[i].token,
 		   min(atokenLen, sizeof(struct ktc_token)));
 	    memcpy(aclient, &local_tokens[i].client,
 		   sizeof(struct ktc_principal));
-	    UNLOCK_GLOBAL_MUTEX
-	    return 0;
+	    UNLOCK_GLOBAL_MUTEX return 0;
 	}
-    UNLOCK_GLOBAL_MUTEX
-    return KTC_NOENT;
+    UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
 }
 
 
-static int ForgetLocalTokens()
+static int
+ForgetLocalTokens()
 {
     int i;
 
-    LOCK_GLOBAL_MUTEX
-    for (i = 0; i < MAXLOCALTOKENS; i++) {
+    LOCK_GLOBAL_MUTEX for (i = 0; i < MAXLOCALTOKENS; i++) {
 	local_tokens[i].valid = 0;
 	memset(&local_tokens[i].token.sessionKey, 0,
 	       sizeof(struct ktc_encryptionKey));
     }
-    UNLOCK_GLOBAL_MUTEX
-    return 0;
+    UNLOCK_GLOBAL_MUTEX return 0;
 }
 
 
-static int ForgetOneLocalToken(struct ktc_principal *aserver)
+static int
+ForgetOneLocalToken(struct ktc_principal *aserver)
 {
     int i;
 
-    LOCK_GLOBAL_MUTEX
-    for (i = 0; i < MAXLOCALTOKENS; i++) {
-	if (local_tokens[i].valid &&
-	    (strcmp(local_tokens[i].server.name, aserver->name) == 0) &&
-	    (strcmp(local_tokens[i].server.instance,aserver->instance) == 0) &&
-	    (strcmp(local_tokens[i].server.cell, aserver->cell) == 0)) {
+    LOCK_GLOBAL_MUTEX for (i = 0; i < MAXLOCALTOKENS; i++) {
+	if (local_tokens[i].valid
+	    && (strcmp(local_tokens[i].server.name, aserver->name) == 0)
+	    && (strcmp(local_tokens[i].server.instance, aserver->instance) ==
+		0)
+	    && (strcmp(local_tokens[i].server.cell, aserver->cell) == 0)) {
 	    local_tokens[i].valid = 0;
 	    memset(&local_tokens[i].token.sessionKey, 0,
 		   sizeof(struct ktc_encryptionKey));
-	    UNLOCK_GLOBAL_MUTEX
-	    return 0;
+	    UNLOCK_GLOBAL_MUTEX return 0;
 	}
     }
-    UNLOCK_GLOBAL_MUTEX
-    return KTC_NOENT;
+    UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
 }

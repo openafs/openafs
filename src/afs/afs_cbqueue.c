@@ -74,10 +74,11 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
-#include "afs/sysincludes.h" /*Standard vendor system headers*/
-#include "afsincludes.h" /*AFS-based standard headers*/
+#include "afs/sysincludes.h"	/*Standard vendor system headers */
+#include "afsincludes.h"	/*AFS-based standard headers */
 #include "afs/afs_cbqueue.h"
 #include "afs/afs.h"
 #include "afs/lock.h"
@@ -85,10 +86,10 @@ RCSID("$Header$");
 
 static unsigned int base = 0;
 static unsigned int basetime = 0;
-static struct vcache *debugvc;  /* used only for post-mortem debugging */
+static struct vcache *debugvc;	/* used only for post-mortem debugging */
 struct bucket {
-  struct afs_q head;
-  /*  struct afs_lock lock;  only if you want lots of locks... */
+    struct afs_q head;
+    /*  struct afs_lock lock;  only if you want lots of locks... */
 };
 static struct bucket cbHashT[CBHTSIZE];
 struct afs_lock afs_xcbhash;
@@ -108,17 +109,18 @@ struct afs_lock afs_xcbhash;
  * NOTE: The caller must hold a write lock on afs_xcbhash
  */
 
-void afs_QueueCallback(struct vcache *avc, unsigned int atime, struct volume *avp)
+void
+afs_QueueCallback(struct vcache *avc, unsigned int atime, struct volume *avp)
 {
-if (avp && (avp->expireTime < avc->cbExpires))
-  avp->expireTime = avc->cbExpires;
-if (!(avc->callsort.next)) {
-  atime = (atime + base) % CBHTSIZE;
-  QAdd(&(cbHashT[atime].head), &(avc->callsort));
-}
+    if (avp && (avp->expireTime < avc->cbExpires))
+	avp->expireTime = avc->cbExpires;
+    if (!(avc->callsort.next)) {
+	atime = (atime + base) % CBHTSIZE;
+	QAdd(&(cbHashT[atime].head), &(avc->callsort));
+    }
 
-return ;
-} /* afs_QueueCallback */
+    return;
+}				/* afs_QueueCallback */
 
 /* afs_DequeueCallback
  * Takes a write-locked vcache pointer and removes it from the callback
@@ -132,19 +134,19 @@ return ;
  *
  * NOTE: The caller must hold a write lock on afs_xcbhash
  */
-void afs_DequeueCallback(struct vcache *avc)
+void
+afs_DequeueCallback(struct vcache *avc)
 {
 
-  debugvc=avc;
-  if (avc->callsort.prev) {
-    QRemove(&(avc->callsort));
-    avc->callsort.prev = avc->callsort.next = NULL;
-  }
-  else ; /* must have got dequeued in a race */
-  afs_symhint_inval(avc);
+    debugvc = avc;
+    if (avc->callsort.prev) {
+	QRemove(&(avc->callsort));
+	avc->callsort.prev = avc->callsort.next = NULL;
+    } else;			/* must have got dequeued in a race */
+    afs_symhint_inval(avc);
 
-  return;
-} /* afs_DequeueCallback */
+    return;
+}				/* afs_DequeueCallback */
 
 /* afs_CheckCallbacks
  * called periodically to determine which callbacks are likely to
@@ -186,90 +188,92 @@ void afs_DequeueCallback(struct vcache *avc)
 #define CBQ_LIMIT (afs_cacheStats + afs_stats_cmperf.vcacheXAllocs + 10)
 #endif
 
-void afs_CheckCallbacks(unsigned int secs)
+void
+afs_CheckCallbacks(unsigned int secs)
 {
-  struct vcache *tvc;
-  register struct afs_q *tq;
-  struct afs_q *uq;
-  afs_uint32 now;
-  struct volume *tvp;
-  register int safety;
+    struct vcache *tvc;
+    register struct afs_q *tq;
+    struct afs_q *uq;
+    afs_uint32 now;
+    struct volume *tvp;
+    register int safety;
 
-  ObtainWriteLock(&afs_xcbhash,85);  /* pretty likely I'm going to remove something */
-  now=osi_Time();
-  for(safety = 0, tq = cbHashT[base].head.prev;  
-     (safety <= CBQ_LIMIT) && (tq != &(cbHashT[base].head));
-      tq = uq, safety++) {
+    ObtainWriteLock(&afs_xcbhash, 85);	/* pretty likely I'm going to remove something */
+    now = osi_Time();
+    for (safety = 0, tq = cbHashT[base].head.prev;
+	 (safety <= CBQ_LIMIT) && (tq != &(cbHashT[base].head));
+	 tq = uq, safety++) {
 
-    uq = QPrev(tq);
-    tvc = CBQTOV(tq);
-    if (tvc->cbExpires < now + secs) {  /* race #1 here */
-      /* Get the volume, and if its callback expiration time is more than secs
-       * seconds into the future, update this vcache entry and requeue it below
-       */
-       if ((tvc->states & CRO) && (tvp=afs_FindVolume(&(tvc->fid), READ_LOCK))) {
-          if (tvp->expireTime > now + secs) {
-	     tvc->cbExpires = tvp->expireTime;     /* XXX race here */
-	  }
-	  else {
-	     int i;
-	     for (i=0; i < MAXHOSTS && tvp->serverHost[i]; i++) {
-		if (!(tvp->serverHost[i]->flags & SRVR_ISDOWN)) {
-		   /* What about locking xvcache or vrefcount++ or
-		    * write locking tvc? */
-		   QRemove(tq);
-		   tq->prev = tq->next = NULL;
-		   tvc->states &= ~(CStatd | CMValid | CUnique);  
-		   if ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR))
-		      osi_dnlc_purgedp(tvc);
-		   tvc->quick.stamp = 0; 
-		   tvc->h1.dchint = NULL;/*invalidate em */
-		   afs_ResetVolumeInfo(tvp);
-		   break;
+	uq = QPrev(tq);
+	tvc = CBQTOV(tq);
+	if (tvc->cbExpires < now + secs) {	/* race #1 here */
+	    /* Get the volume, and if its callback expiration time is more than secs
+	     * seconds into the future, update this vcache entry and requeue it below
+	     */
+	    if ((tvc->states & CRO)
+		&& (tvp = afs_FindVolume(&(tvc->fid), READ_LOCK))) {
+		if (tvp->expireTime > now + secs) {
+		    tvc->cbExpires = tvp->expireTime;	/* XXX race here */
+		} else {
+		    int i;
+		    for (i = 0; i < MAXHOSTS && tvp->serverHost[i]; i++) {
+			if (!(tvp->serverHost[i]->flags & SRVR_ISDOWN)) {
+			    /* What about locking xvcache or vrefcount++ or
+			     * write locking tvc? */
+			    QRemove(tq);
+			    tq->prev = tq->next = NULL;
+			    tvc->states &= ~(CStatd | CMValid | CUnique);
+			    if ((tvc->fid.Fid.Vnode & 1)
+				|| (vType(tvc) == VDIR))
+				osi_dnlc_purgedp(tvc);
+			    tvc->quick.stamp = 0;
+			    tvc->h1.dchint = NULL;	/*invalidate em */
+			    afs_ResetVolumeInfo(tvp);
+			    break;
+			}
+		    }
 		}
-	     }
-	  }
-	  afs_PutVolume(tvp, READ_LOCK);
-       }
-       else {
-	 /* Do I need to worry about things like execsorwriters?
-	  * What about locking xvcache or vrefcount++ or write locking tvc?
-	  */
-	 QRemove(tq);
-	 tq->prev = tq->next = NULL;
-	 tvc->states &= ~(CStatd | CMValid | CUnique);
-	 if ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR))
-	    osi_dnlc_purgedp(tvc);
-       }
+		afs_PutVolume(tvp, READ_LOCK);
+	    } else {
+		/* Do I need to worry about things like execsorwriters?
+		 * What about locking xvcache or vrefcount++ or write locking tvc?
+		 */
+		QRemove(tq);
+		tq->prev = tq->next = NULL;
+		tvc->states &= ~(CStatd | CMValid | CUnique);
+		if ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR))
+		    osi_dnlc_purgedp(tvc);
+	    }
+	}
+
+	if ((tvc->cbExpires > basetime) && CBHash(tvc->cbExpires - basetime)) {
+	    /* it's been renewed on us.  Have to be careful not to put it back
+	     * into this slot, or we may never get out of here.
+	     */
+	    int slot;
+	    slot = (CBHash(tvc->cbExpires - basetime) + base) % CBHTSIZE;
+	    if (slot != base) {
+		if (QPrev(tq))
+		    QRemove(&(tvc->callsort));
+		QAdd(&(cbHashT[slot].head), &(tvc->callsort));
+		/* XXX remember to update volume expiration time */
+		/* -- not needed for correctness, though */
+	    }
+	}
     }
 
-    if ((tvc->cbExpires > basetime) && CBHash(tvc->cbExpires - basetime)) {
-      /* it's been renewed on us.  Have to be careful not to put it back
-       * into this slot, or we may never get out of here.
-       */
-      int slot;
-      slot = (CBHash(tvc->cbExpires - basetime)+base)%CBHTSIZE ;
-      if (slot != base) {
-	if (QPrev(tq))
-	  QRemove(&(tvc->callsort));
-	QAdd( &(cbHashT[slot].head), &(tvc->callsort) );
-	/* XXX remember to update volume expiration time */
-	/* -- not needed for correctness, though */
-      }
-    }
-  }
+    if (safety > CBQ_LIMIT) {
+	afs_stats_cmperf.cbloops++;
+	if (afs_paniconwarn)
+	    osi_Panic("CheckCallbacks");
 
-  if (safety > CBQ_LIMIT) {
-    afs_stats_cmperf.cbloops++;
-    if (afs_paniconwarn)
-      osi_Panic ("CheckCallbacks");
-
-    afs_warn("AFS Internal Error (minor): please contact AFS Product Support.\n");
-    ReleaseWriteLock(&afs_xcbhash);
-    afs_FlushCBs();
-    return;
-  }
-  else ReleaseWriteLock(&afs_xcbhash);
+	afs_warn
+	    ("AFS Internal Error (minor): please contact AFS Product Support.\n");
+	ReleaseWriteLock(&afs_xcbhash);
+	afs_FlushCBs();
+	return;
+    } else
+	ReleaseWriteLock(&afs_xcbhash);
 
 
 /* XXX future optimization:
@@ -286,32 +290,33 @@ void afs_CheckCallbacks(unsigned int secs)
    }
    */
 
-return;
-} /* afs_CheckCallback */
+    return;
+}				/* afs_CheckCallback */
 
 /* afs_FlushCBs 
  * to be used only in dire circumstances, this drops all callbacks on
  * the floor, without giving them back to the server.  It's ok, the server can 
  * deal with it, but it is a little bit rude.
  */
-void afs_FlushCBs(void)
+void
+afs_FlushCBs(void)
 {
-  register int i;
-  register struct vcache *tvc;
+    register int i;
+    register struct vcache *tvc;
 
-  ObtainWriteLock(&afs_xcbhash,86);  /* pretty likely I'm going to remove something */
+    ObtainWriteLock(&afs_xcbhash, 86);	/* pretty likely I'm going to remove something */
 
-    for (i = 0; i < VCSIZE; i++)  /* reset all the vnodes */
-      for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
-	tvc->callback = 0;
-	tvc->quick.stamp = 0; 
-	tvc->h1.dchint = NULL; /* invalidate hints */
-	tvc->states &= ~(CStatd);
-	if ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR))
-	   osi_dnlc_purgedp(tvc);
-	tvc->callsort.prev = tvc->callsort.next = NULL;
-      }
-  
+    for (i = 0; i < VCSIZE; i++)	/* reset all the vnodes */
+	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+	    tvc->callback = 0;
+	    tvc->quick.stamp = 0;
+	    tvc->h1.dchint = NULL;	/* invalidate hints */
+	    tvc->states &= ~(CStatd);
+	    if ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR))
+		osi_dnlc_purgedp(tvc);
+	    tvc->callsort.prev = tvc->callsort.next = NULL;
+	}
+
     afs_InitCBQueue(0);
 
     ReleaseWriteLock(&afs_xcbhash);
@@ -322,49 +327,51 @@ void afs_FlushCBs(void)
  * the floor for a specific server, without giving them back to the server.
  * It's ok, the server can deal with it, but it is a little bit rude.
  */
-void afs_FlushServerCBs(struct server *srvp)
+void
+afs_FlushServerCBs(struct server *srvp)
 {
-  register int i;
-  register struct vcache *tvc;
+    register int i;
+    register struct vcache *tvc;
 
-  ObtainWriteLock(&afs_xcbhash,86);  /* pretty likely I'm going to remove something */
+    ObtainWriteLock(&afs_xcbhash, 86);	/* pretty likely I'm going to remove something */
 
-  for (i=0; i<VCSIZE; i++) { /* reset all the vnodes */
-     for (tvc=afs_vhashT[i]; tvc; tvc=tvc->hnext) {
-        if (tvc->callback == srvp) {
-	   tvc->callback = 0;
-    	   tvc->quick.stamp = 0; 
-    	   tvc->h1.dchint = NULL; /* invalidate hints */
-    	   tvc->states &= ~(CStatd);
-    	   if ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR)) {
-	      osi_dnlc_purgedp(tvc);
-	   }
-    	   afs_DequeueCallback(tvc);
-    	}
-     }
-  }
+    for (i = 0; i < VCSIZE; i++) {	/* reset all the vnodes */
+	for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
+	    if (tvc->callback == srvp) {
+		tvc->callback = 0;
+		tvc->quick.stamp = 0;
+		tvc->h1.dchint = NULL;	/* invalidate hints */
+		tvc->states &= ~(CStatd);
+		if ((tvc->fid.Fid.Vnode & 1) || (vType(tvc) == VDIR)) {
+		    osi_dnlc_purgedp(tvc);
+		}
+		afs_DequeueCallback(tvc);
+	    }
+	}
+    }
 
-  ReleaseWriteLock(&afs_xcbhash);
+    ReleaseWriteLock(&afs_xcbhash);
 }
 
 /* afs_InitCBQueue
  *  called to initialize static and global variables associated with
  *  the Callback expiration management mechanism.
  */
-void afs_InitCBQueue(int doLockInit)
+void
+afs_InitCBQueue(int doLockInit)
 {
-register int i;
+    register int i;
 
-memset((char *)cbHashT, 0, CBHTSIZE*sizeof(struct bucket));
-for (i=0;i<CBHTSIZE;i++) {
-  QInit(&(cbHashT[i].head));
-  /* Lock_Init(&(cbHashT[i].lock)); only if you want lots of locks, which 
-   * don't seem too useful at present.  */
-  }
-base = 0;
-basetime = osi_Time();
-if (doLockInit)
-    Lock_Init(&afs_xcbhash);
+    memset((char *)cbHashT, 0, CBHTSIZE * sizeof(struct bucket));
+    for (i = 0; i < CBHTSIZE; i++) {
+	QInit(&(cbHashT[i].head));
+	/* Lock_Init(&(cbHashT[i].lock)); only if you want lots of locks, which 
+	 * don't seem too useful at present.  */
+    }
+    base = 0;
+    basetime = osi_Time();
+    if (doLockInit)
+	Lock_Init(&afs_xcbhash);
 }
 
 /* Because there are no real-time guarantees, and especially because a
@@ -388,25 +395,26 @@ if (doLockInit)
  * but weren't (say, if the server was down), they will be examined at every
  * opportunity thereafter.
  */
-int afs_BumpBase(void)
+int
+afs_BumpBase(void)
 {
-afs_uint32 now;
-int didbump;
-u_int oldbase;
+    afs_uint32 now;
+    int didbump;
+    u_int oldbase;
 
-ObtainWriteLock(&afs_xcbhash,87);
-didbump = 0;
-now = osi_Time();
-while ( basetime + (CBHTSLOTLEN-20) <= now ) { 
-    oldbase=base;
-    basetime += CBHTSLOTLEN-1;
-    base = (base+1) % CBHTSIZE;
-    didbump++;
-    if (!QEmpty(&(cbHashT[oldbase].head))) {
-      QCat(&(cbHashT[oldbase].head), &(cbHashT[base].head));
+    ObtainWriteLock(&afs_xcbhash, 87);
+    didbump = 0;
+    now = osi_Time();
+    while (basetime + (CBHTSLOTLEN - 20) <= now) {
+	oldbase = base;
+	basetime += CBHTSLOTLEN - 1;
+	base = (base + 1) % CBHTSIZE;
+	didbump++;
+	if (!QEmpty(&(cbHashT[oldbase].head))) {
+	    QCat(&(cbHashT[oldbase].head), &(cbHashT[base].head));
+	}
     }
-  }
-ReleaseWriteLock(&afs_xcbhash);
+    ReleaseWriteLock(&afs_xcbhash);
 
-return didbump;
+    return didbump;
 }

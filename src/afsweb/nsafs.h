@@ -41,16 +41,15 @@ typedef struct shaState {
 } shaState;
 
 
-void sha_clear(shaState *shaStateP);
-void sha_update(shaState *shaStateP, const char *buffer, int bufferLen);
-void sha_finish(shaState *shaStateP);
-void sha_hash(shaState *shaStateP, const char *buffer, int bufferLen);
-void sha_bytes(const shaState *shaStateP, char *bytes);
+void sha_clear(shaState * shaStateP);
+void sha_update(shaState * shaStateP, const char *buffer, int bufferLen);
+void sha_finish(shaState * shaStateP);
+void sha_hash(shaState * shaStateP, const char *buffer, int bufferLen);
+void sha_bytes(const shaState * shaStateP, char *bytes);
 
-extern afs_int32 nsafs_SetToken (
-    struct ktc_principal *aserver,
-    struct ktc_token *atoken,
-    struct ktc_principal *aclient,
-    afs_int32 flags);
+extern afs_int32 nsafs_SetToken(struct ktc_principal *aserver,
+				struct ktc_token *atoken,
+				struct ktc_principal *aclient,
+				afs_int32 flags);
 
 #endif /* _NSAFS_H_ */

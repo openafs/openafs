@@ -21,8 +21,8 @@ RCSID
 #include "bulk.h"
 
 int
-bulk_SendFile(register int fd,
-	      register struct rx_call *call, register struct stat *status)
+bulk_SendFile(register int fd, register struct rx_call *call,
+	      register struct stat *status)
 {
     char *buffer = (char *)0;
     int blockSize;
@@ -59,8 +59,8 @@ bulk_SendFile(register int fd,
 
 /* Copy the appropriate number of bytes from the call to fd.  The status should reflect the file's status coming into the routine and will reflect it going out of the routine, in the absence of errors */
 int
-bulk_ReceiveFile(register int fd,
-		 register struct rx_call *call, register struct stat *status)
+bulk_ReceiveFile(register int fd, register struct rx_call *call,
+		 register struct stat *status)
 {
     register char *buffer = (char *)0;
     long length;

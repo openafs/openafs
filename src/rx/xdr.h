@@ -100,7 +100,7 @@ extern void *afs_osi_Alloc_NoSleep(size_t x);
 extern void afs_osi_Free(void *x, size_t asize);
 
 #endif
-#ifndef major		/* ouch! */
+#ifndef major			/* ouch! */
 #include <sys/types.h>
 #endif
 
@@ -148,9 +148,9 @@ extern void afs_osi_Free(void *x, size_t asize);
  * request.
  */
 enum xdr_op {
-	XDR_ENCODE=0,
-	XDR_DECODE=1,
-	XDR_FREE=2
+    XDR_ENCODE = 0,
+    XDR_DECODE = 1,
+    XDR_FREE = 2
 };
 
 /*
@@ -168,9 +168,9 @@ enum xdr_op {
  * bool_t	(*xdrproc_t)(XDR *, caddr_t *);
  */
 #if 0
-typedef	bool_t (*xdrproc_t)();
+typedef bool_t(*xdrproc_t) ();
 #else
-typedef bool_t (*xdrproc_t) (void *, ...);
+typedef bool_t(*xdrproc_t) (void *, ...);
 #endif
 
 
@@ -181,36 +181,36 @@ typedef bool_t (*xdrproc_t) (void *, ...);
  * and two private fields for the use of the particular impelementation.
  */
 typedef struct {
-	enum xdr_op	x_op;		/* operation; fast additional param */
-	struct xdr_ops {
+    enum xdr_op x_op;		/* operation; fast additional param */
+    struct xdr_ops {
 #if defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV))
 /* NOTE: SGI 6.1 adds two routines to the xdr_ops if the size of a long is
  * 64 bits. I've only done this for the kernel, since other changes may
  * be necessary if we make a 64 bit user version of AFS.
  */
-		bool_t	(*x_getint64)(void *xdrs, afs_int64 *lp); /* get 32 bits into a long */
-		bool_t	(*x_putint64)(void *xdrs, afs_int64 *lp); /* send 32 bits of a long */
-#endif /* defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)) */
+	bool_t(*x_getint64) (void *xdrs, afs_int64 * lp);	/* get 32 bits into a long */
+	bool_t(*x_putint64) (void *xdrs, afs_int64 * lp);	/* send 32 bits of a long */
+#endif				/* defined(KERNEL) && ((defined(AFS_SGI61_ENV) && (_MIPS_SZLONG != _MIPS_SZINT)) || defined(AFS_HPUX_64BIT_ENV)) */
 #if !(defined(KERNEL) && defined(AFS_SUN57_ENV))
-		bool_t	(*x_getint32)(void *xdrs, afs_int32 *lp);	/* get an afs_int32 from underlying stream */
-		bool_t	(*x_putint32)(void *xdrs, afs_int32 *lp);	/* put an afs_int32 to " */
+	bool_t(*x_getint32) (void *xdrs, afs_int32 * lp);	/* get an afs_int32 from underlying stream */
+	bool_t(*x_putint32) (void *xdrs, afs_int32 * lp);	/* put an afs_int32 to " */
 #endif
-		bool_t	(*x_getbytes)(void *xdrs, caddr_t addr, u_int len);/* get some bytes from " */
-		bool_t	(*x_putbytes)(void *xdrs, caddr_t addr, u_int len);/* put some bytes to " */
-		u_int	(*x_getpostn)(void *xdrs);/* returns bytes off from beginning */
-		bool_t  (*x_setpostn)(void *xdrs, u_int pos);/* lets you reposition the stream */
-		afs_int32 *	(*x_inline)(void *xdrs, u_int len);	/* buf quick ptr to buffered data */
-		void	(*x_destroy)(void *xdrs);	/* free privates of this xdr_stream */
+	bool_t(*x_getbytes) (void *xdrs, caddr_t addr, u_int len);	/* get some bytes from " */
+	bool_t(*x_putbytes) (void *xdrs, caddr_t addr, u_int len);	/* put some bytes to " */
+	u_int(*x_getpostn) (void *xdrs);	/* returns bytes off from beginning */
+	bool_t(*x_setpostn) (void *xdrs, u_int pos);	/* lets you reposition the stream */
+	afs_int32 *(*x_inline) (void *xdrs, u_int len);	/* buf quick ptr to buffered data */
+	void (*x_destroy) (void *xdrs);	/* free privates of this xdr_stream */
 #if defined(KERNEL) && defined(AFS_SUN57_ENV)
-		bool_t  (*x_control)(void *xdrs);
-		bool_t  (*x_getint32)(void *xdrs, afs_int32 *lp);
-		bool_t  (*x_putint32)(void *xdrs, afs_int32 *lp);
+	  bool_t(*x_control) (void *xdrs);
+	  bool_t(*x_getint32) (void *xdrs, afs_int32 * lp);
+	  bool_t(*x_putint32) (void *xdrs, afs_int32 * lp);
 #endif
-	} *x_ops;
-	caddr_t 	x_public;	/* users' data */
-	caddr_t		x_private;	/* pointer to private data */
-	caddr_t 	x_base;		/* private used for position info */
-	int		x_handy;	/* extra private word */
+    } *x_ops;
+    caddr_t x_public;		/* users' data */
+    caddr_t x_private;		/* pointer to private data */
+    caddr_t x_base;		/* private used for position info */
+    int x_handy;		/* extra private word */
 } XDR;
 
 /*
@@ -288,8 +288,8 @@ typedef struct {
  */
 #define NULL_xdrproc_t ((xdrproc_t)0)
 struct xdr_discrim {
-	int	value;
-	xdrproc_t proc;
+    int value;
+    xdrproc_t proc;
 };
 
 /*

@@ -48,34 +48,34 @@ RCSID("$Id$");
 #endif
 
 static void
-creat_file (char *name)
+creat_file(char *name)
 {
     int fd;
 
-    fd = open (name, O_WRONLY | O_CREAT | O_EXCL, 0777);
+    fd = open(name, O_WRONLY | O_CREAT | O_EXCL, 0777);
     if (fd < 0)
-	err (1, "open %s", name);
-    if (close (fd) < 0)
-	err (1, "close %s", name);
+	err(1, "open %s", name);
+    if (close(fd) < 0)
+	err(1, "close %s", name);
 }
 
 static void
-look_at_file (char *name)
+look_at_file(char *name)
 {
     int fd;
 
-    fd = open (name, O_RDONLY | O_EXCL, 0777);
+    fd = open(name, O_RDONLY | O_EXCL, 0777);
     if (fd < 0)
-	err (1, "open %s", name);
-    if (close (fd) < 0)
-	err (1, "close %s", name);
+	err(1, "open %s", name);
+    if (close(fd) < 0)
+	err(1, "close %s", name);
 }
 
 static void
-usage (int ret)
+usage(int ret)
 {
-    fprintf (stderr, "%s\n", __progname);
-    exit (ret);
+    fprintf(stderr, "%s\n", __progname);
+    exit(ret);
 }
 
 int
@@ -85,9 +85,9 @@ main(int argc, char **argv)
 
 
     if (argc != 1)
-	usage (1);
+	usage(1);
 
-    creat_file (file);
-    look_at_file (file);
+    creat_file(file);
+    look_at_file(file);
     return 0;
 }

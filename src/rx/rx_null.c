@@ -14,7 +14,8 @@
 #endif
 #include <afsconfig.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef KERNEL
 #ifndef	UKERNEL
@@ -30,14 +31,16 @@ RCSID("$Header$");
 /* The null security object.  No authentication, no nothing. */
 
 static struct rx_securityOps null_ops;
-static struct rx_securityClass null_object = {&null_ops, 0, 0};
+static struct rx_securityClass null_object = { &null_ops, 0, 0 };
 
-struct rx_securityClass *rxnull_NewServerSecurityObject(void)
+struct rx_securityClass *
+rxnull_NewServerSecurityObject(void)
 {
     return &null_object;
 }
 
-struct rx_securityClass *rxnull_NewClientSecurityObject(void)
+struct rx_securityClass *
+rxnull_NewClientSecurityObject(void)
 {
     return &null_object;
 }

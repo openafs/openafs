@@ -28,12 +28,12 @@
 #define AFS_SGI64_ENV		1
 #define AFS_SGI65_ENV		1
 #define AFS_SGI_EXMAG		1	/* use magic fields in extents for AFS extra fields */
-/* AFS_SGI_SHORTSTACK not required since we have a 16K stack. */	
+/* AFS_SGI_SHORTSTACK not required since we have a 16K stack. */
 
 #define AFS_HAVE_FLOCK_SYSID    1
 
 #define RXK_LISTENER_ENV	1	/* Use an rx listener daemon */
-#define AFS_GCPAGS		0       /* if nonzero, garbage collect PAGs */
+#define AFS_GCPAGS		0	/* if nonzero, garbage collect PAGs */
 
 #define _ANSI_C_SOURCE		1	/* rx_user.h */
 
@@ -54,12 +54,12 @@
 #define AFS_IWRITE	69+1000
 #define AFS_IINC	70+1000
 #define AFS_IDEC	71+1000
-#define AFS_IOPEN64	72+1000 /* was never-used aux call. */
+#define AFS_IOPEN64	72+1000	/* was never-used aux call. */
 #define AFS_SYSCALL	73+1000
 
 /* For the XFS fileserver */
-#define AFS_SGI_XFS_IOPS_ENV 	1 /* turns on XFS inode ops. */
-#define AFS_64BIT_IOPS_ENV	1 /* inode ops expect 64 bit inodes */
+#define AFS_SGI_XFS_IOPS_ENV 	1	/* turns on XFS inode ops. */
+#define AFS_64BIT_IOPS_ENV	1	/* inode ops expect 64 bit inodes */
 
 /* Vnode size and access differs between Octane and Origin. The number
  * can be used to indicate which altername vnodeX_t to use for future
@@ -112,8 +112,8 @@
 #define	VATTR_NULL	vattr_null
 /* #define	DEBUG		1 */
 
-#define AFS_EVENT_LOCK  1 /* osi_Sleep/osi_Wakeup use spinlock. */
-#define AFS_SGI_DUAL_FS_CACHE 1 /* implies supports EFS or XFS cache */
+#define AFS_EVENT_LOCK  1	/* osi_Sleep/osi_Wakeup use spinlock. */
+#define AFS_SGI_DUAL_FS_CACHE 1	/* implies supports EFS or XFS cache */
 
 #define memset(A, B, S) bzero(A, S)
 #define memcpy(B, A, S) bcopy(A, B, S)
@@ -124,7 +124,7 @@
 #ifndef CMSERVERPREF
 #define CMSERVERPREF
 #endif
-#endif	/* AFS_PARAM_H */
+#endif /* AFS_PARAM_H */
 
 #else /* !defined(UKERNEL) */
 
@@ -146,7 +146,7 @@
 /* Used only in vfsck code; is it needed any more???? */
 #define RXK_LISTENER_ENV	1
 #define AFS_USERSPACE_IP_ADDR	1
-#define AFS_GCPAGS		0       /* if nonzero, garbage collect PAGs */
+#define AFS_GCPAGS		0	/* if nonzero, garbage collect PAGs */
 
 #define UKERNEL			1	/* user space kernel */
 #define AFS_GREEDY43_ENV	1	/* Used only in rx/rx_user.c */
@@ -159,7 +159,7 @@
 
 #include <afs/afs_sysnames.h>
 
-/*#define AFS_GLOBAL_SUNLOCK	1*/	/* For global locking */
+									   /*#define AFS_GLOBAL_SUNLOCK    1 *//* For global locking */
 
 #define	AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */
 
@@ -174,7 +174,7 @@
 #define SYS_NAME	"sgi_65"
 #define SYS_NAME_ID	SYS_NAME_ID_sgi_65
 #define AFSBIG_ENDIAN	1
-#define AFS_HAVE_FFS            1       /* Use system's ffs. */
+#define AFS_HAVE_FFS            1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS	0	/* System doesn't support statvfs */
 
 /* Extra kernel definitions (from kdefs file) */
@@ -194,7 +194,7 @@
 #define	AFS_MINCHANGE	2
 #define	VATTR_NULL	usr_vattr_null
 #endif /* KERNEL */
-#define	AFS_DIRENT	
+#define	AFS_DIRENT
 #ifndef CMSERVERPREF
 #define CMSERVERPREF
 #endif

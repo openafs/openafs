@@ -13,31 +13,34 @@
 #include <sys/stat.h>
 #include <process.h>
 
-void usuage()
+void
+usuage()
 {
-	printf("touch filename/Wildcard \n");
-	exit(1);
+    printf("touch filename/Wildcard \n");
+    exit(1);
 }
 
-int main(int argc, char* argv[])
+int
+main(int argc, char *argv[])
 {
-	int fh,fs;
-	long pos;
-	char buffer[1];
-	struct _finddata_t finfo;
-	if (argc<2)
-		usuage();
-	fs=_findfirst(argv[1],&finfo);
-	if (fs==-1)
-		return 0;
-	do {
-
-		if ((finfo.attrib & ~_A_ARCH) != _A_NORMAL) continue;
-		fh=_open(finfo.name,_S_IWRITE|_O_BINARY|_S_IREAD|_O_RDWR);
-		pos=_lseek(fh,0l,SEEK_END);
-		_write(fh,buffer,1);
-		_chsize(fh,pos);
-		_close(fh);
-	} while (_findnext(fs,&finfo)==0);
+    int fh, fs;
+    long pos;
+    char buffer[1];
+    struct _finddata_t finfo;
+    if (argc < 2)
+	usuage();
+    fs = _findfirst(argv[1], &finfo);
+    if (fs == -1)
 	return 0;
+    do {
+
+	if ((finfo.attrib & ~_A_ARCH) != _A_NORMAL)
+	    continue;
+	fh = _open(finfo.name, _S_IWRITE | _O_BINARY | _S_IREAD | _O_RDWR);
+	pos = _lseek(fh, 0l, SEEK_END);
+	_write(fh, buffer, 1);
+	_chsize(fh, pos);
+	_close(fh);
+    } while (_findnext(fs, &finfo) == 0);
+    return 0;
 }

@@ -10,14 +10,16 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
- 
+RCSID
+    ("$Header$");
+
 #include <stdio.h>
 
 #include "AFS_component_version_number.c"
 
-int main ()
+int
+main()
 {
-    printf ("%s\n", SYS_NAME);
+    printf("%s\n", SYS_NAME);
     return 0;
 }

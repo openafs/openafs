@@ -46,28 +46,28 @@ extern nl_catd catd;
 #define	GAVSIZ		(NCARGS/6)
 #define	isdir(d)	((d.st_mode & S_IFMT) == S_IFDIR)
 
-static	char **gargv;		/* Pointer to the (stack) arglist */
-static	int gargc;		/* Number args in gargv */
-static	int gnleft;
-static	short gflag;
+static char **gargv;		/* Pointer to the (stack) arglist */
+static int gargc;		/* Number args in gargv */
+static int gnleft;
+static short gflag;
 static int tglob();
-char	**glob();
-char	*globerr;
-char	*home;
-struct	passwd *getpwnam();
-extern	int errno;
-static	char *strspl(), *strend();
-char	*malloc(), *strcpy(), *strcat();
-char	**copyblk();
+char **glob();
+char *globerr;
+char *home;
+struct passwd *getpwnam();
+extern int errno;
+static char *strspl(), *strend();
+char *malloc(), *strcpy(), *strcat();
+char **copyblk();
 
-static	int globcnt;
+static int globcnt;
 
-char	*globchars = "`{[*?";
+char *globchars = "`{[*?";
 
-static	char *gpath, *gpathp, *lastgpathp;
-static	int globbed;
-static	char *entp;
-static	char **sortbas;
+static char *gpath, *gpathp, *lastgpathp;
+static int globbed;
+static char *entp;
+static char **sortbas;
 #if defined(AFS_AIX32_ENV) || defined(AFS_LINUX20_ENV)
 static ginit(char **);
 static collect(register char *);
@@ -103,164 +103,171 @@ void blkfree(char **);
 
 char **
 glob(v)
-	register char *v;
+     register char *v;
 {
-	char agpath[BUFSIZ];
-	char *agargv[GAVSIZ];
-	char *vv[2];
+    char agpath[BUFSIZ];
+    char *agargv[GAVSIZ];
+    char *vv[2];
 
-	vv[0] = strcpy(malloc((unsigned)strlen(v) + 1), v);
-	vv[1] = 0;
-	gflag = 0;
-	rscan(vv, tglob);
-	if (gflag == 0)
-		return (copyblk(vv));
+    vv[0] = strcpy(malloc((unsigned)strlen(v) + 1), v);
+    vv[1] = 0;
+    gflag = 0;
+    rscan(vv, tglob);
+    if (gflag == 0)
+	return (copyblk(vv));
 
-	globerr = 0;
-	gpath = agpath; gpathp = gpath; *gpathp = 0;
-	lastgpathp = &gpath[sizeof agpath - 2];
-	ginit(agargv); globcnt = 0;
-	collect(v);
-	if (globcnt == 0 && (gflag&1)) {
+    globerr = 0;
+    gpath = agpath;
+    gpathp = gpath;
+    *gpathp = 0;
+    lastgpathp = &gpath[sizeof agpath - 2];
+    ginit(agargv);
+    globcnt = 0;
+    collect(v);
+    if (globcnt == 0 && (gflag & 1)) {
 /*		blkfree(gargv); */
-	        gargv = 0; 
-		return (0);
-	} else
-		return (gargv = copyblk(gargv));
+	gargv = 0;
+	return (0);
+    } else
+	return (gargv = copyblk(gargv));
 }
 
 static
 ginit(agargv)
-	char **agargv;
+     char **agargv;
 {
 
-	agargv[0] = 0; gargv = agargv; sortbas = agargv; gargc = 0;
-	gnleft = NCARGS - 4;
+    agargv[0] = 0;
+    gargv = agargv;
+    sortbas = agargv;
+    gargc = 0;
+    gnleft = NCARGS - 4;
 }
 
 static
 collect(as)
-	register char *as;
+     register char *as;
 {
-	if (eq(as, "{") || eq(as, "{}")) {
-		Gcat(as, "");
-		sort();
-	} else
-		acollect(as);
+    if (eq(as, "{") || eq(as, "{}")) {
+	Gcat(as, "");
+	sort();
+    } else
+	acollect(as);
 }
 
 static
 acollect(as)
-	register char *as;
+     register char *as;
 {
-	register int ogargc = gargc;
+    register int ogargc = gargc;
 
-	gpathp = gpath; *gpathp = 0; globbed = 0;
-	expand(as);
-	if (gargc != ogargc)
-		sort();
+    gpathp = gpath;
+    *gpathp = 0;
+    globbed = 0;
+    expand(as);
+    if (gargc != ogargc)
+	sort();
 }
 
 static
 sort()
 {
-	register char **p1, **p2, *c;
-	char **Gvp = &gargv[gargc];
+    register char **p1, **p2, *c;
+    char **Gvp = &gargv[gargc];
 
-	p1 = sortbas;
-	while (p1 < Gvp-1) {
-		p2 = p1;
-		while (++p2 < Gvp)
+    p1 = sortbas;
+    while (p1 < Gvp - 1) {
+	p2 = p1;
+	while (++p2 < Gvp)
 #if defined (NLS) || defined (KJI)
-			if (NLstrcmp(*p1, *p2) > 0)
+	    if (NLstrcmp(*p1, *p2) > 0)
 #else
-			if (strcmp(*p1, *p2) > 0)
+	    if (strcmp(*p1, *p2) > 0)
 #endif
-				c = *p1, *p1 = *p2, *p2 = c;
-		p1++;
-	}
-	sortbas = Gvp;
+		c = *p1, *p1 = *p2, *p2 = c;
+	p1++;
+    }
+    sortbas = Gvp;
 }
 
 static
 expand(as)
-	char *as;
+     char *as;
 {
-	register char *cs;
-	register char *sgpathp, *oldcs;
-	struct stat stb;
+    register char *cs;
+    register char *sgpathp, *oldcs;
+    struct stat stb;
 #if defined (NLS) || defined (KJI)
-	int c, c1, two_bytes;
+    int c, c1, two_bytes;
 #endif
 
-	sgpathp = gpathp;
-	cs = as;
-	if (*cs == '~' && gpathp == gpath) {
-		addpath('~');
+    sgpathp = gpathp;
+    cs = as;
+    if (*cs == '~' && gpathp == gpath) {
+	addpath('~');
 #if defined (NLS) || defined (KJI)
-		while (c = *++cs) {
-			two_bytes = 0;
-			if (NCisshift (c)) {
-				two_bytes++;
-				c1 = *++cs;
-				_NCdec2 (c, c1, c);
-				cs--; /* need to pass 1st char to addpath */
-			}
-			if (NCisalpha (c) || NCisdigit (c) || *cs == '-') {
-				addpath (*cs);
-				if (two_bytes)
-					addpath (*cs++);
-			}
-			else{
-				break;
-			}
-		}
+	while (c = *++cs) {
+	    two_bytes = 0;
+	    if (NCisshift(c)) {
+		two_bytes++;
+		c1 = *++cs;
+		_NCdec2(c, c1, c);
+		cs--;		/* need to pass 1st char to addpath */
+	    }
+	    if (NCisalpha(c) || NCisdigit(c) || *cs == '-') {
+		addpath(*cs);
+		if (two_bytes)
+		    addpath(*cs++);
+	    } else {
+		break;
+	    }
+	}
 #else
-		for (cs++; letter(*cs) || digit(*cs) || *cs == '-';)
-			addpath(*cs++);
+	for (cs++; letter(*cs) || digit(*cs) || *cs == '-';)
+	    addpath(*cs++);
 #endif
-		if (!*cs || *cs == '/') {
-			if (gpathp != gpath + 1) {
-				*gpathp = 0;
-				if (gethdir(gpath + 1))
-					globerr = "Unknown user name after ~";
-				(void) strcpy(gpath, gpath + 1);
-			} else
-				(void) strcpy(gpath, home);
-			gpathp = strend(gpath);
-		}
+	if (!*cs || *cs == '/') {
+	    if (gpathp != gpath + 1) {
+		*gpathp = 0;
+		if (gethdir(gpath + 1))
+		    globerr = "Unknown user name after ~";
+		(void)strcpy(gpath, gpath + 1);
+	    } else
+		(void)strcpy(gpath, home);
+	    gpathp = strend(gpath);
 	}
-	while (!any(*cs, globchars)) {
-		if (*cs == 0) {
-			if (!globbed)
-				Gcat(gpath, "");
-			else if (stat(gpath, &stb) >= 0) {
-				Gcat(gpath, "");
-				globcnt++;
-			}
-			goto endit;
-		}
+    }
+    while (!any(*cs, globchars)) {
+	if (*cs == 0) {
+	    if (!globbed)
+		Gcat(gpath, "");
+	    else if (stat(gpath, &stb) >= 0) {
+		Gcat(gpath, "");
+		globcnt++;
+	    }
+	    goto endit;
+	}
 #if defined (NLS) || defined (KJI)
-		/* need extra call to addpath for two byte NLS char */
-		if (NCisshift (*cs))
-			addpath (*cs++);
+	/* need extra call to addpath for two byte NLS char */
+	if (NCisshift(*cs))
+	    addpath(*cs++);
 #endif
-		addpath(*cs++);
-	}
-	oldcs = cs;
-	while (cs > as && *cs != '/')
-		cs--, gpathp--;
-	if (*cs == '/')
-		cs++, gpathp++;
-	*gpathp = 0;
-	if (*oldcs == '{') {
-		(void) execbrc(cs, (NULL));
-		return;
-	}
-	matchdir(cs);
-endit:
-	gpathp = sgpathp;
-	*gpathp = 0;
+	addpath(*cs++);
+    }
+    oldcs = cs;
+    while (cs > as && *cs != '/')
+	cs--, gpathp--;
+    if (*cs == '/')
+	cs++, gpathp++;
+    *gpathp = 0;
+    if (*oldcs == '{') {
+	(void)execbrc(cs, (NULL));
+	return;
+    }
+    matchdir(cs);
+  endit:
+    gpathp = sgpathp;
+    *gpathp = 0;
 }
 
 #ifndef AFS_LINUX20_ENV
@@ -269,693 +276,675 @@ endit:
 
 static
 matchdir(pattern)
-	char *pattern;
+     char *pattern;
 {
-	struct stat stb;
-	register struct dirent *dp;
-	DIR *dirp;
+    struct stat stb;
+    register struct dirent *dp;
+    DIR *dirp;
 
-	/*
-	 * This fixes the problem of using the local
-	 * path on the remote machine.  (PTM #35291).
-	 */
-	if (strcmp(gpath, "") == 0)
-		dirp = opendir(".");
-	else
-		dirp = opendir(gpath);
-	if (dirp == NULL) {
-		if (globbed)
-			return;
-		goto patherr2;
+    /*
+     * This fixes the problem of using the local
+     * path on the remote machine.  (PTM #35291).
+     */
+    if (strcmp(gpath, "") == 0)
+	dirp = opendir(".");
+    else
+	dirp = opendir(gpath);
+    if (dirp == NULL) {
+	if (globbed)
+	    return;
+	goto patherr2;
+    }
+    if (fstat(dirfd(dirp), &stb) < 0)
+	goto patherr1;
+    if (!isdir(stb)) {
+	errno = ENOTDIR;
+	goto patherr1;
+    }
+    while ((dp = readdir(dirp)) != NULL) {
+	if (dp->d_ino == 0)
+	    continue;
+	if (match(dp->d_name, pattern)) {
+	    Gcat(gpath, dp->d_name);
+	    globcnt++;
 	}
-	if (fstat(dirfd(dirp), &stb) < 0)
-		goto patherr1;
-	if (!isdir(stb)) {
-		errno = ENOTDIR;
-		goto patherr1;
-	}
-	while ((dp = readdir(dirp)) != NULL) {
-		if (dp->d_ino == 0)
-			continue;
-		if (match(dp->d_name, pattern)) {
-			Gcat(gpath, dp->d_name);
-			globcnt++;
-		}
-	}
-	closedir(dirp);
-	return;
+    }
+    closedir(dirp);
+    return;
 
-patherr1:
-	closedir(dirp);
-patherr2:
-	globerr = "Bad directory components";
+  patherr1:
+    closedir(dirp);
+  patherr2:
+    globerr = "Bad directory components";
 }
 
 static
 execbrc(p, s)
-	char *p, *s;
+     char *p, *s;
 {
-	char restbuf[BUFSIZ + 2];
-	register char *pe, *pm, *pl;
-	int brclev = 0;
-	char *lm, savec, *sgpathp;
+    char restbuf[BUFSIZ + 2];
+    register char *pe, *pm, *pl;
+    int brclev = 0;
+    char *lm, savec, *sgpathp;
 #if defined (NLS) || defined (KJI)
-	int tc;
+    int tc;
 #endif
 
-	for (lm = restbuf; *p != '{'; *lm++ = *p++) {
+    for (lm = restbuf; *p != '{'; *lm++ = *p++) {
 #if defined (NLS) || defined (KJI)
-	    if (NCisshift (*p)) {
-		*lm++ = *p++;
-		if (_NCdec2(*lm, *p, *lm) == 1) {
-		    lm--;
-		    p--;
-		}
+	if (NCisshift(*p)) {
+	    *lm++ = *p++;
+	    if (_NCdec2(*lm, *p, *lm) == 1) {
+		lm--;
+		p--;
 	    }
-#endif
-	    continue;
 	}
-	for (pe = ++p; *pe; pe++)
+#endif
+	continue;
+    }
+    for (pe = ++p; *pe; pe++)
 	switch (*pe) {
 
 	case '{':
-		brclev++;
-		continue;
+	    brclev++;
+	    continue;
 
 	case '}':
-		if (brclev == 0)
-			goto pend;
-		brclev--;
-		continue;
+	    if (brclev == 0)
+		goto pend;
+	    brclev--;
+	    continue;
 
 	case '[':
-		for (pe++; *pe && *pe != ']'; pe++) {
+	    for (pe++; *pe && *pe != ']'; pe++) {
 #if defined (NLS) || defined (KJI)
-			if (NCisshift (*pe)) {
-				tc = *p++;
-				if (_NCdec2 (tc, *pe, tc) == 1) pe--;
-			}
+		if (NCisshift(*pe)) {
+		    tc = *p++;
+		    if (_NCdec2(tc, *pe, tc) == 1)
+			pe--;
+		}
 #endif
-			continue;
-		    }
 		continue;
+	    }
+	    continue;
 #if defined (NLS) || defined (KJI)
 	default:
-		if (NCisshift (*pe)) {
-			tc = *pe++;
-			if (_NCdec2 (tc, *pe, tc) == 1) pe--;
-		}
-	continue;
+	    if (NCisshift(*pe)) {
+		tc = *pe++;
+		if (_NCdec2(tc, *pe, tc) == 1)
+		    pe--;
+	    }
+	    continue;
 #endif
 
 	}
-pend:
-	brclev = 0;
-	for (pl = pm = p; pm <= pe; pm++)
+  pend:
+    brclev = 0;
+    for (pl = pm = p; pm <= pe; pm++)
 #if defined (NLS) || defined (KJI)
 	switch (*pm) {
 #else
-	switch (*pm & (QUOTE|TRIM)) {
+	switch (*pm & (QUOTE | TRIM)) {
 #endif
 	case '{':
-		brclev++;
-		continue;
+	    brclev++;
+	    continue;
 
 	case '}':
-		if (brclev) {
-			brclev--;
-			continue;
-		}
-		goto doit;
+	    if (brclev) {
+		brclev--;
+		continue;
+	    }
+	    goto doit;
 
 #if defined (NLS) || defined (KJI)
 	case ',':
 #else
-	case ','|QUOTE:
+	case ',' | QUOTE:
 	case ',':
 #endif
-		if (brclev)
-			continue;
-doit:
-		savec = *pm;
-		*pm = 0;
-		(void) strcpy(lm, pl);
-		(void) strcat(restbuf, pe + 1);
-		*pm = savec;
-		if (s == 0) {
-			sgpathp = gpathp;
-			expand(restbuf);
-			gpathp = sgpathp;
-			*gpathp = 0;
-		} else if (amatch(s, restbuf))
-			return (1);
-		sort();
-		pl = pm + 1;
-		if (brclev)
-			return (0);
+	    if (brclev)
 		continue;
+	  doit:
+	    savec = *pm;
+	    *pm = 0;
+	    (void)strcpy(lm, pl);
+	    (void)strcat(restbuf, pe + 1);
+	    *pm = savec;
+	    if (s == 0) {
+		sgpathp = gpathp;
+		expand(restbuf);
+		gpathp = sgpathp;
+		*gpathp = 0;
+	    } else if (amatch(s, restbuf))
+		return (1);
+	    sort();
+	    pl = pm + 1;
+	    if (brclev)
+		return (0);
+	    continue;
 
 	case '[':
-		for (pm++; *pm && *pm != ']'; pm++) {
+	    for (pm++; *pm && *pm != ']'; pm++) {
 #if defined (NLS) || defined (KJI)
-			if (NCisshift (*pm)) {
-				tc = *pm++;
-				if (_NCdec2 (tc, *pm, tc) == 1) pm--;
-			}
-#endif
-			continue;
-		    }
-		if (!*pm)
+		if (NCisshift(*pm)) {
+		    tc = *pm++;
+		    if (_NCdec2(tc, *pm, tc) == 1)
 			pm--;
+		}
+#endif
 		continue;
+	    }
+	    if (!*pm)
+		pm--;
+	    continue;
 #if defined (NLS) || defined (KJI)
 	default:
-		if (NCisshift (*pm)) {
-			tc = *pm++;
-			if (_NCdec2 (tc, *pm, tc) == 1) pm--;
-		}
-		continue;
+	    if (NCisshift(*pm)) {
+		tc = *pm++;
+		if (_NCdec2(tc, *pm, tc) == 1)
+		    pm--;
+	    }
+	    continue;
 #endif
-       }
-	if (brclev)
-		goto doit;
-	return (0);
+	}
+    if (brclev)
+	goto doit;
+    return (0);
 }
 
 static
 match(s, p)
-	char *s, *p;
+     char *s, *p;
 {
-	register int c;
-	register char *sentp;
-	char sglobbed = globbed;
+    register int c;
+    register char *sentp;
+    char sglobbed = globbed;
 
-	if (*s == '.' && *p != '.')
-		return (0);
-	sentp = entp;
-	entp = s;
-	c = amatch(s, p);
-	entp = sentp;
-	globbed = sglobbed;
-	return (c);
+    if (*s == '.' && *p != '.')
+	return (0);
+    sentp = entp;
+    entp = s;
+    c = amatch(s, p);
+    entp = sentp;
+    globbed = sglobbed;
+    return (c);
 }
 
 static
 amatch(s, p)
-	register char *s, *p;
+     register char *s, *p;
 {
-	register int scc;
-	int ok, lc;
-	char *sgpathp;
-	struct stat stb;
-	int c, cc;
+    register int scc;
+    int ok, lc;
+    char *sgpathp;
+    struct stat stb;
+    int c, cc;
 #if defined (NLS) || defined (KJI)
-	register int cc1, scc1;
-	static int s_is2 = 0;
+    register int cc1, scc1;
+    static int s_is2 = 0;
 #endif
 
-	globbed = 1;
-	for (;;) {
+    globbed = 1;
+    for (;;) {
 #if defined (NLS) || defined (KJI)
 	s_is2 = 0;
 	scc = *s++;
-	if (NCisshift (scc)) {
-		scc1 = *s++;
-		if (_NCdec2(scc, scc1, scc) == 1) 
-			s--;
-		else
-			s_is2 = 1;
+	if (NCisshift(scc)) {
+	    scc1 = *s++;
+	    if (_NCdec2(scc, scc1, scc) == 1)
+		s--;
+	    else
+		s_is2 = 1;
 	}
 #else
-		scc = *s++ & TRIM;
+	scc = *s++ & TRIM;
 #endif
-		switch (c = *p++) {
+	switch (c = *p++) {
 
-		case '{':
+	case '{':
 #if defined (NLS) || defined (KJI)
-		if (s_is2)
-			return (execbrc(p -1, s - 2));
-		else
+	    if (s_is2)
+		return (execbrc(p - 1, s - 2));
+	    else
 #endif
-			return (execbrc(p - 1, s - 1));
+		return (execbrc(p - 1, s - 1));
 
-		case '[':
-			ok = 0;
-			lc = 077777;
-			while (cc = *p++) {
+	case '[':
+	    ok = 0;
+	    lc = 077777;
+	    while (cc = *p++) {
 #if defined (NLS) || defined (KJI)
-				if (NCisshift (cc))
-					if (_NCdec2(cc, *p, cc) == 2) p++;
+		if (NCisshift(cc))
+		    if (_NCdec2(cc, *p, cc) == 2)
+			p++;
 #endif
-				if (cc == ']') {
-					if (ok)
-						break;
-					return (0);
-				}
-#if defined (NLS) || defined (KJI)
-				if (cc == '[')
-					if (p[1] == ':')
-					{
-						if (!strncmp(p,"[:alpha:]",9)) {
-					   	ok |= (isascii(scc) && 
-							isalpha(scc));
-					   	p += 8;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:upper:]",9)) {
-					   	ok |= (isascii(scc) && 
-							isupper(scc));
-					   	p += 8;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:lower:]",9)) {
-					   	ok |= (isascii(scc) && 
-							islower(scc));
-					   	p += 8;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:digit:]",9)) {
-					   	ok |= (isascii(scc) && 
-							isdigit(scc));
-					   	p += 8;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:alnum:]",9)) {
-					   	ok |= (isascii(scc) && 
-							isalnum(scc));
-					   	p += 8;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:print:]",9)) {
-					   	ok |= (isascii(scc) && 
-							isprint(scc));
-					   	p += 8;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:punct:]",9)) {
-					   	ok |= (isascii(scc) && 
-							ispunct(scc));
-					   	p += 8;
-					   	break;
-					   	}
-#ifdef KJI
-						if (!strncmp(p,"[:jalpha:]",10)) {
-					   	ok |= isjalpha(scc);
-					   	p += 9;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:jdigit:]",10)) {
-					   	ok |= isjdigit(scc);
-					   	p += 9;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:jpunct:]",10)) {
-					   	ok |= isjpunct(scc);
-					   	p += 9;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:jparen:]",10)) {
-					   	ok |= isjparen(scc);
-					   	p += 9;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:jkanji:]",10)) {
-					   	ok |= isjkanji(scc);
-					   	p += 9;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:jhira:]",9)) {
-					   	ok |= isjhira(scc);
-					   	p += 8;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:jkata:]",9)) {
-					   	ok |= isjkata(scc);
-					   	p += 8;
-					   	break;
-					   	}
-
-#endif /*KJI*/
-					}
-				if ((cc == '-') && (lc > 0)) {
-					int cu1, lcu, scu1, tco;
-
-					cc1 = *p++;
-					if (NCisshift (cc1))
-						if (_NCdec2(cc1, *p, cc1) == 
-								1)
-							p--;
-					cu1 = NCcoluniq(cc1);
-					if (((tco = NCcollate(cc1)) < 0 ) &&
-					   (tco = _NCxcolu(tco, &p, 0, 
-							&cu1)));
-
-					lcu = NCcoluniq(lc);
-					if ( (tco = NCcollate(lc)) < 0 ) {
-						char tb[3], *tbp = tb;
-
-						tb[0] = tb[1] = tb[2] = '\0';
-                                        	_NCe2(lc,tb[0], tb[1]);
-						tco = _NCxcolu(tco, &tbp, 0, 
-								&lcu);
-				    	}
-					scu1 = NCcoluniq(scc);
-					if (((tco = NCcollate(scc)) < 0 ) &&
-                                           (tco = _NCxcolu(tco, &s,0,&scu1)));
-
-					/* if we have nonzero collate vals */
-					if (lcu && cu1 && scu1 )
-						ok += (lcu <= scu1 && 
-							scu1 <= cu1);
-					else
-						ok += (lc == scc || 
-							scc == cu1);
-#else
-				if (cc == '-') {
-					if (lc <= scc && scc <= *p++)
-						ok++;
-#endif /* KJI || NLS */
-				} else
-					if (scc == (lc = cc))
-						ok++;
-			}
-			if (cc == 0)
-				if (ok)
-					p--;
-				else
-					return 0;
-			continue;
-
-		case '*':
-			if (!*p)
-				return (1);
-			if (*p == '/') {
-				p++;
-				goto slash;
-			}
-#if defined (NLS) || defined (KJI)
-			if (s_is2) s--;
-#endif
-			s--;
-			do {
-				if (amatch(s, p))
-					return (1);
-			} while (*s++);
-			return (0);
-
-		case 0:
-			return (scc == 0);
-
-		default:
-#if defined (NLS) || defined (KJI)
-			if (NCisshift (c))
-				if (_NCdec2(c, *p, c) == 2) p++;
-#endif
-			if (c != scc)
-				return (0);
-			continue;
-
-		case '?':
-			if (scc == 0)
-				return (0);
-			continue;
-
-		case '/':
-			if (scc)
-				return (0);
-slash:
-			s = entp;
-			sgpathp = gpathp;
-			while (*s)
-				addpath(*s++);
-			addpath('/');
-			if (stat(gpath, &stb) == 0 && isdir(stb))
-				if (*p == 0) {
-					Gcat(gpath, "");
-					globcnt++;
-				} else
-					expand(p);
-			gpathp = sgpathp;
-			*gpathp = 0;
-			return (0);
+		if (cc == ']') {
+		    if (ok)
+			break;
+		    return (0);
 		}
+#if defined (NLS) || defined (KJI)
+		if (cc == '[')
+		    if (p[1] == ':') {
+			if (!strncmp(p, "[:alpha:]", 9)) {
+			    ok |= (isascii(scc) && isalpha(scc));
+			    p += 8;
+			    break;
+			}
+			if (!strncmp(p, "[:upper:]", 9)) {
+			    ok |= (isascii(scc) && isupper(scc));
+			    p += 8;
+			    break;
+			}
+			if (!strncmp(p, "[:lower:]", 9)) {
+			    ok |= (isascii(scc) && islower(scc));
+			    p += 8;
+			    break;
+			}
+			if (!strncmp(p, "[:digit:]", 9)) {
+			    ok |= (isascii(scc) && isdigit(scc));
+			    p += 8;
+			    break;
+			}
+			if (!strncmp(p, "[:alnum:]", 9)) {
+			    ok |= (isascii(scc) && isalnum(scc));
+			    p += 8;
+			    break;
+			}
+			if (!strncmp(p, "[:print:]", 9)) {
+			    ok |= (isascii(scc) && isprint(scc));
+			    p += 8;
+			    break;
+			}
+			if (!strncmp(p, "[:punct:]", 9)) {
+			    ok |= (isascii(scc) && ispunct(scc));
+			    p += 8;
+			    break;
+			}
+#ifdef KJI
+			if (!strncmp(p, "[:jalpha:]", 10)) {
+			    ok |= isjalpha(scc);
+			    p += 9;
+			    break;
+			}
+			if (!strncmp(p, "[:jdigit:]", 10)) {
+			    ok |= isjdigit(scc);
+			    p += 9;
+			    break;
+			}
+			if (!strncmp(p, "[:jpunct:]", 10)) {
+			    ok |= isjpunct(scc);
+			    p += 9;
+			    break;
+			}
+			if (!strncmp(p, "[:jparen:]", 10)) {
+			    ok |= isjparen(scc);
+			    p += 9;
+			    break;
+			}
+			if (!strncmp(p, "[:jkanji:]", 10)) {
+			    ok |= isjkanji(scc);
+			    p += 9;
+			    break;
+			}
+			if (!strncmp(p, "[:jhira:]", 9)) {
+			    ok |= isjhira(scc);
+			    p += 8;
+			    break;
+			}
+			if (!strncmp(p, "[:jkata:]", 9)) {
+			    ok |= isjkata(scc);
+			    p += 8;
+			    break;
+			}
+#endif			 /*KJI*/
+		    }
+		if ((cc == '-') && (lc > 0)) {
+		    int cu1, lcu, scu1, tco;
+
+		    cc1 = *p++;
+		    if (NCisshift(cc1))
+			if (_NCdec2(cc1, *p, cc1) == 1)
+			    p--;
+		    cu1 = NCcoluniq(cc1);
+		    if (((tco = NCcollate(cc1)) < 0)
+			&& (tco = _NCxcolu(tco, &p, 0, &cu1)));
+
+		    lcu = NCcoluniq(lc);
+		    if ((tco = NCcollate(lc)) < 0) {
+			char tb[3], *tbp = tb;
+
+			tb[0] = tb[1] = tb[2] = '\0';
+			_NCe2(lc, tb[0], tb[1]);
+			tco = _NCxcolu(tco, &tbp, 0, &lcu);
+		    }
+		    scu1 = NCcoluniq(scc);
+		    if (((tco = NCcollate(scc)) < 0)
+			&& (tco = _NCxcolu(tco, &s, 0, &scu1)));
+
+		    /* if we have nonzero collate vals */
+		    if (lcu && cu1 && scu1)
+			ok += (lcu <= scu1 && scu1 <= cu1);
+		    else
+			ok += (lc == scc || scc == cu1);
+#else
+		if (cc == '-') {
+		    if (lc <= scc && scc <= *p++)
+			ok++;
+#endif /* KJI || NLS */
+		} else if (scc == (lc = cc))
+		    ok++;
+	    }
+	    if (cc == 0)
+		if (ok)
+		    p--;
+		else
+		    return 0;
+	    continue;
+
+	case '*':
+	    if (!*p)
+		return (1);
+	    if (*p == '/') {
+		p++;
+		goto slash;
+	    }
+#if defined (NLS) || defined (KJI)
+	    if (s_is2)
+		s--;
+#endif
+	    s--;
+	    do {
+		if (amatch(s, p))
+		    return (1);
+	    } while (*s++);
+	    return (0);
+
+	case 0:
+	    return (scc == 0);
+
+	default:
+#if defined (NLS) || defined (KJI)
+	    if (NCisshift(c))
+		if (_NCdec2(c, *p, c) == 2)
+		    p++;
+#endif
+	    if (c != scc)
+		return (0);
+	    continue;
+
+	case '?':
+	    if (scc == 0)
+		return (0);
+	    continue;
+
+	case '/':
+	    if (scc)
+		return (0);
+	  slash:
+	    s = entp;
+	    sgpathp = gpathp;
+	    while (*s)
+		addpath(*s++);
+	    addpath('/');
+	    if (stat(gpath, &stb) == 0 && isdir(stb))
+		if (*p == 0) {
+		    Gcat(gpath, "");
+		    globcnt++;
+		} else
+		    expand(p);
+	    gpathp = sgpathp;
+	    *gpathp = 0;
+	    return (0);
 	}
+    }
 }
 
 static
 Gmatch(s, p)
-	register char *s, *p;
+     register char *s, *p;
 {
-	register int scc;
-	int ok, lc;
-	int c, cc;
+    register int scc;
+    int ok, lc;
+    int c, cc;
 #if defined (NLS) || defined (KJI)
-	register int scc1, cc1;
-	int s_is2;
+    register int scc1, cc1;
+    int s_is2;
 #endif
 
-	for (;;) {
+    for (;;) {
 #if defined (NLS) || defined (KJI)
-		s_is2 = 0;
-		scc = *s++;
-		if (NCisshift (scc)) {
-			scc1 = *s++;
-			if (_NCdec2(scc, scc1, scc) == 1)
-				s--;
-			else
-				s_is2 = 1;
-		}
-#else
-		scc = *s++ & TRIM;
-#endif
-		switch (c = *p++) {
-
-		case '[':
-			ok = 0;
-			lc = 077777;
-			while (cc = *p++) {
-#if defined (NLS) || defined (KJI)
-				if (NCisshift (cc))
-					if (_NCdec2(cc, *p, cc)  == 2) p++;
-#endif
-				if (cc == ']') {
-					if (ok)
-						break;
-					return (0);
-				}
-
-#if defined (NLS) || defined (KJI)
-				if (cc == '[')
-					if (p[1] == ':')
-					{
-						if (!strncmp(p,"[:alpha:]",9)) {
-					   	ok |= (isascii(scc) && 
-							isalpha(scc));
-					   	p += 8;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:upper:]",9)) {
-					   	ok |= (isascii(scc) && 
-							isupper(scc));
-					   	p += 8;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:lower:]",9)) {
-					   	ok |= (isascii(scc) && 
-							islower(scc));
-					   	p += 8;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:digit:]",9)) {
-					   	ok |= (isascii(scc) && 
-							isdigit(scc));
-					   	p += 8;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:alnum:]",9)) {
-					   	ok |= (isascii(scc) && 
-							isalnum(scc));
-					   	p += 8;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:print:]",9)) {
-					   	ok |= (isascii(scc) && 
-							isprint(scc));
-					   	p += 8;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:punct:]",9)) {
-					   	ok |= (isascii(scc) && 
-							ispunct(scc));
-					   	p += 8;
-					   	break;
-					   	}
-#ifdef KJI
-						if (!strncmp(p,"[:jalpha:]",10)) {
-					   	ok |= isjalpha(scc);
-					   	p += 9;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:jdigit:]",10)) {
-					   	ok |= isjdigit(scc);
-					   	p += 9;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:jpunct:]",10)) {
-					   	ok |= isjpunct(scc);
-					   	p += 9;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:jparen:]",10)) {
-					   	ok |= isjparen(scc);
-					   	p += 9;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:jkanji:]",10)) {
-					   	ok |= isjkanji(scc);
-					   	p += 9;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:jhira:]",9)) {
-					   	ok |= isjhira(scc);
-					   	p += 8;
-					   	break;
-					   	}
-						if (!strncmp(p,"[:jkata:]",9)) {
-					   	ok |= isjkata(scc);
-					   	p += 8;
-					   	break;
-					   	}
-#endif /* KJI */
-					}
-				if ((cc == '-') && (lc > 0)) {
-					int cu1, scu1, lcu, tco;
-
-					cc1 = *p++;
-					if (NCisshift (cc1))
-						if (_NCdec2(cc1, *p, cc1) == 
-								1)
-							p--;
-					cu1 = NCcoluniq(cc1);
-					if (((tco = NCcollate(cc1)) < 0 ) &&
-					   (tco = _NCxcolu(tco, &p, 0,&cu1)));
-
-					lcu = NCcoluniq(lc);
-					if ( (tco = NCcollate(lc)) < 0 ) {
-						char tb[3], *tbp = tb;
-
-						tb[0] = tb[1] = tb[2] = '\0';
-                                        	_NCe2(lc,tb[0], tb[1]);
-						tco = _NCxcolu(tco, &tbp, 0, 
-								&lcu);
-				    	}
-					scu1 = NCcoluniq(scc);
-					if (((tco = NCcollate(scc)) < 0 ) &&
-                                           (tco = _NCxcolu(tco, &s,0,&scu1)));
-
-					/* if we have nonzero collate vals */
-					if (lcu && cu1 && scu1 )
-						ok += (lcu <= scu1 && 
-							scu1 <= cu1);
-					else
-						ok += (lc == scc || 
-							scc == cu1);
-#else 
-				if (cc == '-') {
-					if (lc <= scc && scc <= *p++)
-						ok++;
-#endif /* KJI || NLS */
-				} else
-					if (scc == (lc = cc))
-						ok++;
-			}
-			if (cc == 0)
-				if (ok)
-					p--;
-				else
-					return 0;
-			continue;
-
-		case '*':
-			if (!*p)
-				return (1);
-#if defined (NLS) || defined (KJI)
-			if (s_is2) s--;
-#endif
-			for (s--; *s; s++)
-				if (Gmatch(s, p))
-					return (1);
-			return (0);
-
-		case 0:
-			return (scc == 0);
-
-		default:
-#if defined (NLS) || defined (KJI)
-			if (NCisshift(c))
-				if (_NCdec2 (c, *p, c) == 2) p++;
-			if (c != scc)
-#else
-			if ((c & TRIM) != scc)
-#endif
-				return (0);
-			continue;
-
-		case '?':
-			if (scc == 0)
-				return (0);
-			continue;
-
-		}
+	s_is2 = 0;
+	scc = *s++;
+	if (NCisshift(scc)) {
+	    scc1 = *s++;
+	    if (_NCdec2(scc, scc1, scc) == 1)
+		s--;
+	    else
+		s_is2 = 1;
 	}
+#else
+	scc = *s++ & TRIM;
+#endif
+	switch (c = *p++) {
+
+	case '[':
+	    ok = 0;
+	    lc = 077777;
+	    while (cc = *p++) {
+#if defined (NLS) || defined (KJI)
+		if (NCisshift(cc))
+		    if (_NCdec2(cc, *p, cc) == 2)
+			p++;
+#endif
+		if (cc == ']') {
+		    if (ok)
+			break;
+		    return (0);
+		}
+#if defined (NLS) || defined (KJI)
+		if (cc == '[')
+		    if (p[1] == ':') {
+			if (!strncmp(p, "[:alpha:]", 9)) {
+			    ok |= (isascii(scc) && isalpha(scc));
+			    p += 8;
+			    break;
+			}
+			if (!strncmp(p, "[:upper:]", 9)) {
+			    ok |= (isascii(scc) && isupper(scc));
+			    p += 8;
+			    break;
+			}
+			if (!strncmp(p, "[:lower:]", 9)) {
+			    ok |= (isascii(scc) && islower(scc));
+			    p += 8;
+			    break;
+			}
+			if (!strncmp(p, "[:digit:]", 9)) {
+			    ok |= (isascii(scc) && isdigit(scc));
+			    p += 8;
+			    break;
+			}
+			if (!strncmp(p, "[:alnum:]", 9)) {
+			    ok |= (isascii(scc) && isalnum(scc));
+			    p += 8;
+			    break;
+			}
+			if (!strncmp(p, "[:print:]", 9)) {
+			    ok |= (isascii(scc) && isprint(scc));
+			    p += 8;
+			    break;
+			}
+			if (!strncmp(p, "[:punct:]", 9)) {
+			    ok |= (isascii(scc) && ispunct(scc));
+			    p += 8;
+			    break;
+			}
+#ifdef KJI
+			if (!strncmp(p, "[:jalpha:]", 10)) {
+			    ok |= isjalpha(scc);
+			    p += 9;
+			    break;
+			}
+			if (!strncmp(p, "[:jdigit:]", 10)) {
+			    ok |= isjdigit(scc);
+			    p += 9;
+			    break;
+			}
+			if (!strncmp(p, "[:jpunct:]", 10)) {
+			    ok |= isjpunct(scc);
+			    p += 9;
+			    break;
+			}
+			if (!strncmp(p, "[:jparen:]", 10)) {
+			    ok |= isjparen(scc);
+			    p += 9;
+			    break;
+			}
+			if (!strncmp(p, "[:jkanji:]", 10)) {
+			    ok |= isjkanji(scc);
+			    p += 9;
+			    break;
+			}
+			if (!strncmp(p, "[:jhira:]", 9)) {
+			    ok |= isjhira(scc);
+			    p += 8;
+			    break;
+			}
+			if (!strncmp(p, "[:jkata:]", 9)) {
+			    ok |= isjkata(scc);
+			    p += 8;
+			    break;
+			}
+#endif /* KJI */
+		    }
+		if ((cc == '-') && (lc > 0)) {
+		    int cu1, scu1, lcu, tco;
+
+		    cc1 = *p++;
+		    if (NCisshift(cc1))
+			if (_NCdec2(cc1, *p, cc1) == 1)
+			    p--;
+		    cu1 = NCcoluniq(cc1);
+		    if (((tco = NCcollate(cc1)) < 0)
+			&& (tco = _NCxcolu(tco, &p, 0, &cu1)));
+
+		    lcu = NCcoluniq(lc);
+		    if ((tco = NCcollate(lc)) < 0) {
+			char tb[3], *tbp = tb;
+
+			tb[0] = tb[1] = tb[2] = '\0';
+			_NCe2(lc, tb[0], tb[1]);
+			tco = _NCxcolu(tco, &tbp, 0, &lcu);
+		    }
+		    scu1 = NCcoluniq(scc);
+		    if (((tco = NCcollate(scc)) < 0)
+			&& (tco = _NCxcolu(tco, &s, 0, &scu1)));
+
+		    /* if we have nonzero collate vals */
+		    if (lcu && cu1 && scu1)
+			ok += (lcu <= scu1 && scu1 <= cu1);
+		    else
+			ok += (lc == scc || scc == cu1);
+#else
+		if (cc == '-') {
+		    if (lc <= scc && scc <= *p++)
+			ok++;
+#endif /* KJI || NLS */
+		} else if (scc == (lc = cc))
+		    ok++;
+	    }
+	    if (cc == 0)
+		if (ok)
+		    p--;
+		else
+		    return 0;
+	    continue;
+
+	case '*':
+	    if (!*p)
+		return (1);
+#if defined (NLS) || defined (KJI)
+	    if (s_is2)
+		s--;
+#endif
+	    for (s--; *s; s++)
+		if (Gmatch(s, p))
+		    return (1);
+	    return (0);
+
+	case 0:
+	    return (scc == 0);
+
+	default:
+#if defined (NLS) || defined (KJI)
+	    if (NCisshift(c))
+		if (_NCdec2(c, *p, c) == 2)
+		    p++;
+	    if (c != scc)
+#else
+	    if ((c & TRIM) != scc)
+#endif
+		return (0);
+	    continue;
+
+	case '?':
+	    if (scc == 0)
+		return (0);
+	    continue;
+
+	}
+    }
 }
 
 static
 Gcat(s1, s2)
-	register char *s1, *s2;
+     register char *s1, *s2;
 {
-	register int len = strlen(s1) + strlen(s2) + 1;
+    register int len = strlen(s1) + strlen(s2) + 1;
 
-	if (len >= gnleft || gargc >= GAVSIZ - 1)
-		globerr = "Arguments too long";
-	else {
-		gargc++;
-		gnleft -= len;
-		gargv[gargc] = 0;
-		gargv[gargc - 1] = strspl(s1, s2);
-	}
+    if (len >= gnleft || gargc >= GAVSIZ - 1)
+	globerr = "Arguments too long";
+    else {
+	gargc++;
+	gnleft -= len;
+	gargv[gargc] = 0;
+	gargv[gargc - 1] = strspl(s1, s2);
+    }
 }
 
 static
 addpath(c)
-	char c;
+     char c;
 {
 
-	if (gpathp >= lastgpathp)
-		globerr = "Pathname too long";
-	else {
-		*gpathp++ = c;
-		*gpathp = 0;
-	}
+    if (gpathp >= lastgpathp)
+	globerr = "Pathname too long";
+    else {
+	*gpathp++ = c;
+	*gpathp = 0;
+    }
 }
 
 static
 rscan(t, f)
-	register char **t;
-	int (*f)();
+     register char **t;
+     int (*f) ();
 {
-	register char *p, c;
+    register char *p, c;
 
-	while (p = *t++) {
-		if (f == tglob)
-			if (*p == '~')
-				gflag |= 2;
-			else if (eq(p, "{") || eq(p, "{}"))
-				continue;
-		while (c = *p++)
-			(*f)(c);
-	}
+    while (p = *t++) {
+	if (f == tglob)
+	    if (*p == '~')
+		gflag |= 2;
+	    else if (eq(p, "{") || eq(p, "{}"))
+		continue;
+	while (c = *p++)
+	    (*f) (c);
+    }
 }
+
 /*
 static
 scan(t, f)
@@ -971,13 +960,14 @@ scan(t, f)
 
 static
 tglob(c)
-	register char c;
+     register char c;
 {
 
-	if (any(c, globchars))
-		gflag |= c == '{' ? 2 : 1;
-	return (c);
+    if (any(c, globchars))
+	gflag |= c == '{' ? 2 : 1;
+    return (c);
 }
+
 /*
 static
 trim(c)
@@ -989,96 +979,98 @@ trim(c)
 
 
 letter(c)
-	register char c;
+     register char c;
 {
 
-	return (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '_');
+    return (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '_');
 }
 
 digit(c)
-	register char c;
+     register char c;
 {
 
-	return (c >= '0' && c <= '9');
+    return (c >= '0' && c <= '9');
 }
 
 any(c, s)
-	register int c;
-	register char *s;
+     register int c;
+     register char *s;
 {
 
-	while (*s)
-		if (*s++ == c)
-			return(1);
-	return(0);
+    while (*s)
+	if (*s++ == c)
+	    return (1);
+    return (0);
 }
-blklen(av)
-	register char **av;
-{
-	register int i = 0;
 
-	while (*av++)
-		i++;
-	return (i);
+blklen(av)
+     register char **av;
+{
+    register int i = 0;
+
+    while (*av++)
+	i++;
+    return (i);
 }
 
 char **
 blkcpy(oav, bv)
-	char **oav;
-	register char **bv;
+     char **oav;
+     register char **bv;
 {
-	register char **av = oav;
+    register char **av = oav;
 
-	while (*av++ = *bv++)
-		continue;
-	return (oav);
+    while (*av++ = *bv++)
+	continue;
+    return (oav);
 }
 
 blkfree(av0)
-	char **av0;
+     char **av0;
 {
-	register char **av = av0;
+    register char **av = av0;
 
-	while (*av)
-		free(*av++);
+    while (*av)
+	free(*av++);
 }
 
 static
 char *
 strspl(cp, dp)
-	register char *cp, *dp;
+     register char *cp, *dp;
 {
-	register char *ep = malloc((unsigned)(strlen(cp) + strlen(dp) + 1));
+    register char *ep = malloc((unsigned)(strlen(cp) + strlen(dp) + 1));
 
-	if (ep == NULL)
-		fatal("Out of memory");
-	(void) strcpy(ep, cp);
-	(void) strcat(ep, dp);
-	return (ep);
+    if (ep == NULL)
+	fatal("Out of memory");
+    (void)strcpy(ep, cp);
+    (void)strcat(ep, dp);
+    return (ep);
 }
 
 char **
 copyblk(v)
-	register char **v;
+     register char **v;
 {
-	register char **nv = (char **)malloc((unsigned)((blklen(v) + 1) *
-						sizeof(char **)));
-	if (nv == NULL)
-		fatal("Out of memory");
+    register char **nv =
+	(char **)malloc((unsigned)((blklen(v) + 1) * sizeof(char **)));
+    if (nv == NULL)
+	fatal("Out of memory");
 
-	return (blkcpy(nv, v));
+    return (blkcpy(nv, v));
 }
 
 static
 char *
 strend(cp)
-	register char *cp;
+     register char *cp;
 {
 
-	while (*cp)
-		cp++;
-	return (cp);
+    while (*cp)
+	cp++;
+    return (cp);
 }
+
 /*
  * Extract a home directory from the password file
  * The argument points to a buffer where the name of the
@@ -1086,12 +1078,12 @@ strend(cp)
  * We write the home directory of the user back there.
  */
 gethdir(home)
-	char *home;
+     char *home;
 {
-	register struct passwd *pp = getpwnam(home);
+    register struct passwd *pp = getpwnam(home);
 
-	if (!pp || home + strlen(pp->pw_dir) >= lastgpathp)
-		return (1);
-	(void) strcpy(home, pp->pw_dir);
-	return (0);
+    if (!pp || home + strlen(pp->pw_dir) >= lastgpathp)
+	return (1);
+    (void)strcpy(home, pp->pw_dir);
+    return (0);
 }

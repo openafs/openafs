@@ -50,39 +50,39 @@
  */
 struct DiskPartition {
     struct DiskPartition *next;
-    char	*name;		/* Mounted partition name */
-    char	*devName;	/* Device mounted on */
-    Device	device;		/* device number */
-    int		lock_fd;	/* File descriptor of this partition if locked; otherwise -1;
-    				   Not used by the file server */
-    int		free;		/* Total number of blocks (1K) presumed
-				   available on this partition (accounting
-				   for the minfree parameter for the
-				   partition).  This is adjusted
-				   approximately by the sizes of files
-				   and directories read/written, and
-				   periodically the superblock is read and
-				   this is recomputed.  This number can
-				   be negative, if the partition starts
-				   out too full */
-    int		totalUsable;	/* Total number of blocks available on this
-    				   partition, taking into account the minfree
-				   parameter for the partition (see the
-				   4.2bsd command tunefs, but note that the
-				   bug mentioned there--that the superblock
-				   is not reread--does not apply here.  The
-				   superblock is re-read periodically by
-				   VSetPartitionDiskUsage().) */
-    int		minFree;	/* Number blocks to be kept free, as last read
-    				   from the superblock */
-    int		flags;
-    int 	f_files;	/* total number of files in this partition */
+    char *name;			/* Mounted partition name */
+    char *devName;		/* Device mounted on */
+    Device device;		/* device number */
+    int lock_fd;		/* File descriptor of this partition if locked; otherwise -1;
+				 * Not used by the file server */
+    int free;			/* Total number of blocks (1K) presumed
+				 * available on this partition (accounting
+				 * for the minfree parameter for the
+				 * partition).  This is adjusted
+				 * approximately by the sizes of files
+				 * and directories read/written, and
+				 * periodically the superblock is read and
+				 * this is recomputed.  This number can
+				 * be negative, if the partition starts
+				 * out too full */
+    int totalUsable;		/* Total number of blocks available on this
+				 * partition, taking into account the minfree
+				 * parameter for the partition (see the
+				 * 4.2bsd command tunefs, but note that the
+				 * bug mentioned there--that the superblock
+				 * is not reread--does not apply here.  The
+				 * superblock is re-read periodically by
+				 * VSetPartitionDiskUsage().) */
+    int minFree;		/* Number blocks to be kept free, as last read
+				 * from the superblock */
+    int flags;
+    int f_files;		/* total number of files in this partition */
 };
 #define	PART_DONTUPDATE	1
-#define PART_DUPLICATE  2 /* NT - used if we find more than one partition 
-			   * using the same drive. Will be dumped before
-			   * all partitions attached.
-			   */
+#define PART_DUPLICATE  2	/* NT - used if we find more than one partition 
+				 * using the same drive. Will be dumped before
+				 * all partitions attached.
+				 */
 
 #ifdef AFS_NT40_ENV
 #include <WINNT/vptab.h>
@@ -105,4 +105,3 @@ extern char *VPartitionPath(struct DiskPartition *p);
 /*extern void VAdjustDiskUsage(Error *ec, Volume *vp, afs_int32 blocks,
 			     afs_int32 checkBlocks); */
 extern void VPrintDiskStats(void);
-

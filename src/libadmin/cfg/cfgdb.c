@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/stds.h>
 
@@ -41,110 +42,95 @@ RCSID("$Header$");
 
 /* Local declarations and definitions */
 
-#define CSDB_OP_ADD  0   /* add a server CellServDB entry */
-#define CSDB_OP_REM  1   /* remove a server CellServDB entry */
+#define CSDB_OP_ADD  0		/* add a server CellServDB entry */
+#define CSDB_OP_REM  1		/* remove a server CellServDB entry */
 
-#define CSDB_WAIT   0  /* wait to begin CellServDB update operations */
-#define CSDB_GO     1  /* begin CellServDB update operations */
-#define CSDB_ABORT  2  /* abort CellServDB update operations */
+#define CSDB_WAIT   0		/* wait to begin CellServDB update operations */
+#define CSDB_GO     1		/* begin CellServDB update operations */
+#define CSDB_ABORT  2		/* abort CellServDB update operations */
 
-#define SERVER_NAME_BLOCK_SIZE  20  /* number of server names in a block */
+#define SERVER_NAME_BLOCK_SIZE  20	/* number of server names in a block */
 
 
 /* server name iterator */
 typedef struct {
-    int dbOnly;         /* enumerate database servers only */
-    void *iterationId;  /* underlying iteration handle */
+    int dbOnly;			/* enumerate database servers only */
+    void *iterationId;		/* underlying iteration handle */
 } cfg_server_iteration_t;
 
 
 /* CellServDB update control block */
 typedef struct {
     /* control block invariants */
-    cfg_host_p cfg_host;        /* host configuration handle */
-    int op;                     /* CellServDB update operation type */
-    char opHostAlias[MAXHOSTCHARS];  /* CellServDB alias for config host */
-    cfg_cellServDbUpdateCallBack_t callBack;  /* CellServDB update callback */
-    void *callBackId;           /* CellServDB update callback cookie */
+    cfg_host_p cfg_host;	/* host configuration handle */
+    int op;			/* CellServDB update operation type */
+    char opHostAlias[MAXHOSTCHARS];	/* CellServDB alias for config host */
+    cfg_cellServDbUpdateCallBack_t callBack;	/* CellServDB update callback */
+    void *callBackId;		/* CellServDB update callback cookie */
 
     /* control block synchronization objects */
-    pthread_cond_t event;       /* disposition change event */
-    pthread_mutex_t mutex;      /* protects disposition and workersActive */
-    int disposition;            /* wait, go, or abort operation */
-    int workersActive;          /* count of active worker threads */
+    pthread_cond_t event;	/* disposition change event */
+    pthread_mutex_t mutex;	/* protects disposition and workersActive */
+    int disposition;		/* wait, go, or abort operation */
+    int workersActive;		/* count of active worker threads */
 } cfg_csdb_update_ctrl_t;
 
 /* CellServDB update name block */
 typedef struct {
-    cfg_csdb_update_ctrl_t *ctrl;  /* pointer to common control block */
-    int serverCount;               /* number of entries in serverName array */
+    cfg_csdb_update_ctrl_t *ctrl;	/* pointer to common control block */
+    int serverCount;		/* number of entries in serverName array */
     char serverName[SERVER_NAME_BLOCK_SIZE][AFS_MAX_SERVER_NAME_LEN];
 } cfg_csdb_update_name_t;
 
 /* name block iterator */
 typedef struct {
-    void *serverIter;            /* server name iterator */
-    cfg_csdb_update_ctrl_t *ctrlBlockp;   /* update control block */
-    const char *cfgHost;         /* configuration host name */
-    const char *sysControlHost;  /* system control host name (if any) */
-    short cfgInBlock;            /* configuration host in a name block */
-    short sysInBlock;            /* system control host in a name block */
-    short serverIterDone;        /* server name enumeration complete */
+    void *serverIter;		/* server name iterator */
+    cfg_csdb_update_ctrl_t *ctrlBlockp;	/* update control block */
+    const char *cfgHost;	/* configuration host name */
+    const char *sysControlHost;	/* system control host name (if any) */
+    short cfgInBlock;		/* configuration host in a name block */
+    short sysInBlock;		/* system control host in a name block */
+    short serverIterDone;	/* server name enumeration complete */
 } cfg_csdb_nameblock_iteration_t;
 
 
 
 static int
-CellServDbUpdate(int updateOp,
-		 void *hostHandle,
-		 const char *sysControlHost,
-		 cfg_cellServDbUpdateCallBack_t callBack,
-		 void *callBackId,
-		 int *maxUpdates,
-		 afs_status_p st);
+  CellServDbUpdate(int updateOp, void *hostHandle, const char *sysControlHost,
+		   cfg_cellServDbUpdateCallBack_t callBack, void *callBackId,
+		   int *maxUpdates, afs_status_p st);
 
 static int
-StartUpdateWorkerThread(cfg_csdb_update_name_t *nameBlockp,
-			afs_status_p st);
-
-static void*
-UpdateWorkerThread(void *argp);
-
-static int
-CfgHostGetCellServDbAlias(cfg_host_p cfg_host,
-			  char *cfgHostAlias,
+  StartUpdateWorkerThread(cfg_csdb_update_name_t * nameBlockp,
 			  afs_status_p st);
 
-static int
-NameBlockGetBegin(cfg_host_p cfg_host,
-		  const char *sysControlHost,
-		  cfg_csdb_update_ctrl_t *ctrlBlockp,
-		  void **iterationIdP,
-		  afs_status_p st);
+static void *UpdateWorkerThread(void *argp);
 
 static int
-NameBlockGetNext(void *iterationId,
-		 cfg_csdb_update_name_t *nameBlockp,
-		 afs_status_p st);
+  CfgHostGetCellServDbAlias(cfg_host_p cfg_host, char *cfgHostAlias,
+			    afs_status_p st);
 
 static int
-NameBlockGetDone(void *iterationId,
-		 afs_status_p st);
+  NameBlockGetBegin(cfg_host_p cfg_host, const char *sysControlHost,
+		    cfg_csdb_update_ctrl_t * ctrlBlockp, void **iterationIdP,
+		    afs_status_p st);
 
 static int
-ServerNameGetBegin(cfg_host_p cfg_host,
-		   short dbOnly,
-		   void **iterationIdP,
+  NameBlockGetNext(void *iterationId, cfg_csdb_update_name_t * nameBlockp,
 		   afs_status_p st);
 
 static int
-ServerNameGetNext(void *iterationId,
-		  char *serverName,
-		  afs_status_p st);
+  NameBlockGetDone(void *iterationId, afs_status_p st);
 
 static int
-ServerNameGetDone(void *iterationId,
-		  afs_status_p st);
+  ServerNameGetBegin(cfg_host_p cfg_host, short dbOnly, void **iterationIdP,
+		     afs_status_p st);
+
+static int
+  ServerNameGetNext(void *iterationId, char *serverName, afs_status_p st);
+
+static int
+  ServerNameGetDone(void *iterationId, afs_status_p st);
 
 
 
@@ -187,20 +173,13 @@ ServerNameGetDone(void *iterationId,
  *     specify the host name; otherwise, sysControlHost must be NULL.
  */
 int ADMINAPI
-cfg_CellServDbAddHost(void *hostHandle,            /* host config handle */
-		      const char *sysControlHost,  /* sys control host */
-		      cfg_cellServDbUpdateCallBack_t callBack,
-		      void *callBackId,
-		      int *maxUpdates,             /* max servers to update */
-		      afs_status_p st)             /* completion status */
-{
-    return CellServDbUpdate(CSDB_OP_ADD,
-			    hostHandle,
-			    sysControlHost,
-			    callBack,
-			    callBackId,
-			    maxUpdates,
-			    st);
+cfg_CellServDbAddHost(void *hostHandle,	/* host config handle */
+		      const char *sysControlHost,	/* sys control host */
+		      cfg_cellServDbUpdateCallBack_t callBack, void *callBackId, int *maxUpdates,	/* max servers to update */
+		      afs_status_p st)
+{				/* completion status */
+    return CellServDbUpdate(CSDB_OP_ADD, hostHandle, sysControlHost, callBack,
+			    callBackId, maxUpdates, st);
 }
 
 
@@ -213,20 +192,13 @@ cfg_CellServDbAddHost(void *hostHandle,            /* host config handle */
  *     specify the host name; otherwise, sysControlHost must be NULL.
  */
 int ADMINAPI
-cfg_CellServDbRemoveHost(void *hostHandle,           /* host config handle */
-			 const char *sysControlHost, /* sys control host */
-			 cfg_cellServDbUpdateCallBack_t callBack,
-			 void *callBackId,
-			 int *maxUpdates,          /* max servers to update */
-			 afs_status_p st)          /* completion status */
-{
-    return CellServDbUpdate(CSDB_OP_REM,
-			    hostHandle,
-			    sysControlHost,
-			    callBack,
-			    callBackId,
-			    maxUpdates,
-			    st);
+cfg_CellServDbRemoveHost(void *hostHandle,	/* host config handle */
+			 const char *sysControlHost,	/* sys control host */
+			 cfg_cellServDbUpdateCallBack_t callBack, void *callBackId, int *maxUpdates,	/* max servers to update */
+			 afs_status_p st)
+{				/* completion status */
+    return CellServDbUpdate(CSDB_OP_REM, hostHandle, sysControlHost, callBack,
+			    callBackId, maxUpdates, st);
 }
 
 
@@ -236,11 +208,11 @@ cfg_CellServDbRemoveHost(void *hostHandle,           /* host config handle */
  *     as a multistring.
  */
 int ADMINAPI
-cfg_CellServDbEnumerate(const char *fsDbHost, /* fileserver or database host */
-			char **cellName,      /* cell name for cellDbHosts */
-			char **cellDbHosts,   /* cell database hosts */
-			afs_status_p st)      /* completion status */
-{
+cfg_CellServDbEnumerate(const char *fsDbHost,	/* fileserver or database host */
+			char **cellName,	/* cell name for cellDbHosts */
+			char **cellDbHosts,	/* cell database hosts */
+			afs_status_p st)
+{				/* completion status */
     int rc = 1;
     afs_status_t tst2, tst = 0;
 
@@ -274,11 +246,10 @@ cfg_CellServDbEnumerate(const char *fsDbHost, /* fileserver or database host */
 		if (!bos_HostGetBegin(bosHandle, &dbIter, &tst2)) {
 		    tst = tst2;
 		} else {
-		    for (dbhostCount = 0; ; dbhostCount++) {
+		    for (dbhostCount = 0;; dbhostCount++) {
 			char dbhostNameTemp[BOS_MAX_NAME_LEN];
 
-			if (!bos_HostGetNext(dbIter,
-					     dbhostNameTemp, &tst2)) {
+			if (!bos_HostGetNext(dbIter, dbhostNameTemp, &tst2)) {
 			    /* no more entries (or failure) */
 			    if (tst2 != ADMITERATORDONE) {
 				tst = tst2;
@@ -323,7 +294,7 @@ cfg_CellServDbEnumerate(const char *fsDbHost, /* fileserver or database host */
 	    for (i = 0; i < dbhostCount; i++) {
 		bufSize += strlen(dbhostName[i]) + 1;
 	    }
-	    bufSize++; /* end multistring */
+	    bufSize++;		/* end multistring */
 
 	    *cellDbHosts = (char *)malloc(bufSize);
 
@@ -373,7 +344,7 @@ cfg_CellServDbEnumerate(const char *fsDbHost, /* fileserver or database host */
  *     record returned by library.
  */
 int ADMINAPI
-cfg_CellServDbStatusDeallocate(cfg_cellServDbStatus_t *statusItempP,
+cfg_CellServDbStatusDeallocate(cfg_cellServDbStatus_t * statusItempP,
 			       afs_status_p st)
 {
     free((void *)statusItempP);
@@ -397,17 +368,13 @@ cfg_CellServDbStatusDeallocate(cfg_cellServDbStatus_t *statusItempP,
  *     Common function implementing cfg_CellServDb{Add/Remove}Host().
  */
 static int
-CellServDbUpdate(int updateOp,
-		 void *hostHandle,
-		 const char *sysControlHost,
-		 cfg_cellServDbUpdateCallBack_t callBack,
-		 void *callBackId,
-		 int *maxUpdates,
-		 afs_status_p st)
+CellServDbUpdate(int updateOp, void *hostHandle, const char *sysControlHost,
+		 cfg_cellServDbUpdateCallBack_t callBack, void *callBackId,
+		 int *maxUpdates, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst2, tst = 0;
-    cfg_host_p cfg_host = (cfg_host_p)hostHandle;
+    cfg_host_p cfg_host = (cfg_host_p) hostHandle;
     char fullSysHostName[MAXHOSTCHARS];
 
     /* validate parameters */
@@ -426,8 +393,8 @@ CellServDbUpdate(int updateOp,
 
     if (tst == 0) {
 	if (sysControlHost != NULL) {
-	    if (!cfgutil_HostNameGetFull(sysControlHost,
-					 fullSysHostName, &tst2)) {
+	    if (!cfgutil_HostNameGetFull
+		(sysControlHost, fullSysHostName, &tst2)) {
 		tst = tst2;
 	    } else {
 		sysControlHost = fullSysHostName;
@@ -466,7 +433,7 @@ CellServDbUpdate(int updateOp,
 
 	/* create control block */
 
-	ctrlBlockp = (cfg_csdb_update_ctrl_t *)malloc(sizeof(*ctrlBlockp));
+	ctrlBlockp = (cfg_csdb_update_ctrl_t *) malloc(sizeof(*ctrlBlockp));
 
 	if (ctrlBlockp == NULL) {
 	    tst = ADMNOMEM;
@@ -506,9 +473,8 @@ CellServDbUpdate(int updateOp,
 		 * get the configuration host alias.  The only time this
 		 * might get us into trouble is in a re-do scenario.
 		 */
-		if (!CfgHostGetCellServDbAlias(cfg_host,
-					       ctrlBlockp->opHostAlias,
-					       &tst2)) {
+		if (!CfgHostGetCellServDbAlias
+		    (cfg_host, ctrlBlockp->opHostAlias, &tst2)) {
 		    tst = tst2;
 		} else if (*ctrlBlockp->opHostAlias == '\0') {
 		    /* no alias found; go with config host working name */
@@ -523,11 +489,9 @@ CellServDbUpdate(int updateOp,
 		void *nameBlockIter;
 		short workersStarted = 0;
 
-		if (!NameBlockGetBegin(cfg_host,
-				       sysControlHost,
-				       ctrlBlockp,
-				       &nameBlockIter,
-				       &tst2)) {
+		if (!NameBlockGetBegin
+		    (cfg_host, sysControlHost, ctrlBlockp, &nameBlockIter,
+		     &tst2)) {
 		    tst = tst2;
 		} else {
 		    cfg_csdb_update_name_t *nameBlockp;
@@ -541,9 +505,9 @@ CellServDbUpdate(int updateOp,
 			    tst = ADMNOMEM;
 			    nameBlockDone = 1;
 
-			} else if (!NameBlockGetNext(nameBlockIter,
-						     nameBlockp,
-						     &tst2)) {
+			} else
+			    if (!NameBlockGetNext
+				(nameBlockIter, nameBlockp, &tst2)) {
 			    /* no more entries (or failure) */
 			    if (tst2 != ADMITERATORDONE) {
 				tst = tst2;
@@ -619,8 +583,7 @@ CellServDbUpdate(int updateOp,
  * RETURN CODES: 1 success, 0 failure  (st indicates why)
  */
 static int
-StartUpdateWorkerThread(cfg_csdb_update_name_t *nameBlockp,
-			afs_status_p st)
+StartUpdateWorkerThread(cfg_csdb_update_name_t * nameBlockp, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst = 0;
@@ -633,9 +596,9 @@ StartUpdateWorkerThread(cfg_csdb_update_name_t *nameBlockp,
     } else if (pthread_attr_setdetachstate(&tattr, PTHREAD_CREATE_DETACHED)) {
 	tst = ADMTHREADATTRSETDETACHSTATE;
 
-    } else if (pthread_create(&tid,
-			      &tattr,
-			      UpdateWorkerThread, (void *) nameBlockp)) {
+    } else
+	if (pthread_create
+	    (&tid, &tattr, UpdateWorkerThread, (void *)nameBlockp)) {
 	tst = ADMTHREADCREATE;
     }
 
@@ -654,11 +617,11 @@ StartUpdateWorkerThread(cfg_csdb_update_name_t *nameBlockp,
  * UpdateWorkerThread() -- thread for updating CellServDB of servers in
  *     a single name block.
  */
-static void*
+static void *
 UpdateWorkerThread(void *argp)
 {
     afs_status_t sync_tst = 0;
-    cfg_csdb_update_name_t *nameBlockp = (cfg_csdb_update_name_t *)argp;
+    cfg_csdb_update_name_t *nameBlockp = (cfg_csdb_update_name_t *) argp;
     int opDisposition;
 
     /* Pthread mutex and condition variable functions should never fail,
@@ -672,8 +635,8 @@ UpdateWorkerThread(void *argp)
 
     while ((opDisposition = nameBlockp->ctrl->disposition) == CSDB_WAIT) {
 	/* wait for start/abort signal */
-	if (pthread_cond_wait(&nameBlockp->ctrl->event,
-			      &nameBlockp->ctrl->mutex)) {
+	if (pthread_cond_wait
+	    (&nameBlockp->ctrl->event, &nameBlockp->ctrl->mutex)) {
 	    /* avoid tight loop if condition variable wait fails */
 	    cfgutil_Sleep(1);
 	}
@@ -693,8 +656,8 @@ UpdateWorkerThread(void *argp)
 	    /* alloc memory for status information (including host name) */
 
 	    while ((statusp = (cfg_cellServDbStatus_t *)
-		    malloc(sizeof(*statusp) +
-			   AFS_MAX_SERVER_NAME_LEN)) == NULL) {
+		    malloc(sizeof(*statusp) + AFS_MAX_SERVER_NAME_LEN)) ==
+		   NULL) {
 		/* avoid tight loop while waiting for status storage */
 		cfgutil_Sleep(1);
 	    }
@@ -713,10 +676,9 @@ UpdateWorkerThread(void *argp)
 		void *bosHandle;
 		afs_status_t tst2, tst = 0;
 
-		if (!bos_ServerOpen(nameBlockp->ctrl->cfg_host->cellHandle,
-				    nameBlockp->serverName[i],
-				    &bosHandle,
-				    &tst2)) {
+		if (!bos_ServerOpen
+		    (nameBlockp->ctrl->cfg_host->cellHandle,
+		     nameBlockp->serverName[i], &bosHandle, &tst2)) {
 		    tst = tst2;
 
 		} else {
@@ -743,9 +705,8 @@ UpdateWorkerThread(void *argp)
 
 	    /* make call back to return update status */
 
-	    (*nameBlockp->ctrl->callBack)(nameBlockp->ctrl->callBackId,
-					  statusp,
-					  0);
+	    (*nameBlockp->ctrl->callBack) (nameBlockp->ctrl->callBackId,
+					   statusp, 0);
 	}
     }
 
@@ -759,9 +720,8 @@ UpdateWorkerThread(void *argp)
 
     if (nameBlockp->ctrl->workersActive == 0) {
 	if (opDisposition == CSDB_GO) {
-	    (*nameBlockp->ctrl->callBack)(nameBlockp->ctrl->callBackId,
-					  NULL,
-					  sync_tst);
+	    (*nameBlockp->ctrl->callBack) (nameBlockp->ctrl->callBackId, NULL,
+					   sync_tst);
 	}
 	free(nameBlockp->ctrl);
     }
@@ -771,7 +731,7 @@ UpdateWorkerThread(void *argp)
     }
 
     /* all workers deallocate their own name block */
-    free (nameBlockp);
+    free(nameBlockp);
 
     return NULL;
 }
@@ -789,8 +749,7 @@ UpdateWorkerThread(void *argp)
  * RETURN CODES: 1 success, 0 failure  (st indicates why)
  */
 static int
-CfgHostGetCellServDbAlias(cfg_host_p cfg_host,
-			  char *cfgHostAlias,
+CfgHostGetCellServDbAlias(cfg_host_p cfg_host, char *cfgHostAlias,
 			  afs_status_p st)
 {
     int rc = 1;
@@ -813,10 +772,10 @@ CfgHostGetCellServDbAlias(cfg_host_p cfg_host,
 		}
 		dbhostDone = 1;
 
-	    } else if (!cfgutil_HostNameGetCellServDbAlias(dbhostEntry.serverName,
-							   cfg_host->hostName,
-							   cfgHostAlias,
-							   &tst2)) {
+	    } else
+		if (!cfgutil_HostNameGetCellServDbAlias
+		    (dbhostEntry.serverName, cfg_host->hostName, cfgHostAlias,
+		     &tst2)) {
 		/* save failure status but keep trying */
 		dbhostSt = tst2;
 
@@ -856,17 +815,15 @@ CfgHostGetCellServDbAlias(cfg_host_p cfg_host,
  * RETURN CODES: 1 success, 0 failure  (st indicates why)
  */
 static int
-NameBlockGetBegin(cfg_host_p cfg_host,
-		  const char *sysControlHost,
-		  cfg_csdb_update_ctrl_t *ctrlBlockp,
-		  void **iterationIdP,
+NameBlockGetBegin(cfg_host_p cfg_host, const char *sysControlHost,
+		  cfg_csdb_update_ctrl_t * ctrlBlockp, void **iterationIdP,
 		  afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst2, tst = 0;
     cfg_csdb_nameblock_iteration_t *nbIterp;
 
-    nbIterp = (cfg_csdb_nameblock_iteration_t *)malloc(sizeof(*nbIterp));
+    nbIterp = (cfg_csdb_nameblock_iteration_t *) malloc(sizeof(*nbIterp));
 
     if (nbIterp == NULL) {
 	tst = ADMNOMEM;
@@ -880,8 +837,8 @@ NameBlockGetBegin(cfg_host_p cfg_host,
 	nbIterp->sysInBlock = 0;
 	nbIterp->serverIterDone = 0;
 
-	if (!ServerNameGetBegin(cfg_host,
-				dbOnly, &nbIterp->serverIter, &tst2)) {
+	if (!ServerNameGetBegin
+	    (cfg_host, dbOnly, &nbIterp->serverIter, &tst2)) {
 	    tst = tst2;
 	}
 
@@ -909,8 +866,7 @@ NameBlockGetBegin(cfg_host_p cfg_host,
  * RETURN CODES: 1 success, 0 failure  (st indicates why)
  */
 static int
-NameBlockGetNext(void *iterationId,
-		 cfg_csdb_update_name_t *nameBlockp,
+NameBlockGetNext(void *iterationId, cfg_csdb_update_name_t * nameBlockp,
 		 afs_status_p st)
 {
     int rc = 1;
@@ -918,7 +874,7 @@ NameBlockGetNext(void *iterationId,
     cfg_csdb_nameblock_iteration_t *nbIterp;
     int i;
 
-    nbIterp = (cfg_csdb_nameblock_iteration_t *)iterationId;
+    nbIterp = (cfg_csdb_nameblock_iteration_t *) iterationId;
 
     nameBlockp->ctrl = nbIterp->ctrlBlockp;
     nameBlockp->serverCount = 0;
@@ -927,9 +883,8 @@ NameBlockGetNext(void *iterationId,
 	short nameEntered = 0;
 
 	if (!nbIterp->serverIterDone) {
-	    if (ServerNameGetNext(nbIterp->serverIter,
-				  nameBlockp->serverName[i],
-				  &tst2)) {
+	    if (ServerNameGetNext
+		(nbIterp->serverIter, nameBlockp->serverName[i], &tst2)) {
 		/* Got server name; check if matches cfg or sys control host.
 		 * Do a simple string compare, rather than making an expensive
 		 * cfgutil_HostNameIsAlias() call because it will not cause
@@ -938,15 +893,16 @@ NameBlockGetNext(void *iterationId,
 		nameEntered = 1;
 
 		if (!nbIterp->cfgInBlock) {
-		    if (!strcasecmp(nbIterp->cfgHost,
-				    nameBlockp->serverName[i])) {
+		    if (!strcasecmp
+			(nbIterp->cfgHost, nameBlockp->serverName[i])) {
 			nbIterp->cfgInBlock = 1;
 		    }
 		}
 
 		if (!nbIterp->sysInBlock && nbIterp->sysControlHost != NULL) {
-		    if (!strcasecmp(nbIterp->sysControlHost,
-				    nameBlockp->serverName[i])) {
+		    if (!strcasecmp
+			(nbIterp->sysControlHost,
+			 nameBlockp->serverName[i])) {
 			nbIterp->sysInBlock = 1;
 		    }
 		}
@@ -970,8 +926,8 @@ NameBlockGetNext(void *iterationId,
 		nbIterp->cfgInBlock = 1;
 		nameEntered = 1;
 
-	    } else if (!nbIterp->sysInBlock &&
-		       nbIterp->sysControlHost != NULL) {
+	    } else if (!nbIterp->sysInBlock
+		       && nbIterp->sysControlHost != NULL) {
 		/* shouldn't be duplicate, but OK if is */
 		strcpy(nameBlockp->serverName[i], nbIterp->sysControlHost);
 		nbIterp->sysInBlock = 1;
@@ -1007,14 +963,13 @@ NameBlockGetNext(void *iterationId,
  * RETURN CODES: 1 success, 0 failure  (st indicates why)
  */
 static int
-NameBlockGetDone(void *iterationId,
-		 afs_status_p st)
+NameBlockGetDone(void *iterationId, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst2, tst = 0;
     cfg_csdb_nameblock_iteration_t *nbIterp;
 
-    nbIterp = (cfg_csdb_nameblock_iteration_t *)iterationId;
+    nbIterp = (cfg_csdb_nameblock_iteration_t *) iterationId;
 
     if (!ServerNameGetDone(nbIterp->serverIter, &tst2)) {
 	tst = tst2;
@@ -1040,16 +995,14 @@ NameBlockGetDone(void *iterationId,
  * RETURN CODES: 1 success, 0 failure  (st indicates why)
  */
 static int
-ServerNameGetBegin(cfg_host_p cfg_host,
-		   short dbOnly,
-		   void **iterationIdP,
+ServerNameGetBegin(cfg_host_p cfg_host, short dbOnly, void **iterationIdP,
 		   afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst2, tst = 0;
     cfg_server_iteration_t *serverIterp;
 
-    serverIterp = (cfg_server_iteration_t *)malloc(sizeof(*serverIterp));
+    serverIterp = (cfg_server_iteration_t *) malloc(sizeof(*serverIterp));
 
     if (serverIterp == NULL) {
 	tst = ADMNOMEM;
@@ -1057,15 +1010,13 @@ ServerNameGetBegin(cfg_host_p cfg_host,
 	serverIterp->dbOnly = dbOnly;
 
 	if (dbOnly) {
-	    if (!util_DatabaseServerGetBegin(cfg_host->cellName,
-					     &serverIterp->iterationId,
-					     &tst2)) {
+	    if (!util_DatabaseServerGetBegin
+		(cfg_host->cellName, &serverIterp->iterationId, &tst2)) {
 		tst = tst2;
 	    }
 	} else {
-	    if (!afsclient_AFSServerGetBegin(cfg_host->cellHandle,
-					     &serverIterp->iterationId,
-					     &tst2)) {
+	    if (!afsclient_AFSServerGetBegin
+		(cfg_host->cellHandle, &serverIterp->iterationId, &tst2)) {
 		tst = tst2;
 	    }
 	}
@@ -1094,22 +1045,19 @@ ServerNameGetBegin(cfg_host_p cfg_host,
  * RETURN CODES: 1 success, 0 failure  (st indicates why)
  */
 static int
-ServerNameGetNext(void *iterationId,
-		  char *serverName,
-		  afs_status_p st)
+ServerNameGetNext(void *iterationId, char *serverName, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst2, tst = 0;
     cfg_server_iteration_t *serverIterp;
 
-    serverIterp = (cfg_server_iteration_t *)iterationId;
+    serverIterp = (cfg_server_iteration_t *) iterationId;
 
     if (serverIterp->dbOnly) {
 	util_databaseServerEntry_t serverEntry;
 
-	if (!util_DatabaseServerGetNext(serverIterp->iterationId,
-					&serverEntry,
-					&tst2)) {
+	if (!util_DatabaseServerGetNext
+	    (serverIterp->iterationId, &serverEntry, &tst2)) {
 	    tst = tst2;
 	} else {
 	    strcpy(serverName, serverEntry.serverName);
@@ -1117,9 +1065,8 @@ ServerNameGetNext(void *iterationId,
     } else {
 	afs_serverEntry_t serverEntry;
 
-	if (!afsclient_AFSServerGetNext(serverIterp->iterationId,
-					&serverEntry,
-					&tst2)) {
+	if (!afsclient_AFSServerGetNext
+	    (serverIterp->iterationId, &serverEntry, &tst2)) {
 	    tst = tst2;
 	} else {
 	    strcpy(serverName, serverEntry.serverName);
@@ -1143,14 +1090,13 @@ ServerNameGetNext(void *iterationId,
  * RETURN CODES: 1 success, 0 failure  (st indicates why)
  */
 static int
-ServerNameGetDone(void *iterationId,
-		  afs_status_p st)
+ServerNameGetDone(void *iterationId, afs_status_p st)
 {
     int rc = 1;
     afs_status_t tst2, tst = 0;
     cfg_server_iteration_t *serverIterp;
 
-    serverIterp = (cfg_server_iteration_t *)iterationId;
+    serverIterp = (cfg_server_iteration_t *) iterationId;
 
     if (serverIterp->dbOnly) {
 	if (!util_DatabaseServerGetDone(serverIterp->iterationId, &tst2)) {

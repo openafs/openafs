@@ -19,7 +19,9 @@
 
 typedef unsigned char des_cblock[8];	/* crypto-block size */
 /* Key schedule */
-typedef struct des_ks_struct { des_cblock _; } des_key_schedule[16];
+typedef struct des_ks_struct {
+    des_cblock _;
+} des_key_schedule[16];
 
 #define DES_KEY_SZ 	(sizeof(des_cblock))
 #define DES_ENCRYPT	1

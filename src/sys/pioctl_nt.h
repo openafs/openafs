@@ -16,15 +16,16 @@
 
 /* looks like pioctl block from the Unix world */
 typedef struct ViceIoctl {
-	long in_size;
-        long out_size;
-        void *in;
-	void *out;
+    long in_size;
+    long out_size;
+    void *in;
+    void *out;
 } viceIoctl_t;
 
 /* Fake error code since NT errno.h doesn't define it */
 #include <afs/errmap_nt.h>
 
-extern long pioctl(char *pathp, long opcode, struct ViceIoctl *blob, int follow);
+extern long pioctl(char *pathp, long opcode, struct ViceIoctl *blob,
+		   int follow);
 
 #endif /* OPENAFS_AFS_PIOCTL_H */

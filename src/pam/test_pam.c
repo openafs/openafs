@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <stdio.h>
 #include <security/pam_appl.h>
@@ -38,7 +39,8 @@ static const char *new_homestring = "HOME=/tmp";
 #endif
 
 
-void main(int argc, char *argv[])
+void
+main(int argc, char *argv[])
 {
     int authenticated = 0;
     int retcode;
@@ -55,14 +57,14 @@ void main(int argc, char *argv[])
 	    exit(1);
 	}
 	/* service = "unixtest"; */
-        setcred = 0;
+	setcred = 0;
 	username = argv[2];
     } else {
 	username = argv[1];
     }
 
-    if ((retcode = pam_start(service, username,
-			     &pam_conv, &pamh)) != PAM_SUCCESS) {
+    if ((retcode =
+	 pam_start(service, username, &pam_conv, &pamh)) != PAM_SUCCESS) {
 	fprintf(stderr, "PAM error %d\n", retcode);
 	exit(1);
     }
@@ -84,11 +86,11 @@ void main(int argc, char *argv[])
     /* pam_open_session */
 
     if (setcred)
-    if ((retcode = pam_setcred(pamh, PAM_ESTABLISH_CRED)) != PAM_SUCCESS) {
-	fprintf(stderr, "pam_setcred returned %d.\n", retcode);
-	pam_end(pamh, PAM_ABORT);
-	exit(1);
-    }
+	if ((retcode = pam_setcred(pamh, PAM_ESTABLISH_CRED)) != PAM_SUCCESS) {
+	    fprintf(stderr, "pam_setcred returned %d.\n", retcode);
+	    pam_end(pamh, PAM_ABORT);
+	    exit(1);
+	}
 
     if ((retcode = pam_open_session(pamh, PAM_SILENT)) != PAM_SUCCESS) {
 	fprintf(stderr, "pam_open_session returned %d.\n", retcode);
@@ -105,8 +107,9 @@ void main(int argc, char *argv[])
 }
 
 
-static int my_conv(int num_msg, struct pam_message **msg,
-		   struct pam_response **response, void *appdata_ptr)
+static int
+my_conv(int num_msg, struct pam_message **msg, struct pam_response **response,
+	void *appdata_ptr)
 {
     struct pam_message *m;
     struct pam_response *r;
@@ -115,20 +118,23 @@ static int my_conv(int num_msg, struct pam_message **msg,
     m = *msg;
     if (response) {
 	*response = calloc(num_msg, sizeof(struct pam_response));
-	if (*response == NULL) return PAM_BUF_ERR;
+	if (*response == NULL)
+	    return PAM_BUF_ERR;
 	r = *response;
     } else {
 	r = NULL;
     }
 
     while (num_msg--) {
-	switch(m->msg_style) {
+	switch (m->msg_style) {
 	case PAM_PROMPT_ECHO_OFF:
 #ifdef __hpux
 	    /* ON HP's we still read 8 chars */
-	    if (r) r->resp = strdup(getpass(m->msg));
+	    if (r)
+		r->resp = strdup(getpass(m->msg));
 #else
-	    if (r) r->resp = strdup(getpassphrase(m->msg));
+	    if (r)
+		r->resp = strdup(getpassphrase(m->msg));
 #endif
 	    break;
 	case PAM_PROMPT_ECHO_ON:
@@ -136,9 +142,10 @@ static int my_conv(int num_msg, struct pam_message **msg,
 	    if (r) {
 		r->resp = malloc(PAM_MAX_RESP_SIZE);
 		fgets(r->resp, PAM_MAX_RESP_SIZE, stdin);
-		r->resp[PAM_MAX_RESP_SIZE-1] = '\0';
-		p = &r->resp[strlen(r->resp)-1];
-		while (*p == '\n' && p >= r->resp) *(p--) = '\0';
+		r->resp[PAM_MAX_RESP_SIZE - 1] = '\0';
+		p = &r->resp[strlen(r->resp) - 1];
+		while (*p == '\n' && p >= r->resp)
+		    *(p--) = '\0';
 	    }
 	    break;
 	case PAM_ERROR_MSG:
@@ -151,7 +158,8 @@ static int my_conv(int num_msg, struct pam_message **msg,
 	    break;
 	}
 	m++;
-	if (r) r++;
+	if (r)
+	    r++;
     }
     return PAM_SUCCESS;
 }

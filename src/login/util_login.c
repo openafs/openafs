@@ -18,7 +18,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <sys/types.h>
 #include <sys/file.h>
@@ -43,20 +44,20 @@ RCSID("$Header$");
 
 void
 login(ut)
-	struct utmp *ut;
+     struct utmp *ut;
 {
-	register int fd;
-	int tty;
-	off_t lseek();
+    register int fd;
+    int tty;
+    off_t lseek();
 
-	tty = ttyslot();
-	if (tty > 0 && (fd = open(UTMPFILE, O_WRONLY, 0)) >= 0) {
-		(void)lseek(fd, (long)(tty * sizeof(struct utmp)), L_SET);
-		(void)write(fd, (char *)ut, sizeof(struct utmp));
-		(void)close(fd);
-	}
-	if ((fd = open(WTMPFILE, O_WRONLY|O_APPEND, 0)) >= 0) {
-		(void)write(fd, (char *)ut, sizeof(struct utmp));
-		(void)close(fd);
-	}
+    tty = ttyslot();
+    if (tty > 0 && (fd = open(UTMPFILE, O_WRONLY, 0)) >= 0) {
+	(void)lseek(fd, (long)(tty * sizeof(struct utmp)), L_SET);
+	(void)write(fd, (char *)ut, sizeof(struct utmp));
+	(void)close(fd);
+    }
+    if ((fd = open(WTMPFILE, O_WRONLY | O_APPEND, 0)) >= 0) {
+	(void)write(fd, (char *)ut, sizeof(struct utmp));
+	(void)close(fd);
+    }
 }

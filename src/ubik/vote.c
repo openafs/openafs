@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -100,11 +101,11 @@ RCSID("$Header$");
     site (indicated by ServBeacon's parameter being 1).
 */
 
-afs_int32 ubik_debugFlag	= 0;		/* print out debugging messages? */
+afs_int32 ubik_debugFlag = 0;	/* print out debugging messages? */
 
 /* these statics are used by all sites in nominating new sync sites */
 afs_int32 ubik_lastYesTime = 0;	/* time we sent the last *yes* vote */
-static afs_uint32 lastYesHost = 0xffffffff; /* host to which we sent *yes* vote */
+static afs_uint32 lastYesHost = 0xffffffff;	/* host to which we sent *yes* vote */
 /* Next is time sync site began this vote: guarantees sync site until this + SMALLTIME */
 static afs_int32 lastYesClaim = 0;
 static int lastYesState = 0;	/* did last site we voted for claim to be sync site? */
@@ -117,7 +118,7 @@ static afs_int32 syncHost = 0;
 
 /* used to remember which dbase version is the one at the sync site (for non-sync sites */
 struct ubik_version ubik_dbVersion;	/* sync site's dbase version */
-struct ubik_tid	ubik_dbTid;		/* sync site's tid, or 0 if none */
+struct ubik_tid ubik_dbTid;	/* sync site's tid, or 0 if none */
 
 /* decide if we should try to become sync site.  The basic rule is that we
  * don't run if there is a valid sync site and it ain't us (we have to run if
@@ -128,15 +129,18 @@ struct ubik_tid	ubik_dbTid;		/* sync site's tid, or 0 if none */
  *
  * This function returns true if we should run, and false otherwise.
  */
-int uvote_ShouldIRun(void)
+int
+uvote_ShouldIRun(void)
 {
     register afs_int32 now;
-    
+
     now = FT_ApproxTime();
-    if (BIGTIME + ubik_lastYesTime < now) return 1;    /* no valid guy even trying */
-    if (lastYesState && lastYesHost != ubik_host[0]) return 0; /* other guy is sync site, leave him alone */
+    if (BIGTIME + ubik_lastYesTime < now)
+	return 1;		/* no valid guy even trying */
+    if (lastYesState && lastYesHost != ubik_host[0])
+	return 0;		/* other guy is sync site, leave him alone */
     if (ntohl((afs_uint32) lastYesHost) < ntohl((afs_uint32) ubik_host[0]))
-	return 0;    /* if someone is valid and better than us, don't run */
+	return 0;		/* if someone is valid and better than us, don't run */
     /* otherwise we should run */
     return 1;
 }
@@ -154,16 +158,20 @@ int uvote_ShouldIRun(void)
  * This function returns 0 or currently valid sync site.  It can return our own
  * address, if we're the sync site.
  */
-afs_int32 uvote_GetSyncSite(void)
+afs_int32
+uvote_GetSyncSite(void)
 {
     register afs_int32 now;
     register afs_int32 code;
 
-    if (!lastYesState) code = 0;
+    if (!lastYesState)
+	code = 0;
     else {
 	now = FT_ApproxTime();
-	if (SMALLTIME + lastYesClaim < now) code = 0;    /* last guy timed out */
-	else code = lastYesHost;
+	if (SMALLTIME + lastYesClaim < now)
+	    code = 0;		/* last guy timed out */
+	else
+	    code = lastYesHost;
     }
     return code;
 }
@@ -173,8 +181,10 @@ afs_int32 uvote_GetSyncSite(void)
  * not voting for this sync site, or the time we actually voted yes, if
  * non-zero.
  */
-afs_int32 SVOTE_Beacon(register struct rx_call *rxcall, afs_int32 astate, 
-	afs_int32 astart, struct ubik_version *avers, struct ubik_tid *atid)
+afs_int32
+SVOTE_Beacon(register struct rx_call * rxcall, afs_int32 astate,
+	     afs_int32 astart, struct ubik_version * avers,
+	     struct ubik_tid * atid)
 {
     register afs_int32 otherHost;
     register afs_int32 now;
@@ -184,94 +194,96 @@ afs_int32 SVOTE_Beacon(register struct rx_call *rxcall, afs_int32 astate,
     struct ubik_server *ts;
     int isClone = 0;
 
-    now = FT_ApproxTime();			/* close to current time */
-    if (rxcall)	{				/* caller's host */
+    now = FT_ApproxTime();	/* close to current time */
+    if (rxcall) {		/* caller's host */
 	aconn = rx_ConnectionOf(rxcall);
 	rxp = rx_PeerOf(aconn);
 	otherHost = rx_HostOf(rxp);
 
-                /* get the primary interface address for this host.  */
-                /* This is the identifier that ubik uses. */
-        otherHost = ubikGetPrimaryInterfaceAddr(otherHost);
-        if ( !otherHost )
-        {
-                ubik_dprint("Received beacon from unknown host %s\n",
-					afs_inet_ntoa(rx_HostOf(rxp)));
-                return 0; /* I don't know about you: vote no */
-        }
-        for (ts = ubik_servers; ts; ts = ts->next) {
-            if (ts->addr[0] == otherHost) break;
-        }
-        if (!ts) ubik_dprint("Unknown host %x has sent a beacon\n", otherHost);
-        if (ts && ts->isClone) isClone = 1;
+	/* get the primary interface address for this host.  */
+	/* This is the identifier that ubik uses. */
+	otherHost = ubikGetPrimaryInterfaceAddr(otherHost);
+	if (!otherHost) {
+	    ubik_dprint("Received beacon from unknown host %s\n",
+			afs_inet_ntoa(rx_HostOf(rxp)));
+	    return 0;		/* I don't know about you: vote no */
+	}
+	for (ts = ubik_servers; ts; ts = ts->next) {
+	    if (ts->addr[0] == otherHost)
+		break;
+	}
+	if (!ts)
+	    ubik_dprint("Unknown host %x has sent a beacon\n", otherHost);
+	if (ts && ts->isClone)
+	    isClone = 1;
     } else {
-	otherHost = ubik_host[0];			/* this host */
-        isClone = amIClone;
+	otherHost = ubik_host[0];	/* this host */
+	isClone = amIClone;
     }
 
-    ubik_dprint("Received beacon type %d from host %s\n", astate, 
-				afs_inet_ntoa(otherHost));
+    ubik_dprint("Received beacon type %d from host %s\n", astate,
+		afs_inet_ntoa(otherHost));
 
     /* compute the lowest server we've heard from.  We'll try to only vote for
-       this dude if we don't already have a synchronization site.  Also, don't
-       let a very old lowestHost confusing things forever.  We pick a new
-       lowestHost after BIGTIME seconds to limit the damage if this host
-       actually crashes.  Finally, we also count in this computation: don't
-       pick someone else if we're even better!
-
-       Note that the test below must be <=, not <, so that we keep refreshing
-       lowestTime.  Otherwise it will look like we haven't heard from
-       lowestHost in a while and another host could slip in.  */
+     * this dude if we don't already have a synchronization site.  Also, don't
+     * let a very old lowestHost confusing things forever.  We pick a new
+     * lowestHost after BIGTIME seconds to limit the damage if this host
+     * actually crashes.  Finally, we also count in this computation: don't
+     * pick someone else if we're even better!
+     * 
+     * Note that the test below must be <=, not <, so that we keep refreshing
+     * lowestTime.  Otherwise it will look like we haven't heard from
+     * lowestHost in a while and another host could slip in.  */
 
 
     /* First compute the lowest host we've heard from, whether we want them
-       for a sync site or not.  If we haven't heard from a site in BIGTIME
-       seconds, we ignore its presence in lowestHost: it may have crashed.
-       Note that we don't ever let anyone appear in our lowestHost if we're
-       lower than them, 'cause we know we're up. */
+     * for a sync site or not.  If we haven't heard from a site in BIGTIME
+     * seconds, we ignore its presence in lowestHost: it may have crashed.
+     * Note that we don't ever let anyone appear in our lowestHost if we're
+     * lower than them, 'cause we know we're up. */
     /* But do not consider clones for lowesHost since they never may become
-       sync site */
-    if (!isClone &&
-        (ntohl((afs_uint32) otherHost) <= ntohl((afs_uint32) lowestHost)
-        || lowestTime + BIGTIME < now)) {
+     * sync site */
+    if (!isClone
+	&& (ntohl((afs_uint32) otherHost) <= ntohl((afs_uint32) lowestHost)
+	    || lowestTime + BIGTIME < now)) {
 	lowestTime = now;
 	lowestHost = otherHost;
     }
     /* why do we need this next check?  Consider the case where each of two
-       servers decides the other is lowestHost.  Each stops sending beacons
-       'cause the other is there.  Not obvious that this process terminates:
-       i.e. each guy could restart procedure and again think other side is
-       lowest.  Need to prove: if one guy in the system is lowest and knows
-       he's lowest, these loops don't occur.  because if someone knows he's
-       lowest, he will send out beacons telling others to vote for him. */
-    if (!amIClone &&
-        (ntohl((afs_uint32) ubik_host[0]) <= ntohl((afs_uint32) lowestHost)
-        || lowestTime + BIGTIME < now)) {
+     * servers decides the other is lowestHost.  Each stops sending beacons
+     * 'cause the other is there.  Not obvious that this process terminates:
+     * i.e. each guy could restart procedure and again think other side is
+     * lowest.  Need to prove: if one guy in the system is lowest and knows
+     * he's lowest, these loops don't occur.  because if someone knows he's
+     * lowest, he will send out beacons telling others to vote for him. */
+    if (!amIClone
+	&& (ntohl((afs_uint32) ubik_host[0]) <= ntohl((afs_uint32) lowestHost)
+	    || lowestTime + BIGTIME < now)) {
 	lowestTime = now;
 	lowestHost = ubik_host[0];
     }
-    
+
     /* tell if we've heard from a sync site recently (even if we're not voting
-       for this dude yet).  After a while, time the guy out. */
-    if (astate)	{   /* this guy is a sync site */
+     * for this dude yet).  After a while, time the guy out. */
+    if (astate) {		/* this guy is a sync site */
 	syncHost = otherHost;
 	syncTime = now;
-    }
-    else if (syncTime + BIGTIME < now) {
-       if (syncHost) {
-	  ubik_dprint("Ubik: Lost contact with sync-site %d.%d.%d.%d (NOT in quorum)\n",
-		      ((syncHost>>24)&0xff), ((syncHost>>16)&0xff),
-		      ((syncHost>> 8)&0xff), (syncHost      &0xff));
-       }
-       syncHost = 0;
+    } else if (syncTime + BIGTIME < now) {
+	if (syncHost) {
+	    ubik_dprint
+		("Ubik: Lost contact with sync-site %d.%d.%d.%d (NOT in quorum)\n",
+		 ((syncHost >> 24) & 0xff), ((syncHost >> 16) & 0xff),
+		 ((syncHost >> 8) & 0xff), (syncHost & 0xff));
+	}
+	syncHost = 0;
     }
 
     /* decide how to vote */
-    vote = 0;		    /* start off voting no */
+    vote = 0;			/* start off voting no */
 
     /* if we this guy isn't a sync site, we don't really have to vote for him.
-       We get to apply some heuristics to try to avoid weird oscillation sates
-       in the voting procedure. */
+     * We get to apply some heuristics to try to avoid weird oscillation sates
+     * in the voting procedure. */
     if (astate == 0) {
 	/* in here only if this guy doesn't claim to be a sync site */
 
@@ -283,80 +295,91 @@ afs_int32 SVOTE_Beacon(register struct rx_call *rxcall, afs_int32 astate,
 	/* someone else *is* a sync site, just say no */
 	if (syncHost && syncHost != otherHost)
 	    return 0;
-    } else  /* fast startup if this is the only non-clone */
-    if (lastYesHost == 0xffffffff && otherHost == ubik_host[0]) {
+    } else /* fast startup if this is the only non-clone */ if (lastYesHost ==
+								0xffffffff
+								&& otherHost
+								==
+								ubik_host[0])
+    {
 	int i = 0;
-        for (ts = ubik_servers; ts; ts = ts->next) {
-            if (ts->addr[0] == otherHost) continue;
-	    if (!ts->isClone) i++;
+	for (ts = ubik_servers; ts; ts = ts->next) {
+	    if (ts->addr[0] == otherHost)
+		continue;
+	    if (!ts->isClone)
+		i++;
 	}
-	if (!i) lastYesHost = otherHost;
+	if (!i)
+	    lastYesHost = otherHost;
     }
-	
 
-    if (isClone) return 0; /* clone never can become sync site */
+
+    if (isClone)
+	return 0;		/* clone never can become sync site */
 
     /* Don't promise sync site support to more than one host every BIGTIME
-       seconds.  This is the heart of our invariants in this system. */
+     * seconds.  This is the heart of our invariants in this system. */
     if (ubik_lastYesTime + BIGTIME < now || otherHost == lastYesHost) {
-        if ((ubik_lastYesTime+BIGTIME < now) || 
-	    (otherHost != lastYesHost) ||
-	    (lastYesState != astate)) {
-	   /* A new vote or a change in the vote or changed quorum */
-	   ubik_dprint("Ubik: vote 'yes' for %s %s\n",
-				afs_inet_ntoa(otherHost),
-		       (astate?"(in quorum)":"(NOT in quorum)"));
+	if ((ubik_lastYesTime + BIGTIME < now) || (otherHost != lastYesHost)
+	    || (lastYesState != astate)) {
+	    /* A new vote or a change in the vote or changed quorum */
+	    ubik_dprint("Ubik: vote 'yes' for %s %s\n",
+			afs_inet_ntoa(otherHost),
+			(astate ? "(in quorum)" : "(NOT in quorum)"));
 	}
 
-	vote = now;		    /* vote yes */
-	ubik_lastYesTime = now;	    /* remember when we voted yes */
-	lastYesClaim = astart;	    /* remember for computing when sync site expires */
-	lastYesHost = otherHost;    /* and who for */
-	lastYesState = astate;	    /* remember if site is a sync site */
-	ubik_dbVersion = *avers;    /* resync value */
-	ubik_dbTid = *atid;	    /* transaction id, if any, of active trans */
-	urecovery_CheckTid(atid);   /* check if current write trans needs aborted */
+	vote = now;		/* vote yes */
+	ubik_lastYesTime = now;	/* remember when we voted yes */
+	lastYesClaim = astart;	/* remember for computing when sync site expires */
+	lastYesHost = otherHost;	/* and who for */
+	lastYesState = astate;	/* remember if site is a sync site */
+	ubik_dbVersion = *avers;	/* resync value */
+	ubik_dbTid = *atid;	/* transaction id, if any, of active trans */
+	urecovery_CheckTid(atid);	/* check if current write trans needs aborted */
     }
     return vote;
 }
 
 /* handle per-server debug command, where 0 is the first server.  Basic network
    debugging hooks. */
-afs_int32 SVOTE_SDebug(struct rx_call *rxcall, afs_int32 awhich,
-	register struct ubik_sdebug *aparm)
+afs_int32
+SVOTE_SDebug(struct rx_call * rxcall, afs_int32 awhich,
+	     register struct ubik_sdebug * aparm)
 {
     afs_int32 code, isClone;
     code = SVOTE_XSDebug(rxcall, awhich, aparm, &isClone);
     return code;
 }
 
-afs_int32 SVOTE_XSDebug(struct rx_call *rxcall, afs_int32 awhich, 
-	register struct ubik_sdebug *aparm, afs_int32 *isclone)
+afs_int32
+SVOTE_XSDebug(struct rx_call * rxcall, afs_int32 awhich,
+	      register struct ubik_sdebug * aparm, afs_int32 * isclone)
 {
     register struct ubik_server *ts;
     register int i;
-    for(ts=ubik_servers; ts; ts=ts->next) {
+    for (ts = ubik_servers; ts; ts = ts->next) {
 	if (awhich-- == 0) {
 	    /* we're done */
-	    aparm->addr = ntohl(ts->addr[0]); /* primary interface */
-	    for ( i=0; i < UBIK_MAX_INTERFACE_ADDR-1; i++)
-	    	aparm->altAddr[i] = ntohl(ts->addr[i+1]);
+	    aparm->addr = ntohl(ts->addr[0]);	/* primary interface */
+	    for (i = 0; i < UBIK_MAX_INTERFACE_ADDR - 1; i++)
+		aparm->altAddr[i] = ntohl(ts->addr[i + 1]);
 	    aparm->lastVoteTime = ts->lastVoteTime;
 	    aparm->lastBeaconSent = ts->lastBeaconSent;
-	    memcpy(&aparm->remoteVersion, &ts->version, sizeof(struct ubik_version));
+	    memcpy(&aparm->remoteVersion, &ts->version,
+		   sizeof(struct ubik_version));
 	    aparm->lastVote = ts->lastVote;
 	    aparm->up = ts->up;
 	    aparm->beaconSinceDown = ts->beaconSinceDown;
 	    aparm->currentDB = ts->currentDB;
-            *isclone = ts->isClone;
+	    *isclone = ts->isClone;
 	    return 0;
 	}
     }
     return 2;
 }
 
-afs_int32 SVOTE_XDebug(struct rx_call *rxcall, register struct ubik_debug *aparm, 
-	afs_int32 *isclone)
+afs_int32
+SVOTE_XDebug(struct rx_call * rxcall, register struct ubik_debug * aparm,
+	     afs_int32 * isclone)
 {
     afs_int32 code;
 
@@ -366,12 +389,13 @@ afs_int32 SVOTE_XDebug(struct rx_call *rxcall, register struct ubik_debug *aparm
 }
 
 /* handle basic network debug command.  This is the global state dumper */
-afs_int32 SVOTE_Debug(struct rx_call *rxcall, register struct ubik_debug *aparm)
+afs_int32
+SVOTE_Debug(struct rx_call * rxcall, register struct ubik_debug * aparm)
 {
-    int  i;
+    int i;
     /* fill in the basic debug structure.  Note the the RPC protocol transfers,
      * integers in host order. */
-    
+
     aparm->now = FT_ApproxTime();
     aparm->lastYesTime = ubik_lastYesTime;
     aparm->lastYesHost = ntohl(lastYesHost);
@@ -383,14 +407,14 @@ afs_int32 SVOTE_Debug(struct rx_call *rxcall, register struct ubik_debug *aparm)
     aparm->syncTime = syncTime;
 
     /* fill in all interface addresses of myself in hostbyte order */
-    for ( i=0; i < UBIK_MAX_INTERFACE_ADDR; i++)
-	aparm->interfaceAddr[i] = ntohl(ubik_host[i]);   
+    for (i = 0; i < UBIK_MAX_INTERFACE_ADDR; i++)
+	aparm->interfaceAddr[i] = ntohl(ubik_host[i]);
 
     aparm->amSyncSite = ubik_amSyncSite;
     ubeacon_Debug(aparm);
-    
+
     udisk_Debug(aparm);
-    
+
     ulock_Debug(aparm);
 
     /* Get the recovery state. The label of the database may not have 
@@ -398,22 +422,23 @@ afs_int32 SVOTE_Debug(struct rx_call *rxcall, register struct ubik_debug *aparm)
      * Defect 9477.
      */
     aparm->recoveryState = urecovery_state;
-    if ((urecovery_state & UBIK_RECSYNCSITE) && 
-	(urecovery_state & UBIK_RECFOUNDDB ) &&
-	(urecovery_state & UBIK_RECHAVEDB  ) ) {
-       aparm->recoveryState |= UBIK_RECLABELDB;
+    if ((urecovery_state & UBIK_RECSYNCSITE)
+	&& (urecovery_state & UBIK_RECFOUNDDB)
+	&& (urecovery_state & UBIK_RECHAVEDB)) {
+	aparm->recoveryState |= UBIK_RECLABELDB;
     }
     memcpy(&aparm->syncVersion, &ubik_dbVersion, sizeof(struct ubik_version));
     memcpy(&aparm->syncTid, &ubik_dbTid, sizeof(struct ubik_tid));
     aparm->activeWrite = (ubik_dbase->flags & DBWRITING);
     aparm->tidCounter = ubik_dbase->tidCounter;
-    
+
     if (ubik_currentTrans) {
 	aparm->currentTrans = 1;
-	if (ubik_currentTrans->type == UBIK_WRITETRANS) aparm->writeTrans = 1;
-	else aparm->writeTrans = 0;
-    }
-    else {
+	if (ubik_currentTrans->type == UBIK_WRITETRANS)
+	    aparm->writeTrans = 1;
+	else
+	    aparm->writeTrans = 0;
+    } else {
 	aparm->currentTrans = 0;
     }
 
@@ -422,17 +447,20 @@ afs_int32 SVOTE_Debug(struct rx_call *rxcall, register struct ubik_debug *aparm)
     return 0;
 }
 
-afs_int32 SVOTE_SDebugOld(struct rx_call *rxcall, afs_int32 awhich, register struct ubik_sdebug_old *aparm)
+afs_int32
+SVOTE_SDebugOld(struct rx_call * rxcall, afs_int32 awhich,
+		register struct ubik_sdebug_old * aparm)
 {
     register struct ubik_server *ts;
 
-    for(ts=ubik_servers; ts; ts=ts->next) {
+    for (ts = ubik_servers; ts; ts = ts->next) {
 	if (awhich-- == 0) {
 	    /* we're done */
-	    aparm->addr = ntohl(ts->addr[0]); /* primary interface */
+	    aparm->addr = ntohl(ts->addr[0]);	/* primary interface */
 	    aparm->lastVoteTime = ts->lastVoteTime;
 	    aparm->lastBeaconSent = ts->lastBeaconSent;
-	    memcpy(&aparm->remoteVersion, &ts->version, sizeof(struct ubik_version));
+	    memcpy(&aparm->remoteVersion, &ts->version,
+		   sizeof(struct ubik_version));
 	    aparm->lastVote = ts->lastVote;
 	    aparm->up = ts->up;
 	    aparm->beaconSinceDown = ts->beaconSinceDown;
@@ -445,12 +473,14 @@ afs_int32 SVOTE_SDebugOld(struct rx_call *rxcall, afs_int32 awhich, register str
 
 
 /* handle basic network debug command.  This is the global state dumper */
-afs_int32 SVOTE_DebugOld(struct rx_call *rxcall, register struct ubik_debug_old *aparm)
+afs_int32
+SVOTE_DebugOld(struct rx_call * rxcall,
+	       register struct ubik_debug_old * aparm)
 {
 
     /* fill in the basic debug structure.  Note the the RPC protocol transfers,
      * integers in host order. */
-    
+
     aparm->now = FT_ApproxTime();
     aparm->lastYesTime = ubik_lastYesTime;
     aparm->lastYesHost = ntohl(lastYesHost);
@@ -463,9 +493,9 @@ afs_int32 SVOTE_DebugOld(struct rx_call *rxcall, register struct ubik_debug_old 
 
     aparm->amSyncSite = ubik_amSyncSite;
     ubeacon_Debug(aparm);
-    
+
     udisk_Debug(aparm);
-    
+
     ulock_Debug(aparm);
 
     /* Get the recovery state. The label of the database may not have 
@@ -473,22 +503,23 @@ afs_int32 SVOTE_DebugOld(struct rx_call *rxcall, register struct ubik_debug_old 
      * Defect 9477.
      */
     aparm->recoveryState = urecovery_state;
-    if ((urecovery_state & UBIK_RECSYNCSITE) && 
-	(urecovery_state & UBIK_RECFOUNDDB ) &&
-	(urecovery_state & UBIK_RECHAVEDB  ) ) {
-       aparm->recoveryState |= UBIK_RECLABELDB;
+    if ((urecovery_state & UBIK_RECSYNCSITE)
+	&& (urecovery_state & UBIK_RECFOUNDDB)
+	&& (urecovery_state & UBIK_RECHAVEDB)) {
+	aparm->recoveryState |= UBIK_RECLABELDB;
     }
     memcpy(&aparm->syncVersion, &ubik_dbVersion, sizeof(struct ubik_version));
     memcpy(&aparm->syncTid, &ubik_dbTid, sizeof(struct ubik_tid));
     aparm->activeWrite = (ubik_dbase->flags & DBWRITING);
     aparm->tidCounter = ubik_dbase->tidCounter;
-    
+
     if (ubik_currentTrans) {
 	aparm->currentTrans = 1;
-	if (ubik_currentTrans->type == UBIK_WRITETRANS) aparm->writeTrans = 1;
-	else aparm->writeTrans = 0;
-    }
-    else {
+	if (ubik_currentTrans->type == UBIK_WRITETRANS)
+	    aparm->writeTrans = 1;
+	else
+	    aparm->writeTrans = 0;
+    } else {
 	aparm->currentTrans = 0;
     }
 
@@ -499,7 +530,9 @@ afs_int32 SVOTE_DebugOld(struct rx_call *rxcall, register struct ubik_debug_old 
 
 
 /* get the sync site; called by remote servers to find where they should go */
-afs_int32 SVOTE_GetSyncSite(register struct rx_call *rxcall, register afs_int32 *ahost)
+afs_int32
+SVOTE_GetSyncSite(register struct rx_call * rxcall,
+		  register afs_int32 * ahost)
 {
     register afs_int32 temp;
 
@@ -508,18 +541,23 @@ afs_int32 SVOTE_GetSyncSite(register struct rx_call *rxcall, register afs_int32 
     return 0;
 }
 
-int ubik_dprint(char *a, char *b, char *c, char *d, char *e, char *f, char *g, char *h)
+int
+ubik_dprint(char *a, char *b, char *c, char *d, char *e, char *f, char *g,
+	    char *h)
 {
-    ViceLog(5, (a,b,c,d,e,f,g,h));
+    ViceLog(5, (a, b, c, d, e, f, g, h));
 }
 
-int ubik_print(char *a, char *b, char *c, char *d, char *e, char *f, char *g, char *h)
+int
+ubik_print(char *a, char *b, char *c, char *d, char *e, char *f, char *g,
+	   char *h)
 {
-  ViceLog(0, (a,b,c,d,e,f,g,h));
+    ViceLog(0, (a, b, c, d, e, f, g, h));
 }
 
 /* called once/run to init the vote module */
-int uvote_Init(void)
+int
+uvote_Init(void)
 {
     /* pretend we just voted for someone else, since we just restarted */
     ubik_lastYesTime = FT_ApproxTime();

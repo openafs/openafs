@@ -15,23 +15,23 @@
  * EXPORT kernel extension configuration parameters
  */
 struct k_conf {
-	u_int	nsyms;			/* # of symbols			*/
-	u_int	symt_sz;		/* size of symbol table		*/
-	u_int	str_sz;			/* size of string table		*/
-	caddr_t	symtab;			/* user address of symtab	*/
-	caddr_t	strtab;			/* user address of string table	*/
+    u_int nsyms;		/* # of symbols                 */
+    u_int symt_sz;		/* size of symbol table         */
+    u_int str_sz;		/* size of string table         */
+    caddr_t symtab;		/* user address of symtab       */
+    caddr_t strtab;		/* user address of string table */
 };
 
 /*
  * kernel function import
  */
 struct k_func {
-	void	*(**fpp)();	/* ^ to ^ to function we import	*/
-	char	*name;		/* ^ to symbol name		*/
+    void *(**fpp) ();		/* ^ to ^ to function we import */
+    char *name;			/* ^ to symbol name             */
 #if defined(__XCOFF64__) || defined(AFS_64BIT_KERNEL)
-	u_int64 fdesc[3];	/* function descriptor storage  */
+    u_int64 fdesc[3];		/* function descriptor storage  */
 #else
-	u_int	fdesc[3];	/* function descriptor storage	*/
+    u_int fdesc[3];		/* function descriptor storage  */
 #endif
 };
 
@@ -39,6 +39,6 @@ struct k_func {
  * kernel variable import
  */
 struct k_var {
-	void	*varp;		/* ^ to surrogate variable	*/
-	char	*name;		/* ^ to symbol name		*/
+    void *varp;			/* ^ to surrogate variable      */
+    char *name;			/* ^ to symbol name             */
 };

@@ -20,12 +20,13 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/osi_inode.h"
-#include "afs/afs_stats.h" /* statistics stuff */
+#include "afs/afs_stats.h"	/* statistics stuff */
 
 #define BAD_IGET	-1000
 
@@ -36,21 +37,24 @@ RCSID("$Header$");
 /*
  * `INODESPECIAL' type inodes are ones that describe volumes.
  */
-#define INODESPECIAL	0xffffffff	/* ... from ../vol/viceinode.h	*/
+#define INODESPECIAL	0xffffffff	/* ... from ../vol/viceinode.h  */
 #endif
 
 
-int afs_syscall_icreate(void)
+int
+afs_syscall_icreate(void)
 {
     return 0;
 }
 
-int afs_syscall_iopen(void)
+int
+afs_syscall_iopen(void)
 {
     return 0;
 }
 
-int afs_syscall_iincdec(void)
+int
+afs_syscall_iincdec(void)
 {
     return 0;
 }

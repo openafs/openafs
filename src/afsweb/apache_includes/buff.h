@@ -65,8 +65,8 @@
 #define B_RDERR (16)
 /* A write error has occurred */
 #define B_WRERR (32)
-#ifdef B_ERROR  /* in SVR4: sometimes defined in /usr/include/sys/buf.h */
-#undef B_ERROR  /* avoid "warning: `B_ERROR' redefined" */
+#ifdef B_ERROR			/* in SVR4: sometimes defined in /usr/include/sys/buf.h */
+#undef B_ERROR			/* avoid "warning: `B_ERROR' redefined" */
 #endif
 #define B_ERROR (48)
 /* Use chunked writing */
@@ -76,60 +76,59 @@
 
 typedef struct buff_struct BUFF;
 
-struct buff_struct
-{
-    int flags;             /* flags */
-    unsigned char *inptr;  /* pointer to next location to read */
-    int incnt;             /* number of bytes left to read from input buffer;
-			    * always 0 if had a read error  */
-    int outchunk;	   /* location of chunk header when chunking */
-    int outcnt;            /* number of byte put in output buffer */
+struct buff_struct {
+    int flags;			/* flags */
+    unsigned char *inptr;	/* pointer to next location to read */
+    int incnt;			/* number of bytes left to read from input buffer;
+				 * always 0 if had a read error  */
+    int outchunk;		/* location of chunk header when chunking */
+    int outcnt;			/* number of byte put in output buffer */
     unsigned char *inbase;
     unsigned char *outbase;
     int bufsiz;
-    void (*error)(BUFF *fb, int op, void *data);
+    void (*error) (BUFF * fb, int op, void *data);
     void *error_data;
-    long int bytes_sent;   /* number of bytes actually written */
+    long int bytes_sent;	/* number of bytes actually written */
 
     pool *pool;
 
 /* could also put pointers to the basic I/O routines here */
-    int fd;                /* the file descriptor */
-    int fd_in;             /* input file descriptor, if different */
+    int fd;			/* the file descriptor */
+    int fd_in;			/* input file descriptor, if different */
 };
 
 /* Options to bset/getopt */
 #define BO_BYTECT (1)
 
 /* Stream creation and modification */
-extern BUFF *bcreate(pool *p, int flags);
-extern void bpushfd(BUFF *fb, int fd_in, int fd_out);
-extern int bsetopt(BUFF *fb, int optname, const void *optval);
-extern int bgetopt(BUFF *fb, int optname, void *optval);
-extern int bsetflag(BUFF *fb, int flag, int value);
-extern int bclose(BUFF *fb);
+extern BUFF *bcreate(pool * p, int flags);
+extern void bpushfd(BUFF * fb, int fd_in, int fd_out);
+extern int bsetopt(BUFF * fb, int optname, const void *optval);
+extern int bgetopt(BUFF * fb, int optname, void *optval);
+extern int bsetflag(BUFF * fb, int flag, int value);
+extern int bclose(BUFF * fb);
 
 #define bgetflag(fb, flag)	((fb)->flags & (flag))
 
 /* Error handling */
-extern void bonerror(BUFF *fb, void (*error)(BUFF *, int, void *),
+extern void bonerror(BUFF * fb, void (*error) (BUFF *, int, void *),
 		     void *data);
 
 /* I/O */
-extern int bread(BUFF *fb, void *buf, int nbyte);
-extern int bgets(char *s, int n, BUFF *fb);
-extern int blookc(char *buff, BUFF *fb);
-extern int bskiplf(BUFF *fb);
-extern int bwrite(BUFF *fb, const void *buf, int nbyte);
-extern int bflush(BUFF *fb);
-extern int bputs(const char *x, BUFF *fb);
-extern int bvputs(BUFF *fb, ...);
-extern int bprintf(BUFF *fb,const char *fmt,...);
-extern int vbprintf(BUFF *fb,const char *fmt,va_list vlist);
+extern int bread(BUFF * fb, void *buf, int nbyte);
+extern int bgets(char *s, int n, BUFF * fb);
+extern int blookc(char *buff, BUFF * fb);
+extern int bskiplf(BUFF * fb);
+extern int bwrite(BUFF * fb, const void *buf, int nbyte);
+extern int bflush(BUFF * fb);
+extern int bputs(const char *x, BUFF * fb);
+extern int bvputs(BUFF * fb, ...);
+extern int bprintf(BUFF * fb, const char *fmt, ...);
+extern int vbprintf(BUFF * fb, const char *fmt, va_list vlist);
 
 /* Internal routines */
-extern int bflsbuf(int c, BUFF *fb);
-extern int bfilbuf(BUFF *fb);
+extern int bflsbuf(int c, BUFF * fb);
+extern int bfilbuf(BUFF * fb);
 
 #define bgetc(fb)   ( ((fb)->incnt == 0) ? bfilbuf(fb) : \
 		    ((fb)->incnt--, *((fb)->inptr++)) )

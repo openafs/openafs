@@ -13,7 +13,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <stdio.h>
 #include <errno.h>
@@ -50,7 +51,7 @@ int WhatFidCmd_FileParm;
 int WhatFidCmd_FollowLinkParm;
 int
 WhatFidCmd(as)
-register struct cmd_syndesc *as;
+     register struct cmd_syndesc *as;
 {
     register afs_int32 code;
     struct ViceIoctl blob;
@@ -62,11 +63,11 @@ register struct cmd_syndesc *as;
 
     if (as->parms[1].items)
 	follow = 0;
-    for(ti=as->parms[0].items; ti; ti=ti->next) {
+    for (ti = as->parms[0].items; ti; ti = ti->next) {
 	/* once per file */
 	blob.out_size = sizeof(struct VenusFid);
 	blob.in_size = 0;
-	blob.out = (char*)&vFid;
+	blob.out = (char *)&vFid;
 	code = pioctl(ti->data, VIOCGETFID, &blob, follow);
 	if (code) {
 	    PioctlError(code, ti->data);
@@ -77,15 +78,16 @@ register struct cmd_syndesc *as;
     }
     return 0;
 }
-	       
+
 
 
 main(argc, argv)
-int argc;
-char **argv; {
+     int argc;
+     char **argv;
+{
     register afs_int32 code;
     register struct cmd_syndesc *ts;
-    
+
 #ifdef	AFS_AIX32_ENV
     /*
      * The following signal action for AIX is necessary so that in case of a 
@@ -94,7 +96,7 @@ char **argv; {
      * generated which, in many cases, isn't too useful.
      */
     struct sigaction nsa;
-    
+
     sigemptyset(&nsa.sa_mask);
     nsa.sa_handler = SIG_DFL;
     nsa.sa_flags = SA_FULLDUMP;
@@ -105,35 +107,48 @@ char **argv; {
 
     ts = cmd_CreateSyntax("initcmd", WhatFidCmd, 0, "list fid for file(s)");
     WhatFidCmd_FileParm = cmd_AddParm(ts, "-path", CMD_LIST, 0, "pathnames");
-    WhatFidCmd_FollowLinkParm = cmd_AddParm(ts, "-link", CMD_FLAG, CMD_OPTIONAL,
-				      "do not follow symlinks");
-    
+    WhatFidCmd_FollowLinkParm =
+	cmd_AddParm(ts, "-link", CMD_FLAG, CMD_OPTIONAL,
+		    "do not follow symlinks");
+
     exit(cmd_Dispatch(argc, argv));
 }
 
 void
 PioctlError(code, filename)
-    int   code;
-    char *filename;
-{ /*Die*/
+     int code;
+     char *filename;
+{				/*Die */
 
     if (errno == EINVAL) {
 	if (filename)
-	    fprintf(stderr,"%s: Invalid argument; it is possible that %s is not in AFS.\n", pn, filename);
-	else fprintf(stderr,"%s: Invalid argument.\n", pn);
-    }
-    else if (errno == ENOENT) {
-	if (filename) fprintf(stderr,"%s: File '%s' doesn't exist\n", pn, filename);
-	else fprintf(stderr,"%s: no such file returned\n", pn);
-    }
-    else if (errno == EROFS)  fprintf(stderr,"%s: You can not change a backup or readonly volume\n", pn);
+	    fprintf(stderr,
+		    "%s: Invalid argument; it is possible that %s is not in AFS.\n",
+		    pn, filename);
+	else
+	    fprintf(stderr, "%s: Invalid argument.\n", pn);
+    } else if (errno == ENOENT) {
+	if (filename)
+	    fprintf(stderr, "%s: File '%s' doesn't exist\n", pn, filename);
+	else
+	    fprintf(stderr, "%s: no such file returned\n", pn);
+    } else if (errno == EROFS)
+	fprintf(stderr,
+		"%s: You can not change a backup or readonly volume\n", pn);
     else if (errno == EACCES || errno == EPERM) {
-	if (filename) fprintf(stderr,"%s: You don't have the required access rights on '%s'\n", pn, filename);
-	else fprintf(stderr,"%s: You do not have the required rights to do this operation\n", pn);
+	if (filename)
+	    fprintf(stderr,
+		    "%s: You don't have the required access rights on '%s'\n",
+		    pn, filename);
+	else
+	    fprintf(stderr,
+		    "%s: You do not have the required rights to do this operation\n",
+		    pn);
+    } else {
+	if (filename)
+	    fprintf(stderr, "%s:'%s'", pn, filename);
+	else
+	    fprintf(stderr, "%s", pn);
+	fprintf(stderr, ": %s\n", error_message(errno));
     }
-    else {
-	if (filename) fprintf(stderr,"%s:'%s'", pn, filename);
-	else fprintf(stderr,"%s", pn);
-	fprintf(stderr,": %s\n", error_message(errno));
-    }
-} /*Die*/
+}				/*Die */

@@ -25,7 +25,7 @@
 #define AFS_SGI61_ENV		1
 #define AFS_SGI62_ENV		1
 #define AFS_SGI_EXMAG		1	/* use magic fields in extents for AFS extra fields */
-/* AFS_SGI_SHORTSTACK not required since we have a 16K stack. */	
+/* AFS_SGI_SHORTSTACK not required since we have a 16K stack. */
 
 #define AFS_HAVE_FLOCK_SYSID    1
 
@@ -52,12 +52,12 @@
 #define AFS_IWRITE	69+1000
 #define AFS_IINC	70+1000
 #define AFS_IDEC	71+1000
-#define AFS_IOPEN64	72+1000 /* was never-used aux call. */
+#define AFS_IOPEN64	72+1000	/* was never-used aux call. */
 #define AFS_SYSCALL	73+1000
 
 /* For the XFS fileserver */
-#define AFS_SGI_XFS_IOPS_ENV 	1 /* turns on XFS inode ops. */
-#define AFS_64BIT_IOPS_ENV	1 /* inode ops expect 64 bit inodes */
+#define AFS_SGI_XFS_IOPS_ENV 	1	/* turns on XFS inode ops. */
+#define AFS_64BIT_IOPS_ENV	1	/* inode ops expect 64 bit inodes */
 
 /* File system entry (used if mount.h doesn't define MOUNT_AFS */
 #define AFS_MOUNT_AFS	 "afs"
@@ -98,7 +98,7 @@
 #define	VATTR_NULL	vattr_null
 #define	DEBUG		1
 
-#define AFS_SGI_DUAL_FS_CACHE 1 /* implies supports EFS or XFS cache */
+#define AFS_SGI_DUAL_FS_CACHE 1	/* implies supports EFS or XFS cache */
 
 #define memset(A, B, S) bzero(A, S)
 #define memcpy(B, A, S) bcopy(A, B, S)
@@ -109,7 +109,7 @@
 #ifndef CMSERVERPREF
 #define CMSERVERPREF
 #endif
-#endif	/* AFS_PARAM_H */
+#endif /* AFS_PARAM_H */
 
 #else /* !defined(UKERNEL) */
 
@@ -140,7 +140,7 @@
 
 #include <afs/afs_sysnames.h>
 
-/*#define AFS_GLOBAL_SUNLOCK	1*/	/* For global locking */
+									   /*#define AFS_GLOBAL_SUNLOCK    1 *//* For global locking */
 
 #define	AFS_3DISPARES		1	/* Utilize the 3 available disk inode 'spares' */
 
@@ -155,7 +155,7 @@
 #define SYS_NAME	"sgi_62"
 #define SYS_NAME_ID	SYS_NAME_ID_sgi_62
 #define AFSBIG_ENDIAN	1
-#define AFS_HAVE_FFS            1       /* Use system's ffs. */
+#define AFS_HAVE_FFS            1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS	0	/* System doesn't support statvfs */
 
 /* Extra kernel definitions (from kdefs file) */
@@ -175,7 +175,7 @@
 #define	AFS_MINCHANGE	2
 #define	VATTR_NULL	usr_vattr_null
 #endif /* KERNEL */
-#define	AFS_DIRENT	
+#define	AFS_DIRENT
 #ifndef CMSERVERPREF
 #define CMSERVERPREF
 #endif

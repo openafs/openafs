@@ -13,7 +13,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef AFS_NT40_ENV
 #include <stdio.h>
@@ -22,7 +23,7 @@ RCSID("$Header$");
 #include <winbase.h>
 #include "rx_clock.h"
 
-struct clock clock_now;	/* The last elapsed time ready by clock_GetTimer */
+struct clock clock_now;		/* The last elapsed time ready by clock_GetTimer */
 
 /* This is set to 1 whenever the time is read, and reset to 0 whenever
  * clock_NewTime is called.  This is to allow the caller to control the
@@ -40,7 +41,8 @@ LARGE_INTEGER rxi_clockFreq;
 #undef clock_UpdateTime
 void clock_UpdateTime(void);
 
-void clock_Init()
+void
+clock_Init()
 {
     if (!QueryPerformanceFrequency(&rxi_clockFreq)) {
 	printf("No High Performance clock, exiting.\n");
@@ -48,7 +50,7 @@ void clock_Init()
     }
 
     clockInitialized = 1;
-    (void) QueryPerformanceCounter(&rxi_clock0);
+    (void)QueryPerformanceCounter(&rxi_clock0);
 
     clock_UpdateTime();
 }
@@ -61,20 +63,21 @@ clock_UnInit()
 }
 #endif
 
-void clock_UpdateTime(void)
+void
+clock_UpdateTime(void)
 {
     LARGE_INTEGER now, delta;
     double seconds;
 
-    (void) QueryPerformanceCounter(&now);
+    (void)QueryPerformanceCounter(&now);
 
     delta.QuadPart = now.QuadPart - rxi_clock0.QuadPart;
 
     seconds = (double)delta.QuadPart / (double)rxi_clockFreq.QuadPart;
 
-    clock_now.sec = (int) seconds;
-    clock_now.usec = (int) ((seconds - (double)clock_now.sec)
-			    * (double)1000000);
+    clock_now.sec = (int)seconds;
+    clock_now.usec = (int)((seconds - (double)clock_now.sec)
+			   * (double)1000000);
     clock_haveCurrentTime = 1;
     clock_nUpdates++;
 

@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -35,16 +36,19 @@ RCSID("$Header$");
 #define	MAX_DAY_VALUE	30
 
 /* for parsing relative expiration dates */
-static struct parseseqS
-{
+static struct parseseqS {
     afs_int32 ps_field;
     char ps_keychar;
     afs_int32 ps_maxValue;
 } parseseq[] = {
-    { KTIMEDATE_YEAR, 'y', MAX_YEAR_VALUE, },		/* no max. value */
-    { KTIMEDATE_MONTH, 'm', MAX_MONTH_VALUE, },		/* months max. 12 */
-    { KTIMEDATE_DAY, 'd',	MAX_DAY_VALUE, },	/* days max. 31 */
-    { 0, 0, 0, }
+    {
+    KTIMEDATE_YEAR, 'y', MAX_YEAR_VALUE,},	/* no max. value */
+    {
+    KTIMEDATE_MONTH, 'm', MAX_MONTH_VALUE,},	/* months max. 12 */
+    {
+    KTIMEDATE_DAY, 'd', MAX_DAY_VALUE,},	/* days max. 31 */
+    {
+    0, 0, 0,}
 };
 
 /* Encodings to and from relative dates. The caller is responsible for
@@ -58,13 +62,15 @@ static struct parseseqS
  *	afs_int32 value of encoded date.
  */
 
-afs_int32 ktimeRelDate_ToInt32(struct ktime_date *kdptr)
+afs_int32
+ktimeRelDate_ToInt32(struct ktime_date *kdptr)
 {
     afs_int32 retval;
 
-    retval = (((kdptr->year*(MAX_MONTH_VALUE+1)) +
-	       kdptr->month)*(MAX_DAY_VALUE+1)) + kdptr->day;
-    return(retval);
+    retval =
+	(((kdptr->year * (MAX_MONTH_VALUE + 1)) +
+	  kdptr->month) * (MAX_DAY_VALUE + 1)) + kdptr->day;
+    return (retval);
 }
 
 /* Int32To_ktimeRelDate
@@ -72,27 +78,28 @@ afs_int32 ktimeRelDate_ToInt32(struct ktime_date *kdptr)
  *	structure
  */
 
-int Int32To_ktimeRelDate(afs_int32 int32Date, struct ktime_date *kdptr)
+int
+Int32To_ktimeRelDate(afs_int32 int32Date, struct ktime_date *kdptr)
 {
     memset(kdptr, 0, sizeof(*kdptr));
-    
+
     kdptr->day = int32Date % (MAX_DAY_VALUE + 1);
-    if ( kdptr->day != 0 )
-    	kdptr->mask |= KTIMEDATE_DAY;
+    if (kdptr->day != 0)
+	kdptr->mask |= KTIMEDATE_DAY;
 
-    int32Date = int32Date/(MAX_DAY_VALUE + 1);
-    
+    int32Date = int32Date / (MAX_DAY_VALUE + 1);
+
     kdptr->month = int32Date % (MAX_MONTH_VALUE + 1);
-    if ( kdptr->month != 0 )
-    	kdptr->mask |= KTIMEDATE_MONTH;
+    if (kdptr->month != 0)
+	kdptr->mask |= KTIMEDATE_MONTH;
 
-    int32Date = int32Date/(MAX_MONTH_VALUE + 1);
-    
+    int32Date = int32Date / (MAX_MONTH_VALUE + 1);
+
     kdptr->year = int32Date;
-    if ( kdptr->year != 0 )
-    	kdptr->mask |= KTIMEDATE_YEAR;
+    if (kdptr->year != 0)
+	kdptr->mask |= KTIMEDATE_YEAR;
 
-    return(0);
+    return (0);
 }
 
 /* ktimeDate_FromInt32
@@ -104,27 +111,29 @@ int Int32To_ktimeRelDate(afs_int32 int32Date, struct ktime_date *kdptr)
  *	ktimePtr - ptr to struct for the return value
  */
 
-int ktimeDate_FromInt32(afs_int32 timeSecs, struct ktime_date *ktimePtr)
+int
+ktimeDate_FromInt32(afs_int32 timeSecs, struct ktime_date *ktimePtr)
 {
     struct tm *timePtr;
 
-    timePtr = localtime((time_t *)&timeSecs);
+    timePtr = localtime((time_t *) & timeSecs);
 
     /* copy the relevant fields */
     ktimePtr->sec = timePtr->tm_sec;
     ktimePtr->min = timePtr->tm_min;
     ktimePtr->hour = timePtr->tm_hour;
     ktimePtr->day = timePtr->tm_mday;
-    ktimePtr->month = timePtr->tm_mon+1;
+    ktimePtr->month = timePtr->tm_mon + 1;
     ktimePtr->year = timePtr->tm_year;
 
-    ktimePtr->mask = KTIMEDATE_YEAR | KTIMEDATE_MONTH | KTIMEDATE_DAY |
-    	KTIMEDATE_HOUR | KTIMEDATE_MIN | KTIMEDATE_SEC;
+    ktimePtr->mask =
+	KTIMEDATE_YEAR | KTIMEDATE_MONTH | KTIMEDATE_DAY | KTIMEDATE_HOUR |
+	KTIMEDATE_MIN | KTIMEDATE_SEC;
 
-    return(0);
+    return (0);
 }
 
-#define	RD_DIGIT_LIMIT	4			/* max. no. digits permitted */
+#define	RD_DIGIT_LIMIT	4	/* max. no. digits permitted */
 
 /* ParseRelDate
  *	Parses a relative date of the form  <n>y<n>m<n>d representing years
@@ -139,7 +148,8 @@ int ktimeDate_FromInt32(afs_int32 timeSecs, struct ktime_date *ktimePtr)
  *	0 - error in date specification
  */
 
-afs_int32 ParseRelDate(char *dateStr, struct ktime_date *relDatePtr)
+afs_int32
+ParseRelDate(char *dateStr, struct ktime_date * relDatePtr)
 {
     struct parseseqS *psPtr;
     afs_int32 value, digit_limit;
@@ -148,84 +158,79 @@ afs_int32 ParseRelDate(char *dateStr, struct ktime_date *relDatePtr)
     memset(relDatePtr, 0, sizeof(*relDatePtr));
     type_index = 0;
 
-    while ( 1 )
-    { /*w*/
+    while (1) {			/*w */
 
-	while ( isspace(*dateStr) )                /* skip leading whitespace */
-                dateStr++;
+	while (isspace(*dateStr))	/* skip leading whitespace */
+	    dateStr++;
 
-	if ( isdigit(*dateStr) == 0 )
-    		goto error;
+	if (isdigit(*dateStr) == 0)
+	    goto error;
 
 	digit_limit = RD_DIGIT_LIMIT;
 	value = 0;
-	while ( isdigit(*dateStr) )
-	{
-	    value = value*10 + *dateStr - '0';
+	while (isdigit(*dateStr)) {
+	    value = value * 10 + *dateStr - '0';
 	    dateStr++;
-	    if ( digit_limit-- == 0 )
-	    	goto error;
+	    if (digit_limit-- == 0)
+		goto error;
 	}
 
 	psPtr = &parseseq[type_index];
 	/* determine the units. Search for a matching type character */
-	while ( (psPtr->ps_keychar != *dateStr)
-	&&  	(psPtr->ps_keychar != 0)
-	      )
-	{
+	while ((psPtr->ps_keychar != *dateStr)
+	       && (psPtr->ps_keychar != 0)
+	    ) {
 	    type_index++;
 	    psPtr = &parseseq[type_index];
 	}
 
 	/* no matching type found */
-	if ( psPtr->ps_keychar == 0 )
- 		goto error;
+	if (psPtr->ps_keychar == 0)
+	    goto error;
 
 	/* check the bounds on the maximum value. Can't be negative
 	 * and if a maximum value is specified, check against it
 	 */
-	if ( (value < 0)
-	||   ((psPtr->ps_maxValue > 0) && (value > psPtr->ps_maxValue))
-	   )
-	    	goto error;
+	if ((value < 0)
+	    || ((psPtr->ps_maxValue > 0) && (value > psPtr->ps_maxValue))
+	    )
+	    goto error;
 
 	/* save computed value in the relevant type field */
-	switch ( psPtr->ps_field )
-	{
-	  case KTIMEDATE_YEAR:
+	switch (psPtr->ps_field) {
+	case KTIMEDATE_YEAR:
 	    relDatePtr->year = value;
 	    relDatePtr->mask |= KTIMEDATE_YEAR;
 	    break;
 
-	  case KTIMEDATE_MONTH:
-	    if ( value > MAX_MONTH_VALUE )
-	    	goto error;
+	case KTIMEDATE_MONTH:
+	    if (value > MAX_MONTH_VALUE)
+		goto error;
 	    relDatePtr->month = value;
 	    relDatePtr->mask |= KTIMEDATE_MONTH;
 	    break;
 
-	  case KTIMEDATE_DAY:
-	    if ( value > MAX_DAY_VALUE )
-	    	goto error;
+	case KTIMEDATE_DAY:
+	    if (value > MAX_DAY_VALUE)
+		goto error;
 
 	    relDatePtr->mask |= KTIMEDATE_DAY;
 	    relDatePtr->day = value;
 	    break;
 
-	  default:
+	default:
 	    goto error;
 	}
-	dateStr++;				/* next digit */
+	dateStr++;		/* next digit */
 
-	if ( *dateStr == 0 )
-	{
+	if (*dateStr == 0) {
 	    /* no more chars to process, return the result */
-	    return(0);
+	    return (0);
 	}
-    } /*w*/
+    }				/*w */
 
-error:
-    return(1);
+  error:
+    return (1);
 }
 
 /* RelDatetoString
@@ -237,7 +242,8 @@ error:
  *	ptr to static string
  */
 
-char *RelDatetoString(struct ktime_date *datePtr)
+char *
+RelDatetoString(struct ktime_date *datePtr)
 {
     static char dateString[64];
     char tempstring[64], *sptr;
@@ -245,26 +251,23 @@ char *RelDatetoString(struct ktime_date *datePtr)
     dateString[0] = 0;
     sptr = &dateString[0];
 
-    if ( datePtr->mask & KTIMEDATE_YEAR )
-    {
+    if (datePtr->mask & KTIMEDATE_YEAR) {
 	sprintf(tempstring, "%-dy", datePtr->year);
 	strcat(sptr, tempstring);
     }
 
-    if ( datePtr->mask & KTIMEDATE_MONTH )
-    {
+    if (datePtr->mask & KTIMEDATE_MONTH) {
 	strcat(sptr, " ");
 	sprintf(tempstring, "%-dm", datePtr->month);
 	strcat(sptr, tempstring);
     }
 
-    if ( datePtr->mask & KTIMEDATE_DAY )
-    {
+    if (datePtr->mask & KTIMEDATE_DAY) {
 	strcat(sptr, " ");
 	sprintf(tempstring, "%-dd", datePtr->day);
 	strcat(sptr, tempstring);
     }
-    return(sptr);
+    return (sptr);
 }
 
 /* Add_RelDate_to_Time
@@ -278,42 +281,42 @@ char *RelDatetoString(struct ktime_date *datePtr)
  *	returns specified time with relative time added.
  */
 
-afs_int32 Add_RelDate_to_Time(struct ktime_date *relDatePtr, afs_int32 atime)
+afs_int32
+Add_RelDate_to_Time(struct ktime_date * relDatePtr, afs_int32 atime)
 {
     afs_int32 moreYears;
     static struct ktime_date absDate;
-    
+
     ktimeDate_FromInt32(atime, &absDate);	/* convert to ktime */
 
     /* add in years */
-    if ( relDatePtr->mask & KTIMEDATE_YEAR )
-	    absDate.year += relDatePtr->year;
+    if (relDatePtr->mask & KTIMEDATE_YEAR)
+	absDate.year += relDatePtr->year;
 
     /* add in months */
-    if ( relDatePtr->mask & KTIMEDATE_MONTH )
-    	absDate.month += relDatePtr->month;
+    if (relDatePtr->mask & KTIMEDATE_MONTH)
+	absDate.month += relDatePtr->month;
 
-    if ( absDate.month > 12 )
-    {
+    if (absDate.month > 12) {
 	moreYears = absDate.month / 12;
 	absDate.month = absDate.month % 12;
 	absDate.year += moreYears;
     }
-    
+
     /* day computations depend upon month size, so do these in seconds */
     atime = ktime_InterpretDate(&absDate);
 
-    if ( relDatePtr->mask & KTIMEDATE_DAY )
-	    atime = atime + relDatePtr->day*24*60*60;
+    if (relDatePtr->mask & KTIMEDATE_DAY)
+	atime = atime + relDatePtr->day * 24 * 60 * 60;
 
-    if ( relDatePtr->mask & KTIMEDATE_HOUR )
-	    atime = atime + relDatePtr->hour*60*60;
+    if (relDatePtr->mask & KTIMEDATE_HOUR)
+	atime = atime + relDatePtr->hour * 60 * 60;
 
-    if ( relDatePtr->mask & KTIMEDATE_MIN )
-	    atime = atime + relDatePtr->min*60;
+    if (relDatePtr->mask & KTIMEDATE_MIN)
+	atime = atime + relDatePtr->min * 60;
 
-    if ( relDatePtr->mask & KTIMEDATE_SEC )
-	    atime = atime + relDatePtr->sec;
+    if (relDatePtr->mask & KTIMEDATE_SEC)
+	atime = atime + relDatePtr->sec;
 
-    return(atime);
-}	
+    return (atime);
+}

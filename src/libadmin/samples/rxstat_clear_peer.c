@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -26,19 +27,16 @@ RCSID("$Header$");
 
 extern int RXSTATS_ClearPeerRPCStats();
 
-void Usage()
+void
+Usage()
 {
-    fprintf(stderr,
-	    "Usage: rxstat_clear_peer <cell> <host> <port>\n");
+    fprintf(stderr, "Usage: rxstat_clear_peer <cell> <host> <port>\n");
     exit(1);
 }
 
-void ParseArgs(
-    int argc,
-    char *argv[],
-    char **cellName,
-    char **srvrName,
-    long *srvrPort)
+void
+ParseArgs(int argc, char *argv[], char **cellName, char **srvrName,
+	  long *srvrPort)
 {
     char **argp = argv;
 
@@ -57,7 +55,8 @@ void ParseArgs(
 	Usage();
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     int rc;
     afs_status_t st = 0;
@@ -88,7 +87,8 @@ int main(int argc, char *argv[])
 	exit(1);
     }
 
-    rc = afsclient_RPCStatOpenPort(cellHandle, srvrName, srvrPort, &conn, &st);
+    rc = afsclient_RPCStatOpenPort(cellHandle, srvrName, srvrPort, &conn,
+				   &st);
     if (!rc) {
 	fprintf(stderr, "afsclient_RPCStatOpenPort, status %d\n", st);
 	exit(1);

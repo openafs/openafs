@@ -18,7 +18,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifndef KERNEL
 #include <stdio.h>
@@ -71,21 +72,20 @@ pthread_mutex_t des_init_mutex;
  *        to be a weak des key.  Des_generate_random_block is used to
  *        provide the random bits.
  */
-int des_random_key(des_cblock key)
+int
+des_random_key(des_cblock key)
 {
-    LOCK_INIT
-    if (!is_inited) {
+    LOCK_INIT if (!is_inited) {
 	void des_init_random_number_generator();
 	des_init_random_number_generator(key);
     }
     UNLOCK_INIT
-
     do {
 	des_generate_random_block(key);
 	des_fixup_key_parity(key);
     } while (des_is_weak_key(key));
 
-    return(0);
+    return (0);
 }
 
 /*
@@ -103,8 +103,7 @@ int des_random_key(des_cblock key)
  * Note: this routine calls des_set_random_generator_seed.
  */
 #if !defined(BSDUNIX) && !defined(AFS_SGI_ENV) && !defined(AFS_NT40_ENV) && !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_DJGPP_ENV)
-  you lose...   (aka, you get to implement an analog of this for your
-		 system...)
+you lose ... (aka, you get to implement an analog of this for your system ...)
 #else
 
 #ifdef AFS_NT40_ENV
@@ -116,13 +115,14 @@ int des_random_key(des_cblock key)
 #include <unistd.h>
 #endif
 
-void des_init_random_number_generator(des_cblock key)
+void
+des_init_random_number_generator(des_cblock key)
 {
-    struct { /* This must be 64 bits exactly */
+    struct {			/* This must be 64 bits exactly */
 	afs_int32 process_id;
 	afs_int32 host_id;
     } seed;
-    struct timeval time; /* this must also be 64 bits exactly */
+    struct timeval time;	/* this must also be 64 bits exactly */
     des_cblock new_key;
 
     is_inited = 1;
@@ -145,7 +145,7 @@ void des_init_random_number_generator(des_cblock key)
 
     /*
      * use it to select a random stream:
-     */      
+     */
     des_set_random_generator_seed(new_key);
 
     /*
@@ -175,8 +175,8 @@ void des_init_random_number_generator(des_cblock key)
  * The secret des key schedule for the current stream of random numbers:
  */
 static union {
-  afs_int32 align;
-  des_key_schedule d;
+    afs_int32 align;
+    des_key_schedule d;
 } random_sequence_key;
 
 /*
@@ -211,19 +211,18 @@ pthread_mutex_t des_random_mutex;
  * Requires: key is a valid des key.  I.e., has correct parity and is not a
  *           weak des key.
  */
-void des_set_random_generator_seed(des_cblock key)
+void
+des_set_random_generator_seed(des_cblock key)
 {
     register int i;
 
     /* select the new stream: (note errors are not possible here...) */
-    LOCK_RANDOM
-    des_key_sched(key, random_sequence_key.d);
+    LOCK_RANDOM des_key_sched(key, random_sequence_key.d);
 
     /* "seek" to the start of the stream: */
-    for (i=0; i<8; i++)
-      sequence_number[i] = 0;
-    UNLOCK_RANDOM
-}
+    for (i = 0; i < 8; i++)
+	sequence_number[i] = 0;
+UNLOCK_RANDOM}
 
 /*
  * des_set_sequence_number: this routine is used to set the sequence number
@@ -233,12 +232,12 @@ void des_set_random_generator_seed(des_cblock key)
  *
  * Note that des_set_random_generator_seed resets the sequence number to 0.
  */
-static afs_int32 des_set_sequence_number(des_cblock new_sequence_number)
+static afs_int32
+des_set_sequence_number(des_cblock new_sequence_number)
 {
-    LOCK_RANDOM
-    memcpy((char *)sequence_number, (char *)new_sequence_number, sizeof(sequence_number));
-    UNLOCK_RANDOM
-    return 0;
+    LOCK_RANDOM memcpy((char *)sequence_number, (char *)new_sequence_number,
+		       sizeof(sequence_number));
+    UNLOCK_RANDOM return 0;
 }
 
 /*
@@ -249,29 +248,27 @@ static afs_int32 des_set_sequence_number(des_cblock new_sequence_number)
  * Requires: des_set_random_generator_seed must have been called at least once
  *           before this routine is called.
  */
-static afs_int32 des_generate_random_block(des_cblock block)
+static afs_int32
+des_generate_random_block(des_cblock block)
 {
     int i;
 
-    LOCK_RXKAD_STATS
-    rxkad_stats.des_randoms++;
+    LOCK_RXKAD_STATS rxkad_stats.des_randoms++;
     UNLOCK_RXKAD_STATS
-
-    /*
-     * Encrypt the sequence number to get the new random block:
-     */
-    LOCK_RANDOM
-    des_ecb_encrypt(sequence_number, block, random_sequence_key.d, 1);
+	/*
+	 * Encrypt the sequence number to get the new random block:
+	 */
+	LOCK_RANDOM des_ecb_encrypt(sequence_number, block,
+				    random_sequence_key.d, 1);
 
     /*
      * Increment the sequence number as an 8 byte unsigned number with wrap:
      * (using LSB here)
      */
-    for (i=0; i<8; i++) {
+    for (i = 0; i < 8; i++) {
 	sequence_number[i] = (sequence_number[i] + 1) & 0xff;
 	if (sequence_number[i])
-	  break;
+	    break;
     }
-    UNLOCK_RANDOM
-    return 0;
+    UNLOCK_RANDOM return 0;
 }

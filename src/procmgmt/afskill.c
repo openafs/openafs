@@ -15,7 +15,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/stds.h>
 
@@ -35,25 +36,26 @@ typedef struct {
 } signal_map_t;
 
 static signal_map_t signalMap[] = {
-{"HUP",  SIGHUP},
-{"INT",  SIGINT},
-{"QUIT", SIGQUIT},
-{"ILL",  SIGILL},
-{"ABRT", SIGABRT},
-{"FPE",  SIGFPE},
-{"KILL", SIGKILL},
-{"SEGV", SIGSEGV},
-{"TERM", SIGTERM},
-{"USR1", SIGUSR1},
-{"USR2", SIGUSR2},
-{"CLD",  SIGCLD},
-{"CHLD", SIGCHLD},
-{"TSTP", SIGTSTP},
-{NULL, 0}
+    {"HUP", SIGHUP},
+    {"INT", SIGINT},
+    {"QUIT", SIGQUIT},
+    {"ILL", SIGILL},
+    {"ABRT", SIGABRT},
+    {"FPE", SIGFPE},
+    {"KILL", SIGKILL},
+    {"SEGV", SIGSEGV},
+    {"TERM", SIGTERM},
+    {"USR1", SIGUSR1},
+    {"USR2", SIGUSR2},
+    {"CLD", SIGCLD},
+    {"CHLD", SIGCHLD},
+    {"TSTP", SIGTSTP},
+    {NULL, 0}
 };
 
 
-static void PrintSignalList(void)
+static void
+PrintSignalList(void)
 {
     int i;
 
@@ -63,7 +65,8 @@ static void PrintSignalList(void)
     printf("\n");
 }
 
-static int SignalArgToNumber(const char *sigargp)
+static int
+SignalArgToNumber(const char *sigargp)
 {
     long signo;
     char *endp;
@@ -84,11 +87,12 @@ static int SignalArgToNumber(const char *sigargp)
 	}
     }
 
-    return -1;  /* invalid signal argument */
+    return -1;			/* invalid signal argument */
 }
 
 
-static void PrintUsage(const char *whoami)
+static void
+PrintUsage(const char *whoami)
 {
     printf("usage: %s [-signal] [pid] ...\n", whoami);
     printf("       %s -l\n", whoami);
@@ -96,7 +100,8 @@ static void PrintUsage(const char *whoami)
 
 
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     int status = 0;
     char *whoami;
@@ -122,14 +127,14 @@ int main(int argc, char *argv[])
     } else {
 	/* request to send a signal */
 	int i;
-	int signo = SIGTERM;  /* SIGTERM is default if no signal specified */
+	int signo = SIGTERM;	/* SIGTERM is default if no signal specified */
 
 	for (i = 1; i < argc; i++) {
 	    char *curargp = argv[i];
 
 	    if (i == 1 && *curargp == '-') {
 		/* signal argument specified; translate to a number */
-		curargp++;  /* advance past signal flag indicator ('-') */
+		curargp++;	/* advance past signal flag indicator ('-') */
 
 		if ((signo = SignalArgToNumber(curargp)) == -1) {
 		    printf("%s: unknown signal %s.\n", whoami, curargp);
@@ -149,21 +154,21 @@ int main(int argc, char *argv[])
 		    printf("%s: invalid pid value %s.\n", whoami, curargp);
 		    status = 1;
 		} else {
-		    if (kill((pid_t)pid, signo)) {
+		    if (kill((pid_t) pid, signo)) {
 			if (errno == EINVAL) {
-			    printf("%s: invalid signal number %d.\n",
-				   whoami, signo);
+			    printf("%s: invalid signal number %d.\n", whoami,
+				   signo);
 			    status = 1;
 			    break;
 
 			} else if (errno == ESRCH) {
-			    printf("%s: no such process %d.\n",
-				   whoami, (int)pid);
+			    printf("%s: no such process %d.\n", whoami,
+				   (int)pid);
 			    status = 1;
 
 			} else if (errno == EPERM) {
-			    printf("%s: no privilege to signal %d.\n",
-				   whoami, (int)pid);
+			    printf("%s: no privilege to signal %d.\n", whoami,
+				   (int)pid);
 			    status = 1;
 
 			} else {

@@ -11,7 +11,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <mit-cpyright.h>
 #include <stdio.h>
@@ -22,12 +23,13 @@ RCSID("$Header$");
 #define WANT_FP_TABLE
 #include "tables.h"
 
-void gen (FILE *stream)
+void
+gen(FILE * stream)
 {
-    register    int i;
+    register int i;
 
     /* clear the output */
-    fprintf(stream,"    L2 = 0; R2 = 0;\n");
+    fprintf(stream, "    L2 = 0; R2 = 0;\n");
 
     /*
      *  NOTE: As part of the final permutation, we also have to adjust
@@ -40,30 +42,29 @@ void gen (FILE *stream)
     swap_long_bytes_bit_number(swap_bit_pos_0_to_ansi((unsigned)i)-j)
 
     /* first setup FP */
-    fprintf(stream,
-            "/* FP operations */\n/* first left to left */\n");
+    fprintf(stream, "/* FP operations */\n/* first left to left */\n");
 
     /* first list mapping from left to left */
     for (i = 0; i <= 31; i++)
-        if (FP[i] < 32)
-            test_set(stream, "L1", FP[i], "L2", SWAP(i,0));
+	if (FP[i] < 32)
+	    test_set(stream, "L1", FP[i], "L2", SWAP(i, 0));
 
     /* now mapping from right to left */
-    fprintf(stream,"\n\n/* now from right to left */\n");
+    fprintf(stream, "\n\n/* now from right to left */\n");
     for (i = 0; i <= 31; i++)
-        if (FP[i] >= 32)
-            test_set(stream, "R1", FP[i]-32, "L2", SWAP(i,0));
+	if (FP[i] >= 32)
+	    test_set(stream, "R1", FP[i] - 32, "L2", SWAP(i, 0));
 
-    fprintf(stream,"\n/* now from left to right */\n");
+    fprintf(stream, "\n/* now from left to right */\n");
 
     /*  list mapping from left to right */
     for (i = 32; i <= 63; i++)
-        if (FP[i] <32)
-            test_set(stream, "L1", FP[i], "R2", SWAP(i,32));
+	if (FP[i] < 32)
+	    test_set(stream, "L1", FP[i], "R2", SWAP(i, 32));
 
     /* now mapping from right to right */
-    fprintf(stream,"\n/* last from right to right */\n");
+    fprintf(stream, "\n/* last from right to right */\n");
     for (i = 32; i <= 63; i++)
-        if (FP[i] >= 32)
-            test_set(stream, "R1", FP[i]-32, "R2", SWAP(i,32));
+	if (FP[i] >= 32)
+	    test_set(stream, "R1", FP[i] - 32, "R2", SWAP(i, 32));
 }

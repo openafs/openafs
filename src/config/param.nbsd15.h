@@ -9,10 +9,10 @@
 #include <sys/param.h>
 #endif
 
-#define AFS_XBSD_ENV 1             /* {Free,Open,Net}BSD */
+#define AFS_XBSD_ENV 1		/* {Free,Open,Net}BSD */
 
-#define AFS_NAMEI_ENV     1   /* User space interface to file system */
-#define AFS_64BIT_IOPS_ENV 1  /* Needed for NAMEI */
+#define AFS_NAMEI_ENV     1	/* User space interface to file system */
+#define AFS_64BIT_IOPS_ENV 1	/* Needed for NAMEI */
 #define AFS_NBSD_ENV 1
 #define AFS_NBSD15_ENV 1
 #define AFS_NONFSTRANS 1
@@ -49,11 +49,11 @@
 #define	MOUNT_AFS AFS_MOUNT_AFS
 #endif
 
-#define AFS_HAVE_FFS            1       /* Use system's ffs. */
+#define AFS_HAVE_FFS            1	/* Use system's ffs. */
 #define AFS_HAVE_STATVFS	0	/* System doesn't supports statvfs */
 
-#define AFS_GCPAGS	        0       /* if nonzero, garbage collect PAGs */
-#define AFS_USE_GETTIMEOFDAY    1       /* use gettimeofday to implement rx clock */
+#define AFS_GCPAGS	        0	/* if nonzero, garbage collect PAGs */
+#define AFS_USE_GETTIMEOFDAY    1	/* use gettimeofday to implement rx clock */
 
 /* Extra kernel definitions (from kdefs file) */
 #ifdef _KERNEL
@@ -94,7 +94,7 @@
 #define	VN_HOLD(vp)	VREF(((struct vnode *)(vp)))
 
 #if	!defined(ASSEMBLER) && !defined(__LANGUAGE_ASSEMBLY__)
-enum vcexcl {NONEXCL, EXCL};
+enum vcexcl { NONEXCL, EXCL };
 
 #ifdef KERNEL
 #ifndef MIN
@@ -105,10 +105,10 @@ enum vcexcl {NONEXCL, EXCL};
 #endif
 #endif /* KERNEL */
 
-#endif	/* ! ASSEMBLER & ! __LANGUAGE_ASSEMBLY__ */
+#endif /* ! ASSEMBLER & ! __LANGUAGE_ASSEMBLY__ */
 #endif /* _KERNEL */
 
-#endif	/* AFS_PARAM_COMMON_H */
+#endif /* AFS_PARAM_COMMON_H */
 
 #else /* !defined(UKERNEL) */
 

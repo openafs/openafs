@@ -14,7 +14,8 @@
 #endif
 #include <afsconfig.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef UKERNEL
 #include "afs/sysincludes.h"
@@ -36,77 +37,67 @@ RCSID("$Header$");
  * stat code - which is generic across all servers.
  */
 
-afs_int32 MRXSTATS_RetrieveProcessRPCStats(
-  struct rx_call *call,
-  IN afs_uint32 clientVersion,
-  OUT afs_uint32 *serverVersion,
-  OUT afs_uint32 *clock_sec,
-  OUT afs_uint32 *clock_usec,
-  OUT afs_uint32 *stat_count,
-  OUT rpcStats *stats)
-{ 
+afs_int32
+MRXSTATS_RetrieveProcessRPCStats(struct rx_call *call,
+				 IN afs_uint32 clientVersion,
+				 OUT afs_uint32 * serverVersion,
+				 OUT afs_uint32 * clock_sec,
+				 OUT afs_uint32 * clock_usec,
+				 OUT afs_uint32 * stat_count,
+				 OUT rpcStats * stats)
+{
     afs_int32 rc;
     size_t allocSize;
 
-    rc = rx_RetrieveProcessRPCStats(clientVersion,
-				    serverVersion,
-				    clock_sec,
-				    clock_usec,
-				    &allocSize,
-				    stat_count,
+    rc = rx_RetrieveProcessRPCStats(clientVersion, serverVersion, clock_sec,
+				    clock_usec, &allocSize, stat_count,
 				    &stats->rpcStats_val);
-    stats->rpcStats_len = allocSize/sizeof(afs_uint32);
+    stats->rpcStats_len = allocSize / sizeof(afs_uint32);
     return rc;
-}   
+}
 
 
-afs_int32 MRXSTATS_RetrievePeerRPCStats(
-  struct rx_call *call,
-  IN afs_uint32 clientVersion,
-  OUT afs_uint32 *serverVersion,
-  OUT afs_uint32 *clock_sec,
-  OUT afs_uint32 *clock_usec,
-  OUT afs_uint32 *stat_count,
-  OUT rpcStats *stats)
-{ 
+afs_int32
+MRXSTATS_RetrievePeerRPCStats(struct rx_call * call,
+			      IN afs_uint32 clientVersion,
+			      OUT afs_uint32 * serverVersion,
+			      OUT afs_uint32 * clock_sec,
+			      OUT afs_uint32 * clock_usec,
+			      OUT afs_uint32 * stat_count,
+			      OUT rpcStats * stats)
+{
     afs_int32 rc;
     size_t allocSize;
 
-    rc = rx_RetrievePeerRPCStats(clientVersion,
-				    serverVersion,
-				    clock_sec,
-				    clock_usec,
-				    &allocSize,
-				    stat_count,
-				    &stats->rpcStats_val);
-    stats->rpcStats_len = allocSize/sizeof(afs_uint32);
+    rc = rx_RetrievePeerRPCStats(clientVersion, serverVersion, clock_sec,
+				 clock_usec, &allocSize, stat_count,
+				 &stats->rpcStats_val);
+    stats->rpcStats_len = allocSize / sizeof(afs_uint32);
     return rc;
-}   
+}
 
 
-afs_int32 MRXSTATS_QueryProcessRPCStats(
-  struct rx_call *call,
-  OUT afs_int32 *on)
-{ 
+afs_int32
+MRXSTATS_QueryProcessRPCStats(struct rx_call * call, OUT afs_int32 * on)
+{
     afs_int32 rc = 0;
     *on = rx_queryProcessRPCStats();
     return rc;
-}   
+}
 
 
-afs_int32 MRXSTATS_QueryPeerRPCStats(
-  struct rx_call *call,
-  OUT afs_int32 *on)
-{ 
+afs_int32
+MRXSTATS_QueryPeerRPCStats(struct rx_call * call, OUT afs_int32 * on)
+{
     afs_int32 rc = 0;
     *on = rx_queryPeerRPCStats();
     return rc;
-}   
+}
 
 
-afs_int32 MRXSTATS_EnableProcessRPCStats(
-  struct rx_call *call)
-{ 
+afs_int32
+MRXSTATS_EnableProcessRPCStats(struct rx_call * call)
+{
     afs_int32 rc = 0;
     if (!rx_RxStatUserOk(call)) {
 	rc = EPERM;
@@ -114,11 +105,11 @@ afs_int32 MRXSTATS_EnableProcessRPCStats(
 	rx_enableProcessRPCStats();
     }
     return rc;
-}   
+}
 
-afs_int32 MRXSTATS_EnablePeerRPCStats(
-  struct rx_call *call)
-{ 
+afs_int32
+MRXSTATS_EnablePeerRPCStats(struct rx_call * call)
+{
     afs_int32 rc = 0;
     if (!rx_RxStatUserOk(call)) {
 	rc = EPERM;
@@ -126,12 +117,12 @@ afs_int32 MRXSTATS_EnablePeerRPCStats(
 	rx_enablePeerRPCStats();
     }
     return rc;
-}   
+}
 
 
-afs_int32 MRXSTATS_DisableProcessRPCStats(
-  struct rx_call *call)
-{ 
+afs_int32
+MRXSTATS_DisableProcessRPCStats(struct rx_call * call)
+{
     afs_int32 rc = 0;
     if (!rx_RxStatUserOk(call)) {
 	rc = EPERM;
@@ -139,32 +130,30 @@ afs_int32 MRXSTATS_DisableProcessRPCStats(
 	rx_disableProcessRPCStats();
     }
     return rc;
-}   
+}
 
-afs_int32 MRXSTATS_DisablePeerRPCStats(
-  struct rx_call *call)
-{ 
+afs_int32
+MRXSTATS_DisablePeerRPCStats(struct rx_call * call)
+{
     afs_int32 rc = 0;
     if (!rx_RxStatUserOk(call)) {
 	rc = EPERM;
     } else {
-    rx_disablePeerRPCStats();
+	rx_disablePeerRPCStats();
     }
     return rc;
-}   
+}
 
-afs_int32 MRXSTATS_QueryRPCStatsVersion(
-  struct rx_call *call,
-  OUT afs_uint32 *ver)
+afs_int32
+MRXSTATS_QueryRPCStatsVersion(struct rx_call * call, OUT afs_uint32 * ver)
 {
     afs_int32 rc = 0;
     *ver = RX_STATS_RETRIEVAL_VERSION;
     return rc;
 }
 
-afs_int32 MRXSTATS_ClearProcessRPCStats(
-  struct rx_call *call,
-  IN afs_uint32 clearFlag)
+afs_int32
+MRXSTATS_ClearProcessRPCStats(struct rx_call * call, IN afs_uint32 clearFlag)
 {
     afs_int32 rc = 0;
     if (!rx_RxStatUserOk(call)) {
@@ -175,9 +164,8 @@ afs_int32 MRXSTATS_ClearProcessRPCStats(
     return rc;
 }
 
-afs_int32 MRXSTATS_ClearPeerRPCStats(
-  struct rx_call *call,
-  IN afs_uint32 clearFlag)
+afs_int32
+MRXSTATS_ClearPeerRPCStats(struct rx_call * call, IN afs_uint32 clearFlag)
 {
     afs_int32 rc = 0;
     if (!rx_RxStatUserOk(call)) {

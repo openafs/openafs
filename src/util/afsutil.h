@@ -17,8 +17,8 @@
 /* These macros are return values from extractAddr. They do not represent
  * any valid IP address and so can indicate a failure.
  */
-#define	AFS_IPINVALID 		0xffffffff /* invalid IP address */
-#define AFS_IPINVALIDIGNORE	0xfffffffe /* no input given to extractAddr */
+#define	AFS_IPINVALID 		0xffffffff	/* invalid IP address */
+#define AFS_IPINVALIDIGNORE	0xfffffffe	/* no input given to extractAddr */
 
 /* logging defines
  */
@@ -40,22 +40,22 @@ extern int ReOpenLog(const char *fileName);
 extern void SetupLogSignals(void);
 
 extern int
-afs_vsnprintf(/*@out@*/char *p, size_t avail, const char *fmt,
+afs_vsnprintf( /*@out@ */ char *p, size_t avail, const char *fmt,
 	      va_list ap)
-    /*@requires maxSet(p) >= (avail-1)@*/
-    /*@modifies p@*/;
+    /*@requires maxSet(p) >= (avail-1)@ */
+    /*@modifies p@ */ ;
 
-extern /*@printflike@*/ int
-afs_snprintf(/*@out@*/char *p, size_t avail,
-	     const char *fmt, ...)
-    /*@requires maxSet(p) >= (avail-1)@*/
-    /*@modifies p@*/;
+     extern /*@printflike@ */ int
+       afs_snprintf( /*@out@ */ char *p, size_t avail,
+		    const char *fmt, ...)
+    /*@requires maxSet(p) >= (avail-1)@ */
+    /*@modifies p@ */ ;
 
 
 /* special version of ctime that clobbers a *different static variable, so
  * that ViceLog can call ctime and not cause buffer confusion.
  */
-extern char *vctime(const time_t *atime);
+     extern char *vctime(const time_t * atime);
 
 /* Need a thead safe ctime for pthread builds. Use std ctime for LWP */
 #if defined(AFS_PTHREAD_ENV) && !defined(AFS_NT40_ENV)
@@ -68,7 +68,7 @@ extern char *vctime(const time_t *atime);
 #else /* AFS_PTHREAD_ENV && !AFS_NT40_ENV */
 #define afs_ctime(C, B, S) \
 	((void)strncpy(B, ctime(C), (S-1)), (B)[S-1] = '\0', (B))
-#endif  /* AFS_PTHREAD_ENV && !AFS_NT40_ENV */
+#endif /* AFS_PTHREAD_ENV && !AFS_NT40_ENV */
 
 
 /* abort the current process. */
@@ -85,29 +85,29 @@ extern char *vctime(const time_t *atime);
 #endif /* _MFC_VER */
 
 /* Initialize the windows sockets before calling networking routines. */
-extern int afs_winsockInit(void);
+     extern int afs_winsockInit(void);
 
-struct timezone {
-    int  tz_minuteswest;     /* of Greenwich */
-    int  tz_dsttime;    /* type of dst correction to apply */
-};
+     struct timezone {
+	 int tz_minuteswest;	/* of Greenwich */
+	 int tz_dsttime;	/* type of dst correction to apply */
+     };
 #define gettimeofday afs_gettimeofday
-int afs_gettimeofday(struct timeval *tv, struct timezone *tz);
+     int afs_gettimeofday(struct timeval *tv, struct timezone *tz);
 
 /* Unbuffer output when Un*x would do line buffering. */
 #define setlinebuf(S) setvbuf(S, NULL, _IONBF, 0)
 
 /* regular expression parser for NT */
-extern char *re_comp(char *sp);
-extern int rc_exec(char *p);
+     extern char *re_comp(char *sp);
+     extern int rc_exec(char *p);
 
 /* Abort on error, possibly trapping to debugger or dumping a trace. */
-void afs_NTAbort(void);
+     void afs_NTAbort(void);
 #endif /* NT40 */
 
-typedef char b32_string_t[8];
+     typedef char b32_string_t[8];
 /* b64_string_t is 8 bytes, in stds.h */
-typedef char lb64_string_t[12];
+     typedef char lb64_string_t[12];
 
 #ifndef UKERNEL
 #include "afs/ktime.h"

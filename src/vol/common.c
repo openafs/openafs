@@ -19,15 +19,17 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/afsutil.h>
 
 int Statistics = 0;
 
-/*@printflike@*/ void Log(const char *format, ...)
+/*@printflike@*/ void
+Log(const char *format, ...)
 {
-    int	level;
+    int level;
     va_list args;
 
     if (Statistics)
@@ -40,7 +42,8 @@ int Statistics = 0;
     va_end(args);
 }
 
-/*@printflike@*/ void Abort(const char *format, ...)
+/*@printflike@*/ void
+Abort(const char *format, ...)
 {
     va_list args;
 
@@ -51,7 +54,8 @@ int Statistics = 0;
     abort();
 }
 
-/*@printflike@*/ void Quit(const char *format, ...)
+/*@printflike@*/ void
+Quit(const char *format, ...)
 {
     va_list args;
 

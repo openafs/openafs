@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/stds.h>
 #include <stdio.h>
@@ -70,34 +71,33 @@ typedef struct file_server {
  * Returns != 0 upon successful completion.
  */
 
-static int IsValidServerHandle(
-    file_server_p serverHandle,
-    afs_status_p st)
+static int
+IsValidServerHandle(file_server_p serverHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
 
     if (serverHandle == NULL) {
-        tst = ADMVOSSERVERHANDLENULL;
-        goto fail_IsValidServerHandle;
+	tst = ADMVOSSERVERHANDLENULL;
+	goto fail_IsValidServerHandle;
     }
 
     if (serverHandle->is_valid != 1) {
-        tst = ADMVOSSERVERHANDLEINVALID;
-        goto fail_IsValidServerHandle;
+	tst = ADMVOSSERVERHANDLEINVALID;
+	goto fail_IsValidServerHandle;
     }
 
-    if ((serverHandle->begin_magic != BEGIN_MAGIC) ||
-        (serverHandle->end_magic != END_MAGIC)) {
-        tst = ADMVOSSERVERHANDLEBADMAGIC;
-        goto fail_IsValidServerHandle;
+    if ((serverHandle->begin_magic != BEGIN_MAGIC)
+	|| (serverHandle->end_magic != END_MAGIC)) {
+	tst = ADMVOSSERVERHANDLEBADMAGIC;
+	goto fail_IsValidServerHandle;
     }
     rc = 1;
 
-fail_IsValidServerHandle:
+  fail_IsValidServerHandle:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
 
     return rc;
@@ -120,14 +120,13 @@ fail_IsValidServerHandle:
  * Returns != 0 upon successful completion.
  */
 
-static int IsValidCellHandle(
-  afs_cell_handle_p cellHandle,
-  afs_status_p st)
+static int
+IsValidCellHandle(afs_cell_handle_p cellHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
 
-    if (!CellHandleIsValid((void *) cellHandle, &tst)) {
+    if (!CellHandleIsValid((void *)cellHandle, &tst)) {
 	goto fail_IsValidCellHandle;
     }
 
@@ -137,7 +136,7 @@ static int IsValidCellHandle(
     }
     rc = 1;
 
-fail_IsValidCellHandle:
+  fail_IsValidCellHandle:
 
     if (st != NULL) {
 	*st = tst;
@@ -147,37 +146,34 @@ fail_IsValidCellHandle:
 
 /* set <server> and <part> to the correct values depending on
  * <voltype> and <entry> */
-static void GetServerAndPart (
-  struct nvldbentry *entry,
-  int voltype,
-  afs_int32 *server,
-  afs_int32 *part,
-  int *previdx)
+static void
+GetServerAndPart(struct nvldbentry *entry, int voltype, afs_int32 * server,
+		 afs_int32 * part, int *previdx)
 {
     int i, istart, vtype;
- 
+
     *server = -1;
-    *part   = -1;
- 
+    *part = -1;
+
     /* Doesn't check for non-existance of backup volume */
     if ((voltype == RWVOL) || (voltype == BACKVOL)) {
-       vtype = ITSRWVOL;
-       istart = 0;      /* seach the entire entry */
+	vtype = ITSRWVOL;
+	istart = 0;		/* seach the entire entry */
     } else {
-       vtype = ITSROVOL;
-       /* Seach from beginning of entry or pick up where we left off */
-       istart = ((*previdx < 0) ? 0 : *previdx+1);
+	vtype = ITSROVOL;
+	/* Seach from beginning of entry or pick up where we left off */
+	istart = ((*previdx < 0) ? 0 : *previdx + 1);
     }
- 
+
     for (i = istart; i < entry->nServers; i++) {
-       if (entry->serverFlags[i] & vtype) {
-          *server = entry->serverNumber[i];
-          *part   = entry->serverPartition[i];
-          *previdx = i;
-          return;
-       }
+	if (entry->serverFlags[i] & vtype) {
+	    *server = entry->serverNumber[i];
+	    *part = entry->serverPartition[i];
+	    *previdx = i;
+	    return;
+	}
     }
- 
+
     /* Didn't find any, return -1 */
     *previdx = -1;
     return;
@@ -205,11 +201,9 @@ static void GetServerAndPart (
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_BackupVolumeCreate(
-  const void *cellHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int volumeId,
-  afs_status_p st)
+int ADMINAPI
+vos_BackupVolumeCreate(const void *cellHandle, vos_MessageCallBack_t callBack,
+		       unsigned int volumeId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -223,7 +217,7 @@ int ADMINAPI vos_BackupVolumeCreate(
     afs_int32 bk_partition;
     afs_int32 bk_vol_type;
     int equal;
- 
+
     /*
      * Validate arguments
      */
@@ -237,8 +231,9 @@ int ADMINAPI vos_BackupVolumeCreate(
      * a read write volume id
      */
 
-    if (!GetVolumeInfo(c_handle, volumeId, &rw_vol_entry, &rw_server,
-		       &rw_partition, &rw_vol_type, &tst)) {
+    if (!GetVolumeInfo
+	(c_handle, volumeId, &rw_vol_entry, &rw_server, &rw_partition,
+	 &rw_vol_type, &tst)) {
 	goto fail_vos_BackupVolumeCreate;
     }
 
@@ -253,9 +248,9 @@ int ADMINAPI vos_BackupVolumeCreate(
      */
 
     if (rw_vol_entry.flags & BACK_EXISTS) {
-	if (!GetVolumeInfo(c_handle, rw_vol_entry.volumeId[BACKVOL],
-			   &bk_vol_entry, &bk_server, &bk_partition,
-			   &bk_vol_type, &tst)) {
+	if (!GetVolumeInfo
+	    (c_handle, rw_vol_entry.volumeId[BACKVOL], &bk_vol_entry,
+	     &bk_server, &bk_partition, &bk_vol_type, &tst)) {
 	    goto fail_vos_BackupVolumeCreate;
 	}
 	if (!VLDB_IsSameAddrs(c_handle, bk_server, rw_server, &equal, &tst)) {
@@ -273,10 +268,10 @@ int ADMINAPI vos_BackupVolumeCreate(
 
     rc = UV_BackupVolume(c_handle, rw_server, rw_partition, volumeId, &tst);
 
-fail_vos_BackupVolumeCreate:
+  fail_vos_BackupVolumeCreate:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -312,14 +307,13 @@ fail_vos_BackupVolumeCreate:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_BackupVolumeCreateMultiple(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  const unsigned int *partition,
-  const char *volumePrefix,
-  vos_exclude_t excludePrefix,
-  afs_status_p st)
+int ADMINAPI
+vos_BackupVolumeCreateMultiple(const void *cellHandle,
+			       const void *serverHandle,
+			       vos_MessageCallBack_t callBack,
+			       const unsigned int *partition,
+			       const char *volumePrefix,
+			       vos_exclude_t excludePrefix, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -337,8 +331,8 @@ int ADMINAPI vos_BackupVolumeCreateMultiple(
     int previdx;
     int equal = 0;
     char backbuf[1024];
- 
-    memset((void *) &attr, 0, sizeof(attr));
+
+    memset((void *)&attr, 0, sizeof(attr));
 
     /*
      * Validate arguments
@@ -352,8 +346,8 @@ int ADMINAPI vos_BackupVolumeCreateMultiple(
 	goto fail_vos_BackupVolumeCreateMultiple;
     }
 
-    if ((excludePrefix == VOS_EXCLUDE) &&
-	((volumePrefix == NULL) || (*volumePrefix == 0))) {
+    if ((excludePrefix == VOS_EXCLUDE)
+	&& ((volumePrefix == NULL) || (*volumePrefix == 0))) {
 	tst = ADMVOSEXCLUDEREQUIRESPREFIX;
 	goto fail_vos_BackupVolumeCreateMultiple;
     }
@@ -384,7 +378,7 @@ int ADMINAPI vos_BackupVolumeCreateMultiple(
 	prefix_len = strlen(volumePrefix);
     }
 
-    memset((void *) &arrayEntries, 0, sizeof(arrayEntries));
+    memset((void *)&arrayEntries, 0, sizeof(arrayEntries));
 
     /*
      * Get a list of all the volumes in the cell
@@ -399,7 +393,7 @@ int ADMINAPI vos_BackupVolumeCreateMultiple(
      * for each individual volume
      */
 
-    for(i=0;i<nentries;i++) {
+    for (i = 0; i < nentries; i++) {
 	entry = &arrayEntries.nbulkentries_val[i];
 
 	/*
@@ -409,10 +403,10 @@ int ADMINAPI vos_BackupVolumeCreateMultiple(
 	if (!(entry->flags & RW_EXISTS)) {
 	    if (callBack != NULL) {
 		const char *messageText;
-		if (util_AdminErrorCodeTranslate(ADMVOSVOLUMENOREADWRITE, 0,
-						 &messageText, &tst)) {
+		if (util_AdminErrorCodeTranslate
+		    (ADMVOSVOLUMENOREADWRITE, 0, &messageText, &tst)) {
 		    sprintf(backbuf, "%s %s", messageText, entry->name);
-		    (**callBack)(VOS_VERBOSE_MESSAGE, backbuf);
+		    (**callBack) (VOS_VERBOSE_MESSAGE, backbuf);
 		}
 	    }
 	    continue;
@@ -441,10 +435,10 @@ int ADMINAPI vos_BackupVolumeCreateMultiple(
 	if ((rw_server == -1) || (rw_partition == -1)) {
 	    if (callBack != NULL) {
 		const char *messageText;
-		if (util_AdminErrorCodeTranslate(ADMVOSVLDBBADENTRY, 0,
-						 &messageText, &tst)) {
+		if (util_AdminErrorCodeTranslate
+		    (ADMVOSVLDBBADENTRY, 0, &messageText, &tst)) {
 		    sprintf(backbuf, "%s %s", messageText, entry->name);
-		    (**callBack)(VOS_ERROR_MESSAGE, backbuf);
+		    (**callBack) (VOS_ERROR_MESSAGE, backbuf);
 		}
 	    }
 	    continue;
@@ -456,17 +450,17 @@ int ADMINAPI vos_BackupVolumeCreateMultiple(
 	 */
 
 	if (serverHandle != NULL) {
-	    if (!VLDB_IsSameAddrs(c_handle,
-				  ntohl(rx_HostOf(rx_PeerOf(f_server->serv))),
-				  rw_server, &equal, &tst)) {
+	    if (!VLDB_IsSameAddrs
+		(c_handle, ntohl(rx_HostOf(rx_PeerOf(f_server->serv))),
+		 rw_server, &equal, &tst)) {
 		if (callBack != NULL) {
 		    const char *messageText;
-		    if (util_AdminErrorCodeTranslate(ADMVOSVLDBBADSERVER, 0,
-						     &messageText, &tst)) {
+		    if (util_AdminErrorCodeTranslate
+			(ADMVOSVLDBBADSERVER, 0, &messageText, &tst)) {
 			sprintf(backbuf, "%s %x %d", messageText,
 				ntohl(rx_HostOf(rx_PeerOf(f_server->serv))),
 				tst);
-			(**callBack)(VOS_ERROR_MESSAGE, backbuf);
+			(**callBack) (VOS_ERROR_MESSAGE, backbuf);
 		    }
 		}
 		continue;
@@ -474,11 +468,10 @@ int ADMINAPI vos_BackupVolumeCreateMultiple(
 	    if (!equal) {
 		if (callBack != NULL) {
 		    const char *messageText;
-		    if (util_AdminErrorCodeTranslate(ADMVOSVLDBDIFFERENTADDR, 0,
-						     &messageText, &tst)) {
-			sprintf(backbuf, "%s %s", messageText,
-				entry->name);
-			(**callBack)(VOS_ERROR_MESSAGE, backbuf);
+		    if (util_AdminErrorCodeTranslate
+			(ADMVOSVLDBDIFFERENTADDR, 0, &messageText, &tst)) {
+			sprintf(backbuf, "%s %s", messageText, entry->name);
+			(**callBack) (VOS_ERROR_MESSAGE, backbuf);
 		    }
 		}
 		continue;
@@ -500,17 +493,18 @@ int ADMINAPI vos_BackupVolumeCreateMultiple(
 	 * Backup the volume
 	 */
 
-	rc = UV_BackupVolume(c_handle, rw_server, rw_partition, rw_volid, &tst);
+	rc = UV_BackupVolume(c_handle, rw_server, rw_partition, rw_volid,
+			     &tst);
     }
 
-fail_vos_BackupVolumeCreateMultiple:
+  fail_vos_BackupVolumeCreateMultiple:
 
     if (arrayEntries.nbulkentries_val) {
 	free(arrayEntries.nbulkentries_val);
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -543,33 +537,30 @@ fail_vos_BackupVolumeCreateMultiple:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_PartitionGet(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int partition,
-  vos_partitionEntry_p partitionP,
-  afs_status_p st)
+int ADMINAPI
+vos_PartitionGet(const void *cellHandle, const void *serverHandle,
+		 vos_MessageCallBack_t callBack, unsigned int partition,
+		 vos_partitionEntry_p partitionP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     struct diskPartition part_info;
     file_server_p f_server = (file_server_p) serverHandle;
-    char partitionName[10]; /* this rpc requires a character partition name */
+    char partitionName[10];	/* this rpc requires a character partition name */
 
     /*
      * Validate arguments
      */
 
     if (!IsValidServerHandle(f_server, &tst)) {
-        goto fail_vos_PartitionGet;
+	goto fail_vos_PartitionGet;
     }
 
     if (partitionP == NULL) {
 	tst = ADMVOSPARTITIONPNULL;
 	goto fail_vos_PartitionGet;
     }
- 
+
     if (!vos_PartitionIdToName(partition, partitionName, &tst)) {
 	goto fail_vos_PartitionGet;
     }
@@ -585,10 +576,10 @@ int ADMINAPI vos_PartitionGet(
     partitionP->totalFreeSpace = part_info.free;
     rc = 1;
 
-fail_vos_PartitionGet:
+  fail_vos_PartitionGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -598,25 +589,22 @@ fail_vos_PartitionGet:
  */
 
 typedef struct partition_get {
-    afs_int32 total_received; /* the total number of valid partiions retrieved */
-    int number_processed; /* the number of valid paritions we've handed out */
-    int index; /* the current index into the part_list array */
-    struct partList part_list; /* the list of partitions */
-    vos_partitionEntry_t partition[CACHED_ITEMS]; /* the cache of partitions */
-    const void *server; /* the server where the parititions exist */
+    afs_int32 total_received;	/* the total number of valid partiions retrieved */
+    int number_processed;	/* the number of valid paritions we've handed out */
+    int index;			/* the current index into the part_list array */
+    struct partList part_list;	/* the list of partitions */
+    vos_partitionEntry_t partition[CACHED_ITEMS];	/* the cache of partitions */
+    const void *server;		/* the server where the parititions exist */
 } partition_get_t, *partition_get_p;
 
-static int GetPartitionInfoRPC(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+GetPartitionInfoRPC(void *rpc_specific, int slot, int *last_item,
+		    int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     partition_get_p part = (partition_get_p) rpc_specific;
-    vos_partitionEntry_p ptr = (vos_partitionEntry_p) &part->partition[slot];
+    vos_partitionEntry_p ptr = (vos_partitionEntry_p) & part->partition[slot];
 
     /*
      * Skip partition entries that are not valid
@@ -630,9 +618,9 @@ static int GetPartitionInfoRPC(
      * Get information for the next partition
      */
 
-    if (!vos_PartitionGet(0, part->server, 0,
-			  (unsigned int) part->part_list.partId[part->index],
-			  ptr, &tst)) {
+    if (!vos_PartitionGet
+	(0, part->server, 0,
+	 (unsigned int)part->part_list.partId[part->index], ptr, &tst)) {
 	goto fail_GetPartitionInfoRPC;
     }
 
@@ -645,7 +633,7 @@ static int GetPartitionInfoRPC(
     }
     rc = 1;
 
-fail_GetPartitionInfoRPC:
+  fail_GetPartitionInfoRPC:
 
     if (st != NULL) {
 	*st = tst;
@@ -653,17 +641,15 @@ fail_GetPartitionInfoRPC:
     return rc;
 }
 
-static int GetPartitionInfoFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+GetPartitionInfoFromCache(void *rpc_specific, int slot, void *dest,
+			  afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     partition_get_p part = (partition_get_p) rpc_specific;
 
-    memcpy(dest, (const void *) &part->partition[slot],
+    memcpy(dest, (const void *)&part->partition[slot],
 	   sizeof(vos_partitionEntry_t));
     rc = 1;
 
@@ -699,34 +685,34 @@ static int GetPartitionInfoFromCache(
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_PartitionGetBegin(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+vos_PartitionGetBegin(const void *cellHandle, const void *serverHandle,
+		      vos_MessageCallBack_t callBack, void **iterationIdP,
+		      afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     file_server_p f_server = (file_server_p) serverHandle;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    partition_get_p part = (partition_get_p) calloc(1, sizeof(partition_get_t));
+    afs_admin_iterator_p iter =
+	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    partition_get_p part =
+	(partition_get_p) calloc(1, sizeof(partition_get_t));
 
     /*
      * Validate arguments
      */
 
     if (!IsValidServerHandle(f_server, &tst)) {
-        goto fail_vos_PartitionGetBegin;
+	goto fail_vos_PartitionGetBegin;
     }
 
     if (iterationIdP == NULL) {
-        goto fail_vos_PartitionGetBegin;
+	goto fail_vos_PartitionGetBegin;
     }
-	
+
     if ((iter == NULL) || (part == NULL)) {
 	tst = ADMNOMEM;
-        goto fail_vos_PartitionGetBegin;
+	goto fail_vos_PartitionGetBegin;
     }
 
     /*
@@ -734,8 +720,8 @@ int ADMINAPI vos_PartitionGetBegin(
      */
 
     part->server = serverHandle;
-    if (!UV_ListPartitions(f_server->serv, &part->part_list,
-                           &part->total_received, &tst)) {
+    if (!UV_ListPartitions
+	(f_server->serv, &part->part_list, &part->total_received, &tst)) {
 	goto fail_vos_PartitionGetBegin;
     }
 
@@ -745,21 +731,22 @@ int ADMINAPI vos_PartitionGetBegin(
      */
 
     if (part->total_received == 0) {
-	if (!IteratorInit(iter, (void *) part, NULL, NULL, NULL, NULL, &tst)) {
+	if (!IteratorInit(iter, (void *)part, NULL, NULL, NULL, NULL, &tst)) {
 	    goto fail_vos_PartitionGetBegin;
 	}
 	iter->done_iterating = 1;
 	iter->st = ADMITERATORDONE;
     } else {
-	if (!IteratorInit(iter, (void *) part, GetPartitionInfoRPC,
-			 GetPartitionInfoFromCache, NULL, NULL, &tst)) {
+	if (!IteratorInit
+	    (iter, (void *)part, GetPartitionInfoRPC,
+	     GetPartitionInfoFromCache, NULL, NULL, &tst)) {
 	    goto fail_vos_PartitionGetBegin;
 	}
     }
-    *iterationIdP = (void *) iter;
+    *iterationIdP = (void *)iter;
     rc = 1;
- 
-fail_vos_PartitionGetBegin:
+
+  fail_vos_PartitionGetBegin:
 
     if (rc == 0) {
 	if (iter != NULL) {
@@ -771,7 +758,7 @@ fail_vos_PartitionGetBegin:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -795,10 +782,9 @@ fail_vos_PartitionGetBegin:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_PartitionGetNext(
-  const void *iterationId,
-  vos_partitionEntry_p partitionP,
-  afs_status_p st)
+int ADMINAPI
+vos_PartitionGetNext(const void *iterationId, vos_partitionEntry_p partitionP,
+		     afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -814,12 +800,12 @@ int ADMINAPI vos_PartitionGetNext(
 	goto fail_vos_PartitionGetNext;
     }
 
-    rc = IteratorNext(iter, (void *) partitionP, &tst);
+    rc = IteratorNext(iter, (void *)partitionP, &tst);
 
-fail_vos_PartitionGetNext:
+  fail_vos_PartitionGetNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -840,29 +826,28 @@ fail_vos_PartitionGetNext:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_PartitionGetDone(
-  const void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+vos_PartitionGetDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     /*
      * Validate arguments
      */
- 
+
     if (iter == NULL) {
-        tst = ADMITERATORNULL;
-        goto fail_vos_PartitionGetDone;
+	tst = ADMITERATORNULL;
+	goto fail_vos_PartitionGetDone;
     }
- 
+
     rc = IteratorDone(iter, &tst);
 
-fail_vos_PartitionGetDone:
- 
+  fail_vos_PartitionGetDone:
+
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -890,11 +875,9 @@ fail_vos_PartitionGetDone:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_ServerOpen(
-  const void *cellHandle,
-  const char *serverName,
-  void **serverHandleP,
-  afs_status_p st)
+int ADMINAPI
+vos_ServerOpen(const void *cellHandle, const char *serverName,
+	       void **serverHandleP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -905,8 +888,8 @@ int ADMINAPI vos_ServerOpen(
     int scIndex;
 
     if (f_server == NULL) {
-        tst = ADMNOMEM;
-        goto fail_vos_ServerOpen;
+	tst = ADMNOMEM;
+	goto fail_vos_ServerOpen;
     }
 
     /*
@@ -922,31 +905,32 @@ int ADMINAPI vos_ServerOpen(
 	goto fail_vos_ServerOpen;
     }
 
-    if (!util_AdminServerAddressGetFromName(serverName, &server_address,
-					    &tst)) {
+    if (!util_AdminServerAddressGetFromName
+	(serverName, &server_address, &tst)) {
 	goto fail_vos_ServerOpen;
     }
 
     scIndex = c_handle->tokens->sc_index;
     sc[scIndex] = c_handle->tokens->afs_sc[scIndex];
-    f_server->serv = rx_GetCachedConnection(htonl(server_address),
-					htons(AFSCONF_VOLUMEPORT),
-					VOLSERVICE_ID, sc[scIndex], scIndex);
+    f_server->serv =
+	rx_GetCachedConnection(htonl(server_address),
+			       htons(AFSCONF_VOLUMEPORT), VOLSERVICE_ID,
+			       sc[scIndex], scIndex);
     if (f_server->serv != NULL) {
 	f_server->begin_magic = BEGIN_MAGIC;
 	f_server->end_magic = END_MAGIC;
 	f_server->is_valid = 1;
-	*serverHandleP = (void *) f_server;
+	*serverHandleP = (void *)f_server;
 	rc = 1;
     } else {
 	tst = ADMVOSSERVERNOCONNECTION;
 	goto fail_vos_ServerOpen;
     }
- 
-fail_vos_ServerOpen:
+
+  fail_vos_ServerOpen:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -967,14 +951,13 @@ fail_vos_ServerOpen:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_ServerClose(
-  const void *serverHandle,
-  afs_status_p st)
+int ADMINAPI
+vos_ServerClose(const void *serverHandle, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     file_server_p f_server = (file_server_p) serverHandle;
- 
+
     if (!IsValidServerHandle(f_server, &tst)) {
 	goto fail_vos_ServerClose;
     }
@@ -984,10 +967,10 @@ int ADMINAPI vos_ServerClose(
     free(f_server);
     rc = 1;
 
-fail_vos_ServerClose:
+  fail_vos_ServerClose:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1019,12 +1002,10 @@ fail_vos_ServerClose:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_ServerSync(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  const unsigned int *partition,
-  afs_status_p st)
+int ADMINAPI
+vos_ServerSync(const void *cellHandle, const void *serverHandle,
+	       vos_MessageCallBack_t callBack, const unsigned int *partition,
+	       afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1032,7 +1013,7 @@ int ADMINAPI vos_ServerSync(
     file_server_p f_server = (file_server_p) serverHandle;
     afs_int32 part = 0;
     int flags = 0;
- 
+
     /*
      * Validate arguments
      */
@@ -1050,7 +1031,7 @@ int ADMINAPI vos_ServerSync(
 	    tst = ADMVOSPARTITIONTOOLARGE;
 	    goto fail_vos_ServerSync;
 	}
-	part = (afs_int32) *partition;
+	part = (afs_int32) * partition;
 	flags = 1;
     }
 
@@ -1059,11 +1040,11 @@ int ADMINAPI vos_ServerSync(
      */
 
     rc = UV_SyncServer(c_handle, f_server->serv, part, flags, &tst);
- 
-fail_vos_ServerSync:
+
+  fail_vos_ServerSync:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1092,17 +1073,15 @@ fail_vos_ServerSync:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_FileServerAddressChange(
-  const void *cellHandle,
-  vos_MessageCallBack_t callBack,
-  int oldAddress,
-  int newAddress,
-  afs_status_p st)
+int ADMINAPI
+vos_FileServerAddressChange(const void *cellHandle,
+			    vos_MessageCallBack_t callBack, int oldAddress,
+			    int newAddress, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
- 
+
     /*
      * Validate arguments
      */
@@ -1111,17 +1090,18 @@ int ADMINAPI vos_FileServerAddressChange(
 	goto fail_vos_FileServerAddressChange;
     }
 
-    tst = ubik_Call_New(VL_ChangeAddr, c_handle->vos, 0,
-			oldAddress, newAddress);
+    tst =
+	ubik_Call_New(VL_ChangeAddr, c_handle->vos, 0, oldAddress,
+		      newAddress);
     if (tst) {
 	goto fail_vos_FileServerAddressChange;
     }
     rc = 1;
- 
-fail_vos_FileServerAddressChange:
+
+  fail_vos_FileServerAddressChange:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1148,17 +1128,16 @@ fail_vos_FileServerAddressChange:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_FileServerAddressRemove(
-  const void *cellHandle,
-  vos_MessageCallBack_t callBack,
-  int serverAddress,
-  afs_status_p st)
+int ADMINAPI
+vos_FileServerAddressRemove(const void *cellHandle,
+			    vos_MessageCallBack_t callBack, int serverAddress,
+			    afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     int dummyAddress = 0xffffffff;
- 
+
     /*
      * Validate arguments
      */
@@ -1167,17 +1146,18 @@ int ADMINAPI vos_FileServerAddressRemove(
 	goto fail_vos_FileServerAddressRemove;
     }
 
-    tst = ubik_Call_New(VL_ChangeAddr, c_handle->vos, 0,
-			dummyAddress, serverAddress);
+    tst =
+	ubik_Call_New(VL_ChangeAddr, c_handle->vos, 0, dummyAddress,
+		      serverAddress);
     if (tst) {
 	goto fail_vos_FileServerAddressRemove;
     }
     rc = 1;
- 
-fail_vos_FileServerAddressRemove:
+
+  fail_vos_FileServerAddressRemove:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1192,19 +1172,16 @@ fail_vos_FileServerAddressRemove:
  */
 
 typedef struct server_get {
-  struct ubik_client *vldb; /* connection for future rpc's if neccessary */
-  afs_int32 total_addresses; /* total number of addresses */
-  bulkaddrs addresses; /* the list of addresses */
-  int address_index; /* current index into address list */
-  vos_fileServerEntry_t server[CACHED_ITEMS]; /* the cache of servers */
+    struct ubik_client *vldb;	/* connection for future rpc's if neccessary */
+    afs_int32 total_addresses;	/* total number of addresses */
+    bulkaddrs addresses;	/* the list of addresses */
+    int address_index;		/* current index into address list */
+    vos_fileServerEntry_t server[CACHED_ITEMS];	/* the cache of servers */
 } server_get_t, *server_get_p;
 
-static int GetServerRPC(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+GetServerRPC(void *rpc_specific, int slot, int *last_item,
+	     int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1222,27 +1199,26 @@ static int GetServerRPC(
      * Check to see if this is a multihomed address server
      */
 
-    if ( ((*addrP & 0xff000000) == 0xff000000) && ((*addrP)&0xffff) ) {
-	base = (*addrP>>16) & 0xff;
+    if (((*addrP & 0xff000000) == 0xff000000) && ((*addrP) & 0xffff)) {
+	base = (*addrP >> 16) & 0xff;
 	index = (*addrP) & 0xffff;
 
-	if ((base >= 0) && (base <= VL_MAX_ADDREXTBLKS) &&
-	    (index >= 1) && (index <= VL_MHSRV_PERBLK)) {
+	if ((base >= 0) && (base <= VL_MAX_ADDREXTBLKS) && (index >= 1)
+	    && (index <= VL_MHSRV_PERBLK)) {
 
 	    /*
 	     * This is a multihomed server.  Make an rpc to retrieve
 	     * all its addresses.  Copy the addresses into the cache.
 	     */
 
-	    m_attrs.Mask  = VLADDR_INDEX;
+	    m_attrs.Mask = VLADDR_INDEX;
 	    m_attrs.index = (base * VL_MHSRV_PERBLK) + index;
 	    total_multi = 0;
 	    addr_multi.bulkaddrs_val = 0;
 	    addr_multi.bulkaddrs_len = 0;
-	    tst = ubik_Call(VL_GetAddrsU, serv->vldb, 0, &m_attrs, &m_uuid,
-			    &m_unique,
-			    &total_multi,
-			    &addr_multi);
+	    tst =
+		ubik_Call(VL_GetAddrsU, serv->vldb, 0, &m_attrs, &m_uuid,
+			  &m_unique, &total_multi, &addr_multi);
 	    if (tst) {
 		goto fail_GetServerRPC;
 	    }
@@ -1252,14 +1228,14 @@ static int GetServerRPC(
 	     * been unable to remove.
 	     */
 
-	    RemoveBadAddresses (&total_multi, &addr_multi);
+	    RemoveBadAddresses(&total_multi, &addr_multi);
 
 	    /*
 	     * Copy all the addresses into the cache
 	     */
 
-	    for(i=0;i<total_multi;i++) {
-		serv->server[slot].serverAddress[i] = 
+	    for (i = 0; i < total_multi; i++) {
+		serv->server[slot].serverAddress[i] =
 		    addr_multi.bulkaddrs_val[i];
 	    }
 
@@ -1268,9 +1244,9 @@ static int GetServerRPC(
 	    free(addr_multi.bulkaddrs_val);
 	}
 
-    /*
-     * The next address is just a plain old address
-     */
+	/*
+	 * The next address is just a plain old address
+	 */
 
     } else {
 	serv->server[slot].serverAddress[0] = *addrP;
@@ -1289,7 +1265,7 @@ static int GetServerRPC(
     }
     rc = 1;
 
-fail_GetServerRPC:
+  fail_GetServerRPC:
 
     if (st != NULL) {
 	*st = tst;
@@ -1297,17 +1273,14 @@ fail_GetServerRPC:
     return rc;
 }
 
-static int GetServerFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+GetServerFromCache(void *rpc_specific, int slot, void *dest, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     server_get_p serv = (server_get_p) rpc_specific;
 
-    memcpy(dest, (const void *) &serv->server[slot],
+    memcpy(dest, (const void *)&serv->server[slot],
 	   sizeof(vos_fileServerEntry_t));
     rc = 1;
 
@@ -1318,9 +1291,8 @@ static int GetServerFromCache(
 }
 
 
-static int DestroyServer(
-  void *rpc_specific,
-  afs_status_p st)
+static int
+DestroyServer(void *rpc_specific, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1360,19 +1332,18 @@ static int DestroyServer(
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_FileServerGetBegin(
-  const void *cellHandle,
-  vos_MessageCallBack_t callBack,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+vos_FileServerGetBegin(const void *cellHandle, vos_MessageCallBack_t callBack,
+		       void **iterationIdP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    afs_admin_iterator_p iter =
+	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
     server_get_p serv = (server_get_p) calloc(1, sizeof(server_get_t));
     struct VLCallBack unused;
- 
+
 
     /*
      * Validate arguments
@@ -1383,12 +1354,12 @@ int ADMINAPI vos_FileServerGetBegin(
     }
 
     if (iterationIdP == NULL) {
-        goto fail_vos_FileServerGetBegin;
+	goto fail_vos_FileServerGetBegin;
     }
-	
+
     if ((iter == NULL) || (serv == NULL)) {
 	tst = ADMNOMEM;
-        goto fail_vos_FileServerGetBegin;
+	goto fail_vos_FileServerGetBegin;
     }
 
     /*
@@ -1396,8 +1367,9 @@ int ADMINAPI vos_FileServerGetBegin(
      */
 
     serv->vldb = c_handle->vos;
-    tst = ubik_Call_New(VL_GetAddrs, c_handle->vos, 0, 0, 0, &unused, 
-			&serv->total_addresses, &serv->addresses);
+    tst =
+	ubik_Call_New(VL_GetAddrs, c_handle->vos, 0, 0, 0, &unused,
+		      &serv->total_addresses, &serv->addresses);
 
     if (tst) {
 	goto fail_vos_FileServerGetBegin;
@@ -1408,24 +1380,25 @@ int ADMINAPI vos_FileServerGetBegin(
      * been unable to remove.
      */
 
-    RemoveBadAddresses (&serv->total_addresses, &serv->addresses);
+    RemoveBadAddresses(&serv->total_addresses, &serv->addresses);
 
     if (serv->total_addresses == 0) {
-	if (!IteratorInit(iter, (void *) serv, NULL, NULL, NULL, NULL, &tst)) {
+	if (!IteratorInit(iter, (void *)serv, NULL, NULL, NULL, NULL, &tst)) {
 	    goto fail_vos_FileServerGetBegin;
 	}
 	iter->done_iterating = 1;
 	iter->st = ADMITERATORDONE;
     } else {
-	if (!IteratorInit(iter, (void *) serv, GetServerRPC,
-			 GetServerFromCache, NULL, DestroyServer, &tst)) {
+	if (!IteratorInit
+	    (iter, (void *)serv, GetServerRPC, GetServerFromCache, NULL,
+	     DestroyServer, &tst)) {
 	    goto fail_vos_FileServerGetBegin;
 	}
     }
-    *iterationIdP = (void *) iter;
+    *iterationIdP = (void *)iter;
     rc = 1;
 
-fail_vos_FileServerGetBegin:
+  fail_vos_FileServerGetBegin:
 
     if (rc == 0) {
 	if (iter != NULL) {
@@ -1440,7 +1413,7 @@ fail_vos_FileServerGetBegin:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1465,10 +1438,9 @@ fail_vos_FileServerGetBegin:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_FileServerGetNext(
-  void *iterationId,
-  vos_fileServerEntry_p serverEntryP,
-  afs_status_p st)
+int ADMINAPI
+vos_FileServerGetNext(void *iterationId, vos_fileServerEntry_p serverEntryP,
+		      afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1484,12 +1456,12 @@ int ADMINAPI vos_FileServerGetNext(
 	goto fail_vos_FileServerGetNext;
     }
 
-    rc = IteratorNext(iter, (void *) serverEntryP, &tst);
- 
-fail_vos_FileServerGetNext:
+    rc = IteratorNext(iter, (void *)serverEntryP, &tst);
+
+  fail_vos_FileServerGetNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1510,29 +1482,28 @@ fail_vos_FileServerGetNext:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_FileServerGetDone(
-  void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+vos_FileServerGetDone(void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     /*
      * Validate arguments
      */
- 
+
     if (iter == NULL) {
-        tst = ADMITERATORNULL;
-        goto fail_vos_FileServerGetDone;
+	tst = ADMITERATORNULL;
+	goto fail_vos_FileServerGetDone;
     }
- 
+
     rc = IteratorDone(iter, &tst);
- 
-fail_vos_FileServerGetDone:
+
+  fail_vos_FileServerGetDone:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1542,18 +1513,15 @@ fail_vos_FileServerGetDone:
  */
 
 typedef struct transaction_get {
-  afs_int32 total; /* total number of transactions */
-  afs_int32 index; /* index to the current transaction */
-  transDebugInfo *cur; /* the current transaction */
-  vos_serverTransactionStatus_t tran[CACHED_ITEMS]; /* the cache of trans */
+    afs_int32 total;		/* total number of transactions */
+    afs_int32 index;		/* index to the current transaction */
+    transDebugInfo *cur;	/* the current transaction */
+    vos_serverTransactionStatus_t tran[CACHED_ITEMS];	/* the cache of trans */
 } transaction_get_t, *transaction_get_p;
 
-static int GetTransactionRPC(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+GetTransactionRPC(void *rpc_specific, int slot, int *last_item,
+		  int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1578,38 +1546,37 @@ static int GetTransactionRPC(
 
     t->tran[slot].volumeAttachMode = VOS_VOLUME_ATTACH_MODE_OK;
 
-    switch(t->cur[index].iflags){
-      case ITOffline: 
+    switch (t->cur[index].iflags) {
+    case ITOffline:
 	t->tran[slot].volumeAttachMode = VOS_VOLUME_ATTACH_MODE_OFFLINE;
 	break;
-      case ITBusy:
+    case ITBusy:
 	t->tran[slot].volumeAttachMode = VOS_VOLUME_ATTACH_MODE_BUSY;
 	break;
-      case ITReadOnly:
+    case ITReadOnly:
 	t->tran[slot].volumeAttachMode = VOS_VOLUME_ATTACH_MODE_READONLY;
 	break;
-      case ITCreate:
+    case ITCreate:
 	t->tran[slot].volumeAttachMode = VOS_VOLUME_ATTACH_MODE_CREATE;
 	break;
-      case ITCreateVolID:
+    case ITCreateVolID:
 	t->tran[slot].volumeAttachMode = VOS_VOLUME_ATTACH_MODE_CREATE_VOLID;
 	break;
     }
 
     t->tran[slot].volumeActiveStatus = VOS_VOLUME_ACTIVE_STATUS_OK;
 
-    switch(t->cur[index].vflags){
-      case VTDeleteOnSalvage: 
-	t->tran[slot].volumeActiveStatus = 
+    switch (t->cur[index].vflags) {
+    case VTDeleteOnSalvage:
+	t->tran[slot].volumeActiveStatus =
 	    VOS_VOLUME_ACTIVE_STATUS_DELETE_ON_SALVAGE;
 	break;
-      case VTOutOfService: 
-	t->tran[slot].volumeActiveStatus = 
+    case VTOutOfService:
+	t->tran[slot].volumeActiveStatus =
 	    VOS_VOLUME_ACTIVE_STATUS_OUT_OF_SERVICE;
 	break;
-      case VTDeleted: 
-	t->tran[slot].volumeActiveStatus = 
-	    VOS_VOLUME_ACTIVE_STATUS_DELETED;
+    case VTDeleted:
+	t->tran[slot].volumeActiveStatus = VOS_VOLUME_ACTIVE_STATUS_DELETED;
 	break;
     }
 
@@ -1639,17 +1606,15 @@ static int GetTransactionRPC(
     return rc;
 }
 
-static int GetTransactionFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+GetTransactionFromCache(void *rpc_specific, int slot, void *dest,
+			afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     transaction_get_p tran = (transaction_get_p) rpc_specific;
 
-    memcpy(dest, (const void *) &tran->tran[slot],
+    memcpy(dest, (const void *)&tran->tran[slot],
 	   sizeof(vos_serverTransactionStatus_p));
     rc = 1;
 
@@ -1660,9 +1625,8 @@ static int GetTransactionFromCache(
 }
 
 
-static int DestroyTransaction(
-  void *rpc_specific,
-  afs_status_p st)
+static int
+DestroyTransaction(void *rpc_specific, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1705,19 +1669,20 @@ static int DestroyTransaction(
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_ServerTransactionStatusGetBegin(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+vos_ServerTransactionStatusGetBegin(const void *cellHandle,
+				    const void *serverHandle,
+				    vos_MessageCallBack_t callBack,
+				    void **iterationIdP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     file_server_p f_server = (file_server_p) serverHandle;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    transaction_get_p tran = (transaction_get_p) calloc(1, sizeof(transaction_get_t));
- 
+    afs_admin_iterator_p iter =
+	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    transaction_get_p tran =
+	(transaction_get_p) calloc(1, sizeof(transaction_get_t));
+
 
     /*
      * Validate arguments
@@ -1728,12 +1693,12 @@ int ADMINAPI vos_ServerTransactionStatusGetBegin(
     }
 
     if (iterationIdP == NULL) {
-        goto fail_vos_ServerTransactionStatusGetBegin;
+	goto fail_vos_ServerTransactionStatusGetBegin;
     }
-	
+
     if ((iter == NULL) || (tran == NULL)) {
 	tst = ADMNOMEM;
-        goto fail_vos_ServerTransactionStatusGetBegin;
+	goto fail_vos_ServerTransactionStatusGetBegin;
     }
 
     /*
@@ -1745,23 +1710,22 @@ int ADMINAPI vos_ServerTransactionStatusGetBegin(
     }
 
     if (tran->total == 0) {
-	if (!IteratorInit(iter, (void *) tran, NULL,
-			 NULL, NULL, NULL, &tst)) {
+	if (!IteratorInit(iter, (void *)tran, NULL, NULL, NULL, NULL, &tst)) {
 	    goto fail_vos_ServerTransactionStatusGetBegin;
 	}
 	iter->done_iterating = 1;
 	iter->st = ADMITERATORDONE;
     } else {
-	if (!IteratorInit(iter, (void *) tran, GetTransactionRPC,
-			 GetTransactionFromCache, NULL,
-			 DestroyTransaction, &tst)) {
+	if (!IteratorInit
+	    (iter, (void *)tran, GetTransactionRPC, GetTransactionFromCache,
+	     NULL, DestroyTransaction, &tst)) {
 	    goto fail_vos_ServerTransactionStatusGetBegin;
 	}
     }
-    *iterationIdP = (void *) iter;
+    *iterationIdP = (void *)iter;
     rc = 1;
 
-fail_vos_ServerTransactionStatusGetBegin:
+  fail_vos_ServerTransactionStatusGetBegin:
 
     if (rc == 0) {
 	if (iter != NULL) {
@@ -1776,7 +1740,7 @@ fail_vos_ServerTransactionStatusGetBegin:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1803,10 +1767,10 @@ fail_vos_ServerTransactionStatusGetBegin:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_ServerTransactionStatusGetNext(
-  const void *iterationId,
-  vos_serverTransactionStatus_p serverTransactionStatusP,
-  afs_status_p st)
+int ADMINAPI
+vos_ServerTransactionStatusGetNext(const void *iterationId,
+				   vos_serverTransactionStatus_p
+				   serverTransactionStatusP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -1822,12 +1786,12 @@ int ADMINAPI vos_ServerTransactionStatusGetNext(
 	goto fail_vos_ServerTransactionStatusGetNext;
     }
 
-    rc = IteratorNext(iter, (void *) serverTransactionStatusP, &tst);
- 
-fail_vos_ServerTransactionStatusGetNext:
+    rc = IteratorNext(iter, (void *)serverTransactionStatusP, &tst);
+
+  fail_vos_ServerTransactionStatusGetNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -1849,52 +1813,49 @@ fail_vos_ServerTransactionStatusGetNext:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_ServerTransactionStatusGetDone(
-  const void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+vos_ServerTransactionStatusGetDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     /*
      * Validate arguments
      */
- 
+
     if (iter == NULL) {
-        tst = ADMITERATORNULL;
-        goto fail_vos_ServerTransactionStatusGetDone;
+	tst = ADMITERATORNULL;
+	goto fail_vos_ServerTransactionStatusGetDone;
     }
- 
+
     rc = IteratorDone(iter, &tst);
- 
-fail_vos_ServerTransactionStatusGetDone:
+
+  fail_vos_ServerTransactionStatusGetDone:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
 
-static int copyVLDBEntry(
-    struct nvldbentry *source,
-    vos_vldbEntry_p dest,
-    afs_status_p st)
+static int
+copyVLDBEntry(struct nvldbentry *source, vos_vldbEntry_p dest,
+	      afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     int i;
 
     dest->numServers = source->nServers;
-    for (i=0;i<VOS_MAX_VOLUME_TYPES;i++) {
+    for (i = 0; i < VOS_MAX_VOLUME_TYPES; i++) {
 	dest->volumeId[i] = source->volumeId[i];
     }
     dest->cloneId = source->cloneId;
     dest->status = VOS_VLDB_ENTRY_OK;
     if (source->flags & VLOP_ALLOPERS) {
 	dest->status |= VOS_VLDB_ENTRY_LOCKED;
-    }
-    else {
+    } else {
 	if (source->flags & VLOP_MOVE) {
 	    dest->status |= VOS_VLDB_ENTRY_MOVE;
 	}
@@ -1922,7 +1883,7 @@ static int copyVLDBEntry(
     }
 
     strcpy(dest->name, source->name);
-    for (i=0;i<VOS_MAX_REPLICA_SITES;i++) {
+    for (i = 0; i < VOS_MAX_REPLICA_SITES; i++) {
 	dest->volumeSites[i].serverAddress = source->serverNumber[i];
 	dest->volumeSites[i].serverPartition = source->serverPartition[i];
 	dest->volumeSites[i].serverFlags = 0;
@@ -1942,7 +1903,7 @@ static int copyVLDBEntry(
 	if (source->serverFlags[i] & RO_DONTUSE) {
 	    dest->volumeSites[i].serverFlags |= VOS_VLDB_DONT_USE;
 	}
-	
+
     }
 
     rc = 1;
@@ -1979,19 +1940,16 @@ static int copyVLDBEntry(
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VLDBGet(
-  const void *cellHandle,
-  vos_MessageCallBack_t callBack,
-  const unsigned int *volumeId,
-  const char *volumeName,
-  vos_vldbEntry_p vldbEntry,
-  afs_status_p st)
+int ADMINAPI
+vos_VLDBGet(const void *cellHandle, vos_MessageCallBack_t callBack,
+	    const unsigned int *volumeId, const char *volumeName,
+	    vos_vldbEntry_p vldbEntry, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     struct nvldbentry entry;
- 
+
 
     /*
      * Validate arguments
@@ -2006,8 +1964,7 @@ int ADMINAPI vos_VLDBGet(
 	goto fail_vos_VLDBGet;
     }
 
-    if (((volumeName == NULL) || (*volumeName == 0)) &&
-	(volumeId == NULL)) {
+    if (((volumeName == NULL) || (*volumeName == 0)) && (volumeId == NULL)) {
 	tst = ADMVOSVOLUMENAMEANDVOLUMEIDNULL;
 	goto fail_vos_VLDBGet;
     }
@@ -2037,11 +1994,11 @@ int ADMINAPI vos_VLDBGet(
 	goto fail_vos_VLDBGet;
     }
     rc = 1;
- 
-fail_vos_VLDBGet:
+
+  fail_vos_VLDBGet:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2051,18 +2008,15 @@ fail_vos_VLDBGet:
  */
 
 typedef struct vldb_entry_get {
-  afs_int32 total; /* total number of vldb entries */
-  afs_int32 index; /* index to the current vldb entry */
-  nbulkentries entries; /* the list of entries retrieved */
-  vos_vldbEntry_t entry[CACHED_ITEMS]; /* the cache of entries */
+    afs_int32 total;		/* total number of vldb entries */
+    afs_int32 index;		/* index to the current vldb entry */
+    nbulkentries entries;	/* the list of entries retrieved */
+    vos_vldbEntry_t entry[CACHED_ITEMS];	/* the cache of entries */
 } vldb_entry_get_t, *vldb_entry_get_p;
 
-static int GetVLDBEntryRPC(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+GetVLDBEntryRPC(void *rpc_specific, int slot, int *last_item,
+		int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2072,9 +2026,9 @@ static int GetVLDBEntryRPC(
      * Copy the next entry into the cache
      */
 
-    if (!copyVLDBEntry(&entry->entries.nbulkentries_val[entry->index],
-		       &entry->entry[slot],
-		       &tst)) {
+    if (!copyVLDBEntry
+	(&entry->entries.nbulkentries_val[entry->index], &entry->entry[slot],
+	 &tst)) {
 	goto fail_GetVLDBEntryRPC;
     }
     entry->index++;
@@ -2090,7 +2044,7 @@ static int GetVLDBEntryRPC(
     }
     rc = 1;
 
-fail_GetVLDBEntryRPC:
+  fail_GetVLDBEntryRPC:
 
     if (st != NULL) {
 	*st = tst;
@@ -2098,18 +2052,15 @@ fail_GetVLDBEntryRPC:
     return rc;
 }
 
-static int GetVLDBEntryFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+GetVLDBEntryFromCache(void *rpc_specific, int slot, void *dest,
+		      afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     vldb_entry_get_p entry = (vldb_entry_get_p) rpc_specific;
 
-    memcpy(dest, (const void *) &entry->entry[slot],
-	   sizeof(vos_vldbEntry_t));
+    memcpy(dest, (const void *)&entry->entry[slot], sizeof(vos_vldbEntry_t));
     rc = 1;
 
     if (st != NULL) {
@@ -2119,9 +2070,8 @@ static int GetVLDBEntryFromCache(
 }
 
 
-static int DestroyVLDBEntry(
-  void *rpc_specific,
-  afs_status_p st)
+static int
+DestroyVLDBEntry(void *rpc_specific, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2168,20 +2118,19 @@ static int DestroyVLDBEntry(
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VLDBGetBegin(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int *partition,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+vos_VLDBGetBegin(const void *cellHandle, const void *serverHandle,
+		 vos_MessageCallBack_t callBack, unsigned int *partition,
+		 void **iterationIdP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     file_server_p f_server = (file_server_p) serverHandle;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
-    vldb_entry_get_p entry = (vldb_entry_get_p) calloc(1, sizeof(vldb_entry_get_t));
+    afs_admin_iterator_p iter =
+	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    vldb_entry_get_p entry =
+	(vldb_entry_get_p) calloc(1, sizeof(vldb_entry_get_t));
     struct VldbListByAttributes attr;
 
     attr.Mask = 0;
@@ -2217,28 +2166,28 @@ int ADMINAPI vos_VLDBGetBegin(
 	attr.Mask |= VLLIST_PARTITION;
     }
 
-    if (!VLDB_ListAttributes(c_handle, &attr, &entry->total, &entry->entries, &tst)) {
+    if (!VLDB_ListAttributes
+	(c_handle, &attr, &entry->total, &entry->entries, &tst)) {
 	goto fail_vos_VLDBGetBegin;
     }
 
     if (entry->total <= 0) {
-	if (!IteratorInit(iter, (void *) entry, NULL,
-			  NULL, NULL, NULL, &tst)) {
+	if (!IteratorInit(iter, (void *)entry, NULL, NULL, NULL, NULL, &tst)) {
 	    goto fail_vos_VLDBGetBegin;
 	}
 	iter->done_iterating = 1;
 	iter->st = ADMITERATORDONE;
     } else {
-	if (!IteratorInit(iter, (void *) entry, GetVLDBEntryRPC,
-			  GetVLDBEntryFromCache, NULL,
-			  DestroyVLDBEntry, &tst)) {
+	if (!IteratorInit
+	    (iter, (void *)entry, GetVLDBEntryRPC, GetVLDBEntryFromCache,
+	     NULL, DestroyVLDBEntry, &tst)) {
 	    goto fail_vos_VLDBGetBegin;
 	}
     }
-    *iterationIdP = (void *) iter;
+    *iterationIdP = (void *)iter;
     rc = 1;
- 
-fail_vos_VLDBGetBegin:
+
+  fail_vos_VLDBGetBegin:
 
     if (rc == 0) {
 	if (iter != NULL) {
@@ -2253,7 +2202,7 @@ fail_vos_VLDBGetBegin:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2279,10 +2228,9 @@ fail_vos_VLDBGetBegin:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VLDBGetNext(
-  const void *iterationId,
-  vos_vldbEntry_p vldbEntry,
-  afs_status_p st)
+int ADMINAPI
+vos_VLDBGetNext(const void *iterationId, vos_vldbEntry_p vldbEntry,
+		afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2298,12 +2246,12 @@ int ADMINAPI vos_VLDBGetNext(
 	goto fail_vos_VLDBGetNext;
     }
 
-    rc = IteratorNext(iter, (void *) vldbEntry, &tst);
- 
-fail_vos_VLDBGetNext:
+    rc = IteratorNext(iter, (void *)vldbEntry, &tst);
+
+  fail_vos_VLDBGetNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2324,29 +2272,28 @@ fail_vos_VLDBGetNext:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VLDBGetDone(
-  const void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+vos_VLDBGetDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     /*
      * Validate arguments
      */
- 
+
     if (iter == NULL) {
-        tst = ADMITERATORNULL;
-        goto fail_vos_VLDBGetDone;
+	tst = ADMITERATORNULL;
+	goto fail_vos_VLDBGetDone;
     }
- 
+
     rc = IteratorDone(iter, &tst);
- 
-fail_vos_VLDBGetDone:
+
+  fail_vos_VLDBGetDone:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2378,13 +2325,11 @@ fail_vos_VLDBGetDone:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VLDBEntryRemove(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  const unsigned int *partition,
-  unsigned int *volumeId,
-  afs_status_p st)
+int ADMINAPI
+vos_VLDBEntryRemove(const void *cellHandle, const void *serverHandle,
+		    vos_MessageCallBack_t callBack,
+		    const unsigned int *partition, unsigned int *volumeId,
+		    afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2394,7 +2339,7 @@ int ADMINAPI vos_VLDBEntryRemove(
     nbulkentries entries;
     afs_int32 nentries;
     int i;
- 
+
     memset(&attr, 0, sizeof(attr));
     memset(&entries, 0, sizeof(entries));
 
@@ -2448,23 +2393,24 @@ int ADMINAPI vos_VLDBEntryRemove(
 	goto fail_vos_VLDBEntryRemove;
     }
 
-    for(i=0;i<nentries;i++) {
-	ubik_Call(VL_DeleteEntry, c_handle->vos, 0, entries.nbulkentries_val[i].volumeId[RWVOL]);
+    for (i = 0; i < nentries; i++) {
+	ubik_Call(VL_DeleteEntry, c_handle->vos, 0,
+		  entries.nbulkentries_val[i].volumeId[RWVOL]);
     }
     rc = 1;
 
-fail_vos_VLDBEntryRemove:
+  fail_vos_VLDBEntryRemove:
 
     if (entries.nbulkentries_val) {
 	free(entries.nbulkentries_val);
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
- 
+
 /*
  * vos_VLDBUnlock - unlock vldb entries en masse.
  *
@@ -2490,12 +2436,10 @@ fail_vos_VLDBEntryRemove:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VLDBUnlock(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  const unsigned int *partition,
-  afs_status_p st)
+int ADMINAPI
+vos_VLDBUnlock(const void *cellHandle, const void *serverHandle,
+	       vos_MessageCallBack_t callBack, const unsigned int *partition,
+	       afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2546,20 +2490,21 @@ int ADMINAPI vos_VLDBUnlock(
 	goto fail_vos_VLDBUnlock;
     }
 
-    for(i=0;i<nentries;i++) {
+    for (i = 0; i < nentries; i++) {
 	vos_VLDBEntryUnlock(cellHandle, 0,
-			    entries.nbulkentries_val[i].volumeId[RWVOL], &tst);
+			    entries.nbulkentries_val[i].volumeId[RWVOL],
+			    &tst);
     }
     rc = 1;
- 
-fail_vos_VLDBUnlock:
+
+  fail_vos_VLDBUnlock:
 
     if (entries.nbulkentries_val) {
 	free(entries.nbulkentries_val);
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2587,11 +2532,9 @@ fail_vos_VLDBUnlock:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VLDBEntryLock(
-  const void *cellHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int volumeId,
-  afs_status_p st)
+int ADMINAPI
+vos_VLDBEntryLock(const void *cellHandle, vos_MessageCallBack_t callBack,
+		  unsigned int volumeId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2610,11 +2553,11 @@ int ADMINAPI vos_VLDBEntryLock(
 	goto fail_vos_VLDBEntryLock;
     }
     rc = 1;
- 
-fail_vos_VLDBEntryLock:
+
+  fail_vos_VLDBEntryLock:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2641,11 +2584,9 @@ fail_vos_VLDBEntryLock:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VLDBEntryUnlock(
-  const void *cellHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int volumeId,
-  afs_status_p st)
+int ADMINAPI
+vos_VLDBEntryUnlock(const void *cellHandle, vos_MessageCallBack_t callBack,
+		    unsigned int volumeId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2660,17 +2601,18 @@ int ADMINAPI vos_VLDBEntryUnlock(
     }
 
 
-    tst = ubik_Call(VL_ReleaseLock, c_handle->vos, 0, volumeId, -1,
-                    LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
+    tst =
+	ubik_Call(VL_ReleaseLock, c_handle->vos, 0, volumeId, -1,
+		  LOCKREL_OPCODE | LOCKREL_AFSID | LOCKREL_TIMESTAMP);
     if (tst != 0) {
 	goto fail_vos_VLDBEntryUnlock;
     }
     rc = 1;
- 
-fail_vos_VLDBEntryUnlock:
+
+  fail_vos_VLDBEntryUnlock:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2702,19 +2644,17 @@ fail_vos_VLDBEntryUnlock:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VLDBReadOnlySiteCreate(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int partition,
-  unsigned int volumeId,
-  afs_status_p st)
+int ADMINAPI
+vos_VLDBReadOnlySiteCreate(const void *cellHandle, const void *serverHandle,
+			   vos_MessageCallBack_t callBack,
+			   unsigned int partition, unsigned int volumeId,
+			   afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     file_server_p f_server = (file_server_p) serverHandle;
- 
+
     /*
      * Validate arguments
      */
@@ -2732,16 +2672,17 @@ int ADMINAPI vos_VLDBReadOnlySiteCreate(
 	goto fail_vos_VLDBReadOnlySiteCreate;
     }
 
-    if (!UV_AddSite(c_handle, ntohl(rx_HostOf(rx_PeerOf(f_server->serv))),
-		    partition, volumeId, &tst)) {
+    if (!UV_AddSite
+	(c_handle, ntohl(rx_HostOf(rx_PeerOf(f_server->serv))), partition,
+	 volumeId, &tst)) {
 	goto fail_vos_VLDBReadOnlySiteCreate;
     }
     rc = 1;
- 
-fail_vos_VLDBReadOnlySiteCreate:
+
+  fail_vos_VLDBReadOnlySiteCreate:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2774,19 +2715,17 @@ fail_vos_VLDBReadOnlySiteCreate:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VLDBReadOnlySiteDelete(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int partition,
-  unsigned int volumeId,
-  afs_status_p st)
+int ADMINAPI
+vos_VLDBReadOnlySiteDelete(const void *cellHandle, const void *serverHandle,
+			   vos_MessageCallBack_t callBack,
+			   unsigned int partition, unsigned int volumeId,
+			   afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     file_server_p f_server = (file_server_p) serverHandle;
- 
+
     /*
      * Validate arguments
      */
@@ -2804,16 +2743,17 @@ int ADMINAPI vos_VLDBReadOnlySiteDelete(
 	goto fail_vos_VLDBReadOnlySiteDelete;
     }
 
-    if (!UV_RemoveSite(c_handle, ntohl(rx_HostOf(rx_PeerOf(f_server->serv))),
-		    partition, volumeId, &tst)) {
+    if (!UV_RemoveSite
+	(c_handle, ntohl(rx_HostOf(rx_PeerOf(f_server->serv))), partition,
+	 volumeId, &tst)) {
 	goto fail_vos_VLDBReadOnlySiteDelete;
     }
     rc = 1;
- 
-fail_vos_VLDBReadOnlySiteDelete:
+
+  fail_vos_VLDBReadOnlySiteDelete:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2845,13 +2785,10 @@ fail_vos_VLDBReadOnlySiteDelete:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VLDBSync(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  const unsigned int *partition,
-  vos_force_t force,
-  afs_status_p st)
+int ADMINAPI
+vos_VLDBSync(const void *cellHandle, const void *serverHandle,
+	     vos_MessageCallBack_t callBack, const unsigned int *partition,
+	     vos_force_t force, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2860,7 +2797,7 @@ int ADMINAPI vos_VLDBSync(
     afs_int32 part = 0;
     int flags = 0;
     int force_flag = 0;
- 
+
     /*
      * Validate arguments
      */
@@ -2878,7 +2815,7 @@ int ADMINAPI vos_VLDBSync(
 	    tst = ADMVOSPARTITIONTOOLARGE;
 	    goto fail_vos_VLDBSync;
 	}
-	part = (afs_int32) *partition;
+	part = (afs_int32) * partition;
 	flags = 1;
     }
 
@@ -2891,11 +2828,11 @@ int ADMINAPI vos_VLDBSync(
      */
 
     rc = UV_SyncVldb(c_handle, f_server->serv, part, flags, force_flag, &tst);
- 
-fail_vos_VLDBSync:
+
+  fail_vos_VLDBSync:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -2932,15 +2869,11 @@ fail_vos_VLDBSync:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VolumeCreate(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int partition,
-  const char *volumeName,
-  unsigned int quota,
-  unsigned int *volumeId,
-  afs_status_p st)
+int ADMINAPI
+vos_VolumeCreate(const void *cellHandle, const void *serverHandle,
+		 vos_MessageCallBack_t callBack, unsigned int partition,
+		 const char *volumeName, unsigned int quota,
+		 unsigned int *volumeId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -2948,7 +2881,7 @@ int ADMINAPI vos_VolumeCreate(
     file_server_p f_server = (file_server_p) serverHandle;
     vos_partitionEntry_t pinfo;
     struct nvldbentry vinfo;
- 
+
     /*
      * Validate arguments
      */
@@ -2979,8 +2912,8 @@ int ADMINAPI vos_VolumeCreate(
      * Check that partition is valid at the server
      */
 
-    if (!vos_PartitionGet(cellHandle, serverHandle, 0, partition,
-			  &pinfo, &tst)) {
+    if (!vos_PartitionGet
+	(cellHandle, serverHandle, 0, partition, &pinfo, &tst)) {
 	goto fail_vos_VolumeCreate;
     }
 
@@ -2997,13 +2930,13 @@ int ADMINAPI vos_VolumeCreate(
      * Create the new volume
      */
 
-    rc = UV_CreateVolume(c_handle, f_server->serv,
-			 partition, volumeName, quota, volumeId, &tst);
+    rc = UV_CreateVolume(c_handle, f_server->serv, partition, volumeName,
+			 quota, volumeId, &tst);
 
-fail_vos_VolumeCreate:
+  fail_vos_VolumeCreate:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3035,20 +2968,17 @@ fail_vos_VolumeCreate:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VolumeDelete(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int partition,
-  unsigned int volumeId,
-  afs_status_p st)
+int ADMINAPI
+vos_VolumeDelete(const void *cellHandle, const void *serverHandle,
+		 vos_MessageCallBack_t callBack, unsigned int partition,
+		 unsigned int volumeId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     file_server_p f_server = (file_server_p) serverHandle;
     vos_partitionEntry_t pinfo;
- 
+
     /*
      * Validate arguments
      */
@@ -3070,17 +3000,17 @@ int ADMINAPI vos_VolumeDelete(
      * Check that partition is valid at the server
      */
 
-    if (!vos_PartitionGet(cellHandle, serverHandle, 0, 
-			  partition, &pinfo, &tst)) {
+    if (!vos_PartitionGet
+	(cellHandle, serverHandle, 0, partition, &pinfo, &tst)) {
 	goto fail_vos_VolumeDelete;
     }
- 
+
     rc = UV_DeleteVolume(c_handle, f_server->serv, partition, volumeId, &tst);
 
-fail_vos_VolumeDelete:
+  fail_vos_VolumeDelete:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3112,18 +3042,16 @@ fail_vos_VolumeDelete:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VolumeRename(
-  const void *cellHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int readWriteVolumeId,
-  const char *newVolumeName,
-  afs_status_p st)
+int ADMINAPI
+vos_VolumeRename(const void *cellHandle, vos_MessageCallBack_t callBack,
+		 unsigned int readWriteVolumeId, const char *newVolumeName,
+		 afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     struct nvldbentry entry;
- 
+
     /*
      * Validate arguments
      */
@@ -3144,13 +3072,13 @@ int ADMINAPI vos_VolumeRename(
     if (!VLDB_GetEntryByID(c_handle, readWriteVolumeId, -1, &entry, &tst)) {
 	goto fail_vos_VolumeRename;
     }
- 
+
     rc = UV_RenameVolume(c_handle, &entry, newVolumeName, &tst);
 
-fail_vos_VolumeRename:
+  fail_vos_VolumeRename:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3184,15 +3112,11 @@ fail_vos_VolumeRename:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VolumeDump(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int *partition,
-  unsigned int volumeId,
-  unsigned int startTime,
-  const char *dumpFile,
-  afs_status_p st)
+int ADMINAPI
+vos_VolumeDump(const void *cellHandle, const void *serverHandle,
+	       vos_MessageCallBack_t callBack, unsigned int *partition,
+	       unsigned int volumeId, unsigned int startTime,
+	       const char *dumpFile, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -3200,7 +3124,7 @@ int ADMINAPI vos_VolumeDump(
     file_server_p f_server = (file_server_p) serverHandle;
     afs_int32 server, part, voltype;
     struct nvldbentry entry;
- 
+
     /*
      * Validate arguments
      */
@@ -3232,8 +3156,8 @@ int ADMINAPI vos_VolumeDump(
 	    part = *partition;
 	}
     } else {
-	if (!GetVolumeInfo(c_handle, volumeId, &entry, &server,
-			   &part, &voltype, &tst)) {
+	if (!GetVolumeInfo
+	    (c_handle, volumeId, &entry, &server, &part, &voltype, &tst)) {
 	    goto fail_vos_VolumeDump;
 	}
     }
@@ -3243,13 +3167,13 @@ int ADMINAPI vos_VolumeDump(
 	goto fail_vos_VolumeDump;
     }
 
-    rc = UV_DumpVolume(c_handle, volumeId, server, part, startTime,
-		       dumpFile, &tst);
- 
-fail_vos_VolumeDump:
+    rc = UV_DumpVolume(c_handle, volumeId, server, part, startTime, dumpFile,
+		       &tst);
+
+  fail_vos_VolumeDump:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3287,16 +3211,12 @@ fail_vos_VolumeDump:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VolumeRestore(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int partition,
-  unsigned int *volumeId,
-  const char *volumeName,
-  const char *dumpFile,
-  vos_volumeRestoreType_t dumpType,
-  afs_status_p st)
+int ADMINAPI
+vos_VolumeRestore(const void *cellHandle, const void *serverHandle,
+		  vos_MessageCallBack_t callBack, unsigned int partition,
+		  unsigned int *volumeId, const char *volumeName,
+		  const char *dumpFile, vos_volumeRestoreType_t dumpType,
+		  afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -3310,7 +3230,7 @@ int ADMINAPI vos_VolumeRestore(
     afs_int32 Oserver, Opart, Otype;
     struct nvldbentry Oentry;
     int equal;
- 
+
     /*
      * Validate arguments
      */
@@ -3377,16 +3297,16 @@ int ADMINAPI vos_VolumeRestore(
 	restoreflags = RV_FULLRST;
 	if (volid == 0) {
 	    volid = entry.volumeId[RWVOL];
-	} else if ((entry.volumeId[RWVOL] != 0) &&
-		   (entry.volumeId[RWVOL] != volid)) {
+	} else if ((entry.volumeId[RWVOL] != 0)
+		   && (entry.volumeId[RWVOL] != volid)) {
 	    volid = entry.volumeId[RWVOL];
 	}
     } else {
 
 	if (volid == 0) {
 	    volid = entry.volumeId[RWVOL];
-	} else if ((entry.volumeId[RWVOL] != 0) &&
-		   (entry.volumeId[RWVOL] != volid)) {
+	} else if ((entry.volumeId[RWVOL] != 0)
+		   && (entry.volumeId[RWVOL] != volid)) {
 	    volid = entry.volumeId[RWVOL];
 	}
 
@@ -3402,8 +3322,8 @@ int ADMINAPI vos_VolumeRestore(
 	    /*
 	     * Check to see if the volume exists where the caller said
 	     */
-	    if (!GetVolumeInfo(c_handle, volid, &Oentry, &Oserver, &Opart,
-			       &Otype, &tst)) {
+	    if (!GetVolumeInfo
+		(c_handle, volid, &Oentry, &Oserver, &Opart, &Otype, &tst)) {
 		goto fail_vos_VolumeRestore;
 	    }
 	    if (!VLDB_IsSameAddrs(c_handle, Oserver, server, &equal, &tst)) {
@@ -3420,10 +3340,10 @@ int ADMINAPI vos_VolumeRestore(
     rc = UV_RestoreVolume(c_handle, server, partition, volid, volumeName,
 			  restoreflags, dumpFile, &tst);
 
-fail_vos_VolumeRestore:
+  fail_vos_VolumeRestore:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3452,20 +3372,17 @@ fail_vos_VolumeRestore:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VolumeOnline(
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int partition,
-  unsigned int volumeId,
-  unsigned int sleepTime,
-  vos_volumeOnlineType_t volumeStatus,
-  afs_status_p st)
+int ADMINAPI
+vos_VolumeOnline(const void *serverHandle, vos_MessageCallBack_t callBack,
+		 unsigned int partition, unsigned int volumeId,
+		 unsigned int sleepTime, vos_volumeOnlineType_t volumeStatus,
+		 afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     file_server_p f_server = (file_server_p) serverHandle;
     int up = ITOffline;
- 
+
     /*
      * Validate arguments
      */
@@ -3483,13 +3400,13 @@ int ADMINAPI vos_VolumeOnline(
 	up = ITBusy;
     }
 
-    rc = UV_SetVolume(f_server->serv, partition, volumeId, up, 0,
-		      sleepTime, &tst);
+    rc = UV_SetVolume(f_server->serv, partition, volumeId, up, 0, sleepTime,
+		      &tst);
 
-fail_vos_VolumeOnline:
+  fail_vos_VolumeOnline:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3518,17 +3435,15 @@ fail_vos_VolumeOnline:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VolumeOffline(
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int partition,
-  unsigned int volumeId,
-  afs_status_p st)
+int ADMINAPI
+vos_VolumeOffline(const void *serverHandle, vos_MessageCallBack_t callBack,
+		  unsigned int partition, unsigned int volumeId,
+		  afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     file_server_p f_server = (file_server_p) serverHandle;
- 
+
     /*
      * Validate arguments
      */
@@ -3544,11 +3459,11 @@ int ADMINAPI vos_VolumeOffline(
 
     rc = UV_SetVolume(f_server->serv, partition, volumeId, ITOffline,
 		      VTOutOfService, 0, &tst);
- 
-fail_vos_VolumeOffline:
+
+  fail_vos_VolumeOffline:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3571,10 +3486,9 @@ fail_vos_VolumeOffline:
  * Returns != 0 upon successful completion.
  */
 
-static int copyvolintXInfo(
-    struct volintXInfo *source,
-    vos_volumeEntry_p dest,
-    afs_status_p st)
+static int
+copyvolintXInfo(struct volintXInfo *source, vos_volumeEntry_p dest,
+		afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -3588,41 +3502,41 @@ static int copyvolintXInfo(
 
     memset(dest, 0, sizeof(dest));
 
-    switch(source->status){
-      case VOK: 
+    switch (source->status) {
+    case VOK:
 	dest->status = VOS_OK;
 	break;
-      case VSALVAGE: 
+    case VSALVAGE:
 	dest->status = VOS_SALVAGE;
 	break;
-      case VNOVNODE: 
+    case VNOVNODE:
 	dest->status = VOS_NO_VNODE;
 	break;
-      case VNOVOL: 
+    case VNOVOL:
 	dest->status = VOS_NO_VOL;
 	break;
-      case VVOLEXISTS: 
+    case VVOLEXISTS:
 	dest->status = VOS_VOL_EXISTS;
 	break;
-      case VNOSERVICE: 
+    case VNOSERVICE:
 	dest->status = VOS_NO_SERVICE;
 	break;
-      case VOFFLINE: 
+    case VOFFLINE:
 	dest->status = VOS_OFFLINE;
 	break;
-      case VONLINE: 
+    case VONLINE:
 	dest->status = VOS_ONLINE;
 	break;
-      case VDISKFULL: 
+    case VDISKFULL:
 	dest->status = VOS_DISK_FULL;
 	break;
-      case VOVERQUOTA: 
+    case VOVERQUOTA:
 	dest->status = VOS_OVER_QUOTA;
 	break;
-      case VBUSY: 
+    case VBUSY:
 	dest->status = VOS_BUSY;
 	break;
-      case VMOVED: 
+    case VMOVED:
 	dest->status = VOS_MOVED;
 	break;
     }
@@ -3660,17 +3574,20 @@ static int copyvolintXInfo(
 	    dest->volumeDisposition = VOS_OFFLINE;
 	}
 
-	for(i=0;i<VOS_VOLUME_READ_WRITE_STATS_NUMBER;i++) {
+	for (i = 0; i < VOS_VOLUME_READ_WRITE_STATS_NUMBER; i++) {
 	    dest->readStats[i] = source->stat_reads[i];
 	    dest->writeStats[i] = source->stat_writes[i];
 	}
 
-	for(i=0;i<VOS_VOLUME_TIME_STATS_NUMBER;i++) {
-	    dest->fileAuthorWriteSameNetwork[i] = source->stat_fileSameAuthor[i];
+	for (i = 0; i < VOS_VOLUME_TIME_STATS_NUMBER; i++) {
+	    dest->fileAuthorWriteSameNetwork[i] =
+		source->stat_fileSameAuthor[i];
 	    dest->fileAuthorWriteDifferentNetwork[i] =
 		source->stat_fileDiffAuthor[i];
-	    dest->dirAuthorWriteSameNetwork[i] = source->stat_dirSameAuthor[i];
-	    dest->dirAuthorWriteDifferentNetwork[i] = source->stat_dirDiffAuthor[i];
+	    dest->dirAuthorWriteSameNetwork[i] =
+		source->stat_dirSameAuthor[i];
+	    dest->dirAuthorWriteDifferentNetwork[i] =
+		source->stat_dirDiffAuthor[i];
 	}
     }
 
@@ -3712,20 +3629,17 @@ static int copyvolintXInfo(
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VolumeGet(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int partition,
-  unsigned int volumeId,
-  vos_volumeEntry_p volumeP,
-  afs_status_p st)
+int ADMINAPI
+vos_VolumeGet(const void *cellHandle, const void *serverHandle,
+	      vos_MessageCallBack_t callBack, unsigned int partition,
+	      unsigned int volumeId, vos_volumeEntry_p volumeP,
+	      afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     file_server_p f_server = (file_server_p) serverHandle;
     struct volintXInfo *info = NULL;
- 
+
     /*
      * Validate arguments
      */
@@ -3761,14 +3675,14 @@ int ADMINAPI vos_VolumeGet(
     }
     rc = 1;
 
-fail_vos_VolumeGet:
+  fail_vos_VolumeGet:
 
     if (info != NULL) {
 	free(info);
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3778,18 +3692,15 @@ fail_vos_VolumeGet:
  */
 
 typedef struct volume_get {
-  struct volintXInfo *vollist;
-  afs_int32 total; /* total number of volumes at this partition */
-  afs_int32 index; /* index to the current volume */
-  vos_volumeEntry_t entry[CACHED_ITEMS]; /* the cache of entries */
+    struct volintXInfo *vollist;
+    afs_int32 total;		/* total number of volumes at this partition */
+    afs_int32 index;		/* index to the current volume */
+    vos_volumeEntry_t entry[CACHED_ITEMS];	/* the cache of entries */
 } volume_get_t, *volume_get_p;
 
-static int GetVolumeRPC(
-  void *rpc_specific,
-  int slot,
-  int *last_item,
-  int *last_item_contains_data,
-  afs_status_p st)
+static int
+GetVolumeRPC(void *rpc_specific, int slot, int *last_item,
+	     int *last_item_contains_data, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -3799,9 +3710,8 @@ static int GetVolumeRPC(
      * Copy the next entry into the cache
      */
 
-    if (!copyvolintXInfo(&entry->vollist[entry->index],
-		         &entry->entry[slot],
-		         &tst)) {
+    if (!copyvolintXInfo
+	(&entry->vollist[entry->index], &entry->entry[slot], &tst)) {
 	goto fail_GetVolumeRPC;
     }
     entry->index++;
@@ -3817,7 +3727,7 @@ static int GetVolumeRPC(
     }
     rc = 1;
 
-fail_GetVolumeRPC:
+  fail_GetVolumeRPC:
 
     if (st != NULL) {
 	*st = tst;
@@ -3825,17 +3735,14 @@ fail_GetVolumeRPC:
     return rc;
 }
 
-static int GetVolumeFromCache(
-  void *rpc_specific,
-  int slot,
-  void *dest,
-  afs_status_p st)
+static int
+GetVolumeFromCache(void *rpc_specific, int slot, void *dest, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     volume_get_p entry = (volume_get_p) rpc_specific;
 
-    memcpy(dest, (const void *) &entry->entry[slot],
+    memcpy(dest, (const void *)&entry->entry[slot],
 	   sizeof(vos_volumeEntry_t));
     rc = 1;
 
@@ -3846,9 +3753,8 @@ static int GetVolumeFromCache(
 }
 
 
-static int DestroyVolume(
-  void *rpc_specific,
-  afs_status_p st)
+static int
+DestroyVolume(void *rpc_specific, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -3893,20 +3799,18 @@ static int DestroyVolume(
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VolumeGetBegin(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int partition,
-  void **iterationIdP,
-  afs_status_p st)
+int ADMINAPI
+vos_VolumeGetBegin(const void *cellHandle, const void *serverHandle,
+		   vos_MessageCallBack_t callBack, unsigned int partition,
+		   void **iterationIdP, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     file_server_p f_server = (file_server_p) serverHandle;
-    afs_admin_iterator_p iter = (afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
+    afs_admin_iterator_p iter =
+	(afs_admin_iterator_p) malloc(sizeof(afs_admin_iterator_t));
     volume_get_p entry = (volume_get_p) calloc(1, sizeof(volume_get_t));
- 
+
     /*
      * Validate arguments
      */
@@ -3930,27 +3834,29 @@ int ADMINAPI vos_VolumeGetBegin(
      * server
      */
 
-    if (!UV_XListVolumes(f_server->serv, partition, 1, &entry->vollist,
-			 &entry->total, &tst)) {
+    if (!UV_XListVolumes
+	(f_server->serv, partition, 1, &entry->vollist, &entry->total,
+	 &tst)) {
 	goto fail_vos_VolumeGetBegin;
     }
 
     if (entry->total == 0) {
-	if (!IteratorInit(iter, (void *) entry, NULL, NULL, NULL, NULL, &tst)) {
+	if (!IteratorInit(iter, (void *)entry, NULL, NULL, NULL, NULL, &tst)) {
 	    goto fail_vos_VolumeGetBegin;
 	}
 	iter->done_iterating = 1;
 	iter->st = ADMITERATORDONE;
     } else {
-	if (!IteratorInit(iter, (void *) entry, GetVolumeRPC,
-			  GetVolumeFromCache, NULL, DestroyVolume, &tst)) {
+	if (!IteratorInit
+	    (iter, (void *)entry, GetVolumeRPC, GetVolumeFromCache, NULL,
+	     DestroyVolume, &tst)) {
 	    goto fail_vos_VolumeGetBegin;
 	}
     }
-    *iterationIdP = (void *) iter;
+    *iterationIdP = (void *)iter;
     rc = 1;
 
-fail_vos_VolumeGetBegin:
+  fail_vos_VolumeGetBegin:
 
     if (rc == 0) {
 	if (iter != NULL) {
@@ -3962,7 +3868,7 @@ fail_vos_VolumeGetBegin:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -3988,10 +3894,9 @@ fail_vos_VolumeGetBegin:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VolumeGetNext(
-  const void *iterationId,
-  vos_volumeEntry_p volumeP,
-  afs_status_p st)
+int ADMINAPI
+vos_VolumeGetNext(const void *iterationId, vos_volumeEntry_p volumeP,
+		  afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -4007,12 +3912,12 @@ int ADMINAPI vos_VolumeGetNext(
 	goto fail_vos_VolumeGetNext;
     }
 
-    rc = IteratorNext(iter, (void *) volumeP, &tst);
- 
-fail_vos_VolumeGetNext:
+    rc = IteratorNext(iter, (void *)volumeP, &tst);
+
+  fail_vos_VolumeGetNext:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -4033,29 +3938,28 @@ fail_vos_VolumeGetNext:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VolumeGetDone(
-  const void *iterationId,
-  afs_status_p st)
+int ADMINAPI
+vos_VolumeGetDone(const void *iterationId, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_admin_iterator_p iter = (afs_admin_iterator_p) iterationId;
- 
+
     /*
      * Validate arguments
      */
- 
+
     if (iter == NULL) {
-        tst = ADMITERATORNULL;
-        goto fail_vos_VolumeGetDone;
+	tst = ADMITERATORNULL;
+	goto fail_vos_VolumeGetDone;
     }
- 
+
     rc = IteratorDone(iter, &tst);
- 
-fail_vos_VolumeGetDone:
+
+  fail_vos_VolumeGetDone:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -4092,26 +3996,23 @@ fail_vos_VolumeGetDone:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VolumeMove(
-  const void *cellHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int volumeId,
-  const void *fromServer,
-  unsigned int fromPartition,
-  const void *toServer,
-  unsigned int toPartition,
-  afs_status_p st)
+int ADMINAPI
+vos_VolumeMove(const void *cellHandle, vos_MessageCallBack_t callBack,
+	       unsigned int volumeId, const void *fromServer,
+	       unsigned int fromPartition, const void *toServer,
+	       unsigned int toPartition, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     file_server_p from_server = (file_server_p) fromServer;
     file_server_p to_server = (file_server_p) toServer;
-    afs_int32 from_server_addr = ntohl(rx_HostOf(rx_PeerOf(from_server->serv)));
+    afs_int32 from_server_addr =
+	ntohl(rx_HostOf(rx_PeerOf(from_server->serv)));
     afs_int32 to_server_addr = ntohl(rx_HostOf(rx_PeerOf(to_server->serv)));
     afs_int32 from_partition = fromPartition;
     afs_int32 to_partition = toPartition;
- 
+
     /*
      * Validate arguments
      */
@@ -4145,10 +4046,10 @@ int ADMINAPI vos_VolumeMove(
     rc = UV_MoveVolume(c_handle, volumeId, from_server_addr, from_partition,
 		       to_server_addr, to_partition, &tst);
 
-fail_vos_VolumeMove:
+  fail_vos_VolumeMove:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -4177,19 +4078,16 @@ fail_vos_VolumeMove:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VolumeRelease(
-  const void *cellHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int volumeId,
-  vos_force_t force,
-  afs_status_p st)
+int ADMINAPI
+vos_VolumeRelease(const void *cellHandle, vos_MessageCallBack_t callBack,
+		  unsigned int volumeId, vos_force_t force, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     afs_int32 server, part, forc = 0, voltype, volume;
     struct nvldbentry entry;
- 
+
     /*
      * Validate arguments
      */
@@ -4197,9 +4095,9 @@ int ADMINAPI vos_VolumeRelease(
     if (!IsValidCellHandle(c_handle, &tst)) {
 	goto fail_vos_VolumeRelease;
     }
- 
-    if (!GetVolumeInfo(c_handle, volumeId, &entry, &server,
-		       &part, &voltype, &tst)) {
+
+    if (!GetVolumeInfo
+	(c_handle, volumeId, &entry, &server, &part, &voltype, &tst)) {
 	goto fail_vos_VolumeRelease;
     }
 
@@ -4210,10 +4108,10 @@ int ADMINAPI vos_VolumeRelease(
     volume = volumeId;
     rc = UV_ReleaseVolume(c_handle, volume, server, part, forc, &tst);
 
-fail_vos_VolumeRelease:
+  fail_vos_VolumeRelease:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -4247,20 +4145,16 @@ fail_vos_VolumeRelease:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VolumeZap(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int partition,
-  unsigned int volumeId,
-  vos_force_t force,
-  afs_status_p st)
+int ADMINAPI
+vos_VolumeZap(const void *cellHandle, const void *serverHandle,
+	      vos_MessageCallBack_t callBack, unsigned int partition,
+	      unsigned int volumeId, vos_force_t force, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
     afs_cell_handle_p c_handle = (afs_cell_handle_p) cellHandle;
     file_server_p f_server = (file_server_p) serverHandle;
- 
+
     /*
      * Verify that the cellHandle is capable of making vos rpc's
      */
@@ -4270,19 +4164,21 @@ int ADMINAPI vos_VolumeZap(
     }
 
     if (!IsValidServerHandle(f_server, &tst)) {
-        goto fail_vos_VolumeZap;
+	goto fail_vos_VolumeZap;
     }
 
     if (force == VOS_FORCE) {
-	rc = UV_NukeVolume(c_handle, f_server->serv, partition, volumeId, &tst);
+	rc = UV_NukeVolume(c_handle, f_server->serv, partition, volumeId,
+			   &tst);
     } else {
-	rc = UV_VolumeZap(c_handle, f_server->serv, partition, volumeId, &tst);
+	rc = UV_VolumeZap(c_handle, f_server->serv, partition, volumeId,
+			  &tst);
     }
 
-fail_vos_VolumeZap:
+  fail_vos_VolumeZap:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -4308,10 +4204,9 @@ fail_vos_VolumeZap:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_PartitionNameToId(
-  const char *partitionName,
-  unsigned int *partitionId,
-  afs_status_p st)
+int ADMINAPI
+vos_PartitionNameToId(const char *partitionName, unsigned int *partitionId,
+		      afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -4362,7 +4257,7 @@ int ADMINAPI vos_PartitionNameToId(
      * Check that all characters past the prefix are lower case
      */
 
-    for(i=VICE_PREFIX_SIZE;i<partition_name_len;i++) {
+    for (i = VICE_PREFIX_SIZE; i < partition_name_len; i++) {
 	if (!islower(partitionName[i])) {
 	    tst = ADMVOSPARTITIONNAMENOTLOWER;
 	    goto fail_vos_PartitionNameToId;
@@ -4376,8 +4271,9 @@ int ADMINAPI vos_PartitionNameToId(
     if (partitionName[VICE_PREFIX_SIZE + 1] == 0) {
 	*partitionId = partitionName[VICE_PREFIX_SIZE] - 'a';
     } else {
-	*partitionId = (partitionName[VICE_PREFIX_SIZE] - 'a') * 26  +
-		       (partitionName[VICE_PREFIX_SIZE + 1] - 'a') + 26;
+	*partitionId =
+	    (partitionName[VICE_PREFIX_SIZE] - 'a') * 26 +
+	    (partitionName[VICE_PREFIX_SIZE + 1] - 'a') + 26;
     }
 
     if (*partitionId > VOLMAXPARTS) {
@@ -4386,10 +4282,10 @@ int ADMINAPI vos_PartitionNameToId(
     }
     rc = 1;
 
-fail_vos_PartitionNameToId:
+  fail_vos_PartitionNameToId:
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -4414,10 +4310,9 @@ fail_vos_PartitionNameToId:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_PartitionIdToName(
-  unsigned int partitionId,
-  char *partitionName,
-  afs_status_p st)
+int ADMINAPI
+vos_PartitionIdToName(unsigned int partitionId, char *partitionName,
+		      afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -4432,23 +4327,23 @@ int ADMINAPI vos_PartitionIdToName(
 	goto fail_vos_PartitionIdToName;
     }
 
-    if(partitionId < 26) {
+    if (partitionId < 26) {
 	strcpy(partitionName, VICE_PARTITION_PREFIX);
 	partitionName[6] = partitionId + 'a';
 	partitionName[7] = '\0';
     } else {
 	strcpy(partitionName, VICE_PARTITION_PREFIX);
 	partitionId -= 26;
-	partitionName[6] = 'a' + (partitionId/26);
-	partitionName[7] = 'a' + (partitionId%26);
+	partitionName[6] = 'a' + (partitionId / 26);
+	partitionName[7] = 'a' + (partitionId % 26);
 	partitionName[8] = '\0';
     }
     rc = 1;
 
-fail_vos_PartitionIdToName:
- 
+  fail_vos_PartitionIdToName:
+
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
@@ -4482,14 +4377,11 @@ fail_vos_PartitionIdToName:
  * Returns != 0 upon successful completion.
  */
 
-int ADMINAPI vos_VolumeQuotaChange(
-  const void *cellHandle,
-  const void *serverHandle,
-  vos_MessageCallBack_t callBack,
-  unsigned int partition,
-  unsigned int volumeId,
-  unsigned int volumeQuota,
-  afs_status_p st)
+int ADMINAPI
+vos_VolumeQuotaChange(const void *cellHandle, const void *serverHandle,
+		      vos_MessageCallBack_t callBack, unsigned int partition,
+		      unsigned int volumeId, unsigned int volumeQuota,
+		      afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -4509,14 +4401,15 @@ int ADMINAPI vos_VolumeQuotaChange(
     }
 
     if (!IsValidServerHandle(f_server, &tst)) {
-        goto fail_vos_VolumeQuotaChange;
+	goto fail_vos_VolumeQuotaChange;
     }
 
-    memset((void *) &tstatus, 0, sizeof(tstatus));
+    memset((void *)&tstatus, 0, sizeof(tstatus));
     tstatus.dayUse = -1;
     tstatus.maxquota = volumeQuota;
 
-    tst = AFSVolTransCreate(f_server->serv, volumeId, partition, ITBusy, &ttid);
+    tst =
+	AFSVolTransCreate(f_server->serv, volumeId, partition, ITBusy, &ttid);
     if (tst) {
 	goto fail_vos_VolumeQuotaChange;
     }
@@ -4528,7 +4421,7 @@ int ADMINAPI vos_VolumeQuotaChange(
     }
     rc = 1;
 
-fail_vos_VolumeQuotaChange:
+  fail_vos_VolumeQuotaChange:
 
     if (active_trans) {
 	afs_status_t tst2 = 0;
@@ -4548,8 +4441,7 @@ fail_vos_VolumeQuotaChange:
     }
 
     if (st != NULL) {
-        *st = tst;
+	*st = tst;
     }
     return rc;
 }
-

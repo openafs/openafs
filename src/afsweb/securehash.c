@@ -21,7 +21,8 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include <net/if.h>
@@ -42,15 +43,17 @@ static const sha_int hashinit[] = {
 #define ROTL(n, x) (((x) << (n)) | ((x) >> (SHA_BITS_PER_INT - (n))))
 
 #ifdef DISABLED_CODE_HERE
-static sha_int f(int t, sha_int x, sha_int y, sha_int z)
+static sha_int
+f(int t, sha_int x, sha_int y, sha_int z)
 {
-    if (t < 0 || t >= SHA_ROUNDS) return 0;
+    if (t < 0 || t >= SHA_ROUNDS)
+	return 0;
     if (t < 20)
- 	return (z ^ (x & (y ^ z)));
+	return (z ^ (x & (y ^ z)));
     if (t < 40)
- 	return (x ^ y ^ z);
+	return (x ^ y ^ z);
     if (t < 60)
- 	return ((x & y) | (z & (x | y))); /* saves 1 boolean op */
+	return ((x & y) | (z & (x | y)));	/* saves 1 boolean op */
     return (x ^ y ^ z);		/* 60-79 same as 40-59 */
 }
 #endif
@@ -87,14 +90,16 @@ static sha_int f(int t, sha_int x, sha_int y, sha_int z)
 /* This macro/function supplies the "magic" constant for each round. */
 /* The function call version preserved above until stable            */
 
-static const sha_int k_vals[] = { 0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xCA62C1D6};
+static const sha_int k_vals[] =
+    { 0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xCA62C1D6 };
 
 #define K(t) ( (t < 0 || t >= SHA_ROUNDS) ? 0 : k_vals[ t/20 ] )
 
 /*
  * Update the internal state based on the given chunk.
  */
-static void transform(shaState *shaStateP, sha_int *chunk)
+static void
+transform(shaState * shaStateP, sha_int * chunk)
 {
     sha_int A = shaStateP->digest[0];
     sha_int B = shaStateP->digest[1];
@@ -109,13 +114,17 @@ static void transform(shaState *shaStateP, sha_int *chunk)
     for (t = 0; t < SHA_CHUNK_INTS; t++)
 	W[t] = chunk[t];
     for (; t < SHA_ROUNDS; t++) {
-	TEMP = W[t-3] ^ W[t-8] ^ W[t-14] ^ W[t-16];
+	TEMP = W[t - 3] ^ W[t - 8] ^ W[t - 14] ^ W[t - 16];
 	W[t] = ROTL(1, TEMP);
     }
 
     for (t = 0; t < SHA_ROUNDS; t++) {
 	TEMP = ROTL(5, A) + f(t, B, C, D) + E + W[t] + K(t);
-	E = D; D = C; C = ROTL(30, B); B = A; A = TEMP;
+	E = D;
+	D = C;
+	C = ROTL(30, B);
+	B = A;
+	A = TEMP;
     }
 
     shaStateP->digest[0] += A;
@@ -131,7 +140,8 @@ static void transform(shaState *shaStateP, sha_int *chunk)
  * as input and produces an output array of ints that is
  * SHA_CHUNK_INTS long.
  */
-static void buildInts(const char *data, sha_int *chunk)
+static void
+buildInts(const char *data, sha_int * chunk)
 {
     /*
      * Need to copy the data because we can't be certain that
@@ -153,7 +163,8 @@ static void buildInts(const char *data, sha_int *chunk)
  * buildInts to break the input up into chunks and repeatedly passing
  * these chunks to transform().
  */
-void sha_update(shaState *shaStateP, const char *buffer, int bufferLen)
+void
+sha_update(shaState * shaStateP, const char *buffer, int bufferLen)
 {
     int i;
     sha_int chunk[SHA_CHUNK_INTS];
@@ -167,7 +178,7 @@ void sha_update(shaState *shaStateP, const char *buffer, int bufferLen)
 	shaStateP->bitcountHi++;
     shaStateP->bitcountLo = newLo;
     shaStateP->bitcountHi += ((bufferLen >> (SHA_BITS_PER_INT - 3)) & 0x07);
-    
+
     /*
      * If we won't have enough for a full chunk, just tack this
      * buffer onto the leftover piece and return.
@@ -212,7 +223,8 @@ void sha_update(shaState *shaStateP, const char *buffer, int bufferLen)
  * of the hash bitcount to finish the hash.  The hash value
  * is not valid until finish() has been called.
  */
-void sha_finish(shaState *shaStateP)
+void
+sha_finish(shaState * shaStateP)
 {
     sha_int chunk[SHA_CHUNK_INTS];
     int i;
@@ -243,11 +255,13 @@ void sha_finish(shaState *shaStateP)
  * SHS standard, and clear out the bitcount and leftover vars.
  * This should be used to initialize an shaState.
  */
-void sha_clear(shaState *shaStateP)
+void
+sha_clear(shaState * shaStateP)
 {
     big_endian = (0x01020304 == htonl(0x01020304));
 
-    memcpy((void *)&shaStateP->digest[0], (void *)&hashinit[0], SHA_HASH_BYTES);
+    memcpy((void *)&shaStateP->digest[0], (void *)&hashinit[0],
+	   SHA_HASH_BYTES);
     shaStateP->bitcountLo = shaStateP->bitcountHi = 0;
     shaStateP->leftoverLen = 0;
 }
@@ -256,7 +270,8 @@ void sha_clear(shaState *shaStateP)
 /*
  * Hash the buffer and place the result in *shaStateP.
  */
-void sha_hash(shaState *shaStateP, const char *buffer, int bufferLen)
+void
+sha_hash(shaState * shaStateP, const char *buffer, int bufferLen)
 {
     sha_clear(shaStateP);
     sha_update(shaStateP, buffer, bufferLen);
@@ -268,10 +283,11 @@ void sha_hash(shaState *shaStateP, const char *buffer, int bufferLen)
  * Returns the current state of the hash as an array of 20 bytes.
  * This will be an interim result if finish() has not yet been called.
  */
-void sha_bytes(const shaState *shaStateP, char *bytes)
+void
+sha_bytes(const shaState * shaStateP, char *bytes)
 {
     sha_int temp[SHA_HASH_INTS];
-    int  i;
+    int i;
 
     for (i = 0; i < SHA_HASH_INTS; i++)
 	temp[i] = htonl(shaStateP->digest[i]);

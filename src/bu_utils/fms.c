@@ -10,26 +10,26 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #undef	IN
 #include <stdio.h>
 #include <errno.h>
-#include <sys/types.h>				/* for mtio.h */
+#include <sys/types.h>		/* for mtio.h */
 #include <afs/cmd.h>
 #include <afs/procmgmt.h>
 #include <afs/usd.h>
 
 /* structure for writing data to tape */
-typedef struct tapeDataBuffer
-{
-    struct tapeDataBuffer	*tdb_next;
-    char 			*tdb_buffer;
+typedef struct tapeDataBuffer {
+    struct tapeDataBuffer *tdb_next;
+    char *tdb_buffer;
 } tapeDataBufferT;
 typedef tapeDataBufferT *tapeDataBufferP;
 
 /* globals */
-char *tapeDevice = 0;				/* device pathname */
+char *tapeDevice = 0;		/* device pathname */
 afs_int32 eotEnabled = 1;
 
 /* prototypes */
@@ -52,7 +52,7 @@ void tt_fileMarkSize(struct cmd_syndesc *as, char *arock);
 void quitFms(int);
 
 main(argc, argv)
-     int    argc;
+     int argc;
      char **argv;
 {
     struct sigaction intaction, oldaction;
@@ -63,14 +63,16 @@ main(argc, argv)
 
     sigaction(SIGINT, &intaction, &oldaction);
 
-    cptr = cmd_CreateSyntax(NULL, tt_fileMarkSize, 0, 
-			    "write a tape full of file marks");
+    cptr =
+	cmd_CreateSyntax(NULL, tt_fileMarkSize, 0,
+			 "write a tape full of file marks");
     cmd_AddParm(cptr, "-tape", CMD_SINGLE, CMD_REQUIRED, "tape special file");
 
     cmd_Dispatch(argc, argv);
 }
 
-void tt_fileMarkSize(as, arock)
+void
+tt_fileMarkSize(as, arock)
      struct cmd_syndesc *as;
      char *arock;
 {
@@ -86,7 +88,7 @@ fileMarkSize(tapeDevice)
      char *tapeDevice;
 {
     afs_uint32 nFileMarks, nBlocks, nbfTape;
-    double  tpSize, fmSize;
+    double tpSize, fmSize;
     afs_uint32 bufferSize = 16384;
     usd_handle_t hTape;
     FILE *logFile;
@@ -96,18 +98,16 @@ fileMarkSize(tapeDevice)
 
     afs_int32 rewindTape();
 
-    code = usd_Open(tapeDevice,
-		     (USD_OPEN_RDWR | USD_OPEN_WLOCK), 0777, &hTape);
-    if ( code )
-    {
+    code =
+	usd_Open(tapeDevice, (USD_OPEN_RDWR | USD_OPEN_WLOCK), 0777, &hTape);
+    if (code) {
 	printf("Can't open tape device %s\n", tapeDevice);
 	fflush(stdout);
 	exit(1);
     }
 
     logFile = fopen("fms.log", "w+");
-    if ( logFile == NULL )
-    {
+    if (logFile == NULL) {
 	printf("Can't open log file\n");
 	fflush(stdout);
 	exit(1);
@@ -116,8 +116,7 @@ fileMarkSize(tapeDevice)
     fflush(logFile);
 
     code = rewindTape(hTape);
-    if ( code )
-    {
+    if (code) {
 	fprintf(logFile, "Can't rewind tape\n");
 	fflush(logFile);
 	ERROR(code);
@@ -125,18 +124,16 @@ fileMarkSize(tapeDevice)
 
     /* measure capacity of tape */
     nbfTape = 0;
-    countr  = 0;
-    while ( 1 )
-    {
+    countr = 0;
+    while (1) {
 	code = dataBlock(hTape, bufferSize);
 	nbfTape++;
 	count++;
-        countr++;
-	if ( code )
+	countr++;
+	if (code)
 	    break;
 
-	if ( count >= 5 ) 
-	{
+	if (count >= 5) {
 	    count = 0;
 	    printf("\rwrote block: %d", nbfTape);
 	}
@@ -149,17 +146,15 @@ fileMarkSize(tapeDevice)
     printf("Finished data capacity test - rewinding\n");
     /* reset the tape device */
     code = USD_CLOSE(hTape);
-    if (code) 
-    {
+    if (code) {
 	fprintf(logFile, "Can't close tape device at end of pass 1\n");
 	fflush(logFile);
 	printf("Can't close tape device %s\n", tapeDevice);
 	goto error_exit;
     }
-    code = usd_Open(tapeDevice,
-		    (USD_OPEN_RDWR | USD_OPEN_WLOCK), 0777, &hTape);
-    if ( code )
-    {
+    code =
+	usd_Open(tapeDevice, (USD_OPEN_RDWR | USD_OPEN_WLOCK), 0777, &hTape);
+    if (code) {
 	fprintf(logFile, "Can't open tape device for pass 2\n");
 	fflush(logFile);
 	printf("Can't open tape device %s\n", tapeDevice);
@@ -167,8 +162,7 @@ fileMarkSize(tapeDevice)
     }
 
     code = rewindTape(hTape);
-    if ( code )
-    {
+    if (code) {
 	fprintf(logFile, "Can't rewind tape\n");
 	fflush(logFile);
 	ERROR(code);
@@ -176,45 +170,45 @@ fileMarkSize(tapeDevice)
 
     /* now measure file mark size */
     nFileMarks = 0;
-    nBlocks    = 0;
-    count      = 0;
-    countr     = 0;
-    while ( 1 )
-    {
+    nBlocks = 0;
+    count = 0;
+    countr = 0;
+    while (1) {
 	code = dataBlock(hTape, bufferSize);
 	nBlocks++;
-	if ( code )
+	if (code)
 	    break;
 	code = fileMark(hTape);
 	nFileMarks++;
-	if ( code )
+	if (code)
 	    break;
 	count++;
-        countr++;
+	countr++;
 
-	if ( count >= 2 )
-	{
+	if (count >= 2) {
 	    count = 0;
-	    printf("\rwrote %d blocks, %d filemarks", 
-		   nBlocks, nFileMarks);
+	    printf("\rwrote %d blocks, %d filemarks", nBlocks, nFileMarks);
 	}
 
     }
     printf("\nFinished filemark test\n");
-    tpSize = (double)nbfTape*(double)bufferSize;
-    fmSize = (((double)nbfTape - (double)nBlocks)*(double)bufferSize)/(double)nFileMarks;
+    tpSize = (double)nbfTape *(double)bufferSize;
+    fmSize =
+	(((double)nbfTape -
+	  (double)nBlocks) * (double)bufferSize) / (double)nFileMarks;
     printf("Tape capacity is %.0f bytes\n", tpSize);
-    printf("File marks are %.0f bytes\n",   fmSize);
+    printf("File marks are %.0f bytes\n", fmSize);
     fprintf(logFile, "Tape capacity is %.0f bytes\n", tpSize);
-    fprintf(logFile, "File marks are %.0f bytes\n",   fmSize);
+    fprintf(logFile, "File marks are %.0f bytes\n", fmSize);
     fflush(logFile);
     fclose(logFile);
-error_exit:
+  error_exit:
     USD_CLOSE(hTape);
-    return(code);
+    return (code);
 }
 
-void quitFms(int sig)
+void
+quitFms(int sig)
 {
     exit(0);
 }
@@ -229,25 +223,26 @@ void quitFms(int sig)
 afs_int32
 rewindTape(usd_handle_t hTape)
 {
-  usd_tapeop_t tapeop;
-  int rcode;
+    usd_tapeop_t tapeop;
+    int rcode;
 
-  tapeop.tp_op = USDTAPE_REW;
-  tapeop.tp_count = 1;
-  rcode = USD_IOCTL(hTape, USD_IOCTL_TAPEOPERATION, (void *)&tapeop);
-  return rcode;
+    tapeop.tp_op = USDTAPE_REW;
+    tapeop.tp_count = 1;
+    rcode = USD_IOCTL(hTape, USD_IOCTL_TAPEOPERATION, (void *)&tapeop);
+    return rcode;
 }
 
 /* write an EOF marker */
-int fileMark(usd_handle_t hTape)
+int
+fileMark(usd_handle_t hTape)
 {
-  usd_tapeop_t tapeop;
-  int rcode;
+    usd_tapeop_t tapeop;
+    int rcode;
 
-  tapeop.tp_op = USDTAPE_WEOF;
-  tapeop.tp_count = 1;
-  rcode = USD_IOCTL(hTape, USD_IOCTL_TAPEOPERATION, (void *)&tapeop);
-  return rcode;
+    tapeop.tp_op = USDTAPE_WEOF;
+    tapeop.tp_count = 1;
+    rcode = USD_IOCTL(hTape, USD_IOCTL_TAPEOPERATION, (void *)&tapeop);
+    return rcode;
 }
 
 /* dataBlock
@@ -266,37 +261,28 @@ dataBlock(usd_handle_t hTape, afs_int32 reqSize)
 
     /* dbBuffersize is only valid when dB_buffer is non-zero */
 
-    if ( (dB_buffer != 0)
-    &&   (dB_buffersize != reqSize )
-       )
-    {
+    if ((dB_buffer != 0)
+	&& (dB_buffersize != reqSize)
+	) {
 	free(dB_buffer);
 	dB_buffer = 0;
     }
 
-    if (dB_buffer == 0 )
-    {
-	dB_buffer = (char *) malloc(reqSize);
-	if ( dB_buffer == 0 )
+    if (dB_buffer == 0) {
+	dB_buffer = (char *)malloc(reqSize);
+	if (dB_buffer == 0)
 	    ERROR(-1);
 	dB_buffersize = reqSize;
 	memset(dB_buffer, 0, dB_buffersize);
     }
 
-    ptr = (int *) dB_buffer;
+    ptr = (int *)dB_buffer;
     *ptr = dB_count++;
 
     code = USD_WRITE(hTape, dB_buffer, dB_buffersize, &xferd);
     if (code || xferd != dB_buffersize)
 	ERROR(-1);
 
-error_exit:
-    return(code);
+  error_exit:
+    return (code);
 }
-
-
-
-
-
-
-

@@ -21,11 +21,12 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afs/afsincludes.h"	/* Afs-based standard headers */
-#include "afs/afs_stats.h"  /* statistics */
+#include "afs/afs_stats.h"	/* statistics */
 /* #include <vm/vm_ubc.h> */
 #include <limits.h>
 #include <float.h>
@@ -46,7 +47,8 @@ RCSID("$Header$");
  *
  * OSF/1 Locking:  VN_LOCK has been called.
  */
-int osi_VM_FlushVCache(struct vcache *avc, int *slept)
+int
+osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
     return 0;
 }
@@ -56,7 +58,8 @@ int osi_VM_FlushVCache(struct vcache *avc, int *slept)
  * Locking:  the vcache entry's lock is held.  It will usually be dropped and
  * re-obtained.
  */
-void osi_VM_StoreAllSegments(struct vcache *avc)
+void
+osi_VM_StoreAllSegments(struct vcache *avc)
 {
 }
 
@@ -69,7 +72,8 @@ void osi_VM_StoreAllSegments(struct vcache *avc)
  * Since we drop and re-obtain the lock, we can't guarantee that there won't
  * be some pages around when we return, newly created by concurrent activity.
  */
-void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
+void
+osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 {
 }
 
@@ -77,7 +81,8 @@ void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
  *
  * Locking:  No lock is held, not even the global lock.
  */
-void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
+void
+osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
 }
 
@@ -87,6 +92,7 @@ void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
  * activeV is raised.  This is supposed to block pageins, but at present
  * it only works on Solaris.
  */
-void osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
+void
+osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
 }

@@ -34,7 +34,8 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifndef	NeXT
 
@@ -49,35 +50,37 @@ RCSID("$Header$");
  * XDR afs_int32 integers
  * same as xdr_u_long - open coded to save a proc call!
  */
-bool_t xdr_afs_int32(register XDR *xdrs, afs_int32 *lp)
+bool_t
+xdr_afs_int32(register XDR * xdrs, afs_int32 * lp)
 {
 
-	if (xdrs->x_op == XDR_ENCODE)
-		return (XDR_PUTINT32(xdrs, (long *)lp));
+    if (xdrs->x_op == XDR_ENCODE)
+	return (XDR_PUTINT32(xdrs, (long *)lp));
 
-	if (xdrs->x_op == XDR_DECODE)
-		return (XDR_GETINT32(xdrs, (long *)lp));
+    if (xdrs->x_op == XDR_DECODE)
+	return (XDR_GETINT32(xdrs, (long *)lp));
 
-	if (xdrs->x_op == XDR_FREE)
-		return (TRUE);
+    if (xdrs->x_op == XDR_FREE)
+	return (TRUE);
 
-	return (FALSE);
+    return (FALSE);
 }
 
 /*
  * XDR unsigned afs_int32 integers
  * same as xdr_long - open coded to save a proc call!
  */
-bool_t xdr_afs_uint32(register XDR *xdrs, afs_uint32 *ulp)
+bool_t
+xdr_afs_uint32(register XDR * xdrs, afs_uint32 * ulp)
 {
 
-	if (xdrs->x_op == XDR_DECODE)
-		return (XDR_GETINT32(xdrs, (long *)ulp));
-	if (xdrs->x_op == XDR_ENCODE)
-		return (XDR_PUTINT32(xdrs, (long *)ulp));
-	if (xdrs->x_op == XDR_FREE)
-		return (TRUE);
-	return (FALSE);
+    if (xdrs->x_op == XDR_DECODE)
+	return (XDR_GETINT32(xdrs, (long *)ulp));
+    if (xdrs->x_op == XDR_ENCODE)
+	return (XDR_PUTINT32(xdrs, (long *)ulp));
+    if (xdrs->x_op == XDR_FREE)
+	return (TRUE);
+    return (FALSE);
 }
 
 #endif /* NeXT */

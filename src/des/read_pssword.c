@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <mit-cpyright.h>
 #include <des.h>
@@ -66,7 +67,7 @@ static int intrupt;
 #endif
 
 static int intrupt;
-#if defined(AFS_SGI_ENV) || defined (AFS_AIX_ENV) || defined(AFS_XBSD_ENV) /*|| defined (AFS_HPUX_ENV) || defined(AFS_SUN5_ENV)*/
+#if defined(AFS_SGI_ENV) || defined (AFS_AIX_ENV) || defined(AFS_XBSD_ENV)	/*|| defined (AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) */
 #undef	BSDUNIX
 #endif
 
@@ -89,7 +90,8 @@ int des_read_pw_string(char *, int, char *, int);
 int des_string_to_key(char *, des_cblock *);
 
 /*** Routines ****************************************************** */
-int des_read_password(des_cblock *k, char *prompt, int verify)
+int
+des_read_password(des_cblock * k, char *prompt, int verify)
 {
     int ok;
     char key_string[BUFSIZ];
@@ -106,9 +108,9 @@ int des_read_password(des_cblock *k, char *prompt, int verify)
 	des_string_to_key(key_string, k);
 
 #ifdef BSDUNIX
-lose:
+  lose:
 #endif
-    memset(key_string, 0, sizeof (key_string));
+    memset(key_string, 0, sizeof(key_string));
     return ok;
 }
 
@@ -126,13 +128,13 @@ static void catch(int);
  * Returns 0 on success, non-zero on failure.
  */
 int
-des_read_pw_string(s,maxa,prompt,verify)
-    char *s;
-    int	maxa;
-    char *prompt;
-    int	verify;
+des_read_pw_string(s, maxa, prompt, verify)
+     char *s;
+     int maxa;
+     char *prompt;
+     int verify;
 {
-    int ok = 0, cnt1=0;
+    int ok = 0, cnt1 = 0;
     char *ptr;
 #if defined(AFS_HPUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     register int fno;
@@ -156,7 +158,7 @@ des_read_pw_string(s,maxa,prompt,verify)
     struct termio ttyb;
     FILE *fi;
     char savel, flags;
-    void (*sig)();
+    void (*sig) ();
 #endif
 #endif
 #ifdef AFS_NT40_ENV
@@ -169,11 +171,10 @@ des_read_pw_string(s,maxa,prompt,verify)
     if (maxa > BUFSIZ) {
 	return -1;
     }
-
 #if defined(AFS_HPUX_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
     if ((fi = fopen("/dev/tty", "r")) == NULL)
-        return -1;
-    setbuf(fi, (char *)NULL);			/* We don't want any buffering for our i/o. */
+	return -1;
+    setbuf(fi, (char *)NULL);	/* We don't want any buffering for our i/o. */
     /*
      * Install signal handler for SIGINT so that we can restore
      * the tty settings after we change them.  The handler merely
@@ -185,7 +186,7 @@ des_read_pw_string(s,maxa,prompt,verify)
     newsig.sa_flags = 0;
     sigaction(SIGINT, &newsig, &oldsig);
     intrupt = 0;
- 
+
     /*
      * Get the terminal characters (save for later restoration) and
      * reset them so that echo is off
@@ -197,49 +198,48 @@ des_read_pw_string(s,maxa,prompt,verify)
     tcsetattr(fno, TCSAFLUSH, &ttyb);
 #else
 #if	defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
-    if((fi = fopen("/dev/tty", "r")) == NULL) {
-		return(-1);
-	    }
-    else
-	setbuf(fi, (char*)NULL);
+    if ((fi = fopen("/dev/tty", "r")) == NULL) {
+	return (-1);
+    } else
+	setbuf(fi, (char *)NULL);
     sa.sa_handler = catch;
     sa.sa_mask = 0;
     sa.sa_flags = SA_INTERRUPT;
-    (void) sigaction(SIGINT, &sa, &osa);
+    (void)sigaction(SIGINT, &sa, &osa);
     intrupt = 0;
-    (void) ioctl(fileno(fi), TCGETS, &ttyb);
+    (void)ioctl(fileno(fi), TCGETS, &ttyb);
     flags = ttyb.c_lflag;
     ttyb.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHONL);
-    (void) ioctl(fileno(fi), TCSETSF, &ttyb);
+    (void)ioctl(fileno(fi), TCSETSF, &ttyb);
 #else
 #ifdef	BSDUNIX
     /* XXX assume jmp_buf is typedef'ed to an array */
     memcpy((char *)env, (char *)old_env, sizeof(env));
     if (setjmp(env))
 	goto lose;
-    /* save terminal state*/
-    if (ioctl(0,TIOCGETP,(char *)&tty_state) == -1)
+    /* save terminal state */
+    if (ioctl(0, TIOCGETP, (char *)&tty_state) == -1)
 	return -1;
     push_signals();
     /* Turn off echo */
-    memcpy(&echo_off_tty_state, &tty_state, sizeof (tty_state));
+    memcpy(&echo_off_tty_state, &tty_state, sizeof(tty_state));
     echo_off_tty_state.sg_flags &= ~ECHO;
-    if (ioctl(0,TIOCSETP,(char *)&echo_off_tty_state) == -1)
+    if (ioctl(0, TIOCSETP, (char *)&echo_off_tty_state) == -1)
 	return -1;
 #else
 #if	defined	(AFS_AIX_ENV) || defined (AFS_HPUX_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)
-	if((fi = fopen("/dev/tty", "r+")) == NULL)
-		return(-1);
-	else
-		setbuf(fi, (char*)NULL);
-	sig = signal(SIGINT, catch);
-	intrupt = 0;
-	(void) ioctl(fileno(fi), TCGETA, &ttyb);
-	savel = ttyb.c_line;
-	ttyb.c_line = 0;
-	flags = ttyb.c_lflag;
-	ttyb.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHONL);
-	(void) ioctl(fileno(fi), TCSETAF, &ttyb);
+    if ((fi = fopen("/dev/tty", "r+")) == NULL)
+	return (-1);
+    else
+	setbuf(fi, (char *)NULL);
+    sig = signal(SIGINT, catch);
+    intrupt = 0;
+    (void)ioctl(fileno(fi), TCGETA, &ttyb);
+    savel = ttyb.c_line;
+    ttyb.c_line = 0;
+    flags = ttyb.c_lflag;
+    ttyb.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHONL);
+    (void)ioctl(fileno(fi), TCSETAF, &ttyb);
 #else
 #ifdef AFS_NT40_ENV
     /* turn off console input echoing */
@@ -257,10 +257,10 @@ des_read_pw_string(s,maxa,prompt,verify)
 #endif
 #endif
     while (!ok) {
-	(void) printf(prompt);
-	(void) fflush(stdout);
+	(void)printf(prompt);
+	(void)fflush(stdout);
 #ifdef	CROSSMSDOS
-	h19line(s,sizeof(s),0);
+	h19line(s, sizeof(s), 0);
 	if (!strlen(s))
 	    continue;
 #else
@@ -279,10 +279,10 @@ des_read_pw_string(s,maxa,prompt,verify)
 	    *ptr = '\0';
 #endif
 	if (verify) {
-	    printf("\nVerifying, please re-enter %s",prompt);
-	    (void) fflush(stdout);
+	    printf("\nVerifying, please re-enter %s", prompt);
+	    (void)fflush(stdout);
 #ifdef CROSSMSDOS
-	    h19line(key_string,sizeof(key_string),0);
+	    h19line(key_string, sizeof(key_string), 0);
 	    if (!strlen(key_string))
 		continue;
 #else
@@ -290,12 +290,12 @@ des_read_pw_string(s,maxa,prompt,verify)
 		clearerr(stdin);
 		continue;
 	    }
-            if ((ptr = strchr(key_string, '\n')))
-	    *ptr = '\0';
+	    if ((ptr = strchr(key_string, '\n')))
+		*ptr = '\0';
 #endif
-	    if (strcmp(s,key_string)) {
+	    if (strcmp(s, key_string)) {
 		printf("\n\07\07Mismatch - try again\n");
-		(void) fflush(stdout);
+		(void)fflush(stdout);
 		continue;
 	    }
 	}
@@ -303,7 +303,7 @@ des_read_pw_string(s,maxa,prompt,verify)
     }
 
 #ifdef BSDUNIX
-lose:
+  lose:
 #endif
     if (!ok)
 	memset(s, 0, maxa);
@@ -316,25 +316,25 @@ lose:
     tcsetattr(fno, TCSANOW, &save_ttyb);
     sigaction(SIGINT, &oldsig, NULL);
     if (fi != stdin)
-        fclose(fi);
- 
+	fclose(fi);
+
     /*
      * If we got a SIGINT while we were doing things, send the SIGINT
      * to ourselves so that the calling program receives it (since we
      * were intercepting it for a period of time.)
      */
     if (intrupt)
-        kill(getpid(), SIGINT);
+	kill(getpid(), SIGINT);
 #else
 #if	defined(AFS_SUN_ENV) && !defined(AFS_SUN5_ENV)
     ttyb.c_lflag = flags;
-    (void) ioctl(fileno(fi), TCSETSW, &ttyb);
-    (void) sigaction(SIGINT, &osa, (struct sigaction *)NULL);
-    if(fi != stdin)
-	(void) fclose(fi);
+    (void)ioctl(fileno(fi), TCSETSW, &ttyb);
+    (void)sigaction(SIGINT, &osa, (struct sigaction *)NULL);
+    if (fi != stdin)
+	(void)fclose(fi);
 #else
 #ifdef	BSDUNIX
-    if (ioctl(0,TIOCSETP,(char *)&tty_state))
+    if (ioctl(0, TIOCSETP, (char *)&tty_state))
 	ok = 0;
     pop_signals();
     memcpy((char *)old_env, (char *)env, sizeof(env));
@@ -342,12 +342,12 @@ lose:
 #if	defined	(AFS_AIX_ENV) /*|| defined (AFS_HPUX_ENV)*/ || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV)
     ttyb.c_lflag = flags;
     ttyb.c_line = savel;
-    (void) ioctl(fileno(fi), TCSETAW, &ttyb);
-    (void) signal(SIGINT, sig);
-    if(fi != stdin)
-	(void) fclose(fi);
-    if(intrupt)
-	(void) kill(getpid(), SIGINT);
+    (void)ioctl(fileno(fi), TCSETAW, &ttyb);
+    (void)signal(SIGINT, sig);
+    if (fi != stdin)
+	(void)fclose(fi);
+    if (intrupt)
+	(void)kill(getpid(), SIGINT);
 #else
 #ifdef AFS_NT40_ENV
     /* restore console to original mode settings */
@@ -360,8 +360,8 @@ lose:
 #endif
 #endif
     if (verify)
-	memset(key_string, 0, sizeof (key_string));
-    s[maxa-1] = 0;		/* force termination */
+	memset(key_string, 0, sizeof(key_string));
+    s[maxa - 1] = 0;		/* force termination */
     return !ok;			/* return nonzero if not okay */
 }
 
@@ -371,29 +371,31 @@ lose:
  * one set saved....
  */
 #ifdef mips
-void static (*old_sigfunc[NSIG])();
+void static (*old_sigfunc[NSIG]) ();
 #else
-static sigtype (*old_sigfunc[NSIG])();
+static sigtype(*old_sigfunc[NSIG]) ();
 #endif
 
-static push_signals()
+static
+push_signals()
 {
     register i;
     for (i = 0; i < NSIG; i++)
-	old_sigfunc[i] = signal(i,sig_restore);
+	old_sigfunc[i] = signal(i, sig_restore);
 }
 
-static pop_signals()
+static
+pop_signals()
 {
     register i;
     for (i = 0; i < NSIG; i++)
-	(void) signal(i,old_sigfunc[i]);
+	(void)signal(i, old_sigfunc[i]);
 }
 
 static sigtype
 sig_restore()
 {
-    longjmp(env,1);
+    longjmp(env, 1);
 }
 #endif
 
@@ -402,6 +404,6 @@ sig_restore()
 static void
 catch(int junk)
 {
-	++intrupt;
+    ++intrupt;
 }
 #endif

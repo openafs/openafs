@@ -52,7 +52,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <stdio.h>
 #include <string.h>
@@ -73,26 +74,21 @@ static char *unix_symbols[] = {
 
 /* all one string */
     "LIBS = $(DESTDIR)lib/libafsrpc.so \\\n"
-    "\t$(DESTDIR)lib/afs/libcmd.a \\\n"
-    "\t$(DESTDIR)lib/afs/libcom_err.a \\\n"
-    "\t$(DESTDIR)lib/afs/util.a \n",
+	"\t$(DESTDIR)lib/afs/libcmd.a \\\n"
+	"\t$(DESTDIR)lib/afs/libcom_err.a \\\n"
+	"\t$(DESTDIR)lib/afs/util.a \n",
 
 /* all one string */
-    "LIBS = $(DESTDIR)lib/librxkad.a \\\n"
-    "\t$(DESTDIR)lib/libdes.a \\\n"
-    "\t$(DESTDIR)lib/librx.a \\\n"
-    "\t$(DESTDIR)lib/liblwp.a \\\n"
-    "\t$(DESTDIR)lib/afs/libcmd.a \\\n"
-    "\t$(DESTDIR)lib/afs/libcom_err.a \\\n"
-    "\t$(DESTDIR)lib/afs/util.a \\\n"
-    "\t/usr/ucblib/libucb.a \n",
+    "LIBS = $(DESTDIR)lib/librxkad.a \\\n" "\t$(DESTDIR)lib/libdes.a \\\n"
+	"\t$(DESTDIR)lib/librx.a \\\n" "\t$(DESTDIR)lib/liblwp.a \\\n"
+	"\t$(DESTDIR)lib/afs/libcmd.a \\\n"
+	"\t$(DESTDIR)lib/afs/libcom_err.a \\\n"
+	"\t$(DESTDIR)lib/afs/util.a \\\n" "\t/usr/ucblib/libucb.a \n",
 
 /* all one string */
-    "\t@if [ ! -r DEST ] ; \\\n"
-    "\tthen \\\n"
-    "\t\techo \"Must create DEST link by hand before building tests\"; \\\n"
-    "\t\texit 1; \\\n"
-    "\tfi\n"
+    "\t@if [ ! -r DEST ] ; \\\n" "\tthen \\\n"
+	"\t\techo \"Must create DEST link by hand before building tests\"; \\\n"
+	"\t\texit 1; \\\n" "\tfi\n"
 };
 
 static char *nt_symbols[] = {
@@ -105,27 +101,25 @@ static char *nt_symbols[] = {
 
 /* all one string */
     "LIBS = $(DESTDIR)/lib/afsrpc.lib \\\n"
-    "\t$(DESTDIR)/lib/afs/afscmd.lib \\\n"
-    "\t$(DESTDIR)/lib/afs/afscom_err.lib \\\n"
-    "\t$(DESTDIR)/lib/afs/afsutil.lib \\\n"
-    "\t$(DESTDIR)/lib/pthread.lib \\\n"
-    "\t$(DESTDIR)/lib/afsreg.lib \\\n"
-    "\t$(XLIBS)\n",
+	"\t$(DESTDIR)/lib/afs/afscmd.lib \\\n"
+	"\t$(DESTDIR)/lib/afs/afscom_err.lib \\\n"
+	"\t$(DESTDIR)/lib/afs/afsutil.lib \\\n"
+	"\t$(DESTDIR)/lib/pthread.lib \\\n" "\t$(DESTDIR)/lib/afsreg.lib \\\n"
+	"\t$(XLIBS)\n",
 
 /* all one string */
     "LIBS = $(DESTDIR)/lib/afsrxkad.lib \\\n"
-    "\t$(DESTDIR)/lib/afsdes.lib \\\n"
-    "\t$(DESTDIR)/lib/afsrx.lib \\\n"
-    "\t$(DESTDIR)/lib/afslwp.lib \\\n"
-    "\t$(DESTDIR)/lib/afs/afscmd.lib \\\n"
-    "\t$(DESTDIR)/lib/afs/afscom_err.lib \\\n"
-    "\t$(DESTDIR)/lib/afs/afsutil.lib \\\n"
-    "\t$(DESTDIR)/lib/afsreg.lib \n",
+	"\t$(DESTDIR)/lib/afsdes.lib \\\n" "\t$(DESTDIR)/lib/afsrx.lib \\\n"
+	"\t$(DESTDIR)/lib/afslwp.lib \\\n"
+	"\t$(DESTDIR)/lib/afs/afscmd.lib \\\n"
+	"\t$(DESTDIR)/lib/afs/afscom_err.lib \\\n"
+	"\t$(DESTDIR)/lib/afs/afsutil.lib \\\n"
+	"\t$(DESTDIR)/lib/afsreg.lib \n",
 
 /* all one string */
     "!\tIF (!EXIST(DEST))\n"
-    "!\t\tERROR Must create DEST link by hand before building tests\n"
-    "!\tENDIF\n",
+	"!\t\tERROR Must create DEST link by hand before building tests\n"
+	"!\tENDIF\n",
 };
 
 static char **platform = nt_symbols;
@@ -142,13 +136,14 @@ static char **platform = nt_symbols;
 static unsigned long randVal = 0x330E16;
 
 typedef enum {
-   PTHREADS,
-   LWPS
+    PTHREADS,
+    LWPS
 } threadModel_t;
 
 static threadModel_t threadModel = PTHREADS;
 
-PRIVATE double drand32(void)
+PRIVATE double
+drand32(void)
 {
     randVal = ((randVal * 0xEECE66D) + 0xB) & 0xFFFFFFFF;
     return ((double)(randVal) / 4294967296.0);
@@ -158,31 +153,34 @@ PRIVATE double drand32(void)
  * GetDescription writes a one line comment describing the parameters
  * used in an rpc in the client program
  */
-PRIVATE char *GetDescription(rpcArgs *argsP)
+PRIVATE char *
+GetDescription(rpcArgs * argsP)
 {
     char *bufP2;
     int i;
 
-    bufP2 = (char *) calloc((MAX_TYP_STR+MAX_DIR_STR+ATTRIB_LEN*ATTRIB_NO)
-		    *argsP->argCount+3, sizeof(char));
+    bufP2 =
+	(char *)calloc((MAX_TYP_STR + MAX_DIR_STR + ATTRIB_LEN * ATTRIB_NO)
+		       * argsP->argCount + 3, sizeof(char));
     MEM_CHK(bufP2, "GetDescription: out of mem bufP2\n");
 
-    for (i=0; i < argsP->argCount; i++) {
+    for (i = 0; i < argsP->argCount; i++) {
 	strcat(bufP2, argsP->argDescr[i].direction);
 	strcat(bufP2, argsP->argDescr[i].type);
     }
-    return(bufP2);
+    return (bufP2);
 }
 
 /*
  * GetName -- get the name of the current server/instance
  */
-PRIVATE char *GetName(char *serverName, int sign_no)
+PRIVATE char *
+GetName(char *serverName, int sign_no)
 {
-    /* itl file name 8.3 format*/
+    /* itl file name 8.3 format */
     char *bufP;
 
-    bufP = (char *) malloc(32 * sizeof(char));
+    bufP = (char *)malloc(32 * sizeof(char));
     MEM_CHK(bufP, "GetName: bufP out of mem\n");
 
     sprintf(bufP, "%s%d", serverName, sign_no);
@@ -192,19 +190,23 @@ PRIVATE char *GetName(char *serverName, int sign_no)
 /*
  * OpenOutFile -- open a file in the output directory
  */
-PRIVATE FILE *OpenOutFile(char *outDir, char *fileName, char *tailStr)
+PRIVATE FILE *
+OpenOutFile(char *outDir, char *fileName, char *tailStr)
 {
     char *bufP;
     FILE *fP;
 
     if (outDir) {
-	bufP = (char *) malloc(sizeof(char)*(strlen(fileName)+
-			    strlen(tailStr)+strlen(outDir)+2));
+	bufP =
+	    (char *)malloc(sizeof(char) *
+			   (strlen(fileName) + strlen(tailStr) +
+			    strlen(outDir) + 2));
 	MEM_CHK(bufP, "OpenOutFile : Out of mem -- bufP\n");
 	sprintf(bufP, "%s/%s%s", outDir, fileName, tailStr);
     } else {
-	bufP = (char *) malloc(sizeof(char)*(strlen(fileName)+
-			    strlen(tailStr)+1));
+	bufP =
+	    (char *)malloc(sizeof(char) *
+			   (strlen(fileName) + strlen(tailStr) + 1));
 	MEM_CHK(bufP, "OpenOutFile : Out of mem -- bufP\n");
 	sprintf(bufP, "%s%s", fileName, tailStr);
     }
@@ -217,31 +219,26 @@ PRIVATE FILE *OpenOutFile(char *outDir, char *fileName, char *tailStr)
 /*
  * WriteXGDecl -- write the declaration for a parameter
  */
-PRIVATE void WriteXGDecl(arg_tuple *arg, FILE *xg_h, int i, 
-			  int structFlag, int lastFlag)
+PRIVATE void
+WriteXGDecl(arg_tuple * arg, FILE * xg_h, int i, int structFlag, int lastFlag)
 {
     if (structFlag) {
 	if (!strcmp(arg->type, "varString")) {
 	    fprintf(xg_h, "\tchar a%d[STR_MAX];\n", i);
-	}
-	else {
+	} else {
 	    fprintf(xg_h, "\tdrpc_%s_t a%d;\n", arg->type, i);
 	}
     } else {
 	if (!strncmp(arg->type, "ar_", 2)) {
-	    fprintf(xg_h, "\t%s drpc_out_%s_t *a%d",
-		    arg->direction, arg->type, i);
-	}
-	else if (!strcmp(arg->type, "varString")) {
-	    fprintf(xg_h, "\t%s string a%d<STR_MAX>",
-		    arg->direction, i);
-	}
-	else if (!strcmp(arg->direction, "IN")) {
-	    fprintf(xg_h, "\t%s drpc_%s_t a%d",
-		    arg->direction, arg->type, i);
+	    fprintf(xg_h, "\t%s drpc_out_%s_t *a%d", arg->direction,
+		    arg->type, i);
+	} else if (!strcmp(arg->type, "varString")) {
+	    fprintf(xg_h, "\t%s string a%d<STR_MAX>", arg->direction, i);
+	} else if (!strcmp(arg->direction, "IN")) {
+	    fprintf(xg_h, "\t%s drpc_%s_t a%d", arg->direction, arg->type, i);
 	} else {
-	    fprintf(xg_h, "\t%s drpc_%s_t *a%d",
-		    arg->direction, arg->type, i);
+	    fprintf(xg_h, "\t%s drpc_%s_t *a%d", arg->direction, arg->type,
+		    i);
 	}
 	if (lastFlag) {
 	    fputs(");\n", xg_h);
@@ -254,7 +251,8 @@ PRIVATE void WriteXGDecl(arg_tuple *arg, FILE *xg_h, int i,
 /*
  * WriteXG -- write the body of the xg interface
  */
-PRIVATE void WriteXG(rpcArgs *argsP, FILE *xg_h, char *serverName, int sign_no)
+PRIVATE void
+WriteXG(rpcArgs * argsP, FILE * xg_h, char *serverName, int sign_no)
 {
     int i;
     char *name = GetName(serverName, sign_no);
@@ -266,16 +264,16 @@ PRIVATE void WriteXG(rpcArgs *argsP, FILE *xg_h, char *serverName, int sign_no)
     fprintf(xg_h, "\nproc %s(\n", name);
 
     /* declare each arg */
-    for (i=0; i < argsP->argCount; i++) {
+    for (i = 0; i < argsP->argCount; i++) {
 	WriteXGDecl(&argsP->argDescr[i], xg_h, i, FALSE,
-		     (i==argsP->argCount-1));
+		    (i == argsP->argCount - 1));
     }
 
     /* Now pass the paramaters inside a structure */
     fprintf(xg_h, "\nstruct %s_t {\n", name);
-    for (i=0; i < argsP->argCount; i++) {
+    for (i = 0; i < argsP->argCount; i++) {
 	WriteXGDecl(&argsP->argDescr[i], xg_h, i, TRUE,
-		     (i==argsP->argCount-1));
+		    (i == argsP->argCount - 1));
     }
     fprintf(xg_h, "} ;\n");
     fprintf(xg_h, "\nproc %s_s(\n", name);
@@ -287,7 +285,8 @@ PRIVATE void WriteXG(rpcArgs *argsP, FILE *xg_h, char *serverName, int sign_no)
 /*
  * GetRandStr -- get a random string
  */
-PRIVATE void GetRandStr(int strLen, char **ret, int *rP)
+PRIVATE void
+GetRandStr(int strLen, char **ret, int *rP)
 {
     int i, randI;
     char buf[5];
@@ -295,7 +294,7 @@ PRIVATE void GetRandStr(int strLen, char **ret, int *rP)
     strcpy(*ret, "\"");
     i = 0;
     while (i < strLen) {
-	randI = 'A' + ('Z' - 'A')*drand32();
+	randI = 'A' + ('Z' - 'A') * drand32();
 	sprintf(buf, "%c", randI);
 	strcat(*ret, buf);
 	i++;
@@ -308,25 +307,26 @@ PRIVATE void GetRandStr(int strLen, char **ret, int *rP)
  * GetRandP -- sets a string to a random value of the data type
  * inthe case of a char type, ret holds "%c" and ret2 holds '%c'
  */
-PRIVATE void GetRandP(char *typ, char **ret, char **ret2)
+PRIVATE void
+GetRandP(char *typ, char **ret, char **ret2)
 {
     int randI, strLen;
     float f;
     double d, d1;
     short shI;
 
-    *ret = (char *) calloc(MAX_RAND_LENGTH+1, sizeof(char));
-    *ret2 = (char *) calloc(MAX_RAND_LENGTH+1, sizeof(char));
+    *ret = (char *)calloc(MAX_RAND_LENGTH + 1, sizeof(char));
+    *ret2 = (char *)calloc(MAX_RAND_LENGTH + 1, sizeof(char));
 
     if (strstr(typ, "char")) {
 	GetRandStr(1, ret2, &randI);
 	if (randI == '\\')
 	    strcpy(*ret2, "'\\\\'");
-	else if(randI == '\'')
+	else if (randI == '\'')
 	    strcpy(*ret2, "'\\''");
 	else
 	    sprintf(*ret, "'%c'", randI);
-	    return;
+	return;
     } else if (strstr(typ, "short")) {
 	shI = SHRT_MIN + (SHRT_MAX - SHRT_MIN) * drand32();
 	sprintf(*ret, "%d", shI);
@@ -351,7 +351,7 @@ PRIVATE void GetRandP(char *typ, char **ret, char **ret2)
 	strcpy(*ret2, *ret);
 
     } else if (strstr(typ, "String")) {
-	strLen = (MAX_RAND_LENGTH-2)*drand32();
+	strLen = (MAX_RAND_LENGTH - 2) * drand32();
 	GetRandStr(strLen, ret, &randI);
 	strcpy(*ret2, *ret);
     }
@@ -361,34 +361,33 @@ PRIVATE void GetRandP(char *typ, char **ret, char **ret2)
 /*
  * GenParamValues -- generate the parameter values for an rpc
  */
-PRIVATE void GenParamValues(rpcArgs *argsP)
+PRIVATE void
+GenParamValues(rpcArgs * argsP)
 {
     char *typ;
     int i, j;
 
     /* generate random values for each argument */
-    for (i=0; i < argsP->argCount; i++) {
+    for (i = 0; i < argsP->argCount; i++) {
 
 	argsP->argDescr[i].vc_low = 0;
-	argsP->argDescr[i].vc_max = IDL_FIX_ARRAY_SIZE-1;
-	argsP->argDescr[i].vc_high = IDL_FIX_ARRAY_SIZE-1;
+	argsP->argDescr[i].vc_max = IDL_FIX_ARRAY_SIZE - 1;
+	argsP->argDescr[i].vc_high = IDL_FIX_ARRAY_SIZE - 1;
 	argsP->argDescr[i].ovc_low = 0;
-	argsP->argDescr[i].ovc_high = IDL_FIX_ARRAY_SIZE-1;
+	argsP->argDescr[i].ovc_high = IDL_FIX_ARRAY_SIZE - 1;
 
 	if (!strncmp(argsP->argDescr[i].type, "ar_", 3)) {
 	    typ = argsP->argDescr[i].type + 3;
-	    for (j = 0 ; j < IDL_FIX_ARRAY_SIZE ; j++) {
+	    for (j = 0; j < IDL_FIX_ARRAY_SIZE; j++) {
 		GetRandP(typ, &argsP->argDescr[i].inValue[j],
 			 &argsP->argDescr[i].inValue2[j]);
 		GetRandP(typ, &argsP->argDescr[i].outValue[j],
 			 &argsP->argDescr[i].outValue2[j]);
 	    }
 	} else {
-	    GetRandP(argsP->argDescr[i].type,
-		     &argsP->argDescr[i].inValue[0],
+	    GetRandP(argsP->argDescr[i].type, &argsP->argDescr[i].inValue[0],
 		     &argsP->argDescr[i].inValue2[0]);
-	    GetRandP(argsP->argDescr[i].type,
-		     &argsP->argDescr[i].outValue[0],
+	    GetRandP(argsP->argDescr[i].type, &argsP->argDescr[i].outValue[0],
 		     &argsP->argDescr[i].outValue2[0]);
 	}
     }
@@ -397,56 +396,56 @@ PRIVATE void GenParamValues(rpcArgs *argsP)
 /*
  * WriteServC -- write the rpcs in the server file
  */
-PRIVATE void WriteServC(rpcArgs *argsP, FILE *srv_h, char *serverName, int sign_no)
+PRIVATE void
+WriteServC(rpcArgs * argsP, FILE * srv_h, char *serverName, int sign_no)
 {
     char *name, *typ;
-    int i,j;
+    int i, j;
 
     name = GetName(serverName, sign_no);
     fprintf(srv_h, "\nint A%s(struct rx_call *c,\n", name);
 
     /* declare each arg */
-    for (i=0; i < argsP->argCount; i++) {
+    for (i = 0; i < argsP->argCount; i++) {
 
-        if (!strcmp(argsP->argDescr[i].type, "varString")) {
+	if (!strcmp(argsP->argDescr[i].type, "varString")) {
 	    if (!strcmp(argsP->argDescr[i].direction, "IN")) {
 		fprintf(srv_h, "\tchar *a%d", i);
-	    }
-	    else {
+	    } else {
 		fprintf(srv_h, "\tchar **a%d", i);
 	    }
-	}
-	else if (strncmp(argsP->argDescr[i].type, "ar_", 3) &&
-	        (!strcmp(argsP->argDescr[i].direction, "IN"))) {
+	} else if (strncmp(argsP->argDescr[i].type, "ar_", 3)
+		   && (!strcmp(argsP->argDescr[i].direction, "IN"))) {
 	    fprintf(srv_h, "\tdrpc_%s_t a%d", argsP->argDescr[i].type, i);
 	} else {
 	    if (!strncmp(argsP->argDescr[i].type, "ar_", 3)) {
-		fprintf(srv_h, "\tdrpc_out_%s_t *a%d", argsP->argDescr[i].type, i);
-	    }
-	    else {
-		fprintf(srv_h, "\tdrpc_%s_t *a%d", argsP->argDescr[i].type, i);
+		fprintf(srv_h, "\tdrpc_out_%s_t *a%d",
+			argsP->argDescr[i].type, i);
+	    } else {
+		fprintf(srv_h, "\tdrpc_%s_t *a%d", argsP->argDescr[i].type,
+			i);
 	    }
 	}
-	if(i < (argsP->argCount - 1)) {
+	if (i < (argsP->argCount - 1)) {
 	    fprintf(srv_h, ",\n");
 	}
     }
-    fputs(")\n{\n", srv_h); /* balance the } */
+    fputs(")\n{\n", srv_h);	/* balance the } */
     fputs("\tint errFlag = 0;", srv_h);
 
     /*
      * check the in and inout parameters
      */
-    for (i=0; i < argsP->argCount; i++) {
+    for (i = 0; i < argsP->argCount; i++) {
 
-	if (!strcmp(argsP->argDescr[i].direction, "IN") ||
-		   (!strcmp(argsP->argDescr[i].direction, "INOUT") &&
-		    !strcmp(argsP->argDescr[i].type, "varString"))) {
+	if (!strcmp(argsP->argDescr[i].direction, "IN")
+	    || (!strcmp(argsP->argDescr[i].direction, "INOUT")
+		&& !strcmp(argsP->argDescr[i].type, "varString"))) {
 
 	    typ = argsP->argDescr[i].type;
 
 	    if (strstr(typ, "String")) {
-		if(!strcmp(argsP->argDescr[i].direction, "INOUT")) {
+		if (!strcmp(argsP->argDescr[i].direction, "INOUT")) {
 		    fprintf(srv_h, "\n\tCHECK%s((char *)*a%d, %s, \"%s\");",
 			    typ, i, argsP->argDescr[i].inValue[0], name);
 		} else {
@@ -454,18 +453,18 @@ PRIVATE void WriteServC(rpcArgs *argsP, FILE *srv_h, char *serverName, int sign_
 			    typ, i, argsP->argDescr[i].inValue[0], name);
 		}
 	    } else if (!strcmp(typ, "afs_int32")) {
-		fprintf(srv_h, "\n\tCHECK%s(a%d, %sL, \"%s\");",
-			typ, i, argsP->argDescr[i].inValue[0], name);
+		fprintf(srv_h, "\n\tCHECK%s(a%d, %sL, \"%s\");", typ, i,
+			argsP->argDescr[i].inValue[0], name);
 	    } else {
-		if(!strncmp(typ, "ar_", 3)) {
-		    for(j=0;j<IDL_FIX_ARRAY_SIZE;j++)
-			fprintf(srv_h, "\n\tCHECK%s(a%d->drpc_out_%s_t_val[%d], %s, \"%s\");",
-				(typ+3), i, typ, j, argsP->argDescr[i].inValue[j],
-				name);
-		}
-		else {
-		    fprintf(srv_h, "\n\tCHECK%s(a%d, %s, \"%s\");",
-			    typ, i, argsP->argDescr[i].inValue[0], name);
+		if (!strncmp(typ, "ar_", 3)) {
+		    for (j = 0; j < IDL_FIX_ARRAY_SIZE; j++)
+			fprintf(srv_h,
+				"\n\tCHECK%s(a%d->drpc_out_%s_t_val[%d], %s, \"%s\");",
+				(typ + 3), i, typ, j,
+				argsP->argDescr[i].inValue[j], name);
+		} else {
+		    fprintf(srv_h, "\n\tCHECK%s(a%d, %s, \"%s\");", typ, i,
+			    argsP->argDescr[i].inValue[0], name);
 		}
 	    }
 	} else if (!strcmp(argsP->argDescr[i].direction, "INOUT")) {
@@ -473,21 +472,21 @@ PRIVATE void WriteServC(rpcArgs *argsP, FILE *srv_h, char *serverName, int sign_
 	    typ = argsP->argDescr[i].type;
 
 	    if (strstr(typ, "String")) {
-		fprintf(srv_h, "\n\tCHECK%s((char *)*a%d, %s, \"%s\");",
-			typ, i, argsP->argDescr[i].inValue[0], name);
+		fprintf(srv_h, "\n\tCHECK%s((char *)*a%d, %s, \"%s\");", typ,
+			i, argsP->argDescr[i].inValue[0], name);
 	    } else if (!strcmp(typ, "afs_int32")) {
-		fprintf(srv_h, "\n\tCHECK%s(*a%d, %sL, \"%s\");",
-			typ, i, argsP->argDescr[i].inValue[0], name);
+		fprintf(srv_h, "\n\tCHECK%s(*a%d, %sL, \"%s\");", typ, i,
+			argsP->argDescr[i].inValue[0], name);
 	    } else {
-		if(!strncmp(typ, "ar_", 3)) {
-		    for(j=0;j<IDL_FIX_ARRAY_SIZE;j++)
-			fprintf(srv_h, "\n\tCHECK%s(a%d->drpc_out_%s_t_val[%d], %s, \"%s\");",
-				(typ+3), i, typ, j, argsP->argDescr[i].inValue[j],
-				name);
-		}
-		else {
-		    fprintf(srv_h, "\n\tCHECK%s(*a%d, %s, \"%s\");",
-			    typ, i, argsP->argDescr[i].inValue[0], name);
+		if (!strncmp(typ, "ar_", 3)) {
+		    for (j = 0; j < IDL_FIX_ARRAY_SIZE; j++)
+			fprintf(srv_h,
+				"\n\tCHECK%s(a%d->drpc_out_%s_t_val[%d], %s, \"%s\");",
+				(typ + 3), i, typ, j,
+				argsP->argDescr[i].inValue[j], name);
+		} else {
+		    fprintf(srv_h, "\n\tCHECK%s(*a%d, %s, \"%s\");", typ, i,
+			    argsP->argDescr[i].inValue[0], name);
 		}
 	    }
 	}
@@ -496,18 +495,20 @@ PRIVATE void WriteServC(rpcArgs *argsP, FILE *srv_h, char *serverName, int sign_
     /*
      * free up memory for dynamic input args
      */
-    for (i=0; i < argsP->argCount; i++) {
+    for (i = 0; i < argsP->argCount; i++) {
 	if (!strncmp(argsP->argDescr[i].type, "ar_", 3)) {
 	    typ = argsP->argDescr[i].type;
-	    if(!strcmp(argsP->argDescr[i].direction, "INOUT")) {
-		fprintf(srv_h, "\n\tif (a%d->drpc_out_%s_t_val) "
+	    if (!strcmp(argsP->argDescr[i].direction, "INOUT")) {
+		fprintf(srv_h,
+			"\n\tif (a%d->drpc_out_%s_t_val) "
 			"free(a%d->drpc_out_%s_t_val);", i, typ, i, typ);
 	    }
-	    if(!strcmp(argsP->argDescr[i].direction, "INOUT") ||
-	       !strcmp(argsP->argDescr[i].direction, "OUT")) {
-		fprintf(srv_h, "\n\ta%d->drpc_out_%s_t_val = (%s *) "
-			"malloc(FIX_ARRAY_SIZE * sizeof(%s));",
-			i, typ, (typ+3), (typ+3));
+	    if (!strcmp(argsP->argDescr[i].direction, "INOUT")
+		|| !strcmp(argsP->argDescr[i].direction, "OUT")) {
+		fprintf(srv_h,
+			"\n\ta%d->drpc_out_%s_t_val = (%s *) "
+			"malloc(FIX_ARRAY_SIZE * sizeof(%s));", i, typ,
+			(typ + 3), (typ + 3));
 		fprintf(srv_h, "\n\ta%d->drpc_out_%s_t_len = FIX_ARRAY_SIZE;",
 			i, typ);
 	    }
@@ -517,79 +518,74 @@ PRIVATE void WriteServC(rpcArgs *argsP, FILE *srv_h, char *serverName, int sign_
     /*
      * set the inout and out parameters
      */
-    for (i=0; i < argsP->argCount; i++) {
+    for (i = 0; i < argsP->argCount; i++) {
 
-	if (!strcmp(argsP->argDescr[i].direction, "INOUT") ||
-		   !strcmp(argsP->argDescr[i].direction, "OUT")) {
+	if (!strcmp(argsP->argDescr[i].direction, "INOUT")
+	    || !strcmp(argsP->argDescr[i].direction, "OUT")) {
 
 	    typ = argsP->argDescr[i].type;
 
 	    if (!strncmp(typ, "ar_", 3)) {
-		for(j=0;j<IDL_FIX_ARRAY_SIZE;j++)
-		    fprintf(srv_h, "\n\ta%d->drpc_out_%s_t_val[%d] = %s;",
-			    i, typ, j, argsP->argDescr[i].outValue[j]);
+		for (j = 0; j < IDL_FIX_ARRAY_SIZE; j++)
+		    fprintf(srv_h, "\n\ta%d->drpc_out_%s_t_val[%d] = %s;", i,
+			    typ, j, argsP->argDescr[i].outValue[j]);
 	    } else if (!strcmp(typ, "afs_int32")) {
-		fprintf(srv_h, "\n\t*a%d = %sL;",
-			i, argsP->argDescr[i].outValue[0]);
+		fprintf(srv_h, "\n\t*a%d = %sL;", i,
+			argsP->argDescr[i].outValue[0]);
 	    } else if (!strcmp(typ, "varString")) {
-		if(!strcmp(argsP->argDescr[i].direction, "OUT")) {
+		if (!strcmp(argsP->argDescr[i].direction, "OUT")) {
 		    fprintf(srv_h, "\n\t*a%d = (char *) malloc(STR_MAX);", i);
 		}
-		fprintf(srv_h, "\n\tstrcpy((char *)*a%d, %s);",
-			i, argsP->argDescr[i].outValue[0]);
+		fprintf(srv_h, "\n\tstrcpy((char *)*a%d, %s);", i,
+			argsP->argDescr[i].outValue[0]);
 	    } else if (strstr(typ, "String")) {
-		fprintf(srv_h,
-			"\n\t*a%d = (drpc_%s_t)rpc_ss_allocate(%d);",
-			i, typ, strlen(argsP->argDescr[i].outValue[0])-1);
-		fprintf(srv_h, "\n\tstrcpy((char *)*a%d, %s);",
-			i, argsP->argDescr[i].outValue[0]);
+		fprintf(srv_h, "\n\t*a%d = (drpc_%s_t)rpc_ss_allocate(%d);",
+			i, typ, strlen(argsP->argDescr[i].outValue[0]) - 1);
+		fprintf(srv_h, "\n\tstrcpy((char *)*a%d, %s);", i,
+			argsP->argDescr[i].outValue[0]);
 	    } else {
-		fprintf(srv_h, "\n\t*a%d = %s;",
-			i, argsP->argDescr[i].outValue[0]);
+		fprintf(srv_h, "\n\t*a%d = %s;", i,
+			argsP->argDescr[i].outValue[0]);
 	    }
 	}
     }
 
     fprintf(srv_h,
-	    "\n\tif (errFlag) {"
-	    "\n\t\tprintf(\"%s: failed\\n\");"
-	    "\n\t\tfflush(stdout);"
-	    "\n\t}"
-	    "\n\treturn errFlag;\n}\n",
-	    name);
+	    "\n\tif (errFlag) {" "\n\t\tprintf(\"%s: failed\\n\");"
+	    "\n\t\tfflush(stdout);" "\n\t}" "\n\treturn errFlag;\n}\n", name);
 
     /*
      * second routine with arguments inside a structure
      */
-    fprintf(srv_h, "\nint A%s_s(struct rx_call *c,\n\t%s_t *s)\n{"
-		    "\n\tint errFlag = 0;", name, name);
+    fprintf(srv_h,
+	    "\nint A%s_s(struct rx_call *c,\n\t%s_t *s)\n{"
+	    "\n\tint errFlag = 0;", name, name);
 
     /*
      * check the in and inout parameters
      */
-    for (i=0; i < argsP->argCount; i++) {
+    for (i = 0; i < argsP->argCount; i++) {
 
-	if (!strcmp(argsP->argDescr[i].direction, "IN") ||
-		   (!strstr(argsP->argDescr[i].type, "String") &&
-		    !strcmp(argsP->argDescr[i].direction, "INOUT"))) {
+	if (!strcmp(argsP->argDescr[i].direction, "IN")
+	    || (!strstr(argsP->argDescr[i].type, "String")
+		&& !strcmp(argsP->argDescr[i].direction, "INOUT"))) {
 
 	    typ = argsP->argDescr[i].type;
 
-	    if(!strncmp(typ, "ar_", 3)) {
-		for(j=0;j<IDL_FIX_ARRAY_SIZE;j++)
+	    if (!strncmp(typ, "ar_", 3)) {
+		for (j = 0; j < IDL_FIX_ARRAY_SIZE; j++)
 		    fprintf(srv_h, "\n\tCHECK%s(s->a%d[%d], %s, \"%s_s\");",
-			    (typ+3), i, j, argsP->argDescr[i].inValue[j],
+			    (typ + 3), i, j, argsP->argDescr[i].inValue[j],
 			    name);
-	    }
-	    else if (strstr(typ, "String")) {
+	    } else if (strstr(typ, "String")) {
 		fprintf(srv_h, "\n\tCHECK%s((char *)s->a%d, %s, \"%s_s\");",
 			typ, i, argsP->argDescr[i].inValue[0], name);
 	    } else if (!strcmp(typ, "afs_int32")) {
-		fprintf(srv_h, "\n\tCHECK%s(s->a%d, %sL, \"%s_s\");",
-			typ, i, argsP->argDescr[i].inValue[0], name);
+		fprintf(srv_h, "\n\tCHECK%s(s->a%d, %sL, \"%s_s\");", typ, i,
+			argsP->argDescr[i].inValue[0], name);
 	    } else {
-		fprintf(srv_h, "\n\tCHECK%s(s->a%d, %s, \"%s_s\");",
-			typ, i, argsP->argDescr[i].inValue[0], name);
+		fprintf(srv_h, "\n\tCHECK%s(s->a%d, %s, \"%s_s\");", typ, i,
+			argsP->argDescr[i].inValue[0], name);
 	    }
 	}
     }
@@ -597,43 +593,38 @@ PRIVATE void WriteServC(rpcArgs *argsP, FILE *srv_h, char *serverName, int sign_
     /*
      * set the inout and out parameters
      */
-    for (i=0; i < argsP->argCount; i++) {
+    for (i = 0; i < argsP->argCount; i++) {
 
-	if (!strcmp(argsP->argDescr[i].direction, "INOUT") ||
-		   !strcmp(argsP->argDescr[i].direction, "OUT")) {
+	if (!strcmp(argsP->argDescr[i].direction, "INOUT")
+	    || !strcmp(argsP->argDescr[i].direction, "OUT")) {
 
 	    typ = argsP->argDescr[i].type;
 
-	    if(!strncmp(typ, "ar_", 3)) {
-		for(j=0;j<IDL_FIX_ARRAY_SIZE;j++)
-		    fprintf(srv_h, "\n\ts->a%d[%d]= %s;",
-			    i, j, argsP->argDescr[i].outValue[j]);
-	    }
-	    else if (!strcmp(typ, "afs_int32")) {
-		fprintf(srv_h, "\n\ts->a%d = %sL;",
-			i, argsP->argDescr[i].outValue[0]);
+	    if (!strncmp(typ, "ar_", 3)) {
+		for (j = 0; j < IDL_FIX_ARRAY_SIZE; j++)
+		    fprintf(srv_h, "\n\ts->a%d[%d]= %s;", i, j,
+			    argsP->argDescr[i].outValue[j]);
+	    } else if (!strcmp(typ, "afs_int32")) {
+		fprintf(srv_h, "\n\ts->a%d = %sL;", i,
+			argsP->argDescr[i].outValue[0]);
 	    } else if (!strcmp(typ, "varString")) {
-		fprintf(srv_h, "\n\tstrcpy((char *)s->a%d, %s);",
-			i, argsP->argDescr[i].outValue[0]);
+		fprintf(srv_h, "\n\tstrcpy((char *)s->a%d, %s);", i,
+			argsP->argDescr[i].outValue[0]);
 	    } else if (strstr(typ, "String")) {
-		fprintf(srv_h, "\n\ts->a%d = rpc_ss_allocate(%d);",
-			i, strlen(argsP->argDescr[i].outValue[0])-1);
-		fprintf(srv_h, "\n\tstrcpy((char *)s->a%d, %s);",
-			i, argsP->argDescr[i].outValue[0]);
+		fprintf(srv_h, "\n\ts->a%d = rpc_ss_allocate(%d);", i,
+			strlen(argsP->argDescr[i].outValue[0]) - 1);
+		fprintf(srv_h, "\n\tstrcpy((char *)s->a%d, %s);", i,
+			argsP->argDescr[i].outValue[0]);
 	    } else {
-		fprintf(srv_h, "\n\ts->a%d = %s;",
-			i, argsP->argDescr[i].outValue[0]);
+		fprintf(srv_h, "\n\ts->a%d = %s;", i,
+			argsP->argDescr[i].outValue[0]);
 	    }
 	}
     }
 
     fprintf(srv_h,
-	    "\n\tif (errFlag) {"
-	    "\n\t\tprintf(\"%s_s: failed\\n\");"
-	    "\n\t}"
-	    "\n\tfflush(stdout);"
-	    "\n\treturn errFlag;\n}\n",
-	    name);
+	    "\n\tif (errFlag) {" "\n\t\tprintf(\"%s_s: failed\\n\");" "\n\t}"
+	    "\n\tfflush(stdout);" "\n\treturn errFlag;\n}\n", name);
 
 
     free(name);
@@ -642,68 +633,54 @@ PRIVATE void WriteServC(rpcArgs *argsP, FILE *srv_h, char *serverName, int sign_
 /*
  * WriteMake - write the makefile for a particular client/server pair
  */
-PRIVATE void WriteMake(char *serverName, int srv_no, FILE *mak_h)
+PRIVATE void
+WriteMake(char *serverName, int srv_no, FILE * mak_h)
 {
     char p[1024];
-    char *obj=platform[2];
+    char *obj = platform[2];
 
-    sprintf(p,"%s%d", serverName, srv_no);
+    sprintf(p, "%s%d", serverName, srv_no);
     fprintf(mak_h, "%s", platform[1]);
     if (threadModel == PTHREADS) {
-	fprintf(mak_h, 
-		"CFLAGS = -KPIC -g -mt -I$(DESTDIR)include\n"
-		"%s",
+	fprintf(mak_h, "CFLAGS = -KPIC -g -mt -I$(DESTDIR)include\n" "%s",
 		platform[6]
-		);
+	    );
     } else {
-	fprintf(mak_h, 
-		"CFLAGS = -g -I$(DESTDIR)include\n"
-		"%s",
-		platform[7]
-		);
+	fprintf(mak_h, "CFLAGS = -g -I$(DESTDIR)include\n" "%s", platform[7]
+	    );
     }
     fprintf(mak_h,
 	    "\n\ntest: all\ntests: all\nall: %sClt %sSrv\n\n"
-	    "%sClt: %s.cs.%s %s.xdr.%s %sClt.%s $(LIBS)\n",
-	    p,p,p,p,obj,p,obj,p,obj
-	    );
-    if(platform == nt_symbols) {
+	    "%sClt: %s.cs.%s %s.xdr.%s %sClt.%s $(LIBS)\n", p, p, p, p, obj,
+	    p, obj, p, obj);
+    if (platform == nt_symbols) {
 	fprintf(mak_h, "\t$(EXECONLINK)\n\n");
     } else {
 	fprintf(mak_h,
 		"\t$(CC) $(CFLAGS) -o $@ %sClt.%s %s.cs.%s %s.xdr.%s "
-		"$(LIBS) $(XLIBS)\n\n",
-		p,obj,p,obj,p,obj
-		);
+		"$(LIBS) $(XLIBS)\n\n", p, obj, p, obj, p, obj);
     }
     fprintf(mak_h,
-	    "%s.xdr.c: %s.xg\n\n"
-	    "%s.h %s.cs.c %s.ss.c: %s.xg\n"
-	    "\t$(RXGEN) %s.xg\n"
-	    "\t%s %s.cs.c\n"
-	    "\t%s %s.ss.c\n\n",
-	    p,p,p,p,p,p,p,platform[3],p,platform[3],p);
-    fprintf(mak_h,
-	    "%sSrv: %s.ss.%s %s.xdr.%s %sSrv.%s $(LIBS)\n",
-	    p,p,obj,p,obj,p,obj);
+	    "%s.xdr.c: %s.xg\n\n" "%s.h %s.cs.c %s.ss.c: %s.xg\n"
+	    "\t$(RXGEN) %s.xg\n" "\t%s %s.cs.c\n" "\t%s %s.ss.c\n\n", p, p, p,
+	    p, p, p, p, platform[3], p, platform[3], p);
+    fprintf(mak_h, "%sSrv: %s.ss.%s %s.xdr.%s %sSrv.%s $(LIBS)\n", p, p, obj,
+	    p, obj, p, obj);
 
-    if(platform == nt_symbols) {
+    if (platform == nt_symbols) {
 	fprintf(mak_h, "\t$(EXECONLINK)\n\n");
     } else {
 	fprintf(mak_h,
 		"\t$(CC) $(CFLAGS) -o $@ %sSrv.o %s.ss.o %s.xdr.o "
-		"$(LIBS) $(XLIBS)\n\n",
-		p,p,p
-		);
+		"$(LIBS) $(XLIBS)\n\n", p, p, p);
     }
 
-    if(platform == unix_symbols) {
+    if (platform == unix_symbols) {
 	fprintf(mak_h,
-		"clean:\n"
-		"\t/bin/rm -f %sClt %s.h %s.cs.c %s.ss.c core "
+		"clean:\n" "\t/bin/rm -f %sClt %s.h %s.cs.c %s.ss.c core "
 		"%sSrv %sSrv.o \\\n"
-		"\t%sClt.o %s.cs.o %s.ss.o %s.xdr.c %s.xdr.o\n",
-		p,p,p,p,p,p,p,p,p,p,p);
+		"\t%sClt.o %s.cs.o %s.ss.o %s.xdr.c %s.xdr.o\n", p, p, p, p,
+		p, p, p, p, p, p, p);
     }
 
 }
@@ -711,9 +688,10 @@ PRIVATE void WriteMake(char *serverName, int srv_no, FILE *mak_h)
 /*
  * WriteCltTrailer - finish writing client source
  */
-PRIVATE void WriteCltTrailer(char *serverName, int first, int last, FILE *itl_h)
+PRIVATE void
+WriteCltTrailer(char *serverName, int first, int last, FILE * itl_h)
 {
-    int i=0;
+    int i = 0;
 
     /*
      * Write out 1 function that calls all the manager functions
@@ -724,20 +702,20 @@ PRIVATE void WriteCltTrailer(char *serverName, int first, int last, FILE *itl_h)
 	fprintf(itl_h, "\n\nint threadFunc(int *arg) {\n");
     }
 
-    fprintf(itl_h, 
-	    "\tstruct rx_connection *conn;\n"
-	    "\tint error=0;\n\n"
-	    "\tint i = (int) arg;\n\n"
-	    );
+    fprintf(itl_h,
+	    "\tstruct rx_connection *conn;\n" "\tint error=0;\n\n"
+	    "\tint i = (int) arg;\n\n");
 
-    fprintf(itl_h, "\tconn = rx_GetCachedConnection(serverAddr,serverPort,4,secClass,secIndex);\n");
+    fprintf(itl_h,
+	    "\tconn = rx_GetCachedConnection(serverAddr,serverPort,4,secClass,secIndex);\n");
 
     fprintf(itl_h, "\twhile(i--) {\n");
 
-    if (first == 0) first = 1;
-    for(i=first;i<last;i++) {
-	fprintf(itl_h, "\t\tC_%s%d(conn);\n",serverName, i);
-	fprintf(itl_h, "\t\tC_%s%d_s(conn);\n",serverName, i);
+    if (first == 0)
+	first = 1;
+    for (i = first; i < last; i++) {
+	fprintf(itl_h, "\t\tC_%s%d(conn);\n", serverName, i);
+	fprintf(itl_h, "\t\tC_%s%d_s(conn);\n", serverName, i);
     }
     fprintf(itl_h, "\t}\n");
 
@@ -746,123 +724,84 @@ PRIVATE void WriteCltTrailer(char *serverName, int first, int last, FILE *itl_h)
     if (threadModel == PTHREADS) {
 	fprintf(itl_h, "\treturn (void *) 0;\n");
     } else {
-	fprintf(itl_h, 
-	    "\tLWP_CALL(LWP_SignalProcess,(&done));\n"
-	    "\treturn 0;\n"
-	    );
+	fprintf(itl_h,
+		"\tLWP_CALL(LWP_SignalProcess,(&done));\n" "\treturn 0;\n");
     }
 
     fprintf(itl_h, "}\n");
 
     fprintf(itl_h,
-	    "\n\nstatic void DoRun(struct cmd_syndesc *as, char *arock) {\n"
-	    );
+	    "\n\nstatic void DoRun(struct cmd_syndesc *as, char *arock) {\n");
 
     if (threadModel == PTHREADS) {
 	fprintf(itl_h, "\tpthread_t *tid;\n");
     } else {
 	fprintf(itl_h, "\tPROCESS *tid;\n");
     }
-    
+
     fprintf(itl_h,
-	    "\tint i,j;\n"
-	    "\tunsigned int numThreads=0,numIterations=0;\n"
-	    "\tint errflg=0;\n"
-	    "\tstruct hostent *host=NULL;\n\n"
+	    "\tint i,j;\n" "\tunsigned int numThreads=0,numIterations=0;\n"
+	    "\tint errflg=0;\n" "\tstruct hostent *host=NULL;\n\n"
 	    "\tnumThreads = atoi(as->parms[0].items->data);\n"
 	    "\tnumIterations = atoi(as->parms[1].items->data);\n"
 	    "\tsecType = atoi(as->parms[2].items->data);\n"
 	    "\tencLevel = atoi(as->parms[3].items->data);\n"
 	    "\tserverPort = htons(atoi(as->parms[4].items->data));\n"
 	    "\tif ((host = hostutil_GetHostByName(as->parms[5].items->data))==0) {\n"
-	    "\t\terrflg++;\n"
-	    "\t}\n"
-	    "\telse {\n"
+	    "\t\terrflg++;\n" "\t}\n" "\telse {\n"
 	    "\t\tmemcpy((void *) &serverAddr, (const void *)host->h_addr, sizeof(serverAddr));\n"
-	    "\t}\n"
-	    "\tif ((secType<1) || (secType>2)) errflg++;\n"
+	    "\t}\n" "\tif ((secType<1) || (secType>2)) errflg++;\n"
 	    "\tif ((encLevel<0) || (encLevel>2)) errflg++;\n"
 	    "\tif ((serverPort == 0) ||(numThreads == 0) ||(numIterations == 0)) errflg++;\n"
-	    "\tif (errflg) {\n"
-	    "\t\tprintf(\"invalid argument\\n\");\n"
-	    "\t\texit(1);\n"
-	    "\t}\n\n"
-	    "\tif(rx_Init(htons(0)) < 0) {\n"
-	    "\t\texit(1);\n"
-	    "\t}\n\n"
-	    "\tswitch(secType) {\n"
-	    "\t\tcase 1:\n"
+	    "\tif (errflg) {\n" "\t\tprintf(\"invalid argument\\n\");\n"
+	    "\t\texit(1);\n" "\t}\n\n" "\tif(rx_Init(htons(0)) < 0) {\n"
+	    "\t\texit(1);\n" "\t}\n\n" "\tswitch(secType) {\n" "\t\tcase 1:\n"
 	    "\t\t\tsecIndex = 0;\n"
 	    "\t\t\tsecClass = rxnull_NewClientSecurityObject();\n"
-	    "\t\t\tbreak;\n"
-	    "\t\tcase 2:\n"
+	    "\t\t\tbreak;\n" "\t\tcase 2:\n"
 	    "\t\t\tif (GetTicket (&kvno, &Ksession, &ticketLen, ticket) == 0) {\n"
 	    "\t\t\t\tsecIndex = 2;\n"
 	    "\t\t\t\tsecClass = rxkad_NewClientSecurityObject(encLevel,\n"
-	    "\t\t\t\t&Ksession, kvno, ticketLen, ticket);\n"
-	    "\t\t\t}\n"
-	    "\t\t\tbreak;\n"
-	    "\t\tdefault:\n"
-	    "\t\t\tbreak;\n"
-	    "\t}\n"
-	    "\tassert(secClass);\n\n"
-	    );
+	    "\t\t\t\t&Ksession, kvno, ticketLen, ticket);\n" "\t\t\t}\n"
+	    "\t\t\tbreak;\n" "\t\tdefault:\n" "\t\t\tbreak;\n" "\t}\n"
+	    "\tassert(secClass);\n\n");
     if (threadModel == PTHREADS) {
 	fprintf(itl_h,
-		"#if defined sun\n"
-		"\tthr_setconcurrency(numThreads);\n"
-		"#endif\n"
-		"\ttid = (pthread_t *) "
-		"malloc(numThreads*(sizeof(pthread_t)));\n"
-		);
+		"#if defined sun\n" "\tthr_setconcurrency(numThreads);\n"
+		"#endif\n" "\ttid = (pthread_t *) "
+		"malloc(numThreads*(sizeof(pthread_t)));\n");
     } else {
 	fprintf(itl_h,
-		"\ttid = (PROCESS *) malloc(numThreads*(sizeof(PROCESS *)));\n"
-		);
+		"\ttid = (PROCESS *) malloc(numThreads*(sizeof(PROCESS *)));\n");
     }
 
-    fprintf(itl_h,
-	    "\tassert(tid);\n"
-	    "\tfor(j=0;j<numThreads;j++) {\n"
-	    );
+    fprintf(itl_h, "\tassert(tid);\n" "\tfor(j=0;j<numThreads;j++) {\n");
     if (threadModel == PTHREADS) {
 	fprintf(itl_h,
 		"\t\ti = pthread_create(&tid[j], (const pthread_attr_t *) 0,\n"
 		"\t\tthreadFunc, (void *) numIterations);\n"
-		"\t\tassert(i==0);\n"
-		);
+		"\t\tassert(i==0);\n");
     } else {
 	fprintf(itl_h,
-		"\t\tLWP_CALL(LWP_CreateProcess,(threadFunc, 10*4096, LWP_NORMAL_PRIORITY, numIterations, \"foo\", &tid[j]));\n"
-		);
+		"\t\tLWP_CALL(LWP_CreateProcess,(threadFunc, 10*4096, LWP_NORMAL_PRIORITY, numIterations, \"foo\", &tid[j]));\n");
     }
 
-    fprintf(itl_h,
-	    "\t}\n"
-	    "\tfor(j=0;j<numThreads;j++) {\n"
-	    );
+    fprintf(itl_h, "\t}\n" "\tfor(j=0;j<numThreads;j++) {\n");
     if (threadModel == PTHREADS) {
-	fprintf(itl_h, 
+	fprintf(itl_h,
 		"\t\ti = pthread_join(tid[j], (void **) 0);\n"
-		"\t\tassert(i==0);\n"
-		);
+		"\t\tassert(i==0);\n");
     } else {
 	fprintf(itl_h, "\t\tLWP_CALL(LWP_WaitProcess,(&done));\n");
     }
-    fprintf(itl_h,
-	    "\t}\n"
-	    "\trx_Finalize();\n"
-	    "\tfree(tid);\n"
-	    "}\n"
-	    );
+    fprintf(itl_h, "\t}\n" "\trx_Finalize();\n" "\tfree(tid);\n" "}\n");
 
     /*
      * Write command syntax function
      */
 
     fprintf(itl_h,
-	    "static void SetupRunCmd(void) {\n"
-	    "\tstruct cmd_syndesc *ts;\n"
+	    "static void SetupRunCmd(void) {\n" "\tstruct cmd_syndesc *ts;\n"
 	    "\tts = cmd_CreateSyntax(NULL,DoRun, 0, \"run the test client program\");\n"
 	    "\tcmd_AddParm(ts, \"-threadCount\", CMD_SINGLE, CMD_REQUIRED, \"number of threads to spawn\");\n"
 	    "\tcmd_AddParm(ts, \"-iterationCount\", CMD_SINGLE, CMD_REQUIRED, \"number of iterations to make over entire interface for each thread\");\n"
@@ -870,22 +809,17 @@ PRIVATE void WriteCltTrailer(char *serverName, int first, int last, FILE *itl_h)
 	    "\tcmd_AddParm(ts, \"-encLevel\", CMD_SINGLE, CMD_REQUIRED, \"encryption level to use, (0-> rxkad_clear, 1 -> rxkad_auth, 2 -> rxkad_crypt)\");\n"
 	    "\tcmd_AddParm(ts, \"-serverPort\", CMD_SINGLE, CMD_REQUIRED, \"port that server is using\");\n"
 	    "\tcmd_AddParm(ts, \"-serverHost\", CMD_SINGLE, CMD_REQUIRED, \"host where server is running\");\n"
-	    "}\n"
-	    );
+	    "}\n");
 
     /*
      * Write client main
      */
 
     fprintf(itl_h,
-	    "int main (int argc, char *argv[]) {\n"
-	    "\tint code;\n\n"
-	    "\tinitialize_CMD_error_table();\n"
-	    "\tSetupRunCmd();\n"
-	    "\tcode = cmd_Dispatch(argc, argv);\n\n"
-	    "\treturn(code);\n"
-	    "\t}\n"
-	    );
+	    "int main (int argc, char *argv[]) {\n" "\tint code;\n\n"
+	    "\tinitialize_CMD_error_table();\n" "\tSetupRunCmd();\n"
+	    "\tcode = cmd_Dispatch(argc, argv);\n\n" "\treturn(code);\n"
+	    "\t}\n");
 
 }
 
@@ -893,63 +827,53 @@ PRIVATE void WriteCltTrailer(char *serverName, int first, int last, FILE *itl_h)
  * Create macros useful for checking input/output parameters
  */
 
-PRIVATE void WriteTestMacros(FILE *f) {
+PRIVATE void
+WriteTestMacros(FILE * f)
+{
     fprintf(f,
-	"\n#define CHECKchar(x,y,z) if ((x)!=(y)) { printf(\"%%s: Got '%%c',"
-	"expected '%%c'\\n\", z, (char)x, (char)(y)); fflush(stdout); "
-	"errFlag = 1; } "
-	"\n#define CHECKshort(x,y,z) if ((x)!=(y)) "
-	"{ printf(\"%%s: Got 0x%%04x, "
-	"expected 0x%%04x\\n\", z, x, y); fflush(stdout); "
-	"errFlag = 1; } "
-	"\n#define CHECKint32(x,y,z) if ((x)!=(y)) "
-	"{ printf(\"%%s: Got 0x%%08x, "
-	"expected 0x%%08x\\n\", z, x, y); fflush(stdout); "
-	"errFlag = 1; } "
-	"\n#define CHECKfloat(x,y,z) if (((x)/(y)<.999999) "
-	"|| ((x)/(y)>1.000001)) "
-	"{ printf(\"%%s: Got %%2.8e, expected %%2.8e\\n\", z, x, y); "
-	"fflush(stdout); "
-	"errFlag = 1; } "
-	"\n#define CHECKdouble(x,y,z) if (((x)/(y)<.999999999999999) || "
-	"((x)/(y)>1.000000000000001)) { printf(\"%%s: Got %%2.16e, "
-	"expected %%2.16e\\n\", z, x, y); fflush(stdout); errFlag = 1; }"
-	"\n#define CHECKvarString(x,y,z) if (strcmp((x),(y))) { printf(\"%%s: "
-	"Got \\\"%%s\\\", expected \\\"%%s\\\"\\n\", z, x, y); fflush(stdout); "
-	"errFlag = 1; } \n");
+	    "\n#define CHECKchar(x,y,z) if ((x)!=(y)) { printf(\"%%s: Got '%%c',"
+	    "expected '%%c'\\n\", z, (char)x, (char)(y)); fflush(stdout); "
+	    "errFlag = 1; } " "\n#define CHECKshort(x,y,z) if ((x)!=(y)) "
+	    "{ printf(\"%%s: Got 0x%%04x, "
+	    "expected 0x%%04x\\n\", z, x, y); fflush(stdout); "
+	    "errFlag = 1; } " "\n#define CHECKint32(x,y,z) if ((x)!=(y)) "
+	    "{ printf(\"%%s: Got 0x%%08x, "
+	    "expected 0x%%08x\\n\", z, x, y); fflush(stdout); "
+	    "errFlag = 1; } "
+	    "\n#define CHECKfloat(x,y,z) if (((x)/(y)<.999999) "
+	    "|| ((x)/(y)>1.000001)) "
+	    "{ printf(\"%%s: Got %%2.8e, expected %%2.8e\\n\", z, x, y); "
+	    "fflush(stdout); " "errFlag = 1; } "
+	    "\n#define CHECKdouble(x,y,z) if (((x)/(y)<.999999999999999) || "
+	    "((x)/(y)>1.000000000000001)) { printf(\"%%s: Got %%2.16e, "
+	    "expected %%2.16e\\n\", z, x, y); fflush(stdout); errFlag = 1; }"
+	    "\n#define CHECKvarString(x,y,z) if (strcmp((x),(y))) { printf(\"%%s: "
+	    "Got \\\"%%s\\\", expected \\\"%%s\\\"\\n\", z, x, y); fflush(stdout); "
+	    "errFlag = 1; } \n");
 }
 
 /*
  * WriteCltHeader - write the begining of the client code.
  */
-PRIVATE void WriteCltHeader(char *serverName, int srv_no, FILE *itl_h)
+PRIVATE void
+WriteCltHeader(char *serverName, int srv_no, FILE * itl_h)
 {
     fprintf(itl_h, "#include <stdio.h>\n");
     if (threadModel == PTHREADS) {
-	    fprintf(itl_h,"#include <pthread.h>\n");
+	fprintf(itl_h, "#include <pthread.h>\n");
     }
     fprintf(itl_h,
-	    "%s"
-	    "#include <assert.h>\n"
-	    "#include <rx/rx.h>\n"
-	    "#include <rx/rx_null.h>\n"
-	    "#include <rx/rxkad.h>\n"
-	    "#include <afs/cmd.h>\n"
-	    "#include \"%s%d.h\"\n"
-	    ,
-	    platform[4], serverName, srv_no);
+	    "%s" "#include <assert.h>\n" "#include <rx/rx.h>\n"
+	    "#include <rx/rx_null.h>\n" "#include <rx/rxkad.h>\n"
+	    "#include <afs/cmd.h>\n" "#include \"%s%d.h\"\n", platform[4],
+	    serverName, srv_no);
     if (threadModel == LWPS) {
 	fprintf(itl_h,
-	    "\n\n#define LWP_CALL(fnName, params) \\\n"
-	    "{ \\\n"
-	    "\tint rc; \\\n"
-	    "\trc = fnName params; \\\n"
-	    "\tif (rc != LWP_SUCCESS) { \\\n"
-	    "\t\tprintf(\"call to %%s failed with %%d\\n\", # fnName, rc); \\\n"
-	    "\t\texit(1); \\\n"
-	    "\t} \\\n"
-	    "};\n\n"
-	    "char done;\n\n");
+		"\n\n#define LWP_CALL(fnName, params) \\\n" "{ \\\n"
+		"\tint rc; \\\n" "\trc = fnName params; \\\n"
+		"\tif (rc != LWP_SUCCESS) { \\\n"
+		"\t\tprintf(\"call to %%s failed with %%d\\n\", # fnName, rc); \\\n"
+		"\t\texit(1); \\\n" "\t} \\\n" "};\n\n" "char done;\n\n");
     }
 
     fprintf(itl_h,
@@ -959,29 +883,18 @@ PRIVATE void WriteCltHeader(char *serverName, int srv_no, FILE *itl_h)
 	    "\nextern struct hostent *hostutil_GetHostByName();\n\n"
 	    "static long GetTicket (long *versionP,\n"
 	    "\tstruct ktc_encryptionKey *session,\n"
-	    "\tint * ticketLenP, char *ticket)\n"
-	    "{\n"
-	    "\tlong code;\n"
+	    "\tint * ticketLenP, char *ticket)\n" "{\n" "\tlong code;\n"
 	    "\tdes_init_random_number_generator (&serviceKey);\n"
 	    "\tcode = des_random_key (session);\n"
-	    "\tif (code) return code;\n"
-	    "\t*ticketLenP = 0;\n"
+	    "\tif (code) return code;\n" "\t*ticketLenP = 0;\n"
 	    "\tcode = tkt_MakeTicket(ticket, ticketLenP, &serviceKey,\n"
-	    "\t\t\"tclnt\", \"\", \"\",\n"
-	    "\t\t0, 0xffffffff, session, 0,\n"
-	    "\t\t\"tsrvr\", \"\");\n"
-	    "\tif (code) return code;\n"
-	    "\t*versionP = serviceKeyVersion;\n"
-	    "\treturn 0;\n"
-	    "}\n\n"
+	    "\t\t\"tclnt\", \"\", \"\",\n" "\t\t0, 0xffffffff, session, 0,\n"
+	    "\t\t\"tsrvr\", \"\");\n" "\tif (code) return code;\n"
+	    "\t*versionP = serviceKeyVersion;\n" "\treturn 0;\n" "}\n\n"
 	    "static int secType,encLevel,serverPort,serverAddr;\n"
-	    "struct rx_securityClass *secClass;\n"
-	    "int secIndex;\n"
-	    "long kvno;\n"
-	    "char ticket[MAXKTCTICKETLEN];\n"
-	    "int ticketLen;\n"
-	    "struct ktc_encryptionKey Ksession;\n\n"
-	    );
+	    "struct rx_securityClass *secClass;\n" "int secIndex;\n"
+	    "long kvno;\n" "char ticket[MAXKTCTICKETLEN];\n"
+	    "int ticketLen;\n" "struct ktc_encryptionKey Ksession;\n\n");
     WriteTestMacros(itl_h);
 
 }
@@ -989,8 +902,8 @@ PRIVATE void WriteCltHeader(char *serverName, int srv_no, FILE *itl_h)
 /*
  * WriteCltInit -- write the initialization for each param
  */
-PRIVATE void WriteCltInit(arg_tuple *arg, FILE *itl_h, int i, 
-			  int structFlag)
+PRIVATE void
+WriteCltInit(arg_tuple * arg, FILE * itl_h, int i, int structFlag)
 {
     int j;
     char *s = (structFlag) ? "s." : "";
@@ -998,30 +911,26 @@ PRIVATE void WriteCltInit(arg_tuple *arg, FILE *itl_h, int i,
     if ((!strncmp(arg->direction, "IN", 2) || structFlag)) {
 	if (!strncmp(arg->type, "varString", 9)) {
 	    fprintf(itl_h, "\tstrcpy(%sa%d, %s);\n", s, i, arg->inValue[0]);
-	}
-	else if (!strncmp(arg->type, "ar_", 3)) {
-	    if(!structFlag) {
-		fprintf(itl_h, "\t%sa%d.drpc_out_%s_t_len = FIX_ARRAY_SIZE;\n",
-			s, i, arg->type);
-		fprintf(itl_h, 
+	} else if (!strncmp(arg->type, "ar_", 3)) {
+	    if (!structFlag) {
+		fprintf(itl_h,
+			"\t%sa%d.drpc_out_%s_t_len = FIX_ARRAY_SIZE;\n", s, i,
+			arg->type);
+		fprintf(itl_h,
 			"\t%sa%d.drpc_out_%s_t_val = "
-			"(%s *) malloc(FIX_ARRAY_SIZE * sizeof(%s));\n",
-			s, i, arg->type, (arg->type + 3), (arg->type + 3));
+			"(%s *) malloc(FIX_ARRAY_SIZE * sizeof(%s));\n", s, i,
+			arg->type, (arg->type + 3), (arg->type + 3));
 	    }
-	    for(j=0;j<IDL_FIX_ARRAY_SIZE;j++) {
-		if(structFlag) {
-		    fprintf(itl_h, 
-			    "\t%sa%d[%d] = %s;\n",
-			    s, i, j,arg->inValue[j]);
-		}
-		else {
-		    fprintf(itl_h, 
-			    "\t%sa%d.drpc_out_%s_t_val[%d] = %s;\n",
-			    s, i, arg->type,j,arg->inValue[j]);
+	    for (j = 0; j < IDL_FIX_ARRAY_SIZE; j++) {
+		if (structFlag) {
+		    fprintf(itl_h, "\t%sa%d[%d] = %s;\n", s, i, j,
+			    arg->inValue[j]);
+		} else {
+		    fprintf(itl_h, "\t%sa%d.drpc_out_%s_t_val[%d] = %s;\n", s,
+			    i, arg->type, j, arg->inValue[j]);
 		}
 	    }
-	}
-	else {
+	} else {
 	    fprintf(itl_h, "\t%sa%d = %s;\n", s, i, arg->inValue[0]);
 	}
     }
@@ -1030,24 +939,23 @@ PRIVATE void WriteCltInit(arg_tuple *arg, FILE *itl_h, int i,
 /*
  * WriteCltCall -- write each parameter for a call
  */
-PRIVATE void WriteCltCall(arg_tuple *arg, FILE *itl_h, int i) {
+PRIVATE void
+WriteCltCall(arg_tuple * arg, FILE * itl_h, int i)
+{
 
     if (!strncmp(arg->type, "varString", 9)) {
-	if ((!strncmp(arg->direction, "OUT", 3)) ||
-	    (!strncmp(arg->direction, "INOUT", 5))) {
+	if ((!strncmp(arg->direction, "OUT", 3))
+	    || (!strncmp(arg->direction, "INOUT", 5))) {
 	    fprintf(itl_h, "&a%d_p", i);
-	}
-	else {
+	} else {
 	    fprintf(itl_h, "a%d_p", i);
 	}
-    }
-    else {
-	if ((!strncmp(arg->direction, "OUT", 3)) ||
-	    (!strncmp(arg->direction, "INOUT", 5)) || 
-	    (!strncmp(arg->type, "ar_", 3))) {
+    } else {
+	if ((!strncmp(arg->direction, "OUT", 3))
+	    || (!strncmp(arg->direction, "INOUT", 5))
+	    || (!strncmp(arg->type, "ar_", 3))) {
 	    fprintf(itl_h, "&a%d", i);
-	}
-	else {
+	} else {
 	    fprintf(itl_h, "a%d", i);
 	}
     }
@@ -1056,21 +964,20 @@ PRIVATE void WriteCltCall(arg_tuple *arg, FILE *itl_h, int i) {
 /*
  * WriteCltDecl -- write the declaration for a parameter
  */
-PRIVATE void WriteCltDecl(arg_tuple *arg, FILE *itl_h, int i) {
+PRIVATE void
+WriteCltDecl(arg_tuple * arg, FILE * itl_h, int i)
+{
 
     if (!strncmp(arg->type, "ar_", 3)) {
 	if (!strncmp(arg->direction, "OUT", 3)) {
 	    fprintf(itl_h, "\tdrpc_out_%s_t a%d = {0,0};\n", arg->type, i);
-	}
-	else {
+	} else {
 	    fprintf(itl_h, "\tdrpc_out_%s_t a%d;\n", arg->type, i);
 	}
-    }
-    else if (!strncmp(arg->type, "varString", 9)) {
+    } else if (!strncmp(arg->type, "varString", 9)) {
 	fprintf(itl_h, "\tchar a%d[STR_MAX];\n", i);
 	fprintf(itl_h, "\tchar *a%d_p = a%d;\n", i, i);
-    }
-    else {
+    } else {
 	fprintf(itl_h, "\t%s a%d;\n", arg->type, i);
     }
 }
@@ -1079,10 +986,11 @@ PRIVATE void WriteCltDecl(arg_tuple *arg, FILE *itl_h, int i) {
 /*
  * WriteClt -- write the rpcs in the client
  */
-PRIVATE void WriteClt(rpcArgs *argsP, char *serverName, int sign_no, FILE *itl_h)
+PRIVATE void
+WriteClt(rpcArgs * argsP, char *serverName, int sign_no, FILE * itl_h)
 {
     char *name, *name2, *typ;
-    int i,j;
+    int i, j;
 
     name = GetName(serverName, sign_no);
     name2 = GetDescription(argsP);
@@ -1092,13 +1000,13 @@ PRIVATE void WriteClt(rpcArgs *argsP, char *serverName, int sign_no, FILE *itl_h
     fprintf(itl_h, "\nvoid C_%s(struct rx_connection *conn) {\n", name);
 
     /* declare each arg */
-    for (i=0; i < argsP->argCount; i++) {
+    for (i = 0; i < argsP->argCount; i++) {
 	WriteCltDecl(&argsP->argDescr[i], itl_h, i);
     }
     fprintf(itl_h, "\tint error;\n\tint errFlag;\n\n");
 
     /* initialize IN/INOUT args */
-    for (i=0; i < argsP->argCount; i++) {
+    for (i = 0; i < argsP->argCount; i++) {
 	WriteCltInit(&argsP->argDescr[i], itl_h, i, FALSE);
     }
 
@@ -1106,44 +1014,41 @@ PRIVATE void WriteClt(rpcArgs *argsP, char *serverName, int sign_no, FILE *itl_h
     fprintf(itl_h, "\terror = A%s(conn, ", name);
 
     /* pass each arg */
-    for (i=0; i < argsP->argCount; i++) {
+    for (i = 0; i < argsP->argCount; i++) {
 	WriteCltCall(&argsP->argDescr[i], itl_h, i);
-	fprintf(itl_h, ((i < (argsP->argCount -1))) ? "," : ");\n");
+	fprintf(itl_h, ((i < (argsP->argCount - 1))) ? "," : ");\n");
     }
 
-    fprintf(itl_h, 
+    fprintf(itl_h,
 	    "\tif (error != 0) {\n"
 	    "\t\tprintf(\"C_%s failed %%d\\n\", error);\n"
-	    "\t\tfflush(stdout);\n"
-	    "\t\treturn;\n"
-	    "\t}\n",
-	    name);
+	    "\t\tfflush(stdout);\n" "\t\treturn;\n" "\t}\n", name);
 
     /*
      * check the in and inout parameters
      */
-    for (i=0; i < argsP->argCount; i++) {
+    for (i = 0; i < argsP->argCount; i++) {
 
-	if ((!strcmp(argsP->argDescr[i].direction, "OUT")) ||
-		    (!strcmp(argsP->argDescr[i].direction, "INOUT"))) {
+	if ((!strcmp(argsP->argDescr[i].direction, "OUT"))
+	    || (!strcmp(argsP->argDescr[i].direction, "INOUT"))) {
 
 	    typ = argsP->argDescr[i].type;
 
-	    if(!strncmp(typ, "ar_", 3)) {
-		for(j=0;j<IDL_FIX_ARRAY_SIZE;j++)
-		    fprintf(itl_h, "\n\tCHECK%s(a%d.drpc_out_%s_t_val[%d], %s, \"C_%s_s\");",
-			    (typ+3), i, typ, j, argsP->argDescr[i].outValue[j],
-			    name);
-	    }
-	    else if (strstr(typ, "String")) {
+	    if (!strncmp(typ, "ar_", 3)) {
+		for (j = 0; j < IDL_FIX_ARRAY_SIZE; j++)
+		    fprintf(itl_h,
+			    "\n\tCHECK%s(a%d.drpc_out_%s_t_val[%d], %s, \"C_%s_s\");",
+			    (typ + 3), i, typ, j,
+			    argsP->argDescr[i].outValue[j], name);
+	    } else if (strstr(typ, "String")) {
 		fprintf(itl_h, "\n\tCHECK%s((char *)a%d, %s, \"C_%s_s\");",
 			typ, i, argsP->argDescr[i].outValue[0], name);
 	    } else if (!strcmp(typ, "afs_int32")) {
-		fprintf(itl_h, "\n\tCHECK%s(a%d, %sL, \"C_%s_s\");",
-			typ, i, argsP->argDescr[i].outValue[0], name);
+		fprintf(itl_h, "\n\tCHECK%s(a%d, %sL, \"C_%s_s\");", typ, i,
+			argsP->argDescr[i].outValue[0], name);
 	    } else {
-		fprintf(itl_h, "\n\tCHECK%s(a%d, %s, \"C_%s_s\");",
-			typ, i, argsP->argDescr[i].outValue[0], name);
+		fprintf(itl_h, "\n\tCHECK%s(a%d, %s, \"C_%s_s\");", typ, i,
+			argsP->argDescr[i].outValue[0], name);
 	    }
 	}
     }
@@ -1151,10 +1056,11 @@ PRIVATE void WriteClt(rpcArgs *argsP, char *serverName, int sign_no, FILE *itl_h
     /*
      * free up memory for dynamic input args
      */
-    for (i=0; i < argsP->argCount; i++) {
+    for (i = 0; i < argsP->argCount; i++) {
 	if (!strncmp(argsP->argDescr[i].type, "ar_", 3)) {
 	    typ = argsP->argDescr[i].type;
-	    fprintf(itl_h, "\n\tif (a%d.drpc_out_%s_t_val) "
+	    fprintf(itl_h,
+		    "\n\tif (a%d.drpc_out_%s_t_val) "
 		    "free(a%d.drpc_out_%s_t_val);", i, typ, i, typ);
 	}
     }
@@ -1171,46 +1077,42 @@ PRIVATE void WriteClt(rpcArgs *argsP, char *serverName, int sign_no, FILE *itl_h
     fprintf(itl_h, "\tint error;\n\tint errFlag;\n\n");
 
     /* initialize IN/INOUT args */
-    for (i=0; i < argsP->argCount; i++) {
+    for (i = 0; i < argsP->argCount; i++) {
 	WriteCltInit(&argsP->argDescr[i], itl_h, i, TRUE);
     }
 
     /* call the server */
     fprintf(itl_h, "\terror = A%s_s(conn, &s);\n", name);
 
-    fprintf(itl_h, 
+    fprintf(itl_h,
 	    "\tif (error != 0) {\n"
 	    "\t\tprintf(\"C_%s_s failed %%d\\n\", error);\n"
-	    "\t\tfflush(stdout);\n"
-	    "\t\treturn;\n"
-	    "\t}\n",
-	    name);
+	    "\t\tfflush(stdout);\n" "\t\treturn;\n" "\t}\n", name);
 
     /*
      * check the in and inout parameters
      */
-    for (i=0; i < argsP->argCount; i++) {
+    for (i = 0; i < argsP->argCount; i++) {
 
-	if ((!strcmp(argsP->argDescr[i].direction, "OUT")) ||
-		    (!strcmp(argsP->argDescr[i].direction, "INOUT"))) {
+	if ((!strcmp(argsP->argDescr[i].direction, "OUT"))
+	    || (!strcmp(argsP->argDescr[i].direction, "INOUT"))) {
 
 	    typ = argsP->argDescr[i].type;
 
-	    if(!strncmp(typ, "ar_", 3)) {
-		for(j=0;j<IDL_FIX_ARRAY_SIZE;j++)
+	    if (!strncmp(typ, "ar_", 3)) {
+		for (j = 0; j < IDL_FIX_ARRAY_SIZE; j++)
 		    fprintf(itl_h, "\n\tCHECK%s(s.a%d[%d], %s, \"C_%s_s\");",
-			    (typ+3), i, j, argsP->argDescr[i].outValue[j],
+			    (typ + 3), i, j, argsP->argDescr[i].outValue[j],
 			    name);
-	    }
-	    else if (strstr(typ, "String")) {
+	    } else if (strstr(typ, "String")) {
 		fprintf(itl_h, "\n\tCHECK%s((char *)s.a%d, %s, \"C_%s_s\");",
 			typ, i, argsP->argDescr[i].outValue[0], name);
 	    } else if (!strcmp(typ, "afs_int32")) {
-		fprintf(itl_h, "\n\tCHECK%s(s.a%d, %sL, \"C_%s_s\");",
-			typ, i, argsP->argDescr[i].outValue[0], name);
+		fprintf(itl_h, "\n\tCHECK%s(s.a%d, %sL, \"C_%s_s\");", typ, i,
+			argsP->argDescr[i].outValue[0], name);
 	    } else {
-		fprintf(itl_h, "\n\tCHECK%s(s.a%d, %s, \"C_%s_s\");",
-			typ, i, argsP->argDescr[i].outValue[0], name);
+		fprintf(itl_h, "\n\tCHECK%s(s.a%d, %s, \"C_%s_s\");", typ, i,
+			argsP->argDescr[i].outValue[0], name);
 	    }
 	}
     }
@@ -1225,60 +1127,50 @@ PRIVATE void WriteClt(rpcArgs *argsP, char *serverName, int sign_no, FILE *itl_h
 /*
  * WriteXGHeader -- fill in Header info in the xg file
  */
-PRIVATE void WriteXGHeader(char *serverName, FILE *xg_h, int srv_no)
+PRIVATE void
+WriteXGHeader(char *serverName, FILE * xg_h, int srv_no)
 {
 
     /* create the interface header */
 
     fprintf(xg_h,
 	    "\n/* Do not edit this file -- it was created by a generator */\n"
-	    "\npackage A\n\n"
-	    "const STR_MAX = %d; \n"
-	    "const FIX_ARRAY_SIZE = %d; \n"
-	    "typedef char drpc_char_t; \n"
-	    "typedef short drpc_short_t; \n"
-	    "typedef long drpc_int32_t; \n"
+	    "\npackage A\n\n" "const STR_MAX = %d; \n"
+	    "const FIX_ARRAY_SIZE = %d; \n" "typedef char drpc_char_t; \n"
+	    "typedef short drpc_short_t; \n" "typedef long drpc_int32_t; \n"
 	    "typedef string drpc_varString_t<STR_MAX>; \n"
 	    "typedef drpc_char_t drpc_ar_char_t[FIX_ARRAY_SIZE]; \n"
 	    "typedef drpc_char_t drpc_out_ar_char_t<FIX_ARRAY_SIZE>; \n"
 	    "typedef drpc_short_t drpc_ar_short_t[FIX_ARRAY_SIZE]; \n"
 	    "typedef drpc_short_t drpc_out_ar_short_t<FIX_ARRAY_SIZE>; \n"
 	    "typedef drpc_int32_t drpc_ar_int32_t[FIX_ARRAY_SIZE]; \n"
-	    "typedef drpc_int32_t drpc_out_ar_int32_t<FIX_ARRAY_SIZE>; \n"
-	    ,
+	    "typedef drpc_int32_t drpc_out_ar_int32_t<FIX_ARRAY_SIZE>; \n",
 	    IDL_STR_MAX, IDL_FIX_ARRAY_SIZE);
 }
 
 /*
  * WriteServHeader -- fill in the Header info in the server file
  */
-PRIVATE void WriteServHeader(FILE *srv_h, char *serverName, int srv_no)
+PRIVATE void
+WriteServHeader(FILE * srv_h, char *serverName, int srv_no)
 {
     char *name;
 
     name = GetName(serverName, srv_no);
 
     fprintf(srv_h,
-	"\n/* Do not edit this file -- it's been created by a generator */\n\n" 
-	"%s\n"
-	"#include <stdio.h>\n"
-	"#include <string.h>\n"
-	"#include <stdlib.h>\n"
-	"#include <rx/rx.h>\n"
-	"#include <rx/rx_null.h>\n"
-	"#include <rx/rxkad.h>\n"
-	"#include <afs/cmd.h>\n"
-	"#include \"%s.h\"\n\n"
-	"struct ktc_encryptionKey serviceKey =\n"
-	"\t{0x45, 0xe3, 0x3d, 0x16, 0x29, 0x64, 0x8a, 0x8f};\n"
-	"long serviceKeyVersion = 7;\n\n"
-	"extern int AExecuteRequest();\n"
-	"extern char *optarg;\n"
-	"extern int optind, opterr, optopt;\n\n"
-	"#define VERIFY(x,y) if (!(x)) { printf y ; exit(1); }\n"
-	"#define CHECK(x) ASSERT(x)\n"
-	,
-	platform[4], name);
+	    "\n/* Do not edit this file -- it's been created by a generator */\n\n"
+	    "%s\n" "#include <stdio.h>\n" "#include <string.h>\n"
+	    "#include <stdlib.h>\n" "#include <rx/rx.h>\n"
+	    "#include <rx/rx_null.h>\n" "#include <rx/rxkad.h>\n"
+	    "#include <afs/cmd.h>\n" "#include \"%s.h\"\n\n"
+	    "struct ktc_encryptionKey serviceKey =\n"
+	    "\t{0x45, 0xe3, 0x3d, 0x16, 0x29, 0x64, 0x8a, 0x8f};\n"
+	    "long serviceKeyVersion = 7;\n\n"
+	    "extern int AExecuteRequest();\n" "extern char *optarg;\n"
+	    "extern int optind, opterr, optopt;\n\n"
+	    "#define VERIFY(x,y) if (!(x)) { printf y ; exit(1); }\n"
+	    "#define CHECK(x) ASSERT(x)\n", platform[4], name);
 
     WriteTestMacros(srv_h);
     free(name);
@@ -1287,66 +1179,46 @@ PRIVATE void WriteServHeader(FILE *srv_h, char *serverName, int srv_no)
 /*
  * WriteServTrailer -- finish up the server file
  */
-PRIVATE void WriteServTrailer(FILE *srv_h) {
+PRIVATE void
+WriteServTrailer(FILE * srv_h)
+{
 
-    fprintf(srv_h, 
+    fprintf(srv_h,
 	    "\nstatic long GetKey (char *rock, long kvno, struct ktc_encryptionKey *key) {\n"
 	    "\tmemcpy ((void *) key, (void *) &serviceKey, sizeof(*key));\n"
-	    "\treturn 0;\n"
-	    "}\n\n"
-
+	    "\treturn 0;\n" "}\n\n"
 	    "static void DoRun(struct cmd_syndesc *as, char *arock) {\n"
 	    "\tstruct rx_service *serv;\n"
 	    "\tstruct rx_securityClass *sc[3];\n\n"
-	    "\tint port=0, errflg=0;\n"
-
-	    "\tint lowThreads=4, highThreads=8;\n"
+	    "\tint port=0, errflg=0;\n" "\tint lowThreads=4, highThreads=8;\n"
 	    "\tlowThreads = atoi(as->parms[0].items->data);\n"
 	    "\thighThreads = atoi(as->parms[1].items->data);\n"
 	    "\tport = atoi(as->parms[2].items->data);\n"
-
-	    "\tif (port == 0) errflg++;\n"
-
-	    "\tif (errflg) {\n"
-	    "\t\tprintf(\"invalid argument\\n\");\n"
-	    "\t\texit(1);\n"
-	    "\t}\n"
-
+	    "\tif (port == 0) errflg++;\n" "\tif (errflg) {\n"
+	    "\t\tprintf(\"invalid argument\\n\");\n" "\t\texit(1);\n" "\t}\n"
 	    "\trx_Init(htons(port));\n"
-	    "\tsc[0] = rxnull_NewServerSecurityObject();\n"
-	    "\tsc[1] = 0;\n"
+	    "\tsc[0] = rxnull_NewServerSecurityObject();\n" "\tsc[1] = 0;\n"
 	    "\tsc[2] = rxkad_NewServerSecurityObject (rxkad_clear, 0, GetKey, 0);\n"
 	    "\tif (serv = rx_NewService(0,4,\"foo\",sc,3,AExecuteRequest)) {\n"
 	    "\t\trx_SetMinProcs(serv,lowThreads);\n"
 	    "\t\trx_SetMaxProcs(serv,highThreads);\n"
-	    "\t\trx_StartServer(1);\n"
-	    "\t}\n"
-	    "\texit(0);\n"
-            "}\n\n"
-
-	    "static void SetupRunCmd(void) {\n"
-	    "\tstruct cmd_syndesc *ts;\n"
+	    "\t\trx_StartServer(1);\n" "\t}\n" "\texit(0);\n" "}\n\n"
+	    "static void SetupRunCmd(void) {\n" "\tstruct cmd_syndesc *ts;\n"
 	    "\tts = cmd_CreateSyntax(NULL,DoRun, 0, \"run the test server program\");\n"
 	    "\tcmd_AddParm(ts, \"-lowThreadCount\", CMD_SINGLE, CMD_REQUIRED, \"minimum number of threads to spawn\");\n"
 	    "\tcmd_AddParm(ts, \"-highThreadCount\", CMD_SINGLE, CMD_REQUIRED, \"maximum number of threads to spawn\");\n"
 	    "\tcmd_AddParm(ts, \"-serverPort\", CMD_SINGLE, CMD_REQUIRED, \"port that server is using\");\n"
-	    "}\n"
-
-	    "int main(int argc, char **argv) {\n"
-	    "\tint code;\n"
-	    "\tinitialize_CMD_error_table();\n"
-	    "\tSetupRunCmd();\n"
-	    "\tcode = cmd_Dispatch(argc, argv);\n"
-	    "\treturn(code);\n"
-	    "}\n"
-	    );
+	    "}\n" "int main(int argc, char **argv) {\n" "\tint code;\n"
+	    "\tinitialize_CMD_error_table();\n" "\tSetupRunCmd();\n"
+	    "\tcode = cmd_Dispatch(argc, argv);\n" "\treturn(code);\n" "}\n");
 }
 
 /*
  * ProcessCmdLine -- processes the command line args
  */
-PRIVATE void ProcessCmdLine(int argc, char **argv,  char **serverName,
-			    char **ipFileName,  char **outputDir)
+PRIVATE void
+ProcessCmdLine(int argc, char **argv, char **serverName, char **ipFileName,
+	       char **outputDir)
 {
     if (argc == 1) {
 	PrintShortUsage;
@@ -1357,42 +1229,43 @@ PRIVATE void ProcessCmdLine(int argc, char **argv,  char **serverName,
 	if ((*++argv)[0] == '-') {
 	    switch ((*argv)[1]) {
 
-		case 'f':
-		case 'F':   /* input table file */
-		    *ipFileName = *++argv;
-		    --argc;
-		    break;
-		case 'h': /* display help */
-		case 'H':
-		    PrintLongUsage;
-		    exit(0);
-		    break;
-		case 'l':
-		case 'L':   /* use LWP threads */
-		    threadModel = LWPS;
-		    break;
-		case 's':
-		case 'S':   /* serverName */
-		    *serverName = *++argv;
-		    /* need 8 char file name, and so truncate the server name*/
-		    if ((int)strlen(*serverName) > MAX_SERV_NAME)
-			*(*serverName+MAX_SERV_NAME) = '\0';		
-		    --argc;
-		    break;
-		case 'o':
-		case 'O':
-		    *outputDir = *++argv;
-		    --argc;
-		    break;
-		case 'p':
-		case 'P':
-		     if(strcmp(*++argv,"NT")) platform = unix_symbols;
-		    --argc;
-		    break;
-		default:
-		    PrintLongUsage;
-		    exit(1);
-		    break;
+	    case 'f':
+	    case 'F':		/* input table file */
+		*ipFileName = *++argv;
+		--argc;
+		break;
+	    case 'h':		/* display help */
+	    case 'H':
+		PrintLongUsage;
+		exit(0);
+		break;
+	    case 'l':
+	    case 'L':		/* use LWP threads */
+		threadModel = LWPS;
+		break;
+	    case 's':
+	    case 'S':		/* serverName */
+		*serverName = *++argv;
+		/* need 8 char file name, and so truncate the server name */
+		if ((int)strlen(*serverName) > MAX_SERV_NAME)
+		    *(*serverName + MAX_SERV_NAME) = '\0';
+		--argc;
+		break;
+	    case 'o':
+	    case 'O':
+		*outputDir = *++argv;
+		--argc;
+		break;
+	    case 'p':
+	    case 'P':
+		if (strcmp(*++argv, "NT"))
+		    platform = unix_symbols;
+		--argc;
+		break;
+	    default:
+		PrintLongUsage;
+		exit(1);
+		break;
 	    }
 	} else {
 	    PrintShortUsage;
@@ -1404,7 +1277,8 @@ PRIVATE void ProcessCmdLine(int argc, char **argv,  char **serverName,
 }
 
 
-void main(int argc, char **argv)
+void
+main(int argc, char **argv)
 {
     FILE *table_h, *srv_h, *xg_h, *clt_h, *mak_h;
     int i, j;
@@ -1413,7 +1287,7 @@ void main(int argc, char **argv)
     char *serverName = NULL;
     char *ipFileName = NULL;
     char *outputDir = NULL;
-    int sign_no=0, start_no, srv_no;
+    int sign_no = 0, start_no, srv_no;
 
     ProcessCmdLine(argc, argv, &serverName, &ipFileName, &outputDir);
 
@@ -1451,13 +1325,15 @@ void main(int argc, char **argv)
 	    FATAL("Max no: of signatures overflow\n");
 
 	/* allocate for the arg struct */
-	args.argDescr = (arg_tuple *)calloc(args.argCount, sizeof(arg_tuple));
+	args.argDescr =
+	    (arg_tuple *) calloc(args.argCount, sizeof(arg_tuple));
 	MEM_CHK(args.argDescr, "main: Out of memory -- args.argDescr\n");
 
 	/* pick out the dirs and the types */
-	for (i=0; i < args.argCount; i++) {
-	    if(!fscanf(table_h, " ( %s %s )", args.argDescr[i].direction,
-		       args.argDescr[i].type)) {
+	for (i = 0; i < args.argCount; i++) {
+	    if (!fscanf
+		(table_h, " ( %s %s )", args.argDescr[i].direction,
+		 args.argDescr[i].type)) {
 		FATAL("main: Incorrect input file format\n");
 	    }
 	}
@@ -1498,8 +1374,8 @@ void main(int argc, char **argv)
 	}
 
 	/* initialize parameter values */
-	for (i=0; i<args.argCount; i++) {
-	    for (j = 0 ; j < IDL_FIX_ARRAY_SIZE ; j++) {
+	for (i = 0; i < args.argCount; i++) {
+	    for (j = 0; j < IDL_FIX_ARRAY_SIZE; j++) {
 		args.argDescr[i].inValue[j] = NULL;
 		args.argDescr[i].inValue2[j] = NULL;
 		args.argDescr[i].outValue[j] = NULL;
@@ -1518,8 +1394,8 @@ void main(int argc, char **argv)
 	WriteClt(&args, serverName, sign_no, clt_h);
 
 	/* free saved values */
-	for (i=0; i<args.argCount; i++) {
-	    for (j = 0 ; j < IDL_FIX_ARRAY_SIZE ; j++) {
+	for (i = 0; i < args.argCount; i++) {
+	    for (j = 0; j < IDL_FIX_ARRAY_SIZE; j++) {
 		if (args.argDescr[i].inValue[j])
 		    free(args.argDescr[i].inValue[j]);
 		if (args.argDescr[i].inValue2[j])
@@ -1534,7 +1410,7 @@ void main(int argc, char **argv)
     }
 
     WriteServTrailer(srv_h);
-    WriteCltTrailer(serverName, start_no, (sign_no +1), clt_h);
+    WriteCltTrailer(serverName, start_no, (sign_no + 1), clt_h);
 
     fclose(clt_h);
 
@@ -1550,11 +1426,11 @@ void main(int argc, char **argv)
     mak_h = OpenOutFile(outputDir, "Makefile", "");
     fprintf(mak_h, "\ntest:all\ntests:all\nall:\n");
     fprintf(mak_h, "%s", platform[8]);
-    for(i=1;i<=srv_no;i++)
-	fprintf(mak_h, "\t%s %s%d.mak %s\n", 
-		platform[0], serverName, i, platform[5]);
+    for (i = 1; i <= srv_no; i++)
+	fprintf(mak_h, "\t%s %s%d.mak %s\n", platform[0], serverName, i,
+		platform[5]);
     fprintf(mak_h, "\nclean:\n");
-    for(i=1;i<=srv_no;i++)
+    for (i = 1; i <= srv_no; i++)
 	fprintf(mak_h, "\t%s %s%d.mak clean\n", platform[0], serverName, i);
     fclose(mak_h);
 

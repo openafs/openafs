@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <sys/types.h>
 #include <afs/cmd.h>
@@ -56,21 +57,24 @@ afs_int32 DeleteDump();
 afs_int32 ScanDumpHdr();
 
 /* return the tape file name corresponding to a particular tape */
-static char *TapeName(atapeName)
-register char *atapeName; {
+static char *
+TapeName(atapeName)
+     register char *atapeName;
+{
     static char tbuffer[AFSDIR_PATH_MAX];
 
     /* construct the backup dir path */
     strcpy(tbuffer, AFSDIR_SERVER_BACKUP_DIRPATH);
     strcat(tbuffer, "/T");
-    strcat(tbuffer+1, atapeName);
+    strcat(tbuffer + 1, atapeName);
     strcat(tbuffer, ".db");
     return tbuffer;
 }
 
 /* return the dump file name corresponding to a particular dump ID */
-static char *DumpName(adumpID)
-register afs_int32 adumpID; 
+static char *
+DumpName(adumpID)
+     register afs_int32 adumpID;
 {
     static char tbuffer[AFSDIR_PATH_MAX];
     char buf[AFSDIR_PATH_MAX];
@@ -82,9 +86,11 @@ register afs_int32 adumpID;
     return tbuffer;
 }
 
-static FILE *OpenDump(adumpID, awrite)
-char *awrite;
-afs_int32 adumpID; {
+static FILE *
+OpenDump(adumpID, awrite)
+     char *awrite;
+     afs_int32 adumpID;
+{
     register char *tp;
     register FILE *tfile;
 
@@ -98,9 +104,11 @@ afs_int32 adumpID; {
  * 	non-static for recoverDB
  */
 
-FILE *OpenTape(atapeName, awrite)
-char *awrite;
-char *atapeName; {
+FILE *
+OpenTape(atapeName, awrite)
+     char *awrite;
+     char *atapeName;
+{
     register char *tp;
     register FILE *tfile;
     tp = TapeName(atapeName);
@@ -109,8 +117,10 @@ char *atapeName; {
 }
 
 /* scan for, and delete, all dumps whose parent dump ID is aparentID */
-static afs_int32 ScanForChildren(aparentID)
-afs_int32 aparentID; {
+static afs_int32
+ScanForChildren(aparentID)
+     afs_int32 aparentID;
+{
     DIR *tdir;
     register struct dirent *tde;
     afs_int32 dumpID, parent;
@@ -119,16 +129,19 @@ afs_int32 aparentID; {
     afs_int32 j2, j3, j4;
     char dname[256];
     char dumpName[1024];
-    
-    tdir = opendir(AFSDIR_SERVER_BACKUP_DIRPATH); 
-    if (!tdir) return -1;
 
-    for(tde=readdir(tdir); tde; tde=readdir(tdir)) {
+    tdir = opendir(AFSDIR_SERVER_BACKUP_DIRPATH);
+    if (!tdir)
+	return -1;
+
+    for (tde = readdir(tdir); tde; tde = readdir(tdir)) {
 	code = sscanf(tde->d_name, "D%ld.db", &dumpID);
-	if (code != 1) continue;
+	if (code != 1)
+	    continue;
 
 	tfile = OpenDump(dumpID, "r");
-	if (!tfile) continue;	/* shouldn't happen, but should continue anyway */
+	if (!tfile)
+	    continue;		/* shouldn't happen, but should continue anyway */
 
 	code = ScanDumpHdr(tfile, dname, dumpName, &parent, &j2, &j3, &j4);
 	fclose(tfile);
@@ -140,26 +153,33 @@ afs_int32 aparentID; {
 	/* if this guy's parent is the ID we're scanning for, delete it */
 	if (aparentID == parent) {
 	    code = DeleteDump(dumpID);
-	    if (code) printf("backup:dsstub: failed to delete child dump %d\n", dumpID);
+	    if (code)
+		printf("backup:dsstub: failed to delete child dump %d\n",
+		       dumpID);
 	}
     }
     closedir(tdir);
     return 0;
 }
 
-static afs_int32 DeleteDump(adumpID)
-afs_int32 adumpID; {
+static afs_int32
+DeleteDump(adumpID)
+     afs_int32 adumpID;
+{
     register char *tp;
     register afs_int32 code;
     tp = DumpName(adumpID);
     code = unlink(tp);
-    if (code) return code;
+    if (code)
+	return code;
     code = ScanForChildren(adumpID);
     return code;
 }
 
-static afs_int32 DeleteTape(atapeName)
-char *atapeName; {
+static afs_int32
+DeleteTape(atapeName)
+     char *atapeName;
+{
     register char *tp;
     register afs_int32 code;
     tp = TapeName(atapeName);
@@ -178,18 +198,15 @@ tailCompPtr(pathNamePtr)
 {
     char *ptr;
     ptr = strrchr(pathNamePtr, '/');
-    if ( ptr == 0 )
-    {
-    	/* this should never happen */
-	printf("tailCompPtr: could not find / in name(%s)\n",
-	       pathNamePtr);
-	return(pathNamePtr);
-    }
-    else
-    	ptr++;					/* skip the / */
-    return(ptr);
+    if (ptr == 0) {
+	/* this should never happen */
+	printf("tailCompPtr: could not find / in name(%s)\n", pathNamePtr);
+	return (pathNamePtr);
+    } else
+	ptr++;			/* skip the / */
+    return (ptr);
 }
-  
+
 /* ScanDumpHdr
  *	scan a dump header out of a dump file, leaving the file ptr set after
  *	the header. 
@@ -220,33 +237,39 @@ ScanDumpHdr(afile, aname, dumpName, aparent, aincTime, acreateTime, alevel)
     register afs_int32 code;
 
     tp = fgets(tbuffer, sizeof(tbuffer), afile);
-    if (!tp) return -1;
-    code = sscanf(tbuffer, "%d %d %s %s %ld %ld %ld %ld",
-		  &dbmagic, &dbversion,
-		  aname, dumpName, aparent, aincTime, acreateTime, alevel);
-    if (code != 8) return -1;
+    if (!tp)
+	return -1;
+    code =
+	sscanf(tbuffer, "%d %d %s %s %ld %ld %ld %ld", &dbmagic, &dbversion,
+	       aname, dumpName, aparent, aincTime, acreateTime, alevel);
+    if (code != 8)
+	return -1;
 
     /* now check the magic and version numbers */
-    if ( (dbmagic != BC_DUMPDB_MAGIC) || (dbversion != BC_DUMPDB_VERSION) )
-    	return(-1);
+    if ((dbmagic != BC_DUMPDB_MAGIC) || (dbversion != BC_DUMPDB_VERSION))
+	return (-1);
 
     return 0;
 }
 
 /* scan a tape header out of a tape file, leaving the file ptr positioned just past the header */
-static afs_int32 ScanTapeHdr(afile, adumpID, aseq, adamage)
-register FILE *afile;
-afs_int32 *adumpID;
-afs_int32 *aseq;
-afs_int32 *adamage; {
+static afs_int32
+ScanTapeHdr(afile, adumpID, aseq, adamage)
+     register FILE *afile;
+     afs_int32 *adumpID;
+     afs_int32 *aseq;
+     afs_int32 *adamage;
+{
     char tbuffer[256];
     char *tp;
     register afs_int32 code;
 
     tp = fgets(tbuffer, sizeof(tbuffer), afile);
-    if (!tp) return -1;
+    if (!tp)
+	return -1;
     code = sscanf(tbuffer, "%ld %ld %ld", adumpID, aseq, adamage);
-    if (code != 3) return -1;
+    if (code != 3)
+	return -1;
     return 0;
 }
 
@@ -262,23 +285,28 @@ afs_int32 *adamage; {
 afs_int32
 ScanTapeVolume(afile, avolName, avolID, atapeName, apos, aseq, alastp,
 	       cloneTime)
-FILE *afile;
-char *avolName;
-afs_int32 *avolID;
-char *atapeName;
-afs_int32 *apos, *aseq, *alastp, *cloneTime; {
+     FILE *afile;
+     char *avolName;
+     afs_int32 *avolID;
+     char *atapeName;
+     afs_int32 *apos, *aseq, *alastp, *cloneTime;
+{
     char tbuffer[256];
     register afs_int32 code;
     register char *tp;
 
     tp = fgets(tbuffer, sizeof(tbuffer), afile);
-    if (!tp) {				/* something went wrong, or eof hit */
-	if (ferror(afile)) return -1;	/* error occurred */
-	else return 1;			/* eof */
+    if (!tp) {			/* something went wrong, or eof hit */
+	if (ferror(afile))
+	    return -1;		/* error occurred */
+	else
+	    return 1;		/* eof */
     }
-    code = sscanf(tbuffer, "%s %ld %s %ld %ld %ld %ld", avolName, avolID,
-		  atapeName, apos, aseq, alastp, cloneTime);
-    if (code != 7) return -1;		/* bad input line */
+    code =
+	sscanf(tbuffer, "%s %ld %s %ld %ld %ld %ld", avolName, avolID,
+	       atapeName, apos, aseq, alastp, cloneTime);
+    if (code != 7)
+	return -1;		/* bad input line */
     return 0;
 }
 
@@ -298,29 +326,32 @@ ScanVolClone(tdump, volName, cloneTime)
 {
     char avolName[256], atapeName[256];
     afs_int32 retval, avolID, apos, aseq, alastp;
-    
-    retval = ScanTapeVolume(tdump, &avolName[0], &avolID, &atapeName[0],
-			    &apos, &aseq, &alastp, cloneTime);
-    while ( retval == 0 )
-    {
-	if ( strcmp(avolName, volName) == 0 )
-		return(0);
-	retval = ScanTapeVolume(tdump, &avolName[0], &avolID, &atapeName[0],
-				&apos, &aseq, &alastp, cloneTime);
+
+    retval =
+	ScanTapeVolume(tdump, &avolName[0], &avolID, &atapeName[0], &apos,
+		       &aseq, &alastp, cloneTime);
+    while (retval == 0) {
+	if (strcmp(avolName, volName) == 0)
+	    return (0);
+	retval =
+	    ScanTapeVolume(tdump, &avolName[0], &avolID, &atapeName[0], &apos,
+			   &aseq, &alastp, cloneTime);
     }
-    return(-1);
+    return (-1);
 }
 
 /* seek a dump file (after a header scan has been done) to position apos */
-static SeekDump(afile, apos)
-register FILE *afile;
-afs_int32 apos; {
+static
+SeekDump(afile, apos)
+     register FILE *afile;
+     afs_int32 apos;
+{
     register afs_int32 i;
     register char *tp;
     char tbuffer[256];
 
     /* now skip to appropriate position */
-    for(i=0;i<apos; i++) {
+    for (i = 0; i < apos; i++) {
 	tp = fgets(tbuffer, sizeof(tbuffer), afile);
 	if (!tp) {
 	    fclose(afile);
@@ -329,4 +360,3 @@ afs_int32 apos; {
     }
     return 0;
 }
-

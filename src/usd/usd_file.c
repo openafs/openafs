@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <errno.h>
 #include <fcntl.h>
@@ -43,14 +44,14 @@ RCSID("$Header$");
 #include "usd.h"
 
 #ifdef O_LARGEFILE
-typedef off64_t         osi_lloff_t;
+typedef off64_t osi_lloff_t;
 #define osi_llseek      lseek64
 #else /* O_LARGEFILE */
 #ifdef AFS_HAVE_LLSEEK
-typedef offset_t        osi_lloff_t;
+typedef offset_t osi_lloff_t;
 #define osi_llseek      llseek
 #else /* AFS_HAVE_LLSEEK */
-typedef off_t           osi_lloff_t;
+typedef off_t osi_lloff_t;
 #define osi_llseek      lseek
 #endif /* AFS_HAVE_LLSEEK */
 #endif /* O_LARGEFILE */
@@ -78,11 +79,9 @@ typedef off_t           osi_lloff_t;
 
 /* Implementation of user space device I/O for regular POSIX files. */
 
-static int usd_FileRead(
-  usd_handle_t usd,
-  char *buf,
-  afs_uint32 nbytes,
-  afs_uint32 *xferdP)
+static int
+usd_FileRead(usd_handle_t usd, char *buf, afs_uint32 nbytes,
+	     afs_uint32 * xferdP)
 {
     int fd = (int)(usd->handle);
     int got;
@@ -97,12 +96,10 @@ static int usd_FileRead(
 	*xferdP = got;
     return 0;
 }
- 
-static int usd_FileWrite(
-  usd_handle_t usd,
-  char *buf,
-  afs_uint32 nbytes,
-  afs_uint32 *xferdP)
+
+static int
+usd_FileWrite(usd_handle_t usd, char *buf, afs_uint32 nbytes,
+	      afs_uint32 * xferdP)
 {
     int fd = (int)(usd->handle);
     int sent;
@@ -120,11 +117,9 @@ static int usd_FileWrite(
 
 extern osi_lloff_t osi_llseek(int, osi_lloff_t, int);
 
-static int usd_FileSeek(
-  usd_handle_t usd,
-  afs_hyper_t reqOff,
-  int whence,
-  afs_hyper_t *curOffP)
+static int
+usd_FileSeek(usd_handle_t usd, afs_hyper_t reqOff, int whence,
+	     afs_hyper_t * curOffP)
 {
     int fd = (int)(usd->handle);
     osi_lloff_t lloff;
@@ -134,7 +129,7 @@ static int usd_FileSeek(
 
     osi_h2off(reqOff, lloff);
     lloff = osi_llseek(fd, lloff, whence);
-    if (lloff == (((osi_lloff_t)0) - 1))
+    if (lloff == (((osi_lloff_t) 0) - 1))
 	return errno;
     if (curOffP)
 	osi_off2h(lloff, *curOffP);
@@ -142,7 +137,8 @@ static int usd_FileSeek(
     return 0;
 }
 
-static int usd_FileIoctl(usd_handle_t usd, int req, void *arg)
+static int
+usd_FileIoctl(usd_handle_t usd, int req, void *arg)
 {
     int fd = (int)(usd->handle);
 #ifdef O_LARGEFILE
@@ -151,14 +147,14 @@ static int usd_FileIoctl(usd_handle_t usd, int req, void *arg)
     struct stat info;
 #endif /* O_LARGEFILE */
 #ifdef AFS_AIX_ENV
-    struct statfs fsinfo; /* AIX stat structure doesn't have st_blksize */
+    struct statfs fsinfo;	/* AIX stat structure doesn't have st_blksize */
 #endif /* AFS_AIX_ENV */
     afs_hyper_t size;
     osi_lloff_t off;
     int code = 0;
 
     switch (req) {
-      case USD_IOCTL_GETBLKSIZE:
+    case USD_IOCTL_GETBLKSIZE:
 #ifdef AFS_AIX_ENV
 	code = fstatfs(fd, &fsinfo);
 	if (code) {
@@ -167,9 +163,9 @@ static int usd_FileIoctl(usd_handle_t usd, int req, void *arg)
 	}
 	break;
 #endif /* AFS_AIX_ENV */
-      case USD_IOCTL_GETTYPE:
-      case USD_IOCTL_GETDEV:
-      case USD_IOCTL_GETSIZE:
+    case USD_IOCTL_GETTYPE:
+    case USD_IOCTL_GETDEV:
+    case USD_IOCTL_GETSIZE:
 #ifdef O_LARGEFILE
 	code = fstat64(fd, &info);
 #else /* O_LARGEFILE */
@@ -186,13 +182,13 @@ static int usd_FileIoctl(usd_handle_t usd, int req, void *arg)
 	break;
     case USD_IOCTL_GETDEV:
 	if (!(S_ISCHR(info.st_mode) || S_ISBLK(info.st_mode)))
-	    return ENODEV;		/* not a device */
-	*(dev_t *)arg = info.st_rdev;
+	    return ENODEV;	/* not a device */
+	*(dev_t *) arg = info.st_rdev;
 	break;
     case USD_IOCTL_GETSIZE:
 	if (S_ISCHR(info.st_mode) || S_ISBLK(info.st_mode))
-	    return ENOTTY;		/* shouldn't be a device */
-	osi_off2h(info.st_size, *(afs_hyper_t *)arg);
+	    return ENOTTY;	/* shouldn't be a device */
+	osi_off2h(info.st_size, *(afs_hyper_t *) arg);
 	break;
     case USD_IOCTL_GETFULLNAME:
 	*(char **)arg = usd->fullPathName;
@@ -206,75 +202,75 @@ static int usd_FileIoctl(usd_handle_t usd, int req, void *arg)
 	/* However, I'm pretty sure this doesn't work on Ultrix so I am
 	 * unsure about OSF/1 and HP/UX. 931118 */
 
-	size = *(afs_hyper_t *)arg;
+	size = *(afs_hyper_t *) arg;
 	if (!osi_hFitsInOff(size, off))
 	    return EFBIG;
 	osi_h2off(size, off);
 #ifdef O_LARGEFILE
-	code = ftruncate64 (fd, off);
+	code = ftruncate64(fd, off);
 #else /* O_LARGEFILE */
-	code = ftruncate (fd, off);
+	code = ftruncate(fd, off);
 #endif /* O_LARGEFILE */
 	if (code == -1)
 	    code = errno;
 	return code;
 
     case USD_IOCTL_TAPEOPERATION:
-    {
-	usd_tapeop_t *tapeOpp = (usd_tapeop_t *)arg;
+	{
+	    usd_tapeop_t *tapeOpp = (usd_tapeop_t *) arg;
 #if defined(AFS_AIX_ENV)
-	struct stop os_tapeop;
+	    struct stop os_tapeop;
 
-	if (tapeOpp->tp_op == USDTAPE_WEOF) {
-	    os_tapeop.st_op = STWEOF;
-	} else if (tapeOpp->tp_op == USDTAPE_REW) {
-	    os_tapeop.st_op = STREW;
-	} else if (tapeOpp->tp_op == USDTAPE_FSF) {
-	    os_tapeop.st_op = STFSF;
-	} else if (tapeOpp->tp_op == USDTAPE_BSF) {
-	    os_tapeop.st_op = STRSF;
-	} else if (tapeOpp->tp_op == USDTAPE_PREPARE) {
-	    return 0;
-	} else if (tapeOpp->tp_op == USDTAPE_SHUTDOWN) {
-	    return 0;
-	} else {
-	    /* unsupported tape operation */
-	    return EINVAL;
-	}
-	os_tapeop.st_count = tapeOpp->tp_count;
+	    if (tapeOpp->tp_op == USDTAPE_WEOF) {
+		os_tapeop.st_op = STWEOF;
+	    } else if (tapeOpp->tp_op == USDTAPE_REW) {
+		os_tapeop.st_op = STREW;
+	    } else if (tapeOpp->tp_op == USDTAPE_FSF) {
+		os_tapeop.st_op = STFSF;
+	    } else if (tapeOpp->tp_op == USDTAPE_BSF) {
+		os_tapeop.st_op = STRSF;
+	    } else if (tapeOpp->tp_op == USDTAPE_PREPARE) {
+		return 0;
+	    } else if (tapeOpp->tp_op == USDTAPE_SHUTDOWN) {
+		return 0;
+	    } else {
+		/* unsupported tape operation */
+		return EINVAL;
+	    }
+	    os_tapeop.st_count = tapeOpp->tp_count;
 
-	code = ioctl(fd, STIOCTOP, &os_tapeop);
+	    code = ioctl(fd, STIOCTOP, &os_tapeop);
 #else
-	struct mtop os_tapeop;
+	    struct mtop os_tapeop;
 
-	if (tapeOpp->tp_op == USDTAPE_WEOF) {
-	    os_tapeop.mt_op = MTWEOF;
-	} else if (tapeOpp->tp_op == USDTAPE_REW) {
-	    os_tapeop.mt_op = MTREW;
-	} else if (tapeOpp->tp_op == USDTAPE_FSF) {
-	    os_tapeop.mt_op = MTFSF;
-	} else if (tapeOpp->tp_op == USDTAPE_BSF) {
-	    os_tapeop.mt_op = MTBSF;
-	} else if (tapeOpp->tp_op == USDTAPE_PREPARE) {
-	    return 0;
-	} else if (tapeOpp->tp_op == USDTAPE_SHUTDOWN) {
-	    return 0;
-	} else {
-	    /* unsupported tape operation */
-	    return EINVAL;
-	}
-	os_tapeop.mt_count = tapeOpp->tp_count;
+	    if (tapeOpp->tp_op == USDTAPE_WEOF) {
+		os_tapeop.mt_op = MTWEOF;
+	    } else if (tapeOpp->tp_op == USDTAPE_REW) {
+		os_tapeop.mt_op = MTREW;
+	    } else if (tapeOpp->tp_op == USDTAPE_FSF) {
+		os_tapeop.mt_op = MTFSF;
+	    } else if (tapeOpp->tp_op == USDTAPE_BSF) {
+		os_tapeop.mt_op = MTBSF;
+	    } else if (tapeOpp->tp_op == USDTAPE_PREPARE) {
+		return 0;
+	    } else if (tapeOpp->tp_op == USDTAPE_SHUTDOWN) {
+		return 0;
+	    } else {
+		/* unsupported tape operation */
+		return EINVAL;
+	    }
+	    os_tapeop.mt_count = tapeOpp->tp_count;
 
-	code = ioctl(fd, MTIOCTOP, &os_tapeop);
+	    code = ioctl(fd, MTIOCTOP, &os_tapeop);
 #endif /* AFS_AIX_ENV */
 
-	if (code == -1) {
-	    code = errno;
-	} else {
-	    code = 0;
+	    if (code == -1) {
+		code = errno;
+	    } else {
+		code = 0;
+	    }
+	    return code;
 	}
-	return code;
-    }
 
     case USD_IOCTL_GETBLKSIZE:
 	if (S_ISCHR(info.st_mode) || S_ISBLK(info.st_mode)) {
@@ -294,7 +290,8 @@ static int usd_FileIoctl(usd_handle_t usd, int req, void *arg)
     return code;
 }
 
-static int usd_FileClose(usd_handle_t usd)
+static int
+usd_FileClose(usd_handle_t usd)
 {
     int fd = (int)(usd->handle);
     int code = 0;
@@ -306,7 +303,7 @@ static int usd_FileClose(usd_handle_t usd)
      * being salvaged is ever necessary.  But the salvager used to do this
      * before returning, so... */
 
-    if (usd->openFlags & (O_WRONLY|O_RDWR)) {
+    if (usd->openFlags & (O_WRONLY | O_RDWR)) {
 	int mode;
 	code = usd_FileIoctl(usd, USD_IOCTL_GETTYPE, &mode);
 	if (code == 0) {
@@ -334,11 +331,8 @@ static int usd_FileClose(usd_handle_t usd)
     return code;
 }
 
-static int usd_FileOpen(
-  const char *path,
-  int flags,
-  int mode,
-  usd_handle_t *usdP)
+static int
+usd_FileOpen(const char *path, int flags, int mode, usd_handle_t * usdP)
 {
     int fd;
     int oflags;
@@ -350,7 +344,7 @@ static int usd_FileOpen(
 
     oflags = (flags & USD_OPEN_RDWR) ? O_RDWR : O_RDONLY;
 
-#ifdef O_SYNC /* AFS_DARWIN_ENV XXX */
+#ifdef O_SYNC			/* AFS_DARWIN_ENV XXX */
     if (flags & USD_OPEN_SYNC)
 	oflags |= O_SYNC;
 #endif
@@ -374,12 +368,12 @@ static int usd_FileOpen(
     usd->seek = usd_FileSeek;
     usd->ioctl = usd_FileIoctl;
     usd->close = usd_FileClose;
-    usd->fullPathName = (char *)malloc(strlen(path)+1);
+    usd->fullPathName = (char *)malloc(strlen(path) + 1);
     strcpy(usd->fullPathName, path);
     usd->openFlags = flags;
 
     code = 0;
-    if (flags & (USD_OPEN_RLOCK|USD_OPEN_WLOCK)) {
+    if (flags & (USD_OPEN_RLOCK | USD_OPEN_WLOCK)) {
 #ifdef O_LARGEFILE
 	struct flock64 fl;
 #else /* O_LARGEFILE */
@@ -387,12 +381,12 @@ static int usd_FileOpen(
 #endif /* O_LARGEFILE */
 
 	/* make sure both lock bits aren't set */
-	assert(~flags & (USD_OPEN_RLOCK|USD_OPEN_WLOCK));
+	assert(~flags & (USD_OPEN_RLOCK | USD_OPEN_WLOCK));
 
 	fl.l_type = ((flags & USD_OPEN_RLOCK) ? F_RDLCK : F_WRLCK);
 	fl.l_whence = SEEK_SET;
-	fl.l_start = (osi_lloff_t)0;
-	fl.l_len = (osi_lloff_t)0;	/* whole file */
+	fl.l_start = (osi_lloff_t) 0;
+	fl.l_len = (osi_lloff_t) 0;	/* whole file */
 #ifdef O_LARGEFILE
 	code = fcntl(fd, F_SETLK64, &fl);
 #else /* O_LARGEFILE */
@@ -417,19 +411,21 @@ static int usd_FileOpen(
     return code;
 }
 
-static int usd_FileDummyClose(usd_handle_t usd)
+static int
+usd_FileDummyClose(usd_handle_t usd)
 {
     free(usd);
     return 0;
 }
 
-int usd_Open(const char *path, int oflag, int mode, usd_handle_t *usdP)
+int
+usd_Open(const char *path, int oflag, int mode, usd_handle_t * usdP)
 {
     return usd_FileOpen(path, oflag, mode, usdP);
 }
 
-static int usd_FileStandardInput(
-  usd_handle_t *usdP)
+static int
+usd_FileStandardInput(usd_handle_t * usdP)
 {
     usd_handle_t usd;
 
@@ -451,13 +447,14 @@ static int usd_FileStandardInput(
     return 0;
 }
 
-int usd_StandardInput(usd_handle_t *usdP)
+int
+usd_StandardInput(usd_handle_t * usdP)
 {
     return usd_FileStandardInput(usdP);
 }
 
-static int usd_FileStandardOutput(
-  usd_handle_t *usdP)
+static int
+usd_FileStandardOutput(usd_handle_t * usdP)
 {
     usd_handle_t usd;
 
@@ -479,7 +476,8 @@ static int usd_FileStandardOutput(
     return 0;
 }
 
-int usd_StandardOutput(usd_handle_t *usdP)
+int
+usd_StandardOutput(usd_handle_t * usdP)
 {
     return usd_FileStandardOutput(usdP);
 }

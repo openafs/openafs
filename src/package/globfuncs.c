@@ -39,24 +39,24 @@
  *	As described; may exit from package.
  *------------------------------------------------------------------------*/
 
-char *emalloc(size)
-    unsigned size;
+char *
+emalloc(size)
+     unsigned size;
 
-{ /*emalloc*/
+{				/*emalloc */
 
     char *malloc();
     char *ptr;
 
     if ((ptr = malloc(size)) == NULL) {
-      fprintf(stderr,
-	      "Error: Out of memory; malloc() failed allocating %d bytes\n",
-	      size);
-      exit(ERR_OUTOFMEMORY);
-    }
-    else
-      return(ptr);
+	fprintf(stderr,
+		"Error: Out of memory; malloc() failed allocating %d bytes\n",
+		size);
+	exit(ERR_OUTOFMEMORY);
+    } else
+	return (ptr);
 
-} /*emalloc*/
+}				/*emalloc */
 
 /*------------------------------------------------------------------------
  * ecalloc
@@ -79,24 +79,24 @@ char *emalloc(size)
  *	As described; may exit from package.
  *------------------------------------------------------------------------*/
 
-char *ecalloc(nelem, size)
-    unsigned nelem;
-    unsigned size;
+char *
+ecalloc(nelem, size)
+     unsigned nelem;
+     unsigned size;
 
-{ /*ecalloc*/
+{				/*ecalloc */
 
     char *calloc();
     char *ptr;
 
     if ((ptr = calloc(nelem, size)) == NULL) {
-      fprintf(stderr, "Error: Out of memory; calloc(%d, %d) failed\n",
-	      nelem, size);
-      exit(ERR_OUTOFMEMORY);
-    }
-    else
-      return(ptr);
+	fprintf(stderr, "Error: Out of memory; calloc(%d, %d) failed\n",
+		nelem, size);
+	exit(ERR_OUTOFMEMORY);
+    } else
+	return (ptr);
 
-} /*ecalloc*/
+}				/*ecalloc */
 
 /*------------------------------------------------------------------------
  * efopen
@@ -119,20 +119,20 @@ char *ecalloc(nelem, size)
  *	As described; may exit from package.
  *------------------------------------------------------------------------*/
 
-FILE *efopen(filename, type)
-    char *filename;
-    char *type;
+FILE *
+efopen(filename, type)
+     char *filename;
+     char *type;
 
-{ /*efopen*/
+{				/*efopen */
 
     FILE *f;
 
     if ((f = fopen(filename, type)) == NULL) {
-      fprintf(stderr, "Error: Couldn't open file; fopen(%s, %s) failed\n",
-	      filename, type);
-      exit(ERR_FOPENFAILED);
-    }
-    else
-      return(f);
+	fprintf(stderr, "Error: Couldn't open file; fopen(%s, %s) failed\n",
+		filename, type);
+	exit(ERR_FOPENFAILED);
+    } else
+	return (f);
 
-} /*efopen*/
+}				/*efopen */

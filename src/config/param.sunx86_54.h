@@ -70,7 +70,7 @@
 #define	AFS_KFREE	kmem_free
 #define	VATTR_NULL	vattr_null
 #endif /* KERNEL */
-#define	AFS_DIRENT	
+#define	AFS_DIRENT
 #ifndef CMSERVERPREF
 #define CMSERVERPREF
 #endif

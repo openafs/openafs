@@ -17,7 +17,7 @@
 #define AFS_NT40_ENV        1
 #define AFSLITTLE_ENDIAN    1
 #define AFS_64BIT_IOPS_ENV  1
-#define AFS_NAMEI_ENV       1   /* User space interface to file system */
+#define AFS_NAMEI_ENV       1	/* User space interface to file system */
 #define AFS_HAVE_STATVFS    0	/* System doesn't support statvfs */
 #define AFS_WIN95_ENV       1
 
@@ -46,7 +46,7 @@ typedef int ssize_t;
 #define strchr(s, c)             strchr(s, c)
 #define strrchr(s, c)            strrchr(s, c)
 #endif
-#define strcasecmp(s1,s2)       _stricmp(s1,s2) 
+#define strcasecmp(s1,s2)       _stricmp(s1,s2)
 #define strncasecmp(s1,s2,n)    _strnicmp(s1,s2,n)
 #define sleep(seconds)          Sleep((seconds) * 1000)
 #define fsync(fileno)           _commit(fileno)
@@ -59,7 +59,7 @@ typedef int ssize_t;
 
 #define popen(cmd, mode)        _popen((cmd), (mode))
 #define pclose(stream)          _pclose(stream)
-typedef char * caddr_t;
+typedef char *caddr_t;
 
 #define pipe(fdp)               _pipe(fdp, 4096, _O_BINARY)
 #endif /* AFS_PARAM_H */

@@ -44,15 +44,15 @@
 
 #ifdef OPCODE_NAMES
 static char *opcode_names[NUMBER_OPCODES] = {
-  "SetPassword",
-  "Authenticate",
-  "GetTicket",
-  "SetFields",
-  "CreateUser",
-  "DeleteUser",
-  "GetEntry",
-  "ListEntry",
-  "ChangePW",
-  "GetStats"};
+    "SetPassword",
+    "Authenticate",
+    "GetTicket",
+    "SetFields",
+    "CreateUser",
+    "DeleteUser",
+    "GetEntry",
+    "ListEntry",
+    "ChangePW",
+    "GetStats"
+};
 #endif
-

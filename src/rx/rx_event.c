@@ -18,7 +18,8 @@
 #include <sys/time_impl.h>
 #endif
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef KERNEL
 #ifndef UKERNEL
@@ -72,24 +73,24 @@ extern void *osi_Alloc();
 /* All event processing is relative to the apparent current time given by clock_GetTime */
 
 /* This should be static, but event_test wants to look at the free list... */
-struct rx_queue rxevent_free;	   /* It's somewhat bogus to use a doubly-linked queue for the free list */
-struct rx_queue rxepoch_free;	   /* It's somewhat bogus to use a doubly-linked queue for the free list */
-static struct rx_queue rxepoch_queue; /* list of waiting epochs */
-static int rxevent_allocUnit = 10;   /* Allocation unit (number of event records to allocate at one time) */
-static int rxepoch_allocUnit = 10;   /* Allocation unit (number of epoch records to allocate at one time) */
-int rxevent_nFree;		   /* Number of free event records */
-int rxevent_nPosted;	   /* Current number of posted events */
-int rxepoch_nFree;		   /* Number of free epoch records */
-static void (*rxevent_ScheduledEarlierEvent)(void); /* Proc to call when an event is scheduled that is earlier than all other events */
-struct xfreelist { 
+struct rx_queue rxevent_free;	/* It's somewhat bogus to use a doubly-linked queue for the free list */
+struct rx_queue rxepoch_free;	/* It's somewhat bogus to use a doubly-linked queue for the free list */
+static struct rx_queue rxepoch_queue;	/* list of waiting epochs */
+static int rxevent_allocUnit = 10;	/* Allocation unit (number of event records to allocate at one time) */
+static int rxepoch_allocUnit = 10;	/* Allocation unit (number of epoch records to allocate at one time) */
+int rxevent_nFree;		/* Number of free event records */
+int rxevent_nPosted;		/* Current number of posted events */
+int rxepoch_nFree;		/* Number of free epoch records */
+static void (*rxevent_ScheduledEarlierEvent) (void);	/* Proc to call when an event is scheduled that is earlier than all other events */
+struct xfreelist {
     void *mem;
     int size;
-    struct xfreelist *next; 
+    struct xfreelist *next;
 };
 static struct xfreelist *xfreemallocs = 0, *xsp = 0;
 
 struct clock rxevent_nextRaiseEvents;	/* Time of next call to raise events */
-int rxevent_raiseScheduled;		/* true if raise events is scheduled */
+int rxevent_raiseScheduled;	/* true if raise events is scheduled */
 
 #ifdef RX_ENABLE_LOCKS
 #ifdef RX_LOCKS_DB
@@ -118,16 +119,16 @@ pthread_mutex_t rx_event_mutex;
 
 /* Pass in the number of events to allocate at a time */
 int rxevent_initialized = 0;
-void rxevent_Init(int nEvents, void (*scheduler)(void))
+void
+rxevent_Init(int nEvents, void (*scheduler) (void))
 {
-    LOCK_EV_INIT
-    if (rxevent_initialized) {
-	UNLOCK_EV_INIT
-	return;
+    LOCK_EV_INIT if (rxevent_initialized) {
+	UNLOCK_EV_INIT return;
     }
     MUTEX_INIT(&rxevent_lock, "rxevent_lock", MUTEX_DEFAULT, 0);
     clock_Init();
-    if (nEvents) rxevent_allocUnit = nEvents;
+    if (nEvents)
+	rxevent_allocUnit = nEvents;
     queue_Init(&rxevent_free);
     queue_Init(&rxepoch_free);
     queue_Init(&rxepoch_queue);
@@ -137,11 +138,11 @@ void rxevent_Init(int nEvents, void (*scheduler)(void))
     rxevent_initialized = 1;
     clock_Zero(&rxevent_nextRaiseEvents);
     rxevent_raiseScheduled = 0;
-    UNLOCK_EV_INIT
-}
+UNLOCK_EV_INIT}
 
 /* Create and initialize new epoch structure */
-struct rxepoch *rxepoch_Allocate(struct clock *when)
+struct rxepoch *
+rxepoch_Allocate(struct clock *when)
 {
     struct rxepoch *ep;
     int i;
@@ -150,17 +151,18 @@ struct rxepoch *rxepoch_Allocate(struct clock *when)
      * and add them to the free queue */
     if (queue_IsEmpty(&rxepoch_free)) {
 #if    defined(AFS_AIX32_ENV) && defined(KERNEL)
-	ep = (struct rxepoch *) rxi_Alloc(sizeof(struct rxepoch));
+	ep = (struct rxepoch *)rxi_Alloc(sizeof(struct rxepoch));
 	queue_Append(&rxepoch_free, &ep[0]), rxepoch_nFree++;
 #else
 	ep = (struct rxepoch *)
-	     osi_Alloc(sizeof(struct rxepoch) * rxepoch_allocUnit);
+	    osi_Alloc(sizeof(struct rxepoch) * rxepoch_allocUnit);
 	xsp = xfreemallocs;
-	xfreemallocs = (struct xfreelist *) osi_Alloc(sizeof(struct xfreelist));
+	xfreemallocs =
+	    (struct xfreelist *)osi_Alloc(sizeof(struct xfreelist));
 	xfreemallocs->mem = (void *)ep;
 	xfreemallocs->size = sizeof(struct rxepoch) * rxepoch_allocUnit;
 	xfreemallocs->next = xsp;
-	for (i = 0; i<rxepoch_allocUnit; i++)
+	for (i = 0; i < rxepoch_allocUnit; i++)
 	    queue_Append(&rxepoch_free, &ep[i]), rxepoch_nFree++;
 #endif
     }
@@ -177,14 +179,14 @@ struct rxepoch *rxepoch_Allocate(struct clock *when)
  * units. */
 
 #if 0
-struct rxevent *rxevent_Post(struct clock *when, 
-	void (*func)(struct rxevent *event,
-        struct rx_connection *conn, struct rx_call *acall),
-	void *arg, void *arg1)
+struct rxevent *
+rxevent_Post(struct clock *when,
+	     void (*func) (struct rxevent * event,
+			   struct rx_connection * conn,
+			   struct rx_call * acall), void *arg, void *arg1)
 #else
-struct rxevent *rxevent_Post(struct clock *when, 
-	void (*func)(),
-	void *arg, void *arg1)
+struct rxevent *
+rxevent_Post(struct clock *when, void (*func) (), void *arg, void *arg1)
 #endif
 {
     register struct rxevent *ev, *evqe, *evqpr;
@@ -197,9 +199,9 @@ struct rxevent *rxevent_Post(struct clock *when,
     if (rx_Log_event) {
 	struct clock now;
 	clock_GetTime(&now);
-	fprintf(rx_Log_event, "%d.%d: rxevent_Post(%d.%d, %x, %x)\n", 
-	    (int) now.sec, (int) now.usec, (int) when->sec, 
-	    (int) when->usec, (unsigned int) func, (unsigned int) arg);
+	fprintf(rx_Log_event, "%d.%d: rxevent_Post(%d.%d, %x, %x)\n",
+		(int)now.sec, (int)now.usec, (int)when->sec, (int)when->usec,
+		(unsigned int)func, (unsigned int)arg);
     }
 #endif
 
@@ -231,16 +233,18 @@ struct rxevent *rxevent_Post(struct clock *when,
     if (queue_IsEmpty(&rxevent_free)) {
 	register int i;
 #if	defined(AFS_AIX32_ENV) && defined(KERNEL)
-	ev = (struct rxevent *) rxi_Alloc(sizeof(struct rxevent));
+	ev = (struct rxevent *)rxi_Alloc(sizeof(struct rxevent));
 	queue_Append(&rxevent_free, &ev[0]), rxevent_nFree++;
 #else
-	ev = (struct rxevent *) osi_Alloc(sizeof(struct rxevent) * rxevent_allocUnit);
+	ev = (struct rxevent *)osi_Alloc(sizeof(struct rxevent) *
+					 rxevent_allocUnit);
 	xsp = xfreemallocs;
-	xfreemallocs = (struct xfreelist *) osi_Alloc(sizeof(struct xfreelist));
+	xfreemallocs =
+	    (struct xfreelist *)osi_Alloc(sizeof(struct xfreelist));
 	xfreemallocs->mem = (void *)ev;
 	xfreemallocs->size = sizeof(struct rxevent) * rxevent_allocUnit;
 	xfreemallocs->next = xsp;
-	for (i = 0; i<rxevent_allocUnit; i++)
+	for (i = 0; i < rxevent_allocUnit; i++)
 	    queue_Append(&rxevent_free, &ev[i]), rxevent_nFree++;
 #endif
     }
@@ -255,9 +259,9 @@ struct rxevent *rxevent_Post(struct clock *when,
     ev->func = func;
     ev->arg = arg;
     ev->arg1 = arg1;
-    rxevent_nPosted += 1; /* Rather than ++, to shut high-C up
-			   *  regarding never-set variables
-			   */
+    rxevent_nPosted += 1;	/* Rather than ++, to shut high-C up
+				 *  regarding never-set variables
+				 */
 
     /* Insert the event into the sorted list of events for this epoch */
     for (queue_ScanBackwards(&ep->events, evqe, evqpr, rxevent)) {
@@ -270,14 +274,14 @@ struct rxevent *rxevent_Post(struct clock *when,
     }
     /* Insert event at head of current epoch */
     queue_Prepend(&ep->events, ev);
-    if (isEarliest && rxevent_ScheduledEarlierEvent &&
-	(!rxevent_raiseScheduled ||
-	 clock_Lt(&ev->eventTime, &rxevent_nextRaiseEvents))) {
+    if (isEarliest && rxevent_ScheduledEarlierEvent
+	&& (!rxevent_raiseScheduled
+	    || clock_Lt(&ev->eventTime, &rxevent_nextRaiseEvents))) {
 	rxevent_raiseScheduled = 1;
 	clock_Zero(&rxevent_nextRaiseEvents);
 	MUTEX_EXIT(&rxevent_lock);
 	/* Notify our external scheduler */
-	(*rxevent_ScheduledEarlierEvent)();
+	(*rxevent_ScheduledEarlierEvent) ();
 	MUTEX_ENTER(&rxevent_lock);
     }
     MUTEX_EXIT(&rxevent_lock);
@@ -296,17 +300,18 @@ int rxevent_Cancel_type = 0;
 #endif
 #endif
 
-void rxevent_Cancel_1(register struct rxevent *ev, 
-	register struct rx_call *call, register int type)
+void
+rxevent_Cancel_1(register struct rxevent *ev, register struct rx_call *call,
+		 register int type)
 {
 #ifdef RXDEBUG
     if (rx_Log_event) {
 	struct clock now;
 	clock_GetTime(&now);
-	fprintf(rx_Log_event, "%d.%d: rxevent_Cancel_1(%d.%d, %x, %x)\n", 
-		(int) now.sec, (int) now.usec, (int) ev->eventTime.sec, 
-		(int) ev->eventTime.usec, (unsigned int) ev->func,
-		(unsigned int) ev->arg);
+	fprintf(rx_Log_event, "%d.%d: rxevent_Cancel_1(%d.%d, %x, %x)\n",
+		(int)now.sec, (int)now.usec, (int)ev->eventTime.sec,
+		(int)ev->eventTime.usec, (unsigned int)ev->func,
+		(unsigned int)ev->arg);
     }
 #endif
     /* Append it to the free list (rather than prepending) to keep the free
@@ -328,7 +333,7 @@ void rxevent_Cancel_1(register struct rxevent *ev,
 	    call->refCount--;
 #ifdef RX_REFCOUNT_CHECK
 	    call->refCDebug[type]--;
-	    if (call->refCDebug[type]<0) {
+	    if (call->refCDebug[type] < 0) {
 		rxevent_Cancel_type = type;
 		osi_Panic("rxevent_Cancel: call refCount < 0");
 	    }
@@ -349,7 +354,8 @@ void rxevent_Cancel_1(register struct rxevent *ev,
  * and the function returns 1.  If there are is no next epoch, the function
  * returns 0.
  */
-int rxevent_RaiseEvents(struct clock *next)
+int
+rxevent_RaiseEvents(struct clock *next)
 {
     register struct rxepoch *ep;
     register struct rxevent *ev;
@@ -393,26 +399,25 @@ int rxevent_RaiseEvents(struct clock *next)
 	} while (queue_IsNotEmpty(&ep->events));
     }
 #ifdef RXDEBUG
-    if (rx_Log_event) fprintf(rx_Log_event, "rxevent_RaiseEvents(%d.%d)\n", 
-	(int) now.sec, (int) now.usec);
+    if (rx_Log_event)
+	fprintf(rx_Log_event, "rxevent_RaiseEvents(%d.%d)\n", (int)now.sec,
+		(int)now.usec);
 #endif
     rxevent_raiseScheduled = 0;
     MUTEX_EXIT(&rxevent_lock);
     return 0;
 }
 
-void shutdown_rxevent(void) 
+void
+shutdown_rxevent(void)
 {
     struct xfreelist *xp, *nxp;
 
-    LOCK_EV_INIT
-    if (!rxevent_initialized) {
-	UNLOCK_EV_INIT
-	return;
+    LOCK_EV_INIT if (!rxevent_initialized) {
+	UNLOCK_EV_INIT return;
     }
     rxevent_initialized = 0;
-    UNLOCK_EV_INIT
-    MUTEX_DESTROY(&rxevent_lock);
+    UNLOCK_EV_INIT MUTEX_DESTROY(&rxevent_lock);
 #if	defined(AFS_AIX32_ENV) && defined(KERNEL)
     /* Everything is freed in afs_osinet.c */
 #else

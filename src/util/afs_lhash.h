@@ -42,15 +42,15 @@
 typedef struct afs_lhash afs_lhash;
 
 struct afs_lhash_stat {
-    size_t	min_chain_length;
-    size_t	max_chain_length;
-    size_t	buckets;
-    size_t	records;
+    size_t min_chain_length;
+    size_t max_chain_length;
+    size_t buckets;
+    size_t records;
 
-    size_t	search_calls;	/* cumulative afs_lhash_search() call count */
-    size_t	search_tests;	/* cumulative afs_lhash_search() comparison count */
-    size_t	remove_calls;	/* cumulative afs_lhash_remove() call count */
-    size_t	remove_tests;	/* cumulative afs_lhash_remove() comparison count */
+    size_t search_calls;	/* cumulative afs_lhash_search() call count */
+    size_t search_tests;	/* cumulative afs_lhash_search() comparison count */
+    size_t remove_calls;	/* cumulative afs_lhash_remove() call count */
+    size_t remove_tests;	/* cumulative afs_lhash_remove() comparison count */
 };
 
 /*
@@ -66,14 +66,12 @@ struct afs_lhash_stat {
  * error.
  */
 
-afs_lhash *
-afs_lhash_create
-( int (*equal)(const void *a, const void *b)
-	/* returns true if the elements pointed to by
-	   a and b are the same, false otherwise */
-, void *(*allocate)(size_t n)
-, void (*deallocate)(void *p, size_t n)
-);
+afs_lhash *afs_lhash_create(int (*equal) (const void *a, const void *b)
+			    /* returns true if the elements pointed to by
+			     * a and b are the same, false otherwise */
+			    , void *(*allocate) (size_t n)
+			    , void (*deallocate) (void *p, size_t n)
+    );
 
 /*
  * afs_lhash_destroy() destroys the given hash table.
@@ -83,9 +81,7 @@ afs_lhash_create
  */
 
 void
-afs_lhash_destroy
-( afs_lhash *lh
-);
+  afs_lhash_destroy(afs_lhash * lh);
 
 /*
  * afs_lhash_iter() calls the given function for each element of the
@@ -97,10 +93,10 @@ afs_lhash_destroy
  */
 
 void
-afs_lhash_iter
-( afs_lhash *lh
-, void(*f)(size_t index, unsigned key, void *data)
-);
+
+  afs_lhash_iter(afs_lhash * lh,
+		 void (*f) (size_t index, unsigned key, void *data)
+    );
 
 /*
  * afs_lhash_search() searches the given hash table for the given key
@@ -116,12 +112,7 @@ afs_lhash_iter
  * found, 0 otherwise.
  */
 
-void *
-afs_lhash_search
-( afs_lhash *lh
-, unsigned key
-, const void *data
-);
+void *afs_lhash_search(afs_lhash * lh, unsigned key, const void *data);
 
 /*
  * afs_lhash_rosearch() searches the given hash table for the given key
@@ -136,12 +127,8 @@ afs_lhash_search
  * found, 0 otherwise.
  */
 
-void *
-afs_lhash_rosearch
-( const afs_lhash *lh
-, unsigned key
-, const void *data
-);
+void *afs_lhash_rosearch(const afs_lhash * lh, unsigned key,
+			 const void *data);
 
 /*
  * afs_lhash_remove() removes an item matching the given key and data
@@ -151,12 +138,7 @@ afs_lhash_rosearch
  * 0 otherwise.
  */
 
-void *
-afs_lhash_remove
-( afs_lhash *lh
-, unsigned key
-, const void *data
-);
+void *afs_lhash_remove(afs_lhash * lh, unsigned key, const void *data);
 
 /*
  * afs_lhash_enter() enters the given data element into the given hash
@@ -169,11 +151,7 @@ afs_lhash_remove
  */
 
 int
-afs_lhash_enter
-( afs_lhash *lh
-, unsigned key
-, void *data
-);
+  afs_lhash_enter(afs_lhash * lh, unsigned key, void *data);
 
 /*
  * afs_lhash_stat() writes certain statistics about the given hash table
@@ -183,9 +161,6 @@ afs_lhash_enter
  */
 
 int
-afs_lhash_stat
-( afs_lhash *lh
-, struct afs_lhash_stat *sb
-);
+  afs_lhash_stat(afs_lhash * lh, struct afs_lhash_stat *sb);
 
 #endif /* AFS_LHASH_H */

@@ -14,7 +14,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef AFS_NT40_ENV
 #include <winsock2.h>
@@ -24,18 +25,15 @@ RCSID("$Header$");
 #include <afs/afs_clientAdmin.h>
 #include <afs/afs_utilAdmin.h>
 
-void Usage()
+void
+Usage()
 {
-    fprintf(stderr,
-	    "Usage: cm_list_cells <host> <port>\n");
+    fprintf(stderr, "Usage: cm_list_cells <host> <port>\n");
     exit(1);
 }
 
-void ParseArgs(
-    int argc,
-    char *argv[],
-    char **srvrName,
-    long *srvrPort)
+void
+ParseArgs(int argc, char *argv[], char **srvrName, long *srvrPort)
 {
     char **argp = argv;
 
@@ -51,7 +49,8 @@ void ParseArgs(
 	Usage();
 }
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     int rc;
     afs_status_t st = 0;
@@ -93,10 +92,9 @@ int main(int argc, char *argv[])
     printf("\n");
     while (util_CMListCellsNext(iterator, &cellInfo, &st)) {
 	printf("Cell %s on hosts", cellInfo.cellname);
-	for (i=0 ; i < UTIL_MAX_CELL_HOSTS && cellInfo.serverAddr[i] ; i++) {
+	for (i = 0; i < UTIL_MAX_CELL_HOSTS && cellInfo.serverAddr[i]; i++) {
 	    taddr = cellInfo.serverAddr[i];
-	    printf(" %d.%d.%d.%d",
-		   (taddr >> 24) & 0xff, (taddr >> 16) & 0xff,
+	    printf(" %d.%d.%d.%d", (taddr >> 24) & 0xff, (taddr >> 16) & 0xff,
 		   (taddr >> 8) & 0xff, taddr & 0xff);
 	}
 	printf("\n");

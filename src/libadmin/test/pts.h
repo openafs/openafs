@@ -30,4 +30,4 @@
 #include "common.h"
 
 void
-SetupPtsAdminCmd(void);
+  SetupPtsAdminCmd(void);

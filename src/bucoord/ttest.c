@@ -24,25 +24,25 @@
 extern TC_ExecuteRequest();
 
 /* dump information */
-static afs_int32 transID = 1000;		/* dump or restore transaction id */
-static afs_int32 bytesDumped=0;
+static afs_int32 transID = 1000;	/* dump or restore transaction id */
+static afs_int32 bytesDumped = 0;
 
 #include "AFS_component_version_number.c"
 
 main(argc, argv)
-int argc;
-char **argv; {
+     int argc;
+     char **argv;
+{
     register int i;
     register afs_int32 code;
     register struct rx_service *tservice;
     struct rx_securityClass *rxsc[1];
-    
-    for(i=1;i<argc;i++) {
+
+    for (i = 1; i < argc; i++) {
 	/* parse args */
-	if (*argv[i] == '-' ) {
+	if (*argv[i] == '-') {
 	    /* switch */
-	}
-	else {
+	} else {
 	    printf("ttest takes only switches (not '%s')\n", argv[i]);
 	    exit(1);
 	}
@@ -53,28 +53,32 @@ char **argv; {
 	exit(1);
     }
     rxsc[0] = rxnull_NewServerSecurityObject();
-    tservice = rx_NewService(0, 1, "tape-controller", rxsc, 1, TC_ExecuteRequest);
+    tservice =
+	rx_NewService(0, 1, "tape-controller", rxsc, 1, TC_ExecuteRequest);
     rx_SetMinProcs(tservice, 3);
     rx_SetMaxProcs(tservice, 5);
-    rx_StartServer(1);	/* don't donate this process to the rpc pool; it has work to do */
+    rx_StartServer(1);		/* don't donate this process to the rpc pool; it has work to do */
     /* never returns */
     printf("RETURNED FROM STARTSERVER!\n");
     exit(1);
 }
 
 STC_LabelTape(acall)
-struct rx_call *acall; {
+     struct rx_call *acall;
+{
     printf("Got a tape labelling call.\n");
     return 0;
 }
 
-STC_PerformDump(acall, adumpName, atapeSet, adumpArray, aparent, alevel, adumpID)
-struct rx_call *acall;
-char *adumpName;
-afs_int32 aparent, alevel;
-struct tc_tapeSet *atapeSet;
-struct tc_dumpArray *adumpArray;
-afs_int32 *adumpID; {
+STC_PerformDump(acall, adumpName, atapeSet, adumpArray, aparent, alevel,
+		adumpID)
+     struct rx_call *acall;
+     char *adumpName;
+     afs_int32 aparent, alevel;
+     struct tc_tapeSet *atapeSet;
+     struct tc_dumpArray *adumpArray;
+     afs_int32 *adumpID;
+{
     register int i;
     register struct tc_dumpDesc *tdescr;
     register afs_int32 code;
@@ -86,7 +90,7 @@ afs_int32 *adumpID; {
 
     printf("tape controller received request to start dump %s.\n", adumpName);
     *adumpID = ++transID;	/* send result back to caller */
-    
+
     memset(&tdentry, 0, sizeof(tdentry));
     tdentry.created = time(0);
     strcpy(tdentry.name, atapeSet->format);
@@ -96,10 +100,10 @@ afs_int32 *adumpID; {
     tdentry.level = alevel;
     tdentry.incTime = 0;	/* useless? */
     tdentry.nVolumes = 1000000000;	/* bogus, but not important */
-    tdentry.tapes.a = 1;		/* a*x+b is tape numbering scheme */
+    tdentry.tapes.a = 1;	/* a*x+b is tape numbering scheme */
     tdentry.tapes.b = 0;
     tdentry.tapes.maxTapes = 1000000000;	/* don't care */
-    strcpy(tdentry.tapes.format, atapeSet->format); /* base name (e.g. sys) */
+    strcpy(tdentry.tapes.format, atapeSet->format);	/* base name (e.g. sys) */
     strcat(tdentry.tapes.format, ".");
     strcat(tdentry.tapes.format, adumpName);	/* e.g. .daily */
     strcat(tdentry.tapes.format, ".%d");	/* so we get basename.0, basename.1, etc */
@@ -114,21 +118,23 @@ afs_int32 *adumpID; {
     memset(&ttentry, 0, sizeof(ttentry));
     sprintf(ttentry.name, tdentry.tapes.format, 1);
     ttentry.written = time(0);
-    ttentry.dump = tdentry.id;		/* dump we're in */
+    ttentry.dump = tdentry.id;	/* dump we're in */
     ttentry.seq = 0;
-    ttentry.nVolumes = 0;		/* perhaps we'll adjust during dump */
+    ttentry.nVolumes = 0;	/* perhaps we'll adjust during dump */
     ttentry.flags = BUDB_TAPE_BEINGWRITTEN;	/* starting I/O */
     code = bcdb_UseTape(&ttentry, &new);
     if (code) {
-	printf("ttape: failed to start tape %s, code %d\n", ttentry.name, code);
+	printf("ttape: failed to start tape %s, code %d\n", ttentry.name,
+	       code);
 	return code;
     }
 
     tdescr = adumpArray->tc_dumpArray_val;
-    for(i=0;i<adumpArray->tc_dumpArray_len;i++, tdescr++) {
+    for (i = 0; i < adumpArray->tc_dumpArray_len; i++, tdescr++) {
 	memcpy(&taddr, tdescr->hostID, sizeof(taddr));
-	printf("dumping volid %s(%d) from host %08x since date %d\n", tdescr->name,
-	       tdescr->vid, taddr.sin_addr.s_addr, tdescr->date);
+	printf("dumping volid %s(%d) from host %08x since date %d\n",
+	       tdescr->name, tdescr->vid, taddr.sin_addr.s_addr,
+	       tdescr->date);
 	memset(&tventry, 0, sizeof(tventry));
 	strcpy(tventry.name, tdescr->name);
 	tventry.clone = tdescr->date;
@@ -141,7 +147,8 @@ afs_int32 *adumpID; {
 	tventry.flags = (BUDB_VOL_LASTFRAG | BUDB_VOL_FIRSTFRAG);
 	code = bcdb_AddVolume(&tventry);
 	if (code) {
-	    printf("failed to append volume entry for volume %d, code %d\n", tdescr->vid, code);
+	    printf("failed to append volume entry for volume %d, code %d\n",
+		   tdescr->vid, code);
 	    return code;
 	}
     }
@@ -163,21 +170,24 @@ afs_int32 *adumpID; {
 }
 
 STC_PerformRestore(acall, aname, arestore, adumpID)
-struct rx_call *acall;
-char *aname;
-struct tc_restoreArray *arestore;
-afs_int32 *adumpID; {
+     struct rx_call *acall;
+     char *aname;
+     struct tc_restoreArray *arestore;
+     afs_int32 *adumpID;
+{
     register int i;
     register struct tc_restoreDesc *tdescr;
     struct sockaddr_in taddr;
 
     printf("tape controller received request to start restore %s.\n", aname);
     tdescr = arestore->tc_restoreArray_val;
-    for(i=0;i<arestore->tc_restoreArray_len; i++, tdescr++) {
+    for (i = 0; i < arestore->tc_restoreArray_len; i++, tdescr++) {
 	memcpy(&taddr, tdescr->hostID, sizeof(taddr));
-	printf("restoring frag %d of volume %s from tape %s at position %d.\n    New name is '%s', new vid is %d, new host is %08x, new partition is %d\n",
-	       tdescr->frag, tdescr->oldName, tdescr->tapeName, tdescr->position, tdescr->newName,
-	       tdescr->vid, taddr.sin_addr.s_addr, tdescr->partition);
+	printf
+	    ("restoring frag %d of volume %s from tape %s at position %d.\n    New name is '%s', new vid is %d, new host is %08x, new partition is %d\n",
+	     tdescr->frag, tdescr->oldName, tdescr->tapeName,
+	     tdescr->position, tdescr->newName, tdescr->vid,
+	     taddr.sin_addr.s_addr, tdescr->partition);
     }
     *adumpID = ++transID;
     bytesDumped = 0;
@@ -188,36 +198,43 @@ afs_int32 *adumpID; {
     the status of completed dumps for a reasonable period (2 - 12 hours)
     so that they can be examined later */
 STC_CheckDump(acall, adumpID, astatus)
-struct rx_call *acall;
-afs_int32 adumpID;
-struct tc_dumpStat *astatus; {
-    if (adumpID != transID) return 2;
+     struct rx_call *acall;
+     afs_int32 adumpID;
+     struct tc_dumpStat *astatus;
+{
+    if (adumpID != transID)
+	return 2;
     astatus->dumpID = adumpID;
     astatus->bytesDumped = (bytesDumped += 1470);
-    astatus->flags =0;
-    if (bytesDumped > 2000) astatus->flags = TC_STAT_DONE;
+    astatus->flags = 0;
+    if (bytesDumped > 2000)
+	astatus->flags = TC_STAT_DONE;
     return 0;
 }
 
 STC_AbortDump(acall, adumpID)
-struct rx_call *acall;
-afs_int32 adumpID; {
+     struct rx_call *acall;
+     afs_int32 adumpID;
+{
     return 0;
 }
 
 /* this call waits for a dump to complete; it ties up an LWP on the tape 
 coordinator */
-STC_WaitForDump() {
+STC_WaitForDump()
+{
     return 1;
 }
 
 STC_EndDump(acall, adumpID)
-struct rx_call *acall;
-afs_int32 adumpID; {
+     struct rx_call *acall;
+     afs_int32 adumpID;
+{
     return 0;
 }
 
 STC_GetTMInfo(acall)
-struct rx_call *acall; {
+     struct rx_call *acall;
+{
     return 0;
 }

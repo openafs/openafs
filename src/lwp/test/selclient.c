@@ -53,7 +53,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 
 #include "lwp.h"
@@ -67,7 +68,8 @@ void sendTest(int, int, int, int);
 void sendEnd(int);
 
 int nSigIO = 0;
-void sigIO()
+void
+sigIO()
 {
     nSigIO++;
 }
@@ -77,7 +79,8 @@ char *program;
 
 Usage()
 {
-    printf("Usage: selclient [-fd n] [-oob] [-soob] [-delay n] [-end] [-write n] host port\n");
+    printf
+	("Usage: selclient [-fd n] [-oob] [-soob] [-delay n] [-end] [-write n] host port\n");
     printf("\t-fd n\tUse file descriptor n for socket.\n");
     printf("\t-oob\tRequest a MSG_OOB from server.\n");
     printf("\t-soob\tSend a MSG_OOB to server.\n");
@@ -93,8 +96,8 @@ main(int ac, char **av)
     int on = 1;
     char *hostname = 0;
     struct hostent *hostent;
-    int host; /* net order. */
-    short port = -1; /* host order. */
+    int host;			/* net order. */
+    short port = -1;		/* host order. */
     int setFD = 0;
     int sockFD;
     struct sockaddr_in saddr;
@@ -110,66 +113,58 @@ main(int ac, char **av)
     signal(SIGIO, sigIO);
 
 
-    for (i=1; i<ac; i++) {
+    for (i = 1; i < ac; i++) {
 	if (!strcmp("-fd", av[i])) {
-	    if (++i>=ac) {
+	    if (++i >= ac) {
 		printf("Missing number for -fd option.\n");
 		Usage();
 	    }
 	    setFD = atoi(av[i]);
-	    if (setFD<=2) {
+	    if (setFD <= 2) {
 		printf("%s: %d: file descriptor must be at least 3.\n",
 		       program, setFD);
 		Usage();
 	    }
-	}
-	else if (!strcmp("-end", av[i])) {
+	} else if (!strcmp("-end", av[i])) {
 	    doEnd = 1;
-	}
-	else if (!strcmp("-delay", av[i])) {
-	    if (++i>=ac) {
+	} else if (!strcmp("-delay", av[i])) {
+	    if (++i >= ac) {
 		printf("%s: Missing time for -delay option.\n", program);
 		Usage();
 	    }
 	    delay = atoi(av[i]);
-	    if (delay<0) {
-		printf("%s: %s: delay must be at least 0 seconds.\n",
-		       program, av[i]);
+	    if (delay < 0) {
+		printf("%s: %s: delay must be at least 0 seconds.\n", program,
+		       av[i]);
 		Usage();
 	    }
-	}
-	else if (!strcmp("-write", av[i])) {
+	} else if (!strcmp("-write", av[i])) {
 	    doWrite = 1;
-	    if (++i>=ac) {
+	    if (++i >= ac) {
 		printf("%s: Missing size for -write option.\n", program);
 		Usage();
 	    }
 	    writeSize = atoi(av[i]);
-	    if (writeSize<1) {
+	    if (writeSize < 1) {
 		printf("%s: %s: Write size must be at least 1 byte.\n",
 		       program, av[i]);
 		Usage();
 	    }
-	}
-	else if (!strcmp("-oob", av[i])) {
+	} else if (!strcmp("-oob", av[i])) {
 	    reqOOB = 1;
-	}
-	else if (!strcmp("-soob", av[i])) {
+	} else if (!strcmp("-soob", av[i])) {
 	    putOOB = 1;
-	}
-	else {
+	} else {
 	    if (!hostname) {
 		hostname = av[i];
-	    }
-	    else if (port == -1) {
+	    } else if (port == -1) {
 		port = atoi(av[i]);
-		if (port<=0) {
-		    printf("%s: %s: port must be at least 1\n",
-			   program, av[i]);
+		if (port <= 0) {
+		    printf("%s: %s: port must be at least 1\n", program,
+			   av[i]);
 		    Usage();
 		}
-	    }
-	    else {
+	    } else {
 		printf("%s: %s: Unknown argument.\n", program, av[i]);
 	    }
 	}
@@ -184,7 +179,7 @@ main(int ac, char **av)
 	Usage();
     }
 
-    if (writeSize == 0 && doEnd ==0 && putOOB == 0) {
+    if (writeSize == 0 && doEnd == 0 && putOOB == 0) {
 	printf("%s: Missing action.\n", program);
 	Usage();
     }
@@ -195,44 +190,41 @@ main(int ac, char **av)
     }
 
     if (!(hostent = gethostbyname(hostname))) {
-	printf("%s: Failed to find host entry for %s.\n",
-	       program, hostname);
+	printf("%s: Failed to find host entry for %s.\n", program, hostname);
 	exit(1);
     }
 
-    memcpy((void*)&host, (const void*)hostent->h_addr, sizeof(host));
-    
+    memcpy((void *)&host, (const void *)hostent->h_addr, sizeof(host));
+
     OpenFDs(setFD);
 
     /* Connect to server. */
     sockFD = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockFD<0) {
+    if (sockFD < 0) {
 	Die(0, "socket");
     }
     printf("%s: Using socket at file descriptor %d.\n", program, sockFD);
 
-    memset((void*)&saddr, 0, sizeof(saddr));
+    memset((void *)&saddr, 0, sizeof(saddr));
     saddr.sin_family = AF_INET;
-    saddr.sin_addr.s_addr = host; /* already in network byte order. */
+    saddr.sin_addr.s_addr = host;	/* already in network byte order. */
     saddr.sin_port = htons(port);
-    
-    if (connect(sockFD, (struct sockaddr*)&saddr, sizeof(saddr))<0) {
+
+    if (connect(sockFD, (struct sockaddr *)&saddr, sizeof(saddr)) < 0) {
 	assert(0);
     }
 
 
     if (doEnd) {
 	sendEnd(sockFD);
-    }
-    else if (putOOB) {
+    } else if (putOOB) {
 	Log("Will send OOB in 2 seconds.\n");
 	sleep(2);
 	sendOOB(sockFD);
 	Log("Sent OOB, sleeping for 5 seconds.\n");
 	sleep(5);
 	Log("Sent OOB, exiting.\n");
-    }
-    else {
+    } else {
 	IOMGR_Initialize();
 	sendTest(sockFD, delay, reqOOB, writeSize);
     }
@@ -252,31 +244,32 @@ sendTest(int sockFD, int delay, int reqOOB, int size)
     selcmd_t selCmd;
     time_t stime, etime;
 
-    buf = (char*)malloc(size);
+    buf = (char *)malloc(size);
     assert(buf);
-    bufTest = (char*)malloc(size);
+    bufTest = (char *)malloc(size);
     assert(bufTest);
 
-    for (j=i=0; i<size; i++, j++) {
-	if (j==END_DATA) j++;
-	if (j>255) j=0;
+    for (j = i = 0; i < size; i++, j++) {
+	if (j == END_DATA)
+	    j++;
+	if (j > 255)
+	    j = 0;
 	buf[i] = (char)j;
     }
-    
+
     selCmd.sc_cmd = SC_WRITE;
     selCmd.sc_info = size;
     selCmd.sc_delay = delay;
     selCmd.sc_flags = SC_WAIT_ONLY;
 
-    nbytes = write(sockFD, (char*)&selCmd, sizeof(selCmd));
+    nbytes = write(sockFD, (char *)&selCmd, sizeof(selCmd));
     assert(nbytes == sizeof(selCmd));
 
     Log("Starting to write %d bytes.\n", size);
-   if (!delay) {
+    if (!delay) {
 	nbytes = write(sockFD, buf, size);
 	assert(nbytes == size);
-    }
-    else {
+    } else {
 	rfds = IOMGR_AllocFDSet();
 	wfds = IOMGR_AllocFDSet();
 	efds = IOMGR_AllocFDSet();
@@ -285,25 +278,28 @@ sendTest(int sockFD, int delay, int reqOOB, int size)
 	    exit(1);
 	}
 
-	for (writeIndex = i=0; i<size; writeIndex++, i++) {
-	    FD_ZERO(rfds); FD_ZERO(wfds); FD_ZERO(efds);
+	for (writeIndex = i = 0; i < size; writeIndex++, i++) {
+	    FD_ZERO(rfds);
+	    FD_ZERO(wfds);
+	    FD_ZERO(efds);
 	    FD_SET(sockFD, wfds);
 	    FD_SET(sockFD, efds);
-	    (void) time(&stime);
-	    code = IOMGR_Select(sockFD+1, rfds, wfds, efds,
-				(struct timeval*)NULL);
-	    assert(code>0);
+	    (void)time(&stime);
+	    code =
+		IOMGR_Select(sockFD + 1, rfds, wfds, efds,
+			     (struct timeval *)NULL);
+	    assert(code > 0);
 
 	    if (FD_ISSET(sockFD, wfds)) {
-		(void) time(&etime);
-		if (etime - stime > 1 ) {
+		(void)time(&etime);
+		if (etime - stime > 1) {
 		    Log("Waited %d seconds to write at offset %d.\n",
 			etime - stime, i);
 		}
 		stime = etime;
 		nbytes = write(sockFD, &buf[i], 1);
-		(void) time(&etime);
-		if (etime - stime > 1 ) {
+		(void)time(&etime);
+		if (etime - stime > 1) {
 		    Log("Waited %d seconds IN write.\n", etime - stime);
 		}
 		assert(nbytes == 1);
@@ -317,7 +313,7 @@ sendTest(int sockFD, int delay, int reqOOB, int size)
 
     Log("Wrote %d bytes.\n", size);
     i = 0;
-    while (i<size) {
+    while (i < size) {
 	nbytes = read(sockFD, &bufTest[i], size);
 	i += nbytes;
     }
@@ -327,13 +323,14 @@ sendTest(int sockFD, int delay, int reqOOB, int size)
     Log("Compared %d bytes.\n", size);
 }
 
-void sendEnd(int fd)
+void
+sendEnd(int fd)
 {
     selcmd_t sc;
 
     sc.sc_cmd = SC_END;
-    
-    if (write(fd, (char*)&sc, sizeof(sc)) != sizeof(sc)) {
+
+    if (write(fd, (char *)&sc, sizeof(sc)) != sizeof(sc)) {
 	Die(1, "(sendEnd) write failed: ");
     }
 }

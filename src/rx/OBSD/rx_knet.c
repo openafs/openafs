@@ -10,12 +10,14 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "../rx/rx_kcommon.h"
 
-int osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
-		   int nvecs, int *alength)
+int
+osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr,
+	       struct iovec *dvec, int nvecs, int *alength)
 {
     struct uio u;
     int i, code;
@@ -25,10 +27,10 @@ int osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr, struct iovec *d
     int haveGlock = ISAFS_GLOCK();
 
     if (nvecs > RX_MAXIOVECS)
-        osi_Panic("osi_NetReceive: %d: too many iovecs\n", nvecs);
+	osi_Panic("osi_NetReceive: %d: too many iovecs\n", nvecs);
 
-    for (i = 0 ; i < nvecs ; i++)
-        iov[i] = dvec[i];
+    for (i = 0; i < nvecs; i++)
+	iov[i] = dvec[i];
 
     u.uio_iov = &iov[0];
     u.uio_iovcnt = nvecs;
@@ -39,10 +41,10 @@ int osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr, struct iovec *d
     u.uio_procp = NULL;
 
     if (haveGlock)
-        AFS_GUNLOCK();
+	AFS_GUNLOCK();
     code = soreceive(asocket, (addr ? &nam : NULL), &u, NULL, NULL, NULL);
     if (haveGlock)
-        AFS_GLOCK();
+	AFS_GLOCK();
 
     if (code) {
 #ifdef RXKNET_DEBUG
@@ -63,22 +65,24 @@ int osi_NetReceive(osi_socket asocket, struct sockaddr_in *addr, struct iovec *d
 }
 
 extern int rxk_ListenerPid;
-void osi_StopListener(void)
+void
+osi_StopListener(void)
 {
-   struct proc *p;
+    struct proc *p;
 
-   soclose(rx_socket);
-   p = pfind(rxk_ListenerPid);
-   if (p)
-       psignal(p, SIGUSR1);
+    soclose(rx_socket);
+    p = pfind(rxk_ListenerPid);
+    if (p)
+	psignal(p, SIGUSR1);
 }
 
 /*
  * rx_NetSend - send asize bytes at adata from asocket to host at addr.
  */
 
-int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
-		struct iovec *dvec, int nvecs, afs_int32 alength, int istack)
+int
+osi_NetSend(osi_socket asocket, struct sockaddr_in *addr, struct iovec *dvec,
+	    int nvecs, afs_int32 alength, int istack)
 {
     int i, code;
     struct iovec iov[RX_MAXIOVECS];
@@ -88,10 +92,10 @@ int osi_NetSend(osi_socket asocket, struct sockaddr_in *addr,
 
     AFS_STATCNT(osi_NetSend);
     if (nvecs > RX_MAXIOVECS)
-        osi_Panic("osi_NetSend: %d: Too many iovecs.\n", nvecs);
+	osi_Panic("osi_NetSend: %d: Too many iovecs.\n", nvecs);
 
     for (i = 0; i < nvecs; i++)
-        iov[i] = dvec[i];
+	iov[i] = dvec[i];
 
     u.uio_iov = &iov[0];
     u.uio_iovcnt = nvecs;

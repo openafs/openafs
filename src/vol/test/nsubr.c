@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef AFS_NAMEI_ENV
 #include <stdio.h>
@@ -34,7 +35,8 @@ RCSID("$Header$");
 
 
 
-IHandle_t * GetLinkHandle(char *part, int volid)
+IHandle_t *
+GetLinkHandle(char *part, int volid)
 {
     int dev;
     Inode ino;
@@ -47,6 +49,9 @@ IHandle_t * GetLinkHandle(char *part, int volid)
     return lh;
 }
 
-void DFlushVolume(void) {} ;
+void
+DFlushVolume(void)
+{
+};
 
 #endif /* AFS_NAMEI_ENV */

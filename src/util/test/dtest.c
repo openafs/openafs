@@ -10,13 +10,15 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "ktime.h"
 
 main(argc, argv)
-int argc;
-char **argv; {
+     int argc;
+     char **argv;
+{
     long code, temp;
 
     if (argc <= 1) {
@@ -27,9 +29,9 @@ char **argv; {
     code = ktime_DateToLong(argv[1], &temp);
     if (code) {
 	printf("date parse failed with code %d.\n", code);
-    }
-    else {
-	printf("returned %d, which, run through ctime, yields %s", temp, ctime(&temp));
+    } else {
+	printf("returned %d, which, run through ctime, yields %s", temp,
+	       ctime(&temp));
     }
     exit(0);
 }

@@ -10,7 +10,8 @@
 #include <sys/param.h>
 #include <afsconfig.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <afs/param.h>
 #include <rx/xdr.h>
@@ -19,7 +20,7 @@ RCSID("$Header$");
 #if !defined(AFS_SGI_ENV)
 #ifdef	AFS_OSF_ENV
 #include <ufs/fs.h>
-#else	/* AFS_OSF_ENV */
+#else /* AFS_OSF_ENV */
 #ifdef AFS_VFSINCL_ENV
 #define VFS
 #ifdef	AFS_SUN5_ENV
@@ -37,7 +38,7 @@ RCSID("$Header$");
 #include <sys/fs.h>
 #endif
 #endif /* AFS_VFSINCL_ENV */
-#endif	/* AFS_OSF_ENV */
+#endif /* AFS_OSF_ENV */
 #endif /* AFS_SGI_ENV */
 #include <sys/errno.h>
 #include <sys/types.h>
@@ -88,7 +89,7 @@ RCSID("$Header$");
 #ifdef AFS_LINUX22_ENV
 #include <asm/types.h>
 #include <linux/ext2_fs.h>
-#define ROOTINO EXT2_ROOT_INO /* Assuming we do this on ext2, of course. */
+#define ROOTINO EXT2_ROOT_INO	/* Assuming we do this on ext2, of course. */
 #endif
 
 
@@ -104,7 +105,8 @@ RCSID("$Header$");
 /* ensure that we don't have a "/" instead of a "/dev/rxd0a" type of device.
  * returns pointer to static storage; copy it out quickly!
  */
-char *vol_DevName(dev_t adev, char *wpath)
+char *
+vol_DevName(dev_t adev, char *wpath)
 {
     static char pbuffer[128];
     char pbuf[128], *ptr;
@@ -126,10 +128,12 @@ char *vol_DevName(dev_t adev, char *wpath)
 #endif
 
 #ifdef	AFS_AIX_ENV
-    if ((nmounts = getmount(&vmountp)) <= 0)	{   
+    if ((nmounts = getmount(&vmountp)) <= 0) {
 	return NULL;
     }
-    for (; nmounts; nmounts--, vmountp = (struct vmount *)((int)vmountp + vmountp->vmt_length)) {
+    for (; nmounts;
+	 nmounts--, vmountp =
+	 (struct vmount *)((int)vmountp + vmountp->vmt_length)) {
 	char *part = vmt2dataptr(vmountp, VMT_STUB);
 #else
 #ifdef	AFS_SUN5_ENV
@@ -147,7 +151,7 @@ char *vol_DevName(dev_t adev, char *wpath)
 	}
     }
 #else
-    if ((mfd = setmntent(MOUNTED/*MNTTAB*/, "r")) == NULL) {
+    if ((mfd = setmntent(MOUNTED /*MNTTAB*/, "r")) == NULL) {
 	return NULL;
     }
 #endif
@@ -162,22 +166,25 @@ char *vol_DevName(dev_t adev, char *wpath)
 #endif
 	struct stat status;
 #ifdef	AFS_AIX_ENV
-	if (vmountp->vmt_flags & (MNT_READONLY|MNT_REMOVABLE|MNT_REMOTE)) continue; /* Ignore any "special" partitions */
+	if (vmountp->vmt_flags & (MNT_READONLY | MNT_REMOVABLE | MNT_REMOTE))
+	    continue;		/* Ignore any "special" partitions */
 #else
 #ifdef	AFS_SUN5_ENV
 	/* Ignore non ufs or non read/write partitions */
-	if ((strcmp(mnt.mnt_fstype, "ufs") !=0) ||
-	    (strncmp(mnt.mnt_mntopts, "ro,ignore",9) ==0)) 
-	    continue; 
+	if ((strcmp(mnt.mnt_fstype, "ufs") != 0)
+	    || (strncmp(mnt.mnt_mntopts, "ro,ignore", 9) == 0))
+	    continue;
 #else
 #if defined(AFS_LINUX22_ENV)
 	if (strcmp(mntent->mnt_type, "ext2"))
 	    continue;
 #else
 #if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_HPUX_ENV)
-	if (!hasmntopt(mntent, MNTOPT_RW)) continue;
+	if (!hasmntopt(mntent, MNTOPT_RW))
+	    continue;
 #else
-	if (strcmp(fsent->fs_type, "rw") != 0) continue; /* Ignore non read/write partitions */
+	if (strcmp(fsent->fs_type, "rw") != 0)
+	    continue;		/* Ignore non read/write partitions */
 #endif /* AFS_LINUX22_ENV */
 #endif /* AFS_SGI_ENV */
 #endif
@@ -185,12 +192,13 @@ char *vol_DevName(dev_t adev, char *wpath)
 	/* Only keep track of "/vicepx" partitions since it can get hairy when NFS mounts are involved.. */
 	if (strncmp(part, VICE_PARTITION_PREFIX, VICE_PREFIX_SIZE)) {
 	    continue;		/* Non /vicepx; ignore */
-        }
+	}
 	if (stat(part, &status) == -1) {
 	    continue;
 	}
 #ifndef AFS_SGI_XFS_IOPS_ENV
-	if ((status.st_ino != ROOTINO) /*|| ((status.st_mode & S_IFMT) != S_IFBLK)*/) {
+	if ((status.st_ino !=
+	     ROOTINO) /*|| ((status.st_mode & S_IFMT) != S_IFBLK) */ ) {
 	    continue;
 	}
 #endif
@@ -206,7 +214,7 @@ char *vol_DevName(dev_t adev, char *wpath)
 #else
 	    strcpy(pbuffer, fsent->fs_spec);
 #endif
-#endif	/* AFS_SGI_ENV */
+#endif /* AFS_SGI_ENV */
 #endif
 	    if (wpath) {
 		strcpy(pbuf, pbuffer);
@@ -217,16 +225,16 @@ char *vol_DevName(dev_t adev, char *wpath)
 		} else
 		    return NULL;
 	    }
-	    ptr = (char *)strrchr(pbuffer, '/');	    
+	    ptr = (char *)strrchr(pbuffer, '/');
 	    if (ptr) {
-		strcpy(pbuffer, ptr+1);
+		strcpy(pbuffer, ptr + 1);
 		return pbuffer;
 	    } else
 		return NULL;
 	}
     }
 #ifdef	AFS_SUN5_ENV
-   (void) fclose(mntfile);
+    (void)fclose(mntfile);
 #else
 #if defined(AFS_SGI_ENV) || defined(AFS_SUN_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_LINUX22_ENV)
     endmntent(mfd);
@@ -243,29 +251,29 @@ char *vol_DevName(dev_t adev, char *wpath)
  * directory and file entry of the pathname until we find a character
  * device.
  */
-char *afs_rawname(char *devfile)
+char *
+afs_rawname(char *devfile)
 {
-  static char rawname[100];
-  struct stat statbuf;
-  char *p;
-  int code, i;
+    static char rawname[100];
+    struct stat statbuf;
+    char *p;
+    int code, i;
 
-  i = strlen(devfile);
-  while (i >= 0) {
-     strcpy(rawname, devfile);
-     if (devfile[i] == '/') {
-        rawname[i+1] = 'r';
-        rawname[i+2] = 0;
-        strcat(rawname, &devfile[i+1]);
-     }
+    i = strlen(devfile);
+    while (i >= 0) {
+	strcpy(rawname, devfile);
+	if (devfile[i] == '/') {
+	    rawname[i + 1] = 'r';
+	    rawname[i + 2] = 0;
+	    strcat(rawname, &devfile[i + 1]);
+	}
 
-     code = stat(rawname, &statbuf);
-     if (!code && S_ISCHR(statbuf.st_mode))
-        return rawname;
-  
-     while((--i>=0) && (devfile[i] != '/'));
-  }
+	code = stat(rawname, &statbuf);
+	if (!code && S_ISCHR(statbuf.st_mode))
+	    return rawname;
 
-  return NULL;
+	while ((--i >= 0) && (devfile[i] != '/'));
+    }
+
+    return NULL;
 }
-

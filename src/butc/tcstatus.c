@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include <sys/types.h>
 #ifdef AFS_NT40_ENV
@@ -35,7 +36,7 @@ RCSID("$Header$");
 extern statusP findStatus();
 extern afs_int32 xbsaType;
 
-dlqlinkT	statusHead;
+dlqlinkT statusHead;
 struct Lock statusQueueLock;
 struct Lock cmdLineLock;
 
@@ -47,7 +48,8 @@ struct Lock cmdLineLock;
  *	statusPtr - filled in with task status
  */
 
-afs_int32 STC_GetStatus(call, taskId, statusPtr)
+afs_int32
+STC_GetStatus(call, taskId, statusPtr)
      struct rx_call *call;
      afs_uint32 taskId;
      struct tciStatusS *statusPtr;
@@ -55,70 +57,72 @@ afs_int32 STC_GetStatus(call, taskId, statusPtr)
     statusP ptr;
     int retval = 0;
 
-    if ( callPermitted(call) == 0 )
-        return(TC_NOTPERMITTED);
+    if (callPermitted(call) == 0)
+	return (TC_NOTPERMITTED);
 
     lock_Status();
     ptr = findStatus(taskId);
-    if ( ptr )
-    {
+    if (ptr) {
 	/* strcpy(statusPtr->status, ptr->status); */
 
 	strcpy(statusPtr->taskName, ptr->taskName);
 	strcpy(statusPtr->volumeName, ptr->volumeName);
-	statusPtr->taskId     = ptr->taskId;
-	statusPtr->flags      = ptr->flags;
-	statusPtr->nKBytes    = ptr->nKBytes;
-	statusPtr->dbDumpId   = ptr->dbDumpId;
+	statusPtr->taskId = ptr->taskId;
+	statusPtr->flags = ptr->flags;
+	statusPtr->nKBytes = ptr->nKBytes;
+	statusPtr->dbDumpId = ptr->dbDumpId;
 	statusPtr->lastPolled = ptr->lastPolled;
 	statusPtr->volsFailed = ptr->volsFailed;
 	ptr->lastPolled = time(0);
-    }
-    else
+    } else
 	retval = TC_NODENOTFOUND;
     unlock_Status();
 
-    return(retval);
+    return (retval);
 }
 
-afs_int32 STC_EndStatus(call, taskId )
+afs_int32
+STC_EndStatus(call, taskId)
      struct rx_call *call;
      afs_uint32 taskId;
 {
     statusP ptr;
     int retval = 0;
 
-    if ( callPermitted(call) == 0 )
-        return(TC_NOTPERMITTED);
+    if (callPermitted(call) == 0)
+	return (TC_NOTPERMITTED);
 
     lock_Status();
     ptr = findStatus(taskId);
     unlock_Status();
 
-    if ( ptr ) deleteStatusNode(ptr);
-    else       retval = TC_NODENOTFOUND;
+    if (ptr)
+	deleteStatusNode(ptr);
+    else
+	retval = TC_NODENOTFOUND;
 
-    return(retval);
+    return (retval);
 }
 
-afs_int32 STC_RequestAbort(call,  taskId )
+afs_int32
+STC_RequestAbort(call, taskId)
      struct rx_call *call;
      afs_uint32 taskId;
 {
     statusP ptr;
     int retval = 0;
 
-    if ( callPermitted(call) == 0 )
-        return(TC_NOTPERMITTED);
+    if (callPermitted(call) == 0)
+	return (TC_NOTPERMITTED);
 
     lock_Status();
     ptr = findStatus(taskId);
-    if ( ptr )
+    if (ptr)
 	ptr->flags |= ABORT_REQUEST;
     else
 	retval = TC_NODENOTFOUND;
     unlock_Status();
-    return(retval);
+    return (retval);
 }
 
 /* STC_ScanStatus
@@ -137,7 +141,8 @@ afs_int32 STC_RequestAbort(call,  taskId )
  *	TC_NOTASKS - no tasks active
  */
 
-afs_int32 STC_ScanStatus(call, taskId, statusPtr, flags)
+afs_int32
+STC_ScanStatus(call, taskId, statusPtr, flags)
      struct rx_call *call;
      afs_uint32 *taskId;
      struct tciStatusS *statusPtr;
@@ -147,39 +152,36 @@ afs_int32 STC_ScanStatus(call, taskId, statusPtr, flags)
     statusP nextPtr = 0;
     dlqlinkP dlqPtr;
 
-    if ( callPermitted(call) == 0 )
-        return(TC_NOTPERMITTED);
+    if (callPermitted(call) == 0)
+	return (TC_NOTPERMITTED);
 
     lock_Status();
 
-    if (CONF_XBSA)                         *flags |= TSK_STAT_XBSA;
-    if (xbsaType == XBSA_SERVER_TYPE_ADSM) *flags |= TSK_STAT_ADSM;
+    if (CONF_XBSA)
+	*flags |= TSK_STAT_XBSA;
+    if (xbsaType == XBSA_SERVER_TYPE_ADSM)
+	*flags |= TSK_STAT_ADSM;
 
-    if ( *flags & TSK_STAT_FIRST )
-    {
+    if (*flags & TSK_STAT_FIRST) {
 	/* find first status node */
 	dlqPtr = statusHead.dlq_next;
-	if ( dlqPtr == &statusHead )
-	{
+	if (dlqPtr == &statusHead) {
 	    /* no status nodes */
 	    *flags |= (TSK_STAT_NOTFOUND | TSK_STAT_END);
 	    unlock_Status();
-	    return(0);
+	    return (0);
 	}
 	ptr = (statusP) dlqPtr;
-    }
-    else
-    {
+    } else {
 	ptr = findStatus(*taskId);
-	if ( ptr == 0 )
-	{
+	if (ptr == 0) {
 	    /* in the event that the set of tasks has changed, just
 	     * finish, letting the caller retry
 	     */
 
 	    *flags |= (TSK_STAT_NOTFOUND | TSK_STAT_END);
-            unlock_Status();
-            return(0);
+	    unlock_Status();
+	    return (0);
 	}
     }
 
@@ -187,20 +189,20 @@ afs_int32 STC_ScanStatus(call, taskId, statusPtr, flags)
      * what the next node will be
      */
 
-    if ( ptr->link.dlq_next == &statusHead )
+    if (ptr->link.dlq_next == &statusHead)
 	*flags |= TSK_STAT_END;
     else
 	*taskId = ((statusP) ptr->link.dlq_next)->taskId;
 
-    strcpy(statusPtr->taskName,   ptr->taskName);
+    strcpy(statusPtr->taskName, ptr->taskName);
     strcpy(statusPtr->volumeName, ptr->volumeName);
-    statusPtr->taskId     = ptr->taskId;
-    statusPtr->flags      = ptr->flags;
-    statusPtr->nKBytes    = ptr->nKBytes;
+    statusPtr->taskId = ptr->taskId;
+    statusPtr->flags = ptr->flags;
+    statusPtr->nKBytes = ptr->nKBytes;
     statusPtr->lastPolled = ptr->lastPolled;
 
     unlock_Status();
-    return(0);
+    return (0);
 }
 
 
@@ -222,15 +224,14 @@ checkAbortByTaskId(taskId)
     int retval = 0;
 
     extern statusP findStatus();
-    
+
     lock_Status();
     statusPtr = findStatus(taskId);
-    if ( statusPtr )
-    {
+    if (statusPtr) {
 	retval = statusPtr->flags & ABORT_REQUEST;
     }
     unlock_Status();
-    return(retval);
+    return (retval);
 }
 
 /* getStatusFlag
@@ -251,10 +252,9 @@ getStatusFlag(taskId, flag)
 
     lock_Status();
     statusPtr = findStatus(taskId);
-    if ( statusPtr )
-    {
-        retval = statusPtr->flags & flag;
+    if (statusPtr) {
+	retval = statusPtr->flags & flag;
     }
     unlock_Status();
-    return(retval);
+    return (retval);
 }

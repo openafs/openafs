@@ -7,7 +7,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "internal.h"
 #include <stdio.h>
@@ -16,7 +17,8 @@ RCSID("$Header$");
 #include "com_err.h"
 
 static void
-    default_com_err_proc (const char *whoami, afs_int32 code, const char *fmt, va_list args)
+default_com_err_proc(const char *whoami, afs_int32 code, const char *fmt,
+		     va_list args)
 {
     if (whoami) {
 	fputs(whoami, stderr);
@@ -27,7 +29,7 @@ static void
 	fputs(" ", stderr);
     }
     if (fmt) {
-        vfprintf (stderr, fmt, args);
+	vfprintf(stderr, fmt, args);
     }
     putc('\n', stderr);
     /* should do this only on a tty in raw mode */
@@ -39,31 +41,37 @@ typedef void (*errf) (const char *, afs_int32, const char *, va_list);
 
 static errf com_err_hook = default_com_err_proc;
 
-void com_err_va (const char *whoami, afs_int32 code, const char *fmt, va_list args)
+void
+com_err_va(const char *whoami, afs_int32 code, const char *fmt, va_list args)
 {
     (*com_err_hook) (whoami, code, fmt, args);
 }
 
-void com_err (const char *whoami, afs_int32 code, const char *fmt, ...)
+void
+com_err(const char *whoami, afs_int32 code, const char *fmt, ...)
 {
     va_list pvar;
 
     if (!com_err_hook)
 	com_err_hook = default_com_err_proc;
     va_start(pvar, fmt);
-    com_err_va (whoami, code, fmt, pvar);
+    com_err_va(whoami, code, fmt, pvar);
     va_end(pvar);
 }
 
-errf set_com_err_hook (errf new_proc)
+errf
+set_com_err_hook(errf new_proc)
 {
     errf x = com_err_hook;
-    if (new_proc) com_err_hook = new_proc;
-    else com_err_hook = default_com_err_proc;
+    if (new_proc)
+	com_err_hook = new_proc;
+    else
+	com_err_hook = default_com_err_proc;
     return x;
 }
 
-errf reset_com_err_hook (void)
+errf
+reset_com_err_hook(void)
 {
     errf x = com_err_hook;
     com_err_hook = default_com_err_proc;

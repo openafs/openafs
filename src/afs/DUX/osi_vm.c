@@ -10,11 +10,12 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
-#include "afs/afs_stats.h"  /* statistics */
+#include "afs/afs_stats.h"	/* statistics */
 #include <vm/vm_ubc.h>
 #include <values.h>
 
@@ -34,7 +35,8 @@ RCSID("$Header$");
  *
  * OSF/1 Locking:  VN_LOCK has been called.
  */
-int osi_VM_FlushVCache(struct vcache *avc, int *slept)
+int
+osi_VM_FlushVCache(struct vcache *avc, int *slept)
 {
     if (avc->vrefCount > 1)
 	return EBUSY;
@@ -79,16 +81,17 @@ int osi_VM_FlushVCache(struct vcache *avc, int *slept)
  *
  * Called with the global lock NOT held.
  */
-static void osi_ubc_flush_dirty_and_wait(struct vnode *vp, int flags)
+static void
+osi_ubc_flush_dirty_and_wait(struct vnode *vp, int flags)
 {
     int retry;
     vm_page_t pp;
     int first;
 
     do {
-	struct vm_ubc_object* vop;
-	vop = (struct vm_ubc_object*)(vp->v_object);
-	ubc_flush_dirty(vop, flags); 
+	struct vm_ubc_object *vop;
+	vop = (struct vm_ubc_object *)(vp->v_object);
+	ubc_flush_dirty(vop, flags);
 
 	vm_object_lock(vop);
 	if (vop->vu_dirtypl)
@@ -103,14 +106,15 @@ static void osi_ubc_flush_dirty_and_wait(struct vnode *vp, int flags)
 		    if (pp->pg_busy) {
 			retry = 1;
 			pp->pg_wait = 1;
-			assert_wait_mesg((vm_offset_t)pp, FALSE, "pg_wait");
+			assert_wait_mesg((vm_offset_t) pp, FALSE, "pg_wait");
 			vm_object_unlock(vop);
 			thread_block();
 			break;
 		    }
 		}
 	    }
-	    if (retry) continue;
+	    if (retry)
+		continue;
 	}
 	vm_object_unlock(vop);
     } while (retry);
@@ -121,13 +125,14 @@ static void osi_ubc_flush_dirty_and_wait(struct vnode *vp, int flags)
  * Locking:  the vcache entry's lock is held.  It will usually be dropped and
  * re-obtained.
  */
-void osi_VM_StoreAllSegments(struct vcache *avc)
+void
+osi_VM_StoreAllSegments(struct vcache *avc)
 {
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
     osi_ubc_flush_dirty_and_wait(AFSTOV(avc), 0);
     AFS_GLOCK();
-    ObtainWriteLock(&avc->lock,94);
+    ObtainWriteLock(&avc->lock, 94);
 }
 
 /* Try to invalidate pages, for "fs flush" or "fs flushv"; or
@@ -139,21 +144,23 @@ void osi_VM_StoreAllSegments(struct vcache *avc)
  * Since we drop and re-obtain the lock, we can't guarantee that there won't
  * be some pages around when we return, newly created by concurrent activity.
  */
-void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
+void
+osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred, int sync)
 {
     ReleaseWriteLock(&avc->lock);
     AFS_GUNLOCK();
     osi_ubc_flush_dirty_and_wait(AFSTOV(avc), 0);
     ubc_invalidate(AFSTOV(avc)->v_object, 0, 0, B_INVAL);
     AFS_GLOCK();
-    ObtainWriteLock(&avc->lock,59);
+    ObtainWriteLock(&avc->lock, 59);
 }
 
 /* Purge VM for a file when its callback is revoked.
  *
  * Locking:  No lock is held, not even the global lock.
  */
-void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
+void
+osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
 {
     ubc_flush_dirty(AFSTOV(avc)->v_object, 0);
     ubc_invalidate(AFSTOV(avc)->v_object, 0, 0, B_INVAL);
@@ -165,8 +172,8 @@ void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
  * activeV is raised.  This is supposed to block pageins, but at present
  * it only works on Solaris.
  */
-void osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
+void
+osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
 {
-    ubc_invalidate(AFSTOV(avc)->v_object, alen,
-                        MAXINT - alen, B_INVAL);
+    ubc_invalidate(AFSTOV(avc)->v_object, alen, MAXINT - alen, B_INVAL);
 }

@@ -51,92 +51,92 @@ RCSID("$Id$");
 #endif
 
 static int
-creat_files (const char *dirname, int count)
+creat_files(const char *dirname, int count)
 {
     struct stat sb;
     int i;
     DIR *d;
     struct dirent *dp;
-    
-    if (mkdir (dirname, 0777) < 0)
-	err (1, "mkdir %s", dirname);
 
-    if (chdir (dirname) < 0)
-	err (1, "chdir %s", dirname);
-    if (stat (".", &sb) < 0)
-	err (1, "stat .");
+    if (mkdir(dirname, 0777) < 0)
+	err(1, "mkdir %s", dirname);
+
+    if (chdir(dirname) < 0)
+	err(1, "chdir %s", dirname);
+    if (stat(".", &sb) < 0)
+	err(1, "stat .");
     if (sb.st_size != 2048)
-	errx (1, "size != 2048");
+	errx(1, "size != 2048");
     for (i = 0; i < count; ++i) {
 	char num[17];
 	int fd;
 
-	snprintf (num, sizeof(num), "%d", i);
-	
-	fd = open (num, O_CREAT | O_EXCL, 0777);
-	if (fd < 0)
-	    err (1, "open %s", num);
-	if (close (fd) < 0)
-	    err (1, "close %s", num);
-    }
-    if (stat (".", &sb) < 0)
-	err (1, "stat .");
+	snprintf(num, sizeof(num), "%d", i);
 
-    d = opendir (".");
+	fd = open(num, O_CREAT | O_EXCL, 0777);
+	if (fd < 0)
+	    err(1, "open %s", num);
+	if (close(fd) < 0)
+	    err(1, "close %s", num);
+    }
+    if (stat(".", &sb) < 0)
+	err(1, "stat .");
+
+    d = opendir(".");
     if (d == NULL)
-	err (1, "opendir .");
+	err(1, "opendir .");
     for (i = -2; i < count; ++i) {
 	char num[17];
 
-	dp = readdir (d);
+	dp = readdir(d);
 	if (dp == NULL)
-	    errx (1, "out of entries at %d?", i);
+	    errx(1, "out of entries at %d?", i);
 	if (i == -2)
-	    strcpy (num, ".");
+	    strcpy(num, ".");
 	else if (i == -1)
-	    strcpy (num, "..");
+	    strcpy(num, "..");
 	else
-	    snprintf (num, sizeof(num), "%d", i);
-	if (strcmp (num, dp->d_name) != 0)
-	    errx (1, "'%s' != '%s'", num, dp->d_name);
+	    snprintf(num, sizeof(num), "%d", i);
+	if (strcmp(num, dp->d_name) != 0)
+	    errx(1, "'%s' != '%s'", num, dp->d_name);
     }
-    if (readdir (d) != NULL)
-	errx (1, "more entries?");
-    closedir (d);
+    if (readdir(d) != NULL)
+	errx(1, "more entries?");
+    closedir(d);
     for (i = 0; i < count; ++i) {
 	char num[17];
 
-	snprintf (num, sizeof(num), "%d", i);
-	
-	if (unlink (num) < 0)
-	    err (1, "unlink %s", num);
+	snprintf(num, sizeof(num), "%d", i);
+
+	if (unlink(num) < 0)
+	    err(1, "unlink %s", num);
     }
-    d = opendir (".");
+    d = opendir(".");
     if (d == NULL)
-	err (1, "opendir .");
-    dp = readdir (d);
-    if (dp == NULL || strcmp (dp->d_name, ".") != 0)
-	errx (1, "where's .?");
-    dp = readdir (d);
-    if (dp == NULL || strcmp (dp->d_name, "..") != 0)
-	errx (1, "where's ..?");
-    if (readdir (d) != NULL)
-	errx (1, "even more entries?");
-    closedir (d);
-    if (stat (".", &sb) < 0)
-	err (1, "stat .");
+	err(1, "opendir .");
+    dp = readdir(d);
+    if (dp == NULL || strcmp(dp->d_name, ".") != 0)
+	errx(1, "where's .?");
+    dp = readdir(d);
+    if (dp == NULL || strcmp(dp->d_name, "..") != 0)
+	errx(1, "where's ..?");
+    if (readdir(d) != NULL)
+	errx(1, "even more entries?");
+    closedir(d);
+    if (stat(".", &sb) < 0)
+	err(1, "stat .");
 #if 0
     if (sb.st_size != 2048)
-	errx (1, "size != 2048");
+	errx(1, "size != 2048");
 #endif
     return 0;
 }
 
 static void
-usage (int ret)
+usage(int ret)
 {
-    fprintf (stderr, "%s directory number-of-files\n", __progname);
-    exit (ret);
+    fprintf(stderr, "%s directory number-of-files\n", __progname);
+    exit(ret);
 }
 
 int
@@ -147,11 +147,11 @@ main(int argc, char **argv)
 
 
     if (argc != 3)
-	usage (1);
+	usage(1);
 
-    count = strtol (argv[2], &ptr, 0);
+    count = strtol(argv[2], &ptr, 0);
     if (count == 0 && ptr == argv[2])
-	errx (1, "'%s' not a number", argv[2]);
+	errx(1, "'%s' not a number", argv[2]);
 
-    return creat_files (argv[1], count);
+    return creat_files(argv[1], count);
 }

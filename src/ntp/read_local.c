@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #ifdef	REFCLOCK
 /*
@@ -24,21 +25,21 @@ RCSID("$Header$");
 #include <sys/time.h>
 
 init_clock_local(file)
-char *file;
+     char *file;
 {
-	return getdtablesize();	/* invalid if we ever use it */
+    return getdtablesize();	/* invalid if we ever use it */
 }
 
 read_clock_local(cfd, tvp, mtvp)
-int cfd;
-struct timeval **tvp, **mtvp;
+     int cfd;
+     struct timeval **tvp, **mtvp;
 {
-	static struct timeval realtime, mytime;
+    static struct timeval realtime, mytime;
 
-	gettimeofday(&realtime, 0);
-	mytime = realtime;
-	*tvp = &realtime;
-	*mtvp = &mytime;
-	return(0);
+    gettimeofday(&realtime, 0);
+    mytime = realtime;
+    *tvp = &realtime;
+    *mtvp = &mytime;
+    return (0);
 }
 #endif

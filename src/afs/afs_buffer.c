@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
@@ -22,7 +23,7 @@ RCSID("$Header$");
 #include "h/limits.h"
 #endif
 #if	!defined(AFS_AIX_ENV) && !defined(AFS_SUN5_ENV) && !defined(AFS_SGI_ENV) && !defined(AFS_LINUX20_ENV)
-#include "h/kernel.h"    /* Doesn't needed, so it should go */
+#include "h/kernel.h"		/* Doesn't needed, so it should go */
 #endif
 #endif /* !defined(UKERNEL) */
 
@@ -66,7 +67,7 @@ RCSID("$Header$");
 			 | (page & PHPAGEMASK))
 
 #ifdef	dirty
-#undef dirty	/* XXX */
+#undef dirty			/* XXX */
 #endif
 
 static struct buffer *Buffers = 0;
@@ -87,63 +88,69 @@ static int nbuffers;
 static afs_int32 timecounter;
 
 /* Prototypes for static routines */
-static struct buffer *afs_newslot (afs_inode_t *afid, afs_int32 apage,register struct buffer *lp);
+static struct buffer *afs_newslot(afs_inode_t * afid, afs_int32 apage,
+				  register struct buffer *lp);
 
 static int dinit_flag = 0;
-void DInit (int abuffers)
+void
+DInit(int abuffers)
 {
     /* Initialize the venus buffer system. */
     register int i;
     register struct buffer *tb;
 #if AFS_USEBUFFERS
-    struct buf *tub;	    /* unix buffer for allocation */
+    struct buf *tub;		/* unix buffer for allocation */
 #endif
 
     AFS_STATCNT(DInit);
-    if (dinit_flag) return;
+    if (dinit_flag)
+	return;
     dinit_flag = 1;
 #if AFS_USEBUFFERS
     /* round up to next multiple of NPB, since we allocate multiple pages per chunk */
-    abuffers = ((abuffers-1) | (NPB-1)) + 1;
+    abuffers = ((abuffers - 1) | (NPB - 1)) + 1;
 #endif
     LOCK_INIT(&afs_bufferLock, "afs_bufferLock");
-    Buffers = (struct buffer *) afs_osi_Alloc(abuffers * sizeof(struct buffer));
+    Buffers =
+	(struct buffer *)afs_osi_Alloc(abuffers * sizeof(struct buffer));
 #if !AFS_USEBUFFERS
-    BufferData = (char *) afs_osi_Alloc(abuffers * AFS_BUFFER_PAGESIZE);
+    BufferData = (char *)afs_osi_Alloc(abuffers * AFS_BUFFER_PAGESIZE);
 #endif
     timecounter = 1;
     afs_stats_cmperf.bufAlloced = nbuffers = abuffers;
-    for(i=0;i<PHSIZE;i++) phTable[i] = 0;
-    for (i=0;i<abuffers;i++) {
+    for (i = 0; i < PHSIZE; i++)
+	phTable[i] = 0;
+    for (i = 0; i < abuffers; i++) {
 #if AFS_USEBUFFERS
-	if ((i & (NPB-1)) == 0) {
+	if ((i & (NPB - 1)) == 0) {
 	    /* time to allocate a fresh buffer */
-	    tub = geteblk(AFS_BUFFER_PAGESIZE*NPB);
-	    BufferData = (char *) tub->b_un.b_addr;
+	    tub = geteblk(AFS_BUFFER_PAGESIZE * NPB);
+	    BufferData = (char *)tub->b_un.b_addr;
 	}
 #endif
-        /* Fill in each buffer with an empty indication. */
+	/* Fill in each buffer with an empty indication. */
 	tb = &Buffers[i];
-        dirp_Zap(tb->fid);
-        tb->accesstime = 0;
+	dirp_Zap(tb->fid);
+	tb->accesstime = 0;
 	tb->lockers = 0;
 #if AFS_USEBUFFERS
-	if ((i & (NPB-1)) == 0) 
+	if ((i & (NPB - 1)) == 0)
 	    tb->bufp = tub;
 	else
 	    tb->bufp = 0;
-	tb->data = &BufferData[AFS_BUFFER_PAGESIZE * (i&(NPB-1))];
+	tb->data = &BufferData[AFS_BUFFER_PAGESIZE * (i & (NPB - 1))];
 #else
-        tb->data = &BufferData[AFS_BUFFER_PAGESIZE*i];
+	tb->data = &BufferData[AFS_BUFFER_PAGESIZE * i];
 #endif
 	tb->hashIndex = 0;
-        tb->dirty = 0;
+	tb->dirty = 0;
 	RWLOCK_INIT(&tb->lock, "buffer lock");
     }
     return;
 }
 
-char *DRead(register afs_inode_t *fid, register int page)
+char *
+DRead(register afs_inode_t * fid, register int page)
 {
     /* Read a page from the disk. */
     register struct buffer *tb, *tb2;
@@ -151,7 +158,7 @@ char *DRead(register afs_inode_t *fid, register int page)
     int code;
 
     AFS_STATCNT(DRead);
-    MObtainWriteLock(&afs_bufferLock,256);
+    MObtainWriteLock(&afs_bufferLock, 256);
 
 #define bufmatch(tb) (tb->page == page && dirp_Eq(tb->fid, fid))
 #define buf_Front(head,parent,p) {(parent)->hashNext = (p)->hashNext; (p)->hashNext= *(head);*(head)=(p);}
@@ -162,47 +169,46 @@ char *DRead(register afs_inode_t *fid, register int page)
      * of larger code size.  This could be simplified by better use of
      * macros. 
      */
-    if ((tb = phTable[pHash(fid,page)])) {
+    if ((tb = phTable[pHash(fid, page)])) {
 	if (bufmatch(tb)) {
-	    MObtainWriteLock(&tb->lock,257);
+	    MObtainWriteLock(&tb->lock, 257);
 	    ReleaseWriteLock(&afs_bufferLock);
 	    tb->lockers++;
 	    tb->accesstime = timecounter++;
 	    AFS_STATS(afs_stats_cmperf.bufHits++);
 	    MReleaseWriteLock(&tb->lock);
 	    return tb->data;
-	}
-	else {
-	  register struct buffer **bufhead;
-	  bufhead = &( phTable[pHash(fid,page)] );
-	  while ((tb2 = tb->hashNext)) {
-	    if (bufmatch(tb2)) {
-	      buf_Front(bufhead,tb,tb2);
-	      MObtainWriteLock(&tb2->lock,258);
-	      ReleaseWriteLock(&afs_bufferLock);
-	      tb2->lockers++;
-	      tb2->accesstime = timecounter++;
-	      AFS_STATS(afs_stats_cmperf.bufHits++);
-	      MReleaseWriteLock(&tb2->lock);
-	      return tb2->data;
+	} else {
+	    register struct buffer **bufhead;
+	    bufhead = &(phTable[pHash(fid, page)]);
+	    while ((tb2 = tb->hashNext)) {
+		if (bufmatch(tb2)) {
+		    buf_Front(bufhead, tb, tb2);
+		    MObtainWriteLock(&tb2->lock, 258);
+		    ReleaseWriteLock(&afs_bufferLock);
+		    tb2->lockers++;
+		    tb2->accesstime = timecounter++;
+		    AFS_STATS(afs_stats_cmperf.bufHits++);
+		    MReleaseWriteLock(&tb2->lock);
+		    return tb2->data;
+		}
+		if ((tb = tb2->hashNext)) {
+		    if (bufmatch(tb)) {
+			buf_Front(bufhead, tb2, tb);
+			MObtainWriteLock(&tb->lock, 259);
+			ReleaseWriteLock(&afs_bufferLock);
+			tb->lockers++;
+			tb->accesstime = timecounter++;
+			AFS_STATS(afs_stats_cmperf.bufHits++);
+			MReleaseWriteLock(&tb->lock);
+			return tb->data;
+		    }
+		} else
+		    break;
 	    }
-	    if ((tb = tb2->hashNext)) {
-	      if (bufmatch(tb)) {
-		buf_Front(bufhead,tb2,tb);
-		MObtainWriteLock(&tb->lock,259);
-		ReleaseWriteLock(&afs_bufferLock);
-		tb->lockers++;
-		tb->accesstime = timecounter++;
-		AFS_STATS(afs_stats_cmperf.bufHits++);
-		MReleaseWriteLock(&tb->lock);
-		return tb->data;
-	      }
-	    }
-	    else break;
-	  }
 	}
-      }  
-    else tb2 = NULL;
+    } else
+	tb2 = NULL;
 
     AFS_STATS(afs_stats_cmperf.bufMisses++);
     /* can't find it */
@@ -215,7 +221,7 @@ char *DRead(register afs_inode_t *fid, register int page)
 	MReleaseWriteLock(&afs_bufferLock);
 	return NULL;
     }
-    MObtainWriteLock(&tb->lock,260);
+    MObtainWriteLock(&tb->lock, 260);
     MReleaseWriteLock(&afs_bufferLock);
     tb->lockers++;
     tfile = afs_CFileOpen(fid[0]);
@@ -226,8 +232,9 @@ char *DRead(register afs_inode_t *fid, register int page)
 	afs_CFileClose(tfile);
 	return NULL;
     }
-    code = afs_CFileRead(tfile, tb->page * AFS_BUFFER_PAGESIZE,
-			 tb->data, AFS_BUFFER_PAGESIZE);
+    code =
+	afs_CFileRead(tfile, tb->page * AFS_BUFFER_PAGESIZE, tb->data,
+		      AFS_BUFFER_PAGESIZE);
     afs_CFileClose(tfile);
     if (code < AFS_BUFFER_PAGESIZE) {
 	dirp_Zap(tb->fid);
@@ -241,7 +248,8 @@ char *DRead(register afs_inode_t *fid, register int page)
     return tb->data;
 }
 
-static void FixupBucket(register struct buffer *ap)
+static void
+FixupBucket(register struct buffer *ap)
 {
     register struct buffer **lp, *tp;
     register int i;
@@ -250,7 +258,7 @@ static void FixupBucket(register struct buffer *ap)
     AFS_STATCNT(FixupBucket);
     i = ap->hashIndex;
     lp = &phTable[i];
-    for(tp = *lp; tp; tp=tp->hashNext) {
+    for (tp = *lp; tp; tp = tp->hashNext) {
 	if (tp == ap) {
 	    *lp = tp->hashNext;
 	    break;
@@ -258,14 +266,15 @@ static void FixupBucket(register struct buffer *ap)
 	lp = &tp->hashNext;
     }
     /* now figure the new hash bucket */
-    i = pHash(ap->fid,ap->page);
+    i = pHash(ap->fid, ap->page);
     ap->hashIndex = i;		/* remember where we are for deletion */
     ap->hashNext = phTable[i];	/* add us to the list */
-    phTable[i] = ap;            /* at the front, since it's LRU */
+    phTable[i] = ap;		/* at the front, since it's LRU */
 }
 
 /* lp is pointer to a fairly-old buffer */
-static struct buffer *afs_newslot (afs_inode_t *afid, afs_int32 apage,register struct buffer *lp)
+static struct buffer *
+afs_newslot(afs_inode_t * afid, afs_int32 apage, register struct buffer *lp)
 {
     /* Find a usable buffer slot */
     register afs_int32 i;
@@ -281,11 +290,10 @@ static struct buffer *afs_newslot (afs_inode_t *afid, afs_int32 apage,register s
      * case" for loop below.
      */
     if (lp && (lp->lockers == 0)) {
-      lt = lp->accesstime;
-    }
-    else {
-      lp = 0;
-      lt = BUF_TIME_MAX;
+	lt = lp->accesstime;
+    } else {
+	lp = 0;
+	lt = BUF_TIME_MAX;
     }
 
     /* timecounter might have wrapped, if machine is very very busy
@@ -303,44 +311,43 @@ static struct buffer *afs_newslot (afs_inode_t *afid, afs_int32 apage,register s
      * themselves back out after just a few more DReads.
      */
     if (timecounter < 0) {
-      timecounter = 1;
-      tp = Buffers;
-      for (i=0;i<nbuffers;i++,tp++) {
-	tp->accesstime = 0;
-	if (!lp && !tp->lockers)  /* one is as good as the rest, I guess */
-	  lp = tp;
-      }
-    }
-    else {
-      /* this is the typical case */
-      tp = Buffers;
-      for (i=0;i<nbuffers;i++,tp++) {
-	if (tp->lockers == 0) {
-	  if (tp->accesstime < lt) {
-	    lp = tp;
-	    lt = tp->accesstime;
-	  }
+	timecounter = 1;
+	tp = Buffers;
+	for (i = 0; i < nbuffers; i++, tp++) {
+	    tp->accesstime = 0;
+	    if (!lp && !tp->lockers)	/* one is as good as the rest, I guess */
+		lp = tp;
 	}
-      }
+    } else {
+	/* this is the typical case */
+	tp = Buffers;
+	for (i = 0; i < nbuffers; i++, tp++) {
+	    if (tp->lockers == 0) {
+		if (tp->accesstime < lt) {
+		    lp = tp;
+		    lt = tp->accesstime;
+		}
+	    }
+	}
     }
 
     if (lp == 0) {
-      /* There are no unlocked buffers -- this used to panic, but that
-       * seems extreme.  To the best of my knowledge, all the callers
-       * of DRead are prepared to handle a zero return.  Some of them
-       * just panic directly, but not all of them. */
-      afs_warn ("all buffers locked");
-      return 0;
+	/* There are no unlocked buffers -- this used to panic, but that
+	 * seems extreme.  To the best of my knowledge, all the callers
+	 * of DRead are prepared to handle a zero return.  Some of them
+	 * just panic directly, but not all of them. */
+	afs_warn("all buffers locked");
+	return 0;
     }
 
     if (lp->dirty) {
 	tfile = afs_CFileOpen(lp->fid[0]);
-	afs_CFileWrite(tfile, lp->page * AFS_BUFFER_PAGESIZE, 
-		       lp->data, AFS_BUFFER_PAGESIZE);	
-        lp->dirty = 0;
+	afs_CFileWrite(tfile, lp->page * AFS_BUFFER_PAGESIZE, lp->data,
+		       AFS_BUFFER_PAGESIZE);
+	lp->dirty = 0;
 	afs_CFileClose(tfile);
 	AFS_STATS(afs_stats_cmperf.bufFlushDirty++);
-      }
+    }
 
     /* Now fill in the header. */
     dirp_Cpy(lp->fid, afid);	/* set this */
@@ -351,7 +358,8 @@ static struct buffer *afs_newslot (afs_inode_t *afid, afs_int32 apage,register s
     return lp;
 }
 
-void DRelease (register struct buffer *bp, int flag)
+void
+DRelease(register struct buffer *bp, int flag)
 {
     /* Release a buffer, specifying whether or not the buffer has been
      * modified by the locker. */
@@ -361,29 +369,33 @@ void DRelease (register struct buffer *bp, int flag)
 #endif
 
     AFS_STATCNT(DRelease);
-    if (!bp) return;
+    if (!bp)
+	return;
 #if AFS_USEBUFFERS
     /* look for buffer by scanning Unix buffers for appropriate address */
     tp = Buffers;
-    for(index = 0; index < nbuffers; index += NPB, tp += NPB) {
-	if ((afs_int32)bp >= (afs_int32)tp->data 
-	    && (afs_int32)bp < (afs_int32)tp->data + AFS_BUFFER_PAGESIZE*NPB) {
+    for (index = 0; index < nbuffers; index += NPB, tp += NPB) {
+	if ((afs_int32) bp >= (afs_int32) tp->data
+	    && (afs_int32) bp <
+	    (afs_int32) tp->data + AFS_BUFFER_PAGESIZE * NPB) {
 	    /* we found the right range */
-	    index += ((afs_int32)bp - (afs_int32)tp->data) >> LOGPS;
+	    index += ((afs_int32) bp - (afs_int32) tp->data) >> LOGPS;
 	    break;
 	}
     }
 #else
-    index = (((char *)bp)-((char *)BufferData))>>LOGPS;
+    index = (((char *)bp) - ((char *)BufferData)) >> LOGPS;
 #endif
     bp = &(Buffers[index]);
-    MObtainWriteLock(&bp->lock,261);
+    MObtainWriteLock(&bp->lock, 261);
     bp->lockers--;
-    if (flag) bp->dirty=1;
+    if (flag)
+	bp->dirty = 1;
     MReleaseWriteLock(&bp->lock);
 }
 
-int DVOffset (register void *ap)
+int
+DVOffset(register void *ap)
 {
     /* Return the byte within a file represented by a buffer pointer. */
     register struct buffer *bp;
@@ -392,23 +404,26 @@ int DVOffset (register void *ap)
     register struct buffer *tp;
 #endif
     AFS_STATCNT(DVOffset);
-    bp=ap;
+    bp = ap;
 #if AFS_USEBUFFERS
     /* look for buffer by scanning Unix buffers for appropriate address */
     tp = Buffers;
-    for(index = 0; index < nbuffers; index += NPB, tp += NPB) {
-	if ((afs_int32)bp >= (afs_int32)tp->data && (afs_int32)bp < (afs_int32)tp->data + AFS_BUFFER_PAGESIZE*NPB) {
+    for (index = 0; index < nbuffers; index += NPB, tp += NPB) {
+	if ((afs_int32) bp >= (afs_int32) tp->data
+	    && (afs_int32) bp <
+	    (afs_int32) tp->data + AFS_BUFFER_PAGESIZE * NPB) {
 	    /* we found the right range */
-	    index += ((afs_int32)bp - (afs_int32)tp->data) >> LOGPS;
+	    index += ((afs_int32) bp - (afs_int32) tp->data) >> LOGPS;
 	    break;
 	}
     }
 #else
-    index = (((char *)bp)-((char *)BufferData))>>LOGPS;
+    index = (((char *)bp) - ((char *)BufferData)) >> LOGPS;
 #endif
-    if (index<0 || index >= nbuffers) return -1;
+    if (index < 0 || index >= nbuffers)
+	return -1;
     bp = &(Buffers[index]);
-    return AFS_BUFFER_PAGESIZE*bp->page+(int)(((char *)ap)-bp->data);
+    return AFS_BUFFER_PAGESIZE * bp->page + (int)(((char *)ap) - bp->data);
 }
 
 /* 1/1/91 - I've modified the hash function to take the page as well
@@ -417,27 +432,29 @@ int DVOffset (register void *ap)
  * of the hash function.  Oh well.  This should use the list traversal 
  * method of DRead...
  */
-void DZap (afs_inode_t *fid)
+void
+DZap(afs_inode_t * fid)
 {
     register int i;
     /* Destroy all buffers pertaining to a particular fid. */
     register struct buffer *tb;
-    
+
     AFS_STATCNT(DZap);
     MObtainReadLock(&afs_bufferLock);
 
-    for (i=0;i<=PHPAGEMASK;i++)
-    for(tb=phTable[pHash(fid,i)]; tb; tb=tb->hashNext)
-        if (dirp_Eq(tb->fid,fid)) {
-	    MObtainWriteLock(&tb->lock,262);
-            dirp_Zap(tb->fid);
-            tb->dirty = 0;
-	    MReleaseWriteLock(&tb->lock);
-	}
+    for (i = 0; i <= PHPAGEMASK; i++)
+	for (tb = phTable[pHash(fid, i)]; tb; tb = tb->hashNext)
+	    if (dirp_Eq(tb->fid, fid)) {
+		MObtainWriteLock(&tb->lock, 262);
+		dirp_Zap(tb->fid);
+		tb->dirty = 0;
+		MReleaseWriteLock(&tb->lock);
+	    }
     MReleaseReadLock(&afs_bufferLock);
 }
 
-void DFlush (void)
+void
+DFlush(void)
 {
     /* Flush all the modified buffers. */
     register int i;
@@ -447,9 +464,9 @@ void DFlush (void)
     AFS_STATCNT(DFlush);
     tb = Buffers;
     MObtainReadLock(&afs_bufferLock);
-    for(i=0;i<nbuffers;i++,tb++) {
-        if (tb->dirty) {
-	    MObtainWriteLock(&tb->lock,263);
+    for (i = 0; i < nbuffers; i++, tb++) {
+	if (tb->dirty) {
+	    MObtainWriteLock(&tb->lock, 263);
 	    tb->lockers++;
 	    MReleaseReadLock(&afs_bufferLock);
 	    if (tb->dirty) {
@@ -467,24 +484,26 @@ void DFlush (void)
     MReleaseReadLock(&afs_bufferLock);
 }
 
-char *DNew (register afs_inode_t *fid, register int page)
+char *
+DNew(register afs_inode_t * fid, register int page)
 {
     /* Same as read, only do *not* even try to read the page, since it probably doesn't exist. */
     register struct buffer *tb;
     AFS_STATCNT(DNew);
-    MObtainWriteLock(&afs_bufferLock,264);
-    if ((tb = afs_newslot(fid,page,NULL)) == 0) {
+    MObtainWriteLock(&afs_bufferLock, 264);
+    if ((tb = afs_newslot(fid, page, NULL)) == 0) {
 	MReleaseWriteLock(&afs_bufferLock);
 	return 0;
     }
-    MObtainWriteLock(&tb->lock,265);
+    MObtainWriteLock(&tb->lock, 265);
     MReleaseWriteLock(&afs_bufferLock);
     tb->lockers++;
     MReleaseWriteLock(&tb->lock);
     return tb->data;
 }
 
-void shutdown_bufferpackage(void)
+void
+shutdown_bufferpackage(void)
 {
 #if AFS_USEBUFFERS
     register struct buffer *tp;
@@ -496,25 +515,27 @@ void shutdown_bufferpackage(void)
     /* Free all allocated Buffers and associated buffer pages */
     DFlush();
     if (afs_cold_shutdown) {
-      dinit_flag = 0;
+	dinit_flag = 0;
 #if !AFS_USEBUFFERS
-      afs_osi_Free(BufferData, nbuffers * AFS_BUFFER_PAGESIZE);
+	afs_osi_Free(BufferData, nbuffers * AFS_BUFFER_PAGESIZE);
 #else
-      tp = Buffers;
-      for (i=0; i < nbuffers; i+= NPB, tp += NPB) {
-	/* The following check shouldn't be necessary and it will be removed soon */
-	if (!tp->bufp) 
-	    afs_warn("shutdown_bufferpackage: bufp == 0!! Shouldn't happen\n");
-	else {
-	    brelse(tp->bufp);
-	    tp->bufp = 0;
+	tp = Buffers;
+	for (i = 0; i < nbuffers; i += NPB, tp += NPB) {
+	    /* The following check shouldn't be necessary and it will be removed soon */
+	    if (!tp->bufp)
+		afs_warn
+		    ("shutdown_bufferpackage: bufp == 0!! Shouldn't happen\n");
+	    else {
+		brelse(tp->bufp);
+		tp->bufp = 0;
+	    }
 	}
-      }
 #endif
-      afs_osi_Free(Buffers, nbuffers * sizeof(struct buffer));
-      nbuffers = 0;
-      timecounter = 1;
-      for(i=0;i<PHSIZE;i++) phTable[i] = 0;
-      memset((char *)&afs_bufferLock, 0, sizeof(afs_lock_t));
-  }
-}  
+	afs_osi_Free(Buffers, nbuffers * sizeof(struct buffer));
+	nbuffers = 0;
+	timecounter = 1;
+	for (i = 0; i < PHSIZE; i++)
+	    phTable[i] = 0;
+	memset((char *)&afs_bufferLock, 0, sizeof(afs_lock_t));
+    }
+}

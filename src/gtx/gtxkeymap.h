@@ -14,26 +14,26 @@
 #define KEYMAP_NENTRIES		256
 
 /* types of keymaps */
-#define KEYMAP_EMPTY		0		/* nothing in this slot */
-#define KEYMAP_PROC		1		/* procedure in this slot */
-#define KEYMAP_SUBMAP		2		/* submap in this slot */
+#define KEYMAP_EMPTY		0	/* nothing in this slot */
+#define KEYMAP_PROC		1	/* procedure in this slot */
+#define KEYMAP_SUBMAP		2	/* submap in this slot */
 
 /* one per entry */
 struct keymap_entry {
-    char type;				/* type, e.g. submap, etc */
-    char pad[3];			/* padding */
-    char *name;				/* descriptive name of function, if function */
-    union {				/* value (proc, submap, etc) */
-	int (*proc)();
+    char type;			/* type, e.g. submap, etc */
+    char pad[3];		/* padding */
+    char *name;			/* descriptive name of function, if function */
+    union {			/* value (proc, submap, etc) */
+	int (*proc) ();
 	struct keymap_map *submap;
 	char *generic;
     } u;
-    char *rock;				/* rock to use */
+    char *rock;			/* rock to use */
 };
 
 struct keymap_map {
-    short refcount;	/* reference count */
-    char pad[2];	/* padding to afs_int32 boundary */
+    short refcount;		/* reference count */
+    char pad[2];		/* padding to afs_int32 boundary */
     struct keymap_entry entries[KEYMAP_NENTRIES];
 };
 
@@ -49,4 +49,4 @@ extern int keymap_InitState();
 extern int keymap_ProcessState();
 extern int keymap_ResetState();
 
-#endif	/* define for file */
+#endif /* define for file */

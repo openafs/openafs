@@ -35,9 +35,9 @@
 #ifndef	__GNU__			/* ditto */
 #ifndef	NOASM			/* are we doing C-only? */
 #define VAXASM
-#endif				/* NOASM */
-#endif				/* __GNU__ */
-#endif				/* __STDC__ */
+#endif /* NOASM */
+#endif /* __GNU__ */
+#endif /* __STDC__ */
 #define BITS32
 #define BIG
 #define BSDUNIX
@@ -58,7 +58,7 @@
 #define IBMWSASM
 #define BITS32
 #define BIG
-#define	BSDUNIX	/*Does it mean the default us S5? NO */
+#define	BSDUNIX			/*Does it mean the default us S5? NO */
 #define MSBFIRST
 #define MUSTALIGN
 #else
@@ -69,17 +69,15 @@
 #define LSBFIRST
 #else
 
-Sorry, you lose.
-Figure out what the machine looks like and fix this file to
-include it.
+Sorry,
+    you lose.
+    Figure out what the machine looks like and fix this file to include it.
 #endif /* multimax */
 #endif /* AFS_AIX_ENV */
 #endif /* sun */
 #endif /* vax */
 #endif /* pc8086 */
-
 /* Language configuration -- are we ANSI or are we Berkeley? */
-
 #ifndef	__STDC__
 #define	const
 #endif

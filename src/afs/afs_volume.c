@@ -18,7 +18,8 @@
 #include <afsconfig.h>
 #include "afs/param.h"
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -38,7 +39,7 @@ RCSID("$Header$");
 #endif /* !defined(UKERNEL) */
 
 #include "afsincludes.h"	/* Afs-based standard headers */
-#include "afs/afs_stats.h"   /* afs statistics */
+#include "afs/afs_stats.h"	/* afs statistics */
 
 #if	defined(AFS_SUN56_ENV)
 #include <inet/led.h>
@@ -56,36 +57,39 @@ RCSID("$Header$");
 #endif /* vlserver error base define */
 
 /* Exported variables */
-ino_t volumeInode;			/*Inode for VolumeItems file*/
-afs_rwlock_t afs_xvolume;               /* allocation lock for volumes */
+ino_t volumeInode;		/*Inode for VolumeItems file */
+afs_rwlock_t afs_xvolume;	/* allocation lock for volumes */
 struct volume *afs_freeVolList;
 struct volume *afs_volumes[NVOLS];
-afs_int32 afs_volCounter = 1; /* for allocating volume indices */
+afs_int32 afs_volCounter = 1;	/* for allocating volume indices */
 afs_int32 fvTable[NFENTRIES];
 
 /* Forward declarations */
-static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
-				   struct vrequest *areq, afs_int32 locktype);
+static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell,
+					  int agood, struct vrequest *areq,
+					  afs_int32 locktype);
 static struct volume *afs_NewDynrootVolume(struct VenusFid *fid);
-static int inVolList(struct VenusFid *fid, afs_int32 nvols, afs_int32 *vID, afs_int32 *cID);
+static int inVolList(struct VenusFid *fid, afs_int32 nvols, afs_int32 * vID,
+		     afs_int32 * cID);
 
 
 /* Convert a volume name to a #; return 0 if can't parse as a number */
-static int afs_vtoi(register char *aname)
+static int
+afs_vtoi(register char *aname)
 {
     register afs_int32 temp;
     register int tc;
     temp = 0;
     AFS_STATCNT(afs_vtoi);
-    while((tc = *aname++)) {
-	if (tc > '9' ||	tc < '0')
-	    return 0; /* invalid name */
+    while ((tc = *aname++)) {
+	if (tc > '9' || tc < '0')
+	    return 0;		/* invalid name */
 	temp *= 10;
 	temp += tc - '0';
     }
     return temp;
 
-} /*afs_vtoi*/
+}				/*afs_vtoi */
 
 
 /*
@@ -100,7 +104,8 @@ afs_int32 afs_FVIndex = -1;
 
 /* UFS specific version of afs_GetVolSlot */
 
-struct volume *afs_UFSGetVolSlot(void)
+struct volume *
+afs_UFSGetVolSlot(void)
 {
     register struct volume *tv, **lv;
     struct osi_file *tfile;
@@ -114,11 +119,11 @@ struct volume *afs_UFSGetVolSlot(void)
 	bestTime = 0x7fffffff;
 	bestVp = 0;
 	bestLp = 0;
-	for (i=0;i<NVOLS;i++) {
+	for (i = 0; i < NVOLS; i++) {
 	    lv = &afs_volumes[i];
 	    for (tv = *lv; tv; lv = &tv->next, tv = *lv) {
-		if (tv->refCount == 0) {    /* is this one available? */
-		    if (tv->accessTime < bestTime) { /* best one available? */
+		if (tv->refCount == 0) {	/* is this one available? */
+		    if (tv->accessTime < bestTime) {	/* best one available? */
 			bestTime = tv->accessTime;
 			bestLp = lv;
 			bestVp = tv;
@@ -131,7 +136,7 @@ struct volume *afs_UFSGetVolSlot(void)
 	tv = bestVp;
 	*bestLp = tv->next;
 	if (tv->name)
-	    afs_osi_Free(tv->name, strlen(tv->name)+1);
+	    afs_osi_Free(tv->name, strlen(tv->name) + 1);
 	tv->name = NULL;
 	/* now write out volume structure to file */
 	if (tv->vtix < 0) {
@@ -139,17 +144,17 @@ struct volume *afs_UFSGetVolSlot(void)
 	    /* now put on hash chain */
 	    i = FVHash(tv->cell, tv->volume);
 	    staticFVolume.next = fvTable[i];
-	    fvTable[i]=tv->vtix;
-	}
-	else {
+	    fvTable[i] = tv->vtix;
+	} else {
 	    /*
 	     * Haul the guy in from disk so we don't overwrite hash table
 	     * next chain
 	     */
 	    if (afs_FVIndex != tv->vtix) {
 		tfile = osi_UFSOpen(volumeInode);
-		code = afs_osi_Read(tfile, sizeof(struct fvolume) * tv->vtix,
-				&staticFVolume, sizeof(struct fvolume));
+		code =
+		    afs_osi_Read(tfile, sizeof(struct fvolume) * tv->vtix,
+				 &staticFVolume, sizeof(struct fvolume));
 		if (code != sizeof(struct fvolume))
 		    osi_Panic("read volumeinfo");
 		osi_UFSClose(tfile);
@@ -164,22 +169,23 @@ struct volume *afs_UFSGetVolSlot(void)
 	staticFVolume.rootVnode = tv->rootVnode;
 	staticFVolume.rootUnique = tv->rootUnique;
 	tfile = osi_UFSOpen(volumeInode);
-	code = afs_osi_Write(tfile, sizeof(struct fvolume) * afs_FVIndex, 
-			 &staticFVolume, sizeof(struct fvolume));
+	code =
+	    afs_osi_Write(tfile, sizeof(struct fvolume) * afs_FVIndex,
+			  &staticFVolume, sizeof(struct fvolume));
 	if (code != sizeof(struct fvolume))
 	    osi_Panic("write volumeinfo");
-	osi_UFSClose(tfile);    
-    }
-    else {
+	osi_UFSClose(tfile);
+    } else {
 	tv = afs_freeVolList;
 	afs_freeVolList = tv->next;
     }
     return tv;
 
-} /*afs_UFSGetVolSlot*/
+}				/*afs_UFSGetVolSlot */
 
 
-struct volume *afs_MemGetVolSlot(void)
+struct volume *
+afs_MemGetVolSlot(void)
 {
     register struct volume *tv;
 
@@ -187,7 +193,7 @@ struct volume *afs_MemGetVolSlot(void)
     if (!afs_freeVolList) {
 	struct volume *newVp;
 
-	newVp = (struct volume *) afs_osi_Alloc(sizeof(struct volume));
+	newVp = (struct volume *)afs_osi_Alloc(sizeof(struct volume));
 
 	newVp->next = NULL;
 	afs_freeVolList = newVp;
@@ -196,36 +202,38 @@ struct volume *afs_MemGetVolSlot(void)
     afs_freeVolList = tv->next;
     return tv;
 
-} /*afs_MemGetVolSlot*/
+}				/*afs_MemGetVolSlot */
 
 /* afs_ResetVolumes()
  * Reset volume inforamation for all volume structs that
  * point to a speicific server.
  */
-void afs_ResetVolumes(struct server *srvp)
+void
+afs_ResetVolumes(struct server *srvp)
 {
-  int j, k;
-  struct volume *vp;
+    int j, k;
+    struct volume *vp;
 
-  /* Find any volumes residing on this server and flush their state */
-  for (j=0; j<NVOLS; j++) {
-     for (vp=afs_volumes[j]; vp; vp=vp->next) {
-	for (k=0; k<MAXHOSTS; k++) {
-	   if (!srvp || (vp->serverHost[k] == srvp)) {
-	      vp->serverHost[k] = 0;
-	      afs_ResetVolumeInfo(vp);
-	      break;
-	   }
+    /* Find any volumes residing on this server and flush their state */
+    for (j = 0; j < NVOLS; j++) {
+	for (vp = afs_volumes[j]; vp; vp = vp->next) {
+	    for (k = 0; k < MAXHOSTS; k++) {
+		if (!srvp || (vp->serverHost[k] == srvp)) {
+		    vp->serverHost[k] = 0;
+		    afs_ResetVolumeInfo(vp);
+		    break;
+		}
+	    }
 	}
-     }
-  }
+    }
 }
 
 
 /* reset volume name to volume id mapping  cache */
-void afs_CheckVolumeNames(int flags) 
+void
+afs_CheckVolumeNames(int flags)
 {
-    afs_int32 i,j;
+    afs_int32 i, j;
     struct volume *tv;
     unsigned int now;
     struct vcache *tvc;
@@ -234,38 +242,38 @@ void afs_CheckVolumeNames(int flags)
 
     nvols = 0;
     volumeID = cellID = NULL;
-    vsize=0;
+    vsize = 0;
     ObtainReadLock(&afs_xvolume);
     if (flags & AFS_VOLCHECK_EXPIRED) {
 	/*
 	 * allocate space to hold the volumeIDs and cellIDs, only if
 	 * we will be invalidating the mountpoints later on
 	 */
-	for (i=0; i< NVOLS; i++)
-	    for (tv = afs_volumes[i]; tv; tv=tv->next)
+	for (i = 0; i < NVOLS; i++)
+	    for (tv = afs_volumes[i]; tv; tv = tv->next)
 		++vsize;
 
 	volumeID = (afs_int32 *) afs_osi_Alloc(2 * vsize * sizeof(*volumeID));
-	cellID   = (volumeID) ? volumeID + vsize : 0;
+	cellID = (volumeID) ? volumeID + vsize : 0;
     }
 
     now = osi_Time();
-    for (i=0;i<NVOLS;i++) {
-	for (tv = afs_volumes[i]; tv; tv=tv->next) {
+    for (i = 0; i < NVOLS; i++) {
+	for (tv = afs_volumes[i]; tv; tv = tv->next) {
 	    if (flags & AFS_VOLCHECK_EXPIRED) {
-		    if ( ((tv->expireTime<(now+10)) && (tv->states & VRO)) ||
-				(flags & AFS_VOLCHECK_FORCE)){
-		    afs_ResetVolumeInfo(tv);  /* also resets status */
+		if (((tv->expireTime < (now + 10)) && (tv->states & VRO))
+		    || (flags & AFS_VOLCHECK_FORCE)) {
+		    afs_ResetVolumeInfo(tv);	/* also resets status */
 		    if (volumeID) {
 			volumeID[nvols] = tv->volume;
-			cellID[nvols]   = tv->cell;
+			cellID[nvols] = tv->cell;
 		    }
 		    ++nvols;
 		    continue;
 		}
 	    }
 	    if (flags & (AFS_VOLCHECK_BUSY | AFS_VOLCHECK_FORCE)) {
-		for (j=0; j<MAXHOSTS; j++) 
+		for (j = 0; j < MAXHOSTS; j++)
 		    tv->status[j] = not_busy;
 	    }
 
@@ -277,26 +285,26 @@ void afs_CheckVolumeNames(int flags)
     /* next ensure all mt points are re-evaluated */
     if (nvols || (flags & (AFS_VOLCHECK_FORCE | AFS_VOLCHECK_MTPTS))) {
 	ObtainReadLock(&afs_xvcache);
-	for(i=0;i<VCSIZE;i++) {
-	    for(tvc = afs_vhashT[i]; tvc; tvc=tvc->hnext) {
+	for (i = 0; i < VCSIZE; i++) {
+	    for (tvc = afs_vhashT[i]; tvc; tvc = tvc->hnext) {
 
 		/* if the volume of "mvid" of the vcache entry is among the
-                 * ones we found earlier, then we re-evaluate it.  Also, if the
-                 * force bit is set or we explicitly asked to reevaluate the
-                 * mt-pts, we clean the cmvalid bit */
+		 * ones we found earlier, then we re-evaluate it.  Also, if the
+		 * force bit is set or we explicitly asked to reevaluate the
+		 * mt-pts, we clean the cmvalid bit */
 
-		if ((flags & (AFS_VOLCHECK_FORCE | AFS_VOLCHECK_MTPTS)) ||
-		    (tvc->mvid &&
-		     inVolList(tvc->mvid, nvols, volumeID, cellID)))
+		if ((flags & (AFS_VOLCHECK_FORCE | AFS_VOLCHECK_MTPTS))
+		    || (tvc->mvid
+			&& inVolList(tvc->mvid, nvols, volumeID, cellID)))
 		    tvc->states &= ~CMValid;
 
 		/* If the volume that this file belongs to was reset earlier,
 		 * then we should remove its callback.
 		 * Again, if forced, always do it.
 		 */
-		if ((tvc->states & CRO) &&
-		    (inVolList(&tvc->fid, nvols, volumeID, cellID) ||
-		     (flags & AFS_VOLCHECK_FORCE))) {
+		if ((tvc->states & CRO)
+		    && (inVolList(&tvc->fid, nvols, volumeID, cellID)
+			|| (flags & AFS_VOLCHECK_FORCE))) {
 
 		    AFS_FAST_HOLD(tvc);
 		    ReleaseReadLock(&afs_xvcache);
@@ -316,25 +324,27 @@ void afs_CheckVolumeNames(int flags)
 		}
 	    }
 	}
-	osi_dnlc_purge ();   /* definitely overkill, but it's safer this way. */
+	osi_dnlc_purge();	/* definitely overkill, but it's safer this way. */
 	ReleaseReadLock(&afs_xvcache);
     }
 
     if (volumeID)
 	afs_osi_Free(volumeID, 2 * vsize * sizeof(*volumeID));
 
-} /*afs_CheckVolumeNames*/
+}				/*afs_CheckVolumeNames */
 
 
-static int inVolList(struct VenusFid *fid, afs_int32 nvols, afs_int32 *vID, afs_int32 *cID)
+static int
+inVolList(struct VenusFid *fid, afs_int32 nvols, afs_int32 * vID,
+	  afs_int32 * cID)
 {
     afs_int32 i;
 
     /* if no arrays present, be conservative and return true */
-    if ( nvols && (!vID || !cID))
+    if (nvols && (!vID || !cID))
 	return 1;
 
-    for (i=0; i< nvols; ++i) {
+    for (i = 0; i < nvols; ++i) {
 	if (fid->Fid.Volume == vID[i] && fid->Cell == cID[i])
 	    return 1;
     }
@@ -350,7 +360,8 @@ static int inVolList(struct VenusFid *fid, afs_int32 nvols, afs_int32 *vID, afs_
  *
  *  Environment:  Must be called with afs_xvolume unlocked.
  */
-struct volume *afs_FindVolume(struct VenusFid *afid, afs_int32 locktype)
+struct volume *
+afs_FindVolume(struct VenusFid *afid, afs_int32 locktype)
 {
     struct volume *tv;
     afs_int32 i;
@@ -359,17 +370,17 @@ struct volume *afs_FindVolume(struct VenusFid *afid, afs_int32 locktype)
 	return NULL;
 
     i = VHash(afid->Fid.Volume);
-    ObtainWriteLock(&afs_xvolume,106);
-    for (tv = afs_volumes[i]; tv; tv=tv->next) {
+    ObtainWriteLock(&afs_xvolume, 106);
+    for (tv = afs_volumes[i]; tv; tv = tv->next) {
 	if (tv->volume == afid->Fid.Volume && tv->cell == afid->Cell
 	    && (tv->states & VRecheck) == 0) {
 	    tv->refCount++;
 	    break;
-	  }
+	}
     }
     ReleaseWriteLock(&afs_xvolume);
-    return tv;      /* NULL if we didn't find it */
-} /*afs_FindVolume*/
+    return tv;			/* NULL if we didn't find it */
+}				/*afs_FindVolume */
 
 
 
@@ -377,8 +388,9 @@ struct volume *afs_FindVolume(struct VenusFid *afid, afs_int32 locktype)
  * Note that areq may be null, in which case we don't bother to set any
  * request status information.
  */
-struct volume *afs_GetVolume(struct VenusFid *afid, struct vrequest *areq, 
-	afs_int32 locktype)
+struct volume *
+afs_GetVolume(struct VenusFid *afid, struct vrequest *areq,
+	      afs_int32 locktype)
 {
     struct volume *tv;
     char *bp, tbuf[CVBS];
@@ -386,38 +398,39 @@ struct volume *afs_GetVolume(struct VenusFid *afid, struct vrequest *areq,
 
     tv = afs_FindVolume(afid, locktype);
     if (!tv) {
-       if (afs_IsDynrootFid(afid)) {
-          tv = afs_NewDynrootVolume(afid);
-       } else {
-          bp = afs_cv2string(&tbuf[CVBS], afid->Fid.Volume);
-          tv = afs_NewVolumeByName(bp, afid->Cell, 0, areq, locktype);
-       }
+	if (afs_IsDynrootFid(afid)) {
+	    tv = afs_NewDynrootVolume(afid);
+	} else {
+	    bp = afs_cv2string(&tbuf[CVBS], afid->Fid.Volume);
+	    tv = afs_NewVolumeByName(bp, afid->Cell, 0, areq, locktype);
+	}
     }
     return tv;
-} /*afs_GetVolume*/
+}				/*afs_GetVolume */
 
 
 
-static struct volume *afs_SetupVolume(afs_int32 volid, char *aname, 
-	char *ve, struct cell *tcell, afs_int32 agood, afs_int32 type, struct vrequest *areq)
+static struct volume *
+afs_SetupVolume(afs_int32 volid, char *aname, char *ve, struct cell *tcell,
+		afs_int32 agood, afs_int32 type, struct vrequest *areq)
 {
     struct volume *tv;
     struct vldbentry *ove = (struct vldbentry *)ve;
     struct nvldbentry *nve = (struct nvldbentry *)ve;
     struct uvldbentry *uve = (struct uvldbentry *)ve;
 
-    int	whichType;  /* which type of volume to look for */
-    int i, j, err=0;
+    int whichType;		/* which type of volume to look for */
+    int i, j, err = 0;
 
     if (!volid) {
-        int len;
+	int len;
 	/* special hint from file server to use vlserver */
 	len = strlen(aname);
-	if (len >= 8 && strcmp(aname+len-7, ".backup") == 0)
+	if (len >= 8 && strcmp(aname + len - 7, ".backup") == 0)
 	    whichType = BACKVOL;
-	else if (len >= 10 && strcmp(aname+len-9, ".readonly")==0)
+	else if (len >= 10 && strcmp(aname + len - 9, ".readonly") == 0)
 	    whichType = ROVOL;
-	else 
+	else
 	    whichType = RWVOL;
 
 	/* figure out which one we're really interested in (a set is returned) */
@@ -425,26 +438,24 @@ static struct volume *afs_SetupVolume(afs_int32 volid, char *aname,
 	if (volid == 0) {
 	    if (type == 2) {
 		volid = uve->volumeId[whichType];
-	    }
-	    else if (type == 1) {
+	    } else if (type == 1) {
 		volid = nve->volumeId[whichType];
-	    }
-	    else {
+	    } else {
 		volid = ove->volumeId[whichType];
 	    }
 	}
     }
 
-    
-    ObtainWriteLock(&afs_xvolume,108);
+
+    ObtainWriteLock(&afs_xvolume, 108);
     i = VHash(volid);
-    for (tv = afs_volumes[i]; tv; tv=tv->next) {
+    for (tv = afs_volumes[i]; tv; tv = tv->next) {
 	if (tv->volume == volid && tv->cell == tcell->cellNum) {
 	    break;
 	}
     }
     if (!tv) {
-	struct fvolume *tf=0;
+	struct fvolume *tf = 0;
 
 	tv = afs_GetVolSlot();
 	memset((char *)tv, 0, sizeof(struct volume));
@@ -453,11 +464,13 @@ static struct volume *afs_SetupVolume(afs_int32 volid, char *aname,
 	tv->next = afs_volumes[i];	/* thread into list */
 	afs_volumes[i] = tv;
 	tv->volume = volid;
-	for (j=fvTable[FVHash(tv->cell,volid)]; j!=0; j=tf->next) {
+	for (j = fvTable[FVHash(tv->cell, volid)]; j != 0; j = tf->next) {
 	    if (afs_FVIndex != j) {
 		struct osi_file *tfile;
 		tfile = osi_UFSOpen(volumeInode);
-		err = afs_osi_Read(tfile, sizeof(struct fvolume) * j, &staticFVolume, sizeof(struct fvolume));
+		err =
+		    afs_osi_Read(tfile, sizeof(struct fvolume) * j,
+				 &staticFVolume, sizeof(struct fvolume));
 		if (err != sizeof(struct fvolume))
 		    osi_Panic("read volumeinfo2");
 		osi_UFSClose(tfile);
@@ -471,22 +484,21 @@ static struct volume *afs_SetupVolume(afs_int32 volid, char *aname,
 	    tv->vtix = afs_FVIndex;
 	    tv->mtpoint = tf->mtpoint;
 	    tv->dotdot = tf->dotdot;
-	    tv->rootVnode = tf->rootVnode;	    
-	    tv->rootUnique = tf->rootUnique;	    
+	    tv->rootVnode = tf->rootVnode;
+	    tv->rootUnique = tf->rootUnique;
 	} else {
 	    tv->vtix = -1;
 	    tv->rootVnode = tv->rootUnique = 0;
 	}
     }
     tv->refCount++;
-    tv->states &= ~VRecheck;	    /* just checked it */
+    tv->states &= ~VRecheck;	/* just checked it */
     tv->accessTime = osi_Time();
     ReleaseWriteLock(&afs_xvolume);
-    ObtainWriteLock(&tv->lock,111);
+    ObtainWriteLock(&tv->lock, 111);
     if (type == 2) {
 	InstallUVolumeEntry(tv, uve, tcell->cellNum, tcell, areq);
-    }
-    else if (type == 1)
+    } else if (type == 1)
 	InstallNVolumeEntry(tv, nve, tcell->cellNum);
     else
 	InstallVolumeEntry(tv, ove, tcell->cellNum);
@@ -496,26 +508,27 @@ static struct volume *afs_SetupVolume(afs_int32 volid, char *aname,
 	    strcpy(tv->name, aname);
 	}
     }
-    for (i=0; i<NMAXNSERVERS; i++) {
-       tv->status[i] = not_busy;
+    for (i = 0; i < NMAXNSERVERS; i++) {
+	tv->status[i] = not_busy;
     }
     ReleaseWriteLock(&tv->lock);
     return tv;
 }
 
 
-struct volume *afs_GetVolumeByName(register char *aname, afs_int32 acell, 
-	int agood, struct vrequest *areq, afs_int32 locktype)
+struct volume *
+afs_GetVolumeByName(register char *aname, afs_int32 acell, int agood,
+		    struct vrequest *areq, afs_int32 locktype)
 {
-  afs_int32 i;
-  struct volume *tv;
+    afs_int32 i;
+    struct volume *tv;
 
     AFS_STATCNT(afs_GetVolumeByName);
-    ObtainWriteLock(&afs_xvolume,112);
-  for (i=0;i<NVOLS;i++) {
-	for (tv = afs_volumes[i]; tv; tv=tv->next) {
-	    if (tv->name && !strcmp(aname,tv->name) && tv->cell == acell
-		&& (tv->states&VRecheck) == 0) {
+    ObtainWriteLock(&afs_xvolume, 112);
+    for (i = 0; i < NVOLS; i++) {
+	for (tv = afs_volumes[i]; tv; tv = tv->next) {
+	    if (tv->name && !strcmp(aname, tv->name) && tv->cell == acell
+		&& (tv->states & VRecheck) == 0) {
 		tv->refCount++;
 		ReleaseWriteLock(&afs_xvolume);
 		return tv;
@@ -525,11 +538,12 @@ struct volume *afs_GetVolumeByName(register char *aname, afs_int32 acell,
 
     ReleaseWriteLock(&afs_xvolume);
 
-  tv = afs_NewVolumeByName(aname, acell, agood, areq, locktype);
-  return(tv);
+    tv = afs_NewVolumeByName(aname, acell, agood, areq, locktype);
+    return (tv);
 }
 
-static struct volume *afs_NewDynrootVolume(struct VenusFid *fid)
+static struct volume *
+afs_NewDynrootVolume(struct VenusFid *fid)
 {
     struct cell *tcell;
     struct volume *tv;
@@ -556,10 +570,11 @@ static struct volume *afs_NewDynrootVolume(struct VenusFid *fid)
 }
 
 int lastnvcode;
-static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
-				   struct vrequest *areq, afs_int32 locktype)
+static struct volume *
+afs_NewVolumeByName(char *aname, afs_int32 acell, int agood,
+		    struct vrequest *areq, afs_int32 locktype)
 {
-    afs_int32 code, type=0;
+    afs_int32 code, type = 0;
     struct volume *tv, *tv1;
     struct vldbentry *tve;
     struct nvldbentry *ntve;
@@ -578,19 +593,21 @@ static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agoo
     }
 
     /* allow null request if we don't care about ENODEV/ETIMEDOUT distinction */
-    if (!areq) 	areq = &treq;
+    if (!areq)
+	areq = &treq;
 
 
     afs_Trace2(afs_iclSetp, CM_TRACE_GETVOL, ICL_TYPE_STRING, aname,
-			   ICL_TYPE_POINTER, aname);
+	       ICL_TYPE_POINTER, aname);
     tbuffer = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
-    tve = (struct vldbentry *) (tbuffer+1024);
+    tve = (struct vldbentry *)(tbuffer + 1024);
     ntve = (struct nvldbentry *)tve;
     utve = (struct uvldbentry *)tve;
     afs_InitReq(&treq, &afs_osi_cred);	/* *must* be unauth for vldb */
     do {
-	tconn = afs_ConnByMHosts(tcell->cellHosts, tcell->vlport,
-				 tcell->cellNum, &treq, SHARED_LOCK);
+	tconn =
+	    afs_ConnByMHosts(tcell->cellHosts, tcell->vlport, tcell->cellNum,
+			     &treq, SHARED_LOCK);
 	if (tconn) {
 	    if (tconn->srvr->server->flags & SNO_LHOSTS) {
 		type = 0;
@@ -611,7 +628,7 @@ static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agoo
 		    if (code == RXGEN_OPCODE) {
 			type = 1;
 			RX_AFS_GUNLOCK();
-                        code = VL_GetEntryByNameN(tconn->id, aname, ntve);
+			code = VL_GetEntryByNameN(tconn->id, aname, ntve);
 			RX_AFS_GLOCK();
 			if (code == RXGEN_OPCODE) {
 			    type = 0;
@@ -622,16 +639,14 @@ static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agoo
 			} else if (!code)
 			    tconn->srvr->server->flags |= SYES_LHOSTS;
 		    } else if (!code)
-			    tconn->srvr->server->flags |= SVLSRV_UUID;
+			tconn->srvr->server->flags |= SVLSRV_UUID;
 		}
 		lastnvcode = code;
 	    }
 	} else
 	    code = -1;
-    } while
-      (afs_Analyze(tconn, code, NULL, &treq,
-		   -1, /* no op code for this */
-		   SHARED_LOCK, tcell));
+    } while (afs_Analyze(tconn, code, NULL, &treq, -1,	/* no op code for this */
+			 SHARED_LOCK, tcell));
 
     if (code) {
 	/* If the client has yet to contact this cell and contact failed due
@@ -643,8 +658,9 @@ static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agoo
 	    int i;
 	    struct server *sp;
 	    struct srvAddr *sap;
-	    for (i=0; i<MAXCELLHOSTS; i++) {
-		if ((sp = tcell->cellHosts[i]) == NULL) break;
+	    for (i = 0; i < MAXCELLHOSTS; i++) {
+		if ((sp = tcell->cellHosts[i]) == NULL)
+		    break;
 		for (sap = sp->addr; sap; sap = sap->next_sa)
 		    afs_MarkServerUpOrDown(sap, 0);
 	    }
@@ -663,8 +679,8 @@ static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agoo
     if (!(tcell->states & CHasVolRef)) {
 	tcell->states |= CHasVolRef;
 	afs_stats_cmperf.numCellsContacted++;
-    } /*First time a volume in this cell has been referenced*/
-
+    }
+    /*First time a volume in this cell has been referenced */
     if (type == 2)
 	ve = (char *)utve;
     else if (type == 1)
@@ -684,12 +700,13 @@ static struct volume *afs_NewVolumeByName(char *aname, afs_int32 acell, int agoo
     afs_PutCell(tcell, READ_LOCK);
     return tv;
 
-} /*afs_NewVolumeByName*/
+}				/*afs_NewVolumeByName */
 
 
 
 /* call this with the volume structure locked; used for new-style vldb requests */
-void InstallVolumeEntry(struct volume *av, struct vldbentry *ve, int acell)
+void
+InstallVolumeEntry(struct volume *av, struct vldbentry *ve, int acell)
 {
     register struct server *ts;
     struct cell *cellp;
@@ -701,24 +718,23 @@ void InstallVolumeEntry(struct volume *av, struct vldbentry *ve, int acell)
 
     /* Determine the type of volume we want */
     if ((ve->flags & VLF_RWEXISTS) && (av->volume == ve->volumeId[RWVOL])) {
-       mask = VLSF_RWVOL;
-    }
-    else if ((ve->flags & VLF_ROEXISTS) && (av->volume == ve->volumeId[ROVOL])) {
-       mask = VLSF_ROVOL;
-       av->states |= VRO;
-    }
-    else if ((ve->flags & VLF_BACKEXISTS) && (av->volume == ve->volumeId[BACKVOL])) {
-       /* backup always is on the same volume as parent */
-       mask = VLSF_RWVOL;
-       av->states |= (VRO|VBackup);
-    }
-    else {
-       mask = 0;  /* Can't find volume in vldb entry */
+	mask = VLSF_RWVOL;
+    } else if ((ve->flags & VLF_ROEXISTS)
+	       && (av->volume == ve->volumeId[ROVOL])) {
+	mask = VLSF_ROVOL;
+	av->states |= VRO;
+    } else if ((ve->flags & VLF_BACKEXISTS)
+	       && (av->volume == ve->volumeId[BACKVOL])) {
+	/* backup always is on the same volume as parent */
+	mask = VLSF_RWVOL;
+	av->states |= (VRO | VBackup);
+    } else {
+	mask = 0;		/* Can't find volume in vldb entry */
     }
 
     /* fill in volume types */
-    av->rwVol   = ((ve->flags & VLF_RWEXISTS)   ? ve->volumeId[RWVOL]   : 0);
-    av->roVol   = ((ve->flags & VLF_ROEXISTS)   ? ve->volumeId[ROVOL]   : 0);
+    av->rwVol = ((ve->flags & VLF_RWEXISTS) ? ve->volumeId[RWVOL] : 0);
+    av->roVol = ((ve->flags & VLF_ROEXISTS) ? ve->volumeId[ROVOL] : 0);
     av->backVol = ((ve->flags & VLF_BACKEXISTS) ? ve->volumeId[BACKVOL] : 0);
 
     if (ve->flags & VLF_DFSFILESET)
@@ -731,18 +747,20 @@ void InstallVolumeEntry(struct volume *av, struct vldbentry *ve, int acell)
      * struct, we don't deadlock trying to afs_ResetVolumeInfo()
      * this volume.
      */
-    for (j=0; j<MAXHOSTS; j++) {
-       av->serverHost[j] = 0;
+    for (j = 0; j < MAXHOSTS; j++) {
+	av->serverHost[j] = 0;
     }
 
     /* Step through the VLDB entry making sure each server listed is there */
-    for (i=0,j=0; i<ve->nServers; i++) {
-	if ( ((ve->serverFlags[i] & mask) == 0) || (ve->serverFlags[i] & VLSF_DONTUSE) ) {
-	   continue;      /* wrong volume or  don't use this volume */
+    for (i = 0, j = 0; i < ve->nServers; i++) {
+	if (((ve->serverFlags[i] & mask) == 0)
+	    || (ve->serverFlags[i] & VLSF_DONTUSE)) {
+	    continue;		/* wrong volume or  don't use this volume */
 	}
 
 	temp = htonl(ve->serverNumber[i]);
-	ts = afs_GetServer(&temp, 1, acell, cellp->fsport, WRITE_LOCK, (afsUUID *)0, 0);
+	ts = afs_GetServer(&temp, 1, acell, cellp->fsport, WRITE_LOCK,
+			   (afsUUID *) 0, 0);
 	av->serverHost[j] = ts;
 
 	/*
@@ -752,7 +770,7 @@ void InstallVolumeEntry(struct volume *av, struct vldbentry *ve, int acell)
 	 * follows later on it will find the server entry thus it will
 	 * simply return without setting any fields, so we set the
 	 * field ourselves below.
-         */
+	 */
 	if (!ts->cell)
 	    ts->cell = cellp;
 	afs_PutServer(ts, WRITE_LOCK);
@@ -762,10 +780,11 @@ void InstallVolumeEntry(struct volume *av, struct vldbentry *ve, int acell)
 	av->serverHost[j++] = 0;
     }
     afs_SortServers(av->serverHost, MAXHOSTS);
-} /*InstallVolumeEntry*/
+}				/*InstallVolumeEntry */
 
 
-void InstallNVolumeEntry(struct volume *av, struct nvldbentry *ve, int acell)
+void
+InstallNVolumeEntry(struct volume *av, struct nvldbentry *ve, int acell)
 {
     register struct server *ts;
     struct cell *cellp;
@@ -777,24 +796,23 @@ void InstallNVolumeEntry(struct volume *av, struct nvldbentry *ve, int acell)
 
     /* Determine type of volume we want */
     if ((ve->flags & VLF_RWEXISTS) && (av->volume == ve->volumeId[RWVOL])) {
-       mask = VLSF_RWVOL;
-    }
-    else if ((ve->flags & VLF_ROEXISTS) && (av->volume == ve->volumeId[ROVOL])) {
-       mask = VLSF_ROVOL;
-       av->states |= VRO;
-    }
-    else if ((ve->flags&VLF_BACKEXISTS) && (av->volume == ve->volumeId[BACKVOL])) {
-       /* backup always is on the same volume as parent */
-       mask = VLSF_RWVOL;
-       av->states |= (VRO|VBackup);
-    }
-    else {
-       mask = 0;     /* Can't find volume in vldb entry */
+	mask = VLSF_RWVOL;
+    } else if ((ve->flags & VLF_ROEXISTS)
+	       && (av->volume == ve->volumeId[ROVOL])) {
+	mask = VLSF_ROVOL;
+	av->states |= VRO;
+    } else if ((ve->flags & VLF_BACKEXISTS)
+	       && (av->volume == ve->volumeId[BACKVOL])) {
+	/* backup always is on the same volume as parent */
+	mask = VLSF_RWVOL;
+	av->states |= (VRO | VBackup);
+    } else {
+	mask = 0;		/* Can't find volume in vldb entry */
     }
 
     /* fill in volume types */
-    av->rwVol   = ((ve->flags & VLF_RWEXISTS)   ? ve->volumeId[RWVOL]   : 0);
-    av->roVol   = ((ve->flags & VLF_ROEXISTS)   ? ve->volumeId[ROVOL]   : 0);
+    av->rwVol = ((ve->flags & VLF_RWEXISTS) ? ve->volumeId[RWVOL] : 0);
+    av->roVol = ((ve->flags & VLF_ROEXISTS) ? ve->volumeId[ROVOL] : 0);
     av->backVol = ((ve->flags & VLF_BACKEXISTS) ? ve->volumeId[BACKVOL] : 0);
 
     if (ve->flags & VLF_DFSFILESET)
@@ -807,18 +825,20 @@ void InstallNVolumeEntry(struct volume *av, struct nvldbentry *ve, int acell)
      * struct, we don't deadlock trying to afs_ResetVolumeInfo()
      * this volume.
      */
-    for (j=0; j<MAXHOSTS; j++) {
-       av->serverHost[j] = 0;
+    for (j = 0; j < MAXHOSTS; j++) {
+	av->serverHost[j] = 0;
     }
 
     /* Step through the VLDB entry making sure each server listed is there */
-    for (i=0,j=0; i<ve->nServers; i++) {
-        if ( ((ve->serverFlags[i] & mask) == 0) || (ve->serverFlags[i] & VLSF_DONTUSE) ) {
-	   continue;      /* wrong volume or don't use this volume */
+    for (i = 0, j = 0; i < ve->nServers; i++) {
+	if (((ve->serverFlags[i] & mask) == 0)
+	    || (ve->serverFlags[i] & VLSF_DONTUSE)) {
+	    continue;		/* wrong volume or don't use this volume */
 	}
 
 	temp = htonl(ve->serverNumber[i]);
-	ts = afs_GetServer(&temp, 1, acell, cellp->fsport, WRITE_LOCK, (afsUUID *)0,0);
+	ts = afs_GetServer(&temp, 1, acell, cellp->fsport, WRITE_LOCK,
+			   (afsUUID *) 0, 0);
 	av->serverHost[j] = ts;
 	/*
 	 * The cell field could be 0 if the server entry was created
@@ -827,7 +847,7 @@ void InstallNVolumeEntry(struct volume *av, struct nvldbentry *ve, int acell)
 	 * follows later on it will find the server entry thus it will
 	 * simply return without setting any fields, so we set the
 	 * field ourselves below.
-         */
+	 */
 	if (!ts->cell)
 	    ts->cell = cellp;
 	afs_PutServer(ts, WRITE_LOCK);
@@ -837,11 +857,12 @@ void InstallNVolumeEntry(struct volume *av, struct nvldbentry *ve, int acell)
 	av->serverHost[j++] = 0;
     }
     afs_SortServers(av->serverHost, MAXHOSTS);
-} /*InstallNVolumeEntry*/
+}				/*InstallNVolumeEntry */
 
 
-void InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
-			 int acell, struct cell *tcell, struct vrequest *areq)
+void
+InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve, int acell,
+		    struct cell *tcell, struct vrequest *areq)
 {
     register struct server *ts;
     struct conn *tconn;
@@ -855,24 +876,23 @@ void InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
 
     /* Determine type of volume we want */
     if ((ve->flags & VLF_RWEXISTS) && (av->volume == ve->volumeId[RWVOL])) {
-       mask = VLSF_RWVOL;
-    }
-    else if ((ve->flags & VLF_ROEXISTS) && av->volume == ve->volumeId[ROVOL]) {
-       mask = VLSF_ROVOL;
-       av->states |= VRO;
-    }
-    else if ((ve->flags & VLF_BACKEXISTS) && (av->volume == ve->volumeId[BACKVOL])) {
-       /* backup always is on the same volume as parent */
-       mask = VLSF_RWVOL;
-       av->states |= (VRO|VBackup);
-    }
-    else {
-       mask = 0;      /* Can't find volume in vldb entry */
+	mask = VLSF_RWVOL;
+    } else if ((ve->flags & VLF_ROEXISTS)
+	       && av->volume == ve->volumeId[ROVOL]) {
+	mask = VLSF_ROVOL;
+	av->states |= VRO;
+    } else if ((ve->flags & VLF_BACKEXISTS)
+	       && (av->volume == ve->volumeId[BACKVOL])) {
+	/* backup always is on the same volume as parent */
+	mask = VLSF_RWVOL;
+	av->states |= (VRO | VBackup);
+    } else {
+	mask = 0;		/* Can't find volume in vldb entry */
     }
 
     /* fill in volume types */
-    av->rwVol   = ((ve->flags & VLF_RWEXISTS)   ? ve->volumeId[RWVOL]   : 0);
-    av->roVol   = ((ve->flags & VLF_ROEXISTS)   ? ve->volumeId[ROVOL]   : 0);
+    av->rwVol = ((ve->flags & VLF_RWEXISTS) ? ve->volumeId[RWVOL] : 0);
+    av->roVol = ((ve->flags & VLF_ROEXISTS) ? ve->volumeId[ROVOL] : 0);
     av->backVol = ((ve->flags & VLF_BACKEXISTS) ? ve->volumeId[BACKVOL] : 0);
 
     if (ve->flags & VLF_DFSFILESET)
@@ -885,8 +905,8 @@ void InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
      * struct, we don't deadlock trying to afs_ResetVolumeInfo()
      * this volume.
      */
-    for (j=0; j<MAXHOSTS; j++) {
-       av->serverHost[j] = 0;
+    for (j = 0; j < MAXHOSTS; j++) {
+	av->serverHost[j] = 0;
     }
 
     /* Gather the list of servers the VLDB says the volume is on
@@ -894,19 +914,22 @@ void InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
      * is not found, then get the list of addresses for the
      * server, VL_GetAddrsU(), and create a server struct, afs_GetServer().
      */
-    for (i=0,j=0; i<ve->nServers; i++) {
-        if ( ((ve->serverFlags[i] & mask) == 0) || (ve->serverFlags[i] & VLSF_DONTUSE) ) {
-	   continue;       /* wrong volume don't use this volume */
+    for (i = 0, j = 0; i < ve->nServers; i++) {
+	if (((ve->serverFlags[i] & mask) == 0)
+	    || (ve->serverFlags[i] & VLSF_DONTUSE)) {
+	    continue;		/* wrong volume don't use this volume */
 	}
 
 	if (!(ve->serverFlags[i] & VLSERVER_FLAG_UUID)) {
 	    /* The server has no uuid */
 	    serverid = htonl(ve->serverNumber[i].time_low);
-	    ts = afs_GetServer(&serverid, 1, acell, cellp->fsport, WRITE_LOCK, (afsUUID *)0,0);
+	    ts = afs_GetServer(&serverid, 1, acell, cellp->fsport, WRITE_LOCK,
+			       (afsUUID *) 0, 0);
 	} else {
 	    ts = afs_FindServer(0, cellp->fsport, &ve->serverNumber[i], 0);
-	    if (ts && (ts->sr_addr_uniquifier == ve->serverUnique[i]) && ts->addr) {
-	       /* uuid, uniquifier, and portal are the same */
+	    if (ts && (ts->sr_addr_uniquifier == ve->serverUnique[i])
+		&& ts->addr) {
+		/* uuid, uniquifier, and portal are the same */
 	    } else {
 		afs_uint32 *addrp, nentries, code, unique;
 		bulkaddrs addrs;
@@ -919,11 +942,14 @@ void InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
 		memset((char *)&uuid, 0, sizeof(uuid));
 		memset((char *)&addrs, 0, sizeof(addrs));
 		do {
-		    tconn = afs_ConnByMHosts(tcell->cellHosts, tcell->vlport,
-					     tcell->cellNum, areq, SHARED_LOCK);
+		    tconn =
+			afs_ConnByMHosts(tcell->cellHosts, tcell->vlport,
+					 tcell->cellNum, areq, SHARED_LOCK);
 		    if (tconn) {
 			RX_AFS_GUNLOCK();
-			code = VL_GetAddrsU(tconn->id, &attrs, &uuid, &unique, &nentries, &addrs);
+			code =
+			    VL_GetAddrsU(tconn->id, &attrs, &uuid, &unique,
+					 &nentries, &addrs);
 			RX_AFS_GLOCK();
 		    } else {
 			code = -1;
@@ -933,8 +959,8 @@ void InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
 		    if (code == 0 && nentries == 0)
 			code = VL_NOENT;
 
-		} while (afs_Analyze(tconn, code, NULL, areq,
-				     -1, SHARED_LOCK, tcell));
+		} while (afs_Analyze
+			 (tconn, code, NULL, areq, -1, SHARED_LOCK, tcell));
 		if (code) {
 		    /* Better handing of such failures; for now we'll simply retry this call */
 		    areq->volumeError = 1;
@@ -943,12 +969,13 @@ void InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
 
 		addrp = addrs.bulkaddrs_val;
 		for (k = 0; k < nentries; k++) {
-		   addrp[k] = htonl(addrp[k]);
+		    addrp[k] = htonl(addrp[k]);
 		}
 		ts = afs_GetServer(addrp, nentries, acell, cellp->fsport,
 				   WRITE_LOCK, &ve->serverNumber[i],
 				   ve->serverUnique[i]);
-		afs_osi_Free(addrs.bulkaddrs_val, addrs.bulkaddrs_len*sizeof(*addrp));
+		afs_osi_Free(addrs.bulkaddrs_val,
+			     addrs.bulkaddrs_len * sizeof(*addrp));
 	    }
 	}
 	av->serverHost[j] = ts;
@@ -959,7 +986,7 @@ void InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
 	 * follows later on it will find the server entry thus it will
 	 * simply return without setting any fields, so we set the
 	 * field ourselves below.
-         */
+	 */
 	if (!ts->cell)
 	    ts->cell = cellp;
 	afs_PutServer(ts, WRITE_LOCK);
@@ -967,21 +994,22 @@ void InstallUVolumeEntry(struct volume *av, struct uvldbentry *ve,
     }
 
     afs_SortServers(av->serverHost, MAXHOSTS);
-} /*InstallVolumeEntry*/
+}				/*InstallVolumeEntry */
 
 
-void afs_ResetVolumeInfo(struct volume *tv)
+void
+afs_ResetVolumeInfo(struct volume *tv)
 {
     int i;
 
     AFS_STATCNT(afs_ResetVolumeInfo);
-    ObtainWriteLock(&tv->lock,117);
+    ObtainWriteLock(&tv->lock, 117);
     tv->states |= VRecheck;
-    for (i=0; i<MAXHOSTS; i++)
-      tv->status[i] = not_busy;
+    for (i = 0; i < MAXHOSTS; i++)
+	tv->status[i] = not_busy;
     if (tv->name) {
-	afs_osi_Free(tv->name, strlen(tv->name)+1);
+	afs_osi_Free(tv->name, strlen(tv->name) + 1);
 	tv->name = NULL;
-      }
+    }
     ReleaseWriteLock(&tv->lock);
 }

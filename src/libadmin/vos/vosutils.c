@@ -10,7 +10,8 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header$");
+RCSID
+    ("$Header$");
 
 #include "vosutils.h"
 #include "vsprocs.h"
@@ -28,7 +29,10 @@ RCSID("$Header$");
  * Functions that aren't prototyped, but that we use
  */
 
-extern int VL_CreateEntryN(), VL_CreateEntry(), VL_GetEntryByIDN(), VL_GetEntryByID(), VL_GetEntryByNameN(), VL_GetEntryByNameO(), VL_ReplaceEntryN(), VL_ReplaceEntry(), VL_ListAttributesN(), VL_ListAttributes(), VL_GetAddrsU();
+extern int VL_CreateEntryN(), VL_CreateEntry(), VL_GetEntryByIDN(),
+VL_GetEntryByID(), VL_GetEntryByNameN(), VL_GetEntryByNameO(),
+VL_ReplaceEntryN(), VL_ReplaceEntry(), VL_ListAttributesN(),
+VL_ListAttributes(), VL_GetAddrsU();
 
 /*
  * VLDB entry conversion routines.
@@ -36,10 +40,9 @@ extern int VL_CreateEntryN(), VL_CreateEntry(), VL_GetEntryByIDN(), VL_GetEntryB
  * two types "old" and "new".
  */
 
-static int OldVLDB_to_NewVLDB(
-  struct vldbentry *source,
-  struct nvldbentry *dest,
-  afs_status_p st)
+static int
+OldVLDB_to_NewVLDB(struct vldbentry *source, struct nvldbentry *dest,
+		   afs_status_p st)
 {
     register int i;
     int rc = 0;
@@ -56,7 +59,7 @@ static int OldVLDB_to_NewVLDB(
     for (i = 0; i < MAXTYPES; i++)
 	dest->volumeId[i] = source->volumeId[i];
     dest->cloneId = source->cloneId;
-    dest->flags = source->flags; 
+    dest->flags = source->flags;
 
     rc = 1;
 
@@ -72,10 +75,9 @@ static int OldVLDB_to_NewVLDB(
  * return an error.
  */
 
-static int NewVLDB_to_OldVLDB(
-  struct nvldbentry *source,
-  struct vldbentry *dest,
-  afs_status_p st)
+static int
+NewVLDB_to_OldVLDB(struct nvldbentry *source, struct vldbentry *dest,
+		   afs_status_p st)
 {
     register int i;
     afs_status_t tst = 0;
@@ -105,10 +107,9 @@ static int NewVLDB_to_OldVLDB(
     return rc;
 }
 
-int VLDB_CreateEntry(
-  afs_cell_handle_p cellHandle,
-  struct nvldbentry *entryp,
-  afs_status_p st)
+int
+VLDB_CreateEntry(afs_cell_handle_p cellHandle, struct nvldbentry *entryp,
+		 afs_status_p st)
 {
     struct vldbentry oentry;
     afs_status_t tst = 0;
@@ -136,16 +137,14 @@ int VLDB_CreateEntry(
 
     if (st != NULL) {
 	*st = tst;
-    } 
+    }
     return rc;
 }
 
-int VLDB_GetEntryByID(
-  afs_cell_handle_p cellHandle,
-  afs_int32   volid,
-  afs_int32 voltype,
-  struct nvldbentry *entryp,
-  afs_status_p st)
+int
+VLDB_GetEntryByID(afs_cell_handle_p cellHandle, afs_int32 volid,
+		  afs_int32 voltype, struct nvldbentry *entryp,
+		  afs_status_p st)
 {
     struct vldbentry oentry;
     afs_status_t tst = 0;
@@ -153,8 +152,9 @@ int VLDB_GetEntryByID(
 
     do {
 	if (cellHandle->vos_new) {
-	    tst = ubik_Call(VL_GetEntryByIDN, cellHandle->vos, 0, volid,
-			    voltype, entryp);
+	    tst =
+		ubik_Call(VL_GetEntryByIDN, cellHandle->vos, 0, volid,
+			  voltype, entryp);
 	    if (tst) {
 		if (tst == RXGEN_OPCODE) {
 		    cellHandle->vos_new = 0;
@@ -163,8 +163,9 @@ int VLDB_GetEntryByID(
 		rc = 1;
 	    }
 	} else {
-	    tst = ubik_Call(VL_GetEntryByID, cellHandle->vos, 0, volid,
-			    voltype, &oentry);
+	    tst =
+		ubik_Call(VL_GetEntryByID, cellHandle->vos, 0, volid, voltype,
+			  &oentry);
 	    if (tst == 0) {
 		rc = OldVLDB_to_NewVLDB(&oentry, entryp, &tst);
 	    }
@@ -174,15 +175,13 @@ int VLDB_GetEntryByID(
 
     if (st != NULL) {
 	*st = tst;
-    } 
+    }
     return rc;
 }
 
-int VLDB_GetEntryByName(
-  afs_cell_handle_p cellHandle,
-  const char *namep,
-  struct nvldbentry *entryp,
-  afs_status_p st)
+int
+VLDB_GetEntryByName(afs_cell_handle_p cellHandle, const char *namep,
+		    struct nvldbentry *entryp, afs_status_p st)
 {
     struct vldbentry oentry;
     afs_status_t tst = 0;
@@ -190,8 +189,9 @@ int VLDB_GetEntryByName(
 
     do {
 	if (cellHandle->vos_new) {
-	    tst = ubik_Call(VL_GetEntryByNameN, cellHandle->vos, 0, namep,
-			    entryp);
+	    tst =
+		ubik_Call(VL_GetEntryByNameN, cellHandle->vos, 0, namep,
+			  entryp);
 	    if (tst) {
 		if (tst == RXGEN_OPCODE) {
 		    cellHandle->vos_new = 0;
@@ -200,8 +200,9 @@ int VLDB_GetEntryByName(
 		rc = 1;
 	    }
 	} else {
-	    tst = ubik_Call(VL_GetEntryByNameO, cellHandle->vos, 0, namep,
-			    &oentry);
+	    tst =
+		ubik_Call(VL_GetEntryByNameO, cellHandle->vos, 0, namep,
+			  &oentry);
 	    if (tst == 0) {
 		rc = OldVLDB_to_NewVLDB(&oentry, entryp, &tst);
 	    }
@@ -211,17 +212,14 @@ int VLDB_GetEntryByName(
 
     if (st != NULL) {
 	*st = tst;
-    } 
+    }
     return rc;
 }
 
-int VLDB_ReplaceEntry(
-  afs_cell_handle_p cellHandle,
-  afs_int32   volid,
-  afs_int32 voltype,
-  struct nvldbentry *entryp,
-  afs_int32   releasetype,
-  afs_status_p st)
+int
+VLDB_ReplaceEntry(afs_cell_handle_p cellHandle, afs_int32 volid,
+		  afs_int32 voltype, struct nvldbentry *entryp,
+		  afs_int32 releasetype, afs_status_p st)
 {
     struct vldbentry oentry;
     afs_status_t tst = 0;
@@ -229,8 +227,9 @@ int VLDB_ReplaceEntry(
 
     do {
 	if (cellHandle->vos_new) {
-	    tst = ubik_Call(VL_ReplaceEntryN, cellHandle->vos, 0, volid, 
-			    voltype, entryp, releasetype);
+	    tst =
+		ubik_Call(VL_ReplaceEntryN, cellHandle->vos, 0, volid,
+			  voltype, entryp, releasetype);
 	    if (tst) {
 		if (tst == RXGEN_OPCODE) {
 		    cellHandle->vos_new = 0;
@@ -240,8 +239,9 @@ int VLDB_ReplaceEntry(
 	    }
 	} else {
 	    if (NewVLDB_to_OldVLDB(entryp, &oentry, &tst)) {
-		tst = ubik_Call(VL_ReplaceEntry, cellHandle->vos, 0, volid, 
-				voltype, &oentry, releasetype);
+		tst =
+		    ubik_Call(VL_ReplaceEntry, cellHandle->vos, 0, volid,
+			      voltype, &oentry, releasetype);
 		if (!tst) {
 		    rc = 1;
 		}
@@ -251,16 +251,14 @@ int VLDB_ReplaceEntry(
 
     if (st != NULL) {
 	*st = tst;
-    } 
+    }
     return rc;
 }
 
-int VLDB_ListAttributes(
-  afs_cell_handle_p cellHandle,
-  VldbListByAttributes *attrp,
-  afs_int32  *entriesp,
-  nbulkentries *blkentriesp,
-  afs_status_p st)
+int
+VLDB_ListAttributes(afs_cell_handle_p cellHandle,
+		    VldbListByAttributes * attrp, afs_int32 * entriesp,
+		    nbulkentries * blkentriesp, afs_status_p st)
 {
     bulkentries arrayEntries;
     int i;
@@ -269,8 +267,9 @@ int VLDB_ListAttributes(
 
     do {
 	if (cellHandle->vos_new) {
-	    tst = ubik_Call(VL_ListAttributesN, cellHandle->vos, 0, attrp,
-			    entriesp, blkentriesp);
+	    tst =
+		ubik_Call(VL_ListAttributesN, cellHandle->vos, 0, attrp,
+			  entriesp, blkentriesp);
 	    if (tst) {
 		if (tst == RXGEN_OPCODE) {
 		    cellHandle->vos_new = 0;
@@ -279,14 +278,19 @@ int VLDB_ListAttributes(
 		rc = 1;
 	    }
 	} else {
-	    memset((void *) &arrayEntries, 0, sizeof(arrayEntries));
-	    tst = ubik_Call(VL_ListAttributes, cellHandle->vos, 0, attrp,
-			    entriesp, arrayEntries);
+	    memset((void *)&arrayEntries, 0, sizeof(arrayEntries));
+	    tst =
+		ubik_Call(VL_ListAttributes, cellHandle->vos, 0, attrp,
+			  entriesp, arrayEntries);
 	    if (tst == 0) {
-		blkentriesp->nbulkentries_val = (nvldbentry *) malloc(*entriesp * sizeof(*blkentriesp));
+		blkentriesp->nbulkentries_val =
+		    (nvldbentry *) malloc(*entriesp * sizeof(*blkentriesp));
 		if (blkentriesp->nbulkentries_val != NULL) {
-		    for(i=0;i< *entriesp;i++) {
-			OldVLDB_to_NewVLDB((struct vldbentry *) &arrayEntries.bulkentries_val[i], (struct nvldbentry *) &blkentriesp->nbulkentries_val[i], &tst);
+		    for (i = 0; i < *entriesp; i++) {
+			OldVLDB_to_NewVLDB((struct vldbentry *)&arrayEntries.
+					   bulkentries_val[i],
+					   (struct nvldbentry *)&blkentriesp->
+					   nbulkentries_val[i], &tst);
 		    }
 		} else {
 		    tst = ADMNOMEM;
@@ -302,26 +306,24 @@ int VLDB_ListAttributes(
 
     if (st != NULL) {
 	*st = tst;
-    } 
+    }
     return rc;
 }
 
-int VLDB_ListAttributesN2(
-  afs_cell_handle_p cellHandle,
-  VldbListByAttributes *attrp,
-  char   *name,
-  afs_int32   thisindex,
-  afs_int32  *nentriesp,
-  nbulkentries *blkentriesp,
-  afs_int32  *nextindexp,
-  afs_status_p st)
+int
+VLDB_ListAttributesN2(afs_cell_handle_p cellHandle,
+		      VldbListByAttributes * attrp, char *name,
+		      afs_int32 thisindex, afs_int32 * nentriesp,
+		      nbulkentries * blkentriesp, afs_int32 * nextindexp,
+		      afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
 
-    tst = ubik_Call(VL_ListAttributesN2, cellHandle->vos, 0,
-		     attrp, (name ? name : ""), thisindex,
-		     nentriesp, blkentriesp, nextindexp);
+    tst =
+	ubik_Call(VL_ListAttributesN2, cellHandle->vos, 0, attrp,
+		  (name ? name : ""), thisindex, nentriesp, blkentriesp,
+		  nextindexp);
     if (!tst) {
 	rc = 1;
     }
@@ -332,22 +334,16 @@ int VLDB_ListAttributesN2(
     return rc;
 }
 
-int VLDB_IsSameAddrs(
-  afs_cell_handle_p cellHandle,
-  afs_int32 serv1,
-  afs_int32 serv2,
-  int *equal,
-  afs_status_p st)
+int
+VLDB_IsSameAddrs(afs_cell_handle_p cellHandle, afs_int32 serv1,
+		 afs_int32 serv2, int *equal, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
 
     ListAddrByAttributes attrs;
     bulkaddrs addrs;
-    afs_uint32 *addrp,
-            nentries,
-            unique,
-            i;
+    afs_uint32 *addrp, nentries, unique, i;
     afsUUID uuid;
 
     *equal = 0;
@@ -363,8 +359,9 @@ int VLDB_IsSameAddrs(
     attrs.ipaddr = serv1;
     memset(&addrs, 0, sizeof(addrs));
     memset(&uuid, 0, sizeof(uuid));
-    tst = ubik_Call(VL_GetAddrsU, cellHandle->vos, 0, &attrs, &uuid,
-	            &unique, &nentries, &addrs);
+    tst =
+	ubik_Call(VL_GetAddrsU, cellHandle->vos, 0, &attrs, &uuid, &unique,
+		  &nentries, &addrs);
     if (tst) {
 	*equal = 0;
 	goto fail_VLDB_IsSameAddrs;
@@ -379,8 +376,8 @@ int VLDB_IsSameAddrs(
     }
     rc = 1;
 
-fail_VLDB_IsSameAddrs:
-    
+  fail_VLDB_IsSameAddrs:
+
     if (st != NULL) {
 	*st = tst;
     }
@@ -415,56 +412,52 @@ fail_VLDB_IsSameAddrs:
  * Returns != 0 upon successful completion.
  */
 
-int GetVolumeInfo(
-  afs_cell_handle_p cellHandle,
-  unsigned int volid, 
-  struct nvldbentry *rentry,
-  afs_int32 *server, 
-  afs_int32 *partition, 
-  afs_int32 *voltype,
-  afs_status_p st)
+int
+GetVolumeInfo(afs_cell_handle_p cellHandle, unsigned int volid,
+	      struct nvldbentry *rentry, afs_int32 * server,
+	      afs_int32 * partition, afs_int32 * voltype, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst;
-    int i,index = -1;
- 
+    int i, index = -1;
+
     if (!VLDB_GetEntryByID(cellHandle, volid, -1, rentry, &tst)) {
 	rc = 0;
 	goto fail_GetVolumeInfo;
     }
 
-    if(volid == rentry->volumeId[ROVOL]){
-        *voltype = ROVOL;
-        for (i = 0; i < rentry->nServers; i++) {
-            if ( (index == -1) && (rentry->serverFlags[i] & ITSROVOL) &&
-                !(rentry->serverFlags[i] & RO_DONTUSE) )
-                index = i;
-        }
-        if(index == -1) {
+    if (volid == rentry->volumeId[ROVOL]) {
+	*voltype = ROVOL;
+	for (i = 0; i < rentry->nServers; i++) {
+	    if ((index == -1) && (rentry->serverFlags[i] & ITSROVOL)
+		&& !(rentry->serverFlags[i] & RO_DONTUSE))
+		index = i;
+	}
+	if (index == -1) {
 	    tst = 1;
 	    goto fail_GetVolumeInfo;
 	}
-        *server = rentry->serverNumber[index];
-        *partition = rentry->serverPartition[index];
+	*server = rentry->serverNumber[index];
+	*partition = rentry->serverPartition[index];
 	rc = 1;
 	goto fail_GetVolumeInfo;
     }
-       
-    if ((index = Lp_GetRwIndex(cellHandle, rentry, &tst))<0) {
+
+    if ((index = Lp_GetRwIndex(cellHandle, rentry, &tst)) < 0) {
 	goto fail_GetVolumeInfo;
     }
-    if(volid == rentry->volumeId[RWVOL]){
-        *voltype = RWVOL;
-        *server = rentry->serverNumber[index];
-        *partition = rentry->serverPartition[index];
-    } else if(volid == rentry->volumeId[BACKVOL]){
-        *voltype = BACKVOL;
-        *server = rentry->serverNumber[index];
-        *partition = rentry->serverPartition[index];
+    if (volid == rentry->volumeId[RWVOL]) {
+	*voltype = RWVOL;
+	*server = rentry->serverNumber[index];
+	*partition = rentry->serverPartition[index];
+    } else if (volid == rentry->volumeId[BACKVOL]) {
+	*voltype = BACKVOL;
+	*server = rentry->serverNumber[index];
+	*partition = rentry->serverPartition[index];
     }
-    rc = 1; 
+    rc = 1;
 
-fail_GetVolumeInfo:
+  fail_GetVolumeInfo:
 
     if (st != NULL) {
 	*st = tst;
@@ -488,9 +481,8 @@ fail_GetVolumeInfo:
  * Returns != 0 upon successful completion.
  */
 
-int ValidateVolumeName(
-  const char *volumeName,
-  afs_status_p st)
+int
+ValidateVolumeName(const char *volumeName, afs_status_p st)
 {
     int rc = 0;
     afs_status_t tst = 0;
@@ -508,15 +500,15 @@ int ValidateVolumeName(
 
     len = strlen(volumeName);
 
-    if (((len > 8) && (!strcmp(&volumeName[len - 9], ".readonly"))) ||
-	((len > 6) && (!strcmp(&volumeName[len - 7], ".backup")))) {
+    if (((len > 8) && (!strcmp(&volumeName[len - 9], ".readonly")))
+	|| ((len > 6) && (!strcmp(&volumeName[len - 7], ".backup")))) {
 	tst = ADMVOSVOLUMENAMEINVALID;
 	goto fail_ValidateVolumeName;
     }
 
     rc = 1;
 
-fail_ValidateVolumeName:
+  fail_ValidateVolumeName:
 
     if (st != NULL) {
 	*st = tst;
@@ -528,30 +520,27 @@ fail_ValidateVolumeName:
 /*extract the name of volume <name> without readonly or backup suffixes
  * and return the result as <rname>.
  */
-int vsu_ExtractName(
-  char *rname,
-  char *name)
+int
+vsu_ExtractName(char *rname, char *name)
 {
     char sname[32];
     size_t total;
- 
-    strcpy(sname,name);
+
+    strcpy(sname, name);
     total = strlen(sname);
-    if((total > 9) && (!strcmp(&sname[total - 9],".readonly"))) {
-        /*discard the last 8 chars */
-        sname[total - 9] = '\0';
-        strcpy(rname,sname);
-        return 0;
-    }
-    else if((total > 7) && (!strcmp(&sname[total - 7 ],".backup"))) {
-        /*discard last 6 chars */
-        sname[total - 7] = '\0';
-        strcpy(rname,sname);
-        return 0;
-    }
-    else {
-        strncpy(rname,name,VOLSER_OLDMAXVOLNAME);
-        return -1;
+    if ((total > 9) && (!strcmp(&sname[total - 9], ".readonly"))) {
+	/*discard the last 8 chars */
+	sname[total - 9] = '\0';
+	strcpy(rname, sname);
+	return 0;
+    } else if ((total > 7) && (!strcmp(&sname[total - 7], ".backup"))) {
+	/*discard last 6 chars */
+	sname[total - 7] = '\0';
+	strcpy(rname, sname);
+	return 0;
+    } else {
+	strncpy(rname, name, VOLSER_OLDMAXVOLNAME);
+	return -1;
     }
 }
 
@@ -575,9 +564,8 @@ int vsu_ExtractName(
  * (where 255 in any byte in the pattern indicates a wildcard).
  */
 
-int AddressMatch (
-    int addrTest,
-    int addrPattern)
+int
+AddressMatch(int addrTest, int addrPattern)
 {
     int bTest;
     int bPattern;
@@ -634,7 +622,8 @@ int AddressMatch (
 static pthread_once_t badaddr_init_once = PTHREAD_ONCE_INIT;
 static int addr_to_skip;
 
-static void badaddr_once (void)
+static void
+badaddr_once(void)
 {
 
 #ifdef AFS_NT40_ENV
@@ -651,15 +640,14 @@ static void badaddr_once (void)
      */
 
     HKEY hk;
-    addr_to_skip = 0; /* don't ignore any addrs unless we find otherwise */
-    if (RegOpenKey (HKEY_LOCAL_MACHINE, cszREG_IGNORE_KEY, &hk) == 0) {
+    addr_to_skip = 0;		/* don't ignore any addrs unless we find otherwise */
+    if (RegOpenKey(HKEY_LOCAL_MACHINE, cszREG_IGNORE_KEY, &hk) == 0) {
 	DWORD dwType = REG_DWORD;
 	DWORD dwSize = sizeof(addr_to_skip);
-	RegQueryValueEx (hk, cszREG_IGNORE_VALUE, 0,
-			     &dwType, (PBYTE)&addr_to_skip, &dwSize);
-	RegCloseKey (hk);
+	RegQueryValueEx(hk, cszREG_IGNORE_VALUE, 0, &dwType,
+			(PBYTE) & addr_to_skip, &dwSize);
+	RegCloseKey(hk);
     }
-
 #else
 
     /*
@@ -669,17 +657,16 @@ static void badaddr_once (void)
      *
      */
 
-    addr_to_skip = 0; /* don't skip any addresses */
+    addr_to_skip = 0;		/* don't skip any addresses */
 
 #endif
 
 }
 
-int RemoveBadAddresses(
-   afs_int32 *totalp,
-   bulkaddrs *addrsp)
+int
+RemoveBadAddresses(afs_int32 * totalp, bulkaddrs * addrsp)
 {
-    pthread_once (&badaddr_init_once, badaddr_once);
+    pthread_once(&badaddr_init_once, badaddr_once);
 
     /*
      * If we've been requested to skip anything, addr_to_skip will be
@@ -692,13 +679,13 @@ int RemoveBadAddresses(
     if (addr_to_skip && addrsp && addrsp->bulkaddrs_val) {
 	size_t iiWrite = 0;
 	size_t iiRead = 0;
-	for ( ; iiRead < addrsp->bulkaddrs_len; ++iiRead) {
+	for (; iiRead < addrsp->bulkaddrs_len; ++iiRead) {
 
 	    /*
 	     * Check this IP address to see if it should be skipped.
 	     */
 
-	    if (!AddressMatch(addrsp->bulkaddrs_val[iiRead],addr_to_skip)) {
+	    if (!AddressMatch(addrsp->bulkaddrs_val[iiRead], addr_to_skip)) {
 
 		/*
 		 * The address is okay; make sure it stays in the list.
@@ -706,16 +693,15 @@ int RemoveBadAddresses(
 
 		if (iiWrite != iiRead) {
 		    addrsp->bulkaddrs_val[iiWrite] =
-		    addrsp->bulkaddrs_val[iiRead];
+			addrsp->bulkaddrs_val[iiRead];
 		}
 
 		++iiWrite;
 	    }
 	}
-	*totalp = (afs_int32)iiWrite;
+	*totalp = (afs_int32) iiWrite;
 	addrsp->bulkaddrs_len = iiWrite;
     }
 
     return TRUE;
 }
-
