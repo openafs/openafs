@@ -30,6 +30,14 @@ OpenAFS News -- history of user-visible changes.  April 10, 2003.
 ** Solaris 9 12/02 is now supported.  Solaris 7 and 8 x86 should now
    work again.
 
+** On Linux machines using 2.2 series kernels, 2.2.19 or higher is now
+   required.
+
+** An OpenAFS 1.2.9 afsd will not work with kernel modules built from
+   an earlier OpenAFS release.  In general, using a mismatched afsd and
+   kernel modules set is unsupported; it is not recommended that you use
+   such a configuration on a regular basis.
+
 * Changes incorporated in OpenAFS 1.2.8
 
 ** Mountpoint directory information is now only faked for cross-cell
