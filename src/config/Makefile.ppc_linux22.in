@@ -30,7 +30,6 @@ XLIBS=@LIB_AFSDB@
 AR=ar
 AS=as
 CP=cp
-INSTALL=install
 LD=ld
 MT_CC=cc
 MV=mv

@@ -1,0 +1,23 @@
+Index: src/ptserver//ptserver.c
+===================================================================
+RCS file: /afs/sipb.mit.edu/project/openafs/debian/cvs/openafs/src/ptserver/ptserver.c,v
+retrieving revision 1.1.1.5
+diff -u -r1.1.1.5 ptserver.c
+--- src/ptserver//ptserver.c	5 Jul 2001 01:03:41 -0000	1.1.1.5
++++ src/ptserver//ptserver.c	5 Jul 2001 02:58:45 -0000
+@@ -43,6 +43,7 @@
+ extern afs_int32 ubik_lastYesTime;
+ extern afs_int32 ubik_nBuffers;
+ 
++extern int afsconf_ClientAuth();
+ extern int afsconf_ServerAuth();
+ extern int afsconf_CheckAuth();
+ 
+@@ -255,6 +256,7 @@
+     sc[0] = rxnull_NewServerSecurityObject();
+     sc[1] = 0;
+     if (kerberosKeys) {
++	extern int afsconf_GetKey();
+ 	sc[2] = rxkad_NewServerSecurityObject
+ 	    (0, prdir, afsconf_GetKey, (char *)0);
+     }

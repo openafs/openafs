@@ -375,7 +375,7 @@ libadmin: libafsauthent bozo
 		echo Not building MT libadmin for ${SYS_NAME} ;; \
 	esac
 
-finale: project cmd comerr afsd allrcmds butc tbutc libafs libuafs audit kauth log package \
+finale: project cmd comerr afsd allrcmds butc tbutc  libuafs audit kauth log package \
 	ptserver scout bu_utils ubik uss bozo vfsck volser \
 	venus update xstat afsmonitor dauth tests libafsrpc \
 	libafsauthent libadmin
