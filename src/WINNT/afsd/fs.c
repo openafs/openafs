@@ -583,6 +583,69 @@ char *AclToString(acl)
     return mydata;
 }
 
+BOOL IsAdmin (void)
+{
+    static BOOL fAdmin = FALSE;
+    static BOOL fTested = FALSE;
+
+    if (!fTested)
+    {
+        /* Obtain the SID for BUILTIN\Administrators. If this is Windows NT,
+         * expect this call to succeed; if it does not, we can presume that
+         * it's not NT and therefore the user always has administrative
+         * privileges.
+         */
+        PSID psidAdmin = NULL;
+        SID_IDENTIFIER_AUTHORITY auth = SECURITY_NT_AUTHORITY;
+
+        fTested = TRUE;
+
+        if (!AllocateAndInitializeSid (&auth, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &psidAdmin))
+            fAdmin = TRUE;
+        else
+        {
+            /* Then open our current ProcessToken */
+            HANDLE hToken;
+
+            if (OpenProcessToken (GetCurrentProcess(), TOKEN_QUERY, &hToken))
+            {
+                /* We'll have to allocate a chunk of memory to store the list of
+                 * groups to which this user belongs; find out how much memory
+                 * we'll need.
+                 */
+                DWORD dwSize = 0;
+                PTOKEN_GROUPS pGroups;
+                
+                GetTokenInformation (hToken, TokenGroups, NULL, dwSize, &dwSize);
+            
+                pGroups = (PTOKEN_GROUPS)malloc(dwSize);
+                
+                /* Allocate that buffer, and read in the list of groups. */
+                if (GetTokenInformation (hToken, TokenGroups, pGroups, dwSize, &dwSize))
+                {
+                    /* Look through the list of group SIDs and see if any of them
+                     * matches the Administrator group SID.
+                     */
+                    size_t iGroup = 0;
+                    for (; (!fAdmin) && (iGroup < pGroups->GroupCount); ++iGroup)
+                    {
+                        if (EqualSid (psidAdmin, pGroups->Groups[ iGroup ].Sid))
+                            fAdmin = TRUE;
+                    }
+                }
+
+                if (pGroups)
+                    free(pGroups);
+            }
+        }
+
+        if (psidAdmin)
+            FreeSid (psidAdmin);
+    }
+
+    return fAdmin;
+}
+
 static SetACLCmd(as)
 struct cmd_syndesc *as; {
     register afs_int32 code;
@@ -1585,11 +1648,25 @@ register struct cmd_syndesc *as; {
 		} else if(checkserv.tinterval> 600) {
 		    printf("Warning: The maximum -interval value is 10 mins (600 secs)\n");
 		    checkserv.tinterval=600;	/* 10 min max interval */
-	       }
+        }
 	}
 	else {
-	  checkserv.tinterval = -1;	/* don't change current interval */
+        checkserv.tinterval = -1;	/* don't change current interval */
 	}
+
+    if ( checkserv.tinterval != 0 ) {
+#ifdef WIN32
+        if ( !IsAdmin() ) {
+            fprintf (stderr,"Permission denied: requires Administrator access.\n");
+            return EACCES;
+        }
+#else /* WIN32 */
+        if (geteuid()) {
+            fprintf (stderr,"Permission denied: requires root access.\n");
+            return EACCES;
+        }
+#endif /* WIN32 */
+    }
 
     code = pioctl(0, VIOCCKSERV, &blob, 1);
     if (code) {
@@ -1690,6 +1767,18 @@ register struct cmd_syndesc *as; {
     struct ViceIoctl blob;
     afs_int32 temp;
     
+#ifdef WIN32
+    if ( !IsAdmin() ) {
+        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        return EACCES;
+    }
+#else /* WIN32 */
+    if (geteuid()) {
+        fprintf (stderr,"Permission denied: requires root access.\n");
+        return EACCES;
+    }
+#endif /* WIN32 */
+
     if (!as->parms[0].items && !as->parms[1].items) {
 	fprintf(stderr,"%s: syntax error in set cache size cmd.\n", pn);
 	return 1;
@@ -1791,6 +1880,18 @@ register struct cmd_syndesc *as; {
     register char *tp, *cellname=0;
     register struct hostent *thp;
     afs_int32 fsport = 0, vlport = 0;
+
+#ifdef WIN32
+    if ( !IsAdmin() ) {
+        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        return EACCES;
+    }
+#else /* WIN32 */
+    if (geteuid()) {
+        fprintf (stderr,"Permission denied: requires root access.\n");
+        return EACCES;
+    }
+#endif /* WIN32 */
 
     memset(space, 0, MAXHOSTS * sizeof(afs_int32));
     tp = space;
@@ -2000,7 +2101,21 @@ register struct cmd_syndesc *as; {
     afs_int32 setp = 1;
     
     ti = as->parms[0].items;
-    if (!ti) setp = 0;
+    if (ti) {
+#ifdef WIN32
+    if ( !IsAdmin() ) {
+        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        return EACCES;
+    }
+#else /* WIN32 */
+    if (geteuid()) {
+        fprintf (stderr,"Permission denied: requires root access.\n");
+        return EACCES;
+    }
+#endif /* WIN32 */
+    } else {
+        setp = 0;
+    }
     blob.in = space;
     blob.out = space;
     blob.out_size = MAXSIZE;
@@ -2042,6 +2157,18 @@ register struct cmd_syndesc *as; {
     register struct cmd_item *ti;
     int export=0, type=0, mode = 0, exp = 0, gstat = 0, exportcall, pwsync=0, smounts=0;
     
+#ifdef WIN32
+    if ( !IsAdmin() ) {
+        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        return EACCES;
+    }
+#else /* WIN32 */
+    if (geteuid()) {
+        fprintf (stderr,"Permission denied: requires root access.\n");
+        return EACCES;
+    }
+#endif /* WIN32 */
+
     ti = as->parms[0].items;
     if (strcmp(ti->data, "nfs")	== 0) type = 0x71; /* NFS */
     else {
@@ -2169,6 +2296,18 @@ register struct cmd_syndesc *as; {
     /* figure stuff to set */
     args.stat = 0;
     args.junk = 0;
+
+#ifdef WIN32
+    if ( !IsAdmin() ) {
+        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        return EACCES;
+    }
+#else /* WIN32 */
+    if (geteuid()) {
+        fprintf (stderr,"Permission denied: requires root access.\n");
+        return EACCES;
+    }
+#endif /* WIN32 */
 
     if (! as->parms[1].items) args.stat |= CM_SETCELLFLAG_SUID; /* default to -nosuid */
 
@@ -2397,69 +2536,6 @@ static BOOL IsWindowsNT (void)
 }
 
 
-BOOL IsAdmin (void)
-{
-    static BOOL fAdmin = FALSE;
-    static BOOL fTested = FALSE;
-
-    if (!fTested)
-    {
-        /* Obtain the SID for BUILTIN\Administrators. If this is Windows NT,
-         * expect this call to succeed; if it does not, we can presume that
-         * it's not NT and therefore the user always has administrative
-         * privileges.
-         */
-        PSID psidAdmin = NULL;
-        SID_IDENTIFIER_AUTHORITY auth = SECURITY_NT_AUTHORITY;
-
-        fTested = TRUE;
-
-        if (!AllocateAndInitializeSid (&auth, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &psidAdmin))
-            fAdmin = TRUE;
-        else
-        {
-            /* Then open our current ProcessToken */
-            HANDLE hToken;
-
-            if (OpenProcessToken (GetCurrentProcess(), TOKEN_QUERY, &hToken))
-            {
-                /* We'll have to allocate a chunk of memory to store the list of
-                 * groups to which this user belongs; find out how much memory
-                 * we'll need.
-                 */
-                DWORD dwSize = 0;
-                PTOKEN_GROUPS pGroups;
-                
-                GetTokenInformation (hToken, TokenGroups, NULL, dwSize, &dwSize);
-            
-                pGroups = (PTOKEN_GROUPS)malloc(dwSize);
-                
-                /* Allocate that buffer, and read in the list of groups. */
-                if (GetTokenInformation (hToken, TokenGroups, pGroups, dwSize, &dwSize))
-                {
-                    /* Look through the list of group SIDs and see if any of them
-                     * matches the Administrator group SID.
-                     */
-                    size_t iGroup = 0;
-                    for (; (!fAdmin) && (iGroup < pGroups->GroupCount); ++iGroup)
-                    {
-                        if (EqualSid (psidAdmin, pGroups->Groups[ iGroup ].Sid))
-                            fAdmin = TRUE;
-                    }
-                }
-
-                if (pGroups)
-                    free(pGroups);
-            }
-        }
-
-        if (psidAdmin)
-            FreeSid (psidAdmin);
-    }
-
-    return fAdmin;
-}
-
 static SetPrefCmd(as)
 register struct cmd_syndesc *as; {
   FILE *infd;
@@ -2476,7 +2552,6 @@ register struct cmd_syndesc *as; {
   gblob.in = space;
   gblob.out = space;
   gblob.out_size = MAXSIZE;
-
 
 #ifdef WIN32
     if ( !IsAdmin() ) {
@@ -2625,33 +2700,45 @@ register struct cmd_syndesc *as; {
     }
   } while (!code && out->next_offset > 0);
 
-return code;
+    return code;
 }
 
 static TraceCmd(struct cmd_syndesc *asp)
 {
 	long code;
-        struct ViceIoctl blob;
-        long inValue;
-        long outValue;
-        
-        if ((asp->parms[0].items && asp->parms[1].items)) {
-		fprintf(stderr, "fs trace: must use at most one of '-off' or '-on'\n");
-                return EINVAL;
+    struct ViceIoctl blob;
+    long inValue;
+    long outValue;
+    
+#ifdef WIN32
+    if ( !IsAdmin() ) {
+        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        return EACCES;
+    }
+#else /* WIN32 */
+        if (geteuid()) {
+            fprintf (stderr,"Permission denied: requires root access.\n");
+            return EACCES;
         }
+#endif /* WIN32 */
+
+    if ((asp->parms[0].items && asp->parms[1].items)) {
+		fprintf(stderr, "fs trace: must use at most one of '-off' or '-on'\n");
+        return EINVAL;
+    }
         
 	/* determine if we're turning this tracing on or off */
 	inValue = 0;
-        if (asp->parms[0].items)
-        	inValue = 3;		/* enable */
+    if (asp->parms[0].items)
+        inValue = 3;		/* enable */
 	else if (asp->parms[1].items) inValue = 2;	/* disable */
-        if (asp->parms[2].items) inValue |= 4;		/* do reset */
+    if (asp->parms[2].items) inValue |= 4;		/* do reset */
 	if (asp->parms[3].items) inValue |= 8;		/* dump */
         
-        blob.in_size = sizeof(long);
-        blob.in = (char *) &inValue;
-        blob.out_size = sizeof(long);
-        blob.out = (char *) &outValue;
+    blob.in_size = sizeof(long);
+    blob.in = (char *) &inValue;
+    blob.out_size = sizeof(long);
+    blob.out = (char *) &outValue;
         
 	code = pioctl(NULL, VIOC_TRACECTL, &blob, 1);
 	if (code) {
@@ -2659,10 +2746,10 @@ static TraceCmd(struct cmd_syndesc *asp)
 		return code;
 	}
         
-        if (outValue) printf("AFS tracing enabled.\n");
-        else printf("AFS tracing disabled.\n");
+    if (outValue) printf("AFS tracing enabled.\n");
+    else printf("AFS tracing disabled.\n");
 
-        return 0;
+    return 0;
 }
 
 static void sbusage()
@@ -2679,6 +2766,18 @@ struct cmd_syndesc *as; {
     struct sbstruct tsb;
     int kb;
     
+#ifdef WIN32
+    if ( !IsAdmin() ) {
+        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        return EACCES;
+    }
+#else /* WIN32 */
+    if (geteuid()) {
+        fprintf (stderr,"Permission denied: requires root access.\n");
+        return EACCES;
+    }
+#endif /* WIN32 */
+
     if ((as->parms[0].items && as->parms[1].items) ||   
         (!as->parms[0].items && !as->parms[1].items)) /* same as logical xor */
       ;
@@ -2732,6 +2831,18 @@ static afs_int32 SetCryptCmd(as)
     struct ViceIoctl blob;
     char *tp;
  
+#ifdef WIN32
+    if ( !IsAdmin() ) {
+        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        return EACCES;
+    }
+#else /* WIN32 */
+    if (geteuid()) {
+        fprintf (stderr,"Permission denied: requires root access.\n");
+        return EACCES;
+    }
+#endif /* WIN32 */
+
     tp = as->parms[0].items->data;
     if (strcmp(tp, "on") == 0)
       flag = 1;
@@ -3131,7 +3242,19 @@ static CSCPolicyCmd(struct cmd_syndesc *asp)
 	
 	if (share)
 	{
-		policy = "manual";
+#ifdef WIN32
+        if ( !IsAdmin() ) {
+            fprintf (stderr,"Permission denied: requires Administrator access.\n");
+            return EACCES;
+        }
+#else /* WIN32 */
+        if (geteuid()) {
+            fprintf (stderr,"Permission denied: requires root access.\n");
+            return EACCES;
+        }
+#endif /* WIN32 */
+
+        policy = "manual";
 		
 		if (asp->parms[1].items)
 			policy = "manual";
