@@ -34,12 +34,6 @@ void *osi_UFSOpen(afs_int32 ainode)
     AFS_STATCNT(osi_UFSOpen);
     if (cacheDiskType != AFS_FCACHE_TYPE_UFS)
 	osi_Panic("UFSOpen called for non-UFS cache\n");
-    if (!afs_osicred_initialized) {
-	/* valid for alpha_osf, SunOS, Ultrix */
-	memset(&afs_osi_cred, 0, sizeof(struct AFS_UCRED));
-	crhold(&afs_osi_cred);
-	afs_osicred_initialized = 1;
-    }
     afile = (struct osi_file *) osi_AllocSmallSpace(sizeof(struct osi_file));
     code = VFS_VGET(cacheDev.mp, (ino_t) ainode, &vp);
     if (code) {

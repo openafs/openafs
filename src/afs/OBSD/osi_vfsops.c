@@ -461,6 +461,7 @@ afsinit()
     sysent[AFS_SYSCALL].sy_argsize = 6 * sizeof(long);
     sysent[54].sy_call = afs_xioctl;
     sysent[80].sy_call = Afs_xsetgroups;
+    osi_Init();
 
     return 0;
 }

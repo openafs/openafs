@@ -16,6 +16,9 @@ RCSID("$Header$");
 #ifdef AFS_OBSD_ENV
 #include "h/syscallargs.h"
 #endif
+#ifdef AFS_FBSD50_ENV
+#include "h/sysproto.h"
+#endif
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"   /* afs statistics */
 #include "afs/vice.h"
@@ -446,6 +449,15 @@ afs_xioctl (p, args, retval)
         u_long com;
         caddr_t arg;
     } *uap = (struct a *)args;
+#elif defined(AFS_FBSD50_ENV)
+#define arg data
+int
+afs_xioctl(td, uap, retval)
+        struct thread *td;
+        register struct ioctl_args *uap;
+        register_t *retval;
+{
+    struct proc *p = td->td_proc;
 #elif defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 struct ioctl_args {
     int fd;
@@ -497,16 +509,13 @@ int afs_xioctl (void)
 	return EBADF;
     if ((fd->f_flag & (FREAD | FWRITE)) == 0)
 	return EBADF;
-#else
-#if defined(AFS_DARWIN_ENV)
+#elif defined(AFS_DARWIN_ENV)
     if ((code=fdgetf(p, uap->fd, &fd)))
 	return code;
-#else
-#ifdef AFS_LINUX22_ENV
+#elif defined(AFS_LINUX22_ENV)
     ua.com = com;
     ua.arg = arg;
-#else
-#ifdef	AFS_AIX32_ENV
+#elif defined(AFS_AIX32_ENV)
     uap->fd = fdes;
     uap->com = com;
     uap->arg = arg;
@@ -514,36 +523,28 @@ int afs_xioctl (void)
     uap->arg2 = arg2;
     uap->arg3 = arg3;
 #endif
-
     if (setuerror(getf(uap->fd, &fd))) {
 	return -1;
     }
-#else
-#ifdef  AFS_OSF_ENV
+#elif defined(AFS_OSF_ENV)
     fd = NULL;
     if (code = getf(&fd, uap->fd, FILE_FLAGS_NULL, &u.u_file_state))
         return code;
-#else   /* AFS_OSF_ENV */
-#ifdef	AFS_SUN5_ENV
-#if defined(AFS_SUN57_ENV)
+#elif defined(AFS_SUN5_ENV)
+# if defined(AFS_SUN57_ENV)
     fd = getf(uap->fd);
     if (!fd) return(EBADF);
-#elif defined(AFS_SUN54_ENV)
+# elif defined(AFS_SUN54_ENV)
     fd = GETF(uap->fd);
     if (!fd) return(EBADF);
-#else
+# else
     if (code = getf(uap->fd, &fd)) {
 	return (code);
     }
-#endif
+# endif   /* AFS_SUN57_ENV */
 #else
     fd = getf(uap->fd);
     if (!fd) return(EBADF);
-#endif
-#endif
-#endif
-#endif
-#endif
 #endif
     /* first determine whether this is any sort of vnode */
 #if defined(AFS_LINUX22_ENV)
@@ -661,6 +662,8 @@ int afs_xioctl (void)
 	releasef(fd);
 #endif
 	code = ioctl(uap, rvp);
+#elif defined(AFS_FBSD50_ENV)
+        return ioctl(td, uap);
 #elif defined(AFS_FBSD_ENV)
         return ioctl(p, uap);
 #elif defined(AFS_OBSD_ENV)
