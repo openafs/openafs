@@ -1,15 +1,18 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+CFLAGS=-g -I. -I${srcdir} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR} ${XCFLAGS}
+
 #  Test programs
 PROGS = \
 	key_test \
 	testit \
 	verify
 
-INCDIRS= -I${TOP_OBJDIR}/src/config -I${DESTDIR}/include -I.. 
-LIBS=-L.. -ldes
-CFLAGS = ${INCDIRS} ${XCFLAGS}
+LDFLAGS = ${XLDFLAGS}
+
+LIBS=\
+	${TOP_LIBDIR}/libdes.a \
 
 all test: $(PROGS)
 
@@ -22,9 +25,9 @@ kinstall:
 	@echo No kernel source here.
 
 testit: testit.o 
-	${CC} ${CFLAGS} testit.o ${LIBS} -o testit
+	${CC} ${CFLAGS} testit.o ${LIBS} ${LDFLAGS} -o testit
 verify: verify.o ../libdes.a
-	${CC} ${CFLAGS} verify.o ${LIBS} -o verify
+	${CC} ${CFLAGS} verify.o ${LIBS} ${LDFLAGS} -o verify
 key_test: key_test.o ../libdes.a
-	${CC} ${CFLAGS} key_test.o ${LIBS} -o key_test
+	${CC} ${CFLAGS} key_test.o ${LIBS} ${LDFLAGS} -o key_test
 

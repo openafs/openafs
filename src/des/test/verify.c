@@ -68,15 +68,9 @@ main(argc,argv)
     char *argv[];
 {
     /* Local Declarations */
-    long in_length;
+    afs_int32 in_length;
 
     progname=argv[0];		/* salt away invoking program */
-
-    /* Assume a long is four bytes */
-    if (sizeof(long) != 4) {
-	printf("\nERROR,  size of long is %d",sizeof(long));
-	exit(-1);
-    }
 
     while (--argc > 0 && (*++argv)[0] == '-')
 	for (i=1; argv[0][i] != '\0'; i++) {
@@ -187,7 +181,7 @@ main(argc,argv)
 
     printf("ACTUAL CBC\n\tclear \"%s\"\n",input);
     in_length = strlen(input);
-    des_cbc_encrypt(input,cipher_text,(long) in_length,KS,ivec,1);
+    des_cbc_encrypt(input,cipher_text,(afs_int32) in_length,KS,ivec,1);
     printf("\tciphertext = (low to high bytes)\n");
     for (i = 0; i <= 7; i++) {
 	printf("\t\t");
@@ -196,7 +190,7 @@ main(argc,argv)
 	}
 	printf("\n");
     }
-    des_cbc_encrypt(cipher_text,clear_text,(long) in_length,KS,ivec,0);
+    des_cbc_encrypt(cipher_text,clear_text,(afs_int32) in_length,KS,ivec,0);
     printf("\tdecrypted clear_text = \"%s\"\n",clear_text);
 
     printf("EXAMPLE CBC checksum");
@@ -205,7 +199,7 @@ main(argc,argv)
     printf("\tchecksum\t58 d2 e7 7e 86 06 27 33, ");
     printf("or some part thereof\n");
     input = clear_text2;
-    des_cbc_cksum(input,cipher_text,(long) strlen(input),KS,ivec,1);
+    des_cbc_cksum(input,cipher_text,(afs_int32) strlen(input),KS,ivec,1);
     printf("ACTUAL CBC checksum\n");
     printf("\t\tencrypted cksum = (low to high bytes)\n\t\t");
     for (j = 0; j<=7; j++)

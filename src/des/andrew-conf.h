@@ -30,8 +30,12 @@
 #if defined(sgi)
 #include "conf-sgi.h"
 #else
-#if defined(__alpha) && !defined(AFS_ALPHA_LINUX20_ENV)
+#ifdef AFS_OSF_ENV
+#if defined(__alpha)
 #include "conf-bsd-alpha.h"
+#else
+#error unknown osf
+#endif
 #else
 #if	defined(AFS_X86_ENV)
 #include "conf-bsd-ncr.h"
@@ -39,9 +43,17 @@
 #ifdef AFS_NT40_ENV
 #include "conf-winnt.h"
 #else
+
 #ifdef AFS_XBSD_ENV
+#ifdef AFS_X86_XBSD_ENV
 #include "conf-i386-obsd.h"
+#elif defined(AFS_ALPHA_ENV)
+#include "conf-alpha-bsd.h"
 #else
+#error unknown bsd
+#endif
+#else /* AFS_XBSD_ENV */
+
 #if defined(AFS_LINUX20_ENV) || defined(AFS_DJGPP_ENV)
 #ifdef AFS_PARISC_LINUX20_ENV
 #include "conf-parisc-linux.h"
