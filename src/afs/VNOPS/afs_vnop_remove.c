@@ -280,7 +280,8 @@ OSI_VC_DECL(adp);
 	return code;
     }
 
-    if (adp->mvstat == 1) {
+    if (adp->mvstat == 2) {
+	afs_PutFakeStat(&fakestate);
 #ifdef  AFS_OSF_ENV
         afs_PutVCache(adp);
 	afs_PutVCache(tvc);
