@@ -523,7 +523,7 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t **avcp, struct fid *fidp)
     register afs_int32 code = 0;
     afs_int32 ret;
 
-#if defined(AFS_SGI64_ENV) && defined(CKPT)
+#if defined(AFS_SGI64_ENV) && defined(CKPT) && !defined(_R5000_CVT_WAR)
     afs_fid2_t *afid2;
 #endif    
 
@@ -533,7 +533,7 @@ afs_vget(OSI_VFS_DECL(afsp), vnode_t **avcp, struct fid *fidp)
 
     *avcp = NULL;
 
-#if defined(AFS_SGI64_ENV) && defined(CKPT)
+#if defined(AFS_SGI64_ENV) && defined(CKPT) && !defined(_R5000_CVT_WAR)
     afid2 = (afs_fid2_t*)fidp;
     if (afid2->af_len == sizeof(afs_fid2_t) - sizeof(afid2->af_len)) {
 	/* It's a checkpoint restart fid. */
