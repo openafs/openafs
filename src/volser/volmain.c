@@ -397,7 +397,11 @@ main(argc, argv)
     if (lwps < 4)
 	lwps = 4;
     rx_SetMaxProcs(service, lwps);
+#ifdef AFS_SGI_ENV
+    rx_SetStackSize(service, 49152);
+#else
     rx_SetStackSize(service, 32768);
+#endif
 
     service =
 	rx_NewService(0, RX_STATS_SERVICE_ID, "rpcstats", securityObjects, 3,
