@@ -574,6 +574,10 @@ Section "AFS Client" secClient
   WriteRegStr HKCR "FOLDER\shellex\ContextMenuHandlers\AFS Client Shell Extension" "" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}"
   WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" "{DC515C27-6CAC-11D1-BAE7-00C04FD140D2}" "AFS Client Shell Extension"
   WriteRegStr HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Control Panel\Cpls" "afs_cpa" "$INSTDIR\Client\Program\afs_cpa.cpl"
+
+  ; Support for apps that wrote submount data directly to afsdsbmt.ini
+  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion\IniFileMapping\afsdsbmt.ini" "AFS Mappings" "USR:Software\OpenAFS\Client\mappings"
+  WriteRegStr HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion\IniFileMapping\afsdsbmt.ini" "AFS Submounts" "SYS:OpenAFS\Client\Submounts"
   
   ; AFS Reg entries
   DeleteRegKey HKLM "${AFS_REGKEY_ROOT}\AFS Client\CurrentVersion"
@@ -1963,7 +1967,10 @@ StartRemove:
   DeleteRegKey /ifempty HKLM "${AFS_REGKEY_ROOT}"
   DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\OpenAFS"
   DeleteRegValue HKLM "SYSTEM\CurrentControlSet\Services\NetBT\Parameters" "SmbDeviceEnabled"
- 
+
+  ; Support for apps that wrote submount data directly to afsdsbmt.ini
+  DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion\IniFileMapping\afsdsbmt.ini"
+
   RMDir  "$INSTDIR"
 
 SectionEnd
