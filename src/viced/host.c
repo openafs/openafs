@@ -142,7 +142,6 @@ static void GetCEBlock()
 
 /* get the next available CE */
 static struct client *GetCE()
-
 {
     register struct client *entry;
 
@@ -163,9 +162,7 @@ static struct client *GetCE()
 
 
 /* return an entry to the free list */
-static void FreeCE(entry)
-    register struct client *entry;
-
+static void FreeCE(register struct client *entry)
 {
     entry->next = CEFree;
     CEFree = entry;
@@ -199,7 +196,6 @@ struct HTBlock		/* block of HTSPERBLOCK file entries */
 
 /* get a new block of HTs and chain it on HTFree */
 static void GetHTBlock()
-
 {
     register struct HTBlock *block;
     register int i;
@@ -230,7 +226,6 @@ static void GetHTBlock()
 
 /* get the next available HT */
 static struct host *GetHT()
-
 {
     register struct host *entry;
 
@@ -247,9 +242,7 @@ static struct host *GetHT()
 
 
 /* return an entry to the free list */
-static void FreeHT(entry)
-    register struct host *entry; 
-
+static void FreeHT(register struct host *entry)
 {
     entry->next = HTFree;
     HTFree = entry;
@@ -260,8 +253,7 @@ static void FreeHT(entry)
 
 static short consolePort = 0;
 
-int h_Release(host)
-    register struct host *host;
+int h_Release(register struct host *host)
 {
     H_LOCK
     h_Release_r(host);
@@ -275,8 +267,7 @@ int h_Release(host)
  * If either the HOSTDELETED or CLIENTDELETED flags are set
  * then toss the host
  */
-int h_Release_r(host)
-    register struct host *host;
+int h_Release_r(register struct host *host)
 {	
     
     if (!((host)->holds[h_holdSlot()] & ~h_holdbit()) ) {
@@ -296,18 +287,7 @@ int h_Release_r(host)
     return 0;
 }
 
-int h_Held(host)
-    register struct host *host;
-{
-    int retVal;
-    H_LOCK
-    retVal = h_Held_r(host);
-    H_UNLOCK
-    return retVal;
-}
-
-int h_OtherHolds_r(host)
-    register struct host *host;
+int h_OtherHolds_r(register struct host *host)
 {
     register int i, bit, slot;
     bit = h_holdbit();
@@ -320,18 +300,7 @@ int h_OtherHolds_r(host)
     return 0;
 }
 
-int h_OtherHolds(host)
-    register struct host *host;
-{
-    int retVal;
-    H_LOCK
-    retVal = h_OtherHolds_r(host);
-    H_UNLOCK
-    return retVal;
-}
-
-int h_Lock_r(host)
-    register struct host *host;
+int h_Lock_r(register struct host *host)
 {
     H_UNLOCK
     h_Lock(host);
@@ -345,8 +314,7 @@ int h_Lock_r(host)
   * else returns locks and returns 0
   */
 
-int h_NBLock_r(host)
-    register struct host *host;
+int h_NBLock_r(register struct host *host)
 {
     struct Lock *hostLock = &host->lock;
     int locked = 0;
@@ -465,10 +433,10 @@ h_gethostcps_r(host,now)
 		h_Hold_r(host);
 
     	/* wait if somebody else is already doing the getCPS call */
-    while ( host->hostFlags & HPCS_INPROGRESS ) 
+    while ( host->hostFlags & HCPS_INPROGRESS ) 
     {
 	slept = 1;		/* I did sleep */
-	host->hostFlags |= HPCS_WAITING; /* I am sleeping now */
+	host->hostFlags |= HCPS_WAITING; /* I am sleeping now */
 #ifdef AFS_PTHREAD_ENV
 	pthread_cond_wait(&host->cond, &host_glock_mutex);
 #else /* AFS_PTHREAD_ENV */
@@ -478,7 +446,7 @@ h_gethostcps_r(host,now)
     }
 
 
-    host->hostFlags |= HPCS_INPROGRESS;	/* mark as CPSCall in progress */
+    host->hostFlags |= HCPS_INPROGRESS;	/* mark as CPSCall in progress */
     if (host->hcps.prlist_val)
 	free(host->hcps.prlist_val);    /* this is for hostaclRefresh */
     host->hcps.prlist_val = NULL;
@@ -521,11 +489,11 @@ h_gethostcps_r(host,now)
     } else
 	host->hcpsfailed = 0;
 
-    host->hostFlags &=  ~HPCS_INPROGRESS;
+    host->hostFlags &=  ~HCPS_INPROGRESS;
     					/* signal all who are waiting */
-    if ( host->hostFlags & HPCS_WAITING) /* somebody is waiting */
+    if ( host->hostFlags & HCPS_WAITING) /* somebody is waiting */
     {
-        host->hostFlags &= ~HPCS_WAITING;
+        host->hostFlags &= ~HCPS_WAITING;
 #ifdef AFS_PTHREAD_ENV
 	assert(pthread_cond_broadcast(&host->cond) == 0);
 #else /* AFS_PTHREAD_ENV */
@@ -650,15 +618,6 @@ struct host *h_Alloc_r(r_con)
 
 /* Lookup a host given an IP address and UDP port number. */
 /* hostaddr and hport are in network order */
-struct host *h_Lookup(afs_uint32 hostaddr, afs_uint32 hport, int *heldp)
-{
-    struct host *retVal;
-    H_LOCK
-    retVal = h_Lookup_r(hostaddr, hport, heldp);
-    H_UNLOCK
-    return retVal;
-}
-
 /* Note: host should be released by caller if 0 == *heldp and non-null */
 /* hostaddr and hport are in network order */
 struct host *h_Lookup_r(afs_uint32 hostaddr, afs_uint32 hport, int *heldp)
@@ -726,23 +685,13 @@ struct host *h_LookupUuid_r(afsUUID *uuidp)
 
 
 /*
- * h_Hold: Establish a hold by the current LWP on this host--the host
+ * h_Hold_r: Establish a hold by the current LWP on this host--the host
  * or its clients will not be physically deleted until all holds have
  * been released.
- *
  * NOTE: h_Hold_r is a macro defined in host.h.
  */
 
-int h_Hold(register struct host *host)
-{
-    H_LOCK
-    h_Hold_r(host);
-    H_UNLOCK
-    return 0;
-}
-
-
-/* h_TossStuff:  Toss anything in the host structure (the host or
+/* h_TossStuff_r:  Toss anything in the host structure (the host or
  * clients marked for deletion.  Called from r_Release ONLY.
  * To be called, there must be no holds, and either host->deleted
  * or host->clientDeleted must be set.
@@ -883,10 +832,7 @@ int h_FreeConnection(struct rx_connection *tcon)
  * to (*proc) as the param held.  The proc should return 0 if the host should be
  * released, 1 if it should be held after enumeration.
  */
-h_Enumerate(proc, param)
-    int (*proc)();
-    char *param;
-
+void h_Enumerate(int (*proc)(), char *param)
 {
     register struct host *host, **list;
     register int *held;
@@ -927,11 +873,7 @@ h_Enumerate(proc, param)
  * The proc should return 0 if the host should be released, 1 if it should
  * be held after enumeration.
  */
-h_Enumerate_r(proc, enumstart, param)
-    int (*proc)();
-    struct host* enumstart;
-    char *param;
-
+void h_Enumerate_r(int (*proc)(), struct host* enumstart, char *param)
 {
     register struct host *host;
     register int held;
@@ -949,9 +891,7 @@ h_Enumerate_r(proc, enumstart, param)
 } /*h_Enumerate_r*/
 
 /* Host is returned held */
-struct host *h_GetHost_r(tcon)
-    struct rx_connection *tcon;
-
+struct host *h_GetHost_r(struct rx_connection *tcon)
 {
     struct host *host;
     struct host *oldHost;
@@ -1168,11 +1108,7 @@ void h_InitHostPackage()
 #endif /* AFS_PTHREAD_ENV */
 }
 
-static MapName_r(aname, acell, aval)
-    char *aname;
-    char *acell;
-    afs_int32 *aval;
-
+static int MapName_r(char *aname, char *acell, afs_int32 *aval)
 {
     namelist lnames;
     idlist lids;
@@ -1235,8 +1171,7 @@ static MapName_r(aname, acell, aval)
 
 
 /* NOTE: this returns the client with a Shared lock */
-struct client *h_ID2Client(vid)
-afs_int32 vid;
+struct client *h_ID2Client(afs_int32 vid)
 {
     register struct client *client;
     register struct host *host;
@@ -1260,7 +1195,7 @@ afs_int32 vid;
       }
 
     H_UNLOCK
-return 0;
+    return 0;
 }
 
 /*
@@ -1270,9 +1205,7 @@ return 0;
  * by one. The caller must call h_ReleaseClient_r when finished with
  * the client.
  */
-struct client *h_FindClient_r(tcon)
-    struct rx_connection *tcon;
-
+struct client *h_FindClient_r(struct rx_connection *tcon)
 {
     register struct client *client;
     register struct host *host;
@@ -1460,8 +1393,7 @@ ticket name length != 64
 
 } /*h_FindClient_r*/
 
-int h_ReleaseClient_r(client)
-    struct client *client;
+int h_ReleaseClient_r(struct client *client)
 {
     assert(client->refCount > 0);
     client->refCount--;
@@ -1476,10 +1408,7 @@ int h_ReleaseClient_r(client)
  * It does check tokens, since only the server routines can return the
  * VICETOKENDEAD error code
  */
-int GetClient(tcon, cp)
-    struct rx_connection * tcon;
-    struct client **cp;
-
+int GetClient(struct rx_connection * tcon, struct client **cp)
 {
     register struct client *client;
 
@@ -1506,9 +1435,7 @@ int GetClient(tcon, cp)
 
 
 /* Client user name for short term use.  Note that this is NOT inexpensive */
-char *h_UserName(client)
-    struct client *client;
-
+char *h_UserName(struct client *client)
 {
     static char User[PR_MAXNAMELEN+1];
     namelist lnames;
@@ -1532,8 +1459,7 @@ char *h_UserName(client)
 } /*h_UserName*/
 
 
-h_PrintStats()
-
+void h_PrintStats()
 {
     ViceLog(0,
 	    ("Total Client entries = %d, blocks = %d; Host entries = %d, blocks = %d\n",
@@ -1542,10 +1468,8 @@ h_PrintStats()
 } /*h_PrintStats*/
 
 
-static int h_PrintClient(host, held, file)
-    register struct host *host;
-    int held;
-    StreamHandle_t *file;
+static int 
+h_PrintClient(register struct host *host, int held, StreamHandle_t *file)
 {
     register struct client *client;
     int i;
@@ -1602,8 +1526,7 @@ static int h_PrintClient(host, held, file)
  * Print a list of clients, with last security level and token value seen,
  * if known
  */
-h_PrintClients()
-
+void h_PrintClients()
 {
     time_t now;
     char tmpStr[256];
@@ -1627,11 +1550,8 @@ h_PrintClients()
 
 
 
-static int h_DumpHost(host, held, file)
-    register struct host *host;
-    int held;
-    StreamHandle_t *file;
-
+static int 
+h_DumpHost(register struct host *host, int held, StreamHandle_t *file)
 {
     int i;
     char tmpStr[256];
@@ -1672,8 +1592,7 @@ static int h_DumpHost(host, held, file)
 } /*h_DumpHost*/
 
 
-h_DumpHosts()
-
+void h_DumpHosts()
 {
     time_t now;
     StreamHandle_t *file = STREAM_OPEN(AFSDIR_SERVER_HOSTDUMP_FILEPATH, "w");
@@ -1701,12 +1620,8 @@ h_DumpHosts()
  * recently).  An active workstation has received a call since the cutoff
  * time argument passed.
  */
-h_GetWorkStats(nump, activep, delp, cutofftime)
-    int *nump;
-    int *activep;
-    int *delp;
-    afs_int32 cutofftime;
-
+void 
+h_GetWorkStats(int *nump, int *activep, int *delp, afs_int32 cutofftime)
 {
     register int i;
     register struct host *host;
@@ -1764,14 +1679,10 @@ h_GetWorkStats(nump, activep, delp, cutofftime)
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-static void h_ClassifyAddress(a_targetAddr, a_candAddr, a_sameNetOrSubnetP,
-		       a_diffSubnetP, a_diffNetworkP)
-    afs_uint32 a_targetAddr;
-    afs_uint32 a_candAddr;
-    afs_int32 *a_sameNetOrSubnetP;
-    afs_int32 *a_diffSubnetP;
-    afs_int32 *a_diffNetworkP;
-
+static void h_ClassifyAddress(afs_uint32 a_targetAddr, afs_uint32 a_candAddr,
+			      afs_int32 *a_sameNetOrSubnetP, 
+			      afs_int32 *a_diffSubnetP, 
+			      afs_int32 *a_diffNetworkP)
 { /*h_ClassifyAddress*/
 
     register int i;			 /*Iterator thru host hash table*/
@@ -1880,13 +1791,8 @@ static void h_ClassifyAddress(a_targetAddr, a_candAddr, a_sameNetOrSubnetP,
  *	As advertised.
  *------------------------------------------------------------------------*/
 
-void h_GetHostNetStats(a_numHostsP, a_sameNetOrSubnetP, a_diffSubnetP,
-		       a_diffNetworkP)
-    afs_int32 *a_numHostsP;
-    afs_int32 *a_sameNetOrSubnetP;
-    afs_int32 *a_diffSubnetP;
-    afs_int32 *a_diffNetworkP;
-
+void h_GetHostNetStats(afs_int32 *a_numHostsP, afs_int32 *a_sameNetOrSubnetP,
+		       afs_int32 *a_diffSubnetP, afs_int32 *a_diffNetworkP)
 { /*h_GetHostNetStats*/
 
     register struct host *hostP;	 /*Ptr to current host entry*/
@@ -1927,14 +1833,11 @@ static struct AFSFid zerofid;
 
 
 /*
- * XXXX: This routine could use Multi-R to avoid serializing the timeouts.
+ * XXXX: This routine could use Multi-Rx to avoid serializing the timeouts.
  * Since it can serialize them, and pile up, it should be a separate LWP
  * from other events.
  */
-int CheckHost(host, held)
-    register struct host *host;
-    int held;
-
+int CheckHost(register struct host *host, int held)
 {
     register struct client *client;
     struct interfaceAddr interf;
@@ -2032,8 +1935,7 @@ int CheckHost(host, held)
  *
  * This routine is called roughly every 5 minutes.
  */
-h_CheckHosts() {
-
+void h_CheckHosts() {
     afs_uint32 now = FT_ApproxTime();
 
     memset((char *)&zerofid, 0, sizeof(zerofid));
@@ -2056,9 +1958,7 @@ h_CheckHosts() {
  * The addresses in the ineterfaceAddr list are in host byte order.
  */
 int
-initInterfaceAddr_r(host, interf)
-struct host*	host;
-struct interfaceAddr *interf;
+initInterfaceAddr_r(struct host *host, struct interfaceAddr *interf)
 {
 	int i, j;
 	int number, count;
@@ -2144,9 +2044,7 @@ struct interfaceAddr *interf;
  * All addresses are in network byte order.
  */
 int
-addInterfaceAddr_r(host, addr)
-struct host*	host;
-afs_int32 addr;
+addInterfaceAddr_r(struct host *host, afs_int32 addr)
 {
 	int i;
 	int number;
@@ -2190,10 +2088,8 @@ afs_int32 addr;
 	return 0;
 }
 
-/* inserts  a new HashChain structure corresponding to this address */
-hashInsert_r(addr, host)
-afs_int32 addr;
-struct host* host;
+/* inserts a new HashChain structure corresponding to this address */
+void hashInsert_r(afs_int32 addr, struct host* host)
 {
 	int index;
 	struct h_hashChain*	chain;
@@ -2211,10 +2107,8 @@ struct host* host;
 
 }
 
-/* inserts  a new HashChain structure corresponding to this UUID */
-hashInsertUuid_r(uuid, host)
-struct afsUUID *uuid;
-struct host* host;
+/* inserts a new HashChain structure corresponding to this UUID */
+void hashInsertUuid_r(struct afsUUID *uuid, struct host* host)
 {
 	int index;
 	struct h_hashChain*	chain;
@@ -2233,9 +2127,7 @@ struct host* host;
 /* deleted a HashChain structure for this address and host */
 /* returns 1 on success */
 int
-hashDelete_r(addr, host)
-afs_int32 addr;
-struct host* host;
+hashDelete_r(afs_int32 addr, struct host* host)
 {
 	int flag;
 	int index;
@@ -2262,9 +2154,8 @@ struct host* host;
 ** prints out all alternate interface address for the host. The 'level'
 ** parameter indicates what level of debugging sets this output
 */
-printInterfaceAddr(host, level)
-struct host*	host;
-int 		level;
+void
+printInterfaceAddr(struct host *host, int level)
 {
 	int i, number;
         if ( host-> interface )

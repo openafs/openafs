@@ -91,7 +91,7 @@ struct host {
     struct Lock         lock;           /* Write lock for synchronization of
 				      VenusDown flag */
 #ifdef AFS_PTHREAD_ENV
-    pthread_cond_t	cond;		/* used to wait on hpcsValid */
+    pthread_cond_t	cond;		/* used to wait on hcpsValid */
 #endif /* AFS_PTHREAD_ENV */
 };
 
@@ -222,8 +222,8 @@ struct host *(hosttableptrs[h_MAXHOSTTABLES]);  /* Used by h_itoh */
 #define h_htoi(host) ((host)->index) /* index isn't zeroed, no need to lock */
 #define h_itoh(hostindex) (hosttableptrs[(hostindex)>>h_HTSHIFT]+((hostindex)&(h_HTSPERBLOCK-1)))
 
-#define HPCS_INPROGRESS			0x01 /*set when CPS is being updated */
-#define HPCS_WAITING			0x02 /*waiting for CPS to get updated*/
+#define HCPS_INPROGRESS			0x01 /*set when CPS is being updated */
+#define HCPS_WAITING			0x02 /*waiting for CPS to get updated*/
 #define ALTADDR				0x04 /*InitCallBack is being done */
 #define VENUSDOWN			0x08 /* venus CallBack failed */
 #define HOSTDELETED			0x10 /* host delated */
