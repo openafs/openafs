@@ -92,12 +92,9 @@ struct rx_packet *rx_mallocedP = 0;
 extern char cml_version_number[];
 extern int (*rx_almostSent)();
 
-void rxi_FreePacketNoLock(struct rx_packet *p);
 static void rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
-			       afs_int32 ahost, short aport, afs_int32 istack);
+                               afs_int32 ahost, short aport, afs_int32 istack);
 
-extern char cml_version_number[];
-extern int (*rx_almostSent)();
 /* some rules about packets:
  * 1.  When a packet is allocated, the final iov_buf contains room for
  * a security trailer, but iov_len masks that fact.  If the security
@@ -222,9 +219,6 @@ afs_int32 rx_SlowWritePacket(struct rx_packet *packet, int offset, int resid,
 static struct rx_packet * allocCBuf(int class)
 {
   struct rx_packet *c;
-#ifndef KERNEL
-  extern void rxi_MorePacketsNoLock();
-#endif /* !KERNEL */
   SPLVAR;
   
   NETPRI;
@@ -288,7 +282,6 @@ static struct rx_packet * allocCBuf(int class)
  */
 void rxi_freeCBuf(struct rx_packet *c)
 {
-  extern void rxi_PacketsUnWait();
   SPLVAR;
   
   NETPRI;
@@ -358,7 +351,6 @@ int rxi_AllocDataBuf(struct rx_packet *p, int nb, int class)
 /* Add more packet buffers */
 void rxi_MorePackets(int apackets)
 {
-  extern void rxi_PacketsUnWait();
   struct rx_packet *p, *e;
   int getme;
   SPLVAR;
@@ -395,7 +387,6 @@ void rxi_MorePackets(int apackets)
 /* Add more packet buffers */
 void rxi_MorePacketsNoLock(int apackets)
 {
-  extern void rxi_PacketsUnWait();
   struct rx_packet *p, *e;
   int getme;
 
@@ -521,7 +512,6 @@ int rxi_TrimDataBufs(p, first)
      struct rx_packet * p;
      int first;
 {
-  extern void rxi_PacketsUnWait();
   int length;
   struct iovec *iov, *end;
   SPLVAR;
@@ -564,7 +554,6 @@ int rxi_TrimDataBufs(p, first)
  * remove it yourself first if you call this routine. */
 void rxi_FreePacket(struct rx_packet *p)
 {
-  extern void rxi_PacketsUnWait();
   SPLVAR;
   
   NETPRI;

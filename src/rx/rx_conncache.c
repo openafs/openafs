@@ -24,7 +24,6 @@
 #include "rx.h"
 #endif /* UKERNEL */
 
-extern void rxi_DestroyConnection(struct rx_connection *);
 /*
  * We initialize rxi_connectionCache at compile time, so there is no
  * need to call queue_Init(&rxi_connectionCache).

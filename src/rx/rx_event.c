@@ -178,7 +178,9 @@ struct rxevent *rxevent_Post(struct clock *when, void (*func)(),
     if (rx_Log_event) {
 	struct clock now;
 	clock_GetTime(&now);
-	fprintf(rx_Log_event, "%d.%d: rxevent_Post(%d.%d, %x, %x)\n", now.sec, now.usec, when->sec, when->usec, func, arg);
+	fprintf(rx_Log_event, "%d.%d: rxevent_Post(%d.%d, %x, %x)\n", 
+	    (int) now.sec, (int) now.usec, (int) when->sec, 
+	    (int) when->usec, (unsigned int) func, (unsigned int) arg);
     }
 #endif
 
@@ -290,9 +292,10 @@ void rxevent_Cancel_1(ev)
     if (rx_Log_event) {
 	struct clock now;
 	clock_GetTime(&now);
-	fprintf(rx_Log_event, "%d.%d: rxevent_Cancel_1(%d.%d, %x, %x)\n", now.sec,
-		now.usec, ev->eventTime.sec, ev->eventTime.usec, ev->func,
-		ev->arg);
+	fprintf(rx_Log_event, "%d.%d: rxevent_Cancel_1(%d.%d, %x, %x)\n", 
+		(int) now.sec, (int) now.usec, (int) ev->eventTime.sec, 
+		(int) ev->eventTime.usec, (unsigned int) ev->func,
+		(unsigned int) ev->arg);
     }
 #endif
     /* Append it to the free list (rather than prepending) to keep the free
@@ -380,7 +383,8 @@ int rxevent_RaiseEvents(next)
 	} while (queue_IsNotEmpty(&ep->events));
     }
 #ifdef RXDEBUG
-    if (rx_Log_event) fprintf(rx_Log_event, "rxevent_RaiseEvents(%d.%d)\n", now.sec, now.usec);
+    if (rx_Log_event) fprintf(rx_Log_event, "rxevent_RaiseEvents(%d.%d)\n", 
+	(int) now.sec, (int) now.usec);
 #endif
     rxevent_raiseScheduled = 0;
     MUTEX_EXIT(&rxevent_lock);

@@ -65,6 +65,7 @@ afs_int32 rxi_getaddr() {
 #ifndef KERNEL
 
 /* to satisfy those who call setaddr */
+int
 rxi_setaddr(x)
 afs_int32 x; {
     return 0;

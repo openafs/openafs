@@ -52,9 +52,6 @@
 # include "rx.h"
 # include "rx_globals.h"
 
-extern void rxi_Delay();
-extern void rxi_MorePackets();
-
 #ifdef AFS_PTHREAD_ENV
 #include <assert.h>
 
@@ -97,7 +94,6 @@ osi_socket rxi_GetUDPSocket(u_short port)
     osi_socket socketFd = OSI_NULLSOCKET;
     struct sockaddr_in taddr;
     char *name = "rxi_GetUDPSocket: ";
-    extern int rxi_Listen(osi_socket sock);
     int greedy=0;
 
 #if !defined(AFS_NT40_ENV) && !defined(AFS_DJGPP_ENV)
