@@ -129,7 +129,7 @@ load_client() {
 	set_prefix
 		LOADED=`/sbin/lsmod | fgrep openafs`
 	if [ -z "$LOADED" ] ; then
-	    /sbin/insmod ${PREFIX:+-P $PREFIX} -f -m $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
+	    /sbin/insmod ${PREFIX:+-P $PREFIX} -f  $MODLOADDIR/$LIBAFS > $MODLOADDIR/libafs.map 2>&1
 	fi
 }
 
