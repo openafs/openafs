@@ -5,6 +5,11 @@ This software has been released under the terms of the IBM Public
 License.  For details, see the LICENSE file in the top-level source
 directory or online at http://www.openafs.org/dl/license10.html
 
+NOTE: As of the OpenAFS 1.3 release series, Windows 9x platforms are no
+longer officially supported.  It is not clear whether or not the source
+tree will build successfully or not.  As far as we know, no one has tried
+in a very long time.
+
 Building Open AFS on Win 95
 ---------------------------
 

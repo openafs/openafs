@@ -3,58 +3,62 @@ License.  For details, see the LICENSE file in the top-level source
 directory or on-line at http://www.openafs.org/dl/license10.html
 
 The document now provides a step by step procedure that takes the user 
-from a basic Windows NT/2000 workstation to an OpenAFS development 
+from a basic Windows 2000/XP workstation to an OpenAFS development 
 environment.   Details are provided so that a 'beginning' windows 
-developer can build an OpenAFS installable package for Windows NT/2000.  
+developer can build an OpenAFS installable package for Windows 2000/XP/2003.
 
-***********   Windows NT/2000 Build Process ****************
+NOTE:
+As of the OpenAFS 1.3 release series, Windows platforms released
+prior to Windows 2000 are not being supported.  The InstallShield
+installer is still in the source tree but is no longer supported.
+A new open source installer based on NSIS 2.0 replaces it.
+
+***********   Windows 2000/XP/2003 Build Process ****************
 
 Building OpenAFS for Windows requires configuring a Windows
 development system by installing compilation tools and header files.
-Open AFS Software development can be done on Windows NT or 2000.  The
+Open AFS Software development can be done on Windows 2000 or XP.  The
 target system, where OpenAFS will be installed, should be either
-Windows NT or Windows 2000.  The building process is controlled by a
-nmake file that generates the necessary binaries and binds them into an
-install package.
+Windows 2000, Windows XP, or Windows 2003.  The building process is 
+controlled by a nmake file that generates the necessary binaries and 
+binds them into an install package.
 
-The following steps describe how to configure Windows 2000/NT:
+The following steps describe how to configure Windows 2000/XP:
 
    A. Obtain a copy of the OpenAFS Source Tree
    B. Install Compiler and Development tools.
-   C. Set up drive mappings.
-   D. Install SDK header files
-   E. Configure Environment variables
-   F. Set program version Level
-   G. Build Win2000 binaries
-   H. Install InstallShield 5.x
-   I. Build Win2000 InstallShield Package
-   J. Build Win2000 InstallShield Package for the Web
-   K. Final Results
-   L. Creating a Debug Environment
-   M. Optional Items
-   N. Required patches for 1.2.2a and earlier releases
+   C. Install SDK header files
+   D. Configure NTBUILD.BAT
+   E. Set program version Level
+   F. Build Win2000 binaries
+   G. Install NSIS 2.0
+   H. Build NSIS Install Package
+   I. Final Results
+   J. Optional Items
    	
-The Software development tools with InstallShield require 900 MB
-storage.
+The Microsoft development tools require anywhere from 660 MB to 1.8GB
+of storage depending on which compilers are selected.  The following 
+versions are supported:
 
-The Software development tools (without InstallShield) require 660 MB
-storage.
+    Microsoft Visual C++ 6.0
+    Microsoft Visual .NET 
+    Microsoft Visual .NET 2003 (recommended)
 
-The OpenAFS Source directory requires about 200 MB storage. The Source
+    Any version of the Microsoft SDK and Tools released August 2001 or later.
+
+The NSIS installer requires about 14 MB of storage. The following 
+version is supported.
+
+    Nullsoft Scriptable Installation System 2.0 
+
+The InstallShield scripts (although not supported) require version 5.5
+of InstallShiled. Version 6.0 or higher of InstallShield are not 
+compatible.
+
+The OpenAFS Source directory requires about 360 MB storage. The Source
 directory size includes additional space for files that will be
 generated during the build process.
 
-The following CDs are used in this example:
-	Microsoft SDK and Tools Jan 2001
-	Microsoft Visual Studio Version 6.0
-	InstallShield 5.5
-
-Different versions of above CDs can be used; however, building an
-install package for Windows NT/2000 requires InstallShield
-version 5.0 to 5.5 (version 6.0 or better will not work).  
-
-You can build all the necessary binaries without the InstallShield
-software. InstallShield is only needed to build an install package.
 
 STEP A. Obtain a copy of the Open AFS Source Tree.
 
@@ -62,13 +66,13 @@ Transfer OpenAFS source tree onto your hardrive.  The source can be
 downloaded from the OpenAFS web site:
 	http://www.OpenAFS.org/release/snapindex.html.
 
-For this example, download source for version 1.2.2a using the
+For this example, download source for version 1.3.60 using the
 following URL:
-http://www.openafs.org/dl/openafs/1.2.2a/openafs-1.2.2a-src.tar
+http://www.openafs.org/dl/openafs/1.3.60/openafs-1.3.60-src.tar
 
 HINT: DailySnapShots are pre-release source trees and much more
 likely to have compilation errors. If this is your first attempt, do
-your build based on a release version of the source, e.g. 1.2.2.a. Once
+your build based on a release version of the source, e.g. 1.3.60. Once
 you have completed a build process successfully, you can experiment with
 other source trees.
 
@@ -76,27 +80,32 @@ You will need an unzip utility that can expand compressed tar files.
 For example "Pkzip for Windows" from Pkware will uncompress tar files.
 (http://www.pkware.com/)
 
-Expand the downloaded tar file (openafs-1.2.2a-src.tar) into target
+Expand the downloaded tar file (openafs-1.3.60-src.tar) into target
 directory (c:\OpenAFS), the unzip routine will expand the source into a
 subdirectory tree:
-		c:\OpenAFS\OpenAFS-1.2.2a\src
+		c:\OpenAFS\OpenAFS-1.3.60\src
 
-Copy files NTMAKEFILE from 'src' to the AFS base directory:
+Copy the files 'NTMakefile' and 'ntbuild.bat' from 'src' to the OpenAFS 
+base directory:
 
-From a DOS command prompt window, enter the following copy commands:
+  From a DOS command prompt window, enter the following copy commands:
 
-copy c:\OpenAFS\OpenAFS-1.2.2a\src\NTMAKEFILE c:\OpenAFS\OpenAFS-1.2.2a\.
+    copy c:\OpenAFS\OpenAFS-1.3.60\src\NTMakefile c:\OpenAFS\OpenAFS-1.3.60\.
+    copy c:\OpenAFS\OpenAFS-1.3.60\src\ntbuild.bat c:\OpenAFS\OpenAFS-1.3.60\.
+
 
 The AFS base directory should look something like the following:
 
-c:\OpenAFS\OpenAFS-1.2.2a\
-  NTMakefile
-  src
+  c:\OpenAFS\OpenAFS-1.3.60\
+    NTMakefile
+    ntbuild.bat
+    src
 	  
+
 STEP B. Install compiler and development tools.
 
-Install a copy of Microsoft Visual C++ 5.0 or 6.0. The "Typical" install
-setting is sufficient.
+Install a copy of Microsoft Visual C++ 6.0, Visual .NET, or Visual .NET 2003.
+The "Typical" install setting is sufficient.
 
 (1) You can reduce the installation size by selecting "Custom" install
 and remove all but the following Options:
@@ -106,48 +115,16 @@ and remove all but the following Options:
 
 (2) When asked, Select to Register Environment Variables.
 
-(3) After rebooting you have to choice to install additional software
-packages. It is not necessary to install these packages.
 
-STEP C. Map development drive letters.
+STEP C. Install SDK header files.
 
-The following documentation will assume you are mapping the Y: drive to
-the OpenAFS source directory and you are mapping X: drive to your
-development tools directory. Other configurations will work, including
-not mapping any drives, as long as the path assignments are consistent
-and you don't exceed the maximum environment variable length.
+Files from Microsoft's Platform SDK (August 2001 or later) are required to
+complete a build on Windows 2000 or XP.   You can install the "Core SDK"
+from
 
-Y: drive mapping provides a consistent directory location to build from.
-Building OpenAFS will require you to open up a command DOS prompt,
-navigate to drive Y: and execute the nmake file.  The source is based
-from Y: drive and the generated files are based from Y:\DEST.  If the OpenAFS 
-source tree is at a different location, you only need to re-map the
-Y: drive.
+  http://www.microsoft.com/msdownload/platformsdk/sdkupdate/
 
-X: drive mapping shortens the length of several Environment variables
-by mapping it to a directory where Visual Studio is installed. Although
-this step is not important when using Windows NT or 2000 as a
-development OS, it does reduce the chance of typing errors during
-the configuration phase.
-
-From a DOS command window enter the following commands:
-
-SUBST  y: c:\OpenAFS\OpenAFS-1.2.2a
-SUBST  x: "c:\Program Files\Microsoft Visual Studio\VC98"
-
-SUBST is persistent across DOS command prompts; that is, if you open up
-another DOS command prompt the mapped drives are still defined.
-However, if you reboot the mapped drives using SUBST will be lost.  
-
-If you need to remove Y: drive mapping, execute the following command
-from a DOS command prompt window:
-
-SUBST  y: /d
-
-STEP D. Install SDK header files.
-
-Files from Microsoft's Platform SDK for NT or 98 are required to
-complete a build on NT/2000.
+by using Internet Explorer 5.x or higher.  (Active X controls are required)
 
 The header files that are required are found from a Microsoft SDK are:
 
@@ -164,79 +141,53 @@ These files come from Microsoft DDKs/SDKs as follows:
                             - you need to install "Legacy and Related
                               driver samples"
 
-To Install Platform SDK from CDROM
-	
-	Run "setup.exe default.htm" from CDROM:
-	Select Microsoft Core SDK
-	Select Sample and Source
-	Select installation path x:\SDK
+STEP D. Configure NTBUILD.BAT.
 
-To Install Windows SDK from WEB:
-	http://www.microsoft.com/sdk
+The NTBUILD.BAT file copied to the OpenAFS base directory must be 
+customized for use on your development system.  The following variables
+must be defined to match your configuration:
 
-STEP E. Configure the OpenAFS build environment.
+  AFSVER_CL: Set to 1200 if using MS Visual C++ 6.0
+             Set to 1300 if using MS Visual .NET
+             Set to 1310 if using MS Visual .NET 2003
 
-The following environment variables should be set:
+  MSVCDIR: Set to the short name version of the directory into which
+           the visual C++ compiler was installed regardless of version
 
-SET AFSDEV_LIB=%LIB%
-SET AFSROOT=Y:
-SET SYS_NAME=i386_nt40
-SET _WIN32_IE=0x400
-SET MSSDK=X:\Sdk
-SET MSTOOLS=X:\Sdk
-SET MSVCDIR=X:
-SET AFSDEV_BIN=X:\BIN
-SET AFSDEV_BUILDTYPE=FREE
-SET AFSDEV_INCLUDE=X:\Sdk\samples\winbase\security\winnt\logonNP;X:\Sdk\Include\ATL30;X:\Sdk\Include;%INCLUDE%
+  MSSDKDIR: Set to the short name of the directory into which
+            the Platform SDK was installed
 
-Please do not include unnecessary spaces in AFSDEV_INLCUDE.
+  NTDDKDIR: Set the short name of the directory containing the npapi.h file
 
-Create a batch file (SETAFS.BAT) to make these settings that can be 
-executed when you bring up a DOS command prompt window.  Environment 
-variables are not persistent, if you close the DOS command window 
-or reboot, the environment variables are lost and they must be 
-recreated when you open a new DOS command prompt window.
+  AFSROOT: Set to the short name of the OpenAFS Base directory
 
-HINT: SET AFSDEV_BUILDTYPE=CHECKED if you want debug information
-included in your binaries.
 
-HINT: Adding drive mapping commands to the batch file makes it easy to
-establish your development environment even if you logoff.  I suggest
-adding the following lines to the beginning of the batch file:
-
-SUBST  y: /d
-SUBST  x: /d
-SUBST  y: c:\OpenAfs\OpenAFS-1.2.2a
-SUBST  x: "c:\Program Files\Microsoft Visual Studio\VC98"
-
-HINT: Windows 2000/NT provides an alternate way to set environment
-variables in System Proprieties.  These can be accessed from the system
-control panel, advanced tab, Environment Variables.  These are
-persistent and will be reset every time a DOS command prompt window is
-opened.
-
-STEP F. Set version and installation options
+STEP E. Set version and installation options (optional)
 
 Add a CellServDB file to install area. CellServDB contains the entries
 for the various cell names.  You can download a general purpose one
 from:
 	http://grand.central.org/dl/cellservdb/CellServDB
-then copy it to Y:\DEST\Wininstall\Config\CellServDB.GrandCentral
+then copy it to %AFSROOT%\src\WINNT\install\NSIS and name it afsdcell.ini
 
-Note: Create directory Y:\DEST\Wininstall\Config\ if it doesn't exist.
-
-Edit file Y:\src\config\NTMakefile.i386_nt40
-	AFSPRODUCT_VERSION  - Product version
+Edit file %AFSROOT%\src\config\NTMakefile.i386_nt40
+    AFSPRODUCT_VER_MAJOR - Version Major Number
+    AFSPRODUCT_VER_MINOR - Version Minor Number
+    AFSPRODUCT_VER_PATCH - Version Patch Number
+    AFSPRODUCT_VER_BUILD - Version Build Number
 	CELLSERVDB_INSTALL - The default file name for the CellServDB
 	included in the install Package.
 	CELLNAME_DEFAULT -  The default home cell name.
 	CELLSERVDB_WEB  - The default web address to obtain CellServDB
 
-For example: in the file Y:\src\config\NTMakefile.i386_nt40 you would
+For example: in the file %AFSROOT%\src\config\NTMakefile.i386_nt40 you would
 see the following:
 
-   AFSPRODUCT_VERSION=1.2.2a
-   CELLNAME_DEFAULT=home.cell.com
+   AFSPRODUCT_VER_MAJOR=1
+   AFSPRODUCT_VER_MINOR=3
+   AFSPRODUCT_VER_PATCH=6000
+   AFSPRODUCT_VER_BUILD=0
+   CELLNAME_DEFAULT=openafs.org
    CELLSERVDB_INSTALL=CellServDB.GrandCentral
    CELLSERVDB_WEB=http://grand.central.org/dl/cellservdb/CellServDB
 
@@ -244,20 +195,37 @@ During the Open AFS installation process the user will be presented
 with two choices for the CellServDB: Local copy (CELLSERVDB_INSTALL) and
 one that can be downloaded from the web (CELLSERVDB_WEB).
 
-HINT: The product version number (AFSPRODUCT_VERSION) can be changed to
-create a new version number.  For example if you have added source
-changes to OpenAFS-1.2.2a and you wanted to create a new version level,
-you may want to use the following: AFSPRODUCT_VERSION=1.2.2b
+STEP F. Begin the build
 
-STEP G. Begin the build
+(1) From Windows 2000/XP open up a DOS prompt window.
 
-(1) From Windows 2000 open up a DOS prompt window.
+(2) Change to the %AFSROOT% directory
 
-(2) Clean the work area.
+(3) Configure the environment variables:
+
+    For a release build:
+
+    (a) Execute the VCVARS32.BAT or VSVARS32.BAT file which part of the
+        Visual Studio environment you installed.
+
+    (b) Execute the SETENV.BAT file with the parameters "/2000 /RETAIL"
+
+    (c) Execute the NTBUILD.BAT file with the parameter "free"
+
+    For a debug build:
+
+    (a) Execute the VCVARS32.BAT or VSVARS32.BAT file which part of the
+        Visual Studio environment you installed.
+
+    (b) Execute the SETENV.BAT file with the parameters "/2000 /DEBUG"
+
+    (c) Execute the NTBUILD.BAT file with the parameter "checked"
+
+(4) Clean the work area:
 
     nmake /f NTMakefile clean
 
-(3) Build the complete Windows NT/2000 development environment.
+(5) Build the complete Windows NT/2000 development environment.
 
     nmake /f NTMakefile install
 
@@ -266,89 +234,41 @@ behavior is normal; the build process is successful as long as the build
 process doesn't terminate with an error ("nmake.exe return code 0x2")
 and it displays 'Build Finished Successfully'.
 
-STEP H. Install InstallShield (optional).
 
-In order to build an install package for OpenAFS, InstallShield 5.5
-must be installed along with InstallShield East and West
-multi-Language packs.
+STEP G. Install NSIS 2.0 (optional).
 
-(1) Install InstallShield (version between 5.0 and  5.5)
+Download the Nullsoft Scriptable Installation System (NSIS) 2.0 from
 
-For minimum installation choose "compact".
+    http://nsis.sourceforge.net/home/
 
-(2) Install West Language Pack (5.5)
+Run the nsis20.exe installer.
 
-(3) Install East Language Pack (5.5)
+NOTE: The NSIS installer may be rebuilt from source files 
+   
+    C:\Program Files\NSIS\Source
 
-NOTE: InstallShield's versions 6 and higher WILL NOT WORK for
-Windows NT/2000 build process.
+to enable options not built into the default configuration.  The 
+OpenAFS installers are built using a modified version of the NSIS
+sources.  The following changes were made to exehead\config.h.
 
-(4) Add necessary DLL's to work with the InstallShield package.
+    NSIS_MAX_STRLEN set to 4096
+    NSIS_CONFIG_LOG defined
+    NSIS_CONFIG_LOG_ODS defined
+    
 
-Two Microsoft DLL's are missing from the InstallShield package. These
-DLL's must be copied to Y:\DEST\WinInstall\Config\:
-	SHLWAPI.DLL 
-	WININET.DLL
-
-These files are only used during the installation, and they will not 
-be left on the target machine.  They can be located at 
-%SystemRoot%\SYSTEM32.
-
-From a DOS command prompt window enter the following commands:
-
-copy %systemRoot%\System32\SHLWAPI.DLL y:\dest\wininstall\config\.
-copy %systemRoot%\System32\WININET.DLL y:\dest\wininstall\config\.
-
-(5) Add two Environment variables to the bottom of the batch file,
-SETAFS.BAT (see STEP E:).
-
-SET IS5ROOT="C:\Program Files\InstallShield\InstallShield 5.5 Professional Edition"
-SET AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%IS5ROOT%\Include
-
-STEP I.  Build Win2000 InstallShield package
+STEP H.  Build OpenAFS NSIS install package
 
 From the DOS command prompt window run:
 
-	Y:
-    nmake /f NTMakefile media
+    nmake /f NTMakefile NSIS
 
-While the build is running you will see a few compile warnings. This
-behavior is normal; the build process is successful as long as the build
-process doesn't terminate with an error ("nmake.exe return code 0x2")
-and it displays 'Install Script Finished Successfully'.
 
-STEP J.  Build Win2000 InstallShield package for the Web
+STEP I. Final Results
 
-InstallShield's PackageForTheWeb combines the installation files into a
-single application file that will expand on execution and lead you
-through the OpenAFS installation.   
-
-Install PackageForTheWeb 3 from InstallShield
-
-Add Environment variables to the bottom of the batch file, SETAFS.BAT
-(see STEP E:).
-
-SET ISWEB="C:\Program Files\InstallShield\PackageForTheWeb 3"
-
-From the DOS command prompt window run:
-
-	Y:
-    nmake /f NTMakefile media
-
-While the build is running you will see a few compile warnings. This
-behavior is normal; the build process is successful as long as the build
-process doesn't terminate with an error ("nmake.exe return code 0x2") and
-it displays 'Install Script Finished Successfully'.
-
-HINT:  It is only necessary to run "nmake /f NTMakefile media" once, by 
-combining steps I & J.     
-
-STEP K. Final Results
-
-The build process generates its binaries in Y:\DEST. The subdirectory
+The build process generates its binaries in %AFSROOT%\DEST. The subdirectory
 would look like the following:
 
-Y:\DEST
+%AFSROOT%:\DEST\{checked,free}\
 	bin
 	etc
 	include
@@ -357,75 +277,13 @@ Y:\DEST
 	root.server
 	WinInstall
 
-Y:\DEST\Bin - contains build utilities.
-Y:\DEST\root.client - contains Open AFS binaries
-Y:\DEST\root.server - contain Open AFS Server binaries
-Y:\DEST\WinInstall\PackageWeb\AFSforWindows.exe - is the Web install
-package for Open AFS.
-Y:\DEST\WinInstall\ - are the install package files for Open AFS
+    Bin - contains build utilities.
+    root.client - contains Open AFS binaries
+    root.server - contain Open AFS Server binaries
+    WinInstall\OpenAFSforWindows.exe - is the install package for Open AFS
 
-Step L. Creating a Debug Environment
 
-Instructions on building a debugging environment from Visual Studio C++
-workspace.  This example give the user a way to step through the source
-code for AFSCREDS.EXE.
-
-These instructions are to be followed after you have set up the
-development environment.
-
-The following steps must be done before you can build a debug
-environment:
-
-1. Set up the development environment as described above
-2. set AFS_BUILDTYPE=CHECKED to get debug information.
-3. You must use environment variables in System Properties
-4. Do a complete build.
-
-To set the the environment variables in the System Properties:
-1. Select the 'System' icon in the control Panel
-2. Select the 'Advanced' tab
-3. Select the 'Environment Variables' button
-4. In the user area set all variables as you did above that
-were used in the setafs.bat file.
-
-To build a new work space to debug afs_creds.exe:
-
-1. Create New Workspace  - 
-Select from Microsoft Visual C++ toolbar file New
-Select from 'new' Project Tab Makefile Project name: Creds
-Location Y:\src\winnt\client_creds
-Select OK
-
-From Dialog Box 'Makefile - Step 1 of 2'
-command line= nmake /f"ntmakefile" install
-Output = y:\dest\root.client\usr\vice\etc\AFSCREDS.EXE
-Select NEXT
-
-Dialog Box 'Makefile - Step 2 of 2'
-Command line= nmake /f"ntmakefile" install
-Output = y:\dest\root.client\usr\vice\etc\AFSCREDS.EXE
-
-Select Finish
-
-Switch to FileView
-Right click on 'Source Files' and select 'Add Files to folder', select
-all *.cpp files.
-
-Right click on 'Header Files' and select 'Add Files to folder', select
-all *.h files.
-
-Right click on 'creds files' and select 'New Folder'
-Fill name in 'Build'
-
-From the toolbar select Build
-Select 'Build All'
-
-You should see the following string when the compile is finished:
-"afs_creds.exe - 0 errors(0), 0 warnings(s)"
-
-Press <F5> to execute afs_creds.exe.
-
-STEP M. Optional Items
+STEP J. Optional Items
 
 The build process has an error table that is compiled for many OpenAFS
 applications.  This table is generated by Unix based tools.  It is not
@@ -467,120 +325,3 @@ command line options than flex and bison, then you may also need to
 change src/comerr/NTMakefile.
 
 (3) Generate new OpenAFS binaries
-
-
-STEP N. Required patches for 1.2.2a and earlier releases
-
-There are two set of patches must be applied to 1.2.2a source to
-successfully build the binaries:
-
-(1)  Patches applied to 1.2.2a to build binaries, excluding install
-package.
-
-diff -Nur --exclude-from=exclude bas/src/NTMakefile upd/src/NTMakefile
---- bas/src/NTMakefile	Wed Nov 14 19:38:06 2001
-+++ upd/src/NTMakefile	Mon Dec  3 14:41:12 2001
-@@ -471,6 +471,7 @@
- 	$(CD) $(OBJ)\$@
- 	$(NTMAKE)
- 	$(CD) ..\..	
-+	echo Build Finished Successfully
- 
- install: start finale
- 
-@@ -487,6 +488,7 @@
- 	$(CD) ..\..\..\..
- 
- media: InstallShield5
-+	echo Install Script Finished Successfully
- 
- 
-(2)  Patches applied to 1.2.2a to build install package.
-
-diff -Nur --exclude-from=exclude bas/src/WINNT/afsd/NTMakefile upd/src/WINNT/afsd/NTMakefile
---- bas/src/WINNT/afsd/NTMakefile	Tue Nov 20 22:45:40 2001
-+++ upd/src/WINNT/afsd/NTMakefile	Wed Dec  5 11:42:46 2001
-@@ -169,8 +169,8 @@
- 	$(EXEDIR)\tokens.exe \
- 	$(EXEDIR)\unlog.exe $(EXEDIR)\afsd.exe $(EXEDIR)\afsd_service.exe \
- 	$(EXEDIR)\fs.exe $(EXEDIR)\symlink.exe \
--	$(LOGON_DLLFILE) $(LOG95_DLLFILE) \
--	$(EXEDIR)\afsshare.exe \
-+	$(LOGON_DLLFILE) \
-+ 	$(EXEDIR)\afsshare.exe \
- 	$(DESTDIR)\bin\kpasswd.exe
- 
- install9X: install_headers $(CONF_DLLFILE) \
-
-diff -Nur --exclude-from=exclude bas/src/WINNT/install/InstallShield5/NTMakefile upd/src/WINNT/install/InstallShield5/NTMakefile
---- bas/src/WINNT/install/InstallShield5/NTMakefile	Wed Nov 14 19:38:50 2001
-+++ upd/src/WINNT/install/InstallShield5/NTMakefile	Mon Dec  3 16:43:08 2001
-@@ -60,7 +60,7 @@
- 		$(MKDIR) $(DESTDIR)\Wininstall\PackageWeb
- !	ENDIF
- 	$(DEL) /q $(DESTDIR)\Wininstall\PackageWeb\*.*
--	$(ISWEB)\Pftwwiz.exe $(AFSROOT)\src\winnt\install\InstallShield5\PackageWeb.pfw -s -a 
-+	"$(ISWEB)\Pftwwiz.exe" $(AFSROOT)\src\winnt\install\InstallShield5\PackageWeb.pfw -s -a 
- !ENDIF
- 	xcopy /s/e/y "Media\OpenAFS\Disk Images\disk1\*.*" $(DESTDIR)\WinInstall
- 	copy AFS_component_version_number.txt $(DESTDIR)\WinInstall\Version.txt
-diff -Nur --exclude-from=exclude bas/src/WINNT/afs_setup_utils/_isuser/_IsUser.RC upd/src/WINNT/afs_setup_utils/_isuser/_IsUser.RC
---- bas/src/WINNT/afs_setup_utils/_isuser/_IsUser.RC	Thu Sep  6 20:54:58 2001
-+++ upd/src/WINNT/afs_setup_utils/_isuser/_IsUser.RC	Mon Dec  3 15:11:46 2001
-@@ -10,7 +10,7 @@
- #define APSTUDIO_HIDDEN_SYMBOLS
- #include "windows.h"
- #undef APSTUDIO_HIDDEN_SYMBOLS
--#include <.\sdrc.h>
-+#include <sdrc.h>
- 
- /////////////////////////////////////////////////////////////////////////////
- #undef APSTUDIO_READONLY_SYMBOLS
-diff -Nur --exclude-from=exclude bas/src/WINNT/afs_setup_utils/_isuser/_IsUser.dep upd/src/WINNT/afs_setup_utils/_isuser/_IsUser.dep
---- bas/src/WINNT/afs_setup_utils/_isuser/_IsUser.dep	Thu Sep  6 20:54:58 2001
-+++ upd/src/WINNT/afs_setup_utils/_isuser/_IsUser.dep	Wed Dec 31 16:00:00 1969
-@@ -1,5 +0,0 @@
--# Microsoft Developer Studio Generated Dependency File, included by _IsUser.mak
--
--.\_Isuser.RC : \
--	".\sdrc.h"\
--	
-diff -Nur --exclude-from=exclude bas/src/WINNT/afs_setup_utils/_isuser/ntmakefile upd/src/WINNT/afs_setup_utils/_isuser/ntmakefile
---- bas/src/WINNT/afs_setup_utils/_isuser/ntmakefile	Mon Sep 10 09:39:50 2001
-+++ upd/src/WINNT/afs_setup_utils/_isuser/ntmakefile	Mon Dec  3 15:16:04 2001
-@@ -30,14 +30,6 @@
- "$(OUTDIR)" ::
-     if not exist "$(OUTDIR)/$(NULL)" mkdir "$(OUTDIR)"
- 
--HEADERS = ".\sdrc.h"
--
--".\sdrc.h" : $(IS5ROOT)\INCLUDE\sdrc.h
--    $(COPY) $(IS5ROOT)\INCLUDE\sdrc.h .
--!   IF EXIST($(IS5ROOT)\Script\ISRT\Include\sdrc.h)
--    $(COPY) $(IS5ROOT)\Script\ISRT\Include\sdrc.h .
--!      ENDIF
--
- CPP=cl.exe
- CPP_PROJ=/nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "_ISUSER_EXPORTS" /YX /Fo"$(INTDIR)\\" /Fd"$(INTDIR)\\" /FD /c 
- 
-@@ -85,20 +77,10 @@
- 	"$(INTDIR)\_isuser.obj" \
- 	"$(INTDIR)\_Isuser.res"
- 
--"$(OUTDIR)\_IsUser.dll" : "$(OUTDIR)" $(HEADERS) $(DEF_FILE) $(LINK32_OBJS)
-+"$(OUTDIR)\_IsUser.dll" : "$(OUTDIR)" $(DEF_FILE) $(LINK32_OBJS)
-     $(LINK32) @<<
-   $(LINK32_FLAGS) $(LINK32_OBJS)
- <<
--
--
--!IF "$(NO_EXTERNAL_DEPS)" != "1"
--!IF EXISTS("_IsUser.dep")
--!INCLUDE "_IsUser.dep"
--!ELSE 
--!MESSAGE Warning: cannot find "_IsUser.dep"
--!ENDIF 
--!ENDIF 
--
- 
- SOURCE=.\_isuser.c
