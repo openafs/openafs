@@ -1,0 +1,26 @@
+Index: configure.in
+===================================================================
+RCS file: /afs/sipb/project/openafs/debian/cvs/openafs/configure.in,v
+retrieving revision 1.1.1.1
+diff -u -r1.1.1.1 configure.in
+--- configure.in	5 Jul 2001 00:54:56 -0000	1.1.1.1
++++ configure.in	5 Jul 2001 06:55:46 -0000
+@@ -62,13 +62,14 @@
+ 		 else
+ 		  LINUX_VERSION="$linux_kvers"
+ 		 fi
++		LINUX_FS_STRUCT_INODE_HAS_I_BYTES
++		LINUX_INODE_SETATTR_RETURN_TYPE
++
+ 		else
+-		 AC_MSG_ERROR(No linux headers found at $with_linux_kernel_headers)
+-		 exit 1
++#		 AC_MSG_ERROR(No linux headers found at $with_linux_kernel_headers)
++:
+ 		fi
+                 AC_MSG_RESULT(linux)
+-		LINUX_FS_STRUCT_INODE_HAS_I_BYTES
+-		LINUX_INODE_SETATTR_RETURN_TYPE
+                 ;;
+         *-solaris*)
+ 		MKAFS_OSTYPE=SOLARIS
