@@ -14,6 +14,13 @@ RCSID("$Header$");
 
 #include <stdio.h>
 #include <stdlib.h>	/* for malloc() */
+
+#ifdef AFS_LINUX24_ENV
+#define __KERNEL__
+#include <linux/string.h>
+#define _STRING_H 1
+#endif
+
 #include <string.h>
 
 #ifdef __linux__
@@ -242,10 +249,12 @@ struct timezone {
     int a,b;
 };
 #ifndef AFS_ALPHA_LINUX20_ENV
+#ifndef AFS_LINUX24_ENV
 typedef struct timeval {
     int tv_sec;
     int tv_usec;
 } timeval_t; /* Needed here since KERNEL defined. */
+#endif
 #endif /*AFS_ALPHA_LINUX20_ENV*/
 #if defined(AFSBIG_ENDIAN)
 #define _LINUX_BYTEORDER_BIG_ENDIAN_H
@@ -2462,9 +2471,15 @@ void print_vnode(kmem, vep, ptr, pnt)
     printf("\ti_ino=%d, i_mode=%x, i_nlink=%d, i_uid=%d, i_gid=%d, i_size=%d\n",
 	   vep->i_ino, vep->i_mode, vep->i_nlink, vep->i_uid, vep->i_gid,
 	   vep->i_size);
+#ifndef AFS_LINUX24_ENV
     printf("\ti_atime=%u, i_mtime=%u, i_ctime=%u, i_version=%u, i_nrpages=%u\n",
 	   vep->i_atime, vep->i_mtime, vep->i_ctime, vep->i_version,
 	   vep->i_nrpages);
+#else
+    printf("\ti_atime=%u, i_mtime=%u, i_ctime=%u, i_version=%u\n",
+	   vep->i_atime, vep->i_mtime, vep->i_ctime, vep->i_version
+	   );
+#endif
     printf("\ti_op=0x%x, i_dev=0x%x, i_rdev=0x%x, i_sb=0x%x\n",
 	   vep->i_op, vep->i_dev, vep->i_rdev, vep->i_sb);
 #ifdef AFS_LINUX24_ENV
