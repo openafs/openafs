@@ -291,6 +291,26 @@ void afs_osi_MaskSignals(){
 void afs_osi_UnmaskRxkSignals(){
 }
     
+/* Two hacks to try and fix afsdb */
+void 
+afs_osi_MaskUserLoop()
+{
+#ifdef AFS_DARWIN_ENV
+    afs_osi_Invisible();
+    afs_osi_fullSigMask();
+#else
+    afs_osi_MaskSignals();
+#endif
+}
+
+void 
+afs_osi_UnmaskUserLoop()
+{
+#ifdef AFS_DARWIN_ENV
+    afs_osi_fullSigRestore();
+#endif
+}
+
 /* register rxk listener proc info */
 void afs_osi_RxkRegister(){
 #ifdef AFS_LINUX22_ENV
