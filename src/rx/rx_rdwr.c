@@ -18,6 +18,9 @@ RCSID("$Header$");
 
 #ifdef KERNEL
 #ifndef UKERNEL
+#ifdef RX_KERNEL_TRACE
+#include "rx_kcommon.h"
+#endif
 #if defined(AFS_DARWIN_ENV) || defined(AFS_XBSD_ENV)
 #include "afs/sysincludes.h"
 #else
@@ -1233,6 +1236,20 @@ void rxi_FlushWrite(register struct rx_call *call)
 
 	call->mode = (call->conn->type == RX_CLIENT_CONNECTION ?
 		                          RX_MODE_RECEIVING: RX_MODE_EOF);
+
+#ifdef RX_KERNEL_TRACE
+        {
+                int glockOwner = ISAFS_GLOCK();
+                if (!glockOwner)
+                        AFS_GLOCK();
+                afs_Trace3(afs_iclSetp, CM_TRACE_WASHERE,
+                        ICL_TYPE_STRING, __FILE__,
+                        ICL_TYPE_INT32, __LINE__,
+                        ICL_TYPE_POINTER, call);
+                if (!glockOwner)
+                        AFS_GUNLOCK();
+        }
+#endif
 
 #ifdef AFS_GLOBAL_RXLOCK_KERNEL
 	/* Wait until TQ_BUSY is reset before adding any

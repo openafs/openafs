@@ -131,7 +131,7 @@ typedef unsigned short                  etap_event_t;
 #include "afs/longc_procs.h"
 #include "afs/afs_stats.h"
 #include "h/errno.h"
-#if 0/*def KERNEL*/
+#ifdef KERNEL
 #include "afs/sysincludes.h"
 #include "afsincludes.h"
 #endif

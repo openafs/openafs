@@ -34,7 +34,7 @@ int afs_authenticate (char *userName, char *response, int  *reenter, char **mess
     int code, unixauthneeded, password_expires = -1;
 
     *reenter = 0;
-    *message = NULL;
+    *message = (char *)0;
     if (response) {
 	pword = response;
     } else {
@@ -53,7 +53,7 @@ int afs_authenticate (char *userName, char *response, int  *reenter, char **mess
 	return AUTH_FAILURE;
     }
     if (code = ka_UserAuthenticateGeneral(KA_USERAUTH_VERSION + KA_USERAUTH_DOSETPAG, userName, 
-					  NULL, NULL, pword, 0, &password_expires, 0, &reason)) {
+					  (char *)0, (char *)0, pword, 0, &password_expires, 0, &reason)) {
 	if (code == KANOENT) 
 	    return AUTH_NOTFOUND;	
 	*message = (char *)malloc(1024);
@@ -83,6 +83,28 @@ int afs_getgrset (char *userName) {
 }
 
 struct group *afs_getgrgid (int id) {
+#ifdef AFS_AIX51_ENV
+    static char name[64];
+    static char passwd[64];
+    static struct group grp;
+    struct group *g;
+    char *mem = NULL;
+
+    while ((g = getgrent()) != NULL) {
+	if (g->gr_gid == id) {
+		strncpy(&name, g->gr_name, sizeof(name));
+		strncpy(&passwd, g->gr_passwd, sizeof(passwd));
+		grp.gr_name = &name;
+		grp.gr_passwd = &passwd;
+		grp.gr_gid = g->gr_gid;
+		grp.gr_mem = &mem;
+		break;
+	}
+    }
+    endgrent();
+    if (g)
+       return &grp;
+#endif
     return NULL;
 }
 
@@ -91,33 +113,34 @@ struct group *afs_getgrnam (char *name) {
 }
 
 #ifdef AFS_AIX51_ENV
-/*
- *  This is a nasty hack. It seems getpwnam calls this routine and is not
- *  happy with NULL as result. Trying to call here getpwnam in order to get
- *  a reasonable result kills the whole program. So I tried to return
- *  a dummy pwd and it seems to work!
- */
 struct passwd *afs_getpwnam (char *user) {
-    char name[64];
-    char *passwd = "*";
-    char *gecos = "";
-    char *dir = "/";
-    char *shell = "/bin/sh";
-    char *nobody = "nobody";
-    struct passwd p;
+    static char name[64];
+    static char passwd[64];
+    static char gecos[256];
+    static char dir[256];
+    static char shell[256];
+    static struct passwd pwd;
+    struct passwd *p;
 
-    strncpy((char *)&name, user, sizeof(name));
-    name[63] = 0;
-    p.pw_name = &name;
-    p.pw_name = nobody;
-    p.pw_passwd = passwd;
-    p.pw_uid = 4294967294;
-    p.pw_gid = 4294967294;
-    p.pw_gecos = gecos;
-    p.pw_dir = dir;
-    p.pw_shell = shell;
-
-    return &p;
+    while ((p = getpwent()) != NULL) {
+	if (!strcmp(p->pw_name, user)) {
+		strncpy(&name, p->pw_name, sizeof(name));
+		strncpy(&passwd, p->pw_passwd, sizeof(passwd));
+		strncpy(&gecos, p->pw_gecos, sizeof(gecos));
+		strncpy(&dir, p->pw_dir, sizeof(dir));
+		strncpy(&shell, p->pw_shell, sizeof(shell));
+		pwd.pw_name = &name;
+		pwd.pw_passwd = &passwd;
+		pwd.pw_uid = p->pw_uid;
+		pwd.pw_gid = p->pw_gid;
+		pwd.pw_gecos = &gecos;
+		pwd.pw_dir = &dir;
+		pwd.pw_shell = &shell;
+		break;
+	}
+    }
+    endpwent();
+    return &pwd;
 }
 #else
 int afs_getpwnam(int id)

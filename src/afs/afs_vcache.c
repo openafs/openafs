@@ -1896,7 +1896,7 @@ struct vcache *afs_LookupVCache(struct VenusFid *afid, struct vrequest *areq,
     if (!tvc) {
         /* no cache entry, better grab one */
 	UpgradeSToWLock(&afs_xvcache,22);
-        tvc = afs_NewVCache(&nfid, NULL);
+        tvc = afs_NewVCache(&nfid, serverp);
 	newvcache = 1;
         ConvertWToSLock(&afs_xvcache);
     }

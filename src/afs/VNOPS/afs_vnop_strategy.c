@@ -122,7 +122,7 @@ afs_ustrategy(abp)
 	    if (dbtob(abp->b_blkno) + abp->b_bcount > tvc->m.Length) {
 		if ((abp->b_flags & B_PFSTORE) == 0) {
 		    AFS_GUNLOCK();
-		    vm_protectp(tvc->vmh, dbtob(abp->b_blkno)/PAGESIZE,
+		    vm_protectp(tvc->segid, dbtob(abp->b_blkno)/PAGESIZE,
 				abp->b_bcount/PAGESIZE, RDONLY);
 		    AFS_GLOCK();
 		}

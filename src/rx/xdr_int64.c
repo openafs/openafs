@@ -36,8 +36,8 @@ bool_t xdr_int64(register XDR *xdrs, afs_int64 *ulp)
 
 bool_t xdr_afs_int64(register XDR *xdrs, afs_int64 *ulp)
 {
-        static afs_int32 high;
-        static afs_uint32 low;
+        afs_int32 high;
+        afs_uint32 low;
 
         if (xdrs->x_op == XDR_DECODE) {
                 if (!XDR_GETINT32(xdrs, (afs_int32 *) &high)) return (FALSE);
@@ -67,8 +67,8 @@ bool_t xdr_uint64(register XDR *xdrs, afs_uint64 *ulp)
 }
 bool_t xdr_afs_uint64(register XDR *xdrs, afs_uint64 *ulp)
 {
-        static afs_uint32 high;
-        static afs_uint32 low;
+        afs_uint32 high;
+        afs_uint32 low;
 
         if (xdrs->x_op == XDR_DECODE) {
                 if (!XDR_GETINT32(xdrs, (afs_uint32 *) &high)) return (FALSE);

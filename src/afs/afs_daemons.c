@@ -12,6 +12,11 @@
 
 RCSID("$Header$");
 
+#ifdef AFS_AIX51_ENV
+#define __FULL_PROTO
+#include <sys/sleep.h>
+#endif
+
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
 #include "afs/afs_stats.h"   /* statistics gathering code */
@@ -585,7 +590,7 @@ struct brequest *afs_BQueue(register short aopcode, register struct vcache *avc,
  * The modifications here will work for either a UP or MP machine.
  */
 struct buf *afs_asyncbuf = (struct buf*)0;
-afs_int32 afs_asyncbuf_cv = EVENT_NULL;
+tid_t afs_asyncbuf_cv = EVENT_NULL;
 afs_int32 afs_biodcnt = 0;
 
 /* in implementing this, I assumed that all external linked lists were
@@ -620,7 +625,7 @@ Simple_lock afs_asyncbuf_lock;
     struct buf *bp = NULL;
     struct buf *bestbp;
     struct buf **bestlbpP, **lbpP;
-    int bestage, stop;
+    long bestage, stop;
     struct buf *t1P, *t2P;      /* temp pointers for list manipulation */
     int oldPriority;
     afs_uint32 wait_ret;
@@ -639,16 +644,16 @@ Simple_lock afs_asyncbuf_lock;
 	if (afs_asyncbuf) {
 	    /* look for oldest buffer */
 	    bp = bestbp = afs_asyncbuf;
-	    bestage = (int) bestbp->av_back;
+	    bestage = (long) bestbp->av_back;
 	    bestlbpP = &afs_asyncbuf;
 	    while (1) {
 		lbpP = &bp->av_forw;
 		bp = *lbpP;
 		if (!bp) break;
-		if ((int) bp->av_back - bestage < 0) {
+		if ((long) bp->av_back - bestage < 0) {
 		    bestbp = bp;
 		    bestlbpP = lbpP;
-		    bestage = (int) bp->av_back;
+		    bestage = (long) bp->av_back;
 		}
 	    }
 	    bp = bestbp;
@@ -814,7 +819,7 @@ if (DOvmlock)
 	 * also want to hang onto the old one.
 	 */
 	tmpaddr = bp->b_baddr;
-	bp->b_baddr = vm_att (bp->b_xmemd.subspace_id, tmpaddr);
+	bp->b_baddr = (caddr_t) vm_att (bp->b_xmemd.subspace_id, tmpaddr);
 	tmperr = afs_ustrategy(bp);	/* temp variable saves offset calculation */
 	if (tmperr) {			/* in non-error case */
 	    bp->b_flags |= B_ERROR;		/* should other flags remain set ??? */
@@ -824,7 +829,7 @@ if (DOvmlock)
 	/* Unmap the buffer's data area by calling vm_det.  Reset data area
 	 * to the value that we saved above.
 	 */
-	vm_det(bp->b_un.b_addr);
+	vm_det(bp->b_baddr);
 	bp->b_baddr = tmpaddr;
 
 	/*

@@ -187,7 +187,7 @@ struct ucred	*cred;
 
     AFS_STATCNT(afs_gn_link);
     error = afs_link(vp, dp, name, cred);
-    afs_Trace3(afs_iclSetp, CM_TRACE_GNLINK, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace3(afs_iclSetp, CM_TRACE_GNLINK, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_STRING, name, ICL_TYPE_LONG, error);
     return(error);
 }
@@ -217,7 +217,7 @@ struct ucred	*cred;
     if (! error) {
 	AFS_RELE(vp);
     }
-    afs_Trace4(afs_iclSetp, CM_TRACE_GMKDIR, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace4(afs_iclSetp, CM_TRACE_GMKDIR, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_STRING, name, ICL_TYPE_LONG, mode, ICL_TYPE_LONG, error);
     return(error);
 }
@@ -282,7 +282,7 @@ struct ucred	*cred;
 
    AFS_STATCNT(afs_gn_remove);
    error = afs_remove(dp, name, cred);
-   afs_Trace3(afs_iclSetp, CM_TRACE_GREMOVE, ICL_TYPE_POINTER, (afs_int32)dp,
+   afs_Trace3(afs_iclSetp, CM_TRACE_GREMOVE, ICL_TYPE_POINTER, dp,
 	      ICL_TYPE_STRING, name, ICL_TYPE_LONG, error);
    return(error);
 }
@@ -302,7 +302,7 @@ struct ucred	*cred;
 
    AFS_STATCNT(afs_gn_rename);
     error = afs_rename(dp, name, tdp, tname, cred);
-    afs_Trace4(afs_iclSetp, CM_TRACE_GRENAME, ICL_TYPE_POINTER, (afs_int32)dp,
+    afs_Trace4(afs_iclSetp, CM_TRACE_GRENAME, ICL_TYPE_POINTER, dp,
 	       ICL_TYPE_STRING, name, ICL_TYPE_STRING, tname, ICL_TYPE_LONG, error);
     return(error);
 }
@@ -323,7 +323,7 @@ struct ucred	*cred;
 	if (error == 66 /* 4.3's ENOTEMPTY */)
 	    error = EEXIST; 	/* AIX returns EEXIST where 4.3 used ENOTEMPTY */
     }
-    afs_Trace3(afs_iclSetp, CM_TRACE_GRMDIR, ICL_TYPE_POINTER, (afs_int32)dp,
+    afs_Trace3(afs_iclSetp, CM_TRACE_GRMDIR, ICL_TYPE_POINTER, dp,
 	       ICL_TYPE_STRING, name, ICL_TYPE_LONG, error);
     return(error);
 }
@@ -347,7 +347,7 @@ struct ucred	*cred;
 
    AFS_STATCNT(afs_gn_lookup);
     error = afs_lookup(dp, name, vpp, cred);
-    afs_Trace3(afs_iclSetp, CM_TRACE_GLOOKUP, ICL_TYPE_POINTER, (afs_int32)dp,
+    afs_Trace3(afs_iclSetp, CM_TRACE_GLOOKUP, ICL_TYPE_POINTER, dp,
 	       ICL_TYPE_STRING, name, ICL_TYPE_LONG, error);
    if (vattrp != NULL && error == 0)
        afs_gn_getattr(*vpp, vattrp, cred);
@@ -365,7 +365,7 @@ struct ucred	*cred;
 
     AFS_STATCNT(afs_gn_fid);
     error =  afs_fid(vp, fidp);
-    afs_Trace3(afs_iclSetp, CM_TRACE_GFID, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace3(afs_iclSetp, CM_TRACE_GFID, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, (afs_int32)fidp, ICL_TYPE_LONG, error);
     return(error);
 }
@@ -434,7 +434,7 @@ struct ucred	*cred;
     }
 
 abort:
-    afs_Trace3(afs_iclSetp, CM_TRACE_GOPEN, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace3(afs_iclSetp, CM_TRACE_GOPEN, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, flags, ICL_TYPE_LONG, error);
     return(error);
 }
@@ -495,7 +495,7 @@ struct ucred	*cred;
 	*vinfop	= cred; /* save user creds in fp->f_vinfo */
 	error = afs_open(vpp, flags, cred);
     }
-    afs_Trace4(afs_iclSetp, CM_TRACE_GCREATE, ICL_TYPE_POINTER, (afs_int32)dp,
+    afs_Trace4(afs_iclSetp, CM_TRACE_GCREATE, ICL_TYPE_POINTER, dp,
 	       ICL_TYPE_STRING, name, ICL_TYPE_LONG, mode, ICL_TYPE_LONG, error);
     return error;
 }
@@ -593,7 +593,7 @@ struct ucred	*cred;
     /*
      * We map the segment into our address space using the handle returned by vm_create.
      */
-    if (!vcp->vmh) {
+    if (!vcp->segid) {
         afs_uint32 tlen = vcp->m.Length;
 #ifdef AFS_64BIT_CLIENT
         if (vcp->m.Length > afs_vmMappingEnd)
@@ -604,7 +604,11 @@ struct ucred	*cred;
 	    ReleaseWriteLock(&vcp->lock);
 	    return(EOPNOTSUPP);
 	}
+#ifdef AFS_64BIT_KERNEL
+        vcp->vmh = vm_handle(vcp->segid, (int32long64_t) 0);
+#else
 	vcp->vmh = SRVAL(vcp->segid, 0, 0);
+#endif
     }
     vcp->v.v_gnode->gn_seg = vcp->segid; 	/* XXX Important XXX */
     if (flag & SHM_RDONLY) {
@@ -628,7 +632,7 @@ struct ucred	*cred;
     }
     ReleaseWriteLock(&vcp->lock);
     VN_HOLD(vp);
-    afs_Trace4(afs_iclSetp, CM_TRACE_GMAP, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace4(afs_iclSetp, CM_TRACE_GMAP, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, addr, ICL_TYPE_LONG, len, ICL_TYPE_LONG, off);
     return(0);
 }
@@ -715,7 +719,7 @@ struct ucred		*cred;
   
     }
 out:
-    afs_Trace3(afs_iclSetp, CM_TRACE_GACCESS, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace3(afs_iclSetp, CM_TRACE_GACCESS, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, mode, ICL_TYPE_LONG, error);
     return(error);
 }
@@ -731,34 +735,30 @@ struct ucred	*cred;
 
    AFS_STATCNT(afs_gn_getattr);
     error = afs_getattr(vp, vattrp, cred);
-    afs_Trace2(afs_iclSetp, CM_TRACE_GGETATTR, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace2(afs_iclSetp, CM_TRACE_GGETATTR, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, error);
     return(error);
 }
 
 
 int
-afs_gn_setattr(vp, Op, Arg1, Arg2, Arg3, cred)
+afs_gn_setattr(vp, op, arg1, arg2, arg3, cred)
 struct	vnode	*vp;
 #ifdef AFS_AIX51_ENV
-int32long64_t	Op;
-int32long64_t	Arg1;
-int32long64_t	Arg2;
-int32long64_t	Arg3;
+int32long64_t	op;
+int32long64_t	arg1;
+int32long64_t	arg2;
+int32long64_t	arg3;
 #else
-int		Op;
-int		Arg1;
-int		Arg2;
-int		Arg3;
+int		op;
+int		arg1;
+int		arg2;
+int		arg3;
 #endif
 struct ucred	*cred;
 {
     struct	vattr	va;
     int		error = 0;
-    int		op = Op;
-    int		arg1 = Arg1;
-    int		arg2 = Arg2;
-    int		arg3 = Arg3;
 
    AFS_STATCNT(afs_gn_setattr);
     VATTR_NULL(&va);
@@ -794,7 +794,7 @@ struct ucred	*cred;
 
     error = afs_setattr(vp, &va, cred);
 out:
-    afs_Trace2(afs_iclSetp, CM_TRACE_GSETATTR, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace2(afs_iclSetp, CM_TRACE_GSETATTR, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, error);
     return(error);
 }
@@ -835,7 +835,7 @@ struct ucred	*cred;
     if (avc->segid) {
 	AFS_GUNLOCK();
 	vm_flushp(avc->segid, 0, MAXFSIZE/PAGESIZE - 1);
-	vms_iowait(avc->vmh);	
+	vms_iowait(avc->segid);	
 	AFS_GLOCK();
     }	
     uio.afsio_offset = offset;
@@ -850,7 +850,7 @@ struct ucred	*cred;
 	if (error = afs_rdwr(vp, &uio, UIO_WRITE, 0, cred))
 	    break;
     }
-    afs_Trace4(afs_iclSetp, CM_TRACE_GFCLEAR, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace4(afs_iclSetp, CM_TRACE_GFCLEAR, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, offset, ICL_TYPE_LONG, length, ICL_TYPE_LONG, error);
     return (error);
 }
@@ -872,7 +872,7 @@ struct ucred	*cred;
 
    AFS_STATCNT(afs_gn_fsync);
     error = afs_fsync(vp, cred);
-    afs_Trace3(afs_iclSetp, CM_TRACE_GFSYNC, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace3(afs_iclSetp, CM_TRACE_GFSYNC, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, flags, ICL_TYPE_LONG, error);
     return(error);
 }
@@ -897,7 +897,7 @@ struct ucred	*cred;
     VATTR_NULL(&va);
     va.va_size = length;
     error = afs_setattr(vp, &va, cred);
-    afs_Trace4(afs_iclSetp, CM_TRACE_GFTRUNC, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace4(afs_iclSetp, CM_TRACE_GFTRUNC, ICL_TYPE_POINTER, vp,
 	       	ICL_TYPE_LONG, flags, 
 		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(length), 
 		ICL_TYPE_LONG, error);
@@ -933,7 +933,7 @@ struct ucred	*cred;
     if (vcp->vc_error) {
 	if (op == UIO_WRITE) {
             afs_Trace2(afs_iclSetp, CM_TRACE_GRDWR1, 
-	    ICL_TYPE_POINTER, (afs_int32)vp,
+	    ICL_TYPE_POINTER, vp,
 	    ICL_TYPE_LONG, vcp->vc_error);
 	    return vcp->vc_error;
 	} else
@@ -1026,7 +1026,7 @@ struct ucred	*cred;
     if (vattrp != NULL && error == 0)
 	afs_gn_getattr(vp, vattrp, cred);
 
-    afs_Trace4(afs_iclSetp, CM_TRACE_GRDWR, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace4(afs_iclSetp, CM_TRACE_GRDWR, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, flags, ICL_TYPE_LONG, op, ICL_TYPE_LONG, error);
 
     if (free_cred)
@@ -1046,10 +1046,10 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
     register int i;
     afs_int32 blockSize;
     afs_size_t fileSize, xfrOffset, offset, old_offset, xfrSize;
-    afs_int32 txfrSize;
+    vmsize_t txfrSize;
 #ifdef AFS_64BIT_CLIENT
     afs_size_t finalOffset;
-    afs_int32 toffset;
+    off_t toffset;
     int mixed = 0;
 #endif /* AFS_64BIT_CLIENT */
     register struct vcache *vcp = VTOAFS(vp);
@@ -1123,7 +1123,7 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
     }
 #endif /* AFS_64BIT_CLIENT */
 
-    if (!vcp->vmh) {
+    if (!vcp->segid) {
         afs_uint32 tlen = vcp->m.Length;
 #ifdef AFS_64BIT_CLIENT
         if (vcp->m.Length > afs_vmMappingEnd)
@@ -1134,7 +1134,11 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 			      tlen, 0, 0)) {
 	    goto fail;
 	}
+#ifdef AFS_64BIT_KERNEL
+        vcp->vmh = vm_handle(vcp->segid, (int32long64_t) 0);
+#else
 	vcp->vmh = SRVAL(vcp->segid, 0, 0);	
+#endif
     }
     vcp->v.v_gnode->gn_seg = vcp->segid;
     if (rw == UIO_READ) {
@@ -1197,7 +1201,7 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
     if (vcp->m.Length > afs_vmMappingEnd)
         last_page = afs_vmMappingEnd/PAGESIZE;
 #endif
-    vm_protectp(vcp->vmh, last_page, 1, FILEKEY);
+    vm_protectp(vcp->segid, last_page, 1, FILEKEY);
     if (xfrSize + xfrOffset > fileSize) {
 	vcp->m.Length = xfrSize+xfrOffset;
     }	    
@@ -1287,7 +1291,7 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
 	first_page = (afs_size_t)old_offset >> PGSHIFT;
 	pages = 1 + (((afs_size_t)old_offset + (len - 1)) >> PGSHIFT) - first_page;
         afs_Trace3(afs_iclSetp, CM_TRACE_VMWRITE2, 
-		ICL_TYPE_POINTER, (afs_int32) vcp,
+		ICL_TYPE_POINTER, vcp,
 		ICL_TYPE_INT32, first_page,
 		ICL_TYPE_INT32, pages);
 	AFS_GUNLOCK();
@@ -1310,7 +1314,7 @@ afs_vm_rdwr(vp, uiop, rw, ioflag, credp)
     if (code == 0 && (vcp->states & CDirty)) {
 	code = afs_DoPartialWrite(vcp, &treq);
     }
-    vm_protectp(vcp->vmh, last_page, 1, RDONLY);
+    vm_protectp(vcp->segid, last_page, 1, RDONLY);
     ReleaseWriteLock(&vcp->lock);
     
     /* If requested, fsync the file after every write */
@@ -1393,7 +1397,7 @@ afs_direct_rdwr(vp, uiop, rw, ioflag, credp)
         ReleaseWriteLock(&vcp->lock);
     }	    
     afs_Trace3(afs_iclSetp, CM_TRACE_DIRECTRDWR, 
-			ICL_TYPE_POINTER, (afs_int32)vp,
+			ICL_TYPE_POINTER, vp,
 			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(uiop->afsio_offset),
 	       		ICL_TYPE_LONG, uiop->afsio_resid);
     code = afs_rdwr(vp, uiop, rw, ioflag, credp);
@@ -1495,7 +1499,7 @@ int		cmd;
    lckdat->l_len    = flkd.l_len;
    lckdat->l_pid    = flkd.l_pid;
    lckdat->l_sysid  = flkd.l_sysid;
-    afs_Trace3(afs_iclSetp, CM_TRACE_GLOCKCTL, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace3(afs_iclSetp, CM_TRACE_GLOCKCTL, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, ncmd, ICL_TYPE_LONG, error);
     return(error);
 }
@@ -1520,7 +1524,7 @@ int		ext;		/* Ignored in AFS */
     AFS_STATCNT(afs_gn_ioctl);
     /* This seems to be a perfect fit for our ioctl redirection (afs_xioctl hack); thus the ioctl(2) entry in sysent.c is unaffected in the aix/afs port. */ 
     error = afs_ioctl(vp, cmd, arg);
-    afs_Trace3(afs_iclSetp, CM_TRACE_GIOCTL, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace3(afs_iclSetp, CM_TRACE_GIOCTL, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, cmd, ICL_TYPE_LONG, error);
     return(error);
 }
@@ -1536,7 +1540,7 @@ struct	ucred	*cred;
 
    AFS_STATCNT(afs_gn_readlink);
     error = afs_readlink(vp, uiop, cred);
-    afs_Trace2(afs_iclSetp, CM_TRACE_GREADLINK, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace2(afs_iclSetp, CM_TRACE_GREADLINK, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, error);
     return(error);
 }
@@ -1569,7 +1573,7 @@ struct ucred	*cred;
     VATTR_NULL(&va);
     va.va_mode = 0777;
     error = afs_symlink(vp, link, &va, target, cred);
-    afs_Trace4(afs_iclSetp, CM_TRACE_GSYMLINK, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace4(afs_iclSetp, CM_TRACE_GSYMLINK, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_STRING, link, ICL_TYPE_STRING, target, ICL_TYPE_LONG, error);
     return(error);
 }
@@ -1585,7 +1589,7 @@ struct ucred	*cred;
 
    AFS_STATCNT(afs_gn_readdir);
     error = afs_readdir(vp, uiop, cred);
-    afs_Trace2(afs_iclSetp, CM_TRACE_GREADDIR, ICL_TYPE_POINTER, (afs_int32)vp,
+    afs_Trace2(afs_iclSetp, CM_TRACE_GREADDIR, ICL_TYPE_POINTER, vp,
 	       ICL_TYPE_LONG, error);
     return(error);
 }
@@ -1615,7 +1619,11 @@ struct ucred *cred;
 register struct buf *abp; 
 {
     register struct buf **lbp, *tbp;
+#ifdef AFS_64BIT_KERNEL
+    afs_int64 *lwbp;    /* last quy in work chain */
+#else
     int *lwbp;		/* last guy in work chain */
+#endif
     struct buf *nbp, *qbp, *qnbp, *firstComparable;
     int doMerge;
     int oldPriority;
@@ -1725,7 +1733,11 @@ register struct buf *abp;
 
 		    /* merge both of these blocks together */
 		    /* first set age to the older of the two */
+#ifdef AFS_64BIT_KERNEL
+		    if ((afs_int64) qnbp->av_back - (afs_int64) qbp->av_back < 0)
+#else
 		    if ((int) qnbp->av_back - (int) qbp->av_back < 0)
+#endif
 			qbp->av_back = qnbp->av_back;
 		    lwbp = &qbp->b_work;
 		    /* find end of qbp's work queue */
@@ -1737,7 +1749,11 @@ register struct buf *abp;
 		     */
 		    qbp->av_forw = qnbp->av_forw; /* splice out qnbp */
 		    qbp->b_bcount += qnbp->b_bcount; /* fix count */
+#ifdef AFS_64BIT_KERNEL
+		    *lwbp = (afs_int64) qnbp; /* append qnbp to end */
+#else
 		    *lwbp = (int) qnbp; /* append qnbp to end */
+#endif
 		    /*
 		     * note that qnbp is bogus, but it doesn't matter because
 		     * we're going to restart the for loop now.

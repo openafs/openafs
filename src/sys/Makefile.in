@@ -8,6 +8,7 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
+CFLAGS=-I. -I${srcdir} ${DBUG} -I${TOP_OBJDIR}/src/config -I${TOP_INCDIR}  ${XCFLAGS}
 SFLAGS=-P -I${TOP_INCDIR}
 LIBS=libsys.a ${TOP_LIBDIR}/librx.a libsys.a ${TOP_LIBDIR}/liblwp.a ${TOP_LIBDIR}/util.a ${XLIBS}
 
@@ -22,9 +23,13 @@ all: \
 	${TOP_INCDIR}/afs/afs.exp \
 	${TOP_INCDIR}/afs/xfsattrs.h \
 	${TOP_LIBDIR}/afs.exp \
-	${TOP_LIBDIR}/libsys.a 
+	${TOP_LIBDIR}/libsys.a \
+	${KERNELDIR}/afs \
+	${KERNELDIR}/afs/xfsattrs.h \
+	${UKERNELDIR}/afs \
+	${UKERNELDIR}/afs/afsl.exp
 
-libsys.a: ${OBJECTS} ${RMTOBJS} AFS_component_version_number.o
+libsys.a: ${OBJECTS} ${RMTOBJS} afsl.exp AFS_component_version_number.o
 	-$(RM) -f $@
 	$(AR) crv $@ ${OBJECTS} ${RMTOBJS} \
 		AFS_component_version_number.o ${LIBSYS_AIX_EXP}
@@ -122,6 +127,22 @@ xfsinode: xfsinode.c  AFS_component_version_number.c
 		$(CC) -o xfsinode ${CFLAGS} ${srcdir}/xfsinode.c ${LIBS}
 	esac
 
+afs.exp: afs4.exp afs5.exp
+	case ${SYS_NAME} in \
+		rs_aix5* ) \
+			cp -p afs5.exp afs.exp ;; \
+		* ) \
+			cp -p afs4.exp afs.exp ;; \
+	esac
+
+afsl.exp: afsl4.exp afsl5.exp
+	case ${SYS_NAME} in \
+		rs_aix5* ) \
+			cp -p afsl5.exp afsl.exp ;; \
+		* ) \
+			cp -p afsl4.exp afsl.exp ;; \
+	esac
+
 #
 # Installation targets
 #
@@ -139,6 +160,18 @@ ${TOP_INCDIR}/afs/xfsattrs.h: xfsattrs.h
 	${INSTALL} $? $@
 
 ${TOP_LIBDIR}/libsys.a: libsys.a
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs:
+	mkdir -p $@
+
+${UKERNELDIR}/afs/afsl.exp: afsl.exp
+	${INSTALL} $? $@
+
+${KERNELDIR}/afs:
+	mkdir -p $@
+
+${KERNELDIR}/afs/xfsattrs.h: xfsattrs.h
 	${INSTALL} $? $@
 
 install: \
@@ -209,4 +242,5 @@ include ../config/Makefile.version
 clean:
 	$(RM) -f *.o libsys.a xfsinode iinc idec icreate iopen istat core \
 	rmtsysc rmtsyss *.o rmtsys.ss.c rmtsys.cs.c rmtsys.xdr.c rmtsys.h \
-	rmtsysd AFS_component_version_number.c pagsh pagsh.krb
+	rmtsysd AFS_component_version_number.c pagsh pagsh.krb \
+	afs.exp afsl.exp

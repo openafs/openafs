@@ -8,7 +8,6 @@
 srcdir=@srcdir@
 include @TOP_OBJDIR@/src/config/Makefile.config
 
-
 # OS specific object files:
 AFS_OS_OBJS = \
 	osi_assem.o \
@@ -44,7 +43,9 @@ OPT2   = -O
 
 IMPORTS = -bI:/lib/kernex.exp -bI:/lib/syscalls.exp -bI:/lib/sockets.exp \
 	-bI:/lib/netinet.exp \
-	-bI:${TOP_LIBDIR}/extras.exp -bI:${TOP_LIBDIR}/export.exp
+	-bI:${TOP_LIBDIR}/extras.exp 
+IMPORTS32 = -bI:${TOP_LIBDIR}/export.exp
+IMPORTS64 = -bI:${TOP_LIBDIR}/export64.exp
 KDEFS = -U_IBMR2 -D_POWER -D_AIX -DNLS -D_NLS -DMSG -D__STR31__ -Daiws \
 	-D_POWER_RS -D_POWER_PC -D_POWER_RS1 -D_POWER_RS2 -D_POWER_RSC \
 	 -D_POWER_601 -D_POWER_603 -D_POWER_604 -D_THREADS -M  -D_KERNEL \
@@ -52,27 +53,24 @@ KDEFS = -U_IBMR2 -D_POWER -D_AIX -DNLS -D_NLS -DMSG -D__STR31__ -Daiws \
 	 -DGETMOUNT -H8 -DAFS -DAFS_COMMON -D_VOPS -D_SUN -DKERNEL
 LDSTUFF= -b"binder:/usr/lib/bind glink:/usr/lib/glink.o" -bnoentry -b h:4 \
 	-D0 -T512
+LDSTUFF64= -b"binder:/usr/lib/bind glink:/usr/lib/glink64.o" -bnoentry -b h:4 \
+	-D0 -T512
 LDFLAGS = -m -eafs_config -bexport:${TOP_LIBDIR}/afs.exp ${IMPORTS} \
-	 -lsys -lcsys 
+	 -lsys -lcsys  ${KLDOPTS}
 
 CFLAGS=-I. -I.. -I${TOP_OBJDIR}/src/config ${FSINCLUDES} $(KDEFS) $(KOPTS) ${DBUG}
 
 # Name of directory to hold object files and libraries.
-KOBJ = MODLOAD
+KOBJ = MODLOAD MODLOAD64
 
 # This tells Makefile.common to use it's single directory build target.
-COMPDIRS = single_compdir
-INSTDIRS = single_instdir
-DESTDIRS = single_destdir
+COMPDIRS = aix_compdirs
+INSTDIRS = aix_instdirs
+DESTDIRS = aix_destdirs
 
 include Makefile.common
 
 setup:
-	-mkdir $(KOBJ)
-	-$(RM) $(KOBJ)/Makefile $(KOBJ)/Makefile.common $(KOBJ)/config
-	ln -fs ../Makefile $(KOBJ)/Makefile
-	ln -fs ../Makefile.common $(KOBJ)/Makefile.common
-	ln -fs ../config $(KOBJ)/config
 	-$(RM) -f  h net netinet rpc ufs nfs  machine sys
 	ln -fs /usr/include/sys h
 	ln -fs /usr/include/net net
@@ -81,7 +79,46 @@ setup:
 	ln -fs /usr/include/sys sys
 	ln -fs /usr/include/nfs nfs
 	ln -fs /usr/include/jfs ufs
+	for m in 32 64 ; do \
+		KDIR=MODLOAD-$$m ; \
+		mkdir -p $${KDIR} ; \
+		ln -fs ../Makefile $${KDIR}/Makefile ; \
+		ln -fs ../Makefile.common $${KDIR}/Makefile.common ; \
+		ln -fs ../config $${KDIR}/config ; \
+	done
 
+${COMPDIRS} ${INSTDIRS} ${DESTDIRS}:
+	for m in 32 64 ; do \
+		KDIR=MODLOAD-$$m ; \
+		echo Building in directory: $${KDIR} ; \
+		if [ "$$m" = "32" ] ; then \
+			KOPTS="-q32" ; \
+			KLDOPTS="-b32" ; \
+			KASOPTS="32" ; \
+			TARG="afs.ext.32" ; \
+		elif [ "$$m" = "64" ] ; then \
+			KOPTS="-q64 -DAFS_64BIT_KERNEL -D__64BIT_KERNEL" ; \
+			KLDOPTS="-b64" ; \
+			KASOPTS="64" ; \
+			TARG="afs.ext.64" ; \
+		fi ; \
+		cd $${KDIR} ; \
+		$(MAKE) DEST="$${DEST}" KOPTS="$${KOPTS}"  KLDOPTS="$${KLDOPTS}" KASOPTS="$${KASOPTS}" $@_$${TARG} || exit $$?; \
+		cd ../ ; \
+	done
+
+aix_compdirs_afs.ext.32: afs.ext.32
+aix_compdirs_afs.ext.64: afs.ext.64
+aix_instdirs_afs.ext.32: install_afs.ext.32
+aix_instdirs_afs.ext.64: install_afs.ext.64
+aix_destdirs_afs.ext.32: dest_afs.ext.32
+aix_destdirs_afs.ext.64: dest_afs.ext.64
+
+dest_afs.ext.32: $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.32
+	echo Install for 32-bit Kernel Complete
+
+dest_afs.ext.64: $(DEST)/root.client/usr/vice/etc/dkload/afs.ext.64
+	echo Install for 64-bit Kernel Complete
 
 # Standard AFS->NFS translator support is removed in AFS 3.5 in favor of
 # the iauth authentication mechanism. The model was changed by IBM in the
@@ -93,14 +130,18 @@ LIBAFSIAUTH = afs.ext.iauth
 LIBAFS = afs.ext
 
 DEST_LIBAFSIAUTH = $(DEST)/root.client/usr/vice/etc/dkload/$(LIBAFSIAUTH)
-DEST_LIBAFS = $(DEST)/root.client/usr/vice/etc/dkload/$(LIBAFS)
 
 INST_LIBAFSIAUTH = ${DESTDIR}${afskerneldir}/$(LIBAFSIAUTH)
 INST_LIBAFS = ${DESTDIR}${afskerneldir}/$(LIBAFS)
 
-$(DEST_LIBAFS): $(LIBAFS)
+$(DEST)/root.client/usr/vice/etc/dkload/afs.ext.32: afs.ext.32
 	$(INSTALL) -f $? $@
-	-${STRIP} $@
+	-${STRIP} -X 32 $@
+	$(INSTALL) -f $?.map $@.map
+	
+$(DEST)/root.client/usr/vice/etc/dkload/afs.ext.64: afs.ext.64
+	$(INSTALL) -f $? $@
+	-${STRIP} -X 64 $@
 	$(INSTALL) -f $?.map $@.map
 	
 $(DEST_LIBAFSIAUTH): $(LIBAFSIAUTH)
@@ -122,29 +163,44 @@ $(INST_LIBAFSIAUTH): $(LIBAFSIAUTH)
 $(LIBAFSIAUTH): $(AFSAOBJS) $(AFSIAUTHOBJS)
 	${LD} ${LDSTUFF} -bloadmap:afs.ext.iauth.loadmap \
 		-bmap:afs.ext.iauth.map -o afs.ext.iauth \
-		${AFSAOBJS} ${AFSIAUTHOBJS} ${LIBS} ${LDFLAGS} 
+		${AFSAOBJS} ${AFSIAUTHOBJS} ${LIBS} ${LDFLAGS} ${IMPORTS32}
 
-$(LIBAFS): $(AFSAOBJS) $(AFSNOIAUTHOBJS)
-	${LD} ${LDSTUFF} -bloadmap:afs.ext.loadmap \
-	 	-bmap:afs.ext.map -o afs.ext \
-		${AFSAOBJS} ${AFSNOIAUTHOBJS} ${LIBS} ${LDFLAGS}
+afs.ext.32: $(AFSAOBJS) $(AFSNOIAUTHOBJS)
+	${LD} ${LDSTUFF} -bloadmap:afs.ext.32.loadmap \
+	 	-bmap:afs.ext.32.map -o afs.ext.32 \
+		${AFSAOBJS} ${AFSNOIAUTHOBJS} ${LIBS} \
+		${LDFLAGS} ${IMPORTS32}
 
-libafs: $(LIBAFS) $(LIBAFSIAUTH)
+afs.ext.64: $(AFSAOBJS) $(AFSNOIAUTHOBJS)
+	${LD} ${LDSTUFF64} -b64 -bloadmap:afs.ext.64.loadmap \
+	 	-bmap:afs.ext.64.map -o afs.ext.64 \
+		${AFSAOBJS} ${AFSNOIAUTHOBJS} ${LIBS} \
+		${LDFLAGS} ${IMPORTS64}
+
+libafs: $(LIBAFS) $(LIBAFS64) $(LIBAFSIAUTH)
 install_libafs: $(INST_LIBAFS) $(INST_LIBAFSIAUTH)
 dest_libafs: $(DEST_LIBAFS) $(DEST_LIBAFSIAUTH)
 
 
-osi_assem.o:	$(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_assem.s
-	${AS} -o osi_assem.o $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_assem.s
+osi_assem.o:	osi_assem.s
+	${AS} -a${KASOPTS} -o osi_assem.o osi_assem.s
+osi_assem.s: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_assem32.s $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_assem64.s
+	case bit${KASOPTS} in \
+		bit64 ) \
+			cp -p $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_assem64.s osi_assem.s ;; \
+		* ) \
+			cp -p $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_assem32.s osi_assem.s ;; \
+	esac
+
 
 # Build rules for iauth objects.
 afs_call_iauth.o:	$(AFS)/afs_call.c
-	$(CRULE_NOOPT) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o afs_call_iauth.o
+	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o afs_call_iauth.o
 afs_nfsclnt_iauth.o:	$(AFS)/afs_nfsclnt.c
-	$(CRULE_NOOPT) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o afs_nfsclnt_iauth.o
+	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o afs_nfsclnt_iauth.o
 afs_pioctl_iauth.o:	$(AFS)/afs_pioctl.c
-	$(CRULE_NOOPT) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o afs_pioctl_iauth.o
-osi_vfsops_iauth.o: $(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vnodeops.c
-	$(CRULE_NOOPT) -DAFS_NONFSTRANS  -DAFS_AIX_IAUTH_ENV -o osi_vfsops_iauth.o
-osi_vnodeops_iauth.o:	$(TOP_SRCDIR)/afs/$(MKAFS_OSTYPE)/osi_vnodeops.c
-	$(CRULE_NOOPT) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o osi_vnodeops_iauth.o
+	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o afs_pioctl_iauth.o
+osi_vfsops_iauth.o: $(AFS)/osi_vfsops.c
+	$(CRULE1) -DAFS_NONFSTRANS  -DAFS_AIX_IAUTH_ENV -o osi_vfsops_iauth.o
+osi_vnodeops_iauth.o:	$(AFS)/osi_vnodeops.c
+	$(CRULE1) -DAFS_NONFSTRANS -DAFS_AIX_IAUTH_ENV -o osi_vnodeops_iauth.o

@@ -168,7 +168,11 @@ import_kfunc(struct k_func *kfp) {
 #endif
 
 	if (!myg_toc) {
+#ifdef __XCOFF64__
+		sym = sym_lookup("ktoc", 0);
+#else
 		sym = sym_lookup("g_toc", 0);
+#endif
 		if (!sym) {
 			printf("\nimport: can't ascertain kernel's TOC\n");
 			return EINVAL;
@@ -183,7 +187,7 @@ import_kfunc(struct k_func *kfp) {
 	}
 
 	kfp->fdesc[0] = sym->n_value;
-	kfp->fdesc[1] = myg_toc;
+	kfp->fdesc[1] = *myg_toc;
 	kfp->fdesc[2] = 0;
 
 #ifdef __XCOFF64__

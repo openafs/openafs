@@ -85,7 +85,7 @@ typedef struct afs_event {
     int seq;			/* Sequence number: this is incremented
 				   by wakeup calls; wait will not return until
 				   it changes */
-    int cond;
+    tid_t cond;
 } afs_event_t;
 
 #define HASHSIZE 128

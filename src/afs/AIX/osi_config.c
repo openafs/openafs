@@ -75,6 +75,12 @@ long db_tflags = 0;
 extern struct gfs afs_gfs;
 extern struct vnodeops locked_afs_gn_vnodeops;
 
+#ifdef __64BIT__
+afs_uint64 get_toc();
+#else
+afs_uint32 get_toc();
+#endif
+
 #define	AFS_CALLOUT_TBL_SIZE	256
 
 #include <sys/lock_alloc.h>
@@ -272,7 +278,11 @@ struct k_var kvars[] = {
 kluge_init() {
 	register struct k_func *kf;
 	register struct k_var  *kv;
+#ifdef __64BIT__
+        register afs_uint64  toc;
+#else
 	register afs_uint32  toc;
+#endif
 	register err = 0;
 
 	toc = get_toc();
@@ -334,10 +344,19 @@ struct inode **ipp; {
 iget(dev, ino, ipp, doscan, vfsp)
 dev_t dev;
 ino_t ino;
+#ifdef __64BIT__
+afs_size_t doscan;
+#endif
 struct vfs *vfsp;
 struct inode **ipp; {
+#ifdef __64BIT__
+    afs_int64 dummy[10];
+    dummy[0] = doscan;
 
+    return (*kluge_iget)(dev, ino, ipp, (afs_size_t) doscan, vfsp, &dummy);
+#else
     return (*kluge_iget)(dev, ino, ipp, doscan, vfsp);
+#endif
 }
 
 iput(ip, vfsp)

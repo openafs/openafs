@@ -274,6 +274,8 @@ int afs_MemWrite(register struct vcache *avc, struct uio *auio, int aio,
 	if (offset + len > tdc->f.chunkBytes) {
 	    afs_int32 tlength = offset+len;
 	    afs_AdjustSize(tdc, tlength);
+            if (tdc->validPos < filePos + len)
+                tdc->validPos = filePos + len;
 	}
 	totalLength -= len;
 	transferLength += len;
@@ -426,7 +428,7 @@ int afs_UFSWrite(register struct vcache *avc, struct uio *auio,
     tvec = (struct iovec *) osi_AllocSmallSpace(sizeof(struct iovec));
     while (totalLength > 0) {
         /* 
-         *  The following lines are necessary because afs_GetDCache with
+         *  The following line is necessary because afs_GetDCache with
 	 *  flag == 4 expects the length field to be filled. It decides
 	 *  from this whether it's necessary to fetch data into the chunk
 	 *  before writing or not (when the whole chunk is overwritten!).
@@ -595,6 +597,8 @@ int afs_UFSWrite(register struct vcache *avc, struct uio *auio,
 	if (offset + len > tdc->f.chunkBytes) {
 	    afs_int32 tlength = offset+len;
 	    afs_AdjustSize(tdc, tlength);
+            if (tdc->validPos < filePos + len)
+                tdc->validPos = filePos + len;
 	}
 	totalLength -= len;
 	transferLength += len;

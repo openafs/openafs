@@ -331,6 +331,8 @@ void afs_AdjustSize(register struct dcache *adc, register afs_int32 newSize)
     adc->dflags |= DFEntryMod;
     oldSize = ((adc->f.chunkBytes + afs_fsfragsize)^afs_fsfragsize)>>10;/* round up */
     adc->f.chunkBytes = newSize;
+    if (!newSize)
+	adc->validPos = 0;
     newSize = ((newSize + afs_fsfragsize)^afs_fsfragsize)>>10;/* round up */
     if (newSize > oldSize) {
 	/* We're growing the file, wakeup the daemon */
@@ -2759,6 +2761,10 @@ struct dcache *afs_UFSGetDSlot(register afs_int32 aslot, register struct dcache 
     }
     tdc->refCount = 1;
     tdc->index = aslot;
+    if (tdc->f.chunk >= 0)
+	tdc->validPos = AFS_CHUNKTOBASE(tdc->f.chunk) + tdc->f.chunkBytes;
+    else
+	tdc->validPos = 0;
 
     if (existing) {
 	osi_Assert(0 == NBObtainWriteLock(&tdc->lock, 674));

@@ -416,6 +416,7 @@ int afs_MemCacheFetchProc(register struct rx_call *acall, register struct memCac
       if(!tiov) {
 	osi_Panic("afs_MemCacheFetchProc: osi_AllocSmallSpace for iovecs returned NULL\n");
       }
+      adc->validPos = abase;
       do {
 	  if (moredata) {
               RX_AFS_GUNLOCK();
@@ -467,7 +468,12 @@ int afs_MemCacheFetchProc(register struct rx_call *acall, register struct memCac
 	      abase += tlen;
 	      length -= tlen;
 	      adc->validPos = abase;
-	      afs_osi_Wakeup(&adc->validPos);
+	      if (afs_osi_Wakeup(&adc->validPos) == 0)
+		 afs_Trace4(afs_iclSetp, CM_TRACE_DCACHEWAKE,
+                           ICL_TYPE_STRING, __FILE__,
+                           ICL_TYPE_INT32, __LINE__,
+                           ICL_TYPE_POINTER, adc,
+                           ICL_TYPE_INT32, adc->dflags);
 	  }
       } while (moredata);
       /* max of two sizes */

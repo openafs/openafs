@@ -450,8 +450,17 @@ int afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs, struct AFS_UCRED
     OSI_VC_CONVERT(avc)
 
     AFS_STATCNT(afs_setattr);
-    afs_Trace2(afs_iclSetp, CM_TRACE_SETATTR, ICL_TYPE_POINTER, avc, 
+#if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX22_ENV)
+    afs_Trace4(afs_iclSetp, CM_TRACE_SETATTR, ICL_TYPE_POINTER, avc, 
+		ICL_TYPE_INT32, attrs->va_mask,
+		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(attrs->va_size),
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
+#else
+    afs_Trace4(afs_iclSetp, CM_TRACE_SETATTR, ICL_TYPE_POINTER, avc, 
+		ICL_TYPE_INT32, attrs->va_mode,
+		ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(attrs->va_size),
+	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
+#endif
     if ((code = afs_InitReq(&treq, acred))) return code;
  
     afs_InitFakeStat(&fakestate);

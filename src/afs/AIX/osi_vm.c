@@ -68,7 +68,7 @@ int osi_VM_FlushVCache(struct vcache *avc, int *slept)
  */
 void osi_VM_StoreAllSegments(struct vcache *avc)
 {
-    if (avc->vmh) {
+    if (avc->segid) {
 	/*
 	 * The execsOrWriters test is done so that we don't thrash on
 	 * the vm_writep call below. We only initiate a pageout of the
@@ -82,8 +82,8 @@ void osi_VM_StoreAllSegments(struct vcache *avc)
          */
 	ReleaseWriteLock(&avc->lock);		/* XXX */
 	AFS_GUNLOCK();
-	vm_writep(avc->vmh, 0, MAXFSIZE/PAGESIZE -1 );
-	vms_iowait(avc->vmh);
+	vm_writep(avc->segid, 0, MAXFSIZE/PAGESIZE -1 );
+	vms_iowait(avc->segid);
 	AFS_GLOCK();
 	ObtainWriteLock(&avc->lock,93);		/* XXX */
 	/*
@@ -125,7 +125,7 @@ void osi_VM_TryToSmush(struct vcache *avc, struct AFS_UCRED *acred,
 	ReleaseWriteLock(&avc->lock);
 	AFS_GUNLOCK();
 	vm_flushp(avc->segid, 0, MAXFSIZE/PAGESIZE - 1);
-	vms_iowait(avc->vmh);		/* XXX Wait?? XXX */
+	vms_iowait(avc->segid);		/* XXX Wait?? XXX */
 	AFS_GLOCK();
 	ObtainWriteLock(&avc->lock,60);
     }
@@ -142,7 +142,7 @@ void osi_VM_FlushPages(struct vcache *avc, struct AFS_UCRED *credp)
         /*
          * XXX We probably don't need to wait but better be safe XXX
          */
-        vms_iowait(avc->vmh);
+        vms_iowait(avc->segid);
     }
 }
 
@@ -157,6 +157,6 @@ void osi_VM_Truncate(struct vcache *avc, int alen, struct AFS_UCRED *acred)
     if (avc->segid) {
         int firstpage = (alen + PAGESIZE-1)/PAGESIZE;
         vm_releasep(avc->segid, firstpage, MAXFSIZE/PAGESIZE - firstpage);
-        vms_iowait(avc->vmh);	/* Do we need this? */
+        vms_iowait(avc->segid);	/* Do we need this? */
     }
 }

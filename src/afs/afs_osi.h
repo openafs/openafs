@@ -51,7 +51,11 @@ struct osi_file {
 #if	defined(AFS_HPUX102_ENV)
     k_off_t offset;
 #else
+#if defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)
+    afs_offs_t offset;
+#else
     afs_int32 offset;
+#endif
 #endif
     int	(*proc)(struct osi_file *afile, afs_int32 code);	/* proc, which, if not null, is called on writes */
     char *rock;		/* rock passed to proc */
@@ -66,7 +70,11 @@ struct osi_dev {
     struct mount *mp;
     struct vnode *held_vnode;
 #else
+#ifdef AFS_AIX42_ENV
+    dev_t dev;
+#else
     afs_int32 dev;
+#endif
 #endif
 };
 

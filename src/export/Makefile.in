@@ -25,7 +25,7 @@ noversion system: install
 
 install: ${DESTDIR}${libdir}/afs/export.exp ${DESTDIR}${libdir}/afs/extras.exp  
 
-export.ext: export4.exp export5.exp
+export.exp: export4.exp export5.exp
 	case ${SYS_NAME} in \
 	rs_aix4* ) \
 		cp -p export4.exp export.exp ; \
@@ -102,7 +102,7 @@ cfgafs64.o: cfgafs.c AFS_component_version_number.c
 	${CC} -q64 ${CFLAGS} -c cfgafs.c -o cfgafs64.o
 
 clean:
-	$(RM) -f *.o *.Zlst *.map *.out cfgexport cfgafs *.ext AFS_component_version_number.c
+	$(RM) -f *.o *.Zlst *.map *.out cfgexport cfgafs *.ext AFS_component_version_number.c export.exp
 ${DEST}/root.client/usr/vice/etc/dkload/export.ext: export.ext
 	${INSTALL} $? $@
 

@@ -11,7 +11,6 @@
  * Implements:
  * afs_MemRead
  * afs_PrefetchChunk
- * afs_UFSReadFast
  * afs_UFSRead
  * 
  */
@@ -233,17 +232,20 @@ tagain:
 		error = code;
 		break;
 	    }
-	    /* fetching flag gone, data is here, or we never tried (BBusy for instance) */
+	    /* fetching flag gone, data is here, or we never tried 
+	     * (BBusy for instance) */
 	    if (tdc->dflags & DFFetching) {
-		/* still fetching, some new data is here: compute length and offset */
+		/* still fetching, some new data is here: 
+		 * compute length and offset */
 		offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
 		len = tdc->validPos - filePos;
 	    }
 	    else {
-		/* no longer fetching, verify data version (avoid new GetDCache call) */
-		if (hsame(avc->m.DataVersion, tdc->f.versionNo)) {
+		/* no longer fetching, verify data version 
+		 * (avoid new GetDCache call) */
+		if (hsame(avc->m.DataVersion, tdc->f.versionNo) 
+		    && ((len = tdc->validPos - filePos) > 0)) {
 		    offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
-		    len = tdc->f.chunkBytes - offset;
 		}
 		else {
 		    /* don't have current data, so get it below */
@@ -258,6 +260,10 @@ tagain:
 	    }
 
 	    if (!tdc) {
+                /* If we get, it was not possible to start the
+                 * background daemon. With flag == 1 afs_GetDCache
+                 * does the FetchData rpc synchronously.
+                 */
 		ReleaseReadLock(&avc->lock);
 		tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 1);
 		ObtainReadLock(&avc->lock);
@@ -265,6 +271,10 @@ tagain:
 	    }
 	}
 
+        afs_Trace3(afs_iclSetp, CM_TRACE_VNODEREAD,
+                        ICL_TYPE_POINTER, tdc,
+                        ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(offset),
+                        ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(len));
 	if (!tdc) {
 	    error = EIO;
 	    break;
@@ -418,170 +428,6 @@ void afs_PrefetchChunk(struct vcache *avc, struct dcache *adc,
     }
 }
 
-
-/* if the vcache is up-to-date, and the request fits entirely into the chunk
- * that the hint here references, then we just use it quickly, otherwise we
- * have to call the slow read.
- *
- * This could be generalized in several ways to take advantage of partial 
- * state even when all the chips don't fall the right way.  For instance,
- * if the hint is good and the first part of the read request can be 
- * satisfied from the chunk, then just do the read.  After the read has
- * completed, check to see if there's more. (Chances are there won't be.)
- * If there is more, then just call afs_UFSReadSlow and let it do the rest.
- *
- * For the time being, I'm ignoring quick.f, but it should be used at
- * some future date.
- * do this in the future avc->quick.f = tfile; but I think it
- * has to be done under a write lock, but don't want to wait on the
- * write lock
- */
-    /* everywhere that a dcache can be freed (look for NULLIDX) 
-     * probably does it under a write lock on xdcache.  Need to invalidate
-     * stamp there, too.  
-     * Also need to worry about DFFetching, and IFFree, I think. */
-static struct dcache *savedc = 0;
-
-int afs_UFSReadFast(register struct vcache *avc, struct uio *auio, 
-	struct AFS_UCRED *acred, daddr_t albn, struct buf **abpp, int noLock)
-{
-    struct vrequest treq;
-    int offDiff;
-    struct dcache *tdc;
-    struct osi_file *tfile;
-    afs_int32 code = 0;
-
-    if (!noLock)
-	ObtainReadLock(&avc->lock);  
-    ObtainReadLock(&afs_xdcache);
-
-    if ((avc->states & CStatd)                                /* up to date */
-	&& (tdc = avc->quick.dc) && (tdc->index != NULLIDX) 
-	&& !(afs_indexFlags[tdc->index] & (IFFree | IFDiscarded)))   {
-
-	int readLocked = 0;
-
-	afs_RefDCache(tdc);
-	ReleaseReadLock(&afs_xdcache);
-	if (tdc->stamp == avc->quick.stamp) {
-	    readLocked = 1;
-	    ObtainReadLock(&tdc->lock);
-	}
-
-	if ((tdc->stamp == avc->quick.stamp)                /* hint matches */
-	    && ((offDiff = (afs_size_t)(auio->afsio_offset - avc->quick.minLoc)) >= 0)
-	    && (tdc->f.chunkBytes >= auio->afsio_resid + offDiff)
-	    && !(tdc->dflags & DFFetching)) { /* fits in chunk */
-
-	    auio->afsio_offset -= avc->quick.minLoc;
-
-	    afs_Trace4(afs_iclSetp, CM_TRACE_READFAST, ICL_TYPE_POINTER, avc,
-			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(auio->afsio_offset),
-			ICL_TYPE_INT32, auio->afsio_resid,
-			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
-
-	    tfile = (struct osi_file *)osi_UFSOpen(tdc->f.inode);
-
-#ifdef	AFS_AIX_ENV
-#ifdef	AFS_AIX41_ENV
-	    AFS_GUNLOCK();
-	    code = VNOP_RDWR(tfile->vnode, UIO_READ, FREAD, auio, NULL, NULL, NULL, &afs_osi_cred);
-	    AFS_GLOCK();
-#else
-#ifdef AFS_AIX32_ENV
-	    code = VNOP_RDWR(tfile->vnode, UIO_READ, FREAD, auio, NULL, NULL);
-#else
-	    code = VNOP_RDWR(tfile->vnode, UIO_READ, FREAD, (off_t)&auio->afsio_offset, auio, NULL, NULL, -1);
-#endif
-#endif
-#else
-#ifdef	AFS_SUN5_ENV
-	    AFS_GUNLOCK();
-	    VOP_RWLOCK(tfile->vnode, 0);
-	    code = VOP_READ(tfile->vnode, auio, 0, &afs_osi_cred);
-	    VOP_RWUNLOCK(tfile->vnode, 0);
-	    AFS_GLOCK();
-#else
-#if defined(AFS_SGI_ENV)
-            AFS_GUNLOCK();
-            AFS_VOP_RWLOCK(tfile->vnode, VRWLOCK_READ);
-            AFS_VOP_READ(tfile->vnode, auio, IO_ISLOCKED, &afs_osi_cred, code);
-            AFS_VOP_RWUNLOCK(tfile->vnode, VRWLOCK_READ);
-            AFS_GLOCK();
-#else
-#ifdef	AFS_OSF_ENV
-	    auio->uio_rw = UIO_READ;
-	    AFS_GUNLOCK();
-	    VOP_READ(tfile->vnode, auio, 0, &afs_osi_cred, code);
-	    AFS_GLOCK();
-#else	/* AFS_OSF_ENV */
-#if defined(AFS_HPUX100_ENV)
-	    AFS_GUNLOCK();
-	    code = VOP_RDWR(tfile->vnode, auio, UIO_READ, 0, &afs_osi_cred);
-            AFS_GLOCK();
-#else
-#if defined(AFS_LINUX20_ENV)
-	    AFS_GUNLOCK();
-	    code = osi_file_uio_rdwr(tfile, auio, UIO_READ);
-	    AFS_GLOCK();
-#else
-#if defined(AFS_DARWIN_ENV)
-            AFS_GUNLOCK();
-            VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, current_proc());
-            code = VOP_READ(tfile->vnode, auio, 0, &afs_osi_cred);
-            VOP_UNLOCK(tfile->vnode, 0, current_proc());
-            AFS_GLOCK();
-#else
-#if defined(AFS_XBSD_ENV)
-            AFS_GUNLOCK();
-            VOP_LOCK(tfile->vnode, LK_EXCLUSIVE, curproc);
-            code = VOP_READ(tfile->vnode, auio, 0, &afs_osi_cred);
-            VOP_UNLOCK(tfile->vnode, 0, curproc);
-            AFS_GLOCK();
-#else
-	    code = VOP_RDWR(tfile->vnode, auio, UIO_READ, 0, &afs_osi_cred);
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-#endif
-	    auio->afsio_offset += avc->quick.minLoc;
-	    osi_UFSClose(tfile);
-	    /* Fix up LRU info */
-	    hset(afs_indexTimes[tdc->index], afs_indexCounter);
-	    hadd32(afs_indexCounter, 1);
-
-	    if (!noLock) {
-		ReleaseReadLock(&avc->lock);
-#if !defined(AFS_VM_RDWR_ENV)
-		if (!(code = afs_InitReq(&treq, acred))) {
-		    if (!(tdc->mflags & DFNextStarted))
-			afs_PrefetchChunk(avc, tdc, acred, &treq);
-		}
-#endif
-	    }
-	    if (readLocked) ReleaseReadLock(&tdc->lock);
-	    afs_PutDCache(tdc);
-	    return (code);
-	}
-	if (!tdc->f.chunkBytes) {   /* debugging f.chunkBytes == 0 problem */
-	    savedc = tdc;
-	}
-	if (readLocked) ReleaseReadLock(&tdc->lock);
-	afs_PutDCache(tdc);
-    } else {
-	ReleaseReadLock(&afs_xdcache);
-    }
-
-    /* come here if fast path doesn't work for some reason or other */
-    if (!noLock)
-	ReleaseReadLock(&avc->lock);
-    return afs_UFSRead(avc, auio, acred, albn, abpp, noLock);
-}
-
 int afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	struct AFS_UCRED *acred, daddr_t albn, struct buf **abpp, int noLock)
 {
@@ -655,7 +501,7 @@ int afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	    if (tdc) {
 		ObtainReadLock(&tdc->lock);
 		offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
-		len = tdc->f.chunkBytes - offset;
+		len = tdc->validPos - filePos;
 	    }
 	} else {
 	    /* a tricky question: does the presence of the DFFetching flag
@@ -694,9 +540,6 @@ int afs_UFSRead(register struct vcache *avc, struct uio *auio,
 	    }
 	    tdc = afs_GetDCache(avc, filePos, &treq, &offset, &len, 2);
 	    ObtainReadLock(&tdc->lock);
-	    if (tdc == savedc) {
-		savedc = 0;
-	    }
 	    /* now, first try to start transfer, if we'll need the data.  If
 	     * data already coming, we don't need to do this, obviously.  Type
 	     * 2 requests never return a null dcache entry, btw. */
@@ -782,9 +625,8 @@ tagain:
 		/* no longer fetching, verify data version (avoid new
 		 * GetDCache call) */
 		if (hsame(avc->m.DataVersion, tdc->f.versionNo) 
-							&& tdc->f.chunkBytes) {
+		    && ((len = tdc->validPos - filePos) > 0)) {
 		    offset = filePos - AFS_CHUNKTOBASE(tdc->f.chunk);
-		    len = tdc->f.chunkBytes - offset;
 		}
 		else {
 		    /* don't have current data, so get it below */
@@ -810,14 +652,15 @@ tagain:
 	    }
 	}
 	
-	afs_Trace3(afs_iclSetp, CM_TRACE_VNODEREAD,
-			ICL_TYPE_POINTER, tdc,
-			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(offset),
-			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(len));
 	if (!tdc) {
 	    error = EIO;
 	    break;
 	}
+	len = tdc->validPos - filePos;
+	afs_Trace3(afs_iclSetp, CM_TRACE_VNODEREAD,
+			ICL_TYPE_POINTER, tdc,
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(offset),
+			ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(len));
 	if (len	> totalLength) len = totalLength;   /* will read len bytes */
 	if (len	<= 0) {	/* shouldn't get here if DFFetching is on */
 	    afs_Trace4(afs_iclSetp, CM_TRACE_VNODEREAD2,

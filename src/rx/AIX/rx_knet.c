@@ -145,6 +145,15 @@ register struct mbuf *am; {
     tlen = ntohs((u_short)tvu->ui_ulen);
     if ((int)ti->ip_len != tlen) {
 	if (tlen > (int)ti->ip_len) {
+#ifdef RX_KERNEL_TRACE
+            int glockOwner = ISAFS_GLOCK();
+            if (!glockOwner) AFS_GLOCK();
+            afs_Trace3(afs_iclSetp, CM_TRACE_WASHERE,
+                        ICL_TYPE_STRING, __FILE__,
+                        ICL_TYPE_INT32, __LINE__,
+                        ICL_TYPE_INT32, tlen);
+            if (!glockOwner) AFS_GUNLOCK();
+#endif
 	    m_free(am);
 	    return;
 	}
@@ -163,18 +172,47 @@ register struct mbuf *am; {
 	 * underlying network (and interfaces and drivers and
 	 * DMA hardware, etc!) is error-free. First, fill
 	 * in entire virtual ip header. */
+#ifndef AFS_64BIT_KERNEL
 	tvu->ui_next = 0;
 	tvu->ui_prev = 0;
+#endif
 	tvu->ui_x1 = 0;
 	tvu->ui_len = tvu->ui_ulen;
 	am->m_flags |= M_PKTHDR;
 	am->m_pkthdr.len = tlen;
+#if !defined(AFS_AIX51_ENV) || !defined(AFS_64BIT_KERNEL)
 	if (in_cksum(am, sizeof(struct ip) + tlen)) {
 	    /* checksum, including cksum field, doesn't come out 0, so
 	       this packet is bad */
+#ifdef RX_KERNEL_TRACE
+            int glockOwner = ISAFS_GLOCK();
+            if (!glockOwner) AFS_GLOCK();
+            afs_Trace3(afs_iclSetp, CM_TRACE_WASHERE,
+                        ICL_TYPE_STRING, __FILE__,
+                        ICL_TYPE_INT32, __LINE__,
+                        ICL_TYPE_INT32, tlen);
+            if (!glockOwner) AFS_GUNLOCK();
+#endif
 	    m_freem(am);
 	    return;
 	}
+#else
+#ifdef notdef
+        { /* in_cksum() doesn't work correctly or the length is wrong? */
+                int cksum;
+                int glockOwner = ISAFS_GLOCK();
+                cksum = in_cksum(am, sizeof(struct ip) + tlen);
+                if (!glockOwner)
+                        AFS_GLOCK();
+                afs_Trace3(afs_iclSetp, CM_TRACE_WASHERE,
+                        ICL_TYPE_STRING, __FILE__,
+                        ICL_TYPE_INT32, __LINE__,
+                        ICL_TYPE_INT32, cksum);
+                if (!glockOwner)
+                        AFS_GUNLOCK();
+        }
+#endif
+#endif
     }
 
     /*

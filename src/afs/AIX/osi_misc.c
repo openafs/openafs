@@ -85,7 +85,11 @@ gop_rdwr(rw, vp, base, len, offset, segflg, unit, aresid)
 enum uio_rw	rw;
 struct vnode	*vp;
 caddr_t		base;
+#ifdef AFS_64BIT_KERNEL
+offset_t        *offset;
+#else
 off_t		*offset;
+#endif
 int		len, segflg;
 int		*aresid;
 int		unit;	    /* Ignored */
@@ -106,8 +110,14 @@ int		unit;	    /* Ignored */
     uio_struct.uio_resid = len;
     uio_struct.uio_fmode = (rw == UIO_READ ? FREAD : FWRITE);
 
+#ifdef AFS_64BIT_KERNEL
+    code = VNOP_RDWR(vp, rw,
+               (int32long64_t)(rw == UIO_READ ? FREAD : FWRITE), &uio_struct,
+               (ext_t) 0, (caddr_t) 0, (struct vattr *)0, &afs_osi_cred);
+#else
     code = VNOP_RDWR(vp, rw, (rw == UIO_READ ? FREAD : FWRITE), &uio_struct,
 		     NULL, NULL, NULL, &afs_osi_cred);
+#endif
     *aresid = uio_struct.uio_resid;
     return code;
 }

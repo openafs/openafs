@@ -9,7 +9,8 @@ import_kvar
 *
 * Overwrite vanilla system calls
 *
-okioctl32	syscall
+osetgroups	syscall
+okioctl		syscall
 
 
 

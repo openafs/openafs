@@ -973,6 +973,9 @@ extern pthread_cond_t usr_sleep_cond;
 #define uprintf			printf
 
 #define usr_getpid()		(int)(usr_thread_self())
+#ifdef ISAFS_GLOCK
+#undef ISAFS_GLOCK
+#endif
 #define ISAFS_GLOCK() (usr_thread_self() == afs_global_owner)
 
 #endif /* NETSCAPE_NSAPI */

@@ -25,6 +25,9 @@ RCSID("$Header$");
 #include "rx/rx_queue.h"
 #include "rx/rx_packet.h"
 #else /* defined(UKERNEL) */
+#ifdef RX_KERNEL_TRACE
+#include "../rx/rx_kcommon.h"
+#endif
 #include "h/types.h"
 #ifndef AFS_LINUX20_ENV
 #include "h/systm.h"
@@ -1417,13 +1420,31 @@ static void rxi_SendDebugPacket(struct rx_packet *apacket, osi_socket asocket,
     }
     AFS_RXGUNLOCK();
 #ifdef KERNEL
+#ifdef RX_KERNEL_TRACE
+    if (ICL_SETACTIVE(afs_iclSetp)) {
+        if (!waslocked) AFS_GLOCK();
+        afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP,
+                       ICL_TYPE_STRING, "before osi_NetSend()");
+        AFS_GUNLOCK();
+    } else
+#else
     if (waslocked) AFS_GUNLOCK();
+#endif
 #endif
     /* debug packets are not reliably delivered, hence the cast below. */
     (void) osi_NetSend(asocket, &taddr, apacket->wirevec, apacket->niovecs,
 		       apacket->length+RX_HEADER_SIZE, istack);
 #ifdef KERNEL
+#ifdef RX_KERNEL_TRACE
+    if (ICL_SETACTIVE(afs_iclSetp)) {
+        AFS_GLOCK();
+        afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP,
+                       ICL_TYPE_STRING, "after osi_NetSend()");
+        if (!waslocked) AFS_GUNLOCK();
+    } else
+#else
     if (waslocked) AFS_GLOCK();
+#endif
 #endif
     AFS_RXGLOCK();
     if (saven) {  /* means we truncated the packet above. */
@@ -1513,7 +1534,16 @@ void rxi_SendPacket(struct rx_call * call, struct rx_connection * conn,
 	AFS_RXGUNLOCK();
 #ifdef KERNEL
 	waslocked = ISAFS_GLOCK();
+#ifdef RX_KERNEL_TRACE
+        if (ICL_SETACTIVE(afs_iclSetp)) {
+            if (!waslocked) AFS_GLOCK();
+            afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP,
+                       ICL_TYPE_STRING, "before osi_NetSend()");
+            AFS_GUNLOCK();
+        } else
+#else
 	if (waslocked) AFS_GUNLOCK();
+#endif
 #endif
 	if ((code = osi_NetSend(socket, &addr, p->wirevec, p->niovecs, 
 				p->length+RX_HEADER_SIZE, istack)) != 0) {
@@ -1535,7 +1565,16 @@ void rxi_SendPacket(struct rx_call * call, struct rx_connection * conn,
 #endif
 	}
 #ifdef KERNEL
+#ifdef RX_KERNEL_TRACE
+        if (ICL_SETACTIVE(afs_iclSetp)) {
+            AFS_GLOCK();
+            afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP,
+                       ICL_TYPE_STRING, "after osi_NetSend()");
+            if (!waslocked) AFS_GUNLOCK();
+        } else
+#else
 	if (waslocked) AFS_GLOCK();
+#endif
 #endif
 	AFS_RXGLOCK();
 #ifdef RXDEBUG    

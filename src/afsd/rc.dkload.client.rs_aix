@@ -6,5 +6,19 @@
 # directory or online at http://www.openafs.org/dl/license10.html
 
 echo 'Loading AFS ...'>/dev/console
-/usr/vice/etc/dkload/cfgexport -a /usr/vice/etc/dkload/export.ext.nonfs
-/usr/vice/etc/dkload/cfgafs  -a /usr/vice/etc/dkload/afs.ext
+# Load AFS into the kernel
+cd /usr/vice/etc/dkload
+./cfgexport -a /usr/vice/etc/dkload/export.ext.nonfs
+if [ $? -eq 0 ]; then
+    echo "32-bit kernel found"
+    ./cfgafs -a /usr/vice/etc/dkload/afs.ext.32
+else
+    echo "64-bit kernel assumed"
+    ./cfgexport64 -a /usr/vice/etc/dkload/export64.ext.nonfs
+    ./cfgafs64 -a /usr/vice/etc/dkload/afs.ext.64
+fi
+if [ $? -ne 0 ]; then
+  /bin/echo "Unable to load AFS extensions into kernel."
+  exit 1
+fi
+

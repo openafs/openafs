@@ -44,7 +44,7 @@ int afs_StoreMini(register struct vcache *avc, struct vrequest *areq)
     struct AFSVolSync tsync;
     register afs_int32 code;
     register struct rx_call *tcall;
-    afs_size_t tlen, base = 0;
+    afs_size_t tlen, xlen = 0;
     XSTATS_DECLS
 
     AFS_STATCNT(afs_StoreMini);
@@ -75,16 +75,16 @@ retry:
 	    XSTATS_START_TIME(AFS_STATS_FS_RPCIDX_STOREDATA);
             afs_Trace4(afs_iclSetp, CM_TRACE_STOREDATA64, 
 		ICL_TYPE_FID, &avc->fid.Fid,
-	       	ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(base), 
-	       	ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(tlen), 
-	       	ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
+	       	ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length),
+	       	ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(xlen), 
+	       	ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(tlen));
 	    RX_AFS_GUNLOCK();
 #ifdef AFS_64BIT_CLIENT
 	    if (!afs_serverHasNo64Bit(tc)) {
 	        code = StartRXAFS_StoreData64(tcall,
 					(struct AFSFid *)&avc->fid.Fid,
 					&InStatus, avc->m.Length,
-					base, tlen);
+					(afs_size_t) 0, tlen);
 	    } else {
 		afs_int32 l1, l2;
 		l1 = avc->m.Length;
@@ -523,9 +523,11 @@ restart:
 		    if (!code) doProcessFS = 1;	/* Flag to run afs_ProcessFS() later on */
 		}
 		if (tcall) {
+		    afs_int32 code2;
 		    RX_AFS_GUNLOCK();
-		    code = rx_EndCall(tcall, code);  
+		    code2 = rx_EndCall(tcall, code);  
 		    RX_AFS_GLOCK();
+		    if (code2) code = code2;
 		}
 	    } while (afs_Analyze(tc, code, &avc->fid, areq,
 				 AFS_STATS_FS_RPCIDX_STOREDATA,

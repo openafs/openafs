@@ -940,19 +940,23 @@ int rxk_ReadPacket(osi_socket so, struct rx_packet *p, int *host, int *port)
 
     nbytes = tlen + sizeof(afs_int32);
 #ifdef RX_KERNEL_TRACE
+    if (ICL_SETACTIVE(afs_iclSetp)) {
     AFS_GLOCK();
     afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP,
 		ICL_TYPE_STRING, "before osi_NetRecive()");
     AFS_GUNLOCK();
+    }
 #endif
     code = osi_NetReceive(rx_socket, &from, p->wirevec, p->niovecs,
 			    &nbytes);
 
 #ifdef RX_KERNEL_TRACE
+    if (ICL_SETACTIVE(afs_iclSetp)) {
     AFS_GLOCK();
     afs_Trace1(afs_iclSetp, CM_TRACE_TIMESTAMP,
 		ICL_TYPE_STRING, "after osi_NetRecive()");
     AFS_GUNLOCK();
+    }
 #endif
    /* restore the vec to its correct state */
     p->wirevec[p->niovecs-1].iov_len = savelen;

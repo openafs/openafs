@@ -1587,7 +1587,7 @@ void uafs_Init(
     /*
      * Set the primary cell name.
      */
-    call_syscall(AFSOP_SET_THISCELL, afs_LclCellName, 0, 0, 0, 0);
+    call_syscall(AFSOP_SET_THISCELL, (long) afs_LclCellName, 0, 0, 0, 0);
 
     if ((logfd = fopen(fullpn_AFSLogFile,"r+")) == 0) {
 	if (afsd_verbose)  printf("%s: Creating '%s'\n",  rn, fullpn_AFSLogFile);

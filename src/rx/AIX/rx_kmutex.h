@@ -44,7 +44,7 @@
 #define CV_SIGNAL(_cv)		e_wakeup_one(_cv)
 #define CV_BROADCAST(_cv)	e_wakeup(_cv)
 typedef simple_lock_data afs_kmutex_t;
-typedef int afs_kcondvar_t;
+typedef tid_t afs_kcondvar_t;
 #define	osi_rxWakeup(cv)	e_wakeup(cv)
 
 

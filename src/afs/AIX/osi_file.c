@@ -166,8 +166,13 @@ int afs_osi_Read(register struct osi_file *afile, int offset, void *aptr, afs_in
 retry_IO:
     /* Note the difference in the way the afile->offset is passed (see comments in gop_rdwr() in afs_aix_subr.c for comments) */
     AFS_GUNLOCK();
+#ifdef AFS_64BIT_KERNEL
+    code = gop_rdwr(UIO_READ, afile->vnode, (caddr_t) aptr, asize,
+                   &afile->offset, AFS_UIOSYS, NULL, &resid);
+#else
     code = gop_rdwr(UIO_READ, afile->vnode, (caddr_t) aptr, asize,
 		    (off_t)&afile->offset, AFS_UIOSYS, NULL, &resid);
+#endif
     AFS_GLOCK();
     if (code == 0) {
 	code = asize - resid;
@@ -203,14 +208,28 @@ int afs_osi_Write(register struct osi_file *afile, afs_int32 offset, void *aptr,
     if (offset != -1) afile->offset = offset;
     /* Note the difference in the way the afile->offset is passed (see comments in gop_rdwr() in afs_aix_subr.c for comments) */
     AFS_GUNLOCK();
+#ifdef AFS_64BIT_KERNEL
+    code = gop_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize,
+                   &afile->offset, AFS_UIOSYS, NULL, &resid);
+#else
     code = gop_rdwr(UIO_WRITE, afile->vnode, (caddr_t) aptr, asize,
 		    (off_t)&afile->offset, AFS_UIOSYS, NULL, &resid);
+#endif
     AFS_GLOCK();
     if (code == 0) {
+       if (resid)
+           afs_Trace3(afs_iclSetp, CM_TRACE_WRITEFAILED,
+                       ICL_TYPE_INT32, asize,
+                       ICL_TYPE_INT32, resid,
+                       ICL_TYPE_INT32, code);
 	code = asize - resid;
 	afile->offset += code;
     }
     else {
+        afs_Trace3(afs_iclSetp, CM_TRACE_WRITEFAILED,
+                       ICL_TYPE_INT32, asize,
+                       ICL_TYPE_INT32, resid,
+                       ICL_TYPE_INT32, code);
 	if (code == ENOSPC) afs_warnuser("\n\n\n*** Cache partition is FULL - Decrease cachesize!!! ***\n\n");
 	setuerror(code);
 	code = -1;

@@ -36,7 +36,7 @@ afs_setgroups(
     gid_t *gidset,
     int change_parent);
 
-#ifndef AFS_AIX5_ENV
+#ifndef AFS_AIX51_ENV
 int
 setgroups(ngroups, gidset)
     int ngroups;

@@ -71,7 +71,11 @@
 /* Configurable parameters */
 #define	RX_IDLE_DEAD_TIME	60	/* default idle dead time */
 #define	RX_MAX_SERVICES		20	/* Maximum number of services that may be installed */
+#if defined(KERNEL) && defined(AFS_AIX51_ENV) && defined(__64__)
+#define RX_DEFAULT_STACK_SIZE   24000
+#else
 #define	RX_DEFAULT_STACK_SIZE	16000	/* Default process stack size; overriden by rx_SetStackSize */
+#endif
 
 /* This parameter should not normally be changed */
 #define	RX_PROCESS_PRIORITY	LWP_NORMAL_PRIORITY

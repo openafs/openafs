@@ -40,14 +40,14 @@ RCSID("$Header$");
 #include <afs/icl.h>
 #include <afs/afsutil.h>
 
-#if defined(AFS_ALPHA_ENV) || defined(AFS_SGI61_ENV)
+#if defined(AFS_ALPHA_ENV) || defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 /* For SGI 6.2, this is changed to 1 if it's a 32 bit kernel. */
 int afs_icl_sizeofLong = 2;
 #else
 int afs_icl_sizeofLong = 1;
 #endif
 
-#ifdef AFS_SGI61_ENV
+#if defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 int afs_64bit_kernel = 1;	/* Default for 6.2+, and always for 6.1 */
 extern int afs_icl_sizeofLong;	/* Used in ICL_SIZEHACK() */
 #ifdef AFS_SGI62_ENV
@@ -120,7 +120,7 @@ static icl_GetSize(type, addr)
  * by typesp.  Also watch for prematurely running out of parameters
  * before the string is gone.
  */
-#ifdef AFS_SGI61_ENV
+#if defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 static int CheckTypes(bufferp, typesp, typeCount, outMsgBuffer)
   char *bufferp;
   int *typesp;
@@ -257,7 +257,7 @@ static DisplayRecord(outFilep, alp, rsize)
   afs_int32 rsize;
 {
     char msgBuffer[1024];
-#ifdef AFS_SGI61_ENV
+#if defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
     char outMsgBuffer[1024];
     uint64_t tempParam;
     uint64_t printfParms[ICL_MAXEXPANSION * /* max parms */ 4];
@@ -297,7 +297,7 @@ static DisplayRecord(outFilep, alp, rsize)
 	case ICL_TYPE_LONG:
 	case ICL_TYPE_POINTER:
 	    printfTypes[pftix++] = 0;
-#ifdef AFS_SGI61_ENV
+#if defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 	    printfParms[pfpix] = alp[pix];
 	    printfParms[pfpix] &= 0xffffffff;
 	    if (afs_64bit_kernel) {
@@ -340,7 +340,7 @@ static DisplayRecord(outFilep, alp, rsize)
 #ifdef AFS_SGI64_ENV
             printfStrings[pfpix++] = (char*) &alp[pix];
 #else /* AFS_SGI64_ENV */
-#ifdef AFS_SGI61_ENV
+#if defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 	    printfStrings[pfpix++] = (char *) &alp[pix];
 #else /* AFS_SGI61_ENV */
 	    printfParms[pfpix++] = (long) &alp[pix];
@@ -369,7 +369,7 @@ static DisplayRecord(outFilep, alp, rsize)
      */
     printed = 0;
     if (status == 0) {
-#ifdef AFS_SGI61_ENV
+#if defined(AFS_SGI61_ENV) || (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL))
 	if (CheckTypes(msgBuffer, printfTypes, pftix, outMsgBuffer)) {
 	    /* we have a string to use, but it ends "(dfs / zcm)",
 	     * so we remove the extra gunk.
@@ -2592,7 +2592,8 @@ int icl_ZeroLog(register struct afs_icl_log *logp)
 }
 
 /* free a log entry, and drop its reference count */
-int icl_LogFree(register struct afs_icl_log *logp)
+icl_LogFree(logp)
+  register struct afs_icl_log *logp;
 {
     logp->states |= ICL_LOGF_DELETED;
     icl_LogRele(logp);

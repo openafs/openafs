@@ -34,6 +34,9 @@ RCSID("$Header$");
 #include "netinet/in.h"
 #include "afs/afs_args.h"
 #include "afs/afs_osi.h"
+#ifdef RX_KERNEL_TRACE
+#include "rx_kcommon.h"
+#endif
 #if	(defined(AFS_AUX_ENV) || defined(AFS_AIX_ENV))
 #include "h/systm.h"
 #endif
@@ -314,6 +317,7 @@ static int rxdb_fileID = RXDB_FILE_RX;
 #define CLEAR_CALL_QUEUE_LOCK(C)
 #endif /* RX_ENABLE_LOCKS */
 struct rx_serverQueueEntry *rx_waitForPacket = 0;
+struct rx_serverQueueEntry *rx_waitingForPacket = 0;
 
 /* ------------Exported Interfaces------------- */
 
@@ -1500,6 +1504,8 @@ struct rx_call *rx_GetCall(int tno, struct rx_service *cur_service, osi_socket *
 	    queue_Append(&rx_idleServerQueue, sq);
 #ifndef AFS_AIX41_ENV
 	    rx_waitForPacket = sq;
+#else
+            rx_waitingForPacket = sq;
 #endif /* AFS_AIX41_ENV */
 	    do {
 		CV_WAIT(&sq->cv, &rx_serverPool_lock);
@@ -1528,6 +1534,19 @@ struct rx_call *rx_GetCall(int tno, struct rx_service *cur_service, osi_socket *
 	clock_GetTime(&call->startTime);
 	call->state = RX_STATE_ACTIVE;
 	call->mode = RX_MODE_RECEIVING;
+#ifdef RX_KERNEL_TRACE
+	if (ICL_SETACTIVE(afs_iclSetp)) {
+                int glockOwner = ISAFS_GLOCK();
+                if (!glockOwner)
+                        AFS_GLOCK();
+                afs_Trace3(afs_iclSetp, CM_TRACE_WASHERE,
+                        ICL_TYPE_STRING, __FILE__,
+                        ICL_TYPE_INT32, __LINE__,
+                        ICL_TYPE_POINTER, call);
+                if (!glockOwner)
+                        AFS_GUNLOCK();
+        }
+#endif
 
 	rxi_calltrace(RX_CALL_START, call);
 	dpf(("rx_GetCall(port=%d, service=%d) ==> call %x\n", 
@@ -1663,6 +1682,19 @@ struct rx_call *rx_GetCall(int tno, struct rx_service *cur_service, osi_socket *
 	clock_GetTime(&call->startTime);
 	call->state = RX_STATE_ACTIVE;
 	call->mode = RX_MODE_RECEIVING;
+#ifdef RX_KERNEL_TRACE
+	if (ICL_SETACTIVE(afs_iclSetp)) {
+                int glockOwner = ISAFS_GLOCK();
+                if (!glockOwner)
+                        AFS_GLOCK();
+                afs_Trace3(afs_iclSetp, CM_TRACE_WASHERE,
+                        ICL_TYPE_STRING, __FILE__,
+                        ICL_TYPE_INT32, __LINE__,
+                        ICL_TYPE_POINTER, call);
+                if (!glockOwner)
+                        AFS_GUNLOCK();
+        }
+#endif
 
 	rxi_calltrace(RX_CALL_START, call);
 	dpf(("rx_GetCall(port=%d, service=%d) ==> call %x\n", 
@@ -3897,6 +3929,19 @@ void rxi_AttachServerProc(register struct rx_call *call,
 	}
 	call->state = RX_STATE_ACTIVE;
 	call->mode = RX_MODE_RECEIVING;
+#ifdef RX_KERNEL_TRACE
+        {
+                int glockOwner = ISAFS_GLOCK();
+                if (!glockOwner)
+                        AFS_GLOCK();
+                afs_Trace3(afs_iclSetp, CM_TRACE_WASHERE,
+                        ICL_TYPE_STRING, __FILE__,
+                        ICL_TYPE_INT32, __LINE__,
+                        ICL_TYPE_POINTER, call);
+                if (!glockOwner)
+                        AFS_GUNLOCK();
+        }
+#endif
 	if (call->flags & RX_CALL_CLEARED) {
 	    /* send an ack now to start the packet flow up again */
 	    call->flags &= ~RX_CALL_CLEARED;
