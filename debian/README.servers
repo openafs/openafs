@@ -1,0 +1,36 @@
+		 Setting up a Debian OpennAFS Server
+
+Currently, most of the configuration mechanisms are not present for
+setting up a Debian server.  These packages include the binaries with
+appropriate FHS-compatible path names.  Here is a rough map from the
+AFS paths to the Debian paths:
+
+/usr/afs/etc		/etc/openafs/server
+/usr/afs/local		/etc/openafs/server-local
+/usr/afs/db		/var/lib/openafs/db
+/usr/afs/logs		/var/log/openafs
+/usr/afs/bin		/usr/lib/openafs
+
+The main problem linking the AFS configuration model into the Debian
+model is how to deal with synchronization of servers.  Once this is
+resolved, support for configuring the servers directly will be added.  
+
+Another issue is upgrades.  It is likely that futurue versions of this
+package will install for example /usr/lib/openafs/fileserver.package
+instead of /usr/lib/openafs/fileserver.  The postinst script will
+create links the actual binaries.  Upgrades will not replace the old
+binaries, but a script will be provided to roll the links forward to
+the new versions.  The intent is that people could install the new
+package on all their servers and then quickly move the links before
+restarting the bosserver.
+
+		    Things to do for manual config
+
+* Create /etc/openafs/server/CellServDB only with the server's cell
+* create /etc/openafs/server/KeyFile -- good luck finding out how
+* start bosserver
+* add ptserver and vlserver
+* create prdb (again good luck without starting in noauth)
+* Create vldb
+* add fileserver process
+

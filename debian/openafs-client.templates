@@ -15,3 +15,11 @@ Description:  How large is your AFS cache (kb)?
    on.  Often, people find it useful to dedicate a partition to their
    AFS cache.
 
+Template: openafs-client/nohomecell
+Type: note
+Description: Your home cell is not in CellServDb
+ AFS uses the file /etc/openafs/CellServDB to hold the list of servers
+ that should be contacted to find parts of a cell.  The cell you claim
+ this workstation belongs to is not in that file.  You must either
+ change the home cell of this workstation or edit CellServDB to add a
+ new cell.

@@ -1,0 +1,7 @@
+Template: openafs-fileserver/thiscell
+Type: string
+Description: What cell does this server serve files for?
+ AFS fileservers belong to a cell.  They have the key for that cell's
+ Kerberos service and serve volumes into that cell.  Normally, this
+ cell is the same cell as the workstation's client belongs to.
+

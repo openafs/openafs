@@ -1,3 +1,12 @@
+openafs (1.0.snap20001106-2) unstable; urgency=low
+
+  * Fix init.d script to actually work for stop this time--tested and works
+  * Add server packages; fairly useless right now but at least we ship the binaries
+  * Check to make sure home cell exists and warn user if not
+  * Fix purge for openafs-client
+
+ --  Sam Hartman <hartmans@mit.edu>  Fri, 10 Nov 2000 23:35:30 -0500
+
 openafs (1.0.snap20001106-1) unstable; urgency=low
 
   * New Upstream version

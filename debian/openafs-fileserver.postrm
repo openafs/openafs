@@ -18,8 +18,7 @@ set -e
 
 case "$1" in
 purge)
-    rm /etc/openafs/cacheinfo 2>/dev/null ||true
-    rm /etc/openafs/ThisCell 2>/dev/null ||true
+    rm /etc/openafs/server/ThisCell 2>/dev/null || true
     ;;
        remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
 
