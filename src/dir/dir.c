@@ -73,11 +73,11 @@ RCSID("$Header$");
 #endif /* AFS_MACH_ENV */
 #endif
 #endif
-#ifndef AFS_LINUX20_ENV
-#include "../netinet/in.h"
-#endif
 #if !defined(AFS_SUN5_ENV) && !defined(AFS_LINUX20_ENV)
 #include "../h/mbuf.h"
+#endif
+#ifndef AFS_LINUX20_ENV
+#include "../netinet/in.h"
 #endif
 #else /* !defined(UKERNEL) */
 #include "../afs/stds.h"
