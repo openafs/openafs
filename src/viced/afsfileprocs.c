@@ -28,7 +28,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/viced/afsfileprocs.c,v 1.10 2002/09/26 19:18:09 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/viced/afsfileprocs.c,v 1.11 2002/12/11 03:00:40 hartmans Exp $");
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -5014,7 +5014,7 @@ afs_int32 *a_bytesFetchedP;
     struct iovec tiov[RX_MAXIOVECS];
     int tnio;
 #endif /* AFS_NT40_ENV */
-    int tlen;
+    afs_int32 tlen;
     afs_int32 optSize;
     struct stat tstat;
 #ifdef	AFS_AIX_ENV
@@ -5212,12 +5212,12 @@ StoreData_RXStyle(volptr, targetptr, Fid, client, Call, Pos, Length,
     afs_int32 optSize;			/* optimal transfer size */
     int DataLength;			/* size of inode */
     afs_int32 TruncatedLength;		/* size after ftruncate */
-    afs_int32 NewLength;			/* size after this store completes */
-    afs_int32 adjustSize;			/* bytes to call VAdjust... with */
+    afs_uint32 NewLength;		/* size after this store completes */
+    afs_int32 adjustSize;		/* bytes to call VAdjust... with */
     int linkCount;			/* link count on inode */
     int code;
     FdHandle_t *fdP;
-    struct in_addr logHostAddr;             /* host ip holder for inet_ntoa */
+    struct in_addr logHostAddr;		/* host ip holder for inet_ntoa */
 
 #if FS_STATS_DETAILED
     /*
@@ -5259,7 +5259,7 @@ StoreData_RXStyle(volptr, targetptr, Fid, client, Call, Pos, Length,
 	}
 	
 	if (linkCount != 1) {
-	    int size;
+	    afs_uint32 size;
 	    ViceLog(25, ("StoreData_RXStyle : inode %s has more than onelink\n",
 			 PrintInode(NULL, VN_GET_INO(targetptr))));
 	    /* other volumes share this data, better copy it first */
@@ -5843,7 +5843,7 @@ Update_ParentVnodeStatus(parentptr, volptr, dir, author, linkcount)
 #endif /* FS_STATS_DETAILED */
 
 {
-    int	newlength;	    /* Holds new directory length */
+    afs_uint32 newlength;	/* Holds new directory length */
     int errorCode;
 #if FS_STATS_DETAILED
     Date currDate;		/*Current date*/
@@ -6606,7 +6606,11 @@ int CopyOnWrite(targetptr, volptr)
 		    ViceLog(0,("CopyOnWrite failed: volume %u in partition %s  (tried reading %u, read %u, wrote %u, errno %u) volume needs salvage\n",
 			       V_id(volptr), volptr->partition->name, length,
 			       rdlen, wrlen, errno));
-		    assert(0);
+#ifdef FAST_RESTART /* if running in no-salvage, don't core the server */
+		    ViceLog(0,("CopyOnWrite failed: taking volume offline\n"));
+#else /* Avoid further corruption and try to get a core. */
+		    assert(0); 
+#endif
                     /* Decrement this inode so salvager doesn't find it. */
 		    FDH_REALLYCLOSE(newFdP);
 		    IH_RELEASE(newH);

@@ -16,7 +16,7 @@
 #include <afs/param.h>
 #endif
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx.c,v 1.12 2002/09/26 19:18:08 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/rx/rx.c,v 1.13 2002/12/11 03:00:40 hartmans Exp $");
 
 #ifdef KERNEL
 #include "../afs/sysincludes.h"
@@ -1796,6 +1796,16 @@ afs_int32 rx_EndCall(call, rc)
 	 || (call->mode == RX_MODE_RECEIVING && call->rnext == 1)) {
 	    (void) rxi_ReadProc(call, &dummy, 1);
 	}
+
+	/* If we had an outstanding delayed ack, be nice to the server
+	 * and force-send it now.
+	 */
+	if (call->delayedAckEvent) {
+	    rxevent_Cancel(call->delayedAckEvent, call, RX_CALL_REFCOUNT_DELAY);
+	    call->delayedAckEvent = NULL;
+	    rxi_SendDelayedAck(NULL, call, NULL);
+	}
+
 	/* We need to release the call lock since it's lower than the
 	 * conn_call_lock and we don't want to hold the conn_call_lock
 	 * over the rx_ReadProc call. The conn_call_lock needs to be held
@@ -2247,7 +2257,6 @@ rxi_FindConnection(socket, host, port, serviceId, cid,
 {
     int hashindex, flag;
     register struct rx_connection *conn;
-    struct rx_peer *peer;
     hashindex = CONN_HASH(host, port, cid, epoch, type);
     MUTEX_ENTER(&rx_connHashTable_lock);
     rxLastConn ? (conn = rxLastConn, flag = 0) :
@@ -2264,13 +2273,12 @@ rxi_FindConnection(socket, host, port, serviceId, cid,
 	    MUTEX_EXIT(&rx_connHashTable_lock);
 	    return (struct rx_connection *) 0;
 	}
-	/* epoch's high order bits mean route for security reasons only on
-	 * the cid, not the host and port fields.
-	 */
-	if (conn->epoch & 0x80000000) break;
-	if (((type == RX_CLIENT_CONNECTION) 
-	     || (pp->host == host)) && (pp->port == port))
-	  break;
+	if (pp->host == host && pp->port == port)
+	    break;
+	if (type == RX_CLIENT_CONNECTION && pp->port == port)
+	    break;
+	if (type == RX_CLIENT_CONNECTION && (conn->epoch & 0x80000000))
+	    break;
       }
       if ( !flag )
       {
@@ -2302,7 +2310,7 @@ rxi_FindConnection(socket, host, port, serviceId, cid,
 	CV_INIT(&conn->conn_call_cv, "conn call cv", CV_DEFAULT, 0);
 	conn->next = rx_connHashTable[hashindex];
 	rx_connHashTable[hashindex] = conn;
-	peer = conn->peer = rxi_FindPeer(host, port, 0, 1);
+	conn->peer = rxi_FindPeer(host, port, 0, 1);
 	conn->type = RX_SERVER_CONNECTION;
 	conn->lastSendTime = clock_Sec();   /* don't GC immediately */
 	conn->epoch = epoch;
@@ -2325,27 +2333,9 @@ rxi_FindConnection(socket, host, port, serviceId, cid,
 	rx_stats.nServerConns++;
 	MUTEX_EXIT(&rx_stats_mutex);
     }
-    else
-    {
-    /* Ensure that the peer structure is set up in such a way that
-    ** replies in this connection go back to that remote interface
-    ** from which the last packet was sent out. In case, this packet's
-    ** source IP address does not match the peer struct for this conn,
-    ** then drop the refCount on conn->peer and get a new peer structure.
-    ** We can check the host,port field in the peer structure without the
-    ** rx_peerHashTable_lock because the peer structure has its refCount
-    ** incremented and the only time the host,port in the peer struct gets
-    ** updated is when the peer structure is created.
-    */
-	if (conn->peer->host == host )
-		peer = conn->peer; /* no change to the peer structure */
-	else
-        	peer = rxi_FindPeer(host, port, conn->peer, 1);
-    }
 
     MUTEX_ENTER(&conn->conn_data_lock);
     conn->refCount++;
-    conn->peer = peer;
     MUTEX_EXIT(&conn->conn_data_lock);
 
     rxLastConn = conn;	/* store this connection as the last conn used */
@@ -2772,8 +2762,11 @@ struct rx_packet *rxi_ReceivePacket(np, socket, host, port, tnop, newcallp)
 	    /* Respond immediately to ack packets requesting acknowledgement
              * (ping packets) */
 	    if (np->header.flags & RX_REQUEST_ACK) {
-		if (call->error) (void) rxi_SendCallAbort(call, 0, 1, 0);
-		else (void) rxi_SendAck(call, 0, 0, 0, 0, RX_ACK_PING_RESPONSE, 1);
+		if (call->error)
+		    (void) rxi_SendCallAbort(call, 0, 1, 0);
+		else
+		    (void) rxi_SendAck(call, 0, 0, np->header.serial, 0,
+				       RX_ACK_PING_RESPONSE, 1);
 	    }
 	    np = rxi_ReceiveAckPacket(call, np, 1);
 	    break;
@@ -3372,6 +3365,27 @@ static void rxi_UpdatePeerReach(conn, acall)
 	MUTEX_EXIT(&conn->conn_data_lock);
 }
 
+/* rxi_ComputePeerNetStats
+ *
+ * Called exclusively by rxi_ReceiveAckPacket to compute network link
+ * estimates (like RTT and throughput) based on ack packets.  Caller
+ * must ensure that the packet in question is the right one (i.e.
+ * serial number matches).
+ */
+static void
+rxi_ComputePeerNetStats(struct rx_call *call, struct rx_packet *p,
+	struct rx_ackPacket *ap, struct rx_packet *np)
+{
+    struct rx_peer *peer = call->conn->peer;
+
+    /* Use RTT if not delayed by client. */
+    if (ap->reason != RX_ACK_DELAY)
+	rxi_ComputeRoundTripTime(p, &p->timeSent, peer);
+#ifdef ADAPT_WINDOW
+    rxi_ComputeRate(peer, call, p, np, ap->reason);
+#endif
+}
+
 /* The real smarts of the whole thing.  */
 struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
     register struct rx_call *call;
@@ -3439,15 +3453,6 @@ struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
     }
 #endif
 
-    /* if a server connection has been re-created, it doesn't remember what
-	serial # it was up to.  An ack will tell us, since the serial field
-	contains the largest serial received by the other side */
-    MUTEX_ENTER(&conn->conn_data_lock);
-    if ((conn->type == RX_SERVER_CONNECTION) && (conn->serial < serial)) {
-	conn->serial = serial+1;
-    }
-    MUTEX_EXIT(&conn->conn_data_lock);
-
     /* Update the outgoing packet skew value to the latest value of
      * the peer's incoming packet skew value.  The ack packet, of
      * course, could arrive out of order, but that won't affect things
@@ -3463,22 +3468,9 @@ struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
     for (queue_Scan(&call->tq, tp, nxp, rx_packet)) {
 	if (tp->header.seq >= first) break;
 	call->tfirst = tp->header.seq + 1;
-	if (tp->header.serial == serial) {
-	  /* Use RTT if not delayed by client. */
-	  if (ap->reason != RX_ACK_DELAY)
-	      rxi_ComputeRoundTripTime(tp, &tp->timeSent, peer);
-#ifdef ADAPT_WINDOW
-	  rxi_ComputeRate(peer, call, tp, np, ap->reason);
-#endif
-	}
-	else if (tp->firstSerial == serial) {
-	    /* Use RTT if not delayed by client. */
-	    if (ap->reason != RX_ACK_DELAY)
-		rxi_ComputeRoundTripTime(tp, &tp->firstSent, peer);
-#ifdef ADAPT_WINDOW
-	  rxi_ComputeRate(peer, call, tp, np, ap->reason);
-#endif
-	}
+	if (serial && (tp->header.serial == serial ||
+		       tp->firstSerial == serial))
+	    rxi_ComputePeerNetStats(call, tp, ap, np);
 #ifdef	AFS_GLOBAL_RXLOCK_KERNEL
     /* XXX Hack. Because we have to release the global rx lock when sending
      * packets (osi_NetSend) we drop all acks while we're traversing the tq
@@ -3531,30 +3523,12 @@ struct rx_packet *rxi_ReceiveAckPacket(call, np, istack)
          * of this packet */
 #ifdef AFS_GLOBAL_RXLOCK_KERNEL
 #ifdef RX_ENABLE_LOCKS
-	if (tp->header.seq >= first) {
+	if (tp->header.seq >= first)
 #endif /* RX_ENABLE_LOCKS */
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
-	if (tp->header.serial == serial) {
-	    /* Use RTT if not delayed by client. */
-	    if (ap->reason != RX_ACK_DELAY)
-		rxi_ComputeRoundTripTime(tp, &tp->timeSent, peer);
-#ifdef ADAPT_WINDOW
-	  rxi_ComputeRate(peer, call, tp, np, ap->reason);
-#endif
-	}
-	else if ((tp->firstSerial == serial)) {
-	    /* Use RTT if not delayed by client. */
-	    if (ap->reason != RX_ACK_DELAY)
-		rxi_ComputeRoundTripTime(tp, &tp->firstSent, peer);
-#ifdef ADAPT_WINDOW
-	  rxi_ComputeRate(peer, call, tp, np, ap->reason);
-#endif
-	}
-#ifdef AFS_GLOBAL_RXLOCK_KERNEL
-#ifdef RX_ENABLE_LOCKS
-	}
-#endif /* RX_ENABLE_LOCKS */
-#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+	    if (serial && (tp->header.serial == serial ||
+			   tp->firstSerial == serial))
+		rxi_ComputePeerNetStats(call, tp, ap, np);
 
 	/* Set the acknowledge flag per packet based on the
          * information in the ack packet. An acknowlegded packet can
@@ -4563,7 +4537,7 @@ struct rx_packet *rxi_SendAck(call, optionalPacket, seq, serial, pflags, reason,
 
     /* The skew computation used to be bogus, I think it's better now. */
     /* We should start paying attention to skew.    XXX  */
-    ap->serial = htonl(call->conn->maxSerial);
+    ap->serial = htonl(serial);
     ap->maxSkew	= 0;	/* used to be peer->inPacketSkew */
 
     ap->firstPacket = htonl(call->rnext); /* First packet not yet forwarded to reader */

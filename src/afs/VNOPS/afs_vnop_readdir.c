@@ -22,7 +22,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_readdir.c,v 1.9 2002/09/26 19:18:06 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_readdir.c,v 1.10 2002/12/11 03:00:39 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -783,7 +783,7 @@ afs1_readdir(avc, auio, acred, eofp)
 #else
 afs1_readdir(avc, auio, acred)
 #endif
-    register struct vcache *avc;
+    struct vcache *avc;
     struct uio *auio;
     struct AFS_UCRED *acred; {
     struct vrequest treq;

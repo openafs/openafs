@@ -22,7 +22,7 @@
 #include <afsconfig.h>
 #include "../afs/param.h"
 
-RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.12 2002/09/26 19:18:06 hartmans Exp $");
+RCSID("$Header: /tmp/cvstemp/openafs/src/afs/VNOPS/afs_vnop_lookup.c,v 1.13 2002/12/11 03:00:39 hartmans Exp $");
 
 #include "../afs/sysincludes.h"	/* Standard vendor system headers */
 #include "../afs/afsincludes.h"	/* Afs-based standard headers */
@@ -54,7 +54,7 @@ extern struct inode_operations afs_symlink_iops, afs_dir_iops;
 
 afs_int32 afs_bulkStatsDone;
 static int bulkStatCounter = 0;	/* counter for bulk stat seq. numbers */
-int afs_fakestat_enable = 0;
+int afs_fakestat_enable = 0;	/* 1: fakestat-all, 2: fakestat-crosscell */
 
 
 /* this would be faster if it did comparison as int32word, but would be 
@@ -268,12 +268,8 @@ afs_InitFakeStat(state)
  *
  * Only issues RPCs if canblock is non-zero.
  */
-static int
-afs_EvalFakeStat_int(avcp, state, areq, canblock)
-    struct vcache **avcp;
-    struct afs_fakestat_state *state;
-    struct vrequest *areq;
-    int canblock;
+int afs_EvalFakeStat_int(struct vcache **avcp, struct afs_fakestat_state *state,
+	struct vrequest *areq, int canblock)
 {
     struct vcache *tvc, *root_vp;
     struct volume *tvolp = NULL;
@@ -1400,17 +1396,34 @@ afs_lookup(adp, aname, avcp, acred)
     } /* sub-block just to reduce stack usage */
 
     if (tvc) {
-       if (adp->states & CForeign)
+	int force_eval = afs_fakestat_enable ? 0 : 1;
+
+	if (adp->states & CForeign)
 	   tvc->states |= CForeign;
 	tvc->parentVnode = adp->fid.Fid.Vnode;
 	tvc->parentUnique = adp->fid.Fid.Unique;
 	tvc->states &= ~CBulkStat;
 
+	if (afs_fakestat_enable == 2 && tvc->mvstat == 1) {
+	    ObtainSharedLock(&tvc->lock, 680);
+	    if (!tvc->linkData) {
+		UpgradeSToWLock(&tvc->lock, 681);
+		code = afs_HandleLink(tvc, &treq);
+		ConvertWToRLock(&tvc->lock);
+	    } else {
+		ConvertSToRLock(&tvc->lock);
+		code = 0;
+	    }
+	    if (!code && !afs_strchr(tvc->linkData, ':'))
+		force_eval = 1;
+	    ReleaseReadLock(&tvc->lock);
+	}
+
 #if defined(UKERNEL) && defined(AFS_WEB_ENHANCEMENTS)
         if (!(flags & AFS_LOOKUP_NOEVAL))
           /* don't eval mount points */
 #endif /* UKERNEL && AFS_WEB_ENHANCEMENTS */
-	if (!afs_fakestat_enable && tvc->mvstat == 1) {
+	if (tvc->mvstat == 1 && force_eval) {
 	    /* a mt point, possibly unevaluated */
 	    struct volume *tvolp;
 
