@@ -863,7 +863,7 @@ static void rxi_DestroyConnectionNoLock(conn)
 	MUTEX_EXIT(&rx_stats_mutex);
     }
 
-    if (conn->refCount > 0) {
+    if ((conn->refCount > 0) || (conn->flags & RX_CONN_BUSY)) {
 	/* Busy; wait till the last guy before proceeding */
 	MUTEX_EXIT(&conn->conn_data_lock);
 	USERPRI;
@@ -1763,6 +1763,7 @@ afs_int32 rx_EndCall(call, rc)
 	MUTEX_ENTER(&conn->conn_call_lock);
 	MUTEX_ENTER(&call->lock);
 	MUTEX_ENTER(&conn->conn_data_lock);
+	conn->flags |= RX_CONN_BUSY;
 	if (conn->flags & RX_CONN_MAKECALL_WAITING) {
 	    conn->flags &= (~RX_CONN_MAKECALL_WAITING);
 	    MUTEX_EXIT(&conn->conn_data_lock);
@@ -1801,8 +1802,10 @@ afs_int32 rx_EndCall(call, rc)
 
     CALL_RELE(call, RX_CALL_REFCOUNT_BEGIN);
     MUTEX_EXIT(&call->lock);
-    if (conn->type == RX_CLIENT_CONNECTION)
+    if (conn->type == RX_CLIENT_CONNECTION) {
 	MUTEX_EXIT(&conn->conn_call_lock);
+	conn->flags &= ~RX_CONN_BUSY;
+    }
     AFS_RXGUNLOCK();
     USERPRI;
     /*
@@ -6600,7 +6603,8 @@ static int rxi_AddRpcStat(
      * queue.
      */
 
-    if ((rpc_stat == NULL) ||
+    if (queue_IsEnd(stats, rpc_stat) ||
+	(rpc_stat == NULL) ||
 	(rpc_stat->stats[0].interfaceId != rxInterface) ||
 	(rpc_stat->stats[0].remote_is_server != isServer)) {
 	int i;

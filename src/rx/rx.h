@@ -481,6 +481,7 @@ struct rx_connection {
 #define RX_CONN_USING_PACKET_CKSUM  4	/* non-zero header.spare field seen */
 #define RX_CONN_KNOW_WINDOW         8   /* window size negotiation works */
 #define RX_CONN_RESET		   16   /* connection is reset, remove */
+#define RX_CONN_BUSY               32   /* connection is busy; don't delete */
 
 /* Type of connection, client or server */
 #define	RX_CLIENT_CONNECTION	0
