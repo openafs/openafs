@@ -121,7 +121,7 @@ rxi_GetUDPSocket(u_short port)
 	goto error;
     }
 
-    taddr.sin_addr.s_addr = ADDR_ANY;
+    taddr.sin_addr.s_addr = INADDR_ANY;
     taddr.sin_family = AF_INET;
     taddr.sin_port = (u_short) port;
 #ifdef STRUCT_SOCKADDR_HAS_SA_LEN
