@@ -138,12 +138,53 @@ static struct file_operations afs_syscall_fops = {
     .ioctl = afs_ioctl,
 };
 
+int
+csdbproc_read(char *buffer, char **start, off_t offset, int count,
+	      int *eof, void *data)
+{
+    int len, i, j;
+    struct afs_q *cq, *tq;
+    struct cell *tc;
+    void *ret = NULL;
+    char tbuffer[16];
+    afs_uint32 addr;
+    
+    len = 0;
+    ObtainReadLock(&afs_xcell);
+    for (cq = CellLRU.next; cq != &CellLRU; cq = tq) {
+	tc = QTOC(cq); tq = QNext(cq);
+	len += sprintf(buffer + len, ">%s #(%d/%d)\n", tc->cellName, 
+		       tc->cellNum, tc->cellIndex);
+	for (j = 0; j < MAXCELLHOSTS; j++) {
+	    if (!tc->cellHosts[j]) break;
+	    addr = ntohl(tc->cellHosts[j]->addr->sa_ip);
+	    sprintf(tbuffer, "%d.%d.%d.%d", 
+		    (int)((addr>>24) & 0xff), (int)((addr>>16) & 0xff),
+		    (int)((addr>>8)  & 0xff), (int)( addr      & 0xff));
+            len += sprintf(buffer + len, "%s #%s\n", tbuffer, tbuffer);
+	}
+    }
+    ReleaseReadLock(&afs_xcell);
+    
+    if (offset >= len) {
+	*start = buffer;
+	*eof = 1;
+	return 0;
+    }
+    *start = buffer + offset;
+    if ((len -= offset) > count)
+	return count;
+    *eof = 1;
+    return len;
+}
+
 static struct proc_dir_entry *openafs_procfs;
 
 static int
 afsproc_init()
 {
     struct proc_dir_entry *entry1;
+    struct proc_dir_entry *entry2;
 
     openafs_procfs = proc_mkdir(PROC_FSDIRNAME, proc_root_fs);
     entry1 = create_proc_entry(PROC_SYSCALL_NAME, 0666, openafs_procfs);
@@ -152,12 +193,15 @@ afsproc_init()
 
     entry1->owner = THIS_MODULE;
 
+    entry2 = create_proc_read_entry(PROC_CELLSERVDB_NAME, (S_IFREG|S_IRUGO), openafs_procfs, csdbproc_read, NULL);
+
     return 0;
 }
 
 static void
 afsproc_exit()
 {
+    remove_proc_entry(PROC_CELLSERVDB_NAME, openafs_procfs);
     remove_proc_entry(PROC_SYSCALL_NAME, openafs_procfs);
     remove_proc_entry(PROC_FSDIRNAME, proc_root_fs);
 }

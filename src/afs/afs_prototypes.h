@@ -196,6 +196,8 @@ extern void afs_DequeueCallback(struct vcache *avc);
 
 /* afs_cell.c */
 extern afs_rwlock_t afs_xcell;
+extern struct afs_q CellLRU;           
+
 extern void afs_CellInit(void);
 extern void shutdown_cell(void);
 extern int afs_cellname_init(ino_t inode, int lookupcode);
