@@ -181,6 +181,7 @@ case $system in
 		 LINUX_FS_STRUCT_INODE_HAS_I_TRUNCATE_SEM
 		 LINUX_FS_STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS
 		 LINUX_FS_STRUCT_INODE_HAS_I_DEVICES
+		 LINUX_FS_STRUCT_INODE_HAS_I_SECURITY
 	  	 LINUX_INODE_SETATTR_RETURN_TYPE
 		 LINUX_KERNEL_LINUX_SYSCALL_H
 		 LINUX_KERNEL_SELINUX
@@ -273,6 +274,9 @@ case $system in
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_devices" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_DEVICES, 1, [define if you struct inode has i_devices])
+		 fi
+		 if test "x$ac_cv_linux_fs_struct_inode_has_i_security" = "xyes"; then 
+		  AC_DEFINE(STRUCT_INODE_HAS_I_SECURITY, 1, [define if you struct inode has i_security])
 		 fi
 		 if test "x$ac_cv_linux_fs_struct_inode_has_i_dirty_data_buffers" = "xyes"; then 
 		  AC_DEFINE(STRUCT_INODE_HAS_I_DIRTY_DATA_BUFFERS, 1, [define if your struct inode has data_buffers])

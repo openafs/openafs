@@ -64,6 +64,9 @@
 #include <linux/backing-dev.h>
 #include <linux/pagemap.h>
 #include <linux/namei.h>
+#ifdef STRUCT_INODE_HAS_I_SECURITY
+#include <linux/security.h>
+#endif
 #include <linux/suspend.h>
 #endif
 /* Avoid conflicts with coda overloading AFS type namespace. Must precede
