@@ -463,29 +463,29 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 /* called with a held server to GC all bad connections hanging off of the server */
 void cm_GCConnections(cm_server_t *serverp)
 {
-	cm_conn_t *tcp;
+    cm_conn_t *tcp;
     cm_conn_t **lcpp;
     cm_user_t *userp;
 
-	lock_ObtainWrite(&cm_connLock);
-	lcpp = &serverp->connsp;
-	for(tcp = *lcpp; tcp; tcp = *lcpp) {
-		userp = tcp->userp;
-		if (userp && tcp->refCount == 0 && (userp->vcRefs == 0)) {
-			/* do the deletion of this guy */
+    lock_ObtainWrite(&cm_connLock);
+    lcpp = &serverp->connsp;
+    for (tcp = *lcpp; tcp; tcp = *lcpp) {
+        userp = tcp->userp;
+        if (userp && tcp->refCount == 0 && (userp->vcRefs == 0)) {
+            /* do the deletion of this guy */
             cm_PutServer(tcp->serverp);
             cm_ReleaseUser(userp);
             *lcpp = tcp->nextp;
-			rx_DestroyConnection(tcp->callp);
+            rx_DestroyConnection(tcp->callp);
             lock_FinalizeMutex(&tcp->mx);
             free(tcp);
         }
         else {
-			/* just advance to the next */
+            /* just advance to the next */
             lcpp = &tcp->nextp;
         }
     }
-	lock_ReleaseWrite(&cm_connLock);
+    lock_ReleaseWrite(&cm_connLock);
 }
 
 static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
@@ -495,25 +495,24 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
     int serviceID;
     int secIndex;
     struct rx_securityClass *secObjp;
-	afs_int32 level;
+    afs_int32 level;
 
-	if (serverp->type == CM_SERVER_VLDB) {
-		port = htons(7003);
+    if (serverp->type == CM_SERVER_VLDB) {
+        port = htons(7003);
         serviceID = 52;
     }
     else {
-		osi_assert(serverp->type == CM_SERVER_FILE);
+        osi_assert(serverp->type == CM_SERVER_FILE);
         port = htons(7000);
         serviceID = 1;
     }
-	if (ucellp->flags & CM_UCELLFLAG_RXKAD) {
-		secIndex = 2;
-		if (cryptall) {
-			level = rxkad_crypt;
-			tcp->cryptlevel = rxkad_crypt;
-		} else {
-			level = rxkad_clear;
-		}
+    if (ucellp->flags & CM_UCELLFLAG_RXKAD) {
+        secIndex = 2;
+        if (cryptall) {
+            level = tcp->cryptlevel = rxkad_crypt;
+        } else {
+            level = tcp->cryptlevel = rxkad_clear;
+        }
         secObjp = rxkad_NewClientSecurityObject(level,
                                                 &ucellp->sessionKey, ucellp->kvno,
                                                 ucellp->ticketLen, ucellp->ticketp);    
@@ -523,61 +522,65 @@ static void cm_NewRXConnection(cm_conn_t *tcp, cm_ucell_t *ucellp,
         secIndex = 0;
         secObjp = rxnull_NewClientSecurityObject();
     }
-	osi_assert(secObjp != NULL);
+    osi_assert(secObjp != NULL);
     tcp->callp = rx_NewConnection(serverp->addr.sin_addr.s_addr,
                                   port,
                                   serviceID,
                                   secObjp,
                                   secIndex);
-	rx_SetConnDeadTime(tcp->callp, ConnDeadtimeout);
-	rx_SetConnHardDeadTime(tcp->callp, HardDeadtimeout);
-	tcp->ucgen = ucellp->gen;
+    rx_SetConnDeadTime(tcp->callp, ConnDeadtimeout);
+    rx_SetConnHardDeadTime(tcp->callp, HardDeadtimeout);
+    tcp->ucgen = ucellp->gen;
     if (secObjp)
         rxs_Release(secObjp);   /* Decrement the initial refCount */
 }
 
 long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
 {
-	cm_conn_t *tcp;
+    cm_conn_t *tcp;
     cm_ucell_t *ucellp;
 
-	lock_ObtainMutex(&userp->mx);
-	lock_ObtainWrite(&cm_connLock);
-	for(tcp = serverp->connsp; tcp; tcp=tcp->nextp) {
+    lock_ObtainMutex(&userp->mx);
+    lock_ObtainWrite(&cm_connLock);
+    for (tcp = serverp->connsp; tcp; tcp=tcp->nextp) {
         if (tcp->userp == userp) 
             break;
     }
     
-	/* find ucell structure */
+    /* find ucell structure */
     ucellp = cm_GetUCell(userp, serverp->cellp);
-	if (!tcp) {
+    if (!tcp) {
         cm_GetServer(serverp);
-		tcp = malloc(sizeof(*tcp));
+        tcp = malloc(sizeof(*tcp));
         memset(tcp, 0, sizeof(*tcp));
         tcp->nextp = serverp->connsp;
         serverp->connsp = tcp;
         cm_HoldUser(userp);
         tcp->userp = userp;
         lock_InitializeMutex(&tcp->mx, "cm_conn_t mutex");
+        lock_ObtainMutex(&tcp->mx);
         tcp->serverp = serverp;
-		tcp->cryptlevel = rxkad_clear;
-		cm_NewRXConnection(tcp, ucellp, serverp);
-		tcp->refCount = 1;
-    }
-	else {
-		if ((tcp->ucgen < ucellp->gen) || (tcp->cryptlevel != cryptall))
-		{
-			rx_DestroyConnection(tcp->callp);
-			cm_NewRXConnection(tcp, ucellp, serverp);
-		}
+        tcp->cryptlevel = rxkad_clear;
+        cm_NewRXConnection(tcp, ucellp, serverp);
+        tcp->refCount = 1;
+        lock_ReleaseMutex(&tcp->mx);
+    } else {
+        if ((tcp->ucgen < ucellp->gen) || 
+            (tcp->cryptlevel != (cryptall ? rxkad_crypt : rxkad_clear)))
+        {
+            lock_ObtainMutex(&tcp->mx);
+            rx_DestroyConnection(tcp->callp);
+            cm_NewRXConnection(tcp, ucellp, serverp);
+            lock_ReleaseMutex(&tcp->mx);
+        }
         tcp->refCount++;
-	}
-	lock_ReleaseWrite(&cm_connLock);
+    }
+    lock_ReleaseWrite(&cm_connLock);
     lock_ReleaseMutex(&userp->mx);
 
-	/* return this pointer to our caller */
+    /* return this pointer to our caller */
     osi_Log1(afsd_logp, "cm_ConnByServer returning conn 0x%x", (long) tcp);
-	*connpp = tcp;
+    *connpp = tcp;
 
     return 0;
 }
