@@ -6690,7 +6690,7 @@ FetchData_RXStyle(Volume * volptr, Vnode * targetptr,
     {
 	afs_int32 high, low;
 	SplitOffsetOrSize(Len, high, low);
-	assert(Int64Mode || high == 0);
+	assert(Int64Mode || (Len >= 0 && high == 0) || Len < 0);
 	if (Int64Mode) {
 	    high = htonl(high);
 	    rx_Write(Call, (char *)&high, sizeof(afs_int32));	/* High order bits */
