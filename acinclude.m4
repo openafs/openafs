@@ -562,6 +562,12 @@ else
 		power*-ibm-aix4.3*)
 			AFS_SYSNAME="rs_aix42"
 			;;
+		power*-ibm-aix5.1*)
+			AFS_SYSNAME="rs_aix51"
+			;;
+		power*-ibm-aix5.2*)
+			AFS_SYSNAME="rs_aix52"
+			;;
 		x86_64-*-linux-gnu)
 			AFS_SYSNAME="amd64_linuxXX"
 			;;
