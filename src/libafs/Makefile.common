@@ -125,6 +125,7 @@ AFSAOBJS = \
 	rxkad_client.o	\
 	rxkad_common.o	\
 	xdr_afsuuid.o	\
+	xdr_int64.o	\
 	afs_uuid.o $(AFS_OS_OBJS)
 
 # These next two allow nfs and nonfs builds to occur in the same directory.
@@ -229,6 +230,8 @@ rx_rdwr.o: $(RX)/rx_rdwr.c
 afs_uuid.o: $(AFS)/afs_uuid.c
 	$(CRULE2);
 xdr_afsuuid.o: $(RX)/xdr_afsuuid.c
+	$(CRULE2);
+xdr_int64.o: $(RX)/xdr_int64.c
 	$(CRULE2);
 
 # these files are not to be optimized - subject to change.

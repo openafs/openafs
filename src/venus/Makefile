@@ -7,6 +7,7 @@
 
 SHELL = /bin/sh
 COMPONENT=venus
+LINUX_VERS=dummy
 include ../config/Makefile.${SYS_NAME}
 
 INSTALL = ${DESTDIR}bin/install

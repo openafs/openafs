@@ -31,7 +31,7 @@ MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 all:
 	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
-	$(MAKE) install "COMPILE_PART1=cd obj; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME} "WASHTOOL=echo No washtool: "
+	$(MAKE) install "COMPILE_PART1=cd obj; cd" "COMPILE_PART2=; $(MAKE) install SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ SRCDIR=`pwd`/${SYS_NAME}/dest/" "COMPILE_PART3=; $(MAKE) test SYS_NAME=${SYS_NAME} DESTDIR=`pwd`/${SYS_NAME}/dest/ SRCDIR=`pwd`/${SYS_NAME}/dest/" SYS_NAME=${SYS_NAME} "WASHTOOL=echo No washtool: "
 
 basics:
 	-if test -f "${WASHTOOL}"; \
@@ -94,7 +94,7 @@ rxincls: rxobj
 	${COMPILE_PART1} rx ${COMPILE_PART2}
 
 rxtests: rxobj
-	${COMPILE_PART1} rx ${COMPILE_PART2}
+	${COMPILE_PART1} rx ${COMPILE_PART3}
 
 fsint: project kfsint
 
@@ -137,8 +137,9 @@ auth: project comerr des lwp rx sys rxkad audit
 ubik: project auth 
 	${COMPILE_PART1} ubik ${COMPILE_PART2}
 
+#	cd obj/ubik; $(MAKE) test SYS_NAME=${SYS_NAME} 
 ubiktests: ubik sys
-	cd obj/ubik; $(MAKE) test SYS_NAME=${SYS_NAME} 
+	${COMPILE_PART1} ubik ${COMPILE_PART3}
 
 ptserver: project ubik cmd comerr auth audit
 	${COMPILE_PART1} ptserver ${COMPILE_PART2}
@@ -443,7 +444,7 @@ libafs_setup: config minproject export
 # Warning: The next few lines are _extremely_ sensitive to spaces and tabs.
 	${WASHTOOL} object libafs
 	case ${SYS_NAME} in \
-	alpha_dux4* ) \
+	alpha_dux* ) \
 		MKAFS_OSTYPE=DUX;; \
 	hp_ux* ) \
 		MKAFS_OSTYPE=HPUX;; \
@@ -474,7 +475,7 @@ libuafs_setup: config minproject export
 		MKAFS_OSTYPE=AIX;; \
 	sun4x_5* ) \
 		MKAFS_OSTYPE=SOLARIS;; \
-	alpha_dux4* ) \
+	alpha_dux* ) \
 		MKAFS_OSTYPE=DUX;; \
 	sgi_6* ) \
 		MKAFS_OSTYPE=IRIX;; \
@@ -521,12 +522,14 @@ links:
 	- /bin/rm -rf @sys/dest/* ;
 	- /bin/mkdir @sys/obj ;
 	echo "Create the obj directories"
+	here=`pwd` ; \
 	cd src; \
 	for file in `find [!NW]* -type d -print` ; do \
-		/bin/mkdir ../obj/$${file} ; \
+		/bin/mkdir $${here}/obj/$${file} ; \
 	done;
 	echo "Create the obj file links"
+	here=`pwd` ; \
 	cd src; \
 	for file in `find [!NW]* -type f -print` ; do \
-		/bin/ln -s `pwd`/$${file} ../obj/$${file} ; \
+		/bin/ln -s `pwd`/$${file} $${here}/obj/$${file} ; \
 	done;
