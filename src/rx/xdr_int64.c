@@ -7,7 +7,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/xdr_int64.c,v 1.9 2003/12/08 03:14:08 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/xdr_int64.c,v 1.9.2.1 2004/08/25 07:09:42 shadow Exp $");
 
 #if defined(KERNEL) && !defined(UKERNEL)
 #ifdef AFS_LINUX20_ENV
@@ -53,8 +53,8 @@ xdr_afs_int64(register XDR * xdrs, afs_int64 * ulp)
 	return (TRUE);
     }
     if (xdrs->x_op == XDR_ENCODE) {
-	high = (afs_int32)(*ulp >> 32);
-	low = (afs_uint32)(*ulp & 0xFFFFFFFFL);
+	high = (afs_int32) (*ulp >> 32);
+	low = (afs_uint32) (*ulp & 0xFFFFFFFFL);
 	if (!XDR_PUTINT32(xdrs, (afs_int32 *) & high))
 	    return (FALSE);
 	return (XDR_PUTINT32(xdrs, (afs_int32 *) & low));
@@ -90,8 +90,8 @@ xdr_afs_uint64(register XDR * xdrs, afs_uint64 * ulp)
 	return (TRUE);
     }
     if (xdrs->x_op == XDR_ENCODE) {
-	high = (afs_uint32)(*ulp >> 32);
-	low = (afs_uint32)(*ulp & 0xFFFFFFFFL);
+	high = (afs_uint32) (*ulp >> 32);
+	low = (afs_uint32) (*ulp & 0xFFFFFFFFL);
 	if (!XDR_PUTINT32(xdrs, (afs_uint32 *) & high))
 	    return (FALSE);
 	return (XDR_PUTINT32(xdrs, (afs_uint32 *) & low));

@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/authclient.c,v 1.14 2003/07/15 23:15:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/authclient.c,v 1.14.2.2 2004/08/25 07:09:38 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -83,7 +83,8 @@ ka_ExplicitCell(char *cell, afs_int32 serverList[])
 {
     int i;
 
-    LOCK_GLOBAL_MUTEX ka_ExpandCell(cell, explicit_cell_server_list.name, 0);
+    LOCK_GLOBAL_MUTEX;
+    ka_ExpandCell(cell, explicit_cell_server_list.name, 0);
     for (i = 0; i < MAXHOSTSPERCELL; i++)
 	if (serverList[i]) {
 	    explicit_cell_server_list.numServers = i + 1;
@@ -100,7 +101,8 @@ ka_ExplicitCell(char *cell, afs_int32 serverList[])
 	    explicit = 1;
 	} else
 	    break;
-UNLOCK_GLOBAL_MUTEX}
+    UNLOCK_GLOBAL_MUTEX;
+}
 
 static int
 myCellLookup(struct afsconf_dir *conf, char *cell, char *service,
@@ -125,8 +127,9 @@ ka_GetServers(char *cell, struct afsconf_cell * cellinfo)
     afs_int32 code;
     char cellname[MAXKTCREALMLEN];
 
-    LOCK_GLOBAL_MUTEX if (cell && !strlen(cell))
-	  cell = 0;
+    LOCK_GLOBAL_MUTEX;
+    if (cell && !strlen(cell))
+	cell = 0;
     else
 	cell = lcstring(cellname, cell, sizeof(cellname));
 
@@ -137,18 +140,21 @@ ka_GetServers(char *cell, struct afsconf_cell * cellinfo)
 	conf = afsconf_Open(AFSDIR_CLIENT_ETC_DIRPATH);
 #endif /* UKERNEL */
 	if (!conf) {
-	    UNLOCK_GLOBAL_MUTEX return KANOCELLS;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return KANOCELLS;
 	}
     }
     code = myCellLookup(conf, cell, AFSCONF_KAUTHSERVICE, cellinfo);
-    UNLOCK_GLOBAL_MUTEX return code;
+    UNLOCK_GLOBAL_MUTEX;
+    return code;
 }
 
 afs_int32
 ka_GetSecurity(int service, struct ktc_token * token,
 	       struct rx_securityClass ** scP, int *siP)
 {				/* security class index */
-    LOCK_GLOBAL_MUTEX *scP = 0;
+    LOCK_GLOBAL_MUTEX;
+    *scP = 0;
     switch (service) {
     case KA_AUTHENTICATION_SERVICE:
     case KA_TICKET_GRANTING_SERVICE:
@@ -166,13 +172,16 @@ ka_GetSecurity(int service, struct ktc_token * token,
 	*siP = RX_SCINDEX_KAD;
 	break;
     default:
-	UNLOCK_GLOBAL_MUTEX return KABADARGUMENT;
+	UNLOCK_GLOBAL_MUTEX;
+	return KABADARGUMENT;
     }
     if (*scP == 0) {
 	printf("Failed gettting security object\n");
-	UNLOCK_GLOBAL_MUTEX return KARXFAIL;
+	UNLOCK_GLOBAL_MUTEX;
+	return KARXFAIL;
     }
-    UNLOCK_GLOBAL_MUTEX return 0;
+    UNLOCK_GLOBAL_MUTEX;
+    return 0;
 }
 
 afs_int32
@@ -190,9 +199,11 @@ ka_SingleServerConn(char *cell, char *server,	/* name of server to contact */
     char sname[MAXHOSTCHARS];
     int snamel;
 
-    LOCK_GLOBAL_MUTEX code = ka_GetServers(cell, &cellinfo);
+    LOCK_GLOBAL_MUTEX;
+    code = ka_GetServers(cell, &cellinfo);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX return code;
+	UNLOCK_GLOBAL_MUTEX;
+	return code;
     }
 
     lcstring(sname, server, sizeof(sname));
@@ -201,23 +212,27 @@ ka_SingleServerConn(char *cell, char *server,	/* name of server to contact */
     for (i = 0; i < cellinfo.numServers; i++) {
 	if (strncmp(cellinfo.hostName[i], sname, snamel) == 0) {
 	    if (match >= 0) {
-		UNLOCK_GLOBAL_MUTEX return KANOCELLS;
+		UNLOCK_GLOBAL_MUTEX;
+		return KANOCELLS;
 	    } else
 		match = i;
 	}
     }
     if (match < 0) {
-	UNLOCK_GLOBAL_MUTEX return KANOCELLS;
+	UNLOCK_GLOBAL_MUTEX;
+	return KANOCELLS;
     }
 
     code = rx_Init(0);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX return code;
+	UNLOCK_GLOBAL_MUTEX;
+	return code;
     }
 
     code = ka_GetSecurity(service, token, &sc, &si);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX return code;
+	UNLOCK_GLOBAL_MUTEX;
+	return code;
     }
 #ifdef AFS_PTHREAD_ENV
     serverconns[0] =
@@ -237,8 +252,9 @@ ka_SingleServerConn(char *cell, char *server,	/* name of server to contact */
     *conn = 0;
     code = ubik_ClientInit(serverconns, conn);
     rxs_Release(sc);
-    UNLOCK_GLOBAL_MUTEX if (code)
-	  return KAUBIKINIT;
+    UNLOCK_GLOBAL_MUTEX;
+    if (code)
+	return KAUBIKINIT;
     return 0;
 }
 
@@ -253,14 +269,17 @@ ka_AuthSpecificServersConn(int service, struct ktc_token * token,
     int si;			/* security class index */
     int i;
 
-    LOCK_GLOBAL_MUTEX code = rx_Init(0);
+    LOCK_GLOBAL_MUTEX;
+    code = rx_Init(0);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX return code;
+	UNLOCK_GLOBAL_MUTEX;
+	return code;
     }
 
     code = ka_GetSecurity(service, token, &sc, &si);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX return code;
+	UNLOCK_GLOBAL_MUTEX;
+	return code;
     }
 
     for (i = 0; i < cellinfo->numServers; i++)
@@ -282,8 +301,9 @@ ka_AuthSpecificServersConn(int service, struct ktc_token * token,
     *conn = 0;
     code = ubik_ClientInit(serverconns, conn);
     rxs_Release(sc);
-    UNLOCK_GLOBAL_MUTEX if (code)
-	  return KAUBIKINIT;
+    UNLOCK_GLOBAL_MUTEX;
+    if (code)
+	return KAUBIKINIT;
     return 0;
 }
 
@@ -298,19 +318,23 @@ ka_AuthServerConn(char *cell, int service, struct ktc_token * token,
     int i;
     struct afsconf_cell cellinfo;	/* for cell auth server list */
 
-    LOCK_GLOBAL_MUTEX code = ka_GetServers(cell, &cellinfo);
+    LOCK_GLOBAL_MUTEX;
+    code = ka_GetServers(cell, &cellinfo);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX return code;
+	UNLOCK_GLOBAL_MUTEX;
+	return code;
     }
 
     code = rx_Init(0);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX return code;
+	UNLOCK_GLOBAL_MUTEX;
+	return code;
     }
 
     code = ka_GetSecurity(service, token, &sc, &si);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX return code;
+	UNLOCK_GLOBAL_MUTEX;
+	return code;
     }
 
     for (i = 0; i < cellinfo.numServers; i++)
@@ -332,8 +356,9 @@ ka_AuthServerConn(char *cell, int service, struct ktc_token * token,
     *conn = 0;
     code = ubik_ClientInit(serverconns, conn);
     rxs_Release(sc);
-    UNLOCK_GLOBAL_MUTEX if (code)
-	  return KAUBIKINIT;
+    UNLOCK_GLOBAL_MUTEX;
+    if (code)
+	return KAUBIKINIT;
     return 0;
 }
 
@@ -501,8 +526,10 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
     char *ans_label;
     int version;
 
-    LOCK_GLOBAL_MUTEX if ((code = des_key_sched(key, schedule))) {
-	UNLOCK_GLOBAL_MUTEX return KABADKEY;
+    LOCK_GLOBAL_MUTEX;
+    if ((code = des_key_sched(key, schedule))) {
+	UNLOCK_GLOBAL_MUTEX;
+	return KABADKEY;
     }
 
     if (service == KA_MAINTENANCE_SERVICE) {
@@ -512,7 +539,8 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
 	req_label = KA_GETTGT_REQ_LABEL;
 	ans_label = KA_GETTGT_ANS_LABEL;
     } else {
-	UNLOCK_GLOBAL_MUTEX return KABADARGUMENT;
+	UNLOCK_GLOBAL_MUTEX;
+	return KABADARGUMENT;
     }
 
     request_time = time(0);
@@ -552,8 +580,9 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
 	}
     }
     if (code) {
-	UNLOCK_GLOBAL_MUTEX if ((code >= KAMINERROR) && (code <= KAMAXERROR))
-	      return code;
+	UNLOCK_GLOBAL_MUTEX;
+	if ((code >= KAMINERROR) && (code <= KAMAXERROR))
+	    return code;
 	return KAUBIKCALL;
     }
     des_pcbc_encrypt(oanswer.SeqBody, oanswer.SeqBody, oanswer.SeqLen,
@@ -571,7 +600,8 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
 		CheckTicketAnswer(&oanswer, request_time + 1, token, &caller,
 				  0, ans_label, pwexpires);
 	    if (code) {
-		UNLOCK_GLOBAL_MUTEX return code;
+		UNLOCK_GLOBAL_MUTEX;
+		return code;
 	    }
 	}
 	break;
@@ -581,13 +611,15 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
 	if ((answer_old.time != request_time + 1)
 	    || (answer_old.ticket_len < MINKTCTICKETLEN)
 	    || (answer_old.ticket_len > MAXKTCTICKETLEN)) {
-	    UNLOCK_GLOBAL_MUTEX return KABADPROTOCOL;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return KABADPROTOCOL;
 	}
 	{
 	    char *label = ((char *)answer_old.ticket) + answer_old.ticket_len;
 
 	    if (strncmp(label, ans_label, sizeof(answer_old.label))) {
-		UNLOCK_GLOBAL_MUTEX return KABADPROTOCOL;
+		UNLOCK_GLOBAL_MUTEX;
+		return KABADPROTOCOL;
 	    }
 	    token->startTime = start;
 	    token->endTime = end;
@@ -599,10 +631,12 @@ ka_Authenticate(char *name, char *instance, char *cell, struct ubik_client * con
 	}
 	break;
     default:
-	UNLOCK_GLOBAL_MUTEX return KAINTERNALERROR;
+	UNLOCK_GLOBAL_MUTEX;
+	return KAINTERNALERROR;
     }
 
-    UNLOCK_GLOBAL_MUTEX return 0;
+    UNLOCK_GLOBAL_MUTEX;
+    return 0;
 }
 
 afs_int32
@@ -624,12 +658,14 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
     int version;
     afs_int32 pwexpires;
 
-    LOCK_GLOBAL_MUTEX aticket.SeqLen = auth_token->ticketLen;
+    LOCK_GLOBAL_MUTEX;
+    aticket.SeqLen = auth_token->ticketLen;
     aticket.SeqBody = auth_token->ticket;
 
     code = des_key_sched(&auth_token->sessionKey, schedule);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX return KABADKEY;
+	UNLOCK_GLOBAL_MUTEX;
+	return KABADKEY;
     }
 
     times.start = htonl(start);
@@ -662,8 +698,9 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
 	}
     }
     if (code) {
-	UNLOCK_GLOBAL_MUTEX if ((code >= KAMINERROR) && (code <= KAMAXERROR))
-	      return code;
+	UNLOCK_GLOBAL_MUTEX;
+	if ((code >= KAMINERROR) && (code <= KAMAXERROR))
+	    return code;
 	return KAUBIKCALL;
     }
 
@@ -680,7 +717,8 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
 		CheckTicketAnswer(&oanswer, 0, token, 0, &server,
 				  KA_GETTICKET_ANS_LABEL, &pwexpires);
 	    if (code) {
-		UNLOCK_GLOBAL_MUTEX return code;
+		UNLOCK_GLOBAL_MUTEX;
+		return code;
 	    }
 	}
 	break;
@@ -693,51 +731,61 @@ ka_GetToken(char *name, char *instance, char *cell, char *cname, char *cinst, st
 	       sizeof(token->sessionKey));
 
 	if (tkt_CheckTimes(token->startTime, token->endTime, time(0)) < 0) {
-	    UNLOCK_GLOBAL_MUTEX return KABADPROTOCOL;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return KABADPROTOCOL;
 	}
 	if ((token->ticketLen < MINKTCTICKETLEN)
 	    || (token->ticketLen > MAXKTCTICKETLEN)) {
-	    UNLOCK_GLOBAL_MUTEX return KABADPROTOCOL;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return KABADPROTOCOL;
 	}
 	strings = answer_old.name;
 	len = strlen(strings);	/* check client name */
 	if ((len < 1) || (len > MAXKTCNAMELEN)) {
-	    UNLOCK_GLOBAL_MUTEX return KABADPROTOCOL;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return KABADPROTOCOL;
 	}
 	strings += len + 1;	/* check client instance */
 	len = strlen(strings);
 	if ((len < 0) || (len > MAXKTCNAMELEN)) {
-	    UNLOCK_GLOBAL_MUTEX return KABADPROTOCOL;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return KABADPROTOCOL;
 	}
 	strings += len + 1;
 	len = strlen(strings);	/* check client cell */
 	if ((len < 0) || (len > MAXKTCNAMELEN)) {
-	    UNLOCK_GLOBAL_MUTEX return KABADPROTOCOL;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return KABADPROTOCOL;
 	}
 	strings += len + 1;
 	len = strlen(strings);	/* check server name */
 	if ((len < 1) || (len > MAXKTCNAMELEN) || strcmp(name, strings)) {
-	    UNLOCK_GLOBAL_MUTEX return KABADPROTOCOL;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return KABADPROTOCOL;
 	}
 	strings += len + 1;
 	len = strlen(strings);	/* check server instance */
 	if ((len < 0) || (len > MAXKTCNAMELEN) || strcmp(instance, strings)) {
-	    UNLOCK_GLOBAL_MUTEX return KABADPROTOCOL;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return KABADPROTOCOL;
 	}
 	strings += len + 1;
 
 	if ((strings - oanswer.SeqBody + token->ticketLen) - oanswer.SeqLen >=
 	    ENCRYPTIONBLOCKSIZE) {
-	    UNLOCK_GLOBAL_MUTEX return KABADPROTOCOL;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return KABADPROTOCOL;
 	}
 	memcpy(token->ticket, strings, token->ticketLen);
 
 	break;
     default:
-	UNLOCK_GLOBAL_MUTEX return KAINTERNALERROR;
+	UNLOCK_GLOBAL_MUTEX;
+	return KAINTERNALERROR;
     }
 
-    UNLOCK_GLOBAL_MUTEX return 0;
+    UNLOCK_GLOBAL_MUTEX;
+    return 0;
 }
 
 afs_int32
@@ -748,14 +796,15 @@ ka_ChangePassword(char *name, char *instance, struct ubik_client * conn,	/* Ubik
 {
     afs_int32 code;
 
-    LOCK_GLOBAL_MUTEX
-#ifdef AFS_S390_LINUX20_ENV
-	code =
+    LOCK_GLOBAL_MUTEX;
+#if defined(AFS_S390_LINUX20_ENV) && !defined(AFS_S390X_LINUX20_ENV)
+    code =
 	ubik_Call_New(KAM_SetPassword, conn, 0, name, instance, 0, 0,
 		      *newkey);
 #else
-	code =
+    code =
 	ubik_Call_New(KAM_SetPassword, conn, 0, name, instance, 0, *newkey);
 #endif
-    UNLOCK_GLOBAL_MUTEX return code;
+    UNLOCK_GLOBAL_MUTEX;
+    return code;
 }

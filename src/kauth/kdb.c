@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kdb.c,v 1.7 2003/07/15 23:15:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kdb.c,v 1.7.2.1 2004/08/25 07:18:06 shadow Exp $");
 
 #include <fcntl.h>
 #include <sys/types.h>
@@ -50,7 +50,31 @@ cmdproc(register struct cmd_syndesc *as, afs_int32 arock)
 	printf("Printing all entries found in %s\n", dbmfile);
 	for (key = dbm_firstkey(kdb); key.dptr;
 	     key = afs_dbm_nextkey(kdb, key), cnt++) {
-	    printf("\t%s\n", key.dptr);
+            if (as->parms[2].items) {
+		data = dbm_fetch(kdb, key);
+		if (!data.dptr) {
+		    fprintf(stderr, "%s: no entry exists\n", ti->data);
+		    continue;
+		}
+		if (data.dsize != sizeof(kalog_elt)) {
+		    fprintf(stderr, "%s: data came out corrupt\n", ti->data);
+		    continue;
+		}
+		memcpy(&rdata, data.dptr, sizeof(kalog_elt));
+		if (! as->parms[3].items) {
+		    char *hostName;
+		    hostName = hostutil_GetNameByINet(rdata.host);
+		    printf("%s: last operation from host %s at %s", key.dptr, 
+			   hostName, ctime(&rdata.last_use));
+		} else {
+		    char *hostIP;
+		    hostIP = afs_inet_ntoa(rdata.host);
+		    printf("%s: last operation from host %s at %s", key.dptr, 
+			   hostIP, ctime(&rdata.last_use));
+		}
+            } else {
+		printf("\t%s\n", key.dptr);
+            }
 	}
 	printf("%d entries were found\n", cnt);
     } else {
@@ -91,6 +115,8 @@ main(int argc, char **argv)
     cmd_AddParm(ts, "-dbmfile", CMD_SINGLE, CMD_OPTIONAL, dbmfile_help);
     cmd_AddParm(ts, "-key", CMD_SINGLE, CMD_OPTIONAL,
 		"extract entries that match specified key");
+    cmd_AddParm(ts, "-long", CMD_FLAG, CMD_OPTIONAL, "print long info for each entry");
+    cmd_AddParm(ts, "-numeric", CMD_FLAG, CMD_OPTIONAL, "addresses only");
     code = cmd_Dispatch(argc, argv);
     return code;
 }

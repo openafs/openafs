@@ -44,15 +44,19 @@ process.o	: process.s process.i386.s process.c
 		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c -I${TOP_INCDIR} -KPIC -G0  ${srcdir}/process.s;; \
 	sgi_61 | sgi_62 | sgi_63 ) \
 		$(CCOBJ) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} -I${TOP_INCDIR} -KPIC -G0  ${srcdir}/process.s;; \
-	s390*) \
-		/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s >process.ss; \
+	s390_*) \
+		/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s390.s >process.ss; \
+		${AS} -ahlns process.ss -o process.o >process.lst; \
+		$(RM) process.ss ;; \
+	s390x_*) \
+		/lib/cpp -P -I${TOP_INCDIR} ${srcdir}/process.s390x.s >process.ss; \
 		${AS} -ahlns process.ss -o process.o >process.lst; \
 		$(RM) process.ss ;; \
 	*_darwin* ) \
 		$(CC) ${LWP_DBG} ${LWP_OPTMZ} -c ${XCFLAGS} -I${TOP_INCDIR} ${srcdir}/process.s;; \
 	i386_*bsd*) \
 		cp ${srcdir}/process.i386.s process.S ; \
-		${CCOBJ} -E -I${srcdir} -I${TOP_INCDIR} process.S >process.ss ; \
+		${CCOBJ} -DIGNORE_STDS_H -E -I${srcdir} -I${TOP_INCDIR} process.S > process.ss ; \
 		${AS} process.ss -o process.o ;  \
 		$(RM) -f process.S ;;\
 	ncrx86_* | sunx86_*) \

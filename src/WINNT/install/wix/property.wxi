@@ -114,7 +114,7 @@
     </Property>
     
     <Property Id="ABORTREASON">$(loc.StrNsisAbortReason)</Property>
-
+    
     <Property Id="OLDCELLSERVDB">
       <DirectorySearch Id="dsOldCellServDB" Path="[WindowsFolder]" >
         <FileSearch Id="fsOldCellServDB" Name="afsdcell.ini" />

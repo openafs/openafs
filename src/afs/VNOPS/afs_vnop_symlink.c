@@ -22,7 +22,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_symlink.c,v 1.19 2003/08/26 15:09:28 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_symlink.c,v 1.19.2.1 2004/08/25 07:09:35 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -41,8 +41,7 @@ extern afs_rwlock_t afs_xcbhash;
 
 
 /* don't set CDirty in here because RPC is called synchronously */
-int
-afs_symlink
+int afs_symlink
 #ifdef	AFS_OSF_ENV
   (ndp, attrs, atargetName)
      struct nameidata *ndp;
@@ -77,7 +76,8 @@ afs_symlink
     struct AFSVolSync tsync;
     struct volume *volp = 0;
     struct afs_fakestat_state fakestate;
-    XSTATS_DECLS OSI_VC_CONVERT(adp)
+    XSTATS_DECLS;
+    OSI_VC_CONVERT(adp);
 
     AFS_STATCNT(afs_symlink);
     afs_Trace2(afs_iclSetp, CM_TRACE_SYMLINK, ICL_TYPE_POINTER, adp,
@@ -355,7 +355,7 @@ afs_readlink(OSI_VC_ARG(avc), auio, acred)
     struct vrequest treq;
     register char *tp;
     struct afs_fakestat_state fakestat;
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
 
     AFS_STATCNT(afs_readlink);
     afs_Trace1(afs_iclSetp, CM_TRACE_READLINK, ICL_TYPE_POINTER, avc);

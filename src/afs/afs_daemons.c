@@ -11,7 +11,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_daemons.c,v 1.28 2004/03/11 19:14:46 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_daemons.c,v 1.28.2.1 2004/08/25 07:16:11 shadow Exp $");
 
 #ifdef AFS_AIX51_ENV
 #define __FULL_PROTO
@@ -1338,7 +1338,7 @@ shutdown_daemons(void)
 #ifdef AFS_AIX41_ENV
 	lock_free(&afs_asyncbuf_lock);
 	unpin(&afs_asyncbuf, sizeof(struct buf *));
-	pin(&afs_asyncbuf_cv, sizeof(afs_int32));
+	unpin(&afs_asyncbuf_cv, sizeof(afs_int32));
 #else /* AFS_AIX41_ENV */
 	afs_busyq = NULL;
 	afs_biodcnt = 0;

@@ -43,12 +43,12 @@ smb_vc_t *active_vcp = NULL;
 /* TODO; logout mechanism needs to be thread-safe */
 char *loggedOutName = NULL;
 smb_user_t *loggedOutUserp = NULL;
-unsigned long loggedOutTime;
+time_t loggedOutTime;
 int loggedOut = 0;
 int smbShutdownFlag = 0;
 
 int smb_LogoffTokenTransfer;
-unsigned long smb_LogoffTransferTimeout;
+time_t smb_LogoffTransferTimeout;
 
 DWORD last_msg_time = 0;
 
@@ -432,7 +432,7 @@ static int ExtractBits(WORD bits, short start, short len)
 }
 
 #ifndef DJGPP
-void ShowUnixTime(char *FuncName, afs_uint32 unixTime)
+void ShowUnixTime(char *FuncName, time_t unixTime)
 {
 	FILETIME ft;
 	WORD wDate, wTime;
@@ -583,12 +583,12 @@ smb_CalculateNowTZ()
 }
 
 #ifndef DJGPP
-void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, afs_uint32 unixTime)
+void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime)
 {
 	struct tm *ltp;
 	SYSTEMTIME stm;
 	struct tm localJunk;
-	long ersatz_unixTime;
+	time_t ersatz_unixTime;
 
 	/*
 	 * Must use kludge-GMT instead of real GMT.
@@ -623,7 +623,7 @@ void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, afs_uint32 unixTime)
 	SystemTimeToFileTime(&stm, largeTimep);
 }
 #else /* DJGPP */
-void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, afs_uint32 unixTime)
+void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, time_t unixTime)
 {
 	/* unixTime: seconds since 1/1/1970 00:00:00 GMT */
 	/* FILETIME: 100ns intervals since 1/1/1601 00:00:00 ??? */
@@ -645,7 +645,7 @@ void smb_LargeSearchTimeFromUnixTime(FILETIME *largeTimep, afs_uint32 unixTime)
 #endif /* !DJGPP */
 
 #ifndef DJGPP
-void smb_UnixTimeFromLargeSearchTime(afs_uint32 *unixTimep, FILETIME *largeTimep)
+void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep)
 {
 	SYSTEMTIME stm;
 	struct tm lt;
@@ -668,7 +668,7 @@ void smb_UnixTimeFromLargeSearchTime(afs_uint32 *unixTimep, FILETIME *largeTimep
 	_timezone = save_timezone;
 }
 #else /* DJGPP */
-void smb_UnixTimeFromLargeSearchTime(afs_uint32 *unixTimep, FILETIME *largeTimep)
+void smb_UnixTimeFromLargeSearchTime(time_t *unixTimep, FILETIME *largeTimep)
 {
 	/* unixTime: seconds since 1/1/1970 00:00:00 GMT */
 	/* FILETIME: 100ns intervals since 1/1/1601 00:00:00 GMT? */
@@ -689,32 +689,33 @@ void smb_UnixTimeFromLargeSearchTime(afs_uint32 *unixTimep, FILETIME *largeTimep
 }
 #endif /* !DJGPP */
 
-void smb_SearchTimeFromUnixTime(long *dosTimep, afs_uint32 unixTime)
+void smb_SearchTimeFromUnixTime(long *dosTimep, time_t unixTime)
 {
-	struct tm *ltp;
-	int dosDate;
-	int dosTime;
-	struct tm localJunk;
+    struct tm *ltp;
+    int dosDate;
+    int dosTime;
+    struct tm localJunk;
+    time_t t = unixTime;
 
-	ltp = localtime((time_t*) &unixTime);
+    ltp = localtime((time_t*) &t);
 
-	/* if we fail, make up something */
-	if (!ltp) {
-		ltp = &localJunk;
-		localJunk.tm_year = 89 - 20;
-		localJunk.tm_mon = 4;
-		localJunk.tm_mday = 12;
-		localJunk.tm_hour = 0;
-		localJunk.tm_min = 0;
-		localJunk.tm_sec = 0;
-	}	
+    /* if we fail, make up something */
+    if (!ltp) {
+        ltp = &localJunk;
+        localJunk.tm_year = 89 - 20;
+        localJunk.tm_mon = 4;
+        localJunk.tm_mday = 12;
+        localJunk.tm_hour = 0;
+        localJunk.tm_min = 0;
+        localJunk.tm_sec = 0;
+    }	
 
-	dosDate = ((ltp->tm_year-80)<<9) | ((ltp->tm_mon+1) << 5) | (ltp->tm_mday);
-	dosTime = (ltp->tm_hour<<11) | (ltp->tm_min << 5) | (ltp->tm_sec / 2);
-	*dosTimep = (dosDate<<16) | dosTime;
+    dosDate = ((ltp->tm_year-80)<<9) | ((ltp->tm_mon+1) << 5) | (ltp->tm_mday);
+    dosTime = (ltp->tm_hour<<11) | (ltp->tm_min << 5) | (ltp->tm_sec / 2);
+    *dosTimep = (dosDate<<16) | dosTime;
 }	
 
-void smb_UnixTimeFromSearchTime(afs_uint32 *unixTimep, long searchTime)
+void smb_UnixTimeFromSearchTime(time_t *unixTimep, time_t searchTime)
 {
 	unsigned short dosDate;
 	unsigned short dosTime;
@@ -734,12 +735,12 @@ void smb_UnixTimeFromSearchTime(afs_uint32 *unixTimep, long searchTime)
 	*unixTimep = mktime(&localTm);
 }
 
-void smb_DosUTimeFromUnixTime(afs_uint32 *dosUTimep, afs_uint32 unixTime)
+void smb_DosUTimeFromUnixTime(time_t *dosUTimep, time_t unixTime)
 {
 	*dosUTimep = unixTime - smb_localZero;
 }
 
-void smb_UnixTimeFromDosUTime(afs_uint32 *unixTimep, afs_uint32 dosTime)
+void smb_UnixTimeFromDosUTime(time_t *unixTimep, time_t dosTime)
 {
 #ifndef DJGPP
 	*unixTimep = dosTime + smb_localZero;
@@ -2592,7 +2593,7 @@ long smb_ReceiveNegotiate(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	char protocol_array[10][1024];  /* protocol signature of the client */
     int caps;                       /* capabilities */
     time_t unixTime;
-	long dosTime;
+	time_t dosTime;
 	TIME_ZONE_INFORMATION tzi;
 
     osi_Log1(smb_logp, "SMB receive negotiate; %d + 1 ongoing ops",
@@ -3169,7 +3170,7 @@ long smb_ApplyDirListPatches(smb_dirListPatch_t **dirPatchespp,
 	long code = 0;
 	cm_scache_t *scp;
 	char *dptr;
-	long dosTime;
+	time_t dosTime;
 	u_short shortTemp;
 	char attr;
 	smb_dirListPatch_t *patchp;
@@ -3801,7 +3802,7 @@ long smb_ReceiveCoreSetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 	unsigned short attribute;
 	cm_attr_t attr;
 	cm_scache_t *newScp;
-	long dosTime;
+	time_t dosTime;
 	cm_user_t *userp;
 	int caseFold;
 	char *tidPathp;
@@ -3900,7 +3901,7 @@ long smb_ReceiveCoreGetFileAttributes(smb_vc_t *vcp, smb_packet_t *inp, smb_pack
 	long code = 0;
 	cm_scache_t *rootScp;
 	cm_scache_t *newScp, *dscp;
-	long dosTime;
+	time_t dosTime;
 	int attrs;
 	cm_user_t *userp;
 	int caseFold;
@@ -4062,7 +4063,7 @@ long smb_ReceiveCoreOpen(smb_vc_t *vcp, smb_packet_t *inp, smb_packet_t *outp)
 	long code = 0;
     cm_user_t *userp;
     cm_scache_t *scp;
-    long dosTime;
+    time_t dosTime;
     int caseFold;
 	cm_space_t *spacep;
 	char *tidPathp;

@@ -19,7 +19,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/rxkad_client.c,v 1.18 2004/04/19 05:43:58 kolya Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/rxkad_client.c,v 1.18.2.1 2004/08/25 07:09:42 shadow Exp $");
 
 #ifdef KERNEL
 #include "afs/stds.h"
@@ -101,8 +101,8 @@ static struct rx_securityOps rxkad_client_ops = {
  */
 #include <assert.h>
 pthread_mutex_t rxkad_client_uid_mutex;
-#define LOCK_CUID assert(pthread_mutex_lock(&rxkad_client_uid_mutex)==0);
-#define UNLOCK_CUID assert(pthread_mutex_unlock(&rxkad_client_uid_mutex)==0);
+#define LOCK_CUID assert(pthread_mutex_lock(&rxkad_client_uid_mutex)==0)
+#define UNLOCK_CUID assert(pthread_mutex_unlock(&rxkad_client_uid_mutex)==0)
 #else
 #define LOCK_CUID
 #define UNLOCK_CUID
@@ -119,7 +119,8 @@ rxkad_AllocCID(struct rx_securityClass *aobj, struct rx_connection *aconn)
     struct rxkad_cidgen tgen;
     static afs_int32 counter = 0;	/* not used anymore */
 
-    LOCK_CUID if (Cuid[0] == 0) {
+    LOCK_CUID;
+    if (Cuid[0] == 0) {
 	afs_uint32 xor[2];
 	tgen.ipAddr = rxi_getaddr();	/* comes back in net order */
 	clock_GetTime(&tgen.time);	/* changes time1 and time2 */
@@ -154,12 +155,14 @@ rxkad_AllocCID(struct rx_securityClass *aobj, struct rx_connection *aconn)
     }
 
     if (!aconn) {
-	UNLOCK_CUID return 0;
+	UNLOCK_CUID;
+	return 0;
     }
     aconn->epoch = Cuid[0];
     aconn->cid = Cuid[1];
     Cuid[1] += 1 << RX_CIDSHIFT;
-    UNLOCK_CUID return 0;
+    UNLOCK_CUID;
+    return 0;
 }
 
 /* Allocate a new client security object.  Called with the encryption level,
@@ -204,8 +207,10 @@ rxkad_NewClientSecurityObject(rxkad_level level,
     }
     memcpy(tcp->ticket, ticket, ticketLen);
 
-    LOCK_RXKAD_STATS rxkad_stats_clientObjects++;
-    UNLOCK_RXKAD_STATS return tsc;
+    LOCK_RXKAD_STATS;
+    rxkad_stats_clientObjects++;
+    UNLOCK_RXKAD_STATS;
+    return tsc;
 }
 
 /* client: respond to a challenge packet */
@@ -250,8 +255,10 @@ rxkad_GetResponse(struct rx_securityClass *aobj, struct rx_connection *aconn,
 
     if (level > tcp->level)
 	return RXKADLEVELFAIL;
-    LOCK_RXKAD_STATS rxkad_stats.challenges[rxkad_LevelIndex(tcp->level)]++;
-    UNLOCK_RXKAD_STATS if (v2) {
+    LOCK_RXKAD_STATS;
+    rxkad_stats.challenges[rxkad_LevelIndex(tcp->level)]++;
+    UNLOCK_RXKAD_STATS;
+    if (v2) {
 	int i;
 	afs_uint32 xor[2];
 	memset((void *)&r_v2, 0, sizeof(r_v2));
@@ -307,6 +314,8 @@ rxkad_GetResponse(struct rx_securityClass *aobj, struct rx_connection *aconn,
 void
 rxkad_ResetState(void)
 {
-    LOCK_CUID Cuid[0] = 0;
+    LOCK_CUID;
+    Cuid[0] = 0;
     rxkad_EpochWasSet = 0;
-UNLOCK_CUID}
+    UNLOCK_CUID;
+}

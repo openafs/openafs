@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.31 2004/06/23 22:25:06 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_remove.c,v 1.31.2.1 2004/08/25 07:09:35 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -110,7 +110,7 @@ afsremove(register struct vcache *adp, register struct dcache *tdc,
     register struct conn *tc;
     struct AFSFetchStatus OutDirStatus;
     struct AFSVolSync tsync;
-    XSTATS_DECLS
+    XSTATS_DECLS;
     do {
 	tc = afs_Conn(&adp->fid, treqp, SHARED_LOCK);
 	if (tc) {
@@ -228,7 +228,7 @@ afs_remove(ndp)
     struct ucred *acred = ndp->ni_cred;
 #else				/* AFS_OSF_ENV */
 afs_remove(OSI_VC_ARG(adp), aname, acred)
-OSI_VC_DECL(adp);
+     OSI_VC_DECL(adp);
      char *aname;
      struct AFS_UCRED *acred;
 {
@@ -240,9 +240,9 @@ OSI_VC_DECL(adp);
     register struct vcache *tvc;
     afs_size_t offset, len;
     struct afs_fakestat_state fakestate;
-    OSI_VC_CONVERT(adp)
+    OSI_VC_CONVERT(adp);
 
-	AFS_STATCNT(afs_remove);
+    AFS_STATCNT(afs_remove);
     afs_Trace2(afs_iclSetp, CM_TRACE_REMOVE, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_STRING, aname);
 
@@ -279,12 +279,11 @@ OSI_VC_DECL(adp);
 #endif
 	return code;
     }
-
 #if 0
     if (adp->mvstat == 2) {
 	afs_PutFakeStat(&fakestate);
 #ifdef  AFS_OSF_ENV
-        afs_PutVCache(adp);
+	afs_PutVCache(adp);
 	afs_PutVCache(tvc);
 #endif
 	return EISDIR;
@@ -402,13 +401,14 @@ OSI_VC_DECL(adp);
 	Ttvcr = VREFCOUNT(tvc);
 #ifdef	AFS_AIX_ENV
     if (tvc && (VREFCOUNT(tvc) > 2) && tvc->opens > 0
-	&& !(tvc->states & CUnlinked)) 
+	&& !(tvc->states & CUnlinked))
 #else
 #ifdef AFS_DARWIN14_ENV
-    if (tvc && (VREFCOUNT(tvc) > 1 + DARWIN_REFBASE) && tvc->opens > 0 && !(tvc->states & CUnlinked)) 
+    if (tvc && (VREFCOUNT(tvc) > 1 + DARWIN_REFBASE) && tvc->opens > 0
+	&& !(tvc->states & CUnlinked))
 #else
     if (tvc && (VREFCOUNT(tvc) > 1) && tvc->opens > 0
-	&& !(tvc->states & CUnlinked)) 
+	&& !(tvc->states & CUnlinked))
 #endif
 #endif
     {
@@ -495,10 +495,10 @@ afs_remunlink(register struct vcache *avc, register int doit)
 	    avc->states &= ~(CUnlinked | CUnlinkedDel);
 
 #ifdef AFS_DARWIN14_ENV
-           if (VREFCOUNT(avc) < 4) {
-               oldref = 4 - VREFCOUNT(avc);
-               VREFCOUNT_SET(avc, 4);
-           }
+	    if (VREFCOUNT(avc) < 4) {
+		oldref = 4 - VREFCOUNT(avc);
+		VREFCOUNT_SET(avc, 4);
+	    }
 #endif
 	    ReleaseWriteLock(&avc->lock);
 
@@ -529,7 +529,7 @@ afs_remunlink(register struct vcache *avc, register int doit)
 	    VREFCOUNT_SET(avc, 0);
 #else
 	    if (oldref) {
-	        int newref = VREFCOUNT(avc) - oldref;
+		int newref = VREFCOUNT(avc) - oldref;
 		VREFCOUNT_SET(avc, newref);
 	    }
 #endif

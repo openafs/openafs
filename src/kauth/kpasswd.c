@@ -12,7 +12,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kpasswd.c,v 1.14 2004/06/05 20:11:06 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kpasswd.c,v 1.14.2.1 2004/08/25 07:09:38 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -211,10 +211,10 @@ CommandProc(as, arock)
      char *arock;
      struct cmd_syndesc *as;
 {
-    char name[MAXKTCNAMELEN]="";
-    char instance[MAXKTCNAMELEN]="";
-    char cell[MAXKTCREALMLEN]="";
-    char realm[MAXKTCREALMLEN]="";
+    char name[MAXKTCNAMELEN] = "";
+    char instance[MAXKTCNAMELEN] = "";
+    char cell[MAXKTCREALMLEN] = "";
+    char realm[MAXKTCREALMLEN] = "";
     afs_int32 serverList[MAXSERVERS];
     char *lcell;		/* local cellname */
     int code;

@@ -20,7 +20,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/volume.c,v 1.35 2004/04/18 06:13:54 kolya Exp $");
+    ("$Header: /cvs/openafs/src/vol/volume.c,v 1.35.2.1 2004/08/25 07:14:19 shadow Exp $");
 
 #include <rx/xdr.h>
 #include <afs/afsint.h>
@@ -339,8 +339,10 @@ int
 VConnectFS(void)
 {
     int retVal;
-    VOL_LOCK retVal = VConnectFS_r();
-    VOL_UNLOCK return retVal;
+    VOL_LOCK;
+    retVal = VConnectFS_r();
+    VOL_UNLOCK;
+    return retVal;
 }
 
 int
@@ -365,8 +367,10 @@ VDisconnectFS_r(void)
 void
 VDisconnectFS(void)
 {
-    VOL_LOCK VDisconnectFS_r();
-VOL_UNLOCK}
+    VOL_LOCK;
+    VDisconnectFS_r();
+    VOL_UNLOCK;
+}
 
 void
 VShutdown_r(void)
@@ -409,8 +413,10 @@ VShutdown_r(void)
 void
 VShutdown(void)
 {
-    VOL_LOCK VShutdown_r();
-VOL_UNLOCK}
+    VOL_LOCK;
+    VShutdown_r();
+    VOL_UNLOCK;
+}
 
 
 static void
@@ -556,9 +562,12 @@ Volume *
 VAttachVolumeByName(Error * ec, char *partition, char *name, int mode)
 {
     Volume *retVal;
-    VATTACH_LOCK VOL_LOCK retVal =
-	VAttachVolumeByName_r(ec, partition, name, mode);
-    VOL_UNLOCK VATTACH_UNLOCK return retVal;
+    VATTACH_LOCK;
+    VOL_LOCK;
+    retVal = VAttachVolumeByName_r(ec, partition, name, mode);
+    VOL_UNLOCK;
+    VATTACH_UNLOCK;
+    return retVal;
 }
 
 Volume *
@@ -601,18 +610,20 @@ VAttachVolumeByName_r(Error * ec, char *partition, char *name, int mode)
     strcpy(path, VPartitionPath(partp));
     strcat(path, "/");
     strcat(path, name);
-    VOL_UNLOCK if ((fd = afs_open(path, O_RDONLY)) == -1
-		   || afs_fstat(fd, &status) == -1) {
+    VOL_UNLOCK;
+    if ((fd = afs_open(path, O_RDONLY)) == -1 || afs_fstat(fd, &status) == -1) {
 	Log("VAttachVolume: Failed to open %s (errno %d)\n", path, errno);
 	if (fd > -1)
 	    close(fd);
-	VOL_LOCK *ec = VNOVOL;
+	VOL_LOCK;
+	*ec = VNOVOL;
 	goto done;
     }
     n = read(fd, &diskHeader, sizeof(diskHeader));
     close(fd);
-    VOL_LOCK if (n != sizeof(diskHeader)
-		 || diskHeader.stamp.magic != VOLUMEHEADERMAGIC) {
+    VOL_LOCK;
+    if (n != sizeof(diskHeader)
+	|| diskHeader.stamp.magic != VOLUMEHEADERMAGIC) {
 	Log("VAttachVolume: Error reading volume header %s\n", path);
 	*ec = VSALVAGE;
 	goto done;
@@ -711,7 +722,8 @@ attach2(Error * ec, char *path, register struct VolumeHeader * header,
 {
     register Volume *vp;
 
-    VOL_UNLOCK vp = (Volume *) calloc(1, sizeof(Volume));
+    VOL_UNLOCK;
+    vp = (Volume *) calloc(1, sizeof(Volume));
     assert(vp != NULL);
     vp->specialStatus = (byte) (isbusy ? VBUSY : 0);
     vp->device = partp->device;
@@ -730,11 +742,13 @@ attach2(Error * ec, char *path, register struct VolumeHeader * header,
     vp->shuttingDown = 0;
     vp->goingOffline = 0;
     vp->nUsers = 1;
-    VOL_LOCK GetVolumeHeader(vp);
-    VOL_UNLOCK(void) ReadHeader(ec, V_diskDataHandle(vp), (char *)&V_disk(vp),
-				sizeof(V_disk(vp)), VOLUMEINFOMAGIC,
-				VOLUMEINFOVERSION);
-    VOL_LOCK if (*ec) {
+    VOL_LOCK;
+    GetVolumeHeader(vp);
+    VOL_UNLOCK;
+    (void)ReadHeader(ec, V_diskDataHandle(vp), (char *)&V_disk(vp),
+		     sizeof(V_disk(vp)), VOLUMEINFOMAGIC, VOLUMEINFOVERSION);
+    VOL_LOCK;
+    if (*ec) {
 	Log("VAttachVolume: Error reading diskDataHandle vol header %s; error=%u\n", path, *ec);
     }
     if (!*ec) {
@@ -751,29 +765,34 @@ attach2(Error * ec, char *path, register struct VolumeHeader * header,
 	    V_stat_initialized(vp) = 1;
 	}
 #endif /* OPENAFS_VOL_STATS */
-	VOL_UNLOCK(void) ReadHeader(ec, vp->vnodeIndex[vSmall].handle,
-				    (char *)&iHead, sizeof(iHead),
-				    SMALLINDEXMAGIC, SMALLINDEXVERSION);
-	VOL_LOCK if (*ec) {
+	VOL_UNLOCK;
+	(void)ReadHeader(ec, vp->vnodeIndex[vSmall].handle,
+			 (char *)&iHead, sizeof(iHead),
+			 SMALLINDEXMAGIC, SMALLINDEXVERSION);
+	VOL_LOCK;
+	if (*ec) {
 	    Log("VAttachVolume: Error reading smallVnode vol header %s; error=%u\n", path, *ec);
 	}
     }
     if (!*ec) {
 	struct IndexFileHeader iHead;
-	VOL_UNLOCK(void) ReadHeader(ec, vp->vnodeIndex[vLarge].handle,
-				    (char *)&iHead, sizeof(iHead),
-				    LARGEINDEXMAGIC, LARGEINDEXVERSION);
-	VOL_LOCK if (*ec) {
+	VOL_UNLOCK;
+	(void)ReadHeader(ec, vp->vnodeIndex[vLarge].handle,
+			 (char *)&iHead, sizeof(iHead),
+			 LARGEINDEXMAGIC, LARGEINDEXVERSION);
+	VOL_LOCK;
+	if (*ec) {
 	    Log("VAttachVolume: Error reading largeVnode vol header %s; error=%u\n", path, *ec);
 	}
     }
 #ifdef AFS_NAMEI_ENV
     if (!*ec) {
 	struct versionStamp stamp;
-	VOL_UNLOCK(void) ReadHeader(ec, V_linkHandle(vp), (char *)&stamp,
-				    sizeof(stamp), LINKTABLEMAGIC,
-				    LINKTABLEVERSION);
-	VOL_LOCK if (*ec) {
+	VOL_UNLOCK;
+	(void)ReadHeader(ec, V_linkHandle(vp), (char *)&stamp,
+			 sizeof(stamp), LINKTABLEMAGIC, LINKTABLEVERSION);
+	VOL_LOCK;
+	if (*ec) {
 	    Log("VAttachVolume: Error reading namei vol header %s; error=%u\n", path, *ec);
 	}
     }
@@ -819,8 +838,10 @@ attach2(Error * ec, char *path, register struct VolumeHeader * header,
     if (programType == fileServer && VolumeWriteable(vp)) {
 	int i;
 	for (i = 0; i < nVNODECLASSES; i++) {
-	    VOL_UNLOCK GetBitmap(ec, vp, i);
-	    VOL_LOCK if (*ec) {
+	    VOL_UNLOCK;
+	    GetBitmap(ec, vp, i);
+	    VOL_LOCK;
+	    if (*ec) {
 		FreeVolume(vp);
 		Log("VAttachVolume: error getting bitmap for volume (%s)\n",
 		    path);
@@ -851,8 +872,12 @@ Volume *
 VAttachVolume(Error * ec, VolumeId volumeId, int mode)
 {
     Volume *retVal;
-    VATTACH_LOCK VOL_LOCK retVal = VAttachVolume_r(ec, volumeId, mode);
-    VOL_UNLOCK VATTACH_UNLOCK return retVal;
+    VATTACH_LOCK;
+    VOL_LOCK;
+    retVal = VAttachVolume_r(ec, volumeId, mode);
+    VOL_UNLOCK;
+    VATTACH_UNLOCK;
+    return retVal;
 }
 
 Volume *
@@ -901,8 +926,10 @@ static int
 VHold(register Volume * vp)
 {
     int retVal;
-    VOL_LOCK retVal = VHold_r(vp);
-    VOL_UNLOCK return retVal;
+    VOL_LOCK;
+    retVal = VHold_r(vp);
+    VOL_UNLOCK;
+    return retVal;
 }
 
 void
@@ -917,8 +944,10 @@ VTakeOffline_r(register Volume * vp)
 void
 VTakeOffline(register Volume * vp)
 {
-    VOL_LOCK VTakeOffline_r(vp);
-VOL_UNLOCK}
+    VOL_LOCK;
+    VTakeOffline_r(vp);
+    VOL_UNLOCK;
+}
 
 void
 VPutVolume_r(register Volume * vp)
@@ -962,8 +991,10 @@ VPutVolume_r(register Volume * vp)
 void
 VPutVolume(register Volume * vp)
 {
-    VOL_LOCK VPutVolume_r(vp);
-VOL_UNLOCK}
+    VOL_LOCK;
+    VPutVolume_r(vp);
+    VOL_UNLOCK;
+}
 
 /* Get a pointer to an attached volume.  The pointer is returned regardless
    of whether or not the volume is in service or on/off line.  An error
@@ -972,8 +1003,10 @@ Volume *
 VGetVolume(Error * ec, VolId volumeId)
 {
     Volume *retVal;
-    VOL_LOCK retVal = VGetVolume_r(ec, volumeId);
-    VOL_UNLOCK return retVal;
+    VOL_LOCK;
+    retVal = VGetVolume_r(ec, volumeId);
+    VOL_UNLOCK;
+    return retVal;
 }
 
 Volume *
@@ -1126,8 +1159,10 @@ VForceOffline_r(Volume * vp)
 void
 VForceOffline(Volume * vp)
 {
-    VOL_LOCK VForceOffline_r(vp);
-VOL_UNLOCK}
+    VOL_LOCK;
+    VForceOffline_r(vp);
+    VOL_UNLOCK;
+}
 
 /* The opposite of VAttachVolume.  The volume header is written to disk, with
    the inUse bit turned off.  A copy of the header is maintained in memory,
@@ -1156,8 +1191,10 @@ VOffline_r(Volume * vp, char *message)
 void
 VOffline(Volume * vp, char *message)
 {
-    VOL_LOCK VOffline_r(vp, message);
-VOL_UNLOCK}
+    VOL_LOCK;
+    VOffline_r(vp, message);
+    VOL_UNLOCK;
+}
 
 /* For VDetachVolume, we close all cached file descriptors, but keep
  * the Inode handles in case we need to read from a busy volume.
@@ -1237,8 +1274,10 @@ VDetachVolume_r(Error * ec, Volume * vp)
 void
 VDetachVolume(Error * ec, Volume * vp)
 {
-    VOL_LOCK VDetachVolume_r(ec, vp);
-VOL_UNLOCK}
+    VOL_LOCK;
+    VDetachVolume_r(ec, vp);
+    VOL_UNLOCK;
+}
 
 
 VnodeId
@@ -1262,19 +1301,23 @@ VAllocBitmapEntry_r(Error * ec, Volume * vp, register struct vnodeIndex
 					 * from AddNewReadableResidency */
 		wasVBUSY = 1;
 	    } else {
-		VOL_UNLOCK while (vp->specialStatus == VBUSY)
+		VOL_UNLOCK;
+		while (vp->specialStatus == VBUSY)
 #ifdef AFS_PTHREAD_ENV
 		    sleep(2);
 #else /* AFS_PTHREAD_ENV */
 		    IOMGR_Sleep(2);
 #endif /* AFS_PTHREAD_ENV */
-	    VOL_LOCK}
+		VOL_LOCK;
+	    }
 	}
 	if (!index->bitmap) {
 	    vp->specialStatus = VBUSY;	/* Stop anyone else from using it. */
 	    for (i = 0; i < nVNODECLASSES; i++) {
-		VOL_UNLOCK GetBitmap(ec, vp, i);
-		VOL_LOCK if (*ec) {
+		VOL_UNLOCK;
+		GetBitmap(ec, vp, i);
+		VOL_LOCK;
+		if (*ec) {
 		    vp->specialStatus = 0;
 		    vp->shuttingDown = 1;	/* Let who has it free it. */
 		    return NULL;
@@ -1316,8 +1359,10 @@ VnodeId
 VAllocBitmapEntry(Error * ec, Volume * vp, register struct vnodeIndex * index)
 {
     VnodeId retVal;
-    VOL_LOCK retVal = VAllocBitmapEntry_r(ec, vp, index);
-    VOL_UNLOCK return retVal;
+    VOL_LOCK;
+    retVal = VAllocBitmapEntry_r(ec, vp, index);
+    VOL_UNLOCK;
+    return retVal;
 }
 
 void
@@ -1344,8 +1389,10 @@ void
 VFreeBitMapEntry(Error * ec, register struct vnodeIndex *index,
 		 unsigned bitNumber)
 {
-    VOL_LOCK VFreeBitMapEntry_r(ec, index, bitNumber);
-VOL_UNLOCK}
+    VOL_LOCK;
+    VFreeBitMapEntry_r(ec, index, bitNumber);
+    VOL_UNLOCK;
+}
 
 void
 VUpdateVolume_r(Error * ec, Volume * vp)
@@ -1367,8 +1414,10 @@ VUpdateVolume_r(Error * ec, Volume * vp)
 void
 VUpdateVolume(Error * ec, Volume * vp)
 {
-    VOL_LOCK VUpdateVolume_r(ec, vp);
-VOL_UNLOCK}
+    VOL_LOCK;
+    VUpdateVolume_r(ec, vp);
+    VOL_UNLOCK;
+}
 
 void
 VSyncVolume_r(Error * ec, Volume * vp)
@@ -1388,8 +1437,10 @@ VSyncVolume_r(Error * ec, Volume * vp)
 void
 VSyncVolume(Error * ec, Volume * vp)
 {
-    VOL_LOCK VSyncVolume_r(ec, vp);
-VOL_UNLOCK}
+    VOL_LOCK;
+    VSyncVolume_r(ec, vp);
+    VOL_UNLOCK;
+}
 
 static void
 FreeVolume(Volume * vp)
@@ -1609,8 +1660,10 @@ int
 VAdjustVolumeStatistics(register Volume * vp)
 {
     int retVal;
-    VOL_LOCK retVal = VAdjustVolumeStatistics_r(vp);
-    VOL_UNLOCK return retVal;
+    VOL_LOCK;
+    retVal = VAdjustVolumeStatistics_r(vp);
+    VOL_UNLOCK;
+    return retVal;
 }
 
 void
@@ -1631,8 +1684,10 @@ VBumpVolumeUsage_r(register Volume * vp)
 void
 VBumpVolumeUsage(register Volume * vp)
 {
-    VOL_LOCK VBumpVolumeUsage_r(vp);
-VOL_UNLOCK}
+    VOL_LOCK;
+    VBumpVolumeUsage_r(vp);
+    VOL_UNLOCK;
+}
 
 void
 VSetDiskUsage_r(void)
@@ -1660,8 +1715,10 @@ VSetDiskUsage_r(void)
 void
 VSetDiskUsage(void)
 {
-    VOL_LOCK VSetDiskUsage_r();
-VOL_UNLOCK}
+    VOL_LOCK;
+    VSetDiskUsage_r();
+    VOL_UNLOCK;
+}
 
 /* The number of minutes that a volume hasn't been updated before the
  * "Dont salvage" flag in the volume header will be turned on */
@@ -1883,5 +1940,7 @@ VPrintCacheStats_r(void)
 void
 VPrintCacheStats(void)
 {
-    VOL_LOCK VPrintCacheStats_r();
-VOL_UNLOCK}
+    VOL_LOCK;
+    VPrintCacheStats_r();
+    VOL_UNLOCK;
+}

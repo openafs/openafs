@@ -15,7 +15,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/kauth/kalocalcell.c,v 1.8 2003/07/15 23:15:16 shadow Exp $");
+    ("$Header: /cvs/openafs/src/kauth/kalocalcell.c,v 1.8.2.1 2004/08/25 07:09:38 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/pthread_glock.h"
@@ -68,14 +68,17 @@ ka_CellConfig(const char *dir)
     strcpy(cell_name, afs_LclCellName);
     return 0;
 #else /* UKERNEL */
-    LOCK_GLOBAL_MUTEX if (conf)
-	  afsconf_Close(conf);
+    LOCK_GLOBAL_MUTEX;
+    if (conf)
+	afsconf_Close(conf);
     conf = afsconf_Open(dir);
     if (!conf) {
-	UNLOCK_GLOBAL_MUTEX return KANOCELLS;
+	UNLOCK_GLOBAL_MUTEX;
+	return KANOCELLS;
     }
     code = afsconf_GetLocalCell(conf, cell_name, sizeof(cell_name));
-    UNLOCK_GLOBAL_MUTEX return code;
+    UNLOCK_GLOBAL_MUTEX;
+    return code;
 #endif /* UKERNEL */
 }
 
@@ -84,8 +87,10 @@ ka_LocalCell(void)
 {
     int code;
 
-    LOCK_GLOBAL_MUTEX if (conf) {
-	UNLOCK_GLOBAL_MUTEX return cell_name;
+    LOCK_GLOBAL_MUTEX;
+    if (conf) {
+	UNLOCK_GLOBAL_MUTEX;
+	return cell_name;
     }
 #ifdef UKERNEL
     conf = afs_cdir;
@@ -99,10 +104,12 @@ ka_LocalCell(void)
     if (!conf || code) {
 	printf("** Can't determine local cell name!\n");
 	conf = 0;
-	UNLOCK_GLOBAL_MUTEX return 0;
+	UNLOCK_GLOBAL_MUTEX;
+	return 0;
     }
 #endif /* UKERNEL */
-    UNLOCK_GLOBAL_MUTEX return cell_name;
+    UNLOCK_GLOBAL_MUTEX;
+    return cell_name;
 }
 
 int
@@ -113,9 +120,11 @@ ka_ExpandCell(char *cell, char *fullCell, int *alocal)
     char cellname[MAXKTCREALMLEN];
     struct afsconf_cell cellinfo;	/* storage for cell info */
 
-    LOCK_GLOBAL_MUTEX ka_LocalCell();	/* initialize things */
+    LOCK_GLOBAL_MUTEX;
+    ka_LocalCell();		/* initialize things */
     if (!conf) {
-	UNLOCK_GLOBAL_MUTEX return KANOCELLS;
+	UNLOCK_GLOBAL_MUTEX;
+	return KANOCELLS;
     }
 
     if ((cell == 0) || (strlen(cell) == 0)) {
@@ -125,7 +134,8 @@ ka_ExpandCell(char *cell, char *fullCell, int *alocal)
 	cell = lcstring(cellname, cell, sizeof(cellname));
 	code = afsconf_GetCellInfo(conf, cell, 0, &cellinfo);
 	if (code) {
-	    UNLOCK_GLOBAL_MUTEX return KANOCELL;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return KANOCELL;
 	}
 	cell = cellinfo.name;
     }
@@ -136,7 +146,8 @@ ka_ExpandCell(char *cell, char *fullCell, int *alocal)
 	strcpy(fullCell, cell);
     if (alocal)
 	*alocal = local;
-    UNLOCK_GLOBAL_MUTEX return 0;
+    UNLOCK_GLOBAL_MUTEX;
+    return 0;
 }
 
 int
@@ -144,7 +155,9 @@ ka_CellToRealm(char *cell, char *realm, int *local)
 {
     int code;
 
-    LOCK_GLOBAL_MUTEX code = ka_ExpandCell(cell, realm, local);
+    LOCK_GLOBAL_MUTEX;
+    code = ka_ExpandCell(cell, realm, local);
     ucstring(realm, realm, MAXKTCREALMLEN);
-    UNLOCK_GLOBAL_MUTEX return code;
+    UNLOCK_GLOBAL_MUTEX;
+    return code;
 }

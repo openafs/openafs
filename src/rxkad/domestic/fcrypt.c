@@ -20,7 +20,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/domestic/fcrypt.c,v 1.11 2003/07/15 23:16:44 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/domestic/fcrypt.c,v 1.11.2.1 2004/08/25 07:17:01 shadow Exp $");
 
 #define DEBUG 0
 #ifdef KERNEL
@@ -102,8 +102,10 @@ fc_keysched(struct ktc_encryptionKey *key, fc_KeySchedule schedule)
 	kword[1] = (kword[1] >> 11) | (temp << (56 - 32 - 11));
 	schedule[i] = kword[0];
     }
-    LOCK_RXKAD_STATS rxkad_stats.fc_key_scheds++;
-    UNLOCK_RXKAD_STATS return 0;
+    LOCK_RXKAD_STATS;
+    rxkad_stats.fc_key_scheds++;
+    UNLOCK_RXKAD_STATS;
+    return 0;
 }
 
 /* IN int encrypt; * 0 ==> decrypt, else encrypt */
@@ -138,8 +140,10 @@ fc_ecb_encrypt(afs_uint32 * clear, afs_uint32 * cipher,
 #endif
 
     if (encrypt) {
-	LOCK_RXKAD_STATS rxkad_stats.fc_encrypts[ENCRYPT]++;
-	UNLOCK_RXKAD_STATS for (i = 0; i < (ROUNDS / 2); i++) {
+	LOCK_RXKAD_STATS;
+	rxkad_stats.fc_encrypts[ENCRYPT]++;
+	UNLOCK_RXKAD_STATS;
+	for (i = 0; i < (ROUNDS / 2); i++) {
 	    S = *schedule++ ^ R;	/* xor R with key bits from schedule */
 	    Pchar[Byte2] = sbox0[Schar[Byte0]];	/* do 8-bit S Box subst. */
 	    Pchar[Byte3] = sbox1[Schar[Byte1]];	/* and permute the result */
@@ -156,8 +160,10 @@ fc_ecb_encrypt(afs_uint32 * clear, afs_uint32 * cipher,
 	    R ^= P;
 	}
     } else {
-	LOCK_RXKAD_STATS rxkad_stats.fc_encrypts[DECRYPT]++;
-	UNLOCK_RXKAD_STATS schedule = &schedule[ROUNDS - 1];	/* start at end of key schedule */
+	LOCK_RXKAD_STATS;
+	rxkad_stats.fc_encrypts[DECRYPT]++;
+	UNLOCK_RXKAD_STATS;
+	schedule = &schedule[ROUNDS - 1];	/* start at end of key schedule */
 	for (i = 0; i < (ROUNDS / 2); i++) {
 	    S = *schedule-- ^ L;	/* xor R with key bits from schedule */
 	    Pchar[Byte2] = sbox0[Schar[Byte0]];	/* do 8-bit S Box subst. and */

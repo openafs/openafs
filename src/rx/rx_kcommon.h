@@ -88,7 +88,9 @@ typedef unsigned short etap_event_t;
 #else
 #include "net/route.h"
 #endif
+#if defined(HAVE_IN_SYSTM_H) || !defined(AFS_LINUX22_ENV)
 #include "netinet/in_systm.h"
+#endif
 #include "netinet/ip.h"
 #if !defined(AFS_HPUX110_ENV) && !defined(AFS_LINUX22_ENV) && !defined(AFS_DARWIN60_ENV) && !defined(AFS_OBSD_ENV)
 #include "netinet/in_pcb.h"

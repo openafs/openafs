@@ -62,6 +62,7 @@
 
 #include <osilog.h>
 #include <rxkad_prototypes.h>   /* for life_to_time */
+#include <afs/ptserver.h>
 
 /*
  * TIMING _____________________________________________________________________
@@ -2378,6 +2379,114 @@ KFW_AFS_unlog(void)
     return(0);
 }
 
+
+#define ALLOW_REGISTER 1
+static int
+ViceIDToUsername(char *username, 
+                 char *realm_of_user, 
+                 char *realm_of_cell,
+                 char * cell_to_use,
+                 struct ktc_principal *aclient, 
+                 struct ktc_principal *aserver, 
+                 struct ktc_token *atoken)
+{
+    static char lastcell[MAXCELLCHARS+1] = { 0 };
+    static char confname[512] = { 0 };
+    char username_copy[BUFSIZ];
+    long viceId;			/* AFS uid of user */
+    int  status = 0;
+#ifdef ALLOW_REGISTER
+    afs_int32 id;
+#endif /* ALLOW_REGISTER */
+
+    if (confname[0] == '\0') {
+        strncpy(confname, AFSDIR_CLIENT_ETC_DIRPATH, sizeof(confname));
+        confname[sizeof(confname) - 2] = '\0';
+    }
+
+    /*
+     * Talk about DUMB!  It turns out that there is a bug in
+     * pr_Initialize -- even if you give a different cell name
+     * to it, it still uses a connection to a previous AFS server
+     * if one exists.  The way to fix this is to change the
+     * _filename_ argument to pr_Initialize - that forces it to
+     * re-initialize the connection.  We do this by adding and
+     * removing a "/" on the end of the configuration directory name.
+     */
+
+    if (lastcell[0] != '\0' && (strcmp(lastcell, aserver->cell) != 0)) {
+        int i = strlen(confname);
+        if (confname[i - 1] == '/') {
+            confname[i - 1] = '\0';
+        } else {
+            confname[i] = '/';
+            confname[i + 1] = '\0';
+        }
+    }
+
+    strcpy(lastcell, aserver->cell);
+
+    if (!pr_Initialize (0, confname, aserver->cell))
+        status = pr_SNameToId (username, &viceId);
+
+    /*
+     * This is a crock, but it is Transarc's crock, so
+     * we have to play along in order to get the
+     * functionality.  The way the afs id is stored is
+     * as a string in the username field of the token.
+     * Contrary to what you may think by looking at
+     * the code for tokens, this hack (AFS ID %d) will
+     * not work if you change %d to something else.
+     */
+
+    /*
+     * This code is taken from cklog -- it lets people
+     * automatically register with the ptserver in foreign cells
+     */
+
+#ifdef ALLOW_REGISTER
+    if (status == 0) {
+        if (viceId != ANONYMOUSID) {
+#else /* ALLOW_REGISTER */
+            if ((status == 0) && (viceId != ANONYMOUSID))
+#endif /* ALLOW_REGISTER */
+            {
+#ifdef AFS_ID_TO_NAME
+                strncpy(username_copy, username, BUFSIZ);
+                snprintf (username, BUFSIZ, "%s (AFS ID %d)", username_copy, (int) viceId);
+#endif /* AFS_ID_TO_NAME */
+            }
+#ifdef ALLOW_REGISTER
+        } else if (strcmp(realm_of_user, realm_of_cell) != 0) {
+            id = 0;
+            strncpy(aclient->name, username, MAXKTCNAMELEN - 1);
+            strcpy(aclient->instance, "");
+            strncpy(aclient->cell, realm_of_user, MAXKTCREALMLEN - 1);
+            if (status = ktc_SetToken(aserver, atoken, aclient, 0))
+                return status;
+
+            /*                                    
+             * In case you're wondering, we don't need to change the
+             * filename here because we're still connecting to the
+             * same cell -- we're just using a different authentication
+             * level
+             */
+
+            if (status = pr_Initialize(1L, confname, aserver->cell, 0))
+                return status;
+            if (status = pr_CreateUser(username, &id))
+                return status;
+#ifdef AFS_ID_TO_NAME
+            strncpy(username_copy, username, BUFSIZ);
+            snprintf (username, BUFSIZ, "%s (AFS ID %d)", username_copy, (int) viceId);
+#endif /* AFS_ID_TO_NAME */
+        }
+    }
+#endif /* ALLOW_REGISTER */
+    return status;
+}
+
+
 int
 KFW_AFS_klog(
     krb5_context alt_ctx,
@@ -2717,6 +2826,9 @@ KFW_AFS_klog(
             p[len] = '\0';
         }
 
+        ViceIDToUsername(aclient.name, realm_of_user, realm_of_cell, CellName, 
+                         &aclient, &aserver, &atoken);
+
         if ( smbname ) {
             strncpy(aclient.smbname, smbname, sizeof(aclient.smbname));
             aclient.smbname[sizeof(aclient.smbname)-1] = '\0';
@@ -2834,6 +2946,9 @@ KFW_AFS_klog(
     aclient.name[MAXKTCREALMLEN-1] = '\0';
 
     strcpy(aclient.cell, CellName);
+
+    ViceIDToUsername(aclient.name, realm_of_user, realm_of_cell, CellName, 
+                      &aclient, &aserver, &atoken);
 
     if ( smbname ) {
         strncpy(aclient.smbname, smbname, sizeof(aclient.smbname));

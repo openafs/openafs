@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/comerr/error_msg.c,v 1.5 2003/07/15 23:14:53 shadow Exp $");
+    ("$Header: /cvs/openafs/src/comerr/error_msg.c,v 1.5.2.1 2004/08/25 07:09:36 shadow Exp $");
 
 #include "internal.h"
 #include <stdio.h>
@@ -54,9 +54,11 @@ et_mutex_once(void)
 }
 
 #define LOCK_ET_LIST \
-	(et_list_done || pthread_once(&et_list_once, et_mutex_once)); \
-	assert(pthread_mutex_lock(&et_list_mutex)==0);
-#define UNLOCK_ET_LIST assert(pthread_mutex_unlock(&et_list_mutex)==0);
+	do { \
+	    (et_list_done || pthread_once(&et_list_once, et_mutex_once)); \
+	    assert(pthread_mutex_lock(&et_list_mutex)==0); \
+	} while (0)
+#define UNLOCK_ET_LIST assert(pthread_mutex_unlock(&et_list_mutex)==0)
 #else
 #define LOCK_ET_LIST
 #define UNLOCK_ET_LIST
@@ -131,16 +133,19 @@ error_message(afs_int32 code)
 	else
 	    goto oops;
     }
-    LOCK_ET_LIST for (et = _et_list; et; et = et->next) {
+    LOCK_ET_LIST;
+    for (et = _et_list; et; et = et->next) {
 	if (et->table->base == table_num) {
 	    /* This is the right table */
 	    if (et->table->n_msgs <= offset)
 		goto oops;
-	    UNLOCK_ET_LIST return (et->table->msgs[offset]);
+	    UNLOCK_ET_LIST;
+	    return (et->table->msgs[offset]);
 	}
     }
   oops:
-    UNLOCK_ET_LIST strcpy(buffer, "Unknown code ");
+    UNLOCK_ET_LIST;
+    strcpy(buffer, "Unknown code ");
     if (table_num) {
 	strcat(buffer, error_table_name(table_num));
 	strcat(buffer, " ");
@@ -168,16 +173,18 @@ add_to_error_table(struct et_list *new_table)
 {
     struct et_list *et;
 
-    LOCK_ET_LIST
-	/*
-	 * Protect against adding the same error table twice
-	 */
-	for (et = _et_list; et; et = et->next) {
+    LOCK_ET_LIST;
+    /*
+     * Protect against adding the same error table twice
+     */
+    for (et = _et_list; et; et = et->next) {
 	if (et->table->base == new_table->table->base) {
-	    UNLOCK_ET_LIST return;
+	    UNLOCK_ET_LIST;
+	    return;
 	}
     }
 
     new_table->next = _et_list;
     _et_list = new_table;
-UNLOCK_ET_LIST}
+    UNLOCK_ET_LIST;
+}

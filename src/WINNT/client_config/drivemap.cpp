@@ -447,7 +447,7 @@ void QueryDriveMapList_ReadMappings (PDRIVEMAPLIST pList)
 {
     HKEY hkMappings;
     RegCreateKeyEx( HKEY_CURRENT_USER,
-                    "SOFTWARE\\OpenAFS\\Client\\Mappings",
+                    cszSECTION_MAPPINGS,
                     0, 
                     "AFS", 
                     REG_OPTION_NON_VOLATILE,
@@ -480,13 +480,20 @@ void QueryDriveMapList_ReadMappings (PDRIVEMAPLIST pList)
 
         RegEnumValue( hkMappings, dwIndex, drive, &driveLen, NULL,
                       &dwType, (LPBYTE)mapping, &mappingLen);
+        if ( dwType == REG_EXPAND_SZ ) {
+            TCHAR buf[MAX_PATH];
+            DWORD dummyLen = ExpandEnvironmentStrings(buf, mapping, MAX_PATH);
+            if (dummyLen > MAX_PATH)
+                continue;
+            _tcsncpy(mapping, buf, MAX_PATH);
+        }
 
-       DRIVEMAP DriveMap;
-       memset (&DriveMap, 0x00, sizeof(DRIVEMAP));
-       DriveMap.chDrive = toupper(*drive);
-       DriveMap.fPersistent = TRUE;
-       if ((DriveMap.chDrive < chDRIVE_A) || (DriveMap.chDrive > chDRIVE_Z))
-           continue;
+        DRIVEMAP DriveMap;
+        memset (&DriveMap, 0x00, sizeof(DRIVEMAP));
+        DriveMap.chDrive = toupper(*drive);
+        DriveMap.fPersistent = TRUE;
+        if ((DriveMap.chDrive < chDRIVE_A) || (DriveMap.chDrive > chDRIVE_Z))
+            continue;
 
        if (mapping[0] != TEXT('\0'))
        {
@@ -541,7 +548,7 @@ void WriteDriveMappings (PDRIVEMAPLIST pList)
 {
     HKEY hkMappings;
     RegCreateKeyEx( HKEY_CURRENT_USER, 
-                    "SOFTWARE\\OpenAFS\\Client\\Mappings",
+                    cszSECTION_MAPPINGS,
                     0, 
                     "AFS", 
                     REG_OPTION_NON_VOLATILE,
@@ -587,7 +594,7 @@ void WriteDriveMappings (PDRIVEMAPLIST pList)
            if (!pList->aDriveMap[iDrive].fPersistent)
                lstrcat (szRHS, TEXT("*"));
 
-           RegSetValueEx( hkMappings, szLHS, 0, REG_SZ, (const BYTE *)szRHS, lstrlen(szRHS) + 1);
+           RegSetValueEx( hkMappings, szLHS, 0, REG_EXPAND_SZ, (const BYTE *)szRHS, lstrlen(szRHS) + 1);
        }
    }
    RegCloseKey( hkMappings );

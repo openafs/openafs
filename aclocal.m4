@@ -236,6 +236,15 @@ case $system in
                          fi
                    fi
                  fi
+		 if test -f "$LINUX_KERNEL_PATH/include/linux/in_systm.h"; then
+		  AC_DEFINE(HAVE_IN_SYSTM_H, 1, [define if you have in_systm.h header file])
+	         fi
+		 if test -f "$LINUX_KERNEL_PATH/include/linux/mm_inline.h"; then
+		  AC_DEFINE(HAVE_MM_INLINE_H, 1, [define if you have mm_inline.h header file])
+	         fi
+		 if test -f "$LINUX_KERNEL_PATH/include/linux/in_systm.h"; then
+		  AC_DEFINE(HAVE_IN_SYSTM_H, 1, [define if you have in_systm.h header file])
+	         fi
 		 if test "x$ac_cv_linux_exports_sys_chdir" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_SYS_CHDIR, 1, [define if your linux kernel exports sys_chdir])
 		 fi
@@ -602,6 +611,9 @@ else
 			;;
 		s390-*-linux*)
 			AFS_SYSNAME="s390_linuxXX"
+			;;
+		s390x-*-linux*)
+			AFS_SYSNAME="s390x_linuxXX"
 			;;
 		sparc-*-linux*)
 			AFS_SYSNAME="sparc_linuxXX"
@@ -2291,6 +2303,7 @@ case $AFS_SYSNAME in
 		AIX64="#"
 		;;
 
+
 	rs_aix51)
 		DBG=""
 		LEX="lex"
@@ -2306,10 +2319,24 @@ case $AFS_SYSNAME in
 		AIX64=""
 		;;
 
+	rs_aix52)	
+		DBG=""
+		LEX="lex"
+		LIBSYS_AIX_EXP="afsl.exp"
+		MT_CC="xlc_r"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV ${XCFLAGS}'
+		MT_LIBS="-lpthreads"
+		SHLIB_SUFFIX="o"
+		TXLIBS="-lcurses"
+		XCFLAGS="-K -D_NO_PROTO -D_NONSTD_TYPES -D_MBI=void"
+		XLIBS="${LIB_AFSDB} -ldl"
+		SHLIB_LINKER="${MT_CC} -bM:SRE -berok"
+		AIX64=""
+		;;
 	s390_linux22)
 		CC="gcc"
 		CCOBJ="gcc"
-		LD="gcc"
+		LD="ld"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CC="$CC"
@@ -2326,7 +2353,7 @@ case $AFS_SYSNAME in
 	s390_linux24)
 		CC="gcc"
 		CCOBJ="gcc"
-		LD="gcc"
+		LD="ld"
 		KERN_OPTMZ=-O2
 		LEX="flex -l"
 		MT_CC="$CC"
@@ -2336,6 +2363,23 @@ case $AFS_SYSNAME in
 		SHLIB_LDFLAGS="-shared -Xlinker -x"
 		TXLIBS="-lncurses"
 		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE"
+		YACC="bison -y"
+		SHLIB_LINKER="${MT_CC} -shared"
+		;;
+
+	s390x_linux24)
+		CC="gcc"
+		CCOBJ="gcc"
+		LD="ld"
+		KERN_OPTMZ=-O2
+		LEX="flex -l"
+		MT_CC="$CC"
+		MT_CFLAGS='-DAFS_PTHREAD_ENV -pthread -D_REENTRANT ${XCFLAGS}'
+		MT_LIBS="-lpthread"
+		PAM_CFLAGS="-O -Dlinux -DLINUX_PAM -fPIC"
+		SHLIB_LDFLAGS="-shared -Xlinker -x"
+		TXLIBS="-lncurses"
+		XCFLAGS="-O -g -D_LARGEFILE64_SOURCE -D__s390x__"
 		YACC="bison -y"
 		SHLIB_LINKER="${MT_CC} -shared"
 		;;

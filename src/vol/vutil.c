@@ -18,7 +18,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vutil.c,v 1.15 2003/11/29 21:38:05 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/vol/vutil.c,v 1.15.2.1 2004/08/25 07:14:19 shadow Exp $");
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -109,8 +109,10 @@ VCreateVolume(Error * ec, char *partname, VolId volumeId, VolId parentId)
 {				/* Should be the same as volumeId if there is
 				 * no parent */
     Volume *retVal;
-    VOL_LOCK retVal = VCreateVolume_r(ec, partname, volumeId, parentId);
-    VOL_UNLOCK return retVal;
+    VOL_LOCK;
+    retVal = VCreateVolume_r(ec, partname, volumeId, parentId);
+    VOL_UNLOCK;
+    return retVal;
 }
 
 Volume *
@@ -289,8 +291,10 @@ VCreateVolume_r(Error * ec, char *partname, VolId volumeId, VolId parentId)
 void
 AssignVolumeName(register VolumeDiskData * vol, char *name, char *ext)
 {
-    VOL_LOCK AssignVolumeName_r(vol, name, ext);
-VOL_UNLOCK}
+    VOL_LOCK;
+    AssignVolumeName_r(vol, name, ext);
+    VOL_UNLOCK;
+}
 
 void
 AssignVolumeName_r(register VolumeDiskData * vol, char *name, char *ext)
@@ -335,15 +339,19 @@ CopyVolumeHeader(VolumeDiskData * from, VolumeDiskData * to)
 {
     afs_int32 code;
 
-    VOL_LOCK code = CopyVolumeHeader_r(from, to);
-    VOL_UNLOCK return (code);
+    VOL_LOCK;
+    code = CopyVolumeHeader_r(from, to);
+    VOL_UNLOCK;
+    return (code);
 }
 
 void
 ClearVolumeStats(register VolumeDiskData * vol)
 {
-    VOL_LOCK ClearVolumeStats_r(vol);
-VOL_UNLOCK}
+    VOL_LOCK;
+    ClearVolumeStats_r(vol);
+    VOL_UNLOCK;
+}
 
 void
 ClearVolumeStats_r(register VolumeDiskData * vol)

@@ -17,7 +17,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/ktc.c,v 1.15 2004/04/14 23:26:13 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/auth/ktc.c,v 1.15.2.1 2004/08/25 07:09:36 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "afs/sysincludes.h"
@@ -424,9 +424,9 @@ ktc_SetToken(aserver, atoken, aclient, flags)
 {
     int ncode, ocode;
 
-    LOCK_GLOBAL_MUTEX
+    LOCK_GLOBAL_MUTEX;
 #ifdef AFS_KERBEROS_ENV
-	if (!lcell[0])
+    if (!lcell[0])
 	ktc_LocalCell();
 
     if (			/*!strcmp(aclient->cell, lcell) && this would only store local creds */
@@ -453,7 +453,8 @@ ktc_SetToken(aserver, atoken, aclient, flags)
 	}
 	afs_tf_close();
 #ifdef NO_AFS_CLIENT
-	UNLOCK_GLOBAL_MUTEX return ncode;
+	UNLOCK_GLOBAL_MUTEX;
+	return ncode;
 #endif /* NO_AFS_CLIENT */
     }
 #endif
@@ -466,7 +467,8 @@ ktc_SetToken(aserver, atoken, aclient, flags)
     } else
 	ocode = 0;
     if (ncode && ocode) {
-	UNLOCK_GLOBAL_MUTEX if (ocode == -1)
+	UNLOCK_GLOBAL_MUTEX;
+	if (ocode == -1)
 	    ocode = errno;
 	else if (ocode == KTC_PIOCTLFAIL)
 	    ocode = errno;
@@ -479,7 +481,8 @@ ktc_SetToken(aserver, atoken, aclient, flags)
 	return KTC_PIOCTLFAIL;
     }
 #endif /* NO_AFS_CLIENT */
-    UNLOCK_GLOBAL_MUTEX return 0;
+    UNLOCK_GLOBAL_MUTEX;
+    return 0;
 }
 
 /* get token, given server we need and token buffer.  aclient will eventually
@@ -502,9 +505,9 @@ ktc_GetToken(aserver, atoken, atokenLen, aclient)
     int tktLen;			/* server ticket length */
     char found = 0;
 
-    LOCK_GLOBAL_MUTEX
+    LOCK_GLOBAL_MUTEX;
 #ifndef NO_AFS_CLIENT
-	TRY_KERNEL(KTC_GETTOKEN_OP, aserver, aclient, atoken, atokenLen);
+    TRY_KERNEL(KTC_GETTOKEN_OP, aserver, aclient, atoken, atokenLen);
 #endif /* NO_AFS_CLIENT */
 
 #ifdef AFS_KERBEROS_ENV
@@ -527,7 +530,8 @@ ktc_GetToken(aserver, atoken, atokenLen, aclient)
 		       min(atokenLen, sizeof(struct ktc_token)));
 		if (aclient)
 		    *aclient = local_tokens[i].client;
-		UNLOCK_GLOBAL_MUTEX return 0;
+		UNLOCK_GLOBAL_MUTEX;
+		return 0;
 	    }
 #ifdef AFS_KERBEROS_ENV
 	if (!afs_tf_init(ktc_tkt_string(), R_TKT_FIL)) {
@@ -557,13 +561,15 @@ ktc_GetToken(aserver, atoken, atokenLen, aclient)
 			   min(atokenLen, sizeof(struct ktc_token)));
 
 		    afs_tf_close();
-		    UNLOCK_GLOBAL_MUTEX return 0;
+		    UNLOCK_GLOBAL_MUTEX;
+		    return 0;
 		}
 	    }
 	}
 	afs_tf_close();
 #endif
-	UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
+	UNLOCK_GLOBAL_MUTEX;
+	return KTC_NOENT;
     }
 #ifndef NO_AFS_CLIENT
     for (index = 0; index < 200; index++) {	/* sanity check in case pioctl fails */
@@ -577,7 +583,8 @@ ktc_GetToken(aserver, atoken, atokenLen, aclient)
 	if (code) {
 	    /* failed to retrieve specified token */
 	    if (code < 0 && errno == EDOM) {
-		UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
+		UNLOCK_GLOBAL_MUTEX;
+		return KTC_NOENT;
 	    }
 	} else {
 	    /* token retrieved; parse buffer */
@@ -595,7 +602,8 @@ ktc_GetToken(aserver, atoken, atokenLen, aclient)
 	    /* get size of clear token and verify */
 	    memcpy(&temp, tp, sizeof(afs_int32));
 	    if (temp != sizeof(struct ClearToken)) {
-		UNLOCK_GLOBAL_MUTEX return KTC_ERROR;
+		UNLOCK_GLOBAL_MUTEX;
+		return KTC_ERROR;
 	    }
 	    tp += sizeof(afs_int32);
 
@@ -618,7 +626,8 @@ ktc_GetToken(aserver, atoken, atokenLen, aclient)
 		maxLen =
 		    atokenLen - sizeof(struct ktc_token) + MAXKTCTICKETLEN;
 		if (maxLen < tktLen) {
-		    UNLOCK_GLOBAL_MUTEX return KTC_TOOBIG;
+		    UNLOCK_GLOBAL_MUTEX;
+		    return KTC_TOOBIG;
 		}
 
 		/* set return values */
@@ -645,13 +654,15 @@ ktc_GetToken(aserver, atoken, atokenLen, aclient)
 			sprintf(aclient->name, "Unix UID %d", ct.ViceId);
 		    }
 		}
-		UNLOCK_GLOBAL_MUTEX return 0;
+		UNLOCK_GLOBAL_MUTEX;
+		return 0;
 	    }
 	}
     }
 #endif /* NO_AFS_CLIENT */
 
-    UNLOCK_GLOBAL_MUTEX if ((code < 0) && (errno == EINVAL))
+    UNLOCK_GLOBAL_MUTEX;
+    if ((code < 0) && (errno == EINVAL))
 	return KTC_NOPIOCTL;
     return KTC_PIOCTLFAIL;	/* probable cause */
 }
@@ -666,10 +677,12 @@ ktc_ForgetToken(aserver)
 {
     int rc;
 
-    LOCK_GLOBAL_MUTEX TRY_KERNEL(KTC_FORGETTOKEN_OP, aserver, 0, 0, 0);
+    LOCK_GLOBAL_MUTEX;
+    TRY_KERNEL(KTC_FORGETTOKEN_OP, aserver, 0, 0, 0);
 
     rc = ktc_ForgetAllTokens();	/* bogus, but better */
-    UNLOCK_GLOBAL_MUTEX return rc;
+    UNLOCK_GLOBAL_MUTEX;
+    return rc;
 }
 #endif /* NO_AFS_CLIENT */
 
@@ -689,9 +702,9 @@ ktc_ListTokens(aprevIndex, aindex, aserver)
 
     memset(tbuffer, 0, sizeof(tbuffer));
 
-    LOCK_GLOBAL_MUTEX
+    LOCK_GLOBAL_MUTEX;
 #ifndef NO_AFS_CLIENT
-	TRY_KERNEL(KTC_LISTTOKENS_OP, aserver, aprevIndex, aindex, 0);
+    TRY_KERNEL(KTC_LISTTOKENS_OP, aserver, aprevIndex, aindex, 0);
 #endif /* NO_AFS_CLIENT */
 
     index = aprevIndex;
@@ -708,20 +721,23 @@ ktc_ListTokens(aprevIndex, aindex, aserver)
 	if (afs_tf_init(ktc_tkt_string(), R_TKT_FIL)
 	    || afs_tf_get_pname(tbuffer) || afs_tf_get_pinst(tbuffer)) {
 	    afs_tf_close();
-	    UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return KTC_NOENT;
 	}
 
 	for (i = 214; i < index; i++) {
 	    if (afs_tf_get_cred(&cprincipal, &ctoken)) {
 		afs_tf_close();
-		UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
+		UNLOCK_GLOBAL_MUTEX;
+		return KTC_NOENT;
 	    }
 	}
 
       again:
 	if (afs_tf_get_cred(&cprincipal, &ctoken)) {
 	    afs_tf_close();
-	    UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return KTC_NOENT;
 	}
 	index++;
 
@@ -743,7 +759,8 @@ ktc_ListTokens(aprevIndex, aindex, aserver)
 	*aserver = cprincipal;
 	*aindex = index;
 	afs_tf_close();
-	UNLOCK_GLOBAL_MUTEX return 0;
+	UNLOCK_GLOBAL_MUTEX;
+	return 0;
     }
 #endif
 
@@ -753,15 +770,16 @@ ktc_ListTokens(aprevIndex, aindex, aserver)
 	    if (local_tokens[index - 123].valid) {
 		*aserver = local_tokens[index - 123].server;
 		*aindex = index + 1;
-		UNLOCK_GLOBAL_MUTEX return 0;
+		UNLOCK_GLOBAL_MUTEX;
+		return 0;
 	    }
 	    index++;
 	}
-	UNLOCK_GLOBAL_MUTEX
+	UNLOCK_GLOBAL_MUTEX;
 #ifdef AFS_KERBEROS_ENV
-	    return ktc_ListTokens(214, aindex, aserver);
+	return ktc_ListTokens(214, aindex, aserver);
 #else
-	    return KTC_NOENT;
+	return KTC_NOENT;
 #endif
     }
 
@@ -776,9 +794,11 @@ ktc_ListTokens(aprevIndex, aindex, aserver)
 	    if (index < 123) {
 		int rc;
 		rc = ktc_ListTokens(123, aindex, aserver);
-		UNLOCK_GLOBAL_MUTEX return rc;
+		UNLOCK_GLOBAL_MUTEX;
+		return rc;
 	    } else {
-		UNLOCK_GLOBAL_MUTEX return KTC_NOENT;
+		UNLOCK_GLOBAL_MUTEX;
+		return KTC_NOENT;
 	    }
 	}
 	if (code == 0)
@@ -787,7 +807,8 @@ ktc_ListTokens(aprevIndex, aindex, aserver)
 	index++;
     }
     if (code < 0) {
-	UNLOCK_GLOBAL_MUTEX if (errno == EINVAL)
+	UNLOCK_GLOBAL_MUTEX;
+	if (errno == EINVAL)
 	    return KTC_NOPIOCTL;
 	return KTC_PIOCTLFAIL;
     }
@@ -803,7 +824,8 @@ ktc_ListTokens(aprevIndex, aindex, aserver)
     tp += temp;			/* skip ticket for now */
     memcpy(&temp, tp, sizeof(afs_int32));	/* get size of clear token */
     if (temp != sizeof(struct ClearToken)) {
-	UNLOCK_GLOBAL_MUTEX return KTC_ERROR;
+	UNLOCK_GLOBAL_MUTEX;
+	return KTC_ERROR;
     }
     tp += sizeof(afs_int32);	/* skip length */
     tp += temp;			/* skip clear token itself */
@@ -813,7 +835,8 @@ ktc_ListTokens(aprevIndex, aindex, aserver)
     aserver->instance[0] = 0;
     strcpy(aserver->name, "afs");
 #endif /* NO_AFS_CLIENT */
-    UNLOCK_GLOBAL_MUTEX return 0;
+    UNLOCK_GLOBAL_MUTEX;
+    return 0;
 }
 
 /* discard all tokens from this user's cache */
@@ -854,9 +877,9 @@ ktc_ForgetAllTokens()
 {
     int ncode, ocode;
 
-    LOCK_GLOBAL_MUTEX
+    LOCK_GLOBAL_MUTEX;
 #ifdef AFS_KERBEROS_ENV
-    (void) afs_tf_dest_tkt();
+    (void)afs_tf_dest_tkt();
 #endif
 
     ncode = NewForgetAll();
@@ -866,11 +889,13 @@ ktc_ForgetAllTokens()
 	    ocode = errno;
 	else if (ocode == KTC_PIOCTLFAIL)
 	    ocode = errno;
-	UNLOCK_GLOBAL_MUTEX if (ocode == EINVAL)
+	UNLOCK_GLOBAL_MUTEX;
+	if (ocode == EINVAL)
 	    return KTC_NOPIOCTL;
 	return KTC_PIOCTLFAIL;
     }
-    UNLOCK_GLOBAL_MUTEX return 0;
+    UNLOCK_GLOBAL_MUTEX;
+    return 0;
 }
 
 /* ktc_OldPioctl - returns a boolean true if the kernel supports only the old
@@ -879,14 +904,15 @@ ktc_ForgetAllTokens()
 ktc_OldPioctl()
 {
     int rc;
-    LOCK_GLOBAL_MUTEX
+    LOCK_GLOBAL_MUTEX;
 #ifdef	KERNEL_KTC_COMPAT
-	CHECK_KERNEL;
+    CHECK_KERNEL;
     rc = (kernelKTC != 1);	/* old style interface */
 #else
-	rc = 1;
+    rc = 1;
 #endif
-    UNLOCK_GLOBAL_MUTEX return rc;
+    UNLOCK_GLOBAL_MUTEX;
+    return rc;
 }
 
 
@@ -1415,7 +1441,8 @@ ktc_tkt_string()
 {
     char *env;
 
-    LOCK_GLOBAL_MUTEX if (!*krb_ticket_string) {
+    LOCK_GLOBAL_MUTEX;
+    if (!*krb_ticket_string) {
 	if (env = getenv("KRBTKFILE")) {
 	    (void)strncpy(krb_ticket_string, env,
 			  sizeof(krb_ticket_string) - 1);
@@ -1426,7 +1453,8 @@ ktc_tkt_string()
 	    (void)sprintf(krb_ticket_string, "%s%d", TKT_ROOT, getuid());
 	}
     }
-    UNLOCK_GLOBAL_MUTEX return krb_ticket_string;
+    UNLOCK_GLOBAL_MUTEX;
+    return krb_ticket_string;
 }
 
 /*
@@ -1445,10 +1473,11 @@ ktc_set_tkt_string(val)
      char *val;
 {
 
-    LOCK_GLOBAL_MUTEX(void) strncpy(krb_ticket_string, val,
-				    sizeof(krb_ticket_string) - 1);
+    LOCK_GLOBAL_MUTEX;
+    (void)strncpy(krb_ticket_string, val, sizeof(krb_ticket_string) - 1);
     krb_ticket_string[sizeof(krb_ticket_string) - 1] = '\0';
-    UNLOCK_GLOBAL_MUTEX return;
+    UNLOCK_GLOBAL_MUTEX;
+    return;
 }
 
 /*
@@ -1615,7 +1644,8 @@ ktc_newpag()
     int numenv;
     char **newenv, **senv, **denv;
 
-    LOCK_GLOBAL_MUTEX if (stat("/ticket", &sbuf) == -1) {
+    LOCK_GLOBAL_MUTEX;
+    if (stat("/ticket", &sbuf) == -1) {
 	prefix = "/tmp/tkt";
     }
 
@@ -1641,7 +1671,8 @@ ktc_newpag()
     strcat(*denv, fname);
     *++denv = 0;
     environ = newenv;
-UNLOCK_GLOBAL_MUTEX}
+    UNLOCK_GLOBAL_MUTEX;
+}
 
 /*
  * BLETCH!  We have to invoke the entire afsconf package just to

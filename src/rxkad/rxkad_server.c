@@ -15,7 +15,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/rxkad_server.c,v 1.14 2003/11/29 20:23:35 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/rxkad_server.c,v 1.14.2.1 2004/08/25 07:09:42 shadow Exp $");
 
 #include <afs/stds.h>
 #include <sys/types.h>
@@ -59,9 +59,9 @@ static struct rx_securityOps rxkad_server_ops = {
     rxkad_CheckPacket,		/* check data packet */
     rxkad_DestroyConnection,
     rxkad_GetStats,
-	0, /* spare 1 */
-	0, /* spare 2 */
-	0, /* spare 3 */
+    0,				/* spare 1 */
+    0,				/* spare 2 */
+    0,				/* spare 3 */
 };
 extern afs_uint32 rx_MyMaxSendSize;
 
@@ -79,8 +79,8 @@ static fc_KeySchedule random_int32_schedule;
 
 #include <assert.h>
 pthread_mutex_t rxkad_random_mutex;
-#define LOCK_RM assert(pthread_mutex_lock(&rxkad_random_mutex)==0);
-#define UNLOCK_RM assert(pthread_mutex_unlock(&rxkad_random_mutex)==0);
+#define LOCK_RM assert(pthread_mutex_lock(&rxkad_random_mutex)==0)
+#define UNLOCK_RM assert(pthread_mutex_unlock(&rxkad_random_mutex)==0)
 #else
 #define LOCK_RM
 #define UNLOCK_RM
@@ -92,8 +92,10 @@ init_random_int32(void)
     struct timeval key;
 
     gettimeofday(&key, NULL);
-    LOCK_RM fc_keysched(&key, random_int32_schedule);
-UNLOCK_RM}
+    LOCK_RM;
+    fc_keysched(&key, random_int32_schedule);
+    UNLOCK_RM;
+}
 
 static afs_int32
 get_random_int32(void)
@@ -101,9 +103,11 @@ get_random_int32(void)
     static struct timeval seed;
     afs_int32 rc;
 
-    LOCK_RM fc_ecb_encrypt(&seed, &seed, random_int32_schedule, ENCRYPT);
+    LOCK_RM;
+    fc_ecb_encrypt(&seed, &seed, random_int32_schedule, ENCRYPT);
     rc = seed.tv_sec;
-    UNLOCK_RM return rc;
+    UNLOCK_RM;
+    return rc;
 }
 
 /* Called with four parameters.  The first is the level of encryption, as
@@ -156,8 +160,10 @@ rxkad_NewServerSecurityObject(rxkad_level level, char *get_key_rock,
     tsp->user_ok = user_ok;	/* to inform server of client id. */
     init_random_int32();
 
-    LOCK_RXKAD_STATS rxkad_stats_serverObjects++;
-    UNLOCK_RXKAD_STATS return tsc;
+    LOCK_RXKAD_STATS;
+    rxkad_stats_serverObjects++;
+    UNLOCK_RXKAD_STATS;
+    return tsc;
 }
 
 /* server: called to tell if a connection authenticated properly */
@@ -232,8 +238,10 @@ rxkad_GetChallenge(struct rx_securityClass *aobj, struct rx_connection *aconn,
     rx_packetwrite(apacket, 0, challengeSize, challenge);
     rx_SetDataSize(apacket, challengeSize);
     sconn->tried = 1;
-    LOCK_RXKAD_STATS rxkad_stats.challengesSent++;
-    UNLOCK_RXKAD_STATS return 0;
+    LOCK_RXKAD_STATS;
+    rxkad_stats.challengesSent++;
+    UNLOCK_RXKAD_STATS;
+    return 0;
 }
 
 /* server: process a response to a challenge packet */
@@ -397,11 +405,11 @@ rxkad_CheckResponse(struct rx_securityClass *aobj,
 	return RXKADLEVELFAIL;
     sconn->level = level;
     rxkad_SetLevel(aconn, sconn->level);
-    LOCK_RXKAD_STATS rxkad_stats.responses[rxkad_LevelIndex(sconn->level)]++;
-    UNLOCK_RXKAD_STATS
-	/* now compute endpoint-specific info used for computing 16 bit checksum */
-	rxkad_DeriveXORInfo(aconn, sconn->keysched, sconn->ivec,
-			    sconn->preSeq);
+    LOCK_RXKAD_STATS;
+    rxkad_stats.responses[rxkad_LevelIndex(sconn->level)]++;
+    UNLOCK_RXKAD_STATS;
+    /* now compute endpoint-specific info used for computing 16 bit checksum */
+    rxkad_DeriveXORInfo(aconn, sconn->keysched, sconn->ivec, sconn->preSeq);
 
     /* otherwise things are ok */
     sconn->expirationTime = end;

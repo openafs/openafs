@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/userok.c,v 1.12 2003/12/07 22:49:17 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/auth/userok.c,v 1.12.2.1 2004/08/25 07:09:36 shadow Exp $");
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
@@ -54,9 +54,10 @@ afsconf_CheckAuth(adir, acall)
      register struct rx_call *acall;
      register struct afsconf_dir *adir;
 {
-    LOCK_GLOBAL_MUTEX return ((afsconf_SuperUser(adir, acall, NULL) == 0) ?
-			      10029 : 0);
-UNLOCK_GLOBAL_MUTEX}
+    LOCK_GLOBAL_MUTEX;
+    return ((afsconf_SuperUser(adir, acall, NULL) == 0) ? 10029 : 0);
+    UNLOCK_GLOBAL_MUTEX;
+}
 #endif /* !defined(UKERNEL) */
 
 static int
@@ -77,8 +78,10 @@ afsconf_GetNoAuthFlag(adir)
 {
     int rc;
 
-    LOCK_GLOBAL_MUTEX rc = GetNoAuthFlag(adir);
-    UNLOCK_GLOBAL_MUTEX return rc;
+    LOCK_GLOBAL_MUTEX;
+    rc = GetNoAuthFlag(adir);
+    UNLOCK_GLOBAL_MUTEX;
+    return rc;
 }
 
 void
@@ -88,7 +91,8 @@ afsconf_SetNoAuthFlag(adir, aflag)
 {
     register afs_int32 code;
 
-    LOCK_GLOBAL_MUTEX if (aflag == 0) {
+    LOCK_GLOBAL_MUTEX;
+    if (aflag == 0) {
 	/* turn off noauth flag */
 	code = (unlink(AFSDIR_SERVER_NOAUTH_FILEPATH) ? errno : 0);
 	osi_audit(NoAuthDisableEvent, code, AUD_END);
@@ -103,7 +107,8 @@ afsconf_SetNoAuthFlag(adir, aflag)
 	} else
 	    osi_audit(NoAuthEnableEvent, errno, AUD_END);
     }
-UNLOCK_GLOBAL_MUTEX}
+    UNLOCK_GLOBAL_MUTEX;
+}
 
 /* deletes a user from the UserList file */
 int
@@ -122,8 +127,9 @@ afsconf_DeleteUser(adir, auser)
     struct stat tstat;
     register afs_int32 code;
 
-    LOCK_GLOBAL_MUTEX strcompose(tbuffer, sizeof tbuffer, adir->name, "/",
-				 AFSDIR_ULIST_FILE, NULL);
+    LOCK_GLOBAL_MUTEX;
+    strcompose(tbuffer, sizeof tbuffer, adir->name, "/",
+	       AFSDIR_ULIST_FILE, NULL);
 #ifndef AFS_NT40_ENV
     {
 	/*
@@ -140,18 +146,21 @@ afsconf_DeleteUser(adir, auser)
 #endif /* AFS_NT40_ENV */
     tf = fopen(tbuffer, "r");
     if (!tf) {
-	UNLOCK_GLOBAL_MUTEX return -1;
+	UNLOCK_GLOBAL_MUTEX;
+	return -1;
     }
     code = stat(tbuffer, &tstat);
     if (code < 0) {
-	UNLOCK_GLOBAL_MUTEX return code;
+	UNLOCK_GLOBAL_MUTEX;
+	return code;
     }
     strcpy(nbuffer, tbuffer);
     strcat(nbuffer, ".NXX");
     nf = fopen(nbuffer, "w+");
     if (!nf) {
 	fclose(tf);
-	UNLOCK_GLOBAL_MUTEX return EIO;
+	UNLOCK_GLOBAL_MUTEX;
+	return EIO;
     }
     flag = 0;
     found = 0;
@@ -185,8 +194,9 @@ afsconf_DeleteUser(adir, auser)
 	unlink(nbuffer);
 
     /* finally, decide what to return to the caller */
-    UNLOCK_GLOBAL_MUTEX if (flag)
-	  return EIO;		/* something mysterious went wrong */
+    UNLOCK_GLOBAL_MUTEX;
+    if (flag)
+	return EIO;		/* something mysterious went wrong */
     if (!found)
 	return ENOENT;		/* entry wasn't found, no changes made */
     return 0;			/* everything was fine */
@@ -207,11 +217,13 @@ afsconf_GetNthUser(adir, an, abuffer, abufferLen)
     register int flag;
     register afs_int32 code;
 
-    LOCK_GLOBAL_MUTEX strcompose(tbuffer, sizeof tbuffer, adir->name, "/",
-				 AFSDIR_ULIST_FILE, NULL);
+    LOCK_GLOBAL_MUTEX;
+    strcompose(tbuffer, sizeof tbuffer, adir->name, "/",
+	       AFSDIR_ULIST_FILE, NULL);
     tf = fopen(tbuffer, "r");
     if (!tf) {
-	UNLOCK_GLOBAL_MUTEX return 1;
+	UNLOCK_GLOBAL_MUTEX;
+	return 1;
     }
     flag = 1;
     while (1) {
@@ -228,7 +240,8 @@ afsconf_GetNthUser(adir, an, abuffer, abufferLen)
     if (flag == 0)
 	strcpy(abuffer, tname);
     fclose(tf);
-    UNLOCK_GLOBAL_MUTEX return flag;
+    UNLOCK_GLOBAL_MUTEX;
+    return flag;
 }
 
 /* returns true iff user is in the UserList file */
@@ -275,15 +288,18 @@ afsconf_AddUser(adir, aname)
     register afs_int32 code;
     char tbuffer[256];
 
-    LOCK_GLOBAL_MUTEX if (FindUser(adir, aname)) {
-	UNLOCK_GLOBAL_MUTEX return EEXIST;	/* already in the list */
+    LOCK_GLOBAL_MUTEX;
+    if (FindUser(adir, aname)) {
+	UNLOCK_GLOBAL_MUTEX;
+	return EEXIST;		/* already in the list */
     }
 
     strcompose(tbuffer, sizeof tbuffer, adir->name, "/", AFSDIR_ULIST_FILE,
 	       NULL);
     tf = fopen(tbuffer, "a+");
     if (!tf) {
-	UNLOCK_GLOBAL_MUTEX return EIO;
+	UNLOCK_GLOBAL_MUTEX;
+	return EIO;
     }
     fprintf(tf, "%s\n", aname);
     code = 0;
@@ -291,7 +307,8 @@ afsconf_AddUser(adir, aname)
 	code = EIO;
     if (fclose(tf))
 	code = EIO;
-    UNLOCK_GLOBAL_MUTEX return code;
+    UNLOCK_GLOBAL_MUTEX;
+    return code;
 }
 
 /* special CompFindUser routine that builds up a princ and then
@@ -352,23 +369,28 @@ afsconf_SuperUser(adir, acall, namep)
     register afs_int32 code;
     int flag;
 
-    LOCK_GLOBAL_MUTEX if (!adir) {
-	UNLOCK_GLOBAL_MUTEX return 0;
+    LOCK_GLOBAL_MUTEX;
+    if (!adir) {
+	UNLOCK_GLOBAL_MUTEX;
+	return 0;
     }
 
     if (afsconf_GetNoAuthFlag(adir)) {
 	if (namep)
 	    strcpy(namep, "<NoAuth>");
-	UNLOCK_GLOBAL_MUTEX return 1;
+	UNLOCK_GLOBAL_MUTEX;
+	return 1;
     }
 
     tconn = rx_ConnectionOf(acall);
     code = rx_SecurityClassOf(tconn);
     if (code == 0) {
-	UNLOCK_GLOBAL_MUTEX return 0;	/* not authenticated at all, answer is no */
+	UNLOCK_GLOBAL_MUTEX;
+	return 0;		/* not authenticated at all, answer is no */
     } else if (code == 1) {
 	/* bcrypt tokens */
-	UNLOCK_GLOBAL_MUTEX return 0;	/* not supported any longer */
+	UNLOCK_GLOBAL_MUTEX;
+	return 0;		/* not supported any longer */
     } else if (code == 2) {
 	char tname[MAXKTCNAMELEN];	/* authentication from ticket */
 	char tinst[MAXKTCNAMELEN];
@@ -388,7 +410,8 @@ afsconf_SuperUser(adir, acall, namep)
 	    rxkad_GetServerInfo(acall->conn, NULL, &exp, tname, tinst, tcell,
 				NULL);
 	if (code) {
-	    UNLOCK_GLOBAL_MUTEX return 0;	/* bogus connection/other error */
+	    UNLOCK_GLOBAL_MUTEX;
+	    return 0;		/* bogus connection/other error */
 	}
 
 	/* don't bother checking anything else if tix have expired */
@@ -397,7 +420,8 @@ afsconf_SuperUser(adir, acall, namep)
 #else
 	if (exp < FT_ApproxTime()) {
 #endif
-	    UNLOCK_GLOBAL_MUTEX return 0;	/* expired tix */
+	    UNLOCK_GLOBAL_MUTEX;
+	    return 0;		/* expired tix */
 	}
 
 	/* generate lowercased version of cell name */
@@ -467,8 +491,10 @@ afsconf_SuperUser(adir, acall, namep)
 
 	if (namep)
 	    strcpy(namep, uname);
-	UNLOCK_GLOBAL_MUTEX return flag;
+	UNLOCK_GLOBAL_MUTEX;
+	return flag;
     } else {			/* some other auth type */
-	UNLOCK_GLOBAL_MUTEX return 0;	/* mysterious, just say no */
+	UNLOCK_GLOBAL_MUTEX;
+	return 0;		/* mysterious, just say no */
     }
 }

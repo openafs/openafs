@@ -17,7 +17,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vnode.c,v 1.19 2004/06/23 14:27:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/vnode.c,v 1.19.2.1 2004/08/25 07:14:19 shadow Exp $");
 
 #include <errno.h>
 #include <stdio.h>
@@ -266,8 +266,10 @@ Vnode *
 VAllocVnode(Error * ec, Volume * vp, VnodeType type)
 {
     Vnode *retVal;
-    VOL_LOCK retVal = VAllocVnode_r(ec, vp, type);
-    VOL_UNLOCK return retVal;
+    VOL_LOCK;
+    retVal = VAllocVnode_r(ec, vp, type);
+    VOL_UNLOCK;
+    return retVal;
 }
 
 Vnode *
@@ -344,8 +346,10 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	    ObtainWriteLock(&vnp->lock);
 	} else {
 	    /* follow locking hierarchy */
-	    VOL_UNLOCK ObtainWriteLock(&vnp->lock);
-	VOL_LOCK}
+	    VOL_UNLOCK;
+	    ObtainWriteLock(&vnp->lock);
+	    VOL_LOCK;
+	}
 #ifdef AFS_PTHREAD_ENV
 	vnp->writer = pthread_self();
 #else /* AFS_PTHREAD_ENV */
@@ -381,7 +385,8 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 	    FdHandle_t *fdP;
 	    off_t off = vnodeIndexOffset(vcp, vnodeNumber);
 
-	    VOL_UNLOCK fdP = IH_OPEN(ihP);
+	    VOL_UNLOCK;
+	    fdP = IH_OPEN(ihP);
 	    if (fdP == NULL)
 		Abort("VAllocVnode: can't open index file!\n");
 	    if ((size = FDH_SIZE(fdP)) < 0)
@@ -403,7 +408,8 @@ VAllocVnode_r(Error * ec, Volume * vp, VnodeType type)
 		free(buf);
 	    }
 	    FDH_CLOSE(fdP);
-	VOL_LOCK}
+	    VOL_LOCK;
+	}
 	VNLog(4, 2, vnodeNumber, (afs_int32) vnp);
     }
 
@@ -429,8 +435,10 @@ Vnode *
 VGetVnode(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
 {				/* READ_LOCK or WRITE_LOCK, as defined in lock.h */
     Vnode *retVal;
-    VOL_LOCK retVal = VGetVnode_r(ec, vp, vnodeNumber, locktype);
-    VOL_UNLOCK return retVal;
+    VOL_LOCK;
+    retVal = VGetVnode_r(ec, vp, vnodeNumber, locktype);
+    VOL_UNLOCK;
+    return retVal;
 }
 
 Vnode *
@@ -520,7 +528,8 @@ VGetVnode_r(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
 #endif /* AFS_PTHREAD_ENV */
 
 	/* Read vnode from volume index */
-	VOL_UNLOCK fdP = IH_OPEN(ihP);
+	VOL_UNLOCK;
+	fdP = IH_OPEN(ihP);
 	if (fdP == NULL) {
 	    Log("VGetVnode: can't open index dev=%u, i=%s\n", vp->device,
 		PrintInode(NULL, vp->vnodeIndex[class].handle->ih_ino));
@@ -537,7 +546,8 @@ VGetVnode_r(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
 	    /* Don't take volume off line if the inumber is out of range
 	     * or the inode table is full. */
 	    FDH_REALLYCLOSE(fdP);
-	    VOL_LOCK if (n == BAD_IGET) {
+	    VOL_LOCK;
+	    if (n == BAD_IGET) {
 		Log("VGetVnode: bad inumber %s\n",
 		    PrintInode(NULL, vp->vnodeIndex[class].handle->ih_ino));
 		*ec = VIO;
@@ -561,9 +571,9 @@ VGetVnode_r(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
 	    return NULL;
 	}
 	FDH_CLOSE(fdP);
-	VOL_LOCK
-	    /* Quick check to see that the data is reasonable */
-	    if (vnp->disk.vnodeMagic != vcp->magic || vnp->disk.type == vNull) {
+	VOL_LOCK;
+	/* Quick check to see that the data is reasonable */
+	if (vnp->disk.vnodeMagic != vcp->magic || vnp->disk.type == vNull) {
 	    if (vnp->disk.type == vNull) {
 		*ec = VNOVNODE;
 		mlkReason = 6;
@@ -613,7 +623,8 @@ VGetVnode_r(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
 	    vnp->lruNext->lruPrev = vnp->lruPrev;
 	}
     }
-    VOL_UNLOCK if (locktype == READ_LOCK)
+    VOL_UNLOCK;
+    if (locktype == READ_LOCK)
 	ObtainReadLock(&vnp->lock);
     else {
 	ObtainWriteLock(&vnp->lock);
@@ -623,10 +634,10 @@ VGetVnode_r(Error * ec, Volume * vp, VnodeId vnodeNumber, int locktype)
 	LWP_CurrentProcess(&vnp->writer);
 #endif /* AFS_PTHREAD_ENV */
     }
-    VOL_LOCK
-	/* Check that the vnode hasn't been removed while we were obtaining
-	 * the lock */
-	VNLog(102, 2, vnodeNumber, (afs_int32) vnp);
+    VOL_LOCK;
+    /* Check that the vnode hasn't been removed while we were obtaining
+     * the lock */
+    VNLog(102, 2, vnodeNumber, (afs_int32) vnp);
     if ((vnp->disk.type == vNull) || (vnp->cacheCheck == 0)) {
 	if (vnp->nUsers-- == 1)
 	    StickOnLruChain_r(vnp, vcp);
@@ -652,8 +663,10 @@ int TrustVnodeCacheEntry = 1;
 void
 VPutVnode(Error * ec, register Vnode * vnp)
 {
-    VOL_LOCK VPutVnode_r(ec, vnp);
-VOL_UNLOCK}
+    VOL_LOCK;
+    VPutVnode_r(ec, vnp);
+    VOL_UNLOCK;
+}
 
 void
 VPutVnode_r(Error * ec, register Vnode * vnp)
@@ -709,7 +722,8 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
 	    } else {
 		IHandle_t *ihP = vp->vnodeIndex[class].handle;
 		FdHandle_t *fdP;
-		VOL_UNLOCK fdP = IH_OPEN(ihP);
+		VOL_UNLOCK;
+		fdP = IH_OPEN(ihP);
 		if (fdP == NULL)
 		    Abort("VPutVnode: can't open index file!\n");
 		offset = vnodeIndexOffset(vcp, vnp->vnodeNumber);
@@ -723,7 +737,8 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
 		    /* Don't force volume offline if the inumber is out of
 		     * range or the inode table is full.
 		     */
-		    VOL_LOCK if (code == BAD_IGET) {
+		    VOL_LOCK;
+		    if (code == BAD_IGET) {
 			Log("VPutVnode: bad inumber %s\n",
 			    PrintInode(NULL,
 				       vp->vnodeIndex[class].handle->ih_ino));
@@ -733,17 +748,18 @@ VPutVnode_r(Error * ec, register Vnode * vnp)
 			VForceOffline_r(vp);
 			*ec = VSALVAGE;
 		    }
-		    VOL_UNLOCK FDH_REALLYCLOSE(fdP);
+		    VOL_UNLOCK;
+		    FDH_REALLYCLOSE(fdP);
 		} else {
 		    FDH_CLOSE(fdP);
 		}
-		VOL_LOCK
-		    /* If the vnode is to be deleted, and we wrote the vnode out,
-		     * free its bitmap entry. Do after the vnode is written so we
-		     * don't allocate from bitmap before the vnode is written
-		     * (doing so could cause a "addled bitmap" message).
-		     */
-		    if (vnp->delete && !*ec) {
+		VOL_LOCK;
+		/* If the vnode is to be deleted, and we wrote the vnode out,
+		 * free its bitmap entry. Do after the vnode is written so we
+		 * don't allocate from bitmap before the vnode is written
+		 * (doing so could cause a "addled bitmap" message).
+		 */
+		if (vnp->delete && !*ec) {
 		    VFreeBitMapEntry_r(ec, &vp->vnodeIndex[class],
 				       vnodeIdToBitNumber(vnp->vnodeNumber));
 		}
@@ -779,8 +795,10 @@ int
 VVnodeWriteToRead(Error * ec, register Vnode * vnp)
 {
     int retVal;
-    VOL_LOCK retVal = VVnodeWriteToRead_r(ec, vnp);
-    VOL_UNLOCK return retVal;
+    VOL_LOCK;
+    retVal = VVnodeWriteToRead_r(ec, vnp);
+    VOL_UNLOCK;
+    return retVal;
 }
 
 int
@@ -818,7 +836,8 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
 					    changed_oldTime) << 1) | vnp->
 	  delete);
     if (thisProcess != vnp->writer)
-	Abort("VPutVnode: Vnode at 0x%x locked by another process!\n", (int)vnp);
+	Abort("VPutVnode: Vnode at 0x%x locked by another process!\n",
+	      (int)vnp);
     if (vnp->delete) {
 	return 0;
     }
@@ -839,7 +858,8 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
 	    IHandle_t *ihP = vp->vnodeIndex[class].handle;
 	    FdHandle_t *fdP;
 	    off_t off = vnodeIndexOffset(vcp, vnp->vnodeNumber);
-	    VOL_UNLOCK fdP = IH_OPEN(ihP);
+	    VOL_UNLOCK;
+	    fdP = IH_OPEN(ihP);
 	    if (fdP == NULL)
 		Abort("VPutVnode: can't open index file!\n");
 	    code = FDH_SEEK(fdP, off, SEEK_SET);
@@ -851,18 +871,22 @@ VVnodeWriteToRead_r(Error * ec, register Vnode * vnp)
 		 * Don't force volume offline if the inumber is out of
 		 * range or the inode table is full.
 		 */
-		VOL_LOCK if (code == BAD_IGET) {
+		VOL_LOCK;
+		if (code == BAD_IGET) {
 		    Log("VPutVnode: bad inumber %s\n",
-			PrintInode(NULL, vp->vnodeIndex[class].handle->ih_ino));
+			PrintInode(NULL,
+				   vp->vnodeIndex[class].handle->ih_ino));
 		    *ec = VIO;
 		} else {
 		    Log("VPutVnode: Couldn't write vnode %u, volume %u (%s)\n", vnp->vnodeNumber, V_id(vnp->volumePtr), V_name(vnp->volumePtr));
 		    VForceOffline_r(vp);
 		    *ec = VSALVAGE;
 		}
-	    VOL_UNLOCK}
+		VOL_UNLOCK;
+	    }
 	    FDH_CLOSE(fdP);
-	VOL_LOCK}
+	    VOL_LOCK;
+	}
 	vcp->writes++;
 	vnp->changed_newTime = vnp->changed_oldTime = 0;
     }

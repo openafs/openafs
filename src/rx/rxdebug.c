@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rxdebug.c,v 1.15 2003/12/07 22:49:36 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rx/rxdebug.c,v 1.15.2.1 2004/08/25 07:09:42 shadow Exp $");
 
 #include <sys/types.h>
 #include <errno.h>
@@ -333,7 +333,7 @@ MainCommand(as, arock)
 		printf("getconn call failed with code %d\n", code);
 		break;
 	    }
-	    if (tconn.cid == (afs_int32)0xffffffff) {
+	    if (tconn.cid == (afs_int32) 0xffffffff) {
 		printf("Done.\n");
 		break;
 	    }

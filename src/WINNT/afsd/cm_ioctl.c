@@ -1060,8 +1060,10 @@ long cm_IoctlGetCell(struct smb_ioctl *ioctlp, struct cm_user *userp)
 		ioctlp->outDatap = cp;
 	}
 
-	if (tcellp) return 0;
-	else return CM_ERROR_NOMORETOKENS;	/* mapped to EDOM */
+    if (tcellp) 
+        return 0;
+    else 
+        return CM_ERROR_NOMORETOKENS;	/* mapped to EDOM */
 }
 
 extern long cm_AddCellProc(void *rockp, struct sockaddr_in *addrp, char *namep);

@@ -50,63 +50,103 @@ BOOL IsWindowsNT (void)
  *
  */
 
+#define AFSCLIENT_ADMIN_GROUPNAME "AFS Client Admins"
+
 BOOL IsAdmin (void)
 {
-   static BOOL fAdmin = FALSE;
-   static BOOL fTested = FALSE;
-   if (!fTested)
-      {
-      fTested = TRUE;
+    static BOOL fAdmin = FALSE;
+    static BOOL fTested = FALSE;
 
-      // Obtain the SID for BUILTIN\Administrators. If this is Windows NT,
-      // expect this call to succeed; if it does not, we can presume that
-      // it's not NT and therefore the user always has administrative
-      // privileges.
-      //
-      PSID psidAdmin = NULL;
-      SID_IDENTIFIER_AUTHORITY auth = SECURITY_NT_AUTHORITY;
-      if (!AllocateAndInitializeSid (&auth, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &psidAdmin))
-         fAdmin = TRUE;
-      else
-         {
+    if (!fTested)
+    {
+        /* Obtain the SID for the AFS client admin group.  If the group does
+         * not exist, then assume we have AFS client admin privileges.
+         */
+        PSID psidAdmin = NULL;
+        DWORD dwSize, dwSize2;
+        char pszAdminGroup[ MAX_COMPUTERNAME_LENGTH + sizeof(AFSCLIENT_ADMIN_GROUPNAME) + 2 ];
+        char *pszRefDomain = NULL;
+        SID_NAME_USE snu = SidTypeGroup;
 
-         // Then open our current ProcessToken
-         //
-         HANDLE hToken;
-         if (OpenProcessToken (GetCurrentProcess(), TOKEN_QUERY, &hToken))
+        dwSize = sizeof(pszAdminGroup);
+
+        if (!GetComputerName(pszAdminGroup, &dwSize)) {
+            /* Can't get computer name.  We return false in this case.
+               Retain fAdmin and fTested. This shouldn't happen.*/
+            return FALSE;
+        }
+
+        fTested = TRUE;
+
+        dwSize = 0;
+        dwSize2 = 0;
+
+        strcat(pszAdminGroup,"\\");
+        strcat(pszAdminGroup, AFSCLIENT_ADMIN_GROUPNAME);
+
+        LookupAccountName(NULL, pszAdminGroup, NULL, &dwSize, NULL, &dwSize2, &snu);
+        /* that should always fail. */
+
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+            /* if we can't find the group, then we allow the operation */
+            fAdmin = TRUE;
+            return TRUE;
+        }
+
+        if (dwSize == 0 || dwSize2 == 0) {
+            /* Paranoia */
+            fAdmin = TRUE;
+            return TRUE;
+        }
+
+        psidAdmin = (PSID) malloc(dwSize); memset(psidAdmin,0,dwSize);
+        pszRefDomain = (char *)malloc(dwSize2);
+
+        if (!LookupAccountName(NULL, pszAdminGroup, psidAdmin, &dwSize, pszRefDomain, &dwSize2, &snu)) {
+            /* We can't lookup the group now even though we looked it up earlier.  
+               Could this happen? */
+            fAdmin = TRUE;
+        } else {
+            /* Then open our current ProcessToken */
+            HANDLE hToken;
+
+            if (OpenProcessToken (GetCurrentProcess(), TOKEN_QUERY, &hToken))
             {
-
-            // We'll have to allocate a chunk of memory to store the list of
-            // groups to which this user belongs; find out how much memory
-            // we'll need.
-            //
-            DWORD dwSize = 0;
-            GetTokenInformation (hToken, TokenGroups, NULL, dwSize, &dwSize);
+                /* We'll have to allocate a chunk of memory to store the list of
+                 * groups to which this user belongs; find out how much memory
+                 * we'll need.
+                 */
+                DWORD dwSize = 0;
+                PTOKEN_GROUPS pGroups;
+                
+                GetTokenInformation (hToken, TokenGroups, NULL, dwSize, &dwSize);
             
-            // Allocate that buffer, and read in the list of groups.
-            //
-            PTOKEN_GROUPS pGroups = (PTOKEN_GROUPS)Allocate (dwSize);
-            if (GetTokenInformation (hToken, TokenGroups, pGroups, dwSize, &dwSize))
-               {
-               // Look through the list of group SIDs and see if any of them
-               // matches the Administrator group SID.
-               //
-               for (size_t iGroup = 0; (!fAdmin) && (iGroup < pGroups->GroupCount); ++iGroup)
-                  {
-                  if (EqualSid (psidAdmin, pGroups->Groups[ iGroup ].Sid))
-                     fAdmin = TRUE;
-                  }
-               }
+                pGroups = (PTOKEN_GROUPS)malloc(dwSize);
+                
+                /* Allocate that buffer, and read in the list of groups. */
+                if (GetTokenInformation (hToken, TokenGroups, pGroups, dwSize, &dwSize))
+                {
+                    /* Look through the list of group SIDs and see if any of them
+                     * matches the AFS Client Admin group SID.
+                     */
+                    size_t iGroup = 0;
+                    for (; (!fAdmin) && (iGroup < pGroups->GroupCount); ++iGroup)
+                    {
+                        if (EqualSid (psidAdmin, pGroups->Groups[ iGroup ].Sid)) {
+                            fAdmin = TRUE;
+                        }
+                    }
+                }
 
-            if (pGroups)
-               Free (pGroups);
+                if (pGroups)
+                    free(pGroups);
             }
-         }
+        }
 
-      if (psidAdmin)
-         FreeSid (psidAdmin);
-      }
+        free(psidAdmin);
+        free(pszRefDomain);
+    }
 
-   return fAdmin;
+    return fAdmin;
 }
 

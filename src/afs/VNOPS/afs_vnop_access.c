@@ -23,7 +23,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_access.c,v 1.10 2003/07/15 23:14:29 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_access.c,v 1.10.2.1 2004/08/25 07:09:35 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -189,9 +189,9 @@ afs_access(OSI_VC_DECL(avc), register afs_int32 amode,
     register afs_int32 code;
     struct vrequest treq;
     struct afs_fakestat_state fakestate;
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
 
-	AFS_STATCNT(afs_access);
+    AFS_STATCNT(afs_access);
     afs_Trace3(afs_iclSetp, CM_TRACE_ACCESS, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_INT32, amode, ICL_TYPE_OFFSET,
 	       ICL_HANDLE_OFFSET(avc->m.Length));
@@ -314,9 +314,9 @@ afs_getRights(OSI_VC_DECL(avc), register afs_int32 arights,
 {
     register afs_int32 code;
     struct vrequest treq;
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
 
-	if (code = afs_InitReq(&treq, acred))
+    if (code = afs_InitReq(&treq, acred))
 	return code;
 
     code = afs_VerifyVCache(avc, &treq);

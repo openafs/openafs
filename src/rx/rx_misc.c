@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_misc.c,v 1.12 2003/07/15 23:16:09 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_misc.c,v 1.12.2.1 2004/08/25 07:09:41 shadow Exp $");
 
 #ifdef	KERNEL
 #include <afs/sysincludes.h>
@@ -109,8 +109,8 @@ ntoh_syserr_conv(int code)
 
 #include <assert.h>
 pthread_mutex_t osi_malloc_mutex;
-#define LOCK_MALLOC_STATS assert(pthread_mutex_lock(&osi_malloc_mutex)==0);
-#define UNLOCK_MALLOC_STATS assert(pthread_mutex_unlock(&osi_malloc_mutex)==0);
+#define LOCK_MALLOC_STATS assert(pthread_mutex_lock(&osi_malloc_mutex)==0)
+#define UNLOCK_MALLOC_STATS assert(pthread_mutex_unlock(&osi_malloc_mutex)==0)
 #else
 #define LOCK_MALLOC_STATS
 #define UNLOCK_MALLOC_STATS
@@ -126,9 +126,11 @@ osi_alloc(afs_int32 x)
      */
     if (x == 0)
 	return (char *)&memZero;
-    LOCK_MALLOC_STATS osi_alloccnt++;
+    LOCK_MALLOC_STATS;
+    osi_alloccnt++;
     osi_allocsize += x;
-    UNLOCK_MALLOC_STATS return (char *)(mem_alloc(x));
+    UNLOCK_MALLOC_STATS;
+    return (char *)(mem_alloc(x));
 }
 
 int
@@ -136,9 +138,11 @@ osi_free(char *x, afs_int32 size)
 {
     if ((x == &memZero) || !x)
 	return 0;
-    LOCK_MALLOC_STATS osi_alloccnt--;
+    LOCK_MALLOC_STATS;
+    osi_alloccnt--;
     osi_allocsize -= size;
-    UNLOCK_MALLOC_STATS mem_free(x, size);
+    UNLOCK_MALLOC_STATS;
+    mem_free(x, size);
     return 0;
 }
 #endif

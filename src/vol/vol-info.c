@@ -18,7 +18,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/vol-info.c,v 1.18 2004/06/23 14:27:48 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/vol-info.c,v 1.18.2.1 2004/08/25 07:14:19 shadow Exp $");
 
 #include <ctype.h>
 #include <errno.h>
@@ -608,8 +608,9 @@ HandleVolume(struct DiskPartition *dp, char *name)
 	if (saveinodes)
 	    printf
 		("Volume-Id\t  Volsize  Auxsize Inodesize  AVolsize SizeDiff                (VolName)\n");
-	printf("%u\t%9d%9d%10d%10d%9d\t%24s\n", V_id(vp), Vdiskused, Vauxsize_k,
-	       Vvnodesize_k, totvolsize, totvolsize - Vdiskused, V_name(vp));
+	printf("%u\t%9d%9d%10d%10d%9d\t%24s\n", V_id(vp), Vdiskused,
+	       Vauxsize_k, Vvnodesize_k, totvolsize, totvolsize - Vdiskused,
+	       V_name(vp));
     }
 }
 

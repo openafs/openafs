@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_link.c,v 1.15 2003/08/29 22:00:04 rees Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_link.c,v 1.15.2.1 2004/08/25 07:09:35 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -46,7 +46,7 @@ afs_link(OSI_VC_ARG(adp), avc, aname, acred)
 #else
 afs_link(avc, OSI_VC_ARG(adp), aname, acred)
 #endif
-    OSI_VC_DECL(adp);
+     OSI_VC_DECL(adp);
      struct vcache *avc;
      char *aname;
      struct AFS_UCRED *acred;
@@ -60,9 +60,10 @@ afs_link(avc, OSI_VC_ARG(adp), aname, acred)
     struct AFSFetchStatus OutFidStatus, OutDirStatus;
     struct AFSVolSync tsync;
     struct afs_fakestat_state vfakestate, dfakestate;
-    XSTATS_DECLS OSI_VC_CONVERT(adp)
+    XSTATS_DECLS;
+    OSI_VC_CONVERT(adp);
 
-      AFS_STATCNT(afs_link);
+    AFS_STATCNT(afs_link);
     afs_Trace3(afs_iclSetp, CM_TRACE_LINK, ICL_TYPE_POINTER, adp,
 	       ICL_TYPE_POINTER, avc, ICL_TYPE_STRING, aname);
     /* create a hard link; new entry is aname in dir adp */

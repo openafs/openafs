@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/bozo/bos.c,v 1.20 2003/12/07 22:49:18 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/bozo/bos.c,v 1.20.2.1 2004/08/25 07:03:36 shadow Exp $");
 
 #include <afs/stds.h>
 #include <stdlib.h>
@@ -145,7 +145,8 @@ DateOf(atime)
 {
     static char tbuffer[30];
     register char *tp;
-    tp = ctime((time_t *) & atime);
+    time_t t = (time_t) atime;
+    tp = ctime(&t);
     if (tp) {
 	strcpy(tbuffer, tp);
 	tbuffer[24] = 0;	/* get rid of new line */

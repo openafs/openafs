@@ -17,7 +17,7 @@
 #include <afsconfig.h>
 #include <afs/param.h>
 
-RCSID("$Header: /cvs/openafs/src/lwp/lwp.c,v 1.27 2004/07/28 20:59:58 shadow Exp $");
+RCSID("$Header: /cvs/openafs/src/lwp/lwp.c,v 1.27.2.1 2004/08/25 07:03:40 shadow Exp $");
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -73,11 +73,16 @@ extern char PRE_Block;		/* from preempt.c */
 #define MINFRAME 128
 #define STACK_ALIGN 8
 #else
+#ifdef __s390x__
+#define MINFRAME    160
+#define STACK_ALIGN 8
+#else
 #ifdef __s390__
 #define MINFRAME    96
 #define STACK_ALIGN 8
 #else
 #define STACK_ALIGN 4
+#endif
 #endif
 #endif
 

@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/AIX/osi_inode.c,v 1.8 2003/07/15 23:14:17 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/AIX/osi_inode.c,v 1.8.2.1 2004/08/25 07:16:15 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -236,13 +236,13 @@ igetinode(dev, vfsp, inode, vpp, perror)
 	ip = 0;
 	goto out;
     }
-    IREAD_UNLOCK(ip);
     if (vpp) {
 	if (nvfsp)
 	    *vpp = ip->i_gnode.gn_vnode;
 	else
 	    setuerror(iptovp(vfsp, ip, vpp));
     }
+    IREAD_UNLOCK(ip);
   out:
     return ip;
 }

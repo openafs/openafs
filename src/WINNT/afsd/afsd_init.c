@@ -46,7 +46,7 @@ DWORD cm_rootVolumeNameLen;
 cm_volume_t *cm_rootVolumep = NULL;
 cm_cell_t *cm_rootCellp = NULL;
 cm_fid_t cm_rootFid;
-cm_scache_t *cm_rootSCachep;
+cm_scache_t *cm_rootSCachep = NULL;
 char cm_mountRoot[1024];
 DWORD cm_mountRootLen;
 int cm_logChunkSize;
@@ -71,7 +71,7 @@ long cm_HostAddr;
 
 char cm_NetbiosName[MAX_NB_NAME_LENGTH] = "";
 
-char cm_CachePath[200];
+char cm_CachePath[MAX_PATH];
 DWORD cm_CachePathLen;
 
 BOOL isGateway = FALSE;
@@ -553,8 +553,7 @@ int afsd_InitCM(char **reasonP)
 		code = RegQueryValueEx(parmKey, "LogoffTokenTransferTimeout",
 					NULL, NULL, (BYTE *) &ltto, &dummyLen);
 		if (code == ERROR_SUCCESS)
-			afsi_log("Logoff token tranfer timeout %d seconds",
-				 ltto);
+            afsi_log("Logoff token tranfer timeout %d seconds", ltto);
 		else {
 			ltto = 10;
 			afsi_log("Default logoff token transfer timeout 10 seconds");
@@ -647,8 +646,7 @@ int afsd_InitCM(char **reasonP)
     cm_sysName = cm_sysNameList[0];
 
 	dummyLen = MAXSYSNAME;
-	code = RegQueryValueEx(parmKey, "SysName", NULL, NULL,
-				cm_sysName, &dummyLen);
+    code = RegQueryValueEx(parmKey, "SysName", NULL, NULL, cm_sysName, &dummyLen);
 	if (code == ERROR_SUCCESS)
 		afsi_log("Sys name %s", cm_sysName);
 	else {
@@ -943,11 +941,11 @@ int afsd_InitCM(char **reasonP)
         }
 	}
 
+
 #ifdef AFS_FREELANCE_CLIENT
 	if (cm_freelanceEnabled)
 	  cm_InitFreelance();
 #endif
-
 	return 0;
 }
 

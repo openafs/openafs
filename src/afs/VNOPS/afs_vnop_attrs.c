@@ -24,7 +24,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.27 2003/10/24 06:26:04 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_attrs.c,v 1.27.2.1 2004/08/25 07:09:35 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -71,7 +71,7 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
     }
 #if defined(AFS_DARWIN_ENV)
     {
-        extern u_int32_t afs_darwin_realmodes;
+	extern u_int32_t afs_darwin_realmodes;
 	if (!afs_darwin_realmodes) {
 	    /* Mac OS X uses the mode bits to determine whether a file or
 	     * directory is accessible, and believes them, even though under
@@ -80,13 +80,13 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
 	     * conservatively.
 	     */
 	    if (S_ISDIR(attrs->va_mode)) {
-	        /* all access bits need to be set for directories, since even
+		/* all access bits need to be set for directories, since even
 		 * a mode 0 directory can still be used normally.
 		 */
-	        attrs->va_mode |= ACCESSPERMS;
+		attrs->va_mode |= ACCESSPERMS;
 	    } else {
-	        /* for other files, replicate the user bits to group and other */
-	        mode_t ubits = (attrs->va_mode & S_IRWXU) >> 6;
+		/* for other files, replicate the user bits to group and other */
+		mode_t ubits = (attrs->va_mode & S_IRWXU) >> 6;
 		attrs->va_mode |= ubits | (ubits << 3);
 	    }
 	}
@@ -105,7 +105,7 @@ afs_CopyOutAttrs(register struct vcache *avc, register struct vattr *attrs)
     attrs->va_fsid = avc->v.v_mount->m_stat.f_fsid.val[0];
 #else
 #ifdef AFS_DARWIN70_ENV
-    attrs->va_fsid = avc->v.v_mount->mnt_stat.f_fsid.val[0]; 
+    attrs->va_fsid = avc->v.v_mount->mnt_stat.f_fsid.val[0];
 #else /* ! AFS_DARWIN70_ENV */
     attrs->va_fsid = 1;
 #endif /* AFS_DARWIN70_ENV */
@@ -242,9 +242,9 @@ afs_getattr(OSI_VC_DECL(avc), struct vattr *attrs, struct AFS_UCRED *acred)
     extern struct unixuser *afs_FindUser();
     struct unixuser *au;
     int inited = 0;
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
 
-	AFS_STATCNT(afs_getattr);
+    AFS_STATCNT(afs_getattr);
     afs_Trace2(afs_iclSetp, CM_TRACE_GETATTR, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_OFFSET, ICL_HANDLE_OFFSET(avc->m.Length));
 
@@ -474,9 +474,9 @@ afs_setattr(OSI_VC_DECL(avc), register struct vattr *attrs,
     struct AFSStoreStatus astat;
     register afs_int32 code;
     struct afs_fakestat_state fakestate;
-    OSI_VC_CONVERT(avc)
+    OSI_VC_CONVERT(avc);
 
-	AFS_STATCNT(afs_setattr);
+    AFS_STATCNT(afs_setattr);
 #if defined(AFS_SUN5_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX22_ENV)
     afs_Trace4(afs_iclSetp, CM_TRACE_SETATTR, ICL_TYPE_POINTER, avc,
 	       ICL_TYPE_INT32, attrs->va_mask, ICL_TYPE_OFFSET,

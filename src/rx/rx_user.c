@@ -13,7 +13,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_user.c,v 1.18 2004/08/06 20:04:07 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_user.c,v 1.18.2.1 2004/08/25 07:09:42 shadow Exp $");
 
 # include <sys/types.h>
 # include <errno.h>
@@ -66,8 +66,8 @@ RCSID
  */
 
 pthread_mutex_t rx_if_init_mutex;
-#define LOCK_IF_INIT assert(pthread_mutex_lock(&rx_if_init_mutex)==0);
-#define UNLOCK_IF_INIT assert(pthread_mutex_unlock(&rx_if_init_mutex)==0);
+#define LOCK_IF_INIT assert(pthread_mutex_lock(&rx_if_init_mutex)==0)
+#define UNLOCK_IF_INIT assert(pthread_mutex_unlock(&rx_if_init_mutex)==0)
 
 /*
  * The rx_if_mutex mutex protects the following global variables:
@@ -77,8 +77,8 @@ pthread_mutex_t rx_if_init_mutex;
  */
 
 pthread_mutex_t rx_if_mutex;
-#define LOCK_IF assert(pthread_mutex_lock(&rx_if_mutex)==0);
-#define UNLOCK_IF assert(pthread_mutex_unlock(&rx_if_mutex)==0);
+#define LOCK_IF assert(pthread_mutex_lock(&rx_if_mutex)==0)
+#define UNLOCK_IF assert(pthread_mutex_unlock(&rx_if_mutex)==0)
 #else
 #define LOCK_IF_INIT
 #define UNLOCK_IF_INIT
@@ -296,8 +296,10 @@ rx_getAllAddr(afs_int32 * buffer, int maxSize)
 void
 rx_GetIFInfo(void)
 {
-    LOCK_IF_INIT if (Inited) {
-	UNLOCK_IF_INIT return;
+    LOCK_IF_INIT;
+    if (Inited) {
+	UNLOCK_IF_INIT;
+	return;
     } else {
 	u_int maxsize;
 	u_int rxsize;
@@ -305,10 +307,12 @@ rx_GetIFInfo(void)
 	afs_uint32 i;
 
 	Inited = 1;
-	UNLOCK_IF_INIT rxi_numNetAddrs = ADDRSPERSITE;
+	UNLOCK_IF_INIT;
+	rxi_numNetAddrs = ADDRSPERSITE;
 
-	LOCK_IF(void) syscfg_GetIFInfo(&rxi_numNetAddrs, rxi_NetAddrs,
-				       myNetMasks, myNetMTUs, myNetFlags);
+	LOCK_IF;
+	(void)syscfg_GetIFInfo(&rxi_numNetAddrs, rxi_NetAddrs,
+			       myNetMasks, myNetMTUs, myNetFlags);
 
 	for (i = 0; i < rxi_numNetAddrs; i++) {
 	    rxsize = rxi_AdjustIfMTU(myNetMTUs[i] - RX_IPUDP_SIZE);
@@ -322,7 +326,8 @@ rx_GetIFInfo(void)
 	    }
 
 	}
-	UNLOCK_IF ncbufs = (rx_maxJumboRecvSize - RX_FIRSTBUFFERSIZE);
+	UNLOCK_IF;
+	ncbufs = (rx_maxJumboRecvSize - RX_FIRSTBUFFERSIZE);
 	if (ncbufs > 0) {
 	    ncbufs = ncbufs / RX_CBUFFERSIZE;
 	    npackets = rx_initSendWindow - 1;
@@ -391,16 +396,21 @@ rx_GetIFInfo(void)
     struct sockaddr_in *a;
 #endif /* AFS_DJGPP_ENV */
 
-    LOCK_IF_INIT if (Inited) {
-	UNLOCK_IF_INIT return;
+    LOCK_IF_INIT;
+    if (Inited) {
+	UNLOCK_IF_INIT;
+	return;
     }
     Inited = 1;
-    UNLOCK_IF_INIT LOCK_IF rxi_numNetAddrs = 0;
+    UNLOCK_IF_INIT;
+    LOCK_IF;
+    rxi_numNetAddrs = 0;
     memset(rxi_NetAddrs, 0, sizeof(rxi_NetAddrs));
     memset(myNetFlags, 0, sizeof(myNetFlags));
     memset(myNetMTUs, 0, sizeof(myNetMTUs));
     memset(myNetMasks, 0, sizeof(myNetMasks));
-    UNLOCK_IF s = socket(AF_INET, SOCK_DGRAM, 0);
+    UNLOCK_IF;
+    s = socket(AF_INET, SOCK_DGRAM, 0);
     if (s < 0)
 	return;
 
@@ -421,10 +431,10 @@ rx_GetIFInfo(void)
 	return;
     }
 
-    LOCK_IF
+    LOCK_IF;
 #ifdef	AFS_AIX41_ENV
 #define size(p) MAX((p).sa_len, sizeof(p))
-	cplim = buf + ifc.ifc_len;	/*skip over if's with big ifr_addr's */
+    cplim = buf + ifc.ifc_len;	/*skip over if's with big ifr_addr's */
     for (cp = buf; cp < cplim;
 	 cp += sizeof(ifr->ifr_name) + MAX(a->sin_len, sizeof(*a))) {
 	if (rxi_numNetAddrs >= ADDRSPERSITE)
@@ -432,7 +442,7 @@ rx_GetIFInfo(void)
 
 	ifr = (struct ifreq *)cp;
 #else
-	len = ifc.ifc_len / sizeof(struct ifreq);
+    len = ifc.ifc_len / sizeof(struct ifreq);
     if (len > ADDRSPERSITE)
 	len = ADDRSPERSITE;
 
@@ -552,7 +562,8 @@ rx_GetIFInfo(void)
 	    ++rxi_numNetAddrs;
 	}
     }
-    UNLOCK_IF close(s);
+    UNLOCK_IF;
+    close(s);
 
     /* have to allocate at least enough to allow a single packet to reach its
      * maximum size, so ReadPacket will work.  Allocate enough for a couple
@@ -594,15 +605,17 @@ rxi_InitPeerParams(struct rx_peer *pp)
 
 
 
-    LOCK_IF_INIT if (!Inited) {
-	UNLOCK_IF_INIT
-	    /*
-	     * there's a race here since more than one thread could call
-	     * rx_GetIFInfo.  The race stops in rx_GetIFInfo.
-	     */
-	    rx_GetIFInfo();
+    LOCK_IF_INIT;
+    if (!Inited) {
+	UNLOCK_IF_INIT;
+	/*
+	 * there's a race here since more than one thread could call
+	 * rx_GetIFInfo.  The race stops in rx_GetIFInfo.
+	 */
+	rx_GetIFInfo();
     } else {
-    UNLOCK_IF_INIT}
+	UNLOCK_IF_INIT;
+    }
 
 #ifdef ADAPT_MTU
     /* try to second-guess IP, and identify which link is most likely to
@@ -616,7 +629,8 @@ rxi_InitPeerParams(struct rx_peer *pp)
      * pp->burstSize pp->burst pp->burstWait.sec pp->burstWait.usec
      * pp->timeout.usec */
 
-    LOCK_IF for (ix = 0; ix < rxi_numNetAddrs; ++ix) {
+    LOCK_IF;
+    for (ix = 0; ix < rxi_numNetAddrs; ++ix) {
 	if ((rxi_NetAddrs[ix] & myNetMasks[ix]) == (ppaddr & myNetMasks[ix])) {
 #ifdef IFF_POINTOPOINT
 	    if (myNetFlags[ix] & IFF_POINTOPOINT)
@@ -629,7 +643,8 @@ rxi_InitPeerParams(struct rx_peer *pp)
 		pp->ifMTU = MIN(rx_MyMaxSendSize, rxmtu);
 	}
     }
-    UNLOCK_IF if (!pp->ifMTU) {	/* not local */
+    UNLOCK_IF;
+    if (!pp->ifMTU) {		/* not local */
 	pp->timeout.sec = 3;
 	pp->ifMTU = MIN(rx_MyMaxSendSize, RX_REMOTE_PACKET_SIZE);
     }
@@ -665,8 +680,8 @@ rx_SetNoJumbo(void)
 
 /* Override max MTU.  If rx_SetNoJumbo is called, it must be 
    called before calling rx_SetMaxMTU since SetNoJumbo clobbers rx_maxReceiveSize */
-void rx_SetMaxMTU(int mtu)
+void
+rx_SetMaxMTU(int mtu)
 {
-	rx_MyMaxSendSize = rx_maxReceiveSizeUser = rx_maxReceiveSize = mtu;
+    rx_MyMaxSendSize = rx_maxReceiveSizeUser = rx_maxReceiveSize = mtu;
 }
-

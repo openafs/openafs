@@ -15,7 +15,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44 2004/08/08 19:17:05 shadow Exp $");
+    ("$Header: /cvs/openafs/src/rx/rx_kcommon.c,v 1.44.2.1 2004/08/25 07:09:41 shadow Exp $");
 
 #include "rx/rx_kcommon.h"
 
@@ -516,7 +516,7 @@ rxi_GetcbiInfo(void)
     memset((void *)mtus, 0, sizeof(mtus));
 
     for (i = 0; i < afs_cb_interface.numberOfInterfaces; i++) {
-        if (!afs_cb_interface.mtu[i]) 
+	if (!afs_cb_interface.mtu[i])
 	    afs_cb_interface.mtu[i] = htonl(1500);
 	rxmtu = (ntohl(afs_cb_interface.mtu[i]) - RX_IPUDP_SIZE);
 	ifinaddr = ntohl(afs_cb_interface.addr_in[i]);
@@ -791,16 +791,17 @@ rxk_NewSocketHost(afs_uint32 ahost, short aport)
 #if	defined(AFS_HPUX102_ENV)
 #if     defined(AFS_HPUX110_ENV)
     /* we need a file associated with the socket so sosend in NetSend 
-       will not fail */
+     * will not fail */
     /* blocking socket */
     code = socreate(AF_INET, &newSocket, SOCK_DGRAM, 0, 0);
     fp = falloc();
-    if (!fp) goto bad;
+    if (!fp)
+	goto bad;
     fp->f_flag = FREAD | FWRITE;
     fp->f_type = DTYPE_SOCKET;
-    fp->f_ops  = &socketops;
+    fp->f_ops = &socketops;
 
-    fp->f_data = (void *) newSocket;
+    fp->f_data = (void *)newSocket;
     newSocket->so_fp = (void *)fp;
 
 #else /* AFS_HPUX110_ENV */
@@ -930,11 +931,11 @@ rxk_FreeSocket(register struct socket *asocket)
 #endif
 #ifdef AFS_HPUX110_ENV
     if (asocket->so_fp) {
-	struct file * fp = asocket->so_fp;
+	struct file *fp = asocket->so_fp;
 #if !defined(AFS_HPUX1123_ENV)
 	/* 11.23 still has falloc, but not FPENTRYFREE ! 
-	   so for now if we shutdown, we will waist a file 
-	   structure */
+	 * so for now if we shutdown, we will waist a file 
+	 * structure */
 	FPENTRYFREE(fp);
 	asocket->so_fp = NULL;
 #endif

@@ -94,7 +94,6 @@ void cm_InitReq(cm_req_t *reqp)
 #else
         gettimeofday(&reqp->startTime, NULL);
 #endif
- 
 }
 
 static long cm_GetServerList(struct cm_fid *fidp, struct cm_user *userp,
@@ -144,7 +143,7 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 	cm_serverRef_t * serversp,
 	cm_callbackRequest_t *cbrp, long errorCode)
 {
-	cm_server_t *serverp;
+    cm_server_t *serverp = 0;
     cm_serverRef_t **serverspp = 0;
 	cm_serverRef_t *tsrp;
 	cm_ucell_t *ucellp;
@@ -163,8 +162,21 @@ cm_Analyze(cm_conn_t *connp, cm_user_t *userp, cm_req_t *reqp,
 		serverp = connp->serverp;
 
 	/* Update callback pointer */
-    if (cbrp && errorCode == 0) 
-        cbrp->serverp = connp->serverp;
+    if (cbrp && serverp && errorCode == 0) {
+        if (cbrp->serverp) {
+            if ( cbrp->serverp != serverp ) {
+                lock_ObtainWrite(&cm_serverLock);
+                cm_PutServerNoLock(cbrp->serverp);
+                cm_GetServerNoLock(serverp);
+                lock_ReleaseWrite(&cm_serverLock);
+            }
+        } else {
+            cm_GetServer(serverp);
+        }
+        lock_ObtainWrite(&cm_callbackLock);
+        cbrp->serverp = serverp;
+        lock_ReleaseWrite(&cm_callbackLock);
+    }
 
 	/* If not allowed to retry, don't */
 	if (reqp->flags & CM_REQ_NORETRY)
@@ -398,7 +410,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
 	lock_ObtainWrite(&cm_serverLock);
     for (tsrp = serversp; tsrp; tsrp=tsrp->next) {
         tsp = tsrp->server;
-        tsp->refCount++;
+        cm_GetServerNoLock(tsp);
         lock_ReleaseWrite(&cm_serverLock);
         if (!(tsp->flags & CM_SERVERFLAG_DOWN)) {
             allDown = 0;
@@ -422,7 +434,6 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
                     rx_SetConnDeadTime((*connpp)->callp, timeLeft);
                     rx_SetConnHardDeadTime((*connpp)->callp, (u_short) hardTimeLeft);
                     lock_ReleaseMutex(&(*connpp)->mx);
-
                     return 0;
                 }
                 if (firstError == 0) 
@@ -430,7 +441,7 @@ long cm_ConnByMServers(cm_serverRef_t *serversp, cm_user_t *usersp,
             }
 		} 
         lock_ObtainWrite(&cm_serverLock);
-        osi_assert(tsp->refCount-- > 0);
+        cm_PutServerNoLock(tsp);
     }   
 
 	lock_ReleaseWrite(&cm_serverLock);
@@ -462,6 +473,7 @@ void cm_GCConnections(cm_server_t *serverp)
 		userp = tcp->userp;
 		if (userp && tcp->refCount == 0 && (userp->vcRefs == 0)) {
 			/* do the deletion of this guy */
+            cm_PutServer(tcp->serverp);
             cm_ReleaseUser(userp);
             *lcpp = tcp->nextp;
 			rx_DestroyConnection(tcp->callp);
@@ -532,11 +544,14 @@ long cm_ConnByServer(cm_server_t *serverp, cm_user_t *userp, cm_conn_t **connpp)
 	lock_ObtainMutex(&userp->mx);
 	lock_ObtainWrite(&cm_connLock);
 	for(tcp = serverp->connsp; tcp; tcp=tcp->nextp) {
-		if (tcp->userp == userp) break;
+        if (tcp->userp == userp) 
+            break;
     }
+    
 	/* find ucell structure */
     ucellp = cm_GetUCell(userp, serverp->cellp);
 	if (!tcp) {
+        cm_GetServer(serverp);
 		tcp = malloc(sizeof(*tcp));
         memset(tcp, 0, sizeof(*tcp));
         tcp->nextp = serverp->connsp;

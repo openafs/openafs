@@ -17,7 +17,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_create.c,v 1.16 2003/07/15 23:14:30 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/VNOPS/afs_vnop_create.c,v 1.16.2.1 2004/08/25 07:09:35 shadow Exp $");
 
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
 #include "afsincludes.h"	/* Afs-based standard headers */
@@ -71,10 +71,11 @@ afs_create(OSI_VC_DECL(adp), char *aname, struct vattr *attrs,
     struct vcache *tvc;
     struct volume *volp = 0;
     struct afs_fakestat_state fakestate;
-    XSTATS_DECLS OSI_VC_CONVERT(adp)
+    XSTATS_DECLS;
+    OSI_VC_CONVERT(adp);
 
 
-      AFS_STATCNT(afs_create);
+    AFS_STATCNT(afs_create);
     if ((code = afs_InitReq(&treq, acred)))
 	goto done2;
 

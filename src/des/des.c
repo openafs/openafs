@@ -37,7 +37,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/des/des.c,v 1.11 2003/07/15 23:14:59 shadow Exp $");
+    ("$Header: /cvs/openafs/src/des/des.c,v 1.11.2.1 2004/08/25 07:09:37 shadow Exp $");
 
 #ifndef KERNEL
 #include <stdio.h>
@@ -104,25 +104,26 @@ des_ecb_encrypt(afs_uint32 * clear, afs_uint32 * cipher,
 #ifdef DEBUG
     afs_uint32 dbg_tmp[2];
 #endif
-    LOCK_RXKAD_STATS if (encrypt)
-	  rxkad_stats.des_encrypts[DES_ENCRYPT]++;
+    LOCK_RXKAD_STATS;
+    if (encrypt)
+	rxkad_stats.des_encrypts[DES_ENCRYPT]++;
     else
 	rxkad_stats.des_encrypts[DES_DECRYPT]++;
-    UNLOCK_RXKAD_STATS
-	/*
-	 * Use L1,R1 and L2,R2 as two sets of "64-bit" registers always
-	 * work from L1,R1 input to L2,R2 output; initialize the cleartext
-	 * into registers.
-	 */
+    UNLOCK_RXKAD_STATS;
+    /*
+     * Use L1,R1 and L2,R2 as two sets of "64-bit" registers always
+     * work from L1,R1 input to L2,R2 output; initialize the cleartext
+     * into registers.
+     */
 #ifdef MUSTALIGN
 #ifdef DEBUG
-	/*
-	 * If the alignment is wrong, the programmer really screwed up --
-	 * we aren't even getting the right data type.  His problem.  Keep
-	 * this code for debugging.
-	 */
-	/* Make sure schedule is ok */
-	if ((afs_int32) schedule & 3) {
+    /*
+     * If the alignment is wrong, the programmer really screwed up --
+     * we aren't even getting the right data type.  His problem.  Keep
+     * this code for debugging.
+     */
+    /* Make sure schedule is ok */
+    if ((afs_int32) schedule & 3) {
 	fprintf(stderr, "des.c schedule arg pointer not aligned\n");
 	abort();
     }

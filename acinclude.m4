@@ -224,6 +224,15 @@ case $system in
                          fi
                    fi
                  fi
+		 if test -f "$LINUX_KERNEL_PATH/include/linux/in_systm.h"; then
+		  AC_DEFINE(HAVE_IN_SYSTM_H, 1, [define if you have in_systm.h header file])
+	         fi
+		 if test -f "$LINUX_KERNEL_PATH/include/linux/mm_inline.h"; then
+		  AC_DEFINE(HAVE_MM_INLINE_H, 1, [define if you have mm_inline.h header file])
+	         fi
+		 if test -f "$LINUX_KERNEL_PATH/include/linux/in_systm.h"; then
+		  AC_DEFINE(HAVE_IN_SYSTM_H, 1, [define if you have in_systm.h header file])
+	         fi
 		 if test "x$ac_cv_linux_exports_sys_chdir" = "xyes" ; then
 		  AC_DEFINE(EXPORTED_SYS_CHDIR, 1, [define if your linux kernel exports sys_chdir])
 		 fi
@@ -590,6 +599,9 @@ else
 			;;
 		s390-*-linux*)
 			AFS_SYSNAME="s390_linuxXX"
+			;;
+		s390x-*-linux*)
+			AFS_SYSNAME="s390x_linuxXX"
 			;;
 		sparc-*-linux*)
 			AFS_SYSNAME="sparc_linuxXX"

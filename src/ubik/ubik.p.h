@@ -87,8 +87,8 @@ struct ubik_client {
 };
 
 #ifdef AFS_PTHREAD_ENV
-#define LOCK_UBIK_CLIENT(client) assert(pthread_mutex_lock(&client->cm)==0);
-#define UNLOCK_UBIK_CLIENT(client) assert(pthread_mutex_unlock(&client->cm)==0);
+#define LOCK_UBIK_CLIENT(client) assert(pthread_mutex_lock(&client->cm)==0)
+#define UNLOCK_UBIK_CLIENT(client) assert(pthread_mutex_unlock(&client->cm)==0)
 #else
 #define LOCK_UBIK_CLIENT(client)
 #define UNLOCK_UBIK_CLIENT(client)
@@ -355,7 +355,8 @@ extern int ubik_ClientInit(register struct rx_connection **serverconns,
 extern afs_int32 ubik_ClientDestroy(struct ubik_client *aclient);
 
 /* ubik.c */
-extern int ubik_BeginTrans(register struct ubik_dbase *dbase, afs_int32 transMode, struct ubik_trans **transPtr);
+extern int ubik_BeginTrans(register struct ubik_dbase *dbase,
+			   afs_int32 transMode, struct ubik_trans **transPtr);
 extern int ubik_EndTrans(register struct ubik_trans *transPtr);
 
 #endif /* UBIK_H */

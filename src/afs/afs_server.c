@@ -33,7 +33,7 @@
 #include "afs/param.h"
 
 RCSID
-    ("$Header: /cvs/openafs/src/afs/afs_server.c,v 1.33 2004/06/24 17:38:23 shadow Exp $");
+    ("$Header: /cvs/openafs/src/afs/afs_server.c,v 1.33.2.1 2004/08/25 07:07:53 shadow Exp $");
 
 #include "afs/stds.h"
 #include "afs/sysincludes.h"	/* Standard vendor system headers */
@@ -1178,8 +1178,7 @@ afsi_SetServerIPRank(sa, ifa)
 #ifdef  IFF_POINTTOPOINT
     /* check for case #4 -- point-to-point link */
     if ((ifa->ia_ifp->if_flags & IFF_POINTOPOINT)
-	&& (myDstaddr == serverAddr))
-	) {
+	&& (myDstaddr == serverAddr)) {
 	if (ifa->ia_ifp->if_metric >= (MAXDEFRANK - MED) / PPWEIGHT)
 	    t = MAXDEFRANK;
 	else

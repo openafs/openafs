@@ -27,7 +27,10 @@
     <?define ProductName="OpenAFS for Windows"?>
     
     <!-- Localized packages should have different product codes -->
-    <?define ProductCode="CCAF9E14-976E-46C0-8A1B-A218EAB7ADC5"?>
+    <!-- Each product release should have a different product code -->
+    <?ifndef ProductCode?>
+        <?define ProductCode="????????-????-????-????-????????????"?>
+    <?endif?>
     
     <!-- Same goes for localized components -->
     <?define DocHtmlIndexGuid="B656CA5A-5179-42D8-8972-2F128AEDE751"?>

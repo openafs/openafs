@@ -62,7 +62,7 @@
 #endif
 
 RCSID
-    ("$Header: /cvs/openafs/src/rxkad/ticket5.c,v 1.8 2004/04/09 05:53:14 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/rxkad/ticket5.c,v 1.8.2.1 2004/08/25 07:09:42 shadow Exp $");
 
 #if defined(UKERNEL)
 #include "../afs/sysincludes.h"
@@ -387,36 +387,36 @@ tkt_DecodeTicket5(char *ticket, afs_int32 ticket_len,
 
 static int
 verify_checksum_md4(void *data, size_t len,
-                    void *cksum, size_t cksumsz,
-                    struct ktc_encryptionKey *key)
+		    void *cksum, size_t cksumsz,
+		    struct ktc_encryptionKey *key)
 {
-      MD4_CTX md4;
-      unsigned char tmp[16];
+    MD4_CTX md4;
+    unsigned char tmp[16];
 
-      MD4_Init(&md4);
-      MD4_Update(&md4, data, len);
-      MD4_Final (tmp, &md4);
+    MD4_Init(&md4);
+    MD4_Update(&md4, data, len);
+    MD4_Final(tmp, &md4);
 
-      if (memcmp(tmp, cksum, cksumsz) != 0)
-              return 1;
-      return 0;
+    if (memcmp(tmp, cksum, cksumsz) != 0)
+	return 1;
+    return 0;
 }
 
 static int
 verify_checksum_md5(void *data, size_t len,
-                    void *cksum, size_t cksumsz,
-                    struct ktc_encryptionKey *key)
+		    void *cksum, size_t cksumsz,
+		    struct ktc_encryptionKey *key)
 {
-      MD5_CTX md5;
-      unsigned char tmp[16];
+    MD5_CTX md5;
+    unsigned char tmp[16];
 
-      MD5_Init(&md5);
-      MD5_Update(&md5, data, len);
-      MD5_Final (tmp, &md5);
+    MD5_Init(&md5);
+    MD5_Update(&md5, data, len);
+    MD5_Final(tmp, &md5);
 
-      if (memcmp(tmp, cksum, cksumsz) != 0)
-              return 1;
-      return 0;
+    if (memcmp(tmp, cksum, cksumsz) != 0)
+	return 1;
+    return 0;
 }
 
 static int
@@ -449,7 +449,7 @@ krb5_des_decrypt(struct ktc_encryptionKey *key, int etype, void *in,
     des_key_schedule s;
     char cksum[24];
     size_t cksumsz;
-    int ret = 1;	/* failure */
+    int ret = 1;		/* failure */
 
     cksum_func = NULL;
 

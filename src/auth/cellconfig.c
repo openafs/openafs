@@ -11,7 +11,7 @@
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/auth/cellconfig.c,v 1.40 2004/07/22 09:42:40 jaltman Exp $");
+    ("$Header: /cvs/openafs/src/auth/cellconfig.c,v 1.40.2.1 2004/08/25 07:09:36 shadow Exp $");
 
 #include <afs/stds.h>
 #include <afs/pthread_glock.h>
@@ -211,20 +211,21 @@ afsconf_Check(register struct afsconf_dir *adir)
 #ifdef AFS_NT40_ENV
     /* NT client CellServDB has different file name than NT server or Unix */
     if (IsClientConfigDirectory(adir->name)) {
-        if ( !afssw_GetClientCellServDBDir(&p) ) {
-            strcompose(tbuffer, sizeof(tbuffer), p, "/",
-                        AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
-            free(p);
-        } else {
-            int len;
-			strncpy(tbuffer, adir->name, sizeof(tbuffer));
-			len = strlen(tbuffer);
-            if ( tbuffer[len-1] != '\\' && tbuffer[len-1] != '/' ) {
-                strncat(tbuffer, "\\", sizeof(tbuffer));
-            }
-            strncat(tbuffer, AFSDIR_CELLSERVDB_FILE_NTCLIENT, sizeof(tbuffer));
-            tbuffer[sizeof(tbuffer)-1] = '\0';
-        }
+	if (!afssw_GetClientCellServDBDir(&p)) {
+	    strcompose(tbuffer, sizeof(tbuffer), p, "/",
+		       AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
+	    free(p);
+	} else {
+	    int len;
+	    strncpy(tbuffer, adir->name, sizeof(tbuffer));
+	    len = strlen(tbuffer);
+	    if (tbuffer[len - 1] != '\\' && tbuffer[len - 1] != '/') {
+		strncat(tbuffer, "\\", sizeof(tbuffer));
+	    }
+	    strncat(tbuffer, AFSDIR_CELLSERVDB_FILE_NTCLIENT,
+		    sizeof(tbuffer));
+	    tbuffer[sizeof(tbuffer) - 1] = '\0';
+	}
     } else {
 	strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLSERVDB_FILE,
 		   NULL);
@@ -260,18 +261,19 @@ afsconf_Touch(register struct afsconf_dir *adir)
     /* NT client CellServDB has different file name than NT server or Unix */
 
     if (IsClientConfigDirectory(adir->name)) {
-        if ( !afssw_GetClientCellServDBDir(&p) ) {
-            strcompose(tbuffer, sizeof(tbuffer), p, "/",
-                        AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
-            free(p);
-        } else {
-            int len = strlen(tbuffer);
-            if ( tbuffer[len-1] != '\\' && tbuffer[len-1] != '/' ) {
-                strncat(tbuffer, "\\", sizeof(tbuffer));
-            }
-            strncat(tbuffer, AFSDIR_CELLSERVDB_FILE_NTCLIENT, sizeof(tbuffer));
-            tbuffer[sizeof(tbuffer)-1] = '\0';
-        }
+	if (!afssw_GetClientCellServDBDir(&p)) {
+	    strcompose(tbuffer, sizeof(tbuffer), p, "/",
+		       AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
+	    free(p);
+	} else {
+	    int len = strlen(tbuffer);
+	    if (tbuffer[len - 1] != '\\' && tbuffer[len - 1] != '/') {
+		strncat(tbuffer, "\\", sizeof(tbuffer));
+	    }
+	    strncat(tbuffer, AFSDIR_CELLSERVDB_FILE_NTCLIENT,
+		    sizeof(tbuffer));
+	    tbuffer[sizeof(tbuffer) - 1] = '\0';
+	}
     } else {
 	strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLSERVDB_FILE,
 		   NULL);
@@ -293,9 +295,9 @@ afsconf_Open(register const char *adir)
     register struct afsconf_dir *tdir;
     register afs_int32 code;
 
-    LOCK_GLOBAL_MUTEX
-	/* zero structure and fill in name; rest is done by internal routine */
-	tdir = (struct afsconf_dir *)malloc(sizeof(struct afsconf_dir));
+    LOCK_GLOBAL_MUTEX;
+    /* zero structure and fill in name; rest is done by internal routine */
+    tdir = (struct afsconf_dir *)malloc(sizeof(struct afsconf_dir));
     memset(tdir, 0, sizeof(struct afsconf_dir));
     tdir->name = (char *)malloc(strlen(adir) + 1);
     strcpy(tdir->name, adir);
@@ -317,7 +319,8 @@ afsconf_Open(register const char *adir)
 		fp = fopen("/.AFSCONF", "r");
 		if (fp == 0) {
 		    free(tdir);
-		    UNLOCK_GLOBAL_MUTEX return (struct afsconf_dir *)0;
+		    UNLOCK_GLOBAL_MUTEX;
+		    return (struct afsconf_dir *)0;
 		}
 		fgets(afs_confdir, 128, fp);
 		fclose(fp);
@@ -331,7 +334,8 @@ afsconf_Open(register const char *adir)
 		    fp = fopen("/.AFSCONF", "r");
 		    if (fp == 0) {
 			free(tdir);
-			UNLOCK_GLOBAL_MUTEX return (struct afsconf_dir *)0;
+			UNLOCK_GLOBAL_MUTEX;
+			return (struct afsconf_dir *)0;
 		    }
 		}
 		fgets(afs_confdir, 128, fp);
@@ -340,7 +344,8 @@ afsconf_Open(register const char *adir)
 	    len = strlen(afs_confdir);
 	    if (len == 0) {
 		free(tdir);
-		UNLOCK_GLOBAL_MUTEX return (struct afsconf_dir *)0;
+		UNLOCK_GLOBAL_MUTEX;
+		return (struct afsconf_dir *)0;
 	    }
 	    if (afs_confdir[len - 1] == '\n') {
 		afs_confdir[len - 1] = 0;
@@ -353,10 +358,12 @@ afsconf_Open(register const char *adir)
 	if (code) {
 	    free(tdir->name);
 	    free(tdir);
-	    UNLOCK_GLOBAL_MUTEX return (struct afsconf_dir *)0;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return (struct afsconf_dir *)0;
 	}
     }
-    UNLOCK_GLOBAL_MUTEX return tdir;
+    UNLOCK_GLOBAL_MUTEX;
+    return tdir;
 }
 
 
@@ -434,21 +441,22 @@ afsconf_OpenInternal(register struct afsconf_dir *adir, char *cell,
      */
     if (IsClientConfigDirectory(adir->name)) {
 	/* NT client config dir */
-        char * p;
-        if ( !afssw_GetClientCellServDBDir(&p) ) {
-            strcompose(tbuffer, sizeof(tbuffer), p, "/",
-                        AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
-            free(p);
-        } else {
-            int len;
-			strncpy(tbuffer, adir->name, sizeof(tbuffer));
-			len = strlen(tbuffer);
-            if ( tbuffer[len-1] != '\\' && tbuffer[len-1] != '/' ) {
-                strncat(tbuffer, "\\", sizeof(tbuffer));
-            }
-            strncat(tbuffer, AFSDIR_CELLSERVDB_FILE_NTCLIENT, sizeof(tbuffer));
-            tbuffer[sizeof(tbuffer)-1] = '\0';
-        }
+	char *p;
+	if (!afssw_GetClientCellServDBDir(&p)) {
+	    strcompose(tbuffer, sizeof(tbuffer), p, "/",
+		       AFSDIR_CELLSERVDB_FILE_NTCLIENT, NULL);
+	    free(p);
+	} else {
+	    int len;
+	    strncpy(tbuffer, adir->name, sizeof(tbuffer));
+	    len = strlen(tbuffer);
+	    if (tbuffer[len - 1] != '\\' && tbuffer[len - 1] != '/') {
+		strncat(tbuffer, "\\", sizeof(tbuffer));
+	    }
+	    strncat(tbuffer, AFSDIR_CELLSERVDB_FILE_NTCLIENT,
+		    sizeof(tbuffer));
+	    tbuffer[sizeof(tbuffer) - 1] = '\0';
+	}
     } else {
 	/* NT server config dir */
 	strcompose(tbuffer, 256, adir->name, "/", AFSDIR_CELLSERVDB_FILE,
@@ -663,13 +671,16 @@ afsconf_CellApply(struct afsconf_dir *adir,
 {
     register struct afsconf_entry *tde;
     register afs_int32 code;
-    LOCK_GLOBAL_MUTEX for (tde = adir->entries; tde; tde = tde->next) {
+    LOCK_GLOBAL_MUTEX;
+    for (tde = adir->entries; tde; tde = tde->next) {
 	code = (*aproc) (&tde->cellInfo, arock, adir);
 	if (code) {
-	    UNLOCK_GLOBAL_MUTEX return code;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return code;
 	}
     }
-    UNLOCK_GLOBAL_MUTEX return 0;
+    UNLOCK_GLOBAL_MUTEX;
+    return 0;
 }
 
 /* call aproc(entry, arock, adir) for all cell aliases.
@@ -683,13 +694,16 @@ afsconf_CellAliasApply(struct afsconf_dir *adir,
 {
     register struct afsconf_aliasentry *tde;
     register afs_int32 code;
-    LOCK_GLOBAL_MUTEX for (tde = adir->alias_entries; tde; tde = tde->next) {
+    LOCK_GLOBAL_MUTEX;
+    for (tde = adir->alias_entries; tde; tde = tde->next) {
 	code = (*aproc) (&tde->aliasInfo, arock, adir);
 	if (code) {
-	    UNLOCK_GLOBAL_MUTEX return code;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return code;
 	}
     }
-    UNLOCK_GLOBAL_MUTEX return 0;
+    UNLOCK_GLOBAL_MUTEX;
+    return 0;
 }
 
 afs_int32 afsconf_SawCell = 0;
@@ -735,10 +749,11 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
      * replaced with a more fine-grained lock just for the resolver
      * operations.
      */
-    LOCK_GLOBAL_MUTEX len =
-	res_search(acellName, C_IN, T_AFSDB, answer, sizeof(answer));
-    UNLOCK_GLOBAL_MUTEX if (len < 0)
-	  return AFSCONF_NOTFOUND;
+    LOCK_GLOBAL_MUTEX;
+    len = res_search(acellName, C_IN, T_AFSDB, answer, sizeof(answer));
+    UNLOCK_GLOBAL_MUTEX;
+    if (len < 0)
+	return AFSCONF_NOTFOUND;
 
     p = answer + sizeof(HEADER);	/* Skip header */
     code = dn_expand(answer, answer + len, p, host, sizeof(host));
@@ -830,14 +845,15 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
     int tservice;
     struct afsconf_entry DNSce;
     afs_int32 cellHostAddrs[AFSMAXCELLHOSTS];
-	char      cellHostNames[AFSMAXCELLHOSTS][MAXHOSTCHARS];
+    char cellHostNames[AFSMAXCELLHOSTS][MAXHOSTCHARS];
     int numServers;
     int rc;
     int ttl;
 
     DNSce.cellInfo.numServers = 0;
     DNSce.next = NULL;
-    rc = getAFSServer(acellName, cellHostAddrs, cellHostNames, &numServers, &ttl);
+    rc = getAFSServer(acellName, cellHostAddrs, cellHostNames, &numServers,
+		      &ttl);
     /* ignore the ttl here since this code is only called by transitory programs
      * like klog, etc. */
     if (rc < 0)
@@ -857,8 +873,10 @@ afsconf_GetAfsdbInfo(char *acellName, char *aservice,
     acellInfo->numServers = numServers;
     strcpy(acellInfo->name, acellName);
     if (aservice) {
-	LOCK_GLOBAL_MUTEX tservice = afsconf_FindService(aservice);
-	UNLOCK_GLOBAL_MUTEX if (tservice < 0) {
+	LOCK_GLOBAL_MUTEX;
+	tservice = afsconf_FindService(aservice);
+	UNLOCK_GLOBAL_MUTEX;
+	if (tservice < 0) {
 	    return AFSCONF_NOTFOUND;	/* service not found */
 	}
 	for (i = 0; i < acellInfo->numServers; i++) {
@@ -886,8 +904,9 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
     int ambig;
     char tbuffer[64];
 
-    LOCK_GLOBAL_MUTEX if (adir)
-	  afsconf_Check(adir);
+    LOCK_GLOBAL_MUTEX;
+    if (adir)
+	afsconf_Check(adir);
     if (acellName) {
 	tcell = acellName;
 	cnLen = strlen(tcell) + 1;
@@ -897,7 +916,8 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
     } else {
 	i = afsconf_GetLocalCell(adir, tbuffer, sizeof(tbuffer));
 	if (i) {
-	    UNLOCK_GLOBAL_MUTEX return i;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return i;
 	}
 	tcell = tbuffer;
     }
@@ -905,7 +925,8 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
     bestce = (struct afsconf_entry *)0;
     ambig = 0;
     if (!adir) {
-	UNLOCK_GLOBAL_MUTEX return 0;
+	UNLOCK_GLOBAL_MUTEX;
+	return 0;
     }
 
     /* Look through the list of aliases */
@@ -936,20 +957,22 @@ afsconf_GetCellInfo(struct afsconf_dir *adir, char *acellName, char *aservice,
 	if (aservice) {
 	    tservice = afsconf_FindService(aservice);
 	    if (tservice < 0) {
-		UNLOCK_GLOBAL_MUTEX return AFSCONF_NOTFOUND;	/* service not found */
+		UNLOCK_GLOBAL_MUTEX;
+		return AFSCONF_NOTFOUND;	/* service not found */
 	    }
 	    for (i = 0; i < acellInfo->numServers; i++) {
 		acellInfo->hostAddr[i].sin_port = tservice;
 	    }
 	}
 	acellInfo->timeout = 0;
-	UNLOCK_GLOBAL_MUTEX return 0;
+	UNLOCK_GLOBAL_MUTEX;
+	return 0;
     } else {
-	UNLOCK_GLOBAL_MUTEX
+	UNLOCK_GLOBAL_MUTEX;
 #ifdef AFS_AFSDB_ENV
-	    return afsconf_GetAfsdbInfo(tcell, aservice, acellInfo);
+	return afsconf_GetAfsdbInfo(tcell, aservice, acellInfo);
 #else
-	    return AFSCONF_NOTFOUND;
+	return AFSCONF_NOTFOUND;
 #endif /* AFS_AFSDB_ENV */
     }
 }
@@ -962,14 +985,14 @@ afsconf_GetLocalCell(register struct afsconf_dir *adir, char *aname,
     char *afscell_path;
     afs_int32 code = 0;
 
-    LOCK_GLOBAL_MUTEX
-	/*
-	 * If a cell switch was specified in a command, then it should override the 
-	 * AFSCELL variable.  If a cell was specified, then the afsconf_SawCell flag
-	 * is set and the cell name in the adir structure is used.
-	 * Read the AFSCELL var each time: in case it changes (unsetenv AFSCELL).
-	 */
-	if (!afsconf_SawCell && (afscell_path = getenv("AFSCELL"))) {
+    LOCK_GLOBAL_MUTEX;
+    /*
+     * If a cell switch was specified in a command, then it should override the 
+     * AFSCELL variable.  If a cell was specified, then the afsconf_SawCell flag
+     * is set and the cell name in the adir structure is used.
+     * Read the AFSCELL var each time: in case it changes (unsetenv AFSCELL).
+     */
+    if (!afsconf_SawCell && (afscell_path = getenv("AFSCELL"))) {
 	if (!afsconf_showcell) {
 	    fprintf(stderr, "Note: Operation is performed on cell %s\n",
 		    afscell_path);
@@ -984,17 +1007,20 @@ afsconf_GetLocalCell(register struct afsconf_dir *adir, char *aname,
 	    code = AFSCONF_UNKNOWN;
     }
 
-    UNLOCK_GLOBAL_MUTEX return (code);
+    UNLOCK_GLOBAL_MUTEX;
+    return (code);
 }
 
 int
 afsconf_Close(struct afsconf_dir *adir)
 {
-    LOCK_GLOBAL_MUTEX afsconf_CloseInternal(adir);
+    LOCK_GLOBAL_MUTEX;
+    afsconf_CloseInternal(adir);
     if (adir->name)
 	free(adir->name);
     free(adir);
-    UNLOCK_GLOBAL_MUTEX return 0;
+    UNLOCK_GLOBAL_MUTEX;
+    return 0;
 }
 
 static int
@@ -1060,9 +1086,9 @@ afsconf_IntGetKeys(struct afsconf_dir *adir)
     }
 #endif /* AFS_NT40_ENV */
 
-    LOCK_GLOBAL_MUTEX
-	/* compute the key name and other setup */
-	strcompose(tbuffer, 256, adir->name, "/", AFSDIR_KEY_FILE, NULL);
+    LOCK_GLOBAL_MUTEX;
+    /* compute the key name and other setup */
+    strcompose(tbuffer, 256, adir->name, "/", AFSDIR_KEY_FILE, NULL);
     tstr = (struct afsconf_keys *)malloc(sizeof(struct afsconf_keys));
     adir->keystr = tstr;
 
@@ -1070,13 +1096,15 @@ afsconf_IntGetKeys(struct afsconf_dir *adir)
     fd = open(tbuffer, O_RDONLY);
     if (fd < 0) {
 	tstr->nkeys = 0;
-	UNLOCK_GLOBAL_MUTEX return 0;
+	UNLOCK_GLOBAL_MUTEX;
+	return 0;
     }
     code = read(fd, tstr, sizeof(struct afsconf_keys));
     close(fd);
     if (code < sizeof(afs_int32)) {
 	tstr->nkeys = 0;
-	UNLOCK_GLOBAL_MUTEX return 0;
+	UNLOCK_GLOBAL_MUTEX;
+	return 0;
     }
 
     /* convert key structure to host order */
@@ -1084,7 +1112,8 @@ afsconf_IntGetKeys(struct afsconf_dir *adir)
     for (fd = 0; fd < tstr->nkeys; fd++)
 	tstr->key[fd].kvno = ntohl(tstr->key[fd].kvno);
 
-    UNLOCK_GLOBAL_MUTEX return 0;
+    UNLOCK_GLOBAL_MUTEX;
+    return 0;
 }
 
 /* get keys structure */
@@ -1093,12 +1122,15 @@ afsconf_GetKeys(struct afsconf_dir *adir, struct afsconf_keys *astr)
 {
     register afs_int32 code;
 
-    LOCK_GLOBAL_MUTEX code = afsconf_Check(adir);
+    LOCK_GLOBAL_MUTEX;
+    code = afsconf_Check(adir);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX return AFSCONF_FAILURE;
+	UNLOCK_GLOBAL_MUTEX;
+	return AFSCONF_FAILURE;
     }
     memcpy(astr, adir->keystr, sizeof(struct afsconf_keys));
-    UNLOCK_GLOBAL_MUTEX return 0;
+    UNLOCK_GLOBAL_MUTEX;
+    return 0;
 }
 
 /* get latest key */
@@ -1112,9 +1144,11 @@ afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno, char *akey)
     struct afsconf_key *bestk;
     register afs_int32 code;
 
-    LOCK_GLOBAL_MUTEX code = afsconf_Check(adir);
+    LOCK_GLOBAL_MUTEX;
+    code = afsconf_Check(adir);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX return AFSCONF_FAILURE;
+	UNLOCK_GLOBAL_MUTEX;
+	return AFSCONF_FAILURE;
     }
     maxa = adir->keystr->nkeys;
 
@@ -1133,9 +1167,11 @@ afsconf_GetLatestKey(struct afsconf_dir * adir, afs_int32 * avno, char *akey)
 	    memcpy(akey, bestk->key, 8);	/* copy out latest key */
 	if (avno)
 	    *avno = bestk->kvno;	/* and kvno to caller */
-	UNLOCK_GLOBAL_MUTEX return 0;
+	UNLOCK_GLOBAL_MUTEX;
+	return 0;
     }
-    UNLOCK_GLOBAL_MUTEX return AFSCONF_NOTFOUND;	/* didn't find any keys */
+    UNLOCK_GLOBAL_MUTEX;
+    return AFSCONF_NOTFOUND;	/* didn't find any keys */
 }
 
 /* get a particular key */
@@ -1146,20 +1182,24 @@ afsconf_GetKey(struct afsconf_dir *adir, afs_int32 avno, char *akey)
     register struct afsconf_key *tk;
     register afs_int32 code;
 
-    LOCK_GLOBAL_MUTEX code = afsconf_Check(adir);
+    LOCK_GLOBAL_MUTEX;
+    code = afsconf_Check(adir);
     if (code) {
-	UNLOCK_GLOBAL_MUTEX return AFSCONF_FAILURE;
+	UNLOCK_GLOBAL_MUTEX;
+	return AFSCONF_FAILURE;
     }
     maxa = adir->keystr->nkeys;
 
     for (tk = adir->keystr->key, i = 0; i < maxa; i++, tk++) {
 	if (tk->kvno == avno) {
 	    memcpy(akey, tk->key, 8);
-	    UNLOCK_GLOBAL_MUTEX return 0;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return 0;
 	}
     }
 
-    UNLOCK_GLOBAL_MUTEX return AFSCONF_NOTFOUND;
+    UNLOCK_GLOBAL_MUTEX;
+    return AFSCONF_NOTFOUND;
 }
 
 /* save the key structure in the appropriate file */
@@ -1202,18 +1242,21 @@ afsconf_AddKey(struct afsconf_dir *adir, afs_int32 akvno, char akey[8],
     register afs_int32 i;
     int foundSlot;
 
-    LOCK_GLOBAL_MUTEX tk = adir->keystr;
+    LOCK_GLOBAL_MUTEX;
+    tk = adir->keystr;
 
     if (akvno != 999) {
 	if (akvno < 0 || akvno > 255) {
-	    UNLOCK_GLOBAL_MUTEX return ERANGE;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return ERANGE;
 	}
     }
     foundSlot = 0;
     for (i = 0, tkey = tk->key; i < tk->nkeys; i++, tkey++) {
 	if (tkey->kvno == akvno) {
 	    if (!overwrite) {
-		UNLOCK_GLOBAL_MUTEX return AFSCONF_KEYINUSE;
+		UNLOCK_GLOBAL_MUTEX;
+		return AFSCONF_KEYINUSE;
 	    }
 	    foundSlot = 1;
 	    break;
@@ -1221,7 +1264,8 @@ afsconf_AddKey(struct afsconf_dir *adir, afs_int32 akvno, char akey[8],
     }
     if (!foundSlot) {
 	if (tk->nkeys >= AFSCONF_MAXKEYS) {
-	    UNLOCK_GLOBAL_MUTEX return AFSCONF_FULL;
+	    UNLOCK_GLOBAL_MUTEX;
+	    return AFSCONF_FULL;
 	}
 	tkey = &tk->key[tk->nkeys++];
     }
@@ -1229,7 +1273,8 @@ afsconf_AddKey(struct afsconf_dir *adir, afs_int32 akvno, char akey[8],
     memcpy(tkey->key, akey, 8);
     i = SaveKeys(adir);
     afsconf_Touch(adir);
-    UNLOCK_GLOBAL_MUTEX return i;
+    UNLOCK_GLOBAL_MUTEX;
+    return i;
 }
 
 /* this proc works by sliding the other guys down, rather than using a funny
@@ -1243,7 +1288,8 @@ afsconf_DeleteKey(struct afsconf_dir *adir, afs_int32 akvno)
     register int i;
     int foundFlag = 0;
 
-    LOCK_GLOBAL_MUTEX tk = adir->keystr;
+    LOCK_GLOBAL_MUTEX;
+    tk = adir->keystr;
 
     for (i = 0, tkey = tk->key; i < tk->nkeys; i++, tkey++) {
 	if (tkey->kvno == akvno) {
@@ -1252,7 +1298,8 @@ afsconf_DeleteKey(struct afsconf_dir *adir, afs_int32 akvno)
 	}
     }
     if (!foundFlag) {
-	UNLOCK_GLOBAL_MUTEX return AFSCONF_NOTFOUND;
+	UNLOCK_GLOBAL_MUTEX;
+	return AFSCONF_NOTFOUND;
     }
 
     /* otherwise slide the others down.  i and tkey point at the guy to delete */
@@ -1263,5 +1310,6 @@ afsconf_DeleteKey(struct afsconf_dir *adir, afs_int32 akvno)
     tk->nkeys--;
     i = SaveKeys(adir);
     afsconf_Touch(adir);
-    UNLOCK_GLOBAL_MUTEX return i;
+    UNLOCK_GLOBAL_MUTEX;
+    return i;
 }

@@ -227,6 +227,15 @@
 /* define if you have redhat buildsystem */
 #undef ENABLE_REDHAT_BUILDSYS
 
+/* define if you have in_systm.h header file */
+#undef HAVE_IN_SYSTM_H
+
+/* define if you have mm_inline.h header file */
+#undef HAVE_MM_INLINE_H
+
+/* define if you have in_systm.h header file */
+#undef HAVE_IN_SYSTM_H
+
 /* define if your linux kernel exports sys_chdir */
 #undef EXPORTED_SYS_CHDIR
 

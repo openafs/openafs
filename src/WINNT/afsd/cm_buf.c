@@ -491,11 +491,14 @@ long buf_AddBuffers(long nbuffers)
  */
 long buf_SetNBuffers(long nbuffers)
 {
-	if (nbuffers < 10) return CM_ERROR_INVAL;
-        if (nbuffers == buf_nbuffers) return 0;
+    if (nbuffers < 10) 
+        return CM_ERROR_INVAL;
+    if (nbuffers == buf_nbuffers) 
+        return 0;
         else if (nbuffers > buf_nbuffers)
 		return buf_AddBuffers(nbuffers - buf_nbuffers);
-        else return CM_ERROR_INVAL;
+    else 
+        return CM_ERROR_INVAL;
 }
 
 /* release a buffer.  Buffer must be referenced, but unlocked. */
@@ -652,8 +655,7 @@ void buf_Recycle(cm_buf_t *bp)
 	 * have any lock conflicts, so we can grab the buffer lock out of
 	 * order in the locking hierarchy.
 	 */
-	osi_Log2(buf_logp,
-		"buf_Recycle recycles 0x%x, off 0x%x",
+    osi_Log2( buf_logp, "buf_Recycle recycles 0x%x, off 0x%x",
 		bp, bp->offset.LowPart);
 
 	osi_assert(bp->refCount == 0);
@@ -1296,7 +1298,6 @@ long buf_Truncate(cm_scache_t *scp, cm_user_t *userp, cm_req_t *reqp,
 			}
 
                         lock_ReleaseWrite(&buf_globalLock);
-
                 }
 		
                 lock_ReleaseMutex(&scp->mx);

@@ -53,7 +53,7 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
 
         lock_ObtainWrite(&cm_serverLock);
 	for(tsp = cm_allServersp; tsp; tsp = tsp->allNextp) {
-		tsp->refCount++;
+        cm_GetServerNoLock(tsp);
                 lock_ReleaseWrite(&cm_serverLock);
 
 		/* now process the server */
@@ -120,7 +120,7 @@ void cm_CheckServers(long flags, cm_cell_t *cellp)
 		cm_GCConnections(tsp);
 
                 lock_ObtainWrite(&cm_serverLock);
-                osi_assert(tsp->refCount-- > 0);
+        cm_PutServerNoLock(tsp);
         }
         lock_ReleaseWrite(&cm_serverLock);
 }
@@ -133,6 +133,18 @@ void cm_InitServer(void)
 		lock_InitializeRWLock(&cm_serverLock, "cm_serverLock");
 		osi_EndOnce(&once);
         }
+}
+
+void cm_GetServer(cm_server_t *serverp)
+{
+    lock_ObtainWrite(&cm_serverLock);
+    serverp->refCount++;
+    lock_ReleaseWrite(&cm_serverLock);
+}
+
+void cm_GetServerNoLock(cm_server_t *serverp)
+{
+    serverp->refCount++;
 }
 
 void cm_PutServer(cm_server_t *serverp)
@@ -195,7 +207,8 @@ void cm_SetServerPrefs(cm_server_t * serverp)
 		serverp->ipRank += min(serverp->ipRank, rand() % 0x000f);
 	    } /* and of for loop */
 	}
-	else	serverp->ipRank = 10000 + (rand() % 0x00ff); /* VL server */
+    else 
+        serverp->ipRank = 10000 + (rand() % 0x00ff); /* VL server */
 }
 
 cm_server_t *cm_NewServer(struct sockaddr_in *socketp, int type, cm_cell_t *cellp) {
@@ -235,7 +248,8 @@ cm_server_t *cm_FindServer(struct sockaddr_in *addrp, int type)
         }
 
 	/* bump ref count if we found the server */
-	if (tsp) tsp->refCount++;
+    if (tsp) 
+        cm_GetServerNoLock(tsp);
 
 	/* drop big table lock */
         lock_ReleaseWrite(&cm_serverLock);
@@ -248,9 +262,7 @@ cm_serverRef_t *cm_NewServerRef(cm_server_t *serverp)
 {
 	cm_serverRef_t *tsrp;
 
-    lock_ObtainWrite(&cm_serverLock);
-	serverp->refCount++;
-    lock_ReleaseWrite(&cm_serverLock);
+    cm_GetServer(serverp);
 	tsrp = malloc(sizeof(*tsrp));
 	tsrp->server = serverp;
 	tsrp->status = not_busy;
@@ -404,25 +416,26 @@ void cm_RandomizeServer(cm_serverRef_t** list)
 }
 
 /* call cm_FreeServer while holding a write lock on cm_serverLock */
-void cm_FreeServer(cm_server_t* server)
+void cm_FreeServer(cm_server_t* serverp)
 {
-    if (--(server->refCount) == 0)
+    cm_PutServerNoLock(serverp);
+    if (serverp->refCount == 0)
     {
         /* we need to check to ensure that all of the connections
          * for this server have a 0 refCount; otherwise, they will
          * not be garbage collected 
          */
-        cm_GCConnections(server);  /* connsp */
+        cm_GCConnections(serverp);  /* connsp */
 
-        lock_FinalizeMutex(&server->mx);
-        if ( cm_allServersp == server )
-            cm_allServersp = server->allNextp;
+        lock_FinalizeMutex(&serverp->mx);
+        if ( cm_allServersp == serverp )
+            cm_allServersp = serverp->allNextp;
         else {
             cm_server_t *tsp;
 
             for(tsp = cm_allServersp; tsp->allNextp; tsp=tsp->allNextp) {
-                if ( tsp->allNextp == server ) {
-                    tsp->allNextp = server->allNextp;
+                if ( tsp->allNextp == serverp ) {
+                    tsp->allNextp = serverp->allNextp;
                     break;
                 }
             }

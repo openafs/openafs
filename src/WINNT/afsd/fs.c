@@ -583,6 +583,8 @@ char *AclToString(acl)
     return mydata;
 }
 
+#define AFSCLIENT_ADMIN_GROUPNAME "AFS Client Admins"
+
 BOOL IsAdmin (void)
 {
     static BOOL fAdmin = FALSE;
@@ -590,20 +592,54 @@ BOOL IsAdmin (void)
 
     if (!fTested)
     {
-        /* Obtain the SID for BUILTIN\Administrators. If this is Windows NT,
-         * expect this call to succeed; if it does not, we can presume that
-         * it's not NT and therefore the user always has administrative
-         * privileges.
+        /* Obtain the SID for the AFS client admin group.  If the group does
+         * not exist, then assume we have AFS client admin privileges.
          */
         PSID psidAdmin = NULL;
-        SID_IDENTIFIER_AUTHORITY auth = SECURITY_NT_AUTHORITY;
+        DWORD dwSize, dwSize2;
+        char pszAdminGroup[ MAX_COMPUTERNAME_LENGTH + sizeof(AFSCLIENT_ADMIN_GROUPNAME) + 2 ];
+        char *pszRefDomain = NULL;
+        SID_NAME_USE snu = SidTypeGroup;
+
+        dwSize = sizeof(pszAdminGroup);
+
+        if (!GetComputerName(pszAdminGroup, &dwSize)) {
+            /* Can't get computer name.  We return false in this case.
+               Retain fAdmin and fTested. This shouldn't happen.*/
+            return FALSE;
+        }
 
         fTested = TRUE;
 
-        if (!AllocateAndInitializeSid (&auth, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, &psidAdmin))
+        dwSize = 0;
+        dwSize2 = 0;
+
+        strcat(pszAdminGroup,"\\");
+        strcat(pszAdminGroup, AFSCLIENT_ADMIN_GROUPNAME);
+
+        LookupAccountName(NULL, pszAdminGroup, NULL, &dwSize, NULL, &dwSize2, &snu);
+        /* that should always fail. */
+
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER) {
+            /* if we can't find the group, then we allow the operation */
             fAdmin = TRUE;
-        else
-        {
+            return TRUE;
+        }
+
+        if (dwSize == 0 || dwSize2 == 0) {
+            /* Paranoia */
+            fAdmin = TRUE;
+            return TRUE;
+        }
+
+        psidAdmin = (PSID)malloc(dwSize); memset(psidAdmin,0,dwSize);
+        pszRefDomain = (char *)malloc(dwSize2);
+
+        if (!LookupAccountName(NULL, pszAdminGroup, psidAdmin, &dwSize, pszRefDomain, &dwSize2, &snu)) {
+            /* We can't lookup the group now even though we looked it up earlier.  
+               Could this happen? */
+            fAdmin = TRUE;
+        } else {
             /* Then open our current ProcessToken */
             HANDLE hToken;
 
@@ -624,13 +660,14 @@ BOOL IsAdmin (void)
                 if (GetTokenInformation (hToken, TokenGroups, pGroups, dwSize, &dwSize))
                 {
                     /* Look through the list of group SIDs and see if any of them
-                     * matches the Administrator group SID.
+                     * matches the AFS Client Admin group SID.
                      */
                     size_t iGroup = 0;
                     for (; (!fAdmin) && (iGroup < pGroups->GroupCount); ++iGroup)
                     {
-                        if (EqualSid (psidAdmin, pGroups->Groups[ iGroup ].Sid))
+                        if (EqualSid (psidAdmin, pGroups->Groups[ iGroup ].Sid)) {
                             fAdmin = TRUE;
+                        }
                     }
                 }
 
@@ -639,8 +676,8 @@ BOOL IsAdmin (void)
             }
         }
 
-        if (psidAdmin)
-            FreeSid (psidAdmin);
+        free(psidAdmin);
+        free(pszRefDomain);
     }
 
     return fAdmin;
@@ -1657,7 +1694,7 @@ register struct cmd_syndesc *as; {
     if ( checkserv.tinterval != 0 ) {
 #ifdef WIN32
         if ( !IsAdmin() ) {
-            fprintf (stderr,"Permission denied: requires Administrator access.\n");
+            fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
             return EACCES;
         }
 #else /* WIN32 */
@@ -1769,7 +1806,7 @@ register struct cmd_syndesc *as; {
     
 #ifdef WIN32
     if ( !IsAdmin() ) {
-        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
 #else /* WIN32 */
@@ -1883,7 +1920,7 @@ register struct cmd_syndesc *as; {
 
 #ifdef WIN32
     if ( !IsAdmin() ) {
-        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
 #else /* WIN32 */
@@ -2104,7 +2141,7 @@ register struct cmd_syndesc *as; {
     if (ti) {
 #ifdef WIN32
     if ( !IsAdmin() ) {
-        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
 #else /* WIN32 */
@@ -2171,7 +2208,7 @@ register struct cmd_syndesc *as; {
     
 #ifdef WIN32
     if ( !IsAdmin() ) {
-        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
 #else /* WIN32 */
@@ -2311,7 +2348,7 @@ register struct cmd_syndesc *as; {
 
 #ifdef WIN32
     if ( !IsAdmin() ) {
-        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
 #else /* WIN32 */
@@ -2567,7 +2604,7 @@ register struct cmd_syndesc *as; {
 
 #ifdef WIN32
     if ( !IsAdmin() ) {
-        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
 #else /* WIN32 */
@@ -2724,7 +2761,7 @@ static TraceCmd(struct cmd_syndesc *asp)
     
 #ifdef WIN32
     if ( !IsAdmin() ) {
-        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
 #else /* WIN32 */
@@ -2780,7 +2817,7 @@ struct cmd_syndesc *as; {
     
 #ifdef WIN32
     if ( !IsAdmin() ) {
-        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");  
         return EACCES;
     }
 #else /* WIN32 */
@@ -2845,7 +2882,7 @@ static afs_int32 SetCryptCmd(as)
  
 #ifdef WIN32
     if ( !IsAdmin() ) {
-        fprintf (stderr,"Permission denied: requires Administrator access.\n");
+        fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
         return EACCES;
     }
 #else /* WIN32 */
@@ -3239,20 +3276,20 @@ static MemDumpCmd(struct cmd_syndesc *asp)
 
 static CSCPolicyCmd(struct cmd_syndesc *asp)
 {
-	struct cmd_item *ti;
-	char *share = NULL;
+    struct cmd_item *ti;
+    char *share = NULL;
     HKEY hkCSCPolicy;
 
-	for(ti=asp->parms[0].items; ti;ti=ti->next) {
-		share = ti->data;
-		if (share)
-		{
-			break;
-		}
-	}
+    for(ti=asp->parms[0].items; ti;ti=ti->next) {
+        share = ti->data;
+        if (share)
+        {
+            break;
+        }
+    }
 
-	if (share)
-	{
+    if (share)
+    {
         char *policy;
 
         RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
@@ -3265,40 +3302,44 @@ static CSCPolicyCmd(struct cmd_syndesc *asp)
                         &hkCSCPolicy,
                         NULL );
 
-        if ( !IsAdmin() || hkCSCPolicy == NULL ) {
+        if ( hkCSCPolicy == NULL ) {
             fprintf (stderr,"Permission denied: requires Administrator access.\n");
-            if ( hkCSCPolicy )
-                RegCloseKey(hkCSCPolicy);
+            return EACCES;
+        }
+
+        if ( !IsAdmin() ) {
+            fprintf (stderr,"Permission denied: requires AFS Client Administrator access.\n");
+            RegCloseKey(hkCSCPolicy);
             return EACCES;
         }
 
         policy = "manual";
 		
-		if (asp->parms[1].items)
-			policy = "manual";
-		if (asp->parms[2].items)
-			policy = "programs";
-		if (asp->parms[3].items)
-			policy = "documents";
-		if (asp->parms[4].items)
-			policy = "disable";
+        if (asp->parms[1].items)
+            policy = "manual";
+        if (asp->parms[2].items)
+            policy = "programs";
+        if (asp->parms[3].items)
+            policy = "documents";
+        if (asp->parms[4].items)
+            policy = "disable";
 		
         RegSetValueEx( hkCSCPolicy, share, 0, REG_SZ, policy, strlen(policy)+1);
 		
-		printf("CSC policy on share \"%s\" changed to \"%s\".\n\n", share, policy);
-		printf("Close all applications that accessed files on this share or restart AFS Client for the change to take effect.\n"); 
-	}
-	else
-	{
+        printf("CSC policy on share \"%s\" changed to \"%s\".\n\n", share, policy);
+        printf("Close all applications that accessed files on this share or restart AFS Client for the change to take effect.\n"); 
+    }
+    else
+    {
         DWORD dwIndex, dwPolicies;
-		char policyName[256];
-		DWORD policyNameLen;
+        char policyName[256];
+        DWORD policyNameLen;
         char policy[256];
         DWORD policyLen;
         DWORD dwType;
 
-		/* list current csc policies */
-		
+        /* list current csc policies */
+
         RegCreateKeyEx( HKEY_LOCAL_MACHINE, 
                         "SOFTWARE\\OpenAFS\\Client\\CSCPolicy",
                         0, 
@@ -3323,7 +3364,7 @@ static CSCPolicyCmd(struct cmd_syndesc *asp)
                          NULL   /* lpftLastWriteTime */
                          );
 		
-		printf("Current CSC policies:\n");
+        printf("Current CSC policies:\n");
         for ( dwIndex = 0; dwIndex < dwPolicies; dwIndex ++ ) {
 
             policyNameLen = sizeof(policyName);
@@ -3331,10 +3372,10 @@ static CSCPolicyCmd(struct cmd_syndesc *asp)
             RegEnumValue( hkCSCPolicy, dwIndex, policyName, &policyNameLen, NULL,
                           &dwType, policy, &policyLen);
 
-			printf("  %s = %s\n", policyName, policy);
-		}
-	}
+            printf("  %s = %s\n", policyName, policy);
+        }
+    }
 
     RegCloseKey(hkCSCPolicy);
-	return (0);
+    return (0);
 }

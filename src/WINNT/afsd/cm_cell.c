@@ -105,14 +105,14 @@ cm_cell_t *cm_GetCell_Gen(char *namep, char *newnamep, long flags)
 
         code = cm_SearchCellFile(namep, fullname, cm_AddCellProc, cp);
 		if (code) {
-            afsi_log("in cm_GetCell_gen cm_SearchCellFile(%s) returns code= %d fullname= %s", 
+            osi_Log3(afsd_logp,"in cm_GetCell_gen cm_SearchCellFile(%s) returns code= %d fullname= %s", 
                       namep, code, fullname);
 
 #ifdef AFS_AFSDB_ENV
             if (cm_dnsEnabled /*&& cm_DomainValid(namep)*/) {
                 code = cm_SearchCellByDNS(namep, fullname, &ttl, cm_AddCellProc, cp);
                 if ( code ) {
-                    afsi_log("in cm_GetCell_gen cm_SearchCellByDNS(%s) returns code= %d fullname= %s", 
+                    osi_Log3(afsd_logp,"in cm_GetCell_gen cm_SearchCellByDNS(%s) returns code= %d fullname= %s", 
                              namep, code, fullname);
                     if (dns_expired) {
                         cp->flags |= CM_CELLFLAG_VLSERVER_INVALID;

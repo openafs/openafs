@@ -35,10 +35,10 @@ extern int pthread_recursive_mutex_lock(pthread_recursive_mutex_p);
 extern int pthread_recursive_mutex_unlock(pthread_recursive_mutex_p);
 
 #define LOCK_GLOBAL_MUTEX \
-    assert(pthread_recursive_mutex_lock(&grmutex)==0);
+    assert(pthread_recursive_mutex_lock(&grmutex)==0)
 
 #define UNLOCK_GLOBAL_MUTEX \
-    assert(pthread_recursive_mutex_unlock(&grmutex)==0);
+    assert(pthread_recursive_mutex_unlock(&grmutex)==0)
 
 #else
 

@@ -50,7 +50,7 @@ static int newVLDB = 1;
 #include <afs/param.h>
 
 RCSID
-    ("$Header: /cvs/openafs/src/vol/fssync.c,v 1.26 2004/07/28 21:49:18 shadow Exp $");
+    ("$Header: /cvs/openafs/src/vol/fssync.c,v 1.26.2.1 2004/08/25 07:14:19 shadow Exp $");
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -105,7 +105,7 @@ int (*V_BreakVolumeCallbacks) ();
 
 #define MAXHANDLERS	4	/* Up to 4 clients; must be at least 2, so that
 				 * move = dump+restore can run on single server */
-#define MAXOFFLINEVOLUMES 128   /* This needs to be as big as the maximum
+#define MAXOFFLINEVOLUMES 128	/* This needs to be as big as the maximum
 				 * number that would be offline for 1 operation.
 				 * Current winner is salvage, which needs all
 				 * cloned read-only copies offline when salvaging
@@ -214,7 +214,7 @@ FSYNC_askfs(VolumeId volume, char *partName, int com, int reason)
     else
 	command.partName[0] = 0;
     assert(FS_sd != -1);
-    VFSYNC_LOCK
+    VFSYNC_LOCK;
 #ifdef AFS_NT40_ENV
     if (send(FS_sd, (char *)&command, sizeof(command), 0) != sizeof(command)) {
 	printf("FSYNC_askfs: write to file server failed\n");
@@ -247,9 +247,8 @@ FSYNC_askfs(VolumeId volume, char *partName, int com, int reason)
 	    ("FSYNC_askfs: negative response from file server; volume %u, command %d\n",
 	     command.volume, (int)command.command);
     }
- done:
-    VFSYNC_UNLOCK
-
+  done:
+    VFSYNC_UNLOCK;
     return response;
 }
 
@@ -406,7 +405,9 @@ FSYNC_com(int fd)
 	FSYNC_Drop(fd);
 	return;
     }
-    VATTACH_LOCK VOL_LOCK volumes = OfflineVolumes[FindHandler(fd)];
+    VATTACH_LOCK;
+    VOL_LOCK;
+    volumes = OfflineVolumes[FindHandler(fd)];
     for (v = 0, i = 0; i < MAXOFFLINEVOLUMES; i++) {
 	if (volumes[i].volumeID == command.volume
 	    && strcmp(volumes[i].partName, command.partName) == 0) {
@@ -568,28 +569,35 @@ defect #2080 for details.
 	if (V_BreakVolumeCallbacks) {
 	    Log("fssync: volume %u moved to %x; breaking all call backs\n",
 		command.volume, command.reason);
-	    VOL_UNLOCK VATTACH_UNLOCK(*V_BreakVolumeCallbacks) (command.
-								volume);
-	VATTACH_LOCK VOL_LOCK}
+	    VOL_UNLOCK;
+	    VATTACH_UNLOCK;
+	    (*V_BreakVolumeCallbacks) (command.volume);
+	    VATTACH_LOCK;
+	    VOL_LOCK;
+	}
 	break;
     case FSYNC_RESTOREVOLUME:
 	/* if the volume is being restored, break all callbacks on it */
 	if (V_BreakVolumeCallbacks) {
 	    Log("fssync: volume %u restored; breaking all call backs\n",
 		command.volume);
-	    VOL_UNLOCK VATTACH_UNLOCK(*V_BreakVolumeCallbacks) (command.
-								volume);
-	VATTACH_LOCK VOL_LOCK}
+	    VOL_UNLOCK;
+	    VATTACH_UNLOCK;
+	    (*V_BreakVolumeCallbacks) (command.volume);
+	    VATTACH_LOCK;
+	    VOL_LOCK;
+	}
 	break;
     default:
 	rc = FSYNC_DENIED;
 	break;
     }
-    VOL_UNLOCK VATTACH_UNLOCK
+    VOL_UNLOCK;
+    VATTACH_UNLOCK;
 #ifdef AFS_NT40_ENV
-      (void) send(fd, &rc, 1, 0);
+    (void)send(fd, &rc, 1, 0);
 #else
-      (void) write(fd, &rc, 1);
+    (void)write(fd, &rc, 1);
 #endif
 }
 
@@ -601,7 +609,9 @@ FSYNC_Drop(int fd)
     Error error;
     char tvolName[VMAXPATHLEN];
 
-    VATTACH_LOCK VOL_LOCK p = OfflineVolumes[FindHandler(fd)];
+    VATTACH_LOCK;
+    VOL_LOCK;
+    p = OfflineVolumes[FindHandler(fd)];
     for (i = 0; i < MAXOFFLINEVOLUMES; i++) {
 	if (p[i].volumeID) {
 	    Volume *vp;
@@ -615,7 +625,9 @@ FSYNC_Drop(int fd)
 	    p[i].volumeID = 0;
 	}
     }
-    VOL_UNLOCK VATTACH_UNLOCK RemoveHandler(fd);
+    VOL_UNLOCK;
+    VATTACH_UNLOCK;
+    RemoveHandler(fd);
 #ifdef AFS_NT40_ENV
     closesocket(fd);
 #else
