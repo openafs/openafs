@@ -576,6 +576,7 @@ afs_vop_pageout(ap)
     struct iovec aiov;
     struct uio *uio = &auio;
     int nocommit = flags & UPL_NOCOMMIT;
+    int iosize;
 
     int code;
     struct vcache *tvc = VTOAFS(vp);
@@ -593,7 +594,7 @@ afs_vop_pageout(ap)
     }
 #if 1
     {
-	int lbn, iosize, s;
+	int lbn, s;
 	struct buf *bp;
 	int biosize = DEV_BSIZE;
 
@@ -642,6 +643,19 @@ afs_vop_pageout(ap)
     if (f_offset & PAGE_MASK)
 	panic("afs_vop_pageout: offset not page aligned");
 
+    /* size will always be a multiple of PAGE_SIZE */
+    /* pageout isn't supposed to extend files */
+    if (f_offset + size > tvc->m.Length) 
+        iosize = tvc->m.Length - f_offset;
+    else
+        iosize = size;
+
+    if (size > (iosize + (PAGE_SIZE - 1)) & ~PAGE_MASK && !nocommit)  {
+            int iosize_rnd=(iosize + (PAGE_SIZE - 1)) & ~PAGE_MASK;
+	    kernel_upl_abort_range(pl, pl_offset + iosize_rnd,
+                                   size - iosize_rnd,
+				   UPL_ABORT_FREE_ON_EMPTY);
+    }
     auio.uio_iov = &aiov;
     auio.uio_iovcnt = 1;
     auio.uio_offset = f_offset;
@@ -650,7 +664,7 @@ afs_vop_pageout(ap)
     auio.uio_procp = NULL;
     kernel_upl_map(kernel_map, pl, &ioaddr);
     ioaddr += pl_offset;
-    auio.uio_resid = aiov.iov_len = size;
+    auio.uio_resid = aiov.iov_len = iosize;
     aiov.iov_base = (caddr_t) ioaddr;
 #if 1				/* USV [ */
     {
