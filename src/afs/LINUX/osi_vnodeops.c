@@ -518,6 +518,9 @@ afs_linux_mmap(struct file *fp, struct vm_area_struct *vmap)
     if (!code)
 	code = afs_VerifyVCache(vcp, &treq);
 
+    if (!code && (vcp->states & CRO) && 
+	(vmap->vm_file->f_flags & (FWRITE | FTRUNC)))
+	code = EACCES;
 
     if (code)
 	code = -code;
