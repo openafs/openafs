@@ -689,7 +689,7 @@ void AdjustAfsPath (LPTSTR pszTarget, LPCTSTR pszSource, BOOL fWantAFS, BOOL fWa
                                                                          (pszSource[4] == TEXT('\\')) ||
                                                                          (lstrlen(pszSource) == 4)))
       wsprintf (pszTarget, TEXT("/afs%s"), pszSource);
-   else if (!fWantAFS && (!lstrncmpi (&pszSource[1], TEXT("afs"), 3) || ((pszSource[4] == TEXT('/')) ||
+   else if (!fWantAFS && (!lstrncmpi (&pszSource[1], TEXT("afs"), 3) && ((pszSource[4] == TEXT('/')) ||
                                                                         (pszSource[4] == TEXT('\\')) ||
                                                                         (lstrlen(pszSource) == 4))))
       lstrcpy (pszTarget, &pszSource[4]);
