@@ -85,10 +85,10 @@ struct stat istat, ostat;
 
 extern int errno;
 extern int sys_nerr;
-#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD40_ENV)
+#if !defined(AFS_LINUX20_ENV) && !defined(AFS_DARWIN_ENV) && !defined(AFS_FBSD_ENV)
 extern char *sys_errlist[];
 #endif
-#if	defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
+#if	defined(AFS_AIX_ENV) || defined(AFS_HPUX_ENV) || defined(AFS_SUN5_ENV) || defined(AFS_DECOSF_ENV) || defined(AFS_SGI_ENV) || defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 extern struct passwd *getpwnam();
 int stripcalled = 0;
 #endif
@@ -222,7 +222,7 @@ char *iname, *oname; {
 		strip[1] = oname;
 #ifdef	AFS_SUN5_ENV
 #define	STRIP_BIN	"/usr/ccs/bin/strip"
-#elif defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV)
+#elif defined(AFS_LINUX20_ENV) || defined(AFS_DARWIN_ENV) || defined(AFS_FBSD_ENV)
 #define STRIP_BIN	"/usr/bin/strip"
 #else
 #define	STRIP_BIN	"/bin/strip"
@@ -476,7 +476,7 @@ main (argc, argv)
 #endif /* AFS_HPUX_ENV */
     char pnametmp[1024];
     int pnamelen;
-#if defined (AFS_AIX_ENV)
+#if defined (AFS_AIX_ENV) || defined(AFS_FBSD_ENV)
     afs_int32 newcode;
     static char diskBuffer[BUFSIZE];	/* must be static to avoid compiler bugs for large stuff */
 #endif
