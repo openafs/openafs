@@ -15,38 +15,38 @@ SYS_NAME=@AFS_SYSNAME@
 SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
-CFLAGS = -g -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = -g -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
 LDFLAGS = -g ${XLDFLAGS}
-INCLS=${SRCDIR}include/ubik.h \
-	${SRCDIR}include/lwp.h \
-	${SRCDIR}include/lock.h  \
-	${SRCDIR}include/rx/rx.h \
-	${SRCDIR}include/rx/xdr.h \
-	${SRCDIR}include/rx/rxkad.h \
-	${SRCDIR}include/afs/com_err.h \
-	${SRCDIR}include/afs/auth.h \
-	${SRCDIR}include/afs/cellconfig.h \
-	${SRCDIR}include/afs/cmd.h \
-	${SRCDIR}include/afs/pterror.h \
-	${SRCDIR}include/afs/kautils.h \
-	${SRCDIR}include/afs/bnode.h \
-	${SRCDIR}include/afs/vlserver.h
+INCLS=${SRCDIR}/include/ubik.h \
+	${SRCDIR}/include/lwp.h \
+	${SRCDIR}/include/lock.h  \
+	${SRCDIR}/include/rx/rx.h \
+	${SRCDIR}/include/rx/xdr.h \
+	${SRCDIR}/include/rx/rxkad.h \
+	${SRCDIR}/include/afs/com_err.h \
+	${SRCDIR}/include/afs/auth.h \
+	${SRCDIR}/include/afs/cellconfig.h \
+	${SRCDIR}/include/afs/cmd.h \
+	${SRCDIR}/include/afs/pterror.h \
+	${SRCDIR}/include/afs/kautils.h \
+	${SRCDIR}/include/afs/bnode.h \
+	${SRCDIR}/include/afs/vlserver.h
 
-LIBS=${SRCDIR}lib/libubik.a \
-	${SRCDIR}lib/librx.a \
-	${SRCDIR}lib/liblwp.a \
-	${SRCDIR}lib/afs/libauth.a \
-	${SRCDIR}lib/afs/libsys.a \
-	${SRCDIR}lib/librxkad.a \
-	${SRCDIR}lib/afs/libcmd.a \
-	${SRCDIR}lib/afs/libvldb.a \
-	${SRCDIR}lib/afs/libbos.a \
-	${SRCDIR}lib/afs/libcom_err.a \
-	${SRCDIR}lib/afs/libvolser.a \
-	${SRCDIR}lib/afs/util.a \
-	${SRCDIR}lib/afs/libkauth.a \
-	${SRCDIR}lib/afs/libprot.a \
-	${SRCDIR}lib/libdes.a \
+LIBS=${SRCDIR}/lib/libubik.a \
+	${SRCDIR}/lib/librx.a \
+	${SRCDIR}/lib/liblwp.a \
+	${SRCDIR}/lib/afs/libauth.a \
+	${SRCDIR}/lib/afs/libsys.a \
+	${SRCDIR}/lib/librxkad.a \
+	${SRCDIR}/lib/afs/libcmd.a \
+	${SRCDIR}/lib/afs/libvldb.a \
+	${SRCDIR}/lib/afs/libbos.a \
+	${SRCDIR}/lib/afs/libcom_err.a \
+	${SRCDIR}/lib/afs/libvolser.a \
+	${SRCDIR}/lib/afs/util.a \
+	${SRCDIR}/lib/afs/libkauth.a \
+	${SRCDIR}/lib/afs/libprot.a \
+	${SRCDIR}/lib/libdes.a \
 	${XLIBS}
 
 include ../config/Makefile.version
@@ -78,4 +78,4 @@ test: translate_et
 system: install
 
 noversion install.noversion install: all
-	${INSTALL} translate_et ${DESTDIR}bin/translate_et
+	${INSTALL} translate_et ${DESTDIR}/bin/translate_et

@@ -14,10 +14,10 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-INCPATH= -I${TOP_SRCDIR}/config -I${DESTDIR}include
+INCPATH= -I${TOP_SRCDIR}/config -I${DESTDIR}/include
 BINDIR=/usr/local/etc
 LINKDIR=/etc
-LIBS= ${DESTDIR}lib/afs/util.a  
+LIBS= ${DESTDIR}/lib/afs/util.a  
 
 VERS=3.4
 
@@ -133,10 +133,10 @@ ntpd.o:	patchlevel.h
 
 system: install
 
-AFSLIBS= ${DESTDIR}lib/afs/libauth.a ${DESTDIR}lib/afs/libcom_err.a ${DESTDIR}lib/afs/util.a 
+AFSLIBS= ${DESTDIR}/lib/afs/libauth.a ${DESTDIR}/lib/afs/libcom_err.a ${DESTDIR}/lib/afs/util.a 
 
 runntp.o: runntp.c ${DESTDIR}/include/afs/cellconfig.h AFS_component_version_number.c
-	${CC} ${CFLAGS} -I${DESTDIR}include -c runntp.c ${AFSLIBS} ${XLIBS}
+	${CC} ${CFLAGS} -I${DESTDIR}/include -c runntp.c ${AFSLIBS} ${XLIBS}
 
 runntp: runntp.o ${AFSLIBS}
 	${CC} ${LDFLAGS} -o runntp runntp.o ${AFSLIBS} ${XLIBS}
@@ -144,8 +144,8 @@ runntp: runntp.o ${AFSLIBS}
 install: AFS_component_version_number.c ntest ntpd ntp ntpdc runntp
 	${INSTALL} ntpd ${DESTDIR}root.server/usr/afs/bin/ntpd
 	${INSTALL} ntpdc ${DESTDIR}root.server/usr/afs/bin/ntpdc
-	${INSTALL} ntp ${DESTDIR}etc/ntp
-	${INSTALL} ntpdc ${DESTDIR}etc/ntpdc
+	${INSTALL} ntp ${DESTDIR}/etc/ntp
+	${INSTALL} ntpdc ${DESTDIR}/etc/ntpdc
 	${INSTALL} runntp ${DESTDIR}root.server/usr/afs/bin/runntp
 
 #
@@ -164,9 +164,6 @@ print:
 
 clean:
 	@rm -f *.o *~ core ${PROGS} ntp.tar ntest sock_test AFS_component_version_number.c
-
-lint:
-	lint -bac ${DEFINES} ${NTPDSRC}
 
 dist:	ntp.tar.Z
 	mv ntp.tar.Z /usr/ftp/pub/ntp.${VERS}/ntp.tar.Z

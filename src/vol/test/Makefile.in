@@ -14,16 +14,16 @@ SHELL=/bin/sh
 
 include ../../config/Makefile.${SYS_NAME}
 
-INCDIRS= -I. -I.. -I${DESTDIR}include ${FSINCLUDES}
-INSTALL = ${SRCDIR}bin/install
+INCDIRS= -I. -I.. -I${DESTDIR}/include ${FSINCLUDES}
+INSTALL = ${SRCDIR}/bin/install
 LDFLAGS = ${OPTMZ} ${PROF} ${LDIRS} ${XLDFLAGS}
 
-LIBS= ${DESTDIR}lib/afs/libcmd.a ${DESTDIR}lib/afs/vlib.a \
-	${SRCDIR}lib/afs/util.a \
-	${DESTDIR}lib/afs/libsys.a ${DESTDIR}lib/afs/libdir.a \
-	${DESTDIR}lib/liblwp.a  ${DESTDIR}lib/afs/libacl.a ${XLIBS}
+LIBS= ${DESTDIR}/lib/afs/libcmd.a ${DESTDIR}/lib/afs/vlib.a \
+	${SRCDIR}/lib/afs/util.a \
+	${DESTDIR}/lib/afs/libsys.a ${DESTDIR}/lib/afs/libdir.a \
+	${DESTDIR}/lib/liblwp.a  ${DESTDIR}/lib/afs/libacl.a ${XLIBS}
 
-NAMEI_LIBS = ../vlib.a ${SRCDIR}lib/afs/util.a ${DESTDIR}lib/liblwp.a
+NAMEI_LIBS = ../vlib.a ${SRCDIR}/lib/afs/util.a ${DESTDIR}/lib/liblwp.a
 
 CFLAGS = -D${SYS_NAME} ${OPTMZ} ${INCDIRS} ${XCFLAGS} -g
 
@@ -41,8 +41,8 @@ kinstall:
 
 install:  listVicepx updateDirInode testpart
 
-${OBJECTS}:	${PUBLICHEADERS} ${SRCDIR}include/lwp.h \
-		${SRCDIR}include/lock.h  ${SRCDIR}include/afs/afsint.h \
+${OBJECTS}:	${PUBLICHEADERS} ${SRCDIR}/include/lwp.h \
+		${SRCDIR}/include/lock.h  ${SRCDIR}/include/afs/afsint.h \
 		../filesignal.h ../vutils.h ../vldb.h ../salvage.h \
 		../volinodes.h ../qiin.h 
 
@@ -52,8 +52,8 @@ listVicepx.o:	listVicepx.c  utilities.c
 
 testpart:	testpart.c ../vlib.a
 		${CC} ${CFLAGS} ${LDFLAGS} -o $@ testpart.c \
-		${DESTDIR}lib/afs/vlib.a ${DESTDIR}lib/liblwp.a \
-		${DESTDIR}lib/afs/util.a ${XLIBS}
+		${DESTDIR}/lib/afs/vlib.a ${DESTDIR}/lib/liblwp.a \
+		${DESTDIR}/lib/afs/util.a ${XLIBS}
 		
 
 listVicepx:	listVicepx.o utilities.o 
@@ -79,11 +79,8 @@ nilist: nilist.o nsubr.o
 	${CC} ${CFLAGS} -o nilist nilist.o nsubr.o ${NAMEI_LIBS}
 
 nino: nino.o
-	${CC} ${CFLAGS} -o nino nino.o ${DESTDIR}lib/afs/util.a
+	${CC} ${CFLAGS} -o nino nino.o ${DESTDIR}/lib/afs/util.a
 
 clean:
 	rm -f *.o *.a 
 	rm -f ${SCMPROGS} ${STAGEPROGS} core listVicepx updateDirInode
-
-beancount:
-	wc -l *.c *.h

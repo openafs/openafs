@@ -15,8 +15,8 @@ SRCDIR=
 BACKDIR=../../../../PARENT/dest/
 OPTIMIZE=-O
 
-INCDIRS= -I${DESTDIR}include -I.. -I${BACKDIR}include
-LDIRS= -L${DESTDIR}lib -L${DESTDIR}lib/afs -L.. -L${BACKDIR}lib -L${BACKDIR}lib/afs
+INCDIRS= -I${DESTDIR}/include -I.. -I${BACKDIR}/include
+LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L.. -L${BACKDIR}/lib -L${BACKDIR}/lib/afs
 
 CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS}
 

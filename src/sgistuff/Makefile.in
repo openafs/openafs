@@ -19,17 +19,17 @@ SHELL=/bin/sh
 #
 include ../config/Makefile.${SYS_NAME}
 OPTIMIZE=-g
-CFLAGS = ${OPTIMIZE} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = ${OPTIMIZE} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
 LDFLAGS = ${OPTIMIZE} ${XLDFLAGS}
-LIBDIR = ${DESTDIR}lib/
-AFSLIBS = ${LIBDIR}afs/libkauth.a ${LIBDIR}afs/libprot.a ${LIBDIR}libubik.a \
-	  ${LIBDIR}afs/libauth.a ${DESTDIR}lib/librxkad.a ${LIBDIR}afs/libsys.a \
-	  ${DESTDIR}lib/libdes.a ${LIBDIR}librx.a ${LIBDIR}liblwp.a \
-          ${LIBDIR}afs/libcmd.a ${LIBDIR}afs/libcom_err.a ${LIBDIR}afs/util.a
-KAFSLIBS = ${LIBDIR}afs/libkauth.krb.a ${LIBDIR}afs/libprot.a ${LIBDIR}libubik.a \
-	  ${LIBDIR}afs/libauth.krb.a ${DESTDIR}lib/librxkad.a ${LIBDIR}afs/libsys.a \
-	  ${DESTDIR}lib/libdes.a ${LIBDIR}librx.a ${LIBDIR}liblwp.a \
-          ${LIBDIR}afs/libcmd.a ${LIBDIR}afs/libcom_err.a ${LIBDIR}afs/util.a
+LIBDIR = ${DESTDIR}/lib/
+AFSLIBS = ${LIBDIR}/afs/libkauth.a ${LIBDIR}/afs/libprot.a ${LIBDIR}/libubik.a \
+	  ${LIBDIR}/afs/libauth.a ${DESTDIR}/lib/librxkad.a ${LIBDIR}/afs/libsys.a \
+	  ${DESTDIR}/lib/libdes.a ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a \
+          ${LIBDIR}/afs/libcmd.a ${LIBDIR}/afs/libcom_err.a ${LIBDIR}/afs/util.a
+KAFSLIBS = ${LIBDIR}/afs/libkauth.krb.a ${LIBDIR}/afs/libprot.a ${LIBDIR}/libubik.a \
+	  ${LIBDIR}/afs/libauth.krb.a ${DESTDIR}/lib/librxkad.a ${LIBDIR}/afs/libsys.a \
+	  ${DESTDIR}/lib/libdes.a ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a \
+          ${LIBDIR}/afs/libcmd.a ${LIBDIR}/afs/libcom_err.a ${LIBDIR}/afs/util.a
 AUTHFILES=../inetd/ta-rauth.o ../rsh/rcmd.o ../rsh/herror.o
 AUTHLIBS=afsauthlib.so afskauthlib.so
 TARGETS=$(AUTHLIBS) 

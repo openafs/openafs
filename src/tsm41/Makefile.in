@@ -12,16 +12,16 @@ SYS_NAME=@AFS_SYSNAME@
 
 include ../config/Makefile.${SYS_NAME}
 OPTIMIZE=-g
-CFLAGS = ${OPTIMIZE} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
-LIBDIR = ${DESTDIR}lib/
-AFSLIBS = ${LIBDIR}afs/libkauth.a ${LIBDIR}afs/libprot.a ${LIBDIR}libubik.a \
-	  ${LIBDIR}afs/libauth.a ${DESTDIR}lib/librxkad.a ${LIBDIR}afs/libsys.a \
-	  ${DESTDIR}lib/libdes.a ${LIBDIR}librx.a ${LIBDIR}liblwp.a \
-          ${LIBDIR}afs/libcmd.a ${LIBDIR}afs/libcom_err.a ${LIBDIR}afs/util.a ${LIBDIR}afs/libaudit.a
-KAFSLIBS = ${LIBDIR}afs/libkauth.krb.a ${LIBDIR}afs/libprot.a ${LIBDIR}libubik.a \
-	  ${LIBDIR}afs/libauth.krb.a ${DESTDIR}lib/librxkad.a ${LIBDIR}afs/libsys.a \
-	  ${DESTDIR}lib/libdes.a ${LIBDIR}librx.a ${LIBDIR}liblwp.a \
-          ${LIBDIR}afs/libcmd.a ${LIBDIR}afs/libcom_err.a ${LIBDIR}afs/util.a ${LIBDIR}afs/libaudit.a
+CFLAGS = ${OPTIMIZE} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
+LIBDIR = ${DESTDIR}/lib/
+AFSLIBS = ${LIBDIR}/afs/libkauth.a ${LIBDIR}/afs/libprot.a ${LIBDIR}/libubik.a \
+	  ${LIBDIR}/afs/libauth.a ${DESTDIR}/lib/librxkad.a ${LIBDIR}/afs/libsys.a \
+	  ${DESTDIR}/lib/libdes.a ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a \
+          ${LIBDIR}/afs/libcmd.a ${LIBDIR}/afs/libcom_err.a ${LIBDIR}/afs/util.a ${LIBDIR}/afs/libaudit.a
+KAFSLIBS = ${LIBDIR}/afs/libkauth.krb.a ${LIBDIR}/afs/libprot.a ${LIBDIR}/libubik.a \
+	  ${LIBDIR}/afs/libauth.krb.a ${DESTDIR}/lib/librxkad.a ${LIBDIR}/afs/libsys.a \
+	  ${DESTDIR}/lib/libdes.a ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a \
+          ${LIBDIR}/afs/libcmd.a ${LIBDIR}/afs/libcom_err.a ${LIBDIR}/afs/util.a ${LIBDIR}/afs/libaudit.a
 AUTHLIBS=afs_dynamic_auth afs_dynamic_kerbauth
 IMPORTS = -bI:/lib/aio.exp -bI:/lib/netinet.exp -bI:/lib/sockets.exp -bI:/lib/statcmd.exp 
 LDFLAGS = -eafs_initialize ${IMPORTS}  -lsys -lcsys -lc

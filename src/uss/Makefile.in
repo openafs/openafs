@@ -24,25 +24,25 @@ PROGRAMS = uss
 #
 # and here's what it uses to do so:
 #
-LIBS =	${SRCDIR}lib/afs/libvolser.a \
-	${SRCDIR}lib/afs/libvldb.a  \
-	${SRCDIR}lib/afs/libkauth.a \
-	${SRCDIR}lib/afs/libprot.a \
-	${SRCDIR}lib/libubik.a \
-	${SRCDIR}lib/afs/libauth.a \
-	${SRCDIR}lib/librxkad.a \
-	${SRCDIR}lib/afs/libsys.a \
-	${SRCDIR}lib/libdes.a \
-	${SRCDIR}lib/librx.a \
-	${SRCDIR}lib/afs/libsys.a \
-	${SRCDIR}lib/liblwp.a \
-	${SRCDIR}lib/afs/libcmd.a \
-	${SRCDIR}lib/afs/libcom_err.a\
-	${SRCDIR}lib/afs/util.a \
+LIBS =	${SRCDIR}/lib/afs/libvolser.a \
+	${SRCDIR}/lib/afs/libvldb.a  \
+	${SRCDIR}/lib/afs/libkauth.a \
+	${SRCDIR}/lib/afs/libprot.a \
+	${SRCDIR}/lib/libubik.a \
+	${SRCDIR}/lib/afs/libauth.a \
+	${SRCDIR}/lib/librxkad.a \
+	${SRCDIR}/lib/afs/libsys.a \
+	${SRCDIR}/lib/libdes.a \
+	${SRCDIR}/lib/librx.a \
+	${SRCDIR}/lib/afs/libsys.a \
+	${SRCDIR}/lib/liblwp.a \
+	${SRCDIR}/lib/afs/libcmd.a \
+	${SRCDIR}/lib/afs/libcom_err.a\
+	${SRCDIR}/lib/afs/util.a \
 	${XLIBS}
 
 CFLAGS = ${DBUG} -I/usr/include -I${TOP_SRCDIR}/config \
-	-I${SRCDIR}include -I. ${XCFLAGS}
+	-I${SRCDIR}/include -I. ${XCFLAGS}
 OBJS =  uss_procs.o \
 	uss_common.o \
 	uss_vol.o \
@@ -61,7 +61,7 @@ include ../config/Makefile.version
 all :  ${PROGRAMS}
 
 install: all
-	${INSTALL} uss ${DESTDIR}etc
+	${INSTALL} uss ${DESTDIR}/etc
 
 system: install
 

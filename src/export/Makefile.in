@@ -20,7 +20,7 @@ include ../config/Makefile.${SYS_NAME}
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
      DEFS =
-     INCS = -I${TOP_SRCDIR}/config -I${SRCDIR}include
+     INCS = -I${TOP_SRCDIR}/config -I${SRCDIR}/include
    CFLAGS = ${OPTMZ} ${DEFS} ${INCS}
   EXPORTS = -bexport:export.exp
   IMPORTS = /lib/kernex.exp /lib/syscalls.exp extras.exp
@@ -35,15 +35,15 @@ noversion system: install
 install: all kinstall ukinstall
 	${INSTALL} export.ext ${DESTDIR}root.client/usr/vice/etc/dkload
 	${INSTALL} export.ext.nonfs ${DESTDIR}root.client/usr/vice/etc/dkload
-	${INSTALL} export.exp ${DESTDIR}lib/afs/export.exp
-	${INSTALL} extras.exp ${DESTDIR}lib/afs/extras.exp
+	${INSTALL} export.exp ${DESTDIR}/lib/afs/export.exp
+	${INSTALL} extras.exp ${DESTDIR}/lib/afs/extras.exp
 	${INSTALL} cfgexport  ${DESTDIR}root.client/usr/vice/etc/dkload/cfgexport
 	${INSTALL} cfgafs     ${DESTDIR}root.client/usr/vice/etc/dkload/cfgafs
 
 kinstall:
-	${INSTALL} export.h ${DESTDIR}include
+	${INSTALL} export.h ${DESTDIR}/include
 	${INSTALL} export.h ../libafs
-	${INSTALL} export.exp ${DESTDIR}lib
+	${INSTALL} export.exp ${DESTDIR}/lib
 	${INSTALL} export.exp ../libafs
 
 ukinstall webinstall:

@@ -8,8 +8,8 @@ SYS_NAME=@AFS_SYSNAME@
 BACKDIR=../../../../PARENT/dest/
 OPTIMIZE=-O
 
-INCDIRS= -I${DESTDIR}include -I.. -I${BACKDIR}include
-LDIRS= -L${DESTDIR}lib -L${DESTDIR}lib/afs -L.. -L${BACKDIR}lib -L${BACKDIR}lib/afs
+INCDIRS= -I${DESTDIR}/include -I.. -I${BACKDIR}/include
+LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L.. -L${BACKDIR}/lib -L${BACKDIR}/lib/afs
 LIBS= -lcom_err
 
 CFLAGS = ${OPTIMIZE} ${INCDIRS} ${LDIRS} ${LIBS} ${XCFLAGS}

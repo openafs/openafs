@@ -18,7 +18,7 @@ KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
-INCDIRS= -I${TOP_SRCDIR}/config -I${DESTDIR}include ${XINCLS}
+INCDIRS= -I${TOP_SRCDIR}/config -I${DESTDIR}/include ${XINCLS}
 CFLAGS = ${OPTMZ} ${INCDIRS} ${XCFLAGS}
 
 OBJS=buffer.o dir.o salvage.o
@@ -36,17 +36,17 @@ libdir.a: ${OBJS} AFS_component_version_number.o
 	$(RANLIB) libdir.a
 
 kinstall:
-	${INSTALL} dir.h ${KERNELDIR}afs
-	${INSTALL} dir.c ${KERNELDIR}afs/afs_dir.c
+	${INSTALL} dir.h ${KERNELDIR}/afs
+	${INSTALL} dir.c ${KERNELDIR}/afs/afs_dir.c
 
 ukinstall webinstall:
-	set ${UKERNELDIR}afs; $(MKDIR_IF_NEEDED)
-	${INSTALL} dir.h ${UKERNELDIR}afs
-	${INSTALL} dir.c ${UKERNELDIR}afs/afs_dir.c
+	set ${UKERNELDIR}/afs; $(MKDIR_IF_NEEDED)
+	${INSTALL} dir.h ${UKERNELDIR}/afs
+	${INSTALL} dir.c ${UKERNELDIR}/afs/afs_dir.c
 
 install:	all kinstall ukinstall
-	${INSTALL} libdir.a ${DESTDIR}lib/afs
-	${INSTALL} dir.h ${DESTDIR}include/afs
+	${INSTALL} libdir.a ${DESTDIR}/lib/afs
+	${INSTALL} dir.h ${DESTDIR}/include/afs
 
 test: 
 	(cd test; $(MAKE) )
@@ -57,12 +57,5 @@ dir.o: dir.c dir.h
 
 salvage.o: salvage.c dir.h
 
-#doc:
-#	${INSTALL} -m 644 dir.vdoc ${DESTDIR}doc/vdoc
-
 clean:
 	rm -f *.o *.a core AFS_component_version_number.c
-
-beancount:
-	wc -l *.c *.h
-

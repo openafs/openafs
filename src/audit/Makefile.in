@@ -19,62 +19,47 @@ SYS_NAME=@AFS_SYSNAME@
 
 SHELL = /bin/sh
 
-
 include ../config/Makefile.${SYS_NAME}
-MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 UKERNELDIR = ../libuafs/
-LOCALDIR = ${DESTDIR}root.server/usr/afs/local/
-
-audobjs = audit.o
 
 CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I$(SRCDIR)include ${XCFLAGS}
 
-include ../config/Makefile.version
+all: install
 
-noversion system: install
-
-UKSRCS = audit.h
-
-all:  libaudit.a 
-
-headers: audit.h
-	${INSTALL} audit.h ${DESTDIR}include/afs
-
-install: ukinstall libaudit.a 
-	${INSTALL} libaudit.a ${DESTDIR}lib/afs
-	${INSTALL} audit.h ${DESTDIR}include/afs
+install: ukinstall ${DESTDIR}/lib/afs/libaudit.a ${DESTDIR}/include/afs/audit.h
 	case ${SYS_NAME} in \
 	rs_aix*) \
-	   ${INSTALL} Audit              ${LOCALDIR}                     ;  \
-	   ${INSTALL} objects.aix.sample ${LOCALDIR}audit/objects.sample ;  \
-	   ${INSTALL} events.aix.sample  ${LOCALDIR}audit/events.sample  ;  \
-	   ${INSTALL} config.aix.sample  ${LOCALDIR}audit/config.sample  ;; \
+	   ${INSTALL} Audit              ${DESTDIR}/root.server/usr/afs/local ;  \
+	   ${INSTALL} objects.aix.sample ${DESTDIR}/root.server/usr/afs/local/audit/objects.sample ;  \
+	   ${INSTALL} events.aix.sample  ${DESTDIR}/root.server/usr/afs/local/audit/events.sample  ;  \
+	   ${INSTALL} config.aix.sample  ${DESTDIR}/root.server/usr/afs/local/audit/config.sample  ;; \
         *) ;; \
         esac ;
 
+ukinstall: ${UKERNELDIR}/afs ${UKERNELDIR}/afs/audit.h
 
-kinstall:
-	@echo No $@ source here.
+${UKERNELDIR}/afs:
+	mkdir -p ${UKERNELDIR}/afs
 
-ukinstall webinstall:
-	set ${UKERNELDIR}afs; $(MKDIR_IF_NEEDED)
-	${INSTALL} ${UKSRCS} ${UKERNELDIR}afs
+${UKERNELDIR}/afs/audit.h: audit.h
+	${INSTALL} $? $@
 
-doc:
-	echo no documents in this directory
+${DESTDIR}/include/afs/audit.h: audit.h
+	${INSTALL} $? $@
 
-libaudit.a: ${audobjs} AFS_component_version_number.o
+${DESTDIR}/lib/afs/libaudit.a: libaudit.a
+	${INSTALL} $? $@
+
+libaudit.a: audit.o AFS_component_version_number.o
 	rm -f libaudit.a
-	ar r libaudit.a ${audobjs} AFS_component_version_number.o
+	ar r libaudit.a audit.o AFS_component_version_number.o
 	$(RANLIB) libaudit.a
 
 audit.o: audit.c audit.h 
 	${CC} ${CFLAGS} -c audit.c
 
 clean:
-	rm -f *.o core AFS_component_version_number.c *.a
+	rm -f *.a *.o core AFS_component_version_number.c
 
-beancount:
-	wc -l *.c *.h
-
+include ../config/Makefile.version

@@ -14,37 +14,28 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-COMPILE_ET = ${DESTDIR}/bin/compile_et
-CFLAGS= -g -w -I${TOP_SRCDIR}/config \
-	-I${SRCDIR}include -I${SRCDIR}include/afs ${XCFLAGS}
+CFLAGS= -g -w -I${TOP_SRCDIR}/config -I${SRCDIR}/include -I${SRCDIR}/include/afs ${XCFLAGS}
 LDFLAGS = ${XLDFLAGS}
 
-include ../config/Makefile.version
+all: install
 
-noversion: install
-
-all: fms
-
-FMSOBJS = fms.o
-FMSLIBS=${DESTDIR}lib/afs/libcmd.a \
+FMSLIBS=${DESTDIR}/lib/afs/libcmd.a \
 	${TXLIBS} \
         $(SRCDIR)lib/afs/libusd.a \
 	$(SRCDIR)lib/afs/libtermlib.a ${XLIBS} \
 	$(SRCDIR)lib/afs/util.a
 
-fms:	${FMSOBJS}
-	${CC} ${LDFLAGS} -o fms ${FMSOBJS} ${FMSLIBS}
+fms: fms.o
+	${CC} ${LDFLAGS} -o fms fms.o ${FMSLIBS}
 
 fms.o:  fms.c AFS_component_version_number.o
 
-#
-# global operations 
-#
+install: ${DESTDIR}/etc/fms
 
-system:	install
-
-install:	all
-	${INSTALL} fms ${DESTDIR}etc
+${DESTDIR}/etc/fms: fms
+	${INSTALL} $? $@
 
 clean:
 	rm -f *.o fms AFS_component_version_number.c
+
+include ../config/Makefile.version

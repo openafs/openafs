@@ -10,58 +10,41 @@ SRCDIR=@SRCDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
-
 include ../config/Makefile.${SYS_NAME}
 
-INCDIRS= -I${TOP_SRCDIR}/config -I${DESTDIR}include -I${DESTDIR}include/afs 
+INCDIRS= -I${TOP_SRCDIR}/config -I${DESTDIR}/include -I${DESTDIR}/include/afs 
 
 CFLAGS = ${OPTMZ} ${INCDIRS} ${XCFLAGS} ${DBUG}
 
 PROGRAMS=	unlog tokens tokens.krb kseal
 
-INCLS=${SRCDIR}include/afs/auth.h ${SRCDIR}include/rx/rx.h \
-${SRCDIR}include/rx/xdr.h ${SRCDIR}include/des.h ${SRCDIR}include/rx/rxkad.h \
-${SRCDIR}include/afs/cellconfig.h
+INCLS=${SRCDIR}/include/afs/auth.h ${SRCDIR}/include/rx/rx.h \
+${SRCDIR}/include/rx/xdr.h ${SRCDIR}/include/des.h ${SRCDIR}/include/rx/rxkad.h \
+${SRCDIR}/include/afs/cellconfig.h
 
-LIBRARIES=	${SRCDIR}lib/afs/libauth.a \
-		${SRCDIR}lib/librxkad.a \
-		${SRCDIR}lib/libdes.a \
-		${SRCDIR}lib/afs/libsys.a ${SRCDIR}lib/librx.a \
-		${SRCDIR}lib/afs/libsys.a \
-	        ${SRCDIR}lib/liblwp.a ${SRCDIR}lib/afs/libcmd.a \
-	        ${SRCDIR}lib/afs/util.a
-KLIBRARIES=	${SRCDIR}lib/afs/libauth.krb.a \
-		${SRCDIR}lib/librxkad.a \
-		${SRCDIR}lib/libdes.a \
-		${SRCDIR}lib/afs/libsys.a ${SRCDIR}lib/librx.a \
-		${SRCDIR}lib/afs/libsys.a \
-	        ${SRCDIR}lib/liblwp.a ${SRCDIR}lib/afs/libcmd.a \
-	        ${SRCDIR}lib/afs/util.a
+LIBRARIES=	${SRCDIR}/lib/afs/libauth.a \
+		${SRCDIR}/lib/librxkad.a \
+		${SRCDIR}/lib/libdes.a \
+		${SRCDIR}/lib/afs/libsys.a ${SRCDIR}/lib/librx.a \
+		${SRCDIR}/lib/afs/libsys.a \
+	        ${SRCDIR}/lib/liblwp.a ${SRCDIR}/lib/afs/libcmd.a \
+	        ${SRCDIR}/lib/afs/util.a
+KLIBRARIES=	${SRCDIR}/lib/afs/libauth.krb.a \
+		${SRCDIR}/lib/librxkad.a \
+		${SRCDIR}/lib/libdes.a \
+		${SRCDIR}/lib/afs/libsys.a ${SRCDIR}/lib/librx.a \
+		${SRCDIR}/lib/afs/libsys.a \
+	        ${SRCDIR}/lib/liblwp.a ${SRCDIR}/lib/afs/libcmd.a \
+	        ${SRCDIR}/lib/afs/util.a
 
-include ../config/Makefile.version
+#
+# Main targets
+#
+all: install
 
-# top-level options
-
-all:	${PROGRAMS}
-
-install:	all
-	${INSTALL} -s unlog tokens tokens.krb ${DESTDIR}bin
-	${INSTALL} -s tokens tokens.krb ${DESTDIR}root.server/usr/afs/bin
-	${INSTALL} -s kseal ${DESTDIR}etc
-
-lint:	log.c passwd.c unlog.c testlog.c
-	lint  ${INCDIRS} log.c 
-	lint  ${INCDIRS} unlog.c 
-	lint  ${INCDIRS} passwd.c
-
-clean:	
-	rm -f *.o log passwd unlog tokens kseal core AFS_component_version_number.c tokens.krb
-
-beancount:
-	wc -l log.c passwd.c unlog.c 
-
-# programs
-
+#
+# Build targets
+#
 kseal: kseal.o ${LIBRARIES}
 	${CC} -o kseal kseal.o ${LIBRARIES} ${XLIBS} ${CFLAGS}
 
@@ -80,13 +63,46 @@ tokens: tokens.o ${LIBRARIES}
 tokens.krb: tokens.o ${KLIBRARIES}
 	${CC} -o tokens.krb tokens.o ${KLIBRARIES} ${XLIBS} ${CFLAGS}
 
-# objects
+kseal.o: kseal.c ${INCLS} AFS_component_version_number.c
+unlog.o: unlog.c AFS_component_version_number.c
+tokens.o: tokens.c ${SRCDIR}/include/rx/xdr.h AFS_component_version_number.c
 
-kseal.o:		kseal.c ${INCLS} AFS_component_version_number.c
-unlog.o:		unlog.c AFS_component_version_number.c
-tokens.o:		tokens.c ${SRCDIR}include/rx/xdr.h AFS_component_version_number.c
-#log.o:		log.c ${SRCDIR}include/afs/comauth.h ${SRCDIR}include/r/xdr.h
-#passwd.o:	passwd.c ${SRCDIR}include/afs/comauth.h ${SRCDIR}include/r/xdr.h ${SRCDIR}include/r/r.h
+#
+# Install targets
+#
+install: ${DESTDIR}/bin/unlog \
+	${DESTDIR}/bin/tokens \
+	${DESTDIR}/bin/tokens.krb \
+	${DESTDIR}/root.server/usr/afs/bin/tokens \
+	${DESTDIR}/root.server/usr/afs/bin/tokens.krb \
+	${DESTDIR}/etc/kseal
+
+${DESTDIR}/bin/unlog: unlog
+	${INSTALL} $? $@
+
+${DESTDIR}/bin/tokens: tokens
+	${INSTALL} $? $@
+
+${DESTDIR}/bin/tokens.krb: tokens.krb
+	${INSTALL} $? $@
+
+${DESTDIR}/root.server/usr/afs/bin/tokens: tokens
+	${INSTALL} $? $@
+
+${DESTDIR}/root.server/usr/afs/bin/tokens.krb: tokens.krb
+	${INSTALL} $? $@
+
+${DESTDIR}/etc/kseal: kseal
+	${INSTALL} $? $@
+
+#
+# Misc. targets
+#
+clean:	
+	rm -f *.o log passwd unlog tokens kseal core AFS_component_version_number.c tokens.krb
 
 test:
 	cd test; $(MAKE)
+
+include ../config/Makefile.version
+

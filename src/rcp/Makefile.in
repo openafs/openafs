@@ -29,13 +29,13 @@ SRCS=	rcp.c
 OBJS=   rcp.o ../rsh/rcmd.o ../rsh/herror.o ../inetd/ta-rauth.o
 
 
-CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I${DESTDIR}include ${XCFLAGS}
-LIBDIR = ${DESTDIR}lib/
-AFSLIBS =  ${LIBDIR}afs/libkauth.a ${LIBDIR}libubik.a\
-		   ${LIBDIR}afs/libauth.a ${LIBDIR}afs/libsys.a \
-		   ${LIBDIR}librx.a ${LIBDIR}liblwp.a ${DESTDIR}lib/librxkad.a\
-		   ${DESTDIR}lib/libdes.a ${LIBDIR}afs/libcmd.a \
-		   ${LIBDIR}afs/libcom_err.a ${LIBDIR}afs/util.a 
+CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I${DESTDIR}/include ${XCFLAGS}
+LIBDIR = ${DESTDIR}/lib/
+AFSLIBS =  ${LIBDIR}/afs/libkauth.a ${LIBDIR}/libubik.a\
+		   ${LIBDIR}/afs/libauth.a ${LIBDIR}/afs/libsys.a \
+		   ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a ${DESTDIR}/lib/librxkad.a\
+		   ${DESTDIR}/lib/libdes.a ${LIBDIR}/afs/libcmd.a \
+		   ${LIBDIR}/afs/libcom_err.a ${LIBDIR}/afs/util.a 
 LIBRES = 
 LIBS = ${AFSLIBS} ${LIBRES} 
 MAN=
@@ -77,10 +77,4 @@ depend: ${SRCS}
 	mkdep -p ${CFLAGS} ${SRCS}
 
 install: ${MAN} all
-	${INSTALL} rcp ${DESTDIR}bin/rcp
-
-lint: ${SRCS}
-	lint ${CFLAGS} ${SRCS}
-
-tags: ${SRCS}
-	ctags ${SRCS}
+	${INSTALL} rcp ${DESTDIR}/bin/rcp

@@ -45,5 +45,3 @@ INSTALL=${DESTDIR}bin/install
 #
 YACC = bison -y
 LEX = flex -l
-# Used in des library.
-CRYPT_OBJ = crypt.o

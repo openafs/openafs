@@ -53,38 +53,38 @@ LWPOBJS    =lock.o
 
 BUTMOBJS   =file_tm.o
 BUTMLIBS   =libbutm.a
-BUTMINCLS  =${SRCDIR}include/afs/com_err.h ${SRCDIR}include/afs/butm.h
-BUTMINCLUDE=-I${SRCDIR}include
+BUTMINCLS  =${SRCDIR}/include/afs/com_err.h ${SRCDIR}/include/afs/butm.h
+BUTMINCLUDE=-I${SRCDIR}/include
 
 BUTCOBJS   =dbentries.o tcprocs.o lwps.o tcmain.o list.o recoverDb.o \
 	    tcudbprocs.o dump.o tcstatus.o butc_xbsa.o \
             ${LWPOBJS} ${BUCOORDOBJS}
-BUTCINCLS  =${SRCDIR}include/afs/partition.h \
-	    ${SRCDIR}include/afs/volume.h \
-	    ${SRCDIR}include/afs/vlserver.h \
-	    ${SRCDIR}include/rx/rx.h \
-	    ${SRCDIR}include/rx/xdr.h \
-	    ${SRCDIR}include/afs/keys.h \
-	    ${SRCDIR}include/afs/cellconfig.h \
-	    ${SRCDIR}include/ubik.h \
-	    ${SRCDIR}include/afs/cmd.h \
-	    ${SRCDIR}include/afs/butc.h \
-	    ${SRCDIR}include/afs/tcdata.h \
-	    ${SRCDIR}include/afs/bubasics.h \
-	    ${SRCDIR}include/afs/butm.h
-BUTCINCLUDE=-I. -I${SRCDIR}include
-BUTCLIBS   =${SRCDIR}lib/afs/libbudb.a \
-	    ${SRCDIR}lib/afs/libbubasics.a \
+BUTCINCLS  =${SRCDIR}/include/afs/partition.h \
+	    ${SRCDIR}/include/afs/volume.h \
+	    ${SRCDIR}/include/afs/vlserver.h \
+	    ${SRCDIR}/include/rx/rx.h \
+	    ${SRCDIR}/include/rx/xdr.h \
+	    ${SRCDIR}/include/afs/keys.h \
+	    ${SRCDIR}/include/afs/cellconfig.h \
+	    ${SRCDIR}/include/ubik.h \
+	    ${SRCDIR}/include/afs/cmd.h \
+	    ${SRCDIR}/include/afs/butc.h \
+	    ${SRCDIR}/include/afs/tcdata.h \
+	    ${SRCDIR}/include/afs/bubasics.h \
+	    ${SRCDIR}/include/afs/butm.h
+BUTCINCLUDE=-I. -I${SRCDIR}/include
+BUTCLIBS   =${SRCDIR}/lib/afs/libbudb.a \
+	    ${SRCDIR}/lib/afs/libbubasics.a \
 	    ${VOLSERLIBS} \
             ${BUTMLIBS} \
-	    ${SRCDIR}lib/afs/libvldb.a \
+	    ${SRCDIR}/lib/afs/libvldb.a \
 	    ${SRCDIR}/lib/libafsauthent.a \
 	    ${SRCDIR}/lib/libafsrpc.a \
-            ${SRCDIR}lib/afs/libcmd.a \
-	    ${SRCDIR}lib/afs/util.a \
-	    ${SRCDIR}lib/afs/libusd.a \
-	    ${SRCDIR}lib/afs/libprocmgmt.a \
-	    ${SRCDIR}lib/librx.a
+            ${SRCDIR}/lib/afs/libcmd.a \
+	    ${SRCDIR}/lib/afs/util.a \
+	    ${SRCDIR}/lib/afs/libusd.a \
+	    ${SRCDIR}/lib/afs/libprocmgmt.a \
+	    ${SRCDIR}/lib/librx.a
 
 include ../config/Makefile.version
 
@@ -290,7 +290,7 @@ pre:
 
 all: butc ${BUTMLIBS}
 install install.noversion: all
-	${INSTALL} butc ${DESTDIR}etc/butc
+	${INSTALL} butc ${DESTDIR}/etc/butc
 
 noversion: install
 system: install

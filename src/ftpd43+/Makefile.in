@@ -25,15 +25,15 @@ SYS_NAME=@AFS_SYSNAME@
 include ../config/Makefile.version
 include ../config/Makefile.${SYS_NAME}
 
-LIBDIR = ${DESTDIR}lib/
-AFSLIBS = ${LIBDIR}afs/libkauth.a ${LIBDIR}afs/libprot.a ${LIBDIR}libubik.a \
-	  ${LIBDIR}afs/libauth.a ${DESTDIR}lib/librxkad.a ${LIBDIR}afs/libsys.a \
-	  ${DESTDIR}lib/libdes.a ${LIBDIR}librx.a ${LIBDIR}liblwp.a \
-          ${LIBDIR}afs/libcmd.a ${LIBDIR}afs/libcom_err.a ${LIBDIR}afs/util.a \
-          ${LIBDIR}afs/libaudit.a
+LIBDIR = ${DESTDIR}/lib/
+AFSLIBS = ${LIBDIR}/afs/libkauth.a ${LIBDIR}/afs/libprot.a ${LIBDIR}/libubik.a \
+	  ${LIBDIR}/afs/libauth.a ${DESTDIR}/lib/librxkad.a ${LIBDIR}/afs/libsys.a \
+	  ${DESTDIR}/lib/libdes.a ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a \
+          ${LIBDIR}/afs/libcmd.a ${LIBDIR}/afs/libcom_err.a ${LIBDIR}/afs/util.a \
+          ${LIBDIR}/afs/libaudit.a
 
 LIBS = ${AFSLIBS} 
-CFLAGS=	${OPTMZ} -I${DESTDIR}include ${XCFLAGS}
+CFLAGS=	${OPTMZ} -I${DESTDIR}/include ${XCFLAGS}
 LIBC=	/lib/libc.a 
 SRCS=	ftpd.c ftpcmd.c getusershell.c glob.c logwtmp.c popen.c vers.c
 OBJS=	ftpd.o ftpcmd.o getusershell.o glob.o logwtmp.o popen.o vers.o
@@ -65,16 +65,10 @@ clean:
 	rm -f ${OBJS} ftpd core ftpcmd.c AFS_component_version_number.c
 
 cleandir: clean
-	rm -f ${MAN} tags .depend
+	rm -f ${MAN} .depend
 
 depend: ${SRCS}
 	mkdep ${CFLAGS} ${SRCS}
 
 install: ${MAN} all
 	${INSTALL} -s -m 755 ftpd ${DESTDIR}/etc/ftpd
-
-lint: ${SRCS}
-	lint ${CFLAGS} ${SRCS}
-
-tags: ${SRCS}
-	ctags ${SRCS}

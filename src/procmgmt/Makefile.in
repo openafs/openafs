@@ -11,37 +11,37 @@ TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
 include ../config/Makefile.${SYS_NAME}
-include ../config/Makefile.version
 
-CFLAGS = $(DBUG) -I${SRCDIR}include -I${TOP_SRCDIR}/config ${XCFLAGS}
+CFLAGS = $(DBUG) -I${SRCDIR}/include -I${TOP_SRCDIR}/config ${XCFLAGS}
 
-########################################################################
-# build libprocmgmt.a
-LIBOBJS=procmgmt_unix.o
+all: install
 
-libprocmgmt.a: ${LIBOBJS} AFS_component_version_number.o
+#
+# Build targets
+#
+libprocmgmt.a: procmgmt_unix.o AFS_component_version_number.o
 	$(RM) -f libprocmgmt.a
-	$(AR) r libprocmgmt.a ${LIBOBJS} AFS_component_version_number.o
+	$(AR) r libprocmgmt.a procmgmt_unix.o AFS_component_version_number.o
 	$(RANLIB) libprocmgmt.a
 
 procmgmt_unix.o: procmgmt_unix.c procmgmt.h
 
-#######################################################################
-system: install
+#
+# Install targets
+#
+install: ${DESTDIR}/lib/afs/libprocmgmt.a \
+	${DESTDIR}/include/afs/procmgmt.h
 
-kinstall ukinstall webinstall: install
-	@echo No relevant source here.
+${DESTDIR}/lib/afs/libprocmgmt.a: libprocmgmt.a
+	${INSTALL} $? $@
 
-${DESTDIR}lib/afs/libprocmgmt.a: libprocmgmt.a
-	${INSTALL}   $? $@
+${DESTDIR}/include/afs/procmgmt.h: procmgmt.h
+	${INSTALL} $? $@
 
-
-install: ${DESTDIR}lib/afs/libprocmgmt.a 
-	${INSTALL} procmgmt.h ${DESTDIR}include/afs
-
-includes:
-	${INSTALL} procmgmt.h ${DESTDIR}include/afs
-
+#
+# Misc targets
+#
 clean:
-	$(RM) -f *.o libprocmgmt.a   \
-	 core  AFS_component_version_number.c
+	$(RM) -f *.a *.o core AFS_component_version_number.c
+
+include ../config/Makefile.version

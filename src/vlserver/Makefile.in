@@ -17,34 +17,34 @@ MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 KERNELDIR=../libafs/
 UKERNELDIR=../libuafs/
-COMPILE_ET = ${SRCDIR}bin/compile_et
+COMPILE_ET = ${SRCDIR}/bin/compile_et
 
-CFLAGS = ${DBUG} -I. -I.. -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
-INCLS=${SRCDIR}include/ubik.h \
-             ${SRCDIR}include/lwp.h \
-             ${SRCDIR}include/lock.h  \
-             ${SRCDIR}include/rx/rx.h \
-             ${SRCDIR}include/rx/xdr.h \
-             ${SRCDIR}include/afs/keys.h \
-             ${SRCDIR}include/afs/cellconfig.h \
+CFLAGS = ${DBUG} -I. -I.. -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
+INCLS=${SRCDIR}/include/ubik.h \
+             ${SRCDIR}/include/lwp.h \
+             ${SRCDIR}/include/lock.h  \
+             ${SRCDIR}/include/rx/rx.h \
+             ${SRCDIR}/include/rx/xdr.h \
+             ${SRCDIR}/include/afs/keys.h \
+             ${SRCDIR}/include/afs/cellconfig.h \
 	vlserver.h vlclient.h vldbint.h
 
 LIBS = \
-	${SRCDIR}lib/libubik.a \
-	${SRCDIR}lib/afs/libauth.a \
-	${SRCDIR}lib/librxkad.a \
-	${SRCDIR}lib/librxstat.a \
-	${SRCDIR}lib/librx.a \
-	${SRCDIR}lib/liblwp.a \
-	${SRCDIR}lib/libdes.a \
-	${SRCDIR}lib/afs/libcom_err.a \
-	${SRCDIR}lib/afs/util.a \
-	${SRCDIR}lib/afs/libsys.a \
-	${SRCDIR}lib/afs/util.a
+	${SRCDIR}/lib/libubik.a \
+	${SRCDIR}/lib/afs/libauth.a \
+	${SRCDIR}/lib/librxkad.a \
+	${SRCDIR}/lib/librxstat.a \
+	${SRCDIR}/lib/librx.a \
+	${SRCDIR}/lib/liblwp.a \
+	${SRCDIR}/lib/libdes.a \
+	${SRCDIR}/lib/afs/libcom_err.a \
+	${SRCDIR}/lib/afs/util.a \
+	${SRCDIR}/lib/afs/libsys.a \
+	${SRCDIR}/lib/afs/util.a
 
-auditlib=${SRCDIR}lib/afs/libaudit.a
+auditlib=${SRCDIR}/lib/afs/libaudit.a
 
-RXGEN=${SRCDIR}bin/rxgen
+RXGEN=${SRCDIR}/bin/rxgen
 KSRCS=Kvldbint.cs.c Kvldbint.xdr.c vl_opcodes.h vldbint.h
 UKSRCS=$(KSRCS)
 
@@ -65,11 +65,11 @@ clean:
 
 vldb_check: vldb_check.c
 	$(CC) ${CFLAGS} -o vldb_check vldb_check.c ${XLIBS} \
-		${DESTDIR}lib/afs/libcmd.a ${DESTDIR}lib/afs/util.a
+		${DESTDIR}/lib/afs/libcmd.a ${DESTDIR}/lib/afs/util.a
 
 cnvldb: cnvldb.o 
-	$(CC) ${CFLAGS} -o cnvldb cnvldb.o ${XLIBS} ${DESTDIR}lib/afs/libcmd.a\
-		 ${DESTDIR}lib/afs/util.a		 
+	$(CC) ${CFLAGS} -o cnvldb cnvldb.o ${XLIBS} ${DESTDIR}/lib/afs/libcmd.a\
+		 ${DESTDIR}/lib/afs/util.a		 
 
 cnvldb.o: cnvldb.c cnvldb.h AFS_component_version_number.o
 
@@ -101,7 +101,7 @@ libvldb.a: $(OBJS) AFS_component_version_number.o
 	$(RANLIB) libvldb.a
 
 vlclient: vlclient.o libvldb.a $(LIBS)
-	$(CC) ${CFLAGS} -o vlclient vlclient.o libvldb.a $(LIBS) ${XLIBS} ${DESTDIR}lib/afs/libcmd.a
+	$(CC) ${CFLAGS} -o vlclient vlclient.o libvldb.a $(LIBS) ${XLIBS} ${DESTDIR}/lib/afs/libcmd.a
 
 vlclient.o: vlclient.c ${INCLS} AFS_component_version_number.o
 
@@ -112,11 +112,11 @@ vlserver.h vl_errors.c: vl_errors.et vlserver.p.h
 system: install
 
 kinstall: $(KSRCS)
-	${INSTALL} $(KSRCS) ${KERNELDIR}afsint
+	${INSTALL} $(KSRCS) ${KERNELDIR}/afsint
 
 ukinstall webinstall: $(UKSRCS)
-	set ${UKERNELDIR}afsint; $(MKDIR_IF_NEEDED)
-	${INSTALL} $(UKSRCS) ${UKERNELDIR}afsint
+	set ${UKERNELDIR}/afsint; $(MKDIR_IF_NEEDED)
+	${INSTALL} $(UKSRCS) ${TKERNELDIR}/afsint
 
 ${DESTDIR}root.server/usr/afs/bin/vlserver: vlserver
 	${INSTALL} vlserver ${DESTDIR}root.server/usr/afs/bin
@@ -125,12 +125,12 @@ ${DESTDIR}/etc/vldb_convert: cnvldb
 	${INSTALL} -f cnvldb ${DESTDIR}/etc/vldb_convert
 
 install: kinstall ukinstall vlserver vlclient libvldb.a cnvldb ${DESTDIR}root.server/usr/afs/bin/vlserver ${DESTDIR}/etc/vldb_convert vldb_check
-	${INSTALL} libvldb.a ${DESTDIR}lib/afs
-	${INSTALL} vl_opcodes.h vlserver.h vldbint.h ${DESTDIR}include/afs
-	${INSTALL} cnvldb.h ${DESTDIR}include/afs
+	${INSTALL} libvldb.a ${DESTDIR}/lib/afs
+	${INSTALL} vl_opcodes.h vlserver.h vldbint.h ${DESTDIR}/include/afs
+	${INSTALL} cnvldb.h ${DESTDIR}/include/afs
 	${INSTALL} vldb_check ${DESTDIR}/etc
 
 libinstall: libvldb.a
-	${INSTALL} libvldb.a ${DESTDIR}lib/afs
-	${INSTALL} vl_opcodes.h vlserver.h vldbint.h ${DESTDIR}include/afs
-	${INSTALL} cnvldb.h ${DESTDIR}include/afs
+	${INSTALL} libvldb.a ${DESTDIR}/lib/afs
+	${INSTALL} vl_opcodes.h vlserver.h vldbint.h ${DESTDIR}/include/afs
+	${INSTALL} cnvldb.h ${DESTDIR}/include/afs

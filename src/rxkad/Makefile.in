@@ -18,36 +18,134 @@ include ../config/Makefile.${SYS_NAME}
 
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
-COMPILE_ET = ${SRCDIR}bin/compile_et
-MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
+COMPILE_ET = ${SRCDIR}/bin/compile_et
 
-CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
-INCLS= ${SRCDIR}include/rx/rx.h \
-       ${SRCDIR}include/rx/xdr.h \
+CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
+INCLS= ${SRCDIR}/include/rx/rx.h ${SRCDIR}/include/rx/xdr.h \
        rxkad.h
 
-OBJS= rxkad_client.o rxkad_server.o rxkad_common.o ticket.o rxkad_errs.o
+OBJS=rxkad_client.o rxkad_server.o rxkad_common.o ticket.o rxkad_errs.o \
+	fcrypt.o crypt_conn.o
 
-REGOBJS=fcrypt.o crypt_conn.o
+all: install
 
-KSRCS=private_data.h fcrypt.h fcrypt.c crypt_conn.c rxkad_client.c rxkad_common.c rxkad.h sboxes.h
+#
+# Install targets
+#
+kinstall: \
+	${KERNELDIR}/afs/private_data.h \
+	${KERNELDIR}/afs/rxkad.h \
+	${KERNELDIR}/afs/sboxes.h \
+	${KERNELDIR}/afs/fcrypt.h \
+	${KERNELDIR}/afs/fcrypt.c \
+	${KERNELDIR}/afs/crypt_conn.c \
+	${KERNELDIR}/afs/rxkad_client.c \
+	${KERNELDIR}/afs/rxkad_common.c 
 
-UKSRCS=$(KSRCS) rxkad.h ticket.c rxkad_server.c lifetimes.h private_data.h rxkad_errs.c
+${KERNELDIR}/afs/private_data.h: private_data.h
+	${INSTALL} $? $@
 
-include ../config/Makefile.version
+${KERNELDIR}/afs/rxkad.h: rxkad.h
+	${INSTALL} $? $@
 
-noversion: install
+${KERNELDIR}/afs/sboxes.h: sboxes.h
+	${INSTALL} $? $@
 
-all: librxkad.a
+${KERNELDIR}/afs/fcrypt.h: fcrypt.h
+	${INSTALL} $? $@
 
-system: install
+${KERNELDIR}/afs/fcrypt.c: fcrypt.c
+	${INSTALL} $? $@
 
-clean: 
-	rm -f *.o tcrypt core *.a rxkad_errs.c rxkad.h AFS_component_version_number.c crypt_conn.c fcrypt.c fcrypt.h sboxes.h
+${KERNELDIR}/afs/crypt_conn.c: crypt_conn.c
+	${INSTALL} $? $@
 
-librxkad.a: $(OBJS) ${REGOBJS} AFS_component_version_number.o
+${KERNELDIR}/afs/rxkad_client.c: rxkad_client.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/afs/rxkad_common.c: rxkad_common.c
+	${INSTALL} $? $@
+
+ukinstall: \
+	${UKERNELDIR}/afs \
+	${UKERNELDIR}/rx \
+	${UKERNELDIR}/afs/private_data.h \
+	${UKERNELDIR}/afs/rxkad.h \
+	${UKERNELDIR}/rx/rxkad.h \
+	${UKERNELDIR}/afs/sboxes.h \
+	${UKERNELDIR}/afs/fcrypt.h \
+	${UKERNELDIR}/afs/fcrypt.c \
+	${UKERNELDIR}/afs/crypt_conn.c \
+	${UKERNELDIR}/afs/rxkad_client.c \
+	${UKERNELDIR}/afs/rxkad_common.c \
+	${UKERNELDIR}/afs/ticket.c \
+	${UKERNELDIR}/afs/rxkad_server.c \
+	${UKERNELDIR}/afs/lifetimes.h \
+	${UKERNELDIR}/afs/rxkad_errs.c 
+
+
+${UKERNELDIR}/afs:
+	mkdir -p $?
+
+${UKERNELDIR}/rx:
+	mkdir -p $?
+
+${UKERNELDIR}/afs/private_data.h: private_data.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs/rxkad.h: rxkad.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx/rxkad.h: rxkad.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs/lifetimes.h: lifetimes.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs/ticket.c: ticket.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs/sboxes.h: sboxes.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs/fcrypt.h: fcrypt.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs/fcrypt.c: fcrypt.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs/crypt_conn.c: crypt_conn.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs/rxkad_client.c: rxkad_client.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs/rxkad_errs.c: rxkad_errs.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs/rxkad_server.c: rxkad_server.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afs/rxkad_common.c: rxkad_common.c
+	${INSTALL} $? $@
+
+install: kinstall ukinstall \
+	${DESTDIR}/lib/librxkad.a \
+	${DESTDIR}/include/rx/rxkad.h
+
+${DESTDIR}/lib/librxkad.a: librxkad.a
+	${INSTALL} $? $@
+
+${DESTDIR}/include/rx/rxkad.h: rxkad.h
+	${INSTALL} $? $@
+
+#
+# Build targets
+#
+
+librxkad.a: ${OBJS} AFS_component_version_number.o
 	-rm -f librxkad.a
-	$(AR) rv librxkad.a $(OBJS) ${REGOBJS} AFS_component_version_number.o
+	$(AR) rv librxkad.a ${OBJS} AFS_component_version_number.o
 	$(RANLIB) librxkad.a
 
 crypt_conn.o: fcrypt.h private_data.h crypt_conn.c ${INCLS}
@@ -61,30 +159,27 @@ rxkad_common.o: fcrypt.h private_data.h rxkad_common.c ${INCLS}
 rxkad_errs.o: rxkad_errs.c
 
 rxkad_errs.c rxkad.h: rxkad_errs.et rxkad.p.h
-	rm -f rxkad.h rxkad_errs.c; ${COMPILE_ET} rxkad_errs -h rxkad
+	rm -f rxkad.h rxkad_errs.c
+	${COMPILE_ET} rxkad_errs -h rxkad
 
 ticket.o: ticket.c lifetimes.h ${INCLS}
 
 fcrypt.o: fcrypt.c fcrypt.h sboxes.h rxkad.h
 	${CC} ${CFLAGS} -c fcrypt.c
 
-kinstall: ${KSRCS}
-	${INSTALL} $(KSRCS) ${KERNELDIR}afs
-
-ukinstall webinstall: ${UKSRCS}
-	set ${UKERNELDIR}afs; $(MKDIR_IF_NEEDED)
-	set ${UKERNELDIR}rx; $(MKDIR_IF_NEEDED)
-	${INSTALL} $(UKSRCS) ${UKERNELDIR}afs
-	${INSTALL} rxkad.h ${UKERNELDIR}rx
-
-install: all kinstall ukinstall
-	rm -f ${DESTDIR}lib/librxkad.a
-	${INSTALL} librxkad.a ${DESTDIR}lib
-	${INSTALL} rxkad.h ${DESTDIR}include/rx
-
 tcrypt: tcrypt.o librxkad.a 
 	${CC} -o tcrypt tcrypt.o librxkad.a
+
 tcrypt.o: tcrypt.c AFS_component_version_number.o
+
+#
+# Misc. targets
+#
+
+clean: 
+	rm -f *.o *.a tcrypt core rxkad_errs.c rxkad.h \
+		AFS_component_version_number.c \
+		crypt_conn.c fcrypt.c fcrypt.h sboxes.h
 
 test:
 	cd test; $(MAKE)
@@ -92,22 +187,19 @@ test:
 # These sources are kept in a separate directory so that we can use an
 # ACL to comply with source export restrictions.
 
-crypt_conn.c:	domestic/crypt_conn.c
-	rm -f $@
-	cp domestic/crypt_conn.c $@
+crypt_conn.c: domestic/crypt_conn.c
+	${INSTALL} $? $@
 
-fcrypt.c:	domestic/fcrypt.c
-	rm -f $@
-	cp domestic/fcrypt.c $@
+fcrypt.c: domestic/fcrypt.c
+	${INSTALL} $? $@
 
-fcrypt.h:	domestic/fcrypt.h
-	rm -f $@
-	cp domestic/fcrypt.h $@
+fcrypt.h: domestic/fcrypt.h
+	${INSTALL} $? $@
 
-sboxes.h:	domestic/sboxes.h
-	rm -f $@
-	cp domestic/sboxes.h $@
+sboxes.h: domestic/sboxes.h
+	${INSTALL} $? $@
 
-tcrypt.c:	domestic/tcrypt.c
-	rm -f $@
-	cp domestic/tcrypt.c $@
+tcrypt.c: domestic/tcrypt.c
+	${INSTALL} $? $@
+
+include ../config/Makefile.version

@@ -17,7 +17,7 @@ SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 CC=${MT_CC}
-CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${MT_CFLAGS} 
+CFLAGS = ${OPTMZ} ${DBG} -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${MT_CFLAGS} 
 CCRULE = ${CC} ${CFLAGS} -c $?
 
 AUDIT= ../audit
@@ -94,10 +94,10 @@ LIBOBJS = \
 	${PTSERVEROBJS} \
 	${SYSOBJS}
 
-system install: ${DESTDIR}lib/libafsauthent.a
+system install: ${DESTDIR}/lib/libafsauthent.a
 
-${DESTDIR}lib/libafsauthent.a: libafsauthent.a
-	${INSTALL} libafsauthent.a ${DESTDIR}lib/libafsauthent.a
+${DESTDIR}/lib/libafsauthent.a: libafsauthent.a
+	${INSTALL} libafsauthent.a ${DESTDIR}/lib/libafsauthent.a
 
 libafsauthent.a: ${LIBOBJS}
 	rm -f libafsauthent.a

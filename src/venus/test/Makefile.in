@@ -16,8 +16,8 @@ include ../../config/Makefile.${SYS_NAME}
 
 OPTIMIZE=-O
 
-INCDIRS= -I${TOP_SRCDIR}/config -I${DESTDIR}include -I..
-LDIRS= -L${DESTDIR}lib -L${DESTDIR}lib/afs -L..
+INCDIRS= -I${TOP_SRCDIR}/config -I${DESTDIR}/include -I..
+LDIRS= -L${DESTDIR}/lib -L${DESTDIR}/lib/afs -L..
 LIBS= -lsys -lubik -lvldb -lauth -lrxkad -ldes -lcom_err -lcmd -lrx -llwp -lafsutil
 
 CFLAGS = ${OPTIMIZE} ${INCDIRS} ${XCFLAGS}

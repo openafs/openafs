@@ -13,29 +13,21 @@ SYS_NAME=@AFS_SYSNAME@
 
 SHELL = /bin/sh
 
-SOURCES = afsd.c sys.c
-
-
 include ../config/Makefile.${SYS_NAME}
-include ../config/Makefile.version
 
-INSTALLro = ${INSTALL} -m 644
-INSTALLex = ${INSTALL} -m 755
-CFLAGS = -g -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = -g -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
 LDFLAGS = -g ${XLDFLAGS}
-
-noversion: install
 
 #
 # What to make
 #
-all:	afsd vsys
+all: afsd vsys
 
 #
 # Programs
 #
 
-AFSLIBS=$(SRCDIR)lib/afs/libauth.a ${SRCDIR}lib/afs/libcmd.a $(SRCDIR)lib/afs/libsys.a $(SRCDIR)lib/afs/util.a $(SRCDIR)lib/librx.a $(SRCDIR)lib/liblwp.a $(SRCDIR)lib/afs/util.a 
+AFSLIBS=$(SRCDIR)lib/afs/libauth.a ${SRCDIR}/lib/afs/libcmd.a $(SRCDIR)lib/afs/libsys.a $(SRCDIR)lib/afs/util.a $(SRCDIR)lib/librx.a $(SRCDIR)lib/liblwp.a $(SRCDIR)lib/afs/util.a 
 
 afsd: afsd.o $(AFSLIBS)
 	case ${SYS_NAME} in \
@@ -48,7 +40,7 @@ afsd: afsd.o $(AFSLIBS)
 	esac
 
 vsys: vsys.o
-	$(CC) -g -o vsys vsys.o ${SRCDIR}lib/afs/libsys.a $(LDFLAGS) ${XLIBS}
+	$(CC) -g -o vsys vsys.o ${SRCDIR}/lib/afs/libsys.a $(LDFLAGS) ${XLIBS}
 
 #
 # Objects
@@ -60,13 +52,10 @@ vsys.o: vsys.c AFS_component_version_number.c
 clean:
 	rm -f *.o vsys afsd core AFS_component_version_number.c
 
-beancount:
-	wc -l afsd.c
-
 system: install
 
 install: all
-	${INSTALL} vsys ${DESTDIR}etc
+	${INSTALL} vsys ${DESTDIR}/etc
 	${INSTALL} afsd ${DESTDIR}root.client/usr/vice/etc
 	case ${SYS_NAME} in \
 		rs_aix*)  \
@@ -114,3 +103,5 @@ install: all
 		* )  \
 			echo No rc scripts installed for ${SYS_NAME} ;; \
 	esac
+
+include ../config/Makefile.version

@@ -14,33 +14,29 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-DBUG = -g
-CFLAGS =  -DNINTERFACE ${DBUG} \
-	-I${TOP_SRCDIR}/config -I. -I${SRCDIR}include -I${SRCDIR}include/afs \
+CFLAGS =  -DNINTERFACE -I${TOP_SRCDIR}/config -I. -I${SRCDIR}/include -I${SRCDIR}/include/afs \
 	 ${XCFLAGS} -DRXDEBUG
+
 LDFLAGS = ${DBUG} ${XLDFLAGS}
 
-UTILLIB=${SRCDIR}lib/afs/util.a
-auditlib=${SRCDIR}lib/afs/libaudit.a
-
-LIBS=	${SRCDIR}lib/afs/libacl.a	\
-	${SRCDIR}lib/afs/libvldb.a	\
-	${SRCDIR}lib/afs/libprot.a	\
-	${SRCDIR}lib/afs/libauth.a	\
-	${SRCDIR}lib/librxkad.a		\
-	${SRCDIR}lib/libubik.a 		\
-	${SRCDIR}lib/afs/vlib.a		\
-	${SRCDIR}lib/afs/libdir.a	\
-	${UTILLIB}			\
-	${SRCDIR}lib/afs/libsys.a	\
-	${SRCDIR}lib/afs/libafsint.a	\
-	${SRCDIR}lib/librxstat.a	\
-	${SRCDIR}lib/librx.a		\
-	${SRCDIR}lib/afs/libsys.a	\
-	${SRCDIR}lib/libdes.a		\
-	${SRCDIR}lib/afs/libcom_err.a	\
-	${SRCDIR}lib/afs/util.a		\
-	${SRCDIR}lib/liblwp.a 
+LIBS=	${SRCDIR}/lib/afs/libacl.a	\
+	${SRCDIR}/lib/afs/libvldb.a	\
+	${SRCDIR}/lib/afs/libprot.a	\
+	${SRCDIR}/lib/afs/libauth.a	\
+	${SRCDIR}/lib/librxkad.a		\
+	${SRCDIR}/lib/libubik.a 		\
+	${SRCDIR}/lib/afs/vlib.a		\
+	${SRCDIR}/lib/afs/libdir.a	\
+	${SRCDIR}/lib/afs/util.a		\
+	${SRCDIR}/lib/afs/libsys.a	\
+	${SRCDIR}/lib/afs/libafsint.a	\
+	${SRCDIR}/lib/librxstat.a	\
+	${SRCDIR}/lib/librx.a		\
+	${SRCDIR}/lib/afs/libsys.a	\
+	${SRCDIR}/lib/libdes.a		\
+	${SRCDIR}/lib/afs/libcom_err.a	\
+	${SRCDIR}/lib/afs/util.a		\
+	${SRCDIR}/lib/liblwp.a 
 
 headers=${SRCDIR}include/lwp.h		\
 	${SRCDIR}include/afs/acl.h	\
@@ -63,33 +59,27 @@ objects=viced.o		\
 	physio.o	\
 	callback.o	
 
-include ../config/Makefile.version
+all: install
 
-noversion: install
+${objects}: ${headers}
 
-all: cbd fsprobe check_sysid
-
-${objects}:${headers}
 viced.o: AFS_component_version_number.o
 
 check_sysid: check_sysid.c
-	${CC} ${CFLAGS} -IDEST/include -o check_sysid check_sysid.c
+	${CC} ${CFLAGS} -o check_sysid check_sysid.c
 
-fileserver: viced.o ${objects} ${headers} ${LIBS}
+fileserver: ${objects} ${headers} ${LIBS}
 	set -x; \
 	case ${SYS_NAME} in \
-	*linux* | *fbsd* ) \
-	    ${CC} ${LDFLAGS} -o fileserver ${objects} \
-	    ${auditlib} ${LIBS} ${XLIBS} ;; \
 	rs_aix*) \
 	    ${CC} -K ${LDFLAGS} -o fileserver ${objects} \
-	    ${auditlib} ${LIBS} ${XLIBS} ;; \
+	    ${SRCDIR}/lib/afs/libaudit.a ${LIBS} ${XLIBS} ;; \
 	*) \
 	    ${CC} ${LDFLAGS} -o fileserver ${objects} \
-	    ${auditlib} ${LIBS} ${XLIBS} ;; \
+	    ${SRCDIR}/lib/afs/libaudit.a ${LIBS} ${XLIBS} ;; \
 	esac
 
-fsprobe.o: fsprobe.c  AFS_component_version_number.c
+fsprobe.o: fsprobe.c AFS_component_version_number.c
 	${CC} ${CFLAGS} -DINTERPRET_DUMP -c fsprobe.c
 
 fsprobe: fsprobe.o
@@ -101,25 +91,22 @@ cbd.o: callback.c AFS_component_version_number.c
 cbd: cbd.o
 	${CC} ${CFLAGS} -DINTERPRET_DUMP -o cbd cbd.o ${LIBS} ${XLIBS}  
 
-lint:
-	lint -uvn  -I${SRCDIR}include viced.c afsfileprocs.c host.c physio.c callback.c ${SRCDIR}lib/afs/llib-lutil.ln
-
-${DESTDIR}root.server/usr/afs/bin/fileserver : fileserver
+${DESTDIR}/root.server/usr/afs/bin/fileserver: fileserver
 	@case ${SYS_NAME} in \
 	alpha_dux4*|*linux*|rs_aix*|sgi_6*|sun4x*) \
 	echo "Don't install fileserver for ${SYS_NAME}" ;; \
 	*) \
-	echo ${INSTALL} -ns fileserver ${DESTDIR}root.server/usr/afs/bin/fileserver ; \
-	${INSTALL} -ns fileserver ${DESTDIR}root.server/usr/afs/bin/fileserver ;; \
+	echo ${INSTALL} -ns fileserver ${DESTDIR}/root.server/usr/afs/bin/fileserver ; \
+	${INSTALL} -ns fileserver ${DESTDIR}/root.server/usr/afs/bin/fileserver ;; \
 	esac
 
-install: all  ${DESTDIR}root.server/usr/afs/bin/fileserver
-	${INSTALL} fs_stats.h ${DESTDIR}/include/afs
+${DESTDIR}/include/afs/fs_stats.h: fs_stats.h
+	${INSTALL} $? $@
 
-system: install
+install: cbd fsprobe check_sysid ${DESTDIR}/root.server/usr/afs/bin/fileserver \
+	${DESTDIR}/include/afs/fs_stats.h
 
 clean:
-	rm -f *.o llib-lvice.ln fileserver core AFS_component_version_number.c cbd check_sysid fsprobe
+	rm -f *.o fileserver core AFS_component_version_number.c cbd check_sysid fsprobe
 
-beancount:
-	wc -l *.c *.h
+include ../config/Makefile.version

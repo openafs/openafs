@@ -16,11 +16,9 @@ UKERNELDIR = ../libuafs/
 
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
-
 include ../config/Makefile.${SYS_NAME}
-include ../config/Makefile.version
 
-system: install
+all: install
 
 # NOTE: linux case uses --new as well to work around bug in some versions of
 # gencat.
@@ -46,7 +44,7 @@ kinstall: AFS_component_version_number.c
 
 
 
-ukinstall webinstall: AFS_component_version_number.c
+ukinstall: AFS_component_version_number.c
 	set ${UKERNELDIR}afs; $(MKDIR_IF_NEEDED)
 	-chmod 666 ${UKERNELDIR}afs/*
 	${DESTDIR}bin/compile_et -v 2 afs_trace.et
@@ -54,8 +52,7 @@ ukinstall webinstall: AFS_component_version_number.c
 	${INSTALL} VNOPS/*.[csh] ${UKERNELDIR}afs
 	${INSTALL} UKERNEL/*.[csh] ${UKERNELDIR}afs
 
-noversion: install.noversion
-install install.noversion: kinstall ukinstall
+install: kinstall ukinstall
 	${INSTALL} afs.h ${DESTDIR}include/afs
 	${INSTALL} ${AFS_OSTYPE}/osi_inode.h ${DESTDIR}include/afs
 	${INSTALL} afs_stats.h exporter.h nfsclient.h  ${DESTDIR}include/afs
@@ -78,3 +75,5 @@ install install.noversion: kinstall ukinstall
 
 clean:
 	rm -f *.o core AFS_component_version_number.c afs_trace.h afs_trace.msf afszcm.cat
+
+include ../config/Makefile.version

@@ -18,9 +18,9 @@ include ../config/Makefile.${SYS_NAME}
 
 COMPILE_ET=$(SRCDIR)bin/compile_et
 CFLAGS= ${DBUG} -I. -I${TOP_SRCDIR}/config \
-	-I${SRCDIR}include -I${SRCDIR}include/afs ${XCFLAGS}
+	-I${SRCDIR}/include -I${SRCDIR}/include/afs ${XCFLAGS}
 LDFLAGS = ${XLDFLAGS}
-#RPCINCLS=${SRCDIR}include/lwp.h ${SRCDIR}include/rx/rx.h bosint.h
+#RPCINCLS=${SRCDIR}/include/lwp.h ${SRCDIR}/include/rx/rx.h bosint.h
 RPCINCLS=
 INCLS=gtxobjects.h \
 	gtxwindows.h \
@@ -35,25 +35,23 @@ INCLS=gtxobjects.h \
 	gtxframe.h \
 	gtxobjdict.h \
 	${RPCINCLS} \
-	${SRCDIR}include/afs/keys.h \
-	${SRCDIR}include/afs/cellconfig.h \
-	${SRCDIR}include/afs/cmd.h
+	${SRCDIR}/include/afs/keys.h \
+	${SRCDIR}/include/afs/cellconfig.h \
+	${SRCDIR}/include/afs/cmd.h
 
 LIBS= \
-	${SRCDIR}lib/librx.a \
-	${SRCDIR}lib/liblwp.a \
-	${SRCDIR}lib/afs/libsys.a \
-	${SRCDIR}lib/afs/libcmd.a \
-	${SRCDIR}lib/afs/libkauth.a \
-	${SRCDIR}lib/afs/libauth.a \
-	${SRCDIR}lib/librxkad.a \
-	${SRCDIR}lib/libdes.a \
-	${SRCDIR}lib/afs/libcom_err.a \
-	${SRCDIR}lib/afs/util.a
+	${SRCDIR}/lib/librx.a \
+	${SRCDIR}/lib/liblwp.a \
+	${SRCDIR}/lib/afs/libsys.a \
+	${SRCDIR}/lib/afs/libcmd.a \
+	${SRCDIR}/lib/afs/libkauth.a \
+	${SRCDIR}/lib/afs/libauth.a \
+	${SRCDIR}/lib/librxkad.a \
+	${SRCDIR}/lib/libdes.a \
+	${SRCDIR}/lib/afs/libcom_err.a \
+	${SRCDIR}/lib/afs/util.a
 
-EXTRA_LIBS= ${TXLIBS} ${SRCDIR}lib/afs/libtermlib.a  ${XLIBS} 
-
-LINT_LIBS = /usr/lib/lint/llib-lcurses.ln
+EXTRA_LIBS= ${TXLIBS} ${SRCDIR}/lib/afs/libtermlib.a  ${XLIBS} 
 
 KEYMAP_SRCS=keymap.c input.c frame.c
 
@@ -135,40 +133,25 @@ curses_test.o: curses_test.c ${INCLS} AFS_component_version_number.o
 curses_test: curses_test.o $(LIBS)
 	${CC} ${CFLAGS} -o curses_test curses_test.o $(LIBS) ${EXTRA_LIBS}
 
-curses_test.lint: curses_test.c $(LINT_LIBS)
-	lint ${CFLAGS} curses_test.c ${LINT_LIBS}
-
 screen_test.o: screen_test.c ${INCLS} AFS_component_version_number.o
 
 screen_test: screen_test.o ${WINDOW_OBJS} ${LIBS}
 	${CC} ${CFLAGS} -o screen_test screen_test.o ${WINDOW_OBJS} ${LIBS} ${EXTRA_LIBS}
-
-screen_test.lint: screen_test.o ${WINDOW_SRCS} ${LINT_LIBS}
-	lint ${CFLAGS} screen_test.c ${WINDOW_SRCS} ${LINT_LIBS}
 
 cb_test.o: cb_test.c ${INCLS} AFS_component_version_number.o
 
 cb_test: cb_test.o ${CB_OBJS} ${LIBS}
 	${CC} ${CFLAGS} -o cb_test cb_test.o ${CB_OBJS} ${LIBS} ${EXTRA_LIBS}
 
-cb_test.lint: cb_test.c ${CB_SRCS} ${LINT_LIBS}
-	lint ${CFLAGS} cb_test.c ${CB_SRCS} ${LINT_LIBS}
-
 gtxtest.o: gtxtest.c ${INCLS} AFS_component_version_number.o
 
 gtxtest: gtxtest.o libgtx.a ${LIBS}
 	${CC} ${LDFLAGS} -o gtxtest gtxtest.o libgtx.a ${LIBS} ${EXTRA_LIBS}
 
-gtxtest.lint: gtxtest.c llib-lgtx.ln ${LINT_LIBS}
-	lint $(CFLAGS) gtxtest.c llib-lgtx.ln ${LINT_LIBS}
-
 object_test.o: object_test.c ${INCLS} AFS_component_version_number.o
 
 object_test: object_test.o ${WINDOW_OBJS} ${DICT_OBJS} ${OBJECT_OBJS} ${CB_OBJS} ${LIBS}
 	${CC} ${CFLAGS} -o object_test object_test.o ${WINDOW_OBJS} ${DICT_OBJS} ${OBJECT_OBJS} ${CB_OBJS} ${LIBS} ${EXTRA_LIBS}
-
-object_test.lint: object_test.c ${WINDOW_SRCS} ${DICT_SRCS} ${OBJECT_SRCS} ${CB_SRCS} ${LINT_LIBS}
-	lint ${CFLAGS} object_test.c ${WINDOW_SRCS} ${DICT_SRCS} ${OBJECT_SRCS} ${CB_SRCS} ${LINT_LIBS}
 
 #
 # Misc others
@@ -180,19 +163,9 @@ libgtx.a: ${LIBOBJS} AFS_component_version_number.o
 	ar rv $@ ${LIBOBJS} AFS_component_version_number.o
 	${RANLIB} $@
 
-llib-lgtx.ln: ${LIBSRCS}
-	lint -Cgtx ${CFLAGS} ${LIBSRCS}
-
-lint: llib-lgtx.ln \
-	curses_test.lint \
-	screen_test.lint \
-	cb_test.lint \
-	gtxtest.lint \
-	object_test.lint
-
 install: all
-	${INSTALL} gtx*.h ${DESTDIR}include/afs
-	${INSTALL} libgtx.a ${DESTDIR}lib/afs
+	${INSTALL} gtx*.h ${DESTDIR}/include/afs
+	${INSTALL} libgtx.a ${DESTDIR}/lib/afs
 
 clean:
 	rm -f  *.o *.a *.ln object_test screen_test curses_test err.c core cb_test gtxtest AFS_component_version_number.c

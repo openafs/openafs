@@ -19,11 +19,7 @@ COMPILE_ET = ${SRCDIR}bin/compile_et
 
 CFLAGS= ${DBUG} -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
 
-include ../config/Makefile.version
-
-noversion: install
-
-all: libbubasics.a bumon.h butc.h bubasics.h tcdata.h butm.h
+all: install
 
 OBJS=butc.ss.o butc.cs.o butc.xdr.o bumon.ss.o bumon.cs.o bumon.xdr.o butc_errs.o butm_errs.o butx_errs.o
 
@@ -39,25 +35,55 @@ bumon.xdr.c bumon.ss.c bumon.cs.c bumon.h: bumon.xg
 	${RXGEN} bumon.xg
 
 butm_errs.c butm.h: butm_errs.et butm.p.h
-	rm -f butm.h butm_errs.c; ${COMPILE_ET} butm_errs -h butm
+	rm -f butm.h butm_errs.c
+	${COMPILE_ET} butm_errs -h butm
 
 butc_errs.c tcdata.h: butc_errs.et tcdata.p.h butm.h
-	rm -f tcdata.h butc_errs.c; ${COMPILE_ET} butc_errs -h tcdata
+	rm -f tcdata.h butc_errs.c
+	${COMPILE_ET} butc_errs -h tcdata
 
 butx_errs.c butx.h: butx_errs.et
-	rm -f butx.h butx_errs.c; ${COMPILE_ET} butx_errs -h butx
+	rm -f butx.h butx_errs.c
+	${COMPILE_ET} butx_errs -h butx
 
-system: install
+#
+# Installation targets
+#
+install: ${DESTDIR}/lib/afs/libbubasics.a \
+	${DESTDIR}/include/afs/bumon.h \
+	${DESTDIR}/include/afs/butc.h \
+	${DESTDIR}/include/afs/bubasics.h \
+	${DESTDIR}/include/afs/tcdata.h \
+	${DESTDIR}/include/afs/butm.h \
+	${DESTDIR}/include/afs/butx.h
 
-${DESTDIR}lib/afs/libbubasics.a: libbubasics.a 
-	${INSTALL}   $? $@
+${DESTDIR}/lib/afs/libbubasics.a: libbubasics.a
+	${INSTALL} $? $@
 
+${DESTDIR}/include/afs/bumon.h: bumon.h
+	${INSTALL} $? $@
 
-install: all ${DESTDIR}lib/afs/libbubasics.a
-	${INSTALL} bubasics.h butc.h bumon.h butm.h butx.h tcdata.h ${DESTDIR}include/afs
+${DESTDIR}/include/afs/butc.h: butc.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/afs/bubasics.h: bubasics.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/afs/tcdata.h: tcdata.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/afs/butm.h: butm.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/afs/butx.h: butx.h
+	${INSTALL} $? $@
+
+#
+# Common targets
+#
 
 clean:
-	-rm -f *.o *.a *.xdr.c *.ss.c *.cs.c \
-butc.h butx.h butm.h bumon.h tcdata.h \
-butc_errs.c butx_errs.c butm_errs.c \
-core AFS_component_version_number.c
+	rm -f *.o *.a *.xdr.c *.ss.c *.cs.c butc.h butx.h butm.h bumon.h tcdata.h \
+		butc_errs.c butx_errs.c butm_errs.c core AFS_component_version_number.c
+
+include ../config/Makefile.version

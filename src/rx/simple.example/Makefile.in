@@ -11,11 +11,11 @@ TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
 SRCDIR=/usr/andy/
-LIBRX=${SRCDIR}lib/librx.a
+LIBRX=${SRCDIR}/lib/librx.a
 DESTDIR=/usr/andy/
-INSTALL=${SRCDIR}bin/install
-LIBS=${LIBRX} ${SRCDIR}lib/liblwp.a
-CFLAGS=-g -I. -I${SRCDIR}include -DDEBUG ${XCFLAGS}
+INSTALL=${SRCDIR}/bin/install
+LIBS=${LIBRX} ${SRCDIR}/lib/liblwp.a
+CFLAGS=-g -I. -I${SRCDIR}/include -DDEBUG ${XCFLAGS}
 
 all: sample_client sample_server
 

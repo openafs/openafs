@@ -11,16 +11,17 @@ SRCDIR=@SRCDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
 SYS_NAME=@AFS_SYSNAME@
 
-
-
 SHELL=/bin/sh
 
-
 include ../config/Makefile.${SYS_NAME}
-include ../config/Makefile.version
 CFLAGS = ${XCFLAGS}
 
-all: libnull.a
+all: install
+
+install: ${DESTDIR}/lib/afs/libnull.a
+
+${DESTDIR}/lib/afs/libnull.a: libnull.a
+	${INSTALL} $? $@
 
 null.o: null.c AFS_component_version_number.o
 
@@ -29,8 +30,7 @@ libnull.a: null.o
 	ar rv $@ null.o
 	$(RANLIB) $@
 
-system install noversion install.noversion version: all
-	${INSTALL} libnull.a ${DESTDIR}lib/afs
-
 clean:
 	rm -f *.o *.a AFS_component_version_number.c
+
+include ../config/Makefile.version

@@ -89,8 +89,3 @@ install: all ${MAN}
 			 chmod 755 ${DESTDIR}/root.server/etc/bcheckrc ${DESTDIR}/root.server/etc/mount ${DESTDIR}/root.server/etc/umount ;\
 				;;					\
 	esac
-lint: ${SRCS}
-	lint ${CFLAGS} ${SRCS}
-
-tags: ${SRCS}
-	ctags ${SRCS}

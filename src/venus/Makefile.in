@@ -18,42 +18,42 @@ include ../config/Makefile.${SYS_NAME}
 INSTALLex = ${INSTALL} -m 755
 CCXPG2= /usr/xpg2bin/cc
 
-CFLAGS = ${OPTMZ} -I${DESTDIR}include -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = ${OPTMZ} -I${DESTDIR}/include -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
 
-INCLS = ${DESTDIR}include/afs/afsint.h \
-	${DESTDIR}include/afs/cmd.h \
-	${DESTDIR}include/afs/afsutil.h
+INCLS = ${DESTDIR}/include/afs/afsint.h \
+	${DESTDIR}/include/afs/cmd.h \
+	${DESTDIR}/include/afs/afsutil.h
 
-VLIB = ${DESTDIR}lib/afs/
+VLIB = ${DESTDIR}/lib/afs/
 
-LIB = ${DESTDIR}lib/
+LIB = ${DESTDIR}/lib/
 
-FSLIBS = ${VLIB}libsys.a \
-	 ${VLIB}libvldb.a \
-	 ${LIB}libubik.a \
+FSLIBS = ${VLIB}/libsys.a \
+	 ${VLIB}/libvldb.a \
+	 ${LIB}/libubik.a \
 	 ${VLIB}vlib.a \
-	 ${VLIB}libauth.a \
-	 ${DESTDIR}lib/librxkad.a \
-	 ${VLIB}libcom_err.a \
-	 ${VLIB}libcmd.a \
-	 ${VLIB}libkauth.a \
-	 ${DESTDIR}lib/libdes.a \
-	 ${LIB}librx.a \
-	 ${VLIB}libsys.a \
+	 ${VLIB}/libauth.a \
+	 ${DESTDIR}/lib/librxkad.a \
+	 ${VLIB}/libcom_err.a \
+	 ${VLIB}/libcmd.a \
+	 ${VLIB}/libkauth.a \
+	 ${DESTDIR}/lib/libdes.a \
+	 ${LIB}/librx.a \
+	 ${VLIB}/libsys.a \
 	 $(VLIB)util.a \
-	 ${LIB}liblwp.a \
-	 ${VLIB}libaudit.a
+	 ${LIB}/liblwp.a \
+	 ${VLIB}/libaudit.a
 
-CMLIBS = ${VLIB}libsys.a \
-	 ${VLIB}libafsint.a \
-	 ${DESTDIR}lib/librxkad.a \
-	 ${VLIB}libauth.a \
-	 ${VLIB}libcom_err.a \
-	 ${VLIB}libcmd.a \
-	 ${LIB}librx.a \
-	 ${VLIB}libsys.a \
+CMLIBS = ${VLIB}/libsys.a \
+	 ${VLIB}/libafsint.a \
+	 ${DESTDIR}/lib/librxkad.a \
+	 ${VLIB}/libauth.a \
+	 ${VLIB}/libcom_err.a \
+	 ${VLIB}/libcmd.a \
+	 ${LIB}/librx.a \
+	 ${VLIB}/libsys.a \
 	 $(VLIB)util.a \
-	 ${LIB}liblwp.a 
+	 ${LIB}/liblwp.a 
 
 LIBS = ${FSLIBS} 
 
@@ -66,44 +66,44 @@ cacheout.o: cacheout.c
 
 all: fs up cmdebug fstrace kdump gcpags kdump64
 
-${DESTDIR}bin/fs ${DESTDIR}root.server/usr/afs/bin/fs: fs
+${DESTDIR}/bin/fs ${DESTDIR}root.server/usr/afs/bin/fs: fs
 	${INSTALL} -s $? $@
 
-${DESTDIR}bin/up: up
+${DESTDIR}/bin/up: up
 	${INSTALL} -s $? $@
 
-${DESTDIR}etc/fstrace: fstrace
+${DESTDIR}/etc/fstrace: fstrace
 	${INSTALL} -s $? $@
 
-${DESTDIR}bin/cmdebug: cmdebug
+${DESTDIR}/bin/cmdebug: cmdebug
 	${INSTALL} -s $? $@
 
-${DESTDIR}etc/kdump: kdump
+${DESTDIR}/etc/kdump: kdump
 	-set -x; \
 	case ${SYS_NAME} in \
 	sgi_6? ) \
 		${INSTALLex} -f kdump.sh.sgi_ipnos $@; \
-		ln -fs kdump ${DESTDIR}etc/kdump32; \
-		ln -fs kdump.IP20 ${DESTDIR}etc/kdump.IP22; \
-		ln -fs kdump.IP20 ${DESTDIR}etc/kdump.IP32; \
+		ln -fs kdump ${DESTDIR}/etc/kdump32; \
+		ln -fs kdump.IP20 ${DESTDIR}/etc/kdump.IP22; \
+		ln -fs kdump.IP20 ${DESTDIR}/etc/kdump.IP32; \
 		for f in kdump.IP??; \
-		do ${INSTALL} -s $$f ${DESTDIR}etc/$$f || exit $$? ; \
+		do ${INSTALL} -s $$f ${DESTDIR}/etc/$$f || exit $$? ; \
 		done ;; \
 	sun4x_5[78] ) \
 		${INSTALLex} -f kdump.sh.solaris7 $@; \
-		${INSTALL} -s -f $? ${DESTDIR}etc/kdump32;; \
+		${INSTALL} -s -f $? ${DESTDIR}/etc/kdump32;; \
 	*linux* ) \
 		for lv in ${LINUX_VERS}; do \
-			${INSTALL} -s kdump-$$lv ${DESTDIR}etc/kdump-$$lv ; \
+			${INSTALL} -s kdump-$$lv ${DESTDIR}/etc/kdump-$$lv ; \
 		done ;; \
 	hp_ux11* ) \
 		${INSTALLex} -f kdump.sh.hp_ux11 $@; \
-		${INSTALL} -s -f $? ${DESTDIR}etc/kdump32;; \
+		${INSTALL} -s -f $? ${DESTDIR}/etc/kdump32;; \
 	*) \
 		${INSTALL} -s $? $@ ;; \
 	esac
 
-${DESTDIR}etc/kdump64: kdump64
+${DESTDIR}/etc/kdump64: kdump64
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_5[78] | hp_ux11* ) \
@@ -113,9 +113,9 @@ ${DESTDIR}etc/kdump64: kdump64
 	esac
 
 
-install: all ${DESTDIR}bin/fs ${DESTDIR}root.server/usr/afs/bin/fs \
-	${DESTDIR}bin/up ${DESTDIR}etc/fstrace ${DESTDIR}bin/cmdebug \
-	${DESTDIR}etc/kdump ${DESTDIR}etc/kdump64
+install: all ${DESTDIR}/bin/fs ${DESTDIR}root.server/usr/afs/bin/fs \
+	${DESTDIR}/bin/up ${DESTDIR}/etc/fstrace ${DESTDIR}/bin/cmdebug \
+	${DESTDIR}/etc/kdump ${DESTDIR}/etc/kdump64
 
 system: install
 
@@ -127,7 +127,7 @@ up: up.o
 fs.o: fs.c ${INCLS} AFS_component_version_number.c
 
 fs: fs.o $(LIBS)
-	${CC} ${CFLAGS} -g -o fs fs.o ${DESTDIR}lib/afs/libprot.a $(LIBS) ${XLIBS}
+	${CC} ${CFLAGS} -g -o fs fs.o ${DESTDIR}/lib/afs/libprot.a $(LIBS) ${XLIBS}
 
 twiddle: twiddle.c $(LIBS)
 	${CC} -g -o twiddle $(CFLAGS) twiddle.c $(LIBS) ${XLIBS}
@@ -143,21 +143,21 @@ whatfid: whatfid.o ${LIBS}
 fstrace.o: fstrace.c AFS_component_version_number.c
 	case ${SYS_NAME} in \
 		sun4_411 | sun4c_411 | sun4m_412 ) \
-			${CCXPG2} -g -I${TOP_SRCDIR}/config -I${DESTDIR}include -I${SRCDIR}include -c fstrace.c ;; \
+			${CCXPG2} -g -I${TOP_SRCDIR}/config -I${DESTDIR}/include -I${SRCDIR}/include -c fstrace.c ;; \
 		* ) \
-			${CC} ${CFLAGS} -g -I${TOP_SRCDIR}/config -I${DESTDIR}include -I${SRCDIR}include -c fstrace.c ;; \
+			${CC} ${CFLAGS} -g -I${TOP_SRCDIR}/config -I${DESTDIR}/include -I${SRCDIR}/include -c fstrace.c ;; \
 	esac
 
 fstrace: fstrace.o
 	case ${SYS_NAME} in \
 		pmax_ul43 | pmax_ul43a ) \
-			${CC} ${CFLAGS} -o fstrace fstrace.o ${VLIB}/libsys.a ${VLIB}libcmd.a ${VLIB}util.a /usr/lib/libi.a ;; \
+			${CC} ${CFLAGS} -o fstrace fstrace.o ${VLIB}/libsys.a ${VLIB}/libcmd.a ${VLIB}util.a /usr/lib/libi.a ;; \
 		sun4_411 | sun4c_411 | sun4m_412 ) \
-			${CCXPG2} ${CFLAGS} -g -o fstrace fstrace.o ${VLIB}/libsys.a ${VLIB}libcmd.a ${VLIB}util.a ;; \
+			${CCXPG2} ${CFLAGS} -g -o fstrace fstrace.o ${VLIB}/libsys.a ${VLIB}/libcmd.a ${VLIB}util.a ;; \
 		hp700_ux100 | hp800_ux100 | hp?00_ux10? | hp_ux10? | hp_ux11?) \
-			${CC} -I${TOP_SRCDIR}/config  -o fstrace fstrace.o ${VLIB}/libsys.a ${VLIB}libcmd.a ${VLIB}util.a ;; \
+			${CC} -I${TOP_SRCDIR}/config  -o fstrace fstrace.o ${VLIB}/libsys.a ${VLIB}/libcmd.a ${VLIB}util.a ;; \
 		* ) \
-			${CC} ${CFLAGS} -o fstrace fstrace.o ${VLIB}/libsys.a ${VLIB}libcmd.a ${VLIB}util.a ;; \
+			${CC} ${CFLAGS} -o fstrace fstrace.o ${VLIB}/libsys.a ${VLIB}/libcmd.a ${VLIB}util.a ;; \
 	esac
 
 cmdebug.o: cmdebug.c ${INCLS} AFS_component_version_number.c
@@ -170,11 +170,11 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 	case ${SYS_NAME} in \
 		alpha_linux* ) \
 			for lv in ${LINUX_VERS}; do \
-				${CC} -g -I${LINUX_SRCDIR}$$lv/include -I${DESTDIR}include -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS} -mno-fp-regs -ffixed-8 -o kdump-$$lv.o -c kdump.c ; \
+				${CC} -g -I${LINUX_SRCDIR}$$lv/include -I${DESTDIR}/include -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS} -mno-fp-regs -ffixed-8 -o kdump-$$lv.o -c kdump.c ; \
 				done ;; \
 		*linux* ) \
 			for lv in ${LINUX_VERS}; do \
-				${CC} -g -I${LINUX_SRCDIR}$$lv/include -I${DESTDIR}include -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS} -o kdump-$$lv.o -c kdump.c ; \
+				${CC} -g -I${LINUX_SRCDIR}$$lv/include -I${DESTDIR}/include -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS} -o kdump-$$lv.o -c kdump.c ; \
 			done ;; \
 		alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c| alpha_dux?? ) \
 			${CC} -g ${CFLAGS} -I/usr/sys/include -I/usr/sys/BINARY -I/usr/sys/AFS -DDEBUGGER -c kdump.c ;;\
@@ -186,14 +186,14 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 				echo CPU_KDEFS = $$CPU_KDEFS; \
 				case $$CPU_KDEFS in \
 				*-64*)	${CC} -D_KMEMUSER -woff 1178 \
-						-g -I${DESTDIR}include \
+						-g -I${DESTDIR}/include \
 						-I${TOP_SRCDIR}/config \
 						$$CPU_KDEFS \
 						${XCFLAGS64} \
 						-c kdump.c -o kdump.$$IP.o \
 					;; \
 				*)	${CC} -D_KMEMUSER -woff 1178 \
-						-g -I${DESTDIR}include \
+						-g -I${DESTDIR}/include \
 						-I${TOP_SRCDIR}/config \
 						$$CPU_KDEFS \
 						${XCFLAGS} -DAFS_32BIT_KERNEL_ENV \
@@ -203,23 +203,23 @@ kdump.o: kdump.c ${INCLS} AFS_component_version_number.c
 			done \
 			;; \
 		*) \
-			${CC} -g -I${DESTDIR}include -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS} -c kdump.c ;; \
+			${CC} -g -I${DESTDIR}/include -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS} -c kdump.c ;; \
 	esac ;
 
 kdump64.o : kdump.c ${INCLS} AFS_component_version_number.c
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_5[78] | hp_ux11* ) \
-		${CC} -g -I${DESTDIR}include -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS64} -o kdump64.o -c kdump.c ;; \
+		${CC} -g -I${DESTDIR}/include -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS64} -o kdump64.o -c kdump.c ;; \
 	esac
 
 kdump:  kdump.o
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4c_51 | sun4c_52 | sun4m_51 | sun4m_52 | sun4c_53 | sun4m_53 | sun4_53 | sun4_54 | sun4c_54 | sun4m_54 | sunx86_54) \
-		${CC} -g -o kdump kdump.o ${DESTDIR}lib/afs/libcmd.a  ${DESTDIR}lib/afs/util.a /usr/lib/libkvm.a -lelf ${XLIBS} ;; \
+		${CC} -g -o kdump kdump.o ${DESTDIR}/lib/afs/libcmd.a  ${DESTDIR}/lib/afs/util.a /usr/lib/libkvm.a -lelf ${XLIBS} ;; \
 	sun4x_5? ) \
-		${CC} -g -o kdump kdump.o ${DESTDIR}lib/afs/libcmd.a  ${DESTDIR}lib/afs/util.a  ${XLIBELFA}  ${XLIBKVM} ${XLIBS} ;; \
+		${CC} -g -o kdump kdump.o ${DESTDIR}/lib/afs/libcmd.a  ${DESTDIR}/lib/afs/util.a  ${XLIBELFA}  ${XLIBKVM} ${XLIBS} ;; \
 	sgi_6? ) \
 		for f in ../libafs/STATIC.IP*/CPU_KDEFS; \
 		do	IP=`expr "$$f" : '../libafs/STATIC.\(IP..\)'`; \
@@ -230,23 +230,23 @@ kdump:  kdump.o
 			*-64*)	${CC} ${XCFLAGS64} -g \
 					$$CPU_KDEFS \
 					-o kdump.$$IP kdump.$$IP.o \
-					${DESTDIR}lib/afs/libcmd64.a -lelf \
+					${DESTDIR}/lib/afs/libcmd64.a -lelf \
 				;; \
 			*) 	${CC} ${XCFLAGS} -g \
 					$$CPU_KDEFS \
 					-o kdump.$$IP kdump.$$IP.o \
-					${DESTDIR}lib/afs/libcmd.a -lelf \
+					${DESTDIR}/lib/afs/libcmd.a -lelf \
 				;; \
 			esac || exit $$? ; \
 		done ;; \
 	*linux* ) \
 		for lv in ${LINUX_VERS}; do \
-			${CC} -g -o kdump-$$lv kdump-$$lv.o ${DESTDIR}lib/afs/libcmd.a  ${DESTDIR}lib/afs/util.a ${XLIBS} ; \
+			${CC} -g -o kdump-$$lv kdump-$$lv.o ${DESTDIR}/lib/afs/libcmd.a  ${DESTDIR}/lib/afs/util.a ${XLIBS} ; \
 		done ;; \
 	alpha_osf1 | alpha_osf20 |  alpha_osf30 | alpha_osf32 | alpha_osf32c | alpha_dux??) \
-		${CC} -g -o kdump kdump.o ${DESTDIR}lib/afs/libcmd.a  ${DESTDIR}lib/afs/util.a ${XLIBS} -ll -lmld;; \
-	ncrx86_* ) ${CC} -g -o kdump kdump.o ${DESTDIR}lib/afs/libcmd.a  ${DESTDIR}lib/afs/util.a -lelf ${XLIBS} ;; \
-	* )     ${CC} -g -o kdump kdump.o ${DESTDIR}lib/afs/libcmd.a  ${DESTDIR}lib/afs/util.a ${XLIBS} ;; \
+		${CC} -g -o kdump kdump.o ${DESTDIR}/lib/afs/libcmd.a  ${DESTDIR}/lib/afs/util.a ${XLIBS} -ll -lmld;; \
+	ncrx86_* ) ${CC} -g -o kdump kdump.o ${DESTDIR}/lib/afs/libcmd.a  ${DESTDIR}/lib/afs/util.a -lelf ${XLIBS} ;; \
+	* )     ${CC} -g -o kdump kdump.o ${DESTDIR}/lib/afs/libcmd.a  ${DESTDIR}/lib/afs/util.a ${XLIBS} ;; \
 	esac
 
 ## kdump to read from 64 bit kernel dumps
@@ -255,14 +255,11 @@ kdump64 : kdump64.o
 	-set -x; \
 	case ${SYS_NAME} in \
 	sun4x_5[78] | hp_ux11* )  \
-		${CC} -g ${XCFLAGS64} -o kdump64 kdump64.o ${DESTDIR}lib/afs/libcmd64.a ${XLIBELFA}  ${XLIBKVM} ${XLIBS} ;; \
+		${CC} -g ${XCFLAGS64} -o kdump64 kdump64.o ${DESTDIR}/lib/afs/libcmd64.a ${XLIBELFA}  ${XLIBKVM} ${XLIBS} ;; \
 	esac
 
 clean:
 	rm -f *.o *.a up fs core cmdebug AFS_component_version_number.c fstrace gcpags
-
-beancount:
-	wc -l *.c *.h
 
 test:
 	cd test; $(MAKE)

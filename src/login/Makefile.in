@@ -25,16 +25,16 @@ SYS_NAME=@AFS_SYSNAME@
 
 include ../config/Makefile.${SYS_NAME}
 
-LIBDIR = ${DESTDIR}lib/
-AFSLIBS = ${LIBDIR}afs/libkauth.a ${LIBDIR}afs/libprot.a ${LIBDIR}libubik.a \
-	  ${LIBDIR}afs/libauth.a ${DESTDIR}lib/librxkad.a ${LIBDIR}afs/libsys.a \
-	  ${DESTDIR}lib/libdes.a ${LIBDIR}librx.a ${LIBDIR}liblwp.a \
-          ${LIBDIR}afs/libcmd.a ${LIBDIR}afs/libcom_err.a ${LIBDIR}afs/util.a
-KAFSLIBS = ${LIBDIR}afs/libkauth.krb.a ${LIBDIR}afs/libprot.a ${LIBDIR}libubik.a \
-	  ${LIBDIR}afs/libauth.krb.a ${DESTDIR}lib/librxkad.a ${LIBDIR}afs/libsys.a \
-	  ${DESTDIR}lib/libdes.a ${LIBDIR}librx.a ${LIBDIR}liblwp.a \
-          ${LIBDIR}afs/libcmd.a ${LIBDIR}afs/libcom_err.a ${LIBDIR}afs/util.a
-INCLUDES = -I${TOP_SRCDIR}/config -I${DESTDIR}include -I/usr/include -I/usr/include/sys
+LIBDIR = ${DESTDIR}/lib/
+AFSLIBS = ${LIBDIR}/afs/libkauth.a ${LIBDIR}/afs/libprot.a ${LIBDIR}/libubik.a \
+	  ${LIBDIR}/afs/libauth.a ${DESTDIR}/lib/librxkad.a ${LIBDIR}/afs/libsys.a \
+	  ${DESTDIR}/lib/libdes.a ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a \
+          ${LIBDIR}/afs/libcmd.a ${LIBDIR}/afs/libcom_err.a ${LIBDIR}/afs/util.a
+KAFSLIBS = ${LIBDIR}/afs/libkauth.krb.a ${LIBDIR}/afs/libprot.a ${LIBDIR}/libubik.a \
+	  ${LIBDIR}/afs/libauth.krb.a ${DESTDIR}/lib/librxkad.a ${LIBDIR}/afs/libsys.a \
+	  ${DESTDIR}/lib/libdes.a ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a \
+          ${LIBDIR}/afs/libcmd.a ${LIBDIR}/afs/libcom_err.a ${LIBDIR}/afs/util.a
+INCLUDES = -I${TOP_SRCDIR}/config -I${DESTDIR}/include -I/usr/include -I/usr/include/sys
 CFLAGS=	-g ${XCFLAGS} ${INCLUDES}
 LIBC=	/lib/libc.a
 SRCS=	login.c 
@@ -85,13 +85,7 @@ depend: ${SRCS}
 	mkdep -p ${CFLAGS} ${SRCS}
 
 install: ${MAN} all
-	${INSTALL} -s login ${DESTDIR}bin/login
-	${INSTALL} -s login.krb ${DESTDIR}bin/login.krb
-
-lint: ${SRCS}
-	lint ${CFLAGS} ${SRCS}
-
-tags: ${SRCS}
-	ctags ${SRCS}
+	${INSTALL} -s login ${DESTDIR}/bin/login
+	${INSTALL} -s login.krb ${DESTDIR}/bin/login.krb
 
 system: install

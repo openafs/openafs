@@ -17,9 +17,9 @@ SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 CC=${MT_CC}
-INCLUDES = -I${SRCDIR}include -I.. -I../rx
+INCLUDES = -I${SRCDIR}/include -I.. -I../rx
 CFLAGS = ${OPTMZ} ${DBG} ${INCLUDES} -DRXDEBUG ${MT_CFLAGS} -I${TOP_SRCDIR}/config
-SFLAGS=-P -I${SRCDIR}include
+SFLAGS=-P -I${SRCDIR}/include
 RX = ../rx
 CCRULE = ${CC} ${CFLAGS} -c $?
 RXKAD = ../rxkad
@@ -97,8 +97,10 @@ DESOBJS =\
 	key_parity.o \
 	weak_key.o \
 	strng_to_key.o \
-	misco.o \
+	misc.o \
 	util.o
+
+CRYPT_OBJ = crypt.o
 
 LIBOBJS = \
 	${RXOBJS} \
@@ -112,10 +114,10 @@ LIBOBJS = \
 	${RXSTATOBJS} \
 	${FSINTOBJS}
 
-system install: ${DESTDIR}lib/libafsrpc.a
+system install: ${DESTDIR}/lib/libafsrpc.a
 
-${DESTDIR}lib/libafsrpc.a: libafsrpc.a
-	${INSTALL} libafsrpc.a ${DESTDIR}lib/libafsrpc.a
+${DESTDIR}/lib/libafsrpc.a: libafsrpc.a
+	${INSTALL} libafsrpc.a ${DESTDIR}/lib/libafsrpc.a
 
 libafsrpc.a: ${LIBOBJS}
 	rm -f libafsrpc.a
@@ -290,8 +292,8 @@ weak_key.o: ${DES}/weak_key.c
 strng_to_key.o: ${DES}/strng_to_key.c
 	${CCRULE};
 
-misco.o: ${DES}/misco.c
-	${CCRULE} -DDONT_INCL_MAIN;
+misc.o: ${DES}/misc.c
+	${CCRULE};
 
 util.o: ${DES}/util.c
 	${CCRULE};

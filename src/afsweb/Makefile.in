@@ -16,7 +16,7 @@ SHELL=/bin/sh
 include ../config/Makefile.${SYS_NAME}
 
 UKERNELDIR=../libuafs/
-COMPILE_ET=${SRCDIR}bin/compile_et
+COMPILE_ET=${SRCDIR}/bin/compile_et
 
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
@@ -41,9 +41,7 @@ APACHEAFS_DOC=README
 APACHE_INSTALL_SCRIPT=afswsApache_config.sh 
 NETSCAPE_INSTALL_SCRIPT=afswsNetscape_config.sh
 
-
-
-system noversion apache_afs_web_secure:
+system apache_afs_web_secure:
 	case "${SYS_NAME}" in \
 		rs_aix* ) \
 			echo Clean, make, and install the lib for 1.2 ; \
@@ -121,8 +119,6 @@ system noversion apache_afs_web_secure:
 	chmod a+w ${DESTDIR}root.afsweb/install/${APACHE_INSTALL_SCRIPT}
 	${INSTALL} $(BINARIES) ${DESTDIR}root.afsweb/bin
 
-include ../config/Makefile.version
-
 all:
 
 install: kinstall ukinstall
@@ -132,8 +128,8 @@ kinstall:
 
 
 webinstall:${UKSRCS}
-	set ${UKERNELDIR}afs; $(MKDIR_IF_NEEDED)
-	${INSTALL} ${UKSRCS} ${UKERNELDIR}afs
+	set ${UKERNELDIR}/afs; $(MKDIR_IF_NEEDED)
+	${INSTALL} ${UKSRCS} ${UKERNELDIR}/afs
 
 ukinstall:
 	@echo No $@ source here.
@@ -155,29 +151,29 @@ OPTF=
 DEBUG_FLAG=
 AUX_CFLAGS=
 VERSION_CFLAG=
-AFS_INCL=-I${SRCDIR}include -I.. -I../config
+AFS_INCL=-I${SRCDIR}/include -I.. -I../config
 CFLAGS=$(OPTF) $(DEFINES) -I. -I.. $(EXTRA_CFLAGS) $(VERSION_CFLAG) $(DEBUG_FLAG)
-INCLS=${SRCDIR}include/ubik.h \
-             ${SRCDIR}include/lwp.h \
-             ${SRCDIR}include/lock.h  \
-             ${SRCDIR}include/rx/rx.h \
-             ${SRCDIR}include/rx/xdr.h \
-             ${SRCDIR}include/rx/rxkad.h \
-             ${SRCDIR}include/afs/com_err.h \
+INCLS=${SRCDIR}/include/ubik.h \
+             ${SRCDIR}/include/lwp.h \
+             ${SRCDIR}/include/lock.h  \
+             ${SRCDIR}/include/rx/rx.h \
+             ${SRCDIR}/include/rx/xdr.h \
+             ${SRCDIR}/include/rx/rxkad.h \
+             ${SRCDIR}/include/afs/com_err.h \
 	     weblog_errors.h $(DCE_DLOG_INCLUDES)
-deslib=${SRCDIR}lib/libdes.a
-rxkadlib=${SRCDIR}lib/librxkad.a
-authlib=${SRCDIR}lib/afs/libauth.a
-cmdlib=${SRCDIR}lib/afs/libcmd.a
-utilib=${SRCDIR}lib/afs/util.a
-auditlib=${SRCDIR}lib/afs/libaudit.a
-kauthlib=${SRCDIR}lib/afs/libkauth.a
+deslib=${SRCDIR}/lib/libdes.a
+rxkadlib=${SRCDIR}/lib/librxkad.a
+authlib=${SRCDIR}/lib/afs/libauth.a
+cmdlib=${SRCDIR}/lib/afs/libcmd.a
+utilib=${SRCDIR}/lib/afs/util.a
+auditlib=${SRCDIR}/lib/afs/libaudit.a
+kauthlib=${SRCDIR}/lib/afs/libkauth.a
 
-LIBS = ${kauthlib} ${SRCDIR}lib/libubik.a ${SRCDIR}lib/afs/libprot.a \
-       ${authlib} ${rxkadlib} ${SRCDIR}lib/afs/libsys.a ${SRCDIR}lib/librx.a \
-       ${SRCDIR}lib/afs/libsys.a  \
-       ${SRCDIR}lib/liblwp.a ${deslib} ${cmdlib} \
-       ${SRCDIR}lib/afs/libcom_err.a ${utilib} \
+LIBS = ${kauthlib} ${SRCDIR}/lib/libubik.a ${SRCDIR}/lib/afs/libprot.a \
+       ${authlib} ${rxkadlib} ${SRCDIR}/lib/afs/libsys.a ${SRCDIR}/lib/librx.a \
+       ${SRCDIR}/lib/afs/libsys.a  \
+       ${SRCDIR}/lib/liblwp.a ${deslib} ${cmdlib} \
+       ${SRCDIR}/lib/afs/libcom_err.a ${utilib} \
        $(DBM) $(XLIBS)
 
 AR=ar
@@ -240,4 +236,6 @@ clean:
 
 libclean:
 	-/bin/rm -f $(APACHE_AFS_LIB) $(LIBOBJS)
+
+include ../config/Makefile.version
 

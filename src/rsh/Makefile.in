@@ -25,19 +25,19 @@ SHELL=/bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-LIBDIR = ${DESTDIR}lib/
-INCLUDES= -I${TOP_SRCDIR}/config -I${SRCDIR}include
+LIBDIR = ${DESTDIR}/lib/
+INCLUDES= -I${TOP_SRCDIR}/config -I${SRCDIR}/include
 CFLAGS=	${DBUG} ${INCLUDES} ${XCFLAGS}
 LIBC=	/lib/libc.a
 OBJS=   rcmd.o ../inetd/ta-rauth.o herror.o
 MAN=	
 SRCS=	rsh.c rcmd.c ../inetd/ta-rauth.c herror.c AFS_component_version_number.c
-AFSLIBS =  ${LIBDIR}afs/libkauth.a ${LIBDIR}libubik.a\
-           ${LIBDIR}afs/libauth.a ${LIBDIR}afs/libsys.a \
-           ${LIBDIR}librx.a ${LIBDIR}liblwp.a ${DESTDIR}lib/librxkad.a\
-	   ${LIBDIR}afs/libsys.a \
-           ${DESTDIR}lib/libdes.a ${LIBDIR}afs/libcmd.a \
-           ${LIBDIR}afs/libcom_err.a ${LIBDIR}afs/util.a
+AFSLIBS =  ${LIBDIR}/afs/libkauth.a ${LIBDIR}/libubik.a\
+           ${LIBDIR}/afs/libauth.a ${LIBDIR}/afs/libsys.a \
+           ${LIBDIR}/librx.a ${LIBDIR}/liblwp.a ${DESTDIR}/lib/librxkad.a\
+	   ${LIBDIR}/afs/libsys.a \
+           ${DESTDIR}/lib/libdes.a ${LIBDIR}/afs/libcmd.a \
+           ${LIBDIR}/afs/libcom_err.a ${LIBDIR}/afs/util.a
 LIBS = ${AFSLIBS} 
 
 include ../config/Makefile.version
@@ -73,13 +73,7 @@ install: ${MAN} all
 	set -x; \
 	case "${SYS_NAME}" in \
 	hp* ) \
-		${INSTALL} -m 4755 -f rsh ${DESTDIR}bin/remsh ;; \
+		${INSTALL} -m 4755 -f rsh ${DESTDIR}/bin/remsh ;; \
 	* ) \
-		${INSTALL} -m 4755 rsh ${DESTDIR}bin/rsh ;; \
+		${INSTALL} -m 4755 rsh ${DESTDIR}/bin/rsh ;; \
 	esac
-
-lint: ${SRCS}
-	lint ${CFLAGS} ${SRCS}
-
-tags: ${SRCS}
-	ctags ${SRCS}

@@ -15,19 +15,19 @@ SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
-CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I./ -I${SRCDIR}include ${XCFLAGS}
+CFLAGS=${OPTMZ} -I${TOP_SRCDIR}/config -I./ -I${SRCDIR}/include ${XCFLAGS}
 UKERNELDIR=../libuafs/
 LIBOBJS=disk.o  remote.o beacon.o recovery.o ubik.o  vote.o lock.o phys.o \
 	ubik_int.cs.o ubik_int.ss.o ubik_int.xdr.o ubikcmd.o \
 	ubikclient.o uerrors.o
-INCLS= ${SRCDIR}include/lwp.h ${SRCDIR}include/lock.h \
-	${SRCDIR}include/rx/rx.h ${SRCDIR}include/rx/xdr.h \
-	${SRCDIR}include/lock.h ubik.h ubik_int.h
-LIBS=${SRCDIR}lib/librx.a ${SRCDIR}lib/liblwp.a \
-     ${SRCDIR}lib/afs/libcom_err.a ${SRCDIR}lib/afs/libcmd.a \
-     ${SRCDIR}lib/afs/util.a ${SRCDIR}lib/afs/libsys.a ${XLIBS}
-RXGEN=${SRCDIR}bin/rxgen
-COMPILE_ET = ${SRCDIR}bin/compile_et
+INCLS= ${SRCDIR}/include/lwp.h ${SRCDIR}/include/lock.h \
+	${SRCDIR}/include/rx/rx.h ${SRCDIR}/include/rx/xdr.h \
+	${SRCDIR}/include/lock.h ubik.h ubik_int.h
+LIBS=${SRCDIR}/lib/librx.a ${SRCDIR}/lib/liblwp.a \
+     ${SRCDIR}/lib/afs/libcom_err.a ${SRCDIR}/lib/afs/libcmd.a \
+     ${SRCDIR}/lib/afs/util.a ${SRCDIR}/lib/afs/libsys.a ${XLIBS}
+RXGEN=${SRCDIR}/bin/rxgen
+COMPILE_ET = ${SRCDIR}/bin/compile_et
 
 UKSRCS=ubik.h ubikclient.c uerrors.c
 
@@ -36,7 +36,7 @@ include ../config/Makefile.version
 all: libubik.a test
 
 test: utst_server utst_client udebug
-	${INSTALL} udebug ${DESTDIR}bin
+	${INSTALL} udebug ${DESTDIR}/bin
 	${INSTALL} udebug ${DESTDIR}root.server/usr/afs/bin
 
 clean:
@@ -49,19 +49,16 @@ kinstall:
 	@echo No $@ source here.
 
 ukinstall webinstall: ${UKSRCS} Kubik_int.h Kubik_int.xdr.c Kubik_int.cs.c
-	set ${UKERNELDIR}afs; $(MKDIR_IF_NEEDED)
-	set ${UKERNELDIR}afsint; $(MKDIR_IF_NEEDED)
-	${INSTALL} Kubik_int.h ${UKERNELDIR}afsint/ubik_int.h
-	${INSTALL} Kubik_int.cs.c ${UKERNELDIR}afsint/ubik_int.cs.c
-	${INSTALL} Kubik_int.xdr.c ${UKERNELDIR}afsint/ubik_int.xdr.c
-	${INSTALL} ${UKSRCS} ${UKERNELDIR}afs
-
-beancount:
-	wc *.[ch] *.xg
+	set ${UKERNELDIR}/afs; $(MKDIR_IF_NEEDED)
+	set ${UKERNELDIR}/afsint; $(MKDIR_IF_NEEDED)
+	${INSTALL} Kubik_int.h ${UKERNELDIR}/afsint/ubik_int.h
+	${INSTALL} Kubik_int.cs.c ${UKERNELDIR}/afsint/ubik_int.cs.c
+	${INSTALL} Kubik_int.xdr.c ${UKERNELDIR}/afsint/ubik_int.xdr.c
+	${INSTALL} ${UKSRCS} ${UKERNELDIR}/afs
 
 install: libubik.a ukinstall
-	${INSTALL} libubik.a ${DESTDIR}lib
-	${INSTALL} ubik.h ubik_int.h ${DESTDIR}include
+	${INSTALL} libubik.a ${DESTDIR}/lib
+	${INSTALL} ubik.h ubik_int.h ${DESTDIR}/include
 
 utst_server: utst_server.o utst_int.ss.o utst_int.xdr.o libubik.a 
 	${CC} ${CFLAGS} -o utst_server utst_server.o utst_int.ss.o utst_int.xdr.o libubik.a $(LIBS)

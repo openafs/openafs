@@ -14,8 +14,8 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-INCDIRS= -I${TOP_SRCDIR}/config -I${DESTDIR}include -I.. \
-	-I${BACKDIR}include -I${DESTDIR}include/afs 
+INCDIRS= -I${TOP_SRCDIR}/config -I${DESTDIR}/include -I.. \
+	-I${BACKDIR}/include -I${DESTDIR}/include/afs 
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
 
@@ -42,15 +42,15 @@ clean:
 system: install
 
 kinstall:
-	${INSTALL} prs_fs.h ${KERNELDIR}afs/prs_fs.h
+	${INSTALL} prs_fs.h ${KERNELDIR}/afs/prs_fs.h
 
 ukinstall webinstall:
-	${INSTALL} prs_fs.h ${UKERNELDIR}afs/prs_fs.h
+	${INSTALL} prs_fs.h ${UKERNELDIR}/afs/prs_fs.h
 
 install: libacl.a kinstall ukinstall
-	${INSTALL} libacl.a ${DESTDIR}lib/afs/libacl.a
-	${INSTALL} acl.h ${DESTDIR}include/afs/acl.h
-	${INSTALL} prs_fs.h ${DESTDIR}include/afs/prs_fs.h
+	${INSTALL} libacl.a ${DESTDIR}/lib/afs/libacl.a
+	${INSTALL} acl.h ${DESTDIR}/include/afs/acl.h
+	${INSTALL} prs_fs.h ${DESTDIR}/include/afs/prs_fs.h
 
 test:
 	cd test; $(MAKE)

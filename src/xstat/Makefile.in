@@ -18,21 +18,21 @@ include ../config/Makefile.${SYS_NAME}
 
 CFLAGS= ${DBUG} -I. \
 	-I${TOP_SRCDIR}/config \
-	-I${SRCDIR}include \
-	-I${SRCDIR}include/afs \
+	-I${SRCDIR}/include \
+	-I${SRCDIR}/include/afs \
 	-I${SRCDIR} \
 	-I/usr/include ${XCFLAGS}
 
-RPCINCLS=${SRCDIR}include/lwp.h ${SRCDIR}include/rx/rx.h
+RPCINCLS=${SRCDIR}/include/lwp.h ${SRCDIR}/include/rx/rx.h
 FSINCLS=xstat_fs.h ${RPCINCLS}
 CMINCLS=xstat_cm.h ${RPCINCLS}
 
-AFSLIBS=${SRCDIR}lib/afs/libafsint.a \
-	${SRCDIR}lib/afs/libcmd.a \
-	${SRCDIR}lib/librx.a \
-	${SRCDIR}lib/liblwp.a \
-	${SRCDIR}lib/afs/libsys.a \
-	${SRCDIR}lib/afs/util.a
+AFSLIBS=${SRCDIR}/lib/afs/libafsint.a \
+	${SRCDIR}/lib/afs/libcmd.a \
+	${SRCDIR}/lib/librx.a \
+	${SRCDIR}/lib/liblwp.a \
+	${SRCDIR}/lib/afs/libsys.a \
+	${SRCDIR}/lib/afs/util.a
 
 LIBS = ${AFSLIBS} 
 
@@ -85,12 +85,12 @@ xstat_cm_test: xstat_cm_test.o libxstat_cm.a ${LIBS}
 system: install
 
 install: all
-	${INSTALL} xstat_fs.h    ${DESTDIR}include/afs
-	${INSTALL} xstat_cm.h    ${DESTDIR}include/afs
-	${INSTALL} libxstat_fs.a ${DESTDIR}lib/afs
-	${INSTALL} libxstat_cm.a ${DESTDIR}lib/afs
-	${INSTALL} xstat_fs_test ${DESTDIR}bin
-	${INSTALL} xstat_cm_test ${DESTDIR}bin
+	${INSTALL} xstat_fs.h    ${DESTDIR}/include/afs
+	${INSTALL} xstat_cm.h    ${DESTDIR}/include/afs
+	${INSTALL} libxstat_fs.a ${DESTDIR}/lib/afs
+	${INSTALL} libxstat_cm.a ${DESTDIR}/lib/afs
+	${INSTALL} xstat_fs_test ${DESTDIR}/bin
+	${INSTALL} xstat_cm_test ${DESTDIR}/bin
 
 clean:
 	rm -f *.o \

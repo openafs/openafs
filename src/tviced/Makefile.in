@@ -36,8 +36,7 @@ LWPOBJS=lock.o fasttime.o threadname.o
 
 LIBACLOBJS=aclprocs.o netprocs.o
 
-UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o \
-		volparse.o flipbase64.o
+UTILOBJS=assert.o uuid.o serverLog.o fileutil.o netutils.o dirpath.o volparse.o flipbase64.o
 
 DIROBJS=buffer.o dir.o salvage.o
 
@@ -49,165 +48,147 @@ FSINTOBJS= afsaux.o afscbint.cs.o afsint.ss.o afsint.xdr.o
 objects= ${VICEDOBJS} ${VLSERVEROBJS} ${LWPOBJS} ${LIBACLOBJS} \
 	 ${UTILOBJS} ${DIROBJS} ${VOLOBJS} ${FSINTOBJS}
 
-LIBS=	${SRCDIR}lib/libafsauthent.a	\
-	${SRCDIR}lib/libafsrpc.a \
-	${SRCDIR}lib/afs/util.a
+LIBS= ${SRCDIR}/lib/libafsauthent.a ${SRCDIR}/lib/libafsrpc.a ${SRCDIR}/lib/afs/util.a
 
-include ../config/Makefile.version
+all: install
 
-noversion: install
-
-all: fileserver
-
-CRULE1=${CC} ${CFLAGS} -c $?
+COMPILE=${CC} ${CFLAGS} -c $?
 
 viced.o: ${VICED}/viced.c
-	${CRULE1}
+	${COMPILE}
 
 afsfileprocs.o: ${VICED}/afsfileprocs.c
-	${CRULE1}
+	${COMPILE}
 
 host.o: ${VICED}/host.c
-	${CRULE1}
+	${COMPILE}
 
 physio.o: ${VICED}/physio.c
-	${CRULE1}
+	${COMPILE}
 
 callback.o: ${VICED}/callback.c
-	${CRULE1}
+	${COMPILE}
 
 assert.o: ${UTIL}/assert.c
-	${CRULE1};
+	${COMPILE}
 
 uuid.o: ${UTIL}/uuid.c
-	${CRULE1};
+	${COMPILE}
 
 serverLog.o: ${UTIL}/serverLog.c
-	${CRULE1};
+	${COMPILE}
 
 fileutil.o: ${UTIL}/fileutil.c
-	${CRULE1};
+	${COMPILE}
 
 volparse.o: ${UTIL}/volparse.c
-	${CRULE1};
+	${COMPILE}
 
 flipbase64.o: ${UTIL}/flipbase64.c
-	${CRULE1};
+	${COMPILE}
 
 netutils.o: ${UTIL}/netutils.c
-	${CRULE1};
+	${COMPILE}
 
 dirpath.o: ${UTIL}/dirpath.c
-	${CRULE1};
+	${COMPILE}
 
 lock.o: ${LWP}/lock.c
-	${CRULE1};
+	${COMPILE}
 
 fasttime.o: ${LWP}/fasttime.c
-	${CRULE1};
+	${COMPILE}
 
 threadname.o: ${LWP}/threadname.c
-	${CRULE1};
+	${COMPILE}
 
 aclprocs.o: ${LIBACL}/aclprocs.c
-	${CRULE1}
+	${COMPILE}
 
 netprocs.o: ${LIBACL}/netprocs.c
-	${CRULE1}
+	${COMPILE}
 
 vldbint.cs.o: ${VLSERVER}/vldbint.cs.c
-	${CRULE1}
+	${COMPILE}
 
 vldbint.xdr.o: ${VLSERVER}/vldbint.xdr.c
-	${CRULE1}
+	${COMPILE}
 
 buffer.o: ${DIR}/buffer.c
-	${CRULE1}
+	${COMPILE}
 
 dir.o: ${DIR}/dir.c
-	${CRULE1}
+	${COMPILE}
 
 salvage.o: ${DIR}/salvage.c
-	${CRULE1}
+	${COMPILE}
 
 vnode.o: ${VOL}/vnode.c
-	${CC} -c ${CFLAGS} ${VOL}/vnode.c
+	${COMPILE}
 
 volume.o: ${VOL}/volume.c
-	${CC} -c ${CFLAGS} ${VOL}/volume.c
+	${COMPILE}
 
 vutil.o: ${VOL}/vutil.c
-	${CC} -c ${CFLAGS} ${VOL}/vutil.c
+	${COMPILE}
 
 partition.o: ${VOL}/partition.c
-	${CC} -c ${CFLAGS} ${VOL}/partition.c
+	${COMPILE}
 
 fssync.o: ${VOL}/fssync.c
-	${CC} -c ${CFLAGS} ${VOL}/fssync.c
+	${COMPILE}
 
 purge.o: ${VOL}/purge.c
-	${CC} -c ${CFLAGS} ${VOL}/purge.c
+	${COMPILE}
 
 clone.o: ${VOL}/clone.c
-	${CC} -c ${CFLAGS} ${VOL}/clone.c
+	${COMPILE}
 
 nuke.o: ${VOL}/nuke.c
-	${CC} -c ${CFLAGS} ${VOL}/nuke.c
+	${COMPILE}
 
 devname.o: ${VOL}/devname.c
-	${CC} -c ${CFLAGS} ${VOL}/devname.c
+	${COMPILE}
 
 common.o: ${VOL}/common.c
-	${CC} -c ${CFLAGS} ${VOL}/common.c
+	${COMPILE}
 
 listinodes.o: ${VOL}/listinodes.c
-	${CC} -c ${CFLAGS} ${VOL}/listinodes.c
+	${COMPILE}
 
 ihandle.o: ${VOL}/ihandle.c
-	${CC} -c ${CFLAGS} ${VOL}/ihandle.c
+	${COMPILE}
 
 namei_ops.o: ${VOL}/namei_ops.c
-	${CC} -c ${CFLAGS} ${VOL}/namei_ops.c
+	${COMPILE}
 
 afsaux.o: ${FSINT}/afsaux.c
-	${CC} -c ${CFLAGS} ${FSINT}/afsaux.c
+	${COMPILE}
 
 afscbint.cs.o: ${FSINT}/afscbint.cs.c
-	${CC} -c ${CFLAGS} ${FSINT}/afscbint.cs.c
+	${COMPILE}
 
 afscbint.ss.o: ${FSINT}/afscbint.ss.c
-	${CC} -c ${CFLAGS} ${FSINT}/afscbint.ss.c
+	${COMPILE}
 
 afsint.cs.o: ${FSINT}/afsint.cs.c
-	${CC} -c ${CFLAGS} ${FSINT}/afsint.cs.c
+	${COMPILE}
 
 afsint.ss.o: ${FSINT}/afsint.ss.c
-	${CC} -c ${CFLAGS} ${FSINT}/afsint.ss.c
+	${COMPILE}
 
 afsint.xdr.o: ${FSINT}/afsint.xdr.c
-	${CC} -c ${CFLAGS} ${FSINT}/afsint.xdr.c
+	${COMPILE}
 
-fileserver: callback_clean1 viced.o ${objects} ${LIBS}
+fileserver: ${objects} ${LIBS}
 	${CC} ${LDFLAGS} -o fileserver ${objects} ${LIBS} ${MTLIBS} ${XLIBS}
 
-${DESTDIR}root.server/usr/afs/bin/fileserver : fileserver
-	${INSTALL} -ns fileserver ${DESTDIR}root.server/usr/afs/bin/fileserver
+${DESTDIR}/root.server/usr/afs/bin/fileserver: fileserver
+	${INSTALL} -ns $? $@
 
-install: all  ${DESTDIR}root.server/usr/afs/bin/fileserver
-
-system: install
-
-callback_clean1 callback_clean2: 
-	case ${SYS_NAME} in \
-	ncrx86_*) \
-		${RM}  -f callback.o;\
-		echo ${RM} callback.o;;\
-	esac;
-
-lint:
+install: ${DESTDIR}/root.server/usr/afs/bin/fileserver
 
 clean:
 	rm -f *.o fileserver core AFS_component_version_number.c
 
-beancount:
-	wc -l *.c *.h
+include ../config/Makefile.version

@@ -12,8 +12,12 @@ SYS_NAME=@AFS_SYSNAME@
 
 include ../config/Makefile.${SYS_NAME}
 
-system install: 
-	${INSTALL} afs_Admin.h ${DESTDIR}include/afs
+all: install
+
+install: ${DESTDIR}/include/afs/afs_Admin.h
+
+${DESTDIR}/include/afs/afs_Admin.h: afs_Admin.h
+	${INSTALL} $? $@
 
 clean:
 

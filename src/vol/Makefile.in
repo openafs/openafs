@@ -15,12 +15,12 @@ SHELL=/bin/sh
 include ../config/Makefile.${SYS_NAME}
 include ../config/Makefile.version
 
-INCDIRS= -I${TOP_SRCDIR}/config -I. -I${DESTDIR}include ${FSINCLUDES}
+INCDIRS= -I${TOP_SRCDIR}/config -I. -I${DESTDIR}/include ${FSINCLUDES}
 LDFLAGS = ${OPTMZ} ${PROF} ${LDIRS} ${XLDFLAGS}
 
-LIBS= ${DESTDIR}lib/afs/libcmd.a vlib.a ${SRCDIR}lib/afs/util.a \
-	${DESTDIR}lib/afs/libsys.a ${DESTDIR}lib/afs/libdir.a \
-	${DESTDIR}lib/liblwp.a  ${DESTDIR}lib/afs/libacl.a ${XLIBS}
+LIBS= ${DESTDIR}/lib/afs/libcmd.a vlib.a ${SRCDIR}/lib/afs/util.a \
+	${DESTDIR}/lib/afs/libsys.a ${DESTDIR}/lib/afs/libdir.a \
+	${DESTDIR}/lib/liblwp.a  ${DESTDIR}/lib/afs/libacl.a ${XLIBS}
 
 CFLAGS = -D${SYS_NAME} ${OPTMZ} ${INCDIRS} ${XCFLAGS} ${DBG}
 
@@ -36,8 +36,8 @@ VLIBOBJS=vnode.o volume.o vutil.o partition.o fssync.o purge.o \
 
 OBJECTS=${VLIBOBJS} physio.o vol-salvage.o vol-info.o 
 
-all:	${DESTDIR}lib/afs/vlib.a \
-	${DESTDIR}lib/afs/libvlib.a \
+all:	${DESTDIR}/lib/afs/vlib.a \
+	${DESTDIR}/lib/afs/libvlib.a \
 	${DESTDIR}root.server/usr/afs/bin/salvager \
 	${DESTDIR}root.server/usr/afs/bin/volinfo \
 	gi
@@ -53,10 +53,10 @@ ${DESTDIR}root.server/usr/afs/bin/salvager: salvager
 ${DESTDIR}root.server/usr/afs/bin/volinfo: volinfo
 	${INSTALL} -s $? $@
 
-${DESTDIR}lib/afs/vlib.a: vlib.a
+${DESTDIR}/lib/afs/vlib.a: vlib.a
 	${INSTALL} $? $@
 
-${DESTDIR}lib/afs/libvlib.a: vlib.a
+${DESTDIR}/lib/afs/libvlib.a: vlib.a
 	${INSTALL} $? $@
 
 $(DESTDIR)root.server/usr/afs/bin/fs_conv_dux40D:  fs_conv_dux40D
@@ -69,11 +69,11 @@ $(DESTDIR)root.server/usr/afs/bin/fs_conv_sol26:  fs_conv_sol26
 	   ${INSTALL} -s $? $@
 
 install: all $(FS_CONV_OSF40D) $(XFS_SIZE_CHECK) $(FS_CONV_SOL26)
-	${INSTALL} ${PUBLICHEADERS} ${DESTDIR}include/afs
+	${INSTALL} ${PUBLICHEADERS} ${DESTDIR}/include/afs
 
 
-${OBJECTS}: ${PUBLICHEADERS} ${SRCDIR}include/lwp.h ${SRCDIR}include/lock.h \
-	 ${SRCDIR}include/afs/afsint.h vutils.h salvage.h\
+${OBJECTS}: ${PUBLICHEADERS} ${SRCDIR}/include/lwp.h ${SRCDIR}/include/lock.h \
+	 ${SRCDIR}/include/afs/afsint.h vutils.h salvage.h\
 	AFS_component_version_number.c
 
 vol-salvage.o vutil.o: volinodes.h
@@ -120,10 +120,10 @@ volinfo: vol-info.o physio.o ihandle.o
 
 
 fs_conv_dux40D: fs_conv_411.o
-	${CC} ${CFLAGS} ${DESTDIR}lib/afs/libcmd.a -o fs_conv_dux40D fs_conv_411.o  ${LIBS} 
+	${CC} ${CFLAGS} ${DESTDIR}/lib/afs/libcmd.a -o fs_conv_dux40D fs_conv_411.o  ${LIBS} 
 
 fs_conv_sol26: fs_conv_411.o vlib.a 
-	${CC} ${CFLAGS} ${DESTDIR}lib/afs/libcmd.a -o fs_conv_sol26 fs_conv_411.o  ${LIBS} 
+	${CC} ${CFLAGS} ${DESTDIR}/lib/afs/libcmd.a -o fs_conv_sol26 fs_conv_411.o  ${LIBS} 
 
 fs_conv_411.o: fs_conv_411.c AFS_component_version_number.c
 	${CC} ${CFLAGS} -c fs_conv_411.c
@@ -134,10 +134,6 @@ xfs_size_check: xfs_size_check.c
 clean:
 	rm -f *.o *.a AFS_component_version_number.c
 	rm -f ${SCMPROGS} ${STAGEPROGS} core salvager volinfo gi fs_conv_sol26 fs_conv_dux40D
-
-
-beancount:
-	wc -l *.c *.h
 
 test:
 	cd test; $(MAKE)

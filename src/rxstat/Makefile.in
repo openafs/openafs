@@ -12,21 +12,23 @@ SYS_NAME=@AFS_SYSNAME@
 
 SHELL = /bin/sh
 include ../config/Makefile.${SYS_NAME}
-include ../config/Makefile.version
 
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
-RXGEN=${SRCDIR}bin/rxgen
+RXGEN=${SRCDIR}/bin/rxgen
 MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
 KSRCS=rxstat.c rxstat.h Krxstat.ss.c Krxstat.xdr.c
 
-CFLAGS = $(DBUG) -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
 
 LIBOBJS = rxstat.cs.o rxstat.ss.o rxstat.xdr.o rxstat.o
 
-all: librxstat.a includes
+all: install
 
+#
+# Build targets
+#
 rxstat.cs.c rxstat.ss.c rxstat.xdr.c rxstat.h: rxstat.xg
 	${RXGEN} -x rxstat.xg
 
@@ -34,14 +36,6 @@ librxstat.a: ${LIBOBJS} AFS_component_version_number.o
 	-rm -f $@
 	$(AR) rv $@ AFS_component_version_number.o ${LIBOBJS}
 	$(RANLIB) $@
-
-kinstall: ${KSRCS} 
-	set ${KERNELDIR}afsint; $(MKDIR_IF_NEEDED)
-	${INSTALL} ${KSRCS} ${KERNELDIR}afsint
-
-ukinstall webinstall:  ${KSRCS}
-	set ${UKERNELDIR}afsint; $(MKDIR_IF_NEEDED)
-	${INSTALL} ${KSRCS} ${UKERNELDIR}afsint
 
 Krxstat.cs.c: rxstat.xg
 	${RXGEN} -x -k -C -o $@ rxstat.xg
@@ -52,11 +46,65 @@ Krxstat.ss.c: rxstat.xg
 Krxstat.xdr.c: rxstat.xg
 	${RXGEN} -x -k -c -o $@ rxstat.xg
 
-install: librxstat.a includes kinstall ukinstall
-	${INSTALL} librxstat.a ${DESTDIR}lib
+#
+# Install targets
+#
+install: kinstall ukinstall \
+	${DESTDIR}/include/rx/rxstat.h \
+	${DESTDIR}/lib/librxstat.a 
 
-includes: rxstat.h
-	${INSTALL} rxstat.h ${DESTDIR}include/rx
+${DESTDIR}/lib/librxstat.a: librxstat.a
+	${INSTALL} $? $@
 
+${DESTDIR}/include/rx/rxstat.h: rxstat.h
+	${INSTALL} $? $@
+
+kinstall: ${KERNELDIR}/afsint \
+	${KERNELDIR}/afsint/rxstat.c \
+	${KERNELDIR}/afsint/rxstat.h \
+	${KERNELDIR}/afsint/Krxstat.ss.c \
+	${KERNELDIR}/afsint/Krxstat.xdr.c 
+
+${KERNELDIR}/afsint:
+	mkdir -p $?
+
+${KERNELDIR}/afsint/rxstat.c: rxstat.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/afsint/rxstat.h: rxstat.h
+	${INSTALL} $? $@
+
+${KERNELDIR}/afsint/Krxstat.ss.c: Krxstat.ss.c
+	${INSTALL} $? $@
+
+${KERNELDIR}/afsint/Krxstat.xdr.c: Krxstat.xdr.c
+	${INSTALL} $? $@
+
+ukinstall: ${UKERNELDIR}/afsint \
+	${UKERNELDIR}/afsint/rxstat.c \
+	${UKERNELDIR}/afsint/rxstat.h \
+	${UKERNELDIR}/afsint/Krxstat.ss.c \
+	${UKERNELDIR}/afsint/Krxstat.xdr.c
+
+${UKERNELDIR}/afsint:
+	mkdir -p $?
+
+${UKERNELDIR}/afsint/rxstat.c: rxstat.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afsint/rxstat.h: rxstat.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afsint/Krxstat.ss.c: Krxstat.ss.c
+	${INSTALL} $? $@
+
+${UKERNELDIR}/afsint/Krxstat.xdr.c: Krxstat.xdr.c
+	${INSTALL} $? $@
+
+#
+# Misc. targets
+#
 clean:
-	rm -f rxstat.h *.xdr.c *.cs.c *.ss.c *.o *.a core *_component_version_number.c
+	rm -f rxstat.h *.xdr.c *.cs.c *.ss.c *.o *.a core AFS_component_version_number.c
+
+include ../config/Makefile.version

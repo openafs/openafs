@@ -15,18 +15,18 @@ include ../../config/Makefile.${SYS_NAME}
 
 OPTIMIZE=-g
 
-INCDIRS= -I${DESTDIR}include -I.. -I${BACKDIR}include
+INCDIRS= -I${DESTDIR}/include -I.. -I${BACKDIR}/include
 
 HEADERS = ../rxkad.h stress.h stress_internal.h stress_errs.h
 
-LDIR= ${DESTDIR}lib/
-ULIBS = ${LDIR}afs/libcmd.a ${LDIR}afs/libcom_err.a ${DESTDIR}lib/afs/util.a
+LDIR= ${DESTDIR}/lib/
+ULIBS = ${LDIR}/afs/libcmd.a ${LDIR}/afs/libcom_err.a ${DESTDIR}/lib/afs/util.a
 
-LIBS = ../librxkad.a  ${LDIR}librx.a ${LDIR}libdes.a \
-	${LDIR}liblwp.a  ${ULIBS} ${XLIBS}
+LIBS = ../librxkad.a  ${LDIR}/librx.a ${LDIR}/libdes.a \
+	${LDIR}/liblwp.a  ${ULIBS} ${XLIBS}
 
 LIBRPC = ../../librpc/libafsrpc.so
-THLIBS= ${LDIR}afs/libcmd.a  ${LDIR}afs/libcom_err.a \
+THLIBS= ${LDIR}/afs/libcmd.a  ${LDIR}/afs/libcom_err.a \
 	${ULIBS} ${XLIBS} ${LIBRPC} -lpthread
 
 CFLAGS = ${OPTIMIZE} ${INCDIRS}  ${XCFLAGS}
@@ -36,7 +36,7 @@ THFLAGS = -mt -DAFS_PTHREAD_ENV
 
 THRULE = ${CC} ${CFLAGS} ${THFLAGS} -c $?
 
-COMPILE_ET = ${SRCDIR}bin/compile_et
+COMPILE_ET = ${SRCDIR}/bin/compile_et
 
 noversion all test system: stress
 
@@ -58,7 +58,7 @@ th_stress.xdr.o: stress.xdr.c stress.h
 	${THRULE} -o th_stress.xdr.o
 
 stress.ss.c stress.cs.c stress.xdr.c stress.h: stress.rg
-	${SRCDIR}bin/rxgen stress.rg
+	${SRCDIR}/bin/rxgen stress.rg
 
 stress_errs.o: stress_errs.c
 

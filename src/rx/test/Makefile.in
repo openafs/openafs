@@ -14,9 +14,9 @@ SYS_NAME=@AFS_SYSNAME@
 include ../../config/Makefile.${SYS_NAME}
 OPTIMIZE=-g
 
-INCDIRS= -I${DESTDIR}include -I.. 
-LDIRS= -L.. -L${DESTDIR}lib -L${DESTDIR}lib/afs  
-LIBS= ${DESTDIR}lib/afs/libcmd.a  ../librx.a ${DESTDIR}lib/liblwp.a \
+INCDIRS= -I${DESTDIR}/include -I.. 
+LDIRS= -L.. -L${DESTDIR}/lib -L${DESTDIR}/lib/afs  
+LIBS= ${DESTDIR}/lib/afs/libcmd.a  ../librx.a ${DESTDIR}/lib/liblwp.a \
 	 ${DESTDIR}/lib/util.a ${DESTDIR}/lib/afs/libsys.a ${XLIBS}
 
 CFLAGS = ${OPTIMIZE} ${INCDIRS} -DRXDEBUG ${LDIRS} ${LIBS} ${XCFLAGS}

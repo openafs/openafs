@@ -51,7 +51,7 @@ OPT2   = -O
 
 IMPORTS = -bI:/lib/kernex.exp -bI:/lib/syscalls.exp -bI:/lib/sockets.exp \
 	-bI:/lib/netinet.exp \
-	-bI:${DESTDIR}lib/afs/extras.exp -bI:${DESTDIR}lib/afs/export.exp
+	-bI:${DESTDIR}/lib/afs/extras.exp -bI:${DESTDIR}/lib/afs/export.exp
 KDEFS = -U_IBMR2 -D_POWER -D_AIX -DNLS -D_NLS -DMSG -D__STR31__ -Daiws \
 	-D_POWER_RS -D_POWER_PC -D_POWER_RS1 -D_POWER_RS2 -D_POWER_RSC \
 	 -D_POWER_601 -D_POWER_603 -D_POWER_604 -D_THREADS -M  -D_KERNEL \

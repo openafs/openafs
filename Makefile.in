@@ -9,9 +9,7 @@ SHELL=/bin/sh
 DESTDIR=@DESTDIR@
 SRCDIR=@SRCDIR@
 TOP_SRCDIR=@TOP_SRCDIR@
-INSTALL=${SRCDIR}bin/install
-
-MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
+INSTALL=${SRCDIR}/bin/install
 
 # Systype-generic items
 SYS_NAME=@AFS_SYSNAME@
@@ -43,16 +41,16 @@ COMPILE_PART2=; $(MAKE) install
 COMPILE_PART3=; $(MAKE) test
 COMPILE_CLEAN=; $(MAKE) clean
 
-all: force
-	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
+all: force ${SYS_NAME}/dest
 	$(MAKE) install
 
-all_nolibafs:
-	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
+${SYS_NAME}/dest:
+	mkdir -p ${SYS_NAME}/dest
+
+all_nolibafs: ${SYS_NAME}/dest
 	$(MAKE) install TARGET=finale_nolibafs
 
-only_libafs:
-	set ${SYS_NAME}/dest; $(MKDIR_IF_NEEDED)
+only_libafs: ${SYS_NAME}/dest
 	$(MAKE) install TARGET=libafs
 
 project: cmd comerr 
@@ -204,12 +202,12 @@ null: project
 gtx: project null auth # kauth rxkad ?
 	case ${SYS_NAME} in \
 	  rs_aix* | sun4x_5? | sgi_6? | *linux* | ppc_darwin* | *fbsd*) \
-		rm -f ${DESTDIR}lib/afs/libtermlib.a; \
-		ln -s libnull.a ${DESTDIR}lib/afs/libtermlib.a; \
+		rm -f ${DESTDIR}/lib/afs/libtermlib.a; \
+		ln -s libnull.a ${DESTDIR}/lib/afs/libtermlib.a; \
 		${COMPILE_PART1} gtx ${COMPILE_PART2};; \
 	  *) \
-		rm -f ${DESTDIR}lib/afs/libtermlib.a; \
-		ln -s /usr/lib/libtermlib.a ${DESTDIR}lib/afs/libtermlib.a; \
+		rm -f ${DESTDIR}/lib/afs/libtermlib.a; \
+		ln -s /usr/lib/libtermlib.a ${DESTDIR}/lib/afs/libtermlib.a; \
 		${COMPILE_PART1} gtx ${COMPILE_PART2};; \
 	esac
 
@@ -508,10 +506,119 @@ clean2:
 
  
 distclean: clean
-	/bin/rm -f config.log config.cache config.status Makefile
-	/bin/rm -f src/config/afsconfig.h src/config/Makefile.${SYS_NAME} 
-	/bin/rm -f src/libafs/Makefile src/libafs/MakefileProto.${MKAFS_OSTYPE}
-	/bin/rm -f src/libuafs/Makefile afs.ppc_darwin.plist src/pam/Makefile
+	/bin/rm -f config.log config.cache config.status \
+	src/config/afsconfig.h \
+	Makefile \
+	src/afs/Makefile \
+	src/afsd/Makefile \
+	src/afsd/afs.ppc_darwin.plist \
+	src/afsmonitor/Makefile \
+	src/afsweb/Makefile \
+	src/audit/Makefile \
+	src/auth/test/Makefile \
+	src/auth/Makefile \
+	src/bozo/test/Makefile \
+	src/bozo/Makefile \
+	src/bu_utils/Makefile \
+	src/bubasics/Makefile \
+	src/bucoord/Makefile \
+	src/budb/Makefile \
+	src/butc/Makefile \
+	src/butm/Makefile \
+	src/cmd/test/Makefile \
+	src/cmd/Makefile \
+	src/comerr/test/Makefile \
+	src/comerr/Makefile \
+	src/config/Makefile \
+	src/config/Makefile.version \
+	src/config/Makefile.version-NOCML \
+	src/config/Makefile.${SYS_NAME} \
+	src/dauth/Makefile \
+	src/des/test/Makefile \
+	src/des/Makefile \
+	src/des_stub/Makefile \
+	src/dir/test/Makefile \
+	src/dir/Makefile \
+	src/export/Makefile \
+	src/finale/Makefile \
+	src/fsint/Makefile \
+	src/fsprobe/Makefile \
+	src/ftpd43+/Makefile \
+	src/gtx/Makefile \
+	src/inetd/Makefile \
+	src/kauth/test/Makefile \
+	src/kauth/Makefile \
+	src/libacl/test/Makefile \
+	src/libacl/Makefile \
+	src/libadmin/adminutil/Makefile \
+	src/libadmin/Makefile \
+	src/libadmin/bos/Makefile \
+	src/libadmin/cfg/test/Makefile \
+	src/libadmin/cfg/Makefile \
+	src/libadmin/client/Makefile \
+	src/libadmin/kas/Makefile \
+	src/libadmin/pts/Makefile \
+	src/libadmin/samples/Makefile \
+	src/libadmin/test/Makefile \
+	src/libadmin/vos/Makefile \
+	src/libafs/Makefile \
+	src/libafs/MakefileProto.${MKAFS_OSTYPE} \
+	src/libafsauthent/Makefile \
+	src/libafsrpc/Makefile \
+	src/libuafs/Makefile \
+	src/libuafs/MakefileProto.${MKAFS_OSTYPE} \
+	src/log/test/Makefile \
+	src/log/Makefile \
+	src/login/Makefile \
+	src/lwp/test/Makefile \
+	src/lwp/Makefile \
+	src/mpp/Makefile \
+	src/ntp/Makefile \
+	src/null/Makefile \
+	src/package/Makefile \
+	src/pam/Makefile \
+	src/pinstall/test/Makefile \
+	src/pinstall/Makefile \
+	src/procmgmt/Makefile \
+	src/procmgmt/test/Makefile \
+	src/ptserver/Makefile \
+	src/rcp/Makefile \
+	src/rlogind/Makefile \
+	src/rsh/Makefile \
+	src/rx/Makefile \
+	src/rx/bulk.example/Makefile \
+	src/rx/bulktest/Makefile \
+	src/rx/multi.example/Makefile \
+	src/rx/simple.example/Makefile \
+	src/rx/test/Makefile \
+	src/rxgen/Makefile \
+	src/rxkad/Makefile \
+	src/rxkad/test/Makefile \
+	src/rxstat/Makefile \
+	src/scout/Makefile \
+	src/sgistuff/Makefile \
+	src/sia/Makefile \
+	src/sys/Makefile \
+	src/tbutc/Makefile \
+	src/tsm41/Makefile \
+	src/tviced/Makefile \
+	src/ubik/Makefile \
+	src/update/Makefile \
+	src/usd/test/Makefile \
+	src/usd/Makefile \
+	src/uss/Makefile \
+	src/util/Makefile \
+	src/util/test/Makefile \
+	src/venus/test/Makefile \
+	src/venus/Makefile \
+	src/vfsck/Makefile \
+	src/viced/Makefile \
+	src/vlserver/Makefile \
+	src/vol/Makefile \
+	src/vol/test/Makefile \
+	src/volser/Makefile \
+	src/wsadmin.src/Makefile \
+	src/xstat/Makefile 
 
 pristine: distclean
 	/bin/rm -f src/config/afsconfig.h.in configure aclocal.m4

@@ -14,14 +14,14 @@ SHELL = /bin/sh
 
 include ../config/Makefile.${SYS_NAME}
 
-RXGEN=${SRCDIR}bin/rxgen
-COMPILE_ET = ${SRCDIR}bin/compile_et
+RXGEN=${SRCDIR}/bin/rxgen
+COMPILE_ET = ${SRCDIR}/bin/compile_et
 
-CFLAGS = $(DBG) -I${TOP_SRCDIR}/config -I${SRCDIR}include ${XCFLAGS}
+CFLAGS = $(DBG) -I${TOP_SRCDIR}/config -I${SRCDIR}/include ${XCFLAGS}
 
 #####################################################################
 # include files
-INCLS=${SRCDIR}include/afs/param.h \
+INCLS=${SRCDIR}/include/afs/param.h \
 	usd.h
 
 LINCLS=usd.h
@@ -51,9 +51,9 @@ kinstall:
 	@echo No kernel source here.
 
 
-${DESTDIR}lib/afs/libusd.a: libusd.a
+${DESTDIR}/lib/afs/libusd.a: libusd.a
 	${INSTALL}   $? $@
 
 
-install: ${DESTDIR}lib/afs/libusd.a 
-	${INSTALL} usd.h ${DESTDIR}include/afs
+install: ${DESTDIR}/lib/afs/libusd.a 
+	${INSTALL} usd.h ${DESTDIR}/include/afs

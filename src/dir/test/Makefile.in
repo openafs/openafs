@@ -15,10 +15,10 @@ SHELL = /bin/sh
 include ../../config/Makefile.${SYS_NAME}
 
 KERNELDIR = ../libafs/
-INSTALL = ${SRCDIR}bin/install
+INSTALL = ${SRCDIR}/bin/install
 
-INCDIRS= -I${DESTDIR}include ${XINCLS}
-LIBS = ${SRCDIR}lib/afs/libdir.a ${SRCDIR}lib/afs/util.a 
+INCDIRS= -I${DESTDIR}/include ${XINCLS}
+LIBS = ${SRCDIR}/lib/afs/libdir.a ${SRCDIR}/lib/afs/util.a 
 CFLAGS = ${OPTMZ} ${INCDIRS} ${XCFLAGS}
 
 OBJS=test-salvage.o physio.o dtest.o

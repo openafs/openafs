@@ -402,14 +402,9 @@ AC_SUBST(WITH_INSECURE)
 
 AC_OUTPUT(             \
 Makefile               \
-src/config/Makefile.version-NOCML \
-src/config/Makefile.${AFS_SYSNAME} \
-src/libafs/MakefileProto.${MKAFS_OSTYPE} \
-src/libuafs/MakefileProto.${MKAFS_OSTYPE} \
-src/pam/Makefile \
-src/afsd/afs.ppc_darwin.plist \
 src/afs/Makefile \
 src/afsd/Makefile \
+src/afsd/afs.ppc_darwin.plist \
 src/afsmonitor/Makefile \
 src/afsweb/Makefile \
 src/audit/Makefile \
@@ -428,6 +423,8 @@ src/cmd/Makefile \
 src/comerr/test/Makefile \
 src/comerr/Makefile \
 src/config/Makefile \
+src/config/Makefile.version-NOCML \
+src/config/Makefile.${AFS_SYSNAME} \
 src/dauth/Makefile \
 src/des/test/Makefile \
 src/des/Makefile \
@@ -456,8 +453,10 @@ src/libadmin/pts/Makefile \
 src/libadmin/samples/Makefile \
 src/libadmin/test/Makefile \
 src/libadmin/vos/Makefile \
+src/libafs/MakefileProto.${MKAFS_OSTYPE} \
 src/libafsauthent/Makefile \
 src/libafsrpc/Makefile \
+src/libuafs/MakefileProto.${MKAFS_OSTYPE} \
 src/log/test/Makefile \
 src/log/Makefile \
 src/login/Makefile \

@@ -17,10 +17,8 @@ include ../config/Makefile.${SYS_NAME}
 
 KERNELDIR = ../libafs/
 UKERNELDIR = ../libuafs/
-MKDIR_IF_NEEDED=[ -d $$1 ] || mkdir -p $$1
 
-#CC=pcc
-CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}include -DRXDEBUG ${XCFLAGS}
+CFLAGS = ${OPTMZ} -I${TOP_SRCDIR}/config -I${SRCDIR}/include -DRXDEBUG ${XCFLAGS}
 
 #
 # Generic xdr objects (or, at least, xdr stuff that's not newly defined for rx).
@@ -38,24 +36,19 @@ LIBOBJS = ${RXOBJS} ${MULTIOBJS} ${XDROBJS}
 
 LIBOBJS_djgpp = ${RXOBJS_djgpp} ${MULTIOBJS} ${XDROBJS_djgpp}
 
-XMIT = rx_xmit_nt.o
-XMIT_H = rx_xmit_nt.h
-
 XDROBJS_djgpp = xdr.o xdr_rec.o xdr_stdio.o \
 	xdr_float.o  xdr_refernce.o  xdr_update.o \
 	xdr_array.o xdr_mem.o xdr_rx.o xdr_afsuuid.o
 
 RXOBJS_djgpp = rx_clock.o rx_event.o rx_user.o rx_lwp.o rx.o rx_null.o rx_globals.o \
 		rx_getaddr.o rx_misc.o rx_packet.o rx_rdwr.o  rx_trace.o rx_conncache.o \
-		xdr_int64.o $(XMIT)
+		xdr_int64.o rx_xmit_nt.o
 
-BASICINCLS = ${SRCDIR}include/lwp.h ${SRCDIR}include/lock.h \
+BASICINCLS = ${SRCDIR}/include/lwp.h ${SRCDIR}/include/lock.h \
 	     rx_clock.h rx_queue.h rx_event.h
 
-LIBS = librx.a ${SRCDIR}lib/liblwp.a ${SRCDIR}lib/afs/libcmd.a \
-	       ${SRCDIR}lib/afs/util.a 
-
-LINK = ${CC} ${CFLAGS} -o $@ $@.o ${LIBS} ${SRCDIR}lib/afs/libsys.a ${XLIBS}
+LIBS = librx.a ${SRCDIR}/lib/liblwp.a ${SRCDIR}/lib/afs/libcmd.a \
+	       ${SRCDIR}/lib/afs/util.a 
 
 KSRCS = rx.c rx.h rx_clock.c rx_clock.h rx_event.c rx_event.h \
 	rx_globals.c rx_globals.h rx_kernel.h rx_misc.h \
@@ -65,16 +58,12 @@ KSRCS = rx.c rx.h rx_clock.c rx_clock.h rx_event.c rx_event.h \
 	xdr_afsuuid.c rx_trace.h xdr_int64.c
 UKSRCS = $(KSRCS) rx_conncache.c
 
-include ../config/Makefile.version
-
-test tests: install ${DESTDIR}etc/rxdebug rxdumptrace 
+all: install
 
 RX_component_version_number.c: AFS_component_version_number.c
 	sed 's/cml_version/rx_cml_version/' <AFS_component_version_number.c >RX_component_version_number.c
 
 RX_component_version_number.o: RX_component_version_number.c
-
-xdrs: ${XDROBJS}
 
 ${RXOBJS}: ${BASICINCLS} rx.h rx_user.h rx_globals.h
 
@@ -89,7 +78,6 @@ rxdebug.o: rxdebug.c
 rx_packet.o: rx_packet.c rx_packet.h
 
 rx_rdwr.o: rx_rdwr.c rx.h
-#	$(CC) -c -O -I${SRCDIR}include -DRXDEBUG ${XCFLAGS} rx_rdwr.c
 
 rx.o: rx.h rx_user.h
 
@@ -110,51 +98,119 @@ xdr_rx.o: xdr.h rx.h
 
 xdr_refernce.o: xdr_refernce.c xdr.h
 
-#rx_vab.o: rx_vab.c rx_vab.h rx_user.h ${BASICINCLS}
-
 librx.a: ${LIBOBJS} RX_component_version_number.o
 	-rm -f $@
 	$(AR) rv $@ RX_component_version_number.o ${LIBOBJS}
 	$(RANLIB) $@
 
-librx-djgpp: ${LIBOBJS_djgpp} RX_component_version_number.o
-	-rm -f librx.a
-	$(AR) rv librx.a RX_component_version_number.o ${LIBOBJS_djgpp}
-	$(RANLIB) librx.a
+librx-djgpp.a: ${LIBOBJS_djgpp} RX_component_version_number.o
+	-rm -f librx-djgpp.a
+	$(AR) rv librx-djgpp.a RX_component_version_number.o ${LIBOBJS_djgpp}
+	$(RANLIB) librx-djgpp.a
 
-${DESTDIR}etc/rxdebug: rxdebug
-	${INSTALL} rxdebug ${DESTDIR}etc/rxdebug
+${DESTDIR}/etc/rxdebug: rxdebug
+	${INSTALL} rxdebug ${DESTDIR}/etc/rxdebug
 
-rxdebug: rxdebug.o ${DESTDIR}lib/afs/util.a ${DESTDIR}lib/afs/libsys.a
-	${LINK}
+rxdebug: rxdebug.o ${DESTDIR}/lib/afs/util.a ${DESTDIR}/lib/afs/libsys.a
+	${CC} ${CFLAGS} -o $@ $@.o ${LIBS} ${SRCDIR}/lib/afs/libsys.a ${XLIBS}
 
-install.noversion noversion install all system: librx.a includes kinstall ukinstall
-	${INSTALL} librx.a ${DESTDIR}lib
+#
+# Install targets
+#
+install: includes kinstall ukinstall \
+	${DESTDIR}/lib/librx.a
 
-install-djgpp: librx-djgpp includes includes-djgpp kinstall ukinstall
-	${INSTALL} librx.a ${DESTDIR}lib
+includes: \
+	${DESTDIR}/include/rx \
+	${DESTDIR}/include/rx/rx_packet.h \
+	${DESTDIR}/include/rx/rx.h \
+	${DESTDIR}/include/rx/rx_user.h \
+	${DESTDIR}/include/rx/rx_event.h \
+	${DESTDIR}/include/rx/rx_queue.h \
+	${DESTDIR}/include/rx/rx_globals.h \
+	${DESTDIR}/include/rx/rx_clock.h \
+	${DESTDIR}/include/rx/rx_multi.h \
+	${DESTDIR}/include/rx/rx_pthread.h \
+	${DESTDIR}/include/rx/rx_lwp.h \
+	${DESTDIR}/include/rx/rx_misc.h \
+	${DESTDIR}/include/rx/rx_null.h \
+	${DESTDIR}/include/rx/xdr.h 
 
-includes-djgpp: $(XMIT_H)
-	set ${DESTDIR}include/rx; $(MKDIR_IF_NEEDED)
-	${INSTALL} $(XMIT_H) ${DESTDIR}include/rx
-
-includes: rx.h rx_user.h rx_event.h rx_queue.h rx_clock.h xdr.h rx_null.h rx_globals.h 
-	set ${DESTDIR}include/rx; $(MKDIR_IF_NEEDED)
-	${INSTALL} rx_packet.h rx.h rx_user.h rx_event.h rx_queue.h \
-	rx_globals.h \
-	rx_clock.h rx_multi.h ${DESTDIR}include/rx
-	${INSTALL} xdr.h rx_null.h ${DESTDIR}include/rx
-	${INSTALL} rx_pthread.h rx_lwp.h rx_misc.h ${DESTDIR}include/rx
-
-kinstall: includes
-	set $(KERNELDIR)rx; $(MKDIR_IF_NEEDED)
-	$(INSTALL) $(KSRCS) $(KERNELDIR)rx
+kinstall: ${KERNELDIR}/rx
 	$(INSTALL) $(MKAFS_OSTYPE)/*.[ch] $(KERNELDIR)rx
+	$(INSTALL) $(KSRCS) $(KERNELDIR)rx
 
-ukinstall webinstall: includes
-	set $(UKERNELDIR)rx; $(MKDIR_IF_NEEDED)
+ukinstall: ${UKERNELDIR}/rx
 	$(INSTALL) $(UKSRCS) $(UKERNELDIR)rx
 	-$(INSTALL) UKERNEL/*.[ch] $(UKERNELDIR)rx
 
+${DESTDIR}/include/rx/rx_packet.h: rx_packet.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/rx/rx.h: rx.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/rx/rx_user.h: rx_user.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/rx/rx_event.h: rx_event.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/rx/rx_queue.h: rx_queue.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/rx/rx_globals.h: rx_globals.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/rx/rx_clock.h: rx_clock.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/rx/rx_multi.h: rx_multi.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/rx/rx_pthread.h: rx_pthread.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/rx/rx_lwp.h: rx_lwp.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/rx/rx_misc.h: rx_misc.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/rx/rx_null.h: rx_null.h
+	${INSTALL} $? $@
+
+${DESTDIR}/include/rx/xdr.h: xdr.h
+	${INSTALL} $? $@
+
+${UKERNELDIR}/rx:
+	mkdir -p ${UKERNELDIR}/rx
+
+${KERNELDIR}/rx:
+	mkdir -p ${KERNELDIR}/rx
+
+install-djgpp: includes kinstall ukinstall librx-djgpp ${DESTDIR}/include/rx/rx_xmit_nt.h ${DESTDIR}/lib/librx-djgpp.a
+
+${DESTDIR}/lib/librx.a: librx.a
+	${INSTALL} $? $@
+
+# rule will never be satisfied
+${DESTDIR}/lib/librx-djgpp.a: librx-djgpp.a
+	${INSTALL} $? ${DESTdIR}/lib/librx.a
+
+${DESTDIR}/include/rx:
+	mkdir -p ${DESTDIR}/include/rx
+
+${DESTDIR}/include/rx/rx_xmit_nt.h: rx_xmit_nt.h ${DESTDIR}/include/rx
+	${INSTALL} $? $@
+
+#
+# Misc. targets
+#
 clean:
 	rm -f *.o *.a core *_component_version_number.c rxdumptrace rxdebug
+
+include ../config/Makefile.version
+
+test tests: install ${DESTDIR}/etc/rxdebug rxdumptrace 
+
