@@ -220,15 +220,15 @@ struct conn *afs_ConnBySA(struct srvAddr *sap, unsigned short aport,
 
 	      if (cryptall) {
 		level=rxkad_crypt;
-		isec=3;
-	      }
-	      else {
+	      } else {
 		level=rxkad_clear;
-		isec=2;
 	      }
-		/* kerberos tickets on channel 2 */
-		csec = rxkad_NewClientSecurityObject(level, tu->ct.HandShakeKey,
-			/* kvno */ tu->ct.AuthHandle, tu->stLen, tu->stp);
+	      isec=2;
+	      /* kerberos tickets on channel 2 */
+	      csec = rxkad_NewClientSecurityObject(level, tu->ct.HandShakeKey,
+						   /* kvno */ 
+						   tu->ct.AuthHandle, 
+						   tu->stLen, tu->stp);
 	}
 	if (isec == 0)
 	    csec = rxnull_NewClientSecurityObject();
