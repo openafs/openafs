@@ -2426,11 +2426,14 @@ afs_int32 GetDumps (call, majorVersion, flags, name, start, end,
 	    if (eval) ABORT(eval);
 	}
 
+/*
 	if nothing found
 		return error
 
 	from saved volfragment address, compute dump.
 	otherwise, return dump found
+*/
+
 #endif /* PA */
 	
     }

@@ -285,7 +285,7 @@ restat:
 	setup_all_block_seek();
 #endif
 #ifdef	AFS_SUN5_ENV
-	else if (debug)
+	if (!preen && debug)
 		printf(" pid %d\n", getpid());
 	if (debug && (hotroot || mountedfs)) {
 		printf("** %s", sname);
