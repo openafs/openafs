@@ -1,0 +1,7 @@
+LIBRARY     LOOPBACK_INSTALL
+
+DESCRIPTION "Microsoft Loopback Adapter Installer for OpenAFS"
+
+EXPORTS
+    doLoopBackEntryW
+    disableLoopBackEntryW
