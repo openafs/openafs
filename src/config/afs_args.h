@@ -197,6 +197,14 @@ struct afsprocdata {
   long param1;
   long syscall;
 };
+
+struct afsprocdata32 {
+  unsigned int param4;
+  unsigned int param3;
+  unsigned int param2;
+  unsigned int param1;
+  unsigned int syscall;
+};
  
 #endif
 

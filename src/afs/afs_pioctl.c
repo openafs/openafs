@@ -195,7 +195,7 @@ static int (*(CpioctlSw[])) () = {
 #define PSetClientContext 99	/*  Special pioctl to setup caller's creds  */
 int afs_nobody = NFS_NOBODY;
 
-#if (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV) && !defined(AFS_AMD64_LINUX20_ENV))
+#if (defined(AFS_AIX51_ENV) && defined(AFS_64BIT_KERNEL)) || defined(AFS_HPUX_64BIT_ENV) || defined(AFS_SUN57_64BIT_ENV) || (defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64)) || (defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV))
 static void
 afs_ioctl32_to_afs_ioctl(const struct afs_ioctl32 *src, struct afs_ioctl *dst)
 {
@@ -260,25 +260,31 @@ copyin_afs_ioctl(caddr_t cmarg, struct afs_ioctl *dst)
     }
 #endif /* defined(AFS_SGI_ENV) && (_MIPS_SZLONG==64) */
 
-#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV) && !defined(AFS_AMD64_LINUX20_ENV)
+#if defined(AFS_LINUX_64BIT_KERNEL) && !defined(AFS_ALPHA_LINUX20_ENV) && !defined(AFS_IA64_LINUX20_ENV)
     struct afs_ioctl32 dst32;
 
 #ifdef AFS_SPARC64_LINUX24_ENV
     if (current->thread.flags & SPARC_FLAG_32BIT)
 #elif defined(AFS_SPARC64_LINUX20_ENV)
     if (current->tss.flags & SPARC_FLAG_32BIT)
+
+#elif defined(AFS_AMD64_LINUX26_ENV)
+    if (test_thread_flag(TIF_IA32))
 #elif defined(AFS_AMD64_LINUX20_ENV)
     if (current->thread.flags & THREAD_IA32)
-#elif defined(AFS_PPC64_LINUX20_ENV)
-#ifdef AFS_PPC64_LINUX26_ENV
+
+#elif defined(AFS_PPC64_LINUX26_ENV)
     if (current->thread_info->flags & _TIF_32BIT)
-#else /*Linux 2.6 */
+#elif defined(AFS_PPC64_LINUX20_ENV)
     if (current->thread.flags & PPC_FLAG_32BIT)
-#endif
+
+#elif defined(AFS_S390X_LINUX26_ENV)
+    if (test_thread_flag(TIF_31BIT))
 #elif defined(AFS_S390X_LINUX20_ENV)
     if (current->thread.flags & S390_FLAG_31BIT)
+
 #else
-#error Not done for this linux type
+#error pioctl32 not done for this linux
 #endif
     {
 	AFS_COPYIN(cmarg, (caddr_t) & dst32, sizeof dst32, code);

@@ -68,10 +68,6 @@
 #include <asm/ia32_unistd.h>
 #endif
 
-#ifdef HAVE_KERNEL_LINUX_SYSCALL_H
-#include <linux/syscall.h>
-#endif
-
 /* number of syscalls */
 /* NB: on MIPS we care about the 4xxx range */
 #ifndef NR_syscalls
@@ -79,11 +75,11 @@
 #endif
 
 /* lower bound of valid kernel text pointers */
-//#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,5,0)
+#ifdef AFS_IA64_LINUX20_ENV
+#define ktxt_lower_bound (((unsigned long)&kernel_thread )  & 0xfff00000L)
+#else
 #define ktxt_lower_bound (((unsigned long)&kernel_thread )  & ~0xfffffL)
-//#else
-//#define ktxt_lower_bound (((unsigned long)&empty_zero_page) & ~0xfffffL)
-//#endif
+#endif
 
 /* On SPARC64 and S390X, sys_call_table contains 32-bit entries
  * even though pointers are 64 bit quantities.
@@ -94,6 +90,14 @@
 #else
 #define SYSCALLTYPE void *
 #define PROBETYPE long
+#endif
+
+#if defined(AFS_S390X_LINUX20_ENV) && !defined(AFS_S390X_LINUX26_ENV) 
+#define _SS(x) ((x) << 1)
+#define _SX(x) ((x) &~ 1)
+#else
+#define _SS(x) (x)
+#define _SX(x) (x)
 #endif
 
 
@@ -143,7 +147,16 @@ MODULE_PARM_DESC(probe_debug_tag, "Debugging output start tag");
 /* Weak references are our friends.  They are supported by the in-kernel
  * linker in Linux 2.6 and by all versions of modutils back to 2.2pre1.
  * A weak reference not satisified by the kernel will have value zero.
+ *
+ * Unfortunately, weak references to functions don't work right on
+ * IA64; specifically, if you actually try to make a call through
+ * such a reference, and the symbol doesn't exist in the kernel, then
+ * the module relocation code will oops.  A workaround for this is
+ * probably possible, but the use of kallsyms_* is of limited value,
+ * so I'm not bothing with the effort for now.
+ * -- jhutz, 10-Feb-2005
  */
+#ifdef OSI_PROBE_KALLSYMS
 extern int kallsyms_symbol_to_address(char *name, unsigned long *token,
 				      char **mod_name,
 				      unsigned long *mod_start,
@@ -167,20 +180,22 @@ extern int kallsyms_address_to_symbol(unsigned long address,
 				      unsigned long *sym_start,
 				      unsigned long *sym_end
 				     ) __attribute__((weak));
+#endif
 
 extern SYSCALLTYPE sys_call_table[] __attribute__((weak));
 extern SYSCALLTYPE ia32_sys_call_table[] __attribute__((weak));
 extern SYSCALLTYPE sys_call_table32[] __attribute__((weak));
+extern SYSCALLTYPE sys_call_table_emu[] __attribute__((weak));
 
 extern asmlinkage long sys_close(unsigned int) __attribute__((weak));
 extern asmlinkage long sys_chdir(const char *) __attribute__((weak));
-extern asmlinkage int  sys_write(unsigned int, const char *, size_t) __attribute__((weak));
+extern asmlinkage ssize_t sys_write(unsigned int, const char *, size_t) __attribute__((weak));
 #ifdef AFS_LINUX26_ENV
 extern asmlinkage long sys_wait4(pid_t, int *, int, struct rusage *) __attribute__((weak));
 #else
 extern asmlinkage long sys_wait4(pid_t, unsigned int *, int, struct rusage *) __attribute__((weak));
 #endif
-extern asmlinkage int  sys_exit (int) __attribute__((weak));
+extern asmlinkage long sys_exit (int) __attribute__((weak));
 extern asmlinkage long sys_open (const char *, int, int) __attribute__((weak));
 extern asmlinkage long sys_ioctl(unsigned int, unsigned int, unsigned long) __attribute__((weak));
 
@@ -306,7 +321,7 @@ static int main_zapped_syscalls[] = {
  * corresponding __NR macros are not defined, so the tests above fail.
  * Instead, we just have to know the numbers for these.
  */
-#ifdef AFS_S390_LINUX20_ENV
+#if defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
     /* break, stty, gtty, ftime, prof, lock, mpx */
     17, 31, 32, 35, 44, 53, 56,
 #endif
@@ -400,6 +415,13 @@ static int main_zapped_syscalls[] = {
 
 /* unique syscalls for try_harder */
 static int main_unique_syscalls[] = {
+#if defined(AFS_SPARC64_LINUX24_ENV) || defined(AFS_SPARC_LINUX24_ENV)
+    /* 
+     * On SPARC, we need some additional unique calls to make sure
+     * we don't match the SunOS-compatibility table.
+     */
+    __NR_sgetmask, __NR_ssetmask,
+#endif
     __NR_exit, __NR_mount, __NR_read, __NR_write,
     __NR_open, __NR_close, __NR_unlink
 };
@@ -428,7 +450,7 @@ static probectl main_probe = {
     main_try,                     /* array of combinations to try */
 
     /* symbol in section to try scanning */
-#if defined(AFS_SPARC64_LINUX20_ENV)
+#if defined(AFS_SPARC64_LINUX20_ENV) || defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
     (unsigned long)&sys_close,
 #elif defined(AFS_AMD64_LINUX20_ENV)
     /* On this platform, it's in a different section! */
@@ -444,13 +466,22 @@ static probectl main_probe = {
     (unsigned long)(&sys_close),
     0xfffff,
     0x10000,
+#elif   defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
+    /* bleah; this is so suboptimal */
+    (unsigned long)(&sys_close),
+    0xfffff,
+    0x20000,
 #elif   defined(AFS_IA64_LINUX20_ENV)
-    (unsigned long)(&sys_close - 0x180000),
-    0,
-    (0x180000 / sizeof(unsigned long *)),
+    (unsigned long)(&init_mm),
+    0x1fffff,
+    0x30000,
 #elif defined(AFS_AMD64_LINUX20_ENV)
-    (unsigned long)(&tasklist_lock - 0x1000),
+    (unsigned long)(&tasklist_lock) - 0x30000,
     0,
+    0x6000,
+#elif defined(AFS_PPC_LINUX20_ENV) || defined(AFS_PPC_LINUX20_ENV)
+    (unsigned long)&init_mm,
+    0xffff,
     16384,
 #else
     (unsigned long)&init_mm,
@@ -570,6 +601,19 @@ static probectl *probe_list[] = {
 };
 
 
+/********** Probing Configuration: IA64 **********/
+#elif defined(AFS_IA64_LINUX20_ENV)
+struct fptr {
+    void *ip;
+    unsigned long gp;
+};
+
+/* no 32-bit support on IA64 for now */
+static probectl *probe_list[] = {
+    &main_probe
+};
+
+
 /********** Probing Configuration: ppc64, sparc64 sys_call_table32 **********/
 #elif defined(AFS_PPC64_LINUX20_ENV) || defined(AFS_SPARC64_LINUX20_ENV)
 
@@ -601,6 +645,13 @@ static int sct32_zapped_syscalls[] = {
 static int sct32_unique_syscalls[] = {
 #ifdef AFS_PPC64_LINUX20_ENV
     __NR_mmap2, __NR_fstat64,
+#endif
+#ifdef AFS_SPARC64_LINUX24_ENV
+    /* 
+     * On SPARC, we need some additional unique calls to make sure
+     * we don't match the SunOS-compatibility table.
+     */
+    __NR_sgetmask, __NR_ssetmask,
 #endif
     __NR_exit, __NR_mount, __NR_read, __NR_write,
     __NR_open, __NR_close, __NR_unlink
@@ -675,7 +726,11 @@ static probectl *probe_list[] = {
 
 
 /********** Probing Configuration: s390x sys_call_table_emu **********/
-#elif defined(AFS_S390X_LINUX20_ENV)
+/* We only actually need to do this on s390x_linux26 and later.
+ * On earlier versions, the two tables were interleaved and so
+ * have related base addresses.
+ */
+#elif defined(AFS_S390X_LINUX26_ENV)
 
 /* syscall pairs/triplets to probe */
 /* nothing worthwhile is exported, so this is empty */
@@ -718,14 +773,14 @@ static probectl emu_probe = {
     emu_try,                      /* array of combinations to try */
 
     /* symbol in section to try scanning */
-    (unsigned long)&init_mm,
+    (unsigned long)&sys_close,
 
     /* default base address for scan */
     /* base address bits to force to zero */
     /* default length for scan */
-    (unsigned long)&init_mm,
-    0,
-    16384,
+    (unsigned long)&sys_close,
+    0xfffff,
+    0x20000,
 
     /* number and list of unimplemented system calls */
     ((sizeof(emu_zapped_syscalls)/sizeof(emu_zapped_syscalls[0])) - 1),
@@ -773,17 +828,17 @@ static int check_table(probectl *P, PROBETYPE *ptr)
     PROBETYPE *x;
     int i, j;
 
-    for (x = ptr, i = 0; i < NR_syscalls; i++, x++) {
+    for (x = ptr, i = 0; i < _SS(NR_syscalls); i++, x++) {
 #ifdef OSI_PROBE_DEBUG
 	if (probe_debug & 0x0040) {
 	    for (j = 0; j < 4; j++) {
-		if (P->debug_ignore_NR[j] == i) break;
+		if (_SS(P->debug_ignore_NR[j]) == _SX(i + P->offset)) break;
 	    }
 	    if (j < 4) continue;
 	}
 #endif
 	for (j = 0; j < 8; j++) {
-	    if (probe_ignore_syscalls[j] == i) break;
+	    if (_SS(probe_ignore_syscalls[j]) == _SX(i) + P->offset) break;
 	}
 	if (j < 8) continue;
 	if (*x <= ktxt_lower_bound) {
@@ -805,10 +860,12 @@ static int check_table(probectl *P, PROBETYPE *ptr)
 static void *try(probectl *P, tryctl *T, PROBETYPE *ptr,
 		 unsigned long datalen)
 {
+#ifdef OSI_PROBE_KALLSYMS
     char *mod_name, *sec_name, *sym_name;
     unsigned long mod_start, mod_end;
     unsigned long sec_start, sec_end;
     unsigned long sym_start, sym_end;
+#endif
     unsigned long offset, ip1, ip2, ip3;
     int ret;
 
@@ -844,14 +901,15 @@ static void *try(probectl *P, tryctl *T, PROBETYPE *ptr,
 	if ((probe_debug & 0x0002) && DEBUG_IN_RANGE(P,ptr))
 	    printk("<7>try 0x%lx\n", (unsigned long)ptr);
 #endif
-	if (ptr[T->NR1 - P->offset] != ip1)                    continue;
-	if (ptr[T->NR2 - P->offset] != ip2)        continue;
-	if (ip3 && ptr[T->NR3 - P->offset] != ip3) continue;
+	if (ptr[_SS(T->NR1 - P->offset)] != ip1)        continue;
+	if (ptr[_SS(T->NR2 - P->offset)] != ip2)        continue;
+	if (ip3 && ptr[_SS(T->NR3 - P->offset)] != ip3) continue;
 
 #ifdef OSI_PROBE_DEBUG
 	if (probe_debug & 0x0002)
 	    printk("<7>try found 0x%lx\n", (unsigned long)ptr);
 #endif
+#ifdef OSI_PROBE_KALLSYMS
 	if (kallsyms_address_to_symbol) {
 	    ret = kallsyms_address_to_symbol((unsigned long)ptr,
 					     &mod_name, &mod_start, &mod_end,
@@ -859,6 +917,7 @@ static void *try(probectl *P, tryctl *T, PROBETYPE *ptr,
 					     &sym_name, &sym_start, &sym_end);
 	    if (!ret || strcmp(sym_name, P->symbol)) continue;
 	}
+#endif
 	/* XXX should we make sure there is only one match? */
 	return (void *)ptr;
     }
@@ -873,7 +932,7 @@ static int check_harder(probectl *P, PROBETYPE *p)
 
     /* Check zapped syscalls */
     for (i = 1; i < P->n_zapped_syscalls; i++) {
-	if (p[P->zapped_syscalls[i]] != p[P->zapped_syscalls[0]]) {
+	if (p[_SS(P->zapped_syscalls[i])] != p[_SS(P->zapped_syscalls[0])]) {
 #ifdef OSI_PROBE_DEBUG
 	    if ((probe_debug & 0x0020) && DEBUG_IN_RANGE(P,p))
 		printk("<7>check_harder 0x%lx zapped failed i=%d\n", (unsigned long)p, i);
@@ -885,7 +944,8 @@ static int check_harder(probectl *P, PROBETYPE *p)
     /* Check unique syscalls */
     for (i = 0; i < P->n_unique_syscalls; i++) {
 	for (s = 0; s < NR_syscalls; s++) {
-	    if (p[s] == p[P->unique_syscalls[i]] && s != P->unique_syscalls[i]) {
+	    if (p[_SS(s)] == p[_SS(P->unique_syscalls[i])]
+		&& s != P->unique_syscalls[i]) {
 #ifdef OSI_PROBE_DEBUG
 		if ((probe_debug & 0x0010) && DEBUG_IN_RANGE(P,p))
 		    printk("<7>check_harder 0x%lx unique failed i=%d s=%d\n", (unsigned long)p, i, s);
@@ -901,7 +961,7 @@ static int check_harder(probectl *P, PROBETYPE *p)
     ip1 = (unsigned long)(P->verify_fn);
 #endif
 
-    if (ip1 && p[P->verifyNR - P->offset] != ip1) {
+    if (ip1 && p[_SS(P->verifyNR - P->offset)] != ip1) {
 #ifdef OSI_PROBE_DEBUG
 	if ((probe_debug & 0x0010) && DEBUG_IN_RANGE(P,p))
 	    printk("<7>check_harder 0x%lx verify failed\n", (unsigned long)p);
@@ -918,10 +978,12 @@ static int check_harder(probectl *P, PROBETYPE *p)
 
 static void *try_harder(probectl *P, PROBETYPE *ptr, unsigned long datalen)
 {
+#ifdef OSI_PROBE_KALLSYMS
     char *mod_name, *sec_name, *sym_name;
     unsigned long mod_start, mod_end;
     unsigned long sec_start, sec_end;
     unsigned long sym_start, sym_end;
+#endif
     unsigned long offset;
     void *match = 0;
     int ret;
@@ -951,6 +1013,7 @@ static void *try_harder(probectl *P, PROBETYPE *ptr, unsigned long datalen)
 	    printk("<7>try_harder found 0x%lx\n", (unsigned long)ptr);
 #endif
 
+#ifdef OSI_PROBE_KALLSYMS
 	if (kallsyms_address_to_symbol) {
 	    ret = kallsyms_address_to_symbol((unsigned long)ptr,
 					     &mod_name, &mod_start, &mod_end,
@@ -958,6 +1021,7 @@ static void *try_harder(probectl *P, PROBETYPE *ptr, unsigned long datalen)
 					     &sym_name, &sym_start, &sym_end);
 	    if (!ret || strcmp(sym_name, P->symbol)) continue;
 	}
+#endif
 
 	if (match) {
 #ifdef OSI_PROBE_DEBUG
@@ -995,18 +1059,24 @@ static void *try_harder(probectl *P, PROBETYPE *ptr, unsigned long datalen)
 #endif
 static void *do_find_syscall_table(probectl *P, char **method)
 {
+#ifdef OSI_PROBE_KALLSYMS
     char *mod_name, *sec_name, *sym_name;
     unsigned long mod_start, mod_end;
     unsigned long sec_start, sec_end;
     unsigned long sym_start, sym_end;
+    unsigned long token;
+    int ret;
+#endif
     PROBETYPE *B;
-    unsigned long token, L;
+    unsigned long L;
     tryctl *T;
     void *answer;
+#if defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
+    void *answer2;
+#endif
 #ifdef OSI_PROBE_DEBUG
     void *final_answer = 0;
 #endif
-    int ret;
 
     *method = "not found";
 
@@ -1014,6 +1084,7 @@ static void *do_find_syscall_table(probectl *P, char **method)
     check_result(P->weak_answer, "exported");
 
     /* ask the kernel to do the name lookup, if it's willing */
+#ifdef OSI_PROBE_KALLSYMS
     if (kallsyms_symbol_to_address) {
 	token = 0;
         sym_start = 0;
@@ -1028,6 +1099,7 @@ static void *do_find_syscall_table(probectl *P, char **method)
 	} while (ret);
         check_result(sym_start, "kallsyms_symbol_to_address");
     }
+#endif
 
     /* Maybe a little birdie told us */
     check_result(P->parm_answer,  "module parameter");
@@ -1037,6 +1109,7 @@ static void *do_find_syscall_table(probectl *P, char **method)
     B = (PROBETYPE *)((P->try_base) & ~(P->try_base_mask));
     L = P->try_length;
     /* Now, see if the kernel will tell us something better than the default */
+#ifdef OSI_PROBE_KALLSYMS
     if (kallsyms_address_to_symbol) {
 	ret = kallsyms_address_to_symbol(P->try_sect_sym,
 					 &mod_name, &mod_start, &mod_end,
@@ -1047,6 +1120,7 @@ static void *do_find_syscall_table(probectl *P, char **method)
 	    L = (sec_end - sec_start) / sizeof(unsigned long);
 	}
     }
+#endif
 
 #ifdef OSI_PROBE_DEBUG
     if (probe_debug & 0x0007)
@@ -1062,12 +1136,38 @@ static void *do_find_syscall_table(probectl *P, char **method)
 
     for (T = P->trylist; T->name; T++) {
 	answer = try(P, T, B, L);
+#if defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
+	answer2 = try(P, T, (PROBETYPE *)(2 + (void *)B), L);
+#ifdef OSI_PROBE_DEBUG
+	if (probe_debug & 0x0003) {
+	    printk("<7>osi_probe: %s = 0x%016lx %s (even)\n",
+		   P->symbol, (unsigned long)(answer), T->name);
+	    printk("<7>osi_probe: %s = 0x%016lx %s (odd)\n",
+		   P->symbol, (unsigned long)(answer2), T->name);
+	}
+#endif
+	if (answer && answer2) answer = 0;
+	else if (answer2) answer = answer2;
+#endif
         check_result(answer, T->name);
     }
 
     /* XXX more checks here */
 
     answer = try_harder(P, B, L);
+#if defined(AFS_S390_LINUX20_ENV) || defined(AFS_S390X_LINUX20_ENV)
+    answer2 = try_harder(P, (PROBETYPE *)(2 + (void *)B), L);
+#ifdef OSI_PROBE_DEBUG
+    if (probe_debug & 0x0005) {
+	printk("<7>osi_probe: %s = 0x%016lx pattern scan (even)\n",
+	       P->symbol, (unsigned long)(answer));
+	printk("<7>osi_probe: %s = 0x%016lx pattern scan (odd)\n",
+	       P->symbol, (unsigned long)(answer2));
+    }
+#endif
+    if (answer && answer2) answer = 0;
+    else if (answer2) answer = answer2;
+#endif
     check_result(answer, "pattern scan");
 
 #ifdef OSI_PROBE_DEBUG
