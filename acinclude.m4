@@ -569,6 +569,24 @@ else
         done    
   fi    
 
+dnl darwin wants it, aix hates it
+AC_MSG_CHECKING(for the useability of arpa/nameser_compat.h)
+AC_TRY_COMPILE([
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <arpa/nameser.h>
+#include <arpa/nameser_compat.h>
+#include <resolv.h>
+], [static int i; i = 0;],
+[AC_MSG_RESULT(yes)
+ AC_DEFINE(HAVE_ARPA_NAMESER_COMPAT_H)],
+[AC_MSG_RESULT(no)
+ ])
+ 
   openafs_save_libs="$LIBS"
   AC_MSG_CHECKING([for res_search])
   AC_FUNC_RES_SEARCH
@@ -683,7 +701,7 @@ AC_CHECK_HEADERS(stdlib.h string.h unistd.h fcntl.h sys/time.h sys/file.h)
 AC_CHECK_HEADERS(netinet/in.h netdb.h sys/fcntl.h sys/mnttab.h sys/mntent.h)
 AC_CHECK_HEADERS(mntent.h sys/vfs.h sys/param.h sys/fs_types.h)
 AC_CHECK_HEADERS(sys/mount.h strings.h termios.h signal.h)
-AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h)
+AC_CHECK_HEADERS(windows.h malloc.h winsock2.h direct.h io.h sys/user.h)
 AC_CHECK_HEADERS(security/pam_modules.h siad.h usersec.h ucontext.h)
 
 if test "$ac_cv_header_security_pam_modules_h" = "yes"; then

@@ -4,6 +4,9 @@ AC_DEFUN(AC_FUNC_RES_SEARCH, [
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/nameser.h>
+#ifdef HAVE_ARPA_NAMESER_COMPAT_H
+#include <arpa/nameser_compat.h>
+#endif
 #include <resolv.h>],
   [
 const char host[11]="openafs.org";
