@@ -89,7 +89,7 @@ DEFINES = $(COMMON_DEFINES)
 
 <all>
 INCLUDES = -I. -I../ -I${TOP_OBJDIR}/src/config \
-  -I${TOP_SRCDIR}/rx -I${TOP_SRCDIR}/rxstat
+  -I${TOP_SRCDIR}/rx -I${TOP_OBJDIR}/src/rxstat
 
 CFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES)
 
@@ -235,7 +235,7 @@ ${LIBAFS} ${LIBAFS_MP} ${LIBAFS_EP} ${LIBAFS_BM}: libafs.ko
 
 .FORCE:
 libafs.ko: .FORCE
-	../make_kbuild_makefile.pl ${KDIR} $@ \
+	../$(srcdir)/make_kbuild_makefile.pl ${KDIR} $@ \
 	  @TOP_OBJDIR@/src/config/Makefile.config Makefile.afs Makefile.common
 	$(MAKE) -C ${LINUX_KERNEL_PATH} M=@TOP_OBJDIR@/src/libafs/${KDIR} modules
         
