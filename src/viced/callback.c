@@ -796,7 +796,7 @@ static void MultiBreakCallBack_r(struct cbstruct cba[], int ncbas,
 	  	ViceLog(7, 
 		  ("BCB: Failed on file %u.%d.%d, host %s:%d is down\n",
 		   afidp->AFSCBFids_val->Volume, afidp->AFSCBFids_val->Vnode,
-		   afidp->AFSCBFids_val->Unique, afs_inet_ntoa_r(hp->host,hoststr), hp->port));
+		   afidp->AFSCBFids_val->Unique, afs_inet_ntoa_r(hp->host,hoststr), ntohs(hp->port)));
 		}
 
 		H_LOCK
@@ -848,7 +848,7 @@ int BreakCallBack(struct host *xhost, AFSFid *fid, int flag)
     char hoststr[16];
 
     ViceLog(7,("BCB: BreakCallBack(all but %s:%d, (%u,%d,%d))\n",
-	       afs_inet_ntoa_r(xhost->host,hoststr), xhost->port, fid->Volume, fid->Vnode, 
+	       afs_inet_ntoa_r(xhost->host,hoststr), ntohs(xhost->port), fid->Volume, fid->Vnode, 
 	       fid->Unique));
 
     H_LOCK
@@ -879,7 +879,7 @@ int BreakCallBack(struct host *xhost, AFSFid *fid, int flag)
 	  }
 	  else if (thishost->hostFlags & VENUSDOWN) {
 	    ViceLog(7,("BCB: %s:%d is down; delaying break call back\n",
-		       afs_inet_ntoa_r(thishost->host,hoststr), thishost->port));
+		       afs_inet_ntoa_r(thishost->host,hoststr), ntohs(thishost->port)));
 	    cb->status = CB_DELAYED;
 	  }
 	  else {
@@ -938,7 +938,7 @@ int DeleteCallBack(struct host *host, AFSFid *fid)
     pcb = FindCBPtr(fe, host);
     if (!*pcb) {
 	ViceLog(8,("DCB: No call back for host %s:%d, (%u, %d, %d)\n",
-	    afs_inet_ntoa_r(host->host,hoststr), host->port, fid->Volume, fid->Vnode, fid->Unique));
+	    afs_inet_ntoa_r(host->host,hoststr), ntohs(host->port), fid->Volume, fid->Vnode, fid->Unique));
 	h_Unlock_r(host);
 	H_UNLOCK
 	return 0;
@@ -1050,7 +1050,7 @@ int BreakDelayedCallBacks_r(struct host *host)
 	    if (ShowProblems) {
 		ViceLog(0,
 	   ("CB: Call back connect back failed (in break delayed) for %s:%d\n",
-			afs_inet_ntoa_r(host->host,hoststr), host->port));
+			afs_inet_ntoa_r(host->host,hoststr), ntohs(host->port)));
 	      }
 	    host->hostFlags |= VENUSDOWN;
 	}
@@ -1095,13 +1095,13 @@ int BreakDelayedCallBacks_r(struct host *host)
 	    if (ShowProblems) {
 		ViceLog(0,
 	     ("CB: XCallBackBulk failed, host=%s:%d; callback list follows:\n",
-		    afs_inet_ntoa_r(host->host,hoststr), host->port));
+		    afs_inet_ntoa_r(host->host,hoststr), ntohs(host->port)));
 	    }
 	    for (i = 0; i<nfids; i++) {
 		if (ShowProblems) {
 		    ViceLog(0,
 		    ("CB: Host %s:%d, file %u.%u.%u (part of bulk callback)\n",
-		               afs_inet_ntoa_r(host->host,hoststr), host->port, 
+		               afs_inet_ntoa_r(host->host,hoststr), ntohs(host->port), 
 		               fids[i].Volume, fids[i].Vnode, fids[i].Unique));
 		}
 		/* used to do this:
@@ -1146,10 +1146,10 @@ static int MultiBreakVolumeCallBack_r(struct host *host,
 	    return 0;      /* Release hold */
 	}
 	ViceLog(8,("BVCB: volume call back for host %s:%d failed\n",
-		 afs_inet_ntoa_r(host->host,hoststr),host->port));
+		 afs_inet_ntoa_r(host->host,hoststr),ntohs(host->port)));
 	if (ShowProblems) {
 	    ViceLog(0, ("CB: volume callback for host %s:%d failed\n",
-		    afs_inet_ntoa_r(host->host,hoststr), host->port));
+		    afs_inet_ntoa_r(host->host,hoststr), ntohs(host->port)));
 	}
 	DeleteAllCallBacks_r(host, deletefe); /* Delete all callback state 
 						 rather than attempting to 
