@@ -37,7 +37,7 @@ void KFW_initialize(void);
 void KFW_cleanup(void);
 int  KFW_is_available(void);
 int  KFW_AFS_destroy_tickets_for_cell(char *);
-int  KFW_AFS_renew_expiring_credentials(void);
+int  KFW_AFS_renew_expiring_tokens(void);
 int  KFW_AFS_get_cred( char * username, 
                         char * instance, 
                         char * cell,

@@ -270,25 +270,36 @@ void Main_OnInitDialog (HWND hDlg)
       }
 
    BOOL fFoundUserName = FALSE;
-   if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"), &hk) == 0)
-      {
-      DWORD dwSize = sizeof(szUser);
-      DWORD dwType = REG_SZ;
-      if (RegQueryValueEx (hk, TEXT("DefaultUserName"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
-         fFoundUserName = TRUE;
-      RegCloseKey (hk);
-      }
-   if (!fFoundUserName)
-      {
-      if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Network\\Logon"), &hk) == 0)
-         {
-         DWORD dwSize = sizeof(szUser);
-         DWORD dwType = REG_SZ;
-         if (RegQueryValueEx (hk, TEXT("UserName"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
+    if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Software\\Microsoft\\Windows NT\\CurrentVersion\\Explorer"), &hk) == 0)
+    {
+        DWORD dwSize = sizeof(szUser);
+        DWORD dwType = REG_SZ;
+        if (RegQueryValueEx (hk, TEXT("Logon User Name"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
             fFoundUserName = TRUE;
-         RegCloseKey (hk);
-         }
-      }
+        RegCloseKey (hk);
+    }
+    if (!fFoundUserName ) 
+    {
+        if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"), &hk) == 0)
+        {
+            DWORD dwSize = sizeof(szUser);
+            DWORD dwType = REG_SZ;
+            if (RegQueryValueEx (hk, TEXT("DefaultUserName"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
+                fFoundUserName = TRUE;
+            RegCloseKey (hk);
+        }
+    }
+   if (!fFoundUserName)
+   {
+       if (RegOpenKey (HKEY_LOCAL_MACHINE, TEXT("Network\\Logon"), &hk) == 0)
+       {
+           DWORD dwSize = sizeof(szUser);
+           DWORD dwType = REG_SZ;
+           if (RegQueryValueEx (hk, TEXT("UserName"), NULL, &dwType, (PBYTE)szUser, &dwSize) == 0)
+               fFoundUserName = TRUE;
+           RegCloseKey (hk);
+       }
+   }
 
    TCHAR szSource[ cchRESOURCE ];
    TCHAR szTarget[ cchRESOURCE ];
@@ -599,7 +610,7 @@ size_t Main_FindExpiredCreds (void)
    size_t retval = (size_t) -1;
    lock_ObtainMutex(&g.expirationCheckLock);
    if ( KFW_is_available() )
-       KFW_AFS_renew_expiring_credentials();
+       KFW_AFS_renew_expiring_tokens();
    lock_ObtainMutex(&g.credsLock);
    for (size_t iCreds = 0; iCreds < g.cCreds; ++iCreds)
       {

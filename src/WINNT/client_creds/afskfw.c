@@ -419,7 +419,7 @@ KFW_initialize(void)
             KFW_import_windows_lsa();
 #endif /* USE_MS2MIT */
             KFW_import_ccache_data();
-		    KFW_AFS_renew_expiring_credentials();
+		    KFW_AFS_renew_expiring_tokens();
 
             /* WIN32 NOTE: no way to get max chars */
             if (!pcm_GetRootCellName(rootcell))
@@ -1316,7 +1316,7 @@ KFW_AFS_destroy_tickets_for_cell(char * cell)
 }
 
 int
-KFW_AFS_renew_expiring_credentials(void)
+KFW_AFS_renew_expiring_tokens(void)
 {
     krb5_error_code		        code = 0;
     krb5_context		        ctx = 0;
@@ -1333,7 +1333,7 @@ KFW_AFS_renew_expiring_credentials(void)
         return 0;
 
     if ( IsDebuggerPresent() ) {
-        OutputDebugString("KFW_AFS_renew_expiring_credentials\n");
+        OutputDebugString("KFW_AFS_renew_expiring_tokens\n");
     }
 
     code = pkrb5_init_context(&ctx);
@@ -1458,6 +1458,10 @@ KFW_AFS_renew_token_for_cell(char * cell)
                 OutputDebugString("\n");
             }
 
+#ifdef COMMENT
+            /* krb5_cc_remove_cred() is not implemented 
+             * for a single cred 
+             */
             code = pkrb5_build_principal(ctx, &service, strlen(realm),
                                           realm, "afs", cell, NULL);
             if (!code) {
@@ -1485,6 +1489,8 @@ KFW_AFS_renew_token_for_cell(char * cell)
                     pkrb5_free_principal(ctx, creds.server);
                 }
             }
+#endif /* COMMENT */
+
             code = KFW_AFS_klog(ctx, cc, "afs", cell, (char *)realm, pLeash_get_default_lifetime());
             if ( IsDebuggerPresent() ) {
                 char message[256];
@@ -2477,7 +2483,7 @@ KFW_AFS_klog(
             char * cname, *sname;
             pkrb5_unparse_name(ctx, increds.client, &cname);
             pkrb5_unparse_name(ctx, increds.server, &sname);
-            OutputDebugString("Getting credentials for \"");
+            OutputDebugString("Getting tickets for \"");
             OutputDebugString(cname);
             OutputDebugString("\" and service \"");
             OutputDebugString(sname);
@@ -2503,7 +2509,7 @@ KFW_AFS_klog(
                 pkrb5_unparse_name(ctx, increds.client, &cname);
                 pkrb5_unparse_name(ctx, increds.server, &sname);
                 OutputDebugString("krb5_get_credentials() returned Service Principal Unknown\n");
-                OutputDebugString("Trying again: getting credentials for \"");
+                OutputDebugString("Trying again: getting tickets for \"");
                 OutputDebugString(cname);
                 OutputDebugString("\" and service \"");
                 OutputDebugString(sname);
@@ -3080,6 +3086,13 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
 
         if (!rc && (now < atoken.endTime))
             goto cleanup;
+
+        if ( IsDebuggerPresent() ) {
+            char message[256];
+            sprintf(message,"KFW_AFS_klog() returns: %d  now = %ul  endTime = %ul\n",
+                     rc, now, atoken.endTime);
+            OutputDebugString(message);
+        }
     } else {
         SYSTEMTIME stNow;
         FILETIME ftNow;
@@ -3101,6 +3114,13 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
 
         if (!rc && (llNow < llExpires))
             goto cleanup;
+
+        if ( IsDebuggerPresent() ) {
+            char message[256];
+            sprintf(message,"KFW_AFS_klog() returns: %d  now = %ul  endTime = %ul\n",
+                     rc, llNow, llExpires);
+            OutputDebugString(message);
+        }
     }
 
 
@@ -3163,14 +3183,20 @@ ObtainTokensFromUserIfNeeded(HWND hWnd)
         serverReachable = 1;
     }
 #endif
-    if ( !serverReachable )
+    if ( !serverReachable ) {
+        if ( IsDebuggerPresent() )
+            OutputDebugString("Server Unreachable\n");
         goto cleanup;
+    }
+
+    if ( IsDebuggerPresent() )
+        OutputDebugString("Server Reachable\n");
 
     if ( KFW_is_available() ) {
 #ifdef USE_MS2MIT
         KFW_import_windows_lsa();
 #endif /* USE_MS2MIT */
-        KFW_AFS_renew_expiring_credentials();
+        KFW_AFS_renew_expiring_tokens();
         KFW_AFS_renew_token_for_cell(rootcell);
 
         rc = pktc_GetToken(&aserver, &atoken, sizeof(atoken), &aclient);
@@ -3269,6 +3295,14 @@ IpAddrChangeMonitor(void * hWnd)
 #endif
         
         NumOfAddrs = GetNumOfIpAddrs();
+
+        if ( IsDebuggerPresent() ) {
+            char message[256];
+            sprintf(message,"IPAddrChangeMonitor() NumOfAddrs: now %d was %d\n",
+                    NumOfAddrs, prevNumOfAddrs);
+            OutputDebugString(message);
+        }
+
         if ( NumOfAddrs != prevNumOfAddrs ) {
             // Give AFS Client Service a chance to notice and die
             // Or for network services to startup
