@@ -27,6 +27,7 @@ RCSID("$Header$");
 #ifdef AFS_SGI_XFS_IOPS_ENV
 #include "xfsattrs.h"
 #endif
+#include <errno.h>
 #include "afssyscalls.h"
 
 #ifdef AFS_DEBUG_IOPS
@@ -223,8 +224,7 @@ struct iparam {
 
 int icreate(int dev, int near_inode, int param1, int param2, int param3, int param4)
 {
-    extern int errno;
-    int errcode;
+  int errcode;
     struct iparam iparams;
 
     iparams.param1 = param1;
@@ -239,7 +239,6 @@ int icreate(int dev, int near_inode, int param1, int param2, int param3, int par
 
 int iopen(int dev, int inode, int usrmod)
 {
-    extern int errno;
     int errcode;
 
     errcode = syscall(AFS_SYSCALL, AFSCALL_IOPEN, dev, inode, usrmod);
@@ -249,7 +248,6 @@ int iopen(int dev, int inode, int usrmod)
 
 int iinc(int dev, int inode, int inode_p1)
 {
-    extern int errno;
     int errcode;
 
     errcode = syscall(AFS_SYSCALL, AFSCALL_IINC, dev, inode, inode_p1);
@@ -259,7 +257,6 @@ int iinc(int dev, int inode, int inode_p1)
 
 int idec(int dev, int inode, int inode_p1)
 {
-    extern int errno;
     int errcode;
 
     errcode = syscall(AFS_SYSCALL, AFSCALL_IDEC, dev, inode, inode_p1);
@@ -270,7 +267,6 @@ int idec(int dev, int inode, int inode_p1)
 #ifdef notdef
 int iread(int dev, int inode, int inode_p1, unsigned int offset, char *cbuf, unsigned int count)
 {
-    extern int errno;
     int errcode;
     struct iparam iparams;
 
@@ -285,7 +281,6 @@ int iread(int dev, int inode, int inode_p1, unsigned int offset, char *cbuf, uns
 
 iwrite(int dev, int inode, int inode_p1, unsigned int offset, char *cbuf, unsigned int count)
 {
-    extern int errno;
     int errcode;
     struct iparam iparams;
 
@@ -303,7 +298,6 @@ iwrite(int dev, int inode, int inode_p1, unsigned int offset, char *cbuf, unsign
 
 int lsetpag(void)
 {
-    extern int errno;
     int errcode;
 
     errcode = syscall(AFS_SYSCALL, AFSCALL_SETPAG);
@@ -312,7 +306,6 @@ int lsetpag(void)
 
 int lpioctl(char *path, int cmd, char *cmarg, int follow)
 {
-    extern int errno;
     int errcode;
 
     errcode = syscall(AFS_SYSCALL, AFSCALL_PIOCTL, path, cmd, cmarg, follow);

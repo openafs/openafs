@@ -27,6 +27,13 @@
 #include <sys/stat.h>
 #include <sys/file.h>
 #include <dirent.h>
+#ifdef HAVE_STRING_H
+#include <string.h>
+#else
+#ifdef HAVE_STRINGS_H
+#include <strings.h>
+#endif
+#endif
 #include <errno.h>
 #ifdef	AFS_SUN5_ENV
 #include <sys/fcntl.h>
@@ -34,8 +41,6 @@
 #include "globals.h"
 #include "package.h"
 
-extern char *strcpy();
-extern int errno;
 
 int mv(from,to)
 register char *from;

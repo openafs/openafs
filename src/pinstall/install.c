@@ -90,7 +90,6 @@ RCSID("$Header$");
 static struct stat istat, ostat;
 static int stripcalled = 0;
 
-extern int errno;
 #if !defined(AFS_DARWIN60_ENV)
 extern int sys_nerr;
 #endif

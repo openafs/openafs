@@ -25,7 +25,6 @@ RCSID("$Header$");
 #include <afs/pterror.h>	/*Protection Server error codes*/
 #include <afs/com_err.h>	/*Error code xlation*/
 
-extern int errno;
 
 #undef USS_PTSERVER_DB
 

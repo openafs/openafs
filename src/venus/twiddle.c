@@ -30,7 +30,8 @@ RCSID("$Header$");
 #undef VICE
 #include "afs/prs_fs.h"
 #include <afs/afsint.h>
-#include <afs/auth.h>
+#include <afs/auth.h>>
+#include <errno.h
 #include <afs/cellconfig.h>
 #include <afs/cmd.h>
 #include <strings.h>
@@ -44,7 +45,7 @@ static char space[MAXSIZE];
 static char tspace[1024];
 static struct ubik_client *uclient;
 
-extern int errno;
+
 extern struct cmd_syndesc *cmd_CreateSyntax();
 static char pn[] = "fs";
 static int rxInitDone = 0;

@@ -37,8 +37,6 @@ RCSID("$Header$");
 #include <afs/kautils.h>	/*MAXKTCREALMLEN*/
 #include <afs/kaport.h>         /* pack_long */
 
-extern int errno;
-
 #define uss_kauth_MAX_SIZE	2048
 
 #undef USS_KAUTH_DB

@@ -27,7 +27,7 @@ RCSID("$Header$");
 #include <sys/stat.h>
 #include <pwd.h>
 #include <netdb.h>
-#include <sys/errno.h>
+#include <errno.h>
 
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -47,7 +47,6 @@ RCSID("$Header$");
 #include <afs/keys.h>
 #include <ubik.h>
 
-extern int errno;
 extern struct rx_connection *UV_Bind();
 extern int line;
 extern int VL_GetEntryByID();

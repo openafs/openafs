@@ -22,9 +22,8 @@ RCSID("$Header$");
 
 #include "uss_fs.h"		/*Interface to this module*/
 #include <sys/types.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <sys/socket.h>
-#include <sys/errno.h>
 #ifdef	AFS_SUN5_ENV
 #include <sys/ioccom.h>
 #endif
@@ -40,7 +39,6 @@ RCSID("$Header$");
 
 #include <afs/venus.h>
 #include "uss_common.h"
-extern int errno;
 
 
 /*

@@ -209,7 +209,7 @@ struct cm_Display_Data *prev_cmData = (struct cm_Display_Data *)0;
 /* EXTERN DEFINITIONS */
 
 extern struct hostent *hostutil_GetHostByName(); 
-extern int errno;
+
 
 
 /* routines from afsmon-output.c */

@@ -28,11 +28,12 @@ RCSID("$Header$");
 #include <netinet/in.h>
 #include <sys/stat.h>
 #include <sys/file.h>
+#include <errno.h>
 #include <stdio.h>
 #include <rx/xdr.h>
 #include "rmtsys.h"
 
-extern int errno;   /* We ship this over the net if needed */
+
 extern RMTSYS_ExecuteRequest();
 
 #define N_SECURITY_OBJECTS 1	/* No real security yet */

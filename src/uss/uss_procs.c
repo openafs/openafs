@@ -42,7 +42,6 @@ RCSID("$Header$");
 
 #include <afs/kautils.h>	/*MAXKTCREALMLEN*/
 
-extern int errno;
 
 #undef USS_PROCS_DB
 #undef USS_PROCS_DB_INSTANCE

@@ -21,8 +21,8 @@ RCSID("$Header$");
 #include "gtxdumbwin.h"	    /*Dumb terminal window interface*/
 #include "gtxX11win.h"	    /*X11 window interface*/
 #include <cmd.h>		    /*Command interpretation library*/
+#include <errno.h>
 
-extern int errno;
 
 /*
  * Command line parameter indicies.
