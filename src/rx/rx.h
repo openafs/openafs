@@ -506,6 +506,7 @@ struct rx_connection {
     u_short secondsUntilDead;	    /* Maximum silence from peer before RX_CALL_DEAD */
     u_short hardDeadTime;	    /* hard max for call execution */
     u_char ackRate;                 /* how many packets between ack requests */
+    u_char makeCallWaiters;         /* how many rx_NewCalls are waiting */
     int nSpecific;		    /* number entries in specific data */
     void **specific;		    /* pointer to connection specific data */
 };

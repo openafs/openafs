@@ -1001,6 +1001,21 @@ struct rx_call *rx_NewCall(conn)
     clock_GetTime(&queueTime);
     AFS_RXGLOCK();
     MUTEX_ENTER(&conn->conn_call_lock);
+
+    /*
+     * Check if there are others waiting for a new call.
+     * If so, let them go first to avoid starving them.
+     * This is a fairly simple scheme, and might not be
+     * a complete solution for large numbers of waiters.
+     */
+    if (conn->makeCallWaiters) {
+#ifdef	RX_ENABLE_LOCKS
+	CV_WAIT(&conn->conn_call_cv, &conn->conn_call_lock);
+#else
+	osi_rxSleep(conn);
+#endif
+    }
+
     for (;;) {
 	for (i=0; i<RX_MAXCALLS; i++) {
 	    call = conn->call[i];
@@ -1025,10 +1040,23 @@ struct rx_call *rx_NewCall(conn)
 	MUTEX_ENTER(&conn->conn_data_lock);
 	conn->flags |= RX_CONN_MAKECALL_WAITING;
 	MUTEX_EXIT(&conn->conn_data_lock);
+
+	conn->makeCallWaiters++;
 #ifdef	RX_ENABLE_LOCKS
 	CV_WAIT(&conn->conn_call_cv, &conn->conn_call_lock);
 #else
 	osi_rxSleep(conn);
+#endif
+	conn->makeCallWaiters--;
+
+	/*
+	 * Wake up anyone else who might be giving us a chance to
+	 * run (see code above that avoids resource starvation).
+	 */
+#ifdef	RX_ENABLE_LOCKS
+	CV_BROADCAST(&conn->conn_call_cv);
+#else
+	osi_rxWakeup(conn);
 #endif
     }
 
