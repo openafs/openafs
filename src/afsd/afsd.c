@@ -29,7 +29,8 @@
   *	-cachedir    The base directory for the workstation cache.
   *	-mountdir   The directory on which the AFS is to be mounted.
   *	-confdir    The configuration directory .
-  *	-nosettime  Don't keep checking the time to avoid drift.
+  *	-nosettime  Don't keep checking the time to avoid drift (default).
+  *     -settime    Keep checking the time to avoid drift.
   *	-verbose     Be chatty.
   *	-debug	   Print out additional debugging info.
   *	-kerndev    [OBSOLETE] The kernel device for AFS.
@@ -242,7 +243,7 @@ int sawDCacheSize = 0;
 int sawBiod = 0;
 char cacheMountDir[1024];	/*Mount directory for AFS */
 char rootVolume[64] = "root.afs";	/*AFS root volume name */
-afs_int32 cacheSetTime = 1;	/*Keep checking time to avoid drift? */
+afs_int32 cacheSetTime = FALSE;	/*Keep checking time to avoid drift? */
 afs_int32 isHomeCell;		/*Is current cell info for the home cell? */
 #ifdef AFS_XBSD_ENV
 int createAndTrunc = O_RDWR | O_CREAT | O_TRUNC;	/*Create & truncate on open */
@@ -1292,7 +1293,7 @@ AfsdbLookupHandler()
 #endif
 
 mainproc(as, arock)
-     register struct cmd_syndesc *as;
+     struct cmd_syndesc *as;
      char *arock;
 {
     static char rn[] = "afsd";	/*Name of this routine */
@@ -1500,6 +1501,10 @@ mainproc(as, arock)
     if (as->parms[31].items) {
 	/* -rxbind */
 	enable_rxbind = 1;
+    }
+    if (as->parms[32].items) {
+       /* -settime */
+       cacheSetTime = TRUE;
     }
 
     
@@ -2110,7 +2115,7 @@ main(argc, argv)
      int argc;
      char **argv;
 {
-    register struct cmd_syndesc *ts;
+    struct cmd_syndesc *ts;
 
     ts = cmd_CreateSyntax(NULL, mainproc, NULL, "start AFS");
     cmd_AddParm(ts, "-blocks", CMD_SINGLE, CMD_OPTIONAL,
@@ -2179,6 +2184,8 @@ main(argc, argv)
     cmd_AddParm(ts, "-backuptree", CMD_FLAG, CMD_OPTIONAL,
 		"Prefer backup volumes for mointpoints in backup volumes");
     cmd_AddParm(ts, "-rxbind", CMD_FLAG, CMD_OPTIONAL, "Bind the Rx socket (one interface only)");
+    cmd_AddParm(ts, "-settime", CMD_FLAG, CMD_OPTIONAL,
+               "don't set the time");
     return (cmd_Dispatch(argc, argv));
 }
 
