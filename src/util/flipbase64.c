@@ -27,7 +27,7 @@ static char c_xlate[80] =
  * The supplied string 's' must be at least 12 bytes long.
  * lb64_string in stds.h provides a typedef to get the length.
  */
-char *int64_to_flipbase64(lb64_string_t s, u_int64_t a)
+char *int64_to_flipbase64(lb64_string_t s, uint64_t a)
 {
     int i, j;
     int64_t n;
