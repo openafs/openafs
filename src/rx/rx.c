@@ -5032,6 +5032,9 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 	if (!(call->flags & RX_CALL_TQ_BUSY)) {
 	    call->flags |= RX_CALL_TQ_BUSY;
 	    do {
+#endif /* AFS_GLOBAL_RXLOCK_KERNEL */
+	    restart:
+#ifdef	AFS_GLOBAL_RXLOCK_KERNEL
 		call->flags &= ~RX_CALL_NEED_START;
 #endif /* AFS_GLOBAL_RXLOCK_KERNEL */
 		nXmitPackets = 0;
@@ -5085,7 +5088,12 @@ rxi_Start(struct rxevent *event, register struct rx_call *call,
 		    /* Transmit the packet if it needs to be sent. */
 		    if (!clock_Lt(&now, &p->retryTime)) {
 			if (nXmitPackets == maxXmitPackets) {
-			    osi_Panic("rxi_Start: xmit list overflowed");
+			    rxi_SendXmitList(call, xmitList, nXmitPackets, 
+					     istack, &now, &retryTime, 
+					     resending);
+			    osi_Free(xmitList, maxXmitPackets * 
+				     sizeof(struct rx_packet *));
+			    goto restart;
 			}
 			xmitList[nXmitPackets++] = p;
 		    }
