@@ -354,6 +354,7 @@ tagain:
              afid.Fid.Unique=ntohl(de->fid.vunique);
              if ((avc->states & CForeign) == 0 &&
                  (ntohl(de->fid.vnode) & 1)) {
+		 type=DT_DIR;
              } else if ((tvc=afs_FindVCache(&afid,0,0,0,0))) {
                   if (tvc->mvstat) {
                        type=DT_DIR;
