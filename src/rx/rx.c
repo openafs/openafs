@@ -1053,17 +1053,16 @@ struct rx_call *rx_NewCall(conn)
 	osi_rxSleep(conn);
 #endif
 	conn->makeCallWaiters--;
-
-	/*
-	 * Wake up anyone else who might be giving us a chance to
-	 * run (see code above that avoids resource starvation).
-	 */
-#ifdef	RX_ENABLE_LOCKS
-	CV_BROADCAST(&conn->conn_call_cv);
-#else
-	osi_rxWakeup(conn);
-#endif
     }
+    /*
+     * Wake up anyone else who might be giving us a chance to
+     * run (see code above that avoids resource starvation).
+     */
+#ifdef	RX_ENABLE_LOCKS
+    CV_BROADCAST(&conn->conn_call_cv);
+#else
+    osi_rxWakeup(conn);
+#endif
 
     CALL_HOLD(call, RX_CALL_REFCOUNT_BEGIN);
 
