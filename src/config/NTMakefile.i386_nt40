@@ -161,9 +161,9 @@ OUT=$(OJT)\$(RELDIR)
 # WIN32.MAK, and this nmake file, are targeted to the MSVC compiler;
 # port this nmake file if additional compiler support is required.
 
-!IF ("$(AFSVER_CL)"=="1300")
-afslflags = $(afslflags) /DEBUG
-!ENDIF
+# !IF ("$(AFSVER_CL)"=="1300")
+# afslflags = $(afslflags) /DEBUG
+# !ENDIF
 
 !IF ("$(APPVER)" == "")
 APPVER=4.0
@@ -352,7 +352,8 @@ DLLPREP = rebase -i $(DESTDIR)\NTDllmap.txt -x $(@D) -q $@
 
 !ELSE	#CHECKED BUILD
 
-ldebug = /NODEFAULTLIB:LIBC 
+# Generate debug information and pdb files 
+ldebug = /DEBUG /PDB:$*.pdb /NODEFAULTLIB:LIBC 
 
 #!IF ("AFSVER_CL"=="1200")
 #ldebug = $(ldebug) -debugtype:cv 
@@ -365,8 +366,8 @@ afscflags = $(afscflags) /Od /Zi
 !IF ("AFSVER_CL"=="1200")
 ldebug = $(ldebug) -debugtype:both
 ldebug = $(ldebug:-debugtype:cv=)
-!ENDIF
-!ENDIF
+!ENDIF #AFSVER_CL == 1200
+!ENDIF #VADUMPT
 
 !IFNDEF _CRTDBG_MAP_ALLOC
 mfclflags = $(mfclflags) /NODEFAULTLIB:msvcrtd.lib
@@ -376,38 +377,37 @@ mfcdlllflags = $(mfcdlllflags) /NODEFAULTLIB:msvcrtd.lib
 !IF ("$(AFSVER_CL)"=="1200")
 EXEMFCLINK=$(EXEMFCLINK:/NODEFAULTLIB:msvcrtd.lib=)
 DLLMFCLINK=$(DLLMFCLINK:/NODEFAULTLIB:msvcrtd.lib=)
-!ENDIF
+!ENDIF #AFSVER_CL == 1200
 
-!ELSE
+!ELSE #_CRTDBG_MAP_ALLOC
 mfclflags = $(mfclflags) /NODEFAULTLIB:msvcrtd.lib
 mfcdlllflags = $(mfcdlllflags) /NODEFAULTLIB:msvcrtd.lib
 conlibsdll = $(conlibsdll:msvcrt.lib=msvcrtd.lib)
 guilibsdll = $(guilibsdll:msvcrt.lib=msvcrtd.lib)
-!ENDIF
+!ENDIF #_CRTDBG_MAP_ALLOC
 
 EXEPREP = rebase -b 0x00400000 -q $@
 DLLPREP = rebase -i $(DESTDIR)\NTDllmap.txt -q $@
 
-!ENDIF
+!ENDIF #CHECKED BUILD
 
 
 # EXE link macro for console applications
-EXECONLINK = $(link) /OUT:$@ /DEBUG /PDB:$*.pdb $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib  version.lib $**
+EXECONLINK = $(link) /OUT:$@ $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib  version.lib $**
 
 # EXE link macro for GUI applications
-EXEGUILINK = $(link) /OUT:$@ /DEBUG /PDB:$*.pdb $(ldebug) $(guilflags) $(afslflags) $(guilibsdll) $**
+EXEGUILINK = $(link) /OUT:$@ $(ldebug) $(guilflags) $(afslflags) $(guilibsdll) $**
 
 # EXE link macro for MFC applications
-EXEMFCLINK = $(link) /OUT:$@ /DEBUG /PDB:$*.pdb $(ldebug) $(mfclflags) $(afslflags) $(mfclibsdll) $**
+EXEMFCLINK = $(link) /OUT:$@ $(ldebug) $(mfclflags) $(afslflags) $(mfclibsdll) $**
 
 # DLL link macro for console applications
-DLLCONLINK = $(link) /OUT:$@ /DEBUG /PDB:$*.pdb $(ldebug) $(dlllflags) $(afslflags) $(conlibsdll) $**
+DLLCONLINK = $(link) /OUT:$@ $(ldebug) $(dlllflags) $(afslflags) $(conlibsdll) $**
 
 # DLL link macro for GUI applications
-DLLGUILINK = $(link) /OUT:$@ /DEBUG /PDB:$*.pdb $(ldebug) $(dlllflags) $(afslflags) $(guilibsdll)  $**
-EXECONLINK = $(link) /OUT:$@ /DEBUG /PDB:$*.pdb $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib version.lib $**
-DLLMFCLINK = $(link) /OUT:$@ /DEBUG /PDB:$*.pdb $(ldebug) $(mfcdlllflags) $(afslflags) $(mfclibsdll) $**
-
+DLLGUILINK = $(link) /OUT:$@ $(ldebug) $(dlllflags) $(afslflags) $(guilibsdll)  $**
+EXECONLINK = $(link) /OUT:$@ $(ldebug) $(conlflags) $(afslflags) $(conlibsdll) Advapi32.lib user32.lib version.lib $**
+DLLMFCLINK = $(link) /OUT:$@ $(ldebug) $(mfcdlllflags) $(afslflags) $(mfclibsdll) $**
 
 # DLL link macro for resource-only DLLs
 DLLRESLINK = $(link) /OUT:$@ $(dlllflags:-entry:_DllMainCRTStartup@12=-noentry) $(afslflags) $**
