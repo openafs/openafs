@@ -1,8 +1,8 @@
 
-Registry keys used in the Windows AFS Client
---------------------------------------------
+Registry keys and Environment Variables used in the Windows AFS Client
+----------------------------------------------------------------------
 
-This file describes the registry keys used in the Windows AFS clients.
+REGISTRY KEYS:
 
 1. Service parameters
 ---------------------
@@ -292,6 +292,15 @@ Default : <no default>
   systems to avoid crashes in the RX library.
 
 
+Regkey:
+[HKLM\SYSTEM\CurrentControlSet\Services\TransarcAFSDaemon\Parameters\GlobalAutoMapper]
+
+Value   : <Drive Letter:> for example "G:"
+Type    : SZ
+
+    Specifies the submount name to be mapped by afsd_service.exe at startup
+    to the provided drive letter.
+
 
 
 Regkey:
@@ -457,4 +466,18 @@ Function: LoadRemind(), SaveRemind()
   This value used to be stored at 
   [HKLM\Software\TransarcCorporation\AFS Client\AfsCreds].
 
+
+ENVIRONMENT VARIABLES:
+
+Variable: AFS_RPC_ENCRYPT 
+Values:   "OFF" disables the use of RPC encryption
+          any other value allows RPC encryption to be used
+Default:  RPC encryption is on
+
+
+Variable: AFS_RPC_PROTSEQ
+Values:   "ncalrpc"  - local RPC 
+          "ncacn_np" - named pipes
+          "ncacn_ip_tcp" - tcp/ip
+Default:  local RPC
 
