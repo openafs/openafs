@@ -294,8 +294,6 @@ void afs_osi_MaskSignals(){
 void afs_osi_Invisible() {
 #ifdef AFS_LINUX22_ENV
     afs_osi_MaskSignals();
-    
-    daemonize();
 #endif 
 #ifdef AFS_DEC_ENV
     u.u_procp->p_type |= SSYS;
