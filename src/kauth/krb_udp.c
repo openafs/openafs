@@ -560,7 +560,7 @@ static err_packet (ksoc, pkt, code, reason)
 
     if (reason == 0) reason = "";
     else if (strlen(reason) + 20 > sizeof(buf)) reason = "reason too long";
-    sprintf (buf, "code = %d: %s", code, reason);
+    snprintf (buf, 255, "code = %d: %s", code, reason);
 
     if (krb_udp_debug) {
 	printf ("Sending error packet to '%s'.'%s'@'%s' containing %s\n",
