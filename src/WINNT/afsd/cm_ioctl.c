@@ -135,30 +135,62 @@ void TranslateExtendedChars(char *str)
 long cm_ParseIoctlPath(smb_ioctl_t *ioctlp, cm_user_t *userp, cm_req_t *reqp,
 	cm_scache_t **scpp)
 {
+    extern char cm_NetbiosName[];
 	long code;
 	cm_scache_t *substRootp;
+    char * relativePath = ioctlp->inDatap;
 
-        /* This is usually the file name, but for StatMountPoint it is the path. */
-	TranslateExtendedChars(ioctlp->inDatap);
+    /* This is usually the file name, but for StatMountPoint it is the path. */
+    /* ioctlp->inDatap can be either of the form:
+     *    \path\.
+     *    \path\file
+     *    \\netbios-name\submount\path\.
+     *    \\netbios-name\submount\path\file
+     */
+	TranslateExtendedChars(relativePath);
 
-	code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
-		CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
-		userp, ioctlp->tidPathp, reqp, &substRootp);
-	if (code) return code;
+    if (relativePath[0] == relativePath[1] &&
+         relativePath[1] == '\\' && 
+         !_strnicmp(cm_NetbiosName,relativePath+2,strlen(cm_NetbiosName))) 
+    {
+        /* We may have found a UNC path. 
+         * If the first component is the NetbiosName,
+         * then throw out the second component (the submount)
+         * since it had better expand into the value of ioctl->tidPathp
+         */
+        char * p;
+        p = relativePath + 2 + strlen(cm_NetbiosName) + 1;
+        if ( !_strnicmp("all", p, 3) )
+            p += 4;
+
+        code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+                         CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                         userp, p, reqp, &substRootp);
+        if (code) return code;
         
-        code = cm_NameI(substRootp, ioctlp->inDatap, CM_FLAG_FOLLOW,
-        	userp, NULL, reqp, scpp);
-	if (code) return code;
+        code = cm_NameI(substRootp, ".", CM_FLAG_FOLLOW,
+                         userp, NULL, reqp, scpp);
+        if (code) return code;
+    } else {
+        code = cm_NameI(cm_rootSCachep, ioctlp->prefix->data,
+                         CM_FLAG_CASEFOLD | CM_FLAG_FOLLOW,
+                         userp, ioctlp->tidPathp, reqp, &substRootp);
+        if (code) return code;
         
+        code = cm_NameI(substRootp, relativePath, CM_FLAG_FOLLOW,
+                         userp, NULL, reqp, scpp);
+        if (code) return code;
+    }
+
 	/* # of bytes of path */
-        code = strlen(ioctlp->inDatap) + 1;
-        ioctlp->inDatap += code;
+    code = strlen(ioctlp->inDatap) + 1;
+    ioctlp->inDatap += code;
 
-        /* This is usually nothing, but for StatMountPoint it is the file name. */
-        TranslateExtendedChars(ioctlp->inDatap);
+    /* This is usually nothing, but for StatMountPoint it is the file name. */
+    TranslateExtendedChars(ioctlp->inDatap);
 
 	/* and return success */
-        return 0;
+    return 0;
 }
 
 void cm_SkipIoctlPath(smb_ioctl_t *ioctlp)
