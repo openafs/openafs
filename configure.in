@@ -1,5 +1,5 @@
 AC_INIT(src/config/stds.h)
-AM_INIT_AUTOMAKE(openafs,devel)
+AM_INIT_AUTOMAKE(openafs,1.1.0)
 AC_CANONICAL_HOST
 AC_CONFIG_HEADER(src/config/afsconfig.h)
 
@@ -62,6 +62,9 @@ system=$host
 case $system in
         *-linux*)
 		MKAFS_OSTYPE=LINUX
+		if test "x$enable_redhat_buildsys" = "xyes"; then
+		 AC_DEFINE(ENABLE_REDHAT_BUILDSYS)
+		fi
 		if test "x$enable_kernel_module" = "xyes"; then
 		 if test "x$with_linux_kernel_headers" != "x"; then
 		   LINUX_KERNEL_PATH="$with_linux_kernel_headers"
@@ -228,7 +231,7 @@ else
 		power*-ibm-aix4.3*)
 			AFS_SYSNAME="rs_aix42"
 			;;
-		default)
+		*)
 			AC_MSG_ERROR(An AFS sysname is required)
 			exit 1
 			;;
