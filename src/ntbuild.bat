@@ -1,4 +1,3 @@
-@echo off
 rem Copyright 2000, International Business Machines Corporation and others.
 rem All Rights Reserved.
 rem 
@@ -99,11 +98,13 @@ SET W9XDDKDIR=c:\progra~1\micros~6
 
 set AFSDEV_INCLUDE=%MSSDKDIR%\include;%MSVCDIR%\include
 IF "%AFSVER_CL%" == "1310" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
+IF "%AFSVER_CL%" == "1300" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atlmfc\include
 IF NOT "%AFSVER_CL%" == "1310" set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%MSVCDIR%\atl\include;%MSVCDIR%\mfc\include
 set AFSDEV_INCLUDE=%AFSDEV_INCLUDE%;%NTDDKDIR%\include;%W9XDDKDIR%\include
 
 set AFSDEV_LIB=%MSSDKDIR%\lib;%MSVCDIR%\lib
 IF "%AFSVER_CL%" == "1310" set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\atlmfc\lib
+IF "%AFSVER_CL%" == "1300" set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\atlmfc\lib
 IF NOT "%AFSVER_CL%" == "1310" set AFSDEV_LIB=%AFSDEV_LIB%;%MSVCDIR%\mfc\lib
 
 set AFSDEV_BIN=%MSSDKDIR%\bin;%MSVCDIR%\bin
