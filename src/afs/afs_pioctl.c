@@ -1119,8 +1119,9 @@ afs_HandlePioctl(struct vnode *avp, afs_int32 acom,
     if (inSize > MAXPIOCTLTOKENLEN || inSize < 0 || ablob->out_size < 0)
 	return E2BIG;
 
+    /* Note that we use osi_Alloc for large allocs and osi_AllocLargeSpace for small ones */
     if (inSize > AFS_LRALLOCSIZ) {
-	inData = osi_AllocLargeSpace(inSize + 1);
+	inData = osi_Alloc(inSize + 1);
     } else {
 	inData = osi_AllocLargeSpace(AFS_LRALLOCSIZ);
     }
