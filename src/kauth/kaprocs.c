@@ -542,7 +542,7 @@ static int create_user (tt, name, instance, key, caller, flags)
 
 /* Put actual stub routines here */
 
-afs_int32 KAM_CreateUser (call, aname, ainstance, ainitpw)
+afs_int32 SKAM_CreateUser (call, aname, ainstance, ainitpw)
   struct rx_call *call;
   char		 *aname;
   char		 *ainstance;
@@ -587,7 +587,7 @@ afs_int32 kamCreateUser (call, aname, ainstance, ainitpw)
     return code;
 }
 
-afs_int32 KAA_ChangePassword (call, aname, ainstance, arequest, oanswer)
+afs_int32 SKAA_ChangePassword (call, aname, ainstance, arequest, oanswer)
   struct rx_call      *call;
   char		      *aname;
   char		      *ainstance;
@@ -802,7 +802,7 @@ set_password (tt, name, instance, password, kvno, caller)
     return(0);
 }
 
-afs_int32 KAM_SetPassword (call, aname, ainstance, akvno, apassword)
+afs_int32 SKAM_SetPassword (call, aname, ainstance, akvno, apassword)
   struct rx_call      *call;
   char		      *aname;
   char		      *ainstance;
@@ -1180,7 +1180,7 @@ abort:
 	return code;
 }
 
-afs_int32 KAA_Authenticate_old (call, aname, ainstance, start, end,
+afs_int32 SKAA_Authenticate_old (call, aname, ainstance, start, end,
 			   arequest, oanswer)
   struct rx_call      *call;
   char		      *aname;
@@ -1199,7 +1199,7 @@ afs_int32 KAA_Authenticate_old (call, aname, ainstance, start, end,
   return code;
 }
 
-afs_int32 KAA_Authenticate (call, aname, ainstance, start, end, arequest, oanswer)
+afs_int32 SKAA_Authenticate (call, aname, ainstance, start, end, arequest, oanswer)
   struct rx_call      *call;
   char		      *aname;
   char		      *ainstance;
@@ -1216,7 +1216,7 @@ afs_int32 KAA_Authenticate (call, aname, ainstance, start, end, arequest, oanswe
   return code;
 }
 
-afs_int32 KAA_AuthenticateV2 (call, aname, ainstance, start, end, arequest, oanswer)
+afs_int32 SKAA_AuthenticateV2 (call, aname, ainstance, start, end, arequest, oanswer)
   struct rx_call      *call;
   char		      *aname;
   char		      *ainstance;
@@ -1233,7 +1233,7 @@ afs_int32 KAA_AuthenticateV2 (call, aname, ainstance, start, end, arequest, oans
   return code;
 }
 
-afs_int32 KAM_SetFields (call, aname, ainstance, aflags,
+afs_int32 SKAM_SetFields (call, aname, ainstance, aflags,
 		    aexpiration, alifetime, amaxAssociates, misc_auth_bytes, spare2)
   struct rx_call      *call;
   char		      *aname;
@@ -1387,7 +1387,7 @@ abort:
 
 /* delete a user */
 
-afs_int32 KAM_DeleteUser(call, aname, ainstance)
+afs_int32 SKAM_DeleteUser(call, aname, ainstance)
   struct rx_call      *call;
   char		      *aname;
   char		      *ainstance;
@@ -1457,7 +1457,7 @@ afs_int32 kamDeleteUser(call, aname, ainstance)
  * report that the ID is not locked, or else to find out when the ID
  * will be unlocked.
  */
-afs_int32 KAM_GetEntry (call, aname, ainstance, aversion, aentry)
+afs_int32 SKAM_GetEntry (call, aname, ainstance, aversion, aentry)
   struct rx_call      *call;
   char		      *aname;
   char		      *ainstance;
@@ -1579,7 +1579,7 @@ abort:
     return code;
 }
 
-afs_int32 KAM_ListEntry (call, previous_index, index, count, name)
+afs_int32 SKAM_ListEntry (call, previous_index, index, count, name)
   struct rx_call      *call;
   afs_int32		       previous_index;	/* last entry ret'd or 0 for first */
   afs_int32		      *index;		/* index of this entry */
@@ -1812,7 +1812,7 @@ abort:
     return code;
 }
 
-afs_int32 KAT_GetTicket_old (call, kvno, authDomain, aticket,
+afs_int32 SKAT_GetTicket_old (call, kvno, authDomain, aticket,
 			sname, sinstance, atimes, oanswer)
   struct rx_call      *call;
   afs_int32		       kvno;
@@ -1833,7 +1833,7 @@ int code;
     return code;
 }
 
-afs_int32 KAT_GetTicket (call, kvno, authDomain, aticket,
+afs_int32 SKAT_GetTicket (call, kvno, authDomain, aticket,
 		    sname, sinstance, atimes, oanswer)
   struct rx_call      *call;
   afs_int32		       kvno;
@@ -1852,7 +1852,7 @@ int code;
     return code;
 }
 
-afs_int32 KAM_GetStats (call, version, admin_accounts, statics, dynamics)
+afs_int32 SKAM_GetStats (call, version, admin_accounts, statics, dynamics)
   struct rx_call      *call;
   afs_int32		       version;
   afs_int32		      *admin_accounts;
@@ -1935,7 +1935,7 @@ afs_int32 kamGetStats (call, version, admin_accounts, statics, dynamics)
     return code;
 }
 
-afs_int32 KAM_GetPassword (call, name, password)
+afs_int32 SKAM_GetPassword (call, name, password)
   struct rx_call *call;
   char		 *name;
   EncryptionKey  *password;
@@ -1993,7 +1993,7 @@ afs_int32 kamGetPassword (call, name, password)
     return code;
 }
 
-afs_int32 KAM_GetRandomKey (call, key)
+afs_int32 SKAM_GetRandomKey (call, key)
   struct rx_call *call;
   EncryptionKey  *key;
 {
@@ -2016,7 +2016,7 @@ afs_int32 kamGetRandomKey (call, key)
     return 0;
 }
 
-afs_int32 KAM_Debug (call, version, checkDB, info)
+afs_int32 SKAM_Debug (call, version, checkDB, info)
   struct rx_call      *call;
   afs_int32		       version;
   int		       checkDB;		/* start a transaction to examine DB */
@@ -2091,7 +2091,7 @@ afs_int32 kamDebug (call, version, checkDB, info)
  * prob'ly ought to check the noauth flag.
  */
 #define ABORTIF(A) {if(code= A){goto abort;}}
-afs_int32 KAM_Unlock (call, aname, ainstance, spare1, spare2, spare3, spare4)
+afs_int32 SKAM_Unlock (call, aname, ainstance, spare1, spare2, spare3, spare4)
   struct rx_call      *call;
   char		      *aname;
   char		      *ainstance;
@@ -2130,7 +2130,7 @@ exit:
   return code;
 }
 
-afs_int32 KAM_LockStatus (call, aname, ainstance, lockeduntil, spare1, spare2, spare3, spare4)
+afs_int32 SKAM_LockStatus (call, aname, ainstance, lockeduntil, spare1, spare2, spare3, spare4)
   struct rx_call      *call;
   char		      *aname;
   char		      *ainstance;

@@ -8,6 +8,7 @@
  */
 
 package	VL_
+prefix S
 statindex 15
 
 #include	"vl_opcodes.h"

@@ -42,8 +42,8 @@ RCSID("$Header$");
 struct ubik_dbase *dbase;
 afs_int32 sleepTime;
 
-SAMPLE_Inc(rxcall)
-struct rx_call	*rxcall;
+SAMPLE_Inc(rxconn)
+struct rx_connection	*rxconn;
 {
     afs_int32 code, temp;
     struct ubik_trans	*tt;
@@ -99,8 +99,8 @@ this program's convention for locking the whole database */
 }
 
 
-SAMPLE_Get(rxcall, gnumber)
-struct rx_call	*rxcall;
+SAMPLE_Get(rxconn, gnumber)
+struct rx_connection	*rxconn;
 afs_int32 *gnumber;
 {
     afs_int32 code, temp;
@@ -143,8 +143,8 @@ afs_int32 *gnumber;
 }
 
 
-SAMPLE_QGet(rxcall, gnumber)
-struct rx_call	*rxcall;
+SAMPLE_QGet(rxconn, gnumber)
+struct rx_connection	*rxconn;
 afs_int32 *gnumber;
 {
     afs_int32 code, temp;
@@ -187,8 +187,8 @@ afs_int32 *gnumber;
 }
 
 
-SAMPLE_Trun(rxcall)
-struct rx_call	*rxcall;
+SAMPLE_Trun(rxconn)
+struct rx_connection	*rxconn;
 {
     afs_int32 code;
     struct ubik_trans	*tt;
@@ -222,8 +222,8 @@ struct rx_call	*rxcall;
 }
 
 
-SAMPLE_Test(rxcall)
-struct rx_call	*rxcall;
+SAMPLE_Test(rxconn)
+struct rx_connection	*rxconn;
 {
     afs_int32 code, temp;
     struct ubik_trans	*tt;
