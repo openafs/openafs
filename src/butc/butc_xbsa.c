@@ -259,8 +259,8 @@ xbsa_Initialize(struct butx_transactionInfo * info, char *bsaObjectOwner,
 {
     char envStrs[XBSA_NUM_ENV_STRS][BSA_MAX_DESC];
     char *envP[XBSA_NUM_ENV_STRS + 1];
-    char *ADSMMaxObject = "MAXOBJ=";
-    char *ADSMServer = "DSMSRVR=";
+    char *ADSMMaxObject = "TSMMAXOBJ=";
+    char *ADSMServer = "TSMSRVR=";
     char *tempStrPtr;
     int i;
     int rc;
@@ -306,6 +306,7 @@ xbsa_Initialize(struct butx_transactionInfo * info, char *bsaObjectOwner,
 	    tempStrPtr = tempStrPtr + strlen(ADSMServer);
 	    strcat(tempStrPtr, serverName);
 	    envP[1] = NULL;
+	    envP[0] = NULL;     /* Hack for TSM V5 */
 	} else {
 	    envP[0] = NULL;
 	    ELog(0, "xbsa_Initialize: The serverName was not specified\n");
@@ -376,6 +377,8 @@ xbsa_Initialize(struct butx_transactionInfo * info, char *bsaObjectOwner,
 	xbsa_error(rc, info);
 	return (BUTX_GETENVFAIL);
     }
+
+ info->maxObjects = 255; /* Hack for ADSM V5: unclear what this actually means... */
 
     switch (XBSA_GET_SERVER_TYPE(info->serverType)) {
     case XBSA_SERVER_TYPE_ADSM:
