@@ -1,3 +1,10 @@
+openafs (1.2.11-2) UNRELEASED; urgency=low
+
+  * Install rxgen
+  * Install upserver and upclient
+
+ -- Sam Hartman <hartmans@debian.org>  Tue,  6 Jul 2004 19:36:27 -0400
+
 openafs (1.2.11-1) unstable; urgency=high
 
   * Versions prior to 1.2.10 stopped working with multiple servers in a
