@@ -103,6 +103,19 @@
 
     <!-- We are including debug symbols anyway.  Undefine this for a leaner installer witout debug syms. -->
     <?define DebugSyms?>
+
+    <!-- Parameters for the features containing debug symbols -->
+    <?ifdef DebugSyms?>
+         <?ifdef Debug?>
+             <?define DebugSymInstallDefault="followParent"?>
+             <?define DebugSymLowLevel="30"?>
+             <?define DebugSymHighLevel="130"?>
+         <?else?>
+             <?define DebugSymInstallDefault="followParent"?>
+             <?define DebugSymLowLevel="130"?>
+             <?define DebugSymHighLevel="130"?>
+         <?endif?>
+    <?endif?>
     
     <!-- Use the afsloopback.dll instead of instloop.exe -->
     <?define UseDllLoopbackInstaller?>
@@ -150,4 +163,6 @@
 		<?error AFSVER_CL needs to be set to the compiler version?>
     <?endif?>
     <?define SystemDir="$(env.SystemRoot)\System32\"?>
+
+
 </Include>

@@ -1,4 +1,4 @@
-OpenAFS for Windows 1.3.72 Installation Notes
+OpenAFS for Windows 1.3.74 Installation Notes
 ---------------------------------------------
 
 The OpenAFS for Windows product was very poorly maintained throughout the 
@@ -72,24 +72,38 @@ The OpenAFS Client Service now supports a fake "root.afs" volume which is
 dynamically constructed when the service starts.  This mode is called 
 Freelance mode.  Freelance mode is turned on by default.
 
-The contents of the
-fake "root.afs" volume are constructed dynamically as cells are accessed.
-When the fake "root.afs" volume is constructed it will only contain two
-mount points: a read-only and read-write mount point used to access the
-"root.cell" volume of the default AFS cell.  Any attempt to access a 
-valid cell name will automatically result in a new mount point 
+The contents of the fake "root.afs" volume are constructed dynamically as
+cells are accessed.  When the fake "root.afs" volume is constructed it will
+only contain two mount points: a read-only and read-write mount point used
+to access the "root.cell" volume of the default AFS cell.  Any attempt to
+access a valid cell name will automatically result in a new mount point 
 being created in the fake "root.afs" volume.  If the cellname begins with
 a "." the mount point will be read-write; otherwise the mount point will
 be read-only.  These mount points are preserved in the registry at key:
+
   HKLM\SOFTWARE\OpenAFS\Client\Freelance
 
 Additional mount points may be manually created using the "fs mkmount"
 command.  Mount points may be removed using the "fs rmmount" command.
 
-    fs mkmount \\AFS\all\athena.mit.edu root.cell athena.mit.edu
-    fs mkmount \\AFS\all\.athena.mit.edu root.cell athena.mit.edu -rw
-    fs rmmount \\AFS\all\athena.mit.edu
-    fs rmmount \\AFS\all\.athena.mit.edu
+    >fs mkmount \\AFS\all\athena.mit.edu root.cell athena.mit.edu
+    >fs mkmount \\AFS\all\.athena.mit.edu root.cell athena.mit.edu -rw
+    >fs rmmount \\AFS\all\athena.mit.edu
+    >fs rmmount \\AFS\all\.athena.mit.edu
+
+Beginning in 1.3.74, the Freelance fake root.afs volume will support
+the creation of symlinks.
+
+  >symlink make \\afs\all\link \\afs\all\athena.mit.edu\user\j\a\jaltman
+
+  >symlink list \\afs\all\link
+  '\\afs\all\link' is a symlink to 'athena.mit.edu\user\j\a\jaltman'
+
+  >symlink rm \\afs\all\link
+
+The symlinks are stored in the registry at:
+
+  HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks 
      
 
 4. The OpenAFS for Windows client will use AFSDB DNS records to 
@@ -357,6 +371,19 @@ in 1.3.72 adds a new registry value to force the use of krb524d.  However,
 the availability of this option should only be used by individuals until
 such time as their organizations can provide a more permanent solution.
 
+
+25. The Status Cache (AFS Config Control Panel: Advanced Page) is defined
+to have a maximum number of entries.  Each entry represents a single file
+or directory entry accessed within the AFS file system.  When the maximum
+number of entries are allocated, entries will begin to be reused according
+to a least recently used (LRU) algorithm.  If the number of files or 
+directories being accessed repeatedly by your applications is greater then
+the maximum number of entries, your host will begin to experience thrashing
+of the Status Cache and all requests will result in network operations.
+
+If you are experiencing poor performance you might want to increase the 
+maximum number of Status Cache entries.  Each entry requires 164K.  Only
+those entries which are used are allocated.
 
 
 ------------------------------------------------------------------------

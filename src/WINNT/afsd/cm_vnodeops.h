@@ -154,4 +154,5 @@ extern void cm_CheckLocks();
 
 extern long cm_RetryLock(cm_file_lock_t *oldFileLock, int vcp_is_dead);
 
+#define MAX_SYMLINK_COUNT 16
 #endif /*  __CM_VNODEOPS_H_ENV__ */

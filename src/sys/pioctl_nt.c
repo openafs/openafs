@@ -530,7 +530,7 @@ pioctl(char *pathp, long opcode, struct ViceIoctl *blobp, int follow)
 	CloseHandle(reqHandle);
 	errno = CMtoUNIXerror(temp);
         if ( IoctlDebug() )
-            fprintf(stderr, "pioctl temp != 0: %d\r\n",temp);
+            fprintf(stderr, "pioctl temp != 0: 0x%X\r\n",temp);
 	return -1;
     }
 

@@ -733,14 +733,31 @@ Value   : "numeric value"
 Type    : REG_SZ
 Default : <none>
 
-    This key is used to store newline terminated mount point strings 
+    This key is used to store dot terminated mount point strings 
     for use in constructing the fake root.afs volume when Freelance
     (dynamic roots) mode is activated.
 
-        "athena.mit.edu#athena.mit.edu:root.cell.\n"
-        ".athena.mit.edu%athena.mit.edu:root.cell.\n"
+        "athena.mit.edu#athena.mit.edu:root.cell."
+        ".athena.mit.edu%athena.mit.edu:root.cell."
 
     These values used to be stored in afs_freelance.ini
+
+
+Regkey:
+[HKLM\SOFTWARE\OpenAFS\Client\Freelance\Symlinks]
+
+Value   : "numeric value"
+Type    : REG_SZ
+Default : <none>
+
+    This key is used to store a dot terminated symlink strings 
+    for use in constructing the fake root.afs volume when Freelance
+    (dynamic roots) mode is activated.
+
+        "linkname:destination-path."
+        "athena:athena.mit.edu."
+        "home:athena.mit.edu\user\j\a\jaltman."
+        "filename:path\file."
 
 
 Regkey:

@@ -590,14 +590,11 @@ static void pthread_sync_terminate_thread(void) {
     (pthread_cache_done || pthread_once(&pthread_cache_once, create_once));
 
     if (terminate_thread_handle == INVALID_HANDLE_VALUE) {
-        CHAR eventName[MAX_PATH];
-        static eventCount = 0;
-        sprintf(eventName, "terminate_thread_wakeup_event %d::%d", _getpid(), eventCount++);
-        terminate_thread_wakeup_event = CreateEvent((LPSECURITY_ATTRIBUTES) 0,
-                                                     TRUE, FALSE, (LPCTSTR) eventName);
-        terminate_thread_handle = CreateThread((LPSECURITY_ATTRIBUTES) 0, 0, 
-                                                terminate_thread_routine, (LPVOID) 0, 0, 
-                                                &terminate_thread_id);
+	terminate_thread_wakeup_event = CreateEvent((LPSECURITY_ATTRIBUTES) 0,
+				TRUE, FALSE, (LPCTSTR) 0);
+	terminate_thread_handle = CreateThread((LPSECURITY_ATTRIBUTES) 0, 0, 
+		                terminate_thread_routine, (LPVOID) 0, 0, 
+			        &terminate_thread_id);
     } else {
     	SetEvent (terminate_thread_wakeup_event);
     }
@@ -714,11 +711,8 @@ static cond_waiters_t *get_waiter() {
     if (queue_IsEmpty(&waiter_cache)) {
         new = (cond_waiters_t *) malloc(sizeof(cond_waiters_t));
 	if (new != NULL) {
-        CHAR eventName[MAX_PATH];
-        static eventCount = 0;
-        sprintf(eventName, "cond_waiters_t %d::%d", _getpid(), eventCount++);
-        new->event = CreateEvent((LPSECURITY_ATTRIBUTES) 0, FALSE,
-                                  FALSE, (LPCTSTR) eventName);
+	    new->event = CreateEvent((LPSECURITY_ATTRIBUTES) 0, FALSE,
+				     FALSE, (LPCTSTR) 0);
 	    if (new->event == NULL) {
 		free(new);
 		new = NULL;

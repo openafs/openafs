@@ -24,7 +24,7 @@ typedef struct cm_fid {
 typedef struct cm_accessCache {
 	osi_queue_t q;			/* queue header */
         struct cm_user *userp;		/* user having access rights */
-        long rights;			/* rights */
+        unsigned long rights;		/* rights */
 } cm_accessCache_t;
 
 typedef struct cm_file_lock {
@@ -50,7 +50,7 @@ typedef struct cm_scache {
 	osi_queue_t q;			/* lru queue; cm_scacheLock */
 	struct cm_scache *nextp;	/* next in hash; cm_scacheLock */
 	cm_fid_t fid;
-        long flags;			/* flags; locked by mx */
+        unsigned long flags;		/* flags; locked by mx */
 
 	/* synchronization stuff */
         osi_mutex_t mx;			/* mutex for this structure */
@@ -67,17 +67,17 @@ typedef struct cm_scache {
         long parentUnique;		/* for ACL callbacks */
 
 	/* local modification stat */
-        long mask;			/* for clientModTime, length and
+        unsigned long mask;		/* for clientModTime, length and
 					 * truncPos */
 
 	/* file status */
-	int fileType;			/* file type */
+	unsigned int fileType;			/* file type */
 	time_t clientModTime;	/* mtime */
         time_t serverModTime;	/* at server, for concurrent call
 					 * comparisons */
         osi_hyper_t length;		/* file length */
 	cm_prefetch_t prefetch;		/* prefetch info structure */
-        int unixModeBits;		/* unix protection mode bits */
+        unsigned int unixModeBits;	/* unix protection mode bits */
         int linkCount;			/* link count */
         long dataVersion;		/* data version */
         long owner;			/* file owner */
@@ -118,7 +118,7 @@ typedef struct cm_scache {
         osi_hyper_t bulkStatProgress;	/* track bulk stats of large dirs */
 
         /* open state */
-        short openReads;		/* opens for reading */
+        short openReads;		/* open for reading */
         short openWrites;		/* open for writing */
         short openShares;		/* open for read excl */
         short openExcls;		/* open for exclusives */

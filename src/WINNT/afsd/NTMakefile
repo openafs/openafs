@@ -339,26 +339,26 @@ AFSD_EXEFILE = $(EXEDIR)\afsd.exe
 AFSD_SDKLIBS =\
 	largeint.lib \
 	netapi32.lib \
-    dnsapi.lib mpr.lib \
+        dnsapi.lib mpr.lib \
 	rpcrt4.lib \
 	user32.lib \
-    Dbghelp.lib \
-    strsafe.lib \
-    mpr.lib \
-    secur32.lib \
-    ole32.lib \
-    oleaut32.lib
+        Dbghelp.lib \
+        strsafe.lib \
+        mpr.lib \
+        secur32.lib \
+        ole32.lib \
+        oleaut32.lib
 
 AFSD_EXELIBS =\
 	$(DESTDIR)\lib\libosi.lib \
 	$(DESTDIR)\lib\afsrpc.lib \
-    $(DESTDIR)\lib\afsrx.lib \
+        $(DESTDIR)\lib\afsrx.lib \
 	$(DESTDIR)\lib\afsauthent.lib \
 	$(DESTDIR)\lib\afs\mtafsvldb.lib \
 	$(DESTDIR)\lib\afs\mtafsint.lib \
 	$(DESTDIR)\lib\libafsconf.lib \
 	$(DESTDIR)\lib\afs\afsreg.lib \
-    $(LANAHELPERLIB)
+        $(LANAHELPERLIB)
 
 $(AFSD_EXEFILE): $(OUT)\afsd.obj $(AFSDOBJS) $(OUT)\afsd.res  $(RXOBJS) $(AFSD_EXELIBS)
 	$(EXEGUILINK) $(AFSD_SDKLIBS)

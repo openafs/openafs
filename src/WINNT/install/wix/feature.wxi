@@ -1,42 +1,29 @@
 ﻿<?xml version="1.0" ?>
 <Include>
-
-		<?ifdef DebugSyms?>
-			<?ifdef Debug?>
-				<?define DebugSymFollowParent="yes"?>
-				<?define DebugSymLowLevel="30"?>
-				<?define DebugSymHighLevel="130"?>
-			<?else?>
-				<?define DebugSymFollowParent="no"?>
-				<?define DebugSymLowLevel="130"?>
-				<?define DebugSymHighLevel="130"?>
-			<?endif?>
-		<?endif?>
-
         <Feature Id="feaOpenAFS" AllowAdvertise="no" Absent="disallow" ConfigurableDirectory="AFSDIR"
             Description="$(loc.StrAFSProdDesc)" Display="expand" InstallDefault="local" Level="30"
             Title="OpenAFS">
             <Feature Id="feaClient" AllowAdvertise="no" Description="$(loc.StrAFSClientLongDesc)" Display="expand"
-                FollowParent="yes" InstallDefault="local" Level="30" Title="$(loc.StrAFSClientDesc)">
+                InstallDefault="followParent" Level="30" Title="$(loc.StrAFSClientDesc)">
                 
-                <Feature Id="feaLoopback" FollowParent="yes" AllowAdvertise="no" Description="$(loc.StrLoopbackLongDesc)"
-                    Display="expand" InstallDefault="local" Level="30" Title="$(loc.StrLoopbackDesc)">
+                <Feature Id="feaLoopback" AllowAdvertise="no" Description="$(loc.StrLoopbackLongDesc)"
+                    Display="expand" InstallDefault="followParent" Level="30" Title="$(loc.StrLoopbackDesc)">
                     <ComponentRef Id="rcm_Loopback"/>
                 </Feature>
 
-				<Feature Id="feaKB301673" AllowAdvertise="no" Absent="disallow" Display="hidden" InstallDefault="local" Level="0" FollowParent="yes">
+				<Feature Id="feaKB301673" AllowAdvertise="no" Absent="disallow" Display="hidden" InstallDefault="followParent" Level="0">
 					<ComponentRef Id="rcm_KB301673" />
 					<Condition Level="30">VersionNT = 500 And ServicePackLevel &lt; 3</Condition>
 				</Feature>
 				
-				<Feature Id="feaCredsStartup" AllowAdvertise="no" FollowParent="yes" Display="hidden" InstallDefault="local" Level="30">
+				<Feature Id="feaCredsStartup" AllowAdvertise="no" Display="hidden" InstallDefault="followParent" Level="30">
 					<ComponentRef Id="cmp_credsStartup" />
 					<Condition Level="130">CREDSSTARTUP = 0</Condition>
 				</Feature>
 				
 			<?ifdef DebugSyms?>
 				<Feature Id="feaClientDebug" AllowAdvertise="no" Description="$(loc.StrAFSClientDebugLongDesc)" Display="expand"
-					FollowParent="$(var.DebugSymFollowParent)" InstallDefault="local" Level="$(var.DebugSymLowLevel)" Title="$(loc.StrAFSClientDebugDesc)">
+					InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymLowLevel)" Title="$(loc.StrAFSClientDebugDesc)">
                     <ComponentRef Id="cmp_ClientProgramDebug" />
                     <ComponentRef Id="cmp_CommonCommonDebug" />
                     <ComponentRef Id="cmp_ClientCommonDebug" />
@@ -98,7 +85,7 @@
             </Feature>
             
             <Feature Id="feaServer" AllowAdvertise="no" Description="$(loc.StrAFSServerLongDesc)" Display="expand"
-                FollowParent="yes" InstallDefault="local" Level="130" Title="$(loc.StrAFSServerDesc)">
+                InstallDefault="followParent" Level="130" Title="$(loc.StrAFSServerDesc)">
 
 				<ComponentRef Id="rcm_Server" />
 				<ComponentRef Id="cmp_CommonDir" />
@@ -147,7 +134,7 @@
 
             <?ifdef DebugSyms?>
 				<Feature Id="feaServerDebug" AllowAdvertise="no" Description="$(loc.StrAFSServerDebugLongDesc)" Display="expand"
-					FollowParent="$(var.DebugSymFollowParent)" InstallDefault="local" Level="$(var.DebugSymHighLevel)" Title="$(loc.StrAFSServerDebugDesc)">
+					InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymHighLevel)" Title="$(loc.StrAFSServerDebugDesc)">
 					<ComponentRef Id="cmp_Server_Program_Debug" />
 					<ComponentRef Id="cmp_ServerCommonDebug" />
 					<ComponentRef Id="cmp_CommonCommonDebug" />
@@ -159,7 +146,7 @@
                 <?include runtime.wxi?>
             </Feature>
             <Feature Id="feaControlCenter" AllowAdvertise="no" Description="$(loc.StrAFSCCLongDesc)"
-                Display="expand" FollowParent="yes" InstallDefault="local" Level="130" Title="$(loc.StrAFSCCDesc)">
+                Display="expand" InstallDefault="followParent" Level="130" Title="$(loc.StrAFSCCDesc)">
                 
                 <ComponentRef Id="rcm_Control_Center" />
                 <ComponentRef Id="cmp_CommonDir" />
@@ -197,7 +184,7 @@
 
             <?ifdef DebugSyms?>
 				<Feature Id="feaControlCenterDebug" AllowAdvertise="no" Description="$(loc.StrAFSCCDebugLongDesc)"
-					Display="expand" FollowParent="$(var.DebugSymFollowParent)" InstallDefault="local" Level="$(var.DebugSymHighLevel)" Title="$(loc.StrAFSCCDebugDesc)">
+					Display="expand" InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymHighLevel)" Title="$(loc.StrAFSCCDebugDesc)">
 					<ComponentRef Id="cmp_Control_CenterDebug" />
 					<ComponentRef Id="cmp_ServerCommonDebug" />
 					<ComponentRef Id="cmp_CommonCommonDebug" />
@@ -212,7 +199,7 @@
                 <?include runtime.wxi?>
             </Feature>
             <Feature Id="feaSDK" AllowAdvertise="no" Description="$(loc.StrAFSSDKLongDesc)" Display="expand"
-                FollowParent="yes" InstallDefault="local" Level="130" Title="$(loc.StrAFSSDKDesc)">
+                InstallDefault="followParent" Level="130" Title="$(loc.StrAFSSDKDesc)">
 
 				<ComponentRef Id="rcm_SDK" />
 
@@ -227,7 +214,7 @@
 
 			<?ifdef DebugSyms?>
 				<Feature Id="feaSDKDebug" AllowAdvertise="no" Description="$(loc.StrAFSSDKDebugLongDesc)" Display="expand"
-					FollowParent="$(var.DebugSymFollowParent)" InstallDefault="local" Level="$(var.DebugSymHighLevel)" Title="$(loc.StrAFSSDKDebugDesc)">
+					InstallDefault="$(var.DebugSymInstallDefault)" Level="$(var.DebugSymHighLevel)" Title="$(loc.StrAFSSDKDebugDesc)">
 					<?include runtime_debug.wxi?>
 				</Feature>
 			<?endif?>
@@ -236,7 +223,7 @@
             </Feature>
             
             <Feature Id="feaDocumentation" AllowAdvertise="no" Description="$(loc.StrAFSDocLongDesc)"
-                Display="expand" FollowParent="yes" InstallDefault="local" Level="130" Title="$(loc.StrAFSDocDesc)">
+                Display="expand" InstallDefault="followParent" Level="130" Title="$(loc.StrAFSDocDesc)">
 
 				<ComponentRef Id="rcm_Documentation" />
                 
