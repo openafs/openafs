@@ -73,8 +73,7 @@ struct cronbnode {
     char killSent;  /* have we tried sigkill signal? */
 };
 
-static int cron_hascore(abnode)
-register struct ezbnode *abnode; {
+static int cron_hascore(register struct ezbnode *abnode) {
     char tbuffer[256];
 
     bnode_CoreName(abnode, NULL, tbuffer);
@@ -86,8 +85,8 @@ register struct ezbnode *abnode; {
     one shot run) or when we should run again.  Sleeps until we should run again.
     Note that the computation of when we should run again is made in procexit
     and/or create procs.  This guy only schedules the sleep */
-ScheduleCronBnode(abnode)
-register struct cronbnode *abnode; {
+int ScheduleCronBnode(register struct cronbnode *abnode)
+{
     register afs_int32 code;
     register afs_int32 temp;
     struct bnode_proc *tp;
@@ -133,23 +132,21 @@ register struct cronbnode *abnode; {
     return 0;
 }
 
-static int cron_restartp (abnode)
-register struct cronbnode *abnode; {
+static int cron_restartp (register struct cronbnode *abnode)
+{
     return 0;
 }
 
-static int cron_delete(abnode)
-struct cronbnode *abnode; {
+static int cron_delete(struct cronbnode *abnode)
+{
     free(abnode->command);
     free(abnode->whenString);
     free(abnode);
     return 0;
 }
 
-struct bnode *cron_create(ainstance, acommand, awhen)
-char *ainstance;
-char *awhen;
-char *acommand; {
+struct bnode *cron_create(char *ainstance, char *acommand, char *awhen)
+{
     struct cronbnode *te;
     afs_int32 code;
     char *cmdpath;
@@ -164,12 +161,11 @@ char *acommand; {
     te = (struct cronbnode *) malloc(sizeof(struct cronbnode));
     memset(te, 0, sizeof(struct cronbnode));
     code = ktime_ParsePeriodic(awhen, &te->whenToRun);
-    if (code < 0) {
+    if ((code < 0) || (bnode_InitBnode(te, &cronbnode_ops, ainstance) != 0)) {
 	free(te);
 	free(cmdpath);
 	return NULL;
     }
-    bnode_InitBnode(te, &cronbnode_ops, ainstance);
     te->when = ktime_next(&te->whenToRun, 0);
     te->command = cmdpath;
     te->whenString = copystr(awhen);
@@ -178,8 +174,8 @@ char *acommand; {
 
 /* called to SIGKILL a process if it doesn't terminate normally.  In cron, also
     start up a process if it is time and not already running */
-static int cron_timeout(abnode)
-struct cronbnode *abnode; {
+static int cron_timeout(struct cronbnode *abnode)
+{
     register afs_int32 temp;
     register afs_int32 code;
     struct bnode_proc *tp;
@@ -217,9 +213,8 @@ struct cronbnode *abnode; {
     return 0;
 }
 
-static int cron_getstat(abnode, astatus)
-struct cronbnode *abnode;
-afs_int32 *astatus; {
+static int cron_getstat(struct cronbnode *abnode, afs_int32 *astatus)
+{
     register afs_int32 temp;
     if (abnode->waitingForShutdown) temp = BSTAT_SHUTTINGDOWN;
     else if (abnode->b.goal == 0) temp = BSTAT_SHUTDOWN;
@@ -234,10 +229,8 @@ afs_int32 *astatus; {
     return 0;
 }
 
-static int cron_setstat(abnode, astatus)
-register struct cronbnode *abnode;
-afs_int32 astatus; {
-
+static int cron_setstat(register struct cronbnode *abnode, afs_int32 astatus)
+{
     if (abnode->waitingForShutdown) return BZBUSY;
     if (astatus == BSTAT_SHUTDOWN) {
        if (abnode->running) {
@@ -264,9 +257,8 @@ afs_int32 astatus; {
     return 0;
 }
 
-static int cron_procexit(abnode, aproc)
-struct cronbnode *abnode;
-struct bnode_proc *aproc; {
+static int cron_procexit(struct cronbnode *abnode, struct bnode_proc *aproc)
+{
     /* process has exited */
 
     /* log interesting errors for folks */
@@ -288,21 +280,17 @@ struct bnode_proc *aproc; {
     return 0;
 }
 
-static int cron_getstring(abnode, abuffer, alen)
-struct cronbnode *abnode;
-char *abuffer;
-afs_int32 alen;{
+static int cron_getstring(struct cronbnode *abnode, char *abuffer, 
+			  afs_int32 alen)
+{
     if (abnode->running) strcpy(abuffer, "running now");
     else if (abnode->when==0) strcpy(abuffer, "waiting to run once");
     else sprintf(abuffer, "run next at %s", ktime_DateOf(abnode->when));
     return 0;
 }
 
-static cron_getparm(abnode, aindex, abuffer, alen)
-struct cronbnode *abnode;
-afs_int32 aindex;
-char *abuffer;
-afs_int32 alen; {
+static int cron_getparm(struct cronbnode *abnode, afs_int32 aindex, char *abuffer, afs_int32 alen)
+{
     if (aindex == 0) strcpy(abuffer, abnode->command);
     else if (aindex == 1) {
 	strcpy(abuffer, abnode->whenString);

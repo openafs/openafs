@@ -89,14 +89,14 @@ struct bztemp {
 };
 
 /* check whether caller is authorized to manage RX statistics */
-int bozo_rxstat_userok(call)
-    struct rx_call *call;
+int bozo_rxstat_userok(struct rx_call *call)
 {
     return afsconf_SuperUser(bozo_confdir, call, NULL);
 }
 
 /* restart bozo process */
-bozo_ReBozo() {
+int bozo_ReBozo() 
+{
 #ifdef AFS_NT40_ENV
     /* exit with restart code; SCM integrator process will restart bosserver */
     int status = BOSEXIT_RESTART;
@@ -157,8 +157,8 @@ bozo_ReBozo() {
 }
 
 /* make sure a dir exists */
-static MakeDir(adir)
-register char *adir; {
+static int MakeDir(register char *adir)
+{
     struct stat tstat;
     register afs_int32 code;
     if (stat(adir, &tstat) < 0 || (tstat.st_mode & S_IFMT) != S_IFDIR) {
@@ -178,8 +178,8 @@ register char *adir; {
 }
 
 /* create all the bozo dirs */
-static CreateDirs() {
-    
+static int CreateDirs()
+{
     MakeDir(AFSDIR_USR_DIRPATH);
     MakeDir(AFSDIR_SERVER_AFS_DIRPATH);
     MakeDir(AFSDIR_SERVER_BIN_DIRPATH);
@@ -198,8 +198,8 @@ static CreateDirs() {
 }
 
 /* strip the \\n from the end of the line, if it is present */
-static StripLine(abuffer)
-register char *abuffer; {
+static int StripLine(register char *abuffer)
+{
     register char *tp;
     
     tp = abuffer + strlen(abuffer); /* starts off pointing at the null  */
@@ -210,9 +210,8 @@ register char *abuffer; {
 }
 
 /* write one bnode's worth of entry into the file */
-static bzwrite(abnode, at)
-register struct bnode *abnode;
-register struct bztemp *at; {
+static bzwrite(register struct bnode *abnode, register struct bztemp *at)
+{
     register int i;
     char tbuffer[BOZO_BSSIZE];
     register afs_int32 code;
@@ -235,8 +234,8 @@ register struct bztemp *at; {
 }
 
 #define	MAXPARMS    20
-ReadBozoFile(aname)
-char *aname; {
+int ReadBozoFile(char *aname) 
+{
     register FILE *tfile;
     char tbuffer[BOZO_BSSIZE];
     register char *tp;
@@ -403,8 +402,8 @@ fail:
 }
 
 /* write a new bozo file */
-WriteBozoFile(aname)
-char *aname; {
+int WriteBozoFile(char *aname)
+{
     register FILE *tfile;
     char tbuffer[AFSDIR_PATH_MAX];
     register afs_int32 code;
@@ -444,9 +443,8 @@ char *aname; {
     return 0;
 }
 
-static bdrestart(abnode, arock)
-register struct bnode *abnode;
-char *arock; {
+static int bdrestart(register struct bnode *abnode, char *arock)
+{
     register afs_int32 code;
     
     if (abnode->fileGoal != BSTAT_NORMAL || abnode->goal != BSTAT_NORMAL)
@@ -465,7 +463,8 @@ char *arock; {
 
 #define	BOZO_MINSKIP 3600	    /* minimum to advance clock */
 /* lwp to handle system restarts */
-static BozoDaemon() {
+static int BozoDaemon() 
+{
     register afs_int32 now;
     
     /* now initialize the values */
@@ -502,7 +501,7 @@ static BozoDaemon() {
 }
 
 #ifdef AFS_AIX32_ENV
-static tweak_config()
+static int tweak_config()
 {
     FILE *f;
     char c[80];
@@ -561,8 +560,7 @@ static tweak_config()
  */
 
 #ifndef AFS_NT40_ENV
-static void
-background(void)
+static void background(void)
 {
     /* 
      * A process is a process group leader if its process ID
@@ -657,11 +655,7 @@ background(void)
 
 #include "AFS_component_version_number.c"
 
-
-main (argc, argv,envp)
-int argc;
-char **argv;
-char **envp;
+int main (int argc, char **argv, char **envp)
 {
     struct rx_service *tservice;
     register afs_int32 code;
@@ -927,9 +921,8 @@ char **envp;
     rx_StartServer(1);	    /* donate this process */
 }
 
-void
-bozo_Log(a,b,c,d,e,f)
-char *a, *b, *c, *d, *e, *f; {
+void bozo_Log(char *a, char *b, char *c, char *d, char *e, char *f)
+{
     char tdate[26];
     time_t myTime;
 

@@ -68,8 +68,8 @@ extern char **environ;			/* env structure */
 #endif
 
 /* Remember the name of the process, if any, that failed last */
-static void RememberProcName(ap)
-register struct bnode_proc *ap; {
+static void RememberProcName(register struct bnode_proc *ap)
+{
     register struct bnode *tbnodep;
 
     tbnodep = ap->bnode;
@@ -86,10 +86,9 @@ register struct bnode_proc *ap; {
 /* utility for use by BOP_HASCORE functions to determine where a core file might
  * be stored.
  */
-bnode_CoreName(abnode, acoreName, abuffer)
-register struct bnode *abnode;
-char *acoreName;
-char *abuffer; {
+int bnode_CoreName(register struct bnode *abnode, char *acoreName, 
+		   char *abuffer)
+{
     strcpy(abuffer, AFSDIR_SERVER_CORELOG_FILEPATH);
     if (acoreName) {
 	strcat(abuffer, acoreName);
@@ -100,9 +99,9 @@ char *abuffer; {
 }
 
 /* save core file, if any */
-static void SaveCore(abnode, aproc)
-register struct bnode_proc *aproc;
-register struct bnode *abnode; {
+static void SaveCore(register struct bnode *abnode, register struct bnode_proc
+		     *aproc)
+{
     char tbuffer[256];
     struct stat tstat;
     register afs_int32 code;
@@ -128,34 +127,30 @@ register struct bnode *abnode; {
     code = renamefile(AFSDIR_SERVER_CORELOG_FILEPATH, tbuffer);
 }
 
-bnode_GetString(abnode, abuffer, alen)
-register struct bnode *abnode;
-register char *abuffer;
-register afs_int32 alen;{
+int bnode_GetString(register struct bnode *abnode, register char *abuffer,
+register afs_int32 alen)
+{
     return BOP_GETSTRING(abnode, abuffer, alen);
 }
 
-bnode_GetParm(abnode, aindex, abuffer, alen)
-register struct bnode *abnode;
-register afs_int32 aindex;
-register char *abuffer;
-afs_int32 alen; {
+int bnode_GetParm(register struct bnode *abnode, register afs_int32 aindex, 
+		  register char *abuffer, afs_int32 alen)
+{
     return BOP_GETPARM(abnode, aindex, abuffer, alen);
 }
 
-bnode_GetStat(abnode, astatus)
-register struct bnode *abnode;
-register afs_int32 *astatus; {
+int bnode_GetStat(register struct bnode *abnode, register afs_int32 *astatus)
+{
     return BOP_GETSTAT(abnode, astatus);
 }
 
-bnode_RestartP(abnode)
-register struct bnode *abnode; {
+int bnode_RestartP(register struct bnode *abnode)
+{
     return BOP_RESTARTP(abnode);
 }
 
-static bnode_Check(abnode)
-register struct bnode *abnode; {
+static int bnode_Check(register struct bnode *abnode)
+{
     if (abnode->flags & BNODE_WAIT) {
 	abnode->flags &= ~BNODE_WAIT;
 	LWP_NoYieldSignal(abnode);
@@ -164,13 +159,13 @@ register struct bnode *abnode; {
 }
 
 /* tell if an instance has a core file */
-bnode_HasCore(abnode)
-register struct bnode *abnode; {
+int bnode_HasCore(register struct bnode *abnode)
+{
     return BOP_HASCORE(abnode);
 }
 
 /* wait for all bnodes to stabilize */
-bnode_WaitAll() {
+int bnode_WaitAll() {
     register struct bnode *tb;
     register afs_int32 code;
     afs_int32 stat;
@@ -195,9 +190,8 @@ bnode_WaitAll() {
 }
 
 /* wait until bnode status is correct */
-bnode_WaitStatus(abnode, astatus)
-int astatus;
-register struct bnode *abnode; {
+int bnode_WaitStatus(register struct bnode *abnode, int astatus)
+{
     register afs_int32 code;
     afs_int32 stat;
 
@@ -222,9 +216,8 @@ register struct bnode *abnode; {
     }
 }
 
-bnode_SetStat(abnode, agoal)
-register struct bnode *abnode;
-register int agoal; {
+int bnode_SetStat(register struct bnode *abnode, register int agoal)
+{
     abnode->goal = agoal;
     bnode_Check(abnode);
     BOP_SETSTAT(abnode, agoal);
@@ -232,17 +225,15 @@ register int agoal; {
     return 0;
 }
 
-bnode_SetGoal(abnode, agoal)
-register struct bnode *abnode;
-register int agoal; {
+int bnode_SetGoal(register struct bnode *abnode, register int agoal)
+{
     abnode->goal = agoal;
     bnode_Check(abnode);
     return 0;
 }
 
-bnode_SetFileGoal(abnode, agoal)
-register struct bnode *abnode;
-register int agoal; {
+int bnode_SetFileGoal(register struct bnode *abnode, register int agoal)
+{
     if (abnode->fileGoal == agoal) return 0;	/* already done */
     abnode->fileGoal = agoal;
     WriteBozoFile(0);
@@ -250,9 +241,8 @@ register int agoal; {
 }
 
 /* apply a function to all bnodes in the system */
-int bnode_ApplyInstance(aproc, arock)
-int (*aproc)();
-char *arock; {
+int bnode_ApplyInstance(int (*aproc)(), char *arock)
+{
     register struct bnode *tb, *nb;
     register afs_int32 code;
 
@@ -264,8 +254,8 @@ char *arock; {
     return 0;
 }
 
-struct bnode *bnode_FindInstance (aname)
-register char *aname; {
+struct bnode *bnode_FindInstance(register char *aname)
+{
     register struct bnode *tb;
     
     for(tb=allBnodes;tb;tb=tb->next) {
@@ -274,8 +264,8 @@ register char *aname; {
     return NULL;
 }
 
-static struct bnode_type *FindType(aname)
-register char *aname; {
+static struct bnode_type *FindType(register char *aname)
+{
     register struct bnode_type *tt;
     
     for(tt=allTypes;tt;tt=tt->next) {
@@ -284,10 +274,8 @@ register char *aname; {
     return (struct bnode_type *) 0;
 }
 
-bnode_Register(atype, aprocs, anparms)
-char *atype;
-int anparms;	    /* number of parms to create */
-struct bnode_ops *aprocs; {
+int bnode_Register(char *atype, struct bnode_ops *aprocs, int anparms)
+{
     register struct bnode_type *tt;
 
     for(tt=allTypes;tt;tt=tt->next) {
@@ -304,12 +292,10 @@ struct bnode_ops *aprocs; {
     return 0;
 }
 
-afs_int32 bnode_Create(atype, ainstance, abp, ap1, ap2, ap3, ap4, ap5, notifier,fileGoal)
-char *atype;
-char *ainstance;
-struct bnode **abp;
-char *ap1, *ap2, *ap3, *ap4, *ap5, *notifier; 
-int fileGoal;{
+afs_int32 bnode_Create(char *atype, char *ainstance, struct bnode **abp, 
+		       char *ap1, char *ap2, char *ap3, char *ap4, 
+		       char *ap5, char *notifier, int fileGoal)
+{
     struct bnode_type *type;
     struct bnode *tb;
     char *notifierpath = NULL;
@@ -351,8 +337,8 @@ int fileGoal;{
     return 0;
 }
 
-int bnode_DeleteName(ainstance)
-char *ainstance; {
+int bnode_DeleteName(char *ainstance)
+{
     register struct bnode *tb;
 
     tb = bnode_FindInstance(ainstance);
@@ -361,14 +347,14 @@ char *ainstance; {
     return bnode_Delete(tb);
 }
 
-bnode_Hold(abnode)
-register struct bnode *abnode; {
+int bnode_Hold(register struct bnode *abnode)
+{
     abnode->refCount++;
     return 0;
 }
 
-bnode_Release(abnode)
-register struct bnode *abnode; {
+int bnode_Release(register struct bnode *abnode)
+{
     abnode->refCount--;
     if (abnode->refCount == 0 && abnode->flags & BNODE_DELETE) {
 	abnode->flags &= ~BNODE_DELETE;	/* we're going for it */
@@ -377,8 +363,8 @@ register struct bnode *abnode; {
     return 0;
 }
 
-int bnode_Delete(abnode)
-register struct bnode *abnode; {
+int bnode_Delete(register struct bnode *abnode)
+{
     register afs_int32 code;
     register struct bnode **lb, *ub;
     afs_int32 temp;
@@ -410,15 +396,14 @@ register struct bnode *abnode; {
 }
 
 /* function to tell if there's a timeout coming up */
-int bnode_PendingTimeout(abnode)
-register struct bnode *abnode; {
+int bnode_PendingTimeout(register struct bnode *abnode)
+{
     return (abnode->flags & BNODE_NEEDTIMEOUT);
 }
 
 /* function called to set / clear periodic bnode wakeup times */
-int bnode_SetTimeout(abnode, atimeout)
-register struct bnode *abnode;
-afs_int32 atimeout; {
+int bnode_SetTimeout(register struct bnode *abnode, afs_int32 atimeout)
+{
     if (atimeout != 0) {
 	abnode->nextTimeout = FT_ApproxTime() + atimeout;
 	abnode->flags |= BNODE_NEEDTIMEOUT;
@@ -432,16 +417,17 @@ afs_int32 atimeout; {
 }
 
 /* used by new bnode creation code to format bnode header */
-int bnode_InitBnode (abnode, abnodeops, aname)
-register struct bnode *abnode;
-char *aname;
-struct bnode_ops *abnodeops; {
+int bnode_InitBnode (register struct bnode *abnode, 
+		     struct bnode_ops *abnodeops, char *aname) 
+{
     struct bnode **lb, *nb;
 
     /* format the bnode properly */
     memset(abnode, 0, sizeof(struct bnode));
     abnode->ops = abnodeops;
     abnode->name = (char *) malloc(strlen(aname)+1);
+    if (!abnode->name)
+	return ENOMEM;
     strcpy(abnode->name, aname);
     abnode->flags = BNODE_ACTIVE;
     abnode->fileGoal = BSTAT_NORMAL;
@@ -598,19 +584,7 @@ static int bproc() {
 }
 
 
-#ifdef	notdef
-sigcatch()
-{
-    signal(SIGPIPE, SIG_IGN);
-    bozo_Log("Notifier aborted prematurely");
-    exit(0);
-}
-#endif
-
-
-
-hdl_notifier(tp) 
-    struct bnode_proc *tp;
+int hdl_notifier(struct bnode_proc *tp)
 {
 #ifndef AFS_NT40_ENV  /* NT notifier callout not yet implemented */
     int code, pid, status;
@@ -652,9 +626,8 @@ hdl_notifier(tp)
 }
 
 
-static afs_int32 SendNotifierData(fd, tp)
-    register int fd;
-    register struct bnode_proc *tp;
+static afs_int32 SendNotifierData(register int fd, 
+				  register struct bnode_proc *tp)
 {
     register struct bnode *tb = tp->bnode;
     char buffer[1000], *bufp = buffer, *buf1;
@@ -730,7 +703,7 @@ static afs_int32 SendNotifierData(fd, tp)
     
 /* Called by IOMGR at low priority on IOMGR's stack shortly after a SIGCHLD
  * occurs.  Wakes up bproc do redo things */
-bnode_SoftInt(int asignal)
+int bnode_SoftInt(int asignal)
 {
     IOMGR_Cancel(bproc_pid);
     return 0;
@@ -739,8 +712,7 @@ bnode_SoftInt(int asignal)
 /* Called at signal interrupt level; queues function to be called
  * when IOMGR runs again.
  */
-void
-bnode_Int(int asignal)
+void bnode_Int(int asignal)
 {
     extern void bozo_ShutdownAndExit();
 
@@ -777,8 +749,8 @@ int bnode_Init() {
 }
     
 /* free token list returned by parseLine */
-bnode_FreeTokens(alist)
-    register struct bnode_token *alist; {
+int bnode_FreeTokens(register struct bnode_token *alist)
+{
     register struct bnode_token *nlist;
     for(; alist; alist = nlist) {
 	nlist = alist->next;
@@ -788,15 +760,14 @@ bnode_FreeTokens(alist)
     return 0;
 }
 
-static space(x)
-int x; {
+static int space(int x)
+{
     if (x == 0 || x == ' ' || x == '\t' || x== '\n') return 1;
     else return 0;
 }
 
-bnode_ParseLine(aline, alist)
-    char *aline;
-    struct bnode_token **alist; {
+int bnode_ParseLine(char *aline, struct bnode_token **alist)
+{
     char tbuffer[256];
     register char *tptr;
     int inToken;
@@ -844,11 +815,9 @@ bnode_ParseLine(aline, alist)
 }
 
 #define	MAXVARGS	    128
-int bnode_NewProc(abnode, aexecString, coreName, aproc)
-struct bnode_proc **aproc;
-char *coreName;
-struct bnode *abnode;
-char *aexecString; {
+int bnode_NewProc(struct bnode *abnode, char *aexecString, char *coreName, 
+		  struct bnode_proc **aproc)
+{
     struct bnode_token *tlist, *tt;
     afs_int32 code;
     struct bnode_proc *tp;
@@ -893,9 +862,8 @@ char *aexecString; {
     return 0;
 }
 
-int bnode_StopProc(aproc, asignal)
-register struct bnode_proc *aproc;
-int asignal; {
+int bnode_StopProc(register struct bnode_proc *aproc, int asignal)
+{
     register int code;
     if (!(aproc->flags & BPROC_STARTED) || (aproc->flags & BPROC_EXITED))
 	return BZNOTACTIVE;
@@ -907,8 +875,8 @@ int asignal; {
     return code;
 }
 
-int bnode_Deactivate(abnode)
-register struct bnode *abnode; {
+int bnode_Deactivate(register struct bnode *abnode)
+{
     register struct bnode **pb, *tb;
     struct bnode *nb;
     if (!(abnode->flags & BNODE_ACTIVE)) return BZNOTACTIVE;
@@ -923,8 +891,8 @@ register struct bnode *abnode; {
     return BZNOENT;
 }
 
-static int DeleteProc(abproc)
-register struct bnode_proc *abproc; {
+static int DeleteProc(register struct bnode_proc *abproc)
+{
     register struct bnode_proc **pb, *tb;
     struct bnode_proc *nb;
 
