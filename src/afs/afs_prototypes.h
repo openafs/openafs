@@ -711,6 +711,7 @@ extern int afsi_SetServerIPRank(struct srvAddr *sa, afs_int32 addr,
 void afsi_SetServerIPRank(struct srvAddr *sa, struct in_ifaddr *ifa);
 #endif
 #endif
+extern int HaveCallBacksFrom(struct server *aserver);
 
 
 

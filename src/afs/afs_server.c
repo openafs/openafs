@@ -259,7 +259,7 @@ afs_ServerDown(struct srvAddr *sa)
 
 
 /* return true if we have any callback promises from this server */
-static int
+int
 HaveCallBacksFrom(struct server *aserver)
 {
     register afs_int32 now;
